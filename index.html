@@ -2619,8 +2619,8 @@ function tryQuestVisit(r){const list=QUEST_VISITS.get(r);if(!list||!list.length|
   endAct(r);startAct(r,G,'questjoy',stand,{obj:v.obj,targetId:v.id});return true;
 }
 ACT.questjoy={start(r,a){if(S.obj[a.obj]!==a.targetId||!questVisitReached(r,a.obj))return false;const now=performance.now();a.joyAt=now;a.joyUntil=now+2400;JOYU.set(r,a.joyUntil);JUMP.set(r,now);r.shine=now;r.bubble='😊';r.face=a.obj%W+.5>=r.x?1:-1;sfxAt('good',r.x,r.y);
-  const main=QUEST_CLEAR_WAIT;if(main&&main.r===r&&main.obj===a.obj&&!main.prompted){main.prompted=true;const q=QUESTS[main.quest];if(q&&q.story&&S.quest===main.quest){PAYOK=false;if(q.pay)for(const k in q.pay)S.mat[k]=Math.max(0,(S.mat[k]||0)-q.pay[k]);S.qTalked=false;S.qStory=main.quest;sfx('quest');logEv('目標「'+q.text+'」をたっせい');TALKW=storyWho(q);QUESTCLEARW=TALKW;if(q.text.startsWith('村レベル'))focusQuestSpeaker(TALKW);renderQuest();renderPalette()}}
-  for(const k in SUB_CLEAR_WAIT){const w=SUB_CLEAR_WAIT[k];if(!w||w.r!==r||w.obj!==a.obj||w.prompted)continue;const q=SUBQ.find(x=>x.k===k);if(!q)continue;w.prompted=true;S.subSt[k]=3;SUBW[subWho(q)]=k}
+  const main=QUEST_CLEAR_WAIT;if(main&&main.r===r&&main.obj===a.obj&&!main.prompted){main.prompted=true;const q=QUESTS[main.quest];if(q&&q.story&&S.quest===main.quest){PAYOK=false;if(q.pay)for(const k in q.pay)S.mat[k]=Math.max(0,(S.mat[k]||0)-q.pay[k]);S.qTalked=false;S.qStory=main.quest;sfx('quest');logEv('目標「'+q.text+'」をたっせい');TALKW=r.name;QUESTCLEARW=r.name;if(q.text.startsWith('村レベル'))focusQuestSpeaker(TALKW);renderQuest();renderPalette()}}
+  for(const k in SUB_CLEAR_WAIT){const w=SUB_CLEAR_WAIT[k];if(!w||w.r!==r||w.obj!==a.obj||w.prompted)continue;const q=SUBQ.find(x=>x.k===k);if(!q)continue;w.prompted=true;S.subSt[k]=3;SUBW[r.name]=k}
 },
   tick(r,a){if(!a.secondHop&&performance.now()-a.joyAt>=900){a.secondHop=true;JUMP.set(r,performance.now())}},
   done:(r,a)=>S.obj[a.obj]!==a.targetId||performance.now()>=a.joyUntil,
