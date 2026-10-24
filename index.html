@@ -2548,7 +2548,7 @@ function guardTick(){const fin=!WD&&!!(S.ns&&S.ns.final)&&isNight();if(WD||!(S.f
 function drawLeaf(r,now){const px=r.x*TS,py=r.y*TS;ctx.save();ctx.globalAlpha=.85;ctx.strokeStyle='rgba(130,215,100,.6)';ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(px,py+6,14,6,0,0,7);ctx.stroke();
   for(let i=0;i<5;i++){const a=now/450+i*1.2566,lx=px+Math.cos(a)*15,ly=py-4+Math.sin(a)*7;ctx.fillStyle=i%2?'#7ccf5a':'#a8e67f';ctx.beginPath();ctx.ellipse(lx,ly,3.6,1.9,a,0,7);ctx.fill()}ctx.restore()}
 /* 次のステージへ、はじめて出発するとき：フタバとのお見送り */
-function departOK(){let d=false;try{d=KV.getItem('hakoniwa-dep1')==='1'}catch(e){}return !d&&LIVE[0]&&LIVE[0].cleared&&LIVE[0].res.some(r=>r.name===POKO)}
+function departOK(){if(LIVE[0]&&LIVE[0].summary&&LIVE[0].cleared)loadStage(0);let d=false;try{d=KV.getItem('hakoniwa-dep1')==='1'}catch(e){}return !d&&LIVE[0]&&LIVE[0].cleared&&LIVE[0].res.some(r=>r.name===POKO)}
 function depart(go){$('#maps').hidden=true;continueGame(LIVE[0]);const f=S.res.find(r=>r.name===POKO);if(f)centerOn(f.x*TS,f.y*TS);
   const A=sevLines([['G','さあ、次は火山のふもとの村じゃ。そろそろ行くぞい。'],['F','……え？ もう、行っちゃうの？'],['F','……ほんとはね、行かないでって、言いたい。'],['F','あの夜、みんながぼくをかくしてくれたから、ぼくは生きてる。だから、だれかがいなくなるのが、こわくて……。'],['U','フタバ。守り神は、いなくなるのではない。ほかの土地を助けに行くのだ。'],['F','……うん。あの夜のぼくみたいな子が、待ってるかもしれないんだ。'],['F','ぼく、もうかくれてるだけじゃないよ。みんなのことは、ぼくが守るから！'],['F','……いってらっしゃい！ ちゃんと、ここで待ってるから！ でも、たまには帰ってきてね。ぜったいだよ？'],['G','うむ……。鼻の奥がつーんとしたわい。行ってくるぞい。'],
     ['N','ここは、ぼくたちにまかせてねぇ。',1],['H',{A:'安心して行ってきな。夜はあたいらが守るよ。',B:'安心して行ってこい。夜はおれたちが守るぜ。'},1],['M','次の村のせいれいたちも、元気になりますように。',1],['K','フッ……最初は、なんとも素朴な村だと思ったけれど。',1],['K','今では、世界でいちばん心地よい風が吹く場所かもしれないね。きみの旅路に、いい風が吹きますように。',1],['U','この草原は、わたしたちが見守ろう。'],
@@ -5027,16 +5027,27 @@ function arrive(){
     S.godShown=true;burst(Math.floor(godY())*W+Math.floor(godX()),'furn');sfx('poof');
     setTimeout(()=>{started=true;showUI(true);S.introSeen=true;dialog(WD===FREE?INTROFL():INTROS[WD],()=>save())},500)}};
 }
-function continueGame(saved){setWorld(saved.world||0);S=saved;LIVE[WD]=S;ensureStor(S);syncTools(S);dirty=true;closeSheet();S.res.forEach(r=>{r.act=null;r.path=[]});S.orders.forEach(o=>o.worker=null);recount();renderQuest();applyFeats();setMode('look');glassUI();
+function continueGame(saved){if(saved&&saved.summary)saved=loadStage(saved.world);if(!saved)return;setWorld(saved.world||0);S=saved;LIVE[WD]=S;ensureStor(S);syncTools(S);dirty=true;closeSheet();S.res.forEach(r=>{r.act=null;r.path=[]});S.orders.forEach(o=>o.worker=null);recount();renderQuest();applyFeats();setMode('look');glassUI();
   cam.z=homeZ();centerOn(CX*TS,CY*TS);$('#title').hidden=true;$('#maps').hidden=true;started=true;stageMusic();showUI(true);if(!WD&&S.flags&&S.flags.ret1===1){S.flags.ret1=2;(S.sevQ||(S.sevQ=[])).push('ret')}}
 
 
 /* ---------- マップ選択 ---------- */
-const LIVE=[null,null];/* ステージごとのセーブ */
+const LIVE=[null,null];
+function stageInfo(w){
+  const live=LIVE[w];if(live&&!live.summary)return live;
+  const raw=KV.getItem(SAVE_KEYS[w]);if(!raw)return null;
+  // 旧セーブもマップ配列をJSON展開せず、選択画面に必要な項目だけ拾う。
+  const flag=k=>new RegExp('"'+k+'"\\s*:\\s*true').test(raw);
+  const lv=raw.match(/"lv"\s*:\s*(\d+)/);
+  return {summary:true,world:w,introSeen:flag('introSeen'),cleared:flag('cleared'),bulk:flag('bulk'),stamps:flag('stamps'),lv:lv?+lv[1]:1,res:[]};
+}
+function loadStage(w){if(LIVE[w]&&!LIVE[w].summary)return LIVE[w];return LIVE[w]=load(w)}
+function refreshStageInfo(){for(const w of[0,1,FREE])if(!LIVE[w]||LIVE[w].summary)LIVE[w]=stageInfo(w)}
+/* ステージごとのセーブ */
 /* ステージは属性の数だけ（木・火・水・土・風）と、さいごの庭 */
 function freeCard(list){if(!(LIVE[0]&&LIVE[0].cleared))return;let told=false;try{told=KV.getItem('hakoniwa-freeTold')==='1'}catch(e){}if(!told){try{KV.setItem('hakoniwa-freeTold','1')}catch(e){}setTimeout(()=>toast('フリーモードが解放されました！','good'),400)}
   const L=LIVE[FREE],k=FREE,card=el(`<div class="wcard open"><canvas width="760" height="280"></canvas><div class="wb"><span class="wn">FREE MODE</span><h3>フリーモード</h3><p></p><div class="wbtns"></div></div></div>`);
-  card.querySelector('p').textContent=L&&L.introSeen?'せいれい '+L.res.length+'人・村レベル '+L.lv+(L.cleared?'・お祭りをひらいた！':''):'自然の力が弱く、災いもほとんどない、しずかな土地。のんびり、自分だけの村をつくろう。';
+  card.querySelector('p').textContent=L&&L.introSeen?(L.summary?'':'せいれい '+L.res.length+'人・')+'村レベル '+L.lv+(L.cleared?'・お祭りをひらいた！':''):'自然の力が弱く、災いもほとんどない、しずかな土地。のんびり、自分だけの村をつくろう。';
   const bt=card.querySelector('.wbtns');
   if(L&&L.introSeen){const c=el('<button class="btn pri">つづきから</button>');c.onclick=()=>{sfx('tap');$('#maps').hidden=true;continueGame(L)};bt.appendChild(c);
     const n=el('<button class="btn">はじめから</button>');n.onclick=()=>{if(n.dataset.ok){$('#maps').hidden=true;newGame(k)}else{n.dataset.ok=1;n.textContent='データを消してはじめる（もう一度タップ）';n.style.borderColor='var(--danger)'}};bt.appendChild(n)}
@@ -5060,6 +5071,7 @@ function thumb(cv2,k,open){
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
 function showMaps(){
+  refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
   const list=$('#mList');list.innerHTML='';freeCard(list);
   WORLDS.forEach((wd,k)=>{if(k===FREE)return;
@@ -5069,7 +5081,7 @@ function showMaps(){
     const card=el(`<div class="wcard${open?' open':' lock'}"><canvas width="760" height="280"></canvas><div class="wb"><span class="wn"></span><h3></h3><p></p><div class="wbtns"></div></div></div>`);
     card.querySelector('.wn').textContent=wd.sub;card.querySelector('h3').textContent=wd.name;
     let info=wd.desc;
-    if(k<=1&&L&&L.introSeen)info='せいれい '+L.res.length+'人・村レベル '+L.lv+(L.cleared?'・ヌシ様が帰ってきた！':'');
+    if(k<=1&&L&&L.introSeen)info=(L.summary?'':'せいれい '+L.res.length+'人・')+'村レベル '+L.lv+(L.cleared?'・ヌシ様が帰ってきた！':'');
     else if(k===1&&!open)info='はじまりの草原でヌシ様をむかえると、ひらきます。';
     if(k===2)info=LIVE[1]&&LIVE[1].cleared?'道がひらいた！ …けれど、まだ準備中。':'まえの土地でヌシ様をむかえると、ひらきます。';
     if(k>=3)info=k===5?'？？？':'まえの土地でヌシ様をむかえると、ひらきます。';
@@ -5167,6 +5179,7 @@ function updTut(){
 function frame(now){
   if(!running)return;requestAnimationFrame(frame);
   const menuOpen=!$('#title').hidden||!$('#maps').hidden;
+  if(!S){last=now;return}
   if(now-(frame.lr||0)<(menuOpen?125:31))return;frame.lr=now;/* タイトルは静止画なので8コマ/秒。ゲーム中は30コマ/秒 */
   if(now-(frame.tutT||0)>120){frame.tutT=now;try{palArrows();updTut()}catch(e){}}
   const rdt=Math.min(.25,(now-last)/1000);last=now;
@@ -5215,9 +5228,8 @@ $('#cYes').onclick=confirmYes;$('#cNo').onclick=()=>{pending=null;selRect=null;$
 
 /* ---------- 起動 ---------- */
 resize();
-const saved=load(0);
-LIVE[0]=saved;LIVE[1]=load(1);LIVE[FREE]=load(FREE);S=saved||newState();if(saved){S.res.forEach(r=>{r.act=null;r.path=[];delete r.jumpT});ensureStor(S)}recount();showUI(false);$('#app').classList.add('ready');
-KV.onCloud(()=>{if(started)return;setTimeout(()=>{if(!started&&!$('#maps').hidden)showMaps()},0);const sv=load(0);if(!sv)return;LIVE[0]=sv;LIVE[1]=load(1);LIVE[FREE]=load(FREE);S=sv;S.res.forEach(r=>{r.act=null;r.path=[];delete r.jumpT});ensureStor(S);recount();dirty=true;try{rebuildStatic()}catch(e){}});/* 共有URLではクラウドのセーブを読みこむ */
+showUI(false);$('#app').classList.add('ready');
+KV.onCloud(()=>{if(started)return;if(!$('#maps').hidden)showMaps()});
 requestAnimationFrame(frame);
 window.__game={get doSummon(){return doSummon},get pinkPrompts(){return {...SEVW}},checkSev,sevTalk,get RECIPES(){return RECIPES},subTalk,get stat(){return stat},walk,hour,nushiReturns,centerOn,rebuild(){rebuildStatic()},get cam(){return cam},get avoidPath(){return avoidPath},get bfs(){return bfs},get moveR(){return moveR},get sepRes(){return sepRes},get pathTo(){return pathTo},dialog,get drawObj(){return drawObj},get drawFloor(){return drawFloor},get drawShade(){return drawShade},set ICON(v){ICON=v},openSheet,get S(){return S},stepWorld,place,spawnWave,waveFor,checkLevel,checkQuest,newGame,orderFurn,recount,get ATTR(){return ATTR},get BASEPCT(){return BASEPCT}};
 })();
