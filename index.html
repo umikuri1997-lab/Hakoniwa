@@ -5014,9 +5014,10 @@ function startPrologue(){
   $('#proSkip').onclick=end;show();
 }
 function arrive(){
-  /* 長いカメラ移動をやめて、会話の開始位置へすぐ移る。 */
-  camAnim=null;cam.z=homeZ();centerOn(CX*TS,(CY-3)*TS);S.godShown=true;burst(Math.floor(godY())*W+Math.floor(godX()),'furn');sfx('poof');
-  setTimeout(()=>{started=true;showUI(true);S.introSeen=true;dialog(WD===FREE?INTROFL():INTROS[WD],()=>save())},500);
+  /* はじめての村へ降りるカメラズームは残す。タイトルの背景描画とは別の演出。 */
+  camAnim={fz:cam.z,tz:homeZ(),fx:cam.x+VW/cam.z/2,fy:cam.y+VH/cam.z/2,tx:CX*TS,ty:(CY-3)*TS,t:0,dur:2.2,done:()=>{
+    S.godShown=true;burst(Math.floor(godY())*W+Math.floor(godX()),'furn');sfx('poof');
+    setTimeout(()=>{started=true;showUI(true);S.introSeen=true;dialog(WD===FREE?INTROFL():INTROS[WD],()=>save())},500)}};
 }
 function continueGame(saved){setWorld(saved.world||0);S=saved;LIVE[WD]=S;ensureStor(S);syncTools(S);dirty=true;closeSheet();S.res.forEach(r=>{r.act=null;r.path=[]});S.orders.forEach(o=>o.worker=null);recount();renderQuest();applyFeats();setMode('look');glassUI();
   cam.z=homeZ();centerOn(CX*TS,CY*TS);$('#title').hidden=true;$('#maps').hidden=true;started=true;showUI(true);if(!WD&&S.flags&&S.flags.ret1===1){S.flags.ret1=2;(S.sevQ||(S.sevQ=[])).push('ret')}}
