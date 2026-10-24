@@ -1,6 +1,6 @@
 # はこにわ暮らし
 
-[ゲームを開く](https://umikuri1997-lab.github.io/Hakoniwa/)
+[ゲームを開く](https://umikuri1997-lab.github.io/Hakoniwa/index.html)
 
 GitHub Pagesで公開しています。mainブランチへの更新時に `.github/workflows/pages.yml` が実行され、静的サイトを公開します。
 
