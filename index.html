@@ -3702,7 +3702,7 @@ function rebuildStatic(){findHouses();
   sc.save();sc.strokeStyle='rgba(255,240,180,.6)';sc.setLineDash([6,6]);sc.lineWidth=2;sc.strokeRect((CX-r)*TS+1,(CY-r)*TS+1,2*r*TS-2,2*r*TS-2);sc.restore();
   // 固定物も、アニメーションする物と同じ足元の奥行きで並べる。
   const fixed=[];
-  for(let y=0;y<H;y++)for(let x=0;x<W;x++){const i=y*W+x,o=S.obj[i];if(!o||o==='part'||!BL[o]||BL[o].dyn||BL[o].anim)continue;fixed.push({i,o,k:objectDepth(o,i),t:BL[o].kind==='block'?0:1})}
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++){const i=y*W+x,o=S.obj[i];if(!o||o==='part'||!BL[o]||BL[o].dyn||BL[o].anim||TREES.has(o))continue;fixed.push({i,o,k:objectDepth(o,i),t:BL[o].kind==='block'?0:1})}
   fixed.sort((a,b)=>a.k-b.k||a.t-b.t||a.i-b.i);
   for(const {i,o}of fixed)drawObj(sc,o,(i%W)*TS,((i/W)|0)*TS,i);
   dirty=false;
@@ -4283,14 +4283,14 @@ function render(now){
   for(const e of S.enemies)if(vis(e)){const s=EN[e.type].size||1,px=e.x*TS,fy=e.y*TS;add(e.y,2,[px-24*s,fy-56*s-10,px+24*s,fy+15],()=>drawEnemy(e,now),(e.y|0)*W+(e.x|0))}
   if(godHere()){const GX=godX(),GY=godY(),px=GX*TS,py=GY*TS,onA=STATUE>=0&&S.obj[STATUE+W]==='altar';add(onA?((STATUE/W)|0)+1.02:GY+.5,onA?1.5:2,/* 神殿の柱とお供え箱より手前 */[px-36,py-64,px+36,py+24],()=>drawGod(now),(GY|0)*W+(GX|0))}
   if(S.nushi){const n=S.nushi,px=n.x*TS,py=n.y*TS;add(n.y+.2,2,[px-100,py-150,px+100,py+20],()=>drawNushi(now),-1)}
-  for(let y=Math.max(0,y0-2);y<Math.min(H,y1+4);y++)for(let x=x0;x<x1;x++){const i=y*W+x,o=S.obj[i];if(!o||o==='part'||!BL[o]||S.ground[i]===1&&o!=='lotus'&&o!=='sprout'||!(BL[o].dyn||BL[o].anim))continue;
+  for(let y=Math.max(0,y0-2);y<Math.min(H,y1+4);y++)for(let x=x0;x<x1;x++){const i=y*W+x,o=S.obj[i];if(!o||o==='part'||!BL[o]||S.ground[i]===1&&o!=='lotus'&&o!=='sprout'||!(BL[o].dyn||BL[o].anim||TREES.has(o)))continue;
     add(objectDepth(o,i),BL[o].kind==='block'?0:1,objBox(o,i),()=>drawObj(ctx,o,x*TS,y*TS,i,S.dyn[i]?(S.dyn[i].g!=null?S.dyn[i].g:S.dyn[i].p):0,now),i)}
   for(const h of HOUSES){let bot=0,ib=0;for(const j of h.set)bot=Math.max(bot,(j/W)|0);for(const j of h.inside)ib=Math.max(ib,(j/W)|0);if(bot<y0-1||h.y0>y1+1||h.x1<x0-1||h.x0>x1+1)continue;
     add(ib+1.5,3,[h.x0*TS-6,h.y0*TS-40,(h.x1+1)*TS+6,(ib+1)*TS+12],()=>drawRoofs(ctx,now,[h]),-1);D[D.length-1].hs=h.set}/* 屋根は家ごとにひとまとまり。その家の壁は屋根の上に描き直さない *//* 屋根は、横の壁より後・手前の壁より先に描く */
   // 手前にある止まっている物を、重なる範囲だけ描き直す
   const occ=[];
   for(const A of D){const[bx0,by0,bx1,by1]=A.box;const cx0=Math.max(0,Math.floor(bx0/TS)-3),cx1=Math.min(W-1,Math.floor(bx1/TS)+3),ry0=Math.max(0,Math.floor(A.k)-1),ry1=Math.min(H-1,Math.floor(A.k)+6);
-    for(let y=ry0;y<=ry1;y++)for(let x=cx0;x<=cx1;x++){const j=y*W+x,o=S.obj[j];if(!o||o==='part'||!BL[o]||FLAT.has(o)||BL[o].floor||BL[o].dyn||BL[o].anim||S.ground[j]===1)continue;if(A.hs&&A.hs.has(j))continue;if(j===A.own&&!(TREES.has(o)||BIG2.has(o)||BL[o].kind==='build'))continue;/* 自分が乗っている低い物（いすなど）はとばす。木や神殿など背の高い物は、同じマスでも奥なら前に出す */
+    for(let y=ry0;y<=ry1;y++)for(let x=cx0;x<=cx1;x++){const j=y*W+x,o=S.obj[j];if(!o||o==='part'||!BL[o]||FLAT.has(o)||BL[o].floor||BL[o].dyn||BL[o].anim||TREES.has(o)||S.ground[j]===1)continue;if(A.hs&&A.hs.has(j))continue;if(j===A.own&&!(TREES.has(o)||BIG2.has(o)||BL[o].kind==='build'))continue;/* 自分が乗っている低い物（いすなど）はとばす。木や神殿など背の高い物は、同じマスでも奥なら前に出す */
       const z=BL[o].sz||[1,1],k=objectDepth(o,j);if(k<=A.k)continue;if(A.own>=0&&y+z[1]-1===((A.own/W)|0)&&(x+z[0]<=A.own%W||x>A.own%W)&&!(TREES.has(o)||BIG2.has(o)||BL[o].kind==='build'))continue;/* 同じ列のとなりのマスの物（ベッドなど）のはみ出しは、上にかぶせない */const b=objBox(o,j);if(b[2]<=bx0||b[0]>=bx1||b[3]<=by0||b[1]>=by1)continue;
       const cl=[Math.max(b[0],bx0),Math.max(b[1],by0),Math.min(b[2],bx1),Math.min(b[3],by1)];
       occ.push({k,t:BL[o].kind==='block'?0:1,clip:cl,draw:()=>{NOSH=true;try{drawObj(ctx,o,x*TS,y*TS,j)}finally{NOSH=false}}})}}
