@@ -2412,6 +2412,9 @@ SUBQ.forEach(q=>{const T=THX[q.k],X=q.X;if(!T||!X||!X.length)return;if(/あり�
 for(const k in THXB)if(FIREB[k])FIREB[k].X.push(['K',THXB[k]]);
 function inHouseFurn(){let n=0;for(let j=0;j<S.obj.length;j++){const o=S.obj[j];if(!o||!BL[o]||BL[o].kind!=='furn'||BL[o].trap)continue;if(HOUSES.some(h=>h.set&&h.set.has(j)))n++}return n}
 function qAt(t){const qi=QUESTS.findIndex(q=>q.text===t);if(qi<0)return false;const h=S.questOrder35;return h?!!(h.done[t]||h.accepted[t]||S.quest===qi&&S.qTalked):(S.quest>qi||S.quest===qi&&!!S.qTalked)}/* そのメインクエストを受けたあと */
+function qDone(text){const index=QUESTS.findIndex(q=>q.text===text);if(index<0)return false;if(S.qStory===index)return false;return S.questOrder35?!!S.questOrder35.done[text]:S.quest>index}
+const SUB_MAIN_AFTER={chair2:'食卓をたのもう',farm10:'畑を6つにしよう',bed3:'火のせいれいをむかえよう',light3:'火のせいれいをむかえよう',oven:'火のせいれいをむかえよう'};
+function subOfferReady(q){if(S.qStory!=null||QUEST_CLEAR_WAIT)return false;return WD!==0||!SUB_MAIN_AFTER[q.k]||qDone(SUB_MAIN_AFTER[q.k])}
 const LEVEL_HELP={2:['benchbreak','chair2'],3:['oven','bed3'],4:['jar2','farm10'],5:['toy2','deco3'],8:['room','paint','parasol']};
 function levelHelpKeys(){const out=[];for(const n in LEVEL_HELP){const main=qAt('村レベルを'+n+'にしよう'),side=SUBQ.some(q=>q.k.startsWith('lv_')&&q.n===+n&&(S.subSt||{})[q.k]>=2);if(main||side)out.push(...LEVEL_HELP[n])}return out}
 function subList(){const help=levelHelpKeys();if(waitingBellflowers())help.unshift('seedwait_gate','seedwait_planter','seedwait_food');return SUBQ.filter(q=>q.w==null||q.w===WD).sort((a,b)=>(help.includes(a.k)?0:1)-(help.includes(b.k)?0:1))}
@@ -2425,7 +2428,7 @@ function keyName(el){const N=S.keyN||(S.keyN={});/* 5属性のキーキャラ：
 function subWho(q){return keyName(q.g)}
 function checkSub(){const D=S.subDone||(S.subDone={}),Sn=S.subSeen||(S.subSeen={}),St=S.subSt||(S.subSt={});S.subB||(S.subB={});SUBW={};
   const busy={};
-  for(const q of subList()){if(D[q.k])continue;if(Sn[q.k]&&!St[q.k])St[q.k]=2;
+  for(const q of subList()){if(D[q.k])continue;if(St[q.k]===1&&!subOfferReady(q))delete St[q.k];if(Sn[q.k]&&!St[q.k])St[q.k]=2;
     if(St[q.k]===3&&FLOWER_QUESTS.has(q.k)&&!q.ok()){St[q.k]=2;delete (S.subArrived||{})[q.k];delete SUB_CLEAR_WAIT[q.k]}
     if(St[q.k]===3&&!(S.subArrived||{})[q.k]&&!SUB_CLEAR_WAIT[q.k]){const visit=queueQuestVisit(q,subWho(q));if(visit){St[q.k]=2;SUB_CLEAR_WAIT[q.k]=Object.assign({done:false},visit)}}/* 前からの人：もう受けている */
     if(St[q.k]===2&&q.ok()){let wait=SUB_CLEAR_WAIT[q.k];if(wait&&!wait.done&&S.obj[wait.obj]!==wait.id){delete SUB_CLEAR_WAIT[q.k];wait=null}
@@ -2434,11 +2437,11 @@ function checkSub(){const D=S.subDone||(S.subDone={}),Sn=S.subSeen||(S.subSeen={
     if(St[q.k])busy[q.g]=busy[q.g]&&!(St[q.k]===3&&St[busy[q.g].k]!==3)?busy[q.g]:q}/* 終わったクエストの報告を先に出す *//* その子から受けたクエストが終わるまで、次は出ない */
   /* サブクエストは一つずつ提示。会話のあいだを村の時間で2時間あける */
   const spaced=S.subTalkAt==null||S.t-S.subTalkAt>=120;
-  if(spaced&&!Object.values(busy).some(q=>!q.k.startsWith('lv_')||St[q.k]!==2))for(const q of subList()){if(D[q.k]||St[q.k])continue;if(Object.keys(busy).length&&!levelHelpKeys().includes(q.k))continue;const w=keyName(q.g);if(!w||!q.at())continue;St[q.k]=1;busy[q.g]=q;break}
-  if(spaced&&waitingBellflowers()&&!subList().some(q=>St[q.k]===1||St[q.k]===3)&&subList().filter(q=>St[q.k]===2).length<3){const next=subList().find(q=>q.k.startsWith('seedwait_')&&!D[q.k]&&!St[q.k]&&q.at());if(next)St[next.k]=1}
+  if(spaced&&!Object.values(busy).some(q=>!q.k.startsWith('lv_')||St[q.k]!==2))for(const q of subList()){if(D[q.k]||St[q.k])continue;if(Object.keys(busy).length&&!levelHelpKeys().includes(q.k))continue;const w=keyName(q.g);if(!w||!q.at()||!subOfferReady(q))continue;St[q.k]=1;busy[q.g]=q;break}
+  if(spaced&&waitingBellflowers()&&!subList().some(q=>St[q.k]===1||St[q.k]===3)&&subList().filter(q=>St[q.k]===2).length<3){const next=subList().find(q=>q.k.startsWith('seedwait_')&&!D[q.k]&&!St[q.k]&&q.at());if(next&&subOfferReady(next))St[next.k]=1}
   const pending=subList().filter(q=>St[q.k]===3).concat(spaced?subList().filter(q=>St[q.k]===1):[]);
   for(const q of pending){const w=St[q.k]===3?questReplyWho(q):subWho(q);if(w&&spkOK(w)&&w!==TALKW){SUBW[w]=q.k;break}}}
-function subTalk(k){const q=SUBQ.find(q=>q.k===k),St=S.subSt,D=S.subDone;if(!q||!$('#dialog').hidden)return;S.subTalkAt=S.t;const w=subWho(q)||POKO,L=(St[k]===1?q.L:q.X)||[[w,q.t]];
+function subTalk(k){const q=SUBQ.find(q=>q.k===k),St=S.subSt,D=S.subDone;if(!q||!$('#dialog').hidden||St[k]===1&&!subOfferReady(q))return;S.subTalkAt=S.t;const w=subWho(q)||POKO,L=(St[k]===1?q.L:q.X)||[[w,q.t]];
   const rw=S.res.find(z=>z.name===w),FB2=q.g==='fire'&&rw&&elemKey(rw)==='fireB'&&FIREB[k];let once=0;dialog(ideaDialogue(q,(FB2?(St[k]===1?FB2.L:FB2.X):L).map(x=>[x[0]==='K'?w:x[0],x[1]]),St[k]===1?'accept':'clear'),()=>{if(once++)return;
     if(St[k]===1){St[k]=2;Sn0(k);if(q.base)S.subB[k]=q.base();for(const id of q.learn||[])S.recipes[id]=true;inspireQuest(q);for(const x in q.give||{}){S.unlocked[x]=true;giveItem(x,q.give[x])}queueItemGift(q.give);sfx('quest');toast('サブクエスト：'+q.t,'good');renderPalette()}
     else if(St[k]===3){St[k]=4;D[k]=1;inspireQuest(q,'clear');if(q.rw){S.pt+=q.rw;S.totalPt+=q.rw;toast('ごほうび：パワー+'+q.rw,'good')}memo('📌','サブクエスト「'+q.t+'」をたっせい');logEv('サブクエスト「'+q.t+'」をたっせい')}
