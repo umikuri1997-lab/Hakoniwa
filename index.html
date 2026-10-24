@@ -4387,7 +4387,7 @@ function onTap(sx,sy){
 /* ---------- おと（BGM・効果音はWeb Audioで鳴らすオリジナル） ---------- */
 const SND={bgm:true,sfx:true};try{Object.assign(SND,JSON.parse(KV.getItem('hakoniwa-sound')||'{}'))}catch(e){}
 const saveSnd=()=>{try{KV.setItem('hakoniwa-sound',JSON.stringify(SND))}catch(e){}};
-let bgmF=null,bgmSw=0,AC=null,bgmG=null,sfxG=null,noiseBuf=null,curSong='day',wantSong='day',nextT=0,step=0;
+let bgmF=null,bgmSw=0,AC=null,bgmG=null,sfxG=null,noiseBuf=null,samplesStarted=false,curSong='day',wantSong='day',nextT=0,step=0;
 const mf=m=>440*Math.pow(2,(m-69)/12);
 // [音, 長さ(8分音符)]。0は休み
 const SONGS={
@@ -4421,14 +4421,14 @@ let WAVE=null;/* 水浴びの音は1つだけ。水浴びが終わったら止�
 function playWave(vol){if(WAVE||!AC)return;const L=(SBUF.wave||[]).filter(Boolean);if(!L.length)return;const src=AC.createBufferSource(),g=AC.createGain();src.buffer=pick(L);g.gain.value=vol*SFXV;src.connect(g);g.connect(sfxG);const w={src,g};src.onended=()=>{if(WAVE===w)WAVE=null};WAVE=w;src.start()}
 function stopWave(){if(!WAVE)return;const{src,g}=WAVE;WAVE=null;try{g.gain.setTargetAtTime(0,AC.currentTime,.12);src.stop(AC.currentTime+.5)}catch(e){}}
 function playS(k,vol){const L=(SBUF[k]||[]).filter(Boolean);if(!L.length)return false;const src=AC.createBufferSource(),g=AC.createGain();src.buffer=pick(L);src.playbackRate.value=.92+Math.random()*.16;g.gain.value=vol*SFXV;src.connect(g);g.connect(sfxG);src.start();return true}
-function audioInit(){
-  if(AC){if(AC.state==='suspended')AC.resume().catch(()=>{});return}
+function audioInit(withSamples=true){
+  if(AC){if(AC.state==='suspended')AC.resume().catch(()=>{});if(withSamples&&!samplesStarted){samplesStarted=true;loadSamples()}return}
   try{AC=new (window.AudioContext||window.webkitAudioContext)();if(AC.state==='suspended')AC.resume().catch(()=>{})}catch(e){return}
   const comp=AC.createDynamicsCompressor();comp.connect(AC.destination);
   bgmG=AC.createGain();bgmG.gain.value=gainB();bgmF=AC.createGain();bgmF.gain.value=1;bgmG.connect(bgmF);bgmF.connect(comp);
   sfxG=AC.createGain();sfxG.gain.value=gainS();sfxG.connect(comp);
   noiseBuf=AC.createBuffer(1,AC.sampleRate*.3,AC.sampleRate);const d=noiseBuf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;
-  nextT=AC.currentTime+.15;setInterval(sched,60);setInterval(ambTick,500);loadSamples();
+  nextT=AC.currentTime+.15;setInterval(sched,60);setInterval(ambTick,500);if(withSamples){samplesStarted=true;loadSamples()}
 }
 function tone(m,t,dur,type,vol,out,f2){
   const o=AC.createOscillator(),g=AC.createGain();o.type=type;o.frequency.setValueAtTime(typeof m==='number'&&m<200?mf(m):m,t);
@@ -5211,6 +5211,8 @@ resize();
 const saved=load(0);
 LIVE[0]=saved;LIVE[1]=load(1);LIVE[FREE]=load(FREE);S=saved||newState();if(saved){S.res.forEach(r=>{r.act=null;r.path=[];delete r.jumpT});ensureStor(S)}recount();showUI(false);$('#app').classList.add('ready');
 KV.onCloud(()=>{if(started)return;setTimeout(()=>{if(!started&&!$('#maps').hidden)showMaps()},0);const sv=load(0);if(!sv)return;LIVE[0]=sv;LIVE[1]=load(1);LIVE[FREE]=load(FREE);S=sv;S.res.forEach(r=>{r.act=null;r.path=[];delete r.jumpT});ensureStor(S);recount();dirty=true;try{rebuildStatic()}catch(e){}});/* 共有URLではクラウドのセーブを読みこむ */
+/* 起動したらまずオープニング曲を再生。自動再生を許さないブラウザでは最初のタップで再開し、効果音の読込もその時まで遅らせる。 */
+curSong=wantSong='opening';step=0;audioInit(false);
 requestAnimationFrame(frame);
 window.__game={get doSummon(){return doSummon},get pinkPrompts(){return {...SEVW}},checkSev,sevTalk,get RECIPES(){return RECIPES},subTalk,get stat(){return stat},walk,hour,nushiReturns,centerOn,rebuild(){rebuildStatic()},get cam(){return cam},get avoidPath(){return avoidPath},get bfs(){return bfs},get moveR(){return moveR},get sepRes(){return sepRes},get pathTo(){return pathTo},dialog,get drawObj(){return drawObj},get drawFloor(){return drawFloor},get drawShade(){return drawShade},set ICON(v){ICON=v},openSheet,get S(){return S},stepWorld,place,spawnWave,waveFor,checkLevel,checkQuest,newGame,orderFurn,recount,get ATTR(){return ATTR},get BASEPCT(){return BASEPCT}};
 })();
