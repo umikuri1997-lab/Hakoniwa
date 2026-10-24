@@ -2440,7 +2440,10 @@ function checkSub(){const D=S.subDone||(S.subDone={}),Sn=S.subSeen||(S.subSeen={
   const spaced=S.subTalkAt==null||S.t-S.subTalkAt>=120;
   if(spaced&&!Object.values(busy).some(q=>!q.k.startsWith('lv_')||St[q.k]!==2))for(const q of subList()){if(D[q.k]||St[q.k])continue;if(Object.keys(busy).length&&!levelHelpKeys().includes(q.k))continue;const w=keyName(q.g);if(!w||!q.at()||!subOfferReady(q))continue;St[q.k]=1;busy[q.g]=q;break}
   if(spaced&&waitingBellflowers()&&!subList().some(q=>St[q.k]===1||St[q.k]===3)&&subList().filter(q=>St[q.k]===2).length<3){const next=subList().find(q=>q.k.startsWith('seedwait_')&&!D[q.k]&&!St[q.k]&&q.at());if(next&&subOfferReady(next))St[next.k]=1}
-  const pending=subList().filter(q=>St[q.k]===3).concat(spaced?subList().filter(q=>St[q.k]===1):[]);
+  const fireHelp=WD===0&&S.qStory==null&&S.qTalked&&QUESTS[S.quest]?.text==='火のせいれいをむかえよう',supportKeys=fireHelp?['salvia3','watch2']:[];
+  for(const k of supportKeys){if(D[k]||St[k])continue;const q=subList().find(q=>q.k===k);if(!q||!q.at()||!subOfferReady(q)||!keyName(q.g))continue;if(k==='salvia3'||spaced){St[k]=1;break}}
+  const requests=subList().filter(q=>St[q.k]===1&&(spaced||fireHelp&&q.k==='salvia3'));
+  const pending=requests.filter(q=>supportKeys.includes(q.k)).concat(subList().filter(q=>St[q.k]===3),requests.filter(q=>!supportKeys.includes(q.k)));
   for(const q of pending){const w=St[q.k]===3?questReplyWho(q):subWho(q);if(w&&spkOK(w)&&w!==TALKW){SUBW[w]=q.k;break}}}
 function subTalk(k){const q=SUBQ.find(q=>q.k===k),St=S.subSt,D=S.subDone;if(!q||!$('#dialog').hidden||St[k]===1&&!subOfferReady(q))return;S.subTalkAt=S.t;const w=subWho(q)||POKO,L=(St[k]===1?q.L:q.X)||[[w,q.t]];
   const rw=S.res.find(z=>z.name===w),FB2=q.g==='fire'&&rw&&elemKey(rw)==='fireB'&&FIREB[k];let once=0;dialog(ideaDialogue(q,(FB2?(St[k]===1?FB2.L:FB2.X):L).map(x=>[x[0]==='K'?w:x[0],x[1]]),St[k]===1?'accept':'clear'),()=>{if(once++)return;
