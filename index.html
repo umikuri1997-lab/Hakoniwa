@@ -2621,7 +2621,7 @@ function questVisitTarget(q,ids,j){const o=S.obj[j];if(!o||o==='part'||!BL[o])re
   return true;
 }
 function queueQuestVisit(q,who,partIds,partKey){const ids=partIds||(q.k?QUEST_VISIT_SUB[q.k]:QUEST_VISIT_MAIN[q.text]);if(!ids)return null;
-  const r=S.res.find(r=>r.name===who)||S.res.find(r=>r.name===(q.talk&&q.talk.who))||S.res.find(r=>!r.hidden);if(!r)return;
+  const r=S.res.find(r=>r.name===who)||S.res.find(r=>r.name===(q.talk&&q.talk.who))||S.res.find(r=>(q.story||[]).some(line=>line[0]===r.name))||S.res.find(r=>!r.hidden)||S.res[0];if(!r)return;
   const recent=QUEST_PLACEMENTS.get(S);let target=-1,best=-Infinity;
   for(let j=0;j<S.obj.length;j++){if(!questVisitTarget(q,ids,j))continue;const last=recent&&recent.get(j),score=(last&&last.id===S.obj[j]?last.n*100000:0)-Math.hypot(j%W+.5-r.x,(j/W|0)+.5-r.y);if(score>best){best=score;target=j}}
   if(target<0)return null;
@@ -2643,7 +2643,7 @@ function questVisitReached(r,j){const b=BL[S.obj[j]],z=b&&b.sz||[1,1],x=j%W,y=(j
 function tryQuestVisit(r){const list=QUEST_VISITS.get(r);if(!list||!list.length||r.act&&r.act.type==='questjoy')return false;
   const v=list[0];if(S.obj[v.obj]!==v.id){list.shift();return false}
   if(r.hidden||r.hunger<20||onHold(r)||HOLD.has(r.id)||!questVisitSafe(r,v.obj))return false;
-  if(r.act&&['eat','fetch','flee','faint'].includes(r.act.type))return false;
+  if(r.act&&(['eat','fetch','flee','faint'].includes(r.act.type)||r.act.type==='sleep'&&r.act.stage==='do'))return false;
   const G=bfs(r.x|0,r.y|0),stand=questVisitStand(r,G,v.obj);if(stand<0)return false;list.shift();
   endAct(r);startAct(r,G,'questjoy',stand,{obj:v.obj,targetId:v.id,partKey:v.partKey});return true;
 }
