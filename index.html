@@ -2587,7 +2587,7 @@ function syncQuestRecipes(s){if(s.qVer===34&&(s.world||0)===0)migrateQuest35(s);
 /* クエスト達成の喜び：経路で対象のそばへ行く。会話や進行は自動で開かない。 */
 const QUEST_VISIT_MAIN={"神殿を建ててもらおう": ["statue"], "食料箱を置こう": ["stor"], "素材箱を置こう": ["mbox"], "食卓をたのもう": ["table"], "家の壁を直そう": ["hwall", "door"], "家にベッドを置こう": ["bed"], "柵を4つ置こう": ["fence"], "見張り台ととげの罠を置こう": ["watch", "spike"], "ききょうを植えて、土の力をためよう": ["bellf"], "畑を6つにしよう": ["farm"], "畑にたねをまこう": ["farm"], "守護の台座を建ててもらおう": ["tower"], "フタバのおねがい：花を10こさかせよう": ["flower", "clover", "bellf", "salvia", "lily", "lotus"], "温泉をよみがえらせよう": ["hotstone"], "シズクのおねがい：温泉のそばに休憩所を作ろう": ["bench", "tub"], "第1話 はじめての居場所：家とベッド2つ": ["hwall", "door", "bed"], "第2話 みんなの好きなもの：花10・食卓・遊び道具": ["flower", "clover", "bellf", "salvia", "lily", "lotus", "table", "swing", "sandbox"], "第4話 ここが好き！：噴水の広場": ["fountain"], "最終話 みんなのふるさと：たき火とせいれい6人": ["campfire"]};
 const QUEST_VISIT_SUB={"chair2": ["chair", "stool", "chair2", "achair", "bench", "pouf", "sofa1"], "bed3": ["bed"], "light3": ["candle", "lantern", "flamp", "torch", "lamp", "stonelamp", "campfire"], "houselight": ["candle", "lantern", "flamp"], "oven": ["oven"], "salvia3": ["salvia"], "watch2": ["watch"], "lotus3": ["lotus"], "lily5": ["lily"], "wmill": ["windmill"], "clover3": ["clover"], "toy2": ["swing", "sandbox"], "deco3": ["planter", "hedge", "birdhouse", "birdbath", "parasol", "arch", "signpost", "monstera"], "tree5": ["tree", "fruit"], "farm10": ["farm"], "house2": ["hwall", "door"], "room": ["@furniture"], "paint": ["@painting"], "trap4": ["spike", "sticky", "puddle", "firetrap", "gust"], "jar2": ["jar"], "parasol": ["parasol"]};
-const QUEST_PLACEMENTS=new WeakMap(),QUEST_VISITS=new WeakMap();let questPlaceSerial=0,QUEST_CLEAR_WAIT=null,SUB_CLEAR_WAIT={};const questGuideBlocked=()=>!!QUEST_CLEAR_WAIT||Object.keys(SUB_CLEAR_WAIT).some(k=>!!SUB_CLEAR_WAIT[k])||Object.keys(SUBW).length>0;
+const QUEST_PLACEMENTS=new WeakMap(),QUEST_VISITS=new WeakMap();let questPlaceSerial=0,QUEST_CLEAR_WAIT=null,SUB_CLEAR_WAIT={};const questGuideBlocked=()=>!!QUEST_CLEAR_WAIT||Object.keys(SUB_CLEAR_WAIT).some(k=>!!SUB_CLEAR_WAIT[k])||Object.keys(SUBW).length>0;const questGuideBlockedNow=()=>questGuideBlocked()&&!(S&&QUESTS[S.quest]&&QUESTS[S.quest].text==='食卓をたのもう'&&S.qTalked);
 function noteQuestPlacement(id,j){let m=QUEST_PLACEMENTS.get(S);if(!m){m=new Map();QUEST_PLACEMENTS.set(S,m)}m.set(j,{id,n:++questPlaceSerial})}
 function questVisitTarget(q,ids,j){const o=S.obj[j];if(!o||o==='part'||!BL[o])return false;
   if(!ids.includes(o)&&!(ids.includes('@furniture')&&BL[o].kind==='furn')&&!(ids.includes('@painting')&&['paint1','paint2','paint3'].includes((S.win||{})[j])))return false;
@@ -5102,7 +5102,7 @@ function tutSpot(id){const sz=BL[id].sz||[1,1],V=tutView(),vc=[Math.floor((cam.x
 function palArrows(){const b=$('#palItems');if(!b)return;const m=b.scrollWidth-b.clientWidth;$('#palL').hidden=!(m>4&&b.scrollLeft>4);$('#palR').hidden=!(m>4&&b.scrollLeft<m-4)}
 function updTut(){
   const hand=$('#tutHand');const hide=()=>{hand.hidden=true};
-  if(!S||!$('#dialog').hidden||!$('#lvup').hidden||!$('#rlv').hidden||!$('#title').hidden||!$('#maps').hidden||!$('#pro').hidden||S.cleared||questGuideBlocked())return hide();
+  if(!S||!$('#dialog').hidden||!$('#lvup').hidden||!$('#rlv').hidden||!$('#title').hidden||!$('#maps').hidden||!$('#pro').hidden||S.cleared||questGuideBlockedNow())return hide();
   const q=QUESTS[S.quest];if(!q)return hide();const qt=q.text;
   let el=null,wp=null,lbl='ここをタップ',swipe=0;
   const placeHint=id=>{
