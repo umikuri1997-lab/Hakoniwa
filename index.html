@@ -2590,24 +2590,36 @@ function syncQuestRecipes(s){if(s.qVer===34&&(s.world||0)===0)migrateQuest35(s);
 const QUEST_VISIT_MAIN={"神殿を建ててもらおう": ["statue"], "食料箱を置こう": ["stor"], "素材箱を置こう": ["mbox"], "食卓をたのもう": ["table"], "家の壁を直そう": ["hwall", "door"], "家にベッドを置こう": ["bed"], "柵を4つ置こう": ["fence"], "見張り台ととげの罠を置こう": ["watch", "spike"], "ききょうを植えて、土の力をためよう": ["bellf"], "畑を6つにしよう": ["farm"], "畑にたねをまこう": ["farm"], "守護の台座を建ててもらおう": ["tower"], "フタバのおねがい：花を10こさかせよう": ["flower", "clover", "bellf", "salvia", "lily", "lotus"], "温泉をよみがえらせよう": ["hotstone"], "シズクのおねがい：温泉のそばに休憩所を作ろう": ["bench", "tub"], "第1話 はじめての居場所：家とベッド2つ": ["hwall", "door", "bed"], "第2話 みんなの好きなもの：花10・食卓・遊び道具": ["flower", "clover", "bellf", "salvia", "lily", "lotus", "table", "swing", "sandbox"], "第4話 ここが好き！：噴水の広場": ["fountain"], "最終話 みんなのふるさと：たき火とせいれい6人": ["campfire"]};
 const QUEST_VISIT_SUB={"benchbreak": ["bench"], "chair2": ["chair", "stool", "chair2", "achair", "bench", "pouf", "sofa1"], "bed3": ["bed"], "light3": ["candle", "lantern", "flamp", "torch", "lamp", "stonelamp", "campfire"], "houselight": ["candle", "lantern", "flamp"], "oven": ["oven"], "salvia3": ["salvia"], "watch2": ["watch"], "lotus3": ["lotus"], "lily5": ["lily"], "wmill": ["windmill"], "clover3": ["clover"], "toy2": ["swing", "sandbox"], "deco3": ["planter", "hedge", "birdhouse", "birdbath", "parasol", "arch", "signpost", "monstera"], "tree5": ["tree", "fruit"], "farm10": ["farm"], "house2": ["hwall", "door"], "room": ["@furniture"], "paint": ["@painting"], "trap4": ["spike", "sticky", "puddle", "firetrap", "gust"], "jar2": ["jar"], "parasol": ["parasol"]};
 const QUEST_PLACEMENTS=new WeakMap(),QUEST_VISITS=new WeakMap();let questPlaceSerial=0,QUEST_CLEAR_WAIT=null,SUB_CLEAR_WAIT={};const questGuideBlocked=()=>!!QUEST_CLEAR_WAIT||Object.keys(SUB_CLEAR_WAIT).some(k=>!!SUB_CLEAR_WAIT[k])||Object.keys(SUBW).length>0;const questGuideBlockedNow=()=>!!QUEST_CLEAR_WAIT;const questGuideAccepted=()=>{const q=S&&QUESTS[S.quest];return !!q&&!S.cleared&&S.qStory==null&&(!q.talk||S.qTalked)};
+const QUEST_PARTS={
+  '見張り台ととげの罠を置こう':[[['watch'],()=>cnt('watch')>=1],[['spike'],()=>(S.placed.spike||0)>=2]],
+  'シズクのおねがい：温泉のそばに休憩所を作ろう':[[['bench'],()=>nearSp('bench')],[['tub'],()=>nearSp('tub')]],
+  '第1話 はじめての居場所：家とベッド2つ':[[['hwall','door'],()=>HOUSES.length>=1],[['bed'],()=>cnt('bed')>=2]],
+  '第2話 みんなの好きなもの：花10・食卓・遊び道具':[[['flower','clover','bellf','salvia','lily','lotus'],()=>flowerN()>=10],[['table'],()=>cnt('table')>=1],[['swing','sandbox'],()=>CN(TOYS4)>=1]],
+  '最終話 みんなのふるさと：たき火とせいれい6人':[[['campfire'],()=>cnt('campfire')>=1]]
+};
+function checkQuestParts(q){const parts=QUEST_PARTS[q.text];if(!parts)return;for(let i=0;i<parts.length;i++){const [ids,ready]=parts[i],partKey=(S.world||0)+':'+q.text+':'+i;if((S.questPartSeen||{})[partKey]||!ready())continue;
+  if(S.res.some(r=>r.act&&r.act.partKey===partKey||(QUEST_VISITS.get(r)||[]).some(v=>v.partKey===partKey)))continue;
+  queueQuestVisit(q,storyWho(q),ids,partKey);
+}}
 function noteQuestPlacement(id,j){let m=QUEST_PLACEMENTS.get(S);if(!m){m=new Map();QUEST_PLACEMENTS.set(S,m)}m.set(j,{id,n:++questPlaceSerial})}
 function questVisitTarget(q,ids,j){const o=S.obj[j];if(!o||o==='part'||!BL[o])return false;
   if(!ids.includes(o)&&!(ids.includes('@furniture')&&BL[o].kind==='furn')&&!(ids.includes('@painting')&&['paint1','paint2','paint3'].includes((S.win||{})[j])))return false;
   if(q.k==='bed3'||q.k==='houselight'||q.k==='room'||q.text==='家にベッドを置こう')return HOUSES.some(h=>h.inside.has(j));
+  if(q.text==='シズクのおねがい：温泉のそばに休憩所を作ろう')return nearHot(j,4);
   if(q.k==='chair2')return [-1,1,-W,W].some(d=>{const k=j+d;return k>=0&&k<W*H&&Math.abs(k%W-j%W)+Math.abs((k/W|0)-(j/W|0))===1&&S.obj[k]==='table'});
   return true;
 }
-function queueQuestVisit(q,who){const ids=q.k?QUEST_VISIT_SUB[q.k]:QUEST_VISIT_MAIN[q.text];if(!ids)return null;
+function queueQuestVisit(q,who,partIds,partKey){const ids=partIds||(q.k?QUEST_VISIT_SUB[q.k]:QUEST_VISIT_MAIN[q.text]);if(!ids)return null;
   const r=S.res.find(r=>r.name===who)||S.res.find(r=>r.name===(q.talk&&q.talk.who))||S.res.find(r=>!r.hidden);if(!r)return;
   const recent=QUEST_PLACEMENTS.get(S);let target=-1,best=-Infinity;
   for(let j=0;j<S.obj.length;j++){if(!questVisitTarget(q,ids,j))continue;const last=recent&&recent.get(j),score=(last&&last.id===S.obj[j]?last.n*100000:0)-Math.hypot(j%W+.5-r.x,(j/W|0)+.5-r.y);if(score>best){best=score;target=j}}
   if(target<0)return null;
   // メインの訪問は、未完了のサブの訪問より先に行う。中断したサブは後で再開する。
-  if(!q.k&&r.act&&r.act.type==='questjoy'&&r.act.obj!==target)endAct(r);
+  if(!q.k&&!partKey&&r.act&&r.act.type==='questjoy'&&r.act.obj!==target)endAct(r);
   const id=S.obj[target],list=(QUEST_VISITS.get(r)||[]).filter(v=>v.obj!==target||v.id!==id);
-  if(q.k)list.push({obj:target,id});else list.unshift({obj:target,id});QUEST_VISITS.set(r,list.slice(0,4));return{r,obj:target,id};
+  if(q.k||partKey)list.push({obj:target,id,partKey});else list.unshift({obj:target,id});QUEST_VISITS.set(r,list.slice(0,4));return{r,obj:target,id};
 }
-function settleQuestVisit(r,a){const waits=[];if(QUEST_CLEAR_WAIT&&QUEST_CLEAR_WAIT.r===r&&QUEST_CLEAR_WAIT.obj===a.obj)waits.push(QUEST_CLEAR_WAIT);for(const k in SUB_CLEAR_WAIT){const w=SUB_CLEAR_WAIT[k];if(w&&w.r===r&&w.obj===a.obj)waits.push(w)}if(!waits.length)return;const arrived=a.joyUntil!=null&&performance.now()>=a.joyUntil&&S.obj[a.obj]===a.targetId;
+function settleQuestVisit(r,a){const waits=[];if(QUEST_CLEAR_WAIT&&QUEST_CLEAR_WAIT.r===r&&QUEST_CLEAR_WAIT.obj===a.obj)waits.push(QUEST_CLEAR_WAIT);for(const k in SUB_CLEAR_WAIT){const w=SUB_CLEAR_WAIT[k];if(w&&w.r===r&&w.obj===a.obj)waits.push(w)}if(a.partKey&&a.joyAt==null&&S.obj[a.obj]===a.targetId){const list=QUEST_VISITS.get(r)||[];if(!list.some(v=>v.partKey===a.partKey))list.push({obj:a.obj,id:a.targetId,partKey:a.partKey});QUEST_VISITS.set(r,list)}if(!waits.length)return;const arrived=a.joyUntil!=null&&performance.now()>=a.joyUntil&&S.obj[a.obj]===a.targetId;
   for(const w of waits){if(arrived){w.done=true;if(w===QUEST_CLEAR_WAIT&&S.qStory===w.quest)QUEST_CLEAR_WAIT=null;continue}if(S.obj[a.obj]===a.targetId){const list=QUEST_VISITS.get(r)||[];if(!list.some(v=>v.obj===a.obj&&v.id===a.targetId))list.unshift({obj:a.obj,id:a.targetId});QUEST_VISITS.set(r,list)}else if(w===QUEST_CLEAR_WAIT)QUEST_CLEAR_WAIT=null;else for(const k in SUB_CLEAR_WAIT)if(SUB_CLEAR_WAIT[k]===w)delete SUB_CLEAR_WAIT[k]}}
 function questVisitSafe(r,j){if(isNight()&&S.enemyOn)return false;return !S.enemies.some(e=>e.spawned&&!e.dead&&!e.flee&&(Math.hypot(e.x-r.x,e.y-r.y)<8||Math.hypot(e.x-(j%W+.5),e.y-((j/W|0)+.5))<8))}
 function questVisitStand(r,G,j){const b=BL[S.obj[j]],z=b&&b.sz||[1,1],x=j%W,y=(j/W)|0,occupied=occTiles(r);let stand=-1,best=Infinity;
@@ -2622,9 +2634,9 @@ function tryQuestVisit(r){const list=QUEST_VISITS.get(r);if(!list||!list.length|
   if(r.hidden||r.hunger<20||onHold(r)||HOLD.has(r.id)||!questVisitSafe(r,v.obj))return false;
   if(r.act&&['eat','fetch','flee','faint'].includes(r.act.type))return false;
   const G=bfs(r.x|0,r.y|0),stand=questVisitStand(r,G,v.obj);if(stand<0)return false;list.shift();
-  endAct(r);startAct(r,G,'questjoy',stand,{obj:v.obj,targetId:v.id});return true;
+  endAct(r);startAct(r,G,'questjoy',stand,{obj:v.obj,targetId:v.id,partKey:v.partKey});return true;
 }
-ACT.questjoy={start(r,a){if(S.obj[a.obj]!==a.targetId||!questVisitReached(r,a.obj))return false;const now=performance.now();a.joyAt=now;a.joyUntil=now+2400;JOYU.set(r,a.joyUntil);JUMP.set(r,now);r.shine=now;r.bubble='😊';r.face=a.obj%W+.5>=r.x?1:-1;sfxAt('good',r.x,r.y);
+ACT.questjoy={start(r,a){if(S.obj[a.obj]!==a.targetId||!questVisitReached(r,a.obj))return false;const now=performance.now();a.joyAt=now;a.joyUntil=now+2400;if(a.partKey)(S.questPartSeen||(S.questPartSeen={}))[a.partKey]=true;JOYU.set(r,a.joyUntil);JUMP.set(r,now);r.shine=now;r.bubble='😊';r.face=a.obj%W+.5>=r.x?1:-1;sfxAt('good',r.x,r.y);
   const main=QUEST_CLEAR_WAIT;if(main&&main.r===r&&main.obj===a.obj&&!main.prompted){main.prompted=true;const q=QUESTS[main.quest];if(q&&q.story&&S.quest===main.quest){PAYOK=false;if(q.pay)for(const k in q.pay)S.mat[k]=Math.max(0,(S.mat[k]||0)-q.pay[k]);S.qTalked=false;S.qStory=main.quest;sfx('quest');logEv('目標「'+q.text+'」をたっせい');TALKW=r.name;QUESTCLEARW=r.name;if(q.text.startsWith('村レベル'))focusQuestSpeaker(TALKW);renderQuest();renderPalette()}}
   for(const k in SUB_CLEAR_WAIT){const w=SUB_CLEAR_WAIT[k];if(!w||w.r!==r||w.obj!==a.obj||w.prompted)continue;const q=SUBQ.find(x=>x.k===k);if(!q)continue;w.prompted=true;(S.subArrived||(S.subArrived={}))[k]=true;S.subSt[k]=3;SUBW[r.name]=k}
 },
@@ -2859,7 +2871,8 @@ function checkQuest(){
   if(S.qStory!=null){TALKW=storyWho(QUESTS[S.qStory]);QUESTCLEARW=TALKW;renderQuest();return}/* クエストのあとのお話は、💬をタップしてから */
   if(qMissing(q).length){renderQuest();return}
   if(q.talk&&!S.qTalked){if(q.talk.when())TALKW=firstSpk(q.talk.lines,q.talk.who);renderQuest();return}
-  if(q.check()){
+  const complete=q.check();if(!complete)checkQuestParts(q);
+  if(complete){
     if(q.pay&&!PAYOK){if(!ASKING&&sheet==null&&(S.payNo==null||S.t-S.payNo>60)){ASKING=true;const who=(q.talk&&q.talk.who)||POKO;
       askYesNo(who,matTxt(q.pay)+'、もらってもいい？',()=>{ASKING=false;PAYOK=true;checkQuest()},()=>{ASKING=false;S.payNo=S.t;renderQuest()})}renderQuest();return}/* 材料を使うクエストは、きいてから */
     let wait=QUEST_CLEAR_WAIT;
