@@ -1324,7 +1324,7 @@ const typeAt=j=>S.obj[anc(j)];
 for(const f of FLOWERS)BL[f].anim=1;BL.table.anim=1;/* 食卓は1.5倍で、はみ出しても奥行き順にかく *//* 花ははみ出すので、地面にやきつけず、ほかの物と同じ順番で描く */
 const solidOf=j=>{const o=typeAt(j);return !!(o&&BL[o]&&BL[o].solid)};
 const fp=(id,x,y)=>{const z=BL[id].sz;if(!z)return [[x,y]];const c=[];for(let b=0;b<z[1];b++)for(let a=0;a<z[0];a++)c.push([x+a,y+b]);return c};
-function walk(j){if(S.ground[j]===1)return false;return !solidOf(j)}
+function walk(j){if(j<0||j>=W*H||S.ground[j]===1)return false;return !solidOf(j)}
 const cnt=id=>counts[id]||0;
 const FOODS={mugi:{name:'こむぎ',v:1,e:'🌾'},imo:{name:'いも',v:1,e:'🥔'},tomato:{name:'キャベツ',v:1,e:'🥬'},berry:{name:'ベリー',v:1,e:'🫐'},apple:{name:'りんご',v:1,e:'🍎'},fish:{name:'さかな',v:1,e:'🐟'},
   bread:{name:'パン',v:3,pt:3,dish:1,e:'🍞',fx:'5時間、腹持ちがよくなる（おなかのへる速さ×0.6）'},soup:{name:'トマトスープ',v:3,pt:3,dish:1,e:'🍲',fx:'元気+25'},yakiimo:{name:'ベイクドポテト',v:2,pt:2,dish:1,e:'🍠',fx:'3時間、作業速度×1.15'},yakizakana:{name:'焼き魚',v:2,pt:4,dish:1,e:'🐠',fx:'食べるとパワー+1.8'},yakiberry:{name:'焼きベリー',v:2,pt:2,dish:1,e:'🍮',fx:'たのしさ+15'},yakiapple:{name:'焼きりんご',v:2,pt:2,dish:1,e:'🥧',fx:'3時間、移動速度×1.15'}};
@@ -1522,17 +1522,17 @@ function spawnFX(x,y,col){const cx=x*TS+16,cy=y*TS+20;
 /* ---------- せいれいの行動 ---------- */
 function occTiles(r){const bl=new Set();for(const q of S.res)if(q!==r&&!q.hidden&&!(q.act&&q.act.stage==='walk'&&q.path&&q.path.length))bl.add((q.y|0)*W+(q.x|0));return bl}
 // 止まっている子のマスを避けた道を選ぶ（なければふつうの道）
-function avoidPath(r,G,goal){const bl=occTiles(r);bl.delete(goal);bl.delete((r.y|0)*W+(r.x|0));if(!bl.size)return pathTo(G,goal);
-  const G2=roadSearch(r.x|0,r.y|0,bl);return G2.dist[goal]>=0?pathTo(G2,goal):pathTo(G,goal)}
+function avoidPath(r,G,goal){const centered=p=>{const j=(r.y|0)*W+(r.x|0);if(p.length&&walk(j)&&Math.hypot(r.x-(j%W+.5),r.y-((j/W|0)+.5))>.01&&p[0]!==j)p.unshift(j);return p};const bl=occTiles(r);bl.delete(goal);bl.delete((r.y|0)*W+(r.x|0));if(!bl.size)return centered(pathTo(G,goal));
+  const G2=roadSearch(r.x|0,r.y|0,bl);return centered(G2.dist[goal]>=0?pathTo(G2,goal):pathTo(G,goal))}
 function startAct(r,G,type,stand,o){
   r.bubble='';/* 前の行動の吹き出し（💤など）を残さない */
   r.act=Object.assign({type,stand,t:0,stage:'walk'},o||{});
   if(r.act.key)reserve(r.act.key);
   r.path=stand>=0?avoidPath(r,G,stand):[];
-  if(!r.path.length&&stand>=0&&stand!==(r.y|0)*W+(r.x|0)&&Math.abs(stand%W+.5-r.x)+Math.abs(((stand/W)|0)+.5-r.y)>1.6){noPass(r);endAct(r);r.act={type:'idle',stage:'do',t:0,dur:8};return}/* 行きたい場所に通れない */
+  if(stand>=0&&G&&G.dist[stand]<0||!r.path.length&&stand>=0&&stand!==(r.y|0)*W+(r.x|0)&&Math.abs(stand%W+.5-r.x)+Math.abs(((stand/W)|0)+.5-r.y)>1.6){noPass(r);endAct(r);r.act={type:'idle',stage:'do',t:0,dur:8};return}/* 行きたい場所に通れない */
   if(!r.path.length)beginDo(r);
 }
-function noPass(r){if((r.npT||0)>S.t)return;r.npT=S.t+90;addFloat(r.x,r.y-1.6,'通れないよ…','#ffd0c0')}
+function noPass(r){if(r.act){if(r.act.key)BAN.set(r.act.key,S.t+60);if(r.act.stand>=0){r.routeAvoid=r.routeAvoid||{};r.routeAvoid[r.act.stand]=S.t+60}}r.visitRetryAt=S.t+10;if((r.npT||0)>S.t)return;r.npT=S.t+90;addFloat(r.x,r.y-1.6,'通れないよ…','#ffd0c0')}
 function beginDo(r){const a=r.act;a.stage='do';a.t=0;a.e0=r.energy;const f=ACT[a.type].start;if(f&&f(r,a)===false){endAct(r);r.act={type:'idle',stage:'do',t:0,dur:8}}}
 function endAct(r){if(r.act){if(r.act.type==='sevreact')sevInterrupted(r,r.act);if(r.act.type==='questjoy'){settleQuestVisit(r,r.act);if(r.act.joyUntil!=null&&JOYU.get(r)===r.act.joyUntil)JOYU.delete(r)}if(r.act.key)release(r.act.key);if(r.act.type==='bathe'){if(r.act.sx!=null){r.x=r.act.sx;r.y=r.act.sy}if(!S.res.some(q=>q!==r&&q.act&&q.act.type==='bathe'&&q.act.stage==='do'))stopWave()}/* 水からあがる */if(r.act.order){const o=S.orders.find(q=>q.id===r.act.order);if(o&&o.worker===r.id)o.worker=null}}r.act=null;r.path=[];r.hidden=false;r.bubble=''}
 function tired(){}
@@ -1590,7 +1590,7 @@ const ACT={
   patrol:{done:()=>true},/* 見回りは、止まらずに歩きつづける（吹き出しなし） */
   faint:{done:(r,a)=>a.t>=30,end(r){r.fleeNow=true}},
   flee:{start(r,a){r.bubble='💦';if(a.house)r.hidden=true},done:(r,a)=>a.t>=(a.house?40:4)},
-  wander:{start(r,a){a.dur=rnd(10,30)},done:(r,a)=>a.t>=a.dur},
+  wander:{start(r,a){a.dur=rnd(10,30)},done:(r,a)=>a.t>=a.dur,end(r){r.wanderRestUntil=S.t+45}},
   idle:{start(r){r.bubble='☕'},done:(r,a)=>a.t>=a.dur},/* ひとやすみ中は、休けいの吹き出し */
   // ベッドがない子は、家の中で起きたまま夜をすごす
   stay:{start(r){r.bubble='🏠'},done:(r,a)=>r.hunger<18||!isNight()},
@@ -1598,6 +1598,7 @@ const ACT={
 const ACT_LBL={sevreact:'気づいたものを見にいく',questjoy:'よろこんでいる',stay:'起きてすごしている',sow:'種をまいている',faint:'目をまわしている',eat:'ごはん中',forage:'ベリーを食べている',sleep:'おやすみ中',play:'遊んでいる',fish:'つりをしている',chat:'おしゃべり中',cook:'料理中',chop:'木を切っている',mine:'石をほっている',smat:'素材をしまう',store:'食料をしまう',fetch:'食料をとりに',chatwait:'待ちあわせ',npl:'ヌシ様と遊んでいる',tag:'おいかけっこ',tend:'畑の世話',water:'水やり',till:'畑を耕している',plant:'植えている',build:'建てている',craft:'家具づくり',harvest:'収穫中',gather:'ベリーあつめ',repair:'柵の修理',pickseed:'種ひろい',pickdrop:'おとしものひろい',offer:'おそなえ中',flee:'にげている',patrol:'見回り',wander:'おさんぽ',idle:'ひとやすみ'};
 
 function decide(r){TAKEN=new Set();for(const q of S.res){if(q===r||q.hidden)continue;if(q.act&&q.act.stand>=0)TAKEN.add(q.act.stand);if(!q.act||q.act.stage!=='walk')TAKEN.add((q.y|0)*W+(q.x|0))}
+  for(const [j,t]of Object.entries(r.routeAvoid||{})){if(t>S.t)TAKEN.add(+j);else delete r.routeAvoid[j]}
   try{return decide0(r)}finally{TAKEN=null}}
 // 家の中：壁とドアで外から閉じられたマス。壁が壊れると外とつながって中ではなくなる
 function insideSet(){const out=new Uint8Array(W*H),q=[];const open=j=>S.obj[j]!=='door'&&S.obj[j]!=='sdoor'&&walk(j);
@@ -1962,7 +1963,8 @@ function goWander(r,G){
   if(r.cmat&&matCap()>0){const j=nearest(G,j=>adjOf(j,k=>storageAt(k,'mat'))>=0,200);if(j>=0)return startAct(r,G,'smat',j);return startAct(r,G,'idle',-1,{dur:15})}/* 荷物を持ったままお散歩しない（先に素材箱へ） */
   if(carryN(r)>0&&foodCap()>0)return goStore(r,G);
   const fw=isWatch(r)&&S.enemyOn&&!offShift(r);if(isNight()&&!fw)return goSleep(r,G,S.enemies.some(e=>e.spawned));/* 夜はお散歩しないで休む */
-  const c=[];for(let j=0;j<W*H;j++){const d=G.dist[j];if(d>=2&&d<=7){const x=j%W,y=(j/W)|0;if(isNight()&&!inBase(x,y))continue;c.push(j)}}
+  if((r.wanderRestUntil||0)>S.t)return startAct(r,G,'idle',-1,{dur:Math.min(20,r.wanderRestUntil-S.t)});
+  const c=[];for(let j=0;j<W*H;j++){const d=G.dist[j];if(d>=2&&d<=7&&walk(j)&&!(TAKEN&&TAKEN.has(j))&&!((r.routeAvoid||{})[j]>S.t)){const x=j%W,y=(j/W)|0;if(isNight()&&!inBase(x,y))continue;c.push(j)}}
   if(!c.length)return startAct(r,G,'idle',-1,{dur:15});
   startAct(r,G,'wander',pick(c));
 }
@@ -1970,8 +1972,8 @@ function moveR(r,dt){
   let step=.36*dt*rMul(r,'move')*(r.act&&['questjoy','sevreact'].includes(r.act.type)&&r.act.stage==='walk'?1.5:1)/* クエストで置いた物へ駆け寄る間だけ、1.5倍 */*Math.max(NEARVANE.has((r.y|0)*W+(r.x|0))?1.2:1,NEARSIGN.has((r.y|0)*W+(r.x|0))&&r.act&&r.act.type==='flee'?1.4:1)*/* 風見鶏と道しるべは重ならない（大きいほう） */(r.energy<5?.5:1)*(r.act&&(r.act.type==='flee'||r.act.run)?1.9:1)*(r.hunger<20&&r.act&&(r.act.type==='eat'||r.act.type==='fetch'||r.act.type==='forage')?1.6:1)/* おなかがへりすぎたら、急いで食べに行く */*(FSPD[S.floor[(r.y|0)*W+(r.x|0)]]||1);r.walkT=(r.walkT||0)+dt;
   if(r.path.length>1&&r.path[0]!==r.reroute){const n0=r.path[0];if(S.res.some(q=>q!==r&&!q.hidden&&(q.y|0)*W+(q.x|0)===n0&&!(q.act&&q.act.stage==='walk'&&q.path&&q.path.length))){r.reroute=n0;const g=r.path[r.path.length-1],G0=roadSearch(r.x|0,r.y|0);r.path=avoidPath(r,G0,g)}}
   if(r.path.length){const cj=(r.y|0)*W+(r.x|0),n0=r.path[0];if(n0!==cj&&Math.abs(n0%W-cj%W)+Math.abs(((n0/W)|0)-((cj/W)|0))>1){/* 次のマスがとなりでない（古い道・押されてずれた）ときは、いまの場所から道を引きなおす。壁をすりぬけない */
-    const g=r.path[r.path.length-1],G0=roadSearch(r.x|0,r.y|0);r.path=G0.dist[g]>=0?pathTo(G0,g):[];if(!r.path.length&&g!==cj){noPass(r);endAct(r);return}}}
-  while(step>0&&r.path.length){const j=r.path[0];if(!walk(j)&&!(S.ground[j]===1&&!solidOf(j)&&(S.ground[(r.y|0)*W+(r.x|0)]===1||r.act&&r.act.wade))){noPass(r);endAct(r);return}
+    const g=r.path[r.path.length-1],G0=roadSearch(r.x|0,r.y|0);r.path=G0.dist[g]>=0?avoidPath(r,G0,g):[];if(!r.path.length&&g!==cj){noPass(r);endAct(r);return}}}
+  while(step>0&&r.path.length){const j=r.path[0];if(!walk(j)&&!(S.ground[j]===1&&!solidOf(j)&&(S.ground[(r.y|0)*W+(r.x|0)]===1||r.act&&r.act.wade))){const goal=r.path[r.path.length-1],G=roadSearch(r.x|0,r.y|0);if(G.dist[goal]>=0&&walk(goal)){r.path=avoidPath(r,G,goal);if(r.path.length)return}noPass(r);endAct(r);return}
     const tx=j%W+.5,ty=((j/W)|0)+.5,dx=tx-r.x,dy=ty-r.y,d=Math.hypot(dx,dy);
     if(dx)r.face=dx<0?-1:1;
     if(d<=step){r.x=tx;r.y=ty;r.path.shift();step-=d}else{r.x+=dx/d*step;r.y+=dy/d*step;step=0}}
@@ -2641,7 +2643,7 @@ function queueQuestVisit(q,who,partIds,partKey){const ids=partIds||(q.k?QUEST_VI
 }
 function settleQuestVisit(r,a){const waits=[];if(QUEST_CLEAR_WAIT&&QUEST_CLEAR_WAIT.r===r&&QUEST_CLEAR_WAIT.obj===a.obj)waits.push(QUEST_CLEAR_WAIT);for(const k in SUB_CLEAR_WAIT){const w=SUB_CLEAR_WAIT[k];if(w&&w.r===r&&w.obj===a.obj)waits.push(w)}if(a.partKey&&a.joyAt==null&&S.obj[a.obj]===a.targetId){const list=QUEST_VISITS.get(r)||[];if(!list.some(v=>v.partKey===a.partKey))list.push({obj:a.obj,id:a.targetId,partKey:a.partKey});QUEST_VISITS.set(r,list)}if(!waits.length)return;const arrived=a.joyUntil!=null&&performance.now()>=a.joyUntil&&S.obj[a.obj]===a.targetId;
   for(const w of waits){if(arrived){w.done=true;if(w===QUEST_CLEAR_WAIT&&S.qStory===w.quest)QUEST_CLEAR_WAIT=null;continue}if(S.obj[a.obj]===a.targetId){const list=QUEST_VISITS.get(r)||[];if(!list.some(v=>v.obj===a.obj&&v.id===a.targetId))list.unshift({obj:a.obj,id:a.targetId});QUEST_VISITS.set(r,list)}else if(w===QUEST_CLEAR_WAIT)QUEST_CLEAR_WAIT=null;else for(const k in SUB_CLEAR_WAIT)if(SUB_CLEAR_WAIT[k]===w)delete SUB_CLEAR_WAIT[k]}}
-function questVisitSafe(r,j){if(isNight()&&S.enemyOn)return false;return !S.enemies.some(e=>e.spawned&&!e.dead&&!e.flee&&(Math.hypot(e.x-r.x,e.y-r.y)<8||Math.hypot(e.x-(j%W+.5),e.y-((j/W|0)+.5))<8))}
+function questVisitSafe(r,j){if(isNight())return false;return !S.enemies.some(e=>e.spawned&&!e.dead&&!e.flee&&(Math.hypot(e.x-r.x,e.y-r.y)<8||Math.hypot(e.x-(j%W+.5),e.y-((j/W|0)+.5))<8))}
 function questVisitStand(r,G,j){const b=BL[S.obj[j]],z=b&&b.sz||[1,1],x=j%W,y=(j/W)|0,occupied=occTiles(r);let stand=-1,best=Infinity;
   for(let yy=Math.max(0,y-1);yy<=Math.min(H-1,y+z[1]);yy++)for(let xx=Math.max(0,x-1);xx<=Math.min(W-1,x+z[0]);xx++){
     if(xx>=x&&xx<x+z[0]&&yy>=y&&yy<y+z[1])continue;
@@ -2651,7 +2653,7 @@ function questVisitStand(r,G,j){const b=BL[S.obj[j]],z=b&&b.sz||[1,1],x=j%W,y=(j
 function questVisitReached(r,j){const b=BL[S.obj[j]],z=b&&b.sz||[1,1],x=j%W,y=(j/W)|0,dx=Math.max(x-r.x,0,r.x-(x+z[0])),dy=Math.max(y-r.y,0,r.y-(y+z[1]));return Math.hypot(dx,dy)<=1.05}
 function tryQuestVisit(r){const list=QUEST_VISITS.get(r);if(!list||!list.length||r.act&&r.act.type==='questjoy')return false;
   const v=list[0];if(S.obj[v.obj]!==v.id){list.shift();return false}
-  if(r.hidden||r.hunger<20||onHold(r)||HOLD.has(r.id)||!questVisitSafe(r,v.obj))return false;
+  if(r.hidden||r.hunger<30||r.energy<10||(r.visitRetryAt||0)>S.t||onHold(r)||HOLD.has(r.id)||!questVisitSafe(r,v.obj))return false;
   if(r.act&&(['eat','fetch','flee','faint'].includes(r.act.type)||r.act.type==='sleep'&&r.act.stage==='do'))return false;
   const G=bfs(r.x|0,r.y|0),stand=questVisitStand(r,G,v.obj);if(stand<0)return false;list.shift();
   endAct(r);startAct(r,G,'questjoy',stand,{obj:v.obj,targetId:v.id,partKey:v.partKey});return true;
@@ -3958,7 +3960,7 @@ function star4(c,x,y,r){c.save();c.translate(x,y);c.fillStyle='rgba(255,240,170,
 function drawRes0(r,now){
   if(r.hidden&&!peekH(r))return;
   const sleeping=r.act&&r.act.type==='sleep'&&r.act.stage==='do',bedJ=sleeping&&r.act.obj!=null&&S.obj[r.act.obj]==='bed'&&BEDSPR.ok?r.act.obj:-1,benchJ=r.act&&r.act.type==='rest'&&r.act.stage==='do'&&S.obj[r.act.obj]==='bench'?(r.act.seat??r.act.obj):-1;/* ベンチではすわって見える *//* ベッドで眠るときは、まくらに頭をのせて、ふとんをかける */
-  let sj=bedJ>=0?bedJ:benchJ,px=sj>=0?(sj%W+.5)*TS:r.x*TS,py=bedJ>=0?(((bedJ/W)|0)+.5)*TS+2:benchJ>=0?(((benchJ/W)|0)+.5)*TS+1:r.y*TS;const talking=DLGA.who===r.name&&!(DLGEL||(DLGEL=$('#dialog'))).hidden,walking=!talking&&r.act&&(r.act.stage==='walk'||r.act.type==='tag');/* 話しているときはこっちを向く */
+  let sj=bedJ>=0?bedJ:benchJ,px=sj>=0?(sj%W+.5)*TS:r.x*TS,py=bedJ>=0?(((bedJ/W)|0)+.5)*TS+2:benchJ>=0?(((benchJ/W)|0)+.5)*TS+1:r.y*TS;const talking=DLGA.who===r.name&&!(DLGEL||(DLGEL=$('#dialog'))).hidden,walking=!talking&&r.act&&(r.act.stage==='walk'&&r.path.length>0||r.act.type==='tag');/* 話しているときはこっちを向く */
   const working=!onHold(r)&&r.act&&r.act.stage==='do'&&['till','sow','plant','build','craft','water','tend','repair','harvest','gather','chop','mine','cook'].includes(r.act.type);
   if(!SPV.has(r))SPV.set(r,{x:r.x,y:r.y,back:false,turn:0,bl:now+2000+Math.random()*3000});const v=SPV.get(r),dx=r.x-v.x,dy=r.y-v.y;
   if(!walking){v.back=false;v.turn=r.act&&r.act.stage==='do'&&(r.act.type==='chop'||r.act.type==='mine')&&!objBelow(r)?1:0}/* 木・岩は横向きで、そちらを向いて切る */else if(Math.abs(dx)+Math.abs(dy)>.002){const ax=Math.abs(dx),ay=Math.abs(dy);v.turn=ax>ay*1.2?1:0;v.back=!v.turn&&dy<0}v.x=r.x;v.y=r.y;
