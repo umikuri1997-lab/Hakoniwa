@@ -540,7 +540,7 @@ const BL={
   slide:{name:'すべり台',sz:[2,2],kind:'furn',cat:'toy',f2:1,lv:2,pc:14,time:70,maker:'wind',attr:{wind:1},mat:{wood:3,stone:1},play:{pt:3,fun:55,dur:40,cap:1,adj:1},solid:1,desc:'1人で遊べる。たのしさ +88（40分）'},
   sandbox:{name:'すなば',sz:[2,1],nosc:1,kind:'furn',cat:'toy',f2:1,lv:5,pc:14,time:70,maker:'earth',attr:{earth:1},mat:{wood:2,stone:2},play:{pt:3,fun:50,dur:45,cap:2,adj:1},solid:1,desc:'2人まで遊べる。たのしさ +80（45分）'},
   seesaw:{name:'シーソー',kind:'furn',cat:'toy',f2:1,dsc:2,lv:7,pc:16,time:80,maker:'wind',attr:{wind:1},mat:{wood:3},play:{pt:4,fun:60,dur:40,cap:2,adj:1},solid:1,desc:'2人で遊べる。たのしさ +96（40分）'},
-  window:{name:'窓',kind:'block',cat:'other',lv:4,pc:10,time:50,maker:'wood',attr:{wood:1},mat:{wood:2,stone:1},desc:'横向きの木の壁にはめる。住み心地が上がる'},
+  window:{name:'窓',kind:'block',cat:'other',lv:4,pc:10,time:50,maker:'wood',attr:{wood:1},mat:{wood:1},desc:'横向きの木の壁にはめる。住み心地が上がる'},
   sdoor:{sz:[2,1],name:'石の塀のドア',kind:'block',anim:1,hp:30,cost:4,pc:8,time:60,maker:'earth',qty:1,lv:6,attr:{},mat:{stone:2},desc:'横2マスの石垣の出入り口。せいれいだけ通れる'},
   table:{name:'食卓',kind:'furn',pc:12,time:45,maker:'wood',solid:1,eat:{cap:2,pt:2},attr:{wood:2},mat:{wood:3},desc:'2人まで食べられる。食べるたびにパワー+0.9'},
   stor:{name:'食料箱',kind:'furn',pc:8,time:60,maker:'earth',solid:1,attr:{earth:1},mat:{wood:3},desc:'食料を30までしまえる。ここから食べる'},
@@ -4764,13 +4764,21 @@ function renderSheet(){
     V.appendChild(el('<div class="vlGrid">'+tile(ic('.stk[title="食料"] svg'),'食料',S.food+'<small> / '+fc+'</small>','',bar(fc?S.food/fc:0,'#f3d27a'))+tile('','木材・石材',(()=>{const im=[...document.querySelectorAll('.hud .stk[title="木材・石材"] .ic')].map(n=>{const c=n.cloneNode(true);c.classList.add('vlMi');return c.outerHTML});return (im[0]||'')+(S.mat.wood||0)+'<span style="display:inline-block;width:10px"></span>'+(im[1]||'')+(S.mat.stone||0)})(),'素材箱 '+matTot()+' / '+mc,bar(mc?matTot()/mc:0,'#c9a27a'))+tile(ic('.stat[title="パワー"] img'),'パワー',S.pt,'ためた合計 '+Math.floor(S.totalPt))+tile(ic('.stat[title="せいれい"] svg'),'せいれい',S.res.length+'<small> 人</small>','')+'</div>'));
     V.appendChild(el('<div class="vlDay"><span>きょう</span><b>'+(S.today?DAYEV[S.today][0]+' '+DAYEV[S.today][1]:(S.rain?'☔ 雨':'ふつうの日'))+'</b></div>'));
     body.appendChild(V);
+  }else if(sheet==='attrdetail'){
+    T.textContent='属性の内訳';
+    const sources={};for(const k of ELEM_KEYS)sources[k]={};
+    const add=(k,name,v)=>{const a=sources[k];if(!a)return;const r=a[name]||(a[name]={n:0,v:0});r.n++;r.v+=v};
+    for(let j=0;j<W*H;j++){if(!inBase(j%W,(j/W)|0))continue;if(S.ground[j]===1)add('water','池・水辺（1マス0.3）',.3);const id=S.obj[j],b=BL[id];if(!b||b.kind==='block'||FLOWERS.has(id)&&isBud(j))continue;for(const k in b.attr||{})if(b.attr[k]>0)add(k,b.name,b.attr[k])}
+    body.appendChild(el('<p class="note">基地の中にあるものだけを集計。花は咲いてから加算されます。</p>'));
+    for(const k of ELEM_KEYS){const sec=el('<div class="sec"></div>');const h=document.createElement('h3');h.textContent=ELEM[k].name+'の力：'+Number(ATTR[k].toFixed(1));sec.appendChild(h);for(const [name,r]of Object.entries(sources[k]))sec.appendChild(rowEl(name+' ×'+r.n,'+'+Number(r.v.toFixed(1))));if(!Object.keys(sources[k]).length)sec.appendChild(el('<p class="note">まだありません</p>'));body.appendChild(sec)}
   }else if(sheet==='people'){
     T.textContent='せいれい '+S.res.length+'人';
     const a=el('<div class="sec"><h3>この土地の属性（満ちた次の朝、神殿の「！」からなかまを呼べる）</h3><div class="attr"></div></div>');const g=a.querySelector('.attr');
     for(const k of ELEM_KEYS){const v=ATTR[k],n=needFor(k),p=Math.min(100,v/n*100);
       g.insertAdjacentHTML('beforeend',`<span class="el" style="background:${ELEM[k].col}">${ELEM[k].name}</span><div class="bar"><i style="width:${p|0}%;background:${ELEM[k].col}"></i></div><small>${Math.floor(v)}/${n}</small>`)}
     body.appendChild(a);
-    body.appendChild(el('<p class="note">属性が目もりに届くと、次の朝に神殿の「！」から呼べます。いくつか届いていれば、呼ぶ属性をえらべます。置いたブロック・植物・家具・建物それぞれに属性があります。</p>'));
+    const detail=el('<button class="btn">属性の内訳を見る</button>');detail.onclick=()=>openSheet('attrdetail');body.appendChild(detail);
+    body.appendChild(el('<p class="note">属性が目もりに届くと、次の朝に神殿の「！」から呼べます。いくつか届いていれば、呼ぶ属性をえらべます。池・植物・家具・建物から属性の力が集まります。</p>'));
     const rows=el('<div class="rows"></div>');
     for(const r of S.res){const row=el(`<button class="row" style="text-align:left;width:100%"><span class="dot"></span><div class="tx"><b></b><small></small></div></button>`);
       row.querySelector('.dot').style.cssText='background:#f6f1e6 url('+spiritPort(r.elem,96)+') center/86% no-repeat;box-shadow:inset 0 0 0 2px '+ELEM[r.elem].col;
