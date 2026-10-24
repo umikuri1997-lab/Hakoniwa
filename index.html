@@ -794,7 +794,7 @@ const QUESTS1=[
     [GOD,'わからんことがあったら、メニューの「ひでんのしょ」を見るんじゃ。わしの知恵が、ぜ〜んぶ書いてあるからの。'],
     [GOD,'ときどき遊びに来るぞい。そのときまた交換しようの。ではな〜！'],[POKO,'いろいろ教えてくれて、ありがとう、カミサマ！ またね！']],gives:{godLeave:true}},
   /* どのクエストも：吹き出し→会話でクエストを受ける→たっせい→吹き出し→お礼とごほうび */
-  {text:'おつげを出してみよう',check:()=>!!S.flags.oracleSet,how:'メニューの「おつげ」で、きょういちにちの方針をえらぶ',
+  {text:'おつげを出してみよう',check:()=>!!S.flags.oracleSet&&!(sheet==='menu'&&sheetArg==='oracle'),how:'メニューの「おつげ」で、きょういちにちの方針をえらぶ',
    talk:{who:POKO,when:()=>true,lines:[
     [POKO,'ねえ、守り神さま。みんな、言われなくても自分で動いてくれるけど……'],
     [POKO,'「今日は、これをやってほしいな」って、お願いもできるんだよ。'],
@@ -4911,14 +4911,14 @@ function renderSheet(){
     if(!sub){/* メニューはアイコンを並べるだけ。タップで中身を開く */
       body.appendChild(el(`<p class="story">みどりのマス <b>${GRASSN}</b>・村レベル ${S.lv}・せいれい ${S.res.length}人</p>`));
       const g=el('<div class="mgrid"></div>');
-      for(const[k,ic,nm]of MI){const b=el('<button class="mtile"><span class="mi"></span><span class="mn"></span></button>');if(ICONS['m_'+k])b.querySelector('.mi').innerHTML='<img alt="" src="'+ICONS['m_'+k]+'">';else b.querySelector('.mi').textContent=ic;b.querySelector('.mn').textContent=nm;
+      for(const[k,ic,nm]of MI){const b=el('<button class="mtile"><span class="mi"></span><span class="mn"></span></button>');if(ICONS['m_'+k])b.querySelector('.mi').innerHTML='<img alt="" src="'+ICONS['m_'+k]+'">';else b.querySelector('.mi').textContent=ic;b.querySelector('.mn').textContent=nm;b.dataset.menu=k;
         b.onclick=()=>{sfx('tap');if(k==='manual')return openSheet('manual');if(k==='maps'){save();closeSheet();return showMaps()}openSheet('menu',k)};g.appendChild(b)}
       body.appendChild(g);return}
     T.textContent=sub[2];
     {const bk=el('<button class="btn back">‹ メニュー</button>');bk.onclick=()=>{sfx('tap');openSheet('menu')};body.appendChild(bk)}
     if(sheetArg==='oracle'){
       {const sec=el('<div class="sec"><h3>おつげ（きょういちにち）</h3><div class="rows"></div></div>'),rw=sec.querySelector('.rows');
-       for(const k of [null,...Object.keys(ORACLE)]){const O=k?ORACLE[k]:{name:'じゆうにすごす',e:'🍃'},on=(S.oracle||null)===k;const b=el('<button class="btn"></button>');b.textContent=O.e+' '+O.name+(on?'（いま）':'');if(on)b.classList.add('pri');
+       for(const k of [null,...Object.keys(ORACLE)]){const O=k?ORACLE[k]:{name:'じゆうにすごす',e:'🍃'},on=(S.oracle||null)===k;const b=el('<button class="btn"></button>');b.dataset.oracle=k||'';b.textContent=O.e+' '+O.name+(on?'（いま）':'');if(on)b.classList.add('pri');
          b.onclick=()=>{S.oracle=k;if(k){S.flags.oracleSet=true;checkQuest()}sfx('quest');toast(k?'おつげ：'+O.name:'おつげをやめた','good');for(const r of S.res)if(!r.hidden&&r.act&&r.act.stage==='do'&&IDLE_ACTS.includes(r.act.type))endAct(r);renderSheet()};rw.appendChild(b)}
        body.appendChild(sec)}
     }else if(sheetArg==='goal'&&S.cleared){subSec(body);
@@ -5202,6 +5202,14 @@ function updTut(){
   else if(qt==='畑にたねをまこう'){if(imoSeedQuestPlots().length>=2)return hide();if(sheet){el=$('#sheetX');lbl='とじる'}else if(mode!=='build'){el=document.querySelector('#dock [data-mode="build"]');lbl='「おく」をタップ'}
     else if(!(sel==='seed:imo'&&cseed('imo')>0)){const c=[...document.querySelectorAll('#palItems .chip')].find(b=>b.textContent.includes(CROPS.imo.name+'のたね')&&!b.classList.contains('zero'));if(c){el=c;lbl='たねをえらぶ'}else{el=$('#palMore');lbl='ほかをえらぶ'}}
     else{let fj=-1;for(let j=0;j<S.obj.length;j++)if(S.obj[j]==='farm'&&S.dyn[j]&&S.dyn[j].crop===null&&!imoSeedQuestPlots().includes(j)){fj=j;break}if(fj>=0){wp=[(fj%W+.5)*TS,((fj/W)|0)*TS+16];lbl='畑をタップ'}}}/* たねは「おく」からえらんで、畑をタップ */
+  else if(qt==='おつげを出してみよう'){
+    if(S.flags.oracleSet){if(sheet){el=$('#sheetX');lbl='とじて、話を聞こう'}}
+    else if(sheet==='menu'&&sheetArg==='oracle'){el=document.querySelector('#sheetBody [data-oracle="food"]');lbl='好きな方針をえらぶ'}
+    else if(sheet==='menu'&&!sheetArg){el=document.querySelector('#sheetBody [data-menu="oracle"]');lbl='「おつげ」をタップ'}
+    else if(sheet==='menu'){el=document.querySelector('#sheetBody .back');lbl='メニューにもどる'}
+    else if(sheet){el=$('#sheetX');lbl='とじてメニューをひらこう'}
+    else{el=document.querySelector('#dock [data-sheet="menu"]');lbl='「メニュー」をタップ'}
+  }
   else if(qt==='道を6マスのばそう'){if(inv('path')>0)placeHint('path')}
   else if(qt==='花を植えてもらおう'){if(inv('flower')>0)placeHint('flower')}
   else if(qt==='食料箱を置こう'||qt==='素材箱を置こう'){const bid=qt==='食料箱を置こう'?'stor':'mbox',tb=craftTabFor(bid),tn=CRAFT_TABS[tb][0],bn=BL[bid].name;
