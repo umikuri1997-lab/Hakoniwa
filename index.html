@@ -2408,6 +2408,8 @@ const SUBQ=[/* サブクエスト：メインと別に、いつでもできる�
  for(const[k,need]of[['watch2',2],['toy2',2],['jar2',3],['parasol',5],['wmill',8]]){const i=SUBQ.findIndex(q=>q.k===k);if(i<0)continue;const q=SUBQ[i],at0=q.at,L=LVL[q.g]||LVL.wood,legacy=['toy2','jar2','parasol'].includes(k);
   if(!legacy)q.at=()=>at0()&&S.lv>=need;
   SUBQ.splice(i,0,{k:'lv_'+k,how:'せいれいがくらしていると、村レベルが上がる',w:q.w,g:q.g,L:L[0](need),X:L[1](need),t:'村レベルを'+need+'にしよう',at:()=>at0()&&(legacy?(S.subSt||{})['lv_'+k]===3:S.lv<need||(S.subSt||{})['lv_'+k]>=2),ok:()=>S.lv>=need,n:need,now:()=>S.lv})}}
+/* サブ依頼の報酬は難しさに応じた設定を保ち、最低3パワーを保証。村レベル依頼は目標レベルに応じて増やす */
+for(const q of SUBQ)q.rw=q.k.startsWith('lv_')?Math.max(3,Math.ceil((q.n||2)*1.25)):Math.max(3,Number(q.rw)||0);
 
 const FIREB={/* 火のキーキャラが、あにきのとき */
   light3:{L:[['K','夜の村、まっくらじゃねえか。これじゃ「コワイノ」にやりたい放題されるぜ。'],['K','おれの火を、もっと遠くまで届けられねえかな。おまえ、いい考えはねえか？']],X:[['K','よし、明るくなった！ これで夜も、ちっとはマシだな。']]},
