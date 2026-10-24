@@ -2418,7 +2418,8 @@ function keyName(el){const N=S.keyN||(S.keyN={});/* 5属性のキーキャラ：
 function subWho(q){return keyName(q.g)}
 function checkSub(){const D=S.subDone||(S.subDone={}),Sn=S.subSeen||(S.subSeen={}),St=S.subSt||(S.subSt={});S.subB||(S.subB={});SUBW={};
   const busy={};
-  for(const q of subList()){if(D[q.k])continue;if(Sn[q.k]&&!St[q.k])St[q.k]=2;/* 前からの人：もう受けている */
+  for(const q of subList()){if(D[q.k])continue;if(Sn[q.k]&&!St[q.k])St[q.k]=2;
+    if(St[q.k]===3&&!(S.subArrived||{})[q.k]&&!SUB_CLEAR_WAIT[q.k]){const visit=queueQuestVisit(q,subWho(q));if(visit){St[q.k]=2;SUB_CLEAR_WAIT[q.k]=Object.assign({done:false},visit)}}/* 前からの人：もう受けている */
     if(St[q.k]===2&&q.ok()){let wait=SUB_CLEAR_WAIT[q.k];if(wait&&!wait.done&&S.obj[wait.obj]!==wait.id){delete SUB_CLEAR_WAIT[q.k];wait=null}
       if(wait&&wait.done){delete SUB_CLEAR_WAIT[q.k];St[q.k]=3;sfx('quest');toast('サブクエストたっせい：'+q.t,'good')}
       else if(!wait){const visit=queueQuestVisit(q,subWho(q));if(visit)SUB_CLEAR_WAIT[q.k]=Object.assign({done:false},visit);else{St[q.k]=3;sfx('quest');toast('サブクエストたっせい：'+q.t,'good')}}}
@@ -2426,8 +2427,7 @@ function checkSub(){const D=S.subDone||(S.subDone={}),Sn=S.subSeen||(S.subSeen={
   /* サブクエストは一つずつ提示。会話のあいだを村の時間で2時間あける */
   const spaced=S.subTalkAt==null||S.t-S.subTalkAt>=120;
   if(spaced&&!Object.values(busy).some(q=>!q.k.startsWith('lv_')||St[q.k]!==2))for(const q of subList()){if(D[q.k]||St[q.k])continue;if(Object.keys(busy).length&&!levelHelpKeys().includes(q.k))continue;const w=keyName(q.g);if(!w||!q.at())continue;St[q.k]=1;busy[q.g]=q;break}
-  if(!spaced)return;
-  const pending=Object.values(busy).filter(q=>St[q.k]===3).concat(Object.values(busy).filter(q=>St[q.k]===1));
+  const pending=Object.values(busy).filter(q=>St[q.k]===3).concat(spaced?Object.values(busy).filter(q=>St[q.k]===1):[]);
   for(const q of pending){const w=subWho(q);if(w&&spkOK(w)&&w!==TALKW){SUBW[w]=q.k;break}}}
 function subTalk(k){const q=SUBQ.find(q=>q.k===k),St=S.subSt,D=S.subDone;if(!q||!$('#dialog').hidden)return;S.subTalkAt=S.t;const w=subWho(q)||POKO,L=(St[k]===1?q.L:q.X)||[[w,q.t]];
   const rw=S.res.find(z=>z.name===w),FB2=q.g==='fire'&&rw&&elemKey(rw)==='fireB'&&FIREB[k];let once=0;dialog(ideaDialogue(q,(FB2?(St[k]===1?FB2.L:FB2.X):L).map(x=>[x[0]==='K'?w:x[0],x[1]]),St[k]===1?'accept':'clear'),()=>{if(once++)return;
@@ -2588,7 +2588,7 @@ function syncQuestRecipes(s){if(s.qVer===34&&(s.world||0)===0)migrateQuest35(s);
 }
 /* クエスト達成の喜び：経路で対象のそばへ行く。会話や進行は自動で開かない。 */
 const QUEST_VISIT_MAIN={"神殿を建ててもらおう": ["statue"], "食料箱を置こう": ["stor"], "素材箱を置こう": ["mbox"], "食卓をたのもう": ["table"], "家の壁を直そう": ["hwall", "door"], "家にベッドを置こう": ["bed"], "柵を4つ置こう": ["fence"], "見張り台ととげの罠を置こう": ["watch", "spike"], "ききょうを植えて、土の力をためよう": ["bellf"], "畑を6つにしよう": ["farm"], "畑にたねをまこう": ["farm"], "守護の台座を建ててもらおう": ["tower"], "フタバのおねがい：花を10こさかせよう": ["flower", "clover", "bellf", "salvia", "lily", "lotus"], "温泉をよみがえらせよう": ["hotstone"], "シズクのおねがい：温泉のそばに休憩所を作ろう": ["bench", "tub"], "第1話 はじめての居場所：家とベッド2つ": ["hwall", "door", "bed"], "第2話 みんなの好きなもの：花10・食卓・遊び道具": ["flower", "clover", "bellf", "salvia", "lily", "lotus", "table", "swing", "sandbox"], "第4話 ここが好き！：噴水の広場": ["fountain"], "最終話 みんなのふるさと：たき火とせいれい6人": ["campfire"]};
-const QUEST_VISIT_SUB={"chair2": ["chair", "stool", "chair2", "achair", "bench", "pouf", "sofa1"], "bed3": ["bed"], "light3": ["candle", "lantern", "flamp", "torch", "lamp", "stonelamp", "campfire"], "houselight": ["candle", "lantern", "flamp"], "oven": ["oven"], "salvia3": ["salvia"], "watch2": ["watch"], "lotus3": ["lotus"], "lily5": ["lily"], "wmill": ["windmill"], "clover3": ["clover"], "toy2": ["swing", "sandbox"], "deco3": ["planter", "hedge", "birdhouse", "birdbath", "parasol", "arch", "signpost", "monstera"], "tree5": ["tree", "fruit"], "farm10": ["farm"], "house2": ["hwall", "door"], "room": ["@furniture"], "paint": ["@painting"], "trap4": ["spike", "sticky", "puddle", "firetrap", "gust"], "jar2": ["jar"], "parasol": ["parasol"]};
+const QUEST_VISIT_SUB={"benchbreak": ["bench"], "chair2": ["chair", "stool", "chair2", "achair", "bench", "pouf", "sofa1"], "bed3": ["bed"], "light3": ["candle", "lantern", "flamp", "torch", "lamp", "stonelamp", "campfire"], "houselight": ["candle", "lantern", "flamp"], "oven": ["oven"], "salvia3": ["salvia"], "watch2": ["watch"], "lotus3": ["lotus"], "lily5": ["lily"], "wmill": ["windmill"], "clover3": ["clover"], "toy2": ["swing", "sandbox"], "deco3": ["planter", "hedge", "birdhouse", "birdbath", "parasol", "arch", "signpost", "monstera"], "tree5": ["tree", "fruit"], "farm10": ["farm"], "house2": ["hwall", "door"], "room": ["@furniture"], "paint": ["@painting"], "trap4": ["spike", "sticky", "puddle", "firetrap", "gust"], "jar2": ["jar"], "parasol": ["parasol"]};
 const QUEST_PLACEMENTS=new WeakMap(),QUEST_VISITS=new WeakMap();let questPlaceSerial=0,QUEST_CLEAR_WAIT=null,SUB_CLEAR_WAIT={};const questGuideBlocked=()=>!!QUEST_CLEAR_WAIT||Object.keys(SUB_CLEAR_WAIT).some(k=>!!SUB_CLEAR_WAIT[k])||Object.keys(SUBW).length>0;const questGuideBlockedNow=()=>!!QUEST_CLEAR_WAIT||Object.keys(SUB_CLEAR_WAIT).some(k=>!!SUB_CLEAR_WAIT[k]);const questGuideAccepted=()=>{const q=S&&QUESTS[S.quest];return !!q&&!S.cleared&&S.qStory==null&&(!q.talk||S.qTalked)};
 function noteQuestPlacement(id,j){let m=QUEST_PLACEMENTS.get(S);if(!m){m=new Map();QUEST_PLACEMENTS.set(S,m)}m.set(j,{id,n:++questPlaceSerial})}
 function questVisitTarget(q,ids,j){const o=S.obj[j];if(!o||o==='part'||!BL[o])return false;
@@ -2622,7 +2622,7 @@ function tryQuestVisit(r){const list=QUEST_VISITS.get(r);if(!list||!list.length|
 }
 ACT.questjoy={start(r,a){if(S.obj[a.obj]!==a.targetId||!questVisitReached(r,a.obj))return false;const now=performance.now();a.joyAt=now;a.joyUntil=now+2400;JOYU.set(r,a.joyUntil);JUMP.set(r,now);r.shine=now;r.bubble='😊';r.face=a.obj%W+.5>=r.x?1:-1;sfxAt('good',r.x,r.y);
   const main=QUEST_CLEAR_WAIT;if(main&&main.r===r&&main.obj===a.obj&&!main.prompted){main.prompted=true;const q=QUESTS[main.quest];if(q&&q.story&&S.quest===main.quest){PAYOK=false;if(q.pay)for(const k in q.pay)S.mat[k]=Math.max(0,(S.mat[k]||0)-q.pay[k]);S.qTalked=false;S.qStory=main.quest;sfx('quest');logEv('目標「'+q.text+'」をたっせい');TALKW=r.name;QUESTCLEARW=r.name;if(q.text.startsWith('村レベル'))focusQuestSpeaker(TALKW);renderQuest();renderPalette()}}
-  for(const k in SUB_CLEAR_WAIT){const w=SUB_CLEAR_WAIT[k];if(!w||w.r!==r||w.obj!==a.obj||w.prompted)continue;const q=SUBQ.find(x=>x.k===k);if(!q)continue;w.prompted=true;S.subSt[k]=3;SUBW[r.name]=k}
+  for(const k in SUB_CLEAR_WAIT){const w=SUB_CLEAR_WAIT[k];if(!w||w.r!==r||w.obj!==a.obj||w.prompted)continue;const q=SUBQ.find(x=>x.k===k);if(!q)continue;w.prompted=true;(S.subArrived||(S.subArrived={}))[k]=true;S.subSt[k]=3;SUBW[r.name]=k}
 },
   tick(r,a){if(!a.secondHop&&performance.now()-a.joyAt>=900){a.secondHop=true;JUMP.set(r,performance.now())}},
   done:(r,a)=>S.obj[a.obj]!==a.targetId||performance.now()>=a.joyUntil,
