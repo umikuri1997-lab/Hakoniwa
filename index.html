@@ -1417,7 +1417,7 @@ function recount(){
     if(o==='windmill')around(j,5,NEARMILL);
     if(o==='jar')around(j,1,NEARWELL);/* みずがめ：まわり1マスの畑は水やりいらず */if(o==='vane')around(j,3,NEARVANE);if(o==='signpost')around(j,3,NEARSIGN);/* 風見鶏：まわり3マスは足が速い */
     if(BL[o]&&BL[o].env){const er=BL[o].er||3;for(let dy=-er;dy<=er;dy++)for(let dx=-er;dx<=er;dx++){const nx=x+dx,ny=y+dy;if(nx>=0&&ny>=0&&nx<W&&ny<H)ENVG[ny*W+nx]+=BL[o].env}}/* にわの家具：まわりの環境 */
-    if(ib&&BL[o].kind!=='block')addA(BL[o].attr);
+    if(ib&&BL[o]&&BL[o].kind!=='block'&&(!FLOWERS.has(o)||!isBud(j)))addA(BL[o].attr);
     const rr=revRadius(o);if(rr)around(j,rr,REV);
   }
   if(WD===FREE)for(let j=0;j<W*H;j++)REV.add(j);/* フリーモードの土地は荒れていない */
