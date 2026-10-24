@@ -2428,7 +2428,7 @@ function checkSub(){const D=S.subDone||(S.subDone={}),Sn=S.subSeen||(S.subSeen={
   const spaced=S.subTalkAt==null||S.t-S.subTalkAt>=120;
   if(spaced&&!Object.values(busy).some(q=>!q.k.startsWith('lv_')||St[q.k]!==2))for(const q of subList()){if(D[q.k]||St[q.k])continue;if(Object.keys(busy).length&&!levelHelpKeys().includes(q.k))continue;const w=keyName(q.g);if(!w||!q.at())continue;St[q.k]=1;busy[q.g]=q;break}
   const pending=Object.values(busy).filter(q=>St[q.k]===3).concat(spaced?Object.values(busy).filter(q=>St[q.k]===1):[]);
-  for(const q of pending){const w=subWho(q);if(w&&spkOK(w)&&w!==TALKW){SUBW[w]=q.k;break}}}
+  for(const q of pending){const w=St[q.k]===3?questReplyWho(q):subWho(q);if(w&&spkOK(w)&&w!==TALKW){SUBW[w]=q.k;break}}}
 function subTalk(k){const q=SUBQ.find(q=>q.k===k),St=S.subSt,D=S.subDone;if(!q||!$('#dialog').hidden)return;S.subTalkAt=S.t;const w=subWho(q)||POKO,L=(St[k]===1?q.L:q.X)||[[w,q.t]];
   const rw=S.res.find(z=>z.name===w),FB2=q.g==='fire'&&rw&&elemKey(rw)==='fireB'&&FIREB[k];let once=0;dialog(ideaDialogue(q,(FB2?(St[k]===1?FB2.L:FB2.X):L).map(x=>[x[0]==='K'?w:x[0],x[1]]),St[k]===1?'accept':'clear'),()=>{if(once++)return;
     if(St[k]===1){St[k]=2;Sn0(k);if(q.base)S.subB[k]=q.base();for(const id of q.learn||[])S.recipes[id]=true;inspireQuest(q);for(const x in q.give||{}){S.unlocked[x]=true;giveItem(x,q.give[x])}queueItemGift(q.give);sfx('quest');toast('サブクエスト：'+q.t,'good');renderPalette()}
@@ -2601,6 +2601,7 @@ function checkQuestParts(q){const parts=QUEST_PARTS[q.text];if(!parts)return;for
   if(S.res.some(r=>r.act&&r.act.partKey===partKey||(QUEST_VISITS.get(r)||[]).some(v=>v.partKey===partKey)))continue;
   queueQuestVisit(q,storyWho(q),ids,partKey);
 }}
+function questReplyWho(q){if(!q.k)return storyWho(q);const who=subWho(q);return firstSpk((q.X||[]).map(line=>[line[0]==='K'?who:line[0],line[1]]),who)}
 function noteQuestPlacement(id,j){let m=QUEST_PLACEMENTS.get(S);if(!m){m=new Map();QUEST_PLACEMENTS.set(S,m)}m.set(j,{id,n:++questPlaceSerial})}
 function questVisitTarget(q,ids,j){const o=S.obj[j];if(!o||o==='part'||!BL[o])return false;
   if(!ids.includes(o)&&!(ids.includes('@furniture')&&BL[o].kind==='furn')&&!(ids.includes('@painting')&&['paint1','paint2','paint3'].includes((S.win||{})[j])))return false;
@@ -2637,8 +2638,8 @@ function tryQuestVisit(r){const list=QUEST_VISITS.get(r);if(!list||!list.length|
   endAct(r);startAct(r,G,'questjoy',stand,{obj:v.obj,targetId:v.id,partKey:v.partKey});return true;
 }
 ACT.questjoy={start(r,a){if(S.obj[a.obj]!==a.targetId||!questVisitReached(r,a.obj))return false;const now=performance.now();a.joyAt=now;a.joyUntil=now+2400;if(a.partKey)(S.questPartSeen||(S.questPartSeen={}))[a.partKey]=true;JOYU.set(r,a.joyUntil);JUMP.set(r,now);r.shine=now;r.bubble='😊';r.face=a.obj%W+.5>=r.x?1:-1;sfxAt('good',r.x,r.y);
-  const main=QUEST_CLEAR_WAIT;if(main&&main.r===r&&main.obj===a.obj&&!main.prompted){main.prompted=true;const q=QUESTS[main.quest];if(q&&q.story&&S.quest===main.quest){PAYOK=false;if(q.pay)for(const k in q.pay)S.mat[k]=Math.max(0,(S.mat[k]||0)-q.pay[k]);S.qTalked=false;S.qStory=main.quest;sfx('quest');logEv('目標「'+q.text+'」をたっせい');TALKW=r.name;QUESTCLEARW=r.name;if(q.text.startsWith('村レベル'))focusQuestSpeaker(TALKW);renderQuest();renderPalette()}}
-  for(const k in SUB_CLEAR_WAIT){const w=SUB_CLEAR_WAIT[k];if(!w||w.r!==r||w.obj!==a.obj||w.prompted)continue;const q=SUBQ.find(x=>x.k===k);if(!q)continue;w.prompted=true;(S.subArrived||(S.subArrived={}))[k]=true;S.subSt[k]=3;SUBW[r.name]=k}
+  const main=QUEST_CLEAR_WAIT;if(main&&main.r===r&&main.obj===a.obj&&!main.prompted){main.prompted=true;const q=QUESTS[main.quest];if(q&&q.story&&S.quest===main.quest){PAYOK=false;if(q.pay)for(const k in q.pay)S.mat[k]=Math.max(0,(S.mat[k]||0)-q.pay[k]);S.qTalked=false;S.qStory=main.quest;sfx('quest');logEv('目標「'+q.text+'」をたっせい');TALKW=questReplyWho(q);QUESTCLEARW=TALKW;if(q.text.startsWith('村レベル'))focusQuestSpeaker(TALKW);renderQuest();renderPalette()}}
+  for(const k in SUB_CLEAR_WAIT){const w=SUB_CLEAR_WAIT[k];if(!w||w.r!==r||w.obj!==a.obj||w.prompted)continue;const q=SUBQ.find(x=>x.k===k);if(!q)continue;w.prompted=true;(S.subArrived||(S.subArrived={}))[k]=true;S.subSt[k]=3;const reply=questReplyWho(q);if(reply)SUBW[reply]=k}
 },
   tick(r,a){if(!a.secondHop&&performance.now()-a.joyAt>=900){a.secondHop=true;JUMP.set(r,performance.now())}},
   done:(r,a)=>S.obj[a.obj]!==a.targetId||performance.now()>=a.joyUntil,
