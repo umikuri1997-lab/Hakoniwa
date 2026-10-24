@@ -2842,6 +2842,7 @@ function memo(e,t){if(!S)return;(S.memo||(S.memo=[])).push([dayNo(),e,t]);if(S.m
 function kurashi(key,el,v,mt){if(!S||!ELEM[el])return;const K=S.kb||(S.kb={done:{}});if(K.done[key])return;K.done[key]=1;if(mt)memo(mt[0],mt[1]);}/* 暮らしボーナスはなし（思い出帳のメモだけ） */
 function logEv(t){if(!S.log)S.log=[];S.log.push([dayNo(),t]);if(S.log.length>300)S.log.shift()}
 function checkQuest(){
+  if(QUEST_CLEAR_WAIT&&QUEST_CLEAR_WAIT.quest!==S.quest)QUEST_CLEAR_WAIT=null;
   if(S.questOrder35&&S.qStory==null)resumeQuest35(S);
   TALKW=null;if(S.qStory==null)QUESTCLEARW=null;finalCheck();
   if(NEWRES!=null||NEWQ.length)return;
@@ -2893,7 +2894,7 @@ function storyWho(q){if(q.story&&spkOK(q.story[0]&&q.story[0][0]))return q.story
 function startTalk(){if(!$('#dialog').hidden)return;
   if(S.qStory!=null){const sq=QUESTS[S.qStory];TALKW=null;QUESTCLEARW=null;S.flags.talked1=true;
     if(sq.pre&&!S.flags['pre'+WD+'_'+S.qStory]){S.flags['pre'+WD+'_'+S.qStory]=true;questGives(sq,sq.pre);if(sheet==='food')renderSheet()}/* お礼の会話がはじまったら、すぐわたす（ベリーなど） */
-    let once=0;return dialog(ideaDialogue(sq,sq.story,'clear'),()=>{if(once++||S.qStory!==QUESTS.indexOf(sq))return;/* 2回よばれても1回だけ */if(S.quest<=S.qStory)S.quest=S.qStory+1;/* 設置クエストは、お礼を聞き終えてから次の目標へ */S.qStory=null;if(S.questOrder35){S.questOrder35.done[sq.text]=true;resumeQuest35(S)}const after=questGives(sq);inspireQuest(sq,'clear');{const rw=sq.reward??5;if(rw){S.pt+=rw;S.totalPt+=rw;toast('ごほうび：パワー+'+rw,'good')}}renderQuest();renderPalette();if(after)after();else checkQuest()},null)}
+    let once=0;return dialog(ideaDialogue(sq,sq.story,'clear'),()=>{if(once++||S.qStory!==QUESTS.indexOf(sq))return;/* 2回よばれても1回だけ */if(QUEST_CLEAR_WAIT&&QUEST_CLEAR_WAIT.quest===S.qStory)QUEST_CLEAR_WAIT=null;if(S.quest<=S.qStory)S.quest=S.qStory+1;/* 設置クエストは、お礼を聞き終えてから次の目標へ */S.qStory=null;if(S.questOrder35){S.questOrder35.done[sq.text]=true;resumeQuest35(S)}const after=questGives(sq);inspireQuest(sq,'clear');{const rw=sq.reward??5;if(rw){S.pt+=rw;S.totalPt+=rw;toast('ごほうび：パワー+'+rw,'good')}}renderQuest();renderPalette();if(after)after();else checkQuest()},null)}
   const q=QUESTS[S.quest];if(!q||!q.talk)return;TALKW=null;QUESTCLEARW=null;S.flags.talked1=true;
   let once=0;dialog(ideaDialogue(q,q.talk.lines),()=>{if(once++||QUESTS[S.quest]!==q)return;/* 2回よばれても1回だけ */S.qTalked=true;if(S.questOrder35)S.questOrder35.accepted[q.text]=true;recount();
     for(const id of q.talk.learn||[])S.recipes[id]=true;
