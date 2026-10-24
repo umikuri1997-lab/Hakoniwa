@@ -189,11 +189,11 @@ button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 @keyframes tswipe{0%{transform:translateX(34px);opacity:0}15%{opacity:1}85%{opacity:1}100%{transform:translateX(-34px);opacity:0}}
 #tutHand{--hand-size:clamp(40px,11vw,56px);position:absolute;left:0;top:0;z-index:27;pointer-events:none;width:0;height:0}
 #tutHand .ring{position:absolute;left:-30px;top:-30px;width:60px;height:60px;border-radius:50%;border:3px solid #ecdcbc;box-shadow:0 0 12px #ecdcbc;animation:tring 1.1s ease-out infinite}
-#tutHand .fing{position:absolute;left:calc(var(--hand-size) * -.52);top:calc(-1 * var(--hand-size) - 10px);width:var(--hand-size);line-height:1;filter:drop-shadow(0 2px 2px rgba(0,0,0,.5));animation:tfing .9s ease-in-out infinite}
+#tutHand .fing{position:absolute;left:calc(var(--hand-size) * -.52);top:40px;width:var(--hand-size);line-height:1;filter:drop-shadow(0 2px 2px rgba(0,0,0,.5));animation:tfing .9s ease-in-out infinite}
 #tutHand .lbl{position:absolute;left:50%;transform:translateX(-50%);top:-54px;white-space:nowrap;background:#ecdcbc;color:#1b1408;font-weight:800;font-size:13px;padding:4px 10px;border-radius:999px;box-shadow:0 2px 0 rgba(0,0,0,.25)}
 #tutHand .fing img{width:100%;height:auto;display:block}
-#tutHand.up .lbl{top:calc(var(--hand-size) + 24px);bottom:auto}
-#tutHand.down .fing{top:calc(-1 * var(--hand-size) - 4px)}#tutHand.down .fing img{transform:scaleY(-1)}#tutHand.down .lbl{top:calc(-1 * var(--hand-size) - 44px)}
+#tutHand.up .lbl{top:calc(var(--hand-size) * 2 + 56px);bottom:auto}
+#tutHand.down .fing{top:auto;bottom:40px}#tutHand.down .fing img{transform:scaleY(-1)}#tutHand.down .lbl{top:auto;bottom:calc(var(--hand-size) * 2 + 56px)}
 @keyframes tring{0%{transform:scale(.6);opacity:1}100%{transform:scale(1.3);opacity:0}}
 @keyframes tfing{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
 .ctabs{display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 10px}.ctab{border:none;border-radius:999px;padding:6px 12px;font:inherit;font-size:13px;font-weight:800;background:var(--panel2);color:inherit;cursor:pointer}.ctab.on{background:#f1e4cc;color:#4a3a22}
