@@ -2807,6 +2807,7 @@ function clearObj(j){j=anc(j);const o=S.obj[j];delete S.hp['L'+j];if(S.win&&S.wi
 function removeAt(x,y){
   if(!inBase(x,y))return toast('基地の外はこわせません');
   const j=anc(y*W+x),o=S.obj[j];x=j%W;y=(j/W)|0;
+  if(S.win&&S.win[j]){const id=S.win[j]===1?'window':S.win[j];delete S.win[j];giveItem(id,1);toast(BL[id].name+'をお供え箱にもどした');burst(j,'furn','rm');recount();renderPalette();return}
   if(o){const b=BL[o];if(o==='tower')return toast('守護の台座はこわせません');if(o==='volcano'||o==='heatv'||o==='crack'||o==='boulder')return toast(b.name+'はこわせません');if(o==='statue'||o==='obox'||o==='board'||o==='altar'||o==='site2')return toast('神殿はこわせません');if((o==='stor'||o==='mbox')&&cnt(o)<=1)return toast(BL[o].name+'は1つ以上必要です');
     if(o==='site'){const d=S.dyn[j];if(d.build==='statue')return toast('神殿はこわせません');const bm=d.mat||{};clearObj(j);for(const k in bm)S.mat[k]=(S.mat[k]||0)+bm[k];toast('建てるのをやめた')}/* 素材はもどる・パワーはもどらない */
     else if(o==='sprout'){const d=S.dyn[j];clearObj(j);giveItem(d.plant,1);toast('植えるのをやめた')}
