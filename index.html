@@ -2431,7 +2431,7 @@ function checkSub(){const D=S.subDone||(S.subDone={}),Sn=S.subSeen||(S.subSeen={
   for(const q of pending){const w=subWho(q);if(w&&spkOK(w)&&w!==TALKW){SUBW[w]=q.k;break}}}
 function subTalk(k){const q=SUBQ.find(q=>q.k===k),St=S.subSt,D=S.subDone;if(!q||!$('#dialog').hidden)return;S.subTalkAt=S.t;const w=subWho(q)||POKO,L=(St[k]===1?q.L:q.X)||[[w,q.t]];
   const rw=S.res.find(z=>z.name===w),FB2=q.g==='fire'&&rw&&elemKey(rw)==='fireB'&&FIREB[k];let once=0;dialog(ideaDialogue(q,(FB2?(St[k]===1?FB2.L:FB2.X):L).map(x=>[x[0]==='K'?w:x[0],x[1]]),St[k]===1?'accept':'clear'),()=>{if(once++)return;
-    if(St[k]===1){St[k]=2;Sn0(k);if(q.base)S.subB[k]=q.base();for(const id of q.learn||[])S.recipes[id]=true;inspireQuest(q);for(const x in q.give||{}){S.unlocked[x]=true;giveItem(x,q.give[x])}sfx('quest');toast('サブクエスト：'+q.t,'good');renderPalette()}
+    if(St[k]===1){St[k]=2;Sn0(k);if(q.base)S.subB[k]=q.base();for(const id of q.learn||[])S.recipes[id]=true;inspireQuest(q);for(const x in q.give||{}){S.unlocked[x]=true;giveItem(x,q.give[x])}queueItemGift(q.give);sfx('quest');toast('サブクエスト：'+q.t,'good');renderPalette()}
     else if(St[k]===3){St[k]=4;D[k]=1;inspireQuest(q,'clear');if(q.rw){S.pt+=q.rw;S.totalPt+=q.rw;toast('ごほうび：パワー+'+q.rw,'good')}memo('📌','サブクエスト「'+q.t+'」をたっせい');logEv('サブクエスト「'+q.t+'」をたっせい')}
     checkSub()},null)}
 function Sn0(k){(S.subSeen||(S.subSeen={}))[k]=1}
@@ -2880,8 +2880,17 @@ let ASKING=false,PAYOK=false,SUBT=0;
 function askYesNo(who,text,yes,no){const o=document.createElement('div');o.className='askyn';o.innerHTML='<div class="ak"><b></b><p></p><div class="ab"><button class="btn">あとで</button><button class="btn pri">はい</button></div></div>';o.querySelector('b').textContent=who;o.querySelector('p').textContent=text;
   const [bn,by]=o.querySelectorAll('button');by.onclick=()=>{sfx('next');o.remove();yes()};bn.onclick=()=>{sfx('tap');o.remove();no()};document.body.appendChild(o);sfx('next')}
 /* クエストのごほうび・解放。お話のあとに行う。続けてすることがあれば関数を返す */
+const ITEM_GIFTS=[];let GIFT_ACTIVE=false;
+function queueItemGift(items){const entries=Object.entries(items||{}).filter(([id,n])=>BL[id]&&n>0);if(entries.length)ITEM_GIFTS.push({state:S,items:entries})}
+function showItemGift(){while(ITEM_GIFTS.length&&ITEM_GIFTS[0].state!==S)ITEM_GIFTS.shift();if(!ITEM_GIFTS.length||GIFT_ACTIVE)return;
+  const items=new Map();while(ITEM_GIFTS.length&&ITEM_GIFTS[0].state===S)for(const[id,n]of ITEM_GIFTS.shift().items)items.set(id,(items.get(id)||0)+n);
+  GIFT_ACTIVE=true;const overlay=el('<div class="idea-reveal gift-reveal" role="dialog" aria-modal="true" aria-label="うけとったもの"></div>'),card=el('<div class="idea-card"><div class="idea-symbol">🎁</div><h2>うけとった！</h2><div class="idea-items"></div><p>「おく」からえらんで使えるよ</p></div>');
+  for(const[id,n]of items){const item=el('<div class="idea-item"></div>'),img=document.createElement('img'),name=document.createElement('span');img.src=iconURL(id);img.alt='';name.textContent=iname(id)+' ×'+n;item.append(img,name);card.querySelector('.idea-items').append(item)}
+  const button=el('<button class="btn pri" type="button">うけとる</button>');button.disabled=true;card.append(button);overlay.append(card);document.body.append(overlay);sfx('good');const prior=document.activeElement;
+  setTimeout(()=>{if(overlay.isConnected){button.disabled=false;button.focus({preventScroll:true})}},650);button.onclick=()=>{if(button.disabled)return;overlay.remove();GIFT_ACTIVE=false;if(prior&&prior.isConnected)prior.focus({preventScroll:true})};
+}
 function questGives(q,g){g=g||q.gives||{};
-    (g.feat||[]).forEach(f=>S.feat[f]=true);for(const k in (g.food||{}))addFood(k,g.food[k]);for(const k in (g.mat||{}))S.mat[k]=(S.mat[k]||0)+g.mat[k];for(const k in (g.items||{})){S.unlocked[k]=true;giveItem(k,g.items[k])}
+    (g.feat||[]).forEach(f=>S.feat[f]=true);for(const k in (g.food||{}))addFood(k,g.food[k]);for(const k in (g.mat||{}))S.mat[k]=(S.mat[k]||0)+g.mat[k];for(const k in (g.items||{})){S.unlocked[k]=true;giveItem(k,g.items[k])}queueItemGift(g.items);
     if(g.flags)g.flags.forEach(f=>S.flags[f]=true);if(g.recipes)g.recipes.forEach(id=>S.recipes[id]=true);if(g.shard)giveShard(g.shard);if(g.enemy)S.enemyOn=true;if(g.shrine)S.flags.shrine=true;if(g.flag){S.flags[g.flag]=true;if(g.flag==='onsen')dirty=true}
     if(g.godLeave){S.godGone=true;const GX=godX(),GY=godY();fx.push({k:'ring',x:GX*TS,y:GY*TS,life:1});for(let n=0;n<20;n++){const a=Math.random()*7;fx.push({k:'p',x:GX*TS,y:GY*TS,vx:Math.cos(a)*90,vy:Math.sin(a)*90-40,life:1,col:'#fff',r:3})}sfx('poof')}
     if(g.fest)freeFest();applyFeats();
@@ -5111,7 +5120,7 @@ $('#tStart').onclick=()=>{audioInit();curSong=wantSong='opening';step=0;nextT=AC
 
 /* ---------- ループ ---------- */
 let last=performance.now(),lastDraw=0,saveT=0,questT=0,running=true;
-const paused=()=>!started||sheet!=null||!$('#dialog').hidden||!$('#lvup').hidden||!$('#rlv').hidden||NEWRES!=null||!$('#idle').hidden;
+const paused=()=>GIFT_ACTIVE||!started||sheet!=null||!$('#dialog').hidden||!$('#lvup').hidden||!$('#rlv').hidden||NEWRES!=null||!$('#idle').hidden;
 /* 寝落ち対策：2分さわらないと、時間を止める */
 let lastIn=performance.now();
 for(const ev of['pointerdown','keydown','wheel'])addEventListener(ev,()=>{lastIn=performance.now();const d=$('#idle');if(!d.hidden){d.hidden=true;last=performance.now()}},true);
@@ -5133,7 +5142,7 @@ function tutSpot(id){const sz=BL[id].sz||[1,1],V=tutView(),vc=[Math.floor((cam.x
 function palArrows(){const b=$('#palItems');if(!b)return;const m=b.scrollWidth-b.clientWidth;$('#palL').hidden=!(m>4&&b.scrollLeft>4);$('#palR').hidden=!(m>4&&b.scrollLeft<m-4)}
 function updTut(){
   const hand=$('#tutHand');const hide=()=>{hand.hidden=true};
-  if(!S||!$('#dialog').hidden||!$('#lvup').hidden||!$('#rlv').hidden||!$('#title').hidden||!$('#maps').hidden||!$('#pro').hidden||S.cleared||questGuideBlockedNow())return hide();
+  if(!S||GIFT_ACTIVE||!$('#dialog').hidden||!$('#lvup').hidden||!$('#rlv').hidden||!$('#title').hidden||!$('#maps').hidden||!$('#pro').hidden||S.cleared||questGuideBlockedNow())return hide();
   const q=QUESTS[S.quest];if(!q)return hide();const qt=q.text;
   let el=null,wp=null,lbl='ここをタップ',swipe=0;
   const placeHint=id=>{
@@ -5194,6 +5203,7 @@ function frame(now){
   if(camAnim){camAnim.t+=rdt;const p=Math.min(1,camAnim.t/camAnim.dur),e=p<.5?2*p*p:1-Math.pow(-2*p+2,2)/2;cam.z=camAnim.fz+(camAnim.tz-camAnim.fz)*e;centerOn(camAnim.fx+(camAnim.tx-camAnim.fx)*e,camAnim.fy+(camAnim.ty-camAnim.fy)*e);if(p>=1){const d=camAnim.done;camAnim=null;if(d)d()}}
   if(started&&!window.__noIdle&&now-lastIn>120000&&$('#idle').hidden&&$('#title').hidden&&$('#maps').hidden){$('#idle').hidden=false;try{save()}catch(e){}}
   if(SKIP&&!(S.cleared?eveH():isNight()&&S.enemyOn))SKIP=false;/* 朝になったら、ふつうの速さにもどす */
+  if(started&&!menuOpen&&$('#pro').hidden&&sheet==null&&NEWRES==null&&$('#dialog').hidden&&$('#lvup').hidden&&$('#rlv').hidden)showItemGift();
   if(!paused()){if(S.speed>1&&!TESTSPD&&!TESTM){S.glassT=Math.max(0,(S.glassT||0)-rdt);if(S.glassT<=0){S.speed=1;0}}glassUI();LIGHTCD=Math.max(0,LIGHTCD-rdt*S.speed*(SKIP?40:1));let g=rdt*MIN_PER_SEC*S.speed*(SKIP?40:1);while(g>0){const s=Math.min(g,2);stepWorld(s);g-=s}}
   for(const f of floats)f.life-=prdt*.7;while(floats.length&&floats[0].life<=0)floats.shift();
   for(const s of shots)s.life-=prdt*1.4;while(shots.length&&shots[0].life<=0)shots.shift();
@@ -5204,9 +5214,9 @@ function frame(now){
   if(now-lastDraw>=32&&!PZ&&!menuOpen&&$('#pro').hidden){lastDraw=now;render(now)}/* タイトル・導入会話・メニュー中は、背景ワールドを描かない */
   if(AC)wantSong=(!$('#title').hidden||!$('#maps').hidden||!$('#pro').hidden)?'opening':(isDark()?'night':'day');
   if(started){hudT+=rdt;if(hudT>.3){hudT=0;updHUD()}
-    if(RLVQ.length&&sheet==null&&NEWRES==null&&$('#dialog').hidden&&$('#lvup').hidden&&$('#rlv').hidden)rlvShow(RLVQ.shift());
-    if(NEWQ.length&&NEWRES==null&&$('#dialog').hidden&&$('#lvup').hidden&&$('#rlv').hidden&&performance.now()>=NEWQ[0].t){const q=NEWQ.shift();if(S.res.some(x=>x.id===q.id)){NEWRES=q.id;resTab=0;sfx('next');openSheet('res',q.id)}else HOLD.delete(q.id)}
-    questT+=rdt;if(questT>1){questT=0;checkLevel();checkQuest();checkSummon()}
+    if(!GIFT_ACTIVE&&RLVQ.length&&sheet==null&&NEWRES==null&&$('#dialog').hidden&&$('#lvup').hidden&&$('#rlv').hidden)rlvShow(RLVQ.shift());
+    if(!GIFT_ACTIVE&&NEWQ.length&&NEWRES==null&&$('#dialog').hidden&&$('#lvup').hidden&&$('#rlv').hidden&&performance.now()>=NEWQ[0].t){const q=NEWQ.shift();if(S.res.some(x=>x.id===q.id)){NEWRES=q.id;resTab=0;sfx('next');openSheet('res',q.id)}else HOLD.delete(q.id)}
+    questT+=rdt;if(questT>1&&!GIFT_ACTIVE){questT=0;checkLevel();checkQuest();checkSummon()}
     saveT+=rdt;if(saveT>10){saveT=0;save()}}
 }
 document.addEventListener('visibilitychange',()=>{if(document.hidden){running=false;save();KV.push(true);if(AC)AC.suspend()}else{if(AC)AC.resume();if(!running){running=true;last=performance.now();requestAnimationFrame(frame)}}});
