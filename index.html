@@ -705,11 +705,11 @@ const QUESTS1=[
   {text:'家の壁を直そう',check:()=>HOUSES.length>=1,
    talk:{who:GOD,when:()=>true,lines:[
     [GOD,'しまう場所もできたのう。…そろそろ、夜のことも話しておかんとな。'],[GOD,'この土地には、夜になると「コワイノ」が来るんじゃ。'],
-    [POKO,'うん……コワイノは、ずっと前から夜に来てたよ。ぼく、見つからないように隠れて朝を待ってたんだ。'],
-    [GOD,'せいれいの力が大好きでのう〜、夜になると、それをねらってくるんじゃよ。'],
-    [GOD,'せいれいをおそったり、食料箱の食べ物や畑の作物、素材箱の木材や石材をぬすんだりするんじゃ。'],
-    [POKO,'こわい…。'],
-    [GOD,'じゃが、家の中にいるせいれいは攻撃されん。見つかると、壁をこわそうとはしてくるがの。'],
+    [POKO,'夜になると、いつも隠れてたの。朝になるまで、じっと……。'],
+    [GOD,'そうじゃったか……。ひとりで朝まで、怖かったじゃろう。'],
+    [POKO,'うん……音がするたび、息をひそめてた。'],
+    [GOD,'もう、ひとりで隠れんでよいぞ。コワイノは、せいれいや食べ物をねらって来る。'],
+    [GOD,'家の中にいれば襲われん。じゃが、壁にすきまがあると、こわして入ろうとするんじゃ。'],
     [GOD,'あそこの家、壁がこわれたままなんじゃ。木の壁を3つ入れといたから、すきまをふさいでみい。']],gives:{feat:['people'],items:{hwall:3}}},
    story:[
     [POKO,'前に、夜に壁をこわされたことがあったんだ。'],[POKO,'でも、もうすきまはないね。壁があると、なんだかほっとする！']]},
@@ -734,9 +734,8 @@ const QUESTS1=[
     [GOD,'うむうむ。新しく使える物もふえたぞい。']]},
   {text:'柵を4つ置こう',check:()=>['fence','logfence','bamboofence','stonefence'].reduce((n,id)=>n+(S.placed[id]||0),0)>=4,
    talk:{who:POKO,when:()=>(S.nights||0)>=1&&S.lastMorning>S.lastNight,wait:'夜をこして、朝をむかえよう',lines:[
-    [POKO,'……おはよう。ゆうべも、コワイノが来たね。'],[POKO,'気になって、あんまり眠れなかったよ……。外で足音がして、壁をがりがりってひっかく音も……。'],
-    [POKO,'いつもなら、見つからないように隠れて朝を待つんだけど……。'],
-    [POKO,'……でも、今日は、守り神さまがいる。'],
+    [POKO,'……おはよう。ゆうべも、外で音がしてたね。'],[POKO,'壁をがりがりってひっかく音……。聞こえるたび、胸がどきどきしたよ。'],
+    [POKO,'前なら、音がするたび隠れてた。でも今日は、守り神さまがいる。'],
     [POKO,'ぼくもがんばる！ でも、どうしたらいいのかな……。'],[POKO,'家の壁で家を守れたみたいに、コワイノの通り道もふさげたらいいのかな……。'],[GOD,'「コワイノ」は、まっすぐ歩いて近づいてくるんじゃ。道をふさげば、遠まわりさせられるぞい。'],[POKO,'そっか、通り道をふさぐんだね！ 家の壁みたいに全部閉じるんじゃなくて、柵で囲めば、ぼくたちは出入りできるもんね！'],
     [GOD,'柵を入れといたぞい。「コワイノ」が通りそうなとこに置いて、家に近づけんようにするんじゃ。']],gives:{items:{fence:10}}},
    story:[
@@ -748,7 +747,7 @@ const QUESTS1=[
     [GOD,'とげの罠も10こ入れといたぞい。「コワイノ」が通りそうな所に置いてみい。']],gives:{watchNow:true,items:{spike:10},flags:['watchLearned']}},
    story:[
     [GOD,'見張り台は光の矢で「コワイノ」を追いはらうんじゃ。とげの罠は、ふんだ「コワイノ」にダメージじゃよ。'],
-    [POKO,'これでもう、「コワイノ」なんかへっちゃらだね！'],[POKO,'守ってくれて、ありがとう、守り神さま！']]},
+    [POKO,'これで、少しは安心できるね。'],[POKO,'守ってくれて、ありがとう、守り神さま！']]},
   {text:'ききょうを植えて、土の力をためよう',check:()=>S.summonNext==='earth'||!!S.summon||!!S.flags.minaCame,prog:()=>'ききょう '+Math.min(2,cnt('bellf'))+'/2',
    talk:{who:POKO,when:()=>true,lines:[
     [POKO,'ねえカミサマ…ぼく、ひとりだとちょっとさみしいな。'],
@@ -5172,7 +5171,7 @@ function updTut(){
   else if(qt==='カミサマと交換してみよう'){if(sheet==='shop'){if(S.flags.traded){el=$('#shopEnd');lbl='買いおわったら、おわる'}else{el=[...document.querySelectorAll('#sheetBody .btn.pri')].find(b=>!b.disabled);lbl='交換してみよう'}}else if(!sheet&&godHere()){if(mode!=='look'){el=document.querySelector('#dock [data-mode="look"]');lbl='「みる」をタップ'}else{wp=[godX()*TS,(godY()-.2)*TS];lbl='カミサマをタップ'}}}
   let x,y;
   if(el){const r=el.getBoundingClientRect(),ar=$('#app').getBoundingClientRect();if(!r.width)return hide();x=r.left-ar.left+r.width/2;y=r.top-ar.top+r.height/2}
-  else if(wp){x=(wp[0]-cam.x)*cam.z;y=(wp[1]-cam.y)*cam.z;if(x<0||y<0||x>VW||y>VH)return hide()}
+  else if(wp){const ar=$('#app').getBoundingClientRect(),cr=cv.getBoundingClientRect();x=cr.left-ar.left+(wp[0]-cam.x)*cam.z*(cr.width/VW);y=cr.top-ar.top+(wp[1]-cam.y)*cam.z*(cr.height/VH);if(x<0||y<0||x>ar.width||y>ar.height)return hide()}
   else return hide();
   hand.hidden=false;hand.style.transform='translate('+x+'px,'+y+'px)';hand.classList.toggle('up',y<120);hand.classList.toggle('down',!swipe&&y>innerHeight-110);// 画面の下のほうは指を上から向ける
   hand.classList.toggle('swipe',!!swipe);hand.classList.toggle('rev',swipe<0);hand.querySelector('.lbl').textContent=lbl;{const L=hand.querySelector('.lbl');L.style.marginLeft='0px';const lr=L.getBoundingClientRect();let sh=0;if(lr.right>innerWidth-8)sh=innerWidth-8-lr.right;else if(lr.left<8)sh=8-lr.left;L.style.marginLeft=sh+'px'}// ラベルが画面からはみ出さないように
