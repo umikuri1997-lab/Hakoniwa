@@ -2442,6 +2442,7 @@ function checkSub(){const D=S.subDone||(S.subDone={}),Sn=S.subSeen||(S.subSeen={
   for(const q of subList()){if(D[q.k])continue;if(St[q.k]===1&&!subOfferReady(q))delete St[q.k];if(Sn[q.k]&&!St[q.k])St[q.k]=2;
     if(St[q.k]===3&&FLOWER_QUESTS.has(q.k)&&!q.ok()){St[q.k]=2;delete (S.subArrived||{})[q.k];delete SUB_CLEAR_WAIT[q.k]}
     if(St[q.k]===3&&!(S.subArrived||{})[q.k]&&!SUB_CLEAR_WAIT[q.k]){const visit=queueQuestVisit(q,subWho(q));if(visit){St[q.k]=2;SUB_CLEAR_WAIT[q.k]=Object.assign({done:false},visit)}}/* 前からの人：もう受けている */
+    if(St[q.k]===2&&q.k==='oven'){const partKey=(S.world||0)+':sub:oven:placed';if((S.questPartSeen||{})[partKey]){if(q.ok()){St[q.k]=3;(S.subArrived||(S.subArrived={}))[q.k]=true;sfx('quest');toast('サブクエストたっせい：'+q.t,'good')}}else if(cnt('oven')&&!q.ok()&&!S.res.some(r=>r.act&&r.act.partKey===partKey||(QUEST_VISITS.get(r)||[]).some(v=>v.partKey===partKey)))queueQuestVisit(q,subWho(q),['oven'],partKey)}
     if(St[q.k]===2&&q.ok()){let wait=SUB_CLEAR_WAIT[q.k];if(wait&&!wait.done&&S.obj[wait.obj]!==wait.id){delete SUB_CLEAR_WAIT[q.k];wait=null}
       if(wait&&wait.done){delete SUB_CLEAR_WAIT[q.k];St[q.k]=3;sfx('quest');toast('サブクエストたっせい：'+q.t,'good')}
       else if(!wait){const visit=queueQuestVisit(q,subWho(q));if(visit)SUB_CLEAR_WAIT[q.k]=Object.assign({done:false},visit);else{St[q.k]=3;sfx('quest');toast('サブクエストたっせい：'+q.t,'good')}}}
