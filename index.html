@@ -774,11 +774,11 @@ const QUESTS1=[
     [POKO,'ふかふかの畑だ！'],
     [MINA,'耕すのは、ぼくにまかせてねぇ。'],
     [GOD,'いい畑になったのう〜。']]},
-  {text:'畑にたねをまこう',check:()=>cnt('farm')>=6&&!farmsBare(),prog:()=>'たねをまいた畑 '+(cnt('farm')-farmsBare())+'/'+cnt('farm'),
+  {text:'畑にたねをまこう',check:()=>imoSeedQuestPlots().length>=2,prog:()=>'いものたね '+Math.min(2,imoSeedQuestPlots().length)+'/2',
    talk:{who:POKO,when:()=>true,lines:[
     [POKO,'ノドカが耕してくれた畑、まだなにも植わってないね。'],
     [MINA,'畑はねぇ、耕しただけじゃ、なにも育たないんだよぉ。'],
-    [MINA,'「おく」で、たねをえらんで、畑をタップしてねぇ。いまは、いものたねがあるよぉ。'],
+    [MINA,'「おく」で、たねをえらんで、畑をタップしてねぇ。いものたねを2こ、別々の畑にまいてねぇ。'],
     [POKO,'いもは、いっぺんにたくさんとれるんだよ！']],gives:{items:{'seed:imo':2}}},
    story:[
     [POKO,'たねをまいてくれて、ありがとう！ 水やりと世話は、ぼくにまかせて！'],
@@ -926,7 +926,7 @@ const QUEST_HELP1={
   "ききょうを植えて、土の力をためよう": "「おく」→「ききょうの種」を植える。土の力が満ちると、次の朝になかまを呼べる",
   "朝になったら、神殿の「！」でなかまを呼ぼう": "朝、神殿の上に「！」が出たら、「みる」で神殿をタップ",
   "畑を6つにしよう": "「おく」→「畑」をえらび、合計6つにする。土のせいれいが耕すのを待とう",
-  "畑にたねをまこう": "「おく」でたねをえらんで、たねがない畑にまく",
+  "畑にたねをまこう": "「おく」でいものたねをえらび、たねがない別々の畑に2こまく",
   "カミサマと交換してみよう": "カミサマをタップし、何かと交換してから「交換をおわる」をタップ",
   "火のせいれいをむかえよう": "火の力をためる。サルビアを5本植える依頼と、見張り台を合計2つにする依頼も受けられる。満ちた次の朝、神殿の「！」から呼ぶ",
   "水のせいれいをむかえよう": "井戸やハスを置いて水の力をため、朝に神殿の「！」から呼ぶ",
@@ -1331,6 +1331,7 @@ const FOODS={mugi:{name:'こむぎ',v:1,e:'🌾'},imo:{name:'いも',v:1,e:'🥔
 FOODS.berry.fx=FOODS.apple.fx='たのしさ+8';
 const DISHD=R=>{const F=FOODS[R.out];return F.name+'：材料は '+Object.keys(R.need).map(k=>FOODS[k].name+'×'+R.need[k]).join('・')+'。調理時間は約'+R.time+'分。食べると、おなかが'+F.v+'ふくれて、パワー+'+F.pt+'。'+(F.fx?'さらに、'+F.fx+'。':'')};/* ハテナに出す料理の説明 */
 const DISHES=['bread','soup','yakiimo','yakizakana'],favDish=r=>{const ds=WD===0?DISHES.filter(d=>d!=='soup'):DISHES;return ds[[...r.name].reduce((a,c)=>a+c.charCodeAt(0),0)%ds.length]};/* すきな料理は名前できまる */
+function imoSeedQuestPlots(){if(!S.imoSeedQuestPlots){S.imoSeedQuestPlots=[];for(let j=0;j<S.obj.length;j++){const d=S.dyn[j];if(S.obj[j]==='farm'&&d&&d.crop==='imo'&&(d.paid||d.sown===true))S.imoSeedQuestPlots.push(j)}}return S.imoSeedQuestPlots}
 const farmsBare=()=>{let n=0;for(let j=0;j<S.obj.length;j++)if(S.obj[j]==='farm'&&S.dyn[j]&&S.dyn[j].crop===null)n++;return n};/* たねをえらんでいない畑の数 */
 const cropK=d=>d.crop===undefined?'mugi':d.crop;/* 作物。null はまだえらんでいない（前からの畑はこむぎ） */
 const cropOn=k=>!S.crops||!!S.crops[k];/* 使える作物（前からのデータは、ぜんぶ使える） */
@@ -2618,6 +2619,7 @@ function noteQuestPlacement(id,j){let m=QUEST_PLACEMENTS.get(S);if(!m){m=new Map
 function questVisitTarget(q,ids,j){const o=S.obj[j];if(!o||o==='part'||!BL[o])return false;
   if(!ids.includes(o)&&!(ids.includes('@furniture')&&BL[o].kind==='furn')&&!(ids.includes('@painting')&&['paint1','paint2','paint3'].includes((S.win||{})[j])))return false;
   if(FLOWERS.has(o)&&isBud(j))return false;
+  if(q.text==='畑にたねをまこう')return imoSeedQuestPlots().includes(j);
   if(q.k==='bed3'||q.k==='houselight'||q.k==='room'||q.text==='家にベッドを置こう')return HOUSES.some(h=>h.inside.has(j));
   if(q.text==='シズクのおねがい：温泉のそばに休憩所を作ろう')return nearHot(j,4);
   if(q.k==='chair2')return [-1,1,-W,W].some(d=>{const k=j+d;return k>=0&&k<W*H&&Math.abs(k%W-j%W)+Math.abs((k/W|0)-(j/W|0))===1&&S.obj[k]==='table'});
@@ -2743,7 +2745,7 @@ function place(id,x,y){
   if(WALLD.has(id)){if(!usable(id))return toast(BL[id].name+'がありません。依頼ボードでせいれいにたのもう');if(!canPlace(id,x,y))return;const j=y*W+x;S.inv[id]--;(S.win||(S.win={}))[j]=id==='window'?1:id;noteQuestPlacement('hwall',j);burst(j,'furn');recount();dirty=true;renderPalette();return}
   if(b.kind==='seed'){const k=id.slice(5),j=y*W+x,d=S.dyn[j];if(S.obj[j]!=='farm'||!d)return toast('畑をタップしてね');
     if(d.crop&&d.sown!==false)return toast('もう'+CROPS[d.crop].name+'が植えてある');if(cseed(k)<1)return toast('たねがありません');
-    if(d.paid&&d.crop)S.cseed[d.crop]=cseed(d.crop)+1;S.cseed[k]--;d.paid=true;/* たねは、えらんだときに減る */d.crop=k;d.sown=false;noteQuestPlacement('farm',j);burst(j,'plant','pat');toast(CROPS[k].name+'のたねをまいた');checkQuest();renderPalette();return}/* せいれいが、たねをまく */
+    if(d.paid&&d.crop)S.cseed[d.crop]=cseed(d.crop)+1;S.cseed[k]--;d.paid=true;/* たねは、えらんだときに減る */d.crop=k;d.sown=false;if(k==='imo'&&QUESTS[S.quest]?.text==='畑にたねをまこう'&&S.qTalked){const plots=imoSeedQuestPlots();if(!plots.includes(j))plots.push(j)}noteQuestPlacement('farm',j);burst(j,'plant','pat');toast(CROPS[k].name+'のたねをまいた');checkQuest();renderPalette();return}/* せいれいが、たねをまく */
   if(id==='tower'&&!towerReady())return openSheet('clear');/* 条件がそろうまで、台座は建てられない */
   if(!usable(id)){if(b.kind==='furn'){toast(b.name+'がありません。依頼ボードでせいれいにたのもう');if(S.feat.craft)openSheet('craft')}else toast('まだつかえません');return}
   if(!canPlace(id,x,y))return;
@@ -5197,9 +5199,9 @@ function updTut(){
   else if(qt==='食卓をたのもう'){const g=orderTut('table');if(g&&g.kind==='place')placeHint('table');else if(g&&g.kind==='close'){el=$('#sheetX');lbl='依頼ボードをとじる'}else if(g&&g.kind==='look'){el=document.querySelector('#dock [data-mode="look"]');lbl='「みる」をタップ'}else if(g&&g.kind==='board'){wp=[(BOARD%W+.5)*TS,((BOARD/W)|0)*TS+8];lbl='依頼ボードをタップ'}else if(g&&g.kind==='tab'){el=document.querySelectorAll('.ctab')[g.tab];lbl='「家具」をタップ'}else if(g&&g.kind==='row'){const row=[...document.querySelectorAll('#sheetBody .row')].find(r=>r.textContent.includes(BL.table.name));el=row&&row.querySelector('button');lbl=el&&el.disabled?'パワーや素材が集まるまで待とう':'食卓の「はる」をタップ'}}
   else if((qt==='食料箱を置こう'||qt==='素材箱を置こう')&&sheet==='craft'&&S.orders.some(o=>o.type===(qt==='食料箱を置こう'?'stor':'mbox'))&&inv(qt==='食料箱を置こう'?'stor':'mbox')<=0){el=$('#sheetX');lbl='とじる'}/* はったあと：画面をとじて、できあがりを待つ */
   else if(qt==='畑を6つにしよう'){if(inv('farm')>0)placeHint('farm')}
-  else if(qt==='畑にたねをまこう'){if(sheet){el=$('#sheetX');lbl='とじる'}else if(mode!=='build'){el=document.querySelector('#dock [data-mode="build"]');lbl='「おく」をタップ'}
-    else if(!(sel&&sel.startsWith('seed:')&&cseed(sel.slice(5))>0)){const c=[...document.querySelectorAll('#palItems .chip')].find(b=>b.textContent.includes('のたね')&&!b.classList.contains('zero'));if(c){el=c;lbl='たねをえらぶ'}else{el=$('#palMore');lbl='ほかをえらぶ'}}
-    else{let fj=-1;for(let j=0;j<S.obj.length;j++)if(S.obj[j]==='farm'&&S.dyn[j]&&S.dyn[j].crop===null){fj=j;break}if(fj>=0){wp=[(fj%W+.5)*TS,((fj/W)|0)*TS+16];lbl='畑をタップ'}}}/* たねは「おく」からえらんで、畑をタップ */
+  else if(qt==='畑にたねをまこう'){if(imoSeedQuestPlots().length>=2)return hide();if(sheet){el=$('#sheetX');lbl='とじる'}else if(mode!=='build'){el=document.querySelector('#dock [data-mode="build"]');lbl='「おく」をタップ'}
+    else if(!(sel==='seed:imo'&&cseed('imo')>0)){const c=[...document.querySelectorAll('#palItems .chip')].find(b=>b.textContent.includes(CROPS.imo.name+'のたね')&&!b.classList.contains('zero'));if(c){el=c;lbl='たねをえらぶ'}else{el=$('#palMore');lbl='ほかをえらぶ'}}
+    else{let fj=-1;for(let j=0;j<S.obj.length;j++)if(S.obj[j]==='farm'&&S.dyn[j]&&S.dyn[j].crop===null&&!imoSeedQuestPlots().includes(j)){fj=j;break}if(fj>=0){wp=[(fj%W+.5)*TS,((fj/W)|0)*TS+16];lbl='畑をタップ'}}}/* たねは「おく」からえらんで、畑をタップ */
   else if(qt==='道を6マスのばそう'){if(inv('path')>0)placeHint('path')}
   else if(qt==='花を植えてもらおう'){if(inv('flower')>0)placeHint('flower')}
   else if(qt==='食料箱を置こう'||qt==='素材箱を置こう'){const bid=qt==='食料箱を置こう'?'stor':'mbox',tb=craftTabFor(bid),tn=CRAFT_TABS[tb][0],bn=BL[bid].name;
