@@ -4669,6 +4669,16 @@ function gaugeHTML(r){
   return `<div class="gauges">${g('おなか',r.hunger/hMax(r)*100,r.hunger<25?'var(--danger)':'#ffb35c')}${g('たのしさ',r.fun,'var(--pink)')}${g(S.t-(r.eUp||-9)<3?'つかれ（回復中）':'つかれ',100-r.energy,S.t-(r.eUp||-9)<3?'#7ed99a':r.energy<25?'var(--danger)':'#c9a7ff')}</div>`;
 }
 let sheet=null,sheetArg=null;
+function attrPop(k){
+  const src={};const add=(name,v)=>{const r=src[name]||(src[name]={n:0,v:0});r.n++;r.v+=v};
+  for(let j=0;j<W*H;j++){if(!inBase(j%W,(j/W)|0))continue;if(k==='water'&&S.ground[j]===1)add('池・水辺（1マス0.3）',.3);const id=S.obj[j],b=BL[id];if(!b||b.kind==='block'||(FLOWERS.has(id)||id==='tree'||id==='fruit')&&isBud(j))continue;if((b.attr||{})[k]>0)add(b.name,b.attr[k])}
+  const ov=el('<div style="position:absolute;inset:0;z-index:30;background:rgba(0,0,0,.45);display:grid;place-items:center;padding:24px"></div>');
+  const card=el('<div class="sec" style="background:var(--panel);border:2px solid var(--line);border-radius:16px;padding:14px;width:100%;max-width:340px;max-height:70%;overflow:auto"></div>');
+  const h=document.createElement('h3');h.textContent=ELEM[k].name+'の力：'+Number(ATTR[k].toFixed(1))+' / '+needFor(k);card.appendChild(h);
+  for(const[name,r]of Object.entries(src))card.appendChild(rowEl(name+' ×'+r.n,'+'+Number(r.v.toFixed(1))));
+  if(!Object.keys(src).length)card.appendChild(el('<p class="note">まだありません</p>'));
+  card.appendChild(el('<p class="note">基地の中にあるものだけを集計。花と木は育ってから加算されます。</p>'));
+  ov.appendChild(card);ov.onclick=()=>ov.remove();$('#app').appendChild(ov)}/* 属性の内訳ポップアップ */
 function openSheet(k,arg){if(NEWRES!=null&&!(k==='res'&&arg===NEWRES))unhold();if(k==='shop')shopSay=pick(S.pt<2?GOD_POOR:GOD_SHOP);sheet=k;sheetArg=arg;$('#sheetWrap').hidden=false;renderSheet()}
 let resTab=0,tapPend=false,DLG_KEEP=false,NEWQ=[],NEWRES=null,HOLD=new Set();// 新しいせいれいが来たら、ステータスを見せてから進める
 function unhold(){if(NEWRES!=null){HOLD.delete(NEWRES);const r=S&&S.res.find(x=>x.id===NEWRES);if(r)JUMP.set(r,performance.now())}NEWRES=null}
@@ -4783,10 +4793,10 @@ function renderSheet(){
     T.textContent='せいれい '+S.res.length+'人';
     const a=el('<div class="sec"><h3>この土地の属性（満ちた次の朝、神殿の「！」からなかまを呼べる）</h3><div class="attr"></div></div>');const g=a.querySelector('.attr');
     for(const k of ELEM_KEYS){const v=ATTR[k],n=needFor(k),p=Math.min(100,v/n*100);
-      g.insertAdjacentHTML('beforeend',`<span class="el" style="background:${ELEM[k].col}">${ELEM[k].name}</span><div class="bar"><i style="width:${p|0}%;background:${ELEM[k].col}"></i></div><small>${Math.floor(v)}/${n}</small>`)}
+      g.insertAdjacentHTML('beforeend',`<span class="el" style="background:${ELEM[k].col}">${ELEM[k].name}</span><div class="bar"><i style="width:${p|0}%;background:${ELEM[k].col}"></i></div><small>${Math.floor(v)}/${n}</small>`);
+      for(const c of[...g.children].slice(-3)){c.style.cursor='pointer';c.onclick=()=>{sfx('tap');attrPop(k)}}}/* 属性をタップすると、内訳のポップアップ */
     body.appendChild(a);
-    const detail=el('<button class="btn">属性の内訳を見る</button>');detail.onclick=()=>openSheet('attrdetail');body.appendChild(detail);
-    body.appendChild(el('<p class="note">属性が目もりに届くと、次の朝に神殿の「！」から呼べます。いくつか届いていれば、呼ぶ属性をえらべます。池・植物・家具・建物から属性の力が集まります。</p>'));
+    body.appendChild(el('<p class="note">属性をタップすると内訳が見られます。目もりに届いた次の朝、神殿の「！」から呼べます。いくつか届いていれば、呼ぶ属性をえらべます。池・植物・家具・建物から属性の力が集まります。</p>'));
     const rows=el('<div class="rows"></div>');
     for(const r of S.res){const row=el(`<button class="row" style="text-align:left;width:100%"><span class="dot"></span><div class="tx"><b></b><small></small></div></button>`);
       row.querySelector('.dot').style.cssText='background:#f6f1e6 url('+spiritPort(r.elem,96)+') center/86% no-repeat;box-shadow:inset 0 0 0 2px '+ELEM[r.elem].col;
