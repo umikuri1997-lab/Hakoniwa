@@ -3468,7 +3468,8 @@ function drawSpirit(c,el,x,y,s,f,o){
   const st=o.walk?Math.sin(t*9):0,arm=o.carry?0:o.work?Math.sin(t*12)*.6:o.walk?st*.35:Math.sin(t*1.7)*.08;
   // 作業ごとの動き：aN=手前の腕、aF=奥の腕（負で上がる）
   const A=o.anim||'',cyc=(sp)=>(t*sp)%1;let aN=null,aF=null,prop='',lean2=0,sq=0,frontArm=false,bothF=false;
-  if(A==='eat'){aN=aF=-2.45+Math.sin(t*7)*.06;frontArm=bothF=true}
+  if(A==='punch'){const p=Math.min(1,o.pp||0),v=p<.55?-1.95*(p/.55):-1.95+2.4*((p-.55)/.45);aN=aF=v;lean2=p<.55?-.04:.07;frontArm=bothF=true}/* 攻撃：両手を振り上げて、ぽかっと振り下ろす */
+  else if(A==='eat'){aN=aF=-2.45+Math.sin(t*7)*.06;frontArm=bothF=true}
   else if(A==='chop'||A==='mine'||A==='till'){const p=cyc(1.4),v=p<.72?-2.3*(p/.72):-2.3+2.9*((p-.72)/.28);aN=v;aF=v;prop=A==='chop'?'axe':A==='mine'?'pick':'hoe';lean2=p<.72?-.06*(p/.72):-.06+.2*((p-.72)/.28);frontArm=true}
   else if(A==='build'||A==='repair'||A==='craft'){const p=cyc(2.6),v=p<.6?-1.3*(p/.6):-1.3+1.7*((p-.6)/.4);aN=v;aF=.2;prop='hammer';lean2=p>.6?.06:0;frontArm=true}
   else if(A==='water'||A==='tend'){aN=-.55+Math.sin(t*2)*.08;aF=.25;prop='can';lean2=.05;frontArm=true}
@@ -3654,7 +3655,6 @@ function drawRes0(r,now){
   if(now>v.bl+140)v.bl=now+2500+Math.random()*3500;
   const bob=(walking?Math.abs(Math.sin(now/110+r.id))*2.5:0)+(()=>{const jt=JUMP.get(r),d=jt==null?-1:now-jt;return d>=0&&d<1000?Math.abs(Math.sin(d/130))*9*(1-d/1000):0})();
   {const sw=Math.max(r.swing||0,r.swingT||0),sd=now-sw;if(sw&&sd>=0&&sd<280)px+=(r.face<0?-1:1)*Math.sin(sd/280*Math.PI)*8}/* 攻撃のとき、前にとびだす */
-  {const sw=Math.max(r.swing||0,r.swingT||0),sd=now-sw;if(sw&&sd>=0&&sd<320){const dr=r.face<0?-1:1,an=-2.1+2.7*Math.min(1,sd/240),ax=px+dr*Math.cos(an)*14,ay=py-1+Math.sin(an)*14,col=(ELEM[r.elem]||ELEM.fire).body;ctx.save();ctx.lineCap='round';ctx.strokeStyle='#5a3a22';ctx.lineWidth=6;ctx.beginPath();ctx.moveTo(px+dr*3,py-2);ctx.lineTo(ax,ay);ctx.stroke();ctx.strokeStyle=col;ctx.lineWidth=3.6;ctx.stroke();ctx.fillStyle='#5a3a22';ctx.beginPath();ctx.arc(ax,ay,4.6,0,7);ctx.fill();ctx.fillStyle=col;ctx.beginPath();ctx.arc(ax,ay,3.2,0,7);ctx.fill();ctx.restore()}}/* 攻撃のとき、腕をふる */
   const wade=at==='bathe'&&ad&&r.act.in>0?r.act.in:0;/* 水浴び：水の中では下半分がかくれる */
   {const tp=toyPose(r,now);if(tp){px=tp.x;py=tp.y-9}}/* 遊具の上で遊ぶ */if(sj<0&&!wade&&!toyR(r))shadow(ctx,px,py+8,12,3.6);
   const lvR=rLv(r);
@@ -3665,7 +3665,7 @@ function drawRes0(r,now){
     if(o&&o.type&&BL[o.type].mat&&BL[o.type].mat.stone){circ(ctx,mx+9,my-10,3.4,'#a3a6ae');circ(ctx,mx+8,my-11,1.4,'#d4d5da')}}
   ctx.save();// 発熱対策：ぼかし影はなし
   if(wade){ctx.beginPath();ctx.rect(px-40,fy-90,80,90-wade*11);ctx.clip()}
-  const ci0=carryIcon(r),an=r.act&&r.act.stage==='do'&&!sleeping&&!onHold(r)?r.act.type:'';const joy=(JOYU.get(r)||0)>now&&!sleeping,clap=(CLAPON||now-CLAPT<3200||joy)&&!sleeping,wv=!clap&&!sleeping&&(r.waveU||0)>S.t,facePlayer=!$('#dialog').hidden&&DLGN.has(r.name)&&!clap&&!sleeping;/* 会話中は話し手がこちらを向く */drawSpirit(ctx,r.elem,px,fy,.435,clap?1:r.face<0?-1:1,{t:tt,vr:r.vr,banzai:held,anim:clap?'clap':wv?'wave':reacting?({shock:'talkshock',think:'talkthink',sad:'talksad',nod:'talk'}[rm]||an):an,food:an==='eat'&&!clap?(r.act.e||'🍙'):'',carry:!!ci0&&!clap,back:clap||wv||facePlayer?false:v.back,turn:clap||wv||facePlayer?0:v.turn,mood,walk:walking,work:working,sleep:sleeping,bed:bedJ>=0,blink:now>v.bl,lean:rp?rp.angle:sleeping?Math.sin(tt*.8)*.06:0});ctx.restore();
+  const ci0=carryIcon(r),an=r.act&&r.act.stage==='do'&&!sleeping&&!onHold(r)?r.act.type:'';const joy=(JOYU.get(r)||0)>now&&!sleeping,clap=(CLAPON||now-CLAPT<3200||joy)&&!sleeping,wv=!clap&&!sleeping&&(r.waveU||0)>S.t,facePlayer=!$('#dialog').hidden&&DLGN.has(r.name)&&!clap&&!sleeping;/* 会話中は話し手がこちらを向く */const pk=(()=>{const sw=Math.max(r.swing||0,r.swingT||0),sd=now-sw;return sw&&sd>=0&&sd<420&&!clap&&!sleeping?sd/420:null})();drawSpirit(ctx,r.elem,px,fy,.435,clap?1:r.face<0?-1:1,{t:tt,vr:r.vr,banzai:held,pp:pk,anim:pk!=null?'punch':clap?'clap':wv?'wave':reacting?({shock:'talkshock',think:'talkthink',sad:'talksad',nod:'talk'}[rm]||an):an,food:an==='eat'&&!clap?(r.act.e||'🍙'):'',carry:!!ci0&&!clap,back:clap||wv||facePlayer?false:v.back,turn:clap||wv||facePlayer?0:v.turn,mood,walk:walking,work:working,sleep:sleeping,bed:bedJ>=0,blink:now>v.bl,lean:rp?rp.angle:sleeping?Math.sin(tt*.8)*.06:0});ctx.restore();
   if(lvR>=5&&!sleeping&&!wade){const n=Math.min(6,Math.floor(lvR/5));for(let i=0;i<n;i++){const SL=LVSLOT[i],bx=px+SL[0]+Math.cos(now/900+i*2.1+r.id)*1.5,by=fy+SL[1]+Math.sin(now/700+i*1.7+r.id)*2.6;lvCharm(ctx,r.elem,bx,by,now/1000+i+r.id)}}/* Lv5ごとに1つ、属性の小物がまわりにふわふわ浮かぶ（顔や体にはかさねない） */
   if(r.shine&&now>=r.shine&&now-r.shine<3500&&!wade){const e=(now-r.shine)/3500;for(let i=0;i<6;i++){const SP=SHINE[i],tw=Math.sin(now/160+i*1.9),k=Math.max(0,(.55+.45*tw)*(e>.75?(1-e)/.25:1));if(k>0)star4(ctx,px+SP[0],fy+SP[1]-e*8,SP[2]*k)}}/* 水浴びのあと：キラキラ */
   if(wade){const wl=fy-wade*11,rp=(now/900+r.id)%1;ctx.strokeStyle='rgba(255,255,255,.75)';ctx.lineWidth=1.6;ctx.beginPath();ctx.ellipse(px,wl,11+rp*6,3+rp*1.5,0,0,7);ctx.globalAlpha=1-rp*.8;ctx.stroke();ctx.globalAlpha=1;ctx.strokeStyle='rgba(255,255,255,.9)';ctx.beginPath();ctx.ellipse(px,wl,10,2.6,0,0,7);ctx.stroke()}/* 水面の波紋 */
