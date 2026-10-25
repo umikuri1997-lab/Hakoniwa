@@ -1685,7 +1685,7 @@ function goEat(r,G){
   r.bubble='😣';return goWander(r,G);
 }
 const fireMul=r=>(r.energy<25?.7:1)*(r.fun<20?.8:1);/* 火のせいれいは、つかれても楽しさが減ってもたたかう。そのぶん、こうげきが弱くなる（つかれ×0.7・楽しさ低下×0.8） */
-const futabaFight=()=>!!(S.cleared||(S.bossKills||0)>0||qAt('オオカゲを追いはらおう'));/* フタバが戦うのは、オオカゲに挑むお話が出てから */
+const futabaFight=()=>!!(S.cleared||(S.bossKills||0)>0);/* フタバが戦うのは、オオカゲを追いはらってから（こもれびのまもりをおぼえてから） */
 const isWatch=r=>r.elem==='fire'||(r.name===POKO&&!WD&&!!S.flags.guard&&futabaFight());/* 夜の見回りをする子 */
 function offShift(r){return false;/* 火のせいれいは全員みまわり（交代なし） */if(r.elem!=='fire'||!S.enemyOn)return false;const F=S.res.filter(q=>q.elem==='fire'&&!q.hidden).sort((a,b)=>a.id-b.id);if(F.length<2)return false;const h=hour(),sh=(h>=21||h<1.5)?0:1;return F.indexOf(r)%2!==sh}
 function goSleep(r,G,run){
