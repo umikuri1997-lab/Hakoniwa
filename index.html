@@ -3213,7 +3213,7 @@ for(const k in ART){const a=ART[k];a.img=new Image();a.img.onload=()=>{a.ok=true
 const BIG2=new Set(['windmill','statue']);/* 見張り台は2×2マスにぴったりの大きさ（拡大しない） */// 見た目2倍
 const TREES=new Set(['tree','ntree','fruit','deadtree']);// 木はさらに1.5倍
 const SPR_OBJ=new Set(['lumber','quarry','well','puddle','spike','firetrap','gust']);
-const BIG=new Set(['table','flower','clover','bellf','salvia','lily','lotus','tree','fruit','rock','deadtree','ntree','berry','grave','stor','mbox','oven','lamp','campfire','swing','torch','stonelamp','chime','vane','kamizo','lighthouse']);const BIGK={oven:1.2,campfire:1.2,kamizo:2,lighthouse:2};/* 食卓・椅子・つぼ・石のオブジェは1マスぴったり。かまど・たき火は少しだけ大きく */// 罠は1マスぴったりなので大きくしない
+const BIG=new Set(['table','flower','clover','bellf','salvia','lily','lotus','tree','fruit','rock','deadtree','ntree','berry','grave','stor','mbox','oven','lamp','campfire','swing','torch','stonelamp','chime','vane','kamizo','lighthouse','chair','chair2','achair','stool']);const BIGK={oven:1.2,campfire:1.2,kamizo:2,lighthouse:2,table:1.125,chair:.75,chair2:.75,achair:.75,stool:.75};/* 食卓・椅子は、大きさの判定はそのままで、見た目を0.75倍 *//* 食卓・椅子・つぼ・石のオブジェは1マスぴったり。かまど・たき火は少しだけ大きく */// 罠は1マスぴったりなので大きくしない
 /* 新しい家具（スクリプトで描く）。マスの左上が (x,y)、足もとは y+30 */
 const F2C={wd:'#c08a58',wdD:'#8a5a36',wdL:'#dcae7c',ol:'#6e4a2e',cr:'#f7eedb',crD:'#e3d3b2',gr:'#8cc06a',grD:'#5e9a4a',pk:'#f2b5b5',bl:'#a8c8e6',st:'#c9c3b8',stD:'#9d968b'};
 function f2rr(c,x,y,w,h,r,f,s){c.beginPath();c.roundRect(x,y,w,h,r);if(f){c.fillStyle=f;c.fill()}if(s){c.strokeStyle=s;c.lineWidth=1;c.stroke()}}
