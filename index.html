@@ -3378,7 +3378,7 @@ function drawObj(c,id,x,y,i,g,now){
       const rows=[y+11,y+16.1,y+21.2],brick=(bx,yy,bw)=>{c.fillStyle='#874837';rr(c,bx,yy,bw,4.8,1.15);c.fillStyle='#b8614a';rr(c,bx+.5,yy+.4,bw-1,3.9,1);c.fillStyle='rgba(255,205,163,.5)';c.fillRect(bx+1,yy+.7,bw-2,.65);c.fillStyle='rgba(91,46,37,.24)';c.fillRect(bx+1,yy+4.1,bw-2,.5)};
       for(let row=0;row<rows.length;row++){const yy=rows[row],off=row%2?l-5:l;for(let bx=off;bx<r;bx+=11.5)brick(bx,yy,10.7)}c.restore();c.fillStyle='#d7b695';for(let yy of[y+15.8,y+20.9,y+26])c.fillRect(l+1,yy,w-2,.8)
     }c.restore();break}
-  case'door':case'hwall':{const isW=k=>HOME_WALLS.has(typeAt(k))||HOME_DOORS.has(typeAt(k));const L=!ICON&&isW(i-1),R=!ICON&&isW(i+1),U=!ICON&&isW(i-W),D=!ICON&&isW(i+W);const door=id==='door',PM=c._plaster?{'#8a5e3c':'#eadbbb','#a8784e':'#cdb48e','#b88550':'#f8eed6','#906848':'#dcc9a5','#a87a54':'#f1e3c6','#6e4c32':'#ad8e67','#d0a67c':'#f1e2c6','#c49a70':'#e7d5b2','#a07858':'#c2a581'}:null,K=s=>PM&&PM[s]||s;/* しっくいの縦の壁は、木の壁と同じ形で色だけしっくい */
+  case'door':case'hwall':{const isW=k=>HOME_WALLS.has(typeAt(k))||HOME_DOORS.has(typeAt(k));const L=!ICON&&isW(i-1),R=!ICON&&isW(i+1),U=!ICON&&isW(i-W),D=!ICON&&isW(i+W);const door=id==='door',PM=c._plaster?{'#d0a67c':'#8a5e3c','#c49a70':'#80563a','#a07858':'#6e4c32'}:null,K=s=>PM&&PM[s]||s;/* しっくいの縦の壁・柱は、しっくいの上にある木部と同じ色 */
     if(!ICON&&!door)wallMarg(c,i,x,y);/* ドアのぶんは、床といっしょに下の絵に描く */
     const hasV=U||D,hasH=L||R||!hasV;const hx0=L?x:x+5,hx1=R?x+TS:x+27,vy0=U?y:y+2,vy1=D?y+TS:y+14;
     if(!ICON&&!door&&(hasV&&hasH||hasH&&(!L||!R)||!hasH&&(!U||!D))){/* 壁のはじっこ・角は、縦の壁と同じ幅の柱 */
