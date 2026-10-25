@@ -1534,7 +1534,7 @@ function spawnFX(x,y,col){const cx=x*TS+16,cy=y*TS+20;
 /* ---------- せいれいの行動 ---------- */
 function occTiles(r){const bl=new Set();for(const q of S.res)if(q!==r&&!q.hidden&&!(q.act&&q.act.stage==='walk'&&q.path&&q.path.length))bl.add((q.y|0)*W+(q.x|0));return bl}
 // 止まっている子のマスを避けた道を選ぶ（なければふつうの道）
-function avoidPath(r,G,goal){const centered=p=>{const j=(r.y|0)*W+(r.x|0);if(p.length&&walk(j)&&Math.hypot(r.x-(j%W+.5),r.y-((j/W|0)+.5))>.01&&p[0]!==j){const cx=j%W+.5,cy=(j/W|0)+.5,nx=p[0]%W+.5,ny=(p[0]/W|0)+.5;if((r.x-cx)*(nx-cx)+(r.y-cy)*(ny-cy)<=0)p.unshift(j)}/* 次のマスへ向かって進んでいるときは、マスの中心へもどらない（引きなおしで一瞬もどるのを防ぐ） */return p};const bl=occTiles(r);bl.delete(goal);bl.delete((r.y|0)*W+(r.x|0));if(!bl.size)return centered(pathTo(G,goal));
+function avoidPath(r,G,goal){const centered=p=>p;/* いまのマスの中心へ寄りもどらない（引きなおしのたびに一瞬もどるのを防ぐ）。となりのマスへの直線は、2つのマスの中におさまる */;const bl=occTiles(r);bl.delete(goal);bl.delete((r.y|0)*W+(r.x|0));if(!bl.size)return centered(pathTo(G,goal));
   const G2=roadSearch(r.x|0,r.y|0,bl);return centered(G2.dist[goal]>=0?pathTo(G2,goal):pathTo(G,goal))}
 function startAct(r,G,type,stand,o){
   r.bubble='';/* 前の行動の吹き出し（💤など）を残さない */
@@ -1986,7 +1986,7 @@ function goWander(r,G){
 }
 function moveR(r,dt){
   let step=.36*dt*rMul(r,'move')*(r.act&&['questjoy','sevreact'].includes(r.act.type)&&r.act.stage==='walk'?1.5:1)/* クエストで置いた物へ駆け寄る間だけ、1.5倍 */*Math.max(NEARVANE.has((r.y|0)*W+(r.x|0))?1.2:1,NEARSIGN.has((r.y|0)*W+(r.x|0))&&r.act&&r.act.type==='flee'?1.4:1)*/* 風見鶏と道しるべは重ならない（大きいほう） */(r.energy<5?.5:1)*(r.act&&(r.act.type==='flee'||r.act.run)?1.9:1)*(r.hunger<20&&r.act&&(r.act.type==='eat'||r.act.type==='fetch'||r.act.type==='forage')?1.6:1)/* おなかがへりすぎたら、急いで食べに行く */*(FSPD[S.floor[(r.y|0)*W+(r.x|0)]]||1);r.walkT=(r.walkT||0)+dt;
-  if(r.path.length>1&&r.path[0]!==r.reroute){const n0=r.path[0];if(S.res.some(q=>q!==r&&!q.hidden&&(q.y|0)*W+(q.x|0)===n0&&!(q.act&&q.act.stage==='walk'&&q.path&&q.path.length))){r.reroute=n0;const g=r.path[r.path.length-1],G0=roadSearch(r.x|0,r.y|0);r.path=avoidPath(r,G0,g)}}
+  if(r.path.length>1&&r.path[0]!==r.reroute){const n0=r.path[0];if(S.res.some(q=>q!==r&&!q.hidden&&(q.y|0)*W+(q.x|0)===n0&&!(q.act&&q.act.stage==='walk'&&q.path&&q.path.length))){r.reroute=n0;const g=r.path[r.path.length-1],G0=roadSearch(r.x|0,r.y|0),np=avoidPath(r,G0,g);if(np.length&&np.length<=r.path.length+4)r.path=np}}/* 遠まわりになるなら、よけずにそのまま進む（進んでは戻るのを防ぐ。進めなければ下の「つまり」で処理） */
   if(r.path.length){const cj=(r.y|0)*W+(r.x|0),n0=r.path[0];if(n0!==cj&&Math.abs(n0%W-cj%W)+Math.abs(((n0/W)|0)-((cj/W)|0))>1){/* 次のマスがとなりでない（古い道・押されてずれた）ときは、いまの場所から道を引きなおす。壁をすりぬけない */
     const g=r.path[r.path.length-1],G0=roadSearch(r.x|0,r.y|0);r.path=G0.dist[g]>=0?avoidPath(r,G0,g):[];if(!r.path.length&&g!==cj){noPass(r);endAct(r);return}}}
   while(step>0&&r.path.length){const j=r.path[0];if(!walk(j)&&!(S.ground[j]===1&&!solidOf(j)&&(S.ground[(r.y|0)*W+(r.x|0)]===1||r.act&&r.act.wade))){const goal=r.path[r.path.length-1],G=roadSearch(r.x|0,r.y|0);if(G.dist[goal]>=0&&walk(goal)){r.path=avoidPath(r,G,goal);if(r.path.length)return}noPass(r);endAct(r);return}
@@ -1998,7 +1998,7 @@ function moveR(r,dt){
     const prog=r.lastN!==r.path.length||r.lastX==null||dd<r.lastX-.06*dt;
     if(prog){r.stk=0;r.lastN=r.path.length;r.lastX=dd}else r.stk=(r.stk||0)+dt;
     if(r.stk>2.5){r.stk=0;r.lastX=null;const bl=new Set();for(const q of S.res)if(q!==r&&!q.hidden&&!(q.act&&q.act.stage==='walk'&&q.path&&q.path.length))bl.add((q.y|0)*W+(q.x|0));bl.delete(g);bl.delete((r.y|0)*W+(r.x|0));
-      const G2=roadSearch(r.x|0,r.y|0,bl);if(G2.dist[g]>=0&&!r.ghost)r.path=pathTo(G2,g);else r.ghost=8}}
+      const G2=roadSearch(r.x|0,r.y|0,bl);if(G2.dist[g]>=0&&!r.ghost&&G2.dist[g]<=r.path.length+6)r.path=pathTo(G2,g);else r.ghost=8}}
   else{r.stk=0;r.lastX=null;r.lastN=null}
   if(r.ghost>0)r.ghost-=dt;
   if(r.act&&r.act.stage==='walk'&&r.path.length){/* 長いあいだ1マスも近づけないときは、あきらめる */
