@@ -3316,6 +3316,12 @@ function wallBand(c,mat,a,b,x,y,i){/* 壁の正面（1マスの高さ：y〜y+28
       for(let n=Math.floor((a+gx)/13)-1;n*13<b+gx;n++)if(hash(n*7+r*13+3)>.55){c.fillStyle='rgba(150,98,62,.7)';c.fillRect(n*13+2+hash(n*3+r)*6-gx,yy+rh/2-.4,3.2,.9)}}}
   else{const rh=FH/6;c.fillStyle='#e9c3a2';c.fillRect(a,y,b-a,FH);for(let r=0;r<6;r++){const yy=y+r*rh+.5,off=r%2?6:0;for(let n=Math.floor((a+gx-off)/12)-1;n*12+off<b+gx;n++){const bx=n*12+off-gx;c.fillStyle=hash(n*5+r*11)>.7?'#a3573f':'#ae5f45';c.fillRect(bx+.5,yy,11,rh-1);c.fillStyle='rgba(255,205,170,.35)';c.fillRect(bx+1,yy+.3,10,.6);c.fillStyle='rgba(90,40,28,.25)';c.fillRect(bx+.5,yy+rh-1.6,11,.6)}}}
   c.restore();c.fillStyle='#8a5e3c';c.fillRect(a,y+FH,b-a,TS-FH);c.fillStyle='#a8784e';c.fillRect(a,y+FH,b-a,.9);c.fillStyle='rgba(0,0,0,.2)';c.fillRect(a,y+TS-.8,b-a,.8)}
+const SEC={a:null,b:null};
+function drawSection(c,ox,oy,rs){/* 断面（壁・柱のてっぺん）：形のまわりだけ少し濃く、内がわは少し薄く。つながる側へはみ出した分で、マスのさかいめにも線が出ない */
+  const W0=TS+16,H0=TS+40,X=ox-8,Y=oy-8;if(!SEC.a){SEC.a=document.createElement('canvas');SEC.b=document.createElement('canvas');SEC.a.width=SEC.b.width=W0;SEC.a.height=SEC.b.height=H0}
+  const m=SEC.a.getContext('2d'),t=SEC.b.getContext('2d');m.clearRect(0,0,W0,H0);m.fillStyle='#000';for(const r of rs)m.fillRect(r[0]-X,r[1]-Y,r[2]-r[0],r[3]-r[1]);
+  const put=(col,erode)=>{t.globalCompositeOperation='source-over';t.clearRect(0,0,W0,H0);t.drawImage(SEC.a,0,0);if(erode){t.globalCompositeOperation='destination-in';for(const[dx,dy]of[[1,0],[-1,0],[0,1],[0,-1],[1,1],[-1,-1],[1,-1],[-1,1]])t.drawImage(SEC.a,dx,dy)}t.globalCompositeOperation='source-in';t.fillStyle=col;t.fillRect(0,0,W0,H0);t.globalCompositeOperation='source-over';c.save();c.beginPath();for(const r of rs)c.rect(r[4],r[5],r[6]-r[4],r[7]-r[5]);c.clip();c.drawImage(SEC.b,X,Y);c.restore()};
+  put('#7f5c3d',false);put('#a77f5a',true)}
 function drawObj(c,id,x,y,i,g,now){
   if(!ICON&&i!=null&&S&&PLANTS.includes(id)&&isBud(i)){c.fillStyle='rgba(0,0,0,.18)';c.beginPath();c.ellipse(x+16,y+27,7,2.5,0,0,7);c.fill();c.fillStyle='#6fbf5a';c.fillRect(x+15,y+17,2,10);c.beginPath();c.ellipse(x+11,y+18,5,2.6,-.5,0,7);c.ellipse(x+21,y+18,5,2.6,.5,0,7);c.fill();return}/* 芽 */
   if(false&&!ICON&&!c._rot&&i!=null&&S&&S.rot&&S.rot[i]&&BL[id]&&BL[id].kind==='furn'){const zz=BL[id].sz||[1,1],z=zz[0],rv=S.rot[i];c.save();if(rv===1){c.translate(x+16*z,0);c.scale(-1,1);c.translate(-(x+16*z),0)}else{const cx=x+16*z,cy=y+16*zz[1];c.translate(cx,cy);c.rotate((rv-1)*Math.PI/2);c.translate(-cx,-cy)}c._rot=1;drawObj(c,id,x,y,i,g,now);c._rot=0;c.restore();return}/* 向きをかえた家具は左右反転 */
@@ -3383,8 +3389,7 @@ function drawObj(c,id,x,y,i,g,now){
     if(ICON){c.save();c.translate(x+16,y+32);c.scale(.75,.75);c.translate(-x-16,-y-32)}
     const isW=k=>HOME_WALLS.has(typeAt(k))||HOME_DOORS.has(typeAt(k));const L=!ICON&&isW(i-1),R=!ICON&&isW(i+1),U=!ICON&&isW(i-W),D=!ICON&&isW(i+W);
     const MAT=c._mat||'wood',WT='#9a7350',T=9,hasV=U||D,hasH=L||R||!hasV,hx0=L?x:x+5,hx1=R?x+TS:x+27;
-    const OLC='#7f5c3d',INC='#a77f5a',ob=(x0,y0,w,h,l,r,t,bm)=>{c.fillStyle=INC;c.fillRect(x0,y0,w,h);c.fillStyle=OLC;if(l)c.fillRect(x0,y0,1.4,h);if(r)c.fillRect(x0+w-1.4,y0,1.4,h);if(t)c.fillRect(x0,y0,w,1.4);if(bm)c.fillRect(x0,y0+h-1.4,w,1.4)};/* 断面：ふちだけ少し濃く、内がわは少し薄く */
-    const top=()=>{if(hasH)ob(hx0,y-T,hx1-hx0,T,!L&&!hasV,!R&&!hasV,!(hasV&&U),false);if(hasV)ob(x+5,y-T,22,(D?TS:T),true,true,!U,!D)};
+    const top=()=>{const rs=[];if(hasH)rs.push([hx0-(L?2:0),y-T,hx1+(R?2:0),y,hx0,y-T,hx1,y]);if(hasV)rs.push([x+5,y-T-(U?2:0),x+27,y-T+(D?TS+2:T),x+5,y-T,x+27,y-T+(D?TS:T)]);drawSection(c,x,y-T,rs)};/* 断面：エリア全体をひとつにつなげた輪郭（たて・よこのくぎりなし） */
     const front=(a,b)=>wallBand(c,MAT,a,b,x,y,i);
     const side=(a,b)=>{/* 柱・縦の壁のはしの正面：たて板 */c.fillStyle='rgba(0,0,0,.18)';c.fillRect(a,y+TS,b-a,2);c.fillStyle='#8a5e3c';c.fillRect(a,y,b-a,TS);c.fillStyle='#a8784e';for(const lx of[a+5,a+11,a+17])if(lx<b-2)c.fillRect(lx,y,1,TS);c.fillStyle='#b88550';c.fillRect(a,y,1.5,TS);c.fillRect(b-1.5,y,1.5,TS)};/* 柱には巾木をつけない */
     if(c._doorBack){if(door&&hasH)top();break}/* ドアの断面は、となりの壁と同じ下絵(静的な層)に描く */
