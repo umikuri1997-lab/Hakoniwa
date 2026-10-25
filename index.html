@@ -3385,7 +3385,7 @@ function drawObj(c,id,x,y,i,g,now){
     const MAT=c._mat||'wood',WT='#9a7350',T=9,hasV=U||D,hasH=L||R||!hasV,hx0=L?x:x+5,hx1=R?x+TS:x+27;
     const top=()=>{c.fillStyle=WT;if(hasH)c.fillRect(hx0,y-T,hx1-hx0,T);if(hasV)c.fillRect(x+5,y-T,22,(D?TS:T))};
     const front=(a,b)=>wallBand(c,MAT,a,b,x,y,i);
-    const side=(a,b)=>{/* 柱・縦の壁のはしの正面：たて板 */c.fillStyle='rgba(0,0,0,.18)';c.fillRect(a,y+TS,b-a,2);c.fillStyle='#8a5e3c';c.fillRect(a,y,b-a,TS);c.fillStyle='#a8784e';for(const lx of[a+5,a+11,a+17])if(lx<b-2)c.fillRect(lx,y,1,TS);c.fillStyle='#b88550';c.fillRect(a,y,1.5,TS);c.fillRect(b-1.5,y,1.5,TS);c.fillStyle='rgba(0,0,0,.2)';c.fillRect(a,y+28.4,b-a,3.6)};
+    const side=(a,b)=>{/* 柱・縦の壁のはしの正面：たて板 */c.fillStyle='rgba(0,0,0,.18)';c.fillRect(a,y+TS,b-a,2);c.fillStyle='#8a5e3c';c.fillRect(a,y,b-a,TS);c.fillStyle='#a8784e';for(const lx of[a+5,a+11,a+17])if(lx<b-2)c.fillRect(lx,y,1,TS);c.fillStyle='#b88550';c.fillRect(a,y,1.5,TS);c.fillRect(b-1.5,y,1.5,TS)};/* 柱には巾木をつけない */
     if(c._doorBack){if(door&&hasH)top();break}/* ドアの断面は、となりの壁と同じ下絵(静的な層)に描く */
     if(door&&hasV&&!hasH){let op=0;if(!ICON)op=doorOp(i,x,y,2.1,.9);/* 縦の壁のドア：断面に戸口をあけ、細い戸板（開くと内がわへ回る） */
       c.fillStyle=WT;c.fillRect(x+5,y-T,22,3);c.fillRect(x+5,y+TS-T-3,22,3);
