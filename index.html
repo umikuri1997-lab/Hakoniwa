@@ -85,7 +85,8 @@ button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .top{position:absolute;left:0;right:0;top:0;z-index:5;padding-top:calc(env(safe-area-inset-top,0px) + 8px);padding-left:var(--gut-l);padding-right:var(--gut-r);display:flex;flex-direction:column;gap:6px;pointer-events:none;align-items:flex-start}
 .hud{pointer-events:auto;display:flex;align-items:center;gap:10px;background:color-mix(in srgb,var(--panel) 92%,transparent);border:1px solid var(--line);border-radius:14px;padding:6px 12px;max-width:100%;flex-wrap:wrap;box-shadow:0 4px 0 rgba(0,0,0,.18)}
 .clock{display:flex;flex-direction:row;align-items:baseline;gap:8px;line-height:1.05;min-width:54px}
-.guard-btn{align-self:flex-end;position:relative;width:52px;height:52px;border-radius:50%;pointer-events:none;box-shadow:0 2px 6px rgba(0,0,0,.35);margin-bottom:2px}
+.guard-btn{position:relative;width:52px;height:52px;border-radius:50%;pointer-events:none;box-shadow:0 2px 6px rgba(0,0,0,.35);margin-bottom:2px}
+.guard-btn.tap{pointer-events:auto;cursor:pointer}.guard-btn.armed{box-shadow:0 0 0 3px #fff,0 0 14px 4px #ffe58a}.skills{align-self:flex-end;display:flex;gap:10px;pointer-events:none}.skills>*{margin-bottom:2px}
 .guard-btn .gl{position:absolute;inset:0;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid #fff}
 .guard-btn .gl svg{width:28px;height:28px;fill:none;stroke:#fff;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .guard-btn .gb{background:#8a8a8a;border-color:#c9c9c9}.guard-btn .gb svg{stroke:#e6e6e6}
@@ -414,7 +415,8 @@ html,body{margin:0;width:100%;min-width:0}
   <div id="rlv" hidden><div class="rcard"><div class="rpt"></div><div class="rtt"></div><div class="rrows"></div><button class="btn pri" id="rlvOk">OK</button></div></div>
   <div id="lvup" hidden><div class="rays"></div><div class="card"><small>村レベル アップ</small><div class="n">2</div><div class="pw"></div><div class="op"></div><div class="opd" hidden></div><button class="btn pri lvok" id="lvOk">OK</button></div></div>
   <div class="bottom" id="botUI" hidden>
-    <div id="guardStatus" class="guard-btn" hidden role="status" aria-label="守りの光"><span class="gl gb"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5 20 6v5.2c0 5.1-3.3 8.5-8 10.3-4.7-1.8-8-5.2-8-10.3V6l8-3.5Z"/><path d="m13 6.8-4 5h3l-1 5.2 4-6h-3l1-4.2Z"/></svg></span><span class="gl gc"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5 20 6v5.2c0 5.1-3.3 8.5-8 10.3-4.7-1.8-8-5.2-8-10.3V6l8-3.5Z"/><path d="m13 6.8-4 5h3l-1 5.2 4-6h-3l1-4.2Z"/></svg></span></div>
+    <div class="skills"><div id="areaBtn" class="guard-btn tap" hidden role="button" aria-label="ひかりのはどう"><span class="gl gb"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="2.2"/><circle cx="12" cy="12" r="6"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M5 5l1.8 1.8M17.2 17.2 19 19M19 5l-1.8 1.8M6.8 17.2 5 19"/></svg></span><span class="gl gc"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="2.2"/><circle cx="12" cy="12" r="6"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M5 5l1.8 1.8M17.2 17.2 19 19M19 5l-1.8 1.8M6.8 17.2 5 19"/></svg></span></div>
+<div id="guardStatus" class="guard-btn" hidden role="status" aria-label="守りの光"><span class="gl gb"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5 20 6v5.2c0 5.1-3.3 8.5-8 10.3-4.7-1.8-8-5.2-8-10.3V6l8-3.5Z"/><path d="m13 6.8-4 5h3l-1 5.2 4-6h-3l1-4.2Z"/></svg></span><span class="gl gc"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5 20 6v5.2c0 5.1-3.3 8.5-8 10.3-4.7-1.8-8-5.2-8-10.3V6l8-3.5Z"/><path d="m13 6.8-4 5h3l-1 5.2 4-6h-3l1-4.2Z"/></svg></span></div></div>
     <div id="confirm" hidden><span id="confirmTxt"></span><div style="display:flex;gap:6px;flex:none"><button class="btn" id="cNo">やめる</button><button class="btn pri" id="cYes">置く</button></div></div>
     <div id="itemInfo" class="iinfo" hidden><b id="iiName"></b><span id="iiDesc"></span></div>
     <div id="palette" hidden><div id="palWrap"><div id="palItems" class="pal"></div><button id="palL" class="palA" hidden aria-label="ひだりへ">‹</button><button id="palR" class="palA" hidden aria-label="みぎへ">›</button></div><button id="undoBtn">もどす</button></div>
@@ -2246,6 +2248,14 @@ function guardLight(e){if(LIGHTCD>0){toast('まもりの光は、あと'+Math.ce
   const D=EN[e.type];e.hp-=1;e.flash=8;/* ダメージは1だけ */e.stun=D.boss?1:2.5;e.path=[];e.repath=0;
   const cx=e.x*TS,cy=e.y*TS-18;fx.push({k:'ring',x:cx,y:cy,life:1});for(let n=0;n<18;n++){const a=Math.random()*7,v=rnd(50,120);fx.push({k:'p',x:cx,y:cy,vx:Math.cos(a)*v,vy:Math.sin(a)*v-40,life:1,col:pick(['#fffbe0','#fff','#ffe9a0']),r:rnd(1.5,3)})}sfxAt('shoot',e.x,e.y);
   if(e.hp<=0)return defeat(e,'守り神の光で'+D.name+'を追いはらった！')}
+let AREACD=0,AREAARM=false;/* ひかりのはどう：範囲2マスに0.5ダメージ・パワー3 */
+function areaBlast(cx,cy){
+  const L=S.enemies.filter(e=>e.spawned&&!e.dead&&Math.hypot(e.x-cx,e.y-cy)<=2);
+  if(!L.length){toast('はんいに「コワイノ」がいません');return}
+  S.pt-=3;AREACD=5;const px=cx*TS,py=cy*TS;fx.push({k:'ring',x:px,y:py,life:1});
+  for(let n=0;n<28;n++){const a=n/28*Math.PI*2;fx.push({k:'p',x:px+Math.cos(a)*2*TS,y:py+Math.sin(a)*2*TS,vx:Math.cos(a)*30,vy:Math.sin(a)*30-10,life:1,col:pick(['#fffbe0','#fff','#ffe9a0']),r:rnd(1.5,3)})}
+  sfxAt('shoot',cx,cy);
+  for(const e of L){e.hp-=.5;e.flash=8;if(e.hp<=0)defeat(e,'ひかりのはどうで'+EN[e.type].name+'を追いはらった！')}}
 function defeat(e,msg){sfx('defeat');
   e.dead=true;S.kills++;const D=EN[e.type];{const K=S.enKills||(S.enKills={});K[e.type]=(K[e.type]||0)+1}if(S.ns){S.ns.kill++;if(D.boss)S.ns.boss=2}const n=D.pw||5;
   if(e.type==='hino')S.flags.hinoDown=true;if(D.ash&&WD===1)st2().ashKills=(st2().ashKills||0)+1;
@@ -2512,6 +2522,8 @@ const SEV1=[
  {k:'e16',at:()=>(S.finalNight||S.finalOn)&&!S.cleared,L:[['F','守護の台座ができた…！'],['N','光ってるねぇ。……でも、この光、「コワイノ」も気づいちゃうかもねぇ。',1],['N','……フタバ。はじめて会ったころより、ずっと頼もしくなったねぇ。',1],['F','えっ、ほんと！？ えへへ……ありがとう、ノドカ！','N'],['H',{A:'来るなら来な。今夜でぜんぶ終わらせてやるよ。',B:'来るなら来い。今夜でぜんぶ終わらせてやるぜ。'},1],['F','……うん。夜をこえたら、ヌシ様に会えるんだ！']]},
  {k:'e15',night:1,at:()=>!!(S.ns&&S.ns.final)&&S.enemies.some(e=>e.type==='boss2'&&e.spawned&&!e.dead)&&sevHere('F'),L:[['F','……来た。ヨルノオオカゲ……！',0,'shake'],['F','あの夜も、こんな大きな影だった。'],['F','きょうだいたちが前に出て……ぼくは、奥でふるえてるだけだった。'],['H',{A:'くっ……数が多すぎる……！',B:'くそっ……数が多すぎる……！'},1],['N','フタバ、あぶないよぉ！',1],['F','……ううん。もう、ふるえてるだけじゃない！',0,'beat'],['F','むかしは、みんなに守ってもらったけど……'],['F','今度は、ぼくが守る番だ！',0,'flash'],['F','守り神さまも、おねがい！ 光で、「コワイノ」をおどかして！']],
   go:()=>{S.flags.finF=1;S.flags.guard=true;toast('フタバが、近くのみんなを葉っぱで守る！','good')}},
+ {k:'e16g',vis:['守護の台座の光が、夜を前に、ひときわ強くまたたいた。','光はゆっくりほどけて、守り神の手のひらへ、流れこんでくる。','草原の花々が、いっせいに顔をあげた。木々の葉が、さざ波のように鳴る。','この土地のすべてが、守り神に、力をかしてくれている。'],at:()=>(S.finalNight||S.finalOn)&&!S.cleared&&!(S.flags&&S.flags.areaSkill),L:[['F','わっ……！ 守り神さまの手が、光ってる！'],['N','この土地みんなの力が、集まってるんだねぇ。',1],['H',{A:'へえ……こいつは頼もしいじゃないか。',B:'へえ……こいつは頼もしいじゃねえか。'},1],['G',GVOICE()+'守り神よ。それは「ひかりのはどう」じゃ。'],['G',GVOICE()+'指さした場所のまわり2マスの「コワイノ」に、光がはじける。ただし、パワーを3つ使うぞい。'],['F','すごい……！ ぼくたちも、いっしょにがんばる！'],['F','今夜、みんなで守りきろう！',0,'flash']],
+  go:()=>{S.flags.areaSkill=true;toast('守り神が「ひかりのはどう」をおぼえた！','good');memo('✨','守り神が「ひかりのはどう」をおぼえた')}},
  /* 消えた子がもどったとき（S.sevQ に入る） */
  {k:'b_N',q:1,L:[['N','ふわぁ……ただいまぁ。'],['F','ノドカ！！'],['F','……もう！ すっごく、心配したんだから！'],['N','ごめんねぇ。待っててくれて、ありがとう。'],['F','……ほんとに、帰ってきた。',0,'beat'],['F','むかしは、ヌシ様の力までなくなっちゃって……もう会えないかもしれないって、思ってたんだ。','1st'],['F','おかえり！ こんどは、いっしょにごはん食べようね！']]},
  {k:'b_H',q:1,L:[['F','おかえり！ もう、ひとりでむちゃしないでよ！'],['F','むかしは、ヌシ様の力がなくなって、もう会えない子がいたんだ。……だから、ほんとによかった。','1st'],['H',{A:'……ああ。今度は、いっしょに守ろう。',B:'……おう。今度は、いっしょに守ろうぜ。'}],['F','うん！ ぼくも、もっとがんばる！']]},
@@ -2523,7 +2535,7 @@ function checkSev(){if(WD||!S){SEVW={};return}if(!sevBusy())sevBub();if(S.cleare
   const Q=S.sevQ||(S.sevQ=[]);while(Q.length){const k=Q[0],e=SEV1.find(x=>x.k===k);const L=e&&sevLines(e.L);Q.shift();if(!L)continue;D[k]=1;if(/^b_/.test(k))S.flags.kizunaTold=1;return dialog(L)}
   const h=hour(),day=h>=6&&h<21;
   for(const e of SEV1){if(e.q||D[e.k])continue;if(!e.night&&!day)continue;if(!e.at())continue;const L=sevLines(e.L);if(!L)continue;D[e.k]=1;
-    if(e.k==='e08'||e.k==='e15'||e.k==='e09'){const f=S.res.find(r=>r.name===POKO);if(f)centerOn(f.x*TS,f.y*TS);const run=()=>dialog(L,()=>{if(e.go)e.go()});return e.vis?visionFX(e.vis,run):run()}
+    if(e.k==='e08'||e.k==='e15'||e.k==='e09'||e.k==='e16g'){const f=S.res.find(r=>r.name===POKO);if(f)centerOn(f.x*TS,f.y*TS);const run=()=>dialog(L,()=>{if(e.go)e.go()});return e.vis?visionFX(e.vis,run):run()}
     (S.sevP||(S.sevP=[])).push(e.k)}/* ふつうの条件会話は、吹き出しをタップしてから */
   sevBub()}
 /* 話したそうな子：S.sevP にたまった条件会話を、先頭のセリフの子の吹き出しにする */
@@ -4395,6 +4407,7 @@ cv.addEventListener('wheel',e=>{e.preventDefault();if(!started)return;const w=to
 
 function onTap(sx,sy){
   const w=toWorld(sx,sy),tx=Math.floor(w.x/TS),ty=Math.floor(w.y/TS);
+  if(AREAARM){AREAARM=false;return areaBlast(w.x/TS,w.y/TS)}/* ひかりのはどう：タップした場所のまわり */
   const si=S.seeds.findIndex(s=>s.x===tx&&s.y===ty);
   if(tx>=0&&ty>=0&&tx<W&&ty<H){const hh=HOUSES.find(h=>h.set.has(ty*W+tx));/* 開けた屋根は、壁をタップするまでそのまま */
     if(hh&&mode!=='look'&&!OPENH.has(hKey(hh))){OPENH.add(hKey(hh));return}}/* 置く・こわすときも、まず家をタップして中を見る */
@@ -5089,6 +5102,7 @@ function updHUD(){
   $('#dayLbl').textContent=(S.rain?'☔雨':'☀晴れ')+(S.today?'・'+DAYEV[S.today][1]:'');/* 何日目は出さない（きろくで見る） */
   $('#timeLbl').textContent=String(Math.floor(h)).padStart(2,'0')+':'+String(Math.floor(m/10)*10).padStart(2,'0');
   {const gs=$('#guardStatus'),night=isNight();gs.hidden=!night;if(night){const gc=gs.querySelector('.gc');let p=1;if(LIGHTCD>0)p=1-LIGHTCD/5;else if(S.pt<1)p=0;gc.style.setProperty('--gp',(p*360)+'deg')}}
+  {const ab=$('#areaBtn'),on=!!(S.flags&&S.flags.areaSkill)&&isNight();ab.hidden=!on;if(on){let p=1;if(AREACD>0)p=1-AREACD/5;else if(S.pt<3)p=0;if(AREAARM&&(AREACD>0||S.pt<3))AREAARM=false;ab.querySelector('.gc').style.setProperty('--gp',(p*360)+'deg');ab.classList.toggle('armed',AREAARM)}else AREAARM=false}
   const L=S.lv,a=LV_XP[L-1],b=LV_XP[L]??a;$('#lvLbl').textContent=L;$('#xpBar').style.width=(b>a?clamp((S.totalPt-a)/(b-a),0,1)*100:100)+'%';$('#xpTxt').textContent=b>a?Math.floor(S.totalPt-a)+' / '+(b-a):'MAX';
   $('#pt').textContent=S.pt;$('#food').textContent=S.food;$('#woodN').textContent=S.mat.wood||0;$('#stoneN').textContent=S.mat.stone||0;{const fc=foodCap(),mc=matCap(),fb=$('#foodBar'),mb=$('#matBar');fb.style.width=(fc?Math.min(100,S.food/fc*100):0)+'%';fb.style.background=fc&&S.food>=fc?'#d9a441':'';mb.style.width=(mc?Math.min(100,matTot()/mc*100):0)+'%';mb.style.background=mc&&matTot()>=mc?'#d9a441':'#c9a46a'}$('#resN').textContent=S.res.length;if(!$('#resIc').src)$('#resIc').src=spiritPort('wood',48,null);$('#revLbl').textContent='みどり '+GRASSN;
   const hungry=S.res.filter(r=>r.hunger<20).length,en=S.enemies.filter(e=>e.spawned).length;
@@ -5290,7 +5304,7 @@ function frame(now){
   if(started&&!window.__noIdle&&now-lastIn>120000&&$('#idle').hidden&&$('#title').hidden&&$('#maps').hidden){$('#idle').hidden=false;try{save()}catch(e){}}
   if(SKIP&&!(S.cleared?eveH():isNight()&&S.enemyOn))SKIP=false;/* 朝になったら、ふつうの速さにもどす */
   if(started&&!menuOpen&&$('#pro').hidden&&sheet==null&&NEWRES==null&&$('#dialog').hidden&&$('#lvup').hidden&&$('#rlv').hidden)showItemGift();
-  if(!paused()){if(S.speed>1&&!TESTSPD&&!TESTM){S.glassT=Math.max(0,(S.glassT||0)-rdt);if(S.glassT<=0){S.speed=1;0}}glassUI();LIGHTCD=Math.max(0,LIGHTCD-rdt*S.speed*(SKIP?40:1));let g=rdt*MIN_PER_SEC*S.speed*(SKIP?40:1);while(g>0){const s=Math.min(g,2);stepWorld(s);g-=s}}
+  if(!paused()){if(S.speed>1&&!TESTSPD&&!TESTM){S.glassT=Math.max(0,(S.glassT||0)-rdt);if(S.glassT<=0){S.speed=1;0}}glassUI();LIGHTCD=Math.max(0,LIGHTCD-rdt*S.speed*(SKIP?40:1));AREACD=Math.max(0,AREACD-rdt*S.speed*(SKIP?40:1));let g=rdt*MIN_PER_SEC*S.speed*(SKIP?40:1);while(g>0){const s=Math.min(g,2);stepWorld(s);g-=s}}
   for(const f of floats)f.life-=prdt*.7;while(floats.length&&floats[0].life<=0)floats.shift();
   for(const s of shots)s.life-=prdt*1.4;while(shots.length&&shots[0].life<=0)shots.shift();
   for(const f of fx){f.life-=prdt*(f.k==='ring'?(f.col?1.3:2.2):f.k==='pillar'?.9:f.k==='slash'?3:1.4);if(f.k!=='ring'&&f.k!=='pillar'&&!PZ){f.x+=f.vx*rdt;f.y+=f.vy*rdt;f.vy+=(f.k==='p'?260:40)*rdt;f.vx*=.96}}
@@ -5312,6 +5326,7 @@ addEventListener('resize',resize);
 for(const ev of ['pointerdown','touchend','click'])document.addEventListener(ev,()=>{if(AC&&AC.state!=='running'&&!document.hidden)AC.resume().catch(()=>{})},true);addEventListener('focus',()=>{if(AC&&AC.state!=='running')AC.resume().catch(()=>{})});
 
 $('#alert').addEventListener('click',()=>{const L=S.enemies.filter(e=>e.spawned&&!e.dead);if(!L.length)return;ALI=(ALI+1)%L.length;const e=L[ALI];centerOn(e.x*TS,e.y*TS);sfx('tap')});/* 「コワイノ ○体」をタップすると、その場所へ */
+$('#areaBtn').addEventListener('click',e=>{e.stopPropagation();if(AREACD>0)return toast('ひかりのはどうは、あと'+Math.ceil(AREACD/(S.speed||1))+'秒');if(S.pt<3)return toast('ひかりのはどうにはパワー3が必要じゃ');sfx('tap');AREAARM=!AREAARM;if(AREAARM)toast('光をはなつ場所をタップ（まわり2マス）')});
 $('#skipBtn').addEventListener('click',()=>{if(!canSkip())return;sfx('tap');SKIP=true;$('#skipBtn').hidden=true;toast('朝まで休もう…','good')});
 let RLVR=null;
 function rlvShow(q){const r=S.res.find(x=>x.id===q.id);if(!r)return;RLVR=r;const o=$('#rlv'),a=rStat(r,q.from),b=rStat(r,q.to);
