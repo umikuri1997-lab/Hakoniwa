@@ -3390,7 +3390,7 @@ function drawObj(c,id,x,y,i,g,now){
     const door=id==='door';if(ICON&&door){const art=HOUSEART&&HOUSEART['wall-door'];if(art&&art.complete&&art.naturalWidth){c.drawImage(art,x+2,y+1,28,30);break}}
     if(ICON){c.save();c.translate(x+16,y+32);c.scale(.75,.75);c.translate(-x-16,-y-32)}
     const isW=k=>HOME_WALLS.has(typeAt(k))||HOME_DOORS.has(typeAt(k));const L=!ICON&&isW(i-1),R=!ICON&&isW(i+1),U=!ICON&&isW(i-W),D=!ICON&&isW(i+W);
-    const MAT=c._mat||'wood',WT='#9a7350',T=9,hasV=U||D,hasH=L||R||!hasV,hx0=L?x:x+5,hx1=R?x+TS:x+27;
+    const MAT=c._mat||'wood',WT='#9a7350',T=9,hasV=U||D,hasH=L||R||!hasV,hx0=L||ICON?x:x+5,hx1=R||ICON?x+TS:x+27;
     const top=()=>{const rs=[];if(hasH)rs.push([hx0-(L?2:0),y-T,hx1+(R?2:0),y,hx0,y-T,hx1,y]);if(hasV)rs.push([x+5,y-T-(U?2:0),x+27,y-T+(D?TS+2:T),x+5,y-T,x+27,y-T+(D?TS:T)]);drawSection(c,x,y-T,rs)};/* 断面：エリア全体をひとつにつなげた輪郭（たて・よこのくぎりなし） */
     const front=(a,b)=>wallBand(c,MAT,a,b,x,y,i);
     const side=(a,b)=>{/* 柱・縦の壁のはしの正面：たて板 */c.fillStyle='rgba(0,0,0,.18)';c.fillRect(a,y+TS,b-a,2);c.fillStyle='#8a5e3c';c.fillRect(a,y,b-a,TS);c.fillStyle='#a8784e';for(const lx of[a+5,a+11,a+17])if(lx<b-2)c.fillRect(lx,y,1,TS);c.fillStyle='#b88550';c.fillRect(a,y,1.5,TS);c.fillRect(b-1.5,y,1.5,TS)};/* 柱には巾木をつけない */
@@ -3404,7 +3404,8 @@ function drawObj(c,id,x,y,i,g,now){
       else{c.fillStyle='#b77a49';c.fillRect(x+2,y+2,(TS-4)*(1-op*.78),TS-2)}
       if(ICON){top();c.restore()}break}
     if(!ICON&&!door)wallMarg(c,i,x,y);
-    if(hasH){if(!D){if(L&&R&&!U)front(x,x+TS);else{side(x+5,x+27);if(L)front(x,x+5);if(R)front(x+27,x+TS)}}else{if(L)front(x,x+5);if(R)front(x+27,x+TS)}}
+    if(ICON)front(x,x+TS);/* アイコンは、柱ではなく壁の正面を見せる */
+    else if(hasH){if(!D){if(L&&R&&!U)front(x,x+TS);else{side(x+5,x+27);if(L)front(x,x+5);if(R)front(x+27,x+TS)}}else{if(L)front(x,x+5);if(R)front(x+27,x+TS)}}
     else if(!D)side(x+5,x+27);
     top();if(ICON)c.restore();break}
   case'sdoor':{const isF=k=>HOME_WALLS.has(typeAt(k))||HOME_DOORS.has(typeAt(k));const L=!ICON&&isF(i-1),R=!ICON&&isF(i+1),U=!ICON&&isF(i-W),D=!ICON&&isF(i+W);const ver=!(L||R)&&(U||D);
