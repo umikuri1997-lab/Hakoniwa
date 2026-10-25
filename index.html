@@ -1378,7 +1378,8 @@ const fixMat=id=>({});/* 修理に素材はいらない */
 const DEFS=new Set(['watch','spike','puddle','sticky','firetrap','gust']),DEFHP={watch:10,spike:5},defHp=o=>DEFHP[o]||4;
 let DEFC={t:0,l:[]};function defList(){const now=performance.now();if(now-DEFC.t>1000){DEFC.l=[];for(let j=0;j<W*H;j++)if(DEFS.has(S.obj[j]))DEFC.l.push(j);DEFC.t=now}return DEFC.l}
 const brokenAt=q=>(S.broken||[]).find(b=>b.j===q);
-const canRebuild=q=>{const b=brokenAt(q);return b&&!S.obj[q]&&matOK(fixMat(b.id))&&free('o'+q,1)&&!S.res.some(r=>(r.y|0)*W+(r.x|0)===q)&&!S.enemies.some(e=>e.spawned&&(e.y|0)*W+(e.x|0)===q)};
+const brokenCover=q=>(S.broken||[]).find(b=>!S.obj[b.j]&&fp(b.id,b.j%W,(b.j/W)|0).some(([x,y])=>y*W+x===q));/* 大きい物は、4マスのどこでも、こわれたあとの場所として扱う */
+const canRebuild=q=>{const b=brokenAt(q);if(!b||!matOK(fixMat(b.id))||!free('o'+q,1))return false;return fp(b.id,q%W,(q/W)|0).every(([x,y])=>{const k=y*W+x;return !S.obj[k]&&!S.res.some(r=>(r.y|0)*W+(r.x|0)===k)&&!S.enemies.some(e=>e.spawned&&(e.y|0)*W+(e.x|0)===k)})};
 const BAN=new Map(),free=(k,cap)=>(resv.get(k)||0)<cap&&!(BAN.get(k)>(S?S.t:0));/* 行きつけない目的地は、しばらく選ばない */
 const reserve=k=>resv.set(k,(resv.get(k)||0)+1);
 const release=k=>{const v=(resv.get(k)||0)-1;if(v<=0)resv.delete(k);else resv.set(k,v)};
@@ -1898,7 +1899,7 @@ function tryJob(r,G,k){
   if(!canJob(r,k))return false;
   let j;
   switch(k){
-  case'repair':{if(isNight())return false;if(S.broken)S.broken=S.broken.filter(b=>!S.obj[b.j]);const dmg=q=>(breakable(S.obj[q])&&(S.hp[q]??BL[S.obj[q]].hp)<BL[S.obj[q]].hp&&matOK(fixMat(S.obj[q]))||DEFS.has(S.obj[q])&&S.hp[q]!=null&&matOK(fixMat(S.obj[q]))||canRebuild(q))&&free('o'+q,1);j=nearest(G,j=>adjOf(j,dmg)>=0);if(j>=0){const q=adjOf(j,dmg);startAct(r,G,'repair',j,{key:'o'+q,obj:q});return true}return false}
+  case'repair':{if(isNight())return false;if(S.broken)S.broken=S.broken.filter(b=>!S.obj[b.j]);const dmg=q=>(breakable(S.obj[q])&&(S.hp[q]??BL[S.obj[q]].hp)<BL[S.obj[q]].hp&&matOK(fixMat(S.obj[q]))||DEFS.has(S.obj[q])&&S.hp[q]!=null&&matOK(fixMat(S.obj[q]))||(bk=>!!bk&&canRebuild(bk.j)&&free('o'+bk.j,1))(brokenCover(q)))&&free('o'+(brokenCover(q)?brokenCover(q).j:q),1);j=nearest(G,j=>adjOf(j,dmg)>=0);if(j>=0){const q0=adjOf(j,dmg),bk=brokenCover(q0),q=bk?bk.j:q0;startAct(r,G,'repair',j,{key:'o'+q,obj:q});return true}return false}
   case'till':j=nearest(G,j=>S.obj[j]==='plot'&&free('o'+j,1));if(j>=0){startAct(r,G,'till',j,{key:'o'+j,obj:j});return true}return false;
   case'sow':j=nearest(G,j=>S.obj[j]==='farm'&&S.dyn[j]&&S.dyn[j].sown===false&&(S.dyn[j].paid||cseed(cropK(S.dyn[j]))>0)&&free('o'+j,1));if(j>=0){startAct(r,G,'sow',j,{key:'o'+j,obj:j});return true}return false;
   case'plant':{j=nearest(G,j=>S.obj[j]==='sprout'&&free('o'+j,1));if(j>=0){startAct(r,G,'plant',j,{key:'o'+j,obj:j});return true}const wq=q=>S.obj[q]==='sprout'&&S.ground[q]===1&&free('o'+q,1);j=nearest(G,j=>adjOf(j,wq)>=0);if(j>=0){const q=adjOf(j,wq);startAct(r,G,'plant',j,{key:'o'+q,obj:q});return true}
@@ -4325,7 +4326,7 @@ function render(now){
   if(pending&&pending.kind==='one'){const z=BL[pending.id].sz||[1,1],px=pending.x*TS,py=pending.y*TS;ctx.fillStyle=pending.ok?'rgba(255,220,90,.3)':'rgba(255,90,90,.35)';const TP=pending.id==='statue'?[[-1,0,'obox'],[0,0,'statue'],[1,0,'board'],[0,1,'altar']]:[[0,0,pending.id]];if(TP.length>1)for(const[dx,dy]of TP)ctx.fillRect(px+dx*TS,py+dy*TS,TS,TS);else ctx.fillRect(px,py,z[0]*TS,z[1]*TS);
     ctx.strokeStyle=pending.ok?'rgba(255,230,120,.95)':'rgba(255,110,110,.95)';ctx.lineWidth=2;ctx.setLineDash([5,4]);if(TP.length>1)for(const[dx,dy]of TP)ctx.strokeRect(px+dx*TS+1,py+dy*TS+1,TS-2,TS-2);else ctx.strokeRect(px+1,py+1,z[0]*TS-2,z[1]*TS-2);ctx.setLineDash([])}
   if(pending&&pending.kind==='stamp'){for(const[dx,dy]of STAMPS[pending.sid].cells){ctx.fillStyle='rgba(255,220,90,.4)';ctx.fillRect((pending.x+dx)*TS,(pending.y+dy)*TS,TS,TS)}}
-  if(S.broken)for(const b of S.broken){if(S.obj[b.j])continue;const bx=(b.j%W)*TS,by=((b.j/W)|0)*TS;ctx.save();ctx.setLineDash([4,3]);ctx.strokeStyle='rgba(255,230,180,.55)';ctx.lineWidth=2;ctx.strokeRect(bx+3,by+3,TS-6,TS-6);ctx.restore()}
+  if(S.broken)for(const b of S.broken){if(S.obj[b.j])continue;const bx=(b.j%W)*TS,by=((b.j/W)|0)*TS,bz=(BL[b.id]&&BL[b.id].sz)||[1,1];ctx.save();ctx.setLineDash([4,3]);ctx.strokeStyle='rgba(255,230,180,.55)';ctx.lineWidth=2;ctx.strokeRect(bx+3,by+3,bz[0]*TS-6,bz[1]*TS-6);ctx.restore()}/* こわれた見張り台は、4マスぶんの枠 */
   const vis=o=>o.x>x0-2&&o.x<x1+2&&o.y>y0-1&&o.y<y1+3;// 画面外は描かない
   // ---- 奥行きの順に描く（足もとのY座標が小さい＝奥から）----
   // 動く物（せいれい・敵・カミサマ・動く置物・屋根）を足もとの順に描き、
