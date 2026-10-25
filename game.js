@@ -2782,9 +2782,9 @@ function f2pot(c,x,y,w){f2rr(c,x-w/2,y-w*.75,w,w*.75,2,'#c98a5a',F2C.ol);c.fillS
 function f2flower(c,x,y,col){for(let a=0;a<5;a++)circ(c,x+Math.cos(a*1.26)*1.6,y+Math.sin(a*1.26)*1.6,1.3,col);circ(c,x,y,.9,'#ffd35c')}
 /* 花壇・生垣の絵：お手本を切って、まわりのつながり方（左右上下）ごとに16マスぶん並べた画像 */
 function spOK(k){const m=HOUSEART[k];return m&&m.complete&&m.naturalWidth>0}
-function spTile(c,k,m,x,y,ICON,dn,fi){if(dn==null)dn=m&8;if(fi==null)fi=m;const im=HOUSEART[k];if(ICON){c.drawImage(im,m*120,0,120,144,x+5,y-1,22,33);return}
+function spTile(c,k,m,x,y,ICON,dn,fi,vo){if(dn==null)dn=m&8;if(fi==null)fi=m;const im=HOUSEART[k];if(ICON){c.drawImage(im,m*120,0,120,144,x+5,y-1,22,33);return}
   /* 高さは0.8倍で、どのマスも同じ大きさ・同じ位置にかく（ふちの高さがそろう）。下につながるマスは、下のマスとのすきまを、絵の下のはしをのばしてうめる */
-  c.drawImage(im,m*120,0,120,96,x-.2,y-2.8,32.4,25.8);if(dn)c.drawImage(im,m*120,76,120,20,x-.2,y+22.6,32.4,7);else c.drawImage(im,fi*120,96,120,48,x-.2,y+23,32.4,12.8)}
+  if(dn){c.drawImage(im,m*120,0,120,96,x-.2,y-2.8,32.4,32.6);return}/* 下につながるマスは、上のふちの位置はそのままで、下のマスまで絵をのばす */c.drawImage(im,m*120,0,120,96,x-.2,y-2.8,32.4,25.8);c.drawImage(im,fi*120,96,120,48,x-.2,y+23,32.4,12.8)}
 function drawF2(c,id,x,y,i,now){const C=F2C,cx=x+16,T=(now||0)/1000;
   const sh=(w,h)=>{if(!c._onWall)shadow(c,cx,y+29,w,h||3)};
   switch(id){
@@ -2824,7 +2824,7 @@ function drawF2(c,id,x,y,i,now){const C=F2C,cx=x+16,T=(now||0)/1000;
   case'sink':sh(13);f2rr(c,cx-13,y+12,26,17,2,'#cfc9be',C.stD);c.fillStyle='#b9b2a6';c.fillRect(cx-13,y+12,26,3);f2rr(c,cx-8,y+15,16,7,2,'#8f897f');c.fillStyle='#a9d4ea';c.fillRect(cx-7,y+18,14,3);c.strokeStyle=C.stD;c.strokeRect(cx-10,y+23,20,5);c.fillStyle='#9d968b';c.fillRect(cx-1,y+5,2.5,9);c.fillRect(cx-1,y+5,7,2.2);circ(c,cx+6,y+7,1.2,'#9d968b');break;
   case'tub':sh(10);f2rr(c,cx-10,y+11,20,18,4,C.wd,C.ol);c.fillStyle='#8f97a0';c.fillRect(cx-10,y+14,20,2);c.fillRect(cx-10,y+24,20,2);c.fillStyle='#9fd0ea';c.beginPath();c.ellipse(cx,y+12,9,3,0,0,7);c.fill();c.strokeStyle=C.ol;c.beginPath();c.ellipse(cx,y+12,10,3.5,0,0,7);c.stroke();break;
   case'planter':{/* 花壇：白い石の箱（上のふち・葉の山・前がわのブロック）に、五まいの花びらの花 */const P=k=>i!=null&&!ICON&&S&&S.obj[k]==='planter',L=P(i-1)&&i%W>0,R=P(i+1)&&(i+1)%W>0,U=P(i-W),D=P(i+W),h=i||0;
-    if(spOK('planter-atlas')){let m=(L?1:0)|(R?2:0)|(U?4:0)|(D?8:0);const dn=!!D;if((m===3||m===12)&&i!=null&&!ICON){const v=Math.floor(hash(h*13+7)*13);if(v)m=(m===3?15:27)+v}/* 長いときは、花の色と並びをマスごとにかえる */const rD=R&&P(i+1+W),lD=L&&P(i-1+W),fi=rD&&lD?42:rD?40:lD?41:m;/* となりが下へ曲がるときは、前の石ブロックを入り隅までつなぐ */spTile(c,'planter-atlas',m,x,y,ICON,dn,fi);break}
+    if(spOK('planter-atlas')){let m=(L?1:0)|(R?2:0)|(U?4:0)|(D?8:0);const dn=!!D;if((m===3||m===12)&&i!=null&&!ICON){const v=Math.floor(hash(h*13+7)*13);if(v)m=(m===3?15:27)+v}/* 長いときは、花の色と並びをマスごとにかえる */const rD=R&&P(i+1+W),lD=L&&P(i-1+W),fi=rD&&lD?42:rD?40:lD?41:m;/* となりが下へ曲がるときは、前の石ブロックを入り隅までつなぐ */spTile(c,'planter-atlas',m,x,y,ICON,dn,fi,!L&&!R);break}
     const bx0=L?x-1:x+2,bx1=R?x+33:x+30,by0=U?y-4:y+10,by1=D?y+36:y+29,iy1=D?by1:by0+(by1-by0)*.62,ix0=L?bx0:bx0+3,ix1=R?bx1:bx1-3,iy0=U?by0:by0+1.8;
     if(!D)sh(14);
     f2rr(c,bx0,by0,bx1-bx0,by1-by0,[(U||L)?0:3.5,(U||R)?0:3.5,(D||R)?0:3.5,(D||L)?0:3.5],'#f1e9d2','#cdc1a2');
@@ -2843,7 +2843,7 @@ function drawF2(c,id,x,y,i,now){const C=F2C,cx=x+16,T=(now||0)/1000;
     else{const w2=ix1-ix0,nf=Math.max(2,Math.round(w2/11));for(let k=0;k<nf;k++){const big=k%2===0,D2=big?9.4:6.2,fx=ix0+(w2)*((k+.5)/nf)+(hash(h*5+k)-.5)*2,fy=iy0+(big?1.6:3.6)+hash(h*9+k)*1;flower(fx,fy,D2,FC[(k+h)%4])}}/* 五まいの花びら（大と中） */
     break}
   case'hedge':{/* 生垣：まるくこんもりした明るい葉のかたまりと、下の茶色い土 */const hu=!ICON&&i!=null&&typeAt(i-W)==='hedge',hd=!ICON&&i!=null&&typeAt(i+W)==='hedge',hl=!ICON&&i!=null&&i%W>0&&typeAt(i-1)==='hedge',hr=!ICON&&i!=null&&i%W<W-1&&typeAt(i+1)==='hedge',h=i||0;
-    if(spOK('hedge-atlas')){{const rD=hr&&typeAt(i+1+W)==='hedge',lD=hl&&typeAt(i-1+W)==='hedge',m=(hl?1:0)|(hr?2:0)|(hu?4:0)|(hd?8:0);spTile(c,'hedge-atlas',m,x,y,ICON,null,rD&&lD?18:rD?16:lD?17:m)}break}
+    if(spOK('hedge-atlas')){{const rD=hr&&typeAt(i+1+W)==='hedge',lD=hl&&typeAt(i-1+W)==='hedge',m=(hl?1:0)|(hr?2:0)|(hu?4:0)|(hd?8:0);spTile(c,'hedge-atlas',m,x,y,ICON,null,rD&&lD?18:rD?16:lD?17:m,!hl&&!hr)}break}
     const x0=hl?x-2:x+3.6,x1=hr?x+34:x+28.4,y0=hu?y-4:y+4.6,y1=hd?y+36:y+25.6;
     if(!hd)sh(15);
     if(!hd){const bl=hl?x-1:x+2.5,br=hr?x+33:x+29.5;c.fillStyle='#a07548';rr(c,bl-.6,y+24.2,br-bl+1.2,7,3);c.fillStyle='#b98c5c';rr(c,bl,y+24.2,br-bl,6,2.6)}/* 下の土 */
