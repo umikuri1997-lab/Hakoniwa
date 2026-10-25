@@ -3972,11 +3972,11 @@ function render(now){
   ctx.setTransform(dpr,0,0,dpr,0,0);
   if(dk>0){ctx.fillStyle=(!WD&&S.ns&&S.ns.final&&!S.cleared?'rgba(46,10,52,':'rgba(14,20,58,')+dk+')';ctx.fillRect(0,0,VW,VH);
     ctx.setTransform(k,0,0,k,-cam.x*k,-cam.y*k);ctx.globalCompositeOperation='lighter';
-    for(let y=y0;y<y1;y++)for(let x=x0;x<x1;x++){const o=S.obj[y*W+x];if(!['lamp','tower','watch','campfire','statue','torch','candle','lantern','flamp'].includes(o))continue;/* 明かりの出る物は、夜にまわりを明るく */
+    for(let y=y0;y<y1;y++)for(let x=x0;x<x1;x++){const o=S.obj[y*W+x];if(!['lamp','tower','watch','campfire','statue','torch','candle','lantern','flamp'].includes(o))continue;if(INDL.has(o)&&roomOf(y*W+x))continue;/* 家の中の灯りは、灯りそのものは光らせず、家ぜんたいを光らせる（下） *//* 明かりの出る物は、夜にまわりを明るく */
       const cx=x*TS+(o==='watch'?32:16),cy=y*TS+(o==='flamp'?-6:o==='candle'?10:o==='lantern'?6:o==='lamp'?3:o==='torch'?-12:o==='watch'?-20:o==='campfire'?14:o==='tower'?6:o==='statue'?-6:15),R=o==='tower'?200:o==='statue'?110:o==='lamp'?100:o==='torch'?105:INDL.has(o)?(roomOf(y*W+x)?40:45):o==='campfire'?110:o==='watch'?40:30;
       const g=ctx.createRadialGradient(cx,cy,2,cx,cy,R);g.addColorStop(0,'rgba(255,214,120,'+dk*.9+')');g.addColorStop(1,'rgba(255,200,100,0)');ctx.fillStyle=g;ctx.fillRect(cx-R,cy-R,R*2,R*2)}
     {const litH=new Set();for(const j of LIGHTS){if(INDL.has(S.obj[j])){const h=roomOf(j);if(h)litH.add(h)}}/* 灯りのある家は、家ぜんたいを同じ明るさで照らす（ふちはぼかす） */
-      for(const h of litH){ctx.beginPath();for(const q of h.set){const qx=q%W,qy=(q/W)|0;if(qx<x0-2||qx>x1+1||qy<y0-2||qy>y1+1)continue;ctx.rect(qx*TS-.5,qy*TS-.5,TS+1,TS+1)}ctx.fillStyle='rgba(255,205,110,'+dk*.5+')';ctx.shadowColor='rgba(255,205,110,'+dk*.6+')';ctx.shadowBlur=28*k*dpr;ctx.fill();ctx.shadowBlur=0;ctx.shadowColor='transparent'}}
+      for(const h of litH){ctx.beginPath();for(const q of h.set){const qx=q%W,qy=(q/W)|0;if(qx<x0-2||qx>x1+1||qy<y0-2||qy>y1+1)continue;ctx.rect(qx*TS-.5,qy*TS-.5,TS+1,TS+1)}ctx.fillStyle='rgba(255,205,110,'+dk*.5+')';ctx.shadowColor='rgba(255,205,110,'+dk*.6+')';ctx.shadowBlur=40*k*dpr;ctx.fill();ctx.shadowBlur=0;ctx.shadowColor='transparent'}}
     ctx.globalCompositeOperation='source-over';ctx.setTransform(dpr,0,0,dpr,0,0)}
   if(GLWN){ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=Math.min(1,dk*1.5);ctx.globalCompositeOperation='lighter';ctx.drawImage(GLW,0,0);ctx.globalCompositeOperation='source-over';ctx.globalAlpha=1;ctx.setTransform(dpr,0,0,dpr,0,0);GLWN=0}
   // 空気の粒（昼は花粉、夜はホタル）
