@@ -4462,7 +4462,7 @@ function onTap(sx,sy){
     if(!inBase(tx,ty))return toast('基地の外のフィールド');
     return toast(REV.has(j)?'よみがえった土地':'荒れた土地。まわりに何か置くと、よみがえる');
   }
-  if(mode==='build'){if(BL[sel]&&['furn','build','deco'].includes(BL[sel].kind)){if(!usable(sel))return place(sel,tx,ty);const ok=canPlace(sel,tx,ty,true);pending={kind:'one',id:sel,x:tx,y:ty,ok};$('#confirmTxt').textContent=ok?BL[sel].name+'をここに置く？':'ここには置けません';$('#cYes').disabled=!ok;$('#confirm').hidden=false;sfx('tap');return}return place(sel,tx,ty)}
+  if(mode==='build'){if(BL[sel]&&['furn','build','deco'].includes(BL[sel].kind)&&!BL[sel].trap){/* ワナは柵と同じで、タップするたびにそのまま置く */if(!usable(sel))return place(sel,tx,ty);const ok=canPlace(sel,tx,ty,true);pending={kind:'one',id:sel,x:tx,y:ty,ok};$('#confirmTxt').textContent=ok?BL[sel].name+'をここに置く？':'ここには置けません';$('#cYes').disabled=!ok;$('#confirm').hidden=false;sfx('tap');return}return place(sel,tx,ty)}
   if(mode==='remove')return removeAt(tx,ty);
   if(mode==='bulk'){if(selStamp)return askStamp(selStamp,tx,ty);if(!S.bulk)return toast('ひろびろハケは、カミサマと交換できます');return toast('ハケで、なぞった範囲をぬれます')}
 }
