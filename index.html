@@ -1499,7 +1499,7 @@ function plantSparkle(j,id){const FL=['fl_pink','fl_white','fl_yellow'],FK={clov
 // おく画面ではまわりに効く物の範囲を出す。みる画面ではタップした物の範囲をしばらく出す
 const RANGE_COL={flower:'255,150,190',well:'90,170,240',windmill:'90,210,180',light:'255,190,90',watch:'255,110,110',env:'150,205,110',vane:'150,170,255',sign:'255,170,120'};
 function rangeOf(o,j){if(o==='lotus')return{k:'flower',cells:2};if(FLOWERS.has(o))return{k:'flower',cells:1};if(o==='well')return{k:'well',cells:3};if(o==='windmill')return{k:'windmill',cells:5};if(o==='jar')return{k:'well',cells:1};if(o==='vane')return{k:'vane',cells:3};if(o==='signpost')return{k:'sign',cells:3};if(BL[o]&&BL[o].env)return{k:'env',cells:BL[o].er||3,sq:1};
-  if(INDL.has(o)){const h=j!=null&&roomOf(j);if(!h)return{k:'light',r:1.5};let m=1;for(const k of h.set)m=Math.max(m,Math.hypot(k%W-j%W,((k/W)|0)-((j/W)|0)));return{k:'light',r:m+.5}}
+  if(INDL.has(o)){const h=j!=null&&roomOf(j);if(!h)return{k:'light',r:1.5};let m=1;for(const k of h.set)m=Math.max(m,Math.hypot(k%W-j%W,((k/W)|0)-((j/W)|0)));return{k:'light',r:m+1.5}}
   if(o==='lamp'||o==='campfire'||o==='torch')return{k:'light',r:3.5};if(o==='stonelamp')return{k:'light',r:2.5};if(o==='lighthouse')return{k:'light',r:8};if(o==='stele')return{k:'sign',cells:5};if(o==='tower')return{k:'light',r:7};
   if(o==='watch'){const st=WATCH[(j!=null&&S.hp['L'+j])||1];return{k:'watch',r:st.range}}return null}
 let SHOWR=null,MANC='あそびかた';
@@ -2171,7 +2171,8 @@ function edgeSpot(){
 }
 const INDL=new Set(['candle','lantern','flamp']);/* 室内の灯り：家の中なら家じゅう、外なら1マス */
 function steleF(j){const o=S.obj[j],b=o&&BL[o]&&BL[o].hp;if(!b||!STELES.length)return 1;const x=j%W,y=(j/W)|0;for(const q of STELES)if(Math.hypot(q%W-x,((q/W)|0)-y)<=5)return Math.floor(b*1.15)/b;return 1}/* 石碑：まわり5マスの壁は、じょうぶさ1.15倍（小数点以下は切りすて） */
-function lightAt(x,y){for(const j of LIGHTS){const o=S.obj[j];const lx=j%W+(o==='lighthouse'?1:.5),ly=((j/W)|0)+(o==='lighthouse'?1:.5);if(INDL.has(o)){const h=roomOf(j);if(h?h.set.has((y|0)*W+(x|0)):(lx-x)**2+(ly-y)**2<2.25)return true;continue}if((lx-x)**2+(ly-y)**2<(o==='tower'?49:o==='lighthouse'?64:o==='stonelamp'?6.25:12.25))return true}/* 灯りの範囲（石灯籠2.5・ふつう3.5・台座7マス） */return false}
+function litNear(h,x,y){for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++)if(h.set.has((y+dy)*W+x+dx))return true;return false}/* 家の中の灯り：家ぜんたいと、そこから1マス */
+function lightAt(x,y){for(const j of LIGHTS){const o=S.obj[j];const lx=j%W+(o==='lighthouse'?1:.5),ly=((j/W)|0)+(o==='lighthouse'?1:.5);if(INDL.has(o)){const h=roomOf(j);if(h?litNear(h,x|0,y|0):(lx-x)**2+(ly-y)**2<2.25)return true;continue}if((lx-x)**2+(ly-y)**2<(o==='tower'?49:o==='lighthouse'?64:o==='stonelamp'?6.25:12.25))return true}/* 灯りの範囲（石灯籠2.5・ふつう3.5・台座7マス） */return false}
 const EREACH=new WeakMap();
 const ZUKAN={basic:'いちばんよく見るコワイノ。夜になると、せいれいをねらってやってくる。',fast:'足がとても速い。体は小さくて、すぐ追いはらえる。',thief:'畑の実った作物をぬすみにくる。見つかると、すぐにげる。',brute:'体がかたくて力も強い。なかなか追いはらえない。',breaker:'壁をこわすのが大好き。まわり道をしないで、まっすぐこわしてくる。',trapper:'罠を見つけると、こわしにくる。',boss:'大きなコワイノ。まわりのせいれいも巻きこんで攻撃する。',ash:'灰をまきちらして、施設をしばらく使えなくする。',rockc:'岩みたいにかたい。動きはおそい。',hino:'火山からやってくる大きなコワイノ。熱の切りかえ装置をこわそうとする。',boss2:'夜の力をたくわえた、いちばん大きなコワイノ。'};
 function updEnemy(e,dt){
@@ -4376,6 +4377,9 @@ function render(now){
     for(let y=y0;y<y1;y++)for(let x=x0;x<x1;x++){const o=S.obj[y*W+x];if(!['lamp','tower','house','watch','campfire','statue','torch','candle','lantern','flamp'].includes(o))continue;/* 明かりの出る物は、夜にまわりを明るく */
       const cx=x*TS+(o==='watch'?32:16),cy=y*TS+(o==='flamp'?-6:o==='candle'?10:o==='lantern'?6:o==='lamp'?3:o==='torch'?-12:o==='watch'?-20:o==='campfire'?14:o==='tower'?6:o==='statue'?-6:15),R=o==='tower'?200:o==='statue'?110:o==='lamp'?100:o==='torch'?105:INDL.has(o)?(roomOf(y*W+x)?105:45):o==='campfire'?110:o==='watch'?40:30;
       const g=ctx.createRadialGradient(cx,cy,2,cx,cy,R);g.addColorStop(0,'rgba(255,214,120,'+dk*.9+')');g.addColorStop(1,'rgba(255,200,100,0)');ctx.fillStyle=g;ctx.fillRect(cx-R,cy-R,R*2,R*2)}
+    {const litH=new Set();for(const j of LIGHTS){if(INDL.has(S.obj[j])){const h=roomOf(j);if(h)litH.add(h)}}/* 灯りのある家は、家ぜんたいと、そこから1マスを照らす */
+      for(const h of litH){const seen=new Map();for(const q of h.set)seen.set(q,1);for(const q of h.set){const qx=q%W,qy=(q/W)|0;for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){const nx=qx+dx,ny=qy+dy;if(nx<0||ny<0||nx>=W||ny>=H)continue;const n=ny*W+nx;if(!seen.has(n))seen.set(n,.5)}}
+        for(const[q,a]of seen){const qx=q%W,qy=(q/W)|0;if(qx<x0-1||qx>x1||qy<y0-1||qy>y1)continue;ctx.fillStyle='rgba(255,200,100,'+dk*.2*a+')';ctx.fillRect(qx*TS,qy*TS,TS,TS)}}}
     ctx.globalCompositeOperation='source-over';ctx.setTransform(dpr,0,0,dpr,0,0)}
   if(GLWN){ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=Math.min(1,dk*1.5);ctx.globalCompositeOperation='lighter';ctx.drawImage(GLW,0,0);ctx.globalCompositeOperation='source-over';ctx.globalAlpha=1;ctx.setTransform(dpr,0,0,dpr,0,0);GLWN=0}
   // 空気の粒（昼は花粉、夜はホタル）
