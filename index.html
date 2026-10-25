@@ -2454,7 +2454,7 @@ for(const k in THXB)if(FIREB[k])FIREB[k].X.push(['K',THXB[k]]);
 function inHouseFurn(){let n=0;for(let j=0;j<S.obj.length;j++){const o=S.obj[j];if(!o||!BL[o]||BL[o].kind!=='furn'||BL[o].trap)continue;if(HOUSES.some(h=>h.set&&h.set.has(j)))n++}return n}
 function qAt(t){const qi=QUESTS.findIndex(q=>q.text===t);if(qi<0)return false;const h=S.questOrder35;return h?!!(h.done[t]||h.accepted[t]||S.quest===qi&&S.qTalked):(S.quest>qi||S.quest===qi&&!!S.qTalked)}/* そのメインクエストを受けたあと */
 function qDone(text){const index=QUESTS.findIndex(q=>q.text===text);if(index<0)return false;if(S.qStory===index)return false;return S.questOrder35?!!S.questOrder35.done[text]:S.quest>index}
-const SUB_MAIN_AFTER={chair2:'食卓をたのもう',farm10:'畑を6つにしよう',bed3:'火のせいれいをむかえよう',light3:'火のせいれいをむかえよう',oven:'火のせいれいをむかえよう'};
+const SUB_MAIN_AFTER={chair2:'食卓をたのもう',farm10:'畑を6つにしよう',light3:'火のせいれいをむかえよう',oven:'火のせいれいをむかえよう'};
 function subOfferReady(q){if(S.qStory!=null||QUEST_CLEAR_WAIT)return false;return WD!==0||!SUB_MAIN_AFTER[q.k]||qDone(SUB_MAIN_AFTER[q.k])}
 const LEVEL_HELP={2:['benchbreak','chair2'],3:['oven','bed3'],4:['jar2','farm10'],5:['toy2','deco3'],8:['room','paint','parasol']};
 function levelHelpKeys(){const out=[];for(const n in LEVEL_HELP){const main=qAt('村レベルを'+n+'にしよう'),side=SUBQ.some(q=>q.k.startsWith('lv_')&&q.n===+n&&(S.subSt||{})[q.k]>=2);if(main||side)out.push(...LEVEL_HELP[n])}return out}
