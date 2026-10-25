@@ -3304,6 +3304,15 @@ function drawMossGate(c,x,y,i,ver,op){
   c.restore();return true;
 }
 
+const WALLMAT={plasterwall:'plaster',logwall:'log',brickwall:'brick'};
+function wallBand(c,mat,a,b,x,y,i){/* 壁の正面（梁の下〜巾木・かげ）。世界の座標で模様をつなぐので、マスのさかいめに継ぎ目が出ない */
+  if(b<=a)return;if(mat==='plaster'){plBand(c,a,b,x,y,i);return}const gx=(i!=null&&!ICON?(i%W)*TS:0)-x;
+  c.fillStyle='rgba(0,0,0,.18)';c.fillRect(a,y+29,b-a,2);c.save();c.beginPath();c.rect(a,y+11,b-a,14);c.clip();
+  if(mat==='wood'){const art=HOUSEART['wall-wood'];if(art&&art.complete&&art.naturalWidth){const k=art.naturalHeight/18,sw=art.naturalWidth-8,pw=sw/k;let wx=Math.floor((a+gx)/pw)*pw;for(;wx<b+gx;wx+=pw)c.drawImage(art,4,0,sw,art.naturalHeight,wx-gx,y+11,pw,18)}else{c.fillStyle='#c6905f';c.fillRect(a,y+11,b-a,14)}}
+  else if(mat==='log'){c.fillStyle='#a87650';c.fillRect(a,y+11,b-a,14);for(let r=0;r<3;r++){const yy=y+11+r*4.6;c.fillStyle='#c6905f';c.fillRect(a,yy+.6,b-a,3.4);c.fillStyle='#e2ad7e';c.fillRect(a,yy+.6,b-a,.8);c.fillStyle='rgba(120,76,46,.35)';c.fillRect(a,yy+3.6,b-a,.6);
+      for(let n=Math.floor((a+gx)/13)-1;n*13<b+gx;n++)if(hash(n*7+r*13+3)>.55){c.fillStyle='rgba(150,98,62,.7)';c.fillRect(n*13+2+hash(n*3+r)*6-gx,yy+1.9,3.2,.9)}}}
+  else{c.fillStyle='#e9c3a2';c.fillRect(a,y+11,b-a,14);for(let r=0;r<3;r++){const yy=y+11+r*4.6+.5,off=r%2?5.75:0;for(let n=Math.floor((a+gx-off)/11.5)-1;n*11.5+off<b+gx;n++){const bx=n*11.5+off-gx;c.fillStyle=hash(n*5+r*11)>.7?'#a3573f':'#ae5f45';c.fillRect(bx+.5,yy,10.5,3.6);c.fillStyle='rgba(255,205,170,.35)';c.fillRect(bx+1,yy+.3,9.5,.6);c.fillStyle='rgba(90,40,28,.25)';c.fillRect(bx+.5,yy+3,10.5,.6)}}}
+  c.restore();c.fillStyle='#8a5e3c';c.fillRect(a,y+24.6,b-a,3.6);c.fillStyle='#a8784e';c.fillRect(a,y+24.6,b-a,.9);c.fillStyle='rgba(0,0,0,.2)';c.fillRect(a,y+27.4,b-a,.8)}
 function plBand(c,a,b,x,y,i){/* しっくいの壁の正面：つなぎめなしの1まいの帯（はしまで同じ高さ・同じ光沢・巾木） */
   if(b<=a)return;c.fillStyle='rgba(0,0,0,.18)';c.fillRect(a,y+29,b-a,2);c.fillStyle='#efdfc1';c.fillRect(a,y+11,b-a,17);c.fillStyle='rgba(120,84,50,.16)';c.fillRect(a,y+11,b-a,1.6);c.fillStyle='#f8edd4';c.fillRect(a,y+12.6,b-a,1.6);c.fillStyle='#d7c3a0';c.fillRect(a,y+22,b-a,2.6);
   for(let k=0;k<4;k++){const px=x+2+hash(i*17+k*7)*28,py=y+15+hash(i*31+k*13)*7;if(px<a+1||px>b-1)continue;c.fillStyle=k%2?'rgba(198,173,137,.28)':'rgba(255,250,232,.6)';c.beginPath();c.ellipse(px,py,1.2+hash(i+k)*.8,.7,0,0,7);c.fill()}
@@ -3369,31 +3378,19 @@ function drawObj(c,id,x,y,i,g,now){
     for(const[dx,dy,r,col]of[[-9,-5,6,D],[9,-5,6,D],[-6,-11,7,B],[6,-11,7,B],[0,-15,7,L],[-10,0,6,B],[10,0,6,B],[0,-4,10,B]])circ(c,x+16+dx,y+24+dy,r,col);
     tuft(c,x+5,y+29,.6,D);tuft(c,x+27,y+29,.6,D);
     if(g>=100)for(const[dx,dy]of[[-6,-12],[5,-8],[-3,-2],[8,-15]]){circ(c,x+16+dx,y+24+dy,3,'#5b6fd1');c.fillStyle='#3f50a8';c.fillRect(x+15+dx,y+21.6+dy,2,1.2)}break}
-  case'logwall':case'plasterwall':case'brickwall':{const mat=id==='logwall'?'log':id==='plasterwall'?'plaster':'brick',panel=HOUSEART['wall-'+mat],post=HOUSEART['post-'+mat],L=HOME_WALLS.has(S.obj[i-1])||HOME_DOORS.has(S.obj[i-1]),R=HOME_WALLS.has(S.obj[i+1])||HOME_DOORS.has(S.obj[i+1]),U=HOME_WALLS.has(S.obj[i-W])||HOME_DOORS.has(S.obj[i-W]),D=HOME_WALLS.has(S.obj[i+W])||HOME_DOORS.has(S.obj[i+W]);if(panel&&panel.complete&&panel.naturalWidth){c._plaster=(id==='plasterwall'&&(U||D))?1:0;c._noFront=id==='plasterwall'?1:0;drawObj(c,'hwall',x,y,i,g,now);c._plaster=0;c._noFront=0;if(id==='plasterwall'){const hv=U||D;if(hv){/* 縦の壁は木の壁と同じ形（柱・上の断面も）。角のとなりは、木の壁側で、しっくい色にぬる */}else{const x0=L?x:x+3,x1=R?x+TS:x+29;/* つなぎめのない一枚の壁：タイルごとに絵をはらず、色で連続して塗る */plBand(c,x0,x1,x,y,i);if(post&&post.complete&&post.naturalWidth){if(!L)c.drawImage(post,x,y+7,6,23);if(!R)c.drawImage(post,x+26,y+7,6,23)}}break}if(U||D){/* 縦につながる壁は、同じ絵を90度回して継ぐ */c.save();c.translate(x+TS,y);c.rotate(Math.PI/2);c.drawImage(panel,3,8,26,20);c.restore()}else{c.drawImage(panel,x+3,y+8,26,20);if(post&&post.complete&&post.naturalWidth){if(!L)c.drawImage(post,x,y+7,6,23);if(!R)c.drawImage(post,x+26,y+7,6,23)}}break}drawObj(c,'hwall',x,y,i,g,now);c.save();const l=x+5,r=x+27,w=r-l;if(id==='logwall'){
-      c.fillStyle='#70462b';rr(c,l,y+11,w,16,3);
-      for(let row=0;row<3;row++){const yy=y+11+row*5.1;c.fillStyle='#754729';rr(c,l,yy,w,5.3,2.5);c.fillStyle=row===1?'#bd8050':'#ad7448';rr(c,l+1,yy+.4,w-2,4.2,2.1);c.fillStyle='rgba(255,221,166,.38)';rr(c,l+2,yy+.7,w-4,.8,.4);c.fillStyle='rgba(77,43,25,.36)';c.fillRect(l+1,yy+4.3,w-2,.7);
-        for(const[dx,dy]of[[5,1.8],[15,3.2]]){const k=hash(i*29+row*11+dx);if(k>.52){c.fillStyle='rgba(105,60,34,.3)';rr(c,l+dx,yy+dy,3.5,.8,.4)}}}
-      for(const yy of[y+13.5,y+18.6,y+23.7]){c.fillStyle='#d19a63';c.beginPath();c.ellipse(r-1.5,yy,1.8,2.1,0,0,7);c.fill();c.fillStyle='#895432';c.beginPath();c.ellipse(r-1.5,yy,1,1.3,0,0,7);c.fill()}
-    }else if(id==='plasterwall'){
-      c.fillStyle='#a9825f';rr(c,l,y+10,w,18,2.5);c.fillStyle='#f1e1c4';rr(c,l+1.5,y+11.5,w-3,14.5,2);c.fillStyle='rgba(255,250,232,.65)';rr(c,l+2.5,y+12.3,w-5,2.2,1.1);c.fillStyle='rgba(157,124,89,.23)';c.fillRect(l+2,y+25,w-4,1);
-      for(let k=0;k<5;k++){const px=l+3+hash(i*17+k*7)*(w-7),py=y+14+hash(i*31+k*13)*9;c.fillStyle=k%2?'rgba(198,173,137,.25)':'rgba(255,250,232,.55)';c.beginPath();c.ellipse(px,py,1.1+hash(i+k)*.7,.7,0,0,7);c.fill()}
-    }else{
-      c.fillStyle='#754236';rr(c,l,y+10,w,18,2);c.save();c.beginPath();c.rect(l+1,y+11,w-2,16);c.clip();c.fillStyle='#e6c9a6';c.fillRect(l+1,y+11,w-2,16);
-      const rows=[y+11,y+16.1,y+21.2],brick=(bx,yy,bw)=>{c.fillStyle='#874837';rr(c,bx,yy,bw,4.8,1.15);c.fillStyle='#b8614a';rr(c,bx+.5,yy+.4,bw-1,3.9,1);c.fillStyle='rgba(255,205,163,.5)';c.fillRect(bx+1,yy+.7,bw-2,.65);c.fillStyle='rgba(91,46,37,.24)';c.fillRect(bx+1,yy+4.1,bw-2,.5)};
-      for(let row=0;row<rows.length;row++){const yy=rows[row],off=row%2?l-5:l;for(let bx=off;bx<r;bx+=11.5)brick(bx,yy,10.7)}c.restore();c.fillStyle='#d7b695';for(let yy of[y+15.8,y+20.9,y+26])c.fillRect(l+1,yy,w-2,.8)
-    }c.restore();break}
-  case'door':case'hwall':{const isW=k=>HOME_WALLS.has(typeAt(k))||HOME_DOORS.has(typeAt(k));const L=!ICON&&isW(i-1),R=!ICON&&isW(i+1),U=!ICON&&isW(i-W),D=!ICON&&isW(i+W);const door=id==='door',PM=c._plaster?{'#d0a67c':'#8a5e3c','#c49a70':'#80563a','#a07858':'#6e4c32'}:null,K=s=>PM&&PM[s]||s,pillar=()=>{/* 四隅の柱：壁と同じ幅の四角。上がわの柱はてっぺんだけ、下がわの柱はてっぺんと正面。てっぺんは正面の色に合わせ、木目を入れる */const px=x+5,pw=22,OL='#6b4830',TOP='#8f6542',FR='#80593a',GR='rgba(110,76,50,.34)',GL='rgba(222,176,128,.2)';
+  case'logwall':case'plasterwall':case'brickwall':{/* 丸太・しっくい・レンガの壁も、木の壁と同じ形（柱・断面・巾木・つなぎめなし）で、正面の帯だけ材質を変える */c._mat=id==='logwall'?'log':id==='plasterwall'?'plaster':'brick';drawObj(c,'hwall',x,y,i,g,now);c._mat=0;break}
+  case'door':case'hwall':{const isW=k=>HOME_WALLS.has(typeAt(k))||HOME_DOORS.has(typeAt(k));const L=!ICON&&isW(i-1),R=!ICON&&isW(i+1),U=!ICON&&isW(i-W),D=!ICON&&isW(i+W);const door=id==='door',MAT=c._mat||'wood',PM=MAT!=='wood'?{'#d0a67c':'#8a5e3c','#c49a70':'#80563a','#a07858':'#6e4c32'}:null,K=s=>PM&&PM[s]||s,pillar=()=>{/* 四隅の柱：壁と同じ幅の四角。上がわの柱はてっぺんだけ、下がわの柱はてっぺんと正面。てっぺんは正面の色に合わせ、木目を入れる */const px=x+5,pw=22,OL='#6b4830',TOP='#8f6542',FR='#80593a',GR='rgba(110,76,50,.34)',GL='rgba(222,176,128,.2)';
   const grainTop=(py,h)=>{/* てっぺんは木の断面：年輪（同心の輪） */c.save();c.beginPath();c.rect(px+1,py,pw-2,h);c.clip();const ox=px+pw/2+(hash(i*5)-.5)*5,oy=py+h/2+(hash(i*9)-.5)*3;c.lineWidth=.8;for(let k=0;k<5;k++){const r=2.2+k*2.6;c.strokeStyle='rgba(70,44,26,.5)';c.beginPath();c.ellipse(ox,oy,r*1.25,r*.85,0,0,7);c.stroke();c.strokeStyle='rgba(222,176,128,.22)';c.beginPath();c.ellipse(ox,oy+.9,r*1.25,r*.85,0,0,7);c.stroke()}c.fillStyle='rgba(60,36,20,.55)';c.beginPath();c.ellipse(ox,oy,1.1,.8,0,0,7);c.fill();c.restore()};
   const grainFront=(py,h)=>{for(let k=0;k<5;k++){const gx=px+2.5+k*(pw-5)/5+hash(i*11+k)*2;c.fillStyle=GR;c.fillRect(gx,py+1,.8,h-2);c.fillStyle=GL;c.fillRect(gx+1,py+1,.6,h-2)}};
   const sideFace=(fy,fh)=>{/* 側面は、縦の壁と全く同じ絵（色・線・ふち）をのばす */c.fillStyle='#8a5e3c';c.fillRect(px,fy,pw,fh);c.fillStyle='#a8784e';for(const lx of[x+10,x+16,x+22])c.fillRect(lx,fy,1,fh);c.fillStyle='#b88550';c.fillRect(px,fy,1.5,fh);c.fillRect(px+pw-1.5,fy,1.5,fh)};
-  if(!U){const py=y+1;c.fillStyle=OL;c.fillRect(px,py,pw,16);c.fillStyle=TOP;c.fillRect(px+1,py+1,pw-2,14);grainTop(py+1,14);c.fillStyle='#a97c55';c.fillRect(px+1,py+1,pw-2,1.2);return}
-  const roofed=!ICON&&HOUSES.some(h=>h.set.has(i)&&!OPENH.has(hKey(h)));if(roofed){/* 屋根をかけた家の手前の柱：断面は上の柱と同じ大きさ（すこし上にずらす）。側面は縦の壁と同じ絵を1マスぶん */c.fillStyle='rgba(0,0,0,.18)';c.fillRect(px,y+29,pw,2);c.fillStyle=OL;c.fillRect(px,y-17,pw,16);c.fillStyle=TOP;c.fillRect(px+1,y-16,pw-2,14);grainTop(y-16,14);c.fillStyle='#a97c55';c.fillRect(px+1,y-16,pw-2,1.2);sideFace(y-1,30);return}
-  const py=y+2;/* 手前の柱は、前の壁のてっぺん(y+2)より上に出さない。断面は上の柱と同じ大きさ */c.fillStyle='rgba(0,0,0,.18)';c.fillRect(px,y+29,pw,2);c.fillStyle=OL;c.fillRect(px,py,pw,16);c.fillStyle=TOP;c.fillRect(px+1,py+1,pw-2,14);grainTop(py+1,14);c.fillStyle='#a97c55';c.fillRect(px+1,py+1,pw-2,1.2);sideFace(y+18,11)},baseb=(a,b)=>{if(b<=a)return;c.fillStyle='#8a5e3c';c.fillRect(a,y+24.6,b-a,3.6);c.fillStyle='#a8784e';c.fillRect(a,y+24.6,b-a,.9);c.fillStyle='rgba(0,0,0,.2)';c.fillRect(a,y+27.4,b-a,.8)};/* 巾木 *//* しっくいの縦の壁・柱は、しっくいの上にある木部と同じ色 */
+  const roofed=!ICON&&HOUSES.some(h=>h.set.has(i)&&!OPENH.has(hKey(h)));if(!U){if(roofed)return;/* 屋根の下の奥の柱は屋根にかくれる（屋根の上にはみ出さない） */const py=y-5;/* 断面の下のはしは、横の壁のてっぺん（梁）の下のライン(y+11)にそろえる */c.fillStyle=OL;c.fillRect(px,py,pw,16);c.fillStyle=TOP;c.fillRect(px+1,py+1,pw-2,14);grainTop(py+1,14);c.fillStyle='#a97c55';c.fillRect(px+1,py+1,pw-2,1.2);return}
+  if(roofed){/* 屋根をかけた家の手前の柱：断面は上の柱と同じ大きさ（すこし上にずらす）。側面は縦の壁と同じ絵を1マスぶん */c.fillStyle=OL;c.fillRect(px,y-17,pw,16);c.fillStyle=TOP;c.fillRect(px+1,y-16,pw-2,14);grainTop(y-16,14);c.fillStyle='#a97c55';c.fillRect(px+1,y-16,pw-2,1.2);sideFace(y-1,30);return}
+  const py=y-5;/* 手前の柱も、断面の下のはしは横の壁の梁の下のライン(y+11)。断面は上の柱と同じ大きさ、その下に側面 */c.fillStyle=OL;c.fillRect(px,py,pw,16);c.fillStyle=TOP;c.fillRect(px+1,py+1,pw-2,14);grainTop(py+1,14);c.fillStyle='#a97c55';c.fillRect(px+1,py+1,pw-2,1.2);sideFace(y+11,18)},baseb=(a,b)=>{if(b<=a)return;c.fillStyle='#8a5e3c';c.fillRect(a,y+24.6,b-a,3.6);c.fillStyle='#a8784e';c.fillRect(a,y+24.6,b-a,.9);c.fillStyle='rgba(0,0,0,.2)';c.fillRect(a,y+27.4,b-a,.8)};/* 巾木 *//* しっくいの縦の壁・柱は、しっくいの上にある木部と同じ色 */
     if(!ICON&&!door)wallMarg(c,i,x,y);/* ドアのぶんは、床といっしょに下の絵に描く */
-    const hasV=U||D,hasH=L||R||!hasV;const hx0=L?x:x+5,hx1=R?x+TS:x+27,vy0=U?y:y+2,vy1=D?y+TS:y+14;
+    const hasV=U||D,hasH=L||R||!hasV;const hx0=L?x:x+5,hx1=R?x+TS:x+27,vy0=U?y:y+2,vy1=D?y+TS:y+14;if(c._doorBack&&!(door&&hasH))break;
     if(!ICON&&!door&&(hasV&&hasH||hasH&&(!L||!R)||!hasH&&(!U||!D))){/* 壁のはじっこ・角は、縦の壁と同じ幅の柱 */
       const t0=U?y:y+2,t1=D?y+TS:y+12,p0=x+5,p1=x+27;
-      const pl=(a,b)=>{if(c._plaster){plBand(c,a,b,x,y,i);return}const art=HOUSEART['wall-wood'];if(art&&art.complete&&art.naturalWidth){c.drawImage(art,a,y+11,b-a,18);baseb(a,b);c.fillStyle='rgba(0,0,0,.18)';c.fillRect(a,y+29,b-a,2);return}for(let k=0;k<3;k++){c.fillStyle=k%2?'#d0a67c':'#c49a70';c.fillRect(a,y+12+k*5.4,b-a,4.6);c.fillStyle=K('#a07858');c.fillRect(a,y+16.6+k*5.4,b-a,.8)}baseb(a,b)};/* 角のとなりの壁は、ふつうの壁と同じ絵・色でつなぐ */
+      const pl=(a,b)=>wallBand(c,MAT,a,b,x,y,i);/* 角のとなりの壁は、ふつうの壁と同じ絵・色でつなぐ */
       if(L)pl(x,p0);if(R)pl(p1,x+TS);
       if(!D){c.fillStyle='rgba(0,0,0,.18)';c.fillRect(p0,y+29,p1-p0,2);c.fillStyle=K('#8a5e3c');c.fillRect(p0,y+10,p1-p0,19);c.fillStyle=K('#a8784e');c.fillRect(p0+5,y+10,1,18);c.fillRect(p0+11,y+10,1,18);c.fillRect(p0+17,y+10,1,18);c.fillStyle=K('#b88550');c.fillRect(p0,y+10,1.5,18);c.fillRect(p1-1.5,y+10,1.5,18);c.fillStyle='rgba(0,0,0,.2)';c.fillRect(p0,y+25,p1-p0,3)}/* 柱の足もとは、縦の壁のつづきの色・線 */
       c.fillStyle=K('#8a5e3c');c.fillRect(p0,t0,p1-p0,t1-t0);if(L)c.fillRect(x,y+2,5,9);if(R)c.fillRect(p1,y+2,5,9);/* 壁の絵のてっぺんと、ぴったりそろえる */
@@ -3403,17 +3400,14 @@ function drawObj(c,id,x,y,i,g,now){
       pillar();
       break}
     // 木の壁：横板の壁と太い柱（家の絵と同じ）
-    const front=(a,b)=>{if(b<=a||c._noFront)return;const art=HOUSEART['wall-wood'];if(art&&art.complete&&art.naturalWidth){c.drawImage(art,a,y+11,b-a,18);baseb(a,b);c.fillStyle='rgba(0,0,0,.18)';c.fillRect(a,y+29,b-a,2);return}c.fillStyle='rgba(0,0,0,.2)';rr(c,a,y+26,b-a,5,2);c.fillStyle='#885b3d';rr(c,a,y+11,b-a,17,2.5);
-      for(let k=0;k<3;k++){const py=y+11+k*5.3;c.fillStyle=k%2?'#d8a574':'#cb9765';rr(c,a,py,b-a,4.9,1.6);c.fillStyle='rgba(255,236,199,.52)';rr(c,a+1,py+.5,b-a-2,.85,.4);c.fillStyle='rgba(99,62,39,.28)';c.fillRect(a+1,py+4.4,b-a-2,.65);const gx=a+((hash(i*13+k)*Math.max(1,b-a-7))|0)+3;c.fillStyle='rgba(139,83,47,.28)';rr(c,gx,py+2.7,3.5,.75,.35)}
-      const post=px=>{c.fillStyle='#704a30';rr(c,px,y+9,5,20,1.8);c.fillStyle='#a87850';rr(c,px+.7,y+9.5,3.2,19,1.3);c.fillStyle='rgba(255,223,174,.55)';c.fillRect(px+1.2,y+10,1,17);c.fillStyle='rgba(71,47,32,.45)';c.fillRect(px+4,y+10,1,17)};
-      baseb(a,b);if(a!==x)post(a);if(b!==x+TS)post(b-5)};
+    const front=(a,b)=>wallBand(c,MAT,a,b,x,y,i);
     if(door&&hasV&&!hasH){let op=0;if(!ICON)op=doorOp(i,x,y,2.1,.9);
       /* 横の壁のドア：壁と同じ太さ・色の枠に、マスいっぱいの四角い板戸 */
       c.fillStyle=K('#8a5e3c');c.fillRect(x+5,y,22,3);c.fillRect(x+5,y+29,22,3);c.fillStyle=K('#a8784e');c.fillRect(x+5,y+3,22,1);c.fillRect(x+5,y+28,22,1);
       {const L=25,an=op*Math.PI*.45;c.save();c.translate(x+16,y+3.5);c.rotate(an);c.fillStyle='rgba(0,0,0,.18)';c.fillRect(-1,1,5,L);c.fillStyle='#8a5a33';c.fillRect(-2,0,4,L);c.fillStyle=K('#b88550');c.fillRect(-2,0,1.3,L);c.restore()}/* 横の壁のドア：ドアの断面（細い縦線）。開くと内がわへ回る */break}
-    if(hasH){if(!D)front(hx0,hx1);else{if(L)front(hx0,x+5);if(R)front(x+27,hx1)}}else if(!D)front(x+5,x+27);
-    if(door&&hasH&&!ICON){/* ドアの後ろの壁は、となりの壁と同じ（梁・正面・巾木）を、タイルいっぱいに */const nb=L?i-1:i+1,t=typeAt(nb);c.fillStyle='#8a5e3c';c.fillRect(x,y+2,TS,9);c.fillStyle='#a8784e';c.fillRect(x,y+3,TS,1.5);if(t==='plasterwall')plBand(c,x,x+TS,x,y,i);else{const wa=HOUSEART['wall-wood'];if(wa&&wa.complete&&wa.naturalWidth)c.drawImage(wa,x,y+11,TS,18);else{c.fillStyle='#c49268';c.fillRect(x,y+11,TS,17)}baseb(x,x+TS);c.fillStyle='rgba(0,0,0,.18)';c.fillRect(x,y+29,TS,2)}}
-    if(door&&hasH){const art=HOUSEART&&HOUSEART['wall-door'];let op=0;if(!ICON)op=doorOp(i,x,y,.9,2.1);if(art&&art.complete&&art.naturalWidth){c.drawImage(art,x,y+2,TS,27);if(op>.01){c.fillStyle='#4f3527';c.beginPath();c.moveTo(x+6,y+29);c.lineTo(x+6,y+15);c.quadraticCurveTo(x+16,y+2,x+26,y+15);c.lineTo(x+26,y+29);c.closePath();c.fill();c.save();c.translate(x+7,y);c.scale(1-op*.78,1);c.translate(-x-7,-y);c.drawImage(art,14,25,102,145,x+5,y+4,22,26);c.restore()}break}
+    if(door&&hasH&&!ICON){}/* ドアは下で、となりと同じ壁をタイルいっぱいに1回だけ描く（かげが2重にならないように） */else if(hasH){if(!D)front(hx0,hx1);else{if(L)front(hx0,x+5);if(R)front(x+27,hx1)}}else if(!D)front(x+5,x+27);
+    if(c._doorBack){/* ドアの後ろの壁は、となりの壁と同じ（梁・正面・巾木）を、タイルいっぱいに。となりの壁と同じ下絵(静的な層)に描いて、にじみ方までそろえる */const nb=L?i-1:i+1;c.fillStyle='#8a5e3c';c.fillRect(x,y+2,TS,9);c.fillStyle='#a8784e';c.fillRect(x,y+3,TS,1.5);wallBand(c,WALLMAT[typeAt(nb)]||'wood',x,x+TS,x,y,i);break}
+    if(door&&hasH){const art=HOUSEART&&HOUSEART['wall-door'];let op=0;if(!ICON)op=doorOp(i,x,y,.9,2.1);if(art&&art.complete&&art.naturalWidth){if(ICON){c.drawImage(art,x+2,y+1,28,30);break}/* 壁に戸口をあけて、枠は梁と同じ木。戸板だけを絵からとる。上の梁・下のかげは、となりの壁とひとつづき */c.fillStyle='#8a5e3c';c.fillRect(x+6,y+4.5,20,24.5);c.fillStyle='#a8784e';c.fillRect(x+6,y+4.5,20,1);c.fillStyle='#4f3527';c.fillRect(x+8,y+6,16,23);c.save();c.translate(x+8,0);c.scale(1-op*.78,1);c.drawImage(art,19,18,94,149,0,y+6,16,23);c.restore();break}
       /* 木のアーチ戸：丸い上枠、縦板、木目、真鍮色の取っ手 */
       c.fillStyle='rgba(0,0,0,.2)';rr(c,x+3,y+25,26,5,2);
       c.fillStyle='#70482e';rr(c,x+5,y+7,22,22,5);c.fillStyle='#d5ab77';
@@ -3787,6 +3781,7 @@ function rebuildStatic(){findHouses();
   const fixed=[];
   for(let y=0;y<H;y++)for(let x=0;x<W;x++){const i=y*W+x,o=S.obj[i];if(!o||o==='part'||!BL[o]||BL[o].dyn||BL[o].anim||TREES.has(o))continue;fixed.push({i,o,k:objectDepth(o,i),t:BL[o].kind==='block'?0:1})}
   fixed.sort((a,b)=>a.k-b.k||a.t-b.t||a.i-b.i);
+  for(let i=0;i<W*H;i++)if(S.obj[i]==='door'){sc._doorBack=1;drawObj(sc,'door',(i%W)*TS,((i/W)|0)*TS,i);sc._doorBack=0}
   for(const {i,o}of fixed)drawObj(sc,o,(i%W)*TS,((i/W)|0)*TS,i);
   dirty=false;
 }
@@ -4487,7 +4482,7 @@ function onTap(sx,sy){
   if(AREAARM){AREAARM=false;return areaBlast(w.x/TS,w.y/TS)}/* ひかりのはどう：タップした場所のまわり */
   const si=S.seeds.findIndex(s=>s.x===tx&&s.y===ty);
   if(tx>=0&&ty>=0&&tx<W&&ty<H){const hh=HOUSES.find(h=>h.set.has(ty*W+tx));/* 開けた屋根は、壁をタップするまでそのまま */
-    if(hh&&mode!=='look'&&!OPENH.has(hKey(hh))){OPENH.add(hKey(hh));return}}/* 置く・こわすときも、まず家をタップして中を見る */
+    if(hh&&mode!=='look'&&!OPENH.has(hKey(hh))){OPENH.add(hKey(hh));dirty=true;return}}/* 置く・こわすときも、まず家をタップして中を見る */
   if(si>=0){sfx('seed');S.seeds.splice(si,1);S.mseed=(S.mseed||0)+1;S.mseedGot=(S.mseedGot||0)+1;addFloat(tx+.5,ty,'ふしぎな種+1','#d8f5c0');burstAt(tx,ty,'plant');toast('ふしぎな種をひろった','good');return}
   if(mode==='look'){
     const en=S.enemies.find(e=>e.spawned&&Math.hypot(e.x-w.x/TS,e.y-w.y/TS)<.8);
@@ -4504,7 +4499,7 @@ function onTap(sx,sy){
     if(best&&best.act&&(best.act.type==='chat'||best.act.type==='rest')&&best.act.stage==='do'&&best.act.topic!=null){const p=S.res.find(q=>q.id===best.act.partner);if(p){const A=best.act.sub?p:best,B=best.act.sub?best:p;const C=CHATS[best.act.topic];return dialog(C.map((l,i)=>{const sp=l[0]?B:A;return [sp.name,((C.el&&!l[0])?l[1]:chatTone(l[1],sp,i)).replace(/@([HMK])/g,(m,c)=>sevName(c))]}),C.wave?()=>{A.waveU=B.waveU=S.t+4}:null)}}/* おしゃべり中の子をタップすると、会話が見られる */
     if(best){if(!S.flags.tapped&&S.flags.tapAsk){S.flags.tapPend=true}voiceHmm(best);return openSheet('res',best.id)}// ステータスを見て閉じたら、会話に進む
     if(tx<0||ty<0||tx>=W||ty>=H)return;
-    {const hi=HOUSES.findIndex(h=>h.set.has(ty*W+tx));if(hi>=0){const hk=hKey(HOUSES[hi]);if(!OPENH.has(hk)){OPENH.add(hk);return}/* 1回目のタップで屋根を外す */const o0=S.obj[anc(ty*W+tx)];if(HOME_WALLS.has(o0)||HOME_DOORS.has(o0)){OPENH.delete(hk);return}/* 壁をタップすると屋根がもどる */if(!o0)return openSheet('house',hi)}}// 中が見えているときは、家具やせいれいもタップできる
+    {const hi=HOUSES.findIndex(h=>h.set.has(ty*W+tx));if(hi>=0){const hk=hKey(HOUSES[hi]);if(!OPENH.has(hk)){OPENH.add(hk);dirty=true;return}/* 1回目のタップで屋根を外す */const o0=S.obj[anc(ty*W+tx)];if(HOME_WALLS.has(o0)||HOME_DOORS.has(o0)){OPENH.delete(hk);dirty=true;return}/* 壁をタップすると屋根がもどる */if(!o0)return openSheet('house',hi)}}// 中が見えているときは、家具やせいれいもタップできる
     const j=anc(ty*W+tx),o=S.obj[j];
     if(WD===1&&S.st2){const g=ty*W+tx;
       if(S.ground[g]===1&&!o){const k=sprMap()[g];if(k){if(!S.flags.sprLook){S.flags.sprLook=true;checkQuest()}return toast(SPN[k]+'：'+(springOn(k)?'あたたかい湯がわいている':S.st2.sp[k]?'装置がこわれて、湯が冷めている':'冷たい水…熱がとどいていない'))}}
