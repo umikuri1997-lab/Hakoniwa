@@ -3256,34 +3256,36 @@ function drawF2(c,id,x,y,i,now){const C=F2C,cx=x+16,T=(now||0)/1000;
   case'flamp':sh(7);c.fillStyle=C.wdD;c.beginPath();c.ellipse(cx,y+28,6,2,0,0,7);c.fill();c.fillRect(cx-1,y+9,2,19);c.globalAlpha=.3;circ(c,cx,y+8,9,'#ffe7a8');c.globalAlpha=1;c.fillStyle=C.cr;c.beginPath();c.moveTo(cx-5,y+2);c.lineTo(cx+5,y+2);c.lineTo(cx+8,y+11);c.lineTo(cx-8,y+11);c.closePath();c.fill();c.strokeStyle=C.crD;c.stroke();break;
   case'sink':sh(13);f2rr(c,cx-13,y+12,26,17,2,'#cfc9be',C.stD);c.fillStyle='#b9b2a6';c.fillRect(cx-13,y+12,26,3);f2rr(c,cx-8,y+15,16,7,2,'#8f897f');c.fillStyle='#a9d4ea';c.fillRect(cx-7,y+18,14,3);c.strokeStyle=C.stD;c.strokeRect(cx-10,y+23,20,5);c.fillStyle='#9d968b';c.fillRect(cx-1,y+5,2.5,9);c.fillRect(cx-1,y+5,7,2.2);circ(c,cx+6,y+7,1.2,'#9d968b');break;
   case'tub':sh(10);f2rr(c,cx-10,y+11,20,18,4,C.wd,C.ol);c.fillStyle='#8f97a0';c.fillRect(cx-10,y+14,20,2);c.fillRect(cx-10,y+24,20,2);c.fillStyle='#9fd0ea';c.beginPath();c.ellipse(cx,y+12,9,3,0,0,7);c.fill();c.strokeStyle=C.ol;c.beginPath();c.ellipse(cx,y+12,10,3.5,0,0,7);c.stroke();break;
-  case'planter':{/* 花壇：白い石の箱に、葉と五まいの花びらの花 */const P=k=>i!=null&&!ICON&&S&&S.obj[k]==='planter',L=P(i-1)&&i%W>0,R=P(i+1)&&(i+1)%W>0,U=P(i-W),D=P(i+W),h=i||0;
-    const bx0=L?x-1:x+2,bx1=R?x+33:x+30,by0=U?y-4:y+8,by1=D?y+36:y+29,FH=D?0:8;
+  case'planter':{/* 花壇：白い石の箱（上のふち・葉の山・前がわのブロック）に、五まいの花びらの花 */const P=k=>i!=null&&!ICON&&S&&S.obj[k]==='planter',L=P(i-1)&&i%W>0,R=P(i+1)&&(i+1)%W>0,U=P(i-W),D=P(i+W),h=i||0;
+    const bx0=L?x-1:x+2,bx1=R?x+33:x+30,by0=U?y-4:y+10,by1=D?y+36:y+29,iy1=D?by1:by0+(by1-by0)*.62,ix0=L?bx0:bx0+3,ix1=R?bx1:bx1-3,iy0=U?by0:by0+1.8;
     if(!D)sh(14);
-    f2rr(c,bx0,by0,bx1-bx0,by1-by0,[(U||L)?0:4,(U||R)?0:4,(D||R)?0:4,(D||L)?0:4],'#f3ecd8','#d5c9aa');
-    c.fillStyle='#fbf8ec';if(!U)c.fillRect(bx0+(L?0:3),by0+1,bx1-bx0-(L?0:3)-(R?0:3),1);/* 上のふちのつや */
-    if(FH){c.fillStyle='#e8dfc4';c.fillRect(bx0+.5,by1-FH,bx1-bx0-1,FH-.5);c.fillStyle='#d3c7a8';c.fillRect(bx0+(L?0:1),by1-FH,bx1-bx0-(L?0:1)-(R?0:1),1);for(let k=0;k<4;k++){const lx=x+k*10.667;if(lx>bx0+2&&lx<bx1-2)c.fillRect(lx-.5,by1-FH,1,FH-.5)}}/* 石のブロックの前がわ */
-    const ix0=L?bx0:bx0+2.5,ix1=R?bx1:bx1-2.5,iy0=U?by0:by0+2.5,iy1=D?by1:by1-FH-1;
-    c.save();c.beginPath();c.rect(ix0,iy0-8,ix1-ix0,iy1-iy0+8);c.clip();
-    c.fillStyle='#8a5b3a';c.fillRect(ix0,iy0,ix1-ix0,iy1-iy0);
-    const nl=U||D?16:12;for(let k=0;k<nl;k++){const px=ix0+1+hash(h*7+k)*(ix1-ix0-2),py=(U||D)?y-2+hash(h*11+k+2)*36:iy0+hash(h*11+k+2)*(iy1-iy0-1),r=3.6+hash(h+k*3)*1.6;circ(c,px,py,r+.8,'#4a8a35');circ(c,px,py,r,k%3?'#7cbc50':'#93cf5f')}/* 葉っぱ：ふちどりして、こんもり */
-    if(!U)for(let k=0;k<7;k++){const px=ix0+1+k*(ix1-ix0-2)/6,py=iy0-2+hash(h+k*5)*2.5;circ(c,px,py,4.4,'#4a8a35');circ(c,px,py,3.6,k%2?'#86c45c':'#7cbc50')}
-    if(!D){c.fillStyle='#8a5b3a';c.fillRect(ix0,iy1-.5,ix1-ix0,1.5)}/* 手前の土 */
+    f2rr(c,bx0,by0,bx1-bx0,by1-by0,[(U||L)?0:3.5,(U||R)?0:3.5,(D||R)?0:3.5,(D||L)?0:3.5],'#f1e9d2','#cdc1a2');
+    if(!D){/* ふちのだい（明るい帯）と、石ブロックの前がわ */const ly=iy1,lh=2.6;c.fillStyle='#f8f3e3';c.fillRect(bx0+(L?0:1),ly,bx1-bx0-(L?0:1)-(R?0:1),lh);c.fillStyle='#fffdf4';c.fillRect(bx0+(L?0:1),ly,bx1-bx0-(L?0:1)-(R?0:1),.8);c.fillStyle='#e9dfc6';c.fillRect(bx0+(L?0:1),ly+lh,bx1-bx0-(L?0:1)-(R?0:1),by1-ly-lh-(1));c.fillStyle='#cfc3a4';for(let k=0;k<4;k++){const lx=x+k*10.667;if(lx>bx0+2&&lx<bx1-2)c.fillRect(lx-.4,ly+.8,.8,by1-ly-1.8)}}
+    c.fillStyle='#d9cfb3';if(!L)c.fillRect(bx0+1,by0+(iy1-by0)*.5,2.4,.7);if(!R)c.fillRect(bx1-3.4,by0+(iy1-by0)*.5,2.4,.7);/* 横のふちのブロックの線 */
+    c.save();c.beginPath();c.rect(ix0,iy0-5,ix1-ix0,iy1-iy0+5);c.clip();
+    c.fillStyle='#5aa043';c.fillRect(ix0,iy0-2,ix1-ix0,iy1-iy0+2);
+    const nd=(U||D)?10:7;for(let k=0;k<nd;k++){const px=ix0+hash(h*7+k)*(ix1-ix0),py=(U||D)?y-2+hash(h*11+k+2)*36:iy0-.5+hash(h*11+k+2)*(iy1-iy0-2),r=2.8+hash(h+k*3)*1.4;circ(c,px,py,r+.7,'#43842f');circ(c,px,py,r,k%2?'#62ab48':'#70b84f')}/* 葉のかたまり */
+    if(!U)for(let k=0;k<7;k++){const px=ix0+.5+k*(ix1-ix0-1)/6,py=iy0-1.2+hash(h+k*5)*1.6;circ(c,px,py,3.1,'#43842f');circ(c,px,py,2.5,'#68b24c')}/* ふちの上にもりあがる葉 */
+    const nl=(U||D)?8:Math.max(3,Math.round((ix1-ix0)/6));for(let k=0;k<nl;k++){const px=ix0+1.5+(k+.2+hash(h*3+k)*.6)*(ix1-ix0-3)/nl,py=(U||D)?y+hash(h*17+k)*32:(k%3===0?iy0+1+hash(h*5+k)*2:iy1-1.8+hash(h*5+k)),r=1.9+hash(h*9+k)*.8;circ(c,px,py,r+.6,'#69a93c');circ(c,px,py,r,'#92d05c')}/* 明るい葉っぱ（ふちのきわと、ところどころ） */
+    if(!D){c.fillStyle='#7a5033';c.fillRect(ix0,iy1-.9,ix1-ix0,1.2)}/* 手前の土 */
     c.restore();
-    const FC=[['#f6a9bd','#de849f'],['#fff2cf','#dfc98a'],['#d3c1ee','#a58fcf'],['#a9d7f2','#79b0d5']];
-    const nf=U||D?3:Math.max(2,Math.round((ix1-ix0)/10));for(let k=0;k<nf;k++){const big=hash(h*3+k)>.3,rp=big?2.9:1.7,fx=ix0+3+((k+.5)/nf)*(ix1-ix0-6)+(hash(h*5+k)-.5)*3,fy=(U||D)?y+4+hash(h*13+k)*22:iy0-1.5+hash(h*9+k)*3,cc=FC[(k+h)%4];
-      for(const[col,pad]of[[cc[1],.5],[cc[0],0]])for(let a=0;a<5;a++){const an=a*1.2566-Math.PI/2;circ(c,fx+Math.cos(an)*rp*.95,fy+Math.sin(an)*rp*.95,rp*.85+pad,col)}circ(c,fx,fy,rp*.55,'#ffd23f')}/* 五まいの花びら */
+    const FC=[['#f8aabb','#df8499'],['#fff4d8','#e3d3a2'],['#d6c3ee','#ab94d2'],['#aadbf5','#7cb6dd']];
+    const flower=(fx,fy,D2,cc)=>{const rp=D2*.21,dd=D2*.31;for(const[col,pad]of[[cc[1],.55],[cc[0],0]])for(let a=0;a<5;a++){const an=a*1.2566-Math.PI/2;circ(c,fx+Math.cos(an)*dd,fy+Math.sin(an)*dd,rp+pad,col)}circ(c,fx,fy,D2*.17+.4,'#e9a52c');circ(c,fx,fy,D2*.17,'#fdd54c')};
+    if(U||D){const nf=3;for(let k=0;k<nf;k++)flower(ix0+3+hash(h*5+k)*(ix1-ix0-6),y+3+hash(h*13+k)*26,5.4+hash(h+k)*2,FC[(k+h)%4])}
+    else{const w2=ix1-ix0,nf=Math.max(2,Math.round(w2/11));for(let k=0;k<nf;k++){const big=k%2===0,D2=big?9.4:6.2,fx=ix0+(w2)*((k+.5)/nf)+(hash(h*5+k)-.5)*2,fy=iy0+(big?1.6:3.6)+hash(h*9+k)*1;flower(fx,fy,D2,FC[(k+h)%4])}}/* 五まいの花びら（大と中） */
     break}
-  case'hedge':{/* 生垣：まるくこんもりした葉のかたまりと、下の土 */const hu=!ICON&&i!=null&&typeAt(i-W)==='hedge',hd=!ICON&&i!=null&&typeAt(i+W)==='hedge',hl=!ICON&&i!=null&&i%W>0&&typeAt(i-1)==='hedge',hr=!ICON&&i!=null&&i%W<W-1&&typeAt(i+1)==='hedge',h=i||0;
-    const x0=hl?x-2:x+2,x1=hr?x+34:x+30,y0=hu?y-4:y+5,y1=hd?y+36:y+25;
+  case'hedge':{/* 生垣：まるくこんもりした明るい葉のかたまりと、下の茶色い土 */const hu=!ICON&&i!=null&&typeAt(i-W)==='hedge',hd=!ICON&&i!=null&&typeAt(i+W)==='hedge',hl=!ICON&&i!=null&&i%W>0&&typeAt(i-1)==='hedge',hr=!ICON&&i!=null&&i%W<W-1&&typeAt(i+1)==='hedge',h=i||0;
+    const x0=hl?x-2:x+3.6,x1=hr?x+34:x+28.4,y0=hu?y-4:y+4.6,y1=hd?y+36:y+25.6;
     if(!hd)sh(15);
-    if(!hd){c.fillStyle='#9d7146';rr(c,(hl?x-1:x+1),y+21,(hr?x+33:x+31)-(hl?x-1:x+1),10,3);c.fillStyle='#bd8f5c';rr(c,(hl?x-1:x+1)+.8,y+21,(hr?x+33:x+31)-(hl?x-1:x+1)-1.6,8.4,2.6)}/* 下の土 */
-    const rad=[(hu||hl)?0:6,(hu||hr)?0:6,(hd||hr)?0:6,(hd||hl)?0:6];
-    const sc=[];/* ふちのこんもり */const sp=5.4;if(!hu)for(let cx=x0+3;cx<x1-2;cx+=sp)sc.push([cx+(hash(h*3+((cx-x0)|0))-.5)*1.5,y0+.5,3.4+hash(h+cx)*.6]);if(!hd)for(let cx=x0+3;cx<x1-2;cx+=sp)sc.push([cx+(hash(h*5+((cx-x0)|0))-.5)*1.5,y1-.5,3.4+hash(h+cx*2)*.6]);if(!hl)for(let cy=y0+3;cy<y1-2;cy+=sp)sc.push([x0+.5,cy,3.4+hash(h+cy)*.6]);if(!hr)for(let cy=y0+3;cy<y1-2;cy+=sp)sc.push([x1-.5,cy,3.4+hash(h+cy*3)*.6]);
-    c.save();c.fillStyle='#4a8a2e';c.beginPath();c.roundRect(hl?x0:x0-.8,hu?y0:y0-.8,(x1-x0)+(hl?0:.8)+(hr?0:.8),(y1-y0)+(hu?0:.8)+(hd?0:.8),rad);c.fill();for(const[cx,cy,r]of sc)circ(c,cx,cy,r+.9,'#4a8a2e');
-    c.fillStyle='#7cc243';c.beginPath();c.roundRect(x0,y0,x1-x0,y1-y0,rad);c.fill();for(const[cx,cy,r]of sc)circ(c,cx,cy,r,'#7cc243');
-    c.beginPath();c.roundRect(x0,y0,x1-x0,y1-y0,rad);c.clip();if(!hd){c.fillStyle='rgba(50,120,35,.2)';c.fillRect(x0-4,y1-7,x1-x0+8,9)}/* 下のほうは、すこし濃く */
-    const nb=hu||hd?7:5;for(let k=0;k<nb;k++){const px=x0+3+hash(h*7+k)*(x1-x0-6),py=y0+3+hash(h*9+k+4)*(y1-y0-6);c.fillStyle=k%3?'rgba(150,205,70,.85)':'rgba(190,230,90,.9)';c.beginPath();c.ellipse(px,py,3.2+hash(k+h)*1.8,2.4+hash(k*2+h),hash(k+h*2)*3,0,7);c.fill()}/* 明るい葉っぱ */
-    for(let k=0;k<3;k++){const px=x0+3+hash(h*11+k)*(x1-x0-6),py=y0+3+hash(h*13+k+1)*(y1-y0-6);c.fillStyle='rgba(70,140,45,.4)';c.beginPath();c.ellipse(px,py,2.6,1.9,hash(k+h*3)*3,0,7);c.fill()}
+    if(!hd){const bl=hl?x-1:x+2.5,br=hr?x+33:x+29.5;c.fillStyle='#a07548';rr(c,bl-.6,y+24.2,br-bl+1.2,7,3);c.fillStyle='#b98c5c';rr(c,bl,y+24.2,br-bl,6,2.6)}/* 下の土 */
+    const rad=[(hu||hl)?0:6,(hu||hr)?0:6,(hd||hr)?0:6,(hd||hl)?0:6],sc=[],sp=5.0;
+    if(!hu)for(let cx=x0+2.5;cx<x1-1.5;cx+=sp)sc.push([cx+(hash(h*3+((cx-x0)|0))-.5)*1.2,y0,3.2+hash(h+cx)*.9]);if(!hd)for(let cx=x0+2.5;cx<x1-1.5;cx+=sp)sc.push([cx+(hash(h*5+((cx-x0)|0))-.5)*1.2,y1,3.2+hash(h+cx*2)*.9]);if(!hl)for(let cy=y0+3;cy<y1-2;cy+=sp)sc.push([x0,cy,3.2+hash(h+cy)*.9]);if(!hr)for(let cy=y0+3;cy<y1-2;cy+=sp)sc.push([x1,cy,3.2+hash(h+cy*3)*.9]);
+    const hull=new Path2D();hull.roundRect(x0,y0,x1-x0,y1-y0,rad);for(const[cx,cy,r]of sc){hull.moveTo(cx+r,cy);hull.arc(cx,cy,r,0,7)}
+    c.save();c.fillStyle='#4c9231';c.fill(hull);c.save();c.beginPath();c.rect(hl?x:x-6,hu?y:y-8,(hr?x+TS:x+TS+6)-(hl?x:x-6),(hd?y+TS:y+TS+8)-(hu?y:y-8));c.clip();c.strokeStyle='#4c9231';c.lineWidth=1.6;c.stroke(hull);c.restore();/* ふちどり（つながる側には引かない） */
+    c.fillStyle='#8ccb48';c.fill(hull);c.clip(hull);
+    if(!hu){const g1=c.createLinearGradient(0,y0,0,y0+13);g1.addColorStop(0,'rgba(215,248,105,.6)');g1.addColorStop(1,'rgba(215,248,105,0)');c.fillStyle=g1;c.fillRect(x0-4,y0-4,x1-x0+8,17)}/* 上は明るい黄緑 */
+    if(!hd){const g2=c.createLinearGradient(0,y1-14,0,y1);g2.addColorStop(0,'rgba(35,120,55,0)');g2.addColorStop(1,'rgba(35,120,55,.5)');c.fillStyle=g2;c.fillRect(x0-4,y1-14,x1-x0+8,18)}/* 下は濃い緑 */
+    const nb=(hu||hd)?7:6;for(let k=0;k<nb;k++){const px=x0+4+hash(h*7+k)*(x1-x0-8),py=y0+4+hash(h*9+k+4)*(y1-y0-8),rx=(k%3===0?4:3)+hash(k+h)*1.2,ry=(k%3===0?2.8:2.2)+hash(k*2+h)*.7,an=hash(k+h*2)*1.2-.3;c.fillStyle='#5aa63a';c.beginPath();c.ellipse(px,py,rx+.6,ry+.6,an,0,7);c.fill();c.fillStyle=py<(y0+y1)/2?'#bfe85e':'#9fd652';c.beginPath();c.ellipse(px,py,rx,ry,an,0,7);c.fill()}/* ふちどりのある明るい葉っぱ */
     c.restore();break}
   case'birdbath':sh(8);f2rr(c,cx-6,y+25,12,4,1,C.st,C.stD);f2rr(c,cx-2.5,y+15,5,11,1,C.st,C.stD);c.fillStyle=C.st;c.beginPath();c.ellipse(cx,y+14,11,4.5,0,0,7);c.fill();c.strokeStyle=C.stD;c.stroke();c.fillStyle='#9fd0ea';c.beginPath();c.ellipse(cx,y+13.5,8.5,2.8,0,0,7);c.fill();
     {const hop=Math.max(0,Math.sin(T*2.2+i))*1.5;c.fillStyle='#c8955f';c.beginPath();c.ellipse(cx+8,y+8-hop,3.2,2.4,0,0,7);c.fill();circ(c,cx+10,y+6-hop,1.8,'#c8955f');c.fillStyle='#f4e6cc';c.beginPath();c.ellipse(cx+8,y+9-hop,2,1.2,0,0,7);c.fill();c.fillStyle='#e8a33a';c.fillRect(cx+11.5,y+5.6-hop,1.8,.9)}break;
