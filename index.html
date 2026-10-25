@@ -1651,6 +1651,7 @@ function decide0(r){
   if(r.toStor){if(carryN(r)>0&&foodCap()>0)return goStore(r,G);r.toStor=0}
   if(r.meal)return goMeal(r,G);
   {const h=hour();if(h>=18+hash((r.id||0)*13+5)*.4&&r.bathD!==dayNo()&&goBathe(r,G))return}
+  if(r.elem==='water'&&!isNight()&&r.bathW!==dayNo()&&hour()>=10+hash((r.id||0)*7+dayNo())*6){const bd=r.bathD;r.bathW=dayNo();if(goBathe(r,G))return;r.bathD=bd}/* 水のせいれいは、昼間にも水あそびをする */
   if(WD===1&&!isNight()&&springN()&&r.energy<35&&!((r.bathCD||0)>S.t)){r.bathCD=S.t+240;const bd=r.bathD;if(goBathe(r,G))return;r.bathD=bd}/* 温泉の村：つかれたら温泉へ */
   if(r.afterBath>S.t&&!isNight()){r.afterBath=0;const isB=j=>(S.obj[j]==='bench'||(S.obj[j]==='part'&&S.obj[S.ref[j]]==='bench'))&&!ashed(anc(j));const bj=nearest(G,j=>isB(j)&&free('o'+j,1),40);if(bj>=0)return startAct(r,G,'rest',bj,{key:'o'+bj,obj:anc(bj),seat:bj})}/* 湯上がりは、ベンチでひと休み *//* 水浴びは18時。せいれいごとに少しずつずれる */
   if(heldN(r)>0&&r.elem==='earth'&&r.hunger>=55&&!isNight()&&tryJob(r,G,'repair'))return;/* 土のせいれいは、ついでの収穫・木切りより修理が先 */
@@ -1897,7 +1898,7 @@ function goPlay(r,G,strict){
     if(o==='swing'&&free('o'+j,BL[o].play.cap)){/* 花では遊ばない */const p=BL[o].play;const s=p.pt*3+(r.like===o?6:0)-d*.3+Math.random()*2;if(s>bs){bs=s;best={type:'play',stand:j,o:{key:'o'+j,obj:j,what:o,fun:p.fun,dur:p.dur,pt:p.pt}}}}
     const fk0=adjOf(j,k=>{const t=typeAt(k),p=t&&BL[t]&&BL[t].play;return !!(p&&p.adj&&free('o'+anc(k),p.cap))}),fk=fk0>=0?anc(fk0):-1;
     if(fk>=0){const w=S.obj[fk],p=BL[w].play;const s=p.pt*3+(r.like===w?6:0)-d*.3+Math.random()*2;if(s>bs){bs=s;best={type:'play',stand:j,o:{key:'o'+fk,obj:fk,what:w,fun:p.fun,dur:p.dur,pt:p.pt}}}}
-    if(canJob(r,'fish')&&roomN(r)>0&&S.ground[j]!==1&&sideW(j)>=0&&free('f'+j,1)){const sp=fSpot(j),s=9+(sp?12:0)+(r.like==='fish'?6:0)+(r.elem==='water'?3:0)-d*.3+Math.random()*2;if(s>bs){bs=s;best={type:'fish',stand:j,o:{key:'f'+j,spot:sp}}}}
+    if(canJob(r,'fish')&&roomN(r)>0&&S.ground[j]!==1&&sideW(j)>=0&&free('f'+j,1)){const sp=fSpot(j),s=9+(sp?12:0)+(r.like==='fish'?6:0)+(r.elem==='water'?9:0)-d*.3+Math.random()*2;if(s>bs){bs=s;best={type:'fish',stand:j,o:{key:'f'+j,spot:sp}}}}
   }
   {const sb=socialBest(r,G);if(sb&&sb.s>bs){bs=sb.s;best=sb.b}}
   if(!best)return strict?false:goWander(r,G);
