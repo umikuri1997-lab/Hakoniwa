@@ -4016,7 +4016,6 @@ function lvCharm(c,el,x,y,t){c.save();c.translate(x,y);c.rotate(Math.sin(t*1.3)*
   else{c.rotate(.6);c.fillStyle='#9fe8d2';c.beginPath();c.moveTo(0,-6.5);c.quadraticCurveTo(4,-1,.6,5.5);c.quadraticCurveTo(-3.6,-1,0,-6.5);c.fill();c.strokeStyle='#3fae8e';c.lineWidth=1;c.lineCap='round';c.beginPath();c.moveTo(0,-5);c.quadraticCurveTo(.6,0,.4,7);c.stroke()}/* 風の羽根 */
   c.restore()}
 function carryIcon(r){
-  if(r.act&&r.act.stage==='do'&&r.act.type==='eat')return r.cmat&&matN(r)>0?(r.cmat.wood?'🪵':'🪨'):null;/* 食べているあいだは、食べ物のアイコンは出さない（木材・石はそのまま） */
   if(r.act&&r.act.stage==='do'&&r.act.type==='cook')return null;
   if(r.carry&&carryN(r)>0){if(typeof r.carry==='number')return FOODS.mugi.e;const k=r.carryLast&&r.carry[r.carryLast]>0?r.carryLast:Object.keys(r.carry).find(k=>r.carry[k]>0);return FOODS[k]?FOODS[k].e:'🧺'}
   if(r.cmat)return r.cmat.wood?'🪵':'🪨';
@@ -4025,7 +4024,6 @@ function carryIcon(r){
   return null}
 function carryIcons(r){/* 持っているものを、そのまま1つずつ並べる（上に積むほど新しい） */
   const em=k=>FOODS[k]?FOODS[k].e:'🧺',out=[];
-  if(r.act&&r.act.stage==='do'&&r.act.type==='eat'){if(r.cmat){for(let i=0;i<(r.cmat.wood||0);i++)out.push('🪵');for(let i=0;i<(r.cmat.stone||0);i++)out.push('🪨')}return out}/* 食べはじめたら、食べ物のアイコンは全部消す。木材・石はそのまま */
   if(r.act&&r.act.stage==='do'&&r.act.type==='cook')return out;
   if(typeof r.carry==='number')for(let i=0;i<r.carry;i++)out.push(FOODS.mugi.e);
   else if(r.carry){const ks=Object.keys(r.carry).filter(k=>r.carry[k]>0);if(r.carryLast&&ks.includes(r.carryLast)){ks.splice(ks.indexOf(r.carryLast),1);ks.push(r.carryLast)}for(const k of ks)for(let i=0;i<r.carry[k];i++)out.push(em(k))}
