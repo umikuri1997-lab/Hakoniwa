@@ -2892,7 +2892,7 @@ function drawMossWall(c,x,y,i,L,R,U,D){
 function drawMossGate(c,x,y,i,ver,op,nw){
   const p=HOUSEART['post-stone'],a=HOUSEART['gate-stone-left'],b=HOUSEART['gate-stone-right'];
   if(!p||!p.complete||!p.naturalWidth||!a||!a.complete||!a.naturalWidth||!b||!b.complete||!b.naturalWidth)return false;
-  if(nw===3&&!ver){const Wd=96,lw=(Wd-16)/2*(1-op*.91);c.drawImage(a,x+8,y+2,lw,30);c.drawImage(b,x+Wd-8-lw,y+2,lw,30);c.drawImage(p,x-8,y,16,32);c.drawImage(p,x+Wd-8,y,16,32);return true}/* 柱は石の塀の端の柱とぴったりつなぐ（塀と同じ高さ・同じ柱） */
+  if(nw===3&&!ver){const Wd=96,lw=(Wd-16)/2*(1-op*.91);const lw2=(Wd+16)/2*(1-op*.91);c.drawImage(a,x-8,y+2,lw2,30);c.drawImage(b,x+Wd+8-lw2,y+2,lw2,30);return true}/* 柱はドアにつけず、となりの塀の端の柱にとびらをつなぐ */
   c.save();c.beginPath();c.rect(x,y,32,32);c.clip();const w=10*(1-op*.91);
   if(!ver){c.drawImage(a,x+6,y+5,w,25);c.drawImage(b,x+26-w,y+5,w,25);c.drawImage(p,x-2,y-2,8,33);c.drawImage(p,x+26,y-2,8,33)}
   else{c.drawImage(p,x+8,y-3,16,13);c.drawImage(p,x+8,y+24,16,13);const h=7*(1-op*.91);c.drawImage(a,x+8,y+10,16,h);c.drawImage(b,x+8,y+24-h,16,h)}/* たてむきも、両はしの柱のあいだにとびら */
@@ -3014,7 +3014,7 @@ function drawObj(c,id,x,y,i,g,now){
       c.fillStyle=P;c.fillRect(x+1,y+7,6,21);c.fillRect(x+25,y+7,6,21);c.fillStyle=PC;c.fillRect(x+1,y+7,6,3);c.fillRect(x+25,y+7,6,3)}
     else{const ph=18*(1-op*.82);c.fillStyle=RL;c.fillRect(x+12,y+7,3,ph);c.fillRect(x+17,y+7,3,ph);c.fillStyle=SL;for(let k=0;k<3;k++)c.fillRect(x+11,y+7+ph*(k+.5)/3-1.5,10,3);
       c.fillStyle=P;c.fillRect(x+12,y,8,7);c.fillRect(x+12,y+25,8,7);c.fillStyle=PC;c.fillRect(x+12,y,8,3);c.fillRect(x+12,y+25,8,3)}break}
-  case'fence':case'logfence':case'bamboofence':case'stonefence':case'wall':{const W2=id==='wall';const isF=k=>W2?(HOME_WALLS.has(typeAt(k))||HOME_DOORS.has(typeAt(k))||typeAt(k)==='stonegate'):FENCE_IDS.has(typeAt(k));const L=!ICON&&isF(i-1),R=!ICON&&isF(i+1),U=!ICON&&isF(i-W),D=!ICON&&isF(i+W);
+  case'fence':case'logfence':case'bamboofence':case'stonefence':case'wall':{const W2=id==='wall';const isF=k=>W2?(HOME_WALLS.has(typeAt(k))||HOME_DOORS.has(typeAt(k))||typeAt(k)==='stonegate'):FENCE_IDS.has(typeAt(k));const L=!ICON&&isF(i-1)&&!(W2&&typeAt(i-1)==='sdoor'),R=!ICON&&isF(i+1)&&!(W2&&typeAt(i+1)==='sdoor'),U=!ICON&&isF(i-W),D=!ICON&&isF(i+W);/* 石の塀のドアの横では、塀はそこで終わって端の柱が立つ */
     if(W2){if(drawMossWall(c,x,y,i,L,R,U,D))break;shadow(c,x+16,y+29,16,3);const l=x+(L?0:2),wd=TS-(L?0:2)-(R?0:2),t0=U?y-2:y+3,t1=D?y+32:y+29;c.fillStyle='#9a978f';rr(c,l,t0,wd,t1-t0,3);if(U){c.fillStyle='#c3bfb6';rr(c,x+3,y-1,12,4,2);rr(c,x+17,y-1,12,4,2)}/* 縦にもつながる */
       const st=(a,b,w,h,k)=>{c.fillStyle='rgba(64,59,52,.28)';rr(c,a+.4,b+1,w,h,3.6);c.fillStyle=k?'#c7c3bb':'#b8b4ac';rr(c,a,b,w,h,3.6);c.fillStyle=k?'#e0ddd5':'#d4d0c8';rr(c,a+1,b+.7,w-2,h*.68,3);c.fillStyle='rgba(255,255,255,.5)';rr(c,a+2,b+1.1,w-4,1.1,1);c.fillStyle='rgba(88,82,75,.19)';rr(c,a+1,b+h-2,w-2,1.3,1)};
       const o=(hash(i)*6)|0;st(x+1,y+4,13-o/2,8,1);st(x+15-o/2,y+4,16+o/2,8,0);st(x+1,y+13,9,7,0);st(x+11,y+13,11,7,1);st(x+23,y+13,8,7,0);st(x+1,y+21,15,7,1);st(x+17,y+21,14,7,0);break}
