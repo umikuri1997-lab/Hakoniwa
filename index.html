@@ -1352,7 +1352,7 @@ const cropK=d=>d.crop===undefined?'mugi':d.crop;/* 作物。null はまだえら
 const cropOn=k=>!S.crops||!!S.crops[k];/* 使える作物（前からのデータは、ぜんぶ使える） */
 const CROPS={mugi:{name:'こむぎ',days:2,yield:1,desc:'2日で育つ。パンの材料'},tomato:{name:'キャベツ',days:2,yield:1,desc:'2日で育つ'},imo:{name:'いも',days:3,yield:2,desc:'3日で育つ。たくさんとれる'}};
 for(const k in CROPS)BL['seed:'+k]={name:CROPS[k].name+'のたね',kind:'seed',desc:CROPS[k].desc+'。畑をタップしてまく'};/* たねは、お供え箱からえらんで畑にまく */
-const RECIPES=[{out:'soup',need:{tomato:1,imo:1},time:45},{out:'bread',need:{mugi:2},time:35},{out:'yakizakana',need:{fish:1},time:20},{out:'yakiimo',need:{imo:1},time:15},{out:'yakiberry',need:{berry:2},time:20},{out:'yakiapple',need:{apple:1},time:20},{out:'salad',need:{tomato:2},time:25}];RECIPES.forEach(R=>R.time=Math.round(Math.round(Math.round(R.time*1.5)*1.5)*1.5));/* 従来の調理時間からさらに1.5倍、そのうえさらに1.5倍 */SOUPR=RECIPES.find(R=>R.out==='soup');soupFilter();/* time：料理にかかる時間（レシピごと） */
+const RECIPES=[{out:'soup',need:{tomato:1,imo:1},time:45},{out:'bread',need:{mugi:2},time:35},{out:'yakizakana',need:{fish:1},time:20},{out:'yakiimo',need:{imo:1},time:15},{out:'yakiberry',need:{berry:2},time:20},{out:'yakiapple',need:{apple:1},time:20},{out:'salad',need:{tomato:2},time:25}];RECIPES.forEach(R=>R.time=Math.round(Math.round(Math.round(R.time*1.5)*1.5)*1.5));/* 従来の調理時間からさらに1.5倍、そのうえさらに1.5倍 */{const FIXT={yakizakana:60,yakiberry:60,yakiapple:60,yakiimo:50};RECIPES.forEach(R=>{if(FIXT[R.out])R.time=FIXT[R.out]})}/* 焼き魚・焼きベリー・焼きりんごは60分、ベイクドポテトは50分 */SOUPR=RECIPES.find(R=>R.out==='soup');soupFilter();/* time：料理にかかる時間（レシピごと） */
 function syncFood(){let n=0;for(const k in S.fs)n+=S.fs[k]||0;S.food=n}
 function addFood(k,n){S.fs[k]=(S.fs[k]||0)+n;syncFood()}
 function takeFood(n,pref){let got=[];const keys=Object.keys(S.fs).filter(k=>S.fs[k]>0);if(pref==='raw')keys.sort((a,b)=>(FOODS[a].v-FOODS[b].v));else keys.sort((a,b)=>FOODS[b].v-FOODS[a].v||Math.random()-.5);
@@ -3628,7 +3628,7 @@ function houseComfort(h){let bed=0,furn=0,fl=0,n=0;const seen=new Set();
   tower:'守護の力をとりもどす台座。ヌシ様が帰ってくる。光の矢：ダメージ3／10秒ごと／範囲6マス。まわり7マスを照らす',
   lumber:'せいれいがここで働くと、40分ごとに木材+1（自然の木は減らない）',
   quarry:'せいれいがここで働くと、40分ごとに石材+1（岩は減らない）',
-  oven:'せいれいが材料から料理を作る。かかる時間：サラダ86分・焼きいも53分・焼きベリー／焼きりんご／焼き魚68分・パン120分・スープ153分',
+  oven:'せいれいが材料から料理を作る。かかる時間：サラダ86分・ベイクドポテト50分・焼きベリー／焼きりんご／焼き魚60分・パン120分・スープ153分',
   farm:'置くとせいれいが耕して種をまく。水やりすると育つ。こむぎ・キャベツは2日で食料+1、いもは3日で食料+2',
   carpet:'やわらかな織り模様の床。歩く速さ×1',
   gate:'柵の出入り口。せいれいだけ通れる（じょうぶさ13）',archedgate:'飾りのついた柵の出入り口（じょうぶさ22）',stonegate:'横2マス。石柱で支える大きな柵の出入り口（じょうぶさ35）',
