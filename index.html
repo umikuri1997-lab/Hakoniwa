@@ -560,15 +560,15 @@ const BL={
   chair:{name:'椅子',kind:'furn',lv:3,pc:5,time:30,maker:'wood',attr:{wood:1},mat:{wood:1},desc:'食卓のとなりに置く。ここで食べると、パワー+0.9'},
   bench:{name:'ベンチ',sz:[2,1],kind:'furn',pc:8,time:50,maker:'wood',attr:{wood:1},mat:{wood:2},desc:'2人すわれる。昼につかれたら、ここで休む（元気 +20／1時間）'},
   bed:{name:'ベッド',kind:'furn',pc:15,time:100,maker:'wood',sleep:{cap:1,pt:5,rate:.2},attr:{wood:2},mat:{wood:3},desc:'1人眠れる。元気 +12／1時間。家の住み心地で0.6〜1.5倍'},
-  lamp:{name:'篝火',kind:'furn',pc:10,time:80,maker:'fire',solid:1,anim:1,attr:{fire:3},mat:{wood:1,stone:1},desc:'まわり2.5マスを照らす。光の中の「コワイノ」は速さ20%'},
+  lamp:{name:'篝火',kind:'furn',pc:10,time:80,maker:'fire',solid:1,anim:1,attr:{fire:3},mat:{wood:1,stone:1},desc:'まわり2.5マスを照らす。光の中の「コワイノ」は移動・攻撃の速さ−20%'},
   campfire:{name:'たき火',kind:'furn',pc:12,time:80,maker:'fire',lv:6,solid:1,anim:1,attr:{fire:4},play:{pt:3,fun:45,dur:40,cap:3,adj:1},mat:{wood:2,stone:1},desc:'3人まで遊べる。たのしさ +72（40分）'},
   swing:{name:'ブランコ',kind:'furn',pc:18,time:120,maker:'wind',lv:4,play:{pt:4,fun:60,dur:50,cap:1},attr:{wind:3},mat:{wood:3},desc:'1人で遊べる。たのしさ +96（50分）'},
-  torch:{name:'たいまつ',kind:'furn',lv:3,pc:6,time:50,maker:'fire',solid:1,anim:1,attr:{fire:2},mat:{wood:1},desc:'まわり2.5マスを照らす（「コワイノ」の速さ20%）'},
+  torch:{name:'たいまつ',kind:'furn',lv:3,pc:6,time:50,maker:'fire',solid:1,anim:1,attr:{fire:2},mat:{wood:1},desc:'まわり2.5マスを照らす（「コワイノ」の移動・攻撃の速さ−20%）'},
   jar:{name:'みずがめ',kind:'furn',lv:3,pc:8,time:60,maker:'water',solid:1,attr:{water:3},mat:{stone:1},desc:'水をためたかめ。まわり1マスの畑は水やりなしで育つ'},
   basin:{name:'水鉢',kind:'furn',pc:12,time:80,maker:'water',solid:1,anim:1,attr:{water:4,wood:.5},mat:{stone:2},desc:''},/* もう作れない（古いセーブ用） */
   kamizo:{name:'カミサマの像',kind:'furn',lv:5,pc:15,time:80,maker:'earth',solid:1,attr:{earth:2},mat:{stone:4},desc:'カミサマが遊びにくる確率が2倍（25%→50%）'},
   rockart:{name:'つぼ',kind:'furn',lv:2,pc:6,time:50,maker:'earth',solid:1,attr:{earth:2},mat:{stone:1},desc:'土でできたかざり'},
-  stonelamp:{name:'石灯籠',kind:'furn',pc:12,time:80,maker:'earth',solid:1,anim:1,attr:{earth:2,fire:2},mat:{stone:2},desc:'まわり1マスをほんのり照らす（「コワイノ」の速さ20%）'},
+  stonelamp:{name:'石灯籠',kind:'furn',pc:12,time:80,maker:'earth',solid:1,anim:1,attr:{earth:2,fire:2},mat:{stone:2},desc:'まわり1マスをほんのり照らす（「コワイノ」の移動・攻撃の速さ−20%）'},
   chime:{name:'風鈴',kind:'furn',pc:8,time:60,maker:'wind',solid:1,anim:1,attr:{wind:2},mat:{wood:1},desc:'風でちりんと鳴る'},
   vane:{offerOnly:1,name:'風見鶏',kind:'furn',pc:12,time:80,maker:'wind',solid:1,anim:1,attr:{wind:4},mat:{wood:1,stone:1},desc:'風の向きをおしえる。まわり3マスのせいれいは移動速度×1.2（道しるべとは重ならない）'},
   spike:{name:'とげの罠',kind:'furn',lv:1,pc:6,time:50,maker:'wood',qty:2,trap:1,attr:{earth:.5},mat:{wood:1,stone:1},desc:'上にいる「コワイノ」に、10分ごとに0.5ダメージ'},
@@ -580,7 +580,7 @@ const BL={
   well:{name:'井戸',kind:'build',mat:{wood:1,stone:4},pc:25,time:140,maker:'water',lv:6,solid:1,attr:{water:4},desc:'まわり3マスの畑は水やりなしで育つ'},
   windmill:{name:'風車',kind:'build',mat:{wood:5,stone:3},pc:30,time:160,maker:'wind',lv:8,solid:1,anim:1,attr:{wind:5},desc:'まわり3マスの畑の収穫+1'},
   house:{name:'小さな家',sz:[2,2],kind:'build',pc:60,time:240,maker:'earth',lv:5,offerOnly:1,sleep:{cap:2,pt:7,rate:.24},attr:{earth:3,wood:2},desc:'2人眠れる。家の中にいるせいれいは「コワイノ」に攻撃されない'},
-  lighthouse:{name:'灯台',sz:[2,2],kind:'build',mat:{wood:4,stone:6},pc:40,time:180,maker:'fire',lv:7,solid:1,anim:1,attr:{fire:4},desc:'まわり8マスを照らす。光の中では、カゲモノの攻撃がおそくなる'},
+  lighthouse:{name:'灯台',sz:[2,2],kind:'build',mat:{wood:4,stone:6},pc:40,time:180,maker:'fire',lv:7,solid:1,anim:1,attr:{fire:4},desc:'まわり8マスを照らす。光の中では、カゲモノの移動・攻撃の速さが−20%'},
   stele:{name:'石碑',kind:'build',mat:{wood:2,stone:8},pc:40,time:180,maker:'earth',lv:6,solid:1,attr:{earth:4},desc:'まわり5マスの壁が、1.15倍じょうぶになる（小数点以下は切りすて）'},
   fountain:{name:'噴水',sz:[2,2],kind:'build',mat:{wood:2,stone:8},pc:50,time:200,maker:'water',lv:6,solid:1,anim:1,play:{pt:6,fun:70,dur:50,cap:3,adj:1},attr:{water:6},desc:'3人まで遊べる。たのしさ +100まで（50分）'},
   statue:{name:'神殿',kind:'build',anim:1,pc:0,time:50,maker:null,solid:1,attr:{wood:1,water:1,fire:1,earth:1,wind:1},desc:'守り神の居場所。女神像・お供え箱・依頼ボード・カミサマの台座がある'},
@@ -2225,12 +2225,12 @@ function updEnemy(e,dt){
   let pre=null;if(!D.thief&&!D.trapper&&!e.ashG&&!e.flee){if(!EREACH.has(e))EREACH.set(e,bfs(e.x|0,e.y|0,2).dist);const RD=EREACH.get(e);let nd=5,hd=1e9,hr=null;
     for(const r of S.res){if(r.hidden)continue;const d=Math.hypot(r.x-e.x,r.y-e.y),rj=(r.y|0)*W+(r.x|0);if(RD&&RD[rj]>=0&&d<nd){nd=d;pre=r}else if(roomOf(rj)&&d<hd){hd=d;hr=r}}if(!pre)pre=hr}
   let dj=-1;if(!D.thief&&!e.ashG&&!e.flee&&!pre){let bd=1e9;for(const j of defList()){if(!DEFS.has(S.obj[j]))continue;const z=BL[S.obj[j]].sz||[1,1],x0=j%W,y0=(j/W)|0,d=Math.hypot(Math.max(x0-e.x,0,e.x-(x0+z[0])),Math.max(y0-e.y,0,e.y-(y0+z[1])))+.5;/* 大きい設備は、いちばん近い面まで */if(d<bd){bd=d;dj=j}}
-    if(dj>=0){if(bd<1.15){e.busyT=S.t;e.atk+=dt*(lightAt(e.x,e.y)?.75:1);/* 光の中は、攻撃の速さ0.75倍 */if(e.atk>=D.atk){e.atk=0;const o=S.obj[dj];S.hp[dj]=(S.hp[dj]??defHp(o))-(D.boss?2:D.trapper?2:1)/steleF(dj);WALLHIT.set(dj,performance.now());sfxAt('bonk',dj%W+.5,(dj/W)|0);
+    if(dj>=0){if(bd<1.15){e.busyT=S.t;e.atk+=dt*(lightAt(e.x,e.y)?.8:1);/* 光の中は、攻撃の速さ0.8倍 */if(e.atk>=D.atk){e.atk=0;const o=S.obj[dj];S.hp[dj]=(S.hp[dj]??defHp(o))-(D.boss?2:D.trapper?2:1)/steleF(dj);WALLHIT.set(dj,performance.now());sfxAt('bonk',dj%W+.5,(dj/W)|0);
         if(S.hp[dj]<=0){(S.broken||(S.broken=[])).push({j:dj,id:o});sfxAt('wbreak',dj%W+.5,(dj/W)|0);if(S.ns)S.ns.broke++;clearObj(dj);DEFC.t=0;recount();dirty=true;toast(BL[o].name+'がこわされた！','warn')}}return}
       {const z=BL[S.obj[dj]].sz||[1,1],x0=dj%W,y0=(dj/W)|0;if(BL[S.obj[dj]].solid){let bq=-1,bb=1e9;for(let yy=y0-1;yy<=y0+z[1];yy++)for(let xx=x0-1;xx<=x0+z[0];xx++){if((xx<x0||xx>=x0+z[0])===(yy<y0||yy>=y0+z[1]))continue;if(xx<0||yy<0||xx>=W||yy>=H)continue;const q=yy*W+xx;if(!walk(q))continue;const dd=Math.hypot(xx+.5-e.x,yy+.5-e.y);if(dd<bb){bb=dd;bq=q}}goal=bq>=0?bq:dj}else goal=dj}if(e.tg!=='d'+dj){e.tg='d'+dj;e.repath=0}}}/* 防衛設備をこわしてから、せいれいをねらう */
   if(dj<0&&(!(D.thief||e.ashG)||goal<0&&!e.flee)){let td=1e9,ts=1e9;if(!EREACH.has(e))EREACH.set(e,bfs(e.x|0,e.y|0,2).dist);const RD=EREACH.get(e);if(pre){tgt=pre;td=Math.hypot(pre.x-e.x,pre.y-e.y)}else for(const r of S.res){if(r.hidden)continue;const d=Math.hypot(r.x-e.x,r.y-e.y),sc=d+(RD&&RD[(r.y|0)*W+(r.x|0)]<0?60:0)-(r.id===e.tg?2:0);/* いまねらっている子を少し優先（ねらいがころころ変わってガタガタしない） */if(sc<ts){ts=sc;td=d;tgt=r}}
     if(tgt&&td<.75*hsOf(D)){hitRes(e,tgt,D);if(hsOf(D)>=2&&!e.dead){const ar=1.5;burstAt(tgt.x,tgt.y,'offer');for(const q of S.res){if(q===tgt||q.hidden||e.dead)continue;if(Math.hypot(q.x-tgt.x,q.y-tgt.y)<ar)hitRes(e,q,D)}}/* 大きいコワイノは範囲攻撃：まわりの子も巻きこむ */return}
-    if(tgt&&td<1.6&&!e.flee&&!(e.dcb>S.t)){let sp=D.sp*dt*e.slow;if(lightAt(e.x,e.y))sp*=.2;const dx=tgt.x-e.x,dy=tgt.y-e.y;const nq=(((e.y+dy/td*sp)|0)*W)+((e.x+dx/td*sp)|0);if(walk(nq)&&!HOME_DOORS.has(typeAt(nq))&&!GATE_IDS.has(typeAt(nq))){e.x+=dx/td*Math.min(sp,td);e.y+=dy/td*Math.min(sp,td);e.path=[];return}e.dcb=S.t+4;e.repath=0}/* まっすぐ行けないときは、しばらく道どおりに進む（行ったり来たりでガタガタしない） */
+    if(tgt&&td<1.6&&!e.flee&&!(e.dcb>S.t)){let sp=D.sp*dt*e.slow;if(lightAt(e.x,e.y))sp*=.8;/* 光の中は、移動の速さ0.8倍 */const dx=tgt.x-e.x,dy=tgt.y-e.y;const nq=(((e.y+dy/td*sp)|0)*W)+((e.x+dx/td*sp)|0);if(walk(nq)&&!HOME_DOORS.has(typeAt(nq))&&!GATE_IDS.has(typeAt(nq))){e.x+=dx/td*Math.min(sp,td);e.y+=dy/td*Math.min(sp,td);e.path=[];return}e.dcb=S.t+4;e.repath=0}/* まっすぐ行けないときは、しばらく道どおりに進む（行ったり来たりでガタガタしない） */
     if(tgt){goal=(tgt.y|0)*W+(tgt.x|0);if(e.tg!==tgt.id){e.tg=tgt.id;e.repath=0}}}
   e.repath-=dt;let force=false;{const bv=(S.broken||[]).length;if(e.bv!==bv){e.bv=bv;force=true}}/* どこかの壁がこわれたら、すぐ道を考えなおす（あいた穴から入る） */
   const onWall=e.path.length&&breakable(typeAt(e.path[0]));/* 壁をたたいているあいだは、ほかの壁がこわれるまで同じ壁をたたきつづける */
@@ -2242,11 +2242,11 @@ function updEnemy(e,dt){
   if(!e.path.length){e.stk=(e.stk||0)+dt;if(e.stk>20&&!e.flee){e.stk=0;[e.x,e.y]=spawnSpot();e.path=[];e.repath=0;EREACH.delete(e)}return}/* うごけないまま止まっていたら、べつの場所から来なおす */
   const j=e.path[0];
   {const j=anc(e.path[0]);if(breakable(S.obj[j])){e.busyT=S.t;
-    e.atk+=dt*(lightAt(e.x,e.y)?.75:1);/* 光の中は、攻撃の速さ0.75倍 */if(e.atk>=D.atk){e.atk=0;S.hp[j]=(S.hp[j]??BL[S.obj[j]].hp)-(D.wall||(D.boss?2:1))/steleF(j);/* オオカゲは壁をこわす力1.5倍 */if(hsOf(D)>=2)for(const[ax,ay]of DIRS){const k=j+ay*W+ax,ko=S.obj[k];if(k===j||!breakable(ko)||Math.hypot(k%W+.5-e.x,((k/W)|0)+.5-e.y)>2.2)continue;S.hp[k]=(S.hp[k]??BL[ko].hp)-1/steleF(k);WALLHIT.set(k,performance.now());if(S.hp[k]<=0){(S.broken||(S.broken=[])).push({j:k,id:ko});if(S.ns)S.ns.broke++;clearObj(k);recount();toast(BL[ko].name+'がこわされた！','warn')}}/* 大きいコワイノは、となりの壁にもダメージ（範囲攻撃） */WALLHIT.set(j,performance.now());sfxAt('bonk',j%W+.5,(j/W)|0);
+    e.atk+=dt*(lightAt(e.x,e.y)?.8:1);/* 光の中は、攻撃の速さ0.8倍 */if(e.atk>=D.atk){e.atk=0;S.hp[j]=(S.hp[j]??BL[S.obj[j]].hp)-(D.wall||(D.boss?2:1))/steleF(j);/* オオカゲは壁をこわす力1.5倍 */if(hsOf(D)>=2)for(const[ax,ay]of DIRS){const k=j+ay*W+ax,ko=S.obj[k];if(k===j||!breakable(ko)||Math.hypot(k%W+.5-e.x,((k/W)|0)+.5-e.y)>2.2)continue;S.hp[k]=(S.hp[k]??BL[ko].hp)-1/steleF(k);WALLHIT.set(k,performance.now());if(S.hp[k]<=0){(S.broken||(S.broken=[])).push({j:k,id:ko});if(S.ns)S.ns.broke++;clearObj(k);recount();toast(BL[ko].name+'がこわされた！','warn')}}/* 大きいコワイノは、となりの壁にもダメージ（範囲攻撃） */WALLHIT.set(j,performance.now());sfxAt('bonk',j%W+.5,(j/W)|0);
       if(S.hp[j]<=0){const nm=BL[S.obj[j]].name;(S.broken||(S.broken=[])).push({j,id:S.obj[j]});sfxAt('wbreak',j%W+.5,(j/W)|0);if(S.ns)S.ns.broke++;clearObj(j);recount();toast(nm+'がこわされた！','warn')}}
     return}}
   if(!walk(j)){e.path=[];return}
-  let sp=D.sp*dt*e.slow*(e.flee&&D.thief?1.8:1);if(lightAt(e.x,e.y)&&!e.flee)sp*=.2;
+  let sp=D.sp*dt*e.slow*(e.flee&&D.thief?1.8:1);if(lightAt(e.x,e.y)&&!e.flee)sp*=.8;/* 光の中は、移動の速さ0.8倍 */
   const tx=j%W+.5,ty=((j/W)|0)+.5,dx=tx-e.x,dy=ty-e.y,d=Math.hypot(dx,dy);
   if(d<=sp){e.x=tx;e.y=ty;e.path.shift()}else{e.x+=dx/d*sp;e.y+=dy/d*sp}e.stk=0
 }
@@ -3627,7 +3627,7 @@ function houseComfort(h){let bed=0,furn=0,fl=0,n=0;const seen=new Set();
   let lit=false;for(let y=h.y0-1;y<=h.y1+1&&!lit;y++)for(let x=h.x0-1;x<=h.x1+1;x++){if(x<0||y<0||x>=W||y>=H)continue;if(LIGHTF.has(S.obj[y*W+x])){lit=true;break}}/* 家の中か、すぐそばに灯り */
   const v=Math.round(Math.max(0,Math.min(100,5+Math.min(20,Math.min(bed,cap)*COMFY.bed)+Math.min(50,furn)+(n?fl/n:0)*15-over*35-(lit?0:20))));
   return{v,bed,cap,lit,kinds:seen.size,floorPct:n?Math.round(fl/n*100):0,over}}
-{const LT='光の中の「コワイノ」は、移動速度20%・攻撃の速さ75%',D2={
+{const LT='光の中の「コワイノ」は、移動速度−20%・攻撃の速さ−20%',D2={
   tree:'まわり3マスを緑にする。まわり3マスで、たのしさ+0.4／1時間（休けい中は元気も+0.4）',
   fruit:'まわり3マスを緑にする。まわり3マスで、たのしさ+0.4／1時間（休けい中は元気も+0.4）。4日ごとに、りんごが実る（収穫すると食料+2）',
   torch:'まわり3.5マスを照らす。'+LT,lamp:'まわり3.5マスを照らす。'+LT,stonelamp:'まわり2.5マスを照らす。'+LT,
