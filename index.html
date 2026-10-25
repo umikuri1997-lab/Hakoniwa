@@ -2253,7 +2253,7 @@ function hitRes(e,r,D){if(!WD&&r.elem==='fire'&&r.hunger<60&&r.name===keyName('f
   const yk=trt(r,'yuukan'),adj=Math.hypot(e.x-r.x,e.y-r.y)<=Math.max(1.1,reachOf(D)+.05);/* せいれいの攻撃は、となりにいる相手だけ（遠くから攻撃してくる大きいコワイノには、その距離でもやり返せる） */const ba=((r.bst&&r.bst.atk)||0)+((r.sst&&r.sst.atk)||0);if((fire||lv>=3||yk||ba)&&adj){/* やり返しはしない（攻撃されたときの受けるダメージの軽さだけ、戦える子は今までどおり） */
     r.hunger=Math.max(0,r.hunger-Math.round(D.hit/2));r.hurt=40;if(r.hunger<35&&!D.boss)r.fleeNow=true;/* 体力（おなか）がへったら逃げる */}
   else{r.hunger=Math.max(0,r.hunger-Math.round(D.hit*.6));r.fun=Math.max(0,r.fun-20);r.hurt=40;r.fleeNow=!D.boss;
-    if(D.boss&&Math.random()<.5){endAct(r);r.act={type:'faint',stage:'do',t:0};r.bubble='😵'}/* ボスの攻撃で気絶するのは、2回に1回くらい */}r.alarm=S.t;
+    if(D.boss&&Math.random()<.25){endAct(r);r.act={type:'faint',stage:'do',t:0};r.bubble='😵'}/* ボスの攻撃で気絶するのは、4回に1回くらい */}r.alarm=S.t;
   if(h0>=12&&r.hunger<3)r.hunger=3;/* 一撃では消えない */
   e.stun=(fire||lv>=3)?(D.boss?1.5:2):(D.boss?3:4);if(lightAt(e.x,e.y))e.stun/=.75;e.path=[];e.repath=0;
 }
