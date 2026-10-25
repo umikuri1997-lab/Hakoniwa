@@ -2884,7 +2884,7 @@ function drawMossWall(c,x,y,i,L,R,U,D){
   const a=HOUSEART[(((i/W)|0)%2)?'wall-stone-alt':'wall-stone'],v=HOUSEART['wall-stone-v'],p=HOUSEART['post-stone'];
   if(!a||!a.complete||!a.naturalWidth)return false;
   c.save();c.beginPath();c.rect(x,y,TS,TS);c.clip();const hor=L||R||!(U||D),ver=U||D;
-  if(hor){const sw=a.naturalWidth/4,left=ver&&!L?8:0,right=ver&&!R?25:TS;c.save();c.beginPath();c.rect(x+left,y,right-left,TS);c.clip();c.drawImage(a,(i%W%4)*sw,0,sw,a.naturalHeight,x,y+2,TS,30);c.restore()}/* 縦の石垣に曲がる角では、つながらない側を柱の外端で止める */
+  if(hor){const sw=a.naturalWidth/4,left=!L?8:0,right=!R?24:TS;c.save();c.beginPath();c.rect(x+left,y,right-left,TS);c.clip();c.drawImage(a,(i%W%4)*sw,0,sw,a.naturalHeight,x,y+2,TS,30);c.restore()}/* 横の石垣は、つながらない側（いちばん端）を柱の外端で止める */
   if(ver&&v&&v.complete&&v.naturalWidth){const sh=v.naturalHeight/4;c.drawImage(v,0,(((i/W)|0)%4)*sh,v.naturalWidth,sh,x+8,y,17,TS)}
   if(p&&p.complete&&p.naturalWidth&&(!(L&&R&&!U&&!D)&&!(U&&D&&!L&&!R)))c.drawImage(p,x+8,y,16,32);
   c.restore();return true;
