@@ -3007,7 +3007,7 @@ function drawObj(c,id,x,y,i,g,now){
     else if(!D)side(x+5,x+27);
     top();if(ICON)c.restore();break}
   case'sdoor':{const isF=k=>HOME_WALLS.has(typeAt(k))||HOME_DOORS.has(typeAt(k));const L=!ICON&&isF(i-1),R=!ICON&&isF(i+1),U=!ICON&&isF(i-W),D=!ICON&&isF(i+W);const ver=!(L||R)&&(U||D);
-    let op=0;if(!ICON)op=doorOp(i,x,y,ver?2.1:.9,ver?.9:2.1);if(drawStoneDoor(c,x,y,op))break;shadow(c,x+16,y+29,16,3);const stc='#c3bfb6',sto='#9a978f';
+    let op=0;if(!ICON)op=doorOp(i,x,y,ver?2.1:.9,ver?.9:2.1);if(ver&&!ICON){const an=op*Math.PI*.45;c.save();c.translate(x+16,y+3);c.rotate(an);c.fillStyle='rgba(0,0,0,.18)';c.fillRect(-1,1,5,TS-6);c.fillStyle='#8a5a33';c.fillRect(-2,0,4,TS-6);c.fillStyle='#b88550';c.fillRect(-2,0,1.3,TS-6);c.restore();break}/* たて置きは、家のドアと同じ一本線 */if(drawStoneDoor(c,x,y,op))break;shadow(c,x+16,y+29,16,3);const stc='#c3bfb6',sto='#9a978f';
     if(!ver){c.fillStyle=sto;rr(c,x,y+3,7,26,2);rr(c,x+25,y+3,7,26,2);c.fillStyle=stc;rr(c,x+1,y+4,5,24,2);rr(c,x+26,y+4,5,24,2);const pw=18*(1-op*.82);c.fillStyle='#9a6a40';c.fillRect(x+7,y+8,pw,20);c.fillStyle='#b9824f';for(let k=0;k<3;k++)c.fillRect(x+7+k*pw/3+.5,y+8,pw/3-1,20);c.fillStyle='#6e4c32';c.fillRect(x+7,y+13,pw,1.5);c.fillRect(x+7,y+22,pw,1.5)}
     else{c.fillStyle=sto;rr(c,x+2,y-2,28,8,2);rr(c,x+2,y+25,28,7,2);const ph=18*(1-op*.82);c.fillStyle='#9a6a40';c.fillRect(x+9,y+6,14,ph);c.fillStyle='#6e4c32';c.fillRect(x+9,y+6+ph/2,14,1.5)}break}
   case'gate':case'archedgate':case'stonegate':{const isF=k=>FENCE_IDS.has(typeAt(k))||(id==='stonegate'&&(HOME_WALLS.has(typeAt(k))||HOME_DOORS.has(typeAt(k))));const L=!ICON&&isF(i-1),R=!ICON&&isF(i+1),U=!ICON&&isF(i-W),D=!ICON&&isF(i+W);const ver=!(L||R)&&(U||D);
