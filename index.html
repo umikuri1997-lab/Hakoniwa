@@ -753,7 +753,7 @@ const QUESTS1=[
     [GOD,'よしよし、いい感じじゃ。'],
     [POKO,'これで、ちょっと安心だね！']]},
   {text:'見張り台ととげの罠を置こう',check:()=>cnt('watch')>=1&&(S.placed.spike||0)>=2,prog:()=>'見張り台 '+Math.min(1,cnt('watch'))+'/1・とげの罠 '+Math.min(2,S.placed.spike||0)+'/2',
-    talk:{who:GOD,when:()=>true,lines:[
+    talk:{who:GOD,when:()=>{if(S.flags.wtN==null)S.flags.wtN=S.nights||0;return (S.nights||0)>S.flags.wtN&&S.lastMorning>S.lastNight},wait:'柵を置いて、夜をこして朝をむかえよう',lines:[/* 柵のあとの夜を、ほんとうにこしてから */
     [POKO,'守り神さま、ゆうべ「コワイノ」が、柵のまわりをうろうろしてたよ。'],
     [POKO,'入れなくて困ってたみたい。……でも、あきらめて帰ったわけじゃなかった。'],
     [GOD,'うむ。柵は足止めにはなるが、追いはらえるわけではないんじゃ。時間をかせぐだけじゃからのう。'],
@@ -4074,10 +4074,11 @@ function drawRes0(r,now){
   if(!(r.hurt>0)&&S.t-(r.eUp||-9)<3&&r.energy<99.5){const v=r.energy/100,bx=px-12,byy=py+11;ctx.fillStyle='rgba(0,0,0,.45)';rr(ctx,bx,byy,24,5,2.5);ctx.fillStyle='#7ed99a';rr(ctx,bx+1,byy+1,Math.max(2,22*v),3,1.5);const ph=(now/600)%1;ctx.globalAlpha=1-ph;ctx.fillStyle='#7ed99a';ctx.font='bold 9px \"Hikomi\",\"Hiragino Maru Gothic ProN\",sans-serif';ctx.textAlign='center';ctx.fillText('+',px+15,byy+4-ph*8);ctx.globalAlpha=1}/* 元気が回復中：みどりのバー */
   if(r.hurt>0){const v=r.hunger/hMax(r),a=Math.min(1,r.hurt/8);ctx.globalAlpha=a;ctx.fillStyle='rgba(0,0,0,.6)';rr(ctx,px-12,py+11,24,5,2.5);ctx.fillStyle=v>.5?'#7ee08a':v>.25?'#ecdcbc':'#ff6b6b';rr(ctx,px-11,py+12,Math.max(2,22*v),3,1.5);ctx.globalAlpha=1}
   if(at==='craft'&&ad){const o=S.orders.find(q=>q.id===r.act.order);if(o){const f=Math.min(1,o.prog/o.need),bx=px-16,byy=py+(r.hurt>0?19:12);ctx.fillStyle='rgba(150,115,75,.5)';rr(ctx,bx-1.5,byy-1.5,35,8,4);ctx.fillStyle='#e8dcc0';rr(ctx,bx,byy,32,5,2.5);ctx.fillStyle='#e0a43a';rr(ctx,bx,byy,Math.max(2.5,32*f),5,2.5)}}/* 依頼の作業の進み具合は足もと。吹き出しは上に出す */
-  if(QUESTCLEARW===r.name){talkBub(px,by,now,'#ffd56b');return}
-  if(TALKW===r.name){talkBub(px,by,now);return}
-  if(SEVW[r.name]){talkBub(px,by,now,'#ffb3d1');return}
-  if(SUBW[r.name]){talkBub(px,by,now,'#ffd56b');return}/* サブクエスト：黄色の吹き出し *//* 話したそうにしている：水色の吹き出し */
+  const zzz=r.act&&r.act.type==='sleep';/* 寝ているあいだは、話しかけの吹き出しを出さない */
+  if(!zzz&&QUESTCLEARW===r.name){talkBub(px,by,now,'#ffd56b');return}
+  if(!zzz&&TALKW===r.name){talkBub(px,by,now);return}
+  if(!zzz&&SEVW[r.name]){talkBub(px,by,now,'#ffb3d1');return}
+  if(!zzz&&SUBW[r.name]){talkBub(px,by,now,'#ffd56b');return}/* サブクエスト：黄色の吹き出し *//* 話したそうにしている：水色の吹き出し */
   if(CLAPON)return;/* 拍手中は吹き出しを出さない */
   const warn=r.hunger<20,tiredW=false;
   if(!ci&&(r.bubble||warn||tiredW)){const t=warn&&!r.bubble?'🍙':tiredW&&!r.bubble?'😩':r.bubble;
@@ -4472,9 +4473,9 @@ function onTap(sx,sy){
     if(S.cleared){const tw=S.obj.indexOf('tower');if(tw>=0&&Math.hypot(w.x/TS-(tw%W+1),w.y/TS-((tw/W|0)+.6))<1.4)return openSheet('travel')}/* クリア後は、台座から次の土地へ */
     if(sumHit(w.x/TS,w.y/TS))return doSummon();
     if(TALKW===GOD&&godHere()&&Math.hypot(w.x/TS-godX(),w.y/TS-(godY()-1.6))<1.2)return startTalk();
-    if(TALKW){const tr=S.res.find(r=>r.name===TALKW&&!r.hidden);if(tr&&Math.hypot(tr.x-w.x/TS,(tr.y-1)-w.y/TS)<1.4){panTo(tr.x*TS,(tr.y-.7)*TS);return startTalk()}}
-    {const tr=S.res.find(r=>SEVW[r.name]&&!r.hidden&&Math.hypot(r.x-w.x/TS,(r.y-1)-w.y/TS)<1.4);if(tr)return sevTalk(SEVW[tr.name])}
-    {const tr=S.res.find(r=>SUBW[r.name]&&!r.hidden&&Math.hypot(r.x-w.x/TS,(r.y-1)-w.y/TS)<1.4);if(tr){panTo(tr.x*TS,(tr.y-.7)*TS);return subTalk(SUBW[tr.name])}}
+    if(TALKW){const tr=S.res.find(r=>r.name===TALKW&&!r.hidden&&!(r.act&&r.act.type==='sleep'));if(tr&&Math.hypot(tr.x-w.x/TS,(tr.y-1)-w.y/TS)<1.4){panTo(tr.x*TS,(tr.y-.7)*TS);return startTalk()}}
+    {const tr=S.res.find(r=>SEVW[r.name]&&!r.hidden&&!(r.act&&r.act.type==='sleep')&&Math.hypot(r.x-w.x/TS,(r.y-1)-w.y/TS)<1.4);if(tr)return sevTalk(SEVW[tr.name])}
+    {const tr=S.res.find(r=>SUBW[r.name]&&!r.hidden&&!(r.act&&r.act.type==='sleep')&&Math.hypot(r.x-w.x/TS,(r.y-1)-w.y/TS)<1.4);if(tr){panTo(tr.x*TS,(tr.y-.7)*TS);return subTalk(SUBW[tr.name])}}
     let best=null,bd=1.1;for(const r of S.res){if(r.hidden&&!peekH(r))continue;const d=Math.hypot(r.x-w.x/TS,(r.y-.5)-w.y/TS);if(d<bd){bd=d;best=r}}
     if(best&&best.act&&(best.act.type==='chat'||best.act.type==='rest')&&best.act.stage==='do'&&best.act.topic!=null){const p=S.res.find(q=>q.id===best.act.partner);if(p){const A=best.act.sub?p:best,B=best.act.sub?best:p;const C=CHATS[best.act.topic];return dialog(C.map((l,i)=>{const sp=l[0]?B:A;return [sp.name,(C.el&&!l[0])?l[1]:chatTone(l[1],sp,i)]}),C.wave?()=>{A.waveU=B.waveU=S.t+4}:null)}}/* おしゃべり中の子をタップすると、会話が見られる */
     if(best){if(!S.flags.tapped&&S.flags.tapAsk){S.flags.tapPend=true}voiceHmm(best);return openSheet('res',best.id)}// ステータスを見て閉じたら、会話に進む
