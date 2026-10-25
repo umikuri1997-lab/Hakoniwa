@@ -4093,7 +4093,7 @@ function onTap(sx,sy){
     if(o==='rock'||o==='deadtree'||o==='ntree')return toast(BL[o].name+'：のこり '+Math.max(0,10-(S.hp['n'+j]||0))+'/10');
     if(o==='watch')return openSheet('watch',j);
     if(o==='obox')return S.feat.inv?openSheet('inv'):toast('お供え箱');
-    if(o==='grave'){const d=S.dyn[j]||{};if(!d.buried&&(S.lost||[]).some(q=>q.name===d.name)&&S.mebuki>0)return openSheet('grave',j);/* めぶきのしずくがあれば、よみがえらせるかえらぶ */if(!d.buried){S.obj[j]='';delete S.dyn[j];S.pt+=1;S.totalPt+=1;recount();burst(j,'plant','offer');return toast((d.name||'せいれい')+'を埋葬した。'+((S.buried||[]).some(q=>q.name===d.name)?'次の朝、神殿で呼びもどせる':'パワー+1'),'good')}return toast((d.name||'せいれい')+'のお墓')}
+    if(o==='grave'){const d=S.dyn[j]||{};if(!d.buried&&(S.lost||[]).some(q=>q.name===d.name)&&S.mebuki>0)return openSheet('grave',j);/* めぶきのしずくがあれば、よみがえらせるかえらぶ */if(!d.buried)return toast((d.name||'せいれい')+'のお墓。なかまが神殿へはこんで、埋葬してくれる');/* 守り神は埋葬できない */return toast((d.name||'せいれい')+'のお墓')}
     if(o==='tower'&&!WD&&!S.cleared){const av=(S.shards||0)-(S.setSh||0);if(av>0){S.setSh=(S.setSh||0)+1;sfx('level');burst(j,'furn','none');toast('台座に、ヌシのかけらをはめた（'+S.setSh+'/3）','good');logEv('かけらを台座にはめた');if(S.setSh>=3)setTimeout(()=>dialog([[POKO,'台座が、光ってる……！'],[MINA,'3つともはまったねぇ。……ヌシ様が、帰ってくるよぉ。']],()=>{if(S.cleared)return;if(S.res.some(q=>q.name===POKO))nushiReturns();else{S.flags.nushiWait=1;toast('フタバが帰ってきたら、ヌシ様がすがたをあらわす','warn')}}),900);checkQuest();return}return openSheet('clear')}
     if(o==='board')return S.feat.craft?openSheet('craft'):toast('依頼ボード。もう少ししたら使えるようになる');
     if(o==='statue')return toast('女神像。守り神の居場所');
@@ -4466,7 +4466,7 @@ function renderSheet(){
     const j=sheetArg,d=S.dyn[j]||{},nm=d.name||'せいれい';T.textContent=nm+'のお墓';
     body.appendChild(el('<p class="story">「めぶきのしずく」をつかうと、'+nm+'がもどってきます（Lv1から）。<br>めぶきのしずく：<b>'+(S.mebuki||0)+'こ</b></p>'));
     const b1=el('<button class="btn pri" style="width:100%;margin-top:8px">めぶきのしずくで よみがえらせる</button>');b1.disabled=!(S.mebuki>0);b1.onclick=()=>{if(!(S.mebuki>0))return;S.mebuki--;S.obj[j]='';delete S.dyn[j];recount();closeSheet();{const pv=S.summon;S.summon={rev:1,lost:nm};doSummon();S.summon=pv}sfx('level')};body.appendChild(b1);
-    const b2=el('<button class="btn" style="width:100%;margin-top:8px">埋葬する（パワー+1）</button>');b2.onclick=()=>{S.obj[j]='';delete S.dyn[j];S.pt+=1;S.totalPt+=1;recount();burst(j,'plant','offer');closeSheet();toast(nm+'を埋葬した。めぶきのしずくがあれば、「せいれい」の画面からも呼びもどせる','good')};body.appendChild(b2);
+    body.appendChild(el('<p class="story">よみがえらせないときは、なかまが神殿へはこんで、埋葬してくれます。</p>'));
   }else if(sheet==='house'){
     const h=HOUSES[sheetArg],L=h?houseRes(h):[];if(!h)return closeSheet();
     {const cap=houseCap(h),C=houseComfort(h);T.textContent='おうち';
