@@ -1607,7 +1607,7 @@ const ACT={
   pickseed:{start(r,a){const i=S.seeds.findIndex(q=>q.y*W+q.x===a.obj);if(i<0)return false;S.seeds.splice(i,1);r.bubble='✨'},done:(r,a)=>a.t>=8,end(r){S.mseed=(S.mseed||0)+1;S.mseedGot=(S.mseedGot||0)+1;addFloat(r.x,r.y-1.6,'ふしぎな種+1','#d8f5c0');toast(r.name+'がふしぎな種をひろった','good')}},
   patrol:{done:()=>true},/* 見回りは、止まらずに歩きつづける（吹き出しなし） */
   faint:{done:(r,a)=>a.t>=30,end(r){r.fleeNow=true}},
-  flee:{start(r,a){r.bubble='💦';if(a.house)r.hidden=true},done:(r,a)=>a.t>=(a.house?40:4)},
+  flee:{start(r,a){r.bubble='💦';if(a.house)r.hidden=true},done:(r,a)=>a.t>=(a.house?40:4),end(r,a){if(a.food)r.wantEat=1/* 食べ物のところへ逃げたら、そこで食べる */}},
   wander:{start(r,a){a.dur=rnd(10,30)},done:(r,a)=>a.t>=a.dur,end(r){r.wanderRestUntil=S.t+45}},
   idle:{start(r){r.bubble='☕'},done:(r,a)=>a.t>=a.dur},/* ひとやすみ中は、休けいの吹き出し */
   // ベッドがない子は、家の中で起きたまま夜をすごす
@@ -1626,7 +1626,7 @@ function insideSet(){const out=new Uint8Array(W*H),q=[];const open=j=>S.obj[j]!=
   return out}
 function fleeHit(r,G){
   if(r.hunger<50&&S.food>0){const sj=nearest(G,j=>adjOf(j,k=>storageAt(k,'food'))>=0,60);if(sj>=0){startAct(r,G,'fetch',sj,{run:true});return true}}/* おなかがすいていたら、にげながら食料箱でごはんをとる */
-  if(r.elem==='fire'){const sj=nearest(G,j=>adjOf(j,k=>storageAt(k,'food'))>=0,60);if(sj>=0){startAct(r,G,'flee',sj);return true}}/* 火の子は食料箱へ逃げる */
+  if(r.elem==='fire'){const sj=nearest(G,j=>adjOf(j,k=>storageAt(k,'food'))>=0,60);if(sj>=0){startAct(r,G,'flee',sj,{food:1});return true}}/* 火の子は食料箱へ逃げる */
   if(isNight()){const out=insideSet(),bj=nearest(G,j=>S.obj[j]==='bed'&&!out[j]&&free('o'+j,1)&&bedFor(j,r),200);if(bj>=0){const b=BL.bed.sleep;startAct(r,G,'sleep',bj,{key:'o'+bj,obj:bj,rate:b.rate,pt:b.pt,run:true});return true}}
   const hj=nearest(G,j=>S.obj[j]==='house'&&free('o'+j,2),12);
   if(hj>=0){startAct(r,G,'flee',hj,{key:'o'+hj,house:true});return true}
@@ -1636,15 +1636,16 @@ function fleeHit(r,G){
 function fleeGraph(r){const bl=new Set();for(const e of S.enemies){if(!e.spawned||e.dead)continue;const ex=e.x|0,ey=e.y|0;for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){const nx=ex+dx,ny=ey+dy;if(nx>=0&&ny>=0&&nx<W&&ny<H)bl.add(ny*W+nx)}}bl.delete((r.y|0)*W+(r.x|0));const G=roadSearch(r.x|0,r.y|0,bl);G.bl=bl;return G}/* 「コワイノ」のすぐそばを通らずに逃げられる道 */
 function withFlee(r,fn,G){const Gf=fleeGraph(r);let ok=false;FLEEBL=Gf.bl;try{ok=fn(r,Gf)}finally{FLEEBL=null}return ok||fn(r,G)}
 function fleeAlarm(r,G){
-  if(r.elem==='fire'){if(S.food>0){const sj=nearest(G,j=>adjOf(j,k=>storageAt(k,'food'))>=0,60);if(sj>=0){startAct(r,G,'flee',sj);return true}}else{const f=ripeAdj(['berry','fruit']),fj=nearest(G,j=>f(j)>=0,60);if(fj>=0){const k=f(fj);startAct(r,G,'forage',fj,{key:'o'+k,obj:k});return true}const bj=nearest(G,j=>adjOf(j,k=>S.obj[k]==='berry'||S.obj[k]==='fruit')>=0,60);if(bj>=0){startAct(r,G,'flee',bj);return true}}}/* 火の子は食料箱へ逃げる。食べ物がなければ、ベリーの茂みや果物の木へ逃げて、実を食べる */
+  if(r.elem==='fire'){if(S.food>0){const sj=nearest(G,j=>adjOf(j,k=>storageAt(k,'food'))>=0,60);if(sj>=0){startAct(r,G,'flee',sj,{food:1});return true}}else{const f=ripeAdj(['berry','fruit']),fj=nearest(G,j=>f(j)>=0,60);if(fj>=0){const k=f(fj);startAct(r,G,'forage',fj,{key:'o'+k,obj:k});return true}const bj=nearest(G,j=>adjOf(j,k=>S.obj[k]==='berry'||S.obj[k]==='fruit')>=0,60);if(bj>=0){startAct(r,G,'flee',bj,{food:1});return true}}}/* 火の子は食料箱へ逃げる。食べ物がなければ、ベリーの茂みや果物の木へ逃げて、実を食べる */
   const hj=nearest(G,j=>S.obj[j]==='house'&&free('o'+j,2),30);if(hj>=0){startAct(r,G,'flee',hj,{key:'o'+hj,house:true});return true}
   const en=S.enemies.find(e=>e.spawned&&!e.flee);if(!en)return false;let best=-1,bs=-1;for(let j=0;j<W*H;j++){const d=G.dist[j];if(d<2||d>12)continue;const sc=Math.hypot(j%W+.5-en.x,((j/W)|0)+.5-en.y)-d*.2;if(sc>bs){bs=sc;best=j}}
   if(best>=0){startAct(r,G,'flee',best);return true}return false}
 function decide0(r){
   const tx=r.x|0,ty=r.y|0,G=bfs(tx,ty),here=ty*W+tx;
+  if(r.wantEat){r.wantEat=0;if(r.hunger<hMax(r)-8&&goEat(r,G))return}/* 食べ物のところへ逃げてきたら、ちゃんと食べる */
   // 夜に家の中にいるせいれいは、おなかがすいても外へは出ない（見張り番の火のせいれいはべつ）
   if(isNight()&&!(isWatch(r)&&S.enemyOn&&!offShift(r)&&r.hunger>=30)&&!(r.hunger<hMax(r)*.5&&S.food>0)&&S.obj[here]!=='door'&&S.obj[here]!=='sdoor'){const out=insideSet();if(!out[here])for(let j=0;j<W*H;j++)if(out[j]||S.obj[j]==='door'||S.obj[j]==='sdoor')G.dist[j]=-1}
-  if(r.alarm!=null&&S.t-r.alarm<120&&r.hunger>=10&&!(r.elem==='fire'&&r.hunger>=35)&&S.enemies.some(e=>e.spawned&&!e.flee&&Math.hypot(e.x-r.x,e.y-r.y)<10)){if(withFlee(r,fleeAlarm,G))return}
+  if(r.alarm!=null&&S.t-r.alarm<120&&r.hunger>=10&&!r.meal&&!(r.elem==='fire'&&r.hunger>=35)&&S.enemies.some(e=>e.spawned&&!e.flee&&Math.hypot(e.x-r.x,e.y-r.y)<10)){if(withFlee(r,fleeAlarm,G))return}
   if(r.cing&&!isNight()){const ov=q=>S.obj[q]==='oven'&&free('o'+q,1);let j=nearest(G,j=>adjOf(j,q=>q===r.cing.ov&&ov(q))>=0,90);if(j<0)j=nearest(G,j=>adjOf(j,ov)>=0,90);
     if(j>=0){const q=adjOf(j,k=>k===r.cing.ov&&ov(k))>=0?r.cing.ov:adjOf(j,ov);r.cing.ov=q;const st=ovenStand(G,q);return startAct(r,G,'cook',st>=0?st:j,{key:'o'+q,obj:q})}
     if(!cnt('oven')){const R=RECIPES.find(x=>x.out===r.cing.rec);for(const k in R.need)addFood(k,R.need[k]);r.cing=null}}
