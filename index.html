@@ -579,7 +579,6 @@ const BL={
   watch:{name:'見張り台',kind:'build',sz:[2,2],mat:{wood:4,stone:3},pc:25,time:150,maker:'earth',lv:2,solid:1,attr:{fire:2,earth:2},desc:'「コワイノ」に光の矢を放つ'},
   well:{name:'井戸',kind:'build',mat:{wood:1,stone:4},pc:25,time:140,maker:'water',lv:6,solid:1,attr:{water:4},desc:'まわり3マスの畑は水やりなしで育つ'},
   windmill:{name:'風車',kind:'build',mat:{wood:5,stone:3},pc:30,time:160,maker:'wind',lv:8,solid:1,anim:1,attr:{wind:5},desc:'まわり3マスの畑の収穫+1'},
-  house:{name:'小さな家',sz:[2,2],kind:'build',pc:60,time:240,maker:'earth',lv:5,offerOnly:1,sleep:{cap:2,pt:7,rate:.24},attr:{earth:3,wood:2},desc:'2人眠れる。家の中にいるせいれいは「コワイノ」に攻撃されない'},
   lighthouse:{name:'灯台',sz:[2,2],kind:'build',mat:{wood:4,stone:6},pc:40,time:180,maker:'fire',lv:7,solid:1,anim:1,attr:{fire:4},desc:'まわり8マスを照らす。光の中では、カゲモノの移動・攻撃の速さが−20%'},
   stele:{name:'石碑',kind:'build',mat:{wood:2,stone:8},pc:40,time:180,maker:'earth',lv:6,solid:1,attr:{earth:4},desc:'まわり5マスの壁が、1.15倍じょうぶになる（小数点以下は切りすて）'},
   fountain:{name:'噴水',sz:[2,2],kind:'build',mat:{wood:2,stone:8},pc:50,time:200,maker:'water',lv:6,solid:1,anim:1,play:{pt:6,fun:70,dur:50,cap:3,adj:1},attr:{water:6},desc:'3人まで遊べる。たのしさ +100まで（50分）'},
@@ -1223,7 +1222,7 @@ function ensureStor(s){widenStoneGates(s);if(!(s.world>=1)&&s.ovenSet)for(const 
   if(!s.flags.shV){const n=s.shards||0,Q=QL[s.world||0];['boss','land','key'].forEach((k,i)=>{if(n>i)s.flags['sh_'+k]=true});
     for(const k of['land','key']){const qi=Q.findIndex(q=>q.gives&&q.gives.shard===k||q.story&&q.gives&&q.gives.shard===k);if(!s.flags['sh_'+k]&&qi>=0&&(s.questOrder35?!!s.questOrder35.done[Q[qi].text]:qi<s.quest&&s.qStory!==qi)){s.flags['sh_'+k]=true;s.shards=Math.min(3,(s.shards||0)+1)}}s.flags.shV=1}/* かけらの入手方法を分けた *//* 食料箱と素材箱を別のクエストにした */
   if(!s.recipes)s.recipes={};if(!s.lost)s.lost=[];if(!s.buried)s.buried=[];s.buried=s.buried.filter(b=>KEYS.flat().includes(b.name)||Object.values(FIXK0).includes(b.name)||Object.values(s.keyN||{}).includes(b.name));/* 火・水・風のキーキャラも、読みこみで消さない */if(!s.drops)s.drops=[];if(s.shards==null)s.shards=Math.min(3,s.bossKills||0);for(let j=0;j<s.obj.length;j++)if(s.obj[j]==='part'&&s.ref&&s.obj[s.ref[j]]==='table'){s.obj[j]='';delete s.ref[j]}// 食卓は1マスになった
-  if(!s.ref)s.ref={};for(let j=0;j<s.obj.length;j++)if(s.obj[j]==='bench'&&!(s.obj[j+1]==='part'&&s.ref[j+1]===j)){if(!s.obj[j+1]&&s.ground[j+1]!==1&&(j+1)%W){s.obj[j+1]='part';s.ref[j+1]=j}else{s.obj[j]='';s.inv.bench=(s.inv.bench||0)+1}}/* ベンチを2マスにした。右があいていなければ、お供え箱にもどす */
+  if(!s.ref)s.ref={};for(let j=0;j<s.obj.length;j++)if(s.obj[j]==='part'&&s.obj[s.ref[j]]==='house'){s.obj[j]='';delete s.ref[j]}for(let j=0;j<s.obj.length;j++)if(s.obj[j]==='house'){s.obj[j]='';if(s.dyn)delete s.dyn[j]}if(s.inv)delete s.inv.house;/* 小さな家はなくなった */for(let j=0;j<s.obj.length;j++)if(s.obj[j]==='bench'&&!(s.obj[j+1]==='part'&&s.ref[j+1]===j)){if(!s.obj[j+1]&&s.ground[j+1]!==1&&(j+1)%W){s.obj[j+1]='part';s.ref[j+1]=j}else{s.obj[j]='';s.inv.bench=(s.inv.bench||0)+1}}/* ベンチを2マスにした。右があいていなければ、お供え箱にもどす */
   for(let j=0;j<s.obj.length;j++)if(s.obj[j]==='grave'&&s.dyn[j]&&s.dyn[j].buried){s.obj[j]='';delete s.dyn[j]}{const st=s.obj.indexOf('statue');if(st>=0&&s.obj[st+W]!=='altar'&&!s.obj[st+W])s.obj[st+W]='altar'}if(!s.cseed)s.cseed={mugi:4,tomato:2,imo:2};if(!s.mat)s.mat={wood:0,stone:0};if(!s.fs)s.fs={mugi:s.food||0};if((s.quest||0)>2){if(!s.obj.includes('stor'))putNear(s,'stor',CX-2,CY-5);if(!s.obj.includes('mbox'))putNear(s,'mbox',CX,CY-5)}syncQuestRecipes(s);}// チュートリアル中は自分で置いてもらう
 /* 特性：ひとりにひとつ。キーキャラは決まっている */
 const TRK=()=>Object.keys(TRAITS).filter(k=>k!=='kizuna'&&k!=='tane');/* たねはこびは風の子だけ（mkRes） */const TRAITS={hayaashi:['はやあし','歩くのが速い'],hataraki:['はたらきもの','作業が速い'],shukaku:['しゅうかく上手','畑や木の実の収穫がひとつ多い'],kikori:['木こり','木を切ると、木材がひとつ多い'],ishiku:['石工','石をほると、石材がひとつ多い'],chikara:['力もち','持てる数が2つ多い'],shoshoku:['小食','おなかがへりにくい'],tafu:['タフ','つかれにくい'],kizuna:['めぐり','消えてしまっても、この土地のめぐりで、次の朝もどってくる'],/* キーキャラだけ（TRK でのぞく） */genki:['元気いっぱい','たのしさがへりにくい'],yuukan:['ゆうかん','「コワイノ」におそわれると、やり返す（攻撃力+1）'],ryouri:['料理じょうず','料理が早くできる'],tane:['たねはこび','ふしぎな種を拾ってくる（風のせいれいだけ）']};
@@ -1628,8 +1627,6 @@ function fleeHit(r,G){
   if(r.hunger<50&&S.food>0){const sj=nearest(G,j=>adjOf(j,k=>storageAt(k,'food'))>=0,60);if(sj>=0){startAct(r,G,'fetch',sj,{run:true});return true}}/* おなかがすいていたら、にげながら食料箱でごはんをとる */
   if(r.elem==='fire'){const sj=nearest(G,j=>adjOf(j,k=>storageAt(k,'food'))>=0,60);if(sj>=0){startAct(r,G,'flee',sj,{food:1});return true}}/* 火の子は食料箱へ逃げる */
   if(isNight()){const out=insideSet(),bj=nearest(G,j=>S.obj[j]==='bed'&&!out[j]&&free('o'+j,1)&&bedFor(j,r),200);if(bj>=0){const b=BL.bed.sleep;startAct(r,G,'sleep',bj,{key:'o'+bj,obj:bj,rate:b.rate,pt:b.pt,run:true});return true}}
-  const hj=nearest(G,j=>S.obj[j]==='house'&&free('o'+j,2),12);
-  if(hj>=0){startAct(r,G,'flee',hj,{key:'o'+hj,house:true});return true}
   const ens=S.enemies.filter(e=>e.spawned&&!e.dead),fr=r.elem==='fire'?null:S.res.find(q=>q!==r&&q.elem==='fire'&&!q.hidden);/* 「コワイノ」からはなれる。火のせいれいがいれば、そのそばへ */
   let best=-1,bs=-1e9;for(let j=0;j<W*H;j++){const d=G.dist[j];if(!(d>=3&&d<=14))continue;const x=j%W+.5,y=((j/W)|0)+.5;let me=99;for(const e of ens)me=Math.min(me,Math.hypot(x-e.x,y-e.y));if(me<2)continue;const sc=fr?Math.min(me,6)-Math.hypot(x-fr.x,y-fr.y)*.8-d*.05:me-d*.15;if(sc>bs){bs=sc;best=j}}
   if(best>=0){startAct(r,G,'flee',best);return true}return false}
@@ -1637,7 +1634,6 @@ function fleeGraph(r){const bl=new Set();for(const e of S.enemies){if(!e.spawned
 function withFlee(r,fn,G){const Gf=fleeGraph(r);let ok=false;FLEEBL=Gf.bl;try{ok=fn(r,Gf)}finally{FLEEBL=null}return ok||fn(r,G)}
 function fleeAlarm(r,G){
   if(r.elem==='fire'){if(S.food>0){const sj=nearest(G,j=>adjOf(j,k=>storageAt(k,'food'))>=0,60);if(sj>=0){startAct(r,G,'flee',sj,{food:1});return true}}else{const f=ripeAdj(['berry','fruit']),fj=nearest(G,j=>f(j)>=0,60);if(fj>=0){const k=f(fj);startAct(r,G,'forage',fj,{key:'o'+k,obj:k});return true}const bj=nearest(G,j=>adjOf(j,k=>S.obj[k]==='berry'||S.obj[k]==='fruit')>=0,60);if(bj>=0){startAct(r,G,'flee',bj,{food:1});return true}}}/* 火の子は食料箱へ逃げる。食べ物がなければ、ベリーの茂みや果物の木へ逃げて、実を食べる */
-  const hj=nearest(G,j=>S.obj[j]==='house'&&free('o'+j,2),30);if(hj>=0){startAct(r,G,'flee',hj,{key:'o'+hj,house:true});return true}
   const en=S.enemies.find(e=>e.spawned&&!e.flee);if(!en)return false;let best=-1,bs=-1;for(let j=0;j<W*H;j++){const d=G.dist[j];if(d<2||d>12)continue;const sc=Math.hypot(j%W+.5-en.x,((j/W)|0)+.5-en.y)-d*.2;if(sc>bs){bs=sc;best=j}}
   if(best>=0){startAct(r,G,'flee',best);return true}return false}
 function decide0(r){
@@ -1709,10 +1705,10 @@ function offShift(r){return false;/* 火のせいれいは全員みまわり（�
 function goSleep(r,G,run){
   if(!isNight()){const isB=j=>(S.obj[j]==='bench'||(S.obj[j]==='part'&&S.obj[S.ref[j]]==='bench'))&&!ashed(anc(j));const bj=nearest(G,j=>isB(j)&&free('o'+j,1),40);if(bj>=0)return startAct(r,G,'rest',bj,{key:'o'+bj,obj:anc(bj),seat:bj})}/* 昼につかれたら、ベンチでひと休み（2人すわれる） */
   {const mb=myBed(r);if(mb>=0&&free('o'+mb,1)){const k=nearest(G,j=>j===mb,200);if(k>=0){const b=BL.bed.sleep;return startAct(r,G,'sleep',k,{key:'o'+k,obj:k,rate:b.rate,pt:b.pt,run:run&&!!isNight()})}}}/* じぶんのベッドがあれば、そこで眠る */
-  const bedOK=j=>(S.obj[j]==='bed'&&free('o'+j,1)&&bedFor(j,r))||(S.obj[j]==='house'&&free('o'+j,2));
+  const bedOK=j=>(S.obj[j]==='bed'&&free('o'+j,1)&&bedFor(j,r));
   let j=nearest(G,j=>{if(!bedOK(j))return false;const h=roomOf(j);return !h||roomSleepN(h)<houseCap(h)},200);/* きゅうくつな家はなるべくさける */
   if(j<0)j=nearest(G,bedOK,200);
-  if(j>=0){const b=BL[S.obj[j]].sleep;return startAct(r,G,'sleep',j,{key:'o'+j,obj:j,rate:b.rate,pt:b.pt,house:S.obj[j]==='house',run:run&&!!isNight()})}
+  if(j>=0){const b=BL[S.obj[j]].sleep;return startAct(r,G,'sleep',j,{key:'o'+j,obj:j,rate:b.rate,pt:b.pt,run:run&&!!isNight()})}
   if(isNight()&&HOUSES.length){// ベッドがない：家の中にいてもいいが、寝られない（家がなければ床で寝る）
     const hs=new Set();for(const h of HOUSES)for(const k of h.set)hs.add(k);
     const k=hs.size?nearest(G,j=>hs.has(j)&&walk(j)&&S.obj[j]!=='door'&&S.obj[j]!=='sdoor',200):-1;
@@ -3573,7 +3569,7 @@ function drawObj(c,id,x,y,i,g,now){
   case'well':shadow(c,x+16,y+29,13,3);c.fillStyle='#7d8088';rr(c,x+5,y+14,22,15,4);c.fillStyle='#a3a6ae';rr(c,x+5,y+12,22,6,3);c.fillStyle='#3a8cc4';c.fillRect(x+8,y+13,16,3);c.fillStyle='#6d4424';c.fillRect(x+6,y-4,3,18);c.fillRect(x+23,y-4,3,18);c.fillStyle='#c4523f';c.beginPath();c.moveTo(x+2,y-2);c.lineTo(x+16,y-10);c.lineTo(x+30,y-2);c.fill();c.strokeStyle='#ddd';c.lineWidth=1;c.beginPath();c.moveTo(x+16,y-2);c.lineTo(x+16,y+9);c.stroke();c.fillStyle='#8a5a33';c.fillRect(x+13,y+8,6,4);break;
   case'windmill':{shadow(c,x+16,y+29,12,3);c.fillStyle='#f1e2c4';c.beginPath();c.moveTo(x+8,y+29);c.lineTo(x+12,y-4);c.lineTo(x+20,y-4);c.lineTo(x+24,y+29);c.fill();c.fillStyle='#8a5a33';c.fillRect(x+13,y+19,6,10);c.fillStyle='#c4523f';c.beginPath();c.moveTo(x+10,y-3);c.lineTo(x+16,y-11);c.lineTo(x+22,y-3);c.fill();
     const a=(now||0)/900;c.save();c.translate(x+16,y-4);c.rotate(a);c.fillStyle='#fff';for(let k=0;k<4;k++){c.rotate(Math.PI/2);c.fillRect(-2,2,4,15);c.fillStyle='#e9e2d0';c.fillRect(-2,8,4,2);c.fillStyle='#fff'}c.restore();circ(c,x+16,y-4,2.4,'#6d4424');break}
-  case'house':shadow(c,x+16,y+29,16,3);c.fillStyle='#f1e2c4';c.fillRect(x+3,y+6,26,23);c.fillStyle='#e0cda8';c.fillRect(x+3,y+24,26,5);c.fillStyle='#c4523f';c.beginPath();c.moveTo(x-1,y+8);c.lineTo(x+16,y-10);c.lineTo(x+33,y+8);c.fill();c.fillStyle='#a8402f';c.fillRect(x-1,y+6,34,3);c.fillStyle='#8a5a33';rr(c,x+13,y+17,7,12,2);c.fillStyle='#8fd3f4';c.fillRect(x+5,y+12,6,6);c.fillRect(x+22,y+12,6,6);c.fillStyle='#fff';c.fillRect(x+7,y+13,2,2);break;
+
   case'lighthouse':{const T=now||0;shadow(c,x+16,y+29,12,3);c.fillStyle='#eadfc8';c.beginPath();c.moveTo(x+8,y+29);c.lineTo(x+12,y+2);c.lineTo(x+20,y+2);c.lineTo(x+24,y+29);c.fill();c.fillStyle='#c4523f';c.beginPath();c.moveTo(x+9.4,y+20);c.lineTo(x+10.6,y+13);c.lineTo(x+21.4,y+13);c.lineTo(x+22.6,y+20);c.fill();c.fillStyle='#8a5a33';rr(c,x+13,y+22,6,7,2);
     c.fillStyle='#3a3f4a';c.fillRect(x+10,y-3,12,6);const f=.65+.35*Math.sin(T/260);c.fillStyle='rgba(255,215,110,'+f+')';c.fillRect(x+12,y-2,8,4);c.fillStyle='#c4523f';c.beginPath();c.moveTo(x+9,y-3);c.lineTo(x+16,y-11);c.lineTo(x+23,y-3);c.fill();
     c.fillStyle='rgba(255,225,140,'+(.18*f)+')';circ(c,x+16,y,9,c.fillStyle);break}
@@ -3786,7 +3782,7 @@ function iconURL(id){
   if(typeof id==='string'&&id.startsWith('seed:'))return seedIcon(id.slice(5));
   if(iconCache[id])return iconCache[id];
   const c=document.createElement('canvas');c.width=72;c.height=72;const g=c.getContext('2d');
-  const tall=['watch','house','tower','swing','lamp','well','windmill','site'].includes(id);
+  const tall=['watch','tower','swing','lamp','well','windmill','site'].includes(id);
   g.scale(tall?1.2:1.9,tall?1.2:1.9);const ox=tall?14:3,oy=tall?24:3;
   if(id==='statue'){ICON=true;g.setTransform(1,0,0,1,0,0);g.translate(15,33);g.scale(1.22,1.22);drawObj(g,'statue',0,0,7);ICON=false;return iconCache[id]=c.toDataURL()}
   ICON=true;if(BL[id].floor)drawFloor(g,id,ox,oy,7,true);else drawObj(g,id,ox,oy,7,(id==='berry'||id==='fruit')?100:id==='farm'?60:0,1);ICON=false;
@@ -4416,7 +4412,7 @@ function render(now){
   ctx.setTransform(dpr,0,0,dpr,0,0);
   if(dk>0){ctx.fillStyle=(!WD&&S.ns&&S.ns.final&&!S.cleared?'rgba(46,10,52,':'rgba(14,20,58,')+dk+')';ctx.fillRect(0,0,VW,VH);
     ctx.setTransform(k,0,0,k,-cam.x*k,-cam.y*k);ctx.globalCompositeOperation='lighter';
-    for(let y=y0;y<y1;y++)for(let x=x0;x<x1;x++){const o=S.obj[y*W+x];if(!['lamp','tower','house','watch','campfire','statue','torch','candle','lantern','flamp'].includes(o))continue;/* 明かりの出る物は、夜にまわりを明るく */
+    for(let y=y0;y<y1;y++)for(let x=x0;x<x1;x++){const o=S.obj[y*W+x];if(!['lamp','tower','watch','campfire','statue','torch','candle','lantern','flamp'].includes(o))continue;/* 明かりの出る物は、夜にまわりを明るく */
       const cx=x*TS+(o==='watch'?32:16),cy=y*TS+(o==='flamp'?-6:o==='candle'?10:o==='lantern'?6:o==='lamp'?3:o==='torch'?-12:o==='watch'?-20:o==='campfire'?14:o==='tower'?6:o==='statue'?-6:15),R=o==='tower'?200:o==='statue'?110:o==='lamp'?100:o==='torch'?105:INDL.has(o)?(roomOf(y*W+x)?105:45):o==='campfire'?110:o==='watch'?40:30;
       const g=ctx.createRadialGradient(cx,cy,2,cx,cy,R);g.addColorStop(0,'rgba(255,214,120,'+dk*.9+')');g.addColorStop(1,'rgba(255,200,100,0)');ctx.fillStyle=g;ctx.fillRect(cx-R,cy-R,R*2,R*2)}
     {const litH=new Set();for(const j of LIGHTS){if(INDL.has(S.obj[j])){const h=roomOf(j);if(h)litH.add(h)}}/* 灯りのある家は、家ぜんたいと、そこから1マスを照らす */
