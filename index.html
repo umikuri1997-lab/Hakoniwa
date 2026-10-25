@@ -2032,7 +2032,8 @@ function moveR(r,dt){
 }
 const NIGHT_OK=['sleep','stay','eat','fetch','store','smat','flee','patrol','faint','forage'];
 const WORKT=new Set(['till','sow','plant','build','craft','water','tend','repair','harvest','gather','chop','mine','cook']);
-function updRes(r,dt){if((RHOLD.get(r)||0)>performance.now())return;/* 喜んでいる・話したあとの少しの間は、手をとめる */if(r._pe!=null&&r.energy>r._pe+1e-6)r.eUp=S.t;r._pe=r.energy;/* 元気が回復しているか */
+function rescueStuck(r){if(r.hidden)return;const cj=(r.y|0)*W+(r.x|0),o=S.obj[cj];if(!(HOME_WALLS.has(o)||(FENCE_IDS.has(o)&&!GATE_IDS.has(o))))return;/* 壁や柵の中にいたら、いちばん近い歩ける場所へ出す */let best=-1,bd=1e9;for(let rr=1;rr<=6&&best<0;rr++)for(let dy=-rr;dy<=rr;dy++)for(let dx=-rr;dx<=rr;dx++){if(Math.max(Math.abs(dx),Math.abs(dy))!==rr)continue;const x=(r.x|0)+dx,y=(r.y|0)+dy;if(x<0||y<0||x>=W||y>=H)continue;const k=y*W+x;if(!walk(k)||S.obj[k])continue;const d=dx*dx+dy*dy;if(d<bd){bd=d;best=k}}if(best>=0){r.x=best%W+.5;r.y=((best/W)|0)+.5;r.path=[];if(r.act&&r.act.stage==='walk')endAct(r)}}
+function updRes(r,dt){rescueStuck(r);if((RHOLD.get(r)||0)>performance.now())return;/* 喜んでいる・話したあとの少しの間は、手をとめる */if(r._pe!=null&&r.energy>r._pe+1e-6)r.eUp=S.t;r._pe=r.energy;/* 元気が回復しているか */
   if(r.elem==='fire'&&!r.hidden&&!(r.act&&r.act.type==='sleep'&&r.act.stage==='do')&&S.enemies.length){r.fcd=(r.fcd||0)-dt;if(r.fcd<=0){let en=null,bd=2.1;for(const e of S.enemies){if(!e.spawned||e.dead)continue;const d=Math.hypot(e.x-r.x,e.y-r.y);if(d<bd){bd=d;en=e}}
     if(en){r.fcd=20;const lv=rLv(r),dmg=fAtk(lv)+(trt(r,'yuukan')?1:0)+((r.bst&&r.bst.atk)||0)+((r.sst&&r.sst.atk)||0);en.hp-=dmg;en.flash=6;en.stun=Math.max(en.stun||0,1.2);r.face=en.x>=r.x?1:-1;r.swingT=performance.now();atkFX(r,en);sfxAt('hit',r.x,r.y);if(en.hp<=0){r.beat=(r.beat||0)+1;defeat(en,r.name+'が'+EN[en.type].name+'を追いはらった！')}}}}/* 火のせいれいは、近くの「コワイノ」に自分から攻撃する（柵ごしでも届く） */
   if(HOLD.has(r.id)){if(r.act)endAct(r);r.act=null;return}
@@ -2792,6 +2793,7 @@ function canPlace1(id,x,y,quiet){
   if(S.ground[j]===1){if(!quiet)toast('水の上には置けません');return false}
   if(BL[id].floor)return S.floor[j]!==id&&!(S.obj[j]&&BL[S.obj[j]].job);
   if(S.obj[j]){if(!quiet)toast('ここにはもう何かあります');return false}
+  {const b=BL[id];if(b&&(b.solid||HOME_WALLS.has(id)||(FENCE_IDS.has(id)&&!GATE_IDS.has(id)))&&(S.res.some(r=>!r.hidden&&(r.y|0)*W+(r.x|0)===j)||S.enemies.some(e=>e.spawned&&!e.dead&&(e.y|0)*W+(e.x|0)===j))){if(!quiet)toast('せいれい（や「コワイノ」）がいるので、置けません');return false}}/* 立っている子がいる場所には、通れなくなる物は置けない */
   return true;
 }
 function setBlock(id,j){
