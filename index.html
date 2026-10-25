@@ -2252,7 +2252,7 @@ const hsOf=D=>D.size>=1.5?2:1,reachOf=D=>D.rng||.75*hsOf(D);/* 攻撃がとど�
 function hitRes(e,r,D){if(!WD&&r.elem==='fire'&&r.hunger<60&&r.name===keyName('fire'))S.flags.fHurt=1;if((r.shU||0)>S.t)D=Object.assign({},D,{hit:D.hit*.5});/* フタバの葉っぱのまもり */if(r.act&&r.act.type==='faint'){e.stun=1;return}/* 気絶している子は攻撃しない */const h0=r.hunger;sfx('hit');e.swing=performance.now();
   const lv=rLv(r);S.nightHurt++;if(S.ns)S.ns.hurt++;const fire=r.elem==='fire';
   if(r.act&&['sleep','stay','rest','idle'].includes(r.act.type)&&r.act.stage==='do')endAct(r);/* 攻撃されたら、寝ていても起きる */
-  const yk=trt(r,'yuukan'),adj=Math.hypot(e.x-r.x,e.y-r.y)<=1.1;/* せいれいの攻撃は、となりにいる相手だけ */const ba=((r.bst&&r.bst.atk)||0)+((r.sst&&r.sst.atk)||0);if((fire||lv>=3||yk||ba)&&adj){const rd=!((r.fatk||0)>S.t);if(rd)r.fatk=S.t+5;/* やり返しも、攻撃と同じ待ち時間 */const dmg=rd?(fire?fAtk(lv):lv>=3?Math.floor((lv-1)/2):0)+(yk?1:0)+ba:0;e.hp-=dmg;if(dmg)e.flash=6;
+  const yk=trt(r,'yuukan'),adj=Math.hypot(e.x-r.x,e.y-r.y)<=Math.max(1.1,reachOf(D)+.05);/* せいれいの攻撃は、となりにいる相手だけ（遠くから攻撃してくる大きいコワイノには、その距離でもやり返せる） */const ba=((r.bst&&r.bst.atk)||0)+((r.sst&&r.sst.atk)||0);if((fire||lv>=3||yk||ba)&&adj){const rd=!((r.fatk||0)>S.t);if(rd)r.fatk=S.t+5;/* やり返しも、攻撃と同じ待ち時間 */const dmg=rd?(fire?fAtk(lv):lv>=3?Math.floor((lv-1)/2):0)+(yk?1:0)+ba:0;e.hp-=dmg;if(dmg)e.flash=6;
     r.hunger=Math.max(0,r.hunger-Math.round(D.hit/2));r.hurt=40;if(r.hunger<35&&!D.boss)r.fleeNow=true;/* 体力（おなか）がへったら逃げる */
     if(e.hp<=0){r.beat=(r.beat||0)+1;return defeat(e,r.name+'が'+EN[e.type].name+'を追いはらった！')}}
   else{r.hunger=Math.max(0,r.hunger-Math.round(D.hit*.6));r.fun=Math.max(0,r.fun-20);r.hurt=40;r.fleeNow=!D.boss;
