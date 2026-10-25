@@ -3218,23 +3218,9 @@ function f2rr(c,x,y,w,h,r,f,s){c.beginPath();c.roundRect(x,y,w,h,r);if(f){c.fill
 function f2leaf(c,x,y,rx,ry,a,col){c.fillStyle=col;c.beginPath();c.ellipse(x,y,rx,ry,a,0,7);c.fill()}
 function f2pot(c,x,y,w){f2rr(c,x-w/2,y-w*.75,w,w*.75,2,'#c98a5a',F2C.ol);c.fillStyle='#b5764a';c.fillRect(x-w/2,y-w*.75,w,2)}
 function f2flower(c,x,y,col){for(let a=0;a<5;a++)circ(c,x+Math.cos(a*1.26)*1.6,y+Math.sin(a*1.26)*1.6,1.3,col);circ(c,x,y,.9,'#ffd35c')}
-/* 花壇・生垣の絵（assets の画像をトリミングして使う） */
-const SPS=.34;
-function spOK(...ks){return ks.every(k=>{const m=HOUSEART[k];return m&&m.complete&&m.naturalWidth>0})}
-function spSeg(c,im,u1,u2,p1,p2,ox,by,vert){const lo=Math.min(u1,u2),hi=Math.max(u1,u2),w=p2-p1;if(w<=.01||hi-lo<=.001)return;const fl=u1>u2;
-  if(!vert){const dx=ox+p1,dh=im.height*SPS,dy=by-dh;if(!fl)c.drawImage(im,lo,0,hi-lo,im.height,dx,dy,w,dh);else{c.save();c.translate(dx+w,dy);c.scale(-1,1);c.drawImage(im,lo,0,hi-lo,im.height,0,0,w,dh);c.restore()}}
-  else{const dw=im.width*SPS,dx=ox-dw/2,dy=by+p1;if(!fl)c.drawImage(im,0,lo,im.width,hi-lo,dx,dy,dw,w);else{c.save();c.translate(dx,dy+w);c.scale(1,-1);c.drawImage(im,0,lo,im.width,hi-lo,0,0,dw,w);c.restore()}}}
-function spFold(Wt,L,C){const out=[],half=Wt/2,len=C-L,fs=Math.min(L*SPS,half);out.push([0,fs,0,fs/SPS]);let q=fs,k=0;while(q<half-1e-6){const e=Math.min(q+len*SPS,half),f=(e-q)/SPS;out.push(k%2===0?[q,e,L,L+f]:[q,e,C,C-f]);q=e;k++}
-  for(let j=out.length-1;j>=0;j--){const[a,b,u1,u2]=out[j];out.push([Wt-b,Wt-a,u2,u1])}return out}
-/* 横につながる絵：hedge は左はしから折り返しで伸ばし、右はしは鏡うつし。planter は左右のはしのあいだを同じ絵のくりかえし。k番目のマスぶんだけ描く */
-function spRunH(c,im,L,C,k,n,xl,by,e,rep){const Wt=n*32-2*e,p0=Math.max(0,k*32-e),p1=Math.min(Wt,k*32+32-e),ox=xl-k*32+e;let segs;
-  if(rep){const capL=L*SPS,capR=(im.width-C)*SPS,M=Wt-capL-capR;segs=[];if(M<=0)segs.push([0,Wt,0,im.width]);else{segs.push([0,capL,0,L]);const m=Math.max(1,Math.round(M/((C-L)*SPS)));for(let j=0;j<m;j++)segs.push([capL+M*j/m,capL+M*(j+1)/m,L,C]);segs.push([capL+M,Wt,C,im.width])}}
-  else segs=spFold(Wt,L,C);
-  for(const[a,b,u1,u2]of segs){const A=Math.max(a,p0),B=Math.min(b,p1);if(B<=A)continue;const f=t=>u1+(u2-u1)*(t-a)/(b-a);spSeg(c,im,f(A),f(B),A,B,ox,by,false)}}
-/* たてにつながる絵：上のふちと下のふちのあいだを、なかの帯をのばして埋める */
-function spRunV(c,im,L,R2,k,n,cx,yt,hb){const Ht=(n-1)*32+hb,capT=L*SPS,capB=(im.height-R2)*SPS,M=Ht-capT-capB,segs=[];
-  if(M<=0)segs.push([0,Ht,0,im.height]);else{segs.push([0,capT,0,L]);let m=Math.max(1,Math.round(M/((R2-L)*SPS)));if(m%2===0)m++;for(let j=0;j<m;j++)segs.push([capT+M*j/m,capT+M*(j+1)/m,j%2?R2:L,j%2?L:R2]);segs.push([capT+M,Ht,R2,im.height])}
-  const p0=k*32,p1=k===n-1?Ht:k*32+32,oy=yt;for(const[a,b,u1,u2]of segs){const A=Math.max(a,p0),B=Math.min(b,p1);if(B<=A)continue;const f=t=>u1+(u2-u1)*(t-a)/(b-a);spSeg(c,im,f(A),f(B),A,B,cx,oy,true)}}
+/* 花壇・生垣の絵：お手本を切って、まわりのつながり方（左右上下）ごとに16マスぶん並べた画像 */
+function spOK(k){const m=HOUSEART[k];return m&&m.complete&&m.naturalWidth>0}
+function spTile(c,k,m,x,y,ICON){const im=HOUSEART[k];if(ICON)c.drawImage(im,m*96,0,96,144,x+5,y-1,22,33);else c.drawImage(im,m*96,0,96,144,x,y-10,32,48)}
 function drawF2(c,id,x,y,i,now){const C=F2C,cx=x+16,T=(now||0)/1000;
   const sh=(w,h)=>{if(!c._onWall)shadow(c,cx,y+29,w,h||3)};
   switch(id){
@@ -3274,10 +3260,7 @@ function drawF2(c,id,x,y,i,now){const C=F2C,cx=x+16,T=(now||0)/1000;
   case'sink':sh(13);f2rr(c,cx-13,y+12,26,17,2,'#cfc9be',C.stD);c.fillStyle='#b9b2a6';c.fillRect(cx-13,y+12,26,3);f2rr(c,cx-8,y+15,16,7,2,'#8f897f');c.fillStyle='#a9d4ea';c.fillRect(cx-7,y+18,14,3);c.strokeStyle=C.stD;c.strokeRect(cx-10,y+23,20,5);c.fillStyle='#9d968b';c.fillRect(cx-1,y+5,2.5,9);c.fillRect(cx-1,y+5,7,2.2);circ(c,cx+6,y+7,1.2,'#9d968b');break;
   case'tub':sh(10);f2rr(c,cx-10,y+11,20,18,4,C.wd,C.ol);c.fillStyle='#8f97a0';c.fillRect(cx-10,y+14,20,2);c.fillRect(cx-10,y+24,20,2);c.fillStyle='#9fd0ea';c.beginPath();c.ellipse(cx,y+12,9,3,0,0,7);c.fill();c.strokeStyle=C.ol;c.beginPath();c.ellipse(cx,y+12,10,3.5,0,0,7);c.stroke();break;
   case'planter':{/* 花壇：白い石の箱（上のふち・葉の山・前がわのブロック）に、五まいの花びらの花 */const P=k=>i!=null&&!ICON&&S&&S.obj[k]==='planter',L=P(i-1)&&i%W>0,R=P(i+1)&&(i+1)%W>0,U=P(i-W),D=P(i+W),h=i||0;
-    if(spOK('planter-1','planter-2','planter-3','planter-4','planter-5','planter-long')){
-      if(L||R){let k=0,n=1;while(P(i-k-1)&&(i-k)%W>0)k++;n+=k;while(P(i+n-k)&&(i+n-k)%W>0)n++;spRunH(c,HOUSEART['planter-long'],54,120,k,n,x,y+30,2,1)}
-      else{sh(14);const im=HOUSEART['planter-'+(ICON?1:1+(h*7+(h>>3))%5)];c.drawImage(im,cx-im.width*SPS/2,y+30-im.height*SPS,im.width*SPS,im.height*SPS)}
-      break}
+    if(spOK('planter-atlas')){spTile(c,'planter-atlas',(L?1:0)|(R?2:0)|(U?4:0)|(D?8:0),x,y,ICON);break}
     const bx0=L?x-1:x+2,bx1=R?x+33:x+30,by0=U?y-4:y+10,by1=D?y+36:y+29,iy1=D?by1:by0+(by1-by0)*.62,ix0=L?bx0:bx0+3,ix1=R?bx1:bx1-3,iy0=U?by0:by0+1.8;
     if(!D)sh(14);
     f2rr(c,bx0,by0,bx1-bx0,by1-by0,[(U||L)?0:3.5,(U||R)?0:3.5,(D||R)?0:3.5,(D||L)?0:3.5],'#f1e9d2','#cdc1a2');
@@ -3296,11 +3279,7 @@ function drawF2(c,id,x,y,i,now){const C=F2C,cx=x+16,T=(now||0)/1000;
     else{const w2=ix1-ix0,nf=Math.max(2,Math.round(w2/11));for(let k=0;k<nf;k++){const big=k%2===0,D2=big?9.4:6.2,fx=ix0+(w2)*((k+.5)/nf)+(hash(h*5+k)-.5)*2,fy=iy0+(big?1.6:3.6)+hash(h*9+k)*1;flower(fx,fy,D2,FC[(k+h)%4])}}/* 五まいの花びら（大と中） */
     break}
   case'hedge':{/* 生垣：まるくこんもりした明るい葉のかたまりと、下の茶色い土 */const hu=!ICON&&i!=null&&typeAt(i-W)==='hedge',hd=!ICON&&i!=null&&typeAt(i+W)==='hedge',hl=!ICON&&i!=null&&i%W>0&&typeAt(i-1)==='hedge',hr=!ICON&&i!=null&&i%W<W-1&&typeAt(i+1)==='hedge',h=i||0;
-    if(spOK('hedge-1','hedge-long')){
-      if(hl||hr){let k=0,n=1;while(i-k>0&&(i-k)%W>0&&typeAt(i-k-1)==='hedge')k++;n+=k;while((i+n-k)%W>0&&typeAt(i+n-k)==='hedge')n++;spRunH(c,HOUSEART['hedge-long'],30,128.5,k,n,x,y+31,2)}
-      else if(hu||hd){let k=0,n=1;while(i-(k+1)*W>=0&&typeAt(i-(k+1)*W)==='hedge')k++;n+=k;while(typeAt(i+(n-k)*W)==='hedge')n++;spRunV(c,HOUSEART['hedge-1'],28,55,k,n,cx,y-k*32+31-HOUSEART['hedge-1'].height*SPS,HOUSEART['hedge-1'].height*SPS)}
-      else{sh(15);const im=HOUSEART['hedge-1'];c.drawImage(im,cx-im.width*SPS/2,y+31-im.height*SPS,im.width*SPS,im.height*SPS)}
-      break}
+    if(spOK('hedge-atlas')){spTile(c,'hedge-atlas',(hl?1:0)|(hr?2:0)|(hu?4:0)|(hd?8:0),x,y,ICON);break}
     const x0=hl?x-2:x+3.6,x1=hr?x+34:x+28.4,y0=hu?y-4:y+4.6,y1=hd?y+36:y+25.6;
     if(!hd)sh(15);
     if(!hd){const bl=hl?x-1:x+2.5,br=hr?x+33:x+29.5;c.fillStyle='#a07548';rr(c,bl-.6,y+24.2,br-bl+1.2,7,3);c.fillStyle='#b98c5c';rr(c,bl,y+24.2,br-bl,6,2.6)}/* 下の土 */
@@ -3332,7 +3311,7 @@ function drawWin(c,i,x,y){/* 窓は0.75倍、壁の正面の上によせる */c.
 function drawWin0(c,i,x,y){const wa=HOUSEART&&HOUSEART['wall-window'];if(wa&&wa.complete&&wa.naturalWidth){c.drawImage(wa,x+5,y+9,22,19.3);return}/* 窓は、壁のまん中に小さめに */c.fillStyle='rgba(68,43,28,.28)';rr(c,x+5,y+10,22,16,2.5);c.fillStyle='#70482e';rr(c,x+6,y+8,20,16,2.5);c.fillStyle='#d3a06c';rr(c,x+7.5,y+9.5,17,12.5,1.4);c.fillStyle='#a9d7e8';rr(c,x+9,y+11,14,9.5,1);c.fillStyle='rgba(255,255,255,.7)';c.beginPath();c.moveTo(x+10,y+12);c.lineTo(x+15,y+12);c.lineTo(x+11,y+17);c.lineTo(x+9.5,y+17);c.closePath();c.fill();c.fillStyle='#795033';rr(c,x+15.5,y+10.5,1.6,10.5,.7);rr(c,x+8.5,y+15.4,15,1.5,.7);c.fillStyle='#d8aa71';rr(c,x+5,y+21,22,3,1.4);c.fillStyle='#f0d3a3';rr(c,x+6,y+21,20,1,0.5)}
 
 // 送ってもらった家づくりパーツ画像から切り出した質感を、壁・扉・窓に使用。
-const HOUSEART={};for(const k of ['wall-log','post-log','wall-plaster','post-plaster','wall-brick','post-brick','wall-stone','wall-stone-alt','wall-stone-v','gate-stone-left','gate-stone-right','post-stone','wall-door','wall-window','wall-wood','floor-wood','floor-brick','floor-stone','floor-wood-render','floor-brick-render','floor-stone-render','planter-1','planter-2','planter-3','planter-4','planter-5','planter-long','hedge-1','hedge-long']){const im=new Image();im.src='assets/'+k+'.png?v=101';im.onload=()=>{if(typeof iconCache!=='undefined')for(const id in iconCache)delete iconCache[id];if(typeof rebuildStatic==='function'&&S)rebuildStatic()};HOUSEART[k]=im}
+const HOUSEART={};for(const k of ['wall-log','post-log','wall-plaster','post-plaster','wall-brick','post-brick','wall-stone','wall-stone-alt','wall-stone-v','gate-stone-left','gate-stone-right','post-stone','wall-door','wall-window','wall-wood','floor-wood','floor-brick','floor-stone','floor-wood-render','floor-brick-render','floor-stone-render','planter-atlas','hedge-atlas']){const im=new Image();im.src='assets/'+k+'.png?v=101';im.onload=()=>{if(typeof iconCache!=='undefined')for(const id in iconCache)delete iconCache[id];if(typeof rebuildStatic==='function'&&S)rebuildStatic()};HOUSEART[k]=im}
 
 /* 苔の石垣は横面・縦面・柱を別々に継ぐ。画像全体を回転・反転しない。 */
 function drawMossWall(c,x,y,i,L,R,U,D){
