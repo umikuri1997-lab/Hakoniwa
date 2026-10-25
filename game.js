@@ -1130,7 +1130,7 @@ const ACT={
   rest:{start(r,a){if(S.obj[a.obj]!=='bench')return false;r.bubble='☕'},tick(r,a,dt){if(a.partner!=null&&!S.res.some(x=>x.id===a.partner&&x.act&&x.act.type==='rest'&&x.act.obj===a.obj)){a.topic=null;a.partner=null;a.sub=0;a.ended=1;r.bubble='☕'}/* 片方が休けいを終えたら、おしゃべりもおわり */r.energy=Math.min(100,r.energy+dt/3*mateK(r,'rest'));r.fun=Math.min(100,r.fun+.08*dt);
     if(a.topic==null){const q=a.ended||(r.chatCD||0)>S.t?null:S.res.find(x=>x!==r&&(x.chatCD||0)<=S.t&&x.act&&x.act.type==='rest'&&x.act.stage==='do'&&x.act.obj===a.obj&&x.act.topic==null);if(q){const t=chatTopic(r,q);a.topic=t;a.partner=q.id;q.act.topic=t;q.act.partner=r.id;q.act.sub=1;r.bubble=q.bubble='💬';mate(r,q);for(const x of[r,q])addPt(1+(x.like==='chat'?2:0)+(S.today==='oshaberi'?2:0),x)}}/* ベンチに2人すわったら、おしゃべり */
     else{a.bt=(a.bt||0)+dt;if(a.bt>4){a.bt=0;r.bubble=pick(['💬','💬','😊','🎵','😆'])}r.fun=Math.min(100,r.fun+.3*dt)}},done:(r,a)=>r.energy>=100||a.t>=(a.dur||90)||isNight()||S.obj[a.obj]!=='bench',end(r){addPt(1,r)}},/* ベンチでひと休み */
-  play:{start(r,a){r.bubble={flower:'🌼',fountain:'💦',campfire:'🔥'}[a.what]||'🎵'},tick(r,a,dt){r.fun=Math.min(100,r.fun+a.fun/a.dur*dt*(a.what==='flower'?1:1.6))}/* おもちゃは、お話よりたのしさがたまりやすい */,done:(r,a)=>a.t>=a.dur,end(r,a){addPt(a.pt+(r.like===a.what?2:0),r);train(r,a.what)}},
+  play:{start(r,a){r.bubble={flower:'🌼',fountain:'💦',campfire:'🔥'}[a.what]||'🎵'},tick(r,a,dt){r.fun=Math.min(100,r.fun+a.fun/a.dur*dt*(a.what==='flower'?1:TOYF))}/* おもちゃは、お話よりたのしさがたまりやすい */,done:(r,a)=>a.t>=a.dur,end(r,a){addPt(a.pt+(r.like===a.what?2:0),r);train(r,a.what);if(a.what!=='flower')r.lastToy={j:a.obj,t:S.t}}},/* 遊んだ遊び家具は覚えておき、しばらくは行かない */
   bathe:{start(r,a){const w=adjOf(a.stand,k=>S.ground[k]===1);if(w<0)return false;r.face=w%W+.5>=r.x?1:-1;r.bubble='💦';sfxAt('wave',r.x,r.y);a.sx=r.x;a.sy=r.y;a.wx=w%W+.5;a.wy=((w/W)|0)+.5;a.in=0;a.hot=hotW(w)},tick(r,a,dt){/* 水の中まで入って、出てくる */a.in=Math.max(0,Math.min(1,a.t/3,(30-a.t)/3));r.x=a.sx+(a.wx-a.sx)*a.in*.8;r.y=a.sy+(a.wy-a.sy)*a.in*.8;const hot=!!a.hot,m=S.res.find(q=>q!==r&&q.act&&q.act.type==='bathe'&&Math.hypot(q.x-r.x,q.y-r.y)<3.5);if(m){r.face=m.x>=r.x?1:-1;r.bubble=Math.floor(a.t/1.5)%2?'🎵':'💦'}else r.bubble='💦';/* ほかの子がいたら、いっしょに水かけっこ */const lo=nearLotus(r);r.fun=Math.min(100,r.fun+(hot?.45:.3)*(m?1.5:1)*(lo?1.5:1)*(hot&&r.elem==='fire'?1.3:1)*dt);if(hot&&r.elem==='fire'&&Math.floor(a.t/2)%3===0)r.bubble='♨️';/* 火の子は温泉が大好き */if(lo)r.energy=Math.min(100,r.energy+.15*dt);/* ハスの近くの水浴びは、たのしい */if(hot)r.energy=Math.min(100,r.energy+.35*dt);/* 温泉は、つかれもとれる */a.h=(a.h||0)+dt;if(a.h>=4.5){a.h=0;sfxAt('wave',r.x,r.y)}},done:(r,a)=>a.t>=30,end(r,a){r.bathD=dayNo();r.bubble='✨';r.shine=performance.now();addPt(1,r);if(a&&a.hot)r.afterBath=S.t+90}},
   fish:{start(r,a){const w=sideW(a.stand);if(w>=0)r.face=w%W+.5>=r.x?1:-1;/* 釣竿は水のほうへ */r.bubble='🎣';sfxAt('cast',r.x,r.y)},tick(r,a,dt){r.fun=Math.min(100,r.fun+.5*dt)},done:(r,a)=>a.t>=50,end(r,a){const w=r.elem==='water';addPt(3+(r.like==='fish'?2:0),r);if(Math.random()<(w?.7:.35)+(a&&a.spot?.25:0)){addCarry(r,'fish',1);S.fishN=(S.fishN||0)+1;kurashi('fish','water',2,['🐟','はじめて魚がつれた']);r.bubble='🐟';sfxAt('catch',r.x,r.y)}else sfxAt('bubble',r.x,r.y)}},
   chat:{start(r,a){const p=S.res.find(q=>q.id===a.partner);if(!p||!p.act||p.act.type!=='chatwait'||p.act.partner!==r.id||(r.chatCD||0)>S.t||(p.chatCD||0)>S.t)return false;mate(r,p);
@@ -1464,8 +1464,8 @@ function trySocial(r,G){const sb=socialBest(r,G);if(!sb)return false;const best=
 function goPlay(r,G,strict){
   let best=null,bs=-1e9;
   for(let j=0;j<W*H;j++){const d=G.dist[j];if(d<0||d>45)continue;const o=S.obj[j];
-    if(o==='swing'&&free('o'+j,BL[o].play.cap)){/* 花では遊ばない */const p=BL[o].play;const s=p.pt*3+(r.like===o?6:0)-d*.3+Math.random()*2;if(s>bs){bs=s;best={type:'play',stand:j,o:{key:'o'+j,obj:j,what:o,fun:p.fun,dur:p.dur,pt:p.pt}}}}
-    const fk0=adjOf(j,k=>{const t=typeAt(k),p=t&&BL[t]&&BL[t].play;return !!(p&&p.adj&&free('o'+anc(k),p.cap))}),fk=fk0>=0?anc(fk0):-1;
+    if(o==='swing'&&free('o'+j,BL[o].play.cap)&&!toyTired(r,j)){/* 花では遊ばない */const p=BL[o].play;const s=p.pt*3+(r.like===o?6:0)-d*.3+Math.random()*2;if(s>bs){bs=s;best={type:'play',stand:j,o:{key:'o'+j,obj:j,what:o,fun:p.fun,dur:p.dur,pt:p.pt}}}}
+    const fk0=adjOf(j,k=>{const t=typeAt(k),p=t&&BL[t]&&BL[t].play;return !!(p&&p.adj&&free('o'+anc(k),p.cap)&&!toyTired(r,anc(k)))}),fk=fk0>=0?anc(fk0):-1;
     if(fk>=0){const w=S.obj[fk],p=BL[w].play;const s=p.pt*3+(r.like===w?6:0)-d*.3+Math.random()*2;if(s>bs){bs=s;best={type:'play',stand:j,o:{key:'o'+fk,obj:fk,what:w,fun:p.fun,dur:p.dur,pt:p.pt}}}}
     if(canJob(r,'fish')&&roomN(r)>0&&S.ground[j]!==1&&sideW(j)>=0&&free('f'+j,1)){const sp=fSpot(j),s=9+(sp?12:0)+(r.like==='fish'?6:0)+(r.elem==='water'?9:0)-d*.3+Math.random()*2;if(s>bs){bs=s;best={type:'fish',stand:j,o:{key:'f'+j,spot:sp}}}}
   }
@@ -1542,6 +1542,7 @@ function hasWork(r){
     if((o==='plot'&&canJob(r,'till')||o==='sprout'&&canJob(r,'plant'))&&free('o'+j,1))return true}
   return false}
 /* おつげ：守り神さまからの、きょういちにちの指示 */
+const TOYF=.8,toyTired=(r,j)=>!!(r.lastToy&&r.lastToy.j===j&&S.t-r.lastToy.t<240);/* 遊び家具のたのしさは、もとの半分。同じ遊び家具には4時間行かない */
 const ORACLE={play:{name:'いっぱいあそぶ',e:'🎈',jobs:[]},wood:{name:'木をあつめる',e:'🪵',jobs:['chop']},stone:{name:'石をあつめる',e:'🪨',jobs:['mine']},food:{name:'食料をあつめる',e:'🍎',jobs:['harvest','gather','fish']},farm:{name:'畑の世話をする',e:'🌱',jobs:['till','sow','water','tend','plant']}};
 function goWork(r,G,nw){
   // 木材と石材は、少ないほうから集める（どちらかが得意なら両方やる）
@@ -3232,6 +3233,7 @@ function houseComfort(h){let bed=0,furn=0,fl=0,n=0;const seen=new Set();
 for(const k in COMFY){const b=BL[k];if(!b||b.kind!=='furn'||k==='bed')continue;let d=(b.desc||'').replace(/住み心地が大きく上がる|住み心地が上がる/,'住み心地+'+COMFY[k]);
   if(b.cat==='living')d=d.replace(/。?家の中の食卓で食べると、パワーが多くなる。?/,'');/* ダイニング家具の効果は、ジャンルの表示とひでんのしょで */
   if(!d.includes('住み心地+'))d=(d?d.replace(/。?$/,'。'):'')+'住み心地+'+COMFY[k];b.desc=d}/* 住み心地の数字を説明に書く */
+for(const k in BL){const b=BL[k];if(b.play&&b.desc&&k!=='flower')b.desc=b.desc.replace(/たのしさ \+\d+(まで)?/,'たのしさ +'+Math.round(Math.min(100,b.play.fun*TOYF)))}/* 遊び家具のたのしさの数字 */
 const LIGHTF=new Set(['torch','lamp','lantern','candle','flamp']);/* 灯りになる家具 */
 // すきな家具：その家具が家にあると、そのせいれいにとっての住み心地が上がる（名前から決まる）
 const LIKEF=['rockart','jar','vane','bench','table','torch','candle','lantern','sofa1','achair','rug1','monstera','shelf1','paint1','curtain1','birdbath','parasol','stool','pouf'];
