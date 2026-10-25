@@ -1733,7 +1733,7 @@ function waveFor(day){
     return list}
   const bq=QUESTS.find(q=>q.text==='オオカゲを追いはらおう'),bOK=S.cleared||!bq||qAt(bq.text);/* オオカゲのクエストが出るまでは来ない */
   if(bq&&bOK&&!S.bossKills&&S.bossWarn==null)S.bossWarn=dayNo();
-  if(bossNight(day-1)||S.bossOwed){if(bOK&&rn>=4&&S.res4Since!=null&&dayNo()-S.res4Since>=3&&KEYS[WD].every(n=>S.res.some(r=>r.name===n))){/* メインの子をふくめて4人そろって3日たったら、自動で来る（全滅したあとは、4人にもどってから3日あと） */list.unshift(S.cleared||clearReady()?'boss2':'boss');S.bossOwed=false}else S.bossOwed=true}/* dayは次の日。5日目の夜＝day6。せいれいが3人そろうまで、オオカゲは来るのを先のばし */
+  if(bossNight(day-1)||S.bossOwed){if(bOK&&rn>=4&&S.res.some(q=>q.elem==='fire')&&S.res4Since!=null&&dayNo()-S.res4Since>=3&&KEYS[WD].every(n=>S.res.some(r=>r.name===n))){/* メインの子をふくめて4人そろい、火の子が1人以上いて3日たったら、自動で来る（全滅したあとは、その状態にもどってから3日あと） */list.unshift(S.cleared||clearReady()?'boss2':'boss');S.bossOwed=false}else S.bossOwed=true}/* dayは次の日。5日目の夜＝day6。せいれいが3人そろうまで、オオカゲは来るのを先のばし */
   return list;
 }
 function waveText(list){const c={};list.forEach(t=>c[t]=(c[t]||0)+1);return Object.keys(c).map(t=>EN[t].name+(c[t]>1?'×'+c[t]:'')).join('、')}
@@ -4747,9 +4747,10 @@ const eveH=()=>{const h=hour();return h>=18||h<6};/* クリア後は夕方から
 const canSkip=()=>!SKIP&&(S.cleared?eveH()&&!S.enemies.some(e=>!e.dead):isNight()&&S.enemyOn&&(!S.res.length||S.nightHad&&!S.enemies.length&&!S.nushi));/* クリア後は、コワイノがいなければいつでも *//* 全員いなくなったときも、朝までとばせる */
 function updHUD(){
   if(S){const was=S.res4Since,tell=S.bossWarn!=null&&!S.cleared;/* オオカゲの来る時期を、せいれいが減ったとき・もどったときに伝える */
-    if(S.res.length<4){S.res4Since=null;if(was!=null&&tell&&S.enemyOn&&$('#dialog').hidden)dialog([[GOD,'なかまが減ってしもうたのう…。'],[GOD,'もう少しなかまが増えて、村がおちつくまでは、オオカゲも来ぬはずじゃ。それまでに、なかまを集めて備えるのじゃぞ。']])}
+    const hasFire=S.res.some(q=>q.elem==='fire');/* 火の子が1人もいないときも、オオカゲは来ない */
+    if(S.res.length<4||!hasFire){S.res4Since=null;if(was!=null&&tell&&S.enemyOn&&$('#dialog').hidden)dialog([[GOD,'なかまが減ってしもうたのう…。'],[GOD,'もう少しなかまが増えて、村がおちつくまでは、オオカゲも来ぬはずじゃ。それまでに、なかまを集めて備えるのじゃぞ。']])}
     else if(was==null){S.res4Since=dayNo();if(tell&&S.enemyOn&&S.lastRes4!=null&&$('#dialog').hidden)dialog([[GOD,'なかまが、また増えてきたのう。'],[GOD,'村がおちついてきたころ、オオカゲがまた来るかもしれん。柵と見張り台を、しっかり整えておくんじゃ。']])}
-    S.lastRes4=S.res.length>=4?1:S.lastRes4}
+    S.lastRes4=S.res.length>=4&&hasFire?1:S.lastRes4}
   {const sb=$('#skipBtn'),v=canSkip();if(sb.hidden===v)sb.hidden=!v}
   const h=hour(),m=Math.floor(clk()%60);
   $('#dayLbl').textContent=(S.rain?'☔雨':'☀晴れ')+(S.today?'・'+DAYEV[S.today][1]:'');/* 何日目は出さない（きろくで見る） */
