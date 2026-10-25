@@ -4486,7 +4486,8 @@ function onTap(sx,sy){
     if(TALKW){const tr=S.res.find(r=>r.name===TALKW&&!r.hidden&&!(r.act&&r.act.type==='sleep'));if(tr&&Math.hypot(tr.x-w.x/TS,(tr.y-1)-w.y/TS)<1.4){panTo(tr.x*TS,(tr.y-.7)*TS);return startTalk()}}
     {const tr=S.res.find(r=>SEVW[r.name]&&!r.hidden&&!(r.act&&r.act.type==='sleep')&&Math.hypot(r.x-w.x/TS,(r.y-1)-w.y/TS)<1.4);if(tr)return sevTalk(SEVW[tr.name])}
     {const tr=S.res.find(r=>SUBW[r.name]&&!r.hidden&&!(r.act&&r.act.type==='sleep')&&Math.hypot(r.x-w.x/TS,(r.y-1)-w.y/TS)<1.4);if(tr){panTo(tr.x*TS,(tr.y-.7)*TS);return subTalk(SUBW[tr.name])}}
-    let best=null,bd=1.1;for(const r of S.res){if(r.hidden&&!peekH(r))continue;const d=Math.hypot(r.x-w.x/TS,(r.y-.5)-w.y/TS);if(d<bd){bd=d;best=r}}
+    const tapO=tx>=0&&ty>=0&&tx<W&&ty<H?S.obj[anc(ty*W+tx)]:null,tapDesk=tapO==='board'||tapO==='obox'||tapO==='altar';/* 神殿のボード・箱・お供え台をタップしたときは、家具づくり中のせいれいが近くにいても、ボードを優先 */
+    let best=null,bd=1.1;for(const r of S.res){if(r.hidden&&!peekH(r))continue;if(tapDesk&&r.act&&r.act.type==='craft')continue;const d=Math.hypot(r.x-w.x/TS,(r.y-.5)-w.y/TS);if(d<bd){bd=d;best=r}}
     if(best&&best.act&&(best.act.type==='chat'||best.act.type==='rest')&&best.act.stage==='do'&&best.act.topic!=null){const p=S.res.find(q=>q.id===best.act.partner);if(p){const A=best.act.sub?p:best,B=best.act.sub?best:p;const C=CHATS[best.act.topic];return dialog(C.map((l,i)=>{const sp=l[0]?B:A;return [sp.name,((C.el&&!l[0])?l[1]:chatTone(l[1],sp,i)).replace(/@([HMK])/g,(m,c)=>sevName(c))]}),C.wave?()=>{A.waveU=B.waveU=S.t+4}:null)}}/* おしゃべり中の子をタップすると、会話が見られる */
     if(best){if(!S.flags.tapped&&S.flags.tapAsk){S.flags.tapPend=true}voiceHmm(best);return openSheet('res',best.id)}// ステータスを見て閉じたら、会話に進む
     if(tx<0||ty<0||tx>=W||ty>=H)return;
