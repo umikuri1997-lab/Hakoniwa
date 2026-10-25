@@ -2140,7 +2140,7 @@ const EN={
   hino:{pw:25,rng:2.3,name:'ヒノオオカゲ',hp:60,sp:.7,atk:6,hit:40,col:'#3a0c08',eye:'#ffb02e',size:2.1,boss:1,dev:1},/* 火山から下りてきて、熱の装置をねらう */
   boss2:{pw:30,rng:2.4,name:'ヨルノオオカゲ',hp:70,sp:.9,atk:4.5,hit:48,col:'#05030c',eye:'#ffd84a',size:2.3,boss:1},/* ヌシ様をむかえる準備ができたあとに来る */
 };
-const bossNight=d=>d>=5&&(d-5)%3===0;/* オオカゲは5日目、そのあと3日ごと */
+const bossNight=d=>{const w=S&&S.bossWarn;return w==null?d>=5&&(d-5)%3===0:d-w>=5&&(d-w-5)%3===0}/* オオカゲは「来るかも」と聞いた5日後、そのあと3日ごと */;
 function waveFor(day){
   if(!S.nights)return ['basic'];/* 最初の夜は1体だけ */
   if(day<2)return [];
@@ -2153,6 +2153,7 @@ function waveFor(day){
     else if(S.flags.hinoDown&&bossNight(day-1)&&rn>=5)list.unshift(S.cleared||clearReady()?'boss2':'boss');
     return list}
   const bq=QUESTS.find(q=>q.text==='オオカゲを追いはらおう'),bOK=S.cleared||!bq||qAt(bq.text);/* オオカゲのクエストが出るまでは来ない */
+  if(bq&&bOK&&!S.bossKills&&S.bossWarn==null)S.bossWarn=dayNo();
   if(bossNight(day-1)||S.bossOwed){if(bOK&&rn>=5&&KEYS[WD].every(n=>S.res.some(r=>r.name===n))){/* メインの子をふくめて5人そろったら、自動で来る */list.unshift(S.cleared||clearReady()?'boss2':'boss');S.bossOwed=false}else S.bossOwed=true}/* dayは次の日。5日目の夜＝day6。せいれいが3人そろうまで、オオカゲは来るのを先のばし */
   return list;
 }
@@ -2425,7 +2426,7 @@ const SUBQ=[/* サブクエスト：メインと別に、いつでもできる�
   {k:'lighthouse1',how:'「おく」→「灯台」を置く（木4・石6）。火のせいれいが建てるのを待とう。遠くまで照らす',g:'fire',L:[['K','夜の見回り、まだ暗いところがあって不安なんだ。'],['K','もっと遠くまで照らせる、でっかい灯りがあれば、いいんだがな。']],X:[['K','おお、灯台だ！ これなら遠くまでよく見える。'],['K','ありがとよ、守り神。']],learn:['lighthouse'],w:0,t:'灯台を建てよう',ln:'もっと遠くまで照らせたらいいな',at:()=>S.lv>=7&&elemCount('fire')>=1,ok:()=>cnt('lighthouse')>=1,n:1,now:()=>cnt('lighthouse'),rw:12},
   {k:'wmill',how:'「おく」→「風車」を置く（木5・石3）。せいれいが建てるのを待とう',learn:['windmill'],g:'wood',L:[["K", "ねえ、風って見えないけど、葉っぱをくるくる回すでしょ。"], ["K", "あの力、もっと大きなものを回せたりするのかな？ 守り神さま、見てみたいな！"]],X:[['K','風車がまわってる！ 見てるだけで、たのしいね！'],['K','守り神さま、ありがとう！']],w:0,t:'風車を建てよう',ln:"風がものを回すところ、もっと見てみたいな",at:()=>S.lv>=8&&elemCount('wind')>=1,ok:()=>cnt('windmill')>=1,n:1,now:()=>cnt('windmill'),rw:10},
   {k:'clover3',how:'「おく」→「シロツメクサの種」を置く。せいれいに植えてもらい、花が咲くのを待とう',g:'wood',L:[['K','ねえ見て、シロツメクサの種を見つけたよ！'],['K','木の力がたまるんだって。5つ咲かせてみよう！']],X:[['K','シロツメクサ、かわいい！ 四つ葉、さがしてみようっと！'],['K','守り神さま、ありがとう！']],w:0,t:'シロツメクサを5つ咲かせよう',ln:'シロツメクサの種、見つけたよ！ 木の力がたまるんだって！',at:()=>qAt('木のせいれいを6人にしよう'),give:{clover:5},ok:()=>bloomCount('clover')>=5,n:5,now:()=>bloomCount('clover'),rw:10},
-  {k:'toy2',how:'神殿の依頼ボードをタップ →「遊び」→砂場・ブランコをはる。できたら「おく」で置く',g:'wind',L:[["K", "フッ……ここは、ただ走りまわるだけでも悪くないが。"], ["K", "砂の山をつくったり、風にゆられて遊んだり……まだ知らない遊びがありそうだ。"], ["K", "守り神、きみなら、どんな形を思い浮かべる？"]],X:[['K','見たまえ、みんなの笑顔を。…美しいね。'],['K','…ありがとう、守り神。きみには感謝しているよ。']],t:'遊び道具を2つ置こう',ln:'みんなで遊べる場所がほしいな！',at:()=>elemCount('wind')>=1||HOUSES.length>=1,learn:['swing','sandbox'],ok:()=>CN(['swing','sandbox'])>=2,n:2,now:()=>CN(['swing','sandbox']),rw:15},
+  {k:'toy2',how:'神殿の依頼ボードをタップ →「遊び」→砂場をはる。できたら「おく」で置く',g:'fire',L:[["K", "なあ、守り神。ここ、走りまわれる場所はあるけど、ちょっと物足りなくないか？"], ["K", "砂の山をつくったり、穴をほったり……そういう遊び場があったら、みんな喜ぶと思うんだ。"], ["K", "守り神、どんな形を思い浮かべる？"]],X:[['K','おお、砂場だ！ さっそく山をつくろうぜ！'],['K','ありがとな、守り神。']],t:'砂場を置こう',ln:'みんなで遊べる場所がほしいな！',at:()=>S.res.some(r=>r.elem==='fire'&&r.name===keyName('fire')),learn:['sandbox'],ok:()=>CN(['sandbox'])>=1,n:1,now:()=>CN(['sandbox']),rw:15},
   {k:'deco3',how:'神殿の依頼ボードをタップ →「庭」→花壇・生垣・巣箱などをはる。できたら「おく」で外に置く',g:'wood',L:[["K", "ねえ、村をもっとかわいくしたいな！"], ["K", "花とか、小鳥とか、好きなものを見ながら歩けたら、うれしいなあ。"], ["K", "守り神さま、どんなふうになるかな？"]],X:[['K','村が、どんどんかわいくなってく！ ありがとう、守り神さま！']],t:'外にかざりを3つ置こう',ln:"花や小鳥をながめながら歩けたらいいな",at:()=>S.lv>=2,ok:()=>CN(['planter','hedge','birdhouse','birdbath','parasol','arch','signpost','monstera'])>=3,n:3,now:()=>CN(['planter','hedge','birdhouse','birdbath','parasol','arch','signpost','monstera']),rw:15},
   {k:'tree5',how:'「おく」→「木の苗」を置く。せいれいが植えるのを待とう\n木の苗は、カミサマから買うか、せいれいが拾ってお供え箱に入れてくれるのを待とう',g:'wood',L:[['K','おひるねするとき、木かげがあったらいいなあ。'],['K','木を5本植えたら、すずしい木かげができるよね！']],X:[['K','木かげ、すずしい〜。ここでおひるねしようっと！'],['K','守り神さま、ありがとう！']],t:'木を5本植えよう',ln:'木かげで、おひるねしたいな',at:()=>S.lv>=3,ok:()=>bloomCount('tree')+bloomCount('fruit')>=5,n:5,now:()=>bloomCount('tree')+bloomCount('fruit'),rw:15},
   {k:'farm10',how:'「おく」→「畑」を置く。土のせいれいが耕すのを待とう',g:'earth',L:[['K','なかまがふえて、ごはんもたくさんいるねぇ。'],['K','畑が10こあったら、ごはんにこまらないよぉ。']],X:[['K','畑がいっぱいだねぇ。耕すの、がんばるよぉ。'],['K','守り神さま、ありがとうねぇ。']],w:0,t:'畑を10にしよう',ln:'畑がもっとあると、ごはんにこまらないねぇ',at:()=>cnt('farm')>=6,ok:()=>cnt('farm')>=10,n:10,now:()=>cnt('farm'),rw:15},
