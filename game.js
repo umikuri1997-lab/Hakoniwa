@@ -2892,7 +2892,7 @@ function drawMossWall(c,x,y,i,L,R,U,D){
 function drawMossGate(c,x,y,i,ver,op,nw){
   const p=HOUSEART['post-stone'],a=HOUSEART['gate-stone-left'],b=HOUSEART['gate-stone-right'];
   if(!p||!p.complete||!p.naturalWidth||!a||!a.complete||!a.naturalWidth||!b||!b.complete||!b.naturalWidth)return false;
-  if(nw===3&&!ver){const Wd=96,lw=(Wd-24)/2*(1-op*.91);c.save();c.beginPath();c.rect(x,y,Wd,32);c.clip();c.drawImage(a,x+12,y+5,lw,25);c.drawImage(b,x+Wd-12-lw,y+5,lw,25);c.drawImage(p,x-4,y-2,16,33);c.drawImage(p,x+Wd-12,y-2,16,33);c.restore();return true}
+  if(nw===3&&!ver){const Wd=96,lw=(Wd-16)/2*(1-op*.91);c.drawImage(a,x+8,y+2,lw,30);c.drawImage(b,x+Wd-8-lw,y+2,lw,30);c.drawImage(p,x-8,y,16,32);c.drawImage(p,x+Wd-8,y,16,32);return true}/* 柱は石の塀の端の柱とぴったりつなぐ（塀と同じ高さ・同じ柱） */
   c.save();c.beginPath();c.rect(x,y,32,32);c.clip();const w=10*(1-op*.91);
   if(!ver){c.drawImage(a,x+6,y+5,w,25);c.drawImage(b,x+26-w,y+5,w,25);c.drawImage(p,x-2,y-2,8,33);c.drawImage(p,x+26,y-2,8,33)}
   else{c.drawImage(p,x+8,y-3,16,13);c.drawImage(p,x+8,y+24,16,13);c.save();c.translate(x+16,y+10);c.rotate(op*Math.PI*.42);c.drawImage(a,-2,0,4,7);c.restore();c.save();c.translate(x+16,y+24);c.rotate(-op*Math.PI*.42);c.drawImage(b,-2,-7,4,7);c.restore()}
