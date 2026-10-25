@@ -1099,7 +1099,9 @@ function occTiles(r){const bl=new Set();for(const q of S.res)if(q!==r&&!q.hidden
 let FLEEBL=null;/* 逃げるとき、「コワイノ」のそばを通らないための通れないマス */
 function avoidPath(r,G,goal){const centered=p=>p;/* いまのマスの中心へ寄りもどらない（引きなおしのたびに一瞬もどるのを防ぐ）。となりのマスへの直線は、2つのマスの中におさまる */;const bl=occTiles(r);if(FLEEBL)for(const k of FLEEBL)bl.add(k);bl.delete(goal);bl.delete((r.y|0)*W+(r.x|0));if(!bl.size)return centered(pathTo(G,goal));
   const G2=roadSearch(r.x|0,r.y|0,bl);return centered(G2.dist[goal]>=0?pathTo(G2,goal):pathTo(G,goal))}
+const benchSpot=G=>nearest(G,j=>(S.obj[j]==='bench'||(S.obj[j]==='part'&&S.obj[S.ref[j]]==='bench'))&&!ashed(anc(j))&&free('o'+j,1),40);
 function startAct(r,G,type,stand,o){
+  if(type==='idle'&&stand<0&&G&&!isNight()){const bj=benchSpot(G);if(bj>=0){type='rest';stand=bj;o={key:'o'+bj,obj:anc(bj),seat:bj,dur:Math.max(30,(o&&o.dur)||15)}}}/* ひとやすみは、あいているベンチがあればベンチで */
   r.bubble='';/* 前の行動の吹き出し（💤など）を残さない */
   r.act=Object.assign({type,stand,t:0,stage:'walk'},o||{});
   if(r.act.key)reserve(r.act.key);
@@ -1121,7 +1123,7 @@ const ACT={
     done:(r,a)=>r.hunger<18||(a.night?!isNight():r.energy>=(a.ground?50:90)),end(r,a){}/* 寝るだけでは、パワーも経験値もふえない */},/* 起きたときのパワーも住み心地で変わる */
   rest:{start(r,a){if(S.obj[a.obj]!=='bench')return false;r.bubble='☕'},tick(r,a,dt){if(a.partner!=null&&!S.res.some(x=>x.id===a.partner&&x.act&&x.act.type==='rest'&&x.act.obj===a.obj)){a.topic=null;a.partner=null;a.sub=0;a.ended=1;r.bubble='☕'}/* 片方が休けいを終えたら、おしゃべりもおわり */r.energy=Math.min(100,r.energy+dt/3*mateK(r,'rest'));r.fun=Math.min(100,r.fun+.08*dt);
     if(a.topic==null){const q=a.ended||(r.chatCD||0)>S.t?null:S.res.find(x=>x!==r&&(x.chatCD||0)<=S.t&&x.act&&x.act.type==='rest'&&x.act.stage==='do'&&x.act.obj===a.obj&&x.act.topic==null);if(q){const t=chatTopic(r,q);a.topic=t;a.partner=q.id;q.act.topic=t;q.act.partner=r.id;q.act.sub=1;r.bubble=q.bubble='💬';mate(r,q);for(const x of[r,q])addPt(1+(x.like==='chat'?2:0)+(S.today==='oshaberi'?2:0),x)}}/* ベンチに2人すわったら、おしゃべり */
-    else{a.bt=(a.bt||0)+dt;if(a.bt>4){a.bt=0;r.bubble=pick(['💬','💬','😊','🎵','😆'])}r.fun=Math.min(100,r.fun+.3*dt)}},done:(r,a)=>r.energy>=100||a.t>=90||isNight()||S.obj[a.obj]!=='bench',end(r){addPt(1,r)}},/* ベンチでひと休み */
+    else{a.bt=(a.bt||0)+dt;if(a.bt>4){a.bt=0;r.bubble=pick(['💬','💬','😊','🎵','😆'])}r.fun=Math.min(100,r.fun+.3*dt)}},done:(r,a)=>r.energy>=100||a.t>=(a.dur||90)||isNight()||S.obj[a.obj]!=='bench',end(r){addPt(1,r)}},/* ベンチでひと休み */
   play:{start(r,a){r.bubble={flower:'🌼',fountain:'💦',campfire:'🔥'}[a.what]||'🎵'},tick(r,a,dt){r.fun=Math.min(100,r.fun+a.fun/a.dur*dt*(a.what==='flower'?1:1.6))}/* おもちゃは、お話よりたのしさがたまりやすい */,done:(r,a)=>a.t>=a.dur,end(r,a){addPt(a.pt+(r.like===a.what?2:0),r);train(r,a.what)}},
   bathe:{start(r,a){const w=adjOf(a.stand,k=>S.ground[k]===1);if(w<0)return false;r.face=w%W+.5>=r.x?1:-1;r.bubble='💦';sfxAt('wave',r.x,r.y);a.sx=r.x;a.sy=r.y;a.wx=w%W+.5;a.wy=((w/W)|0)+.5;a.in=0;a.hot=hotW(w)},tick(r,a,dt){/* 水の中まで入って、出てくる */a.in=Math.max(0,Math.min(1,a.t/3,(30-a.t)/3));r.x=a.sx+(a.wx-a.sx)*a.in*.8;r.y=a.sy+(a.wy-a.sy)*a.in*.8;const hot=!!a.hot,m=S.res.find(q=>q!==r&&q.act&&q.act.type==='bathe'&&Math.hypot(q.x-r.x,q.y-r.y)<3.5);if(m){r.face=m.x>=r.x?1:-1;r.bubble=Math.floor(a.t/1.5)%2?'🎵':'💦'}else r.bubble='💦';/* ほかの子がいたら、いっしょに水かけっこ */const lo=nearLotus(r);r.fun=Math.min(100,r.fun+(hot?.45:.3)*(m?1.5:1)*(lo?1.5:1)*(hot&&r.elem==='fire'?1.3:1)*dt);if(hot&&r.elem==='fire'&&Math.floor(a.t/2)%3===0)r.bubble='♨️';/* 火の子は温泉が大好き */if(lo)r.energy=Math.min(100,r.energy+.15*dt);/* ハスの近くの水浴びは、たのしい */if(hot)r.energy=Math.min(100,r.energy+.35*dt);/* 温泉は、つかれもとれる */a.h=(a.h||0)+dt;if(a.h>=4.5){a.h=0;sfxAt('wave',r.x,r.y)}},done:(r,a)=>a.t>=30,end(r,a){r.bathD=dayNo();r.bubble='✨';r.shine=performance.now();addPt(1,r);if(a&&a.hot)r.afterBath=S.t+90}},
   fish:{start(r,a){const w=sideW(a.stand);if(w>=0)r.face=w%W+.5>=r.x?1:-1;/* 釣竿は水のほうへ */r.bubble='🎣';sfxAt('cast',r.x,r.y)},tick(r,a,dt){r.fun=Math.min(100,r.fun+.5*dt)},done:(r,a)=>a.t>=50,end(r,a){const w=r.elem==='water';addPt(3+(r.like==='fish'?2:0),r);if(Math.random()<(w?.7:.35)+(a&&a.spot?.25:0)){addCarry(r,'fish',1);S.fishN=(S.fishN||0)+1;kurashi('fish','water',2,['🐟','はじめて魚がつれた']);r.bubble='🐟';sfxAt('catch',r.x,r.y)}else sfxAt('bubble',r.x,r.y)}},
@@ -2780,9 +2782,9 @@ function f2pot(c,x,y,w){f2rr(c,x-w/2,y-w*.75,w,w*.75,2,'#c98a5a',F2C.ol);c.fillS
 function f2flower(c,x,y,col){for(let a=0;a<5;a++)circ(c,x+Math.cos(a*1.26)*1.6,y+Math.sin(a*1.26)*1.6,1.3,col);circ(c,x,y,.9,'#ffd35c')}
 /* 花壇・生垣の絵：お手本を切って、まわりのつながり方（左右上下）ごとに16マスぶん並べた画像 */
 function spOK(k){const m=HOUSEART[k];return m&&m.complete&&m.naturalWidth>0}
-function spTile(c,k,m,x,y,ICON,dn){if(dn==null)dn=m&8;const im=HOUSEART[k];if(ICON){c.drawImage(im,m*120,0,120,144,x+5,y-1,22,33);return}
+function spTile(c,k,m,x,y,ICON,dn,fi){if(dn==null)dn=m&8;if(fi==null)fi=m;const im=HOUSEART[k];if(ICON){c.drawImage(im,m*120,0,120,144,x+5,y-1,22,33);return}
   /* 高さは0.8倍で、どのマスも同じ大きさ・同じ位置にかく（ふちの高さがそろう）。下につながるマスは、下のマスとのすきまを、絵の下のはしをのばしてうめる */
-  c.drawImage(im,m*120,0,120,96,x-.2,y-2.8,32.4,25.8);if(dn)c.drawImage(im,m*120,76,120,20,x-.2,y+22.6,32.4,7);else c.drawImage(im,m*120,96,120,48,x-.2,y+23,32.4,12.8)}
+  c.drawImage(im,m*120,0,120,96,x-.2,y-2.8,32.4,25.8);if(dn)c.drawImage(im,m*120,76,120,20,x-.2,y+22.6,32.4,7);else c.drawImage(im,fi*120,96,120,48,x-.2,y+23,32.4,12.8)}
 function drawF2(c,id,x,y,i,now){const C=F2C,cx=x+16,T=(now||0)/1000;
   const sh=(w,h)=>{if(!c._onWall)shadow(c,cx,y+29,w,h||3)};
   switch(id){
@@ -2822,7 +2824,7 @@ function drawF2(c,id,x,y,i,now){const C=F2C,cx=x+16,T=(now||0)/1000;
   case'sink':sh(13);f2rr(c,cx-13,y+12,26,17,2,'#cfc9be',C.stD);c.fillStyle='#b9b2a6';c.fillRect(cx-13,y+12,26,3);f2rr(c,cx-8,y+15,16,7,2,'#8f897f');c.fillStyle='#a9d4ea';c.fillRect(cx-7,y+18,14,3);c.strokeStyle=C.stD;c.strokeRect(cx-10,y+23,20,5);c.fillStyle='#9d968b';c.fillRect(cx-1,y+5,2.5,9);c.fillRect(cx-1,y+5,7,2.2);circ(c,cx+6,y+7,1.2,'#9d968b');break;
   case'tub':sh(10);f2rr(c,cx-10,y+11,20,18,4,C.wd,C.ol);c.fillStyle='#8f97a0';c.fillRect(cx-10,y+14,20,2);c.fillRect(cx-10,y+24,20,2);c.fillStyle='#9fd0ea';c.beginPath();c.ellipse(cx,y+12,9,3,0,0,7);c.fill();c.strokeStyle=C.ol;c.beginPath();c.ellipse(cx,y+12,10,3.5,0,0,7);c.stroke();break;
   case'planter':{/* 花壇：白い石の箱（上のふち・葉の山・前がわのブロック）に、五まいの花びらの花 */const P=k=>i!=null&&!ICON&&S&&S.obj[k]==='planter',L=P(i-1)&&i%W>0,R=P(i+1)&&(i+1)%W>0,U=P(i-W),D=P(i+W),h=i||0;
-    if(spOK('planter-atlas')){let m=(L?1:0)|(R?2:0)|(U?4:0)|(D?8:0);const dn=!!D;if((m===3||m===12)&&i!=null&&!ICON){const v=Math.floor(hash(h*13+7)*13);if(v)m=(m===3?15:27)+v}/* 長いときは、花の色と並びをマスごとにかえる */spTile(c,'planter-atlas',m,x,y,ICON,dn);break}
+    if(spOK('planter-atlas')){let m=(L?1:0)|(R?2:0)|(U?4:0)|(D?8:0);const dn=!!D;if((m===3||m===12)&&i!=null&&!ICON){const v=Math.floor(hash(h*13+7)*13);if(v)m=(m===3?15:27)+v}/* 長いときは、花の色と並びをマスごとにかえる */const rD=R&&P(i+1+W),lD=L&&P(i-1+W),fi=rD&&lD?42:rD?40:lD?41:m;/* となりが下へ曲がるときは、前の石ブロックを入り隅までつなぐ */spTile(c,'planter-atlas',m,x,y,ICON,dn,fi);break}
     const bx0=L?x-1:x+2,bx1=R?x+33:x+30,by0=U?y-4:y+10,by1=D?y+36:y+29,iy1=D?by1:by0+(by1-by0)*.62,ix0=L?bx0:bx0+3,ix1=R?bx1:bx1-3,iy0=U?by0:by0+1.8;
     if(!D)sh(14);
     f2rr(c,bx0,by0,bx1-bx0,by1-by0,[(U||L)?0:3.5,(U||R)?0:3.5,(D||R)?0:3.5,(D||L)?0:3.5],'#f1e9d2','#cdc1a2');
@@ -2841,7 +2843,7 @@ function drawF2(c,id,x,y,i,now){const C=F2C,cx=x+16,T=(now||0)/1000;
     else{const w2=ix1-ix0,nf=Math.max(2,Math.round(w2/11));for(let k=0;k<nf;k++){const big=k%2===0,D2=big?9.4:6.2,fx=ix0+(w2)*((k+.5)/nf)+(hash(h*5+k)-.5)*2,fy=iy0+(big?1.6:3.6)+hash(h*9+k)*1;flower(fx,fy,D2,FC[(k+h)%4])}}/* 五まいの花びら（大と中） */
     break}
   case'hedge':{/* 生垣：まるくこんもりした明るい葉のかたまりと、下の茶色い土 */const hu=!ICON&&i!=null&&typeAt(i-W)==='hedge',hd=!ICON&&i!=null&&typeAt(i+W)==='hedge',hl=!ICON&&i!=null&&i%W>0&&typeAt(i-1)==='hedge',hr=!ICON&&i!=null&&i%W<W-1&&typeAt(i+1)==='hedge',h=i||0;
-    if(spOK('hedge-atlas')){spTile(c,'hedge-atlas',(hl?1:0)|(hr?2:0)|(hu?4:0)|(hd?8:0),x,y,ICON);break}
+    if(spOK('hedge-atlas')){{const rD=hr&&typeAt(i+1+W)==='hedge',lD=hl&&typeAt(i-1+W)==='hedge',m=(hl?1:0)|(hr?2:0)|(hu?4:0)|(hd?8:0);spTile(c,'hedge-atlas',m,x,y,ICON,null,rD&&lD?18:rD?16:lD?17:m)}break}
     const x0=hl?x-2:x+3.6,x1=hr?x+34:x+28.4,y0=hu?y-4:y+4.6,y1=hd?y+36:y+25.6;
     if(!hd)sh(15);
     if(!hd){const bl=hl?x-1:x+2.5,br=hr?x+33:x+29.5;c.fillStyle='#a07548';rr(c,bl-.6,y+24.2,br-bl+1.2,7,3);c.fillStyle='#b98c5c';rr(c,bl,y+24.2,br-bl,6,2.6)}/* 下の土 */
