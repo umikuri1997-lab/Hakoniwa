@@ -4749,7 +4749,7 @@ function updHUD(){
   {const sb=$('#skipBtn'),v=canSkip();if(sb.hidden===v)sb.hidden=!v}
   const h=hour(),m=Math.floor(clk()%60);
   $('#dayLbl').textContent=(S.rain?'☔雨':'☀晴れ')+(S.today?'・'+DAYEV[S.today][1]:'');/* 何日目は出さない（きろくで見る） */
-  $('#timeLbl').textContent=String(Math.floor(h)).padStart(2,'0')+':'+String(Math.floor(m/10)*10).padStart(2,'0');
+  {const tx=String(Math.floor(h)).padStart(2,'0')+':'+String(Math.floor(m/10)*10).padStart(2,'0'),el=$('#timeLbl');if(el.dataset.t!==tx){el.dataset.t=tx;el.innerHTML=[...tx].map(ch=>ch===':'?'<i class="c">:</i>':'<i>'+ch+'</i>').join('')}}/* 数字を1文字ずつ同じはばのわくに入れ、時刻で表示がずれないようにする */
   {const gs=$('#guardStatus'),night=isNight();gs.hidden=!night;if(night){const gc=gs.querySelector('.gc');let p=1;if(LIGHTCD>0)p=1-LIGHTCD/5;else if(S.pt<1)p=0;gc.style.setProperty('--gp',(p*360)+'deg')}}
   {const ab=$('#areaBtn'),on=!!(S.flags&&S.flags.areaSkill)&&isNight();ab.hidden=!on;if(on){let p=1;if(AREACD>0)p=1-AREACD/5;else if(S.pt<3)p=0;if(AREAARM&&(AREACD>0||S.pt<3))AREAARM=false;ab.querySelector('.gc').style.setProperty('--gp',(p*360)+'deg');ab.classList.toggle('armed',AREAARM)}else AREAARM=false}
   const L=S.lv,a=LV_XP[L-1],b=LV_XP[L]??a;$('#lvLbl').textContent=L;$('#xpBar').style.width=(b>a?clamp((S.totalPt-a)/(b-a),0,1)*100:100)+'%';$('#xpTxt').textContent=b>a?Math.floor(S.totalPt-a)+' / '+(b-a):'MAX';
