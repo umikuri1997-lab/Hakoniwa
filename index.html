@@ -1534,7 +1534,7 @@ function spawnFX(x,y,col){const cx=x*TS+16,cy=y*TS+20;
 /* ---------- せいれいの行動 ---------- */
 function occTiles(r){const bl=new Set();for(const q of S.res)if(q!==r&&!q.hidden&&!(q.act&&q.act.stage==='walk'&&q.path&&q.path.length))bl.add((q.y|0)*W+(q.x|0));return bl}
 // 止まっている子のマスを避けた道を選ぶ（なければふつうの道）
-function avoidPath(r,G,goal){const centered=p=>{const j=(r.y|0)*W+(r.x|0);if(p.length&&walk(j)&&Math.hypot(r.x-(j%W+.5),r.y-((j/W|0)+.5))>.01&&p[0]!==j)p.unshift(j);return p};const bl=occTiles(r);bl.delete(goal);bl.delete((r.y|0)*W+(r.x|0));if(!bl.size)return centered(pathTo(G,goal));
+function avoidPath(r,G,goal){const centered=p=>{const j=(r.y|0)*W+(r.x|0);if(p.length&&walk(j)&&Math.hypot(r.x-(j%W+.5),r.y-((j/W|0)+.5))>.01&&p[0]!==j){const cx=j%W+.5,cy=(j/W|0)+.5,nx=p[0]%W+.5,ny=(p[0]/W|0)+.5;if((r.x-cx)*(nx-cx)+(r.y-cy)*(ny-cy)<=0)p.unshift(j)}/* 次のマスへ向かって進んでいるときは、マスの中心へもどらない（引きなおしで一瞬もどるのを防ぐ） */return p};const bl=occTiles(r);bl.delete(goal);bl.delete((r.y|0)*W+(r.x|0));if(!bl.size)return centered(pathTo(G,goal));
   const G2=roadSearch(r.x|0,r.y|0,bl);return centered(G2.dist[goal]>=0?pathTo(G2,goal):pathTo(G,goal))}
 function startAct(r,G,type,stand,o){
   r.bubble='';/* 前の行動の吹き出し（💤など）を残さない */
@@ -2569,7 +2569,7 @@ function sevBub(){SEVW={};if(!S)return;const P=S.sevP||[];for(let i=P.length-1;i
   if(enc){if(!sevEncounterSafe(enc)){sevCancel(enc);return}if(enc.ready){if(sevNear(enc.L)&&enc.actors.every(r=>sevClose(r,enc.target)))SEVW[enc.speaker.name]=enc.k;else sevCancel(enc)}return}
   const retry=SEV_RETRY.get(S)||{};for(const k of P){if(retry[k]>S.t)continue;const e=SEV1.find(x=>x.k===k),L=sevLines(e.L);if(!L)continue;if(sevBegin(e,L))return;retry[k]=S.t+5}SEV_RETRY.set(S,retry)}
 function pauseAfterPink(lines){S.sevTalkAt=S.t;S.sevQuietUntil=S.t+180;for(const [name]of lines){const r=S.res.find(r=>r.name===name);if(r)r.chatCD=Math.max(r.chatCD||0,S.sevQuietUntil)}}
-function sevTalk(k){if(!$('#dialog').hidden)return;const enc=SEV_ENCOUNTERS.get(S);if(!enc||enc.k!==k||!enc.ready||SEVW[enc.speaker.name]!==k)return;const P=S.sevP||[],i=P.indexOf(k),e=SEV1.find(x=>x.k===k);if(i<0||!e)return;const L=sevLines(e.L);if(!L)return;P.splice(i,1);S.sevTalkAt=S.t;const actors=enc.actors.filter(r=>!r.hidden);if(actors.length){const tx=actors.reduce((v,r)=>v+r.x,0)/actors.length*TS,ty=(actors.reduce((v,r)=>v+r.y,0)/actors.length-.7)*TS;camAnim={fz:cam.z,tz:cam.z,fx:cam.x+VW/cam.z/2,fy:cam.y+VH/cam.z/2,tx,ty,t:0,dur:.6}}sevCancel(enc,null,false);sevBub();
+function sevTalk(k){if(!$('#dialog').hidden)return;const enc=SEV_ENCOUNTERS.get(S);if(!enc||enc.k!==k||!enc.ready||SEVW[enc.speaker.name]!==k)return;const P=S.sevP||[],i=P.indexOf(k),e=SEV1.find(x=>x.k===k);if(i<0||!e)return;const L=sevLines(e.L);if(!L)return;P.splice(i,1);S.sevTalkAt=S.t;const actors=enc.actors.filter(r=>!r.hidden);if(actors.length){const tx=actors.reduce((v,r)=>v+r.x,0)/actors.length*TS,ty=(actors.reduce((v,r)=>v+r.y,0)/actors.length-.7)*TS;camAnim={fz:cam.z,tz:cam.z,fx:cam.x+VW/cam.z/2,fy:cam.y+VH/cam.z/2,tx,ty,t:0,dur:.6}}sevCancel(enc,null,false);sevBub();pauseAfterPink(L);for(const r of actors)r.chatCD=Math.max(r.chatCD||0,S.sevQuietUntil);/* ピンクの会話のあいだ、ふつうの会話は始めない */
   const run=()=>dialog(L,()=>{pauseAfterPink(L);if(e.go)e.go()});e.vis?visionFX(e.vis,run):run()}
 /* 消えたときの会話。null ならいつもの説明 */
 const GVOICE=()=>godHere()?'':'……聞こえるかの？ 遠くから、声だけ届けておるぞい。';
