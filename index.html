@@ -5180,7 +5180,10 @@ let SKIP=false,ALI=-1;/* 「コワイノ」をぜんぶ追いはらった夜は�
 const eveH=()=>{const h=hour();return h>=18||h<6};/* クリア後は夕方から朝までとばせる */
 const canSkip=()=>!SKIP&&(S.cleared?eveH()&&!S.enemies.some(e=>!e.dead):isNight()&&S.enemyOn&&(!S.res.length||S.nightHad&&!S.enemies.length&&!S.nushi));/* クリア後は、コワイノがいなければいつでも *//* 全員いなくなったときも、朝までとばせる */
 function updHUD(){
-  if(S){if(S.res.length<4)S.res4Since=null;else if(S.res4Since==null)S.res4Since=dayNo()}
+  if(S){const was=S.res4Since,tell=S.bossWarn!=null&&!S.cleared;/* オオカゲの来る時期を、せいれいが減ったとき・もどったときに伝える */
+    if(S.res.length<4){S.res4Since=null;if(was!=null&&tell&&S.enemyOn&&$('#dialog').hidden)dialog([[GOD,'なかまが減ってしもうたのう…。'],[GOD,'せいれいが4人にもどって、3日たつまで、オオカゲは来ぬはずじゃ。それまでに、なかまを集めて備えるのじゃぞ。']])}
+    else if(was==null){S.res4Since=dayNo();if(tell&&S.enemyOn&&S.lastRes4!=null&&$('#dialog').hidden)dialog([[GOD,'せいれいが4人にもどったのう。'],[GOD,'オオカゲは、今日から3日後に来るかもしれん。柵と見張り台を、しっかり整えておくんじゃ。']])}
+    S.lastRes4=S.res.length>=4?1:S.lastRes4}
   {const sb=$('#skipBtn'),v=canSkip();if(sb.hidden===v)sb.hidden=!v}
   const h=hour(),m=Math.floor(clk()%60);
   $('#dayLbl').textContent=(S.rain?'☔雨':'☀晴れ')+(S.today?'・'+DAYEV[S.today][1]:'');/* 何日目は出さない（きろくで見る） */
