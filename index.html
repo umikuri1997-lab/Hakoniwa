@@ -2256,7 +2256,7 @@ function hitRes(e,r,D){if(!WD&&r.elem==='fire'&&r.hunger<60&&r.name===keyName('f
     r.hunger=Math.max(0,r.hunger-Math.round(D.hit/2));r.hurt=40;if(r.hunger<35&&!D.boss)r.fleeNow=true;/* 体力（おなか）がへったら逃げる */
     if(e.hp<=0){r.beat=(r.beat||0)+1;return defeat(e,r.name+'が'+EN[e.type].name+'を追いはらった！')}}
   else{r.hunger=Math.max(0,r.hunger-Math.round(D.hit*.6));r.fun=Math.max(0,r.fun-20);r.hurt=40;r.fleeNow=!D.boss;
-    if(D.boss){endAct(r);r.act={type:'faint',stage:'do',t:0};r.bubble='😵'}}r.alarm=S.t;
+    if(D.boss&&Math.random()<.5){endAct(r);r.act={type:'faint',stage:'do',t:0};r.bubble='😵'}/* ボスの攻撃で気絶するのは、2回に1回くらい */}r.alarm=S.t;
   if(h0>=12&&r.hunger<3)r.hunger=3;/* 一撃では消えない */
   e.stun=(fire||lv>=3)?(D.boss?1.5:2):(D.boss?3:4);if(lightAt(e.x,e.y))e.stun/=.75;e.path=[];e.repath=0;
 }
