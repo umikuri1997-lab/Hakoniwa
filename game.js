@@ -2892,7 +2892,7 @@ function drawMossWall(c,x,y,i,L,R,U,D,dl,dr){/* dl/dr：となりが石の塀の
 }
 function drawStoneDoor(c,x,y,op){/* 石の塀のドア：1マスのとびら。ひらくと左のちょうつがいを軸にせまくなる */
   const d=HOUSEART['door-stone'];if(!d||!d.complete||!d.naturalWidth)return false;
-  const h=31,w=h*d.naturalWidth/d.naturalHeight;shadow(c,x+16,y+31,13,2.5);c.drawImage(d,x+16-w/2,y+1,w*(1-op*.82),h);return true}
+  const h=31,w=TS;/* 幅いっぱい：両どなりの塀の端の柱とすきまなくつなぐ */shadow(c,x+16,y+31,14,2.5);c.drawImage(d,x,y+1,w*(1-op*.82),h);return true}
 function drawMossGate(c,x,y,i,ver,op){
   const p=HOUSEART['post-stone'],a=HOUSEART['gate-stone-left'],b=HOUSEART['gate-stone-right'];
   if(!p||!p.complete||!p.naturalWidth||!a||!a.complete||!a.naturalWidth||!b||!b.complete||!b.naturalWidth)return false;
