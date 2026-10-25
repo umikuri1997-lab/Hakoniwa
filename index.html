@@ -1606,7 +1606,7 @@ const ACT={
   pickdrop:{start(r,a){const i=(S.drops||[]).findIndex(q=>q.y*W+q.x===a.obj);if(i<0)return false;takeDrop(S.drops.splice(i,1)[0],r);r.bubble='✨'},done:(r,a)=>a.t>=3},
   pickseed:{start(r,a){const i=S.seeds.findIndex(q=>q.y*W+q.x===a.obj);if(i<0)return false;S.seeds.splice(i,1);r.bubble='✨'},done:(r,a)=>a.t>=8,end(r){S.mseed=(S.mseed||0)+1;S.mseedGot=(S.mseedGot||0)+1;addFloat(r.x,r.y-1.6,'ふしぎな種+1','#d8f5c0');toast(r.name+'がふしぎな種をひろった','good')}},
   patrol:{done:()=>true},/* 見回りは、止まらずに歩きつづける（吹き出しなし） */
-  faint:{done:(r,a)=>a.t>=30,end(r){r.fleeNow=true}},
+  faint:{done:(r,a)=>a.t>=30,end(r){r.fleeNow=true;r.faintGrace=S.t+40}/* 目をまわし終えたら、しばらくは攻撃されない（にげる間に、またすぐ気絶してしまわないように） */},
   flee:{start(r,a){r.bubble='💦';if(a.house)r.hidden=true},done:(r,a)=>a.t>=(a.house?40:4),end(r,a){if(a.food)r.wantEat=1/* 食べ物のところへ逃げたら、そこで食べる */}},
   wander:{start(r,a){a.dur=rnd(10,30)},done:(r,a)=>a.t>=a.dur,end(r){r.wanderRestUntil=S.t+45}},
   idle:{start(r){r.bubble='☕'},done:(r,a)=>a.t>=a.dur},/* ひとやすみ中は、休けいの吹き出し */
@@ -2226,7 +2226,7 @@ function updEnemy(e,dt){
     if(dj>=0){if(bd<1.15){e.busyT=S.t;e.atk+=dt*(lightAt(e.x,e.y)?.8:1);/* 光の中は、攻撃の速さ0.8倍 */if(e.atk>=D.atk){e.atk=0;const o=S.obj[dj];S.hp[dj]=(S.hp[dj]??defHp(o))-(D.boss?2:D.trapper?2:1)/steleF(dj);WALLHIT.set(dj,performance.now());sfxAt('bonk',dj%W+.5,(dj/W)|0);
         if(S.hp[dj]<=0){(S.broken||(S.broken=[])).push({j:dj,id:o});sfxAt('wbreak',dj%W+.5,(dj/W)|0);if(S.ns)S.ns.broke++;clearObj(dj);DEFC.t=0;recount();dirty=true;toast(BL[o].name+'がこわされた！','warn')}}return}
       {const z=BL[S.obj[dj]].sz||[1,1],x0=dj%W,y0=(dj/W)|0;if(BL[S.obj[dj]].solid){let bq=-1,bb=1e9;for(let yy=y0-1;yy<=y0+z[1];yy++)for(let xx=x0-1;xx<=x0+z[0];xx++){if((xx<x0||xx>=x0+z[0])===(yy<y0||yy>=y0+z[1]))continue;if(xx<0||yy<0||xx>=W||yy>=H)continue;const q=yy*W+xx;if(!walk(q))continue;const dd=Math.hypot(xx+.5-e.x,yy+.5-e.y);if(dd<bb){bb=dd;bq=q}}goal=bq>=0?bq:dj}else goal=dj}if(e.tg!=='d'+dj){e.tg='d'+dj;e.repath=0}}}/* 防衛設備をこわしてから、せいれいをねらう */
-  if(dj<0&&(!(D.thief||e.ashG)||goal<0&&!e.flee)){let td=1e9,ts=1e9;if(!EREACH.has(e))EREACH.set(e,bfs(e.x|0,e.y|0,2).dist);const RD=EREACH.get(e);if(pre){tgt=pre;td=Math.hypot(pre.x-e.x,pre.y-e.y)}else for(const r of S.res){if(r.hidden)continue;const d=Math.hypot(r.x-e.x,r.y-e.y),sc=d+(RD&&RD[(r.y|0)*W+(r.x|0)]<0?60:0)-(r.id===e.tg?2:0);/* いまねらっている子を少し優先（ねらいがころころ変わってガタガタしない） */if(sc<ts){ts=sc;td=d;tgt=r}}
+  if(dj<0&&(!(D.thief||e.ashG)||goal<0&&!e.flee)){let td=1e9,ts=1e9;if(!EREACH.has(e))EREACH.set(e,bfs(e.x|0,e.y|0,2).dist);const RD=EREACH.get(e);if(pre){tgt=pre;td=Math.hypot(pre.x-e.x,pre.y-e.y)}else for(const r of S.res){if(r.hidden||(r.faintGrace||0)>S.t||r.act&&r.act.type==='faint')continue;const d=Math.hypot(r.x-e.x,r.y-e.y),sc=d+(RD&&RD[(r.y|0)*W+(r.x|0)]<0?60:0)-(r.id===e.tg?2:0);/* いまねらっている子を少し優先（ねらいがころころ変わってガタガタしない） */if(sc<ts){ts=sc;td=d;tgt=r}}
     if(tgt&&td<reachOf(D)){hitRes(e,tgt,D);if(hsOf(D)>=2&&!e.dead){const ar=1.5;burstAt(tgt.x,tgt.y,'offer');for(const q of S.res){if(q===tgt||q.hidden||e.dead)continue;if(Math.hypot(q.x-tgt.x,q.y-tgt.y)<ar)hitRes(e,q,D)}}/* 大きいコワイノは範囲攻撃：まわりの子も巻きこむ */return}
     if(tgt&&td<1.6&&!e.flee&&!(e.dcb>S.t)){let sp=D.sp*dt*e.slow;if(lightAt(e.x,e.y))sp*=.8;/* 光の中は、移動の速さ0.8倍 */const dx=tgt.x-e.x,dy=tgt.y-e.y;const nq=(((e.y+dy/td*sp)|0)*W)+((e.x+dx/td*sp)|0);if(walk(nq)&&!HOME_DOORS.has(typeAt(nq))&&!GATE_IDS.has(typeAt(nq))){e.x+=dx/td*Math.min(sp,td);e.y+=dy/td*Math.min(sp,td);e.path=[];return}e.dcb=S.t+4;e.repath=0}/* まっすぐ行けないときは、しばらく道どおりに進む（行ったり来たりでガタガタしない） */
     if(tgt){goal=(tgt.y|0)*W+(tgt.x|0);if(e.tg!==tgt.id){e.tg=tgt.id;e.repath=0}}}
@@ -2249,7 +2249,7 @@ function updEnemy(e,dt){
   if(d<=sp){e.x=tx;e.y=ty;e.path.shift()}else{e.x+=dx/d*sp;e.y+=dy/d*sp}e.stk=0
 }
 const hsOf=D=>D.size>=1.5?2:1,reachOf=D=>D.rng||.75*hsOf(D);/* 攻撃がとどく距離：大きいコワイノ（オオカゲ・カタカゲ）は、すこし離れたところから攻撃する *//* 当たり判定は見た目ぴったりではなく、1マスか2マス */
-function hitRes(e,r,D){if(!WD&&r.elem==='fire'&&r.hunger<60&&r.name===keyName('fire'))S.flags.fHurt=1;if((r.shU||0)>S.t)D=Object.assign({},D,{hit:D.hit*.5});/* フタバの葉っぱのまもり */if(r.act&&r.act.type==='faint'){e.stun=1;return}/* 気絶している子は攻撃しない */const h0=r.hunger;sfx('hit');e.swing=performance.now();
+function hitRes(e,r,D){if(!WD&&r.elem==='fire'&&r.hunger<60&&r.name===keyName('fire'))S.flags.fHurt=1;if((r.shU||0)>S.t)D=Object.assign({},D,{hit:D.hit*.5});/* フタバの葉っぱのまもり */if((r.faintGrace||0)>S.t||r.act&&r.act.type==='faint'){e.stun=1;return}/* 気絶している子は攻撃しない */const h0=r.hunger;sfx('hit');e.swing=performance.now();
   const lv=rLv(r);S.nightHurt++;if(S.ns)S.ns.hurt++;const fire=r.elem==='fire';
   if(r.act&&['sleep','stay','rest','idle'].includes(r.act.type)&&r.act.stage==='do')endAct(r);/* 攻撃されたら、寝ていても起きる */
   const yk=trt(r,'yuukan'),adj=Math.hypot(e.x-r.x,e.y-r.y)<=Math.max(1.1,reachOf(D)+.05);/* せいれいの攻撃は、となりにいる相手だけ（遠くから攻撃してくる大きいコワイノには、その距離でもやり返せる） */const ba=((r.bst&&r.bst.atk)||0)+((r.sst&&r.sst.atk)||0);if((fire||lv>=3||yk||ba)&&adj){const rd=!((r.fatk||0)>S.t);if(rd)r.fatk=S.t+5;/* やり返しも、攻撃と同じ待ち時間 */const dmg=rd?(fire?fAtk(lv):lv>=3?Math.floor((lv-1)/2):0)+(yk?1:0)+ba:0;e.hp-=dmg;if(dmg)e.flash=6;
@@ -3400,11 +3400,10 @@ function drawObj(c,id,x,y,i,g,now){
     const front=(a,b)=>wallBand(c,MAT,a,b,x,y,i);
     const side=(a,b)=>{/* 柱・縦の壁のはしの正面：たて板 */c.fillStyle='rgba(0,0,0,.18)';c.fillRect(a,y+TS,b-a,2);c.fillStyle='#8a5e3c';c.fillRect(a,y,b-a,TS);c.fillStyle='#a8784e';for(const lx of[a+5,a+11,a+17])if(lx<b-2)c.fillRect(lx,y,1,TS);c.fillStyle='#b88550';c.fillRect(a,y,1.5,TS);c.fillRect(b-1.5,y,1.5,TS)};/* 柱には巾木をつけない */
     if(c._doorBack){if(door&&hasH)top();break}/* ドアの断面は、となりの壁と同じ下絵(静的な層)に描く */
-    if(door&&hasV&&!hasH){let op=0;if(!ICON)op=doorOp(i,x,y,2.1,.9);/* 縦の壁のドア：平置きと同じ。上に断面、下に縦板の側面（1マスぶん）、その上の層にドア */
-      const FHt=TS-T;/* 断面の下の側面（このマスの高さぶん） */
-      drawSection(c,x,y-T,[[x+5,y-T-(U?2:0),x+27,y,x+5,y-T,x+27,y]]);
-      c.fillStyle='#8a5e3c';c.fillRect(x+5,y,22,FHt);c.fillStyle='#a8784e';for(const lx of[x+10,x+16,x+22])c.fillRect(lx,y,1,FHt);c.fillStyle='#b88550';c.fillRect(x+5,y,1.5,FHt);c.fillRect(x+25.5,y,1.5,FHt);
-      {const art=HOUSEART&&HOUSEART['wall-door'],dx=x+5,dy=y+1,dw=22*(1-op*.78),dh=FHt-1;/* ドアは、側面の上に重ねる。開くと、はばがせまくなる */c.fillStyle='#4f3527';c.fillRect(dx,dy,dw,dh);
+    if(door&&hasV&&!hasH){let op=0;if(!ICON)op=doorOp(i,x,y,2.1,.9);/* 縦の壁のドア：断面は上下のふち（戸口がわに輪郭線）、そのあいだに縦板の側面、その上の層にドア */
+      drawSection(c,x,y-T,[[x+5,y-T-2,x+27,y-T+3,x+5,y-T,x+27,y-T+3],[x+5,y+TS-T-3,x+27,y+TS-T+2,x+5,y+TS-T-3,x+27,y+TS-T]]);
+      const fy=y-T+3,FHt=TS-6;c.fillStyle='#8a5e3c';c.fillRect(x+5,fy,22,FHt);c.fillStyle='#a8784e';for(const lx of[x+10,x+16,x+22])c.fillRect(lx,fy,1,FHt);c.fillStyle='#b88550';c.fillRect(x+5,fy,1.5,FHt);c.fillRect(x+25.5,fy,1.5,FHt);
+      {const art=HOUSEART&&HOUSEART['wall-door'],dx=x+5,dy=fy+1,dw=22*(1-op*.78),dh=FHt-2;/* ドアは、側面の上に重ねる。開くと、はばがせまくなる */c.fillStyle='#4f3527';c.fillRect(dx,dy,dw,dh);
         if(art&&art.complete&&art.naturalWidth)c.drawImage(art,19,18,94,149,dx+1,dy+1,Math.max(0,dw-2),dh-2);else{c.fillStyle='#b77a49';c.fillRect(dx+1,dy+1,Math.max(0,dw-2),dh-2)}}
       if(ICON)c.restore();break}
     if(door&&hasH){/* 正面のドア：1マスぴったり。絵の左はし（ちょうつがい）と右はし（取っ手）はそのまま、まん中の板だけのばす */const art=HOUSEART&&HOUSEART['wall-door'];let op=0;if(!ICON)op=doorOp(i,x,y,.9,2.1);
