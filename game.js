@@ -896,8 +896,10 @@ const fp=(id,x,y)=>{const z=BL[id].sz;if(!z)return [[x,y]];const c=[];for(let b=
 function walk(j){if(j<0||j>=W*H||S.ground[j]===1)return false;return !solidOf(j)}
 const cnt=id=>counts[id]||0;
 const FOODS={mugi:{name:'こむぎ',v:1,e:'🌾'},imo:{name:'いも',v:1,e:'🥔'},tomato:{name:'キャベツ',v:1,e:'🥬'},berry:{name:'ベリー',v:1,e:'🫐'},apple:{name:'りんご',v:1,e:'🍎'},fish:{name:'さかな',v:1,e:'🐟'},
-  bread:{name:'パン',v:3,pt:3,dish:1,e:'🍞',fx:'5時間、腹持ちがよくなる（おなかのへる速さ×0.6）'},soup:{name:'トマトスープ',v:3,pt:3,dish:1,e:'🍲',fx:'元気+25'},yakiimo:{name:'ベイクドポテト',v:2,pt:2,dish:1,e:'🍠',fx:'3時間、作業速度×1.15'},yakizakana:{name:'焼き魚',v:2,pt:4,dish:1,e:'🐠',fx:'食べるとパワー+1.8'},yakiberry:{name:'焼きベリー',v:2,pt:2,dish:1,e:'🍮',fx:'たのしさ+15'},yakiapple:{name:'焼きりんご',v:2,pt:2,dish:1,e:'🥧',fx:'3時間、移動速度×1.15'},salad:{name:'サラダ',v:2,pt:2,dish:1,e:'🥗',fx:'元気+10・たのしさ+10'}};
+  bread:{name:'パン',v:3,pt:3,dish:1,e:'🍞',fx:'5時間、腹持ちがよくなる（おなかのへる速さ×0.6）'},soup:{name:'トマトスープ',v:3,pt:3,dish:1,e:'🍲',fx:'元気+25'},yakiimo:{name:'ベイクドポテト',v:2,pt:2,dish:1,e:'🍠',fx:'3時間、作業速度×1.15'},yakizakana:{name:'焼き魚',v:2,pt:4,dish:1,e:'🐠',fx:''},yakiberry:{name:'焼きベリー',v:2,pt:2,dish:1,e:'🍮',fx:'たのしさ+15'},yakiapple:{name:'焼きりんご',v:2,pt:2,dish:1,e:'🥧',fx:'3時間、移動速度×1.15'},salad:{name:'サラダ',v:2,pt:2,dish:1,e:'🥗',fx:'元気+10・たのしさ+10'}};
 FOODS.berry.fx=FOODS.apple.fx='たのしさ+8';
+const RAWFL={mugi:'ぷっくり実ったこむぎ。',imo:'ころんとしたおいも。',tomato:'みずみずしいキャベツ。',berry:'あまずっぱいベリー。',apple:'まっかなりんご。',fish:'とれたてのさかな。'};
+const RAWD=k=>{const f=FOODS[k];return (RAWFL[k]||f.name+'。')+'/効果:お腹'+f.v+(f.pt?'、パワー+'+f.pt:'')+(f.fx?'、'+f.fx.replace(/、/g,''):'')};/* 料理していない食べ物の説明（料理の説明と同じ形） */
 const DISHFL={yakiimo:'ほくほくのおいも。',bread:'こんがり焼けたパン。',soup:'からだがあたたまるスープ。',yakizakana:'こうばしい焼き魚。',yakiberry:'あまずっぱい焼きベリー。',yakiapple:'とろっと甘い焼きりんご。',salad:'しゃきしゃきのサラダ。'};
 const needTxt=R=>Object.keys(R.need).map(k=>FOODS[k].name+(R.need[k]>1?'×'+R.need[k]:'')).join('・');/* 材料は1つなら数をつけない */
 const DISHD=R=>{const F=FOODS[R.out];return (DISHFL[R.out]||F.name+'。')+'/材料:'+needTxt(R)+'/時間:'+R.time+'分/効果:お腹'+F.v+'、パワー+'+F.pt+(F.fx?'、'+F.fx.replace(/、/g,''):'')};/* ハテナに出す料理の説明 */
@@ -3981,7 +3983,7 @@ function render(now){
     {const litH=new Set();for(const j of LIGHTS){if(INDL.has(S.obj[j])){const h=roomOf(j);if(h)litH.add(h)}}/* 灯りのある家は、家ぜんたいを同じ明るさで照らす（ふちはぼかす） */
       for(const h of litH){const D=(VW*dpr+120*k)/k;/* k は画面の倍率（dprこみ） */ctx.beginPath();for(const q of h.set){const qx=q%W,qy=(q/W)|0;if(qx<x0-3||qx>x1+2||qy<y0-3||qy>y1+2)continue;ctx.rect(qx*TS-D,qy*TS,TS,TS)}ctx.fillStyle='#000';ctx.shadowColor='rgba(255,205,110,'+dk*.75+')';ctx.shadowBlur=36*k;ctx.shadowOffsetX=D*k;ctx.fill();ctx.shadowBlur=0;ctx.shadowOffsetX=0;ctx.shadowColor='transparent'}}/* 家の形をぼかした光だけをかく（形そのものは画面の外へずらし、影だけを家の位置に出す） */
     ctx.globalCompositeOperation='source-over';
-    {const wl=HOUSEART['wall-window-lit'];if(wl&&wl.complete&&wl.naturalWidth&&isDark()){ctx.globalAlpha=1;const litW=new Set();for(const j of LIGHTS){if(INDL.has(S.obj[j])){const h=roomOf(j);if(h)litW.add(h)}}for(const h of litW)for(const q of h.set){if(!S.win||S.win[q]!==1||!(HOME_WALLS.has(S.obj[q])||S.obj[q]==='window'))continue;const qx=q%W,qy=(q/W)|0;if(qx<x0-1||qx>x1||qy<y0-1||qy>y1)continue;const x=qx*TS,y=qy*TS;ctx.save();ctx.translate(0,-1.5);ctx.translate(x+16,y+3);ctx.scale(.75,.75);ctx.translate(-x-16,-y-9);ctx.drawImage(wl,x+5,y+9,22,19.3);ctx.restore()}ctx.globalAlpha=1}}/* 夜（21時〜6時）だけ、灯りのある家の窓ガラスは中が明るい色に（暗さの上にかく） */
+    {const wl=HOUSEART['wall-window-lit'];if(wl&&wl.complete&&wl.naturalWidth&&isDark()){ctx.globalAlpha=1;const litW=new Set();for(const j of LIGHTS){if(INDL.has(S.obj[j])){const h=roomOf(j);if(h)litW.add(h)}}for(const h of litW)for(const q of h.set){if(((q/W)|0)===h.y0)continue;/* 上がわの壁の窓は、昼も夜も同じ色 */if(!S.win||S.win[q]!==1||!(HOME_WALLS.has(S.obj[q])||S.obj[q]==='window'))continue;const qx=q%W,qy=(q/W)|0;if(qx<x0-1||qx>x1||qy<y0-1||qy>y1)continue;const x=qx*TS,y=qy*TS;ctx.save();ctx.translate(0,-1.5);ctx.translate(x+16,y+3);ctx.scale(.75,.75);ctx.translate(-x-16,-y-9);ctx.drawImage(wl,x+5,y+9,22,19.3);ctx.restore()}ctx.globalAlpha=1}}/* 夜（21時〜6時）だけ、灯りのある家の窓ガラスは中が明るい色に（暗さの上にかく） */
     ctx.setTransform(dpr,0,0,dpr,0,0)}
   if(GLWN){ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=Math.min(1,dk*1.5);ctx.globalCompositeOperation='lighter';ctx.drawImage(GLW,0,0);ctx.globalCompositeOperation='source-over';ctx.globalAlpha=1;ctx.setTransform(dpr,0,0,dpr,0,0);GLWN=0}
   // 空気の粒（昼は花粉、夜はホタル）
@@ -4538,7 +4540,7 @@ function renderSheet(){
     if(!cr){const b2=el('<button class="btn pri">お供え箱からたねをえらぶ</button>');b2.onclick=()=>{sfx('tap');openSheet('inv',Object.keys(CROPS).filter(cropOn).map(k=>'seed:'+k).find(id=>inv(id)>0)||'seed:imo')};body.appendChild(b2)}
   }else if(sheet==='food'){T.textContent='食料箱';
     body.appendChild(el('<p class="story">'+S.food+'/'+foodCap()+'</p>'));
-    const g=el('<div class="rows"></div>');for(const k in FOODS){const n=S.fs[k]||0;if(!n)continue;const f=FOODS[k];const rc=RECIPES.find(R=>R.out===k),r=helpify(rowEl((icURL(f.e)?'':f.e+' ')+f.name+'　×'+n,(f.dish?'料理・':'')+'おなか'+f.v+(f.pt?'・パワー+'+f.pt:'')+(f.fx?'・'+f.fx:''),icURL(f.e)),rc?DISHD(rc):f.name+'：おなかが'+f.v+'ふくれる。'+(f.fx?f.fx+'。':''));g.appendChild(r)}body.appendChild(g);
+    const g=el('<div class="rows"></div>');for(const k in FOODS){const n=S.fs[k]||0;if(!n)continue;const f=FOODS[k];const rc=RECIPES.find(R=>R.out===k),r=helpify(rowEl((icURL(f.e)?'':f.e+' ')+f.name+'　×'+n,(f.dish?'料理・':'')+'おなか'+f.v+(f.pt?'・パワー+'+f.pt:'')+(f.fx?'・'+f.fx:''),icURL(f.e)),rc?DISHD(rc):RAWD(k));g.appendChild(r)}body.appendChild(g);
   }else if(sheet==='oven'){
     const j=sheetArg;if(S.obj[j]!=='oven')return closeSheet();if(!S.ovenSet)S.ovenSet={};const cur=S.ovenSet[j];T.textContent='かまど';
     body.appendChild(el('<p class="story">作る料理をえらぶと、火のせいれいが食料箱の材料で作ってくれる。</p>'));
