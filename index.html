@@ -1651,7 +1651,7 @@ function decide0(r){
     if(!cnt('oven')){const R=RECIPES.find(x=>x.out===r.cing.rec);for(const k in R.need)addFood(k,R.need[k]);r.cing=null}}
   if(r.toStor){if(carryN(r)>0&&foodCap()>0)return goStore(r,G);r.toStor=0}
   if(r.meal)return goMeal(r,G);
-  {const h=hour();if(h>=18+hash((r.id||0)*13+5)*.4&&r.bathD!==dayNo()&&goBathe(r,G))return}
+  {const h=hour();if(!isNight()&&h>=18+hash((r.id||0)*13+5)*.4&&r.bathD!==dayNo()&&goBathe(r,G))return}/* 夜（23時〜）は水浴びを始めない（始めても、すぐやめさせられるので） */
   if(r.elem==='water'&&!isNight()&&r.bathW!==dayNo()&&hour()>=10+hash((r.id||0)*7+dayNo())*6){const bd=r.bathD;r.bathW=dayNo();if(goBathe(r,G))return;r.bathD=bd}/* 水のせいれいは、昼間にも水あそびをする */
   if(WD===1&&!isNight()&&springN()&&r.energy<35&&!((r.bathCD||0)>S.t)){r.bathCD=S.t+240;const bd=r.bathD;if(goBathe(r,G))return;r.bathD=bd}/* 温泉の村：つかれたら温泉へ */
   if(r.afterBath>S.t&&!isNight()){r.afterBath=0;const isB=j=>(S.obj[j]==='bench'||(S.obj[j]==='part'&&S.obj[S.ref[j]]==='bench'))&&!ashed(anc(j));const bj=nearest(G,j=>isB(j)&&free('o'+j,1),40);if(bj>=0)return startAct(r,G,'rest',bj,{key:'o'+bj,obj:anc(bj),seat:bj})}/* 湯上がりは、ベンチでひと休み *//* 水浴びは18時。せいれいごとに少しずつずれる */
@@ -1961,7 +1961,7 @@ function hasHighWork(r){
     if(o==='sprout'&&canJob(r,'plant')&&free('o'+j,1))return true}
   return false}
 const ROUTINE=['chop','mine','gather'];
-const URGNO=['build','craft','repair','eat','sleep','flee','faint','cook','store','smat','fetch','cgrab','chat','chatwait','npl','tag','offer','pickdrop','pickseed'];
+const URGNO=['build','craft','repair','eat','sleep','flee','faint','cook','store','smat','fetch','cgrab','chat','chatwait','npl','tag','offer','pickdrop','pickseed','bathe','rest'];/* 水浴びやベンチの休けいは、とちゅうでやめない */
 function hasUrgent(r){/* 建てる場所か、だれも受けていない依頼があるか */
   if(canJob(r,'build')&&S.obj.some((o,j)=>o==='site'&&free('o'+j,2)))return true;
   return S.orders.some(q=>(!q.worker||!S.res.some(x=>x.id===q.worker))&&craftOK(r,q))}
