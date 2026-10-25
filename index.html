@@ -3262,7 +3262,7 @@ function drawF2(c,id,x,y,i,now){const C=F2C,cx=x+16,T=(now||0)/1000;
   case'sink':sh(13);f2rr(c,cx-13,y+12,26,17,2,'#cfc9be',C.stD);c.fillStyle='#b9b2a6';c.fillRect(cx-13,y+12,26,3);f2rr(c,cx-8,y+15,16,7,2,'#8f897f');c.fillStyle='#a9d4ea';c.fillRect(cx-7,y+18,14,3);c.strokeStyle=C.stD;c.strokeRect(cx-10,y+23,20,5);c.fillStyle='#9d968b';c.fillRect(cx-1,y+5,2.5,9);c.fillRect(cx-1,y+5,7,2.2);circ(c,cx+6,y+7,1.2,'#9d968b');break;
   case'tub':sh(10);f2rr(c,cx-10,y+11,20,18,4,C.wd,C.ol);c.fillStyle='#8f97a0';c.fillRect(cx-10,y+14,20,2);c.fillRect(cx-10,y+24,20,2);c.fillStyle='#9fd0ea';c.beginPath();c.ellipse(cx,y+12,9,3,0,0,7);c.fill();c.strokeStyle=C.ol;c.beginPath();c.ellipse(cx,y+12,10,3.5,0,0,7);c.stroke();break;
   case'planter':{/* 花壇：白い石の箱（上のふち・葉の山・前がわのブロック）に、五まいの花びらの花 */const P=k=>i!=null&&!ICON&&S&&S.obj[k]==='planter',L=P(i-1)&&i%W>0,R=P(i+1)&&(i+1)%W>0,U=P(i-W),D=P(i+W),h=i||0;
-    if(spOK('planter-atlas')){let m=(L?1:0)|(R?2:0)|(U?4:0)|(D?8:0);if((m===3||m===12)&&i!=null&&!ICON){const v=(h%4+Math.floor(hash(h*5)*2)*2)%4;if(v)m=(m===3?15:18)+v}/* 長いときは、花の色と並びをマスごとにかえる */spTile(c,'planter-atlas',m,x,y,ICON);break}
+    if(spOK('planter-atlas')){let m=(L?1:0)|(R?2:0)|(U?4:0)|(D?8:0);if((m===3||m===12)&&i!=null&&!ICON){const v=Math.floor(hash(h*13+7)*13);if(v)m=(m===3?15:27)+v}/* 長いときは、花の色と並びをマスごとにかえる */spTile(c,'planter-atlas',m,x,y,ICON);break}
     const bx0=L?x-1:x+2,bx1=R?x+33:x+30,by0=U?y-4:y+10,by1=D?y+36:y+29,iy1=D?by1:by0+(by1-by0)*.62,ix0=L?bx0:bx0+3,ix1=R?bx1:bx1-3,iy0=U?by0:by0+1.8;
     if(!D)sh(14);
     f2rr(c,bx0,by0,bx1-bx0,by1-by0,[(U||L)?0:3.5,(U||R)?0:3.5,(D||R)?0:3.5,(D||L)?0:3.5],'#f1e9d2','#cdc1a2');
