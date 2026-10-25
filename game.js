@@ -1542,7 +1542,7 @@ function hasWork(r){
     if((o==='plot'&&canJob(r,'till')||o==='sprout'&&canJob(r,'plant'))&&free('o'+j,1))return true}
   return false}
 /* おつげ：守り神さまからの、きょういちにちの指示 */
-const TOYF=.8,toyFun=f=>Math.round(Math.min(100,f*TOYF)/5)*5,toyTired=(r,j)=>!!(r.lastToy&&r.lastToy.j===j&&S.t-r.lastToy.t<240);/* 遊び家具のたのしさは、もとの半分を5きざみにした数。同じ遊び家具には4時間行かない */
+const TOYF=.8,toyFun=f=>Math.round(Math.min(100,f*TOYF)/5)*5-10,toyTired=(r,j)=>!!(r.lastToy&&r.lastToy.j===j&&S.t-r.lastToy.t<240);/* 遊び家具のたのしさは、もとの半分を5きざみにして、さらに-10。同じ遊び家具には4時間行かない */
 const ORACLE={play:{name:'いっぱいあそぶ',e:'🎈',jobs:[]},wood:{name:'木をあつめる',e:'🪵',jobs:['chop']},stone:{name:'石をあつめる',e:'🪨',jobs:['mine']},food:{name:'食料をあつめる',e:'🍎',jobs:['harvest','gather','fish']},farm:{name:'畑の世話をする',e:'🌱',jobs:['till','sow','water','tend','plant']}};
 function goWork(r,G,nw){
   // 木材と石材は、少ないほうから集める（どちらかが得意なら両方やる）
