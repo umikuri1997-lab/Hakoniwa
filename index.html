@@ -1541,7 +1541,8 @@ function spawnFX(x,y,col){const cx=x*TS+16,cy=y*TS+20;
 /* ---------- せいれいの行動 ---------- */
 function occTiles(r){const bl=new Set();for(const q of S.res)if(q!==r&&!q.hidden&&!(q.act&&q.act.stage==='walk'&&q.path&&q.path.length))bl.add((q.y|0)*W+(q.x|0));return bl}
 // 止まっている子のマスを避けた道を選ぶ（なければふつうの道）
-function avoidPath(r,G,goal){const centered=p=>p;/* いまのマスの中心へ寄りもどらない（引きなおしのたびに一瞬もどるのを防ぐ）。となりのマスへの直線は、2つのマスの中におさまる */;const bl=occTiles(r);bl.delete(goal);bl.delete((r.y|0)*W+(r.x|0));if(!bl.size)return centered(pathTo(G,goal));
+let FLEEBL=null;/* 逃げるとき、「コワイノ」のそばを通らないための通れないマス */
+function avoidPath(r,G,goal){const centered=p=>p;/* いまのマスの中心へ寄りもどらない（引きなおしのたびに一瞬もどるのを防ぐ）。となりのマスへの直線は、2つのマスの中におさまる */;const bl=occTiles(r);if(FLEEBL)for(const k of FLEEBL)bl.add(k);bl.delete(goal);bl.delete((r.y|0)*W+(r.x|0));if(!bl.size)return centered(pathTo(G,goal));
   const G2=roadSearch(r.x|0,r.y|0,bl);return centered(G2.dist[goal]>=0?pathTo(G2,goal):pathTo(G,goal))}
 function startAct(r,G,type,stand,o){
   r.bubble='';/* 前の行動の吹き出し（💤など）を残さない */
@@ -1625,11 +1626,27 @@ function insideSet(){const out=new Uint8Array(W*H),q=[];const open=j=>S.obj[j]!=
   for(let y=0;y<H;y++)for(const x of[0,W-1]){const j=y*W+x;if(open(j)&&!out[j]){out[j]=1;q.push(j)}}
   while(q.length){const j=q.pop(),x=j%W,y=(j/W)|0;for(const[dx,dy]of DIRS){const nx=x+dx,ny=y+dy;if(nx<0||ny<0||nx>=W||ny>=H)continue;const k=ny*W+nx;if(!out[k]&&open(k)){out[k]=1;q.push(k)}}}
   return out}
+function fleeHit(r,G){
+  if(r.hunger<50&&S.food>0){const sj=nearest(G,j=>adjOf(j,k=>storageAt(k,'food'))>=0,60);if(sj>=0){startAct(r,G,'fetch',sj,{run:true});return true}}/* おなかがすいていたら、にげながら食料箱でごはんをとる */
+  if(r.elem==='fire'){const sj=nearest(G,j=>adjOf(j,k=>storageAt(k,'food'))>=0,60);if(sj>=0){startAct(r,G,'flee',sj);return true}}/* 火の子は食料箱へ逃げる */
+  if(isNight()){const out=insideSet(),bj=nearest(G,j=>S.obj[j]==='bed'&&!out[j]&&free('o'+j,1)&&bedFor(j,r),200);if(bj>=0){const b=BL.bed.sleep;startAct(r,G,'sleep',bj,{key:'o'+bj,obj:bj,rate:b.rate,pt:b.pt,run:true});return true}}
+  const hj=nearest(G,j=>S.obj[j]==='house'&&free('o'+j,2),12);
+  if(hj>=0){startAct(r,G,'flee',hj,{key:'o'+hj,house:true});return true}
+  const ens=S.enemies.filter(e=>e.spawned&&!e.dead),fr=r.elem==='fire'?null:S.res.find(q=>q!==r&&q.elem==='fire'&&!q.hidden);/* 「コワイノ」からはなれる。火のせいれいがいれば、そのそばへ */
+  let best=-1,bs=-1e9;for(let j=0;j<W*H;j++){const d=G.dist[j];if(!(d>=3&&d<=14))continue;const x=j%W+.5,y=((j/W)|0)+.5;let me=99;for(const e of ens)me=Math.min(me,Math.hypot(x-e.x,y-e.y));if(me<2)continue;const sc=fr?Math.min(me,6)-Math.hypot(x-fr.x,y-fr.y)*.8-d*.05:me-d*.15;if(sc>bs){bs=sc;best=j}}
+  if(best>=0){startAct(r,G,'flee',best);return true}return false}
+function fleeGraph(r){const bl=new Set();for(const e of S.enemies){if(!e.spawned||e.dead)continue;const ex=e.x|0,ey=e.y|0;for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){const nx=ex+dx,ny=ey+dy;if(nx>=0&&ny>=0&&nx<W&&ny<H)bl.add(ny*W+nx)}}bl.delete((r.y|0)*W+(r.x|0));const G=roadSearch(r.x|0,r.y|0,bl);G.bl=bl;return G}/* 「コワイノ」のすぐそばを通らずに逃げられる道 */
+function withFlee(r,fn,G){const Gf=fleeGraph(r);let ok=false;FLEEBL=Gf.bl;try{ok=fn(r,Gf)}finally{FLEEBL=null}return ok||fn(r,G)}
+function fleeAlarm(r,G){
+  if(r.elem==='fire'){if(S.food>0){const sj=nearest(G,j=>adjOf(j,k=>storageAt(k,'food'))>=0,60);if(sj>=0){startAct(r,G,'flee',sj);return true}}else{const f=ripeAdj(['berry','fruit']),fj=nearest(G,j=>f(j)>=0,60);if(fj>=0){const k=f(fj);startAct(r,G,'forage',fj,{key:'o'+k,obj:k});return true}const bj=nearest(G,j=>adjOf(j,k=>S.obj[k]==='berry'||S.obj[k]==='fruit')>=0,60);if(bj>=0){startAct(r,G,'flee',bj);return true}}}/* 火の子は食料箱へ逃げる。食べ物がなければ、ベリーの茂みや果物の木へ逃げて、実を食べる */
+  const hj=nearest(G,j=>S.obj[j]==='house'&&free('o'+j,2),30);if(hj>=0){startAct(r,G,'flee',hj,{key:'o'+hj,house:true});return true}
+  const en=S.enemies.find(e=>e.spawned&&!e.flee);if(!en)return false;let best=-1,bs=-1;for(let j=0;j<W*H;j++){const d=G.dist[j];if(d<2||d>12)continue;const sc=Math.hypot(j%W+.5-en.x,((j/W)|0)+.5-en.y)-d*.2;if(sc>bs){bs=sc;best=j}}
+  if(best>=0){startAct(r,G,'flee',best);return true}return false}
 function decide0(r){
   const tx=r.x|0,ty=r.y|0,G=bfs(tx,ty),here=ty*W+tx;
   // 夜に家の中にいるせいれいは、おなかがすいても外へは出ない（見張り番の火のせいれいはべつ）
   if(isNight()&&!(isWatch(r)&&S.enemyOn&&!offShift(r)&&r.hunger>=30)&&!(r.hunger<hMax(r)*.5&&S.food>0)&&S.obj[here]!=='door'&&S.obj[here]!=='sdoor'){const out=insideSet();if(!out[here])for(let j=0;j<W*H;j++)if(out[j]||S.obj[j]==='door'||S.obj[j]==='sdoor')G.dist[j]=-1}
-  if(r.alarm!=null&&S.t-r.alarm<120&&r.hunger>=10&&!(r.elem==='fire'&&r.hunger>=35)&&S.enemies.some(e=>e.spawned&&!e.flee&&Math.hypot(e.x-r.x,e.y-r.y)<10)){if(r.elem==='fire'){if(S.food>0){const sj=nearest(G,j=>adjOf(j,k=>storageAt(k,'food'))>=0,60);if(sj>=0)return startAct(r,G,'flee',sj)}else{const f=ripeAdj(['berry','fruit']),fj=nearest(G,j=>f(j)>=0,60);if(fj>=0){const k=f(fj);return startAct(r,G,'forage',fj,{key:'o'+k,obj:k})}const bj=nearest(G,j=>adjOf(j,k=>S.obj[k]==='berry'||S.obj[k]==='fruit')>=0,60);if(bj>=0)return startAct(r,G,'flee',bj)}}/* 火の子は食料箱へ逃げる。食べ物がなければ、ベリーの茂みや果物の木へ逃げて、実を食べる */const hj=nearest(G,j=>S.obj[j]==='house'&&free('o'+j,2),30);if(hj>=0)return startAct(r,G,'flee',hj,{key:'o'+hj,house:true});const en=S.enemies.find(e=>e.spawned&&!e.flee);let best=-1,bs=-1;for(let j=0;j<W*H;j++){const d=G.dist[j];if(d<2||d>12)continue;const sc=Math.hypot(j%W+.5-en.x,((j/W)|0)+.5-en.y)-d*.2;if(sc>bs){bs=sc;best=j}}if(best>=0)return startAct(r,G,'flee',best)}
+  if(r.alarm!=null&&S.t-r.alarm<120&&r.hunger>=10&&!(r.elem==='fire'&&r.hunger>=35)&&S.enemies.some(e=>e.spawned&&!e.flee&&Math.hypot(e.x-r.x,e.y-r.y)<10)){if(withFlee(r,fleeAlarm,G))return}
   if(r.cing&&!isNight()){const ov=q=>S.obj[q]==='oven'&&free('o'+q,1);let j=nearest(G,j=>adjOf(j,q=>q===r.cing.ov&&ov(q))>=0,90);if(j<0)j=nearest(G,j=>adjOf(j,ov)>=0,90);
     if(j>=0){const q=adjOf(j,k=>k===r.cing.ov&&ov(k))>=0?r.cing.ov:adjOf(j,ov);r.cing.ov=q;const st=ovenStand(G,q);return startAct(r,G,'cook',st>=0?st:j,{key:'o'+q,obj:q})}
     if(!cnt('oven')){const R=RECIPES.find(x=>x.out===r.cing.rec);for(const k in R.need)addFood(k,R.need[k]);r.cing=null}}
@@ -2048,15 +2065,7 @@ function updRes(r,dt){if((RHOLD.get(r)||0)>performance.now())return;/* 喜んで
   if(r.elem==='fire'&&r.hunger>=35){r.fleeNow=false;if(r.act&&r.act.type==='flee')endAct(r)}
   if(r.fleeNow&&!r.hidden&&!(r.act&&(r.act.type==='flee'||r.act.run))){r.fleeNow=false;
     const en=S.enemies.find(e=>e.spawned&&Math.hypot(e.x-r.x,e.y-r.y)<6);
-    if(en){r.fleeT=S.t;endAct(r);const G=bfs(r.x|0,r.y|0);
-      if(r.hunger<50&&S.food>0){const sj=nearest(G,j=>adjOf(j,k=>storageAt(k,'food'))>=0,60);if(sj>=0){startAct(r,G,'fetch',sj,{run:true});return}}/* おなかがすいていたら、にげながら食料箱でごはんをとる */
-      if(r.elem==='fire'){const sj=nearest(G,j=>adjOf(j,k=>storageAt(k,'food'))>=0,60);if(sj>=0){startAct(r,G,'flee',sj);return}}/* 火の子は食料箱へ逃げる */
-      if(isNight()){const out=insideSet(),bj=nearest(G,j=>S.obj[j]==='bed'&&!out[j]&&free('o'+j,1)&&bedFor(j,r),200);if(bj>=0){const b=BL.bed.sleep;startAct(r,G,'sleep',bj,{key:'o'+bj,obj:bj,rate:b.rate,pt:b.pt,run:true});return}}
-      const hj=nearest(G,j=>S.obj[j]==='house'&&free('o'+j,2),12);
-      if(hj>=0){startAct(r,G,'flee',hj,{key:'o'+hj,house:true});return}
-      const ens=S.enemies.filter(e=>e.spawned&&!e.dead),fr=r.elem==='fire'?null:S.res.find(q=>q!==r&&q.elem==='fire'&&!q.hidden);/* 「コワイノ」からはなれる。火のせいれいがいれば、そのそばへ */
-      let best=-1,bs=-1e9;for(let j=0;j<W*H;j++){const d=G.dist[j];if(!(d>=3&&d<=14))continue;const x=j%W+.5,y=((j/W)|0)+.5;let me=99;for(const e of ens)me=Math.min(me,Math.hypot(x-e.x,y-e.y));if(me<2)continue;const sc=fr?Math.min(me,6)-Math.hypot(x-fr.x,y-fr.y)*.8-d*.05:me-d*.15;if(sc>bs){bs=sc;best=j}}
-      if(best>=0){startAct(r,G,'flee',best);return}}}
+    if(en){r.fleeT=S.t;endAct(r);const G=bfs(r.x|0,r.y|0);if(withFlee(r,fleeHit,G))return}}
   if(r.act&&isNight()&&!NIGHT_OK.includes(r.act.type))endAct(r)
   if(r.act&&r.act.type==='sevreact'&&(r.hunger<30||r.energy<10||!SEV_ENCOUNTERS.get(S)||!sevEncounterSafe(SEV_ENCOUNTERS.get(S))))endAct(r);
   if(r.act&&r.act.type==='questjoy'&&(r.hunger<30||r.energy<10||!questVisitSafe(r,r.act.obj)))endAct(r);
