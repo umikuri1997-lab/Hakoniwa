@@ -2064,7 +2064,7 @@ function updRes(r,dt){if((RHOLD.get(r)||0)>performance.now())return;/* 喜んで
   if(!r.act){decide(r);return}
   const a=r.act;
   if(a.stage==='walk'){moveR(r,dt);return}
-  const wdt=WORKT.has(a.type)?dt*rMul(r,'work'):dt;/* 力があるほど作業が速い */
+  const wdt=WORKT.has(a.type)&&a.type!=='cook'?dt*rMul(r,'work'):dt;/* 料理は、力に関係なく、説明どおりの時間 *//* 力があるほど作業が速い */
   a.t+=wdt;const A=ACT[a.type];
   if(A.tick)A.tick(r,a,wdt);
   if(A.done(r,a)){if(A.end)A.end(r,a);endAct(r)}
