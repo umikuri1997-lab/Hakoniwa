@@ -898,7 +898,9 @@ const cnt=id=>counts[id]||0;
 const FOODS={mugi:{name:'こむぎ',v:1,e:'🌾'},imo:{name:'いも',v:1,e:'🥔'},tomato:{name:'キャベツ',v:1,e:'🥬'},berry:{name:'ベリー',v:1,e:'🫐'},apple:{name:'りんご',v:1,e:'🍎'},fish:{name:'さかな',v:1,e:'🐟'},
   bread:{name:'パン',v:3,pt:3,dish:1,e:'🍞',fx:'5時間、腹持ちがよくなる（おなかのへる速さ×0.6）'},soup:{name:'トマトスープ',v:3,pt:3,dish:1,e:'🍲',fx:'元気+25'},yakiimo:{name:'ベイクドポテト',v:2,pt:2,dish:1,e:'🍠',fx:'3時間、作業速度×1.15'},yakizakana:{name:'焼き魚',v:2,pt:4,dish:1,e:'🐠',fx:'食べるとパワー+1.8'},yakiberry:{name:'焼きベリー',v:2,pt:2,dish:1,e:'🍮',fx:'たのしさ+15'},yakiapple:{name:'焼きりんご',v:2,pt:2,dish:1,e:'🥧',fx:'3時間、移動速度×1.15'},salad:{name:'サラダ',v:2,pt:2,dish:1,e:'🥗',fx:'元気+10・たのしさ+10'}};
 FOODS.berry.fx=FOODS.apple.fx='たのしさ+8';
-const DISHD=R=>{const F=FOODS[R.out];return F.name+'：材料は '+Object.keys(R.need).map(k=>FOODS[k].name+'×'+R.need[k]).join('・')+' / 時間：約'+R.time+'分 / 効果：おなかが'+F.v+'ふくれて、パワー+'+F.pt+'。'+(F.fx?'さらに、'+F.fx+'。':'')};/* ハテナに出す料理の説明 */
+const DISHFL={yakiimo:'ほくほくのおいも。',bread:'こんがり焼けたパン。',soup:'からだがあたたまるスープ。',yakizakana:'こうばしい焼き魚。',yakiberry:'あまずっぱい焼きベリー。',yakiapple:'とろっと甘い焼きりんご。',salad:'しゃきしゃきのサラダ。'};
+const needTxt=R=>Object.keys(R.need).map(k=>FOODS[k].name+(R.need[k]>1?'×'+R.need[k]:'')).join('・');/* 材料は1つなら数をつけない */
+const DISHD=R=>{const F=FOODS[R.out];return (DISHFL[R.out]||F.name+'。')+'/材料:'+needTxt(R)+'/時間:'+R.time+'分/効果:お腹'+F.v+'、パワー+'+F.pt+(F.fx?'、'+F.fx.replace(/、/g,''):'')};/* ハテナに出す料理の説明 */
 const DISHES=['bread','soup','yakiimo','yakizakana'],favDish=r=>{const ds=WD===0?DISHES.filter(d=>d!=='soup'):DISHES;return ds[[...r.name].reduce((a,c)=>a+c.charCodeAt(0),0)%ds.length]};/* すきな料理は名前できまる */
 function imoSeedQuestPlots(){if(!S.imoSeedQuestPlots){S.imoSeedQuestPlots=[];for(let j=0;j<S.obj.length;j++){const d=S.dyn[j];if(S.obj[j]==='farm'&&d&&d.crop==='imo'&&(d.paid||d.sown===true))S.imoSeedQuestPlots.push(j)}}return S.imoSeedQuestPlots}
 const farmsBare=()=>{let n=0;for(let j=0;j<S.obj.length;j++)if(S.obj[j]==='farm'&&S.dyn[j]&&S.dyn[j].crop===null)n++;return n};/* たねをえらんでいない畑の数 */
@@ -4538,7 +4540,7 @@ function renderSheet(){
     const j=sheetArg;if(S.obj[j]!=='oven')return closeSheet();if(!S.ovenSet)S.ovenSet={};const cur=S.ovenSet[j];T.textContent='かまど';
     body.appendChild(el('<p class="story">作る料理をえらぶと、火のせいれいが食料箱の材料で作ってくれる。</p>'));
     const rows=el('<div class="rows"></div>');
-    for(const R of RECIPES){const F=FOODS[R.out],need=Object.keys(R.need).map(k=>FOODS[k].name+'×'+R.need[k]).join('・'),has=Object.keys(R.need).every(k=>(S.fs[k]||0)>=R.need[k]);
+    for(const R of RECIPES){const F=FOODS[R.out],need=needTxt(R),has=Object.keys(R.need).every(k=>(S.fs[k]||0)>=R.need[k]);
       const r=helpify(rowEl((icURL(F.e)?'':F.e+' ')+F.name+(cur===R.out?'（作っている）':''),'材料：'+need+' / 時間：'+R.time+'分'+(F.fx?' / 効果：'+F.fx:'')+(has?'':'・材料が足りない'),icURL(F.e)),DISHD(R));
       const b=el('<button class="btn"></button>');b.textContent=cur===R.out?'やめる':'これを作る';if(cur===R.out)b.classList.add('pri');
       b.onclick=()=>{if(cur===R.out)delete S.ovenSet[j];else S.ovenSet[j]=R.out;sfx('tap');renderSheet()};r.appendChild(b);if(!has&&cur!==R.out){r.style.filter='grayscale(1)';r.style.opacity='.55'}/* 材料が足りない料理はグレー */rows.appendChild(r)}
