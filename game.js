@@ -1869,8 +1869,8 @@ function hitRes(e,r,D){if(BOSSFX[e.type]){shakeScreen();fx.push({k:'ring',x:r.x*
   const lv=rLv(r);S.nightHurt++;if(S.ns)S.ns.hurt++;const fire=r.elem==='fire';
   if(r.act&&['sleep','stay','rest','idle'].includes(r.act.type)&&r.act.stage==='do')endAct(r);/* 攻撃されたら、寝ていても起きる */
   const adj=Math.hypot(e.x-r.x,e.y-r.y)<=Math.max(1.1,reachOf(D)+.05);/* せいれいの攻撃は、となりにいる相手だけ（遠くから攻撃してくる大きいコワイノには、その距離でもやり返せる） */const ba=((r.bst&&r.bst.atk)||0)+((r.sst&&r.sst.atk)||0);if((fire||lv>=3||ba)&&adj){/* やり返しはしない（攻撃されたときの受けるダメージの軽さだけ、戦える子は今までどおり） */
-    r.hunger=Math.max(0,r.hunger-Math.round(D.hit/2));r.hurt=40;if(r.hunger<35&&!D.boss)r.fleeNow=true;/* 体力（おなか）がへったら逃げる */}
-  else{r.hunger=Math.max(0,r.hunger-Math.round(D.hit*.6));r.fun=Math.max(0,r.fun-20);r.hurt=40;r.fleeNow=!D.boss;
+    r.hunger=Math.max(0,r.hunger-Math.round(D.hit/2));r.hurt=40;if(r.hunger<35)r.fleeNow=true;/* 体力（おなか）がへったら逃げる（オオカゲが相手でも同じ） */}
+  else{r.hunger=Math.max(0,r.hunger-Math.round(D.hit*.6));r.fun=Math.max(0,r.fun-20);r.hurt=40;r.fleeNow=true;/* 戦えない子は、オオカゲが相手でも逃げる */
     if(D.boss&&Math.random()<.25){endAct(r);r.act={type:'faint',stage:'do',t:0};r.bubble='😵'}/* ボスの攻撃で気絶するのは、4回に1回くらい */}r.alarm=S.t;
   if(h0>=12&&r.hunger<3)r.hunger=3;/* 一撃では消えない */
   e.stun=(fire||lv>=3)?(D.boss?1.5:2):(D.boss?3:4);if(lightAt(e.x,e.y))e.stun/=.75;e.path=[];e.repath=0;
@@ -4922,7 +4922,7 @@ function thumb(cv2,k,open){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='333';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='334';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
