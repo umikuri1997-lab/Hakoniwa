@@ -1227,13 +1227,14 @@ function decide0(r){
   if(!isWatch(r)&&hostileNow()&&r.hunger>=30&&!r.coffin&&goShiver(r,G))return;/* たたかえない子は、コワイノがいるあいだ、家でふるえる *//* 食べ物のところへ逃げてきたら、ちゃんと食べる */
   // 夜に家の中にいるせいれいは、おなかがすいても外へは出ない（見張り番の火のせいれいはべつ）
   if(isNight()&&!(isWatch(r)&&S.enemyOn&&!offShift(r)&&r.hunger>=30)&&!(r.hunger<hMax(r)*.5&&S.food>0)&&S.obj[here]!=='door'&&S.obj[here]!=='sdoor'){const out=insideSet();if(!out[here])for(let j=0;j<W*H;j++)if(out[j]||S.obj[j]==='door'||S.obj[j]==='sdoor')G.dist[j]=-1}
+  if(r.meal)return goMeal(r,G);
+  if(r.hunger<30||(r.hunger<45&&Math.hypot(r.x-CX,r.y-CY)>20))return goEat(r,G);/* ごはんは、なによりも先。基地から遠いときは早めに帰る */
   if(r.alarm!=null&&S.t-r.alarm<120&&r.hunger>=10&&!r.meal&&!(r.elem==='fire'&&r.hunger>=35)&&S.enemies.some(e=>e.spawned&&!e.flee&&Math.hypot(e.x-r.x,e.y-r.y)<10)){if(withFlee(r,fleeAlarm,G))return}
   if((r.coffin||cnt('grave'))&&goBurial(r,G))return;
   if(r.cing&&!isNight()){const ov=q=>S.obj[q]==='oven'&&free('o'+q,1);let j=nearest(G,j=>adjOf(j,q=>q===r.cing.ov&&ov(q))>=0,90);if(j<0)j=nearest(G,j=>adjOf(j,ov)>=0,90);
     if(j>=0){const q=adjOf(j,k=>k===r.cing.ov&&ov(k))>=0?r.cing.ov:adjOf(j,ov);r.cing.ov=q;const st=ovenStand(G,q);return startAct(r,G,'cook',st>=0?st:j,{key:'o'+q,obj:q})}
     if(!cnt('oven')){const R=RECIPES.find(x=>x.out===r.cing.rec);for(const k in R.need)addFood(k,R.need[k]);r.cing=null}}
   if(r.toStor){if(carryN(r)>0&&foodCap()>0)return goStore(r,G);r.toStor=0}
-  if(r.meal)return goMeal(r,G);
   {const h=hour();if(!isNight()&&r.hunger>=40&&h>=18+hash((r.id||0)*13+5)*.4&&r.bathD!==dayNo()&&goBathe(r,G))return}/* 夜（23時〜）は水浴びを始めない（始めても、すぐやめさせられるので）。おなかがすいているときは、ごはんが先 */
   if(r.elem==='water'&&!isNight()&&r.hunger>=40&&r.bathW!==dayNo()&&hour()>=10+hash((r.id||0)*7+dayNo())*6){const bd=r.bathD;r.bathW=dayNo();if(goBathe(r,G))return;r.bathD=bd}/* 水のせいれいは、昼間にも水あそびをする */
   if(WD===1&&!isNight()&&r.hunger>=40&&springN()&&r.energy<35&&!((r.bathCD||0)>S.t)){r.bathCD=S.t+240;const bd=r.bathD;if(goBathe(r,G))return;r.bathD=bd}/* 温泉の村：つかれたら温泉へ */
@@ -1242,7 +1243,6 @@ function decide0(r){
   if(heldN(r)>0){if(heldN(r)<capOf(r)&&!isNight()&&r.hunger>=30&&!r.highFirst){const cm=r.cmat||{},gm=(cm.stone||0)>0?['mine']:(cm.wood||0)>0?['chop']:[],gat=true;for(const k of['harvest',...gm,'gather'])if(tryJob(r,G,k))return}
     if(carryN(r)>0&&foodCap()>0)return goStore(r,G)}
   if(r.cmat&&matCap()>0)return goStoreMat(r,G);
-  if(r.hunger<30||(r.hunger<45&&Math.hypot(r.x-CX,r.y-CY)>20))return goEat(r,G);/* 基地から遠いときは早めに帰る */
   if(isNight()&&r.hunger<hMax(r)*.5&&S.food>0&&!S.enemies.some(e=>e.spawned&&!e.dead&&Math.hypot(e.x-r.x,e.y-r.y)<7)){return goEat(r,G)}/* 夜も、おなかが半分になったら食べにいく（見回りの子もふくめて） */
   if(r.elem==='fire'&&r.hunger>=35&&!r.refill){let en=null,bd=1e9;const br=BASE_R[S.baseLv]+3;for(const e of S.enemies){if(!e.spawned||e.dead)continue;if(!(e.x>=CX-br&&e.x<CX+br&&e.y>=CY-br&&e.y<CY+br))continue;const d=Math.hypot(e.x-r.x,e.y-r.y);if(d<bd){bd=d;en=e}}/* 「コワイノ」が拠点に近づいたら、たたかいに行く（おなか＝体力が少ないときは行かない） */
     if(en){const j=huntSpot(G,en,60,r);/* 敵と同じマスではなく、ひとます離れて */if(j>=0)return startAct(r,G,'patrol',j,{hunt:S.t})}}/* となりに行けなくても、いちばん近くまで行く。見回りの中断でぐるぐるしないよう hunt をつける */
@@ -1645,6 +1645,7 @@ function updRes(r,dt){rescueStuck(r);if((RHOLD.get(r)||0)>performance.now())retu
   if(!S.enemyOn&&r.hunger<40)r.hunger=40;/* チュートリアル中は、おなかで消えない */
   if(r.hunger<10&&!r.hw10&&S.enemyOn){r.hw10=1;toast(r.name+'のおなかが、もうすぐからっぽ！','warn')}else if(r.hunger>=25)r.hw10=0;
   if(r.hunger<=0){r.hunger=0;return die(r)}
+  if(r.act&&r.hunger<30&&S.food>0&&!['eat','fetch','forage','flee','faint'].includes(r.act.type))endAct(r);/* おなかがすいたら、なにをしていても、やめて食べにいく */
   if(r.act&&r.act.type==='repair'&&r.hunger<=50&&S.food>0&&!isNight()){endAct(r);goEat(r,bfs(r.x|0,r.y|0));return}
   if(r.cing&&r.hunger<=25&&S.food<=0){const R=RECIPES.find(x=>x.out===r.cing.rec);if(R)for(const k in R.need)addFood(k,R.need[k]);r.cing=null;if(r.act&&r.act.type==='cook')endAct(r);if(r.bubble==='🔥'||r.bubble==='🍳')r.bubble=null}/* 料理中におなかがすいたら、材料をもどして食べにいく */
   if(r.act&&r.hunger<=(r.act.type==='cook'?25:50)&&S.food>0&&!isNight()&&WORKT.has(r.act.type)){endAct(r)}/* おなかが50いかになったら、作業をやめて食べにいく */
@@ -4919,7 +4920,7 @@ function thumb(cv2,k,open){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='326';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='327';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
