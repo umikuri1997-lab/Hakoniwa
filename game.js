@@ -3693,7 +3693,7 @@ function drawRes0(r,now){
   const by=fy-27;
   const ci=carryIcon(r);
   const over=()=>{
-  if(ci){const cb=walking?Math.abs(Math.sin(now/110+r.id))*1.2:0;ctx.font='26px sans-serif';ctx.fillStyle='#000';ctx.textAlign='center';ctx.textBaseline='middle';{let cl=carryIcons(r);if(!cl.length)cl=[ci];if(!cl[0])cl=[];const cap=trt(r,'chikara')?5:4;if(cl.length>cap)cl=cl.slice(-cap);const hn=cl.length;for(let i=0;i<hn;i++){const e1=cl[i],ei=emoImg(e1),ox=(i%2?3:-3)*(hn>1?1:0),oy=-i*7;if(ei){const k=30/Math.max(ei.width,ei.height),iw=ei.width*k,ih=ei.height*k;ctx.drawImage(ei,px-iw/2+ox,fy-47-cb-ih/2+oy+(hn-1)*3+(e1==='⚰️'?7:0),iw,ih)}else ctx.fillText(e1,px+ox,fy-47-cb+oy+(hn-1)*3)}}/* たくさん持つときは、アイコンを重ねる */ctx.textAlign='start';ctx.textBaseline='alphabetic'}
+  if(ci){const cb=walking?Math.abs(Math.sin(now/110+r.id))*1.2:0;ctx.font='26px sans-serif';ctx.fillStyle='#000';ctx.textAlign='center';ctx.textBaseline='middle';{let cl=carryIcons(r);if(!cl.length)cl=[ci];if(!cl[0])cl=[];const hn=cl.length;/* 持っている数だけ、そのまま積む */for(let i=0;i<hn;i++){const e1=cl[i],ei=emoImg(e1),ox=(i%2?3:-3)*(hn>1?1:0),oy=-i*7;if(ei){const k=30/Math.max(ei.width,ei.height),iw=ei.width*k,ih=ei.height*k;ctx.drawImage(ei,px-iw/2+ox,fy-47-cb-ih/2+oy+(hn-1)*3+(e1==='⚰️'?7:0),iw,ih)}else ctx.fillText(e1,px+ox,fy-47-cb+oy+(hn-1)*3)}}/* たくさん持つときは、アイコンを重ねる */ctx.textAlign='start';ctx.textBaseline='alphabetic'}
   if(!(r.hurt>0)&&S.t-(r.eUp||-9)<3&&r.energy<99.5){const v=r.energy/100,bx=px-12,byy=py+11;ctx.fillStyle='rgba(0,0,0,.45)';rr(ctx,bx,byy,24,5,2.5);ctx.fillStyle='#7ed99a';rr(ctx,bx+1,byy+1,Math.max(2,22*v),3,1.5);const ph=(now/600)%1;ctx.globalAlpha=1-ph;ctx.fillStyle='#7ed99a';ctx.font='bold 9px \"Hikomi\",\"Hiragino Maru Gothic ProN\",sans-serif';ctx.textAlign='center';ctx.fillText('+',px+15,byy+4-ph*8);ctx.globalAlpha=1}/* 元気が回復中：みどりのバー */
   if(r.hurt>0){const v=r.hunger/hMax(r),a=Math.min(1,r.hurt/8);ctx.globalAlpha=a;ctx.fillStyle='rgba(0,0,0,.6)';rr(ctx,px-12,py+11,24,5,2.5);ctx.fillStyle=v>.5?'#7ee08a':v>.25?'#ecdcbc':'#ff6b6b';rr(ctx,px-11,py+12,Math.max(2,22*v),3,1.5);ctx.globalAlpha=1}
   if(at==='craft'&&ad){const o=S.orders.find(q=>q.id===r.act.order);if(o){const f=Math.min(1,o.prog/o.need),bx=px-16,byy=py+(r.hurt>0?19:12);ctx.fillStyle='rgba(150,115,75,.5)';rr(ctx,bx-1.5,byy-1.5,35,8,4);ctx.fillStyle='#e8dcc0';rr(ctx,bx,byy,32,5,2.5);ctx.fillStyle='#e0a43a';rr(ctx,bx,byy,Math.max(2.5,32*f),5,2.5)}}/* 依頼の作業の進み具合は足もと。吹き出しは上に出す */
@@ -4359,7 +4359,7 @@ function renderPalette(){
 }
 function gaugeHTML(r){
   const g=(l,v,c)=>`<span>${l}</span><div class="bar"><i style="width:${clamp(v,0,100)|0}%;background:${c}"></i></div>`;
-  return `<div class="gauges">${g('おなか',r.hunger/hMax(r)*100,r.hunger<25?'var(--danger)':'#ffb35c')}${g('たのしさ',r.fun,'var(--pink)')}${g(S.t-(r.eUp||-9)<3?'つかれ（回復中）':'つかれ',100-r.energy,S.t-(r.eUp||-9)<3?'#7ed99a':r.energy<25?'var(--danger)':'#c9a7ff')}</div>`;
+  return `<div class="gauges">${g('おなか '+Math.round(r.hunger)+'/'+hMax(r),r.hunger/hMax(r)*100,r.hunger<25?'var(--danger)':'#ffb35c')}${g('たのしさ',r.fun,'var(--pink)')}${g(S.t-(r.eUp||-9)<3?'つかれ（回復中）':'つかれ',100-r.energy,S.t-(r.eUp||-9)<3?'#7ed99a':r.energy<25?'var(--danger)':'#c9a7ff')}</div>`;
 }
 let sheet=null,sheetArg=null;
 function attrPop(k){
