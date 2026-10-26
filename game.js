@@ -1275,7 +1275,7 @@ function goMeal(r,G){
   return startAct(r,G,'eat',-1,{pt:0,pw:0});
 }
 function useNat(j){const o=S.obj[j];if(!o)return;const n=(S.hp['n'+j]||0)+1;if(n<(o==='boulder'?4:10)){S.hp['n'+j]=n;return}
-  delete S.hp['n'+j];const x=j%W,y=(j/W)|0;if(o==='boulder'){clearObj(j);burst(j,'block');recount();checkQuest();return}if(!inBase(x,y))(S.regrow||(S.regrow=[])).push({j,id:o,t:S.t+4320});clearObj(j);burst(j,'block');recount()}
+  delete S.hp['n'+j];const x=j%W,y=(j/W)|0;if(o==='boulder'){clearObj(j);burst(j,'block');recount();checkQuest();return}if(!inBase(x,y))(S.regrow||(S.regrow=[])).push({j,id:o,day:dayNo()+3})/* 3日後の朝に生えなおす */;clearObj(j);burst(j,'block');recount()}
 function ovenStand(G,q){let b=-1,bd=1e9;for(const[k,pen]of[[q-1,0],[q+1,0],[q+W,2],[q-W,40]]){const d=G.dist[k];if(d<0||!walk(k))continue;if(d+pen<bd){bd=d+pen;b=k}}return b}
 function goStoreMat(r,G){const j=nearest(G,j=>adjOf(j,k=>storageAt(k,'mat'))>=0,200);if(j>=0)return startAct(r,G,'smat',j);return startAct(r,G,'idle',-1,{dur:15})}
 function goStore(r,G){const j=nearest(G,j=>adjOf(j,k=>storageAt(k,'food'))>=0,90);if(j>=0)return startAct(r,G,'store',j);return startAct(r,G,'idle',-1,{dur:15})}
@@ -1998,8 +1998,7 @@ function stepWorld(dt){if((SUBT+=dt)>1){SUBT=0;checkSub();checkSev();guardTick()
   const prevH=hour(),t0=S.t;let nt=S.t+dt/1.5;// 時計：夜も昼と同じ速さ（1日は1.5倍の長さ）
   let hold=false;if(!S.enemyOn){const c=clk(),cap=Math.floor(c/1440)*1440+18*60,nc=c+(nt-S.t);if(nc>cap){S.hold=(S.hold||0)+Math.min(nt-S.t,nc-cap);hold=true}}/* チュートリアルで夜がはじまるまで、時計は18時で止めておく。S.tは動かす */S.t=nt;if(hold){S.tAcc=(S.tAcc||0)+dt;}const h=hour();
   for(const k in S.dyn){const o=S.obj[k],d=S.dyn[k];if(!o){delete S.dyn[k];continue}
-    if(o==='farm'){if(d.sown===false)continue;if((S.rain&&!isNight()||NEARWELL.has(+k))&&d.g<100)d.wet=100}
-    else if((o==='berry'||o==='fruit')&&d.g<100)d.g=Math.min(100,d.g+100/5760*(S.t-t0))}// ベリー・りんごは4日で復活
+    if(o==='farm'){if(d.sown===false)continue;if((S.rain&&!isNight()||NEARWELL.has(+k))&&d.g<100)d.wet=100}}/* ベリー・りんごの実は、朝6時に1日ぶんずつ育つ（morning） */
   for(const r of S.res.slice())updRes(r,dt);
   sepRes(dt);
   for(const e of S.enemies)updEnemy(e,dt);
@@ -2379,8 +2378,8 @@ function subSec(body,main){const D=S.subDone||{},St=S.subSt||{},L=subList().filt
 function checkFree(){if(!S.cleared)return;const D=S.freeDone||(S.freeDone={});for(const g of FREEG)if(!D[g.k]&&g.ok()){D[g.k]=1;S.pt+=g.rw;S.totalPt+=g.rw;toast('目標たっせい：'+g.t+'（パワー+'+g.rw+'）','good');memo('🎯',g.t)}}
 const DAYEV={hosaku:['🌾','豊作の日','収穫がひとつ多い'],oshaberi:['💬','おしゃべりの日','おしゃべりがはずむ。おしゃべり1回のパワー+0.9'],odayaka:['🌙','おだやかな夜','今夜の「コワイノ」が半分（オオカゲはそのまま）'],kaze:['🍃','風の強い日','ふしぎな種が2倍落ちてくる'],kami:['⛩️','カミサマの訪問日','カミサマが遊びにくる'],hoshi:['✨','星空の夜','3時に寝ている子のたのしさ+15'],mono:['🎁','ものひろいの日','村のあちこちに落とし物がある']};
 function morning(){sfx('morning');S.oracle=null;finalCheck();if(S.bud){let nb=0;for(const j in S.bud)if(S.bud[j]<=dayNo()){delete S.bud[j];nb++}if(nb){recount();dirty=true}}S.res.filter(r=>r.comfy===dayNo()).forEach(r=>addFloat(r.x,r.y-1.4,'ぐっすり！','#d8f5c0'));{const L=S.res.filter(r=>r.crowd===dayNo());if(L.length){L.forEach(r=>{r.bubble='😣';addFloat(r.x,r.y-1.4,'きゅうくつだった…','#ffd2cc')});toast('家がきゅうくつで、よく眠れなかったせいれいがいる','warn')}}
-  if(S.regrow&&S.regrow.length){let ch=false;S.regrow=S.regrow.filter(g=>{if(S.t<g.t)return true;if(!S.obj[g.j]&&!S.floor[g.j]&&!S.res.some(r=>(r.y|0)*W+(r.x|0)===g.j)){S.obj[g.j]=g.id;ch=true;return false}return true});if(ch)recount()}
-  for(const k in S.dyn){if(S.obj[k]!=='farm')continue;const d=S.dyn[k];if(d.sown===false){d.wet=0;continue}if(d.wet>0&&d.g<100)d.g=Math.min(100,d.g+100/((CROPS[d.crop]||CROPS.mugi).days));d.wet=0}
+  if(S.regrow&&S.regrow.length){let ch=false;S.regrow=S.regrow.filter(g=>{if(g.day!=null?dayNo()<g.day:S.t<g.t)return true;if(!S.obj[g.j]&&!S.floor[g.j]&&!S.res.some(r=>(r.y|0)*W+(r.x|0)===g.j)){S.obj[g.j]=g.id;ch=true;return false}return true});if(ch)recount()}
+  for(const k in S.dyn){const o=S.obj[k],d=S.dyn[k];if((o==='berry'||o==='fruit')&&d&&d.g<100){d.g=Math.min(100,d.g+25);continue}/* ベリー・りんごは4日（朝ごとに25） */if(o!=='farm')continue;if(d.sown===false){d.wet=0;continue}if(d.wet>0&&d.g<100)d.g=Math.min(100,d.g+100/((CROPS[d.crop]||CROPS.mugi).days));d.wet=0}
   S.rain=Math.random()<.22;
   S.today=null;if(S.enemyOn&&dayNo()>=3&&Math.random()<.4){const ks=Object.keys(DAYEV).filter(k=>k!=='kami');const k=pick(ks),E=DAYEV[k];S.today=k;/* 日替わりのできごと */
     setTimeout(()=>toast('きょうは「'+E[1]+'」：'+E[2],'good'),1200);memo(E[0],'きょうは「'+E[1]+'」');
@@ -4180,7 +4179,7 @@ function onTap(sx,sy){
     if(o==='bed')return openSheet('bed',j);
     if(o==='stor')return openSheet('food');
     if(o==='oven')return openSheet('oven',j);
-    if(o==='farm'){const d=S.dyn[j];return toast(d.g>=100?'畑：収穫できる':'畑：収穫まであと'+Math.round((100-d.g)/50)+'日・きょうの水やり'+(d.wet>0?'ずみ':'まだ'))}
+    if(o==='farm'){const d=S.dyn[j];return toast(d.g>=100?'畑：収穫できる':'畑：収穫まであと'+Math.ceil((100-d.g)/(100/(CROPS[cropK(d)]||CROPS.mugi).days)-.01)+'日・きょうの水やり'+(d.wet>0?'ずみ':'まだ'))}
     if(o==='plot')return toast('耕す前の畑：せいれいが耕しにくる');
     if(o==='sprout')return toast(BL[S.dyn[j].plant].name+'を植える場所：せいれいが植えにくる');
     if(o==='site'){const d=S.dyn[j];return toast(BL[d.build].name+'を建設中：'+Math.floor(d.p/d.need*100)+'%')}
@@ -4943,7 +4942,7 @@ function thumb(cv2,k,open){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='341';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='342';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
