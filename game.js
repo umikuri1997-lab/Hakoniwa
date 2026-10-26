@@ -1784,14 +1784,19 @@ function lightAt(x,y){for(const j of LIGHTS){const o=S.obj[j];const lx=j%W+(o===
 const EREACH=new WeakMap();
 const ZUKAN={basic:'いちばんよく見るコワイノ。夜になると、せいれいをねらってやってくる。',fast:'足がとても速い。体は小さくて、すぐ追いはらえる。',thief:'畑の実った作物をぬすみにくる。見つかると、すぐにげる。',brute:'体がかたくて力も強い。なかなか追いはらえない。',breaker:'壁をこわすのが大好き。まわり道をしないで、まっすぐこわしてくる。',trapper:'罠を見つけると、こわしにくる。',boss:'大きなコワイノ。まわりのせいれいも巻きこんで攻撃する。',ash:'灰をまきちらして、施設をしばらく使えなくする。',rockc:'岩みたいにかたい。動きはおそい。',hino:'火山からやってくる大きなコワイノ。熱の切りかえ装置をこわそうとする。',boss2:'夜の力をたくわえた、いちばん大きなコワイノ。'};
 function shakeScreen(){const v=$('#cv');v.classList.remove('shk');void v.offsetWidth;v.classList.add('shk');setTimeout(()=>v.classList.remove('shk'),600)}
-function bossEntrance(e){/* ヨルノオオカゲの登場：画面がゆれて暗くなり、名前が大きく出る */centerOn(e.x*TS,e.y*TS);shakeScreen();dlgCue('dim');sfx('hit');
-  for(let n=0;n<4;n++)fx.push({k:'ring',x:e.x*TS,y:e.y*TS,life:1+n*.4,col:'#ffd84a'});
-  const d=document.createElement('div');d.style.cssText='position:fixed;left:0;right:0;top:32%;z-index:21;text-align:center;pointer-events:none;color:#ffe9a6;text-shadow:0 0 18px #ffd84a,0 3px 0 #05030c;font-weight:bold;opacity:0;transition:opacity .8s ease,letter-spacing 2.4s ease;letter-spacing:.05em';
-  d.innerHTML='<div style="font-size:34px">ヨルノオオカゲ</div><div style="font-size:14px;margin-top:8px;color:#fff3d6">夜の力をたくわえた、いちばん大きなコワイノ</div>';document.body.appendChild(d);
+function bigBanner(title,sub,col){/* 画面のまんなかに、大きな文字を出して消す */const d=document.createElement('div');d.style.cssText='position:fixed;left:0;right:0;top:32%;z-index:21;text-align:center;pointer-events:none;color:#ffe9a6;text-shadow:0 0 18px '+col+',0 3px 0 #05030c;font-weight:bold;opacity:0;transition:opacity .8s ease,letter-spacing 2.4s ease;letter-spacing:.05em';
+  d.innerHTML='<div style="font-size:34px"></div><div style="font-size:14px;margin-top:8px;color:#fff3d6"></div>';d.children[0].textContent=title;d.children[1].textContent=sub;document.body.appendChild(d);
   requestAnimationFrame(()=>requestAnimationFrame(()=>{d.style.opacity='1';d.style.letterSpacing='.3em'}));setTimeout(()=>{d.style.transition='opacity 1s ease';d.style.opacity='0';setTimeout(()=>d.remove(),1100)},2600)}
+const BOSSFX={boss:{col:'#ff3b6b',sub:'コワイノたちの親玉が、すがたをあらわした'},boss2:{col:'#ffd84a',sub:'夜の力をたくわえた、いちばん大きなコワイノ'}};
+function bossEntrance(e){/* オオカゲ・ヨルノオオカゲの登場：画面がよって、ゆれて暗くなり、名前が大きく出る */const B=BOSSFX[e.type];centerOn(e.x*TS,e.y*TS);shakeScreen();dlgCue('dim');sfx('hit');
+  for(let n=0;n<4;n++)fx.push({k:'ring',x:e.x*TS,y:e.y*TS,life:1+n*.4,col:B.col});bigBanner(EN[e.type].name,B.sub,B.col)}
+function bossDefeatFX(e){/* オオカゲをたおしたとき：白く光って、ゆれて、光の輪と粒がはじける */const B=BOSSFX[e.type]||BOSSFX.boss,px=e.x*TS,py=e.y*TS;centerOn(px,py);dlgCue('flash');shakeScreen();
+  for(let n=0;n<6;n++)fx.push({k:'ring',x:px,y:py,life:1+n*.3,col:n%2?'#fff3d6':B.col});
+  for(let n=0;n<36;n++){const a=n/36*6.28,v=80+(n%3)*40;fx.push({k:'p',x:px,y:py-20,vx:Math.cos(a)*v,vy:Math.sin(a)*v-60,life:1.4,col:n%2?'#fff3a0':B.col,r:3.2})}
+  bigBanner(EN[e.type].name+'を追いはらった！','みんなで、村を守りぬいた',B.col)}
 function updEnemy(e,dt){
   const D=EN[e.type];
-  if(!e.spawned){e.delay-=dt;if(e.delay<=0){[e.x,e.y]=D.dev&&WD===1?volSpot():spawnSpot();e.spawned=true;(S.seenEn||(S.seenEn={}))[e.type]=1;if(e.type==='boss2')bossEntrance(e)}return}
+  if(!e.spawned){e.delay-=dt;if(e.delay<=0){[e.x,e.y]=D.dev&&WD===1?volSpot():spawnSpot();e.spawned=true;(S.seenEn||(S.seenEn={}))[e.type]=1;if(e.type==='boss2'||e.type==='boss'&&!S.flags.bossIntro){if(e.type==='boss')S.flags.bossIntro=1;bossEntrance(e)}}return}/* オオカゲの登場演出は最初の1回、ヨルノオオカゲは毎回 */
   if(e.flash>0)e.flash-=dt;
   if(e.stun>0||S.t-(e.busyT??-1e9)<5){e.wd=0;e.wx=null}/* 罠で足止め・壁や設備をたたいているあいだは、来なおさない */
   else if(!e.flee&&!inBase(e.x|0,e.y|0)){e.wd=(e.wd||0)+dt;if(e.wd>=30){if(e.wx!=null&&Math.hypot(e.x-e.wx,e.y-e.wy)<3){[e.x,e.y]=spawnSpot();e.path=[];e.repath=0;EREACH.delete(e)}e.wd=0;e.wx=e.x;e.wy=e.y}}else{e.wd=0;e.wx=null}/* 基地の外で30分ほとんど進めていなかったら、べつの場所から来なおす（森でうろうろ対策） */
@@ -1849,7 +1854,7 @@ function updEnemy(e,dt){
 function overFence(ax,ay,bx,by){/* 柵（門もふくむ）を、はさんでいるか */const n=Math.ceil(Math.hypot(bx-ax,by-ay)*4),ia=(ay|0)*W+(ax|0),ib=(by|0)*W+(bx|0);for(let k=1;k<n;k++){const px=ax+(bx-ax)*k/n,py=ay+(by-ay)*k/n,q=(py|0)*W+(px|0);if(q===ia||q===ib)continue;if(FENCE_IDS.has(typeAt(q)))return true}return false}
 function fenceBetween(ax,ay,bx,by){/* 壁をはさんでいたら、離れたところからは攻撃できない（柵はこえて攻撃できる） */const n=Math.ceil(Math.hypot(bx-ax,by-ay)*4),ia=(ay|0)*W+(ax|0),ib=(by|0)*W+(bx|0);for(let k=1;k<n;k++){const px=ax+(bx-ax)*k/n,py=ay+(by-ay)*k/n,q=(py|0)*W+(px|0);if(q===ia||q===ib)continue;const t=typeAt(q);if(HOME_WALLS.has(t))return true}return false}
 const hsOf=D=>D.size>=1.5?2:1,reachOf=D=>D.rng||.75*hsOf(D);/* 攻撃がとどく距離：大きいコワイノ（オオカゲ・カタカゲ）は、すこし離れたところから攻撃する *//* 当たり判定は見た目ぴったりではなく、1マスか2マス */
-function hitRes(e,r,D){if(e.type==='boss2'){shakeScreen();fx.push({k:'ring',x:r.x*TS,y:r.y*TS,life:1.2,col:'#ffd84a'});sfxAt('bonk',r.x,r.y)}/* ヨルノオオカゲの一撃は、画面がゆれて衝撃がひろがる */if(!WD&&r.elem==='fire'&&r.hunger<60&&r.name===keyName('fire'))S.flags.fHurt=1;if((r.shU||0)>S.t)D=Object.assign({},D,{hit:D.hit*.5});/* フタバの葉っぱのまもり */if((r.faintGrace||0)>S.t||r.act&&r.act.type==='faint'){e.stun=1;return}/* 気絶している子は攻撃しない */const h0=r.hunger;sfx('hit');e.swing=performance.now();
+function hitRes(e,r,D){if(BOSSFX[e.type]){shakeScreen();fx.push({k:'ring',x:r.x*TS,y:r.y*TS,life:1.2,col:BOSSFX[e.type].col});sfxAt('bonk',r.x,r.y)}/* オオカゲの一撃は、画面がゆれて衝撃がひろがる */if(!WD&&r.elem==='fire'&&r.hunger<60&&r.name===keyName('fire'))S.flags.fHurt=1;if((r.shU||0)>S.t)D=Object.assign({},D,{hit:D.hit*.5});/* フタバの葉っぱのまもり */if((r.faintGrace||0)>S.t||r.act&&r.act.type==='faint'){e.stun=1;return}/* 気絶している子は攻撃しない */const h0=r.hunger;sfx('hit');e.swing=performance.now();
   const lv=rLv(r);S.nightHurt++;if(S.ns)S.ns.hurt++;const fire=r.elem==='fire';
   if(r.act&&['sleep','stay','rest','idle'].includes(r.act.type)&&r.act.stage==='do')endAct(r);/* 攻撃されたら、寝ていても起きる */
   const adj=Math.hypot(e.x-r.x,e.y-r.y)<=Math.max(1.1,reachOf(D)+.05);/* せいれいの攻撃は、となりにいる相手だけ（遠くから攻撃してくる大きいコワイノには、その距離でもやり返せる） */const ba=((r.bst&&r.bst.atk)||0)+((r.sst&&r.sst.atk)||0);if((fire||lv>=3||ba)&&adj){/* やり返しはしない（攻撃されたときの受けるダメージの軽さだけ、戦える子は今までどおり） */
@@ -1872,7 +1877,7 @@ function areaBlast(cx,cy){
   for(let n=0;n<28;n++){const a=n/28*Math.PI*2;fx.push({k:'p',x:px+Math.cos(a)*2*TS,y:py+Math.sin(a)*2*TS,vx:Math.cos(a)*30,vy:Math.sin(a)*30-10,life:1,col:pick(['#fffbe0','#fff','#ffe9a0']),r:rnd(1.5,3)})}
   sfxAt('shoot',cx,cy);
   for(const e of L){e.hp-=.5;e.flash=8;if(e.hp<=0)defeat(e,'ひかりのはどうで'+EN[e.type].name+'を追いはらった！')}}
-function defeat(e,msg){sfx('defeat');
+function defeat(e,msg){sfx('defeat');if(BOSSFX[e.type])bossDefeatFX(e);
   e.dead=true;S.kills++;const D=EN[e.type];{const K=S.enKills||(S.enKills={});K[e.type]=(K[e.type]||0)+1}if(S.ns){S.ns.kill++;if(D.boss)S.ns.boss=2}const n=D.pw||5;
   if(e.type==='hino')S.flags.hinoDown=true;if(D.ash&&WD===1)st2().ashKills=(st2().ashKills||0)+1;
   if(D.boss){S.bossKills=(S.bossKills||0)+1;if(!S.bossDay)S.bossDay=dayNo();logEv('オオカゲを追いはらった');memo('⚔️','オオカゲを追いはらった')}
