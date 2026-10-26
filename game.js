@@ -1728,7 +1728,7 @@ const EN={
   yama:{pw:30,rng:2.4,name:'ヤマノオオカゲ',hp:60,sp:.75,atk:6,hit:20,col:'#2a0904',eye:'#ff6a2e',size:2.4,boss:1,vol:1},/* 火山のふもとの最後の夜に、火の山からおりてきて、温泉の熱をうばう */
   boss2:{pw:30,rng:3.4,hx:2.6,hy:.8,name:'ヨルノオオカゲ',hp:70,sp:.9,atk:4.5,hit:30,col:'#05030c',eye:'#ffd84a',size:4.6,boss:1},/* ヌシ様をむかえる準備ができたあとに来る */
 };
-const bossNight=d=>{const w=S&&S.bossWarn;return w==null?d>=5&&(d-5)%3===0:d-w>=5&&(d-w-5)%3===0}/* オオカゲは「来るかも」と聞いた5日後、そのあと3日ごと */;
+const bossNight=d=>{const w=S&&S.bossWarn;return w==null?d>=5&&(d-5)%3===0:d-w>=3&&(d-w-3)%2===0}/* オオカゲは「来るかも」と聞いた3日後、そのあと2日ごと（火山のふもとは5日目、そのあと3日ごと） */;
 function waveFor(day){
   if(!S.nights)return WD===1?['basic','basic','basic']:['basic'];/* 最初の夜は1体だけ（火山のふもとは3体） */
   if(day<2)return [];
@@ -1900,6 +1900,7 @@ function takeDrop(d,r){let nm;
   if(d.id.startsWith('mat:')){const k=d.id.slice(4),add=Math.max(0,Math.min(d.n,matCap()-matTot()));S.mat[k]=(S.mat[k]||0)+add;if(!S.gotMat)S.gotMat={};S.gotMat[k]=(S.gotMat[k]||0)+add;nm=MATN[k]+(add?'×'+add:'（素材箱がいっぱい）')}
   else{giveItem(d.id,d.n);nm=(d.id.startsWith('seed:')?CROPS[d.id.slice(5)].name+'のたね':BL[d.id].item||BL[d.id].name)+'×'+d.n}
   toast((r?r.name+'が':'')+'おとしものをひろった：'+nm,'good')}
+const watchUp=()=>Object.keys(S.hp).some(k=>k[0]==='L'&&S.hp[k]>=2&&S.obj[+k.slice(1)]==='watch');/* Lv2以上の見張り台がある */
 const WUP=[null,{pc:30,mat:{wood:30,stone:35}},{pc:60,mat:{wood:45,stone:75}}];/* 見張り台の強化 */const WATCH=[null,{dmg:1,range:4.2,cd:6},{dmg:2,range:4.8,cd:6},{dmg:3,range:5.5,cd:6}];
 function updTowers(dt){
   if(!S.enemies.length)return;
@@ -2020,6 +2021,7 @@ const SUBQ=[/* サブクエスト：メインと別に、いつでもできる�
   {k:'benchbreak',w:0,g:'wood',t:'外にベンチを置こう',how:'依頼ボードの「庭」でベンチをはり、できたら外に置く。昼の休けいやおしゃべりでパワーがもらえる',L:[['K','歩きまわってたら、足がくたくたになっちゃった。'],['K','外でも、ちょこんと座ってひと休みできたらいいな。']],X:[['K','ここなら、足をのばして休めるね。ふう……。'],['K','守り神さま、ありがとう！']],learn:['bench'],at:()=>qAt('村レベルを2にしよう')||qAt('家の壁を直そう')&&!isNight()&&(hour()>=18||S.res.some(r=>r.name===POKO&&r.energy<50)),/* フタバのつかれがたまったら（げんき50より下）、おそくても夕方18時に出てくる（1日目は、ベッドの前に18時で時計が止まる） */ok:()=>cnt('bench')>=1,n:1,now:()=>cnt('bench'),rw:5},
   {k:'salvia3',how:'「おく」→「サルビアの種」を置く。せいれいに植えてもらい、花が咲くのを待とう',g:'earth',L:[['K','火の力をためるなら、赤いサルビアがいいよぉ。'],['K','種、あげるねぇ。5本植えたら、きっとぽかぽかだよぉ。']],X:[['K','まっかなサルビアが5本も増えたねぇ。火の力、たまってきたよぉ。'],['K','守り神さま、ありがとうねぇ。']],w:0,t:'サルビアを5本植えよう',ln:'赤いサルビアは、火の力をためてくれるよぉ。種、あげるねぇ',at:()=>qAt('火のせいれいをむかえよう'),give:{salvia:5},base:()=>cnt('salvia'),ok:()=>bloomCount('salvia')-((S.subB||{}).salvia3||0)>=5,n:5,now:()=>Math.max(0,bloomCount('salvia')-((S.subB||{}).salvia3||0)),rw:10},
   {k:'watch2',how:'「おく」→「見張り台」を置き、合計2つにしよう。せいれいが建てるのを待とう',g:'wood',L:[["K", "あの光が飛んでいくところ、見てると安心するね！"], ["K", "でも、向こうのはしは、ちょっと暗いままなんだ。あっちも守れたらいいなあ。"]],X:[['K','見張り台が2つになった！ これで夜も、ちょっと安心だね！'],['K','あっちへ行く道がすぐわかる目印もあるとうれしいね。'],['K','守り神さま、ありがとう！']],w:0,t:'見張り台を2つにしよう',ln:"向こうのはしも、安心して過ごせたらいいな",at:()=>qAt('火のせいれいをむかえよう'),ok:()=>cnt('watch')>=2,n:2,now:()=>cnt('watch'),rw:15},
+  {k:'watchup',how:'見張り台をタップして「強化する」をえらぶ。パワーと素材を使う',g:'wood',L:[['K','オオカゲって、どのくらい強いのかな……。'],['K','見張り台の光の矢が、もっと強くなったら、安心して眠れるのになあ。']],X:[['K','見張り台が、ぴかっと強くなった！'],['K','これなら、オオカゲが来ても、きっとだいじょうぶ。守り神さま、ありがとう！']],w:0,t:'見張り台を強くしよう',ln:'見張り台の光の矢、もっと強くならないかな',at:()=>qAt('オオカゲを追いはらおう')&&!watchUp(),ok:()=>watchUp(),n:1,now:()=>watchUp()?1:0,rw:15},
   {k:'chair2',how:'神殿の依頼ボードをタップ →「家具」→いすやスツールをはる。できたら「おく」で食卓の隣に置く',g:'wood',L:[["K", "食べ物に土がつかなくなったの、うれしいな！ でも、立ったまま食べてると足がつかれちゃう。"], ["K", "ごはんを食べるとき、ぼくも座れたらいいなあ。"]],X:[["K", "わあ、これなら座って食べられるね！"], ["K", "足もらくちん。ゆっくり食べようっと。"], ["K", "守り神さま、ありがとう！"]],t:'いすを2つ置こう',ln:"ごはんを食べるとき、ぼくも座れたらいいな",at:()=>cnt('table')>=1,ok:()=>diningSeatCount()>=2,n:2,now:()=>diningSeatCount(),rw:10},
   {k:'bed3',how:'神殿の依頼ボードをタップ →「家具」→「ベッド」をはる。できたら「おく」で家の中に置く',g:'earth',L:[["K", "なかまが3人になって、にぎやかだねぇ。"], ["K", "……でもねぇ、まだ地面で寝ている子がいるんだよぉ。朝、背中が冷たそうでねぇ。"], ["K", "守り神さま、みんながあったかく眠れるように、してあげられないかなぁ。"]],X:[["K", "ふかふかが、みんなの分あるねぇ。これなら、冷たくないよぉ。"], ["K", "守り神さま、ありがとうねぇ。"]],w:0,t:'ベッドを3つにしよう',ln:"地面で寝ている子が、あったかく眠れたらいいねぇ",at:()=>S.res.length>=3&&houseBedCount()<3,learn:['bed'],ok:()=>houseBedCount()>=3,n:3,now:()=>houseBedCount(),rw:15},
   {k:'light3',how:'神殿の依頼ボードをタップ →「あかり」→たいまつやかがり火をはる。できたら「おく」で置く。たき火も数に入る',g:'fire',L:[["K", "夜の村、まっくらじゃないか。足もとが見えなくて、落ち着かないよ。"], ["K", "守り神、あたいの火、もっと遠くまで届けられないかい？"]],X:[['K','よし、明るくなった！ これで夜も、ちっとはマシだね。'],['K','ありがとよ、守り神。恩に着るよ。']],t:'たいまつ・かがり火・たき火を3つ置こう',ln:'夜の村、もうちょっと明るいといいね',at:()=>elemCount('fire')>=1,ok:()=>CN(['torch','lamp','campfire'])>=3,n:3,now:()=>CN(['torch','lamp','campfire']),rw:15},
@@ -4644,7 +4646,7 @@ function renderSheet(){
     {const lost=(S.lost||[]).filter(q=>!q.unb);if(S.mebuki>0&&lost.length){const nt=el('<div class="sec"><h3>めぶきのしずく　'+S.mebuki+'こ</h3><p class="note"></p></div>');nt.querySelector('.note').textContent='消えてしまったせいれい（'+lost.map(q=>q.name).join('・')+'）を、よみがえらせることができる。「せいれい」のリストから、しずくを使おう。';body.appendChild(nt)}}/* しずくを持っていたら、よみがえらせられると知らせる */
   }else if(sheet==='enemy'){const e=S.enemies.find(q=>q.id===sheetArg);if(!e||e.dead){closeSheet();return}const D=EN[e.type];
     T.textContent=D.name;
-    const FEAT={yama:'火山のふもとの最後の夜に来る。温泉を冷やす',boss2:'ヌシ様をむかえる準備ができたあと、オオカゲのかわりに来る。とても強い',basic:'せいれいをおそう',fast:'足が速い',thief:'食料や素材をぬすむ',brute:'体力が多い',boss:WD?'5日目の夜、そのあと3日ごとに来る。追いはらうと、そのあとに「ヌシのかけら」があらわれる。当たると目をまわす':'5日目の夜、そのあと3日ごとに来る。とても強い。当たると目をまわす'};
+    const FEAT={yama:'火山のふもとの最後の夜に来る。温泉を冷やす',boss2:'ヌシ様をむかえる準備ができたあと、オオカゲのかわりに来る。とても強い',basic:'せいれいをおそう',fast:'足が速い',thief:'食料や素材をぬすむ',brute:'体力が多い',boss:WD?'5日目の夜、そのあと3日ごとに来る。追いはらうと、そのあとに「ヌシのかけら」があらわれる。当たると目をまわす':'クエストが出てから3日目の夜、そのあと2日ごとに来る。とても強い。当たると目をまわす'};
     const st=el('<div class="sec"><h3>ステータス</h3><div class="stats"></div></div>'),g=st.querySelector('.stats');
     for(const[k,v]of[['体力',Math.max(0,Math.ceil(e.hp))+' / '+e.max],['移動速度','×'+D.sp],['壁への攻撃',D.atk+'秒ごとに1'],['せいれいへの攻撃','おなか −'+Math.round(D.hit*.6)],['特徴',FEAT[e.type]||'']])g.appendChild(el('<div class="stat"><span style="white-space:nowrap">'+k+'</span><b>'+v+'</b></div>'));
     body.appendChild(st);
@@ -4939,7 +4941,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='370';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='371';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
