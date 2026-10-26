@@ -4573,7 +4573,7 @@ function renderSheet(){
       row.querySelector('.tx').insertAdjacentHTML('beforeend',gaugeHTML(r));row.onclick=()=>openSheet('res',r.id);rows.appendChild(row)}
     body.appendChild(rows);
   }else if(sheet==='clear'){T.textContent='守護の台座';
-    body.appendChild(el('<p class="note">ぜんぶそろうと、台座を建てられる。</p>'));
+    body.appendChild(el('<p class="note">'+(WD||cnt('tower')>=1?'ぜんぶそろうと、台座が光りはじめる。':'ぜんぶそろうと、台座を建てられる。')+'</p>'));
     const rows=el('<div class="rows"></div>');for(const[t,ok]of(WD||cnt('tower')>=1?clearConds():towerConds())){const r=el('<div class="row"><div class="tx"><b></b></div></div>');r.querySelector('b').textContent=(ok?'✓ ':'・')+t;if(ok)r.classList.add('done');rows.appendChild(r)}body.appendChild(rows);
   }else if(sheet==='bed'){const j=sheetArg;if(S.obj[j]!=='bed')return closeSheet();
     const o=bedOwner(j);T.textContent='ベッド';
