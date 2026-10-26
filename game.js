@@ -48,15 +48,15 @@ const BL={
   carpet:{name:'じゅうたん',kind:'block',floor:1,lv:9,cost:2,pc:3,time:35,maker:'wind',qty:10,mat:{wood:2},attr:{wind:.5},desc:'やわらかな織り模様の床。歩く速さ×1'},
   stone:{name:'石畳',kind:'block',floor:1,cost:2,pc:4,time:40,maker:'earth',qty:10,lv:10,mat:{stone:6},attr:{earth:.75},desc:'しっかりした石の床。歩く速さ×1.55'},
   farm:{name:'畑',kind:'block',cost:4,dyn:1,attr:{},desc:'置くとせいれいが耕して種をまく。水やりすると育つ。こむぎ・キャベツは2日で食料+1、いもは3日で食料+2'},
-  fence:{name:'柵',fix:2,kind:'block',cost:2,pc:4,time:60,maker:'wood',qty:10,solid:1,hp:20,attr:{},mat:{wood:2},desc:'「コワイノ」の足止め（じょうぶさ20）'},
-  logfence:{name:'丸太の柵',fix:3,kind:'block',cost:3,pc:6,time:70,maker:'wood',qty:10,lv:3,offerOnly:1,solid:1,brk:1,hp:28,attr:{},mat:{wood:3},desc:'太い丸太を組んだ柵（じょうぶさ28）'},
-  bamboofence:{name:'竹の柵',fix:3,kind:'block',cost:3,pc:7,time:75,maker:'wood',qty:10,lv:6,offerOnly:1,solid:1,brk:1,hp:32,attr:{},mat:{wood:5},desc:'竹を組んだ軽やかな柵（じょうぶさ32）'},
-  stonefence:{name:'石の柵',fix:4,kind:'block',cost:4,pc:9,time:90,maker:'earth',qty:10,lv:7,offerOnly:1,solid:1,brk:1,hp:38,attr:{},mat:{stone:6},desc:'石を積んだ低い柵（じょうぶさ38）'},
-  hwall:{name:'木の壁',fix:3,kind:'block',cost:2,pc:6,time:60,maker:'wood',qty:10,lv:3,solid:1,hp:30,attr:{},mat:{wood:3},desc:'かこってドアをつけると家になる（じょうぶさ30）'},
-  logwall:{name:'丸太の壁',fix:4,kind:'block',cost:3,pc:9,time:80,maker:'wood',qty:10,lv:7,solid:1,hp:40,brk:1,attr:{},mat:{wood:9},desc:'丸太を組んだ家の壁（じょうぶさ40）'},
-  plasterwall:{name:'しっくいの壁',fix:5,kind:'block',cost:4,pc:11,time:90,maker:'earth',qty:10,lv:5,solid:1,hp:48,brk:1,attr:{},mat:{wood:6,stone:3},desc:'明るいしっくい仕上げの家の壁（じょうぶさ48）'},
-  brickwall:{name:'レンガの壁',fix:6,kind:'block',cost:5,pc:13,time:100,maker:'fire',qty:10,lv:8,solid:1,hp:55,brk:1,attr:{},mat:{stone:14},desc:'レンガを積んだ家の壁（じょうぶさ55）'},
-  wall:{name:'石の塀',fix:6,kind:'block',cost:5,pc:12,time:100,maker:'earth',qty:10,lv:6,solid:1,hp:45,attr:{},mat:{stone:9},desc:'石の壁（じょうぶさ45）'},
+  fence:{name:'柵',fix:2,fixm:{wood:1},kind:'block',cost:2,pc:4,time:60,maker:'wood',qty:10,solid:1,hp:20,attr:{},mat:{wood:2},desc:'「コワイノ」の足止め（じょうぶさ20）'},
+  logfence:{name:'丸太の柵',fix:3,fixm:{wood:2},kind:'block',cost:3,pc:6,time:70,maker:'wood',qty:10,lv:3,offerOnly:1,solid:1,brk:1,hp:28,attr:{},mat:{wood:3},desc:'太い丸太を組んだ柵（じょうぶさ28）'},
+  bamboofence:{name:'竹の柵',fix:3,fixm:{wood:3},kind:'block',cost:3,pc:7,time:75,maker:'wood',qty:10,lv:6,offerOnly:1,solid:1,brk:1,hp:32,attr:{},mat:{wood:5},desc:'竹を組んだ軽やかな柵（じょうぶさ32）'},
+  stonefence:{name:'石の柵',fix:4,fixm:{stone:3},kind:'block',cost:4,pc:9,time:90,maker:'earth',qty:10,lv:7,offerOnly:1,solid:1,brk:1,hp:38,attr:{},mat:{stone:6},desc:'石を積んだ低い柵（じょうぶさ38）'},
+  hwall:{name:'木の壁',fix:3,fixm:{wood:2},kind:'block',cost:2,pc:6,time:60,maker:'wood',qty:10,lv:3,solid:1,hp:30,attr:{},mat:{wood:3},desc:'かこってドアをつけると家になる（じょうぶさ30）'},
+  logwall:{name:'丸太の壁',fix:4,fixm:{wood:5},kind:'block',cost:3,pc:9,time:80,maker:'wood',qty:10,lv:7,solid:1,hp:40,brk:1,attr:{},mat:{wood:9},desc:'丸太を組んだ家の壁（じょうぶさ40）'},
+  plasterwall:{name:'しっくいの壁',fix:5,fixm:{wood:3,stone:2},kind:'block',cost:4,pc:11,time:90,maker:'earth',qty:10,lv:5,solid:1,hp:48,brk:1,attr:{},mat:{wood:6,stone:3},desc:'明るいしっくい仕上げの家の壁（じょうぶさ48）'},
+  brickwall:{name:'レンガの壁',fix:6,fixm:{stone:7},kind:'block',cost:5,pc:13,time:100,maker:'fire',qty:10,lv:8,solid:1,hp:55,brk:1,attr:{},mat:{stone:14},desc:'レンガを積んだ家の壁（じょうぶさ55）'},
+  wall:{name:'石の塀',fix:6,fixm:{stone:5},kind:'block',cost:5,pc:12,time:100,maker:'earth',qty:10,lv:6,solid:1,hp:45,attr:{},mat:{stone:9},desc:'石の壁（じょうぶさ45）'},
   flower:{name:'花だん',item:'花の種',kind:'plant',cost:2,attr:{wood:1},desc:'まわり1マスの畑の収穫+1（重複なし）。ピンク・白・黄色のどれかが咲く'},
   clover:{name:'シロツメクサ',item:'シロツメクサの種',kind:'plant',cost:3,attr:{wood:1},desc:'まわり1マスの畑の収穫+1（重複なし）'},
   bellf:{name:'ききょう',item:'ききょうの種',kind:'plant',cost:3,attr:{earth:1},desc:'まわり1マスの畑の収穫+1（重複なし）'},
@@ -103,7 +103,7 @@ const BL={
   sandbox:{name:'すなば',sz:[2,1],nosc:1,kind:'furn',cat:'toy',f2:1,lv:5,pc:9,time:140,maker:'earth',attr:{earth:1},mat:{wood:11,stone:11},play:{pt:3,fun:30,dur:45,cap:2,adj:1},solid:1,desc:'2人まで遊べる。たのしさ +30（45分）。遊ぶと10%の確率で、スタミナ+1'},
   seesaw:{name:'シーソー',kind:'furn',cat:'toy',f2:1,anim:1,dsc:2,lv:7,pc:11,time:160,maker:'wind',attr:{wind:1},mat:{wood:25},play:{pt:4,fun:40,dur:40,cap:2,adj:1},solid:1,desc:'2人で遊べる。たのしさ +40（40分）。遊ぶと10%の確率で、作業スピード+1'},
   window:{name:'窓',kind:'block',cat:'other',lv:4,pc:10,time:50,maker:'wood',attr:{wood:1},mat:{wood:2},desc:'横向きの木の壁にはめる。住み心地+5（1つの家で2つまで。3つ目からは+2.5）'},
-  sdoor:{name:'石の塀のドア',fix:4,kind:'block',anim:1,hp:30,cost:4,pc:8,time:60,maker:'earth',qty:1,lv:6,attr:{},mat:{stone:6},desc:'石垣の出入り口。せいれいだけ通れる（じょうぶさ30）'},
+  sdoor:{name:'石の塀のドア',fix:4,fixm:{stone:3},kind:'block',anim:1,hp:30,cost:4,pc:8,time:60,maker:'earth',qty:1,lv:6,attr:{},mat:{stone:6},desc:'石垣の出入り口。せいれいだけ通れる（じょうぶさ30）'},
   table:{name:'食卓',kind:'furn',pc:7,time:90,maker:'wood',solid:1,eat:{cap:2,pt:2},attr:{wood:2},mat:{wood:8},desc:'2人まで食べられる。食べるたびにパワー+0.9。住み心地+8'},
   stor:{name:'食料箱',kind:'furn',pc:3,time:120,maker:'earth',solid:1,attr:{earth:1},mat:{wood:5},desc:'食料を30までしまえる。ここから食べる。住み心地+3'},
   mbox:{name:'素材箱',kind:'furn',pc:3,time:120,maker:'earth',solid:1,attr:{earth:1},mat:{wood:3,stone:3},desc:'木材・石材を50までしまえる。住み心地+3'},
@@ -111,10 +111,10 @@ const BL={
   quarry:{name:'採石場',kind:'build',mat:{wood:15,stone:25},pc:20,time:140,maker:'earth',lv:7,solid:1,attr:{earth:2},desc:'せいれいがここで働くと、40分ごとに石材+1（岩は減らない）'},
   oven:{name:'かまど',kind:'furn',anim:1,pc:5,time:160,maker:'fire',solid:1,attr:{fire:2,earth:1},mat:{wood:3,stone:8},desc:'せいれいが材料から料理を作る。住み心地+6'},
   grave:{name:'お墓',kind:'deco',attr:{},desc:''},
-  gate:{name:'柵のドア',fix:2,kind:'block',anim:1,hp:13,cost:2,pc:4,time:40,maker:'wood',qty:1,lv:2,attr:{},mat:{wood:2},desc:'柵の出入り口。せいれいだけ通れる（じょうぶさ13）'},
-  archedgate:{name:'アーチ門',fix:4,kind:'block',anim:1,brk:1,hp:22,cost:4,pc:8,time:70,maker:'wood',qty:1,lv:14,attr:{},mat:{wood:5},desc:'飾りのついた柵の出入り口（じょうぶさ22）'},
-  stonegate:{sz:[2,1],name:'石の大門',fix:5,kind:'block',anim:1,brk:1,hp:35,cost:5,pc:10,time:90,maker:'earth',qty:1,lv:10,attr:{},mat:{stone:5},desc:'横2マス。石柱で支える大きな柵の出入り口（じょうぶさ35）'},
-  door:{name:'ドア',fix:2,kind:'block',anim:1,hp:20,cost:2,pc:5,time:40,maker:'wood',qty:1,lv:3,attr:{},mat:{wood:2},desc:'壁にはめる出入り口（じょうぶさ20）'},
+  gate:{name:'柵のドア',fix:2,fixm:{wood:1},kind:'block',anim:1,hp:13,cost:2,pc:4,time:40,maker:'wood',qty:1,lv:2,attr:{},mat:{wood:2},desc:'柵の出入り口。せいれいだけ通れる（じょうぶさ13）'},
+  archedgate:{name:'アーチ門',fix:4,fixm:{wood:3},kind:'block',anim:1,brk:1,hp:22,cost:4,pc:8,time:70,maker:'wood',qty:1,lv:14,attr:{},mat:{wood:5},desc:'飾りのついた柵の出入り口（じょうぶさ22）'},
+  stonegate:{sz:[2,1],name:'石の大門',fix:5,fixm:{stone:3},kind:'block',anim:1,brk:1,hp:35,cost:5,pc:10,time:90,maker:'earth',qty:1,lv:10,attr:{},mat:{stone:5},desc:'横2マス。石柱で支える大きな柵の出入り口（じょうぶさ35）'},
+  door:{name:'ドア',fix:2,fixm:{wood:1},kind:'block',anim:1,hp:20,cost:2,pc:5,time:40,maker:'wood',qty:1,lv:3,attr:{},mat:{wood:2},desc:'壁にはめる出入り口（じょうぶさ20）'},
   chair:{name:'椅子',kind:'furn',lv:3,pc:1,time:60,maker:'wood',attr:{wood:1},mat:{wood:3},desc:'食卓のとなりに置く。ここで食べると、パワー+0.9。住み心地+4'},
   bench:{name:'ベンチ',sz:[2,1],kind:'furn',pc:3,time:100,maker:'wood',attr:{wood:1},mat:{wood:5},desc:'2人すわれる。昼につかれたら、ここで休む（元気 +20／1時間）。住み心地+5'},
   bed:{name:'ベッド',kind:'furn',pc:10,time:200,maker:'wood',sleep:{cap:1,pt:5,rate:.2},attr:{wood:2},mat:{wood:8},desc:'1人眠れる。元気 +12／1時間。家の住み心地で0.6〜3.3倍'},
@@ -127,12 +127,12 @@ const BL={
   kamizo:{name:'カミサマの像',kind:'furn',lv:5,pc:10,time:160,maker:'earth',solid:1,attr:{earth:2},mat:{stone:25},desc:'カミサマが遊びにくる確率が2倍（25%→50%）'},
   rockart:{name:'つぼ',kind:'furn',lv:2,pc:1,time:100,maker:'earth',solid:1,attr:{earth:2},mat:{stone:3},desc:'土でできたかざり。住み心地+5'},
   vane:{offerOnly:1,name:'風見鶏',kind:'furn',pc:7,time:160,maker:'wind',solid:1,anim:1,attr:{wind:4},mat:{wood:3,stone:3},desc:'風の向きをおしえる。まわり3マスのせいれいは移動速度×1.2（道しるべとは重ならない）。住み心地+4'},
-  spike:{name:'とげの罠',fix:1,kind:'furn',lv:1,pc:1,time:100,maker:'wood',qty:2,trap:1,attr:{earth:.5},mat:{wood:2,stone:2},desc:'上にいる「コワイノ」に、10分ごとに0.5ダメージ'},
-  sticky:{name:'ねばねば草',fix:1,kind:'furn',lv:2,pc:1,time:80,maker:'wood',qty:2,trap:1,attr:{wood:.5},mat:{wood:2},desc:'上にいる「コワイノ」の速さが35%になる'},
-  puddle:{name:'すべる水たまり',fix:1,kind:'furn',lv:4,pc:1,time:80,maker:'water',qty:2,trap:1,anim:1,attr:{water:.5},mat:{stone:2},desc:'ふんだ「コワイノ」が8分止まる（オオカゲは3分）。つぎに使えるまで2時間'},
-  firetrap:{name:'ほのおの罠',fix:2,kind:'furn',pc:3,time:120,maker:'fire',lv:4,qty:2,trap:1,anim:1,attr:{fire:.5},mat:{wood:2,stone:2},desc:'ふんだ「コワイノ」に4ダメージ。つぎに使えるまで3時間'},
-  gust:{name:'つむじ風の罠',fix:2,kind:'furn',pc:3,time:120,maker:'wind',lv:5,qty:2,trap:1,anim:1,attr:{wind:.5},mat:{wood:2},desc:'ふんだ「コワイノ」を6マスふきとばし、2分止める。つぎに使えるまで2時間30分'},
-  watch:{name:'見張り台',fix:10,kind:'build',sz:[2,2],mat:{wood:25,stone:20},pc:20,time:150,maker:'earth',lv:2,solid:1,attr:{fire:2,earth:2},desc:'「コワイノ」に光の矢を放つ。Lv1：ダメージ1／24秒ごと／範囲4.2マス（Lv3：ダメージ3／14秒ごと／範囲5.5マス）'},
+  spike:{name:'とげの罠',fix:1,fixm:{wood:1,stone:1},kind:'furn',lv:1,pc:1,time:100,maker:'wood',qty:2,trap:1,attr:{earth:.5},mat:{wood:2,stone:2},desc:'上にいる「コワイノ」に、10分ごとに0.5ダメージ'},
+  sticky:{name:'ねばねば草',fix:1,fixm:{wood:1},kind:'furn',lv:2,pc:1,time:80,maker:'wood',qty:2,trap:1,attr:{wood:.5},mat:{wood:2},desc:'上にいる「コワイノ」の速さが35%になる'},
+  puddle:{name:'すべる水たまり',fix:1,fixm:{stone:1},kind:'furn',lv:4,pc:1,time:80,maker:'water',qty:2,trap:1,anim:1,attr:{water:.5},mat:{stone:2},desc:'ふんだ「コワイノ」が8分止まる（オオカゲは3分）。つぎに使えるまで2時間'},
+  firetrap:{name:'ほのおの罠',fix:2,fixm:{wood:1,stone:1},kind:'furn',pc:3,time:120,maker:'fire',lv:4,qty:2,trap:1,anim:1,attr:{fire:.5},mat:{wood:2,stone:2},desc:'ふんだ「コワイノ」に4ダメージ。つぎに使えるまで3時間'},
+  gust:{name:'つむじ風の罠',fix:2,fixm:{wood:1},kind:'furn',pc:3,time:120,maker:'wind',lv:5,qty:2,trap:1,anim:1,attr:{wind:.5},mat:{wood:2},desc:'ふんだ「コワイノ」を6マスふきとばし、2分止める。つぎに使えるまで2時間30分'},
+  watch:{name:'見張り台',fix:10,fixm:{wood:10,stone:10},kind:'build',sz:[2,2],mat:{wood:25,stone:20},pc:20,time:150,maker:'earth',lv:2,solid:1,attr:{fire:2,earth:2},desc:'「コワイノ」に光の矢を放つ。Lv1：ダメージ1／24秒ごと／範囲4.2マス（Lv3：ダメージ3／14秒ごと／範囲5.5マス）'},
   well:{name:'井戸',kind:'build',mat:{wood:8,stone:30},pc:20,time:140,maker:'water',lv:6,solid:1,attr:{water:4},desc:'まわり3マスの畑は水やりなしで育つ'},
   windmill:{name:'風車',kind:'build',mat:{wood:60,stone:35},pc:25,time:160,maker:'wind',lv:8,solid:1,anim:1,attr:{wind:5},desc:'まわり5マスの畑の収穫+1'},
   lighthouse:{name:'灯台',sz:[2,2],kind:'build',mat:{wood:25,stone:35},pc:35,time:180,maker:'fire',lv:7,solid:1,anim:1,attr:{fire:4},desc:'まわり8マスを照らす。'},
@@ -931,12 +931,12 @@ const QB=new Set(['lumber','quarry','stele','fountain','lighthouse','windmill'])
 const breakable=o=>o==='fence'||o==='wall'||o==='hwall'||o==='door'||o==='gate'||o==='sdoor'||!!(o&&BL[o]&&BL[o].brk);
 for(const k in BL){const b=BL[k];if(b.solid&&!b.natural&&!b.hp&&!b.trap&&b.kind&&b.kind!=='block'&&(!b.sz||b.sz[0]*b.sz[1]===1)&&!['statue','obox','board','altar','tower','volcano','heatv','crack','boulder','watch'].includes(k)){b.hp=5;b.brk=1}}/* 道をふさぐ物は、壁でなくてもコワイノがこわす（じょうぶさ5） */
 const fixMat=id=>({});/* 修理に素材はいらない */
-function godFix(j){/* 守り神の修理：タップして、パワーを使ってすぐ直す（せいれいが直すとただ） */const o=S.obj[j],b=o?null:brokenCover(j),id=b?b.id:o,c=id&&BL[id]&&BL[id].fix;if(!c)return false;
+function godFix(j){/* 守り神の修理：タップして、パワーと素材を使ってすぐ直す（せいれいが直すとただ） */const o=S.obj[j],b=o?null:brokenCover(j),id=b?b.id:o,c=id&&BL[id]&&BL[id].fix;if(!c)return false;
   if(!b&&!(breakable(o)&&(S.hp[j]??BL[o].hp)<BL[o].hp||DEFS.has(o)&&S.hp[j]!=null))return false;
-  askYesNo(BL[id].name,(b?'建てなおす':'直す')+'？（'+SP(c)+'）',()=>{if(isNight())return toast('夜のあいだは、直せません');if(S.pt<c)return toast('パワーが足りません');
+  const m=BL[id].fixm||{};askYesNo(BL[id].name,(b?'建てなおす':'直す')+'？（'+SP(c)+'・'+matTxt(m)+'）',()=>{if(isNight())return toast('夜のあいだは、直せません');if(S.pt<c)return toast('パワーが足りません');if(!matOK(m))return toast('素材が足りません');
     if(b){const a={re:b.id,obj:b.j};if(!repairFree(a)||fp(b.id,b.j%W,(b.j/W)|0).some(([x,y])=>S.obj[y*W+x]))return toast('じゃまな物があって、建てなおせません');S.obj[b.j]=b.id;setParts(b.id,b.j,'part');delete S.hp[b.j];S.broken=S.broken.filter(q=>q.j!==b.j);recount();burst(b.j,'block')}
     else{if(S.obj[j]!==o)return;if(DEFS.has(o))delete S.hp[j];else S.hp[j]=BL[o].hp}
-    S.pt-=c;dirty=true;sfx('repair');toast(BL[id].name+'を直した','good')},()=>{});return true}
+    S.pt-=c;for(const k in m)S.mat[k]-=m[k];dirty=true;sfx('repair');toast(BL[id].name+'を直した','good')},()=>{});return true}
 /* 防衛設備：「コワイノ」はまずこれをこわしにくる */
 const DEFS=new Set(['watch','spike','puddle','sticky','firetrap','gust']),DEFHP={watch:10,spike:5},defHp=o=>DEFHP[o]||4;
 let DEFC={t:0,l:[]};function defList(){const now=performance.now();if(now-DEFC.t>1000){DEFC.l=[];for(let j=0;j<W*H;j++)if(DEFS.has(S.obj[j]))DEFC.l.push(j);DEFC.t=now}return DEFC.l}
@@ -4917,7 +4917,7 @@ function thumb(cv2,k,open){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='313';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='314';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
