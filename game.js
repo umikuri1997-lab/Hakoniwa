@@ -201,7 +201,10 @@ const INTRO=[
   [POKO,'えへへ、急にお客さんが来るなんて、びっくりしちゃった。'],
   [POKO,'守り神さまと会えてうれしいな！'],
   [GOD,'この土地に守護の力を取り戻すには、おヌシの力を集める場所がいる。わしの居場所にもなる、小さな神殿を建てよう。'],
-  [GOD,'建てる場所は、おヌシが好きにえらんでよいぞ。建てるのは、せいれいたちがやってくれるぞい。'],
+  [GOD,'じゃがのう、生まれたばかりのおヌシの守護の力がとどくのは、まだこのまわりだけなんじゃ。'],
+  [GOD,'力のとどかん所は、土地があれたままでのう。ものを建てても、すぐにくずれてしまう。夜の「コワイノ」も、そっちのほうからやってくるんじゃ。'],
+  [GOD,'村が育ったら、わしが手を貸して、とどく所を広げてやるぞい。'],
+  [GOD,'建てる場所は、力のとどく所なら、おヌシが好きにえらんでよいぞ。建てるのは、せいれいたちがやってくれるぞい。'],
 ];
 let TESTSPD=false;try{TESTSPD=KV.getItem('hakoniwa-test')==='1'}catch(e){}
 const GLASS_IC='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="2.5" rx="1" fill="#a0703f"/><rect x="5" y="19.5" width="14" height="2.5" rx="1" fill="#a0703f"/><path d="M7 4.5c0 5 10 5.5 10 7.5s-10 2.5-10 7.5h10c0-5-10-5.5-10-7.5s10-2.5 10-7.5z" fill="#dff1f7" stroke="#7a5233" stroke-width=".8"/><path d="M9 18.5c1-2 5-2 6 0z" fill="#e8c27a"/></svg>');
@@ -393,7 +396,7 @@ const QUESTS1=[
     [POKO,'守り神さま、ここ、なんだかせまくなってきたね。'],
     [MINA,'せいれいが増えたからねぇ。置ける場所も、そろそろいっぱいだよぉ。'],
     [POKO,'もっと広くできないの？'],
-    [MINA,'カミサマにたのめば、土地を広げてもらえるはずだよぉ。'],
+    [MINA,'カミサマにたのめば、守り神さまの力がとどく所を、広げてもらえるはずだよぉ。'],
     [POKO,'カミサマが来たときに、お願いしてみよう！'],
     [POKO,'カミサマがまた遊びに来たら、広くなった村を見てもらいたいね！']]},
    story:[
@@ -506,7 +509,7 @@ const PROLOGUE2=[
   [GOD,'さて、次の土地じゃな。'],
   [GOD,'ここは火の山のふもとの村。むかしは、あちこちから温泉がわく、あったかい村じゃった。'],
   [GOD,'じゃが、火のヌシ様が力をうばわれて、地面の熱が冷えきってしもうた。温泉も、いまではただの冷たい水たまりじゃ。'],
-  [GOD,'新しい土地じゃから、守り神の力も、また一からじゃな。'],
+  [GOD,'新しい土地じゃから、守り神の力も、また一からじゃな。力がとどくのは、はじめはせまい所だけじゃ。'],
   [GOD,'では、行こうかの。'],
 ];
 const INTRO2=[
@@ -4956,7 +4959,7 @@ function thumb(cv2,k,open){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='353';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='354';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
