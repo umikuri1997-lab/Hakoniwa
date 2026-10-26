@@ -2094,9 +2094,9 @@ function checkSub(){const D=S.subDone||(S.subDone={}),Sn=S.subSeen||(S.subSeen={
   const busy={};
   for(const q of subList()){if(D[q.k])continue;if(St[q.k]===1&&!subOfferReady(q))delete St[q.k];if(Sn[q.k]&&!St[q.k])St[q.k]=2;
     if(St[q.k]===3&&FLOWER_QUESTS.has(q.k)&&!q.ok()){St[q.k]=2;delete (S.subArrived||{})[q.k];delete SUB_CLEAR_WAIT[q.k]}
-    if(St[q.k]===3&&!(S.subArrived||{})[q.k]&&!SUB_CLEAR_WAIT[q.k]){const visit=queueQuestVisit(q,subWho(q));if(visit){St[q.k]=2;SUB_CLEAR_WAIT[q.k]=Object.assign({done:false},visit)}}/* 前からの人：もう受けている */
+    if(St[q.k]===3&&!isNight()&&!(S.subArrived||{})[q.k]&&!SUB_CLEAR_WAIT[q.k]){const visit=queueQuestVisit(q,subWho(q));if(visit){St[q.k]=2;SUB_CLEAR_WAIT[q.k]=Object.assign({done:false},visit)}}/* 前からの人：もう受けている */
     if(St[q.k]===2&&q.k==='oven'){const partKey=(S.world||0)+':sub:oven:placed';if((S.questPartSeen||{})[partKey]){if(q.ok()){St[q.k]=3;(S.subArrived||(S.subArrived={}))[q.k]=true;sfx('quest');toast('サブクエストたっせい：'+q.t,'good')}}else if(cnt('oven')&&!q.ok()&&!S.res.some(r=>r.act&&r.act.partKey===partKey||(QUEST_VISITS.get(r)||[]).some(v=>v.partKey===partKey)))queueQuestVisit(q,subWho(q),['oven'],partKey)}
-    if(St[q.k]===2&&q.ok()){let wait=SUB_CLEAR_WAIT[q.k];if(wait&&!wait.done&&S.obj[wait.obj]!==wait.id){delete SUB_CLEAR_WAIT[q.k];wait=null}
+    if(St[q.k]===2&&q.ok()&&!isNight()){let wait=SUB_CLEAR_WAIT[q.k];if(wait&&!wait.done&&S.obj[wait.obj]!==wait.id){delete SUB_CLEAR_WAIT[q.k];wait=null}
       if(wait&&wait.done){delete SUB_CLEAR_WAIT[q.k];St[q.k]=3;sfx('quest');toast('サブクエストたっせい：'+q.t,'good')}
       else if(!wait){const visit=queueQuestVisit(q,subWho(q));if(visit)SUB_CLEAR_WAIT[q.k]=Object.assign({done:false},visit);else{St[q.k]=3;sfx('quest');toast('サブクエストたっせい：'+q.t,'good')}}}
     if(St[q.k])busy[q.g]=busy[q.g]&&!(St[q.k]===3&&St[busy[q.g].k]!==3)?busy[q.g]:q}/* 終わったクエストの報告を先に出す *//* その子から受けたクエストが終わるまで、次は出ない */
@@ -2566,6 +2566,7 @@ function checkQuest(){
   if(q.talk&&!S.qTalked){if(q.talk.when())TALKW=firstSpk(q.talk.lines,q.talk.who);renderQuest();return}
   const complete=q.check();if(!complete)checkQuestParts(q);
   if(complete){
+    if(isNight()){renderQuest();return}/* クリアの話・お礼は、昼だけ */
     if(q.pay&&!PAYOK){if(!ASKING&&sheet==null&&(S.payNo==null||S.t-S.payNo>60)){ASKING=true;const who=(q.talk&&q.talk.who)||POKO;
       askYesNo(who,matTxt(q.pay)+'、もらってもいい？',()=>{ASKING=false;PAYOK=true;checkQuest()},()=>{ASKING=false;S.payNo=S.t;renderQuest()})}renderQuest();return}/* 材料を使うクエストは、きいてから */
     let wait=QUEST_CLEAR_WAIT;
@@ -3730,7 +3731,7 @@ function drawRes0(r,now){
   if(at==='craft'&&ad){const o=S.orders.find(q=>q.id===r.act.order);if(o){const f=Math.min(1,o.prog/o.need),bx=px-16,byy=py+(r.hurt>0?19:12);ctx.fillStyle='rgba(150,115,75,.5)';rr(ctx,bx-1.5,byy-1.5,35,8,4);ctx.fillStyle='#e8dcc0';rr(ctx,bx,byy,32,5,2.5);ctx.fillStyle='#e0a43a';rr(ctx,bx,byy,Math.max(2.5,32*f),5,2.5)}}/* 依頼の作業の進み具合は足もと。吹き出しは上に出す */
   if(r.act&&r.act.stage==='do'&&WORKP[r.act.type]){const f=Math.max(0,Math.min(1,WORKP[r.act.type](r,r.act)||0)),bx=px-16,byy=py+(r.hurt>0?19:12);ctx.fillStyle='rgba(150,115,75,.5)';rr(ctx,bx-1.5,byy-1.5,35,8,4);ctx.fillStyle='#e8dcc0';rr(ctx,bx,byy,32,5,2.5);ctx.fillStyle='#e0a43a';rr(ctx,bx,byy,Math.max(2.5,32*f),5,2.5)}/* 木を切る・石を掘る・畑・建てる・料理など、作業の進み具合 */
   const zzz=r.act&&r.act.type==='sleep';/* 寝ているあいだは、話しかけの吹き出しを出さない */
-  if(!zzz&&QUESTCLEARW===r.name){talkBub(px,by,now,'#ffd56b');return}
+  if(!zzz&&QUESTCLEARW===r.name&&!isNight()){talkBub(px,by,now,'#ffd56b');return}
   if(r.act&&(r.act.type==='eat'||r.act.type==='forage')&&r.act.stage==='do'&&!zzz){const p=Math.max(0,Math.min(1,r.hunger/hMax(r))),gx=px-12,gy=py+11,g=()=>{ctx.fillStyle='rgba(0,0,0,.5)';rr(ctx,gx,gy,24,6,3);ctx.fillStyle=p>=.999?'#8fd36a':'#ffc766';rr(ctx,gx+1,gy+1,Math.max(2,22*p),4,2)};if(BUBQ)BUBQ.push(g);else g()}/* ごはん中の、お腹ゲージの回復 */
   if(!zzz&&TALKW===r.name){talkBub(px,by,now);return}
   if(!zzz&&SEVW[r.name]){talkBub(px,by,now,'#ffb3d1');return}
