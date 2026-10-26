@@ -2680,8 +2680,8 @@ function nushiReturns(){
   });
   T.pre?dialog(T.pre,runOpen,null,''):runOpen();
 }
-function calcScore(){const d=S.clearDay||dayNo(),parts=[['クリアした日',d+'日目',d<=20?3000:d<=30?2000:d<=40?1200:d<=60?600:200],['せいれい',S.res.length+'人',S.res.length*120],['のりこえた夜',(S.nights||0)+'回',(S.nights||0)*40],['オオカゲを追いはらった',(S.bossKills||0)+'回',(S.bossKills||0)*150],['集めたパワー',Math.floor(S.totalPt||0)+'',Math.floor((S.totalPt||0)/4)],['消えてしまったせいれい',(S.deaths||0)+'人',-Math.min(1500,(S.deaths||0)*50)]];
-  const tot=Math.max(0,parts.reduce((a,p)=>a+p[2],0)),rank=tot>=6500?'S':tot>=5000?'A':tot>=3500?'B':'C'/* きびしめ */;return{tot,rank,parts}}/* クリアスコア：早いほど・にぎやかなほど高い。クリアした日：20日目まで3000・30日目まで2000・40日目まで1200・60日目まで600・それより後200。消えたせいれい：1人50てん引く（引くのは1500まで） */
+function calcScore(){const d=S.clearDay||dayNo(),parts=[['クリアした日',d+'日目',d<=22?4000:d<=26?3200:d<=30?2600:d<=35?2000:d<=40?1500:d<=50?1000:500],['せいれい',S.res.length+'人',S.res.length*100],['消えてしまったせいれい',(S.deaths||0)+'人',-Math.min(1000,(S.deaths||0)*50)]];
+ const tot=Math.max(0,parts.reduce((a,p)=>a+p[2],0)),rank=tot>=5000?'S':tot>=4000?'A':tot>=2500?'B':'C'/* ふつうはB。はやく・消さずにクリアでS */;return{tot,rank,parts}}/* クリアスコア：早いほど・せいれいが多いほど・消えたせいれいが少ないほど高い。夜の数・パワーなど、長く遊ぶほどふえるものは入れない。クリアした日：22日目まで4000・26日目まで3200・30日目まで2600・35日目まで2000・40日目まで1500・50日目まで1000・それより後500。せいれい：1人100てん。消えたせいれい：1人50てん引く（引くのは1000まで）。S 5000・A 4000・B 2500 */
 function visionFX(lines,after){const d=document.createElement('div');d.style.cssText='position:absolute;inset:0;background:#0b0f0a;opacity:0;pointer-events:none;z-index:25;transition:opacity .9s ease';$('#app').appendChild(d);requestAnimationFrame(()=>requestAnimationFrame(()=>{d.style.opacity='.55'}));setTimeout(()=>dialog(lines,()=>{d.style.opacity='0';setTimeout(()=>{d.remove();after&&after()},900)},null,''),1000)}/* かけらにふれたとき、画面が暗くなって記憶がうかぶ（会話の枠は暗くしない・暗さは控えめ） */
 function flashScreen(){const d=document.createElement('div');d.style.cssText='position:fixed;inset:0;background:#fff;opacity:.85;pointer-events:none;z-index:60;transition:opacity 1.4s ease-out';document.body.appendChild(d);requestAnimationFrame(()=>requestAnimationFrame(()=>{d.style.opacity='0'}));setTimeout(()=>d.remove(),1600)}/* 白くひかる */
 function updNushi(dt){const n=S.nushi;if(n.app==null)n.app=1;if(n.app<1){n.app=Math.min(1,n.app+dt/5);n.mv=0;return}/* 台座の上で、すこしずつ姿をあらわす */
@@ -4939,7 +4939,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='369';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='370';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
