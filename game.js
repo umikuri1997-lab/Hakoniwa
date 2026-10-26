@@ -1757,8 +1757,7 @@ function waveFor(day){
 function waveText(list){const c={};list.forEach(t=>c[t]=(c[t]||0)+1);return Object.keys(c).map(t=>EN[t].name+(c[t]>1?'×'+c[t]:'')).join('、')}
 function waveArrivalDelay(index,total,hasBoss,late=0){const spacing=Math.min(late>0?Math.max(12,35-late*2):35,(hasBoss?180:220)/Math.max(1,total-1));return index*spacing}/* 夜0時ごろから4時までに全員が到着。ボスの登場演出ぶんも見込む */
 function spawnWave(list){
-  const mult=1;/* 同じ種類なら、強さはいつも同じ */
-  const hasBoss=list.some(type=>EN[type].boss);list.forEach((type,k)=>{const d=EN[type],m2=mult;S.enemies.push({id:S.nid++,type,x:0,y:0,hp:Math.round(d.hp*m2),max:Math.round(d.hp*m2),delay:waveArrivalDelay(k,list.length,hasBoss,S.lateWave)+(d.boss?60:0),/* 強い夜も、いっせいに押し寄せない */spawned:false,path:[],repath:0,atk:0,stun:0,flash:0,flee:false})});
+  const hasBoss=list.some(type=>EN[type].boss);list.forEach((type,k)=>{const d=EN[type];S.enemies.push({id:S.nid++,type,x:0,y:0,hp:d.hp,max:d.hp,delay:waveArrivalDelay(k,list.length,hasBoss,S.lateWave)+(d.boss?60:0),/* 強い夜も、いっせいに押し寄せない */spawned:false,path:[],repath:0,atk:0,stun:0,flash:0,flee:false})});
   S.nightHurt=0;S.nightHad=true;S.ns={n:list.length,kill:0,lost:[],hurt:0,broke:0,boss:list.includes('boss')||list.includes('boss2')||list.includes('hino')?1:0,trial:!!S.trialOn,final:!!S.finalOn};S.trialOn=false;S.finalOn=false;
   if(S.ns.final&&!WD&&S.res.some(r=>r.name===POKO))dialog([[POKO,'守り神さま…！ 今夜は「ヨルノオオカゲ」と、オオカゲが2体も来る……！'],[POKO,'……こわいよ。でも、ぼく、もう隠れてるだけじゃない。'],[POKO,'今度は、ぼくがみんなを守るんだ！']]);
   else if(list.includes('hino'))dialog(['火山のほうから、熱い風がふいてくる…！','「ヒノオオカゲ」が来るよ！ 熱の装置をねらってる！ みんなで追いはらって！'],null,null,LEAD());
@@ -1915,7 +1914,7 @@ const lvF=(lv,k)=>1+k*(Math.min(lv,10)-1);
 const LVUP={work:[0,0,1,1,1,2],move:[0,0,0,1,1,1]};
 function lvGain(r,k,lv){let n=0;for(let l=2;l<=Math.min(lv,10);l++){const h=hash(((r.id||0)*131+l*17+(k==='work'?7:3))>>>0);n+=LVUP[k][(h*LVUP[k].length)|0]}return n}
 const RSC=new WeakMap();function rMul(r,k){const lv=rLv(r);let c=RSC.get(r);if(!c||c.lv!==lv||c.vr!==r.vr||c.b!==r.boost){c={lv,vr:r.vr,b:r.boost,s:rStat(r,lv)};RSC.set(r,c)}return c.s[k]/10*(k==='work'&&r.wkT>S.t?1.15:k==='move'&&r.mvT>S.t?1.15:1)}
-function ovenMul(j){if(j==null)return 1;const x0=j%W,y0=(j/W)|0;let n=0;for(let y=y0-3;y<=y0+3;y++)for(let x=x0-3;x<=x0+3;x++){if(x<0||y<0||x>=W||y>=H)continue;const o=S.obj[y*W+x];if(o&&BL[o]&&BL[o].cat==='cook')n++}return Math.max(.6,1-.1*n)}/* 調理の家具がそばにあると、料理が早い */
+function ovenMul(j){if(j==null)return 1;const x0=j%W,y0=(j/W)|0;const kinds=new Set();for(let y=y0-3;y<=y0+3;y++)for(let x=x0-3;x<=x0+3;x++){if(x<0||y<0||x>=W||y>=H)continue;const o=S.obj[y*W+x];if(o&&BL[o]&&BL[o].cat==='cook')kinds.add(o)}return 1-.1*kinds.size}/* 調理の家具がそばにあると、料理が早い（同じ家具は1つ分だけ。下限はなし） */
 const fAtk=lv=>1+Math.floor((Math.min(lv,10)-1)/3);/* 火のせいれい：Lv1=1・Lv4=2・Lv7=3・Lv10=4 */
 function rStat(r,lv){const V=r.vr||{},fire=r.elem==='fire';return{
   atk:(fire?fAtk(lv):lv>=3?Math.floor((lv-1)/2):0)+((r.bst&&r.bst.atk)||0)+((r.sst&&r.sst.atk)||0),
@@ -2015,7 +2014,7 @@ const SUBQ=[/* サブクエスト：メインと別に、いつでもできる�
   {k:'houselight',how:'神殿の依頼ボードをタップ →「あかり」→ランタンやろうそくをはる。できたら「おく」で家の中に置く',g:'fire',L:[["K", "なあ守り神、外が明るくなったら、今度は家の中が暗く感じるね。"], ["K", "夜に、だれかがつまずいたら、かわいそうだろ。"], ["K", "中でも足もとが見えるように、できないかな。"]],X:[['K','おっ、あったけえ灯りだな。……これで夜も、安心して眠れるぜ。'],['K','ありがとよ、守り神。']],w:0,t:'家の中にあかりを置こう',ln:'家ん中も、もう少し明るくしてやりてえな',at:()=>!!(S.subDone||{}).light3&&HOUSES.length>=1,ok:()=>HOUSES.some(h=>[...h.inside].some(j=>['candle','lantern','flamp'].includes(S.obj[j]))),n:1,now:()=>Math.min(1,HOUSES.reduce((n,h)=>n+[...h.inside].filter(j=>['candle','lantern','flamp'].includes(S.obj[j])).length,0)),rw:15},
   {k:'boost1',how:'画面の下の「せいれい」をタップ → 強化したい子をえらぶ → 上の「強化」タブをタップ → 「パワーをそそぐ」をタップ。パワーを使って、ランダムな能力が1つ上がる',g:'earth',L:[['K','ねえ守り神さま、せいれいはね、パワーをそそいでもらうと、ちょっとだけ強くなれるんだよぉ。'],['K','だれか1人でいいから、そそいであげてねぇ。']],X:[['K','わぁ、元気になったみたいだねぇ。'],['K','これからも、ときどきそそいであげてねぇ。']],w:0,t:'せいれいにパワーをそそごう',ln:'せいれいに、パワーをそそいでみてほしいなぁ',at:()=>S.res.some(r=>r.elem==='water'&&r.name===keyName('water')),ok:()=>S.res.some(r=>(r.boost||0)>=1),n:1,now:()=>S.res.some(r=>(r.boost||0)>=1)?1:0,rw:10},
   {k:'oven',how:'神殿の依頼ボードをタップ →「ごはん」→「かまど」をはる。置いたら「みる」でかまどをタップして、作る料理をえらぶ',g:'fire',L:[["K", "おい守り神、あたいの火、ただ燃やしとくのはもったいないだろ？"], ["K", "食べ物をあっためたら、うまくなりそうなんだ。でも、そのまま火に近づけると、真っ黒になっちまってさ。"], ["K", "あんた、なにか思いつかないかい？"]],X:[["K", "へえ、この中に火を入れるのかい。あんた、よく考えたね！"], ["K", "焼けた匂い、たまらないだろ？ あたいも、うまくできたよ。"], ["K", "ありがとよ、守り神。"]],w:0,t:'かまどで料理してもらおう',ln:'火を使って、あったかいごはんを作れないかなぁ',at:()=>elemCount('fire')>=1,learn:['oven'],ok:()=>!!S.flags.cooked,rw:15},
-  {k:'board',how:'木材15・石材10を集めて、この画面の「わたす」をタップ',g:'earth',L:[["K", "依頼ボード、紙が重なって、下の絵が見えないねぇ……。"], ["K", "もっとたくさん、見えるようにできないかなぁ。"], ["K", "守り神さまが形を考えてくれたら、ぼくも手伝うよぉ。"]],X:[['K','板をつぎたしたよぉ。依頼が5まいまで貼れるようになったねぇ。'],['K','守り神さま、ありがとうねぇ。']],w:0,t:'依頼ボードを広げよう',ln:"紙が重なって、下の絵が見えないねぇ",at:()=>elemCount('fire')>=1,pay:{wood:15,stone:10},ok:()=>!!S.flags.board5,rw:0},
+  {k:'board',how:'木材15・石材10を集めて、この画面の「わたす」をタップ',g:'earth',L:[["K", "依頼ボード、紙が重なって、下の絵が見えないねぇ……。"], ["K", "もっとたくさん、見えるようにできないかなぁ。"], ["K", "守り神さまが形を考えてくれたら、ぼくも手伝うよぉ。"]],X:[['K','板をつぎたしたよぉ。依頼が5まいまで貼れるようになったねぇ。'],['K','守り神さま、ありがとうねぇ。']],w:0,t:'依頼ボードを広げよう',ln:"紙が重なって、下の絵が見えないねぇ",at:()=>elemCount('fire')>=1,pay:{wood:15,stone:10},ok:()=>!!S.flags.board5,rw:3},
   {k:'lotus3',how:'「おく」→「ハスの種」を池の上に置く。せいれいに植えてもらい、花が咲くのを待とう',g:'earth',L:[['K','水の力をためるなら、池にハスを咲かせるといいよぉ。'],['K','ハスの種、少しあげるねぇ。']],X:[['K','ハスが咲いたねぇ。池が、うれしそうだよぉ。'],['K','守り神さま、ありがとうねぇ。']],w:0,t:'ハスを5つ咲かせよう',ln:'池にハスを咲かせたら、水の力がたまるよぉ。種、あげるねぇ',at:()=>qAt('水のせいれいをむかえよう'),give:{lotus:5},ok:()=>bloomCount('lotus')>=5,n:5,now:()=>bloomCount('lotus'),rw:10},
   {k:'lily5',how:'「おく」→「ゆりの種」を置く。せいれいに植えてもらい、花が咲くのを待とう',g:'earth',L:[['K','風の力をためるなら、ゆりがいいねぇ。'],['K','ゆりの種、あげるよぉ。5つ咲いたら、いい風がふくかもねぇ。']],X:[['K','ゆりの香りが、風にのってるねぇ。'],['K','守り神さま、ありがとうねぇ。']],w:0,t:'ゆりを5つ咲かせよう',ln:'ゆりを咲かせれば、風の力がたまるはずだねぇ。種、あげるよぉ',at:()=>qAt('風のせいれいをむかえよう'),give:{lily:5},ok:()=>bloomCount('lily')>=5,n:5,now:()=>bloomCount('lily'),rw:10},
   {k:'swing1',how:'神殿の依頼ボードをタップ →「遊び」→ブランコをはる。できたら「おく」で外に置く。風の力もたまる',g:'wood',L:[['K','ねえ、ゆらゆら揺れるブランコ、つくってみない？'],['K','風を受けて揺れるから、風の力もたまるんだって！']],X:[['K','ブランコ、できた！ 風がきもちいいね！'],['K','守り神さま、ありがとう！']],w:0,t:'ブランコを置こう',ln:'ブランコをつくったら、風の力がたまるんだって！',at:()=>qAt('風のせいれいをむかえよう'),learn:['swing'],ok:()=>CN(['swing'])>=1,n:1,now:()=>CN(['swing']),rw:10},
@@ -2053,9 +2052,7 @@ const SUBQ=[/* サブクエスト：メインと別に、いつでもできる�
   wind:[n=>[['K','ふっ…頼みたいものがあるんだが、この村にはまだ早いらしい。'],['K','村レベル'+n+'になったら、また声をかけるよ。']],n=>[['K','村レベル'+n+'か。悪くない。ありがとう。']]]};
  for(const[k,need]of[['watch2',2],['toy2',2],['jar2',3],['parasol',5],['wmill',8]]){const i=SUBQ.findIndex(q=>q.k===k);if(i<0)continue;const q=SUBQ[i],at0=q.at,L=LVL[q.g]||LVL.wood,legacy=['toy2','jar2','parasol'].includes(k);
   if(!legacy)q.at=()=>at0()&&S.lv>=need;
-  SUBQ.splice(i,0,{k:'lv_'+k,how:'せいれいがくらしていると、村レベルが上がる',w:q.w,g:q.g,L:L[0](need),X:L[1](need),t:'村レベルを'+need+'にしよう',at:()=>at0()&&(legacy?(S.subSt||{})['lv_'+k]===3:S.lv<need||(S.subSt||{})['lv_'+k]>=2),ok:()=>S.lv>=need,n:need,now:()=>S.lv})}}
-/* サブ依頼の報酬は難しさに応じた設定を保ち、最低3パワーを保証。村レベル依頼は目標レベルに応じて増やす */
-for(const q of SUBQ)q.rw=q.k.startsWith('lv_')?Math.max(3,Math.ceil((q.n||2)*1.25)):Math.max(3,Number(q.rw)||0);
+  SUBQ.splice(i,0,{k:'lv_'+k,how:'せいれいがくらしていると、村レベルが上がる',w:q.w,g:q.g,L:L[0](need),X:L[1](need),t:'村レベルを'+need+'にしよう',at:()=>at0()&&(legacy?(S.subSt||{})['lv_'+k]===3:S.lv<need||(S.subSt||{})['lv_'+k]>=2),ok:()=>S.lv>=need,n:need,rw:{2:3,3:4,5:7,8:10}[need],now:()=>S.lv})}}
 
 const FIREB={/* 火のキーキャラが、あにきのとき */
   light3:{L:[['K','夜の村、まっくらじゃねえか。これじゃ「コワイノ」にやりたい放題されるぜ。'],['K','おれの火を、もっと遠くまで届けられねえかな。おまえ、いい考えはねえか？']],X:[['K','よし、明るくなった！ これで夜も、ちっとはマシだな。']]},
@@ -4648,7 +4645,6 @@ function renderSheet(){
       body.appendChild(el('<div class="rows"></div>')).appendChild(rowEl('ここで食べたときのパワー（いま）',h?'+'+bon+'（家の中の食卓 +1・ダイニング家具で +'+Math.min(3,Math.floor(n/2))+(n/2<3?'。ダイニング家具をふやすと、まだふえる':'。いちばん多い')+'）':'家の外なので、ふえない（家の中に置くと +1、ダイニング家具でさらに +3 まで）'))}/* 食卓：いまのパワーのボーナス */
     if(o==='bench'){const ev=ENVG?Math.min(12,Math.max(ENVG[j]||0,ENVG[j+1]||0)):0,en=1+ev*.018,fu=1+ev*.075;/* ベンチ：まわりのかざりで上がった回復 */
       body.appendChild(el('<div class="rows"></div>')).appendChild(rowEl('すわって休むと（1時間あたり）','元気 +'+(Math.round((20+ev*.36)*10)/10)+' / たのしさ +'+(Math.round((4.8+ev*.36)*10)/10)+(ev>0?'':'（生垣・パラソルなどをまわりに置くと上がる）')))}
-    else if(BL[o].env)body.appendChild(el('<div class="rows"></div>')).appendChild(rowEl('まわり'+(BL[o].er||3)+'マス（1時間あたり）','たのしさ +'+(Math.round(BL[o].env*3.6)/10)+' / 休けい中は元気も +'+(Math.round(BL[o].env*3.6)/10)));
 
   }else if(sheet==='score'){const sc=S.score||calcScore();T.textContent='クリアスコア';
     body.appendChild(el('<div style="text-align:center;margin:6px 0 10px"><div style="font-size:44px;font-weight:900;color:#e0a43a;line-height:1">'+sc.rank+'</div><div style="font-size:24px;font-weight:800;margin-top:4px">'+sc.tot+' てん</div></div>'));
