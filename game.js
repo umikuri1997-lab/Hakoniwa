@@ -1802,7 +1802,7 @@ const BOSSFX={boss:{col:'#ff3b6b',sub:'コワイノたちの親玉が、すが�
 function bossEntrance(e){/* オオカゲ・ヨルノオオカゲの登場：画面がよって、ゆれて暗くなり、名前が大きく出る */const B=BOSSFX[e.type];SKIP=false;/* 登場のあいだは時間を止めて、すがたを見せる */centerOn(e.x*TS,e.y*TS);shakeScreen();dlgCue('dim');sfx('hit');
   for(let n=0;n<4;n++)fx.push({k:'ring',x:e.x*TS,y:e.y*TS,life:1+n*.4,col:B.col});bigBanner(EN[e.type].name,B.sub,B.col)}
 let BOSSHOLD=0;/* ボスの登場・追いはらいの演出のあいだ、時間を止める（「進む」をおすまで） */
-function bossDefeatFX(e){EVAP.push({e,t0:performance.now(),dur:3200});/* 時間を止めて、消えていく様子を見せる *//* オオカゲをたおしたとき：白く光って、ゆれて、光の輪と粒がはじける */const B=BOSSFX[e.type]||BOSSFX.boss,px=e.x*TS,py=e.y*TS;centerOn(px,py);dlgCue('flash');shakeScreen();
+function bossDefeatFX(e){const sand=e.type==='boss'||e.type==='boss2';if(sand)sfx('crack');EVAP.push({e,t0:performance.now()+(sand?350:0),dur:sand?4200:3200,sand});/* オオカゲ・ヨルノオオカゲ：ピシッとひびが入って、上から砂になってくずれる *//* 時間を止めて、消えていく様子を見せる *//* オオカゲをたおしたとき：白く光って、ゆれて、光の輪と粒がはじける */const B=BOSSFX[e.type]||BOSSFX.boss,px=e.x*TS,py=e.y*TS;centerOn(px,py);dlgCue('flash');shakeScreen();
   for(let n=0;n<6;n++)fx.push({k:'ring',x:px,y:py,life:1+n*.3,col:n%2?'#fff3d6':B.col});
   for(let n=0;n<36;n++){const a=n/36*6.28,v=80+(n%3)*40;fx.push({k:'p',x:px,y:py-20,vx:Math.cos(a)*v,vy:Math.sin(a)*v-60,life:1.4,col:n%2?'#fff3a0':B.col,r:3.2})}
   bigBanner(EN[e.type].name+'を追いはらった！','みんなで、村を守りぬいた',B.col)}
@@ -3936,8 +3936,23 @@ function drawShadeV(c,ty,x,y,s,f,o){
 }
 const EV=new WeakMap();let EVAP=[];/* 朝日で消える「コワイノ」：じゅわっと蒸発させる */
 function drawEvap(it,now){const e=it.e,D=EN[e.type],z=D.size*2,px=e.x*TS,py=e.y*TS,p=Math.max(0,(now-it.t0)/(it.dur||1800)),v=EV.get(e)||{f:1};
+  if(it.sand)return drawSand(it,now,e,D,z,px,py,v);
   if(p<.75){ctx.save();ctx.globalAlpha=Math.max(0,1-p/.75)*.9;ctx.translate(px,py+8);ctx.scale(1+p*.35,1-p*.55);ctx.translate(-px,-py-8);drawShade(ctx,e.type,px,py+8-p*10,.27*z,v.f,{t:now/1000+e.id*1.3,flash:Math.sin(now/40)>0});ctx.restore()}
   for(let i=0;i<9;i++){const q=p*1.2-i*.06;if(q<0||q>1)continue;const sx=px+Math.sin(i*2.3+e.id)*14*z+Math.sin(now/300+i)*4,sy=py-6*z-q*48*z,r=(4+q*9)*z;ctx.globalAlpha=(1-q)*.55;ctx.fillStyle='#f4f0ff';ctx.beginPath();ctx.arc(sx,sy,r,0,7);ctx.fill()}ctx.globalAlpha=1}
+function drawSand(it,now,e,D,z,px,py,v){/* 砂になって消える：ひびが走る → 上から砂になってくずれ、足もとに砂山がのこって消える */
+  const raw=(now-it.t0)/it.dur,p=Math.max(0,raw),Hh=34*D.size,Ww=14*D.size,top=py-Hh,SC=['#e8cf98','#d9b77a','#c9a35f','#b88d4f'];
+  if(p<1){const c=p<.15?0:Math.min(1,(p-.15)/.75),cut=top+c*(Hh+14);
+    const R=36*z,ox=px-R,oy=py+8-R*1.7,ww=R*2,hh=R*2.2,k=dpr*cam.z,cw=Math.ceil(ww*k)+2,ch=Math.ceil(hh*k)+2;/* 体だけを別の画面に描いて、砂の色をかさねる */
+    if(EOC.width<cw||EOC.height<ch){EOC.width=EOS.width=Math.max(EOC.width,cw);EOC.height=EOS.height=Math.max(EOC.height,ch)}
+    eox.setTransform(1,0,0,1,0,0);eox.clearRect(0,0,EOC.width,EOC.height);eox.setTransform(k,0,0,k,-ox*k,-oy*k);
+    drawShade(eox,e.type,px+(raw<0?Math.sin(now/22)*3:0),py+8,.27*z,v.f,{t:it.t0/1000+e.id*1.3,flash:false});/* ピシッ：一瞬ふるえる */
+    eox.setTransform(1,0,0,1,0,0);eox.globalCompositeOperation='source-atop';eox.globalAlpha=Math.min(.8,c*1.3);eox.fillStyle='#c9a35f';eox.fillRect(0,0,cw,ch);eox.globalCompositeOperation='source-over';eox.globalAlpha=1;/* 体が砂の色にかわっていく */
+    ctx.save();ctx.beginPath();ctx.rect(ox,cut,ww,hh);ctx.clip();ctx.drawImage(EOC,0,0,cw,ch,ox,oy,cw/k,ch/k);ctx.restore();
+    if(raw<.25){ctx.save();ctx.globalAlpha=Math.min(1,(.25-raw)*6);ctx.strokeStyle='#fffbe8';ctx.lineWidth=2.2;for(let n2=0;n2<5;n2++){let x=px+(n2-2)*Ww*.35,y=top+Hh*.2;ctx.beginPath();ctx.moveTo(x,y);for(let n=0;n<5;n++){x+=Math.sin(e.id*7+n2*13+n*5)*Ww*.2;y+=Hh*.14;ctx.lineTo(x,y)}ctx.stroke()}ctx.restore()}/* ひびの線 */
+    if(c>0&&c<1&&!PAUSE_FX())for(let n=0;n<3;n++)fx.push({k:'p',x:px+(Math.random()-.5)*Ww*1.8,y:cut+Math.random()*8,vx:(Math.random()-.5)*40,vy:-30+Math.random()*30,life:1.1,col:SC[(Math.random()*4)|0],r:2+Math.random()*2.5})}/* くずれたところから、砂がこぼれる */
+  const m=Math.min(1,Math.max(0,(p-.2)/.6)),fade=p<1?1:Math.max(0,1-(raw-1)/.15);if(m>0&&fade>0){ctx.save();ctx.globalAlpha=fade;ctx.fillStyle='#c9a35f';ctx.beginPath();ctx.ellipse(px,py+10,Ww*1.2*m,Hh*.1*m+2,0,0,7);ctx.fill();ctx.fillStyle='#e0c487';ctx.beginPath();ctx.ellipse(px,py+7,Ww*.8*m,Hh*.06*m+1,0,0,7);ctx.fill();ctx.restore()}/* 足もとの砂山 */
+  ctx.globalAlpha=1}
+const PAUSE_FX=()=>started&&sheet!=null;
 const GLW=document.createElement('canvas'),glx=GLW.getContext('2d');let GLWN=0;
 const EOC=document.createElement('canvas'),EOS=document.createElement('canvas'),eox=EOC.getContext('2d'),eos=EOS.getContext('2d');
 function enemyHidden(e,x0,y0,x1,y1){const ex=e.x|0,ey=e.y|0;
@@ -4020,7 +4035,7 @@ function render(now){
   const add=(k,t,box,draw,own)=>D.push({k,t,box,draw,own});
   for(const r of S.res)if(vis(r)){const px=r.x*TS,fy=r.y*TS,onB=r.act&&r.act.type==='rest'&&r.act.stage==='do'&&S.obj[r.act.obj]==='bench',onAl=STATUE>=0&&(r.y|0)*W+(r.x|0)===STATUE+W;/* ベンチにすわっている子は、ベンチの背もたれより手前。神殿の台座の上にいる子は、台座より手前 */const inDr=HOME_DOORS.has(typeAt((r.y|0)*W+(r.x|0)))||GATE_IDS.has(typeAt((r.y|0)*W+(r.x|0)))||SEATS.includes(typeAt((r.y|0)*W+(r.x|0)));/* いすにすわる子も、いすより手前 *//* ドアのマスを通る子は、ドアより手前 */add(toyR(r)?toyPose(r,now).z:onB?((r.act.obj/W)|0)+1.05:onAl?((STATUE/W)|0)+2.03:inDr?(r.y|0)+1.02:rDepth(r),2,[px-22,fy-64,px+22,fy+13],()=>drawRes(r,now),(r.y|0)*W+(r.x|0))}
   if(EVAP.length){EVAP=EVAP.filter(it=>now-it.t0<(it.dur||1800)+600);for(const it of EVAP){const e=it.e,z=EN[e.type].size||1,px=e.x*TS,fy=e.y*TS;add(e.y,2,[px-30*z,fy-110*z,px+30*z,fy+15],()=>drawEvap(it,now),(e.y|0)*W+(e.x|0))}}
-  for(const e of S.enemies)if(vis(e)){const s=EN[e.type].size||1,px=e.x*TS,fy=e.y*TS;add(e.y,2,[px-24*s,fy-56*s-10,px+24*s,fy+15],()=>drawEnemy(e,now),(e.y|0)*W+(e.x|0))}
+  for(const e of S.enemies)if(vis(e)&&!(e.dead&&EVAP.some(it=>it.e===e))){/* 消えていく途中のコワイノは、消える演出だけを描く */const s=EN[e.type].size||1,px=e.x*TS,fy=e.y*TS;add(e.y,2,[px-24*s,fy-56*s-10,px+24*s,fy+15],()=>drawEnemy(e,now),(e.y|0)*W+(e.x|0))}
   if(godHere()){const GX=godX(),GY=godY(),px=GX*TS,py=GY*TS,onA=STATUE>=0&&S.obj[STATUE+W]==='altar';add(onA?((STATUE/W)|0)+1.02:GY+.5,onA?1.5:2,/* 神殿の柱とお供え箱より手前 */[px-36,py-64,px+36,py+24],()=>drawGod(now),(GY|0)*W+(GX|0))}
   if(S.nushi){const n=S.nushi,px=n.x*TS,py=n.y*TS;add(n.y+.2,2,[px-100,py-150,px+100,py+20],()=>drawNushi(now),-1)}
   for(let y=Math.max(0,y0-2);y<Math.min(H,y1+4);y++)for(let x=x0;x<x1;x++){const i=y*W+x,o=S.obj[i];if(!o||o==='part'||!BL[o]||S.ground[i]===1&&o!=='lotus'&&o!=='sprout'||!(BL[o].dyn||BL[o].anim||TREES.has(o)))continue;
@@ -4319,6 +4334,7 @@ function sfx(k){
   case'door':playS('door',.25);break;
   case'wave':playWave(.2);break;
   case'wbreak':playS('wallbreak',.5);break;
+  case'crack':noise(t,.04,.7,o,3500);tone(2600,t,.025,'square',.12,o);tone(1500,t+.015,.06,'triangle',.12,o);noise(t+.03,.12,.25,o,1800);break;/* ピシッ */
   case'pour':playSeg('trickle',.4,1.8);break;
   case'shoot':playS('shoot',.5);break;
   case'clap':for(let i=0;i<6;i++){const d=t+i*.13+Math.random()*.03;noise(d,.04,.12,o,2200+Math.random()*900);noise(d+.05,.03,.08,o,1800)}break;
@@ -4927,7 +4943,7 @@ function thumb(cv2,k,open){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='339';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='340';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
