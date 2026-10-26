@@ -1367,7 +1367,7 @@ const CHATS=[
  [[0,'ねえ、手、つないでみる？'],[1,'…ちょっと、てれるね。'],[0,'じゃあ、小指だけ。']]];
 CHATS.push([[0,'ねえ、すべり台って、何回すべってもあきないね。'],[1,'わかる！ 上るのはちょっと大変だけど。'],[0,'それも、たのしいのうちだよ。']],[[0,'きょう、いちばんうれしかったこと、なに？'],[1,'うーん…いま、こうして話してることかな。'],[0,'…えへへ。']],[[0,'ねむる前って、なに考えてる？'],[1,'あしたの朝ごはんのこと。'],[0,'ぼくも！']],[[0,'しってる？ 星って、ずっと遠くで光ってるんだって。'],[1,'じゃあ、いま見えてる光は、むかしの光？'],[0,'そうかも。…なんか、ふしぎだね。']],[[0,'あのね、ないしょの話があるの。'],[1,'なになに？'],[0,'…やっぱり、もうちょっと仲よくなってからね。'],[1,'えー！']],[[0,'すなばで、お城をつくったよ。'],[1,'見たい見たい！'],[0,'…風で、ちょっとくずれちゃったけど。']],[[0,'ここに来てから、いろんな色を見たよ。'],[1,'どの色がいちばん好き？'],[0,'みんなが笑ってるときの色。']],[[0,'しっぽ、ほしいなあ。'],[1,'なんで？'],[0,'うれしいとき、ふりたいから。']],[[0,'「コワイノ」って、ほんとはさみしいのかな。'],[1,'…どうして、そう思うの？'],[0,'夜になると、こっちに来たがるから。']],[[0,'きのう、葉っぱの舟をうかべたよ。'],[1,'どこまで行った？'],[0,'池のまんなかで、くるくるまわってた。']],[[0,'あくび、うつった？'],[1,'ふわぁ…うつった。'],[0,'ふふ、作戦成功。']],[[0,'おいしいって、どうしてうれしいんだろう。'],[1,'おなかが、ありがとうって言ってるのかも。']],[[0,'ねえ、もし空をとべたら、どこに行く？'],[1,'神殿のてっぺん！'],[0,'ちかっ！']],[[0,'シーソー、またいっしょにのろうね。'],[1,'うん。こんどは、ぼくが上の番！']],[[0,'ひとりでいるのも好きだけど…'],[1,'うん。'],[0,'みんなといるのは、もっと好き。']],[[0,'このまえ、虹のはしっこをさがしたんだ。'],[1,'見つかった？'],[0,'ううん。でも、歩くのがたのしかった。']]);
 CHATS[5].wave=1;
-{const late=()=>WD!==0&&WD!==FREE;for(const c of CHATS)if(c[0]&&(c[0][1]==='むかしは、夜にも神さまがいたんだって。'||c[0][1]==='力って、使ったらなくなるの？'))c.ok=late}/* ステージ1では、真相に近い話はしない */
+{const late=()=>WD!==0&&WD!==FREE;for(const c of CHATS){if(c[0]&&(c[0][1]==='むかしは、夜にも神さまがいたんだって。'||c[0][1]==='力って、使ったらなくなるの？'))c.ok=late;if(c[0]&&c[0][1]==='この土地、前はもっと緑だったのかな。')c.key=1}}/* なつかしがる話は、むかしからこの土地にいた子（物語のせいれい）どうしだけ *//* ステージ1では、真相に近い話はしない */
 /* 条件付きの会話は属性別会話の追加後に、まとめて設定する */
 [[[0,'ねえ、となりにいると、なんだか安心する。'],[1,'わたしも。ずっと前から知ってたみたい。']],
  [[0,'こんど、いっしょに星を見に行こうよ。'],[1,'うん！ ふたりだけで、ね。']],
@@ -1479,7 +1479,7 @@ function chatTone(tx,r,i){if(!r)return tx;const k=elemKey(r),pr=r.elem==='fire'?
   {const fl={earth:'うーんとねぇ…',water:'そうですね……',wind:'そうだね……',fire:k==='fireB'?'そうだな、':'まあ、'}[r.elem];if(fl)t=t.replace(/^うーん…/,fl)}/* 口ぐせは属性ごとに */
   if(r.elem==='wind'&&i%3===1&&t.length>=14&&!/^(フッ|そう|えっ|ええ|うん|あ|わ|へえ|ほう|ねえ)/.test(t)&&/[。]$/.test(t))t='フッ…'+t;
   return t}
-function chatTopic(r,p){const L=[],mt=((r.mates||{})[p.id]||0)>=6;CHATS.forEach((c,i)=>{if((!c.el||c.el===r.elem)&&(!c.ok||c.ok())&&(!c.mate||mt)&&(!c.kc||kcOK(c,r,p)))L.push(i)});if(L.some(i=>CHATS[i].kc)&&Math.random()<.4){const K=L.filter(i=>CHATS[i].kc);L.length=0;L.push(...K)}/* キーキャラの話は、あえば4割で選ばれる *//* なかよし同士だと、なかよしの話もまざる */const R=S.chatRec||(S.chatRec=[]),F=L.filter(i=>!R.includes(i)),C=F.length?F:L,t=C[Math.floor(Math.random()*C.length)];R.push(t);while(R.length>Math.floor(CHATS.length*.7))R.shift();return t}/* 最近した話は、しばらくしない *//* 話しかけた子の属性のお話もまざる */
+function chatTopic(r,p){const L=[],mt=((r.mates||{})[p.id]||0)>=6;CHATS.forEach((c,i)=>{if((!c.el||c.el===r.elem)&&(!c.ok||c.ok())&&(!c.key||isKey(r.name)&&isKey(p.name))&&(!c.mate||mt)&&(!c.kc||kcOK(c,r,p)))L.push(i)});if(L.some(i=>CHATS[i].kc)&&Math.random()<.4){const K=L.filter(i=>CHATS[i].kc);L.length=0;L.push(...K)}/* キーキャラの話は、あえば4割で選ばれる *//* なかよし同士だと、なかよしの話もまざる */const R=S.chatRec||(S.chatRec=[]),F=L.filter(i=>!R.includes(i)),C=F.length?F:L,t=C[Math.floor(Math.random()*C.length)];R.push(t);while(R.length>Math.floor(CHATS.length*.7))R.shift();return t}/* 最近した話は、しばらくしない *//* 話しかけた子の属性のお話もまざる */
 /* 「手、ふっとこうか」：このあと手をふる */
 function trySocial(r,G){const sb=socialBest(r,G);if(!sb)return false;const best=sb.b;const o=S.res.find(q=>q.id===best.o.partner);if(!o)return false;endAct(o);o.act={type:'chatwait',stage:'do',t:0,partner:r.id};o.bubble='👋';startAct(r,G,'chat',best.stand,best.o);return true}
 const FAVTOY={earth:['sandbox'],wood:['swing'],water:['fountain'],fire:['campfire'],wind:['slide','seesaw']};/* 属性ごとに、よく遊ぶおもちゃ（ほかの子より選ばれやすい） */
@@ -4939,7 +4939,7 @@ function thumb(cv2,k,open){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='343';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='344';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
