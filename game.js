@@ -93,7 +93,7 @@ const BL={
   candle:{offerOnly:1,name:'ろうそく',kind:'furn',cat:'light',f2:1,lv:5,pc:1,time:60,maker:'fire',attr:{fire:1},mat:{wood:2},solid:1,desc:'灯り'},
   lantern:{name:'ランタン',kind:'furn',cat:'light',f2:1,lv:6,pc:3,time:80,maker:'fire',attr:{fire:1},mat:{wood:2,stone:2},solid:1,desc:'灯り'},
   flamp:{offerOnly:1,name:'フロアランプ',kind:'furn',cat:'light',f2:1,lv:6,pc:7,time:100,maker:'fire',attr:{fire:1},mat:{wood:3,stone:2},solid:1,desc:'灯り'},
-  signpost:{offerOnly:1,name:'道しるべ',kind:'furn',cat:'env',f2:1,lv:5,pc:1,time:60,maker:'earth',attr:{earth:1},mat:{wood:9},solid:1,desc:'まわり3マスで、せいれいがにげる速さ×1.4'},
+  signpost:{name:'道しるべ',kind:'furn',cat:'env',f2:1,lv:5,pc:1,time:60,maker:'earth',attr:{earth:1},mat:{wood:9},solid:1,desc:'まわり3マスで、せいれいがにげる速さ×1.4'},
   hedge:{name:'生垣',kind:'furn',cat:'env',f2:1,lv:5,pc:3,time:80,maker:'wood',attr:{wood:1},mat:{wood:12},solid:1,env:3,er:2,desc:'まわり2マスで、たのしさ+1.1／1時間（休けい中は元気も+1.1）'},
   birdhouse:{name:'巣箱',kind:'furn',cat:'env',f2:1,lv:2,pc:3,time:80,maker:'wind',attr:{wind:1},mat:{wood:3},solid:1,env:1,er:4,desc:'まわり4マスで、たのしさ+0.4／1時間（休けい中は元気も+0.4）。範囲がとても広い'},
   birdbath:{offerOnly:1,name:'水飲み鳥',kind:'furn',cat:'env',f2:1,lv:7,pc:5,time:100,maker:'water',attr:{water:1},mat:{stone:15},solid:1,env:3,desc:'まわり3マスで、たのしさ+1.1／1時間（休けい中は元気も+1.1）'},
@@ -440,7 +440,7 @@ const QUESTS1=[
    story:[
     [POKO,'ついに村レベル5……！ ここまで来たんだね。'],
     [POKO,'……あれ？ 神殿のそばが、ぽうっと光ってる……！'],
-    [MINA,'「想う力」のかけらだねぇ。村のみんなが満足して、想いが集まったから、こたえてくれたんだよぉ。']],gives:{shard:'key'}},
+    [MINA,'「想う力」のかけらだねぇ。村のみんなが満足して、想いが集まったから、こたえてくれたんだよぉ。']],gives:{shard:'key',items:{signpost:1}}},
   {text:'守護の台座を建ててもらおう',check:()=>cnt('tower')>=1,prog:()=>'じょうけん '+towerConds().filter(c=>c[1]).length+'/'+towerConds().length,
    talk:{who:POKO,when:()=>true,lines:[
     [POKO,'ねえノドカ、ヌシ様をおむかえする「守護の台座」、そろそろ建てられないかな？'],
