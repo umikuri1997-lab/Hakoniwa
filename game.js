@@ -1279,7 +1279,8 @@ function goEat(r,G){
 }
 const fireMul=r=>(r.energy<10?.5:r.energy<25?.7:1)*(r.fun<20?.8:1);/* 火のせいれいは、つかれても楽しさが減ってもたたかう。そのぶん、こうげきが弱くなる（つかれ×0.7・楽しさ低下×0.8） */
 const futabaFight=()=>!!(S.cleared||(S.bossKills||0)>0);/* フタバが戦うのは、オオカゲを追いはらってから（こもれびのまもりをおぼえてから） */
-const isWatch=r=>r.elem==='fire'||(r.name===POKO&&!WD&&!!S.flags.guard&&futabaFight());/* 夜の見回りをする子 */
+const nightClear=()=>!!S.nightHad&&!S.nushi&&S.enemies.every(e=>e.dead);/* 今夜のコワイノを倒し切った */
+const isWatch=r=>(r.elem==='fire'&&!nightClear())||(r.name===POKO&&!WD&&!!S.flags.guard&&futabaFight());/* 夜の見回りをする子 */
 function offShift(r){return false;/* 火のせいれいは全員みまわり（交代なし） */if(r.elem!=='fire'||!S.enemyOn)return false;const F=S.res.filter(q=>q.elem==='fire'&&!q.hidden).sort((a,b)=>a.id-b.id);if(F.length<2)return false;const h=hour(),sh=(h>=21||h<1.5)?0:1;return F.indexOf(r)%2!==sh}
 const hostileNow=()=>S.enemies.some(e=>e.spawned&&!e.dead&&!e.flee);
 function goShiver(r,G){/* 家の中（なければ、いまの場所）で、ふるえる */let k=-1;if(HOUSES.length){const hs=new Set();for(const h of HOUSES)for(const q of h.inside)hs.add(q);k=nearest(G,j=>hs.has(j)&&walk(j)&&S.obj[j]!=='door'&&S.obj[j]!=='sdoor',200)}startAct(r,G,'shiver',k,{run:k>=0});return true}
