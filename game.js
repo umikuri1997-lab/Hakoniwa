@@ -1740,7 +1740,7 @@ const EN={
   ash:{pw:3,name:'ハイカゲ',hp:6,sp:.9,atk:20,hit:12,col:'#6d6a66',eye:'#ffb36b',size:.9,ash:1},/* かまど・ベンチなどを灰でよごして止める */
   rockc:{pw:8,name:'イワカゲ',hp:22,sp:.5,atk:30,hit:30,col:'#5a4636',eye:'#ffcf6b',size:1.3},/* おそいけど、かたい */
   hino:{pw:25,rng:2.3,name:'ヒノオオカゲ',hp:60,sp:.7,atk:6,hit:40,col:'#3a0c08',eye:'#ffb02e',size:2.1,boss:1,dev:1},/* 火山から下りてきて、熱の装置をねらう */
-  boss2:{pw:30,rng:3.4,name:'ヨルノオオカゲ',hp:70,sp:.9,atk:4.5,hit:48,col:'#05030c',eye:'#ffd84a',size:4.6,boss:1},/* ヌシ様をむかえる準備ができたあとに来る */
+  boss2:{pw:30,rng:3.4,name:'ヨルノオオカゲ',hp:45,sp:.9,atk:4.5,hit:30,col:'#05030c',eye:'#ffd84a',size:4.6,boss:1},/* ヌシ様をむかえる準備ができたあとに来る */
 };
 const bossNight=d=>{const w=S&&S.bossWarn;return w==null?d>=5&&(d-5)%3===0:d-w>=5&&(d-w-5)%3===0}/* オオカゲは「来るかも」と聞いた5日後、そのあと3日ごと */;
 function waveFor(day){
@@ -1764,7 +1764,7 @@ function waveArrivalDelay(index,total,hasBoss,late=0){const spacing=Math.min(lat
 function spawnWave(list){
   const hasBoss=list.some(type=>EN[type].boss);list.forEach((type,k)=>{const d=EN[type];S.enemies.push({id:S.nid++,type,x:0,y:0,hp:d.hp,max:d.hp,delay:waveArrivalDelay(k,list.length,hasBoss,S.lateWave)+(d.boss?60:0),/* 強い夜も、いっせいに押し寄せない */spawned:false,path:[],repath:0,atk:0,stun:0,flash:0,flee:false})});
   S.nightHurt=0;S.nightHad=true;S.ns={n:list.length,kill:0,lost:[],hurt:0,broke:0,boss:list.includes('boss')||list.includes('boss2')||list.includes('hino')?1:0,trial:!!S.trialOn,final:!!S.finalOn};S.trialOn=false;S.finalOn=false;
-  if(S.ns.final&&!WD&&S.res.some(r=>r.name===POKO))dialog([[POKO,'守り神さま…！ 今夜は「ヨルノオオカゲ」と、オオカゲが2体も来る……！'],[POKO,'……こわいよ。でも、ぼく、もう隠れてるだけじゃない。'],[POKO,'今度は、ぼくがみんなを守るんだ！']]);
+  if(S.ns.final&&!WD&&S.res.some(r=>r.name===POKO))dialog([[POKO,'守り神さま…！ 今夜は「ヨルノオオカゲ」と、オオカゲも来る……！'],[POKO,'……こわいよ。でも、ぼく、もう隠れてるだけじゃない。'],[POKO,'今度は、ぼくがみんなを守るんだ！']]);
   else if(list.includes('hino'))dialog(['火山のほうから、熱い風がふいてくる…！','「ヒノオオカゲ」が来るよ！ 熱の装置をねらってる！ みんなで追いはらって！'],null,null,LEAD());
   else if(list.filter(t=>t==='ash').length>=6)dialog(['空から、灰がふってきた…！','ハイカゲがたくさん来るよ！ かまどやベンチをまもって！'],null,null,LEAD());
   else if(list.includes('boss2'))dialog(['守り神さま…！ いつもより、ずっと空気が重い…！','今夜は「ヨルノオオカゲ」が来る！ 柵をかさねて、家の中にかくれて！'],null,null,LEAD());
@@ -2007,7 +2007,7 @@ function stepWorld(dt){if((SUBT+=dt)>1){SUBT=0;checkSub();checkSev();guardTick()
   if(prevH<6&&h>=6&&S.lastMorning!==dayNo()){S.lastMorning=dayNo();morning();if(WD===1&&S.finalRetry!=null&&dayNo()>=S.finalRetry&&!S.cleared){S.finalRetry=null;S.finalNight=true}}/* 火山のふもと：負けたら3日あとの夜にまた来る *//* 1日のリセットは朝6時にまとめて */
   if(prevH<8&&h>=8&&S.godGone&&!S.cleared&&!S.godVisit&&dayNo()>=(S.godNextVisitDay||1)&&Math.random()<(cnt('kamizo')?.5:.25)){S.godVisit=true;S.godNextVisitDay=dayNo()+2;/* 来た翌日は休み。像があれば来訪率は50% */sfx('arrive');toast('カミサマが遊びにきた！ 神殿の前で交換できる','good')}
   if(prevH<18&&h>=18&&S.godVisit){S.godVisit=false;S.godNextVisitDay=Math.max(S.godNextVisitDay||0,dayNo()+2);toast('カミサマは帰っていった')}
-  if(prevH<20&&h>=20&&S.enemyOn&&S.lastWarn!==dayNo()){S.lastWarn=dayNo();S.wave=waveFor(dayNo()+1);if(S.wipe&&S.res.length>=5)S.wipe=false;if(S.finalNight&&!S.cleared&&(WD||S.res.some(r=>r.name===POKO))){S.finalNight=false;S.finalOn=true;/* フタバがいない夜は、ヨルノオオカゲは来ない */S.wave=['boss2','boss','boss'].concat(S.wave.filter(t=>t!=='boss'&&t!=='boss2'),['brute','brute','brute','fast','fast','fast','breaker','breaker']);toast('最後の夜…！ ヨルノオオカゲとオオカゲ2体がやってくる','warn')}else if(S.trial){S.trialOn=true;S.trial=false;S.wave=['boss'].concat(S.wave.filter(t=>t!=='boss'),['brute','brute','fast','fast'])}else if(S.today==='odayaka'){const bo=S.wave.filter(t=>t==='boss'),ot=S.wave.filter(t=>t!=='boss');S.wave=bo.concat(ot.slice(0,Math.ceil(ot.length/2)))}/* 「コワイノ」の予告はしない */}
+  if(prevH<20&&h>=20&&S.enemyOn&&S.lastWarn!==dayNo()){S.lastWarn=dayNo();S.wave=waveFor(dayNo()+1);if(S.wipe&&S.res.length>=5)S.wipe=false;if(S.finalNight&&!S.cleared&&(WD||S.res.some(r=>r.name===POKO))){S.finalNight=false;S.finalOn=true;/* フタバがいない夜は、ヨルノオオカゲは来ない */S.wave=['boss2','boss'].concat(S.wave.filter(t=>t!=='boss'&&t!=='boss2'),['brute','brute','fast','fast','breaker']);toast('最後の夜…！ ヨルノオオカゲとオオカゲがやってくる','warn')}else if(S.trial){S.trialOn=true;S.trial=false;S.wave=['boss'].concat(S.wave.filter(t=>t!=='boss'),['brute','brute','fast','fast'])}else if(S.today==='odayaka'){const bo=S.wave.filter(t=>t==='boss'),ot=S.wave.filter(t=>t!=='boss');S.wave=bo.concat(ot.slice(0,Math.ceil(ot.length/2)))}/* 「コワイノ」の予告はしない */}
   if(prevH<3&&h>=3)for(const H of HOUSES){const L=S.res.filter(x=>x.act&&(x.act.type==='sleep'||x.act.type==='stay')&&H.set.has((x.y|0)*W+(x.x|0)));if(houseComfort(H).over)for(const x of L){x.energy=Math.min(x.energy,60);x.fun=Math.max(0,x.fun-15);x.crowd=dayNo()}else if(L.length){const C=houseComfort(H);for(const x of L){const c=comfyFor(H,x,C);if(c>=180){x.fun=Math.min(100,x.fun+10);x.comfy=dayNo()}else if(c<90)x.fun=Math.max(0,x.fun-5)}}}/* 住み心地がいいと、ぐっすり眠れる *//* 家につめこむと、きゅうくつで眠れない */
   if(prevH>h&&S.enemyOn&&S.wave&&S.lastNight!==dayNo()-1){S.lastNight=dayNo()-1;/* 「コワイノ」は夜12時に来る（前の日の夜としてかぞえる） */S.nights++;let w=S.wave;S.wave=null;const rn=S.res.length;if(rn<5)w=w.filter(t=>EN[t].boss&&!S.wipe).concat(w.filter(t=>!EN[t].boss).slice(0,[0,1,2,3,4][rn]));/* せいれいが4人までの夜は、コワイノは人数と同じ数まで（全滅のあと5人そろうまでは、オオカゲも来ない） */if(w.length)spawnWave(w)}
   if(S.seedDay!==dayNo()&&h>=6){S.seedDay=dayNo();const n=Math.random()<.5?1:0,b=S.t-S.t%1440;S.seeds=[];S.seedPlan=Array.from({length:n},()=>b+360+Math.random()*720).sort((x,y)=>x-y)}/* ふしぎな種は1日1こまで（50%）。ひろわなかったら、あしたには消える */
@@ -4921,7 +4921,7 @@ function thumb(cv2,k,open){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='330';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='331';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
