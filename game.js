@@ -4427,7 +4427,7 @@ function tagsEl(id){const tg=tagsOf(id);if(!tg.length)return null;const d=docume
 function helpPop(t,text){const o=$('#helpPop');let tg=[];{const id=Object.keys(BL).find(k=>BL[k].name===t);if(id)tg=tagsOf(id)}{const bx=o.querySelector('.tags');if(bx){bx.innerHTML='';for(const g of tg){const sp=document.createElement('span');sp.className='tag';sp.textContent=g;bx.appendChild(sp)}bx.hidden=!tg.length}}o.querySelector('b').textContent=t;o.querySelector('p').textContent=text;o.hidden=false}
 function rowEl(title,desc,img,html){const r=el(`<div class="row">${img?'<img alt="">':''}<div class="tx"><b></b><small></small></div></div>`);if(img)r.querySelector('img').src=img;r.querySelector('b').textContent=title;if(html)r.querySelector('small').innerHTML=html+esc(desc||'');else r.querySelector('small').textContent=desc||'';return r}
 /* カミサマの値段：花は高め、畑・果物の苗は買うごとに上がる（果物の苗は10から、1本ごとに+2） */
-function shopPrice(id,k){let t=0;for(let i=0;i<k;i++){if(id==='farm')t+=4+Math.floor(((S.farmBuy||0)+i)*.75);else if(id==='fruit')t+=10+2*((S.fruitBuy||0)+i);else if(FLOWERS.has(id))t+=BL[id].cost*3;else t+=BL[id].cost}return t}
+function shopPrice(id,k){let t=0;for(let i=0;i<k;i++){if(id==='farm')t+=4+Math.floor(((S.farmBuy||0)+i)/3);/* 畑は3こ買うごとに1ポイント上がる */else if(id==='fruit')t+=10+2*((S.fruitBuy||0)+i);else if(FLOWERS.has(id))t+=BL[id].cost*3;else t+=BL[id].cost}return t}
 function renderSheet(){
   if(!sheet)return;const body=$('#sheetBody');body.innerHTML='';const T=$('#sheetTitle');
   if(sheet==='shop'){
@@ -4911,7 +4911,7 @@ function thumb(cv2,k,open){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='309';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='310';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
