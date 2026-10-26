@@ -676,7 +676,10 @@ function clearConds(){if(WD===1){const tm=TOWER_MAT(),n=springDone(),fac=['bench
   ['みどりのマス'+GRASS_GOAL+'（いま'+GRASSN+'）',GRASSN>=GRASS_GOAL],
   ['せいれいパワーを'+pw+'集める（いま'+Math.floor(S.totalPt)+'）',S.totalPt>=pw]]}
 const clearReady=()=>clearConds().every(c=>c[1]);
-function finalCheck(){if(WD||!S||S.cleared||S.finalNight||S.finalOn||!S.enemyOn||S.flags.finalWon)return;/* 勝ったあとは、もう来ない */if(S.finalLost!=null&&dayNo()-S.finalLost<3)return;if(S.res.length<5)return;if(!S.res.some(r=>r.name===POKO))return;/* フタバがいるときだけ *//* ヨルノオオカゲに負けたら3日あける。せいれいが5人以上になってから */if(cnt('tower')>=1&&clearReady()){S.finalNight=true;memo('🌑','台座に力がそろった。最後の夜がくる');setTimeout(()=>toast('守護の台座が光りはじめた…！ 今夜、オオカゲたちがおしよせてくる','warn'),900)}}/* 台座にかけらが3つそろったら、最後の夜 */
+function finalCheck(){if(WD||!S||S.cleared||S.finalNight||S.finalOn||!S.enemyOn||S.flags.finalWon)return;/* 勝ったあとは、もう来ない */if(S.finalLost!=null&&dayNo()-S.finalLost<3)return;if(S.res.length<5)return;if(!S.res.some(r=>r.name===POKO))return;/* フタバがいるときだけ *//* ヨルノオオカゲに負けたら3日あける。せいれいが5人以上になってから */if(cnt('tower')>=1&&clearReady()){
+  if(S.finalDay==null){if(isNight())return;S.finalDay=dayNo()+3;S.finalHint=3;memo('🌑','夜の空気が、すこし重くなってきた');dialog([[POKO,'……ねえ。なんだか、夜の風がつめたくなってきた気がする。'],[MINA,'台座の光に、なにかが気づいたのかもしれないねぇ……。']]);return}/* 予告：すぐには来ない。3日後の夜に来る */
+  const left=S.finalDay-dayNo();if(left>0){if(left<S.finalHint&&!isNight()){S.finalHint=left;toast(left===2?'遠くの森が、いつもより静かだ……':'夜になると、影がざわめいている気がする……','warn')}return}/* 日ごとに、少しずつにおわせる */
+  S.finalNight=true;memo('🌑','台座に力がそろった。最後の夜がくる');setTimeout(()=>toast('守護の台座が光りはじめた…！ 今夜、オオカゲたちがおしよせてくる','warn'),900)}}/* 予告から3日後の夜に、ヨルノオオカゲが来る */
 
 /* ---------- 状態 ---------- */
 let S=null;
@@ -1990,7 +1993,7 @@ function stepWorld(dt){if((SUBT+=dt)>1){SUBT=0;checkSub();checkSev();guardTick()
   if(S.nushi)updNushi(dt);
   if(prevH<6&&h>=6&&S.nightHad){S.nightHad=false;const left=S.enemies.length;{const t0=performance.now();for(const e of S.enemies)if(e.spawned&&!e.dead)EVAP.push({e,t0:t0+Math.random()*500})}if(left)sfx('evap');S.enemies=[];
     if(S.ns&&!S.nightHurt){const rw=Math.min(10,3+Math.floor((S.nights||0)/2));S.ns.rw=rw;if(!S.flags.safeMemo){S.flags.safeMemo=1;memo('🌙','はじめて夜をぶじに守りきった')}S.pt+=rw;S.totalPt+=rw;for(const r of S.res)r.fun=Math.min(100,r.fun+10)}/* けがも被害もない夜は、ごほうび（パワーと、みんなのたのしさ） */
-    if(S.ns&&S.ns.final&&!S.cleared&&!WD&&!S.obj.includes('tower'))S.finalLost=dayNo();/* 台座をこわされたら負け */if(S.ns&&S.ns.final&&!S.cleared&&S.obj.includes('tower')){if(WD)setTimeout(()=>{if(S.cleared)return;if(S.res.some(r=>r.name===POKO))nushiReturns();else{S.flags.nushiWait=1;toast('フタバが帰ってきたら、ヌシ様がすがたをあらわす','warn')}},1800);else if(!S.flags.finalWon){S.flags.finalWon=1;S.flags.sh_boss=true;S.shards=Math.min(3,(S.shards||0)+1);memo('💎','最後のバトルに勝って、ヌシのかけらがあらわれた（'+S.shards+'/3）');setTimeout(()=>toast('台座の前に、ヌシのかけらがあらわれた！ 台座をタップしてはめよう','good'),1500)}}/* 最後の夜をこえたら、かけらが出て、台座にはめるとヌシ様がもどる */if(S.ns&&S.ns.trial){const ok=S.ns.kill>=S.ns.n;S.ns.trialOK=ok;if(ok){S.trials=(S.trials||0)+1;S.pt+=60;S.totalPt+=60;S.mebuki=(S.mebuki||0)+1;memo('🏆','「コワイノ」の試練をのりこえた')}}
+    if(S.ns&&S.ns.final&&!S.cleared&&!WD&&!S.obj.includes('tower'))S.finalLost=dayNo();S.finalDay=dayNo()+3;S.finalHint=3;/* 台座をこわされたら負け */if(S.ns&&S.ns.final&&!S.cleared&&S.obj.includes('tower')){if(WD)setTimeout(()=>{if(S.cleared)return;if(S.res.some(r=>r.name===POKO))nushiReturns();else{S.flags.nushiWait=1;toast('フタバが帰ってきたら、ヌシ様がすがたをあらわす','warn')}},1800);else if(!S.flags.finalWon){S.flags.finalWon=1;S.flags.sh_boss=true;S.shards=Math.min(3,(S.shards||0)+1);memo('💎','最後のバトルに勝って、ヌシのかけらがあらわれた（'+S.shards+'/3）');setTimeout(()=>toast('台座の前に、ヌシのかけらがあらわれた！ 台座をタップしてはめよう','good'),1500)}}/* 最後の夜をこえたら、かけらが出て、台座にはめるとヌシ様がもどる */if(S.ns&&S.ns.trial){const ok=S.ns.kill>=S.ns.n;S.ns.trialOK=ok;if(ok){S.trials=(S.trials||0)+1;S.pt+=60;S.totalPt+=60;S.mebuki=(S.mebuki||0)+1;memo('🏆','「コワイノ」の試練をのりこえた')}}
     if(S.ns){S.ns.left=left;if(!sheet)openSheet('night');else toast(S.nightHurt?'朝日がのぼって、「コワイノ」は'+(left?'消えていった':'いなくなった'):'夜をぶじに守りきった！','good')}
     else if(!S.nightHurt)toast('夜をぶじに守りきった！','good');else toast('朝日がのぼって、「コワイノ」は'+(left?'消えていった':'いなくなった'))}
   if(prevH<6&&h>=6&&S.lastMorning!==dayNo()){S.lastMorning=dayNo();morning()}/* 1日のリセットは朝6時にまとめて */
@@ -4908,7 +4911,7 @@ function thumb(cv2,k,open){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='308';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='309';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
