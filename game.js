@@ -1790,7 +1790,8 @@ function bigBanner(title,sub,col){/* 画面のまんなかに、大きな文字�
 const BOSSFX={boss:{col:'#ff3b6b',sub:'コワイノたちの親玉が、すがたをあらわした'},boss2:{col:'#ffd84a',sub:'夜の力をたくわえた、いちばん大きなコワイノ'}};
 function bossEntrance(e){/* オオカゲ・ヨルノオオカゲの登場：画面がよって、ゆれて暗くなり、名前が大きく出る */const B=BOSSFX[e.type];centerOn(e.x*TS,e.y*TS);shakeScreen();dlgCue('dim');sfx('hit');
   for(let n=0;n<4;n++)fx.push({k:'ring',x:e.x*TS,y:e.y*TS,life:1+n*.4,col:B.col});bigBanner(EN[e.type].name,B.sub,B.col)}
-function bossDefeatFX(e){/* オオカゲをたおしたとき：白く光って、ゆれて、光の輪と粒がはじける */const B=BOSSFX[e.type]||BOSSFX.boss,px=e.x*TS,py=e.y*TS;centerOn(px,py);dlgCue('flash');shakeScreen();
+let BOSSHOLD=0;/* オオカゲをたおしたあと、少しのあいだ時間を止める */
+function bossDefeatFX(e){BOSSHOLD=performance.now()+3600;EVAP.push({e,t0:performance.now(),dur:3200});/* 時間を止めて、消えていく様子を見せる *//* オオカゲをたおしたとき：白く光って、ゆれて、光の輪と粒がはじける */const B=BOSSFX[e.type]||BOSSFX.boss,px=e.x*TS,py=e.y*TS;centerOn(px,py);dlgCue('flash');shakeScreen();
   for(let n=0;n<6;n++)fx.push({k:'ring',x:px,y:py,life:1+n*.3,col:n%2?'#fff3d6':B.col});
   for(let n=0;n<36;n++){const a=n/36*6.28,v=80+(n%3)*40;fx.push({k:'p',x:px,y:py-20,vx:Math.cos(a)*v,vy:Math.sin(a)*v-60,life:1.4,col:n%2?'#fff3a0':B.col,r:3.2})}
   bigBanner(EN[e.type].name+'を追いはらった！','みんなで、村を守りぬいた',B.col)}
@@ -1881,7 +1882,7 @@ function defeat(e,msg){sfx('defeat');if(BOSSFX[e.type])bossDefeatFX(e);
   e.dead=true;S.kills++;const D=EN[e.type];{const K=S.enKills||(S.enKills={});K[e.type]=(K[e.type]||0)+1}if(S.ns){S.ns.kill++;if(D.boss)S.ns.boss=2}const n=D.pw||5;
   if(e.type==='hino')S.flags.hinoDown=true;if(D.ash&&WD===1)st2().ashKills=(st2().ashKills||0)+1;
   if(D.boss){S.bossKills=(S.bossKills||0)+1;if(!S.bossDay)S.bossDay=dayNo();logEv('オオカゲを追いはらった');memo('⚔️','オオカゲを追いはらった')}
-  if(D.boss&&!S.flags.sh_boss&&!S.flags.bossShake&&!WD&&S.res.some(r=>r.name===POKO)){S.flags.bossShake=1;setTimeout(()=>dialog([[POKO,'オオカゲはいなくなったのに…まだ手が震えてる…'],...(S.res.some(r=>r.name===MINA)?[[MINA,'よくがんばったねぇ。もう、だいじょうぶだよぉ。']]:[[GOD,'うむ、よう耐えたのう。もう終わったんじゃ。']])]),1500)}/* 戦闘のあと：フタバのふるえ（かけらの話とは別） */
+  if(D.boss&&!S.flags.sh_boss&&!S.flags.bossShake&&!WD&&S.res.some(r=>r.name===POKO)){S.flags.bossShake=1;setTimeout(()=>dialog([[POKO,'オオカゲはいなくなったのに…まだ手が震えてる…'],...(S.res.some(r=>r.name===MINA)?[[MINA,'よくがんばったねぇ。もう、だいじょうぶだよぉ。']]:[[GOD,'うむ、よう耐えたのう。もう終わったんじゃ。']])]),3800)}/* 戦闘のあと：フタバのふるえ（かけらの話とは別） */
   if(D.boss&&WD&&!S.flags.sh_boss&&!S.drops.some(d=>d.id==='shard'))dropAt(e.x,e.y,'shard');/* 草原では、最後のバトルに勝ったときだけかけらが出る *//* オオカゲが落とすかけらは1つだけ */
   if(D.boss&&Math.random()<.5)dropAt(e.x,e.y,'mebuki');/* 半分の確率で「めぶきのしずく」 */
   if(D.boss||Math.random()<.3)for(let k=D.boss?2:1;k-->0;)dropAt(e.x,e.y);
@@ -3914,7 +3915,7 @@ function drawShadeV(c,ty,x,y,s,f,o){
   c.restore();
 }
 const EV=new WeakMap();let EVAP=[];/* 朝日で消える「コワイノ」：じゅわっと蒸発させる */
-function drawEvap(it,now){const e=it.e,D=EN[e.type],z=D.size*2,px=e.x*TS,py=e.y*TS,p=Math.max(0,(now-it.t0)/1800),v=EV.get(e)||{f:1};
+function drawEvap(it,now){const e=it.e,D=EN[e.type],z=D.size*2,px=e.x*TS,py=e.y*TS,p=Math.max(0,(now-it.t0)/(it.dur||1800)),v=EV.get(e)||{f:1};
   if(p<.75){ctx.save();ctx.globalAlpha=Math.max(0,1-p/.75)*.9;ctx.translate(px,py+8);ctx.scale(1+p*.35,1-p*.55);ctx.translate(-px,-py-8);drawShade(ctx,e.type,px,py+8-p*10,.27*z,v.f,{t:now/1000+e.id*1.3,flash:Math.sin(now/40)>0});ctx.restore()}
   for(let i=0;i<9;i++){const q=p*1.2-i*.06;if(q<0||q>1)continue;const sx=px+Math.sin(i*2.3+e.id)*14*z+Math.sin(now/300+i)*4,sy=py-6*z-q*48*z,r=(4+q*9)*z;ctx.globalAlpha=(1-q)*.55;ctx.fillStyle='#f4f0ff';ctx.beginPath();ctx.arc(sx,sy,r,0,7);ctx.fill()}ctx.globalAlpha=1}
 const GLW=document.createElement('canvas'),glx=GLW.getContext('2d');let GLWN=0;
@@ -3998,7 +3999,7 @@ function render(now){
   const D=[];BUBQ=[];const bubs=BUBQ;
   const add=(k,t,box,draw,own)=>D.push({k,t,box,draw,own});
   for(const r of S.res)if(vis(r)){const px=r.x*TS,fy=r.y*TS,onB=r.act&&r.act.type==='rest'&&r.act.stage==='do'&&S.obj[r.act.obj]==='bench',onAl=STATUE>=0&&(r.y|0)*W+(r.x|0)===STATUE+W;/* ベンチにすわっている子は、ベンチの背もたれより手前。神殿の台座の上にいる子は、台座より手前 */const inDr=HOME_DOORS.has(typeAt((r.y|0)*W+(r.x|0)))||GATE_IDS.has(typeAt((r.y|0)*W+(r.x|0)))||SEATS.includes(typeAt((r.y|0)*W+(r.x|0)));/* いすにすわる子も、いすより手前 *//* ドアのマスを通る子は、ドアより手前 */add(toyR(r)?toyPose(r,now).z:onB?((r.act.obj/W)|0)+1.05:onAl?((STATUE/W)|0)+2.03:inDr?(r.y|0)+1.02:rDepth(r),2,[px-22,fy-64,px+22,fy+13],()=>drawRes(r,now),(r.y|0)*W+(r.x|0))}
-  if(EVAP.length){EVAP=EVAP.filter(it=>now-it.t0<2400);for(const it of EVAP){const e=it.e,z=EN[e.type].size||1,px=e.x*TS,fy=e.y*TS;add(e.y,2,[px-30*z,fy-110*z,px+30*z,fy+15],()=>drawEvap(it,now),(e.y|0)*W+(e.x|0))}}
+  if(EVAP.length){EVAP=EVAP.filter(it=>now-it.t0<(it.dur||1800)+600);for(const it of EVAP){const e=it.e,z=EN[e.type].size||1,px=e.x*TS,fy=e.y*TS;add(e.y,2,[px-30*z,fy-110*z,px+30*z,fy+15],()=>drawEvap(it,now),(e.y|0)*W+(e.x|0))}}
   for(const e of S.enemies)if(vis(e)){const s=EN[e.type].size||1,px=e.x*TS,fy=e.y*TS;add(e.y,2,[px-24*s,fy-56*s-10,px+24*s,fy+15],()=>drawEnemy(e,now),(e.y|0)*W+(e.x|0))}
   if(godHere()){const GX=godX(),GY=godY(),px=GX*TS,py=GY*TS,onA=STATUE>=0&&S.obj[STATUE+W]==='altar';add(onA?((STATUE/W)|0)+1.02:GY+.5,onA?1.5:2,/* 神殿の柱とお供え箱より手前 */[px-36,py-64,px+36,py+24],()=>drawGod(now),(GY|0)*W+(GX|0))}
   if(S.nushi){const n=S.nushi,px=n.x*TS,py=n.y*TS;add(n.y+.2,2,[px-100,py-150,px+100,py+20],()=>drawNushi(now),-1)}
@@ -4939,7 +4940,7 @@ $('#tStart').onclick=()=>{audioInit();curSong=wantSong='opening';step=0;nextT=AC
 
 /* ---------- ループ ---------- */
 let last=performance.now(),lastDraw=0,saveT=0,questT=0,running=true;
-const paused=()=>GIFT_ACTIVE||!started||sheet!=null||!$('#dialog').hidden||!$('#lvup').hidden||!$('#rlv').hidden||NEWRES!=null||!$('#idle').hidden;
+const paused=()=>performance.now()<BOSSHOLD||GIFT_ACTIVE||!started||sheet!=null||!$('#dialog').hidden||!$('#lvup').hidden||!$('#rlv').hidden||NEWRES!=null||!$('#idle').hidden;
 /* 寝落ち対策：2分さわらないと、時間を止める */
 let lastIn=performance.now();
 for(const ev of['pointerdown','keydown','wheel'])addEventListener(ev,()=>{lastIn=performance.now();const d=$('#idle');if(!d.hidden){d.hidden=true;last=performance.now()}},true);
