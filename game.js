@@ -72,9 +72,9 @@ const BL={
   pouf:{name:'まるクッション',kind:'furn',lv:5,cat:'living',f2:1,pc:6,time:30,maker:'wind',attr:{wind:1},mat:{wood:2},desc:'ころんとしたクッション。食卓のとなりに置く。ここで食べると、パワー+1.35'},
   achair:{name:'ひじかけいす',kind:'furn',lv:9,cat:'living',f2:1,pc:10,time:50,maker:'wood',attr:{wood:1},mat:{wood:4},desc:'ゆったりすわれるいす。食卓の隣に置くと、ここで食べたときにパワー+2.25'},
   ltable:{dw:1.5,name:'ローテーブル',kind:'furn',cat:'living',f2:1,lv:5,pc:10,time:50,maker:'wood',attr:{wood:1},mat:{wood:3},solid:1,desc:'ひくいテーブル。家の中の食卓で食べると、パワーが多くなる'},
-  rug1:{dw:1.25,name:'ひしがたラグ',kind:'furn',cat:'living',f2:1,lv:6,pc:8,time:40,maker:'wind',attr:{wind:1},mat:{wood:2},desc:'床にしくラグ。家の中の食卓で食べると、パワーが多くなる'},
+  rug1:{cs:1.5,dw:1.25,name:'ひしがたラグ',kind:'furn',cat:'living',f2:1,lv:6,pc:8,time:40,maker:'wind',attr:{wind:1},mat:{wood:2},desc:'床にしくラグ。家の中の食卓で食べると、パワーが多くなる'},
   sofa1:{dw:2.5,offerOnly:1,name:'ひとりがけソファ',kind:'furn',cat:'living',f2:1,lv:6,pc:14,time:60,maker:'wood',attr:{wood:1},mat:{wood:4},solid:1,desc:'しずみこむソファ。家の中の食卓で食べると、パワーが多くなる'},
-  rug2:{offerOnly:1,dw:1.75,name:'くもラグ',kind:'furn',cat:'living',f2:1,lv:7,pc:10,time:50,maker:'wind',attr:{wind:1},mat:{wood:3},desc:'くもの形のラグ。家の中の食卓で食べると、パワーが多くなる'},
+  rug2:{offerOnly:1,cs:1.5,dw:1.75,name:'くもラグ',kind:'furn',cat:'living',f2:1,lv:7,pc:10,time:50,maker:'wind',attr:{wind:1},mat:{wood:3},desc:'くもの形のラグ。家の中の食卓で食べると、パワーが多くなる'},
   tub:{name:'水おけ',kind:'furn',cat:'cook',f2:1,lv:3,pc:8,time:40,maker:'water',attr:{water:1},mat:{wood:2},solid:1,desc:'調理：かまどのそば（3マス）にあると、料理の時間-10%'},
   sink:{name:'流し台',kind:'furn',cat:'cook',f2:1,lv:4,pc:12,time:60,maker:'water',attr:{water:1},mat:{stone:3},solid:1,desc:'調理：かまどのそば（3マス）にあると、料理の時間-10%'},
   crate:{name:'木箱',kind:'furn',cat:'other',f2:1,lv:2,pc:8,time:40,maker:'earth',attr:{earth:1},mat:{wood:3},solid:1,desc:'なんでも入る木の箱。住み心地が大きく上がる'},
@@ -2954,6 +2954,7 @@ function drawSection(c,ox,oy,rs){/* 断面（壁・柱のてっぺん）：形�
     put('#7f5c3d',false);put('#a77f5a',true);SEC.cache.set(key,sp)}
   c.drawImage(sp,X,Y)}
 function drawObj(c,id,x,y,i,g,now){
+  if(BL[id]&&BL[id].cs&&!ICON&&!c._cs){const k=BL[id].cs;c.save();c.translate(x+16,y+20);c.scale(k,k);c.translate(-x-16,-y-20);c._cs=1;drawObj(c,id,x,y,i,g,now);c._cs=0;c.restore();return}/* ラグは、絵だけ大きく（判定はそのまま） */
   if(!ICON&&i!=null&&S&&PLANTS.includes(id)&&isBud(i)){c.fillStyle='rgba(0,0,0,.18)';c.beginPath();c.ellipse(x+16,y+27,7,2.5,0,0,7);c.fill();c.fillStyle='#6fbf5a';c.fillRect(x+15,y+17,2,10);c.beginPath();c.ellipse(x+11,y+18,5,2.6,-.5,0,7);c.ellipse(x+21,y+18,5,2.6,.5,0,7);c.fill();return}/* 芽 */
   if(false&&!ICON&&!c._rot&&i!=null&&S&&S.rot&&S.rot[i]&&BL[id]&&BL[id].kind==='furn'){const zz=BL[id].sz||[1,1],z=zz[0],rv=S.rot[i];c.save();if(rv===1){c.translate(x+16*z,0);c.scale(-1,1);c.translate(-(x+16*z),0)}else{const cx=x+16*z,cy=y+16*zz[1];c.translate(cx,cy);c.rotate((rv-1)*Math.PI/2);c.translate(-cx,-cy)}c._rot=1;drawObj(c,id,x,y,i,g,now);c._rot=0;c.restore();return}/* 向きをかえた家具は左右反転 */
   if(!ICON&&i!=null&&now!=null&&S&&SEATS.includes(id)){const w=spotW(i);if(w>=0&&!S.res.some(r=>r.act&&r.act.type==='fish'&&r.act.stage!=='walk'&&sideW(r.act.stand)===w)){/* 釣りスポットのうきと釣りざお（釣り中はかくす） */const px=x+(w%W-i%W)*TS+16,py=y+((w/W|0)-(i/W|0))*TS+17,bb=Math.sin(now/450+i)*1.2,dx=Math.sign(px-(x+16))||1,bx=x+16+dx*10,by=y+28,tx=px-dx*4,ty=py-20;c.save();c.lineCap='round';c.strokeStyle='#6b4a2b';c.lineWidth=2.2;c.beginPath();c.moveTo(bx,by);c.lineTo(tx,ty);c.stroke();c.strokeStyle='#a87a4a';c.lineWidth=1;c.beginPath();c.moveTo(bx+dx*.5,by-1);c.lineTo(tx,ty);c.stroke();c.strokeStyle='rgba(255,255,255,.7)';c.lineWidth=.6;c.beginPath();c.moveTo(tx,ty);c.quadraticCurveTo(px,ty+4,px,py+bb-5);c.stroke();c.strokeStyle='rgba(255,255,255,.55)';c.lineWidth=1;c.beginPath();c.ellipse(px,py+3,7+Math.sin(now/600)*1.5,2.5,0,0,7);c.stroke();c.fillStyle='#fff';c.beginPath();c.arc(px,py+bb,3.2,0,7);c.fill();c.fillStyle='#e0533d';c.beginPath();c.arc(px,py+bb,3.2,Math.PI,0);c.fill();c.fillRect(px-.6,py+bb-6,1.2,3);c.restore()}}
@@ -3955,7 +3956,7 @@ function siteSpan(id){const b=BL[id];if(!b)return null;if(id==='statue')return{x
 function objBox(o,j){if(o==='site'&&S.dyn[j]){const sp=siteSpan(S.dyn[j].build);if(sp){const x=j%W,y=(j/W)|0,L=x*TS+sp.x0*TS-4,Wd=sp.w*TS+8,B=(y+sp.rows)*TS+3;return[L,B-Wd*91/104*sp.hf-20,L+Wd,B]}}
 const x=j%W,y=(j/W)|0,b=BL[o],z=b.sz||[1,1],k=BIG2.has(o)?2:TREES.has(o)?2.25:(o==='stor'||o==='mbox')?1.25:BIG.has(o)?(BIGK[o]||1.5):1,tall=BIG2.has(o)||TREES.has(o)||b.kind==='build';
   const cx=x*TS+16*z[0],by=(y+z[1])*TS+3,hw=Math.max(16*z[0]*k,tall?28:16)+6,ht=tall?150:b.kind==='block'?44:48*k*z[1]+8;return[cx-hw,by-ht,cx+hw,by]}
-const FLAT=new Set(['farm','plot','sprout','spike','puddle','sticky','firetrap','gust','crack']);/* 地面に近い物：その上に立つせいれいより下に描く */
+const FLAT=new Set(['rug1','rug2','farm','plot','sprout','spike','puddle','sticky','firetrap','gust','crack']);/* 地面に近い物：その上に立つせいれいより下に描く */
 function objectDepth(o,j){const y=(j/W)|0;if(FLAT.has(o))return y+.02;if((o==='door'||o==='sdoor')&&HOUSES.some(h=>h.set.has(j)))return y+.3;/* 家のドアは、屋根より下の層 */
   const b=o==='site'&&S.dyn[j]&&BL[S.dyn[j].build]||BL[o];
   return y+(b&&b.sz?b.sz[1]:1)+(o==='obox'?.01:0);
