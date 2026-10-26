@@ -132,7 +132,7 @@ const BL={
   puddle:{name:'すべる水たまり',fix:1,fixm:{stone:1},kind:'furn',lv:4,pc:1,time:80,maker:'water',qty:2,trap:1,anim:1,attr:{water:.5},mat:{stone:2},desc:'ふんだ「コワイノ」が8分止まる（オオカゲは3分）。つぎに使えるまで2時間'},
   firetrap:{name:'ほのおの罠',fix:2,fixm:{wood:1,stone:1},kind:'furn',pc:3,time:120,maker:'fire',lv:4,qty:2,trap:1,anim:1,attr:{fire:.5},mat:{wood:2,stone:2},desc:'ふんだ「コワイノ」に4ダメージ。つぎに使えるまで3時間'},
   gust:{name:'つむじ風の罠',fix:2,fixm:{wood:1},kind:'furn',pc:3,time:120,maker:'wind',lv:5,qty:2,trap:1,anim:1,attr:{wind:.5},mat:{wood:2},desc:'ふんだ「コワイノ」を6マスふきとばし、2分止める。つぎに使えるまで2時間30分'},
-  watch:{name:'見張り台',fix:10,fixm:{wood:10,stone:10},kind:'build',sz:[2,2],mat:{wood:25,stone:20},pc:20,time:150,maker:'earth',lv:2,solid:1,attr:{fire:2,earth:2},desc:'「コワイノ」に光の矢を放つ。Lv1：ダメージ1／6分ごと／範囲4.2マス（Lv3：ダメージ3／6分ごと／範囲5.5マス）'},
+  watch:{name:'見張り台',fix:10,fixm:{wood:10,stone:10},kind:'build',sz:[2,2],mat:{wood:25,stone:20},pc:20,time:150,maker:'earth',lv:2,solid:1,attr:{fire:2,earth:2},desc:'「コワイノ」に光の矢を放つ。Lv1：ダメージ1／6分ごと／範囲4.2マス（Lv3：ダメージ3／6分ごと／範囲5.5マス）。「コワイノ」は、ねむっている子の家をねらってくるので、家のそばに置くと守りやすい'},
   well:{hp:5,brk:1,fix:10,fixm:{wood:4,stone:15},name:'井戸',kind:'build',mat:{wood:8,stone:30},pc:20,time:140,maker:'water',lv:6,solid:1,attr:{water:4},desc:'まわり3マスの畑は水やりなしで育つ'},
   windmill:{hp:5,brk:1,fix:13,fixm:{wood:30,stone:18},name:'風車',kind:'build',mat:{wood:60,stone:35},pc:25,time:160,maker:'wind',lv:8,solid:1,anim:1,attr:{wind:5},desc:'まわり5マスの畑の収穫+1'},
   lighthouse:{name:'灯台',sz:[2,2],kind:'build',mat:{wood:25,stone:35},pc:35,time:180,maker:'fire',lv:7,solid:1,anim:1,attr:{fire:4},desc:'まわり8マスを照らす。'},
@@ -321,6 +321,7 @@ const QUESTS1=[
     [GOD,'うむ。柵は足止めにはなるが、追いはらえるわけではないんじゃ。時間をかせぐだけじゃからのう。'],
     [POKO,'じゃあ、足止めしてるあいだに、なんとかしないとだめだね。'],
     [GOD,'そこで見張り台じゃ。高いところから早めに見つけて、光の矢で追いはらえる。今回はわしのおごりじゃ。'],
+    [GOD,'「コワイノ」は、眠っている子の家をねらってくる。見張り台は、家のそばに建てるとよいぞ。'],
     [GOD,'とげの罠も10こ入れといたぞい。柵で遠まわりしてきた「コワイノ」の通り道に置いてみい。ふんだら、ダメージじゃ。'],
     [POKO,'柵で足止めして、罠と見張り台で追いはらうんだね！ やってみる！']],gives:{watchNow:true,items:{spike:10},flags:['watchLearned']}},
    story:[
@@ -496,7 +497,7 @@ const QUEST_HELP1={
   "道をつくろう": "「おく」→「あぜ道」をえらんで、家と神殿のあいだに5マスしく",
   "家にベッドを置こう": "「おく」→「ベッド」をえらんで、壁で囲まれた家の中に置く",
   "柵を4つ置こう": "「おく」→「柵」をえらんで4つ置く",
-  "見張り台ととげの罠を置こう": "「おく」→「見張り台」を1つと「とげの罠」を2つ置く",
+  "見張り台ととげの罠を置こう": "「おく」→「見張り台」を1つと「とげの罠」を2つ置く。見張り台は、家のそばに置くと、ねむっている子を守れる",
   "ききょうを植えて、土の力をためよう": "「おく」→「ききょうの種」を植える。土の力が満ちると、次の朝になかまを呼べる",
   "朝になったら、神殿の「！」でなかまを呼ぼう": "朝、神殿の上に「！」が出たら、「みる」で神殿をタップ",
   "畑を6つにしよう": "「おく」→「畑」をえらび、合計6つにする。土のせいれいが耕すのを待とう",
@@ -1230,6 +1231,7 @@ function decide0(r){
     {const e=r.elem!=='fire'?null:S.enemies.filter(e=>e.spawned&&!e.dead&&inBase(e.x|0,e.y|0)).sort((a,b)=>Math.hypot(a.x-r.x,a.y-r.y)-Math.hypot(b.x-r.x,b.y-r.y))[0];if(e){const t=guardSpot(G,e,r);/* 届かない所にいても、いちばん近くまで行く */if(t>=0)return startAct(r,G,'patrol',t,{hunt:S.t})}}/* 拠点にコワイノが入ったら、まっすぐたたかいに行く */
     if(r.name===POKO){const hk=keyName('fire'),fs=S.res.filter(t=>t!==r&&!t.hidden&&t.elem==='fire'),tg=fs.find(t=>t.name===hk)||fs[0];if(tg&&Math.hypot(tg.x-r.x,tg.y-r.y)>1.5){let q=-1,bd=1e9;for(let k=0;k<W*H;k++){if(G.dist[k]<0||G.dist[k]>40||!walk(k))continue;const d=Math.hypot(k%W+.5-tg.x,((k/W)|0)+.5-tg.y)+G.dist[k]*.02;if(d<bd){bd=d;q=k}}if(q>=0)return startAct(r,G,'patrol',q)}}/* フタバは、火の子のそばについて回る */
     const ib=j=>inBase(j%W,(j/W)|0);let j=nearest(G,j=>walk(j)&&!roomOf(j)&&ib(j)&&Math.random()<.04,8);if(j<0)j=nearest(G,j=>walk(j)&&!roomOf(j)&&ib(j),80);/* 家の中にいたら、まず外へ出る */if(j>=0)return startAct(r,G,'patrol',j);/* 夜は家の外を見回る */return startAct(r,G,'wander',(r.y|0)*W+(r.x|0))}
+  if(isNight()&&r.hunger<hMax(r)-10&&S.food>0&&!S.enemies.some(e=>e.spawned&&!e.dead&&Math.hypot(e.x-r.x,e.y-r.y)<7)){r.refill=S.t+60;if(goEat(r,G))return}/* 夜、寝る前に、おなかいっぱい食べておく（夜中に食べに出ないように） */
   if(r.energy<25||isNight())return goSleep(r,G,S.enemies.some(e=>e.spawned));
   if(r.hunger<55&&!foeNear(r))return goEat(r,G);
   if(!isNight()&&r.fun>=99&&tryJob(r,G,'offer'))return;
@@ -2020,7 +2022,7 @@ const SUBQ=[/* サブクエスト：メインと別に、いつでもできる�
 
   {k:'benchbreak',w:0,g:'wood',t:'外にベンチを置こう',how:'依頼ボードの「庭」でベンチをはり、できたら外に置く。昼の休けいやおしゃべりでパワーがもらえる',L:[['K','歩きまわってたら、足がくたくたになっちゃった。'],['K','外でも、ちょこんと座ってひと休みできたらいいな。']],X:[['K','ここなら、足をのばして休めるね。ふう……。'],['K','守り神さま、ありがとう！']],learn:['bench'],at:()=>qAt('村レベルを2にしよう')||qAt('家の壁を直そう')&&!isNight()&&(hour()>=18||S.res.some(r=>r.name===POKO&&r.energy<50)),/* フタバのつかれがたまったら（げんき50より下）、おそくても夕方18時に出てくる（1日目は、ベッドの前に18時で時計が止まる） */ok:()=>cnt('bench')>=1,n:1,now:()=>cnt('bench'),rw:5},
   {k:'salvia3',how:'「おく」→「サルビアの種」を置く。せいれいに植えてもらい、花が咲くのを待とう',g:'earth',L:[['K','火の力をためるなら、赤いサルビアがいいよぉ。'],['K','種、あげるねぇ。5本植えたら、きっとぽかぽかだよぉ。']],X:[['K','まっかなサルビアが5本も増えたねぇ。火の力、たまってきたよぉ。'],['K','守り神さま、ありがとうねぇ。']],w:0,t:'サルビアを5本植えよう',ln:'赤いサルビアは、火の力をためてくれるよぉ。種、あげるねぇ',at:()=>qAt('火のせいれいをむかえよう'),give:{salvia:5},base:()=>cnt('salvia'),ok:()=>bloomCount('salvia')-((S.subB||{}).salvia3||0)>=5,n:5,now:()=>Math.max(0,bloomCount('salvia')-((S.subB||{}).salvia3||0)),rw:10},
-  {k:'watch2',how:'「おく」→「見張り台」を置き、合計2つにしよう。せいれいが建てるのを待とう',g:'wood',L:[["K", "あの光が飛んでいくところ、見てると安心するね！"], ["K", "でも、向こうのはしは、ちょっと暗いままなんだ。あっちも守れたらいいなあ。"]],X:[['K','見張り台が2つになった！ これで夜も、ちょっと安心だね！'],['K','あっちへ行く道がすぐわかる目印もあるとうれしいね。'],['K','守り神さま、ありがとう！']],w:0,t:'見張り台を2つにしよう',ln:"向こうのはしも、安心して過ごせたらいいな",at:()=>qAt('火のせいれいをむかえよう'),ok:()=>cnt('watch')>=2,n:2,now:()=>cnt('watch'),rw:15},
+  {k:'watch2',how:'「おく」→「見張り台」を置き、合計2つにしよう。せいれいが建てるのを待とう。家のそばに置くと、ねむっている子を守れる',g:'wood',L:[["K", "あの光が飛んでいくところ、見てると安心するね！"], ["K", "でも、向こうのはしは、ちょっと暗いままなんだ。あっちも守れたらいいなあ。"]],X:[['K','見張り台が2つになった！ これで夜も、ちょっと安心だね！'],['K','あっちへ行く道がすぐわかる目印もあるとうれしいね。'],['K','守り神さま、ありがとう！']],w:0,t:'見張り台を2つにしよう',ln:"向こうのはしも、安心して過ごせたらいいな",at:()=>qAt('火のせいれいをむかえよう'),ok:()=>cnt('watch')>=2,n:2,now:()=>cnt('watch'),rw:15},
   {k:'watchup',how:'見張り台をタップして「強化する」をえらぶ。パワーと素材を使う',g:'wood',L:[['K','オオカゲって、どのくらい強いのかな……。'],['K','見張り台の光の矢が、もっと強くなったら、安心して眠れるのになあ。']],X:[['K','見張り台が、ぴかっと強くなった！'],['K','これなら、オオカゲが来ても、きっとだいじょうぶ。守り神さま、ありがとう！']],w:0,t:'見張り台を強くしよう',ln:'見張り台の光の矢、もっと強くならないかな',at:()=>qAt('オオカゲを追いはらおう')&&!watchUp(),ok:()=>watchUp(),n:1,now:()=>watchUp()?1:0,rw:15},
   {k:'chair2',how:'神殿の依頼ボードをタップ →「家具」→いすやスツールをはる。できたら「おく」で食卓の隣に置く',g:'wood',L:[["K", "食べ物に土がつかなくなったの、うれしいな！ でも、立ったまま食べてると足がつかれちゃう。"], ["K", "ごはんを食べるとき、ぼくも座れたらいいなあ。"]],X:[["K", "わあ、これなら座って食べられるね！"], ["K", "足もらくちん。ゆっくり食べようっと。"], ["K", "守り神さま、ありがとう！"]],t:'いすを2つ置こう',ln:"ごはんを食べるとき、ぼくも座れたらいいな",at:()=>cnt('table')>=1,ok:()=>diningSeatCount()>=2,n:2,now:()=>diningSeatCount(),rw:10},
   {k:'bed3',how:'神殿の依頼ボードをタップ →「家具」→「ベッド」をはる。できたら「おく」で家の中に置く',g:'earth',L:[["K", "なかまが3人になって、にぎやかだねぇ。"], ["K", "……でもねぇ、まだ地面で寝ている子がいるんだよぉ。朝、背中が冷たそうでねぇ。"], ["K", "守り神さま、みんながあったかく眠れるように、してあげられないかなぁ。"]],X:[["K", "ふかふかが、みんなの分あるねぇ。これなら、冷たくないよぉ。"], ["K", "守り神さま、ありがとうねぇ。"]],w:0,t:'ベッドを3つにしよう',ln:"地面で寝ている子が、あったかく眠れたらいいねぇ",at:()=>S.res.length>=3&&houseBedCount()<3,learn:['bed'],ok:()=>houseBedCount()>=3,n:3,now:()=>houseBedCount(),rw:15},
