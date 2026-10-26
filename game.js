@@ -3363,9 +3363,11 @@ function findHouses(){const isB=j=>HOME_WALLS.has(typeAt(j))||HOME_DOORS.has(typ
 /* 屋根は家ごと。家をタップすると屋根が消えて中が見える。家の外をタップすると、もどる */
 const OPENH=new Set(),ROOFS=new Map(),hKey=h=>h.x0+','+h.y0;
 function roofAOf(h){const k=hKey(h),now=performance.now();let v=ROOFS.get(k);if(!v){v={a:OPENH.has(k)?0:1,t:now};ROOFS.set(k,v)}const dt=Math.min(.1,Math.max(0,(now-v.t)/1000));v.t=now;const tg=OPENH.has(k)?0:1;v.a+=Math.sign(tg-v.a)*Math.min(Math.abs(tg-v.a),dt*5);return v.a}
-function drawRoofs(c,now,hs,eo){if(!HOUSES.length)return;c.save();
-  /* 屋根は家ぜんたい（中の床と、横・奥の壁の上）をおおう。手前の壁はいつも同じ絵で見える */
-  for(const h of (hs||HOUSES)){const A=roofAOf(h);if(A<=0)continue;c.globalAlpha=A;
+function roofCache(h,sc){/* 屋根の絵は、家ごとに1回だけ描いて使い回す（形がかわるまで） */
+  let minx=W,maxx=0,miny=H,maxy=0;for(const j of h.set){const x=j%W,y=(j/W)|0;minx=Math.min(minx,x);maxx=Math.max(maxx,x);miny=Math.min(miny,y);maxy=Math.max(maxy,y)}
+  const ox=minx*TS-3,oy=miny*TS-16,w=(maxx-minx+1)*TS+6,hh=(maxy-miny+1)*TS+26;
+  const cv=document.createElement('canvas');cv.width=Math.ceil(w*sc);cv.height=Math.ceil(hh*sc);const c=cv.getContext('2d');c.setTransform(sc,0,0,sc,-ox*sc,-oy*sc);
+  {const A=1;
     const top=new Map(),bot=new Map();for(const j of h.set){const x=j%W,y=(j/W)|0;if(!top.has(x)||top.get(x)>y)top.set(x,y);if(!bot.has(x)||bot.get(x)<y)bot.set(x,y)}
     let tx=-1,ty=H;const ys=Math.min(...top.values()),ye=Math.max(...bot.values()),nR=ye-ys+1;const rY=nR<=3?ys*TS+3:nR<=6?(ye-3)*TS+TS/2:(ys+Math.floor((nR-1)/2)-1)*TS+TS/2;/* 棟：3マス以下は一番上の端、6マス以下は下から4マス目、それより大きいと中心のひとつ上 */
     for(const[x,y0]of top){const y1=bot.get(x),px=x*TS,lx=top.has(x-1)?px-.6:px+1,rx=top.has(x+1)?px+TS+.6:px+TS-1,/* となりの列と少し重ねて、すき間の線を出さない */t=y0*TS-11,b=y1*TS+1;if(y0<ty||(y0===ty&&x>tx)){ty=y0;tx=x}
@@ -3382,9 +3384,12 @@ function drawRoofs(c,now,hs,eo){if(!HOUSES.length)return;c.save();
       
       if(!top.has(x-1)){c.fillStyle='rgba(110,55,45,.55)';c.fillRect(lx,t,1.5,b-t)}if(!top.has(x+1)){c.fillStyle='rgba(110,55,45,.55)';c.fillRect(rx-1.5,t,1.5,b-t)}
       if(!top.has(x-1)||!top.has(x+1)||true){c.fillStyle='rgba(255,220,200,.18)';c.fillRect(lx,t,rx-lx,1.5)}}
-    if(tx<0||eo)continue;
-    // えんとつ（石）
-    const xr=Math.max(...top.keys()),ccx=top.has(xr-1)?xr-1:xr,yb=bot.get(ccx),ccy=yb-1>top.get(ccx)?yb-1:yb,cx=ccx*TS+TS-10,cy=ccy*TS+8;/* 屋根の右下から、1マスずつ内がわ */c.fillStyle='#8f8f8f';c.fillRect(cx-7,cy-10,14,18);
+    let chim=null;if(tx>=0){const xr=Math.max(...top.keys()),ccx=top.has(xr-1)?xr-1:xr,yb=bot.get(ccx),ccy=yb-1>top.get(ccx)?yb-1:yb,cx=ccx*TS+TS-10,cy=ccy*TS+8;/* 屋根の右下から、1マスずつ内がわ */chim={cx,cy}}
+    return{cv,ox,oy,sc,chim}}}
+function drawRoofs(c,now,hs,eo){if(!HOUSES.length)return;c.save();
+  for(const h of (hs||HOUSES)){const A=roofAOf(h);if(A<=0)continue;const sc=Math.max(1,Math.ceil(dpr*cam.z));if(!h._rc||h._rc.sc<sc)h._rc=roofCache(h,sc);const R=h._rc;c.globalAlpha=A;c.drawImage(R.cv,R.ox,R.oy,R.cv.width/R.sc,R.cv.height/R.sc);
+    if(!R.chim||eo)continue;const cx=R.chim.cx,cy=R.chim.cy;
+    c.fillStyle='#8f8f8f';c.fillRect(cx-7,cy-10,14,18);
     for(let r=0;r<3;r++)for(let k=0;k<2;k++){c.fillStyle=(r+k)%2?'#b8b8b8':'#acacac';c.fillRect(cx-6+k*6.5+(r%2?-2:0),cy-9+r*5.6,6,4.8)}
     c.fillStyle='#9c9c9c';c.fillRect(cx-8.5,cy-14,17,5);c.fillStyle='#3a3a3a';c.fillRect(cx-5,cy-13,10,2.5);
     {const t=now/1000;for(let k=0;k<3;k++){const p=(t*.4+k/3)%1;c.fillStyle='rgba(240,240,240,'+(.5*(1-p)*A)+')';c.beginPath();c.arc(cx+Math.sin(p*6+k)*3,cy-16-p*18,3+p*4,0,7);c.fill()}}}
