@@ -2399,7 +2399,7 @@ function canPlace(id,x,y,quiet){
 }
 function canPlace1(id,x,y,quiet){
   if(x<0||y<0||x>=W||y>=H)return false;
-  if(WALLD.has(id)){const j=y*W+x,iw=k=>HOME_WALLS.has(typeAt(k))||HOME_DOORS.has(typeAt(k)),wreath=id==='wreath',target=HOME_WALLS.has(S.obj[j])||wreath&&S.obj[j]==='door';if(!target||wreath&&S.obj[j]==='door'&&(iw(j-W)||iw(j+W))&&!(iw(j-1)||iw(j+1))||!wreath&&(iw(j-W)||iw(j+W))||(S.win&&S.win[j])){if(!quiet)toast(wreath?'リースは壁か横向きのドアにかけてね':BL[id].name+'は、横向きの木の壁にかけてね');return false}return true}/* 窓は壁にはめる */
+  if(WALLD.has(id)){const j=y*W+x,iw=k=>HOME_WALLS.has(typeAt(k))||HOME_DOORS.has(typeAt(k)),wreath=id==='wreath',target=HOME_WALLS.has(S.obj[j])||wreath&&S.obj[j]==='door';if(!target||wreath&&S.obj[j]==='door'&&(iw(j-W)||iw(j+W))&&!(iw(j-1)||iw(j+1))||!wreath&&(iw(j-W)||iw(j+W))||(S.win&&S.win[j]&&!((id==='curtain1'||id==='curtain2')&&S.win[j]===1))){if(!quiet)toast(wreath?'リースは壁か横向きのドアにかけてね':BL[id].name+'は、横向きの木の壁にかけてね');return false}return true}/* 窓は壁にはめる */
   if(!inBase(x,y)){if(!quiet)toast('基地の中にだけ置けます');return false}
   const j=y*W+x;if(id==='lotus'){if(S.ground[j]!==1){if(!quiet)toast('ハスは池の上にだけ植えられます');return false}if(S.obj[j]){if(!quiet)toast('ここにはもう何かあります');return false}return true}
   if(S.ground[j]===1){if(!quiet)toast('水の上には置けません');return false}
@@ -2417,7 +2417,7 @@ function setBlock(id,j){
 function setParts(id,j,kind){const x=j%W,y=(j/W)|0;for(const[a,b]of fp(id,x,y)){const k=b*W+a;if(k===j)continue;S.obj[k]=kind;S.ref[k]=j}}
 function place(id,x,y){
   const b=BL[id];
-  if(WALLD.has(id)){if(!usable(id))return toast(BL[id].name+'がありません。依頼ボードでせいれいにたのもう');if(!canPlace(id,x,y))return;const j=y*W+x;S.inv[id]--;(S.win||(S.win={}))[j]=id==='window'?1:id;noteQuestPlacement(S.obj[j]==='door'?'door':'hwall',j);burst(j,'furn');recount();dirty=true;renderPalette();return}
+  if(WALLD.has(id)){if(!usable(id))return toast(BL[id].name+'がありません。依頼ボードでせいれいにたのもう');if(!canPlace(id,x,y))return;const j=y*W+x;S.inv[id]--;if((id==='curtain1'||id==='curtain2')&&S.win&&S.win[j]===1){giveItem('window',1);toast('窓にカーテンをかけた（窓はお供え箱にもどった）')}/* 窓のある壁には、カーテンをかけられる。カーテンの絵には窓がふくまれる */(S.win||(S.win={}))[j]=id==='window'?1:id;noteQuestPlacement(S.obj[j]==='door'?'door':'hwall',j);burst(j,'furn');recount();dirty=true;renderPalette();return}
   if(b.kind==='seed'){const k=id.slice(5),j=y*W+x,d=S.dyn[j];if(S.obj[j]!=='farm'||!d)return toast('畑をタップしてね');
     if(d.crop&&d.sown!==false)return toast('もう'+CROPS[d.crop].name+'が植えてある');if(cseed(k)<1)return toast('たねがありません');
     if(d.paid&&d.crop)S.cseed[d.crop]=cseed(d.crop)+1;S.cseed[k]--;d.paid=true;/* たねは、えらんだときに減る */d.crop=k;d.sown=false;if(k==='imo'&&QUESTS[S.quest]?.text==='畑にたねをまこう'&&S.qTalked){const plots=imoSeedQuestPlots();if(!plots.includes(j))plots.push(j)}noteQuestPlacement('farm',j);burst(j,'plant','pat');toast(CROPS[k].name+'のたねをまいた');checkQuest();renderPalette();return}/* せいれいが、たねをまく */
