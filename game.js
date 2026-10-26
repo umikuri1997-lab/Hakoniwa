@@ -1611,7 +1611,7 @@ function moveR(r,dt){
 }
 const NIGHT_OK=['sleep','stay','shiver','eat','fetch','store','smat','flee','patrol','faint','forage','questjoy'];
 const WORKT=new Set(['till','sow','plant','build','craft','water','tend','repair','harvest','gather','chop','mine','cook']);
-function rescueStuck(r){if(r.hidden)return;const cj=(r.y|0)*W+(r.x|0),o=S.obj[cj];if(!(HOME_WALLS.has(o)||(FENCE_IDS.has(o)&&!GATE_IDS.has(o))))return;/* 壁や柵の中にいたら、いちばん近い歩ける場所へ出す */let best=-1,bd=1e9;for(let rr=1;rr<=6&&best<0;rr++)for(let dy=-rr;dy<=rr;dy++)for(let dx=-rr;dx<=rr;dx++){if(Math.max(Math.abs(dx),Math.abs(dy))!==rr)continue;const x=(r.x|0)+dx,y=(r.y|0)+dy;if(x<0||y<0||x>=W||y>=H)continue;const k=y*W+x;if(!walk(k)||S.obj[k])continue;const d=dx*dx+dy*dy;if(d<bd){bd=d;best=k}}if(best>=0){r.x=best%W+.5;r.y=((best/W)|0)+.5;r.path=[];if(r.act&&r.act.stage==='walk')endAct(r)}}
+function rescueStuck(r){if(r.hidden)return;const cj=(r.y|0)*W+(r.x|0),o=S.obj[cj];if(!(HOME_WALLS.has(o)||(FENCE_IDS.has(o)&&!GATE_IDS.has(o))||S.ground[cj]===1&&!(r.act&&r.act.type==='bathe')))return;/* 壁や柵・水の中にいたら、いちばん近い歩ける場所へ出す */let best=-1,bd=1e9;for(let rr=1;rr<=6&&best<0;rr++)for(let dy=-rr;dy<=rr;dy++)for(let dx=-rr;dx<=rr;dx++){if(Math.max(Math.abs(dx),Math.abs(dy))!==rr)continue;const x=(r.x|0)+dx,y=(r.y|0)+dy;if(x<0||y<0||x>=W||y>=H)continue;const k=y*W+x;if(!walk(k)||S.obj[k])continue;const d=dx*dx+dy*dy;if(d<bd){bd=d;best=k}}if(best>=0){r.x=best%W+.5;r.y=((best/W)|0)+.5;r.path=[];if(r.act&&r.act.stage==='walk')endAct(r)}}
 function updRes(r,dt){rescueStuck(r);if((RHOLD.get(r)||0)>performance.now())return;/* 喜んでいる・話したあとの少しの間は、手をとめる */if(r._pe!=null&&r.energy>r._pe+1e-6)r.eUp=S.t;r._pe=r.energy;/* 元気が回復しているか */
   if(HOLD.has(r.id)){if(r.act)endAct(r);r.act=null;return}
   const sleeping=r.act&&r.act.type==='sleep'&&r.act.stage==='do';
@@ -2674,7 +2674,7 @@ function updNushi(dt){const n=S.nushi;if(n.app==null)n.app=1;if(n.app<1){n.app=M
 
 /* ---------- 保存 ---------- */
 let NOSAVE=false;/* 読みこみ直後は、いまの状態で上書きしない */
-function save(){if(NOSAVE||!S||!S.introSeen)return false;try{const d=Object.assign({},S,{savedAt:Date.now(),res:S.res.map(r=>{const c=Object.assign({},r);c.act=null;c.path=[];c.hidden=false;return c}),orders:S.orders.map(o=>Object.assign({},o,{worker:null}))});return KV.setItem(SAVE_KEYS[S.world||0],JSON.stringify(d))}catch(e){return false}}
+function save(){if(NOSAVE||!S||!S.introSeen)return false;try{const d=Object.assign({},S,{savedAt:Date.now(),res:S.res.map(r=>{const c=Object.assign({},r);if(r.act&&r.act.type==='bathe'&&r.act.sx!=null){c.x=r.act.sx;c.y=r.act.sy}c.act=null;c.path=[];c.hidden=false;return c}),orders:S.orders.map(o=>Object.assign({},o,{worker:null}))});return KV.setItem(SAVE_KEYS[S.world||0],JSON.stringify(d))}catch(e){return false}}
 function load(w){try{const t=KV.getItem(SAVE_KEYS[w||0]);if(!t)return null;const d=JSON.parse(t);if(d&&d.v===8){const fx=v=>{if(!v)return;if(v.key){v.lash=false;v.cheek=true}};/* キーキャラは、まつげなし・ほっぺあり */(d.res||[]).concat(d.buried||[],d.lost||[]).forEach(r=>{if(r.like==='flower')r.like='chat'});(d.res||[]).forEach(r=>{fx(r.vr);if(r.name==='ノドカ'&&r.vr)r.vr.lash=false});(d.buried||[]).forEach(r=>fx(r.vr));(d.lost||[]).forEach(r=>fx(r.vr));return d}}catch(e){}return null}
 
 /* ---------- 描画 ---------- */
