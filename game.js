@@ -2430,7 +2430,7 @@ function place(id,x,y){
     if(d.crop&&d.sown!==false)return toast('もう'+CROPS[d.crop].name+'が植えてある');if(cseed(k)<1)return toast('たねがありません');
     if(d.paid&&d.crop)S.cseed[d.crop]=cseed(d.crop)+1;S.cseed[k]--;d.paid=true;/* たねは、えらんだときに減る */d.crop=k;d.sown=false;if(k==='imo'&&QUESTS[S.quest]?.text==='畑にたねをまこう'&&S.qTalked){const plots=imoSeedQuestPlots();if(!plots.includes(j))plots.push(j)}noteQuestPlacement('farm',j);burst(j,'plant','pat');toast(CROPS[k].name+'のたねをまいた');checkQuest();renderPalette();return}/* せいれいが、たねをまく */
   if(id==='tower'&&!towerReady())return openSheet('clear');/* 条件がそろうまで、台座は建てられない */
-  if(!usable(id)){if(b.kind==='furn'){toast(b.name+'がありません。依頼ボードでせいれいにたのもう');if(S.feat.craft)openSheet('craft')}else toast('まだつかえません');return}
+  if(!usable(id)){if(b.kind==='furn'){toast(b.name+'が足りません。依頼ボードでせいれいにたのもう','warn')}/* 足りないときは、知らせるだけ（画面は開かない） */else toast('まだつかえません');return}
   if(!canPlace(id,x,y))return;
   const j=y*W+x;
   if(b.kind==='plant'||b.kind==='build'){
@@ -2446,7 +2446,7 @@ function place(id,x,y){
       if(id==='statue'){for(const k of[j-1,j+1,j+W]){S.obj[k]='site2';S.ref[k]=j}}else setParts(id,j,'site2')}/* 足場のどのマスからでも、まわりから作業できる */
     toast(b.kind==='plant'?'せいれいが植えにきてくれる':'せいれいが'+b.name+'を建てにきてくれる');
   }else{
-    if(inv(id)<=0){toast(b.name+'がお供え箱にありません');if(S.feat.inv)openSheet('inv',id);return}
+    if(inv(id)<=0){toast(b.name+'が足りません','warn');return}/* 足りないときは、知らせるだけ（お供え箱は開かない） */
     const prevFloor=b.floor?S.floor[j]:'';undoStack.push({j,prevFloor,id});
     S.inv[id]--;if(prevFloor)giveItem(prevFloor,1);
     if(RUGS.has(id)&&S.obj[j]&&!RUGS.has(S.obj[j]))(S.rug||(S.rug={}))[j]=id;/* 家具の下にラグを敷く */
@@ -4906,7 +4906,7 @@ function thumb(cv2,k,open){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='296';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='297';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
