@@ -4663,6 +4663,7 @@ function renderSheet(){
   }else if(sheet==='furn'){const j=sheetArg,o=S.obj[j];if(!o||!BL[o])return closeSheet();T.textContent=BL[o].name;{const te=tagsEl(o);if(te)body.appendChild(te)}
     body.appendChild(rowEl(BL[o].name,withAttr(o,BL[o].desc||''),iconURL(o)));
     {const R=rangeOf(o,j);if(R&&!BL[o].env&&o!=='bench')body.appendChild(el('<div class="rows"></div>')).appendChild(rowEl('効果のはんい','まわり'+(R.cells||R.r)+'マス（「みる」でタップすると、色で出る）'))}
+    if(SEATS.includes(o)&&spotW(j)>=0)body.appendChild(el('<div class="rows"></div>')).appendChild(rowEl('釣りスポット','池のそばのいす。せいれいが、ここにすわって釣りをする。ふつうの水べより、魚がつれやすい（水のせいれいは、さらによくつれる）'));/* 池のそばの椅子＝釣りスポット */
     if(o==='table'){const h=roomOf(j);let n=0;if(h)for(const q of h.inside){const oo=S.obj[q];if(oo&&BL[oo]&&BL[oo].cat==='living')n+=BL[oo].dw||1}const bon=h?1+Math.min(3,Math.floor(n/2)):0;
       body.appendChild(el('<div class="rows"></div>')).appendChild(rowEl('ここで食べたときのパワー（いま）',h?'+'+bon+'（家の中の食卓 +1・ダイニング家具で +'+Math.min(3,Math.floor(n/2))+(n/2<3?'。ダイニング家具をふやすと、まだふえる':'。いちばん多い')+'）':'家の外なので、ふえない（家の中に置くと +1、ダイニング家具でさらに +3 まで）'))}/* 食卓：いまのパワーのボーナス */
     if(o==='bench'){const ev=ENVG?Math.min(12,Math.max(ENVG[j]||0,ENVG[j+1]||0)):0,en=1+ev*.018,fu=1+ev*.075;/* ベンチ：まわりのかざりで上がった回復 */
