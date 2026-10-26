@@ -4062,9 +4062,9 @@ function render(now){
   const dk=darkness();
   ctx.setTransform(dpr,0,0,dpr,0,0);
   if(dk>0){ctx.fillStyle=(!WD&&S.ns&&S.ns.final&&!S.cleared?'rgba(46,10,52,':'rgba(14,20,58,')+dk+')';ctx.fillRect(0,0,VW,VH);
-    ctx.setTransform(k,0,0,k,-cam.x*k,-cam.y*k);ctx.globalCompositeOperation='lighter';
+    ctx.setTransform(k,0,0,k,-cam.x*k,-cam.y*k);ctx.globalCompositeOperation='lighten';/* 光が重なっても、いちばん明るい光より明るくならない */
     for(let y=y0;y<y1;y++)for(let x=x0;x<x1;x++){const o=S.obj[y*W+x];if(!['lamp','tower','watch','campfire','statue','torch','candle','lantern','flamp'].includes(o))continue;if(INDL.has(o)&&roomOf(y*W+x))continue;/* 家の中の灯りは、灯りそのものは光らせず、家ぜんたいを光らせる（下） *//* 明かりの出る物は、夜にまわりを明るく */
-      const cx=x*TS+(o==='watch'?32:16),cy=y*TS+(o==='flamp'?-6:o==='candle'?10:o==='lantern'?6:o==='lamp'?3:o==='torch'?-12:o==='watch'?-20:o==='campfire'?14:o==='tower'?6:o==='statue'?-6:15),R=o==='tower'?200:o==='statue'?110:o==='lamp'?100:o==='torch'?105:INDL.has(o)?(roomOf(y*W+x)?40:45):o==='campfire'?110:o==='watch'?40:30;
+      const cx=x*TS+(o==='watch'?32:16),cy=y*TS+(o==='flamp'?-6:o==='candle'?10:o==='lantern'?6:o==='lamp'?3:o==='torch'?-12:o==='watch'?-20:o==='campfire'?14:o==='tower'?6:o==='statue'?-6:15),R=o==='tower'?150:o==='statue'?110:o==='lamp'?100:o==='torch'?105:INDL.has(o)?(roomOf(y*W+x)?40:45):o==='campfire'?110:o==='watch'?40:30;
       const g=ctx.createRadialGradient(cx,cy,2,cx,cy,R);g.addColorStop(0,'rgba(255,214,120,'+dk*.9+')');g.addColorStop(1,'rgba(255,200,100,0)');ctx.fillStyle=g;ctx.fillRect(cx-R,cy-R,R*2,R*2)}
     {const litH=new Set();for(const j of LIGHTS){if(INDL.has(S.obj[j])){const h=roomOf(j);if(h)litH.add(h)}}/* 灯りのある家は、家ぜんたいを同じ明るさで照らす（ふちはぼかす） */
       for(const h of litH){const D=(VW*dpr+120*k)/k;/* k は画面の倍率（dprこみ） */ctx.beginPath();for(const q of h.set){const qx=q%W,qy=(q/W)|0;if(qx<x0-3||qx>x1+2||qy<y0-3||qy>y1+2)continue;ctx.rect(qx*TS-D,qy*TS,TS,TS)}ctx.fillStyle='#000';ctx.shadowColor='rgba(255,205,110,'+dk*.75+')';ctx.shadowBlur=36*k;ctx.shadowOffsetX=D*k;ctx.fill();ctx.shadowBlur=0;ctx.shadowOffsetX=0;ctx.shadowColor='transparent'}}/* 家の形をぼかした光だけをかく（形そのものは画面の外へずらし、影だけを家の位置に出す） */
