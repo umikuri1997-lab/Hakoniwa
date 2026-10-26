@@ -424,7 +424,7 @@ const QUESTS1=[
     [MINA,'ときどき、足の下から、むかしのお話が聞こえてくるんだぁ。ぼくは、それを聞いてるだけだよぉ。'],
     [POKO,'へえ…！ 土って、すごいんだね。'],
     [POKO,'じゃあ、かけらを集めたら、ヌシ様がもどってくるかも！'],
-    [MINA,'3つそろえて台座にそなえたら、ヌシ様の形にもどれるはずだよぉ。'],[POKO,'かけらは、どこにあるのかな……。'],[MINA,'わからないねぇ。でも、きっとどこかで待ってるよぉ。'],[MINA,'5つの属性のなかまがそろったら、そなえる台座を建てようねぇ。'],[POKO,'……オオカゲ、さいごに、ぼくのほうに手をのばしてた気がする。'],[POKO,'ううん、気のせいだよね。'],[MINA,'……そう、だねぇ。']]},
+    [MINA,'3つそろえて台座にそなえたら、ヌシ様の形にもどれるはずだよぉ。'],[POKO,'かけらは、どこにあるのかな……。'],[MINA,'わからないねぇ。でも、きっとどこかで待ってるよぉ。'],[MINA,'5つの属性のなかまがそろったら、そなえる台座を建てようねぇ。']]},
   {text:'風のせいれいをむかえよう',check:()=>elemCount('wind')>=1&&NEWRES==null,prog:()=>'風の力 '+Math.floor(ATTR.wind)+'/'+needFor('wind'),
    talk:{who:POKO,when:()=>true,learn:['swing'],lines:[
     [POKO,'オオカゲを追いはらえて、ほっとしたよ。'],
@@ -1802,10 +1802,10 @@ const BOSSFX={boss:{col:'#ff3b6b',sub:'コワイノたちの親玉が、すが�
 function bossEntrance(e){/* オオカゲ・ヨルノオオカゲの登場：画面がよって、ゆれて暗くなり、名前が大きく出る */const B=BOSSFX[e.type];SKIP=false;/* 登場のあいだは時間を止めて、すがたを見せる */centerOn(e.x*TS,e.y*TS);shakeScreen();dlgCue('dim');sfx('hit');
   for(let n=0;n<4;n++)fx.push({k:'ring',x:e.x*TS,y:e.y*TS,life:1+n*.4,col:B.col});bigBanner(EN[e.type].name,B.sub,B.col)}
 let BOSSHOLD=0;/* ボスの登場・追いはらいの演出のあいだ、時間を止める（「進む」をおすまで） */
-function bossDefeatFX(e){const sand=e.type==='boss'||e.type==='boss2';if(sand)sfx('crack');EVAP.push({e,t0:performance.now()+(sand?350:0),dur:sand?4200:3200,sand});/* オオカゲ・ヨルノオオカゲ：ピシッとひびが入って、上から砂になってくずれる *//* 時間を止めて、消えていく様子を見せる *//* オオカゲをたおしたとき：白く光って、ゆれて、光の輪と粒がはじける */const B=BOSSFX[e.type]||BOSSFX.boss,px=e.x*TS,py=e.y*TS;centerOn(px,py);dlgCue('flash');shakeScreen();
+function bossDefeatFX(e){const sand=e.type==='boss'||e.type==='boss2';if(sand)sfx('crack');EVAP.push({e,t0:performance.now()+(sand?350:0),dur:sand?4200:3200,sand});/* オオカゲ・ヨルノオオカゲ：ピシッとひびが入って、上から砂になってくずれる *//* 時間を止めて、消えていく様子を見せる *//* オオカゲをたおしたとき：白く光って、ゆれて、光の輪と粒がはじける */const B=BOSSFX[e.type]||BOSSFX.boss,px=e.x*TS,py=e.y*TS;camAnim={fz:cam.z,tz:Math.min(3,cam.z*1.6),fx:cam.x+VW/cam.z/2,fy:cam.y+VH/cam.z/2,tx:px,ty:py-12*(EN[e.type].size||1),t:0,dur:.8};/* ボスへズームアップ */dlgCue('flash');shakeScreen();
   for(let n=0;n<6;n++)fx.push({k:'ring',x:px,y:py,life:1+n*.3,col:n%2?'#fff3d6':B.col});
   for(let n=0;n<36;n++){const a=n/36*6.28,v=80+(n%3)*40;fx.push({k:'p',x:px,y:py-20,vx:Math.cos(a)*v,vy:Math.sin(a)*v-60,life:1.4,col:n%2?'#fff3a0':B.col,r:3.2})}
-  bigBanner(EN[e.type].name+'を追いはらった！','みんなで、村を守りぬいた',B.col)}
+  const hold=EVAP.some(it=>it.e===e&&it.sand)?4900:3600,z0=cam.z;BOSSHOLD=performance.now()+hold;setTimeout(()=>{camAnim={fz:cam.z,tz:z0,fx:cam.x+VW/cam.z/2,fy:cam.y+VH/cam.z/2,tx:cam.x+VW/cam.z/2,ty:cam.y+VH/cam.z/2,t:0,dur:.8}},hold)/* 終わったら、もとの大きさにもどす */}/* 文字は出さず、時間を止めて、よって、消えていく様子だけを見せる */
 function bodyWall(e,D){/* 道の先の、いちばん近い柵・壁に、体がふれているか。ふれていればその壁、なければ次のマス */for(let i=0;i<Math.min(e.path.length,6);i++){const q=anc(e.path[i]);if(!breakable(S.obj[q]))continue;const x0=q%W,y0=(q/W)|0,nx=Math.max(x0,Math.min(e.x,x0+1)),ny=Math.max(y0,Math.min(e.y,y0+1));if(((nx-e.x)/D.hx)**2+((ny-e.y)/D.hy)**2<=1)return q;break}return anc(e.path[0])}
 function updEnemy(e,dt){
   const D=EN[e.type];
@@ -4943,7 +4943,7 @@ function thumb(cv2,k,open){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='340';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='341';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
