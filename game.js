@@ -457,7 +457,7 @@ const QUESTS1=[
    talk:{who:MINA,when:()=>true,lines:[
     [MINA,'5つの属性がそろったねぇ。…守り神さま、「守護の台座」を建てて、ヌシのかけらを3つそなえたら、ヌシ様をおむかえできるらしいよぉ。'],
     [POKO,'ヌシ様に会えるんだね！ ほかには、なにがいるの？'],
-    [MINA,'ヌシ様がもどってこられるように、土地をもっと緑にしないとねぇ。'],[MINA,'まずは375マス。最後の夜までには、600マスくらい緑にしたいねぇ。']]},
+    [MINA,'ヌシ様がもどってこられるように、土地をもっと緑にしないとねぇ。'],[MINA,'まずは375マス。そのあとは、600マスくらい緑にしたいねぇ。']]},
    story:[[POKO,'緑がいっぱい！ 歩くだけで気持ちいいね！'],[POKO,'……わっ！？ 地面が、光った！'],[MINA,'えぇっ……！ 草のあいだから、なにか出てきたよぉ。'],[POKO,'これ……ヌシのかけら！？'],[MINA,'「育てる力」のかけらだねぇ。みんなで土地を育てたから、こたえてくれたんだよぉ。']],gives:{shard:'land'}},
   {text:'木のせいれいを6人にしよう',check:()=>elemCount('wood')>=6&&NEWRES==null,prog:()=>'いま'+elemCount('wood')+'人',
    talk:{who:POKO,when:()=>true,learn:[],lines:[
@@ -475,8 +475,8 @@ const QUESTS1=[
   {text:'ヌシ様をむかえよう',check:()=>!!S.cleared,prog:()=>'かけら '+Math.min(3,S.setSh||0)+'/3・じょうけん '+clearConds().filter(c=>c[1]).length+'/'+clearConds().length,how:'台座をタップすると、足りない条件が見られる。そろうと最後の夜がくる',
    talk:{who:POKO,when:()=>true,lines:[
     [POKO,'台座ができたね。ヌシ様をむかえる準備、もうすぐかな。'],
-    [MINA,'条件がそろうと、台座が光って、最後の夜がくるよぉ。'],
-    [MINA,'その夜を守りぬいたら、最後のかけらがあらわれるはずだよぉ。台座にはめて、ヌシ様をむかえようねぇ。'],
+    [MINA,'条件がそろうと、台座が光って、オオカゲたちがたくさんおしよせてくる夜がくるよぉ。'],
+    [MINA,'その夜を守りぬいたら、3つめのかけらがあらわれるはずだよぉ。台座にはめて、ヌシ様をむかえようねぇ。'],
     [POKO,'よーし、みんなで守りぬこう！']]},
    story:null},
 ];
@@ -4624,6 +4624,7 @@ function renderSheet(){
     for(const c of sumCands()){const row=rowEl(ELEM[c.el].name+'のせいれい',c.cap?'もう村にいっぱいいる':'属性の力 '+Math.floor(c.v)+' / '+c.n+(c.ok?'':'（まだ足りない）'),spiritPort(c.el,96));if(!c.ok)row.style.opacity=.55;
       const bt=el('<button class="btn pri">呼ぶ</button>');bt.disabled=!c.ok||!S.summon;bt.onclick=()=>{if(!S.summon)return;S.summon={elem:c.el,pick:1};closeSheet();doSummon()};row.appendChild(bt);rows.appendChild(row)}
     body.appendChild(rows);
+    {const lost=(S.lost||[]).filter(q=>!q.unb);if(S.mebuki>0&&lost.length){const nt=el('<div class="sec"><h3>めぶきのしずく　'+S.mebuki+'こ</h3><p class="note"></p></div>');nt.querySelector('.note').textContent='消えてしまったせいれい（'+lost.map(q=>q.name).join('・')+'）を、よみがえらせることができる。「せいれい」のリストから、しずくを使おう。';body.appendChild(nt)}}/* しずくを持っていたら、よみがえらせられると知らせる */
   }else if(sheet==='enemy'){const e=S.enemies.find(q=>q.id===sheetArg);if(!e||e.dead){closeSheet();return}const D=EN[e.type];
     T.textContent=D.name;
     const FEAT={boss2:'ヌシ様をむかえる準備ができたあと、オオカゲのかわりに来る。とても強い',basic:'せいれいをおそう',fast:'足が速い',thief:'食料や素材をぬすむ',brute:'体力が多い',boss:'5日目の夜、そのあと3日ごとに来る。追いはらうと、そのあとに「ヌシのかけら」があらわれる。当たると目をまわす'};
