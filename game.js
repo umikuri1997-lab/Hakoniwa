@@ -3353,6 +3353,7 @@ function findHouses(){const isB=j=>HOME_WALLS.has(typeAt(j))||HOME_DOORS.has(typ
       if(!ok)continue;if(brk.size&&cells.some(j=>{const x=j%W,y=(j/W)|0;for(let b=-1;b<=1;b++)for(let a=-1;a<=1;a++)if(brk.has((y+b)*W+x+a))return true;return false}))continue;/* 壁がこわれたままの所は、家ではない（なおすまで。となりの家の外壁まで屋根がかからない） */
       const set=new Set(cells);
       for(const j of cells){const x=j%W,y=(j/W)|0;for(let b=-1;b<=1;b++)for(let a=-1;a<=1;a++){const k=(y+b)*W+x+a;if(isB(k))set.add(k)}}
+      if(![...set].some(k=>{if(!isB(k))return false;const t=typeAt(k);return t!=='wall'&&t!=='sdoor'}))continue;/* 石の塀（と石のドア）だけで囲っても、家にはならない */
       let x0=W,y0=H,x1=0,y1=0;for(const j of set){const x=j%W,y=(j/W)|0;x0=Math.min(x0,x);y0=Math.min(y0,y);x1=Math.max(x1,x);y1=Math.max(y1,y)}
       out.push({set,inside:new Set(cells),x0,y0,x1,y1})}}
   HOUSES=out}
