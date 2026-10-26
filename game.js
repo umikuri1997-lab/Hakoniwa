@@ -1788,7 +1788,7 @@ function bigBanner(title,sub,col){/* 画面のまんなかに、大きな文字�
   d.innerHTML='<div style="font-size:34px"></div><div style="font-size:14px;margin-top:8px;color:#fff3d6"></div>';d.children[0].textContent=title;d.children[1].textContent=sub;document.body.appendChild(d);
   requestAnimationFrame(()=>requestAnimationFrame(()=>{d.style.opacity='1';d.style.letterSpacing='.3em'}));setTimeout(()=>{d.style.transition='opacity 1s ease';d.style.opacity='0';setTimeout(()=>d.remove(),1100)},2600)}
 const BOSSFX={boss:{col:'#ff3b6b',sub:'コワイノたちの親玉が、すがたをあらわした'},boss2:{col:'#ffd84a',sub:'夜の力をたくわえた、いちばん大きなコワイノ'}};
-function bossEntrance(e){/* オオカゲ・ヨルノオオカゲの登場：画面がよって、ゆれて暗くなり、名前が大きく出る */const B=BOSSFX[e.type];centerOn(e.x*TS,e.y*TS);shakeScreen();dlgCue('dim');sfx('hit');
+function bossEntrance(e){/* オオカゲ・ヨルノオオカゲの登場：画面がよって、ゆれて暗くなり、名前が大きく出る */const B=BOSSFX[e.type];BOSSHOLD=performance.now()+3000;SKIP=false;/* 登場のあいだは時間を止めて、すがたを見せる */centerOn(e.x*TS,e.y*TS);shakeScreen();dlgCue('dim');sfx('hit');
   for(let n=0;n<4;n++)fx.push({k:'ring',x:e.x*TS,y:e.y*TS,life:1+n*.4,col:B.col});bigBanner(EN[e.type].name,B.sub,B.col)}
 let BOSSHOLD=0;/* オオカゲをたおしたあと、少しのあいだ時間を止める */
 function bossDefeatFX(e){BOSSHOLD=performance.now()+3600;EVAP.push({e,t0:performance.now(),dur:3200});/* 時間を止めて、消えていく様子を見せる *//* オオカゲをたおしたとき：白く光って、ゆれて、光の輪と粒がはじける */const B=BOSSFX[e.type]||BOSSFX.boss,px=e.x*TS,py=e.y*TS;centerOn(px,py);dlgCue('flash');shakeScreen();
@@ -4908,7 +4908,7 @@ function thumb(cv2,k,open){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='302';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='303';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
@@ -5036,7 +5036,7 @@ function frame(now){
   if(started&&!window.__noIdle&&now-lastIn>120000&&$('#idle').hidden&&$('#title').hidden&&$('#maps').hidden){$('#idle').hidden=false;try{save()}catch(e){}}
   if(SKIP&&!(S.cleared?eveH():isNight()&&S.enemyOn))SKIP=false;/* 朝になったら、ふつうの速さにもどす */
   if(started&&!menuOpen&&$('#pro').hidden&&sheet==null&&NEWRES==null&&$('#dialog').hidden&&$('#lvup').hidden&&$('#rlv').hidden)showItemGift();
-  if(!paused()){if(S.speed>1&&!TESTSPD&&!TESTM){S.glassT=Math.max(0,(S.glassT||0)-rdt);if(S.glassT<=0){S.speed=1;0}}glassUI();LIGHTCD=Math.max(0,LIGHTCD-rdt*S.speed*(SKIP?40:1));AREACD=Math.max(0,AREACD-rdt*S.speed*(SKIP?40:1));let g=rdt*MIN_PER_SEC*S.speed*(SKIP?40:1);while(g>0){const s=Math.min(g,2);try{stepWorld(s)}catch(e){frameErr('step',e);break}g-=s}}
+  if(!paused()){if(S.speed>1&&!TESTSPD&&!TESTM){S.glassT=Math.max(0,(S.glassT||0)-rdt);if(S.glassT<=0){S.speed=1;0}}glassUI();LIGHTCD=Math.max(0,LIGHTCD-rdt*S.speed*(SKIP?40:1));AREACD=Math.max(0,AREACD-rdt*S.speed*(SKIP?40:1));let g=rdt*MIN_PER_SEC*S.speed*(SKIP?40:1);while(g>0){const s=Math.min(g,2);try{stepWorld(s)}catch(e){frameErr('step',e);break}g-=s;if(performance.now()<BOSSHOLD)break}/* オオカゲの登場・撃破で止めたら、残りは進めない */}
   for(const f of floats)f.life-=prdt*.7;while(floats.length&&floats[0].life<=0)floats.shift();
   for(const s of shots)s.life-=prdt*1.4;while(shots.length&&shots[0].life<=0)shots.shift();
   for(const f of fx){f.life-=prdt*(f.k==='ring'?(f.col?1.3:2.2):f.k==='pillar'?.9:f.k==='slash'?3:1.4);if(f.k!=='ring'&&f.k!=='pillar'&&!PZ){f.x+=f.vx*rdt;f.y+=f.vy*rdt;f.vy+=(f.k==='p'?260:40)*rdt;f.vx*=.96}}
