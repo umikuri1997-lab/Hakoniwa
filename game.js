@@ -278,14 +278,6 @@ const QUESTS1=[
     [GOD,'あそこの家、壁がこわれたままなんじゃ。木の壁を3つ入れといたから、すきまをふさいでみい。']],gives:{feat:['people'],items:{hwall:3}}},
    story:[
     [POKO,'前に、夜に壁をこわされたことがあったんだ。'],[POKO,'でも、もうすきまはないね。壁があると、なんだかほっとする！']]},
-  {text:'道をつくろう',check:()=>pathMade()>=5,prog:()=>'あぜ道 '+Math.min(5,pathMade())+'/5',
-   talk:{who:POKO,when:()=>true,lines:[
-    [POKO,'守り神さま、家と神殿のあいだ、草がぼうぼうで歩きにくいんだ。'],
-    [GOD,'ふむ。道があれば、みなも行き来しやすくなるのう。'],
-    [GOD,'あぜ道を5つ入れといたぞい。家と神殿のあいだに、しいてみい。']],gives:{items:{path:5}}},
-   story:[
-    [POKO,'わあ、歩きやすい！ 足が、すいすい進むよ。'],
-    [GOD,'道の上は、せいれいたちも速く歩けるんじゃ。']]},
   {text:'家にベッドを置こう',check:()=>houseBedCount()>=1,
    talk:{who:POKO,when:()=>true,lines:[
     [POKO,'草の上はごつごつするし、ゆっくり休める場所があったらいいな。'],
@@ -297,6 +289,14 @@ const QUESTS1=[
     [GOD,'それで…今夜も「コワイノ」が来るぞ。夜12時ごろに現れて、朝には消えるんじゃ。'],
     [GOD,'この夜は、たぶん1体だけじゃ。家の中で眠っておれば、だいじょうぶ。'],[POKO,'……夜の音は、やっぱりこわいな。でも、この家で眠れるなら、少し安心かも。'],
     [GOD,'おヌシも手伝えるぞ。「コワイノ」に守り神の光をあてて、おどかせるんじゃ。使うたびにパワーを1つ使うから、ためておくんじゃ。']],gives:{enemy:true}},
+  {text:'道をつくろう',check:()=>pathMade()>=5,prog:()=>'あぜ道 '+Math.min(5,pathMade())+'/5',
+   talk:{who:POKO,when:()=>true,lines:[
+    [POKO,'守り神さま、家と神殿のあいだ、草がぼうぼうで歩きにくいんだ。'],
+    [GOD,'ふむ。道があれば、みなも行き来しやすくなるのう。'],
+    [GOD,'あぜ道を5つ入れといたぞい。家と神殿のあいだに、しいてみい。']],gives:{items:{path:5}}},
+   story:[
+    [POKO,'わあ、歩きやすい！ 足が、すいすい進むよ。'],
+    [GOD,'道の上は、せいれいたちも速く歩けるんじゃ。']]},
   {text:'村レベルを2にしよう',check:()=>S.lv>=2,how:'せいれいが満足してパワーがたまると、村レベルが上がる。夜は「コワイノ」をタップすると、パワー1で光をあてておどかせる',prog:()=>'いま 村レベル'+S.lv,
    talk:{who:POKO,when:()=>true,lines:[
     [POKO,'守り神さま、ここで楽しく暮らすと、村も育っていくんだって！'],
@@ -4926,7 +4926,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='365';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='366';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
