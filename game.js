@@ -1179,6 +1179,7 @@ let FOUT=null,FOUTT=-1;function fenceOut(){/* 柵（門もふくむ）と壁で�
   for(let x=0;x<W;x++)for(const y of[0,H-1]){const j=y*W+x;if(open(j)&&!out[j]){out[j]=1;q.push(j)}}for(let y=0;y<H;y++)for(const x of[0,W-1]){const j=y*W+x;if(open(j)&&!out[j]){out[j]=1;q.push(j)}}
   while(q.length){const j=q.pop(),x=j%W,y=(j/W)|0;for(const[dx,dy]of DIRS){const nx=x+dx,ny=y+dy;if(nx<0||ny<0||nx>=W||ny>=H)continue;const k=ny*W+nx;if(!out[k]&&open(k)){out[k]=1;q.push(k)}}}
   FOUT=out;FOUTT=t;return out}
+function trapCheck(){if(isNight()||!S.obj.includes('stor'))return;for(const r of S.res){if(r.hidden||!isKey(r.name)||r.trapDay===dayNo())continue;const G=bfs(r.x|0,r.y|0);if(nearest(G,j=>adjOf(j,k=>storageAt(k,'food'))>=0,400)<0){r.trapDay=dayNo();toast(r.name+'がとじこめられています','warn')}}}/* 物語の子が、かこまれて食料箱へ行けないときは知らせる（1日1回） */
 function hideIn(r,G){if(!HOUSES.length||!S.enemies.some(e=>e.spawned&&!e.dead&&!e.flee&&Math.hypot(e.x-r.x,e.y-r.y)<7))return false;const hs=new Set();for(const h of HOUSES)for(const q of h.inside)hs.add(q);const k=nearest(G,j=>hs.has(j)&&walk(j)&&!HOME_DOORS.has(S.obj[j]),60);if(k<0)return false;startAct(r,G,'flee',k,{house:true,food:1,run:true});return true}/* 火の子は、おなかがへってコワイノがそばにいたら、まず家の中へにげこんで、それから食べにいく */
 function fleeHit(r,G){
   if(r.elem==='fire'&&r.hunger<50&&hideIn(r,G))return true;
@@ -1186,14 +1187,14 @@ function fleeHit(r,G){
   if(r.elem==='fire'&&S.food>0&&r.hunger<hMax(r)-8){const sj=nearest(G,j=>adjOf(j,k=>storageAt(k,'food'))>=0,60);if(sj>=0){r.refill=S.t+60;startAct(r,G,'flee',sj,{food:1});return true}}/* 火の子は、おなかがすいていて食料があるときだけ、食料箱へ逃げる（食べられないのに箱の前でにげ続けない） */
   if(isNight()&&r.elem!=='fire'){const out=insideSet(),bj=nearest(G,j=>S.obj[j]==='bed'&&!out[j]&&free('o'+j,1)&&bedFor(j,r),200);if(bj>=0){const b=BL.bed.sleep;startAct(r,G,'sleep',bj,{key:'o'+bj,obj:bj,rate:b.rate,pt:b.pt,run:true});return true}}
   const ens=S.enemies.filter(e=>e.spawned&&!e.dead),fr=r.elem==='fire'?null:S.res.find(q=>q!==r&&q.elem==='fire'&&!q.hidden);/* 「コワイノ」からはなれる。火のせいれいがいれば、そのそばへ */
-  const fo=fenceOut();let best=-1,bs=-1e9;for(let j=0;j<W*H;j++){const d=G.dist[j],ins=!fo[j];if(!(d>=3&&d<=(ins?30:14)))continue;const x=j%W+.5,y=((j/W)|0)+.5;let me=99;for(const e of ens)me=Math.min(me,Math.hypot(x-e.x,y-e.y));if(me<2)continue;const sc=(fr?Math.min(me,6)-Math.hypot(x-fr.x,y-fr.y)*.8-d*.05:me-d*.15)+(ins?10:0);if(sc>bs){bs=sc;best=j}}/* 柵の内側へ、すすんで逃げる */
+  const fo=fenceOut();let best=-1,bs=-1e9;for(let j=0;j<W*H;j++){const d=G.dist[j],ins=!fo[j];if(!(d>=3&&d<=(ins?30:14))||!inBase(j%W,(j/W)|0))continue;/* にげるのは基地の中だけ */const x=j%W+.5,y=((j/W)|0)+.5;let me=99;for(const e of ens)me=Math.min(me,Math.hypot(x-e.x,y-e.y));if(me<2)continue;const sc=(fr?Math.min(me,6)-Math.hypot(x-fr.x,y-fr.y)*.8-d*.05:me-d*.15)+(ins?10:0);if(sc>bs){bs=sc;best=j}}/* 柵の内側へ、すすんで逃げる */
   if(best>=0){startAct(r,G,'flee',best);return true}return false}
 function fleeGraph(r){const bl=new Set();for(const e of S.enemies){if(!e.spawned||e.dead)continue;const ex=e.x|0,ey=e.y|0;for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){const nx=ex+dx,ny=ey+dy;if(nx>=0&&ny>=0&&nx<W&&ny<H)bl.add(ny*W+nx)}}bl.delete((r.y|0)*W+(r.x|0));const G=roadSearch(r.x|0,r.y|0,bl);G.bl=bl;return G}/* 「コワイノ」のすぐそばを通らずに逃げられる道 */
 function withFlee(r,fn,G){const Gf=fleeGraph(r);let ok=false;FLEEBL=Gf.bl;try{ok=fn(r,Gf)}finally{FLEEBL=null}return ok||fn(r,G)}
 function fleeAlarm(r,G){
   if(r.elem==='fire'&&r.hunger<50&&hideIn(r,G))return true;
   if(r.elem==='fire'){if(S.food>0){if(r.hunger<hMax(r)-8){const sj=nearest(G,j=>adjOf(j,k=>storageAt(k,'food'))>=0,60);if(sj>=0){r.refill=S.t+60;startAct(r,G,'flee',sj,{food:1});return true}}}else{const f=ripeAdj(['berry','fruit']),fj=nearest(G,j=>f(j)>=0,60);if(fj>=0){const k=f(fj);startAct(r,G,'forage',fj,{key:'o'+k,obj:k});return true}const bj=nearest(G,j=>adjOf(j,k=>S.obj[k]==='berry'||S.obj[k]==='fruit')>=0,60);if(bj>=0){startAct(r,G,'flee',bj,{food:1});return true}}}/* 火の子は、おなかがすいていて食料があるときだけ食料箱へ逃げる。食べ物がなければ、ベリーの茂みや果物の木へ逃げて、実を食べる */
-  const en=S.enemies.find(e=>e.spawned&&!e.flee);if(!en)return false;const fo=fenceOut();let best=-1,bs=-1e9;for(let j=0;j<W*H;j++){const d=G.dist[j],ins=!fo[j];if(d<2||d>(ins?30:12))continue;const sc=Math.hypot(j%W+.5-en.x,((j/W)|0)+.5-en.y)-d*.2+(ins?10:0);if(sc>bs){bs=sc;best=j}}/* 柵の内側へ、すすんで逃げる */
+  const en=S.enemies.find(e=>e.spawned&&!e.flee);if(!en)return false;const fo=fenceOut();let best=-1,bs=-1e9;for(let j=0;j<W*H;j++){const d=G.dist[j],ins=!fo[j];if(d<2||d>(ins?30:12)||!inBase(j%W,(j/W)|0))continue;/* にげるのは基地の中だけ */const sc=Math.hypot(j%W+.5-en.x,((j/W)|0)+.5-en.y)-d*.2+(ins?10:0);if(sc>bs){bs=sc;best=j}}/* 柵の内側へ、すすんで逃げる */
   if(best>=0){startAct(r,G,'flee',best);return true}return false}
 const foeNear=r=>S.enemies.some(e=>e.spawned&&!e.dead&&!e.flee&&Math.hypot(e.x-r.x,e.y-r.y)<7);/* すぐそば（7マス）にコワイノがいる */
 function decide0(r){
@@ -1993,6 +1994,7 @@ function stepWorld(dt){if((SUBT+=dt)>1){SUBT=0;checkSub();checkSev();guardTick()
     else if(S.ns&&S.ns.final&&!S.cleared&&!(S.ns.b2&&S.obj.includes('tower'))){S.finalNight=false;S.finalLost=dayNo();if(WD)S.finalRetry=dayNo()+3;else{S.finalDay=dayNo()+3;S.finalHint=3}memo('🌑','ヨルノオオカゲを追いはらえなかった');setTimeout(()=>toast('ヨルノオオカゲは、まだどこかにいる…','warn'),1500)}/* ヨルノオオカゲを追いはらえなかったか、台座をこわされたら負け。3日あとにまた来る */else if(S.ns&&S.ns.final&&!S.cleared){S.finalNight=false;if(WD)setTimeout(()=>{if(!S.cleared)nushiReturns()},1800);/* 火山のふもとには、フタバはいない */else if(!S.flags.finalWon){S.flags.finalWon=1;S.flags.sh_boss=true;S.shards=Math.min(3,(S.shards||0)+1);memo('💎','最後のバトルに勝って、ヌシのかけらがあらわれた（'+S.shards+'/3）');setTimeout(()=>toast('台座の前に、ヌシのかけらがあらわれた！','good'),1500)}}/* 最後の夜をこえたら、かけらが出て、台座にはめるとヌシ様がもどる */if(S.ns&&S.ns.trial){const ok=S.ns.kill>=S.ns.n;S.ns.trialOK=ok;if(ok){S.trials=(S.trials||0)+1;S.pt+=60;S.totalPt+=60;S.mebuki=(S.mebuki||0)+1;memo('🏆','「コワイノ」の試練をのりこえた')}}
     if(S.ns){S.ns.left=left;if(!sheet)openSheet('night');else toast(S.nightHurt?'朝日がのぼって、「コワイノ」は'+(left?'消えていった':'いなくなった'):'夜をぶじに守りきった！','good')}
     else if(!S.nightHurt)toast('夜をぶじに守りきった！','good');else toast('朝日がのぼって、「コワイノ」は'+(left?'消えていった':'いなくなった'))}
+  if((prevH|0)!==(h|0)&&h>=7&&h<23)trapCheck();/* 1時間に1回、とじこめられた子がいないか見る */
   if(prevH<6&&h>=6&&S.lastMorning!==dayNo()){S.lastMorning=dayNo();morning();if(WD===1&&S.finalRetry!=null&&dayNo()>=S.finalRetry&&!S.cleared){S.finalRetry=null;S.finalNight=true}}/* 火山のふもと：負けたら3日あとの夜にまた来る *//* 1日のリセットは朝6時にまとめて */
   if(prevH<8&&h>=8&&S.godGone&&!S.cleared&&!S.godVisit&&dayNo()>=(S.godNextVisitDay||1)&&Math.random()<(cnt('kamizo')?.5:.25)){S.godVisit=true;S.godNextVisitDay=dayNo()+2;/* 来た翌日は休み。像があれば来訪率は50% */sfx('arrive');toast('カミサマが遊びにきた！ 神殿の前で交換できる','good')}
   if(prevH<18&&h>=18&&S.godVisit){S.godVisit=false;S.godNextVisitDay=Math.max(S.godNextVisitDay||0,dayNo()+2);toast('カミサマは帰っていった')}
@@ -4471,6 +4473,11 @@ function renderSheet(){
       if(S.bulk)btn(bx,'もらった',true);else btn(bx,SP(30),S.pt<30,()=>{S.pt-=30;S.bulk=true;applyFeats();toast('ひろびろハケをもらった！「どうぐ」から使える','good');trade()},1)}
     {const bx=row(r3,'かたどりスタンプ','畑・柵の囲い・石の広場などを、ぽんと一度に置ける',toolIcon('stamp'),S.stamps);
       if(S.stamps)btn(bx,'もらった',true);else btn(bx,SP(50),S.pt<50,()=>{S.pt-=50;S.stamps=true;applyFeats();toast('かたどりスタンプをもらった！「どうぐ」から使える','good');trade()},1)}
+    if(S.lv>=5||(S.bossKills||0)>=1||S.flags.hinoDown){const r5=sec('とくべつな交換');/* 終盤のパワーの使い道 */
+      if((S.bossKills||0)>=1||S.flags.hinoDown){const bx=row(r5,'めぶきのしずく','消えてしまったせいれいを、よみがえらせる（所持：'+(S.mebuki||0)+'）',null);btn(bx,SP(400),S.pt<400,()=>{S.pt-=400;S.mebuki=(S.mebuki||0)+1;toast('めぶきのしずくをもらった','good');trade()},1)}
+      if(S.lv>=5){const room=matCap()-(S.mat.wood||0)-(S.mat.stone||0);
+        for(const[k,nm]of[['wood','木材'],['stone','石材']]){const bx=row(r5,nm+'×10','素材箱に入る（いま'+(S.mat[k]||0)+'）',null);btn(bx,room<10?'素材箱がいっぱい':SP(50),room<10||S.pt<50,()=>{S.pt-=50;S.mat[k]=(S.mat[k]||0)+10;S.gotMat&&(S.gotMat[k]=(S.gotMat[k]||0)+10);toast(nm+'を10こもらった','good');trade()},1)}
+        {const done=S.festDay===dayNo(),bx=row(r5,'おまつり','みんなのたのしさとげんきが、いっぱいになる（1日1回）',null,done);btn(bx,done?'きょうはおわった':SP(200),done||S.pt<200,()=>{S.pt-=200;S.festDay=dayNo();for(const r of S.res){r.fun=100;r.energy=100;spawnFX(r.x-.5,r.y-.6,'#ffd84a')}sfx('level');toast('おまつりで、みんな元気いっぱい！','good');trade()},1)}}}
     const r4=sec('土地');
     if(S.baseLv<BASE_R.length-1){const c=BASE_COST[S.baseLv],need=BASE_LV[S.baseLv],nx=BASE_R[S.baseLv+1]*2;
       const bx=row(r4,'基地を広げる（'+nx+'×'+nx+'マス）','置ける範囲が広がる');btn(bx,S.lv<need?'村Lv'+need:SP(c),S.lv<need||S.pt<c,()=>{S.pt-=c;S.baseLv++;recount();toast('基地が広がった！','good');trade()},1)}
@@ -4932,7 +4939,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='368';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='369';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
