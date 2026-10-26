@@ -977,6 +977,7 @@ function recount(){
   const around=(j,r,set)=>{const x=j%W,y=(j/W)|0;for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){if(dx*dx+dy*dy>r*r+1)continue;const nx=x+dx,ny=y+dy;if(nx>=0&&ny>=0&&nx<W&&ny<H)set.add(ny*W+nx)}};
   const addA=a=>{if(a)for(const k in a)ATTR[k]+=a[k]};
   let baseN=0,revN=0;
+  for(const k in S.rug||{}){const o=S.rug[k];counts[o]=(counts[o]||0)+1;if(inBase(k%W,(k/W)|0)&&BL[o])addA(BL[o].attr)}/* 家具の下のラグも数える */
   for(let j=0;j<W*H;j++){const o=S.obj[j],f=S.floor[j],x=j%W,y=(j/W)|0,ib=inBase(x,y);
     if(f){around(j,1,REV)}/* 床・道・壁などのブロックは、属性の力をためない */
     if(S.ground[j]===1&&ib)ATTR.water+=.3;
@@ -2392,6 +2393,7 @@ function usable(id){const b=BL[id];if(WIND_STAGE_TOYS.has(id)&&WD!==4)return fal
 function wellOK(){const qi=QUESTS.findIndex(q=>q.text==='水のせいれいをむかえよう');return qi<0||!!S.flags.wellR||S.quest>qi+1||(S.quest===qi+1&&S.qStory==null)}
 function statueSite(){for(const k in S.dyn)if(S.obj[k]==='site'&&S.dyn[k].build==='statue')return true;return false}
 const BADC={k:'',t:0,L:[]};
+const RUGS=new Set(['rug1','rug2']);/* ラグは、家具の下にも敷ける（S.rug にしまう） */
 function canPlace(id,x,y,quiet){
   if(id==='statue'&&!(canPlace('fence',x-1,y,quiet)&&canPlace('fence',x+1,y,quiet)&&canPlace('fence',x,y+1,quiet)))return false;
   if(BL[id].sz){for(const[a,b]of fp(id,x,y))if(!canPlace1(id,a,b,quiet))return false;return true}
@@ -2404,7 +2406,7 @@ function canPlace1(id,x,y,quiet){
   const j=y*W+x;if(id==='lotus'){if(S.ground[j]!==1){if(!quiet)toast('ハスは池の上にだけ植えられます');return false}if(S.obj[j]){if(!quiet)toast('ここにはもう何かあります');return false}return true}
   if(S.ground[j]===1){if(!quiet)toast('水の上には置けません');return false}
   if(BL[id].floor)return S.floor[j]!==id&&!(S.obj[j]&&BL[S.obj[j]].job);
-  if(S.obj[j]){if(!quiet)toast('ここにはもう何かあります');return false}
+  if(S.obj[j]){const oc=S.obj[j];if(!(RUGS.has(oc)&&!RUGS.has(id)&&BL[id].kind==='furn'&&!(S.rug&&S.rug[j]))&&!(RUGS.has(id)&&BL[oc]&&BL[oc].kind==='furn'&&!BL[oc].sz&&!RUGS.has(oc)&&!(S.rug&&S.rug[j]))){if(!quiet)toast('ここにはもう何かあります');return false}}/* ラグの上には家具を置ける。家具の下にもラグを敷ける */
   {const b=BL[id];if(b&&(b.solid||HOME_WALLS.has(id)||(FENCE_IDS.has(id)&&!GATE_IDS.has(id)))&&(S.res.some(r=>!r.hidden&&(r.y|0)*W+(r.x|0)===j)||S.enemies.some(e=>e.spawned&&!e.dead&&(e.y|0)*W+(e.x|0)===j))){if(!quiet)toast('せいれい（や「コワイノ」）がいるので、置けません');return false}}/* 立っている子がいる場所には、通れなくなる物は置けない */
   return true;
 }
@@ -2441,7 +2443,9 @@ function place(id,x,y){
     if(inv(id)<=0){toast(b.name+'がお供え箱にありません');if(S.feat.inv)openSheet('inv',id);return}
     const prevFloor=b.floor?S.floor[j]:'';undoStack.push({j,prevFloor,id});
     S.inv[id]--;if(prevFloor)giveItem(prevFloor,1);
-    setBlock(id,j);
+    if(RUGS.has(id)&&S.obj[j]&&!RUGS.has(S.obj[j]))(S.rug||(S.rug={}))[j]=id;/* 家具の下にラグを敷く */
+    else{if(!RUGS.has(id)&&b.kind==='furn')for(const[a,c]of(b.sz?fp(id,x,y):[[x,y]])){const k=c*W+a;if(RUGS.has(S.obj[k])){(S.rug||(S.rug={}))[k]=S.obj[k];S.obj[k]=''}}/* ラグの上に家具を置く：ラグは下の層へ */
+    setBlock(id,j)}
   }
   if(undoStack.length>30)undoStack.shift();
   if(b.kind==='furn'&&!b.trap&&!WALLD.has(id)){const R=S.rot||(S.rot={});const sq=(b.sz||[1,1])[0]===(b.sz||[1,1])[1];const v=PLROT===2||PLROT===4?(sq?PLROT:0):PLROT;if(v)R[j]=v;else delete R[j]}/* 置くときにえらんだ向き */
@@ -2457,7 +2461,8 @@ function undo(){
   else{if(o!==u.id&&!(u.id==='farm'&&o==='plot'))return toast('もうもどせません');clearObj(u.j);giveItem(u.id,1)}
   recount();renderPalette();
 }
-function clearObj(j){j=anc(j);const o=S.obj[j];delete S.hp['L'+j];if(S.win&&S.win[j]){giveItem(S.win[j]===1?'window':S.win[j],1);delete S.win[j]}if(S.rot)delete S.rot[j];for(const k in S.ref)if(S.ref[k]===j){S.obj[k]='';delete S.ref[k]}S.obj[j]='';delete S.dyn[j];delete S.hp[j];delete S.hp['L'+j];
+function clearObj(j){j=anc(j);const o=S.obj[j];const tl=o&&BL[o]&&BL[o].sz?fp(o,j%W,(j/W)|0).map(([a,b])=>b*W+a):[j];delete S.hp['L'+j];if(S.win&&S.win[j]){giveItem(S.win[j]===1?'window':S.win[j],1);delete S.win[j]}if(S.rot)delete S.rot[j];for(const k in S.ref)if(S.ref[k]===j){S.obj[k]='';delete S.ref[k]}S.obj[j]='';delete S.dyn[j];delete S.hp[j];delete S.hp['L'+j];
+  if(S.rug&&!RUGS.has(o))for(const k of tl){const rg=S.rug[k];if(rg&&!S.obj[k]){S.obj[k]=rg;delete S.rug[k]}}/* 下に敷いてあったラグが出てくる */
   for(const r of S.res)if(r.act&&r.act.obj===j)endAct(r);return o}
 function removeAt(x,y){
   if(!inBase(x,y))return toast('基地の外はこわせません');
@@ -3248,6 +3253,7 @@ const COMFY={stool:2,chair2:4,stable:4,pouf:3,achair:5,ltable:5,rug1:5,sofa1:6,r
   const EXTRA={gravel:2,stone:2,brick:2.5,bamboofence:1.5,stonefence:2,logwall:2,slide:1.5,sandbox:1.5,seesaw:1.5,swing:1.5};for(const id in EXTRA){const b=BL[id];if(b&&b.mat)for(const k in b.mat)b.mat[k]=Math.ceil(b.mat[k]*EXTRA[id])}}
 function houseComfort(h){let bed=0,furn=0,fl=0,n=0;const seen=new Set();
   const kc={};for(const j of h.inside){n++;if(S.floor[j])fl++;const o=S.obj[j];if(!o||!COMFY[o])continue;if(o==='bed')bed++;else{kc[o]=(kc[o]||0)+1;furn+=COMFY[o]*(kc[o]>2?.5:1);seen.add(o)}}/* 同じ家具は2つまで。3つ目からは半分 */
+  for(const j of h.inside){const o=S.rug&&S.rug[j];if(o&&COMFY[o]){kc[o]=(kc[o]||0)+1;furn+=COMFY[o]*(kc[o]>2?.5:1);seen.add(o)}}/* 家具の下のラグ */
   {const M=2;for(let y=h.y0-M;y<=h.y1+M;y++)for(let x=h.x0-M;x<=h.x1+M;x++){if(x<0||y<0||x>=W||y>=H)continue;const j=y*W+x;if(h.set.has(j))continue;const o=S.obj[j],rg=COMFR[o];if(!rg||!COMFY[o])continue;const d=Math.max(h.x0-x,x-h.x1,h.y0-y,y-h.y1,0);if(d>rg)continue;kc[o]=(kc[o]||0)+1;furn+=COMFY[o]*(kc[o]>2?.5:1);seen.add(o)}}/* かざりは、家のそば（ものごとの範囲）にあっても住み心地に入る */
   {let wn=0;for(const j of h.set)if(S.win&&S.win[j]===1)wn++;if(wn){furn+=COMFY.window*Math.min(wn,2)+COMFY.window*.5*Math.max(0,wn-2);seen.add('window')}}/* 窓 */
   for(const j of h.set){const p=S.win&&S.win[j];if(p&&p!==1&&COMFY[p]){kc[p]=(kc[p]||0)+1;furn+=COMFY[p]*(kc[p]>2?.5:1);seen.add(p)}}/* 壁にかけた絵 */
@@ -3412,6 +3418,7 @@ function rebuildStatic(){findHouses();
   for(let y=0;y<H;y++)for(let x=0;x<W;x++){const i=y*W+x,o=S.obj[i];if(!o||o==='part'||!BL[o]||BL[o].dyn||BL[o].anim||TREES.has(o))continue;fixed.push({i,o,k:objectDepth(o,i),t:BL[o].kind==='block'?0:1})}
   fixed.sort((a,b)=>a.k-b.k||a.t-b.t||a.i-b.i);
   for(let i=0;i<W*H;i++)if(S.obj[i]==='door'){sc._doorBack=1;drawObj(sc,'door',(i%W)*TS,((i/W)|0)*TS,i);sc._doorBack=0}
+  for(const k in S.rug||{})drawObj(sc,S.rug[k],(k%W)*TS,((k/W)|0)*TS,+k);/* 家具の下のラグ */
   for(const {i,o}of fixed)drawObj(sc,o,(i%W)*TS,((i/W)|0)*TS,i);
   dirty=false;
 }
