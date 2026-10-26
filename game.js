@@ -219,6 +219,7 @@ function adPrompt(){if($('#adBox'))return;const d=document.createElement('div');
 const GOD_SHOP=['いらっしゃ〜い。なにがほしいかの？','おっ、来たのう。今日はなにと交換する？','パワーたまっとるか？ ゆっくり見ていくがよい。','どれも自慢の品じゃよ。たぶん。','ほれ、えらべえらべ。まけんがの。'],GOD_BUY=['まいど〜！ だいじに使うんじゃぞ。','いい買い物をしたのう〜。','それをえらぶか？ わかっとるのう。','ありがとさん〜。パワーはだいじにあずかっとくぞい。','また来るんじゃよ。…おっと、来とるのはわしのほうか。'],GOD_POOR=['パワーが足りんのう〜。せいれいたちにがんばってもらうんじゃ。','ツケはなしじゃぞ〜。'];let shopSay='';
 const GOD_IDLE=['草、生えてきたのう〜。','むかしはのう…はて、なんの話じゃったか。','パワー？ ためればなんとかなるわい！','ねむ…。','夜は「コワイノ」に気をつけるんじゃぞ。たぶん来るからの。','「コワイノ」は、ほんとうに悪いやつなんかのう…。','おやつ持っとらんか？','属性がたまるとせいれいが来るぞい。…たしか。'];
 function KS(L){const o=[];for(let[w,t]of L){let n=w;if(w.length===1){try{n=sevName(w)}catch(e){n=null}}if(n){if(t&&typeof t==='object'){const q=S&&S.res.find(x=>x.name===n);t=q&&elemKey(q)==='fireB'?t.B:t.A}o.push([n,t])}}return o}/* キーキャラの名前を入れたセリフ */
+function pathMade(){const n=S.floor.filter(f=>f==='path').length;if(S.flags.path0==null)S.flags.path0=n;return Math.max(0,n-S.flags.path0)}/* クエストを受けてから、しいたあぜ道の数 */
 const QUESTS1=[
   {text:'神殿を建ててもらおう',check:()=>cnt('statue')>=1,by:GOD,story:[
     [POKO,'できたー！ りっぱな神殿！'],
@@ -277,6 +278,14 @@ const QUESTS1=[
     [GOD,'あそこの家、壁がこわれたままなんじゃ。木の壁を3つ入れといたから、すきまをふさいでみい。']],gives:{feat:['people'],items:{hwall:3}}},
    story:[
     [POKO,'前に、夜に壁をこわされたことがあったんだ。'],[POKO,'でも、もうすきまはないね。壁があると、なんだかほっとする！']]},
+  {text:'道をつくろう',check:()=>pathMade()>=5,prog:()=>'あぜ道 '+Math.min(5,pathMade())+'/5',
+   talk:{who:POKO,when:()=>true,lines:[
+    [POKO,'守り神さま、家と神殿のあいだ、草がぼうぼうで歩きにくいんだ。'],
+    [GOD,'ふむ。道があれば、みなも行き来しやすくなるのう。'],
+    [GOD,'あぜ道を5つ入れといたぞい。家と神殿のあいだに、しいてみい。']],gives:{items:{path:5}}},
+   story:[
+    [POKO,'わあ、歩きやすい！ 足が、すいすい進むよ。'],
+    [GOD,'道の上は、せいれいたちも速く歩けるんじゃ。']]},
   {text:'家にベッドを置こう',check:()=>houseBedCount()>=1,
    talk:{who:POKO,when:()=>true,lines:[
     [POKO,'草の上はごつごつするし、ゆっくり休める場所があったらいいな。'],
@@ -484,6 +493,7 @@ const QUEST_HELP1={
   "食料箱を置こう": "フタバと話して食料箱を受けとる。「おく」→「食料箱」をえらんで置く",
   "素材箱を置こう": "フタバと話して素材箱を受けとる。「おく」→「素材箱」をえらんで置く。置きなおしたいときは「こわす」でお供え箱にもどせる",
   "家の壁を直そう": "「おく」→「木の壁」をえらんで、家の壁のすきまをふさぐ",
+  "道をつくろう": "「おく」→「あぜ道」をえらんで、家と神殿のあいだに5マスしく",
   "家にベッドを置こう": "「おく」→「ベッド」をえらんで、壁で囲まれた家の中に置く",
   "柵を4つ置こう": "「おく」→「柵」をえらんで4つ置く",
   "見張り台ととげの罠を置こう": "「おく」→「見張り台」を1つと「とげの罠」を2つ置く",
@@ -698,7 +708,7 @@ function newState(w){w=w||0;
   const s={v:8,flags:{},placed:{},feat:{build:true},inv:{},orders:[],enemyOn:false,nights:0,godGone:false,godShown:false,nushi:null,
     lv:1,bossKills:0,nightHurt:0,nightHad:false,wave:null,lastWarn:0,
     ref:{},ground:new Array(W*H).fill(0),floor:new Array(W*H).fill(''),obj:new Array(W*H).fill(''),dyn:{},hp:{},
-    res:[],enemies:[],pt:15,totalPt:0,food:0,fs:{},cseed:{imo:4},crops:{imo:true},mat:{wood:0,stone:0},regrow:[],t:12*60,speed:1,baseLv:0,
+    res:[],enemies:[],pt:15,totalPt:0,food:0,fs:{},cseed:{imo:4},crops:{imo:true},mat:{wood:0,stone:0},regrow:[],t:w===0?15*60:12*60,/* 草原は15時からはじまる */speed:1,baseLv:0,
     unlocked:{floor:true,farm:true,fence:true,hwall:true},bulk:false,stamps:false,quest:0,cleared:false,rain:false,seeds:[],nameIdx:2,introSeen:false,lastMorning:1,lastNight:0,subDone:{},drops:[],shards:0,gotMat:{wood:0,stone:0},recipes:{},buried:[],nid:1,kills:0,deaths:0};
   s.world=w;genWorld(s,w);
   if(w===1)s.res.push(mkRes(s,HOMURA,'fire',CX+.5,CY-1.5,'campfire'));else s.res.push(mkRes(s,'フタバ','wood',CX+.5,CY-1.5,'swing'));
@@ -4872,7 +4882,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='360';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='361';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
