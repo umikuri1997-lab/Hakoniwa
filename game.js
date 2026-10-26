@@ -3656,6 +3656,8 @@ function carryIcon(r){
   if(r.meal)return typeof r.meal==='number'?'🍙':(r.meal.e||'🍙');
   if(r.cing&&!isNight()){const R=RECIPES.find(x=>x.out===r.cing.rec);return R?FOODS[Object.keys(R.need)[0]].e:'🧺'}/* 夜は料理ができないので、材料を持っている絵は出さない */
   return null}
+let COFFIN=null;function coffinBmp(){/* 棺の絵文字を一度だけ描いて、見えている部分だけ切り出す（機種で絵文字の位置がちがっても、まんなかに置ける） */if(COFFIN)return COFFIN.w?COFFIN:null;const N=288,c=document.createElement('canvas');c.width=c.height=N;const x=c.getContext('2d');x.font='117px sans-serif';x.textAlign='center';x.textBaseline='middle';x.fillText('⚰️',N/2,N/2);let d;try{d=x.getImageData(0,0,N,N).data}catch(e){return null}let x0=N,y0=N,x1=-1,y1=-1;for(let y=0;y<N;y++)for(let i=0;i<N;i++)if(d[(y*N+i)*4+3]>20){if(i<x0)x0=i;if(i>x1)x1=i;if(y<y0)y0=y;if(y>y1)y1=y}
+  if(x1<0){COFFIN={};return null}const w=x1-x0+1,h=y1-y0+1,o=document.createElement('canvas');o.width=w;o.height=h;o.getContext('2d').drawImage(c,x0,y0,w,h,0,0,w,h);COFFIN={c:o,w:w/3,h:h/3};return COFFIN}/* 3倍の大きさで描いて、くっきりさせる（表示は39pxぶん） */
 function carryIcons(r){/* 持っているものを、そのまま1つずつ並べる（上に積むほど新しい） */
   const em=k=>FOODS[k]?FOODS[k].e:'🧺',out=[];
   if(r.coffin)return['⚰️'];/* 棺を持っているときは、それだけ */
@@ -3718,7 +3720,7 @@ function drawRes0(r,now){
   const by=fy-27;
   const ci=carryIcon(r);
   const over=()=>{
-  if(ci){const cb=walking?Math.abs(Math.sin(now/110+r.id))*1.2:0;ctx.font='26px sans-serif';ctx.fillStyle='#000';ctx.textAlign='center';ctx.textBaseline='middle';{let cl=carryIcons(r);if(!cl.length)cl=[ci];if(!cl[0])cl=[];const hn=cl.length;/* 持っている数だけ、そのまま積む */if(cl[0]==='⚰️'){const ei=emoImg('⚰️');if(ei){const k=45/Math.max(ei.width,ei.height),iw=ei.width*k,ih=ei.height*k,by=fy-(r.elem==='wood'?34:29)-cb;ctx.drawImage(ei,px-iw/2,by-ih+12,iw,ih)}else{ctx.font='39px sans-serif';ctx.textBaseline='bottom';ctx.fillText('⚰️',px,by+8);ctx.textBaseline='middle';ctx.font='26px sans-serif'}cl=[]}/* 棺は、いつもの1.5倍の大きさ（39px）で、頭の上に乗せる（木の子は葉っぱの上） */for(let i=0;i<cl.length;i++){const e1=cl[i],ei=emoImg(e1),ox=(i%2?3:-3)*(hn>1?1:0),oy=-i*7;if(ei){const k=30/Math.max(ei.width,ei.height),iw=ei.width*k,ih=ei.height*k;ctx.drawImage(ei,px-iw/2+ox,fy-47-cb-ih/2+oy+(hn-1)*3+(e1==='⚰️'?7:0),iw,ih)}else ctx.fillText(e1,px+ox,fy-47-cb+oy+(hn-1)*3)}}/* たくさん持つときは、アイコンを重ねる */ctx.textAlign='start';ctx.textBaseline='alphabetic'}
+  if(ci){const cb=walking?Math.abs(Math.sin(now/110+r.id))*1.2:0;ctx.font='26px sans-serif';ctx.fillStyle='#000';ctx.textAlign='center';ctx.textBaseline='middle';{let cl=carryIcons(r);if(!cl.length)cl=[ci];if(!cl[0])cl=[];const hn=cl.length;/* 持っている数だけ、そのまま積む */if(cl[0]==='⚰️'){const cb0=coffinBmp(),cy=fy-(r.elem==='wood'?34:29)-cb+10;if(cb0)ctx.drawImage(cb0.c,px-cb0.w/2,cy-cb0.h,cb0.w,cb0.h);cl=[]}/* 棺は、いつもの1.5倍の大きさ（39px）で、頭の上に乗せる（木の子は葉っぱの上） */for(let i=0;i<cl.length;i++){const e1=cl[i],ei=emoImg(e1),ox=(i%2?3:-3)*(hn>1?1:0),oy=-i*7;if(ei){const k=30/Math.max(ei.width,ei.height),iw=ei.width*k,ih=ei.height*k;ctx.drawImage(ei,px-iw/2+ox,fy-47-cb-ih/2+oy+(hn-1)*3+(e1==='⚰️'?7:0),iw,ih)}else ctx.fillText(e1,px+ox,fy-47-cb+oy+(hn-1)*3)}}/* たくさん持つときは、アイコンを重ねる */ctx.textAlign='start';ctx.textBaseline='alphabetic'}
   if(!(r.hurt>0)&&S.t-(r.eUp||-9)<3&&r.energy<99.5){const v=r.energy/100,bx=px-12,byy=py+11;ctx.fillStyle='rgba(0,0,0,.45)';rr(ctx,bx,byy,24,5,2.5);ctx.fillStyle='#7ed99a';rr(ctx,bx+1,byy+1,Math.max(2,22*v),3,1.5);const ph=(now/600)%1;ctx.globalAlpha=1-ph;ctx.fillStyle='#7ed99a';ctx.font='bold 9px \"Hikomi\",\"Hiragino Maru Gothic ProN\",sans-serif';ctx.textAlign='center';ctx.fillText('+',px+15,byy+4-ph*8);ctx.globalAlpha=1}/* 元気が回復中：みどりのバー */
   if(r.hurt>0){const v=r.hunger/hMax(r),a=Math.min(1,r.hurt/8);ctx.globalAlpha=a;ctx.fillStyle='rgba(0,0,0,.6)';rr(ctx,px-12,py+11,24,5,2.5);ctx.fillStyle=v>.5?'#7ee08a':v>.25?'#ecdcbc':'#ff6b6b';rr(ctx,px-11,py+12,Math.max(2,22*v),3,1.5);ctx.globalAlpha=1}
   if(at==='craft'&&ad){const o=S.orders.find(q=>q.id===r.act.order);if(o){const f=Math.min(1,o.prog/o.need),bx=px-16,byy=py+(r.hurt>0?19:12);ctx.fillStyle='rgba(150,115,75,.5)';rr(ctx,bx-1.5,byy-1.5,35,8,4);ctx.fillStyle='#e8dcc0';rr(ctx,bx,byy,32,5,2.5);ctx.fillStyle='#e0a43a';rr(ctx,bx,byy,Math.max(2.5,32*f),5,2.5)}}/* 依頼の作業の進み具合は足もと。吹き出しは上に出す */
@@ -4907,7 +4909,7 @@ function thumb(cv2,k,open){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='306';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='307';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
