@@ -189,7 +189,7 @@ const PROLOGUE=[
   [GOD,'おヌシは、生まれたばかりの小さな守り神なんじゃ。さっそくじゃが、行ってほしい土地があってのう。'],
   [GOD,'行く前に、その土地のことを、ちょっとだけ話しておこうかの。'],
   [GOD,'そこはむかし、せいれいたちがにぎやかに暮らす、ゆたかな草原じゃった。ヌシ様も見守っておってな。'],
-  [GOD,'じゃが、ある大きな夜があってのう。自然の力のバランスがくずれてしもうて、土地はボロボロ。せいれいは散り散り、ヌシ様もどこかへ行ってしもうた。'],
+  [GOD,'じゃが、ある晩、「コワイノ」の大群がおしよせてのう。自然の力のバランスがくずれてしもうて、土地はボロボロ。せいれいは散り散り、ヌシ様もどこかへ行ってしもうた。'],
   [GOD,'そこで、おヌシにおねがいじゃ。'],
   [GOD,'「せいれいたちの力を集めて、この土地に守護の力を取り戻しておくれ」'],
   [GOD,'…というわけで！ よろしくたのむぞい〜。では、さっそく行こうかの！'],
@@ -4872,7 +4872,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='357';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='359';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
