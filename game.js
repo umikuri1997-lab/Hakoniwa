@@ -4424,6 +4424,7 @@ signpost:'ガーデン',hedge:'ガーデン',birdhouse:'ガーデン,飾り',bir
 slide:'遊び,ガーデン',sandbox:'遊び,ガーデン',seesaw:'遊び,ガーデン',swing:'遊び,ガーデン',campfire:'遊び,あかり',fountain:'遊び,ガーデン',
 spike:'ワナ',puddle:'ワナ',sticky:'ワナ',firetrap:'ワナ',gust:'ワナ',watch:'防衛,あかり',tower:'防衛',lighthouse:'あかり,防衛',stele:'防衛',well:'水まわり,ガーデン',windmill:'作業,ガーデン',lumber:'作業',quarry:'作業',statue:'神殿'};/* ジャンルのタグ（複数あるものは、すべて書く） */
 function tagsOf(id){const b=BL[id];if(!b)return[];if(TAGMAP[id])return TAGMAP[id].split(',');const t=[];if(CAT_TAG[b.cat])t.push(CAT_TAG[b.cat]);for(const[n,ids]of CRAFT_TABS)if(ids.includes(id)){const g=TAB_TAG[n]||n;if(!t.includes(g)&&!(g==='家具'&&t.length))t.push(g)}if(b.play&&!t.includes('遊び'))t.push('遊び');if(!t.length&&b.kind==='furn')t.push('家具');return t}/* 説明に出す、ジャンルのタグ */
+function tagsEl(id){const tg=tagsOf(id);if(!tg.length)return null;const d=document.createElement('div');d.className='tags';for(const g of tg){const sp=document.createElement('span');sp.className='tag';sp.textContent=g;d.appendChild(sp)}return d}
 function helpPop(t,text){const o=$('#helpPop');let tg=[];{const id=Object.keys(BL).find(k=>BL[k].name===t);if(id)tg=tagsOf(id)}{const bx=o.querySelector('.tags');if(bx){bx.innerHTML='';for(const g of tg){const sp=document.createElement('span');sp.className='tag';sp.textContent=g;bx.appendChild(sp)}bx.hidden=!tg.length}}o.querySelector('b').textContent=t;o.querySelector('p').textContent=text;o.hidden=false}
 function rowEl(title,desc,img,html){const r=el(`<div class="row">${img?'<img alt="">':''}<div class="tx"><b></b><small></small></div></div>`);if(img)r.querySelector('img').src=img;r.querySelector('b').textContent=title;if(html)r.querySelector('small').innerHTML=html+esc(desc||'');else r.querySelector('small').textContent=desc||'';return r}
 /* カミサマの値段：花は高め、畑は買うごとに上がる */
@@ -4652,7 +4653,7 @@ function renderSheet(){
       const cur=CAT.find(c=>c[0]===MANC);
       for(const[t,items]of MANUAL){if(!cur[1].includes(t))continue;const sec=el('<div class="sec"><h3></h3><div class="rows"></div></div>');sec.querySelector('h3').textContent=t;for(const[a,b]of items)sec.querySelector('.rows').appendChild(rowEl(a,b));body.appendChild(sec)}}
     {const b=el('<button class="btn">もどる</button>');b.onclick=()=>{sfx('tap');openSheet('menu')};body.appendChild(b)}
-  }else if(sheet==='furn'){const j=sheetArg,o=S.obj[j];if(!o||!BL[o])return closeSheet();T.textContent=nameG(o);
+  }else if(sheet==='furn'){const j=sheetArg,o=S.obj[j];if(!o||!BL[o])return closeSheet();T.textContent=BL[o].name;{const te=tagsEl(o);if(te)body.appendChild(te)}
     body.appendChild(rowEl(BL[o].name,withAttr(o,BL[o].desc||''),iconURL(o)));
     {const R=rangeOf(o,j);if(R&&!BL[o].env&&o!=='bench')body.appendChild(el('<div class="rows"></div>')).appendChild(rowEl('効果のはんい','まわり'+(R.cells||R.r)+'マス（「みる」でタップすると、色で出る）'))}
     if(o==='table'){const h=roomOf(j);let n=0;if(h)for(const q of h.inside){const oo=S.obj[q];if(oo&&BL[oo]&&BL[oo].cat==='living')n+=BL[oo].dw||1}const bon=h?1+Math.min(3,Math.floor(n/2)):0;
