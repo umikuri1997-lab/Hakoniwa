@@ -2101,13 +2101,13 @@ function checkSub(){const D=S.subDone||(S.subDone={}),Sn=S.subSeen||(S.subSeen={
       else if(!wait){const visit=queueQuestVisit(q,subWho(q));if(visit)SUB_CLEAR_WAIT[q.k]=Object.assign({done:false},visit);else{St[q.k]=3;sfx('quest');toast('サブクエストたっせい：'+q.t,'good')}}}
     if(St[q.k])busy[q.g]=busy[q.g]&&!(St[q.k]===3&&St[busy[q.g].k]!==3)?busy[q.g]:q}/* 終わったクエストの報告を先に出す *//* その子から受けたクエストが終わるまで、次は出ない */
   /* サブクエストは一つずつ提示。会話のあいだを村の時間で2時間あける */
-  const spaced=S.subTalkAt==null||S.t-S.subTalkAt>=120;
+  const spaced=!isNight()&&(S.subTalkAt==null||S.t-S.subTalkAt>=120);/* 新しいサブクエストは、昼だけ */
   if(spaced&&!Object.values(busy).some(q=>St[q.k]===1||St[q.k]===3)&&subList().filter(q=>!D[q.k]&&St[q.k]===2).length<4)for(const q of subList()){if(D[q.k]||St[q.k])continue;if(busy[q.g]&&!levelHelpKeys().includes(q.k))continue;const w=keyName(q.g);if(!w||!q.at()||!subOfferReady(q))continue;St[q.k]=1;busy[q.g]=q;break}
   if(spaced&&waitingBellflowers()&&!subList().some(q=>St[q.k]===1||St[q.k]===3)&&subList().filter(q=>St[q.k]===2).length<3){const next=subList().find(q=>q.k.startsWith('seedwait_')&&!D[q.k]&&!St[q.k]&&q.at());if(next&&subOfferReady(next))St[next.k]=1}
   const summonHelp=WD===0&&S.qStory==null&&S.qTalked?({'火のせいれいをむかえよう':'salvia3','水のせいれいをむかえよう':'lotus3','風のせいれいをむかえよう':'lily5'}[QUESTS[S.quest]?.text]||''):'',supportKeys=summonHelp?(summonHelp==='salvia3'?['salvia3','watch2']:summonHelp==='lily5'?['lily5','swing1']:[summonHelp]):[];
-  for(const k of supportKeys){if(D[k]||St[k])continue;const q=subList().find(q=>q.k===k);if(!q||!q.at()||!subOfferReady(q)||!keyName(q.g))continue;if(k===summonHelp||spaced){St[k]=1;break}}
+  for(const k of supportKeys){if(D[k]||St[k])continue;const q=subList().find(q=>q.k===k);if(!q||!q.at()||!subOfferReady(q)||!keyName(q.g))continue;if(!isNight()&&(k===summonHelp||spaced)){St[k]=1;break}}
   const visiting=!!QUEST_CLEAR_WAIT&&!QUEST_CLEAR_WAIT.done||Object.values(SUB_CLEAR_WAIT).some(w=>w&&!w.done)||S.res.some(r=>(QUEST_VISITS.get(r)||[]).length||r.act&&r.act.type==='questjoy'&&r.act.joyAt==null);/* クエストのものを見にいく途中は、新しい話の黄色い吹き出しは出さない（着いて喜び始めてから） */
-  const requests=visiting?[]:subList().filter(q=>St[q.k]===1&&(spaced||summonHelp&&q.k===summonHelp));
+  const requests=visiting?[]:subList().filter(q=>St[q.k]===1&&!isNight()&&(spaced||summonHelp&&q.k===summonHelp));
   const pending=requests.filter(q=>supportKeys.includes(q.k)).concat(subList().filter(q=>St[q.k]===3),requests.filter(q=>!supportKeys.includes(q.k)));
   for(const q of pending){const w=St[q.k]===3?questReplyWho(q):subWho(q);if(w&&spkOK(w)&&w!==TALKW){SUBW[w]=q.k;break}}}
 function subTalk(k){const q=SUBQ.find(q=>q.k===k),St=S.subSt,D=S.subDone;if(!q||!$('#dialog').hidden||St[k]===1&&!subOfferReady(q))return;S.subTalkAt=S.t;const w=subWho(q)||POKO,L=(St[k]===1?q.L:q.X)||[[w,q.t]];
