@@ -757,7 +757,7 @@ function ensureStor(s){for(const[rm,to]of[['sideb','cabinet'],['chime','vane']])
   if(s.qVer<15){if(!s.world){const M=q=>q<=0?q:q<=2?1:q<=4?2:q<=6?3:q-3;if([1,3,5].includes(s.quest))s.qTalked=false;if(s.quest>=6)s.flags.mbGift=true;if(s.quest>3){s.feat.remove=true;s.unlocked.path=true}s.quest=M(s.quest);if(s.qStory!=null)s.qStory=[1,3,5].includes(s.qStory)?null:M(s.qStory)}if(s.world===1&&s.quest===QUESTS2.findIndex(q=>q.text.startsWith('ホムラのおねがい')))s.qTalked=false;s.qVer=15}/* チュートリアルをへらした */
   if(s.qVer<16){if(!s.world){if(s.quest===2)s.qTalked=false;if(s.quest>2)s.quest--;if(s.quest>=2){s.feat.plant=true}if(s.qStory!=null)s.qStory=s.qStory===2?null:s.qStory>2?s.qStory-1:s.qStory}s.qVer=16}/* 花を植えるクエストをなくした */
   if(s.qVer<17){if(!s.world){if(s.quest>2||s.quest===2&&s.obj.includes('mbox'))s.quest++;if(s.qStory!=null&&s.qStory>=2)s.qStory++}s.qVer=17}/* 素材箱と食卓を別のクエストにした */
-  if(s.oracle==='build')s.oracle=null;/* 廃止した建築のおつげを解除 */
+  if(s.oracle==='build'||s.oracle==='farm')s.oracle=null;/* 廃止した建築のおつげを解除 */
   if(s.qVer<18){if(!s.world){const R=[3,13,15,16,18,21],q=s.quest,D=s.subDone||(s.subDone={});if(R.includes(q))s.qTalked=false;s.quest=q-R.filter(x=>x<q).length;if(q>=3)s.feat.craft=true;if(s.qStory===16)s.flags.board5=true;['table','bed3','oven','board','watch2','toy2'].forEach((k,n)=>{if(q>R[n])D[k]=1});if(s.qStory!=null)s.qStory=R.includes(s.qStory)?null:s.qStory-R.filter(x=>x<s.qStory).length}s.qVer=18}/* 家具・遊具などのクエストをサブクエストにした */
   if(s.qVer<19){if(!s.world){if(s.quest>=12)s.quest++;if(s.qStory!=null&&s.qStory>=12)s.qStory++}s.qVer=19}/* 基地を広げるクエストを足した */
   if(s.qVer<20){if(!s.world){if(s.quest>13)s.quest++;if(s.qStory!=null&&s.qStory>=13)s.qStory++}s.qVer=20}/* おつげのクエストを足した */
@@ -1561,7 +1561,7 @@ function hasWork(r){
   return false}
 /* おつげ：守り神さまからの、きょういちにちの指示 */
 const TOYF=.8,toyFun=f=>Math.round(Math.min(100,f*TOYF)/5)*5-10,toyTired=(r,j)=>!!(r.lastToy&&r.lastToy.j===j&&S.t-r.lastToy.t<240);/* 遊び家具のたのしさは、もとの半分を5きざみにして、さらに-10。同じ遊び家具には4時間行かない */
-const ORACLE={play:{name:'いっぱいあそぶ',e:'🎈',jobs:[]},wood:{name:'木をあつめる',e:'🪵',jobs:['chop']},stone:{name:'石をあつめる',e:'🪨',jobs:['mine']},food:{name:'食料をあつめる',e:'🍎',jobs:['harvest','gather','fish']},farm:{name:'畑の世話をする',e:'🌱',jobs:['till','sow','water','tend','plant']}};
+const ORACLE={play:{name:'いっぱいあそぶ',e:'🎈',jobs:[]},wood:{name:'木をあつめる',e:'🪵',jobs:['chop']},stone:{name:'石をあつめる',e:'🪨',jobs:['mine']},food:{name:'食料をあつめる',e:'🍎',jobs:['harvest','gather','fish']}};
 function goWork(r,G,nw){
   // 木材と石材は、少ないほうから集める（どちらかが得意なら両方やる）
   const gat=true,mo=(S.mat.stone||0)<=(S.mat.wood||0)?['mine','chop']:['chop','mine'];let gd=false;
