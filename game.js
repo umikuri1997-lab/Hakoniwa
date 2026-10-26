@@ -1151,6 +1151,7 @@ const ACT_LBL={shiver:'こわくて、ふるえている',reunion:'なかよし�
 function decide(r){TAKEN=new Set();for(const q of S.res){if(q===r||q.hidden)continue;if(q.act&&q.act.stand>=0)TAKEN.add(q.act.stand);if(!q.act||q.act.stage!=='walk')TAKEN.add((q.y|0)*W+(q.x|0))}
   for(const [j,t]of Object.entries(r.routeAvoid||{})){if(t>S.t)TAKEN.add(+j);else delete r.routeAvoid[j]}
   try{const x=decide0(r);if(!r.act&&r.elem==='fire'&&!r.hidden&&r.hunger>=20)huntNear(r);return x}finally{TAKEN=null}}
+function springThreat(r){if(WD!==1||!S.st2||!S.st2.cool)return null;let best=null,bd=1e9;for(const e of S.enemies){if(!e.spawned||e.dead||e.flee)continue;const D=EN[e.type];if(!D.ash&&!D.vol)continue;const d=Math.hypot(e.x-r.x,e.y-r.y)-(String(e.tg).startsWith('s')?20:0);if(d<bd){bd=d;best=e}}return best}/* 火山のふもとの最後の夜：温泉を冷やしにくる敵（いま冷やしている敵を先に） */
 function guardSpot(G,en,r){/* 火の子は、見張り台のそばで戦う：敵にいちばん近い見張り台へ行き、見張り台から3マス以内に来た敵をたたく（見張り台がなければ、そのまま敵のところへ） */let w=-1,wd=1e9;for(let k=0;k<W*H;k++){if(S.obj[k]!=='watch'||!inBase(k%W,(k/W)|0))continue;const d=Math.hypot(k%W+1-en.x,((k/W)|0)+1-en.y);if(d<wd){wd=d;w=k}}
   if(w<0||wd<=3)return huntSpot(G,en,60,r);const wx=w%W+1,wy=((w/W)|0)+1;if(Math.hypot(r.x-wx,r.y-wy)<=2.2)return (r.y|0)*W+(r.x|0);/* もう見張り台のそばにいる */
   let j=-1,bd=1e9;for(let y=wy-2;y<=wy+1;y++)for(let x=wx-2;x<=wx+1;x++){const k=y*W+x;if(k<0||k>=W*H||G.dist[k]<0||!walk(k))continue;const d=Math.hypot(x+.5-en.x,y+.5-en.y);if(d<bd){bd=d;j=k}}return j>=0?j:huntSpot(G,en,60,r)}
@@ -1205,7 +1206,7 @@ function decide0(r){
     if(carryN(r)>0&&foodCap()>0)return goStore(r,G)}
   if(r.cmat&&matCap()>0)return goStoreMat(r,G);
   if(isNight()&&r.hunger<hMax(r)*.5&&S.food>0&&!S.enemies.some(e=>e.spawned&&!e.dead&&Math.hypot(e.x-r.x,e.y-r.y)<7)){return goEat(r,G)}/* 夜も、おなかが半分になったら食べにいく（見回りの子もふくめて） */
-  if(r.elem==='fire'&&r.hunger>=35&&!r.refill){let en=null,bd=1e9;const br=BASE_R[S.baseLv]+3;for(const e of S.enemies){if(!e.spawned||e.dead)continue;if(!(e.x>=CX-br&&e.x<CX+br&&e.y>=CY-br&&e.y<CY+br))continue;const d=Math.hypot(e.x-r.x,e.y-r.y);if(d<bd){bd=d;en=e}}/* 「コワイノ」が拠点に近づいたら、たたかいに行く（おなか＝体力が少ないときは行かない） */
+  if(r.elem==='fire'&&r.hunger>=35&&!r.refill){{const st=springThreat(r);if(st){const j=huntSpot(G,st,60,r);if(j>=0)return startAct(r,G,'patrol',j,{hunt:S.t})}}/* 最後の夜は、温泉を守りに行く */let en=null,bd=1e9;const br=BASE_R[S.baseLv]+3;for(const e of S.enemies){if(!e.spawned||e.dead)continue;if(!(e.x>=CX-br&&e.x<CX+br&&e.y>=CY-br&&e.y<CY+br))continue;const d=Math.hypot(e.x-r.x,e.y-r.y);if(d<bd){bd=d;en=e}}/* 「コワイノ」が拠点に近づいたら、たたかいに行く（おなか＝体力が少ないときは行かない） */
     if(en){const j=guardSpot(G,en,r);/* 敵と同じマスではなく、ひとます離れて */if(j>=0)return startAct(r,G,'patrol',j,{hunt:S.t})}}/* となりに行けなくても、いちばん近くまで行く。見回りの中断でぐるぐるしないよう hunt をつける */
   if(isNight()&&r.elem==='fire'&&offShift(r)){r.bubble='💤'}/* 火のせいれいが2人以上いれば、交代で見張って、交代で眠る */
   else if(isNight()&&isWatch(r)){// 火のせいれい（と、まもりをおぼえたフタバ）は寝ないで見回り
