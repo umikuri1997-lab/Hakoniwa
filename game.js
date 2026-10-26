@@ -43,6 +43,8 @@ const BL={
   gravel:{name:'砂利道',kind:'block',floor:1,cost:1,pc:3,time:30,maker:'earth',qty:10,lv:5,mat:{stone:1},attr:{earth:.4},desc:'小石をしいた道。歩く速さ×1.4'},
   brick:{name:'レンガ道',kind:'block',floor:1,cost:3,pc:5,time:50,maker:'fire',qty:10,lv:8,mat:{stone:2},attr:{fire:.4,earth:.3},desc:'いちばん速く歩ける道。歩く速さ×1.75'},
   floor:{name:'フローリング',kind:'block',floor:1,lv:4,cost:1,pc:2,time:30,maker:'wood',qty:10,mat:{wood:1},attr:{wood:.5},desc:'木目のそろった板の床。歩く速さ×1.15'},
+  brickfloor:{name:'レンガ床',kind:'block',floor:1,lv:8,cost:3,pc:5,time:50,maker:'fire',qty:10,mat:{stone:2},attr:{fire:.4,earth:.3},desc:'レンガをしきつめた家の床。歩く速さ×1.15'},
+  stonefloor:{name:'石の床',kind:'block',floor:1,lv:6,cost:2,pc:4,time:40,maker:'earth',qty:10,mat:{stone:2},attr:{earth:.5},desc:'石をしきつめた家の床。歩く速さ×1.15'},
   carpet:{name:'じゅうたん',kind:'block',floor:1,lv:9,cost:2,pc:3,time:35,maker:'wind',qty:10,mat:{wood:1},attr:{wind:.5},desc:'やわらかな織り模様の床。家の中をあたたかく彩る'},
   stone:{name:'石畳',kind:'block',floor:1,cost:2,pc:4,time:40,maker:'earth',qty:10,lv:10,mat:{stone:2},attr:{earth:.75},desc:'しっかりした石の床。歩く速さ×1.55'},
   farm:{name:'畑',kind:'block',cost:4,dyn:1,attr:{},desc:'置くとせいれいが耕して種をまく。水やりすると育つ'},
@@ -160,12 +162,12 @@ for(const k of['wall','sdoor','windmill']){const b=BL[k];for(const m in b.mat)b.
 BL.windmill.desc='まわり5マスの畑の収穫+1'
 for(const k in BL){const b=BL[k];if(b.kind==='furn'&&!b.trap&&!b.f2&&b.mat&&k!=='stor'&&k!=='mbox')for(const m in b.mat)b.mat[m]=Math.ceil(b.mat[m]*1.5)}/* 家具の材料は多め（壁や塀はそのまま） */
 for(const k in BL){const b=BL[k];if(b.kind==='build'&&b.mat)for(const m in b.mat)b.mat[m]*=4}/* 建物の素材は4倍 */
-const BLOCKS=['path','gravel','stone','brick','floor','carpet','farm','fence','gate','archedgate','stonegate','hwall','logwall','plasterwall','brickwall','door','wall','sdoor','window'];const GATE_IDS=new Set(['gate','archedgate','stonegate']),FENCE_IDS=new Set(['fence','logfence','bamboofence','stonefence','gate','archedgate','stonegate']),HOME_WALLS=new Set(['hwall','logwall','plasterwall','brickwall','wall']),HOME_DOORS=new Set(['door','sdoor']);
+const BLOCKS=['path','gravel','stone','brick','floor','brickfloor','stonefloor','carpet','farm','fence','gate','archedgate','stonegate','hwall','logwall','plasterwall','brickwall','door','wall','sdoor','window'];const GATE_IDS=new Set(['gate','archedgate','stonegate']),FENCE_IDS=new Set(['fence','logfence','bamboofence','stonefence','gate','archedgate','stonegate']),HOME_WALLS=new Set(['hwall','logwall','plasterwall','brickwall','wall']),HOME_DOORS=new Set(['door','sdoor']);
 const PLANTS=['flower','clover','bellf','salvia','lily','lotus','tree','fruit'],FLOWERS=new Set(['flower','clover','bellf','salvia','lily','lotus']),ATTRFL=new Set(['clover','bellf','salvia','lily','lotus']),plantOK=id=>!ATTRFL.has(id)||!!S.unlocked[id]/* 属性の花はクエストで解放 */,isBud=j=>!!(S&&S.bud&&S.bud[j]>dayNo())/* 植えた日の次の朝まで、花と木は芽 */,flowerN=()=>S.obj.reduce((a,o,j)=>a+(FLOWERS.has(o)&&!isBud(j)?1:0),0),BREQ={windmill:'wind',fountain:'water',well:'water',lighthouse:'fire',stele:'earth'}/* 属性の子がいないと建てられない */;
 const bloomCount=id=>S.obj.reduce((n,o,j)=>n+(o===id&&!isBud(j)?1:0),0);
 const FLOWER_QUESTS=new Set(['salvia3','lotus3','lily5','clover3']);
-const CRAFTB=['floor','carpet','path','gravel','stone','brick','hwall','logwall','plasterwall','brickwall','door','fence','gate','archedgate','stonegate','wall','sdoor','window'];
-const CRAFT_TABS=[["家具", ["table", "chair", "stool", "chair2", "stable", "pouf", "achair", "ltable", "rug1", "rug2", "bed", "sofa1", "monstera", "wreath", "curtain1", "curtain2", "paint1", "paint2", "paint3", "bathtub"]], ["収納", ["stor", "mbox", "crate", "shelf1", "wshelf", "sideb", "cabinet", "shelf2"]], ["遊び", ["swing", "slide", "sandbox", "seesaw", "campfire"]], ["庭", ["bench", "hedge", "birdhouse", "birdbath", "parasol", "arch", "kamizo", "jar", "rockart", "signpost", "chime", "vane"]], ["あかり", ["torch", "candle", "lantern", "flamp"]], ["ごはん", ["oven", "tub", "sink"]], ["ワナ", ["spike", "puddle"]], ["家づくり", ["floor", "carpet", "hwall", "logwall", "plasterwall", "brickwall", "door", "window"]], ["道・囲い", ["path", "gravel", "stone", "brick", "fence", "gate", "archedgate", "stonegate", "wall", "sdoor"]]];let craftTab=0;
+const CRAFTB=['floor','brickfloor','stonefloor','carpet','path','gravel','stone','brick','hwall','logwall','plasterwall','brickwall','door','fence','gate','archedgate','stonegate','wall','sdoor','window'];
+const CRAFT_TABS=[["家具", ["table", "chair", "stool", "chair2", "stable", "pouf", "achair", "ltable", "rug1", "rug2", "bed", "sofa1", "monstera", "wreath", "curtain1", "curtain2", "paint1", "paint2", "paint3", "bathtub"]], ["収納", ["stor", "mbox", "crate", "shelf1", "wshelf", "sideb", "cabinet", "shelf2"]], ["遊び", ["swing", "slide", "sandbox", "seesaw", "campfire"]], ["庭", ["bench", "hedge", "birdhouse", "birdbath", "parasol", "arch", "kamizo", "jar", "rockart", "signpost", "chime", "vane"]], ["あかり", ["torch", "candle", "lantern", "flamp"]], ["ごはん", ["oven", "tub", "sink"]], ["ワナ", ["spike", "puddle"]], ["家づくり", ["floor", "brickfloor", "stonefloor", "carpet", "hwall", "logwall", "plasterwall", "brickwall", "door", "window"]], ["道・囲い", ["path", "gravel", "stone", "brick", "fence", "gate", "archedgate", "stonegate", "wall", "sdoor"]]];let craftTab=0;
 const craftTabFor=id=>CRAFT_TABS.findIndex(([,ids])=>ids.includes(id));
 function furnitureGroups(ids){const wanted=new Set(ids);return CRAFT_TABS.map(([name,items])=>[name,items.filter(id=>wanted.has(id))]).filter(([,items])=>items.length)}
 const FURN=['table','chair','stor','mbox','oven','bed','bench','campfire','swing','torch','jar','rockart','chime','vane','spike','puddle','stool','chair2','stable','pouf','achair','ltable','rug1','sofa1','rug2','sideb','tub','sink','crate','monstera','shelf1','wreath','curtain1','cabinet','paint2','shelf2','curtain2','paint3','wshelf','paint1','bathtub','candle','lantern','flamp','signpost','hedge','birdhouse','birdbath','parasol','arch','slide','sandbox','seesaw','kamizo'];// 属性の罠（sticky/firetrap/gust）は次のステージから
@@ -1002,7 +1004,7 @@ function recount(){
 }
 
 // せいれいは道（道・石だたみ）を優先して歩く：道は1マス2、ほかは3の重みで最短を探す
-const FSPD={path:1.25,floor:1.15,carpet:1,gravel:1.4,stone:1.55,brick:1.75},FCOST={path:4,floor:5,carpet:6,gravel:4,stone:3,brick:3};// 道の速さと、道えらびの重み（ふつうは6）
+const FSPD={path:1.25,floor:1.15,brickfloor:1.15,stonefloor:1.15,carpet:1,gravel:1.4,stone:1.55,brick:1.75},FCOST={path:4,floor:5,brickfloor:5,stonefloor:5,carpet:6,gravel:4,stone:3,brick:3};// 道の速さと、道えらびの重み（ふつうは6）
 function bfs(sx,sy,enemy){if(!enemy)return roadSearch(sx,sy);return bfs0(sx,sy,enemy)}
 function roadSearch(sx,sy,block){
   const N=W*H,dist=new Int16Array(N).fill(-1),prev=new Int32Array(N).fill(-1),cost=new Int32Array(N).fill(-1),B=[];
@@ -1922,7 +1924,7 @@ function lvShow(l,bonus,opens){
   startClap();/* タップするまで、こっちを向いて拍手 */
   if(STATUE>=0)for(let n=0;n<3;n++)setTimeout(()=>burst(STATUE,'furn','none'),n*260);
 }
-const LEVELUP_ITEMS=new Set(['path','gate','hwall','door','floor','window','plasterwall','gravel','wall','sdoor','logwall','brick','brickwall','carpet','curtain1','stone','stonegate']);
+const LEVELUP_ITEMS=new Set(['path','gate','hwall','door','floor','brickfloor','stonefloor','window','plasterwall','gravel','wall','sdoor','logwall','brick','brickwall','carpet','curtain1','stone','stonegate']);
 const levelUpItemsAt=n=>Object.keys(BL).filter(id=>LEVELUP_ITEMS.has(id)&&BL[id].lv===n&&!BL[id].offerOnly);
 const visibleLevelRewardsAt=n=>levelUpItemsAt(n).filter(id=>id!=='curtain1'||!S.free);
 function checkLevel(){
@@ -2756,7 +2758,8 @@ function roadGrassEdge(c,id,x,y,i,q,iso){if(id!=='path'&&id!=='gravel')return;co
 function roadShape(c,x,y,q){const l=x+(q.L?0:2),r=x+TS-(q.R?0:2),t=y+(q.U?0:2),b=y+TS-(q.D?0:2),tl=!q.L&&!q.U?6:0,tr=!q.R&&!q.U?6:0,br=!q.R&&!q.D?6:0,bl=!q.L&&!q.D?6:0;c.beginPath();c.moveTo(l+tl,t);c.lineTo(r-tr,t);c.quadraticCurveTo(r,t,r,t+tr);c.lineTo(r,b-br);c.quadraticCurveTo(r,b,r-br,b);c.lineTo(l+bl,b);c.quadraticCurveTo(l,b,l,b-bl);c.lineTo(l,t+tl);c.quadraticCurveTo(l,t,l+tl,t);c.closePath()}
 function drawFloor(c,id,x,y,i,iso){
   const n=k=>!iso&&!!S.floor[k],gx=i%W,gy=(i/W)|0;
-  const road=ROADF.has(id),links=road?roadLinks(i,iso):null;if(road){c.save();if(id==='stone'||id==='brick'){c.beginPath();c.rect(x,y,TS,TS)}else roadShape(c,x,y,links);c.clip()}
+  const flat=id==='brickfloor'||id==='stonefloor';if(flat)id=id==='brickfloor'?'brick':'stone';/* 家の床は、道と同じ絵で、道のふち・つなぎはなし */
+  const road=!flat&&ROADF.has(id),links=road?roadLinks(i,iso):null;if(road){c.save();if(id==='stone'||id==='brick'){c.beginPath();c.rect(x,y,TS,TS)}else roadShape(c,x,y,links);c.clip()}
   if(id==='path'){c.fillStyle='#e6c48c';c.fillRect(x,y,TS,TS);
     c.fillStyle='#d4b07a';c.beginPath();c.ellipse(x+9+hash(i)*12,y+11+hash(i+5)*6,4.5,2.6,0,0,7);c.fill();c.beginPath();c.ellipse(x+20,y+21+hash(i+3)*5,3.5,2.2,0,0,7);c.fill();c.fillStyle='rgba(255,250,235,.45)';c.beginPath();c.ellipse(x+14+hash(i+7)*8,y+16,2.5,1.4,0,0,7);c.fill()}
   else if(id==='floor'){const fw=k=>!iso&&(HOME_WALLS.has(typeAt(k))||HOME_DOORS.has(typeAt(k)))&&!S.floor[k],same=k=>n(k)&&S.floor[k]===id||fw(k),L=same(i-1),R2=same(i+1),U=same(i-W),D=same(i+W);/* 板目は座標に合わせて並べ、隣の床へ連続させる */
@@ -2778,7 +2781,8 @@ function drawFloor(c,id,x,y,i,iso){
   else if(id==='stone'){c.fillStyle='#a8a59d';c.fillRect(x,y,TS,TS);const t=(a,b,w,h2,k)=>{c.fillStyle=k?'#d6d3cc':'#cbc8c0';rr(c,x+a,y+b,w,h2,3);c.fillStyle='rgba(255,255,255,.35)';c.fillRect(x+a+2,y+b+1.5,w-4,1.5);c.fillStyle='rgba(90,85,78,.22)';c.fillRect(x+a+1.5,y+b+h2-2,w-3,1.5)};
     if(hash(i)<.5){t(1,1,17,13,1);t(19,1,12,9,0);t(19,11,12,10,1);t(1,15,10,16,0);t(12,15,6,16,1);t(19,22,12,9,0)}else{t(1,1,11,11,0);t(13,1,18,9,1);t(1,13,16,9,1);t(18,11,13,11,0);t(1,23,13,8,0);t(15,23,16,8,1)}}
   {const key={floor:'floor-wood-render',stone:'floor-stone-render',brick:'floor-brick-render'}[id],art=key&&HOUSEART[key];if(art&&art.complete&&art.naturalWidth){const sample=32,cols=art.naturalWidth/sample,rows=art.naturalHeight/sample;c.drawImage(art,(gx%cols)*sample,(gy%rows)*sample,sample,sample,x,y,TS,TS)}}
-  if(road){if(id==='path'||id==='gravel'){roadMaterialEdge(c,id,x,y,links);roadInnerEdges(c,id,x,y,i,iso);roadGrassEdge(c,id,x,y,i,links,iso)}c.restore()}
+  if(flat&&!iso&&HOME_WALLS.has(S.obj[i-W])){c.fillStyle='rgba(60,30,10,.2)';c.fillRect(x,y,TS,4)}
+  if(road){roadMaterialEdge(c,id,x,y,links);roadInnerEdges(c,id,x,y,i,iso);roadGrassEdge(c,id,x,y,i,links,iso);c.restore()}/* 道のふち：土・砂利は草との境、レンガ・石畳はふちどりの石 */
 
 }
 function blob(c,col,pts){c.fillStyle=col;c.beginPath();const n=pts.length;for(let k=0;k<n;k++){const a=pts[k],b=pts[(k+1)%n],mx=(a[0]+b[0])/2,my=(a[1]+b[1])/2;if(k===0)c.moveTo(mx,my);else c.quadraticCurveTo(a[0],a[1],mx,my)}const a=pts[0],b=pts[1];c.quadraticCurveTo(a[0],a[1],(a[0]+b[0])/2,(a[1]+b[1])/2);c.fill()}
@@ -3231,6 +3235,7 @@ function houseComfort(h){let bed=0,furn=0,fl=0,n=0;const seen=new Set();
   quarry:'せいれいがここで働くと、40分ごとに石材+1（岩は減らない）',
   oven:'せいれいが材料から料理を作る',
   farm:'置くとせいれいが耕して種をまく。水やりすると育つ。こむぎ・キャベツは2日で食料+1、いもは3日で食料+2',
+  brickfloor:'レンガをしきつめた家の床。歩く速さ×1.15',stonefloor:'石をしきつめた家の床。歩く速さ×1.15',
   carpet:'やわらかな織り模様の床。歩く速さ×1',
   gate:'柵の出入り口。せいれいだけ通れる（じょうぶさ13）',archedgate:'飾りのついた柵の出入り口（じょうぶさ22）',stonegate:'横2マス。石柱で支える大きな柵の出入り口（じょうぶさ35）',
   door:'壁にはめる出入り口（じょうぶさ20）',sdoor:'石垣の出入り口。せいれいだけ通れる（じょうぶさ30）',
