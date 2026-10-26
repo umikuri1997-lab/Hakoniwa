@@ -2759,7 +2759,7 @@ function roadShape(c,x,y,q){const l=x+(q.L?0:2),r=x+TS-(q.R?0:2),t=y+(q.U?0:2),b
 function drawFloor(c,id,x,y,i,iso){
   const n=k=>!iso&&!!S.floor[k],gx=i%W,gy=(i/W)|0;
   const flat=id==='brickfloor'||id==='stonefloor';if(flat)id=id==='brickfloor'?'brick':'stone';/* 家の床は、道と同じ絵で、道のふち・つなぎはなし */
-  const road=!flat&&ROADF.has(id),links=road?roadLinks(i,iso):null;if(road){c.save();if(id==='stone'||id==='brick'){c.beginPath();c.rect(x,y,TS,TS)}else roadShape(c,x,y,links);c.clip()}
+  const road=!flat&&ROADF.has(id),links=road?roadLinks(i,iso):null;if(road){c.save();roadShape(c,x,y,links);c.clip()}/* 縁の外には、床の絵をはみ出させない */
   if(id==='path'){c.fillStyle='#e6c48c';c.fillRect(x,y,TS,TS);
     c.fillStyle='#d4b07a';c.beginPath();c.ellipse(x+9+hash(i)*12,y+11+hash(i+5)*6,4.5,2.6,0,0,7);c.fill();c.beginPath();c.ellipse(x+20,y+21+hash(i+3)*5,3.5,2.2,0,0,7);c.fill();c.fillStyle='rgba(255,250,235,.45)';c.beginPath();c.ellipse(x+14+hash(i+7)*8,y+16,2.5,1.4,0,0,7);c.fill()}
   else if(id==='floor'){const fw=k=>!iso&&(HOME_WALLS.has(typeAt(k))||HOME_DOORS.has(typeAt(k)))&&!S.floor[k],same=k=>n(k)&&S.floor[k]===id||fw(k),L=same(i-1),R2=same(i+1),U=same(i-W),D=same(i+W);/* 板目は座標に合わせて並べ、隣の床へ連続させる */
