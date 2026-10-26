@@ -1790,14 +1790,15 @@ function lightAt(x,y){for(const j of LIGHTS){const o=S.obj[j];const lx=j%W+(o===
 const EREACH=new WeakMap();
 const ZUKAN={basic:'いちばんよく見るコワイノ。夜になると、せいれいをねらってやってくる。',fast:'足がとても速い。体は小さくて、すぐ追いはらえる。',thief:'畑の実った作物をぬすみにくる。見つかると、すぐにげる。',brute:'体がかたくて力も強い。なかなか追いはらえない。',breaker:'壁をこわすのが大好き。まわり道をしないで、まっすぐこわしてくる。',trapper:'罠を見つけると、こわしにくる。',boss:'大きなコワイノ。まわりのせいれいも巻きこんで攻撃する。',ash:'灰をまきちらして、施設をしばらく使えなくする。',rockc:'岩みたいにかたい。動きはおそい。',hino:'火山からやってくる大きなコワイノ。熱の切りかえ装置をこわそうとする。',boss2:'夜の力をたくわえた、いちばん大きなコワイノ。'};
 function shakeScreen(){const v=$('#cv');v.classList.remove('shk');void v.offsetWidth;v.classList.add('shk');setTimeout(()=>v.classList.remove('shk'),600)}
-function bigBanner(title,sub,col){/* 画面のまんなかに、大きな文字を出して消す */const d=document.createElement('div');d.style.cssText='position:fixed;left:0;right:0;top:32%;z-index:21;text-align:center;pointer-events:none;color:#ffe9a6;text-shadow:0 0 18px '+col+',0 3px 0 #05030c;font-weight:bold;opacity:0;transition:opacity .8s ease,letter-spacing 2.4s ease;letter-spacing:.05em';
-  d.innerHTML='<div style="font-size:34px"></div><div style="font-size:14px;margin-top:8px;color:#fff3d6"></div>';d.children[0].textContent=title;d.children[1].textContent=sub;document.body.appendChild(d);
-  requestAnimationFrame(()=>requestAnimationFrame(()=>{d.style.opacity='1';d.style.letterSpacing='.3em'}));setTimeout(()=>{d.style.transition='opacity 1s ease';d.style.opacity='0';setTimeout(()=>d.remove(),1100)},2600)}
+function bigBanner(title,sub,col){/* 画面のまんなかに大きな文字を出す。「進む」をおすまで時間を止めておく */BOSSHOLD=Infinity;const d=document.createElement('div');d.style.cssText='position:fixed;left:0;right:0;top:32%;z-index:21;text-align:center;pointer-events:none;color:#ffe9a6;text-shadow:0 0 18px '+col+',0 3px 0 #05030c;font-weight:bold;opacity:0;transition:opacity .8s ease,letter-spacing 2.4s ease;letter-spacing:.05em';
+  d.innerHTML='<div style="font-size:34px"></div><div style="font-size:14px;margin-top:8px;color:#fff3d6"></div><button class="btn pri" style="margin-top:22px;pointer-events:auto;opacity:0;transition:opacity .6s ease">進む</button>';d.children[0].textContent=title;d.children[1].textContent=sub;document.body.appendChild(d);const bt=d.children[2];
+  bt.onclick=()=>{sfx('tap');BOSSHOLD=0;bt.disabled=true;d.style.transition='opacity .6s ease';d.style.opacity='0';setTimeout(()=>d.remove(),700)};
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{d.style.opacity='1';d.style.letterSpacing='.3em'}));setTimeout(()=>{bt.style.opacity='1'},1600)}/* 演出を見てから、「進む」が出る */
 const BOSSFX={boss:{col:'#ff3b6b',sub:'コワイノたちの親玉が、すがたをあらわした'},boss2:{col:'#ffd84a',sub:'夜の力をたくわえた、いちばん大きなコワイノ'}};
-function bossEntrance(e){/* オオカゲ・ヨルノオオカゲの登場：画面がよって、ゆれて暗くなり、名前が大きく出る */const B=BOSSFX[e.type];BOSSHOLD=performance.now()+3000;SKIP=false;/* 登場のあいだは時間を止めて、すがたを見せる */centerOn(e.x*TS,e.y*TS);shakeScreen();dlgCue('dim');sfx('hit');
+function bossEntrance(e){/* オオカゲ・ヨルノオオカゲの登場：画面がよって、ゆれて暗くなり、名前が大きく出る */const B=BOSSFX[e.type];SKIP=false;/* 登場のあいだは時間を止めて、すがたを見せる */centerOn(e.x*TS,e.y*TS);shakeScreen();dlgCue('dim');sfx('hit');
   for(let n=0;n<4;n++)fx.push({k:'ring',x:e.x*TS,y:e.y*TS,life:1+n*.4,col:B.col});bigBanner(EN[e.type].name,B.sub,B.col)}
-let BOSSHOLD=0;/* オオカゲをたおしたあと、少しのあいだ時間を止める */
-function bossDefeatFX(e){BOSSHOLD=performance.now()+3600;EVAP.push({e,t0:performance.now(),dur:3200});/* 時間を止めて、消えていく様子を見せる *//* オオカゲをたおしたとき：白く光って、ゆれて、光の輪と粒がはじける */const B=BOSSFX[e.type]||BOSSFX.boss,px=e.x*TS,py=e.y*TS;centerOn(px,py);dlgCue('flash');shakeScreen();
+let BOSSHOLD=0;/* ボスの登場・追いはらいの演出のあいだ、時間を止める（「進む」をおすまで） */
+function bossDefeatFX(e){EVAP.push({e,t0:performance.now(),dur:3200});/* 時間を止めて、消えていく様子を見せる *//* オオカゲをたおしたとき：白く光って、ゆれて、光の輪と粒がはじける */const B=BOSSFX[e.type]||BOSSFX.boss,px=e.x*TS,py=e.y*TS;centerOn(px,py);dlgCue('flash');shakeScreen();
   for(let n=0;n<6;n++)fx.push({k:'ring',x:px,y:py,life:1+n*.3,col:n%2?'#fff3d6':B.col});
   for(let n=0;n<36;n++){const a=n/36*6.28,v=80+(n%3)*40;fx.push({k:'p',x:px,y:py-20,vx:Math.cos(a)*v,vy:Math.sin(a)*v-60,life:1.4,col:n%2?'#fff3a0':B.col,r:3.2})}
   bigBanner(EN[e.type].name+'を追いはらった！','みんなで、村を守りぬいた',B.col)}
@@ -1890,7 +1891,7 @@ function defeat(e,msg){sfx('defeat');if(EN[e.type].boss&&!S.flags.bossOutro&&!(S
   e.dead=true;S.kills++;const D=EN[e.type];{const K=S.enKills||(S.enKills={});K[e.type]=(K[e.type]||0)+1}if(S.ns){S.ns.kill++;if(D.boss)S.ns.boss=2}const n=D.pw||5;
   if(e.type==='hino')S.flags.hinoDown=true;if(D.ash&&WD===1)st2().ashKills=(st2().ashKills||0)+1;
   if(D.boss){S.bossKills=(S.bossKills||0)+1;if(!S.bossDay)S.bossDay=dayNo();logEv('オオカゲを追いはらった');memo('⚔️','オオカゲを追いはらった')}
-  if(D.boss&&!S.flags.sh_boss&&!S.flags.bossShake&&!WD&&S.res.some(r=>r.name===POKO)){S.flags.bossShake=1;setTimeout(()=>dialog([[POKO,'オオカゲはいなくなったのに…まだ手が震えてる…'],...(S.res.some(r=>r.name===MINA)?[[MINA,'よくがんばったねぇ。もう、だいじょうぶだよぉ。']]:[[GOD,'うむ、よう耐えたのう。もう終わったんじゃ。']])]),3800)}/* 戦闘のあと：フタバのふるえ（かけらの話とは別） */
+  if(D.boss&&!S.flags.sh_boss&&!S.flags.bossShake&&!WD&&S.res.some(r=>r.name===POKO)){S.flags.bossShake=1;{const go=()=>performance.now()<BOSSHOLD?setTimeout(go,300):dialog([[POKO,'オオカゲはいなくなったのに…まだ手が震えてる…'],...(S.res.some(r=>r.name===MINA)?[[MINA,'よくがんばったねぇ。もう、だいじょうぶだよぉ。']]:[[GOD,'うむ、よう耐えたのう。もう終わったんじゃ。']])]);setTimeout(go,1200)}}/* 戦闘のあと：フタバのふるえ（かけらの話とは別）。追いはらいの演出で「進む」をおしてから */
   if(D.boss&&WD&&!S.flags.sh_boss&&!S.drops.some(d=>d.id==='shard'))dropAt(e.x,e.y,'shard');/* 草原では、最後のバトルに勝ったときだけかけらが出る *//* オオカゲが落とすかけらは1つだけ */
   if(D.boss&&Math.random()<.5)dropAt(e.x,e.y,'mebuki');/* 半分の確率で「めぶきのしずく」 */
   if(D.boss||Math.random()<.3)for(let k=D.boss?2:1;k-->0;)dropAt(e.x,e.y);
@@ -4920,7 +4921,7 @@ function thumb(cv2,k,open){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='328';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='329';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
