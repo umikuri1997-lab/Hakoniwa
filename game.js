@@ -661,6 +661,7 @@ let SOUPR=null;function soupFilter(){try{if(!SOUPR)return;const i=RECIPES.indexO
 const TOWER_MAT=()=>WD===1?{wood:150,stone:75}:{wood:100,stone:50};/* 台座を建てるときに使う木材・石材 */
 function towerConds(){if(WD===1)return clearConds();const tm=TOWER_MAT();return [
   ['5つの属性のせいれいがそろう（いま'+ELEM_KEYS.filter(k=>elemCount(k)>=1).length+'/5）',ELEM_KEYS.every(k=>elemCount(k)>=1)],
+  ['素材箱に'+(tm.wood+tm.stone)+'こ入る（いま'+matCap()+'こ）',matCap()>=tm.wood+tm.stone],/* 素材箱が小さいと、台座の素材がためられない */
   ['木材'+tm.wood+'・石材'+tm.stone+'（いま'+(S.mat.wood||0)+'・'+(S.mat.stone||0)+'）',(S.mat.wood||0)>=tm.wood&&(S.mat.stone||0)>=tm.stone]]}
 const towerReady=()=>towerConds().every(c=>c[1]);
 function clearConds(){if(WD===1){const tm=TOWER_MAT(),n=springDone(),fac=['bench','tub','parasol'].filter(nearSp).length;return [
@@ -668,6 +669,7 @@ function clearConds(){if(WD===1){const tm=TOWER_MAT(),n=springDone(),fac=['bench
   ['ヒノオオカゲを追いはらい、奥の装置を直す',!!S.flags.hinoDown&&!!(S.st2&&S.st2.d2fix)],
   ['温泉のそばに、ベンチ・水おけ・パラソル（いま'+fac+'/3）',fac>=3],
   ['ホムラとシズクのおねがい',!!S.flags.hReq&&!!S.flags.sReq],
+  ['素材箱に'+(tm.wood+tm.stone)+'こ入る（いま'+matCap()+'こ）',matCap()>=tm.wood+tm.stone],/* 素材箱が小さいと、台座の素材がためられない */
   ['木材'+tm.wood+'・石材'+tm.stone+'（いま'+(S.mat.wood||0)+'・'+(S.mat.stone||0)+'）',(S.mat.wood||0)>=tm.wood&&(S.mat.stone||0)>=tm.stone]]}
   const tm=TOWER_MAT(),[el,need,pw]=WD===1?['fire',6,750]:['wood',6,3000],nm=ELEM[el].name;return [
   [nm+'のせいれい'+need+'人（いま'+elemCount(el)+'人）',elemCount(el)>=need],
@@ -1869,12 +1871,12 @@ const hsOf=D=>D.size>=1.5?2:1,reachOf=D=>D.rng||.75*hsOf(D);/* 攻撃がとど�
 function hitRes(e,r,D){if(BOSSFX[e.type]){shakeScreen();fx.push({k:'ring',x:r.x*TS,y:r.y*TS,life:1.2,col:BOSSFX[e.type].col});sfxAt('bonk',r.x,r.y)}/* オオカゲの一撃は、画面がゆれて衝撃がひろがる */if(!WD&&r.elem==='fire'&&r.hunger<60&&r.name===keyName('fire'))S.flags.fHurt=1;if((r.shU||0)>S.t)D=Object.assign({},D,{hit:D.hit*.5});/* フタバの葉っぱのまもり */if((r.faintGrace||0)>S.t||r.act&&r.act.type==='faint'){e.stun=1;return}/* 気絶している子は攻撃しない */const h0=r.hunger;sfx('hit');e.swing=performance.now();
   const lv=rLv(r);S.nightHurt++;if(S.ns)S.ns.hurt++;const fire=r.elem==='fire';
   if(r.act&&['sleep','stay','rest','idle'].includes(r.act.type)&&r.act.stage==='do')endAct(r);/* 攻撃されたら、寝ていても起きる */
-  const adj=Math.hypot(e.x-r.x,e.y-r.y)<=Math.max(1.1,reachOf(D)+.05);/* せいれいの攻撃は、となりにいる相手だけ（遠くから攻撃してくる大きいコワイノには、その距離でもやり返せる） */const ba=((r.bst&&r.bst.atk)||0)+((r.sst&&r.sst.atk)||0);if((fire||lv>=3||ba)&&adj){/* やり返しはしない（攻撃されたときの受けるダメージの軽さだけ、戦える子は今までどおり） */
+  const adj=Math.hypot(e.x-r.x,e.y-r.y)<=Math.max(1.1,reachOf(D)+.05);/* せいれいの攻撃は、となりにいる相手だけ（遠くから攻撃してくる大きいコワイノには、その距離でもやり返せる） */if(fire&&adj){/* 戦えるのは火の子だけ *//* やり返しはしない（攻撃されたときの受けるダメージの軽さだけ、戦える子は今までどおり） */
     r.hunger=Math.max(0,r.hunger-Math.round(D.hit/2));r.hurt=40;if(r.hunger<35)r.fleeNow=true;/* 体力（おなか）がへったら逃げる（オオカゲが相手でも同じ） */}
   else{r.hunger=Math.max(0,r.hunger-Math.round(D.hit*.6));r.fun=Math.max(0,r.fun-20);r.hurt=40;r.fleeNow=true;/* 戦えない子は、オオカゲが相手でも逃げる */
     if(D.boss&&Math.random()<.25){endAct(r);r.act={type:'faint',stage:'do',t:0};r.bubble='😵'}/* ボスの攻撃で気絶するのは、4回に1回くらい */}r.alarm=S.t;
   if(h0>=12&&r.hunger<3)r.hunger=3;/* 一撃では消えない */
-  e.stun=(fire||lv>=3)?(D.boss?1.5:2):(D.boss?3:4);if(lightAt(e.x,e.y))e.stun/=.75;e.path=[];e.repath=0;
+  e.stun=fire?(D.boss?1.5:2):(D.boss?3:4);if(lightAt(e.x,e.y))e.stun/=.75;e.path=[];e.repath=0;
 }
 let LIGHTCD=0;/* のこり秒（倍速なら早くもどる） */
 function guardLight(e){if(LIGHTCD>0){toast('まもりの光は、あと'+Math.ceil(LIGHTCD/(S.speed||1))+'秒');return}if(S.pt<1){toast('パワーが足りません');return}S.pt-=1;LIGHTCD=5;
@@ -1939,7 +1941,7 @@ const RSC=new WeakMap();function rMul(r,k){const lv=rLv(r);let c=RSC.get(r);if(!
 function ovenMul(j){if(j==null)return 1;const x0=j%W,y0=(j/W)|0;const kinds=new Set();for(let y=y0-3;y<=y0+3;y++)for(let x=x0-3;x<=x0+3;x++){if(x<0||y<0||x>=W||y>=H)continue;const o=S.obj[y*W+x];if(o&&BL[o]&&BL[o].cat==='cook')kinds.add(o)}return 1-.1*kinds.size}/* 調理の家具がそばにあると、料理が早い（同じ家具は1つ分だけ。下限はなし） */
 const fAtk=lv=>1+Math.floor((Math.min(lv,10)-1)/3);/* 火のせいれい：Lv1=1・Lv4=2・Lv7=3・Lv10=4 */
 function rStat(r,lv){const V=r.vr||{},fire=r.elem==='fire';return{
-  atk:(fire?fAtk(lv):lv>=3?Math.floor((lv-1)/2):0)+((r.bst&&r.bst.atk)||0)+((r.sst&&r.sst.atk)||0),
+  atk:fire?fAtk(lv)+((r.bst&&r.bst.atk)||0)+((r.sst&&r.sst.atk)||0):0,/* 攻撃できるのは火の子だけ */
   work:Math.round(10*(V.pow||1)*(EL_WORK[r.elem]||1)*(trt(r,'hataraki')?1.25:1))+lvGain(r,'work',lv),
   move:Math.round(10*(V.spd||1)*(trt(r,'hayaashi')?1.25:1)*(r.elem==='wind'?1.45:1))+lvGain(r,'move',lv),
   eat:Math.round(10*(V.eat||1)*(trt(r,'shoshoku')?.8:1)),
@@ -2265,7 +2267,7 @@ function depart(go){$('#maps').hidden=true;continueGame(LIVE[0]);const f=S.res.f
   setTimeout(()=>dialog(A,()=>{try{KV.setItem('hakoniwa-dep1','1')}catch(e){}S.flags.ret1=1;save();setTimeout(go,1600)},'出発する'),700)}
 /* ふしぎな種：せいれいにあげると、能力のどれかが上がる（パワーの強化とは別） */
 const UPK=[['atk','攻撃力'],['pow','作業スピード'],['spd','移動速度'],['sta','スタミナ'],['cap','持てる数']];
-function giveSeed(r){if((S.mseed||0)<1)return;const T=r.sst||(r.sst={}),L=UPK.filter(([k])=>(T[k]||0)<6);if(!L.length)return toast(r.name+'は、これ以上ふしぎな種で強くならない');
+function giveSeed(r){if((S.mseed||0)<1)return;const T=r.sst||(r.sst={}),L=UPK.filter(([k])=>(T[k]||0)<6&&(k!=='atk'||r.elem==='fire'));/* 攻撃力は火の子だけ */if(!L.length)return toast(r.name+'は、これ以上ふしぎな種で強くならない');
   S.mseed--;const[k,nm]=pick(L),n=T[k]||0,inc=Math.min(Math.random()<.75?1:2,6-n),sg=k==='eat'?'-':'+';T[k]=n+inc;
   if(k==='pow'||k==='spd'||k==='sta')r.vr[k]=Math.round(((r.vr[k]||1)+.1*inc)*100)/100;else if(k==='eat')r.vr.eat=Math.round(Math.max(.3,(r.vr.eat||1)-.1*inc)*100)/100;
   RSC.delete(r);addFloat(r.x,r.y-1.6,nm+sg+inc,'#9fe8ff');upFx(r,nm,sg+inc,inc>1);if(!S.mseed)sheetArg=null;renderSheet()}
@@ -4597,7 +4599,7 @@ function renderSheet(){
     {const lv=rLv(r),fire=r.elem==='fire',atk=fire?1+Math.floor(lv/2):lv>=3?Math.floor((lv-1)/2):0,mv=r.elem==='wind'?1.45:1;
      const sp={wood:'植える・畑の世話 ×2',water:'水やり ×2',fire:'火の家具づくり ×2',earth:'耕す ×2・建てる ×1.3〜2',wind:'風の家具づくり ×2'}[r.elem];
      const tb=el('<div class="ctabs"></div>');['ステータス','プロフィール','強化'].forEach((nm,i)=>{const t=el('<button class="ctab'+(i===resTab?' on':'')+'"></button>');t.textContent=nm;t.onclick=()=>{resTab=i;sfx('next');renderSheet()};tb.appendChild(t)});body.appendChild(tb);/* ステータスと、得意・好きなものは別のタブ */
-     if(resTab===2){const sec=el('<div class="sec"></div>'),cost=15+10*(r.boost||0),B=r.bst||(r.bst={}),ST=[['atk','攻撃力'],['pow','作業スピード'],['spd','移動速度'],['sta','スタミナ'],['cap','持てる数']];
+     if(resTab===2){const sec=el('<div class="sec"></div>'),cost=15+10*(r.boost||0),B=r.bst||(r.bst={}),ST=[['atk','攻撃力'],['pow','作業スピード'],['spd','移動速度'],['sta','スタミナ'],['cap','持てる数']].filter(([k])=>k!=='atk'||r.elem==='fire');/* 攻撃力は火の子だけ */
        for(const[k,nm]of ST){const n=B[k]||0,sg=k==='eat'?'-':'+';const row=el('<div class="row" style="align-items:center"><div class="tx"><b></b><small></small></div></div>');row.querySelector('b').textContent=nm+'  '+sg+n+(n>=6?'（最大）':'');sec.appendChild(row)}
        const left=ST.filter(([k])=>(B[k]||0)<6),bw=el('<div class="row" style="justify-content:center"><button class="btn pri"></button></div>'),b=bw.querySelector('button');
        b.textContent=left.length?'パワーをそそぐ（'+SP(cost)+'）':'ぜんぶ最大';b.disabled=!left.length||S.pt<cost;
@@ -4923,7 +4925,7 @@ function thumb(cv2,k,open){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='337';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='338';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
