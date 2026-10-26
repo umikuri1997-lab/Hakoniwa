@@ -1740,7 +1740,7 @@ const EN={
   ash:{pw:3,name:'ハイカゲ',hp:6,sp:.9,atk:20,hit:12,col:'#6d6a66',eye:'#ffb36b',size:.9,ash:1},/* かまど・ベンチなどを灰でよごして止める */
   rockc:{pw:8,name:'イワカゲ',hp:22,sp:.5,atk:30,hit:30,col:'#5a4636',eye:'#ffcf6b',size:1.3},/* おそいけど、かたい */
   hino:{pw:25,rng:2.3,name:'ヒノオオカゲ',hp:60,sp:.7,atk:6,hit:40,col:'#3a0c08',eye:'#ffb02e',size:2.1,boss:1,dev:1},/* 火山から下りてきて、熱の装置をねらう */
-  boss2:{pw:30,rng:3.4,name:'ヨルノオオカゲ',hp:45,sp:.9,atk:4.5,hit:30,col:'#05030c',eye:'#ffd84a',size:4.6,boss:1},/* ヌシ様をむかえる準備ができたあとに来る */
+  boss2:{pw:30,rng:3.4,hx:2.6,hy:.8,name:'ヨルノオオカゲ',hp:45,sp:.9,atk:4.5,hit:30,col:'#05030c',eye:'#ffd84a',size:4.6,boss:1},/* ヌシ様をむかえる準備ができたあとに来る */
 };
 const bossNight=d=>{const w=S&&S.bossWarn;return w==null?d>=5&&(d-5)%3===0:d-w>=5&&(d-w-5)%3===0}/* オオカゲは「来るかも」と聞いた5日後、そのあと3日ごと */;
 function waveFor(day){
@@ -1802,6 +1802,7 @@ function bossDefeatFX(e){EVAP.push({e,t0:performance.now(),dur:3200});/* 時間�
   for(let n=0;n<6;n++)fx.push({k:'ring',x:px,y:py,life:1+n*.3,col:n%2?'#fff3d6':B.col});
   for(let n=0;n<36;n++){const a=n/36*6.28,v=80+(n%3)*40;fx.push({k:'p',x:px,y:py-20,vx:Math.cos(a)*v,vy:Math.sin(a)*v-60,life:1.4,col:n%2?'#fff3a0':B.col,r:3.2})}
   bigBanner(EN[e.type].name+'を追いはらった！','みんなで、村を守りぬいた',B.col)}
+function bodyWall(e,D){/* 道の先の、いちばん近い柵・壁に、体がふれているか。ふれていればその壁、なければ次のマス */for(let i=0;i<Math.min(e.path.length,6);i++){const q=anc(e.path[i]);if(!breakable(S.obj[q]))continue;const x0=q%W,y0=(q/W)|0,nx=Math.max(x0,Math.min(e.x,x0+1)),ny=Math.max(y0,Math.min(e.y,y0+1));if(((nx-e.x)/D.hx)**2+((ny-e.y)/D.hy)**2<=1)return q;break}return anc(e.path[0])}
 function updEnemy(e,dt){
   const D=EN[e.type];
   if(!e.spawned){e.delay-=dt;if(e.delay<=0){[e.x,e.y]=D.dev&&WD===1?volSpot():spawnSpot();e.spawned=true;(S.seenEn||(S.seenEn={}))[e.type]=1;if(e.type==='boss2'||e.type==='boss'&&!S.flags.bossIntro){if(e.type==='boss')S.flags.bossIntro=1;bossEntrance(e)}}return}/* オオカゲの登場演出は最初の1回、ヨルノオオカゲは毎回 */
@@ -1852,7 +1853,7 @@ function updEnemy(e,dt){
   }
   if(!e.path.length){e.stk=(e.stk||0)+dt;if(e.stk>20&&!e.flee){e.stk=0;[e.x,e.y]=spawnSpot();e.path=[];e.repath=0;EREACH.delete(e)}return}/* うごけないまま止まっていたら、べつの場所から来なおす */
   const j=e.path[0];
-  {const j=e.type==='boss2'&&e.path.length>1&&!breakable(S.obj[anc(e.path[0])])&&breakable(S.obj[anc(e.path[1])])?anc(e.path[1]):anc(e.path[0]);/* ヨルノオオカゲは体が大きいので、柵や壁の1マス手前から、こわしにかかる */if(breakable(S.obj[j])){e.busyT=S.t;
+  {const j=D.hx?bodyWall(e,D):anc(e.path[0]);/* ヨルノオオカゲは体が大きいので、体（足もとのかげの大きさ）が柵や壁にふれたところで、こわしにかかる */if(breakable(S.obj[j])){e.busyT=S.t;
     e.atk+=dt*(lightAt(e.x,e.y)?.8:1);/* 光の中は、攻撃の速さ0.8倍 */if(e.atk>=D.atk){e.atk=0;S.hp[j]=(S.hp[j]??BL[S.obj[j]].hp)-(D.wall||(D.boss?2:1))/steleF(j);/* オオカゲは壁をこわす力1.5倍 */if(hsOf(D)>=2)for(const[ax,ay]of DIRS){const k=j+ay*W+ax,ko=S.obj[k];if(k===j||!breakable(ko)||Math.hypot(k%W+.5-e.x,((k/W)|0)+.5-e.y)>2.2)continue;S.hp[k]=(S.hp[k]??BL[ko].hp)-1/steleF(k);WALLHIT.set(k,performance.now());if(S.hp[k]<=0){(S.broken||(S.broken=[])).push({j:k,id:ko});if(S.ns)S.ns.broke++;clearObj(k);recount();toast(BL[ko].name+'がこわされた！','warn')}}/* 大きいコワイノは、となりの壁にもダメージ（範囲攻撃） */WALLHIT.set(j,performance.now());sfxAt('bonk',j%W+.5,(j/W)|0);
       if(S.hp[j]<=0){const nm=BL[S.obj[j]].name;(S.broken||(S.broken=[])).push({j,id:S.obj[j],L:S.hp['L'+j]});sfxAt('wbreak',j%W+.5,(j/W)|0);if(S.ns)S.ns.broke++;clearObj(j);recount();toast(nm+'がこわされた！','warn')}}
     return}}
@@ -4921,7 +4922,7 @@ function thumb(cv2,k,open){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='332';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='333';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
