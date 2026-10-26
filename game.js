@@ -46,7 +46,7 @@ const BL={
   brickfloor:{name:'レンガ床',kind:'block',floor:1,lv:8,cost:3,pc:5,time:50,maker:'fire',qty:10,mat:{stone:3},attr:{fire:.4,earth:.3},desc:'レンガをしきつめた家の床。歩く速さ×1.15'},
   stonefloor:{name:'石の床',kind:'block',floor:1,lv:6,cost:2,pc:4,time:40,maker:'earth',qty:10,mat:{stone:3},attr:{earth:.5},desc:'石をしきつめた家の床。歩く速さ×1.15'},
   carpet:{name:'じゅうたん',kind:'block',floor:1,lv:9,cost:2,pc:3,time:35,maker:'wind',qty:10,mat:{wood:2},attr:{wind:.5},desc:'やわらかな織り模様の床。歩く速さ×1'},
-  stone:{name:'石畳',kind:'block',floor:1,cost:2,pc:4,time:40,maker:'earth',qty:10,lv:10,mat:{stone:6},attr:{earth:.75},desc:'しっかりした石の床。歩く速さ×1.55'},
+  stone:{name:'石畳',kind:'block',floor:1,cost:2,pc:4,time:40,maker:'earth',qty:10,lv:6,mat:{stone:6},attr:{earth:.75},desc:'しっかりした石の床。歩く速さ×1.55'},
   farm:{name:'畑',kind:'block',cost:4,dyn:1,attr:{},desc:'置くとせいれいが耕して種をまく。水やりすると育つ。こむぎ・キャベツは2日で食料+1、いもは3日で食料+2'},
   fence:{name:'柵',fix:2,fixm:{wood:1},kind:'block',cost:2,pc:4,time:60,maker:'wood',qty:10,solid:1,hp:20,attr:{},mat:{wood:2},desc:'「コワイノ」の足止め（じょうぶさ20）'},
   logfence:{name:'丸太の柵',fix:3,fixm:{wood:2},kind:'block',cost:3,pc:6,time:70,maker:'wood',qty:10,lv:3,offerOnly:1,solid:1,brk:1,hp:28,attr:{},mat:{wood:3},desc:'太い丸太を組んだ柵（じょうぶさ28）'},
@@ -57,20 +57,20 @@ const BL={
   plasterwall:{name:'しっくいの壁',fix:5,fixm:{wood:3,stone:2},kind:'block',cost:4,pc:11,time:90,maker:'earth',qty:10,lv:5,solid:1,hp:48,brk:1,attr:{},mat:{wood:6,stone:3},desc:'明るいしっくい仕上げの家の壁（じょうぶさ48）'},
   brickwall:{name:'レンガの壁',fix:6,fixm:{stone:7},kind:'block',cost:5,pc:13,time:100,maker:'fire',qty:10,lv:8,solid:1,hp:55,brk:1,attr:{},mat:{stone:14},desc:'レンガを積んだ家の壁（じょうぶさ55）'},
   wall:{name:'石の塀',fix:6,fixm:{stone:5},kind:'block',cost:5,pc:12,time:100,maker:'earth',qty:10,lv:6,solid:1,hp:45,attr:{},mat:{stone:9},desc:'石の壁（じょうぶさ45）'},
-  flower:{name:'花だん',item:'花の種',kind:'plant',cost:2,attr:{wood:1},desc:'まわり1マスの畑の収穫+1（重複なし）。ピンク・白・黄色のどれかが咲く'},
-  clover:{name:'シロツメクサ',item:'シロツメクサの種',kind:'plant',cost:3,attr:{wood:1},desc:'まわり1マスの畑の収穫+1（重複なし）'},
-  bellf:{name:'ききょう',item:'ききょうの種',kind:'plant',cost:3,attr:{earth:1},desc:'まわり1マスの畑の収穫+1（重複なし）'},
-  salvia:{name:'サルビア',item:'サルビアの種',kind:'plant',cost:3,attr:{fire:1},desc:'まわり1マスの畑の収穫+1（重複なし）'},
-  lily:{name:'ゆり',item:'ゆりの種',kind:'plant',cost:3,attr:{wind:1},desc:'まわり1マスの畑の収穫+1（重複なし）'},
-  lotus:{name:'ハス',item:'ハスの種',kind:'plant',cost:3,attr:{water:1},desc:'池の上にだけ植えられる。まわり2マスで水浴びすると、たのしさ×1.5 / 元気もすこし回復'},
+  flower:{sp:6,name:'花だん',item:'花の種',kind:'plant',cost:2,attr:{wood:1},desc:'まわり1マスの畑の収穫+1（重複なし）。ピンク・白・黄色のどれかが咲く'},
+  clover:{sp:9,name:'シロツメクサ',item:'シロツメクサの種',kind:'plant',cost:3,attr:{wood:1},desc:'まわり1マスの畑の収穫+1（重複なし）'},
+  bellf:{sp:9,name:'ききょう',item:'ききょうの種',kind:'plant',cost:3,attr:{earth:1},desc:'まわり1マスの畑の収穫+1（重複なし）'},
+  salvia:{sp:9,name:'サルビア',item:'サルビアの種',kind:'plant',cost:3,attr:{fire:1},desc:'まわり1マスの畑の収穫+1（重複なし）'},
+  lily:{sp:9,name:'ゆり',item:'ゆりの種',kind:'plant',cost:3,attr:{wind:1},desc:'まわり1マスの畑の収穫+1（重複なし）'},
+  lotus:{sp:9,name:'ハス',item:'ハスの種',kind:'plant',cost:3,attr:{water:1},desc:'池の上にだけ植えられる。まわり2マスで水浴びすると、たのしさ×1.5 / 元気もすこし回復'},
   tree:{hp:5,brk:1,fix:1,fixm:{},name:'木',item:'木の苗',kind:'plant',cost:4,lv:3,solid:1,env:1,attr:{wood:3},desc:'まわり3マスを緑にする。まわり3マスで、たのしさ+0.4／1時間'},
   fruit:{hp:5,brk:1,fix:1,fixm:{},name:'果物の木',item:'果物の苗',kind:'plant',cost:10,lv:6,solid:1,dyn:1,env:1,attr:{wood:3,water:1},desc:'まわり3マスを緑にする。まわり3マスで、たのしさ+0.4／1時間。4日ごとに、りんごが実る（収穫すると食料+2）'},
 /* 新しい家具（スクリプトで描く） */
-  stool:{name:'木のスツール',kind:'furn',lv:1,cat:'living',f2:1,pc:1,time:60,maker:'wood',attr:{wood:1},mat:{wood:3},desc:'小さないす。食卓の隣に置くと、ここで食べたときにパワー+0.45。住み心地+2'},
+  stool:{name:'木のスツール',kind:'furn',lv:1,cat:'living',f2:1,pc:1,time:60,maker:'wood',attr:{wood:1},mat:{wood:2},desc:'小さないす。食卓の隣に置くと、ここで食べたときにパワー+0.45。住み心地+2'},
   chair2:{name:'クッションチェア',kind:'furn',lv:7,cat:'living',f2:1,pc:2,time:80,maker:'wood',attr:{wood:1},mat:{wood:5},desc:'ふかふかのいす。食卓の隣に置くと、ここで食べたときにパワー+1.8。住み心地+4'},
   stable:{hp:5,brk:1,fix:2,fixm:{wood:2},dw:1,name:'まるいサイドテーブル',kind:'furn',cat:'living',f2:1,lv:4,pc:3,time:80,maker:'wood',attr:{wood:1},mat:{wood:3},solid:1,desc:'お花とカップをのせた小さなテーブル。住み心地+4'},
   pouf:{name:'まるクッション',kind:'furn',lv:5,cat:'living',f2:1,pc:1,time:60,maker:'wind',attr:{wind:1},mat:{wood:3},desc:'ころんとしたクッション。食卓のとなりに置く。ここで食べると、パワー+1.35。住み心地+3'},
-  achair:{name:'ひじかけいす',kind:'furn',lv:9,cat:'living',f2:1,pc:5,time:100,maker:'wood',attr:{wood:1},mat:{wood:25},desc:'ゆったりすわれるいす。食卓の隣に置くと、ここで食べたときにパワー+2.25。住み心地+5'},
+  achair:{name:'ひじかけいす',kind:'furn',lv:9,cat:'living',f2:1,pc:5,time:100,maker:'wood',attr:{wood:1},mat:{wood:10},desc:'ゆったりすわれるいす。食卓の隣に置くと、ここで食べたときにパワー+2.25。住み心地+5'},
   ltable:{hp:5,brk:1,fix:3,fixm:{wood:8},dw:1.5,name:'ローテーブル',kind:'furn',cat:'living',f2:1,lv:5,pc:5,time:100,maker:'wood',attr:{wood:1},mat:{wood:15},solid:1,desc:'ひくいテーブル。住み心地+5'},
   rug1:{cs:1.5,dw:1.25,name:'ひしがたラグ',kind:'furn',cat:'living',f2:1,lv:6,pc:3,time:80,maker:'wind',attr:{wind:1},mat:{wood:12},desc:'床にしくラグ。住み心地+5'},
   sofa1:{hp:5,brk:1,fix:5,fixm:{wood:10},dw:2.5,offerOnly:1,name:'ひとりがけソファ',kind:'furn',cat:'living',f2:1,lv:6,pc:9,time:120,maker:'wood',attr:{wood:1},mat:{wood:20},solid:1,desc:'しずみこむソファ。住み心地+6'},
@@ -102,17 +102,17 @@ const BL={
   slide:{name:'すべり台',sz:[2,2],kind:'furn',cat:'toy',f2:1,lv:2,pc:9,time:140,maker:'wind',attr:{wind:1},mat:{wood:8,stone:3},play:{pt:3,fun:35,dur:40,cap:1,adj:1},solid:1,desc:'1人で遊べる。たのしさ +35（40分）。遊ぶと10%の確率で、移動速度+1'},
   sandbox:{name:'すなば',sz:[2,1],nosc:1,kind:'furn',cat:'toy',f2:1,lv:5,pc:9,time:140,maker:'earth',attr:{earth:1},mat:{wood:11,stone:11},play:{pt:3,fun:30,dur:45,cap:2,adj:1},solid:1,desc:'2人まで遊べる。たのしさ +30（45分）。遊ぶと10%の確率で、スタミナ+1'},
   seesaw:{hp:5,brk:1,fix:6,fixm:{wood:13},name:'シーソー',kind:'furn',cat:'toy',f2:1,anim:1,dsc:2,lv:7,pc:11,time:160,maker:'wind',attr:{wind:1},mat:{wood:25},play:{pt:4,fun:40,dur:40,cap:2,adj:1},solid:1,desc:'2人で遊べる。たのしさ +40（40分）。遊ぶと10%の確率で、作業スピード+1'},
-  window:{name:'窓',kind:'block',cat:'other',lv:4,pc:10,time:50,maker:'wood',attr:{wood:1},mat:{wood:2},desc:'横向きの木の壁にはめる。住み心地+5（1つの家で2つまで。3つ目からは+2.5）'},
+  window:{name:'窓',kind:'block',cat:'other',lv:4,pc:3,time:50,maker:'wood',attr:{wood:1},mat:{wood:2},desc:'横向きの木の壁にはめる。住み心地+5（1つの家で2つまで。3つ目からは+2.5）'},
   sdoor:{name:'石の塀のドア',fix:4,fixm:{stone:3},kind:'block',anim:1,hp:30,cost:4,pc:8,time:60,maker:'earth',qty:1,lv:6,attr:{},mat:{stone:6},desc:'石垣の出入り口。せいれいだけ通れる（じょうぶさ30）'},
   table:{hp:5,brk:1,fix:4,fixm:{wood:4},name:'食卓',kind:'furn',pc:7,time:90,maker:'wood',solid:1,eat:{cap:2,pt:2},attr:{wood:2},mat:{wood:8},desc:'2人まで食べられる。食べるたびにパワー+0.9。住み心地+8'},
   stor:{hp:5,brk:1,fix:2,fixm:{wood:3},name:'食料箱',kind:'furn',pc:3,time:120,maker:'earth',solid:1,attr:{earth:1},mat:{wood:5},desc:'食料を30までしまえる。ここから食べる。住み心地+3'},
   mbox:{hp:5,brk:1,fix:2,fixm:{wood:2,stone:2},name:'素材箱',kind:'furn',pc:3,time:120,maker:'earth',solid:1,attr:{earth:1},mat:{wood:3,stone:3},desc:'木材・石材を50までしまえる。住み心地+3'},
-  lumber:{hp:5,brk:1,fix:8,fixm:{wood:13,stone:4},name:'伐採場',kind:'build',mat:{wood:25,stone:8},pc:15,time:120,maker:'wood',lv:5,solid:1,attr:{wood:2},desc:'せいれいがここで働くと、40分ごとに木材+1（自然の木は減らない）'},
-  quarry:{hp:5,brk:1,fix:10,fixm:{wood:8,stone:13},name:'採石場',kind:'build',mat:{wood:15,stone:25},pc:20,time:140,maker:'earth',lv:7,solid:1,attr:{earth:2},desc:'せいれいがここで働くと、40分ごとに石材+1（岩は減らない）'},
+  lumber:{hp:5,brk:1,fix:8,fixm:{wood:13,stone:4},name:'伐採場',kind:'build',mat:{wood:25,stone:8},pc:15,time:120,maker:'wood',lv:5,solid:1,attr:{wood:2},desc:'せいれいがここで働くと、20分ごとに木材+1（自然の木は減らない）'},
+  quarry:{hp:5,brk:1,fix:10,fixm:{wood:8,stone:13},name:'採石場',kind:'build',mat:{wood:15,stone:25},pc:20,time:140,maker:'earth',lv:7,solid:1,attr:{earth:2},desc:'せいれいがここで働くと、20分ごとに石材+1（岩は減らない）'},
   oven:{hp:5,brk:1,fix:3,fixm:{wood:2,stone:4},name:'かまど',kind:'furn',anim:1,pc:5,time:160,maker:'fire',solid:1,attr:{fire:2,earth:1},mat:{wood:3,stone:8},desc:'せいれいが材料から料理を作る。住み心地+6'},
   grave:{name:'お墓',kind:'deco',attr:{},desc:''},
   gate:{name:'柵のドア',fix:2,fixm:{wood:1},kind:'block',anim:1,hp:13,cost:2,pc:4,time:40,maker:'wood',qty:1,lv:2,attr:{},mat:{wood:2},desc:'柵の出入り口。せいれいだけ通れる（じょうぶさ13）'},
-  archedgate:{name:'アーチ門',fix:4,fixm:{wood:3},kind:'block',anim:1,brk:1,hp:22,cost:4,pc:8,time:70,maker:'wood',qty:1,lv:14,attr:{},mat:{wood:5},desc:'かざりのついた柵の出入り口（じょうぶさ22）'},
+  archedgate:{name:'アーチ門',fix:4,fixm:{wood:3},kind:'block',anim:1,brk:1,hp:22,cost:4,pc:8,time:70,maker:'wood',qty:1,lv:7,attr:{},mat:{wood:5},desc:'かざりのついた柵の出入り口（じょうぶさ22）'},
   stonegate:{sz:[2,1],name:'石の大門',fix:5,fixm:{stone:3},kind:'block',anim:1,brk:1,hp:35,cost:5,pc:10,time:90,maker:'earth',qty:1,lv:10,attr:{},mat:{stone:5},desc:'横2マス。石柱で支える大きな柵の出入り口（じょうぶさ35）'},
   door:{name:'ドア',fix:2,fixm:{wood:1},kind:'block',anim:1,hp:20,cost:2,pc:5,time:40,maker:'wood',qty:1,lv:3,attr:{},mat:{wood:2},desc:'壁にはめる出入り口（じょうぶさ20）'},
   chair:{name:'いす',kind:'furn',lv:3,pc:1,time:60,maker:'wood',attr:{wood:1},mat:{wood:3},desc:'食卓のとなりに置く。ここで食べると、パワー+0.9。住み心地+4'},
@@ -120,7 +120,7 @@ const BL={
   bed:{name:'ベッド',kind:'furn',pc:10,time:200,maker:'wood',sleep:{cap:1,pt:5,rate:.2},attr:{wood:2},mat:{wood:8},desc:'1人眠れる。元気 +12／1時間。家の住み心地で0.6〜3.3倍'},
   lamp:{hp:5,brk:1,fix:3,fixm:{wood:2,stone:2},name:'かがり火',kind:'furn',pc:5,time:160,maker:'fire',solid:1,anim:1,attr:{fire:3},mat:{wood:3,stone:3},desc:'まわり3.5マスを照らす。住み心地+6'},
   campfire:{hp:5,brk:1,fix:4,fixm:{wood:6,stone:4},name:'たき火',kind:'furn',pc:7,time:160,maker:'fire',lv:6,solid:1,anim:1,attr:{fire:4},play:{pt:3,fun:25,dur:40,cap:3,adj:1},mat:{wood:11,stone:8},desc:'3人まで遊べる。たのしさ +25（40分）。まわり3.5マスも照らす。'},
-  swing:{name:'ブランコ',kind:'furn',pc:13,time:240,maker:'wood',lv:4,play:{pt:4,fun:40,dur:50,cap:1},attr:{wind:3},mat:{wood:12},desc:'1人で遊べる。たのしさ +40（50分）。遊ぶと10%の確率で、移動速度+1'},
+  swing:{name:'ブランコ',kind:'furn',pc:9,time:160,maker:'wood',lv:4,play:{pt:4,fun:40,dur:50,cap:1},attr:{wind:3},mat:{wood:12},desc:'1人で遊べる。たのしさ +40（50分）。遊ぶと10%の確率で、移動速度+1'},
   torch:{hp:5,brk:1,fix:1,fixm:{wood:2},name:'たいまつ',kind:'furn',lv:3,pc:1,time:100,maker:'fire',solid:1,anim:1,attr:{fire:2},mat:{wood:3},desc:'まわり3.5マスを照らす。住み心地+4'},
   jar:{hp:5,brk:1,fix:2,fixm:{stone:2},name:'みずがめ',kind:'furn',lv:3,pc:3,time:120,maker:'water',solid:1,attr:{water:3},mat:{stone:3},desc:'水をためたかめ。まわり1マスの畑は水やりなしで育つ。住み心地+5'},
   basin:{hp:5,brk:1,fix:4,fixm:{stone:3},name:'水鉢',kind:'furn',pc:7,time:160,maker:'water',solid:1,anim:1,attr:{water:4,wood:.5},mat:{stone:5},desc:''},/* もう作れない（古いセーブ用） */
@@ -132,7 +132,7 @@ const BL={
   puddle:{name:'すべる水たまり',fix:1,fixm:{stone:1},kind:'furn',lv:4,pc:1,time:80,maker:'water',qty:2,trap:1,anim:1,attr:{water:.5},mat:{stone:2},desc:'ふんだ「コワイノ」が8分止まる（オオカゲは3分）。つぎに使えるまで2時間'},
   firetrap:{name:'ほのおの罠',fix:2,fixm:{wood:1,stone:1},kind:'furn',pc:3,time:120,maker:'fire',lv:4,qty:2,trap:1,anim:1,attr:{fire:.5},mat:{wood:2,stone:2},desc:'ふんだ「コワイノ」に4ダメージ。つぎに使えるまで3時間'},
   gust:{name:'つむじ風の罠',fix:2,fixm:{wood:1},kind:'furn',pc:3,time:120,maker:'wind',lv:5,qty:2,trap:1,anim:1,attr:{wind:.5},mat:{wood:2},desc:'ふんだ「コワイノ」を6マスふきとばし、2分止める。つぎに使えるまで2時間30分'},
-  watch:{name:'見張り台',fix:10,fixm:{wood:10,stone:10},kind:'build',sz:[2,2],mat:{wood:25,stone:20},pc:20,time:150,maker:'earth',lv:2,solid:1,attr:{fire:2,earth:2},desc:'「コワイノ」に光の矢を放つ。Lv1：ダメージ1／24秒ごと／範囲4.2マス（Lv3：ダメージ3／14秒ごと／範囲5.5マス）'},
+  watch:{name:'見張り台',fix:10,fixm:{wood:10,stone:10},kind:'build',sz:[2,2],mat:{wood:25,stone:20},pc:20,time:150,maker:'earth',lv:2,solid:1,attr:{fire:2,earth:2},desc:'「コワイノ」に光の矢を放つ。Lv1：ダメージ1／12分ごと／範囲4.2マス（Lv3：ダメージ3／8分ごと／範囲5.5マス）'},
   well:{hp:5,brk:1,fix:10,fixm:{wood:4,stone:15},name:'井戸',kind:'build',mat:{wood:8,stone:30},pc:20,time:140,maker:'water',lv:6,solid:1,attr:{water:4},desc:'まわり3マスの畑は水やりなしで育つ'},
   windmill:{hp:5,brk:1,fix:13,fixm:{wood:30,stone:18},name:'風車',kind:'build',mat:{wood:60,stone:35},pc:25,time:160,maker:'wind',lv:8,solid:1,anim:1,attr:{wind:5},desc:'まわり5マスの畑の収穫+1'},
   lighthouse:{name:'灯台',sz:[2,2],kind:'build',mat:{wood:25,stone:35},pc:35,time:180,maker:'fire',lv:7,solid:1,anim:1,attr:{fire:4},desc:'まわり8マスを照らす。'},
@@ -969,7 +969,7 @@ function spotW(i){/* 椅子のそばの釣り場の水マス（なければ-1）
 function sideW(j){const x=j%W;if(x+1<W&&S.ground[j+1]===1)return j+1;if(x>0&&S.ground[j-1]===1)return j-1;return -1}/* 左右どちらかが水 */
 function adjOf(j,fn){const x=j%W,y=(j/W)|0;for(const[dx,dy]of DIRS){const nx=x+dx,ny=y+dy;if(nx<0||ny<0||nx>=W||ny>=H)continue;const k=ny*W+nx;if(fn(k))return k}return -1}
 const elemCount=el=>S.res.filter(r=>r.elem===el).length;
-const needFor=el=>{const k=elemCount(el);return Math.round((8+10*k+2*k*k)*(WD===FREE?1.6:1))};/* フリーモードは自然の力が弱い */
+const NEEDT=[8,20,36,56,80,108,140,176,216,260,308],NEEDF=[13,32,58,90,128,173,224,282,346,416,493],needFor=el=>{const T=WD===FREE?NEEDF:NEEDT;return T[Math.min(T.length-1,elemCount(el))]};/* なかまを呼ぶのに必要な力（いる人数ごと）。フリーモードは自然の力が弱いので多め */
 function revRadius(o){const b=BL[o];if(!b)return 0;if(o==='tower')return 7;if(o==='statue')return 4;if(o==='farm')return 2;if(b.kind==='block')return 1;if(b.kind==='plant')return 3;if(b.kind==='furn')return 2;if(b.kind==='build')return 3;if(o==='ntree'||o==='berry')return 1;return 0}
 /* 属性の力の表示（例：属性 木+1・土+2） */
 function attrTxt(id){const b=BL[id];if(!b||!b.attr||b.kind==='block')return'';const a=Object.entries(b.attr).filter(e=>e[1]>0);return a.length?'属性 '+a.map(([k,v])=>ELEM[k].name+'+'+(+v.toFixed(2))).join('・'):''}
@@ -1119,7 +1119,7 @@ function startAct(r,G,type,stand,o){
 }
 function noPass(r){if(r.act){if(r.act.key)BAN.set(r.act.key,S.t+60);if(r.act.stand>=0){r.routeAvoid=r.routeAvoid||{};r.routeAvoid[r.act.stand]=S.t+60}}r.visitRetryAt=S.t+10;if((r.npT||0)>S.t)return;r.npT=S.t+90;addFloat(r.x,r.y-1.6,'通れないよ…','#ffd0c0')}
 const WORKP={/* 作業の進み具合（0〜1）。足もとの進捗バーに出す（建てる・直す・料理は、その場所のバーだけ出す） */
-chop:(r,a)=>a.t/(a.camp?40:30),mine:(r,a)=>a.t/(a.camp?40:35),
+chop:(r,a)=>a.t/(a.camp?20:30),mine:(r,a)=>a.t/(a.camp?20:35),
 tend:(r,a)=>a.t/20,water:(r,a)=>a.t/(r.elem==='water'?8:16),sow:(r,a)=>a.t/10,harvest:(r,a)=>a.t/12,gather:(r,a)=>a.t/15,offer:(r,a)=>a.t/10,pickseed:(r,a)=>a.t/8,fish:(r,a)=>a.t/50,
 till:(r,a)=>{const d=S.dyn[a.obj];return Math.max(a.t/45,d&&d.p!=null?d.p/30:0)},
 plant:(r,a)=>{const d=S.dyn[a.obj];return Math.max(a.t/40,d&&d.p!=null?d.p/20:0)}};
@@ -1152,8 +1152,8 @@ const ACT={
   smat:{start(r){if(!r.cmat)return false;r.bubble='📦'},done:(r,a)=>a.t>=4,end(r){sfxAt('box',r.x,r.y);const m=r.cmat;r.cmat=null;let room=Math.max(0,matCap()-matTot()),txt=[];for(const k in m){const n=Math.min(m[k],room);room-=n;S.mat[k]=(S.mat[k]||0)+n;if(!S.gotMat)S.gotMat={};S.gotMat[k]=(S.gotMat[k]||0)+n;if(n)txt.push(MATN[k]+'+'+n)}addFloat(r.x,r.y-1.4,txt.length?txt.join(' '):'いっぱい',txt.length?'#e8d3a8':'#ffd2cc');if(sheet==='craft')renderSheet()}},
   cgrab:{start(r,a){const R=RECIPES.find(x=>x.out===a.rec);if(!R||!Object.keys(R.need).every(k=>(S.fs[k]||0)>=R.need[k]))return false;for(const k in R.need)S.fs[k]-=R.need[k];syncFood();r.cing={rec:a.rec,ov:a.ov};r.bubble=FOODS[Object.keys(R.need)[0]].e;sfxAt('box',r.x,r.y)},done:(r,a)=>a.t>=4},
   cook:{start(r,a){if(!r.cing||S.obj[a.obj]!=='oven')return false;r.bubble='🔥';const ox=a.obj%W+.5;r.face=ox>=r.x?1:-1;a.t=r.cing.prog||0;/* 中断しても、続きから */sfxAt('cookfire',r.x,r.y)},tick(r,a,dt){work(r,dt);if(r.cing)r.cing.prog=a.t;a.h=(a.h||0)+dt;if(a.h>=6){a.h=0;sfxAt('cook',r.x,r.y)}if(a.t>4)r.bubble='🍳'},done:(r,a)=>a.t>=((RECIPES.find(x=>x.out===(r.cing&&r.cing.rec))||{time:30}).time)*(trt(r,'ryouri')?.7:1)*ovenMul(a.obj),end(r,a){const k=r.cing.rec;r.cing=null;if(typeof r.carry==='number')r.carry={mugi:r.carry};r.carry=r.carry||{};r.carry[k]=(r.carry[k]||0)+1;r.toStor=1;/* できた料理は、すぐ食料箱へ */S.flags.cooked=true;kurashi('cook:'+k,'fire',2,['🍳','はじめて'+FOODS[k].name+'ができた']);r.bubble=FOODS[k].e;addFloat(a.obj%W+.5,((a.obj/W)|0)-.6,FOODS[k].name+'ができた','#ffd38a');sfxAt('harvest',r.x,r.y);addXp(1,r);tired(r,a)}},
-  chop:{start(r,a){if(!S.obj[a.obj])return false;a.tgt=S.obj[a.obj];r.bubble='🪓';faceTo(r,a.obj)},tick(r,a,dt){work(r,dt);a.h=(a.h||0)+dt;if(a.h>=2.5){a.h=0;sfxAt('chop',r.x,r.y)}},done:(r,a)=>a.t>=(a.camp?40:30)||S.obj[a.obj]!==a.tgt,end(r,a){if(S.obj[a.obj]!==a.tgt)return;/* 木が先になくなったら、そこで終わり */addMat(r,'wood',1+(trt(r,'kikori')?1:0));if(!a.camp)useNat(a.obj);addXp(1,r);tired(r,a)}},
-  mine:{start(r,a){if(!S.obj[a.obj])return false;a.tgt=S.obj[a.obj];r.bubble='⛏';faceTo(r,a.obj)},tick(r,a,dt){work(r,dt);a.h=(a.h||0)+dt;if(a.h>=2.5){a.h=0;sfxAt('crack',r.x,r.y,1.5)/* 採掘の音は1.5倍 */}},done:(r,a)=>a.t>=(a.camp?40:35)||S.obj[a.obj]!==a.tgt,end(r,a){if(S.obj[a.obj]!==a.tgt)return;addMat(r,'stone',1+(trt(r,'ishiku')?1:0));if(!a.camp)useNat(a.obj);addXp(1,r);tired(r,a)}},
+  chop:{start(r,a){if(!S.obj[a.obj])return false;a.tgt=S.obj[a.obj];r.bubble='🪓';faceTo(r,a.obj)},tick(r,a,dt){work(r,dt);a.h=(a.h||0)+dt;if(a.h>=2.5){a.h=0;sfxAt('chop',r.x,r.y)}},done:(r,a)=>a.t>=(a.camp?20:30)||S.obj[a.obj]!==a.tgt,end(r,a){if(S.obj[a.obj]!==a.tgt)return;/* 木が先になくなったら、そこで終わり */addMat(r,'wood',1+(trt(r,'kikori')?1:0));if(!a.camp)useNat(a.obj);addXp(1,r);tired(r,a)}},
+  mine:{start(r,a){if(!S.obj[a.obj])return false;a.tgt=S.obj[a.obj];r.bubble='⛏';faceTo(r,a.obj)},tick(r,a,dt){work(r,dt);a.h=(a.h||0)+dt;if(a.h>=2.5){a.h=0;sfxAt('crack',r.x,r.y,1.5)/* 採掘の音は1.5倍 */}},done:(r,a)=>a.t>=(a.camp?20:35)||S.obj[a.obj]!==a.tgt,end(r,a){if(S.obj[a.obj]!==a.tgt)return;addMat(r,'stone',1+(trt(r,'ishiku')?1:0));if(!a.camp)useNat(a.obj);addXp(1,r);tired(r,a)}},
   fetch:{start(r){if(S.food<=0)return false;r.bubble='📦';sfxAt('box',r.x,r.y)},done:(r,a)=>a.t>=4,end(r){let need=Math.max(0,(hMax(r)-r.hunger)*fullN(r)/100),units=0,pt=0,items=[];
     const keys=Object.keys(S.fs).filter(k=>S.fs[k]>0).sort((a,b)=>FOODS[b].v-FOODS[a].v);for(const k of keys){while(need>0&&S.fs[k]>0){S.fs[k]--;need-=FOODS[k].v;units+=FOODS[k].v;pt+=FOODS[k].pt||0;items.push(k)}if(need<=0)break}
     syncFood();if(units)r.meal={u:units,pt,e:FOODS[items[0]].e,items};if(sheet==='food')renderSheet()}},
@@ -1791,7 +1791,7 @@ const EREACH=new WeakMap();
 const ZUKAN={basic:'いちばんよく見るコワイノ。夜になると、せいれいをねらってやってくる。',fast:'足がとても速い。体は小さくて、すぐ追いはらえる。',thief:'畑の実った作物をぬすみにくる。見つかると、すぐにげる。',brute:'体がかたくて力も強い。なかなか追いはらえない。',breaker:'壁をこわすのが大好き。まわり道をしないで、まっすぐこわしてくる。',trapper:'罠を見つけると、こわしにくる。',boss:'大きなコワイノ。まわりのせいれいも巻きこんで攻撃する。',ash:'灰をまきちらして、施設をしばらく使えなくする。',rockc:'岩みたいにかたい。動きはおそい。',hino:'火山からやってくる大きなコワイノ。熱の切りかえ装置をこわそうとする。',boss2:'夜の力をたくわえた、いちばん大きなコワイノ。'};
 function shakeScreen(){const v=$('#cv');v.classList.remove('shk');void v.offsetWidth;v.classList.add('shk');setTimeout(()=>v.classList.remove('shk'),600)}
 function bigBanner(title,sub,col){/* 画面のまんなかに大きな文字を出す。「進む」をおすまで時間を止めておく */BOSSHOLD=Infinity;const d=document.createElement('div');d.style.cssText='position:fixed;left:0;right:0;top:32%;z-index:21;text-align:center;pointer-events:none;color:#ffe9a6;text-shadow:0 0 18px '+col+',0 3px 0 #05030c;font-weight:bold;opacity:0;transition:opacity .8s ease,letter-spacing 2.4s ease;letter-spacing:.05em';
-  d.innerHTML='<div style="font-size:34px"></div><div style="font-size:14px;margin-top:8px;color:#fff3d6"></div><button class="btn pri" style="margin-top:22px;pointer-events:auto;opacity:0;transition:opacity .6s ease">進む</button>';d.children[0].textContent=title;d.children[1].textContent=sub;document.body.appendChild(d);const bt=d.children[2];
+  d.innerHTML='<div style="font-size:34px"></div><div style="font-size:14px;margin-top:8px;color:#fff3d6"></div><button class="btn pri" style="position:fixed;left:50%;bottom:16%;transform:translateX(-50%);min-width:140px;pointer-events:auto;opacity:0;transition:opacity .6s ease">進む</button>';d.children[0].textContent=title;d.children[1].textContent=sub;document.body.appendChild(d);const bt=d.children[2];
   bt.onclick=()=>{sfx('tap');BOSSHOLD=0;bt.disabled=true;d.style.transition='opacity .6s ease';d.style.opacity='0';setTimeout(()=>d.remove(),700)};
   requestAnimationFrame(()=>requestAnimationFrame(()=>{d.style.opacity='1';d.style.letterSpacing='.3em'}));setTimeout(()=>{bt.style.opacity='1'},1600)}/* 演出を見てから、「進む」が出る */
 const BOSSFX={boss:{col:'#ff3b6b',sub:'コワイノたちの親玉が、すがたをあらわした'},boss2:{col:'#ffd84a',sub:'夜の力をたくわえた、いちばん大きなコワイノ'}};
@@ -1912,7 +1912,7 @@ function takeDrop(d,r){let nm;
   if(d.id.startsWith('mat:')){const k=d.id.slice(4),add=Math.max(0,Math.min(d.n,matCap()-matTot()));S.mat[k]=(S.mat[k]||0)+add;if(!S.gotMat)S.gotMat={};S.gotMat[k]=(S.gotMat[k]||0)+add;nm=MATN[k]+(add?'×'+add:'（素材箱がいっぱい）')}
   else{giveItem(d.id,d.n);nm=(d.id.startsWith('seed:')?CROPS[d.id.slice(5)].name+'のたね':BL[d.id].item||BL[d.id].name)+'×'+d.n}
   toast((r?r.name+'が':'')+'おとしものをひろった：'+nm,'good')}
-const WUP=[null,{pc:30,mat:{wood:30,stone:35}},{pc:60,mat:{wood:45,stone:75}}];/* 見張り台の強化 */const WATCH=[null,{dmg:1,range:4.2,cd:24},{dmg:2,range:4.8,cd:18},{dmg:3,range:5.5,cd:14}];
+const WUP=[null,{pc:30,mat:{wood:30,stone:35}},{pc:60,mat:{wood:45,stone:75}}];/* 見張り台の強化 */const WATCH=[null,{dmg:1,range:4.2,cd:12},{dmg:2,range:4.8,cd:10},{dmg:3,range:5.5,cd:8}];
 function updTowers(dt){
   if(!S.enemies.length)return;
   for(const j of TOWERS){const o=S.obj[j];if(o!=='watch'&&o!=='tower')continue;
@@ -4439,7 +4439,7 @@ function tagsEl(id){const tg=tagsOf(id);if(!tg.length)return null;const d=docume
 function helpPop(t,text){const o=$('#helpPop');let tg=[];{const id=Object.keys(BL).find(k=>BL[k].name===t);if(id)tg=tagsOf(id)}{const bx=o.querySelector('.tags');if(bx){bx.innerHTML='';for(const g of tg){const sp=document.createElement('span');sp.className='tag';sp.textContent=g;bx.appendChild(sp)}bx.hidden=!tg.length}}o.querySelector('b').textContent=t;o.querySelector('p').textContent=text;o.hidden=false}
 function rowEl(title,desc,img,html){const r=el(`<div class="row">${img?'<img alt="">':''}<div class="tx"><b></b><small></small></div></div>`);if(img)r.querySelector('img').src=img;r.querySelector('b').textContent=title;if(html)r.querySelector('small').innerHTML=html+esc(desc||'');else r.querySelector('small').textContent=desc||'';return r}
 /* カミサマの値段：花は高め、畑・果物の苗は買うごとに上がる（果物の苗は10から、1本ごとに+2） */
-function shopPrice(id,k){let t=0;for(let i=0;i<k;i++){if(id==='farm')t+=4+Math.floor(((S.farmBuy||0)+i)/3);/* 畑は3こ買うごとに1ポイント上がる */else if(id==='fruit')t+=10+2*((S.fruitBuy||0)+i);else if(FLOWERS.has(id))t+=BL[id].cost*3;else t+=BL[id].cost}return t}
+function shopPrice(id,k){let t=0;for(let i=0;i<k;i++){if(id==='farm')t+=4+Math.floor(((S.farmBuy||0)+i)/3);/* 畑は3こ買うごとに1ポイント上がる */else if(id==='fruit')t+=10+2*((S.fruitBuy||0)+i);else if(FLOWERS.has(id))t+=BL[id].sp;/* 花の種の値段は、表の sp */else t+=BL[id].cost}return t}
 function renderSheet(){
   if(!sheet)return;const body=$('#sheetBody');body.innerHTML='';const T=$('#sheetTitle');
   if(sheet==='shop'){
@@ -4923,7 +4923,7 @@ function thumb(cv2,k,open){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='336';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='337';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
