@@ -784,7 +784,7 @@ function ensureStor(s){widenStoneGates(s);{const nm=new Set();for(let j=0;j<s.ob
   if(!s.ref)s.ref={};for(let j=0;j<s.obj.length;j++)if(s.obj[j]==='part'&&s.obj[s.ref[j]]==='house'){s.obj[j]='';delete s.ref[j]}for(let j=0;j<s.obj.length;j++)if(s.obj[j]==='house'){s.obj[j]='';if(s.dyn)delete s.dyn[j]}if(s.inv)delete s.inv.house;/* 小さな家はなくなった */for(let j=0;j<s.obj.length;j++)if(s.obj[j]==='stonelamp'){s.obj[j]='';if(s.dyn)delete s.dyn[j]}if(s.inv)delete s.inv.stonelamp;if(s.recipes)delete s.recipes.stonelamp;if(s.guardianIdeas)delete s.guardianIdeas.stonelamp;if(s.orders)s.orders=s.orders.filter(o=>o.type!=='stonelamp');/* 石灯籠はなくなった */for(let j=0;j<s.obj.length;j++)if(s.obj[j]==='planter'){s.obj[j]='';if(s.dyn)delete s.dyn[j]}if(s.inv)delete s.inv.planter;if(s.recipes)delete s.recipes.planter;if(s.guardianIdeas)delete s.guardianIdeas.planter;if(s.orders)s.orders=s.orders.filter(o=>o.type!=='planter');for(const r of s.res||[])if(r.lf==='planter')delete r.lf;/* 花壇はなくなった */for(let j=0;j<s.obj.length;j++)if(s.obj[j]==='bench'&&!(s.obj[j+1]==='part'&&s.ref[j+1]===j)){if(!s.obj[j+1]&&s.ground[j+1]!==1&&(j+1)%W){s.obj[j+1]='part';s.ref[j+1]=j}else{s.obj[j]='';s.inv.bench=(s.inv.bench||0)+1}}/* ベンチを2マスにした。右があいていなければ、お供え箱にもどす */
   for(let j=0;j<s.obj.length;j++)if(s.obj[j]==='grave'&&s.dyn[j]&&s.dyn[j].buried){s.obj[j]='';delete s.dyn[j]}{const st=s.obj.indexOf('statue');if(st>=0&&s.obj[st+W]!=='altar'&&!s.obj[st+W])s.obj[st+W]='altar'}if(!s.cseed)s.cseed={mugi:4,tomato:2,imo:2};if(!s.mat)s.mat={wood:0,stone:0};if(!s.fs)s.fs={mugi:s.food||0};if((s.quest||0)>2){if(!s.obj.includes('stor'))putNear(s,'stor',CX-2,CY-5);if(!s.obj.includes('mbox'))putNear(s,'mbox',CX,CY-5)}syncQuestRecipes(s);}// チュートリアル中は自分で置いてもらう
 /* 特性：ひとりにひとつ。キーキャラは決まっている */
-const TRK=()=>Object.keys(TRAITS).filter(k=>k!=='kizuna'&&k!=='tane');/* たねはこびは風の子だけ（mkRes） */const TRAITS={hayaashi:['はやあし','歩くのが速い'],hataraki:['はたらきもの','作業が速い'],shukaku:['しゅうかく上手','畑や木の実の収穫がひとつ多い'],kikori:['木こり','木を切ると、木材がひとつ多い'],ishiku:['石工','石をほると、石材がひとつ多い'],chikara:['力もち','持てる数が2つ多い'],shoshoku:['小食','おなかがへりにくい'],tafu:['タフ','つかれにくい'],kizuna:['めぐり','消えてしまっても、この土地のめぐりで、次の朝もどってくる'],/* キーキャラだけ（TRK でのぞく） */genki:['元気いっぱい','たのしさがへりにくい'],ryouri:['料理じょうず','料理が早くできる'],tane:['たねはこび','ふしぎな種を拾ってくる（風のせいれいだけ）']};
+const TRK=()=>Object.keys(TRAITS).filter(k=>k!=='kizuna'&&k!=='tane');/* たねはこびは風の子だけ（mkRes） */const TRAITS={hayaashi:['はやあし','歩くのが速い'],hataraki:['はたらきもの','作業が速い'],shukaku:['しゅうかく上手','畑や木の実の収穫がひとつ多い'],kikori:['木こり','木を切ると、木材がひとつ多い'],ishiku:['石工','石をほると、石材がひとつ多い'],chikara:['力もち','持てる数が2つ多い'],shoshoku:['小食','おなかがへりにくい'],tafu:['タフ','つかれにくい'],kizuna:['めぐり','消えてしまっても、この土地のめぐりで、次の朝もどってくる'],/* キーキャラだけ（TRK でのぞく） */genki:['元気いっぱい','たのしさがへりにくい'],ryouri:['料理じょうず','料理が早くできる'],tane:['たねはこび','外のふしぎな種を拾いに行く（風のせいれいはみんな）']};
 const EL_WORK={water:1.3,earth:.75},EL_STA={water:.7,earth:1.45};/* 属性ごとの作業スピード・スタミナ */
 const trt=(r,k)=>!!(r&&r.vr&&r.vr.tr===k);
 /* せいれいごとのばらつき：色(h色相・l明るさ)、まつ毛・ほっぺ、足の速さ・食べる量・力 */
@@ -793,7 +793,7 @@ function mkVar(name){if(KEYVR[name])return Object.assign({},KEYVR[name]);const R
 function mkRes(s,name,elem,x,y,like){
   return {id:s.nid++,xp:0,xpf:0,name,elem,color:ELEM[elem].body,x,y,hunger:80,energy:85,fun:70,like:like||pick(LIKE_KEYS.filter(k=>k!=='slide'||WD===4)),act:null,path:[],starve:0,bubble:'',face:1,hidden:false,hurt:0,vr:wVar(mkVar(name),elem,name)};
 }
-function wVar(v,el,name){if(el==='wind'&&!KEYVR[name]&&Math.random()<.35)v.tr='tane';return v}/* 風の子は、ときどき「たねはこび」 */
+function wVar(v,el,name){return v}/* ふしぎな種は、風の子がみんな拾いに行く（特性「たねはこび」は、もうつけない） */
 function genWorld(s,w){
   const R=mulberry(w===1?20261102:w===FREE?20261022:20261018),V=w===1;/* V：火山のふもと */
   const pond=(cx,cy,rx,ry)=>{const a=R()*6.28,b=R()*6.28,e=R()*6.28;for(let y=0;y<H;y++)for(let x=0;x<W;x++){const dx=(x+.5-cx)/rx,dy=(y+.5-cy)/ry,th=Math.atan2(dy,dx),lim=1+.2*Math.sin(2*th+a)+.13*Math.sin(3*th+b)+.07*Math.sin(5*th+e);if(Math.hypot(dx,dy)<lim)s.ground[y*W+x]=1}};
@@ -1488,7 +1488,7 @@ const PREF={wood:['plant','tend','craft','water','till','build','cook','chop'],w
 /* 得意な仕事は、その属性の子だけ。建てるのはみんなできる */
 const OWN={plant:'wood',tend:'wood',water:'water',fish:'water',till:'earth',repair:'earth',cook:'fire',seed:'wind'};
 function ownOK(r,el){return !el||r.elem===el}
-function canJob(r,k){if(k==='seed')return r.elem==='wind'&&trt(r,'tane');/* 種を運ぶのは、たねはこびの風の子だけ */return ownOK(r,OWN[k])}
+function canJob(r,k){if(k==='seed')return r.elem==='wind';/* 外にふしぎな種があれば、風の子はみんな拾いに行く */return ownOK(r,OWN[k])}
 const makerOf=id=>WD===1&&(id==='bench'||id==='parasol')||id==='stor'||id==='mbox'?null:BL[id].maker;/* 箱は、だれでも作れる *//* 火山のふもと：温泉のクエストに使うベンチ・パラソルは、だれでも作れる */
 function craftOK(r,o){return ownOK(r,makerOf(o.type))}
 function tryJob(r,G,k){
