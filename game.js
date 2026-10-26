@@ -1678,7 +1678,7 @@ function die(r){
   toast(r.name+'が空腹で力尽きてしまった…','warn');
   {const DT=S.res.length?deathTalk(r):null;if(DT&&DT.length)setTimeout(()=>dialog(DT),900);else{const key=isKey(r.name),fk=key?'deathTold':'death2Told';if(!S.flags[fk]&&S.res.length){S.flags[fk]=true;const sp=S.res.find(q=>KEYRES.includes(q.name))||S.res[0],n=r.name;
     setTimeout(()=>dialog((key?DEATHL:DEATHL2)[elemKey(sp)](n).map(t=>[sp.name,t])),900)}}}/* 話す子の性格で説明する */
-  if(!S.res.length)setTimeout(()=>STATUE<0?gameOver():dialog([[GOD,'みんな、消えてしもうた…。'],[GOD,'じゃが、だいじょうぶじゃ。朝になれば、物語のせいれいから神殿の「！」で呼びもどせるぞい。'],[GOD,'人数が少ないうちは、「コワイノ」も少なめじゃ。オオカゲも、なかまがそろうまでは来んはずじゃ。'],[GOD,'それと…これを使うがよい。柵を10こ、やろう。']],()=>{giveItem('fence',10);toast('柵を10こもらった','good')}),800);
+  if(!S.res.length)setTimeout(()=>STATUE<0?gameOver():dialog([[GOD,'みんな、消えてしもうた…。'],[GOD,'じゃが、だいじょうぶじゃ。朝になれば、物語のせいれいから神殿の「！」で呼びもどせるぞい。'],[GOD,'人数が少ないうちは、「コワイノ」も少なめじゃ。オオカゲも、なかまがそろうまでは来んはずじゃ。'],[GOD,'それと…これを使うがよい。'+(lvOK('wall')?'石の塀':'柵')+'を10こ、やろう。']],()=>{const w=lvOK('wall')?'wall':'fence';giveItem(w,10);toast(BL[w].name+'を10こもらった','good')}),800);/* 石の塀を覚えていたら、石の塀 */
 }
 
 /* ---------- せいれいがやってくる ---------- */
@@ -4910,7 +4910,7 @@ function thumb(cv2,k,open){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='311';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='312';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
