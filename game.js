@@ -3262,7 +3262,7 @@ function houseComfort(h){let bed=0,furn=0,fl=0,n=0;const seen=new Set();
   for(const j of h.set){const p=S.win&&S.win[j];if(p&&p!==1&&COMFY[p]){kc[p]=(kc[p]||0)+1;furn+=COMFY[p]*(kc[p]>2?.5:1);seen.add(p)}}/* 壁にかけた絵 */
   const cap=houseCap(h),over=Math.max(0,bed-cap);/* きゅうくつかどうかは、ベッドの数で決まる */
   let lit=false;for(let y=h.y0-1;y<=h.y1+1&&!lit;y++)for(let x=h.x0-1;x<=h.x1+1;x++){if(x<0||y<0||x>=W||y>=H)continue;if(LIGHTF.has(S.obj[y*W+x])){lit=true;break}}/* 家の中か、すぐそばに灯り */
-  const v=Math.round(Math.max(0,Math.min(COMFMAX,5*COMFK+Math.min(20*COMFK,Math.min(bed,cap)*COMFY.bed)+Math.min(50*COMFK,furn)+(n?fl/n:0)*15*COMFK-over*35*COMFK-(lit?0:20*COMFK))));/* 上限は3倍（300）。ベッド・家具・床の「上げられる量」も3倍にして、最大まで上げるには、そのぶん多く必要 */
+  const v=Math.round(Math.max(0,Math.min(COMFMAX,5*COMFK+Math.min(70*COMFK,furn)+(n?fl/n:0)*15*COMFK-over*35*COMFK-(lit?0:20*COMFK))));/* 上限は3倍（300）。ベッド・家具・床の「上げられる量」も3倍にして、最大まで上げるには、そのぶん多く必要 */
   return{v,bed,cap,lit,kinds:seen.size,floorPct:n?Math.round(fl/n*100):0,over}}
 {const LT='',D2={
   tree:'まわり3マスを緑にする。まわり3マスで、たのしさ+0.4／1時間（休けい中は元気も+0.4）',
