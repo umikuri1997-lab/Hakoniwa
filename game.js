@@ -99,9 +99,9 @@ const BL={
   birdbath:{offerOnly:1,name:'水飲み鳥',kind:'furn',cat:'env',f2:1,lv:7,pc:5,time:100,maker:'water',attr:{water:1},mat:{stone:10},solid:1,env:3,desc:'まわり3マスで、たのしさ+1.1／1時間（休けい中は元気も+1.1）'},
   parasol:{name:'パラソル',anim:1,dsc:2,kind:'furn',cat:'env',f2:1,lv:5,pc:7,time:100,maker:'wind',attr:{wind:1},mat:{wood:12},solid:1,env:7,er:1,desc:'まわり1マスだけ。そのかわり、たのしさ+2.5／1時間（休けい中は元気も+2.5）'},
   arch:{offerOnly:1,anim:1,dsc:1.8,name:'ガーデンアーチ',kind:'furn',cat:'env',f2:1,lv:8,pc:9,time:120,maker:'wood',attr:{wood:1},mat:{wood:21},env:4,desc:'まわり3マスで、たのしさ+1.4／1時間（休けい中は元気も+1.4）'},
-  slide:{name:'すべり台',sz:[2,2],kind:'furn',cat:'toy',f2:1,lv:2,pc:9,time:140,maker:'wind',attr:{wind:1},mat:{wood:5,stone:2},play:{pt:3,fun:55,dur:40,cap:1,adj:1},solid:1,desc:'1人で遊べる。たのしさ +88（40分）'},
-  sandbox:{name:'すなば',sz:[2,1],nosc:1,kind:'furn',cat:'toy',f2:1,lv:5,pc:9,time:140,maker:'earth',attr:{earth:1},mat:{wood:7,stone:7},play:{pt:3,fun:50,dur:45,cap:2,adj:1},solid:1,desc:'2人まで遊べる。たのしさ +80（45分）'},
-  seesaw:{name:'シーソー',kind:'furn',cat:'toy',f2:1,anim:1,dsc:2,lv:7,pc:11,time:160,maker:'wind',attr:{wind:1},mat:{wood:16},play:{pt:4,fun:60,dur:40,cap:2,adj:1},solid:1,desc:'2人で遊べる。たのしさ +96（40分）'},
+  slide:{name:'すべり台',sz:[2,2],kind:'furn',cat:'toy',f2:1,lv:2,pc:9,time:140,maker:'wind',attr:{wind:1},mat:{wood:5,stone:2},play:{pt:3,fun:35,dur:40,cap:1,adj:1},solid:1,desc:'1人で遊べる。たのしさ +35（40分）'},
+  sandbox:{name:'すなば',sz:[2,1],nosc:1,kind:'furn',cat:'toy',f2:1,lv:5,pc:9,time:140,maker:'earth',attr:{earth:1},mat:{wood:7,stone:7},play:{pt:3,fun:30,dur:45,cap:2,adj:1},solid:1,desc:'2人まで遊べる。たのしさ +30（45分）'},
+  seesaw:{name:'シーソー',kind:'furn',cat:'toy',f2:1,anim:1,dsc:2,lv:7,pc:11,time:160,maker:'wind',attr:{wind:1},mat:{wood:16},play:{pt:4,fun:40,dur:40,cap:2,adj:1},solid:1,desc:'2人で遊べる。たのしさ +40（40分）'},
   window:{name:'窓',kind:'block',cat:'other',lv:4,pc:10,time:50,maker:'wood',attr:{wood:1},mat:{wood:1},desc:'横向きの木の壁にはめる。住み心地が上がる'},
   sdoor:{name:'石の塀のドア',kind:'block',anim:1,hp:30,cost:4,pc:8,time:60,maker:'earth',qty:1,lv:6,attr:{},mat:{stone:4},desc:'石垣の出入り口。せいれいだけ通れる'},
   table:{name:'食卓',kind:'furn',pc:7,time:90,maker:'wood',solid:1,eat:{cap:2,pt:2},attr:{wood:2},mat:{wood:5},desc:'2人まで食べられる。食べるたびにパワー+0.9'},
@@ -119,8 +119,8 @@ const BL={
   bench:{name:'ベンチ',sz:[2,1],kind:'furn',pc:3,time:100,maker:'wood',attr:{wood:1},mat:{wood:3},desc:'2人すわれる。昼につかれたら、ここで休む（元気 +20／1時間）'},
   bed:{name:'ベッド',kind:'furn',pc:10,time:200,maker:'wood',sleep:{cap:1,pt:5,rate:.2},attr:{wood:2},mat:{wood:5},desc:'1人眠れる。元気 +12／1時間。家の住み心地で0.6〜3.3倍'},
   lamp:{name:'篝火',kind:'furn',pc:5,time:160,maker:'fire',solid:1,anim:1,attr:{fire:3},mat:{wood:2,stone:2},desc:'まわり2.5マスを照らす'},
-  campfire:{name:'たき火',kind:'furn',pc:7,time:160,maker:'fire',lv:6,solid:1,anim:1,attr:{fire:4},play:{pt:3,fun:45,dur:40,cap:3,adj:1},mat:{wood:7,stone:5},desc:'3人まで遊べる。たのしさ +72（40分）'},
-  swing:{name:'ブランコ',kind:'furn',pc:13,time:240,maker:'wood',lv:4,play:{pt:4,fun:60,dur:50,cap:1},attr:{wind:3},mat:{wood:8},desc:'1人で遊べる。たのしさ +96（50分）'},
+  campfire:{name:'たき火',kind:'furn',pc:7,time:160,maker:'fire',lv:6,solid:1,anim:1,attr:{fire:4},play:{pt:3,fun:25,dur:40,cap:3,adj:1},mat:{wood:7,stone:5},desc:'3人まで遊べる。たのしさ +25（40分）'},
+  swing:{name:'ブランコ',kind:'furn',pc:13,time:240,maker:'wood',lv:4,play:{pt:4,fun:40,dur:50,cap:1},attr:{wind:3},mat:{wood:8},desc:'1人で遊べる。たのしさ +40（50分）'},
   torch:{name:'たいまつ',kind:'furn',lv:3,pc:1,time:100,maker:'fire',solid:1,anim:1,attr:{fire:2},mat:{wood:2},desc:'まわり2.5マスを照らす'},
   jar:{name:'みずがめ',kind:'furn',lv:3,pc:3,time:120,maker:'water',solid:1,attr:{water:3},mat:{stone:2},desc:'水をためたかめ。まわり1マスの畑は水やりなしで育つ'},
   basin:{name:'水鉢',kind:'furn',pc:7,time:160,maker:'water',solid:1,anim:1,attr:{water:4,wood:.5},mat:{stone:3},desc:''},/* もう作れない（古いセーブ用） */
@@ -137,7 +137,7 @@ const BL={
   windmill:{name:'風車',kind:'build',mat:{wood:40,stone:24},pc:25,time:160,maker:'wind',lv:8,solid:1,anim:1,attr:{wind:5},desc:'まわり3マスの畑の収穫+1'},
   lighthouse:{name:'灯台',sz:[2,2],kind:'build',mat:{wood:16,stone:24},pc:35,time:180,maker:'fire',lv:7,solid:1,anim:1,attr:{fire:4},desc:'まわり8マスを照らす'},
   stele:{name:'石碑',kind:'build',mat:{wood:8,stone:32},pc:35,time:180,maker:'earth',lv:6,solid:1,attr:{earth:4},desc:'まわり5マスの壁が、1.15倍じょうぶになる（小数点以下は切りすて）'},
-  fountain:{name:'噴水',sz:[2,2],kind:'build',mat:{wood:10,stone:40},pc:45,time:200,maker:'water',lv:6,solid:1,anim:1,play:{pt:6,fun:70,dur:50,cap:3,adj:1},attr:{water:6},desc:'3人まで遊べる。たのしさ +100まで（50分）'},
+  fountain:{name:'噴水',sz:[2,2],kind:'build',mat:{wood:10,stone:40},pc:45,time:200,maker:'water',lv:6,solid:1,anim:1,play:{pt:6,fun:45,dur:50,cap:3,adj:1},attr:{water:6},desc:'3人まで遊べる。たのしさ +45（50分）'},
   statue:{name:'神殿',kind:'build',anim:1,pc:0,time:50,maker:null,solid:1,attr:{wood:1,water:1,fire:1,earth:1,wind:1},desc:'守り神の居場所。女神像・お供え箱・依頼ボード・カミサマの台座がある'},
   obox:{name:'お供え箱',solid:1,anim:1},
   board:{name:'依頼ボード',solid:1,anim:1},
@@ -1137,7 +1137,7 @@ const ACT={
   rest:{start(r,a){if(S.obj[a.obj]!=='bench')return false;r.bubble='☕'},tick(r,a,dt){if(a.partner!=null&&!S.res.some(x=>x.id===a.partner&&x.act&&x.act.type==='rest'&&x.act.obj===a.obj)){a.topic=null;a.partner=null;a.sub=0;a.ended=1;r.bubble='☕'}/* 片方が休けいを終えたら、おしゃべりもおわり */r.energy=Math.min(100,r.energy+dt/3*mateK(r,'rest'));r.fun=Math.min(100,r.fun+.08*dt);
     if(a.topic==null){const q=a.ended||(r.chatCD||0)>S.t?null:S.res.find(x=>x!==r&&(x.chatCD||0)<=S.t&&x.act&&x.act.type==='rest'&&x.act.stage==='do'&&x.act.obj===a.obj&&x.act.topic==null);if(q){const t=chatTopic(r,q);a.topic=t;a.partner=q.id;q.act.topic=t;q.act.partner=r.id;q.act.sub=1;r.bubble=q.bubble='💬';mate(r,q);for(const x of[r,q])addPt(1+(x.like==='chat'?2:0)+(S.today==='oshaberi'?2:0),x)}}/* ベンチに2人すわったら、おしゃべり */
     else{a.bt=(a.bt||0)+dt;if(a.bt>4){a.bt=0;r.bubble=pick(['💬','💬','😊','🎵','😆'])}r.fun=Math.min(100,r.fun+.3*dt)}},done:(r,a)=>(r.energy>=100&&a.t>=15)||a.t>=(a.dur||90)||isNight()||S.obj[a.obj]!=='bench',end(r,a){r.restCD=S.t+90;if(a&&a.t>=10)addPt(1,r)}},/* ベンチでひと休み：すぐ終わったときはポイントなし。しばらくは、またベンチにはすわらない */
-  play:{start(r,a){r.bubble={flower:'🌼',fountain:'💦',campfire:'🔥'}[a.what]||'🎵'},tick(r,a,dt){r.fun=Math.min(100,r.fun+(a.what==='flower'?a.fun:toyFun(a.fun))/a.dur*dt)}/* おもちゃは、お話よりたのしさがたまりやすい */,done:(r,a)=>a.t>=a.dur,end(r,a){addPt(a.pt+(r.like===a.what?2:0),r);train(r,a.what);if(a.what!=='flower')r.lastToy={j:a.obj,t:S.t}}},/* 遊んだ遊び家具は覚えておき、しばらくは行かない */
+  play:{start(r,a){r.bubble={flower:'🌼',fountain:'💦',campfire:'🔥'}[a.what]||'🎵'},tick(r,a,dt){r.fun=Math.min(100,r.fun+a.fun/a.dur*dt)}/* おもちゃは、お話よりたのしさがたまりやすい */,done:(r,a)=>a.t>=a.dur,end(r,a){addPt(a.pt+(r.like===a.what?2:0),r);train(r,a.what);if(a.what!=='flower')r.lastToy={j:a.obj,t:S.t}}},/* 遊んだ遊び家具は覚えておき、しばらくは行かない */
   bathe:{start(r,a){const w=a.tub!=null?(typeAt(a.tub)==='bathtub'?a.tub:-1):adjOf(a.stand,k=>S.ground[k]===1);if(w<0)return false;r.face=w%W+.5>=r.x?1:-1;r.bubble='💦';sfxAt('wave',r.x,r.y);a.sx=r.x;a.sy=r.y;a.wx=w%W+.5;a.wy=((w/W)|0)+.5;a.in=0;a.hot=a.tub!=null?false:hotW(w)},tick(r,a,dt){/* 水の中まで入って、出てくる */a.in=Math.max(0,Math.min(1,a.t/3,(30-a.t)/3));const mv=a.tub!=null?1:.8;r.x=a.sx+(a.wx-a.sx)*a.in*mv;r.y=a.sy+(a.wy-a.sy)*a.in*mv;const hot=!!a.hot,m=S.res.find(q=>q!==r&&q.act&&q.act.type==='bathe'&&Math.hypot(q.x-r.x,q.y-r.y)<3.5);if(m){r.face=m.x>=r.x?1:-1;r.bubble=Math.floor(a.t/1.5)%2?'🎵':'💦'}else r.bubble=a.tub!=null?(Math.floor(a.t/3)%2?'♨️':'🎵'):'💦';/* ほかの子がいたら、いっしょに水かけっこ */const lo=nearLotus(r);r.fun=Math.min(100,r.fun+(hot?.45:.3)*(m?1.5:1)*(lo?1.5:1)*(hot&&r.elem==='fire'?1.3:1)*dt);if(hot&&r.elem==='fire'&&Math.floor(a.t/2)%3===0)r.bubble='♨️';/* 火の子は温泉が大好き */if(lo)r.energy=Math.min(100,r.energy+.15*dt);/* ハスの近くの水浴びは、たのしい */if(hot)r.energy=Math.min(100,r.energy+.35*dt);/* 温泉は、つかれもとれる */a.h=(a.h||0)+dt;if(a.h>=4.5){a.h=0;sfxAt('wave',r.x,r.y)}},done:(r,a)=>a.t>=30,end(r,a){r.bathD=dayNo();r.bubble='✨';r.shine=performance.now();addPt(1,r);if(a&&a.hot)r.afterBath=S.t+90}},
   fish:{start(r,a){const w=sideW(a.stand);if(w>=0)r.face=w%W+.5>=r.x?1:-1;/* 釣竿は水のほうへ */r.bubble='🎣';sfxAt('cast',r.x,r.y)},tick(r,a,dt){r.fun=Math.min(100,r.fun+.5*dt)},done:(r,a)=>a.t>=50,end(r,a){const w=r.elem==='water';addPt(3+(r.like==='fish'?2:0),r);if(Math.random()<(w?.7:.35)+(a&&a.spot?.25:0)){addCarry(r,'fish',1);S.fishN=(S.fishN||0)+1;kurashi('fish','water',2,['🐟','はじめて魚がつれた']);r.bubble='🐟';sfxAt('catch',r.x,r.y)}else sfxAt('bubble',r.x,r.y)}},
   chat:{start(r,a){const p=S.res.find(q=>q.id===a.partner);if(!p||!p.act||p.act.type!=='chatwait'||p.act.partner!==r.id||(r.chatCD||0)>S.t||(p.chatCD||0)>S.t)return false;mate(r,p);
@@ -1558,7 +1558,7 @@ function hasWork(r){
     if((o==='plot'&&canJob(r,'till')||o==='sprout'&&canJob(r,'plant'))&&free('o'+j,1))return true}
   return false}
 /* おつげ：守り神さまからの、きょういちにちの指示 */
-const TOYF=.8,toyFun=f=>Math.round(Math.min(100,f*TOYF)/5)*5-10,toyTired=(r,j)=>!!(r.lastToy&&r.lastToy.j===j&&S.t-r.lastToy.t<240);/* 遊び家具のたのしさは、もとの半分を5きざみにして、さらに-10。同じ遊び家具には4時間行かない */
+const toyTired=(r,j)=>!!(r.lastToy&&r.lastToy.j===j&&S.t-r.lastToy.t<240);/* 同じ遊び家具には4時間行かない */
 const ORACLE={play:{name:'いっぱいあそぶ',e:'🎈',jobs:[]},wood:{name:'木をあつめる',e:'🪵',jobs:['chop']},stone:{name:'石をあつめる',e:'🪨',jobs:['mine']},food:{name:'食料をあつめる',e:'🍎',jobs:['harvest','gather','fish']}};
 function goWork(r,G,nw){
   // 木材と石材は、少ないほうから集める（どちらかが得意なら両方やる）
@@ -1990,7 +1990,7 @@ function stepWorld(dt){if((SUBT+=dt)>1){SUBT=0;checkSub();checkSev();guardTick()
   if(prevH<8&&h>=8&&S.godGone&&!S.cleared&&!S.godVisit&&dayNo()>=(S.godNextVisitDay||1)&&Math.random()<(cnt('kamizo')?.5:.25)){S.godVisit=true;S.godNextVisitDay=dayNo()+2;/* 来た翌日は休み。像があれば来訪率は50% */sfx('arrive');toast('カミサマが遊びにきた！ 神殿の前で交換できる','good')}
   if(prevH<18&&h>=18&&S.godVisit){S.godVisit=false;S.godNextVisitDay=Math.max(S.godNextVisitDay||0,dayNo()+2);toast('カミサマは帰っていった')}
   if(prevH<20&&h>=20&&S.enemyOn&&S.lastWarn!==dayNo()){S.lastWarn=dayNo();S.wave=waveFor(dayNo()+1);if(S.finalNight&&!S.cleared){S.finalNight=false;S.finalOn=true;S.wave=['boss2','boss','boss'].concat(S.wave.filter(t=>t!=='boss'&&t!=='boss2'),['brute','brute','brute','fast','fast','fast','breaker','breaker']);toast('最後の夜…！ ヨルノオオカゲとオオカゲ2体がやってくる','warn')}else if(S.trial){S.trialOn=true;S.trial=false;S.wave=['boss'].concat(S.wave.filter(t=>t!=='boss'),['brute','brute','fast','fast'])}else if(S.today==='odayaka'){const bo=S.wave.filter(t=>t==='boss'),ot=S.wave.filter(t=>t!=='boss');S.wave=bo.concat(ot.slice(0,Math.ceil(ot.length/2)))}/* 「コワイノ」の予告はしない */}
-  if(prevH<3&&h>=3)for(const H of HOUSES){const L=S.res.filter(x=>x.act&&(x.act.type==='sleep'||x.act.type==='stay')&&H.set.has((x.y|0)*W+(x.x|0)));if(houseComfort(H).over)for(const x of L){x.energy=Math.min(x.energy,60);x.fun=Math.max(0,x.fun-15);x.crowd=dayNo()}else if(L.length){const C=houseComfort(H);for(const x of L){const c=comfyFor(H,x,C);if(c>=60*COMFK){x.fun=Math.min(100,x.fun+10);x.comfy=dayNo()}else if(c<30*COMFK)x.fun=Math.max(0,x.fun-5)}}}/* 住み心地がいいと、ぐっすり眠れる *//* 家につめこむと、きゅうくつで眠れない */
+  if(prevH<3&&h>=3)for(const H of HOUSES){const L=S.res.filter(x=>x.act&&(x.act.type==='sleep'||x.act.type==='stay')&&H.set.has((x.y|0)*W+(x.x|0)));if(houseComfort(H).over)for(const x of L){x.energy=Math.min(x.energy,60);x.fun=Math.max(0,x.fun-15);x.crowd=dayNo()}else if(L.length){const C=houseComfort(H);for(const x of L){const c=comfyFor(H,x,C);if(c>=180){x.fun=Math.min(100,x.fun+10);x.comfy=dayNo()}else if(c<90)x.fun=Math.max(0,x.fun-5)}}}/* 住み心地がいいと、ぐっすり眠れる *//* 家につめこむと、きゅうくつで眠れない */
   if(prevH>h&&S.enemyOn&&S.wave&&S.lastNight!==dayNo()-1){S.lastNight=dayNo()-1;/* 「コワイノ」は夜12時に来る（前の日の夜としてかぞえる） */S.nights++;const w=S.wave;S.wave=null;if(w.length)spawnWave(w)}
   if(S.seedDay!==dayNo()&&h>=6){S.seedDay=dayNo();const n=Math.random()<.5?1:0,b=S.t-S.t%1440;S.seeds=[];S.seedPlan=Array.from({length:n},()=>b+360+Math.random()*720).sort((x,y)=>x-y)}/* ふしぎな種は1日1こまで（50%）。ひろわなかったら、あしたには消える */
   if(S.seedPlan&&S.seedPlan.length&&S.t>=S.seedPlan[0]){S.seedPlan.shift();spawnSeed()}
@@ -3243,7 +3243,7 @@ function drawObj(c,id,x,y,i,g,now){
 }
 /* ---------- 家と屋根 ---------- */
 const houseRes=h=>S.res.filter(r=>h.set.has((r.y|0)*W+(r.x|0)));
-const COMFK=3,COMFMAX=100*COMFK;// 住み心地の上限は100の3倍
+const COMFMAX=300;// 住み心地の上限
 // 住み心地（0〜300）：ベッド・家具・床・人数で決まる。高いとよく眠れて、低いとたのしさが下がる
 const COMFR={rockart:1,jar:1,torch:1,flower:1,clover:1,bellf:1,salvia:1,lily:1,lotus:1,lamp:2,vane:2};/* 家の外でも住み心地に入る範囲（マス） */
 const COMFY={stool:2,chair2:4,stable:4,pouf:3,achair:5,ltable:5,rug1:5,sofa1:6,rug2:6,tub:3,sink:4,crate:6,monstera:10,shelf1:12,wreath:10,curtain1:10,cabinet:12,paint2:10,shelf2:13,curtain2:10,paint3:10,wshelf:12,paint1:14,bathtub:16,candle:3,lantern:5,flamp:6,window:5,bed:10,table:8,chair:4,oven:6,lamp:6,torch:4,bench:5,jar:5,rockart:5,vane:4,flower:4,clover:4,bellf:4,salvia:4,lily:4,lotus:4,stor:3,mbox:3};
@@ -3255,7 +3255,7 @@ function houseComfort(h){let bed=0,furn=0,fl=0,n=0;const seen=new Set();
   for(const j of h.set){const p=S.win&&S.win[j];if(p&&p!==1&&COMFY[p]){kc[p]=(kc[p]||0)+1;furn+=COMFY[p]*(kc[p]>2?.5:1);seen.add(p)}}/* 壁にかけた絵 */
   const cap=houseCap(h),over=Math.max(0,bed-cap);/* きゅうくつかどうかは、ベッドの数で決まる */
   let lit=false;for(let y=h.y0-1;y<=h.y1+1&&!lit;y++)for(let x=h.x0-1;x<=h.x1+1;x++){if(x<0||y<0||x>=W||y>=H)continue;if(LIGHTF.has(S.obj[y*W+x])){lit=true;break}}/* 家の中か、すぐそばに灯り */
-  const v=Math.round(Math.max(0,Math.min(COMFMAX,5*COMFK+Math.min(70*COMFK,furn)+(n?fl/n:0)*15*COMFK-over*35*COMFK-(lit?0:20*COMFK))));/* 上限は3倍（300）。ベッド・家具・床の「上げられる量」も3倍にして、最大まで上げるには、そのぶん多く必要 */
+  const v=Math.round(Math.max(0,Math.min(COMFMAX,15+Math.min(210,furn)+(n?fl/n:0)*45-over*105-(lit?0:60))));/* 上限は300 */
   return{v,bed,cap,lit,kinds:seen.size,floorPct:n?Math.round(fl/n*100):0,over}}
 {const LT='',D2={
   tree:'まわり3マスを緑にする。まわり3マスで、たのしさ+0.4／1時間（休けい中は元気も+0.4）',
@@ -3282,7 +3282,7 @@ function houseComfort(h){let bed=0,furn=0,fl=0,n=0;const seen=new Set();
 for(const k in COMFY){const b=BL[k];if(!b||b.kind!=='furn'||k==='bed')continue;let d=(b.desc||'').replace(/住み心地が大きく上がる|住み心地が上がる/,'住み心地+'+COMFY[k]);
   if(b.cat==='living')d=d.replace(/。?家の中の食卓で食べると、パワーが多くなる。?/,'');/* ダイニング家具の効果は、ジャンルの表示とひでんのしょで */
   if(!d.includes('住み心地+'))d=(d?d.replace(/。?$/,'。'):'')+'住み心地+'+COMFY[k];b.desc=d}/* 住み心地の数字を説明に書く */
-for(const k in BL){const b=BL[k];if(b.play&&b.desc&&k!=='flower')b.desc=b.desc.replace(/たのしさ \+\d+(まで)?/,'たのしさ +'+toyFun(b.play.fun))}/* 遊び家具のたのしさの数字 */
+
 const LIGHTF=new Set(['torch','lamp','lantern','candle','flamp']);/* 灯りになる家具 */
 // すきな家具：その家具が家にあると、そのせいれいにとっての住み心地が上がる（名前から決まる）
 const LIKEF=['rockart','jar','vane','bench','table','torch','candle','lantern','sofa1','achair','rug1','monstera','shelf1','paint1','curtain1','birdbath','parasol','stool','pouf'];
@@ -3335,7 +3335,7 @@ const likeF=r=>{if(r.lf&&BL[r.lf])return r.lf;let h=2166136261;for(const ch of r
 const hasLikeF=(h,r)=>{const f=likeF(r);for(const j of h.inside)if(S.obj[j]===f)return true;return false};
 const likeExtra=(h,r)=>{const f=likeF(r),pt=COMFY[f]||0;if(!pt)return 0;let n=0,t=0;for(const j of h.inside)if(S.obj[j]===f){n++;t+=pt*(n>2?.5:1)}return t};/* 好きな家具は、その家具のぶんの住み心地ポイントが2倍 */
 const comfyFor=(h,r,C)=>Math.min(COMFMAX,(C||houseComfort(h)).v+likeExtra(h,r));
-const comfyStars=v=>'★'.repeat(Math.min(5,Math.max(1,Math.ceil(v/(20*COMFK)))))+'☆'.repeat(5-Math.min(5,Math.max(1,Math.ceil(v/(20*COMFK)))));
+const comfyStars=v=>'★'.repeat(Math.min(5,Math.max(1,Math.ceil(v/(60)))))+'☆'.repeat(5-Math.min(5,Math.max(1,Math.ceil(v/(60)))));
 /* 家の広さで、ちょうどいい人数が決まる（中のマス4つで1人） */
 const bedOwner=j=>{const id=(S.bedOwn||{})[j];return id!=null&&S.obj[j]==='bed'?S.res.find(q=>q.id===id)||null:null},myBed=r=>{const B=S.bedOwn||{};for(const k in B)if(B[k]===r.id&&S.obj[k]==='bed')return +k;return -1},bedFor=(j,r)=>{const o=bedOwner(j);return !o||o===r};/* ベッドの持ち主（いない子のは、だれでも使える） */
 const houseCap=h=>Math.max(1,Math.floor(h.inside.size/4))/* 床のマス数の1/4（壁はふくめない）。はじめの家で3人 */,roomOf=j=>HOUSES.find(h=>h.set.has(j)),roomSleepN=h=>S.res.filter(x=>x.act&&(x.act.type==='sleep'||x.act.type==='stay')&&x.act.stand>=0&&h.set.has(x.act.obj!=null?x.act.obj:x.act.stand)).length;
@@ -4561,7 +4561,7 @@ function renderSheet(){
      const cs=el('<div class="sec"><h3>住み心地</h3><p class="comfy"><span class="stars"></span><b></b></p><div class="recs"></div><p class="note" style="margin-top:8px"></p></div>');
      cs.querySelector('.stars').textContent=comfyStars(C.v);cs.querySelector('b').textContent=C.v+' / '+COMFMAX;
      for(const[a,b]of[['ベッド',C.bed+' / '+cap+'こ'],['家具・かざり',C.kinds+'しゅるい'],['床',C.floorPct+'%'],['いまの人数',L.length+'人']]){const d=el('<div class="st"><span></span><b></b></div>');d.firstChild.textContent=a;d.lastChild.textContent=b;cs.querySelector('.recs').appendChild(d)}
-     cs.querySelector('.note').textContent=C.over?'ベッドが多すぎて、きゅうくつ！ 住み心地が大きく下がる':'つかれのとれる速さ・起きたときのパワー：'+(.6+C.v/100*.9).toFixed(1)+'倍'+(C.over?'・きゅうくつ！ よく眠れない':C.v>=60*COMFK?'・ぐっすり眠れて、たのしさもふえる':C.v<30*COMFK?'・たのしさが少し下がる':'');
+     cs.querySelector('.note').textContent=C.over?'ベッドが多すぎて、きゅうくつ！ 住み心地が大きく下がる':'つかれのとれる速さ・起きたときのパワー：'+(.6+C.v/100*.9).toFixed(1)+'倍'+(C.over?'・きゅうくつ！ よく眠れない':C.v>=180?'・ぐっすり眠れて、たのしさもふえる':C.v<90?'・たのしさが少し下がる':'');
      body.appendChild(cs)}
     {const bs=[...h.inside].filter(j=>S.obj[j]==='bed');if(bs.length){const sec=el('<div class="sec"><h3>ベッド</h3><div class="rows"></div></div>');bs.forEach((j,k)=>{const o=bedOwner(j),row=el('<button class="row" style="text-align:left;width:100%"><span class="dot"></span><div class="tx"><b></b><small></small></div></button>');row.querySelector('.dot').style.cssText=o?'background:#f6f1e6 url('+spiritPort(o.elem,96)+') center/86% no-repeat;box-shadow:inset 0 0 0 2px '+ELEM[o.elem].col:'background:#efe6d2';row.querySelector('b').textContent='ベッド'+(k+1);row.querySelector('small').textContent=o?o.name+'のベッド':'だれでも使える';row.onclick=()=>openSheet('bed',j);sec.querySelector('.rows').appendChild(row)});body.appendChild(sec)}}
     if(!L.length)body.appendChild(el('<p class="story">いまは、だれもいない</p>'));
