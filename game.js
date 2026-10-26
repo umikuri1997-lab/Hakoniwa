@@ -4016,16 +4016,16 @@ function render(now){
   for(const h of HOUSES){let bot=0,ib=0;for(const j of h.set)bot=Math.max(bot,(j/W)|0);for(const j of h.inside)ib=Math.max(ib,(j/W)|0);if(bot<y0-1||h.y0>y1+1||h.x1<x0-1||h.x0>x1+1)continue;
     add(ib+1.5,3,[h.x0*TS-6,h.y0*TS-40,(h.x1+1)*TS+6,(ib+1)*TS+12],()=>drawRoofs(ctx,now,[h]),-1);/* 屋根はいちばん上の層：柱も屋根の下 */D[D.length-1].hs=h.set}/* 屋根は家ごとにひとまとまり。その家の壁は屋根の上に描き直さない *//* 屋根は、横の壁より後・手前の壁より先に描く */
   // 手前にある止まっている物を、重なる範囲だけ描き直す
-  const occ=[],roofedS=new Set();for(const h of HOUSES)if(!OPENH.has(hKey(h))){for(const j of h.set)roofedS.add(j);for(const j of h.inside)roofedS.add(j)}/* 屋根をかけた家の壁・中の物は、屋根の下。描き直して屋根の上に出さない */
+  const occ=[],occM=new Map(),roofedS=new Set();for(const h of HOUSES)if(!OPENH.has(hKey(h))){for(const j of h.set)roofedS.add(j);for(const j of h.inside)roofedS.add(j)}/* 屋根をかけた家の壁・中の物は、屋根の下。描き直して屋根の上に出さない */
   for(const A of D){const[bx0,by0,bx1,by1]=A.box;const cx0=Math.max(0,Math.floor(bx0/TS)-3),cx1=Math.min(W-1,Math.floor(bx1/TS)+3),ry0=Math.max(0,Math.floor(A.k)-1),ry1=Math.min(H-1,Math.floor(A.k)+6);
     for(let y=ry0;y<=ry1;y++)for(let x=cx0;x<=cx1;x++){const j=y*W+x,o=S.obj[j];if(!o||o==='part'||!BL[o]||FLAT.has(o)||BL[o].floor||BL[o].dyn||BL[o].anim||TREES.has(o)||S.ground[j]===1)continue;if(A.hs&&A.hs.has(j))continue;if(roofedS.has(j))continue;if(j===A.own&&!(TREES.has(o)||BIG2.has(o)||BL[o].kind==='build'))continue;/* 自分が乗っている低い物（いすなど）はとばす。木や神殿など背の高い物は、同じマスでも奥なら前に出す */
       const z=BL[o].sz||[1,1],k=objectDepth(o,j);if(k<=A.k)continue;if(A.own>=0&&y+z[1]-1===((A.own/W)|0)&&(x+z[0]<=A.own%W||x>A.own%W)&&!(TREES.has(o)||BIG2.has(o)||BL[o].kind==='build'))continue;/* 同じ列のとなりのマスの物（ベッドなど）のはみ出しは、上にかぶせない */const b=objBox(o,j);if(b[2]<=bx0||b[0]>=bx1||b[3]<=by0||b[1]>=by1)continue;
       const cl=[Math.max(b[0],bx0),Math.max(b[1],by0),Math.min(b[2],bx1),Math.min(b[3],by1)];
-      occ.push({k,t:BL[o].kind==='block'?0:1,clip:cl,draw:()=>{NOSH=true;try{drawObj(ctx,o,x*TS,y*TS,j)}finally{NOSH=false}}})}}
+      let oe=occM.get(j);if(!oe){oe={k,t:BL[o].kind==='block'?0:1,clips:[],draw:()=>{NOSH=true;try{drawObj(ctx,o,x*TS,y*TS,j)}finally{NOSH=false}}};occM.set(j,oe);occ.push(oe)}oe.clips.push(cl)}}/* 同じ物は1回だけ描き直す（重なる範囲をまとめて切りぬく） */
   for(const q of occ)D.push(q);
   D.sort((a,b)=>a.k-b.k||a.t-b.t);
   const snF=v=>Math.floor(v*k)/k,snC=v=>Math.ceil(v*k)/k;/* 切りぬきは画面のピクセルにそろえて、つなぎ目の線を出さない */
-  for(const it of D){if(it.clip){const c=it.clip,a0=snF(c[0]-cam.x)+cam.x,b0=snF(c[1]-cam.y)+cam.y,a1=snC(c[2]-cam.x)+cam.x,b1=snC(c[3]-cam.y)+cam.y;ctx.save();ctx.beginPath();ctx.rect(a0,b0,a1-a0,b1-b0);ctx.clip();it.draw();ctx.restore()}else it.draw()}
+  for(const it of D){if(it.clips){ctx.save();ctx.beginPath();for(const c of it.clips){const a0=snF(c[0]-cam.x)+cam.x,b0=snF(c[1]-cam.y)+cam.y,a1=snC(c[2]-cam.x)+cam.x,b1=snC(c[3]-cam.y)+cam.y;ctx.rect(a0,b0,a1-a0,b1-b0)}ctx.clip();it.draw();ctx.restore()}else it.draw()}
   // 置く前のプレビューは、家の壁や屋根より手前に描く
   if(pending&&pending.kind==='one'){const px=pending.x*TS,py=pending.y*TS,TP=pending.id==='statue'?[[-1,0,'obox'],[0,0,'statue'],[1,0,'board'],[0,1,'altar']]:[[0,0,pending.id]];ctx.save();ctx.globalAlpha=.6+Math.sin(now/250)*.15;for(const[dx,dy,id2]of TP)drawObj(ctx,id2,px+dx*TS,py+dy*TS,pending.y*W+pending.x+dx+dy*W,100,now);ctx.restore()}
   if(S.summon&&STATUE>=0){const qx=(STATUE%W+.5)*TS,qy=((STATUE/W)|0)*TS-58+Math.sin(now/220)*4;bubs.push(()=>{ctx.fillStyle='rgba(255,236,120,.35)';ctx.beginPath();ctx.arc(qx,qy,19+Math.sin(now/300)*2,0,7);ctx.fill();circ(ctx,qx,qy,14,'#ffd84a');ctx.strokeStyle='#fff';ctx.lineWidth=2.5;ctx.beginPath();ctx.arc(qx,qy,14,0,7);ctx.stroke();ctx.fillStyle='#7a4a10';ctx.font='bold 20px \"Hikomi\",\"Hiragino Maru Gothic ProN\",sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('！',qx,qy+1);ctx.textAlign='start';ctx.textBaseline='alphabetic'})}/* 召喚できる合図 */
