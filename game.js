@@ -1734,7 +1734,7 @@ const EN={
   ash:{pw:3,name:'ハイカゲ',hp:6,sp:.9,atk:20,hit:12,col:'#6d6a66',eye:'#ffb36b',size:.9,ash:1},/* かまど・ベンチなどを灰でよごして止める */
   rockc:{pw:8,name:'イワカゲ',hp:22,sp:.5,atk:30,hit:30,col:'#5a4636',eye:'#ffcf6b',size:1.3},/* おそいけど、かたい */
   hino:{pw:25,rng:2.3,name:'ヒノオオカゲ',hp:60,sp:.7,atk:6,hit:40,col:'#3a0c08',eye:'#ffb02e',size:2.1,boss:1,dev:1},/* 火山から下りてきて、熱の装置をねらう */
-  boss2:{pw:30,rng:2.4,name:'ヨルノオオカゲ',hp:70,sp:.9,atk:4.5,hit:48,col:'#05030c',eye:'#ffd84a',size:4.6,boss:1},/* ヌシ様をむかえる準備ができたあとに来る */
+  boss2:{pw:30,rng:3.4,name:'ヨルノオオカゲ',hp:70,sp:.9,atk:4.5,hit:48,col:'#05030c',eye:'#ffd84a',size:4.6,boss:1},/* ヌシ様をむかえる準備ができたあとに来る */
 };
 const bossNight=d=>{const w=S&&S.bossWarn;return w==null?d>=5&&(d-5)%3===0:d-w>=5&&(d-w-5)%3===0}/* オオカゲは「来るかも」と聞いた5日後、そのあと3日ごと */;
 function waveFor(day){
@@ -1832,7 +1832,7 @@ function updEnemy(e,dt){
       {const z=BL[S.obj[dj]].sz||[1,1],x0=dj%W,y0=(dj/W)|0;if(BL[S.obj[dj]].solid){let bq=-1,bb=1e9;for(let yy=y0-1;yy<=y0+z[1];yy++)for(let xx=x0-1;xx<=x0+z[0];xx++){if((xx<x0||xx>=x0+z[0])===(yy<y0||yy>=y0+z[1]))continue;if(xx<0||yy<0||xx>=W||yy>=H)continue;const q=yy*W+xx;if(!walk(q))continue;const dd=Math.hypot(xx+.5-e.x,yy+.5-e.y);if(dd<bb){bb=dd;bq=q}}goal=bq>=0?bq:dj}else goal=dj}if(e.tg!=='d'+dj){e.tg='d'+dj;e.repath=0}}}/* 防衛設備をこわしてから、せいれいをねらう */
   if(dj<0&&(!(D.thief||e.ashG)||goal<0&&!e.flee)){let td=1e9,ts=1e9;if(!EREACH.has(e))EREACH.set(e,bfs(e.x|0,e.y|0,2).dist);const RD=EREACH.get(e);if(pre){tgt=pre;td=Math.hypot(pre.x-e.x,pre.y-e.y)}else for(const r of S.res){if(r.hidden||(r.faintGrace||0)>S.t||r.act&&r.act.type==='faint')continue;const d=Math.hypot(r.x-e.x,r.y-e.y),sc=d+(RD&&RD[(r.y|0)*W+(r.x|0)]<0?60:0)-(r.id===e.tg?2:0);/* いまねらっている子を少し優先（ねらいがころころ変わってガタガタしない） */if(sc<ts){ts=sc;td=d;tgt=r}}
     if(tgt&&td<reachOf(D)&&!fenceBetween(e.x,e.y,tgt.x,tgt.y)){hitRes(e,tgt,D);if(hsOf(D)>=2&&!e.dead){const ar=1.5;burstAt(tgt.x,tgt.y,'offer');for(const q of S.res){if(q===tgt||q.hidden||e.dead)continue;if(Math.hypot(q.x-tgt.x,q.y-tgt.y)<ar&&!fenceBetween(e.x,e.y,q.x,q.y))hitRes(e,q,D)}}/* 大きいコワイノは範囲攻撃：まわりの子も巻きこむ */return}
-    if(tgt&&td<1.6&&!e.flee&&!(e.dcb>S.t)){let sp=D.sp*dt*e.slow;if(lightAt(e.x,e.y))sp*=.8;/* 光の中は、移動の速さ0.8倍 */const dx=tgt.x-e.x,dy=tgt.y-e.y;const nq=(((e.y+dy/td*sp)|0)*W)+((e.x+dx/td*sp)|0);if(walk(nq)&&!HOME_DOORS.has(typeAt(nq))&&!GATE_IDS.has(typeAt(nq))){e.x+=dx/td*Math.min(sp,td);e.y+=dy/td*Math.min(sp,td);e.path=[];return}e.dcb=S.t+4;e.repath=0}/* まっすぐ行けないときは、しばらく道どおりに進む（行ったり来たりでガタガタしない） */
+    if(tgt&&td<1.6&&e.type!=='boss2'&&!e.flee&&!(e.dcb>S.t)){/* ヨルノオオカゲは、近づききらずに、とどく所から攻撃する */let sp=D.sp*dt*e.slow;if(lightAt(e.x,e.y))sp*=.8;/* 光の中は、移動の速さ0.8倍 */const dx=tgt.x-e.x,dy=tgt.y-e.y;const nq=(((e.y+dy/td*sp)|0)*W)+((e.x+dx/td*sp)|0);if(walk(nq)&&!HOME_DOORS.has(typeAt(nq))&&!GATE_IDS.has(typeAt(nq))){e.x+=dx/td*Math.min(sp,td);e.y+=dy/td*Math.min(sp,td);e.path=[];return}e.dcb=S.t+4;e.repath=0}/* まっすぐ行けないときは、しばらく道どおりに進む（行ったり来たりでガタガタしない） */
     if(tgt){goal=(tgt.y|0)*W+(tgt.x|0);if(e.tg!==tgt.id){e.tg=tgt.id;e.repath=0}}}
   e.repath-=dt;let force=false;{const bv=(S.broken||[]).length;if(e.bv!==bv){e.bv=bv;force=true}}/* どこかの壁がこわれたら、すぐ道を考えなおす（あいた穴から入る） */
   const onWall=e.path.length&&breakable(typeAt(e.path[0]));/* 壁をたたいているあいだは、ほかの壁がこわれるまで同じ壁をたたきつづける */
@@ -1843,7 +1843,7 @@ function updEnemy(e,dt){
   }
   if(!e.path.length){e.stk=(e.stk||0)+dt;if(e.stk>20&&!e.flee){e.stk=0;[e.x,e.y]=spawnSpot();e.path=[];e.repath=0;EREACH.delete(e)}return}/* うごけないまま止まっていたら、べつの場所から来なおす */
   const j=e.path[0];
-  {const j=anc(e.path[0]);if(breakable(S.obj[j])){e.busyT=S.t;
+  {const j=e.type==='boss2'&&e.path.length>1&&!breakable(S.obj[anc(e.path[0])])&&breakable(S.obj[anc(e.path[1])])?anc(e.path[1]):anc(e.path[0]);/* ヨルノオオカゲは体が大きいので、柵や壁の1マス手前から、こわしにかかる */if(breakable(S.obj[j])){e.busyT=S.t;
     e.atk+=dt*(lightAt(e.x,e.y)?.8:1);/* 光の中は、攻撃の速さ0.8倍 */if(e.atk>=D.atk){e.atk=0;S.hp[j]=(S.hp[j]??BL[S.obj[j]].hp)-(D.wall||(D.boss?2:1))/steleF(j);/* オオカゲは壁をこわす力1.5倍 */if(hsOf(D)>=2)for(const[ax,ay]of DIRS){const k=j+ay*W+ax,ko=S.obj[k];if(k===j||!breakable(ko)||Math.hypot(k%W+.5-e.x,((k/W)|0)+.5-e.y)>2.2)continue;S.hp[k]=(S.hp[k]??BL[ko].hp)-1/steleF(k);WALLHIT.set(k,performance.now());if(S.hp[k]<=0){(S.broken||(S.broken=[])).push({j:k,id:ko});if(S.ns)S.ns.broke++;clearObj(k);recount();toast(BL[ko].name+'がこわされた！','warn')}}/* 大きいコワイノは、となりの壁にもダメージ（範囲攻撃） */WALLHIT.set(j,performance.now());sfxAt('bonk',j%W+.5,(j/W)|0);
       if(S.hp[j]<=0){const nm=BL[S.obj[j]].name;(S.broken||(S.broken=[])).push({j,id:S.obj[j]});sfxAt('wbreak',j%W+.5,(j/W)|0);if(S.ns)S.ns.broke++;clearObj(j);recount();toast(nm+'がこわされた！','warn')}}
     return}}
@@ -4910,7 +4910,7 @@ function thumb(cv2,k,open){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='289';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='290';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
