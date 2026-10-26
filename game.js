@@ -1511,7 +1511,7 @@ function tryJob(r,G,k){
   case'tend':j=nearest(G,j=>S.obj[j]==='farm'&&S.dyn[j]&&S.dyn[j].sown!==false&&S.dyn[j].g<100&&S.dyn[j].wet<=0&&!NEARWELL.has(j)&&free('w'+j,1));if(j>=0){startAct(r,G,'tend',j,{key:'w'+j,obj:j});return true}return false;
   case'craft':{const o=S.orders.find(q=>(!q.worker||!S.res.some(x=>x.id===q.worker))&&craftOK(r,q));if(!o)return false;o.worker=r.id;const sp=craftSpot(G);startAct(r,G,'craft',sp>=0?sp:nearTile(G,BOARD),sp>=0?{order:o.id,key:'cs'+sp}:{order:o.id});return true}
   case'chop':case'mine':{if(k==='mine'&&WD===1&&!isNight()){const bq=q=>S.obj[q]==='boulder'&&free('o'+q,1);const bj=nearest(G,j=>adjOf(j,bq)>=0,90);if(bj>=0){const q=adjOf(bj,bq);startAct(r,G,'mine',bj,{key:'o'+q,obj:q});return true}}/* 大岩を先にくだく */
-    if(isNight()||!(matCap()>0)||roomN(r)<1||matTot()+matN(r)+2>matCap())return false;const camp=k==='chop'?'lumber':'quarry',nat=k==='chop'?['ntree','deadtree']:['rock'];
+    if(isNight()||!(matCap()>0)||roomN(r)<1||matTot()+matN(r)>=matCap())return false;/* 素材箱に1つでも空きがあれば集めにいく（ぴったり満杯までためられる） */const camp=k==='chop'?'lumber':'quarry',nat=k==='chop'?['ntree','deadtree']:['rock'];
     const cp=q=>typeAt(q)===camp&&free('o'+anc(q),2);j=nearest(G,j=>adjOf(j,cp)>=0,60);if(j>=0){const q=anc(adjOf(j,cp));startAct(r,G,k,j,{key:'o'+q,obj:q,camp:true});return true}
     const nt=q=>nat.includes(S.obj[q])&&free('o'+q,1);j=nearest(G,j=>adjOf(j,nt)>=0,40);if(j>=0){const q=adjOf(j,nt);startAct(r,G,k,j,{key:'o'+q,obj:q});return true}return false}
   case'cook':{if(!cnt('oven')||!(foodCap()>0)||isNight())return false;const rs=RECIPES.filter(R=>Object.keys(R.need).every(k=>(S.fs[k]||0)>=R.need[k]));if(!rs.length)return false;
@@ -4907,7 +4907,7 @@ function thumb(cv2,k,open){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='305';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='306';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
