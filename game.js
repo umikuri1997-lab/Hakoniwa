@@ -1206,7 +1206,7 @@ function decide0(r){
   if(isNight()&&!(isWatch(r)&&S.enemyOn&&!offShift(r)&&r.hunger>=30)&&!(r.hunger<hMax(r)*.5&&S.food>0)&&S.obj[here]!=='door'&&S.obj[here]!=='sdoor'){const out=insideSet();if(!out[here])for(let j=0;j<W*H;j++)if(out[j]||S.obj[j]==='door'||S.obj[j]==='sdoor')G.dist[j]=-1}
   if(r.meal)return goMeal(r,G);
   if((r.hunger<30||(r.hunger<45&&Math.hypot(r.x-CX,r.y-CY)>20))&&!foeNear(r))return goEat(r,G);/* ごはんは、なによりも先（すぐそばにコワイノがいるときは、逃げるのが先）。基地から遠いときは早めに帰る */
-  if(r.alarm!=null&&S.t-r.alarm<120&&r.hunger>=10&&!r.meal&&!(r.elem==='fire'&&r.hunger>=35)&&S.enemies.some(e=>e.spawned&&!e.flee&&Math.hypot(e.x-r.x,e.y-r.y)<10)){if(withFlee(r,fleeAlarm,G))return}
+  if(r.alarm!=null&&S.t-r.alarm<120&&r.hunger>=10&&!r.meal&&!(r.elem==='fire'&&r.hunger>=50)&&S.enemies.some(e=>e.spawned&&!e.flee&&Math.hypot(e.x-r.x,e.y-r.y)<10)){if(withFlee(r,fleeAlarm,G))return}
   if((r.coffin||cnt('grave'))&&goBurial(r,G))return;
   if(r.cing&&!isNight()){const ov=q=>S.obj[q]==='oven'&&free('o'+q,1);let j=nearest(G,j=>adjOf(j,q=>q===r.cing.ov&&ov(q))>=0,90);if(j<0)j=nearest(G,j=>adjOf(j,ov)>=0,90);
     if(j>=0){const q=adjOf(j,k=>k===r.cing.ov&&ov(k))>=0?r.cing.ov:adjOf(j,ov);r.cing.ov=q;const st=ovenStand(G,q);return startAct(r,G,'cook',st>=0?st:j,{key:'o'+q,obj:q})}
@@ -1221,10 +1221,11 @@ function decide0(r){
     if(carryN(r)>0&&foodCap()>0)return goStore(r,G)}
   if(r.cmat&&matCap()>0)return goStoreMat(r,G);
   if(isNight()&&r.hunger<hMax(r)*.5&&S.food>0&&!S.enemies.some(e=>e.spawned&&!e.dead&&Math.hypot(e.x-r.x,e.y-r.y)<7)){return goEat(r,G)}/* 夜も、おなかが半分になったら食べにいく（見回りの子もふくめて） */
-  if(r.elem==='fire'&&r.hunger>=35&&!r.refill){{const st=springThreat(r);if(st){const j=huntSpot(G,st,60,r);if(j>=0)return startAct(r,G,'patrol',j,{hunt:S.t})}}/* 最後の夜は、温泉を守りに行く */let en=null,bd=1e9;const br=BASE_R[S.baseLv]+3;for(const e of S.enemies){if(!e.spawned||e.dead)continue;if(!(e.x>=CX-br&&e.x<CX+br&&e.y>=CY-br&&e.y<CY+br))continue;const d=Math.hypot(e.x-r.x,e.y-r.y);if(d<bd){bd=d;en=e}}/* 「コワイノ」が拠点に近づいたら、たたかいに行く（おなか＝体力が少ないときは行かない） */
+  if(r.elem==='fire'&&r.hunger>=50&&!r.refill){{const st=springThreat(r);if(st){const j=huntSpot(G,st,60,r);if(j>=0)return startAct(r,G,'patrol',j,{hunt:S.t})}}/* 最後の夜は、温泉を守りに行く */let en=null,bd=1e9;const br=BASE_R[S.baseLv]+3;for(const e of S.enemies){if(!e.spawned||e.dead)continue;if(!(e.x>=CX-br&&e.x<CX+br&&e.y>=CY-br&&e.y<CY+br))continue;const d=Math.hypot(e.x-r.x,e.y-r.y);if(d<bd){bd=d;en=e}}/* 「コワイノ」が拠点に近づいたら、たたかいに行く（おなか＝体力が少ないときは行かない） */
     if(en){const j=guardSpot(G,en,r);/* 敵と同じマスではなく、ひとます離れて */if(j>=0)return startAct(r,G,'patrol',j,{hunt:S.t})}}/* となりに行けなくても、いちばん近くまで行く。見回りの中断でぐるぐるしないよう hunt をつける */
   if(isNight()&&r.elem==='fire'&&offShift(r)){r.bubble='💤'}/* 火のせいれいが2人以上いれば、交代で見張って、交代で眠る */
   else if(isNight()&&isWatch(r)){// 火のせいれい（と、まもりをおぼえたフタバ）は寝ないで見回り
+    if(r.elem==='fire'&&r.hunger<50&&hideIn(r,G))return;/* おなかが50より少ないときは、たたかわずに家へにげる */
     {const e=r.elem!=='fire'?null:S.enemies.filter(e=>e.spawned&&!e.dead&&inBase(e.x|0,e.y|0)).sort((a,b)=>Math.hypot(a.x-r.x,a.y-r.y)-Math.hypot(b.x-r.x,b.y-r.y))[0];if(e){const t=guardSpot(G,e,r);/* 届かない所にいても、いちばん近くまで行く */if(t>=0)return startAct(r,G,'patrol',t,{hunt:S.t})}}/* 拠点にコワイノが入ったら、まっすぐたたかいに行く */
     if(r.name===POKO){const hk=keyName('fire'),fs=S.res.filter(t=>t!==r&&!t.hidden&&t.elem==='fire'),tg=fs.find(t=>t.name===hk)||fs[0];if(tg&&Math.hypot(tg.x-r.x,tg.y-r.y)>1.5){let q=-1,bd=1e9;for(let k=0;k<W*H;k++){if(G.dist[k]<0||G.dist[k]>40||!walk(k))continue;const d=Math.hypot(k%W+.5-tg.x,((k/W)|0)+.5-tg.y)+G.dist[k]*.02;if(d<bd){bd=d;q=k}}if(q>=0)return startAct(r,G,'patrol',q)}}/* フタバは、火の子のそばについて回る */
     const ib=j=>inBase(j%W,(j/W)|0);let j=nearest(G,j=>walk(j)&&!roomOf(j)&&ib(j)&&Math.random()<.04,8);if(j<0)j=nearest(G,j=>walk(j)&&!roomOf(j)&&ib(j),80);/* 家の中にいたら、まず外へ出る */if(j>=0)return startAct(r,G,'patrol',j);/* 夜は家の外を見回る */return startAct(r,G,'wander',(r.y|0)*W+(r.x|0))}
@@ -1633,7 +1634,7 @@ function updRes(r,dt){rescueStuck(r);if((RHOLD.get(r)||0)>performance.now())retu
   if(r.cing&&r.hunger<=25&&S.food<=0){const R=RECIPES.find(x=>x.out===r.cing.rec);if(R)for(const k in R.need)addFood(k,R.need[k]);r.cing=null;if(r.act&&r.act.type==='cook')endAct(r);if(r.bubble==='🔥'||r.bubble==='🍳')r.bubble=null}/* 料理中におなかがすいたら、材料をもどして食べにいく */
   if(r.act&&r.hunger<=(r.act.type==='cook'?25:50)&&S.food>0&&!isNight()&&WORKT.has(r.act.type)){endAct(r)}/* おなかが50いかになったら、作業をやめて食べにいく */
   if(r.refill&&(r.refill<=S.t||r.hunger>=hMax(r)-1||S.food<=0))r.refill=0;/* にげて食べに来たときは、マックスまで食べる */
-  if(r.elem==='fire'&&r.hunger>=35&&!r.refill){r.fleeNow=false;if(r.act&&r.act.type==='flee')endAct(r)}
+  if(r.elem==='fire'&&r.hunger>=50&&!r.refill){r.fleeNow=false;if(r.act&&r.act.type==='flee')endAct(r)}
   if(r.fleeNow&&!r.hidden&&!(r.act&&(r.act.type==='flee'||r.act.run))){r.fleeNow=false;
     const en=S.enemies.find(e=>e.spawned&&Math.hypot(e.x-r.x,e.y-r.y)<6);
     if(en){r.fleeT=S.t;endAct(r);const G=bfs(r.x|0,r.y|0);if(withFlee(r,fleeHit,G))return}}
