@@ -2402,7 +2402,7 @@ function canPlace(id,x,y,quiet){
 }
 function canPlace1(id,x,y,quiet){
   if(x<0||y<0||x>=W||y>=H)return false;
-  if(WALLD.has(id)){const j=y*W+x,iw=k=>HOME_WALLS.has(typeAt(k))||HOME_DOORS.has(typeAt(k)),wreath=id==='wreath',target=HOME_WALLS.has(S.obj[j])||wreath&&S.obj[j]==='door';if(!target||wreath&&S.obj[j]==='door'&&(iw(j-W)||iw(j+W))&&!(iw(j-1)||iw(j+1))||!wreath&&(iw(j-W)||iw(j+W))||(S.win&&S.win[j]&&!((id==='curtain1'||id==='curtain2')&&S.win[j]===1))){if(!quiet)toast(wreath?'リースは壁か横向きのドアにかけてね':BL[id].name+'は、横向きの木の壁にかけてね');return false}return true}/* 窓は壁にはめる */
+  if(WALLD.has(id)){const j=y*W+x,iw=k=>HOME_WALLS.has(typeAt(k))||HOME_DOORS.has(typeAt(k)),wreath=id==='wreath',target=HOME_WALLS.has(S.obj[j])||wreath&&S.obj[j]==='door';if(!target||wreath&&S.obj[j]==='door'&&(iw(j-W)||iw(j+W))&&!(iw(j-1)||iw(j+1))||!wreath&&(iw(j-W)||iw(j+W))||(S.win&&S.win[j]&&!((id==='curtain1'||id==='curtain2')&&S.win[j]===1))||((id==='curtain1'||id==='curtain2')&&!HOUSES.some(h=>h.set.has(j)&&h.inside.has(j+W)&&!h.inside.has(j-W)))){if(!quiet)toast((id==='curtain1'||id==='curtain2')?'カーテンは、家の上がわの壁にだけかけられます':wreath?'リースは壁か横向きのドアにかけてね':BL[id].name+'は、横向きの木の壁にかけてね');return false}return true}/* 窓は壁にはめる */
   if(!inBase(x,y)){if(!quiet)toast('基地の中にだけ置けます');return false}
   const j=y*W+x;if(id==='lotus'){if(S.ground[j]!==1){if(!quiet)toast('ハスは池の上にだけ植えられます');return false}if(S.obj[j]){if(!quiet)toast('ここにはもう何かあります');return false}return true}
   if(S.ground[j]===1){if(!quiet)toast('水の上には置けません');return false}
