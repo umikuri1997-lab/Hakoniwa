@@ -2425,12 +2425,12 @@ function setBlock(id,j){
 function setParts(id,j,kind){const x=j%W,y=(j/W)|0;for(const[a,b]of fp(id,x,y)){const k=b*W+a;if(k===j)continue;S.obj[k]=kind;S.ref[k]=j}}
 function place(id,x,y){
   const b=BL[id];
-  if(WALLD.has(id)){if(!usable(id))return toast(BL[id].name+'がありません。依頼ボードでせいれいにたのもう');if(!canPlace(id,x,y))return;const j=y*W+x;S.inv[id]--;if((id==='curtain1'||id==='curtain2')&&S.win&&S.win[j]===1){giveItem('window',1);toast('窓にカーテンをかけた（窓はお供え箱にもどった）')}/* 窓のある壁には、カーテンをかけられる。カーテンの絵には窓がふくまれる */(S.win||(S.win={}))[j]=id==='window'?1:id;noteQuestPlacement(S.obj[j]==='door'?'door':'hwall',j);burst(j,'furn');recount();dirty=true;renderPalette();return}
+  if(WALLD.has(id)){if(!usable(id))return toast(BL[id].name+'が足りません','warn');if(!canPlace(id,x,y))return;const j=y*W+x;S.inv[id]--;if((id==='curtain1'||id==='curtain2')&&S.win&&S.win[j]===1){giveItem('window',1);toast('窓にカーテンをかけた（窓はお供え箱にもどった）')}/* 窓のある壁には、カーテンをかけられる。カーテンの絵には窓がふくまれる */(S.win||(S.win={}))[j]=id==='window'?1:id;noteQuestPlacement(S.obj[j]==='door'?'door':'hwall',j);burst(j,'furn');recount();dirty=true;renderPalette();return}
   if(b.kind==='seed'){const k=id.slice(5),j=y*W+x,d=S.dyn[j];if(S.obj[j]!=='farm'||!d)return toast('畑をタップしてね');
     if(d.crop&&d.sown!==false)return toast('もう'+CROPS[d.crop].name+'が植えてある');if(cseed(k)<1)return toast('たねがありません');
     if(d.paid&&d.crop)S.cseed[d.crop]=cseed(d.crop)+1;S.cseed[k]--;d.paid=true;/* たねは、えらんだときに減る */d.crop=k;d.sown=false;if(k==='imo'&&QUESTS[S.quest]?.text==='畑にたねをまこう'&&S.qTalked){const plots=imoSeedQuestPlots();if(!plots.includes(j))plots.push(j)}noteQuestPlacement('farm',j);burst(j,'plant','pat');toast(CROPS[k].name+'のたねをまいた');checkQuest();renderPalette();return}/* せいれいが、たねをまく */
   if(id==='tower'&&!towerReady())return openSheet('clear');/* 条件がそろうまで、台座は建てられない */
-  if(!usable(id)){if(b.kind==='furn'){toast(b.name+'が足りません。依頼ボードでせいれいにたのもう','warn')}/* 足りないときは、知らせるだけ（画面は開かない） */else toast('まだつかえません');return}
+  if(!usable(id)){if(b.kind==='furn'){toast(b.name+'が足りません','warn')}/* 足りないときは、知らせるだけ（画面は開かない） */else toast('まだつかえません');return}
   if(!canPlace(id,x,y))return;
   const j=y*W+x;
   if(b.kind==='plant'||b.kind==='build'){
@@ -2505,16 +2505,16 @@ function askBulk(id,cells){
   if(!ok.length){toast('置ける場所がありません');return}
   const b=BL[id];
   if(b.kind==='plant'){const n=Math.min(ok.length,inv(id));if(!n)return toast(iname(id)+'がお供え箱にありません');ok.length=n;pending={kind:'plant',id,cells:ok};$('#confirmTxt').textContent=iname(id)+'を'+n+'か所に植えてもらう';$('#cYes').disabled=false}
-  else{const s=shortCost({[id]:ok.length});if(b.qty){const n=Math.min(ok.length,inv(id));if(!n)return toast(b.name+'がありません。依頼ボードでたのもう');ok.length=n;s.cost=0;s.parts=[]}
+  else{const s=shortCost({[id]:ok.length});if(b.qty){const n=Math.min(ok.length,inv(id));if(!n)return toast(b.name+'が足りません','warn');ok.length=n;s.cost=0;s.parts=[]}
     pending={kind:'bulk',id,cells:ok,cost:s.cost,need:{[id]:ok.length}};$('#confirmTxt').textContent=b.name+' '+ok.length+'マス'+(s.parts.length?'（足りない'+s.parts.join('・')+'は'+SP(s.cost)+'で）':'（お供え箱から）');$('#cYes').disabled=S.pt<s.cost}
   $('#confirm').hidden=false;
 }
 function askStamp(sid,x,y){
   const st=STAMPS[sid];const lock=st.cells.map(c=>c[2]).filter(id=>!S.unlocked[id]);
-  if(lock.length)return toast('「'+BL[lock[0]].name+'」を依頼ボードでたのもう');
+  if(lock.length)return toast(BL[lock[0]].name+'が足りません','warn');
   for(const[dx,dy,id]of st.cells)if(!canPlace(id,x+dx,y+dy,true)||(!BL[id].floor&&S.obj[(y+dy)*W+x+dx]))return toast('ここには置けません（空いた基地の中にどうぞ）');
   const need={};for(const c of st.cells)need[c[2]]=(need[c[2]]||0)+1;
-  const s=shortCost(need);if(!isFinite(s.cost))return toast(s.parts.join('・')+'足りません。依頼ボードでたのもう');s.cost=Math.ceil(s.cost*.8);
+  const s=shortCost(need);if(!isFinite(s.cost))return toast(s.parts.join('・')+'足りません','warn');s.cost=Math.ceil(s.cost*.8);
   pending={kind:'stamp',sid,x,y,cost:s.cost,need};
   $('#confirmTxt').textContent=st.name+(s.parts.length?'（足りない分は'+SP(s.cost)+'で）':'（お供え箱から）');$('#cYes').disabled=S.pt<s.cost;$('#confirm').hidden=false;
 }
@@ -4352,7 +4352,7 @@ function renderPalette(){
   $('#undoBtn').hidden=mode!=='build';
   const pickItem=id=>()=>{sfx('tap');sel=id;if(pending&&pending.kind==='one'){pending=null;$('#confirm').hidden=true}selStamp=null;renderPalette();const b=BL[id];
     if(mode==='bulk'){if(!S.bulk)return toast('ひろびろハケは、カミサマと交換できます');toast('ハケで、なぞった範囲をぬれます');return}
-    if(b.kind==='furn'&&!inv(id))toast('依頼ボードでせいれいに作ってもらおう');
+    if(b.kind==='furn'&&!inv(id))toast(b.name+'が足りません','warn');
     else if(b.kind==='block'&&!inv(id))toast(b.name+'がありません');
     else if(b.kind==='plant')toast(inv(id)?'置いた場所にせいれいが植えてくれる':iname(id)+'がありません');
     else if(b.kind==='seed')toast(inv(id)?'たねをまきたい畑をタップ':iname(id)+'がありません');
@@ -4906,7 +4906,7 @@ function thumb(cv2,k,open){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='297';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='298';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
