@@ -1639,7 +1639,7 @@ function updRes(r,dt){rescueStuck(r);if((RHOLD.get(r)||0)>performance.now())retu
     if(en){r.fleeT=S.t;endAct(r);const G=bfs(r.x|0,r.y|0);if(withFlee(r,fleeHit,G))return}}
   if(r.act&&isNight()&&!NIGHT_OK.includes(r.act.type))endAct(r)
   if(r.act&&r.act.type==='sevreact'&&(r.hunger<30||r.energy<10||!SEV_ENCOUNTERS.get(S)||!sevEncounterSafe(SEV_ENCOUNTERS.get(S))))endAct(r);
-  if(r.act&&r.act.type==='questjoy'&&(r.hunger<30||r.energy<10||!questVisitSafe(r,r.act.obj)))endAct(r);
+  if(r.act&&r.act.type==='questjoy'&&(r.hunger<30||!questVisitSafe(r,r.act.obj)))endAct(r);
   if(tryQuestVisit(r))return;
   if(!r.act){decide(r);return}
   const a=r.act;
@@ -2294,8 +2294,8 @@ function questVisitStand(r,G,j){const b=BL[S.obj[j]],z=b&&b.sz||[1,1],x=j%W,y=(j
 function questVisitReached(r,j){const b=BL[S.obj[j]],z=b&&b.sz||[1,1],x=j%W,y=(j/W)|0,dx=Math.max(x-r.x,0,r.x-(x+z[0])),dy=Math.max(y-r.y,0,r.y-(y+z[1]));return Math.hypot(dx,dy)<=1.05}
 function tryQuestVisit(r){const list=QUEST_VISITS.get(r);if(!list||!list.length||r.act&&r.act.type==='questjoy')return false;
   const v=list[0];if(S.obj[v.obj]!==v.id){list.shift();return false}
-  if(r.hidden||r.hunger<30||r.energy<10||(r.visitRetryAt||0)>S.t||onHold(r)||HOLD.has(r.id)||!questVisitSafe(r,v.obj))return false;
-  if(r.act&&(['eat','fetch','flee','faint'].includes(r.act.type)||r.act.type==='sleep'&&r.act.stage==='do'))return false;
+  if(r.hidden||r.hunger<30||(r.visitRetryAt||0)>S.t||onHold(r)||HOLD.has(r.id)||!questVisitSafe(r,v.obj))return false;
+  if(r.act&&['eat','fetch','flee','faint'].includes(r.act.type))return false;/* おなかがすいているとき以外は、ねむくても、すぐ見にいく */
   const G=bfs(r.x|0,r.y|0),stand=questVisitStand(r,G,v.obj);if(stand<0)return false;list.shift();
   endAct(r);startAct(r,G,'questjoy',stand,{obj:v.obj,targetId:v.id,partKey:v.partKey});return true;
 }
