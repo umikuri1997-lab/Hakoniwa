@@ -99,7 +99,7 @@ const BL={
   birdhouse:{name:'巣箱',kind:'furn',cat:'env',f2:1,lv:2,pc:8,time:40,maker:'wind',attr:{wind:1},mat:{wood:2},solid:1,env:1,er:4,desc:'まわり4マスで、たのしさ+0.4／1時間（休けい中は元気も+0.4）。範囲がとても広い'},
   birdbath:{offerOnly:1,name:'水飲み鳥',kind:'furn',cat:'env',f2:1,lv:7,pc:10,time:50,maker:'water',attr:{water:1},mat:{stone:2},solid:1,env:3,desc:'まわり3マスで、たのしさ+1.1／1時間（休けい中は元気も+1.1）'},
   parasol:{name:'パラソル',dsc:2,kind:'furn',cat:'env',f2:1,lv:5,pc:12,time:50,maker:'wind',attr:{wind:1},mat:{wood:3},solid:1,env:7,er:1,desc:'まわり1マスだけ。そのかわり、たのしさ+2.5／1時間（休けい中は元気も+2.5）'},
-  arch:{offerOnly:1,name:'ガーデンアーチ',kind:'furn',cat:'env',f2:1,lv:8,pc:14,time:60,maker:'wood',attr:{wood:1},mat:{wood:4},env:4,desc:'まわり3マスで、たのしさ+1.4／1時間（休けい中は元気も+1.4）'},
+  arch:{offerOnly:1,dsc:1.8,name:'ガーデンアーチ',kind:'furn',cat:'env',f2:1,lv:8,pc:14,time:60,maker:'wood',attr:{wood:1},mat:{wood:4},env:4,desc:'まわり3マスで、たのしさ+1.4／1時間（休けい中は元気も+1.4）'},
   slide:{name:'すべり台',sz:[2,2],kind:'furn',cat:'toy',f2:1,lv:2,pc:14,time:70,maker:'wind',attr:{wind:1},mat:{wood:3,stone:1},play:{pt:3,fun:55,dur:40,cap:1,adj:1},solid:1,desc:'1人で遊べる。たのしさ +88（40分）'},
   sandbox:{name:'すなば',sz:[2,1],nosc:1,kind:'furn',cat:'toy',f2:1,lv:5,pc:14,time:70,maker:'earth',attr:{earth:1},mat:{wood:2,stone:2},play:{pt:3,fun:50,dur:45,cap:2,adj:1},solid:1,desc:'2人まで遊べる。たのしさ +80（45分）'},
   seesaw:{name:'シーソー',kind:'furn',cat:'toy',f2:1,dsc:2,lv:7,pc:16,time:80,maker:'wind',attr:{wind:1},mat:{wood:3},play:{pt:4,fun:60,dur:40,cap:2,adj:1},solid:1,desc:'2人で遊べる。たのしさ +96（40分）'},
