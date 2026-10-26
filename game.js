@@ -1281,9 +1281,8 @@ function goEat(r,G){
   r.bubble='😣';return goWander(r,G);
 }
 const fireMul=r=>(r.energy<10?.5:r.energy<25?.7:1)*(r.fun<20?.8:1);/* 火のせいれいは、つかれても楽しさが減ってもたたかう。そのぶん、こうげきが弱くなる（つかれ×0.7・楽しさ低下×0.8） */
-const futabaFight=()=>!!(S.cleared||(S.bossKills||0)>0);/* フタバが戦うのは、オオカゲを追いはらってから（こもれびのまもりをおぼえてから） */
 const nightClear=()=>!!S.nightHad&&!S.nushi&&S.enemies.every(e=>e.dead);/* 今夜のコワイノを倒し切った */
-const isWatch=r=>(r.elem==='fire'&&!nightClear())||(r.name===POKO&&!WD&&!!S.flags.guard&&futabaFight());/* 夜の見回りをする子 */
+const isWatch=r=>(r.elem==='fire'&&!nightClear())||(r.name===POKO&&!WD&&!!S.flags.guard);/* 夜の見回りをする子（フタバは、こもれびのまもりをおぼえたら） */
 function offShift(r){return false;/* 火のせいれいは全員みまわり（交代なし） */if(r.elem!=='fire'||!S.enemyOn)return false;const F=S.res.filter(q=>q.elem==='fire'&&!q.hidden).sort((a,b)=>a.id-b.id);if(F.length<2)return false;const h=hour(),sh=(h>=21||h<1.5)?0:1;return F.indexOf(r)%2!==sh}
 const hostileNow=()=>S.enemies.some(e=>e.spawned&&!e.dead&&!e.flee);
 function goShiver(r,G){/* 家の中（なければ、いまの場所）で、ふるえる */let k=-1;if(HOUSES.length){const hs=new Set();for(const h of HOUSES)for(const q of h.inside)hs.add(q);k=nearest(G,j=>hs.has(j)&&walk(j)&&S.obj[j]!=='door'&&S.obj[j]!=='sdoor',200)}startAct(r,G,'shiver',k,{run:k>=0});return true}
@@ -2225,7 +2224,7 @@ function sevBack(n){if(WD||!S.flags)return;const Q=S.sevQ||(S.sevQ=[]),F=S.flags
 function atkFX(r,en){fx.push({k:'slash',x:en.x*TS,y:en.y*TS-6,d:en.x>=r.x?1:-1,life:1});for(let n=0;n<8;n++){const a=Math.random()*6.28;fx.push({k:'p',x:en.x*TS,y:en.y*TS-6,vx:Math.cos(a)*70,vy:Math.sin(a)*70-20,life:.7,col:n%2?'#fff3a0':'#ffb347',r:3})}}/* 攻撃：弧をえがく斬撃と火花 */
 function leafFX(t){for(let n=0;n<14;n++){const a=n/14*6.28;fx.push({k:'p',x:t.x*TS+Math.cos(a)*10,y:t.y*TS+Math.sin(a)*5,vx:Math.cos(a)*40,vy:Math.sin(a)*20-30,life:1,col:n%2?'#8fdc6a':'#c8f5a0',r:2.6})}}
 const faceTo2=(f,t)=>{f.face=t.x>=f.x?1:-1};
-function guardTick(){const fin=!WD&&!!(S.ns&&S.ns.final)&&isNight();if(WD||!((S.flags.guard&&futabaFight())||fin)||!S.enemies.length)return;const f=S.res.find(r=>r.name===POKO);if(!f||(f.act&&f.act.type==='faint')||f.hunger<25)return;
+function guardTick(){const fin=!WD&&!!(S.ns&&S.ns.final)&&isNight();if(WD||!(S.flags.guard||fin)||!S.enemies.length)return;const f=S.res.find(r=>r.name===POKO);if(!f||(f.act&&f.act.type==='faint')||f.hunger<25)return;
   if(f.gw){if(S.t<f.gw.t)return;const t=f.gw.tg;f.gw=null;if(S.res.includes(t)&&!t.hidden&&Math.hypot(t.x-f.x,t.y-f.y)<=(fin?3.6:2.6)&&(t.shU||0)<=S.t){t.shU=S.t+40;f.shU=S.t+40;f.gcd=S.t+75;leafFX(t);leafFX(f);if(fin)for(const u of S.res){if(u===t||u===f||u.hidden||Math.hypot(u.x-f.x,u.y-f.y)>3)continue;u.shU=S.t+40;leafFX(u)}/* 最後の夜：フタバのまわり3マスの子をまとめて守る */addFloat(f.x,f.y-1,'こもれびのまもり！','#5fbf3f');sfx('bush');if(fin&&!S.flags.finF){S.flags.finF=1;S.flags.guard=true;centerOn(f.x*TS,f.y*TS);dialog([[POKO,'むかしは、みんなに守ってもらったけど……'],[POKO,'今度は、ぼくが守る番だ！']])}}return}/* 近くまで来て、ひとふりしてから発動 */
   if((f.gcd||0)>S.t)return;
   let best=null;const hk=keyName('fire');for(const t of S.res){if(t===f||(t.elem!=='fire'&&!fin)||(t.shU||0)>S.t||Math.hypot(t.x-f.x,t.y-f.y)>(fin?3:2))continue;if(!S.enemies.some(e=>!e.dead&&Math.hypot(e.x-t.x,e.y-t.y)<2.6))continue;const p=t.name===hk?0:1;if(!best||p<best[0])best=[p,t]}
