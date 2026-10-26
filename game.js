@@ -3009,7 +3009,7 @@ function drawObj(c,id,x,y,i,g,now){
   case'door':case'hwall':{/* 壁：正面は1マスの高さ（y〜y+32）、断面（てっぺん）はその上（y-9〜y）にブラウン1色 */
     const door=id==='door';if(ICON&&door){const art=HOUSEART&&HOUSEART['wall-door'];if(art&&art.complete&&art.naturalWidth){c.drawImage(art,x+2,y+1,28,30);break}}
     if(ICON){c.save();c.translate(x+16,y+32);c.scale(.75,.75);c.translate(-x-16,-y-32)}
-    const isW=k=>HOME_WALLS.has(typeAt(k))||HOME_DOORS.has(typeAt(k));const L=!ICON&&isW(i-1),R=!ICON&&isW(i+1),U=!ICON&&isW(i-W),D=!ICON&&isW(i+W);
+    const isW=k=>HOME_WALLS.has(typeAt(k))||HOME_DOORS.has(typeAt(k))||door&&FENCE_IDS.has(typeAt(k));const L=!ICON&&isW(i-1),R=!ICON&&isW(i+1),U=!ICON&&isW(i-W),D=!ICON&&isW(i+W);
     const MAT=c._mat||'wood',WT='#9a7350',T=9,hasV=U||D,hasH=L||R||!hasV,hx0=L||ICON?x:x+5,hx1=R||ICON?x+TS:x+27;
     const top=()=>{const rs=[];if(hasH)rs.push([hx0-(L?2:0),y-T,hx1+(R?2:0),y,hx0,y-T,hx1,y]);if(hasV)rs.push([x+5,y-T-(U?2:0),x+27,y-T+(D?TS+2:T),x+5,y-T,x+27,y-T+(D?TS:T)]);drawSection(c,x,y-T,rs)};/* 断面：エリア全体をひとつにつなげた輪郭（たて・よこのくぎりなし） */
     const front=(a,b)=>wallBand(c,MAT,a,b,x,y,i);
@@ -3032,7 +3032,7 @@ function drawObj(c,id,x,y,i,g,now){
     let op=0;if(!ICON)op=doorOp(i,x,y,ver?2.1:.9,ver?.9:2.1);if(ver&&!ICON){const an=op*Math.PI*.45;c.save();c.translate(x+16,y);c.rotate(an);c.fillStyle='rgba(0,0,0,.18)';c.fillRect(-1,1,5,TS);c.fillStyle='#8a5a33';c.fillRect(-2,0,4,TS);c.fillStyle='#b88550';c.fillRect(-2,0,1.3,TS);c.restore();break}/* たて置きは、家のドアと同じ一本線 */if(drawStoneDoor(c,x,y,op))break;shadow(c,x+16,y+29,16,3);const stc='#c3bfb6',sto='#9a978f';
     if(!ver){c.fillStyle=sto;rr(c,x,y+3,7,26,2);rr(c,x+25,y+3,7,26,2);c.fillStyle=stc;rr(c,x+1,y+4,5,24,2);rr(c,x+26,y+4,5,24,2);const pw=18*(1-op*.82);c.fillStyle='#9a6a40';c.fillRect(x+7,y+8,pw,20);c.fillStyle='#b9824f';for(let k=0;k<3;k++)c.fillRect(x+7+k*pw/3+.5,y+8,pw/3-1,20);c.fillStyle='#6e4c32';c.fillRect(x+7,y+13,pw,1.5);c.fillRect(x+7,y+22,pw,1.5)}
     else{c.fillStyle=sto;rr(c,x+2,y-2,28,8,2);rr(c,x+2,y+25,28,7,2);const ph=18*(1-op*.82);c.fillStyle='#9a6a40';c.fillRect(x+9,y+6,14,ph);c.fillStyle='#6e4c32';c.fillRect(x+9,y+6+ph/2,14,1.5)}break}
-  case'gate':case'archedgate':case'stonegate':{const isF=k=>FENCE_IDS.has(typeAt(k))||(id==='stonegate'&&(HOME_WALLS.has(typeAt(k))||HOME_DOORS.has(typeAt(k))));const L=!ICON&&isF(i-1),R=!ICON&&isF(i+1),U=!ICON&&isF(i-W),D=!ICON&&isF(i+W);const ver=!(L||R)&&(U||D);
+  case'gate':case'archedgate':case'stonegate':{const isF=k=>FENCE_IDS.has(typeAt(k))||HOME_WALLS.has(typeAt(k))||HOME_DOORS.has(typeAt(k));/* ちがう種類の塀・壁がつながっていても、たて置きにする */const L=!ICON&&isF(i-1),R=!ICON&&isF(i+1),U=!ICON&&isF(i-W),D=!ICON&&isF(i+W);const ver=!(L||R)&&(U||D);
     let op=0;if(!ICON)op=doorOp(i,x,y,ver?2.1:.9,ver?.9:2.1);
     if(id==='stonegate'&&drawMossGate(c,x,y,i,ver,op))break;shadow(c,x+16,y+28,12,3);const P=id==='stonegate'?'#77756f':id==='archedgate'?'#704b32':'#a0703f',PC=id==='stonegate'?'#c3bfb6':id==='archedgate'?'#d8b275':'#d6a874',RL=id==='stonegate'?'#9a978f':id==='archedgate'?'#9b7049':'#c08a55',SL=id==='stonegate'?'#c3bfb6':id==='archedgate'?'#c99153':'#cf9c66';
     if(!ver){const pw=18*(1-op*.82);c.fillStyle=RL;c.fillRect(x+7,y+12,pw,4);c.fillRect(x+7,y+20,pw,4);c.fillStyle=SL;for(let k=0;k<3;k++)c.fillRect(x+7+pw*(k+.5)/3-1.5,y+10,3,16);
