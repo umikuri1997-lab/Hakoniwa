@@ -738,7 +738,7 @@ function widenStoneGates(s){
 }
 function ensureStor(s){for(const id in BL){const b=BL[id];if(b&&b.offerOnly&&b.kind==='furn'){if(s.recipes)delete s.recipes[id];if(s.guardianIdeas)delete s.guardianIdeas[id]}}/* お供えされる家具は、レシピとして出さない（セーブからも消す） */
   if(s.sev&&s.sev.e09){const f=s.flags||(s.flags={});if(!f.e09Replay){f.e09Replay=1;delete s.sev.e09}}/* かけらのムービーを見そこねた人のために、1回だけ、もう一度流れるようにする */
-  for(const[rm,to]of[['sideb','cabinet'],['chime','vane']]){for(let j=0;j<s.obj.length;j++)if(s.obj[j]===rm)s.obj[j]=to;if(s.inv&&s.inv[rm]){s.inv[to]=(s.inv[to]||0)+s.inv[rm];delete s.inv[rm]}if(s.recipes)delete s.recipes[rm];if(s.guardianIdeas)delete s.guardianIdeas[rm];for(const o of s.orders||[])if(o.type===rm)o.type=to}/* ひくい棚をなくした：置いてあったものは、キャビネットに */widenStoneGates(s);{const nm=new Set();for(let j=0;j<s.obj.length;j++)if(s.obj[j]==='grave'&&s.dyn&&s.dyn[j]&&!s.dyn[j].buried)nm.add(s.dyn[j].name);for(const r of s.res||[])if(r.coffin)nm.add(r.coffin.name);for(const L of[s.buried||[],s.lost||[]])for(const q of L)if(nm.has(q.name))q.unb=true}/* まだ埋葬されていない子は、よみがえらせない */if(!(s.world>=1)&&s.ovenSet)for(const q in s.ovenSet)if(s.ovenSet[q]==='soup')delete s.ovenSet[q];
+  for(const[rm,to]of[['sideb','cabinet'],['chime','vane']]){for(let j=0;j<s.obj.length;j++)if(s.obj[j]===rm)s.obj[j]=to;if(s.inv&&s.inv[rm]){s.inv[to]=(s.inv[to]||0)+s.inv[rm];delete s.inv[rm]}if(s.recipes)delete s.recipes[rm];if(s.guardianIdeas)delete s.guardianIdeas[rm];for(const o of s.orders||[])if(o.type===rm)o.type=to}/* ひくい棚をなくした：置いてあったものは、キャビネットに */widenStoneGates(s);{const nm=new Set();for(let j=0;j<s.obj.length;j++)if(s.obj[j]==='grave'&&s.dyn&&s.dyn[j]&&!s.dyn[j].buried)nm.add(s.dyn[j].name);for(const r of s.res||[])if(r.coffin)nm.add(r.coffin.name);if(!s.wipe)for(const L of[s.buried||[],s.lost||[]])for(const q of L)if(nm.has(q.name))q.unb=true}/* まだ埋葬されていない子は、よみがえらせない */if(!(s.world>=1)&&s.ovenSet)for(const q in s.ovenSet)if(s.ovenSet[q]==='soup')delete s.ovenSet[q];
   if(!(s.baseV>=2)){s.baseLv=[0,4,6,8][s.baseLv||0]||0;s.baseV=2}/* 広げる段階をふやした前のセーブ */fixWallHp(s);boxMat(s);if(s.world===1&&!(s.flags.st2v>=2))st2Migrate(s);for(const r of s.res){if(!r.vr)r.vr=mkVar(r.name);if(!r.vr.sta)r.vr.sta=1;if(!r.vr.vo)r.vr.vo=KEYVR[r.name]?KEYVR[r.name].vo:mkVar('').vo;if(KEYVR[r.name]){r.vr.key=true;r.vr.tr=KEYVR[r.name].tr}if(!r.vr.key&&(!r.vr.tr||r.vr.tr==='kizuna'||r.vr.tr==='yuukan'))r.vr.tr=pick(TRK())}for(const k in s.hp||{})if(/^\d+$/.test(k)&&typeof s.hp[k]==='number')s.hp[k]=Math.ceil(s.hp[k]);/* 耐久は整数 */if(!(s.qVer>=2)){if(s.quest>=11)s.quest+=2;s.qVer=2}/* 夜と罠のクエストを足した分ずらす */
   if(s.qVer<3){const M=[0,1,2,3,4,5,6,7,8,8,11,12,12,16,19,18,22,23];s.quest=s.quest>=M.length?QUESTS.length:M[s.quest];s.qTalked=true;s.qVer=3;/* クエストを作り直した分の読みかえ。前からの人はレシピをぜんぶ知っている */
     s.recipes={};RLOCK.forEach(id=>s.recipes[id]=true);s.feat.summon=true;s.flags.sumTold=true;if(s.res.some(r=>r.name==='ミナ'||r.name==='ツチノコ'||r.name==='ノドカ')||s.quest>8)s.flags.minaCame=true}
@@ -1684,7 +1684,7 @@ function die(r){
   toast(r.name+'が空腹で力尽きてしまった…','warn');
   {const DT=S.res.length?deathTalk(r):null;if(DT&&DT.length)setTimeout(()=>dialog(DT),900);else{const key=isKey(r.name),fk=key?'deathTold':'death2Told';if(!S.flags[fk]&&S.res.length){S.flags[fk]=true;const sp=S.res.find(q=>KEYRES.includes(q.name))||S.res[0],n=r.name;
     setTimeout(()=>dialog((key?DEATHL:DEATHL2)[elemKey(sp)](n).map(t=>[sp.name,t])),900)}}}/* 話す子の性格で説明する */
-  if(!S.res.length){S.wipe=true;for(const L of[S.buried||[],S.lost||[]])for(const q of L)delete q.unb;for(let j=0;j<S.obj.length;j++)if(S.obj[j]==='grave'&&S.dyn[j])S.dyn[j].buried=true}/* 全滅：埋葬する子がいないので、カミサマが見送って、次の朝から呼びもどせるようにする */
+  if(!S.res.length){S.wipe=true;for(const L of[S.buried||[],S.lost||[]])for(const q of L)delete q.unb}/* 全滅：埋葬する子がいないので、埋葬の前でも、次の朝から呼びもどせるようにする（お墓はそのまま） */
   if(!S.res.length)setTimeout(()=>STATUE<0?gameOver():dialog([[GOD,'みんな、消えてしもうた…。'],[GOD,'じゃが、だいじょうぶじゃ。朝になれば、物語のせいれいから神殿の「！」で呼びもどせるぞい。'],[GOD,'人数が少ないうちは、「コワイノ」も少なめじゃ。オオカゲも、なかまがそろうまでは来んはずじゃ。'],[GOD,'それと…これを使うがよい。'+(lvOK('wall')?'石の塀':'柵')+'を10こ、やろう。']],()=>{const w=lvOK('wall')?'wall':'fence';giveItem(w,10);toast(BL[w].name+'を10こもらった','good')}),800);/* 石の塀を覚えていたら、石の塀 */
 }
 
@@ -1717,7 +1717,7 @@ function doSummon(){
   for(let rr=0;rr<10&&!sp;rr++){const c=[];for(let dy=-rr;dy<=rr;dy++)for(let dx=-rr;dx<=rr;dx++){if(Math.max(Math.abs(dx),Math.abs(dy))!==rr)continue;const x=sx0+dx,y=sy0+dy;if(x<1||y<1||x>=W-1||y>=H-1)continue;const j=y*W+x;if(walk(j)&&!S.obj[j]&&!S.res.some(q=>(q.x|0)===x&&(q.y|0)===y)&&!(godHere()&&Math.hypot(x+.5-godX(),y+.5-godY())<2.2))c.push([x,y])}if(c.length)sp=pick(c)}
   if(!sp)sp=[CX,CY];
   if(sm.rev){let d;if(sm.lost){const L=S.lost,i=typeof sm.lost==='string'?L.findIndex(q=>q.name===sm.lost):0;d=L.splice(Math.max(0,i),1)[0];}else{const B=S.buried;B.sort((a,b)=>(isKey(b.name)?1:0)-(isKey(a.name)?1:0)||(a.unb?1:0)-(b.unb?1:0));d=B.shift()}
-    r=mkRes(S,d.name,d.elem,sp[0]+.5,sp[1]+.5,d.like);r.vr=d.vr||r.vr;r.xp=d.xp||0;r.xpf=d.xpf||0;if(d.bst)r.bst=d.bst;if(d.sst)r.sst=d.sst;if(d.boost)r.boost=d.boost;r.back=1;r.came=d.came;r.made=d.made;r.beat=d.beat;r.reMate=d.mate||null;
+    r=mkRes(S,d.name,d.elem,sp[0]+.5,sp[1]+.5,d.like);r.vr=d.vr||r.vr;r.xp=d.xp||0;r.xpf=d.xpf||0;if(d.bst)r.bst=d.bst;if(d.sst)r.sst=d.sst;if(d.boost)r.boost=d.boost;r.back=1;r.came=d.came;r.made=d.made;r.beat=d.beat;r.reMate=d.mate||null;for(let j=0;j<S.obj.length;j++)if(S.obj[j]==='grave'&&S.dyn[j]&&!S.dyn[j].buried&&S.dyn[j].name===d.name){S.obj[j]='';delete S.dyn[j];recount()}for(const q of S.res)if(q.coffin&&q.coffin.name===d.name)q.coffin=null;/* 埋葬の前にもどってきた子のお墓は、なくなる */
     toast(r.name+'がもどってきた！','good');sevBack(r.name);reunite(r,sp)}
   else{let name;if(sm.elem===SECOND[WD].elem&&!S.flags.minaCame){name=SECOND[WD].name;S.flags.minaCame=true}
     else if(!WD&&FIXK0[sm.elem]&&!S.res.some(q=>q.elem===sm.elem)&&!(S.buried||[]).some(q=>q.elem===sm.elem&&isKey(q.name))&&!(S.lost||[]).some(q=>q.elem===sm.elem&&isKey(q.name)))name=FIXK0[sm.elem];/* その属性のキーキャラは、決まった子 */
@@ -4918,7 +4918,7 @@ function thumb(cv2,k,open){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='317';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='318';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
