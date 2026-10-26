@@ -671,7 +671,7 @@ function clearConds(){if(WD===1){const tm=TOWER_MAT(),n=springDone(),fac=['bench
   ['温泉のそばに、ベンチ・水おけ・パラソル（いま'+fac+'/3）',fac>=3],
   ['ホムラとシズクのおねがい',!!S.flags.hReq&&!!S.flags.sReq],
   ['木材'+tm.wood+'・石材'+tm.stone+'（いま'+(S.mat.wood||0)+'・'+(S.mat.stone||0)+'）',(S.mat.wood||0)>=tm.wood&&(S.mat.stone||0)>=tm.stone]]}
-  const tm=TOWER_MAT(),[el,need,pw]=WD===1?['fire',6,750]:['wood',6,500],nm=ELEM[el].name;return [
+  const tm=TOWER_MAT(),[el,need,pw]=WD===1?['fire',6,750]:['wood',6,3000],nm=ELEM[el].name;return [
   [nm+'のせいれい'+need+'人（いま'+elemCount(el)+'人）',elemCount(el)>=need],
   ['守護の台座を建てる',cnt('tower')>=1],
   ['台座にヌシのかけらを2つはめる（いま'+Math.min(2,S.setSh||0)+'つ）',(S.setSh||0)>=2],
