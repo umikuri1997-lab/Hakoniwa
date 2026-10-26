@@ -354,7 +354,7 @@ button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 img{object-fit:contain}/* アイコンの縦横比をかえない */
 #dockInv img{width:26px;height:26px;display:block;margin:0 auto 1px}
 .qbtn{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;margin-left:6px;padding:0;border-radius:5px;background:#faf1e0;border:1.5px solid #a8743f;color:#8a5a33;font-size:12px;font-weight:800;line-height:1;vertical-align:middle;cursor:pointer;box-shadow:0 1.5px 0 #a8743f}.qbtn:active{transform:translateY(1px);box-shadow:none}
-#helpPop{position:absolute;inset:0;z-index:80;display:flex;align-items:center;justify-content:center;background:rgba(40,25,10,.35);padding:16px}#helpPop[hidden]{display:none}#helpPop .hc{background:#fffaf0;border:2px solid #a8743f;border-radius:14px;padding:14px 16px;max-width:320px;color:#4a3a22;box-shadow:0 4px 0 rgba(90,60,30,.25)}#helpPop b{display:block;margin-bottom:6px}#helpPop p{margin:0;font-size:13px;line-height:1.6;white-space:pre-line}
+#helpPop{position:absolute;inset:0;z-index:80;display:flex;align-items:center;justify-content:center;background:rgba(40,25,10,.35);padding:16px}#helpPop[hidden]{display:none}#helpPop .hc{background:#fffaf0;border:2px solid #a8743f;border-radius:14px;padding:14px 16px;max-width:320px;color:#4a3a22;box-shadow:0 4px 0 rgba(90,60,30,.25)}#helpPop b{display:block;margin-bottom:6px}#helpPop .tags{display:flex;flex-wrap:wrap;gap:5px;margin:0 0 8px}#helpPop .tags[hidden]{display:none}.tag{display:inline-block;background:#ecd9b4;color:#6b4a24;border-radius:999px;padding:2px 10px;font-size:11px;font-weight:700;line-height:1.5}#helpPop p{margin:0;font-size:13px;line-height:1.6;white-space:pre-line}
 .emi{height:1.15em;width:auto;vertical-align:-.22em;display:inline-block;margin:0 .06em}
 
 /* 端末の表示幅・セーフエリア内でHUDを組み直す。 */
@@ -434,7 +434,7 @@ html,body{margin:0;width:100%;min-width:0}
     </nav>
   </div>
   <div id="sheetWrap" hidden><div class="scrim" id="scrim"></div><section class="sheet" role="dialog"><header><h2 id="sheetTitle"></h2><button class="x" id="sheetX" aria-label="とじる">×</button></header><div id="sheetBody"></div></section></div>
-  <div id="helpPop" hidden><div class="hc"><b></b><p></p></div></div>
+  <div id="helpPop" hidden><div class="hc"><b></b><div class="tags" hidden></div><p></p></div></div>
   <div id="dialog" hidden><div class="dlg"><canvas id="dlgPort" width="240" height="240" hidden></canvas><div class="who" id="dlgWhoBox"><span class="orb"></span><span id="dlgWho"></span></div><p id="dlgText"></p><div class="btns" id="dlgBtns"></div></div></div>
   <div id="title" class="title"><div class="tbox"><p class="tsub">守り神とせいれいのものがたり</p><h1>はこにわ暮らし</h1><p class="tline">荒れた土地に、もう一度いのちを。</p><div class="tbtns"><button class="btn pri" id="tStart">はじめる</button></div></div></div>
   <div id="maps" class="maps" hidden><div class="mwrap"><div class="mhead"><h2>マップをえらぶ</h2><button class="btn" id="mSnd"></button></div><div class="route" id="mList"></div><button class="btn" id="mBack">タイトルへ</button></div></div>
