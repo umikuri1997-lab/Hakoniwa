@@ -579,6 +579,12 @@ const QUESTS2=[
     [SHIZUKU,'温泉から上がると、足を休めたくなります。それに、からだに残ったお湯を、もう少し流せたら……。守り神さま、何かよい方法はありませんか。'],
     [HOMURA,'湯上がりに、ぼんやりできる場所か。いいね。守り神なら、面白いことを考えてくれそうだ。']],gives:{flags:['lv_tub','lv_bench']}},
    story:[[SHIZUKU,'ありがとうございます。湯上がりのひととき、たいせつにしますね。']],gives:{flag:'sReq'}},
+  {text:'村レベルを3にしよう',check:()=>S.lv>=3,how:'せいれいが満足してパワーがたまると、村レベルが上がる',prog:()=>'いま 村レベル'+S.lv,
+   talk:{who:HOMURA,when:()=>true,lines:[
+    [HOMURA,'温泉がひとつもどっただけで、村の空気がちがうね。'],
+    [SHIZUKU,'みなさんが、ここで楽しく暮らしてくだされば、村も育っていきます。'],
+    [HOMURA,'よし、もっとにぎやかな温泉郷にしてやろうじゃないか。']]},
+   story:[[HOMURA,'村が、ひとまわり大きくなった気がするよ。'],[SHIZUKU,'新しく作れるものも、ふえたようです。']]},
   {text:'ハイカゲを3体追いはらおう',check:()=>(st2().ashKills||0)>=3,prog:()=>'ハイカゲ '+Math.min(3,st2().ashKills||0)+'/3',how:'夜に来る灰色の「ハイカゲ」を追いはらう。かまどやベンチを灰でよごして、しばらく使えなくする',
    talk:{who:HOMURA,when:()=>true,lines:[
     [HOMURA,'…守り神。これから夜になると、火山のほうから「ハイカゲ」ってやつも来るよ。'],
@@ -596,6 +602,20 @@ const QUESTS2=[
     [HOMURA,'火山のふもとに、熱の流れを切りかえる装置があるんだ。'],
     [HOMURA,'左にむければ、西の温泉に熱がとどくはずさ。']]},
    story:[[HOMURA,'西の温泉にも、湯気が上がった！'],[SHIZUKU,'すばらしいです。…残るは、奥の温泉ですね。'],[SHIZUKU,'ありがとうございます、守り神さま。']]},
+  {text:'火のせいれいを3人にしよう',check:()=>elemCount('fire')>=3&&NEWRES==null,how:'見張り台やサルビアを置いて火の力をためる。満ちた次の朝、神殿の「！」からなかまを呼ぶ',prog:()=>'火のせいれい '+Math.min(3,elemCount('fire'))+'/3・火の力 '+Math.floor(ATTR.fire)+'/'+needFor('fire'),
+   talk:{who:HOMURA,when:()=>true,lines:[
+    [HOMURA,'……なあ、守り神。むかし、この村には、火のせいれいがたくさんいたんだ。'],
+    [HOMURA,'温泉が冷えて、コワイノのうろつく寒い夜がつづいてさ……でも、あたいら火のせいれいは、からだが強いからね。消えずに、ちりぢりに逃げのびたんだ。'],
+    [HOMURA,'あたいだけは、この村をはなれられなくて、ひとりでのこったのさ。'],
+    [SHIZUKU,'では、みなさん、どこかで元気にしているのですね。西の温泉にも、湯気がもどりました。ぬくもりが伝われば、きっと帰ってきます。'],
+    [HOMURA,'……そうだね。火の力をためて、なかまをむかえようじゃないか。']]},
+   story:[[HOMURA,'……おかえり。待ってたよ。'],[HOMURA,'ほらね。みんな、ちゃんと生きてたんだ。温泉がもどれば、帰ってくるのさ。'],[SHIZUKU,'にぎやかになりましたね。'],[HOMURA,'ありがとよ、守り神。']]},
+  {text:'西の温泉に、あし湯をつくろう',check:()=>spNear(['bench'],'b')>=2&&spNear(FLOWERS2,'b')>=3,prog:()=>'ベンチ '+Math.min(2,spNear(['bench'],'b'))+'/2・花 '+Math.min(3,spNear(FLOWERS2,'b'))+'/3',how:'西の温泉のそば（4マス以内）に、ベンチを2つと、花を3つ置く（花はさいてから数える）',
+   talk:{who:SHIZUKU,when:()=>true,lines:[
+    [SHIZUKU,'守り神さま。西の温泉は、湯がやわらかくて、足をつけるのにちょうどよいのです。'],
+    [HOMURA,'足だけつかって、のんびりおしゃべり……いいね。すわる所と、花でもあれば最高さ。'],
+    [SHIZUKU,'あし湯ができたら、みなさんも、きっと遊びに来ますね。']]},
+   story:[[SHIZUKU,'あし湯ができました……！ 足だけでも、ぽかぽかします。'],[HOMURA,'花を見ながら、のんびりおしゃべり。いいもんだね。'],[SHIZUKU,'ありがとうございます、守り神さま。']]},
   {text:'火山を調べよう',check:()=>!!S.flags.volLook,how:'「みる」で、北の火山をタップする',
    talk:{who:SHIZUKU,when:()=>true,lines:[
     [SHIZUKU,'奥の温泉に熱をとどけるには、奥の装置を使うはずです。'],
@@ -614,6 +634,17 @@ const QUESTS2=[
    story:[[HOMURA,'…ふう、なんとかのりこえたね。'],[SHIZUKU,'守ってくださって、ありがとうございます。'],[SHIZUKU,'灰は、火山からふってきていました。山の上に、なにかがいるのです。'],[HOMURA,'次の夜、きっとそいつが下りてくる。むかえうってやろうじゃないか！']],gives:{flag:'hinoNight'}},
   {text:'ヒノオオカゲを追いはらおう',check:()=>!!S.flags.hinoDown,how:'夜、火山から下りてくる「ヒノオオカゲ」を追いはらう。熱の装置をねらってくる',
    story:[[HOMURA,'やった…！ 火山の上の、いやな気配が消えたよ。'],[HOMURA,'ありがとよ、守り神！ あんたのおかげさ。'],[SHIZUKU,'ヒノオオカゲが、ヌシ様の熱をうばっていたのですね。'],[SHIZUKU,'落としたかけらは、朝にせいれいが拾ってくれますよ。'],[SHIZUKU,'そのかけらを守護の台座にはめれば、ヌシ様の力になるはずです。']]},
+  {text:'温泉宿をつくろう',check:()=>HOUSES.some(h=>[...h.inside].filter(j=>S.obj[j]==='bed').length>=2&&[...h.inside].some(j=>nearHot(j,6))),how:'あたたかい温泉のそば（6マス以内）に、家の壁とドアで家をつくり、中にベッドを2つ置く',
+   talk:{who:HOMURA,when:()=>true,lines:[
+    [HOMURA,'ヒノオオカゲもいなくなって、やっと落ちついたね。'],
+    [SHIZUKU,'湯上がりに、そのままゆっくり泊まれる場所があると、うれしいですね。'],
+    [HOMURA,'温泉のそばに、宿をつくろうじゃないか。壁でかこって、ベッドを2つ。あたいらで、もてなすのさ。']]},
+   story:[[HOMURA,'温泉宿のできあがりだ！'],[SHIZUKU,'湯上がりに、ここでぐっすり休めますね。'],[HOMURA,'ありがとよ、守り神。今夜は、あたいも泊まってみようかな。']]},
+  {text:'村レベルを5にしよう',check:()=>S.lv>=5,how:'せいれいが満足してパワーがたまると、村レベルが上がる',prog:()=>'いま 村レベル'+S.lv,
+   talk:{who:SHIZUKU,when:()=>true,lines:[
+    [SHIZUKU,'温泉郷らしくなってきましたね。'],
+    [HOMURA,'あと少しさ。みんなが楽しく暮らせば、ヌシ様をむかえる力もたまる。']]},
+   story:[[HOMURA,'村が、また大きく育ったね！'],[SHIZUKU,'ヌシ様をむかえる準備も、ととのってきました。']]},
   {text:'守護の台座を建ててもらおう',check:()=>cnt('tower')>=1,prog:()=>'じょうけん '+clearConds().filter(c=>c[1]).length+'/'+clearConds().length,how:'「おく」→「守護の台座」をえらぶと、足りない条件が見られる。ぜんぶそろったら置いて、建ててもらう',
    talk:{who:HOMURA,when:()=>true,lines:[
     [HOMURA,'温泉郷も、だいぶ元にもどってきたね。'],
@@ -770,7 +801,8 @@ const ASHT=new Set(['oven','bench','tub','sink','campfire','hotstone']);
 const NATK=['rock','deadtree','ntree','berry'];
 function st2(){return S.st2||(S.st2={sp:{a:0,b:0,c:0},d1:1,d2:1,d2fix:0,hvb:{},ash:{},ashKills:0,bw:[]})}
 const ashed=j=>WD===1&&!!S.st2&&S.st2.ash[j]>S.t;
-function springOn(k){if(WD!==1||!k)return false;if(k==='a')return !!S.flags.onsen;const t=S.st2;if(!t||!t.sp[k])return false;if(t.hvb[D1])return false;if(k==='c'&&t.hvb[D2])return false;return true}
+function springOn(k){if(WD!==1||!k)return false;if(S.st2&&S.st2.frz&&S.st2.frz[k])return false;/* 最後の夜に冷やされた温泉 */if(k==='a')return !!S.flags.onsen;const t=S.st2;if(!t||!t.sp[k])return false;if(t.hvb[D1])return false;if(k==='c'&&t.hvb[D2])return false;return true}
+const SPEDGE=new Map();function springEdge(k){const M=sprMap();let c=SPEDGE.get(M);if(!c){c={};SPEDGE.clear();SPEDGE.set(M,c)}if(!c[k]){const L=[];for(let j=0;j<W*H;j++){if(M[j]!==k)continue;for(const q of[j-1,j+1,j-W,j+W])if(q>=0&&q<W*H&&walk(q)&&!L.includes(q))L.push(q)}c[k]=L}return c[k]}/* 温泉のふち（歩けるマス） */
 const springN=()=>['a','b','c'].filter(springOn).length;
 const springDone=()=>(S.flags.onsen?1:0)+(S.st2&&S.st2.sp.b?1:0)+(S.st2&&S.st2.sp.c?1:0);
 let SPRM=null,SPRS=null;
@@ -783,6 +815,8 @@ function sprMap(){if(SPRS===S&&SPRM)return SPRM;SPRS=S;SPRM=new Array(W*H).fill(
 const hotW=j=>WD===1&&S.ground[j]===1&&springOn(sprMap()[j]);
 function nearHot(j,r){const x=j%W,y=(j/W)|0;for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){const xx=x+dx,yy=y+dy;if(xx<0||yy<0||xx>=W||yy>=H)continue;if(hotW(yy*W+xx))return true}return false}
 const nearSp=id=>S.obj.some((o,j)=>o===id&&nearHot(j,4));/* 温泉のそば（4マス以内） */
+const FLOWERS2=['flower','clover','bellf','salvia','lily','lotus'];
+function spNear(ids,k){if(!springOn(k))return 0;const M=sprMap();let n=0;for(let j=0;j<W*H;j++){if(!ids.includes(S.obj[j]))continue;const x=j%W,y=(j/W)|0;let ok=false;for(let dy=-4;dy<=4&&!ok;dy++)for(let dx=-4;dx<=4;dx++){const xx=x+dx,yy=y+dy;if(xx<0||yy<0||xx>=W||yy>=H)continue;const q=yy*W+xx;if(S.ground[q]===1&&M[q]===k){ok=true;break}}if(ok)n++}return n}/* その温泉のそば（4マス以内）にある数 */
 function st2Place(s){
   const stash=j=>{const o=s.obj[j];if(o&&o!=='part'&&BL[o]&&BL[o].kind&&!BL[o].natural)s.inv[o]=(s.inv[o]||0)+1;if(o)for(const k in s.ref)if(s.ref[k]===j){s.obj[k]='';delete s.ref[k]}if(s.obj[j]==='part'){const a=s.ref[j];if(a!=null&&s.obj[a])stash(a)}s.obj[j]='';delete s.dyn[j];delete s.ref[j];s.ground[j]=0};
   for(let y=0;y<=6;y++)for(let x=CX-3;x<=CX+3;x++)stash(y*W+x);
@@ -1127,6 +1161,7 @@ const ACT_LBL={shiver:'こわくて、ふるえている',reunion:'なかよし�
 function decide(r){TAKEN=new Set();for(const q of S.res){if(q===r||q.hidden)continue;if(q.act&&q.act.stand>=0)TAKEN.add(q.act.stand);if(!q.act||q.act.stage!=='walk')TAKEN.add((q.y|0)*W+(q.x|0))}
   for(const [j,t]of Object.entries(r.routeAvoid||{})){if(t>S.t)TAKEN.add(+j);else delete r.routeAvoid[j]}
   try{const x=decide0(r);if(!r.act&&r.elem==='fire'&&!r.hidden&&r.hunger>=20)huntNear(r);return x}finally{TAKEN=null}}
+function springThreat(r){if(WD!==1||!S.st2||!S.st2.cool)return null;let best=null,bd=1e9;for(const e of S.enemies){if(!e.spawned||e.dead||e.flee)continue;const D=EN[e.type];if(!D.ash&&!D.vol)continue;const d=Math.hypot(e.x-r.x,e.y-r.y)-(String(e.tg).startsWith('s')?20:0);if(d<bd){bd=d;best=e}}return best}/* 火山のふもとの最後の夜：温泉を冷やしにくる敵（いま冷やしている敵を先に） */
 function guardSpot(G,en,r){/* 火の子は、見張り台のそばで戦う：敵にいちばん近い見張り台へ行き、見張り台から3マス以内に来た敵をたたく（見張り台がなければ、そのまま敵のところへ） */let w=-1,wd=1e9;for(let k=0;k<W*H;k++){if(S.obj[k]!=='watch'||!inBase(k%W,(k/W)|0))continue;const d=Math.hypot(k%W+1-en.x,((k/W)|0)+1-en.y);if(d<wd){wd=d;w=k}}
   if(w<0||wd<=3)return huntSpot(G,en,60,r);const wx=w%W+1,wy=((w/W)|0)+1;if(Math.hypot(r.x-wx,r.y-wy)<=2.2)return (r.y|0)*W+(r.x|0);/* もう見張り台のそばにいる */
   let j=-1,bd=1e9;for(let y=wy-2;y<=wy+1;y++)for(let x=wx-2;x<=wx+1;x++){const k=y*W+x;if(k<0||k>=W*H||G.dist[k]<0||!walk(k))continue;const d=Math.hypot(x+.5-en.x,y+.5-en.y);if(d<bd){bd=d;j=k}}return j>=0?j:huntSpot(G,en,60,r)}
@@ -1181,7 +1216,7 @@ function decide0(r){
     if(carryN(r)>0&&foodCap()>0)return goStore(r,G)}
   if(r.cmat&&matCap()>0)return goStoreMat(r,G);
   if(isNight()&&r.hunger<hMax(r)*.5&&S.food>0&&!S.enemies.some(e=>e.spawned&&!e.dead&&Math.hypot(e.x-r.x,e.y-r.y)<7)){return goEat(r,G)}/* 夜も、おなかが半分になったら食べにいく（見回りの子もふくめて） */
-  if(r.elem==='fire'&&r.hunger>=35&&!r.refill){let en=null,bd=1e9;const br=BASE_R[S.baseLv]+3;for(const e of S.enemies){if(!e.spawned||e.dead)continue;if(!(e.x>=CX-br&&e.x<CX+br&&e.y>=CY-br&&e.y<CY+br))continue;const d=Math.hypot(e.x-r.x,e.y-r.y);if(d<bd){bd=d;en=e}}/* 「コワイノ」が拠点に近づいたら、たたかいに行く（おなか＝体力が少ないときは行かない） */
+  if(r.elem==='fire'&&r.hunger>=35&&!r.refill){{const st=springThreat(r);if(st){const j=huntSpot(G,st,60,r);if(j>=0)return startAct(r,G,'patrol',j,{hunt:S.t})}}/* 最後の夜は、温泉を守りに行く */let en=null,bd=1e9;const br=BASE_R[S.baseLv]+3;for(const e of S.enemies){if(!e.spawned||e.dead)continue;if(!(e.x>=CX-br&&e.x<CX+br&&e.y>=CY-br&&e.y<CY+br))continue;const d=Math.hypot(e.x-r.x,e.y-r.y);if(d<bd){bd=d;en=e}}/* 「コワイノ」が拠点に近づいたら、たたかいに行く（おなか＝体力が少ないときは行かない） */
     if(en){const j=guardSpot(G,en,r);/* 敵と同じマスではなく、ひとます離れて */if(j>=0)return startAct(r,G,'patrol',j,{hunt:S.t})}}/* となりに行けなくても、いちばん近くまで行く。見回りの中断でぐるぐるしないよう hunt をつける */
   if(isNight()&&r.elem==='fire'&&offShift(r)){r.bubble='💤'}/* 火のせいれいが2人以上いれば、交代で見張って、交代で眠る */
   else if(isNight()&&isWatch(r)){// 火のせいれい（と、まもりをおぼえたフタバ）は寝ないで見回り
@@ -1683,6 +1718,7 @@ const EN={
   ash:{pw:3,name:'ハイカゲ',hp:6,sp:.9,atk:20,hit:12,col:'#6d6a66',eye:'#ffb36b',size:.9,ash:1},/* かまど・ベンチなどを灰でよごして止める */
   rockc:{pw:8,name:'イワカゲ',hp:22,sp:.5,atk:30,hit:30,col:'#5a4636',eye:'#ffcf6b',size:1.3},/* おそいけど、かたい */
   hino:{pw:25,rng:2.3,name:'ヒノオオカゲ',hp:60,sp:.7,atk:6,hit:40,col:'#3a0c08',eye:'#ffb02e',size:2.1,boss:1,dev:1},/* 火山から下りてきて、熱の装置をねらう */
+  yama:{pw:30,rng:2.4,name:'ヤマノオオカゲ',hp:60,sp:.75,atk:6,hit:20,col:'#2a0904',eye:'#ff6a2e',size:2.4,boss:1,vol:1},/* 火山のふもとの最後の夜に、火の山からおりてきて、温泉の熱をうばう */
   boss2:{pw:30,rng:3.4,hx:2.6,hy:.8,name:'ヨルノオオカゲ',hp:70,sp:.9,atk:4.5,hit:30,col:'#05030c',eye:'#ffd84a',size:4.6,boss:1},/* ヌシ様をむかえる準備ができたあとに来る */
 };
 const bossNight=d=>{const w=S&&S.bossWarn;return w==null?d>=5&&(d-5)%3===0:d-w>=5&&(d-w-5)%3===0}/* オオカゲは「来るかも」と聞いた5日後、そのあと3日ごと */;
@@ -1706,8 +1742,9 @@ function waveText(list){const c={};list.forEach(t=>c[t]=(c[t]||0)+1);return Obje
 function waveArrivalDelay(index,total,hasBoss,late=0){const spacing=Math.min(late>0?Math.max(12,35-late*2):35,(hasBoss?180:220)/Math.max(1,total-1));return index*spacing}/* 夜0時ごろから4時までに全員が到着。ボスの登場演出ぶんも見込む */
 function spawnWave(list){SKIP=false;/* コワイノが来たら、早送りをやめる */
   const hasBoss=list.some(type=>EN[type].boss);list.forEach((type,k)=>{const d=EN[type];S.enemies.push({id:S.nid++,type,x:0,y:0,hp:d.hp,max:d.hp,delay:waveArrivalDelay(k,list.length,hasBoss,S.lateWave)+(d.boss?60:0),/* 強い夜も、いっせいに押し寄せない */spawned:false,path:[],repath:0,atk:0,stun:0,flash:0,flee:false})});
-  S.nightHurt=0;S.nightHad=true;S.ns={n:list.length,kill:0,lost:[],hurt:0,broke:0,boss:list.includes('boss')||list.includes('boss2')||list.includes('hino')?1:0,trial:!!S.trialOn,final:!!S.finalOn};S.trialOn=false;S.finalOn=false;
+  S.nightHurt=0;S.nightHad=true;S.ns={n:list.length,kill:0,lost:[],hurt:0,broke:0,boss:list.includes('boss')||list.includes('boss2')||list.includes('hino')||list.includes('yama')?1:0,trial:!!S.trialOn,final:!!S.finalOn};S.trialOn=false;S.finalOn=false;
   if(S.ns.final&&!WD&&S.res.some(r=>r.name===POKO))dialog([[POKO,'守り神さま…！ 今夜は、ヨルノオオカゲが来る……！']]);
+  else if(list.includes('yama'))dialog([[HOMURA,'守り神！ 火の山が、あばれてる……！'],[HOMURA,'「ヤマノオオカゲ」だ。温泉の熱をうばいに来るよ。'],[SHIZUKU,'温泉を、朝まで守りぬきましょう……！']],null,null,LEAD());
   else if(list.includes('hino'))dialog(['火山のほうから、熱い風がふいてくる…！','「ヒノオオカゲ」が来るよ！ 熱の装置をねらってる！ みんなで追いはらって！'],null,null,LEAD());
   else if(list.filter(t=>t==='ash').length>=6)dialog(['空から、灰がふってきた…！','ハイカゲがたくさん来るよ！ かまどやベンチをまもって！'],null,null,LEAD());
   else if(list.includes('boss2'))dialog(WD===1?[[HOMURA,'守り神！ 山の上にのこってた影が、おりてくるよ…！'],[HOMURA,'今夜は「ヨルノオオカゲ」さ。柵をかさねて、みんなを家に入れときな！']]:['守り神さま…！ いつもより、ずっと空気が重い…！','今夜は「ヨルノオオカゲ」が来る！ 柵をかさねて、家の中にかくれて！'],null,null,LEAD());
@@ -1731,9 +1768,9 @@ function steleF(j){const o=S.obj[j],b=o&&BL[o]&&BL[o].hp;if(!b||!STELES.length)r
 function litNear(h,x,y){for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++)if(h.set.has((y+dy)*W+x+dx))return true;return false}/* 家の中の灯り：家ぜんたいと、そこから1マス */
 function lightAt(x,y){for(const j of LIGHTS){const o=S.obj[j];const lx=j%W+(o==='lighthouse'?1:.5),ly=((j/W)|0)+(o==='lighthouse'?1:.5);if(INDL.has(o)){const h=roomOf(j);if(h?litNear(h,x|0,y|0):(lx-x)**2+(ly-y)**2<2.25)return true;continue}if((lx-x)**2+(ly-y)**2<(o==='tower'?49:o==='lighthouse'?64:12.25))return true}/* 灯りの範囲（石灯籠2.5・ふつう3.5・台座7マス） */return false}
 const EREACH=new WeakMap();
-const ZUKAN={basic:'いちばんよく見るコワイノ。夜になると、せいれいをねらってやってくる。',fast:'足がとても速い。体は小さくて、すぐ追いはらえる。',thief:'畑の実った作物をぬすみにくる。見つかると、すぐにげる。',brute:'体がかたくて力も強い。なかなか追いはらえない。',breaker:'壁をこわすのが大好き。まわり道をしないで、まっすぐこわしてくる。',trapper:'罠を見つけると、こわしにくる。',boss:'大きなコワイノ。まわりのせいれいも巻きこんで攻撃する。',ash:'灰をまきちらして、施設をしばらく使えなくする。',rockc:'岩みたいにかたい。動きはおそい。',hino:'火山からやってくる大きなコワイノ。熱の切りかえ装置をこわそうとする。',boss2:'夜の力をたくわえた、いちばん大きなコワイノ。'};
+const ZUKAN={basic:'いちばんよく見るコワイノ。夜になると、せいれいをねらってやってくる。',fast:'足がとても速い。体は小さくて、すぐ追いはらえる。',thief:'畑の実った作物をぬすみにくる。見つかると、すぐにげる。',brute:'体がかたくて力も強い。なかなか追いはらえない。',breaker:'壁をこわすのが大好き。まわり道をしないで、まっすぐこわしてくる。',trapper:'罠を見つけると、こわしにくる。',boss:'大きなコワイノ。まわりのせいれいも巻きこんで攻撃する。',ash:'灰をまきちらして、施設をしばらく使えなくする。',rockc:'岩みたいにかたい。動きはおそい。',yama:'火の山からおりてくる大きなコワイノ。温泉の熱をうばって、冷やしてしまう。',hino:'火山からやってくる大きなコワイノ。熱の切りかえ装置をこわそうとする。',boss2:'夜の力をたくわえた、いちばん大きなコワイノ。'};
 function shakeScreen(){const v=$('#cv');v.classList.remove('shk');void v.offsetWidth;v.classList.add('shk');setTimeout(()=>v.classList.remove('shk'),600)}
-const BOSSFX={boss:{col:'#ff3b6b',sub:'コワイノたちの親玉が、すがたをあらわした'},boss2:{col:'#ffd84a',sub:'夜の力をたくわえた、いちばん大きなコワイノ'}};
+const BOSSFX={boss:{col:'#ff3b6b',sub:'コワイノたちの親玉が、すがたをあらわした'},yama:{col:'#ff6a2e',sub:'火の山の熱をうばう、大きなコワイノ'},boss2:{col:'#ffd84a',sub:'夜の力をたくわえた、いちばん大きなコワイノ'}};
 function bossEntrance(e){/* オオカゲ・ヨルノオオカゲの登場：画面がよって、ゆれて暗くなる */const B=BOSSFX[e.type];SKIP=false;/* 登場のあいだは時間を止めて、すがたを見せる */const z0=cam.z;camAnim={fz:cam.z,tz:Math.min(3,cam.z*1.5),fx:cam.x+VW/cam.z/2,fy:cam.y+VH/cam.z/2,tx:e.x*TS,ty:e.y*TS-12*(EN[e.type].size||1),t:0,dur:.8};BOSSHOLD=performance.now()+5000;setTimeout(()=>{camAnim={fz:cam.z,tz:z0,fx:cam.x+VW/cam.z/2,fy:cam.y+VH/cam.z/2,tx:cam.x+VW/cam.z/2,ty:cam.y+VH/cam.z/2,t:0,dur:.8}},5000);/* ボスへズームアップして、少しのあいだ時間を止める（文字は出さない） */shakeScreen();dlgCue('dim');sfx('hit');
   for(let n=0;n<4;n++)fx.push({k:'ring',x:e.x*TS,y:e.y*TS,life:1+n*.4,col:B.col});}
 let BOSSHOLD=0;/* ボスの登場・追いはらいの演出のあいだ、時間を止める */
@@ -1744,7 +1781,7 @@ function bossDefeatFX(e){const sand=e.type==='boss'||e.type==='boss2';if(sand)sf
 function bodyWall(e,D){/* 道の先の、いちばん近い柵・壁に、体がふれているか。ふれていればその壁、なければ次のマス */for(let i=0;i<Math.min(e.path.length,6);i++){const q=anc(e.path[i]);if(!breakable(S.obj[q]))continue;const x0=q%W,y0=(q/W)|0,nx=Math.max(x0,Math.min(e.x,x0+1)),ny=Math.max(y0,Math.min(e.y,y0+1));if(((nx-e.x)/D.hx)**2+((ny-e.y)/D.hy)**2<=1)return q;break}return anc(e.path[0])}
 function updEnemy(e,dt){
   const D=EN[e.type];
-  if(!e.spawned){e.delay-=dt;if(e.delay<=0){[e.x,e.y]=D.dev&&WD===1?volSpot():spawnSpot();e.spawned=true;(S.seenEn||(S.seenEn={}))[e.type]=1;if(e.type==='boss2'||e.type==='boss'&&!S.flags.bossIntro){if(e.type==='boss')S.flags.bossIntro=1;bossEntrance(e)}}return}/* オオカゲの登場演出は最初の1回、ヨルノオオカゲは毎回 */
+  if(!e.spawned){e.delay-=dt;if(e.delay<=0){[e.x,e.y]=(D.dev||D.vol)&&WD===1?volSpot():spawnSpot();e.spawned=true;(S.seenEn||(S.seenEn={}))[e.type]=1;if(e.type==='boss2'||e.type==='boss'&&!S.flags.bossIntro){if(e.type==='boss')S.flags.bossIntro=1;bossEntrance(e)}}return}/* オオカゲの登場演出は最初の1回、ヨルノオオカゲは毎回 */
   if(e.flash>0)e.flash-=dt;
   if(e.stun>0||S.t-(e.busyT??-1e9)<5){e.wd=0;e.wx=null}/* 罠で足止め・壁や設備をたたいているあいだは、来なおさない */
   else if(!e.flee&&!inBase(e.x|0,e.y|0)){e.wd=(e.wd||0)+dt;if(e.wd>=30){if(e.wx!=null&&Math.hypot(e.x-e.wx,e.y-e.wy)<3){[e.x,e.y]=spawnSpot();e.path=[];e.repath=0;EREACH.delete(e)}e.wd=0;e.wx=e.x;e.wy=e.y}}else{e.wd=0;e.wx=null}/* 基地の外で30分ほとんど進めていなかったら、べつの場所から来なおす（森でうろうろ対策） */
@@ -1764,12 +1801,16 @@ function updEnemy(e,dt){
     else if(goal>=0&&box>=0&&bd<.6){const st=takeFood(5,'any').length;S.nightHurt++;if(S.ns&&st)S.ns.lost.push('食料'+st);toast('カゲドロボウに食料の収納をあらされた！（食料-'+st+'）','warn');sfxAt('thief',e.x,e.y);e.flee=true;e.path=[];e.repath=0}
     else if(goal>=0&&box<0&&bd<.6){S.dyn[goal].g=0;S.nightHurt++;if(S.ns)S.ns.lost.push('畑の作物');toast('カゲドロボウに畑をあらされた！','warn');sfxAt('thief',e.x,e.y);e.flee=true;e.path=[];e.repath=0}}
   if(D.thief&&goal<0&&!e.flee){e.flee=true;e.path=[];e.repath=0}/* カゲドロボウは、盗むものがなければ帰る */
-  e.ashG=false;if((D.ash||D.dev)&&!e.flee&&WD===1&&S.st2){const t=S.st2;let bd=1e9,bt=-1;/* ハイカゲは設備、ヒノオオカゲは熱の装置をねらう */
+  e.ashG=false;if((D.ash||D.dev)&&!e.flee&&WD===1&&S.st2&&!(D.ash&&S.st2.cool)){const t=S.st2;let bd=1e9,bt=-1;/* ハイカゲは設備、ヒノオオカゲは熱の装置をねらう */
     if(D.ash){for(let k=0;k<W*H;k++){if(!ASHT.has(S.obj[k])||t.ash[k]>S.t)continue;const d=Math.hypot(k%W+.5-e.x,((k/W)|0)+.5-e.y);if(d<bd){bd=d;bt=k}}}
     else for(const k of[D1,D2]){if(S.obj[k]!=='heatv'||t.hvb[k]||(k===D2&&!t.d2fix))continue;const d=Math.hypot(k%W+.5-e.x,((k/W)|0)+.5-e.y);if(d<bd){bd=d;bt=k}}
     if(bt>=0){e.ashG=true;if(bd<1.45){if(D.ash){t.ash[bt]=S.t+240;toast(BL[S.obj[bt]].name+'が、ハイカゲの灰で止まった！','warn');sfxAt('thief',e.x,e.y);e.flee=true;e.path=[];e.repath=0;return}
         e.atk+=dt;if(e.atk>=D.atk){e.atk=0;t.hvh=t.hvh||{};t.hvh[bt]=(t.hvh[bt]??8)-1;sfxAt('bonk',bt%W+.5,(bt/W)|0);if(t.hvh[bt]<=0){delete t.hvh[bt];t.hvb[bt]=1;sfxAt('wbreak',bt%W+.5,(bt/W)|0);toast('ヒノオオカゲに熱の装置をこわされた！','warn')}}return}
       const n=[bt-1,bt+1,bt-W,bt+W].filter(q=>walk(q)).sort((a,b)=>Math.hypot(a%W+.5-e.x,((a/W)|0)+.5-e.y)-Math.hypot(b%W+.5-e.x,((b/W)|0)+.5-e.y))[0];goal=n!=null?n:bt;if(e.tg!=='a'+bt){e.tg='a'+bt;e.repath=0}}}
+  if(WD===1&&S.st2&&S.st2.cool&&(D.ash||D.vol)&&!e.flee&&!S.res.some(r=>!r.hidden&&Math.hypot(r.x-e.x,r.y-e.y)<2.5)){const t=S.st2;let bd=1e9,bj=-1,bk=null;/* 火山のふもとの最後の夜：ヤマノオオカゲとハイカゲは、すぐそばにせいれいがいなければ、あたたかい温泉のふちへ行って、熱をうばう */
+    for(const k of['a','b','c']){if(!springOn(k))continue;for(const j of springEdge(k)){const d=Math.hypot(j%W+.5-e.x,((j/W)|0)+.5-e.y);if(d<bd){bd=d;bj=j;bk=k}}}
+    if(bj>=0){e.ashG=true;if(bd<.9){e.busyT=S.t;e.atk+=dt;if(e.atk>=D.atk){e.atk=0;t.cool[bk]-=1;sfxAt('bonk',e.x,e.y);fx.push({k:'ring',x:e.x*TS,y:e.y*TS,life:.8,col:'#9fd8ff'});if(t.cool[bk]<=0){t.frz[bk]=1;dirty=true;sfx('evap');toast(SPN[bk]+'が冷えてしまった！','warn')}}return}
+      goal=bj;if(e.tg!=='s'+bj){e.tg='s'+bj;e.repath=0}}}
   /* ねらう順番：近くのせいれい → 家（壁の中）のせいれい → 罠・見張り台 → そのほかのせいれい */
   if(!D.thief&&!e.ashG&&!e.flee&&!D.dev){let nr=null,nd=reachOf(D);for(const r of S.res){if(r.hidden||(r.faintGrace||0)>S.t||r.act&&r.act.type==='faint')continue;const d=Math.hypot(r.x-e.x,r.y-e.y);if(d<nd&&!fenceBetween(e.x,e.y,r.x,r.y)){nd=d;nr=r}}
     if(nr){e.tg=nr.id;hitRes(e,nr,D);if(hsOf(D)>=2&&!e.dead){burstAt(nr.x,nr.y,'offer');for(const q of S.res){if(q===nr||q.hidden||e.dead)continue;if(Math.hypot(q.x-nr.x,q.y-nr.y)<1.5&&!fenceBetween(e.x,e.y,q.x,q.y))hitRes(e,q,D)}}return}}/* 攻撃がとどく所にせいれいがいれば、柵ごしでも、柵や罠よりせいれいを先に攻撃する */
@@ -1941,13 +1982,15 @@ function stepWorld(dt){if((SUBT+=dt)>1){SUBT=0;checkSub();checkSev();guardTick()
   if(S.nushi)updNushi(dt);
   if(prevH<6&&h>=6&&S.nightHad){S.nightHad=false;const left=S.enemies.length;{const t0=performance.now();for(const e of S.enemies)if(e.spawned&&!e.dead)EVAP.push({e,t0:t0+Math.random()*500})}if(left)sfx('evap');S.enemies=[];
     if(S.ns&&!S.nightHurt){const rw=Math.min(10,3+Math.floor((S.nights||0)/2));S.ns.rw=rw;if(!S.flags.safeMemo){S.flags.safeMemo=1;memo('🌙','はじめて夜をぶじに守りきった')}S.pt+=rw;S.totalPt+=rw;for(const r of S.res)r.fun=Math.min(100,r.fun+10)}/* けがも被害もない夜は、ごほうび（パワーと、みんなのたのしさ） */
-    if(S.ns&&S.ns.final&&!S.cleared&&!(S.ns.b2&&S.obj.includes('tower'))){S.finalNight=false;S.finalLost=dayNo();if(WD)S.finalRetry=dayNo()+3;else{S.finalDay=dayNo()+3;S.finalHint=3}memo('🌑','ヨルノオオカゲを追いはらえなかった');setTimeout(()=>toast('ヨルノオオカゲは、まだどこかにいる…','warn'),1500)}/* ヨルノオオカゲを追いはらえなかったか、台座をこわされたら負け。3日あとにまた来る */else if(S.ns&&S.ns.final&&!S.cleared){S.finalNight=false;if(WD)setTimeout(()=>{if(!S.cleared)nushiReturns()},1800);/* 火山のふもとには、フタバはいない */else if(!S.flags.finalWon){S.flags.finalWon=1;S.flags.sh_boss=true;S.shards=Math.min(3,(S.shards||0)+1);memo('💎','最後のバトルに勝って、ヌシのかけらがあらわれた（'+S.shards+'/3）');setTimeout(()=>toast('台座の前に、ヌシのかけらがあらわれた！','good'),1500)}}/* 最後の夜をこえたら、かけらが出て、台座にはめるとヌシ様がもどる */if(S.ns&&S.ns.trial){const ok=S.ns.kill>=S.ns.n;S.ns.trialOK=ok;if(ok){S.trials=(S.trials||0)+1;S.pt+=60;S.totalPt+=60;S.mebuki=(S.mebuki||0)+1;memo('🏆','「コワイノ」の試練をのりこえた')}}
+    if(S.ns&&S.ns.final&&!S.cleared&&WD===1){const t=st2(),ok=springN()>=2;t.frz={};t.cool=null;S.finalNight=false;if(ok)setTimeout(()=>{if(!S.cleared)nushiReturns()},1800);else{S.finalLost=dayNo();S.finalRetry=dayNo()+3;memo('🌋','温泉を守りきれなかった');setTimeout(()=>toast('火の山は、まだあばれている…','warn'),1500)}}/* 火山のふもと：朝に、あたたかい温泉が2つ以上のこっていれば勝ち。冷えた温泉は、朝にもどる */
+    else if(S.ns&&S.ns.final&&!S.cleared&&!(S.ns.b2&&S.obj.includes('tower'))){S.finalNight=false;S.finalLost=dayNo();if(WD)S.finalRetry=dayNo()+3;else{S.finalDay=dayNo()+3;S.finalHint=3}memo('🌑','ヨルノオオカゲを追いはらえなかった');setTimeout(()=>toast('ヨルノオオカゲは、まだどこかにいる…','warn'),1500)}/* ヨルノオオカゲを追いはらえなかったか、台座をこわされたら負け。3日あとにまた来る */else if(S.ns&&S.ns.final&&!S.cleared){S.finalNight=false;if(WD)setTimeout(()=>{if(!S.cleared)nushiReturns()},1800);/* 火山のふもとには、フタバはいない */else if(!S.flags.finalWon){S.flags.finalWon=1;S.flags.sh_boss=true;S.shards=Math.min(3,(S.shards||0)+1);memo('💎','最後のバトルに勝って、ヌシのかけらがあらわれた（'+S.shards+'/3）');setTimeout(()=>toast('台座の前に、ヌシのかけらがあらわれた！','good'),1500)}}/* 最後の夜をこえたら、かけらが出て、台座にはめるとヌシ様がもどる */if(S.ns&&S.ns.trial){const ok=S.ns.kill>=S.ns.n;S.ns.trialOK=ok;if(ok){S.trials=(S.trials||0)+1;S.pt+=60;S.totalPt+=60;S.mebuki=(S.mebuki||0)+1;memo('🏆','「コワイノ」の試練をのりこえた')}}
     if(S.ns){S.ns.left=left;if(!sheet)openSheet('night');else toast(S.nightHurt?'朝日がのぼって、「コワイノ」は'+(left?'消えていった':'いなくなった'):'夜をぶじに守りきった！','good')}
     else if(!S.nightHurt)toast('夜をぶじに守りきった！','good');else toast('朝日がのぼって、「コワイノ」は'+(left?'消えていった':'いなくなった'))}
   if(prevH<6&&h>=6&&S.lastMorning!==dayNo()){S.lastMorning=dayNo();morning();if(WD===1&&S.finalRetry!=null&&dayNo()>=S.finalRetry&&!S.cleared){S.finalRetry=null;S.finalNight=true}}/* 火山のふもと：負けたら3日あとの夜にまた来る *//* 1日のリセットは朝6時にまとめて */
   if(prevH<8&&h>=8&&S.godGone&&!S.cleared&&!S.godVisit&&dayNo()>=(S.godNextVisitDay||1)&&Math.random()<(cnt('kamizo')?.5:.25)){S.godVisit=true;S.godNextVisitDay=dayNo()+2;/* 来た翌日は休み。像があれば来訪率は50% */sfx('arrive');toast('カミサマが遊びにきた！ 神殿の前で交換できる','good')}
   if(prevH<18&&h>=18&&S.godVisit){S.godVisit=false;S.godNextVisitDay=Math.max(S.godNextVisitDay||0,dayNo()+2);toast('カミサマは帰っていった')}
-  if(prevH<20&&h>=20&&S.enemyOn&&S.lastWarn!==dayNo()){S.lastWarn=dayNo();S.wave=waveFor(dayNo()+1);if(S.wipe&&S.res.length>=5)S.wipe=false;if(S.finalNight&&!S.cleared&&!S.flags.finalWon&&(WD||S.res.some(r=>r.name===POKO))){S.finalNight=false;S.finalDay=null;S.finalOn=true;/* 予告の日をけして、夜のあいだにもう一度始まらないようにする *//* フタバがいない夜は、ヨルノオオカゲは来ない */S.wave=['boss2','boss'].concat(S.wave.filter(t=>t!=='boss'&&t!=='boss2'),['brute','brute','fast','fast','breaker']);toast('最後の夜…！ ヨルノオオカゲとオオカゲがやってくる','warn')}else if(S.trial){S.trialOn=true;S.trial=false;S.wave=['boss'].concat(S.wave.filter(t=>t!=='boss'),['brute','brute','fast','fast'])}else if(S.today==='odayaka'){const bo=S.wave.filter(t=>t==='boss'),ot=S.wave.filter(t=>t!=='boss');S.wave=bo.concat(ot.slice(0,Math.ceil(ot.length/2)))}/* 「コワイノ」の予告はしない */}
+  if(prevH<20&&h>=20&&S.enemyOn&&S.lastWarn!==dayNo()){S.lastWarn=dayNo();S.wave=waveFor(dayNo()+1);if(S.wipe&&S.res.length>=5)S.wipe=false;if(S.finalNight&&!S.cleared&&WD===1){S.finalNight=false;S.finalOn=true;const t=st2();t.cool={a:40,b:40,c:40};t.frz={};S.wave=['yama','ash','ash','ash','ash','rockc','rockc'].concat(S.wave.filter(t=>!EN[t].boss));/* 人数が少ない夜の上限でけずられるのは、あとのふつうの敵から */toast('今夜、火の山の影がおしよせてくる','warn')}/* 火山のふもとの最後の夜：温泉を朝まで守る */
+    else if(S.finalNight&&!S.cleared&&!S.flags.finalWon&&(WD||S.res.some(r=>r.name===POKO))){S.finalNight=false;S.finalDay=null;S.finalOn=true;/* 予告の日をけして、夜のあいだにもう一度始まらないようにする *//* フタバがいない夜は、ヨルノオオカゲは来ない */S.wave=['boss2','boss'].concat(S.wave.filter(t=>t!=='boss'&&t!=='boss2'),['brute','brute','fast','fast','breaker']);toast('最後の夜…！ ヨルノオオカゲとオオカゲがやってくる','warn')}else if(S.trial){S.trialOn=true;S.trial=false;S.wave=['boss'].concat(S.wave.filter(t=>t!=='boss'),['brute','brute','fast','fast'])}else if(S.today==='odayaka'){const bo=S.wave.filter(t=>t==='boss'),ot=S.wave.filter(t=>t!=='boss');S.wave=bo.concat(ot.slice(0,Math.ceil(ot.length/2)))}/* 「コワイノ」の予告はしない */}
   if(prevH<3&&h>=3)for(const H of HOUSES){const L=S.res.filter(x=>x.act&&(x.act.type==='sleep'||x.act.type==='stay')&&H.set.has((x.y|0)*W+(x.x|0)));if(houseComfort(H).over)for(const x of L){x.energy=Math.min(x.energy,60);x.fun=Math.max(0,x.fun-15);x.crowd=dayNo()}else if(L.length){const C=houseComfort(H);for(const x of L){const c=comfyFor(H,x,C);if(c>=180){x.fun=Math.min(100,x.fun+10);x.comfy=dayNo()}else if(c<90)x.fun=Math.max(0,x.fun-5)}}}/* 住み心地がいいと、ぐっすり眠れる *//* 家につめこむと、きゅうくつで眠れない */
   if(prevH>h&&S.enemyOn&&S.wave&&S.lastNight!==dayNo()-1){S.lastNight=dayNo()-1;/* 「コワイノ」は夜12時に来る（前の日の夜としてかぞえる） */S.nights++;let w=S.wave;S.wave=null;const rn=S.res.length;if(rn<7)w=w.filter(t=>EN[t].boss&&!S.wipe).concat(w.filter(t=>!EN[t].boss).slice(0,(WD===1?[0,3,4,5,6,8,9]:[0,1,2,3,4,6,7])[rn]));/* せいれいが少ない夜は、コワイノの数に上限：1人1体・2人2体・3人3体・4人4体・5人6体・6人7体（火山のふもとは1人3体・2人4体・3人5体・4人6体・5人8体・6人9体）（全滅のあと5人そろうまでは、オオカゲも来ない） */if(w.length)spawnWave(w)}
   if(S.seedDay!==dayNo()&&h>=6){S.seedDay=dayNo();const n=Math.random()<.5?1:0,b=S.t-S.t%1440;S.seeds=[];S.seedPlan=Array.from({length:n},()=>b+360+Math.random()*720).sort((x,y)=>x-y)}/* ふしぎな種は1日1こまで（50%）。ひろわなかったら、あしたには消える */
@@ -2233,7 +2276,7 @@ function syncQuestRecipes(s){const shared=s.free?otherModeFurnitureRecipes():nul
     for(const id of FURN){if(shared.has(id)){(s.recipes||(s.recipes={}))[id]=true;(s.guardianIdeas||(s.guardianIdeas={}))[id]=true}else{delete(s.recipes||{})[id];delete(s.guardianIdeas||{})[id]}}}
 }
 /* クエスト達成の喜び：経路で対象のそばへ行く。会話や進行は自動で開かない。 */
-const QUEST_VISIT_MAIN={"神殿を建ててもらおう": ["statue"], "食料箱を置こう": ["stor"], "素材箱を置こう": ["mbox"], "食卓をたのもう": ["table"], "家の壁を直そう": ["hwall", "door"], "家にベッドを置こう": ["bed"], "柵を4つ置こう": ["fence", "logfence", "bamboofence", "stonefence", "wall"], "見張り台ととげの罠を置こう": ["watch", "spike"], "ききょうを植えて、土の力をためよう": ["bellf"], "畑を6つにしよう": ["farm"], "畑にたねをまこう": ["farm"], "守護の台座を建ててもらおう": ["tower"], "フタバのおねがい：花を50こさかせよう": ["flower", "clover", "bellf", "salvia", "lily", "lotus"], "温泉をよみがえらせよう": ["hotstone"], "シズクのおねがい：温泉のそばに休憩所を作ろう": ["bench", "tub"], "第1話 はじめての居場所：家とベッド2つ": ["hwall", "door", "bed"], "第2話 みんなの好きなもの：花10・食卓・遊び道具": ["flower", "clover", "bellf", "salvia", "lily", "lotus", "table", "swing", "sandbox"], "第4話 ここが好き！：噴水の広場": ["fountain"], "最終話 みんなのふるさと：たき火とせいれい6人": ["campfire"]};
+const QUEST_VISIT_MAIN={"温泉宿をつくろう": ["bed"], "西の温泉に、あし湯をつくろう": ["bench"], "神殿を建ててもらおう": ["statue"], "食料箱を置こう": ["stor"], "素材箱を置こう": ["mbox"], "食卓をたのもう": ["table"], "家の壁を直そう": ["hwall", "door"], "家にベッドを置こう": ["bed"], "柵を4つ置こう": ["fence", "logfence", "bamboofence", "stonefence", "wall"], "見張り台ととげの罠を置こう": ["watch", "spike"], "ききょうを植えて、土の力をためよう": ["bellf"], "畑を6つにしよう": ["farm"], "畑にたねをまこう": ["farm"], "守護の台座を建ててもらおう": ["tower"], "フタバのおねがい：花を50こさかせよう": ["flower", "clover", "bellf", "salvia", "lily", "lotus"], "温泉をよみがえらせよう": ["hotstone"], "シズクのおねがい：温泉のそばに休憩所を作ろう": ["bench", "tub"], "第1話 はじめての居場所：家とベッド2つ": ["hwall", "door", "bed"], "第2話 みんなの好きなもの：花10・食卓・遊び道具": ["flower", "clover", "bellf", "salvia", "lily", "lotus", "table", "swing", "sandbox"], "第4話 ここが好き！：噴水の広場": ["fountain"], "最終話 みんなのふるさと：たき火とせいれい6人": ["campfire"]};
 const QUEST_VISIT_SUB={"fence20": ["fence", "logfence", "bamboofence", "stonefence", "wall"], "lumber1": ["lumber"], "quarry1": ["quarry"], "stele1": ["stele"], "fountain1": ["fountain"], "lighthouse1": ["lighthouse"], "fruit1": ["fruit"], "stor2": ["stor"], "mbox2": ["mbox"], "seedwait_gate": ["gate"], "benchbreak": ["bench"], "chair2": ["chair", "stool", "chair2", "achair", "bench", "pouf", "sofa1"], "bed3": ["bed"], "light3": ["torch", "lamp", "campfire"], "houselight": ["candle", "lantern", "flamp"], "oven": ["oven"], "salvia3": ["salvia"], "watch2": ["watch"], "lotus3": ["lotus"], "lily5": ["lily"], "wmill": ["windmill"], "clover3": ["clover"], "toy2": ["sandbox"], "toy3": ["seesaw"], "swing1": ["swing"], "deco3": ["hedge", "birdhouse", "birdbath", "parasol", "arch", "signpost", "monstera"], "tree5": ["tree", "fruit"], "farm10": ["farm"], "house2": ["hwall", "door"], "room": ["@furniture"], "paint": ["@painting"], "trap4": ["spike", "sticky", "puddle", "firetrap", "gust"], "jar2": ["jar"], "parasol": ["parasol"]};
 const QUEST_PLACEMENTS=new WeakMap(),QUEST_VISITS=new WeakMap();let questPlaceSerial=0,QUEST_CLEAR_WAIT=null,SUB_CLEAR_WAIT={};const questGuideBlocked=()=>!!QUEST_CLEAR_WAIT||Object.keys(SUB_CLEAR_WAIT).some(k=>!!SUB_CLEAR_WAIT[k])||Object.keys(SUBW).length>0;const questGuideBlockedNow=()=>!!QUEST_CLEAR_WAIT;const questGuideAccepted=()=>{const q=S&&QUESTS[S.quest];return !!q&&!S.cleared&&S.qStory==null&&(!q.talk||S.qTalked)};
 const QUEST_PARTS={
@@ -3799,7 +3842,7 @@ function atkLift(p){if(p<=0)return 0;if(p<.84)return Math.sin(p*40)*.04;if(p<.95
 function atkLean(p){return p>=.95&&p<1?.12:p>.84?-.08*(p-.84)/.11:0}
 const KGH={basic:100,fast:100,thief:100,brute:100,boss:118};
 function drawShade(c,ty,x,y,s,f,o){const ty0=ty;
-  if(ty==='trapper'||ty==='rockc')ty='brute';else if(ty==='ash'||ty==='breaker')ty='basic';else if(ty==='hino')ty='boss';/* ワナクイは、カタカゲに似たとげとげの形（小さめ） */
+  if(ty==='trapper'||ty==='rockc')ty='brute';else if(ty==='ash'||ty==='breaker')ty='basic';else if(ty==='hino'||ty==='yama')ty='boss';/* ワナクイは、カタカゲに似たとげとげの形（小さめ） */
   const g=KGS[ty+(o.back?'_b':'_f')];if(!g||!g.ok)return drawShadeV(c,ty,x,y,s,f,o);
   const t=o.t||0,BD=o.flash?'#f4eefa':'#3e383e',u=(KGH[ty]||100)/g.h;
   const st=o.walk?Math.sin(t*10):0,bob=o.walk?Math.abs(st)*3:Math.sin(t*3)*1.5,sq=o.walk?Math.abs(st)*.04:Math.sin(t*3)*.015;
@@ -4587,7 +4630,7 @@ function renderSheet(){
     {const lost=(S.lost||[]).filter(q=>!q.unb);if(S.mebuki>0&&lost.length){const nt=el('<div class="sec"><h3>めぶきのしずく　'+S.mebuki+'こ</h3><p class="note"></p></div>');nt.querySelector('.note').textContent='消えてしまったせいれい（'+lost.map(q=>q.name).join('・')+'）を、よみがえらせることができる。「せいれい」のリストから、しずくを使おう。';body.appendChild(nt)}}/* しずくを持っていたら、よみがえらせられると知らせる */
   }else if(sheet==='enemy'){const e=S.enemies.find(q=>q.id===sheetArg);if(!e||e.dead){closeSheet();return}const D=EN[e.type];
     T.textContent=D.name;
-    const FEAT={boss2:'ヌシ様をむかえる準備ができたあと、オオカゲのかわりに来る。とても強い',basic:'せいれいをおそう',fast:'足が速い',thief:'食料や素材をぬすむ',brute:'体力が多い',boss:WD?'5日目の夜、そのあと3日ごとに来る。追いはらうと、そのあとに「ヌシのかけら」があらわれる。当たると目をまわす':'5日目の夜、そのあと3日ごとに来る。とても強い。当たると目をまわす'};
+    const FEAT={yama:'火山のふもとの最後の夜に来る。温泉を冷やす',boss2:'ヌシ様をむかえる準備ができたあと、オオカゲのかわりに来る。とても強い',basic:'せいれいをおそう',fast:'足が速い',thief:'食料や素材をぬすむ',brute:'体力が多い',boss:WD?'5日目の夜、そのあと3日ごとに来る。追いはらうと、そのあとに「ヌシのかけら」があらわれる。当たると目をまわす':'5日目の夜、そのあと3日ごとに来る。とても強い。当たると目をまわす'};
     const st=el('<div class="sec"><h3>ステータス</h3><div class="stats"></div></div>'),g=st.querySelector('.stats');
     for(const[k,v]of[['体力',Math.max(0,Math.ceil(e.hp))+' / '+e.max],['移動速度','×'+D.sp],['壁への攻撃',D.atk+'秒ごとに1'],['せいれいへの攻撃','おなか −'+Math.round(D.hit*.6)],['特徴',FEAT[e.type]||'']])g.appendChild(el('<div class="stat"><span style="white-space:nowrap">'+k+'</span><b>'+v+'</b></div>'));
     body.appendChild(st);
@@ -4684,7 +4727,7 @@ function renderSheet(){
       const seen=S.seenEn||{},K=S.enKills||{},ks=Object.keys(EN).filter(k=>ZUKAN[k]);
       body.appendChild(el(`<p class="story">会ったコワイノ ${ks.filter(k=>seen[k]).length} / ${ks.length}</p>`));
       for(const k of ks){const D=EN[k],ok=seen[k],row=el('<div class="zk"><canvas width="144" height="144"></canvas><div class="zt"><b></b><p></p><small></small></div></div>');
-        const c=row.querySelector('canvas').getContext('2d');c.scale(2,2);if(!ok)c.globalAlpha=.18;try{drawShade(c,k,36,64,(k==='boss'||k==='hino'||k==='boss2'?.46:.56),1,{t:0})}catch(_){}
+        const c=row.querySelector('canvas').getContext('2d');c.scale(2,2);if(!ok)c.globalAlpha=.18;try{drawShade(c,k,36,64,(k==='boss'||k==='hino'||k==='yama'||k==='boss2'?.46:.56),1,{t:0})}catch(_){}
         row.querySelector('b').textContent=ok?D.name:'？？？';row.querySelector('p').textContent=ok?ZUKAN[k]:'まだ会ったことがない';
         row.querySelector('small').textContent=ok?'体力 '+D.hp+'・はやさ '+D.sp+'・追いはらった '+(K[k]||0)+'回':'';body.appendChild(row)}
     }else if(sheetArg==='record'){
@@ -4882,7 +4925,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='361';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='358';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
