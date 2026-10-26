@@ -3218,6 +3218,8 @@ const COMFK=3,COMFMAX=100*COMFK;// 住み心地の上限は100の3倍
 // 住み心地（0〜300）：ベッド・家具・床・人数で決まる。高いとよく眠れて、低いとたのしさが下がる
 const COMFR={rockart:1,jar:1,chime:1,torch:1,flower:1,clover:1,bellf:1,salvia:1,lily:1,lotus:1,lamp:2,vane:2};/* 家の外でも住み心地に入る範囲（マス） */
 const COMFY={stool:2,chair2:4,stable:4,pouf:3,achair:5,ltable:5,rug1:5,sofa1:6,rug2:6,sideb:6,tub:3,sink:4,crate:6,monstera:10,shelf1:12,wreath:10,curtain1:10,cabinet:12,paint2:10,shelf2:13,curtain2:10,paint3:10,wshelf:12,paint1:14,bathtub:16,candle:3,lantern:5,flamp:6,window:5,bed:10,table:8,chair:4,oven:6,lamp:6,torch:4,bench:5,jar:5,rockart:5,chime:5,vane:4,flower:4,clover:4,bellf:4,salvia:4,lily:4,lotus:4,stor:3,mbox:3};
+/* 住み心地の高い家具ほど、素材も多く（パワーはそのまま）。食卓・ベッド・かまど・あかりなど、はたらきのある物はそのまま */
+{const FUNC=new Set(['bed','table','oven','lamp','torch','bench','stor','mbox','candle','lantern','flamp','tub','sink','chair','stool','chair2','stable','pouf']);for(const id in COMFY){const b=BL[id];if(!b||b.kind!=='furn'||!b.mat||FUNC.has(id)||!(COMFY[id]>=6))continue;const p=COMFY[id],m=p>=14?4:p>=10?3:p>=8?2:1.5;for(const k in b.mat)b.mat[k]=Math.ceil(b.mat[k]*m)}}
 function houseComfort(h){let bed=0,furn=0,fl=0,n=0;const seen=new Set();
   const kc={};for(const j of h.inside){n++;if(S.floor[j])fl++;const o=S.obj[j];if(!o||!COMFY[o])continue;if(o==='bed')bed++;else{kc[o]=(kc[o]||0)+1;furn+=COMFY[o]*(kc[o]>2?.5:1);seen.add(o)}}/* 同じ家具は2つまで。3つ目からは半分 */
   {const M=2;for(let y=h.y0-M;y<=h.y1+M;y++)for(let x=h.x0-M;x<=h.x1+M;x++){if(x<0||y<0||x>=W||y>=H)continue;const j=y*W+x;if(h.set.has(j))continue;const o=S.obj[j],rg=COMFR[o];if(!rg||!COMFY[o])continue;const d=Math.max(h.x0-x,x-h.x1,h.y0-y,y-h.y1,0);if(d>rg)continue;kc[o]=(kc[o]||0)+1;furn+=COMFY[o]*(kc[o]>2?.5:1);seen.add(o)}}/* かざりは、家のそば（ものごとの範囲）にあっても住み心地に入る */
@@ -3657,7 +3659,7 @@ function drawBench(c,x,y,front){/* ベンチは横2マス */
   c.fillStyle='#a8733f';rr(c,x+1,y+21,L-2,4,1.5);c.fillStyle='#8a5a33';c.fillRect(x+4,y+24,3.2,7);c.fillRect(x+L/2-1.6,y+24,3.2,7);c.fillRect(x+L-7.2,y+24,3.2,7);c.fillStyle='rgba(0,0,0,.12)';c.fillRect(x+1,y+24,L-2,1)}
 const SHINE=[[-22,-46,12],[21,-58,13],[-8,-74,8],[25,-30,10],[-27,-22,8],[11,-10,7]];
 function star4(c,x,y,r){c.save();c.translate(x,y);c.fillStyle='rgba(255,240,170,.35)';c.beginPath();c.arc(0,0,r*.7,0,7);c.fill();c.fillStyle='#fffbe0';c.strokeStyle='#f2c94c';c.lineWidth=1.2;c.beginPath();c.moveTo(0,-r);c.quadraticCurveTo(r*.18,-r*.18,r,0);c.quadraticCurveTo(r*.18,r*.18,0,r);c.quadraticCurveTo(-r*.18,r*.18,-r,0);c.quadraticCurveTo(-r*.18,-r*.18,0,-r);c.fill();c.stroke();c.fillStyle='#ffd84a';c.beginPath();c.arc(0,0,r*.22,0,7);c.fill();c.restore()}
-function rDepth(r){/* 大きいコワイノの近くで戦うせいれいは、コワイノの影にならないよう、手前に描く */let d=r.y;for(const e of S.enemies){if(!e.spawned||e.dead||(EN[e.type].size||1)<1.2)continue;const dy=e.y-r.y;if(dy>=0&&dy<2.6&&Math.abs(e.x-r.x)<2.6)d=Math.max(d,e.y+.02)}return d}
+function rDepth(r){/* 大きいコワイノの近くで戦うせいれいは、コワイノの影にならないよう、手前に描く */let d=r.y;if(r.act&&r.act.stage==='do'&&r.act.type==='chop'&&r.act.obj!=null)d=Math.max(d,(r.act.obj/W|0)+1.5);/* 木を切っている子は、木にかくれないよう手前に */for(const e of S.enemies){if(!e.spawned||e.dead||(EN[e.type].size||1)<1.2)continue;const dy=e.y-r.y;if(dy>=0&&dy<2.6&&Math.abs(e.x-r.x)<2.6)d=Math.max(d,e.y+.02)}return d}
 const forageAnim=r=>{const t=r.act.t||0;return t<2?'pluck':t<3.5?'hold':'eat'};
 function drawRes0(r,now){
   if(r.hidden&&!peekH(r))return;
