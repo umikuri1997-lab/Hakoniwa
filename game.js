@@ -741,7 +741,7 @@ function widenStoneGates(s){
     s.obj[k]='part';s.ref[k]=j;
   }
 }
-function ensureStor(s){widenStoneGates(s);if(!(s.world>=1)&&s.ovenSet)for(const q in s.ovenSet)if(s.ovenSet[q]==='soup')delete s.ovenSet[q];
+function ensureStor(s){widenStoneGates(s);{const nm=new Set();for(let j=0;j<s.obj.length;j++)if(s.obj[j]==='grave'&&s.dyn&&s.dyn[j]&&!s.dyn[j].buried)nm.add(s.dyn[j].name);for(const r of s.res||[])if(r.coffin)nm.add(r.coffin.name);for(const L of[s.buried||[],s.lost||[]])for(const q of L)if(nm.has(q.name))q.unb=true}/* まだ埋葬されていない子は、よみがえらせない */if(!(s.world>=1)&&s.ovenSet)for(const q in s.ovenSet)if(s.ovenSet[q]==='soup')delete s.ovenSet[q];
   if(!(s.baseV>=2)){s.baseLv=[0,4,6,8][s.baseLv||0]||0;s.baseV=2}/* 広げる段階をふやした前のセーブ */fixWallHp(s);boxMat(s);if(s.world===1&&!(s.flags.st2v>=2))st2Migrate(s);for(const r of s.res){if(!r.vr)r.vr=mkVar(r.name);if(!r.vr.sta)r.vr.sta=1;if(!r.vr.vo)r.vr.vo=KEYVR[r.name]?KEYVR[r.name].vo:mkVar('').vo;if(KEYVR[r.name]){r.vr.key=true;r.vr.tr=KEYVR[r.name].tr}if(!r.vr.key&&(!r.vr.tr||r.vr.tr==='kizuna'||r.vr.tr==='yuukan'))r.vr.tr=pick(TRK())}for(const k in s.hp||{})if(/^\d+$/.test(k)&&typeof s.hp[k]==='number')s.hp[k]=Math.ceil(s.hp[k]);/* 耐久は整数 */if(!(s.qVer>=2)){if(s.quest>=11)s.quest+=2;s.qVer=2}/* 夜と罠のクエストを足した分ずらす */
   if(s.qVer<3){const M=[0,1,2,3,4,5,6,7,8,8,11,12,12,16,19,18,22,23];s.quest=s.quest>=M.length?QUESTS.length:M[s.quest];s.qTalked=true;s.qVer=3;/* クエストを作り直した分の読みかえ。前からの人はレシピをぜんぶ知っている */
     s.recipes={};RLOCK.forEach(id=>s.recipes[id]=true);s.feat.summon=true;s.flags.sumTold=true;if(s.res.some(r=>r.name==='ミナ'||r.name==='ツチノコ'||r.name==='ノドカ')||s.quest>8)s.flags.minaCame=true}
@@ -1186,7 +1186,8 @@ const ACT_LBL={reunion:'なかよしに会いにいく',bury:'お墓へむかう
 function decide(r){TAKEN=new Set();for(const q of S.res){if(q===r||q.hidden)continue;if(q.act&&q.act.stand>=0)TAKEN.add(q.act.stand);if(!q.act||q.act.stage!=='walk')TAKEN.add((q.y|0)*W+(q.x|0))}
   for(const [j,t]of Object.entries(r.routeAvoid||{})){if(t>S.t)TAKEN.add(+j);else delete r.routeAvoid[j]}
   try{const x=decide0(r);if(!r.act&&r.elem==='fire'&&!r.hidden&&r.hunger>=20)huntNear(r);return x}finally{TAKEN=null}}
-function huntNear(r){/* 火のせいれいが、近くにコワイノがいるのに何もしないときは、たたかいに行く */let en=null,bd=10;for(const e of S.enemies){if(!e.spawned||e.dead)continue;const d=Math.hypot(e.x-r.x,e.y-r.y);if(d<bd){bd=d;en=e}}if(!en)return false;const G=bfs(r.x|0,r.y|0);let j=-1,b2=1e9;for(let k=0;k<W*H;k++){if(G.dist[k]<0||G.dist[k]>60||!walk(k))continue;const d=Math.abs(Math.hypot(k%W+.5-en.x,((k/W|0)+.5)-en.y)-1.3)+G.dist[k]*.02;if(d<b2){b2=d;j=k}}if(j<0)return false;startAct(r,G,'patrol',j,{hunt:S.t});return true}
+function huntSpot(G,en,maxD){/* 攻撃できる場所（1.4マス以内で、壁をはさまない）のうち、いちばん近く。柵の内側からとどくなら、外へは出ない */const fo=fenceOut();let j=-1,bd=1e9;for(let k=0;k<W*H;k++){if(G.dist[k]<0||(maxD&&G.dist[k]>maxD)||!walk(k))continue;const cx=k%W+.5,cy=((k/W)|0)+.5,h=Math.hypot(cx-en.x,cy-en.y),ok=h<=1.4&&!fenceBetween(cx,cy,en.x,en.y),d=ok?G.dist[k]*.02+(fo[k]?6:0):50+Math.abs(h-1.3)+G.dist[k]*.02;if(d<bd){bd=d;j=k}}return j}
+function huntNear(r){/* 火のせいれいが、近くにコワイノがいるのに何もしないときは、たたかいに行く */let en=null,bd=10;for(const e of S.enemies){if(!e.spawned||e.dead)continue;const d=Math.hypot(e.x-r.x,e.y-r.y);if(d<bd){bd=d;en=e}}if(!en)return false;const G=bfs(r.x|0,r.y|0);const j=huntSpot(G,en,60);if(j<0)return false;startAct(r,G,'patrol',j,{hunt:S.t});return true}
 // 家の中：壁とドアで外から閉じられたマス。壁が壊れると外とつながって中ではなくなる
 function insideSet(){const out=new Uint8Array(W*H),q=[];const open=j=>S.obj[j]!=='door'&&S.obj[j]!=='sdoor'&&walk(j);
   for(let x=0;x<W;x++)for(const y of[0,H-1]){const j=y*W+x;if(open(j)&&!out[j]){out[j]=1;q.push(j)}}
@@ -1200,7 +1201,7 @@ let FOUT=null,FOUTT=-1;function fenceOut(){/* 柵（門もふくむ）と壁で�
 function fleeHit(r,G){
   if(r.hunger<50&&S.food>0){const sj=nearest(G,j=>adjOf(j,k=>storageAt(k,'food'))>=0,60);if(sj>=0){startAct(r,G,'fetch',sj,{run:true});return true}}/* おなかがすいていたら、にげながら食料箱でごはんをとる */
   if(r.elem==='fire'&&S.food>0&&r.hunger<hMax(r)-8){const sj=nearest(G,j=>adjOf(j,k=>storageAt(k,'food'))>=0,60);if(sj>=0){startAct(r,G,'flee',sj,{food:1});return true}}/* 火の子は、おなかがすいていて食料があるときだけ、食料箱へ逃げる（食べられないのに箱の前でにげ続けない） */
-  if(isNight()){const out=insideSet(),bj=nearest(G,j=>S.obj[j]==='bed'&&!out[j]&&free('o'+j,1)&&bedFor(j,r),200);if(bj>=0){const b=BL.bed.sleep;startAct(r,G,'sleep',bj,{key:'o'+bj,obj:bj,rate:b.rate,pt:b.pt,run:true});return true}}
+  if(isNight()&&r.elem!=='fire'){const out=insideSet(),bj=nearest(G,j=>S.obj[j]==='bed'&&!out[j]&&free('o'+j,1)&&bedFor(j,r),200);if(bj>=0){const b=BL.bed.sleep;startAct(r,G,'sleep',bj,{key:'o'+bj,obj:bj,rate:b.rate,pt:b.pt,run:true});return true}}
   const ens=S.enemies.filter(e=>e.spawned&&!e.dead),fr=r.elem==='fire'?null:S.res.find(q=>q!==r&&q.elem==='fire'&&!q.hidden);/* 「コワイノ」からはなれる。火のせいれいがいれば、そのそばへ */
   const fo=fenceOut();let best=-1,bs=-1e9;for(let j=0;j<W*H;j++){const d=G.dist[j],ins=!fo[j];if(!(d>=3&&d<=(ins?30:14)))continue;const x=j%W+.5,y=((j/W)|0)+.5;let me=99;for(const e of ens)me=Math.min(me,Math.hypot(x-e.x,y-e.y));if(me<2)continue;const sc=(fr?Math.min(me,6)-Math.hypot(x-fr.x,y-fr.y)*.8-d*.05:me-d*.15)+(ins?10:0);if(sc>bs){bs=sc;best=j}}/* 柵の内側へ、すすんで逃げる */
   if(best>=0){startAct(r,G,'flee',best);return true}return false}
@@ -1234,10 +1235,10 @@ function decide0(r){
   if(r.hunger<30||(r.hunger<45&&Math.hypot(r.x-CX,r.y-CY)>20))return goEat(r,G);/* 基地から遠いときは早めに帰る */
   if(isNight()&&r.hunger<hMax(r)*.5&&S.food>0&&!S.enemies.some(e=>e.spawned&&!e.dead&&Math.hypot(e.x-r.x,e.y-r.y)<7)){return goEat(r,G)}/* 夜も、おなかが半分になったら食べにいく（見回りの子もふくめて） */
   if(r.elem==='fire'&&r.hunger>=35){let en=null,bd=1e9;const br=BASE_R[S.baseLv]+3;for(const e of S.enemies){if(!e.spawned||e.dead)continue;if(!(e.x>=CX-br&&e.x<CX+br&&e.y>=CY-br&&e.y<CY+br))continue;const d=Math.hypot(e.x-r.x,e.y-r.y);if(d<bd){bd=d;en=e}}/* 「コワイノ」が拠点に近づいたら、たたかいに行く（おなか＝体力が少ないときは行かない） */
-    if(en){let j=-1,bd=1e9;for(let k=0;k<W*H;k++){if(G.dist[k]<0||G.dist[k]>60||!walk(k))continue;const d=Math.abs(Math.hypot(k%W+.5-en.x,((k/W)|0)+.5-en.y)-1.3)+G.dist[k]*.02;/* 敵と同じマスではなく、ひとます離れて */if(d<bd){bd=d;j=k}}if(j>=0)return startAct(r,G,'patrol',j,{hunt:S.t})}}/* となりに行けなくても、いちばん近くまで行く。見回りの中断でぐるぐるしないよう hunt をつける */
+    if(en){const j=huntSpot(G,en,60);/* 敵と同じマスではなく、ひとます離れて */if(j>=0)return startAct(r,G,'patrol',j,{hunt:S.t})}}/* となりに行けなくても、いちばん近くまで行く。見回りの中断でぐるぐるしないよう hunt をつける */
   if(isNight()&&r.elem==='fire'&&offShift(r)){r.bubble='💤'}/* 火のせいれいが2人以上いれば、交代で見張って、交代で眠る */
   else if(isNight()&&isWatch(r)){// 火のせいれい（と、まもりをおぼえたフタバ）は寝ないで見回り
-    {const e=r.elem!=='fire'?null:S.enemies.filter(e=>e.spawned&&!e.dead&&inBase(e.x|0,e.y|0)).sort((a,b)=>Math.hypot(a.x-r.x,a.y-r.y)-Math.hypot(b.x-r.x,b.y-r.y))[0];if(e){let t=-1,bd=1e9;for(let j=0;j<W*H;j++){if(G.dist[j]<0||!walk(j))continue;const d=Math.abs(Math.hypot(j%W+.5-e.x,((j/W)|0)+.5-e.y)-1.3)+G.dist[j]*.02;if(d<bd){bd=d;t=j}}/* 届かない所にいても、いちばん近くまで行く */if(t>=0)return startAct(r,G,'patrol',t,{hunt:S.t})}}/* 拠点にコワイノが入ったら、まっすぐたたかいに行く */
+    {const e=r.elem!=='fire'?null:S.enemies.filter(e=>e.spawned&&!e.dead&&inBase(e.x|0,e.y|0)).sort((a,b)=>Math.hypot(a.x-r.x,a.y-r.y)-Math.hypot(b.x-r.x,b.y-r.y))[0];if(e){const t=huntSpot(G,e,0);/* 届かない所にいても、いちばん近くまで行く */if(t>=0)return startAct(r,G,'patrol',t,{hunt:S.t})}}/* 拠点にコワイノが入ったら、まっすぐたたかいに行く */
     if(r.name===POKO){const hk=keyName('fire'),fs=S.res.filter(t=>t!==r&&!t.hidden&&t.elem==='fire'),tg=fs.find(t=>t.name===hk)||fs[0];if(tg&&Math.hypot(tg.x-r.x,tg.y-r.y)>1.5){let q=-1,bd=1e9;for(let k=0;k<W*H;k++){if(G.dist[k]<0||G.dist[k]>40||!walk(k))continue;const d=Math.hypot(k%W+.5-tg.x,((k/W)|0)+.5-tg.y)+G.dist[k]*.02;if(d<bd){bd=d;q=k}}if(q>=0)return startAct(r,G,'patrol',q)}}/* フタバは、火の子のそばについて回る */
     const ib=j=>inBase(j%W,(j/W)|0);let j=nearest(G,j=>walk(j)&&!roomOf(j)&&ib(j)&&Math.random()<.04,8);if(j<0)j=nearest(G,j=>walk(j)&&!roomOf(j)&&ib(j),80);/* 家の中にいたら、まず外へ出る */if(j>=0)return startAct(r,G,'patrol',j);/* 夜は家の外を見回る */return startAct(r,G,'wander',(r.y|0)*W+(r.x|0))}
   if(r.energy<25||isNight())return goSleep(r,G,S.enemies.some(e=>e.spawned));
@@ -1270,7 +1271,7 @@ function goEat(r,G){
     if(j>=0)return startAct(r,G,'fetch',j);
   }
   const f=ripeAdj(['berry','fruit']);const j=nearest(G,j=>f(j)>=0);
-  if(j>=0){const k=f(j);return startAct(r,G,'forage',j,{key:'o'+k,obj:k})}
+  if(j>=0){const k=f(j);return startAct(r,G,'forage',j,{key:'o'+k,obj:k,run:S.food<=0})}/* 食料がゼロなら、茂みへは走る */
   r.bubble='😣';return goWander(r,G);
 }
 const fireMul=r=>(r.energy<25?.7:1)*(r.fun<20?.8:1);/* 火のせいれいは、つかれても楽しさが減ってもたたかう。そのぶん、こうげきが弱くなる（つかれ×0.7・楽しさ低下×0.8） */
@@ -1618,7 +1619,7 @@ function updRes(r,dt){rescueStuck(r);if((RHOLD.get(r)||0)>performance.now())retu
     if(out[me]||S.enemies.some(e=>e.spawned&&!out[(e.y|0)*W+(e.x|0)])){endAct(r);r.bubble='🔥'}}
   r.fun=Math.max(0,r.fun);
   if(sleeping&&isWatch(r)&&isNight()&&S.enemyOn&&!offShift(r)&&(r.hunger<hMax(r)*.5?S.food>0:r.energy>40)){endAct(r);addFloat(r.x,r.y-1.4,'見張りの時間','#ffd38a')}/* 家の中で寝ている子もふくめて、見張りの番なら起きる */
-  if(r.elem==='fire'&&!r.hidden&&!sleeping&&!(r.act&&(r.act.type==='flee'||r.act.type==='faint'))&&!((r.fatk||0)>S.t)){const lv=rLv(r);let en=null,bd=1.3;for(const e of S.enemies){if(!e.spawned||e.dead)continue;const d=Math.hypot(e.x-r.x,e.y-r.y);if(d<bd&&!fenceBetween(r.x,r.y,e.x,e.y)){bd=d;en=e}}
+  if(r.elem==='fire'&&!r.hidden&&!sleeping&&!(r.act&&(r.act.type==='flee'||r.act.type==='faint'))&&!((r.fatk||0)>S.t)){const lv=rLv(r);let en=null,bd=1.5;for(const e of S.enemies){if(!e.spawned||e.dead)continue;const d=Math.hypot(e.x-r.x,e.y-r.y);if(d<bd&&!fenceBetween(r.x,r.y,e.x,e.y)){bd=d;en=e}}
     if(en){r.fatk=S.t+5;const ba=((r.bst&&r.bst.atk)||0)+((r.sst&&r.sst.atk)||0),dmg=Math.max(.5,(fAtk(lv)+ba)*fireMul(r));en.hp-=dmg;en.flash=6;en.stun=Math.max(en.stun||0,1);r.face=en.x>=r.x?1:-1;r.swing=performance.now();atkFX(r,en);sfxAt('hit',r.x,r.y);if(en.hp<=0){r.beat=(r.beat||0)+1;defeat(en,r.name+'が'+EN[en.type].name+'を追いはらった！')}}}/* 火のせいれいは、となりのコワイノに自分から攻撃する */
   if(r.act&&!isNight()&&!URGNO.includes(r.act.type)&&!heldN(r)&&!r.meal&&!r.cing&&r.hunger>=35&&r.energy>=25&&!(r.uchk>S.t)){r.uchk=S.t+2;if(hasUrgent(r)){// 建物や依頼は、いまの作業をやめてでも向かう
     const old=r.act,op=r.path,ob=r.bubble;endAct(r);const G=bfs(r.x|0,r.y|0);if(!(tryJob(r,G,'build')||tryJob(r,G,'craft'))){r.act=old;r.path=op;r.bubble=ob;if(old.key)reserve(old.key)}}}
@@ -1651,7 +1652,7 @@ function updRes(r,dt){rescueStuck(r);if((RHOLD.get(r)||0)>performance.now())retu
   if(A.done(r,a)){if(A.end)A.end(r,a);endAct(r)}
 }
 function reunite(r,sp){/* もどってきた子の、もとのなかよしは、神殿へかけつけてよろこぶ */const m=r.reMate&&S.res.find(q=>q.name===r.reMate&&!q.hidden&&q!==r);r.reMate=null;if(!m||isNight()&&!m.act)return;const G=bfs(m.x|0,m.y|0),st=nearest(G,j=>Math.abs(j%W-sp[0])+Math.abs(((j/W)|0)-sp[1])===1&&walk(j),300);if(st<0)return;endAct(m);startAct(m,G,'reunion',st,{who:r.id})}
-function finishBurial(r){const nm=r.coffin&&r.coffin.name;r.coffin=null;if(!nm)return;S.pt+=1;S.totalPt+=1;toast(r.name+'が'+nm+'を埋葬した。'+((S.buried||[]).some(q=>q.name===nm)?'次の朝、神殿で呼びもどせる':'パワー+1'),'good');logEv(r.name+'が'+nm+'を埋葬した')}
+function finishBurial(r){const nm=r.coffin&&r.coffin.name;r.coffin=null;if(!nm)return;for(const L of[S.buried||[],S.lost||[]])for(const q of L)if(q.name===nm)delete q.unb;/* 埋葬してから、よみがえらせられる */S.pt+=1;S.totalPt+=1;toast(r.name+'が'+nm+'を埋葬した。'+((S.buried||[]).some(q=>q.name===nm)?'次の朝、神殿で呼びもどせる':'パワー+1'),'good');logEv(r.name+'が'+nm+'を埋葬した')}
 function goBurial(r,G){/* 消えてしまった子のお墓へ行き、棺を神殿へはこぶ。なかよしがいれば、その子がする */
   if(r.coffin){if(STATUE>=0){const st=nearest(G,j=>adjOf(j,k=>k===STATUE||k===STATUE+W)>=0,300);if(st>=0){startAct(r,G,'pray',st,{});return true}}finishBurial(r);return false}
   if(!cnt('grave')||isNight()||r.hunger<25||heldN(r)||r.meal||r.cing)return false;
@@ -1661,7 +1662,7 @@ function goBurial(r,G){/* 消えてしまった子のお墓へ行き、棺を神
 function die(r){
   endAct(r);const dm=bestMate(r),dmN=dm?dm.name:null;{const t0=(r.y|0)*W+(r.x|0);let gj=-1;for(let rad=0;rad<4&&gj<0;rad++)for(let dy=-rad;dy<=rad&&gj<0;dy++)for(let dx=-rad;dx<=rad;dx++){const k=t0+dy*W+dx;if(k>=0&&k<W*H&&!S.obj[k]&&S.ground[k]!==1){gj=k;break}}
     if(gj>=0){S.obj[gj]='grave';S.dyn[gj]={name:r.name,buried:false,mate:dmN,t0:S.t};recount()}}S.res=S.res.filter(q=>q!==r);S.deaths++;for(const q of S.res)if(Math.hypot(q.x-r.x,q.y-r.y)<14)q.cryU=S.t+90;/* 近くのせいれいは、しばらく泣く */logEv(r.name+'が消えてしまった');
-  if(!S.buried)S.buried=[];if(isKey(r.name))S.buried.push({name:r.name,elem:r.elem,vr:r.vr,xp:r.xp||0,xpf:r.xpf||0,like:r.like,came:r.came,made:r.made,beat:r.beat,bst:r.bst,sst:r.sst,boost:r.boost,mate:dmN});else{if(!S.lost)S.lost=[];S.lost.push({name:r.name,elem:r.elem,vr:r.vr,xp:r.xp||0,xpf:r.xpf||0,like:r.like,came:r.came,made:r.made,beat:r.beat,bst:r.bst,sst:r.sst,boost:r.boost,mate:dmN})}/* キーキャラは特性「きずな」でレベルそのまま。ふつうのせいれいは「めぶきのしずく」がないともどらない *//* もどってくるのはキーキャラだけ *//* 次の朝の召喚で、いちばんにもどってくる */
+  if(!S.buried)S.buried=[];if(isKey(r.name))S.buried.push({name:r.name,elem:r.elem,vr:r.vr,xp:r.xp||0,xpf:r.xpf||0,like:r.like,came:r.came,made:r.made,beat:r.beat,bst:r.bst,sst:r.sst,boost:r.boost,mate:dmN,unb:true});else{if(!S.lost)S.lost=[];S.lost.push({name:r.name,elem:r.elem,vr:r.vr,xp:r.xp||0,xpf:r.xpf||0,like:r.like,came:r.came,made:r.made,beat:r.beat,bst:r.bst,sst:r.sst,boost:r.boost,mate:dmN,unb:true})}/* 埋葬されるまでは、よみがえらせない（unb） *//* キーキャラは特性「きずな」でレベルそのまま。ふつうのせいれいは「めぶきのしずく」がないともどらない *//* もどってくるのはキーキャラだけ *//* 次の朝の召喚で、いちばんにもどってくる */
   addFloat(r.x,r.y-1,'👻','#fff');
   toast(r.name+'が空腹で力尽きてしまった…','warn');
   {const DT=S.res.length?deathTalk(r):null;if(DT&&DT.length)setTimeout(()=>dialog(DT),900);else{const key=isKey(r.name),fk=key?'deathTold':'death2Told';if(!S.flags[fk]&&S.res.length){S.flags[fk]=true;const sp=S.res.find(q=>KEYRES.includes(q.name))||S.res[0],n=r.name;
@@ -1685,7 +1686,7 @@ function checkSummon(){
   if(!S||!S.feat.summon||S.summonNext||S.summon)return;const el=sumElem();if(!el)return;S.summonNext=el}
 function summonMorning(){
   if(S.summon)return;
-  if(S.buried&&S.buried.length)S.summon={rev:1};
+  if(S.buried&&S.buried.some(q=>!q.unb))S.summon={rev:1};
   else if(S.summonNext){S.summon={elem:S.summonNext};S.summonNext=null}
   else if(S&&S.feat.summon){const el=sumElem();if(el)S.summon={elem:el}}/* 呼べるかは、その朝にたまっている力だけで決まる（日中にためた分は次の朝） */
   if(S.summon){sfx('arrive');toast('神殿に「！」が出ている。タップしてなかまを呼ぼう','good')}}
@@ -1697,7 +1698,7 @@ function doSummon(){
   const sx0=STATUE>=0?STATUE%W:CX,sy0=STATUE>=0?((STATUE/W)|0)+3:CY;let sp=null;
   for(let rr=0;rr<10&&!sp;rr++){const c=[];for(let dy=-rr;dy<=rr;dy++)for(let dx=-rr;dx<=rr;dx++){if(Math.max(Math.abs(dx),Math.abs(dy))!==rr)continue;const x=sx0+dx,y=sy0+dy;if(x<1||y<1||x>=W-1||y>=H-1)continue;const j=y*W+x;if(walk(j)&&!S.obj[j]&&!S.res.some(q=>(q.x|0)===x&&(q.y|0)===y)&&!(godHere()&&Math.hypot(x+.5-godX(),y+.5-godY())<2.2))c.push([x,y])}if(c.length)sp=pick(c)}
   if(!sp)sp=[CX,CY];
-  if(sm.rev){let d;if(sm.lost){const L=S.lost,i=typeof sm.lost==='string'?L.findIndex(q=>q.name===sm.lost):0;d=L.splice(Math.max(0,i),1)[0];}else{const B=S.buried;B.sort((a,b)=>(isKey(b.name)?1:0)-(isKey(a.name)?1:0));d=B.shift()}
+  if(sm.rev){let d;if(sm.lost){const L=S.lost,i=typeof sm.lost==='string'?L.findIndex(q=>q.name===sm.lost):0;d=L.splice(Math.max(0,i),1)[0];}else{const B=S.buried;B.sort((a,b)=>(isKey(b.name)?1:0)-(isKey(a.name)?1:0)||(a.unb?1:0)-(b.unb?1:0));d=B.shift()}
     r=mkRes(S,d.name,d.elem,sp[0]+.5,sp[1]+.5,d.like);r.vr=d.vr||r.vr;r.xp=d.xp||0;r.xpf=d.xpf||0;if(d.bst)r.bst=d.bst;if(d.sst)r.sst=d.sst;if(d.boost)r.boost=d.boost;r.back=1;r.came=d.came;r.made=d.made;r.beat=d.beat;r.reMate=d.mate||null;
     toast(r.name+'がもどってきた！','good');sevBack(r.name);reunite(r,sp)}
   else{let name;if(sm.elem===SECOND[WD].elem&&!S.flags.minaCame){name=SECOND[WD].name;S.flags.minaCame=true}
@@ -3118,6 +3119,8 @@ function drawObj(c,id,x,y,i,g,now){
     c.fillStyle='#c98f5c';rr(c,x+4,y-4,24,7,2);c.fillStyle='#d9a46e';c.fillRect(x+4,y-4,24,2);c.fillStyle='#a8703f';c.fillRect(x+4,y+1,24,1.5);
     c.fillStyle='#a8703f';c.fillRect(x+7,y-14,2.5,11);c.fillRect(x+22.5,y-14,2.5,11);
     c.fillStyle='#d0694a';c.beginPath();c.moveTo(x+1,y-12);c.lineTo(x+16,y-23);c.lineTo(x+31,y-12);c.lineTo(x+29,y-10);c.lineTo(x+3,y-10);c.closePath();c.fill();c.fillStyle='#e07e5c';c.beginPath();c.moveTo(x+4,y-12.5);c.lineTo(x+16,y-21);c.lineTo(x+18,y-19.5);c.lineTo(x+7,y-12);c.closePath();c.fill();
+    {const L=(!ICON&&i!=null&&S&&S.hp&&S.hp['L'+i])||1;/* 強化すると見た目が変わる：Lv2は旗、Lv3は金のかざりと星 */if(L>=2){c.fillStyle='#8a5a33';c.fillRect(x+15.4,y-34,1.5,12);c.fillStyle=L>=3?'#ffd84a':'#7fb4e8';c.beginPath();c.moveTo(x+16.9,y-34);c.lineTo(x+26,y-30.5);c.lineTo(x+16.9,y-27);c.closePath();c.fill()}
+      if(L>=3){c.fillStyle='#ffd84a';c.fillRect(x+2.5,y-10.6,27,1.8);c.fillRect(x+4,y-3.6,24,1.2);star4(c,x+16,y-37,4.5)}}
     tuft(c,x+3,y+28,.6,'#7ab35a');break}
   case'torch':{const T=now||0;if(PSPR.torch&&PSPR.torch.ok){const g=PSPR.torch,h=40,w=h*g.w/g.h,fy=y+30-h*.78,fl=1+Math.sin(T/120+i)*.08;shadow(c,x+16,y+29,5,2);const gg=c.createRadialGradient(x+16,fy,1,x+16,fy,14*fl);gg.addColorStop(0,'rgba(255,200,90,.5)');gg.addColorStop(1,'rgba(255,200,90,0)');c.fillStyle=gg;c.fillRect(x+1,fy-15,30,30);c.drawImage(g.img,x+16-w/2,y+30-h,w,h);break}shadow(c,x+16,y+29,5,2);c.fillStyle='#8a5a33';c.fillRect(x+14,y+8,4,21);c.fillStyle='#6d4424';c.fillRect(x+12,y+6,8,4);
     const f=Math.sin(T/120+i)*1.5;const gg=c.createRadialGradient(x+16,y+3,1,x+16,y+3,12);gg.addColorStop(0,'rgba(255,200,90,.55)');gg.addColorStop(1,'rgba(255,200,90,0)');c.fillStyle=gg;c.fillRect(x+3,y-9,26,24);
@@ -3686,13 +3689,14 @@ function drawRes0(r,now){
   const by=fy-27;
   const ci=carryIcon(r);
   const over=()=>{
-  if(ci){const cb=walking?Math.abs(Math.sin(now/110+r.id))*1.2:0;ctx.font='26px sans-serif';ctx.fillStyle='#000';ctx.textAlign='center';ctx.textBaseline='middle';{let cl=carryIcons(r);if(!cl.length)cl=[ci];if(!cl[0])cl=[];const cap=trt(r,'chikara')?5:4;if(cl.length>cap)cl=cl.slice(-cap);const hn=cl.length;for(let i=0;i<hn;i++){const e1=cl[i],ei=emoImg(e1),ox=(i%2?3:-3)*(hn>1?1:0),oy=-i*7;if(ei){const k=30/Math.max(ei.width,ei.height),iw=ei.width*k,ih=ei.height*k;ctx.drawImage(ei,px-iw/2+ox,fy-47-cb-ih/2+oy+(hn-1)*3,iw,ih)}else ctx.fillText(e1,px+ox,fy-47-cb+oy+(hn-1)*3)}}/* たくさん持つときは、アイコンを重ねる */ctx.textAlign='start';ctx.textBaseline='alphabetic'}
+  if(ci){const cb=walking?Math.abs(Math.sin(now/110+r.id))*1.2:0;ctx.font='26px sans-serif';ctx.fillStyle='#000';ctx.textAlign='center';ctx.textBaseline='middle';{let cl=carryIcons(r);if(!cl.length)cl=[ci];if(!cl[0])cl=[];const cap=trt(r,'chikara')?5:4;if(cl.length>cap)cl=cl.slice(-cap);const hn=cl.length;for(let i=0;i<hn;i++){const e1=cl[i],ei=emoImg(e1),ox=(i%2?3:-3)*(hn>1?1:0),oy=-i*7;if(ei){const k=30/Math.max(ei.width,ei.height),iw=ei.width*k,ih=ei.height*k;ctx.drawImage(ei,px-iw/2+ox,fy-47-cb-ih/2+oy+(hn-1)*3+(e1==='⚰️'?7:0),iw,ih)}else ctx.fillText(e1,px+ox,fy-47-cb+oy+(hn-1)*3)}}/* たくさん持つときは、アイコンを重ねる */ctx.textAlign='start';ctx.textBaseline='alphabetic'}
   if(!(r.hurt>0)&&S.t-(r.eUp||-9)<3&&r.energy<99.5){const v=r.energy/100,bx=px-12,byy=py+11;ctx.fillStyle='rgba(0,0,0,.45)';rr(ctx,bx,byy,24,5,2.5);ctx.fillStyle='#7ed99a';rr(ctx,bx+1,byy+1,Math.max(2,22*v),3,1.5);const ph=(now/600)%1;ctx.globalAlpha=1-ph;ctx.fillStyle='#7ed99a';ctx.font='bold 9px \"Hikomi\",\"Hiragino Maru Gothic ProN\",sans-serif';ctx.textAlign='center';ctx.fillText('+',px+15,byy+4-ph*8);ctx.globalAlpha=1}/* 元気が回復中：みどりのバー */
   if(r.hurt>0){const v=r.hunger/hMax(r),a=Math.min(1,r.hurt/8);ctx.globalAlpha=a;ctx.fillStyle='rgba(0,0,0,.6)';rr(ctx,px-12,py+11,24,5,2.5);ctx.fillStyle=v>.5?'#7ee08a':v>.25?'#ecdcbc':'#ff6b6b';rr(ctx,px-11,py+12,Math.max(2,22*v),3,1.5);ctx.globalAlpha=1}
   if(at==='craft'&&ad){const o=S.orders.find(q=>q.id===r.act.order);if(o){const f=Math.min(1,o.prog/o.need),bx=px-16,byy=py+(r.hurt>0?19:12);ctx.fillStyle='rgba(150,115,75,.5)';rr(ctx,bx-1.5,byy-1.5,35,8,4);ctx.fillStyle='#e8dcc0';rr(ctx,bx,byy,32,5,2.5);ctx.fillStyle='#e0a43a';rr(ctx,bx,byy,Math.max(2.5,32*f),5,2.5)}}/* 依頼の作業の進み具合は足もと。吹き出しは上に出す */
   const zzz=r.act&&r.act.type==='sleep';/* 寝ているあいだは、話しかけの吹き出しを出さない */
   if(!zzz&&QUESTCLEARW===r.name){talkBub(px,by,now,'#ffd56b');return}
-  if(r.act&&(r.act.type==='eat'||r.act.type==='forage')&&r.act.stage==='do'&&!zzz){const p=Math.max(0,Math.min(1,r.hunger/hMax(r))),gx=px-14,gy=by-55,g=()=>{ctx.fillStyle='rgba(0,0,0,.5)';rr(ctx,gx,gy,28,6,3);ctx.fillStyle=p>=.999?'#8fd36a':'#ffc766';rr(ctx,gx+1,gy+1,Math.max(2,26*p),4,2)};if(BUBQ)BUBQ.push(g);else g()}/* ごはん中の、お腹ゲージの回復 */
+  if(r.act&&(r.act.type==='eat'||r.act.type==='forage')&&r.act.stage==='do'&&!zzz){const p=Math.max(0,Math.min(1,r.hunger/hMax(r))),gx=px-12,gy=py+11,g=()=>{ctx.fillStyle='rgba(0,0,0,.5)';rr(ctx,gx,gy,24,6,3);ctx.fillStyle=p>=.999?'#8fd36a':'#ffc766';rr(ctx,gx+1,gy+1,Math.max(2,22*p),4,2)};if(BUBQ)BUBQ.push(g);else g()}/* ごはん中の、お腹ゲージの回復 */
+  if(r.coffin||r.act&&(r.act.type==='bury'||r.act.type==='pray')){const t='さみしいなぁ',oy=r.coffin&&!(r.act&&r.act.type==='pray')?-27:0;ctx.save();ctx.font='bold 13px sans-serif';const bw=Math.ceil(ctx.measureText(t).width)+16;ctx.fillStyle='#fff';rr(ctx,px-bw/2,by-45+oy,bw,24,9);ctx.beginPath();ctx.moveTo(px-4.5,by-21.5+oy);ctx.lineTo(px,by-15+oy);ctx.lineTo(px+4.5,by-21.5+oy);ctx.fill();ctx.fillStyle='#6b5a4a';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(t,px,by-33+oy);ctx.restore();return}/* お墓へ向かう・埋葬するあいだは、さみしそうなひとこと */
   if(!zzz&&TALKW===r.name){talkBub(px,by,now);return}
   if(!zzz&&SEVW[r.name]){talkBub(px,by,now,'#ffb3d1');return}
   if(!zzz&&SUBW[r.name]){talkBub(px,by,now,'#ffd56b');return}/* サブクエスト：黄色の吹き出し *//* 話したそうにしている：水色の吹き出し */
@@ -4491,14 +4495,12 @@ function renderSheet(){
       row.querySelector('b').textContent=r.name+'  Lv'+rLv(r);row.querySelector('small').textContent=ELEM[r.elem].name+'のせいれい・'+(r.act?ACT_LBL[r.act.type]||'':'考え中');
       row.querySelector('.tx').insertAdjacentHTML('beforeend',gaugeHTML(r));row.onclick=()=>{closeSheet();setMode('look');centerOn(r.x*TS,r.y*TS)};rows.appendChild(row)}
     body.appendChild(rows);
-    if((S.lost||[]).length&&S.mebuki>0){const ls=el('<div class="sec"><h3>消えてしまったせいれい（めぶきのしずく '+S.mebuki+'こ）</h3><div class="rows"></div></div>');
-      for(const q of S.lost){const row=rowEl(q.name,ELEM[q.elem].name+'のせいれい',spiritPort(q.elem,96,q.vr));const bt=el('<button class="btn pri">よみがえらせる</button>');bt.onclick=()=>{if(!(S.mebuki>0))return;S.mebuki--;closeSheet();{const pv=S.summon;S.summon={rev:1,lost:q.name};doSummon();S.summon=pv}sfx('level')};row.appendChild(bt);ls.querySelector('.rows').appendChild(row)}
+    if((S.lost||[]).some(q=>!q.unb)&&S.mebuki>0){const ls=el('<div class="sec"><h3>消えてしまったせいれい（めぶきのしずく '+S.mebuki+'こ）</h3><div class="rows"></div></div>');
+      for(const q of S.lost.filter(q=>!q.unb)){const row=rowEl(q.name,ELEM[q.elem].name+'のせいれい',spiritPort(q.elem,96,q.vr));const bt=el('<button class="btn pri">よみがえらせる</button>');bt.onclick=()=>{if(!(S.mebuki>0))return;S.mebuki--;closeSheet();{const pv=S.summon;S.summon={rev:1,lost:q.name};doSummon();S.summon=pv}sfx('level')};row.appendChild(bt);ls.querySelector('.rows').appendChild(row)}
       body.appendChild(ls)}
   }else if(sheet==='grave'){
     const j=sheetArg,d=S.dyn[j]||{},nm=d.name||'せいれい';T.textContent=nm+'のお墓';
-    body.appendChild(el('<p class="story">「めぶきのしずく」をつかうと、'+nm+'がもどってきます（Lv1から）。<br>めぶきのしずく：<b>'+(S.mebuki||0)+'こ</b></p>'));
-    const b1=el('<button class="btn pri" style="width:100%;margin-top:8px">めぶきのしずくで よみがえらせる</button>');b1.disabled=!(S.mebuki>0);b1.onclick=()=>{if(!(S.mebuki>0))return;S.mebuki--;S.obj[j]='';delete S.dyn[j];recount();closeSheet();{const pv=S.summon;S.summon={rev:1,lost:nm};doSummon();S.summon=pv}sfx('level')};body.appendChild(b1);
-    body.appendChild(el('<p class="story">よみがえらせないときは、なかまが神殿へはこんで、埋葬してくれます。</p>'));
+    body.appendChild(el('<p class="story">'+nm+'は、なかまが神殿へはこんで、埋葬してくれます。<br>よみがえらせられるのは、埋葬してからです。</p>'));
   }else if(sheet==='house'){
     const h=HOUSES[sheetArg],L=h?houseRes(h):[];if(!h)return closeSheet();
     {const cap=houseCap(h),C=houseComfort(h);T.textContent='おうち';
@@ -4640,7 +4642,7 @@ function renderSheet(){
     const L=S.hp['L'+j]||1,st=WATCH[L];T.textContent='見張り台';
     body.appendChild(el(`<p class="story">Lv${L}：威力 ${st.dmg}・射程 ${st.range}マス・${st.cd}分ごとに光の矢を放つ</p>`));
     const U=WUP[L];if(U){const n=WATCH[L+1];body.appendChild(el(`<p class="note">強化するとLv${L+1}：威力 ${n.dmg}・射程 ${n.range}マス・${n.cd}分ごと<br>${SP(U.pc)}・${matTxt(U.mat)}</p>`));
-      const b=el('<button class="btn pri">強化する</button>');b.onclick=()=>{if(S.pt<U.pc)return toast('パワーが足りません（'+SP(U.pc)+'）');if(!matOK(U.mat))return toast('素材が足りません（'+matTxt(U.mat)+'）');S.pt-=U.pc;for(const k in U.mat)S.mat[k]-=U.mat[k];S.hp['L'+j]=L+1;sfx('post');burst(j,'block','offer');toast('見張り台をLv'+(L+1)+'に強化した','good');renderSheet()};body.appendChild(b)}
+      const b=el('<button class="btn pri">強化する</button>');b.onclick=()=>{if(S.pt<U.pc)return toast('パワーが足りません（'+SP(U.pc)+'）');if(!matOK(U.mat))return toast('素材が足りません（'+matTxt(U.mat)+'）');S.pt-=U.pc;for(const k in U.mat)S.mat[k]-=U.mat[k];S.hp['L'+j]=L+1;dirty=true;try{rebuildStatic()}catch(e){}sfx('post');burst(j,'block','offer');toast('見張り台をLv'+(L+1)+'に強化した','good');renderSheet()};body.appendChild(b)}
     else body.appendChild(el('<p class="note">これ以上は強化できない</p>'));
   }else if(sheet==='menu'){
     T.textContent=WORLDS[WD].name;
