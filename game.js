@@ -1472,12 +1472,13 @@ function chatTone(tx,r,i){if(!r)return tx;const k=elemKey(r),pr=r.elem==='fire'?
 function chatTopic(r,p){const L=[],mt=((r.mates||{})[p.id]||0)>=6;CHATS.forEach((c,i)=>{if((!c.el||c.el===r.elem)&&(!c.ok||c.ok())&&(!c.mate||mt)&&(!c.kc||kcOK(c,r,p)))L.push(i)});if(L.some(i=>CHATS[i].kc)&&Math.random()<.4){const K=L.filter(i=>CHATS[i].kc);L.length=0;L.push(...K)}/* キーキャラの話は、あえば4割で選ばれる *//* なかよし同士だと、なかよしの話もまざる */const R=S.chatRec||(S.chatRec=[]),F=L.filter(i=>!R.includes(i)),C=F.length?F:L,t=C[Math.floor(Math.random()*C.length)];R.push(t);while(R.length>Math.floor(CHATS.length*.7))R.shift();return t}/* 最近した話は、しばらくしない *//* 話しかけた子の属性のお話もまざる */
 /* 「手、ふっとこうか」：このあと手をふる */
 function trySocial(r,G){const sb=socialBest(r,G);if(!sb)return false;const best=sb.b;const o=S.res.find(q=>q.id===best.o.partner);if(!o)return false;endAct(o);o.act={type:'chatwait',stage:'do',t:0,partner:r.id};o.bubble='👋';startAct(r,G,'chat',best.stand,best.o);return true}
+const FAVTOY={earth:['sandbox'],wood:['swing'],water:['fountain'],fire:['campfire'],wind:['slide','seesaw']};/* 属性ごとに、よく遊ぶおもちゃ（ほかの子より選ばれやすい） */
 function goPlay(r,G,strict){
   let best=null,bs=-1e9;
   for(let j=0;j<W*H;j++){const d=G.dist[j];if(d<0||d>45)continue;const o=S.obj[j];
-    if(o==='swing'&&free('o'+j,BL[o].play.cap)&&!toyTired(r,j)){/* 花では遊ばない */const p=BL[o].play;const s=p.pt*3+(r.like===o?6:0)-d*.3+Math.random()*2;if(s>bs){bs=s;best={type:'play',stand:j,o:{key:'o'+j,obj:j,what:o,fun:p.fun,dur:p.dur,pt:p.pt}}}}
+    if(o==='swing'&&free('o'+j,BL[o].play.cap)&&!toyTired(r,j)){/* 花では遊ばない */const p=BL[o].play;const s=p.pt*3+(r.like===o?6:0)+((FAVTOY[r.elem]||[]).includes(o)?7:0)-d*.3+Math.random()*2;if(s>bs){bs=s;best={type:'play',stand:j,o:{key:'o'+j,obj:j,what:o,fun:p.fun,dur:p.dur,pt:p.pt}}}}
     const fk0=adjOf(j,k=>{const t=typeAt(k),p=t&&BL[t]&&BL[t].play;return !!(p&&p.adj&&free('o'+anc(k),p.cap)&&!toyTired(r,anc(k)))}),fk=fk0>=0?anc(fk0):-1;
-    if(fk>=0){const w=S.obj[fk],p=BL[w].play;const s=p.pt*3+(r.like===w?6:0)-d*.3+Math.random()*2;if(s>bs){bs=s;best={type:'play',stand:j,o:{key:'o'+fk,obj:fk,what:w,fun:p.fun,dur:p.dur,pt:p.pt}}}}
+    if(fk>=0){const w=S.obj[fk],p=BL[w].play;const s=p.pt*3+(r.like===w?6:0)+((FAVTOY[r.elem]||[]).includes(w)?7:0)-d*.3+Math.random()*2;if(s>bs){bs=s;best={type:'play',stand:j,o:{key:'o'+fk,obj:fk,what:w,fun:p.fun,dur:p.dur,pt:p.pt}}}}
     if(canJob(r,'fish')&&roomN(r)>0&&S.ground[j]!==1&&sideW(j)>=0&&free('f'+j,1)){const sp=fSpot(j),s=9+(sp?12:0)+(r.like==='fish'?6:0)+(r.elem==='water'?9:0)-d*.3+Math.random()*2;if(s>bs){bs=s;best={type:'fish',stand:j,o:{key:'f'+j,spot:sp}}}}
   }
   {const sb=socialBest(r,G);if(sb&&sb.s>bs){bs=sb.s;best=sb.b}}
