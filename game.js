@@ -189,7 +189,7 @@ const PROLOGUE=[
   [GOD,'おヌシは、生まれたばかりの小さな守り神なんじゃ。さっそくじゃが、行ってほしい土地があってのう。'],
   [GOD,'行く前に、その土地のことを、ちょっとだけ話しておこうかの。'],
   [GOD,'そこはむかし、せいれいたちがにぎやかに暮らす、ゆたかな草原じゃった。ヌシ様も見守っておってな。'],
-  [GOD,'じゃが自然の力のバランスがくずれてしもうて、土地はボロボロ。せいれいは散り散り、ヌシ様もどこかへ行ってしもうた。'],
+  [GOD,'じゃが、ある大きな夜があってのう。自然の力のバランスがくずれてしもうて、土地はボロボロ。せいれいは散り散り、ヌシ様もどこかへ行ってしもうた。'],
   [GOD,'そこで、おヌシにおねがいじゃ。'],
   [GOD,'「せいれいたちの力を集めて、この土地に守護の力を取り戻しておくれ」'],
   [GOD,'…というわけで！ よろしくたのむぞい〜。では、さっそく行こうかの！'],
@@ -268,8 +268,8 @@ const QUESTS1=[
     [POKO,'夜になると、いつも隠れてたの。朝になるまで、じっと……。'],
     [GOD,'そうじゃったか……。ひとりで朝まで、怖かったじゃろう。'],
     [POKO,'うん……音がするたび、息をひそめてた。'],
-    [GOD,'すまなかったのう……。わしは、おまえを守ってやれんかった。'],
-    [GOD,'今度こそ、守らせておくれ。コワイノは、せいれいや食べ物をねらって来る。'],
+    [GOD,'そうか……。今度は、守り神がついておるぞ。'],
+    [GOD,'コワイノは、せいれいや食べ物をねらって来る。'],
     [GOD,'家の中にいればおそわれん。じゃが、壁にすきまがあると、こわして入ろうとするんじゃ。'],
     [GOD,'あそこの家、壁がこわれたままなんじゃ。木の壁を3つ入れといたから、すきまをふさいでみい。']],gives:{feat:['people'],items:{hwall:3}}},
    story:[
@@ -378,10 +378,10 @@ const QUESTS1=[
   {text:'村レベルを3にしよう',check:()=>S.lv>=3,how:'せいれいが満足してパワーがたまると、村レベルが上がる',prog:()=>'いま 村レベル'+S.lv,
    talk:{who:POKO,when:()=>true,lines:[
     [POKO,'火のなかまが来て、夜も心強くなったね！ 村も、もっとにぎやかになるかな？'],
-    [GOD,'うむ。食べたり休んだり、みながここで暮らしていくうちに、村も育っていくんじゃ。']]},
-   story:[
+    [MINA,'うん。食べたり休んだり、みんながここで暮らしていくうちに、村も育っていくんだよぉ。']]},
+   get story(){return KS([
     [POKO,'3になった！ ぼく、はじめのころより、ずいぶん楽しく暮らせてる気がするよ。'],
-    [GOD,'ゆっくり育った、いい村じゃのう。新しく使える物も、ふえたはずじゃ。']]},
+    ['H',{A:'へぇ、悪くない村になってきたじゃないか。夜の見はりも、まかせときな。',B:'へぇ、悪くない村になってきたじゃねえか。夜の見はりも、まかせときな。'}]])}},
   {text:'水のせいれいをむかえよう',check:()=>elemCount('water')>=1&&NEWRES==null,prog:()=>'水の力 '+Math.floor(ATTR.water)+'/'+needFor('water'),
    talk:{who:POKO,when:()=>true,lines:[
     [POKO,'畑がふえて、水やりがたいへんになってきたね…。'],
@@ -404,20 +404,21 @@ const QUESTS1=[
   {text:'村レベルを4にしよう',check:()=>S.lv>=4,how:'せいれいが満足してパワーがたまると、村レベルが上がる',prog:()=>'いま 村レベル'+S.lv,
    talk:{who:POKO,when:()=>true,lines:[
     [POKO,'新しく広がった場所でも、みんながのんびり暮らせたらいいね！'],
-    [GOD,'ほっほ。水のなかまも増えたしのう。広がった村を整えながら、もうひとまわり育てていくのじゃ。']]},
+    [MINA,'水のなかまも増えたしねぇ。広がった村を整えながら、もうひとまわり育てていこうねぇ。']]},
    story:[
     [POKO,'村が、また育った！ 道を歩く足音まで、にぎやかになってきたよ。'],
-    [GOD,'うむ。この調子で、みなの暮らしを守っていくんじゃ。']]},
+    [MINA,'うん。この調子で、みんなの暮らしを守っていこうねぇ。']]},
   {text:'オオカゲを追いはらおう',check:()=>(S.bossKills||0)>=1,
    talk:{who:POKO,when:()=>true,lines:[
     [POKO,'守り神さま、夜のコワイノを見てたらね…森の奥に、ひときわ大きな黒い影がいたんだ。'],
-    [MINA,'それはたぶん「オオカゲ」だねぇ。コワイノたちの親玉って、むかしから言われてるよぉ。'],
-    [POKO,'そんなのが、ここに来るかもしれないの…？'],
+    [POKO,'あの影……ぼく、むかし見たことがある。'],
+    [MINA,'それは「オオカゲ」だねぇ。コワイノたちの親玉って、むかしから言われてるよぉ。'],
+    [POKO,'あれが、また、ここに来るかもしれないの…？'],
     [MINA,'だから、柵をかさねて、見張り台をきたえておこうねぇ。家の中にいれば、攻撃されないよぉ。']]},
    story:[
     [POKO,'追いはらえた……！'],
-    [MINA,'おつかれさまだねぇ。オオカゲは、ヌシ様の力に引き寄せられて来てたのかもしれないよぉ。'],
-    [POKO,'ヌシ様の力……？'],
+    [MINA,'おつかれさまだねぇ。オオカゲは、ヌシ様がいなくなってから、あばれだしたのかもしれないねぇ。'],
+    [POKO,'ヌシ様……？'],
     [MINA,'むかしから、この土地に伝わるお話なんだけどねぇ。ヌシ様がいなくなったとき、その力は3つのかけらになって、ちらばったんだってぇ。'],
     [POKO,'ノドカ、どうしてそんなこと知ってるの？'],
     [MINA,'ぼくは土のせいれいだからねぇ。土はね、この土地のできごとを、ずーっと覚えてるんだよぉ。'],
@@ -456,7 +457,8 @@ const QUESTS1=[
    story:[[POKO,'緑がいっぱい！ 歩くだけで気持ちいいね！'],[POKO,'……わっ！？ 地面が、光った！'],[MINA,'えぇっ……！ 草のあいだから、なにか出てきたよぉ。'],[POKO,'これ……ヌシのかけら！？'],[MINA,'「育てる力」のかけらだねぇ。みんなで土地を育てたから、こたえてくれたんだよぉ。']],gives:{shard:'land'}},
   {text:'木のせいれいを6人にしよう',check:()=>elemCount('wood')>=6&&NEWRES==null,prog:()=>'いま'+elemCount('wood')+'人',
    talk:{who:POKO,when:()=>true,learn:[],lines:[
-    [POKO,'ヌシ様をむかえるには、木のせいれいが6人いるらしいよ。'],
+    [MINA,'ヌシ様は、木のせいれいを生んだんだってぇ。'],
+     [MINA,'木のせいれいの子どもたちがにぎやかだと、ヌシ様も帰り道がわかるかもねぇ。木のなかまを6人にしたいねぇ。'],
     [POKO,'木や花を植えて、木の力をためよう！']]},
    story:[[POKO,'木のなかま、6人になった！'],[MINA,'にぎやかだねぇ。']]},
   {text:'フタバのおねがい：花を50こさかせよう',check:()=>flowerN()>=50,prog:()=>'花 '+Math.min(50,flowerN())+'/50',
@@ -591,20 +593,22 @@ const QUESTS2=[
   {text:'奥の装置のまわりの大岩をどかそう',check:()=>BVOL.every(j=>S.obj[j]!=='boulder'),prog:()=>'大岩 '+BVOL.filter(j=>S.obj[j]!=='boulder').length+'/4',how:'大岩は、せいれいが石をほりにいって、くだいてくれる',
    talk:{who:HOMURA,when:()=>true,lines:[[HOMURA,'奥の装置にたどりつくには、まわりの大岩をどかさないとね。'],[HOMURA,'みんな、たのんだよ！']]},
    story:[[HOMURA,'よし、道がひらけた！'],[SHIZUKU,'…装置が、こわれていますね。'],[HOMURA,'ありがとよ、守り神。']]},
-  {text:'奥の装置を直して、奥の温泉に熱をとどけよう',check:()=>!!st2().sp.c,how:'奥の装置をタップして直す（石材8・木材5・ヌシのかけら）。手前の装置を右、奥の装置を左にむける',
+  {text:'奥の装置を直して、奥の温泉に熱をとどけよう',check:()=>!!st2().sp.c,how:'奥の装置をタップして直す（石材8・木材5・ヌシのかけら1つ。かけらは装置にはめるので、なくなる）。手前の装置を右、奥の装置を左にむける',
    talk:{who:SHIZUKU,when:()=>true,lines:[
     [SHIZUKU,'奥の装置を直すには、石材と木材、それに…ヌシ様のかけらの力がいります。'],
     [HOMURA,'入口の温泉で見つけた、あのかけらだね。'],
     [SHIZUKU,'直したら、手前の装置を右に、奥の装置を左にむけてください。熱が、奥の温泉まで流れるはずです。']]},
-   story:[[HOMURA,'…奥の温泉にも、湯気だ！ 3つ、ぜんぶよみがえったよ！'],[SHIZUKU,'守り神さま、ありがとうございます。温泉が3つ、よみがえりました。'],[SHIZUKU,'…守り神さま。空が、灰色にくもってきました。'],[HOMURA,'今夜は、ハイカゲがわんさか来そうだね…！']],gives:{flag:'ashNight'}},
+   story:[[SHIZUKU,'かけらが、装置に熱を通してくれました……！'],[HOMURA,'…奥の温泉にも、湯気だ！ 3つ、ぜんぶよみがえったよ！'],[SHIZUKU,'守り神さま、ありがとうございます。温泉が3つ、よみがえりました。'],[SHIZUKU,'…守り神さま。空が、灰色にくもってきました。'],[HOMURA,'今夜は、ハイカゲがわんさか来そうだね…！']],gives:{flag:'ashNight'}},
   {text:'灰の降る夜をのりこえよう',check:()=>{const t=st2();return !!t.ashNightAt&&S.nights>=t.ashNightAt&&!isNight()},how:'今夜はハイカゲがたくさん来る。かまどやベンチをまもろう',
    story:[[HOMURA,'…ふう、なんとかのりこえたね。'],[SHIZUKU,'守ってくださって、ありがとうございます。'],[SHIZUKU,'灰は、火山からふってきていました。山の上に、なにかがいるのです。'],[HOMURA,'次の夜、きっとそいつが下りてくる。むかえうってやろうじゃないか！']],gives:{flag:'hinoNight'}},
   {text:'ヒノオオカゲを追いはらおう',check:()=>!!S.flags.hinoDown,how:'夜、火山から下りてくる「ヒノオオカゲ」を追いはらう。熱の装置をねらってくる',
-   story:[[HOMURA,'やった…！ 火山の上の、いやな気配が消えたよ。'],[HOMURA,'ありがとよ、守り神！ あんたのおかげさ。'],[SHIZUKU,'ヒノオオカゲが、ヌシ様の熱をうばっていたのですね。'],[SHIZUKU,'落としたかけらは、朝にせいれいが拾ってくれますよ。']]},
+   story:[[HOMURA,'やった…！ 火山の上の、いやな気配が消えたよ。'],[HOMURA,'ありがとよ、守り神！ あんたのおかげさ。'],[SHIZUKU,'ヒノオオカゲが、ヌシ様の熱をうばっていたのですね。'],[SHIZUKU,'落としたかけらは、朝にせいれいが拾ってくれますよ。'],[SHIZUKU,'そのかけらを守護の台座にはめれば、ヌシ様の力になるはずです。']]},
   {text:'守護の台座を建ててもらおう',check:()=>cnt('tower')>=1,prog:()=>'じょうけん '+clearConds().filter(c=>c[1]).length+'/'+clearConds().length,how:'「おく」→「守護の台座」をえらぶと、足りない条件が見られる。ぜんぶそろったら置いて、建ててもらう',
    talk:{who:HOMURA,when:()=>true,lines:[
     [HOMURA,'温泉郷も、だいぶ元にもどってきたね。'],
     [SHIZUKU,'台座を建てるのに、なにが足りないか、いっしょに確かめましょう。'],
+    [SHIZUKU,'……ただ、台座が光ると、山の上にのこった影が気づくかもしれません。'],
+    [HOMURA,'そのときは、みんなでむかえうつまでさ。'],
     [HOMURA,'よし、仕上げだよ！']],gives:{shrine:true}},
    story:null},
 ];;
@@ -663,12 +667,14 @@ function towerConds(){if(WD===1)return clearConds();const tm=TOWER_MAT();return 
   ['5つの属性のせいれいがそろう（いま'+ELEM_KEYS.filter(k=>elemCount(k)>=1).length+'/5）',ELEM_KEYS.every(k=>elemCount(k)>=1)],
   ['素材箱に'+(tm.wood+tm.stone)+'こ入る（いま'+matCap()+'こ）',matCap()>=tm.wood+tm.stone],/* 素材箱が小さいと、台座の素材がためられない */
   ['木材'+tm.wood+'・石材'+tm.stone+'（いま'+(S.mat.wood||0)+'・'+(S.mat.stone||0)+'）',(S.mat.wood||0)>=tm.wood&&(S.mat.stone||0)>=tm.stone]]}
+const shLeft=()=>Math.max(0,(S.shards||0)-(S.usedSh||0));/* 火山のふもと：まだ使っていないかけらの数（装置と台座にはめると減る） */
 const towerReady=()=>towerConds().every(c=>c[1]);
 function clearConds(){if(WD===1){const tm=TOWER_MAT(),n=springDone(),fac=['bench','tub','parasol'].filter(nearSp).length;return [
   ['温泉3か所をよみがえらせる（いま'+n+'）',n>=3],
   ['ヒノオオカゲを追いはらい、奥の装置を直す',!!S.flags.hinoDown&&!!(S.st2&&S.st2.d2fix)],
   ['温泉のそばに、ベンチ・水おけ・パラソル（いま'+fac+'/3）',fac>=3],
   ['ホムラとシズクのおねがい',!!S.flags.hReq&&!!S.flags.sReq],
+  ['台座にはめるヌシのかけら（いま'+shLeft()+'つ）',shLeft()>=1],
   ['素材箱に'+(tm.wood+tm.stone)+'こ入る（いま'+matCap()+'こ）',matCap()>=tm.wood+tm.stone],/* 素材箱が小さいと、台座の素材がためられない */
   ['木材'+tm.wood+'・石材'+tm.stone+'（いま'+(S.mat.wood||0)+'・'+(S.mat.stone||0)+'）',(S.mat.wood||0)>=tm.wood&&(S.mat.stone||0)>=tm.stone]]}
   const tm=TOWER_MAT(),[el,need,pw]=WD===1?['fire',6,750]:['wood',6,3000],nm=ELEM[el].name;return [
@@ -679,7 +685,7 @@ function clearConds(){if(WD===1){const tm=TOWER_MAT(),n=springDone(),fac=['bench
   ['せいれいパワーを'+pw+'集める（いま'+Math.floor(S.totalPt)+'）',S.totalPt>=pw]]}
 const clearReady=()=>clearConds().every(c=>c[1]);
 function finalCheck(){if(WD||!S||S.cleared||S.finalNight||S.finalOn||!S.enemyOn||S.flags.finalWon)return;/* 勝ったあとは、もう来ない */if(S.finalLost!=null&&dayNo()-S.finalLost<3)return;if(S.res.length<5)return;if(!S.res.some(r=>r.name===POKO))return;/* フタバがいるときだけ *//* ヨルノオオカゲに負けたら3日あける。せいれいが5人以上になってから */if(cnt('tower')>=1&&clearReady()){
-  if(S.finalDay==null){if(isNight())return;S.finalDay=dayNo()+3;S.finalHint=3;memo('🌑','夜の空気が、すこし重くなってきた');talkOnce('finalAnn'+S.finalDay,sevLines([['F','……ねえ。なんだか、夜の風がつめたくなってきた気がする。'],['N','台座の光に、なにかが気づいたのかもしれないねぇ……。',1]]),0);return}/* 予告：すぐには来ない。3日後の夜に来る */
+  if(S.finalDay==null){if(isNight())return;S.finalDay=dayNo()+3;S.finalHint=3;memo('🌑','夜の空気が、すこし重くなってきた');talkOnce('finalAnn'+S.finalDay,sevLines([['F','……ねえ。なんだか、夜の風がつめたくなってきた気がする。'],['N','台座の力に、なにかが気づいたのかもしれないねぇ……。',1]]),0);return}/* 予告：すぐには来ない。3日後の夜に来る */
   const left=S.finalDay-dayNo();if(left>0){if(left<S.finalHint&&!isNight()){S.finalHint=left;toast(left===2?'遠くの森が、いつもより静かだ……':'夜になると、影がざわめいている気がする……','warn')}return}/* 日ごとに、少しずつにおわせる */
   S.finalNight=true;memo('🌑','台座に力がそろった。最後の夜がくる');setTimeout(()=>toast('守護の台座が光りはじめた…！ 今夜、オオカゲたちがおしよせてくる','warn'),900)}}/* 予告から3日後の夜に、ヨルノオオカゲが来る */
 
@@ -1333,6 +1339,7 @@ const CHATS=[
  [[0,'遠くの土地にも、せいれいっているのかな。'],[1,'いるよ、きっと。水の村とか、火の山とか。'],[0,'そこも、ここみたいに、しずかになっちゃってるのかな。'],[1,'……いつか、見に行けたらいいね。']],
  [[0,'夜って、ほんとうはこわいものじゃなかったんだって。'],[1,'えー、うそだぁ。'],[0,'ほんとほんと。むかしは、夜はやすむための時間だったって。'],[1,'いまも、やすむ時間だよ。コワイノがいなければね。']],
  [[0,'ヌシ様って、どうしていなくなっちゃったんだろう。'],[1,'土地の力が弱くなったから、って聞いたよ。'],[0,'じゃあ、わたしたちががんばったら…。'],[1,'うん。きっと、もどってきてくれる。']],
+ [[0,'ヌシ様って、近くで見ると、すごく大きいね。'],[1,'つののところに、小鳥がとまってたよ。'],[0,'ヌシ様、じっとしてあげてたね。']],
  [[0,'星って、なんで夜にしか見えないの？'],[1,'昼もあるんだよ。お日さまがまぶしくて、見えないだけ。'],[0,'じゃあ、見えないだけで、そこにいるものって、ほかにもあるのかな。'],[1,'……あるのかもね。']],
  [[0,'ねえねえ、今日の空、見た？'],[1,'見た見た！ 雲が、おさかなの形してたね。'],[0,'えっ、ぼうしの形じゃなかった？'],[1,'…見る場所で、ちがうのかもね。']],
  [[0,'きのうの夜ね、ゆめを見たの。'],[1,'どんなゆめ？'],[0,'大きなベリーに、ころころ追いかけられるゆめ。'],[1,'こわいような、おいしそうなような…。']],
@@ -1398,6 +1405,8 @@ const ECHATS={/* 属性ごとのお話（0が、その属性の子） */
 ELEM_KEYS.forEach(el=>(ECHATS[el]||[]).forEach(c=>{c.el=el;CHATS.push(c)}));
 /* 属性ごとの会話も追加された後で、置いた物について話す会話すべてに条件をつける */
 {const ok=(t,f)=>{for(const c of CHATS)if(c[0]&&c[0][1]===t)c.ok=f};
+ok('ヌシ様って、どうしていなくなっちゃったんだろう。',()=>!S.cleared);
+ok('ヌシ様って、近くで見ると、すごく大きいね。',()=>!WD&&!!S.cleared&&!!S.nushi);
 ok('ねえ、さっき柵のむこうで、なにか光ってなかった？',()=>['fence','logfence','bamboofence','stonefence','wall'].some(id=>cnt(id)>0));
 ok('さいきん、みんなの家がふえてきたね。',()=>HOUSES.length>=2&&LIGHTS.length>=2);
 ok('ねえ、すべり台って、何回すべってもあきないね。',()=>cnt('slide')>0);
@@ -1411,7 +1420,7 @@ ok('おふろって、いいよね。',()=>cnt('hotstone')>0||cnt('bathtub')>0||
 function treePlanted(){let n=cnt('tree')+cnt('fruit');for(let j=0;j<S.obj.length;j++){if(S.obj[j]==='sprout'&&S.dyn[j]&&(S.dyn[j].plant==='tree'||S.dyn[j].plant==='fruit'))n++}return n}/* 木・果樹（苗もふくむ）。花の芽はかぞえない */
 const KC=(a,b,L,ok)=>{L.kc=[a,b];if(ok)L.ok=ok;CHATS.push(L)};
 const kcOK=(c,r,p)=>!WD&&sevName(c.kc[0])===r.name&&(c.kc[1]==='*'?!isKey(p.name):sevName(c.kc[1])===p.name);
-const kGuard=()=>!!(S.flags||{}).guard,kE09=()=>!!(S.sev||{}).e09,kSh=()=>(S.bossKills||0)>=1,kE18=()=>!!(S.sev||{}).e18;
+const kGuard=()=>!!(S.flags||{}).guard,kE09=()=>!!(S.sev||{}).e09,kSh=()=>(S.bossKills||0)>=1,kE18=()=>!!(S.sev||{}).e18,kClr=()=>!!S.cleared;
 /* フタバ */
 KC('F','N',[[0,'ノドカ、さっきのごはん、おいしかったね！'],[1,'そうだねぇ。もう次のごはんのこと、考えてる顔してるよぉ。'],[0,'えっ、ばれてる！']]);
 KC('F','N',[[0,'ノドカ、ここ、ひなたでぽかぽかだよ！'],[1,'ほんとだねぇ。ここで寝たら、気持ちよさそう。'],[0,'ねちゃだめ！ 畑を見に行くんでしょ！'],[1,'そうだったぁ。']]);
@@ -1422,7 +1431,9 @@ KC('F','*',[[0,'ぼくね、花の冠を作るの、とくいなんだ。'],[1,'
 KC('F','*',[[0,'こわいときは、ぼくのうしろにかくれていいからね。'],[1,'フタバ、たのもしい。'],[0,'えへへ。ぼくも、まだちょっとこわいけどね。']],kGuard);
 KC('F','*',[[0,'きょうは元気？ おなかすいてない？'],[1,'ちょっとすいてるかも。'],[0,'じゃあ、ぼくのベリー、はんぶんこしよう！']]);
 KC('F','*',[[0,'ぼくにはね、きょうだいがいたんだ。'],[1,'そうなんだ。どんな子たち？'],[0,'みんな、ぼくよりおっきくて、やさしかった。……いつか、また会えるといいな。'],[1,'会えるよ、きっと。']],kE09);
-KC('F','*',[[0,'ヌシ様が帰ってきたら、いっしょにあいさつしよう！'],[1,'うん！ なんて言うの？'],[0,'「おかえりなさい」！ ぼく、もう百回れんしゅうしたんだ。']],kSh);
+KC('F','*',[[0,'ヌシ様が帰ってきたら、いっしょにあいさつしよう！'],[1,'うん！ なんて言うの？'],[0,'「おかえりなさい」！ ぼく、もう百回れんしゅうしたんだ。']],()=>kSh()&&!S.cleared);
+KC('F','*',[[0,'ヌシ様に「おかえりなさい」って、ちゃんと言えたよ。'],[1,'れんしゅう、してたもんね。'],[0,'えへへ。百一回目が、ほんばんだったんだ。']],kClr);
+KC('F','*',[[0,'きのう、ヌシ様といっしょに、草原をおさんぽしたんだ！'],[1,'いいなあ！'],[0,'ヌシ様が歩くと、草が「さわさわ」って、あいさつするんだよ。']],kClr);
 /* ノドカ */
 KC('N','F',[[0,'フタバ、ごはん、ちゃんと食べたぁ？'],[1,'食べたよ！ ノドカこそ、畑ばっかりじゃだめだよ！'],[0,'あはは、ばれてるねぇ。']]);
 KC('N','F',[[0,'フタバの寝顔、かわいいよぉ。'],[1,'えっ、見てたの！？'],[0,'ふふ、ひみつだよぉ。']]);
@@ -1432,7 +1443,8 @@ KC('N','K',[[0,'@Kは、いつもおしゃれだねぇ。'],[1,'フッ……身�
 KC('N','*',[[0,'畑の土は、ふかふかが一番だよぉ。'],[1,'さわってもいい？'],[0,'いいよぉ。ほら、あったかいでしょぉ。']]);
 KC('N','*',[[0,'のんびりしてるって、よく言われるんだぁ。'],[1,'でも、ノドカの畑、いつもきれいだよ。'],[0,'ふふ、ありがとうねぇ。']]);
 KC('N','*',[[0,'ねぇ、夜はこわくないかなぁ？'],[1,'ちょっと、こわい……。'],[0,'だいじょうぶだよぉ。ぼくがとなりにいるからねぇ。']]);
-KC('N','*',[[0,'むかしから、この土地には、たくさんの子がいたんだってぇ。'],[1,'そうなの？'],[0,'ひいおばあちゃんのお話だけどねぇ。……またにぎやかになるといいねぇ。']]);
+KC('N','*',[[0,'ヌシ様が歩いたあと、草がうれしそうなんだぁ。'],[1,'草も、待ってたんだね。'],[0,'そうだねぇ。土も、にこにこしてるよぉ。']],kClr);
+KC('N','*',[[0,'むかしから、この土地には、たくさんの子がいたんだってぇ。'],[1,'そうなの？'],[0,'土が、そう教えてくれるんだぁ。……またにぎやかになるといいねぇ。']]);
 KC('N','F',[[0,'フタバ、さいきん、たのもしくなったねぇ。'],[1,'えっ、ほんと！？'],[0,'ほんとだよぉ。ぼくも、うれしいんだぁ。']],kGuard);
 /* 火（あにき） */
 KC('H','F',[[0,'おい、チビ。ちゃんとメシ食ってんのか。'],[1,'チビじゃないもん！ 食べてるよ！'],[0,'ははっ。ならいい。']]);
@@ -1769,11 +1781,11 @@ function waveArrivalDelay(index,total,hasBoss,late=0){const spacing=Math.min(lat
 function spawnWave(list){SKIP=false;/* コワイノが来たら、早送りをやめる */
   const hasBoss=list.some(type=>EN[type].boss);list.forEach((type,k)=>{const d=EN[type];S.enemies.push({id:S.nid++,type,x:0,y:0,hp:d.hp,max:d.hp,delay:waveArrivalDelay(k,list.length,hasBoss,S.lateWave)+(d.boss?60:0),/* 強い夜も、いっせいに押し寄せない */spawned:false,path:[],repath:0,atk:0,stun:0,flash:0,flee:false})});
   S.nightHurt=0;S.nightHad=true;S.ns={n:list.length,kill:0,lost:[],hurt:0,broke:0,boss:list.includes('boss')||list.includes('boss2')||list.includes('hino')?1:0,trial:!!S.trialOn,final:!!S.finalOn};S.trialOn=false;S.finalOn=false;
-  if(S.ns.final&&!WD&&S.res.some(r=>r.name===POKO))dialog([[POKO,'守り神さま…！ 今夜は「ヨルノオオカゲ」と、オオカゲも来る……！'],[POKO,'……こわいよ。でも、ぼく、もう隠れてるだけじゃない。'],[POKO,'今度は、ぼくがみんなを守るんだ！']]);
+  if(S.ns.final&&!WD&&S.res.some(r=>r.name===POKO))dialog([[POKO,'守り神さま…！ 今夜は、ヨルノオオカゲが来る……！']]);
   else if(list.includes('hino'))dialog(['火山のほうから、熱い風がふいてくる…！','「ヒノオオカゲ」が来るよ！ 熱の装置をねらってる！ みんなで追いはらって！'],null,null,LEAD());
   else if(list.filter(t=>t==='ash').length>=6)dialog(['空から、灰がふってきた…！','ハイカゲがたくさん来るよ！ かまどやベンチをまもって！'],null,null,LEAD());
-  else if(list.includes('boss2'))dialog(['守り神さま…！ いつもより、ずっと空気が重い…！','今夜は「ヨルノオオカゲ」が来る！ 柵をかさねて、家の中にかくれて！'],null,null,LEAD());
-  else if(list.includes('boss')&&!WD&&!S.flags.bossTold&&S.res.some(r=>r.name===POKO)){S.flags.bossTold=1;dialog([[POKO,'守り神さま…！ ……この感じ。空気が、ずっしり重い。'],[POKO,'「オオカゲ」……コワイノたちの親玉が、来るんだ。'],[POKO,'ぼく、知ってる。むかし、きょうだいたちとここで暮らしてたとき、同じ影が来たことがあるんだ。'],[POKO,'思い出すと、今でも足がすくむけど……'],[POKO,'今夜は「オオカゲ」が来る！ 柵をかさねて、家の中にかくれて！']],null,null,LEAD())}
+  else if(list.includes('boss2'))dialog(WD===1?[[HOMURA,'守り神！ 山の上にのこってた影が、おりてくるよ…！'],[HOMURA,'今夜は「ヨルノオオカゲ」さ。柵をかさねて、みんなを家に入れときな！']]:['守り神さま…！ いつもより、ずっと空気が重い…！','今夜は「ヨルノオオカゲ」が来る！ 柵をかさねて、家の中にかくれて！'],null,null,LEAD());
+  else if(list.includes('boss')&&!WD&&!S.flags.bossTold&&S.res.some(r=>r.name===POKO)){S.flags.bossTold=1;dialog([[POKO,'守り神さま…！ ……この感じ。空気が、ずっしり重い。'],[POKO,'「オオカゲ」……コワイノたちの親玉が、来るんだ。'],[POKO,'思い出すと、今でも足がすくむけど……'],[POKO,'今夜は「オオカゲ」が来る！ 柵をかさねて、家の中にかくれて！']],null,null,LEAD())}
   else if(list.includes('boss'))dialog(WD===1?['守り神、なんだか空気がおもたいよ…！ 今夜は「オオカゲ」が来る！','柵をかさねておきな！ 家の中にいれば、攻撃はされないよ！']:['守り神さま、なんか空気が重いよ…！ 今夜は「オオカゲ」が来る！','柵をかさねておいて！ 家の中にいれば、攻撃されないよ！'],null,null,LEAD());
 }
 // 出現場所：基地の外のどこかランダム（明かりの中・水・障害物はさける）
@@ -1909,7 +1921,7 @@ function dropAt(x,y,want){if(!S.drops)S.drops=[];const x0=x|0,y0=y|0;let j=-1;co
 function takeDrop(d,r){let nm;
   if(d.id==='mebuki'){S.mebuki=(S.mebuki||0)+1;sfx('level');toast((r?r.name+'が':'')+'「めぶきのしずく」をひろった！','good');logEv('めぶきのしずくをひろった');
     if(!S.flags.mebukiTold){const sp=S.res.find(q=>KEYRES.includes(q.name))||r;if(sp)talkOnce('mebukiTold',MEBUKIL[elemKey(sp)].map(t=>[sp.name,t]))}return}
-  if(d.id==='shard'){S.flags.sh_boss=true;S.shards=Math.min(3,(S.shards||0)+1);memo('💎','オオカゲのかけらをひろった（'+S.shards+'/3）');sfx('level');toast((r?r.name+'が':'')+'「ヌシのかけら」をひろった！（'+S.shards+'/3）','good');logEv('ヌシのかけらをひろった');if(!WD&&S.shards===2)talkOnce('shTalk2',[[POKO,'また、かけらだ……！'],[MINA,'「育てる力」のかけらだねぇ。']]);if(!WD&&S.shards===3)talkOnce('shTalk3',[[POKO,'3つ目のかけら……！'],[MINA,'「想う力」のかけらだねぇ。これで、3つそろったよぉ。']]);checkQuest();return}
+  if(d.id==='shard'){S.flags.sh_boss=true;S.shards=Math.min(3,(S.shards||0)+1);memo('💎','オオカゲのかけらをひろった（'+S.shards+'/3）');sfx('level');toast((r?r.name+'が':'')+'「ヌシのかけら」をひろった！（'+S.shards+'/3）','good');logEv('ヌシのかけらをひろった');checkQuest();return}
   if(d.id.startsWith('mat:')){const k=d.id.slice(4),add=Math.max(0,Math.min(d.n,matCap()-matTot()));S.mat[k]=(S.mat[k]||0)+add;if(!S.gotMat)S.gotMat={};S.gotMat[k]=(S.gotMat[k]||0)+add;nm=MATN[k]+(add?'×'+add:'（素材箱がいっぱい）')}
   else{giveItem(d.id,d.n);nm=(d.id.startsWith('seed:')?CROPS[d.id.slice(5)].name+'のたね':BL[d.id].item||BL[d.id].name)+'×'+d.n}
   toast((r?r.name+'が':'')+'おとしものをひろった：'+nm,'good')}
@@ -2259,10 +2271,11 @@ function drawLeaf(r,now){const px=r.x*TS,py=r.y*TS;ctx.save();ctx.globalAlpha=.8
 /* 次のステージへ、はじめて出発するとき：フタバとのお見送り */
 function departOK(){if(LIVE[0]&&LIVE[0].summary&&LIVE[0].cleared)loadStage(0);let d=false;try{d=KV.getItem('hakoniwa-dep1')==='1'}catch(e){}return !d&&LIVE[0]&&LIVE[0].cleared&&LIVE[0].res.some(r=>r.name===POKO)}
 function depart(go){$('#maps').hidden=true;continueGame(LIVE[0]);const f=S.res.find(r=>r.name===POKO);if(f)centerOn(f.x*TS,f.y*TS);
+  const gv=S.godVisit;S.godVisit=true;/* 見送りには、カミサマも村に来ている */
   const A=sevLines([['G','さあ、次は火山のふもとの村じゃ。そろそろ行くぞい。'],['F','……もう、行っちゃうんだね。'],['F','……ほんとはね、行かないでって、言いたい。'],['F','あの夜、みんながぼくをかくしてくれたから、ぼくは生きてる。だから、だれかがいなくなるのが、こわくて……。'],['U','フタバ。守り神は、いなくなるのではない。ほかの土地を助けに行くのだ。'],['F','……うん。あの夜のぼくみたいな子が、待ってるかもしれないんだ。'],['F','ぼく、もうかくれてるだけじゃないよ。みんなのことは、ぼくが守るから！'],['F','……いってらっしゃい！ ちゃんと、ここで待ってるから！ でも、たまには帰ってきてね。ぜったいだよ？'],['G','うむ……。鼻の奥がつーんとしたわい。行ってくるぞい。'],
     ['N','ここは、ぼくたちにまかせてねぇ。',1],['H',{A:'安心して行ってきな。夜はあたいらが守るよ。',B:'安心して行ってこい。夜はおれたちが守るぜ。'},1],['M','次の村のせいれいたちも、元気になりますように。',1],['K','フッ……最初は、なんとも素朴な村だと思ったけれど。',1],['K','今では、世界でいちばん心地よい風が吹く場所かもしれないね。きみの旅路に、いい風が吹きますように。',1],['U','この草原は、わたしたちが見守ろう。'],
     ['F','……いっちゃったね。'],['N','……さみしいねぇ。',1],['F','……うん。すっごく。'],['F','……でも、ぼく、ここをきれいにして待ってるんだ。'],['F','帰ってきたら、びっくりさせちゃうんだから……！']]);
-  setTimeout(()=>dialog(A,()=>{try{KV.setItem('hakoniwa-dep1','1')}catch(e){}S.flags.ret1=1;save();setTimeout(go,1600)},'出発する'),700)}
+  setTimeout(()=>dialog(A,()=>{try{KV.setItem('hakoniwa-dep1','1')}catch(e){}S.flags.ret1=1;S.godVisit=gv;save();setTimeout(go,1600)},'出発する'),700)}
 /* ふしぎな種：せいれいにあげると、能力のどれかが上がる（パワーの強化とは別） */
 const UPK=[['atk','攻撃力'],['pow','作業スピード'],['spd','移動速度'],['sta','スタミナ'],['cap','持てる数']];
 function giveSeed(r){if((S.mseed||0)<1)return;const T=r.sst||(r.sst={}),L=UPK.filter(([k])=>(T[k]||0)<6&&(k!=='atk'||r.elem==='fire'));/* 攻撃力は火の子だけ */if(!L.length)return toast(r.name+'は、これ以上ふしぎな種で強くならない');
@@ -2506,7 +2519,7 @@ function finishBuild(j,r){
   const d=S.dyn[j],id=d.build;if(!d.mat&&BL[id].mat&&id!=='tower')(S.freeB||(S.freeB={}))[j]=1;/* ただで建てた（素材を使わなかった） */delete S.dyn[j];S.obj[j]=id;noteQuestPlacement(id,j);setParts(id,j,'part');if(BL[id].hp)S.hp[j]=BL[id].hp;if(BL[id].dyn)S.dyn[j]={g:0};
   recount();burst(j,'furn');if(r){addXp(4,r);r.made=(r.made||0)+1}kurashi('b:'+id,'earth',2,['🏠','はじめて'+BL[id].name+'が建った']);toast(BL[id].name+'が建った！','good');checkQuest();
   if(id==='statue'){S.obj[j-1]='obox';S.obj[j+1]='board';S.obj[j+W]='altar';recount();burst(j-1,'furn');burst(j+1,'furn')}
-  if(id==='tower'&&!S.cleared){if(WD===1){S.finalNight=true;memo('🌑','守護の台座が建った。最後の夜がくる');setTimeout(()=>toast('守護の台座が光りはじめた…！ 今夜、オオカゲたちがおしよせてくる','warn'),900)}else{memo('🏛','守護の台座が建った');setTimeout(()=>toast('守護の台座が建った','good'),900)}finalCheck()}/* ヌシ様の前に、きびしい最後の夜 */
+  if(id==='tower'&&!S.cleared){if(WD===1){if(shLeft()>=1)S.usedSh=(S.usedSh||0)+1;/* かけらを台座にはめる */S.finalNight=true;memo('🌑','守護の台座が建った。最後の夜がくる');setTimeout(()=>toast('守護の台座が光りはじめた…！ 今夜、オオカゲたちがおしよせてくる','warn'),900)}else{memo('🏛','守護の台座が建った');setTimeout(()=>toast('守護の台座が建った','good'),900)}finalCheck()}/* ヌシ様の前に、きびしい最後の夜 */
 }
 function finishCraft(o,r){
   S.orders=S.orders.filter(q=>q!==o);S.unlocked[o.type]=true;giveItem(o.type,BL[o.type].qty||1);addXp(3,r);if(r)r.made=(r.made||0)+1;kurashi('f:'+o.type,BL[o.type].maker||'wind',1,['🪑','はじめて'+BL[o.type].name+'を作った']);burstAt(r.x,r.y,'furn');
@@ -2656,11 +2669,11 @@ function renderQuest(){const q=QUESTS[Math.min(S.quest,QUESTS.length-1)];let pr=
   const qt=$('#questTxt');if(qt.dataset.k!==t+'|'+pr){qt.dataset.k=t+'|'+pr;qt.textContent='';const m=document.createElement('span'),g=document.createElement('span');m.className='qm';g.className='qp';m.textContent=t;g.textContent=pr;qt.append(m,g)}/* 進み具合は2行目に */
   const h=$('#questHow');if(!h.hidden&&h.dataset.q==S.quest)return;h.dataset.q=S.quest;h.hidden=true;h.innerHTML='<b>やりかた</b>';h.appendChild(document.createTextNode(q.how||''))}
 const NUSHI_T=[
-  {pre:['台座に、3つのかけらがそろった。','……柵も、罠も、見張り台も、みんなで守った形のまま、立っていた。'],open:[[POKO,'やったぁ……！ みんなで、夜をこえたんだ……！'],[MINA,'みんなぁ、台座に力をそそいでねぇ。']],scene:['あたたかい風がふいて、荒れていた土地に、花がいっせいに咲きはじめた。','草原の奥から、風がふきぬけた。','葉がうずをまき、光がさす。そのなかに、みどりのつのをいただく白い大鹿が立っていた。'],name:'草原のヌシ',
-   nushi:['……ずいぶん長く、るすにしてしまったな。'],world:[['U','守り神よ、せいれいたちよ。かけらを取りもどしてくれて、ありがとう。'],['U','わたしは草原のヌシ。木のせいれいたちを生み、この地を見守ってきた者だ。…この世界には、火・水・土・風の土地もあり、それぞれの子を生んだヌシがいる。'],['U','……おまえが、わたしのかわりに、この地の子らを見守ってくれていたのだな。'],['U','もう、その役目は返してもらおう。この地は、わたしが見守る。守り神よ、おまえは、ほかの土地へ行ってよいのだ。'],['F','……守り神さま、行っちゃうんだね。さみしいけど……ありがとう！ ぼくたち、もうだいじょうぶだよ！',1],['U','かけらにのこった記憶が教えてくれる。どの土地でも、ヌシは力を失い、自然の力がくずれたままだ。'],['U','まずは、火の山のふもと。地面の熱が冷えきって、温泉もこおりかけている。'],['U','……この草原には、たしかに力がもどった。だが、夜のざわめきは、まだ消えていないようだ。']],
-   after:[[GOD,'おーい！ 遠くから見とったぞい〜。ようやったのう！'],[GOD,'……うむうむ！ わしは泣いとらんぞ。目に花びらが入っただけじゃ！'],[GOD,'ヌシ様の話、聞いたかの？ 次は「火山のふもとの村」じゃ。出発は、おヌシの好きなときでよいぞ。']],reu:[['F','ヌシ様……！ ヌシ様ぁっ！！'],['U','……フタバ。待たせてしまったな。'],['F','ぼく、ずっと……ずっと待ってたんだよ……！'],['U','かけらを通して、おまえたちのがんばりは、ずっと感じていた。'],['U','あの夜、いちばん奥でふるえていたおまえが、今度はみんなを守ったのだな。'],['U','……おまえを、ひとりにしてしまった。すまなかった。'],['F','……ううん。今は、ひとりじゃないよ！ 見て！ こんなに、なかまができたんだ！'],['F','……えへへ。おかえりなさいっ！'],['F','……ヌシ様。きょうだいたちは……？'],['U','……わたしにも、まだわからない。すまないな。'],['U','だが、あの子たちは、おまえを守りたくて前に出た。……おまえが今を生きていることを、きっとよろこんでいる。'],['F','……うん。ぼく、もう泣かないよ。'],['F','きょうだいたちがくれた明日を、ここで、みんなといっしょに歩いていく！'],['N','よかったねぇ、フタバ。',1],['H',{A:'みんなで守りきったね。やるじゃないか。',B:'みんなで守りきったな。やるじゃねえか。'},1],['M','この土地に、力がもどってきましたね。',1],['K','フッ…風まで、うれしそうだ。',1]],toast:'ステージクリア！ 「火山のふもとの村」への道がひらいた',last:'草原にもどる'},
-  {open:[[HOMURA,'守護の台座ができたよ…！'],[SHIZUKU,'みなさん、力をそそいでください。']],scene:['あたたかい湯気が村をつつみ、冷えきっていた地面に、ぬくもりがもどってきた。','火の山のほうから、大きな影がおりてきた。'],
-   nushi:['……ふう。ようやく、体があたたまってきた。','守り神よ、せいれいたちよ。かけらを取りもどしてくれて、礼を言う。','わたしは、火のせいれいたちを生み、この火の山の熱を見守る者。草原のヌシとは、むかしからの知り合いだ。','かけらの記憶によれば、次は霧につつまれた水べの村。水の流れが止まり、霧がはれないままだという。'],
+  {pre:['台座に、3つのかけらがそろった。','……柵も、罠も、見張り台も、みんなで守った形のまま、立っていた。'],open:[[POKO,'やったぁ……！ みんなのおかげで、ここまで来たんだ……！'],[MINA,'みんなぁ、台座に力をそそいでねぇ。']],scene:['あたたかい風がふいて、荒れていた土地に、花がいっせいに咲きはじめた。','草原の奥から、風がふきぬけた。','葉がうずをまき、光がさす。そのなかに、みどりのつのをいただく白い大鹿が立っていた。'],name:'草原のヌシ',
+   nushi:['……ずいぶん長く、るすにしてしまったな。'],world:[['U','守り神よ、せいれいたちよ。かけらを取りもどしてくれて、ありがとう。'],['U','わたしは草原のヌシ。木のせいれいたちを生み、この地を見守ってきた者だ。…この世界には、火・水・土・風の土地もあり、それぞれの子を生んだヌシがいる。'],['U','……おまえが、わたしのかわりに、この地の子らを見守ってくれていたのだな。'],['U','もう、その役目は返してもらおう。この地は、わたしが見守る。守り神よ、おまえは、ほかの土地へ行ってよいのだ。'],['U','かけらにのこった記憶が教えてくれる。どの土地でも、ヌシは力を失い、自然の力がくずれたままだ。'],['U','まずは、火の山のふもと。地面の熱が冷えきって、温泉もこおりかけている。']],
+   after:[[GOD,'おーい！ 遠くから見とったぞい〜。ようやったのう！'],[GOD,'……うむうむ！ わしは泣いとらんぞ。目に花びらが入っただけじゃ！'],[GOD,'ヌシ様の話、聞いたかの？ 次は「火山のふもとの村」じゃ。出発は、おヌシの好きなときでよいぞ。']],reu:[['F','ヌシ様……！ ヌシ様ぁっ！！'],['U','……フタバ。待たせてしまったな。'],['F','ぼく、ずっと……ずっと待ってたんだよ……！'],['U','かけらを通して、おまえたちのがんばりは、ずっと感じていた。'],['U','あの夜、いちばん奥でふるえていたおまえが、今度はみんなを守ったのだな。'],['U','……おまえを、ひとりにしてしまった。すまなかった。'],['F','……ううん。今は、ひとりじゃないよ！ 見て！ こんなに、なかまができたんだ！'],['F','……えへへ。おかえりなさいっ！'],['U','……この草原の花。おまえが、咲かせてくれたのだな。いちばんに見られて、うれしいぞ。'],['F','……ヌシ様。きょうだいたちは……？'],['U','……わたしにも、まだわからない。すまないな。'],['F','めぶきのしずくでも、だめなの……？'],['U','しずくは、消えたばかりの子を呼びもどすもの。ずっとむかしの子には、とどかぬのだ。'],['U','ただ……自然にかえった子らは、この土地の風や土になる。新しい子らが、ここをなつかしく思うのは、そのせいかもしれぬ。'],['U','それに、あの子たちは、おまえを守りたくて前に出た。……おまえが今を生きていることを、きっとよろこんでいる。'],['F','……うん。ぼく、もう泣かないよ。'],['F','きょうだいたちがくれた明日を、ここで、みんなといっしょに歩いていく！'],['N','よかったねぇ、フタバ。',1],['H',{A:'みんなで守りきったね。やるじゃないか。',B:'みんなで守りきったな。やるじゃねえか。'},1],['M','この土地に、力がもどってきましたね。',1],['K','フッ…風まで、うれしそうだ。',1]],toast:'ステージクリア！ 「火山のふもとの村」への道がひらいた',last:'草原にもどる'},
+  {open:[[HOMURA,'夜をこえたよ…！'],[SHIZUKU,'みなさん、力をそそいでください。']],scene:['あたたかい湯気が村をつつみ、冷えきっていた地面に、ぬくもりがもどってきた。','火の山のほうから、大きな赤いけものが、おりてきた。'],
+   nushi:['……ふう。ようやく、体があたたまってきた。','守り神よ、せいれいたちよ。この地の熱を取りもどしてくれて、礼を言う。','わたしは、火のせいれいたちを生み、この火の山の熱を見守る者。草原のヌシとは、むかしからの知り合いだ。','かけらの記憶によれば、次は霧につつまれた水べの村。水の流れが止まり、霧がはれないままだという。'],
    after:[[GOD,'おつかれさん〜！ 見とったぞい。'],[GOD,'次は「霧のみずべの村」じゃ。…まだ道が通じておらんのじゃ。準備ができたら知らせるぞい。'],[HOMURA,'あたいたちは、この村と温泉をまもるよ。また入りにおいで！'],[SHIZUKU,'お気をつけて。…ときどき、温泉にいらしてくださいね。']],toast:'ステージクリア！ 「霧のみずべの村」は、ただいま準備中',last:'村にもどる'}];
 function nushiReturns(){
   checkQuest();S.cleared=true;renderQuest();const T=NUSHI_T[WD];
@@ -2681,7 +2694,7 @@ function nushiReturns(){
       spawnFX(TX-.5,TY-.6,'#c8ffd0');sfx('arrive');flashScreen();
       setTimeout(()=>dialog(T.nushi,()=>{
         startClap();for(const r of S.res)r.bubble='👏';for(let k=0;k<8;k++)setTimeout(()=>{const r=pick(S.res);if(r)spawnFX(r.x-.5,r.y-.6,pick(['#ffd84a','#ff9cc0','#9ff0ff','#b8ff9a']))},k*350);setTimeout(endClap,3200);/* みんなで拍手 */
-        dialog((T.reu&&sevLines(T.reu)||[]).concat(T.world&&sevLines(T.world)||[],T.after),()=>{
+        dialog((T.world&&sevLines(T.world)||[]).concat(T.reu&&sevLines(T.reu)||[],T.after),()=>{
           toast(T.toast,'good');
           S.clearDay=dayNo();S.score=calcScore();setTimeout(()=>dialog(['……この土地も、元に戻ったのう'],()=>openSheet('score'),T.last,GOD),1200);
         });
@@ -3299,13 +3312,13 @@ const DEATHL2={wood:n=>[n+'が…！','…ふつうのせいれいは、この�
  fireA:n=>[n+'！ …ちくしょう、やられちまったか。','消えたせいれいは、このままじゃもどってこない。オオカゲが落とす「めぶきのしずく」でもなけりゃね。','…二度とこんな思いはさせないよ。守りをかためな。'],
  fireB:n=>[n+'！ …くそっ、やられちまったか。','消えたやつは、このままじゃもどってこねえ。オオカゲが落とす「めぶきのしずく」があれば、話はべつだ。','…二度とこんな思いはさせねえ。守りをかためようぜ。'],
  water:n=>[n+'が…消えてしまいました。','残念ですが、このままでは、もどってきません。オオカゲが落とす「めぶきのしずく」があれば、よみがえらせられます。','食料と守りを、見なおしておきましょう。'],
- wind:n=>[n+'が…風に消えてしまいました。','このままでは、もどってはまいりません。オオカゲが落とす「めぶきのしずく」があれば、あるいは…。','…この悲しみを、くりかえさないように。']};
+ wind:n=>[n+'が…風に消えてしまった。','フッ…このままでは、もどってこない。オオカゲが落とす「めぶきのしずく」があれば、あるいは…。','…この悲しみは、もうくりかえさないさ。']};
 const MEBUKIL={wood:['それ、「めぶきのしずく」だ！ オオカゲがためこんでた、いのちの力なんだって。','これを使うと、消えちゃったせいれいがもどってきてくれるんだ！'],
  earth:['それ、「めぶきのしずく」だねぇ。オオカゲがためこんでた、いのちの力なんだってぇ。','これを使うと、消えちゃったせいれいがもどってきてくれるんだよぉ。'],
  fireA:['そいつは「めぶきのしずく」だね。オオカゲがためこんでた、いのちの力さ。','こいつを使えば、消えたせいれいがもどってくるよ。大事にしな。'],
  fireB:['そいつは「めぶきのしずく」だな。オオカゲがためこんでた、いのちの力だ。','こいつを使えば、消えたせいれいがもどってくるぜ。'],
  water:['それは「めぶきのしずく」です。オオカゲがためこんでいた、いのちの力ですね。','これを使えば、消えたせいれいがもどってきてくれます。'],
- wind:['それは「めぶきのしずく」。オオカゲがためこんでいた、いのちの力です。','これをお使いください。消えたせいれいが、もどってまいります。']};
+ wind:['フッ…それは「めぶきのしずく」。オオカゲがためこんでいた、いのちの力さ。','これを使えば、消えたせいれいが、もどってくるよ。']};
 const DEATHL={wood:n=>[n+'が…！','…でも、だいじょうぶ。','次の朝、神殿に「！」が出るよ。そしたら、'+n+'を呼びもどせるんだ。','新しいなかまより先に、'+n+'がもどってくるからね。'],
  earth:n=>[n+'が…消えちゃったねぇ…。','…でも、だいじょうぶだよぉ。','次の朝、神殿に「！」が出るからねぇ。そしたら、'+n+'を呼びもどせるんだぁ。','新しいなかまより先に、'+n+'がもどってくるよぉ。'],
  fireA:n=>[n+'！ …ちくしょう、やられちまったか。','しょげてる場合じゃないよ。','次の朝、神殿に「！」が出る。そしたら、'+n+'を呼びもどせるよ。','新しいなかまより先に、'+n+'がもどってくる。待ってな。'],
@@ -4649,7 +4662,7 @@ function renderSheet(){
     {const lost=(S.lost||[]).filter(q=>!q.unb);if(S.mebuki>0&&lost.length){const nt=el('<div class="sec"><h3>めぶきのしずく　'+S.mebuki+'こ</h3><p class="note"></p></div>');nt.querySelector('.note').textContent='消えてしまったせいれい（'+lost.map(q=>q.name).join('・')+'）を、よみがえらせることができる。「せいれい」のリストから、しずくを使おう。';body.appendChild(nt)}}/* しずくを持っていたら、よみがえらせられると知らせる */
   }else if(sheet==='enemy'){const e=S.enemies.find(q=>q.id===sheetArg);if(!e||e.dead){closeSheet();return}const D=EN[e.type];
     T.textContent=D.name;
-    const FEAT={boss2:'ヌシ様をむかえる準備ができたあと、オオカゲのかわりに来る。とても強い',basic:'せいれいをおそう',fast:'足が速い',thief:'食料や素材をぬすむ',brute:'体力が多い',boss:'5日目の夜、そのあと3日ごとに来る。追いはらうと、そのあとに「ヌシのかけら」があらわれる。当たると目をまわす'};
+    const FEAT={boss2:'ヌシ様をむかえる準備ができたあと、オオカゲのかわりに来る。とても強い',basic:'せいれいをおそう',fast:'足が速い',thief:'食料や素材をぬすむ',brute:'体力が多い',boss:WD?'5日目の夜、そのあと3日ごとに来る。追いはらうと、そのあとに「ヌシのかけら」があらわれる。当たると目をまわす':'5日目の夜、そのあと3日ごとに来る。とても強い。当たると目をまわす'};
     const st=el('<div class="sec"><h3>ステータス</h3><div class="stats"></div></div>'),g=st.querySelector('.stats');
     for(const[k,v]of[['体力',Math.max(0,Math.ceil(e.hp))+' / '+e.max],['移動速度','×'+D.sp],['壁への攻撃',D.atk+'秒ごとに1'],['せいれいへの攻撃','おなか −'+Math.round(D.hit*.6)],['特徴',FEAT[e.type]||'']])g.appendChild(el('<div class="stat"><span style="white-space:nowrap">'+k+'</span><b>'+v+'</b></div>'));
     body.appendChild(st);
@@ -4699,9 +4712,9 @@ function renderSheet(){
   }else if(sheet==='heatv'){const j=sheetArg,t=st2();T.textContent=j===D1?'手前の熱の装置':'奥の熱の装置';
     const P=tx=>{body.appendChild(el('<p class="story"></p>')).textContent=tx};
     const dir=j===D1?t.d1:t.d2;
-    if(j===D2&&!t.d2fix){const clr=BVOL.every(q=>S.obj[q]!=='boulder'),ok=clr&&(S.mat.stone||0)>=8&&(S.mat.wood||0)>=5&&(S.shards||0)>=1;
-      P('こわれて止まっている。直すには、石材8・木材5と、ヌシのかけらの力がいる。'+(clr?'':'まわりの大岩をどかさないと、近づけない。')+(S.shards?'':'（ヌシのかけらをまだ持っていない）'));
-      const b=el('<button class="btn pri">直す</button>');b.disabled=!ok;b.onclick=()=>{S.mat.stone-=8;S.mat.wood-=5;t.d2fix=1;sfx('level');burst(j,'block');toast('奥の装置が動きだした！','good');dirty=true;closeSheet();checkQuest()};body.appendChild(b)}
+    if(j===D2&&!t.d2fix){const clr=BVOL.every(q=>S.obj[q]!=='boulder'),ok=clr&&(S.mat.stone||0)>=8&&(S.mat.wood||0)>=5&&shLeft()>=1;
+      P('こわれて止まっている。直すには、石材8・木材5と、ヌシのかけら1つがいる。'+(clr?'':'まわりの大岩をどかさないと、近づけない。')+(shLeft()?'':'（ヌシのかけらをまだ持っていない）'));
+      const b=el('<button class="btn pri">直す</button>');b.disabled=!ok;b.onclick=()=>{S.mat.stone-=8;S.mat.wood-=5;S.usedSh=(S.usedSh||0)+1;t.d2fix=1;sfx('level');burst(j,'block');toast('かけらが熱を通した！ 奥の装置が動きだした','good');dirty=true;closeSheet();checkQuest()};body.appendChild(b)}
     else if(t.hvb[j]){P('ヒノオオカゲにこわされて、止まっている。石材3で直せる。（温泉は、直せばまたあたたかくなる）');const b=el('<button class="btn pri">直す（石材3）</button>');b.disabled=(S.mat.stone||0)<3;b.onclick=()=>{S.mat.stone-=3;delete t.hvb[j];sfx('level');burst(j,'block');toast('装置を直した','good');dirty=true;closeSheet()};body.appendChild(b)}
     else{P(j===D1?'火山の熱を、左（西の温泉）と右（奥の装置）のどちらに流すか切りかえる。':'熱を、左（奥の温泉）と右（けむり穴）のどちらに流すか切りかえる。');
       P('いまは「'+(dir===0?'左':'右')+'」に流している。');
@@ -4943,7 +4956,7 @@ function thumb(cv2,k,open){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='349';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='350';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
