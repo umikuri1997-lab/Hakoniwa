@@ -1110,12 +1110,11 @@ function startAct(r,G,type,stand,o){
   if(!r.path.length)beginDo(r);
 }
 function noPass(r){if(r.act){if(r.act.key)BAN.set(r.act.key,S.t+60);if(r.act.stand>=0){r.routeAvoid=r.routeAvoid||{};r.routeAvoid[r.act.stand]=S.t+60}}r.visitRetryAt=S.t+10;if((r.npT||0)>S.t)return;r.npT=S.t+90;addFloat(r.x,r.y-1.6,'通れないよ…','#ffd0c0')}
-const WORKP={/* 作業の進み具合（0〜1）。足もとの進捗バーに出す */
+const WORKP={/* 作業の進み具合（0〜1）。足もとの進捗バーに出す（建てる作業は、建てている場所のバーだけ出す） */
 chop:(r,a)=>a.t/(a.camp?40:30),mine:(r,a)=>a.t/(a.camp?40:35),
 tend:(r,a)=>a.t/20,water:(r,a)=>a.t/(r.elem==='water'?8:16),sow:(r,a)=>a.t/10,harvest:(r,a)=>a.t/12,gather:(r,a)=>a.t/15,offer:(r,a)=>a.t/10,pickseed:(r,a)=>a.t/8,fish:(r,a)=>a.t/50,
 till:(r,a)=>{const d=S.dyn[a.obj];return Math.max(a.t/45,d&&d.p!=null?d.p/30:0)},
 plant:(r,a)=>{const d=S.dyn[a.obj];return Math.max(a.t/40,d&&d.p!=null?d.p/20:0)},
-build:(r,a)=>{const d=S.dyn[a.obj];return Math.max(a.t/60,d&&d.need?d.p/d.need:0)},
 repair:(r,a)=>a.t/(a.re?30:20),
 cook:(r,a)=>a.t/(((RECIPES.find(x=>x.out===(r.cing&&r.cing.rec))||{time:30}).time)*(trt(r,'ryouri')?.7:1)*ovenMul(a.obj))};
 function beginDo(r){const a=r.act;a.stage='do';a.t=0;a.e0=r.energy;const f=ACT[a.type].start;if(f&&f(r,a)===false){endAct(r);r.act={type:'idle',stage:'do',t:0,dur:8}}}
@@ -4909,7 +4908,7 @@ function thumb(cv2,k,open){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='307';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='308';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
