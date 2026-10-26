@@ -479,8 +479,6 @@ const QUESTS1=[
     [POKO,'よーし、みんなで守りぬこう！']]},
    story:null},
 ];
-/* v34までの保存番号を読み替えるための旧順序。新しい目標順ではない。 */
-const QUEST_ORDER34=["神殿を建ててもらおう", "食料箱を置こう", "素材箱を置こう", "食卓をたのもう", "家の壁を直そう", "家にベッドを置こう", "村レベルを2にしよう", "柵を4つ置こう", "見張り台ととげの罠を置こう", "ききょうを植えて、土の力をためよう", "朝になったら、神殿の「！」でなかまを呼ぼう", "畑を6つにしよう", "畑にたねをまこう", "村レベルを3にしよう", "カミサマと交換してみよう", "村レベルを4にしよう", "おつげを出してみよう", "村レベルを5にしよう", "火のせいれいをむかえよう", "水のせいれいをむかえよう", "基地を広げよう", "オオカゲを追いはらおう", "風のせいれいをむかえよう", "守護の台座を建ててもらおう", "みどりのマスを375にしよう", "木のせいれいを6人にしよう", "フタバのおねがい：花を50こさかせよう", "ヌシ様をむかえよう"];
 const QUEST_HELP1={
   "神殿を建ててもらおう": "下の「おく」→「神殿」をえらび、基地の中の空いた場所（4マス）をタップ",
   "食料箱を置こう": "フタバと話して食料箱を受けとる。「おく」→「食料箱」をえらんで置く",
@@ -700,97 +698,19 @@ function newState(w){w=w||0;
   const s={v:8,flags:{},placed:{},feat:{build:true},inv:{},orders:[],enemyOn:false,nights:0,godGone:false,godShown:false,nushi:null,
     lv:1,bossKills:0,nightHurt:0,nightHad:false,wave:null,lastWarn:0,
     ref:{},ground:new Array(W*H).fill(0),floor:new Array(W*H).fill(''),obj:new Array(W*H).fill(''),dyn:{},hp:{},
-    res:[],enemies:[],pt:15,totalPt:0,food:0,fs:{},cseed:{imo:4},crops:{imo:true},mat:{wood:0,stone:0},regrow:[],t:12*60,speed:1,baseLv:0,baseV:2,
-    unlocked:{floor:true,farm:true,fence:true,hwall:true},bulk:false,stamps:false,quest:0,cleared:false,rain:false,seeds:[],nameIdx:2,introSeen:false,lastMorning:1,lastNight:0,qVer:35,subDone:{},drops:[],shards:0,gotMat:{wood:0,stone:0},recipes:{},buried:[],nid:1,kills:0,deaths:0};
+    res:[],enemies:[],pt:15,totalPt:0,food:0,fs:{},cseed:{imo:4},crops:{imo:true},mat:{wood:0,stone:0},regrow:[],t:12*60,speed:1,baseLv:0,
+    unlocked:{floor:true,farm:true,fence:true,hwall:true},bulk:false,stamps:false,quest:0,cleared:false,rain:false,seeds:[],nameIdx:2,introSeen:false,lastMorning:1,lastNight:0,subDone:{},drops:[],shards:0,gotMat:{wood:0,stone:0},recipes:{},buried:[],nid:1,kills:0,deaths:0};
   s.world=w;genWorld(s,w);
   if(w===1)s.res.push(mkRes(s,HOMURA,'fire',CX+.5,CY-1.5,'campfire'));else s.res.push(mkRes(s,'フタバ','wood',CX+.5,CY-1.5,'swing'));
   if(w===FREE)freeSetup(s);
   return s;
 }
 function putNear(s,id,cx,cy){for(let r=0;r<8;r++)for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){const k=(cy+dy)*W+cx+dx;if(!s.obj[k]&&s.ground[k]!==1&&!s.floor[k]){s.obj[k]=id;return}}}
-function resumeQuest35(s){const h=s.questOrder35;if(!h||(s.world||0)!==0||s.qStory!=null)return;const i=QUESTS1.findIndex(q=>!h.done[q.text]);s.quest=i<0?QUESTS1.length:i;s.qTalked=i>=0&&!!h.accepted[QUESTS1[i].text]}
-function migrateQuest35(s){if(s.qVer>=35)return;
-  if((s.world||0)===0){const old=s.quest||0,pending=s.qStory==null?null:QUEST_ORDER34[s.qStory],h=s.questOrder35={done:{},accepted:{}};
-    QUEST_ORDER34.forEach((text,i)=>{if((i<old&&text!==pending)||s.cleared)h.done[text]=true});
-    if(s.qTalked&&QUEST_ORDER34[old])h.accepted[QUEST_ORDER34[old]]=true;
-    if(pending&&!s.cleared){h.accepted[pending]=true;s.qStory=QUESTS1.findIndex(q=>q.text===pending);s.quest=s.qStory;s.qTalked=false}else{s.qStory=null;resumeQuest35(s)}
-    if(s.flags){const moved={};for(const k of Object.keys(s.flags))if(/^pre0_\d+$/.test(k)){const text=QUEST_ORDER34[+k.slice(5)],i=QUESTS1.findIndex(q=>q.text===text);if(i>=0)moved['pre0_'+i]=s.flags[k];delete s.flags[k]}Object.assign(s.flags,moved)}
-  }
-  /* 家具の依頼に付いていた不要なLv待ちは廃止。報告待ちだけは旧会話を残す。 */
-  for(const k of ['lv_toy2','lv_jar2','lv_parasol'])if(s.subSt&&s.subSt[k]===2){s.subSt[k]=4;(s.subDone||(s.subDone={}))[k]=1}
-  s.qVer=35;
-}
-function migrateBaseQuest34(s){if((s.world||0)!==0)return;const q=s.quest;if(q===15){s.qTalked=false;s.qStory=null}else if(q>=16&&q<=20)s.quest=q-1;if(s.qStory===15)s.qStory=null;else if(s.qStory>=16&&s.qStory<=20)s.qStory--}
-function migrateQuest25(s){if(s.world)return;
-  if(s.quest===22||s.quest===23){s.quest=22;s.qTalked=false}
-  if(s.qStory===23)s.qStory=22;
-}
-function fixWallHp(s){if(!(s.watchV>=1)){s.ref=s.ref||{};for(let j=0;j<s.obj.length;j++){if(s.obj[j]!=='watch')continue;const x=j%W,y=(j/W)|0,c=[j+1,j+W,j+W+1];if(x<W-1&&y<H-1&&c.every(k=>!s.obj[k]&&s.ground[k]!==1))for(const k of c){s.obj[k]='part';s.ref[k]=j}}s.watchV=1}/* 見張り台は2×2マス（前のセーブ） */if(!(s.hpVer>=2)){for(const k in s.hp){if(s.obj[k]==='hwall')s.hp[k]=Math.min(50,s.hp[k]*5)}s.hpVer=2}
-  if(s.hpVer<3){for(const k in s.hp){const o=s.obj[k];if(o&&BL[o]&&BL[o].hp)s.hp[k]=Math.min(BL[o].hp,Math.ceil(s.hp[k]/2))}s.hpVer=3}
-  if(s.hpVer<4){for(const k in s.hp){if(s.obj[k]==='hwall')s.hp[k]=Math.min(10,s.hp[k])}s.hpVer=4}
-  if(s.hpVer<5){for(const k in s.hp){if(s.obj[k]==='hwall')s.hp[k]=Math.min(15,Math.ceil(s.hp[k]*1.5))}s.hpVer=5}
-  if(s.hpVer<6){for(const k in s.hp){if(s.obj[k]==='hwall')s.hp[k]=Math.min(20,Math.ceil(s.hp[k]*4/3))}s.hpVer=6}
-  if(s.hpVer<7){for(const k in s.hp){if(s.obj[k]==='wall')s.hp[k]=Math.min(30,Math.ceil(s.hp[k]*30/9))}s.hpVer=7}
-  if(s.hpVer<8){for(const k in s.hp){const o=s.obj[k];if(o==='hwall'||o==='wall')s.hp[k]=Math.min(BL[o].hp,Math.ceil(s.hp[k]*1.5))}s.hpVer=8}
-  if(s.hpVer<9){for(const k in s.hp){if(s.obj[k]==='door')s.hp[k]=Math.min(23,Math.ceil(s.hp[k]*2.3))}s.hpVer=9}}
-function boxMat(s){/* 食料箱・素材箱の素材：前のセーブで、たのまれる会話をすませていたら、ここでわたす */
-  if(s.world||!s.flags)return;const Q=QL[0],qi=t=>Q.findIndex(q=>q.text===t),has=id=>(s.inv&&s.inv[id])||s.orders.some(o=>o.type===id)||s.obj.includes(id);
-  for(const[t,id,m]of[['食料箱を置こう','stor',{wood:3}],['素材箱を置こう','mbox',{wood:2,stone:2}]]){const i=qi(t);if(i<0||s.flags['bm_'+id])continue;if(s.quest>i||s.quest===i&&s.qTalked){s.flags['bm_'+id]=1;if(!has(id))for(const k in m)s.mat[k]=Math.max(s.mat[k]||0,m[k])}}}
-function widenStoneGates(s){
-  s.ref=s.ref||{};s.inv=s.inv||{};
-  for(let j=0;j<s.obj.length;j++){
-    if(s.obj[j]==='sdoor'){for(const q of[j+1,j+2])if(s.obj[q]==='part'&&s.ref[q]===j){s.obj[q]='';delete s.ref[q]}continue}/* 石の塀のドアは1マス */
-    if(s.obj[j]!=='stonegate')continue;
-    const k=j+1;if(j%W===W-1||s.ground[k]===1||s.obj[k]==='part'&&s.ref[k]===j)continue;
-    if(s.obj[k]&&s.obj[k]!=='wall')continue;
-    if(s.obj[k]==='wall'){s.inv.wall=(s.inv.wall||0)+1;if(s.win&&s.win[k]){const a=s.win[k]===1?'window':s.win[k];s.inv[a]=(s.inv[a]||0)+1;delete s.win[k]}if(s.hp)delete s.hp[k];if(s.dyn)delete s.dyn[k]}
-    s.obj[k]='part';s.ref[k]=j;
-  }
-}
 function ensureStor(s){for(const id in BL){const b=BL[id];if(b&&b.offerOnly&&b.kind==='furn'){if(s.recipes)delete s.recipes[id];if(s.guardianIdeas)delete s.guardianIdeas[id]}}/* お供えされる家具は、レシピとして出さない（セーブからも消す） */
-  if(s.sev&&s.sev.e09){const f=s.flags||(s.flags={});if(!f.e09Replay){f.e09Replay=1;delete s.sev.e09}}/* かけらのムービーを見そこねた人のために、1回だけ、もう一度流れるようにする */
-  for(const[rm,to]of[['sideb','cabinet'],['chime','vane']]){for(let j=0;j<s.obj.length;j++)if(s.obj[j]===rm)s.obj[j]=to;if(s.inv&&s.inv[rm]){s.inv[to]=(s.inv[to]||0)+s.inv[rm];delete s.inv[rm]}if(s.recipes)delete s.recipes[rm];if(s.guardianIdeas)delete s.guardianIdeas[rm];for(const o of s.orders||[])if(o.type===rm)o.type=to}/* ひくい棚をなくした：置いてあったものは、キャビネットに */widenStoneGates(s);{const nm=new Set();for(let j=0;j<s.obj.length;j++)if(s.obj[j]==='grave'&&s.dyn&&s.dyn[j]&&!s.dyn[j].buried)nm.add(s.dyn[j].name);for(const r of s.res||[])if(r.coffin)nm.add(r.coffin.name);if(!s.wipe)for(const L of[s.buried||[],s.lost||[]])for(const q of L)if(nm.has(q.name))q.unb=true}/* まだ埋葬されていない子は、よみがえらせない */if(!(s.world>=1)&&s.ovenSet)for(const q in s.ovenSet)if(s.ovenSet[q]==='soup')delete s.ovenSet[q];
-  if(!(s.baseV>=2)){s.baseLv=[0,4,6,8][s.baseLv||0]||0;s.baseV=2}/* 広げる段階をふやした前のセーブ */fixWallHp(s);boxMat(s);if(s.world===1&&!(s.flags.st2v>=2))st2Migrate(s);for(const r of s.res){if(!r.vr)r.vr=mkVar(r.name);if(!r.vr.sta)r.vr.sta=1;if(!r.vr.vo)r.vr.vo=KEYVR[r.name]?KEYVR[r.name].vo:mkVar('').vo;if(KEYVR[r.name]){r.vr.key=true;r.vr.tr=KEYVR[r.name].tr}if(!r.vr.key&&(!r.vr.tr||r.vr.tr==='kizuna'||r.vr.tr==='yuukan'))r.vr.tr=pick(TRK())}for(const k in s.hp||{})if(/^\d+$/.test(k)&&typeof s.hp[k]==='number')s.hp[k]=Math.ceil(s.hp[k]);/* 耐久は整数 */if(!(s.qVer>=2)){if(s.quest>=11)s.quest+=2;s.qVer=2}/* 夜と罠のクエストを足した分ずらす */
-  if(s.qVer<3){const M=[0,1,2,3,4,5,6,7,8,8,11,12,12,16,19,18,22,23];s.quest=s.quest>=M.length?QUESTS.length:M[s.quest];s.qTalked=true;s.qVer=3;/* クエストを作り直した分の読みかえ。前からの人はレシピをぜんぶ知っている */
-    s.recipes={};RLOCK.forEach(id=>s.recipes[id]=true);s.feat.summon=true;s.flags.sumTold=true;if(s.res.some(r=>r.name==='ミナ'||r.name==='ツチノコ'||r.name==='ノドカ')||s.quest>8)s.flags.minaCame=true}
-  if(s.qVer<4){const M=[0,1,2,3,3,4,5,6,7,8,9,11];if(s.quest<12)s.quest=M[s.quest];if(!s.flags.minaCame&&s.quest>=7){s.summonNext=null;s.summon=null;s.inv.rockart=Math.max(s.inv.rockart||0,2);s.unlocked.rockart=true}s.qVer=4}/* 2人目を土の子にした分の読みかえ */
-  if(s.qVer<6){const rn=o=>{if(o&&(o.name==='ミナ'||o.name==='ツチノコ'))o.name='ノドカ'};s.res.forEach(rn);(s.buried||[]).forEach(rn);for(const k in s.dyn)if(s.obj[k]==='grave')rn(s.dyn[k]);s.qVer=6}/* 2人目の名前をノドカにした */
-  if(s.qVer<7){const rn=o=>{if(o&&o.name==='ポコ')o.name='フタバ'};s.res.forEach(rn);(s.buried||[]).forEach(rn);for(const k in s.dyn)if(s.obj[k]==='grave')rn(s.dyn[k]);s.qVer=7}/* 1人目の名前をフタバにした */
-  if(s.qVer<8){const M={16:17,17:18,18:19,19:21,20:22,21:23,22:24,23:25};if(M[s.quest]!=null)s.quest=M[s.quest];else if(s.quest>=24)s.quest+=2;if(s.quest>16)s.flags.board5=true;s.qVer=8}/* 依頼ボード・水・風のクエストを足した */
-  if(s.qVer<9){const rn=o=>{if(o&&o.name==='ゴロ')o.name='ノドカ'};s.res.forEach(rn);(s.buried||[]).forEach(rn);for(const k in s.dyn)if(s.obj[k]==='grave')rn(s.dyn[k]);s.qVer=9}/* 土の子の名前をノドカにした */
-  if(s.qVer<10){if(s.quest>=11)s.quest++;if(s.qStory!=null&&s.qStory>=11)s.qStory++;s.qVer=10}/* たねまきのクエストを足した */
-  if(s.qVer<11){if(s.qStory===25){s.qStory=null;s.flags.shrine=true}if(s.quest===25||s.quest===26){s.quest=25;s.qTalked=false}else if(s.quest>26)s.quest--;s.qVer=11}/* クリア条件のクエストをなくした */
-  if(s.qVer<12){if(s.quest>=7)s.quest++;if(s.qStory!=null&&s.qStory>=7)s.qStory++;s.qVer=12}/* 家の壁のクエストを足した */
-  if(s.qVer<13){const M={6:6,7:6,8:9,9:10,10:11,11:12,12:13,13:14,14:15,15:15},q=s.quest;if(M[q]!=null){s.quest=M[q];if(q===6||q===8||q===14)s.qTalked=false}if(s.qStory!=null&&M[s.qStory]!=null)s.qStory=(s.qStory===6||s.qStory===14)?null:M[s.qStory];s.qVer=13}/* 最初の夜までを、家→ベッド→柵→見張り台ととげの罠にした */
-  if(s.qVer<14){if(s.quest>=5)s.quest++;if(s.qStory!=null&&s.qStory>=5)s.qStory++;s.qVer=14}
-  if(!s.gotMat)s.gotMat={wood:s.mat.wood||0,stone:s.mat.stone||0};
-  if(s.qVer<15){if(!s.world){const M=q=>q<=0?q:q<=2?1:q<=4?2:q<=6?3:q-3;if([1,3,5].includes(s.quest))s.qTalked=false;if(s.quest>=6)s.flags.mbGift=true;if(s.quest>3){s.feat.remove=true;s.unlocked.path=true}s.quest=M(s.quest);if(s.qStory!=null)s.qStory=[1,3,5].includes(s.qStory)?null:M(s.qStory)}if(s.world===1&&s.quest===QUESTS2.findIndex(q=>q.text.startsWith('ホムラのおねがい')))s.qTalked=false;s.qVer=15}/* チュートリアルをへらした */
-  if(s.qVer<16){if(!s.world){if(s.quest===2)s.qTalked=false;if(s.quest>2)s.quest--;if(s.quest>=2){s.feat.plant=true}if(s.qStory!=null)s.qStory=s.qStory===2?null:s.qStory>2?s.qStory-1:s.qStory}s.qVer=16}/* 花を植えるクエストをなくした */
-  if(s.qVer<17){if(!s.world){if(s.quest>2||s.quest===2&&s.obj.includes('mbox'))s.quest++;if(s.qStory!=null&&s.qStory>=2)s.qStory++}s.qVer=17}/* 素材箱と食卓を別のクエストにした */
-  if(s.oracle==='build'||s.oracle==='farm')s.oracle=null;/* 廃止した建築のおつげを解除 */
-  if(s.qVer<18){if(!s.world){const R=[3,13,15,16,18,21],q=s.quest,D=s.subDone||(s.subDone={});if(R.includes(q))s.qTalked=false;s.quest=q-R.filter(x=>x<q).length;if(q>=3)s.feat.craft=true;if(s.qStory===16)s.flags.board5=true;['table','bed3','oven','board','watch2','toy2'].forEach((k,n)=>{if(q>R[n])D[k]=1});if(s.qStory!=null)s.qStory=R.includes(s.qStory)?null:s.qStory-R.filter(x=>x<s.qStory).length}s.qVer=18}/* 家具・遊具などのクエストをサブクエストにした */
-  if(s.qVer<19){if(!s.world){if(s.quest>=12)s.quest++;if(s.qStory!=null&&s.qStory>=12)s.qStory++}s.qVer=19}/* 基地を広げるクエストを足した */
-  if(s.qVer<20){if(!s.world){if(s.quest>13)s.quest++;if(s.qStory!=null&&s.qStory>=13)s.qStory++}s.qVer=20}/* おつげのクエストを足した */
-  if(s.qVer<21){if(!s.world){if(s.quest>2)s.quest++;if(s.qStory!=null&&s.qStory>=3)s.qStory++}s.qVer=21}/* 食卓のクエストを足した */
-  if(s.qVer<22){if(!s.world){if(s.quest>11)s.quest++;if(s.qStory!=null&&s.qStory>=12)s.qStory++}s.qVer=22}/* 村レベルのクエストを足した */
-  if(s.qVer<23){if(!s.world){for(const t of[16,15,6]){if(s.quest>=t)s.quest++;if(s.qStory!=null&&s.qStory>=t)s.qStory++}}s.qVer=23}/* 村レベル2・4・5のクエストを足した */
-  if(s.qVer<24){if(!s.world){const Q=QUEST_ORDER34.map(text=>({text})),B=Q.findIndex(q=>q.text==='オオカゲを追いはらおう'),T=Q.length-2,mv=q=>q==null?q:(q>B&&q<T?q+1:q===T?B+1:q>T?q+1:q);s.quest=mv(s.quest);s.qStory=mv(s.qStory);s.shardDrop=Math.min(3,s.shards||0);if(s.obj.includes('tower'))s.setSh=Math.min(3,s.shards||0)}s.qVer=24}/* 台座を先に建て、かけらをはめていく */
-  if(s.qVer<25){migrateQuest25(s);s.qVer=25}/* 風のなかまをむかえてから台座を建てる。進行中のセーブも引きつぐ */
-  if(s.qVer<26){if(!(s.subDone||{}).chair2){delete (s.recipes||{}).stool;delete (s.guardianIdeas||{}).stool}s.qVer=26}/* スツールの発想は椅子クエスト達成時へ移す */
-  if(s.qVer<27){if(!(s.subDone||{}).deco3&&(s.subSt||{}).deco3<2){delete (s.recipes||{}).planter;delete (s.guardianIdeas||{}).planter}s.qVer=27}/* 花壇の発想を庭の飾り付け依頼へ移す */
-  if(s.qVer<28){for(const id of['bench','chime']){delete (s.recipes||{})[id];delete (s.guardianIdeas||{})[id]}s.qVer=28}/* ベンチと風鈴は関連クエストまで未解放にする */
-  if(s.qVer<29){for(const id of['chair','stool']){delete (s.recipes||{})[id];delete (s.guardianIdeas||{})[id]}s.qVer=29}/* 椅子・スツールは椅子の依頼まで未解放にする */
-  if(s.qVer<30){if(s.free)for(const id of FURN){delete(s.recipes||{})[id];delete(s.guardianIdeas||{})[id]}s.qVer=30}/* 自由モードの家具レシピを他モードの発想済みに同期 */
-  if(s.qVer<31){if((s.world||0)<2){for(const id of['swing','seesaw']){delete(s.recipes||{})[id];delete(s.guardianIdeas||{})[id]}for(const r of s.res||[])if(r.like==='swing')r.like='slide'}s.qVer=31}/* 以前の遊具配置を移行 */
-  if(s.qVer<32){if((s.world||0)<2){for(const id of['slide','seesaw']){delete(s.recipes||{})[id];delete(s.guardianIdeas||{})[id]}for(const r of s.res||[])if(r.like==='slide')r.like='swing'}s.qVer=32}/* すべり台とシーソーは風のやんだ空の村にとっておく */
-  if(s.qVer<33){if((s.world||0)===0){const wi=QUESTS1.findIndex(q=>q.text==='見張り台ととげの罠を置こう');if((s.quest||0)>wi||s.qStory===wi||((s.quest||0)===wi&&s.qTalked)||(s.obj||[]).includes('watch')||Object.values(s.inv||{}).some(n=>n>0))s.flags.watchLearned=true}s.qVer=33}/* 見張り台は最初の防衛クエストで覚えてから建てる */
-  if(s.qVer<34){migrateBaseQuest34(s);s.qVer=34}/* 水のせいれいが来てから基地を広げる */
-  if(s.qVer<35)migrateQuest35(s);/* レベル目標を実際の村づくりの間へ分散 */
-  if(!s.flags.shV){const n=s.shards||0,Q=QL[s.world||0];['boss','land','key'].forEach((k,i)=>{if(n>i)s.flags['sh_'+k]=true});
-    for(const k of['land','key']){const qi=Q.findIndex(q=>q.gives&&q.gives.shard===k||q.story&&q.gives&&q.gives.shard===k);if(!s.flags['sh_'+k]&&qi>=0&&(s.questOrder35?!!s.questOrder35.done[Q[qi].text]:qi<s.quest&&s.qStory!==qi)){s.flags['sh_'+k]=true;s.shards=Math.min(3,(s.shards||0)+1)}}s.flags.shV=1}/* かけらの入手方法を分けた *//* 食料箱と素材箱を別のクエストにした */
-  if(!s.recipes)s.recipes={};if(!s.lost)s.lost=[];if(!s.buried)s.buried=[];s.buried=s.buried.filter(b=>KEYS.flat().includes(b.name)||Object.values(FIXK0).includes(b.name)||Object.values(s.keyN||{}).includes(b.name));/* 火・水・風のキーキャラも、読みこみで消さない */if(!s.drops)s.drops=[];if(s.shards==null)s.shards=Math.min(3,s.bossKills||0);for(let j=0;j<s.obj.length;j++)if(s.obj[j]==='part'&&s.ref&&s.obj[s.ref[j]]==='table'){s.obj[j]='';delete s.ref[j]}// 食卓は1マスになった
-  if(!s.ref)s.ref={};for(let j=0;j<s.obj.length;j++)if(s.obj[j]==='part'&&s.obj[s.ref[j]]==='house'){s.obj[j]='';delete s.ref[j]}for(let j=0;j<s.obj.length;j++)if(s.obj[j]==='house'){s.obj[j]='';if(s.dyn)delete s.dyn[j]}if(s.inv)delete s.inv.house;/* 小さな家はなくなった */for(let j=0;j<s.obj.length;j++)if(s.obj[j]==='stonelamp'){s.obj[j]='';if(s.dyn)delete s.dyn[j]}if(s.inv)delete s.inv.stonelamp;if(s.recipes)delete s.recipes.stonelamp;if(s.guardianIdeas)delete s.guardianIdeas.stonelamp;if(s.orders)s.orders=s.orders.filter(o=>o.type!=='stonelamp');/* 石灯籠はなくなった */for(let j=0;j<s.obj.length;j++)if(s.obj[j]==='planter'){s.obj[j]='';if(s.dyn)delete s.dyn[j]}if(s.inv)delete s.inv.planter;if(s.recipes)delete s.recipes.planter;if(s.guardianIdeas)delete s.guardianIdeas.planter;if(s.orders)s.orders=s.orders.filter(o=>o.type!=='planter');for(const r of s.res||[])if(r.lf==='planter')delete r.lf;/* 花壇はなくなった */for(let j=0;j<s.obj.length;j++)if(s.obj[j]==='bench'&&!(s.obj[j+1]==='part'&&s.ref[j+1]===j)){if(!s.obj[j+1]&&s.ground[j+1]!==1&&(j+1)%W){s.obj[j+1]='part';s.ref[j+1]=j}else{s.obj[j]='';s.inv.bench=(s.inv.bench||0)+1}}/* ベンチを2マスにした。右があいていなければ、お供え箱にもどす */
-  for(let j=0;j<s.obj.length;j++)if(s.obj[j]==='grave'&&s.dyn[j]&&s.dyn[j].buried){s.obj[j]='';delete s.dyn[j]}{const st=s.obj.indexOf('statue');if(st>=0&&s.obj[st+W]!=='altar'&&!s.obj[st+W])s.obj[st+W]='altar'}if(!s.cseed)s.cseed={mugi:4,tomato:2,imo:2};if(!s.mat)s.mat={wood:0,stone:0};if(!s.fs)s.fs={mugi:s.food||0};if((s.quest||0)>2){if(!s.obj.includes('stor'))putNear(s,'stor',CX-2,CY-5);if(!s.obj.includes('mbox'))putNear(s,'mbox',CX,CY-5)}syncQuestRecipes(s);}// チュートリアル中は自分で置いてもらう
+  {const nm=new Set();for(let j=0;j<s.obj.length;j++)if(s.obj[j]==='grave'&&s.dyn&&s.dyn[j]&&!s.dyn[j].buried)nm.add(s.dyn[j].name);for(const r of s.res||[])if(r.coffin)nm.add(r.coffin.name);if(!s.wipe)for(const L of[s.buried||[],s.lost||[]])for(const q of L)if(nm.has(q.name))q.unb=true}/* まだ埋葬されていない子は、よみがえらせない */
+  for(const k in s.hp||{})if(/^\d+$/.test(k)&&typeof s.hp[k]==='number')s.hp[k]=Math.ceil(s.hp[k]);/* 耐久は整数 */
+  if(!s.lost)s.lost=[];syncQuestRecipes(s)}
+
 /* 特性：ひとりにひとつ。キーキャラは決まっている */
 const TRK=()=>Object.keys(TRAITS).filter(k=>k!=='kizuna'&&k!=='tane');/* たねはこびは風の子だけ（mkRes） */const TRAITS={hayaashi:['はやあし','歩くのが速い'],hataraki:['はたらきもの','作業が速い'],shukaku:['しゅうかく上手','畑や木の実の収穫がひとつ多い'],kikori:['木こり','木を切ると、木材がひとつ多い'],ishiku:['石工','石をほると、石材がひとつ多い'],chikara:['力もち','持てる数が2つ多い'],shoshoku:['小食','おなかがへりにくい'],tafu:['タフ','つかれにくい'],kizuna:['めぐり','消えてしまっても、この土地のめぐりで、次の朝もどってくる'],/* キーキャラだけ（TRK でのぞく） */genki:['元気いっぱい','たのしさがへりにくい'],ryouri:['料理じょうず','料理が早くできる'],tane:['たねはこび','外のふしぎな種を拾いに行く（風のせいれいはみんな）']};
 const EL_WORK={water:1.3,earth:.75},EL_STA={water:.7,earth:1.45};/* 属性ごとの作業スピード・スタミナ */
@@ -830,7 +750,7 @@ function genWorld(s,w){
   for(let y=CY-6;y<=CY-2;y++)for(let d=2;d<=7;d++){if(d>2&&d<7&&y>CY-6&&y<CY-2)continue;const x=hx(-d),j=y*W+x;if(y===CY-2&&d>=3&&d<=5)continue;/* はじめは壁がこわれている（クエストで直す） */s.obj[j]=(d===2&&y===CY-4)?'door':'hwall';s.floor[j]=s.obj[j]==='door'?'path':'';if(s.obj[j]==='hwall')s.hp[j]=BL.hwall.hp}
   if(V){for(let x=CX-7;x<=CX+8;x++)if(!s.obj[(CY+1)*W+x])s.floor[(CY+1)*W+x]='gravel';for(let y=CY+2;y<CY+12;y++)s.floor[y*W+CX]='gravel'}/* 火山のふもとは、砂利の道 */
   for(let d=1;d<=4;d++){const j=(CY-4)*W+hx(d);s.obj[j]='farm';s.floor[j]='';s.dyn[j]={g:50,wet:0,crop:'imo'}}/* 最初の畑は4つ。家の道をはさんだ向かいに横1列。作物は、はじめはいもだけ */
-  if(V){const put=id=>{let best=-1,bd=1e9;for(let y=CY-1;y<CY+12;y++)for(let x=CX+2;x<CX+12;x++){const j=y*W+x;if(s.ground[j]===1||s.obj[j]||s.floor[j])continue;if([j-1,j+1,j-W,j+W,j-W-1,j-W+1,j+W-1,j+W+1].some(k=>s.ground[k]===1||s.obj[k]==='stor'||s.obj[k]==='mbox'))continue;const d=Math.hypot(x+.5-(CX+5),y+.5-(CY+4.5));if(d<bd){bd=d;best=j}}if(best>=0)s.obj[best]=id};put('stor');put('mbox');for(let y=CY-13;y<CY-8;y++){const j=y*W+CX;if(!s.obj[j]&&s.ground[j]!==1)s.floor[j]='path'}st2Place(s);s.flags.st2v=2}/* 火山のふもと：食料箱と素材箱は、はじめから温泉のそばに */
+  if(V){const put=id=>{let best=-1,bd=1e9;for(let y=CY-1;y<CY+12;y++)for(let x=CX+2;x<CX+12;x++){const j=y*W+x;if(s.ground[j]===1||s.obj[j]||s.floor[j])continue;if([j-1,j+1,j-W,j+W,j-W-1,j-W+1,j+W-1,j+W+1].some(k=>s.ground[k]===1||s.obj[k]==='stor'||s.obj[k]==='mbox'))continue;const d=Math.hypot(x+.5-(CX+5),y+.5-(CY+4.5));if(d<bd){bd=d;best=j}}if(best>=0)s.obj[best]=id};put('stor');put('mbox');for(let y=CY-13;y<CY-8;y++){const j=y*W+CX;if(!s.obj[j]&&s.ground[j]!==1)s.floor[j]='path'}st2Place(s)}/* 火山のふもと：食料箱と素材箱は、はじめから温泉のそばに */
 }
 
 /* ---------- 火山のふもと（ステージ2）：温泉3か所・火山・熱の道 ---------- */
@@ -862,16 +782,6 @@ function st2Place(s){
   const c=[];for(let y=CY-12;y<=CY-4;y++)for(let x=CX-13;x<=CX-3;x++){const j=y*W+x;if(s.ground[j]===1||s.floor[j])continue;if(s.obj[j]&&!NATK.includes(s.obj[j]))continue;if(![j-1,j+1,j-W,j+W].some(k=>s.ground[k]===1))continue;c.push([Math.hypot(x+.5-(CX-5.5),y+.5-(CY-8)),j])}
   c.sort((a,b)=>a[0]-b[0]);const bw=c.slice(0,3).map(q=>q[1]);bw.forEach(j=>{s.obj[j]='boulder';delete s.dyn[j]});/* 西の温泉の水路をふさぐ大岩 */
   s.st2={sp:{a:0,b:0,c:0},d1:1,d2:1,d2fix:0,hvb:{},ash:{},ashKills:0,bw}}
-/* 前からのデータ：温泉を2つほって、火山・装置を置き、クエストを読みかえる */
-function st2Migrate(s){
-  const carve=(cx,cy,rx,ry)=>{for(let y=0;y<H;y++)for(let x=0;x<W;x++){const j=y*W+x;if(((x+.5-cx)/rx)**2+((y+.5-cy)/ry)**2>=1||s.floor[j])continue;if(s.obj[j]&&!NATK.includes(s.obj[j]))continue;s.obj[j]='';delete s.dyn[j];s.ground[j]=1}};
-  carve(HSPC.b[0],HSPC.b[1],2.4,1.7);carve(HSPC.c[0],HSPC.c[1],2.2,1.6);
-  for(let y=CY-13;y<CY-8;y++){const j=y*W+CX;if(!s.obj[j]&&s.ground[j]!==1)s.floor[j]='path'}
-  st2Place(s);
-  const q=s.quest,on=!!s.flags.onsen,shz=s.res.some(r=>r.name===SHIZUKU);
-  if(s.cleared||q>=QUESTS2.length){Object.assign(s.st2,{sp:{a:1,b:1,c:1},d1:1,d2:0,d2fix:1});s.st2.bw.forEach(j=>s.obj[j]='');BVOL.forEach(j=>s.obj[j]='');CRACKS.forEach(j=>{s.obj[j]='';s.floor[j]='path'});Object.assign(s.flags,{hinoDown:true,hReq:true,sReq:true,sprLook:true,volLook:true});s.quest=QUESTS2.length}
-  else{s.quest=on?(shz?5:4):(s.obj.includes('statue')?1:0);s.qTalked=false;s.qStory=null}
-  s.flags.st2v=2;SPRS=null}
 function springFX(k){const[cx,cy]=HSPC[k];sfx('level');toast(SPN[k]+'に、あたたかい湯がもどった！','good');logEv(SPN[k]+'がよみがえった');memo('♨️',SPN[k]+'がよみがえった');
   fx.push({k:'ring',x:cx*TS,y:cy*TS,life:1});for(let n=0;n<24;n++){const a=Math.random()*7,v=rnd(40,110);fx.push({k:'p',x:cx*TS,y:cy*TS,vx:Math.cos(a)*v,vy:Math.sin(a)*v-50,life:1,col:pick(['#fff','#bff3ec','#ffe9a0']),r:rnd(2,3.5)})}}
 function st2Tick(){if(WD!==1||!S.st2)return;const t=S.st2;
@@ -918,7 +828,7 @@ const DISHES=['bread','soup','yakiimo','yakizakana'],favDish=r=>{const ds=WD===0
 function imoSeedQuestPlots(){if(!S.imoSeedQuestPlots){S.imoSeedQuestPlots=[];for(let j=0;j<S.obj.length;j++){const d=S.dyn[j];if(S.obj[j]==='farm'&&d&&d.crop==='imo'&&(d.paid||d.sown===true))S.imoSeedQuestPlots.push(j)}}return S.imoSeedQuestPlots}
 const farmsBare=()=>{let n=0;for(let j=0;j<S.obj.length;j++)if(S.obj[j]==='farm'&&S.dyn[j]&&S.dyn[j].crop===null)n++;return n};/* たねをえらんでいない畑の数 */
 const cropK=d=>d.crop===undefined?'mugi':d.crop;/* 作物。null はまだえらんでいない（前からの畑はこむぎ） */
-const cropOn=k=>!S.crops||!!S.crops[k];/* 使える作物（前からのデータは、ぜんぶ使える） */
+const cropOn=k=>!!S.crops[k];/* 使える作物 */
 const CROPS={mugi:{name:'こむぎ',days:2,yield:1,desc:'2日で育つ。パンの材料'},tomato:{name:'キャベツ',days:2,yield:1,desc:'2日で育つ'},imo:{name:'いも',days:3,yield:2,desc:'3日で育つ。たくさんとれる'}};
 for(const k in CROPS)BL['seed:'+k]={name:CROPS[k].name+'のたね',kind:'seed',desc:CROPS[k].desc+'。畑をタップしてまく'};/* たねは、お供え箱からえらんで畑にまく */
 const RECIPES=[{out:'soup',need:{tomato:1,imo:1},time:45},{out:'bread',need:{mugi:2},time:35},{out:'yakizakana',need:{fish:1},time:20},{out:'yakiimo',need:{imo:1},time:15},{out:'yakiberry',need:{berry:2},time:20},{out:'yakiapple',need:{apple:1},time:20},{out:'salad',need:{tomato:2},time:25}];RECIPES.forEach(R=>R.time=Math.round(Math.round(Math.round(R.time*1.5)*1.5)*1.5));/* 従来の調理時間からさらに1.5倍、そのうえさらに1.5倍 */{const FIXT={yakizakana:60,yakiberry:60,yakiapple:60,yakiimo:50,salad:90};RECIPES.forEach(R=>{if(FIXT[R.out])R.time=FIXT[R.out]})}/* 焼き魚・焼きベリー・焼きりんごは60分、ベイクドポテトは50分、サラダは90分 */RECIPES.forEach(R=>{FOODS[R.out].v=Object.keys(R.need).reduce((t,k)=>t+FOODS[k].v*R.need[k],0)});/* 料理でふくれるおなかは、使った材料の合計 */SOUPR=RECIPES.find(R=>R.out==='soup');soupFilter();/* time：料理にかかる時間（レシピごと） */
@@ -2109,8 +2019,8 @@ const THX={"table": "テーブル、ありがとう！ これで、ベリーを�
 SUBQ.forEach(q=>{const T=THX[q.k],X=q.X;if(!T||!X||!X.length)return;if(/ありがと|感謝|恩に着る/.test(X[X.length-1][1]))X[X.length-1]=['K',T];else X.push(['K',T])});
 for(const k in THXB)if(FIREB[k])FIREB[k].X.push(['K',THXB[k]]);
 function inHouseFurn(){let n=0;for(let j=0;j<S.obj.length;j++){const o=S.obj[j];if(!o||!BL[o]||BL[o].kind!=='furn'||BL[o].trap)continue;if(HOUSES.some(h=>h.set&&h.set.has(j)))n++}return n}
-function qAt(t){const qi=QUESTS.findIndex(q=>q.text===t);if(qi<0)return false;const h=S.questOrder35;return h?!!(h.done[t]||h.accepted[t]||S.quest===qi&&S.qTalked):(S.quest>qi||S.quest===qi&&!!S.qTalked)}/* そのメインクエストを受けたあと */
-function qDone(text){const index=QUESTS.findIndex(q=>q.text===text);if(index<0)return false;if(S.qStory===index)return false;return S.questOrder35?!!S.questOrder35.done[text]:S.quest>index}
+function qAt(t){const qi=QUESTS.findIndex(q=>q.text===t);if(qi<0)return false;return (S.quest>qi||S.quest===qi&&!!S.qTalked)}/* そのメインクエストを受けたあと */
+function qDone(text){const index=QUESTS.findIndex(q=>q.text===text);if(index<0)return false;if(S.qStory===index)return false;return S.quest>index}
 const SUB_MAIN_AFTER={chair2:'食卓をたのもう',farm10:'畑を6つにしよう',light3:'火のせいれいをむかえよう',oven:'火のせいれいをむかえよう'};
 function subOfferReady(q){if(S.qStory!=null||QUEST_CLEAR_WAIT)return false;return WD!==0||!SUB_MAIN_AFTER[q.k]||qDone(SUB_MAIN_AFTER[q.k])}
 const LEVEL_HELP={2:['benchbreak','chair2'],3:['oven','bed3'],4:['jar2','farm10'],5:['toy2','deco3'],8:['room','paint','parasol']};
@@ -2302,11 +2212,11 @@ function inspireQuest(q,phase='accept'){const ids=questRecipeIds(q,phase).filter
   const known=S.guardianIdeas||(S.guardianIdeas={});S.recipes||(S.recipes={});const fresh=ids.filter(id=>!known[id]);ids.forEach(id=>{known[id]=true;S.recipes[id]=true});if(!fresh.length)return;
   const text='あたらしいかたち：'+fresh.map(id=>BL[id].name).join('・');toast(text,'good');memo('💡',text);
 }
-function otherModeFurnitureRecipes(){const known=new Set();for(const w of[0,1]){let d=LIVE&&LIVE[w];if(!d)try{const raw=KV.getItem(SAVE_KEYS[w]);if(raw)d=JSON.parse(raw)}catch(e){}if(!d||d.free)continue;if(d.qVer<28)for(const id of['bench','chime'])delete(d.recipes||{})[id];if(d.qVer<29)for(const id of['chair','stool'])delete(d.recipes||{})[id];syncQuestRecipes(d);for(const id of FURN)if((d.recipes||{})[id])known.add(id);if((d.recipes||{}).window)known.add('window')}return known}
-function syncQuestRecipes(s){if(s.qVer===34&&(s.world||0)===0)migrateQuest35(s);const shared=s.free?otherModeFurnitureRecipes():null,learn=(q,phase)=>{for(const id of questRecipeIds(q,phase)){if(s.free&&BL[id].kind==='furn')continue;(s.recipes||(s.recipes={}))[id]=true;(s.guardianIdeas||(s.guardianIdeas={}))[id]=true}};
+function otherModeFurnitureRecipes(){const known=new Set();for(const w of[0,1]){let d=LIVE&&LIVE[w];if(!d)try{const raw=KV.getItem(SAVE_KEYS[w]);if(raw)d=JSON.parse(raw)}catch(e){}if(!d||d.free)continue;syncQuestRecipes(d);for(const id of FURN)if((d.recipes||{})[id])known.add(id);if((d.recipes||{}).window)known.add('window')}return known}
+function syncQuestRecipes(s){const shared=s.free?otherModeFurnitureRecipes():null,learn=(q,phase)=>{for(const id of questRecipeIds(q,phase)){if(s.free&&BL[id].kind==='furn')continue;(s.recipes||(s.recipes={}))[id]=true;(s.guardianIdeas||(s.guardianIdeas={}))[id]=true}};
   for(const id of FURN)if(!BL[id].offerOnly&&((s.inv||{})[id]||(s.obj||[]).includes(id)||(s.orders||[]).some(o=>o.type===id)||Object.values(s.win||{}).includes(id)))(s.recipes||(s.recipes={}))[id]=true;/* 旧セーブの所持・設置済み家具は既知の形として維持 */
   if((s.inv||{}).window||(s.obj||[]).includes('window')||(s.orders||[]).some(o=>o.type==='window')||Object.values(s.win||{}).includes('window'))(s.recipes||(s.recipes={})).window=true;
-  const list=QL[s.world||0]||[];list.forEach((q,i)=>{const h=s.questOrder35,done=h?!!h.done[q.text]:i<s.quest&&s.qStory!==i,accepted=h?(done||h.accepted[q.text]||i===s.quest&&s.qTalked):(i<s.quest||i===s.quest&&s.qTalked);if(accepted)learn(q,'accept');if(done)learn(q,'clear')});
+  const list=QL[s.world||0]||[];list.forEach((q,i)=>{const done=i<s.quest&&s.qStory!==i,accepted=i<s.quest||i===s.quest&&s.qTalked;if(accepted)learn(q,'accept');if(done)learn(q,'clear')});
   for(const q of SUBQ){if(q.w!=null&&q.w!==(s.world||0))continue;const done=(s.subDone||{})[q.k];if(done||(s.subSt||{})[q.k]>=2||(s.subSeen||{})[q.k])learn(q,'accept');if(done)learn(q,'clear')}
   if(!s.free&&(s.lv||1)>=4){s.unlocked||(s.unlocked={});s.unlocked.window=true;(s.recipes||(s.recipes={})).window=true;(s.guardianIdeas||(s.guardianIdeas={})).window=true}
   if(s.free){if(shared.has('window')){(s.recipes||(s.recipes={})).window=true;(s.unlocked||(s.unlocked={})).window=true}else{delete(s.recipes||{}).window;delete(s.unlocked||{}).window}
@@ -2599,7 +2509,6 @@ function kurashi(key,el,v,mt){if(!S||!ELEM[el])return;const K=S.kb||(S.kb={done:
 function logEv(t){if(!S.log)S.log=[];S.log.push([dayNo(),t]);if(S.log.length>300)S.log.shift()}
 function checkQuest(){
   if(QUEST_CLEAR_WAIT&&QUEST_CLEAR_WAIT.quest!==S.quest)QUEST_CLEAR_WAIT=null;
-  if(S.questOrder35&&S.qStory==null)resumeQuest35(S);
   TALKW=null;if(S.qStory==null)QUESTCLEARW=null;finalCheck();
   if(NEWRES!=null||NEWQ.length)return;
   if(S.cleared||S.quest>=QUESTS.length)return;
@@ -2623,7 +2532,7 @@ function checkQuest(){
     if(q.pay)for(const k in q.pay)S.mat[k]=Math.max(0,(S.mat[k]||0)-q.pay[k]);/* 材料を使うクエスト */
     S.quest++;S.qTalked=false;sfx('quest');logEv('目標「'+q.text+'」をたっせい');
     if(q.story){S.qStory=S.quest-1;TALKW=storyWho(q);QUESTCLEARW=TALKW;if(q.text.startsWith('村レベル'))focusQuestSpeaker(TALKW);renderQuest();renderPalette();/* お礼は吹き出しをタップしてから。自動では会話を開かない */return}
-    if(S.questOrder35){S.questOrder35.done[q.text]=true;resumeQuest35(S)}const after=questGives(q);inspireQuest(q,'clear');if(after)after();
+    const after=questGives(q);inspireQuest(q,'clear');if(after)after();
     renderQuest();renderPalette();
   }else renderQuest();
 }
@@ -2661,9 +2570,9 @@ function storyWho(q){if(q.story&&spkOK(q.story[0]&&q.story[0][0]))return q.story
 function startTalk(){if(!$('#dialog').hidden)return;
   if(S.qStory!=null){const sq=QUESTS[S.qStory];TALKW=null;QUESTCLEARW=null;S.flags.talked1=true;
     if(sq.pre&&!S.flags['pre'+WD+'_'+S.qStory]){S.flags['pre'+WD+'_'+S.qStory]=true;questGives(sq,sq.pre);if(sheet==='food')renderSheet()}/* お礼の会話がはじまったら、すぐわたす（ベリーなど） */
-    let once=0;return dialog(ideaDialogue(sq,sq.story,'clear'),()=>{if(once++||S.qStory!==QUESTS.indexOf(sq))return;/* 2回よばれても1回だけ */if(QUEST_CLEAR_WAIT&&QUEST_CLEAR_WAIT.quest===S.qStory)QUEST_CLEAR_WAIT=null;if(S.quest<=S.qStory)S.quest=S.qStory+1;/* 設置クエストは、お礼を聞き終えてから次の目標へ */S.qStory=null;if(S.questOrder35){S.questOrder35.done[sq.text]=true;resumeQuest35(S)}const after=questGives(sq);inspireQuest(sq,'clear');{const rw=sq.reward??5;if(rw){S.pt+=rw;S.totalPt+=rw;toast('ごほうび：パワー+'+rw,'good')}}renderQuest();renderPalette();if(after)after();else checkQuest()},null)}
+    let once=0;return dialog(ideaDialogue(sq,sq.story,'clear'),()=>{if(once++||S.qStory!==QUESTS.indexOf(sq))return;/* 2回よばれても1回だけ */if(QUEST_CLEAR_WAIT&&QUEST_CLEAR_WAIT.quest===S.qStory)QUEST_CLEAR_WAIT=null;if(S.quest<=S.qStory)S.quest=S.qStory+1;/* 設置クエストは、お礼を聞き終えてから次の目標へ */S.qStory=null;const after=questGives(sq);inspireQuest(sq,'clear');{const rw=sq.reward??5;if(rw){S.pt+=rw;S.totalPt+=rw;toast('ごほうび：パワー+'+rw,'good')}}renderQuest();renderPalette();if(after)after();else checkQuest()},null)}
   const q=QUESTS[S.quest];if(!q||!q.talk)return;TALKW=null;QUESTCLEARW=null;S.flags.talked1=true;
-  let once=0;dialog(ideaDialogue(q,q.talk.lines),()=>{if(once++||QUESTS[S.quest]!==q)return;/* 2回よばれても1回だけ */S.qTalked=true;if(S.questOrder35)S.questOrder35.accepted[q.text]=true;recount();
+  let once=0;dialog(ideaDialogue(q,q.talk.lines),()=>{if(once++||QUESTS[S.quest]!==q)return;/* 2回よばれても1回だけ */S.qTalked=true;recount();
     for(const id of q.talk.learn||[])S.recipes[id]=true;
     const after=q.talk.gives?questGives(q,q.talk.gives):null;inspireQuest(q);/* クエストに使う物は、会話のあとでわたす */
     sfx('quest');renderQuest();renderPalette();if(after)after();else checkQuest()},null)}
@@ -4504,7 +4413,7 @@ function renderSheet(){
       if(S.stamps)btn(bx,'もらった',true);else btn(bx,SP(50),S.pt<50,()=>{S.pt-=50;S.stamps=true;applyFeats();toast('かたどりスタンプをもらった！「どうぐ」から使える','good');trade()},1)}
     const r4=sec('土地');
     if(S.baseLv<BASE_R.length-1){const c=BASE_COST[S.baseLv],need=BASE_LV[S.baseLv],nx=BASE_R[S.baseLv+1]*2;
-      const bx=row(r4,'基地を広げる（'+nx+'×'+nx+'マス）','置ける範囲が広がる');btn(bx,S.lv<need?'村Lv'+need:SP(c),S.lv<need||S.pt<c,()=>{S.pt-=c;S.baseLv++;S.baseV=2;recount();toast('基地が広がった！','good');trade()},1)}
+      const bx=row(r4,'基地を広げる（'+nx+'×'+nx+'マス）','置ける範囲が広がる');btn(bx,S.lv<need?'村Lv'+need:SP(c),S.lv<need||S.pt<c,()=>{S.pt-=c;S.baseLv++;recount();toast('基地が広がった！','good');trade()},1)}
     else{const bx=row(r4,'基地を広げる','これ以上は広げられない',null,true);btn(bx,'最大',true)}
   }else if(sheet==='inv'){
     T.textContent='お供え箱';
@@ -4771,7 +4680,7 @@ function renderSheet(){
     }else if(sheetArg==='record'){
       const st=el('<div class="sec"><h3>これまで</h3><div class="recs"></div></div>'),rw=st.querySelector('.recs');
       for(const[a,b]of[['すごした日',dayNo()+'日'],...(S.score?[['クリアスコア',S.score.rank+'（'+S.score.tot+'てん）']]:[]),['のりこえた夜',(S.nights||0)+'回'],['いまのせいれい',S.res.length+'人'],['よんだせいれい',(S.summons||0)+'人'],['消えてしまったせいれい',(S.deaths||0)+'人'],
-        ['追いはらった「コワイノ」',(S.kills||0)+'体'],['オオカゲ',(S.bossKills||0)+'回'],['ヌシのかけら',(S.shards||0)+'つ'],['めぶきのしずく',(S.mebuki||0)+'こ'],['ためたせいれいパワー',Math.floor(S.totalPt||0)+''],['みどりのマス',GRASSN+'マス'],['村レベル','Lv'+S.lv],['たっせいした目標',(S.questOrder35?Object.keys(S.questOrder35.done).length:S.quest)+'こ']]){const d=el('<div class="st"><span></span><b></b></div>');d.firstChild.textContent=a;d.lastChild.textContent=b;rw.appendChild(d)}
+        ['追いはらった「コワイノ」',(S.kills||0)+'体'],['オオカゲ',(S.bossKills||0)+'回'],['ヌシのかけら',(S.shards||0)+'つ'],['めぶきのしずく',(S.mebuki||0)+'こ'],['ためたせいれいパワー',Math.floor(S.totalPt||0)+''],['みどりのマス',GRASSN+'マス'],['村レベル','Lv'+S.lv],['たっせいした目標',S.quest+'こ']]){const d=el('<div class="st"><span></span><b></b></div>');d.firstChild.textContent=a;d.lastChild.textContent=b;rw.appendChild(d)}
       body.appendChild(st);
       /* 思い出帳ときろくをひとつに：日ごとのできごと */
       const E=[];(S.memo||[]).forEach(([d,e,t],i)=>E.push([d,i,e+' '+t]));(S.log||[]).forEach(([d,t],i)=>E.push([d,1e4+i,t]));E.sort((a,b)=>b[0]-a[0]||b[1]-a[1]);
@@ -4962,7 +4871,7 @@ function thumb(cv2,k,open){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='355';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='356';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
