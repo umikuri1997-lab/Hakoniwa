@@ -1893,7 +1893,7 @@ function takeDrop(d,r){let nm;
   if(d.id.startsWith('mat:')){const k=d.id.slice(4),add=Math.max(0,Math.min(d.n,matCap()-matTot()));S.mat[k]=(S.mat[k]||0)+add;if(!S.gotMat)S.gotMat={};S.gotMat[k]=(S.gotMat[k]||0)+add;nm=MATN[k]+(add?'×'+add:'（素材箱がいっぱい）')}
   else{giveItem(d.id,d.n);nm=(d.id.startsWith('seed:')?CROPS[d.id.slice(5)].name+'のたね':BL[d.id].item||BL[d.id].name)+'×'+d.n}
   toast((r?r.name+'が':'')+'おとしものをひろった：'+nm,'good')}
-const WUP=[null,{pc:30,mat:{wood:20,stone:25}},{pc:60,mat:{wood:30,stone:50}}];/* 見張り台の強化 */const WATCH=[null,{dmg:1,range:4.2,cd:24},{dmg:2,range:4.8,cd:18},{dmg:3,range:5.5,cd:14}];
+const WUP=[null,{pc:30,mat:{wood:30,stone:35}},{pc:60,mat:{wood:45,stone:75}}];/* 見張り台の強化 */const WATCH=[null,{dmg:1,range:4.2,cd:24},{dmg:2,range:4.8,cd:18},{dmg:3,range:5.5,cd:14}];
 function updTowers(dt){
   if(!S.enemies.length)return;
   for(const j of TOWERS){const o=S.obj[j];if(o!=='watch'&&o!=='tower')continue;
