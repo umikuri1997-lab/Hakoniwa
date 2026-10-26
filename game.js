@@ -1684,6 +1684,7 @@ function die(r){
   toast(r.name+'が空腹で力尽きてしまった…','warn');
   {const DT=S.res.length?deathTalk(r):null;if(DT&&DT.length)setTimeout(()=>dialog(DT),900);else{const key=isKey(r.name),fk=key?'deathTold':'death2Told';if(!S.flags[fk]&&S.res.length){S.flags[fk]=true;const sp=S.res.find(q=>KEYRES.includes(q.name))||S.res[0],n=r.name;
     setTimeout(()=>dialog((key?DEATHL:DEATHL2)[elemKey(sp)](n).map(t=>[sp.name,t])),900)}}}/* 話す子の性格で説明する */
+  if(!S.res.length){S.wipe=true;for(const L of[S.buried||[],S.lost||[]])for(const q of L)delete q.unb;for(let j=0;j<S.obj.length;j++)if(S.obj[j]==='grave'&&S.dyn[j])S.dyn[j].buried=true}/* 全滅：埋葬する子がいないので、カミサマが見送って、次の朝から呼びもどせるようにする */
   if(!S.res.length)setTimeout(()=>STATUE<0?gameOver():dialog([[GOD,'みんな、消えてしもうた…。'],[GOD,'じゃが、だいじょうぶじゃ。朝になれば、物語のせいれいから神殿の「！」で呼びもどせるぞい。'],[GOD,'人数が少ないうちは、「コワイノ」も少なめじゃ。オオカゲも、なかまがそろうまでは来んはずじゃ。'],[GOD,'それと…これを使うがよい。'+(lvOK('wall')?'石の塀':'柵')+'を10こ、やろう。']],()=>{const w=lvOK('wall')?'wall':'fence';giveItem(w,10);toast(BL[w].name+'を10こもらった','good')}),800);/* 石の塀を覚えていたら、石の塀 */
 }
 
@@ -2004,7 +2005,7 @@ function stepWorld(dt){if((SUBT+=dt)>1){SUBT=0;checkSub();checkSev();guardTick()
   if(prevH<6&&h>=6&&S.lastMorning!==dayNo()){S.lastMorning=dayNo();morning()}/* 1日のリセットは朝6時にまとめて */
   if(prevH<8&&h>=8&&S.godGone&&!S.cleared&&!S.godVisit&&dayNo()>=(S.godNextVisitDay||1)&&Math.random()<(cnt('kamizo')?.5:.25)){S.godVisit=true;S.godNextVisitDay=dayNo()+2;/* 来た翌日は休み。像があれば来訪率は50% */sfx('arrive');toast('カミサマが遊びにきた！ 神殿の前で交換できる','good')}
   if(prevH<18&&h>=18&&S.godVisit){S.godVisit=false;S.godNextVisitDay=Math.max(S.godNextVisitDay||0,dayNo()+2);toast('カミサマは帰っていった')}
-  if(prevH<20&&h>=20&&S.enemyOn&&S.lastWarn!==dayNo()){S.lastWarn=dayNo();S.wave=waveFor(dayNo()+1);if(S.finalNight&&!S.cleared&&S.res.some(r=>r.name===POKO)){S.finalNight=false;S.finalOn=true;/* フタバがいない夜は、ヨルノオオカゲは来ない */S.wave=['boss2','boss','boss'].concat(S.wave.filter(t=>t!=='boss'&&t!=='boss2'),['brute','brute','brute','fast','fast','fast','breaker','breaker']);toast('最後の夜…！ ヨルノオオカゲとオオカゲ2体がやってくる','warn')}else if(S.trial){S.trialOn=true;S.trial=false;S.wave=['boss'].concat(S.wave.filter(t=>t!=='boss'),['brute','brute','fast','fast'])}else if(S.today==='odayaka'){const bo=S.wave.filter(t=>t==='boss'),ot=S.wave.filter(t=>t!=='boss');S.wave=bo.concat(ot.slice(0,Math.ceil(ot.length/2)))}/* 「コワイノ」の予告はしない */}
+  if(prevH<20&&h>=20&&S.enemyOn&&S.lastWarn!==dayNo()){S.lastWarn=dayNo();S.wave=waveFor(dayNo()+1);if(S.wipe){if(S.res.length>=5)S.wipe=false;else S.wave=S.wave.filter(t=>!EN[t]||!EN[t].boss).slice(0,[0,1,2,3,4][S.res.length])}/* 全滅のあと、5人そろうまでは、コワイノは人数と同じ数まで（オオカゲは来ない） */if(S.finalNight&&!S.cleared&&S.res.some(r=>r.name===POKO)){S.finalNight=false;S.finalOn=true;/* フタバがいない夜は、ヨルノオオカゲは来ない */S.wave=['boss2','boss','boss'].concat(S.wave.filter(t=>t!=='boss'&&t!=='boss2'),['brute','brute','brute','fast','fast','fast','breaker','breaker']);toast('最後の夜…！ ヨルノオオカゲとオオカゲ2体がやってくる','warn')}else if(S.trial){S.trialOn=true;S.trial=false;S.wave=['boss'].concat(S.wave.filter(t=>t!=='boss'),['brute','brute','fast','fast'])}else if(S.today==='odayaka'){const bo=S.wave.filter(t=>t==='boss'),ot=S.wave.filter(t=>t!=='boss');S.wave=bo.concat(ot.slice(0,Math.ceil(ot.length/2)))}/* 「コワイノ」の予告はしない */}
   if(prevH<3&&h>=3)for(const H of HOUSES){const L=S.res.filter(x=>x.act&&(x.act.type==='sleep'||x.act.type==='stay')&&H.set.has((x.y|0)*W+(x.x|0)));if(houseComfort(H).over)for(const x of L){x.energy=Math.min(x.energy,60);x.fun=Math.max(0,x.fun-15);x.crowd=dayNo()}else if(L.length){const C=houseComfort(H);for(const x of L){const c=comfyFor(H,x,C);if(c>=180){x.fun=Math.min(100,x.fun+10);x.comfy=dayNo()}else if(c<90)x.fun=Math.max(0,x.fun-5)}}}/* 住み心地がいいと、ぐっすり眠れる *//* 家につめこむと、きゅうくつで眠れない */
   if(prevH>h&&S.enemyOn&&S.wave&&S.lastNight!==dayNo()-1){S.lastNight=dayNo()-1;/* 「コワイノ」は夜12時に来る（前の日の夜としてかぞえる） */S.nights++;const w=S.wave;S.wave=null;if(w.length)spawnWave(w)}
   if(S.seedDay!==dayNo()&&h>=6){S.seedDay=dayNo();const n=Math.random()<.5?1:0,b=S.t-S.t%1440;S.seeds=[];S.seedPlan=Array.from({length:n},()=>b+360+Math.random()*720).sort((x,y)=>x-y)}/* ふしぎな種は1日1こまで（50%）。ひろわなかったら、あしたには消える */
@@ -4917,7 +4918,7 @@ function thumb(cv2,k,open){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='316';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='317';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
