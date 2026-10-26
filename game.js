@@ -3658,6 +3658,7 @@ function carryIcons(r){/* 持っているものを、そのまま1つずつ並�
   if(r.meal){if(r.meal.items&&r.meal.items.length)for(const k of r.meal.items)out.push(em(k));else for(let i=0,n=Math.ceil(typeof r.meal==='number'?r.meal:r.meal.u||1);i<n;i++)out.push(typeof r.meal==='number'?'🍙':(r.meal.e||'🍙'))}
   if(!out.length&&r.cing&&!isNight()){const R=RECIPES.find(x=>x.out===r.cing.rec);out.push(R?em(Object.keys(R.need)[0]):'🧺')}
   return out}
+const NOFACE={'😊':'🎵','😌':'🎵','😆':'✨','😋':'🍴','😣':'💦','😩':'💤','😴':'💤','😭':'💧','😢':'💧','😨':'💦','😱':'❗','😵':'💫','😠':'💢','😤':'💢'};/* 吹き出しに顔の絵文字は出さない（かわりの絵） */
 let BUBQ=null;
 function objBelow(r){const j=r.faceObj;if(j==null||j<0)return false;return ((j/W)|0)+.5>r.y+.3&&Math.abs(j%W+.5-r.x)<.6}/* 下にある木・岩は正面のまま */
 function drawRes(r,now){
@@ -3720,7 +3721,7 @@ function drawRes0(r,now){
   if(!zzz&&SUBW[r.name]){talkBub(px,by,now,'#ffd56b');return}/* サブクエスト：黄色の吹き出し *//* 話したそうにしている：水色の吹き出し */
   if(CLAPON)return;/* 拍手中は吹き出しを出さない */
   const warn=r.hunger<20,tiredW=false;
-  if(!ci&&(r.bubble||warn||tiredW)){const t=warn&&!r.bubble?'🍙':tiredW&&!r.bubble?'😩':r.bubble;
+  if(!ci&&(r.bubble||warn||tiredW)){const t=NOFACE[warn&&!r.bubble?'🍙':tiredW&&!r.bubble?'😩':r.bubble]||(warn&&!r.bubble?'🍙':tiredW&&!r.bubble?'😩':r.bubble);/* 顔の絵文字は使わない */
     ctx.font='16px sans-serif';const bw=Math.max(27,Math.ceil(ctx.measureText(t).width)+9);/* 吹き出しは1.5倍 */
     ctx.fillStyle=warn?'#ffd2cc':'#fff';rr(ctx,px-bw/2,by-45,bw,24,9);ctx.beginPath();ctx.moveTo(px-4.5,by-21.5);ctx.lineTo(px,by-15);ctx.lineTo(px+4.5,by-21.5);ctx.fill();
     if(t==='💬'){for(let d=-1;d<=1;d++)circ(ctx,px+d*6.5,by-33,2.3,'#7a7064')}/* おしゃべりは点々だけ */
