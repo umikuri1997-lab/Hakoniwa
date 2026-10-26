@@ -1794,14 +1794,10 @@ function lightAt(x,y){for(const j of LIGHTS){const o=S.obj[j];const lx=j%W+(o===
 const EREACH=new WeakMap();
 const ZUKAN={basic:'いちばんよく見るコワイノ。夜になると、せいれいをねらってやってくる。',fast:'足がとても速い。体は小さくて、すぐ追いはらえる。',thief:'畑の実った作物をぬすみにくる。見つかると、すぐにげる。',brute:'体がかたくて力も強い。なかなか追いはらえない。',breaker:'壁をこわすのが大好き。まわり道をしないで、まっすぐこわしてくる。',trapper:'罠を見つけると、こわしにくる。',boss:'大きなコワイノ。まわりのせいれいも巻きこんで攻撃する。',ash:'灰をまきちらして、施設をしばらく使えなくする。',rockc:'岩みたいにかたい。動きはおそい。',hino:'火山からやってくる大きなコワイノ。熱の切りかえ装置をこわそうとする。',boss2:'夜の力をたくわえた、いちばん大きなコワイノ。'};
 function shakeScreen(){const v=$('#cv');v.classList.remove('shk');void v.offsetWidth;v.classList.add('shk');setTimeout(()=>v.classList.remove('shk'),600)}
-function bigBanner(title,sub,col){/* 画面のまんなかに大きな文字を出す。「進む」をおすまで時間を止めておく */BOSSHOLD=Infinity;const d=document.createElement('div');d.style.cssText='position:fixed;left:0;right:0;top:32%;z-index:21;text-align:center;pointer-events:none;color:#ffe9a6;text-shadow:0 0 18px '+col+',0 3px 0 #05030c;font-weight:bold;opacity:0;transition:opacity .8s ease,letter-spacing 2.4s ease;letter-spacing:.05em';
-  d.innerHTML='<div style="font-size:34px"></div><div style="font-size:14px;margin-top:8px;color:#fff3d6"></div><button class="btn pri" style="position:fixed;left:50%;bottom:16%;transform:translateX(-50%);min-width:140px;pointer-events:auto;opacity:0;transition:opacity .6s ease">進む</button>';d.children[0].textContent=title;d.children[1].textContent=sub;document.body.appendChild(d);const bt=d.children[2];
-  bt.onclick=()=>{sfx('tap');BOSSHOLD=0;bt.disabled=true;d.style.transition='opacity .6s ease';d.style.opacity='0';setTimeout(()=>d.remove(),700)};
-  requestAnimationFrame(()=>requestAnimationFrame(()=>{d.style.opacity='1';d.style.letterSpacing='.3em'}));setTimeout(()=>{bt.style.opacity='1'},1600)}/* 演出を見てから、「進む」が出る */
 const BOSSFX={boss:{col:'#ff3b6b',sub:'コワイノたちの親玉が、すがたをあらわした'},boss2:{col:'#ffd84a',sub:'夜の力をたくわえた、いちばん大きなコワイノ'}};
-function bossEntrance(e){/* オオカゲ・ヨルノオオカゲの登場：画面がよって、ゆれて暗くなり、名前が大きく出る */const B=BOSSFX[e.type];SKIP=false;/* 登場のあいだは時間を止めて、すがたを見せる */centerOn(e.x*TS,e.y*TS);shakeScreen();dlgCue('dim');sfx('hit');
-  for(let n=0;n<4;n++)fx.push({k:'ring',x:e.x*TS,y:e.y*TS,life:1+n*.4,col:B.col});bigBanner(EN[e.type].name,B.sub,B.col)}
-let BOSSHOLD=0;/* ボスの登場・追いはらいの演出のあいだ、時間を止める（「進む」をおすまで） */
+function bossEntrance(e){/* オオカゲ・ヨルノオオカゲの登場：画面がよって、ゆれて暗くなる */const B=BOSSFX[e.type];SKIP=false;/* 登場のあいだは時間を止めて、すがたを見せる */const z0=cam.z;camAnim={fz:cam.z,tz:Math.min(3,cam.z*1.5),fx:cam.x+VW/cam.z/2,fy:cam.y+VH/cam.z/2,tx:e.x*TS,ty:e.y*TS-12*(EN[e.type].size||1),t:0,dur:.8};BOSSHOLD=performance.now()+3200;setTimeout(()=>{camAnim={fz:cam.z,tz:z0,fx:cam.x+VW/cam.z/2,fy:cam.y+VH/cam.z/2,tx:cam.x+VW/cam.z/2,ty:cam.y+VH/cam.z/2,t:0,dur:.8}},3200);/* ボスへズームアップして、少しのあいだ時間を止める（文字は出さない） */shakeScreen();dlgCue('dim');sfx('hit');
+  for(let n=0;n<4;n++)fx.push({k:'ring',x:e.x*TS,y:e.y*TS,life:1+n*.4,col:B.col});}
+let BOSSHOLD=0;/* ボスの登場・追いはらいの演出のあいだ、時間を止める */
 function bossDefeatFX(e){const sand=e.type==='boss'||e.type==='boss2';if(sand)sfx('crack');EVAP.push({e,t0:performance.now()+(sand?350:0),dur:sand?4200:3200,sand});/* オオカゲ・ヨルノオオカゲ：ピシッとひびが入って、上から砂になってくずれる *//* 時間を止めて、消えていく様子を見せる *//* オオカゲをたおしたとき：白く光って、ゆれて、光の輪と粒がはじける */const B=BOSSFX[e.type]||BOSSFX.boss,px=e.x*TS,py=e.y*TS;camAnim={fz:cam.z,tz:Math.min(3,cam.z*1.6),fx:cam.x+VW/cam.z/2,fy:cam.y+VH/cam.z/2,tx:px,ty:py-12*(EN[e.type].size||1),t:0,dur:.8};/* ボスへズームアップ */dlgCue('flash');shakeScreen();
   for(let n=0;n<6;n++)fx.push({k:'ring',x:px,y:py,life:1+n*.3,col:n%2?'#fff3d6':B.col});
   for(let n=0;n<36;n++){const a=n/36*6.28,v=80+(n%3)*40;fx.push({k:'p',x:px,y:py-20,vx:Math.cos(a)*v,vy:Math.sin(a)*v-60,life:1.4,col:n%2?'#fff3a0':B.col,r:3.2})}
@@ -2481,6 +2477,7 @@ function undo(){
   if(u.seed){if(o==='sprout'){clearObj(u.j);giveItem(u.id,1)}else return toast('もう手をつけているので、もどせません')}
   else if(u.pc!=null){if(o==='site'){if(u.id==='statue')return toast('神殿はもどせません');clearObj(u.j);S.pt+=u.pc;for(const k in u.mat||{})S.mat[k]=(S.mat[k]||0)+u.mat[k]}else return toast('もう手をつけているので、もどせません')}
   else if(BL[u.id].floor){S.floor[u.j]=u.prevFloor;if(u.prevFloor)S.inv[u.prevFloor]=Math.max(0,inv(u.prevFloor)-1);giveItem(u.id,1)}
+  else if(RUGS.has(u.id)&&S.rug&&S.rug[u.j]===u.id&&o!==u.id){delete S.rug[u.j];giveItem(u.id,1)}/* 家具の下にしいたラグ */
   else{if(o!==u.id&&!(u.id==='farm'&&o==='plot'))return toast('もうもどせません');clearObj(u.j);giveItem(u.id,1)}
   recount();renderPalette();
 }
@@ -3347,7 +3344,7 @@ let HOUSES=[];
 function houseWhy(j0){const isB=j=>HOME_WALLS.has(typeAt(j))||HOME_DOORS.has(typeAt(j));if(!isB(j0))return null;findHouses();if(HOUSES.some(h=>h.set.has(j0)))return null;
   const comp=new Set([j0]),q=[j0];while(q.length&&comp.size<600){const j=q.pop(),x=j%W,y=(j/W)|0;for(let b=-1;b<=1;b++)for(let a=-1;a<=1;a++){const k=(y+b)*W+x+a;if(k>=0&&k<W*H&&!comp.has(k)&&isB(k)){comp.add(k);q.push(k)}}}
   if(![...comp].some(j=>S.obj[j]==='door'||S.obj[j]==='sdoor'))return 'まだ家になっていません。かべのどこかにドアをつけると、家になります';
-  return 'まだ家になっていません。かべにすきまがあるか、中が広すぎます（中は160マスまで）。ななめのすきまも、ふさいでね'}/* 家にならない理由 */
+  return 'まだ家になっていません。かべにすきまがあるか、中が広すぎます（中は160マスまで）'}/* 家にならない理由 */
 function findHouses(){const isB=j=>HOME_WALLS.has(typeAt(j))||HOME_DOORS.has(typeAt(j));const seen=new Uint8Array(W*H),out=[],brk=new Set();for(const b of S.broken||[])if(!S.obj[b.j]&&(HOME_WALLS.has(b.id)||HOME_DOORS.has(b.id)))brk.add(b.j);
   for(let d=0;d<W*H;d++){if(S.obj[d]!=='door'&&S.obj[d]!=='sdoor')continue;const dx0=d%W,dy0=(d/W)|0;
     for(const[ox,oy]of DIRS){const sx=dx0+ox,sy=dy0+oy;if(sx<0||sy<0||sx>=W||sy>=H)continue;const s=sy*W+sx;if(seen[s]||isB(s))continue;
@@ -4942,7 +4939,7 @@ function thumb(cv2,k,open){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='342';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='343';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
