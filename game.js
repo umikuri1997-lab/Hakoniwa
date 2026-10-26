@@ -4862,8 +4862,9 @@ const WORLDS=[
   {name:'風のやんだ空の村',sub:'WORLD 5・風',el:'wind',desc:'風が止まり、しずみかけた浮き島の村。'},
   {name:'忘れられた神々の庭',sub:'WORLD 6',el:null,desc:'5つの力が生まれた場所。'},
 ];WORLDS[FREE]={name:'フリーモード',sub:'FREE',el:null,desc:''};
-function thumb(cv2,k,open){
+function thumb(cv2,k,open,hide){
   const c=cv2.getContext('2d');const w=cv2.width,h=cv2.height;
+  if(hide){c.fillStyle='#1c1c26';c.fillRect(0,0,w,h);const li=emoImg('🔒');if(li){const ih=64,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}return}/* まだひらいていないステージは、絵も見せない */
   if(S&&k===(S.world||0)&&(LIVE[k]===S||!LIVE[k])){if(dirty)rebuildStatic();const r=BASE_R[S.baseLv]+2,sw=r*2*TS,sh=sw*h/w;c.drawImage(stat,(CX-r)*TS,CY*TS-sh/2,sw,sh,0,0,w,h);return}
   const g=c.createLinearGradient(0,0,0,h);const GC={6:['#8cc46e','#2f5a2a'],2:['#4f7d8f','#1e3440'],3:['#7a5a3f','#2f2117'],4:['#9ec3e0','#3d5a78'],5:['#3a2a4a','#16101f']};if(k===1){g.addColorStop(0,'#8a4a35');g.addColorStop(1,'#3a201a')}else{const q=GC[k]||['#2a2a3a','#16161f'];g.addColorStop(0,q[0]);g.addColorStop(1,q[1])}
   c.fillStyle=g;c.fillRect(0,0,w,h);
@@ -4871,7 +4872,7 @@ function thumb(cv2,k,open){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='356';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='357';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
@@ -4881,7 +4882,8 @@ function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
     let w2o=false;try{w2o=KV.getItem('hakoniwa-w2open')==='1'}catch(e){}
     const L=LIVE[k]||null,open=k===0||(k===1&&!!((LIVE[0]&&LIVE[0].cleared)||L||w2o));
     const card=el(`<div class="wcard${open?' open':' lock'}"><canvas width="760" height="280"></canvas><div class="wb"><span class="wn"></span><h3></h3><p></p><div class="wbtns"></div></div></div>`);
-    card.querySelector('.wn').textContent=wd.sub;card.querySelector('h3').textContent=wd.name;
+    const hide=!open&&!(k===2&&LIVE[1]&&LIVE[1].cleared);/* まだひらいていないステージは、名前も絵も見せない */
+    card.querySelector('.wn').textContent=hide?'🔒 WORLD '+(k+1):wd.sub;card.querySelector('h3').textContent=hide?'？？？':wd.name;
     let info=wd.desc;
     if(k<=1&&L&&L.introSeen)info=(L.summary?'':'せいれい '+L.res.length+'人・')+'村レベル '+L.lv+(L.cleared?'・ヌシ様が帰ってきた！':'');
     else if(k===1&&!open)info='はじまりの草原でヌシ様をむかえると、ひらきます。';
@@ -4895,7 +4897,7 @@ function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
       else{const n=el('<button class="btn pri">あそぶ</button>');n.onclick=()=>{sfx('tap');const go=()=>{$('#maps').hidden=true;newGame(k)};if(k===1&&departOK())depart(go);else go()};bt.appendChild(n)}
     }
     if(k===1&&!open){let n=0;card.onclick=()=>{if(++n>=5){try{KV.setItem('hakoniwa-w2open','1')}catch(e){}sfx('arrive');showMaps()}}}/* 確認用：とじたWORLD 2を5回タップでひらく */
-    list.appendChild(card);thumb(card.querySelector('canvas'),k,open);
+    list.appendChild(card);thumb(card.querySelector('canvas'),k,open,hide);
   });
   $('#mSnd').textContent=SND.bgm||SND.sfx?'♪ おと オン':'♪ おと オフ';
 }
