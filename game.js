@@ -121,7 +121,7 @@ const BL={
   bed:{name:'ベッド',kind:'furn',pc:15,time:100,maker:'wood',sleep:{cap:1,pt:5,rate:.2},attr:{wood:2},mat:{wood:3},desc:'1人眠れる。元気 +12／1時間。家の住み心地で0.6〜3.3倍'},
   lamp:{name:'篝火',kind:'furn',pc:10,time:80,maker:'fire',solid:1,anim:1,attr:{fire:3},mat:{wood:1,stone:1},desc:'まわり2.5マスを照らす'},
   campfire:{name:'たき火',kind:'furn',pc:12,time:80,maker:'fire',lv:6,solid:1,anim:1,attr:{fire:4},play:{pt:3,fun:45,dur:40,cap:3,adj:1},mat:{wood:2,stone:1},desc:'3人まで遊べる。たのしさ +72（40分）'},
-  swing:{name:'ブランコ',kind:'furn',pc:18,time:120,maker:'wind',lv:4,play:{pt:4,fun:60,dur:50,cap:1},attr:{wind:3},mat:{wood:3},desc:'1人で遊べる。たのしさ +96（50分）'},
+  swing:{name:'ブランコ',kind:'furn',pc:18,time:120,maker:'wood',lv:4,play:{pt:4,fun:60,dur:50,cap:1},attr:{wind:3},mat:{wood:3},desc:'1人で遊べる。たのしさ +96（50分）'},
   torch:{name:'たいまつ',kind:'furn',lv:3,pc:6,time:50,maker:'fire',solid:1,anim:1,attr:{fire:2},mat:{wood:1},desc:'まわり2.5マスを照らす'},
   jar:{name:'みずがめ',kind:'furn',lv:3,pc:8,time:60,maker:'water',solid:1,attr:{water:3},mat:{stone:1},desc:'水をためたかめ。まわり1マスの畑は水やりなしで育つ'},
   basin:{name:'水鉢',kind:'furn',pc:12,time:80,maker:'water',solid:1,anim:1,attr:{water:4,wood:.5},mat:{stone:2},desc:''},/* もう作れない（古いセーブ用） */
@@ -500,7 +500,7 @@ const QUEST_HELP1={
   "火のせいれいをむかえよう": "火の力をためる。サルビアを5本植える依頼と、見張り台を合計2つにする依頼も受けられる。満ちた次の朝、神殿の「！」から呼ぶ",
   "水のせいれいをむかえよう": "井戸やハスを置いて水の力をため、朝に神殿の「！」から呼ぶ",
   "オオカゲを追いはらおう": "柵・見張り台・罠を整え、夜に来るオオカゲを追いはらう。かけらは朝にせいれいが拾う",
-  "風のせいれいをむかえよう": "「おく」→「ゆりの種」を植えて風の力をため、朝に神殿の「！」から呼ぶ",
+  "風のせいれいをむかえよう": "「おく」→「ゆりの種」を植えたり、ブランコを置いたりして風の力をため、朝に神殿の「！」から呼ぶ",
   "守護の台座を建ててもらおう": "5つの属性のなかまをそろえ、木材100・石材50を集める。「おく」→「守護の台座」で条件を確認して置く",
   "みどりのマスを375にしよう": "花や木を植え、いろいろ置いて、荒れた土地を緑にする",
   "木のせいれいを6人にしよう": "花や木を植えて木の力をため、朝に神殿の「！」から呼ぶ。合計6人をむかえる",
@@ -2013,6 +2013,7 @@ const SUBQ=[/* サブクエスト：メインと別に、いつでもできる�
   {k:'board',how:'木材15・石材10を集めて、この画面の「わたす」をタップ',g:'earth',L:[["K", "依頼ボード、紙が重なって、下の絵が見えないねぇ……。"], ["K", "もっとたくさん、見えるようにできないかなぁ。"], ["K", "守り神さまが形を考えてくれたら、ぼくも手伝うよぉ。"]],X:[['K','板をつぎたしたよぉ。依頼が5まいまで貼れるようになったねぇ。'],['K','守り神さま、ありがとうねぇ。']],w:0,t:'依頼ボードを広げよう',ln:"紙が重なって、下の絵が見えないねぇ",at:()=>elemCount('fire')>=1,pay:{wood:15,stone:10},ok:()=>!!S.flags.board5,rw:0},
   {k:'lotus3',how:'「おく」→「ハスの種」を池の上に置く。せいれいに植えてもらい、花が咲くのを待とう',g:'earth',L:[['K','水の力をためるなら、池にハスを咲かせるといいよぉ。'],['K','ハスの種、少しあげるねぇ。']],X:[['K','ハスが咲いたねぇ。池が、うれしそうだよぉ。'],['K','守り神さま、ありがとうねぇ。']],w:0,t:'ハスを5つ咲かせよう',ln:'池にハスを咲かせたら、水の力がたまるよぉ。種、あげるねぇ',at:()=>qAt('水のせいれいをむかえよう'),give:{lotus:5},ok:()=>bloomCount('lotus')>=5,n:5,now:()=>bloomCount('lotus'),rw:10},
   {k:'lily5',how:'「おく」→「ゆりの種」を置く。せいれいに植えてもらい、花が咲くのを待とう',g:'earth',L:[['K','風の力をためるなら、ゆりがいいねぇ。'],['K','ゆりの種、あげるよぉ。5つ咲いたら、いい風がふくかもねぇ。']],X:[['K','ゆりの香りが、風にのってるねぇ。'],['K','守り神さま、ありがとうねぇ。']],w:0,t:'ゆりを5つ咲かせよう',ln:'ゆりを咲かせれば、風の力がたまるはずだねぇ。種、あげるよぉ',at:()=>qAt('風のせいれいをむかえよう'),give:{lily:5},ok:()=>bloomCount('lily')>=5,n:5,now:()=>bloomCount('lily'),rw:10},
+  {k:'swing1',how:'神殿の依頼ボードをタップ →「遊び」→ブランコをはる。できたら「おく」で外に置く。風の力もたまる',g:'wood',L:[['K','ねえ、ゆらゆら揺れるブランコ、つくってみない？'],['K','風を受けて揺れるから、風の力もたまるんだって！']],X:[['K','ブランコ、できた！ 風がきもちいいね！'],['K','守り神さま、ありがとう！']],w:0,t:'ブランコを置こう',ln:'ブランコをつくったら、風の力がたまるんだって！',at:()=>qAt('風のせいれいをむかえよう'),learn:['swing'],ok:()=>CN(['swing'])>=1,n:1,now:()=>CN(['swing']),rw:10},
   {k:'lumber1',how:'「おく」→「伐採場」を置く（木3・石1）。せいれいが建てるのを待とう。ここで働くと木材がふえる',g:'wood',L:[['K','木材、ちょっとずつ足りなくなってきたね。'],['K','木を切るたびに、森がさみしくなっちゃう……。木を切らなくても、木材がもらえる場所があったらいいのにな。']],X:[['K','伐採場ができた！ ここで働けば、木をへらさずに木材がもらえるんだね。'],['K','守り神さま、ありがとう！']],learn:['lumber'],w:0,t:'伐採場を建てよう',ln:'木を切らなくても、木材がふえたらいいな',at:()=>S.lv>=5,ok:()=>cnt('lumber')>=1,n:1,now:()=>cnt('lumber'),rw:10},
   {k:'quarry1',how:'「おく」→「採石場」を置く（木2・石3）。せいれいが建てるのを待とう。ここで働くと石材がふえる',g:'earth',L:[['K','石も、だいぶ使っちゃったねぇ。'],['K','岩をくだくのも大変だよぉ。石をもらえる場所を、つくれないかなぁ。']],X:[['K','採石場ができたねぇ。ここなら、岩をへらさずに石がもらえるよぉ。'],['K','守り神さま、ありがとうねぇ。']],learn:['quarry'],w:0,t:'採石場を建てよう',ln:'石も、もっと楽に集めたいなぁ',at:()=>S.lv>=7,ok:()=>cnt('quarry')>=1,n:1,now:()=>cnt('quarry'),rw:10},
   {k:'stele1',how:'「おく」→「石碑」を置く（木2・石8）。土のせいれいが建てるのを待とう。まわりの壁がじょうぶになる',g:'earth',L:[['K','コワイノに壁をたたかれると、いつもひやひやするよぉ。'],['K','壁を、もっとじょうぶにできる物があったら安心だねぇ。']],X:[['K','石碑が立ったねぇ。まわりの壁が、前よりしっかりしてるよぉ。'],['K','守り神さま、ありがとうねぇ。']],learn:['stele'],w:0,t:'石碑を建てよう',ln:'壁をもっとじょうぶにしたいなぁ',at:()=>S.lv>=6&&elemCount('earth')>=1,ok:()=>cnt('stele')>=1,n:1,now:()=>cnt('stele'),rw:12},
@@ -2095,7 +2096,7 @@ function checkSub(){const D=S.subDone||(S.subDone={}),Sn=S.subSeen||(S.subSeen={
   const spaced=S.subTalkAt==null||S.t-S.subTalkAt>=120;
   if(spaced&&!Object.values(busy).some(q=>St[q.k]===1||St[q.k]===3)&&subList().filter(q=>!D[q.k]&&St[q.k]===2).length<4)for(const q of subList()){if(D[q.k]||St[q.k])continue;if(busy[q.g]&&!levelHelpKeys().includes(q.k))continue;const w=keyName(q.g);if(!w||!q.at()||!subOfferReady(q))continue;St[q.k]=1;busy[q.g]=q;break}
   if(spaced&&waitingBellflowers()&&!subList().some(q=>St[q.k]===1||St[q.k]===3)&&subList().filter(q=>St[q.k]===2).length<3){const next=subList().find(q=>q.k.startsWith('seedwait_')&&!D[q.k]&&!St[q.k]&&q.at());if(next&&subOfferReady(next))St[next.k]=1}
-  const summonHelp=WD===0&&S.qStory==null&&S.qTalked?({'火のせいれいをむかえよう':'salvia3','水のせいれいをむかえよう':'lotus3','風のせいれいをむかえよう':'lily5'}[QUESTS[S.quest]?.text]||''):'',supportKeys=summonHelp?(summonHelp==='salvia3'?['salvia3','watch2']:[summonHelp]):[];
+  const summonHelp=WD===0&&S.qStory==null&&S.qTalked?({'火のせいれいをむかえよう':'salvia3','水のせいれいをむかえよう':'lotus3','風のせいれいをむかえよう':'lily5'}[QUESTS[S.quest]?.text]||''):'',supportKeys=summonHelp?(summonHelp==='salvia3'?['salvia3','watch2']:summonHelp==='lily5'?['lily5','swing1']:[summonHelp]):[];
   for(const k of supportKeys){if(D[k]||St[k])continue;const q=subList().find(q=>q.k===k);if(!q||!q.at()||!subOfferReady(q)||!keyName(q.g))continue;if(k===summonHelp||spaced){St[k]=1;break}}
   const visiting=!!QUEST_CLEAR_WAIT&&!QUEST_CLEAR_WAIT.done||Object.values(SUB_CLEAR_WAIT).some(w=>w&&!w.done)||S.res.some(r=>(QUEST_VISITS.get(r)||[]).length||r.act&&r.act.type==='questjoy'&&r.act.joyAt==null);/* クエストのものを見にいく途中は、新しい話の黄色い吹き出しは出さない（着いて喜び始めてから） */
   const requests=visiting?[]:subList().filter(q=>St[q.k]===1&&(spaced||summonHelp&&q.k===summonHelp));
