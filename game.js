@@ -37,7 +37,7 @@ const ELEM={
 const ELEM_KEYS=Object.keys(ELEM);
 
 /* ---------- もの ---------- */
-// kind: block・plant=おそなえ/カミサマとの交換でお供え箱に入る / furn=依頼ボードでせいれいが作る / build=せいれいが建てる（パワー）
+// kind: block・plant=おそなえ/カミサマとの交換でおそなえ箱に入る / furn=依頼ボードでせいれいが作る / build=せいれいが建てる（パワー）
 const BL={
   path:{name:'あぜ道',kind:'block',floor:1,lv:2,cost:1,pc:2,time:30,maker:'earth',qty:10,mat:{stone:2},attr:{earth:.25},desc:'草地のあいだを通る土の道。歩く速さ×1.25'},
   gravel:{name:'砂利道',kind:'block',floor:1,cost:1,pc:3,time:30,maker:'earth',qty:10,lv:5,mat:{stone:3},attr:{earth:.4},desc:'小石をしいた道。歩く速さ×1.4'},
@@ -138,8 +138,8 @@ const BL={
   lighthouse:{name:'灯台',sz:[2,2],kind:'build',mat:{wood:25,stone:35},pc:35,time:180,maker:'fire',lv:7,solid:1,anim:1,attr:{fire:4},desc:'まわり8マスを照らす。'},
   stele:{hp:5,brk:1,fix:18,fixm:{wood:6,stone:25},name:'石碑',kind:'build',mat:{wood:12,stone:50},pc:35,time:180,maker:'earth',lv:6,solid:1,attr:{earth:4},desc:'まわり5マスの壁が、1.15倍じょうぶになる（小数点以下は切りすて）'},
   fountain:{name:'噴水',sz:[2,2],kind:'build',mat:{wood:15,stone:60},pc:45,time:200,maker:'water',lv:6,solid:1,anim:1,play:{pt:6,pw:2.7,fun:45,dur:50,cap:3,adj:1},attr:{water:6},desc:'3人まで遊べる。たのしさ +45（50分）。遊ぶと10%の確率で、スタミナ+1'},
-  statue:{name:'神殿',kind:'build',anim:1,pc:0,time:50,maker:null,solid:1,attr:{wood:1,water:1,fire:1,earth:1,wind:1},desc:'守り神の居場所。女神像・お供え箱・依頼ボード・カミサマの台座がある'},
-  obox:{name:'お供え箱',solid:1,anim:1},
+  statue:{name:'神殿',kind:'build',anim:1,pc:0,time:50,maker:null,solid:1,attr:{wood:1,water:1,fire:1,earth:1,wind:1},desc:'守り神の居場所。女神像・おそなえ箱・依頼ボード・カミサマの台座がある'},
+  obox:{name:'おそなえ箱',solid:1,anim:1},
   board:{name:'依頼ボード',solid:1,anim:1},
   altar:{name:'カミサマの台座',solid:1,anim:1},
   site2:{name:'建てている場所',solid:1,job:1},
@@ -223,8 +223,8 @@ function pathMade(){const n=S.floor.filter(f=>f==='path').length;if(S.flags.path
 const QUESTS1=[
   {text:'神殿を建ててもらおう',check:()=>cnt('statue')>=1,by:GOD,story:[
     [POKO,'できたー！ りっぱな神殿！'],
-    [GOD,'真ん中が女神像、左がお供え箱、右が依頼ボードじゃよ。'],
-    [POKO,'ぼく、ときどきお供え箱におそなえものを入れるね。守り神さま、自由に使ってね！'],
+    [GOD,'真ん中が女神像、左がおそなえ箱、右が依頼ボードじゃよ。'],
+    [POKO,'ぼく、ときどきおそなえ箱におそなえものを入れるね。守り神さま、自由に使ってね！'],
     [GOD,'ありがとうのう。それから、せいれいのようすも、ときどき見てやっておくれ。'],[GOD,'せいれいのようすをよく見ると、おなかやたのしさがわかるんじゃ。おなかがゼロになると消えてしまうからの。'],[GOD,'ためしに、いまフタバのようすを見てみい。']],gives:{feat:['inv'],flag:'tapAsk'}},
   {text:'食料箱を置こう',check:()=>cnt('stor')>=1,
    talk:{who:POKO,when:()=>!S.flags.tapAsk||!!S.flags.tapped,wait:'せいれいをタップして、ようすを見てみよう',/* ステータスを見てから、次のお話 */lines:[
@@ -233,12 +233,12 @@ const QUESTS1=[
     [POKO,'あっ！ 虫さん！ たべちゃったの！？'],
     [POKO,'えへへ……こんどは、どこかにしまっておかなきゃ。'],
     [GOD,'ほっほ、おヌシ。食べ物をしまう箱を思いついたんじゃな。'],
-    [GOD,'その形どおりの「食料箱」を1つ、お供え箱に入れておいたぞい。'],[GOD,'好きな場所に置いてみい。']],gives:{items:{stor:1}}},
+    [GOD,'その形どおりの「食料箱」を1つ、おそなえ箱に入れておいたぞい。'],[GOD,'好きな場所に置いてみい。']],gives:{items:{stor:1}}},
    story:[
     [POKO,'ありがとう、守り神さま！ つんでおいたベリー、入れておくね！'],
     [POKO,'おなかがすいたら、ここから出して食べるね。'],
     [GOD,'うむ、いい場所に置けたのう。'],
-    [GOD,'もし置く場所をまちがえても、お供え箱にもどせるから、安心せい。']],pre:{food:{berry:10}},gives:{feat:['remove','plant']}},
+    [GOD,'もし置く場所をまちがえても、おそなえ箱にもどせるから、安心せい。']],pre:{food:{berry:10}},gives:{feat:['remove','plant']}},
   {text:'素材箱を置こう',check:()=>{if(cnt('mbox')>=1&&!S.flags.mbGift){S.flags.mbGift=true;S.mat.wood=(S.mat.wood||0)+10;S.mat.stone=(S.mat.stone||0)+10;toast('フタバが集めていた木材10・石材10を素材箱に入れた','good')}return cnt('mbox')>=1},
    talk:{who:POKO,when:()=>true,lines:[
     [POKO,'守り神さま、見て見て！ この木の枝、くるんってなってるの。'],
@@ -246,7 +246,7 @@ const QUESTS1=[
     [POKO,'えへへ。こういうの見つけると、つい拾っちゃうんだ。石も、まるいのとか、すべすべのとか。'],
     [POKO,'…でも、拾ったはいいけど、しまうとこがないんだよね。そこらに置いとくと、どれがどれだか、わかんなくなっちゃう。'],
      [GOD,'なるほどのう……木や石をまとめてしまえる箱があれば、散らからずにすむのう。「素材箱」と呼ぶのがよさそうじゃ。'],
-    [GOD,'その形で用意して、お供え箱に入れておいたぞい。好きな場所に置いてみい。']],gives:{items:{mbox:1}}},
+    [GOD,'その形で用意して、おそなえ箱に入れておいたぞい。好きな場所に置いてみい。']],gives:{items:{mbox:1}}},
    story:[
     [POKO,'わあ、ぴったり！ 集めてた木と石、ぜんぶ入れとくね。'],
     [GOD,'ずいぶん集めとったんじゃのう。'],
@@ -261,7 +261,7 @@ const QUESTS1=[
     [GOD,'それは……。おヌシ、その形を思いついたんじゃな。'],
     [GOD,'……ふむ。食べ物をのせる台か。「食卓」と呼ぼうかの。'],
     [GOD,'その形を、神殿の右の依頼ボードに描いてはってみい。せいれいたちにも伝わるぞい。'],
-    [GOD,'手のあいたせいれいが、その絵を見ながら作るんじゃ。できたらお供え箱に入るから、好きな場所に置くんじゃよ。'],[GOD,'たのむときは、パワーを使うぞい。パワーは、せいれいが満足してくれると、もらえるんじゃ。'],[POKO,'その上なら、土がつかないの？ わあ、やってみたい！'],[GOD,'うむ。作るのに使う木材は、わしが渡しておくぞい。']],gives:{feat:['craft'],mat:{wood:8}}},
+    [GOD,'手のあいたせいれいが、その絵を見ながら作るんじゃ。できたらおそなえ箱に入るから、好きな場所に置くんじゃよ。'],[GOD,'たのむときは、パワーを使うぞい。パワーは、せいれいが満足してくれると、もらえるんじゃ。'],[POKO,'その上なら、土がつかないの？ わあ、やってみたい！'],[GOD,'うむ。作るのに使う木材は、わしが渡しておくぞい。']],gives:{feat:['craft'],mat:{wood:8}}},
    story:[
     [POKO,'これが、食卓なんだ！ ベリーに土がつかないね。えへへ、おいしい！'],
     [GOD,'うむ。おヌシの思いつきが、ちゃんと形になったのう。'],
@@ -345,7 +345,7 @@ const QUESTS1=[
     [MINA,'畑を耕すのと、柵を直すのが得意なんだぁ。のんびりやるねぇ。'],[MINA,'呼んでくれて、ありがとうねぇ、守り神さま。']]},
   {text:'畑を6つにしよう',check:()=>cnt('farm')>=6,
    talk:{who:GOD,when:()=>true,lines:[
-    [GOD,'これで畑が作れるのう。畑を2つ、お供え箱に入れといたぞい。置けば土のせいれいが耕してくれるんじゃ。']],gives:{items:{farm:2}}},
+    [GOD,'これで畑が作れるのう。畑を2つ、おそなえ箱に入れといたぞい。置けば土のせいれいが耕してくれるんじゃ。']],gives:{items:{farm:2}}},
    story:[
     [POKO,'ふかふかの畑だ！'],
     [MINA,'耕すのは、ぼくにまかせてねぇ。'],
@@ -491,7 +491,7 @@ const QUESTS1=[
 const QUEST_HELP1={
   "神殿を建ててもらおう": "下の「おく」→「神殿」をえらび、基地の中の空いた場所（4マス）をタップ",
   "食料箱を置こう": "フタバと話して食料箱を受けとる。「おく」→「食料箱」をえらんで置く",
-  "素材箱を置こう": "フタバと話して素材箱を受けとる。「おく」→「素材箱」をえらんで置く。置きなおしたいときは「こわす」でお供え箱にもどせる",
+  "素材箱を置こう": "フタバと話して素材箱を受けとる。「おく」→「素材箱」をえらんで置く。置きなおしたいときは「こわす」でおそなえ箱にもどせる",
   "家の壁を直そう": "「おく」→「木の壁」をえらんで、家の壁のすきまをふさぐ",
   "道をつくろう": "「おく」→「あぜ道」をえらんで、家と神殿のあいだに5マスしく",
   "家にベッドを置こう": "「おく」→「ベッド」をえらんで、壁で囲まれた家の中に置く",
@@ -530,8 +530,8 @@ const INTRO2=[
 const QUESTS2=[
   {text:'神殿を建ててもらおう',check:()=>cnt('statue')>=1,by:GOD,how:'下の「おく」→「神殿」をえらび、基地の中の空いた場所をタップ',story:[
     [HOMURA,'へえ、なかなかいい神殿じゃないか。'],
-    [GOD,'じゃろ〜。女神像もお供え箱も依頼ボードも、草原といっしょじゃよ。'],
-    [GOD,'食料箱と素材箱は、温泉のそばに置いといたぞい。かまどやベッド、柵や罠も、お供え箱に入れといたからの。'],[HOMURA,'ありがとよ、守り神。']],
+    [GOD,'じゃろ〜。女神像もおそなえ箱も依頼ボードも、草原といっしょじゃよ。'],
+    [GOD,'食料箱と素材箱は、温泉のそばに置いといたぞい。かまどやベッド、柵や罠も、おそなえ箱に入れといたからの。'],[HOMURA,'ありがとよ、守り神。']],
    gives:{feat:['inv','remove','plant','craft','people'],flag:'lv_oven',recipes:['oven','bed'],items:{oven:1,bed:1,hwall:3,fence:10,spike:10},mat:{wood:10,stone:10},enemy:true}},
   {text:'冷たい温泉を調べよう',check:()=>!!S.flags.sprLook,how:'「みる」で、村の水たまりをタップする',
    talk:{who:HOMURA,when:()=>true,lines:[
@@ -747,7 +747,7 @@ function newState(w){w=w||0;
   return s;
 }
 function putNear(s,id,cx,cy){for(let r=0;r<8;r++)for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){const k=(cy+dy)*W+cx+dx;if(!s.obj[k]&&s.ground[k]!==1&&!s.floor[k]){s.obj[k]=id;return}}}
-function ensureStor(s){for(const id in BL){const b=BL[id];if(b&&b.offerOnly&&b.kind==='furn'){if(s.recipes)delete s.recipes[id];if(s.guardianIdeas)delete s.guardianIdeas[id]}}/* お供えされる家具は、レシピとして出さない（セーブからも消す） */
+function ensureStor(s){for(const id in BL){const b=BL[id];if(b&&b.offerOnly&&b.kind==='furn'){if(s.recipes)delete s.recipes[id];if(s.guardianIdeas)delete s.guardianIdeas[id]}}/* おそなえされる家具は、レシピとして出さない（セーブからも消す） */
   {const nm=new Set();for(let j=0;j<s.obj.length;j++)if(s.obj[j]==='grave'&&s.dyn&&s.dyn[j]&&!s.dyn[j].buried)nm.add(s.dyn[j].name);for(const r of s.res||[])if(r.coffin)nm.add(r.coffin.name);if(!s.wipe)for(const L of[s.buried||[],s.lost||[]])for(const q of L)if(nm.has(q.name))q.unb=true}/* まだ埋葬されていない子は、よみがえらせない */
   for(const k in s.hp||{})if(/^\d+$/.test(k)&&typeof s.hp[k]==='number')s.hp[k]=Math.ceil(s.hp[k]);/* 耐久は整数 */
   if(!s.lost)s.lost=[];syncQuestRecipes(s)}
@@ -874,7 +874,7 @@ const farmsBare=()=>{let n=0;for(let j=0;j<S.obj.length;j++)if(S.obj[j]==='farm'
 const cropK=d=>d.crop===undefined?'mugi':d.crop;/* 作物。null はまだえらんでいない（前からの畑はこむぎ） */
 const cropOn=k=>!!S.crops[k];/* 使える作物 */
 const CROPS={mugi:{name:'こむぎ',days:2,yield:1,desc:'2日で育つ。パンの材料'},tomato:{name:'キャベツ',days:2,yield:1,desc:'2日で育つ'},imo:{name:'いも',days:3,yield:2,desc:'3日で育つ。たくさんとれる'}};
-for(const k in CROPS)BL['seed:'+k]={name:CROPS[k].name+'のたね',kind:'seed',desc:CROPS[k].desc+'。畑をタップしてまく'};/* たねは、お供え箱からえらんで畑にまく */
+for(const k in CROPS)BL['seed:'+k]={name:CROPS[k].name+'のたね',kind:'seed',desc:CROPS[k].desc+'。畑をタップしてまく'};/* たねは、おそなえ箱からえらんで畑にまく */
 const RECIPES=[{out:'soup',need:{tomato:1,imo:1},time:153},{out:'bread',need:{mugi:2},time:120},{out:'yakizakana',need:{fish:1},time:60},{out:'yakiimo',need:{imo:1},time:50},{out:'yakiberry',need:{berry:2},time:60},{out:'yakiapple',need:{apple:1},time:60},{out:'salad',need:{tomato:2},time:90}];/* time：料理にかかる時間（分） */RECIPES.forEach(R=>{FOODS[R.out].v=Object.keys(R.need).reduce((t,k)=>t+FOODS[k].v*R.need[k],0)});/* 料理でふくれるおなかは、使った材料の合計 */SOUPR=RECIPES.find(R=>R.out==='soup');soupFilter();/* time：料理にかかる時間（レシピごと） */
 function syncFood(){let n=0;for(const k in S.fs)n+=S.fs[k]||0;S.food=n}
 function addFood(k,n){S.fs[k]=(S.fs[k]||0)+n;syncFood()}
@@ -1511,7 +1511,7 @@ function tryJob(r,G,k){
     startAct(r,G,'cgrab',sj,{rec:R.out,ov:q});return true}
   case'harvest':{if(!(foodCap()>0&&S.food<foodCap()))return false;const fRoom=foodCap()-S.food-carryN(r);j=nearest(G,j=>{if(S.obj[j]!=='farm'||!S.dyn[j]||S.dyn[j].g<100||!free('o'+j,1)||roomN(r)<1)return false;const c=CROPS[cropK(S.dyn[j])];return fRoom>=(c?c.yield:2)+(NEARMILL.has(j)?1:0)+(NEARFLOWER.has(j)?1:0)+(trt(r,'shukaku')?1:0)+(S.today==='hosaku'?1:0)});/* 食料箱に入りきらないときは収穫しない（持っている物を捨てない） */if(j>=0){startAct(r,G,'harvest',j,{key:'o'+j,obj:j,food:1});return true}
     const fr=ripeAdj(['fruit']);j=roomN(r)>=1&&fRoom>=2?nearest(G,j=>fr(j)>=0):-1;if(j>=0){const q=fr(j);startAct(r,G,'harvest',j,{key:'o'+q,obj:q,food:1});return true}return false}
-  case'offer':{if(OBOX<0||isNight()||r.fun<99||r.offDay===dayNo())return false;/* おそなえは1人1日1回まで *//* たのしさが満タンになったら、お供えする */j=nearTile(G,OBOX);if(j>=0){startAct(r,G,'offer',j);return true}return false}
+  case'offer':{if(OBOX<0||isNight()||r.fun<99||r.offDay===dayNo())return false;/* おそなえは1人1日1回まで *//* たのしさが満タンになったら、おそなえする */j=nearTile(G,OBOX);if(j>=0){startAct(r,G,'offer',j);return true}return false}
   case'gather':{if(S.food>=(r.elem==='earth'?25:12)||isNight()||roomN(r)<1)return false;const bb=ripeAdj(['berry']);j=nearest(G,j=>bb(j)>=0);if(j>=0){const q=bb(j);startAct(r,G,'gather',j,{key:'o'+q,obj:q});return true}return false}
   case'drop':if(!(S.drops&&S.drops.length)||isNight())return false;const noF=!S.res.some(x=>x.name===POKO&&!x.hidden);j=nearest(G,j=>S.drops.some(q=>q.y*W+q.x===j&&(q.id!=='shard'||r.name===POKO||noF))&&free('d'+j,1),90);if(j>=0){startAct(r,G,'pickdrop',j,{key:'d'+j,obj:j});return true}return false;
   case'seed':if(!S.seeds.length||isNight())return false;j=nearest(G,j=>S.seeds.some(q=>q.y*W+q.x===j)&&free('s'+j,1),90);if(j>=0){startAct(r,G,'pickseed',j,{key:'s'+j,obj:j});return true}return false;
@@ -2042,7 +2042,7 @@ const SUBQ=[/* サブクエスト：メインと別に、いつでもできる�
   {k:'toy2',how:'神殿の依頼ボードをタップ →「遊び」→砂場をはる。できたら「おく」で置く',g:'fire',L:[["K", "なあ、守り神。ここ、走りまわれる場所はあるけど、ちょっと物足りなくないか？"], ["K", "砂の山をつくったり、穴をほったり……そういう遊び場があったら、みんな喜ぶと思うんだ。"], ["K", "守り神、どんな形を思い浮かべる？"]],X:[['K','おお、砂場だ！ さっそく山をつくろうじゃないか！'],['K','ありがとよ、守り神。']],t:'砂場を置こう',ln:'みんなで遊べる場所がほしいな！',at:()=>S.res.some(r=>r.elem==='fire'&&r.name===keyName('fire')),learn:['sandbox'],ok:()=>CN(['sandbox'])>=1,n:1,now:()=>CN(['sandbox']),rw:15},
   {k:'toy3',w:4,how:'神殿の依頼ボードをタップ →「遊び」→シーソーをはる。できたら「おく」で置く',g:'wind',L:[["K", "フッ……風は、ゆれるものに宿るのだよ。"], ["K", "板の両はしに乗って、ギッコン、バッタン……そんな遊び道具があれば、きっと風も楽しい。"], ["K", "守り神、きみなら、どんな形を思い浮かべる？"]],X:[['K','見たまえ、風がシーソーを動かしている。…美しいね。'],['K','…ありがとう、守り神。']],t:'シーソーを置こう',ln:'ギッコン、バッタン、遊びたいな！',at:()=>elemCount('wind')>=1,learn:['seesaw'],ok:()=>CN(['seesaw'])>=1,n:1,now:()=>CN(['seesaw']),rw:15},
   {k:'deco3',how:'神殿の依頼ボードをタップ →「庭」→生垣・巣箱などをはる。できたら「おく」で置く。かんようしょくぶつも数に入る',g:'wood',L:[["K", "ねえ、村をもっとかわいくしたいな！"], ["K", "花とか、小鳥とか、好きなものを見ながら歩けたら、うれしいなあ。"], ["K", "守り神さま、どんなふうになるかな？"]],X:[['K','村が、どんどんかわいくなってく！ ありがとう、守り神さま！']],t:'かざりを3つ置こう',ln:"花や小鳥をながめながら歩けたらいいな",at:()=>S.lv>=2,ok:()=>CN(['hedge','birdhouse','birdbath','parasol','arch','signpost','monstera'])>=3,n:3,now:()=>CN(['hedge','birdhouse','birdbath','parasol','arch','signpost','monstera']),rw:15},
-  {k:'tree5',how:'「おく」→「木の苗」を置く。せいれいが植えるのを待とう\n木の苗は、カミサマと交換するか、せいれいが拾ってお供え箱に入れてくれるのを待とう',g:'wood',L:[['K','おひるねするとき、木かげがあったらいいなあ。'],['K','木を5本植えたら、すずしい木かげができるよね！']],X:[['K','木かげ、すずしい〜。ここでおひるねしようっと！'],['K','守り神さま、ありがとう！']],t:'木を5本植えよう',ln:'木かげで、おひるねしたいな',at:()=>S.lv>=3,ok:()=>bloomCount('tree')+bloomCount('fruit')>=5,n:5,now:()=>bloomCount('tree')+bloomCount('fruit'),rw:15},
+  {k:'tree5',how:'「おく」→「木の苗」を置く。せいれいが植えるのを待とう\n木の苗は、カミサマと交換するか、せいれいが拾っておそなえ箱に入れてくれるのを待とう',g:'wood',L:[['K','おひるねするとき、木かげがあったらいいなあ。'],['K','木を5本植えたら、すずしい木かげができるよね！']],X:[['K','木かげ、すずしい〜。ここでおひるねしようっと！'],['K','守り神さま、ありがとう！']],t:'木を5本植えよう',ln:'木かげで、おひるねしたいな',at:()=>S.lv>=3,ok:()=>bloomCount('tree')+bloomCount('fruit')>=5,n:5,now:()=>bloomCount('tree')+bloomCount('fruit'),rw:15},
   {k:'farm10',how:'「おく」→「畑」を置く。土のせいれいが耕すのを待とう',g:'earth',L:[['K','なかまがふえて、ごはんもたくさんいるねぇ。'],['K','畑が10こあったら、ごはんにこまらないよぉ。']],X:[['K','畑がいっぱいだねぇ。耕すの、がんばるよぉ。'],['K','守り神さま、ありがとうねぇ。']],w:0,t:'畑を10にしよう',ln:'畑がもっとあると、ごはんにこまらないねぇ',at:()=>cnt('farm')>=6,ok:()=>cnt('farm')>=10,n:10,now:()=>cnt('farm'),rw:15},
   {k:'food40',how:'畑で作物を育てて収穫してもらう。ベリーの茂みからも集まる。食料箱1つには30こまでしか入らない',g:'wood',L:[['K','ねえ、食料箱って、どのくらい入るのかな？'],['K','40こくらい、ためてみたい！ そしたら、なにがあってもへっちゃらだよ！']],X:[['K','食料箱がいっぱい！ 見てるだけで、おなかいっぱいになりそう！'],['K','守り神さま、ありがとう！']],t:'食べ物を40こためよう',ln:'食料箱をいっぱいにしたいな！',at:()=>foodCap()>0&&S.res.length>=3,ok:()=>FOODN()>=40,n:40,now:()=>FOODN(),rw:15},
   {k:'house2',how:'家の壁で囲って、ドアをつけると家になる',g:'earth',L:[['K','なかまがふえて、家がちょっときゅうくつだねぇ…。'],['K','もう1けん、家があるといいなぁ。']],X:[['K','新しい家だぁ。のびのび眠れるねぇ。'],['K','ものをしまえる場所や、お湯につかってゆっくりできる場所もあったらいいねぇ。'],['K','守り神さま、ありがとうねぇ。']],t:'家を2けんにしよう',ln:'なかまがふえて、家がきゅうくつだねぇ',at:()=>S.baseLv>=1&&S.res.length>=4&&elemCount('fire')>=1,ok:()=>HOUSES.length>=2,n:2,now:()=>HOUSES.length,rw:20},
@@ -2433,7 +2433,7 @@ function setBlock(id,j){
 function setParts(id,j,kind){const x=j%W,y=(j/W)|0;for(const[a,b]of fp(id,x,y)){const k=b*W+a;if(k===j)continue;S.obj[k]=kind;S.ref[k]=j}}
 function place(id,x,y){
   const b=BL[id];
-  if(WALLD.has(id)){if(!usable(id))return toast(BL[id].name+'が足りません','warn');if(!canPlace(id,x,y))return;const j=y*W+x;S.inv[id]--;if((id==='curtain1'||id==='curtain2')&&S.win&&S.win[j]===1){giveItem('window',1);toast('窓にカーテンをかけた（窓はお供え箱にもどった）')}/* 窓のある壁には、カーテンをかけられる。カーテンの絵には窓がふくまれる */(S.win||(S.win={}))[j]=id==='window'?1:id;noteQuestPlacement(S.obj[j]==='door'?'door':'hwall',j);burst(j,'furn');recount();dirty=true;renderPalette();return}
+  if(WALLD.has(id)){if(!usable(id))return toast(BL[id].name+'が足りません','warn');if(!canPlace(id,x,y))return;const j=y*W+x;S.inv[id]--;if((id==='curtain1'||id==='curtain2')&&S.win&&S.win[j]===1){giveItem('window',1);toast('窓にカーテンをかけた（窓はおそなえ箱にもどった）')}/* 窓のある壁には、カーテンをかけられる。カーテンの絵には窓がふくまれる */(S.win||(S.win={}))[j]=id==='window'?1:id;noteQuestPlacement(S.obj[j]==='door'?'door':'hwall',j);burst(j,'furn');recount();dirty=true;renderPalette();return}
   if(b.kind==='seed'){const k=id.slice(5),j=y*W+x,d=S.dyn[j];if(S.obj[j]!=='farm'||!d)return toast('たねは、畑にしかまけません');
     if(d.crop&&d.sown!==false)return toast('もう'+CROPS[d.crop].name+'が植えてある');if(cseed(k)<1)return toast('たねがありません');
     if(d.paid&&d.crop)S.cseed[d.crop]=cseed(d.crop)+1;S.cseed[k]--;d.paid=true;/* たねは、えらんだときに減る */d.crop=k;d.sown=false;if(k==='imo'&&QUESTS[S.quest]?.text==='畑にたねをまこう'&&S.qTalked){const plots=imoSeedQuestPlots();if(!plots.includes(j))plots.push(j)}noteQuestPlacement('farm',j);burst(j,'plant','pat');toast(CROPS[k].name+'のたねをまいた');checkQuest();renderPalette();return}/* せいれいが、たねをまく */
@@ -2442,7 +2442,7 @@ function place(id,x,y){
   if(!canPlace(id,x,y))return;
   const j=y*W+x;
   if(b.kind==='plant'||b.kind==='build'){
-    if(b.kind==='plant'&&inv(id)<=0){toast(iname(id)+'がお供え箱にありません');return}
+    if(b.kind==='plant'&&inv(id)<=0){toast(iname(id)+'がおそなえ箱にありません');return}
     const free=id==='watch'&&watchQ(),pc=free?0:b.pc,bm=id==='tower'?TOWER_MAT():free?null:b.mat;/* 台座は木材・石材を使う（取り消すともどる） *//* 建物はパワーと素材を使う */
     if(b.kind==='build'&&S.pt<pc)return toast('パワーが足りません（'+SP(b.pc)+'）');
     if(b.kind==='build'&&!matOK(bm))return toast('素材が足りません（'+matTxt(bm)+'）');
@@ -2453,7 +2453,7 @@ function place(id,x,y){
       if(id==='statue'){for(const k of[j-1,j+1,j+W]){S.obj[k]='site2';S.ref[k]=j}}else setParts(id,j,'site2')}/* 足場のどのマスからでも、まわりから作業できる */
     toast(b.kind==='plant'?'せいれいが植えにきてくれる':'せいれいが'+b.name+'を建てにきてくれる');
   }else{
-    if(inv(id)<=0){toast(b.name+'が足りません','warn');return}/* 足りないときは、知らせるだけ（お供え箱は開かない） */
+    if(inv(id)<=0){toast(b.name+'が足りません','warn');return}/* 足りないときは、知らせるだけ（おそなえ箱は開かない） */
     const prevFloor=b.floor?S.floor[j]:'';undoStack.push({j,prevFloor,id});
     S.inv[id]--;if(prevFloor)giveItem(prevFloor,1);
     if(RUGS.has(id)&&S.obj[j]&&!RUGS.has(S.obj[j]))(S.rug||(S.rug={}))[j]=id;/* 家具の下にラグを敷く */
@@ -2481,15 +2481,15 @@ function clearObj(j){j=anc(j);const o=S.obj[j];const tl=o&&BL[o]&&BL[o].sz?fp(o,
 function removeAt(x,y){
   if(!inBase(x,y))return toast('基地の外はこわせません');
   const j=anc(y*W+x),o=S.obj[j];x=j%W;y=(j/W)|0;
-  if(S.win&&S.win[j]){const id=S.win[j]===1?'window':S.win[j];delete S.win[j];giveItem(id,1);toast(BL[id].name+'をお供え箱にもどした');burst(j,'furn','rm');recount();renderPalette();return}
+  if(S.win&&S.win[j]){const id=S.win[j]===1?'window':S.win[j];delete S.win[j];giveItem(id,1);toast(BL[id].name+'をおそなえ箱にもどした');burst(j,'furn','rm');recount();renderPalette();return}
   if(o){const b=BL[o];if(o==='tower')return toast('守護の台座はこわせません');if(o==='volcano'||o==='heatv'||o==='crack'||o==='boulder')return toast(b.name+'はこわせません');if(o==='statue'||o==='obox'||o==='board'||o==='altar'||o==='site2')return toast('神殿はこわせません');if((o==='stor'||o==='mbox')&&cnt(o)<=1)return toast(BL[o].name+'は1つ以上必要です');
     if(o==='site'){const d=S.dyn[j];if(d.build==='statue')return toast('神殿はこわせません');const bm=d.mat||{};clearObj(j);for(const k in bm)S.mat[k]=(S.mat[k]||0)+bm[k];toast('建てるのをやめた')}/* 素材はもどる・パワーはもどらない */
     else if(o==='sprout'){const d=S.dyn[j];clearObj(j);giveItem(d.plant,1);toast('植えるのをやめた')}
     else{clearObj(j);
       if(b.natural){toast(b.name+'をかたづけた')}
       else if(FLOWERS.has(o)||o==='tree'||o==='fruit'){giveItem(o,1);toast(iname(o)+'をもらった')}/* 花・木をこわすと、種・苗がもどる */
-      else if(o==='plot'||o==='farm'){giveItem('farm',1);toast('畑をお供え箱にもどした')}
-      else if(b.kind==='block'||b.kind==='furn'){giveItem(o,1);toast(b.name+'をお供え箱にもどした')}
+      else if(o==='plot'||o==='farm'){giveItem('farm',1);toast('畑をおそなえ箱にもどした')}
+      else if(b.kind==='block'||b.kind==='furn'){giveItem(o,1);toast(b.name+'をおそなえ箱にもどした')}
       else if(b.kind==='build'&&b.mat){const fr=S.freeB&&S.freeB[j];if(fr)delete S.freeB[j];else for(const k in b.mat)S.mat[k]=(S.mat[k]||0)+b.mat[k];toast(b.name+'をこわした')}/* ただで建てたもの（クエストの見張り台）は、素材がもどらない *//* 建物：素材はもどる・パワーはもどらない */
       else toast(b.name+'をとりのぞいた')}
     burst(j,'block','rm');recount();renderPalette();return}
@@ -2503,7 +2503,7 @@ function finishBuild(j,r){
 }
 function finishCraft(o,r){
   S.orders=S.orders.filter(q=>q!==o);S.unlocked[o.type]=true;giveItem(o.type,BL[o.type].qty||1);addXp(3,r);if(r)r.made=(r.made||0)+1;kurashi('f:'+o.type,BL[o.type].maker||'wind',1,['🪑','はじめて'+BL[o.type].name+'を作った']);burstAt(r.x,r.y,'furn');
-  toast(r.name+'が'+BL[o.type].name+'を作って、お供え箱に入れた！','good');renderPalette();if(sheet==='craft')renderSheet();
+  toast(r.name+'が'+BL[o.type].name+'を作って、おそなえ箱に入れた！','good');renderPalette();if(sheet==='craft')renderSheet();
 }
 function rectCells(a,b){const x0=Math.min(a.x,b.x),x1=Math.max(a.x,b.x),y0=Math.min(a.y,b.y),y1=Math.max(a.y,b.y);const c=[];for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++)c.push([x,y]);return c}
 let pending=null;
@@ -2512,9 +2512,9 @@ function askBulk(id,cells){
   const ok=cells.filter(([x,y])=>canPlace(id,x,y,true));
   if(!ok.length){toast('置ける場所がありません');return}
   const b=BL[id];
-  if(b.kind==='plant'){const n=Math.min(ok.length,inv(id));if(!n)return toast(iname(id)+'がお供え箱にありません');ok.length=n;pending={kind:'plant',id,cells:ok};$('#confirmTxt').textContent=iname(id)+'を'+n+'か所に植えてもらう';$('#cYes').disabled=false}
+  if(b.kind==='plant'){const n=Math.min(ok.length,inv(id));if(!n)return toast(iname(id)+'がおそなえ箱にありません');ok.length=n;pending={kind:'plant',id,cells:ok};$('#confirmTxt').textContent=iname(id)+'を'+n+'か所に植えてもらう';$('#cYes').disabled=false}
   else{const s=shortCost({[id]:ok.length});if(b.qty){const n=Math.min(ok.length,inv(id));if(!n)return toast(b.name+'が足りません','warn');ok.length=n;s.cost=0;s.parts=[]}
-    pending={kind:'bulk',id,cells:ok,cost:s.cost,need:{[id]:ok.length}};$('#confirmTxt').textContent=b.name+' '+ok.length+'マス'+(s.parts.length?'（足りない'+s.parts.join('・')+'は'+SP(s.cost)+'で）':'（お供え箱から）');$('#cYes').disabled=S.pt<s.cost}
+    pending={kind:'bulk',id,cells:ok,cost:s.cost,need:{[id]:ok.length}};$('#confirmTxt').textContent=b.name+' '+ok.length+'マス'+(s.parts.length?'（足りない'+s.parts.join('・')+'は'+SP(s.cost)+'で）':'（おそなえ箱から）');$('#cYes').disabled=S.pt<s.cost}
   $('#confirm').hidden=false;
 }
 function askStamp(sid,x,y){
@@ -2524,7 +2524,7 @@ function askStamp(sid,x,y){
   const need={};for(const c of st.cells)need[c[2]]=(need[c[2]]||0)+1;
   const s=shortCost(need);if(!isFinite(s.cost))return toast(s.parts.join('・')+'足りません','warn');s.cost=Math.ceil(s.cost*.8);
   pending={kind:'stamp',sid,x,y,cost:s.cost,need};
-  $('#confirmTxt').textContent=st.name+(s.parts.length?'（足りない分は'+SP(s.cost)+'で）':'（お供え箱から）');$('#cYes').disabled=S.pt<s.cost;$('#confirm').hidden=false;
+  $('#confirmTxt').textContent=st.name+(s.parts.length?'（足りない分は'+SP(s.cost)+'で）':'（おそなえ箱から）');$('#cYes').disabled=S.pt<s.cost;$('#confirm').hidden=false;
 }
 function confirmYes(){
   if(pending&&nightLock()){pending=null;$('#confirm').hidden=true;selRect=null;return toast('夜のあいだは、置くことも、こわすこともできません')}
@@ -2546,7 +2546,7 @@ function confirmYes(){
 const RLOCK=new Set(['lumber','quarry','stele','fountain','lighthouse','windmill','bed','campfire','oven','swing','lamp','bench','chair','stool']);/* 会話でひらめくまで作れない家具 */
 function recipeKnown(id,s=S){const b=BL[id];return !!b&&(!WIND_STAGE_TOYS.has(id)||WD===4)&&(id!=='window'||!!(s.unlocked||{}).window)&&(!(b.kind==='furn'||RLOCK.has(id)||b.offerOnly)||!!(s.recipes||{})[id])}
 
-const MANUAL=[['せいれいのようす',[['おなか','へると元気がなくなり、0になると消えてしまう。食料箱のごはんを食べる。料理はおなかがたくさんふくれる。'],['たのしさ','遊ぶ・おしゃべり・水浴びでふえる。おもちゃで遊ぶといちばんふえる。満タンになると、お供え箱にお供えをしてくれる。低いと疲れやすくなる。'],['つかれ','はたらくとたまる。たまると昼でもひと休みする。夜はベッドや家で眠ってなおす。'],['住み心地','家をタップすると見られる。家具・床がふえると上がる。つぼなどのかざりは、家の中か、家のそば（かざりごとに決まった範囲。つぼは1マス）にあれば入る。そのせいれいの好きな家具は、その家具のぶんのポイントが2倍になる。'],['住み心地の効果','高いほど、眠ったときのつかれのとれ方が速くなる（0.6〜3.3倍）。住み心地は最大300まで上がる。180以上でぐっすり眠れて、朝にたのしさ+10。90未満だと、たのしさ-5。'],['ベッドの数','家の中の広さ4マスにつき、ベッド1つがおすすめ。それより多く置くと、きゅうくつで住み心地が大きく下がり、元気とたのしさも下がる。']]],['ステータス',[['作業スピード','仕事の速さ。たき火で遊ぶとのびる。'],['移動速度','歩く速さ。ブランコで遊ぶとのびる。道の上はもっと速い。'],['スタミナ','疲れにくさ。噴水で遊ぶとのびる。'],['持てる数','一度に運べる数。'],['攻撃力','「コワイノ」とたたかう力。火のせいれいがいちばん強い。']]],['属性と得意なこと',[['木','畑の収穫がいつも+1（ほかの子より、1つ多くとれる）・畑の世話・花や木を植える・木の家具づくり'],['水','水やり・つり・水の家具づくり'],['火','「コワイノ」とたたかう・夜の見回り・料理・火の家具づくり'],['土','畑を耕す・柵を直す・土の家具づくり'],['風','足が速い・ふしぎな種を拾う・風の家具づくり'],['みんな','建てる・収穫・種まき・木や石を集める・お供え']]],['家具の種類',[['【ダイニング家具】','いす・ソファ・ローテーブル・ラグ・ひくい棚など。食卓のある家（ダイニング）の中に置くと、その家の食卓で食べたときにもらえるパワーがふえる。たくさん置くほどふえて、いちばん多くて+3。ソファやひくい棚は、1つでも大きくふえる。家の中の食卓で食べるだけでも+1。食卓をタップすると、いまどれだけふえるか見られる。'],['【料理家具】','水おけ・流し台など。かまどのまわり3マスにあると、料理が早くなる（料理家具の種類1つにつき10%）。かまどをタップすると、いまの料理の速さが見られる。'],['【あかり】','たいまつ・ランタン・ろうそくなど。夜の見回りや、家の中を明るくするのに使う。ろうそく・ランタン・フロアランプは、家の中に置くとその家ぜんたいを照らす（家の外では1.5マス）。'],['【庭の家具】','生垣はまわり2マス、水飲み鳥・ガーデンアーチは3マス、巣箱は4マスと範囲が広いかわりに、効果は小さめ。パラソルは、まわり1マスだけだが、効果が大きい。どれも、たのしさがふえる（休けい中は元気も）。'],['【あそび道具】','ブランコ・シーソー・すべり台など。遊ぶと、たのしさがいちばんふえる。'],['【かべ・かざり】','絵・カーテン・窓・かざり棚など。住み心地が上がる。絵やカーテンは、横向きの家の壁にかける。'],['お供えでしか手に入らない家具','依頼ボードでは作れない家具もある。せいれいが、ごくまれにお供えしてくれる（その子の属性の家具だけ）。']]],['くらし',[['床','家の中の床のわりあいに応じて、住み心地が最大+45（床100%のとき）。床は歩く速さも上がる。'],['水浴び','夕方、水べか、バスタブで水浴びをする。できないと、たのしさが下がる。'],['あかり','家の中か、すぐそばに灯り（たいまつ・ランタン・ろうそくなど）があると、住み心地がいい。'],['畑とたね','お供え箱や「おく」でたねをえらんで、畑をタップしてまく。収穫したら、また植える。耕しただけでは、なにも育たない。はじめはいもだけ。火のせいれいが来ると、こむぎとキャベツもつくれる。'],['ベッド','ベッドをタップすると、そこで眠るせいれいをきめられる。家をタップしても、中のベッドをえらべる。'],['かまど','「みる」でかまどをタップして、作る料理をえらぶ。料理ごとに時間がちがう。']]],['守り神のちから',[['おつげ','メニューから、きょういちにちの指示を出せる（木をあつめる・食料をあつめる など）。'],['依頼ボード','家具や罠をたのむ。手のあいたせいれいが作ってくれる。'],['なかまを呼ぶ','属性の力がたまった次の朝、神殿の「！」をタップ。']]],['夜と「コワイノ」',[['「コワイノ」','夜12時ごろ、南からやってくる。まず見張り台や罠をこわしにきて、そのあとせいれいをねらう。オオカゲを追いはらうほど、数も強さもふえる。'],['まもりの光','夜、「コワイノ」をタップすると、パワー1を使い、光でおどかしてダメージをあたえる。10秒ごとに使える。'],['直す','こわれた柵・壁・見張り台・罠は、昼に土のせいれいが素材を使って直す。'],['朝まで休む','「コワイノ」をぜんぶ追いはらった夜や、せいれいがみんな消えてしまった夜は、上の「朝まで休む」で朝までとばせる。'],['そなえ','柵・壁・見張り台・罠でまもる。家の中にいるせいれいは攻撃されない。でも、「コワイノ」は家の壁をこわそうとする。'],['おとしもの','「コワイノ」を追いはらうと、たまにおとしものをする。朝になると、せいれいが拾ってくれる。'],['ヌシのかけら','3つ集めて台座にはめると、ヌシ様がもどってくる。手に入れかたは土地ごとにちがう。'],['めぶきのしずく','オオカゲを追いはらうと、半分くらいの確率で落とす。せいれいのリストの「消えてしまったせいれい」から使うと、そのせいれいがもどってくる（Lv1から）。'],['おみおくり','消えた子のお墓は、なかま（なかよしがいればその子）が神殿へはこび、おいのりして、おみおくりする。'],['お墓','この土地に深くなじんだ「めぐりの子」は、土地とのつながりをたどり、次の朝、神殿の「！」から、レベルそのままで戻ってこられる。ほかの子は、消えると自然にかえり、同じ姿では戻れない。「めぶきのしずく」があれば別（Lv1から）。']]]];
+const MANUAL=[['せいれいのようす',[['おなか','へると元気がなくなり、0になると消えてしまう。食料箱のごはんを食べる。料理はおなかがたくさんふくれる。'],['たのしさ','遊ぶ・おしゃべり・水浴びでふえる。おもちゃで遊ぶといちばんふえる。満タンになると、おそなえ箱におそなえをしてくれる。低いと疲れやすくなる。'],['つかれ','はたらくとたまる。たまると昼でもひと休みする。夜はベッドや家で眠ってなおす。'],['住み心地','家をタップすると見られる。家具・床がふえると上がる。つぼなどのかざりは、家の中か、家のそば（かざりごとに決まった範囲。つぼは1マス）にあれば入る。そのせいれいの好きな家具は、その家具のぶんのポイントが2倍になる。'],['住み心地の効果','高いほど、眠ったときのつかれのとれ方が速くなる（0.6〜3.3倍）。住み心地は最大300まで上がる。180以上でぐっすり眠れて、朝にたのしさ+10。90未満だと、たのしさ-5。'],['ベッドの数','家の中の広さ4マスにつき、ベッド1つがおすすめ。それより多く置くと、きゅうくつで住み心地が大きく下がり、元気とたのしさも下がる。']]],['ステータス',[['作業スピード','仕事の速さ。たき火で遊ぶとのびる。'],['移動速度','歩く速さ。ブランコで遊ぶとのびる。道の上はもっと速い。'],['スタミナ','疲れにくさ。噴水で遊ぶとのびる。'],['持てる数','一度に運べる数。'],['攻撃力','「コワイノ」とたたかう力。火のせいれいがいちばん強い。']]],['属性と得意なこと',[['木','畑の収穫がいつも+1（ほかの子より、1つ多くとれる）・畑の世話・花や木を植える・木の家具づくり'],['水','水やり・つり・水の家具づくり'],['火','「コワイノ」とたたかう・夜の見回り・料理・火の家具づくり'],['土','畑を耕す・柵を直す・土の家具づくり'],['風','足が速い・ふしぎな種を拾う・風の家具づくり'],['みんな','建てる・収穫・種まき・木や石を集める・おそなえ']]],['家具の種類',[['【ダイニング家具】','いす・ソファ・ローテーブル・ラグ・ひくい棚など。食卓のある家（ダイニング）の中に置くと、その家の食卓で食べたときにもらえるパワーがふえる。たくさん置くほどふえて、いちばん多くて+3。ソファやひくい棚は、1つでも大きくふえる。家の中の食卓で食べるだけでも+1。食卓をタップすると、いまどれだけふえるか見られる。'],['【料理家具】','水おけ・流し台など。かまどのまわり3マスにあると、料理が早くなる（料理家具の種類1つにつき10%）。かまどをタップすると、いまの料理の速さが見られる。'],['【あかり】','たいまつ・ランタン・ろうそくなど。夜の見回りや、家の中を明るくするのに使う。ろうそく・ランタン・フロアランプは、家の中に置くとその家ぜんたいを照らす（家の外では1.5マス）。'],['【庭の家具】','生垣はまわり2マス、水飲み鳥・ガーデンアーチは3マス、巣箱は4マスと範囲が広いかわりに、効果は小さめ。パラソルは、まわり1マスだけだが、効果が大きい。どれも、たのしさがふえる（休けい中は元気も）。'],['【あそび道具】','ブランコ・シーソー・すべり台など。遊ぶと、たのしさがいちばんふえる。'],['【かべ・かざり】','絵・カーテン・窓・かざり棚など。住み心地が上がる。絵やカーテンは、横向きの家の壁にかける。'],['おそなえでしか手に入らない家具','依頼ボードでは作れない家具もある。せいれいが、ごくまれにおそなえしてくれる（その子の属性の家具だけ）。']]],['くらし',[['床','家の中の床のわりあいに応じて、住み心地が最大+45（床100%のとき）。床は歩く速さも上がる。'],['水浴び','夕方、水べか、バスタブで水浴びをする。できないと、たのしさが下がる。'],['あかり','家の中か、すぐそばに灯り（たいまつ・ランタン・ろうそくなど）があると、住み心地がいい。'],['畑とたね','おそなえ箱や「おく」でたねをえらんで、畑をタップしてまく。収穫したら、また植える。耕しただけでは、なにも育たない。はじめはいもだけ。火のせいれいが来ると、こむぎとキャベツもつくれる。'],['ベッド','ベッドをタップすると、そこで眠るせいれいをきめられる。家をタップしても、中のベッドをえらべる。'],['かまど','「みる」でかまどをタップして、作る料理をえらぶ。料理ごとに時間がちがう。']]],['守り神のちから',[['おつげ','メニューから、きょういちにちの指示を出せる（木をあつめる・食料をあつめる など）。'],['依頼ボード','家具や罠をたのむ。手のあいたせいれいが作ってくれる。'],['なかまを呼ぶ','属性の力がたまった次の朝、神殿の「！」をタップ。']]],['夜と「コワイノ」',[['「コワイノ」','夜12時ごろ、南からやってくる。まず見張り台や罠をこわしにきて、そのあとせいれいをねらう。オオカゲを追いはらうほど、数も強さもふえる。'],['まもりの光','夜、「コワイノ」をタップすると、パワー1を使い、光でおどかしてダメージをあたえる。10秒ごとに使える。'],['直す','こわれた柵・壁・見張り台・罠は、昼に土のせいれいが素材を使って直す。'],['朝まで休む','「コワイノ」をぜんぶ追いはらった夜や、せいれいがみんな消えてしまった夜は、上の「朝まで休む」で朝までとばせる。'],['そなえ','柵・壁・見張り台・罠でまもる。家の中にいるせいれいは攻撃されない。でも、「コワイノ」は家の壁をこわそうとする。'],['おとしもの','「コワイノ」を追いはらうと、たまにおとしものをする。朝になると、せいれいが拾ってくれる。'],['ヌシのかけら','3つ集めて台座にはめると、ヌシ様がもどってくる。手に入れかたは土地ごとにちがう。'],['めぶきのしずく','オオカゲを追いはらうと、半分くらいの確率で落とす。せいれいのリストの「消えてしまったせいれい」から使うと、そのせいれいがもどってくる（Lv1から）。'],['おみおくり','消えた子のお墓は、なかま（なかよしがいればその子）が神殿へはこび、おいのりして、おみおくりする。'],['お墓','この土地に深くなじんだ「めぐりの子」は、土地とのつながりをたどり、次の朝、神殿の「！」から、レベルそのままで戻ってこられる。ほかの子は、消えると自然にかえり、同じ姿では戻れない。「めぶきのしずく」があれば別（Lv1から）。']]]];
 const boardMax=()=>S.flags.board5?5:3;
 /* 依頼をやめる：パワーと素材はもどる。作っていた子は手をとめる */
 function cancelOrder(oid){const k=S.orders.findIndex(q=>q.id===oid);if(k<0)return;const o=S.orders[k],b=BL[o.type];S.orders.splice(k,1);
@@ -3749,7 +3749,7 @@ function drawRes0(r,now){
   if(r.act&&r.act.type==='cook'&&r.act.stage==='do'&&r.act.obj!=null&&r.cing){const a=r.act,tot=((RECIPES.find(x=>x.out===r.cing.rec)||{time:30}).time)*(trt(r,'ryouri')?.7:1)*ovenMul(a.obj),p=Math.min(1,(a.t||0)/Math.max(1,tot)),gx=(a.obj%W)*TS+2,gy=((a.obj/W)|0)*TS-12,g=()=>{ctx.fillStyle='rgba(0,0,0,.5)';rr(ctx,gx,gy,28,6,3);ctx.fillStyle='#ffd38a';rr(ctx,gx+1,gy+1,26*p,4,2)};if(BUBQ)BUBQ.push(g);else g()}/* 料理の進みぐあい */
   if(BUBQ)BUBQ.push(over);else over();
 }
-let GODP=[-.82,-.6];const godX=()=>STATUE>=0?STATUE%W+.5+GODP[0]:CX+.5,godY=()=>STATUE>=0?((STATUE/W)|0)+(S.obj[STATUE+W]==='altar'?GODP[1]:1.9):CY-6.4;/* カミサマは神殿の左の柱の前（お供え箱のうしろ）に立つ */
+let GODP=[-.82,-.6];const godX=()=>STATUE>=0?STATUE%W+.5+GODP[0]:CX+.5,godY=()=>STATUE>=0?((STATUE/W)|0)+(S.obj[STATUE+W]==='altar'?GODP[1]:1.9):CY-6.4;/* カミサマは神殿の左の柱の前（おそなえ箱のうしろ）に立つ */
 const godHere=()=>S.godShown&&(!S.godGone||S.godVisit);
 function talkBub(px,by,now,col){const bw=30,bb=by-Math.abs(Math.sin(now/260))*3;ctx.fillStyle=col||'#9fdcff';rr(ctx,px-bw/2,bb-48,bw,27,10);ctx.beginPath();ctx.moveTo(px-5,bb-21.5);ctx.lineTo(px,bb-14);ctx.lineTo(px+5,bb-21.5);ctx.fill();ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.beginPath();ctx.roundRect?ctx.roundRect(px-bw/2,bb-48,bw,27,10):ctx.rect(px-bw/2,bb-48,bw,27);ctx.stroke();
     for(let d=-1;d<=1;d++)circ(ctx,px+d*7,bb-34.5,2.6,'#1f5f86');}
@@ -4026,7 +4026,7 @@ function render(now){
   for(const r of S.res)if(vis(r)){const px=r.x*TS,fy=r.y*TS,onB=r.act&&r.act.type==='rest'&&r.act.stage==='do'&&S.obj[r.act.obj]==='bench',onAl=STATUE>=0&&(r.y|0)*W+(r.x|0)===STATUE+W;/* ベンチにすわっている子は、ベンチの背もたれより手前。神殿の台座の上にいる子は、台座より手前 */const inDr=HOME_DOORS.has(typeAt((r.y|0)*W+(r.x|0)))||GATE_IDS.has(typeAt((r.y|0)*W+(r.x|0)))||SEATS.includes(typeAt((r.y|0)*W+(r.x|0)));/* いすにすわる子も、いすより手前 *//* ドアのマスを通る子は、ドアより手前 */add(toyR(r)?toyPose(r,now).z:onB?((r.act.obj/W)|0)+1.05:onAl?((STATUE/W)|0)+2.03:inDr?(r.y|0)+1.02:rDepth(r),2,[px-22,fy-64,px+22,fy+13],()=>drawRes(r,now),(r.y|0)*W+(r.x|0))}
   if(EVAP.length){EVAP=EVAP.filter(it=>now-it.t0<(it.dur||1800)+600);for(const it of EVAP){const e=it.e,z=EN[e.type].size||1,px=e.x*TS,fy=e.y*TS;add(e.y,2,[px-30*z,fy-110*z,px+30*z,fy+15],()=>drawEvap(it,now),(e.y|0)*W+(e.x|0))}}
   for(const e of S.enemies)if(vis(e)&&!(e.dead&&EVAP.some(it=>it.e===e))){/* 消えていく途中のコワイノは、消える演出だけを描く */const s=EN[e.type].size||1,px=e.x*TS,fy=e.y*TS;add(e.y,2,[px-24*s,fy-56*s-10,px+24*s,fy+15],()=>drawEnemy(e,now),(e.y|0)*W+(e.x|0))}
-  if(godHere()){const GX=godX(),GY=godY(),px=GX*TS,py=GY*TS,onA=STATUE>=0&&S.obj[STATUE+W]==='altar';add(onA?((STATUE/W)|0)+1.02:GY+.5,onA?1.5:2,/* 神殿の柱とお供え箱より手前 */[px-36,py-64,px+36,py+24],()=>drawGod(now),(GY|0)*W+(GX|0))}
+  if(godHere()){const GX=godX(),GY=godY(),px=GX*TS,py=GY*TS,onA=STATUE>=0&&S.obj[STATUE+W]==='altar';add(onA?((STATUE/W)|0)+1.02:GY+.5,onA?1.5:2,/* 神殿の柱とおそなえ箱より手前 */[px-36,py-64,px+36,py+24],()=>drawGod(now),(GY|0)*W+(GX|0))}
   if(S.nushi){const n=S.nushi,px=n.x*TS,py=n.y*TS;add(n.y+.2,2,[px-100,py-150,px+100,py+20],()=>drawNushi(now),-1)}
   for(let y=Math.max(0,y0-2);y<Math.min(H,y1+4);y++)for(let x=x0;x<x1;x++){const i=y*W+x,o=S.obj[i];if(!o||o==='part'||!BL[o]||S.ground[i]===1&&o!=='lotus'&&o!=='sprout'||!(BL[o].dyn||BL[o].anim||TREES.has(o)))continue;
     add(objectDepth(o,i),BL[o].kind==='block'?0:1,objBox(o,i),()=>drawObj(ctx,o,x*TS,y*TS,i,S.dyn[i]?(S.dyn[i].g!=null?S.dyn[i].g:S.dyn[i].p):0,now),i)}
@@ -4179,7 +4179,7 @@ function onTap(sx,sy){
     if(breakable(o)&&o!=='tower')return toast(BL[o].name+'：じょうぶさ '+Math.floor(S.hp[j]??BL[o].hp)+'/'+BL[o].hp);
     if(o==='rock'||o==='deadtree'||o==='ntree')return toast(BL[o].name+'：のこり '+Math.max(0,10-(S.hp['n'+j]||0))+'/10');
     if(o==='watch')return openSheet('watch',j);
-    if(o==='obox')return S.feat.inv?openSheet('inv'):toast('お供え箱');
+    if(o==='obox')return S.feat.inv?openSheet('inv'):toast('おそなえ箱');
     if(o==='grave'){const d=S.dyn[j]||{};if(!d.buried)return toast((d.name||'せいれい')+'のお墓。なかまが神殿へはこんで、おみおくりしてくれる');/* 守り神は埋葬できない */return toast((d.name||'せいれい')+'のお墓')}
     if(o==='tower'&&!WD&&!S.cleared){const av=(S.shards||0)-(S.setSh||0);if(av>0&&(S.setSh||0)>=2){const NM=['木のせいれい','守護の台座','ヌシのかけら','みどりのマス','せいれいパワー'],miss=clearConds().findIndex(c=>!c[1]);if(miss>=0)return toast(NM[miss]+'が足りません','warn')}/* 3つ目をはめるときも、5つの条件がそろっているか見る */if(av>0){S.setSh=(S.setSh||0)+1;sfx('level');burst(j,'furn','none');toast('台座に、ヌシのかけらをはめた（'+S.setSh+'/3）','good');logEv('かけらを台座にはめた');if(S.setSh>=3)setTimeout(()=>dialog((L=>L&&L.length?L:[[GOD,GVOICE()+'かけらが3つそろったのう。……ヌシ様が、帰ってくるぞい。']])(sevLines([['F','台座が、光ってる……！',1],['N','3つともはまったねぇ。……ヌシ様が、帰ってくるよぉ。',1]])),()=>{if(S.cleared)return;if(S.res.some(q=>q.name===POKO))nushiReturns();else{S.flags.nushiWait=1;toast('フタバが帰ってきたら、ヌシ様がすがたをあらわす','warn')}}),900);checkQuest();return}return openSheet('clear')}
     if(o==='board')return S.feat.craft?openSheet('craft'):toast('依頼ボード。もう少ししたら使えるようになる');
@@ -4349,8 +4349,8 @@ function toast(msg,kind){if(kind==='good')sfx('good');else if(kind==='warn')sfx(
 const FEATS={inv:'#dockInv',build:'[data-mode="build"]',remove:'[data-mode="remove"]',craft:'[data-sheet="craft"]',people:'[data-sheet="people"]'};
 function applyFeats(){
   if(S.glassT==null&&glassUnlocked())S.glassT=600;/* はじめの10分は無料 */$('#speedBtn').hidden=!(glassUnlocked()||TESTSPD||TESTM);if(!(hasGlass()||TESTM))S.speed=1;if(!TESTM&&S.speed>2)S.speed=1;glassUI();
-  for(const k in FEATS)document.querySelector(k==='inv'?FEATS[k]:'#dock '+FEATS[k]).hidden=!S.feat[k]||k==='craft'||k==='inv';/* 依頼は依頼ボードから。お供え箱は神殿のお供え箱をタップ */
-  document.querySelector('#dock [data-mode="bulk"]').hidden=!(S.bulk||S.stamps);/* お供え箱のボタン */
+  for(const k in FEATS)document.querySelector(k==='inv'?FEATS[k]:'#dock '+FEATS[k]).hidden=!S.feat[k]||k==='craft'||k==='inv';/* 依頼は依頼ボードから。おそなえ箱は神殿のおそなえ箱をタップ */
+  document.querySelector('#dock [data-mode="bulk"]').hidden=!(S.bulk||S.stamps);/* おそなえ箱のボタン */
   const n=[...document.querySelectorAll('#dock button')].filter(b=>!b.hidden).length;
   $('#dock').style.gridTemplateColumns='repeat('+n+',1fr)';
 }
@@ -4469,7 +4469,7 @@ function renderSheet(){
     const r2=sec('新しいブロック');
     for(const id of BLOCKS){const b=BL[id];if(!b.unlock)continue;
       const bx=row(r2,b.name,'',iconURL(id),S.unlocked[id]);helpify(bx.parentNode,withAttr(id,b.desc));
-      if(S.unlocked[id])btn(bx,'もらった',true);else if(!lvOK(id))btn(bx,'村Lv'+b.lv,true);else btn(bx,SP(b.unlock),S.pt<b.unlock,()=>{S.pt-=b.unlock;S.unlocked[id]=true;giveItem(id,2);toast(b.name+'をもらった！ お供え箱に2こ入った','good');trade()},1)}
+      if(S.unlocked[id])btn(bx,'もらった',true);else if(!lvOK(id))btn(bx,'村Lv'+b.lv,true);else btn(bx,SP(b.unlock),S.pt<b.unlock,()=>{S.pt-=b.unlock;S.unlocked[id]=true;giveItem(id,2);toast(b.name+'をもらった！ おそなえ箱に2こ入った','good');trade()},1)}
     const r3=sec('道具');
     {const bx=row(r3,'ひろびろハケ','指でなぞった範囲を、ブロックでまとめてぬれる。種もまとめて植えてもらえる',toolIcon('hake'),S.bulk);
       if(S.bulk)btn(bx,'もらった',true);else btn(bx,SP(30),S.pt<30,()=>{S.pt-=30;S.bulk=true;applyFeats();toast('ひろびろハケをもらった！「どうぐ」から使える','good');trade()},1)}
@@ -4485,7 +4485,7 @@ function renderSheet(){
       const bx=row(r4,'基地を広げる（'+nx+'×'+nx+'マス）','置ける範囲が広がる');btn(bx,S.lv<need?'村Lv'+need:SP(c),S.lv<need||S.pt<c,()=>{S.pt-=c;S.baseLv++;recount();toast('基地が広がった！','good');trade()},1)}
     else{const bx=row(r4,'基地を広げる','これ以上は広げられない',null,true);btn(bx,'最大',true)}
   }else if(sheet==='inv'){
-    T.textContent='お供え箱';
+    T.textContent='おそなえ箱';
     const grid=el('<div class="grid"></div>');
     const groups=[['ブロック',BLOCKS.filter(id=>inv(id)>0)],['うえる',PLANTS.filter(id=>inv(id)>0)],...furnitureGroups(FURN.filter(id=>inv(id)>0))];
     const ids=groups.flatMap(([,items])=>items);
@@ -4509,7 +4509,7 @@ function renderSheet(){
       body.appendChild(d)}
   }else if(sheet==='craft'){
     T.textContent='依頼ボード';
-    body.appendChild(el('<p class="note">'+(orderLock()?'いまは「'+BL[orderLock()].name+'」だけたのめます。':'できたものはお供え箱に入ります。')+'</p>'));body.appendChild(el('<p class="story">素材箱：<b>木材 '+(S.mat.wood||0)+'</b>・<b>石材 '+(S.mat.stone||0)+'</b>（'+matTot()+'/'+matCap()+'）</p>'));
+    body.appendChild(el('<p class="note">'+(orderLock()?'いまは「'+BL[orderLock()].name+'」だけたのめます。':'できたものはおそなえ箱に入ります。')+'</p>'));body.appendChild(el('<p class="story">素材箱：<b>木材 '+(S.mat.wood||0)+'</b>・<b>石材 '+(S.mat.stone||0)+'</b>（'+matTot()+'/'+matCap()+'）</p>'));
     const bd=el('<div class="board"></div>');
     for(let n=0;n<boardMax();n++){const o=S.orders[n];
       if(!o){bd.appendChild(el('<div class="paper empty">あき</div>'));continue}
@@ -4530,7 +4530,7 @@ function renderSheet(){
       r.appendChild(bt);s2.querySelector('.rows').appendChild(r)}
     if(!s2.querySelector('.rows').children.length)s2.querySelector('.rows').appendChild(el('<div class="empty" style="padding:8px;opacity:.7">まだ作れるものがない</div>'));
     body.appendChild(s2);
-    if(S.feat.inv){const ib=el('<button class="btn">お供え箱を見る</button>');ib.onclick=()=>openSheet('inv');body.appendChild(ib)}
+    if(S.feat.inv){const ib=el('<button class="btn">おそなえ箱を見る</button>');ib.onclick=()=>openSheet('inv');body.appendChild(ib)}
   }else if(sheet==='vill'){
     T.textContent='村のようす';
     /* 項目ごとにまとめる：レベル／目標の進みぐあい／たくわえ／きょう */
@@ -4654,7 +4654,7 @@ function renderSheet(){
     const cr=CROPS[cropK(d)];T.textContent=cr?'畑：'+cr.name:'畑';
     body.appendChild(el('<p class="story">'+(!cr?'まだ、なにも植えていない':d.sown===false?(d.paid||cseed(cropK(d))>0?'種まきを待っている':'たねがなくて植えられない'):d.g>=100?'収穫できる':'収穫まであと'+Math.ceil((100-d.g)/(100/cr.days)-.01)+'日・きょうの水やり'+(d.wet>0?'ずみ':'まだ'))+'</p>'));
     if(cr){const n=cr.yield+(NEARMILL.has(j)?1:0)+(NEARFLOWER.has(j)?1:0)+(S.today==='hosaku'?1:0);const yr=el('<div class="sec"><div class="stats"><div class="stat"><span>収穫できる数</span><b></b></div></div></div>');yr.querySelector('b').textContent=n+'こ';body.appendChild(yr)}/* いま収穫すると、いくつとれるか */
-    if(!cr){const b2=el('<button class="btn pri">お供え箱からたねをえらぶ</button>');b2.onclick=()=>{sfx('tap');openSheet('inv',Object.keys(CROPS).filter(cropOn).map(k=>'seed:'+k).find(id=>inv(id)>0)||'seed:imo')};body.appendChild(b2)}
+    if(!cr){const b2=el('<button class="btn pri">おそなえ箱からたねをえらぶ</button>');b2.onclick=()=>{sfx('tap');openSheet('inv',Object.keys(CROPS).filter(cropOn).map(k=>'seed:'+k).find(id=>inv(id)>0)||'seed:imo')};body.appendChild(b2)}
   }else if(sheet==='food'){T.textContent='食料箱';
     body.appendChild(el('<p class="story">'+S.food+'/'+foodCap()+'</p>'));
     const g=el('<div class="rows"></div>');for(const k in FOODS){const n=S.fs[k]||0;if(!n)continue;const f=FOODS[k];const rc=RECIPES.find(R=>R.out===k),r=helpify(rowEl((icURL(f.e)?'':f.e+' ')+f.name+'　×'+n,(f.dish?'料理・':'')+'おなか'+f.v+(f.pw?'・パワー+'+f.pw:'')+(f.fx?'・'+f.fx:''),icURL(f.e)),rc?DISHD(rc):RAWD(k));g.appendChild(r)}body.appendChild(g);
@@ -4671,7 +4671,7 @@ function renderSheet(){
   }else if(sheet==='manual'){
     T.textContent='ひでんのしょ';
     {const bk=el('<button class="btn back">‹ メニュー</button>');bk.onclick=()=>{sfx('tap');openSheet('menu')};body.appendChild(bk)}
-    body.appendChild(el(`<div class="sec"><h3>あそびかた</h3><p class="story">あなたはこの土地の新しい<b>守り神</b>。せいれいをふやして土地をよみがえらせ、<b>守護の台座</b>を建てて<b>ヌシ様</b>をむかえましょう。<br>せいれいが食べたり眠ったり遊んだりすると<b>せいれいパワー</b>がたまります。<br>せいれいのおそなえは<b>お供え箱</b>に入ります。家具は<b>依頼ボード</b>でたのみます。カミサマが来たら<b>交換</b>ができます。<br>夜は<b>「コワイノ」</b>に気をつけて。<br>1本指でドラッグ：移動／2本指：ズーム。</p></div>`));/* あそびかたも、ひでんのしょにまとめる */
+    body.appendChild(el(`<div class="sec"><h3>あそびかた</h3><p class="story">あなたはこの土地の新しい<b>守り神</b>。せいれいをふやして土地をよみがえらせ、<b>守護の台座</b>を建てて<b>ヌシ様</b>をむかえましょう。<br>せいれいが食べたり眠ったり遊んだりすると<b>せいれいパワー</b>がたまります。<br>せいれいのおそなえは<b>おそなえ箱</b>に入ります。家具は<b>依頼ボード</b>でたのみます。カミサマが来たら<b>交換</b>ができます。<br>夜は<b>「コワイノ」</b>に気をつけて。<br>1本指でドラッグ：移動／2本指：ズーム。</p></div>`));/* あそびかたも、ひでんのしょにまとめる */
     {const CAT=[['あそびかた',[]],['せいれい',['せいれいのようす','ステータス','属性と得意なこと']],['くらし・家具',['家具の種類','くらし']],['守り神',['守り神のちから']],['夜と戦い',['夜と「コワイノ」']]];
       if(!CAT.some(c=>c[0]===MANC))MANC='あそびかた';
       const bar=el('<div class="mtabs" style="display:flex;flex-wrap:wrap;gap:6px;margin:8px 0"></div>');for(const c of CAT){const b=el('<button class="btn"></button>');b.textContent=c[0];if(c[0]===MANC)b.classList.add('pri');b.onclick=()=>{sfx('tap');MANC=c[0];openSheet('manual')};bar.appendChild(b)}
@@ -4941,7 +4941,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='372';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='373';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
