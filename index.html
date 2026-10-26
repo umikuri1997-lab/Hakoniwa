@@ -28,7 +28,7 @@
 ・基地拡張は水のせいれいが来た後。その依頼を受ける会話でカミサマの像を発想する。
 ・精霊どうしの会話で家具・遊具・施設に触れるときは、実際に置かれてから話題にする。別属性ごとの会話にも条件を適用する。
 ・敵はストーリーの序盤ではゆっくり増やし、強い種類とオオカゲ撃破後の増援も段階的に出す。その夜のコワイノ全員を朝4時までに到着させる。ワナクイは罠設置でなく進行度に合わせる。
-・収納は「収納」、遊具は「遊び」。依頼ボード・置く一覧・お供え箱の分類をそろえる。
+・収納は「収納」、遊具は「遊び」。依頼ボード・置く一覧・おそなえ箱の分類をそろえる。
 ・上部UIの折り返しとsafe-area、画面幅に合う指ガイドを維持する。
 ・開始画面に「10秒ごとに自動セーブ」「音が出ます」の案内を再追加しない。機能は残す。
 ・村レベルはLv10が上限。レベル報酬はLv2 あぜ道・柵のドア、Lv3 木の壁・ドア、Lv4 フローリング・窓、Lv5 しっくいの壁・砂利道、Lv6 石の塀・石の塀のドア、Lv7 丸太の壁、Lv8 レンガ道・レンガ壁、Lv9 じゅうたん・カーテン、Lv10 石畳・石の大門。丸太の柵・小さな家は新規作成と報酬から除く。竹の柵・石の柵も新規一覧から除く。
@@ -420,7 +420,7 @@ html,body{margin:0;width:100%;min-width:0}
   <div class="bottom" id="botUI" hidden>
     <div class="skills"><div id="areaBtn" class="guard-btn tap" hidden role="button" aria-label="ひかりのはどう"><span class="gl gb"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="2.2"/><circle cx="12" cy="12" r="6"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M5 5l1.8 1.8M17.2 17.2 19 19M19 5l-1.8 1.8M6.8 17.2 5 19"/></svg></span><span class="gl gc"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="2.2"/><circle cx="12" cy="12" r="6"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M5 5l1.8 1.8M17.2 17.2 19 19M19 5l-1.8 1.8M6.8 17.2 5 19"/></svg></span></div>
 <div id="guardStatus" class="guard-btn" hidden role="status" aria-label="守りの光"><span class="gl gb"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5 20 6v5.2c0 5.1-3.3 8.5-8 10.3-4.7-1.8-8-5.2-8-10.3V6l8-3.5Z"/><path d="m13 6.8-4 5h3l-1 5.2 4-6h-3l1-4.2Z"/></svg></span><span class="gl gc"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5 20 6v5.2c0 5.1-3.3 8.5-8 10.3-4.7-1.8-8-5.2-8-10.3V6l8-3.5Z"/><path d="m13 6.8-4 5h3l-1 5.2 4-6h-3l1-4.2Z"/></svg></span></div></div>
-    <div id="confirm" hidden><span id="confirmTxt"></span><div style="display:flex;gap:6px;flex:none"><button class="btn" id="cNo">やめる</button><button class="btn pri" id="cYes">置く</button></div></div>
+    <div id="confirm" hidden><span id="confirmTxt"></span><div style="display:flex;gap:6px;flex:none"><button class="btn" id="cNo">やめる</button><button class="btn pri" id="cYes">おく</button></div></div>
     <div id="itemInfo" class="iinfo" hidden><b id="iiName"></b><span id="iiDesc"></span></div>
     <div id="palette" hidden><div id="palWrap"><div id="palItems" class="pal"></div><button id="palL" class="palA" hidden aria-label="ひだりへ">‹</button><button id="palR" class="palA" hidden aria-label="みぎへ">›</button></div><button id="undoBtn">もどす</button></div>
     <nav class="dock" id="dock">
@@ -429,7 +429,7 @@ html,body{margin:0;width:100%;min-width:0}
       <button data-mode="bulk"><svg viewBox="0 0 24 24"><path d="M14 3l7 7-6 2-3-3z"/><path d="M12 9l-7 7c-1 1-1 3 0 4s3 1 4 0l7-7"/></svg>どうぐ</button>
       <button data-mode="remove"><svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg>こわす</button>
       <button data-sheet="craft"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="13" rx="1"/><path d="M7 17v4M17 17v4M7 8h5M7 12h8"/><circle cx="16" cy="8" r="1"/></svg>依頼</button>
-      <button data-sheet="inv" id="dockInv" hidden><svg viewBox="0 0 24 24"><path d="M3 9h18v11H3z"/><path d="M2 5h20v4H2z"/><path d="M10 13h4"/></svg>お供え箱</button>
+      <button data-sheet="inv" id="dockInv" hidden><svg viewBox="0 0 24 24"><path d="M3 9h18v11H3z"/><path d="M2 5h20v4H2z"/><path d="M10 13h4"/></svg>おそなえ箱</button>
       <button data-sheet="people"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M3 20c0-4 3-6 6-6s6 2 6 6M15 15c3 0 6 1.5 6 5"/></svg>せいれい</button>
       <button data-sheet="menu"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg>メニュー</button>
     </nav>
