@@ -1180,8 +1180,9 @@ const ACT={
   idle:{start(r){r.bubble='☕'},done:(r,a)=>a.t>=a.dur},/* ひとやすみ中は、休けいの吹き出し */
   // ベッドがない子は、家の中で起きたまま夜をすごす
   stay:{start(r){r.bubble='🏠'},done:(r,a)=>r.hunger<18||!isNight()},
+  shiver:{start(r){r.bubble='😨'},done:(r,a)=>r.hunger<30||!hostileNow()},/* たたかえない子は、コワイノがいるあいだ、家の中でふるえている */
 };
-const ACT_LBL={reunion:'なかよしに会いにいく',bury:'お墓へむかう',pray:'神殿でおいのり',sevreact:'気づいたものを見にいく',questjoy:'よろこんでいる',stay:'起きてすごしている',sow:'種をまいている',faint:'目をまわしている',eat:'ごはん中',forage:'ベリーを食べている',sleep:'おやすみ中',play:'遊んでいる',fish:'つりをしている',chat:'おしゃべり中',cook:'料理中',chop:'木を切っている',mine:'石をほっている',smat:'素材をしまう',store:'食料をしまう',fetch:'食料をとりに',chatwait:'待ちあわせ',npl:'ヌシ様と遊んでいる',tag:'おいかけっこ',tend:'畑の世話',water:'水やり',till:'畑を耕している',plant:'植えている',build:'建てている',craft:'家具づくり',harvest:'収穫中',gather:'ベリーあつめ',repair:'柵の修理',pickseed:'種ひろい',pickdrop:'おとしものひろい',offer:'おそなえ中',flee:'にげている',patrol:'見回り',wander:'おさんぽ',idle:'ひとやすみ'};
+const ACT_LBL={shiver:'こわくて、ふるえている',reunion:'なかよしに会いにいく',bury:'お墓へむかう',pray:'神殿でおいのり',sevreact:'気づいたものを見にいく',questjoy:'よろこんでいる',stay:'起きてすごしている',sow:'種をまいている',faint:'目をまわしている',eat:'ごはん中',forage:'ベリーを食べている',sleep:'おやすみ中',play:'遊んでいる',fish:'つりをしている',chat:'おしゃべり中',cook:'料理中',chop:'木を切っている',mine:'石をほっている',smat:'素材をしまう',store:'食料をしまう',fetch:'食料をとりに',chatwait:'待ちあわせ',npl:'ヌシ様と遊んでいる',tag:'おいかけっこ',tend:'畑の世話',water:'水やり',till:'畑を耕している',plant:'植えている',build:'建てている',craft:'家具づくり',harvest:'収穫中',gather:'ベリーあつめ',repair:'柵の修理',pickseed:'種ひろい',pickdrop:'おとしものひろい',offer:'おそなえ中',flee:'にげている',patrol:'見回り',wander:'おさんぽ',idle:'ひとやすみ'};
 
 function decide(r){TAKEN=new Set();for(const q of S.res){if(q===r||q.hidden)continue;if(q.act&&q.act.stand>=0)TAKEN.add(q.act.stand);if(!q.act||q.act.stage!=='walk')TAKEN.add((q.y|0)*W+(q.x|0))}
   for(const [j,t]of Object.entries(r.routeAvoid||{})){if(t>S.t)TAKEN.add(+j);else delete r.routeAvoid[j]}
@@ -1215,7 +1216,8 @@ function decide0(r){
   const tx=r.x|0,ty=r.y|0,G=bfs(tx,ty),here=ty*W+tx;
   if(r.cing&&isNight()){const R=RECIPES.find(x=>x.out===r.cing.rec);if(R)for(const k in R.need)addFood(k,R.need[k]);r.cing=null}/* 夜は料理ができないので、持っている材料は食料箱にもどす */
   if(r.wantEat){r.wantEat=0;if(r.hunger<hMax(r)-8&&goEat(r,G))return}
-  if(r.refill&&r.hunger<hMax(r)-1&&S.food>0&&goEat(r,G))return;/* マックスまで食べてから、たたかいにもどる *//* 食べ物のところへ逃げてきたら、ちゃんと食べる */
+  if(r.refill&&r.hunger<hMax(r)-1&&S.food>0&&goEat(r,G))return;/* マックスまで食べてから、たたかいにもどる */
+  if(!isWatch(r)&&hostileNow()&&r.hunger>=30&&!r.coffin&&goShiver(r,G))return;/* たたかえない子は、コワイノがいるあいだ、家でふるえる *//* 食べ物のところへ逃げてきたら、ちゃんと食べる */
   // 夜に家の中にいるせいれいは、おなかがすいても外へは出ない（見張り番の火のせいれいはべつ）
   if(isNight()&&!(isWatch(r)&&S.enemyOn&&!offShift(r)&&r.hunger>=30)&&!(r.hunger<hMax(r)*.5&&S.food>0)&&S.obj[here]!=='door'&&S.obj[here]!=='sdoor'){const out=insideSet();if(!out[here])for(let j=0;j<W*H;j++)if(out[j]||S.obj[j]==='door'||S.obj[j]==='sdoor')G.dist[j]=-1}
   if(r.alarm!=null&&S.t-r.alarm<120&&r.hunger>=10&&!r.meal&&!(r.elem==='fire'&&r.hunger>=35)&&S.enemies.some(e=>e.spawned&&!e.flee&&Math.hypot(e.x-r.x,e.y-r.y)<10)){if(withFlee(r,fleeAlarm,G))return}
@@ -1279,6 +1281,8 @@ const fireMul=r=>(r.energy<25?.7:1)*(r.fun<20?.8:1);/* 火のせいれいは、�
 const futabaFight=()=>!!(S.cleared||(S.bossKills||0)>0);/* フタバが戦うのは、オオカゲを追いはらってから（こもれびのまもりをおぼえてから） */
 const isWatch=r=>r.elem==='fire'||(r.name===POKO&&!WD&&!!S.flags.guard&&futabaFight());/* 夜の見回りをする子 */
 function offShift(r){return false;/* 火のせいれいは全員みまわり（交代なし） */if(r.elem!=='fire'||!S.enemyOn)return false;const F=S.res.filter(q=>q.elem==='fire'&&!q.hidden).sort((a,b)=>a.id-b.id);if(F.length<2)return false;const h=hour(),sh=(h>=21||h<1.5)?0:1;return F.indexOf(r)%2!==sh}
+const hostileNow=()=>S.enemies.some(e=>e.spawned&&!e.dead&&!e.flee);
+function goShiver(r,G){/* 家の中（なければ、いまの場所）で、ふるえる */let k=-1;if(HOUSES.length){const hs=new Set();for(const h of HOUSES)for(const q of h.inside)hs.add(q);k=nearest(G,j=>hs.has(j)&&walk(j)&&S.obj[j]!=='door'&&S.obj[j]!=='sdoor',200)}startAct(r,G,'shiver',k,{run:k>=0});return true}
 function goSleep(r,G,run){
   if(!isNight()&&(r.restCD||0)<=S.t){const isB=j=>(S.obj[j]==='bench'||(S.obj[j]==='part'&&S.obj[S.ref[j]]==='bench'))&&!ashed(anc(j));const bj=nearest(G,j=>isB(j)&&free('o'+j,1),40);if(bj>=0)return startAct(r,G,'rest',bj,{key:'o'+bj,obj:anc(bj),seat:bj})}/* 昼につかれたら、ベンチでひと休み（2人すわれる） */
   {const mb=myBed(r);if(mb>=0&&free('o'+mb,1)){const k=nearest(G,j=>j===mb,200);if(k>=0){const b=BL.bed.sleep;return startAct(r,G,'sleep',k,{key:'o'+k,obj:k,rate:b.rate,pt:b.pt,run:run&&!!isNight()})}}}/* じぶんのベッドがあれば、そこで眠る */
@@ -1535,7 +1539,7 @@ function hasHighWork(r){
     if(o==='sprout'&&canJob(r,'plant')&&free('o'+j,1))return true}
   return false}
 const ROUTINE=['chop','mine','gather'];
-const URGNO=['reunion','bury','pray','build','craft','repair','eat','sleep','flee','faint','cook','store','smat','fetch','cgrab','chat','chatwait','npl','tag','offer','pickdrop','pickseed','bathe','rest'];/* 水浴びやベンチの休けいは、とちゅうでやめない */
+const URGNO=['shiver','reunion','bury','pray','build','craft','repair','eat','sleep','flee','faint','cook','store','smat','fetch','cgrab','chat','chatwait','npl','tag','offer','pickdrop','pickseed','bathe','rest'];/* 水浴びやベンチの休けいは、とちゅうでやめない */
 function hasUrgent(r){/* 建てる場所か、だれも受けていない依頼があるか */
   if(canJob(r,'build')&&S.obj.some((o,j)=>o==='site'&&free('o'+j,2)))return true;
   return S.orders.some(q=>(!q.worker||!S.res.some(x=>x.id===q.worker))&&craftOK(r,q))}
@@ -1605,7 +1609,7 @@ function moveR(r,dt){
     if(r.wkT>30){if(r.act.key)BAN.set(r.act.key,S.t+180);noPass(r);endAct(r);r.path=[];r.act={type:'idle',stage:'do',t:0,dur:8};r.wkA=null;return}}
   if(!r.path.length&&r.act)beginDo(r);
 }
-const NIGHT_OK=['sleep','stay','eat','fetch','store','smat','flee','patrol','faint','forage','questjoy'];
+const NIGHT_OK=['sleep','stay','shiver','eat','fetch','store','smat','flee','patrol','faint','forage','questjoy'];
 const WORKT=new Set(['till','sow','plant','build','craft','water','tend','repair','harvest','gather','chop','mine','cook']);
 function rescueStuck(r){if(r.hidden)return;const cj=(r.y|0)*W+(r.x|0),o=S.obj[cj];if(!(HOME_WALLS.has(o)||(FENCE_IDS.has(o)&&!GATE_IDS.has(o))))return;/* 壁や柵の中にいたら、いちばん近い歩ける場所へ出す */let best=-1,bd=1e9;for(let rr=1;rr<=6&&best<0;rr++)for(let dy=-rr;dy<=rr;dy++)for(let dx=-rr;dx<=rr;dx++){if(Math.max(Math.abs(dx),Math.abs(dy))!==rr)continue;const x=(r.x|0)+dx,y=(r.y|0)+dy;if(x<0||y<0||x>=W||y>=H)continue;const k=y*W+x;if(!walk(k)||S.obj[k])continue;const d=dx*dx+dy*dy;if(d<bd){bd=d;best=k}}if(best>=0){r.x=best%W+.5;r.y=((best/W)|0)+.5;r.path=[];if(r.act&&r.act.stage==='walk')endAct(r)}}
 function updRes(r,dt){rescueStuck(r);if((RHOLD.get(r)||0)>performance.now())return;/* 喜んでいる・話したあとの少しの間は、手をとめる */if(r._pe!=null&&r.energy>r._pe+1e-6)r.eUp=S.t;r._pe=r.energy;/* 元気が回復しているか */
@@ -1641,6 +1645,7 @@ function updRes(r,dt){rescueStuck(r);if((RHOLD.get(r)||0)>performance.now())retu
   if(r.fleeNow&&!r.hidden&&!(r.act&&(r.act.type==='flee'||r.act.run))){r.fleeNow=false;
     const en=S.enemies.find(e=>e.spawned&&Math.hypot(e.x-r.x,e.y-r.y)<6);
     if(en){r.fleeT=S.t;endAct(r);const G=bfs(r.x|0,r.y|0);if(withFlee(r,fleeHit,G))return}}
+  if(r.act&&!isWatch(r)&&hostileNow()&&r.hunger>=30&&!['shiver','eat','fetch','flee','faint','forage','pray','bury','reunion','sevreact'].includes(r.act.type)&&!r.coffin)endAct(r);/* たたかえない子は、コワイノがいるあいだ、家でふるえる */
   if(r.act&&isNight()&&!NIGHT_OK.includes(r.act.type))endAct(r)
   if(r.act&&r.act.type==='sevreact'&&(r.hunger<30||r.energy<10||!SEV_ENCOUNTERS.get(S)||!sevEncounterSafe(SEV_ENCOUNTERS.get(S))))endAct(r);
   if(r.act&&r.act.type==='questjoy'&&(r.hunger<30||!questVisitSafe(r,r.act.obj)))endAct(r);
@@ -3670,10 +3675,11 @@ function drawRes0(r,now){
   if(!walking){v.back=false;v.turn=r.act&&r.act.stage==='do'&&(r.act.type==='chop'||r.act.type==='mine')&&!objBelow(r)?1:0}/* 木・岩は横向きで、そちらを向いて切る */else if(Math.abs(dx)+Math.abs(dy)>.002){const ax=Math.abs(dx),ay=Math.abs(dy);v.turn=ax>ay*1.2?1:0;v.back=!v.turn&&dy<0}v.x=r.x;v.y=r.y;
   const at=r.act&&r.act.type,ad=r.act&&r.act.stage==='do',jt=JUMP.get(r),held=HOLD.has(r.id),jumping=held||jt!=null&&now-jt<1000;
   const reacting=at==='sevreact'&&ad&&r.act.reactAt!=null,rm=reacting?r.act.reactMotion:'',rp=reacting?dialoguePose(rm,now-r.act.reactAt):null;if(rp){px+=rp.x*.4;py+=rp.y*.4}
-  const mood=reacting?({joy:'joy',shock:'shock',sad:'teary',think:'sad',nod:'smile'}[rm]||'smile'):((r.cryU||0)>S.t&&at!=='sleep'||r.coffin||at==='bury'||at==='pray')?'teary':/* 棺をはこぶ・埋葬するときは、うるうる顔 */r.hunger<20?'sad':(JOYU.get(r)||0)>now?'joy':(ad&&['chop','mine','till','build','repair'].includes(at))?'strain':jumping?'joy':(at==='flee'||r.hurt>25)?'strain':(at==='eat'&&ad)?'eat':r.hunger<20?'sad':(ad&&['play','chat','chatwait','npl','fish','tag','rest','bathe'].includes(at))||at==='tag'?'smile':'';
+  const mood=reacting?({joy:'joy',shock:'shock',sad:'teary',think:'sad',nod:'smile'}[rm]||'smile'):((r.cryU||0)>S.t&&at!=='sleep'||r.coffin||at==='bury'||at==='pray'||at==='shiver')?'teary':/* 棺をはこぶ・埋葬するときは、うるうる顔 */r.hunger<20?'sad':(JOYU.get(r)||0)>now?'joy':(ad&&['chop','mine','till','build','repair'].includes(at))?'strain':jumping?'joy':(at==='flee'||r.hurt>25)?'strain':(at==='eat'&&ad)?'eat':r.hunger<20?'sad':(ad&&['play','chat','chatwait','npl','fish','tag','rest','bathe'].includes(at))||at==='tag'?'smile':'';
   if(now>v.bl+140)v.bl=now+2500+Math.random()*3500;
   const bob=(walking?Math.abs(Math.sin(now/110+r.id))*2.5:0)+(()=>{const jt=JUMP.get(r),d=jt==null?-1:now-jt;return d>=0&&d<1000?Math.abs(Math.sin(d/130))*9*(1-d/1000):0})();
   {const sw=Math.max(r.swing||0,r.swingT||0),sd=now-sw;if(sw&&sd>=0&&sd<280)px+=(r.face<0?-1:1)*Math.sin(sd/280*Math.PI)*8}/* 攻撃のとき、前にとびだす */
+  if(at==='shiver'&&ad)px+=Math.sin(now/26+r.id*3)*1.4;/* ふるえる */
   const wade=at==='bathe'&&ad&&r.act.in>0?r.act.in:0;/* 水浴び：水の中では下半分がかくれる */
   {const tp=toyPose(r,now);if(tp){px=tp.x;py=tp.y-9}}/* 遊具の上で遊ぶ */if(sj<0&&!wade&&!toyR(r))shadow(ctx,px,py+8,12,3.6);
   const lvR=rLv(r);
