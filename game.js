@@ -3309,13 +3309,14 @@ function houseWhy(j0){const isB=j=>HOME_WALLS.has(typeAt(j))||HOME_DOORS.has(typ
   const comp=new Set([j0]),q=[j0];while(q.length&&comp.size<600){const j=q.pop(),x=j%W,y=(j/W)|0;for(let b=-1;b<=1;b++)for(let a=-1;a<=1;a++){const k=(y+b)*W+x+a;if(k>=0&&k<W*H&&!comp.has(k)&&isB(k)){comp.add(k);q.push(k)}}}
   if(![...comp].some(j=>S.obj[j]==='door'||S.obj[j]==='sdoor'))return 'まだ家になっていません。かべのどこかにドアをつけると、家になります';
   return 'まだ家になっていません。かべにすきまがあるか、中が広すぎます（中は160マスまで）。ななめのすきまも、ふさいでね'}/* 家にならない理由 */
-function findHouses(){const isB=j=>HOME_WALLS.has(typeAt(j))||HOME_DOORS.has(typeAt(j));const seen=new Uint8Array(W*H),out=[];
+function findHouses(){const isB=j=>HOME_WALLS.has(typeAt(j))||HOME_DOORS.has(typeAt(j));const seen=new Uint8Array(W*H),out=[],brk=new Set();for(const b of S.broken||[])if(!S.obj[b.j]&&(HOME_WALLS.has(b.id)||HOME_DOORS.has(b.id)))brk.add(b.j);
   for(let d=0;d<W*H;d++){if(S.obj[d]!=='door'&&S.obj[d]!=='sdoor')continue;const dx0=d%W,dy0=(d/W)|0;
     for(const[ox,oy]of DIRS){const sx=dx0+ox,sy=dy0+oy;if(sx<0||sy<0||sx>=W||sy>=H)continue;const s=sy*W+sx;if(seen[s]||isB(s))continue;
       const cells=[],q=[s];let ok=true;seen[s]=1;
       while(q.length){const j=q.pop();cells.push(j);if(cells.length>160){ok=false;break}const x=j%W,y=(j/W)|0;if(x===0||y===0||x===W-1||y===H-1){ok=false;break}
         for(const[a,b]of DIRS){const k=(y+b)*W+x+a;if(!seen[k]&&!isB(k)){seen[k]=1;q.push(k)}}}
-      if(!ok)continue;const set=new Set(cells);
+      if(!ok)continue;if(brk.size&&cells.some(j=>{const x=j%W,y=(j/W)|0;for(let b=-1;b<=1;b++)for(let a=-1;a<=1;a++)if(brk.has((y+b)*W+x+a))return true;return false}))continue;/* 壁がこわれたままの所は、家ではない（なおすまで。となりの家の外壁まで屋根がかからない） */
+      const set=new Set(cells);
       for(const j of cells){const x=j%W,y=(j/W)|0;for(let b=-1;b<=1;b++)for(let a=-1;a<=1;a++){const k=(y+b)*W+x+a;if(isB(k))set.add(k)}}
       let x0=W,y0=H,x1=0,y1=0;for(const j of set){const x=j%W,y=(j/W)|0;x0=Math.min(x0,x);y0=Math.min(y0,y);x1=Math.max(x1,x);y1=Math.max(y1,y)}
       out.push({set,inside:new Set(cells),x0,y0,x1,y1})}}
