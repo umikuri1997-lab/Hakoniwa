@@ -2165,11 +2165,13 @@ const SEV1=[
  {k:'ret',q:1,L:[['F','……あっ！ 守り神さま！？'],['F','ほんとに帰ってきてくれたんだ！'],['F','えへへ……また会えた！'],['F','見て見て！ ぼくたち、ここを守ってたんだよ！']]},
 ];
 function sevBusy(){return !started||!$('#dialog').hidden||sheet!=null||NEWRES!=null||NEWQ.length||!$('#lvup').hidden||!$('#rlv').hidden||ASKING}
+const SEVRUN=new Set();/* いま再生中の会話（セーブしない） */
 function checkSev(){if(WD||!S){SEVW={};return}if(!sevBusy())sevBub();if(S.cleared&&!(S.sevQ||[]).length)return;const D=S.sev||(S.sev={});if(sevBusy()||(S.sevQuietUntil||0)>S.t)return;
-  const Q=S.sevQ||(S.sevQ=[]);while(Q.length){const k=Q[0],e=SEV1.find(x=>x.k===k);const L=e&&sevLines(e.L);Q.shift();if(!L)continue;D[k]=1;if(/^b_/.test(k))S.flags.kizunaTold=1;return dialog(L)}
+  const Q=S.sevQ||(S.sevQ=[]);while(Q.length){const k=Q[0],e=SEV1.find(x=>x.k===k);const L=e&&sevLines(e.L);if(!L){Q.shift();continue}return dialog(L,()=>{D[k]=1;const i=Q.indexOf(k);if(i>=0)Q.splice(i,1);if(/^b_/.test(k))S.flags.kizunaTold=1})}/* 会話を最後まで見てから「見た」にする（途中でゲームをとじたら、はじめから） */
   const h=hour(),day=h>=6&&h<21;
-  for(const e of SEV1){if(e.q||D[e.k])continue;if(!e.night&&!day)continue;if(!e.at())continue;const L=sevLines(e.L);if(!L)continue;D[e.k]=1;
-    if(e.k==='e08'||e.k==='e15'||e.k==='e09'||e.k==='e16g'){const f=S.res.find(r=>r.name===POKO);if(f)centerOn(f.x*TS,f.y*TS);const run=()=>dialog(L,()=>{if(e.go)e.go()});return e.vis?visionFX(e.vis,run):run()}
+  for(const e of SEV1){if(e.q||D[e.k]||SEVRUN.has(e.k))continue;if(!e.night&&!day)continue;if(!e.at())continue;const L=sevLines(e.L);if(!L)continue;
+    if(e.k==='e08'||e.k==='e15'||e.k==='e09'||e.k==='e16g'){SEVRUN.add(e.k);const f=S.res.find(r=>r.name===POKO);if(f)centerOn(f.x*TS,f.y*TS);const run=()=>dialog(L,()=>{D[e.k]=1;SEVRUN.delete(e.k);if(e.go)e.go()});return e.vis?visionFX(e.vis,run):run()}/* ムービー・会話は、最後まで見てから「見た」にする（途中でゲームをとじたら、はじめから） */
+    D[e.k]=1;
     (S.sevP||(S.sevP=[])).push(e.k)}/* ふつうの条件会話は、吹き出しをタップしてから */
   sevBub()}
 /* 話したそうな子：S.sevP にたまった条件会話を、先頭のセリフの子の吹き出しにする */
