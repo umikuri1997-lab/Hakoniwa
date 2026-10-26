@@ -1878,7 +1878,7 @@ function areaBlast(cx,cy){
   for(let n=0;n<28;n++){const a=n/28*Math.PI*2;fx.push({k:'p',x:px+Math.cos(a)*2*TS,y:py+Math.sin(a)*2*TS,vx:Math.cos(a)*30,vy:Math.sin(a)*30-10,life:1,col:pick(['#fffbe0','#fff','#ffe9a0']),r:rnd(1.5,3)})}
   sfxAt('shoot',cx,cy);
   for(const e of L){e.hp-=.5;e.flash=8;if(e.hp<=0)defeat(e,'ひかりのはどうで'+EN[e.type].name+'を追いはらった！')}}
-function defeat(e,msg){sfx('defeat');if(BOSSFX[e.type])bossDefeatFX(e);
+function defeat(e,msg){sfx('defeat');if(e.type==='boss2'||e.type==='boss'&&!S.flags.bossOutro){if(e.type==='boss')S.flags.bossOutro=1;bossDefeatFX(e)}/* オオカゲをたおした演出は最初の1回、ヨルノオオカゲは毎回 */
   e.dead=true;S.kills++;const D=EN[e.type];{const K=S.enKills||(S.enKills={});K[e.type]=(K[e.type]||0)+1}if(S.ns){S.ns.kill++;if(D.boss)S.ns.boss=2}const n=D.pw||5;
   if(e.type==='hino')S.flags.hinoDown=true;if(D.ash&&WD===1)st2().ashKills=(st2().ashKills||0)+1;
   if(D.boss){S.bossKills=(S.bossKills||0)+1;if(!S.bossDay)S.bossDay=dayNo();logEv('オオカゲを追いはらった');memo('⚔️','オオカゲを追いはらった')}
