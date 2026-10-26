@@ -3255,6 +3255,8 @@ const COMFY={stool:2,chair2:4,stable:4,pouf:3,achair:5,ltable:5,rug1:5,sofa1:6,r
   const EXTRA={gravel:2,stone:2,brick:2.5,bamboofence:1.5,stonefence:2,logwall:2,slide:1.5,sandbox:1.5,seesaw:1.5,swing:1.5};for(const id in EXTRA){const b=BL[id];if(b&&b.mat)for(const k in b.mat)b.mat[k]=Math.ceil(b.mat[k]*EXTRA[id])}}
 /* 中盤〜終盤の家具・建物は、使う素材の数を、パワーの数に合わせる（レベル5〜7はパワーと同じくらい、8〜はパワーの1.5倍。はたらきのある物は、そのまま） */
 {const FUNC2=new Set(['bed','table','oven','lamp','torch','bench','stor','mbox','candle','lantern','flamp','tub','sink','chair','stool','chair2','stable','pouf','tower','statue']);for(const id in BL){const b=BL[id];if(!b||!b.mat||!b.pc||(b.kind!=='furn'&&b.kind!=='build')||b.trap||FUNC2.has(id)||(b.lv||0)<5)continue;const cur=Object.values(b.mat).reduce((x,y)=>x+y,0),tg=Math.min(60,Math.round(b.pc*(b.lv>=8?1.5:1)));if(tg<=cur||!cur)continue;const f=tg/cur;for(const k in b.mat)b.mat[k]=Math.max(1,Math.round(b.mat[k]*f))}}
+/* 家具・建物に必要なパワーは、素材の数をきめたあとで、5へらす（素材はそのまま。1より下にはならない） */
+for(const id in BL){const b=BL[id];if(b&&b.pc>0&&(b.kind==='furn'||b.kind==='build'))b.pc=Math.max(1,b.pc-5)}
 function houseComfort(h){let bed=0,furn=0,fl=0,n=0;const seen=new Set();
   const kc={};for(const j of h.inside){n++;if(S.floor[j])fl++;const o=S.obj[j];if(!o||!COMFY[o])continue;if(o==='bed')bed++;else{kc[o]=(kc[o]||0)+1;furn+=COMFY[o]*(kc[o]>2?.5:1);seen.add(o)}}/* 同じ家具は2つまで。3つ目からは半分 */
   for(const j of h.inside){const o=S.rug&&S.rug[j];if(o&&COMFY[o]){kc[o]=(kc[o]||0)+1;furn+=COMFY[o]*(kc[o]>2?.5:1);seen.add(o)}}/* 家具の下のラグ */
