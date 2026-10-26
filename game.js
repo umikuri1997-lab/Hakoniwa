@@ -1795,7 +1795,7 @@ const EREACH=new WeakMap();
 const ZUKAN={basic:'いちばんよく見るコワイノ。夜になると、せいれいをねらってやってくる。',fast:'足がとても速い。体は小さくて、すぐ追いはらえる。',thief:'畑の実った作物をぬすみにくる。見つかると、すぐにげる。',brute:'体がかたくて力も強い。なかなか追いはらえない。',breaker:'壁をこわすのが大好き。まわり道をしないで、まっすぐこわしてくる。',trapper:'罠を見つけると、こわしにくる。',boss:'大きなコワイノ。まわりのせいれいも巻きこんで攻撃する。',ash:'灰をまきちらして、施設をしばらく使えなくする。',rockc:'岩みたいにかたい。動きはおそい。',hino:'火山からやってくる大きなコワイノ。熱の切りかえ装置をこわそうとする。',boss2:'夜の力をたくわえた、いちばん大きなコワイノ。'};
 function shakeScreen(){const v=$('#cv');v.classList.remove('shk');void v.offsetWidth;v.classList.add('shk');setTimeout(()=>v.classList.remove('shk'),600)}
 const BOSSFX={boss:{col:'#ff3b6b',sub:'コワイノたちの親玉が、すがたをあらわした'},boss2:{col:'#ffd84a',sub:'夜の力をたくわえた、いちばん大きなコワイノ'}};
-function bossEntrance(e){/* オオカゲ・ヨルノオオカゲの登場：画面がよって、ゆれて暗くなる */const B=BOSSFX[e.type];SKIP=false;/* 登場のあいだは時間を止めて、すがたを見せる */const z0=cam.z;camAnim={fz:cam.z,tz:Math.min(3,cam.z*1.5),fx:cam.x+VW/cam.z/2,fy:cam.y+VH/cam.z/2,tx:e.x*TS,ty:e.y*TS-12*(EN[e.type].size||1),t:0,dur:.8};BOSSHOLD=performance.now()+3200;setTimeout(()=>{camAnim={fz:cam.z,tz:z0,fx:cam.x+VW/cam.z/2,fy:cam.y+VH/cam.z/2,tx:cam.x+VW/cam.z/2,ty:cam.y+VH/cam.z/2,t:0,dur:.8}},3200);/* ボスへズームアップして、少しのあいだ時間を止める（文字は出さない） */shakeScreen();dlgCue('dim');sfx('hit');
+function bossEntrance(e){/* オオカゲ・ヨルノオオカゲの登場：画面がよって、ゆれて暗くなる */const B=BOSSFX[e.type];SKIP=false;/* 登場のあいだは時間を止めて、すがたを見せる */const z0=cam.z;camAnim={fz:cam.z,tz:Math.min(3,cam.z*1.5),fx:cam.x+VW/cam.z/2,fy:cam.y+VH/cam.z/2,tx:e.x*TS,ty:e.y*TS-12*(EN[e.type].size||1),t:0,dur:.8};BOSSHOLD=performance.now()+5000;setTimeout(()=>{camAnim={fz:cam.z,tz:z0,fx:cam.x+VW/cam.z/2,fy:cam.y+VH/cam.z/2,tx:cam.x+VW/cam.z/2,ty:cam.y+VH/cam.z/2,t:0,dur:.8}},5000);/* ボスへズームアップして、少しのあいだ時間を止める（文字は出さない） */shakeScreen();dlgCue('dim');sfx('hit');
   for(let n=0;n<4;n++)fx.push({k:'ring',x:e.x*TS,y:e.y*TS,life:1+n*.4,col:B.col});}
 let BOSSHOLD=0;/* ボスの登場・追いはらいの演出のあいだ、時間を止める */
 function bossDefeatFX(e){const sand=e.type==='boss'||e.type==='boss2';if(sand)sfx('crack');EVAP.push({e,t0:performance.now()+(sand?350:0),dur:sand?4200:3200,sand});/* オオカゲ・ヨルノオオカゲ：ピシッとひびが入って、上から砂になってくずれる *//* 時間を止めて、消えていく様子を見せる *//* オオカゲをたおしたとき：白く光って、ゆれて、光の輪と粒がはじける */const B=BOSSFX[e.type]||BOSSFX.boss,px=e.x*TS,py=e.y*TS;camAnim={fz:cam.z,tz:Math.min(3,cam.z*1.6),fx:cam.x+VW/cam.z/2,fy:cam.y+VH/cam.z/2,tx:px,ty:py-12*(EN[e.type].size||1),t:0,dur:.8};/* ボスへズームアップ */dlgCue('flash');shakeScreen();
@@ -4939,7 +4939,7 @@ function thumb(cv2,k,open){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='345';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='346';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
