@@ -144,7 +144,7 @@ const BL={
   altar:{name:'カミサマの台座',solid:1,anim:1},
   site2:{name:'建てている場所',solid:1,job:1},
   part:{name:''},
-  tower:{name:'守護の台座',sz:[2,2],kind:'build',pc:95,time:300,maker:null,solid:1,anim:1,attr:{wood:3,water:3,fire:3,earth:3,wind:3},desc:'守護の力をとりもどす台座。ヌシ様が帰ってくる。光の矢：ダメージ3／10秒ごと／範囲6マス。まわり7マスを照らす'},
+  tower:{hp:60,brk:1,fix:20,fixm:{wood:20,stone:10},name:'守護の台座',sz:[2,2],kind:'build',pc:95,time:300,maker:null,solid:1,anim:1,attr:{wood:3,water:3,fire:3,earth:3,wind:3},desc:'守護の力をとりもどす台座。ヌシ様が帰ってくる。光の矢：ダメージ3／10秒ごと／範囲6マス。まわり7マスを照らす'},
   rock:{name:'岩',solid:1,natural:1},
   hotstone:{hp:5,brk:1,fix:1,fixm:{},name:'ほのお石',kind:'furn',pc:0,time:20,solid:1,anim:1,attr:{fire:3,water:1},desc:'水べに置くと、水があたたまって温泉になる'},
   volcano:{name:'火山',sz:[3,3],solid:1,anim:1},boulder:{name:'大岩',solid:1,natural:1},heatv:{name:'熱の切りかえ装置',solid:1,anim:1},crack:{name:'ひびわれ',anim:1},/* 火山のふもと */
@@ -930,7 +930,7 @@ const watchQ=()=>!!(S.qTalked&&QUESTS[S.quest]&&QUESTS[S.quest].text==='見張�
 const QB=new Set(['lumber','quarry','stele','fountain','lighthouse','windmill']),/* クエストでおぼえるまで建てられない建物（村レベルだけでは、使えない） */lvOK=id=>BL[id].kind==='furn'||(QB.has(id)?(!!(S.recipes||{})[id]||cnt(id)>0):id==='watch'?(!!S.flags.watchLearned||watchQ()):S.lv>=(BL[id].lv||1))||!!S.flags['lv_'+id];
 const breakable=o=>o==='fence'||o==='wall'||o==='hwall'||o==='door'||o==='gate'||o==='sdoor'||!!(o&&BL[o]&&BL[o].brk);
 const fixMat=id=>({});/* 修理に素材はいらない */
-function godFix(j){/* 守り神の修理：タップして、パワーと素材を使ってすぐ直す（せいれいが直すとただ） */const o=S.obj[j],b=o?null:brokenCover(j),id=b?b.id:o,c=id&&BL[id]&&BL[id].fix;if(!c)return false;
+function godFix(j){/* 守り神の修理：タップして、パワーと素材を使ってすぐ直す（せいれいが直すとただ） */const o=S.obj[j],b=o?null:brokenCover(j),id=b?b.id:o,c=id&&BL[id]&&BL[id].fix;if(!c)return false;if(o==='tower'&&(S.shards||0)>(S.setSh||0))return false;/* かけらをはめるのが先 */
   if(!b&&!(breakable(o)&&(S.hp[j]??BL[o].hp)<BL[o].hp||DEFS.has(o)&&S.hp[j]!=null))return false;
   const m=BL[id].fixm||{};askYesNo(BL[id].name,(b?'建てなおす':'直す')+'？（'+SP(c)+'・'+matTxt(m)+'）',()=>{if(isNight())return toast('夜のあいだは、直せません');if(S.pt<c)return toast('パワーが足りません');if(!matOK(m))return toast('素材が足りません');
     if(b){const a={re:b.id,obj:b.j};if(!repairFree(a)||fp(b.id,b.j%W,(b.j/W)|0).some(([x,y])=>S.obj[y*W+x]))return toast('じゃまな物があって、建てなおせません');S.obj[b.j]=b.id;setParts(b.id,b.j,'part');delete S.hp[b.j];if(b.L)S.hp['L'+b.j]=b.L;S.broken=S.broken.filter(q=>q.j!==b.j);recount();burst(b.j,'block')}
@@ -1752,11 +1752,11 @@ function waveFor(day){
   if(WD===1){for(let i=0;i<list.length;i++)if(list[i]==='brute')list[i]='rockc';const st=st2();/* 火山のふもと：カタカゲのかわりにイワカゲ。ハイカゲ・ヒノオオカゲはお話しだいで */
     if(S.flags.ashOn){const big=S.flags.ashNight&&!st.ashNightAt,na=big?6:Math.min(3,1+(day>>2));for(let i=0;i<na;i++)list.push('ash');if(big)st.ashNightAt=(S.nights||0)+1}
     if(S.flags.hinoNight&&!S.flags.hinoDown)list.unshift('hino');
-    else if(S.flags.hinoDown&&bossNight(day-1)&&rn>=5)list.unshift(S.cleared||clearReady()?'boss2':'boss');
+    else if(S.flags.hinoDown&&bossNight(day-1)&&rn>=5)list.unshift('boss');
     return list}
   const bq=QUESTS.find(q=>q.text==='オオカゲを追いはらおう'),bOK=S.cleared||!bq||qAt(bq.text);/* オオカゲのクエストが出るまでは来ない */
   if(bq&&bOK&&!S.bossKills&&S.bossWarn==null)S.bossWarn=dayNo();
-  if(bossNight(day-1)||S.bossOwed){if(bOK&&rn>=4&&S.res.some(q=>q.elem==='fire')&&S.res4Since!=null&&dayNo()-S.res4Since>=3&&KEYS[WD].every(n=>S.res.some(r=>r.name===n))){/* メインの子をふくめて4人そろい、火の子が1人以上いて3日たったら、自動で来る（全滅したあとは、その状態にもどってから3日あと） */list.unshift(S.cleared||clearReady()?'boss2':'boss');S.bossOwed=false}else S.bossOwed=true}/* dayは次の日。5日目の夜＝day6。せいれいが3人そろうまで、オオカゲは来るのを先のばし */
+  if(bossNight(day-1)||S.bossOwed){if(bOK&&rn>=4&&S.res.some(q=>q.elem==='fire')&&S.res4Since!=null&&dayNo()-S.res4Since>=3&&KEYS[WD].every(n=>S.res.some(r=>r.name===n))){/* メインの子をふくめて4人そろい、火の子が1人以上いて3日たったら、自動で来る（全滅したあとは、その状態にもどってから3日あと） */list.unshift('boss');S.bossOwed=false}else S.bossOwed=true}/* dayは次の日。5日目の夜＝day6。せいれいが3人そろうまで、オオカゲは来るのを先のばし */
   return list;
 }
 function waveText(list){const c={};list.forEach(t=>c[t]=(c[t]||0)+1);return Object.keys(c).map(t=>EN[t].name+(c[t]>1?'×'+c[t]:'')).join('、')}
@@ -1844,6 +1844,7 @@ function updEnemy(e,dt){
     if(tgt&&td<reachOf(D)&&!fenceBetween(e.x,e.y,tgt.x,tgt.y)){hitRes(e,tgt,D);if(hsOf(D)>=2&&!e.dead){const ar=1.5;burstAt(tgt.x,tgt.y,'offer');for(const q of S.res){if(q===tgt||q.hidden||e.dead)continue;if(Math.hypot(q.x-tgt.x,q.y-tgt.y)<ar&&!fenceBetween(e.x,e.y,q.x,q.y))hitRes(e,q,D)}}/* 大きいコワイノは範囲攻撃：まわりの子も巻きこむ */return}
     if(tgt&&td<1.6&&e.type!=='boss2'&&!e.flee&&!(e.dcb>S.t)){/* ヨルノオオカゲは、近づききらずに、とどく所から攻撃する */let sp=D.sp*dt*e.slow;if(lightAt(e.x,e.y))sp*=.8;/* 光の中は、移動の速さ0.8倍 */const dx=tgt.x-e.x,dy=tgt.y-e.y,st=Math.min(sp,td);let ok=true;for(let f=.25;f<=st+.001&&ok;f+=.25){const t=Math.min(f,st),nq=(((e.y+dy/td*t)|0)*W)+((e.x+dx/td*t)|0);ok=walk(nq)&&!HOME_DOORS.has(typeAt(nq))&&!GATE_IDS.has(typeAt(nq))}{const nq=(((e.y+dy/td*st)|0)*W)+((e.x+dx/td*st)|0);ok=ok&&walk(nq)&&!HOME_DOORS.has(typeAt(nq))&&!GATE_IDS.has(typeAt(nq))}/* とちゅうのマスも調べて、柵や壁をすりぬけない */if(ok){e.x+=dx/td*st;e.y+=dy/td*st;e.path=[];return}e.dcb=S.t+4;e.repath=0}/* まっすぐ行けないときは、しばらく道どおりに進む（行ったり来たりでガタガタしない） */
     if(tgt){goal=(tgt.y|0)*W+(tgt.x|0);if(e.tg!==tgt.id){e.tg=tgt.id;e.repath=0}}}
+  if(e.type==='boss2'&&S.ns&&S.ns.final&&!pre&&!e.flee){const tw=S.obj.indexOf('tower');if(tw>=0){goal=tw;if(e.tg!=='tw'){e.tg='tw';e.repath=0}}}/* 最後の夜のヨルノオオカゲは、守護の台座をこわしにくる（近くにせいれいがいれば、そちらが先） */
   e.repath-=dt;let force=false;{const bv=(S.broken||[]).length;if(e.bv!==bv){e.bv=bv;force=true}}/* どこかの壁がこわれたら、すぐ道を考えなおす（あいた穴から入る） */
   const onWall=e.path.length&&breakable(typeAt(e.path[0]));/* 壁をたたいているあいだは、ほかの壁がこわれるまで同じ壁をたたきつづける */
   if(force||(e.repath<=0&&!onWall)||!e.path.length){
@@ -1925,7 +1926,7 @@ function updTowers(dt){
 }
 
 /* ---------- レベル ---------- */
-const LV_XP=[0,50,140,308,618,1190,2250,4210,7830,14530,26910,49800,92140,170410,315130];/* 1段の必要量＝（前の段＋その前の段）×1.2。クリア後はLv15まで */
+const LV_XP=[0,40,140,308,618,1190,2250,3200,4400,6000,8000,10500,13500,17000,21000];/* 1段の必要量＝（前の段＋その前の段）×1.2。クリア後はLv15まで */
 const maxLv=()=>S&&S.cleared?15:10;
 function vLv(){let l=1;while(l<maxLv()&&S.totalPt>=LV_XP[l])l++;return l}
 const rLv=r=>1+Math.floor(Math.sqrt((r.xp||0)/25)),hMax=r=>100+(rLv(r)-1)*10;/* おなかの最大はレベル1ごとに+10 */
@@ -2010,7 +2011,7 @@ function stepWorld(dt){if((SUBT+=dt)>1){SUBT=0;checkSub();checkSev();guardTick()
   if(prevH<18&&h>=18&&S.godVisit){S.godVisit=false;S.godNextVisitDay=Math.max(S.godNextVisitDay||0,dayNo()+2);toast('カミサマは帰っていった')}
   if(prevH<20&&h>=20&&S.enemyOn&&S.lastWarn!==dayNo()){S.lastWarn=dayNo();S.wave=waveFor(dayNo()+1);if(S.wipe&&S.res.length>=5)S.wipe=false;if(S.finalNight&&!S.cleared&&(WD||S.res.some(r=>r.name===POKO))){S.finalNight=false;S.finalOn=true;/* フタバがいない夜は、ヨルノオオカゲは来ない */S.wave=['boss2','boss'].concat(S.wave.filter(t=>t!=='boss'&&t!=='boss2'),['brute','brute','fast','fast','breaker']);toast('最後の夜…！ ヨルノオオカゲとオオカゲがやってくる','warn')}else if(S.trial){S.trialOn=true;S.trial=false;S.wave=['boss'].concat(S.wave.filter(t=>t!=='boss'),['brute','brute','fast','fast'])}else if(S.today==='odayaka'){const bo=S.wave.filter(t=>t==='boss'),ot=S.wave.filter(t=>t!=='boss');S.wave=bo.concat(ot.slice(0,Math.ceil(ot.length/2)))}/* 「コワイノ」の予告はしない */}
   if(prevH<3&&h>=3)for(const H of HOUSES){const L=S.res.filter(x=>x.act&&(x.act.type==='sleep'||x.act.type==='stay')&&H.set.has((x.y|0)*W+(x.x|0)));if(houseComfort(H).over)for(const x of L){x.energy=Math.min(x.energy,60);x.fun=Math.max(0,x.fun-15);x.crowd=dayNo()}else if(L.length){const C=houseComfort(H);for(const x of L){const c=comfyFor(H,x,C);if(c>=180){x.fun=Math.min(100,x.fun+10);x.comfy=dayNo()}else if(c<90)x.fun=Math.max(0,x.fun-5)}}}/* 住み心地がいいと、ぐっすり眠れる *//* 家につめこむと、きゅうくつで眠れない */
-  if(prevH>h&&S.enemyOn&&S.wave&&S.lastNight!==dayNo()-1){S.lastNight=dayNo()-1;/* 「コワイノ」は夜12時に来る（前の日の夜としてかぞえる） */S.nights++;let w=S.wave;S.wave=null;const rn=S.res.length;if(rn<5)w=w.filter(t=>EN[t].boss&&!S.wipe).concat(w.filter(t=>!EN[t].boss).slice(0,[0,1,2,3,4][rn]));/* せいれいが4人までの夜は、コワイノは人数と同じ数まで（全滅のあと5人そろうまでは、オオカゲも来ない） */if(w.length)spawnWave(w)}
+  if(prevH>h&&S.enemyOn&&S.wave&&S.lastNight!==dayNo()-1){S.lastNight=dayNo()-1;/* 「コワイノ」は夜12時に来る（前の日の夜としてかぞえる） */S.nights++;let w=S.wave;S.wave=null;const rn=S.res.length;if(rn<7)w=w.filter(t=>EN[t].boss&&!S.wipe).concat(w.filter(t=>!EN[t].boss).slice(0,[0,1,2,3,4,6,7][rn]));/* せいれいが少ない夜は、コワイノの数に上限：1人1体・2人2体・3人3体・4人4体・5人6体・6人7体（全滅のあと5人そろうまでは、オオカゲも来ない） */if(w.length)spawnWave(w)}
   if(S.seedDay!==dayNo()&&h>=6){S.seedDay=dayNo();const n=Math.random()<.5?1:0,b=S.t-S.t%1440;S.seeds=[];S.seedPlan=Array.from({length:n},()=>b+360+Math.random()*720).sort((x,y)=>x-y)}/* ふしぎな種は1日1こまで（50%）。ひろわなかったら、あしたには消える */
   if(S.seedPlan&&S.seedPlan.length&&S.t>=S.seedPlan[0]){S.seedPlan.shift();spawnSeed()}
   if(prevH<3&&h>=3&&S.today==='hoshi')for(const r of S.res)if(r.act&&r.act.type==='sleep')r.fun=Math.min(100,r.fun+15);
@@ -4165,13 +4166,13 @@ function onTap(sx,sy){
     if(o==='sprout')return toast(BL[S.dyn[j].plant].name+'を植える場所：せいれいが植えにくる');
     if(o==='site'){const d=S.dyn[j];return toast(BL[d.build].name+'を建設中：'+Math.floor(d.p/d.need*100)+'%')}
     if(o==='berry'||o==='fruit')return toast(BL[o].name+'：'+(S.dyn[j].g>=100?'実がなっている':'実がなるまで あと'+Math.max(1,Math.ceil((100-S.dyn[j].g)/25))+'日'));
-    if(breakable(o)&&BL[o].brk&&!BL[o].trap)return toast(BL[o].name+'：'+withAttr(o,BL[o].desc||'')+'（じょうぶさ '+Math.floor(S.hp[j]??BL[o].hp)+'/'+BL[o].hp+'）');/* 道をふさぐ物：時間を止めず、説明とじょうぶさをいっしょに出す */
-    if(breakable(o))return toast(BL[o].name+'：じょうぶさ '+Math.floor(S.hp[j]??BL[o].hp)+'/'+BL[o].hp);
+    if(breakable(o)&&BL[o].brk&&!BL[o].trap&&o!=='tower')return toast(BL[o].name+'：'+withAttr(o,BL[o].desc||'')+'（じょうぶさ '+Math.floor(S.hp[j]??BL[o].hp)+'/'+BL[o].hp+'）');/* 道をふさぐ物：時間を止めず、説明とじょうぶさをいっしょに出す */
+    if(breakable(o)&&o!=='tower')return toast(BL[o].name+'：じょうぶさ '+Math.floor(S.hp[j]??BL[o].hp)+'/'+BL[o].hp);
     if(o==='rock'||o==='deadtree'||o==='ntree')return toast(BL[o].name+'：のこり '+Math.max(0,10-(S.hp['n'+j]||0))+'/10');
     if(o==='watch')return openSheet('watch',j);
     if(o==='obox')return S.feat.inv?openSheet('inv'):toast('お供え箱');
     if(o==='grave'){const d=S.dyn[j]||{};if(!d.buried)return toast((d.name||'せいれい')+'のお墓。なかまが神殿へはこんで、埋葬してくれる');/* 守り神は埋葬できない */return toast((d.name||'せいれい')+'のお墓')}
-    if(o==='tower'&&!WD&&!S.cleared){const av=(S.shards||0)-(S.setSh||0);if(av>0){S.setSh=(S.setSh||0)+1;sfx('level');burst(j,'furn','none');toast('台座に、ヌシのかけらをはめた（'+S.setSh+'/3）','good');logEv('かけらを台座にはめた');if(S.setSh>=3)setTimeout(()=>dialog([[POKO,'台座が、光ってる……！'],[MINA,'3つともはまったねぇ。……ヌシ様が、帰ってくるよぉ。']],()=>{if(S.cleared)return;if(S.res.some(q=>q.name===POKO))nushiReturns();else{S.flags.nushiWait=1;toast('フタバが帰ってきたら、ヌシ様がすがたをあらわす','warn')}}),900);checkQuest();return}return openSheet('clear')}
+    if(o==='tower'&&!WD&&!S.cleared){const av=(S.shards||0)-(S.setSh||0);if(av>0&&(S.setSh||0)>=2){const NM=['木のせいれい','守護の台座','ヌシのかけら','みどりのマス','せいれいパワー'],miss=clearConds().findIndex(c=>!c[1]);if(miss>=0)return toast(NM[miss]+'が足りません','warn')}/* 3つ目をはめるときも、5つの条件がそろっているか見る */if(av>0){S.setSh=(S.setSh||0)+1;sfx('level');burst(j,'furn','none');toast('台座に、ヌシのかけらをはめた（'+S.setSh+'/3）','good');logEv('かけらを台座にはめた');if(S.setSh>=3)setTimeout(()=>dialog([[POKO,'台座が、光ってる……！'],[MINA,'3つともはまったねぇ。……ヌシ様が、帰ってくるよぉ。']],()=>{if(S.cleared)return;if(S.res.some(q=>q.name===POKO))nushiReturns();else{S.flags.nushiWait=1;toast('フタバが帰ってきたら、ヌシ様がすがたをあらわす','warn')}}),900);checkQuest();return}return openSheet('clear')}
     if(o==='board')return S.feat.craft?openSheet('craft'):toast('依頼ボード。もう少ししたら使えるようになる');
     if(o==='statue')return toast('女神像。守り神の居場所');
     if(o==='altar')return toast('カミサマの台座。カミサマはここに現れる');
@@ -4922,7 +4923,7 @@ function thumb(cv2,k,open){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='334';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='335';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
