@@ -532,7 +532,7 @@ const QUESTS2=[
     [HOMURA,'へえ、なかなかいい神殿じゃないか。'],
     [GOD,'じゃろ〜。女神像もおそなえ箱も依頼ボードも、草原といっしょじゃよ。'],
     [GOD,'食料箱と素材箱は、温泉のそばに置いといたぞい。かまどやベッド、柵や罠も、おそなえ箱に入れといたからの。'],[HOMURA,'ありがとよ、守り神。']],
-   gives:{feat:['inv','remove','plant','craft','people'],flag:'lv_oven',recipes:['oven','bed'],items:{oven:1,bed:1,hwall:3,fence:10,spike:10},mat:{wood:10,stone:10},enemy:true}},
+   gives:{feat:['inv','remove','plant','craft','people'],flag:'lv_oven',recipes:['oven','bed','stor','mbox'],items:{oven:1,bed:1,hwall:3,fence:10,spike:10},mat:{wood:10,stone:10},enemy:true}},
   {text:'冷たい温泉を調べよう',check:()=>!!S.flags.sprLook,how:'「みる」で、村の水たまりをタップする',
    talk:{who:HOMURA,when:()=>true,lines:[
     [HOMURA,'…なあ守り神。この村、むかしは湯気がもくもく上がってたんだよ。'],
@@ -4942,7 +4942,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='377';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='378';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
