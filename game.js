@@ -94,7 +94,7 @@ const BL={
   lantern:{hp:5,brk:1,fix:2,fixm:{wood:1,stone:1},name:'ランタン',kind:'furn',cat:'light',f2:1,lv:6,pc:3,time:80,maker:'fire',attr:{fire:1},mat:{wood:2,stone:2},solid:1,desc:'あかり。住み心地+5'},
   flamp:{hp:5,brk:1,fix:4,fixm:{wood:2,stone:1},offerOnly:1,name:'フロアランプ',kind:'furn',cat:'light',f2:1,lv:6,pc:7,time:100,maker:'fire',attr:{fire:1},mat:{wood:3,stone:2},solid:1,desc:'あかり。住み心地+6'},
   signpost:{hp:5,brk:1,fix:1,fixm:{wood:5},name:'道しるべ',kind:'furn',cat:'env',f2:1,lv:5,pc:1,time:60,maker:'earth',attr:{earth:1},mat:{wood:9},solid:1,desc:'まわり3マスで、せいれいがにげる速さ×1.4'},
-  hedge:{hp:5,brk:1,fix:2,fixm:{wood:6},name:'生垣',kind:'furn',cat:'env',f2:1,lv:5,pc:3,time:80,maker:'wood',attr:{wood:1},mat:{wood:12},solid:1,env:3,er:2,desc:'まわり2マスで、たのしさ+1.1／1時間'},
+  hedge:{hp:5,brk:1,fix:2,fixm:{wood:3},name:'生垣',kind:'furn',cat:'env',f2:1,lv:5,pc:3,time:80,maker:'wood',attr:{wood:1},mat:{wood:5},solid:1,env:3,er:2,desc:'まわり2マスで、たのしさ+1.1／1時間'},
   birdhouse:{hp:5,brk:1,fix:2,fixm:{wood:2},name:'巣箱',kind:'furn',cat:'env',f2:1,lv:2,pc:3,time:80,maker:'wind',attr:{wind:1},mat:{wood:3},solid:1,env:1,er:4,desc:'まわり4マスで、たのしさ+0.4／1時間。範囲がとても広い'},
   birdbath:{hp:5,brk:1,fix:3,fixm:{stone:8},offerOnly:1,name:'水飲み鳥',kind:'furn',cat:'env',f2:1,lv:7,pc:5,time:100,maker:'water',attr:{water:1},mat:{stone:15},solid:1,env:3,desc:'まわり3マスで、たのしさ+1.1／1時間'},
   noren:{hp:5,brk:1,fix:3,fixm:{wood:6},name:'のれん',anim:1,dsc:2,kind:'furn',cat:'env',f2:1,lv:5,pc:7,time:100,maker:'fire',attr:{fire:1},mat:{wood:12},solid:1,env:7,er:1,desc:'温泉の入り口にかける布。まわり1マスだけ。そのかわり、たのしさ+2.5／1時間'},
@@ -5290,7 +5290,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='435';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='436';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
