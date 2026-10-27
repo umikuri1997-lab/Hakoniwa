@@ -126,6 +126,11 @@ const BL={
   jar:{hp:5,brk:1,fix:2,fixm:{stone:2},name:'みずがめ',kind:'furn',lv:3,pc:3,time:120,maker:'water',solid:1,attr:{water:3},mat:{stone:3},desc:'水をためたかめ。まわり1マスの畑は水やりなしで育つ。住み心地+5'},
   basin:{hp:5,brk:1,fix:4,fixm:{stone:3},name:'水鉢',kind:'furn',pc:7,time:160,maker:'water',solid:1,anim:1,attr:{water:4,wood:.5},mat:{stone:5},desc:''},/* もう作れない（古いセーブ用） */
   kamizo:{hp:5,brk:1,fix:5,fixm:{stone:13},name:'カミサマの像',kind:'furn',lv:5,pc:10,time:160,maker:'earth',solid:1,attr:{earth:2},mat:{stone:25},desc:'カミサマが遊びにくる確率が2倍（25%→50%）'},
+  chochin:{name:'おまつりのちょうちん',kind:'furn',shopOnly:1,pc:6,solid:1,attr:{},desc:'おまつりのおみやげ。赤いちょうちん。住み心地+6'},
+  furin:{name:'ふうりん',kind:'furn',shopOnly:1,pc:8,solid:1,anim:1,attr:{},desc:'カミサマのかざり。風がふくと、ちりんと鳴る。住み心地+8'},
+  ema:{name:'えまかけ',kind:'furn',shopOnly:1,pc:8,solid:1,attr:{},desc:'カミサマのかざり。ねがいごとを書いた板をかける。住み心地+8'},
+  komainu:{name:'こまいぬ',kind:'furn',shopOnly:1,pc:10,solid:1,attr:{},desc:'カミサマのかざり。神殿をまもる石の犬。住み心地+10'},
+  kadomatsu:{name:'かどまつ',kind:'furn',shopOnly:1,pc:10,solid:1,attr:{},desc:'カミサマのかざり。竹と松のおめでたいかざり。住み心地+10'},
   rockart:{hp:5,brk:1,fix:1,fixm:{stone:2},name:'つぼ',kind:'furn',lv:2,pc:1,time:100,maker:'earth',solid:1,attr:{earth:2},mat:{stone:3},desc:'土でできたかざり。住み心地+5'},
   vane:{hp:5,brk:1,fix:4,fixm:{wood:2,stone:2},offerOnly:1,name:'風見鶏',kind:'furn',pc:7,time:160,maker:'wind',solid:1,anim:1,attr:{wind:4},mat:{wood:3,stone:3},desc:'風の向きをおしえる。まわり3マスのせいれいは移動速度×1.2（道しるべとは重ならない）。住み心地+4'},
   spike:{name:'とげの罠',fix:1,fixm:{wood:1,stone:1},kind:'furn',lv:1,pc:1,time:100,maker:'wood',qty:2,trap:1,attr:{earth:.5},mat:{wood:2,stone:2},desc:'上にいる「コワイノ」に、15分ごとに0.5ダメージ'},
@@ -751,7 +756,7 @@ function newState(w){w=w||0;
   return s;
 }
 function putNear(s,id,cx,cy){for(let r=0;r<8;r++)for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){const k=(cy+dy)*W+cx+dx;if(!s.obj[k]&&s.ground[k]!==1&&!s.floor[k]){s.obj[k]=id;return}}}
-function ensureStor(s){for(const id in BL){const b=BL[id];if(b&&b.offerOnly&&b.kind==='furn'){if(s.recipes)delete s.recipes[id];if(s.guardianIdeas)delete s.guardianIdeas[id]}}/* おそなえされる家具は、レシピとして出さない（セーブからも消す） */
+function ensureStor(s){for(const id in BL){const b=BL[id];if(b&&(b.offerOnly||b.shopOnly)&&b.kind==='furn'){if(s.recipes)delete s.recipes[id];if(s.guardianIdeas)delete s.guardianIdeas[id]}}/* おそなえされる家具は、レシピとして出さない（セーブからも消す） */
   {const nm=new Set();for(let j=0;j<s.obj.length;j++)if(s.obj[j]==='grave'&&s.dyn&&s.dyn[j]&&!s.dyn[j].buried)nm.add(s.dyn[j].name);for(const r of s.res||[])if(r.coffin)nm.add(r.coffin.name);if(!s.wipe)for(const L of[s.buried||[],s.lost||[]])for(const q of L)if(nm.has(q.name))q.unb=true}/* まだ埋葬されていない子は、よみがえらせない */
   for(const k in s.hp||{})if(/^\d+$/.test(k)&&typeof s.hp[k]==='number')s.hp[k]=Math.ceil(s.hp[k]);/* 耐久は整数 */
   if(!s.lost)s.lost=[];syncQuestRecipes(s)}
@@ -803,6 +808,15 @@ const HSPC={a:[CX+4.8,CY+4.8],b:[CX-8.5,CY-8],c:[CX+.5,CY-15]},SPN={a:'入口の
 const VOLJ=1*W+(CX-1),D1=9*W+(CX-4),D2=(CY-18)*W+(CX+5),CRACKS=[-2,-1,0,1,2].map(d=>9*W+CX+d),BVOL=[D2-1,D2+1,D2-W,D2+W];
 const ASHT=new Set(['oven','bench','tub','sink','campfire','hotstone']);
 const NATK=['rock','deadtree','ntree','berry'];
+const festOn=()=>!!S&&S.festDay!=null&&(S.festDay===dayNo()||S.festDay===dayNo()-1&&hour()<6);/* おまつり：その日の朝6時まで */
+function festStart(){const L=WD===1?[[HOMURA,'おまつりかい！ ちょうちんの火、いい色だねえ。'],[SHIZUKU,'みなさんで、おどりましょう。ごちそうもありますよ。'],[HOMURA,'たまには、こういう日もいいもんさ。']]:[[POKO,'わあ、おまつりだ！ ちょうちんが、いっぱい！'],[MINA,'みんなで、おどろうねぇ。ごちそうもあるよぉ。'],[POKO,'ヌシ様にも、この景色を見せてあげたいな。']];talkOnce('fest1',L.filter(l=>S.res.some(r=>r.name===l[0])))}/* はじめてのおまつりの会話 */
+function festGift(){if(S.festDay==null||S.festDay>=dayNo()||S.festGot===S.festDay)return;S.festGot=S.festDay;const fl=['salvia','lotus','lily','clover','bellf'].filter(id=>S.unlocked[id]);/* おまつりのおみやげ：はじめはちょうちん。あとは、ちょうちんか、おぼえた花のたね5つ */
+  if(!S.flags.festGift1||!fl.length||Math.random()<.4){S.flags.festGift1=1;giveItem('chochin',1);toast('おまつりのおみやげ：おまつりのちょうちん','good')}else{const id=pick(fl);giveItem(id,5);toast('おまつりのおみやげ：'+BL[id].name+'のたね5つ','good')}renderPalette()}
+const FESTP=[[-3,-1],[3,-1],[-4,2],[4,2]];/* おまつりのちょうちんの柱：神殿からの位置 */
+function drawFestPole(x,y,now){const px=x*TS,py=y*TS,F=(a,b,w,h,col)=>{ctx.fillStyle=col;ctx.fillRect(px+a,py+b,w,h)};shadow(ctx,px+16,py+29,6,2);F(15,-14,3,43,'#7a4f30');F(16,-14,1,43,'#a8703f');F(8,-15,17,2,'#5e3c24');
+  const sw=Math.round(Math.sin(now/600+x)*1);for(const a of[8,21]){F(a+1+sw,-13,1,2,'#3a2a20');F(a-1+sw,-11,6,8,'#d8452f');F(a+sw,-12,4,10,'#d8452f');F(a+sw,-9,4,1,'#a8321f');F(a+sw,-6,4,1,'#a8321f');F(a+sw,-11,1,7,'#f08a6a');F(a+sw,-3,4,1,'#3a2a20')}
+  if(isNight()){for(const a of[10,23]){const g=ctx.createRadialGradient(px+a+sw,py-7,1,px+a+sw,py-7,13);g.addColorStop(0,'rgba(255,190,110,.35)');g.addColorStop(1,'rgba(255,190,110,0)');ctx.fillStyle=g;ctx.fillRect(px+a+sw-13,py-20,26,26)}}}/* 夜はちょうちんがぼんやり光る */
+function goFest(r,G){if(STATUE<0)return false;const sx=STATUE%W+.5,sy=((STATUE/W)|0)+1.5;const j=nearest(G,k=>{const d=Math.hypot(k%W+.5-sx,((k/W)|0)+.5-sy);return d>=1.5&&d<=4&&walk(k)&&!S.obj[k]&&free('fest'+k,1)},80);if(j<0)return false;startAct(r,G,'dance',j,{key:'fest'+j});return true}/* おまつりの日は、神殿の前でおどる */
 const FLAM=new Set(Object.keys(BL).filter(id=>{const b=BL[id],m=b.mat||{};return (b.kind==='furn'||b.kind==='block'||b.kind==='build')&&m.wood>0&&!m.stone&&!b.natural&&id!=='torch'&&id!=='candle'}));/* 火山のふもとで燃える物：木材だけで作る家具・柵・壁など（たいまつ・ろうそくは、もともと火がついている物なのでのぞく） */
 const burnHp=o=>BL[o].hp||10,fireAt=j=>WD===1&&!!S.st2&&!!S.st2.fire&&S.st2.fire[j]!=null;/* じょうぶさのない家具は、燃えるときだけ10とする */
 function ignite(j){if(WD!==1||!S.st2)return;const o=S.obj[j];if(!FLAM.has(o))return;const F=S.st2.fire||(S.st2.fire={});if(F[j]!=null)return;F[j]=S.t;toast(BL[o].name+'が燃えている！','warn');sfxAt('cookfire',j%W+.5,(j/W)|0)}
@@ -1164,6 +1178,7 @@ const ACT={
     done:(r,a)=>a.t>=60||S.obj[a.obj]!=='site'||S.dyn[a.obj].p>=S.dyn[a.obj].need,end(r,a){const d=S.dyn[a.obj];if(S.obj[a.obj]==='site'&&d&&d.p>=d.need)finishBuild(a.obj,r);else addXp(1,r);tired(r,a)}},
   craft:{start(r,a){if(!S.orders.find(q=>q.id===a.order))return false;r.face=1;r.bubble=''},tick(r,a,dt){const o=S.orders.find(q=>q.id===a.order);if(o)o.prog+=dt*(r.elem===BL[o.type].maker?2:1);work(r,dt);a.h=(a.h||0)+dt;if(a.h>=3){a.h=0;sfxAt('nail',r.x,r.y)}},
     done:(r,a)=>{const o=S.orders.find(q=>q.id===a.order);return a.t>=60||!o||o.prog>=o.need},end(r,a){const o=S.orders.find(q=>q.id===a.order);if(o&&o.prog>=o.need)finishCraft(o,r);else addXp(1,r);tired(r,a)}},
+  dance:{start(r,a){r.bubble='🎵'},tick(r,a,dt){r.fun=Math.min(100,r.fun+.5*dt);a.h=(a.h||0)+dt;if(a.h>=1.2){a.h=0;JUMP.set(r,performance.now());r.face=-(r.face||1);r.bubble=pick(['🎵','🎶','🍡','😆'])}},done:(r,a)=>a.t>=40||!festOn()||isNight()||hour()>=20,end(r,a){}},/* おまつりのおどり（ごちそうも食べる） */
   douse:{start(r,a){if(!fireAt(a.obj))return false;r.bubble='💧';sfxAt('pour',r.x,r.y)},tick(r,a,dt){work(r,dt)},done:(r,a)=>a.t>=10||!fireAt(a.obj)||isNight(),end(r,a){if(a.t>=10&&fireAt(a.obj)){delete S.st2.fire[a.obj];sfxAt('pour',r.x,r.y);addXp(1,r)}}},/* 水をかけて、火を消す */
   repair:{start(r,a){const b=!S.obj[a.obj]?brokenAt(a.obj):null;if(!b&&!breakable(S.obj[a.obj])&&!DEFS.has(S.obj[a.obj])&&!burnt(a.obj))return false;const m=fixMat(b?b.id:S.obj[a.obj]);if(!matOK(m))return false;for(const k in m)S.mat[k]-=m[k];a.repairMat={...m};a.re=b?b.id:null;r.bubble='🔨'},tick(r,a,dt){work(r,dt);a.h=(a.h||0)+dt;if(a.h>=3){a.h=0;sfxAt('nail',r.x,r.y)}},done:(r,a)=>a.t>=(a.re?30:20)&&(!a.re||a.t>=60||repairFree(a)),/* 建て直す場所にだれかが立っているあいだは、終わらずに待つ（さいごまで空かなければ、素材をもどしてやめる） */end(r,a){const rm=a.repairMat;delete a.repairMat;if(a.re){const cells=fp(a.re,a.obj%W,(a.obj/W)|0).map(([cx,cy])=>cy*W+cx);if(!repairFree(a)){for(const k in rm||{})S.mat[k]=(S.mat[k]||0)+rm[k];addFloat(r.x,r.y-1.2,'人がいて直せなかった','#ffd2cc')}else if(cells.every(k=>!S.obj[k])){S.obj[a.obj]=a.re;setParts(a.re,a.obj,'part');delete S.hp[a.obj];if(BL[a.re].dyn)S.dyn[a.obj]={g:0};{const bk=brokenAt(a.obj);if(bk&&bk.L)S.hp['L'+a.obj]=bk.L}/* 強化レベルは、建てなおしてももとにもどす */S.broken=S.broken.filter(b=>b.j!==a.obj);recount();dirty=true;burst(a.obj,'block');sfxAt('repair',r.x,r.y)}}else{const o=S.obj[a.obj];if(breakable(o)){S.hp[a.obj]=BL[o].hp;sfxAt('repair',r.x,r.y)}else if(DEFS.has(o)||burnt(a.obj)){delete S.hp[a.obj];sfxAt('repair',r.x,r.y)}}addXp(1,r);tired(r,a)}},
   harvest:{start(r,a){const d=S.dyn[a.obj];if(!d||d.g<100)return false;r.bubble='🧺';sfxAt('bush',r.x,r.y)},tick(r,a,dt){work(r,dt)},done:(r,a)=>a.t>=12,end(r,a){const d=S.dyn[a.obj];if(!d)return;d.g=0;const fk=S.obj[a.obj]==='farm'?(cropK(d)):S.obj[a.obj]==='fruit'?'apple':'berry';if(S.obj[a.obj]==='farm'){if(Math.random()<.75){S.cseed[fk]=cseed(fk)+1;addFloat(r.x,r.y-1.2,CROPS[fk].name+'のたね+1','#e8d38a')}/* たねがとれるのは75% */d.sown=false;d.crop=null}/* 収穫したら、また植えないと育たない */const cr=CROPS[fk]||{yield:a.food||3},food=((fk==='berry'||fk==='apple')?2:cr.yield+(NEARMILL.has(a.obj)?1:0)+(NEARFLOWER.has(a.obj)?1:0))+(trt(r,'shukaku')?1:0)+(r.elem==='wood'&&S.obj[a.obj]==='farm'?1:0)+(S.today==='hosaku'?1:0);{const rm=roomN(r);addCarry(r,fk,Math.min(food,rm));if(food>rm)addFood(fk,food-rm)}kurashi('hv:'+fk,'wood',2,['🧺','はじめて'+FOODS[fk].name+'を収穫した']);sfxAt('harvest',r.x,r.y);addXp(1,r);tired(r,a)}},
@@ -1263,6 +1278,7 @@ function decide0(r){
   if(isNight()&&r.hunger<hMax(r)-10&&S.food>0&&!S.enemies.some(e=>e.spawned&&!e.dead&&Math.hypot(e.x-r.x,e.y-r.y)<7)){r.refill=S.t+60;if(goEat(r,G))return}/* 夜、寝る前に、おなかいっぱい食べておく（夜中に食べに出ないように） */
   if(r.energy<25||isNight())return goSleep(r,G,S.enemies.some(e=>e.spawned));
   if(r.hunger<55&&!foeNear(r))return goEat(r,G);
+  if(festOn()&&!isNight()&&hour()<20&&r.energy>=30&&!foeNear(r)&&goFest(r,G))return;/* おまつりの日は、夜8時まで、みんなでおどる */
   if(!isNight()&&r.fun>=99&&tryJob(r,G,'offer'))return;
   // 楽しさが低いときは、仕事より先に遊びにいく
   if(!isNight()&&r.fun<(r.elem==='wind'?60:30)&&goPlay(r,G,true))return;/* 風の子はよく遊ぶ */
@@ -2049,7 +2065,7 @@ function stepWorld(dt){if((SUBT+=dt)>1){SUBT=0;checkSub();checkSev();guardTick()
     else if(S.ns&&S.ns.final&&!S.cleared&&!(S.ns.b2&&S.obj.includes('tower'))){S.finalNight=false;S.finalLost=dayNo();if(WD)S.finalRetry=dayNo()+3;else{S.finalDay=dayNo()+3;S.finalHint=3}memo('🌑','ヨルノオオカゲを追いはらえなかった');setTimeout(()=>toast('ヨルノオオカゲは、まだどこかにいる…','warn'),1500)}/* ヨルノオオカゲを追いはらえなかったか、台座をこわされたら負け。3日あとにまた来る */else if(S.ns&&S.ns.final&&!S.cleared){S.finalNight=false;if(WD)setTimeout(()=>{if(!S.cleared)nushiReturns()},1800);/* 火山のふもとには、フタバはいない */else if(!S.flags.finalWon){S.flags.finalWon=1;S.flags.sh_boss=true;S.shards=Math.min(3,(S.shards||0)+1);memo('💎','最後のバトルに勝って、ヌシのかけらがあらわれた（'+S.shards+'/3）');setTimeout(()=>toast('台座の前に、ヌシのかけらがあらわれた！','good'),1500)}}/* 最後の夜をこえたら、かけらが出て、台座にはめるとヌシ様がもどる */if(S.ns&&S.ns.trial){const ok=S.ns.kill>=S.ns.n;S.ns.trialOK=ok;if(ok){S.trials=(S.trials||0)+1;S.pt+=60;S.totalPt+=60;S.mebuki=(S.mebuki||0)+1;memo('🏆','「コワイノ」の試練をのりこえた')}}
     if(S.ns){S.ns.left=left;if(!sheet)openSheet('night');else toast(S.nightHurt?'朝日がのぼって、「コワイノ」は'+(left?'消えていった':'いなくなった'):'夜をぶじに守りきった！','good')}
     else if(!S.nightHurt)toast('夜をぶじに守りきった！','good');else toast('朝日がのぼって、「コワイノ」は'+(left?'消えていった':'いなくなった'))}
-  if((prevH|0)!==(h|0)&&h>=7&&h<23){trapCheck();graveCheck();sparkTick()}/* 1時間に1回、とじこめられた子がいないか見る */
+  if((prevH|0)!==(h|0)&&h>=7&&h<23){trapCheck();graveCheck();sparkTick();festGift()}/* 1時間に1回、とじこめられた子がいないか見る */
   if(prevH<6&&h>=6&&S.lastMorning!==dayNo()){S.lastMorning=dayNo();morning();if(WD===1&&S.finalRetry!=null&&dayNo()>=S.finalRetry&&!S.cleared){S.finalRetry=null;S.finalNight=true}}/* 火山のふもと：負けたら3日あとの夜にまた来る *//* 1日のリセットは朝6時にまとめて */
   if(prevH<8&&h>=8&&S.godGone&&!S.cleared&&!S.godVisit&&dayNo()>=(S.godNextVisitDay||1)&&Math.random()<(cnt('kamizo')?.5:.25)){S.godVisit=true;S.godNextVisitDay=dayNo()+2;/* 来た翌日は休み。像があれば来訪率は50% */sfx('arrive');toast('カミサマが遊びにきた！','good')}
   if(prevH<18&&h>=18&&S.godVisit){S.godVisit=false;S.godNextVisitDay=Math.max(S.godNextVisitDay||0,dayNo()+2);toast('カミサマは帰っていった')}
@@ -3315,6 +3331,23 @@ function drawObj(c,id,x,y,i,g,now){
     const G2=SPR.god;if(G2.ok){if(!G2.stone){const cv=document.createElement('canvas');cv.width=G2.img.naturalWidth;cv.height=G2.img.naturalHeight;const q=cv.getContext('2d');q.drawImage(G2.img,0,0);try{const d=q.getImageData(0,0,cv.width,cv.height),a=d.data;for(let i=0;i<a.length;i+=4){const l=(a[i]*.3+a[i+1]*.55+a[i+2]*.15)*.62+70;a[i]=l;a[i+1]=l*.98;a[i+2]=l*.93}q.putImageData(d,0,0)}catch(e){}G2.stone=cv}const h=24,w=h*G2.w/G2.h;c.drawImage(G2.stone,x+16-w/2,y+22-h,w,h)}
     else{circ(c,x+16,y+15,6,'#b3ada3');circ(c,x+16,y+8,4.5,'#c4beb4')}
     break}
+  case'chochin':{/* おまつりのちょうちん：木の台から、赤いちょうちんをつるす */shadow(c,x+16,y+29,9,2.5);const F=(a,b,w,h,col)=>{c.fillStyle=col;c.fillRect(x+a,y+b,w,h)};
+    F(11,6,3,23,'#7a4f30');F(12,6,1,23,'#a8703f');F(10,26,7,3,'#5e3c24');F(11,5,12,2,'#7a4f30');F(20,7,1,3,'#3a2a20');
+    F(17,10,8,2,'#3a2a20');F(16,12,10,10,'#d8452f');F(17,11,8,12,'#d8452f');F(17,14,8,1,'#a8321f');F(17,17,8,1,'#a8321f');F(17,20,8,1,'#a8321f');F(18,12,2,9,'#f08a6a');F(17,22,8,2,'#3a2a20');F(20,24,1,3,'#f9c55a');break}
+  case'furin':{/* ふうりん：木のわくに、ガラスのすずと、ゆれる短冊 */shadow(c,x+16,y+29,9,2.5);const F=(a,b,w,h,col)=>{c.fillStyle=col;c.fillRect(x+a,y+b,w,h)};const sw=ICON?0:Math.round(Math.sin((now||0)/380+(i||0))*2);
+    F(8,6,3,23,'#7a4f30');F(21,6,3,23,'#7a4f30');F(7,4,18,3,'#5e3c24');F(9,28,14,2,'#5e3c24');F(15,7,1,3,'#3a2a20');
+    F(12,10,8,6,'#9fd0ea');F(13,9,6,1,'#9fd0ea');F(13,11,2,3,'#e6f4fb');F(12,15,8,1,'#5e93b8');F(15,16,1,3,'#3a2a20');F(15+sw,19,3,7,'#f4ead8');F(15+sw,19,3,1,'#ef7b4a');break}
+  case'ema':{/* えまかけ：屋根のある台に、ねがいごとの板 */shadow(c,x+16,y+29,12,2.5);const F=(a,b,w,h,col)=>{c.fillStyle=col;c.fillRect(x+a,y+b,w,h)};
+    F(5,9,3,20,'#7a4f30');F(24,9,3,20,'#7a4f30');F(3,6,26,3,'#5e3c24');F(2,8,28,2,'#3a2a20');F(6,14,20,2,'#a8703f');
+    for(const[a,b]of[[7,16],[12,17],[17,16],[22,17],[9,22],[15,22],[20,22]]){F(a,b,4,4,'#d9a46e');F(a,b,4,1,'#f0c890');F(a+1,b-1,2,1,'#c4392e')}break}
+  case'komainu':{/* こまいぬ：石の台にすわる、まもりの犬 */shadow(c,x+16,y+29,11,3);const F=(a,b,w,h,col)=>{c.fillStyle=col;c.fillRect(x+a,y+b,w,h)};
+    F(6,23,20,6,'#8f8a84');F(6,23,20,1,'#b3ada3');F(7,28,18,1,'#6f6a64');
+    F(10,13,12,10,'#b9b3aa');F(9,8,10,8,'#c4beb4');F(18,10,5,4,'#b9b3aa');F(8,7,4,4,'#9b958c');F(16,7,4,3,'#9b958c');F(11,16,4,5,'#9b958c');F(20,18,3,5,'#a59f96');
+    F(12,10,2,2,'#2b2b33');F(21,12,2,1,'#6f6a64');F(10,22,4,1,'#8f8a84');F(18,22,4,1,'#8f8a84');F(22,13,3,3,'#9b958c');break}
+  case'kadomatsu':{/* かどまつ：竹と松のかざり */shadow(c,x+16,y+29,10,3);const F=(a,b,w,h,col)=>{c.fillStyle=col;c.fillRect(x+a,y+b,w,h)};
+    for(const[a,b]of[[11,5],[15,2],[19,8]]){F(a,b,4,20,'#5b8f3a');F(a,b,1,20,'#7fb24f');F(a,b,4,2,'#c8e0a0');F(a,b+9,4,1,'#3f6b2a')}
+    for(const[a,b]of[[7,17],[22,16],[9,13],[21,12]]){F(a,b,4,3,'#2f6b3a');F(a+1,b-1,2,1,'#3f8a4a')}
+    F(8,21,16,8,'#c9a46a');F(8,21,16,1,'#e0c08a');F(8,24,16,1,'#6b4524');F(8,27,16,1,'#6b4524');F(14,24,4,4,'#c4392e');break}
   case'rockart':{/* つぼ：素焼きのつぼ */shadow(c,x+16,y+29,10,3);
     c.fillStyle='#b8643e';c.beginPath();c.moveTo(x+12,y+7);c.quadraticCurveTo(x+12,y+11,x+8,y+14);c.quadraticCurveTo(x+3,y+20,x+8,y+27);c.quadraticCurveTo(x+16,y+31,x+24,y+27);c.quadraticCurveTo(x+29,y+20,x+24,y+14);c.quadraticCurveTo(x+20,y+11,x+20,y+7);c.closePath();c.fill();
     c.fillStyle='#d27a4e';rr(c,x+10.5,y+4.5,11,3.5,1.5);c.fillStyle='#5a2e1a';c.fillRect(x+12.5,y+5.4,7,1.4);
@@ -3394,7 +3427,7 @@ const houseRes=h=>S.res.filter(r=>h.set.has((r.y|0)*W+(r.x|0)));
 const COMFMAX=300;// 住み心地の上限
 // 住み心地（0〜300）：ベッド・家具・床・人数で決まる。高いとよく眠れて、低いとたのしさが下がる
 const COMFR={rockart:1,jar:1,torch:1,flower:1,clover:1,bellf:1,salvia:1,lily:1,lotus:1,lamp:2,vane:2};/* 家の外でも住み心地に入る範囲（マス） */
-const COMFY={stool:2,chair2:4,stable:4,pouf:3,achair:5,ltable:5,rug1:5,sofa1:6,rug2:6,tub:3,sink:4,crate:6,monstera:10,shelf1:12,wreath:10,curtain1:10,cabinet:12,paint2:10,shelf2:13,curtain2:10,paint3:10,wshelf:12,paint1:14,bathtub:16,candle:3,lantern:5,flamp:6,window:5,bed:10,table:8,chair:4,oven:6,lamp:6,torch:4,bench:5,jar:5,rockart:5,vane:4,flower:4,clover:4,bellf:4,salvia:4,lily:4,lotus:4,stor:3,mbox:3};
+const COMFY={stool:2,chair2:4,stable:4,pouf:3,achair:5,ltable:5,rug1:5,sofa1:6,rug2:6,tub:3,sink:4,crate:6,monstera:10,shelf1:12,wreath:10,curtain1:10,cabinet:12,paint2:10,shelf2:13,curtain2:10,paint3:10,wshelf:12,paint1:14,bathtub:16,candle:3,lantern:5,flamp:6,window:5,bed:10,table:8,chair:4,oven:6,lamp:6,torch:4,bench:5,jar:5,rockart:5,chochin:6,furin:8,ema:8,komainu:10,kadomatsu:10,vane:4,flower:4,clover:4,bellf:4,salvia:4,lily:4,lotus:4,stor:3,mbox:3};
 function houseComfort(h){let bed=0,furn=0,fl=0,n=0;const seen=new Set();
   const kc={};for(const j of h.inside){n++;if(S.floor[j])fl++;const o=S.obj[j];if(!o||!COMFY[o])continue;if(o==='bed')bed++;else{kc[o]=(kc[o]||0)+1;furn+=COMFY[o]*(kc[o]>2?.5:1);seen.add(o)}}/* 同じ家具は2つまで。3つ目からは半分 */
   for(const j of h.inside){const o=S.rug&&S.rug[j];if(o&&COMFY[o]){kc[o]=(kc[o]||0)+1;furn+=COMFY[o]*(kc[o]>2?.5:1);seen.add(o)}}/* 家具の下のラグ */
@@ -4166,6 +4199,7 @@ function render(now){
   for(let y=Math.max(0,y0-2);y<Math.min(H,y1+4);y++)for(let x=x0;x<x1;x++){const i=y*W+x,o=S.obj[i];if(!o||o==='part'||!BL[o]||S.ground[i]===1&&o!=='lotus'&&o!=='sprout'||!(BL[o].dyn||BL[o].anim||TREES.has(o)))continue;
     add(objectDepth(o,i),BL[o].kind==='block'?0:1,objBox(o,i),()=>drawObj(ctx,o,x*TS,y*TS,i,S.dyn[i]?(S.dyn[i].g!=null?S.dyn[i].g:S.dyn[i].p):0,now),i)}
   if(WD===1&&S.st2&&S.st2.fire)for(const k in S.st2.fire){const j=+k,o=S.obj[j];if(!o||!BL[o])continue;add(objectDepth(o,j)+.005,1,objBox(o,j),()=>drawFire1(j,now),j)}/* 燃えている物のほのおは、その物のすぐ手前に */
+  if(festOn()&&STATUE>=0){const sx=STATUE%W,sy=(STATUE/W)|0;for(const[dx,dy]of FESTP){const x=sx+dx,y=sy+dy;add(y+1,1,[x*TS,y*TS-22,x*TS+TS,y*TS+TS],()=>drawFestPole(x,y,now),-1)}}/* おまつりのちょうちん */
   for(const h of HOUSES){let bot=0,ib=0;for(const j of h.set)bot=Math.max(bot,(j/W)|0);for(const j of h.inside)ib=Math.max(ib,(j/W)|0);if(bot<y0-1||h.y0>y1+1||h.x1<x0-1||h.x0>x1+1)continue;
     add(ib+1.5,3,[h.x0*TS-6,h.y0*TS-40,(h.x1+1)*TS+6,(ib+1)*TS+12],()=>drawRoofs(ctx,now,[h]),-1);/* 屋根はいちばん上の層：柱も屋根の下 */D[D.length-1].hs=h.set}/* 屋根は家ごとにひとまとまり。その家の壁は屋根の上に描き直さない *//* 屋根は、横の壁より後・手前の壁より先に描く */
   // 手前にある止まっている物を、重なる範囲だけ描き直す
@@ -4578,7 +4612,7 @@ const TAGMAP={stool:'リビング,キッチン',chair:'リビング,キッチン
 tub:'キッチン,お風呂',sink:'キッチン',oven:'キッチン',bathtub:'お風呂',hotstone:'お風呂,ガーデン',crate:'収納',stor:'収納',mbox:'収納',shelf1:'収納,リビング',shelf2:'収納,かざり',cabinet:'収納,リビング',wshelf:'収納,かざり',
 monstera:'かざり,リビング',wreath:'かざり,リビング',curtain1:'かざり,リビング,寝室',curtain2:'かざり,リビング,寝室',paint1:'かざり,リビング',paint2:'かざり,リビング',paint3:'かざり,リビング',
 candle:'あかり,リビング',lantern:'あかり,リビング',flamp:'あかり,リビング',lamp:'あかり,ガーデン',torch:'あかり,ガーデン',
-signpost:'ガーデン',hedge:'ガーデン',birdhouse:'ガーデン,かざり',birdbath:'ガーデン,かざり',arch:'ガーデン,かざり',parasol:'ガーデン,遊び',noren:'ガーデン,かざり',bench:'ガーデン,リビング',jar:'ガーデン,キッチン',kamizo:'ガーデン',rockart:'ガーデン,かざり',vane:'ガーデン,かざり',basin:'ガーデン',
+signpost:'ガーデン',hedge:'ガーデン',birdhouse:'ガーデン,かざり',birdbath:'ガーデン,かざり',arch:'ガーデン,かざり',parasol:'ガーデン,遊び',noren:'ガーデン,かざり',bench:'ガーデン,リビング',jar:'ガーデン,キッチン',kamizo:'ガーデン',rockart:'ガーデン,かざり',chochin:'かざり',furin:'かざり',ema:'かざり',komainu:'かざり,ガーデン',kadomatsu:'かざり,ガーデン',vane:'ガーデン,かざり',basin:'ガーデン',
 slide:'遊び,ガーデン',sandbox:'遊び,ガーデン',seesaw:'遊び,ガーデン',swing:'遊び,ガーデン',campfire:'遊び,あかり',fountain:'遊び,ガーデン',
 spike:'ワナ',puddle:'ワナ',sticky:'ワナ',firetrap:'ワナ',gust:'ワナ',watch:'防衛,あかり',tower:'防衛',lighthouse:'あかり,防衛',stele:'防衛',well:'水まわり,ガーデン',windmill:'作業,ガーデン',lumber:'作業',quarry:'作業',statue:'神殿'};/* ジャンルのタグ（複数あるものは、すべて書く） */
 function tagsOf(id){const b=BL[id];if(!b)return[];if(TAGMAP[id])return TAGMAP[id].split(',');const t=[];if(CAT_TAG[b.cat])t.push(CAT_TAG[b.cat]);for(const[n,ids]of CRAFT_TABS)if(ids.includes(id)){const g=TAB_TAG[n]||n;if(!t.includes(g)&&!(g==='家具'&&t.length))t.push(g)}if(b.play&&!t.includes('遊び'))t.push('遊び');if(!t.length&&b.kind==='furn')t.push('家具');return t}/* 説明に出す、ジャンルのタグ */
@@ -4616,7 +4650,11 @@ function renderSheet(){
       if((S.bossKills||0)>=1||S.flags.hinoDown){const bx=row(r5,'めぶきのしずく','消えてしまったせいれいを、よみがえらせる（所持：'+(S.mebuki||0)+'）',null);btn(bx,SP(400),S.pt<400,()=>{S.pt-=400;S.mebuki=(S.mebuki||0)+1;toast('めぶきのしずくをもらった','good');trade()},1)}
       if(S.lv>=5){const room=matCap()-(S.mat.wood||0)-(S.mat.stone||0);
         for(const[k,nm]of[['wood','木材'],['stone','石材']]){const bx=row(r5,nm+'×10','素材箱に入る（いま'+(S.mat[k]||0)+'）',null);btn(bx,room<10?'素材箱がいっぱい':SP(50),room<10||S.pt<50,()=>{S.pt-=50;S.mat[k]=(S.mat[k]||0)+10;S.gotMat&&(S.gotMat[k]=(S.gotMat[k]||0)+10);toast(nm+'を10こもらった','good');trade()},1)}
-        {const done=S.festDay===dayNo(),bx=row(r5,'おまつり','みんなのたのしさとげんきが、いっぱいになる（1日1回）',null,done);btn(bx,done?'きょうはおわった':SP(200),done||S.pt<200,()=>{S.pt-=200;S.festDay=dayNo();for(const r of S.res){r.fun=100;r.energy=100;spawnFX(r.x-.5,r.y-.6,'#ffd84a')}sfx('level');toast('おまつりで、みんな元気いっぱい！','good');trade()},1)}}}
+        {const done=S.festDay===dayNo(),bx=row(r5,'おまつり','みんなのたのしさとげんきが、いっぱいになる。夜8時まで、神殿の前でおどる。次の朝、おみやげがある（1日1回）',null,done);btn(bx,done?'きょうはおわった':SP(200),done||S.pt<200,()=>{S.pt-=200;S.festDay=dayNo();for(const r of S.res){r.fun=100;r.energy=100;spawnFX(r.x-.5,r.y-.6,'#ffd84a')}sfx('level');toast('おまつりがはじまった！','good');festStart();trade()},1)}}}
+    if(S.lv>=5||(S.bossKills||0)>=1||S.flags.hinoDown){const r6=sec('カミサマのかざり（日によってかわる）');const DECO=[['furin',120],['ema',150],['kadomatsu',180],['komainu',200]],d=dayNo();
+      for(const[id,c]of[DECO[d%4],DECO[(d+1)%4]]){const bx=row(r6,BL[id].name,BL[id].desc+'（持っている数：'+(inv(id)||0)+'）',iconURL(id));btn(bx,SP(c),S.pt<c,()=>{S.pt-=c;giveItem(id,1);toast(BL[id].name+'をもらった','good');trade()},1)}
+      const r7=sec('ごちそう（5つずつ）');const GOCHI={yakiimo:15,yakiberry:15,yakiapple:15,yakizakana:20,bread:20,salad:20,soup:25},room=foodCap()-S.food;
+      for(const R of RECIPES){const k=R.out,c=GOCHI[k];if(!c||!Object.keys(R.need).every(n=>!CROPS[n]||cropOn(n)))continue;const f=FOODS[k],bx=row(r7,f.e+' '+f.name+'×5',f.fx||'おなかがふくれる',null);btn(bx,room<5?'食料箱がいっぱい':SP(c),room<5||S.pt<c,()=>{S.pt-=c;addFood(k,5);toast(f.name+'を5つもらった','good');trade()},1)}}/* 終盤のパワーの使い道 */
     const r4=sec('土地');
     if(S.baseLv<BASE_R.length-1){const c=BASE_COST[S.baseLv],need=BASE_LV[S.baseLv],nx=BASE_R[S.baseLv+1]*2;
       const bx=row(r4,'基地を広げる（'+nx+'×'+nx+'マス）','置ける範囲が広がる');btn(bx,S.lv<need?'村Lv'+need:SP(c),S.lv<need||S.pt<c,()=>{S.pt-=c;S.baseLv++;recount();toast('基地が広がった！','good');trade()},1)}
@@ -5078,7 +5116,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='398';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='399';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
