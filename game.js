@@ -533,7 +533,7 @@ const QUESTS2=[
   {text:'神殿を建ててもらおう',check:()=>cnt('statue')>=1,by:GOD,how:'下の「おく」→「神殿」をえらび、基地の中の空いた場所をタップ',story:[
     [HOMURA,'へえ、なかなかいい神殿じゃないか。'],
     [GOD,'じゃろ〜。女神像もおそなえ箱も依頼ボードも、草原といっしょじゃよ。'],
-    [GOD,'食料箱と素材箱は、村の北がわに置いといたぞい。コワイノは南から来るからの。かまどやベッド、柵や罠も、おそなえ箱に入れといたからの。'],[HOMURA,'ありがとよ、守り神。']],
+    [GOD,'食料箱は古い家の中に、素材箱は村の北西に置いといたぞい。コワイノは南から来るからの。かまどやベッド、柵や罠も、おそなえ箱に入れといたからの。'],[HOMURA,'ありがとよ、守り神。']],
    gives:{feat:['inv','remove','plant','craft','people'],flag:'lv_oven',recipes:['oven','bed','stor','mbox'],flags:['yoganLearned'],items:{oven:1,bed:1,hwall:3,fence:10,spike:10},mat:{wood:10,stone:10},enemy:true}},
   {text:'冷たい温泉を調べよう',check:()=>!!S.flags.sprLook,how:'「みる」で、村の水たまりをタップする',
    talk:{who:HOMURA,when:()=>true,lines:[
@@ -794,7 +794,7 @@ function genWorld(s,w){
   for(let y=CY-6;y<=CY-2;y++)for(let d=2;d<=7;d++){if(d>2&&d<7&&y>CY-6&&y<CY-2)continue;const x=hx(-d),j=y*W+x;if(y===CY-2&&d>=3&&d<=5)continue;/* はじめは壁がこわれている（クエストで直す） */s.obj[j]=(d===2&&y===CY-4)?'door':'hwall';s.floor[j]=s.obj[j]==='door'?'path':'';if(s.obj[j]==='hwall')s.hp[j]=BL.hwall.hp}
   if(V){for(let x=CX-7;x<=CX+8;x++)if(!s.obj[(CY+1)*W+x])s.floor[(CY+1)*W+x]='gravel';for(let y=CY+2;y<CY+12;y++)s.floor[y*W+CX]='gravel'}/* 火山のふもとは、砂利の道 */
   for(let d=1;d<=4;d++){const j=(CY-4)*W+hx(d);s.obj[j]='farm';s.floor[j]='';s.dyn[j]={g:50,wet:0,crop:'imo'}}/* 最初の畑は4つ。家の道をはさんだ向かいに横1列。作物は、はじめはいもだけ */
-  if(V){const put=id=>{let best=-1,bd=1e9;for(let y=CY-7;y<CY;y++)for(let x=CX-6;x<CX;x++){const j=y*W+x;if(s.ground[j]===1||s.obj[j]||s.floor[j])continue;if([j-1,j+1,j-W,j+W,j-W-1,j-W+1,j+W-1,j+W+1].some(k=>s.ground[k]===1||s.obj[k]==='stor'||s.obj[k]==='mbox'))continue;const d=Math.hypot(x+.5-(CX-3),y+.5-(CY-3.5));if(d<bd){bd=d;best=j}}if(best>=0)s.obj[best]=id};put('stor');put('mbox');for(let y=CY-13;y<CY-8;y++){const j=y*W+CX;if(!s.obj[j]&&s.ground[j]!==1)s.floor[j]='path'}st2Place(s)}/* 火山のふもと：食料箱と素材箱は、はじめから村の北西に（コワイノは南から来るので。北東の古い家はさける） */
+  if(V){const put=id=>{let best=-1,bd=1e9;for(let y=CY-7;y<CY;y++)for(let x=CX-6;x<CX;x++){const j=y*W+x;if(s.ground[j]===1||s.obj[j]||s.floor[j])continue;if([j-1,j+1,j-W,j+W,j-W-1,j-W+1,j+W-1,j+W+1].some(k=>s.ground[k]===1||s.obj[k]==='stor'||s.obj[k]==='mbox'))continue;const d=Math.hypot(x+.5-(CX-3),y+.5-(CY-3.5));if(d<bd){bd=d;best=j}}if(best>=0)s.obj[best]=id};{const j=(CY-5)*W+CX+6;if(!s.obj[j])s.obj[j]='stor';else put('stor')}put('mbox');for(let y=CY-13;y<CY-8;y++){const j=y*W+CX;if(!s.obj[j]&&s.ground[j]!==1)s.floor[j]='path'}st2Place(s)}/* 火山のふもと：食料箱は古い家の中、素材箱は村の北西に（コワイノは南から来るので） */
 }
 
 /* ---------- 火山のふもと（ステージ2）：温泉3か所・火山・熱の道 ---------- */
@@ -2052,6 +2052,7 @@ const TRAPS=['spike','sticky','puddle','firetrap','gust'],CN=a=>a.reduce((n,k)=>
 function houseBedCount(){const cells=new Set(HOUSES.flatMap(h=>[...h.inside]));return [...cells].filter(j=>S.obj[j]==='bed').length}
 function diningSeatCount(){return S.obj.reduce((n,o,j)=>n+(SEATS.includes(o)&&[-1,1,-W,W].some(d=>{const k=j+d;return k>=0&&k<W*H&&Math.abs(k%W-j%W)+Math.abs((k/W|0)-(j/W|0))===1&&S.obj[k]==='table'})),0)}
 const waitingBellflowers=()=>WD===0&&qAt('ききょうを植えて、土の力をためよう')&&cnt('bellf')>0&&bloomCount('bellf')<2&&!S.flags.minaCame;
+const houseFood=()=>HOUSES.some(h=>[...h.inside].some(j=>S.obj[j]==='stor'||S.obj[j]==='cabinet'));/* 家の中に食べ物の箱がある */
 const SUBQ=[/* サブクエスト：メインと別に、いつでもできるおねがい。at=出てくる条件 */
   {k:'seedwait_gate',w:0,g:'wood',t:'柵に出入り口をつくろう',how:'柵の途中を「こわす」で1マス戻し、依頼ボードの「道・囲い」で柵のドアをはる。できたら空いた場所に置く',L:[['K','ききょうのまわりも、歩きやすくしたいな。村をひと回りしてこようっと。'],['K','……あれ、こっちの柵、ぐるっと回らなきゃ出られないや。'],['K','ぼくが通るときだけ開くところ、つくれないかな？']],X:[['K','ぱたん、って開いた！ こっちからも出られるね。'],['K','守り神さま、ありがとう！']],at:()=>waitingBellflowers(),ok:()=>cnt('gate')>=1,n:1,now:()=>cnt('gate'),rw:5},
   {k:'seedwait_food',w:0,g:'wood',t:'朝のごはんを10こ用意しよう',how:'フタバがベリーの茂みから実を集め、食料箱へ運ぶのを手伝おう。食料箱の食べ物を10こ以上にする',L:[['K','なかまが来てくれたら……いっしょにごはん、食べたいな。'],['K','食料箱に、少し多めに入れておこうよ。ぼく、ベリーを集めてくる！']],X:[['K','これだけあれば、新しい子のぶんもあるね。'],['K','どんな子かなあ。……えへへ、たのしみ！']],at:()=>waitingBellflowers(),ok:()=>FOODN()>=10,n:10,now:()=>Math.min(10,FOODN()),rw:5},
@@ -2060,6 +2061,9 @@ const SUBQ=[/* サブクエスト：メインと別に、いつでもできる�
   {k:'salvia3',how:'「おく」→「サルビアの種」を置く。せいれいに植えてもらい、花が咲くのを待とう',g:'earth',L:[['K','火の力をためるなら、赤いサルビアがいいよぉ。'],['K','種、あげるねぇ。5本植えたら、きっとぽかぽかだよぉ。']],X:[['K','まっかなサルビアが5本も増えたねぇ。火の力、たまってきたよぉ。'],['K','守り神さま、ありがとうねぇ。']],w:0,t:'サルビアを5本植えよう',ln:'赤いサルビアは、火の力をためてくれるよぉ。種、あげるねぇ',at:()=>qAt('火のせいれいをむかえよう'),give:{salvia:5},base:()=>cnt('salvia'),ok:()=>bloomCount('salvia')-((S.subB||{}).salvia3||0)>=5,n:5,now:()=>Math.max(0,bloomCount('salvia')-((S.subB||{}).salvia3||0)),rw:10},
   {k:'watch2',how:'「おく」→「見張り台」を置き、合計2つにしよう。せいれいが建てるのを待とう',g:'wood',L:[["K", "あの光が飛んでいくところ、見てると安心するね！"], ["K", "でも、向こうのはしは、ちょっと暗いままなんだ。あっちも守れたらいいなあ。"]],X:[['K','見張り台が2つになった！ これで夜も、ちょっと安心だね！'],['K','あっちへ行く道がすぐわかる目印もあるとうれしいね。'],['K','守り神さま、ありがとう！']],w:0,t:'見張り台を2つにしよう',ln:"向こうのはしも、安心して過ごせたらいいな",at:()=>qAt('火のせいれいをむかえよう'),ok:()=>cnt('watch')>=2,n:2,now:()=>cnt('watch'),rw:15},
   {k:'watchup',how:'見張り台をタップして「強化する」をえらぶ。パワーと素材を使う',g:'wood',L:[['K','オオカゲって、どのくらい強いのかな……。'],['K','見張り台の光の矢が、もっと強くなったら、安心して眠れるのになあ。']],X:[['K','見張り台が、ぴかっと強くなった！'],['K','これなら、オオカゲが来ても、きっとだいじょうぶ。守り神さま、ありがとう！']],w:0,t:'見張り台を強くしよう',ln:'見張り台の光の矢、もっと強くならないかな',at:()=>qAt('オオカゲを追いはらおう')&&!watchUp(),ok:()=>watchUp(),n:1,now:()=>watchUp()?1:0,rw:15},
+  {k:'housefood',w:0,how:'神殿の依頼ボードをタップ →「家具」→「食料箱」をはる。できたら「おく」で家の中に置く',g:'earth',L:[['K','夜、「コワイノ」からにげてるときにねぇ、おなかがすいて、外の食料箱まで走っちゃう子がいるんだよぉ。'],['K','家の中に食料箱があったら、外に出なくても食べられるのにねぇ。']],X:[['K','これで、夜におなかがすいても、家の中で食べられるねぇ。'],['K','守り神さま、ありがとうねぇ。']],t:'家の中に食料箱を置こう',ln:'夜も、家の中でごはんが食べられたらいいねぇ',at:()=>HOUSES.length>0&&S.res.length>=3&&!houseFood(),ok:()=>houseFood(),n:1,now:()=>houseFood()?1:0,rw:15},
+  {k:'oldhouse',w:1,how:'「おく」→「木の壁」をえらんで、北東の古い家のこわれた壁（下の3か所）に置く',g:'fire',L:[['K','夜になると、南から「コワイノ」がやってくるんだ。'],['K','北東の古い家、壁がくずれてるだろ？ あそこを直せば、中で夜をやりすごせるよ。']],X:[['K','よし、これで家になった！ 中にいれば、「コワイノ」も手を出せないさ。'],['K','ありがとよ、守り神。']],t:'古い家の壁を直そう',ln:'古い家を直せば、夜も安心なんだけどね',at:()=>!!S.enemyOn&&!HOUSES.length,ok:()=>HOUSES.length>0,n:1,now:()=>HOUSES.length?1:0,rw:10},
+  {k:'yogan1',w:1,how:'「おく」→「ようがん台」を置く。せいれいが建てるのを待とう（石40・木5がいる）',g:'fire',L:[['K','ゆうべは、あぶなかったね。'],['K','火山の石で「ようがん台」を作れば、火の玉で「コワイノ」を追いはらえるんだ。'],['K','石をあつめて、建ててみないかい？']],X:[['K','ようがん台ができた！ これで夜も、こっちから戦えるね。'],['K','ありがとよ、守り神。']],t:'ようがん台を置こう',ln:'ようがん台があれば、夜も戦えるんだけどね',at:()=>(S.nights||0)>=1&&!!S.flags.yoganLearned&&cnt('yogan')<1,ok:()=>cnt('yogan')>=1,n:1,now:()=>cnt('yogan'),rw:15},
   {k:'chair2',how:'神殿の依頼ボードをタップ →「家具」→いすやスツールをはる。できたら「おく」で食卓の隣に置く',g:'wood',L:[["K", "食べ物に土がつかなくなったの、うれしいな！ でも、立ったまま食べてると足がつかれちゃう。"], ["K", "ごはんを食べるとき、ぼくも座れたらいいなあ。"]],X:[["K", "わあ、これなら座って食べられるね！"], ["K", "足もらくちん。ゆっくり食べようっと。"], ["K", "守り神さま、ありがとう！"]],t:'いすを2つ置こう',ln:"ごはんを食べるとき、ぼくも座れたらいいな",at:()=>cnt('table')>=1,ok:()=>diningSeatCount()>=2,n:2,now:()=>diningSeatCount(),rw:10},
   {k:'bed3',how:'神殿の依頼ボードをタップ →「家具」→「ベッド」をはる。できたら「おく」で家の中に置く',g:'earth',L:[["K", "なかまが3人になって、にぎやかだねぇ。"], ["K", "……でもねぇ、まだ地面で寝ている子がいるんだよぉ。朝、背中が冷たそうでねぇ。"], ["K", "守り神さま、みんながあったかく眠れるように、してあげられないかなぁ。"]],X:[["K", "ふかふかが、みんなの分あるねぇ。これなら、冷たくないよぉ。"], ["K", "守り神さま、ありがとうねぇ。"]],w:0,t:'ベッドを3つにしよう',ln:"地面で寝ている子が、あったかく眠れたらいいねぇ",at:()=>S.res.length>=3&&houseBedCount()<3,learn:['bed'],ok:()=>houseBedCount()>=3,n:3,now:()=>houseBedCount(),rw:15},
   {k:'light3',how:'神殿の依頼ボードをタップ →「あかり」→たいまつやかがり火をはる。できたら「おく」で置く。たき火も数に入る',g:'fire',L:[["K", "夜の村、まっくらじゃないか。足もとが見えなくて、落ち着かないよ。"], ["K", "守り神、あたいの火、もっと遠くまで届けられないかい？"]],X:[['K','よし、明るくなった！ これで夜も、ちっとはマシだね。'],['K','ありがとよ、守り神。恩に着るよ。']],t:'たいまつ・かがり火・たき火を3つ置こう',ln:'夜の村、もうちょっと明るいといいね',at:()=>elemCount('fire')>=1,ok:()=>CN(['torch','lamp','campfire'])>=3,n:3,now:()=>CN(['torch','lamp','campfire']),rw:15},
@@ -5043,7 +5047,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='395';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='396';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
