@@ -3016,9 +3016,17 @@ function drawConn(c,id,x,y,i,now){const C=window.CHIPS;if(!C)return false;const 
   if(!vm)return drawChip(c,H,id,x,y,now,i);if(!hm)return drawChip(c,V,id,x,y,now,i);const r=CONNR[id]||'HV';
   if(r==='VH'){if(!drawChip(c,V,id,x,y,now,i))return false;return drawChip(c,H,id,x,y,now,i)}
   if(!drawChip(c,H,id,x,y,now,i))return false;if(r==='Hclip'){c.save();c.beginPath();if(vm&4)c.rect(x-64,y-64,192,66);if(vm&8)c.rect(x-64,y+26,192,96);c.clip();drawChip(c,V,id,x,y,now,i);c.restore();return true}return drawChip(c,V,id,x,y,now,i)}
+const PCH=new Set(['tree','ntree','fruit','deadtree','berry','flower','clover','bellf','salvia','lily','lotus','statue','volcano','hedge']);/* 植物などは、ようすで絵をえらぶ */
+function plantChip(id,i,g){const C=window.CHIPS;if(!C)return null;if(!ICON&&i!=null&&S&&PLANTS.includes(id)&&isBud(i))return C.bud||null;/* 芽 */
+  if(id==='flower')return C['flower#'+(((i==null?0:hash(i*7+3))*3)|0)]||null;/* 花は3しゅるい */
+  if((id==='fruit'||id==='berry')&&g>=100)return C[id+'#mi']||null;/* 実った絵 */
+  if(id==='hedge'){if(ICON||i==null||!S)return C.hedge||null;const t=k=>typeAt(k)==='hedge',hl=i%W>0&&t(i-1),hr=i%W<W-1&&t(i+1),m=(hl?1:0)|(hr?2:0)|(t(i-W)?4:0)|(t(i+W)?8:0);if(m&8)return C['hedge:'+m]||null;
+    const rD=hr&&t(i+1+W),lD=hl&&t(i-1+W),fi=rD&&lD?18:rD?16:lD?17:m;return C['hedge:'+m+(fi!==m?'/'+fi:'')]||null}/* 生け垣は、となりとのつながりの形で */
+  return C[id]||null}
 function drawObj(c,id,x,y,i,g,now){
   if(CONN[id]&&!c._chip&&!(HOME_WALLS.has(id)&&S&&S.win&&S.win[i]&&!c._win)&&drawConn(c,id,x,y,i,now))return;/* つながる物は部品で（窓のある壁は、窓の前に壁だけ） */
-  if(!c._chip&&!c._win&&!SEATS.includes(id)){const ch=chipOf(id,i);if(ch&&drawChip(c,ch,id,x,y,now,i))return}/* ドット絵があれば、それを使う（いすは、つりざおをかいてから下で） */
+  if(!c._chip&&PCH.has(id)){const ch=plantChip(id,i,g);if(ch&&drawChip(c,ch,id,x,y,now,i)){if(id==='statue'&&i!=null&&!ICON)for(const q of[i-1,i+1])if(S.obj[q]==='obox'||S.obj[q]==='board')drawObj(c,S.obj[q],x+(q-i)*TS,y,q,0,now);/* 女神像の横の箱・ボードを手前に */return}}
+  if(!c._chip&&!c._win&&!SEATS.includes(id)&&!PCH.has(id)){const ch=chipOf(id,i);if(ch&&drawChip(c,ch,id,x,y,now,i))return}/* ドット絵があれば、それを使う（いすは、つりざおをかいてから下で） */
   if(BL[id]&&BL[id].cs&&!ICON&&!c._cs){const k=BL[id].cs;c.save();c.translate(x+16,y+20);c.scale(k,k);c.translate(-x-16,-y-20);c._cs=1;drawObj(c,id,x,y,i,g,now);c._cs=0;c.restore();return}/* ラグは、絵だけ大きく（判定はそのまま） */
   if(!ICON&&i!=null&&S&&PLANTS.includes(id)&&isBud(i)){c.fillStyle='rgba(0,0,0,.18)';c.beginPath();c.ellipse(x+16,y+27,7,2.5,0,0,7);c.fill();c.fillStyle='#6fbf5a';c.fillRect(x+15,y+17,2,10);c.beginPath();c.ellipse(x+11,y+18,5,2.6,-.5,0,7);c.ellipse(x+21,y+18,5,2.6,.5,0,7);c.fill();return}/* 芽 */
   if(false&&!ICON&&!c._rot&&i!=null&&S&&S.rot&&S.rot[i]&&BL[id]&&BL[id].kind==='furn'){const zz=BL[id].sz||[1,1],z=zz[0],rv=S.rot[i];c.save();if(rv===1){c.translate(x+16*z,0);c.scale(-1,1);c.translate(-(x+16*z),0)}else{const cx=x+16*z,cy=y+16*zz[1];c.translate(cx,cy);c.rotate((rv-1)*Math.PI/2);c.translate(-cx,-cy)}c._rot=1;drawObj(c,id,x,y,i,g,now);c._rot=0;c.restore();return}/* 向きをかえた家具は左右反転 */
@@ -4997,7 +5005,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='385';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='386';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
