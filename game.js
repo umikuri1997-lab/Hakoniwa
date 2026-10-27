@@ -3825,11 +3825,11 @@ function drawSpiritDot(c,el,x,y,s,f,o){
     c.save();c.scale(sx,1);spr('sp:arm'+S);c.restore();if(prop&&sx===-farA&&!back)spProp(c,prop,sx,a,t,o);c.save();c.scale(sx,1);spr('sp:hand');c.restore();c.restore()};
   const farA=back?1:-1,aA0=sx=>o.carry?-1.85+Math.sin(t*9)*.08:tr?1.22+(o.walk?st*.6:Math.sin(t*1.7)*.05):(back?1:-1)*sx*arm+(back?0:.35),aA=sx=>sx===-farA?(aN!=null?aN:aA0(sx)):(aF!=null&&!o.carry?aF:aA0(sx));
   if(!bothF&&!tr)armD(farA,aA(farA));if(!tr&&!frontArm)armD(-farA,aA(-farA));
-  spr('sp:body'+S+'0');
-  {const ws=o.walk?st:0,up=v=>-Math.max(0,v)*3*D;/* 足：もとの体の下の部分を切り分けた絵。止まっているときは、もとの形と同じ。歩くときは交互に上げる（横向きは前後にもふる） */
-    if(tr){if(o.sit){spr('sp:footS',3*D,-1*D);spr('sp:footS',7*D,-3*D)}/* 横向きにすわる：足を前へ出して、少し上げる *//* 横向きにすわる：足のつけねを中心に90度回して、前へまっすぐのばす（ドットがくずれない） */
+  {const ws=o.walk?st:0,up=v=>-Math.max(0,v)*3*D;/* 足：もとの体の下の部分を切り分けた絵。体より先にかいて、上のはしは体の下にもぐらせる（つけねに線を出さない）。止まっているときは、もとの形と同じ。歩くときは交互に上げる（横向きは前後にもふる） */
+    if(tr){if(o.sit){spr('sp:footS',3*D,-1*D);spr('sp:footS',7*D,-3*D)}/* 横向きにすわる：足を前へ出して、少し上げる */
       else{spr('sp:footS',-ws*3*D,up(ws));spr('sp:footS',ws*3*D,up(-ws))}}
     else{spr('sp:footL',0,up(ws));spr('sp:footR',0,up(-ws))}}
+  spr('sp:body'+S+'0');
   if(tr&&!frontArm)armD(-farA,aA(-farA));
   if(back&&el!=='wind')tail(-tr*12,-17);
   // 頭と顔（食べるときは、うなずく）
@@ -5298,7 +5298,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='459';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='460';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
