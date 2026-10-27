@@ -3009,8 +3009,15 @@ function drawChip(c,ch,id,x,y,now,i){const src=ch.src||ch,ims=chipImgs(src,id),n
   c.drawImage(im,x+src.ax,y+src.ay);
   if(src.parts){const mv=PARTMV[id]?PARTMV[id](i,now):{};for(const p of src.parts){const pm=partImg(p,id);if(!pm.ok)continue;const px=x+p.px,py=y+p.py;c.save();c.translate(px,py);if(mv.rot)c.rotate(mv.rot);if(mv.sx!=null||mv.sy!=null)c.scale(mv.sx??1,mv.sy??1);c.translate(-px,-py);c.drawImage(pm,x+p.ax,y+p.ay);c.restore()}}/* 動く部品は、支点のまわりで動かして重ねる */
   c.restore();c.imageSmoothingEnabled=sm;return true}
-if(window.CHIPS)for(const k in window.CHIPS)chipImgs(window.CHIPS[k],k.split('@')[0]);/* はじめに読みこんでおく */
+if(window.CHIPS)for(const k in window.CHIPS)chipImgs(window.CHIPS[k],k.split(/[@>:]/)[0]);/* はじめに読みこんでおく */
+const CONN={fence:'f',logfence:'f',bamboofence:'f',stonefence:'f',wall:'w',hwall:'h',logwall:'h',plasterwall:'h',brickwall:'h'},CONNR={'fence':'HV','logfence':'HV','bamboofence':'VH','stonefence':'Hclip','wall':'HV','hwall':'HV','logwall':'HV','plasterwall':'HV','brickwall':'HV'};/* つながる物：横の部品（H0 柱・HL・HR・HLR 横板）と縦の部品（VU・VD・VUD 縦板）を、となりのつながりで組み合わせる。CONNR：角で横と縦を重ねる順 */
+function connMask(id,i){if(ICON||i==null||!S)return 0;const t=CONN[id];let f;if(t==='f')f=k=>FENCE_IDS.has(typeAt(k));else if(t==='w')f=k=>{const o=typeAt(k);return o==='wall'||o==='stonegate'};else f=k=>{const o=typeAt(k);return o!=='wall'&&o!=='sdoor'&&(HOME_WALLS.has(o)||HOME_DOORS.has(o))};return (f(i-1)?1:0)|(f(i+1)?2:0)|(f(i-W)?4:0)|(f(i+W)?8:0)}/* 石の塀は、石の塀のドアのとなりでは終わる */
+function drawConn(c,id,x,y,i,now){const C=window.CHIPS;if(!C)return false;const m=connMask(id,i),hm=m&3,vm=m&12,H=C[id+':'+['H0','HL','HR','HLR'][hm]],V=vm?C[id+':'+{4:'VU',8:'VD',12:'VUD'}[vm]]:null;if(!H||vm&&!V)return false;
+  if(!vm)return drawChip(c,H,id,x,y,now,i);if(!hm)return drawChip(c,V,id,x,y,now,i);const r=CONNR[id]||'HV';
+  if(r==='VH'){if(!drawChip(c,V,id,x,y,now,i))return false;return drawChip(c,H,id,x,y,now,i)}
+  if(!drawChip(c,H,id,x,y,now,i))return false;if(r==='Hclip'){c.save();c.beginPath();if(vm&4)c.rect(x-64,y-64,192,66);if(vm&8)c.rect(x-64,y+26,192,96);c.clip();drawChip(c,V,id,x,y,now,i);c.restore();return true}return drawChip(c,V,id,x,y,now,i)}
 function drawObj(c,id,x,y,i,g,now){
+  if(CONN[id]&&!c._chip&&!(HOME_WALLS.has(id)&&S&&S.win&&S.win[i]&&!c._win)&&drawConn(c,id,x,y,i,now))return;/* つながる物は部品で（窓のある壁は、窓の前に壁だけ） */
   if(!c._chip&&!c._win&&!SEATS.includes(id)){const ch=chipOf(id,i);if(ch&&drawChip(c,ch,id,x,y,now,i))return}/* ドット絵があれば、それを使う（いすは、つりざおをかいてから下で） */
   if(BL[id]&&BL[id].cs&&!ICON&&!c._cs){const k=BL[id].cs;c.save();c.translate(x+16,y+20);c.scale(k,k);c.translate(-x-16,-y-20);c._cs=1;drawObj(c,id,x,y,i,g,now);c._cs=0;c.restore();return}/* ラグは、絵だけ大きく（判定はそのまま） */
   if(!ICON&&i!=null&&S&&PLANTS.includes(id)&&isBud(i)){c.fillStyle='rgba(0,0,0,.18)';c.beginPath();c.ellipse(x+16,y+27,7,2.5,0,0,7);c.fill();c.fillStyle='#6fbf5a';c.fillRect(x+15,y+17,2,10);c.beginPath();c.ellipse(x+11,y+18,5,2.6,-.5,0,7);c.ellipse(x+21,y+18,5,2.6,.5,0,7);c.fill();return}/* 芽 */
@@ -4990,7 +4997,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='383';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='384';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
