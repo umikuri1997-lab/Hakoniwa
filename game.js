@@ -1843,6 +1843,19 @@ function litNear(h,x,y){for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++)if(h.s
 function lightAt(x,y){for(const j of LIGHTS){const o=S.obj[j];const lx=j%W+(o==='lighthouse'?1:.5),ly=((j/W)|0)+(o==='lighthouse'?1:.5);if(INDL.has(o)){const h=roomOf(j);if(h?litNear(h,x|0,y|0):(lx-x)**2+(ly-y)**2<2.25)return true;continue}if((lx-x)**2+(ly-y)**2<(o==='tower'?49:o==='lighthouse'?64:12.25))return true}/* 灯りの範囲（石灯籠2.5・ふつう3.5・台座7マス） */return false}
 const EREACH=new WeakMap();
 const ZUKAN={basic:'いちばんよく見るコワイノ。夜になると、せいれいをねらってやってくる。あたたかいものに、よってくるみたい。',fast:'足がとても速い。体は小さくて、すぐ追いはらえる。いつも、なにかをいそいで追いかけている。',thief:'畑の実った作物をぬすみにくる。見つかると、すぐにげる。じぶんでは、なにも育てられないらしい。',brute:'体がかたくて力も強い。なかなか追いはらえない。いくつもの夜をこえて、かたまったといわれる。',breaker:'壁をこわすのが大好き。まわり道をしないで、まっすぐこわしてくる。しめだされるのが、きらいなのかもしれない。',trapper:'罠や見張り台を見つけると、こわしにくる。まもるために作った物が、ごちそうらしい。',boss:'大きなコワイノ。まわりのせいれいも巻きこんで攻撃する。よく見ると、体の中で、小さなかげがいくつもうごいている。',ash:'灰をまきちらして、施設をしばらく使えなくする。もえつきた火の、のこりのような色をしている。',rockc:'岩みたいにかたい。動きはおそい。岩かげから、はなれたがらない。',yama:'火の山からおりてくる大きなコワイノ。温泉の熱をうばって、冷やしてしまう。体は、いつもつめたい。',hino:'火山からやってくる大きなコワイノ。熱の切りかえ装置をこわそうとする。熱をうばっても、すこしもあたたまらないらしい。',boss2:'夜の力をたくわえた、いちばん大きなコワイノ。この土地じゅうの夜が、ひとつにあつまったようなすがた。'};
+const ZURA={/* クリア後に図鑑で読める「もとのすがた」（STORY.md「もとの闇のせいれいたち」） */
+  basic:'ねむる子のそばで、そっと見守っていた、小さな闇のせいれい。いまも、あたたかい子のそばに、いたいだけなのかもしれない。',
+  fast:'夜のあいだ土地をかけまわり、朝の前に夜をたたんで帰る「夜まわり」の子。たたむ夜も、帰る場所もないのに、まだいそいでいる。',
+  thief:'夜のあいだ、作物や種をねむらせていた子。だれにも見られずに、そっと仕事をしていた。',
+  brute:'夜のしずけさをまもる、大きくて、おだやかな子。帰れないまま、いくつもの夜をこえて、かたまってしまった。',
+  breaker:'家々の戸口をめぐって「おやすみ」を運んでいた子。どの家にも、入れるのがあたりまえだった。',
+  trapper:'夜のあいだ村をまもる「夜の番」の子。守る力を、みんなとわけあっていた。',
+  ash:'火が消えたあと、灰の中にぬくもりを朝までのこしておく子。いまは、ぬくもりをのこすのではなく、うばってしまう。',
+  rockc:'岩かげで、ねむる生き物の寝床をまもっていた子。いまは、岩のかげだけが、よりどころのかわり。',
+  boss:'さびしくなった闇のせいれいたちが、よりあつまったすがた。体の中の小さなかげは、一人ひとりの闇のせいれい。',
+  hino:'火山のふもとで、火が夜にねむるのを見守っていた子たちが、あつまったすがた。だから、火の熱にひかれてしまう。',
+  yama:'火山のふもとで、火が夜にねむるのを見守っていた子たちの、もうひとつのすがた。温泉のぬくもりにひかれて、山からおりてくる。',
+  boss2:'闇のせいれいみんなと、闇のヌシ様がいた「夜」そのものの、なごり。いつか、この夜にも、帰る場所ができるのかもしれない。'};
 function shakeScreen(){const v=$('#cv');v.classList.remove('shk');void v.offsetWidth;v.classList.add('shk');setTimeout(()=>v.classList.remove('shk'),600)}
 const BOSSFX={boss:{col:'#ff3b6b',sub:'コワイノたちの親玉が、すがたをあらわした'},yama:{col:'#ff6a2e',sub:'火の山の熱をうばう、大きなコワイノ'},boss2:{col:'#ffd84a',sub:'夜の力をたくわえた、いちばん大きなコワイノ'}};
 function bossEntrance(e){/* オオカゲ・ヨルノオオカゲの登場：画面がよって、ゆれて暗くなる */const B=BOSSFX[e.type];SKIP=false;/* 登場のあいだは時間を止めて、すがたを見せる */const z0=cam.z;camAnim={fz:cam.z,tz:Math.min(3,cam.z*1.5),fx:cam.x+VW/cam.z/2,fy:cam.y+VH/cam.z/2,tx:e.x*TS,ty:e.y*TS-12*(EN[e.type].size||1),t:0,dur:.8};BOSSHOLD=performance.now()+5000;setTimeout(()=>{camAnim={fz:cam.z,tz:z0,fx:cam.x+VW/cam.z/2,fy:cam.y+VH/cam.z/2,tx:cam.x+VW/cam.z/2,ty:cam.y+VH/cam.z/2,t:0,dur:.8}},5000);/* ボスへズームアップして、少しのあいだ時間を止める（文字は出さない） */shakeScreen();dlgCue('dim');sfx('hit');
@@ -5071,7 +5084,7 @@ function renderSheet(){
       for(const k of ks){const D=EN[k],ok=seen[k],row=el('<div class="zk"><canvas width="144" height="144"></canvas><div class="zt"><b></b><p></p><small></small></div></div>');
         const c=row.querySelector('canvas').getContext('2d');c.scale(2,2);if(!ok)c.globalAlpha=.18;try{drawShade(c,k,36,64,(k==='boss'||k==='hino'||k==='yama'||k==='boss2'?.46:.56),1,{t:0})}catch(_){}
         row.querySelector('b').textContent=ok?D.name:'？？？';row.querySelector('p').textContent=ok?ZUKAN[k]:'まだ会ったことがない';
-        row.querySelector('small').textContent=ok?'体力 '+D.hp+'・はやさ '+D.sp+'・追いはらった '+(K[k]||0)+'回':'';body.appendChild(row)}
+        row.querySelector('small').textContent=ok?'体力 '+D.hp+'・はやさ '+D.sp+'・追いはらった '+(K[k]||0)+'回':'';if(ok&&S.cleared&&ZURA[k]){const u=el('<p class="note"></p>');u.textContent='もとのすがた：'+ZURA[k];row.querySelector('.zt').appendChild(u)}/* クリア後は、もとの闇のせいれいのすがたが読める */body.appendChild(row)}
     }else if(sheetArg==='record'){
       const st=el('<div class="sec"><h3>これまで</h3><div class="recs"></div></div>'),rw=st.querySelector('.recs');
       for(const[a,b]of[['すごした日',dayNo()+'日'],...(S.score?[['クリアスコア',S.score.rank+'（'+S.score.tot+'てん）']]:[]),['のりこえた夜',(S.nights||0)+'回'],['いまのせいれい',S.res.length+'人'],['よんだせいれい',(S.summons||0)+'人'],['消えてしまったせいれい',(S.deaths||0)+'人'],
@@ -5267,7 +5280,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='408';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='409';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
