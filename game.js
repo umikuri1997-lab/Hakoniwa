@@ -886,7 +886,7 @@ const anc=j=>{if(S.obj[j]==='part'||(S.obj[j]==='site2'&&S.ref[j]!=null))return 
 const typeAt=j=>S.obj[anc(j)];
 for(const f of FLOWERS)BL[f].anim=1;BL.table.anim=1;/* 食卓は1.5倍で、はみ出しても奥行き順にかく *//* 花ははみ出すので、地面にやきつけず、ほかの物と同じ順番で描く */
 const solidOf=j=>{const o=typeAt(j);return !!(o&&BL[o]&&BL[o].solid)};
-const ROTS={chair:4,achair:4,sofa1:4,bench:2,bed:2,sandbox:2,ltable:2,bathtub:2,rug1:2,slide:1,seesaw:1,swing:1,signpost:1,vane:1,oven:1};/* 向きをかえられる家具。4：前・右・後ろ・左　2：横・縦　1：左右反転だけ */
+const ROTS={chair:4,achair:4,sofa1:4,bench:2,bed:2,sandbox:2,ltable:2,bathtub:2,slide:1,seesaw:1,swing:1,signpost:1,vane:1,oven:1};/* 向きをかえられる家具。4：前・右・後ろ・左　2：横・縦　1：左右反転だけ */
 const BEDHX=26,BEDHY=-1,BEDVY=10,BEDHS=.85;/* 横のベッド：寝る子の足もと（x,y）。たてのベッド：寝る子の足もとのy。BEDHS：横向きで寝るときの、せいれいの横はば。ふとんは重ねない（ベッドの上に寝る子をかく） */
 const ROTN=id=>ROTS[id]===4?4:ROTS[id]?2:1,ROTL={4:['前','右','後ろ','左'],2:['横','縦'],1:['そのまま','反転']};
 let PLROTS={};/* 置くときにえらんでいる向き（家具ごと） */
@@ -5294,7 +5294,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='452';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='453';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
