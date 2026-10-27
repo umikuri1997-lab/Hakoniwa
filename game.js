@@ -1399,7 +1399,10 @@ ELEM_KEYS.forEach(el=>(ECHATS[el]||[]).forEach(c=>{c.el=el;CHATS.push(c)}));
 ,
  [[[0,'やみのヌシ様が夜をまもってたなら、昼は、だれがまもってたんだろう。'],[1,'…光のヌシ様？'],[0,'そのヌシ様も、いまは見かけないね。']],()=>(S.bossKills||0)>=3],
  [[[0,'光のヌシ様って、いまも、どこかにいるのかな。'],[1,'いるよ、きっと。お日さま、毎朝ちゃんとのぼるもん。'],[0,'…そうだといいな。']],()=>!!S.cleared]
-].forEach(([c,f])=>{c.ok=f;CHATS.push(c)});/* 「コワイノ」のお話：はっきりは言わず、聞いていると、正体（やみのヌシ様がいなくなって、夜のバランスがくずれ、帰る場所をなくした、やみのせいれいのなれはて。もとにはもどれない）が少しずつわかる */
+,
+ [[[0,'お日さまって、むかしより、ちょっとだけ小さいんだって。'],[1,'ほんと？ だれに聞いたの？'],[0,'土のせいれいが、そう言ってた。…なんでだろうね。']],()=>!!S.cleared],
+ [[[0,'夕やけって、どうして、あんなにきれいなのかな。'],[1,'…だれかが、さいごまで、いっしょうけんめい光ってるみたいだね。']],()=>!!S.cleared]
+].forEach(([c,f])=>{c.ok=f;CHATS.push(c)});/* 「コワイノ」のお話：はっきりは言わず、聞いていると、正体（やみのヌシ様がいなくなって、夜のバランスがくずれ、帰る場所をなくした、やみのせいれいのなれはて。もとにはもどれない）が少しずつわかる。光のヌシ様は、やみのヌシ様をたすけようと光をぜんぶあげたが、まにあわず、ふたりとも消えた。今の昼は、光のヌシ様ののこり火 */
 /* 属性ごとの会話も追加された後で、置いた物について話す会話すべてに条件をつける */
 {const ok=(t,f)=>{for(const c of CHATS)if(c[0]&&c[0][1]===t)c.ok=f};
 ok('ヌシ様って、どうしていなくなっちゃったんだろう。',()=>!S.cleared);
@@ -5036,7 +5039,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='390';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='391';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
