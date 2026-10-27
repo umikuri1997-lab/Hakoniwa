@@ -963,10 +963,10 @@ function toyPose0(r,now){const a=toyR(r);if(!a)return null;const j=a.obj,X=(j%W)
   if(a.what==='seesaw'){const sg=us.length>1?(k?1:-1):(r.x<X+16?-1:1)*(TS/TS),an=ssAng(j,now),X0=X+16,Y0=Y+7;r.face=-sg;return{x:X0+Math.cos(an)*sg*22+Math.sin(an)*5,y:Y0+Math.sin(an)*sg*22-Math.cos(an)*5+5,z:Y/TS+1.05}}
   if(a.what==='sandbox'){const o=[-15,15,0][k%3];if(rotAt(j)===1){r.face=k%2?-1:1;return{x:X+16+(k===2?0:(k?6:-6)),y:Y+32+o+8-Math.abs(Math.sin(T*5+k))*1.5,z:Y/TS+1.05+(o+16)/TS}}/* 縦の砂場では、たてにならぶ */const cx=X+32;r.face=o>0?-1:1;return{x:cx+o,y:Y+26-Math.abs(Math.sin(T*5+k))*1.5,z:Y/TS+1.05}}
   if(a.what==='slide'){const p=(T*.45+k*.5)%1;let x,y,f=1;
-    if(p<.35){const q=p/.35;x=X+16;y=Y+60-q*46;f=1}
-    else if(p<.42){x=X+16+(p-.35)/.07*15;y=Y+14}
-    else if(p<.7){const q=(p-.42)/.28,u=1-q;x=u*u*(X+31)+2*u*q*(X+48)+q*q*(X+62);y=u*u*(Y+14)+2*u*q*(Y+42)+q*q*(Y+56)}
-    else{const q=(p-.7)/.3;x=X+62-q*46;y=Y+60+Math.sin(q*Math.PI)*2;f=-1}
+    if(p<.35){const q=p/.35;x=X+8+q*10;y=Y+56-q*28;f=1}/* 左の階段をのぼる（chips.js の slide の絵に合わせる） */
+    else if(p<.42){x=X+18+(p-.35)/.07*18;y=Y+28}/* 上の台をわたる */
+    else if(p<.7){const q=(p-.42)/.28,u=1-q;x=u*u*(X+37)+2*u*q*(X+50)+q*q*(X+60);y=u*u*(Y+30)+2*u*q*(Y+46)+q*q*(Y+54)}/* すべる */
+    else{const q=(p-.7)/.3;x=X+60-q*52;y=Y+58+Math.sin(q*Math.PI)*2;f=-1}/* 階段の下へもどる */
     r.face=f;return{x,y,z:Y/TS+2.05}}
   return null}
 function spotW(i){/* 椅子のそばの釣り場の水マス（なければ-1） */const x=i%W;for(const k of[i,i-1,i+1,i-W,i+W]){if(k<0||k>=W*H||Math.abs(k%W-x)>1||S.ground[k]===1)continue;const w=sideW(k);if(w>=0)return w}return -1}
@@ -5290,7 +5290,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='433';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='434';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
