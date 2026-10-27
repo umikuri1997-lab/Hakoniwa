@@ -2846,6 +2846,13 @@ function drawWaterAll(c){
     c.beginPath();for(let y=0;y<H-1;y++)for(let x=0;x<W-1;x++){const n=isW(x,y)+isW(x+1,y)+isW(x,y+1)+isW(x+1,y+1);if(n!==3)continue;const px=(x+1)*TS,py=(y+1)*TS;c.moveTo(px+r*.9,py);c.arc(px,py,r*.9,0,7)}
     c.fill()};
   const VW2=WD===1,HOT=false;/* 火山の水は、温泉になると乳白色の湯 */
+  if(waterChipsOK()){/* ドット絵：マスの角ごとに、まわり4マスの水のあるなし（16通り）で形をえらぶ */
+    const C=window.CHIPS,dc=(k,x,y)=>{const ch=C[k];if(ch)drawChip(c,ch,'water',x,y,0)};
+    const corners=(f,k)=>{for(let y=0;y<=H;y++)for(let x=0;x<=W;x++){const b=(f(x-1,y-1)?1:0)|(f(x,y-1)?2:0)|(f(x-1,y)?4:0)|(f(x,y)?8:0);if(b)dc(k+':'+b,x*TS,y*TS)}};
+    corners(isW0,VW2?'waterr':'water');
+    if(VW2&&S.st2){const M=sprMap();corners((x,y)=>isW0(x,y)&&springOn(M[y*W+x]),'waterh')}/* よみがえった温泉だけ、乳白色の湯 */
+    for(let y=0;y<H;y++)for(let x=0;x<W;x++){if(!isW0(x,y))continue;const i=y*W+x;dc('wave#'+((hash(i*5+2)*4)|0),x*TS+6+hash(i)*10|0,y*TS+10+hash(i*3)*12|0)}/* さざなみ */
+    return}
   c.fillStyle=VW2?'#bdb3a2':'#9fc470';blob(h+8);
   c.fillStyle=VW2?'#a69b88':'#86ad5f';blob(h+5);
   c.fillStyle=HOT?'#7fcfcf':VW2?'#7d9fb0':'#4fa6dd';blob(h+3);
@@ -3578,6 +3585,8 @@ function drawRoofs(c,now,hs,eo){if(!HOUSES.length)return;c.save();
     {const t=now/1000;for(let k=0;k<3;k++){const p=(t*.4+k/3)%1;c.fillStyle='rgba(240,240,240,'+(.5*(1-p)*A)+')';c.beginPath();c.arc(cx+Math.sin(p*6+k)*3,cy-16-p*18,3+p*4,0,7);c.fill()}}}
   c.restore()}
 const GCH=['ground#0','groundr#0','grass#0','gedge:0#0','gedger:0#0','gcorner','gcornerr'];
+const WCH=[];for(const k of['water','waterr','waterh'])for(let b=1;b<16;b++)WCH.push(k+':'+b);for(let i=0;i<4;i++)WCH.push('wave#'+i);
+function waterChipsOK(){const C=window.CHIPS;return !!C&&WCH.every(k=>C[k]&&chipImgs(C[k],'water')[0].ok)}/* 水のドット絵が読みこめたら使う */
 function groundChipsOK(){const C=window.CHIPS;return !!C&&GCH.every(k=>C[k]&&chipImgs(C[k],'ground')[0].ok)}/* 地面のドット絵が読みこめたら使う */
 function drawGroundChips(){const C=window.CHIPS,r=WD===1?'r':'',dc=(k,x,y,i)=>{const ch=C[k];if(ch)drawChip(sc,ch,'ground',x,y,0,i)};
   for(let y=0;y<H;y++)for(let x=0;x<W;x++){const i=y*W+x;dc('ground'+r+'#'+((hash(i*7+1)*8)|0),x*TS,y*TS,i)}/* あれ地：8しゅるい */
@@ -5238,7 +5247,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='405';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='406';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
