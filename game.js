@@ -97,6 +97,7 @@ const BL={
   hedge:{hp:5,brk:1,fix:2,fixm:{wood:6},name:'生垣',kind:'furn',cat:'env',f2:1,lv:5,pc:3,time:80,maker:'wood',attr:{wood:1},mat:{wood:12},solid:1,env:3,er:2,desc:'まわり2マスで、たのしさ+1.1／1時間'},
   birdhouse:{hp:5,brk:1,fix:2,fixm:{wood:2},name:'巣箱',kind:'furn',cat:'env',f2:1,lv:2,pc:3,time:80,maker:'wind',attr:{wind:1},mat:{wood:3},solid:1,env:1,er:4,desc:'まわり4マスで、たのしさ+0.4／1時間。範囲がとても広い'},
   birdbath:{hp:5,brk:1,fix:3,fixm:{stone:8},offerOnly:1,name:'水飲み鳥',kind:'furn',cat:'env',f2:1,lv:7,pc:5,time:100,maker:'water',attr:{water:1},mat:{stone:15},solid:1,env:3,desc:'まわり3マスで、たのしさ+1.1／1時間'},
+  noren:{hp:5,brk:1,fix:3,fixm:{wood:6},name:'のれん',anim:1,dsc:2,kind:'furn',cat:'env',f2:1,lv:5,pc:7,time:100,maker:'fire',attr:{fire:1},mat:{wood:12},solid:1,env:7,er:1,desc:'温泉の入り口にかける布。まわり1マスだけ。そのかわり、たのしさ+2.5／1時間'},
   parasol:{hp:5,brk:1,fix:4,fixm:{wood:10},name:'パラソル',anim:1,dsc:2,kind:'furn',cat:'env',f2:1,lv:5,pc:7,time:100,maker:'wind',attr:{wind:1},mat:{wood:20},solid:1,env:7,er:1,desc:'まわり1マスだけ。そのかわり、たのしさ+2.5／1時間'},
   arch:{offerOnly:1,anim:1,dsc:1.8,name:'ガーデンアーチ',kind:'furn',cat:'env',f2:1,lv:8,pc:9,time:120,maker:'wood',attr:{wood:1},mat:{wood:30},env:4,desc:'まわり3マスで、たのしさ+1.4／1時間'},
   slide:{name:'すべり台',sz:[2,2],kind:'furn',cat:'toy',f2:1,lv:2,pc:9,time:140,maker:'wind',attr:{wind:1},mat:{wood:8,stone:3},play:{pt:3,pw:1.35,fun:35,dur:40,cap:1,adj:1},solid:1,desc:'1人で遊べる。たのしさ +35（40分）。遊ぶと10%の確率で、移動速度+1'},
@@ -160,7 +161,7 @@ const PLANTS=['flower','clover','bellf','salvia','lily','lotus','tree','fruit'],
 const bloomCount=id=>S.obj.reduce((n,o,j)=>n+(o===id&&!isBud(j)?1:0),0);
 const FLOWER_QUESTS=new Set(['salvia3','lotus3','lily5','clover3']);
 const CRAFTB=['floor','brickfloor','stonefloor','carpet','path','gravel','stone','brick','hwall','logwall','plasterwall','brickwall','door','fence','gate','archedgate','stonegate','wall','sdoor','window'];
-const CRAFT_TABS=[["家具", ["table", "chair", "stool", "chair2", "stable", "pouf", "achair", "ltable", "rug1", "rug2", "bed", "sofa1", "monstera", "wreath", "curtain1", "curtain2", "paint1", "paint2", "paint3", "bathtub"]], ["収納", ["stor", "mbox", "crate", "shelf1", "wshelf", "cabinet", "shelf2"]], ["遊び", ["swing", "slide", "sandbox", "seesaw", "campfire"]], ["庭", ["bench", "hedge", "birdhouse", "birdbath", "parasol", "arch", "kamizo", "jar", "rockart", "signpost", "vane"]], ["あかり", ["torch", "candle", "lantern", "flamp"]], ["ごはん", ["oven", "tub", "sink"]], ["ワナ", ["spike", "puddle"]], ["家づくり", ["floor", "brickfloor", "stonefloor", "carpet", "hwall", "logwall", "plasterwall", "brickwall", "door", "window"]], ["道・囲い", ["path", "gravel", "stone", "brick", "fence", "gate", "archedgate", "stonegate", "wall", "sdoor"]]];let craftTab=0;
+const CRAFT_TABS=[["家具", ["table", "chair", "stool", "chair2", "stable", "pouf", "achair", "ltable", "rug1", "rug2", "bed", "sofa1", "monstera", "wreath", "curtain1", "curtain2", "paint1", "paint2", "paint3", "bathtub"]], ["収納", ["stor", "mbox", "crate", "shelf1", "wshelf", "cabinet", "shelf2"]], ["遊び", ["swing", "slide", "sandbox", "seesaw", "campfire"]], ["庭", ["bench", "hedge", "birdhouse", "birdbath", "parasol", "noren", "arch", "kamizo", "jar", "rockart", "signpost", "vane"]], ["あかり", ["torch", "candle", "lantern", "flamp"]], ["ごはん", ["oven", "tub", "sink"]], ["ワナ", ["spike", "puddle"]], ["家づくり", ["floor", "brickfloor", "stonefloor", "carpet", "hwall", "logwall", "plasterwall", "brickwall", "door", "window"]], ["道・囲い", ["path", "gravel", "stone", "brick", "fence", "gate", "archedgate", "stonegate", "wall", "sdoor"]]];let craftTab=0;
 const craftTabFor=id=>CRAFT_TABS.findIndex(([,ids])=>ids.includes(id));
 function furnitureGroups(ids){const wanted=new Set(ids);return CRAFT_TABS.map(([name,items])=>[name,items.filter(id=>wanted.has(id))]).filter(([,items])=>items.length)}
 const FURN=['table','chair','stor','mbox','oven','bed','bench','campfire','swing','torch','jar','rockart','vane','spike','puddle','stool','chair2','stable','pouf','achair','ltable','rug1','sofa1','rug2','tub','sink','crate','monstera','shelf1','wreath','curtain1','cabinet','paint2','shelf2','curtain2','paint3','wshelf','paint1','bathtub','candle','lantern','flamp','signpost','hedge','birdhouse','birdbath','parasol','arch','slide','sandbox','seesaw','kamizo'];// 属性の罠（sticky/firetrap/gust）は次のステージから
@@ -651,7 +652,8 @@ const QUESTS2=[
     [SHIZUKU,'台座を建てるのに、なにが足りないか、いっしょに確かめましょう。'],
     [SHIZUKU,'……ただ、台座が光ると、山の上にのこった影が気づくかもしれません。'],
     [HOMURA,'そのときは、みんなでむかえうつまでさ。'],
-    [HOMURA,'よし、仕上げだよ！']],gives:{shrine:true}},
+    [SHIZUKU,'それと、温泉の入り口に、のれんをかけたいですね。湯けむりの里らしくなりますよ。'],
+    [HOMURA,'よし、仕上げだよ！']],learn:['noren'],gives:{shrine:true}},
    story:null},
 ];;
 const QL=[QUESTS1,QUESTS2],PROS=[PROLOGUE,PROLOGUE2],INTROS=[INTRO,INTRO2];
@@ -711,10 +713,10 @@ function towerConds(){if(WD===1)return clearConds();const tm=TOWER_MAT();return 
   ['木材'+tm.wood+'・石材'+tm.stone+'（いま'+(S.mat.wood||0)+'・'+(S.mat.stone||0)+'）',(S.mat.wood||0)>=tm.wood&&(S.mat.stone||0)>=tm.stone]]}
 const shLeft=()=>Math.max(0,(S.shards||0)-(S.usedSh||0));/* 火山のふもと：まだ使っていないかけらの数（装置と台座にはめると減る） */
 const towerReady=()=>towerConds().every(c=>c[1]);
-function clearConds(){if(WD===1){const tm=TOWER_MAT(),n=springDone(),fac=['bench','tub','parasol'].filter(nearSp).length;return [
+function clearConds(){if(WD===1){const tm=TOWER_MAT(),n=springDone(),fac=['bench','tub','noren'].filter(nearSp).length;return [
   ['温泉3か所をよみがえらせる（いま'+n+'）',n>=3],
   ['ヒノオオカゲを追いはらい、奥の装置を直す',!!S.flags.hinoDown&&!!(S.st2&&S.st2.d2fix)],
-  ['温泉のそばに、ベンチ・水おけ・パラソル（いま'+fac+'/3）',fac>=3],
+  ['温泉のそばに、ベンチ・水おけ・のれん（いま'+fac+'/3）',fac>=3],
   ['ホムラとシズクのおねがい',!!S.flags.hReq&&!!S.flags.sReq],
   ['台座にはめるヌシのかけら（いま'+shLeft()+'つ）',shLeft()>=1],
   ['素材箱に'+(tm.wood+tm.stone)+'こ入る（いま'+matCap()+'こ）',matCap()>=tm.wood+tm.stone],/* 素材箱が小さいと、台座の素材がためられない */
@@ -1483,7 +1485,7 @@ const PREF={wood:['plant','tend','craft','water','till','build','cook','chop'],w
 const OWN={plant:'wood',tend:'wood',water:'water',fish:'water',till:'earth',repair:'earth',cook:'fire',seed:'wind'};
 function ownOK(r,el){return !el||r.elem===el}
 function canJob(r,k){if(k==='seed')return r.elem==='wind';/* 外にふしぎな種があれば、風の子はみんな拾いに行く */return ownOK(r,OWN[k])}
-const makerOf=id=>WD===1&&(id==='bench'||id==='parasol')||id==='stor'||id==='mbox'?null:BL[id].maker;/* 箱は、だれでも作れる *//* 火山のふもと：温泉のクエストに使うベンチ・パラソルは、だれでも作れる */
+const makerOf=id=>WD===1&&(id==='bench'||id==='noren')||id==='stor'||id==='mbox'?null:BL[id].maker;/* 箱は、だれでも作れる *//* 火山のふもと：温泉のクエストに使うベンチ・のれんは、だれでも作れる */
 function craftOK(r,o){return ownOK(r,makerOf(o.type))}
 function tryJob(r,G,k){
   if(!canJob(r,k))return false;
@@ -2914,6 +2916,10 @@ function drawF2(c,id,x,y,i,now){const C=F2C,cx=x+16,T=(now||0)/1000;
     {const hop=Math.max(0,Math.sin(T*2.2+i))*1.5;c.fillStyle='#c8955f';c.beginPath();c.ellipse(cx+8,y+8-hop,3.2,2.4,0,0,7);c.fill();circ(c,cx+10,y+6-hop,1.8,'#c8955f');c.fillStyle='#f4e6cc';c.beginPath();c.ellipse(cx+8,y+9-hop,2,1.2,0,0,7);c.fill();c.fillStyle='#e8a33a';c.fillRect(cx+11.5,y+5.6-hop,1.8,.9)}break;
   case'parasol':sh(13);c.fillStyle=C.wdD;c.fillRect(cx-1,y+6,2,23);c.beginPath();c.ellipse(cx,y+28,4,1.4,0,0,7);c.fill();
     c.fillStyle=C.cr;c.beginPath();c.moveTo(cx-15,y+11);c.quadraticCurveTo(cx,y-4,cx+15,y+11);c.closePath();c.fill();c.strokeStyle=C.crD;c.stroke();c.beginPath();for(const dx of[-8,0,8]){c.moveTo(cx,y+2);c.lineTo(cx+dx,y+11)}c.stroke();break;
+  case'noren':{sh(12);c.fillStyle='#7a4f30';c.fillRect(cx-13,y+3,2.5,26);c.fillRect(cx+10.5,y+3,2.5,26);c.fillRect(cx-14,y+2,28,2.5);/* 柱と横木 */
+    const sw=ICON?0:Math.sin((now||0)/700+(i||0))*.8;for(let k=0;k<3;k++){const px=cx-10.5+k*7.2;c.fillStyle=k===1?'#2f4f86':'#3a5d99';c.beginPath();c.moveTo(px,y+4.5);c.lineTo(px+6.6,y+4.5);c.lineTo(px+6.6+sw,y+18);c.lineTo(px+sw,y+18);c.closePath();c.fill()}/* 3まいの布 */
+    {const mx=cx+sw*.5;c.strokeStyle='#f4ead8';c.lineWidth=1.3;c.beginPath();c.ellipse(mx,y+13.2,5,2.6,0,.15,Math.PI-.15);c.stroke();c.beginPath();for(const dx of[-2.6,0,2.6]){c.moveTo(mx+dx,y+13);c.quadraticCurveTo(mx+dx-1.4,y+10.5,mx+dx,y+9);c.quadraticCurveTo(mx+dx+1.4,y+7.5,mx+dx,y+6)}c.stroke();c.lineWidth=1}/* 湯のしるし（♨） */
+    c.strokeStyle='rgba(255,255,255,.55)';c.beginPath();for(const dx of[-6,6]){c.moveTo(cx+dx,y-1);c.quadraticCurveTo(cx+dx+2,y-4,cx+dx,y-7)}c.stroke();break}/* のれん（火山のふもと） */
   case'arch':{for(const sg of[-1,1]){c.fillStyle=C.wdD;c.fillRect(cx+sg*11-1.5,y+8,3,21);}c.lineWidth=5;c.strokeStyle=C.grD;c.beginPath();c.moveTo(cx-11,y+29);c.lineTo(cx-11,y+10);c.quadraticCurveTo(cx,y-6,cx+11,y+10);c.lineTo(cx+11,y+29);c.stroke();c.lineWidth=1;
     for(let k=0;k<14;k++){const t=k/13,px=t<.3?cx-11:t>.7?cx+11:cx-11+(t-.3)/.4*22,py=t<.3?y+29-t/.3*19:t>.7?y+10+(t-.7)/.3*19:y+10-Math.sin((t-.3)/.4*Math.PI)*8;f2leaf(c,px+(k%2?2:-2),py,3,2,k,k%2?C.gr:C.grD);if(k%3===0)f2flower(c,px,py-1,k%2?C.pk:'#fff')}break}
   case'birdhouse':sh(6);c.fillStyle=C.wdD;c.fillRect(cx-1.5,y+14,3,15);f2rr(c,cx-6,y+6,12,10,1,C.wd,C.ol);c.fillStyle=C.wdD;c.beginPath();c.moveTo(cx-8,y+7);c.lineTo(cx,y+1);c.lineTo(cx+8,y+7);c.closePath();c.fill();circ(c,cx,y+11,2,'#4a3322');c.fillRect(cx-.5,y+14,1,2);break;
@@ -4442,7 +4448,7 @@ const TAGMAP={stool:'リビング,キッチン',chair:'リビング,キッチン
 tub:'キッチン,お風呂',sink:'キッチン',oven:'キッチン',bathtub:'お風呂',hotstone:'お風呂,ガーデン',crate:'収納',stor:'収納',mbox:'収納',shelf1:'収納,リビング',shelf2:'収納,かざり',cabinet:'収納,リビング',wshelf:'収納,かざり',
 monstera:'かざり,リビング',wreath:'かざり,リビング',curtain1:'かざり,リビング,寝室',curtain2:'かざり,リビング,寝室',paint1:'かざり,リビング',paint2:'かざり,リビング',paint3:'かざり,リビング',
 candle:'あかり,リビング',lantern:'あかり,リビング',flamp:'あかり,リビング',lamp:'あかり,ガーデン',torch:'あかり,ガーデン',
-signpost:'ガーデン',hedge:'ガーデン',birdhouse:'ガーデン,かざり',birdbath:'ガーデン,かざり',arch:'ガーデン,かざり',parasol:'ガーデン,遊び',bench:'ガーデン,リビング',jar:'ガーデン,キッチン',kamizo:'ガーデン',rockart:'ガーデン,かざり',vane:'ガーデン,かざり',basin:'ガーデン',
+signpost:'ガーデン',hedge:'ガーデン',birdhouse:'ガーデン,かざり',birdbath:'ガーデン,かざり',arch:'ガーデン,かざり',parasol:'ガーデン,遊び',noren:'ガーデン,かざり',bench:'ガーデン,リビング',jar:'ガーデン,キッチン',kamizo:'ガーデン',rockart:'ガーデン,かざり',vane:'ガーデン,かざり',basin:'ガーデン',
 slide:'遊び,ガーデン',sandbox:'遊び,ガーデン',seesaw:'遊び,ガーデン',swing:'遊び,ガーデン',campfire:'遊び,あかり',fountain:'遊び,ガーデン',
 spike:'ワナ',puddle:'ワナ',sticky:'ワナ',firetrap:'ワナ',gust:'ワナ',watch:'防衛,あかり',tower:'防衛',lighthouse:'あかり,防衛',stele:'防衛',well:'水まわり,ガーデン',windmill:'作業,ガーデン',lumber:'作業',quarry:'作業',statue:'神殿'};/* ジャンルのタグ（複数あるものは、すべて書く） */
 function tagsOf(id){const b=BL[id];if(!b)return[];if(TAGMAP[id])return TAGMAP[id].split(',');const t=[];if(CAT_TAG[b.cat])t.push(CAT_TAG[b.cat]);for(const[n,ids]of CRAFT_TABS)if(ids.includes(id)){const g=TAB_TAG[n]||n;if(!t.includes(g)&&!(g==='家具'&&t.length))t.push(g)}if(b.play&&!t.includes('遊び'))t.push('遊び');if(!t.length&&b.kind==='furn')t.push('家具');return t}/* 説明に出す、ジャンルのタグ */
@@ -4942,7 +4948,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='378';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='379';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
