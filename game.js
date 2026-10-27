@@ -3262,7 +3262,7 @@ function drawObj(c,id,x,y,i,g,now){
     c.fillStyle='#f3ead8';rr(c,x+6,y+6,20,20,3);c.fillStyle='#fbf5e8';rr(c,x+10,y+6,12,6,3);c.fillStyle='#e6dcc6';c.fillRect(x+11,y+11,10,1);
     c.fillStyle='#e4dccd';rr(c,x+5.5,y+13,21,15,3);c.fillStyle='#fbf8f1';rr(c,x+6,y+13,20,14,3);c.fillStyle='#ffffff';rr(c,x+5.5,y+13,21,4,2);c.fillStyle='#ddd4c3';c.fillRect(x+6,y+17,20,1);c.fillStyle='rgba(0,0,0,.06)';c.fillRect(x+9,y+20,8,1.2);c.fillRect(x+16,y+23,7,1.2);
     c.fillStyle='#c07a48';rr(c,x+5,y+24,22,6,2);c.fillStyle='#d08a55';rr(c,x+3,y+22,5,9,2);rr(c,x+24,y+22,5,9,2);c.fillStyle='#a8683c';c.fillRect(x+8,y+27,16,1);break;
-  case'plot':{c.fillStyle='#8b6a45';rr(c,x+2,y+2,TS-4,TS-4,4);c.fillStyle='#7a5a38';for(let k=0;k<5;k++)c.fillRect(x+5+hash(i+k)*20,y+5+hash(i*3+k)*20,4,3);
+  case'plot':{if(!chipOK('plot#0')||!drawChip(c,CHIPS['plot#'+((hash((i||0)*11+1)*4)|0)],'plot',x,y,0)){c.fillStyle='#8b6a45';rr(c,x+2,y+2,TS-4,TS-4,4);c.fillStyle='#7a5a38';for(let k=0;k<5;k++)c.fillRect(x+5+hash(i+k)*20,y+5+hash(i*3+k)*20,4,3)}/* 土はドット絵（もようちがい4つ） */
     c.strokeStyle='rgba(255,240,180,.7)';c.setLineDash([3,3]);c.lineWidth=1.5;c.strokeRect(x+3,y+3,TS-6,TS-6);c.setLineDash([]);
     if(g!=null&&g>0){c.fillStyle='rgba(0,0,0,.4)';c.fillRect(x+4,y+TS-6,TS-8,3);c.fillStyle='#ecdcbc';c.fillRect(x+4,y+TS-6,(TS-8)*Math.min(1,g/30),3)}break}
   case'farm':{const n=k=>!ICON&&S.obj[k]==='farm',gx=i%W,gy=(i/W)|0;
@@ -3277,13 +3277,13 @@ function drawObj(c,id,x,y,i,g,now){
     if(!ICON&&S.dyn[i]&&S.dyn[i].sown!==false){if(g<100){c.fillStyle='rgba(30,20,10,.45)';rr(c,x+4,y+TS-5,TS-8,4,2);c.fillStyle='#8fe06a';if(g>0)rr(c,x+4,y+TS-5,(TS-8)*g/100,4,2)}
       else{const tw=Math.sin((now||0)/300+i)*.5+.5;c.fillStyle='rgba(255,245,170,'+(.5+tw*.5)+')';const sx=x+TS-6,sy=y+5,r=2+tw*1.5;c.fillRect(sx-r,sy-.6,r*2,1.2);c.fillRect(sx-.6,sy-r,1.2,r*2)}}
     break}
-  case'sprout':{if(!ICON&&S&&i!=null&&S.ground[i]!==1&&S.dyn[i]&&S.dyn[i].userMound){const bob=Math.sin((now||0)/600+i)*.6;plantMound(c,x,y,i);drawSeedShape(c,x+16,y+23+bob,.48);break}if(S&&i!=null&&S.ground[i]===1&&!ICON){const b=Math.sin((now||0)/600+i)*1.5;c.fillStyle='rgba(255,255,255,.35)';c.beginPath();c.ellipse(x+16,y+21,9,3,0,0,7);c.fill();drawSeedShape(c,x+16,y+17+b,1);break}/* 池に植える予定：種がぷかぷか */c.fillStyle='rgba(120,90,50,.6)';c.beginPath();c.ellipse(x+16,y+22,9,5,0,0,7);c.fill();c.strokeStyle='#5fbf4f';c.lineWidth=2;c.beginPath();c.moveTo(x+16,y+21);c.lineTo(x+16,y+14);c.stroke();circ(c,x+13,y+14,3,'#7fd36b');circ(c,x+19,y+13,3,'#7fd36b');
+  case'sprout':{if(!ICON&&S&&i!=null&&S.ground[i]!==1&&S.dyn[i]&&S.dyn[i].userMound){const bob=Math.sin((now||0)/600+i)*.6;if(chipOK('mound#0')&&chipOK('seed#s')){drawChip(c,CHIPS['mound#'+Math.min(2,(hash(i*13+5)*3)|0)],'mound',x+16,y+28,0);drawChip(c,CHIPS['seed#s'],'seed',x+16,y+23+Math.round(bob),0);break}plantMound(c,x,y,i);drawSeedShape(c,x+16,y+23+bob,.48);break}if(S&&i!=null&&S.ground[i]===1&&!ICON){const b=Math.sin((now||0)/600+i)*1.5;if(chipOK('seedring')&&chipOK('seed')){drawChip(c,CHIPS.seedring,'seed',x+16,y+21,0);drawChip(c,CHIPS.seed,'seed',x+16,y+17+Math.round(b),0);break}c.fillStyle='rgba(255,255,255,.35)';c.beginPath();c.ellipse(x+16,y+21,9,3,0,0,7);c.fill();drawSeedShape(c,x+16,y+17+b,1);break}/* 池に植える予定：種がぷかぷか */if(chipOK('sprout#plan'))drawChip(c,CHIPS['sprout#plan'],'sprout',x+16,y+22,0);else{c.fillStyle='rgba(120,90,50,.6)';c.beginPath();c.ellipse(x+16,y+22,9,5,0,0,7);c.fill();c.strokeStyle='#5fbf4f';c.lineWidth=2;c.beginPath();c.moveTo(x+16,y+21);c.lineTo(x+16,y+14);c.stroke();circ(c,x+13,y+14,3,'#7fd36b');circ(c,x+19,y+13,3,'#7fd36b')}
     c.strokeStyle='rgba(255,240,180,.8)';c.setLineDash([3,3]);c.lineWidth=1.5;c.strokeRect(x+3,y+3,TS-6,TS-6);c.setLineDash([]);break}
   case'site':{const d=ICON?null:S.dyn[i],sp=d&&siteSpan(d.build);
     if(sp&&SPR.site.ok){/* 建物の大きさに合わせた足場（見た目だけ。マスの判定は変えない） */const L=x+sp.x0*TS-2,Wd=sp.w*TS+4,Hd=Wd*91/104*sp.hf,B=y+sp.rows*TS;
-      shadow(c,L+Wd/2,B-3,Wd/2-2,4);c.drawImage(SPR.site.img,L,B-Hd,Wd,Hd);
+      shadow(c,L+Wd/2,B-3,Wd/2-2,4);{const si=siteImg(Wd,Hd,i);if(si)c.drawImage(si,Math.round(L),Math.round(B-si.height));else c.drawImage(SPR.site.img,L,B-Hd,Wd,Hd)}
       const p=Math.min(1,d.p/d.need),bw=Math.min(Wd-8,64),bx=L+(Wd-bw)/2,by=B-Hd-10;c.fillStyle='rgba(0,0,0,.5)';rr(c,bx-1,by,bw+2,6,3);c.fillStyle='#ecdcbc';rr(c,bx,by+1,bw*p,4,2);break}
-    if(SPR.site.ok){shadow(c,x+16,y+29,14,3);c.drawImage(SPR.site.img,x-1,y+1,34,30);if(d){const p=Math.min(1,d.p/d.need);c.fillStyle='rgba(0,0,0,.5)';rr(c,x+2,y-8,28,6,3);c.fillStyle='#ecdcbc';rr(c,x+3,y-7,26*p,4,2)}break}shadow(c,x+16,y+29,14,3);c.fillStyle='#c9a46a';c.fillRect(x+3,y+20,26,8);c.strokeStyle='#8a5a33';c.lineWidth=2.5;c.beginPath();c.moveTo(x+5,y+28);c.lineTo(x+5,y);c.moveTo(x+27,y+28);c.lineTo(x+27,y);c.moveTo(x+5,y+4);c.lineTo(x+27,y+4);c.moveTo(x+5,y+14);c.lineTo(x+27,y+14);c.moveTo(x+5,y+4);c.lineTo(x+27,y+14);c.stroke();
+    if(SPR.site.ok){shadow(c,x+16,y+29,14,3);{const si=ICON?null:siteImg(34,30,i||0);if(si)c.drawImage(si,x-1,y+1);else c.drawImage(SPR.site.img,x-1,y+1,34,30)}if(d){const p=Math.min(1,d.p/d.need);c.fillStyle='rgba(0,0,0,.5)';rr(c,x+2,y-8,28,6,3);c.fillStyle='#ecdcbc';rr(c,x+3,y-7,26*p,4,2)}break}shadow(c,x+16,y+29,14,3);c.fillStyle='#c9a46a';c.fillRect(x+3,y+20,26,8);c.strokeStyle='#8a5a33';c.lineWidth=2.5;c.beginPath();c.moveTo(x+5,y+28);c.lineTo(x+5,y);c.moveTo(x+27,y+28);c.lineTo(x+27,y);c.moveTo(x+5,y+4);c.lineTo(x+27,y+4);c.moveTo(x+5,y+14);c.lineTo(x+27,y+14);c.moveTo(x+5,y+4);c.lineTo(x+27,y+14);c.stroke();
     if(d){const p=Math.min(1,d.p/d.need);c.fillStyle='rgba(0,0,0,.5)';rr(c,x+2,y-8,28,6,3);c.fillStyle='#ecdcbc';rr(c,x+3,y-7,26*p,4,2)}break}
   case'table':shadow(c,x+16,y+27,14,3.5);c.fillStyle='#a8703f';for(const lx of[6,23.5])rr(c,x+lx,y+16,3,12,1.5);c.fillStyle='#8f5f35';for(const lx of[10,19.5])rr(c,x+lx,y+16,2.6,9,1.3);
     c.fillStyle='#b57d4b';rr(c,x+2,y+12,28,6,3);c.fillStyle='#cf9561';rr(c,x+2,y+8,28,7,3.5);c.fillStyle='#dba872';c.fillRect(x+6,y+10,9,1);c.fillRect(x+17,y+12,8,1);break;
@@ -4270,6 +4270,26 @@ function drawEnemy(e,now){
 }
 // 物の見た目のおおよその範囲（描き直し・重なり判定用、少し大きめ）
 // 建てている足場の見た目の広さ（マス）。x0:左はし, w:はば, rows:足もとまでの行数, hf:高さの倍率
+// 足場・畑の区画・芽のドット絵。足場は大きさがいろいろなので、柱・横木・ななめ木・れんが・砂山のパーツを組み立てて、1まいの絵にしておく
+const SITEK=['site:post','site:cap','site:beam','site:beamL','site:beamR','site:brace','site:brick','site:walltop','site:sand','site:post2','site:cap2','site:beam2','site:beamL2','site:beamR2','site:brace2','site:sand2'],SITEC={};
+const chipOK=k=>{const C=window.CHIPS;return !!(C&&C[k]&&chipImgs(C[k],k)[0].ok)};
+function siteImg(Wd,Hd,seed){Wd=Math.round(Wd);Hd=Math.round(Hd);if(!SITEK.every(chipOK))return null;const key=Wd+'x'+Hd+'_'+(seed%5);if(SITEC[key])return SITEC[key];
+  const cv=document.createElement('canvas');cv.width=Wd;cv.height=Hd;const g=cv.getContext('2d'),C=CHIPS,im=k=>chipImgs(C[k],k)[0],put=(k,x,y)=>g.drawImage(im(k),Math.round(x+C[k].ax),Math.round(y+C[k].ay)),B=Hd;
+  // 作りかけの壁：右へいくほど低い、だんだんの形
+  const x0=Math.round(Wd*.1),x1=Math.round(Wd*.9),n=Math.max(1,Math.ceil((x1-x0)/6));g.save();g.beginPath();const tops=[];
+  for(let k=0;k<n;k++){const t=n>1?k/(n-1):0,h=Math.floor((Hd*(.9-.42*t)+hash(seed*7+k)*5)/6)*6;tops.push(B-h);g.rect(x0+k*6,B-h,6,h)}g.clip();
+  for(let y=B-6,r=0;y>-6;y-=6,r++)for(let x=x0-12+(r%2?6:0);x<x1;x+=12)put('site:brick',x,y);g.restore();
+  for(let k=0;k<n;k++)for(let x=0;x<6&&x0+k*6+x<x1;x+=6)put('site:walltop',x0+k*6,tops[k]);
+  const Z=Wd>=80?'2':'',PW=Z?9:6,BW=Z?7:5;/* 大きい足場は、太い柱と横木 */
+  // 柱
+  const posts=[[Math.round(Wd*.12)-(Z?4:3),Hd],[Math.round(Wd*.8),Math.round(Hd*.88)]];if(Wd>90)posts.push([Math.round(Wd*.48),Math.round(Hd*.78)]);
+  for(const[px,ph]of posts){for(let y=B-8;y>B-ph;y-=8)put('site:post'+Z,px,y);put('site:cap'+Z,px,B-ph)}
+  // ななめ木
+  {const ax=posts[0][0]+(Z?4:3),ay=B-Math.round(Hd*.5),bx=Math.round(Wd*.56),by=B-3,len=Math.max(Math.abs(bx-ax),Math.abs(by-ay));for(let s=0;s<=len;s++)put('site:brace'+Z,ax+(bx-ax)*s/len,ay+(by-ay)*s/len)}
+  // 横木（柱より手前）
+  for(const yy of[B-Math.round(Hd*.62),B-Math.round(Hd*.22)]){const E2=Z?3:2;put('site:beamL'+Z,0,yy);for(let x=E2;x<Wd-E2;x+=8)put('site:beam'+Z,Math.min(x,Wd-E2-8),yy);put('site:beamR'+Z,Wd-E2,yy)}
+  for(const[px]of posts)put('site:sand'+Z,px+(Z?4:3),B);
+  return SITEC[key]=cv}
 function siteSpan(id){const b=BL[id];if(!b)return null;if(id==='statue')return{x0:-1,w:3,rows:1,hf:1.25};if(BIG2.has(id))return{x0:-.5,w:2,rows:1,hf:1.4};if(b.sz)return{x0:0,w:b.sz[0],rows:b.sz[1],hf:1};if(b.kind==='build')return{x0:-.2,w:1.4,rows:1,hf:1.1};return null}
 function objBox(o,j){if(o==='site'&&S.dyn[j]){const sp=siteSpan(S.dyn[j].build);if(sp){const x=j%W,y=(j/W)|0,L=x*TS+sp.x0*TS-4,Wd=sp.w*TS+8,B=(y+sp.rows)*TS+3;return[L,B-Wd*91/104*sp.hf-20,L+Wd,B]}}
 const x=j%W,y=(j/W)|0,b=BL[o],z=szAt(o,j)||[1,1],k=BIG2.has(o)?2:TREES.has(o)?2.25:(o==='stor'||o==='mbox')?1.25:BIG.has(o)?(BIGK[o]||1.5):1,tall=BIG2.has(o)||TREES.has(o)||b.kind==='build';
@@ -5247,7 +5267,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='406';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='407';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
