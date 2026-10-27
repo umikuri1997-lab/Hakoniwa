@@ -134,6 +134,7 @@ const BL={
   firetrap:{name:'ほのおの罠',fix:2,fixm:{wood:1,stone:1},kind:'furn',pc:3,time:120,maker:'fire',lv:4,qty:2,trap:1,anim:1,attr:{fire:.5},mat:{wood:2,stone:2},desc:'ふんだ「コワイノ」に4ダメージ。つぎに使えるまで3時間'},
   gust:{name:'つむじ風の罠',fix:2,fixm:{wood:1},kind:'furn',pc:3,time:120,maker:'wind',lv:5,qty:2,trap:1,anim:1,attr:{wind:.5},mat:{wood:2},desc:'ふんだ「コワイノ」を6マスふきとばし、2分止める。つぎに使えるまで2時間30分'},
   watch:{name:'見張り台',fix:10,fixm:{wood:10,stone:10},kind:'build',sz:[2,2],mat:{wood:25,stone:20},pc:20,time:150,maker:'earth',lv:2,solid:1,attr:{fire:2,earth:2},desc:'「コワイノ」に光の矢を放つ。Lv1：ダメージ1／6分ごと／範囲6マス（Lv3：ダメージ3／6分ごと／範囲7マス）'},
+  yogan:{name:'ようがん台',fix:10,fixm:{stone:15},kind:'build',sz:[2,2],mat:{wood:5,stone:40},pc:20,time:150,maker:'fire',lv:1,solid:1,attr:{fire:3},desc:'火山のふもとの守り。「コワイノ」に火の玉を飛ばし、当たったまわり1.5マスにもダメージ。Lv1：ダメージ1（まわり0.5）／8分ごと／範囲5マス（Lv3：ダメージ3（まわり1.5）／8分ごと／範囲6マス）'},
   well:{hp:5,brk:1,fix:10,fixm:{wood:4,stone:15},name:'井戸',kind:'build',mat:{wood:8,stone:30},pc:20,time:140,maker:'water',lv:6,solid:1,attr:{water:4},desc:'まわり3マスの畑は水やりなしで育つ'},
   windmill:{hp:5,brk:1,fix:13,fixm:{wood:30,stone:18},name:'風車',kind:'build',mat:{wood:60,stone:35},pc:25,time:160,maker:'wind',lv:8,solid:1,anim:1,attr:{wind:5},desc:'まわり5マスの畑の収穫+1'},
   lighthouse:{name:'灯台',sz:[2,2],kind:'build',mat:{wood:25,stone:35},pc:35,time:180,maker:'fire',lv:7,solid:1,anim:1,attr:{fire:4},desc:'まわり8マスを照らす。'},
@@ -166,7 +167,7 @@ const craftTabFor=id=>CRAFT_TABS.findIndex(([,ids])=>ids.includes(id));
 function furnitureGroups(ids){const wanted=new Set(ids);return CRAFT_TABS.map(([name,items])=>[name,items.filter(id=>wanted.has(id))]).filter(([,items])=>items.length)}
 const FURN=['table','chair','stor','mbox','oven','bed','bench','campfire','swing','torch','jar','rockart','vane','spike','puddle','stool','chair2','stable','pouf','achair','ltable','rug1','sofa1','rug2','tub','sink','crate','monstera','shelf1','wreath','curtain1','cabinet','paint2','shelf2','curtain2','paint3','wshelf','paint1','bathtub','candle','lantern','flamp','signpost','hedge','birdhouse','birdbath','parasol','arch','slide','sandbox','seesaw','kamizo'];// 属性の罠（sticky/firetrap/gust）は次のステージから
 for(const [,ids]of CRAFT_TABS)for(const id of ids)if(BL[id].kind==='furn'&&!FURN.includes(id))FURN.push(id);
-const BUILDS=['statue','watch','lumber','well','quarry','windmill','fountain','lighthouse','stele','tower'];
+const BUILDS=['statue','watch','yogan','lumber','well','quarry','windmill','fountain','lighthouse','stele','tower'];
 const STAMPS={
   fields:{name:'畑セット',cells:[[0,0,'farm'],[1,0,'farm'],[2,0,'farm'],[0,1,'farm'],[1,1,'farm'],[2,1,'farm']]},
   ring:{name:'柵の囲い',cells:(()=>{const c=[];for(let y=0;y<5;y++)for(let x=0;x<5;x++)if(x===0||y===0||x===4||y===4)c.push([x,y,'fence']);return c})()},
@@ -533,7 +534,7 @@ const QUESTS2=[
     [HOMURA,'へえ、なかなかいい神殿じゃないか。'],
     [GOD,'じゃろ〜。女神像もおそなえ箱も依頼ボードも、草原といっしょじゃよ。'],
     [GOD,'食料箱と素材箱は、温泉のそばに置いといたぞい。かまどやベッド、柵や罠も、おそなえ箱に入れといたからの。'],[HOMURA,'ありがとよ、守り神。']],
-   gives:{feat:['inv','remove','plant','craft','people'],flag:'lv_oven',recipes:['oven','bed','stor','mbox'],items:{oven:1,bed:1,hwall:3,fence:10,spike:10},mat:{wood:10,stone:10},enemy:true}},
+   gives:{feat:['inv','remove','plant','craft','people'],flag:'lv_oven',recipes:['oven','bed','stor','mbox'],flags:['yoganLearned'],items:{oven:1,bed:1,hwall:3,fence:10,spike:10},mat:{wood:10,stone:10},enemy:true}},
   {text:'冷たい温泉を調べよう',check:()=>!!S.flags.sprLook,how:'「みる」で、村の水たまりをタップする',
    talk:{who:HOMURA,when:()=>true,lines:[
     [HOMURA,'…なあ守り神。この村、むかしは湯気がもくもく上がってたんだよ。'],
@@ -603,7 +604,7 @@ const QUESTS2=[
     [HOMURA,'火山のふもとに、熱の流れを切りかえる装置があるんだ。'],
     [HOMURA,'左にむければ、西の温泉に熱がとどくはずさ。']]},
    story:[[HOMURA,'西の温泉にも、湯気が上がった！'],[SHIZUKU,'すばらしいです。…残るは、奥の温泉ですね。'],[SHIZUKU,'ありがとうございます、守り神さま。']]},
-  {text:'火のせいれいを3人にしよう',check:()=>elemCount('fire')>=3&&NEWRES==null,how:'見張り台やサルビアを置いて火の力をためる。満ちた次の朝、神殿の「！」からなかまを呼ぶ',prog:()=>'火のせいれい '+Math.min(3,elemCount('fire'))+'/3・火の力 '+Math.floor(ATTR.fire)+'/'+needFor('fire'),
+  {text:'火のせいれいを3人にしよう',check:()=>elemCount('fire')>=3&&NEWRES==null,how:'ようがん台を置いて火の力をためる。満ちた次の朝、神殿の「！」からなかまを呼ぶ',prog:()=>'火のせいれい '+Math.min(3,elemCount('fire'))+'/3・火の力 '+Math.floor(ATTR.fire)+'/'+needFor('fire'),
    talk:{who:HOMURA,when:()=>true,lines:[
     [HOMURA,'……なあ、守り神。むかし、この村には、火のせいれいがたくさんいたんだ。'],
     [HOMURA,'温泉が冷えて、コワイノのうろつく寒い夜がつづいてさ……でも、あたいら火のせいれいは、からだが強いからね。消えずに、ちりぢりに逃げのびたんだ。'],
@@ -894,7 +895,7 @@ function storageCapacity(type){let n=0;for(const id in STORAGE){const b=STORAGE[
 const foodCap=()=>storageCapacity('food'),matCap=()=>storageCapacity('mat'),matTot=()=>(S.mat.wood||0)+(S.mat.stone||0);
 const MATN={wood:'木材',stone:'石材'};const matTxt=m=>Object.keys(m||{}).map(k=>MATN[k]+m[k]).join('・');/* 素材は文字ではなくアイコンで */const esc=t=>String(t).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'})[c]);const matHTML=m=>Object.keys(m||{}).map(k=>'<span class="mic"><img src="'+(ICONS[k]||'')+'" alt="'+MATN[k]+'">'+m[k]+'</span>').join('');const matOK=m=>Object.keys(m||{}).every(k=>(S.mat[k]||0)>=m[k]);
 const watchQ=()=>!!(S.qTalked&&QUESTS[S.quest]&&QUESTS[S.quest].text==='見張り台ととげの罠を置こう'&&!cnt('watch')&&!S.obj.some((o,j)=>o==='site'&&S.dyn[j]&&S.dyn[j].build==='watch'));
-const QB=new Set(['lumber','quarry','stele','fountain','lighthouse','windmill']),/* クエストでおぼえるまで建てられない建物（村レベルだけでは、使えない） */lvOK=id=>BL[id].kind==='furn'||(QB.has(id)?(!!(S.recipes||{})[id]||cnt(id)>0):id==='watch'?(!!S.flags.watchLearned||watchQ()):S.lv>=(BL[id].lv||1))||!!S.flags['lv_'+id];
+const QB=new Set(['lumber','quarry','stele','fountain','lighthouse','windmill']),/* クエストでおぼえるまで建てられない建物（村レベルだけでは、使えない） */lvOK=id=>BL[id].kind==='furn'||(QB.has(id)?(!!(S.recipes||{})[id]||cnt(id)>0):id==='yogan'?(WD===1&&!!S.flags.yoganLearned):id==='watch'?(!!S.flags.watchLearned||watchQ()):S.lv>=(BL[id].lv||1))||!!S.flags['lv_'+id];
 const breakable=o=>o==='fence'||o==='wall'||o==='hwall'||o==='door'||o==='gate'||o==='sdoor'||!!(o&&BL[o]&&BL[o].brk);
 const fixMat=id=>({});/* 修理に素材はいらない */
 function godFix(j){/* 守り神の修理：タップして、パワーと素材を使ってすぐ直す（せいれいが直すとただ） */const o=S.obj[j],b=o?null:brokenCover(j),id=b?b.id:o,c=id&&BL[id]&&BL[id].fix;if(!c)return false;if(o==='tower'&&(S.shards||0)>(S.setSh||0))return false;/* かけらをはめるのが先 */
@@ -904,7 +905,7 @@ function godFix(j){/* 守り神の修理：タップして、パワーと素材�
     else{if(S.obj[j]!==o)return;if(DEFS.has(o))delete S.hp[j];else S.hp[j]=BL[o].hp}
     S.pt-=c;for(const k in m)S.mat[k]-=m[k];dirty=true;sfx('repair');toast(BL[id].name+'を直した','good')},()=>{});return true}
 /* 防衛設備：「コワイノ」はまずこれをこわしにくる */
-const DEFS=new Set(['watch','spike','puddle','sticky','firetrap','gust']),DEFHP={watch:30,spike:5},defHp=o=>DEFHP[o]||4;
+const DEFS=new Set(['watch','yogan','spike','puddle','sticky','firetrap','gust']),DEFHP={watch:30,yogan:30,spike:5},defHp=o=>DEFHP[o]||4;
 let DEFC={t:0,l:[]};function defList(){const now=performance.now();if(now-DEFC.t>1000){DEFC.l=[];for(let j=0;j<W*H;j++)if(DEFS.has(S.obj[j]))DEFC.l.push(j);DEFC.t=now}return DEFC.l}
 const brokenAt=q=>(S.broken||[]).find(b=>b.j===q);
 const repairFree=a=>fp(a.re,a.obj%W,(a.obj/W)|0).every(([cx,cy])=>{const k=cy*W+cx;return !S.obj[k]&&!S.res.some(q=>(q.y|0)*W+(q.x|0)===k)&&!S.enemies.some(e=>e.spawned&&!e.dead&&(e.y|0)*W+(e.x|0)===k)});
@@ -955,7 +956,7 @@ function recount(){
     if(o==='statue')STATUE=j;if(o==='obox')OBOX=j;if(o==='board')BOARD=j;
     if(o==='stele')STELES.push(j);
     if(o==='lamp'||o==='lighthouse'||o==='tower'||o==='campfire'||o==='statue'||o==='torch'||o==='candle'||o==='lantern'||o==='flamp')LIGHTS.push(j);
-    if(o==='watch'||o==='tower')TOWERS.push(j);
+    if(o==='watch'||o==='yogan'||o==='tower')TOWERS.push(j);
     if(FLOWERS.has(o)&&o!=='lotus'&&!isBud(j))around(j,1,NEARFLOWER);/* 花：まわり1マス・かさならない */
     if(o==='well')around(j,3,NEARWELL);
     if(o==='windmill')around(j,5,NEARMILL);
@@ -1040,7 +1041,7 @@ const RANGE_COL={flower:'255,150,190',well:'90,170,240',windmill:'90,210,180',li
 function rangeOf(o,j){if(o==='lotus')return{k:'flower',cells:2};if(FLOWERS.has(o))return{k:'flower',cells:1};if(o==='well')return{k:'well',cells:3};if(o==='windmill')return{k:'windmill',cells:5};if(o==='jar')return{k:'well',cells:1};if(o==='vane')return{k:'vane',cells:3};if(o==='signpost')return{k:'sign',cells:3};if(BL[o]&&BL[o].env)return{k:'env',cells:BL[o].er||3,sq:1};
   if(INDL.has(o)){const h=j!=null&&roomOf(j);if(!h)return{k:'light',r:1.5};let m=1;for(const k of h.set)m=Math.max(m,Math.hypot(k%W-j%W,((k/W)|0)-((j/W)|0)));return{k:'light',r:m+1.5}}
   if(o==='lamp'||o==='campfire'||o==='torch')return{k:'light',r:3.5};if(o==='lighthouse')return{k:'light',r:8};if(o==='stele')return{k:'sign',cells:5};if(o==='tower')return{k:'light',r:7};
-  if(o==='watch'){const st=WATCH[(j!=null&&S.hp['L'+j])||1];return{k:'watch',r:st.range}}return null}
+  if(o==='watch'||o==='yogan'){const st=(o==='yogan'?YOGAN:WATCH)[(j!=null&&S.hp['L'+j])||1];return{k:'watch',r:st.range}}return null}
 let SHOWR=null,MANC='あそびかた';
 function drawRangeOne(o,j,x,y,strong){const R=rangeOf(o,j);if(!R)return;const col=RANGE_COL[R.k],z=BL[o].sz||[1,1],cx=(x+z[0]/2)*TS,cy=(y+z[1]/2)*TS;
   ctx.save();if(R.cells){const set=new Set(),r=R.cells;for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){if(!R.sq&&dx*dx+dy*dy>r*r+1)continue;set.add((dx+8)*32+(dy+8))}
@@ -1165,7 +1166,7 @@ function decide(r){TAKEN=new Set();for(const q of S.res){if(q===r||q.hidden)cont
   try{const x=decide0(r);if(!r.act&&r.elem==='fire'&&!r.hidden&&r.hunger>=20)huntNear(r);return x}finally{TAKEN=null}}
 function springThreat(r){if(WD!==1||!S.st2||!S.st2.cool)return null;let best=null,bd=1e9;for(const e of S.enemies){if(!e.spawned||e.dead||e.flee)continue;const D=EN[e.type];if(!D.ash&&!D.vol)continue;const d=Math.hypot(e.x-r.x,e.y-r.y)-(String(e.tg).startsWith('s')?20:0);if(d<bd){bd=d;best=e}}return best}/* 火山のふもとの最後の夜：温泉を冷やしにくる敵（いま冷やしている敵を先に） */
 function guardSpot(G,en,r){/* 火の子は「守る場所」（見張り台・守護の台座・家）のそばで戦う：敵にいちばん近い守る場所へ行き、そこから3マス以内に来た敵をたたく（守る場所がなければ、そのまま敵のところへ） */let P=null,pd=1e9;const add=(x,y,rad)=>{const d=Math.hypot(x-en.x,y-en.y)-rad;if(d<pd){pd=d;P={x,y,rad}}};
-  for(let k=0;k<W*H;k++){const o=S.obj[k];if((o==='watch'||o==='tower')&&inBase(k%W,(k/W)|0))add(k%W+1,((k/W)|0)+1,1)}
+  for(let k=0;k<W*H;k++){const o=S.obj[k];if((o==='watch'||o==='yogan'||o==='tower')&&inBase(k%W,(k/W)|0))add(k%W+1,((k/W)|0)+1,1)}
   for(const h of HOUSES){let sx=0,sy=0,n=0;for(const q of h.inside){sx+=q%W+.5;sy+=((q/W)|0)+.5;n++}if(n)add(sx/n,sy/n,Math.sqrt(n)/2+1)}/* 家は、まん中から壁の外までを守る */
   if(!P||pd<=3)return huntSpot(G,en,60,r);const here=(r.y|0)*W+(r.x|0);if(Math.hypot(r.x-P.x,r.y-P.y)<=P.rad+1.7&&!roomOf(here))return here;/* もう守る場所のそばにいる */
   let j=-1,bd=1e9;const R=Math.ceil(P.rad+3);for(let y=Math.floor(P.y)-R;y<=Math.floor(P.y)+R;y++)for(let x=Math.floor(P.x)-R;x<=Math.floor(P.x)+R;x++){if(x<0||y<0||x>=W||y>=H)continue;const k=y*W+x;if(G.dist[k]<0||!walk(k)||roomOf(k))continue;const c=Math.hypot(x+.5-P.x,y+.5-P.y);if(c<P.rad||c>P.rad+2.5)continue;const d=Math.hypot(x+.5-en.x,y+.5-en.y);if(d<bd){bd=d;j=k}}return j>=0?j:huntSpot(G,en,60,r)}
@@ -1905,15 +1906,17 @@ function takeDrop(d,r){let nm;
   toast((r?r.name+'が':'')+'おとしものをひろった：'+nm,'good')}
 const watchUp=()=>Object.keys(S.hp).some(k=>k[0]==='L'&&S.hp[k]>=2&&S.obj[+k.slice(1)]==='watch');/* Lv2以上の見張り台がある */
 const WUP=[null,{pc:30,mat:{wood:30,stone:35}},{pc:60,mat:{wood:45,stone:75}}];/* 見張り台の強化 */const WATCH=[null,{dmg:1,range:6,cd:6},{dmg:2,range:6.5,cd:6},{dmg:3,range:7,cd:6}];
+const YOGAN=[null,{dmg:1,range:5,cd:8,splash:1.5,sdmg:.5},{dmg:2,range:5.5,cd:8,splash:1.5,sdmg:1},{dmg:3,range:6,cd:8,splash:1.5,sdmg:1.5}];/* ようがん台（火山のふもと）：火の玉。当たったまわりにもダメージ */
 function updTowers(dt){
   if(!S.enemies.length)return;
-  for(const j of TOWERS){const o=S.obj[j];if(o!=='watch'&&o!=='tower')continue;
+  for(const j of TOWERS){const o=S.obj[j];if(o!=='watch'&&o!=='yogan'&&o!=='tower')continue;
     S.hp['w'+j]=(S.hp['w'+j]||0)-dt;if(S.hp['w'+j]>0)continue;
-    const st=o==='tower'?{dmg:1,range:6,cd:10}:WATCH[S.hp['L'+j]||1];
+    const st=o==='tower'?{dmg:1,range:6,cd:10}:(o==='yogan'?YOGAN:WATCH)[S.hp['L'+j]||1];
     const z0=BL[o].sz||[1,1],x=j%W+z0[0]/2,y=((j/W)|0)+z0[1]/2;
     let tg=null,bd=st.range;for(const e of S.enemies){if(!e.spawned||e.dead)continue;const d=Math.hypot(e.x-x,e.y-y);if(d<bd){bd=d;tg=e}}
-    if(tg){S.hp['w'+j]=st.cd;tg.hp-=st.dmg;tg.flash=6;sfxAt('shoot',x,y);shots.push({x1:x,y1:y-(o==='tower'?1.4:.6),x2:tg.x,y2:tg.y-.3,life:1});
-      if(tg.hp<=0)defeat(tg)}}
+    if(tg){S.hp['w'+j]=st.cd;tg.hp-=st.dmg;tg.flash=6;sfxAt('shoot',x,y);shots.push({x1:x,y1:y-(o==='tower'?1.4:.6),x2:tg.x,y2:tg.y-.3,life:1,fire:o==='yogan'});
+      if(st.splash)for(const e of S.enemies){if(e===tg||!e.spawned||e.dead)continue;if(Math.hypot(e.x-tg.x,e.y-tg.y)<st.splash){e.hp-=st.sdmg;e.flash=6;if(e.hp<=0)defeat(e)}}/* 火の玉は、まわりにもダメージ */
+      if(tg.hp<=0&&!tg.dead)defeat(tg)}}
   S.enemies=S.enemies.filter(e=>!e.dead);
 }
 
@@ -2993,7 +2996,7 @@ function drawObj(c,id,x,y,i,g,now){
     c.save();c.translate(x,y);c.scale(nw,1);const drawn=drawMossGate(c,0,0,i,ver,op);c.restore();if(drawn)return
   }
   if(id==='window'){drawObj(c,'hwall',x,y,i,g,now);c.save();c.translate(0,-1.5);drawWin(c,i,x,y);c.restore();return}
-  if((BIG.has(id)||BIG2.has(id))&&!ICON&&!c._big){const z=BL[id].sz||[1,1],ax=x+16*z[0],ay=y+31*z[1],k=BIG2.has(id)?2:TREES.has(id)?2.25:(id==='stor'||id==='mbox')?32/26:(BIGK[id]||1.5);/* 箱は幅1マスぴったり */c.save();c.translate(ax,ay);c.scale(k,k);c.translate(-ax,-ay);c._big=1;drawObj(c,id,x+(id==='watch'?16:0),y+(id==='watch'?31:0),i,g,now);c._big=0;/* 見張り台は2×2マスのまんなかに、今までと同じ大きさで */c.restore();if(id==='statue'&&i!=null)for(const q of[i-1,i+1])if(S.obj[q]==='obox'||S.obj[q]==='board')drawObj(c,S.obj[q],x+(q-i)*TS,y,q,0,now);/* 大きな女神像の横の箱・ボードを手前に */return}
+  if((BIG.has(id)||BIG2.has(id))&&!ICON&&!c._big){const z=BL[id].sz||[1,1],ax=x+16*z[0],ay=y+31*z[1],k=BIG2.has(id)?2:TREES.has(id)?2.25:(id==='stor'||id==='mbox')?32/26:(BIGK[id]||1.5);/* 箱は幅1マスぴったり */c.save();c.translate(ax,ay);c.scale(k,k);c.translate(-ax,-ay);c._big=1;drawObj(c,id,x+(id==='watch'||id==='yogan'?16:0),y+(id==='watch'||id==='yogan'?31:0),i,g,now);c._big=0;/* 見張り台は2×2マスのまんなかに、今までと同じ大きさで */c.restore();if(id==='statue'&&i!=null)for(const q of[i-1,i+1])if(S.obj[q]==='obox'||S.obj[q]==='board')drawObj(c,S.obj[q],x+(q-i)*TS,y,q,0,now);/* 大きな女神像の横の箱・ボードを手前に */return}
   {const FL=['fl_pink','fl_white','fl_yellow'],FK={clover:'fl_clover',bellf:'fl_bell',salvia:'fl_salvia',lily:'fl_lily',lotus:'fl_lotus'},key=id==='flower'?FL[((i==null?0:hash(i*7+3))*FL.length)|0]:FK[id]?FK[id]:id==='tree'||id==='ntree'||id==='fruit'?'tree':id==='deadtree'?'dead':id==='rock'?'rock':id==='berry'?'bush':null,a=key&&ART[key];
    if(a&&a.ok){const w=id==='flower'?19.5:FLOWERS.has(id)?26:id==='rock'?27:id==='deadtree'?22.5:30,h=w*a.h/a.w;if(!FLOWERS.has(id))shadow(c,x+16,y+28.5,w*.4,w*.1);/* 花は影（鉢のように見える）なし */c.drawImage(a.img,x+16-w/2,y+30-h,w,h);
      if(id==='berry'&&g>=100){const bi=emoImg('🫐');for(const[dx,dy]of[[-6,-6],[6,-2]]){if(bi){const ih=11,iw=ih*bi.width/bi.height;c.drawImage(bi,x+16+dx-iw/2,y+24+dy-ih/2,iw,ih)}else{circ(c,x+16+dx,y+24+dy,2.6,'#5b6fd1')}}}/* 実ったら、ベリーのアイコンを2つ */
@@ -3164,6 +3167,14 @@ function drawObj(c,id,x,y,i,g,now){
     const f=Math.sin(T/90+i)*1.5;c.fillStyle='#ef7b4a';c.beginPath();c.moveTo(x+10,y+21);c.quadraticCurveTo(x+9,y+12,x+13,y+9+f*.4);c.quadraticCurveTo(x+14,y+13,x+15,y+12);c.quadraticCurveTo(x+16,y+5,x+19,y+3-f);c.quadraticCurveTo(x+18,y+10,x+21,y+11);c.quadraticCurveTo(x+24,y+15,x+22,y+21);c.closePath();c.fill();
     c.fillStyle='#f9c55a';c.beginPath();c.moveTo(x+13,y+21);c.quadraticCurveTo(x+12,y+16,x+15,y+13+f*.3);c.quadraticCurveTo(x+16,y+16,x+17,y+15);c.quadraticCurveTo(x+20,y+17,x+19,y+21);c.closePath();c.fill();
     if(!ICON)for(let k=0;k<2;k++){const ph=((T/1700+k/2)%1);circ(c,x+18+Math.sin(ph*5)*3+ph*3,y+2-ph*14,1.8+ph*3,'rgba(240,232,215,'+(.7*(1-ph))+')')}break}
+  case'yogan':{shadow(c,x+16,y+29,16,3.5);const L=(!ICON&&i!=null&&S&&S.hp&&S.hp['L'+i])||1,T=(now||0)/1000;
+    blob(c,'#5a4038',[[x-1,y+29],[x+3,y+14],[x+9,y+5],[x+23,y+5],[x+29,y+14],[x+33,y+29]]);blob(c,'#74574c',[[x+2,y+27],[x+6,y+15],[x+11,y+8],[x+16,y+8],[x+12,y+16],[x+8,y+27]]);/* 岩の山 */
+    c.fillStyle='#3a2a26';c.beginPath();c.ellipse(x+16,y+6,8,3,0,0,7);c.fill();const gl=ICON?.9:.7+Math.sin(T*3+(i||0))*.2;c.fillStyle='rgba(255,120,40,'+gl+')';c.beginPath();c.ellipse(x+16,y+6,6.5,2.2,0,0,7);c.fill();c.fillStyle='rgba(255,220,110,'+gl+')';c.beginPath();c.ellipse(x+16,y+5.6,3.5,1.1,0,0,7);c.fill();/* 火口のようがん */
+    c.strokeStyle='rgba(255,130,50,'+(gl*.8)+')';c.lineWidth=1.6;c.beginPath();c.moveTo(x+13,y+8);c.lineTo(x+11,y+15);c.lineTo(x+12,y+21);c.moveTo(x+20,y+8);c.lineTo(x+22,y+14);c.stroke();c.lineWidth=1;/* ようがんのすじ */
+    if(L>=2){c.fillStyle='#8a6a5c';for(const [a,b] of[[x+1,y+24],[x+27,y+23]]){c.beginPath();c.ellipse(a+2,b+2,3.5,2.5,0,0,7);c.fill()}}
+    if(L>=3){c.fillStyle='#ffd84a';star4(c,x+16,y-3,3.5)}
+    if(!ICON){for(let k=0;k<2;k++){const ph=((T*.5+k*.5+(i||0)*.13)%1);c.fillStyle='rgba(120,110,105,'+(.45*(1-ph))+')';c.beginPath();c.arc(x+15+k*3+Math.sin(ph*4)*2,y+2-ph*14,1.5+ph*3,0,7);c.fill()}}/* けむり */
+    break}/* ようがん台（火山のふもと） */
   case'watch':{shadow(c,x+16,y+29,14,3);c.fillStyle='rgba(225,200,160,.7)';c.beginPath();c.ellipse(x+16,y+28,14,3.5,0,0,7);c.fill();
     c.strokeStyle='#a8703f';c.lineWidth=3;c.lineCap='round';c.beginPath();c.moveTo(x+7,y+28);c.lineTo(x+9,y-2);c.moveTo(x+25,y+28);c.lineTo(x+23,y-2);c.stroke();
     c.lineWidth=2;c.beginPath();c.moveTo(x+8,y+24);c.lineTo(x+23,y+6);c.moveTo(x+24,y+24);c.lineTo(x+9,y+6);c.stroke();
@@ -3422,7 +3433,7 @@ function iconURL(id){
   if(typeof id==='string'&&id.startsWith('seed:'))return seedIcon(id.slice(5));
   if(iconCache[id])return iconCache[id];
   const c=document.createElement('canvas');c.width=72;c.height=72;const g=c.getContext('2d');
-  const tall=['watch','tower','swing','lamp','well','windmill','site'].includes(id);
+  const tall=['watch','yogan','tower','swing','lamp','well','windmill','site'].includes(id);
   g.scale(tall?1.2:1.9,tall?1.2:1.9);const ox=tall?14:3,oy=tall?24:3;
   if(id==='statue'){ICON=true;g.setTransform(1,0,0,1,0,0);g.translate(15,33);g.scale(1.22,1.22);drawObj(g,'statue',0,0,7);ICON=false;return iconCache[id]=c.toDataURL()}
   ICON=true;if(BL[id].floor)drawFloor(g,id,ox,oy,7,true);else drawObj(g,id,ox,oy,7,(id==='berry'||id==='fruit')?100:id==='farm'?60:0,1);ICON=false;
@@ -4073,7 +4084,8 @@ function render(now){
   ctx.strokeStyle='#fff6b0';ctx.lineWidth=2;
   /* 見張り台の光の矢：塔から敵へ飛んで、当たると光がはじける */
   for(const s of shots){const p=1-s.life,h=Math.min(1,p*2.4),tl=Math.max(0,h-.35),X=v=>(s.x1+(s.x2-s.x1)*v)*TS,Y=v=>(s.y1+(s.y2-s.y1)*v)*TS-Math.sin(v*Math.PI)*14;
-    ctx.save();ctx.lineCap='round';if(h<1){ctx.strokeStyle='rgba(255,236,150,.55)';ctx.lineWidth=7;ctx.beginPath();ctx.moveTo(X(tl),Y(tl));ctx.lineTo(X(h),Y(h));ctx.stroke();ctx.strokeStyle='#fffbe0';ctx.lineWidth=3;ctx.stroke();ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(X(h),Y(h),4,0,7);ctx.fill()}
+    ctx.save();ctx.lineCap='round';if(s.fire&&h<1){ctx.fillStyle='rgba(255,120,40,.5)';ctx.beginPath();ctx.arc(X(h),Y(h),7,0,7);ctx.fill();ctx.fillStyle='#ffcf6a';ctx.beginPath();ctx.arc(X(h),Y(h),4,0,7);ctx.fill()}/* ようがん台の火の玉 */
+    else if(h<1){ctx.strokeStyle='rgba(255,236,150,.55)';ctx.lineWidth=7;ctx.beginPath();ctx.moveTo(X(tl),Y(tl));ctx.lineTo(X(h),Y(h));ctx.stroke();ctx.strokeStyle='#fffbe0';ctx.lineWidth=3;ctx.stroke();ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(X(h),Y(h),4,0,7);ctx.fill()}
     else{const q=(p-1/2.4)/(1-1/2.4);ctx.globalAlpha=1-q;ctx.strokeStyle='#fff3b0';ctx.lineWidth=3;ctx.beginPath();ctx.arc(s.x2*TS,s.y2*TS,6+q*18,0,7);ctx.stroke();ctx.fillStyle='rgba(255,250,210,.7)';ctx.beginPath();ctx.arc(s.x2*TS,s.y2*TS,9*(1-q),0,7);ctx.fill()}ctx.restore()}ctx.globalAlpha=1;
   ctx.font='bold 11px "Hikomi",sans-serif';ctx.textAlign='center';
   for(const f of floats){ctx.globalAlpha=Math.min(1,f.life*2);const yy=(f.y-(1-f.life)*1.2)*TS;ctx.lineJoin='round';ctx.lineWidth=3;ctx.strokeStyle='rgba(176,138,100,.9)';{const fi=emoImg(f.text);if(fi){const ih=20,iw=ih*fi.width/fi.height;ctx.drawImage(fi,f.x*TS-iw/2,yy-ih+4,iw,ih)}else{ctx.strokeText(f.text,f.x*TS,yy);ctx.fillStyle='#fff3d6';ctx.fillText(f.text,f.x*TS,yy)}}}/* 文字はぜんぶクリーム色 *//* 文字のふちどりはうすい茶色 */
@@ -4082,8 +4094,8 @@ function render(now){
   ctx.setTransform(dpr,0,0,dpr,0,0);
   if(dk>0){ctx.fillStyle=(!WD&&S.ns&&S.ns.final&&!S.cleared?'rgba(46,10,52,':'rgba(14,20,58,')+dk+')';ctx.fillRect(0,0,VW,VH);
     ctx.setTransform(k,0,0,k,-cam.x*k,-cam.y*k);ctx.globalCompositeOperation='lighten';/* 光が重なっても、いちばん明るい光より明るくならない */
-    for(let y=y0;y<y1;y++)for(let x=x0;x<x1;x++){const o=S.obj[y*W+x];if(!['lamp','tower','watch','campfire','statue','torch','candle','lantern','flamp'].includes(o))continue;if(INDL.has(o)&&roomOf(y*W+x))continue;/* 家の中の灯りは、灯りそのものは光らせず、家ぜんたいを光らせる（下） *//* 明かりの出る物は、夜にまわりを明るく */
-      const cx=x*TS+(o==='watch'?32:16),cy=y*TS+(o==='flamp'?-6:o==='candle'?10:o==='lantern'?6:o==='lamp'?3:o==='torch'?-12:o==='watch'?-20:o==='campfire'?14:o==='tower'?6:o==='statue'?-6:15),R=o==='tower'?150:o==='statue'?110:o==='lamp'?100:o==='torch'?105:INDL.has(o)?(roomOf(y*W+x)?40:45):o==='campfire'?110:o==='watch'?40:30;
+    for(let y=y0;y<y1;y++)for(let x=x0;x<x1;x++){const o=S.obj[y*W+x];if(!['lamp','tower','watch','yogan','campfire','statue','torch','candle','lantern','flamp'].includes(o))continue;if(INDL.has(o)&&roomOf(y*W+x))continue;/* 家の中の灯りは、灯りそのものは光らせず、家ぜんたいを光らせる（下） *//* 明かりの出る物は、夜にまわりを明るく */
+      const cx=x*TS+(o==='watch'||o==='yogan'?32:16),cy=y*TS+(o==='yogan'?8:o==='flamp'?-6:o==='candle'?10:o==='lantern'?6:o==='lamp'?3:o==='torch'?-12:o==='watch'?-20:o==='campfire'?14:o==='tower'?6:o==='statue'?-6:15),R=o==='tower'?150:o==='statue'?110:o==='lamp'?100:o==='torch'?105:INDL.has(o)?(roomOf(y*W+x)?40:45):o==='campfire'?110:o==='watch'?40:o==='yogan'?60:30;
       const g=ctx.createRadialGradient(cx,cy,2,cx,cy,R);g.addColorStop(0,'rgba(255,214,120,'+dk*.9+')');g.addColorStop(1,'rgba(255,200,100,0)');ctx.fillStyle=g;ctx.fillRect(cx-R,cy-R,R*2,R*2)}
     {const litH=new Set();for(const j of LIGHTS){if(INDL.has(S.obj[j])){const h=roomOf(j);if(h)litH.add(h)}}/* 灯りのある家は、家ぜんたいを同じ明るさで照らす（ふちはぼかす） */
       for(const h of litH){const D=(VW*dpr+120*k)/k;/* k は画面の倍率（dprこみ） */ctx.beginPath();for(const q of h.set){const qx=q%W,qy=(q/W)|0;if(qx<x0-3||qx>x1+2||qy<y0-3||qy>y1+2)continue;ctx.rect(qx*TS-D,qy*TS,TS,TS)}ctx.fillStyle='#000';ctx.shadowColor='rgba(255,205,110,'+dk*.75+')';ctx.shadowBlur=36*k;ctx.shadowOffsetX=D*k;ctx.fill();ctx.shadowBlur=0;ctx.shadowOffsetX=0;ctx.shadowColor='transparent'}}/* 家の形をぼかした光だけをかく（形そのものは画面の外へずらし、影だけを家の位置に出す） */
@@ -4185,7 +4197,7 @@ function onTap(sx,sy){
     if(breakable(o)&&BL[o].brk&&!BL[o].trap&&o!=='tower')return toast(BL[o].name+'：'+withAttr(o,BL[o].desc||'')+'（じょうぶさ '+Math.floor(S.hp[j]??BL[o].hp)+'/'+BL[o].hp+'）');/* 道をふさぐ物：時間を止めず、説明とじょうぶさをいっしょに出す */
     if(breakable(o)&&o!=='tower')return toast(BL[o].name+'：じょうぶさ '+Math.floor(S.hp[j]??BL[o].hp)+'/'+BL[o].hp);
     if(o==='rock'||o==='deadtree'||o==='ntree')return toast(BL[o].name+'：のこり '+Math.max(0,10-(S.hp['n'+j]||0))+'/10');
-    if(o==='watch')return openSheet('watch',j);
+    if(o==='watch'||o==='yogan')return openSheet('watch',j);
     if(o==='obox')return S.feat.inv?openSheet('inv'):toast('おそなえ箱');
     if(o==='grave'){const d=S.dyn[j]||{};if(!d.buried)return toast((d.name||'せいれい')+'のお墓。なかまが神殿へはこんで、おみおくりしてくれる');/* 守り神は埋葬できない */return toast((d.name||'せいれい')+'のお墓')}
     if(o==='tower'&&!WD&&!S.cleared){const av=(S.shards||0)-(S.setSh||0);if(av>0&&(S.setSh||0)>=2){const NM=['木のせいれい','守護の台座','ヌシのかけら','みどりのマス','せいれいパワー'],miss=clearConds().findIndex(c=>!c[1]);if(miss>=0)return toast(NM[miss]+'が足りません','warn')}/* 3つ目をはめるときも、5つの条件がそろっているか見る */if(av>0){S.setSh=(S.setSh||0)+1;sfx('level');burst(j,'furn','none');toast('台座に、ヌシのかけらをはめた（'+S.setSh+'/3）','good');logEv('かけらを台座にはめた');if(S.setSh>=3)setTimeout(()=>dialog((L=>L&&L.length?L:[[GOD,GVOICE()+'かけらが3つそろったのう。……ヌシ様が、帰ってくるぞい。']])(sevLines([['F','台座が、光ってる……！',1],['N','3つともはまったねぇ。……ヌシ様が、帰ってくるよぉ。',1]])),()=>{if(S.cleared)return;if(S.res.some(q=>q.name===POKO))nushiReturns();else{S.flags.nushiWait=1;toast('フタバが帰ってきたら、ヌシ様がすがたをあらわす','warn')}}),900);checkQuest();return}return openSheet('clear')}
@@ -4716,11 +4728,11 @@ function renderSheet(){
     const b=el('<button class="btn pri">マップをひらく</button>');b.onclick=()=>{sfx('tap');save();closeSheet();showMaps()};body.appendChild(b);
     const c=el('<button class="btn">やめる</button>');c.onclick=()=>{sfx('tap');closeSheet()};body.appendChild(c);
   }else if(sheet==='watch'){
-    const j=sheetArg;if(S.obj[j]!=='watch')return closeSheet();
-    const L=S.hp['L'+j]||1,st=WATCH[L];T.textContent='見張り台';
-    body.appendChild(el(`<p class="story">Lv${L}：威力 ${st.dmg}・射程 ${st.range}マス・${st.cd}分ごとに光の矢を放つ</p>`));
-    const U=WUP[L];if(U){const n=WATCH[L+1];body.appendChild(el(`<p class="note">強化するとLv${L+1}：威力 ${n.dmg}・射程 ${n.range}マス・${n.cd}分ごと<br>${SP(U.pc)}・${matTxt(U.mat)}</p>`));
-      const b=el('<button class="btn pri">強化する</button>');b.onclick=()=>{if(S.pt<U.pc)return toast('パワーが足りません（'+SP(U.pc)+'）');if(!matOK(U.mat))return toast('素材が足りません（'+matTxt(U.mat)+'）');S.pt-=U.pc;for(const k in U.mat)S.mat[k]-=U.mat[k];S.hp['L'+j]=L+1;dirty=true;try{rebuildStatic()}catch(e){}sfx('post');burst(j,'block','offer');toast('見張り台をLv'+(L+1)+'に強化した','good');renderSheet()};body.appendChild(b)}
+    const j=sheetArg,o=S.obj[j];if(o!=='watch'&&o!=='yogan')return closeSheet();
+    const yg=o==='yogan',TB=yg?YOGAN:WATCH,L=S.hp['L'+j]||1,st=TB[L];T.textContent=BL[o].name;
+    body.appendChild(el(`<p class="story">Lv${L}：威力 ${st.dmg}${yg?'（まわり '+st.sdmg+'）':''}・射程 ${st.range}マス・${st.cd}分ごとに${yg?'火の玉':'光の矢'}を放つ</p>`));
+    const U=WUP[L];if(U){const n=TB[L+1];body.appendChild(el(`<p class="note">強化するとLv${L+1}：威力 ${n.dmg}${yg?'（まわり '+n.sdmg+'）':''}・射程 ${n.range}マス・${n.cd}分ごと<br>${SP(U.pc)}・${matTxt(U.mat)}</p>`));
+      const b=el('<button class="btn pri">強化する</button>');b.onclick=()=>{if(S.pt<U.pc)return toast('パワーが足りません（'+SP(U.pc)+'）');if(!matOK(U.mat))return toast('素材が足りません（'+matTxt(U.mat)+'）');S.pt-=U.pc;for(const k in U.mat)S.mat[k]-=U.mat[k];S.hp['L'+j]=L+1;dirty=true;try{rebuildStatic()}catch(e){}sfx('post');burst(j,'block','offer');toast(BL[o].name+'をLv'+(L+1)+'に強化した','good');renderSheet()};body.appendChild(b)}
     else body.appendChild(el('<p class="note">これ以上は強化できない</p>'));
   }else if(sheet==='menu'){
     T.textContent=WORLDS[WD].name;
@@ -4948,7 +4960,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='379';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='380';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
