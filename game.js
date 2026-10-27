@@ -2818,7 +2818,21 @@ function roadGrassEdge(c,id,x,y,i,q,iso){if(id!=='path'&&id!=='gravel')return;co
 }
 
 function roadShape(c,x,y,q){const l=x+(q.L?0:2),r=x+TS-(q.R?0:2),t=y+(q.U?0:2),b=y+TS-(q.D?0:2),tl=!q.L&&!q.U?6:0,tr=!q.R&&!q.U?6:0,br=!q.R&&!q.D?6:0,bl=!q.L&&!q.D?6:0;c.beginPath();c.moveTo(l+tl,t);c.lineTo(r-tr,t);c.quadraticCurveTo(r,t,r,t+tr);c.lineTo(r,b-br);c.quadraticCurveTo(r,b,r-br,b);c.lineTo(l+bl,b);c.quadraticCurveTo(l,b,l,b-bl);c.lineTo(l,t+tl);c.quadraticCurveTo(l,t,l+tl,t);c.closePath()}
+function drawFloorChip(c,id0,x,y,i,iso){const C=window.CHIPS;if(!C)return false;const gx=i%W,gy=(i/W)|0,flat=id0==='brickfloor'||id0==='stonefloor',id=flat?(id0==='brickfloor'?'brick':'stone'):id0;
+  const base=id==='carpet'?C.carpet:C[id+'#'+(id==='path'||id==='gravel'?((hash(i*13+5)*4)|0):(gx%2)+(gy%2)*2)];if(!base||!chipImgs(base,id)[0].ok)return false;/* 床のもよう：土・砂利は4しゅるい、石・レンガ・板は2×2マスでつながる絵 */
+  const road=!flat&&ROADF.has(id),q=road?roadLinks(i,iso):null;if(road){c.save();roadShape(c,x,y,q);c.clip()}
+  drawChip(c,base,id,x,y,0,i);
+  if(id==='carpet'){const same=k=>!iso&&S.floor[k]==='carpet';for(const[s,k]of[['U',i-W],['D',i+W],['L',i-1],['R',i+1]])if(!same(k)&&C['carpet:'+s])drawChip(c,C['carpet:'+s],id,x,y,0,i)}/* じゅうたんのふち */
+  if(road){const cn=roadCorners(i,iso);
+    if(id==='stone'||id==='brick'){const m=(q.L?1:0)|(q.R?2:0)|(q.U?4:0)|(q.D?8:0);if(m<15&&C[id+':'+m])drawChip(c,C[id+':'+m],id,x,y,0,i);cn.forEach((v,k)=>{if(v&&C[id+':c'+k])drawChip(c,C[id+':c'+k],id,x,y,0,i)})}/* 道のふちの石・内がわの角 */
+    else{const tr=(dx,dy)=>{const j=i+dy*W+dx;if(!iso&&(gx+dx<0||gy+dy<0||gx+dx>=W||gy+dy>=H))return null;if(!iso&&(S.ground[j]===1||S.floor[j]))return null;const t=roadTerrain(j,iso);return t.grass?'g':WD===1?'r':'d'};
+      for(const[s,open,dx,dy]of[['U',!q.U,0,-1],['D',!q.D,0,1],['L',!q.L,-1,0],['R',!q.R,1,0]]){const t=open&&tr(dx,dy);if(t&&C['fringe'+t+':'+s])drawChip(c,C['fringe'+t+':'+s],id,x,y,0,i)}
+      cn.forEach((v,k)=>{if(!v)return;const t=tr(k===0||k===3?-1:1,k<2?-1:1);if(t&&C['fringe'+t+':c'+k])drawChip(c,C['fringe'+t+':c'+k],id,x,y,0,i)})}/* 草・地面とのさかい */
+    c.restore()}
+  if(!iso&&HOME_WALLS.has(S.obj[i-W])&&!road&&id!=='floor'){c.fillStyle='rgba(60,30,10,.2)';c.fillRect(x,y,TS,4)}/* 壁の下のかげ */
+  return true}
 function drawFloor(c,id,x,y,i,iso){
+  if(!c._chip&&drawFloorChip(c,id,x,y,i,iso))return;/* ドット絵があれば、それを使う */
   const n=k=>!iso&&!!S.floor[k],gx=i%W,gy=(i/W)|0;
   const flat=id==='brickfloor'||id==='stonefloor';if(flat)id=id==='brickfloor'?'brick':'stone';/* 家の床は、道と同じ絵で、道のふち・つなぎはなし */
   const road=!flat&&ROADF.has(id),links=road?roadLinks(i,iso):null;if(road){c.save();roadShape(c,x,y,links);c.clip()}/* 縁の外には、床の絵をはみ出させない */
@@ -5005,7 +5019,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='386';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='387';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
