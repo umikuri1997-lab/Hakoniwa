@@ -3777,8 +3777,9 @@ function drawSpiritDot(c,el,x,y,s,f,o){
   c.save();c.translate(x,y);c.scale(s*f,s);
   const sm=c.imageSmoothingEnabled;c.imageSmoothingEnabled=false;
   const tail=(tx,ty,rot)=>{c.save();c.translate(tx,ty);c.rotate((rot||0)+Math.sin(t*3)*.18);spr(E0+'tail');c.restore()};
-  const wings=()=>{if(o.bed)return;const fl=Math.sin(t*(o.walk?10:3.2))*.12;
-    for(const[cx,cy,len,rot]of[[-16,-60,44,-2.5-fl],[16,-60,44,-.64+fl],[-18,-40,38,2.75+fl],[18,-40,38,.39-fl]]){c.save();c.translate(cx,cy);c.rotate(rot);if(len!==44)c.scale(len/44,len/44);spr(E0+'leaf');c.restore()}};
+  const wings=bk=>{if(o.bed)return;const fl=Math.sin(t*(o.walk?10:3.2))*.12,W=[[-16,-60,44,-2.5-fl],[16,-60,44,-.64+fl],[-18,-40,38,2.75+fl],[18,-40,38,.39-fl]];
+    const lf=(w,k)=>{c.save();c.translate(w[0],w[1]);c.rotate(w[3]);if(w[2]!==44)c.scale(w[2]/44,w[2]/44);spr(E0+k);c.restore()};
+    for(const w of W)lf(w,'leaf');if(bk){c.globalAlpha=.25;lf(W[0],'leafW');lf(W[1],'leafW');c.globalAlpha=1}};/* うしろ向きは、上のはねを少し白っぽく */
   if(el==='wind'&&!back){c.save();c.translate(-tr*9+hDx,hDy);c.scale(1-tr*.3,1);wings();c.restore()}
   if(!back&&el!=='wind'&&tr)tail(-18,-16,-.85);
   const armD=(sx,a)=>{c.save();c.translate(sx*14*TUNE.bodyW*(1-tr*.9)+(back?-1:1)*tr*2,-26*TUNE.bodyH+aDy);c.translate(aDx,0);c.rotate(sx*(.35+a));
@@ -3790,8 +3791,16 @@ function drawSpiritDot(c,el,x,y,s,f,o){
   if(back&&el!=='wind')tail(-tr*12,-17);
   // 頭と顔（食べるときは、うなずく）
   const nod=A==='eat'?Math.round(Math.max(0,Math.sin(t*7))*1.4)*D:0;c.save();c.translate(hDx,hDy+nod);
-  spr(E0+(tr&&!back?'hoodS':'hood'));/* 頭巾だけ属性ごと。顔の丸は共通（風の子は頭巾のかわりに、まるい頭とつる） */
-  if(el==='wind'&&back){c.save();c.translate(0,-30*TUNE.bodyH);c.scale(TUNE.head,TUNE.head);c.translate(0,36);c.scale(1-tr*.3,1);wings();c.restore()}/* うしろ向きのはねは、頭といっしょに */
+  // 頭巾だけ属性ごと。顔の丸は共通（風の子は頭巾のかわりに、まるい頭とつる）。小さく動く所（頭巾の先・芽・火の玉・つる）は別のパーツ
+  const H=TUNE.head,hs=tr&&!back?'S':'',hp=(lx,ly)=>[(hs?-TUNE.sHoodX+lx*TUNE.sHead:lx)*H,-30*TUNE.bodyH+H*(ly+36)],/* 頭の中の位置→体の位置 */
+    rot=(k,lx,ly,a)=>{const[px,py]=hp(lx,ly);c.save();c.translate(px,py);c.rotate(a);c.translate(-px,-py);spr(k);c.restore()},dd=v=>Math.round(v*H*.435)*D;
+  if(el==='wind'){const[px,py]=[(back?1:-1)*tr*4*H,-30*TUNE.bodyH+H*(-79+36)];c.save();c.translate(px,py);c.rotate(Math.sin(t*2)*.15);c.translate(-px,-py);spr(E0+'vine'+hs);c.restore()}
+  spr(E0+'hood'+hs);
+  if(el==='wood'||el==='fire'){const v=dd(Math.sin(t*(el==='fire'?7:2.2))*(el==='fire'?2.5:1.4));spr(E0+'tip'+hs,v,0)}/* 頭巾の先が左右にゆれる */
+  if(el==='water'){const v=dd(Math.sin(t*2.2)*1.4);if(v<0)spr(E0+'tip'+hs);spr(E0+'tip'+hs,0,v)}/* 水の子は上下（上がるときは、すきまがあかないように元の位置にも描く） */
+  if(el==='fire')spr(E0+'ember'+hs,0,dd(Math.sin(t*3)*2.5));/* 火の玉がふわふわ */
+  if(el==='earth')rot(E0+'sprout'+hs,1,-88,Math.sin(t*2.4)*.18);/* 芽がゆれる */
+  if(el==='wind'&&back){c.save();c.translate(0,-30*TUNE.bodyH);c.scale(TUNE.head,TUNE.head);c.translate(0,36);c.scale(1-tr*.3,1);wings(1);c.restore()}/* うしろ向きのはねは、頭といっしょに */
   if(!back){if(el!=='wind')spr('sp:head'+S);if(el==='fire'&&!tr)spr(E0+'bang');
     const md=o.sleep?'':o.mood==='cry'?'teary':o.mood||'',fy=el==='wind'?-D:0;
     const fm=o.sleep||(o.blink&&!md)?'shut':md==='smile'||md==='joy'||md==='eat'?'hap':['teary','tear','shock','strain','sad'].includes(md)?md:'n';
@@ -5199,7 +5208,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='403';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='404';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
