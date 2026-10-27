@@ -3796,12 +3796,12 @@ function spDotReady(el){if(SPDOK[el])return true;if(!window.CHIPS)return false;
   for(const k in CHIPS)if((k.startsWith('sp:')||k.startsWith('sp_'+el+':'))&&!chipImgs(CHIPS[k],k)[0].ok)return false;return SPDOK[el]=true}
 function drawSpiritDot(c,el,x,y,s,f,o){
   if(!spDotReady(el))return false;
-  const TUNE=o.vr&&o.vr.key?KEYTUNE:BASETUNE,vr=o.vr,t=o.t||0,back=!!o.back,tr=(o.turn||0)>.5?1:0,D=1/.435;
+  const TUNE=o.vr&&o.vr.key?KEYTUNE:BASETUNE,vr=o.vr,t=o.t||0,back=!!o.back,tr=(o.turn||0)>.5?1:0,D=1/.87;/* せいれいの絵は、ゲームの1ドットを2×2に分けた細かさ */
   let {br,st,arm,A,aN,aF,prop,lean2,sq,frontArm,bothF}=spPose(o,t,tr,back);
   const spr=(key,X,Y)=>{const ch=CHIPS[key],im=spDot(key,el,vr);if(im)c.drawImage(im,(X||0)+ch.ax*D,(Y||0)+ch.ay*D,ch.w*D,ch.h*D)};
   const E0='sp_'+el+':',S=tr?'S':'';
   // いきをする・しゃがむ・かたむくは、絵を回さずに、頭とうでをドット単位でずらす（ドットがくずれないように）
-  const L=(o.lean||0)+lean2,hDy=-Math.round((br-sq)*22)*D,aDy=-Math.round((br-sq)*10)*D,hDx=Math.round(L*26)*D,aDx=Math.round(L*11)*D;
+  const L=(o.lean||0)+lean2,hDy=-Math.round((br-sq)*44)*D,aDy=-Math.round((br-sq)*20)*D,hDx=Math.round(L*52)*D,aDx=Math.round(L*22)*D;
   c.save();c.translate(x,y);c.scale(s*f,s);
   const sm=c.imageSmoothingEnabled;c.imageSmoothingEnabled=false;
   const tail=(tx,ty,rot)=>{c.save();c.translate(tx,ty);c.rotate((rot||0)+Math.sin(t*3)*.18);spr(E0+'tail');c.restore()};
@@ -3818,10 +3818,10 @@ function drawSpiritDot(c,el,x,y,s,f,o){
   if(tr&&!frontArm)armD(-farA,aA(-farA));
   if(back&&el!=='wind')tail(-tr*12,-17);
   // 頭と顔（食べるときは、うなずく）
-  const nod=A==='eat'?Math.round(Math.max(0,Math.sin(t*7))*1.4)*D:0;c.save();c.translate(hDx,hDy+nod);
+  const nod=A==='eat'?Math.round(Math.max(0,Math.sin(t*7))*2.8)*D:0;c.save();c.translate(hDx,hDy+nod);
   // 頭巾だけ属性ごと。顔の丸は共通（風の子は頭巾のかわりに、まるい頭とつる）。小さく動く所（頭巾の先・芽・火の玉・つる）は別のパーツ
   const H=TUNE.head,hs=tr&&!back?'S':'',hp=(lx,ly)=>[(hs?-TUNE.sHoodX+lx*TUNE.sHead:lx)*H,-30*TUNE.bodyH+H*(ly+36)],/* 頭の中の位置→体の位置 */
-    rot=(k,lx,ly,a)=>{const[px,py]=hp(lx,ly);c.save();c.translate(px,py);c.rotate(a);c.translate(-px,-py);spr(k);c.restore()},dd=v=>Math.round(v*H*.435)*D;
+    rot=(k,lx,ly,a)=>{const[px,py]=hp(lx,ly);c.save();c.translate(px,py);c.rotate(a);c.translate(-px,-py);spr(k);c.restore()},dd=v=>Math.round(v*H*.87)*D;
   if(el==='wind'){const[px,py]=[(back?1:-1)*tr*4*H,-30*TUNE.bodyH+H*(-79+36)];c.save();c.translate(px,py);c.rotate(Math.sin(t*2)*.15);c.translate(-px,-py);spr(E0+'vine'+hs);c.restore()}
   spr(E0+'hood'+hs);
   if(el==='wood'||el==='fire'){const v=dd(Math.sin(t*(el==='fire'?7:2.2))*(el==='fire'?2.5:1.4));spr(E0+'tip'+hs,v,0)}/* 頭巾の先が左右にゆれる */
@@ -3830,7 +3830,7 @@ function drawSpiritDot(c,el,x,y,s,f,o){
   if(el==='earth')rot(E0+'sprout'+hs,1,-88,Math.sin(t*2.4)*.18);/* 芽がゆれる */
   if(el==='wind'&&back){c.save();c.translate(0,-30*TUNE.bodyH);c.scale(TUNE.head,TUNE.head);c.translate(0,36);c.scale(1-tr*.3,1);wings(1);c.restore()}/* うしろ向きのはねは、頭といっしょに */
   if(!back){if(el!=='wind')spr('sp:head'+S);if(el==='fire'&&!tr)spr(E0+'bang');
-    const md=o.sleep?'':o.mood==='cry'?'teary':o.mood||'',fy=el==='wind'?-D:0;
+    const md=o.sleep?'':o.mood==='cry'?'teary':o.mood||'',fy=el==='wind'?-3*D:0;
     const fm=o.sleep||(o.blink&&!md)?'shut':md==='smile'||md==='joy'||md==='eat'?'hap':['teary','tear','shock','strain','sad'].includes(md)?md:'n';
     if(vr&&vr.cheek)spr('sp:cheek'+S,0,fy);
     spr('sp:face'+S+'#'+fm,0,fy);
@@ -4048,7 +4048,7 @@ function drawGod(now){
   else if(TALKW===GOD){const f=()=>talkBub(px,py-28,now);if(BUBQ)BUBQ.push(f);else f()}
   else if(S.feat.shop){ctx.fillStyle='rgba(31,59,58,.9)';rr(ctx,px-17,py-58,34,13,6);ctx.fillStyle='#ecdcbc';ctx.font='bold 9px \"Hikomi\",\"Hiragino Maru Gothic ProN\",sans-serif';ctx.textAlign='center';ctx.fillText('こうかん',px,py-48.5);ctx.textAlign='start'}
   const g=ctx.createRadialGradient(px,py-12,4,px,py-12,36);g.addColorStop(0,'rgba(255,250,210,.4)');g.addColorStop(1,'rgba(255,250,210,0)');ctx.fillStyle=g;ctx.fillRect(px-36,py-48,72,72);
-  const G2=SPR.god;if(G2.ok){const h=58,w=h*G2.w/G2.h;ctx.drawImage(G2.img,px-w/2,py+16-h,w,h)}else{
+  const G2=SPR.god,GC=window.CHIPS&&CHIPS.god,GI=GC&&chipImgs(GC,'god')[0];if(GI&&GI.ok){const sm=ctx.imageSmoothingEnabled;ctx.imageSmoothingEnabled=false;ctx.drawImage(GI,Math.round(px*2)/2+GC.ax/2,Math.round((py+16)*2)/2+GC.ay/2,GC.w/2,GC.h/2);ctx.imageSmoothingEnabled=sm}/* ドット絵（1ドットを2×2に分けた細かさ） */else if(G2.ok){const h=58,w=h*G2.w/G2.h;ctx.drawImage(G2.img,px-w/2,py+16-h,w,h)}else{
   circ(ctx,px-10,py+6,7,'#fff');circ(ctx,px+10,py+6,7,'#fff');circ(ctx,px,py+4,9,'#fff');circ(ctx,px-4,py+9,6,'#eef4ff');circ(ctx,px+5,py+9,6,'#eef4ff');
   circ(ctx,px,py-7,8,'#f6d6b0');
   ctx.fillStyle='#fff';ctx.beginPath();ctx.moveTo(px-7,py-5);ctx.quadraticCurveTo(px,py+8,px+7,py-5);ctx.quadraticCurveTo(px,py-1,px-7,py-5);ctx.fill();
@@ -5284,7 +5284,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='416';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='417';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
