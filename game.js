@@ -860,7 +860,14 @@ const anc=j=>{if(S.obj[j]==='part'||(S.obj[j]==='site2'&&S.ref[j]!=null))return 
 const typeAt=j=>S.obj[anc(j)];
 for(const f of FLOWERS)BL[f].anim=1;BL.table.anim=1;/* 食卓は1.5倍で、はみ出しても奥行き順にかく *//* 花ははみ出すので、地面にやきつけず、ほかの物と同じ順番で描く */
 const solidOf=j=>{const o=typeAt(j);return !!(o&&BL[o]&&BL[o].solid)};
-const fp=(id,x,y)=>{const z=BL[id].sz;if(!z)return [[x,y]];const c=[];for(let b=0;b<z[1];b++)for(let a=0;a<z[0];a++)c.push([x+a,y+b]);return c};
+const ROTS={chair:4,chair2:4,achair:4,sofa1:4,bench:2,bed:2,sandbox:2,ltable:2,bathtub:2,rug1:2,slide:1,seesaw:1,swing:1,signpost:1,vane:1,oven:1};/* 向きをかえられる家具。4：前・右・後ろ・左　2：横・縦　1：左右反転だけ */
+const BEDHX=34,BEDHY=12,BEDHC=13;/* 横のベッド：寝る子の足もと（x,y）と、ふとんをかける左はし */
+const ROTN=id=>ROTS[id]===4?4:ROTS[id]?2:1,ROTL={4:['前','右','後ろ','左'],2:['横','縦'],1:['そのまま','反転']};
+let PLROTS={};/* 置くときにえらんでいる向き（家具ごと） */
+const rotAt=j=>(S&&S.rot&&S.rot[j])||0;
+const szR=(id,rot)=>{const z=BL[id]&&BL[id].sz;if(!z)return null;return (ROTS[id]===2&&rot===1||ROTS[id]===4&&rot%2===1)?[z[1],z[0]]:z};/* 向きをかえると、たて・よこが入れかわる */
+const szAt=(id,j)=>szR(id,j==null?0:(S.obj[j]===id||S.obj[j]==='site'?rotAt(j):(PLROTS[id]||0)));
+const fp=(id,x,y,rot)=>{const z=rot!=null?szR(id,rot):szAt(id,y*W+x);if(!z)return [[x,y]];const c=[];for(let b=0;b<z[1];b++)for(let a=0;a<z[0];a++)c.push([x+a,y+b]);return c};
 function walk(j){if(j<0||j>=W*H||S.ground[j]===1)return false;return !solidOf(j)}
 const cnt=id=>counts[id]||0;
 const FOODS={mugi:{name:'こむぎ',v:1,e:'🌾'},imo:{name:'いも',v:1,e:'🥔'},tomato:{name:'キャベツ',v:1,e:'🥬'},berry:{name:'ベリー',v:1,e:'🫐'},apple:{name:'りんご',v:1,e:'🍎'},fish:{name:'さかな',v:1,e:'🐟'},
@@ -922,10 +929,11 @@ function toyUsers(j){return S.res.filter(q=>{const a=toyR(q);return a&&a.obj===j
 function swAng(j,now){return Math.sin(now/1000*2.6+j)}/* -1〜1：手前に来ると下に大きく、奥に行くと上に小さく */
 function ssAng(j,now){return Math.sin(now/1000*1.8+j)*(toyUsers(j).length?.28:.12)}
 /* 遊具で遊ぶ子の位置（足もと）。おもちゃの絵に合わせて動く */
-function toyPose(r,now){const a=toyR(r);if(!a)return null;const j=a.obj,X=(j%W)*TS,Y=((j/W)|0)*TS,us=toyUsers(j),k=Math.max(0,us.indexOf(r)),T=now/1000;
+function toyPose(r,now){const p=toyPose0(r,now);if(!p)return p;const a=toyR(r),j=a.obj,t=ROTS[a.what],rv=rotAt(j);if(t===1&&rv){const fw=((szR(a.what,0)||[1,1])[0])*TS,X=(j%W)*TS;p.x=2*X+fw-p.x;r.face=-r.face}return p}/* 左右反転した遊具では、遊ぶ位置も反転 */
+function toyPose0(r,now){const a=toyR(r);if(!a)return null;const j=a.obj,X=(j%W)*TS,Y=((j/W)|0)*TS,us=toyUsers(j),k=Math.max(0,us.indexOf(r)),T=now/1000;
   if(a.what==='swing'){const g=PSPR.swing,h=g&&g.ok?38*g.h/g.w:30,sc=38/80,d=swAng(j,now),sv=30-h+48*sc+d*6;r.face=1;return{x:X+16,y:Y+31+(sv-31)*1.5+4,z:Y/TS+1.05}}
   if(a.what==='seesaw'){const sg=us.length>1?(k?1:-1):(r.x<X+16?-1:1)*(TS/TS),an=ssAng(j,now),X0=X+16,Y0=Y+9;r.face=-sg;return{x:X0+Math.cos(an)*sg*22+Math.sin(an)*5,y:Y0+Math.sin(an)*sg*22-Math.cos(an)*5+5,z:Y/TS+1.05}}
-  if(a.what==='sandbox'){const cx=X+32,o=[-15,15,0][k%3];r.face=o>0?-1:1;return{x:cx+o,y:Y+26-Math.abs(Math.sin(T*5+k))*1.5,z:Y/TS+1.05}}
+  if(a.what==='sandbox'){const o=[-15,15,0][k%3];if(rotAt(j)===1){r.face=k%2?-1:1;return{x:X+16+(k===2?0:(k?6:-6)),y:Y+32+o+8-Math.abs(Math.sin(T*5+k))*1.5,z:Y/TS+1.05+(o+16)/TS}}/* 縦の砂場では、たてにならぶ */const cx=X+32;r.face=o>0?-1:1;return{x:cx+o,y:Y+26-Math.abs(Math.sin(T*5+k))*1.5,z:Y/TS+1.05}}
   if(a.what==='slide'){const p=(T*.45+k*.5)%1;let x,y,f=1;
     if(p<.35){const q=p/.35;x=X+16;y=Y+60-q*46;f=1}
     else if(p<.42){x=X+16+(p-.35)/.07*15;y=Y+14}
@@ -2203,7 +2211,7 @@ function sevActors(L){return [...new Set(L.map(l=>l[0]).filter(n=>n&&n!==GOD&&n!
 function sevAvailable(r){return !r.hidden&&r.hunger>=30&&r.energy>=10&&!onHold(r)&&!HOLD.has(r.id)&&!(r.spawnT&&performance.now()-r.spawnT<1300)&&!(r.act&&['eat','fetch','forage','flee','faint','sleep','questjoy','store'].includes(r.act.type))&&!(r.toStor&&carryN(r)>0)&&!(r.act&&r.act.stage==='walk'&&!['wander','idle','sevreact'].includes(r.act.type)&&r.path&&r.path.length>8)&&!r.cing/* 荷物をしまう・作業に向かう道のり・料理の途中は、ピンクの会話に呼ばない（着くまぎわなら、いい） */}
 function sevTargetAlive(t){return t.obj!=null?S.obj[t.obj]===t.id:S.res.some(r=>r.name===t.who&&!r.hidden)}
 function sevClose(r,t){const dx=Math.max(t.x-r.x,0,r.x-(t.x+t.w)),dy=Math.max(t.y-r.y,0,r.y-(t.y+t.h));return Math.hypot(dx,dy)<=1.05}
-function sevTargets(e,actors){const ids=SEV_OBJECTS[e.k],lead=actors[0];if(ids){const found=[],recent=QUEST_PLACEMENTS.get(S);for(let j=0;j<S.obj.length;j++){const id=S.obj[j];if(!ids.includes(id))continue;if(e.k==='e21'&&isBud(j))continue;const b=BL[id],z=b&&b.sz||[1,1],last=recent&&recent.get(j);found.push({obj:j,id,x:j%W,y:(j/W)|0,w:z[0],h:z[1],score:(last&&last.id===id?last.n*100000:0)-Math.hypot(j%W+.5-lead.x,(j/W|0)+.5-lead.y)})}return found.sort((a,b)=>b.score-a.score)}
+function sevTargets(e,actors){const ids=SEV_OBJECTS[e.k],lead=actors[0];if(ids){const found=[],recent=QUEST_PLACEMENTS.get(S);for(let j=0;j<S.obj.length;j++){const id=S.obj[j];if(!ids.includes(id))continue;if(e.k==='e21'&&isBud(j))continue;const b=BL[id],z=b&&szAt(id,j)||[1,1],last=recent&&recent.get(j);found.push({obj:j,id,x:j%W,y:(j/W)|0,w:z[0],h:z[1],score:(last&&last.id===id?last.n*100000:0)-Math.hypot(j%W+.5-lead.x,(j/W|0)+.5-lead.y)})}return found.sort((a,b)=>b.score-a.score)}
   const n=SEV_CHARACTERS[e.k]&&sevName(SEV_CHARACTERS[e.k]),anchor=actors.find(r=>r.name===n)||actors[1]||lead;return anchor?[{who:anchor.name,x:anchor.x|0,y:anchor.y|0,w:1,h:1}]:[];
 }
 function sevCancel(enc,skip,retry=true){if(!enc||SEV_ENCOUNTERS.get(S)!==enc)return;SEV_ENCOUNTERS.delete(S);if(retry){let m=SEV_RETRY.get(S);if(!m){m={};SEV_RETRY.set(S,m)}m[enc.k]=S.t+5}for(const r of enc.actors)if(r!==skip&&r.act&&r.act.type==='sevreact'&&r.act.sevKey===enc.k)endAct(r);SEVW={}}
@@ -2331,14 +2339,14 @@ function queueQuestVisit(q,who,partIds,partKey){const ids=partIds||(q.k?QUEST_VI
 function settleQuestVisit(r,a){const waits=[];if(QUEST_CLEAR_WAIT&&QUEST_CLEAR_WAIT.r===r&&QUEST_CLEAR_WAIT.obj===a.obj)waits.push(QUEST_CLEAR_WAIT);for(const k in SUB_CLEAR_WAIT){const w=SUB_CLEAR_WAIT[k];if(w&&w.r===r&&w.obj===a.obj)waits.push(w)}if(a.partKey&&a.joyAt==null&&S.obj[a.obj]===a.targetId){const list=QUEST_VISITS.get(r)||[];if(!list.some(v=>v.partKey===a.partKey))list.push({obj:a.obj,id:a.targetId,partKey:a.partKey});QUEST_VISITS.set(r,list)}if(!waits.length)return;const arrived=a.joyUntil!=null&&performance.now()>=a.joyUntil&&S.obj[a.obj]===a.targetId;
   for(const w of waits){if(arrived){w.done=true;if(w===QUEST_CLEAR_WAIT&&S.qStory===w.quest)QUEST_CLEAR_WAIT=null;continue}if(S.obj[a.obj]===a.targetId){const list=QUEST_VISITS.get(r)||[];if(!list.some(v=>v.obj===a.obj&&v.id===a.targetId))list.unshift({obj:a.obj,id:a.targetId});QUEST_VISITS.set(r,list)}else if(w===QUEST_CLEAR_WAIT)QUEST_CLEAR_WAIT=null;else for(const k in SUB_CLEAR_WAIT)if(SUB_CLEAR_WAIT[k]===w)delete SUB_CLEAR_WAIT[k]}}
 function questVisitSafe(r,j){return !S.enemies.some(e=>e.spawned&&!e.dead&&!e.flee&&(Math.hypot(e.x-r.x,e.y-r.y)<8||Math.hypot(e.x-(j%W+.5),e.y-((j/W|0)+.5))<8))}
-function questVisitStand(r,G,j){const b=BL[S.obj[j]],z=b&&b.sz||[1,1],x=j%W,y=(j/W)|0,occupied=occTiles(r);let stand=-1,best=Infinity;
+function questVisitStand(r,G,j){const b=BL[S.obj[j]],z=b&&szAt(S.obj[j],j)||[1,1],x=j%W,y=(j/W)|0,occupied=occTiles(r);let stand=-1,best=Infinity;
   for(let yy=Math.max(0,y-1);yy<=Math.min(H-1,y+z[1]);yy++)for(let xx=Math.max(0,x-1);xx<=Math.min(W-1,x+z[0]);xx++){
     if(xx>=x&&xx<x+z[0]&&yy>=y&&yy<y+z[1])continue;
     const k=yy*W+xx,d=G.dist[k];if(d<0||!walk(k)||occupied.has(k))continue;const score=d*10-Math.min(1,yy-y)*.1;if(score<best){best=score;stand=k}}
   return stand;
 }
-function questVisitReached(r,j){const b=BL[S.obj[j]],z=b&&b.sz||[1,1],x=j%W,y=(j/W)|0,dx=Math.max(x-r.x,0,r.x-(x+z[0])),dy=Math.max(y-r.y,0,r.y-(y+z[1]));return Math.hypot(dx,dy)<=1.05}
-function questVisitOpen(G,j){const b=BL[S.obj[j]],z=b&&b.sz||[1,1],x=j%W,y=(j/W)|0;for(let yy=Math.max(0,y-1);yy<=Math.min(H-1,y+z[1]);yy++)for(let xx=Math.max(0,x-1);xx<=Math.min(W-1,x+z[0]);xx++){const k=yy*W+xx;if(G.dist[k]>=0&&walk(k))return true}return false}/* まわりに、歩いて行けるマスがあるか */
+function questVisitReached(r,j){const b=BL[S.obj[j]],z=b&&szAt(S.obj[j],j)||[1,1],x=j%W,y=(j/W)|0,dx=Math.max(x-r.x,0,r.x-(x+z[0])),dy=Math.max(y-r.y,0,r.y-(y+z[1]));return Math.hypot(dx,dy)<=1.05}
+function questVisitOpen(G,j){const b=BL[S.obj[j]],z=b&&szAt(S.obj[j],j)||[1,1],x=j%W,y=(j/W)|0;for(let yy=Math.max(0,y-1);yy<=Math.min(H-1,y+z[1]);yy++)for(let xx=Math.max(0,x-1);xx<=Math.min(W-1,x+z[0]);xx++){const k=yy*W+xx;if(G.dist[k]>=0&&walk(k))return true}return false}/* まわりに、歩いて行けるマスがあるか */
 function questVisitGiveUp(r,j){/* 柵でかこまれているなどで見にいけないときは、見にいったことにして、クエストを進める */if(QUEST_CLEAR_WAIT&&QUEST_CLEAR_WAIT.r===r&&QUEST_CLEAR_WAIT.obj===j){QUEST_CLEAR_WAIT.done=true;if(S.qStory===QUEST_CLEAR_WAIT.quest)QUEST_CLEAR_WAIT=null}for(const k in SUB_CLEAR_WAIT){const w=SUB_CLEAR_WAIT[k];if(w&&w.r===r&&w.obj===j)w.done=true}try{checkQuest()}catch(e){}}
 function tryQuestVisit(r){const list=QUEST_VISITS.get(r);if(!list||!list.length||r.act&&r.act.type==='questjoy')return false;
   const v=list[0];if(S.obj[v.obj]!==v.id){list.shift();return false}
@@ -2461,13 +2469,13 @@ function place(id,x,y){
   }else{
     if(inv(id)<=0){toast(b.name+'が足りません','warn');return}/* 足りないときは、知らせるだけ（おそなえ箱は開かない） */
     const prevFloor=b.floor?S.floor[j]:'';undoStack.push({j,prevFloor,id});
+    if(ROTS[id]){const R=S.rot||(S.rot={}),v=PLROTS[id]||0;if(v)R[j]=v;else delete R[j]}/* 置くときにえらんだ向き（大きさの計算より先に） */
     S.inv[id]--;if(prevFloor)giveItem(prevFloor,1);
-    if(RUGS.has(id)&&S.obj[j]&&!RUGS.has(S.obj[j]))(S.rug||(S.rug={}))[j]=id;/* 家具の下にラグを敷く */
-    else{if(!RUGS.has(id)&&b.kind==='furn')for(const[a,c]of(b.sz?fp(id,x,y):[[x,y]])){const k=c*W+a;if(RUGS.has(S.obj[k])){(S.rug||(S.rug={}))[k]=S.obj[k];S.obj[k]=''}}/* ラグの上に家具を置く：ラグは下の層へ */
+    if(RUGS.has(id)&&S.obj[j]&&!RUGS.has(S.obj[j])){(S.rug||(S.rug={}))[j]=id;const RR=S.rugRot||(S.rugRot={});if(PLROTS[id])RR[j]=PLROTS[id];else delete RR[j];if(S.rot&&S.obj[j]!==id){/* 家具の向きはそのまま */}}/* 家具の下にラグを敷く */
+    else{if(!RUGS.has(id)&&b.kind==='furn')for(const[a,c]of(b.sz?fp(id,x,y):[[x,y]])){const k=c*W+a;if(RUGS.has(S.obj[k])){(S.rug||(S.rug={}))[k]=S.obj[k];if(S.rot&&S.rot[k]){(S.rugRot||(S.rugRot={}))[k]=S.rot[k];delete S.rot[k]}S.obj[k]=''}}/* ラグの上に家具を置く：ラグは下の層へ */
     setBlock(id,j)}
   }
   if(undoStack.length>30)undoStack.shift();
-  if(b.kind==='furn'&&!b.trap&&!WALLD.has(id)){const R=S.rot||(S.rot={});const sq=(b.sz||[1,1])[0]===(b.sz||[1,1])[1];const v=PLROT===2||PLROT===4?(sq?PLROT:0):PLROT;if(v)R[j]=v;else delete R[j]}/* 置くときにえらんだ向き */
   S.placed[id]=(S.placed[id]||0)+1;recount();if(S.obj[j]===id)noteQuestPlacement(id,j);burst(j,b.kind==='block'?'block':b.kind==='plant'?'plant':'furn',b.kind==='furn'?'furnPlace':b.kind==='plant'?'pat':null);if(SEATS.includes(id)&&spotW(j)>=0)addFloat(j%W+.5,(j/W|0)-.3,'つりスポット！');renderPalette();checkQuest();
   if(id==='door'){const w=houseWhy(j);if(w)setTimeout(()=>toast(w,'warn'),400);else if(HOUSES.some(h=>h.set.has(j)))setTimeout(()=>toast('家ができた！','good'),400)}/* ドアを置いたら、家になったかを知らせる */
 }
@@ -2521,7 +2529,7 @@ function askBulk(id,cells){
   if(b.kind==='plant'){const n=Math.min(ok.length,inv(id));if(!n)return toast(iname(id)+'がおそなえ箱にありません');ok.length=n;pending={kind:'plant',id,cells:ok};$('#confirmTxt').textContent=iname(id)+'を'+n+'か所に植えてもらう';$('#cYes').disabled=false}
   else{const s=shortCost({[id]:ok.length});if(b.qty){const n=Math.min(ok.length,inv(id));if(!n)return toast(b.name+'が足りません','warn');ok.length=n;s.cost=0;s.parts=[]}
     pending={kind:'bulk',id,cells:ok,cost:s.cost,need:{[id]:ok.length}};$('#confirmTxt').textContent=b.name+' '+ok.length+'マス'+(s.parts.length?'（足りない'+s.parts.join('・')+'は'+SP(s.cost)+'で）':'（おそなえ箱から）');$('#cYes').disabled=S.pt<s.cost}
-  $('#confirm').hidden=false;
+  ($('#cRot').hidden=!(pending&&pending.kind==='one'&&ROTS[pending.id]),$('#confirm').hidden=false);
 }
 function askStamp(sid,x,y){
   const st=STAMPS[sid];const lock=st.cells.map(c=>c[2]).filter(id=>!S.unlocked[id]);
@@ -2530,8 +2538,10 @@ function askStamp(sid,x,y){
   const need={};for(const c of st.cells)need[c[2]]=(need[c[2]]||0)+1;
   const s=shortCost(need);if(!isFinite(s.cost))return toast(s.parts.join('・')+'足りません','warn');s.cost=Math.ceil(s.cost*.8);
   pending={kind:'stamp',sid,x,y,cost:s.cost,need};
-  $('#confirmTxt').textContent=st.name+(s.parts.length?'（足りない分は'+SP(s.cost)+'で）':'（おそなえ箱から）');$('#cYes').disabled=S.pt<s.cost;$('#confirm').hidden=false;
+  $('#confirmTxt').textContent=st.name+(s.parts.length?'（足りない分は'+SP(s.cost)+'で）':'（おそなえ箱から）');$('#cYes').disabled=S.pt<s.cost;($('#cRot').hidden=!(pending&&pending.kind==='one'&&ROTS[pending.id]),$('#confirm').hidden=false);
 }
+function confirmOne(){const p=pending;if(!p||p.kind!=='one')return;const rb=$('#cRot'),rt=ROTS[p.id];rb.hidden=!rt;const lb=rt?'（'+ROTL[rt][PLROTS[p.id]||0]+'）':'';$('#confirmTxt').textContent=p.ok?BL[p.id].name+lb+'をここに置く？':'ここには置けません'+lb;$('#cYes').disabled=!p.ok}
+function rotPending(){const p=pending;if(!p||p.kind!=='one'||!ROTS[p.id])return;PLROTS[p.id]=((PLROTS[p.id]||0)+1)%ROTN(p.id);p.ok=canPlace(p.id,p.x,p.y,true);sfx('tap');confirmOne();dirty=true}/* ↻：置く前に向きをかえる */
 function confirmYes(){
   if(pending&&nightLock()){pending=null;$('#confirm').hidden=true;selRect=null;return toast('夜のあいだは、置くことも、こわすこともできません')}
   if(!pending)return;const p=pending;pending=null;$('#confirm').hidden=true;selRect=null;
@@ -2984,9 +2994,12 @@ function drawSection(c,ox,oy,rs){/* 断面（壁・柱のてっぺん）：形�
     put('#7f5c3d',false);put('#a77f5a',true);SEC.cache.set(key,sp)}
   c.drawImage(sp,X,Y)}
 /* ドット絵（chips.js）：ある物は、プログラムの絵のかわりにこれを使う。1ドット＝ゲームの1（ぼかさない） */
-function chipOf(id,i){const C=window.CHIPS;if(!C)return null;const L=(id==='watch'||id==='yogan')&&i!=null&&S&&S.hp?(S.hp['L'+i]||1):1;return C[L>1?id+'@'+L:id]||C[id]||null}
+function chipOf(id,i,rot){const C=window.CHIPS;if(!C)return null;const L=(id==='watch'||id==='yogan')&&i!=null&&S&&S.hp?(S.hp['L'+i]||1):1;let ch=C[L>1?id+'@'+L:id]||C[id]||null;
+  const t=ROTS[id];if(!t)return ch;const r=rot!=null?rot:i==null||!S?0:RUGS.has(id)&&S.rug&&S.rug[i]===id&&S.obj[i]!==id?((S.rugRot||{})[i]||0):S.obj[i]===id?rotAt(i):0;if(!r)return ch;
+  let fl=false;if(t===1)fl=true;else if(C[id+'>'+r])ch=C[id+'>'+r];else if(t===4&&r===3&&C[id+'>1']){ch=C[id+'>1'];fl=true}
+  if(!ch||!fl)return ch;const fw=((szR(id,r)||[1,1])[0])*32;return ch._fl&&ch._fl.fw===fw?ch._fl:(ch._fl={src:ch,ax:ch.ax,ay:ch.ay,w:ch.w,h:ch.h,f:ch.f,flip:1,fw})}/* 向きのある家具は「id>向き」の絵。左向きは右向きの反転。左右反転だけの物は、もとの絵を反転 */
 function chipImgs(ch,id){if(!ch._im)ch._im=ch.f.map(u=>{const im=new Image();im.onload=()=>{im.ok=1;dirty=true;try{delete iconCache[id]}catch(e){}};im.src=u;return im});return ch._im}
-function drawChip(c,ch,id,x,y,now){const ims=chipImgs(ch,id),n=ims.length,im=ims[n>1?Math.floor((now||performance.now())/180)%n:0];if(!im.ok)return false;const sm=c.imageSmoothingEnabled;c.imageSmoothingEnabled=false;c.drawImage(im,x+ch.ax,y+ch.ay);c.imageSmoothingEnabled=sm;return true}
+function drawChip(c,ch,id,x,y,now){const ims=chipImgs(ch.src||ch,id),n=ims.length,im=ims[n>1?Math.floor((now||performance.now())/180)%n:0];if(!im.ok)return false;const sm=c.imageSmoothingEnabled;c.imageSmoothingEnabled=false;if(ch.flip){c.save();c.translate(x+ch.fw,0);c.scale(-1,1);c.drawImage(im,ch.ax,y+ch.ay);c.restore()}else c.drawImage(im,x+ch.ax,y+ch.ay);c.imageSmoothingEnabled=sm;return true}
 if(window.CHIPS)for(const k in window.CHIPS)chipImgs(window.CHIPS[k],k.split('@')[0]);/* はじめに読みこんでおく */
 function drawObj(c,id,x,y,i,g,now){
   if(!c._chip&&!c._win&&!SEATS.includes(id)){const ch=chipOf(id,i);if(ch&&drawChip(c,ch,id,x,y,now))return}/* ドット絵があれば、それを使う（いすは、つりざおをかいてから下で） */
@@ -3721,7 +3734,7 @@ const forageAnim=r=>{const t=r.act.t||0;return t<2?'pluck':t<3.5?'hold':'eat'};
 function drawRes0(r,now){
   if(r.hidden&&!peekH(r))return;
   const sleeping=r.act&&r.act.type==='sleep'&&r.act.stage==='do',bedJ=sleeping&&r.act.obj!=null&&S.obj[r.act.obj]==='bed'&&BEDSPR.ok?r.act.obj:-1,benchJ=r.act&&r.act.type==='rest'&&r.act.stage==='do'&&S.obj[r.act.obj]==='bench'?(r.act.seat??r.act.obj):-1;/* ベンチではすわって見える *//* ベッドで眠るときは、まくらに頭をのせて、ふとんをかける */
-  let sj=bedJ>=0?bedJ:benchJ,px=sj>=0?(sj%W+.5)*TS:r.x*TS,py=bedJ>=0?(((bedJ/W)|0)+.5)*TS+2:benchJ>=0?(((benchJ/W)|0)+.5)*TS+1:r.y*TS;const talking=DLGA.who===r.name&&!(DLGEL||(DLGEL=$('#dialog'))).hidden,walking=!talking&&r.act&&(r.act.stage==='walk'&&r.path.length>0||r.act.type==='tag');/* 話しているときはこっちを向く */
+  const bedH=bedJ>=0&&rotAt(bedJ)===1;/* 横に置いたベッド */let sj=bedJ>=0?bedJ:benchJ,px=bedH?(bedJ%W)*TS+BEDHX:sj>=0?(sj%W+.5)*TS:r.x*TS,py=bedH?((bedJ/W)|0)*TS+BEDHY:bedJ>=0?(((bedJ/W)|0)+.5)*TS+2:benchJ>=0?(((benchJ/W)|0)+.5)*TS+1:r.y*TS;const talking=DLGA.who===r.name&&!(DLGEL||(DLGEL=$('#dialog'))).hidden,walking=!talking&&r.act&&(r.act.stage==='walk'&&r.path.length>0||r.act.type==='tag');/* 話しているときはこっちを向く */
   const working=!onHold(r)&&r.act&&r.act.stage==='do'&&['till','sow','plant','build','craft','water','tend','repair','harvest','gather','chop','mine','cook'].includes(r.act.type);
   if(!SPV.has(r))SPV.set(r,{x:r.x,y:r.y,back:false,turn:0,bl:now+2000+Math.random()*3000});const v=SPV.get(r),dx=r.x-v.x,dy=r.y-v.y;
   if(!walking){v.back=false;v.turn=r.act&&r.act.stage==='do'&&(r.act.type==='chop'||r.act.type==='mine')&&!objBelow(r)?1:0}/* 木・岩は横向きで、そちらを向いて切る */else if(Math.abs(dx)+Math.abs(dy)>.002){const ax=Math.abs(dx),ay=Math.abs(dy);v.turn=ax>ay*1.2?1:0;v.back=!v.turn&&dy<0}v.x=r.x;v.y=r.y;
@@ -3741,13 +3754,14 @@ function drawRes0(r,now){
     ctx.fillStyle='#c9935f';rr(ctx,mx-12,my-9,24,4.5,1.5);ctx.fillStyle='#b9824f';rr(ctx,mx-11,my-13,20,4,1.5);ctx.fillStyle='rgba(255,255,255,.25)';ctx.fillRect(mx-10,my-12.6,17,1);
     if(o&&o.type&&BL[o.type].mat&&BL[o.type].mat.stone){circ(ctx,mx+9,my-10,3.4,'#a3a6ae');circ(ctx,mx+8,my-11,1.4,'#d4d5da')}}
   ctx.save();// 発熱対策：ぼかし影はなし
+  if(bedH){ctx.translate(px,fy);ctx.rotate(-Math.PI/2);ctx.translate(-px,-fy)}/* 横のベッドでは、頭をまくら（左）にして横になる */
   if(wade){ctx.beginPath();ctx.rect(px-40,fy-90,80,tubB?Math.max(0,fy+(((r.act.tub/W)|0)*TS+17-fy)*wade-(fy-90)):90-wade*11);ctx.clip()}
   const ci0=carryIcon(r),an=r.act&&r.act.stage==='do'&&!sleeping&&!onHold(r)?(r.act.type==='bathe'&&r.act.tub!=null?'tubbath':r.act.type):'';const joy=(JOYU.get(r)||0)>now&&!sleeping,clap=(CLAPON||now-CLAPT<3200||joy)&&!sleeping,wv=!clap&&!sleeping&&(r.waveU||0)>S.t,facePlayer=!$('#dialog').hidden&&DLGN.has(r.name)&&!clap&&!sleeping;/* 会話中は話し手がこちらを向く */const pk=(()=>{const sw=Math.max(r.swing||0,r.swingT||0),sd=now-sw;return sw&&sd>=0&&sd<420&&!clap&&!sleeping?sd/420:null})();drawSpirit(ctx,r.elem,px,fy,.435,clap?1:r.face<0?-1:1,{t:tt,vr:r.vr,banzai:held,pp:pk,anim:pk!=null?'punch':clap?'clap':wv?'wave':reacting?({shock:'talkshock',think:'talkthink',sad:'talksad',nod:'talk'}[rm]||(an==='forage'?forageAnim(r):an)):(an==='forage'?forageAnim(r):an),food:(an==='eat'||an==='forage'&&r.act.t>=2)&&!clap?(r.act.e||'🍙'):'',/* ベリーを直接とって食べるときも、手に持って食べる */carry:!!ci0&&!clap&&an!=='pray',back:clap||wv||facePlayer?false:v.back,turn:clap||wv||facePlayer?0:v.turn,mood,walk:walking,work:working,sleep:sleeping,bed:bedJ>=0,blink:now>v.bl,lean:rp?rp.angle:sleeping?Math.sin(tt*.8)*.06:0});ctx.restore();
   if(lvR>=5&&!sleeping&&!wade){const n=Math.min(6,Math.floor(lvR/5));for(let i=0;i<n;i++){const SL=LVSLOT[i],bx=px+SL[0]+Math.cos(now/900+i*2.1+r.id)*1.5,by=fy+SL[1]+Math.sin(now/700+i*1.7+r.id)*2.6;lvCharm(ctx,r.elem,bx,by,now/1000+i+r.id)}}/* Lv5ごとに1つ、属性の小物がまわりにふわふわ浮かぶ（顔や体にはかさねない） */
   if(r.shine&&now>=r.shine&&now-r.shine<3500&&!wade){const e=(now-r.shine)/3500;for(let i=0;i<6;i++){const SP=SHINE[i],tw=Math.sin(now/160+i*1.9),k=Math.max(0,(.55+.45*tw)*(e>.75?(1-e)/.25:1));if(k>0)star4(ctx,px+SP[0],fy+SP[1]-e*8,SP[2]*k)}}/* 水浴びのあと：キラキラ */
   if(tubB){const wl=((r.act.tub/W)|0)*TS+17;ctx.fillStyle='rgba(255,255,255,.85)';for(let k=0;k<5;k++){const bx=px-9+k*4.5+Math.sin(now/700+k*1.7)*1.2,ph=(now/1400+k*.23+r.id)%1;ctx.globalAlpha=.55+.4*Math.sin(now/500+k);ctx.beginPath();ctx.arc(bx,wl+.5-Math.sin(ph*Math.PI)*.8,1.7+((k*7)%3)*.45,0,7);ctx.fill()}ctx.globalAlpha=1}/* 湯ぶねのあわ */
   else if(wade){const wl=fy-wade*11,rp=(now/900+r.id)%1;ctx.strokeStyle='rgba(255,255,255,.75)';ctx.lineWidth=1.6;ctx.beginPath();ctx.ellipse(px,wl,11+rp*6,3+rp*1.5,0,0,7);ctx.globalAlpha=1-rp*.8;ctx.stroke();ctx.globalAlpha=1;ctx.strokeStyle='rgba(255,255,255,.9)';ctx.beginPath();ctx.ellipse(px,wl,10,2.6,0,0,7);ctx.stroke()}/* 水面の波紋 */
-  if(bedJ>=0){const bx=(bedJ%W)*TS,byy=((bedJ/W)|0)*TS,bh=32*BEDSPR.h/BEDSPR.w;ctx.save();ctx.beginPath();ctx.rect(bx-1,byy+13,TS+2,TS);ctx.clip();ctx.drawImage(BEDSPR.img,bx,byy+32-bh,32,bh);ctx.restore()}/* ふとん（ベッドの下半分）を上からかける */
+  if(bedJ>=0){const bx=(bedJ%W)*TS,byy=((bedJ/W)|0)*TS,bh=32*BEDSPR.h/BEDSPR.w,ch=chipOf('bed',bedJ);ctx.save();ctx.beginPath();if(bedH)ctx.rect(bx+BEDHC,byy-8,TS+4,TS+8);else ctx.rect(bx-1,byy+13,TS+2,TS);ctx.clip();if(!(ch&&drawChip(ctx,ch,'bed',bx,byy,now)))ctx.drawImage(BEDSPR.img,bx,byy+32-bh,32,bh);ctx.restore()}/* ふとん（ベッドの下半分）を上からかける */
   /* ベンチは1つの物として、すわった子の後ろにまとめて描く */
   const by=fy-27;
   const ci=carryIcon(r);
@@ -3972,7 +3986,7 @@ const GLW=document.createElement('canvas'),glx=GLW.getContext('2d');let GLWN=0;
 const EOC=document.createElement('canvas'),EOS=document.createElement('canvas'),eox=EOC.getContext('2d'),eos=EOS.getContext('2d');
 function enemyHidden(e,x0,y0,x1,y1){const ex=e.x|0,ey=e.y|0;
   for(let dy=0;dy<=4;dy++)for(let dx=-3;dx<=3;dx++){const x=ex+dx,y=ey+dy;if(x<0||y<0||x>=W||y>=H)continue;const a=anc(y*W+x),o=S.obj[a];if(!o||o==='part'||FLAT.has(o)||!BL[o])continue;
-    const ay=(a/W)|0;if(ay<ey&&!(BL[o].sz&&ay+BL[o].sz[1]-1>=ey))continue;const b=objBox(o,a);if(b[0]<x1&&b[2]>x0&&b[1]<y1&&b[3]>y0&&(ay>ey||dy>0||TREES.has(o)||BIG2.has(o)||BL[o].kind==='build'))return true}
+    const ay=(a/W)|0;if(ay<ey&&!(BL[o].sz&&ay+szAt(o,a)[1]-1>=ey))continue;const b=objBox(o,a);if(b[0]<x1&&b[2]>x0&&b[1]<y1&&b[3]>y0&&(ay>ey||dy>0||TREES.has(o)||BIG2.has(o)||BL[o].kind==='build'))return true}
   for(const h of HOUSES)if(h.set.has(ey*W+ex)||h.set.has((ey+1)*W+ex))return true;return false}
 function drawEnemy(e,now){
   if(!e.spawned)return;const D=EN[e.type],z=D.size*2,px=e.x*TS,py=e.y*TS;
@@ -3998,12 +4012,12 @@ function drawEnemy(e,now){
 // 建てている足場の見た目の広さ（マス）。x0:左はし, w:はば, rows:足もとまでの行数, hf:高さの倍率
 function siteSpan(id){const b=BL[id];if(!b)return null;if(id==='statue')return{x0:-1,w:3,rows:1,hf:1.25};if(BIG2.has(id))return{x0:-.5,w:2,rows:1,hf:1.4};if(b.sz)return{x0:0,w:b.sz[0],rows:b.sz[1],hf:1};if(b.kind==='build')return{x0:-.2,w:1.4,rows:1,hf:1.1};return null}
 function objBox(o,j){if(o==='site'&&S.dyn[j]){const sp=siteSpan(S.dyn[j].build);if(sp){const x=j%W,y=(j/W)|0,L=x*TS+sp.x0*TS-4,Wd=sp.w*TS+8,B=(y+sp.rows)*TS+3;return[L,B-Wd*91/104*sp.hf-20,L+Wd,B]}}
-const x=j%W,y=(j/W)|0,b=BL[o],z=b.sz||[1,1],k=BIG2.has(o)?2:TREES.has(o)?2.25:(o==='stor'||o==='mbox')?1.25:BIG.has(o)?(BIGK[o]||1.5):1,tall=BIG2.has(o)||TREES.has(o)||b.kind==='build';
+const x=j%W,y=(j/W)|0,b=BL[o],z=szAt(o,j)||[1,1],k=BIG2.has(o)?2:TREES.has(o)?2.25:(o==='stor'||o==='mbox')?1.25:BIG.has(o)?(BIGK[o]||1.5):1,tall=BIG2.has(o)||TREES.has(o)||b.kind==='build';
   const cx=x*TS+16*z[0],by=(y+z[1])*TS+3,hw=Math.max(16*z[0]*k,tall?28:16)+6,ht=tall?150:b.kind==='block'?44:48*k*z[1]+8;return[cx-hw,by-ht,cx+hw,by]}
 const FLAT=new Set(['rug1','rug2','farm','plot','sprout','spike','puddle','sticky','firetrap','gust','crack']);/* 地面に近い物：その上に立つせいれいより下に描く */
 function objectDepth(o,j){const y=(j/W)|0;if(FLAT.has(o))return y+.02;if((o==='door'||o==='sdoor')&&HOUSES.some(h=>h.set.has(j)))return y+.3;/* 家のドアは、屋根より下の層 */
   const b=o==='site'&&S.dyn[j]&&BL[S.dyn[j].build]||BL[o];
-  return y+(b&&b.sz?b.sz[1]:1)+(o==='obox'?.01:0);
+  return y+(b&&b.sz?(o==='site'?b.sz[1]:szAt(o,j)[1]):1)+(o==='obox'?.01:0);
 }
 function render(now){
   if(dirty)rebuildStatic();
@@ -4038,7 +4052,7 @@ function render(now){
   if(mode==='build'&&sel&&BL[sel]&&!selRect&&!pending){const k=sel+'|'+S.placed[sel]+'|'+S.baseLv;if(BADC.k!==k||now-BADC.t>600){BADC.k=k;BADC.t=now;BADC.L=[];for(let j=0;j<W*H;j++){const x=j%W,y=(j/W)|0;if(inBase(x,y)&&!canPlace(sel,x,y,true))BADC.L.push(j)}}
     ctx.fillStyle='rgba(255,90,90,.16)';for(const j of BADC.L)ctx.fillRect((j%W)*TS,((j/W)|0)*TS,TS,TS)}/* 置くものをえらんでいるときは、置けないマスをうすい赤で */
   if(selRect){for(const[x,y]of rectCells(selRect.a,selRect.b)){ctx.fillStyle=canPlace(sel,x,y,true)?'rgba(255,220,90,.35)':'rgba(255,90,90,.3)';ctx.fillRect(x*TS,y*TS,TS,TS)}}
-  if(pending&&pending.kind==='one'){const z=BL[pending.id].sz||[1,1],px=pending.x*TS,py=pending.y*TS;ctx.fillStyle=pending.ok?'rgba(255,220,90,.3)':'rgba(255,90,90,.35)';const TP=pending.id==='statue'?[[-1,0,'obox'],[0,0,'statue'],[1,0,'board'],[0,1,'altar']]:[[0,0,pending.id]];if(TP.length>1)for(const[dx,dy]of TP)ctx.fillRect(px+dx*TS,py+dy*TS,TS,TS);else ctx.fillRect(px,py,z[0]*TS,z[1]*TS);
+  if(pending&&pending.kind==='one'){const z=szR(pending.id,PLROTS[pending.id]||0)||[1,1],px=pending.x*TS,py=pending.y*TS;if(ROTS[pending.id]){const ch=chipOf(pending.id,null,PLROTS[pending.id]||0);if(ch){ctx.save();ctx.globalAlpha=.75;drawChip(ctx,ch,pending.id,px,py,performance.now());ctx.restore()}}/* 置く前に、えらんだ向きの絵をうすく見せる */ctx.fillStyle=pending.ok?'rgba(255,220,90,.3)':'rgba(255,90,90,.35)';const TP=pending.id==='statue'?[[-1,0,'obox'],[0,0,'statue'],[1,0,'board'],[0,1,'altar']]:[[0,0,pending.id]];if(TP.length>1)for(const[dx,dy]of TP)ctx.fillRect(px+dx*TS,py+dy*TS,TS,TS);else ctx.fillRect(px,py,z[0]*TS,z[1]*TS);
     ctx.strokeStyle=pending.ok?'rgba(255,230,120,.95)':'rgba(255,110,110,.95)';ctx.lineWidth=2;ctx.setLineDash([5,4]);if(TP.length>1)for(const[dx,dy]of TP)ctx.strokeRect(px+dx*TS+1,py+dy*TS+1,TS-2,TS-2);else ctx.strokeRect(px+1,py+1,z[0]*TS-2,z[1]*TS-2);ctx.setLineDash([])}
   if(pending&&pending.kind==='stamp'){for(const[dx,dy]of STAMPS[pending.sid].cells){ctx.fillStyle='rgba(255,220,90,.4)';ctx.fillRect((pending.x+dx)*TS,(pending.y+dy)*TS,TS,TS)}}
   if(S.broken)for(const b of S.broken){if(S.obj[b.j])continue;const bx=(b.j%W)*TS,by=((b.j/W)|0)*TS,bz=(BL[b.id]&&BL[b.id].sz)||[1,1];ctx.save();ctx.setLineDash([4,3]);ctx.strokeStyle='rgba(255,230,180,.55)';ctx.lineWidth=2;ctx.strokeRect(bx+3,by+3,bz[0]*TS-6,bz[1]*TS-6);ctx.restore()}/* こわれた見張り台は、4マスぶんの枠 */
@@ -4061,7 +4075,7 @@ function render(now){
   const occ=[],occM=new Map(),roofedS=new Set();for(const h of HOUSES)if(!OPENH.has(hKey(h))){for(const j of h.set)roofedS.add(j);for(const j of h.inside)roofedS.add(j)}/* 屋根をかけた家の壁・中の物は、屋根の下。描き直して屋根の上に出さない */
   for(const A of D){const[bx0,by0,bx1,by1]=A.box;const cx0=Math.max(0,Math.floor(bx0/TS)-3),cx1=Math.min(W-1,Math.floor(bx1/TS)+3),ry0=Math.max(0,Math.floor(A.k)-1),ry1=Math.min(H-1,Math.floor(A.k)+6);
     for(let y=ry0;y<=ry1;y++)for(let x=cx0;x<=cx1;x++){const j=y*W+x,o=S.obj[j];if(!o||o==='part'||!BL[o]||FLAT.has(o)||BL[o].floor||BL[o].dyn||BL[o].anim||TREES.has(o)||S.ground[j]===1)continue;if(A.hs&&A.hs.has(j))continue;if(roofedS.has(j))continue;if(j===A.own&&!(TREES.has(o)||BIG2.has(o)||BL[o].kind==='build'))continue;/* 自分が乗っている低い物（いすなど）はとばす。木や神殿など背の高い物は、同じマスでも奥なら前に出す */
-      const z=BL[o].sz||[1,1],k=objectDepth(o,j);if(k<=A.k)continue;if(A.own>=0&&y+z[1]-1===((A.own/W)|0)&&(x+z[0]<=A.own%W||x>A.own%W)&&!(TREES.has(o)||BIG2.has(o)||BL[o].kind==='build'))continue;/* 同じ列のとなりのマスの物（ベッドなど）のはみ出しは、上にかぶせない */const b=objBox(o,j);if(b[2]<=bx0||b[0]>=bx1||b[3]<=by0||b[1]>=by1)continue;
+      const z=szAt(o,j)||[1,1],k=objectDepth(o,j);if(k<=A.k)continue;if(A.own>=0&&y+z[1]-1===((A.own/W)|0)&&(x+z[0]<=A.own%W||x>A.own%W)&&!(TREES.has(o)||BIG2.has(o)||BL[o].kind==='build'))continue;/* 同じ列のとなりのマスの物（ベッドなど）のはみ出しは、上にかぶせない */const b=objBox(o,j);if(b[2]<=bx0||b[0]>=bx1||b[3]<=by0||b[1]>=by1)continue;
       const cl=[Math.max(b[0],bx0),Math.max(b[1],by0),Math.min(b[2],bx1),Math.min(b[3],by1)];
       let oe=occM.get(j);if(!oe){oe={k,t:BL[o].kind==='block'?0:1,clips:[],draw:()=>{NOSH=true;try{drawObj(ctx,o,x*TS,y*TS,j)}finally{NOSH=false}}};occM.set(j,oe);occ.push(oe)}oe.clips.push(cl)}}/* 同じ物は1回だけ描き直す（重なる範囲をまとめて切りぬく） */
   for(const q of occ)D.push(q);
@@ -4218,7 +4232,7 @@ function onTap(sx,sy){
     return toast(REV.has(j)?'よみがえった土地':'荒れた土地。まわりに何か置くと、よみがえる');
   }
   if((mode==='build'||mode==='remove'||mode==='bulk')&&nightLock())return toast('夜のあいだは、置くことも、こわすこともできません');
-  if(mode==='build'){if(BL[sel]&&['furn','build','deco'].includes(BL[sel].kind)&&!BL[sel].trap){/* ワナは柵と同じで、タップするたびにそのまま置く */if(!usable(sel))return place(sel,tx,ty);const ok=canPlace(sel,tx,ty,true);pending={kind:'one',id:sel,x:tx,y:ty,ok};$('#confirmTxt').textContent=ok?BL[sel].name+'をここに置く？':'ここには置けません';$('#cYes').disabled=!ok;$('#confirm').hidden=false;sfx('tap');return}return place(sel,tx,ty)}
+  if(mode==='build'){if(BL[sel]&&['furn','build','deco'].includes(BL[sel].kind)&&!BL[sel].trap){/* ワナは柵と同じで、タップするたびにそのまま置く */if(!usable(sel))return place(sel,tx,ty);const ok=canPlace(sel,tx,ty,true);pending={kind:'one',id:sel,x:tx,y:ty,ok};confirmOne();($('#cRot').hidden=!(pending&&pending.kind==='one'&&ROTS[pending.id]),$('#confirm').hidden=false);sfx('tap');return}return place(sel,tx,ty)}
   if(mode==='remove')return removeAt(tx,ty);
   if(mode==='bulk'){if(selStamp)return askStamp(selStamp,tx,ty);if(!S.bulk)return toast('ひろびろハケは、カミサマと交換できます');return toast('ハケで、なぞった範囲をぬれます')}
 }
@@ -4967,7 +4981,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='381';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='382';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
@@ -5134,7 +5148,7 @@ $('#sheetX').onclick=closeSheet;$('#scrim').onclick=closeSheet;
 $('#questChip').onclick=()=>openSheet('menu','goal');/* 目標の一覧を直接ひらく */
 $('#speedBtn').onclick=()=>{if(!(hasGlass()||TESTM)){if(glassUnlocked())adPrompt();return}sfx('tap');S.speed=S.speed===1?2:S.speed===2&&TESTM?3:S.speed===3&&TESTM?5:1;/* 広告でできるのは2倍まで */glassUI()};
 $('#helpPop').onclick=()=>{sfx('tap');$('#helpPop').hidden=true};$('#undoBtn').onclick=undo;$('#palL').onclick=()=>$('#palItems').scrollBy({left:-$('#palItems').clientWidth*.7,behavior:'smooth'});$('#palR').onclick=()=>$('#palItems').scrollBy({left:$('#palItems').clientWidth*.7,behavior:'smooth'});$('#palItems').addEventListener('scroll',palArrows,{passive:true});
-$('#cYes').onclick=confirmYes;$('#cNo').onclick=()=>{pending=null;selRect=null;$('#confirm').hidden=true};
+$('#cYes').onclick=confirmYes;$('#cRot').onclick=e=>{e.stopPropagation();rotPending()};$('#cNo').onclick=()=>{pending=null;selRect=null;$('#confirm').hidden=true};
 
 /* ---------- 起動 ---------- */
 resize();
