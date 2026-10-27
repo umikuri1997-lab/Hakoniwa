@@ -4140,25 +4140,22 @@ for(const k in KGS){const g=KGS[k];g.img=new Image();g.img.onload=()=>{const cv=
 function atkLift(p){if(p<=0)return 0;if(p<.84)return Math.sin(p*40)*.04;if(p<.95)return (p-.84)/.11*2.7;if(p<.985)return 2.7-(p-.95)/.035*3.1;return -.4}
 function atkLean(p){return p>=.95&&p<1?.12:p>.84?-.08*(p-.84)/.11:0}
 const KGH={basic:100,fast:100,thief:100,brute:100,boss:118};
-// コワイノのドット絵：体・うで・道具（・ヨルノオオカゲの星とすそ）を、パーツのまま動かす。大きさは種類ごとの絵（どれも1ドット＝1）
+// コワイノのドット絵：モーション（待機・歩き・攻撃）ごとのコマを切りかえる。コマはたてにならべた1まいの絵（n＝コマ数）。大きさは種類ごとの絵（どれも1ドット＝1）
 const KGDOT={},KGDOK={};
 function kgDot(key,white){const ch=CHIPS[key],im=chipImgs(ch,key)[0];if(!white)return im;const k=key+'|w';if(KGDOT[k])return KGDOT[k];
-  const cv=document.createElement('canvas');cv.width=ch.w;cv.height=ch.h;const g=cv.getContext('2d');g.drawImage(im,0,0);g.globalCompositeOperation='source-in';g.fillStyle='#f4eefa';g.fillRect(0,0,ch.w,ch.h);return KGDOT[k]=cv}/* ひかったときは白いかげ */
+  const cv=document.createElement('canvas');cv.width=im.width;cv.height=im.height;const g=cv.getContext('2d');g.drawImage(im,0,0);g.globalCompositeOperation='source-in';g.fillStyle='#f4eefa';g.fillRect(0,0,cv.width,cv.height);return KGDOT[k]=cv}/* ひかったときは白いかげ */
 function drawShadeDot(c,ty,x,y,s,f,o){
-  const K='kg_'+ty+':';if(!window.CHIPS||!CHIPS[K+'body'])return false;
+  const K='kg_'+ty+':';if(!window.CHIPS||!CHIPS[K+'idle'])return false;
   if(!KGDOK[ty]){for(const k in CHIPS)if(k.startsWith(K)&&!chipImgs(CHIPS[k],k)[0].ok)return false;KGDOK[ty]=1}
-  const t=o.t||0,back=!!o.back,B=back?'B':'',wh=!!o.flash,sc=s/(.27*EN[ty].size*2);
-  const st=o.walk?Math.sin(t*10):0,bob=Math.round((o.walk?Math.abs(st)*3:Math.sin(t*3)*1.5)*s),lift=atkLift(o.atk||0),N2=ty==='boss2';
-  const spr=(key,X,Y)=>{const ch=CHIPS[key];if(ch)c.drawImage(kgDot(key,wh),(X||0)+ch.ax,(Y||0)+ch.ay)};
-  const sm=c.imageSmoothingEnabled;c.imageSmoothingEnabled=false;
-  c.save();c.translate(x,y);c.scale(sc*f,sc);c.translate(0,-bob);
-  for(let i=0;i<2;i++){const ch=CHIPS[K+'arm'+B+i];if(!ch)continue;/* うでは体のうしろから。ふだんは下ろして、歩くと前後にふる。攻撃のときはふりあげる */
-    const sd=ch.side,ang=wh?-.25:(N2?1.15:1.0)+(o.walk?sd*st*.45:Math.sin(t*2.2+sd)*.08)-lift;c.save();c.translate(ch.px,ch.py);c.scale(sd,1);c.rotate(ang);c.drawImage(kgDot(K+'arm'+B+i,wh),ch.ax,ch.ay);c.restore()}
-  spr(K+'body'+B);
-  if(N2){for(let k=0;k<4;k++)spr(K+'hem'+B+k,Math.round(Math.sin(t*2+k*1.3)*1.5*.6*s),0);/* すそが霧のようにゆれる */
-    if(!wh)for(let i=0;i<7;i++){const ch=CHIPS[K+'star'+i];c.globalAlpha=.4+.6*Math.abs(Math.sin(t*1.7+ch.ph));spr(K+'star'+i)}c.globalAlpha=1}/* 星がまたたく */
-  const tl=CHIPS[K+'tool'];if(tl&&!wh){c.save();c.translate(tl.px,tl.py);c.rotate(Math.sin(t*3)*.08);c.drawImage(kgDot(K+'tool'),tl.ax,tl.ay);c.restore()}/* カベクダキはハンマー、ワナクイは罠のあご */
-  c.restore();c.imageSmoothingEnabled=sm;return true}
+  const t=o.t||0,B=o.back?'B':'',p=o.atk||0,sc=s/(.27*EN[ty].size*2);
+  // どのモーションの、何コマ目か
+  let mo='idle',fi=Math.floor(t*1.6)%2;
+  if(o.walk){mo='walk';fi=Math.floor(t*7)%4}
+  else if(p>=.84){mo='atk';fi=p<.95?0:p<1?1:2}/* ふりかぶる → ふりおろす → もどる */
+  const ch=CHIPS[K+mo+B]||CHIPS[K+mo],key=CHIPS[K+mo+B]?K+mo+B:K+mo;fi=Math.min(fi,(ch.n||1)-1);
+  const sm=c.imageSmoothingEnabled;c.imageSmoothingEnabled=sc<.9;/* 図鑑などで小さく描くときだけ、なめらかに縮める */
+  c.save();c.translate(x,y);c.scale(sc*f,sc);c.drawImage(kgDot(key,!!o.flash),0,fi*ch.h,ch.w,ch.h,ch.ax,ch.ay,ch.w,ch.h);c.restore();
+  c.imageSmoothingEnabled=sm;return true}
 function drawShade(c,ty,x,y,s,f,o){const ty0=ty;
   if(o.dot&&drawShadeDot(c,ty,x,y,s,f,o))return;
   if(ty==='trapper'||ty==='rockc')ty='brute';else if(ty==='ash'||ty==='breaker')ty='basic';else if(ty==='hino'||ty==='yama')ty='boss';/* ワナクイは、カタカゲに似たとげとげの形（小さめ） */
@@ -5088,7 +5085,7 @@ function renderSheet(){
       const seen=S.seenEn||{},K=S.enKills||{},ks=Object.keys(EN).filter(k=>ZUKAN[k]);
       body.appendChild(el(`<p class="story">会ったコワイノ ${ks.filter(k=>seen[k]).length} / ${ks.length}</p>`));
       for(const k of ks){const D=EN[k],ok=seen[k],row=el('<div class="zk"><canvas width="144" height="144"></canvas><div class="zt"><b></b><p></p><small></small></div></div>');
-        const c=row.querySelector('canvas').getContext('2d');c.scale(2,2);if(!ok)c.globalAlpha=.18;try{drawShade(c,k,36,64,(k==='boss'||k==='hino'||k==='yama'||k==='boss2'?.46:.56),1,{t:0})}catch(_){}
+        const c=row.querySelector('canvas').getContext('2d');c.scale(2,2);if(!ok)c.globalAlpha=.18;try{drawShade(c,k,36,64,(k==='boss'||k==='hino'||k==='yama'||k==='boss2'?.46:.56),1,{t:0,dot:1})}catch(_){}
         row.querySelector('b').textContent=ok?D.name:'？？？';row.querySelector('p').textContent=ok?ZUKAN[k]:'まだ会ったことがない';
         row.querySelector('small').textContent=ok?'体力 '+D.hp+'・はやさ '+D.sp+'・追いはらった '+(K[k]||0)+'回':'';if(ok&&S.cleared&&ZURA[k]){const u=el('<p class="note"></p>');u.textContent='もとのすがた：'+ZURA[k];row.querySelector('.zt').appendChild(u)}/* クリア後は、もとの闇のせいれいのすがたが読める */body.appendChild(row)}
     }else if(sheetArg==='record'){
@@ -5286,7 +5283,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='412';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='413';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
