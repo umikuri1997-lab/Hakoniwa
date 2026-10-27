@@ -610,7 +610,7 @@ const QUESTS2=[
     [SHIZUKU,'では、みなさん、どこかで元気にしているのですね。西の温泉にも、湯気がもどりました。ぬくもりが伝われば、きっと帰ってきます。'],
     [HOMURA,'……そうだね。火の力をためて、なかまをむかえようじゃないか。']]},
    story:[[HOMURA,'……おかえり。待ってたよ。'],[HOMURA,'ほらね。みんな、ちゃんと生きてたんだ。温泉がもどれば、帰ってくるのさ。'],[SHIZUKU,'にぎやかになりましたね。'],[HOMURA,'ありがとよ、守り神。']]},
-  {text:'西の温泉に、あし湯をつくろう',check:()=>spNear(['bench'],'b')>=2&&spNear(FLOWERS2,'b')>=3,prog:()=>'ベンチ '+Math.min(2,spNear(['bench'],'b'))+'/2・花 '+Math.min(3,spNear(FLOWERS2,'b'))+'/3',how:'西の温泉のそば（4マス以内）に、ベンチを2つと、花を3つ置く（花はさいてから数える）',
+  {text:'西の温泉に、あし湯をつくろう',check:()=>spNear(['bench'],'b')>=2&&spNear(FLOWERS2,'b')>=3,prog:()=>'ベンチ '+Math.min(2,spNear(['bench'],'b'))+'/2・花 '+Math.min(3,spNear(FLOWERS2,'b'))+'/3',how:'西の温泉のそば（4マス以内）に、ベンチを2つと、花を3つ置く（花はさいてから数える）。花を植えるのは、木のせいれい',
    talk:{who:SHIZUKU,when:()=>true,lines:[
     [SHIZUKU,'守り神さま。西の温泉は、湯がやわらかくて、足をつけるのにちょうどよいのです。'],
     [HOMURA,'足だけつかって、のんびりおしゃべり……いいね。すわる所と、花でもあれば最高さ。'],
@@ -634,7 +634,7 @@ const QUESTS2=[
    story:[[HOMURA,'…ふう、なんとかのりこえたね。'],[SHIZUKU,'守ってくださって、ありがとうございます。'],[SHIZUKU,'灰は、火山からふってきていました。山の上に、なにかがいるのです。'],[HOMURA,'次の夜、きっとそいつが下りてくる。むかえうってやろうじゃないか！']],gives:{flag:'hinoNight'}},
   {text:'ヒノオオカゲを追いはらおう',check:()=>!!S.flags.hinoDown,how:'夜、火山から下りてくる「ヒノオオカゲ」を追いはらう。熱の装置をねらってくる',
    story:[[HOMURA,'やった…！ 火山の上の、いやな気配が消えたよ。'],[HOMURA,'ありがとよ、守り神！ あんたのおかげさ。'],[SHIZUKU,'ヒノオオカゲが、ヌシ様の熱をうばっていたのですね。'],[SHIZUKU,'落としたかけらは、朝にせいれいが拾ってくれますよ。'],[SHIZUKU,'そのかけらを守護の台座にはめれば、ヌシ様の力になるはずです。']]},
-  {text:'温泉宿をつくろう',check:()=>HOUSES.some(h=>[...h.inside].filter(j=>S.obj[j]==='bed').length>=2&&[...h.inside].some(j=>nearHot(j,6))),how:'あたたかい温泉のそば（6マス以内）に、家の壁とドアで家をつくり、中にベッドを2つ置く',
+  {text:'温泉宿をつくろう',check:()=>HOUSES.some(h=>[...h.inside].filter(j=>S.obj[j]==='bed').length>=2&&[...h.inside].some(j=>nearHot(j,6))),how:'あたたかい温泉のそば（6マス以内）に、家の壁とドアで家をつくり、中にベッドを2つ置く。ベッドを作るのは、木のせいれい',
    talk:{who:HOMURA,when:()=>true,lines:[
     [HOMURA,'ヒノオオカゲもいなくなって、やっと落ちついたね。'],
     [SHIZUKU,'湯上がりに、そのままゆっくり泊まれる場所があると、うれしいですね。'],
@@ -1737,13 +1737,13 @@ function waveFor(day){
     n=Math.min((WD===1?14:12)+late,(WD===1?4:2)+Math.floor(rn*.4)+Math.floor(prog*5)+Math.floor(late*.6)),list=[];/* せいれいの数と進行度に合わせて、敵の数をゆっくり増やす（火山のふもとは、草原より2体多い） */let ntr=1+Math.floor(prog*2);/* ワナクイは罠を置いたかどうかでなく、村の進行度に合わせて出す */S.lateWave=late;
   for(let i=0;i<n;i++){let t='basic';if(prog>=.18&&i%3===1)t='thief';if(prog>=.3&&i%3===2)t='fast';if(prog>=.5&&i%4===3)t='brute';if(prog>=.42&&i%5===4&&ntr>0){t='trapper';ntr--}if(prog>=.68&&i%6===5)t='breaker';list.push(t)}/* 敵の種類も、進行に合わせて少しずつ増える */
   if(WD===1){for(let i=0;i<list.length;i++)if(list[i]==='brute')list[i]='rockc';const st=st2();/* 火山のふもと：カタカゲのかわりにイワカゲ。ハイカゲ・ヒノオオカゲはお話しだいで */
-    if(S.flags.ashOn){const big=S.flags.ashNight&&!st.ashNightAt,na=big?6:Math.min(3,1+(day>>2));for(let i=0;i<na;i++)list.push('ash');if(big)st.ashNightAt=(S.nights||0)+1}
+    if(S.flags.ashOn){const big=S.flags.ashNight&&!st.ashNightAt,na=big?6:Math.min(3,1+(day>>2));for(let i=0;i<na;i++)list.unshift('ash');/* 前に入れる（人数が少ない夜の上限でけずられないように） */if(big)st.ashNightAt=(S.nights||0)+1}
     if(S.flags.hinoNight&&!S.flags.hinoDown)list.unshift('hino');
     else if(S.flags.hinoDown&&bossNight(day-1)&&rn>=5)list.unshift('boss');
     return list}
   const bq=QUESTS.find(q=>q.text==='オオカゲを追いはらおう'),bOK=S.cleared||!bq||qAt(bq.text);/* オオカゲのクエストが出るまでは来ない */
   if(bq&&bOK&&!S.bossKills&&S.bossWarn==null)S.bossWarn=dayNo();
-  if(bossNight(day-1)||S.bossOwed){if(bOK&&rn>=4&&S.res.some(q=>q.elem==='fire')&&S.res4Since!=null&&dayNo()-S.res4Since>=3&&KEYS[WD].every(n=>S.res.some(r=>r.name===n))){/* メインの子をふくめて4人そろい、火の子が1人以上いて3日たったら、自動で来る（全滅したあとは、その状態にもどってから3日あと） */list.unshift('boss');S.bossOwed=false}else S.bossOwed=true}/* dayは次の日。5日目の夜＝day6。せいれいが3人そろうまで、オオカゲは来るのを先のばし */
+  if(bossNight(day-1)||S.bossOwed){if(bOK&&rn>=4&&S.res.some(q=>q.elem==='fire')&&S.res4Since!=null&&dayNo()-S.res4Since>=3&&KEYS[WD].every(n=>S.res.some(r=>r.name===n))){/* メインの子をふくめて4人そろい、火の子が1人以上いて3日たったら、自動で来る（全滅したあとは、その状態にもどってから3日あと） */list.unshift('boss');S.bossOwed=false}else if(bOK)S.bossOwed=true}/* クエストが出る前の分はためない（クエストが出てから3日後に来る） *//* dayは次の日。5日目の夜＝day6。せいれいが3人そろうまで、オオカゲは来るのを先のばし */
   return list;
 }
 function waveText(list){const c={};list.forEach(t=>c[t]=(c[t]||0)+1);return Object.keys(c).map(t=>EN[t].name+(c[t]>1?'×'+c[t]:'')).join('、')}
@@ -2683,8 +2683,8 @@ function nushiReturns(){
   });
   T.pre?dialog(T.pre,runOpen,null,''):runOpen();
 }
-function calcScore(){const d=S.clearDay||dayNo(),parts=[['クリアした日',d+'日目',d<=22?4000:d<=26?3200:d<=30?2600:d<=35?2000:d<=40?1500:d<=50?1000:500],['せいれい',S.res.length+'人',S.res.length*100],['消えてしまったせいれい',(S.deaths||0)+'人',-Math.min(1000,(S.deaths||0)*50)]];
- const tot=Math.max(0,parts.reduce((a,p)=>a+p[2],0)),rank=tot>=5000?'S':tot>=4000?'A':tot>=2500?'B':'C'/* ふつうはB。はやく・消さずにクリアでS */;return{tot,rank,parts}}/* クリアスコア：早いほど・せいれいが多いほど・消えたせいれいが少ないほど高い。夜の数・パワーなど、長く遊ぶほどふえるものは入れない。クリアした日：22日目まで4000・26日目まで3200・30日目まで2600・35日目まで2000・40日目まで1500・50日目まで1000・それより後500。せいれい：1人100てん。消えたせいれい：1人50てん引く（引くのは1000まで）。S 5000・A 4000・B 2500 */
+function calcScore(){const d=S.clearDay||dayNo(),parts=[['クリアした日',d+'日目',d<=26?4000:d<=30?3200:d<=34?2600:d<=39?2000:d<=44?1500:d<=54?1000:500],['せいれい',S.res.length+'人',S.res.length*100],['消えてしまったせいれい',(S.deaths||0)+'人',-Math.min(1000,(S.deaths||0)*50)]];
+ const tot=Math.max(0,parts.reduce((a,p)=>a+p[2],0)),rank=tot>=5000?'S':tot>=4000?'A':tot>=2500?'B':'C'/* ふつうはB。はやく・消さずにクリアでS */;return{tot,rank,parts}}/* クリアスコア：早いほど・せいれいが多いほど・消えたせいれいが少ないほど高い。夜の数・パワーなど、長く遊ぶほどふえるものは入れない。クリアした日：26日目まで4000・30日目まで3200・34日目まで2600・39日目まで2000・44日目まで1500・54日目まで1000・それより後500。せいれい：1人100てん。消えたせいれい：1人50てん引く（引くのは1000まで）。S 5000・A 4000・B 2500 */
 function visionFX(lines,after){const d=document.createElement('div');d.style.cssText='position:absolute;inset:0;background:#0b0f0a;opacity:0;pointer-events:none;z-index:25;transition:opacity .9s ease';$('#app').appendChild(d);requestAnimationFrame(()=>requestAnimationFrame(()=>{d.style.opacity='.55'}));setTimeout(()=>dialog(lines,()=>{d.style.opacity='0';setTimeout(()=>{d.remove();after&&after()},900)},null,''),1000)}/* かけらにふれたとき、画面が暗くなって記憶がうかぶ（会話の枠は暗くしない・暗さは控えめ） */
 function flashScreen(){const d=document.createElement('div');d.style.cssText='position:fixed;inset:0;background:#fff;opacity:.85;pointer-events:none;z-index:60;transition:opacity 1.4s ease-out';document.body.appendChild(d);requestAnimationFrame(()=>requestAnimationFrame(()=>{d.style.opacity='0'}));setTimeout(()=>d.remove(),1600)}/* 白くひかる */
 function updNushi(dt){const n=S.nushi;if(n.app==null)n.app=1;if(n.app<1){n.app=Math.min(1,n.app+dt/5);n.mv=0;return}/* 台座の上で、すこしずつ姿をあらわす */
@@ -4942,7 +4942,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='376';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='377';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
