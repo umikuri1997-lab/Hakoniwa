@@ -4112,7 +4112,27 @@ for(const k in KGS){const g=KGS[k];g.img=new Image();g.img.onload=()=>{const cv=
 function atkLift(p){if(p<=0)return 0;if(p<.84)return Math.sin(p*40)*.04;if(p<.95)return (p-.84)/.11*2.7;if(p<.985)return 2.7-(p-.95)/.035*3.1;return -.4}
 function atkLean(p){return p>=.95&&p<1?.12:p>.84?-.08*(p-.84)/.11:0}
 const KGH={basic:100,fast:100,thief:100,brute:100,boss:118};
+// コワイノのドット絵：体・うで・道具（・ヨルノオオカゲの星とすそ）を、パーツのまま動かす。大きさは種類ごとの絵（どれも1ドット＝1）
+const KGDOT={},KGDOK={};
+function kgDot(key,white){const ch=CHIPS[key],im=chipImgs(ch,key)[0];if(!white)return im;const k=key+'|w';if(KGDOT[k])return KGDOT[k];
+  const cv=document.createElement('canvas');cv.width=ch.w;cv.height=ch.h;const g=cv.getContext('2d');g.drawImage(im,0,0);g.globalCompositeOperation='source-in';g.fillStyle='#f4eefa';g.fillRect(0,0,ch.w,ch.h);return KGDOT[k]=cv}/* ひかったときは白いかげ */
+function drawShadeDot(c,ty,x,y,s,f,o){
+  const K='kg_'+ty+':';if(!window.CHIPS||!CHIPS[K+'body'])return false;
+  if(!KGDOK[ty]){for(const k in CHIPS)if(k.startsWith(K)&&!chipImgs(CHIPS[k],k)[0].ok)return false;KGDOK[ty]=1}
+  const t=o.t||0,back=!!o.back,B=back?'B':'',wh=!!o.flash,sc=s/(.27*EN[ty].size*2);
+  const st=o.walk?Math.sin(t*10):0,bob=Math.round((o.walk?Math.abs(st)*3:Math.sin(t*3)*1.5)*s),lift=atkLift(o.atk||0),N2=ty==='boss2';
+  const spr=(key,X,Y)=>{const ch=CHIPS[key];if(ch)c.drawImage(kgDot(key,wh),(X||0)+ch.ax,(Y||0)+ch.ay)};
+  const sm=c.imageSmoothingEnabled;c.imageSmoothingEnabled=false;
+  c.save();c.translate(x,y);c.scale(sc*f,sc);c.translate(0,-bob);
+  for(let i=0;i<2;i++){const ch=CHIPS[K+'arm'+B+i];if(!ch)continue;/* うでは体のうしろから。ふだんは下ろして、歩くと前後にふる。攻撃のときはふりあげる */
+    const sd=ch.side,ang=wh?-.25:(N2?1.15:1.0)+(o.walk?sd*st*.45:Math.sin(t*2.2+sd)*.08)-lift;c.save();c.translate(ch.px,ch.py);c.scale(sd,1);c.rotate(ang);c.drawImage(kgDot(K+'arm'+B+i,wh),ch.ax,ch.ay);c.restore()}
+  spr(K+'body'+B);
+  if(N2){for(let k=0;k<4;k++)spr(K+'hem'+B+k,Math.round(Math.sin(t*2+k*1.3)*1.5*.6*s),0);/* すそが霧のようにゆれる */
+    if(!wh)for(let i=0;i<7;i++){const ch=CHIPS[K+'star'+i];c.globalAlpha=.4+.6*Math.abs(Math.sin(t*1.7+ch.ph));spr(K+'star'+i)}c.globalAlpha=1}/* 星がまたたく */
+  const tl=CHIPS[K+'tool'];if(tl&&!wh){c.save();c.translate(tl.px,tl.py);c.rotate(Math.sin(t*3)*.08);c.drawImage(kgDot(K+'tool'),tl.ax,tl.ay);c.restore()}/* カベクダキはハンマー、ワナクイは罠のあご */
+  c.restore();c.imageSmoothingEnabled=sm;return true}
 function drawShade(c,ty,x,y,s,f,o){const ty0=ty;
+  if(o.dot&&drawShadeDot(c,ty,x,y,s,f,o))return;
   if(ty==='trapper'||ty==='rockc')ty='brute';else if(ty==='ash'||ty==='breaker')ty='basic';else if(ty==='hino'||ty==='yama')ty='boss';/* ワナクイは、カタカゲに似たとげとげの形（小さめ） */
   const g=KGS[ty+(o.back?'_b':'_f')];if(!g||!g.ok)return drawShadeV(c,ty,x,y,s,f,o);
   const t=o.t||0,BD=o.flash?'#f4eefa':'#3e383e',u=(KGH[ty]||100)/g.h;
@@ -4181,13 +4201,23 @@ function drawShadeV(c,ty,x,y,s,f,o){
     P([[-12,-80],[-10,-90],[-5,-84],[0,-96],[5,-84],[10,-90],[12,-80]],BD);
     if(!back){const op=.75+Math.sin(t*1.3)*.25;c.fillStyle=EY;c.beginPath();c.moveTo(0,-77);c.quadraticCurveTo(10,-62,0,-47);c.quadraticCurveTo(-10,-62,0,-77);c.fill();E(0,-62,2.4*op,8*op,0,BD);
       eyes(17.5,-39,6.5,5,true)}
+  }else if(ty==='boss2'){/* ヨルノオオカゲ：この土地の夜が、ひとつにあつまったもの。体の中に星がまたたき、ひたいに三日月 */
+    const NB=o.flash?BD:'#272143',NI=o.flash?BD:'#342c58',MO='#ffe08a';
+    for(const sx of[-1,1]){c.save();c.translate(sx*30,-26);c.scale(sx,1);c.rotate(armAng(sx));c.strokeStyle=NB;c.lineWidth=9.2;c.beginPath();c.moveTo(0,0);c.lineTo(16.5,0);c.stroke();E(17.6,0,6.9,5.8,0,NB);c.restore()}
+    c.fillStyle=NB;c.beginPath();c.moveTo(-34,-4);c.quadraticCurveTo(-40,-34,-28,-52);c.quadraticCurveTo(-14,-68,0,-68);c.quadraticCurveTo(14,-68,28,-52);c.quadraticCurveTo(40,-34,34,-4);
+    for(let k=0;k<4;k++){const x0=34-k*17,w=Math.sin(t*2+k*1.3)*1.5;c.quadraticCurveTo(x0-8.5+w,6,x0-17,-4)}/* すそは、夜の霧のようにゆれる */c.closePath();c.fill();
+    for(const sx of[-1,1]){c.fillStyle=NB;c.beginPath();c.moveTo(sx*14,-64);c.quadraticCurveTo(sx*30,-80,sx*22,-92);c.quadraticCurveTo(sx*38,-82,sx*28,-58);c.closePath();c.fill()}/* 三日月のような角 */
+    c.fillStyle=NI;c.beginPath();c.ellipse(0,-30,24,22,0,0,7);c.fill();/* 夜空の奥 */
+    if(!o.flash)for(const[sx2,sy2,r]of[[-16,-44,2.2],[14,-48,1.6],[-24,-22,1.6],[20,-20,2.2],[-6,-14,1.4],[8,-36,1.2],[0,-54,1.4]]){const tw=.4+.6*Math.abs(Math.sin(t*1.7+sx2*.3+sy2*.11));c.globalAlpha=tw;c.fillStyle=MO;c.beginPath();c.moveTo(sx2,sy2-r*2);c.lineTo(sx2+r*.6,sy2-r*.6);c.lineTo(sx2+r*2,sy2);c.lineTo(sx2+r*.6,sy2+r*.6);c.lineTo(sx2,sy2+r*2);c.lineTo(sx2-r*.6,sy2+r*.6);c.lineTo(sx2-r*2,sy2);c.lineTo(sx2-r*.6,sy2-r*.6);c.closePath();c.fill()}c.globalAlpha=1;/* またたく星 */
+    if(!back){if(!o.flash){c.fillStyle=MO;c.beginPath();c.arc(0,-56,7,0,7);c.fill();c.fillStyle=NB;c.beginPath();c.arc(3.5,-58,6,0,7);c.fill()}/* ひたいの三日月 */
+      eyes(12,-32,6.5,5.5,true)}
   }else{E(0,-40,24,22,0,BD);eyes(8,-42,3.6,6,false)}
   c.restore();
 }
 const EV=new WeakMap();let EVAP=[];/* 朝日で消える「コワイノ」：じゅわっと蒸発させる */
 function drawEvap(it,now){const e=it.e,D=EN[e.type],z=D.size*2,px=e.x*TS,py=e.y*TS,p=Math.max(0,(now-it.t0)/(it.dur||1800)),v=EV.get(e)||{f:1};
   if(it.sand)return drawSand(it,now,e,D,z,px,py,v);
-  if(p<.75){ctx.save();ctx.globalAlpha=Math.max(0,1-p/.75)*.9;ctx.translate(px,py+8);ctx.scale(1+p*.35,1-p*.55);ctx.translate(-px,-py-8);drawShade(ctx,e.type,px,py+8-p*10,.27*z,v.f,{t:now/1000+e.id*1.3,flash:Math.sin(now/40)>0});ctx.restore()}
+  if(p<.75){ctx.save();ctx.globalAlpha=Math.max(0,1-p/.75)*.9;ctx.translate(px,py+8);ctx.scale(1+p*.35,1-p*.55);ctx.translate(-px,-py-8);drawShade(ctx,e.type,px,py+8-p*10,.27*z,v.f,{dot:1,t:now/1000+e.id*1.3,flash:Math.sin(now/40)>0});ctx.restore()}
   for(let i=0;i<9;i++){const q=p*1.2-i*.06;if(q<0||q>1)continue;const sx=px+Math.sin(i*2.3+e.id)*14*z+Math.sin(now/300+i)*4,sy=py-6*z-q*48*z,r=(4+q*9)*z;ctx.globalAlpha=(1-q)*.55;ctx.fillStyle='#f4f0ff';ctx.beginPath();ctx.arc(sx,sy,r,0,7);ctx.fill()}ctx.globalAlpha=1}
 function drawSand(it,now,e,D,z,px,py,v){/* 砂になって消える：ひびが走る → 上から砂になってくずれ、足もとに砂山がのこって消える */
   const raw=(now-it.t0)/it.dur,p=Math.max(0,raw),Hh=34*D.size,Ww=14*D.size,top=py-Hh,SC=['#e8cf98','#d9b77a','#c9a35f','#b88d4f'];
@@ -4195,7 +4225,7 @@ function drawSand(it,now,e,D,z,px,py,v){/* 砂になって消える：ひびが�
     const R=36*z,ox=px-R,oy=py+8-R*1.7,ww=R*2,hh=R*2.2,k=dpr*cam.z,cw=Math.ceil(ww*k)+2,ch=Math.ceil(hh*k)+2;/* 体だけを別の画面に描いて、砂の色をかさねる */
     if(EOC.width<cw||EOC.height<ch){EOC.width=EOS.width=Math.max(EOC.width,cw);EOC.height=EOS.height=Math.max(EOC.height,ch)}
     eox.setTransform(1,0,0,1,0,0);eox.clearRect(0,0,EOC.width,EOC.height);eox.setTransform(k,0,0,k,-ox*k,-oy*k);
-    drawShade(eox,e.type,px+(raw<0?Math.sin(now/22)*3:0),py+8,.27*z,v.f,{t:it.t0/1000+e.id*1.3,flash:false});/* ピシッ：一瞬ふるえる */
+    drawShade(eox,e.type,px+(raw<0?Math.sin(now/22)*3:0),py+8,.27*z,v.f,{dot:1,t:it.t0/1000+e.id*1.3,flash:false});/* ピシッ：一瞬ふるえる */
     eox.setTransform(1,0,0,1,0,0);eox.globalCompositeOperation='source-atop';eox.globalAlpha=Math.min(.8,c*1.3);eox.fillStyle='#c9a35f';eox.fillRect(0,0,cw,ch);eox.globalCompositeOperation='source-over';eox.globalAlpha=1;/* 体が砂の色にかわっていく */
     ctx.save();ctx.beginPath();ctx.rect(ox,cut,ww,hh);ctx.clip();ctx.drawImage(EOC,0,0,cw,ch,ox,oy,cw/k,ch/k);ctx.restore();
     if(raw<.25){ctx.save();ctx.globalAlpha=Math.min(1,(.25-raw)*6);ctx.strokeStyle='#fffbe8';ctx.lineWidth=2.2;for(let n2=0;n2<5;n2++){let x=px+(n2-2)*Ww*.35,y=top+Hh*.2;ctx.beginPath();ctx.moveTo(x,y);for(let n=0;n<5;n++){x+=Math.sin(e.id*7+n2*13+n*5)*Ww*.2;y+=Hh*.14;ctx.lineTo(x,y)}ctx.stroke()}ctx.restore()}/* ひびの線 */
@@ -4218,7 +4248,7 @@ function drawEnemy(e,now){
    const R=36*z,ox=px-R,oy=py+8-R*1.7,ww=R*2,hh=R*2.2,k=dpr*cam.z,cw=Math.ceil(ww*k)+2,ch=Math.ceil(hh*k)+2;
    if(EOC.width<cw||EOC.height<ch){EOC.width=EOS.width=Math.max(EOC.width,cw);EOC.height=EOS.height=Math.max(EOC.height,ch)}
    eox.setTransform(1,0,0,1,0,0);eox.clearRect(0,0,cw,ch);eox.setTransform(k,0,0,k,-ox*k,-oy*k);
-   drawShade(eox,e.type,px,py+8,.27*z,v.f,{t:now/1000+e.id*1.3,back:v.back,walk:now-v.mv<200,flash:e.flash>0,atk:now-(e.swing||-1e9)<300?.95+(now-e.swing)/300*.045:now-v.mv<200?0:(e.atk||0)/D.atk});
+   drawShade(eox,e.type,px,py+8,.27*z,v.f,{dot:1,t:now/1000+e.id*1.3,back:v.back,walk:now-v.mv<200,flash:e.flash>0,atk:now-(e.swing||-1e9)<300?.95+(now-e.swing)/300*.045:now-v.mv<200?0:(e.atk||0)/D.atk});
    eos.globalCompositeOperation='copy';eos.drawImage(EOC,0,0);eos.globalCompositeOperation='source-in';eos.fillStyle='#fff';eos.fillRect(0,0,cw,ch);eos.globalCompositeOperation='source-over';
    const sw=cw/k,sh=ch/k,o=1.3;ctx.globalAlpha=e.stun>0?.5:.95;
    const OFF=[[o,0],[-o,0],[0,o],[0,-o],[o*.7,o*.7],[-o*.7,o*.7],[o*.7,-o*.7],[-o*.7,-o*.7]];for(const[dx,dy]of OFF)ctx.drawImage(EOS,0,0,cw,ch,ox+dx,oy+dy,sw,sh);
@@ -5208,7 +5238,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='404';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='405';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
