@@ -789,11 +789,12 @@ function genWorld(s,w){
       const core=Math.abs(x+.5-CX)<7&&Math.abs(y+.5-CY)<7;
       if(!core&&r<(V?.03:.05))s.obj[i]='deadtree';else if(!core&&r<(V?.09:.08))s.obj[i]='rock';
       continue}
-    if(forest){if(r<.38)s.obj[i]='ntree';else if(r<.42)s.obj[i]='rock';else if(r<.48){s.obj[i]='berry';s.dyn[i]={g:100}}}
+    if(forest){if(r<.38)s.obj[i]=V||w===FREE?'ntree':'deadtree';/* 草原は、はじめは森の木もみんな枯れている */else if(r<.42)s.obj[i]='rock';else if(r<.48){s.obj[i]='berry';s.dyn[i]={g:100}}}
     else if(V){if(r<.05)s.obj[i]='deadtree';else if(r<.13)s.obj[i]='rock';else if(r<.16){s.obj[i]='berry';s.dyn[i]={g:100}}else if(r<.17)s.obj[i]='ntree'}/* 火山のふもとは岩が多い */
-    else{if(r<.07)s.obj[i]='deadtree';else if(r<.1)s.obj[i]='rock';else if(r<.13){s.obj[i]='berry';s.dyn[i]={g:100}}else if(r<.15)s.obj[i]='ntree'}
+    else{if(r<.07)s.obj[i]='deadtree';else if(r<.1)s.obj[i]='rock';else if(r<.13){s.obj[i]='berry';s.dyn[i]={g:100}}else if(r<.15)s.obj[i]=w===FREE?'ntree':'deadtree'}
   }
   for(let y=CY-8;y<CY+12;y++)s.floor[y*W+CX]='path';
+  if(!V&&w!==FREE){let best=-1,bd=1e9;for(let y=CY-6;y<=CY+6;y++)for(let x=CX-6;x<=CX+6;x++){const j=y*W+x;if(s.ground[j]===1||s.obj[j]||s.floor[j]||x===CX)continue;if([j-1,j+1,j-W,j+W].some(k=>s.ground[k]===1))continue;const d=Math.hypot(x+.5-(CX-3),y+.5-(CY+3));if(d<bd){bd=d;best=j}}if(best>=0)s.obj[best]='ntree'}/* 草原の拠点に、森の木が1本だけ（ほかの木は、みんな枯れている） */
   const hx=dx=>V?CX-dx:CX+dx;/* 火山のふもとは、家が右・畑が左（草原と左右反対） */
   for(let d=3;d<=6;d++)for(let y=CY-5;y<CY-2;y++)s.floor[y*W+hx(-d)]='floor';
   for(let d=1;d<=2;d++)s.floor[(CY-4)*W+hx(-d)]='path';
@@ -5284,7 +5285,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='423';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='424';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
