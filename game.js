@@ -3825,7 +3825,10 @@ function drawSpiritDot(c,el,x,y,s,f,o){
     c.save();c.scale(sx,1);spr('sp:arm'+S);c.restore();if(prop&&sx===-farA&&!back)spProp(c,prop,sx,a,t,o);c.save();c.scale(sx,1);spr('sp:hand');c.restore();c.restore()};
   const farA=back?1:-1,aA0=sx=>o.carry?-1.85+Math.sin(t*9)*.08:tr?1.22+(o.walk?st*.6:Math.sin(t*1.7)*.05):(back?1:-1)*sx*arm+(back?0:.35),aA=sx=>sx===-farA?(aN!=null?aN:aA0(sx)):(aF!=null&&!o.carry?aF:aA0(sx));
   if(!bothF&&!tr)armD(farA,aA(farA));if(!tr&&!frontArm)armD(-farA,aA(-farA));
-  spr('sp:body'+S+(o.sit&&tr?3:o.walk?st>.33?1:st<-.33?2:0:0));/* 3：横向きにすわって、足を前に上げる */
+  {const ws=o.walk?st:0;/* 足：体の下に2つ。歩くときは交互に上げる（横向きは前後にふる）。横向きにすわるときは、前にのばして上げる */
+    if(tr){if(o.sit){spr('sp:footS',12*D,-7*D);spr('sp:footS',15*D,-4*D)}else{spr('sp:footS',(-2+ws*6)*D,(1-Math.max(0,ws)*3)*D);spr('sp:footS',(2-ws*6)*D,(1-Math.max(0,-ws)*3)*D)}}
+    else{spr('sp:foot',-6*D,(1-Math.max(0,ws)*4)*D);spr('sp:foot',6*D,(1-Math.max(0,-ws)*4)*D)}}
+  spr('sp:body'+S+'0');
   if(tr&&!frontArm)armD(-farA,aA(-farA));
   if(back&&el!=='wind')tail(-tr*12,-17);
   // 頭と顔（食べるときは、うなずく）
@@ -5294,7 +5297,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='455';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='456';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
