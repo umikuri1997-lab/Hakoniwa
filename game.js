@@ -889,7 +889,7 @@ const typeAt=j=>S.obj[anc(j)];
 for(const f of FLOWERS)BL[f].anim=1;BL.table.anim=1;/* 食卓は1.5倍で、はみ出しても奥行き順にかく *//* 花ははみ出すので、地面にやきつけず、ほかの物と同じ順番で描く */
 const solidOf=j=>{const o=typeAt(j);return !!(o&&BL[o]&&BL[o].solid)};
 const ROTS={chair:4,chair2:4,achair:4,sofa1:4,bench:2,bed:2,sandbox:2,ltable:2,bathtub:2,rug1:2,slide:1,seesaw:1,swing:1,signpost:1,vane:1,oven:1};/* 向きをかえられる家具。4：前・右・後ろ・左　2：横・縦　1：左右反転だけ */
-const BEDHX=34,BEDHY=12,BEDHC=27,BEDVY=24;/* 横のベッド：寝る子の足もと（x,y）と、ふとんをかける左はし。たてのベッド：寝る子の足もとのy */
+const BEDHX=34,BEDHY=5,BEDHC=27,BEDVY=28;/* 横のベッド：寝る子の足もと（x,y）と、ふとんをかける左はし。たてのベッド：寝る子の足もとのy */
 const ROTN=id=>ROTS[id]===4?4:ROTS[id]?2:1,ROTL={4:['前','右','後ろ','左'],2:['横','縦'],1:['そのまま','反転']};
 let PLROTS={};/* 置くときにえらんでいる向き（家具ごと） */
 const rotAt=j=>(S&&S.rot&&S.rot[j])||0;
@@ -4016,7 +4016,7 @@ function drawRes0(r,now){
   if(r.shine&&now>=r.shine&&now-r.shine<3500&&!wade){const e=(now-r.shine)/3500;for(let i=0;i<6;i++){const SP=SHINE[i],tw=Math.sin(now/160+i*1.9),k=Math.max(0,(.55+.45*tw)*(e>.75?(1-e)/.25:1));if(k>0)star4(ctx,px+SP[0],fy+SP[1]-e*8,SP[2]*k)}}/* 水浴びのあと：キラキラ */
   if(tubB){const wl=((r.act.tub/W)|0)*TS+17;ctx.fillStyle='rgba(255,255,255,.85)';for(let k=0;k<5;k++){const bx=px-9+k*4.5+Math.sin(now/700+k*1.7)*1.2,ph=(now/1400+k*.23+r.id)%1;ctx.globalAlpha=.55+.4*Math.sin(now/500+k);ctx.beginPath();ctx.arc(bx,wl+.5-Math.sin(ph*Math.PI)*.8,1.7+((k*7)%3)*.45,0,7);ctx.fill()}ctx.globalAlpha=1}/* 湯ぶねのあわ */
   else if(wade){const wl=fy-wade*11,rp=(now/900+r.id)%1;ctx.strokeStyle='rgba(255,255,255,.75)';ctx.lineWidth=1.6;ctx.beginPath();ctx.ellipse(px,wl,11+rp*6,3+rp*1.5,0,0,7);ctx.globalAlpha=1-rp*.8;ctx.stroke();ctx.globalAlpha=1;ctx.strokeStyle='rgba(255,255,255,.9)';ctx.beginPath();ctx.ellipse(px,wl,10,2.6,0,0,7);ctx.stroke()}/* 水面の波紋 */
-  if(bedJ>=0){const bx=(bedJ%W)*TS,byy=((bedJ/W)|0)*TS,bh=32*BEDSPR.h/BEDSPR.w,ch=chipOf('bed',bedJ);ctx.save();ctx.beginPath();const fr=chipOf('bed',bedJ,null,'.front');if(fr){ctx.restore();ctx.save();drawChip(ctx,fr,'bed',bx,byy,now,bedJ)}else{if(bedH)ctx.rect(bx+BEDHC,byy-8,TS*2,TS+8);else ctx.rect(bx-1,byy+BEDVY-4,TS+2,TS*2);ctx.clip()}/* ふとん：「bed.front」があればそれを、なければベッドの下半分を */if(!fr&&!(ch&&drawChip(ctx,ch,'bed',bx,byy,now,bedJ)))ctx.drawImage(BEDSPR.img,bx,byy+32-bh,32,bh);ctx.restore()}/* ふとん（ベッドの下半分）を上からかける */
+  if(bedJ>=0){const bx=(bedJ%W)*TS,byy=((bedJ/W)|0)*TS,bh=32*BEDSPR.h/BEDSPR.w,ch=chipOf('bed',bedJ);ctx.save();ctx.beginPath();const fr=chipOf('bed',bedJ,null,'.front');if(fr){ctx.restore();ctx.save();drawChip(ctx,fr,'bed',bx,byy,now,bedJ)}else{if(bedH)ctx.rect(bx+BEDHC,byy-8,TS*2,TS+8);else ctx.rect(bx-1,byy+BEDVY+1,TS+2,TS*2);ctx.clip()}/* ふとん：「bed.front」があればそれを、なければベッドの下半分を */if(!fr&&!(ch&&drawChip(ctx,ch,'bed',bx,byy,now,bedJ)))ctx.drawImage(BEDSPR.img,bx,byy+32-bh,32,bh);ctx.restore()}/* ふとん（ベッドの下半分）を上からかける */
   /* ベンチは1つの物として、すわった子の後ろにまとめて描く */
   const by=fy-27;
   const ci=carryIcon(r);
@@ -5290,7 +5290,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='431';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='432';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
