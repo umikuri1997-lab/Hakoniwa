@@ -533,7 +533,7 @@ const QUESTS2=[
   {text:'神殿を建ててもらおう',check:()=>cnt('statue')>=1,by:GOD,how:'下の「おく」→「神殿」をえらび、基地の中の空いた場所をタップ',story:[
     [HOMURA,'へえ、なかなかいい神殿じゃないか。'],
     [GOD,'じゃろ〜。女神像もおそなえ箱も依頼ボードも、草原といっしょじゃよ。'],
-    [GOD,'食料箱と素材箱は、温泉のそばに置いといたぞい。かまどやベッド、柵や罠も、おそなえ箱に入れといたからの。'],[HOMURA,'ありがとよ、守り神。']],
+    [GOD,'食料箱と素材箱は、村の北がわに置いといたぞい。コワイノは南から来るからの。かまどやベッド、柵や罠も、おそなえ箱に入れといたからの。'],[HOMURA,'ありがとよ、守り神。']],
    gives:{feat:['inv','remove','plant','craft','people'],flag:'lv_oven',recipes:['oven','bed','stor','mbox'],flags:['yoganLearned'],items:{oven:1,bed:1,hwall:3,fence:10,spike:10},mat:{wood:10,stone:10},enemy:true}},
   {text:'冷たい温泉を調べよう',check:()=>!!S.flags.sprLook,how:'「みる」で、村の水たまりをタップする',
    talk:{who:HOMURA,when:()=>true,lines:[
@@ -549,7 +549,7 @@ const QUESTS2=[
     [HOMURA,'温泉をなおすのは、ひと仕事だよ。その前に、腹ごしらえだね。'],
     [HOMURA,'あたいからのおねがいさ。食料を3つ、ためておいておくれ。腹いっぱいになったら、あたいもひと働きするよ。']]},
    story:[[HOMURA,'よし、これで村の準備はばっちりだね。ありがとよ、守り神。']],gives:{flag:'hReq'}},
-  {text:'温泉をよみがえらせよう',check:()=>S.obj.some((o,j)=>o==='hotstone'&&adjOf(j,k=>S.ground[k]===1&&sprMap()[k]==='a')>=0),how:'「おく」→「ほのお石」をえらんで、入口の温泉（食料箱のそば）の水べに置く',
+  {text:'温泉をよみがえらせよう',check:()=>S.obj.some((o,j)=>o==='hotstone'&&adjOf(j,k=>S.ground[k]===1&&sprMap()[k]==='a')>=0),how:'「おく」→「ほのお石」をえらんで、入口の温泉（村の南東の温泉）の水べに置く',
    talk:{who:HOMURA,when:()=>true,lines:[
     [HOMURA,'まずは、いちばん近い入口の温泉からだね。'],
     [GOD,'ほのお石を入れといたぞい。入口の温泉の水べに置いて、ホムラの火の力をこめてみい。'],
@@ -794,7 +794,7 @@ function genWorld(s,w){
   for(let y=CY-6;y<=CY-2;y++)for(let d=2;d<=7;d++){if(d>2&&d<7&&y>CY-6&&y<CY-2)continue;const x=hx(-d),j=y*W+x;if(y===CY-2&&d>=3&&d<=5)continue;/* はじめは壁がこわれている（クエストで直す） */s.obj[j]=(d===2&&y===CY-4)?'door':'hwall';s.floor[j]=s.obj[j]==='door'?'path':'';if(s.obj[j]==='hwall')s.hp[j]=BL.hwall.hp}
   if(V){for(let x=CX-7;x<=CX+8;x++)if(!s.obj[(CY+1)*W+x])s.floor[(CY+1)*W+x]='gravel';for(let y=CY+2;y<CY+12;y++)s.floor[y*W+CX]='gravel'}/* 火山のふもとは、砂利の道 */
   for(let d=1;d<=4;d++){const j=(CY-4)*W+hx(d);s.obj[j]='farm';s.floor[j]='';s.dyn[j]={g:50,wet:0,crop:'imo'}}/* 最初の畑は4つ。家の道をはさんだ向かいに横1列。作物は、はじめはいもだけ */
-  if(V){const put=id=>{let best=-1,bd=1e9;for(let y=CY-1;y<CY+12;y++)for(let x=CX+2;x<CX+12;x++){const j=y*W+x;if(s.ground[j]===1||s.obj[j]||s.floor[j])continue;if([j-1,j+1,j-W,j+W,j-W-1,j-W+1,j+W-1,j+W+1].some(k=>s.ground[k]===1||s.obj[k]==='stor'||s.obj[k]==='mbox'))continue;const d=Math.hypot(x+.5-(CX+5),y+.5-(CY+4.5));if(d<bd){bd=d;best=j}}if(best>=0)s.obj[best]=id};put('stor');put('mbox');for(let y=CY-13;y<CY-8;y++){const j=y*W+CX;if(!s.obj[j]&&s.ground[j]!==1)s.floor[j]='path'}st2Place(s)}/* 火山のふもと：食料箱と素材箱は、はじめから温泉のそばに */
+  if(V){const put=id=>{let best=-1,bd=1e9;for(let y=CY-7;y<CY;y++)for(let x=CX-6;x<CX;x++){const j=y*W+x;if(s.ground[j]===1||s.obj[j]||s.floor[j])continue;if([j-1,j+1,j-W,j+W,j-W-1,j-W+1,j+W-1,j+W+1].some(k=>s.ground[k]===1||s.obj[k]==='stor'||s.obj[k]==='mbox'))continue;const d=Math.hypot(x+.5-(CX-3),y+.5-(CY-3.5));if(d<bd){bd=d;best=j}}if(best>=0)s.obj[best]=id};put('stor');put('mbox');for(let y=CY-13;y<CY-8;y++){const j=y*W+CX;if(!s.obj[j]&&s.ground[j]!==1)s.floor[j]='path'}st2Place(s)}/* 火山のふもと：食料箱と素材箱は、はじめから村の北西に（コワイノは南から来るので。北東の古い家はさける） */
 }
 
 /* ---------- 火山のふもと（ステージ2）：温泉3か所・火山・熱の道 ---------- */
@@ -1190,6 +1190,10 @@ let FOUT=null,FOUTT=-1;function fenceOut(){/* 柵（門もふくむ）と壁で�
   for(let x=0;x<W;x++)for(const y of[0,H-1]){const j=y*W+x;if(open(j)&&!out[j]){out[j]=1;q.push(j)}}for(let y=0;y<H;y++)for(const x of[0,W-1]){const j=y*W+x;if(open(j)&&!out[j]){out[j]=1;q.push(j)}}
   while(q.length){const j=q.pop(),x=j%W,y=(j/W)|0;for(const[dx,dy]of DIRS){const nx=x+dx,ny=y+dy;if(nx<0||ny<0||nx>=W||ny>=H)continue;const k=ny*W+nx;if(!out[k]&&open(k)){out[k]=1;q.push(k)}}}
   FOUT=out;FOUTT=t;return out}
+function graveCheck(){if(isNight()||STATUE<0||!cnt('grave'))return;const gs=[];for(let j=0;j<W*H;j++)if(S.obj[j]==='grave'&&S.dyn[j]&&!S.dyn[j].buried)gs.push(j);if(!gs.length)return;
+  let G=null;for(const r of S.res){if(r.hidden)continue;const g=bfs(r.x|0,r.y|0);if(nearest(g,j=>adjOf(j,k=>k===STATUE||k===STATUE+W)>=0,300)>=0){G=g;break}}if(!G)return;/* 神殿まで行ける子から見て */
+  for(const j of gs){if(nearest(G,k=>adjOf(k,q=>q===j)>=0,300)>=0)continue;const k=nearest(G,q=>walk(q)&&!S.obj[q]&&S.ground[q]!==1&&!S.floor[q]&&adjOf(q,t=>t===STATUE||t===STATUE+W)<0,300);if(k<0)continue;
+    S.obj[k]='grave';S.dyn[k]=S.dyn[j];S.obj[j]='';delete S.dyn[j];dirty=true;recount()}}/* とどかない所にあるお墓は、みんなが行ける所へうつす（おみおくりできず、よみがえらせられなくなるのをふせぐ） */
 function trapCheck(){if(isNight()||!S.obj.includes('stor'))return;for(const r of S.res){if(r.hidden||!isKey(r.name)||r.trapDay===dayNo())continue;const G=bfs(r.x|0,r.y|0);if(nearest(G,j=>adjOf(j,k=>storageAt(k,'food'))>=0,400)<0){r.trapDay=dayNo();toast(r.name+'がとじこめられています','warn')}}}/* 物語の子が、かこまれて食料箱へ行けないときは知らせる（1日1回） */
 function hideIn(r,G){if(!HOUSES.length||!S.enemies.some(e=>e.spawned&&!e.dead&&!e.flee&&Math.hypot(e.x-r.x,e.y-r.y)<7))return false;const hs=new Set();for(const h of HOUSES)for(const q of h.inside)hs.add(q);const k=nearest(G,j=>hs.has(j)&&walk(j)&&!HOME_DOORS.has(S.obj[j]),60);if(k<0)return false;startAct(r,G,'flee',k,{house:true,food:1,run:true});return true}/* 火の子は、おなかがへってコワイノがそばにいたら、まず家の中へにげこんで、それから食べにいく */
 function fleeHit(r,G){
@@ -2029,7 +2033,7 @@ function stepWorld(dt){if((SUBT+=dt)>1){SUBT=0;checkSub();checkSev();guardTick()
     else if(S.ns&&S.ns.final&&!S.cleared&&!(S.ns.b2&&S.obj.includes('tower'))){S.finalNight=false;S.finalLost=dayNo();if(WD)S.finalRetry=dayNo()+3;else{S.finalDay=dayNo()+3;S.finalHint=3}memo('🌑','ヨルノオオカゲを追いはらえなかった');setTimeout(()=>toast('ヨルノオオカゲは、まだどこかにいる…','warn'),1500)}/* ヨルノオオカゲを追いはらえなかったか、台座をこわされたら負け。3日あとにまた来る */else if(S.ns&&S.ns.final&&!S.cleared){S.finalNight=false;if(WD)setTimeout(()=>{if(!S.cleared)nushiReturns()},1800);/* 火山のふもとには、フタバはいない */else if(!S.flags.finalWon){S.flags.finalWon=1;S.flags.sh_boss=true;S.shards=Math.min(3,(S.shards||0)+1);memo('💎','最後のバトルに勝って、ヌシのかけらがあらわれた（'+S.shards+'/3）');setTimeout(()=>toast('台座の前に、ヌシのかけらがあらわれた！','good'),1500)}}/* 最後の夜をこえたら、かけらが出て、台座にはめるとヌシ様がもどる */if(S.ns&&S.ns.trial){const ok=S.ns.kill>=S.ns.n;S.ns.trialOK=ok;if(ok){S.trials=(S.trials||0)+1;S.pt+=60;S.totalPt+=60;S.mebuki=(S.mebuki||0)+1;memo('🏆','「コワイノ」の試練をのりこえた')}}
     if(S.ns){S.ns.left=left;if(!sheet)openSheet('night');else toast(S.nightHurt?'朝日がのぼって、「コワイノ」は'+(left?'消えていった':'いなくなった'):'夜をぶじに守りきった！','good')}
     else if(!S.nightHurt)toast('夜をぶじに守りきった！','good');else toast('朝日がのぼって、「コワイノ」は'+(left?'消えていった':'いなくなった'))}
-  if((prevH|0)!==(h|0)&&h>=7&&h<23)trapCheck();/* 1時間に1回、とじこめられた子がいないか見る */
+  if((prevH|0)!==(h|0)&&h>=7&&h<23){trapCheck();graveCheck()}/* 1時間に1回、とじこめられた子がいないか見る */
   if(prevH<6&&h>=6&&S.lastMorning!==dayNo()){S.lastMorning=dayNo();morning();if(WD===1&&S.finalRetry!=null&&dayNo()>=S.finalRetry&&!S.cleared){S.finalRetry=null;S.finalNight=true}}/* 火山のふもと：負けたら3日あとの夜にまた来る *//* 1日のリセットは朝6時にまとめて */
   if(prevH<8&&h>=8&&S.godGone&&!S.cleared&&!S.godVisit&&dayNo()>=(S.godNextVisitDay||1)&&Math.random()<(cnt('kamizo')?.5:.25)){S.godVisit=true;S.godNextVisitDay=dayNo()+2;/* 来た翌日は休み。像があれば来訪率は50% */sfx('arrive');toast('カミサマが遊びにきた！','good')}
   if(prevH<18&&h>=18&&S.godVisit){S.godVisit=false;S.godNextVisitDay=Math.max(S.godNextVisitDay||0,dayNo()+2);toast('カミサマは帰っていった')}
@@ -5039,7 +5043,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='394';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='395';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
