@@ -118,7 +118,7 @@ const BL={
   door:{name:'ドア',fix:2,fixm:{wood:1},kind:'block',anim:1,hp:20,cost:2,pc:5,time:40,maker:'wood',qty:1,lv:3,attr:{},mat:{wood:2},desc:'壁にはめる出入り口（じょうぶさ20）'},
   chair:{name:'いす',kind:'furn',lv:3,pc:1,time:60,maker:'wood',attr:{wood:1},mat:{wood:3},desc:'食卓のとなりに置く。ここで食べると、パワー+0.9。住み心地+4'},
   bench:{name:'ベンチ',sz:[2,1],kind:'furn',pc:3,time:100,maker:'wood',attr:{wood:1},mat:{wood:5},desc:'2人すわれる。昼につかれたら、ここで休む（元気 +20／1時間）。住み心地+5'},
-  bed:{name:'ベッド',sz:[1,2],kind:'furn',pc:10,time:200,maker:'wood',sleep:{cap:1,pt:5,rate:.2},attr:{wood:2},mat:{wood:8},desc:'1人眠れる。元気 +12／1時間。家の住み心地で0.6〜3.3倍'},
+  bed:{name:'ベッド',kind:'furn',pc:10,time:200,maker:'wood',sleep:{cap:1,pt:5,rate:.2},attr:{wood:2},mat:{wood:8},desc:'1人眠れる。元気 +12／1時間。家の住み心地で0.6〜3.3倍'},
   lamp:{hp:5,brk:1,fix:3,fixm:{wood:2,stone:2},name:'かがり火',kind:'furn',pc:5,time:160,maker:'fire',solid:1,anim:1,attr:{fire:3},mat:{wood:3,stone:3},desc:'まわり3.5マスを照らす。住み心地+6'},
   campfire:{hp:5,brk:1,fix:4,fixm:{wood:6,stone:4},name:'たき火',kind:'furn',pc:7,time:160,maker:'fire',lv:6,solid:1,anim:1,attr:{fire:4},play:{pt:3,pw:1.35,fun:25,dur:40,cap:3,adj:1},mat:{wood:11,stone:8},desc:'3人まで遊べる。たのしさ +25（40分）。まわり3.5マスも照らす。'},
   swing:{name:'ブランコ',kind:'furn',pc:9,time:160,maker:'wood',lv:4,play:{pt:4,pw:1.8,fun:40,dur:50,cap:1},attr:{wind:3},mat:{wood:12},desc:'1人で遊べる。たのしさ +40（50分）。遊ぶと10%の確率で、移動速度+1'},
@@ -889,7 +889,7 @@ const typeAt=j=>S.obj[anc(j)];
 for(const f of FLOWERS)BL[f].anim=1;BL.table.anim=1;/* 食卓は1.5倍で、はみ出しても奥行き順にかく *//* 花ははみ出すので、地面にやきつけず、ほかの物と同じ順番で描く */
 const solidOf=j=>{const o=typeAt(j);return !!(o&&BL[o]&&BL[o].solid)};
 const ROTS={chair:4,chair2:4,achair:4,sofa1:4,bench:2,bed:2,sandbox:2,ltable:2,bathtub:2,rug1:2,slide:1,seesaw:1,swing:1,signpost:1,vane:1,oven:1};/* 向きをかえられる家具。4：前・右・後ろ・左　2：横・縦　1：左右反転だけ */
-const BEDHX=41,BEDHY=-7,BEDVY=20,BEDHS=.85;/* 横のベッド：寝る子の足もと（x,y）。たてのベッド：寝る子の足もとのy。BEDHS：横向きで寝るときの、せいれいの横はば。ふとんは重ねない（ベッドの上に寝る子をかく） */
+const BEDHX=33,BEDHY=1,BEDVY=15,BEDHS=.85;/* 横のベッド：寝る子の足もと（x,y）。たてのベッド：寝る子の足もとのy。BEDHS：横向きで寝るときの、せいれいの横はば。ふとんは重ねない（ベッドの上に寝る子をかく） */
 const ROTN=id=>ROTS[id]===4?4:ROTS[id]?2:1,ROTL={4:['前','右','後ろ','左'],2:['横','縦'],1:['そのまま','反転']};
 let PLROTS={};/* 置くときにえらんでいる向き（家具ごと） */
 const rotAt=j=>(S&&S.rot&&S.rot[j])||0;
@@ -2583,11 +2583,8 @@ function undo(){
   else{if(o!==u.id&&!(u.id==='farm'&&o==='plot'))return toast('もうもどせません');clearObj(u.j);giveItem(u.id,1)}
   recount();renderPalette();
 }
-function fixBeds(){/* 1マスだったころのベッド：となりのマスがあいていれば2マスにする。あいていなければ、持ち物にもどす */
-  for(let j=0;j<W*H;j++){if(S.obj[j]!=='bed')continue;const x=j%W,y=(j/W)|0,t=fp('bed',x,y).filter(([a,b])=>a!==x||b!==y);
-    if(t.every(([a,b])=>S.obj[b*W+a]==='part'&&S.ref[b*W+a]===j))continue;
-    if(t.every(([a,b])=>a<W&&b<H&&(!S.obj[b*W+a]||RUGS.has(S.obj[b*W+a]))&&walk(b*W+a))){for(const[a,b]of t){const k=b*W+a;if(RUGS.has(S.obj[k])){(S.rug||(S.rug={}))[k]=S.obj[k];if(S.rot&&S.rot[k]){(S.rugRot||(S.rugRot={}))[k]=S.rot[k];delete S.rot[k]}}}setParts('bed',j,'part')}
-    else{clearObj(j);if(S.bedOwn)delete S.bedOwn[j];S.inv.bed=(S.inv.bed||0)+1}}}
+function fixBeds(){/* 2マスだったころのベッド：のこりのマス（part）をあける。下にしいてあったラグは出てくる */
+  for(const k in S.ref){const j=S.ref[k];if(S.obj[k]==='part'&&S.obj[j]==='bed'){S.obj[k]='';delete S.ref[k];if(S.rug&&S.rug[k]){S.obj[k]=S.rug[k];delete S.rug[k];if(S.rugRot&&S.rugRot[k]){(S.rot||(S.rot={}))[k]=S.rugRot[k];delete S.rugRot[k]}}}}}
 function clearObj(j){j=anc(j);const o=S.obj[j];const tl=o&&BL[o]&&BL[o].sz?fp(o,j%W,(j/W)|0).map(([a,b])=>b*W+a):[j];delete S.hp['L'+j];if(S.win&&S.win[j]){giveItem(S.win[j]===1?'window':S.win[j],1);delete S.win[j]}if(S.rot)delete S.rot[j];for(const k in S.ref)if(S.ref[k]===j){S.obj[k]='';delete S.ref[k]}S.obj[j]='';delete S.dyn[j];delete S.hp[j];delete S.hp['L'+j];
   if(S.rug&&!RUGS.has(o))for(const k of tl){const rg=S.rug[k];if(rg&&!S.obj[k]){S.obj[k]=rg;delete S.rug[k]}}/* 下に敷いてあったラグが出てくる */
   for(const r of S.res)if(r.act&&r.act.obj===j)endAct(r);return o}
@@ -5289,7 +5286,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='437';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='438';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
