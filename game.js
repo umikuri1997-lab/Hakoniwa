@@ -70,8 +70,8 @@ const BL={
   stable:{hp:5,brk:1,fix:2,fixm:{wood:2},dw:1,name:'まるいサイドテーブル',kind:'furn',cat:'living',f2:1,lv:4,pc:3,time:80,maker:'wood',attr:{wood:1},mat:{wood:3},solid:1,desc:'お花とカップをのせた小さなテーブル。住み心地+4'},
   pouf:{name:'まるクッション',kind:'furn',lv:5,cat:'living',f2:1,pc:1,time:60,maker:'wind',attr:{wind:1},mat:{wood:3},desc:'ころんとしたクッション。食卓のとなりに置く。ここで食べると、パワー+1.35。住み心地+3'},
   achair:{name:'ひじかけいす',kind:'furn',lv:9,cat:'living',f2:1,pc:5,time:100,maker:'wood',attr:{wood:1},mat:{wood:10},desc:'ゆったりすわれるいす。食卓の隣に置くと、ここで食べたときにパワー+2.25。住み心地+5'},
-  ltable:{hp:5,brk:1,fix:3,fixm:{wood:8},dw:1.5,name:'ローテーブル',kind:'furn',cat:'living',f2:1,lv:5,pc:5,time:100,maker:'wood',attr:{wood:1},mat:{wood:15},solid:1,desc:'ひくいテーブル。住み心地+5'},
-  rug1:{cs:1.5,dw:1.25,name:'ひしがたラグ',kind:'furn',cat:'living',f2:1,lv:6,pc:3,time:80,maker:'wind',attr:{wind:1},mat:{wood:12},desc:'床にしくラグ。住み心地+5'},
+  ltable:{hp:5,brk:1,fix:3,fixm:{wood:3},dw:1.5,name:'ローテーブル',kind:'furn',cat:'living',f2:1,lv:5,pc:5,time:100,maker:'wood',attr:{wood:1},mat:{wood:6},solid:1,desc:'ひくいテーブル。住み心地+5'},
+  rug1:{cs:1.5,dw:1.25,name:'ひしがたラグ',kind:'furn',cat:'living',f2:1,lv:6,pc:3,time:80,maker:'wind',attr:{wind:1},mat:{wood:5},desc:'床にしくラグ。住み心地+5'},
   sofa1:{hp:5,brk:1,fix:5,fixm:{wood:10},dw:2.5,offerOnly:1,name:'ひとりがけソファ',kind:'furn',cat:'living',f2:1,lv:6,pc:9,time:120,maker:'wood',attr:{wood:1},mat:{wood:20},solid:1,desc:'しずみこむソファ。住み心地+6'},
   rug2:{offerOnly:1,cs:1.5,dw:1.75,name:'くもラグ',kind:'furn',cat:'living',f2:1,lv:7,pc:5,time:100,maker:'wind',attr:{wind:1},mat:{wood:15},desc:'くもの形のラグ。住み心地+6'},
   tub:{hp:5,brk:1,fix:2,fixm:{wood:2},name:'水おけ',kind:'furn',cat:'cook',f2:1,lv:3,pc:3,time:80,maker:'water',attr:{water:1},mat:{wood:3},solid:1,desc:'調理：かまどのそば（3マス）にあると、料理の時間-10%。住み心地+3'},
@@ -80,13 +80,13 @@ const BL={
   monstera:{hp:5,brk:1,fix:2,fixm:{wood:3,stone:3},name:'かんようしょくぶつ',kind:'furn',cat:'other',f2:1,lv:4,pc:4,time:80,maker:'wood',attr:{wood:1},mat:{wood:5,stone:5},solid:1,desc:'大きな葉の鉢植え。住み心地+10'},
   shelf1:{hp:5,brk:1,fix:5,fixm:{wood:10},name:'本棚',kind:'furn',cat:'other',f2:1,lv:6,pc:9,time:120,maker:'wood',attr:{wood:1},mat:{wood:20},solid:1,desc:'本と植物の棚。住み心地+12。木材・石材を合わせて50までしまえる'},
   wreath:{hp:5,brk:1,fix:2,fixm:{wood:7},offerOnly:1,name:'リース',kind:'furn',cat:'other',f2:1,lv:6,pc:4,time:80,maker:'wood',attr:{wood:1},mat:{wood:14},solid:1,desc:'葉と花のリース。住み心地+10'},
-  curtain1:{hp:5,brk:1,fix:3,fixm:{wood:13},name:'カーテン',kind:'furn',cat:'other',f2:1,lv:9,pc:5,time:80,maker:'wind',attr:{wind:1},mat:{wood:25},solid:1,desc:'家の上がわの壁にかける。窓のある壁にもかけられる。やわらかい光が入る。住み心地+10'},
+  curtain1:{hp:5,brk:1,fix:3,fixm:{wood:8},name:'カーテン',kind:'furn',cat:'other',f2:1,lv:9,pc:5,time:80,maker:'wind',attr:{wind:1},mat:{wood:15},solid:1,desc:'家の上がわの壁にかける。窓のある壁にもかけられる。やわらかい光が入る。住み心地+10'},
   cabinet:{hp:5,brk:1,fix:5,fixm:{wood:10},offerOnly:1,name:'キャビネット',kind:'furn',cat:'other',f2:1,lv:7,pc:9,time:120,maker:'earth',attr:{earth:1},mat:{wood:20},solid:1,desc:'とびらつきの棚。住み心地+12。食料を30までしまえる'},
   paint2:{hp:5,brk:1,fix:3,fixm:{wood:8},name:'葉っぱの額',kind:'furn',cat:'other',f2:1,lv:7,pc:5,time:80,maker:'wood',attr:{wood:1},mat:{wood:15},solid:1,desc:'葉っぱの絵。横向きの家の壁にかける。住み心地+10'},
   shelf2:{hp:5,brk:1,fix:6,fixm:{wood:15,stone:4},offerOnly:1,name:'かざり棚',kind:'furn',cat:'other',f2:1,lv:8,pc:11,time:140,maker:'wood',attr:{wood:1},mat:{wood:30,stone:8},solid:1,desc:'小物をかざる棚。住み心地+13。木材・石材を合わせて50までしまえる'},
   curtain2:{hp:5,brk:1,fix:3,fixm:{wood:13},offerOnly:1,name:'カーテン（緑）',kind:'furn',cat:'other',f2:1,lv:8,pc:5,time:80,maker:'wind',attr:{wind:1},mat:{wood:25},solid:1,desc:'森の色のカーテン。家の上がわの壁にかける。窓のある壁にもかけられる。住み心地+10'},
   paint3:{hp:5,brk:1,fix:3,fixm:{wood:13},offerOnly:1,name:'花の額',kind:'furn',cat:'other',f2:1,lv:8,pc:5,time:80,maker:'wind',attr:{wind:1},mat:{wood:25},solid:1,desc:'花の絵。横向きの家の壁にかける。住み心地+10'},
-  wshelf:{hp:5,brk:1,fix:4,fixm:{wood:13},name:'かべ棚',kind:'furn',cat:'other',f2:1,lv:8,pc:7,time:100,maker:'wood',attr:{wood:1},mat:{wood:25},solid:1,desc:'横向きの家の壁にかける。つる草をたらした棚。住み心地+12。木材・石材を合わせて50までしまえる'},
+  wshelf:{hp:5,brk:1,fix:4,fixm:{wood:10},name:'かべ棚',kind:'furn',cat:'other',f2:1,lv:8,pc:7,time:100,maker:'wood',attr:{wood:1},mat:{wood:20},solid:1,desc:'横向きの家の壁にかける。つる草をたらした棚。住み心地+12。木材・石材を合わせて50までしまえる'},
   paint1:{hp:5,brk:1,fix:5,fixm:{wood:15},offerOnly:1,name:'風景画',kind:'furn',cat:'other',f2:1,lv:9,pc:9,time:120,maker:'water',attr:{water:1},mat:{wood:30},solid:1,desc:'草原の絵。横向きの家の壁にかける。住み心地+14'},
   bathtub:{hp:5,brk:1,fix:8,fixm:{wood:8,stone:15},offerOnly:1,name:'バスタブ',kind:'furn',cat:'other',f2:1,lv:9,pc:15,time:180,maker:'water',attr:{water:1},mat:{wood:15,stone:30},solid:1,desc:'家でもお風呂。夕方、ここで水浴びできる。住み心地+16'},
   candle:{hp:5,brk:1,fix:1,fixm:{wood:1},offerOnly:1,name:'ろうそく',kind:'furn',cat:'light',f2:1,lv:5,pc:1,time:60,maker:'fire',attr:{fire:1},mat:{wood:2},solid:1,desc:'あかり。住み心地+3'},
@@ -97,7 +97,7 @@ const BL={
   birdhouse:{hp:5,brk:1,fix:2,fixm:{wood:2},name:'巣箱',kind:'furn',cat:'env',f2:1,lv:2,pc:3,time:80,maker:'wind',attr:{wind:1},mat:{wood:3},solid:1,env:1,er:4,desc:'まわり4マスで、たのしさ+0.4／1時間。範囲がとても広い'},
   birdbath:{hp:5,brk:1,fix:3,fixm:{stone:8},offerOnly:1,name:'水飲み鳥',kind:'furn',cat:'env',f2:1,lv:7,pc:5,time:100,maker:'water',attr:{water:1},mat:{stone:15},solid:1,env:3,desc:'まわり3マスで、たのしさ+1.1／1時間'},
   noren:{hp:5,brk:1,fix:3,fixm:{wood:6},name:'のれん',anim:1,dsc:2,kind:'furn',cat:'env',f2:1,lv:5,pc:7,time:100,maker:'fire',attr:{fire:1},mat:{wood:12},solid:1,env:7,er:1,desc:'温泉の入り口にかける布。まわり1マスだけ。そのかわり、たのしさ+2.5／1時間'},
-  parasol:{hp:5,brk:1,fix:4,fixm:{wood:10},name:'パラソル',anim:1,dsc:2,kind:'furn',cat:'env',f2:1,lv:5,pc:7,time:100,maker:'wind',attr:{wind:1},mat:{wood:20},solid:1,env:7,er:1,desc:'まわり1マスだけ。そのかわり、たのしさ+2.5／1時間'},
+  parasol:{hp:5,brk:1,fix:4,fixm:{wood:6},name:'パラソル',anim:1,dsc:2,kind:'furn',cat:'env',f2:1,lv:5,pc:7,time:100,maker:'wind',attr:{wind:1},mat:{wood:12},solid:1,env:7,er:1,desc:'まわり1マスだけ。そのかわり、たのしさ+2.5／1時間'},
   arch:{offerOnly:1,anim:1,dsc:1.8,name:'ガーデンアーチ',kind:'furn',cat:'env',f2:1,lv:8,pc:9,time:120,maker:'wood',attr:{wood:1},mat:{wood:30},env:4,desc:'まわり3マスで、たのしさ+1.4／1時間'},
   slide:{name:'すべり台',sz:[2,2],kind:'furn',cat:'toy',f2:1,lv:2,pc:9,time:140,maker:'wind',attr:{wind:1},mat:{wood:8,stone:3},play:{pt:3,pw:1.35,fun:35,dur:40,cap:1,adj:1},solid:1,desc:'1人で遊べる。たのしさ +35（40分）。遊ぶと10%の確率で、移動速度+1'},
   sandbox:{name:'砂場',sz:[2,1],nosc:1,kind:'furn',cat:'toy',f2:1,lv:5,pc:9,time:140,maker:'earth',attr:{earth:1},mat:{wood:11,stone:11},play:{pt:3,pw:1.35,fun:30,dur:45,cap:2,adj:1},solid:1,desc:'2人まで遊べる。たのしさ +30（45分）。遊ぶと10%の確率で、スタミナ+1'},
@@ -122,7 +122,7 @@ const BL={
   campfire:{hp:5,brk:1,fix:4,fixm:{wood:6,stone:4},name:'たき火',kind:'furn',pc:7,time:160,maker:'fire',lv:6,solid:1,anim:1,attr:{fire:4},play:{pt:3,pw:1.35,fun:25,dur:40,cap:3,adj:1},mat:{wood:11,stone:8},desc:'3人まで遊べる。たのしさ +25（40分）。まわり3.5マスも照らす。'},
   swing:{name:'ブランコ',kind:'furn',pc:9,time:160,maker:'wood',lv:4,play:{pt:4,pw:1.8,fun:40,dur:50,cap:1},attr:{wind:3},mat:{wood:12},desc:'1人で遊べる。たのしさ +40（50分）。遊ぶと10%の確率で、移動速度+1'},
   torch:{hp:5,brk:1,fix:1,fixm:{wood:2},name:'たいまつ',kind:'furn',lv:3,pc:1,time:100,maker:'fire',solid:1,anim:1,attr:{fire:2},mat:{wood:3},desc:'まわり3.5マスを照らす。住み心地+4'},
-  jar:{hp:5,brk:1,fix:2,fixm:{stone:2},name:'みずがめ',kind:'furn',lv:3,pc:3,time:120,maker:'water',solid:1,attr:{water:3},mat:{stone:3},desc:'水をためたかめ。まわり1マスの畑は水やりなしで育つ。住み心地+5'},
+  jar:{hp:5,brk:1,fix:2,fixm:{stone:3},name:'みずがめ',kind:'furn',lv:3,pc:3,time:120,maker:'water',solid:1,attr:{water:3},mat:{stone:5},desc:'水をためたかめ。まわり1マスの畑は水やりなしで育つ。住み心地+5'},
   basin:{hp:5,brk:1,fix:4,fixm:{stone:3},name:'水鉢',kind:'furn',pc:7,time:160,maker:'water',solid:1,anim:1,attr:{water:4,wood:.5},mat:{stone:5},desc:''},/* もう作れない（古いセーブ用） */
   kamizo:{hp:5,brk:1,fix:5,fixm:{stone:13},name:'カミサマの像',kind:'furn',lv:5,pc:10,time:160,maker:'earth',solid:1,attr:{earth:2},mat:{stone:25},desc:'カミサマが遊びにくる確率が2倍（25%→50%）'},
   chochin:{name:'おまつりのちょうちん',kind:'furn',shopOnly:1,pc:6,solid:1,attr:{},desc:'おまつりのおみやげ。赤いちょうちん。住み心地+6'},
@@ -130,7 +130,7 @@ const BL={
   ema:{name:'えまかけ',kind:'furn',shopOnly:1,pc:8,solid:1,attr:{},desc:'カミサマのかざり。ねがいごとを書いた板をかける。住み心地+8'},
   komainu:{name:'こまいぬ',kind:'furn',shopOnly:1,pc:10,solid:1,attr:{},desc:'カミサマのかざり。神殿をまもる石の犬。住み心地+10'},
   kadomatsu:{name:'かどまつ',kind:'furn',shopOnly:1,pc:10,solid:1,attr:{},desc:'カミサマのかざり。竹と松のおめでたいかざり。住み心地+10'},
-  rockart:{hp:5,brk:1,fix:1,fixm:{stone:2},name:'つぼ',kind:'furn',lv:2,pc:1,time:100,maker:'earth',solid:1,attr:{earth:2},mat:{stone:3},desc:'土でできたかざり。住み心地+5'},
+  rockart:{hp:5,brk:1,fix:1,fixm:{stone:3},name:'つぼ',kind:'furn',lv:2,pc:1,time:100,maker:'earth',solid:1,attr:{earth:2},mat:{stone:5},desc:'土でできたかざり。住み心地+5'},
   vane:{hp:5,brk:1,fix:4,fixm:{wood:2,stone:2},offerOnly:1,name:'風見鶏',kind:'furn',pc:7,time:160,maker:'wind',solid:1,anim:1,attr:{wind:4},mat:{wood:3,stone:3},desc:'風の向きをおしえる。まわり3マスのせいれいは移動速度×1.2（道しるべとは重ならない）。住み心地+4'},
   spike:{name:'とげの罠',fix:1,fixm:{wood:1,stone:1},kind:'furn',lv:1,pc:1,time:100,maker:'wood',qty:2,trap:1,attr:{earth:.5},mat:{wood:2,stone:2},desc:'上にいる「コワイノ」に、15分ごとに0.5ダメージ'},
   sticky:{name:'ねばねば草',fix:1,fixm:{wood:1},kind:'furn',lv:2,pc:1,time:80,maker:'wood',qty:2,trap:1,attr:{wood:.5},mat:{wood:2},desc:'上にいる「コワイノ」の速さが35%になる'},
@@ -5289,7 +5289,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='445';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='446';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
