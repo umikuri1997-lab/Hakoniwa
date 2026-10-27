@@ -4140,7 +4140,7 @@ for(const k in KGS){const g=KGS[k];g.img=new Image();g.img.onload=()=>{const cv=
 function atkLift(p){if(p<=0)return 0;if(p<.84)return Math.sin(p*40)*.04;if(p<.95)return (p-.84)/.11*2.7;if(p<.985)return 2.7-(p-.95)/.035*3.1;return -.4}
 function atkLean(p){return p>=.95&&p<1?.12:p>.84?-.08*(p-.84)/.11:0}
 const KGH={basic:100,fast:100,thief:100,brute:100,boss:118};
-// コワイノのドット絵：モーション（待機・歩き・攻撃）ごとのコマを切りかえる。コマはたてにならべた1まいの絵（n＝コマ数）。大きさは種類ごとの絵（どれも1ドット＝1）
+// コワイノのドット絵：モーション（待機・歩き・攻撃・やられ）ごとのコマを切りかえる。コマはたてにならべた1まいの絵（n＝コマ数）。大きさは種類ごとの絵（どれも1ドット＝1）
 const KGDOT={},KGDOK={};
 function kgDot(key,white){const ch=CHIPS[key],im=chipImgs(ch,key)[0];if(!white)return im;const k=key+'|w';if(KGDOT[k])return KGDOT[k];
   const cv=document.createElement('canvas');cv.width=im.width;cv.height=im.height;const g=cv.getContext('2d');g.drawImage(im,0,0);g.globalCompositeOperation='source-in';g.fillStyle='#f4eefa';g.fillRect(0,0,cv.width,cv.height);return KGDOT[k]=cv}/* ひかったときは白いかげ */
@@ -4149,10 +4149,11 @@ function drawShadeDot(c,ty,x,y,s,f,o){
   if(!KGDOK[ty]){for(const k in CHIPS)if(k.startsWith(K)&&!chipImgs(CHIPS[k],k)[0].ok)return false;KGDOK[ty]=1}
   const t=o.t||0,B=o.back?'B':'',p=o.atk||0,sc=s/(.27*EN[ty].size*2);
   // どのモーションの、何コマ目か
-  let mo='idle',fi=Math.floor(t*1.6)%2;
-  if(o.walk){mo='walk';fi=Math.floor(t*7)%4}
-  else if(p>=.84){mo='atk';fi=p<.95?0:p<1?1:2}/* ふりかぶる → ふりおろす → もどる */
-  const ch=CHIPS[K+mo+B]||CHIPS[K+mo],key=CHIPS[K+mo+B]?K+mo+B:K+mo;fi=Math.min(fi,(ch.n||1)-1);
+  let mo='idle',fi=Math.floor(t*1.6);
+  if(o.hurt!=null){mo='hurt';fi=o.hurt<.4?0:o.hurt<.75?1:2}/* 攻撃をうけたとき：やられの3コマ */
+  else if(o.walk){mo='walk';fi=Math.floor(t*6)}
+  else if(p>=.84){mo='atk';const n=(CHIPS[K+'atk'+B]||CHIPS[K+'atk']).n||3;fi=p<.95?0:Math.min(n-1,1+Math.floor((p-.95)/.05*(n-1)))}/* ふりかぶる → ふりおろす → もどる */
+  const key=mo==='hurt'||!CHIPS[K+mo+B]?K+mo:K+mo+B,ch=CHIPS[key];fi=mo==='hurt'?Math.min(fi,ch.n-1):fi%(ch.n||1);
   const sm=c.imageSmoothingEnabled;c.imageSmoothingEnabled=sc<.9;/* 図鑑などで小さく描くときだけ、なめらかに縮める */
   c.save();c.translate(x,y);c.scale(sc*f,sc);c.drawImage(kgDot(key,!!o.flash),0,fi*ch.h,ch.w,ch.h,ch.ax,ch.ay,ch.w,ch.h);c.restore();
   c.imageSmoothingEnabled=sm;return true}
@@ -4273,7 +4274,7 @@ function drawEnemy(e,now){
    const R=36*z,ox=px-R,oy=py+8-R*1.7,ww=R*2,hh=R*2.2,k=dpr*cam.z,cw=Math.ceil(ww*k)+2,ch=Math.ceil(hh*k)+2;
    if(EOC.width<cw||EOC.height<ch){EOC.width=EOS.width=Math.max(EOC.width,cw);EOC.height=EOS.height=Math.max(EOC.height,ch)}
    eox.setTransform(1,0,0,1,0,0);eox.clearRect(0,0,cw,ch);eox.setTransform(k,0,0,k,-ox*k,-oy*k);
-   drawShade(eox,e.type,px,py+8,.27*z,v.f,{dot:1,t:now/1000+e.id*1.3,back:v.back,walk:now-v.mv<200,flash:e.flash>0,atk:now-(e.swing||-1e9)<300?.95+(now-e.swing)/300*.045:now-v.mv<200?0:(e.atk||0)/D.atk});
+   drawShade(eox,e.type,px,py+8,.27*z,v.f,{dot:1,t:now/1000+e.id*1.3,back:v.back,walk:now-v.mv<200,flash:false,hurt:e.flash>0?Math.max(0,1-e.flash/6):null,atk:now-(e.swing||-1e9)<300?.95+(now-e.swing)/300*.045:now-v.mv<200?0:(e.atk||0)/D.atk});
    eos.globalCompositeOperation='copy';eos.drawImage(EOC,0,0);eos.globalCompositeOperation='source-in';eos.fillStyle='#fff';eos.fillRect(0,0,cw,ch);eos.globalCompositeOperation='source-over';
    const sw=cw/k,sh=ch/k,o=1.3;ctx.globalAlpha=e.stun>0?.5:.95;
    const OFF=[[o,0],[-o,0],[0,o],[0,-o],[o*.7,o*.7],[-o*.7,o*.7],[o*.7,-o*.7],[-o*.7,-o*.7]];for(const[dx,dy]of OFF)ctx.drawImage(EOS,0,0,cw,ch,ox+dx,oy+dy,sw,sh);
@@ -5283,7 +5284,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='413';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='414';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
