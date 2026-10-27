@@ -1383,6 +1383,15 @@ const ECHATS={/* 属性ごとのお話（0が、その属性の子） */
   [[0,'風にのると、遠くのにおいがするんだ。'],[1,'どんなにおい？'],[0,'まだ知らない、どこかのお花のにおい。']],
   [[0,'たんぽぽのわたげ、どこまでとぶと思う？'],[1,'となりの村くらい？'],[0,'もっと。空のはしっこまで。']]]};
 ELEM_KEYS.forEach(el=>(ECHATS[el]||[]).forEach(c=>{c.el=el;CHATS.push(c)}));
+[[[[0,'ヌシ様がいたころは、夜も、こんなに暗くなかったんだって。'],[1,'じゃあ、「コワイノ」も？'],[0,'…そのころは、いなかったみたい。']],()=>!S.cleared&&(S.nights||0)>=1],
+ [[[0,'「コワイノ」って、朝になると、どこに行くんだろう。'],[1,'お日さまに、とけちゃうのかな。'],[0,'…それとも、どこかのかげに、もどるのかも。']],()=>(S.nights||0)>=1],
+ [[[0,'夜、家の壁を「コワイノ」がたたいてた。'],[1,'こわかったね。'],[0,'うん。でも、「入れて」って言ってるみたいにも、聞こえたんだ。']],()=>(S.nights||0)>=1&&HOUSES.length>0],
+ [[[0,'オオカゲを、ちかくで見ちゃった。'],[1,'こわくなかった？'],[0,'こわかった。でも、体の中で、小さいかげが、いっぱいうごいてたんだ。'],[1,'…なんだか、さむそうだったね。']],()=>(S.bossKills||0)>=1],
+ [[[0,'畑の作物、またカゲドロボウにとられちゃった。'],[1,'じぶんで植えればいいのにね。'],[0,'…かげには、育てられないのかも。']],()=>!!(S.seenEn||{}).thief],
+ [[[0,'ワナクイって、罠をおいしそうに食べるよね。'],[1,'まもるために作った物って、おいしいのかな。'],[0,'…みんなの「まもりたい」が、つまってるからかも。']],()=>!!(S.seenEn||{}).trapper],
+ [[[0,'ハイカゲが通ったあと、かまどがつめたくなってた。'],[1,'あったかいのが、ほしいのかな。'],[0,'…灰になっても、まだ、さがしてるんだね。']],()=>!!(S.seenEn||{}).ash],
+ [[[0,'ヨルノオオカゲって、どこから来たんだろう。'],[1,'夜が、いっぱいあつまったみたいだったね。'],[0,'…オオカゲより、ずっと、ずっとたくさん。']],()=>!!(S.seenEn||{}).boss2]
+].forEach(([c,f])=>{c.ok=f;CHATS.push(c)});/* 「コワイノ」のお話：はっきりは言わず、聞いていると、正体が少しずつわかる */
 /* 属性ごとの会話も追加された後で、置いた物について話す会話すべてに条件をつける */
 {const ok=(t,f)=>{for(const c of CHATS)if(c[0]&&c[0][1]===t)c.ok=f};
 ok('ヌシ様って、どうしていなくなっちゃったんだろう。',()=>!S.cleared);
@@ -1787,7 +1796,7 @@ function steleF(j){const o=S.obj[j],b=o&&BL[o]&&BL[o].hp;if(!b||!STELES.length)r
 function litNear(h,x,y){for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++)if(h.set.has((y+dy)*W+x+dx))return true;return false}/* 家の中の灯り：家ぜんたいと、そこから1マス */
 function lightAt(x,y){for(const j of LIGHTS){const o=S.obj[j];const lx=j%W+(o==='lighthouse'?1:.5),ly=((j/W)|0)+(o==='lighthouse'?1:.5);if(INDL.has(o)){const h=roomOf(j);if(h?litNear(h,x|0,y|0):(lx-x)**2+(ly-y)**2<2.25)return true;continue}if((lx-x)**2+(ly-y)**2<(o==='tower'?49:o==='lighthouse'?64:12.25))return true}/* 灯りの範囲（石灯籠2.5・ふつう3.5・台座7マス） */return false}
 const EREACH=new WeakMap();
-const ZUKAN={basic:'いちばんよく見るコワイノ。夜になると、せいれいをねらってやってくる。',fast:'足がとても速い。体は小さくて、すぐ追いはらえる。',thief:'畑の実った作物をぬすみにくる。見つかると、すぐにげる。',brute:'体がかたくて力も強い。なかなか追いはらえない。',breaker:'壁をこわすのが大好き。まわり道をしないで、まっすぐこわしてくる。',trapper:'罠を見つけると、こわしにくる。',boss:'大きなコワイノ。まわりのせいれいも巻きこんで攻撃する。',ash:'灰をまきちらして、施設をしばらく使えなくする。',rockc:'岩みたいにかたい。動きはおそい。',yama:'火の山からおりてくる大きなコワイノ。温泉の熱をうばって、冷やしてしまう。',hino:'火山からやってくる大きなコワイノ。熱の切りかえ装置をこわそうとする。',boss2:'夜の力をたくわえた、いちばん大きなコワイノ。'};
+const ZUKAN={basic:'いちばんよく見るコワイノ。夜になると、せいれいをねらってやってくる。あたたかいものに、よってくるみたい。',fast:'足がとても速い。体は小さくて、すぐ追いはらえる。いつも、なにかをいそいで追いかけている。',thief:'畑の実った作物をぬすみにくる。見つかると、すぐにげる。じぶんでは、なにも育てられないらしい。',brute:'体がかたくて力も強い。なかなか追いはらえない。いくつもの夜をこえて、かたまったといわれる。',breaker:'壁をこわすのが大好き。まわり道をしないで、まっすぐこわしてくる。しめだされるのが、きらいなのかもしれない。',trapper:'罠や見張り台を見つけると、こわしにくる。まもるために作った物が、ごちそうらしい。',boss:'大きなコワイノ。まわりのせいれいも巻きこんで攻撃する。よく見ると、体の中で、小さなかげがいくつもうごいている。',ash:'灰をまきちらして、施設をしばらく使えなくする。もえつきた火の、のこりのような色をしている。',rockc:'岩みたいにかたい。動きはおそい。岩かげから、はなれたがらない。',yama:'火の山からおりてくる大きなコワイノ。温泉の熱をうばって、冷やしてしまう。体は、いつもつめたい。',hino:'火山からやってくる大きなコワイノ。熱の切りかえ装置をこわそうとする。熱をうばっても、すこしもあたたまらないらしい。',boss2:'夜の力をたくわえた、いちばん大きなコワイノ。この土地じゅうの夜が、ひとつにあつまったようなすがた。'};
 function shakeScreen(){const v=$('#cv');v.classList.remove('shk');void v.offsetWidth;v.classList.add('shk');setTimeout(()=>v.classList.remove('shk'),600)}
 const BOSSFX={boss:{col:'#ff3b6b',sub:'コワイノたちの親玉が、すがたをあらわした'},yama:{col:'#ff6a2e',sub:'火の山の熱をうばう、大きなコワイノ'},boss2:{col:'#ffd84a',sub:'夜の力をたくわえた、いちばん大きなコワイノ'}};
 function bossEntrance(e){/* オオカゲ・ヨルノオオカゲの登場：画面がよって、ゆれて暗くなる */const B=BOSSFX[e.type];SKIP=false;/* 登場のあいだは時間を止めて、すがたを見せる */const z0=cam.z;camAnim={fz:cam.z,tz:Math.min(3,cam.z*1.5),fx:cam.x+VW/cam.z/2,fy:cam.y+VH/cam.z/2,tx:e.x*TS,ty:e.y*TS-12*(EN[e.type].size||1),t:0,dur:.8};BOSSHOLD=performance.now()+5000;setTimeout(()=>{camAnim={fz:cam.z,tz:z0,fx:cam.x+VW/cam.z/2,fy:cam.y+VH/cam.z/2,tx:cam.x+VW/cam.z/2,ty:cam.y+VH/cam.z/2,t:0,dur:.8}},5000);/* ボスへズームアップして、少しのあいだ時間を止める（文字は出さない） */shakeScreen();dlgCue('dim');sfx('hit');
@@ -5019,7 +5028,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='387';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='388';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
