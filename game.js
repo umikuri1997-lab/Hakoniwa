@@ -3577,10 +3577,18 @@ function drawRoofs(c,now,hs,eo){if(!HOUSES.length)return;c.save();
     c.fillStyle='#9c9c9c';c.fillRect(cx-8.5,cy-14,17,5);c.fillStyle='#3a3a3a';c.fillRect(cx-5,cy-13,10,2.5);
     {const t=now/1000;for(let k=0;k<3;k++){const p=(t*.4+k/3)%1;c.fillStyle='rgba(240,240,240,'+(.5*(1-p)*A)+')';c.beginPath();c.arc(cx+Math.sin(p*6+k)*3,cy-16-p*18,3+p*4,0,7);c.fill()}}}
   c.restore()}
+const GCH=['ground#0','groundr#0','grass#0','gedge:0#0','gedger:0#0','gcorner','gcornerr'];
+function groundChipsOK(){const C=window.CHIPS;return !!C&&GCH.every(k=>C[k]&&chipImgs(C[k],'ground')[0].ok)}/* 地面のドット絵が読みこめたら使う */
+function drawGroundChips(){const C=window.CHIPS,r=WD===1?'r':'',dc=(k,x,y,i)=>{const ch=C[k];if(ch)drawChip(sc,ch,'ground',x,y,0,i)};
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++){const i=y*W+x;dc('ground'+r+'#'+((hash(i*7+1)*8)|0),x*TS,y*TS,i)}/* あれ地：8しゅるい */
+  const g=sc.createLinearGradient(0,0,W*TS,H*TS);g.addColorStop(0,'#a9ce7b');g.addColorStop(.48,'#9fc571');g.addColorStop(1,'#91b966');sc.fillStyle=g;
+  for(const i of REV){const x=i%W*TS,y=((i/W)|0)*TS;sc.fillRect(x,y,TS,TS);dc('grass#'+((hash(i*3+5)*8)|0),x,y,i)}/* 草地：色のうつり変わりはプログラム、葉や花はドット絵 */
+  for(const i of REV){const x=i%W*TS,y=((i/W)|0)*TS;for(const[dx,dy,side]of grassBoundaryEdges(i))dc('gedge'+r+':'+side+'#'+((hash(i*13+side)*4)|0),x,y,i);for(const[cx,cy]of grassBoundaryCorners(i))dc('gcorner'+r,cx,cy,i)}}/* 草とあれ地のさかい */
 function rebuildStatic(){findHouses();
+  if(groundChipsOK())drawGroundChips();else{
   for(let y=0;y<H;y++)for(let x=0;x<W;x++){const i=y*W+x;drawBarren(sc,i,x*TS,y*TS)}
   for(let y=0;y<H;y++)for(let x=0;x<W;x++){const i=y*W+x;if(REV.has(i))drawGrass(sc,i,x*TS,y*TS)}
-  for(const i of REV)drawGrassBoundary(sc,i,i%W*TS,((i/W)|0)*TS);
+  for(const i of REV)drawGrassBoundary(sc,i,i%W*TS,((i/W)|0)*TS)}
   // 色むら：マス単位ではなく、なめらかにぼかした明暗を重ねる
   {const nc=document.createElement('canvas');nc.width=W;nc.height=H;const nx=nc.getContext('2d'),im=nx.createImageData(W,H);
     for(let y=0;y<H;y++)for(let x=0;x<W;x++){let v=0,n=0;for(let b=-1;b<=1;b++)for(let a=-1;a<=1;a++){const xx=x+a,yy=y+b;if(xx<0||yy<0||xx>=W||yy>=H)continue;v+=hash((yy*W+xx)*31+7);n++}v=v/n-.5;
@@ -5138,7 +5146,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='401';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='402';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
