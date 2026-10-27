@@ -889,7 +889,7 @@ const typeAt=j=>S.obj[anc(j)];
 for(const f of FLOWERS)BL[f].anim=1;BL.table.anim=1;/* 食卓は1.5倍で、はみ出しても奥行き順にかく *//* 花ははみ出すので、地面にやきつけず、ほかの物と同じ順番で描く */
 const solidOf=j=>{const o=typeAt(j);return !!(o&&BL[o]&&BL[o].solid)};
 const ROTS={chair:4,chair2:4,achair:4,sofa1:4,bench:2,bed:2,sandbox:2,ltable:2,bathtub:2,rug1:2,slide:1,seesaw:1,swing:1,signpost:1,vane:1,oven:1};/* 向きをかえられる家具。4：前・右・後ろ・左　2：横・縦　1：左右反転だけ */
-const BEDHX=34,BEDHY=5,BEDHC=27,BEDVY=28;/* 横のベッド：寝る子の足もと（x,y）と、ふとんをかける左はし。たてのベッド：寝る子の足もとのy */
+const BEDHX=32,BEDHY=5,BEDHC=27,BEDVY=21,BEDHS=.85;/* 横のベッド：寝る子の足もと（x,y）と、ふとんをかける左はし（絵がないとき）。たてのベッド：寝る子の足もとのy。BEDHS：横向きで寝るときの、せいれいの横はば */
 const ROTN=id=>ROTS[id]===4?4:ROTS[id]?2:1,ROTL={4:['前','右','後ろ','左'],2:['横','縦'],1:['そのまま','反転']};
 let PLROTS={};/* 置くときにえらんでいる向き（家具ごと） */
 const rotAt=j=>(S&&S.rot&&S.rot[j])||0;
@@ -4009,7 +4009,7 @@ function drawRes0(r,now){
     ctx.fillStyle='#c9935f';rr(ctx,mx-12,my-9,24,4.5,1.5);ctx.fillStyle='#b9824f';rr(ctx,mx-11,my-13,20,4,1.5);ctx.fillStyle='rgba(255,255,255,.25)';ctx.fillRect(mx-10,my-12.6,17,1);
     if(o&&o.type&&BL[o.type].mat&&BL[o.type].mat.stone){circ(ctx,mx+9,my-10,3.4,'#a3a6ae');circ(ctx,mx+8,my-11,1.4,'#d4d5da')}}
   ctx.save();// 発熱対策：ぼかし影はなし
-  if(bedH){ctx.translate(px,fy);ctx.rotate(-Math.PI/2);ctx.translate(-px,-fy)}/* 横のベッドでは、頭をまくら（左）にして横になる */
+  if(bedH){ctx.translate(px,fy);ctx.rotate(-Math.PI/2);ctx.scale(BEDHS,1);ctx.translate(-px,-fy)}/* 横のベッドでは、頭をまくら（左）にして横になる */
   if(wade){ctx.beginPath();ctx.rect(px-40,fy-90,80,tubB?Math.max(0,fy+(((r.act.tub/W)|0)*TS+17-fy)*wade-(fy-90)):90-wade*11);ctx.clip()}
   const ci0=carryIcon(r),an=r.act&&r.act.stage==='do'&&!sleeping&&!onHold(r)?(r.act.type==='bathe'&&r.act.tub!=null?'tubbath':r.act.type):'';const joy=(JOYU.get(r)||0)>now&&!sleeping,clap=(CLAPON||now-CLAPT<3200||joy)&&!sleeping,wv=!clap&&!sleeping&&(r.waveU||0)>S.t,facePlayer=!$('#dialog').hidden&&DLGN.has(r.name)&&!clap&&!sleeping;/* 会話中は話し手がこちらを向く */const pk=(()=>{const sw=Math.max(r.swing||0,r.swingT||0),sd=now-sw;return sw&&sd>=0&&sd<420&&!clap&&!sleeping?sd/420:null})();drawSpirit(ctx,r.elem,px,fy,.435,clap?1:r.face<0?-1:1,{dot:1,t:tt,vr:r.vr,banzai:held,pp:pk,anim:pk!=null?'punch':clap?'clap':wv?'wave':reacting?({shock:'talkshock',think:'talkthink',sad:'talksad',nod:'talk'}[rm]||(an==='forage'?forageAnim(r):an)):(an==='forage'?forageAnim(r):an),food:(an==='eat'||an==='forage'&&r.act.t>=2)&&!clap?(r.act.e||'🍙'):'',/* ベリーを直接とって食べるときも、手に持って食べる */carry:!!ci0&&!clap&&an!=='pray',back:clap||wv||facePlayer?false:v.back,turn:clap||wv||facePlayer?0:v.turn,mood,walk:walking,work:working,sleep:sleeping,bed:bedJ>=0,blink:now>v.bl,lean:rp?rp.angle:sleeping?Math.sin(tt*.8)*.06:0});ctx.restore();{const sj2=(r.y|0)*W+(r.x|0),o2=S.obj[sj2];if(o2&&SEATS.includes(o2)&&r.act&&r.act.stage==='do'&&!walking){const f=chipOf(o2,sj2,null,'.front');if(f)drawChip(ctx,f,o2,(sj2%W)*TS,((sj2/W)|0)*TS,now,sj2)}}/* いすにすわる子の手前に、いすの「.front」（後ろ向きのいすの背もたれなど）を重ねる */
   if(lvR>=5&&!sleeping&&!wade){const n=Math.min(6,Math.floor(lvR/5));for(let i=0;i<n;i++){const SL=LVSLOT[i],bx=px+SL[0]+Math.cos(now/900+i*2.1+r.id)*1.5,by=fy+SL[1]+Math.sin(now/700+i*1.7+r.id)*2.6;lvCharm(ctx,r.elem,bx,by,now/1000+i+r.id)}}/* Lv5ごとに1つ、属性の小物がまわりにふわふわ浮かぶ（顔や体にはかさねない） */
@@ -5290,7 +5290,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='434';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='435';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
