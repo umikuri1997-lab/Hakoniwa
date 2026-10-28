@@ -3853,12 +3853,13 @@ function drawSpiritDot(c,el,x,y,s,f,o){
   if(el==='fire')spr(E0+'ember'+hs,0,dd(Math.sin(t*3)*2.5));/* 火の玉がふわふわ */
   if(el==='earth')rot(E0+'sprout'+hs,1,-88,Math.sin(t*2.4)*.18);/* 芽がゆれる */
   if(el==='wind'&&back){c.save();c.translate(0,-30*TUNE.bodyH);c.scale(TUNE.head,TUNE.head);c.translate(0,36);c.scale(1-tr*.3,1);wings(1);c.restore()}/* うしろ向きのはねは、頭といっしょに */
-  if(!back){if(el!=='wind')spr('sp:head'+S);if(el==='fire'&&!tr)spr(E0+'bang');
+  if(!back){if(el!=='wind')spr('sp:head'+S);
     const md=o.sleep?'':o.mood==='cry'?'teary':o.mood||'',fy=el==='wind'?-3*D:0;
     const fm=o.sleep||(o.blink&&!md)?'shut':md==='smile'||md==='joy'||md==='eat'?'hap':['teary','tear','shock','strain','sad'].includes(md)?md:'n';
     if(vr&&vr.cheek)spr('sp:cheek'+S,0,fy);
     spr('sp:face'+S+'#'+fm,0,fy);
     if(vr&&vr.lash&&fm!=='strain')spr('sp:lash'+S+'#'+fm,0,fy)}/* まつげは、表情ごとの目に合わせた絵 */
+    if(!back){const rk=E0+'hood'+hs+'F';if(CHIPS[rk])spr(rk);if(el==='fire'&&!tr)spr(E0+'bang')}/* 火の前髪は、頭巾のふちより上 *//* 頭巾のふちは、顔より上（顔の入るくぼみだけ、顔が見える） */
   c.restore();
   if(bothF)armD(farA,aA(farA));if(frontArm)armD(-farA,aA(-farA));
   if((A==='eat'||A==='hold')&&o.food&&!back){const ei=emoImg(o.food),yy=A==='hold'?-17:-27+Math.sin(t*7)*.8;if(ei){const ih=40,iw=ih*ei.width/ei.height;c.drawImage(ei,-iw/2,yy-ih/2,iw,ih)}else{c.font='40px sans-serif';c.textAlign='center';c.textBaseline='middle';c.fillStyle='#000';c.fillText(o.food,0,yy);c.textAlign='start';c.textBaseline='alphabetic'}}
@@ -5308,7 +5309,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='479';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='480';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
