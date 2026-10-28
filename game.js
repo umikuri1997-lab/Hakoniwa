@@ -70,9 +70,9 @@ const BL={
   pouf:{name:'まるクッション',kind:'furn',lv:5,cat:'living',f2:1,pc:1,time:60,maker:'wind',attr:{wind:1},mat:{wood:3},desc:'ころんとしたクッション。食卓のとなりに置く。ここで食べると、パワー+1.35。住み心地+3'},
   achair:{name:'ひじかけいす',kind:'furn',lv:9,cat:'living',f2:1,pc:5,time:100,maker:'wood',attr:{wood:1},mat:{wood:10},desc:'ゆったりすわれるいす。食卓の隣に置くと、ここで食べたときにパワー+2.25。住み心地+5'},
   ltable:{hp:5,brk:1,fix:3,fixm:{wood:3},dw:1.5,name:'ローテーブル',kind:'furn',cat:'living',f2:1,lv:5,pc:5,time:100,maker:'wood',attr:{wood:1},mat:{wood:6},solid:1,desc:'ひくいテーブル。住み心地+5'},
-  rug1:{cs:1.5,dw:1.25,name:'ひしがたラグ',kind:'furn',cat:'living',f2:1,lv:6,pc:3,time:80,maker:'wind',attr:{wind:1},mat:{wood:5},desc:'床にしくラグ。住み心地+5',anim:1},
+  rug1:{cs:1.5,sz:[2,2],dw:1.25,name:'ひしがたラグ',kind:'furn',cat:'living',f2:1,lv:6,pc:3,time:80,maker:'wind',attr:{wind:1},mat:{wood:5},desc:'床にしくラグ。住み心地+5',anim:1},
   sofa1:{hp:5,brk:1,fix:5,fixm:{wood:10},dw:2.5,offerOnly:1,name:'ひとりがけソファ',kind:'furn',cat:'living',f2:1,lv:6,pc:9,time:120,maker:'wood',attr:{wood:1},mat:{wood:20},solid:1,desc:'しずみこむソファ。住み心地+6'},
-  rug2:{offerOnly:1,cs:1.5,dw:1.75,name:'くもラグ',kind:'furn',cat:'living',f2:1,lv:7,pc:5,time:100,maker:'wind',attr:{wind:1},mat:{wood:15},desc:'くもの形のラグ。住み心地+6',anim:1},
+  rug2:{offerOnly:1,cs:1.5,sz:[2,2],dw:1.75,name:'くもラグ',kind:'furn',cat:'living',f2:1,lv:7,pc:5,time:100,maker:'wind',attr:{wind:1},mat:{wood:15},desc:'くもの形のラグ。住み心地+6',anim:1},
   tub:{hp:5,brk:1,fix:2,fixm:{wood:2},name:'水おけ',kind:'furn',cat:'cook',f2:1,lv:3,pc:3,time:80,maker:'water',attr:{water:1},mat:{wood:3},solid:1,desc:'調理：かまどのそば（3マス）にあると、料理の時間-10%。住み心地+3'},
   sink:{hp:5,brk:1,fix:4,fixm:{stone:3},name:'流し台',kind:'furn',cat:'cook',f2:1,lv:4,pc:7,time:120,maker:'water',attr:{water:1},mat:{stone:5},solid:1,desc:'調理：かまどのそば（3マス）にあると、料理の時間-10%。住み心地+4'},
   crate:{hp:5,brk:1,fix:2,fixm:{wood:4},name:'木箱',kind:'furn',cat:'other',f2:1,lv:2,pc:3,time:80,maker:'earth',attr:{earth:1},mat:{wood:8},solid:1,desc:'なんでも入る木の箱。住み心地+6。木材・石材を合わせて50までしまえる'},
@@ -721,9 +721,9 @@ function finalCheck(){if(WD||!S||S.cleared||S.finalNight||S.finalOn||!S.enemyOn|
 /* ---------- 状態 ---------- */
 let S=null;
 const resv=new Map();
-let STATUE=-1,OBOX=-1,BOARD=-1,counts={},LIGHTS=[],STELES=[],TOWERS=[],NEARFLOWER=new Set(),NEARWELL=new Set(),NEARMILL=new Set(),NEARVANE=new Set(),NEARSIGN=new Set(),NEARPARA=new Set(),ENVG=null,REV=new Set(),ATTR={},BASEPCT=0,GRASSN=0;const GRASS_GOAL=600;
+let STATUE=-1,OBOX=-1,BOARD=-1,counts={},LIGHTS=[],STELES=[],TOWERS=[],NEARFLOWER=new Set(),NEARWELL=new Set(),NEARMILL=new Set(),NEARVANE=new Set(),NEARSIGN=new Set(),NEARPARA=new Set(),RUGC=new Map(),ENVG=null,REV=new Set(),ATTR={},BASEPCT=0,GRASSN=0;const GRASS_GOAL=600;
 function newState(w){w=w||0;
-  const s={v:8,mig:3,flags:{},placed:{},feat:{build:true},inv:{},orders:[],enemyOn:false,nights:0,godGone:false,godShown:false,nushi:null,
+  const s={v:8,mig:4,flags:{},placed:{},feat:{build:true},inv:{},orders:[],enemyOn:false,nights:0,godGone:false,godShown:false,nushi:null,
     lv:1,bossKills:0,nightHurt:0,nightHad:false,wave:null,lastWarn:0,
     ref:{},ground:new Array(W*H).fill(0),floor:new Array(W*H).fill(''),obj:new Array(W*H).fill(''),dyn:{},hp:{},
     res:[],enemies:[],pt:15,totalPt:0,food:0,fs:{},cseed:{imo:4},crops:{imo:true},mat:{wood:0,stone:0},regrow:[],t:w===0?15*60:12*60,/* 草原は15時からはじまる */speed:1,baseLv:0,
@@ -963,11 +963,11 @@ function attrTxt(id){const b=BL[id];if(!b||!b.attr||b.kind==='block')return'';co
 const withAttr=(id,t)=>{const a=attrTxt(id);return a?(t?t+'　':'')+'【'+a+'】':t||''};
 function recount(){if(S.broken)S.broken=S.broken.filter(b=>!S.obj[b.j]);/* こわれた物の場所に、なにか置いたら、こわれた物のリストからはずす */
   for(const key in S.win||{}){const j=+key,wall=k=>HOME_WALLS.has(S.obj[k])||HOME_DOORS.has(S.obj[k]);if(S.win[j]==='wreath'&&S.obj[j]==='door'&&(wall(j-W)||wall(j+W))&&!(wall(j-1)||wall(j+1))){S.inv.wreath=(S.inv.wreath||0)+1;delete S.win[j];toast('たてのドアのリースを、持ち物にもどしました')}}/* たてのドアにはリースをかけられない。まわりの壁が変わってたてになったら、知らせてもどす */
-  STATUE=-1;OBOX=-1;BOARD=-1;counts={};LIGHTS=[];STELES=[];TOWERS=[];NEARFLOWER=new Set();NEARWELL=new Set();NEARMILL=new Set();NEARVANE=new Set();NEARSIGN=new Set();NEARPARA=new Set();ENVG=new Float32Array(W*H);REV=new Set();ATTR={};ELEM_KEYS.forEach(k=>ATTR[k]=0);
+  STATUE=-1;OBOX=-1;BOARD=-1;counts={};LIGHTS=[];STELES=[];TOWERS=[];NEARFLOWER=new Set();NEARWELL=new Set();NEARMILL=new Set();NEARVANE=new Set();NEARSIGN=new Set();NEARPARA=new Set();RUGC=new Map();for(const k in S.rug||{})for(const c of rugCells(+k))RUGC.set(c,+k);/* ラグがしいてあるマス→ラグの左上 */ENVG=new Float32Array(W*H);REV=new Set();ATTR={};ELEM_KEYS.forEach(k=>ATTR[k]=0);
   const around=(j,r,set)=>{const x=j%W,y=(j/W)|0;for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){if(dx*dx+dy*dy>r*r+1)continue;const nx=x+dx,ny=y+dy;if(nx>=0&&ny>=0&&nx<W&&ny<H)set.add(ny*W+nx)}};
   const addA=a=>{if(a)for(const k in a)ATTR[k]+=a[k]};
   let baseN=0,revN=0;
-  for(const k in S.rug||{}){const o=S.rug[k];counts[o]=(counts[o]||0)+1;if(inBase(k%W,(k/W)|0)&&BL[o])addA(BL[o].attr)}/* 家具の下のラグも数える */
+  for(const k in S.rug||{}){const o=S.rug[k];counts[o]=(counts[o]||0)+1;if(inBase(k%W,(k/W)|0)&&BL[o])addA(BL[o].attr)}/* ラグ（床の上の層）も数える */
   for(let j=0;j<W*H;j++){const o=S.obj[j],f=S.floor[j],x=j%W,y=(j/W)|0,ib=inBase(x,y);
     if(f){around(j,1,REV)}/* 床・道・壁などのブロックは、属性の力をためない */
     if(S.ground[j]===1&&ib)ATTR.water+=.3;
@@ -1123,7 +1123,7 @@ const work=(r,dt)=>{r.energy=Math.max(0,r.energy-.22*dt*(r.fun<30?1.7:r.fun<60?1
 const fast=(r,el)=>r.elem===el?2:1;
 
 const ACT={
-  eat:{start(r,a){if(!r.meal)return false;const m=typeof r.meal==='number'?{u:r.meal,pt:0,pw:0,e:'🍙'}:r.meal;r.meal=null;sfxAt('eat',r.x,r.y);a.to=Math.min(hMax(r),r.hunger+m.u*100/fullN(r));{const seat=!!a.pt;a.pt=(a.pt||0)+(seat?m.pt:Math.floor(m.pt/2));a.pw=(a.pw||0)+(seat?(m.pw||0):(m.pw||0)/2)}/* 席がないと、料理のぶんは半分 */a.e=m.e;a.items=m.items;r.bubble=m.e;if(a.tdir===-1||a.tdir===1)r.face=a.tdir;if(a.tdir!=null){const h=roomOf((r.y|0)*W+(r.x|0));if(h){let n=0;for(const j of h.inside){const o=S.obj[j];if(o&&BL[o]&&BL[o].cat==='living')n+=BL[o].dw||1}a.pt=(a.pt||0)+DINEPT[Math.min(6,n)];a.pw=(a.pw||0)+HOUSEPW[Math.min(6,n)]}}/* 家の中の食卓：ダイニング家具が多いほど、パワーが多い */},tick(r,a,dt){r.hunger=Math.min(a.to,r.hunger+2.6*dt);if(a.tdir!=null){a.bt=(a.bt||0)+dt;if(a.bt>5){a.bt=0;const m=S.res.some(q=>q!==r&&q.act&&q.act.type==='eat'&&q.act.stage==='do'&&q.act.tdir!=null&&Math.hypot(q.x-r.x,q.y-r.y)<3.5);r.bubble=m?pick(['😊',a.e||'🍙','😋','🎵']):(a.e||'🍙');if(m){r.fun=Math.min(100,r.fun+1);if(!a.mc){const q=S.res.find(q=>q!==r&&q.act&&q.act.type==='eat'&&q.act.stage==='do'&&q.act.tdir!=null&&Math.hypot(q.x-r.x,q.y-r.y)<3.5);if(q&&!q.act.mc){a.mc=q.act.mc=1;mate(r,q)}}}}}},done:(r,a)=>r.hunger>=a.to-.01||a.t>=60,end(r,a){const it=a.items||[];if(it.includes('berry')||it.includes('apple'))r.fun=Math.min(100,r.fun+8);if(it.includes('yakiberry'))r.fun=Math.min(100,r.fun+15);if(it.includes('yakiimo'))r.wkT=S.t+180;if(it.includes('yakiapple'))r.mvT=S.t+180;if(it.includes('bread'))r.full=S.t+300;if(it.includes('soup'))r.energy=Math.min(100,r.energy+25);if(it.includes('salad')){r.energy=Math.min(100,r.energy+10);r.fun=Math.min(100,r.fun+10)}if(it.includes('yakisoba')){r.energy=Math.min(100,r.energy+20);r.fun=Math.min(100,r.fun+10)}if(it.includes('takoyaki'))r.fun=Math.min(100,r.fun+25);if(it.includes('ringoame'))r.fun=Math.min(100,r.fun+20);if(it.includes(favDish(r))){a.pt=(a.pt||0)+2;a.pw=(a.pw||0)+.9;addFloat(r.x,r.y-1.6,'だいすきな味！','#ffd38a')}addPt(a.pw,r,a.pt);if(a.snack){r.bubble='😊';r.fun=Math.min(100,r.fun+10);r.shine=performance.now()}}},/* 料理ごとの効果 */
+  eat:{start(r,a){if(!r.meal)return false;const m=typeof r.meal==='number'?{u:r.meal,pt:0,pw:0,e:'🍙'}:r.meal;r.meal=null;sfxAt('eat',r.x,r.y);a.to=Math.min(hMax(r),r.hunger+m.u*100/fullN(r));{const seat=!!a.pt;a.pt=(a.pt||0)+(seat?m.pt:Math.floor(m.pt/2));a.pw=(a.pw||0)+(seat?(m.pw||0):(m.pw||0)/2)}/* 席がないと、料理のぶんは半分 */a.e=m.e;a.items=m.items;r.bubble=m.e;if(a.tdir===-1||a.tdir===1)r.face=a.tdir;if(a.tdir!=null){const h=roomOf((r.y|0)*W+(r.x|0));if(h){let n=0;for(const j of h.inside){const o=S.obj[j];if(o&&BL[o]&&BL[o].cat==='living')n+=BL[o].dw||1}for(const o of rugsIn(h.inside))n+=BL[o].dw||1;a.pt=(a.pt||0)+DINEPT[Math.min(6,n)];a.pw=(a.pw||0)+HOUSEPW[Math.min(6,n)]}}/* 家の中の食卓：ダイニング家具が多いほど、パワーが多い */},tick(r,a,dt){r.hunger=Math.min(a.to,r.hunger+2.6*dt);if(a.tdir!=null){a.bt=(a.bt||0)+dt;if(a.bt>5){a.bt=0;const m=S.res.some(q=>q!==r&&q.act&&q.act.type==='eat'&&q.act.stage==='do'&&q.act.tdir!=null&&Math.hypot(q.x-r.x,q.y-r.y)<3.5);r.bubble=m?pick(['😊',a.e||'🍙','😋','🎵']):(a.e||'🍙');if(m){r.fun=Math.min(100,r.fun+1);if(!a.mc){const q=S.res.find(q=>q!==r&&q.act&&q.act.type==='eat'&&q.act.stage==='do'&&q.act.tdir!=null&&Math.hypot(q.x-r.x,q.y-r.y)<3.5);if(q&&!q.act.mc){a.mc=q.act.mc=1;mate(r,q)}}}}}},done:(r,a)=>r.hunger>=a.to-.01||a.t>=60,end(r,a){const it=a.items||[];if(it.includes('berry')||it.includes('apple'))r.fun=Math.min(100,r.fun+8);if(it.includes('yakiberry'))r.fun=Math.min(100,r.fun+15);if(it.includes('yakiimo'))r.wkT=S.t+180;if(it.includes('yakiapple'))r.mvT=S.t+180;if(it.includes('bread'))r.full=S.t+300;if(it.includes('soup'))r.energy=Math.min(100,r.energy+25);if(it.includes('salad')){r.energy=Math.min(100,r.energy+10);r.fun=Math.min(100,r.fun+10)}if(it.includes('yakisoba')){r.energy=Math.min(100,r.energy+20);r.fun=Math.min(100,r.fun+10)}if(it.includes('takoyaki'))r.fun=Math.min(100,r.fun+25);if(it.includes('ringoame'))r.fun=Math.min(100,r.fun+20);if(it.includes(favDish(r))){a.pt=(a.pt||0)+2;a.pw=(a.pw||0)+.9;addFloat(r.x,r.y-1.6,'だいすきな味！','#ffd38a')}addPt(a.pw,r,a.pt);if(a.snack){r.bubble='😊';r.fun=Math.min(100,r.fun+10);r.shine=performance.now()}}},/* 料理ごとの効果 */
   forage:{start(r,a){const d=S.dyn[a.obj];if(!d||d.g<100)return false;d.g=0;a.e=S.obj[a.obj]==='fruit'?'🍎':'🍇';r.bubble=a.e;sfxAt('bush',r.x,r.y)},tick(r,a,dt){if(a.t>=3.5)r.hunger=Math.min(hMax(r),r.hunger+1.3*dt)}/* むしる(2秒)→手に持つ(1.5秒)→食べる */,done:(r,a)=>a.t>=27,end(r){addPt(.45,r,1)}},
   sleep:{start(r,a){r.bubble='💤';if(a.house||isNight()&&a.obj!=null&&roomOf(a.obj))r.hidden=true;/* 夜、家のベッドで寝ている子は、かくれている（コワイノにねらわれない） */a.night=isNight();{const h=a.stand>=0?roomOf(a.obj!=null?a.obj:a.stand):null;a.cf=h?.6+comfyFor(h,r)/100*.9:1}/* 家の住み心地で、つかれのとれる速さが変わる（0→0.6倍、100→1.5倍、300→3.3倍） */},tick(r,a,dt){if(a.ground&&!isNight()&&((a.bchk=(a.bchk||0)+dt)>2)){a.bchk=0;let bj=-1;for(let j=0;j<W*H&&bj<0;j++)if((S.obj[j]==='bench'||(S.obj[j]==='part'&&S.obj[S.ref[j]]==='bench'))&&!ashed(anc(j))&&free('o'+j,1))bj=j;if(bj>=0){endAct(r);return}}/* 昼に地面で休んでいる子は、ベンチがあいたら、そっちにすわりなおす */const cap=a.ground?50:100;if(r.energy<cap)r.energy=Math.min(cap,r.energy+a.rate*(a.night?1:2)*(a.cf||1)*mateK(r,'sleep')*dt)},
     done:(r,a)=>r.hunger<18||(a.night?!isNight():r.energy>=(a.ground?50:90)),end(r,a){}/* 寝るだけでは、パワーも経験値もふえない */},/* 起きたときのパワーも住み心地で変わる */
@@ -2247,7 +2247,7 @@ const FIREB={/* 火のキーキャラが、あにきのとき */
   lighthouse1:{L:[['K','夜の見回り、まだ暗いところがあって不安なんだ。'],['K','もっと遠くまで照らせる、でっかい灯りがあれば、いいんだがな。'],['@idea']],X:[['K','おお、灯台だ！ これなら遠くまでよく見えるぜ。'],['K','ありがとよ、守り神。']]},
   toy2:{L:[['K','なあ、守り神。ここ、走りまわれる場所はあるけど、ちょっと物足りなくねえか？'],['K','砂の山をつくったり、穴をほったり……そういう遊び場があったら、みんな喜ぶと思うぜ。'],['K','守り神、どんな形を思い浮かべる？'],['@idea']],X:[['K','おお、砂場だ！ さっそく山をつくろうぜ！'],['K','ありがとな、守り神。']]},
   fence20:{L:[['K','土地が広がったぶん、守る場所もふえたな。'],['K','ふちのほうは、まだがら空きじゃねえか。'],['K','#alarm|柵をずらっと並べて、「コワイノ」の足を止めてやろうぜ。']],X:[['K','いいじゃねえか、これならそう簡単には入ってこれねえぜ！'],['K','ありがとよ、守り神。']]}};/* ホノ（あにき）は、いつも「おれ」。あたいは、ホムラ（あねご）だけ */
-function inHouseFurn(){const k=new Set();for(let j=0;j<S.obj.length;j++){const o=S.obj[j];if(!o||!BL[o]||BL[o].kind!=='furn'||BL[o].trap)continue;if(HOUSES.some(h=>h.set&&h.set.has(j)))k.add(o)}return k.size}/* 家の中にある家具・かざりの種類の数 */
+function inHouseFurn(){const k=new Set();for(let j=0;j<S.obj.length;j++){const o=S.obj[j];if(!o||!BL[o]||BL[o].kind!=='furn'||BL[o].trap)continue;if(HOUSES.some(h=>h.set&&h.set.has(j)))k.add(o)}for(const h of HOUSES)if(h.set)for(const o of rugsIn(h.set))k.add(o);return k.size}/* 家の中にある家具・かざりの種類の数 */
 function qAt(id){const qi=QUESTS.findIndex(q=>q.id===id);if(qi<0)return false;return (S.quest>qi||S.quest===qi&&!!S.qTalked)}/* そのメインクエストを受けたあと */
 function qDone(id){const index=QUESTS.findIndex(q=>q.id===id);if(index<0)return false;if(S.qStory===index)return false;return S.quest>index}
 const SUB_MAIN_AFTER={chair2:'table',farm10:'farm6',light3:'fire',oven:'fire'};
@@ -2568,8 +2568,13 @@ function usable(id){const b=BL[id];if(WIND_STAGE_TOYS.has(id)&&WD!==4)return fal
 function wellOK(){const qi=QUESTS.findIndex(q=>q.id==='water');return qi<0||!!S.flags.wellR||S.quest>qi+1||(S.quest===qi+1&&S.qStory==null)}
 function statueSite(){for(const k in S.dyn)if(S.obj[k]==='site'&&S.dyn[k].build==='statue')return true;return false}
 const BADC={k:'',t:0,L:[]};
-const RUGS=new Set(['rug1','rug2']);/* ラグは、家具の下にも敷ける（S.rug にしまう） */
+const RUGS=new Set(['rug1','rug2']);/* ラグは、床の上の層（S.rug：左上のマス→ラグ）。たて2・よこ2マス。上に家具を置ける */
+const rugCells=a=>[a,a+1,a+W,a+W+1];
+const rugsIn=set=>{const L=[];for(const k in S.rug||{})if(rugCells(+k).some(c=>set.has(c)))L.push(S.rug[k]);return L};/* 家の中（どこか1マスでも）にあるラグ */
+function canRug(x,y,quiet){const no=t=>{if(!quiet)toast(t);return false};if(x<0||y<0||x+1>=W||y+1>=H)return false;
+  for(const c of rugCells(y*W+x)){if(!inBase(c%W,(c/W)|0))return no('基地の中にだけ置けます');if(S.ground[c]===1)return no('水の上には置けません');if(RUGC.has(c))return no('ここにはもうラグがあります');const o=S.obj[c],a=o==='part'?S.obj[S.ref[c]]:o;if(a&&!(BL[a]&&BL[a].kind==='furn'&&!BL[a].trap&&!WALLD.has(a)))return no('ここにはもう何かあります')}return true}/* 家具の下にもしける */
 function canPlace(id,x,y,quiet){
+  if(RUGS.has(id))return canRug(x,y,quiet);
   if(id==='statue'&&!(canPlace('fence',x-1,y,quiet)&&canPlace('fence',x+1,y,quiet)&&canPlace('fence',x,y+1,quiet)))return false;
   if(BL[id].sz){for(const[a,b]of fp(id,x,y))if(!canPlace1(id,a,b,quiet))return false;return true}
   return canPlace1(id,x,y,quiet);
@@ -2581,7 +2586,8 @@ function canPlace1(id,x,y,quiet){
   const j=y*W+x;if(id==='lotus'){if(S.ground[j]!==1){if(!quiet)toast('ハスは池の上にだけ植えられます');return false}if(S.obj[j]){if(!quiet)toast('ここにはもう何かあります');return false}return true}
   if(S.ground[j]===1){if(!quiet)toast('水の上には置けません');return false}
   if(BL[id].floor)return S.floor[j]!==id&&!(S.obj[j]&&BL[S.obj[j]].job);
-  if(S.obj[j]){const oc=S.obj[j];if(!(RUGS.has(oc)&&!RUGS.has(id)&&BL[id].kind==='furn'&&!(S.rug&&S.rug[j]))&&!(RUGS.has(id)&&BL[oc]&&BL[oc].kind==='furn'&&!BL[oc].sz&&!RUGS.has(oc)&&!(S.rug&&S.rug[j]))){if(!quiet)toast('ここにはもう何かあります');return false}}/* ラグの上には家具を置ける。家具の下にもラグを敷ける */
+  if(S.obj[j]){if(!quiet)toast('ここにはもう何かあります');return false}
+  if(RUGC.has(j)&&BL[id].kind!=='furn'){if(!quiet)toast('ラグの上には、家具だけ置けます');return false}/* ラグの上には家具を置ける */
   {const b=BL[id];if(b&&(b.solid||HOME_WALLS.has(id)||(FENCE_IDS.has(id)&&!GATE_IDS.has(id)))&&(S.res.some(r=>!r.hidden&&(r.y|0)*W+(r.x|0)===j)||S.enemies.some(e=>e.spawned&&!e.dead&&(e.y|0)*W+(e.x|0)===j))){if(!quiet)toast('せいれいか「コワイノ」がいるので、置けません');return false}}/* 立っている子がいる場所には、通れなくなる物は置けない */
   return true;
 }
@@ -2621,12 +2627,11 @@ function place(id,x,y){
     const prevFloor=b.floor?S.floor[j]:'';undoStack.push({j,prevFloor,id});
     if(ROTS[id]){const R=S.rot||(S.rot={}),v=PLROTS[id]||0;if(v)R[j]=v;else delete R[j]}/* 置くときにえらんだ向き（大きさの計算より先に） */
     S.inv[id]--;if(prevFloor)giveItem(prevFloor,1);
-    if(RUGS.has(id)&&S.obj[j]&&!RUGS.has(S.obj[j])){(S.rug||(S.rug={}))[j]=id;const RR=S.rugRot||(S.rugRot={});if(PLROTS[id])RR[j]=PLROTS[id];else delete RR[j];}/* 家具の下にラグを敷く */
-    else{if(!RUGS.has(id)&&b.kind==='furn')for(const[a,c]of(b.sz?fp(id,x,y):[[x,y]])){const k=c*W+a;if(RUGS.has(S.obj[k])){(S.rug||(S.rug={}))[k]=S.obj[k];if(S.rot&&S.rot[k]){(S.rugRot||(S.rugRot={}))[k]=S.rot[k];delete S.rot[k]}S.obj[k]=''}}/* ラグの上に家具を置く：ラグは下の層へ */
-    setBlock(id,j)}
+    if(RUGS.has(id)){(S.rug||(S.rug={}))[j]=id;const RR=S.rugRot||(S.rugRot={});if(PLROTS[id])RR[j]=PLROTS[id];else delete RR[j];if(S.rot)delete S.rot[j];undoStack[undoStack.length-1].rug=1}/* ラグは床の上の層にしく */
+    else setBlock(id,j)
   }
   if(undoStack.length>30)undoStack.shift();
-  S.placed[id]=(S.placed[id]||0)+1;recount();if(S.obj[j]===id)noteQuestPlacement(id,j);burst(j,b.kind==='block'?'block':b.kind==='plant'?'plant':'furn',b.kind==='furn'?'furnPlace':b.kind==='plant'?'pat':null);if(SEATS.includes(id)&&spotW(j)>=0)addFloat(j%W+.5,(j/W|0)-.3,'つりスポット！');renderPalette();checkQuest();
+  S.placed[id]=(S.placed[id]||0)+1;recount();if(S.obj[j]===id||RUGS.has(id)&&S.rug&&S.rug[j]===id)noteQuestPlacement(id,j);burst(j,b.kind==='block'?'block':b.kind==='plant'?'plant':'furn',b.kind==='furn'?'furnPlace':b.kind==='plant'?'pat':null);if(SEATS.includes(id)&&spotW(j)>=0)addFloat(j%W+.5,(j/W|0)-.3,'つりスポット！');renderPalette();checkQuest();
   if(id==='door'){const w=houseWhy(j);if(w)setTimeout(()=>toast(w,'warn'),400);else if(HOUSES.some(h=>h.set.has(j)))setTimeout(()=>toast('家ができた！','good'),400)}/* ドアを置いたら、家になったかを知らせる */
 }
 function undo(){
@@ -2635,7 +2640,7 @@ function undo(){
   if(u.seed){if(o==='sprout'){clearObj(u.j);giveItem(u.id,1)}else return toast('もう手をつけているので、もどせません')}
   else if(u.pc!=null){if(o==='site'){if(u.id==='statue')return toast('神殿はもどせません');clearObj(u.j);S.pt+=u.pc;for(const k in u.mat||{})S.mat[k]=(S.mat[k]||0)+u.mat[k]}else return toast('もう手をつけているので、もどせません')}
   else if(BL[u.id].floor){S.floor[u.j]=u.prevFloor;if(u.prevFloor)S.inv[u.prevFloor]=Math.max(0,inv(u.prevFloor)-1);giveItem(u.id,1)}
-  else if(RUGS.has(u.id)&&S.rug&&S.rug[u.j]===u.id&&o!==u.id){delete S.rug[u.j];giveItem(u.id,1)}/* 家具の下にしいたラグ */
+  else if(u.rug){if(!(S.rug&&S.rug[u.j]===u.id))return toast('もうもどせません');delete S.rug[u.j];if(S.rugRot)delete S.rugRot[u.j];giveItem(u.id,1)}/* ラグ */
   else{if(o!==u.id&&!(u.id==='farm'&&o==='plot'))return toast('もうもどせません');clearObj(u.j);giveItem(u.id,1)}
   recount();renderPalette();
 }
@@ -2655,12 +2660,16 @@ function dropFlower(){/* なくした花だん：置いてある物・持ち物�
   if(S.inv&&S.inv.flower){S.inv.clover=(S.inv.clover||0)+S.inv.flower;delete S.inv.flower}
   for(const o of S.orders||[])if(o.type==='flower')o.type='clover';
   if(S.recipes)delete S.recipes.flower;if(S.guardianIdeas)delete S.guardianIdeas.flower;if(S.unlocked&&S.unlocked.flower){delete S.unlocked.flower;S.unlocked.clover=true}}
-function fixBeds(){/* 2マスだったころのベッド：のこりのマス（part）をあける。下にしいてあったラグは出てくる */
-  for(const k in S.ref){const j=S.ref[k];if(S.obj[k]==='part'&&S.obj[j]==='bed'){S.obj[k]='';delete S.ref[k];if(S.rug&&S.rug[k]){S.obj[k]=S.rug[k];delete S.rug[k];if(S.rugRot&&S.rugRot[k]){(S.rot||(S.rot={}))[k]=S.rugRot[k];delete S.rugRot[k]}}}}}
+function fixBeds(){/* 2マスだったころのベッド：のこりのマス（part）をあける（下のラグは、ラグの層にのこる） */
+  for(const k in S.ref){const j=S.ref[k];if(S.obj[k]==='part'&&S.obj[j]==='bed'){S.obj[k]='';delete S.ref[k]}}}
+function rugsBig(){/* ラグがたて2・よこ2マスになった：前のラグ（1マス・家具の下の分も）を、そのマスをふくむ2×2にひろげる。ひろげられないラグは、おそなえ箱にもどす */
+  const old=[];for(let j=0;j<W*H;j++)if(RUGS.has(S.obj[j])){old.push([j,S.obj[j],(S.rot||{})[j]||0]);S.obj[j]='';if(S.rot)delete S.rot[j]}
+  for(const k in S.rug||{})old.push([+k,S.rug[k],(S.rugRot||{})[k]||0]);S.rug={};S.rugRot={};RUGC=new Map();let back=0;
+  for(const[j,id,rt]of old){const x=j%W,y=(j/W)|0,a=[[x,y],[x-1,y],[x,y-1],[x-1,y-1]].find(([ax,ay])=>canRug(ax,ay,true));if(!a){giveItem(id,1);back++;continue}const k=a[1]*W+a[0];S.rug[k]=id;if(rt)S.rugRot[k]=rt;for(const c of rugCells(k))RUGC.set(c,k)}
+  if(back)setTimeout(()=>toast('ラグが大きくなったので、しけないラグを'+back+'つ、おそなえ箱にもどしました'),1500)}
 function clearObj(j){j=anc(j);const o=S.obj[j];if(S.bedOwn)delete S.bedOwn[j];/* ベッドをどけたら、だれのベッドかも消す */const tl=o&&BL[o]&&BL[o].sz?fp(o,j%W,(j/W)|0).map(([a,b])=>b*W+a):[j];delete S.hp['L'+j];if(S.win&&S.win[j]){const p=S.win[j];giveItem(p===1?'window':p,1);if(p==='curtain1'||p==='curtain2')giveItem('window',1);delete S.win[j]}/* カーテンの下の窓ももどす */if(S.rot)delete S.rot[j];for(const k in S.ref)if(S.ref[k]===j){S.obj[k]='';delete S.ref[k]}S.obj[j]='';delete S.dyn[j];delete S.hp[j];delete S.hp['L'+j];
-  if(S.rug&&!RUGS.has(o))for(const k of tl){const rg=S.rug[k];if(rg&&!S.obj[k]){S.obj[k]=rg;delete S.rug[k]}}/* 下に敷いてあったラグが出てくる */
   for(const r of S.res)if(r.act&&r.act.obj===j)endAct(r);return o}
-function removeAt(x,y){
+function removeAt(x,y){const tx0=x,ty0=y;
   if(!inBase(x,y))return toast('基地の外はこわせません');
   const j=anc(y*W+x),o=S.obj[j];x=j%W;y=(j/W)|0;
   if(S.win&&S.win[j]){const id=S.win[j]===1?'window':S.win[j];if(id==='curtain1'||id==='curtain2')S.win[j]=1;else delete S.win[j];giveItem(id,1);/* カーテンをはずすと、窓がのこる */toast(BL[id].name+'をおそなえ箱にもどした');burst(j,'furn','rm');recount();renderPalette();return}
@@ -2675,6 +2684,7 @@ function removeAt(x,y){
       else if(b.kind==='build'&&b.mat){const fr=S.freeB&&S.freeB[j];if(fr)delete S.freeB[j];else for(const k in b.mat)S.mat[k]=(S.mat[k]||0)+b.mat[k];toast(b.name+'をこわした')}/* ただで建てたもの（クエストの見張り台）は、素材がもどらない *//* 建物：素材はもどる・パワーはもどらない */
       else toast(b.name+'をとりのぞいた')}
     burst(j,'block','rm');recount();renderPalette();return}
+  {const c=ty0*W+tx0;if(RUGC.has(c)){const a=RUGC.get(c),id=S.rug[a];delete S.rug[a];if(S.rugRot)delete S.rugRot[a];giveItem(id,1);toast(BL[id].name+'をおそなえ箱にもどした');burst(a,'furn','rm');recount();renderPalette();return}}/* 上に物がなければ、ラグをはずす */
   if(S.floor[j]){const f=S.floor[j];S.floor[j]='';giveItem(f,1);burst(j,'block','rm');recount();renderPalette()}
 }
 function finishBuild(j,r){
@@ -3569,7 +3579,7 @@ const COMFR={rockart:1,jar:1,torch:1,clover:1,bellf:1,salvia:1,lily:1,lotus:1,la
 const COMFY={stool:2,stable:4,pouf:3,achair:5,ltable:5,rug1:5,sofa1:6,rug2:6,tub:3,sink:4,crate:6,monstera:10,shelf1:12,wreath:10,curtain1:10,cabinet:12,paint2:10,shelf2:13,curtain2:10,paint3:10,wshelf:12,paint1:14,bathtub:16,candle:3,lantern:5,flamp:6,window:5,bed:10,table:8,chair:4,oven:6,lamp:6,torch:4,bench:5,jar:5,rockart:5,chochin:6,furin:8,ema:8,komainu:10,kadomatsu:10,vane:4,clover:4,bellf:4,salvia:4,lily:4,lotus:4,stor:3,mbox:3};
 function houseComfort(h){let bed=0,furn=0,fl=0,n=0;const seen=new Set();
   const kc={};for(const j of h.inside){n++;if(S.floor[j])fl++;const o=S.obj[j];if(!o||!COMFY[o])continue;if(o==='bed')bed++;else{kc[o]=(kc[o]||0)+1;furn+=COMFY[o]*(kc[o]>2?.5:1);seen.add(o)}}/* 同じ家具は2つまで。3つ目からは半分 */
-  for(const j of h.inside){const o=S.rug&&S.rug[j];if(o&&COMFY[o]){kc[o]=(kc[o]||0)+1;furn+=COMFY[o]*(kc[o]>2?.5:1);seen.add(o)}}/* 家具の下のラグ */
+  for(const o of rugsIn(h.inside)){if(!COMFY[o])continue;kc[o]=(kc[o]||0)+1;furn+=COMFY[o]*(kc[o]>2?.5:1);seen.add(o)}/* ラグ（家の中に1マスでもかかっていれば） */
   {const M=2;for(let y=h.y0-M;y<=h.y1+M;y++)for(let x=h.x0-M;x<=h.x1+M;x++){if(x<0||y<0||x>=W||y>=H)continue;const j=y*W+x;if(h.set.has(j))continue;const o=S.obj[j],rg=COMFR[o];if(!rg||!COMFY[o])continue;const d=Math.max(h.x0-x,x-h.x1,h.y0-y,y-h.y1,0);if(d>rg)continue;kc[o]=(kc[o]||0)+1;furn+=COMFY[o]*(kc[o]>2?.5:1);seen.add(o)}}/* かざりは、家のそば（ものごとの範囲）にあっても住み心地に入る */
   {let wn=0;for(const j of h.set)if(S.win&&(S.win[j]===1||S.win[j]==='curtain1'||S.win[j]==='curtain2'))wn++;/* カーテンの下にも窓がある */if(wn){furn+=COMFY.window*Math.min(wn,2)+COMFY.window*.5*Math.max(0,wn-2);seen.add('window')}}/* 窓 */
   for(const j of h.set){const p=S.win&&S.win[j];if(p&&p!==1&&COMFY[p]){kc[p]=(kc[p]||0)+1;furn+=COMFY[p]*(kc[p]>2?.5:1);seen.add(p)}}/* 壁にかけた絵 */
@@ -3629,8 +3639,8 @@ function sayLine(r){const L=[],fav=FOODS[favDish(r)],m=bestMate(r);
 function helloLine(r){const k=elemKey(r);
   if(r.back)return pick(BACKL[k]);if(KEYHELLO[r.name])return KEYHELLO[r.name];return pick(HELLO[k]).replace('$',r.name)}
 const likeF=r=>{if(r.lf&&BL[r.lf])return r.lf;let h=2166136261;for(const ch of r.name+(r.id||0))h=Math.imul(h^ch.charCodeAt(0),16777619)>>>0;h^=h>>>13;h=Math.imul(h,2246822507)>>>0;h^=h>>>16;r.lf=LIKEF[(h>>>0)%LIKEF.length];return r.lf};/* 好きな家具：ひとりずつちらばる（一度決まったら変わらない） */
-const hasLikeF=(h,r)=>{const f=likeF(r);for(const j of h.inside)if(S.obj[j]===f)return true;return false};
-const likeExtra=(h,r)=>{const f=likeF(r),pt=COMFY[f]||0;if(!pt)return 0;let n=0,t=0;for(const j of h.inside)if(S.obj[j]===f){n++;t+=pt*(n>2?.5:1)}return t};/* 好きな家具は、その家具のぶんの住み心地ポイントが2倍 */
+const hasLikeF=(h,r)=>{const f=likeF(r);for(const j of h.inside)if(S.obj[j]===f)return true;return RUGS.has(f)&&rugsIn(h.inside).includes(f)};
+const likeExtra=(h,r)=>{const f=likeF(r),pt=COMFY[f]||0;if(!pt)return 0;let n=0,t=0;for(const j of h.inside)if(S.obj[j]===f){n++;t+=pt*(n>2?.5:1)}if(RUGS.has(f))for(const o of rugsIn(h.inside))if(o===f){n++;t+=pt*(n>2?.5:1)}return t};/* 好きな家具は、その家具のぶんの住み心地ポイントが2倍 */
 const comfyFor=(h,r,C)=>Math.min(COMFMAX,(C||houseComfort(h)).v+likeExtra(h,r));
 const comfyStars=v=>'★'.repeat(Math.min(5,Math.max(1,Math.ceil(v/(60)))))+'☆'.repeat(5-Math.min(5,Math.max(1,Math.ceil(v/(60)))));
 /* 家の広さで、ちょうどいい人数が決まる（中のマス4つで1人） */
@@ -3709,6 +3719,7 @@ function drawGroundChips(sc,X0,Y0,X1,Y1){const inR=i=>{const x=i%W,y=(i/W)|0;ret
   for(let y=Y0;y<=Y1;y++)for(let x=X0;x<=X1;x++){const i=y*W+x;dc('ground'+r+'#'+((hash(i*7+1)*8)|0),x*TS,y*TS,i)}/* あれ地：8しゅるい */
   const gt=chipImgs(C['tex:grass'],'ground')[0];for(const i of REV){if(!inR(i))continue;const x=i%W*TS,y=((i/W)|0)*TS;sc.drawImage(gt,x%96,y%96,TS,TS,x,y,TS,TS)}/* 草地：96×96のテクスチャを、マップの位置どおりにしきつめる */
   for(const i of REV){if(!inR(i))continue;const x=i%W*TS,y=((i/W)|0)*TS;for(const[dx,dy,side]of grassBoundaryEdges(i))dc('gedge'+r+':'+side+'#'+((hash(i*13+side)*4)|0),x,y,i);for(const[cx,cy]of grassBoundaryCorners(i))dc('gcorner'+r,cx,cy,i)}}/* 草とあれ地のさかい */
+function drawRug(c,id,x,y,i){c.save();c.translate(x+32,y+32);c.scale(1.4,1.4);c.translate(-16,-20);drawObj(c,id,0,0,i);c.restore()}/* ラグ：2×2マスのまんなかに、2マスはばの大きさで */
 function drawStaticArea(sc,X0,Y0,X1,Y1){/* 地面・床・水・動かない物を、マス(X0,Y0)〜(X1,Y1)のはんいだけ描く */const inR=i=>{const x=i%W,y=(i/W)|0;return x>=X0&&x<=X1&&y>=Y0&&y<=Y1};
   if(groundChipsOK())drawGroundChips(sc,X0,Y0,X1,Y1);else{
   for(let y=Y0;y<=Y1;y++)for(let x=X0;x<=X1;x++){const i=y*W+x;drawBarren(sc,i,x*TS,y*TS)}
@@ -3727,12 +3738,12 @@ function drawStaticArea(sc,X0,Y0,X1,Y1){/* 地面・床・水・動かない物�
   const fixed=[];
   for(let y=Y0;y<=Y1;y++)for(let x=X0;x<=X1;x++){const i=y*W+x,o=S.obj[i];if(!o||o==='part'||!BL[o]||BL[o].dyn||BL[o].anim||TREES.has(o)||!(FLAT.has(o)||BL[o].floor))continue;/* 地面にやきつけるのは、平らな物だけ。立っている物は毎コマ、足もとの順に描く */fixed.push({i,o,k:objectDepth(o,i),t:BL[o].kind==='block'?0:1})}
   fixed.sort((a,b)=>a.k-b.k||a.t-b.t||a.i-b.i);
-  for(const k in S.rug||{})if(inR(+k))drawObj(sc,S.rug[k],(k%W)*TS,((k/W)|0)*TS,+k);/* 家具の下のラグ */
+  for(const k in S.rug||{})if(rugCells(+k).some(inR))drawRug(sc,S.rug[k],(k%W)*TS,((k/W)|0)*TS,+k);/* ラグ（床の上・家具の下の層） */
   for(const {i,o}of fixed)drawObj(sc,o,(i%W)*TS,((i/W)|0)*TS,i);
 }
 let SSIG=null,SSIG_S=null,SSIG_G='',NOISEC=null,STMP=null;
 function staticSig(){/* マスごとに、地面の絵にかかわる中身を文字にしておく（前とくらべて、変わったマスだけ描き直すため） */const hs=new Set();for(const h of HOUSES)for(const j of h.set)hs.add(j);const M=WD===1&&S.st2?sprMap():null,sg=new Array(W*H);
-  for(let i=0;i<W*H;i++){const o=S.obj[i],st=o&&BL[o]&&!(BL[o].dyn||BL[o].anim||TREES.has(o));sg[i]=o+'|'+(S.ref[i]??'')+'|'+S.ground[i]+'|'+(S.floor[i]||'')+'|'+(REV.has(i)?1:0)+(hs.has(i)?1:0)+(ashed(i)?1:0)+(M&&S.ground[i]===1&&springOn(M[i])?1:0)+(S.trapCd&&S.trapCd[i]>S.t?1:0)+'|'+(st&&S.dyn[i]?JSON.stringify(S.dyn[i]):'')+'|'+((S.win||{})[i]||'')+'|'+((S.rot||{})[i]||'')+'|'+((S.rug||{})[i]||'')+'|'+((S.rugRot||{})[i]||'')+'|'+(S.hp['L'+i]||'')}
+  for(let i=0;i<W*H;i++){const o=S.obj[i],st=o&&BL[o]&&!(BL[o].dyn||BL[o].anim||TREES.has(o));sg[i]=o+'|'+(S.ref[i]??'')+'|'+S.ground[i]+'|'+(S.floor[i]||'')+'|'+(REV.has(i)?1:0)+(hs.has(i)?1:0)+(ashed(i)?1:0)+(M&&S.ground[i]===1&&springOn(M[i])?1:0)+(S.trapCd&&S.trapCd[i]>S.t?1:0)+'|'+(st&&S.dyn[i]?JSON.stringify(S.dyn[i]):'')+'|'+((S.win||{})[i]||'')+'|'+((S.rot||{})[i]||'')+'|'+(RUGC.has(i)?RUGC.get(i)+S.rug[RUGC.get(i)]+((S.rugRot||{})[RUGC.get(i)]||''):'')+'|'+(S.hp['L'+i]||'')}
   return sg}
 function rebuildStatic(full){findHouses();
   const g=[WD,S.baseLv,CX,CY,W,H,groundChipsOK(),waterChipsOK()].join(),sg=staticSig();
@@ -4634,6 +4645,7 @@ function onTap(sx,sy){
     if(o==='statue')return toast('女神像。守り神の居場所');
     if(o==='altar')return toast('カミサマの台座。カミサマはここに現れる');
     if(o&&BL[o].kind==='furn'&&!BL[o].trap)return openSheet('furn',j);/* 家具：説明と、向きをかえる */
+    if(!o&&RUGC.has(ty*W+tx))return openSheet('furn',RUGC.get(ty*W+tx));/* ラグ */
     if(o)return toast(BL[o].name+'：'+withAttr(o,BL[o].desc||'')+(BL[o].brk?'（じょうぶさ '+Math.floor(S.hp[j]??BL[o].hp)+'/'+BL[o].hp+'）':''));/* 道をふさぐ物も、説明を出す */
     if(S.ground[j]===1)return toast('池。そばでつりができる');
     if(!inBase(tx,ty))return toast('基地の外のフィールド');
@@ -5146,11 +5158,11 @@ function renderSheet(){
       const cur=CAT.find(c=>c[0]===MANC);
       for(const[t,items]of MANUAL){if(!cur[1].includes(t))continue;const sec=el('<div class="sec"><h3></h3><div class="rows"></div></div>');sec.querySelector('h3').textContent=t;for(const[a,b]of items)sec.querySelector('.rows').appendChild(rowEl(a,b));body.appendChild(sec)}}
     {const b=el('<button class="btn">もどる</button>');b.onclick=()=>{sfx('tap');openSheet('menu')};body.appendChild(b)}
-  }else if(sheet==='furn'){const j=sheetArg,o=S.obj[j];if(!o||!BL[o])return closeSheet();T.textContent=BL[o].name;{const te=tagsEl(o);if(te)body.appendChild(te)}
+  }else if(sheet==='furn'){const j=sheetArg,o=S.obj[j]||(S.rug||{})[j];if(!o||!BL[o])return closeSheet();T.textContent=BL[o].name;{const te=tagsEl(o);if(te)body.appendChild(te)}
     body.appendChild(rowEl(BL[o].name,withAttr(o,BL[o].desc||''),iconURL(o)));
     {const R=rangeOf(o,j);if(R&&!BL[o].env&&o!=='bench')body.appendChild(el('<div class="rows"></div>')).appendChild(rowEl('効果のはんい','まわり'+(R.cells||R.r)+'マス（「みる」でタップすると、色で出る）'))}
     if(SEATS.includes(o)&&spotW(j)>=0)body.appendChild(el('<div class="rows"></div>')).appendChild(rowEl('つりスポット','池のそばのいす。せいれいが、ここにすわってつりをする。ふつうの水べより、魚がつれやすい（水のせいれいは、さらによくつれる）'));/* 池のそばの椅子＝釣りスポット */
-    if(o==='table'){const h=roomOf(j);let n=0;if(h)for(const q of h.inside){const oo=S.obj[q];if(oo&&BL[oo]&&BL[oo].cat==='living')n+=BL[oo].dw||1}const bon=h?DINEPT[Math.min(6,n)]:0;
+    if(o==='table'){const h=roomOf(j);let n=0;if(h)for(const q of h.inside){const oo=S.obj[q];if(oo&&BL[oo]&&BL[oo].cat==='living')n+=BL[oo].dw||1}if(h)for(const oo of rugsIn(h.inside))n+=BL[oo].dw||1;const bon=h?DINEPT[Math.min(6,n)]:0;
       body.appendChild(el('<div class="rows"></div>')).appendChild(rowEl('ここで食べたときのパワー（いま）',h?'+'+bon+'（家の中の食卓 +1・ダイニング家具で +'+(DINEPT[Math.min(6,n)]-1)+(n/2<3?'。ダイニング家具をふやすと、まだふえる':'。いちばん多い')+'）':'家の外なので、ふえない（家の中に置くと +1、ダイニング家具でさらに +3 まで）'))}/* 食卓：いまのパワーのボーナス */
     if(o==='bench'){const ev=ENVG?Math.min(12,Math.max(ENVG[j]||0,ENVG[j+1]||0)):0;/* ベンチ：まわりのかざりで上がった回復 */
       body.appendChild(el('<div class="rows"></div>')).appendChild(rowEl('すわって休むと（1時間あたり）','つかれ −'+(Math.round((20+ev*.36)*10)/10)+' / たのしさ +'+(Math.round((4.8+ev*.36)*10)/10)+(ev>0?'':'（生垣・パラソルなどをまわりに置くと上がる）')))}
@@ -5379,7 +5391,7 @@ function arrive(){
 }
 function talkOnce(key,lines,delay){/* 1回だけの会話：最後まで見てから「見た」にする。とちゅうでとじたら、次に開いたときにもう一度 */if(!S||S.flags[key]||!lines||!lines.length)return;const P=S.pendTalk||(S.pendTalk={});P[key]=lines;setTimeout(()=>{if(!S||S.flags[key])return;dialog(P[key]||lines,()=>{S.flags[key]=1;if(S.pendTalk)delete S.pendTalk[key]})},delay||900)}
 function replayTalks(){if(!S||!S.pendTalk)return;for(const k in S.pendTalk){if(S.flags[k]){delete S.pendTalk[k];continue}talkOnce(k,S.pendTalk[k],1500)}}
-function continueGame(saved){if(saved&&saved.summary)saved=loadStage(saved.world);if(!saved)return;setWorld(saved.world||0);S=saved;LIVE[WD]=S;ensureStor(S);if((S.mig||0)<1){fixBeds();dropChair2();dropBirdhouse();dropFlower();dropNtree();if(((S.subSt||{}).watch2||0)>=4){S.recipes=S.recipes||{};S.guardianIdeas=S.guardianIdeas||{};S.recipes.signpost=true;S.guardianIdeas.signpost=true}/* 見張り台を2つにしたあと（フタバの「道がわかる目印」）で、道しるべをおぼえる */S.mig=1}if(S.mig<2){if(S.flags.traded)S.flags.tradedSeen=1;if(S.flags.oracleSet)S.flags.oracleSeen=1;if(S.flags.minaCame&&S.flags.mnN==null)S.flags.mnN=S.nights||0;S.mig=2}if(S.mig<3){swingWide();S.mig=3}/* 古いセーブを直すのは、1回だけ */setTimeout(replayTalks,2500);/* とちゅうでとじた会話を、もう一度 */if(S.flags&&S.flags.nushiDue&&!S.cleared)setTimeout(()=>{if(!S.cleared)nushiReturns()},3000);/* ヌシ様が帰ってくる場面を、とちゅうでとじていたら、はじめから */syncTools(S);dirty=true;closeSheet();S.res.forEach(r=>{r.act=null;r.path=[]});S.orders.forEach(o=>o.worker=null);recount();renderQuest();applyFeats();setMode('look');glassUI();
+function continueGame(saved){if(saved&&saved.summary)saved=loadStage(saved.world);if(!saved)return;setWorld(saved.world||0);S=saved;LIVE[WD]=S;ensureStor(S);if((S.mig||0)<1){fixBeds();dropChair2();dropBirdhouse();dropFlower();dropNtree();if(((S.subSt||{}).watch2||0)>=4){S.recipes=S.recipes||{};S.guardianIdeas=S.guardianIdeas||{};S.recipes.signpost=true;S.guardianIdeas.signpost=true}/* 見張り台を2つにしたあと（フタバの「道がわかる目印」）で、道しるべをおぼえる */S.mig=1}if(S.mig<2){if(S.flags.traded)S.flags.tradedSeen=1;if(S.flags.oracleSet)S.flags.oracleSeen=1;if(S.flags.minaCame&&S.flags.mnN==null)S.flags.mnN=S.nights||0;S.mig=2}if(S.mig<3){swingWide();S.mig=3}if(S.mig<4){recount();rugsBig();S.mig=4}/* 古いセーブを直すのは、1回だけ */setTimeout(replayTalks,2500);/* とちゅうでとじた会話を、もう一度 */if(S.flags&&S.flags.nushiDue&&!S.cleared)setTimeout(()=>{if(!S.cleared)nushiReturns()},3000);/* ヌシ様が帰ってくる場面を、とちゅうでとじていたら、はじめから */syncTools(S);dirty=true;closeSheet();S.res.forEach(r=>{r.act=null;r.path=[]});S.orders.forEach(o=>o.worker=null);recount();renderQuest();applyFeats();setMode('look');glassUI();
   cam.z=homeZ();centerOn(CX*TS,CY*TS);$('#title').hidden=true;$('#maps').hidden=true;started=true;stageMusic();showUI(true);if(!WD&&S.flags&&S.flags.ret1===1){S.flags.ret1=2;(S.sevQ||(S.sevQ=[])).push('ret')}}
 
 
@@ -5423,7 +5435,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='543';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='544';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
