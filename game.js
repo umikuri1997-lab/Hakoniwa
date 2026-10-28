@@ -1130,6 +1130,7 @@ plant:(r,a)=>{const d=S.dyn[a.obj];return Math.max(a.t/40,d&&d.p!=null?d.p/20:0)
 function beginDo(r){const a=r.act;a.stage='do';a.t=0;a.e0=r.energy;const f=ACT[a.type].start;if(f&&f(r,a)===false){endAct(r);r.act={type:'idle',stage:'do',t:0,dur:8}}}
 function endAct(r){if(r.act){if(r.act.type==='repair'&&r.act.repairMat){for(const k in r.act.repairMat)S.mat[k]=(S.mat[k]||0)+r.act.repairMat[k]}if(r.act.type==='sevreact')sevInterrupted(r,r.act);if(r.act.type==='questjoy'){settleQuestVisit(r,r.act);if(r.act.joyUntil!=null&&JOYU.get(r)===r.act.joyUntil)JOYU.delete(r)}if(r.act.key)release(r.act.key);if(r.act.type==='bathe'){if(r.act.sx!=null){r.x=r.act.sx;r.y=r.act.sy}if(!S.res.some(q=>q!==r&&q.act&&q.act.type==='bathe'&&q.act.stage==='do'))stopWave()}/* 水からあがる */if(r.act.order){const o=S.orders.find(q=>q.id===r.act.order);if(o&&o.worker===r.id)o.worker=null}}r.act=null;r.path=[];r.hidden=false;r.bubble=''}
 function tired(){}
+function plantFin(r,a){/* 芽が育ちきったら、花や木にする */const d=S.dyn[a.obj];if(S.obj[a.obj]==='sprout'&&d&&d.p>=20){const id=d.plant;S.obj[a.obj]=id;if(BL[id].dyn)S.dyn[a.obj]={g:0};else delete S.dyn[a.obj];if(PLANTS.includes(id)){(S.bud||(S.bud={}))[a.obj]=dayNo()+1}noteQuestPlacement(id,a.obj);recount();if(PLANTS.includes(id))plantSparkle(a.obj,id);else burst(a.obj,'plant','sow');addXp(2,r);checkQuest()}tired(r,a)}
 const work=(r,dt)=>{r.energy=Math.max(0,r.energy-.22*dt*(r.fun<30?1.7:r.fun<60?1.3:1)/((r.vr&&r.vr.sta)||1)/(EL_STA[r.elem]||1)*(trt(r,'tafu')?.75:1))};/* はたらくと疲れる。たのしさが低いと疲れやすい */
 const fast=(r,el)=>r.elem===el?2:1;
 
@@ -1171,8 +1172,8 @@ const ACT={
     done:(r,a)=>a.t>=45||S.obj[a.obj]!=='plot'||S.dyn[a.obj].p>=30,end(r,a){const d=S.dyn[a.obj];if(S.obj[a.obj]==='plot'&&d&&d.p>=30){S.obj[a.obj]='farm';S.dyn[a.obj]={g:0,wet:0,crop:null,sown:false}/* 耕しただけでは、たねは決まらない */;noteQuestPlacement('farm',a.obj);recount();burst(a.obj,'plant','till');addXp(2,r);checkQuest()}tired(r,a)}},
   sow:{start(r,a){const d=S.dyn[a.obj];if(S.obj[a.obj]!=='farm'||!d||d.sown!==false||cseed(cropK(d))<1&&!d.paid)return false;r.bubble='🌰';sfxAt('bush',r.x,r.y)},tick(r,a,dt){work(r,dt)},
     done:(r,a)=>a.t>=10||S.obj[a.obj]!=='farm',end(r,a){const d=S.dyn[a.obj];if(S.obj[a.obj]==='farm'&&d&&a.t>=10&&sowFarm(d)){burst(a.obj,'plant','sow');addXp(1,r);checkQuest()}}},
-  plant:{start(r,a){if(S.obj[a.obj]!=='sprout')return false;if(a.wade&&a.wade.length&&!a.waded){a.waded=1;r.path=a.wade.slice();a.stage='walk';return}/* 池のまんなかは、水に入って植えにいく */r.bubble='🌱';sfxAt('bush',r.x,r.y)},tick(r,a,dt){const d=S.dyn[a.obj];if(d)d.p+=dt*fast(r,'wood');work(r,dt)},
-    done:(r,a)=>a.t>=40||S.obj[a.obj]!=='sprout'||S.dyn[a.obj].p>=20,end(r,a){const d=S.dyn[a.obj];if(S.obj[a.obj]==='sprout'&&d&&d.p>=20){const id=d.plant;S.obj[a.obj]=id;if(BL[id].dyn)S.dyn[a.obj]={g:0};else delete S.dyn[a.obj];if(PLANTS.includes(id)){(S.bud||(S.bud={}))[a.obj]=dayNo()+1}noteQuestPlacement(id,a.obj);recount();if(PLANTS.includes(id))plantSparkle(a.obj,id);else burst(a.obj,'plant','sow');addXp(2,r);checkQuest()}tired(r,a)}},
+  plant:{start(r,a){if(a.back)return;/* 植えおわって、岸にもどってきた */if(S.obj[a.obj]!=='sprout')return false;if(a.wade&&a.wade.length&&!a.waded){a.waded=1;r.path=a.wade.slice();a.stage='walk';return}/* 池のまんなかは、水に入って植えにいく */r.bubble='🌱';sfxAt('bush',r.x,r.y)},tick(r,a,dt){const d=S.dyn[a.obj];if(d)d.p+=dt*fast(r,'wood');work(r,dt)},
+    done:(r,a)=>{if(a.back)return true;const f=a.t>=40||S.obj[a.obj]!=='sprout'||S.dyn[a.obj].p>=20;if(f&&a.wade&&a.wade.length){plantFin(r,a);a.back=1;r.path=a.wade.slice().reverse().slice(1).concat([a.stand]);a.stage='walk';r.bubble='';return false}/* 水の中で植えたら、来た道をとおって岸へもどる */return f},end(r,a){if(!a.back)plantFin(r,a)}},
   build:{start(r,a){if(S.obj[a.obj]!=='site')return false;r.bubble='🔨'},tick(r,a,dt){const d=S.dyn[a.obj];if(d)d.p+=dt*(r.elem==='earth'?(BL[d.build]&&BL[d.build].maker==='earth'?2:1.3):1);work(r,dt);a.h=(a.h||0)+dt;if(a.h>=3){a.h=0;sfxAt('bnail',r.x,r.y)}},/* 土のせいれいは建てるのが速い（土の建物は×2、ほかは×1.3） */
     done:(r,a)=>a.t>=60||S.obj[a.obj]!=='site'||S.dyn[a.obj].p>=S.dyn[a.obj].need,end(r,a){const d=S.dyn[a.obj];if(S.obj[a.obj]==='site'&&d&&d.p>=d.need)finishBuild(a.obj,r);else addXp(1,r);tired(r,a)}},
   craft:{start(r,a){if(!S.orders.find(q=>q.id===a.order))return false;r.face=1;r.bubble=''},tick(r,a,dt){const o=S.orders.find(q=>q.id===a.order);if(o)o.prog+=dt*(r.elem===BL[o.type].maker?2:1);work(r,dt);a.h=(a.h||0)+dt;if(a.h>=3){a.h=0;sfxAt('nail',r.x,r.y)}},
@@ -1676,7 +1677,7 @@ function moveR(r,dt){
 }
 const NIGHT_OK=['sleep','stay','shiver','eat','fetch','store','smat','flee','patrol','faint','forage','questjoy'];
 const WORKT=new Set(['till','sow','plant','build','craft','water','tend','repair','harvest','gather','chop','mine','cook']);
-function rescueStuck(r){if(r.hidden)return;const cj=(r.y|0)*W+(r.x|0),o=S.obj[cj];if(!(HOME_WALLS.has(o)||(FENCE_IDS.has(o)&&!GATE_IDS.has(o))||S.ground[cj]===1&&!(r.act&&r.act.type==='bathe')))return;/* 壁や柵・水の中にいたら、いちばん近い歩ける場所へ出す */let best=-1,bd=1e9;for(let rr=1;rr<=6&&best<0;rr++)for(let dy=-rr;dy<=rr;dy++)for(let dx=-rr;dx<=rr;dx++){if(Math.max(Math.abs(dx),Math.abs(dy))!==rr)continue;const x=(r.x|0)+dx,y=(r.y|0)+dy;if(x<0||y<0||x>=W||y>=H)continue;const k=y*W+x;if(!walk(k)||S.obj[k])continue;const d=dx*dx+dy*dy;if(d<bd){bd=d;best=k}}if(best>=0){r.x=best%W+.5;r.y=((best/W)|0)+.5;r.path=[];if(r.act&&r.act.stage==='walk')endAct(r)}}
+function rescueStuck(r){if(r.hidden)return;const cj=(r.y|0)*W+(r.x|0),o=S.obj[cj];if(!(HOME_WALLS.has(o)||(FENCE_IDS.has(o)&&!GATE_IDS.has(o))||S.ground[cj]===1&&!(r.act&&(r.act.type==='bathe'||r.act.type==='plant'&&r.act.wade))))return;/* 水浴び・池のまんなかのハス植えは、水に入ってよい *//* 壁や柵・水の中にいたら、いちばん近い歩ける場所へ出す */let best=-1,bd=1e9;for(let rr=1;rr<=6&&best<0;rr++)for(let dy=-rr;dy<=rr;dy++)for(let dx=-rr;dx<=rr;dx++){if(Math.max(Math.abs(dx),Math.abs(dy))!==rr)continue;const x=(r.x|0)+dx,y=(r.y|0)+dy;if(x<0||y<0||x>=W||y>=H)continue;const k=y*W+x;if(!walk(k)||S.obj[k])continue;const d=dx*dx+dy*dy;if(d<bd){bd=d;best=k}}if(best>=0){r.x=best%W+.5;r.y=((best/W)|0)+.5;r.path=[];if(r.act&&r.act.stage==='walk')endAct(r)}}
 function updRes(r,dt){rescueStuck(r);if((RHOLD.get(r)||0)>performance.now())return;/* 喜んでいる・話したあとの少しの間は、手をとめる */if(r._pe!=null&&r.energy>r._pe+1e-6)r.eUp=S.t;r._pe=r.energy;/* 元気が回復しているか */
   if(HOLD.has(r.id)){if(r.act)endAct(r);r.act=null;return}
   const sleeping=r.act&&r.act.type==='sleep'&&r.act.stage==='do';
@@ -5300,7 +5301,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='470';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='471';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
