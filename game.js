@@ -1964,6 +1964,7 @@ function areaBlast(cx,cy){
   sfxAt('shoot',cx,cy);
   for(const e of L){e.hp-=.5;e.flash=8;if(e.hp<=0)defeat(e,'ひかりのはどうで'+EN[e.type].name+'を追いはらった！')}}
 function defeat(e,msg){sfx('defeat');if(EN[e.type].boss&&!S.flags.bossOutro&&!(S.bossKills>0)){S.flags.bossOutro=1;bossDefeatFX(e)}/* 追いはらった演出（時間を止めて消えていく様子を見せる）は、はじめてボスを追いはらったときの1回だけ */
+  if(!EVAP.some(it=>it.e===e))EVAP.push({e,t0:performance.now(),dur:1300,die:true});/* たおしたら、たおれるモーションをしてから消える */
   e.dead=true;S.kills++;const D=EN[e.type];{const K=S.enKills||(S.enKills={});K[e.type]=(K[e.type]||0)+1}if(S.ns){S.ns.kill++;if(D.boss)S.ns.boss=2;if(e.type==='boss2')S.ns.b2=1}const n=D.pw||5;
   if(e.type==='hino')S.flags.hinoDown=true;if(D.ash&&WD===1)st2().ashKills=(st2().ashKills||0)+1;
   if(D.boss){S.bossKills=(S.bossKills||0)+1;if(!S.bossDay)S.bossDay=dayNo();logEv('オオカゲを追いはらった');memo('⚔️','オオカゲを追いはらった')}
@@ -4164,7 +4165,7 @@ function drawShadeDot(c,ty,x,y,s,f,o){
   const t=o.t||0,B=o.back?'B':'',p=o.atk||0,sc=s/(.27*EN[ty].size*2);
   // どのモーションの、何コマ目か
   let mo='idle',fi=Math.floor(t*1.6);
-  if(o.hurt!=null){mo='hurt';fi=o.hurt<.4?0:o.hurt<.75?1:2}/* 攻撃をうけたとき：やられの3コマ */
+  if(o.die!=null){mo='hurt';fi=o.die}/* たおされたとき：やられの3コマ目（たおれる）まで */else if(o.hurt!=null){mo='hurt';fi=o.hurt<.5?0:1}/* 攻撃をうけただけのときは、いたがる2コマだけ（たおれない） */
   else if(o.walk){mo='walk';fi=Math.floor(t*6)}
   else if(p>=.84){mo='atk';const n=(CHIPS[K+'atk'+B]||CHIPS[K+'atk']).n||3;fi=p<.95?0:Math.min(n-1,1+Math.floor((p-.95)/.05*(n-1)))}/* ふりかぶる → ふりおろす → もどる */
   const key=mo==='hurt'||!CHIPS[K+mo+B]?K+mo:K+mo+B,ch=CHIPS[key];fi=mo==='hurt'?Math.min(fi,ch.n-1):fi%(ch.n||1);
@@ -4257,6 +4258,7 @@ function drawShadeV(c,ty,x,y,s,f,o){
 const EV=new WeakMap();let EVAP=[];/* 朝日で消える「コワイノ」：じゅわっと蒸発させる */
 function drawEvap(it,now){const e=it.e,D=EN[e.type],z=D.size*2,px=e.x*TS,py=e.y*TS,p=Math.max(0,(now-it.t0)/(it.dur||1800)),v=EV.get(e)||{f:1};
   if(it.sand)return drawSand(it,now,e,D,z,px,py,v);
+  if(it.die){/* たおれるモーション（やられの3コマ）→ たおれたまま、うすくなって消える */ctx.save();ctx.globalAlpha=p<.6?1:Math.max(0,1-(p-.6)/.4);drawShade(ctx,e.type,px,py+8,.27*z,v.f,{dot:1,t:now/1000+e.id*1.3,die:p<.12?0:p<.24?1:2,flash:p<.12});ctx.restore();return}
   if(p<.75){ctx.save();ctx.globalAlpha=Math.max(0,1-p/.75)*.9;ctx.translate(px,py+8);ctx.scale(1+p*.35,1-p*.55);ctx.translate(-px,-py-8);drawShade(ctx,e.type,px,py+8-p*10,.27*z,v.f,{dot:1,t:now/1000+e.id*1.3,flash:Math.sin(now/40)>0});ctx.restore()}
   for(let i=0;i<9;i++){const q=p*1.2-i*.06;if(q<0||q>1)continue;const sx=px+Math.sin(i*2.3+e.id)*14*z+Math.sin(now/300+i)*4,sy=py-6*z-q*48*z,r=(4+q*9)*z;ctx.globalAlpha=(1-q)*.55;ctx.fillStyle='#f4f0ff';ctx.beginPath();ctx.arc(sx,sy,r,0,7);ctx.fill()}ctx.globalAlpha=1}
 function drawSand(it,now,e,D,z,px,py,v){/* 砂になって消える：ひびが走る → 上から砂になってくずれ、足もとに砂山がのこって消える */
@@ -5298,7 +5300,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='469';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='470';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
