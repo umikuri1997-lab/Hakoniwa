@@ -4956,6 +4956,15 @@ function renderSheet(){
     for(let j=0;j<W*H;j++){if(!inBase(j%W,(j/W)|0))continue;if(S.ground[j]===1)add('water','池・水べ（1マス0.3）',.3);const id=S.obj[j],b=BL[id];if(!b||b.kind==='block'||FLOWERS.has(id)&&isBud(j))continue;for(const k in b.attr||{})if(b.attr[k]>0)add(k,b.name,b.attr[k])}
     body.appendChild(el('<p class="note">基地の中にあるものだけを集計。花は咲いてから加算されます。</p>'));
     for(const k of ELEM_KEYS){const sec=el('<div class="sec"></div>');const h=document.createElement('h3');h.textContent=ELEM[k].name+'の力：'+Number(ATTR[k].toFixed(1));sec.appendChild(h);for(const [name,r]of Object.entries(sources[k]))sec.appendChild(rowEl(name+' ×'+r.n,'+'+Number(r.v.toFixed(1))));if(!Object.keys(sources[k]).length)sec.appendChild(el('<p class="note">まだありません</p>'));body.appendChild(sec)}
+  }else if(sheet==='stock'){/* そうこ：いま、なにがいくつあるか */
+    T.textContent='そうこ';
+    const box=(title,n,cap,items,empty)=>{const sec=el('<div class="sec stockSec"><div class="stockHead"><h3></h3><span class="stockN"></span></div><div class="gauge stockBar"><i></i></div><div class="grid"></div></div>');sec.querySelector('h3').textContent=title;sec.querySelector('.stockN').textContent=cap>0?n+' / '+cap:'箱がありません';sec.querySelector('.stockBar i').style.width=(cap>0?Math.min(100,n/cap*100):0)+'%';const g=sec.querySelector('.grid');
+      if(!items.length){const p=el('<p class="note" style="grid-column:1/-1"></p>');p.textContent=empty;g.appendChild(p)}
+      for(const[img,emo,nm,ct]of items){const b=el('<div class="slot"><span class="ct"></span><img alt=""><span class="nm"></span></div>');if(img)b.querySelector('img').src=img;else{const im=b.querySelector('img');im.replaceWith(Object.assign(document.createElement('span'),{className:'stockEmo',textContent:emo}))}b.querySelector('.nm').textContent=nm;b.querySelector('.ct').textContent=ct;g.appendChild(b)}body.appendChild(sec)};
+    const fk=Object.keys(FOODS).filter(k=>(S.fs[k]||0)>0),raw=fk.filter(k=>!FOODS[k].dish),dish=fk.filter(k=>FOODS[k].dish),fi=k=>[ICONS[k]||null,FOODS[k].e,FOODS[k].name,S.fs[k]];
+    box('食料箱',S.food,foodCap(),[...raw.map(fi),...dish.map(fi)],'食べ物は、ありません');
+    const mk=Object.keys(S.mat).filter(k=>(S.mat[k]||0)>0&&MATN[k]);box('素材箱',matTot(),matCap(),mk.map(k=>[ICONS[k]||null,'',MATN[k],S.mat[k]]),'素材は、ありません');
+    const hold=S.res.filter(r=>heldN(r)>0);if(hold.length){const p=el('<p class="note"></p>');p.textContent='せいれいが運んでいるとちゅう：'+hold.map(r=>r.name+'（'+[...Object.entries(r.carry&&typeof r.carry==='object'?r.carry:{}).map(([k,n])=>FOODS[k].name+n),...Object.entries(r.cmat||{}).map(([k,n])=>MATN[k]+n)].join('・')+'）').join('、');body.appendChild(p)}
   }else if(sheet==='people'){
     T.textContent='せいれい '+S.res.length+'人';
     const a=el('<div class="sec"><h3>この土地の属性（満ちた次の朝、神殿の「！」からなかまを呼べる）</h3><div class="attr"></div></div>');const g=a.querySelector('.attr');
@@ -5282,10 +5291,11 @@ function updHUD(){
   else if(sheet==='craft'){const sig=S.orders.map(o=>o.id+':'+o.worker).join(',')+'|'+CRAFT_TABS[craftTab][1].map(id=>(S.pt>=BL[id].pc?1:0)+''+(matOK(BL[id].mat)?1:0)+inv(id)+(lvOK(id)?1:0)).join('')+'|'+(S.mat.wood||0)+','+(S.mat.stone||0)+'|'+craftTab+'|'+S.lv+'|'+Object.keys(S.recipes).length;
     if(sig!==craftSig){craftSig=sig;renderSheet()}else document.querySelectorAll('#sheetBody .paper .bar i').forEach((b,n)=>{const o=S.orders[n];if(o)b.style.width=Math.min(100,o.prog/o.need*100)+'%'})}/* 依頼ボードは、変わったときだけ作りなおす */
   else if(sheet==='people'||sheet==='res'||sheet==='house')renderSheet();
+  else if(sheet==='stock'){const sig=Object.entries(S.fs).join()+'|'+Object.entries(S.mat).join()+'|'+foodCap()+','+matCap();if(sig!==STOCKSIG){STOCKSIG=sig;renderSheet()}}/* 数が変わったときだけ、そうこを描きなおす */
 }
 
 /* ---------- はじまり ---------- */
-let started=false,titleDrift=0;
+let started=false,titleDrift=0,STOCKSIG='';
 function showUI(on){$('#topUI').hidden=!on;$('#botUI').hidden=!on}
 /* 引き継ぎ：便利な道具（ひろびろハケ・かたどりスタンプ）だけは、ほかの土地でもらっていれば使える */
 function syncTools(s){for(const L of LIVE)if(L&&L!==s){if(L.bulk)s.bulk=true;if(L.stamps)s.stamps=true}}
@@ -5351,7 +5361,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='531';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='532';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
@@ -5510,6 +5520,7 @@ function rlvShow(q){const r=S.res.find(x=>x.id===q.id);if(!r)return;RLVR=r;const
   const g=o.querySelector('.rrows');g.innerHTML='';for(const[k,n]of RSTN){const f=v=>k==='bonus'?'+'+v:k==='atk'&&!v?'なし':String(v);const up=b[k]!==a[k];const x=document.createElement('span'),y=document.createElement('span');x.textContent=n;y.textContent=up?f(a[k])+' → '+f(b[k]):f(b[k]);if(up)y.className='up';g.append(x,y)}
   if(q.to===3||q.to===5||q.to===10)memo('⬆️',r.name+'がLv'+q.to+'になった');o.hidden=false;sfx('quest')}
 $('#rlvOk').addEventListener('click',e=>{e.stopPropagation();sfx('tap');$('#rlv').hidden=true;const r=RLVR;RLVR=null;if(r&&S.res.includes(r)){const t=performance.now();JOYU.set(r,t+2600);RHOLD.set(r,t+2600);JUMP.set(r,t);r.bubble='😆'}});/* レベルアップしたら、手をとめて喜ぶ */
+for(const id of['#foodStk','#matStk']){const e=$(id);const go=ev=>{if(ev)ev.stopPropagation();if(!started||!S)return;sfx('tap');openSheet('stock')};e.addEventListener('click',go);e.addEventListener('keydown',k=>{if(k.key==='Enter'||k.key===' ')go()})}/* 食料・素材の数をタップすると、そうこが見られる */
 $('#lvOk').addEventListener('click',e=>{e.stopPropagation();sfx('tap');$('#lvup').hidden=true;endClap()});
 document.querySelector('.hud').addEventListener('click',()=>{if(!S)return;sfx('tap');openSheet('vill')});/* HUD をタップすると村のようす */
 $('#dock').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;sfx('tap');if(b.dataset.mode)setMode(b.dataset.mode);else if(b.dataset.sheet)openSheet(b.dataset.sheet)});
