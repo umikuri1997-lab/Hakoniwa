@@ -457,10 +457,15 @@ html,body{margin:0;width:100%;min-width:0}
   <div id="sheetWrap" hidden><div class="scrim" id="scrim"></div><section class="sheet" role="dialog"><header><h2 id="sheetTitle"></h2><button class="x" id="sheetX" aria-label="とじる">×</button></header><div id="sheetBody"></div></section></div>
   <div id="helpPop" hidden><div class="hc"><b></b><div class="tags" hidden></div><p></p></div></div>
   <div id="dialog" hidden><div class="dlg"><canvas id="dlgPort" width="240" height="240" hidden></canvas><div class="who" id="dlgWhoBox"><span class="orb"></span><span id="dlgWho"></span></div><p id="dlgText"></p><div class="btns" id="dlgBtns"></div></div></div>
-  <div id="title" class="title"><div class="tbox"><p class="tsub">守り神とせいれいのものがたり</p><h1>はこにわ暮らし</h1><p class="tline">荒れた土地に、もう一度いのちを。</p><div class="tbtns"><button class="btn pri" id="tStart">はじめる</button></div></div></div>
+  <div id="title" class="title"><div class="tbox"><p class="tsub">守り神とせいれいのものがたり</p><h1>はこにわ暮らし</h1><p class="tline">荒れた土地に、もう一度いのちを。</p><div class="tbtns"><button class="btn pri" id="tStart">はじめる</button></div><p class="tline" id="tLoad" hidden></p></div></div>
   <div id="maps" class="maps" hidden><div class="mwrap"><div class="mhead"><h2>マップをえらぶ</h2><div class="mright"><button class="btn" id="mSnd"></button><div class="mver" id="mVer"></div></div></div><div class="route" id="mList"></div><button class="btn" id="mBack">タイトルへ</button></div></div>
   <div id="pro" class="pro" hidden><div class="proWho" id="proWho"></div><p id="proText"></p><div class="hint">タップで進む</div><button id="proSkip" class="btn">スキップ</button></div>
 </div>
 
-<script src="chips.js?v=dev" defer></script>
-<script src="game.js?v=dev" defer></script>
+<script>/* ゲームのデータ（chips.js・game.js）を読みこむあいだに「はじめる」をおしたら、なにを待っているかを出す。読みこめたら、そのまま進む */
+(function(){var st={c:0,g:0},want=0,t0=0,b=document.getElementById('tStart'),m=document.getElementById('tLoad');
+function show(){if(!want||window.__ldDone)return;m.hidden=false;m.textContent='ゲームのデータを読みこみ中…（ドット絵'+(st.c?' ✓':'')+'・プログラム'+(st.g?' ✓':'')+'）'+Math.floor((Date.now()-t0)/1000)+'秒'}
+b.onclick=function(){if(want)return;want=1;t0=Date.now();show();window.__ldT=setInterval(show,500)};
+window.__ld=function(k){st[k]=1;show()};window.__ldWant=function(){return want}})();</script>
+<script src="chips.js?v=dev" defer onload="__ld('c')"></script>
+<script src="game.js?v=dev" defer onload="__ld('g')"></script>
