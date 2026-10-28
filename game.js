@@ -3719,12 +3719,13 @@ function drawRoofs(c,now,hs,eo){if(!HOUSES.length)return;c.save();
     c.fillStyle='#9c9c9c';c.fillRect(cx-8.5,cy-14,17,5);c.fillStyle='#3a3a3a';c.fillRect(cx-5,cy-13,10,2.5);
     {const t=now/1000;for(let k=0;k<3;k++){const p=(t*.4+k/3)%1;c.fillStyle='rgba(240,240,240,'+(.5*(1-p)*A)+')';c.beginPath();c.arc(cx+Math.sin(p*6+k)*3,cy-16-p*18,3+p*4,0,7);c.fill()}}}
   c.restore()}
-const GCH=['tex:grass','ground#0','groundr#0','gedge:0#0','gedger:0#0','gcorner','gcornerr'];
+const GCH=['tex:grass','tex:dry','ground#0','groundr#0','gedge:0#0','gedger:0#0','gcorner','gcornerr'];
 const WCH=[];for(const k of['water','waterr','waterh'])for(let b=1;b<16;b++)WCH.push(k+':'+b);for(let i=0;i<4;i++)WCH.push('wave#'+i);for(let b=1;b<16;b++)WCH.push('waterm:'+b);WCH.push('tex:water');
 function waterChipsOK(){const C=window.CHIPS;return !!C&&WCH.every(k=>C[k]&&chipImgs(C[k],'water')[0].ok)}/* 水のドット絵が読みこめたら使う */
 function groundChipsOK(){const C=window.CHIPS;return !!C&&GCH.every(k=>C[k]&&chipImgs(C[k],'ground')[0].ok)}/* 地面のドット絵が読みこめたら使う */
 function drawGroundChips(sc,X0,Y0,X1,Y1){const inR=i=>{const x=i%W,y=(i/W)|0;return x>=X0&&x<=X1&&y>=Y0&&y<=Y1};const C=window.CHIPS,r=WD===1?'r':'',dc=(k,x,y,i)=>{const ch=C[k];if(ch)drawChip(sc,ch,'ground',x,y,0,i)};
-  for(let y=Y0;y<=Y1;y++)for(let x=X0;x<=X1;x++){const i=y*W+x;dc('ground'+r+'#'+((hash(i*7+1)*8)|0),x*TS,y*TS,i)}/* あれ地：8しゅるい */
+  if(WD===0){const dt=chipImgs(C['tex:dry'],'ground')[0];for(let y=Y0;y<=Y1;y++)for(let x=X0;x<=X1;x++){const px=x*TS,py=y*TS;sc.drawImage(dt,px%288,py%288,TS,TS,px,py,TS,TS)}}/* 草原のあれ地：288×288のテクスチャを、マップの位置どおりにしきつめる */
+  else for(let y=Y0;y<=Y1;y++)for(let x=X0;x<=X1;x++){const i=y*W+x;dc('ground'+r+'#'+((hash(i*7+1)*8)|0),x*TS,y*TS,i)}/* 火山のあれ地：8しゅるい */
   const gt=chipImgs(C['tex:grass'],'ground')[0];for(const i of REV){if(!inR(i))continue;const x=i%W*TS,y=((i/W)|0)*TS;sc.drawImage(gt,x%96,y%96,TS,TS,x,y,TS,TS)}/* 草地：96×96のテクスチャを、マップの位置どおりにしきつめる */
   for(const i of REV){if(!inR(i))continue;const x=i%W*TS,y=((i/W)|0)*TS;for(const[dx,dy,side]of grassBoundaryEdges(i))dc('gedge'+r+':'+side+'#'+((hash(i*13+side)*4)|0),x,y,i);for(const[cx,cy]of grassBoundaryCorners(i))dc('gcorner'+r,cx,cy,i)}}/* 草とあれ地のさかい */
 function drawRug(c,id,x,y,i){c.save();c.translate(x+32,y+32);c.scale(1.4,1.4);c.translate(-16,-20);drawObj(c,id,0,0,i);c.restore()}/* ラグ：2×2マスのまんなかに、2マスはばの大きさで */
@@ -5443,7 +5444,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='560';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='561';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
