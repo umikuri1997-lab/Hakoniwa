@@ -5570,7 +5570,7 @@ function newGame(w){w=w||0;if(sheet!=null)closeSheet();setWorld(w);resetQuestPro
 function startPrologue(){
   showUI(false);started=false;let i=0;const pro=$('#pro');pro.style.transition='none';pro.hidden=false;pro.style.opacity='1';void pro.offsetWidth;pro.style.transition='';/* フェードせずに、すぐまっくらにする（前のデータの画面が一瞬見えないように） */
   cam.z=minZ();centerOn(CX*TS,CY*TS);
-  const show=()=>{const p=$('#proText');const PR=PROS[WD];$('#proWho').textContent=PR[i][0];p.textContent=PR[i][1];p.style.animation='none';void p.offsetWidth;p.style.animation='';voiceStart(PR[i][0],PR[i][1].length/30+.1)};
+  const show=()=>{const p=$('#proText');const PR=PROS[WD];const tx=lineLook(PR[i][1]).text;/* 「#wave|」などの印は出さない */$('#proWho').textContent=PR[i][0];p.textContent=tx;p.style.animation='none';void p.offsetWidth;p.style.animation='';voiceStart(PR[i][0],tx.length/30+.1)};
   const end=()=>{voiceStop();pro.onclick=null;try{render(performance.now())}catch(e){}/* うすくなる前に、新しい村をかいておく（前のデータの画面が一瞬見えないように） */pro.style.opacity='0';setTimeout(()=>{pro.hidden=true;arrive()},800)};
   pro.onclick=e=>{if(e.target.id==='proSkip')return;i++;if(i<PROS[WD].length)show();else end()};
   $('#proSkip').onclick=end;show();
@@ -5628,7 +5628,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='583';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='584';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
