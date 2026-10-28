@@ -2299,6 +2299,8 @@ function sevLines(L,dead){const out=[];for(const x of L){const t=x[0],dp=x[2];if
   if(typeof s==='object'){const r=S.res.find(q=>q.name===n);s=r&&elemKey(r)==='fireB'?s.B:s.A}out.push([n,s.split('$').join(dead||'').replace(/@([HMK])/g,(m,c)=>sevName(c)),typeof x[3]==='string'?x[3]:0])}return out}
 /* 属性のシンボルの建物のそばで、その属性のキーキャラが過ごしているとき */
 const SYMB={fire:'lighthouse',water:'fountain',wind:'windmill',earth:'stele'};
+function natNear(el,f){const q=S.res.find(x=>x.name===keyName(el));if(!q||q.hidden||(q.act&&['flee','faint','sleep'].includes(q.act.type)))return false;return f(q)}/* その属性のキーキャラが、条件 f をみたす所にいるか */
+function tileNear(q,r,f){const x0=q.x|0,y0=q.y|0;for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){const x=x0+dx,y=y0+dy;if(x>=0&&y>=0&&x<W&&y<H&&f(y*W+x))return true}return false}
 function symNear(el){const id=SYMB[el];if(!id||!cnt(id))return false;const q=S.res.find(x=>x.name===keyName(el));if(!q||q.hidden||(q.act&&['flee','faint','sleep'].includes(q.act.type)))return false;for(let j=0;j<S.obj.length;j++)if(S.obj[j]===id&&Math.hypot((j%W+.5)-q.x,((j/W)|0)+.5-q.y)<=3)return true;return false}
 function atFarm(r){if(!r||r.hidden||r.act&&['flee','faint','sleep'].includes(r.act.type))return false;for(let j=0;j<S.obj.length;j++)if(S.obj[j]==='farm'&&Math.hypot((j%W+.5)-r.x,((j/W)|0)+.5-r.y)<=1.35)return true;return false}
 const SEV1=[
@@ -2323,10 +2325,14 @@ const SEV1=[
  {k:'e12f',at:()=>!!S.flags.fHurtG&&!!S.flags.guard&&!(S.sev||{}).e12n&&sevHere('H'),/* こもれびのまもりをおぼえたあと、べつの夜に。e06（まもりをおぼえる話）とは、ちがう話 */L:[['F','#surprise|@H、ゆうべ、いっぱいたたかれてたよね……！ 葉っぱ、ちゃんと届いた？'],['H',{A:'#sigh|ああ、届いたよ。……あんたの葉っぱのおかげで、ちょっとだけ痛くなかった。',B:'#sigh|ああ、届いたぜ。……おまえの葉っぱのおかげで、ちょっとだけ痛くなかった。'}],['F','#think|ちょっとだけ……。もっと早く、もっとたくさん守れるようになるからね！'],['H',{A:'#think|……ふん。じゃあ、たよりにしてるよ。',B:'#think|……へっ。じゃあ、たよりにしてるぜ。'}],['F','#think|……でも、むりはしないでね。ほんとうに心配したんだから。'],['H',{A:'#think|……ばか。そんな顔するんじゃないよ。……ありがと。',B:'#think|……ばか。そんな顔すんな。……ありがとな。'}]]},
  {k:'e13m',at:()=>sevHere('M')&&(S.bossKills||0)>=1&&qDone('ookage')&&!!(S.sev||{}).e07,L:[['M','守り神さま、オオカゲが消えた場所を調べてみました。地面に、ふしぎな光が少しだけ残っていました。'],['M','そこに置いた花は、いつもより長く咲いていて……光の色も、見る角度で変わるんです。'],['F','#sigh|ふしぎ！ どうして？'],['M','#think|オオカゲが消えたときに出てきた「ヌシのかけら」と、同じ光です。……オオカゲは、ヌシ様の力を、体の中にとじこめていたのかもしれません。'],['M','ノドカさんの話では、ヌシ様の力は3つのかけらになったそうですね。言い伝えでは、「守る力」「育てる力」「想う力」の3つ。','N'],['M','言い伝えでは、ヌシ様の力は「守る力」「育てる力」「想う力」の3つのかけらになったそうです。','!N'],['N','3つそろったら、ヌシ様の形にもどれるんだよねぇ。',1],['M','ええ。のこりのかけらも、きっとどこかで、見つけてもらうのを待っています。']]},
  {k:'r1',at:()=>!!(S.sev||{}).e04&&sevHere('N')&&S.qStory==null,L:[['F','ノドカ。……なんだか、なつかしい匂いがするね。'],['N','そうかなぁ。ここの土の匂いじゃないのぉ？'],['F','うーん……ちがう気がする。でも、いい匂い！'],['N','ふふ。フタバがそう言うなら、そうなのかもねぇ。']]},
- {k:'r2',at:()=>sevHere('H')&&symNear('fire')&&S.qStory==null,L:[['H',{A:'#think|……なあ、フタバ。この灯台の光のそばにいるとさ、背中がやけに落ち着くんだ。',B:'#think|……なあ、フタバ。この灯台の光のそばにいるとな、背中がやけに落ち着くんだ。'}],['F','#surprise|えっ、ぼくも！ @Hといると、ほっとする！'],['H',{A:'ふん……気のせいだろ。ずっと前から知ってるわけでもないのにさ。',B:'ふん……気のせいだろ。ずっと前から知ってるわけでもねえのによ。'}],['F','#joy|えへへ。そうだよね。']]},
- {k:'r3',at:()=>sevHere('M')&&symNear('water')&&S.qStory==null,L:[['M','#think|……不思議なんです。この噴水の水の音を聞いていると、前にも同じ音を聞いた気がして。'],['F','#surprise|えっ、来たことあるの？'],['M','いえ。この土地に来たのは、初めてのはずです。……計算では、ありえません。'],['M','ですが、なぜか耳が覚えているんです。']]},
- {k:'r4',at:()=>sevHere('K')&&symNear('wind')&&S.qStory==null,L:[['K','フッ…おかしなものだね。この風車をまわす風の道を、ぼくは前にも通った気がするんだ。'],['F','風の道？ 来たことあるの？'],['K','いいや、初めてさ。……だからこそ、不思議なんだ。'],['K','#sigh|風はなんでも知っている、と言ったが。知っているのは、ぼくのほうなのかもしれないね。']]},
- {k:'r5',at:()=>sevHere('N')&&symNear('earth')&&S.qStory==null,L:[['N','#think|……フタバ。この石碑の石をさわるとねぇ、ずっと前からここにいたみたいな気分になるんだよぉ。'],['F','ノドカ、さいしょから、ここにいたんじゃないの？'],['N','ううん。ぼくが来たのは、つい最近のはずなんだけどねぇ。……ふしぎだねぇ。']]},
+ {k:'r2',at:()=>sevHere('H')&&natNear('fire',q=>hour()>=9&&hour()<16&&!S.rain&&!roomOf((q.y|0)*W+(q.x|0)))&&S.qStory==null,L:[['H',{A:'#think|……なあ、フタバ。このお日さまの下にいるとさ、背中がやけに落ち着くんだ。',B:'#think|……なあ、フタバ。このお日さまの下にいるとな、背中がやけに落ち着くんだ。'}],['F','#surprise|えっ、ぼくも！ @Hといると、ほっとする！'],['H',{A:'ふん……気のせいだろ。ずっと前から知ってるわけでもないのにさ。',B:'ふん……気のせいだろ。ずっと前から知ってるわけでもねえのによ。'}],['F','#joy|えへへ。そうだよね。']]},
+ {k:'r3',at:()=>sevHere('M')&&natNear('water',q=>tileNear(q,2,j=>S.ground[j]===1))&&S.qStory==null,L:[['M','#think|……不思議なんです。この池の水の音を聞いていると、前にも同じ音を聞いた気がして。'],['F','#surprise|えっ、来たことあるの？'],['M','いえ。この土地に来たのは、初めてのはずです。……計算では、ありえません。'],['M','ですが、なぜか耳が覚えているんです。']]},
+ {k:'r4',at:()=>sevHere('K')&&natNear('wind',q=>!isNight()&&!S.rain&&!roomOf((q.y|0)*W+(q.x|0)))&&S.qStory==null,L:[['K','フッ…おかしなものだね。この草原をわたる風の道を、ぼくは前にも通った気がするんだ。'],['F','風の道？ 来たことあるの？'],['K','いいや、初めてさ。……だからこそ、不思議なんだ。'],['K','#sigh|風はなんでも知っている、と言ったが。知っているのは、ぼくのほうなのかもしれないね。']]},
+ {k:'r5',at:()=>sevHere('N')&&natNear('earth',q=>tileNear(q,3,j=>S.obj[j]==='rock'))&&S.qStory==null,L:[['N','#think|……フタバ。この岩をさわるとねぇ、ずっと前からここにいたみたいな気分になるんだよぉ。'],['F','ノドカ、さいしょから、ここにいたんじゃないの？'],['N','ううん。ぼくが来たのは、つい最近のはずなんだけどねぇ。……ふしぎだねぇ。']]},
+ {k:'r2j',at:()=>sevHere('H')&&symNear('fire')&&S.qStory==null,L:[['H',{A:'#joy|見なよ、フタバ。灯台の光、村のはしっこまでとどいてる！',B:'#joy|見ろよ、フタバ。灯台の光、村のはしっこまでとどいてるぜ！'}],['F','#joy|ほんとだ！ 夜でも、みちがよく見えるね。'],['H',{A:'これなら、夜の見まわりも、こわくないさ。',B:'これなら、夜の見まわりも、こわくねえな。'}]]},
+ {k:'r3j',at:()=>sevHere('M')&&symNear('water')&&S.qStory==null,L:[['M','#joy|フタバさん、見てください。噴水の水が、お日さまできらきらしています。'],['F','#joy|ほんとだ！ 虹も見えるよ！'],['M','みなさんが水しぶきで遊んでいると、わたしもうれしくなります。']]},
+ {k:'r4j',at:()=>sevHere('K')&&symNear('wind')&&S.qStory==null,L:[['K','#joy|フッ…いい音だね。風車が、風といっしょに歌っているよ。'],['F','#joy|くるくる、くるくる！ 見てると、目がまわりそう！'],['K','風の通る道ができると、村じゅうが、すこし軽くなるのさ。']]},
+ {k:'r5j',at:()=>sevHere('N')&&symNear('earth')&&S.qStory==null,L:[['N','#joy|フタバ、この石碑、どっしりしてて、いいねぇ。'],['F','うん！ そばにいると、なんだか安心する！'],['N','壁も、まえよりしっかりしたよぉ。みんなを守ってくれてるんだねぇ。']]},
  {k:'e14k',at:()=>sevHere('K')&&!!(S.sev||{}).e10&&(S.bossKills||0)>=2,L:[['K','#worry|……風が、熱を失っている。'],['F','え？'],['K','遠くの火の山から吹いてくる風が、冷たいんだ。あそこにも、困っている子たちがいるのかもしれないね。'],['F','#think|……ここみたいに？'],['K','フッ…いつか、だれかが助けに行くさ。たとえば、守り神とかね。']]},
  {k:'e11',at:()=>qAt('nushi'),L:[['F','#think|……ヌシ様、ほんとうに帰ってきてくれるかな。'],['N','ここまでできたんだよぉ。あと少しだねぇ。',1],['H',{A:'#sigh|夜はあたいにまかせな。最後まで村を守りぬくよ。',B:'#sigh|夜はおれにまかせろ。最後まで村を守りぬくぜ。'},1],['M','準備は進んでいます。できることを、ひとつずつ続けましょう。',1],['K','この場所なら、遠くからでも光が見えるはずさ。',1],['F','#think|……うん！ ぼくも、みんなといっしょにやる！'],['F','守り神さま！ ヌシ様を迎えに行こう！']]},
  {k:'e16',at:()=>(S.finalNight||S.finalOn)&&!S.cleared,L:[['F','守護の台座が、光ってる…！'],['N','#alarm|光ってるねぇ。……でも、この光、「コワイノ」も気づいちゃうかもねぇ。',1],['N','#think|……フタバ。はじめて会ったころより、ずっと頼もしくなったねぇ。',1],['F','#surprise|えっ、ほんと！？ えへへ……ありがとう、ノドカ！','N'],['H',{A:'来るなら来な。今夜でぜんぶ終わらせてやるよ。',B:'来るなら来い。今夜でぜんぶ終わらせてやるぜ。'},1],['F','#think|……うん。夜をこえたら、ヌシ様に会えるんだ！']]},
@@ -2352,7 +2358,7 @@ function checkSev(){if(WD||!S){SEVW={};return}if(!sevBusy())sevBub();if(S.cleare
 /* 話したそうな子：S.sevP にたまった条件会話を、先頭のセリフの子の吹き出しにする */
 let SEVW={};
 /* ピンクの条件会話：対象のそばへ集まり、到着してからリアクションと吹き出し。 */
-const SEV_OBJECTS={e04:['table'],e07:['farm'],e18:['farm'],e20:['tree','fruit'],e21:['clover','bellf','salvia','lily','lotus'],e22:['swing'],e11:['tower'],e16:['tower'],r2:['lighthouse'],r3:['fountain'],r4:['windmill'],r5:['stele']};
+const SEV_OBJECTS={e04:['table'],e07:['farm'],e18:['farm'],e20:['tree','fruit'],e21:['clover','bellf','salvia','lily','lotus'],e22:['swing'],e11:['tower'],e16:['tower'],r5:['rock'],r2j:['lighthouse'],r3j:['fountain'],r4j:['windmill'],r5j:['stele']};/* 「前にも知っている気がする」話（r2〜r5）は、自然の物（お日さま・池・風・岩）のそば。守り神がひらめいた建物では、よろこぶ話（r2j〜r5j） */
 const SEV_CHARACTERS={e04b:'N',e05:'N',e06:'H',e06d:'H',e17:'F',e23:'N',e10:'K',p1:'F',e12f:'H',e13m:'M',r1:'N',e14k:'K'};
 const SEV_HAPPY=new Set(['e04','e05','e17','e20','e21','e22','e16']);
 const SEV_ENCOUNTERS=new WeakMap(),SEV_RETRY=new WeakMap();
@@ -5434,7 +5440,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='554';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='555';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
