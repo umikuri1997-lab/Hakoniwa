@@ -1854,7 +1854,7 @@ function spawnWave(list){SKIP=false;/* コワイノが来たら、早送りを�
   else if(list.filter(t=>t==='ash').length>=6)dialog(['空から、灰がふってきた…！','ハイカゲがたくさん来るよ！ かまどやベンチをまもって！'],null,null,LEAD());
   else if(list.includes('boss2'))dialog(WD===1?[[HOMURA,'守り神！ 山の上にのこってた影が、おりてくるよ…！'],[HOMURA,'今夜は「ヨルノオオカゲ」さ。柵をかさねて、みんなを家に入れときな！']]:['守り神さま…！ いつもより、ずっと空気が重い…！','今夜は「ヨルノオオカゲ」が来る！ 柵をかさねて、家の中にかくれて！'],null,null,LEAD());
   else if(list.includes('boss')&&!WD&&!S.flags.bossTold&&S.res.some(r=>r.name===POKO)){S.flags.bossTold=1;dialog([[POKO,'守り神さま…！ ……この感じ。空気が、ずっしり重い。'],[POKO,'#alarm|「オオカゲ」……コワイノたちの親玉が、来るんだ。'],[POKO,'思い出すと、今でも足がすくむけど……'],[POKO,'今夜は「オオカゲ」が来る！ 柵をかさねて、家の中にかくれて！']],null,null,LEAD())}
-  else if(list.includes('boss'))dialog(WD===1?['守り神、なんだか空気がおもたいよ…！ 今夜は「オオカゲ」が来る！','#danger|柵をかさねておきな！ 家の中にいれば、攻撃はされないよ！']:['守り神さま、なんか空気が重いよ…！ 今夜は「オオカゲ」が来る！','#danger|柵をかさねておいて！ 家の中にいれば、攻撃されないよ！'],null,null,LEAD());
+  else if(list.includes('boss')&&WD===1)dialog(['守り神、なんだか空気がおもたいよ…！ 今夜は「オオカゲ」が来る！','#danger|柵をかさねておきな！ 家の中にいれば、攻撃はされないよ！'],null,null,LEAD());/* 草原は、はじめての夜のフタバの知らせだけ。2回目からは知らせない */
 }
 // 出現場所：基地の外のどこかランダム（明かりの中・水・障害物はさける）
 function spawnSpot(){
@@ -5434,7 +5434,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='551';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='552';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
