@@ -1551,7 +1551,10 @@ function chatTone(tx,r,i){if(!r)return tx;const k=elemKey(r),pr=r.elem==='fire'?
   {const fl={earth:'うーんとねぇ…',water:'そうですね……',wind:'そうだね……',fire:k==='fireB'?'そうだな、':'まあ、'}[r.elem];if(fl)t=t.replace(/^うーん…/,fl)}/* 口ぐせは属性ごとに */
   if(r.elem==='wind'&&i%3===1&&t.length>=14&&!/^(フッ|そう|えっ|ええ|うん|あ|わ|へえ|ほう|ねえ|好き|いい|見た|…|#)/.test(t)&&!/[！？…]|ちゃ|ないで|の。$/.test(t)&&/[。]$/.test(t))t='フッ…'+t;/* 気どった「フッ…」は、おちついた文だけ（気もちのタグ・！・？・…・あまえた言いかたの文にはつけない） */
   return t}
-function chatTopic(r,p){const L=[],mt=((r.mates||{})[p.id]||0)>=6;CHATS.forEach((c,i)=>{if((!c.el||c.el===r.elem)&&(!c.ok||c.ok())&&(!c.key||isKey(r.name)&&isKey(p.name))&&(!c.mate||mt)&&(!c.kc||kcOK(c,r,p)))L.push(i)});if(L.some(i=>CHATS[i].kc)&&Math.random()<.4){const K=L.filter(i=>CHATS[i].kc);L.length=0;L.push(...K)}/* キーキャラの話は、あえば4割で選ばれる *//* なかよし同士だと、なかよしの話もまざる */const R=S.chatRec||(S.chatRec=[]),F=L.filter(i=>!R.includes(i)),C=F.length?F:L,t=C[Math.floor(Math.random()*C.length)];R.push(t);while(R.length>Math.floor(CHATS.length*.7))R.shift();return t}/* 最近した話は、しばらくしない *//* 話しかけた子の属性のお話もまざる */
+function chatTopic(r,p){const L=[],mt=((r.mates||{})[p.id]||0)>=6;CHATS.forEach((c,i)=>{if((!c.el||c.el===r.elem)&&(!c.ok||c.ok())&&(!c.key||isKey(r.name)&&isKey(p.name))&&(!c.mate||mt)&&(!c.kc||kcOK(c,r,p)))L.push(i)});/* なかよし同士だと、なかよしの話もまざる *//* 話しかけた子の属性のお話もまざる */
+  const R=S.chatRec||(S.chatRec=[]),last=i=>R.lastIndexOf(i),lo=Math.min(...L.map(last));let C=L.filter(i=>last(i)===lo);/* だれとだれの会話でも、まだしていない話（なければ、いちばん前にした話）からえらぶ。ひととおりするまで、同じ話はしない */
+  if(C.some(i=>CHATS[i].kc)&&Math.random()<.4)C=C.filter(i=>CHATS[i].kc);/* キーキャラの話は、まだしていなければ4割で選ばれる */
+  const t=C[Math.floor(Math.random()*C.length)];for(let o;(o=R.indexOf(t))>=0;)R.splice(o,1);R.push(t);return t}
 /* 「手、ふっとこうか」：このあと手をふる */
 function trySocial(r,G){const sb=socialBest(r,G);if(!sb)return false;const best=sb.b;const o=S.res.find(q=>q.id===best.o.partner);if(!o)return false;endAct(o);o.act={type:'chatwait',stage:'do',t:0,partner:r.id};o.bubble='👋';startAct(r,G,'chat',best.stand,best.o);return true}
 const FAVTOY={earth:['sandbox'],wood:['swing'],water:['fountain'],fire:['campfire'],wind:['slide','seesaw']};/* 属性ごとに、よく遊ぶおもちゃ（ほかの子より選ばれやすい） */
@@ -4910,7 +4913,7 @@ function renderSheet(){
     {const bx=row(r3,'かたどりスタンプ','畑・柵の囲い・石の広場などを、ぽんと一度に置ける',toolIcon('stamp'),S.stamps);
       if(S.stamps)btn(bx,'もらった',true);else btn(bx,SP(50),S.pt<50,()=>{S.pt-=50;S.stamps=true;applyFeats();toast('かたどりスタンプをもらった！「どうぐ」から使える','good');trade()},1)}
     if(S.lv>=5||(S.bossKills||0)>=1||S.flags.hinoDown){const fo=festOn(),r5=sec(fo?'おまつりの交換':'とくべつな交換');/* ふだんは「おまつり」だけ。めぶきのしずく・素材・ごちそうは、おまつりの日だけ */
-      {const done=S.festDay===dayNo(),bx=row(r5,'おまつり','みんなのたのしさとげんきが、いっぱいになる。夜8時まで、神殿の前でおどる。おまつりのあいだは、めぶきのしずく・素材・ごちそうと交換できる。次の朝、おみやげがある（1日1回）',null,done);btn(bx,done?'きょうはおまつり':SP(200),done||S.pt<200,()=>{S.pt-=200;S.festDay=dayNo();for(const r of S.res){r.fun=100;r.energy=100;spawnFX(r.x-.5,r.y-.6,'#ffd84a')}sfx('level');toast('おまつりがはじまった！','good');festStart();trade()},1)}
+      {const done=S.festDay===dayNo(),bx=row(r5,'おまつり','',null,done);btn(bx,done?'きょうはおまつり':SP(200),done||S.pt<200,()=>{S.pt-=200;S.festDay=dayNo();for(const r of S.res){r.fun=100;r.energy=100;spawnFX(r.x-.5,r.y-.6,'#ffd84a')}sfx('level');toast('おまつりがはじまった！','good');festStart();trade()},1)}
       if(fo&&((S.bossKills||0)>=1||S.flags.hinoDown)){const bx=row(r5,'めぶきのしずく','消えてしまったせいれいを、よみがえらせる（所持：'+(S.mebuki||0)+'）',null);btn(bx,SP(400),S.pt<400,()=>{S.pt-=400;S.mebuki=(S.mebuki||0)+1;toast('めぶきのしずくをもらった','good');trade()},1)}
       if(fo){const room=matCap()-(S.mat.wood||0)-(S.mat.stone||0);
         for(const[k,nm]of[['wood','木材'],['stone','石材']]){const bx=row(r5,nm+'×10','素材箱に入る（いま'+(S.mat[k]||0)+'）',null);btn(bx,room<10?'素材箱がいっぱい':SP(50),room<10||S.pt<50,()=>{S.pt-=50;S.mat[k]=(S.mat[k]||0)+10;S.gotMat&&(S.gotMat[k]=(S.gotMat[k]||0)+10);toast(nm+'を10こもらった','good');trade()},1)}}}
@@ -5403,7 +5406,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='537';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='538';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
