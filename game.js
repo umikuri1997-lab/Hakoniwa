@@ -3697,11 +3697,11 @@ function drawMark(el,px,by,now){
 }
 /* ---------- 精霊の絵 ---------- */
 const SPC={
-  earth:{hood:'#8f6a50',dark:'#6f4f3a',eye:'#5e3d2a',hand:'#e3c3a3',line:'#ead6bd',leaf:'#5e8f43'},
-  water:{hood:'#78c3fb',dark:'#4fa6e8',eye:'#1d4f7c',hand:'#f3dfc6',line:'#ecd9c0'},
-  fire:{hood:'#e8604f',dark:'#c94a3c',eye:'#8f3a22',hand:'#ffc887',line:'#f0d4ae'},
-  wind:{hood:'#a6cc8a',dark:'#86b46a',eye:'#456a2a',hand:'#c8e2b4',line:'#c2dcaa',tend:'#e8cdb0'},
-  wood:{hood:'#6fae4c',dark:'#4f8a35',eye:'#3f5e26',hand:'#d6e8c2',line:'#e2d6bc',vein:'#9fd27e'},
+  earth:{hood:'#8f6a50',cheek:'#c6b1a0',dark:'#6f4f3a',eye:'#5e3d2a',hand:'#e3c3a3',line:'#ead6bd',leaf:'#5e8f43'},
+  water:{hood:'#78c3fb',cheek:'#badef5',dark:'#4fa6e8',eye:'#1d4f7c',hand:'#f3dfc6',line:'#ecd9c0'},
+  fire:{hood:'#e8604f',cheek:'#f2ac9f',dark:'#c94a3c',eye:'#8f3a22',hand:'#ffc887',line:'#f0d4ae'},
+  wind:{hood:'#a6cc8a',cheek:'#d2e2bc',dark:'#86b46a',eye:'#456a2a',hand:'#c8e2b4',line:'#c2dcaa',tend:'#e8cdb0'},
+  wood:{hood:'#6fae4c',cheek:'#b6d39e',dark:'#4f8a35',eye:'#3f5e26',hand:'#d6e8c2',line:'#e2d6bc',vein:'#9fd27e'},
 };
 const CREAM='#fdf8ef';
 // 見た目の微調整用の数値（デザイン調整ツールで作った値をここに入れる）
@@ -3851,7 +3851,7 @@ function drawSpiritDot(c,el,x,y,s,f,o){
     const fm=o.sleep||(o.blink&&!md)?'shut':md==='smile'||md==='joy'||md==='eat'?'hap':['teary','tear','shock','strain','sad'].includes(md)?md:'n';
     if(vr&&vr.cheek)spr('sp:cheek'+S,0,fy);
     spr('sp:face'+S+'#'+fm,0,fy);
-    if(vr&&vr.lash&&fm!=='strain')spr('sp:lash'+S+'#'+(['shut','hap','shock','sad'].includes(fm)?fm:'n'),0,fy)}
+    if(vr&&vr.lash&&fm!=='strain')spr('sp:lash'+S+'#'+fm,0,fy)}/* まつげは、表情ごとの目に合わせた絵 */
   c.restore();
   if(bothF)armD(farA,aA(farA));if(frontArm)armD(-farA,aA(-farA));
   if((A==='eat'||A==='hold')&&o.food&&!back){const ei=emoImg(o.food),yy=A==='hold'?-17:-27+Math.sin(t*7)*.8;if(ei){const ih=40,iw=ih*ei.width/ei.height;c.drawImage(ei,-iw/2,yy-ih/2,iw,ih)}else{c.font='40px sans-serif';c.textAlign='center';c.textBaseline='middle';c.fillStyle='#000';c.fillText(o.food,0,yy);c.textAlign='start';c.textBaseline='alphabetic'}}
@@ -3922,7 +3922,7 @@ function drawSpirit(c,el,x,y,s,f,o){
   if(!back){const ey=(el==='wind'?-53:-50)+TUNE.eyeY,xn=TUNE.eyeGap+tr*TUNE.sEye,xf=-TUNE.eyeGap+tr*14,/* 横顔の目は少し奥 */sf=1,showF=tr<.85;
     const md=o.sleep?'':o.mood==='cry'?'teary':o.mood||'',my=ey+9,mx=(xn+xf)/2+tr*TUNE.sMouth;c.strokeStyle=P.eye;c.fillStyle=P.eye;c.lineWidth=2.1;
     const eyeL=(x,w,k)=>{c.beginPath();if(k==='happy'){c.moveTo(x-3*w,ey+1.5);c.quadraticCurveTo(x,ey-3.5,x+3*w,ey+1.5)}else{c.moveTo(x-3*w,ey);c.quadraticCurveTo(x,ey+2.5,x+3*w,ey)}c.stroke()};
-    if(o.vr&&o.vr.cheek){const ck=P.hand;/* ほっぺは、お手手と同じ色 */E(xn+5+tr*TUNE.sCheek,ey+8-tr*2,4.2*TUNE.cheekS*(1-tr*.25),2.6*TUNE.cheekS,0,ck);if(showF)E(xf-5*sf,ey+8,4.2*TUNE.cheekS*sf,2.6*TUNE.cheekS,0,ck)}/* ほっぺ（目より下のレイヤー） */
+    if(o.vr&&o.vr.cheek){const ck=P.cheek;/* ほっぺは、頭巾の色をうすくした色 */E(xn+5+tr*TUNE.sCheek,ey+8-tr*2,4.2*TUNE.cheekS*(1-tr*.25),2.6*TUNE.cheekS,0,ck);if(showF)E(xf-5*sf,ey+8,4.2*TUNE.cheekS*sf,2.6*TUNE.cheekS,0,ck)}/* ほっぺ（目より下のレイヤー） */
     if(o.sleep||(o.blink&&!md))[[xn,1],showF&&[xf,sf]].forEach(e=>e&&eyeL(e[0],e[1]));
     else if(md==='smile'||md==='joy'||md==='eat')[[xn,1],showF&&[xf,sf]].forEach(e=>e&&eyeL(e[0],e[1],'happy'));
     else if(md==='teary'||md==='tear'){/* うるうる・片目の涙：目を開いたまま潤ませる */
@@ -5301,7 +5301,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='472';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='473';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
