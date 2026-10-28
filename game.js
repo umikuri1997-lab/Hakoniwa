@@ -1030,6 +1030,8 @@ function pathTo(G,j){const p=[];while(j>=0&&G.dist[j]>0){p.push(j);j=G.prev[j]}r
 let TAKEN=null;
 function nearest(G,pred,maxD=60){let best=-1,bd=1e9;for(let j=0;j<W*H;j++){const d=G.dist[j];if(d<0||d>=bd||d>maxD)continue;if(TAKEN&&TAKEN.has(j))continue;if(pred(j)){best=j;bd=d}}
   return best}
+function nearestVia(G,G2,pred,maxD=60){let best=-1,bd=1e9;for(let j=0;j<W*H;j++){const d=G.dist[j],d2=G2.dist[j];if(d<0||d2<0||d>maxD||d+d2>=bd)continue;if(TAKEN&&TAKEN.has(j))continue;if(pred(j)){best=j;bd=d+d2}}
+  return best}/* よりみち：いまの場所 → ここ → G2 のはじまりまで、いちばん近くなるマス（料理の材料をとる箱など） */
 
 /* ---------- 演出 ---------- */
 /* 作業する物の方を向く（木・岩） */
@@ -1603,7 +1605,7 @@ function tryJob(r,G,k){
   case'cook':{if(!cnt('oven')||!(foodCap()>0)||isNight())return false;const rs=RECIPES.filter(R=>Object.keys(R.need).every(k=>(S.fs[k]||0)>=R.need[k]));if(!rs.length)return false;
     if(!S.ovenSet)S.ovenSet={};const ok=q=>{const o=S.ovenSet[q];return o&&rs.some(R=>R.out===o)};/* かまどで、守り神さまがえらんだ料理だけ作る */
     const ov=q=>S.obj[q]==='oven'&&ok(q)&&!ashed(q)&&free('o'+q,1)&&!S.res.some(x=>x.cing&&x.cing.ov===q);j=nearest(G,j=>adjOf(j,ov)>=0,80);if(j<0)return false;const q=adjOf(j,ov),R=RECIPES.find(x=>x.out===S.ovenSet[q]);
-    const sj=nearest(G,j=>adjOf(j,k=>storageAt(k,'food'))>=0,80);if(sj<0)return false;
+    const sj=nearestVia(G,bfs(j%W,(j/W)|0),j=>adjOf(j,k=>storageAt(k,'food'))>=0,80);if(sj<0)return false;/* 材料は、かまどまでの道のりがいちばん短くなる食料箱からとる */
     startAct(r,G,'cgrab',sj,{rec:R.out,ov:q});return true}
   case'harvest':{if(!(foodCap()>0&&S.food<foodCap()))return false;const fRoom=foodCap()-S.food-carryN(r);j=nearest(G,j=>{if(S.obj[j]!=='farm'||!S.dyn[j]||S.dyn[j].g<100||!free('o'+j,1)||roomN(r)<1)return false;const c=CROPS[cropK(S.dyn[j])];return fRoom>=(c?c.yield:2)+(NEARMILL.has(j)?1:0)+(NEARFLOWER.has(j)?1:0)+(trt(r,'shukaku')?1:0)+(S.today==='hosaku'?1:0)});/* 食料箱に入りきらないときは収穫しない（持っている物を捨てない） */if(j>=0){startAct(r,G,'harvest',j,{key:'o'+j,obj:j,food:1});return true}
     const fr=ripeAdj(['fruit']);j=roomN(r)>=1&&fRoom>=2?nearest(G,j=>fr(j)>=0):-1;if(j>=0){const q=fr(j);startAct(r,G,'harvest',j,{key:'o'+q,obj:q,food:1});return true}return false}
@@ -2325,11 +2327,11 @@ const SEV1=[
  {k:'p1',at:()=>!!S.flags.minaCame&&S.quest>=12,L:[['N','フタバは、ずっとひとりでここにいたのぉ？'],['F','#worry|……うん。でもね、まえは、きょうだいがいっぱいいたんだ。'],['F','ぼくがいちばん下で、みんなでくっついて寝てたの。にぎやかだったなあ。'],['N','そっかぁ。……いまは、どこにいるのかなぁ。'],['F','#think|……わかんない。でも、いつか会えるって思ってる！'],['N','#nod|うん。それまで、ぼくがとなりにいるよぉ。']]},
  {k:'e12f',at:()=>!!S.flags.fHurtG&&!!S.flags.guard&&!(S.sev||{}).e12n&&sevHere('H'),/* こもれびのまもりをおぼえたあと、べつの夜に。e06（まもりをおぼえる話）とは、ちがう話 */L:[['F','#surprise|@H、ゆうべ、いっぱいたたかれてたよね……！ 葉っぱ、ちゃんと届いた？'],['H',{A:'#sigh|ああ、届いたよ。……あんたの葉っぱのおかげで、ちょっとだけ痛くなかった。',B:'#sigh|ああ、届いたぜ。……おまえの葉っぱのおかげで、ちょっとだけ痛くなかった。'}],['F','#think|ちょっとだけ……。もっと早く、もっとたくさん守れるようになるからね！'],['H',{A:'#think|……ふん。じゃあ、たよりにしてるよ。',B:'#think|……へっ。じゃあ、たよりにしてるぜ。'}],['F','#think|……でも、むりはしないでね。ほんとうに心配したんだから。'],['H',{A:'#think|……ばか。そんな顔するんじゃないよ。……ありがと。',B:'#think|……ばか。そんな顔すんな。……ありがとな。'}]]},
  {k:'e13m',at:()=>sevHere('M')&&(S.bossKills||0)>=1&&qDone('ookage')&&!!(S.sev||{}).e07,L:[['M','守り神さま、オオカゲが消えた場所を調べてみました。地面に、ふしぎな光が少しだけ残っていました。'],['M','そこに置いた花は、いつもより長く咲いていて……光の色も、見る角度で変わるんです。'],['F','#sigh|ふしぎ！ どうして？'],['M','#think|オオカゲが消えたときに出てきた「ヌシのかけら」と、同じ光です。……オオカゲは、ヌシ様の力を、体の中にとじこめていたのかもしれません。'],['M','ノドカさんの話では、ヌシ様の力は3つのかけらになったそうですね。言い伝えでは、「守る力」「育てる力」「想う力」の3つ。','N'],['M','言い伝えでは、ヌシ様の力は「守る力」「育てる力」「想う力」の3つのかけらになったそうです。','!N'],['N','3つそろったら、ヌシ様の形にもどれるんだよねぇ。',1],['M','ええ。のこりのかけらも、きっとどこかで、見つけてもらうのを待っています。']]},
- {k:'r1',at:()=>!!(S.sev||{}).e04&&sevHere('N')&&S.qStory==null,L:[['F','ノドカ。……なんだか、なつかしい匂いがするね。'],['N','そうかなぁ。ここの土の匂いじゃないのぉ？'],['F','うーん……ちがう気がする。でも、いい匂い！'],['N','ふふ。フタバがそう言うなら、そうなのかもねぇ。']]},
- {k:'r2',at:()=>sevHere('H')&&natNear('fire',q=>hour()>=9&&hour()<16&&!S.rain&&!roomOf((q.y|0)*W+(q.x|0)))&&S.qStory==null,L:[['H',{A:'#think|……なあ、フタバ。このお日さまの下にいるとさ、背中がやけに落ち着くんだ。',B:'#think|……なあ、フタバ。このお日さまの下にいるとな、背中がやけに落ち着くんだ。'}],['F','#surprise|えっ、ぼくも！ @Hといると、ほっとする！'],['H',{A:'ふん……気のせいだろ。ずっと前から知ってるわけでもないのにさ。',B:'ふん……気のせいだろ。ずっと前から知ってるわけでもねえのによ。'}],['F','#joy|えへへ。そうだよね。']]},
- {k:'r3',at:()=>sevHere('M')&&natNear('water',q=>tileNear(q,2,j=>S.ground[j]===1))&&S.qStory==null,L:[['M','#think|……不思議なんです。この池の水の音を聞いていると、前にも同じ音を聞いた気がして。'],['F','#surprise|えっ、来たことあるの？'],['M','いえ。この土地に来たのは、初めてのはずです。……計算では、ありえません。'],['M','ですが、なぜか耳が覚えているんです。']]},
- {k:'r4',at:()=>sevHere('K')&&natNear('wind',q=>!isNight()&&!S.rain&&!roomOf((q.y|0)*W+(q.x|0)))&&S.qStory==null,L:[['K','フッ…おかしなものだね。この草原をわたる風の道を、ぼくは前にも通った気がするんだ。'],['F','風の道？ 来たことあるの？'],['K','いいや、初めてさ。……だからこそ、不思議なんだ。'],['K','#sigh|風はなんでも知っている、と言ったが。知っているのは、ぼくのほうなのかもしれないね。']]},
- {k:'r5',at:()=>sevHere('N')&&natNear('earth',q=>tileNear(q,3,j=>S.obj[j]==='rock'))&&S.qStory==null,L:[['N','#think|……フタバ。この岩をさわるとねぇ、ずっと前からここにいたみたいな気分になるんだよぉ。'],['F','ノドカ、さいしょから、ここにいたんじゃないの？'],['N','ううん。ぼくが来たのは、つい最近のはずなんだけどねぇ。……ふしぎだねぇ。']]},
+ {k:'r1',at:()=>!!(S.sev||{}).e04&&sevHere('N')&&S.qStory==null,L:[['F','ノドカ。……なんだか、なつかしい匂いがするね。'],['N','そうかなぁ。ぼくからは、土の匂いしかしないと思うよぉ。'],['F','ううん、ちがう。草の匂い。ずっとむかしに、すぐそばで、かいでた匂い！'],['N','#think|……ふしぎだねぇ。ぼくも、フタバのとなりだと、なんだか、ねむくなるくらい安心するんだぁ。']]},
+ {k:'r2',at:()=>sevHere('H')&&natNear('fire',q=>hour()>=9&&hour()<16&&!S.rain&&!roomOf((q.y|0)*W+(q.x|0)))&&S.qStory==null,L:[['H',{A:'#think|……なあ、フタバ。この草原のお日さまの下にいるとさ、背中がやけに落ち着くんだ。葉っぱをひろげて、お日さまをあびてたみたいな気がしてさ。',B:'#think|……なあ、フタバ。この草原のお日さまの下にいるとな、背中がやけに落ち着くんだ。葉っぱをひろげて、お日さまをあびてたみたいな気がしてな。'}],['F','#surprise|えっ、@Hが葉っぱ？ 火の子なのに！'],['H',{A:'ふん……おかしいよな。草なんて、あたいがさわったら、もえちまうのにさ。',B:'ふん……おかしいよな。草なんて、おれがさわったら、もえちまうのによ。'}],['F','#think|……ぼくのきょうだいにもね、お日さまの下で、背中をぽかぽかさせるのが、いちばん好きな子がいたんだ。']]},
+ {k:'r3',at:()=>sevHere('M')&&natNear('water',q=>tileNear(q,2,j=>S.ground[j]===1))&&S.qStory==null,L:[['M','#think|……不思議なんです。この池の水の音を聞いていると、前にも、ここで聞いていた気がして。'],['F','#surprise|えっ、来たことあるの？'],['M','いえ。この土地に来たのは、初めてのはずです。……ですが、池のそばで、根っこから水をすっていたような気がするんです。'],['M','#think|……計算では、ありえません。'],['F','#think|……ぼくのきょうだいにもね、池のそばで、ずっと水の音を聞いてる子がいたよ。']]},
+ {k:'r4',at:()=>sevHere('K')&&natNear('wind',q=>!isNight()&&!S.rain&&!roomOf((q.y|0)*W+(q.x|0)))&&S.qStory==null,L:[['K','フッ…おかしなものだね。この草原をわたる風を、ぼくは、下から見上げていた気がするんだ。草の葉っぱの上からね。'],['F','風の子なのに？'],['K','#sigh|ああ。風をおこすほうじゃなくて、風に、ゆらされるほうだった気がするのさ。'],['F','#think|……ぼくのきょうだいにもね、風がふくたびに、いちばん高くまで背をのばす子がいたよ。'],['K','フッ…それは、いい趣味だ。']]},
+ {k:'r5',at:()=>sevHere('N')&&natNear('earth',q=>tileNear(q,3,j=>S.obj[j]==='rock'))&&S.qStory==null,L:[['N','#think|……フタバ。この岩のそばにいるとねぇ、ずっと前から、ここに根をはってたみたいな気分になるんだよぉ。'],['F','ノドカは土の子でしょ？ 根っこなんて、ないよ。'],['N','そうなんだけどねぇ。……ふしぎだねぇ。'],['F','#think|……岩のかげで、いつもひなたぼっこしてた、ぼくのきょうだいもいたなあ。']]},
  {k:'r2j',at:()=>sevHere('H')&&symNear('fire')&&S.qStory==null,L:[['H',{A:'#joy|見なよ、フタバ。灯台の光、村のはしっこまでとどいてる！',B:'#joy|見ろよ、フタバ。灯台の光、村のはしっこまでとどいてるぜ！'}],['F','#joy|ほんとだ！ 夜でも、みちがよく見えるね。'],['H',{A:'これなら、夜の見まわりも、こわくないさ。',B:'これなら、夜の見まわりも、こわくねえな。'}]]},
  {k:'r3j',at:()=>sevHere('M')&&symNear('water')&&S.qStory==null,L:[['M','#joy|フタバさん、見てください。噴水の水が、お日さまできらきらしています。'],['F','#joy|ほんとだ！ 虹も見えるよ！'],['M','みなさんが水しぶきで遊んでいると、わたしもうれしくなります。']]},
  {k:'r4j',at:()=>sevHere('K')&&symNear('wind')&&S.qStory==null,L:[['K','#joy|フッ…いい音だね。風車が、風といっしょに歌っているよ。'],['F','#joy|くるくる、くるくる！ 見てると、目がまわりそう！'],['K','風の通る道ができると、村じゅうが、すこし軽くなるのさ。']]},
@@ -4488,7 +4490,7 @@ function render(now){
   drawHeat(now);drawRanges(now);
   if(mode==='build'&&sel&&BL[sel]&&!selRect&&!pending){const k=sel+'|'+S.placed[sel]+'|'+S.baseLv;if(BADC.k!==k||now-BADC.t>600){BADC.k=k;BADC.t=now;BADC.L=[];for(let j=0;j<W*H;j++){const x=j%W,y=(j/W)|0;if(inBase(x,y)&&!canPlace(sel,x,y,true))BADC.L.push(j)}}
     ctx.fillStyle='rgba(255,90,90,.16)';for(const j of BADC.L)ctx.fillRect((j%W)*TS,((j/W)|0)*TS,TS,TS)}/* 置くものをえらんでいるときは、置けないマスをうすい赤で */
-  if(selRect){for(const[x,y]of rectCells(selRect.a,selRect.b)){ctx.fillStyle=canPlace(sel,x,y,true)?'rgba(255,220,90,.35)':'rgba(255,90,90,.3)';ctx.fillRect(x*TS,y*TS,TS,TS)}}
+  if(selRect){const P=pending&&(pending.kind==='bulk'||pending.kind==='plant')?new Set(pending.cells.map(([x,y])=>y*W+x)):null;/* 「おく」を待っているときは、ほんとうにぬるマスだけを黄色に */for(const[x,y]of rectCells(selRect.a,selRect.b)){ctx.fillStyle=(P?P.has(y*W+x):canPlace(sel,x,y,true))?'rgba(255,220,90,.35)':'rgba(255,90,90,.3)';ctx.fillRect(x*TS,y*TS,TS,TS)}}
   if(pending&&pending.kind==='one'){const z=szR(pending.id,PLROTS[pending.id]||0)||[1,1],px=pending.x*TS,py=pending.y*TS;ctx.fillStyle=pending.ok?'rgba(255,220,90,.3)':'rgba(255,90,90,.35)';const TP=pending.id==='statue'?[[-1,0,'obox'],[0,0,'statue'],[1,0,'board'],[0,1,'altar']]:[[0,0,pending.id]];if(TP.length>1)for(const[dx,dy]of TP)ctx.fillRect(px+dx*TS,py+dy*TS,TS,TS);else ctx.fillRect(px,py,z[0]*TS,z[1]*TS);
     ctx.strokeStyle=pending.ok?'rgba(255,230,120,.95)':'rgba(255,110,110,.95)';ctx.lineWidth=2;ctx.setLineDash([5,4]);if(TP.length>1)for(const[dx,dy]of TP)ctx.strokeRect(px+dx*TS+1,py+dy*TS+1,TS-2,TS-2);else ctx.strokeRect(px+1,py+1,z[0]*TS-2,z[1]*TS-2);ctx.setLineDash([])}
   if(pending&&pending.kind==='stamp'){for(const[dx,dy]of STAMPS[pending.sid].cells){ctx.fillStyle='rgba(255,220,90,.4)';ctx.fillRect((pending.x+dx)*TS,(pending.y+dy)*TS,TS,TS)}}
@@ -5081,7 +5083,6 @@ function renderSheet(){
       row.querySelector('.tx').insertAdjacentHTML('beforeend',gaugeHTML(r));row.onclick=()=>openSheet('res',r.id);rows.appendChild(row)}
     body.appendChild(rows);
   }else if(sheet==='clear'){T.textContent='守護の台座';
-    body.appendChild(el('<p class="note">'+(WD||cnt('tower')>=1?'ぜんぶそろうと、台座が光りはじめる。':'ぜんぶそろうと、台座を建てられる。')+'</p>'));
     const rows=el('<div class="rows"></div>');for(const[t,ok]of(WD||cnt('tower')>=1?clearConds():towerConds())){const r=el('<div class="row"><div class="tx"><b></b></div></div>');r.querySelector('b').textContent=(ok?'✓ ':'・')+t;if(ok)r.classList.add('done');rows.appendChild(r)}body.appendChild(rows);
   }else if(sheet==='bed'){const j=sheetArg;if(S.obj[j]!=='bed')return closeSheet();
     const o=bedOwner(j);T.textContent='ベッド';
@@ -5450,7 +5451,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='562';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='563';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
