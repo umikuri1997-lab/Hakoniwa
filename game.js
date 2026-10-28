@@ -1250,7 +1250,7 @@ function decide0(r){
   // 夜に家の中にいるせいれいは、おなかがすいても外へは出ない（見張り番の火のせいれいはべつ）
   if(isNight()&&!(isWatch(r)&&S.enemyOn&&!offShift(r)&&r.hunger>=30)&&!(r.hunger<hMax(r)*.5&&S.food>0)&&S.obj[here]!=='door'&&S.obj[here]!=='sdoor'){const out=insideSet();if(!out[here])for(let j=0;j<W*H;j++)if(out[j]||S.obj[j]==='door'||S.obj[j]==='sdoor')G.dist[j]=-1}
   if(r.meal)return goMeal(r,G);
-  if((r.hunger<30||(r.hunger<45&&Math.hypot(r.x-CX,r.y-CY)>20))&&!foeNear(r))return goEat(r,G);/* ごはんは、なによりも先（すぐそばにコワイノがいるときは、逃げるのが先）。基地から遠いときは早めに帰る */
+  if(r.hunger<30||(r.hunger<45&&Math.hypot(r.x-CX,r.y-CY)>20)){if(!foeNear(r))return goEat(r,G);if(goEatSafe(r))return}/* そばにコワイノがいても、安全に行ける食料箱（家の中か、コワイノから4マス以上はなれた所）なら食べにいく *//* ごはんは、なによりも先（すぐそばにコワイノがいるときは、逃げるのが先）。基地から遠いときは早めに帰る */
   if(r.alarm!=null&&S.t-r.alarm<120&&r.hunger>=10&&!r.meal&&!(r.elem==='fire'&&r.hunger>=50)&&S.enemies.some(e=>e.spawned&&!e.flee&&Math.hypot(e.x-r.x,e.y-r.y)<10)){if(withFlee(r,fleeAlarm,G))return}
   if((r.coffin||cnt('grave'))&&goBurial(r,G))return;
   if(r.cing&&!isNight()){const ov=q=>S.obj[q]==='oven'&&free('o'+q,1);let j=nearest(G,j=>adjOf(j,q=>q===r.cing.ov&&ov(q))>=0,90);if(j<0)j=nearest(G,j=>adjOf(j,ov)>=0,90);
@@ -1266,7 +1266,7 @@ function decide0(r){
   if(heldN(r)>0){if(heldN(r)<capOf(r)&&!isNight()&&r.hunger>=30&&!r.highFirst){const cm=r.cmat||{},gm=(cm.stone||0)>0?['mine']:(cm.wood||0)>0?['chop']:[],gat=true;for(const k of['harvest',...gm,'gather'])if(tryJob(r,G,k))return}
     if(carryN(r)>0&&foodCap()>0)return goStore(r,G)}
   if(r.cmat&&matCap()>0)return goStoreMat(r,G);
-  if(isNight()&&r.hunger<hMax(r)*.5&&S.food>0&&!S.enemies.some(e=>e.spawned&&!e.dead&&Math.hypot(e.x-r.x,e.y-r.y)<7)){return goEat(r,G)}/* 夜も、おなかが半分になったら食べにいく（見回りの子もふくめて） */
+  if(isNight()&&r.hunger<hMax(r)*.5&&S.food>0){if(!S.enemies.some(e=>e.spawned&&!e.dead&&Math.hypot(e.x-r.x,e.y-r.y)<7))return goEat(r,G);if(goEatSafe(r))return}/* 夜も、おなかが半分になったら食べにいく（見回りの子もふくめて） */
   if(r.elem==='fire'&&r.hunger>=50&&!r.refill){{const st=springThreat(r);if(st){const j=huntSpot(G,st,60,r);if(j>=0)return startAct(r,G,'patrol',j,{hunt:S.t})}}/* 最後の夜は、温泉を守りに行く */let en=null,bd=1e9;const br=BASE_R[S.baseLv]+3;for(const e of S.enemies){if(!e.spawned||e.dead)continue;if(!(e.x>=CX-br&&e.x<CX+br&&e.y>=CY-br&&e.y<CY+br))continue;const d=Math.hypot(e.x-r.x,e.y-r.y);if(d<bd){bd=d;en=e}}/* 「コワイノ」が拠点に近づいたら、たたかいに行く（おなか＝体力が少ないときは行かない） */
     if(en){const j=guardSpot(G,en,r);/* 敵と同じマスではなく、ひとます離れて */if(j>=0)return startAct(r,G,'patrol',j,{hunt:S.t})}}/* となりに行けなくても、いちばん近くまで行く。見回りの中断でぐるぐるしないよう hunt をつける */
   if(isNight()&&r.elem==='fire'&&offShift(r)){r.bubble='💤'}/* 火のせいれいが2人以上いれば、交代で見張って、交代で眠る */
@@ -1301,6 +1301,8 @@ function useNat(j){const o=S.obj[j];if(!o)return;const n=(S.hp['n'+j]||0)+1;if(n
 function ovenStand(G,q){let b=-1,bd=1e9;for(const[k,pen]of[[q-1,0],[q+1,0],[q+W,2],[q-W,40]]){const d=G.dist[k];if(d<0||!walk(k))continue;if(d+pen<bd){bd=d+pen;b=k}}return b}
 function goStoreMat(r,G){const j=nearest(G,j=>adjOf(j,k=>storageAt(k,'mat'))>=0,200);if(j>=0)return startAct(r,G,'smat',j);return startAct(r,G,'idle',-1,{dur:15})}
 function goStore(r,G){const j=nearest(G,j=>adjOf(j,k=>storageAt(k,'food'))>=0,90);if(j>=0)return startAct(r,G,'store',j);return startAct(r,G,'idle',-1,{dur:15})}
+function goEatSafe(r){/* コワイノのすぐそばを通らずに行けて、家の中か、コワイノから4マス以上はなれた食料箱へ、走って食べにいく */if(!(S.food>0))return false;const Gf=fleeGraph(r),safe=j=>!!roomOf(j)||!S.enemies.some(e=>e.spawned&&!e.dead&&Math.hypot(e.x-(j%W+.5),e.y-(((j/W)|0)+.5))<4);
+  const j=nearest(Gf,j=>safe(j)&&adjOf(j,k=>storageAt(k,'food'))>=0,200);if(j<0)return false;r.refill=S.t+60;startAct(r,Gf,'fetch',j,{run:true});return !!r.act}
 function goEat(r,G){
   if(S.food>0){
     const j=nearest(G,j=>adjOf(j,k=>storageAt(k,'food'))>=0,200);
@@ -5302,7 +5304,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='489';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='490';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
