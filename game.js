@@ -4431,8 +4431,8 @@ function render(now){
   ctx.setTransform(dpr,0,0,dpr,0,0);
   if(dk>0){ctx.fillStyle=(!WD&&S.ns&&S.ns.final&&!S.cleared?'rgba(46,10,52,':'rgba(14,20,58,')+dk+')';ctx.fillRect(0,0,VW,VH);
     ctx.setTransform(k,0,0,k,-cam.x*k,-cam.y*k);ctx.globalCompositeOperation='lighten';/* 光が重なっても、いちばん明るい光より明るくならない */
-    for(let y=y0;y<y1;y++)for(let x=x0;x<x1;x++){const o=S.obj[y*W+x];if(!['lamp','tower','watch','yogan','campfire','statue','torch','candle','lantern','flamp'].includes(o))continue;if(INDL.has(o)&&roomOf(y*W+x))continue;/* 家の中の灯りは、灯りそのものは光らせず、家ぜんたいを光らせる（下） *//* 明かりの出る物は、夜にまわりを明るく */
-      const cx=x*TS+(o==='watch'||o==='yogan'?32:16),cy=y*TS+(o==='yogan'?8:o==='flamp'?-6:o==='candle'?10:o==='lantern'?6:o==='lamp'?3:o==='torch'?-12:o==='watch'?-20:o==='campfire'?14:o==='tower'?6:o==='statue'?-6:15),R=o==='tower'?150:o==='statue'?110:o==='lamp'?100:o==='torch'?105:INDL.has(o)?(roomOf(y*W+x)?40:45):o==='campfire'?110:o==='watch'?40:o==='yogan'?60:30;
+    for(let y=y0;y<y1;y++)for(let x=x0;x<x1;x++){const o=S.obj[y*W+x];if(!['lamp','tower','yogan','campfire','statue','torch','candle','lantern','flamp'].includes(o))continue;if(INDL.has(o)&&roomOf(y*W+x))continue;/* 家の中の灯りは、灯りそのものは光らせず、家ぜんたいを光らせる（下） *//* 明かりの出る物は、夜にまわりを明るく */
+      const cx=x*TS+(o==='yogan'?32:16),cy=y*TS+(o==='yogan'?8:o==='flamp'?-6:o==='candle'?10:o==='lantern'?6:o==='lamp'?3:o==='torch'?-12:o==='campfire'?14:o==='tower'?6:o==='statue'?-6:15),R=o==='tower'?150:o==='statue'?110:o==='lamp'?100:o==='torch'?105:INDL.has(o)?(roomOf(y*W+x)?40:45):o==='campfire'?110:o==='yogan'?60:30;
       const g=ctx.createRadialGradient(cx,cy,2,cx,cy,R);g.addColorStop(0,'rgba(255,214,120,'+dk*.9+')');g.addColorStop(1,'rgba(255,200,100,0)');ctx.fillStyle=g;ctx.fillRect(cx-R,cy-R,R*2,R*2)}
     {const litH=new Set();for(const j of LIGHTS){if(INDL.has(S.obj[j])){const h=roomOf(j);if(h)litH.add(h)}}/* 灯りのある家は、家ぜんたいを同じ明るさで照らす（ふちはぼかす） */
       for(const h of litH){const D=(VW*dpr+120*k)/k;/* k は画面の倍率（dprこみ） */ctx.beginPath();for(const q of h.set){const qx=q%W,qy=(q/W)|0;if(qx<x0-3||qx>x1+2||qy<y0-3||qy>y1+2)continue;ctx.rect(qx*TS-D,qy*TS,TS,TS)}ctx.fillStyle='#000';ctx.shadowColor='rgba(255,205,110,'+dk*.75+')';ctx.shadowBlur=36*k;ctx.shadowOffsetX=D*k;ctx.fill();ctx.shadowBlur=0;ctx.shadowOffsetX=0;ctx.shadowColor='transparent'}}/* 家の形をぼかした光だけをかく（形そのものは画面の外へずらし、影だけを家の位置に出す） */
@@ -4799,7 +4799,7 @@ monstera:'かざり,リビング',wreath:'かざり,リビング',curtain1:'か�
 candle:'あかり,リビング',lantern:'あかり,リビング',flamp:'あかり,リビング',lamp:'あかり,ガーデン',torch:'あかり,ガーデン',
 signpost:'ガーデン',hedge:'ガーデン',birdbath:'ガーデン,かざり',arch:'ガーデン,かざり',parasol:'ガーデン,遊び',noren:'ガーデン,かざり',bench:'ガーデン,リビング',jar:'ガーデン,キッチン',kamizo:'ガーデン',rockart:'ガーデン,かざり',chochin:'かざり',furin:'かざり',ema:'かざり',komainu:'かざり,ガーデン',kadomatsu:'かざり,ガーデン',vane:'ガーデン,かざり',basin:'ガーデン',
 slide:'遊び,ガーデン',sandbox:'遊び,ガーデン',seesaw:'遊び,ガーデン',swing:'遊び,ガーデン',campfire:'遊び,あかり',fountain:'遊び,ガーデン',
-spike:'ワナ',puddle:'ワナ',sticky:'ワナ',firetrap:'ワナ',gust:'ワナ',watch:'防衛,あかり',tower:'防衛',lighthouse:'あかり,防衛',stele:'防衛',well:'水まわり,ガーデン',windmill:'作業,ガーデン',lumber:'作業',quarry:'作業',statue:'神殿'};/* ジャンルのタグ（複数あるものは、すべて書く） */
+spike:'ワナ',puddle:'ワナ',sticky:'ワナ',firetrap:'ワナ',gust:'ワナ',watch:'防衛',tower:'防衛',lighthouse:'あかり,防衛',stele:'防衛',well:'水まわり,ガーデン',windmill:'作業,ガーデン',lumber:'作業',quarry:'作業',statue:'神殿'};/* ジャンルのタグ（複数あるものは、すべて書く） */
 function tagsOf(id){const b=BL[id];if(!b)return[];if(TAGMAP[id])return TAGMAP[id].split(',');const t=[];if(CAT_TAG[b.cat])t.push(CAT_TAG[b.cat]);for(const[n,ids]of CRAFT_TABS)if(ids.includes(id)){const g=TAB_TAG[n]||n;if(!t.includes(g)&&!(g==='家具'&&t.length))t.push(g)}if(b.play&&!t.includes('遊び'))t.push('遊び');if(!t.length&&b.kind==='furn')t.push('家具');return t}/* 説明に出す、ジャンルのタグ */
 function tagsEl(id){const tg=tagsOf(id);if(!tg.length)return null;const d=document.createElement('div');d.className='tags';for(const g of tg){const sp=document.createElement('span');sp.className='tag';sp.textContent=g;d.appendChild(sp)}return d}
 function helpPop(t,text){const o=$('#helpPop');let tg=[];{const id=Object.keys(BL).find(k=>BL[k].name===t);if(id)tg=tagsOf(id)}{const bx=o.querySelector('.tags');if(bx){bx.innerHTML='';for(const g of tg){const sp=document.createElement('span');sp.className='tag';sp.textContent=g;bx.appendChild(sp)}bx.hidden=!tg.length}}o.querySelector('b').textContent=t;o.querySelector('p').textContent=text;o.hidden=false}
@@ -5301,7 +5301,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='475';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='476';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
