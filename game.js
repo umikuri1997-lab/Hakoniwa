@@ -2177,10 +2177,10 @@ for(const k in THXB)if(FIREB[k])FIREB[k].X.push(['K',THXB[k]]);
 function inHouseFurn(){let n=0;for(let j=0;j<S.obj.length;j++){const o=S.obj[j];if(!o||!BL[o]||BL[o].kind!=='furn'||BL[o].trap)continue;if(HOUSES.some(h=>h.set&&h.set.has(j)))n++}return n}
 function qAt(id){const qi=QUESTS.findIndex(q=>q.id===id);if(qi<0)return false;return (S.quest>qi||S.quest===qi&&!!S.qTalked)}/* そのメインクエストを受けたあと */
 function qDone(id){const index=QUESTS.findIndex(q=>q.id===id);if(index<0)return false;if(S.qStory===index)return false;return S.quest>index}
-const SUB_MAIN_AFTER={chair2:'食卓をたのもう',farm10:'畑を6つにしよう',light3:'火のせいれいをむかえよう',oven:'火のせいれいをむかえよう'};
+const SUB_MAIN_AFTER={chair2:'table',farm10:'farm6',light3:'fire',oven:'fire'};
 function subOfferReady(q){if(S.qStory!=null||QUEST_CLEAR_WAIT)return false;return WD!==0||!SUB_MAIN_AFTER[q.k]||qDone(SUB_MAIN_AFTER[q.k])}
 const LEVEL_HELP={2:['benchbreak','chair2'],3:['oven','bed3'],4:['jar2','farm10'],5:['toy2','deco3'],8:['room','paint','parasol']};
-function levelHelpKeys(){const out=[];for(const n in LEVEL_HELP){const main=qAt('村レベルを'+n+'にしよう'),side=SUBQ.some(q=>q.k.startsWith('lv_')&&q.n===+n&&(S.subSt||{})[q.k]>=2);if(main||side)out.push(...LEVEL_HELP[n])}return out}
+function levelHelpKeys(){const out=[];for(const n in LEVEL_HELP){const main=qAt('lv'+n),side=SUBQ.some(q=>q.k.startsWith('lv_')&&q.n===+n&&(S.subSt||{})[q.k]>=2);if(main||side)out.push(...LEVEL_HELP[n])}return out}
 function subList(){const help=levelHelpKeys();if(waitingBellflowers())help.unshift('seedwait_gate','seedwait_food');return SUBQ.filter(q=>q.w==null||q.w===WD).sort((a,b)=>(help.includes(a.k)?0:1)-(help.includes(b.k)?0:1))}
 let SUBW={};/* サブクエストで話したそうにしている子（名前→k） */
 const KEYEL0={wood:POKO,earth:MINA};
@@ -5297,7 +5297,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='514';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='515';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
