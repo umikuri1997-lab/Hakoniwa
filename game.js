@@ -1313,7 +1313,7 @@ const fireMul=r=>(r.energy<10?.5:r.energy<25?.7:1)*(r.fun<20?.8:1);/* 火のせ�
 const nightClear=()=>!!S.nightHad&&!S.nushi&&S.enemies.every(e=>e.dead);/* 今夜のコワイノを倒し切った */
 const isWatch=r=>(r.elem==='fire'||r.name===POKO&&!WD&&!!S.flags.guard)&&!nightClear()/* コワイノをぜんぶ倒したら、火の子もフタバも寝る */;/* 夜の見回りをする子（フタバは、こもれびのまもりをおぼえたら） */
 function offShift(r){return false;/* 火のせいれいは全員みまわり（交代なし） */if(r.elem!=='fire'||!S.enemyOn)return false;const F=S.res.filter(q=>q.elem==='fire'&&!q.hidden).sort((a,b)=>a.id-b.id);if(F.length<2)return false;const h=hour(),sh=(h>=21||h<1.5)?0:1;return F.indexOf(r)%2!==sh}
-const hostileNow=()=>S.enemies.some(e=>e.spawned&&!e.dead&&!e.flee);
+const hostileNow=()=>S.enemies.some(e=>e.spawned&&!e.dead&&!e.flee&&inBase(e.x|0,e.y|0));/* コワイノが基地の中に入ってきたときだけ、こわがる */
 function goShiver(r,G){/* 家の中（なければ、いまの場所）で、ふるえる */let k=-1;if(HOUSES.length){const hs=new Set();for(const h of HOUSES)for(const q of h.inside)hs.add(q);k=nearest(G,j=>hs.has(j)&&walk(j)&&S.obj[j]!=='door'&&S.obj[j]!=='sdoor',200)}if(k<0)return withFlee(r,fleeAlarm,G);/* 家がなければ、逃げつづける */startAct(r,G,'shiver',k,{run:true});return true}
 function goSleep(r,G,run){
   if(!isNight()&&(r.restCD||0)<=S.t){const isB=j=>(S.obj[j]==='bench'||(S.obj[j]==='part'&&S.obj[S.ref[j]]==='bench'))&&!ashed(anc(j));const bj=nearest(G,j=>isB(j)&&free('o'+j,1),40);if(bj>=0)return startAct(r,G,'rest',bj,{key:'o'+bj,obj:anc(bj),seat:bj})}/* 昼につかれたら、ベンチでひと休み（2人すわれる） */
@@ -1711,7 +1711,7 @@ function updRes(r,dt){rescueStuck(r);if((RHOLD.get(r)||0)>performance.now())retu
   if(r.fleeNow&&!r.hidden&&!(r.act&&(r.act.type==='flee'||r.act.run))){r.fleeNow=false;
     const en=S.enemies.find(e=>e.spawned&&Math.hypot(e.x-r.x,e.y-r.y)<6);
     if(en){r.fleeT=S.t;endAct(r);const G=bfs(r.x|0,r.y|0);if(withFlee(r,fleeHit,G))return}}
-  if(r.act&&!isWatch(r)&&hostileNow()&&r.hunger>=30&&!['shiver','eat','fetch','flee','faint','forage','pray','bury','reunion','sevreact'].includes(r.act.type)&&!r.coffin&&!(r.act.type==='sleep'&&r.hidden&&roomOf(r.act.obj!=null?r.act.obj:(r.y|0)*W+(r.x|0))))endAct(r);/* 家のベッドで寝ている子は、家の壁がこわされるまで起きない *//* たたかえない子は、コワイノがいるあいだ、家でふるえる */
+  if(r.act&&!isWatch(r)&&hostileNow()&&r.hunger>=30&&!['shiver','eat','fetch','flee','faint','forage','pray','bury','reunion','sevreact'].includes(r.act.type)&&!r.coffin)endAct(r);/* 寝ている子も、コワイノが基地に入ってきたら起きて、家でふるえる *//* たたかえない子は、コワイノがいるあいだ、家でふるえる */
   if(r.act&&isNight()&&!NIGHT_OK.includes(r.act.type))endAct(r)
   if(r.act&&r.act.type==='sevreact'&&(r.hunger<30||r.energy<10||!SEV_ENCOUNTERS.get(S)||!sevEncounterSafe(SEV_ENCOUNTERS.get(S))))endAct(r);
   if(r.act&&r.act.type==='questjoy'&&(r.hunger<30||!questVisitSafe(r,r.act.obj)))endAct(r);
@@ -5298,7 +5298,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='468';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='469';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
