@@ -1187,7 +1187,7 @@ const ACT={
   fetch:{start(r){if(S.food<=0)return false;r.bubble='📦';sfxAt('box',r.x,r.y)},done:(r,a)=>a.t>=4,end(r){let need=Math.max(0,(hMax(r)-r.hunger)*fullN(r)/100),units=0,pt=0,pw=0,items=[];
     const keys=Object.keys(S.fs).filter(k=>S.fs[k]>0).sort((a,b)=>FOODS[b].v-FOODS[a].v);for(const k of keys){while(need>0&&S.fs[k]>0){S.fs[k]--;need-=FOODS[k].v;units+=FOODS[k].v;pt+=FOODS[k].pt||0;pw+=FOODS[k].pw||0;items.push(k)}if(need<=0)break}
     syncFood();if(units)r.meal={u:units,pt,pw,e:FOODS[items[0]].e,items};if(sheet==='food')renderSheet()}},
-  npl:{start(r,a){if(!S.nushi||!S.cleared)return false;r.bubble='💚';r.face=S.nushi.x>=r.x?1:-1;addFloat(r.x,r.y-1.4,'ヌシ様と遊ぶ！');if(!S.flags.nplayed){S.flags.nplayed=1;memo('🦌',r.name+'がヌシ様と遊んだ');logEv(r.name+'がヌシ様と遊んだ')}},tick(r,a,dt){r.fun=Math.min(100,r.fun+1.6*dt);a.bt=(a.bt||0)+dt;if(a.bt>3){a.bt=0;r.bubble=pick(['💚','😆','🎵'])}},done:(r,a)=>a.t>=20||!S.nushi,end(r){addPt(1.35,r,3)}},/* クリア後、ヌシ様のところへ遊びに行く */
+  npl:{start(r,a){if(!S.nushi||!S.cleared)return false;r.bubble='💚';r.face=S.nushi.x>=r.x?1:-1;addFloat(r.x,r.y-1.4,'ヌシ様と遊ぶ！');if(!S.flags.nplayed){S.flags.nplayed=1;memo('🦌',r.name+'がヌシ様と遊んだ');logEv(r.name+'がヌシ様と遊んだ')}},tick(r,a,dt){r.fun=Math.min(100,r.fun+1.6*dt);a.bt=(a.bt||0)+dt;if(a.bt>3){a.bt=0;r.bubble=pick(['💚','😆','🎵'])}a.jt=(a.jt||0)+dt;if(a.jt>2.5&&S.nushi){a.jt=0;JUMP.set(r,performance.now());S.nushi.hop=performance.now()}},done:(r,a)=>a.t>=40||!S.nushi/* ぴょんぴょんはねて、ヌシ様もいっしょにはねる */,end(r){addPt(1.35,r,3)}},/* クリア後、ヌシ様のところへ遊びに行く */
   chatwait:{done:(r,a)=>{const p=S.res.find(q=>q.id===a.partner);return a.t>=40||!p||!p.act||p.act.type!=='chat'||p.act.partner!==r.id}},
   tag:{tick(r,a,dt){const ang=a.ph+a.t*.35,nx=a.cx+Math.cos(ang)*1.1,ny=a.cy+Math.sin(ang)*.8;r.face=nx>=r.x?1:-1;if(walk((ny|0)*W+(nx|0))){r.x=nx;r.y=ny}/* 通れないマスには入らない */r.fun=Math.min(100,r.fun+.6*dt)},
     done:(r,a)=>a.t>=30,end(r,a){addPt(.9,r,2)}},
@@ -3050,9 +3050,9 @@ function nushiTalk(){const n=S.nushi,nm=WD===1?'火のヌシ':NUSHI1,k=WD===1?1:
   const T=NTALK[k];dialog([[nm,T[(S.ntk=(S.ntk||0)+1)%T.length]]])}/* 守り神に、ひとことずつ話す（順番にまわる） */
 function updNushi(dt){const n=S.nushi;if(n.app==null)n.app=1;if(n.app<1){n.app=Math.min(1,n.app+dt/5);n.mv=0;return}/* 台座の上で、すこしずつ姿をあらわす */
   if(n.pl){const r=S.res.find(q=>q.id===n.pl.id);n.pl.t+=dt;if(r&&n.pl.t>90&&r.act&&r.act.type==='npl'&&r.act.stage!=='do')endAct(r);
-    if(!r||!r.act||(r.act.type!=='npl'&&n.pl.t>3)){n.pl=null;n.pt=rnd(240,480)}else{n.mv=0;n.path=[];if(r.act.type==='npl'&&r.act.stage==='do'){n.face=r.x<n.x?-1:1;n.fx=(n.fx||0)+dt;if(n.fx>3){n.fx=0;spawnFX(n.x-.5,n.y-1.1,'#ffb8d8')}}return}}
-  if(n.pt==null)n.pt=rnd(120,300);n.pt-=dt;
-  if(n.pt<=0&&S.cleared&&!isNight()&&!n.path.length){/* クリア後、ときどき、精霊が遊びにくる */n.pt=60;const c=S.res.filter(r=>!r.hidden&&(!r.act||r.act.type==='wander'||r.act.type==='idle')&&r.hunger>40&&r.energy>30&&Math.abs(r.x-n.x)+Math.abs(r.y-n.y)<30);
+    if(!r||!r.act||(r.act.type!=='npl'&&n.pl.t>3)){n.pl=null;n.pt=rnd(30,90)}else{n.mv=0;n.path=[];if(r.act.type==='npl'&&r.act.stage==='do'){n.face=r.x<n.x?-1:1;n.fx=(n.fx||0)+dt;if(n.fx>3){n.fx=0;spawnFX(n.x-.5,n.y-1.1,'#ffb8d8')}}return}}
+  if(n.pt==null)n.pt=rnd(20,60);n.pt-=dt;
+  if(n.pt<=0&&S.cleared&&!isNight()){/* クリア後、ときどき、精霊が遊びにくる（なにもしていない子・おもちゃで遊んでいる子から） */n.pt=20;const c=S.res.filter(r=>!r.hidden&&(!r.act||['wander','idle','play'].includes(r.act.type))&&r.hunger>30&&r.energy>25&&Math.abs(r.x-n.x)+Math.abs(r.y-n.y)<30);
     if(c.length){const r=pick(c),G=bfs(r.x|0,r.y|0),nj=(n.y|0)*W+(n.x|0),st=nearest(G,j=>[1,-1,W,-W].includes(j-nj)&&walk(j),40);if(st>=0){endAct(r);startAct(r,G,'npl',st,{});n.pl={id:r.id,t:0};n.path=[];return}}}
   if(!n.path)n.path=[];
   if(!n.path.length){n.mv=0;n.t-=dt;if(n.t>0)return;n.t=rnd(30,90);
@@ -4369,7 +4369,7 @@ function drawNushi(now){
   const g=ctx.createRadialGradient(px,py-60,8,px,py-60,100);g.addColorStop(0,FIRE?'rgba(255,200,140,.32)':'rgba(190,255,200,.32)');g.addColorStop(1,FIRE?'rgba(255,200,140,0)':'rgba(190,255,200,0)');ctx.fillStyle=g;ctx.fillRect(px-100,py-160,200,200);
   shadow(ctx,px,py+3,34,7);
   if(SH.ok){const fi=(n.dir>0?0:n.dir<0?1:2),F=SH.f[mv?3+fi*6+Math.floor(now/150)%6:fi];/* 0正面・1うしろ・2横（左向き）。歩くときは6コマ */
-    const[sx,sy,sw,sh,sc]=F,dw=sw*sc,dh=sh*sc;ctx.save();ctx.imageSmoothingEnabled=false;ctx.translate(Math.round(px),Math.round(py+4+(mv?0:bob)));/* ドット絵（1ドット＝ゲームの1点）。ドットがくずれないように、整数の位置にかく */if(!n.dir&&f>0)ctx.scale(-1,1);/* 絵は左向き。右を向くときは反転 */ctx.drawImage(SH.img,sx,sy,sw,sh,-dw/2+(F[5]||0)*sc,-dh+(F[6]||0)*sc,dw,dh)/* 6・7番めは、からだの位置をそろえるずらし（ドット） */;ctx.restore()}
+    const[sx,sy,sw,sh,sc]=F,dw=sw*sc,dh=sh*sc;ctx.save();ctx.imageSmoothingEnabled=false;const hp=n.hop&&now-n.hop<450?Math.sin(Math.PI*(now-n.hop)/450)*7:0;/* 遊びにきた子といっしょに、ぴょんとはねる */ctx.translate(Math.round(px),Math.round(py+4+(mv?0:bob)-hp));/* ドット絵（1ドット＝ゲームの1点）。ドットがくずれないように、整数の位置にかく */if(!n.dir&&f>0)ctx.scale(-1,1);/* 絵は左向き。右を向くときは反転 */ctx.drawImage(SH.img,sx,sy,sw,sh,-dw/2+(F[5]||0)*sc,-dh+(F[6]||0)*sc,dw,dh)/* 6・7番めは、からだの位置をそろえるずらし（ドット） */;ctx.restore()}
   else if(n.dir){drawNushiFB(ctx,px,py+4+bob,n.dir<0,now,mv)}else{
   ctx.save();ctx.translate(px,py+4+bob);ctx.scale(-f*K,K);ctx.translate(-117,-301);/* 絵は左向き。f=1で右を向く */
   /* 脚は、からだより先にかく（つけ根はからだにかくれる）。奥の脚は少し暗く */
@@ -5628,7 +5628,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='577';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='578';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
