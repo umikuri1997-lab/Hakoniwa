@@ -118,7 +118,7 @@ const BL={
   bed:{name:'ベッド',kind:'furn',pc:10,time:200,maker:'wood',sleep:{cap:1,pt:5,rate:.2},attr:{wood:2},mat:{wood:8},desc:'1人眠れる。元気 +12／1時間。家の住み心地で0.6〜3.3倍'},
   lamp:{hp:5,brk:1,fix:3,fixm:{wood:2,stone:2},name:'かがり火',kind:'furn',pc:5,time:160,maker:'fire',solid:1,anim:1,attr:{fire:3},mat:{wood:3,stone:3},desc:'まわり3.5マスを照らす。住み心地+6'},
   campfire:{hp:5,brk:1,fix:4,fixm:{wood:6,stone:4},name:'たき火',kind:'furn',pc:7,time:160,maker:'fire',lv:6,solid:1,anim:1,attr:{fire:4},play:{pt:3,pw:1.35,fun:25,dur:40,cap:3,adj:1},mat:{wood:11,stone:8},desc:'3人まで遊べる。たのしさ +25（40分）。まわり3.5マスも照らす。'},
-  swing:{name:'ブランコ',kind:'furn',pc:9,time:160,maker:'wood',lv:4,play:{pt:4,pw:1.8,fun:40,dur:50,cap:1},attr:{wind:3},mat:{wood:12},desc:'1人で遊べる。たのしさ +40（50分）。遊ぶと10%の確率で、移動速度+1'},
+  swing:{name:'ブランコ',sz:[2,1],kind:'furn',pc:9,time:160,maker:'wood',lv:4,play:{pt:4,pw:1.8,fun:40,dur:50,cap:1},attr:{wind:3},mat:{wood:12},desc:'1人で遊べる。たのしさ +40（50分）。遊ぶと10%の確率で、移動速度+1'},
   torch:{hp:5,brk:1,fix:1,fixm:{wood:2},name:'たいまつ',kind:'furn',lv:3,pc:1,time:100,maker:'fire',solid:1,anim:1,attr:{fire:2},mat:{wood:3},desc:'まわり3.5マスを照らす。住み心地+4'},
   jar:{hp:5,brk:1,fix:2,fixm:{stone:3},name:'みずがめ',kind:'furn',lv:3,pc:3,time:120,maker:'water',solid:1,attr:{water:3},mat:{stone:5},desc:'水をためたかめ。まわり1マスの畑は水やりなしで育つ。住み心地+5'},
   basin:{hp:5,brk:1,fix:4,fixm:{stone:3},name:'水鉢',kind:'furn',pc:7,time:160,maker:'water',solid:1,anim:1,attr:{water:4,wood:.5},mat:{stone:5},desc:''},/* もう作れない（古いセーブ用） */
@@ -723,7 +723,7 @@ let S=null;
 const resv=new Map();
 let STATUE=-1,OBOX=-1,BOARD=-1,counts={},LIGHTS=[],STELES=[],TOWERS=[],NEARFLOWER=new Set(),NEARWELL=new Set(),NEARMILL=new Set(),NEARVANE=new Set(),NEARSIGN=new Set(),ENVG=null,REV=new Set(),ATTR={},BASEPCT=0,GRASSN=0;const GRASS_GOAL=600;
 function newState(w){w=w||0;
-  const s={v:8,mig:2,flags:{},placed:{},feat:{build:true},inv:{},orders:[],enemyOn:false,nights:0,godGone:false,godShown:false,nushi:null,
+  const s={v:8,mig:3,flags:{},placed:{},feat:{build:true},inv:{},orders:[],enemyOn:false,nights:0,godGone:false,godShown:false,nushi:null,
     lv:1,bossKills:0,nightHurt:0,nightHad:false,wave:null,lastWarn:0,
     ref:{},ground:new Array(W*H).fill(0),floor:new Array(W*H).fill(''),obj:new Array(W*H).fill(''),dyn:{},hp:{},
     res:[],enemies:[],pt:15,totalPt:0,food:0,fs:{},cseed:{imo:4},crops:{imo:true},mat:{wood:0,stone:0},regrow:[],t:w===0?15*60:12*60,/* 草原は15時からはじまる */speed:1,baseLv:0,
@@ -941,7 +941,7 @@ function ssAng(j,now){return Math.sin(now/1000*1.8+j)*(toyUsers(j).length?.28:.1
 /* 遊具で遊ぶ子の位置（足もと）。おもちゃの絵に合わせて動く */
 function toyPose(r,now){const p=toyPose0(r,now);if(!p)return p;const a=toyR(r),j=a.obj,t=ROTS[a.what],rv=rotAt(j);if(t===1&&rv){const fw=((szR(a.what,0)||[1,1])[0])*TS,X=(j%W)*TS;p.x=2*X+fw-p.x;r.face=-r.face}return p}/* 左右反転した遊具では、遊ぶ位置も反転 */
 function toyPose0(r,now){const a=toyR(r);if(!a)return null;const j=a.obj,X=(j%W)*TS,Y=((j/W)|0)*TS,us=toyUsers(j),k=Math.max(0,us.indexOf(r)),T=now/1000;
-  if(a.what==='swing'){const d=swAng(j,now);r.face=1;return{x:X+16,y:Y+29+d*9,z:Y/TS+1.05}}/* 座面（chips.js の swing の部品）の下に足。ゆれると、座面といっしょに前後する */
+  if(a.what==='swing'){const d=swAng(j,now);r.face=1;return{x:X+32,y:Y+29+d*9,z:Y/TS+1.05}}/* 座面（chips.js の swing の部品）の下に足。ゆれると、座面といっしょに前後する */
   if(a.what==='seesaw'){const sg=us.length>1?(k?1:-1):(r.x<X+16?-1:1)*(TS/TS),an=ssAng(j,now),X0=X+16,Y0=Y+7;r.face=-sg;return{x:X0+Math.cos(an)*sg*22+Math.sin(an)*5,y:Y0+Math.sin(an)*sg*22-Math.cos(an)*5+5,z:Y/TS+1.05}}
   if(a.what==='sandbox'){const o=[-15,15,0][k%3];if(rotAt(j)===1){r.face=k%2?-1:1;return{x:X+16+(k===2?0:(k?6:-6)),y:Y+32+o+8-Math.abs(Math.sin(T*5+k))*1.5,z:Y/TS+1.05+(o+16)/TS}}/* 縦の砂場では、たてにならぶ */const cx=X+32;r.face=o>0?-1:1;return{x:cx+o,y:Y+26-Math.abs(Math.sin(T*5+k))*1.5,z:Y/TS+1.05}}
   if(a.what==='slide'){const p=(T*.45+k*.5)%1;let x,y,f=1;
@@ -2559,6 +2559,9 @@ function setBlock(id,j){
   S.obj[j]=id;if(BL[id].dyn)S.dyn[j]={g:0};if(BL[id].hp)S.hp[j]=BL[id].hp;
   setParts(id,j,'part');
 }
+function swingWide(){/* ブランコが2マスはばになった：前のセーブのブランコは、右か左のあいたマスへひろげる。どちらもふさがっていたら、おそなえ箱にもどす */let back=0;const ok=k=>k>=0&&k<W*H&&!S.obj[k]&&S.ground[k]!==1;
+  for(let j=0;j<S.obj.length;j++){if(S.obj[j]!=='swing')continue;const x=j%W;if(x<W-1&&ok(j+1)){S.obj[j+1]='part';S.ref[j+1]=j}else if(x>0&&ok(j-1)){S.obj[j-1]='swing';S.obj[j]='part';S.ref[j]=j-1;if(S.rot&&S.rot[j]!=null){S.rot[j-1]=S.rot[j];delete S.rot[j]}}else{clearObj(j);giveItem('swing',1);back++}}
+  if(back)setTimeout(()=>toast('ブランコが2マスはばになったので、ひろげられないブランコを'+back+'つ、おそなえ箱にもどしました'),1500)}
 function setParts(id,j,kind){const x=j%W,y=(j/W)|0;for(const[a,b]of fp(id,x,y)){const k=b*W+a;if(k===j)continue;S.obj[k]=kind;S.ref[k]=j}}
 function place(id,x,y){
   const b=BL[id];
@@ -3161,7 +3164,7 @@ function chipOf(id,i,rot,sf=''){const C=window.CHIPS;if(!C)return null;const L=(
   if(!ch||!fl)return ch;const fw=((szR(id,r)||[1,1])[0])*32;return ch._fl&&ch._fl.fw===fw?ch._fl:(ch._fl={src:ch,ax:ch.ax,ay:ch.ay,w:ch.w,h:ch.h,f:ch.f,flip:1,fw})}/* 向きのある家具は「id>向き」の絵。左向きは右向きの反転。左右反転だけの物は、もとの絵を反転 */
 function chipImgs(ch,id){if(!ch._im)ch._im=ch.f.map(u=>{const im=new Image();im.onload=()=>{im.ok=1;dirty=true;try{delete iconCache[id]}catch(e){}};im.src=u;return im});return ch._im}
 const PARTMV={/* 動く部品の動き：rot＝回る角度、sx・sy＝のびちぢみ（どれも支点のまわり） */
-  swing:(i,now)=>{const d=!ICON&&i!=null&&S&&toyUsers(i).length?swAng(i,now):0;return{sx:1+d*.12,sy:1+d*.3}},
+  swing:(i,now)=>{if(ICON)return{sx:1,sy:.5};/* アイコンでは、つなを短くして座面を見やすく */const d=i!=null&&S&&toyUsers(i).length?swAng(i,now):0;return{sx:1+d*.12,sy:1+d*.3}},
   seesaw:(i,now)=>({rot:!ICON&&i!=null&&S?ssAng(i,now||0):0}),
   windmill:(i,now)=>({rot:ICON?0:(now||performance.now())/1000*.9}),
   vane:(i,now)=>({sx:ICON?1:Math.cos(Math.sin((now||performance.now())/1300+(i||0))*.6)})};
@@ -3170,7 +3173,7 @@ function drawChip(c,ch,id,x,y,now,i){const src=ch.src||ch,g64=src.g===64,ims=chi
   if(g64)c.drawImage(im,x+src.ax/2,y+src.ay/2,src.w/2,src.h/2);else c.drawImage(im,x+src.ax,y+src.ay);/* 1マス64ドットの絵（g:64）は、半分の大きさでかく */
   if(src.parts){const mv=PARTMV[id]?PARTMV[id](i,now):{};for(const p of src.parts){const pm=partImg(p,id);if(!pm.ok)continue;const q=g64?.5:1,px=x+p.px*q,py=y+p.py*q;c.save();c.translate(px,py);if(mv.rot)c.rotate(mv.rot);if(mv.sx!=null||mv.sy!=null)c.scale(mv.sx??1,mv.sy??1);c.translate(-px,-py);c.drawImage(pm,x+p.ax*q,y+p.ay*q,p.w*q,p.h*q);c.restore()}}/* 動く部品は、支点のまわりで動かして重ねる */
   if(sv)c.restore();c.imageSmoothingEnabled=sm;return true}
-if(window.CHIPS)for(const k in window.CHIPS){const ch=window.CHIPS[k],id=k.split(/[@>:]/)[0];chipImgs(ch,id)}/* はじめに読みこんでおく */
+if(window.CHIPS)for(const k in window.CHIPS){const ch=window.CHIPS[k],id=k.split(/[@>:]/)[0];chipImgs(ch,id);for(const p of ch.parts||[])partImg(p,id)}/* 動く部品（ブランコの座面など）も *//* はじめに読みこんでおく */
 const CONN={fence:'f',logfence:'f',bamboofence:'f',stonefence:'f',wall:'w',hwall:'h',logwall:'h',plasterwall:'h',brickwall:'h'},CONNR={'fence':'HV','logfence':'HV','bamboofence':'VH','stonefence':'Hclip','wall':'HV','hwall':'HV','logwall':'HV','plasterwall':'HV','brickwall':'HV'};/* つながる物：横の部品（H0 柱・HL・HR・HLR 横板）と縦の部品（VU・VD・VUD 縦板）を、となりのつながりで組み合わせる。CONNR：角で横と縦を重ねる順 */
 function connMask(id,i){if(ICON||i==null||!S)return 0;const t=CONN[id];let f;if(t==='f')f=k=>FENCE_IDS.has(typeAt(k));else if(t==='w')f=k=>{const o=typeAt(k);return o==='wall'||o==='stonegate'};else f=k=>{const o=typeAt(k);return o!=='wall'&&o!=='sdoor'&&(HOME_WALLS.has(o)||HOME_DOORS.has(o))};return (f(i-1)?1:0)|(f(i+1)?2:0)|(f(i-W)?4:0)|(f(i+W)?8:0)}/* 石の塀は、石の塀のドアのとなりでは終わる */
 function drawConn(c,id,x,y,i,now){const C=window.CHIPS;if(!C)return false;const m=connMask(id,i),hm=m&3,vm=m&12,H=C[id+':'+['H0','HL','HR','HLR'][hm]],V=vm?C[id+':'+{4:'VU',8:'VD',12:'VUD'}[vm]]:null;if(!H||vm&&!V)return false;
@@ -3459,7 +3462,7 @@ function drawObj(c,id,x,y,i,g,now){
     if(rd){c.fillStyle='rgba(255,120,50,'+(.5+Math.sin(T/200+i)*.3)+')';for(let k=0;k<3;k++)circ(c,x+9.5+k*7,y+21.5,1.6,'rgba(255,150,60,.9)')}break}
   case'gust':{const T=now||0,rd=!(S.trapCd&&S.trapCd[i]>S.t)||ICON;c.fillStyle='rgba(63,192,160,.25)';c.beginPath();c.ellipse(x+16,y+21,13,6,0,0,7);c.fill();
     c.strokeStyle=rd?'rgba(63,192,160,.95)':'rgba(63,192,160,.4)';c.lineWidth=1.6;const a0=(rd?T/250:0)+i;for(let k=0;k<3;k++){c.beginPath();c.ellipse(x+16,y+21-k*4,10-k*2.5,4-k*.8,0,a0+k,a0+k+4.2);c.stroke()}break}
-  case'swing':if(PSPR.swing&&PSPR.swing.ok){if(c._part!=='part')shadow(c,x+16,y+29,15,3);const g=PSPR.swing,w=38,h=w*g.h/g.w;if(c._part||!ICON&&i!=null&&now!=null&&toyUsers(i).length){const s0=w/80,L0=x+16-w/2,T0=y+30-h,d=c._neutral?0:swAng(i,now),sk=1+d*.12,sy=T0+48*s0+d*6;/* わくはそのまま、つなと座面だけゆらす */if(c._part!=='part'){c.save();c.beginPath();c.rect(L0,T0,w,h);c.rect(L0+60*s0,T0+8*s0,-40*s0,48*s0);c.clip('evenodd');c.drawImage(g.img,L0,T0,w,h);c.restore()}if(c._part==='base')break;const hw=19*s0*sk;c.strokeStyle='#d8c08e';c.lineWidth=1;c.beginPath();c.moveTo(L0+25.5*s0,T0+6*s0);c.lineTo(x+16-hw+4.5*s0,sy-3*s0);c.moveTo(L0+53.5*s0,T0+6*s0);c.lineTo(x+16+hw-4.5*s0,sy-3*s0);c.stroke();c.drawImage(g.img,21,43,38,11,x+16-hw,sy-5*s0*sk,hw*2,11*s0*sk)}else c.drawImage(g.img,x+16-w/2,y+30-h,w,h);break}/* 乗っているとゆれる */shadow(c,x+16,y+29,13,3);c.strokeStyle='#6d4424';c.lineWidth=3;c.beginPath();c.moveTo(x+4,y+29);c.lineTo(x+8,y-6);c.lineTo(x+12,y+29);c.moveTo(x+20,y+29);c.lineTo(x+24,y-6);c.lineTo(x+28,y+29);c.moveTo(x+8,y-6);c.lineTo(x+24,y-6);c.stroke();c.strokeStyle='#ddd';c.lineWidth=1;c.beginPath();c.moveTo(x+12,y-6);c.lineTo(x+12,y+16);c.moveTo(x+20,y-6);c.lineTo(x+20,y+16);c.stroke();c.fillStyle='#e86a6a';c.fillRect(x+10,y+16,12,3);break;
+  case'swing':x+=16;/* 2マスのまん中 */if(PSPR.swing&&PSPR.swing.ok){if(c._part!=='part')shadow(c,x+16,y+29,15,3);const g=PSPR.swing,w=38,h=w*g.h/g.w;if(c._part||!ICON&&i!=null&&now!=null&&toyUsers(i).length){const s0=w/80,L0=x+16-w/2,T0=y+30-h,d=c._neutral?0:swAng(i,now),sk=1+d*.12,sy=T0+48*s0+d*6;/* わくはそのまま、つなと座面だけゆらす */if(c._part!=='part'){c.save();c.beginPath();c.rect(L0,T0,w,h);c.rect(L0+60*s0,T0+8*s0,-40*s0,48*s0);c.clip('evenodd');c.drawImage(g.img,L0,T0,w,h);c.restore()}if(c._part==='base')break;const hw=19*s0*sk;c.strokeStyle='#d8c08e';c.lineWidth=1;c.beginPath();c.moveTo(L0+25.5*s0,T0+6*s0);c.lineTo(x+16-hw+4.5*s0,sy-3*s0);c.moveTo(L0+53.5*s0,T0+6*s0);c.lineTo(x+16+hw-4.5*s0,sy-3*s0);c.stroke();c.drawImage(g.img,21,43,38,11,x+16-hw,sy-5*s0*sk,hw*2,11*s0*sk)}else c.drawImage(g.img,x+16-w/2,y+30-h,w,h);break}/* 乗っているとゆれる */shadow(c,x+16,y+29,13,3);c.strokeStyle='#6d4424';c.lineWidth=3;c.beginPath();c.moveTo(x+4,y+29);c.lineTo(x+8,y-6);c.lineTo(x+12,y+29);c.moveTo(x+20,y+29);c.lineTo(x+24,y-6);c.lineTo(x+28,y+29);c.moveTo(x+8,y-6);c.lineTo(x+24,y-6);c.stroke();c.strokeStyle='#ddd';c.lineWidth=1;c.beginPath();c.moveTo(x+12,y-6);c.lineTo(x+12,y+16);c.moveTo(x+20,y-6);c.lineTo(x+20,y+16);c.stroke();c.fillStyle='#e86a6a';c.fillRect(x+10,y+16,12,3);break;
   case'fruit':{shadow(c,x+16,y+29,12,3.5);c.fillStyle='#9a6a48';c.beginPath();c.moveTo(x+11,y+29);c.quadraticCurveTo(x+14,y+24,x+14,y+16);c.lineTo(x+18,y+16);c.quadraticCurveTo(x+18,y+24,x+21,y+29);c.fill();
     for(const[dx,dy,r,col]of[[-8,1,7.5,'#5a9441'],[8,1,7.5,'#5a9441'],[-5,-7,8,'#6ea84e'],[5,-7,8,'#6ea84e'],[0,-11,8,'#86bf63'],[0,-1,9,'#78b257'],[-3,-10,3.5,'#9fd07c']])circ(c,x+16+dx,y+13+dy,r,col);
     tuft(c,x+7,y+30,.6,'#7ab35a');tuft(c,x+25,y+30,.6,'#7ab35a');
@@ -3700,14 +3703,15 @@ function rebuildStatic(full){findHouses();
   SSIG=sg;SSIG_S=S;SSIG_G=g;drawStaticArea(sc,0,0,W-1,H-1);dirty=false;STATICFULL=false;
 }
 const iconCache={};
-function iconURL(id){
+let ICONTMP=null;
+function iconURL(id){/* アイコンは、大きなキャンバスにふつうの大きさで描いてから、絵のある範囲だけを切り出して、72×72にきちんと入れる（全体がうつる） */
   if(typeof id==='string'&&id.startsWith('seed:'))return seedIcon(id.slice(5));
   if(iconCache[id])return iconCache[id];
-  const c=document.createElement('canvas');c.width=72;c.height=72;const g=c.getContext('2d');
-  const tall=['watch','yogan','tower','swing','lamp','well','windmill','site'].includes(id);
-  g.scale(tall?1.2:1.9,tall?1.2:1.9);const ox=tall?14:3,oy=tall?24:3;
-  if(id==='statue'){ICON=true;g.setTransform(1,0,0,1,0,0);g.translate(15,33);g.scale(1.22,1.22);drawObj(g,'statue',0,0,7);ICON=false;return iconCache[id]=c.toDataURL()}
-  ICON=true;if(BL[id].floor)drawFloor(g,id,ox,oy,7,true);else drawObj(g,id,ox,oy,7,(id==='berry'||id==='fruit')?100:id==='farm'?60:0,1);ICON=false;
+  const T=ICONTMP||(ICONTMP=document.createElement('canvas'));T.width=T.height=288;const t=T.getContext('2d');t.setTransform(1,0,0,1,0,0);t.clearRect(0,0,288,288);
+  ICON=true;try{if(BL[id].floor)drawFloor(t,id,96,160,7,true);else drawObj(t,id,96,160,7,(id==='berry'||id==='fruit')?100:id==='farm'?60:0,1)}finally{ICON=false}
+  const d=t.getImageData(0,0,288,288).data;let x0=288,y0=288,x1=-1,y1=-1;for(let y=0;y<288;y++)for(let x=0;x<288;x++)if(d[(y*288+x)*4+3]>8){if(x<x0)x0=x;if(x>x1)x1=x;if(y<y0)y0=y;if(y>y1)y1=y}
+  const c=document.createElement('canvas');c.width=72;c.height=72;
+  if(x1>=0){const g=c.getContext('2d'),bw=x1-x0+1,bh=y1-y0+1,sc=Math.min(66/bw,66/bh,2),dw=bw*sc,dh=bh*sc;g.imageSmoothingEnabled=false;g.drawImage(T,x0,y0,bw,bh,(72-dw)/2,(72-dh)/2,dw,dh)}/* 小さい物は2倍まで */
   return iconCache[id]=c.toDataURL();
 }
 function toolIcon(k){
@@ -5303,7 +5307,7 @@ function arrive(){
 }
 function talkOnce(key,lines,delay){/* 1回だけの会話：最後まで見てから「見た」にする。とちゅうでとじたら、次に開いたときにもう一度 */if(!S||S.flags[key]||!lines||!lines.length)return;const P=S.pendTalk||(S.pendTalk={});P[key]=lines;setTimeout(()=>{if(!S||S.flags[key])return;dialog(P[key]||lines,()=>{S.flags[key]=1;if(S.pendTalk)delete S.pendTalk[key]})},delay||900)}
 function replayTalks(){if(!S||!S.pendTalk)return;for(const k in S.pendTalk){if(S.flags[k]){delete S.pendTalk[k];continue}talkOnce(k,S.pendTalk[k],1500)}}
-function continueGame(saved){if(saved&&saved.summary)saved=loadStage(saved.world);if(!saved)return;setWorld(saved.world||0);S=saved;LIVE[WD]=S;ensureStor(S);if((S.mig||0)<1){fixBeds();dropChair2();dropBirdhouse();dropFlower();dropNtree();if(((S.subSt||{}).watch2||0)>=4){S.recipes=S.recipes||{};S.guardianIdeas=S.guardianIdeas||{};S.recipes.signpost=true;S.guardianIdeas.signpost=true}/* 見張り台を2つにしたあと（フタバの「道がわかる目印」）で、道しるべをおぼえる */S.mig=1}if(S.mig<2){if(S.flags.traded)S.flags.tradedSeen=1;if(S.flags.oracleSet)S.flags.oracleSeen=1;if(S.flags.minaCame&&S.flags.mnN==null)S.flags.mnN=S.nights||0;S.mig=2}/* 古いセーブを直すのは、1回だけ */setTimeout(replayTalks,2500);/* とちゅうでとじた会話を、もう一度 */if(S.flags&&S.flags.nushiDue&&!S.cleared)setTimeout(()=>{if(!S.cleared)nushiReturns()},3000);/* ヌシ様が帰ってくる場面を、とちゅうでとじていたら、はじめから */syncTools(S);dirty=true;closeSheet();S.res.forEach(r=>{r.act=null;r.path=[]});S.orders.forEach(o=>o.worker=null);recount();renderQuest();applyFeats();setMode('look');glassUI();
+function continueGame(saved){if(saved&&saved.summary)saved=loadStage(saved.world);if(!saved)return;setWorld(saved.world||0);S=saved;LIVE[WD]=S;ensureStor(S);if((S.mig||0)<1){fixBeds();dropChair2();dropBirdhouse();dropFlower();dropNtree();if(((S.subSt||{}).watch2||0)>=4){S.recipes=S.recipes||{};S.guardianIdeas=S.guardianIdeas||{};S.recipes.signpost=true;S.guardianIdeas.signpost=true}/* 見張り台を2つにしたあと（フタバの「道がわかる目印」）で、道しるべをおぼえる */S.mig=1}if(S.mig<2){if(S.flags.traded)S.flags.tradedSeen=1;if(S.flags.oracleSet)S.flags.oracleSeen=1;if(S.flags.minaCame&&S.flags.mnN==null)S.flags.mnN=S.nights||0;S.mig=2}if(S.mig<3){swingWide();S.mig=3}/* 古いセーブを直すのは、1回だけ */setTimeout(replayTalks,2500);/* とちゅうでとじた会話を、もう一度 */if(S.flags&&S.flags.nushiDue&&!S.cleared)setTimeout(()=>{if(!S.cleared)nushiReturns()},3000);/* ヌシ様が帰ってくる場面を、とちゅうでとじていたら、はじめから */syncTools(S);dirty=true;closeSheet();S.res.forEach(r=>{r.act=null;r.path=[]});S.orders.forEach(o=>o.worker=null);recount();renderQuest();applyFeats();setMode('look');glassUI();
   cam.z=homeZ();centerOn(CX*TS,CY*TS);$('#title').hidden=true;$('#maps').hidden=true;started=true;stageMusic();showUI(true);if(!WD&&S.flags&&S.flags.ret1===1){S.flags.ret1=2;(S.sevQ||(S.sevQ=[])).push('ret')}}
 
 
@@ -5347,7 +5351,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='530';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='531';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
