@@ -4002,7 +4002,7 @@ function drawBench(c,x,y,front){/* ベンチは横2マス */
   c.fillStyle='#a8733f';rr(c,x+1,y+21,L-2,4,1.5);c.fillStyle='#8a5a33';c.fillRect(x+4,y+24,3.2,7);c.fillRect(x+L/2-1.6,y+24,3.2,7);c.fillRect(x+L-7.2,y+24,3.2,7);c.fillStyle='rgba(0,0,0,.12)';c.fillRect(x+1,y+24,L-2,1)}
 const SHINE=[[-22,-46,12],[21,-58,13],[-8,-74,8],[25,-30,10],[-27,-22,8],[11,-10,7]];
 function star4(c,x,y,r){c.save();c.translate(x,y);c.fillStyle='rgba(255,240,170,.35)';c.beginPath();c.arc(0,0,r*.7,0,7);c.fill();c.fillStyle='#fffbe0';c.strokeStyle='#f2c94c';c.lineWidth=1.2;c.beginPath();c.moveTo(0,-r);c.quadraticCurveTo(r*.18,-r*.18,r,0);c.quadraticCurveTo(r*.18,r*.18,0,r);c.quadraticCurveTo(-r*.18,r*.18,-r,0);c.quadraticCurveTo(-r*.18,-r*.18,0,-r);c.fill();c.stroke();c.fillStyle='#ffd84a';c.beginPath();c.arc(0,0,r*.22,0,7);c.fill();c.restore()}
-function rDepth(r){/* 大きいコワイノの近くで戦うせいれいは、コワイノの影にならないよう、手前に描く */let d=r.y;if(r.act&&r.act.stage==='do'&&r.act.type==='chop'&&r.act.obj!=null)d=Math.max(d,(r.act.obj/W|0)+1.5);/* 木を切っている子は、木にかくれないよう手前に */for(const e of S.enemies){if(!e.spawned||e.dead||(EN[e.type].size||1)<1.2)continue;const dy=e.y-r.y;if(dy>=0&&dy<2.6&&Math.abs(e.x-r.x)<2.6)d=Math.max(d,e.y+.02)}return d}
+function rDepth(r){/* 大きいコワイノの近くで戦うせいれいは、コワイノの影にならないよう、手前に描く */let d=r.y;if(r.act&&r.act.stage==='do'&&r.act.type==='chop'&&r.act.obj!=null)d=Math.max(d,(r.act.obj/W|0)+1.5);/* 木を切っている子は、木にかくれないよう手前に */{const j=(r.y|0)*W+(r.x|0);if(HOUSES.some(h=>h.set.has(j)&&roofAOf(h)>=.5))return d}/* 屋根のある家の中の子は、外のコワイノより手前に出さない（屋根の上に出てしまうので） */for(const e of S.enemies){if(!e.spawned||e.dead||(EN[e.type].size||1)<1.2)continue;const dy=e.y-r.y;if(dy>=0&&dy<2.6&&Math.abs(e.x-r.x)<2.6)d=Math.max(d,e.y+.02)}return d}
 const forageAnim=r=>{const t=r.act.t||0;return t<2?'pluck':t<3.5?'hold':'eat'};
 function drawRes0(r,now){
   if(r.hidden&&!peekH(r))return;
@@ -5310,7 +5310,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='502';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='503';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
