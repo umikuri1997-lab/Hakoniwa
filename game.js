@@ -2846,8 +2846,7 @@ function rr(c,x,y,w,h,r){c.beginPath();c.roundRect?c.roundRect(x,y,w,h,r):c.rect
 function drawSeedShape(c,x,y,k){c.save();c.translate(x,y);c.scale(k,k);c.rotate(-.35);c.fillStyle='#7a4a24';c.beginPath();c.moveTo(0,-7);c.bezierCurveTo(5.5,-4,5.5,4,0,7);c.bezierCurveTo(-5.5,4,-5.5,-4,0,-7);c.fill();c.fillStyle='#b07a44';c.beginPath();c.moveTo(0,-5.5);c.bezierCurveTo(3.6,-3,3.6,3.5,0,5.6);c.bezierCurveTo(-1.6,3,-1.6,-3,0,-5.5);c.fill();c.strokeStyle='#5c341a';c.lineWidth=.8;c.beginPath();c.moveTo(0,-6);c.lineTo(0,6);c.stroke();c.fillStyle='rgba(255,255,255,.55)';c.beginPath();c.ellipse(1.8,-2.5,.9,2,.2,0,7);c.fill();c.restore()}/* 種の形 */
 let SEEDICO=null;const seedIco=()=>{if(SEEDICO)return SEEDICO;const cv=document.createElement('canvas');cv.width=cv.height=48;const g=cv.getContext('2d');g.fillStyle='rgba(255,236,140,.45)';g.beginPath();g.arc(24,24,17,0,7);g.fill();drawSeedShape(g,24,24,2.4);return SEEDICO=cv.toDataURL()};
 function circ(c,x,y,r,col){c.fillStyle=col;c.beginPath();c.arc(x,y,r,0,7);c.fill()}
-let NOSH=false;/* 描き直しのときは影を重ねない */
-function shadow(c,x,y,w,h){if(NOSH)return;c.fillStyle='rgba(30,20,10,.22)';c.beginPath();c.ellipse(x,y,w,h,0,0,7);c.fill()}
+function shadow(c,x,y,w,h){c.fillStyle='rgba(30,20,10,.22)';c.beginPath();c.ellipse(x,y,w,h,0,0,7);c.fill()}
 function drawBarren(c,i,x,y){
   const h=hash(i);
   c.fillStyle=WD===1?'#a39280':'#b3a37c';c.fillRect(x,y,TS,TS);/* 火山のふもとは灰まじりの土 */
@@ -3193,7 +3192,7 @@ function drawObj(c,id,x,y,i,g,now){
   if(false&&!ICON&&!c._rot&&i!=null&&S&&S.rot&&S.rot[i]&&BL[id]&&BL[id].kind==='furn'){const zz=BL[id].sz||[1,1],z=zz[0],rv=S.rot[i];c.save();if(rv===1){c.translate(x+16*z,0);c.scale(-1,1);c.translate(-(x+16*z),0)}else{const cx=x+16*z,cy=y+16*zz[1];c.translate(cx,cy);c.rotate((rv-1)*Math.PI/2);c.translate(-cx,-cy)}c._rot=1;drawObj(c,id,x,y,i,g,now);c._rot=0;c.restore();return}/* 向きをかえた家具は左右反転 */
   if(!ICON&&i!=null&&now!=null&&S&&SEATS.includes(id)){const w=spotW(i);if(w>=0&&!S.res.some(r=>r.act&&r.act.type==='fish'&&r.act.stage!=='walk'&&sideW(r.act.stand)===w)){/* 釣りスポットのうきと釣りざお（釣り中はかくす） */const px=x+(w%W-i%W)*TS+16,py=y+((w/W|0)-(i/W|0))*TS+17,bb=Math.sin(now/450+i)*1.2,dx=Math.sign(px-(x+16))||1,bx=x+16+dx*10,by=y+28,tx=px-dx*4,ty=py-20;c.save();c.lineCap='round';c.strokeStyle='#6b4a2b';c.lineWidth=2.2;c.beginPath();c.moveTo(bx,by);c.lineTo(tx,ty);c.stroke();c.strokeStyle='#a87a4a';c.lineWidth=1;c.beginPath();c.moveTo(bx+dx*.5,by-1);c.lineTo(tx,ty);c.stroke();c.strokeStyle='rgba(255,255,255,.7)';c.lineWidth=.6;c.beginPath();c.moveTo(tx,ty);c.quadraticCurveTo(px,ty+4,px,py+bb-5);c.stroke();c.strokeStyle='rgba(255,255,255,.55)';c.lineWidth=1;c.beginPath();c.ellipse(px,py+3,7+Math.sin(now/600)*1.5,2.5,0,0,7);c.stroke();c.fillStyle='#fff';c.beginPath();c.arc(px,py+bb,3.2,0,7);c.fill();c.fillStyle='#e0533d';c.beginPath();c.arc(px,py+bb,3.2,Math.PI,0);c.fill();c.fillRect(px-.6,py+bb-6,1.2,3);c.restore()}}
   if(!c._chip&&SEATS.includes(id)){const ch=chipOf(id,i);if(ch&&drawChip(c,ch,id,x,y,now,i))return}
-  if((HOME_WALLS.has(id)||id==='door'&&S&&S.win&&S.win[i]==='wreath')&&!ICON&&!c._win&&S&&S.win&&S.win[i]){c._win=1;if(!c._artOnly)drawObj(c,id,x,y,i,g,now);c._win=0;if(c!==ctx&&win64(i))return;/* 64ドットの絵は、地面にはやきつけず、画面にかく */c.save();c.translate(0,-1.5);if(S.win[i]===1)drawWin(c,i,x,y);else{const p=S.win[i];c._onWall=1;try{if(p==='curtain1'||p==='curtain2'){drawWin(c,i,x,y);const ch=chipOf(p);c.save();if(ch){c.translate(x+16,y-3);c.scale(1.125,1.125);if(!drawChip(c,ch,p,-16,0,now,i)){c.scale(.95,.62);drawF2(c,p,-16,-3,i,now)}}else{c.translate(x+16,y+3);c.scale(1.07,.7);drawF2(c,p,-16,-3,i,now)}c.restore()}/* カーテンの絵を、窓と同じ1.125倍で、窓の上に重ねる */else if(p==='wshelf'){c.save();c.translate(0,4);wallArt(c,p,x,y,i,now);c.restore()}else if(p==='wreath'&&id==='door'){const up=HOME_WALLS.has(S.obj[i-W])||HOME_DOORS.has(S.obj[i-W]),dn=HOME_WALLS.has(S.obj[i+W])||HOME_DOORS.has(S.obj[i+W]),lf=HOME_WALLS.has(S.obj[i-1])||HOME_DOORS.has(S.obj[i-1]),rt=HOME_WALLS.has(S.obj[i+1])||HOME_DOORS.has(S.obj[i+1]),vertical=(up||dn)&&!(lf||rt),op=DOOROP.get(i)||0;c.save();if(vertical){c.translate(x+16,y+3.5);c.rotate(op*Math.PI*.45);c.translate(-x-16,-y-3.5)}else{c.translate(x+7,y);c.scale(1-op*.78,1);c.translate(-x-7,-y)}wallArt(c,p,x,y,i,now);c.restore()}else wallArt(c,p,x,y,i,now)}finally{c._onWall=0}}c.restore();return}/* 壁にかけた絵・カーテン（窓つき）・かべ棚・ドアのリース */
+  if((HOME_WALLS.has(id)||id==='door'&&S&&S.win&&S.win[i]==='wreath')&&!ICON&&!c._win&&S&&S.win&&S.win[i]){c._win=1;drawObj(c,id,x,y,i,g,now);c._win=0;c.save();c.translate(0,-1.5);if(S.win[i]===1)drawWin(c,i,x,y);else{const p=S.win[i];c._onWall=1;try{if(p==='curtain1'||p==='curtain2'){drawWin(c,i,x,y);const ch=chipOf(p);c.save();if(ch){c.translate(x+16,y-3);c.scale(1.125,1.125);if(!drawChip(c,ch,p,-16,0,now,i)){c.scale(.95,.62);drawF2(c,p,-16,-3,i,now)}}else{c.translate(x+16,y+3);c.scale(1.07,.7);drawF2(c,p,-16,-3,i,now)}c.restore()}/* カーテンの絵を、窓と同じ1.125倍で、窓の上に重ねる */else if(p==='wshelf'){c.save();c.translate(0,4);wallArt(c,p,x,y,i,now);c.restore()}else if(p==='wreath'&&id==='door'){const up=HOME_WALLS.has(S.obj[i-W])||HOME_DOORS.has(S.obj[i-W]),dn=HOME_WALLS.has(S.obj[i+W])||HOME_DOORS.has(S.obj[i+W]),lf=HOME_WALLS.has(S.obj[i-1])||HOME_DOORS.has(S.obj[i-1]),rt=HOME_WALLS.has(S.obj[i+1])||HOME_DOORS.has(S.obj[i+1]),vertical=(up||dn)&&!(lf||rt),op=DOOROP.get(i)||0;c.save();if(vertical){c.translate(x+16,y+3.5);c.rotate(op*Math.PI*.45);c.translate(-x-16,-y-3.5)}else{c.translate(x+7,y);c.scale(1-op*.78,1);c.translate(-x-7,-y)}wallArt(c,p,x,y,i,now);c.restore()}else wallArt(c,p,x,y,i,now)}finally{c._onWall=0}}c.restore();return}/* 壁にかけた絵・カーテン（窓つき）・かべ棚・ドアのリース */
   if(BL[id]&&BL[id].f2){const z=BL[id].sz;if(BL[id].dsc&&!ICON&&!c._sc){const k=BL[id].dsc;c.save();c.translate(x+16,y+31);c.scale(k,k);c._sc=1;drawF2(c,id,-16,-31,i,now);c._sc=0;c.restore();return}/* 絵だけ大きく（判定はそのまま） */if(z&&BL[id].nosc&&!ICON)return drawF2(c,id,x+16*(z[0]-1),y+32*(z[1]-1),i,now);/* マスは広いけど絵はそのまま */if(z&&!ICON&&!c._sc){c.save();c.translate(x,y);c.scale(z[0],z[1]);drawF2(c,id,0,0,i,now);c.restore();return}return drawF2(c,id,x,y,i,now)}/* 大きい家具は、マスに合わせて絵も大きく */
   if(id==='stonegate'&&!ICON&&!c._sc){
     const wide=S.obj[i]!==id||(S.obj[i+1]==='part'&&S.ref[i+1]===i),ver=!wide&&(HOME_WALLS.has(typeAt(i-W))||HOME_WALLS.has(typeAt(i+W)));
@@ -3648,9 +3647,8 @@ function drawStaticArea(sc,X0,Y0,X1,Y1){/* 地面・床・水・動かない物�
   sc.save();sc.strokeStyle='rgba(255,240,180,.6)';sc.setLineDash([6,6]);sc.lineWidth=2;sc.strokeRect((CX-r)*TS+1,(CY-r)*TS+1,2*r*TS-2,2*r*TS-2);sc.restore();
   // 固定物も、アニメーションする物と同じ足元の奥行きで並べる。
   const fixed=[];
-  for(let y=Y0;y<=Y1;y++)for(let x=X0;x<=X1;x++){const i=y*W+x,o=S.obj[i];if(!o||o==='part'||!BL[o]||BL[o].dyn||BL[o].anim||TREES.has(o))continue;fixed.push({i,o,k:objectDepth(o,i),t:BL[o].kind==='block'?0:1})}
+  for(let y=Y0;y<=Y1;y++)for(let x=X0;x<=X1;x++){const i=y*W+x,o=S.obj[i];if(!o||o==='part'||!BL[o]||BL[o].dyn||BL[o].anim||TREES.has(o)||!(FLAT.has(o)||BL[o].floor))continue;/* 地面にやきつけるのは、平らな物だけ。立っている物は毎コマ、足もとの順に描く */fixed.push({i,o,k:objectDepth(o,i),t:BL[o].kind==='block'?0:1})}
   fixed.sort((a,b)=>a.k-b.k||a.t-b.t||a.i-b.i);
-  for(let i=0;i<W*H;i++)if(S.obj[i]==='door'&&inR(i)){sc._doorBack=1;drawObj(sc,'door',(i%W)*TS,((i/W)|0)*TS,i);sc._doorBack=0}
   for(const k in S.rug||{})if(inR(+k))drawObj(sc,S.rug[k],(k%W)*TS,((k/W)|0)*TS,+k);/* 家具の下のラグ */
   for(const {i,o}of fixed)drawObj(sc,o,(i%W)*TS,((i/W)|0)*TS,i);
 }
@@ -4019,7 +4017,7 @@ function drawBench(c,x,y,front){/* ベンチは横2マス */
   c.fillStyle='#a8733f';rr(c,x+1,y+21,L-2,4,1.5);c.fillStyle='#8a5a33';c.fillRect(x+4,y+24,3.2,7);c.fillRect(x+L/2-1.6,y+24,3.2,7);c.fillRect(x+L-7.2,y+24,3.2,7);c.fillStyle='rgba(0,0,0,.12)';c.fillRect(x+1,y+24,L-2,1)}
 const SHINE=[[-22,-46,12],[21,-58,13],[-8,-74,8],[25,-30,10],[-27,-22,8],[11,-10,7]];
 function star4(c,x,y,r){c.save();c.translate(x,y);c.fillStyle='rgba(255,240,170,.35)';c.beginPath();c.arc(0,0,r*.7,0,7);c.fill();c.fillStyle='#fffbe0';c.strokeStyle='#f2c94c';c.lineWidth=1.2;c.beginPath();c.moveTo(0,-r);c.quadraticCurveTo(r*.18,-r*.18,r,0);c.quadraticCurveTo(r*.18,r*.18,0,r);c.quadraticCurveTo(-r*.18,r*.18,-r,0);c.quadraticCurveTo(-r*.18,-r*.18,0,-r);c.fill();c.stroke();c.fillStyle='#ffd84a';c.beginPath();c.arc(0,0,r*.22,0,7);c.fill();c.restore()}
-function rDepth(r){let d=r.y;if(r.act&&r.act.stage==='do'&&r.act.type==='chop'&&r.act.obj!=null)d=Math.max(d,(r.act.obj/W|0)+1.5);/* 木を切っている子は、木にかくれないよう手前に */return d}
+function rDepth(r){return r.y}
 const forageAnim=r=>{const t=r.act.t||0;return t<2?'pluck':t<3.5?'hold':'eat'};
 function drawRes0(r,now){
   if(r.hidden&&!peekH(r))return;
@@ -4397,8 +4395,7 @@ function render(now){
   if(S.broken)for(const b of S.broken){if(S.obj[b.j])continue;const bx=(b.j%W)*TS,by=((b.j/W)|0)*TS,bz=(BL[b.id]&&BL[b.id].sz)||[1,1];ctx.save();ctx.setLineDash([4,3]);ctx.strokeStyle='rgba(255,230,180,.55)';ctx.lineWidth=2;ctx.strokeRect(bx+3,by+3,bz[0]*TS-6,bz[1]*TS-6);ctx.restore()}/* こわれた見張り台は、4マスぶんの枠 */
   const vis=o=>o.x>x0-2&&o.x<x1+2&&o.y>y0-1&&o.y<y1+3;// 画面外は描かない
   // ---- 奥行きの順に描く（足もとのY座標が小さい＝奥から）----
-  // 動く物（せいれい・敵・カミサマ・動く置物・屋根）を足もとの順に描き、
-  // その手前にある「止まっている物」（木・壁・神殿など）は、重なる範囲だけ描き直して手前に出す
+  // せいれい・敵・置いてある物・屋根を、ぜんぶ足もとの順に描く
   const D=[];BUBQ=[];const bubs=BUBQ;
   const add=(k,t,box,draw,own)=>D.push({k,t,box,draw,own});
   for(const r of S.res)if(vis(r)){const px=r.x*TS,fy=r.y*TS,onB=r.act&&r.act.type==='rest'&&r.act.stage==='do'&&S.obj[r.act.obj]==='bench',onAl=STATUE>=0&&(r.y|0)*W+(r.x|0)===STATUE+W;/* ベンチにすわっている子は、ベンチの背もたれより手前（縦のベンチは2マスめより手前）。神殿の台座の上にいる子は、台座より手前 */const rj=(r.y|0)*W+(r.x|0),inJ=typeAt(rj)==='bed'?anc(rj):r.act&&r.act.stage==='do'?(r.act.type==='sleep'&&S.obj[r.act.obj]==='bed'?r.act.obj:r.act.type==='bathe'&&r.act.tub!=null?r.act.tub:-1):-1,inO=inJ>=0?S.obj[anc(inJ)]:null;/* ベッドの上にいる子（寝る子も、歩いている子も）・バスタブに入る子は、その家具より手前 */const inDr=HOME_DOORS.has(typeAt((r.y|0)*W+(r.x|0)))||GATE_IDS.has(typeAt((r.y|0)*W+(r.x|0)))||SEATS.includes(typeAt((r.y|0)*W+(r.x|0)));/* いすにすわる子も、いすより手前 *//* ドアのマスを通る子は、ドアより手前 */add(toyR(r)?toyPose(r,now).z:inO&&BL[inO]?objectDepth(inO,anc(inJ))+.02:onB?((r.act.obj/W)|0)+(rotAt(r.act.obj)===1?2.05:1.05):onAl?((STATUE/W)|0)+2.03:inDr?(r.y|0)+1.02:rDepth(r),2,[px-22,fy-64,px+22,fy+13],()=>drawRes(r,now),(r.y|0)*W+(r.x|0))}
@@ -4406,23 +4403,15 @@ function render(now){
   for(const e of S.enemies)if(vis(e)&&!(e.dead&&EVAP.some(it=>it.e===e))){/* 消えていく途中のコワイノは、消える演出だけを描く */const s=EN[e.type].size||1,px=e.x*TS,fy=e.y*TS;add(e.y,2,[px-24*s,fy-56*s-10,px+24*s,fy+15],()=>drawEnemy(e,now),(e.y|0)*W+(e.x|0))}
   if(godHere()){const GX=godX(),GY=godY(),px=GX*TS,py=GY*TS,onA=STATUE>=0&&S.obj[STATUE+W]==='altar';add(onA?((STATUE/W)|0)+1.02:GY+.5,onA?1.5:2,/* 神殿の柱とおそなえ箱より手前 */[px-36,py-64,px+36,py+24],()=>drawGod(now),(GY|0)*W+(GX|0))}
   if(S.nushi){const n=S.nushi,px=n.x*TS,py=n.y*TS;add(n.y+.2,2,[px-100,py-150,px+100,py+20],()=>drawNushi(now),-1)}
-  for(let y=Math.max(0,y0-2);y<Math.min(H,y1+4);y++)for(let x=x0;x<x1;x++){const i=y*W+x,o=S.obj[i];if(!o||o==='part'||!BL[o]||S.ground[i]===1&&o!=='lotus'&&o!=='sprout'||!(BL[o].dyn||BL[o].anim||TREES.has(o)||win64(i)))continue;
-    const ao=!(BL[o].dyn||BL[o].anim||TREES.has(o));/* 壁は地面にやきつけてあるので、かけた物だけかく */add(objectDepth(o,i),BL[o].kind==='block'?0:1,objBox(o,i),()=>{ctx._artOnly=ao;try{drawObj(ctx,o,x*TS,y*TS,i,S.dyn[i]?(S.dyn[i].g!=null?S.dyn[i].g:S.dyn[i].p):0,now)}finally{ctx._artOnly=false}},i)}
+  for(let y=Math.max(0,y0-2);y<Math.min(H,y1+4);y++)for(let x=Math.max(0,x0-4);x<x1;x++){const i=y*W+x,o=S.obj[i];if(!o||o==='part'||!BL[o]||S.ground[i]===1&&o!=='lotus'&&o!=='sprout'||(FLAT.has(o)||BL[o].floor)&&!(BL[o].dyn||BL[o].anim||TREES.has(o)))continue;/* 立っている物は、動く物も動かない物も、毎コマ足もとの順に描く */
+    if(o==='door')add((i/W|0)+.01,0,null,()=>{ctx._doorBack=1;drawObj(ctx,'door',x*TS,y*TS,i);ctx._doorBack=0},i);/* ドアの奥の面 */
+    add(objectDepth(o,i),BL[o].kind==='block'?0:1,null,()=>drawObj(ctx,o,x*TS,y*TS,i,S.dyn[i]?(S.dyn[i].g!=null?S.dyn[i].g:S.dyn[i].p):0,now),i)}
   if(WD===1&&S.st2&&S.st2.fire)for(const k in S.st2.fire){const j=+k,o=S.obj[j];if(!o||!BL[o])continue;add(objectDepth(o,j)+.005,1,objBox(o,j),()=>drawFire1(j,now),j)}/* 燃えている物のほのおは、その物のすぐ手前に */
   if(festOn()&&STATUE>=0){const sx=STATUE%W,sy=(STATUE/W)|0;for(const[dx,dy]of FESTP){const x=sx+dx,y=sy+dy;add(y+1,1,[x*TS,y*TS-22,x*TS+TS,y*TS+TS],()=>drawFestPole(x,y,now),-1)}}/* おまつりのちょうちん */
   for(const h of HOUSES){let bot=0,ib=0;for(const j of h.set)bot=Math.max(bot,(j/W)|0);for(const j of h.inside)ib=Math.max(ib,(j/W)|0);if(bot<y0-1||h.y0>y1+1||h.x1<x0-1||h.x0>x1+1)continue;
-    add(ib+1.5,3,[h.x0*TS-6,h.y0*TS-40,(h.x1+1)*TS+6,(ib+1)*TS+12],()=>drawRoofs(ctx,now,[h]),-1);/* 屋根はいちばん上の層：柱も屋根の下 */D[D.length-1].hs=h.set}/* 屋根は家ごとにひとまとまり。その家の壁は屋根の上に描き直さない *//* 屋根は、横の壁より後・手前の壁より先に描く */
-  // 手前にある止まっている物を、重なる範囲だけ描き直す
-  const occ=[],occM=new Map(),roofedS=new Set();for(const h of HOUSES)if(!OPENH.has(hKey(h))){for(const j of h.set)roofedS.add(j);for(const j of h.inside)roofedS.add(j)}/* 屋根をかけた家の壁・中の物は、屋根の下。描き直して屋根の上に出さない */
-  for(const A of D){const[bx0,by0,bx1,by1]=A.box;const cx0=Math.max(0,Math.floor(bx0/TS)-3),cx1=Math.min(W-1,Math.floor(bx1/TS)+3),ry0=Math.max(0,Math.floor(A.k)-1),ry1=Math.min(H-1,Math.floor(A.k)+6);
-    for(let y=ry0;y<=ry1;y++)for(let x=cx0;x<=cx1;x++){const j=y*W+x,o=S.obj[j];if(!o||o==='part'||!BL[o]||FLAT.has(o)||BL[o].floor||BL[o].dyn||BL[o].anim||TREES.has(o)||S.ground[j]===1)continue;if(A.hs&&A.hs.has(j))continue;if(roofedS.has(j))continue;if(j===A.own&&!(TREES.has(o)||BIG2.has(o)||BL[o].kind==='build'))continue;/* 自分が乗っている低い物（いすなど）はとばす。木や神殿など背の高い物は、同じマスでも奥なら前に出す */
-      const z=szAt(o,j)||[1,1],k=objectDepth(o,j);if(k<=A.k)continue;if(A.own>=0&&y+z[1]-1===((A.own/W)|0)&&(x+z[0]<=A.own%W||x>A.own%W)&&!(TREES.has(o)||BIG2.has(o)||BL[o].kind==='build'))continue;/* 同じ列のとなりのマスの物（ベッドなど）のはみ出しは、上にかぶせない */const b=objBox(o,j);if(b[2]<=bx0||b[0]>=bx1||b[3]<=by0||b[1]>=by1)continue;
-      const cl=[Math.max(b[0],bx0),Math.max(b[1],by0),Math.min(b[2],bx1),Math.min(b[3],by1)];
-      let oe=occM.get(j);if(!oe){oe={k,t:BL[o].kind==='block'?0:1,clips:[],draw:()=>{NOSH=true;try{drawObj(ctx,o,x*TS,y*TS,j)}finally{NOSH=false}}};occM.set(j,oe);occ.push(oe)}oe.clips.push(cl)}}/* 同じ物は1回だけ描き直す（重なる範囲をまとめて切りぬく） */
-  for(const q of occ)D.push(q);
+    add(bot+1.001,3,/* 屋根は、その家の壁（手前の壁もふくむ）のすぐ後に描く。家の前にいる物は屋根より手前 */[h.x0*TS-6,h.y0*TS-40,(h.x1+1)*TS+6,(ib+1)*TS+12],()=>drawRoofs(ctx,now,[h]),-1)}/* 屋根は家ごとにひとまとまり。その家の壁は屋根の上に描き直さない *//* 屋根は、横の壁より後・手前の壁より先に描く */
   D.sort((a,b)=>a.k-b.k||a.t-b.t);
-  const snF=v=>Math.floor(v*k)/k,snC=v=>Math.ceil(v*k)/k;/* 切りぬきは画面のピクセルにそろえて、つなぎ目の線を出さない */
-  for(const it of D){if(it.clips){ctx.save();ctx.beginPath();for(const c of it.clips){const a0=snF(c[0]-cam.x)+cam.x,b0=snF(c[1]-cam.y)+cam.y,a1=snC(c[2]-cam.x)+cam.x,b1=snC(c[3]-cam.y)+cam.y;ctx.rect(a0,b0,a1-a0,b1-b0)}ctx.clip();it.draw();ctx.restore()}else it.draw()}
+  for(const it of D)it.draw();
   // 置く前のプレビューは、家の壁や屋根より手前に描く
   if(pending&&pending.kind==='one'){const px=pending.x*TS,py=pending.y*TS,TP=pending.id==='statue'?[[-1,0,'obox'],[0,0,'statue'],[1,0,'board'],[0,1,'altar']]:[[0,0,pending.id]];ctx.save();ctx.globalAlpha=.6+Math.sin(now/250)*.15;const rch=ROTS[pending.id]&&PLROTS[pending.id]&&chipOf(pending.id,null,PLROTS[pending.id]);if(rch)drawChip(ctx,rch,pending.id,px,py,now);/* 向きをかえられる物は、えらんだ向きの絵だけを見せる（元の向きの絵は出さない） */else for(const[dx,dy,id2]of TP)drawObj(ctx,id2,px+dx*TS,py+dy*TS,pending.y*W+pending.x+dx+dy*W,100,now);ctx.restore()}
   if(S.summon&&STATUE>=0){const qx=(STATUE%W+.5)*TS,qy=((STATUE/W)|0)*TS-58+Math.sin(now/220)*4;bubs.push(()=>{ctx.fillStyle='rgba(255,236,120,.35)';ctx.beginPath();ctx.arc(qx,qy,19+Math.sin(now/300)*2,0,7);ctx.fill();circ(ctx,qx,qy,14,'#ffd84a');ctx.strokeStyle='#fff';ctx.lineWidth=2.5;ctx.beginPath();ctx.arc(qx,qy,14,0,7);ctx.stroke();ctx.fillStyle='#7a4a10';ctx.font='bold 20px \"Hikomi\",\"Hiragino Maru Gothic ProN\",sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('！',qx,qy+1);ctx.textAlign='start';ctx.textBaseline='alphabetic'})}/* 召喚できる合図 */
@@ -5327,7 +5316,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='511';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='512';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
