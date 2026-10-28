@@ -148,7 +148,7 @@ const BL={
   altar:{name:'カミサマの台座',solid:1,anim:1},
   site2:{name:'建てている場所',solid:1,job:1},
   part:{name:''},
-  tower:{hp:100,hpS:114,brk:1,fix:20,fixm:{wood:20,stone:10},name:'守護の台座',sz:[2,2],kind:'build',pc:95,time:300,maker:null,solid:1,anim:1,attr:{wood:3,water:3,fire:3,earth:3,wind:3},desc:'守護の力をとりもどす台座。ヌシ様が帰ってくる。光の矢：ダメージ1／10分ごと／範囲6マス。まわり7マスを照らす'},
+  tower:{hp:100,hpS:114,brk:1,fix:20,fixm:{wood:20,stone:10},name:'守護の台座',sz:[2,2],kind:'build',pc:95,time:300,maker:null,solid:1,anim:1,attr:{wood:3,water:3,fire:3,earth:3,wind:3},desc:'守護の力をとりもどす台座。ヌシ様が帰ってくる。光の矢：ダメージ1／10分ごと／範囲10マス。まわり7マスを照らす'},
   rock:{name:'岩',solid:1,natural:1},
   hotstone:{hp:5,brk:1,fix:1,fixm:{},name:'ほのお石',kind:'furn',pc:0,time:20,solid:1,anim:1,attr:{fire:3,water:1},desc:'水べに置くと、水があたたまって温泉になる'},
   volcano:{name:'火山',sz:[3,3],solid:1,anim:1},boulder:{name:'大岩',solid:1,natural:1},heatv:{name:'熱の切りかえ装置',solid:1,anim:1},crack:{name:'ひびわれ',anim:1},/* 火山のふもと */
@@ -2031,7 +2031,7 @@ function updTowers(dt){
   if(!S.enemies.length)return;
   for(const j of TOWERS){const o=S.obj[j];if(o!=='watch'&&o!=='yogan'&&o!=='tower')continue;
     S.hp['w'+j]=(S.hp['w'+j]||0)-dt;if(S.hp['w'+j]>0)continue;
-    const st=o==='tower'?{dmg:1,range:6,cd:10}:(o==='yogan'?YOGAN:WATCH)[S.hp['L'+j]||1];
+    const st=o==='tower'?{dmg:1,range:10,cd:10}:(o==='yogan'?YOGAN:WATCH)[S.hp['L'+j]||1];
     const z0=BL[o].sz||[1,1],x=j%W+z0[0]/2,y=((j/W)|0)+z0[1]/2;
     let tg=null,bd=st.range;for(const e of S.enemies){if(!e.spawned||e.dead)continue;const d=Math.hypot(e.x-x,e.y-y);if(d<bd){bd=d;tg=e}}
     if(tg){S.hp['w'+j]=st.cd;tg.hp-=st.dmg;tg.flash=6;sfxAt('shoot',x,y);shots.push({x1:x,y1:y-(o==='tower'?1.4:.6),x2:tg.x,y2:tg.y-.3,life:1,fire:o==='yogan'});
@@ -5441,7 +5441,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='558';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='559';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
