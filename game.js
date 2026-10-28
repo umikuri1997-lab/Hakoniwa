@@ -2251,7 +2251,6 @@ function inHouseFurn(){const k=new Set();for(let j=0;j<S.obj.length;j++){const o
 function qAt(id){const qi=QUESTS.findIndex(q=>q.id===id);if(qi<0)return false;return (S.quest>qi||S.quest===qi&&!!S.qTalked)}/* そのメインクエストを受けたあと */
 function qDone(id){const index=QUESTS.findIndex(q=>q.id===id);if(index<0)return false;if(S.qStory===index)return false;return S.quest>index}
 const SUB_MAIN_AFTER={chair2:'table',farm10:'farm6',light3:'fire',oven:'fire'};
-const SUB_ANYTIME=new Set(['house2','boost1']);/* たのむ子がほかのおねがいをしていても、条件がそろえば出す（ノドカのおねがいは多く、順番待ちでおそくなるため） */
 function subOfferReady(q){if(S.qStory!=null||QUEST_CLEAR_WAIT)return false;return WD!==0||!SUB_MAIN_AFTER[q.k]||qDone(SUB_MAIN_AFTER[q.k])}
 const LEVEL_HELP={2:['benchbreak','chair2'],3:['oven','bed3'],4:['jar2','farm10'],5:['toy2','deco3'],8:['room','paint','parasol']};
 function levelHelpKeys(){const out=[];for(const n in LEVEL_HELP){const main=qAt('lv'+n),side=SUBQ.some(q=>q.k.startsWith('lv_')&&q.n===+n&&(S.subSt||{})[q.k]>=2);if(main||side)out.push(...LEVEL_HELP[n])}return out}
@@ -2264,7 +2263,7 @@ function keyName(el){const N=S.keyN||(S.keyN={});/* 5属性のキーキャラ：
   if(!nm){const r=S.res.filter(r=>r.elem===el).sort((a,b)=>a.id-b.id)[0];nm=r?r.name:null}
   if(nm&&S.res.some(r=>r.name===nm))N[el]=nm;return nm}
 function subWho(q){return keyName(q.g)}
-function checkSub(){const D=S.subDone||(S.subDone={}),Sn=S.subSeen||(S.subSeen={}),St=S.subSt||(S.subSt={});S.subB||(S.subB={});SUBW={};const LH=levelHelpKeys(),SL=subList();/* 1回だけ作って使いまわす */
+function checkSub(){const D=S.subDone||(S.subDone={}),Sn=S.subSeen||(S.subSeen={}),St=S.subSt||(S.subSt={});S.subB||(S.subB={});SUBW={};const SL=subList();/* 1回だけ作って使いまわす */
   const busy={};
   for(const q of SL){if(D[q.k])continue;if(St[q.k]===1&&!subOfferReady(q))delete St[q.k];if(Sn[q.k]&&!St[q.k])St[q.k]=2;
     if(St[q.k]===3&&FLOWER_QUESTS.has(q.k)&&!q.ok()){St[q.k]=2;delete (S.subArrived||{})[q.k];delete SUB_CLEAR_WAIT[q.k]}
@@ -2273,10 +2272,10 @@ function checkSub(){const D=S.subDone||(S.subDone={}),Sn=S.subSeen||(S.subSeen={
     if(St[q.k]===2&&q.ok()&&!isNight()){let wait=SUB_CLEAR_WAIT[q.k];if(wait&&!wait.done&&(S.obj[wait.obj]!==wait.id||!S.res.includes(wait.r))){delete SUB_CLEAR_WAIT[q.k];wait=null}
       if(wait&&wait.done){delete SUB_CLEAR_WAIT[q.k];St[q.k]=3;sfx('quest');toast('サブクエストたっせい：'+q.t,'good')}
       else if(!wait){const visit=queueQuestVisit(q,subWho(q));if(visit)SUB_CLEAR_WAIT[q.k]=Object.assign({done:false},visit);else{St[q.k]=3;sfx('quest');toast('サブクエストたっせい：'+q.t,'good')}}}
-    if(St[q.k])busy[q.g]=busy[q.g]&&!(St[q.k]===3&&St[busy[q.g].k]!==3)?busy[q.g]:q}/* 終わったクエストの報告を先に出す *//* その子から受けたクエストが終わるまで、次は出ない */
+    if(St[q.k])busy[q.g]=busy[q.g]&&!(St[q.k]===3&&St[busy[q.g].k]!==3)?busy[q.g]:q}/* 終わったクエストの報告を先に出す */
   /* サブクエストは一つずつ提示。会話のあいだを村の時間で2時間あける */
   const spaced=!isNight()&&(S.subTalkAt==null||S.t-S.subTalkAt>=120);/* 新しいサブクエストは、昼だけ */
-  if(spaced&&!Object.values(busy).some(q=>St[q.k]===1||St[q.k]===3)&&SL.filter(q=>!D[q.k]&&St[q.k]===2).length<4)for(const q of SL){if(D[q.k]||St[q.k])continue;if(busy[q.g]&&!LH.includes(q.k)&&!SUB_ANYTIME.has(q.k))continue;const w=keyName(q.g);if(!w||!q.at()||!subOfferReady(q))continue;St[q.k]=1;busy[q.g]=q;break}
+  if(spaced&&!Object.values(busy).some(q=>St[q.k]===1||St[q.k]===3)&&SL.filter(q=>!D[q.k]&&St[q.k]===2).length<6)for(const q of SL){/* 前のおねがいが終わっていなくても、条件がそろえば出す（受けているのは6つまで） */if(D[q.k]||St[q.k])continue;const w=keyName(q.g);if(!w||!q.at()||!subOfferReady(q))continue;St[q.k]=1;busy[q.g]=q;break}
   if(spaced&&waitingBellflowers()&&!SL.some(q=>St[q.k]===1||St[q.k]===3)&&SL.filter(q=>St[q.k]===2).length<3){const next=SL.find(q=>q.k.startsWith('seedwait_')&&!D[q.k]&&!St[q.k]&&q.at());if(next&&subOfferReady(next))St[next.k]=1}
   const summonHelp=WD===0&&S.qStory==null&&S.qTalked?({fire:'salvia3',water:'lotus3',wind:'lily5'}[QUESTS[S.quest]?.id]||''):'',supportKeys=summonHelp?(summonHelp==='salvia3'?['salvia3','watch2']:summonHelp==='lily5'?['lily5','swing1']:[summonHelp]):[];
   for(const k of supportKeys){if(D[k]||St[k])continue;const q=SL.find(q=>q.k===k);if(!q||!q.at()||!subOfferReady(q)||!keyName(q.g))continue;if(!isNight()&&(k===summonHelp||spaced)){St[k]=1;break}}
@@ -5435,7 +5434,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='549';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='550';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
