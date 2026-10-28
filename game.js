@@ -1187,7 +1187,7 @@ const ACT={
   fetch:{start(r){if(S.food<=0)return false;r.bubble='📦';sfxAt('box',r.x,r.y)},done:(r,a)=>a.t>=4,end(r){let need=Math.max(0,(hMax(r)-r.hunger)*fullN(r)/100),units=0,pt=0,pw=0,items=[];
     const keys=Object.keys(S.fs).filter(k=>S.fs[k]>0).sort((a,b)=>FOODS[b].v-FOODS[a].v);for(const k of keys){while(need>0&&S.fs[k]>0){S.fs[k]--;need-=FOODS[k].v;units+=FOODS[k].v;pt+=FOODS[k].pt||0;pw+=FOODS[k].pw||0;items.push(k)}if(need<=0)break}
     syncFood();if(units)r.meal={u:units,pt,pw,e:FOODS[items[0]].e,items};if(sheet==='food')renderSheet()}},
-  npl:{start(r,a){if(!S.nushi||!S.cleared)return false;r.bubble='💚';r.face=S.nushi.x>=r.x?1:-1;addFloat(r.x,r.y-1.4,'ヌシ様と遊ぶ！');if(!S.flags.nplayed){S.flags.nplayed=1;memo('🦌',r.name+'がヌシ様と遊んだ');logEv(r.name+'がヌシ様と遊んだ')}},tick(r,a,dt){r.fun=Math.min(100,r.fun+1.6*dt);a.bt=(a.bt||0)+dt;if(a.bt>3){a.bt=0;r.bubble=pick(['💚','😆','🎵'])}a.jt=(a.jt||0)+dt;if(a.jt>2.5&&S.nushi){a.jt=0;JUMP.set(r,performance.now());S.nushi.hop=performance.now()}},done:(r,a)=>a.t>=40||!S.nushi/* ぴょんぴょんはねて、ヌシ様もいっしょにはねる */,end(r){addPt(1.35,r,3)}},/* クリア後、ヌシ様のところへ遊びに行く */
+  npl:{start(r,a){if(!S.nushi||!S.cleared)return false;r.bubble='💚';r.face=S.nushi.x>=r.x?1:-1;if(!S.flags.nplayed){S.flags.nplayed=1;memo('🦌',r.name+'がヌシ様と遊んだ');logEv(r.name+'がヌシ様と遊んだ')}},tick(r,a,dt){r.fun=Math.min(100,r.fun+1.6*dt);a.bt=(a.bt||0)+dt;if(a.bt>3){a.bt=0;r.bubble=pick(['💚','😆','🎵'])}a.jt=(a.jt||0)+dt;if(a.jt>2.5&&S.nushi){a.jt=0;JUMP.set(r,performance.now());S.nushi.hop=performance.now()}},done:(r,a)=>a.t>=40||!S.nushi/* ぴょんぴょんはねて、ヌシ様もいっしょにはねる */,end(r){addPt(1.35,r,3)}},/* クリア後、ヌシ様のところへ遊びに行く */
   chatwait:{done:(r,a)=>{const p=S.res.find(q=>q.id===a.partner);return a.t>=40||!p||!p.act||p.act.type!=='chat'||p.act.partner!==r.id}},
   tag:{tick(r,a,dt){const ang=a.ph+a.t*.35,nx=a.cx+Math.cos(ang)*1.1,ny=a.cy+Math.sin(ang)*.8;r.face=nx>=r.x?1:-1;if(walk((ny|0)*W+(nx|0))){r.x=nx;r.y=ny}/* 通れないマスには入らない */r.fun=Math.min(100,r.fun+.6*dt)},
     done:(r,a)=>a.t>=30,end(r,a){addPt(.9,r,2)}},
@@ -3053,7 +3053,7 @@ function updNushi(dt){const n=S.nushi;if(n.app==null)n.app=1;if(n.app<1){n.app=M
     if(!r||!r.act||(r.act.type!=='npl'&&n.pl.t>3)){n.pl=null;n.pt=rnd(30,90)}else{n.mv=0;n.path=[];if(r.act.type==='npl'&&r.act.stage==='do'){n.face=r.x<n.x?-1:1;n.fx=(n.fx||0)+dt;if(n.fx>3){n.fx=0;spawnFX(n.x-.5,n.y-1.1,'#ffb8d8')}}return}}
   if(n.pt==null)n.pt=rnd(20,60);n.pt-=dt;
   if(n.pt<=0&&S.cleared&&!isNight()){/* クリア後、ときどき、精霊が遊びにくる（なにもしていない子・おもちゃで遊んでいる子から） */n.pt=20;const c=S.res.filter(r=>!r.hidden&&(!r.act||['wander','idle','play'].includes(r.act.type))&&r.hunger>30&&r.energy>25&&Math.abs(r.x-n.x)+Math.abs(r.y-n.y)<30);
-    if(c.length){const r=pick(c),G=bfs(r.x|0,r.y|0),nj=(n.y|0)*W+(n.x|0),st=nearest(G,j=>[1,-1,W,-W].includes(j-nj)&&walk(j),40);if(st>=0){endAct(r);startAct(r,G,'npl',st,{});n.pl={id:r.id,t:0};n.path=[];return}}}
+    if(c.length){const r=pick(c),G=bfs(r.x|0,r.y|0),nj=(n.y|0)*W+(n.x|0),F=(j,ok)=>{const dx=j%W-(n.x|0),dy=(j/W|0)-(n.y|0);return ok(dx,dy)&&walk(j)},st0=nearest(G,j=>F(j,(dx,dy)=>dy===1&&Math.abs(dx)<=1),40),st=st0>=0?st0:nearest(G,j=>F(j,(dx,dy)=>dy===0&&Math.abs(dx)>=2&&Math.abs(dx)<=3||dy===2&&Math.abs(dx)<=1),40);/* ヌシ様の前（下）か、横に少しはなれたところ。うしろに立つと、ヌシ様にかくれて見えない */if(st>=0){endAct(r);startAct(r,G,'npl',st,{});n.pl={id:r.id,t:0};n.path=[];return}}}
   if(!n.path)n.path=[];
   if(!n.path.length){n.mv=0;n.t-=dt;if(n.t>0)return;n.t=rnd(30,90);
     let sx=n.x|0,sy=n.y|0;if(!walk(sy*W+sx)){const c=[];for(let y=sy-2;y<=sy+3;y++)for(let x=sx-2;x<=sx+2;x++){const j=y*W+x;if(x>=0&&y>=0&&x<W&&y<H&&walk(j))c.push(j)}c.sort((a,b)=>Math.hypot(a%W+.5-n.x,(a/W|0)+.5-n.y)-Math.hypot(b%W+.5-n.x,(b/W|0)+.5-n.y));if(!c.length)return;n.path=[c[0]];return}/* 台座からおりる */
@@ -5628,7 +5628,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='581';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='582';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
