@@ -79,11 +79,11 @@ const BL={
   monstera:{hp:5,brk:1,fix:2,fixm:{wood:3,stone:3},name:'かんようしょくぶつ',kind:'furn',cat:'other',f2:1,lv:4,pc:4,time:80,maker:'wood',attr:{wood:1},mat:{wood:5,stone:5},solid:1,desc:'大きな葉の鉢植え。住み心地+10'},
   shelf1:{hp:5,brk:1,fix:5,fixm:{wood:10},name:'本棚',kind:'furn',cat:'other',f2:1,lv:6,pc:9,time:120,maker:'wood',attr:{wood:1},mat:{wood:20},solid:1,desc:'本と植物の棚。住み心地+12。木材・石材を合わせて50までしまえる'},
   wreath:{hp:5,brk:1,fix:2,fixm:{wood:7},offerOnly:1,name:'リース',kind:'furn',cat:'other',f2:1,lv:6,pc:4,time:80,maker:'wood',attr:{wood:1},mat:{wood:14},solid:1,desc:'葉と花のリース。住み心地+10'},
-  curtain1:{hp:5,brk:1,fix:3,fixm:{wood:8},name:'カーテン',kind:'furn',cat:'other',f2:1,lv:9,pc:5,time:80,maker:'wind',attr:{wind:1},mat:{wood:15},solid:1,desc:'家の上がわの壁にかける。窓のある壁にもかけられる。やわらかい光が入る。住み心地+10'},
+  curtain1:{hp:5,brk:1,fix:3,fixm:{wood:8},name:'カーテン',kind:'furn',cat:'other',f2:1,lv:9,pc:5,time:80,maker:'wind',attr:{wind:1},mat:{wood:15},solid:1,desc:'家の上がわの壁の窓にかける。やわらかい光が入る。住み心地+10'},
   cabinet:{hp:5,brk:1,fix:5,fixm:{wood:10},offerOnly:1,name:'キャビネット',kind:'furn',cat:'other',f2:1,lv:7,pc:9,time:120,maker:'earth',attr:{earth:1},mat:{wood:20},solid:1,desc:'とびらつきの棚。住み心地+12。食料を30までしまえる'},
   paint2:{hp:5,brk:1,fix:3,fixm:{wood:8},name:'葉っぱの額',kind:'furn',cat:'other',f2:1,lv:7,pc:5,time:80,maker:'wood',attr:{wood:1},mat:{wood:15},solid:1,desc:'葉っぱの絵。横向きの家の壁にかける。住み心地+10'},
   shelf2:{hp:5,brk:1,fix:6,fixm:{wood:15,stone:4},offerOnly:1,name:'かざり棚',kind:'furn',cat:'other',f2:1,lv:8,pc:11,time:140,maker:'wood',attr:{wood:1},mat:{wood:30,stone:8},solid:1,desc:'小物をかざる棚。住み心地+13。木材・石材を合わせて50までしまえる'},
-  curtain2:{hp:5,brk:1,fix:3,fixm:{wood:13},offerOnly:1,name:'カーテン（緑）',kind:'furn',cat:'other',f2:1,lv:8,pc:5,time:80,maker:'wind',attr:{wind:1},mat:{wood:25},solid:1,desc:'森の色のカーテン。家の上がわの壁にかける。窓のある壁にもかけられる。住み心地+10'},
+  curtain2:{hp:5,brk:1,fix:3,fixm:{wood:13},offerOnly:1,name:'カーテン（緑）',kind:'furn',cat:'other',f2:1,lv:8,pc:5,time:80,maker:'wind',attr:{wind:1},mat:{wood:25},solid:1,desc:'森の色のカーテン。家の上がわの壁の窓にかける。住み心地+10'},
   paint3:{hp:5,brk:1,fix:3,fixm:{wood:13},offerOnly:1,name:'花の額',kind:'furn',cat:'other',f2:1,lv:8,pc:5,time:80,maker:'wind',attr:{wind:1},mat:{wood:25},solid:1,desc:'花の絵。横向きの家の壁にかける。住み心地+10'},
   wshelf:{hp:5,brk:1,fix:4,fixm:{wood:10},name:'かべ棚',kind:'furn',cat:'other',f2:1,lv:8,pc:7,time:100,maker:'wood',attr:{wood:1},mat:{wood:20},solid:1,desc:'横向きの家の壁にかける。つる草をたらした棚。住み心地+12。木材・石材を合わせて50までしまえる'},
   paint1:{hp:5,brk:1,fix:5,fixm:{wood:15},offerOnly:1,name:'風景画',kind:'furn',cat:'other',f2:1,lv:9,pc:9,time:120,maker:'water',attr:{water:1},mat:{wood:30},solid:1,desc:'草原の絵。横向きの家の壁にかける。住み心地+14'},
@@ -426,12 +426,13 @@ const QUESTS1=[
    story:[
     [POKO,'#danger|村が、また育った！ 道を歩く足音まで、にぎやかになってきたよ。'],
     [MINA,'#danger|うん。この調子で、みんなの暮らしを守っていこうねぇ。']]},
-  {id:'ookage',text:'オオカゲを追いはらおう',how:"柵・見張り台・罠を整え、夜に来るオオカゲを追いはらう。",check:()=>(S.bossKills||0)>=1,
+  {id:'ookage',text:'オオカゲを追いはらおう',how:"柵・見張り台・罠を整え、夜に来るオオカゲを追いはらう。オオカゲは、このクエストが出た3日後の夜に来る（なかまが4人そろって3日たち、火の子がいるとき）。",check:()=>(S.bossKills||0)>=1,prog:()=>bossDays(),
    talk:{who:POKO,when:()=>true,lines:[
     [POKO,'#alarm|守り神さま、夜のコワイノを見てたらね…森の奥に、ひときわ大きな黒い影がいたんだ。'],
     [POKO,'あの影……ぼく、むかし見たことがある。'],
     [MINA,'#alarm|それは「オオカゲ」だねぇ。コワイノたちの親玉って、むかしから言われてるよぉ。'],
     [POKO,'あれが、また、ここに来るかもしれないの…？'],
+    [MINA,'#alarm|土の音を聞くとねぇ……3日くらいあとの夜に、来そうだよぉ。'],
     [MINA,'#danger|だから、柵をかさねて、見張り台をきたえておこうねぇ。家の中にいれば、攻撃されないよぉ。']]},
    story:[
     [POKO,'追いはらえた……！'],
@@ -458,7 +459,7 @@ const QUESTS1=[
    story:[
     [POKO,'ついに、ここまで村が育ったんだね……！'],
     [POKO,'#think|……あれ？ 神殿のそばが、ぽうっと光ってる……！'],
-    [MINA,'「想う力」のかけらだねぇ。村のみんなが満足して、想いが集まったから、こたえてくれたんだよぉ。']],gives:{shard:'key',items:{signpost:1}}},
+    [MINA,'「想う力」のかけらだねぇ。村のみんなが満足して、想いが集まったから、こたえてくれたんだよぉ。']],gives:{shard:'key'}},
   {id:'tower',text:'守護の台座を建ててもらおう',how:"5つの属性のなかまをそろえ、木材100・石材50を集める。「おく」→「守護の台座」で条件を確認して置く",check:()=>cnt('tower')>=1,prog:()=>'じょうけん '+towerConds().filter(c=>c[1]).length+'/'+towerConds().length,
    talk:{who:POKO,when:()=>true,lines:[
     [POKO,'ねえノドカ、ヌシ様をおむかえする「守護の台座」、そろそろ建てられないかな？'],
@@ -929,7 +930,7 @@ const BAN=new Map(),free=(k,cap)=>(resv.get(k)||0)<cap&&!(BAN.get(k)>(S?S.t:0));
 const reserve=k=>resv.set(k,(resv.get(k)||0)+1);
 const release=k=>{const v=(resv.get(k)||0)-1;if(v<=0)resv.delete(k);else resv.set(k,v)};
 function nearLotus(r){const x0=r.x|0,y0=r.y|0;for(let y=y0-2;y<=y0+2;y++)for(let x=x0-2;x<=x0+2;x++){if(x<0||y<0||x>=W||y>=H)continue;if(S.obj[y*W+x]==='lotus')return true}return false}
-const SEATS=['chair','stool','achair','bench','pouf','sofa1'];function fSpot(j){/* 池のそばの椅子＝釣りスポット */const x=j%W;for(const k of[j,j-1,j+1,j-W,j+W]){if(k<0||k>=W*H||Math.abs(k%W-x)>1)continue;const t=typeAt(k);if(t&&SEATS.includes(t))return true}return false}
+const SEATS=['chair','stool','achair','bench','pouf','sofa1'];function fSpot(j){const t=typeAt(j);return !!t&&SEATS.includes(t)&&sideW(j)>=0}/* 水のすぐとなりの椅子＝釣りスポット（椅子にすわって釣る） */
 const TOYS=new Set(['swing','seesaw','sandbox','slide']);/* 平らな物のうち、毎コマかく物（ラグ・罠など）は、BL に anim:1 と書く */
 const win64=i=>!!(S&&S.win&&typeof S.win[i]==='string'&&window.CHIPS&&window.CHIPS[S.win[i]]&&window.CHIPS[S.win[i]].g===64);/* 1マス64ドットの絵をかけた壁・ドアも、画面の大きさでかく */
 function toyR(r){const a=r.act;return a&&a.type==='play'&&a.stage==='do'&&TOYS.has(a.what)&&a.obj!=null&&S.obj[a.obj]===a.what?a:null}
@@ -949,7 +950,7 @@ function toyPose0(r,now){const a=toyR(r);if(!a)return null;const j=a.obj,X=(j%W)
     else{const q=(p-.7)/.3;x=X+67-q*65;y=Y+56.75+Math.sin(q*Math.PI)*2.5;f=-1}/* 階段の下へもどる */
     r.face=f;return{x,y,z:Y/TS+2.05}}
   return null}
-function spotW(i){/* 椅子のそばの釣り場の水マス（なければ-1） */const x=i%W;for(const k of[i,i-1,i+1,i-W,i+W]){if(k<0||k>=W*H||Math.abs(k%W-x)>1||S.ground[k]===1)continue;const w=sideW(k);if(w>=0)return w}return -1}
+function spotW(i){return sideW(i)}/* 椅子のすぐとなりの水マス（なければ-1） */
 function sideW(j){const x=j%W;if(x+1<W&&S.ground[j+1]===1)return j+1;if(x>0&&S.ground[j-1]===1)return j-1;return -1}/* 左右どちらかが水 */
 function adjOf(j,fn){const x=j%W,y=(j/W)|0;for(const[dx,dy]of DIRS){const nx=x+dx,ny=y+dy;if(nx<0||ny<0||nx>=W||ny>=H)continue;const k=ny*W+nx;if(fn(k))return k}return -1}
 const elemCount=el=>S.res.filter(r=>r.elem===el).length;
@@ -1806,13 +1807,14 @@ const EN={
   brute:{pw:6,rng:1.2,name:'カタカゲ',hp:10,sp:.76,atk:9,hit:28,hitF:14,hitN:17,hitFS:7,hitNS:8,col:'#3a1a1a',eye:'#ff8a3d',size:1.25,hs:1}/* 当たり判定は1マス */,
   breaker:{pw:5,name:'カベクダキ',hp:9,sp:.8,atk:6,hit:18,hitF:9,hitN:11,hitFS:5,hitNS:5,col:'#3a2a1a',eye:'#ffa04a',size:1.1,wall:3},/* 壁や柵をこわすのが得意（こわす力3倍・速い）。よけずにまっすぐこわしにくる */
   trapper:{pw:5,name:'ワナクイ',hp:8,sp:.9,atk:12,hit:16,hitF:8,hitN:10,hitFS:4,hitNS:5,col:'#2b3a1e',eye:'#c6ff6b',size:.95,trapper:1},/* 罠・見張り台を先にこわしにくる */
-  boss:{pw:20,rng:2.1,name:'オオカゲ',hp:30,sp:.84,atk:7,hit:14,hitF:7,hitN:8,hitFS:4,hitNS:4,col:'#120a24',eye:'#ff3b6b',size:1.8,boss:1},
+  boss:{pw:20,rng:2.1,name:'オオカゲ',hp:35,sp:.84,atk:7,hit:14,hitF:7,hitN:8,hitFS:4,hitNS:4,col:'#120a24',eye:'#ff3b6b',size:1.8,boss:1},
   ash:{pw:3,name:'ハイカゲ',hp:6,sp:.9,atk:20,hit:12,hitF:6,hitN:7,hitFS:3,hitNS:4,col:'#6d6a66',eye:'#ffb36b',size:.9,ash:1},/* かまど・ベンチなどを灰でよごして止める */
   rockc:{pw:8,name:'イワカゲ',hp:22,sp:.5,atk:30,hit:30,hitF:15,hitN:18,hitFS:8,hitNS:9,col:'#5a4636',eye:'#ffcf6b',size:1.3},/* おそいけど、かたい */
   hino:{pw:25,rng:2.3,name:'ヒノオオカゲ',hp:60,sp:.7,atk:6,hit:40,hitF:20,hitN:24,hitFS:10,hitNS:12,col:'#3a0c08',eye:'#ffb02e',size:2.1,boss:1,dev:1},/* 火山から下りてきて、熱の装置をねらう */
   yama:{pw:30,rng:2.4,name:'ヤマノオオカゲ',hp:60,sp:.75,atk:6,hit:20,hitF:10,hitN:12,hitFS:5,hitNS:6,col:'#2a0904',eye:'#ff6a2e',size:2.4,boss:1,vol:1},/* 火山のふもとの最後の夜に、火の山からおりてきて、温泉の熱をうばう */
   boss2:{pw:30,rng:3.4,hx:2.6,hy:.8,name:'ヨルノオオカゲ',hp:70,sp:.9,atk:4.5,hit:30,hitF:15,hitN:18,hitFS:8,hitNS:9,col:'#05030c',eye:'#ffd84a',size:4.6,boss:1},/* ヌシ様をむかえる準備ができたあとに来る */
 };
+function bossDays(){const w=S.bossWarn;if(w==null)return '';const t=dayNo();if(!(S.res.length>=4&&S.res.some(q=>q.elem==='fire')&&KEYS[WD].every(n=>S.res.some(r=>r.name===n))))return 'オオカゲ：なかまが4人そろうまで来ない';let d=t;if(S.res4Since!=null)d=Math.max(d,S.res4Since+3);while(!bossNight(d))d++;return d===t?'オオカゲ：今夜来るかも':'オオカゲ：'+(d-t)+'日後の夜に来るかも'}/* クエストの進みぐあいに、オオカゲが来る日を出す */
 const bossNight=d=>{const w=S&&S.bossWarn;return w==null?d>=5&&(d-5)%3===0:d-w>=3&&(d-w-3)%2===0}/* オオカゲは「来るかも」と聞いた3日後、そのあと2日ごと（火山のふもとは5日目、そのあと3日ごと） */;
 function waveFor(day){
   if(!S.nights)return WD===1?['basic','basic','basic']:['basic'];/* 最初の夜は1体だけ（火山のふもとは3体） */
@@ -1878,10 +1880,11 @@ const ZURA={/* クリア後に図鑑で読める「もとのすがた」（STORY
   boss2:'闇のせいれいみんなと、闇のヌシ様がいた「夜」そのものの、なごり。この土地を、もう一度、ちゃんと休める夜にしたくて、明かりや守りを消そうとする。'};
 function shakeScreen(){const v=$('#cv');v.classList.remove('shk');void v.offsetWidth;v.classList.add('shk');setTimeout(()=>v.classList.remove('shk'),600)}
 const BOSSFX={boss:{col:'#ff3b6b',sub:'コワイノたちの親玉が、すがたをあらわした'},yama:{col:'#ff6a2e',sub:'火の山の熱をうばう、大きなコワイノ'},boss2:{col:'#ffd84a',sub:'夜の力をたくわえた、いちばん大きなコワイノ'}};
-function bossEntrance(e){/* オオカゲ・ヨルノオオカゲの登場：画面がよって、ゆれて暗くなる */const B=BOSSFX[e.type];SKIP=false;/* 登場のあいだは時間を止めて、すがたを見せる */const z0=cam.z;camAnim={fz:cam.z,tz:Math.min(3,cam.z*1.5),fx:cam.x+VW/cam.z/2,fy:cam.y+VH/cam.z/2,tx:e.x*TS,ty:e.y*TS-12*(EN[e.type].size||1),t:0,dur:.8};BOSSHOLD=performance.now()+5000;setTimeout(()=>{camAnim={fz:cam.z,tz:z0,fx:cam.x+VW/cam.z/2,fy:cam.y+VH/cam.z/2,tx:cam.x+VW/cam.z/2,ty:cam.y+VH/cam.z/2,t:0,dur:.8}},5000);/* ボスへズームアップして、少しのあいだ時間を止める（文字は出さない） */shakeScreen();dlgCue('dim');sfx('hit');
+function bossEntrance(e){/* オオカゲ・ヨルノオオカゲの登場：画面がよって、ゆれて暗くなる */const B=BOSSFX[e.type];SKIP=false;/* 登場のあいだは時間を止めて、すがたを見せる */const z0=cam.z;camAnim={fz:cam.z,tz:Math.min(3,cam.z*1.5),fx:cam.x+VW/cam.z/2,fy:cam.y+VH/cam.z/2,tx:e.x*TS,ty:e.y*TS-12*(EN[e.type].size||1),t:0,dur:.8};BOSSHOLD=performance.now()+5000;setTimeout(()=>{camAnim={fz:cam.z,tz:z0,fx:cam.x+VW/cam.z/2,fy:cam.y+VH/cam.z/2,tx:cam.x+VW/cam.z/2,ty:cam.y+VH/cam.z/2,t:0,dur:.8}},5000);/* ボスへズームアップして、少しのあいだ時間を止める。名前と説明を大きく出す */shakeScreen();dlgCue('dim');sfx('bossIn');bossTitle(EN[e.type].name,B.sub,B.col);
   for(let n=0;n<4;n++)fx.push({k:'ring',x:e.x*TS,y:e.y*TS,life:1+n*.4,col:B.col});}
+function bossTitle(name,sub,col){/* オオカゲの登場：名前と説明を、画面のまん中に大きく出して、消す */const d=document.createElement('div');d.className='bossTitle';d.innerHTML='<b></b><small></small>';d.querySelector('b').textContent=name;d.querySelector('b').style.color=col;d.querySelector('small').textContent=sub;document.body.appendChild(d);requestAnimationFrame(()=>requestAnimationFrame(()=>d.classList.add('on')));setTimeout(()=>d.classList.remove('on'),3600);setTimeout(()=>d.remove(),4600)}
 let BOSSHOLD=0;/* ボスの登場・追いはらいの演出のあいだ、時間を止める */
-function bossDefeatFX(e){const sand=e.type==='boss'||e.type==='boss2';if(sand)sfx('crack');EVAP.push({e,t0:performance.now()+(sand?350:0),dur:sand?4200:3200,sand});/* オオカゲ・ヨルノオオカゲ：ピシッとひびが入って、上から砂になってくずれる *//* 時間を止めて、消えていく様子を見せる *//* オオカゲをたおしたとき：白く光って、ゆれて、光の輪と粒がはじける */const B=BOSSFX[e.type]||BOSSFX.boss,px=e.x*TS,py=e.y*TS;camAnim={fz:cam.z,tz:Math.min(3,cam.z*1.6),fx:cam.x+VW/cam.z/2,fy:cam.y+VH/cam.z/2,tx:px,ty:py-12*(EN[e.type].size||1),t:0,dur:.8};/* ボスへズームアップ */dlgCue('flash');shakeScreen();
+function bossDefeatFX(e){const sand=e.type==='boss'||e.type==='boss2';sfx('bossKO');if(sand)sfx('crack');EVAP.push({e,t0:performance.now()+(sand?350:0),dur:sand?4200:3200,sand});/* オオカゲ・ヨルノオオカゲ：ピシッとひびが入って、上から砂になってくずれる *//* 時間を止めて、消えていく様子を見せる *//* オオカゲをたおしたとき：白く光って、ゆれて、光の輪と粒がはじける */const B=BOSSFX[e.type]||BOSSFX.boss,px=e.x*TS,py=e.y*TS;camAnim={fz:cam.z,tz:Math.min(3,cam.z*1.6),fx:cam.x+VW/cam.z/2,fy:cam.y+VH/cam.z/2,tx:px,ty:py-12*(EN[e.type].size||1),t:0,dur:.8};/* ボスへズームアップ */dlgCue('flash');shakeScreen();
   for(let n=0;n<6;n++)fx.push({k:'ring',x:px,y:py,life:1+n*.3,col:n%2?'#fff3d6':B.col});
   for(let n=0;n<36;n++){const a=n/36*6.28,v=80+(n%3)*40;fx.push({k:'p',x:px,y:py-20,vx:Math.cos(a)*v,vy:Math.sin(a)*v-60,life:1.4,col:n%2?'#fff3a0':B.col,r:3.2})}
   const hold=EVAP.some(it=>it.e===e&&it.sand)?4900:3600,z0=cam.z;BOSSHOLD=performance.now()+hold;setTimeout(()=>{camAnim={fz:cam.z,tz:z0,fx:cam.x+VW/cam.z/2,fy:cam.y+VH/cam.z/2,tx:cam.x+VW/cam.z/2,ty:cam.y+VH/cam.z/2,t:0,dur:.8}},hold)/* 終わったら、もとの大きさにもどす */}/* 文字は出さず、時間を止めて、よって、消えていく様子だけを見せる */
@@ -1893,9 +1896,9 @@ function updEnemy(e,dt){
   const D=EN[e.type];
   if(!e.spawned){e.delay-=dt;if(e.delay<=0){[e.x,e.y]=(D.dev||D.vol)&&WD===1?volSpot():spawnSpot();e.spawned=true;(S.seenEn||(S.seenEn={}))[e.type]=1;if(e.type==='boss2'||e.type==='boss'&&!S.flags.bossIntro){if(e.type==='boss')S.flags.bossIntro=1;bossEntrance(e)}}return}/* オオカゲの登場演出は最初の1回、ヨルノオオカゲは毎回 */
   if(e.flash>0)e.flash-=dt;
-  if(e.stun>0||S.t-(e.busyT??-1e9)<5){e.wd=0;e.wx=null}/* 罠で足止め・壁や設備をたたいているあいだは、来なおさない */
+  if(e.stun>0||e.rest>0||S.t-(e.busyT??-1e9)<5){e.wd=0;e.wx=null}/* 罠で足止め・壁や設備をたたいているあいだは、来なおさない */
   else if(!e.flee&&!inBase(e.x|0,e.y|0)){e.wd=(e.wd||0)+dt;if(e.wd>=30){if(e.wx!=null&&Math.hypot(e.x-e.wx,e.y-e.wy)<3){enemyFallback(e,D);e.repath=8;EREACH.delete(e)}e.wd=0;e.wx=e.x;e.wy=e.y}}else{e.wd=0;e.wx=null}/* 基地の外で30分ほとんど進めていなかったら、べつの場所から来なおす（森でうろうろ対策） */
-  if(e.stun>0){e.stun-=dt;return}
+  if(e.stun>0){e.stun-=dt;return}if(e.rest>0){e.rest-=dt;return}
   e.slow=1;{const tj=(e.y|0)*W+(e.x|0),to=S.obj[tj];if(to&&BL[to]&&BL[to].trap){e.busyT=S.t;const cd=S.trapCd||(S.trapCd={}),rdy=!(cd[tj]>S.t);
     if(to==='spike'){e.spk=(e.spk||0)+dt;if(e.spk>=15){e.spk-=15;e.hp-=.5;e.flash=4}/* とげの罠：15分ごとに0.5ダメージ */if(e.hp<=0)return defeat(e,EN[e.type].name+'をとげの罠で追いはらった！')}
     else if(to==='sticky')e.slow=.35;
@@ -1958,7 +1961,7 @@ function updEnemy(e,dt){
 function overFence(ax,ay,bx,by){/* 柵（門もふくむ）を、はさんでいるか */const n=Math.ceil(Math.hypot(bx-ax,by-ay)*4),ia=(ay|0)*W+(ax|0),ib=(by|0)*W+(bx|0);for(let k=1;k<n;k++){const px=ax+(bx-ax)*k/n,py=ay+(by-ay)*k/n,q=(py|0)*W+(px|0);if(q===ia||q===ib)continue;if(FENCE_IDS.has(typeAt(q)))return true}return false}
 function fenceBetween(ax,ay,bx,by){/* 家の壁をはさんでいたら、離れたところからは攻撃できない（柵・石の柵・石の塀は、こえて攻撃できる） */const n=Math.ceil(Math.hypot(bx-ax,by-ay)*4),ia=(ay|0)*W+(ax|0),ib=(by|0)*W+(bx|0);for(let k=1;k<n;k++){const px=ax+(bx-ax)*k/n,py=ay+(by-ay)*k/n,q=(py|0)*W+(px|0);if(q===ia||q===ib)continue;const t=typeAt(q);if(HOME_WALLS.has(t)&&t!=='wall')return true}return false}
 const hsOf=D=>D.size>=1.5?2:1,reachOf=D=>D.rng||.75*hsOf(D);/* 攻撃がとどく距離：大きいコワイノ（オオカゲ・カタカゲ）は、すこし離れたところから攻撃する *//* 当たり判定は見た目ぴったりではなく、1マスか2マス */
-function hitRes(e,r,D){if(BOSSFX[e.type]){shakeScreen();fx.push({k:'ring',x:r.x*TS,y:r.y*TS,life:1.2,col:BOSSFX[e.type].col});sfxAt('bonk',r.x,r.y)}/* オオカゲの一撃は、画面がゆれて衝撃がひろがる */if(!WD&&r.elem==='fire'&&r.hunger<60&&r.name===keyName('fire'))S.flags.fHurt=1;const sh=(r.shU||0)>S.t;/* フタバの葉っぱのまもり：EN の hitFS・hitNS（まもりありの数） */if((r.faintGrace||0)>S.t||r.act&&r.act.type==='faint'){e.stun=1;return}/* 気絶している子は攻撃しない */const h0=r.hunger;sfx('hit');e.swing=performance.now();
+function hitRes(e,r,D){if(BOSSFX[e.type]){shakeScreen();fx.push({k:'ring',x:r.x*TS,y:r.y*TS,life:1.2,col:BOSSFX[e.type].col});sfxAt('bonk',r.x,r.y)}/* オオカゲの一撃は、画面がゆれて衝撃がひろがる */if(!WD&&r.elem==='fire'&&r.hunger<60&&r.name===keyName('fire')&&S.flags.guard)S.flags.fHurtG=1;/* こもれびのまもりをおぼえたあとに、火の子がたくさんたたかれた */const sh=(r.shU||0)>S.t;/* フタバの葉っぱのまもり：EN の hitFS・hitNS（まもりありの数） */if((r.faintGrace||0)>S.t||r.act&&r.act.type==='faint'){e.rest=1;return}/* 気絶している子は攻撃しない */const h0=r.hunger;sfx('hit');e.swing=performance.now();
   const lv=rLv(r);S.nightHurt++;if(S.ns)S.ns.hurt++;const fire=r.elem==='fire';
   if(r.act&&['sleep','stay','rest','idle'].includes(r.act.type)&&r.act.stage==='do')endAct(r);/* 攻撃されたら、寝ていても起きる */
   const adj=Math.hypot(e.x-r.x,e.y-r.y)<=Math.max(1.1,reachOf(D)+.05);/* せいれいの攻撃は、となりにいる相手だけ（遠くから攻撃してくる大きいコワイノには、その距離でもやり返せる） */if(fire&&adj){/* 戦えるのは火の子だけ *//* やり返しはしない（攻撃されたときの受けるダメージの軽さだけ、戦える子は今までどおり） */
@@ -1966,7 +1969,7 @@ function hitRes(e,r,D){if(BOSSFX[e.type]){shakeScreen();fx.push({k:'ring',x:r.x*
   else{r.hunger=Math.max(0,r.hunger-(sh?D.hitNS:D.hitN));r.fun=Math.max(0,r.fun-20);r.hurt=40;r.fleeNow=true;/* 戦えない子は、オオカゲが相手でも逃げる */
     if(D.boss&&Math.random()<.25){endAct(r);r.act={type:'faint',stage:'do',t:0};r.bubble='😵'}/* ボスの攻撃で気絶するのは、4回に1回くらい */}r.alarm=S.t;
   if(h0>=12&&r.hunger<3)r.hunger=3;/* 一撃では消えない */
-  {const L=lightAt(e.x,e.y);e.stun=fire?(D.boss?(L?2:1.5):(L?2.667:2)):(D.boss?(L?4:3):(L?5.333:4))}/* やり返されたコワイノが止まる時間（明かりの中は長い） */e.path=[];e.repath=0;
+  {const L=lightAt(e.x,e.y);e.rest=fire?(D.boss?(L?2:1.5):(L?2.667:2)):(D.boss?(L?4:3):(L?5.333:4))}/* たたいたあと、コワイノがひと休みする時間（明かりの中は長い）。やられて止まる stun とはちがい、うすくならない */e.path=[];e.repath=0;
 }
 let LIGHTCD=0;/* のこり秒（倍速なら早くもどる） */
 function guardLight(e){if(LIGHTCD>0){toast('まもりの光は、あと'+Math.ceil(LIGHTCD/(S.speed||1))+'秒');return}if(S.pt<1){toast('パワーが足りません');return}S.pt-=1;LIGHTCD=10;
@@ -2184,7 +2187,7 @@ const SUBQ=[/* サブクエスト：メインと別に、いつでもできる�
   {k:'farm10',how:'「おく」→「畑」を置く。土のせいれいが耕すのを待とう',g:'earth',L:[['K','なかまがふえて、ごはんもたくさんいるねぇ。'],['K','畑が10こあったら、ごはんにこまらないよぉ。']],X:[['K','畑がいっぱいだねぇ。耕すの、がんばるよぉ。'],['K','#joy|畑をふやしてくれて、ありがとうねぇ。収穫の日が、いまから楽しみだよぉ。']],w:0,t:'畑を10にしよう',ln:'畑がもっとあると、ごはんにこまらないねぇ',at:()=>cnt('farm')>=6,ok:()=>cnt('farm')>=10,n:10,now:()=>cnt('farm'),rw:15},
   {k:'food40',how:'畑で作物を育てて収穫してもらう。ベリーの茂みからも集まる。食料箱1つには30こまでしか入らない',g:'wood',L:[['K','ねえ、食料箱って、どのくらい入るのかな？'],['K','40こくらい、ためてみたい！ そしたら、なにがあってもへっちゃらだよ！']],X:[['K','食料箱がいっぱい！ 見てるだけで、おなかいっぱいになりそう！'],['K','#joy|食べ物をいっぱいためてくれて、ありがとう！ これで、おなかがすいても安心だね！']],t:'食べ物を40こためよう',ln:'食料箱をいっぱいにしたいな！',at:()=>foodCap()>0&&S.res.length>=3,ok:()=>FOODN()>=40,n:40,now:()=>FOODN(),rw:15},
   {k:'house2',how:'家の壁で囲って、ドアをつけると家になる',g:'earth',L:[['K','なかまがふえて、家がちょっときゅうくつだねぇ…。'],['K','もう1けん、家があるといいなぁ。']],X:[['K','新しい家だぁ。のびのび眠れるねぇ。'],['K','ものをしまえる場所や、お湯につかってゆっくりできる場所もあったらいいねぇ。'],['K','#joy|新しい家を建ててくれて、ありがとうねぇ。みんな、ゆっくり休めるよぉ。']],t:'家を2けんにしよう',ln:'なかまがふえて、家がきゅうくつだねぇ',at:()=>S.baseLv>=1&&S.res.length>=4&&elemCount('fire')>=1,ok:()=>HOUSES.length>=2,n:2,now:()=>HOUSES.length,rw:20},
-  {k:'room',how:'神殿の依頼ボードをタップ →「家具」から本棚・ラグ・かざり物など、好きなものをはる。できたら「おく」で家の中に置く（カーテンや壁にかけるものは数に入らない）',g:'wind',L:[["K", "家の中が、どうにも味気ないね。"], ["K", "本棚でも、ラグでも、ぼくの好きなもので、おへやをかざれたら……。"], ["K", "#think|守り神、きみの考える形を、見せてくれないか。"],['@idea']],X:[['K','#nod|うん、悪くない。ぼくにふさわしい、品のあるおへやだ。'],['K','部屋を整えてくれて、感謝するよ。ここなら、気持ちよく過ごせそうだ。']],t:'家の中に家具やかざりを5つ置こう',ln:'家の中を、すてきにかざりたいな',at:()=>HOUSES.length>=1&&S.lv>=3,ok:()=>inHouseFurn()>=5,n:5,now:()=>inHouseFurn(),rw:15},
+  {k:'room',how:'神殿の依頼ボードをタップ →「家具」から本棚・ラグ・かざり物など、好きなものをはる。できたら「おく」で家の中に置く。ちがう種類を5つ（同じ物は1つと数える。カーテンや壁にかけるものは数に入らない）',g:'wind',L:[["K", "家の中が、どうにも味気ないね。"], ["K", "本棚でも、ラグでも、ぼくの好きなもので、おへやをかざれたら……。"], ["K", "#think|守り神、きみの考える形を、見せてくれないか。"],['@idea']],X:[['K','#nod|うん、悪くない。ぼくにふさわしい、品のあるおへやだ。'],['K','部屋を整えてくれて、感謝するよ。ここなら、気持ちよく過ごせそうだ。']],t:'家の中に家具やかざりを5種類置こう',ln:'家の中を、すてきにかざりたいな',at:()=>HOUSES.length>=1&&S.lv>=3,ok:()=>inHouseFurn()>=5,n:5,now:()=>inHouseFurn(),rw:15},
   {k:'paint',how:'神殿の依頼ボードをタップ →「家具」→絵（額）をはる。できたら「おく」で家の横向きの家の壁にかける',g:'water',L:[["K", "#cry|家の壁を見ていると、少しさみしく感じます。"], ["K", "きれいな景色を、ここに残しておけたら……。季節が変わっても、見られるように。"], ["K", "守り神さま、そんなことはできるでしょうか。"],['@idea']],X:[["K", "壁に、景色が……！ こんなふうに残せるのですね。"], ["K", "#think|見ていると、考えごとがはかどります。"], ['K','#joy|絵をかざってくださって、ありがとうございます。壁が、ぐっと明るくなりました。']],t:'壁に絵をかざろう',ln:"きれいな景色を、壁に残しておけたら……",at:()=>S.lv>=7,ok:()=>Object.values(S.win||{}).some(v=>v==='paint1'||v==='paint2'||v==='paint3'),rw:15},
   {k:'trap4',how:'神殿の依頼ボードをタップ →「ワナ」→とげの罠などをはる。できたら「おく」で「コワイノ」が通りそうな所に置く',g:'fire',L:[["K", "#danger|守ってばっかりじゃ、つまらないね。"], ["K", "#danger|近づいてくる「コワイノ」を、途中でびっくりさせてやりたいよ。"], ["K", "守り神、もう少し手を打てないかい？"],['@idea']],X:[['K','いいねえ、罠だらけだ！ 来るなら来いってんだ！'],['K','#alarm|罠をふやしてくれて、ありがとよ。これで「コワイノ」も、手出しできないね。']],t:'罠をあと4つ置こう',at:()=>elemCount('fire')>=1&&S.enemyOn&&(WD===1||(S.bossKills||0)>=1||qAt('ookage')),ok:()=>CN(TRAPS)-((S.subB||{}).trap4||0)>=4,n:4,now:()=>Math.max(0,CN(TRAPS)-((S.subB||{}).trap4||0)),base:()=>CN(TRAPS),rw:15},
   {k:'lv_jar2',how:'せいれいがくらしていると、村レベルが上がる',w:0,g:'water',L:[["K","お願いしたいものがあるのですが、この村にはまだ早いようです。"],["K","村がもっと育ったら、あらためてお願いしますね。"]],X:[["K","#joy|村が育ちましたね。ありがとうございます。"]],t:'村レベルを3にしよう',at:()=>(elemCount('water')>=1)&&((S.subSt||{}).lv_jar2===3),ok:()=>S.lv>=3,n:3,rw:4,now:()=>S.lv},
@@ -2207,7 +2210,7 @@ const FIREB={/* 火のキーキャラが、あにきのとき */
   lighthouse1:{L:[['K','夜の見回り、まだ暗いところがあって不安なんだ。'],['K','もっと遠くまで照らせる、でっかい灯りがあれば、いいんだがな。'],['@idea']],X:[['K','おお、灯台だ！ これなら遠くまでよく見えるぜ。'],['K','ありがとよ、守り神。']]},
   toy2:{L:[['K','なあ、守り神。ここ、走りまわれる場所はあるけど、ちょっと物足りなくねえか？'],['K','砂の山をつくったり、穴をほったり……そういう遊び場があったら、みんな喜ぶと思うぜ。'],['K','守り神、どんな形を思い浮かべる？'],['@idea']],X:[['K','おお、砂場だ！ さっそく山をつくろうぜ！'],['K','ありがとな、守り神。']]},
   fence20:{L:[['K','土地が広がったぶん、守る場所もふえたな。'],['K','ふちのほうは、まだがら空きじゃねえか。'],['K','#alarm|柵をずらっと並べて、「コワイノ」の足を止めてやろうぜ。']],X:[['K','いいじゃねえか、これならそう簡単には入ってこれねえぜ！'],['K','ありがとよ、守り神。']]}};/* ホノ（あにき）は、いつも「おれ」。あたいは、ホムラ（あねご）だけ */
-function inHouseFurn(){let n=0;for(let j=0;j<S.obj.length;j++){const o=S.obj[j];if(!o||!BL[o]||BL[o].kind!=='furn'||BL[o].trap)continue;if(HOUSES.some(h=>h.set&&h.set.has(j)))n++}return n}
+function inHouseFurn(){const k=new Set();for(let j=0;j<S.obj.length;j++){const o=S.obj[j];if(!o||!BL[o]||BL[o].kind!=='furn'||BL[o].trap)continue;if(HOUSES.some(h=>h.set&&h.set.has(j)))k.add(o)}return k.size}/* 家の中にある家具・かざりの種類の数 */
 function qAt(id){const qi=QUESTS.findIndex(q=>q.id===id);if(qi<0)return false;return (S.quest>qi||S.quest===qi&&!!S.qTalked)}/* そのメインクエストを受けたあと */
 function qDone(id){const index=QUESTS.findIndex(q=>q.id===id);if(index<0)return false;if(S.qStory===index)return false;return S.quest>index}
 const SUB_MAIN_AFTER={chair2:'table',farm10:'farm6',light3:'fire',oven:'fire'};
@@ -2270,7 +2273,7 @@ const SEV1=[
  {k:'e06d',at:()=>sevHere('H')&&S.enemyOn&&(S.bossKills||0)>=1&&!S.flags.guard&&!!S.flags.hDied,/* 火の子がオオカゲの夜にいなくなっていたら、よみがえってから */L:[['F','@H……！ もどってきてくれたんだね……！'],['F','#scared|オオカゲの夜に、@Hがいなくなっちゃって……ぼく、ずっと、こわかった。'],['H',{A:'#think|……心配かけたね。もう、だいじょうぶさ。',B:'#think|……心配かけたな。もう、だいじょうぶだ。'}],['F','#scared|ぼく、家でふるえてるだけで、なんにもできなかった。むかしね、ぼくのきょうだいも、前に出て、ぼくを守ってくれたのに。'],['H',{A:'あたいらが前に出られるのは、あんたたちが家で待っててくれるからさ。村のちびたちを守りたいのは、あんたも同じだろ？',B:'おれたちが前に出られるのは、おまえらが家で待っててくれるからだ。村のちびたちを守りたいのは、おまえも同じだろ？'}],['F','#think|……うん。もう、だれにもいなくなってほしくない。ぼくも、守りたい！'],['F','ぼくは@Hみたいに強くないけど……葉っぱで守ることならできるかも！'],['F','ほらっ！ こもれびの、まもり！ ……わっ、葉っぱが顔にくっついた！',0,'guarddemo'],['H',{A:'#think|……ぷっ。まったく、しょうがない子だね。……ありがとよ。いっしょに守ろう。',B:'#think|……ははっ。しょうがねえやつだな。……ありがとな。いっしょに守ろうぜ。'}]],
   go:()=>{S.flags.guard=true;toast('フタバが「こもれびのまもり」をおぼえた！','good');memo('🍃','フタバが「こもれびのまもり」をおぼえた')}},
  {k:'e07',at:()=>sevHere('M'),L:[['F','ねえねえ、@M！ 畑、見てくれた？'],['M','この村には、水が必要な場所がたくさんありますね。'],['F','ぼくね、いっぺんに水を運ぼうとして、ぜんぶこぼしたことがあるんだ！'],['N','#surprise|あれは、びっくりしたねぇ。',1],['M','#think|……一度に運ぶ量を、半分にしてみましょう。そのほうが、結果的に早いですよ。'],['F','#joy|えへへ……今日はこぼさないよ！']]},
- {k:'e08',night:1,at:()=>{const f=S.res.find(r=>r.name===POKO);return !!f&&S.enemies.some(e=>!e.dead&&((e.type==='boss'||e.type==='boss2'))&&Math.hypot(e.x-f.x,e.y-f.y)<12)&&!(S.ns&&S.ns.final)},L:[['F','#think|……あの感じ。まえの夜と、おんなじ……！',0,'shake'],['F','あれが、オオカゲ……。'],['F','#ponder|あの夜も、あの影がいた……。'],['F','#scared|あの夜……きょうだいたちは、ぼくを守ってくれたのに……！'],['F','#scared|もう、だれにもこわい思いをさせないで！'],['F','#think|……ここは、ぼくたちの草原なんだ！！',0,'flash']]},
+ {k:'e08',night:1,at:()=>{const f=S.res.find(r=>r.name===POKO);return !!f&&S.enemies.some(e=>!e.dead&&((e.type==='boss'||e.type==='boss2'))&&Math.hypot(e.x-f.x,e.y-f.y)<12)&&!(S.ns&&S.ns.final)},L:[['F','#think|……あの感じ。まえの夜と、おんなじ……！',0,'dim'],['F','あれが、オオカゲ……。'],['F','#ponder|あの夜も、あの影がいた……。'],['F','#scared|あの夜……きょうだいたちは、ぼくを守ってくれたのに……！'],['F','#scared|もう、だれにもこわい思いをさせないで！'],['F','#danger|……こわい。でも、ここは、ぼくたちの草原なんだ。'],['F','#worry|守り神さま、みんなを……おねがい！']]},
  {k:'e09',vis:['かけらの光にふれると、まぶたの裏に、むかしの草原がうかんだ。','花でいっぱいの草原。大きな白い鹿のうしろで、小さな子たちが笑っている。','……夜。だれかの手が、いちばん小さな子を、そっと奥へおしこんだ。','「ここにいて。ぜったい、出てきちゃだめだよ」'],at:()=>!!S.flags.finalWon&&S.qStory==null,L:[['F','この光……やっぱり、ヌシ様の力だ……。'],['N','「守る力」のかけらだねぇ。これで、3つそろったよぉ。',1],['F','#alarm|むかし、「コワイノ」がいっぱい来た夜があったんだ。'],['F','#cry|ぼく、末っ子だったから……きょうだいが、いちばん奥にかくしてくれて。'],['F','#danger|ヌシ様も、さいごまで、ぼくを守ってくれたんだ。'],['F','でも、あのときはヌシ様の力までなくなっちゃって……消えた子が、もどってこられるかも、わからなかった。'],['F','#teary|みんな、だいじょうぶかな。ぼく、ずっと会いたかったんだ。'],['F','#think|……台座に、はめてみよう！ 守り神さま！']]},
  {k:'e17',at:()=>elemCount('wood')>=6&&S.qStory==null,L:[['F','なかまが、こんなにふえた！'],['F','みんなでくっついてた、あのころみたい……。'],['F','#cry|むかしのきょうだいとは、ちがう子たちだけど……ここにも、きょうだいができたみたいで、うれしいな。'],['N','#cry|フタバのきょうだいが、ふえたねぇ。',1],['F','#cry|えへへ。……むかしのきょうだいたちも、きっとよろこんでくれるよね。']]},
  {k:'e18',at:()=>sevHere('M')&&!!(S.sev||{}).e07&&cnt('farm')>=6,L:[['M','畑がふえてきたので、水まきの順番を計算してみました。……ですが、どう回っても、ぜんぶの畑に水が行きわたりません。'],['F','えー！ それなら、ぼくも手伝うよ！ いっしょに水くばろ！'],['M','#think|……計算より、人の手のほうが確実なこともあるのですね。'],['F','そうそう！ みんなでやれば、へっちゃらだよ！'],['M','#joy|はい。……ありがとうございます。']]},
@@ -2280,7 +2283,7 @@ const SEV1=[
  {k:'e23',at:()=>atFarm(S.res.find(r=>r.name===sevName('N')))&&cnt('farm')>=6&&!!(S.sev||{}).e04b,L:[['F','ノドカ、ずっと畑にいるよ。ごはん、食べた？'],['N','あれぇ……もうこんな時間かぁ。畑が気になって、つい。'],['F','もう！ ぼくがお弁当もっていくから、ちょっと休もう！'],['N','#joy|ふふ、ありがとうねぇ。……フタバがいてくれて、助かるよぉ。']]},
  {k:'e10',at:()=>sevHere('K'),L:[['K','フッ…村の外まで、風がずっと続いているね。'],['F','#surprise|えっ、外まで見えるの！？ すごーい！'],['F','#think|……でも、あんまり遠くへ行っちゃだめだよ。迷子になっちゃうから。'],['K','おや。それは、きみのことじゃないのかな？'],['F','#joy|えへへ……このまえ迷ったの、見られてた？'],['K','#sigh|風はなんでも知っているのさ。…安心したまえ、ぼくの胸にしまっておくよ。']]},
  {k:'p1',at:()=>!!S.flags.minaCame&&S.quest>=12,L:[['N','フタバは、ずっとひとりでここにいたのぉ？'],['F','#worry|……うん。でもね、まえは、きょうだいがいっぱいいたんだ。'],['F','ぼくがいちばん下で、みんなでくっついて寝てたの。にぎやかだったなあ。'],['N','そっかぁ。……いまは、どこにいるのかなぁ。'],['F','#think|……わかんない。でも、いつか会えるって思ってる！'],['N','#nod|うん。それまで、ぼくがとなりにいるよぉ。']]},
- {k:'e12f',at:()=>!!S.flags.fHurt&&!!S.flags.guard&&!(S.sev||{}).e12n&&sevHere('H'),L:[['F','#surprise|あのとき、だいじょうぶだった！？ いっぱい、たたかれてたよ！'],['H',{A:'#sigh|へっちゃらさ。あれくらい、なんでもないよ。',B:'#sigh|へっちゃらだ。あれくらい、なんでもねえよ。'}],['F','#think|……むりしないで。ぼく、もっと早く葉っぱで守れるようになるから！'],['H',{A:'#think|……ふん。じゃあ、たよりにしてるよ。',B:'#think|……へっ。じゃあ、たよりにしてるぜ。'}],['F','#think|……でも、ほんとうに心配したんだよ！'],['H',{A:'#think|……ばか。そんな顔するんじゃないよ。……ありがと。',B:'#think|……ばか。そんな顔すんな。……ありがとな。'}]]},
+ {k:'e12f',at:()=>!!S.flags.fHurtG&&!!S.flags.guard&&!(S.sev||{}).e12n&&sevHere('H'),/* こもれびのまもりをおぼえたあと、べつの夜に。e06（まもりをおぼえる話）とは、ちがう話 */L:[['F','#surprise|@H、ゆうべ、いっぱいたたかれてたよね……！ 葉っぱ、ちゃんと届いた？'],['H',{A:'#sigh|ああ、届いたよ。……あんたの葉っぱのおかげで、ちょっとだけ痛くなかった。',B:'#sigh|ああ、届いたぜ。……おまえの葉っぱのおかげで、ちょっとだけ痛くなかった。'}],['F','#think|ちょっとだけ……。もっと早く、もっとたくさん守れるようになるからね！'],['H',{A:'#think|……ふん。じゃあ、たよりにしてるよ。',B:'#think|……へっ。じゃあ、たよりにしてるぜ。'}],['F','#think|……でも、むりはしないでね。ほんとうに心配したんだから。'],['H',{A:'#think|……ばか。そんな顔するんじゃないよ。……ありがと。',B:'#think|……ばか。そんな顔すんな。……ありがとな。'}]]},
  {k:'e13m',at:()=>sevHere('M')&&(S.bossKills||0)>=1&&qDone('ookage')&&!!(S.sev||{}).e07,L:[['M','守り神さま、オオカゲが来た場所を調べてみました。ふしぎな力が、地面に少しだけ残っていました。'],['M','そこに置いた花は、いつもより長く咲いていて……光の色も、見る角度で変わるんです。'],['F','#sigh|ふしぎ！ どうして？'],['M','ノドカさんの話では、ヌシ様の力は3つのかけらになったそうですね。言い伝えでは、「守る力」「育てる力」「想う力」の3つ。そのかけらが、あちこちに散らばっているのかもしれません。','N'],['M','言い伝えでは、ヌシ様の力は「守る力」「育てる力」「想う力」の3つ。そのかけらが、あちこちに散らばっているのかもしれません。','!N'],['N','3つそろったら、ヌシ様の形にもどれるんだよねぇ。',1],['M','ええ。かけらを3つ集めれば、ヌシ様にもどれるはずです。']]},
  {k:'r1',at:()=>!!(S.sev||{}).e04&&sevHere('N')&&S.qStory==null,L:[['F','ノドカ。……なんだか、なつかしい匂いがするね。'],['N','そうかなぁ。ここの土の匂いじゃないのぉ？'],['F','うーん……ちがう気がする。でも、いい匂い！'],['N','ふふ。フタバがそう言うなら、そうなのかもねぇ。']]},
  {k:'r2',at:()=>sevHere('H')&&symNear('fire')&&S.qStory==null,L:[['H',{A:'#think|……なあ、フタバ。この灯台の光のそばにいるとさ、背中がやけに落ち着くんだ。',B:'#think|……なあ、フタバ。この灯台の光のそばにいるとな、背中がやけに落ち着くんだ。'}],['F','#surprise|えっ、ぼくも！ @Hといると、ほっとする！'],['H',{A:'ふん……気のせいだろ。ずっと前から知ってるわけでもないのにさ。',B:'ふん……気のせいだろ。ずっと前から知ってるわけでもねえのによ。'}],['F','#joy|えへへ。そうだよね。']]},
@@ -2536,7 +2539,7 @@ function canPlace(id,x,y,quiet){
 }
 function canPlace1(id,x,y,quiet){
   if(x<0||y<0||x>=W||y>=H)return false;
-  if(WALLD.has(id)){const j=y*W+x,iw=k=>HOME_WALLS.has(typeAt(k))||HOME_DOORS.has(typeAt(k)),wreath=id==='wreath',target=HOME_WALLS.has(S.obj[j])&&S.obj[j]!=='wall'||wreath&&S.obj[j]==='door';/* 石の塀にはかけられない */if(!target||wreath&&S.obj[j]==='door'&&(iw(j-W)||iw(j+W))&&!(iw(j-1)||iw(j+1))||!wreath&&(iw(j-W)||iw(j+W))||(S.win&&S.win[j]&&!((id==='curtain1'||id==='curtain2')&&S.win[j]===1))||((id==='curtain1'||id==='curtain2')&&!HOUSES.some(h=>h.set.has(j)&&h.inside.has(j+W)&&!h.inside.has(j-W)))){if(!quiet)toast((id==='curtain1'||id==='curtain2')?'カーテンは、家の上がわの壁にだけかけられます':wreath?'リースは、壁か横向きのドアにだけかけられます':BL[id].name+'は、横向きの家の壁にだけかけられます');return false}return true}/* 窓は壁にはめる */
+  if(WALLD.has(id)){const j=y*W+x,iw=k=>HOME_WALLS.has(typeAt(k))||HOME_DOORS.has(typeAt(k)),wreath=id==='wreath',target=HOME_WALLS.has(S.obj[j])&&S.obj[j]!=='wall'||wreath&&S.obj[j]==='door';/* 石の塀にはかけられない */if(!target||wreath&&S.obj[j]==='door'&&(iw(j-W)||iw(j+W))&&!(iw(j-1)||iw(j+1))||!wreath&&(iw(j-W)||iw(j+W))||(S.win&&S.win[j]&&!((id==='curtain1'||id==='curtain2')&&S.win[j]===1))||((id==='curtain1'||id==='curtain2')&&!(S.win&&S.win[j]===1&&HOUSES.some(h=>h.set.has(j)&&h.inside.has(j+W)&&!h.inside.has(j-W))))){if(!quiet)toast((id==='curtain1'||id==='curtain2')?'カーテンは、家の上がわの窓にだけかけられます':wreath?'リースは、壁か横向きのドアにだけかけられます':BL[id].name+'は、横向きの家の壁にだけかけられます');return false}return true}/* 窓は壁にはめる */
   if(!inBase(x,y)){if(!quiet)toast('基地の中にだけ置けます');return false}
   const j=y*W+x;if(id==='lotus'){if(S.ground[j]!==1){if(!quiet)toast('ハスは池の上にだけ植えられます');return false}if(S.obj[j]){if(!quiet)toast('ここにはもう何かあります');return false}return true}
   if(S.ground[j]===1){if(!quiet)toast('水の上には置けません');return false}
@@ -2554,7 +2557,7 @@ function setBlock(id,j){
 function setParts(id,j,kind){const x=j%W,y=(j/W)|0;for(const[a,b]of fp(id,x,y)){const k=b*W+a;if(k===j)continue;S.obj[k]=kind;S.ref[k]=j}}
 function place(id,x,y){
   const b=BL[id];
-  if(WALLD.has(id)){if(!usable(id))return toast(BL[id].name+'が足りません','warn');if(!canPlace(id,x,y))return;const j=y*W+x;S.inv[id]--;if((id==='curtain1'||id==='curtain2')&&S.win&&S.win[j]===1){giveItem('window',1);toast('窓にカーテンをかけた（窓はおそなえ箱にもどった）')}/* 窓のある壁には、カーテンをかけられる。カーテンの絵には窓がふくまれる */(S.win||(S.win={}))[j]=id==='window'?1:id;noteQuestPlacement(S.obj[j]==='door'?'door':'hwall',j);burst(j,'furn');recount();dirty=true;renderPalette();return}
+  if(WALLD.has(id)){if(!usable(id))return toast(BL[id].name+'が足りません','warn');if(!canPlace(id,x,y))return;const j=y*W+x;S.inv[id]--;/* カーテンは、上がわの壁の窓にかける。窓はそのまま（S.win がカーテンなら、その下に窓がある） */(S.win||(S.win={}))[j]=id==='window'?1:id;noteQuestPlacement(S.obj[j]==='door'?'door':'hwall',j);burst(j,'furn');recount();dirty=true;renderPalette();return}
   if(b.kind==='seed'){const k=id.slice(5),j=y*W+x,d=S.dyn[j];if(S.obj[j]!=='farm'||!d)return toast('たねは、畑にしかまけません');
     if(d.crop&&d.sown!==false)return toast('もう'+CROPS[d.crop].name+'が植えてある');if(cseed(k)<1)return toast('たねがありません');
     if(d.paid&&d.crop)S.cseed[d.crop]=cseed(d.crop)+1;S.cseed[k]--;d.paid=true;/* たねは、えらんだときに減る */d.crop=k;d.sown=false;if(k==='imo'&&QUESTS[S.quest]?.id==='imoseed'&&S.qTalked){const plots=imoSeedQuestPlots();if(!plots.includes(j))plots.push(j)}noteQuestPlacement('farm',j);burst(j,'plant','pat');toast(CROPS[k].name+'のたねをまいた');checkQuest();renderPalette();return}/* せいれいが、たねをまく */
@@ -2614,13 +2617,13 @@ function dropFlower(){/* なくした花だん：置いてある物・持ち物�
   if(S.recipes)delete S.recipes.flower;if(S.guardianIdeas)delete S.guardianIdeas.flower;if(S.unlocked&&S.unlocked.flower){delete S.unlocked.flower;S.unlocked.clover=true}}
 function fixBeds(){/* 2マスだったころのベッド：のこりのマス（part）をあける。下にしいてあったラグは出てくる */
   for(const k in S.ref){const j=S.ref[k];if(S.obj[k]==='part'&&S.obj[j]==='bed'){S.obj[k]='';delete S.ref[k];if(S.rug&&S.rug[k]){S.obj[k]=S.rug[k];delete S.rug[k];if(S.rugRot&&S.rugRot[k]){(S.rot||(S.rot={}))[k]=S.rugRot[k];delete S.rugRot[k]}}}}}
-function clearObj(j){j=anc(j);const o=S.obj[j];if(S.bedOwn)delete S.bedOwn[j];/* ベッドをどけたら、だれのベッドかも消す */const tl=o&&BL[o]&&BL[o].sz?fp(o,j%W,(j/W)|0).map(([a,b])=>b*W+a):[j];delete S.hp['L'+j];if(S.win&&S.win[j]){giveItem(S.win[j]===1?'window':S.win[j],1);delete S.win[j]}if(S.rot)delete S.rot[j];for(const k in S.ref)if(S.ref[k]===j){S.obj[k]='';delete S.ref[k]}S.obj[j]='';delete S.dyn[j];delete S.hp[j];delete S.hp['L'+j];
+function clearObj(j){j=anc(j);const o=S.obj[j];if(S.bedOwn)delete S.bedOwn[j];/* ベッドをどけたら、だれのベッドかも消す */const tl=o&&BL[o]&&BL[o].sz?fp(o,j%W,(j/W)|0).map(([a,b])=>b*W+a):[j];delete S.hp['L'+j];if(S.win&&S.win[j]){const p=S.win[j];giveItem(p===1?'window':p,1);if(p==='curtain1'||p==='curtain2')giveItem('window',1);delete S.win[j]}/* カーテンの下の窓ももどす */if(S.rot)delete S.rot[j];for(const k in S.ref)if(S.ref[k]===j){S.obj[k]='';delete S.ref[k]}S.obj[j]='';delete S.dyn[j];delete S.hp[j];delete S.hp['L'+j];
   if(S.rug&&!RUGS.has(o))for(const k of tl){const rg=S.rug[k];if(rg&&!S.obj[k]){S.obj[k]=rg;delete S.rug[k]}}/* 下に敷いてあったラグが出てくる */
   for(const r of S.res)if(r.act&&r.act.obj===j)endAct(r);return o}
 function removeAt(x,y){
   if(!inBase(x,y))return toast('基地の外はこわせません');
   const j=anc(y*W+x),o=S.obj[j];x=j%W;y=(j/W)|0;
-  if(S.win&&S.win[j]){const id=S.win[j]===1?'window':S.win[j];delete S.win[j];giveItem(id,1);toast(BL[id].name+'をおそなえ箱にもどした');burst(j,'furn','rm');recount();renderPalette();return}
+  if(S.win&&S.win[j]){const id=S.win[j]===1?'window':S.win[j];if(id==='curtain1'||id==='curtain2')S.win[j]=1;else delete S.win[j];giveItem(id,1);/* カーテンをはずすと、窓がのこる */toast(BL[id].name+'をおそなえ箱にもどした');burst(j,'furn','rm');recount();renderPalette();return}
   if(o){const b=BL[o];if(o==='tower')return toast('守護の台座はこわせません');if(o==='volcano'||o==='heatv'||o==='crack'||o==='boulder')return toast(b.name+'はこわせません');if(o==='statue'||o==='obox'||o==='board'||o==='altar'||o==='site2')return toast('神殿はこわせません');if((o==='stor'||o==='mbox')&&cnt(o)<=1)return toast(BL[o].name+'は1つ以上必要です');
     if(o==='site'){const d=S.dyn[j];if(d.build==='statue')return toast('神殿はこわせません');const bm=d.mat||{};clearObj(j);for(const k in bm)S.mat[k]=(S.mat[k]||0)+bm[k];toast('建てるのをやめた')}/* 素材はもどる・パワーはもどらない */
     else if(o==='sprout'){const d=S.dyn[j];clearObj(j);giveItem(d.plant,1);toast('植えるのをやめた')}
@@ -2689,7 +2692,7 @@ function confirmYes(){
 const RLOCK=new Set(['lumber','quarry','stele','fountain','lighthouse','windmill','bed','campfire','oven','swing','lamp','bench','chair','stool']);/* 会話でひらめくまで作れない家具 */
 function recipeKnown(id,s=S){const b=BL[id];return !!b&&(!WIND_STAGE_TOYS.has(id)||WD===4)&&(id!=='window'||!!(s.unlocked||{}).window)&&(!(b.kind==='furn'||RLOCK.has(id)||b.offerOnly)||!!(s.recipes||{})[id])}
 
-const MANUAL=[['せいれいのようす',[['おなか','へると元気がなくなり、0になると消えてしまう。食料箱のごはんを食べる。料理はおなかがたくさんふくれる。'],['たのしさ','遊ぶ・おしゃべり・水浴びでふえる。おもちゃで遊ぶといちばんふえる。満タンになると、おそなえ箱におそなえをしてくれる。低いと疲れやすくなる。'],['つかれ','はたらくとたまる。たまると昼でもひと休みする。夜はベッドや家で眠ってなおす。'],['住み心地','家をタップすると見られる。家具・床がふえると上がる。つぼなどのかざりは、家の中か、家のそば（かざりごとに決まった範囲。つぼは1マス）にあれば入る。そのせいれいの好きな家具は、その家具のぶんのポイントが2倍になる。'],['住み心地の効果','高いほど、眠ったときのつかれのとれ方が速くなる（0.6〜3.3倍）。住み心地は最大300まで上がる。180以上でぐっすり眠れて、朝にたのしさ+10。90未満だと、たのしさ-5。'],['ベッドの数','家の中の広さ4マスにつき、ベッド1つがおすすめ。それより多く置くと、きゅうくつで住み心地が大きく下がり、元気とたのしさも下がる。']]],['ステータス',[['作業スピード','仕事の速さ。たき火で遊ぶとのびる。'],['移動速度','歩く速さ。ブランコで遊ぶとのびる。道の上はもっと速い。'],['スタミナ','疲れにくさ。噴水で遊ぶとのびる。'],['持てる数','一度に運べる数。'],['攻撃力','「コワイノ」とたたかう力。火のせいれいがいちばん強い。']]],['属性と得意なこと',[['木','畑の収穫がいつも+1（ほかの子より、1つ多くとれる）・畑の世話・花や木を植える・木の家具づくり'],['水','水やり・つり・水の家具づくり'],['火','「コワイノ」とたたかう・夜の見回り・料理・火の家具づくり'],['土','畑を耕す・柵を直す・土の家具づくり'],['風','足が速い・ふしぎな種を拾う・風の家具づくり'],['みんな','建てる・収穫・種まき・木や石を集める・おそなえ']]],['家具の種類',[['【ダイニング家具】','いす・ソファ・ローテーブル・ラグ・ひくい棚など。食卓のある家（ダイニング）の中に置くと、その家の食卓で食べたときにもらえるパワーがふえる。たくさん置くほどふえて、いちばん多くて+3。ソファやひくい棚は、1つでも大きくふえる。家の中の食卓で食べるだけでも+1。食卓をタップすると、いまどれだけふえるか見られる。'],['【料理家具】','水おけ・流し台など。かまどのまわり3マスにあると、料理が早くなる（料理家具の種類1つにつき10%）。かまどをタップすると、いまの料理の速さが見られる。'],['【あかり】','たいまつ・ランタン・ろうそくなど。夜の見回りや、家の中を明るくするのに使う。ろうそく・ランタン・フロアランプは、家の中に置くとその家ぜんたいを照らす（家の外では1.5マス）。'],['【庭の家具】','生垣はまわり2マス、水飲み鳥・ガーデンアーチは3マスと範囲が広いかわりに、効果は小さめ。パラソルは、まわり1マスだけだが、効果が大きい。どれも、たのしさがふえる（休けい中は元気も）。'],['【あそび道具】','ブランコ・シーソー・すべり台など。遊ぶと、たのしさがいちばんふえる。'],['【かべ・かざり】','絵・カーテン・窓・かざり棚など。住み心地が上がる。絵やカーテンは、横向きの家の壁にかける。'],['おそなえでしか手に入らない家具','依頼ボードでは作れない家具もある。せいれいが、ごくまれにおそなえしてくれる（その子の属性の家具だけ）。']]],['くらし',[['床','家の中の床のわりあいに応じて、住み心地が最大+45（床100%のとき）。床は歩く速さも上がる。'],['水浴び','夕方、水べか、バスタブで水浴びをする。できないと、たのしさが下がる。'],['あかり','家の中か、すぐそばに灯り（たいまつ・ランタン・ろうそくなど）があると、住み心地がいい。'],['畑とたね','おそなえ箱や「おく」でたねをえらんで、畑をタップしてまく。収穫したら、また植える。耕しただけでは、なにも育たない。はじめはいもだけ。火のせいれいが来ると、こむぎとキャベツもつくれる。'],['ベッド','ベッドをタップすると、そこで眠るせいれいをきめられる。家をタップしても、中のベッドをえらべる。'],['かまど','「みる」でかまどをタップして、作る料理をえらぶ。料理ごとに時間がちがう。']]],['守り神のちから',[['おつげ','メニューから、きょういちにちの指示を出せる（木をあつめる・食料をあつめる など）。'],['依頼ボード','家具や罠をたのむ。手のあいたせいれいが作ってくれる。'],['なかまを呼ぶ','属性の力がたまった次の朝、神殿の「！」をタップ。']]],['夜と「コワイノ」',[['「コワイノ」','夜12時ごろ、南からやってくる。せいれいをねらってくる。柵や壁の中にいても、こわして入ってくる。見張り台や罠をこわしにくるのはワナクイだけ。オオカゲを追いはらうほど、数も強さもふえる。'],['まもりの光','夜、「コワイノ」をタップすると、パワー1を使い、光でおどかしてダメージをあたえる。10秒ごとに使える。'],['直す','こわれた柵・壁・見張り台・罠は、昼に土のせいれいが素材を使って直す。'],['火事（火山のふもと）','木でできた家具・柵・壁は、ハイカゲ・ヒノオオカゲにふれたり、昼に火の粉がとんできたりすると燃える。燃えているあいだ、15分ごとにじょうぶさが1へり、0になるとこわれる。昼なら、水のせいれいが消しにいく。家の中の物には、火の粉はとどかない。'],['朝まで休む','「コワイノ」をぜんぶ追いはらった夜や、せいれいがみんな消えてしまった夜は、上の「朝まで休む」で朝までとばせる。'],['そなえ','柵・壁・見張り台・罠でまもる。家の中にいるせいれいは攻撃されない。でも、「コワイノ」は家の壁をこわそうとする。'],['おとしもの','「コワイノ」を追いはらうと、たまにおとしものをする。朝になると、せいれいが拾ってくれる。'],['ヌシのかけら','3つ集めて台座にはめると、ヌシ様がもどってくる。手に入れかたは土地ごとにちがう。'],['めぶきのしずく','オオカゲを追いはらうと、半分くらいの確率で落とす。せいれいのリストの「消えてしまったせいれい」から使うと、そのせいれいがもどってくる（Lv1から）。'],['おみおくり','消えた子のお墓は、なかま（なかよしがいればその子）が神殿へはこび、おいのりして、おみおくりする。'],['お墓','この土地に深くなじんだ「めぐりの子」は、土地とのつながりをたどり、次の朝、神殿の「！」から、レベルそのままで戻ってこられる。ほかの子は、消えると自然にかえり、同じ姿では戻れない。「めぶきのしずく」があれば別（Lv1から）。']]]];
+const MANUAL=[['せいれいのようす',[['おなか','へると元気がなくなり、0になると消えてしまう。食料箱のごはんを食べる。料理はおなかがたくさんふくれる。'],['たのしさ','遊ぶ・おしゃべり・水浴びでふえる。おもちゃで遊ぶといちばんふえる。満タンになると、おそなえ箱におそなえをしてくれる。低いと疲れやすくなる。'],['つかれ','はたらくとたまる。たまると昼でもひと休みする。夜はベッドや家で眠ってなおす。'],['住み心地','家をタップすると見られる。家具・床がふえると上がる。つぼなどのかざりは、家の中か、家のそば（かざりごとに決まった範囲。つぼは1マス）にあれば入る。そのせいれいの好きな家具は、その家具のぶんのポイントが2倍になる。'],['住み心地の効果','高いほど、眠ったときのつかれのとれ方が速くなる（0.6〜3.3倍）。住み心地は最大300まで上がる。180以上でぐっすり眠れて、朝にたのしさ+10。90未満だと、たのしさ-5。'],['ベッドの数','家の中の広さ4マスにつき、ベッド1つがおすすめ。それより多く置くと、きゅうくつで住み心地が大きく下がり、元気とたのしさも下がる。']]],['ステータス',[['作業スピード','仕事の速さ。たき火で遊ぶとのびる。'],['移動速度','歩く速さ。ブランコで遊ぶとのびる。道の上はもっと速い。'],['スタミナ','疲れにくさ。噴水で遊ぶとのびる。'],['持てる数','一度に運べる数。'],['攻撃力','「コワイノ」とたたかう力。火のせいれいがいちばん強い。']]],['属性と得意なこと',[['木','畑の収穫がいつも+1（ほかの子より、1つ多くとれる）・畑の世話・花や木を植える・木の家具づくり'],['水','水やり・つり・水の家具づくり'],['火','「コワイノ」とたたかう・夜の見回り・料理・火の家具づくり'],['土','畑を耕す・柵を直す・土の家具づくり'],['風','足が速い・ふしぎな種を拾う・風の家具づくり'],['みんな','建てる・収穫・種まき・木や石を集める・おそなえ']]],['家具の種類',[['【ダイニング家具】','いす・ソファ・ローテーブル・ラグ・ひくい棚など。食卓のある家（ダイニング）の中に置くと、その家の食卓で食べたときにもらえるパワーがふえる。たくさん置くほどふえて、いちばん多くて+3。ソファやひくい棚は、1つでも大きくふえる。家の中の食卓で食べるだけでも+1。食卓をタップすると、いまどれだけふえるか見られる。'],['【料理家具】','水おけ・流し台など。かまどのまわり3マスにあると、料理が早くなる（料理家具の種類1つにつき10%）。かまどをタップすると、いまの料理の速さが見られる。'],['【あかり】','たいまつ・ランタン・ろうそくなど。夜の見回りや、家の中を明るくするのに使う。ろうそく・ランタン・フロアランプは、家の中に置くとその家ぜんたいを照らす（家の外では1.5マス）。'],['【庭の家具】','生垣はまわり2マス、水飲み鳥・ガーデンアーチは3マスと範囲が広いかわりに、効果は小さめ。パラソルは、まわり1マスだけだが、効果が大きい。どれも、たのしさがふえる（休けい中は元気も）。'],['【あそび道具】','ブランコ・シーソー・すべり台など。遊ぶと、たのしさがいちばんふえる。'],['【かべ・かざり】','絵・カーテン・窓・かざり棚など。住み心地が上がる。絵は横向きの家の壁に、カーテンは家の上がわの壁の窓にかける。'],['おそなえでしか手に入らない家具','依頼ボードでは作れない家具もある。せいれいが、ごくまれにおそなえしてくれる（その子の属性の家具だけ）。']]],['くらし',[['床','家の中の床のわりあいに応じて、住み心地が最大+45（床100%のとき）。床は歩く速さも上がる。'],['水浴び','夕方、水べか、バスタブで水浴びをする。できないと、たのしさが下がる。'],['あかり','家の中か、すぐそばに灯り（たいまつ・ランタン・ろうそくなど）があると、住み心地がいい。'],['畑とたね','おそなえ箱や「おく」でたねをえらんで、畑をタップしてまく。収穫したら、また植える。耕しただけでは、なにも育たない。はじめはいもだけ。火のせいれいが来ると、こむぎとキャベツもつくれる。'],['ベッド','ベッドをタップすると、そこで眠るせいれいをきめられる。家をタップしても、中のベッドをえらべる。'],['かまど','「みる」でかまどをタップして、作る料理をえらぶ。料理ごとに時間がちがう。']]],['守り神のちから',[['おつげ','メニューから、きょういちにちの指示を出せる（木をあつめる・食料をあつめる など）。'],['依頼ボード','家具や罠をたのむ。手のあいたせいれいが作ってくれる。'],['なかまを呼ぶ','属性の力がたまった次の朝、神殿の「！」をタップ。']]],['夜と「コワイノ」',[['「コワイノ」','夜12時ごろ、南からやってくる。せいれいをねらってくる。柵や壁の中にいても、こわして入ってくる。見張り台や罠をこわしにくるのはワナクイだけ。オオカゲを追いはらうほど、数も強さもふえる。'],['まもりの光','夜、「コワイノ」をタップすると、パワー1を使い、光でおどかしてダメージをあたえる。10秒ごとに使える。'],['直す','こわれた柵・壁・見張り台・罠は、昼に土のせいれいが素材を使って直す。'],['火事（火山のふもと）','木でできた家具・柵・壁は、ハイカゲ・ヒノオオカゲにふれたり、昼に火の粉がとんできたりすると燃える。燃えているあいだ、15分ごとにじょうぶさが1へり、0になるとこわれる。昼なら、水のせいれいが消しにいく。家の中の物には、火の粉はとどかない。'],['朝まで休む','「コワイノ」をぜんぶ追いはらった夜や、せいれいがみんな消えてしまった夜は、上の「朝まで休む」で朝までとばせる。'],['そなえ','柵・壁・見張り台・罠でまもる。家の中にいるせいれいは攻撃されない。でも、「コワイノ」は家の壁をこわそうとする。'],['おとしもの','「コワイノ」を追いはらうと、たまにおとしものをする。朝になると、せいれいが拾ってくれる。'],['ヌシのかけら','3つ集めて台座にはめると、ヌシ様がもどってくる。手に入れかたは土地ごとにちがう。'],['めぶきのしずく','オオカゲを追いはらうと、半分くらいの確率で落とす。せいれいのリストの「消えてしまったせいれい」から使うと、そのせいれいがもどってくる（Lv1から）。'],['おみおくり','消えた子のお墓は、なかま（なかよしがいればその子）が神殿へはこび、おいのりして、おみおくりする。'],['お墓','この土地に深くなじんだ「めぐりの子」は、土地とのつながりをたどり、次の朝、神殿の「！」から、レベルそのままで戻ってこられる。ほかの子は、消えると自然にかえり、同じ姿では戻れない。「めぶきのしずく」があれば別（Lv1から）。']]]];
 const boardMax=()=>S.flags.board5?5:3;
 /* 依頼をやめる：パワーと素材はもどる。作っていた子は手をとめる */
 function cancelOrder(oid){const k=S.orders.findIndex(q=>q.id===oid);if(k<0)return;const o=S.orders[k],b=BL[o.type];S.orders.splice(k,1);
@@ -3515,7 +3518,7 @@ function houseComfort(h){let bed=0,furn=0,fl=0,n=0;const seen=new Set();
   const kc={};for(const j of h.inside){n++;if(S.floor[j])fl++;const o=S.obj[j];if(!o||!COMFY[o])continue;if(o==='bed')bed++;else{kc[o]=(kc[o]||0)+1;furn+=COMFY[o]*(kc[o]>2?.5:1);seen.add(o)}}/* 同じ家具は2つまで。3つ目からは半分 */
   for(const j of h.inside){const o=S.rug&&S.rug[j];if(o&&COMFY[o]){kc[o]=(kc[o]||0)+1;furn+=COMFY[o]*(kc[o]>2?.5:1);seen.add(o)}}/* 家具の下のラグ */
   {const M=2;for(let y=h.y0-M;y<=h.y1+M;y++)for(let x=h.x0-M;x<=h.x1+M;x++){if(x<0||y<0||x>=W||y>=H)continue;const j=y*W+x;if(h.set.has(j))continue;const o=S.obj[j],rg=COMFR[o];if(!rg||!COMFY[o])continue;const d=Math.max(h.x0-x,x-h.x1,h.y0-y,y-h.y1,0);if(d>rg)continue;kc[o]=(kc[o]||0)+1;furn+=COMFY[o]*(kc[o]>2?.5:1);seen.add(o)}}/* かざりは、家のそば（ものごとの範囲）にあっても住み心地に入る */
-  {let wn=0;for(const j of h.set)if(S.win&&S.win[j]===1)wn++;if(wn){furn+=COMFY.window*Math.min(wn,2)+COMFY.window*.5*Math.max(0,wn-2);seen.add('window')}}/* 窓 */
+  {let wn=0;for(const j of h.set)if(S.win&&(S.win[j]===1||S.win[j]==='curtain1'||S.win[j]==='curtain2'))wn++;/* カーテンの下にも窓がある */if(wn){furn+=COMFY.window*Math.min(wn,2)+COMFY.window*.5*Math.max(0,wn-2);seen.add('window')}}/* 窓 */
   for(const j of h.set){const p=S.win&&S.win[j];if(p&&p!==1&&COMFY[p]){kc[p]=(kc[p]||0)+1;furn+=COMFY[p]*(kc[p]>2?.5:1);seen.add(p)}}/* 壁にかけた絵 */
   const cap=houseCap(h),over=Math.max(0,bed-cap);/* きゅうくつかどうかは、ベッドの数で決まる */
   let lit=false;for(let y=h.y0-1;y<=h.y1+1&&!lit;y++)for(let x=h.x0-1;x<=h.x1+1;x++){if(x<0||y<0||x>=W||y>=H)continue;if(LIGHTF.has(S.obj[y*W+x])){lit=true;break}}/* 家の中か、すぐそばに灯り */
@@ -4684,6 +4687,8 @@ function sfx(k){
   case'warn':seq([62,57],.14,'square',.035,.22);break;
   case'quest':seq([72,76,79,84,79,84],.09,'triangle',.08,.16);break;
   case'level':seq([67,72,76,79],.09,'triangle',.08,.16);[72,76,79,84].forEach(m=>tone(m,t+.4,1.1,'sine',.035,o));[96,100,103,108].forEach((m,i)=>tone(m,t+.7+i*.05,.25,'triangle',.025,o));break;
+  case'bossIn':noise(t,1.6,.16,o,60);tone(110,t,1.6,'sawtooth',.06,o,40);tone(55,t,2.2,'sine',.12,o,35);[45,46,51].forEach((m,i)=>tone(m,t+.25+i*.02,2.4,'triangle',.05,o));break;/* オオカゲの登場：ひくい地ひびきと、にごった和音 */
+  case'bossKO':noise(t,.5,.3,o,200);tone(70,t,1.4,'sine',.2,o,30);tone(900,t,.35,'square',.05,o,120);noise(t+.12,.9,.08,o,3000);[72,79,84,88,91,96].forEach((m,i)=>tone(m,t+.35+i*.08,1.4,'triangle',.06,o));[96,103,108].forEach((m,i)=>tone(m,t+.9+i*.06,1.2,'sine',.04,o));break;/* オオカゲへのさいごの一撃：ドーンとひびいて、光の音がかけあがる */
   case'hit':if(playS('arrow',.6))break;noise(t,.08,.15,o,800);tone(220,t,.12,'square',.05,o,70);break;
   case'defeat':if(playS('kill',.5))break;tone(400,t,.18,'triangle',.08,o,1300);noise(t+.05,.12,.04,o,4000);break;
   case'offer':seq([88,91,96],.05,'sine',.05);break;
@@ -5248,9 +5253,9 @@ let SKIP=false,ALI=-1;/* 「コワイノ」をぜんぶ追いはらった夜は�
 const eveH=()=>{const h=hour();return h>=18||h<6};/* クリア後は夕方から朝までとばせる */
 const canSkip=()=>!SKIP&&(S.cleared?eveH()&&!S.enemies.some(e=>!e.dead):isNight()&&S.enemyOn&&(!S.res.length||S.nightHad&&!S.enemies.length&&!S.nushi));/* クリア後は、コワイノがいなければいつでも *//* 全員いなくなったときも、朝までとばせる */
 function updHUD(){
-  if(S){const was=S.res4Since,tell=S.bossWarn!=null&&!S.cleared;/* オオカゲの来る時期を、せいれいが減ったとき・もどったときに伝える */
+  if(S){const was=S.res4Since,tell=S.bossWarn!=null&&!S.cleared&&!S.bossKills;/* オオカゲを追いはらったあとは、言わない *//* オオカゲの来る時期を、せいれいが減ったとき・もどったときに伝える */
     const hasFire=S.res.some(q=>q.elem==='fire');/* 火の子が1人もいないときも、オオカゲは来ない */
-    if(S.res.length<4||!hasFire){S.res4Since=null;if(was!=null&&tell&&S.enemyOn&&$('#dialog').hidden)dialog([[GOD,'なかまが減ってしもうたのう…。'],[GOD,'もう少しなかまが増えて、村がおちつくまでは、オオカゲも来ぬはずじゃ。それまでに、なかまを集めて備えるのじゃぞ。']])}
+    if(S.res.length<4||!hasFire){S.res4Since=null;if(was!=null&&tell&&S.enemyOn&&$('#dialog').hidden)dialog(S.res.length<4?[[GOD,'なかまが減ってしもうたのう…。'],[GOD,'もう少しなかまが増えて、村がおちつくまでは、オオカゲも来ぬはずじゃ。それまでに、なかまを集めて備えるのじゃぞ。']]:[[GOD,'火のせいれいが、いなくなってしもうたのう…。'],[GOD,'オオカゲとたたかえる火の子がもどるまでは、オオカゲも来ぬはずじゃ。火の子をむかえて、備えるのじゃぞ。']])}/* 火の子だけがいなくなったときは、なかまが減ったとは言わない */
     else if(was==null){S.res4Since=dayNo();if(tell&&S.enemyOn&&S.lastRes4!=null&&$('#dialog').hidden)dialog([[GOD,'なかまが、また増えてきたのう。'],[GOD,'村がおちついてきたころ、オオカゲがまた来るかもしれん。柵と見張り台を、しっかり整えておくんじゃ。']])}
     S.lastRes4=S.res.length>=4&&hasFire?1:S.lastRes4}
   {const sb=$('#skipBtn'),v=canSkip();if(sb.hidden===v)sb.hidden=!v}
@@ -5337,7 +5342,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='527';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='528';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
