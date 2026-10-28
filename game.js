@@ -1301,7 +1301,7 @@ function useNat(j){const o=S.obj[j];if(!o)return;const n=(S.hp['n'+j]||0)+1;if(n
 function ovenStand(G,q){let b=-1,bd=1e9;for(const[k,pen]of[[q-1,0],[q+1,0],[q+W,2],[q-W,40]]){const d=G.dist[k];if(d<0||!walk(k))continue;if(d+pen<bd){bd=d+pen;b=k}}return b}
 function goStoreMat(r,G){const j=nearest(G,j=>adjOf(j,k=>storageAt(k,'mat'))>=0,200);if(j>=0)return startAct(r,G,'smat',j);return startAct(r,G,'idle',-1,{dur:15})}
 function goStore(r,G){const j=nearest(G,j=>adjOf(j,k=>storageAt(k,'food'))>=0,90);if(j>=0)return startAct(r,G,'store',j);return startAct(r,G,'idle',-1,{dur:15})}
-function goEatSafe(r){/* コワイノのすぐそばを通らずに行けて、家の中か、コワイノから4マス以上はなれた食料箱へ、走って食べにいく */if(!(S.food>0))return false;const Gf=fleeGraph(r),safe=j=>!!roomOf(j)||!S.enemies.some(e=>e.spawned&&!e.dead&&Math.hypot(e.x-(j%W+.5),e.y-(((j/W)|0)+.5))<4);
+function goEatSafe(r){/* コワイノのすぐそばを通らずに行けて、家の中・柵や壁でかこまれた所（コワイノが中にいない）・コワイノから4マス以上はなれた所の食料箱へ、走って食べにいく */if(!(S.food>0))return false;const Gf=fleeGraph(r),fo=fenceOut(),al=S.enemies.filter(e=>e.spawned&&!e.dead),encl=al.every(e=>fo[(e.y|0)*W+(e.x|0)]),safe=j=>!!roomOf(j)||(encl&&!fo[j])||!al.some(e=>Math.hypot(e.x-(j%W+.5),e.y-(((j/W)|0)+.5))<4);
   const j=nearest(Gf,j=>safe(j)&&adjOf(j,k=>storageAt(k,'food'))>=0,200);if(j<0)return false;r.refill=S.t+60;startAct(r,Gf,'fetch',j,{run:true});return !!r.act}
 function goEat(r,G){
   if(S.food>0){
@@ -5304,7 +5304,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='491';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='492';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
