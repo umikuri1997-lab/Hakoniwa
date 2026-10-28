@@ -1540,14 +1540,16 @@ const CHATS=[/* kc：キーキャラどうし（話しかける子, 相手）、
 function chatTone(tx,r,i){if(!r)return tx;const k=elemKey(r),pr=r.elem==='fire'?(k==='fireB'?'おれ':r.name===HOMURA?'あたい':'あたし'):r.elem==='water'?'わたし':'ぼく';
   if(tx.replace(LOOKRX,'').length>60)return tx;let t=tx.replace(/ぼく|わたし/g,pr);if(r.elem==='fire'&&pr!=='あたい')t=t.replace(/あたい/g,pr);/* 「あたい」はホムラだけ */
   const ends=(m)=>{for(const[a,b]of m)t=t.split(a).join(b)};
-  if(r.elem==='earth')ends([['よ。','よぉ。'],['よ！','よぉ！'],['ね。','ねぇ。'],['ね！','ねぇ！'],['かな。','かなぁ。'],['かな？','かなぁ？'],['だね','だねぇ'],['よね','よねぇ'],['ない？','ないのぉ？']]);
-  else if(r.elem==='water')ends([['だよ。','ですよ。'],['だよ！','ですよ。'],['だね。','ですね。'],['だね！','ですね。'],['かな。','でしょうか。'],['かな？','でしょうか？'],['わかる！','わかります。'],['すごい！','興味深いですね。'],['ある？','ありますか？'],['だった。','でした。']]);
-  else if(r.elem==='wind')ends([['だよ。','だね。'],['だよ！','だね！'],['よ。','さ。'],['よ！','さ！'],['かな。','かな。'],['すごい！','見事だね！'],['ほんと？','ほう？']]);
+  const rx=(m)=>{for(const[a,b]of m)t=t.replace(a,b)};
+  if(r.elem==='earth'){ends([['よ。','よぉ。'],['よ！','よぉ！'],['かな。','かなぁ。'],['かな？','かなぁ？'],['くない？','くないのぉ？'],['てない？','てないのぉ？'],['じゃない？','じゃないのぉ？'],['できない？','できないのぉ？']]);rx([[/ね([。！])/g,'ねぇ$1']])}/* 「しない？」（さそい）は「しないのぉ？」にしない */
+  else if(r.elem==='water'){t=t.replace(/わたしら/g,'わたしたち');ends([['だよ。','ですよ。'],['だよ！','ですよ。'],['だね。','ですね。'],['だね！','ですね。'],['のかな。','のでしょうか。'],['のかな？','のでしょうか？'],['るかな。','るでしょうか。'],['わかる！ ','わかります。'],['わかる！','わかります。'],['すごい！ ','すごいですね。'],['すごい！','すごいですね。'],['ある？','ありますか？']])}/* 「こわいかな」「音かな」など、じぶんのことの「かな」はそのまま */
+  else if(r.elem==='wind'){ends([['んだよ。','のさ。'],['んだよ！','のさ！'],['からだよ。','からさ。'],['いいよ。','いいさ。'],['いいよ！','いいさ！'],['ないよ。','ないさ。'],['すごい！','見事だね！'],['ほんと？','ほう？']]);rx([[/([^さ])だよ([。！])/g,'$1さ$2'],[/([^て])るよ。/g,'$1るさ。']])}/* 「さ」は、言いきる文だけ（「〜たよ」「〜しようよ」「気になるよ！」「〜てるよ」はそのまま） */
   else if(r.elem==='fire'){const com=[['えへへ','へへっ'],['ふふ、','へっ、'],['あはは','はは'],['もー！','ったく！'],['わあ、','おっ、'],['ねえねえ','なあなあ'],['ねえ、','なあ、'],['えー！','えぇ！'],['ふうん','ふーん'],['ありがとう。','ありがとな。'],['ありがとう！','ありがとな！'],['ごめん','わりぃ'],['しようよ','しようぜ'],['ちゃった','ちまった'],['でしょ','だろ'],['じゃない？','じゃないか？'],['わかる！','わかるさ！'],['すごい！','やるじゃないか！']];
-    ends(com);if(k==='fireB')ends([['じゃないか？','じゃねえか？'],['わかるさ！','わかるぜ！'],['やるじゃないか！','やるな！'],['かなあ。','かな。'],['かなぁ。','かな。'],['よね','よな'],['ね。','な。'],['ね！','な！'],['ね？','な？'],['だよ。','だぜ。'],['だよ！','だぜ！'],['もん。','からな。'],['の？','のか？'],['あたいたち','おれたち']]);
+    ends(com);if(k==='fireB'){if(/なに|なん|だれ|いつ|どう|どこ/.test(t))ends([['るの？','るんだ？'],['たの？','たんだ？'],['うの？','うんだ？']]);ends([['くるね。','くるからな。'],['するね。','するぜ。'],['言うね。','言うじゃねえか。']])}/* 「〜するな」が「するな（だめ）」に聞こえないように */
+    if(k==='fireB')ends([['じゃないか？','じゃねえか？'],['わかるさ！','わかるぜ！'],['やるじゃないか！','やるな！'],['かなあ。','かな。'],['かなぁ。','かな。'],['よね','よな'],['ね。','な。'],['ね！','な！'],['ね？','な？'],['だよ。','だぜ。'],['だよ！','だぜ！'],['もん。','からな。'],['の？','のか？'],['あたいたち','おれたち']]);
     else ends([['だもん。','だからさ。'],['もん。','からさ。'],['の？','のかい？'],['あたいたち','あたいら']])}
   {const fl={earth:'うーんとねぇ…',water:'そうですね……',wind:'そうだね……',fire:k==='fireB'?'そうだな、':'まあ、'}[r.elem];if(fl)t=t.replace(/^うーん…/,fl)}/* 口ぐせは属性ごとに */
-  if(r.elem==='wind'&&i%3===1&&t.length>=14&&!/^(フッ|そう|えっ|ええ|うん|あ|わ|へえ|ほう|ねえ)/.test(t)&&/[。]$/.test(t))t='フッ…'+t;
+  if(r.elem==='wind'&&i%3===1&&t.length>=14&&!/^(フッ|そう|えっ|ええ|うん|あ|わ|へえ|ほう|ねえ|好き|いい|見た|…|#)/.test(t)&&!/[！？…]|ちゃ|ないで|の。$/.test(t)&&/[。]$/.test(t))t='フッ…'+t;/* 気どった「フッ…」は、おちついた文だけ（気もちのタグ・！・？・…・あまえた言いかたの文にはつけない） */
   return t}
 function chatTopic(r,p){const L=[],mt=((r.mates||{})[p.id]||0)>=6;CHATS.forEach((c,i)=>{if((!c.el||c.el===r.elem)&&(!c.ok||c.ok())&&(!c.key||isKey(r.name)&&isKey(p.name))&&(!c.mate||mt)&&(!c.kc||kcOK(c,r,p)))L.push(i)});if(L.some(i=>CHATS[i].kc)&&Math.random()<.4){const K=L.filter(i=>CHATS[i].kc);L.length=0;L.push(...K)}/* キーキャラの話は、あえば4割で選ばれる *//* なかよし同士だと、なかよしの話もまざる */const R=S.chatRec||(S.chatRec=[]),F=L.filter(i=>!R.includes(i)),C=F.length?F:L,t=C[Math.floor(Math.random()*C.length)];R.push(t);while(R.length>Math.floor(CHATS.length*.7))R.shift();return t}/* 最近した話は、しばらくしない *//* 話しかけた子の属性のお話もまざる */
 /* 「手、ふっとこうか」：このあと手をふる */
@@ -3205,6 +3207,7 @@ if(window.CHIPS)for(const k in window.CHIPS){const ch=window.CHIPS[k],id=k.split
 const CONN={fence:'f',logfence:'f',bamboofence:'f',stonefence:'f',wall:'w',hwall:'h',logwall:'h',plasterwall:'h',brickwall:'h'},CONNR={'fence':'HV','logfence':'HV','bamboofence':'VH','stonefence':'Hclip','wall':'HV','hwall':'HV','logwall':'HV','plasterwall':'HV','brickwall':'HV'};/* つながる物：横の部品（H0 柱・HL・HR・HLR 横板）と縦の部品（VU・VD・VUD 縦板）を、となりのつながりで組み合わせる。CONNR：角で横と縦を重ねる順 */
 function connMask(id,i){if(ICON)return 3;/* アイコンは、左右につながった形で見せる */if(i==null||!S)return 0;const t=CONN[id];let f;if(t==='f')f=k=>FENCE_IDS.has(typeAt(k));else if(t==='w')f=k=>{const o=typeAt(k);return o==='wall'||o==='stonegate'};else f=k=>{const o=typeAt(k);return o!=='wall'&&o!=='sdoor'&&(HOME_WALLS.has(o)||HOME_DOORS.has(o))};return (f(i-1)?1:0)|(f(i+1)?2:0)|(f(i-W)?4:0)|(f(i+W)?8:0)}/* 石の塀は、石の塀のドアのとなりでは終わる */
 function drawConn(c,id,x,y,i,now){const C=window.CHIPS;if(!C)return false;const m=connMask(id,i),hm=m&3,vm=m&12,H=C[id+':'+['H0','HL','HR','HLR'][hm]],V=vm?C[id+':'+{4:'VU',8:'VD',12:'VUD'}[vm]]:null;if(!H||vm&&!V)return false;
+  if(id==='wall'&&!vm&&!ICON){const dl=!(hm&1)&&typeAt(i-1)==='sdoor',dr=!(hm&2)&&typeAt(i+1)==='sdoor';if(dl||dr){const H2=C['wall:'+['H0','HL','HR','HLR'][hm|(dl?1:0)|(dr?2:0)]],P=C['wall:H0'];if(!H2||!P||!drawChip(c,H2,id,x,y,now,i))return false;if(dl)drawChip(c,P,id,x-8,y,now,i);if(dr)drawChip(c,P,id,x+8,y,now,i);return true}}/* となりが石の塀のドア：塀はマスのはしまでのばし、端の柱をドアにぴったり寄せる（前の drawMossWall と同じ形） */
   if(!vm)return drawChip(c,H,id,x,y,now,i);if(hm&&C[id+':m'+m])return drawChip(c,C[id+':m'+m],id,x,y,now,i);/* 角・つなぎ目の絵があれば、部品を重ねずにそれを使う */if(!hm)return drawChip(c,V,id,x,y,now,i);const r=CONNR[id]||'HV';
   if(r==='VH'){if(!drawChip(c,V,id,x,y,now,i))return false;return drawChip(c,H,id,x,y,now,i)}
   if(!drawChip(c,H,id,x,y,now,i))return false;if(r==='Hclip'){c.save();c.beginPath();if(vm&4)c.rect(x-64,y-64,192,66);if(vm&8)c.rect(x-64,y+26,192,96);c.clip();drawChip(c,V,id,x,y,now,i);c.restore();return true}return drawChip(c,V,id,x,y,now,i)}
@@ -5400,7 +5403,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='536';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='537';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
