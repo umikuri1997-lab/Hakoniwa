@@ -2873,7 +2873,7 @@ function grassBoundaryCorners(i){
     {cells:[[gx,gy],[gx+1,gy],[gx,gy+1],[gx+1,gy+1]],x:(gx+1)*TS,y:(gy+1)*TS},
     {cells:[[gx-1,gy],[gx,gy],[gx-1,gy+1],[gx,gy+1]],x:gx*TS,y:(gy+1)*TS}
   ],out=[];
-  for(const q of corners){if(q.cells.some(([x,y])=>x<0||y<0||x>=W||y>=H))continue;const mask=q.cells.map(([x,y])=>at(x,y)),n=mask.filter(Boolean).length,diagonal=n===2&&mask[0]===mask[3]&&mask[1]===mask[2];if((n!==1&&n!==3&&!diagonal)||!mask.includes(true))continue;const owner=Math.min(...q.cells.filter((_,k)=>mask[k]).map(([x,y])=>y*W+x));if(owner===i)out.push([q.x,q.y])}
+  for(const q of corners){if(q.cells.some(([x,y])=>x<0||y<0||x>=W||y>=H||S.ground[y*W+x]===1))continue;/* 水のマスがまじる角には、草とあれ地の角の絵をおかない（水のそばに土の丸い穴ができるので） */const mask=q.cells.map(([x,y])=>at(x,y)),n=mask.filter(Boolean).length,diagonal=n===2&&mask[0]===mask[3]&&mask[1]===mask[2];if((n!==1&&n!==3&&!diagonal)||!mask.includes(true))continue;const owner=Math.min(...q.cells.filter((_,k)=>mask[k]).map(([x,y])=>y*W+x));if(owner===i)out.push([q.x,q.y])}
   return out
 }
 function drawGrassBoundary(c,i,x,y){for(const [dx,dy,side] of grassBoundaryEdges(i)){c.save();c.translate(x+(side===1||side===2?TS:0),y+(side>=2?TS:0));c.rotate(side*Math.PI/2);const gx=i%W,gy=(i/W)|0,axis=side===0||side===2?0:1,line=axis?gx+(side===1?1:0):gy+(side===2?1:0),seed=i*137+side*29,world=p=>(axis?gy*TS+p:gx*TS+p),noise=p=>{const z=world(p)/16,a=Math.floor(z),f=z-a,t=f*f*(3-2*f),key=line*7919+axis*104729;return(hash(key+a*374761393)*2-1)*(1-t)+(hash(key+(a+1)*374761393)*2-1)*t},wave=p=>noise(p)*2.6+Math.sin(world(p)*.1+line*1.7)*.55+Math.sin(world(p)*.25+line*2.3)*.2,barren=WD===1?'#a39280':'#b3a37c';c.fillStyle=barren;c.beginPath();c.moveTo(3,-17);c.lineTo(TS-3,-17);c.quadraticCurveTo(TS+1,-10,TS-3,wave(TS-3));for(let p=TS-3;p>=3;p-=2)c.lineTo(p,wave(p));c.quadraticCurveTo(-1,-10,3,-17);c.closePath();c.fill();for(let k=0;k<20;k++){const v=hash(seed*31+k*71),pos=k*1.7-1+hash(seed+k*37)*1.8,depth=2+v*4.3;c.fillStyle=k%4?'#9dc26e':'#8cb262';c.beginPath();c.ellipse(pos,wave(pos)+.6,2+hash(seed+k*17)*1.6,depth*.7,0,0,Math.PI*2);c.fill();c.beginPath();c.moveTo(pos-1.7,wave(pos));c.quadraticCurveTo(pos-1.7,wave(pos)+depth*.6,pos+(v-.5)*3,wave(pos)+depth+1.5);c.quadraticCurveTo(pos+1.9,wave(pos)+depth*.4,pos+1.7,wave(pos));c.closePath();c.fill()}c.restore()}const radius=4.5;c.fillStyle=WD===1?'#a39280':'#b3a37c';for(const [cx,cy] of grassBoundaryCorners(i)){c.beginPath();c.arc(x+cx-i%W*TS,y+cy-((i/W)|0)*TS,radius,0,Math.PI*2);c.fill()}}
@@ -5327,7 +5327,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='509';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='510';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
