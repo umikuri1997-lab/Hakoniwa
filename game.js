@@ -723,7 +723,7 @@ let S=null;
 const resv=new Map();
 let STATUE=-1,OBOX=-1,BOARD=-1,counts={},LIGHTS=[],STELES=[],TOWERS=[],NEARFLOWER=new Set(),NEARWELL=new Set(),NEARMILL=new Set(),NEARVANE=new Set(),NEARSIGN=new Set(),NEARPARA=new Set(),RUGC=new Map(),ENVG=null,REV=new Set(),ATTR={},BASEPCT=0,GRASSN=0;const GRASS_GOAL=600;
 function newState(w){w=w||0;
-  const s={v:8,mig:6,flags:{},placed:{},feat:{build:true},inv:{},orders:[],enemyOn:false,nights:0,godGone:false,godShown:false,nushi:null,
+  const s={v:8,mig:7,flags:{},placed:{},feat:{build:true},inv:{},orders:[],enemyOn:false,nights:0,godGone:false,godShown:false,nushi:null,
     lv:1,bossKills:0,nightHurt:0,nightHad:false,wave:null,lastWarn:0,
     ref:{},ground:new Array(W*H).fill(0),floor:new Array(W*H).fill(''),obj:new Array(W*H).fill(''),dyn:{},hp:{},
     res:[],enemies:[],pt:15,totalPt:0,food:0,fs:{},cseed:{imo:4},crops:{imo:true},mat:{wood:0,stone:0},regrow:[],t:w===0?15*60:12*60,/* 草原は15時からはじまる */speed:1,baseLv:0,
@@ -747,7 +747,7 @@ const trt=(r,k)=>!!(r&&r.vr&&r.vr.tr===k);
 const KEYVR={'フタバ':{key:true,tr:'shukaku',h:0,l:0,lash:false,cheek:true,spd:1,eat:1,pow:1,sta:1,vo:1.18},'ノドカ':{key:true,tr:'tafu',h:0,l:0,lash:false,cheek:true,spd:1,eat:1,pow:1,sta:1,vo:1.02},'ホムラ':{key:true,tr:'',pk:'fireA',h:0,l:0,lash:false,cheek:true,spd:1,eat:1,pow:1,sta:1,vo:1.08},'シズク':{key:true,tr:'hataraki',h:0,l:0,lash:false,cheek:true,spd:1,eat:1,pow:1,sta:1,vo:1.12},'ホノ':{key:true,tr:'',pk:'fireB',h:-6,l:.04,lash:false,cheek:false,spd:1,eat:1,pow:1,sta:1,vo:.95},'アオ':{key:true,tr:'shoshoku',h:8,l:0,lash:true,cheek:false,spd:1,eat:1,pow:1,sta:1,vo:1.12},'フウ':{key:true,tr:'hayaashi',h:0,l:-.03,lash:true,cheek:true,spd:1,eat:1,pow:1,sta:1,vo:1.05}};
 function mkVar(name,el){if(KEYVR[name])return Object.assign({},KEYVR[name]);const R=()=>Math.random()*2-1;const sg=Math.random()<.5?-1:1;return{h:Math.round(sg*(12+Math.random()*33)),l:Math.round(R()*14)/100,lash:Math.random()<.4,cheek:Math.random()<.5,spd:Math.round((1+R()*.2)*100)/100,eat:Math.round((1+R()*.2)*100)/100,pow:Math.round((1+R()*.25)*100)/100,sta:Math.round((1+R()*.2)*100)/100,vo:Math.round((1.12+R()*.16)*100)/100,tr:pick(TRK(el))}}
 function mkRes(s,name,elem,x,y,like){
-  return {id:s.nid++,xp:0,xpf:0,name,elem,color:ELEM[elem].body,x,y,hunger:80,energy:85,fun:70,like:like||pick(LIKE_KEYS.filter(k=>k!=='slide'||WD===4)),act:null,path:[],starve:0,bubble:'',face:1,hidden:false,hurt:0,vr:mkVar(name,elem)};
+  return {id:s.nid++,xp:0,xpf:0,name,elem,color:ELEM[elem].body,x,y,hunger:80,energy:85,fun:70,like:like||pick(LIKE_KEYS.filter(k=>(k!=='slide'||WD===4)&&(NIGATE[elem]||{})[k]==null)),act:null,path:[],starve:0,bubble:'',face:1,hidden:false,hurt:0,vr:mkVar(name,elem)};
 }
 
 function genWorld(s,w){
@@ -789,13 +789,24 @@ const ASHT=new Set(['oven','bench','tub','sink','campfire','hotstone']);
 const NATK=['rock','deadtree','ntree','berry'];
 const festOn=()=>!!S&&S.festDay!=null&&(S.festDay===dayNo()||S.festDay===dayNo()-1&&hour()<6);/* おまつり：その日の朝6時まで */
 function festStart(){S.festN=(S.festN||0)+1;/* おまつりをひらいた回数 */const L=WD===1?[[HOMURA,'おまつりかい！ ちょうちんの火、いい色だねえ。'],[SHIZUKU,'みなさんで、おどりましょう。ごちそうもありますよ。'],[HOMURA,'たまには、こういう日もいいもんさ。']]:[[POKO,'#surprise|わあ、おまつりだ！ ちょうちんが、いっぱい！'],[MINA,'みんなで、おどろうねぇ。ごちそうもあるよぉ。'],[POKO,'ヌシ様にも、この景色を見せてあげたいな。']];talkOnce('fest1',L.filter(l=>S.res.some(r=>r.name===l[0])))}/* はじめてのおまつりの会話 */
+function festBegin(){for(const r of S.res){r.fun=100;r.energy=100;spawnFX(r.x-.5,r.y-.6,'#ffd84a')}if(S.godGone&&!S.godVisit){S.godVisit=true;sfx('arrive')}sfx('level');toast('おまつりがはじまった！ カミサマが屋台を出している','good');festStart()}/* おまつりの朝：カミサマが屋台を出しにくる */
 function festGift(){if(S.festDay==null||S.festDay>=dayNo()||S.festGot===S.festDay)return;S.festGot=S.festDay;const fl=['salvia','lotus','lily','clover','bellf'].filter(id=>S.unlocked[id]);/* おまつりのおみやげ：はじめはちょうちん。あとは、ちょうちんか、おぼえた花のたね5つ */
   if(!S.flags.festGift1||!fl.length||Math.random()<.4){S.flags.festGift1=1;giveItem('chochin',1);toast('おまつりのおみやげ：おまつりのちょうちん','good')}else{const id=pick(fl);giveItem(id,5);toast('おまつりのおみやげ：'+BL[id].name+'のたね5つ','good')}renderPalette()}
 const FESTC={k:null,L:[]};function festPoles(){const r=BASE_R[S.baseLv],k=WD+':'+r;if(FESTC.k!==k){FESTC.k=k;const L=[],a=CX-r-1,b=CX+r,c=CY-r-1,d=CY+r,n=b-a,m=Math.ceil(n/4);for(let i=0;i<=m;i++){const t=Math.round(i*n/m);L.push([a+t,c],[a+t,d]);if(i>0&&i<m)L.push([a,c+t],[b,c+t])}FESTC.L=L.filter(([x,y])=>x>=0&&y>=0&&x<W&&y<H)}return FESTC.L}/* おまつりのちょうちんの柱：基地の1マス外を、4マスくらいずつ（かどにも1本）。基地の広さがかわったときだけ作りなおす */
 function drawFestPole(x,y,now){const px=x*TS,py=y*TS,F=(a,b,w,h,col)=>{ctx.fillStyle=col;ctx.fillRect(px+a,py+b,w,h)};shadow(ctx,px+16,py+29,6,2);F(15,-14,3,43,'#7a4f30');F(16,-14,1,43,'#a8703f');F(8,-15,17,2,'#5e3c24');
   const sw=Math.round(Math.sin(now/600+x)*1);for(const a of[8,21]){F(a+1+sw,-13,1,2,'#3a2a20');F(a-1+sw,-11,6,8,'#d8452f');F(a+sw,-12,4,10,'#d8452f');F(a+sw,-9,4,1,'#a8321f');F(a+sw,-6,4,1,'#a8321f');F(a+sw,-11,1,7,'#f08a6a');F(a+sw,-3,4,1,'#3a2a20')}
   if(isNight()){for(const a of[10,23]){const g=ctx.createRadialGradient(px+a+sw,py-7,1,px+a+sw,py-7,13);g.addColorStop(0,'rgba(255,190,110,.35)');g.addColorStop(1,'rgba(255,190,110,0)');ctx.fillStyle=g;ctx.fillRect(px+a+sw-13,py-20,26,26)}}}/* 夜はちょうちんがぼんやり光る */
-function goFest(r,G){if(STATUE<0)return false;const sx=STATUE%W+.5,sy=((STATUE/W)|0)+1.5;const j=nearest(G,k=>{const d=Math.hypot(k%W+.5-sx,((k/W)|0)+.5-sy);return d>=1.5&&d<=4&&walk(k)&&!S.obj[k]&&free('fest'+k,1)},80);if(j<0)return false;startAct(r,G,'dance',j,{key:'fest'+j});return true}/* おまつりの日は、神殿の前でおどる */
+const FSNACK=[['🍎','りんごあめ'],['🐙','たこ焼き'],['🍝','焼きそば'],['🍧','かき氷']];/* カミサマの屋台でもらえる物（食料箱の食べ物はへらない） */
+function festSpot(G,f,maxD){const L=[];for(let k=0;k<W*H;k++){const d=G.dist[k];if(d<0||d>maxD||!walk(k)||S.obj[k]||roomOf(k)||(TAKEN&&TAKEN.has(k))||!f(k))continue;L.push(k)}return L.length?pick(L):-1}/* 条件にあうマスから、ランダムに1つ */
+function festAct(r,G){if(STATUE<0)return false;const h=hour(),ib=k=>inBase(k%W,(k/W)|0);
+  if(h>=20&&h<21){const j=festSpot(G,ib,12);if(j>=0){startAct(r,G,'hanabi',j);return true}return false}/* 夜8時から9時は、花火を見る */
+  if(h<7||h>=22)return false;if(r.fyD!==dayNo()){r.fyD=dayNo();r.fyN=0}
+  const x=Math.random();
+  if(x<.3){const cx=STATUE%W+.5,cy=((STATUE/W)|0)+3.5;const j=nearest(G,k=>{const d=Math.hypot(k%W+.5-cx,((k/W)|0)+.5-cy);return d>=1.6&&d<=2.8&&walk(k)&&!S.obj[k]},80);if(j>=0){startAct(r,G,'bon',j,{cx,cy});return true}}/* 神殿の前で、おどりの輪 */
+  if(x<.5&&(r.fyN||0)<3&&godHere()){const gx=godX(),gy=godY()+1.3;const j=nearest(G,k=>Math.hypot(k%W+.5-gx,((k/W)|0)+.5-gy)<=2.2&&walk(k)&&!S.obj[k]&&free('yt'+k,1),80);if(j>=0){startAct(r,G,'yatai',j,{key:'yt'+j});return true}}/* カミサマの屋台（1日3回まで） */
+  if(x<.72&&trySocial(r,G))return true;/* おまつりのおしゃべり */
+  const j=festSpot(G,k=>ib(k)&&Math.hypot(k%W+.5-r.x,((k/W)|0)+.5-r.y)>=4,30);if(j>=0){startAct(r,G,'fwalk',j);if(r.fsnack&&Math.random()<.6)r.bubble=r.fsnack;return true}/* 村の中を、ぶらぶら見てまわる */
+  return false}
 const FLAM=new Set(Object.keys(BL).filter(id=>{const b=BL[id],m=b.mat||{};return (b.kind==='furn'||b.kind==='block'||b.kind==='build')&&m.wood>0&&!m.stone&&!b.natural&&id!=='torch'&&id!=='candle'}));/* 火山のふもとで燃える物：木材だけで作る家具・柵・壁など（たいまつ・ろうそくは、もともと火がついている物なのでのぞく） */
 const burnHp=o=>BL[o].hp||10,fireAt=j=>WD===1&&!!S.st2&&!!S.st2.fire&&S.st2.fire[j]!=null;/* じょうぶさのない家具は、燃えるときだけ10とする */
 function ignite(j){if(WD!==1||!S.st2)return;const o=S.obj[j];if(!FLAM.has(o))return;const F=S.st2.fire||(S.st2.fire={});if(F[j]!=null)return;F[j]=S.t;toast(BL[o].name+'が燃えている！','warn');sfxAt('cookfire',j%W+.5,(j/W)|0)}
@@ -1136,7 +1147,7 @@ const ACT={
   rest:{start(r,a){if(S.obj[a.obj]!=='bench')return false;r.bubble='☕'},tick(r,a,dt){if(a.partner!=null&&!S.res.some(x=>x.id===a.partner&&x.act&&x.act.type==='rest'&&x.act.obj===a.obj)){a.topic=null;a.partner=null;a.sub=0;a.ended=1;r.bubble='☕'}/* 片方が休けいを終えたら、おしゃべりもおわり */r.energy=Math.min(100,r.energy+dt/3*mateK(r,'rest'));r.fun=Math.min(100,r.fun+.08*dt);
     if(a.topic==null){const q=a.ended||(r.chatCD||0)>S.t?null:S.res.find(x=>x!==r&&(x.chatCD||0)<=S.t&&x.act&&x.act.type==='rest'&&x.act.stage==='do'&&x.act.obj===a.obj&&x.act.topic==null);if(q){const t=chatTopic(r,q);a.topic=t;a.partner=q.id;q.act.topic=t;q.act.partner=r.id;q.act.sub=1;r.bubble=q.bubble='💬';mate(r,q);for(const x of[r,q])addPt(.45+(x.like==='chat'?.9:0)+(S.today==='oshaberi'?.9:0),x,1+(x.like==='chat'?2:0)+(S.today==='oshaberi'?2:0))}}/* ベンチに2人すわったら、おしゃべり */
     else{a.bt=(a.bt||0)+dt;if(a.bt>4){a.bt=0;r.bubble=pick(['💬','💬','😊','🎵','😆'])}r.fun=Math.min(100,r.fun+.3*dt)}},done:(r,a)=>(r.energy>=100&&a.t>=15)||a.t>=(a.dur||90)||isNight()||S.obj[a.obj]!=='bench',end(r,a){r.restCD=S.t+90;if(a&&a.t>=10)addPt(.45,r,1)}},/* ベンチでひと休み：すぐ終わったときはポイントなし。しばらくは、またベンチにはすわらない */
-  play:{start(r,a){r.bubble={flower:'🌼',fountain:'💦',campfire:'🔥'}[a.what]||'🎵'},tick(r,a,dt){r.fun=Math.min(100,r.fun+a.fun/a.dur*dt)}/* おもちゃは、お話よりたのしさがたまりやすい */,done:(r,a)=>a.t>=a.dur,end(r,a){addPt(a.pw+(r.like===a.what?.9:0),r,a.pt+(r.like===a.what?2:0));train(r,a.what);if(a.what!=='flower')r.lastToy={j:a.obj,t:S.t}}},/* 遊んだ遊び家具は覚えておき、しばらくは行かない */
+  play:{start(r,a){r.bubble={flower:'🌼',fountain:'💦',campfire:'🔥'}[a.what]||'🎵';if(a.nig){r.bubble='😣';if(Math.random()<.5)addFloat(r.x,r.y-1.2,'ちょっと、にがて…','#fff3d6')}},/* にがてなおもちゃ */tick(r,a,dt){r.fun=Math.min(100,r.fun+a.fun/a.dur*dt)}/* おもちゃは、お話よりたのしさがたまりやすい */,done:(r,a)=>a.t>=a.dur,end(r,a){addPt(a.pw+(r.like===a.what?.9:0),r,a.pt+(r.like===a.what?2:0));train(r,a.what);if(a.what!=='flower')r.lastToy={j:a.obj,t:S.t}}},/* 遊んだ遊び家具は覚えておき、しばらくは行かない */
   bathe:{start(r,a){const w=a.tub!=null?(typeAt(a.tub)==='bathtub'?a.tub:-1):adjOf(a.stand,k=>S.ground[k]===1);if(w<0)return false;r.face=w%W+.5>=r.x?1:-1;r.bubble='💦';sfxAt('wave',r.x,r.y);a.sx=r.x;a.sy=r.y;a.wx=w%W+.5;a.wy=((w/W)|0)+.5;a.in=0;a.hot=a.tub!=null?false:hotW(w)},tick(r,a,dt){/* 水の中まで入って、出てくる */a.in=Math.max(0,Math.min(1,a.t/3,(30-a.t)/3));const mv=a.tub!=null?1:.8;r.x=a.sx+(a.wx-a.sx)*a.in*mv;r.y=a.sy+(a.wy-a.sy)*a.in*mv;const hot=!!a.hot,m=S.res.find(q=>q!==r&&q.act&&q.act.type==='bathe'&&Math.hypot(q.x-r.x,q.y-r.y)<3.5);if(m){r.face=m.x>=r.x?1:-1;r.bubble=Math.floor(a.t/1.5)%2?'🎵':'💦'}else r.bubble=a.tub!=null?(Math.floor(a.t/3)%2?'♨️':'🎵'):'💦';/* ほかの子がいたら、いっしょに水かけっこ */const lo=nearLotus(r);r.fun=Math.min(100,r.fun+(hot?.45:.3)*(m?1.5:1)*(lo?1.5:1)*(hot&&r.elem==='fire'?1.3:1)*dt);if(hot&&r.elem==='fire'&&Math.floor(a.t/2)%3===0)r.bubble='♨️';/* 火の子は温泉が大好き */if(lo)r.energy=Math.min(100,r.energy+.15*dt);/* ハスの近くの水浴びは、たのしい */if(hot)r.energy=Math.min(100,r.energy+.35*dt);/* 温泉は、つかれもとれる */a.h=(a.h||0)+dt;if(a.h>=4.5){a.h=0;sfxAt('wave',r.x,r.y)}},done:(r,a)=>a.t>=30,end(r,a){r.bathD=dayNo();r.bubble='✨';r.shine=performance.now();addPt(.45,r,1);if(a&&a.hot)r.afterBath=S.t+90}},
   fish:{start(r,a){const w=fishW(a.stand);if(w>=0)r.face=w%W+.5>=r.x?1:-1;/* 釣竿は水のほうへ */r.bubble='🎣';sfxAt('cast',r.x,r.y)},tick(r,a,dt){r.fun=Math.min(100,r.fun+.5*dt)},done:(r,a)=>a.t>=50,end(r,a){const w=r.elem==='water';addPt(1.35+(r.like==='fish'?.9:0),r,3+(r.like==='fish'?2:0));if(Math.random()<(w?.7:.35)+(a&&a.spot?.25:0)){addCarry(r,'fish',1);S.fishN=(S.fishN||0)+1;kurashi('fish',['🐟','はじめて魚がつれた']);r.bubble='🐟';sfxAt('catch',r.x,r.y)}else sfxAt('bubble',r.x,r.y)}},
   chat:{start(r,a){const p=S.res.find(q=>q.id===a.partner);if(!p||!p.act||p.act.type!=='chatwait'||p.act.partner!==r.id||(r.chatCD||0)>S.t||(p.chatCD||0)>S.t)return false;mate(r,p);
@@ -1170,6 +1181,12 @@ const ACT={
   craft:{start(r,a){if(!S.orders.find(q=>q.id===a.order))return false;r.face=1;r.bubble=''},tick(r,a,dt){const o=S.orders.find(q=>q.id===a.order);if(o)o.prog+=dt*(r.elem===BL[o.type].maker?2:1);work(r,dt);a.h=(a.h||0)+dt;if(a.h>=3){a.h=0;sfxAt('nail',r.x,r.y)}},
     done:(r,a)=>{const o=S.orders.find(q=>q.id===a.order);return a.t>=60||!o||o.prog>=o.need},end(r,a){const o=S.orders.find(q=>q.id===a.order);if(o&&o.prog>=o.need)finishCraft(o,r);else addSpiritXp(1,r)}},
   dance:{start(r,a){r.bubble='🎵'},tick(r,a,dt){r.fun=Math.min(100,r.fun+.5*dt);a.h=(a.h||0)+dt;if(a.h>=1.2){a.h=0;JUMP.set(r,performance.now());r.face=-(r.face||1);r.bubble=pick(['🎵','🎶','🍡','😆'])}},done:(r,a)=>a.t>=40||!festOn()||isNight()||hour()>=20,end(r,a){}},/* おまつりのおどり（ごちそうも食べる） */
+  bon:{start(r,a){r.bubble='🎵';a.ph=Math.atan2(r.y-a.cy,r.x-a.cx);a.rad=Math.max(1.6,Math.hypot(r.x-a.cx,r.y-a.cy));a.dur=20+Math.random()*15},tick(r,a,dt){const ang=a.ph+a.t*.22,tx=a.cx+Math.cos(ang)*a.rad,ty=a.cy+Math.sin(ang)*a.rad,dx=tx-r.x,dy=ty-r.y,L=Math.hypot(dx,dy),m=Math.min(L,1.5*dt);if(L>0){const nx=r.x+dx/L*m,ny=r.y+dy/L*m,k=(ny|0)*W+(nx|0);if(walk(k)&&!S.obj[k]){r.face=dx>=0?1:-1;r.x=nx;r.y=ny}}/* 輪にそって、ゆっくり回る（通れないマスでは止まる） */r.fun=Math.min(100,r.fun+.5*dt);a.h=(a.h||0)+dt;if(a.h>=1.5){a.h=0;JUMP.set(r,performance.now());r.bubble=pick(['🎵','🎶','😆','✨'])}},done:(r,a)=>a.t>=a.dur||!festOn()||isNight()||hour()>=22},/* おまつりのおどりの輪 */
+  yatai:{start(r,a){r.bubble='🏮';r.face=godX()>=r.x?1:-1},done:(r,a)=>a.t>=4,end(r,a){r.fyN=(r.fyN||0)+1;JUMP.set(r,performance.now());sfxAt('offer',r.x,r.y);
+    if(Math.random()<.25){const ok=Math.random()<.35;r.fun=Math.min(100,r.fun+(ok?20:8));r.bubble=ok?'🎯':'😣';addFloat(r.x,r.y-1.2,ok?'わなげ、あたり！':'わなげ、おしい…',ok?'#ffd38a':'#fff3d6')}/* わなげ */
+    else{const f=pick(FSNACK);r.hunger=Math.min(hMax(r),r.hunger+20);r.fun=Math.min(100,r.fun+10);r.bubble=f[0];r.fsnack=f[0];addFloat(r.x,r.y-1.2,f[1]+'！','#ffd38a')}}},/* カミサマの屋台：食べ物は、おなか+20・たのしさ+10 */
+  fwalk:{start(r,a){a.dur=5+Math.random()*6;r.bubble=r.fsnack&&Math.random()<.5?r.fsnack:pick(['🏮','✨','😊','🎵'])},done:(r,a)=>a.t>=a.dur,end(r){r.fsnack=null}},/* おまつりを見てまわる */
+  hanabi:{start(r){r.bubble='🎆';r.face=Math.random()<.5?1:-1},tick(r,a,dt){r.fun=Math.min(100,r.fun+.4*dt);a.h=(a.h||0)+dt;if(a.h>=2){a.h=0;r.bubble=pick(['🎆','🎇','✨','😆']);if(Math.random()<.15)addFloat(r.x,r.y-1.3,pick(['たまやー！','きれい…！','わあ…！']),'#fff3d6')}},done:(r,a)=>hour()>=21||!festOn()||isNight()},/* 花火を見る */
   douse:{start(r,a){if(!fireAt(a.obj))return false;r.bubble='💧';sfxAt('pour',r.x,r.y)},tick(r,a,dt){work(r,dt)},done:(r,a)=>a.t>=10||!fireAt(a.obj)||isNight(),end(r,a){if(a.t>=10&&fireAt(a.obj)){delete S.st2.fire[a.obj];sfxAt('pour',r.x,r.y);addSpiritXp(1,r)}}},/* 水をかけて、火を消す */
   repair:{start(r,a){const b=!S.obj[a.obj]?brokenAt(a.obj):null;if(!b&&!breakable(S.obj[a.obj])&&!DEFS.has(S.obj[a.obj])&&!burnt(a.obj))return false;a.re=b?b.id:null;r.bubble='🔨'},tick(r,a,dt){work(r,dt);a.h=(a.h||0)+dt;if(a.h>=3){a.h=0;sfxAt('nail',r.x,r.y)}},done:(r,a)=>a.t>=repairTime(a)&&(!a.re||a.t>=60||repairFree(a)),/* 建て直す場所にだれかが立っているあいだは、終わらずに待つ（さいごまで空かなければ、素材をもどしてやめる） */end(r,a){if(a.re){const cells=fp(a.re,a.obj%W,(a.obj/W)|0).map(([cx,cy])=>cy*W+cx);if(!repairFree(a)){addFloat(r.x,r.y-1.2,'人がいて直せなかった','#ffd2cc')}else if(cells.every(k=>!S.obj[k])){S.obj[a.obj]=a.re;setParts(a.re,a.obj,'part');delete S.hp[a.obj];if(BL[a.re].dyn)S.dyn[a.obj]={g:0};{const bk=brokenAt(a.obj);if(bk&&bk.L)S.hp['L'+a.obj]=bk.L}/* 強化レベルは、建てなおしてももとにもどす */S.broken=S.broken.filter(b=>b.j!==a.obj);recount();dirty=true;burst(a.obj,'block');sfxAt('repair',r.x,r.y)}}else{const o=S.obj[a.obj];if(breakable(o)){S.hp[a.obj]=BL[o].hp;sfxAt('repair',r.x,r.y)}else if(DEFS.has(o)||burnt(a.obj)){delete S.hp[a.obj];sfxAt('repair',r.x,r.y)}}addSpiritXp(1,r)}},
   harvest:{start(r,a){const d=S.dyn[a.obj];if(!d||d.g<100)return false;r.bubble='🧺';sfxAt('bush',r.x,r.y)},tick(r,a,dt){work(r,dt)},done:(r,a)=>a.t>=12,end(r,a){const d=S.dyn[a.obj];if(!d)return;d.g=0;const fk=S.obj[a.obj]==='farm'?(cropK(d)):S.obj[a.obj]==='fruit'?'apple':'berry';if(S.obj[a.obj]==='farm'){if(Math.random()<.75){S.cseed[fk]=cseed(fk)+1;addFloat(r.x,r.y-1.2,CROPS[fk].name+'のたね+1','#e8d38a')}/* たねがとれるのは75% */d.sown=false;d.crop=null}/* 収穫したら、また植えないと育たない */const cr=CROPS[fk]||{yield:a.food||3},food=((fk==='berry'||fk==='apple')?2:cr.yield+(NEARMILL.has(a.obj)?1:0)+(NEARFLOWER.has(a.obj)?1:0))+(trt(r,'shukaku')?1:0)+(r.elem==='wood'&&S.obj[a.obj]==='farm'?1:0)+(S.today==='hosaku'?1:0);{const rm=roomN(r);addCarry(r,fk,Math.min(food,rm));if(food>rm)dropAt(r.x,r.y,'food:'+fk,food-rm)}/* 持ちきれない分は、足もとに置いて、あとでひろう */kurashi('hv:'+fk,['🧺','はじめて'+FOODS[fk].name+'を収穫した']);sfxAt('harvest',r.x,r.y);addSpiritXp(1,r)}},
@@ -1188,7 +1205,7 @@ const ACT={
   stay:{start(r){r.bubble='🏠'},done:(r,a)=>r.hunger<18||!isNight()},
   shiver:{start(r){r.bubble='😨'},done:(r,a)=>r.hunger<30||!hostileNow()||r.hunger<hMax(r)*.5&&S.food>0&&!(r.eatTry>S.t)},/* おなかが半分より少なくなったら、ふるえるのをやめて、安全に行ける食料箱へ食べにいく *//* たたかえない子は、コワイノがいるあいだ、家の中でふるえている */
 };
-const ACT_LBL={step:'あるいている',shiver:'こわくて、ふるえている',reunion:'なかよしに会いにいく',bury:'お墓へむかう',pray:'神殿でおいのり',sevreact:'気づいたものを見にいく',questjoy:'よろこんでいる',stay:'起きてすごしている',sow:'種をまいている',faint:'目をまわしている',eat:'ごはん中',forage:'ベリーを食べている',sleep:'おやすみ中',play:'遊んでいる',fish:'つりをしている',chat:'おしゃべり中',cook:'料理中',chop:'木を切っている',mine:'石をほっている',smat:'素材をしまう',store:'食料をしまう',fetch:'食料をとりに',chatwait:'待ちあわせ',npl:'ヌシ様と遊んでいる',tag:'おいかけっこ',tend:'畑の世話',water:'水やり',till:'畑を耕している',plant:'植えている',build:'建てている',craft:'家具づくり',harvest:'収穫中',gather:'ベリーあつめ',repair:'柵の修理',pickseed:'種ひろい',pickdrop:'おとしものひろい',offer:'おそなえ中',flee:'にげている',patrol:'見回り',wander:'おさんぽ',idle:'ひとやすみ'};
+const ACT_LBL={dance:'おどっている',bon:'おどりの輪でおどっている',yatai:'屋台にいる',fwalk:'おまつりを見てまわっている',hanabi:'花火を見ている',step:'あるいている',shiver:'こわくて、ふるえている',reunion:'なかよしに会いにいく',bury:'お墓へむかう',pray:'神殿でおいのり',sevreact:'気づいたものを見にいく',questjoy:'よろこんでいる',stay:'起きてすごしている',sow:'種をまいている',faint:'目をまわしている',eat:'ごはん中',forage:'ベリーを食べている',sleep:'おやすみ中',play:'遊んでいる',fish:'つりをしている',chat:'おしゃべり中',cook:'料理中',chop:'木を切っている',mine:'石をほっている',smat:'素材をしまう',store:'食料をしまう',fetch:'食料をとりに',chatwait:'待ちあわせ',npl:'ヌシ様と遊んでいる',tag:'おいかけっこ',tend:'畑の世話',water:'水やり',till:'畑を耕している',plant:'植えている',build:'建てている',craft:'家具づくり',harvest:'収穫中',gather:'ベリーあつめ',repair:'柵の修理',pickseed:'種ひろい',pickdrop:'おとしものひろい',offer:'おそなえ中',flee:'にげている',patrol:'見回り',wander:'おさんぽ',idle:'ひとやすみ'};
 
 function decide(r){TAKEN=new Set();for(const q of S.res){if(q===r||q.hidden)continue;if(q.act&&q.act.stand>=0)TAKEN.add(q.act.stand);if(!q.act||q.act.stage!=='walk')TAKEN.add((q.y|0)*W+(q.x|0))}
   for(const [j,t]of Object.entries(r.routeAvoid||{})){if(t>S.t)TAKEN.add(+j);else delete r.routeAvoid[j]}
@@ -1266,7 +1283,7 @@ function decide0(r){
     const ib=j=>inBase(j%W,(j/W)|0);let j=nearest(G,j=>walk(j)&&!roomOf(j)&&ib(j)&&Math.random()<.04,8);if(j<0)j=nearest(G,j=>walk(j)&&!roomOf(j)&&ib(j),80);/* 家の中にいたら、まず外へ出る */if(j>=0)return startAct(r,G,'patrol',j);/* 夜は家の外を見回る */return startAct(r,G,'wander',(r.y|0)*W+(r.x|0))}
   if(r.energy<25||isNight())return goSleep(r,G,S.enemies.some(e=>e.spawned));
   if(r.hunger<55&&!foeNear(r))return goEat(r,G);
-  if(festOn()&&!isNight()&&hour()<20&&r.energy>=30&&!foeNear(r)&&goFest(r,G))return;/* おまつりの日は、夜8時まで、みんなでおどる */
+  if(festOn()&&!isNight()&&r.energy>=30&&!foeNear(r)&&festAct(r,G))return;/* おまつりの日は、朝7時から夜10時まで、おどる・屋台・おしゃべり・見てまわる。夜8時から9時は花火 */
   if(!isNight()&&r.fun>=99&&tryJob(r,G,'offer'))return;
   // 楽しさが低いときは、仕事より先に遊びにいく
   if(!isNight()&&r.fun<(r.elem==='wind'?60:30)&&goPlay(r,G,true))return;/* 風の子はよく遊ぶ */
@@ -1539,7 +1556,47 @@ const CHATS=[/* kc：キーキャラどうし（話しかける子, 相手）、
  Object.assign([[0,'今日の風は、ミントの香りがするよ。'],[1,'すんすん……わかんない。'],[0,'フッ……そのうち、わかるようになるさ。']],{kc:['K','*']}),
  Object.assign([[0,'遠くの風の便りによるとね、どこかで、だれかが歌っているらしい。'],[1,'どんな歌？'],[0,'それは、風が教えてくれなかった。……残念だ。']],{kc:['K','*']}),
  Object.assign([[0,'フタバ。あまり遠くへ行くなよ。風が心配する。'],[1,'風が？'],[0,'#think|……いや、ぼくが、かな。'],[1,'#joy|えへへ、ありがとう！']],{kc:['K','F']}),
- Object.assign([[0,'ノドカ。きみと話すと、風の速さが、ゆっくりになる。'],[1,'それは、いいことなのかなぁ。'],[0,'ああ。とても。']],{kc:['K','N']})];
+ Object.assign([[0,'ノドカ。きみと話すと、風の速さが、ゆっくりになる。'],[1,'それは、いいことなのかなぁ。'],[0,'ああ。とても。']],{kc:['K','N']}),/* ここから下は、おまつりの日だけの話（fest）。セーブに番号が入るので、うしろに足していく */
+ Object.assign([[0,'#joy|ねえ、カミサマの屋台、見た？'],[1,'見た！ カミサマ、すごくいそがしそうだった。'],[0,'#joy|でも、ずっとにこにこしてたね。']],{fest:1,ok:festOn}),
+ Object.assign([[0,'りんごあめって、どこから食べればいいの？'],[1,'てっぺんから、かじるんだよ。'],[0,'#surprise|かたい！ はが、とれちゃいそう！'],[1,'…ぺろぺろするのが、いいかもね。']],{fest:1,ok:festOn}),
+ Object.assign([[0,'たこ焼き、あつあつだった！'],[1,'ふーふーした？'],[0,'#cry|しないで食べちゃった…。'],[1,'…お水、もってくるね。']],{fest:1,ok:festOn}),
+ Object.assign([[0,'焼きそばのにおいって、遠くまでとどくね。'],[1,'うん。においで、屋台の場所がわかっちゃう。'],[0,'#joy|はなが、道あんないしてくれるんだね。']],{fest:1,ok:festOn}),
+ Object.assign([[0,'ちょうちんの色、あったかいね。'],[1,'うん。見てるだけで、ほっとする。'],[0,'#nod|ずっと消えないでほしいな。']],{fest:1,ok:festOn}),
+ Object.assign([[0,'おどりの輪に入るの、ちょっとはずかしい…。'],[1,'だいじょうぶ。前の子のまねをすればいいよ。'],[0,'#joy|…あ、たのしいかも！']],{fest:1,ok:festOn}),
+ Object.assign([[0,'#joy|おどってたら、足がかってに動くの！'],[1,'わかる。音がなくても、おどれちゃうね。'],[0,'こころの中で、どん、どん、って鳴ってるんだよ。']],{fest:1,ok:festOn}),
+ Object.assign([[0,'わなげ、やった？'],[1,'やった！ 三回とも、はずれた。'],[0,'#think|一回だけ、あたったよ。'],[1,'#surprise|すごい！ コツおしえて！']],{fest:1,ok:festOn}),
+ Object.assign([[0,'おまつりの日は、いつもの村が、ぜんぜんちがって見えるね。'],[1,'うん。同じ道なのに、わくわくする。']],{fest:1,ok:festOn}),
+ Object.assign([[0,'あしたも、おまつりならいいのに。'],[1,'まいにちだと、とくべつじゃなくなっちゃうよ。'],[0,'#think|…そっか。とくべつだから、たのしいんだね。']],{fest:1,ok:festOn}),
+ Object.assign([[0,'ねえ、なにを食べるか、まだきめられないの。'],[1,'ぜんぶ食べたら？'],[0,'#surprise|おなか、はれつしちゃうよ！']],{fest:1,ok:festOn}),
+ Object.assign([[0,'カミサマ、屋台のうらで、つまみぐいしてたよ。'],[1,'#surprise|えっ、ほんと？'],[0,'ないしょね。見なかったことにしよう。']],{fest:1,ok:festOn}),
+ Object.assign([[0,'#joy|ねえ、みんなの顔、いつもより、にこにこしてる。'],[1,'きみもだよ。ずっと、わらってる。']],{fest:1,ok:festOn}),
+ Object.assign([[0,'はぐれないように、手、つないでいこう。'],[1,'村の中だから、はぐれないよ？'],[0,'…いいの。つなぎたいの。'],[1,'#joy|…うん。']],{fest:1,ok:festOn}),
+ Object.assign([[0,'りんごあめ、半分こしよう。'],[1,'どうやって、わるの？'],[0,'#think|……かわりばんこに、かじろっか。']],{fest:1,ok:festOn}),
+ Object.assign([[0,'おまつりの日って、夕方になるのが、ちょっとさみしいね。'],[1,'でも、夜はちょうちんがきれいだよ。'],[0,'#nod|そうだね。夜もたのしみ。']],{fest:1,ok:festOn}),
+ Object.assign([[0,'おどりの輪で、三回ぐるぐるしたら、目がまわった。'],[1,'#joy|ふらふらしてたの、見えてたよ。']],{fest:1,ok:festOn}),
+ Object.assign([[0,'ねえ、おまつりのにおいって、なんのにおいだと思う？'],[1,'焼きそばと…ちょうちんと…みんなの、うれしいにおい？'],[0,'#joy|それだ！']],{fest:1,ok:festOn}),
+ Object.assign([[0,'屋台のかき氷、つめたくて、頭がキーンってした。'],[1,'#joy|わかる！ でも、もう一回食べたくなるよね。']],{fest:1,ok:festOn}),
+ Object.assign([[0,'わなげの景品、なにがあった？'],[1,'小さな木の笛。ぴーって鳴るの。'],[0,'#surprise|ほしい！ もう一回ちょうせんしてくる！']],{fest:1,ok:festOn}),
+ Object.assign([[0,'おどりって、だれが考えたのかな。'],[1,'ずっとむかしの、だれかだよ。きっと、みんなでたのしくなりたかったんだね。']],{fest:1,ok:festOn}),
+ Object.assign([[0,'ねえ、きょうは、はたらかなくていいの？'],[1,'おまつりだもん。カミサマも、いっぱい遊べって言ってたよ。'],[0,'#joy|やったー！']],{fest:1,ok:festOn}),
+ Object.assign([[0,'#think|おまつりの夜も、コワイノは来るのかな。'],[1,'来たら、いっしょにおどってもらおうか。'],[0,'…それ、ちょっといいかも。']],{fest:1,ok:festOn}),
+ Object.assign([[0,'ちょうちんの下に立つと、顔が赤く見えるね。'],[1,'#joy|きみも、りんごあめみたいな色になってる。']],{fest:1,ok:festOn}),
+ Object.assign([[0,'たこ焼きって、たこが入ってるの？'],[1,'入ってるよ。'],[0,'#surprise|たこって、どこにいるの？'],[1,'…うみ、っていう、すごく大きな水たまりにいるんだって。']],{fest:1,ok:festOn}),
+ Object.assign([[0,'焼きそばのソース、ほっぺについてるよ。'],[1,'#surprise|えっ、どこ！？'],[0,'…りょうほう。']],{fest:1,ok:festOn}),
+ Object.assign([[0,'おまつりがおわったら、さみしくなるのかな。'],[1,'さみしくなったら、また、おまつりしよう。'],[0,'#nod|うん。やくそく。']],{fest:1,ok:festOn}),
+ Object.assign([[0,'おどってたら、あんまり話したことない子とも、なかよくなれた！'],[1,'おどりの輪って、ふしぎだね。']],{fest:1,ok:festOn}),
+ Object.assign([[0,'きょうは、ちょっとだけ、夜ふかししてもいい日？'],[1,'ちょっとだけね。花火が、おわるまで。'],[0,'#joy|花火！ たのしみ！']],{fest:1,ok:festOn}),
+ Object.assign([[0,'#joy|屋台で、おまけしてもらっちゃった！'],[1,'いいなあ。なにを？'],[0,'たこ焼き、ひとつぶんだけ。カミサマ、やさしいね。']],{fest:1,ok:festOn}),
+ Object.assign([[0,'#surprise|見て！ 空に、お花がさいた！'],[1,'花火だよ。どーんって、音がおなかにひびくね。']],{fest:1,ok:()=>festOn()&&hour()>=20}),
+ Object.assign([[0,'たまやー！'],[1,'それ、なんて意味？'],[0,'#think|…わかんない。でも、言いたくなるの。']],{fest:1,ok:()=>festOn()&&hour()>=20}),
+ Object.assign([[0,'花火って、すぐ消えちゃうね。'],[1,'うん。だから、ちゃんと見ておこうね。'],[0,'#nod|まばたき、がまんする。']],{fest:1,ok:()=>festOn()&&hour()>=20}),
+ Object.assign([[0,'いまの花火、ハートの形じゃなかった？'],[1,'#surprise|え、見のがした！'],[0,'つぎは、いっしょに見よう。']],{fest:1,ok:()=>festOn()&&hour()>=20}),
+ Object.assign([[0,'#scared|花火の音、ちょっとこわいけど…'],[1,'こわかったら、耳ふさいでていいよ。'],[0,'#joy|ううん、見たいから、がんばる。']],{fest:1,ok:()=>festOn()&&hour()>=20}),
+ Object.assign([[0,'花火の色、ぜんぶ、ちがうね。'],[1,'あかいのは火の子の色、みどりのは草の色かな。'],[0,'#joy|じゃあ、みんなの色が、空にさいてるんだ。']],{fest:1,ok:()=>festOn()&&hour()>=20}),
+ Object.assign([[0,'#sigh|花火がおわったら、おまつりもおわり？'],[1,'まだ、ちょうちんがあるよ。'],[0,'じゃあ、もうちょっとだけ、ここにいよう。']],{fest:1,ok:()=>festOn()&&hour()>=20}),
+ Object.assign([[0,'カミサマも、屋台から、花火見てるかな。'],[1,'きっと、手をとめて、見上げてるよ。']],{fest:1,ok:()=>festOn()&&hour()>=20}),
+ Object.assign([[0,'花火のけむりで、星がかくれちゃったね。'],[1,'あしたになれば、また見えるよ。']],{fest:1,ok:()=>festOn()&&hour()>=20}),
+ Object.assign([[0,'またこんども、となりで花火見ようね。'],[1,'#nod|うん。いちばん見えるところ、とっておくね。']],{fest:1,ok:()=>festOn()&&hour()>=20})];
 /* せいれい同士のおしゃべり：話す子の属性に合わせて、口調をととのえる（話の中身は変えない） */
 function chatTone(tx,r,i){if(!r)return tx;const k=elemKey(r),pr=r.elem==='fire'?(k==='fireB'?'おれ':r.name===HOMURA?'あたい':'あたし'):r.elem==='water'?'わたし':'ぼく';
   if(tx.replace(LOOKRX,'').length>60)return tx;let t=tx.replace(/ぼく|わたし/g,pr);if(r.elem==='fire'&&pr!=='あたい')t=t.replace(/あたい/g,pr);/* 「あたい」はホムラだけ */
@@ -1556,18 +1613,20 @@ function chatTone(tx,r,i){if(!r)return tx;const k=elemKey(r),pr=r.elem==='fire'?
   if(r.elem==='wind'&&i%3===1&&t.length>=14&&!/^(フッ|そう|えっ|ええ|うん|あ|わ|へえ|ほう|ねえ|好き|いい|見た|…|#)/.test(t)&&!/[！？…]|ちゃ|ないで|の。$/.test(t)&&/[。]$/.test(t))t='フッ…'+t;/* 気どった「フッ…」は、おちついた文だけ（気もちのタグ・！・？・…・あまえた言いかたの文にはつけない） */
   return t}
 function chatTopic(r,p){const L=[],mt=((r.mates||{})[p.id]||0)>=6;CHATS.forEach((c,i)=>{if((!c.el||c.el===r.elem)&&(!c.ok||c.ok())&&(!c.key||isKey(r.name)&&isKey(p.name))&&(!c.mate||mt)&&(!c.kc||kcOK(c,r,p)))L.push(i)});/* なかよし同士だと、なかよしの話もまざる *//* 話しかけた子の属性のお話もまざる */
+  if(festOn()){const F=L.filter(i=>CHATS[i].fest);if(F.length)L.splice(0,L.length,...F)}/* おまつりの日は、おまつりの話だけ */
   const R=S.chatRec||(S.chatRec=[]),last=i=>R.lastIndexOf(i),lo=Math.min(...L.map(last));let C=L.filter(i=>last(i)===lo);/* だれとだれの会話でも、まだしていない話（なければ、いちばん前にした話）からえらぶ。ひととおりするまで、同じ話はしない */
   if(C.some(i=>CHATS[i].kc)&&Math.random()<.4)C=C.filter(i=>CHATS[i].kc);/* キーキャラの話は、まだしていなければ4割で選ばれる */
   const t=C[Math.floor(Math.random()*C.length)];for(let o;(o=R.indexOf(t))>=0;)R.splice(o,1);R.push(t);return t}
 /* 「手、ふっとこうか」：このあと手をふる */
 function trySocial(r,G){const sb=socialBest(r,G);if(!sb)return false;const best=sb.b;const o=S.res.find(q=>q.id===best.o.partner);if(!o)return false;endAct(o);o.act={type:'chatwait',stage:'do',t:0,partner:r.id};o.bubble='👋';startAct(r,G,'chat',best.stand,best.o);return true}
+const NIGATE={fire:{fountain:30},wood:{campfire:17},water:{campfire:17},earth:{swing:27},wind:{sandbox:20}};/* 属性ごとの、すこしにがてなおもちゃ：ほかより少しえらばれにくい。数字は、遊んだときのたのしさ（ふつうは BL の play.fun） */
 const FAVTOY={earth:['sandbox'],wood:['swing'],water:['fountain'],fire:['campfire'],wind:['slide','seesaw']};/* 属性ごとに、よく遊ぶおもちゃ（ほかの子より選ばれやすい） */
 function goPlay(r,G,strict){
   let best=null,bs=-1e9;
   for(let j=0;j<W*H;j++){const d=G.dist[j];if(d<0||d>45)continue;const o=S.obj[j];
-    if(o==='swing'&&free('o'+j,BL[o].play.cap)&&!toyTired(r,j)){/* 花では遊ばない */const p=BL[o].play;const s=p.pt*3+(r.like===o?6:0)+((FAVTOY[r.elem]||[]).includes(o)?7:0)-d*.3+Math.random()*2;if(s>bs){bs=s;best={type:'play',stand:j,o:{key:'o'+j,obj:j,what:o,fun:p.fun,dur:p.dur,pt:p.pt,pw:p.pw}}}}
+    if(o==='swing'&&free('o'+j,BL[o].play.cap)&&!toyTired(r,j)){/* 花では遊ばない */const p=BL[o].play;const ng=(NIGATE[r.elem]||{})[o],s=p.pt*3+(r.like===o?6:0)+((FAVTOY[r.elem]||[]).includes(o)?7:0)-(ng!=null?6:0)-d*.3+Math.random()*2;if(s>bs){bs=s;best={type:'play',stand:j,o:{key:'o'+j,obj:j,what:o,fun:ng!=null?ng:p.fun,dur:p.dur,pt:p.pt,pw:p.pw,nig:ng!=null}}}}
     const fk0=adjOf(j,k=>{const t=typeAt(k),p=t&&BL[t]&&BL[t].play;return !!(p&&p.adj&&free('o'+anc(k),p.cap)&&!toyTired(r,anc(k)))}),fk=fk0>=0?anc(fk0):-1;
-    if(fk>=0){const w=S.obj[fk],p=BL[w].play;const s=p.pt*3+(r.like===w?6:0)+((FAVTOY[r.elem]||[]).includes(w)?7:0)-d*.3+Math.random()*2;if(s>bs){bs=s;best={type:'play',stand:j,o:{key:'o'+fk,obj:fk,what:w,fun:p.fun,dur:p.dur,pt:p.pt,pw:p.pw}}}}
+    if(fk>=0){const w=S.obj[fk],p=BL[w].play;const ng=(NIGATE[r.elem]||{})[w],s=p.pt*3+(r.like===w?6:0)+((FAVTOY[r.elem]||[]).includes(w)?7:0)-(ng!=null?6:0)-d*.3+Math.random()*2;if(s>bs){bs=s;best={type:'play',stand:j,o:{key:'o'+fk,obj:fk,what:w,fun:ng!=null?ng:p.fun,dur:p.dur,pt:p.pt,pw:p.pw,nig:ng!=null}}}}
     if(canJob(r,'fish')&&roomN(r)>0&&S.ground[j]!==1&&fishW(j)>=0&&free('f'+j,1)){const sp=fSpot(j),s=9+(sp?12:0)+(r.like==='fish'?6:0)+(r.elem==='water'?9:0)-d*.3+Math.random()*2;if(s>bs){bs=s;best={type:'fish',stand:j,o:{key:'f'+j,spot:sp}}}}
   }
   {const sb=socialBest(r,G);if(sb&&sb.s>bs){bs=sb.s;best=sb.b}}
@@ -2133,6 +2192,7 @@ function stepWorld(dt){if((SUBT+=dt)>1){SUBT=0;checkSub();checkSev();guardTick()
     else if(!S.nightHurt)toast('夜をぶじに守りきった！','good');else toast('朝日がのぼって、「コワイノ」は'+(left?'消えていった':'いなくなった'))}
   if((prevH|0)!==(h|0)&&h>=7&&h<23){trapCheck();graveCheck();sparkTick();festGift()}/* 1時間に1回、とじこめられた子がいないか見る */
   if(prevH<6&&h>=6&&S.lastMorning!==dayNo()){S.lastMorning=dayNo();morning();if(WD===1&&S.finalRetry!=null&&dayNo()>=S.finalRetry&&!S.cleared){S.finalRetry=null;S.finalNight=true}}/* 火山のふもと：負けたら3日あとの夜にまた来る *//* 1日のリセットは朝6時にまとめて */
+  if(prevH<7&&h>=7&&S.festDay===dayNo())festBegin();
   if(prevH<8&&h>=8&&S.godGone&&!S.cleared&&!S.godVisit&&dayNo()>=(S.godNextVisitDay||1)&&Math.random()<(cnt('kamizo')?.5:.25)){S.godVisit=true;S.godNextVisitDay=dayNo()+2;/* 来た翌日は休み。像があれば来訪率は50% */sfx('arrive');toast('カミサマが遊びにきた！','good')}
   if(prevH<6&&h>=6&&S.godVisit&&!festOn()){S.godVisit=false;S.godNextVisitDay=Math.max(S.godNextVisitDay||0,dayNo()+2);toast('カミサマは帰っていった')}/* おまつりの日に来ていたカミサマは、おまつりがおわる朝6時に帰る */
   if(prevH<18&&h>=18&&S.godVisit&&!festOn()){S.godVisit=false;S.godNextVisitDay=Math.max(S.godNextVisitDay||0,dayNo()+2);toast('カミサマは帰っていった')}
@@ -4132,7 +4192,7 @@ function drawRes0(r,now){
   const at=r.act&&r.act.type,ad=r.act&&r.act.stage==='do',jt=JUMP.get(r),held=HOLD.has(r.id),jumping=held||jt!=null&&now-jt<1000;
   const reacting=at==='sevreact'&&ad&&r.act.reactAt!=null,rm=reacting?r.act.reactMotion:'',rp=reacting?dialoguePose(rm,now-r.act.reactAt):null;if(rp){px+=rp.x*.4;py+=rp.y*.4}
   const brave=now-(BRAVET.get(r)||-1e9)<1500;/* 勇ましい顔は、行動の切りかわりや、たたかれた時に、ちらちら消えないよう、1.5秒つづける */
-  const mood=reacting?({joy:'joy',shock:'shock',sad:'teary',think:'sad',nod:'smile'}[rm]||'smile'):((r.cryU||0)>S.t&&at!=='sleep'||r.coffin||at==='bury'||at==='pray'||at==='shiver')?'teary':/* 棺をはこぶ・埋葬するときは、うるうる顔 */r.hunger<20?'sad':(JOYU.get(r)||0)>now?'joy':(ad&&['chop','mine','till','build','repair'].includes(at))?'strain':jumping?'joy':at==='flee'?'strain':brave?'brave'/* たたかいに行く・たたいているときは、勇ましい顔 */:r.hurt>25?'strain':(at==='eat'&&ad)?'eat':(ad&&['play','chat','chatwait','npl','fish','tag','rest','bathe'].includes(at))||at==='tag'?'smile':'';
+  const mood=reacting?({joy:'joy',shock:'shock',sad:'teary',think:'sad',nod:'smile'}[rm]||'smile'):((r.cryU||0)>S.t&&at!=='sleep'||r.coffin||at==='bury'||at==='pray'||at==='shiver')?'teary':/* 棺をはこぶ・埋葬するときは、うるうる顔 */r.hunger<20?'sad':(JOYU.get(r)||0)>now?'joy':(ad&&['chop','mine','till','build','repair'].includes(at))?'strain':jumping?'joy':at==='flee'?'strain':brave?'brave'/* たたかいに行く・たたいているときは、勇ましい顔 */:r.hurt>25?'strain':(at==='eat'&&ad)?'eat':(ad&&['play','chat','chatwait','npl','fish','tag','rest','bathe','bon','yatai','fwalk','hanabi','dance'].includes(at))||at==='tag'?'smile':'';
   const bob=(walking?Math.abs(Math.sin(now/110+r.id))*2.5:0)+(()=>{const jt=JUMP.get(r),d=jt==null?-1:now-jt;return d>=0&&d<1000?Math.abs(Math.sin(d/130))*9*(1-d/1000):0})();
   {const sw=Math.max(r.swing||0,r.swingT||0),sd=now-sw;if(sw&&sd>=0&&sd<280)px+=(r.face<0?-1:1)*Math.sin(sd/280*Math.PI)*8}/* 攻撃のとき、前にとびだす */
   if(at==='shiver'&&ad)px+=Math.sin(now/26+r.id*3)*1.4;/* ふるえる */
@@ -4182,6 +4242,23 @@ let GODP=[-.82,-.6];const godX=()=>STATUE>=0?STATUE%W+.5+GODP[0]:CX+.5,godY=()=>
 const godHere=()=>S.godShown&&(!S.godGone||S.godVisit);
 function talkBub(px,by,now,col){const bw=30,bb=by-Math.abs(Math.sin(now/260))*3;ctx.fillStyle=col||'#9fdcff';rr(ctx,px-bw/2,bb-48,bw,27,10);ctx.beginPath();ctx.moveTo(px-5,bb-21.5);ctx.lineTo(px,bb-14);ctx.lineTo(px+5,bb-21.5);ctx.fill();ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.beginPath();ctx.roundRect?ctx.roundRect(px-bw/2,bb-48,bw,27,10):ctx.rect(px-bw/2,bb-48,bw,27);ctx.stroke();
     for(let d=-1;d<=1;d++)circ(ctx,px+d*7,bb-34.5,2.6,'#1f5f86');}
+const HB={t:0,rk:[],ps:[],fl:[]};
+function drawHanabi(now){const dt=Math.min(.05,Math.max(0,(now-(HB.t||now))/1000));HB.t=now;const h=hour();
+  if(festOn()&&h>=20&&h<21&&!sheet&&Math.random()<dt*1.1){const C=['#ff6b6b','#ffd84a','#7fe8ff','#9cff7a','#ff8cc0','#c9a2ff'];HB.rk.push({x:VW*(.15+Math.random()*.7),y:VH*.62,ty:VH*(.2+Math.random()*.2),col:pick(C),col2:pick(C)})}/* 夜8時から9時は、空に花火 */
+  if(!HB.rk.length&&!HB.ps.length&&!HB.fl.length)return;ctx.globalCompositeOperation='lighter';
+  for(const k of HB.rk){k.y-=220*dt;ctx.fillStyle='rgba(255,230,180,.8)';ctx.fillRect(k.x-1,k.y,2,6);if(k.y<=k.ty){k.done=1;HB.fl.push({x:k.x,y:k.y,life:.3,col:k.col});for(let i=0;i<48;i++){const a=i/48*6.283,v=95+Math.random()*25;HB.ps.push({x:k.x,y:k.y,vx:Math.cos(a)*v,vy:Math.sin(a)*v,life:1.8,col:k.col})}for(let i=0;i<20;i++){const a=i/20*6.283+.15,v=50;HB.ps.push({x:k.x,y:k.y,vx:Math.cos(a)*v,vy:Math.sin(a)*v,life:1.4,col:k.col2})}sfx('hanabi')}}/* 外がわの輪と、内がわの輪（べつの色） */
+  for(const f of HB.fl){f.life-=dt;const R=70*(1-f.life/.3)+20,g=ctx.createRadialGradient(f.x,f.y,1,f.x,f.y,R);g.addColorStop(0,'rgba(255,250,230,'+(f.life*1.6)+')');g.addColorStop(1,'rgba(255,250,230,0)');ctx.fillStyle=g;ctx.fillRect(f.x-R,f.y-R,R*2,R*2)}HB.fl=HB.fl.filter(f=>f.life>0);/* ひらいた瞬間の光 */
+  HB.rk=HB.rk.filter(k=>!k.done);
+  ctx.lineCap='round';for(const q of HB.ps){q.life-=dt;const ox=q.x,oy=q.y;q.x+=q.vx*dt;q.y+=q.vy*dt;q.vy+=30*dt;q.vx*=.985;q.vy*=.985;ctx.globalAlpha=Math.max(0,Math.min(1,q.life));ctx.strokeStyle=q.col;ctx.lineWidth=3.5;ctx.beginPath();ctx.moveTo(ox-q.vx*.06,oy-q.vy*.06);ctx.lineTo(q.x,q.y);ctx.stroke()}/* 光の粒は、すこし尾をひく */
+  HB.ps=HB.ps.filter(q=>q.life>0);ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over'}
+function drawYatai(px,py,front,now){const F=(a,b,w,h,col)=>{ctx.fillStyle=col;ctx.fillRect(px+a,py+b,w,h)};
+  if(!front){F(-31,-80,3,102,'#7a4f30');F(28,-80,3,102,'#7a4f30');F(-30,-80,1,102,'#a8703f');F(29,-80,1,102,'#a8703f');/* 柱 */
+    for(let i=0;i<9;i++)F(-36+i*8,-84,8,12,i%2?'#fff3e6':'#d8452f');F(-36,-72,72,2,'#a8321f');for(let i=0;i<9;i++){ctx.fillStyle=i%2?'#fff3e6':'#d8452f';ctx.beginPath();ctx.arc(px-32+i*8,py-71,4,0,Math.PI);ctx.fill()}/* しましまの屋根 */
+    const sw=Math.round(Math.sin(now/600)*1);for(const a of[-34,30]){F(a+sw,-66,5,8,'#d8452f');F(a+1+sw,-67,3,10,'#d8452f');F(a+1+sw,-65,1,6,'#f08a6a')}return}/* はしのちょうちん */
+  F(-34,2,68,4,'#a8703f');F(-34,2,68,1,'#c98a4e');F(-32,6,64,16,'#8a5a33');F(-32,6,64,5,'#d8452f');for(let i=0;i<4;i++)F(-24+i*16,11,1,11,'#6e4428');/* 台と、赤い布 */
+  for(const a of[-26,-20]){F(a,-6,1,8,'#e8d4a8');ctx.fillStyle='#e0302a';ctx.beginPath();ctx.arc(px+a+.5,py-6,3.2,0,7);ctx.fill();F(a-1,-8,1,1,'#fff')}/* りんごあめ */
+  F(-8,0,14,2,'#f4f0e6');for(const[a,b]of[[-6,-2],[-2,-2],[2,-2],[-4,-4],[0,-4]]){ctx.fillStyle='#b8743a';ctx.beginPath();ctx.arc(px+a+.5,py+b+.5,2,0,7);ctx.fill()}/* たこ焼き */
+  F(12,0,16,2,'#f4f0e6');F(14,-3,12,3,'#c0803a');F(15,-4,3,1,'#7aa84a');F(21,-4,2,1,'#e05a3a')}/* 焼きそば */
 function drawGod(now){
   if(!godHere())return;const GX=godX(),GY=godY(),px=GX*TS,py=GY*TS+Math.sin(now/700)*3;
   shadow(ctx,px,GY*TS+16,14,4);
@@ -4504,7 +4581,7 @@ function render(now){
   for(const r of S.res)if(vis(r)){const px=r.x*TS,fy=r.y*TS,onB=r.act&&r.act.type==='rest'&&r.act.stage==='do'&&S.obj[r.act.obj]==='bench',onAl=STATUE>=0&&(r.y|0)*W+(r.x|0)===STATUE+W;/* ベンチにすわっている子は、ベンチの背もたれより手前（縦のベンチは2マスめより手前）。神殿の台座の上にいる子は、台座より手前 */const rj=(r.y|0)*W+(r.x|0),inJ=typeAt(rj)==='bed'?anc(rj):r.act&&r.act.stage==='do'?(r.act.type==='sleep'&&S.obj[r.act.obj]==='bed'?r.act.obj:r.act.type==='bathe'&&r.act.tub!=null?r.act.tub:-1):-1,inO=inJ>=0?S.obj[anc(inJ)]:null;/* ベッドの上にいる子（寝る子も、歩いている子も）・バスタブに入る子は、その家具より手前 */const inDr=HOME_DOORS.has(typeAt((r.y|0)*W+(r.x|0)))||GATE_IDS.has(typeAt((r.y|0)*W+(r.x|0)))||SEATS.includes(typeAt((r.y|0)*W+(r.x|0)));/* いすにすわる子も、いすより手前 *//* ドアのマスを通る子は、ドアより手前 */add(toyR(r)?toyPose(r,now).z:inO&&BL[inO]?objectDepth(inO,anc(inJ))+.02:onB?((r.act.obj/W)|0)+(rotAt(r.act.obj)===1?2.05:1.05):onAl?((STATUE/W)|0)+2.03:inDr?(r.y|0)+1.02:rDepth(r),2,[px-22,fy-64,px+22,fy+13],()=>drawRes(r,now),(r.y|0)*W+(r.x|0))}
   if(EVAP.length){EVAP=EVAP.filter(it=>now-it.t0<(it.dur||1800)+600);for(const it of EVAP){const e=it.e,z=EN[e.type].size||1,px=e.x*TS,fy=e.y*TS;add(e.y,2,[px-30*z,fy-110*z,px+30*z,fy+15],()=>drawEvap(it,now),(e.y|0)*W+(e.x|0))}}
   for(const e of S.enemies)if(vis(e)&&!(e.dead&&EVAP.some(it=>it.e===e))){/* 消えていく途中のコワイノは、消える演出だけを描く */const s=EN[e.type].size||1,px=e.x*TS,fy=e.y*TS;add(e.y,2,[px-24*s,fy-56*s-10,px+24*s,fy+15],()=>drawEnemy(e,now),(e.y|0)*W+(e.x|0))}
-  if(godHere()){const GX=godX(),GY=godY(),px=GX*TS,py=GY*TS,onA=STATUE>=0&&S.obj[STATUE+W]==='altar';add(onA?((STATUE/W)|0)+1.02:GY+.5,onA?1.5:2,/* 神殿の柱とおそなえ箱より手前 */[px-36,py-64,px+36,py+24],()=>drawGod(now),(GY|0)*W+(GX|0))}
+  if(godHere()){const GX=godX(),GY=godY(),px=GX*TS,py=GY*TS,onA=STATUE>=0&&S.obj[STATUE+W]==='altar',gk=onA?((STATUE/W)|0)+1.02:GY+.5,gt=onA?1.5:2;add(gk,gt,/* 神殿の柱とおそなえ箱より手前 */[px-36,py-64,px+36,py+24],()=>drawGod(now),(GY|0)*W+(GX|0));if(festOn()){add(gk,gt-.05,[px-40,py-84,px+40,py+26],()=>drawYatai(px,py,0,now),-1);add(gk,gt+.05,[px-40,py-84,px+40,py+26],()=>drawYatai(px,py,1,now),-1)}}/* おまつりの日は、カミサマの屋台（屋根はカミサマのうしろ、台は前） */
   if(S.nushi){const n=S.nushi,px=n.x*TS,py=n.y*TS;add(n.y+.2,2,[px-100,py-150,px+100,py+20],()=>drawNushi(now),-1)}
   for(let y=Math.max(0,y0-2);y<Math.min(H,y1+4);y++)for(let x=Math.max(0,x0-4);x<x1;x++){const i=y*W+x,o=S.obj[i];if(!o||o==='part'||!BL[o]||S.ground[i]===1&&o!=='lotus'&&o!=='sprout'||(FLAT.has(o)||BL[o].floor)&&!(BL[o].dyn||BL[o].anim||TREES.has(o)))continue;/* 立っている物は、動く物も動かない物も、毎コマ足もとの順に描く */
     if(o==='door')add((i/W|0)+.01,0,null,()=>{ctx._doorBack=1;drawObj(ctx,'door',x*TS,y*TS,i);ctx._doorBack=0},i);/* ドアの奥の面 */
@@ -4558,6 +4635,7 @@ function render(now){
   if(GLWN){ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=Math.min(1,dk*1.5);ctx.globalCompositeOperation='lighter';ctx.drawImage(GLW,0,0);ctx.globalCompositeOperation='source-over';ctx.globalAlpha=1;ctx.setTransform(dpr,0,0,dpr,0,0);GLWN=0}
   // 空気の粒（昼は花粉、夜はホタル）
   for(const m of motes){const x=m.x*VW,y=m.y*VH;if(dk>.3){const a=(Math.sin(now/400+m.p)*.5+.5)*.8;ctx.globalCompositeOperation='lighter';circ(ctx,x,y,2.2*m.s,'rgba(200,255,140,'+a+')');circ(ctx,x,y,6*m.s,'rgba(200,255,140,'+a*.15+')');ctx.globalCompositeOperation='source-over'}else{circ(ctx,x,y,1.4*m.s,'rgba(255,250,220,'+(.35+.2*Math.sin(now/600+m.p))+')')}}
+  drawHanabi(now);
   if(S.rain){ctx.strokeStyle='rgba(200,225,255,.45)';ctx.lineWidth=1;ctx.beginPath();for(const d of rain){const x=d.x*VW,y=d.y*VH;ctx.moveTo(x,y);ctx.lineTo(x-3,y+10*d.s)}ctx.stroke()}
   if(!VIG||VIG.w!==VW||VIG.h!==VH){const c2=document.createElement('canvas');c2.width=VW;c2.height=VH;const g2=c2.getContext('2d');const vg=g2.createRadialGradient(VW/2,VH/2,Math.min(VW,VH)*.45,VW/2,VH/2,Math.max(VW,VH)*.75);vg.addColorStop(0,'rgba(0,0,0,0)');vg.addColorStop(1,'rgba(10,20,15,.28)');g2.fillStyle=vg;g2.fillRect(0,0,VW,VH);VIG={c:c2,w:VW,h:VH}}
   ctx.drawImage(VIG.c,0,0);
@@ -4778,6 +4856,7 @@ case'bossKO':noise(t,.5,.3,o,200);tone(70,t,1.4,'sine',.2,o,30);tone(900,t,.35,'
   case'hit':if(playS('arrow',.6))break;noise(t,.08,.15,o,800);tone(220,t,.12,'square',.05,o,70);break;
   case'defeat':if(playS('kill',.5))break;tone(400,t,.18,'triangle',.08,o,1300);noise(t+.05,.12,.04,o,4000);break;
   case'offer':seq([88,91,96],.05,'sine',.05);break;
+  case'hanabi':noise(t,.5,.1,o,400);tone(62,t,.35,'sine',.18,o);break;/* 花火の音 */
   case'arrive':seq([79,84,88,91,96],.08,'sine',.06,.2);break;
   case'zap':if(playS('shoot',.45))break;tone(1500,t,.07,'sawtooth',.015,o,500);break;
   case'seed':seq([84,91,96,100],.05,'triangle',.05);break;
@@ -4960,7 +5039,7 @@ function renderSheet(){
     {const T=WD===0?['bulk','ひろびろハケ','指でなぞった範囲を、ブロックでまとめてぬれる。種もまとめて植えてもらえる','hake']:WD===1?['swap','つけかえトンカチ','つながっている柵・塀・家の壁・道・床を、まとめてべつの種類にかえる。はずした物は、おそなえ箱にもどる','swap']:null;/* 道具は、土地ごとに1つ（草原：ハケ・火山：トンカチ・つぎの土地：スタンプ）。もらった道具は、ほかの土地でも使える */
       if(T){const r3=sec('道具'),bx=row(r3,T[1],T[2],toolIcon(T[3]),S[T[0]]);if(S[T[0]])btn(bx,'もらった',true);else btn(bx,SP(3000),S.pt<3000,()=>{S.pt-=3000;S[T[0]]=true;applyFeats();toast(T[1]+'をもらった！「どうぐ」から使える','good');trade()},1)}}
     if(S.lv>=5||(S.bossKills||0)>=1||S.flags.hinoDown){const fo=festOn(),r5=sec(fo?'おまつりの交換':'とくべつな交換');/* ふだんは「おまつり」だけ。めぶきのしずく・素材・ごちそうは、おまつりの日だけ */
-      {const done=S.festDay===dayNo(),bx=row(r5,'おまつり','',null,done);btn(bx,done?'きょうはおまつり':SP(200),done||S.pt<200,()=>{S.pt-=200;S.festDay=dayNo();for(const r of S.res){r.fun=100;r.energy=100;spawnFX(r.x-.5,r.y-.6,'#ffd84a')}sfx('level');toast('おまつりがはじまった！','good');festStart();trade()},1)}
+      {const done=S.festDay!=null&&S.festDay>=dayNo(),bx=row(r5,'おまつり','つぎの日が、おまつりになる',null,done);btn(bx,done?(S.festDay>dayNo()?'あしたはおまつり':'きょうはおまつり'):SP(200),done||S.pt<200,()=>{S.pt-=200;S.festDay=dayNo()+1;sfx('good');toast('あしたは、おまつり！','good');trade()},1)}/* たのんだつぎの日の朝7時に、おまつりがはじまる */
       if(fo&&((S.bossKills||0)>=1||S.flags.hinoDown)){const bx=row(r5,'めぶきのしずく','消えてしまったせいれいを、よみがえらせる（所持：'+(S.mebuki||0)+'）',null);btn(bx,SP(400),S.pt<400,()=>{S.pt-=400;S.mebuki=(S.mebuki||0)+1;toast('めぶきのしずくをもらった','good');trade()},1)}
       if(fo){const room=matCap()-(S.mat.wood||0)-(S.mat.stone||0);
         for(const[k,nm]of[['wood','木材'],['stone','石材']]){const bx=row(r5,nm+'×10','素材箱に入る（いま'+(S.mat[k]||0)+'）',null);btn(bx,room<10?'素材箱がいっぱい':SP(50),room<10||S.pt<50,()=>{S.pt-=50;S.mat[k]=(S.mat[k]||0)+10;S.gotMat&&(S.gotMat[k]=(S.gotMat[k]||0)+10);toast(nm+'を10こもらった','good');trade()},1)}}}
@@ -5116,7 +5195,7 @@ function renderSheet(){
        {const sb=el('<button class="btn"></button>'),sn=S.mseed||0;sb.textContent='ふしぎな種をあげる（'+sn+'こ）';sb.disabled=sn<1;sb.onclick=()=>giveSeed(r);bw.appendChild(sb)}/* ふしぎな種も、パワーのとなりからあげられる */
        body.appendChild(sec)}/* パワーで、せいれいを強化 */
      else if(resTab===1){const pf=el('<div class="sec"><div class="stats"></div></div>'),pg=pf.querySelector('.stats');
-       for(const[k,v]of[['得意なこと',ELEM[r.elem].can],['好きな遊び',LIKES[r.like]],['好きな家具',BL[likeF(r)].name],['好きな料理',FOODS[favDish(r)].name],['なかよし',(bestMate(r)||{}).name||'まだいない'],['村に来た日',r.came?r.came+'日目':'はじめから'],['作ったもの',(r.made||0)+'こ'],['追いはらった「コワイノ」',(r.beat||0)+'体'],['ベッド',myBed(r)>=0?'じぶんのベッドがある':'きまっていない']]){const d=el('<div class="stat" style="display:block"><span style="display:block"></span><b style="display:block;text-align:left;margin-top:2px"></b></div>');d.firstChild.textContent=k;d.lastChild.textContent=v;pg.appendChild(d)}
+       for(const[k,v]of[['得意なこと',ELEM[r.elem].can],['好きな遊び',LIKES[r.like]],['にがてな遊び',Object.keys(NIGATE[r.elem]||{}).map(k=>BL[k].name).join('・')||'とくにない'],['好きな家具',BL[likeF(r)].name],['好きな料理',FOODS[favDish(r)].name],['なかよし',(bestMate(r)||{}).name||'まだいない'],['村に来た日',r.came?r.came+'日目':'はじめから'],['作ったもの',(r.made||0)+'こ'],['追いはらった「コワイノ」',(r.beat||0)+'体'],['ベッド',myBed(r)>=0?'じぶんのベッドがある':'きまっていない']]){const d=el('<div class="stat" style="display:block"><span style="display:block"></span><b style="display:block;text-align:left;margin-top:2px"></b></div>');d.firstChild.textContent=k;d.lastChild.textContent=v;pg.appendChild(d)}
        body.appendChild(pf)}
      else{
      const st=el('<div class="sec"><div class="stats"></div></div>'),g=st.querySelector('.stats');
@@ -5407,7 +5486,7 @@ function arrive(){
 }
 function talkOnce(key,lines,delay){/* 1回だけの会話：最後まで見てから「見た」にする。とちゅうでとじたら、次に開いたときにもう一度 */if(!S||S.flags[key]||!lines||!lines.length)return;const P=S.pendTalk||(S.pendTalk={});P[key]=lines;setTimeout(()=>{if(!S||S.flags[key])return;dialog(P[key]||lines,()=>{S.flags[key]=1;if(S.pendTalk)delete S.pendTalk[key]})},delay||900)}
 function replayTalks(){if(!S||!S.pendTalk)return;for(const k in S.pendTalk){if(S.flags[k]){delete S.pendTalk[k];continue}talkOnce(k,S.pendTalk[k],1500)}}
-function continueGame(saved){if(saved&&saved.summary)saved=loadStage(saved.world);if(!saved)return;setWorld(saved.world||0);S=saved;LIVE[WD]=S;ensureStor(S);if((S.mig||0)<1){fixBeds();dropChair2();dropBirdhouse();dropFlower();dropNtree();if(((S.subSt||{}).watch2||0)>=4){S.recipes=S.recipes||{};S.guardianIdeas=S.guardianIdeas||{};S.recipes.signpost=true;S.guardianIdeas.signpost=true}/* 見張り台を2つにしたあと（フタバの「道がわかる目印」）で、道しるべをおぼえる */S.mig=1}if(S.mig<2){if(S.flags.traded)S.flags.tradedSeen=1;if(S.flags.oracleSet)S.flags.oracleSeen=1;if(S.flags.minaCame&&S.flags.mnN==null)S.flags.mnN=S.nights||0;S.mig=2}if(S.mig<3){swingWide();S.mig=3}if(S.mig<4){recount();rugsBig();S.mig=4}if(S.mig<5){for(const r of [...S.res,...(S.lost||[]),...(S.buried||[])])if(r.vr&&r.vr.tr==='ryouri'&&r.elem!=='fire')r.vr.tr=pick(TRK(r.elem));S.mig=5}if(S.mig<6){const N=new Set([19,25,36,44,48,49,51,55,59,71,72,85,89,90,91,98,99,120,127,134,168,174,177,183,202]);S.chatRec=(S.chatRec||[]).filter(i=>!N.has(i));S.mig=6}/* 似ていた会話を、べつの会話にさしかえた：さしかえた会話は、まだしていない話にもどす *//* 料理じょうずは火の子だけ：ほかの子は、べつの特技に *//* 古いセーブを直すのは、1回だけ */setTimeout(replayTalks,2500);/* とちゅうでとじた会話を、もう一度 */if(S.flags&&S.flags.nushiDue&&!S.cleared)setTimeout(()=>{if(!S.cleared)nushiReturns()},3000);/* ヌシ様が帰ってくる場面を、とちゅうでとじていたら、はじめから */syncTools(S);dirty=true;closeSheet();S.res.forEach(r=>{r.act=null;r.path=[]});S.orders.forEach(o=>o.worker=null);recount();renderQuest();applyFeats();setMode('look');glassUI();
+function continueGame(saved){if(saved&&saved.summary)saved=loadStage(saved.world);if(!saved)return;setWorld(saved.world||0);S=saved;LIVE[WD]=S;ensureStor(S);if((S.mig||0)<1){fixBeds();dropChair2();dropBirdhouse();dropFlower();dropNtree();if(((S.subSt||{}).watch2||0)>=4){S.recipes=S.recipes||{};S.guardianIdeas=S.guardianIdeas||{};S.recipes.signpost=true;S.guardianIdeas.signpost=true}/* 見張り台を2つにしたあと（フタバの「道がわかる目印」）で、道しるべをおぼえる */S.mig=1}if(S.mig<2){if(S.flags.traded)S.flags.tradedSeen=1;if(S.flags.oracleSet)S.flags.oracleSeen=1;if(S.flags.minaCame&&S.flags.mnN==null)S.flags.mnN=S.nights||0;S.mig=2}if(S.mig<3){swingWide();S.mig=3}if(S.mig<4){recount();rugsBig();S.mig=4}if(S.mig<5){for(const r of [...S.res,...(S.lost||[]),...(S.buried||[])])if(r.vr&&r.vr.tr==='ryouri'&&r.elem!=='fire')r.vr.tr=pick(TRK(r.elem));S.mig=5}if(S.mig<6){const N=new Set([19,25,36,44,48,49,51,55,59,71,72,85,89,90,91,98,99,120,127,134,168,174,177,183,202]);S.chatRec=(S.chatRec||[]).filter(i=>!N.has(i));S.mig=6}if(S.mig<7){for(const r of [...S.res,...(S.lost||[]),...(S.buried||[])])if((NIGATE[r.elem]||{})[r.like]!=null)r.like=pick(LIKE_KEYS.filter(k=>(k!=='slide'||WD===4)&&(NIGATE[r.elem]||{})[k]==null));S.mig=7}/* 好きな遊びが、にがてなおもちゃだった子は、えらびなおす *//* 似ていた会話を、べつの会話にさしかえた：さしかえた会話は、まだしていない話にもどす *//* 料理じょうずは火の子だけ：ほかの子は、べつの特技に *//* 古いセーブを直すのは、1回だけ */setTimeout(replayTalks,2500);/* とちゅうでとじた会話を、もう一度 */if(S.flags&&S.flags.nushiDue&&!S.cleared)setTimeout(()=>{if(!S.cleared)nushiReturns()},3000);/* ヌシ様が帰ってくる場面を、とちゅうでとじていたら、はじめから */syncTools(S);dirty=true;closeSheet();S.res.forEach(r=>{r.act=null;r.path=[]});S.orders.forEach(o=>o.worker=null);recount();renderQuest();applyFeats();setMode('look');glassUI();
   cam.z=homeZ();centerOn(CX*TS,CY*TS);$('#title').hidden=true;$('#maps').hidden=true;started=true;stageMusic();showUI(true);if(!WD&&S.flags&&S.flags.ret1===1){S.flags.ret1=2;(S.sevQ||(S.sevQ=[])).push('ret')}}
 
 
@@ -5451,7 +5530,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='565';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='566';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
