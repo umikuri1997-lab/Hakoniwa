@@ -3800,6 +3800,13 @@ const SPDOT={},SPDOK={};
 function spDot(key,el,vr){/* 絵の色を、その子の色にかえる（もとの色：共通の絵は木、ほかはその属性） */
   const ch=window.CHIPS&&CHIPS[key];if(!ch)return null;const im=chipImgs(ch,key)[0];if(!im.ok)return null;
   const se=key.startsWith('sp:')?'wood':el,k=key+'|'+el+'|'+(vr&&vr.h||0)+'_'+(vr&&vr.l||0);if(SPDOT[k])return SPDOT[k];
+  if(key.startsWith('sp_')||key==='sp:hand'){/* 頭巾などは色の数が多い絵なので、色あいを全部ずらす。手は、その子の手の色でそめる */
+    if(key!=='sp:hand'&&(!vr||(!vr.h&&!vr.l)))return SPDOT[k]=im;
+    const cv=document.createElement('canvas');cv.width=ch.w;cv.height=ch.h;const g=cv.getContext('2d');g.drawImage(im,0,0);const d=g.getImageData(0,0,ch.w,ch.h),p=d.data,hx=v=>'#'+((1<<24)|v).toString(16).slice(1);
+    if(key==='sp:hand'){const hc=parseInt(spcVar(el,vr).hand.slice(1),16),H=[hc>>16,hc>>8&255,hc&255];let mx=1;for(let i=0;i<p.length;i+=4)if(p[i+3])mx=Math.max(mx,p[i]+p[i+1]+p[i+2]);
+      for(let i=0;i<p.length;i+=4){if(!p[i+3])continue;const r=(p[i]+p[i+1]+p[i+2])/mx;p[i]=H[0]*r;p[i+1]=H[1]*r;p[i+2]=H[2]*r}}
+    else for(let i=0;i<p.length;i+=4){if(!p[i+3])continue;const[H2,S2,l]=hex2hsl(hx(p[i]<<16|p[i+1]<<8|p[i+2])),t=hsl2hex((H2+vr.h+360)%360,S2,Math.max(.08,Math.min(.92,l+vr.l)));p[i]=parseInt(t.slice(1,3),16);p[i+1]=parseInt(t.slice(3,5),16);p[i+2]=parseInt(t.slice(5,7),16)}
+    g.putImageData(d,0,0);return SPDOT[k]=cv}
   const A=SPC[se],B=spcVar(el,vr);if(A===B)return SPDOT[k]=im;
   const cv=document.createElement('canvas');cv.width=ch.w;cv.height=ch.h;const g=cv.getContext('2d');g.drawImage(im,0,0);
   const d=g.getImageData(0,0,ch.w,ch.h),p=d.data,M={};for(const r in A)if(B[r])M[A[r].toLowerCase()]=B[r];
@@ -3840,7 +3847,7 @@ function drawSpiritDot(c,el,x,y,s,f,o){
   const H=TUNE.head,hs=tr&&!back?'S':'',hp=(lx,ly)=>[(hs?-TUNE.sHoodX+lx*TUNE.sHead:lx)*H,-30*TUNE.bodyH+H*(ly+36)],/* 頭の中の位置→体の位置 */
     rot=(k,lx,ly,a)=>{const[px,py]=hp(lx,ly);c.save();c.translate(px,py);c.rotate(a);c.translate(-px,-py);spr(k);c.restore()},dd=v=>Math.round(v*H*.87)*D;
   if(el==='wind'){const[px,py]=[(back?1:-1)*tr*4*H,-30*TUNE.bodyH+H*(-79+36)];c.save();c.translate(px,py);c.rotate(Math.sin(t*2)*.15);c.translate(-px,-py);spr(E0+'vine'+hs);c.restore()}
-  spr(E0+'hood'+hs);
+  spr(E0+'hood'+(back&&CHIPS[E0+'hoodB']?'B':hs));/* うしろ向きは、うしろの頭巾 */
   if(el==='wood'||el==='fire'){const v=dd(Math.sin(t*(el==='fire'?7:2.2))*(el==='fire'?2.5:1.4));spr(E0+'tip'+hs,v,0)}/* 頭巾の先が左右にゆれる */
   if(el==='water'){const v=dd(Math.sin(t*2.2)*1.4);if(v<0)spr(E0+'tip'+hs);spr(E0+'tip'+hs,0,v)}/* 水の子は上下（上がるときは、すきまがあかないように元の位置にも描く） */
   if(el==='fire')spr(E0+'ember'+hs,0,dd(Math.sin(t*3)*2.5));/* 火の玉がふわふわ */
@@ -5301,7 +5308,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='478';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='479';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
