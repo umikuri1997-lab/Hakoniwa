@@ -880,6 +880,7 @@ const hour=()=>(clk()/60)%24;
 const dayNo=()=>Math.floor(clk()/1440)+1;
 const nightLock=()=>S&&S.enemyOn&&isNight();/* 夜（コワイノの時間）は、建てることも解体もできない */
 const isNight=()=>{const h=hour();return h>=23||h<6},isDark=()=>{const h=hour();return h>=21||h<6};/* せいれいが寝るのは23時 */
+function nearBase(e){const br=BASE_R[S.baseLv]+3;return e.x>=CX-br&&e.x<CX+br&&e.y>=CY-br&&e.y<CY+br}/* 拠点のまわり＋3マス（壁をたたける所）まで */
 function inBase(x,y){const r=BASE_R[S.baseLv];return x>=CX-r&&x<CX+r&&y>=CY-r&&y<CY+r}
 const anc=j=>{if(S.obj[j]==='part'||(S.obj[j]==='site2'&&S.ref[j]!=null))return S.ref[j];if(S.obj[j]==='site2')for(const k of[j-1,j+1,j-W])if(S.obj[k]==='site')return k;return j};/* 古いセーブの神殿の足場にも対応 */
 const typeAt=j=>S.obj[anc(j)];
@@ -1273,7 +1274,7 @@ function decide0(r){
   if(isNight()&&r.elem==='fire'&&offShift(r)){r.bubble='💤'}/* 火のせいれいが2人以上いれば、交代で見張って、交代で眠る */
   else if(isNight()&&isWatch(r)){// 火のせいれい（と、まもりをおぼえたフタバ）は寝ないで見回り
     if(r.elem==='fire'&&r.hunger<50&&hideIn(r,G))return;/* おなかが50より少ないときは、たたかわずに家へにげる */
-    {const e=r.elem!=='fire'?null:pickFoe(r,S.enemies.filter(e=>e.spawned&&!e.dead&&inBase(e.x|0,e.y|0)));if(e){const t=guardSpot(G,e,r);/* 届かない所にいても、いちばん近くまで行く */if(t>=0)return startAct(r,G,'patrol',t,{hunt:S.t})}}/* 拠点にコワイノが入ったら、まっすぐたたかいに行く */
+    {const e=r.elem!=='fire'?null:pickFoe(r,S.enemies.filter(e=>e.spawned&&!e.dead&&nearBase(e)));if(e){const t=guardSpot(G,e,r);/* 届かない所にいても、いちばん近くまで行く */if(t>=0)return startAct(r,G,'patrol',t,{hunt:S.t})}}/* 拠点にコワイノが入ったら、まっすぐたたかいに行く */
     if(r.name===POKO){const hk=keyName('fire'),fs=S.res.filter(t=>t!==r&&!t.hidden&&t.elem==='fire'),tg=fs.find(t=>t.name===hk)||fs[0];if(tg&&Math.hypot(tg.x-r.x,tg.y-r.y)>1.5){let q=-1,bd=1e9;for(let k=0;k<W*H;k++){if(G.dist[k]<0||G.dist[k]>40||!walk(k))continue;const d=Math.hypot(k%W+.5-tg.x,((k/W)|0)+.5-tg.y)+G.dist[k]*.02;if(d<bd){bd=d;q=k}}if(q>=0)return startAct(r,G,'patrol',q)}}/* フタバは、火の子のそばについて回る */
     const ib=j=>inBase(j%W,(j/W)|0);let j=nearest(G,j=>walk(j)&&!roomOf(j)&&ib(j)&&Math.random()<.04,8);if(j<0)j=nearest(G,j=>walk(j)&&!roomOf(j)&&ib(j),80);/* 家の中にいたら、まず外へ出る */if(j>=0)return startAct(r,G,'patrol',j);/* 夜は家の外を見回る */return startAct(r,G,'wander',(r.y|0)*W+(r.x|0))}
   if(isNight()&&r.hunger<hMax(r)-10&&S.food>0&&!S.enemies.some(e=>e.spawned&&!e.dead&&Math.hypot(e.x-r.x,e.y-r.y)<7)){r.refill=S.t+60;if(goEat(r,G))return}/* 夜、寝る前に、おなかいっぱい食べておく（夜中に食べに出ないように） */
@@ -1697,7 +1698,7 @@ function updRes(r,dt){rescueStuck(r);if((RHOLD.get(r)||0)>performance.now())retu
     if(en){r.fatk=S.t+5;const ba=((r.bst&&r.bst.atk)||0)+((r.sst&&r.sst.atk)||0),dmg=Math.max(.5,(fAtk(lv)+ba)*fireMul(r));en.hp-=dmg;en.flash=6;en.stun=Math.max(en.stun||0,1);r.face=en.x>=r.x?1:-1;r.swing=performance.now();atkFX(r,en);sfxAt('hit',r.x,r.y);if(en.hp<=0){r.beat=(r.beat||0)+1;defeat(en,r.name+'が'+EN[en.type].name+'を追いはらった！')}}}/* 火のせいれいは、となりのコワイノに自分から攻撃する */
   if(r.act&&!isNight()&&!URGNO.includes(r.act.type)&&!heldN(r)&&!r.meal&&!r.cing&&r.hunger>=35&&r.energy>=25&&!(r.uchk>S.t)){r.uchk=S.t+2;if(hasUrgent(r)){// 建物や依頼は、いまの作業をやめてでも向かう
     const old=r.act,op=r.path,ob=r.bubble;endAct(r);const G=bfs(r.x|0,r.y|0);if(!(tryJob(r,G,'build')||tryJob(r,G,'craft'))){r.act=old;r.path=op;r.bubble=ob;if(old.key)reserve(old.key)}}}
-  if(r.elem==='fire'&&r.act&&r.act.type==='patrol'&&isNight()&&S.enemyOn&&!offShift(r)&&(r.act.hunt!=null?S.t-r.act.hunt>3:S.enemies.some(e=>e.spawned&&!e.dead&&inBase(e.x|0,e.y|0))))endAct(r);/* 見回り中でも、侵入に気づいたらすぐ向かう */
+  if(r.elem==='fire'&&r.act&&r.act.type==='patrol'&&isNight()&&S.enemyOn&&!offShift(r)&&(r.act.hunt!=null?S.t-r.act.hunt>3:S.enemies.some(e=>e.spawned&&!e.dead&&nearBase(e))))endAct(r);/* 見回り中でも、拠点＋3マスにコワイノが来たらすぐ向かう */
   if(r.act&&r.act.type==='wander'&&isNight()&&!(isWatch(r)&&S.enemyOn&&!offShift(r))){endAct(r)}/* 夜になったら、お散歩をやめて帰る */
   if(r.act&&IDLE_ACTS.includes(r.act.type)&&!isNight()&&r.hunger>=55&&!(r.fun<30&&r.act.type!=='wander'&&r.act.type!=='idle')){r.wchk=(r.wchk||0)+dt;if(r.wchk>=3){r.wchk=0;if(hasWork(r)){// 実際に仕事を始められたときだけ遊びをやめる（できないなら続ける）
     const old=r.act,op=r.path,ob=r.bubble;endAct(r);if(!goWork(r,bfs(r.x|0,r.y|0),true)){r.act=old;r.path=op;r.bubble=ob;if(old.key)reserve(old.key)}}}}
@@ -5305,7 +5306,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='495';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='496';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
