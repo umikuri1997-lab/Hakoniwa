@@ -2720,10 +2720,11 @@ function askStamp(sid,x,y){
   pending={kind:'stamp',sid,x,y,cost:s.cost,need};
   $('#confirmTxt').textContent=st.name+(s.parts.length?'（足りない分は'+SP(s.cost)+'で）':'（おそなえ箱から）');$('#cYes').disabled=S.pt<s.cost;($('#cRot').hidden=true,$('#confirm').hidden=false);
 }
-const SWAPG=[['fence','logfence','bamboofence','stonefence','wall'],['hwall','logwall','plasterwall','brickwall']],SWAPTHRU=[new Set(['gate','archedgate','stonegate','sdoor']),new Set(['door'])];/* つけかえトンカチ：柵・塀のなかまと、家の壁のなかま。ドア・門はとおりぬけて、その先もつけかえる */
+const SWAPG=[['fence','logfence','bamboofence','stonefence','wall'],['hwall','logwall','plasterwall','brickwall'],['path','gravel','stone','brick'],['floor','brickfloor','stonefloor','carpet']],SWAPTHRU=[new Set(['gate','archedgate','stonegate','sdoor']),new Set(['door']),new Set(),new Set()],SWAPNO=['柵や塀ではありません','家の壁ではありません','道ではありません','床ではありません'];/* つけかえトンカチ：柵・塀／家の壁／道／床のなかま。ドア・門はとおりぬけて、その先もつけかえる。道・床は S.floor */
+const swapT=(id,k)=>BL[id].floor?S.floor[k]:S.obj[k];
 function askSwap(id,x,y){const gi=SWAPG.findIndex(g=>g.includes(id)),G=SWAPG[gi],T=SWAPTHRU[gi],j0=y*W+x;
-  if(!G.includes(S.obj[j0]))return toast(gi?'家の壁ではありません':'柵や塀ではありません');
-  const seen=new Set([j0]),q=[j0],cells=[];while(q.length){const j=q.pop();if(S.obj[j]!==id&&G.includes(S.obj[j]))cells.push(j);const x0=j%W;for(const k of [x0>0?j-1:-1,x0<W-1?j+1:-1,j-W,j+W]){if(k<0||k>=W*H||seen.has(k))continue;const o=S.obj[k];if(G.includes(o)||T.has(o)){seen.add(k);q.push(k)}}}
+  if(!G.includes(swapT(id,j0)))return toast(SWAPNO[gi]);
+  const seen=new Set([j0]),q=[j0],cells=[];while(q.length){const j=q.pop();const tj=swapT(id,j);if(tj!==id&&G.includes(tj))cells.push(j);const x0=j%W;for(const k of [x0>0?j-1:-1,x0<W-1?j+1:-1,j-W,j+W]){if(k<0||k>=W*H||seen.has(k))continue;const o=swapT(id,k);if(G.includes(o)||T.has(o)){seen.add(k);q.push(k)}}}
   if(!cells.length)return toast('もう'+BL[id].name+'です');
   if(inv(id)<cells.length)return toast(BL[id].name+'が足りません（'+cells.length+'こいる）','warn');
   pending={kind:'swap',id,cells};$('#confirmTxt').textContent='つながっている'+cells.length+'マスを'+BL[id].name+'にかえる（はずした物は、おそなえ箱にもどる）';$('#cYes').disabled=false;($('#cRot').hidden=true,$('#confirm').hidden=false)}
@@ -2735,8 +2736,8 @@ function confirmYes(){
   if(p.kind==='one'){place(p.id,p.x,p.y);return}
   if(p.kind==='plant'){if(inv(p.id)<p.cells.length)return toast(iname(p.id)+'が足りません');S.inv[p.id]-=p.cells.length;for(const[x,y]of p.cells){const j=y*W+x;S.obj[j]='sprout';S.dyn[j]={plant:p.id,p:0,userMound:true}}
     p.cells.forEach(([x,y],i)=>{if(i<12)burstAt(x,y,'plant')});recount();toast('せいれいたちが植えにきてくれる','good');return}
-  if(p.kind==='swap'){const G=SWAPG.find(g=>g.includes(p.id)),L=p.cells.filter(j=>G.includes(S.obj[j])&&S.obj[j]!==p.id);if(inv(p.id)<L.length)return toast(BL[p.id].name+'が足りません');
-    for(const j of L){giveItem(S.obj[j],1);S.inv[p.id]--;S.obj[j]=p.id;S.hp[j]=BL[p.id].hp}/* 窓・カーテンは、そのまま家の壁にのこる */S.placed[p.id]=(S.placed[p.id]||0)+L.length;
+  if(p.kind==='swap'){const G=SWAPG.find(g=>g.includes(p.id)),fl=!!BL[p.id].floor,L=p.cells.filter(j=>G.includes(swapT(p.id,j))&&swapT(p.id,j)!==p.id);if(inv(p.id)<L.length)return toast(BL[p.id].name+'が足りません');
+    for(const j of L){giveItem(swapT(p.id,j),1);S.inv[p.id]--;if(fl)S.floor[j]=p.id;else{S.obj[j]=p.id;S.hp[j]=BL[p.id].hp}}/* 窓・カーテンは、そのまま家の壁にのこる */S.placed[p.id]=(S.placed[p.id]||0)+L.length;
     L.forEach((j,i)=>{if(i<14)burstAt(j%W,(j/W)|0,'block')});undoStack=[];recount();renderPalette();checkQuest();dirty=true;toast('つけかえた！','good');return}
   if(S.pt<p.cost)return toast('パワーが足りません');
   S.pt-=p.cost;for(const id in p.need)S.inv[id]=Math.max(0,inv(id)-p.need[id]);
@@ -4654,7 +4655,7 @@ function onTap(sx,sy){
   if((mode==='build'||mode==='remove'||mode==='bulk')&&nightLock())return toast('夜のあいだは、置くことも、こわすこともできません');
   if(mode==='build'){if(BL[sel]&&['furn','build','deco'].includes(BL[sel].kind)&&!BL[sel].trap){/* ワナは柵と同じで、タップするたびにそのまま置く */if(!usable(sel))return place(sel,tx,ty);const ok=canPlace(sel,tx,ty,true);pending={kind:'one',id:sel,x:tx,y:ty,ok};confirmOne();($('#cRot').hidden=!(pending&&pending.kind==='one'&&ROTS[pending.id]),$('#confirm').hidden=false);sfx('tap');return}return place(sel,tx,ty)}
   if(mode==='remove')return removeAt(tx,ty);
-  if(mode==='bulk'){if(selStamp)return selStamp.startsWith('swap:')?askSwap(selStamp.slice(5),tx,ty):askStamp(selStamp,tx,ty);if(!S.bulk)return toast('ひろびろハケは、カミサマと交換できます');return toast('ハケで、なぞった範囲をぬれます')}
+  if(mode==='bulk'){if(selStamp)return selStamp.startsWith('swap:')?askSwap(selStamp.slice(5),tx,ty):askStamp(selStamp,tx,ty);if(!S.bulk)return toast('下から道具をえらんでください');return toast('ハケで、なぞった範囲をぬれます')}
 }
 
 
@@ -4833,14 +4834,14 @@ function chip(img,name,cost,cls,onClick,mat){
 function lbl(box,t){const s=document.createElement('span');s.className='pallbl';s.textContent=t;box.appendChild(s)}
 
 function updItemInfo(){const ii=$('#itemInfo');if(!(mode==='build'||mode==='bulk')||!S){ii.hidden=true;return}
-  let nm='',ds='';if(mode==='bulk'&&selStamp){if(selStamp.startsWith('swap:')){nm=BL[selStamp.slice(5)].name+'につけかえ';ds='つけかえたい柵・塀・家の壁をタップ'}else{nm=STAMPS[selStamp].name;ds='置きたい場所の左上をタップ'}}
+  let nm='',ds='';if(mode==='bulk'&&selStamp){if(selStamp.startsWith('swap:')){nm=BL[selStamp.slice(5)].name+'につけかえ';ds='つけかえたい物をタップ'}else{nm=STAMPS[selStamp].name;ds='置きたい場所の左上をタップ'}}
   else if(sel&&BL[sel]){const b=BL[sel];nm=iname(sel);const bm=sel==='tower'?TOWER_MAT():b.mat;ds=(b.kind==='build'?(b.pc?SP(b.pc)+(bm?' '+matHTML(bm):''):''):'所持：'+inv(sel));const hp=withAttr(sel,b.desc||'');if(hp)ds+=' <button class="qbtn" id="iiQ">?</button>';}else ds=esc(ds);
   ii.hidden=!nm;$('#iiName').textContent=nm;$('#iiDesc').innerHTML=ds;const q=$('#iiQ');if(q)q.onclick=e=>{e.stopPropagation();sfx('tap');helpPop(nm,withAttr(sel,BL[sel].desc||''))}}
 function renderPalette(){
   if(!S)return;updItemInfo();const box=$('#palItems');box.innerHTML='';
   $('#undoBtn').hidden=mode!=='build';
   const pickItem=id=>()=>{sfx('tap');sel=id;if(pending&&pending.kind==='one'){pending=null;$('#confirm').hidden=true}selStamp=null;renderPalette();const b=BL[id];
-    if(mode==='bulk'){if(!S.bulk)return toast('ひろびろハケは、カミサマと交換できます');toast('ハケで、なぞった範囲をぬれます');return}
+    if(mode==='bulk'){if(!S.bulk)return toast('下から道具をえらんでください');toast('ハケで、なぞった範囲をぬれます');return}
     if(b.kind==='furn'&&!inv(id))toast(b.name+'が足りません','warn');
     else if(b.kind==='block'&&!inv(id))toast(b.name+'がありません');
     else if(b.kind==='plant')toast(inv(id)?'置いた場所にせいれいが植えてくれる':iname(id)+'がありません');
@@ -4852,10 +4853,10 @@ function renderPalette(){
     if(sel&&BL[sel]){const id=sel,b=BL[id];box.appendChild(chip(iconURL(id),iname(id),b.kind==='build'?(id==='statue'||(id==='watch'&&watchQ())?'むりょう':SP(b.pc)):'×'+inv(id),'sel',()=>{}))}
     const mb=document.createElement('button');mb.className='chip more';mb.id='palMore';mb.textContent='ほかをえらぶ';mb.onclick=()=>{sfx('tap');palOpen=true;renderPalette()};box.appendChild(mb);return}
   if(mode==='bulk'){
-    lbl(box,'ハケ');box.appendChild(chip(toolIcon('hake'),'ひろびろハケ',S.bulk?'下からえらぶ':'カミサマと交換','wide'+(S.bulk?'':' lock'),()=>toast(S.bulk?'ぬりたいブロックや種をえらんで、指でなぞろう':'ひろびろハケは、カミサマと交換できます')));
-    lbl(box,'スタンプ');
-    for(const sid in STAMPS){const lock=!S.stamps;box.appendChild(chip(stampIcon(sid),STAMPS[sid].name,'スタンプ','wide'+(lock?' lock':'')+(selStamp===sid?' sel':''),()=>{if(lock)return toast('かたどりスタンプは、カミサマと交換できます');selStamp=sid;renderPalette();toast('置きたい場所の左上をタップ')}))}
-    lbl(box,'つけかえ');for(const id of SWAPG.flat().filter(id=>S.unlocked[id])){const lock=!S.swap,k='swap:'+id;box.appendChild(chip(iconURL(id),BL[id].name,lock?'カミサマと交換':'×'+inv(id),(lock?'lock':'')+(selStamp===k?' sel':''),()=>{if(lock)return toast('つけかえトンカチは、カミサマと交換できます');selStamp=k;renderPalette();toast('つけかえたい柵・塀・家の壁をタップ')}))}/* つけかえトンカチ：つながっている柵や家の壁を、えらんだ種類にまとめてかえる */
+    if(S.bulk){lbl(box,'ハケ');box.appendChild(chip(toolIcon('hake'),'ひろびろハケ','下からえらぶ','wide',()=>toast('ぬりたいブロックや種をえらんで、指でなぞろう')))}/* もらった道具だけ出す */
+    if(S.stamps){lbl(box,'スタンプ');for(const sid in STAMPS)box.appendChild(chip(stampIcon(sid),STAMPS[sid].name,'スタンプ','wide'+(selStamp===sid?' sel':''),()=>{selStamp=sid;renderPalette();toast('置きたい場所の左上をタップ')}))}
+    if(S.swap){lbl(box,'つけかえ');for(const id of SWAPG.flat().filter(id=>S.unlocked[id])){const k='swap:'+id;box.appendChild(chip(iconURL(id),BL[id].name,'×'+inv(id),selStamp===k?'sel':'',()=>{selStamp=k;renderPalette();toast('つけかえたい物をタップ')}))}}/* つけかえトンカチ：つながっている柵・塀・家の壁・道・床を、えらんだ種類にまとめてかえる */
+    if(!S.bulk)return/* ハケがなければ、ぬるブロック・種は出さない */
   }
   const blocks=STATUE<0?[]:BLOCKS.filter(id=>inv(id)>0);
   if(mode==='bulk'&&STATUE>=0&&inv('spike')>0)blocks.push('spike');/* とげの罠も、なぞってまとめて置ける */
@@ -4936,13 +4937,8 @@ function renderSheet(){
     for(const id of BLOCKS){const b=BL[id];if(!b.unlock)continue;
       const bx=row(r2,b.name,'',iconURL(id),S.unlocked[id]);helpify(bx.parentNode,withAttr(id,b.desc));
       if(S.unlocked[id])btn(bx,'もらった',true);else if(!lvOK(id))btn(bx,'村Lv'+b.lv,true);else btn(bx,SP(b.unlock),S.pt<b.unlock,()=>{S.pt-=b.unlock;S.unlocked[id]=true;giveItem(id,2);toast(b.name+'をもらった！ おそなえ箱に2こ入った','good');trade()},1)}
-    const r3=sec('道具');
-    {const bx=row(r3,'ひろびろハケ','指でなぞった範囲を、ブロックでまとめてぬれる。種もまとめて植えてもらえる',toolIcon('hake'),S.bulk);
-      if(S.bulk)btn(bx,'もらった',true);else btn(bx,SP(30),S.pt<30,()=>{S.pt-=30;S.bulk=true;applyFeats();toast('ひろびろハケをもらった！「どうぐ」から使える','good');trade()},1)}
-    {const bx=row(r3,'かたどりスタンプ','畑・柵の囲い・石の広場などを、ぽんと一度に置ける',toolIcon('stamp'),S.stamps);
-      if(S.stamps)btn(bx,'もらった',true);else btn(bx,SP(50),S.pt<50,()=>{S.pt-=50;S.stamps=true;applyFeats();toast('かたどりスタンプをもらった！「どうぐ」から使える','good');trade()},1)}
-    {const bx=row(r3,'つけかえトンカチ','つながっている柵・塀や家の壁を、まとめてべつの種類にかえる。はずした物は、おそなえ箱にもどる',toolIcon('swap'),S.swap);
-      if(S.swap)btn(bx,'もらった',true);else btn(bx,SP(40),S.pt<40,()=>{S.pt-=40;S.swap=true;applyFeats();toast('つけかえトンカチをもらった！「どうぐ」から使える','good');trade()},1)}
+    {const T=WD===0?['bulk','ひろびろハケ','指でなぞった範囲を、ブロックでまとめてぬれる。種もまとめて植えてもらえる','hake']:WD===1?['swap','つけかえトンカチ','つながっている柵・塀・家の壁・道・床を、まとめてべつの種類にかえる。はずした物は、おそなえ箱にもどる','swap']:null;/* 道具は、土地ごとに1つ（草原：ハケ・火山：トンカチ・つぎの土地：スタンプ）。もらった道具は、ほかの土地でも使える */
+      if(T){const r3=sec('道具'),bx=row(r3,T[1],T[2],toolIcon(T[3]),S[T[0]]);if(S[T[0]])btn(bx,'もらった',true);else btn(bx,SP(3000),S.pt<3000,()=>{S.pt-=3000;S[T[0]]=true;applyFeats();toast(T[1]+'をもらった！「どうぐ」から使える','good');trade()},1)}}
     if(S.lv>=5||(S.bossKills||0)>=1||S.flags.hinoDown){const fo=festOn(),r5=sec(fo?'おまつりの交換':'とくべつな交換');/* ふだんは「おまつり」だけ。めぶきのしずく・素材・ごちそうは、おまつりの日だけ */
       {const done=S.festDay===dayNo(),bx=row(r5,'おまつり','',null,done);btn(bx,done?'きょうはおまつり':SP(200),done||S.pt<200,()=>{S.pt-=200;S.festDay=dayNo();for(const r of S.res){r.fun=100;r.energy=100;spawnFX(r.x-.5,r.y-.6,'#ffd84a')}sfx('level');toast('おまつりがはじまった！','good');festStart();trade()},1)}
       if(fo&&((S.bossKills||0)>=1||S.flags.hinoDown)){const bx=row(r5,'めぶきのしずく','消えてしまったせいれいを、よみがえらせる（所持：'+(S.mebuki||0)+'）',null);btn(bx,SP(400),S.pt<400,()=>{S.pt-=400;S.mebuki=(S.mebuki||0)+1;toast('めぶきのしずくをもらった','good');trade()},1)}
@@ -5435,7 +5431,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='544';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='545';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
