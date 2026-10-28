@@ -3057,9 +3057,9 @@ function updNushi(dt){const n=S.nushi;if(n.app==null)n.app=1;if(n.app<1){n.app=M
   if(!n.path)n.path=[];
   if(!n.path.length){n.mv=0;n.t-=dt;if(n.t>0)return;n.t=rnd(30,90);
     let sx=n.x|0,sy=n.y|0;if(!walk(sy*W+sx)){const c=[];for(let y=sy-2;y<=sy+3;y++)for(let x=sx-2;x<=sx+2;x++){const j=y*W+x;if(x>=0&&y>=0&&x<W&&y<H&&walk(j))c.push(j)}c.sort((a,b)=>Math.hypot(a%W+.5-n.x,(a/W|0)+.5-n.y)-Math.hypot(b%W+.5-n.x,(b/W|0)+.5-n.y));if(!c.length)return;n.path=[c[0]];return}/* 台座からおりる */
-    const G=bfs(sx,sy),r=BASE_R[S.baseLv]-2;for(let k=0;k<40;k++){const x=(CX+rnd(-r,r))|0,y=(CY+rnd(-r,r))|0,j=y*W+x;if(G.dist[j]>0&&G.dist[j]<40){n.path=pathTo(G,j);break}}return}/* 道をとおって歩く（壁や水はとおらない） */
+    const HB=new Set();for(const h of HOUSES){for(const k of h.set)HB.add(k);for(const k of h.inside)HB.add(k)}const G=HB.has(sy*W+sx)?bfs(sx,sy):roadSearch(sx,sy,HB),r=BASE_R[S.baseLv]-2;for(let k=0;k<40;k++){const x=(CX+rnd(-r,r))|0,y=(CY+rnd(-r,r))|0,j=y*W+x;if(G.dist[j]>0&&G.dist[j]<40&&!HB.has(j)){n.path=pathTo(G,j);break}}return}/* 道をとおって歩く（壁や水はとおらない。家の中には入らない） */
   const j=n.path[0],tx=j%W+.5,ty=((j/W)|0)+.5,dx=tx-n.x,dy=ty-n.y,d=Math.hypot(dx,dy),s=.12*dt;
-  if(!walk(j)&&d>1.2){n.path=[];return}
+  if(!walk(j)&&d>1.2||d>.9&&HOUSES.some(h=>h.inside.has(j)||h.set.has(j))&&!HOUSES.some(h=>h.inside.has((n.y|0)*W+(n.x|0)))){n.path=[];return}/* とちゅうで家ができたら、入らずに止まる */
   if(d<=s){n.x=tx;n.y=ty;n.path.shift()}else{n.x+=dx/d*s;n.y+=dy/d*s}
   if(Math.abs(dx)>Math.abs(dy)*1.1){n.face=dx<0?-1:1;n.dir=0}else n.dir=dy<0?-1:1;n.mv=1}
 
@@ -5628,7 +5628,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='572';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='573';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
