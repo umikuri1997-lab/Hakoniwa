@@ -723,7 +723,7 @@ let S=null;
 const resv=new Map();
 let STATUE=-1,OBOX=-1,BOARD=-1,counts={},LIGHTS=[],STELES=[],TOWERS=[],NEARFLOWER=new Set(),NEARWELL=new Set(),NEARMILL=new Set(),NEARVANE=new Set(),NEARSIGN=new Set(),NEARPARA=new Set(),RUGC=new Map(),ENVG=null,REV=new Set(),ATTR={},BASEPCT=0,GRASSN=0;const GRASS_GOAL=600;
 function newState(w){w=w||0;
-  const s={v:8,mig:5,flags:{},placed:{},feat:{build:true},inv:{},orders:[],enemyOn:false,nights:0,godGone:false,godShown:false,nushi:null,
+  const s={v:8,mig:6,flags:{},placed:{},feat:{build:true},inv:{},orders:[],enemyOn:false,nights:0,godGone:false,godShown:false,nushi:null,
     lv:1,bossKills:0,nightHurt:0,nightHad:false,wave:null,lastWarn:0,
     ref:{},ground:new Array(W*H).fill(0),floor:new Array(W*H).fill(''),obj:new Array(W*H).fill(''),dyn:{},hp:{},
     res:[],enemies:[],pt:15,totalPt:0,food:0,fs:{},cseed:{imo:4},crops:{imo:true},mat:{wood:0,stone:0},regrow:[],t:w===0?15*60:12*60,/* 草原は15時からはじまる */speed:1,baseLv:0,
@@ -1350,13 +1350,13 @@ const CHATS=[/* kc：キーキャラどうし（話しかける子, 相手）、
  [[0,'きのうの夜ね、ゆめを見たの。'],[1,'どんなゆめ？'],[0,'大きなベリーに、ころころ追いかけられるゆめ。'],[1,'#scared|こわいような、おいしそうなような…。']],
  [[0,'このへん、ちょっとずつ、にぎやかになってきたね。'],[1,'#nod|うん。朝おきるのが、たのしみになったよ。']],
  [[0,'さっき、ちょうちょがとまったんだ。頭の上に。'],[1,'いいなあ。お花とまちがえたのかな？'],[0,'#joy|えへへ、そうかも。']],
- [[0,'おなか、すいてない？'],[1,'ちょっとだけ。…ほんとは、けっこう。'],[0,'あとで、いっしょに食べよっか。']],
+ [[0,'ねえ、まばたき、がまんしてみて。'],[1,'…………。'],[0,'…………。'],[1,'#surprise|あっ、いま、した！ ずるい！']],
  Object.assign([[0,'守り神さまって、いつもなにしてるのかな。'],[1,'空の上から、見ててくれてるんだって。'],[0,'じゃあ、いまも見てるかも？'],[1,'…手、ふっとこうか。']],{wave:1}),
  [[0,'かくれんぼ、したことある？'],[1,'あるよ。でも、すぐ見つかっちゃう。'],[0,'#sigh|どうして？'],[1,'見つけてほしくて、つい顔だしちゃうの。']],
  [[0,'石って、ひとつずつ、もようがちがうんだよ。'],[1,'へえ。じゃあ、石にも名前つけられるね。'],[0,'このまえ拾ったのは「まるお」にした。']],
  [[0,'雨の音、好き？'],[1,'好き。ぽつぽつって、だれかが歌ってるみたい。']],
  [[0,'ね、どっちが早く歩けるか、きょうそうしない？'],[1,'いいよ。…あ、でも、いま休みたい気分。'],[0,'じゃあ、また今度ね。']],
- [[0,'#scared|夜って、ちょっとこわいよね。'],[1,'#nod|うん。でも、みんながいるから、へいき。'],[0,'…そっか。そうだね。']],
+ [[0,'ねえ、すきなことば、ある？'],[1,'「いただきます」！ そのあと、ごはんだから。'],[0,'#think|それ、ことばが好きなんじゃなくて…。']],
  [[0,'あのね、ひみつ教えてあげる。'],[1,'なになに？'],[0,'…やっぱり、あしたにする。'],[1,'えー！ 気になるよ！']],
  [[0,'葉っぱのにおいって、いいよね。'],[1,'わかる。朝の、しめった葉っぱが、いちばん好き。']],
  [[0,'さっき、カエルさんにあいさつされた。'],[1,'なんて言ってた？'],[0,'「ケロ」って。'],[1,'…ふつうのあいさつだね。']],
@@ -1367,7 +1367,7 @@ const CHATS=[/* kc：キーキャラどうし（話しかける子, 相手）、
  [[0,'#sigh|夕やけって、どうしてオレンジなのかな。'],[1,'お日さまが、ねむくなって顔が赤くなるからだよ。'],[0,'#surprise|そうなの！？'],[1,'…たぶん。']],
  [[0,'ねえ、しりとりしよう。りんご！'],[1,'ごはん！'],[0,'…あっ。'],[1,'おわっちゃったね。']],
  [[0,'このまえ、お星さまに、おねがいしたんだ。'],[1,'なんて？'],[0,'ないしょ。でも、もうちょっとで、かないそう。']],
- [[0,'風がふくと、葉っぱがおしゃべりしてるみたいだね。'],[1,'さらさら、さらさら。なに話してるのかな。'],[0,'きっと、ぼくたちのうわさだよ。']],
+ [[0,'ねえ、ありさんの行列、見た？'],[1,'見た！ ずーっと、つづいてた。'],[0,'どこまで行くのか、ついていったら、日がくれちゃった。']],
  [[0,'あしたも、晴れるかなあ。'],[1,'晴れたら、いっしょにおさんぽしよう。'],[0,'雨だったら？'],[1,'雨でも、おさんぽしよう。']],
  [[0,'ねむいとき、どうやって起きてる？'],[1,'ほっぺを、むにーってするの。'],[0,'…それ、ちょっとかわいいね。']],
  Object.assign([[0,'さいきん、みんなの家がふえてきたね。'],[1,'#joy|うん。夜も、あかりがいっぱいで、うれしい。']],{ok:()=>HOUSES.length>=2&&LIGHTS.length>=2}),
@@ -1375,22 +1375,22 @@ const CHATS=[/* kc：キーキャラどうし（話しかける子, 相手）、
  [[0,'ねえ、ないしょの場所、見つけたんだ。'],[1,'どこ？ どこ？'],[0,'こんど、つれてってあげる。ふたりだけのひみつね。']],
  [[0,'おなかがなると、ちょっと、はずかしいよね。'],[1,'さっき、ぐうって鳴ったの、聞こえた？'],[0,'…なんにも聞こえなかったよ。'],[1,'やさしい…。']],
  [[0,'もし、空をとべたら、どこに行きたい？'],[1,'雲の上で、おひるねしたい！'],[0,'いいね。ぼくは、お日さまに、あいさつしに行く。']],
- [[0,'石をつみあげたら、5こまで、たおれなかったよ。'],[1,'すごい！ ぼくは3こで、くずれちゃった。'],[0,'こんど、いっしょに10こ、めざそう。']],
+ [[0,'目をつぶって、音だけ聞いてみて。'],[1,'…鳥のこえ、葉っぱの音、それから…'],[0,'それから？'],[1,'#joy|きみの、いきの音。ちかいよ。']],
  [[0,'夜になると、お花もねむるのかな。'],[1,'ねむるよ。ちゃんと、おやすみって言ってあげなきゃ。']],
  [[0,'ねえ、手、つないでみる？'],[1,'…ちょっと、てれるね。'],[0,'じゃあ、小指だけ。']],
  Object.assign([[0,'ねえ、すべり台って、何回すべってもあきないね。'],[1,'わかる！ 上るのはちょっと大変だけど。'],[0,'それも、たのしいのうちだよ。']],{ok:()=>cnt('slide')>0}),
- [[0,'#joy|きょう、いちばんうれしかったこと、なに？'],[1,'うーん…いま、こうして話してることかな。'],[0,'#joy|…えへへ。']],
- [[0,'#think|ねむる前って、なに考えてる？'],[1,'あしたの朝ごはんのこと。'],[0,'ぼくも！']],
+ [[0,'どんぐりって、ぼうしをかぶってるよね。'],[1,'ほんとだ。とったら、どうなるの？'],[0,'つるつるの頭が出てくるよ。'],[1,'…ちょっと、さむそう。']],
+ [[0,'ねえ、ねごとって、言ったことある？'],[1,'ないよ。…たぶん。'],[0,'きのう、「もう、たべられない」って言ってたよ。'],[1,'#surprise|えっ！？']],
  [[0,'しってる？ 星って、ずっと遠くで光ってるんだって。'],[1,'じゃあ、いま見えてる光は、むかしの光？'],[0,'そうかも。…なんか、ふしぎだね。']],
- [[0,'あのね、ないしょの話があるの。'],[1,'なになに？'],[0,'…やっぱり、もうちょっと仲よくなってからね。'],[1,'えー！']],
+ [[0,'さっき、しゃっくりが、とまらなくなったの。'],[1,'いまは？'],[0,'…ひっく。'],[1,'まだだね。']],
  Object.assign([[0,'すなばで、お城をつくったよ。'],[1,'見たい見たい！'],[0,'…風で、ちょっとくずれちゃったけど。']],{ok:()=>cnt('sandbox')>0}),
  [[0,'ここに来てから、いろんな色を見たよ。'],[1,'どの色がいちばん好き？'],[0,'みんなが笑ってるときの色。']],
  [[0,'しっぽ、ほしいなあ。'],[1,'#sigh|なんで？'],[0,'#joy|うれしいとき、ふりたいから。']],
- [[0,'#scared|「コワイノ」って、ほんとはさみしいのかな。'],[1,'#sigh|…どうして、そう思うの？'],[0,'夜になると、こっちに来たがるから。']],
+ [[0,'ねえ、すきな場所、おしえあいっこしない？'],[1,'いいよ。わたしは、井戸のそば。ひんやりしてるの。'],[0,'ぼくは、神殿の前。カミサマの声が、ちかいから。']],
  [[0,'きのう、葉っぱの舟をうかべたよ。'],[1,'どこまで行った？'],[0,'池のまんなかで、くるくるまわってた。']],
  [[0,'あくび、うつった？'],[1,'#surprise|ふわぁ…うつった。'],[0,'ふふ、作戦成功。']],
  [[0,'#sigh hop|おいしいって、どうしてうれしいんだろう。'],[1,'#joy|おなかが、ありがとうって言ってるのかも。']],
- [[0,'ねえ、もし空をとべたら、どこに行く？'],[1,'神殿のてっぺん！'],[0,'ちかっ！']],
+ [[0,'ねえ、じぶんの名前、好き？'],[1,'うん。よばれると、うれしくなる。'],[0,'ぼくも。だから、いっぱい、よんでね。'],[1,'#joy|うん、何回でもよぶよ。']],
  Object.assign([[0,'シーソー、またいっしょにのろうね。'],[1,'#nod|うん。こんどは、ぼくが上の番！']],{ok:()=>cnt('seesaw')>0}),
  [[0,'ひとりでいるのも好きだけど…'],[1,'#nod|うん。'],[0,'みんなといるのは、もっと好き。']],
  [[0,'このまえ、虹のはしっこをさがしたんだ。'],[1,'見つかった？'],[0,'ううん。でも、歩くのがたのしかった。']],
@@ -1402,8 +1402,8 @@ const CHATS=[/* kc：キーキャラどうし（話しかける子, 相手）、
  Object.assign([[0,'つかれたら、いつでも言ってね。'],[1,'じゃあ、いま、ちょっとだけ、もたれていい？'],[0,'…どうぞ。']],{mate:1}),
  Object.assign([[0,'はじめて会った日のこと、おぼえてる？'],[1,'おぼえてるよ。すっごく、もじもじしてたね。'],[0,'それは、きみもでしょ。']],{mate:1}),
  Object.assign([[0,'あしたも、いっしょにはたらこうね。'],[1,'#nod|うん。きみといると、時間がはやいんだ。']],{mate:1}),
- [[0,'ねえ、いちばん好きな色って、なに？'],[1,'みどり！ 草の色。'],[0,'ぼくは、夕やけの色かなあ。'],[1,'じゃあ、ふたりで夕方の草原に行こう。']],
- [[0,'さっき、ちょうちょが、あたまにとまったんだよ。'],[1,'お花とまちがえたのかな。'],[0,'#joy|…ちょっと、うれしかった。']],
+ [[0,'さっき、水たまりに、とびこんじゃった。'],[1,'#surprise|えー！ どろんこだよ。'],[0,'#joy|うん。でも、ぱしゃって、いい音がした。']],
+ [[0,'きのうの夕方、ほたるを見たよ。'],[1,'どこで？'],[0,'池のそば。ちいさな星が、おりてきたみたいだった。'],[1,'#joy|こんど、いっしょに見に行こう。']],
  [[0,'#sigh|ねえ、くしゃみって、なんで出るのかな。'],[1,'はなが、くすぐったいからだよ。'],[0,'だれが、くすぐってるの？'],[1,'…かぜさん？']],
  [[0,'あしたの朝ごはん、なにかなあ。'],[1,'まだ今日の夜ごはんも、食べてないよ。'],[0,'#think|楽しみは、さきに考えたほうがいいんだよ。']],
  [[0,'ひとりで歩いてたら、かげがついてきたの。'],[1,'それ、じぶんのかげだよ。'],[0,'わかってるけど、なかよくなれそうだった。']],
@@ -1416,21 +1416,21 @@ const CHATS=[/* kc：キーキャラどうし（話しかける子, 相手）、
  [[0,'ねえ、おうた、うたえる？'],[1,'ちょっとだけなら。らら〜♪'],[0,'じょうず！ ぼくも、らら〜♪'],[1,'…ふたりだと、もっとじょうずに聞こえるね。']],
  [[0,'みんなで、ピクニックしたいな。'],[1,'いいね！ おべんとう、なににする？'],[0,'もちろん、焼きいも！']],
  [[0,'さいきん、ちょっとだけ、力もちになった気がする。'],[1,'ほんと？ うで、見せて。'],[0,'…見た目は、かわってないけど。']],
- [[0,'ねえ、すきな音って、ある？'],[1,'雨が、やねをたたく音。'],[0,'ぼくは、だれかがわらってる音かな。']],
+ [[0,'ねえ、きょう、なんかいわらった？'],[1,'かぞえてないよ。'],[0,'ぼくは、もう十回。…あ、いまので十一回。']],
  [[0,'もし、ひとつだけねがいがかなうなら？'],[1,'うーん…毎日、ベリーが食べたい。'],[0,'それ、もうかなってない？'],[1,'…ほんとだ！']],
  [[0,'おはなし、きいて。きのう、へんなゆめを見たの。'],[1,'またベリーのゆめ？'],[0,'ちがう。こんどは、きのこが、おどってた。'],[1,'…それは見たいかも。']],
  [[0,'ここに来るまえ、どこにいたか、おぼえてる？'],[1,'うーん…あったかくて、しずかなところ。'],[0,'ぼくも。ふしぎだね。']],
- [[0,'ねえ、どっちが早く走れるか、きょうそうしよう！'],[1,'いいよ！ よーい…'],[0,'…やっぱり、歩いていこう。おなかすくし。']],
- [[0,'#alarm|今夜、コワイノ来るかなあ。'],[1,'来ても、みんながいるから、だいじょうぶ。'],[0,'…うん。そうだね。']],
- [[0,'見て、くもが、うさぎの形！'],[1,'ほんとだ。あ、もう、ながれていっちゃった。'],[0,'どこに、あそびに行くんだろうね。']],
+ [[0,'ねえ、おにごっこしよう！'],[1,'いいよ。じゃあ、きみがおに！'],[0,'#surprise|えっ、もう決まってるの！？']],
+ [[0,'けさ、くものすに、つゆがついてたよ。'],[1,'きらきらしてた？'],[0,'#nod|うん。ちいさな玉が、いっぱいならんでた。'],[1,'クモさん、朝から、いいもの作るね。']],
+ [[0,'ねえ、あっちの花、色がかわってたよ。'],[1,'ほんと？ きのうは白かったのに。'],[0,'#think|お花も、きがえるのかな。']],
  [[0,'#joy|あのね、ありがとうって、言いたかったの。'],[1,'え、なにが？'],[0,'いつも、いっしょにいてくれて。'],[1,'…こちらこそ。']],
  [[0,'#surprise|ねえ、はっぱで、ふえって、ふけるんだって。'],[1,'ぴーって？ やってみて！'],[0,'…ぷすー。'],[1,'あはは、こんど、れんしゅうしよう。']],
  Object.assign([[0,'おふろって、いいよね。'],[1,'あったかくて、とけちゃいそう。'],[0,'とけたら、こまるね。'],[1,'じゃあ、ちょっとだけ、とける。']],{ok:()=>cnt('hotstone')>0||cnt('bathtub')>0||WD===1&&springN()>0}),
  [[0,'さっき、カミサマが、ひとりでわらってたよ。'],[1,'なにが、おかしかったのかな。'],[0,'わかんない。でも、こっちまで、わらっちゃった。']],
  [[0,'ねえ、ぼくたちって、大きくなるのかな。'],[1,'こころは、もう大きくなってるよ。'],[0,'…かっこいいこと言うね。']],
  Object.assign([[0,'あ、いいにおい。だれか、なにか作ってる？'],[1,'かまどのほうから、するね。'],[0,'ちょっと、見に行ってみよう。'],[1,'つまみぐいは、だめだよ。']],{ok:()=>cnt('oven')>0}),
- [[0,'あしたは、なにして遊ぶ？'],[1,'まだ、今日がおわってないよ。'],[0,'今日も、あしたも、たのしいのがいいな。']],
- [[0,'ふしぎな種、またひろったんだ。'],[1,'なにが、さくのかな。'],[0,'さいてからの、おたのしみ！']],
+ [[0,'おちば、いっぱいあつめたんだ。'],[1,'なにに使うの？'],[0,'ふかふかのベッド。…でも、風が、ぜんぶもっていっちゃった。'],[1,'こんどは、石でおさえよう。']],
+ [[0,'まいにち、おなじ道をあるいてても、あきないね。'],[1,'きのうと、ちょっとずつちがうもん。'],[0,'#nod|うん。きょうは、お花がひとつ、ふえてた。']],
  [[0,'さむい日は、くっついてると、あったかいね。'],[1,'…ちょっと、きゅうくつだけどね。'],[0,'それも、あったかいのうち。']],
  [[0,'ねえ、わすれものしたこと、ある？'],[1,'あるある。なにを、わすれたかも、わすれた。'],[0,'…それ、いちばん、こまるやつだ。']],
  [[0,'この村、もっとすてきになるかな。'],[1,'なるよ。みんなで、そだててるもん。'],[0,'#nod|うん。ずっと、ここにいたいな。']],
@@ -1451,21 +1451,21 @@ const CHATS=[/* kc：キーキャラどうし（話しかける子, 相手）、
  Object.assign([[0,'料理するとき、火かげんが大事なんだ。'],[1,'つよいほうが、早くできない？'],[0,'こげちゃうよ。やさしく、じっくりがいいの。']],{el:'fire'}),
  Object.assign([[0,'#scared|夜になっても、こわくないよ。'],[1,'#sigh|どうして？'],[0,'ぼくが、ちゃんと明るくしてるから。']],{el:'fire'}),
  Object.assign([[0,'たき火の音って、ぱちぱち、拍手みたいだよね。'],[1,'だれに拍手してるの？'],[0,'がんばった、みんなにだよ。']],{el:'fire'}),
- Object.assign([[0,'あったかいの、好き？'],[1,'好き。ぎゅってされてるみたい。'],[0,'じゃあ、となりにいていいよ。']],{el:'fire'}),
+ Object.assign([[0,'ねえ、ほのおの色って、ひとつじゃないんだよ。'],[1,'赤じゃないの？'],[0,'まんなかは、青いときもあるんだ。ちょっとだけ、ひみつの色。']],{el:'fire'}),
  Object.assign([[0,'土をさわってると、おちつくんだぁ。'],[1,'手、どろどろだよ。'],[0,'それが、いいんだよぉ。']],{el:'earth'}),
  Object.assign([[0,'みみずさんって、えらいんだよ。'],[1,'#sigh|どうして？'],[0,'土を、ふかふかにしてくれるから。ぼくの先生。']],{el:'earth'}),
  Object.assign([[0,'山って、ゆっくり、大きくなるんだって。'],[1,'どのくらい、ゆっくり？'],[0,'ぼくたちが、なんかい、おひるねしても、気づかないくらい。']],{el:'earth'}),
  Object.assign([[0,'土のにおい、かいだことある？'],[1,'雨のあとの、あのにおい？'],[0,'そう。あれ、ぼくのいちばん好きなにおい。']],{el:'earth'}),
  Object.assign([[0,'石をかさねるとね、ちょっとだけ、お城みたいになる。'],[1,'こんど、いっしょにつくろう！'],[0,'くずれても、おこらないでね。']],{el:'earth'}),
  Object.assign([[0,'地面の下には、ねむってる種がいっぱいあるんだ。'],[1,'いつ起きるの？'],[0,'#shocked|ここがもっと、あたたかくなったら。']],{el:'earth'}),
- Object.assign([[0,'ねえ、いま、風がなんて言ったか、わかった？'],[1,'ううん。なんて？'],[0,'「おはよう」だって。']],{el:'wind'}),
+ Object.assign([[0,'風にのって、すこしだけ、うかんだことあるよ。'],[1,'#surprise|ほんと！？ どのくらい？'],[0,'…葉っぱ一まいぶん。'],[1,'それでも、すごい！']],{el:'wind'}),
  Object.assign([[0,'はやく走ると、せかいが、びゅーんってなるんだ。'],[1,'#scared|こわくない？'],[0,'たのしいよ。こんど、手をつないで走ろう。']],{el:'wind'}),
  Object.assign([[0,'たかいところって、好き？'],[1,'#scared|ちょっと、こわいかな。'],[0,'#scared|じゃあ、こんど、いっしょにのぼろう。ふたりなら、こわくないよ。']],{el:'wind'}),
  Object.assign([[0,'さっき、雲においついたよ。'],[1,'ほんとに？ どうだった？'],[0,'ふわふわで、ちょっとしめってた。']],{el:'wind'}),
  Object.assign([[0,'風にのると、遠くのにおいがするんだ。'],[1,'どんなにおい？'],[0,'まだ知らない、どこかのお花のにおい。']],{el:'wind'}),
  Object.assign([[0,'たんぽぽのわたげ、どこまでとぶと思う？'],[1,'となりの村くらい？'],[0,'もっと。空のはしっこまで。']],{el:'wind'}),
  Object.assign([[0,'ずっとむかしは、夜も、こんなに暗くなかったんだって。'],[1,'#alarm|じゃあ、「コワイノ」も？'],[0,'…そのころは、いなかったみたい。']],{ok:()=>!S.cleared&&(S.nights||0)>=1}),
- Object.assign([[0,'#alarm|「コワイノ」って、朝になると、どこに行くんだろう。'],[1,'お日さまに、とけちゃうのかな。'],[0,'…それとも、どこかのかげに、もどるのかも。']],{ok:()=>(S.nights||0)>=1}),
+ Object.assign([[0,'#alarm|ハヤカゲって、いつも、すごくいそいでるよね。'],[1,'うん。ぶつかられて、ころんじゃった。'],[0,'…朝までに、どこかへ行かなきゃいけない、みたいだったね。']],{ok:()=>((S.enKills||{}).fast||0)>=1}),
  Object.assign([[0,'#alarm|夜、家の壁を「コワイノ」がたたいてた。'],[1,'#scared|こわかったね。'],[0,'#nod|うん。でも、「入れて」って言ってるみたいにも、聞こえたんだ。']],{ok:()=>(S.nights||0)>=1&&HOUSES.length>0}),
  Object.assign([[0,'オオカゲを、ちかくで見ちゃった。'],[1,'#scared|こわくなかった？'],[0,'#scared|こわかった。でも、体の中で、小さいかげが、いっぱいうごいてたんだ。'],[1,'…なんだか、さむそうだったね。']],{ok:()=>(S.bossKills||0)>=1}),
  Object.assign([[0,'畑の作物、またカゲドロボウにとられちゃった。'],[1,'じぶんで植えればいいのにね。'],[0,'…かげには、育てられないのかも。']],{ok:()=>!!(S.seenEn||{}).thief}),
@@ -1499,22 +1499,22 @@ const CHATS=[/* kc：キーキャラどうし（話しかける子, 相手）、
  Object.assign([[0,'きのう、ヌシ様といっしょに、草原をおさんぽしたんだ！'],[1,'いいなあ！'],[0,'ヌシ様が歩くと、草が「さわさわ」って、あいさつするんだよ。']],{kc:['F','*'],ok:kClr}),
  Object.assign([[0,'フタバ、ごはん、ちゃんと食べたぁ？'],[1,'食べたよ！ ノドカこそ、畑ばっかりじゃだめだよ！'],[0,'あはは、ばれてるねぇ。']],{kc:['N','F']}),
  Object.assign([[0,'フタバの寝顔、かわいいよぉ。'],[1,'#surprise|えっ、見てたの！？'],[0,'ふふ、ひみつだよぉ。']],{kc:['N','F']}),
- Object.assign([[0,'@Hのそばは、あったかくていいねぇ。'],[1,'おれは、ストーブじゃねえぞ。'],[0,'ごめんごめん。……でも、ぽかぽか。'],[1,'#think|……ったく。']],{kc:['N','H']}),
+ Object.assign([[0,'@H、さっきの雨のとき、どこにいたのぉ？'],[1,'……屋根の下だ。雨は、にがてなんだよ。'],[0,'ふふ、ぼくは、ずぶぬれで、たのしかったよぉ。'],[1,'#think|……おまえは、平和でいいな。']],{kc:['N','H']}),
  Object.assign([[0,'@M、畑の土の水分、どうかなぁ。'],[1,'少し乾いていますね。夕方に、水を足しましょう。'],[0,'さすがだねぇ。たすかるよぉ。']],{kc:['N','M']}),
  Object.assign([[0,'@Kは、いつもおしゃれだねぇ。'],[1,'フッ……身だしなみは、風のたしなみさ。'],[0,'ぼくのほっぺ、どろがついてたら教えてねぇ。'],[1,'#think|……ついているよ、いま。'],[0,'あれぇ？']],{kc:['N','K']}),
  Object.assign([[0,'畑の土は、ふかふかが一番だよぉ。'],[1,'さわってもいい？'],[0,'いいよぉ。ほら、あったかいでしょぉ。']],{kc:['N','*']}),
  Object.assign([[0,'のんびりしてるって、よく言われるんだぁ。'],[1,'でも、ノドカの畑、いつもきれいだよ。'],[0,'#joy|ふふ、ありがとうねぇ。']],{kc:['N','*']}),
  Object.assign([[0,'#scared|ねぇ、夜はこわくないかなぁ？'],[1,'#scared|ちょっと、こわい……。'],[0,'だいじょうぶだよぉ。ぼくがとなりにいるからねぇ。']],{kc:['N','*']}),
- Object.assign([[0,'#joy|ヌシ様が歩いたあと、草がうれしそうなんだぁ。'],[1,'草も、待ってたんだね。'],[0,'そうだねぇ。土も、にこにこしてるよぉ。']],{kc:['N','*'],ok:kClr}),
+ Object.assign([[0,'ヌシ様にねぇ、畑のやさい、食べてもらったんだぁ。'],[1,'なんて言ってた？'],[0,'#joy|「なつかしい味だ」って。……うれしくて、ちょっと泣いちゃったぁ。']],{kc:['N','*'],ok:kClr}),
  Object.assign([[0,'むかしから、この土地には、たくさんの子がいたんだってぇ。'],[1,'そうなの？'],[0,'土が、そう教えてくれるんだぁ。……またにぎやかになるといいねぇ。']],{kc:['N','*']}),
  Object.assign([[0,'フタバ、さいきん、たのもしくなったねぇ。'],[1,'#surprise|えっ、ほんと！？'],[0,'#joy|ほんとだよぉ。ぼくも、うれしいんだぁ。']],{kc:['N','F'],ok:kGuard}),
- Object.assign([[0,'おい、チビ。ちゃんとメシ食ってんのか。'],[1,'チビじゃないもん！ 食べてるよ！'],[0,'ははっ。ならいい。']],{kc:['H','F']}),
+ Object.assign([[0,'おい、チビ。その頭の葉っぱで、ちゃんと前、見えてんのか。'],[1,'見えてるもん！ …わっ。'],[0,'ははっ。言ったそばから、つまずいてやがる。']],{kc:['H','F']}),
  Object.assign([[0,'おまえの葉っぱ、あったけえな。'],[1,'#surprise|えっ、そう？'],[0,'ああ。……悪くねえ。']],{kc:['H','F'],ok:kGuard}),
  Object.assign([[0,'のんびりしすぎだぜ、ノドカ。'],[1,'そうかなぁ。'],[0,'#think|……まあ、そのぐらいのほうが、村は落ちつくか。']],{kc:['H','N']}),
  Object.assign([[0,'#think|おい@M、おまえは考えすぎだ。'],[1,'#think|あなたは、考えなさすぎです。'],[0,'ははっ、ちげえねえ。'],[1,'#think|……ふふ。']],{kc:['H','M']}),
  Object.assign([[0,'@K、そのキザなしゃべり、疲れねえか？'],[1,'フッ……これが、ぼくの自然体さ。'],[0,'そうかよ。……まあ、きらいじゃねえ。']],{kc:['H','K']}),
  Object.assign([[0,'夜はおれにまかせとけ。ぐっすり寝ろ。'],[1,'#joy|うん。ありがとう。'],[0,'礼なんかいらねえよ。']],{kc:['H','*']}),
- Object.assign([[0,'おまえ、ちゃんと食ってるか。顔色が悪いぞ。'],[1,'だいじょうぶだよ。'],[0,'ほら、おれの分もやる。食え。']],{kc:['H','*']}),
+ Object.assign([[0,'おまえ、ひざ、すりむいてるじゃねえか。'],[1,'ころんじゃった。'],[0,'泣かなかったのか。……えらいな。']],{kc:['H','*']}),
  Object.assign([[0,'強くなりたいか？'],[1,'#nod|うん！'],[0,'ならまず、よく食って、よく寝ろ。それが一番だ。']],{kc:['H','*']}),
  Object.assign([[0,'火は、使い方しだいだ。あたためもすりゃ、焼きもする。'],[1,'むずかしいね。'],[0,'おまえも、いつか分かるさ。']],{kc:['H','*']}),
  Object.assign([[0,'#think|……なあ、フタバ。ひとりで抱えこむなよ。'],[1,'#surprise|えっ？'],[0,'つらいときは言え。おれは、ここにいる。']],{kc:['H','F'],ok:kE09}),
@@ -1533,7 +1533,7 @@ const CHATS=[/* kc：キーキャラどうし（話しかける子, 相手）、
  Object.assign([[0,'@H。きみの炎は、風が吹くと、いっそう美しい。'],[1,'おだてても、何も出ねえぞ。'],[0,'フッ……事実を言っただけさ。']],{kc:['K','H']}),
  Object.assign([[0,'@M。きみの頭の中は、いつも整っているね。'],[1,'@Kさんの髪も、いつも整っていますね。'],[0,'フッ……これは、風まかせさ。']],{kc:['K','M']}),
  Object.assign([[0,'ぼくが来たとき、この村は少し素朴だと思ったよ。'],[1,'そうなの？'],[0,'でも、今は……悪くない。いや、すてきだ。']],{kc:['K','*']}),
- Object.assign([[0,'風の声を聞いてごらん。'],[1,'#think|……なんにも聞こえないよ。'],[0,'それが、風の声さ。……静けさにも、言葉があるんだ。']],{kc:['K','*']}),
+ Object.assign([[0,'ぼくの髪がみだれていたら、それは、よくはたらいた、しるしさ。'],[1,'いまは、みだれてるよ？'],[0,'#think|……フッ。きょうは、がんばったのさ。']],{kc:['K','*']}),
  Object.assign([[0,'今日の風は、ミントの香りがするよ。'],[1,'すんすん……わかんない。'],[0,'フッ……そのうち、わかるようになるさ。']],{kc:['K','*']}),
  Object.assign([[0,'遠くの風の便りによるとね、どこかで、だれかが歌っているらしい。'],[1,'どんな歌？'],[0,'それは、風が教えてくれなかった。……残念だ。']],{kc:['K','*']}),
  Object.assign([[0,'フタバ。あまり遠くへ行くなよ。風が心配する。'],[1,'風が？'],[0,'#think|……いや、ぼくが、かな。'],[1,'#joy|えへへ、ありがとう！']],{kc:['K','F']}),
@@ -2710,7 +2710,8 @@ const STAMPC10={farm:32,fence:16,stone:16,path:8};/* スタンプで足りない
 function stampCost(need){let c10=0;const parts=[];for(const id in need){const short=Math.max(0,need[id]-inv(id));c10+=short*(BL[id].qty||STAMPC10[id]==null?Infinity:STAMPC10[id]);if(short)parts.push(BL[id].name+short+'こ')}return {cost:Math.ceil(c10/10),parts}}
 function shortCost(need){let cost=0;const parts=[];for(const id in need){const short=Math.max(0,need[id]-inv(id));cost+=short*(BL[id].qty?Infinity:BL[id].cost);if(short)parts.push(BL[id].name+short+'こ')}return {cost,parts}}
 function askBulk(id,cells){
-  const ok=cells.filter(([x,y])=>canPlace(id,x,y,true));
+  const under=j=>{let o=S.obj[j];if(o==='part')o=S.obj[S.ref[j]];return !!o&&!(BL[o]&&BL[o].kind==='furn')};/* 床・道は、壁・柵・畑・木などの下にはぬらない（見えないのに、数だけへるので）。家具の下にはぬれる */
+  const ok=cells.filter(([x,y])=>canPlace(id,x,y,true)&&!(BL[id].floor&&under(y*W+x)));
   if(!ok.length){toast('置ける場所がありません');return}
   const b=BL[id];
   if(b.kind==='plant'){const n=Math.min(ok.length,inv(id));if(!n)return toast(iname(id)+'がおそなえ箱にありません');ok.length=n;pending={kind:'plant',id,cells:ok};$('#confirmTxt').textContent=iname(id)+'を'+n+'か所に植えてもらう';$('#cYes').disabled=false}
@@ -4706,7 +4707,7 @@ function playSeg(k,vol,dur){if(!AC||!SND.sfx||AC.state!=='running')return false;
 let WAVE=null;/* 水浴びの音は1つだけ。水浴びが終わったら止める */
 function playWave(vol){if(WAVE||!AC)return;const L=(SBUF.wave||[]).filter(Boolean);if(!L.length)return;const src=AC.createBufferSource(),g=AC.createGain();src.buffer=pick(L);g.gain.value=vol*SFXV;src.connect(g);g.connect(sfxG);const w={src,g};src.onended=()=>{if(WAVE===w)WAVE=null};WAVE=w;src.start()}
 function stopWave(){if(!WAVE)return;const{src,g}=WAVE;WAVE=null;try{g.gain.setTargetAtTime(0,AC.currentTime,.12);src.stop(AC.currentTime+.5)}catch(e){}}
-function playS(k,vol){const L=(SBUF[k]||[]).filter(Boolean);if(!L.length)return false;const src=AC.createBufferSource(),g=AC.createGain();src.buffer=pick(L);src.playbackRate.value=.92+Math.random()*.16;g.gain.value=vol*SFXV;src.connect(g);g.connect(sfxG);src.start();return true}
+function playS(k,vol,dl){const L=(SBUF[k]||[]).filter(Boolean);if(!L.length)return false;const src=AC.createBufferSource(),g=AC.createGain();src.buffer=pick(L);src.playbackRate.value=.92+Math.random()*.16;g.gain.value=vol*SFXV;src.connect(g);g.connect(sfxG);src.start(AC.currentTime+(dl||0));return true}
 function audioInit(){
   if(AC){if(AC.state==='suspended')AC.resume().catch(()=>{});return}
   try{AC=new (window.AudioContext||window.webkitAudioContext)();if(AC.state==='suspended')AC.resume().catch(()=>{})}catch(e){return}
@@ -4789,7 +4790,8 @@ case'bossKO':noise(t,.5,.3,o,200);tone(70,t,1.4,'sine',.2,o,30);tone(900,t,.35,'
   case'cook':if(playS('boil',.35))break;noise(t,.35,.025,o,3000);tone(180,t,.08,'triangle',.03,o,140);break;
   case'crack':if(playS('mine',.25))break;playS('place',.25);break;case'rm':if(playS('gravel',.6))break;noise(t,.18,.09,o,900);break;
   case'nail':playS('nail2',.28);break;
-  case'bnail':playS('nail2',.42);break;/* 建てているときの音（ふつうの1.5倍） */
+  case'bnail':playS('nail2',.42);break;
+  case'kankan':for(let i=0;i<3;i++)playS('nail2',.42,i*.22);break;/* 強化したとき：カンカンカン *//* 建てているときの音（ふつうの1.5倍） */
   case'evap':noise(t,1.4,.05,o,2500);seq([67,64,60],.18,'sine',.03,.4);break;
   case'bush':playS('bush',.35);break;
   case'cast':playS('cast',.35);break;
@@ -4853,7 +4855,7 @@ function renderPalette(){
   if(!S)return;updItemInfo();const box=$('#palItems');box.innerHTML='';
   $('#undoBtn').hidden=mode!=='build';
   const pickItem=id=>()=>{sfx('tap');sel=id;if(pending&&pending.kind==='one'){pending=null;$('#confirm').hidden=true}selStamp=null;renderPalette();const b=BL[id];
-    if(mode==='bulk'){if(!S.bulk)return toast('下から道具をえらんでください');toast('ハケで、なぞった範囲をぬれます');return}
+    if(mode==='bulk'){if(!S.bulk)return toast('下から道具をえらんでください');toast('ハケで、なぞった範囲をぬれます');palOpen=false;renderPalette();return}
     if(b.kind==='furn'&&!inv(id))toast(b.name+'が足りません','warn');
     else if(b.kind==='block'&&!inv(id))toast(b.name+'がありません');
     else if(b.kind==='plant')toast(inv(id)?'置いた場所にせいれいが植えてくれる':iname(id)+'がありません');
@@ -4861,13 +4863,17 @@ function renderPalette(){
     else if(b.kind==='build')toast(id==='statue'?'好きな場所をタップ。せいれいが神殿を建ててくれる（4マス）':'置いた場所にせいれいが建ててくれる');
     if(b.kind==='build'||inv(id)>0){palOpen=false;renderPalette()}};
   $('#palette').classList.toggle('open',palOpen);
+  if(!palOpen&&mode==='bulk'){/* ハケ・スタンプ・つけかえも、えらんだら小さくして、マップを見えるように */
+    if(selStamp)box.appendChild(chip(selStamp.startsWith('swap:')?iconURL(selStamp.slice(5)):stampIcon(selStamp),selStamp.startsWith('swap:')?BL[selStamp.slice(5)].name:STAMPS[selStamp].name,selStamp.startsWith('swap:')?'×'+inv(selStamp.slice(5)):'スタンプ','sel',()=>{}));
+    else if(sel&&BL[sel])box.appendChild(chip(iconURL(sel),iname(sel),'×'+inv(sel),'sel',()=>{}));
+    const mb=document.createElement('button');mb.className='chip more';mb.id='palMore';mb.textContent='ほかをえらぶ';mb.onclick=()=>{sfx('tap');palOpen=true;renderPalette()};box.appendChild(mb);return}
   if(!palOpen&&mode==='build'){/* えらんだ物だけを小さく出す */
     if(sel&&BL[sel]){const id=sel,b=BL[id];box.appendChild(chip(iconURL(id),iname(id),b.kind==='build'?(id==='statue'||(id==='watch'&&watchQ())?'むりょう':SP(b.pc)):'×'+inv(id),'sel',()=>{}))}
     const mb=document.createElement('button');mb.className='chip more';mb.id='palMore';mb.textContent='ほかをえらぶ';mb.onclick=()=>{sfx('tap');palOpen=true;renderPalette()};box.appendChild(mb);return}
   if(mode==='bulk'){
     if(S.bulk){lbl(box,'ハケ');box.appendChild(chip(toolIcon('hake'),'ひろびろハケ','下からえらぶ','wide',()=>toast('ぬりたいブロックや種をえらんで、指でなぞろう')))}/* もらった道具だけ出す */
-    if(S.stamps){lbl(box,'スタンプ');for(const sid in STAMPS)box.appendChild(chip(stampIcon(sid),STAMPS[sid].name,'スタンプ','wide'+(selStamp===sid?' sel':''),()=>{selStamp=sid;renderPalette();toast('置きたい場所の左上をタップ')}))}
-    if(S.swap){lbl(box,'つけかえ');for(const id of SWAPG.flat().filter(id=>S.unlocked[id])){const k='swap:'+id;box.appendChild(chip(iconURL(id),BL[id].name,'×'+inv(id),selStamp===k?'sel':'',()=>{selStamp=k;renderPalette();toast('つけかえたい物をタップ')}))}}/* つけかえトンカチ：つながっている柵・塀・家の壁・道・床を、えらんだ種類にまとめてかえる */
+    if(S.stamps){lbl(box,'スタンプ');for(const sid in STAMPS)box.appendChild(chip(stampIcon(sid),STAMPS[sid].name,'スタンプ','wide'+(selStamp===sid?' sel':''),()=>{selStamp=sid;palOpen=false;renderPalette();toast('置きたい場所の左上をタップ')}))}
+    if(S.swap){lbl(box,'つけかえ');for(const id of SWAPG.flat().filter(id=>S.unlocked[id])){const k='swap:'+id;box.appendChild(chip(iconURL(id),BL[id].name,'×'+inv(id),selStamp===k?'sel':'',()=>{selStamp=k;palOpen=false;renderPalette();toast('つけかえたい物をタップ')}))}}/* つけかえトンカチ：つながっている柵・塀・家の壁・道・床を、えらんだ種類にまとめてかえる */
     if(!S.bulk)return/* ハケがなければ、ぬるブロック・種は出さない */
   }
   const blocks=STATUE<0?[]:BLOCKS.filter(id=>inv(id)>0);
@@ -5200,7 +5206,7 @@ function renderSheet(){
     const yg=o==='yogan',TB=yg?YOGAN:WATCH,L=S.hp['L'+j]||1,st=TB[L];T.textContent=BL[o].name;
     body.appendChild(el(`<p class="story">Lv${L}：威力 ${st.dmg}${yg?'（まわり '+st.sdmg+'）':''}・射程 ${st.range}マス・${st.cd}分ごとに${yg?'火の玉':'光の矢'}を放つ</p>`));
     const U=WUP[L];if(U){const n=TB[L+1];body.appendChild(el(`<p class="note">強化するとLv${L+1}：威力 ${n.dmg}${yg?'（まわり '+n.sdmg+'）':''}・射程 ${n.range}マス・${n.cd}分ごと<br>${SP(U.pc)}・${matTxt(U.mat)}</p>`));
-      const b=el('<button class="btn pri">強化する</button>');b.onclick=()=>{if(S.pt<U.pc)return toast('パワーが足りません（'+SP(U.pc)+'）');if(!matOK(U.mat))return toast('素材が足りません（'+matTxt(U.mat)+'）');S.pt-=U.pc;for(const k in U.mat)S.mat[k]-=U.mat[k];S.hp['L'+j]=L+1;dirty=true;try{rebuildStatic()}catch(e){}sfx('post');burst(j,'block','offer');toast(BL[o].name+'をLv'+(L+1)+'に強化した','good');renderSheet()};body.appendChild(b)}
+      const b=el('<button class="btn pri">強化する</button>');b.onclick=()=>{if(S.pt<U.pc)return toast('パワーが足りません（'+SP(U.pc)+'）');if(!matOK(U.mat))return toast('素材が足りません（'+matTxt(U.mat)+'）');S.pt-=U.pc;for(const k in U.mat)S.mat[k]-=U.mat[k];S.hp['L'+j]=L+1;dirty=true;try{rebuildStatic()}catch(e){}sfx('kankan');burst(j,'block','offer');toast(BL[o].name+'をLv'+(L+1)+'に強化した','good');renderSheet()};body.appendChild(b)}
     else body.appendChild(el('<p class="note">これ以上は強化できない</p>'));
   }else if(sheet==='menu'){
     T.textContent=WORLDS[WD].name;
@@ -5400,7 +5406,7 @@ function arrive(){
 }
 function talkOnce(key,lines,delay){/* 1回だけの会話：最後まで見てから「見た」にする。とちゅうでとじたら、次に開いたときにもう一度 */if(!S||S.flags[key]||!lines||!lines.length)return;const P=S.pendTalk||(S.pendTalk={});P[key]=lines;setTimeout(()=>{if(!S||S.flags[key])return;dialog(P[key]||lines,()=>{S.flags[key]=1;if(S.pendTalk)delete S.pendTalk[key]})},delay||900)}
 function replayTalks(){if(!S||!S.pendTalk)return;for(const k in S.pendTalk){if(S.flags[k]){delete S.pendTalk[k];continue}talkOnce(k,S.pendTalk[k],1500)}}
-function continueGame(saved){if(saved&&saved.summary)saved=loadStage(saved.world);if(!saved)return;setWorld(saved.world||0);S=saved;LIVE[WD]=S;ensureStor(S);if((S.mig||0)<1){fixBeds();dropChair2();dropBirdhouse();dropFlower();dropNtree();if(((S.subSt||{}).watch2||0)>=4){S.recipes=S.recipes||{};S.guardianIdeas=S.guardianIdeas||{};S.recipes.signpost=true;S.guardianIdeas.signpost=true}/* 見張り台を2つにしたあと（フタバの「道がわかる目印」）で、道しるべをおぼえる */S.mig=1}if(S.mig<2){if(S.flags.traded)S.flags.tradedSeen=1;if(S.flags.oracleSet)S.flags.oracleSeen=1;if(S.flags.minaCame&&S.flags.mnN==null)S.flags.mnN=S.nights||0;S.mig=2}if(S.mig<3){swingWide();S.mig=3}if(S.mig<4){recount();rugsBig();S.mig=4}if(S.mig<5){for(const r of [...S.res,...(S.lost||[]),...(S.buried||[])])if(r.vr&&r.vr.tr==='ryouri'&&r.elem!=='fire')r.vr.tr=pick(TRK(r.elem));S.mig=5}/* 料理じょうずは火の子だけ：ほかの子は、べつの特技に *//* 古いセーブを直すのは、1回だけ */setTimeout(replayTalks,2500);/* とちゅうでとじた会話を、もう一度 */if(S.flags&&S.flags.nushiDue&&!S.cleared)setTimeout(()=>{if(!S.cleared)nushiReturns()},3000);/* ヌシ様が帰ってくる場面を、とちゅうでとじていたら、はじめから */syncTools(S);dirty=true;closeSheet();S.res.forEach(r=>{r.act=null;r.path=[]});S.orders.forEach(o=>o.worker=null);recount();renderQuest();applyFeats();setMode('look');glassUI();
+function continueGame(saved){if(saved&&saved.summary)saved=loadStage(saved.world);if(!saved)return;setWorld(saved.world||0);S=saved;LIVE[WD]=S;ensureStor(S);if((S.mig||0)<1){fixBeds();dropChair2();dropBirdhouse();dropFlower();dropNtree();if(((S.subSt||{}).watch2||0)>=4){S.recipes=S.recipes||{};S.guardianIdeas=S.guardianIdeas||{};S.recipes.signpost=true;S.guardianIdeas.signpost=true}/* 見張り台を2つにしたあと（フタバの「道がわかる目印」）で、道しるべをおぼえる */S.mig=1}if(S.mig<2){if(S.flags.traded)S.flags.tradedSeen=1;if(S.flags.oracleSet)S.flags.oracleSeen=1;if(S.flags.minaCame&&S.flags.mnN==null)S.flags.mnN=S.nights||0;S.mig=2}if(S.mig<3){swingWide();S.mig=3}if(S.mig<4){recount();rugsBig();S.mig=4}if(S.mig<5){for(const r of [...S.res,...(S.lost||[]),...(S.buried||[])])if(r.vr&&r.vr.tr==='ryouri'&&r.elem!=='fire')r.vr.tr=pick(TRK(r.elem));S.mig=5}if(S.mig<6){const N=new Set([19,25,36,44,48,49,51,55,59,71,72,85,89,90,91,98,99,120,127,134,168,174,177,183,202]);S.chatRec=(S.chatRec||[]).filter(i=>!N.has(i));S.mig=6}/* 似ていた会話を、べつの会話にさしかえた：さしかえた会話は、まだしていない話にもどす *//* 料理じょうずは火の子だけ：ほかの子は、べつの特技に *//* 古いセーブを直すのは、1回だけ */setTimeout(replayTalks,2500);/* とちゅうでとじた会話を、もう一度 */if(S.flags&&S.flags.nushiDue&&!S.cleared)setTimeout(()=>{if(!S.cleared)nushiReturns()},3000);/* ヌシ様が帰ってくる場面を、とちゅうでとじていたら、はじめから */syncTools(S);dirty=true;closeSheet();S.res.forEach(r=>{r.act=null;r.path=[]});S.orders.forEach(o=>o.worker=null);recount();renderQuest();applyFeats();setMode('look');glassUI();
   cam.z=homeZ();centerOn(CX*TS,CY*TS);$('#title').hidden=true;$('#maps').hidden=true;started=true;stageMusic();showUI(true);if(!WD&&S.flags&&S.flags.ret1===1){S.flags.ret1=2;(S.sevQ||(S.sevQ=[])).push('ret')}}
 
 
@@ -5444,7 +5450,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='561';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='562';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
