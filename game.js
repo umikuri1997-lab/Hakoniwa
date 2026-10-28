@@ -948,7 +948,7 @@ const reserve=k=>resv.set(k,(resv.get(k)||0)+1);
 const release=k=>{const v=(resv.get(k)||0)-1;if(v<=0)resv.delete(k);else resv.set(k,v)};
 function nearLotus(r){const x0=r.x|0,y0=r.y|0;for(let y=y0-2;y<=y0+2;y++)for(let x=x0-2;x<=x0+2;x++){if(x<0||y<0||x>=W||y>=H)continue;if(S.obj[y*W+x]==='lotus')return true}return false}
 const SEATS=['chair','stool','achair','bench','pouf','sofa1'];SEATS.forEach(k=>BL[k].anim=1);/* うきを毎フレームかくため */function fSpot(j){/* 池のそばの椅子＝釣りスポット */const x=j%W;for(const k of[j,j-1,j+1,j-W,j+W]){if(k<0||k>=W*H||Math.abs(k%W-x)>1)continue;const t=typeAt(k);if(t&&SEATS.includes(t))return true}return false}
-const TOYS=new Set(['swing','seesaw','sandbox','slide']);TOYS.forEach(k=>BL[k].anim=1);/* 毎フレームかく */for(const k of['hedge'])BL[k].anim=1;/* 絵が細かいので、地面にやきつけず、画面の大きさでかく */if(window.CHIPS)for(const k in BL)if(window.CHIPS[k]&&window.CHIPS[k].g===64)BL[k].anim=1;/* 1マス64ドットの絵の物も、画面の大きさでかく */
+const TOYS=new Set(['swing','seesaw','sandbox','slide']);TOYS.forEach(k=>BL[k].anim=1);/* 毎フレームかく */for(const k of['hedge'])BL[k].anim=1;/* 絵が細かいので、地面にやきつけず、画面の大きさでかく */if(window.CHIPS)for(const k in BL)if(window.CHIPS[k]&&window.CHIPS[k].g===64)BL[k].anim=1;/* 1マス64ドットの絵の物も、画面の大きさでかく */if(window.CHIPS)for(const k in BL)if(window.CHIPS[k]&&window.CHIPS[k].f.length>1)BL[k].anim=1;/* 何コマかある絵（ようがん台の火など）は、毎フレームかく */
 const win64=i=>!!(S&&S.win&&typeof S.win[i]==='string'&&window.CHIPS&&window.CHIPS[S.win[i]]&&window.CHIPS[S.win[i]].g===64);/* 1マス64ドットの絵をかけた壁・ドアも、画面の大きさでかく */
 function toyR(r){const a=r.act;return a&&a.type==='play'&&a.stage==='do'&&TOYS.has(a.what)&&a.obj!=null&&S.obj[a.obj]===a.what?a:null}
 function toyUsers(j){return S.res.filter(q=>{const a=toyR(q);return a&&a.obj===j}).sort((p,q)=>p.id-q.id)}
@@ -5301,7 +5301,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='473';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='474';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
