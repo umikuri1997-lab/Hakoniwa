@@ -3003,6 +3003,51 @@ function calcScore(){const d=S.clearDay||dayNo(),parts=[['クリアした日',d+
  const tot=Math.max(0,parts.reduce((a,p)=>a+p[2],0)),rank=tot>=5000?'S':tot>=4000?'A':tot>=2500?'B':'C'/* ふつうはB。はやく・消さずにクリアでS */;return{tot,rank,parts}}/* クリアスコア：早いほど・せいれいが多いほど・消えたせいれいが少ないほど高い。夜の数・パワーなど、長く遊ぶほどふえるものは入れない。クリアした日：26日目まで4000・30日目まで3200・34日目まで2600・39日目まで2000・44日目まで1500・54日目まで1000・それより後500。せいれい：1人100てん。消えたせいれい：1人50てん引く（引くのは1000まで）。S 5000・A 4000・B 2500 */
 function visionFX(lines,after){const d=document.createElement('div');d.style.cssText='position:absolute;inset:0;background:#0b0f0a;opacity:0;pointer-events:none;z-index:25;transition:opacity .9s ease';$('#app').appendChild(d);requestAnimationFrame(()=>requestAnimationFrame(()=>{d.style.opacity='.55'}));setTimeout(()=>dialog(lines,()=>{d.style.opacity='0';setTimeout(()=>{d.remove();after&&after()},900)},null,''),1000)}/* かけらにふれたとき、画面が暗くなって記憶がうかぶ（会話の枠は暗くしない・暗さは控えめ） */
 function flashScreen(){const d=document.createElement('div');d.style.cssText='position:fixed;inset:0;background:#fff;opacity:.85;pointer-events:none;z-index:60;transition:opacity 1.4s ease-out';document.body.appendChild(d);requestAnimationFrame(()=>requestAnimationFrame(()=>{d.style.opacity='0'}));setTimeout(()=>d.remove(),1600)}/* 白くひかる */
+const NTALK=[[/* 草原のヌシ：守り神に話す（ひとつずつ、順番に） */
+  '#think|……風が、やわらかくなったな。この土地が、息をふきかえしている。',
+  '守り神よ。子らの笑い声は、どんな花より、この地を明るくする。',
+  'わたしの角に、ときどき小鳥がとまる。……じっとしているのは、なかなかむずかしい。',
+  '#think|フタバは、ずいぶんたくましくなった。……わたしがいないあいだに。',
+  '#think|夕やけを見ると、思い出すことがある。さいごまで光ろうとする者のことを。',
+  '花が咲くたび、この地のどこかで、新しい命がめざめる。……おまえのおかげだ。',
+  'むかし、ここには、もっと多くの子らがいた。……いまも、風のなかに、その声がまざっている気がする。',
+  '#joy|子らは、わたしの足あとに、花の種をうえてまわっている。……ありがたいが、少しくすぐったい。',
+  '#think|昼と夜は、ふたつでひとつ。どちらかが欠けると、もう一方も、すこしずつ弱っていく。',
+  '雨の日は、葉がよろこぶ。わたしも、すこしだけ、背がのびた気がする。',
+  '守り神よ。おまえは、つかれないのか。……ふむ。神というのも、たいへんだな。',
+  '#think|この台座には、子らの「守りたい」が、たくさんしみこんでいる。……あたたかいな。',
+  'ほかの土地のヌシたちも、きっと、だれかを待っている。……守り神よ、急ぐことはない。'],[/* 火のヌシ */
+  '#think|……ふう。湯気のにおいがすると、落ちつく。',
+  '火は、あたためもすれば、焼きもする。……ホムラは、それをよく知っている子だ。',
+  '温泉に子らがつかっているのを見るのが好きだ。……わたしも入りたいが、湯がわいてしまう。',
+  '#think|草原のヌシは、元気にしているだろうか。あいつは、むかしから心配性でな。',
+  '#think|あの影たちは、熱をほしがっていた。……あたためてやれる日が、いつか来るといいのだが。',
+  '火の山のおくで、また熱がめぐりはじめた。おまえたちのおかげだ。',
+  'シズクは、湯の温度を毎朝はかっている。……わたしより、くわしいかもしれん。',
+  '#joy|子らのおまつりは、にぎやかでいい。わたしの若いころを思いだす。',
+  'イチョウの家か。……燃えにくい木を、よく見つけたものだ。']];
+const NTALKN=['#think|夜は、静かに見守るときだ。……影たちも、本当は、休める場所がほしいのだろう。','#think|……夜の風は、つめたいな。子らは、よく眠れているだろうか。'];/* 夜に話しかけたとき */
+const NPLAY=[[/* 草原：遊びにきた子と、ヌシ様の会話（0：遊びにきた子、U：ヌシ様） */
+  [[0,'ヌシ様、せなかに乗ってもいい？'],['U','#think|……すこしだけだぞ。角には、さわるでない。'],[0,'#joy|わあ、たかーい！']],
+  [[0,'ヌシ様の角の花、いいにおいがする！'],['U','花の季節には、もっと咲く。そのときは、また見においで。']],
+  [[0,'ヌシ様って、なにを食べるの？'],['U','#think|朝つゆと、日の光だ。……それと、ときどき、子らがくれるベリーもな。']],
+  [[0,'ヌシ様、かくれんぼしよう！'],['U','わたしは、どこにかくれても、角が見えてしまうのだが。'],[0,'#joy|あはは、ほんとだ！']],
+  [[0,'ヌシ様がいないあいだ、さみしかった？'],['U','#think|……ああ。かけらのなかで、ずっと、子らの声を聞いていた。']],
+  [[0,'ねえヌシ様、草原は、むかしもこんなだった？'],['U','もっと花が多かった。……だが、いまの草原も、わたしは好きだ。']],
+  [[0,'ヌシ様の足あとに、花が咲いてる！'],['U','#joy|ふふ。おまえたちが、うえてくれたのだろう？']],
+  [[0,'ヌシ様、夜はこわくないの？'],['U','#think|夜は、休むための時間だ。……こわいものでは、なかったはずなのだがな。']],
+  [[0,'ヌシ様、なでてもいい？'],['U','#think|……かまわん。……そこだ。耳のうしろが、すこしかゆい。']],
+  [[0,'ヌシ様の背中、あったかいね。'],['U','日なたに長くいたからな。おまえも、すこし休んでいけ。']]],[/* 火のヌシ */
+  [[0,'ヌシ様、温泉、ちょうどいい熱さだよ！'],['U','#joy|そうか。……子らがよろこぶ湯は、いい湯だ。']],
+  [[0,'ヌシ様のたてがみ、あったかい！'],['U','やけどせんようにな。……ふう、くすぐったい。']],
+  [[0,'ヌシ様、火の山って、どんなところ？'],['U','#think|熱い風がふく。……だが、夜には、星がよく見える。']],
+  [[0,'ヌシ様、いっしょに火の粉を見よう！'],['U','うむ。ぱちぱちと、よく笑う火だ。']],
+  [[0,'ヌシ様が帰ってきて、村があったかくなったね。'],['U','わたしではない。……おまえたちが、あたためてくれたのだ。']],
+  [[0,'ヌシ様、おまつりの屋台、いっしょにまわろう！'],['U','#think|わたしが行くと、屋台がこげてしまうかもしれん。……遠くから見ているよ。']]]];
+function nushiTalk(){const n=S.nushi,nm=WD===1?'火のヌシ':NUSHI1,k=WD===1?1:0;
+  const r=n.pl&&S.res.find(q=>q.id===n.pl.id);if(r&&r.act&&r.act.type==='npl'&&r.act.stage==='do'){const P=NPLAY[k],L=P[(S.npc=(S.npc||0)+1)%P.length];return dialog(L.map(([w,t])=>w==='U'?[nm,t]:[r.name,chatTone(t,r)]))}/* 遊びにきた子がいれば、その子とヌシ様の会話 */
+  if(isNight())return dialog([[nm,pick(NTALKN)]]);
+  const T=NTALK[k];dialog([[nm,T[(S.ntk=(S.ntk||0)+1)%T.length]]])}/* 守り神に、ひとことずつ話す（順番にまわる） */
 function updNushi(dt){const n=S.nushi;if(n.app==null)n.app=1;if(n.app<1){n.app=Math.min(1,n.app+dt/5);n.mv=0;return}/* 台座の上で、すこしずつ姿をあらわす */
   if(n.pl){const r=S.res.find(q=>q.id===n.pl.id);n.pl.t+=dt;if(r&&n.pl.t>90&&r.act&&r.act.type==='npl'&&r.act.stage!=='do')endAct(r);
     if(!r||!r.act||(r.act.type!=='npl'&&n.pl.t>3)){n.pl=null;n.pt=rnd(240,480)}else{n.mv=0;n.path=[];if(r.act.type==='npl'&&r.act.stage==='do'){n.face=r.x<n.x?-1:1;n.fx=(n.fx||0)+dt;if(n.fx>3){n.fx=0;spawnFX(n.x-.5,n.y-1.1,'#ffb8d8')}}return}}
@@ -4735,7 +4780,7 @@ function onTap(sx,sy){
     if(en)return guardLight(en);/* 夜は「コワイノ」をタップして、守り神の光でおどかす */
     {const st=festStalls().find(t=>Math.abs(w.x/TS-(t.x+.5))<1.3&&w.y/TS>t.y-2.6&&w.y/TS<t.y+1);if(st){sfx('tap');openSheet('stall',st.x);return}}/* 屋台をタップすると、その屋台の品物 */
     if(godHere()&&Math.hypot(w.x/TS-godX(),w.y/TS-godY())<1.1){if(TALKW===GOD)return startTalk();if(S.feat.shop){const ln=pick(S.pt<2?GOD_POOR:GOD_SHOP);return dialog([[GOD,ln]],()=>{openSheet('shop');shopSay=ln;renderSheet()},'交換する')}toast('カミサマ「'+pick(GOD_IDLE)+'」');return}
-    if(S.nushi&&Math.hypot(w.x/TS-S.nushi.x,w.y/TS-(S.nushi.y-.6))<1.4){toast('ヌシ様は、しずかに草原を見守っている');return}
+    if(S.nushi&&Math.hypot(w.x/TS-S.nushi.x,w.y/TS-(S.nushi.y-.6))<1.4){sfx('tap');return nushiTalk()}/* ヌシ様と話す */
     if(S.cleared){const tw=S.obj.indexOf('tower');if(tw>=0&&Math.hypot(w.x/TS-(tw%W+1),w.y/TS-((tw/W|0)+.6))<1.4)return openSheet('travel')}/* クリア後は、台座から次の土地へ */
     if(sumHit(w.x/TS,w.y/TS))return doSummon();
     if(TALKW===GOD&&godHere()&&Math.hypot(w.x/TS-godX(),w.y/TS-(godY()-1.6))<1.2)return startTalk();
@@ -5579,7 +5624,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='569';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='570';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
