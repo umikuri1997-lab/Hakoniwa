@@ -839,7 +839,6 @@ function springFX(k){const[cx,cy]=HSPC[k];sfx('level');toast(SPN[k]+'に、あ�
 function st2Tick(){if(WD!==1||!S.st2)return;const t=S.st2;
   if(!t.sp.b&&t.d1===0&&t.bw.every(j=>S.obj[j]!=='boulder')&&!t.hvb[D1]){t.sp.b=1;dirty=true;springFX('b');checkQuest()}
   if(!t.sp.c&&t.d1===1&&t.d2fix&&t.d2===0&&CRACKS.every(j=>S.obj[j]!=='crack')&&!t.hvb[D1]&&!t.hvb[D2]){t.sp.c=1;dirty=true;springFX('c');checkQuest()}
-  if(t.hvbD!==JSON.stringify(t.hvb)){t.hvbD=JSON.stringify(t.hvb);dirty=true}
   for(const k in t.ash)if(t.ash[k]<=S.t||!S.obj[k])delete t.ash[k]}
 function volSpot(){for(let r=0;r<8;r++)for(let k=0;k<30;k++){const x=CX+Math.round((Math.random()*2-1)*(r+1)),y=6+Math.round(Math.random()*(r+1)),j=y*W+x;if(x>0&&y>0&&x<W&&y<H&&walk(j))return [x+.5,y+.5]}return spawnSpot()}
 function heatLines(){const t=S.st2,ok=k=>!t.hvb[k],L=[],h1=ok(D1),cr=CRACKS.every(j=>S.obj[j]!=='crack'),h2=h1&&t.d1===1&&cr&&t.d2fix&&ok(D2);
@@ -1886,7 +1885,7 @@ function updEnemy(e,dt){
     if(D.ash){for(let k=0;k<W*H;k++){if(!ASHT.has(S.obj[k])||t.ash[k]>S.t)continue;const d=Math.hypot(k%W+.5-e.x,((k/W)|0)+.5-e.y);if(d<bd){bd=d;bt=k}}}
     else for(const k of[D1,D2]){if(S.obj[k]!=='heatv'||t.hvb[k]||(k===D2&&!t.d2fix))continue;const d=Math.hypot(k%W+.5-e.x,((k/W)|0)+.5-e.y);if(d<bd){bd=d;bt=k}}
     if(bt>=0){e.ashG=true;if(bd<1.45){if(D.ash){t.ash[bt]=S.t+240;toast(BL[S.obj[bt]].name+'が、ハイカゲの灰で止まった！','warn');sfxAt('thief',e.x,e.y);e.flee=true;e.path=[];e.repath=0;return}
-        e.atk+=dt;if(e.atk>=D.atk){e.atk=0;t.hvh=t.hvh||{};t.hvh[bt]=(t.hvh[bt]??8)-1;sfxAt('bonk',bt%W+.5,(bt/W)|0);if(t.hvh[bt]<=0){delete t.hvh[bt];t.hvb[bt]=1;sfxAt('wbreak',bt%W+.5,(bt/W)|0);toast('ヒノオオカゲに熱の装置をこわされた！','warn')}}return}
+        e.atk+=dt;if(e.atk>=D.atk){e.atk=0;t.hvh=t.hvh||{};t.hvh[bt]=(t.hvh[bt]??8)-1;sfxAt('bonk',bt%W+.5,(bt/W)|0);if(t.hvh[bt]<=0){delete t.hvh[bt];t.hvb[bt]=1;dirty=true;sfxAt('wbreak',bt%W+.5,(bt/W)|0);toast('ヒノオオカゲに熱の装置をこわされた！','warn')}}return}
       const n=[bt-1,bt+1,bt-W,bt+W].filter(q=>walk(q)).sort((a,b)=>Math.hypot(a%W+.5-e.x,((a/W)|0)+.5-e.y)-Math.hypot(b%W+.5-e.x,((b/W)|0)+.5-e.y))[0];goal=n!=null?n:bt;if(e.tg!=='a'+bt){e.tg='a'+bt;e.repath=0}}}
   if(WD===1&&S.st2&&S.st2.cool&&(D.ash||D.vol)&&!e.flee&&!S.res.some(r=>!r.hidden&&Math.hypot(r.x-e.x,r.y-e.y)<2.5)){const t=S.st2;let bd=1e9,bj=-1,bk=null;/* 火山のふもとの最後の夜：ヤマノオオカゲとハイカゲは、すぐそばにせいれいがいなければ、あたたかい温泉のふちへ行って、熱をうばう */
     for(const k of['a','b','c']){if(!springOn(k))continue;for(const j of springEdge(k)){const d=Math.hypot(j%W+.5-e.x,((j/W)|0)+.5-e.y);if(d<bd){bd=d;bj=j;bk=k}}}
@@ -5059,7 +5058,7 @@ function renderSheet(){
     if(j===D2&&!t.d2fix){const clr=BVOL.every(q=>S.obj[q]!=='boulder'),ok=clr&&(S.mat.stone||0)>=8&&(S.mat.wood||0)>=5&&shLeft()>=1;
       P('こわれて止まっている。直すには、石材8・木材5と、ヌシのかけら1つがいる。'+(clr?'':'まわりの大岩をどかさないと、近づけない。')+(shLeft()?'':'（ヌシのかけらをまだ持っていない）'));
       const b=el('<button class="btn pri">直す</button>');b.disabled=!ok;b.onclick=()=>{S.mat.stone-=8;S.mat.wood-=5;S.usedSh=(S.usedSh||0)+1;t.d2fix=1;sfx('level');burst(j,'block');toast('かけらが熱を通した！ 奥の装置が動きだした','good');dirty=true;closeSheet();checkQuest()};body.appendChild(b)}
-    else if(t.hvb[j]){P('ヒノオオカゲにこわされて、止まっている。石材3で直せる。（温泉は、直せばまたあたたかくなる）');const b=el('<button class="btn pri">直す（石材3）</button>');b.disabled=(S.mat.stone||0)<3;b.onclick=()=>{S.mat.stone-=3;delete t.hvb[j];sfx('level');burst(j,'block');toast('装置を直した','good');dirty=true;closeSheet()};body.appendChild(b)}
+    else if(t.hvb[j]){P('ヒノオオカゲにこわされて、止まっている。石材3で直せる。（温泉は、直せばまたあたたかくなる）');const b=el('<button class="btn pri">直す（石材3）</button>');b.disabled=(S.mat.stone||0)<3;b.onclick=()=>{S.mat.stone-=3;delete t.hvb[j];dirty=true;sfx('level');burst(j,'block');toast('装置を直した','good');dirty=true;closeSheet()};body.appendChild(b)}
     else{P(j===D1?'火山の熱を、左（西の温泉）と右（奥の装置）のどちらに流すか切りかえる。':'熱を、左（奥の温泉）と右（けむり穴）のどちらに流すか切りかえる。');
       P('いまは「'+(dir===0?'左':'右')+'」に流している。');
       const b=el('<button class="btn pri">向きをかえる</button>');b.onclick=()=>{if(j===D1)t.d1=1-t.d1;else t.d2=1-t.d2;sfx('tap');renderSheet();checkQuest()};body.appendChild(b)}
@@ -5169,9 +5168,10 @@ function dialogueBeat(tx,cue){let motion='none',hold=0,lead=0;if(/こわ|怖/.te
 function dialoguePause(ch,previous){return ch==='…'?(previous==='…'?90:340):/[。！？!?]/.test(ch)?220:ch==='、'?100:0}
 function dialogueSpiritAnim(motion,talking,elapsed,hold,text,reduced){if(reduced)return '';if(elapsed<950&&/こんにちは|よろしく|おーい|やっほ/.test(text))return 'wave';if(!talking&&elapsed>=hold)return '';return ({joy:'talkjoy',shock:'talkshock',think:'talkthink',sad:'talksad'})[motion]||(talking?'talk':'')}
 function dialoguePose(motion,elapsed){const durations={joy:950,shock:720,nod:650,think:1050,sad:950},d=durations[motion]||1,p=Math.max(0,Math.min(1,elapsed/d)),fade=Math.sin(p*Math.PI);if(p>=1)return {x:0,y:0,angle:0};if(motion==='joy')return {x:0,y:-Math.abs(Math.sin(p*Math.PI*2))*17,angle:Math.sin(p*Math.PI*4)*.045};if(motion==='shock')return {x:Math.sin(p*Math.PI*5)*4*(1-p),y:-fade*10,angle:-fade*.06};if(motion==='nod')return {x:0,y:Math.sin(p*Math.PI*2)*6,angle:Math.sin(p*Math.PI*2)*.045};return {x:0,y:fade*(motion==='sad'?5:0),angle:fade*(motion==='sad'?.08:-.1)}}
+let GODVOICE_T=0;/* 遠くからの声のあいさつを、さいごに出した時刻 */
 function dialog(lines,after,lastLabel,who){
   const d=$('#dialog');if(!d.hidden){DLGQ.push([lines,after,lastLabel,who]);return}
-  if(S&&!godHere()){/* 遠くからの声：「聞こえるかの？ 遠くから、声だけ届けておるぞい。」は、1つの会話で1回だけ。つづけて開く別の会話（90秒いない）でも出さない */const PRE='……聞こえるかの？ 遠くから、声だけ届けておるぞい。',reP=/……聞こえるかの？ 遠くから、声だけ届けておるぞい。/g;lines=lines.map(ln=>Array.isArray(ln)?ln.slice():ln);let first=true;const recent=performance.now()-(window.__gvT||0)<90000;for(const ln of lines){if(!Array.isArray(ln)||ln[0]!==GOD||typeof ln[1]!=='string')continue;ln[1]=ln[1].replace(reP,'');if(first){first=false;if(!recent){ln[1]=PRE+ln[1];window.__gvT=performance.now()}}}}
+  if(S&&!godHere()){/* 遠くからの声：「聞こえるかの？ 遠くから、声だけ届けておるぞい。」は、1つの会話で1回だけ。つづけて開く別の会話（90秒いない）でも出さない */const PRE='……聞こえるかの？ 遠くから、声だけ届けておるぞい。',reP=/……聞こえるかの？ 遠くから、声だけ届けておるぞい。/g;lines=lines.map(ln=>Array.isArray(ln)?ln.slice():ln);let first=true;const recent=performance.now()-GODVOICE_T<90000;for(const ln of lines){if(!Array.isArray(ln)||ln[0]!==GOD||typeof ln[1]!=='string')continue;ln[1]=ln[1].replace(reP,'');if(first){first=false;if(!recent){ln[1]=PRE+ln[1];GODVOICE_T=performance.now()}}}}
   if(sheet&&!DLG_KEEP)closeSheet();d.classList.toggle('dtop',DLG_KEEP);requestAnimationFrame(fitTopDlg);
   let i=0;d.hidden=false;DLGN.clear();for(const ln of lines)if(Array.isArray(ln)&&ln[0])DLGN.add(ln[0]);if(who)DLGN.add(who);
   const show=()=>{const ln=lines[i];if(Array.isArray(ln)&&ln[0]==='@idea'){const panel=d.querySelector('.dlg');panel.style.visibility='hidden';return showGuardianIdea(ln[1],()=>{panel.style.visibility='';i++;if(i<lines.length)show();else{voiceStop();d.hidden=true;DLG_KEEP=false;d.classList.remove('dtop');fitTopDlg();if(after)after();if(d.hidden&&DLGQ.length)dialog(...DLGQ.shift())}})}const w=Array.isArray(ln)?ln[0]:(who==null?LEAD():who);$('#dlgWho').textContent=w;$('#dlgWhoBox').hidden=w==='';
@@ -5301,7 +5301,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='522';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='523';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
