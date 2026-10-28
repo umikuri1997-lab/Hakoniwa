@@ -875,7 +875,7 @@ const fp=(id,x,y,rot)=>{const z=rot!=null?szR(id,rot):szAt(id,y*W+x);if(!z)retur
 function walk(j){if(j<0||j>=W*H||S.ground[j]===1)return false;return !solidOf(j)}
 const cnt=id=>counts[id]||0;
 const FOODS={mugi:{name:'こむぎ',v:1,e:'🌾'},imo:{name:'いも',v:1,e:'🥔'},tomato:{name:'キャベツ',v:1,e:'🥬'},berry:{name:'ベリー',v:1,e:'🫐'},apple:{name:'りんご',v:1,e:'🍎'},fish:{name:'さかな',v:1,e:'🐟'},
-  bread:{name:'パン',v:3,pt:3,pw:1.35,dish:1,e:'🍞',fx:'5時間、腹持ちがよくなる（おなかのへる速さ×0.6）'},soup:{name:'トマトスープ',v:3,pt:3,pw:1.35,dish:1,e:'🍲',fx:'元気+25'},yakiimo:{name:'ベイクドポテト',v:2,pt:2,pw:.9,dish:1,e:'🍠',fx:'3時間、作業スピード×1.15'},yakizakana:{name:'焼き魚',v:2,pt:4,pw:1.8,dish:1,e:'🐠',fx:''},yakiberry:{name:'焼きベリー',v:2,pt:2,pw:.9,dish:1,e:'🍮',fx:'たのしさ+15'},yakiapple:{name:'焼きりんご',v:2,pt:2,pw:.9,dish:1,e:'🥧',fx:'3時間、移動速度×1.15'},salad:{name:'サラダ',v:2,pt:2,pw:.9,dish:1,e:'🥗',fx:'元気+10・たのしさ+10'}};
+  bread:{name:'パン',v:2,pt:3,pw:1.35,dish:1,e:'🍞',fx:'5時間、腹持ちがよくなる（おなかのへる速さ×0.6）'},soup:{name:'トマトスープ',v:2,pt:3,pw:1.35,dish:1,e:'🍲',fx:'元気+25'},yakiimo:{name:'ベイクドポテト',v:1,pt:2,pw:.9,dish:1,e:'🍠',fx:'3時間、作業スピード×1.15'},yakizakana:{name:'焼き魚',v:1,pt:4,pw:1.8,dish:1,e:'🐠',fx:''},yakiberry:{name:'焼きベリー',v:2,pt:2,pw:.9,dish:1,e:'🍮',fx:'たのしさ+15'},yakiapple:{name:'焼きりんご',v:1,pt:2,pw:.9,dish:1,e:'🥧',fx:'3時間、移動速度×1.15'},salad:{name:'サラダ',v:2,pt:2,pw:.9,dish:1,e:'🥗',fx:'元気+10・たのしさ+10'}};
 FOODS.berry.fx=FOODS.apple.fx='たのしさ+8';
 const RAWFL={mugi:'ぷっくり実ったこむぎ。',imo:'ころんとしたおいも。',tomato:'みずみずしいキャベツ。',berry:'あまずっぱいベリー。',apple:'まっかなりんご。',fish:'とれたてのさかな。'};
 const RAWD=k=>{const f=FOODS[k];return (RAWFL[k]||f.name+'。')+'/効果:お腹'+f.v+(f.pw?'、パワー+'+f.pw:'')+(f.fx?'、'+f.fx.replace(/、/g,''):'')};/* 料理していない食べ物の説明（料理の説明と同じ形） */
@@ -889,7 +889,7 @@ const cropK=d=>d.crop===undefined?'mugi':d.crop;/* 作物。null はまだえら
 const cropOn=k=>!!S.crops[k];/* 使える作物 */
 const CROPS={mugi:{name:'こむぎ',days:2,yield:1,desc:'2日で育つ。パンの材料'},tomato:{name:'キャベツ',days:2,yield:1,desc:'2日で育つ'},imo:{name:'いも',days:3,yield:2,desc:'3日で育つ。たくさんとれる'}};
 for(const k in CROPS)BL['seed:'+k]={name:CROPS[k].name+'のたね',kind:'seed',desc:CROPS[k].desc+'。畑をタップしてまく'};/* たねは、おそなえ箱からえらんで畑にまく */
-const RECIPES=[{out:'soup',need:{tomato:1,imo:1},time:153},{out:'bread',need:{mugi:2},time:120},{out:'yakizakana',need:{fish:1},time:60},{out:'yakiimo',need:{imo:1},time:50},{out:'yakiberry',need:{berry:2},time:60},{out:'yakiapple',need:{apple:1},time:60},{out:'salad',need:{tomato:2},time:90}];/* time：料理にかかる時間（分） */RECIPES.forEach(R=>{FOODS[R.out].v=Object.keys(R.need).reduce((t,k)=>t+FOODS[k].v*R.need[k],0)});/* 料理でふくれるおなかは、使った材料の合計 */SOUPR=RECIPES.find(R=>R.out==='soup');soupFilter();/* time：料理にかかる時間（レシピごと） */
+const RECIPES=[{out:'soup',need:{tomato:1,imo:1},time:153},{out:'bread',need:{mugi:2},time:120},{out:'yakizakana',need:{fish:1},time:60},{out:'yakiimo',need:{imo:1},time:50},{out:'yakiberry',need:{berry:2},time:60},{out:'yakiapple',need:{apple:1},time:60},{out:'salad',need:{tomato:2},time:90}];/* time：料理にかかる時間（分） *//* 料理でふくれるおなか（v）は、FOODS に実数で書く（使った材料の合計と同じ） */SOUPR=RECIPES.find(R=>R.out==='soup');soupFilter();/* time：料理にかかる時間（レシピごと） */
 function syncFood(){let n=0;for(const k in S.fs)n+=S.fs[k]||0;S.food=n}
 function addFood(k,n){S.fs[k]=(S.fs[k]||0)+n;syncFood()}
 function takeFood(n,pref){let got=[];const keys=Object.keys(S.fs).filter(k=>S.fs[k]>0);if(pref==='raw')keys.sort((a,b)=>(FOODS[a].v-FOODS[b].v));else keys.sort((a,b)=>FOODS[b].v-FOODS[a].v||Math.random()-.5);
@@ -5297,7 +5297,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='515';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='516';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
