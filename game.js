@@ -225,12 +225,12 @@ const GOD_IDLE=['草、生えてきたのう〜。','むかしはのう…はて
 function KS(L){const o=[];for(let[w,t]of L){let n=w;if(w.length===1){try{n=sevName(w)}catch(e){n=null}}if(n){if(t&&typeof t==='object'){const q=S&&S.res.find(x=>x.name===n);t=q&&elemKey(q)==='fireB'?t.B:t.A}o.push([n,t])}}return o}/* キーキャラの名前を入れたセリフ */
 function pathMade(){const n=S.floor.filter(f=>f==='path').length;if(S.flags.path0==null)S.flags.path0=n;return Math.max(0,n-S.flags.path0)}/* クエストを受けてから、しいたあぜ道の数 */
 const QUESTS1=[
-  {text:'神殿を建ててもらおう',check:()=>cnt('statue')>=1,by:GOD,story:[
+  {id:'statue',text:'神殿を建ててもらおう',how:"下の「おく」→「神殿」をえらび、基地の中の空いた場所（4マス）をタップ",check:()=>cnt('statue')>=1,by:GOD,story:[
     [POKO,'できたー！ りっぱな神殿！'],
     [GOD,'真ん中が女神像、左がおそなえ箱、右が依頼ボードじゃよ。'],
     [POKO,'ぼく、ときどきおそなえ箱におそなえものを入れるね。守り神さま、自由に使ってね！'],
     [GOD,'ありがとうのう。それから、せいれいのようすも、ときどき見てやっておくれ。'],[GOD,'せいれいのようすをよく見ると、おなかやたのしさがわかるんじゃ。おなかがゼロになると消えてしまうからの。'],[GOD,'ためしに、いまフタバのようすを見てみい。']],gives:{feat:['inv'],flag:'tapAsk'}},
-  {text:'食料箱を置こう',check:()=>cnt('stor')>=1,
+  {id:'stor',text:'食料箱を置こう',how:"フタバと話して食料箱を受けとる。「おく」→「食料箱」をえらんで置く",check:()=>cnt('stor')>=1,
    talk:{who:POKO,when:()=>!S.flags.tapAsk||!!S.flags.tapped,wait:'せいれいをタップして、ようすを見てみよう',/* ステータスを見てから、次のお話 */lines:[
     [POKO,'守り神さま、見て見て！ ベリーいっぱい集めたよ！ すごいでしょ！'],
     [POKO,'……あれ？ おかしいな。さっきまでここに……'],
@@ -243,7 +243,7 @@ const QUESTS1=[
     [POKO,'おなかがすいたら、ここから出して食べるね。'],
     [GOD,'うむ、いい場所に置けたのう。'],
     [GOD,'もし置く場所をまちがえても、おそなえ箱にもどせるから、安心せい。']],pre:{food:{berry:10}},gives:{feat:['remove','plant']}},
-  {text:'素材箱を置こう',check:()=>{if(cnt('mbox')>=1&&!S.flags.mbGift){S.flags.mbGift=true;S.mat.wood=(S.mat.wood||0)+10;S.mat.stone=(S.mat.stone||0)+10;toast('フタバが集めていた木材10・石材10を素材箱に入れた','good')}return cnt('mbox')>=1},
+  {id:'mbox',text:'素材箱を置こう',how:"フタバと話して素材箱を受けとる。「おく」→「素材箱」をえらんで置く。置きなおしたいときは「こわす」でおそなえ箱にもどせる",check:()=>cnt('mbox')>=1,gives:{mat:{wood:10,stone:10},msg:'フタバが集めていた木材10・石材10を素材箱に入れた'},/* ごほうびは、クエストをクリアしたときに */
    talk:{who:POKO,when:()=>true,lines:[
     [POKO,'守り神さま、見て見て！ この木の枝、くるんってなってるの。'],
     [GOD,'ほほう。いい形じゃのう。'],
@@ -257,7 +257,7 @@ const QUESTS1=[
     [POKO,'うん！ …あ、くるんってした枝は、ぼくのたからものだから、入れないけどね。'],
     [GOD,'これからは、おヌシの思いつきを、素材箱の木や石で形にしていけるぞい。'],
     [GOD,'せいれいたちは、困っていることや、やってみたいことを話してくれる。どんな形でかなえるかは、おヌシのひらめき次第じゃ。'],[POKO,'守り神さま、素材箱、ありがとう！']]},
-  {text:'食卓をたのもう',check:()=>cnt('table')>=1,how:'神殿の依頼ボードをタップ →「家具」→「食卓」をはる。できたら「おく」で置く',
+  {id:'table',text:'食卓をたのもう',check:()=>cnt('table')>=1,how:'神殿の依頼ボードをタップ →「家具」→「食卓」をはる。できたら「おく」で置く',
    talk:{who:POKO,when:()=>true,lines:[
     [POKO,'守り神さま、ベリーを置くと、土がついちゃうんだ。食べるたびに、ふうってするの、たいへんで……。'],
     [POKO,'大きな葉っぱにのせたら、土はつかないかな。でも、風で飛んじゃいそう……。'],
@@ -270,7 +270,7 @@ const QUESTS1=[
     [POKO,'これが、食卓なんだ！ ベリーに土がつかないね。えへへ、おいしい！'],
     [GOD,'うむ。おヌシの思いつきが、ちゃんと形になったのう。'],
     [GOD,'これからも、よい形を思いついたら依頼ボードにはるんじゃ。せいれいたちが手伝ってくれるぞい。']]},
-  {text:'家の壁を直そう',check:()=>HOUSES.length>=1,
+  {id:'wall',text:'家の壁を直そう',how:"「おく」→「木の壁」をえらんで、家の壁のすきまをふさぐ",check:()=>HOUSES.length>=1,
    talk:{who:GOD,when:()=>true,lines:[
     [GOD,'しまう場所もできたのう。…そろそろ、夜のことも話しておかんとな。'],[GOD,'この土地には、夜になると「コワイノ」が来るんじゃ。'],
     [POKO,'夜になると、いつも隠れてたの。朝になるまで、じっと……。'],
@@ -282,7 +282,7 @@ const QUESTS1=[
     [GOD,'あそこの家、壁がこわれたままなんじゃ。木の壁を3つ入れといたから、すきまをふさいでみい。']],gives:{feat:['people'],items:{hwall:3}}},
    story:[
     [POKO,'前に、夜に壁をこわされたことがあったんだ。'],[POKO,'でも、もうすきまはないね。壁があると、なんだかほっとする！']]},
-  {text:'家にベッドを置こう',check:()=>houseBedCount()>=1,
+  {id:'bed',text:'家にベッドを置こう',how:"「おく」→「ベッド」をえらんで、壁で囲まれた家の中に置く",check:()=>houseBedCount()>=1,
    talk:{who:POKO,when:()=>true,lines:[
     [POKO,'草の上はごつごつするし、ゆっくり休める場所があったらいいな。'],
     [GOD,'そうか……。安心して休める寝床もいるのう。おヌシ、何か思いついたようじゃな。'],
@@ -293,7 +293,7 @@ const QUESTS1=[
     [GOD,'それで…今夜も「コワイノ」が来るぞ。夜12時ごろに現れて、朝には消えるんじゃ。'],
     [GOD,'この夜は、たぶん1体だけじゃ。家の中で眠っておれば、だいじょうぶ。'],[POKO,'……夜の音は、やっぱりこわいな。でも、この家で眠れるなら、少し安心かも。'],
     [GOD,'おヌシも手伝えるぞ。「コワイノ」に守り神の光をあてて、おどかせるんじゃ。使うたびにパワーを1つ使うから、ためておくんじゃ。']],gives:{enemy:true}},
-  {text:'道をつくろう',check:()=>pathMade()>=5,prog:()=>'あぜ道 '+Math.min(5,pathMade())+'/5',
+  {id:'path',text:'道をつくろう',how:"「おく」→「あぜ道」をえらんで、家と神殿のあいだに5マスしく",check:()=>pathMade()>=5,prog:()=>'あぜ道 '+Math.min(5,pathMade())+'/5',
    talk:{who:POKO,when:()=>true,lines:[
     [POKO,'守り神さま、家と神殿のあいだ、草がぼうぼうで歩きにくいんだ。'],
     [GOD,'ふむ。道があれば、みなも行き来しやすくなるのう。'],
@@ -301,7 +301,7 @@ const QUESTS1=[
    story:[
     [POKO,'わあ、歩きやすい！ 足が、すいすい進むよ。'],
     [GOD,'道の上は、せいれいたちも速く歩けるんじゃ。']]},
-  {text:'村レベルを2にしよう',check:()=>S.lv>=2,how:'せいれいが満足してパワーがたまると、村レベルが上がる。夜は「コワイノ」をタップすると、パワー1で光をあてておどかせる',prog:()=>'いま 村レベル'+S.lv,
+  {id:'lv2',text:'村レベルを2にしよう',check:()=>S.lv>=2,how:'せいれいが満足してパワーがたまると、村レベルが上がる。夜は「コワイノ」をタップすると、パワー1で光をあてておどかせる',prog:()=>'いま 村レベル'+S.lv,
    talk:{who:POKO,when:()=>true,lines:[
     [POKO,'守り神さま、ここで楽しく暮らすと、村も育っていくんだって！'],
     [GOD,'うむ。せいれいたちが満足して、パワーがたまるほど、村は育っていくんじゃ。'],
@@ -309,7 +309,7 @@ const QUESTS1=[
    story:[
     [POKO,'やったー！ 村が、ひとまわり育ったみたい！ 最初の一歩、って感じがするね。'],
     [GOD,'うむうむ。新しく使える物もふえたぞい。']]},
-  {text:'柵を4つ置こう',check:()=>['fence','logfence','bamboofence','stonefence'].reduce((n,id)=>n+cnt(id),0)>=4,
+  {id:'fence4',text:'柵を4つ置こう',how:"「おく」→「柵」をえらんで4つ置く",check:()=>['fence','logfence','bamboofence','stonefence'].reduce((n,id)=>n+cnt(id),0)>=4,
    talk:{who:POKO,when:()=>(S.nights||0)>=1&&S.lastMorning>S.lastNight,wait:'夜をこして、朝をむかえよう',lines:[
     [POKO,'……ねえ、コワイノが来たときの音、まだ耳に残ってるの。'],[POKO,'壁をがりがりってひっかく音……。聞こえるたび、胸がどきどきしたよ。'],
     [POKO,'前なら、音がするたび隠れてた。でも今日は、守り神さまがいる。'],
@@ -318,7 +318,7 @@ const QUESTS1=[
    story:[
     [GOD,'よしよし、いい感じじゃ。'],
     [POKO,'これで、ちょっと安心だね！']]},
-  {text:'見張り台ととげの罠を置こう',check:()=>cnt('watch')>=1&&cnt('spike')>=2,prog:()=>'見張り台 '+Math.min(1,cnt('watch'))+'/1・とげの罠 '+Math.min(2,cnt('spike'))+'/2',
+  {id:'watch1',text:'見張り台ととげの罠を置こう',how:"「おく」→「見張り台」を1つと「とげの罠」を2つ置く",check:()=>cnt('watch')>=1&&cnt('spike')>=2,prog:()=>'見張り台 '+Math.min(1,cnt('watch'))+'/1・とげの罠 '+Math.min(2,cnt('spike'))+'/2',
     talk:{who:GOD,when:()=>true,lines:[
     [POKO,'守り神さま、柵を置いたけど……「コワイノ」は、柵があってもあきらめないんじゃないかな。'],
     [POKO,'入れなくて困っても、そのまま帰ってくれる気がしないんだ。'],
@@ -330,7 +330,7 @@ const QUESTS1=[
    story:[
     [GOD,'見張り台は光の矢で「コワイノ」を追いはらうんじゃ。とげの罠は、ふんだ「コワイノ」にダメージじゃよ。'],
     [POKO,'これで、少しは安心できるね。'],[POKO,'守ってくれて、ありがとう、守り神さま！']]},
-  {text:'ききょうを植えて、土の力をためよう',check:()=>bloomCount('bellf')>=2,prog:()=>'咲いたききょう '+Math.min(2,bloomCount('bellf'))+'/2',
+  {id:'kikyo',text:'ききょうを植えて、土の力をためよう',how:"「おく」→「ききょうの種」を植える。土の力が満ちると、次の朝になかまを呼べる",check:()=>bloomCount('bellf')>=2,prog:()=>'咲いたききょう '+Math.min(2,bloomCount('bellf'))+'/2',
    talk:{who:POKO,when:()=>true,lines:[
     [POKO,'ねえカミサマ…ぼく、ひとりだとちょっとさみしいな。'],
     [GOD,'お、なかまがほしいかの？ せいれいはな、その属性の力がたまった土地にやってくるんじゃ。'],
@@ -339,7 +339,7 @@ const QUESTS1=[
    story:[
     [POKO,'ききょう、きれいだね！ 土の力が満ちたみたい！'],
     [GOD,'うむ、これで土のせいれいが来てくれるぞい。'],[POKO,'なかま、どんな子かなあ。どきどきする！']]},
-  {text:'朝になったら、神殿の「！」でなかまを呼ぼう',check:()=>!!S.flags.minaCame&&NEWRES==null&&!NEWQ.length,
+  {id:'summon',text:'朝になったら、神殿の「！」でなかまを呼ぼう',how:"朝、神殿の上に「！」が出たら、「みる」で神殿をタップ",check:()=>!!S.flags.minaCame&&NEWRES==null&&!NEWQ.length,
    talk:{who:GOD,when:()=>true,lines:[
     [GOD,'力が満ちた次の朝、神殿で、なかまを呼べるぞい。'],
     [POKO,'あしたの朝がたのしみ！']],gives:{flag:'sumTold'}},
@@ -347,14 +347,14 @@ const QUESTS1=[
     [MINA,'ふわぁ…。はじめまして、ノドカだよぉ。よろしくねぇ。'],
     [POKO,'わーい、なかまだ！ よろしくね、ノドカ！'],
     [MINA,'畑を耕すのと、柵を直すのが得意なんだぁ。のんびりやるねぇ。'],[MINA,'呼んでくれて、ありがとうねぇ、守り神さま。']]},
-  {text:'畑を6つにしよう',check:()=>cnt('farm')>=6,
+  {id:'farm6',text:'畑を6つにしよう',how:"「おく」→「畑」をえらび、合計6つにする。土のせいれいが耕すのを待とう",check:()=>cnt('farm')>=6,
    talk:{who:GOD,when:()=>true,lines:[
     [GOD,'これで畑が作れるのう。畑を2つ、おそなえ箱に入れといたぞい。置けば土のせいれいが耕してくれるんじゃ。']],gives:{items:{farm:2}}},
    story:[
     [POKO,'ふかふかの畑だ！'],
     [MINA,'耕すのは、ぼくにまかせてねぇ。'],
     [GOD,'いい畑になったのう〜。']]},
-  {text:'畑にたねをまこう',check:()=>imoSeedQuestPlots().length>=2,prog:()=>'いものたね '+Math.min(2,imoSeedQuestPlots().length)+'/2',
+  {id:'imoseed',text:'畑にたねをまこう',how:"「おく」でいものたねをえらび、たねがない別々の畑に2こまく",check:()=>imoSeedQuestPlots().length>=2,prog:()=>'いものたね '+Math.min(2,imoSeedQuestPlots().length)+'/2',
    talk:{who:POKO,when:()=>true,lines:[
     [POKO,'ノドカが耕してくれた畑、まだなにも植わってないね。'],
     [MINA,'畑はねぇ、耕しただけじゃ、なにも育たないんだよぉ。'],
@@ -363,7 +363,7 @@ const QUESTS1=[
    story:[
     [POKO,'たねをまいてくれて、ありがとう！ 水やりと世話は、ぼくにまかせて！'],
     [MINA,'大きくなるの、たのしみだねぇ。']]},
-  {text:'カミサマと交換してみよう',check:()=>!!S.flags.traded&&sheet!=='shop',
+  {id:'trade',text:'カミサマと交換してみよう',how:"カミサマをタップし、何かと交換してから「交換をおわる」をタップ",check:()=>!!S.flags.tradedSeen,/* 交換して、お店をとじたら（closeSheet） */
    talk:{who:GOD,when:()=>true,lines:[
     [GOD,'これから、いろいろ必要なものが出てくるじゃろ。'],[GOD,'言うてくれたら、おヌシのパワーと交換してやろう。道や囲いのもと、種、便利な道具もあるぞい。'],
     [GOD,'わしに声をかけてみい〜。']],gives:{feat:['shop']}},
@@ -374,7 +374,7 @@ const QUESTS1=[
     [GOD,'わからんことは「ひでんのしょ」に書いておいたぞい。わしの知恵が、ぜ〜んぶつまっとるからの。'],
     [GOD,'ときどき遊びに来るぞい。そのときまた交換しようの。ではな〜！'],[POKO,'いろいろ教えてくれて、ありがとう、カミサマ！ またね！']],gives:{godLeave:true}},
   /* どのクエストも：吹き出し→会話でクエストを受ける→たっせい→吹き出し→お礼とごほうび */
-  {text:'おつげを出してみよう',check:()=>!!S.flags.oracleSet&&!(sheet==='menu'&&sheetArg==='oracle'),how:'メニューの「おつげ」で、きょういちにちの方針をえらぶ。わからないことは、メニューの「ひでんのしょ」で見られる',
+  {id:'oracle',text:'おつげを出してみよう',check:()=>!!S.flags.oracleSeen,/* おつげを出して、画面をとじたら（closeSheet） */how:'メニューの「おつげ」で、きょういちにちの方針をえらぶ。わからないことは、メニューの「ひでんのしょ」で見られる',
    talk:{who:POKO,when:()=>true,lines:[
     [POKO,'ねえ、守り神さま。みんな、言われなくても自分で動いてくれるけど……'],
     [POKO,'「今日は、これをやってほしいな」って、お願いもできるんだよ。'],
@@ -385,26 +385,26 @@ const QUESTS1=[
     [POKO,'わあ、みんなの動きが変わった！'],
     [MINA,'おつげは、あくまでお願いだよぉ。みんなの得意なことや、体の調子もあるからねぇ。'],
     [POKO,'足りないものがあるときに使うと、よさそうだね！']]},
-  {text:'火のせいれいをむかえよう',check:()=>elemCount('fire')>=1&&NEWRES==null,how:'見張り台やサルビアを置いて火の力をためる。満ちた次の朝、神殿の「！」からなかまを呼ぶ',prog:()=>'火の力 '+Math.floor(ATTR.fire)+'/'+needFor('fire'),
+  {id:'fire',text:'火のせいれいをむかえよう',check:()=>elemCount('fire')>=1&&NEWRES==null,how:'見張り台やサルビアを置いて火の力をためる。満ちた次の朝、神殿の「！」からなかまを呼ぶ',prog:()=>'火の力 '+Math.floor(ATTR.fire)+'/'+needFor('fire'),
    talk:{who:POKO,when:()=>true,lines:[
     [POKO,'ねえノドカ、「コワイノ」に立ち向かえるせいれいがいたら、心強いよね。'],
     [MINA,'火のせいれいなら、「コワイノ」とたたかえるらしいよぉ。'],
     [POKO,'火の力をためて、火のせいれいをむかえよう！']]},
    get story(){return KS([['H',{A:'おや、来てやったよ！ 今夜からは、あたいも村を守る。',B:'おう、来てやったぜ！ 今夜からは、おれも村を守る。'}],[POKO,'あったかいせいれいが来てくれた！'],['H',{A:'「コワイノ」なんざ、あたいが追いはらってやるよ。',B:'「コワイノ」なんざ、おれが追いはらってやるよ。'}],[MINA,'これで夜も、ちょっと心強いねぇ。']])}},
-  {text:'村レベルを3にしよう',check:()=>S.lv>=3,how:'せいれいが満足してパワーがたまると、村レベルが上がる',prog:()=>'いま 村レベル'+S.lv,
+  {id:'lv3',text:'村レベルを3にしよう',check:()=>S.lv>=3,how:'せいれいが満足してパワーがたまると、村レベルが上がる',prog:()=>'いま 村レベル'+S.lv,
    talk:{who:POKO,when:()=>true,lines:[
     [POKO,'火のなかまが来て、夜も心強くなったね！ 村も、もっとにぎやかになるかな？'],
     [MINA,'うん。食べたり休んだり、みんながここで暮らしていくうちに、村も育っていくんだよぉ。']]},
    get story(){return KS([
     [POKO,'3になった！ ぼく、はじめのころより、ずいぶん楽しく暮らせてる気がするよ。'],
     ['H',{A:'へぇ、悪くない村になってきたじゃないか。夜の見はりも、まかせときな。',B:'へぇ、悪くない村になってきたじゃねえか。夜の見はりも、まかせときな。'}]])}},
-  {text:'水のせいれいをむかえよう',check:()=>elemCount('water')>=1&&NEWRES==null,prog:()=>'水の力 '+Math.floor(ATTR.water)+'/'+needFor('water'),
+  {id:'water',text:'水のせいれいをむかえよう',how:"ハスを植えて水の力をため、朝に神殿の「！」から呼ぶ",check:()=>elemCount('water')>=1&&NEWRES==null,prog:()=>'水の力 '+Math.floor(ATTR.water)+'/'+needFor('water'),
    talk:{who:POKO,when:()=>true,lines:[
     [POKO,'畑がふえて、水やりがたいへんになってきたね…。'],
     [MINA,'水やりは、水のせいれいが得意なんだよぉ。'],
     [MINA,'水の力をためたら、水のせいれいが来てくれるかもねぇ。']]},
    get story(){return KS([['M','はじめまして。水やりや、水をくむ仕事なら、わたしにまかせてください。'],[POKO,'水のせいれいが来てくれた！ 畑がうるおうね！'],['M','畑の配置を見なおせば、より効率よく水を行きわたらせられそうです。'],[MINA,keyName('water')+'がいれば、井戸のまわりの畑も、もっと元気になるねぇ。']])},gives:{flag:'wellR'}},
-  {text:'基地を広げよう',check:()=>S.baseLv>=1,how:'カミサマが来た日に、交換の「土地」で基地を広げる（村Lv2から）',prog:()=>'いま'+(BASE_R[S.baseLv]*2)+'×'+(BASE_R[S.baseLv]*2)+'マス',
+  {id:'baseUp',text:'基地を広げよう',check:()=>S.baseLv>=1,how:'カミサマが来た日に、交換の「土地」で基地を広げる（村Lv2から）',prog:()=>'いま'+(BASE_R[S.baseLv]*2)+'×'+(BASE_R[S.baseLv]*2)+'マス',
    talk:{who:POKO,when:()=>true,lines:[
     [POKO,'守り神さま、ここ、なんだかせまくなってきたね。'],
     [MINA,'せいれいが増えたからねぇ。置ける場所も、そろそろいっぱいだよぉ。'],
@@ -417,14 +417,14 @@ const QUESTS1=[
     [MINA,'これでまた、いろんなものが置けるねぇ。'],
     [MINA,'広げたぶん、夜に守る場所も増えるからねぇ。柵と見張り台も、忘れずにねぇ。'],
     [POKO,'うん！ 守る場所が広がったんだね。']]},
-  {text:'村レベルを4にしよう',check:()=>S.lv>=4,how:'せいれいが満足してパワーがたまると、村レベルが上がる',prog:()=>'いま 村レベル'+S.lv,
+  {id:'lv4',text:'村レベルを4にしよう',check:()=>S.lv>=4,how:'せいれいが満足してパワーがたまると、村レベルが上がる',prog:()=>'いま 村レベル'+S.lv,
    talk:{who:POKO,when:()=>true,lines:[
     [POKO,'新しく広がった場所でも、みんながのんびり暮らせたらいいね！'],
     [MINA,'水のなかまも増えたしねぇ。広がった村を整えながら、もうひとまわり育てていこうねぇ。']]},
    story:[
     [POKO,'村が、また育った！ 道を歩く足音まで、にぎやかになってきたよ。'],
     [MINA,'うん。この調子で、みんなの暮らしを守っていこうねぇ。']]},
-  {text:'オオカゲを追いはらおう',check:()=>(S.bossKills||0)>=1,
+  {id:'ookage',text:'オオカゲを追いはらおう',how:"柵・見張り台・罠を整え、夜に来るオオカゲを追いはらう。",check:()=>(S.bossKills||0)>=1,
    talk:{who:POKO,when:()=>true,lines:[
     [POKO,'守り神さま、夜のコワイノを見てたらね…森の奥に、ひときわ大きな黒い影がいたんだ。'],
     [POKO,'あの影……ぼく、むかし見たことがある。'],
@@ -442,14 +442,14 @@ const QUESTS1=[
     [POKO,'へえ…！ 土って、すごいんだね。'],
     [POKO,'じゃあ、かけらを集めたら、ヌシ様がもどってくるかも！'],
     [MINA,'3つそろえて台座にそなえたら、ヌシ様の形にもどれるはずだよぉ。'],[POKO,'かけらは、どこにあるのかな……。'],[MINA,'わからないねぇ。でも、きっとどこかで待ってるよぉ。'],[MINA,'5つの属性のなかまがそろったら、そなえる台座を建てようねぇ。']]},
-  {text:'風のせいれいをむかえよう',check:()=>elemCount('wind')>=1&&NEWRES==null,prog:()=>'風の力 '+Math.floor(ATTR.wind)+'/'+needFor('wind'),
+  {id:'wind',text:'風のせいれいをむかえよう',how:"「おく」→「ゆりの種」を植えたり、ブランコを置いたりして風の力をため、朝に神殿の「！」から呼ぶ",check:()=>elemCount('wind')>=1&&NEWRES==null,prog:()=>'風の力 '+Math.floor(ATTR.wind)+'/'+needFor('wind'),
    talk:{who:POKO,when:()=>true,learn:['swing'],lines:[
     [POKO,'オオカゲを追いはらえて、ほっとしたよ。'],
     [MINA,'つぎは風のせいれいかなぁ。足が速くて、よく遊ぶらしいよぉ。'],
     [MINA,'風の力をためれば、来てくれるはずだねぇ。'],
     [POKO,'風に乗って、ふわっと浮かべたら、たのしそう！ 守り神さまなら、なにか思いつくかな？']]},
    get story(){return KS([['K','フッ…風に呼ばれて来てみれば、ずいぶん素朴な村だね。'],[POKO,'風のせいれいが来た！ これで5つの属性がそろったね！'],['K','いいさ。ぼくの風で、この村をもっと華やかにしてあげよう。'],[MINA,'にぎやかになったねぇ。']])}},
-  {text:'村レベルを5にしよう',check:()=>S.lv>=5,how:'せいれいが満足してパワーがたまると、村レベルが上がる',prog:()=>'いま 村レベル'+S.lv,
+  {id:'lv5',text:'村レベルを5にしよう',check:()=>S.lv>=5,how:'せいれいが満足してパワーがたまると、村レベルが上がる',prog:()=>'いま 村レベル'+S.lv,
    talk:{who:POKO,when:()=>true,lines:[
     [POKO,'オオカゲを追いはらえて、風のなかまも来たね！ みんな、ここで楽しく暮らせるといいな。'],
     [GOD,'うむ。5つの属性がそろった村じゃ。みなの暮らしを見守りながら、村をもっと育てていこうかの。']]},
@@ -457,7 +457,7 @@ const QUESTS1=[
     [POKO,'ついに、ここまで村が育ったんだね……！'],
     [POKO,'……あれ？ 神殿のそばが、ぽうっと光ってる……！'],
     [MINA,'「想う力」のかけらだねぇ。村のみんなが満足して、想いが集まったから、こたえてくれたんだよぉ。']],gives:{shard:'key',items:{signpost:1}}},
-  {text:'守護の台座を建ててもらおう',check:()=>cnt('tower')>=1,prog:()=>'じょうけん '+towerConds().filter(c=>c[1]).length+'/'+towerConds().length,
+  {id:'tower',text:'守護の台座を建ててもらおう',how:"5つの属性のなかまをそろえ、木材100・石材50を集める。「おく」→「守護の台座」で条件を確認して置く",check:()=>cnt('tower')>=1,prog:()=>'じょうけん '+towerConds().filter(c=>c[1]).length+'/'+towerConds().length,
    talk:{who:POKO,when:()=>true,lines:[
     [POKO,'ねえノドカ、ヌシ様をおむかえする「守護の台座」、そろそろ建てられないかな？'],
     [MINA,'台座はねぇ、5つの属性のせいれいがそろって、木と石がたくさんあれば、建てられるよぉ。'],
@@ -465,26 +465,26 @@ const QUESTS1=[
     [MINA,'建てたら、かけらが手に入るたびに、台座にはめていこうねぇ。'],
     [POKO,'よーし、みんなでそろえよう！']],gives:{shrine:true}},
    story:null},
-  {text:'みどりのマスを375にしよう',check:()=>GRASSN>=375,prog:()=>'いま'+GRASSN,
+  {id:'green375',text:'みどりのマスを375にしよう',how:"花や木を植え、いろいろ置いて、荒れた土地を緑にする",check:()=>GRASSN>=375,prog:()=>'いま'+GRASSN,
    talk:{who:MINA,when:()=>true,lines:[
     [MINA,'台座もできたねぇ。あとは、ヌシのかけらを3つそなえたら、ヌシ様をおむかえできるらしいよぉ。'],
     [POKO,'ヌシ様に会えるんだね！ ほかには、なにがいるの？'],
     [MINA,'ヌシ様がもどってこられるように、土地をもっと緑にしないとねぇ。'],[MINA,'まずは、村のまわりを緑でいっぱいにしたいねぇ。そのあとは、もっと広く。']]},
    story:[[POKO,'緑がいっぱい！ 歩くだけで気持ちいいね！'],[POKO,'……わっ！？ 地面が、光った！'],[MINA,'えぇっ……！ 草のあいだから、なにか出てきたよぉ。'],[POKO,'これ……ヌシのかけら！？'],[MINA,'「育てる力」のかけらだねぇ。みんなで土地を育てたから、こたえてくれたんだよぉ。']],gives:{shard:'land'}},
-  {text:'木のせいれいを6人にしよう',check:()=>elemCount('wood')>=6&&NEWRES==null,prog:()=>'いま'+elemCount('wood')+'人',
+  {id:'wood6',text:'木のせいれいを6人にしよう',how:"花や木を植えて木の力をため、朝に神殿の「！」から呼ぶ。合計6人をむかえる",check:()=>elemCount('wood')>=6&&NEWRES==null,prog:()=>'いま'+elemCount('wood')+'人',
    talk:{who:POKO,when:()=>true,learn:[],lines:[
     [MINA,'ヌシ様は、木のせいれいを生んだんだってぇ。'],
      [MINA,'木のせいれいの子どもたちがにぎやかだと、ヌシ様も帰り道がわかるかもねぇ。木のなかまを6人にしたいねぇ。'],
     [POKO,'木や花を植えて、木の力をためよう！']]},
    story:[[POKO,'木のなかま、6人になった！'],[MINA,'にぎやかだねぇ。']]},
-  {text:'フタバのおねがい：花を50こさかせよう',check:()=>flowerN()>=50,prog:()=>'花 '+Math.min(50,flowerN())+'/50',
+  {id:'flower50',text:'フタバのおねがい：花を50こさかせよう',how:"「おく」で花の種を置いて、花を50こにする",check:()=>flowerN()>=50,prog:()=>'花 '+Math.min(50,flowerN())+'/50',
    talk:{who:POKO,when:()=>true,learn:['campfire'],lines:[
     [POKO,'守り神さま、ひとつ、おねがいしてもいい？'],
     [POKO,'ヌシ様がいたころ、この草原は花でいっぱいだったんだ。ぼく、ちゃんとおぼえてるよ。ヌシ様が帰ってきたとき、さいしょに見てほしいんだ。'],
     [POKO,'花を50こ、さかせたいな！'],
     [MINA,'花が咲いたら、みんなで見に行こうねぇ。夜も花のそばであったかく過ごせたら、ゆっくり見ていられそうだよぉ。守り神さま、いい考えはないかなぁ。']]},
    story:[[POKO,'わあ…花畑だ！ ありがとう、守り神さま！'],[POKO,'ヌシ様、見てくれるかな。……会いたいな。'],[MINA,'きっと見てくれるよぉ。フタバのきもち、花からも伝わってくるもんねぇ。']]},
-  {text:'ヌシ様をむかえよう',check:()=>!!S.cleared,prog:()=>'かけら '+Math.min(3,S.setSh||0)+'/3・じょうけん '+clearConds().filter(c=>c[1]).length+'/'+clearConds().length,how:'台座をタップすると、足りない条件が見られる。そろうと最後の夜がくる',
+  {id:'nushi',text:'ヌシ様をむかえよう',check:()=>!!S.cleared,prog:()=>'かけら '+Math.min(3,S.setSh||0)+'/3・じょうけん '+clearConds().filter(c=>c[1]).length+'/'+clearConds().length,how:'台座をタップすると、足りない条件が見られる。そろうと最後の夜がくる',
    talk:{who:POKO,when:()=>true,lines:[
     [POKO,'かけらも、あと少しだね。ヌシ様をむかえる準備、もうすぐかな。'],
     [MINA,'条件がそろうと、台座が光って、オオカゲたちがたくさんおしよせてくる夜がくるよぉ。'],
@@ -492,30 +492,8 @@ const QUESTS1=[
     [POKO,'よーし、みんなで守りぬこう！']]},
    story:null},
 ];
-const QUEST_HELP1={
-  "神殿を建ててもらおう": "下の「おく」→「神殿」をえらび、基地の中の空いた場所（4マス）をタップ",
-  "食料箱を置こう": "フタバと話して食料箱を受けとる。「おく」→「食料箱」をえらんで置く",
-  "素材箱を置こう": "フタバと話して素材箱を受けとる。「おく」→「素材箱」をえらんで置く。置きなおしたいときは「こわす」でおそなえ箱にもどせる",
-  "家の壁を直そう": "「おく」→「木の壁」をえらんで、家の壁のすきまをふさぐ",
-  "道をつくろう": "「おく」→「あぜ道」をえらんで、家と神殿のあいだに5マスしく",
-  "家にベッドを置こう": "「おく」→「ベッド」をえらんで、壁で囲まれた家の中に置く",
-  "柵を4つ置こう": "「おく」→「柵」をえらんで4つ置く",
-  "見張り台ととげの罠を置こう": "「おく」→「見張り台」を1つと「とげの罠」を2つ置く",
-  "ききょうを植えて、土の力をためよう": "「おく」→「ききょうの種」を植える。土の力が満ちると、次の朝になかまを呼べる",
-  "朝になったら、神殿の「！」でなかまを呼ぼう": "朝、神殿の上に「！」が出たら、「みる」で神殿をタップ",
-  "畑を6つにしよう": "「おく」→「畑」をえらび、合計6つにする。土のせいれいが耕すのを待とう",
-  "畑にたねをまこう": "「おく」でいものたねをえらび、たねがない別々の畑に2こまく",
-  "カミサマと交換してみよう": "カミサマをタップし、何かと交換してから「交換をおわる」をタップ",
-  "火のせいれいをむかえよう": "火の力をためる。サルビアを5本植える依頼と、見張り台を合計2つにする依頼も受けられる。満ちた次の朝、神殿の「！」から呼ぶ",
-  "水のせいれいをむかえよう": "ハスを植えて水の力をため、朝に神殿の「！」から呼ぶ",
-  "オオカゲを追いはらおう": "柵・見張り台・罠を整え、夜に来るオオカゲを追いはらう。",
-  "風のせいれいをむかえよう": "「おく」→「ゆりの種」を植えたり、ブランコを置いたりして風の力をため、朝に神殿の「！」から呼ぶ",
-  "守護の台座を建ててもらおう": "5つの属性のなかまをそろえ、木材100・石材50を集める。「おく」→「守護の台座」で条件を確認して置く",
-  "みどりのマスを375にしよう": "花や木を植え、いろいろ置いて、荒れた土地を緑にする",
-  "木のせいれいを6人にしよう": "花や木を植えて木の力をため、朝に神殿の「！」から呼ぶ。合計6人をむかえる",
-  "フタバのおねがい：花を50こさかせよう": "「おく」で花の種を置いて、花を50こにする"
-};
-QUESTS1.forEach(q=>{q.how=q.how||QUEST_HELP1[q.text]});
+
+
 /* ---------- ステージ2：火山のふもとの村 ---------- */
 const PROLOGUE2=[
   [GOD,'さて、次の土地じゃな。'],
@@ -532,12 +510,12 @@ const INTRO2=[
   [GOD,'まずは神殿じゃな。草原と同じように、置いてみい。'],
 ];
 const QUESTS2=[
-  {text:'神殿を建ててもらおう',check:()=>cnt('statue')>=1,by:GOD,how:'下の「おく」→「神殿」をえらび、基地の中の空いた場所をタップ',story:[
+  {id:'statue',text:'神殿を建ててもらおう',check:()=>cnt('statue')>=1,by:GOD,how:'下の「おく」→「神殿」をえらび、基地の中の空いた場所をタップ',story:[
     [HOMURA,'へえ、なかなかいい神殿じゃないか。'],
     [GOD,'じゃろ〜。女神像もおそなえ箱も依頼ボードも、草原といっしょじゃよ。'],
     [GOD,'食料箱は古い家の中に、素材箱は村の北西に置いといたぞい。コワイノは南から来るからの。かまどやベッド、柵や罠も、おそなえ箱に入れといたからの。'],[HOMURA,'ありがとよ、守り神。']],
    gives:{feat:['inv','remove','plant','craft','people'],flag:'lv_oven',recipes:['oven','bed','stor','mbox'],flags:['yoganLearned'],items:{oven:1,bed:1,hwall:3,fence:10,spike:10},mat:{wood:10,stone:10},enemy:true}},
-  {text:'冷たい温泉を調べよう',check:()=>!!S.flags.sprLook,how:'「みる」で、村の水たまりをタップする',
+  {id:'coldSpring',text:'冷たい温泉を調べよう',check:()=>!!S.flags.sprLook,how:'「みる」で、村の水たまりをタップする',
    talk:{who:HOMURA,when:()=>true,lines:[
     [HOMURA,'…なあ守り神。この村、むかしは湯気がもくもく上がってたんだよ。'],
     [HOMURA,'それが、いつのまにか消えちまってさ。そこらの水たまり、みんな温泉だったんだ。'],
@@ -546,12 +524,12 @@ const QUESTS2=[
     [HOMURA,'…やっぱり冷たいね。地面の熱が、ぜんぜんとどいてない。'],
     [HOMURA,'この村には、温泉が3つあったんだ。入口の温泉、西の温泉、それと村の奥の温泉さ。'],
     [GOD,'3つとも、よみがえらせたいのう。'],[HOMURA,'いっしょに調べてくれて、ありがとよ。']]},
-  {text:'ホムラのおねがい：食料を3つためよう',check:()=>S.food>=3,prog:()=>'食料 '+Math.min(3,S.food)+'/3',how:'せいれいが木の実や畑でとってきた食べ物が、食料箱にたまる',
+  {id:'food3',text:'ホムラのおねがい：食料を3つためよう',check:()=>S.food>=3,prog:()=>'食料 '+Math.min(3,S.food)+'/3',how:'せいれいが木の実や畑でとってきた食べ物が、食料箱にたまる',
    talk:{who:HOMURA,when:()=>true,lines:[
     [HOMURA,'温泉をなおすのは、ひと仕事だよ。その前に、腹ごしらえだね。'],
     [HOMURA,'あたいからのおねがいさ。食料を3つ、ためておいておくれ。腹いっぱいになったら、あたいもひと働きするよ。']]},
    story:[[HOMURA,'よし、これで村の準備はばっちりだね。ありがとよ、守り神。']],gives:{flag:'hReq'}},
-  {text:'温泉をよみがえらせよう',check:()=>S.obj.some((o,j)=>o==='hotstone'&&adjOf(j,k=>S.ground[k]===1&&sprMap()[k]==='a')>=0),how:'「おく」→「ほのお石」をえらんで、入口の温泉（村の南東の温泉）の水べに置く',
+  {id:'springA',text:'温泉をよみがえらせよう',check:()=>S.obj.some((o,j)=>o==='hotstone'&&adjOf(j,k=>S.ground[k]===1&&sprMap()[k]==='a')>=0),how:'「おく」→「ほのお石」をえらんで、入口の温泉（村の南東の温泉）の水べに置く',
    talk:{who:HOMURA,when:()=>true,lines:[
     [HOMURA,'まずは、いちばん近い入口の温泉からだね。'],
     [GOD,'ほのお石を入れといたぞい。入口の温泉の水べに置いて、ホムラの火の力をこめてみい。'],
@@ -563,7 +541,7 @@ const QUESTS2=[
     [HOMURA,'…ん？ 湯気の中に、なにか光ってる。これ…火のヌシ様のかけらじゃないか！'],
     [GOD,'では、わしはほかの土地を見まわってくるぞい。ときどき遊びに来るからの。わからんことは「ひでんのしょ」を見るんじゃ。ではな〜！']],
    gives:{flag:'onsen',feat:['summon','shop'],shard:'land',godLeave:true}},
-  {text:'朝になったら、神殿の「！」でなかまを呼ぼう',check:()=>!!S.flags.minaCame&&NEWRES==null&&!NEWQ.length,how:'朝、神殿の上に「！」が出たら、「みる」で神殿をタップ',
+  {id:'summon',text:'朝になったら、神殿の「！」でなかまを呼ぼう',check:()=>!!S.flags.minaCame&&NEWRES==null&&!NEWQ.length,how:'朝、神殿の上に「！」が出たら、「みる」で神殿をタップ',
    talk:{who:HOMURA,when:()=>true,lines:[
     [HOMURA,'お湯から、水の力が満ちてきたね。あしたの朝、神殿を見てごらん。'],
     [HOMURA,'なかまか…。にぎやかになるのは、悪くないね。']],gives:{flag:'sumTold'}},
@@ -571,42 +549,42 @@ const QUESTS2=[
     [SHIZUKU,'はじめまして。水のせいれい、シズクと申します。'],
     [HOMURA,'へえ、水のせいれいかい。あたいはホムラ。よろしく頼むよ。'],
     [SHIZUKU,'温泉の湯の加減は、おまかせください。…のこりの温泉も、よみがえらせたいですね。'],[SHIZUKU,'呼んでくださって、ありがとうございます。']]},
-  {text:'水路をふさぐ大岩をどかそう',check:()=>st2().bw.every(j=>S.obj[j]!=='boulder'),prog:()=>'大岩 '+st2().bw.filter(j=>S.obj[j]!=='boulder').length+'/'+st2().bw.length,how:'西の温泉のそばの大岩は、せいれいが石をほりにいって、くだいてくれる',
+  {id:'rockCanal',text:'水路をふさぐ大岩をどかそう',check:()=>st2().bw.every(j=>S.obj[j]!=='boulder'),prog:()=>'大岩 '+st2().bw.filter(j=>S.obj[j]!=='boulder').length+'/'+st2().bw.length,how:'西の温泉のそばの大岩は、せいれいが石をほりにいって、くだいてくれる',
    talk:{who:SHIZUKU,when:()=>true,lines:[
     [SHIZUKU,'守り神さま。西の温泉を調べてきました。'],
     [SHIZUKU,'温泉に水をはこぶ水路が、大きな岩でふさがれています。'],
     [HOMURA,'岩なら、まかせときな。みんなでくだいてやろうじゃないか。']]},
    story:[[SHIZUKU,'水路に、水がもどりました。'],[SHIZUKU,'でも、まだ冷たいままです。熱が、とどいていないのですね。'],[SHIZUKU,'大岩をどかしてくださって、ありがとうございます。']]},
-  {text:'シズクのおねがい：温泉のそばに休憩所を作ろう',check:()=>nearSp('bench')&&nearSp('tub'),prog:()=>'ベンチ '+(nearSp('bench')?1:0)+'/1・水おけ '+(nearSp('tub')?1:0)+'/1',how:'依頼ボードで「ベンチ」と「水おけ」をはって、あたたかい温泉のそば（4マス以内）に置く',
+  {id:'shizukuRest',text:'シズクのおねがい：温泉のそばに休憩所を作ろう',check:()=>nearSp('bench')&&nearSp('tub'),prog:()=>'ベンチ '+(nearSp('bench')?1:0)+'/1・水おけ '+(nearSp('tub')?1:0)+'/1',how:'依頼ボードで「ベンチ」と「水おけ」をはって、あたたかい温泉のそば（4マス以内）に置く',
    talk:{who:SHIZUKU,when:()=>true,learn:['bench','tub'],lines:[
     [SHIZUKU,'わたしからも、ひとつおねがいがあります。'],
     [SHIZUKU,'温泉から上がると、足を休めたくなります。それに、からだに残ったお湯を、もう少し流せたら……。守り神さま、何かよい方法はありませんか。'],
     [HOMURA,'湯上がりに、ぼんやりできる場所か。いいね。守り神なら、面白いことを考えてくれそうだ。']],gives:{flags:['lv_tub','lv_bench']}},
    story:[[SHIZUKU,'ありがとうございます。湯上がりのひととき、たいせつにしますね。']],gives:{flag:'sReq'}},
-  {text:'村レベルを3にしよう',check:()=>S.lv>=3,how:'せいれいが満足してパワーがたまると、村レベルが上がる',prog:()=>'いま 村レベル'+S.lv,
+  {id:'lv3',text:'村レベルを3にしよう',check:()=>S.lv>=3,how:'せいれいが満足してパワーがたまると、村レベルが上がる',prog:()=>'いま 村レベル'+S.lv,
    talk:{who:HOMURA,when:()=>true,lines:[
     [HOMURA,'温泉がひとつもどっただけで、村の空気がちがうね。'],
     [SHIZUKU,'みなさんが、ここで楽しく暮らしてくだされば、村も育っていきます。'],
     [HOMURA,'よし、もっとにぎやかな温泉郷にしてやろうじゃないか。']]},
    story:[[HOMURA,'村が、ひとまわり大きくなった気がするよ。'],[SHIZUKU,'新しく作れるものも、ふえたようです。']]},
-  {text:'ハイカゲを3体追いはらおう',check:()=>(st2().ashKills||0)>=3,prog:()=>'ハイカゲ '+Math.min(3,st2().ashKills||0)+'/3',how:'夜に来る灰色の「ハイカゲ」を追いはらう。かまどやベンチを灰でよごして、しばらく使えなくする',
+  {id:'haikage3',text:'ハイカゲを3体追いはらおう',check:()=>(st2().ashKills||0)>=3,prog:()=>'ハイカゲ '+Math.min(3,st2().ashKills||0)+'/3',how:'夜に来る灰色の「ハイカゲ」を追いはらう。かまどやベンチを灰でよごして、しばらく使えなくする',
    talk:{who:HOMURA,when:()=>true,lines:[
     [HOMURA,'…守り神。これから夜になると、火山のほうから「ハイカゲ」ってやつも来るよ。'],
     [SHIZUKU,'灰をまきちらして、かまどやベンチを使えなくしてしまうのです。'],
     [HOMURA,'来たら3体追いはらって、こらしめてやろうじゃないか。']],gives:{flag:'ashOn'}},
    story:[[HOMURA,'ふん、これでしばらくは、おとなしくなるだろ。'],[SHIZUKU,'灰でよごれた設備も、しばらくすれば元にもどりますよ。'],[HOMURA,'追いはらってくれて、ありがとよ、守り神。']]},
-  {text:'ひびわれた熱の道を直そう',check:()=>CRACKS.every(j=>S.obj[j]!=='crack'),prog:()=>'ひびわれ '+CRACKS.filter(j=>S.obj[j]!=='crack').length+'/5',how:'村の北、火山のふもとの「ひびわれ」を「みる」でタップ。石材2で直せる',
+  {id:'heatPath',text:'ひびわれた熱の道を直そう',check:()=>CRACKS.every(j=>S.obj[j]!=='crack'),prog:()=>'ひびわれ '+CRACKS.filter(j=>S.obj[j]!=='crack').length+'/5',how:'村の北、火山のふもとの「ひびわれ」を「みる」でタップ。石材2で直せる',
    talk:{who:SHIZUKU,when:()=>true,lines:[
     [SHIZUKU,'守り神さま。温泉の熱は、火山から地面の下の「熱の道」を通って、とどいていたのです。'],
     [SHIZUKU,'村の北の地面に、ひびわれがあります。そこから熱がもれているようです。'],
     [HOMURA,'石でふさいじまえばいいんだね。']]},
    story:[[HOMURA,'よし、ふさがった！ 熱の道が、つながったよ。'],[SHIZUKU,'あとは、熱をどこへ流すか、ですね。'],[HOMURA,'直してくれて、ありがとよ！']]},
-  {text:'熱の装置を左にむけて、西の温泉をよみがえらせよう',check:()=>!!st2().sp.b,how:'火山のふもとの「熱の装置」をタップして、向きを左にかえる',
+  {id:'springB',text:'熱の装置を左にむけて、西の温泉をよみがえらせよう',check:()=>!!st2().sp.b,how:'火山のふもとの「熱の装置」をタップして、向きを左にかえる',
    talk:{who:HOMURA,when:()=>true,lines:[
     [HOMURA,'火山のふもとに、熱の流れを切りかえる装置があるんだ。'],
     [HOMURA,'左にむければ、西の温泉に熱がとどくはずさ。']]},
    story:[[HOMURA,'西の温泉にも、湯気が上がった！'],[SHIZUKU,'すばらしいです。…残るは、奥の温泉ですね。'],[SHIZUKU,'ありがとうございます、守り神さま。']]},
-  {text:'火のせいれいを3人にしよう',check:()=>elemCount('fire')>=3&&NEWRES==null,how:'ようがん台を置いて火の力をためる。満ちた次の朝、神殿の「！」からなかまを呼ぶ',prog:()=>'火のせいれい '+Math.min(3,elemCount('fire'))+'/3・火の力 '+Math.floor(ATTR.fire)+'/'+needFor('fire'),
+  {id:'fire3',text:'火のせいれいを3人にしよう',check:()=>elemCount('fire')>=3&&NEWRES==null,how:'ようがん台を置いて火の力をためる。満ちた次の朝、神殿の「！」からなかまを呼ぶ',prog:()=>'火のせいれい '+Math.min(3,elemCount('fire'))+'/3・火の力 '+Math.floor(ATTR.fire)+'/'+needFor('fire'),
    talk:{who:HOMURA,when:()=>true,lines:[
     [HOMURA,'……なあ、守り神。むかし、この村には、火のせいれいがたくさんいたんだ。'],
     [HOMURA,'温泉が冷えて、コワイノのうろつく寒い夜がつづいてさ……でも、あたいら火のせいれいは、からだが強いからね。消えずに、ちりぢりに逃げのびたんだ。'],
@@ -614,43 +592,43 @@ const QUESTS2=[
     [SHIZUKU,'では、みなさん、どこかで元気にしているのですね。西の温泉にも、湯気がもどりました。ぬくもりが伝われば、きっと帰ってきます。'],
     [HOMURA,'……そうだね。火の力をためて、なかまをむかえようじゃないか。']]},
    story:[[HOMURA,'……おかえり。待ってたよ。'],[HOMURA,'ほらね。みんな、ちゃんと生きてたんだ。温泉がもどれば、帰ってくるのさ。'],[SHIZUKU,'にぎやかになりましたね。'],[HOMURA,'ありがとよ、守り神。']]},
-  {text:'西の温泉に、あし湯をつくろう',check:()=>spNear(['bench'],'b')>=2&&spNear(FLOWERS2,'b')>=3,prog:()=>'ベンチ '+Math.min(2,spNear(['bench'],'b'))+'/2・花 '+Math.min(3,spNear(FLOWERS2,'b'))+'/3',how:'西の温泉のそば（4マス以内）に、ベンチを2つと、花を3つ置く（花はさいてから数える）。花を植えるのは、木のせいれい',
+  {id:'ashiyu',text:'西の温泉に、あし湯をつくろう',check:()=>spNear(['bench'],'b')>=2&&spNear(FLOWERS2,'b')>=3,prog:()=>'ベンチ '+Math.min(2,spNear(['bench'],'b'))+'/2・花 '+Math.min(3,spNear(FLOWERS2,'b'))+'/3',how:'西の温泉のそば（4マス以内）に、ベンチを2つと、花を3つ置く（花はさいてから数える）。花を植えるのは、木のせいれい',
    talk:{who:SHIZUKU,when:()=>true,lines:[
     [SHIZUKU,'守り神さま。西の温泉は、湯がやわらかくて、足をつけるのにちょうどよいのです。'],
     [HOMURA,'足だけつかって、のんびりおしゃべり……いいね。すわる所と、花でもあれば最高さ。'],
     [SHIZUKU,'あし湯ができたら、みなさんも、きっと遊びに来ますね。'],
     [GOD,'花のたねを3つ、おそなえ箱に入れといたぞい。']],gives:{items:{clover:3}}},
    story:[[SHIZUKU,'あし湯ができました……！ 足だけでも、ぽかぽかします。'],[HOMURA,'花を見ながら、のんびりおしゃべり。いいもんだね。'],[SHIZUKU,'ありがとうございます、守り神さま。']]},
-  {text:'火山を調べよう',check:()=>!!S.flags.volLook,how:'「みる」で、北の火山をタップする',
+  {id:'volcano',text:'火山を調べよう',check:()=>!!S.flags.volLook,how:'「みる」で、北の火山をタップする',
    talk:{who:SHIZUKU,when:()=>true,lines:[
     [SHIZUKU,'奥の温泉に熱をとどけるには、奥の装置を使うはずです。'],
     [SHIZUKU,'その前に、火山を調べてみませんか。熱の流れが、どうなっているか…。']]},
    story:[[HOMURA,'火山の熱は、ちゃんと生きてるね。'],[SHIZUKU,'でも…山の上から、いやな気配がします。'],[HOMURA,'それと、奥の装置のまわり、大岩だらけだったよ。'],[HOMURA,'いっしょに来てくれて、ありがとよ。']]},
-  {text:'奥の装置のまわりの大岩をどかそう',check:()=>BVOL.every(j=>S.obj[j]!=='boulder'),prog:()=>'大岩 '+BVOL.filter(j=>S.obj[j]!=='boulder').length+'/4',how:'大岩は、せいれいが石をほりにいって、くだいてくれる',
+  {id:'rockDeep',text:'奥の装置のまわりの大岩をどかそう',check:()=>BVOL.every(j=>S.obj[j]!=='boulder'),prog:()=>'大岩 '+BVOL.filter(j=>S.obj[j]!=='boulder').length+'/4',how:'大岩は、せいれいが石をほりにいって、くだいてくれる',
    talk:{who:HOMURA,when:()=>true,lines:[[HOMURA,'奥の装置にたどりつくには、まわりの大岩をどかさないとね。'],[HOMURA,'みんな、たのんだよ！']]},
    story:[[HOMURA,'よし、道がひらけた！'],[SHIZUKU,'…装置が、こわれていますね。'],[HOMURA,'ありがとよ、守り神。']]},
-  {text:'奥の装置を直して、奥の温泉に熱をとどけよう',check:()=>!!st2().sp.c,how:'奥の装置をタップして直す（石材8・木材5・ヌシのかけら1つ。かけらは装置にはめるので、なくなる）。手前の装置を右、奥の装置を左にむける',
+  {id:'springC',text:'奥の装置を直して、奥の温泉に熱をとどけよう',check:()=>!!st2().sp.c,how:'奥の装置をタップして直す（石材8・木材5・ヌシのかけら1つ。かけらは装置にはめるので、なくなる）。手前の装置を右、奥の装置を左にむける',
    talk:{who:SHIZUKU,when:()=>true,lines:[
     [SHIZUKU,'奥の装置を直すには、石材と木材、それに…ヌシ様のかけらの力がいります。'],
     [HOMURA,'入口の温泉で見つけた、あのかけらだね。'],
     [SHIZUKU,'直したら、手前の装置を右に、奥の装置を左にむけてください。熱が、奥の温泉まで流れるはずです。']]},
    story:[[SHIZUKU,'かけらが、装置に熱を通してくれました……！'],[HOMURA,'…奥の温泉にも、湯気だ！ 3つ、ぜんぶよみがえったよ！'],[SHIZUKU,'守り神さま、ありがとうございます。温泉が3つ、よみがえりました。'],[SHIZUKU,'…守り神さま。空が、灰色にくもってきました。'],[HOMURA,'今夜は、ハイカゲがわんさか来そうだね…！']],gives:{flag:'ashNight'}},
-  {text:'灰の降る夜をのりこえよう',check:()=>{const t=st2();return !!t.ashNightAt&&S.nights>=t.ashNightAt&&!isNight()},how:'今夜はハイカゲがたくさん来る。かまどやベンチをまもろう',
+  {id:'ashNight',text:'灰の降る夜をのりこえよう',check:()=>{const t=st2();return !!t.ashNightAt&&S.nights>=t.ashNightAt&&!isNight()},how:'今夜はハイカゲがたくさん来る。かまどやベンチをまもろう',
    story:[[HOMURA,'…ふう、なんとかのりこえたね。'],[SHIZUKU,'守ってくださって、ありがとうございます。'],[SHIZUKU,'灰は、火山からふってきていました。山の上に、なにかがいるのです。'],[HOMURA,'次の夜、きっとそいつが下りてくる。むかえうってやろうじゃないか！']],gives:{flag:'hinoNight'}},
-  {text:'ヒノオオカゲを追いはらおう',check:()=>!!S.flags.hinoDown,how:'夜、火山から下りてくる「ヒノオオカゲ」を追いはらう。熱の装置をねらってくる',
+  {id:'hinoookage',text:'ヒノオオカゲを追いはらおう',check:()=>!!S.flags.hinoDown,how:'夜、火山から下りてくる「ヒノオオカゲ」を追いはらう。熱の装置をねらってくる',
    story:[[HOMURA,'やった…！ 火山の上の、いやな気配が消えたよ。'],[HOMURA,'ありがとよ、守り神！ あんたのおかげさ。'],[SHIZUKU,'ヒノオオカゲが、ヌシ様の熱をうばっていたのですね。'],[SHIZUKU,'落としたかけらは、朝にせいれいが拾ってくれますよ。'],[SHIZUKU,'そのかけらを守護の台座にはめれば、ヌシ様の力になるはずです。']]},
-  {text:'温泉宿をつくろう',check:()=>HOUSES.some(h=>[...h.inside].filter(j=>S.obj[j]==='bed').length>=2&&[...h.inside].some(j=>nearHot(j,6))),how:'あたたかい温泉のそば（6マス以内）に、家の壁とドアで家をつくり、中にベッドを2つ置く。ベッドを作るのは、木のせいれい',
+  {id:'inn',text:'温泉宿をつくろう',check:()=>HOUSES.some(h=>[...h.inside].filter(j=>S.obj[j]==='bed').length>=2&&[...h.inside].some(j=>nearHot(j,6))),how:'あたたかい温泉のそば（6マス以内）に、家の壁とドアで家をつくり、中にベッドを2つ置く。ベッドを作るのは、木のせいれい',
    talk:{who:HOMURA,when:()=>true,lines:[
     [HOMURA,'ヒノオオカゲもいなくなって、やっと落ちついたね。'],
     [SHIZUKU,'湯上がりに、そのままゆっくり泊まれる場所があると、うれしいですね。'],
     [HOMURA,'温泉のそばに、宿をつくろうじゃないか。壁でかこって、ベッドを2つ。あたいらで、もてなすのさ。']]},
    story:[[HOMURA,'温泉宿のできあがりだ！'],[SHIZUKU,'湯上がりに、ここでぐっすり休めますね。'],[HOMURA,'ありがとよ、守り神。今夜は、あたいも泊まってみようかな。']]},
-  {text:'村レベルを5にしよう',check:()=>S.lv>=5,how:'せいれいが満足してパワーがたまると、村レベルが上がる',prog:()=>'いま 村レベル'+S.lv,
+  {id:'lv5',text:'村レベルを5にしよう',check:()=>S.lv>=5,how:'せいれいが満足してパワーがたまると、村レベルが上がる',prog:()=>'いま 村レベル'+S.lv,
    talk:{who:SHIZUKU,when:()=>true,lines:[
     [SHIZUKU,'温泉郷らしくなってきましたね。'],
     [HOMURA,'あと少しさ。みんなが楽しく暮らせば、ヌシ様をむかえる力もたまる。']]},
    story:[[HOMURA,'村が、また大きく育ったね！'],[SHIZUKU,'ヌシ様をむかえる準備も、ととのってきました。']]},
-  {text:'守護の台座を建ててもらおう',check:()=>cnt('tower')>=1,prog:()=>'じょうけん '+clearConds().filter(c=>c[1]).length+'/'+clearConds().length,how:'「おく」→「守護の台座」をえらぶと、足りない条件が見られる。ぜんぶそろったら置いて、建ててもらう',
+  {id:'tower',text:'守護の台座を建ててもらおう',check:()=>cnt('tower')>=1,prog:()=>'じょうけん '+clearConds().filter(c=>c[1]).length+'/'+clearConds().length,how:'「おく」→「守護の台座」をえらぶと、足りない条件が見られる。ぜんぶそろったら置いて、建ててもらう',
    talk:{who:HOMURA,when:()=>true,lines:[
     [HOMURA,'温泉郷も、だいぶ元にもどってきたね。'],
     [SHIZUKU,'台座を建てるのに、なにが足りないか、いっしょに確かめましょう。'],
@@ -674,21 +652,21 @@ const PROF=[
 function INTROFL(){return [[FA(),'わあ、守り神さまだ！ ぼく、'+FA()+'！ この土地で、ひっそり暮らしてたんだ！'],[FB(),'ふわぁ…。'+FB()+'だよぉ。ふたりきりだったから、うれしいねぇ。'],[GOD,'この土地にも、おヌシの力を集める場所がいるのう。わしの居場所にもなる神殿を建てよう。建てる場所は、おヌシが好きにえらんでよいぞ。']]}
 const TOYS4=['swing','sandbox'];
 const QUESTSF=[
-  {text:'神殿を建ててもらおう',check:()=>cnt('statue')>=1,by:GOD,how:'下の「おく」→「神殿」をえらび、空いた場所をタップ',story:[
+  {id:'statue',text:'神殿を建ててもらおう',check:()=>cnt('statue')>=1,by:GOD,how:'下の「おく」→「神殿」をえらび、空いた場所をタップ',story:[
     [GOD,'思いついた形は、依頼ボードに描いて伝えるんじゃ。せいれいが手を貸してくれるぞい。力がたまれば、なかまも呼べるからの。'],[GOD,'わしはここで、交換でもしながら見とるからの。']]},
-  {text:'第1話 はじめての居場所：家とベッド2つ',check:()=>HOUSES.length>=1&&cnt('bed')>=2,prog:()=>'家 '+Math.min(1,HOUSES.length)+'/1・ベッド '+Math.min(2,cnt('bed'))+'/2',how:'家の壁のすきまを木の壁でふさぎ、依頼ボードでベッドをたのんで家の中に置く',
+  {id:'ep1',text:'第1話 はじめての居場所：家とベッド2つ',check:()=>HOUSES.length>=1&&cnt('bed')>=2,prog:()=>'家 '+Math.min(1,HOUSES.length)+'/1・ベッド '+Math.min(2,cnt('bed'))+'/2',how:'家の壁のすきまを木の壁でふさぎ、依頼ボードでベッドをたのんで家の中に置く',
    talk:{get who(){return FA()},when:()=>true,get lines(){return [[FA(),'ねえねえ、あそこの家、まだ中がからっぽなの。'],[FB(),'草の上で寝るとねぇ、朝には背中がひんやりしてるんだよぉ。'],[FA(),'ここで、あったかく眠れるようになるかな？ 守り神さま、お願い！']]}},
    get story(){return [[FA(),'できた！ ぼくたちの家だ！'],[FB(),'ふたりきりのころは、雨の日、木の下でくっついて雨宿りしてたねぇ。'],[FA(),'うん！ これからは、屋根があるね！'],[FB(),'ここ、日なたがぽかぽかで、お気に入りの場所になりそうだねぇ。']]}},
-  {text:'第2話 みんなの好きなもの：花10・食卓・遊び道具',check:()=>flowerN()>=10&&cnt('table')>=1&&CN(TOYS4)>=1,prog:()=>'花 '+Math.min(10,flowerN())+'/10・食卓 '+Math.min(1,cnt('table'))+'/1・遊び道具 '+Math.min(1,CN(TOYS4))+'/1',how:'花の種を植え、依頼ボードの「家具」で食卓、「遊び」で砂場かブランコをたのむ',
+  {id:'ep2',text:'第2話 みんなの好きなもの：花10・食卓・遊び道具',check:()=>flowerN()>=10&&cnt('table')>=1&&CN(TOYS4)>=1,prog:()=>'花 '+Math.min(10,flowerN())+'/10・食卓 '+Math.min(1,cnt('table'))+'/1・遊び道具 '+Math.min(1,CN(TOYS4))+'/1',how:'花の種を植え、依頼ボードの「家具」で食卓、「遊び」で砂場かブランコをたのむ',
    talk:{get who(){return FA()},when:()=>true,get lines(){return [[FA(),'ねえ、好きなもの言いっこしよ！ ぼくは、花！'],[FB(),'ぼくは、みんなでごはんを食べるのが好きだねぇ。'],[FA(),'あと、遊ぶのも！ ぜんぶそろったら、きっと毎日たのしいよ！']]}},
    get story(){return [[FA(),'花も、食卓も、遊び道具もある！ 好きなものだらけ！'],[FA(),'ねえ'+FB()+'、ふたりのころ、いっしょに見つけた花、おぼえてる？'],[FB(),'おぼえてるよぉ。あれが、この村のさいしょの花だったねぇ。']]}},
-  {text:'第3話 遠くからのお客さん：せいれいを4人に',check:()=>S.res.length>=4,prog:()=>'せいれい '+Math.min(4,S.res.length)+'/4',how:'花や家具で属性の力をため、朝に神殿の「！」から呼ぶ。この土地では、力がたまるのがゆっくり',
+  {id:'ep3',text:'第3話 遠くからのお客さん：せいれいを4人に',check:()=>S.res.length>=4,prog:()=>'せいれい '+Math.min(4,S.res.length)+'/4',how:'花や家具で属性の力をため、朝に神殿の「！」から呼ぶ。この土地では、力がたまるのがゆっくり',
    talk:{who:GOD,when:()=>true,lines:[[GOD,'この村も、ちょっとずつにぎやかになってきたのう。'],[GOD,'なかまが4人になったら、遠くからお客さんが来るかもしれんぞ？ ほっほっ。']]},
    get story(){const ids=['hedge'].filter(id=>recipeKnown(id)),gift=ids.length?'草原で見つけたかざりを、おみやげに持ってきたよ！ よかったら使ってね！':'シロツメクサの種を、おみやげに持ってきたよ！ よかったら植えてね！';return [[POKO,'こんにちはー！ ぼく、はじまりの草原から来たフタバ！'],[POKO,'守り神さまの新しい村、見に来ちゃった！ わあ、すてきなところだね！'],[FA(),'わあ、お客さんだ！ いらっしゃい！'],[POKO,'草原にはね、花がいっぱいの広場があるんだ！ '+gift],[GOD,'遠くの友だちが訪ねてくる村は、いい村になってきた証拠じゃよ。']]},get gives(){const items={};for(const[id,n]of[['hedge',3]])if(recipeKnown(id))items[id]=n;if(!Object.keys(items).length)items.clover=5;return{items}}},
-  {text:'第4話 ここが好き！：噴水の広場',check:()=>cnt('fountain')>=1,prog:()=>'噴水 '+Math.min(1,cnt('fountain'))+'/1',how:'「おく」から噴水をえらび、みんなで眺められる場所に建てる',
+  {id:'ep4',text:'第4話 ここが好き！：噴水の広場',check:()=>cnt('fountain')>=1,prog:()=>'噴水 '+Math.min(1,cnt('fountain'))+'/1',how:'「おく」から噴水をえらび、みんなで眺められる場所に建てる',
    talk:{get who(){return FB()},when:()=>true,get lines(){return [[FB(),'みんなで、のんびりできる広場があったらいいねぇ。'],[FA(),'水がきらきらして、みんなで眺められたらうれしいな！']]}},
    get story(){return [[FA(),'ここ、だーいすき！'],[FB(),'水の音を聞きながら、みんなでのんびりできるねぇ。'],[FA(),'うん！ ここで、ゆっくりしていこう！'],[FB(),'この広場、大切な場所になりそうだねぇ。']]}},
-  {text:'最終話 みんなのふるさと：たき火とせいれい6人',check:()=>cnt('campfire')>=1&&S.res.length>=6,prog:()=>'たき火 '+Math.min(1,cnt('campfire'))+'/1・せいれい '+Math.min(6,S.res.length)+'/6',how:'火のせいれいに、たき火を作ってもらう。なかまを6人に',
+  {id:'ep5',text:'最終話 みんなのふるさと：たき火とせいれい6人',check:()=>cnt('campfire')>=1&&S.res.length>=6,prog:()=>'たき火 '+Math.min(1,cnt('campfire'))+'/1・せいれい '+Math.min(6,S.res.length)+'/6',how:'火のせいれいに、たき火を作ってもらう。なかまを6人に',
    talk:{get who(){return FA()},when:()=>true,get lines(){return [[FA(),'ねえ、村のお祭りしようよ！'],[FB(),'夜もあったかいところで、みんなで踊れたら、楽しいだろうねぇ。'],[GOD,'うむ！ なかまが6人そろったら、盛大にやるとしようかの！']]}},
    get story(){return [[GOD,'おお、にぎやかじゃのう！ ほれ、もっと踊らんか！'],[FA(),'……ねえ'+FB()+'。ふたりだけだったころ、おぼえてる？'],[FB(),'おぼえてるよぉ。しずかで、ちょっとさみしくて……でも、きみがいたから、へいきだったねぇ。'],[FA(),'いまは、こんなにいっぱい！ 守り神さまが来てくれたからだね。'],[FB(),'ここが、みんなの帰る場所になったんだねぇ。'],[FA(),'ここが、ぼくたちのふるさとだね！'],[GOD,'物語はひと区切りじゃが、村づくりはまだまだこれからじゃぞ！']]},gives:{fest:true}},
 ];
@@ -742,7 +720,7 @@ let S=null;
 const resv=new Map();
 let STATUE=-1,OBOX=-1,BOARD=-1,counts={},LIGHTS=[],STELES=[],TOWERS=[],NEARFLOWER=new Set(),NEARWELL=new Set(),NEARMILL=new Set(),NEARVANE=new Set(),NEARSIGN=new Set(),ENVG=null,REV=new Set(),ATTR={},BASEPCT=0,GRASSN=0;const GRASS_GOAL=600;
 function newState(w){w=w||0;
-  const s={v:8,mig:1,flags:{},placed:{},feat:{build:true},inv:{},orders:[],enemyOn:false,nights:0,godGone:false,godShown:false,nushi:null,
+  const s={v:8,mig:2,flags:{},placed:{},feat:{build:true},inv:{},orders:[],enemyOn:false,nights:0,godGone:false,godShown:false,nushi:null,
     lv:1,bossKills:0,nightHurt:0,nightHad:false,wave:null,lastWarn:0,
     ref:{},ground:new Array(W*H).fill(0),floor:new Array(W*H).fill(''),obj:new Array(W*H).fill(''),dyn:{},hp:{},
     res:[],enemies:[],pt:15,totalPt:0,food:0,fs:{},cseed:{imo:4},crops:{imo:true},mat:{wood:0,stone:0},regrow:[],t:w===0?15*60:12*60,/* 草原は15時からはじまる */speed:1,baseLv:0,
@@ -927,7 +905,7 @@ function storageAt(j,type){const id=S.obj[j],wall=HOME_WALLS.has(id)&&(S.win||{}
 function storageCapacity(type){let n=0;for(const id in STORAGE){const b=STORAGE[id];if(b.type===type)n+=cnt(id)*b.cap}for(const j in S.win||{}){const b=STORAGE[S.win[j]];if(HOME_WALLS.has(S.obj[j])&&b&&b.type===type)n+=b.cap}return n}
 const foodCap=()=>storageCapacity('food'),matCap=()=>storageCapacity('mat'),matTot=()=>(S.mat.wood||0)+(S.mat.stone||0);
 const MATN={wood:'木材',stone:'石材'};const matTxt=m=>Object.keys(m||{}).map(k=>MATN[k]+m[k]).join('・');/* 素材は文字ではなくアイコンで */const esc=t=>String(t).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'})[c]);const matHTML=m=>Object.keys(m||{}).map(k=>'<span class="mic"><img src="'+(ICONS[k]||'')+'" alt="'+MATN[k]+'">'+m[k]+'</span>').join('');const matOK=m=>Object.keys(m||{}).every(k=>(S.mat[k]||0)>=m[k]);
-const watchQ=()=>!!(S.qTalked&&QUESTS[S.quest]&&QUESTS[S.quest].text==='見張り台ととげの罠を置こう'&&!cnt('watch')&&!S.obj.some((o,j)=>o==='site'&&S.dyn[j]&&S.dyn[j].build==='watch'));
+const watchQ=()=>!!(S.qTalked&&QUESTS[S.quest]&&QUESTS[S.quest].id==='watch1'&&!cnt('watch')&&!S.obj.some((o,j)=>o==='site'&&S.dyn[j]&&S.dyn[j].build==='watch'));
 const QB=new Set(['lumber','quarry','stele','fountain','lighthouse','windmill']),/* クエストでおぼえるまで建てられない建物（村レベルだけでは、使えない） */lvOK=id=>BL[id].kind==='furn'||(QB.has(id)?(!!(S.recipes||{})[id]||cnt(id)>0):id==='yogan'?(WD===1&&!!S.flags.yoganLearned):id==='watch'?(!!S.flags.watchLearned||watchQ()):S.lv>=(BL[id].lv||1))||!!S.flags['lv_'+id];
 const breakable=o=>o==='fence'||o==='wall'||o==='hwall'||o==='door'||o==='gate'||o==='sdoor'||!!(o&&BL[o]&&BL[o].brk);
 const fixMat=id=>({});/* 修理に素材はいらない */
@@ -977,7 +955,7 @@ function revRadius(o){const b=BL[o];if(!b)return 0;if(o==='tower')return 7;if(o=
 /* 属性の力の表示（例：属性 木+1・土+2） */
 function attrTxt(id){const b=BL[id];if(!b||!b.attr||b.kind==='block')return'';const a=Object.entries(b.attr).filter(e=>e[1]>0);return a.length?'属性 '+a.map(([k,v])=>ELEM[k].name+'+'+(+v.toFixed(2))).join('・'):''}
 const withAttr=(id,t)=>{const a=attrTxt(id);return a?(t?t+'　':'')+'【'+a+'】':t||''};
-function recount(){
+function recount(){if(S.broken)S.broken=S.broken.filter(b=>!S.obj[b.j]);/* こわれた物の場所に、なにか置いたら、こわれた物のリストからはずす */
   for(const key in S.win||{}){const j=+key,wall=k=>HOME_WALLS.has(S.obj[k])||HOME_DOORS.has(S.obj[k]);if(S.win[j]==='wreath'&&S.obj[j]==='door'&&(wall(j-W)||wall(j+W))&&!(wall(j-1)||wall(j+1))){S.inv.wreath=(S.inv.wreath||0)+1;delete S.win[j];toast('たてのドアのリースを、持ち物にもどしました')}}/* たてのドアにはリースをかけられない。まわりの壁が変わってたてになったら、知らせてもどす */
   STATUE=-1;OBOX=-1;BOARD=-1;counts={};LIGHTS=[];STELES=[];TOWERS=[];NEARFLOWER=new Set();NEARWELL=new Set();NEARMILL=new Set();NEARVANE=new Set();NEARSIGN=new Set();ENVG=new Float32Array(W*H);REV=new Set();ATTR={};ELEM_KEYS.forEach(k=>ATTR[k]=0);
   const around=(j,r,set)=>{const x=j%W,y=(j/W)|0;for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){if(dx*dx+dy*dy>r*r+1)continue;const nx=x+dx,ny=y+dy;if(nx>=0&&ny>=0&&nx<W&&ny<H)set.add(ny*W+nx)}};
@@ -1347,10 +1325,10 @@ const CHATS=[
  [[0,'外のきらきら、ひろったことある？'],[1,'あるよ。ちいさな種みたいだった。'],[0,'種？ 植えたら、なにが生えるの？'],[1,'うーん…植えるっていうより、食べると力がわいてくる感じ？']],
  [[0,'守り神さまなら、遠くのきらきらにも、手がとどくのかな。'],[1,'とどきそう！ ぼくらは歩いていかないとだけど。']],
  [[0,'ねえ、コワイノって、どこから来るのかな。'],[1,'わかんない。でも朝になると、じゅわって消えちゃうよね。'],[0,'消えて…どこに行くんだろう。'],[1,'……どこにも、行けないのかもね。']],
- [[0,'むかしは、闇のヌシ様っていうヌシ様が、いたんだって。'],[1,'闇の？ 草原のヌシ様とはちがうの？'],[0,'わかんない。おばあちゃんせいれいが、そう言ってた気がする。'],[1,'ふうん…。会ってみたいね。']],
- [[0,'この土地、前はもっと緑だったのかな。'],[1,'たぶんね。土をさわると、なんだか、なつかしい感じがするもん。'],[0,'わかる。おぼえてないのに、知ってる感じ。']],
+ Object.assign([[0,'むかしは、闇のヌシ様っていうヌシ様が、いたんだって。'],[1,'闇の？ 草原のヌシ様とはちがうの？'],[0,'わかんない。おばあちゃんせいれいが、そう言ってた気がする。'],[1,'ふうん…。会ってみたいね。']],{ok:()=>WD!==0&&WD!==FREE}),
+ Object.assign([[0,'この土地、前はもっと緑だったのかな。'],[1,'たぶんね。土をさわると、なんだか、なつかしい感じがするもん。'],[0,'わかる。おぼえてないのに、知ってる感じ。']],{key:1}),
  [[0,'コワイノって、こわいけど…なんか、さみしそうじゃない？'],[1,'え、そう？'],[0,'うん。こっちに来たいだけ、みたいな。'],[1,'……そう言われると、そんな気もしてきた。']],
- [[0,'力って、使ったらなくなるの？'],[1,'なくならないよ。土にかえって、また木になるんだって。'],[0,'じゃあ、かえれなかった力は？'],[1,'え…どうなるんだろう。']],
+ Object.assign([[0,'力って、使ったらなくなるの？'],[1,'なくならないよ。土にかえって、また木になるんだって。'],[0,'じゃあ、かえれなかった力は？'],[1,'え…どうなるんだろう。']],{ok:()=>WD!==0&&WD!==FREE}),
  [[0,'カミサマって、ずっとひとりなのかな。'],[1,'ひとりじゃないよ。ぼくたちがいるもん。'],[0,'そうだけど…たまに、とおくを見てるときがあるよね。'],[1,'だれかを、待ってるのかもね。']],
  [[0,'遠くの土地にも、せいれいっているのかな。'],[1,'いるよ、きっと。水の村とか、火の山とか。'],[0,'そこも、ここみたいに、しずかになっちゃってるのかな。'],[1,'……いつか、見に行けたらいいね。']],
  [[0,'夜って、ほんとうはこわいものじゃなかったんだって。'],[1,'えー、うそだぁ。'],[0,'ほんとほんと。むかしは、夜はやすむための時間だったって。'],[1,'いまも、やすむ時間だよ。コワイノがいなければね。']],
@@ -1362,7 +1340,7 @@ const CHATS=[
  [[0,'このへん、ちょっとずつ、にぎやかになってきたね。'],[1,'うん。朝おきるのが、たのしみになったよ。']],
  [[0,'さっき、ちょうちょがとまったんだ。頭の上に。'],[1,'いいなあ。お花とまちがえたのかな？'],[0,'えへへ、そうかも。']],
  [[0,'おなか、すいてない？'],[1,'ちょっとだけ。…ほんとは、けっこう。'],[0,'あとで、いっしょに食べよっか。']],
- [[0,'守り神さまって、いつもなにしてるのかな。'],[1,'空の上から、見ててくれてるんだって。'],[0,'じゃあ、いまも見てるかも？'],[1,'…手、ふっとこうか。']],
+ Object.assign([[0,'守り神さまって、いつもなにしてるのかな。'],[1,'空の上から、見ててくれてるんだって。'],[0,'じゃあ、いまも見てるかも？'],[1,'…手、ふっとこうか。']],{wave:1}),
  [[0,'かくれんぼ、したことある？'],[1,'あるよ。でも、すぐ見つかっちゃう。'],[0,'どうして？'],[1,'見つけてほしくて、つい顔だしちゃうの。']],
  [[0,'石って、ひとつずつ、もようがちがうんだよ。'],[1,'へえ。じゃあ、石にも名前つけられるね。'],[0,'このまえ拾ったのは「まるお」にした。']],
  [[0,'雨の音、好き？'],[1,'好き。ぽつぽつって、だれかが歌ってるみたい。']],
@@ -1390,8 +1368,8 @@ const CHATS=[
  [[0,'夜になると、お花もねむるのかな。'],[1,'ねむるよ。ちゃんと、おやすみって言ってあげなきゃ。']],
  [[0,'ねえ、手、つないでみる？'],[1,'…ちょっと、てれるね。'],[0,'じゃあ、小指だけ。']]];
 CHATS.push([[0,'ねえ、すべり台って、何回すべってもあきないね。'],[1,'わかる！ 上るのはちょっと大変だけど。'],[0,'それも、たのしいのうちだよ。']],[[0,'きょう、いちばんうれしかったこと、なに？'],[1,'うーん…いま、こうして話してることかな。'],[0,'…えへへ。']],[[0,'ねむる前って、なに考えてる？'],[1,'あしたの朝ごはんのこと。'],[0,'ぼくも！']],[[0,'しってる？ 星って、ずっと遠くで光ってるんだって。'],[1,'じゃあ、いま見えてる光は、むかしの光？'],[0,'そうかも。…なんか、ふしぎだね。']],[[0,'あのね、ないしょの話があるの。'],[1,'なになに？'],[0,'…やっぱり、もうちょっと仲よくなってからね。'],[1,'えー！']],[[0,'すなばで、お城をつくったよ。'],[1,'見たい見たい！'],[0,'…風で、ちょっとくずれちゃったけど。']],[[0,'ここに来てから、いろんな色を見たよ。'],[1,'どの色がいちばん好き？'],[0,'みんなが笑ってるときの色。']],[[0,'しっぽ、ほしいなあ。'],[1,'なんで？'],[0,'うれしいとき、ふりたいから。']],[[0,'「コワイノ」って、ほんとはさみしいのかな。'],[1,'…どうして、そう思うの？'],[0,'夜になると、こっちに来たがるから。']],[[0,'きのう、葉っぱの舟をうかべたよ。'],[1,'どこまで行った？'],[0,'池のまんなかで、くるくるまわってた。']],[[0,'あくび、うつった？'],[1,'ふわぁ…うつった。'],[0,'ふふ、作戦成功。']],[[0,'おいしいって、どうしてうれしいんだろう。'],[1,'おなかが、ありがとうって言ってるのかも。']],[[0,'ねえ、もし空をとべたら、どこに行く？'],[1,'神殿のてっぺん！'],[0,'ちかっ！']],[[0,'シーソー、またいっしょにのろうね。'],[1,'うん。こんどは、ぼくが上の番！']],[[0,'ひとりでいるのも好きだけど…'],[1,'うん。'],[0,'みんなといるのは、もっと好き。']],[[0,'このまえ、虹のはしっこをさがしたんだ。'],[1,'見つかった？'],[0,'ううん。でも、歩くのがたのしかった。']]);
-CHATS[5].wave=1;
-{const late=()=>WD!==0&&WD!==FREE;for(const c of CHATS){if(c[0]&&(c[0][1]==='むかしは、闇のヌシ様っていうヌシ様が、いたんだって。'||c[0][1]==='力って、使ったらなくなるの？'))c.ok=late;if(c[0]&&c[0][1]==='この土地、前はもっと緑だったのかな。')c.key=1}}/* なつかしがる話は、むかしからこの土地にいた子（物語のせいれい）どうしだけ *//* ステージ1では、真相に近い話はしない */
+
+/* なつかしがる話は、むかしからこの土地にいた子（物語のせいれい）どうしだけ *//* ステージ1では、真相に近い話はしない */
 /* 条件付きの会話は属性別会話の追加後に、まとめて設定する */
 [[[0,'ねえ、となりにいると、なんだか安心する。'],[1,'わたしも。ずっと前から知ってたみたい。']],
  [[0,'こんど、いっしょに星を見に行こうよ。'],[1,'うん！ ふたりだけで、ね。']],
@@ -1562,7 +1540,7 @@ function tryJob(r,G,k){
   if(!canJob(r,k))return false;
   let j;
   switch(k){
-  case'repair':{if(isNight())return false;if(S.broken)S.broken=S.broken.filter(b=>!S.obj[b.j]);const dmg=q=>(breakable(S.obj[q])&&(S.hp[q]??BL[S.obj[q]].hp)<BL[S.obj[q]].hp&&matOK(fixMat(S.obj[q]))||DEFS.has(S.obj[q])&&S.hp[q]!=null&&matOK(fixMat(S.obj[q]))||burnt(q)||(bk=>!!bk&&canRebuild(bk.j)&&free('o'+bk.j,1))(brokenCover(q)))&&free('o'+(brokenCover(q)?brokenCover(q).j:q),1);j=nearest(G,j=>!brokenCover(j)&&adjOf(j,dmg)>=0);/* こわれた場所の中ではなく、外から直す */if(j>=0){const q0=adjOf(j,dmg),bk=brokenCover(q0),q=bk?bk.j:q0;startAct(r,G,'repair',j,{key:'o'+q,obj:q});return true}return false}
+  case'repair':{if(isNight())return false;const dmg=q=>(breakable(S.obj[q])&&(S.hp[q]??BL[S.obj[q]].hp)<BL[S.obj[q]].hp&&matOK(fixMat(S.obj[q]))||DEFS.has(S.obj[q])&&S.hp[q]!=null&&matOK(fixMat(S.obj[q]))||burnt(q)||(bk=>!!bk&&canRebuild(bk.j)&&free('o'+bk.j,1))(brokenCover(q)))&&free('o'+(brokenCover(q)?brokenCover(q).j:q),1);j=nearest(G,j=>!brokenCover(j)&&adjOf(j,dmg)>=0);/* こわれた場所の中ではなく、外から直す */if(j>=0){const q0=adjOf(j,dmg),bk=brokenCover(q0),q=bk?bk.j:q0;startAct(r,G,'repair',j,{key:'o'+q,obj:q});return true}return false}
   case'till':j=nearest(G,j=>S.obj[j]==='plot'&&free('o'+j,1));if(j>=0){startAct(r,G,'till',j,{key:'o'+j,obj:j});return true}return false;
   case'sow':j=nearest(G,j=>S.obj[j]==='farm'&&S.dyn[j]&&S.dyn[j].sown===false&&(S.dyn[j].paid||cseed(cropK(S.dyn[j]))>0)&&free('o'+j,1));if(j>=0){startAct(r,G,'sow',j,{key:'o'+j,obj:j});return true}return false;
   case'plant':{j=nearest(G,j=>S.obj[j]==='sprout'&&free('o'+j,1));if(j>=0){startAct(r,G,'plant',j,{key:'o'+j,obj:j});return true}const wq=q=>S.obj[q]==='sprout'&&S.ground[q]===1&&free('o'+q,1);j=nearest(G,j=>adjOf(j,wq)>=0);if(j>=0){const q=adjOf(j,wq);startAct(r,G,'plant',j,{key:'o'+q,obj:q});return true}
@@ -1752,7 +1730,7 @@ function die(r){
    埋葬されたせいれいがいれば、そちらの復活が先（物語のせいれいが最優先） */
 let KEYRES=KEYS[0];
 const isKey=n=>KEYRES.includes(n)||KEYS.flat().includes(n)||Object.values(FIXK0).includes(n)||Object.values((S&&S.keyN)||{}).includes(n);/* キーキャラ（5属性の子もふくむ）は「きずな」で朝にもどる */
-const SECOND=[{elem:'earth',name:MINA,ok:()=>bloomCount('bellf')>=2&&qDone('ききょうを植えて、土の力をためよう')},/* ききょうのお礼の話がすんでから */{elem:'water',name:SHIZUKU,ok:()=>!!S.flags.onsen}];/* 2人目のキーキャラが来るきっかけ */
+const SECOND=[{elem:'earth',name:MINA,ok:()=>bloomCount('bellf')>=2&&qDone('kikyo')},/* ききょうのお礼の話がすんでから */{elem:'water',name:SHIZUKU,ok:()=>!!S.flags.onsen}];/* 2人目のキーキャラが来るきっかけ */
 const MAINEL=['wood','fire'];MAINEL[FREE]='wood';SECOND[FREE]={elem:'earth',name:'',ok:()=>false};
 function sumElem(){
   if(S.res.length>=30)return null;let best=null,bs=0;
@@ -1778,7 +1756,7 @@ function doSummon(){
   if(sm.rev){let d;if(sm.lost){const L=S.lost,i=typeof sm.lost==='string'?L.findIndex(q=>q.name===sm.lost):0;d=L.splice(Math.max(0,i),1)[0];}else{const B=S.buried;B.sort((a,b)=>(isKey(b.name)?1:0)-(isKey(a.name)?1:0)||(a.unb?1:0)-(b.unb?1:0));d=B.shift()}
     r=mkRes(S,d.name,d.elem,sp[0]+.5,sp[1]+.5,d.like);r.vr=d.vr||r.vr;r.xp=d.xp||0;r.xpf=d.xpf||0;if(d.bst)r.bst=d.bst;if(d.sst)r.sst=d.sst;if(d.boost)r.boost=d.boost;r.back=1;r.came=d.came;r.made=d.made;r.beat=d.beat;r.reMate=d.mate||null;for(let j=0;j<S.obj.length;j++)if(S.obj[j]==='grave'&&S.dyn[j]&&!S.dyn[j].buried&&S.dyn[j].name===d.name){S.obj[j]='';delete S.dyn[j];recount()}for(const q of S.res)if(q.coffin&&q.coffin.name===d.name)q.coffin=null;/* 埋葬の前にもどってきた子のお墓は、なくなる */
     toast(r.name+'がもどってきた！','good');sevBack(r.name);reunite(r,sp)}
-  else{let name;if(sm.elem===SECOND[WD].elem&&!S.flags.minaCame){name=SECOND[WD].name;S.flags.minaCame=true}
+  else{let name;if(sm.elem===SECOND[WD].elem&&!S.flags.minaCame){name=SECOND[WD].name;S.flags.minaCame=true;S.flags.mnN=S.nights||0}/* 来た夜の数をおぼえておく（e04b） */
     else if(!WD&&FIXK0[sm.elem]&&!S.res.some(q=>q.elem===sm.elem)&&!(S.buried||[]).some(q=>q.elem===sm.elem&&isKey(q.name))&&!(S.lost||[]).some(q=>q.elem===sm.elem&&isKey(q.name)))name=FIXK0[sm.elem];/* その属性のキーキャラは、決まった子 */
     else{const used=new Set(S.res.map(q=>q.name).concat((S.buried||[]).map(q=>q.name)));do{name=NAMES[S.nameIdx%NAMES.length]+(S.nameIdx>=NAMES.length?'2':'');S.nameIdx++}while(used.has(name)||KEYS.flat().includes(name)||Object.values(FIXK0).includes(name))}
     r=mkRes(S,name,sm.elem,sp[0]+.5,sp[1]+.5);toast(ELEM[sm.elem].name+'のせいれい「'+name+'」がやってきた！','good')
@@ -1815,7 +1793,7 @@ function waveFor(day){
     if(S.flags.hinoNight&&!S.flags.hinoDown)list.unshift('hino');
     else if(S.flags.hinoDown&&bossNight(day-1)&&rn>=5)list.unshift('boss');
     return list}
-  const bq=QUESTS.find(q=>q.text==='オオカゲを追いはらおう'),bOK=S.cleared||!bq||qAt(bq.text);/* オオカゲのクエストが出るまでは来ない */
+  const bq=QUESTS.find(q=>q.id==='ookage'),bOK=S.cleared||!bq||qAt(bq.id);/* オオカゲのクエストが出るまでは来ない */
   if(bq&&bOK&&!S.bossKills&&S.bossWarn==null)S.bossWarn=dayNo();
   if(bossNight(day-1)||S.bossOwed){if(bOK&&rn>=4&&S.res.some(q=>q.elem==='fire')&&S.res4Since!=null&&dayNo()-S.res4Since>=3&&KEYS[WD].every(n=>S.res.some(r=>r.name===n))){/* メインの子をふくめて4人そろい、火の子が1人以上いて3日たったら、自動で来る（全滅したあとは、その状態にもどってから3日あと） */list.unshift('boss');S.bossOwed=false}else if(bOK)S.bossOwed=true}/* クエストが出る前の分はためない（クエストが出てから3日後に来る） *//* dayは次の日。5日目の夜＝day6。せいれいが3人そろうまで、オオカゲは来るのを先のばし */
   return list;
@@ -2078,7 +2056,7 @@ function stepWorld(dt){if((SUBT+=dt)>1){SUBT=0;checkSub();checkSev();guardTick()
   st2Tick();fireTick(dt/1.5);
   const prevH=hour(),t0=S.t;let nt=S.t+dt/1.5;// 時計：夜も昼と同じ速さ（1日は1.5倍の長さ）
   if(!S.enemyOn){const c=clk(),cap=Math.floor(c/1440)*1440+18*60,nc=c+(nt-S.t);if(nc>cap)S.hold=(S.hold||0)+Math.min(nt-S.t,nc-cap)}/* チュートリアルで夜がはじまるまで、時計（朝・昼・夜）は18時で止めておく。せいれいの動きにつかう時間（S.t）は進める */S.t=nt;const h=hour();
-  for(const k in S.dyn){const o=S.obj[k],d=S.dyn[k];if(!o){delete S.dyn[k];continue}
+  for(const k in S.dyn){const o=S.obj[k],d=S.dyn[k];if(!o)continue;
     if(o==='farm'){if(d.sown===false)continue;if((S.rain&&!isNight()||NEARWELL.has(+k))&&d.g<100)d.wet=100}}/* ベリー・りんごの実は、朝6時に1日ぶんずつ育つ（morning） */
   for(const r of S.res.slice())updRes(r,dt);
   sepRes(dt);
@@ -2109,33 +2087,33 @@ const FREEG=[{k:'g900',t:'みどりのマスを900に',now:()=>GRASSN,ok:()=>GRA
 const TRAPS=['spike','sticky','puddle','firetrap','gust'],CN=a=>a.reduce((n,k)=>n+cnt(k),0),FOODN=()=>Object.values(S.fs||{}).reduce((n,v)=>n+v,0);
 function houseBedCount(){const cells=new Set(HOUSES.flatMap(h=>[...h.inside]));return [...cells].filter(j=>S.obj[j]==='bed').length}
 function diningSeatCount(){return S.obj.reduce((n,o,j)=>n+(SEATS.includes(o)&&[-1,1,-W,W].some(d=>{const k=j+d;return k>=0&&k<W*H&&Math.abs(k%W-j%W)+Math.abs((k/W|0)-(j/W|0))===1&&S.obj[k]==='table'})),0)}
-const waitingBellflowers=()=>WD===0&&qAt('ききょうを植えて、土の力をためよう')&&cnt('bellf')>0&&bloomCount('bellf')<2&&!S.flags.minaCame;
+const waitingBellflowers=()=>WD===0&&qAt('kikyo')&&cnt('bellf')>0&&bloomCount('bellf')<2&&!S.flags.minaCame;
 const yoganUp=()=>Object.keys(S.hp).some(k=>k[0]==='L'&&S.hp[k]>=2&&S.obj[+k.slice(1)]==='yogan');/* ようがん台を強化した */
 const houseFood=()=>HOUSES.some(h=>[...h.inside].some(j=>S.obj[j]==='stor'||S.obj[j]==='cabinet'));/* 家の中に食べ物の箱がある */
 const SUBQ=[/* サブクエスト：メインと別に、いつでもできるおねがい。at=出てくる条件 */
   {k:'seedwait_gate',w:0,g:'wood',t:'柵に出入り口をつくろう',how:'柵の途中を「こわす」で1マス戻し、依頼ボードの「道・囲い」で柵のドアをはる。できたら空いた場所に置く',L:[['K','ききょうのまわりも、歩きやすくしたいな。村をひと回りしてこようっと。'],['K','……あれ、こっちの柵、ぐるっと回らなきゃ出られないや。'],['K','ぼくが通るときだけ開くところ、つくれないかな？']],X:[['K','ぱたん、って開いた！ こっちからも出られるね。'],['K','守り神さま、ありがとう！']],at:()=>waitingBellflowers(),ok:()=>cnt('gate')>=1,n:1,now:()=>cnt('gate'),rw:5},
   {k:'seedwait_food',w:0,g:'wood',t:'朝のごはんを10こ用意しよう',how:'フタバがベリーの茂みから実を集め、食料箱へ運ぶのを手伝おう。食料箱の食べ物を10こ以上にする',L:[['K','なかまが来てくれたら……いっしょにごはん、食べたいな。'],['K','食料箱に、少し多めに入れておこうよ。ぼく、ベリーを集めてくる！']],X:[['K','これだけあれば、新しい子のぶんもあるね。'],['K','どんな子かなあ。……えへへ、たのしみ！']],at:()=>waitingBellflowers(),ok:()=>FOODN()>=10,n:10,now:()=>Math.min(10,FOODN()),rw:5},
 
-  {k:'benchbreak',w:0,g:'wood',t:'外にベンチを置こう',how:'依頼ボードの「庭」でベンチをはり、できたら外に置く。昼の休けいやおしゃべりでパワーがもらえる',L:[['K','歩きまわってたら、足がくたくたになっちゃった。'],['K','外でも、ちょこんと座ってひと休みできたらいいな。']],X:[['K','ここなら、足をのばして休めるね。ふう……。'],['K','守り神さま、ありがとう！']],learn:['bench'],at:()=>qAt('村レベルを2にしよう')||qAt('家の壁を直そう')&&!isNight()&&(hour()>=18||S.res.some(r=>r.name===POKO&&r.energy<50)),/* フタバのつかれがたまったら（げんき50より下）、おそくても夕方18時に出てくる（1日目は、ベッドの前に18時で時計が止まる） */ok:()=>cnt('bench')>=1,n:1,now:()=>cnt('bench'),rw:5},
-  {k:'salvia3',how:'「おく」→「サルビアの種」を置く。せいれいに植えてもらい、花が咲くのを待とう',g:'earth',L:[['K','火の力をためるなら、赤いサルビアがいいよぉ。'],['K','種、あげるねぇ。5本植えたら、きっとぽかぽかだよぉ。']],X:[['K','まっかなサルビアが5本も増えたねぇ。火の力、たまってきたよぉ。'],['K','守り神さま、ありがとうねぇ。']],w:0,t:'サルビアを5本植えよう',ln:'赤いサルビアは、火の力をためてくれるよぉ。種、あげるねぇ',at:()=>qAt('火のせいれいをむかえよう'),give:{salvia:5},base:()=>cnt('salvia'),ok:()=>bloomCount('salvia')-((S.subB||{}).salvia3||0)>=5,n:5,now:()=>Math.max(0,bloomCount('salvia')-((S.subB||{}).salvia3||0)),rw:10},
-  {k:'watch2',how:'「おく」→「見張り台」を置き、合計2つにしよう。せいれいが建てるのを待とう',g:'wood',L:[["K", "あの光が飛んでいくところ、見てると安心するね！"], ["K", "でも、向こうのはしは、ちょっと暗いままなんだ。あっちも守れたらいいなあ。"]],X:[['K','見張り台が2つになった！ これで夜も、ちょっと安心だね！'],['K','あっちへ行く道がすぐわかる目印もあるとうれしいね。'],['K','守り神さま、ありがとう！']],w:0,t:'見張り台を2つにしよう',ln:"向こうのはしも、安心して過ごせたらいいな",at:()=>qAt('火のせいれいをむかえよう'),ok:()=>cnt('watch')>=2,n:2,now:()=>cnt('watch'),rw:15},
-  {k:'watchup',how:'見張り台をタップして「強化する」をえらぶ。パワーと素材を使う',g:'wood',L:[['K','オオカゲって、どのくらい強いのかな……。'],['K','見張り台の光の矢が、もっと強くなったら、安心して眠れるのになあ。']],X:[['K','見張り台が、ぴかっと強くなった！'],['K','これなら、オオカゲが来ても、きっとだいじょうぶ。守り神さま、ありがとう！']],w:0,t:'見張り台を強くしよう',ln:'見張り台の光の矢、もっと強くならないかな',at:()=>qAt('オオカゲを追いはらおう')&&!watchUp(),ok:()=>watchUp(),n:1,now:()=>watchUp()?1:0,rw:15},
+  {k:'benchbreak',w:0,g:'wood',t:'外にベンチを置こう',how:'依頼ボードの「庭」でベンチをはり、できたら外に置く。昼の休けいやおしゃべりでパワーがもらえる',L:[['K','歩きまわってたら、足がくたくたになっちゃった。'],['K','外でも、ちょこんと座ってひと休みできたらいいな。']],X:[['K','ここなら、足をのばして休めるね。ふう……。'],['K','守り神さま、ありがとう！']],learn:['bench'],at:()=>qAt('lv2')||qAt('wall')&&!isNight()&&(hour()>=18||S.res.some(r=>r.name===POKO&&r.energy<50)),/* フタバのつかれがたまったら（げんき50より下）、おそくても夕方18時に出てくる（1日目は、ベッドの前に18時で時計が止まる） */ok:()=>cnt('bench')>=1,n:1,now:()=>cnt('bench'),rw:5},
+  {k:'salvia3',how:'「おく」→「サルビアの種」を置く。せいれいに植えてもらい、花が咲くのを待とう',g:'earth',L:[['K','火の力をためるなら、赤いサルビアがいいよぉ。'],['K','種、あげるねぇ。5本植えたら、きっとぽかぽかだよぉ。']],X:[['K','まっかなサルビアが5本も増えたねぇ。火の力、たまってきたよぉ。'],['K','守り神さま、ありがとうねぇ。']],w:0,t:'サルビアを5本植えよう',ln:'赤いサルビアは、火の力をためてくれるよぉ。種、あげるねぇ',at:()=>qAt('fire'),give:{salvia:5},base:()=>cnt('salvia'),ok:()=>bloomCount('salvia')-((S.subB||{}).salvia3||0)>=5,n:5,now:()=>Math.max(0,bloomCount('salvia')-((S.subB||{}).salvia3||0)),rw:10},
+  {k:'watch2',how:'「おく」→「見張り台」を置き、合計2つにしよう。せいれいが建てるのを待とう',g:'wood',L:[["K", "あの光が飛んでいくところ、見てると安心するね！"], ["K", "でも、向こうのはしは、ちょっと暗いままなんだ。あっちも守れたらいいなあ。"]],X:[['K','見張り台が2つになった！ これで夜も、ちょっと安心だね！'],['K','あっちへ行く道がすぐわかる目印もあるとうれしいね。'],['K','守り神さま、ありがとう！']],w:0,t:'見張り台を2つにしよう',ln:"向こうのはしも、安心して過ごせたらいいな",at:()=>qAt('fire'),ok:()=>cnt('watch')>=2,n:2,now:()=>cnt('watch'),rw:15},
+  {k:'watchup',how:'見張り台をタップして「強化する」をえらぶ。パワーと素材を使う',g:'wood',L:[['K','オオカゲって、どのくらい強いのかな……。'],['K','見張り台の光の矢が、もっと強くなったら、安心して眠れるのになあ。']],X:[['K','見張り台が、ぴかっと強くなった！'],['K','これなら、オオカゲが来ても、きっとだいじょうぶ。守り神さま、ありがとう！']],w:0,t:'見張り台を強くしよう',ln:'見張り台の光の矢、もっと強くならないかな',at:()=>qAt('ookage')&&!watchUp(),ok:()=>watchUp(),n:1,now:()=>watchUp()?1:0,rw:15},
   {k:'housefood',w:0,how:'神殿の依頼ボードをタップ →「家具」→「食料箱」をはる。できたら「おく」で家の中に置く',g:'earth',L:[['K','夜、「コワイノ」からにげてるときにねぇ、おなかがすいて、外の食料箱まで走っちゃう子がいるんだよぉ。'],['K','家の中に食料箱があったら、外に出なくても食べられるのにねぇ。']],X:[['K','これで、夜におなかがすいても、家の中で食べられるねぇ。'],['K','守り神さま、ありがとうねぇ。']],t:'家の中に食料箱を置こう',ln:'夜も、家の中でごはんが食べられたらいいねぇ',at:()=>HOUSES.length>0&&S.res.length>=3&&!houseFood(),ok:()=>houseFood(),n:1,now:()=>houseFood()?1:0,rw:15},
   {k:'oldhouse',w:1,how:'「おく」→「木の壁」をえらんで、北東の古い家のこわれた壁（下の3か所）に置く',g:'fire',L:[['K','夜になると、南から「コワイノ」がやってくるんだ。'],['K','北東の古い家、壁がくずれてるだろ？ あそこを直せば、中で夜をやりすごせるよ。']],X:[['K','よし、これで家になった！ 中にいれば、「コワイノ」も手を出せないさ。'],['K','ありがとよ、守り神。']],t:'古い家の壁を直そう',ln:'古い家を直せば、夜も安心なんだけどね',at:()=>!!S.enemyOn&&!HOUSES.length,ok:()=>HOUSES.length>0,n:1,now:()=>HOUSES.length?1:0,rw:10},
   {k:'yogan1',w:1,how:'「おく」→「ようがん台」を置く。せいれいが建てるのを待とう（石40・木5がいる）',g:'fire',L:[['K','ゆうべは、あぶなかったね。'],['K','火山の石で「ようがん台」を作れば、火の玉で「コワイノ」を追いはらえるんだ。'],['K','石をあつめて、建ててみないかい？']],X:[['K','ようがん台ができた！ これで夜も、こっちから戦えるね。'],['K','ありがとよ、守り神。']],t:'ようがん台を置こう',ln:'ようがん台があれば、夜も戦えるんだけどね',at:()=>(S.nights||0)>=1&&!!S.flags.yoganLearned&&cnt('yogan')<1,ok:()=>cnt('yogan')>=1,n:1,now:()=>cnt('yogan'),rw:15},
-  {k:'bossfood',w:0,how:'せいれいが木の実や畑でとってきた食べ物が、食料箱にたまる。おつげの「食料をあつめる」も使える',g:'earth',L:[['K','オオカゲが来る夜は、きっと長くなるよぉ。'],['K','おなかがすいても困らないように、食べ物をたっぷりためておこうねぇ。']],X:[['K','これだけあれば、長い夜でも安心だねぇ。'],['K','守り神さま、ありがとうねぇ。']],t:'食べ物を30こためよう',ln:'長い夜にそなえて、食べ物をためておきたいねぇ',at:()=>qAt('オオカゲを追いはらおう'),ok:()=>FOODN()>=30,n:30,now:()=>FOODN(),rw:10},
-  {k:'twbox0',w:0,how:'神殿の依頼ボードをタップ →「家具」→「素材箱」などをはる。素材箱1つに50こ入る',g:'earth',L:[['K','台座の木と石を、ぜんぶしまっておけるかなぁ。'],['K','素材箱を、もう少しふやしておこうねぇ。']],X:[['K','これで、台座の素材もぜんぶしまえるねぇ。'],['K','守り神さま、ありがとうねぇ。']],t:'素材箱に150こ入るようにしよう',ln:'台座の素材を、しまっておく場所がほしいねぇ',at:()=>qAt('守護の台座を建ててもらおう')&&matCap()<150,ok:()=>matCap()>=150,n:150,now:()=>matCap(),rw:10},
-  {k:'twwood0',w:0,how:'せいれいが木をきって、木材をあつめる。おつげの「木をあつめる」や、伐採場でもふえる',g:'wood',L:[['K','台座って、すごく大きいんだって！'],['K','木材が100こいるんだ。みんなで、いっぱいあつめよう！']],X:[['K','木材が100こたまった！ 台座、建てられそうだね！'],['K','守り神さま、ありがとう！']],t:'木材を100こためよう',ln:'台座のために、木材をいっぱいあつめたいな',at:()=>qAt('守護の台座を建ててもらおう')&&(S.mat.wood||0)<100,ok:()=>(S.mat.wood||0)>=100,n:100,now:()=>S.mat.wood||0,rw:10},
-  {k:'twstone0',w:0,how:'せいれいが岩をほって、石材をあつめる。おつげの「石をあつめる」や、採石場でもふえる',g:'earth',L:[['K','台座の土台には、石材が50こいるんだよぉ。'],['K','岩をほって、少しずつためていこうねぇ。']],X:[['K','石材が50こ、そろったねぇ。'],['K','守り神さま、ありがとうねぇ。']],t:'石材を50こためよう',ln:'台座の土台にする石材を、ためておきたいねぇ',at:()=>qAt('守護の台座を建ててもらおう')&&(S.mat.stone||0)<50,ok:()=>(S.mat.stone||0)>=50,n:50,now:()=>S.mat.stone||0,rw:10},
+  {k:'bossfood',w:0,how:'せいれいが木の実や畑でとってきた食べ物が、食料箱にたまる。おつげの「食料をあつめる」も使える',g:'earth',L:[['K','オオカゲが来る夜は、きっと長くなるよぉ。'],['K','おなかがすいても困らないように、食べ物をたっぷりためておこうねぇ。']],X:[['K','これだけあれば、長い夜でも安心だねぇ。'],['K','守り神さま、ありがとうねぇ。']],t:'食べ物を30こためよう',ln:'長い夜にそなえて、食べ物をためておきたいねぇ',at:()=>qAt('ookage'),ok:()=>FOODN()>=30,n:30,now:()=>FOODN(),rw:10},
+  {k:'twbox0',w:0,how:'神殿の依頼ボードをタップ →「家具」→「素材箱」などをはる。素材箱1つに50こ入る',g:'earth',L:[['K','台座の木と石を、ぜんぶしまっておけるかなぁ。'],['K','素材箱を、もう少しふやしておこうねぇ。']],X:[['K','これで、台座の素材もぜんぶしまえるねぇ。'],['K','守り神さま、ありがとうねぇ。']],t:'素材箱に150こ入るようにしよう',ln:'台座の素材を、しまっておく場所がほしいねぇ',at:()=>qAt('tower')&&matCap()<150,ok:()=>matCap()>=150,n:150,now:()=>matCap(),rw:10},
+  {k:'twwood0',w:0,how:'せいれいが木をきって、木材をあつめる。おつげの「木をあつめる」や、伐採場でもふえる',g:'wood',L:[['K','台座って、すごく大きいんだって！'],['K','木材が100こいるんだ。みんなで、いっぱいあつめよう！']],X:[['K','木材が100こたまった！ 台座、建てられそうだね！'],['K','守り神さま、ありがとう！']],t:'木材を100こためよう',ln:'台座のために、木材をいっぱいあつめたいな',at:()=>qAt('tower')&&(S.mat.wood||0)<100,ok:()=>(S.mat.wood||0)>=100,n:100,now:()=>S.mat.wood||0,rw:10},
+  {k:'twstone0',w:0,how:'せいれいが岩をほって、石材をあつめる。おつげの「石をあつめる」や、採石場でもふえる',g:'earth',L:[['K','台座の土台には、石材が50こいるんだよぉ。'],['K','岩をほって、少しずつためていこうねぇ。']],X:[['K','石材が50こ、そろったねぇ。'],['K','守り神さま、ありがとうねぇ。']],t:'石材を50こためよう',ln:'台座の土台にする石材を、ためておきたいねぇ',at:()=>qAt('tower')&&(S.mat.stone||0)<50,ok:()=>(S.mat.stone||0)>=50,n:50,now:()=>S.mat.stone||0,rw:10},
   {k:'festdeco',w:0,how:'神殿の依頼ボードをタップ →「庭」→生垣などをはる。できたら「おく」で置く',g:'wood',L:[['K','ヌシ様をむかえる日まで、あと少しだね！'],['K','おまつりみたいに、村をかざりたいな！ かざりを、あと5つ置けないかな？']],X:[['K','村が、おまつりみたいになった！ ヌシ様、よろこんでくれるかな。'],['K','守り神さま、ありがとう！']],t:'おまつりのかざりをあと5つ置こう',ln:'ヌシ様をむかえる前に、村をかざりたいな',at:()=>!!S.finalDay&&!S.cleared,ok:()=>CN(['hedge','birdbath','parasol','arch','signpost','monstera'])-((S.subB||{}).festdeco||0)>=5,n:5,now:()=>Math.max(0,CN(['hedge','birdbath','parasol','arch','signpost','monstera'])-((S.subB||{}).festdeco||0)),base:()=>CN(['hedge','birdbath','parasol','arch','signpost','monstera']),rw:20},
   {k:'festlight',w:0,how:'神殿の依頼ボードをタップ →「あかり」→たいまつやランタンなどをはる。できたら「おく」で置く',g:'fire',L:[['K','ヌシ様が来る道、明るくしておきたいね。'],['K','あかりを、あと5つふやそうじゃないか。']],X:[['K','よし、村じゅうが明るくなった！ これならヌシ様も、まよわないね。'],['K','ありがとよ、守り神。']],t:'あかりをあと5つ置こう',ln:'ヌシ様が来る道を、明るくしておきたいね',at:()=>!!S.finalDay&&!S.cleared,ok:()=>CN(['torch','lamp','campfire','lantern','candle'])-((S.subB||{}).festlight||0)>=5,n:5,now:()=>Math.max(0,CN(['torch','lamp','campfire','lantern','candle'])-((S.subB||{}).festlight||0)),base:()=>CN(['torch','lamp','campfire','lantern','candle']),rw:20},
   {k:'bedall',w:0,how:'神殿の依頼ボードをタップ →「家具」→「ベッド」をはる。できたら「おく」で家の中に置く。家が足りなければ、家もふやそう',g:'earth',L:[['K','なかまが、どんどんふえてきたねぇ。'],['K','新しく来た子も、家のベッドで眠れるようにしてあげたいねぇ。']],X:[['K','みんなの分のベッドが、そろったねぇ。'],['K','守り神さま、ありがとうねぇ。']],t:'みんなのベッドを用意しよう',ln:'新しく来た子にも、ベッドを用意してあげたいねぇ',at:()=>S.res.length>=5&&!!(S.subDone||{}).bed3&&houseBedCount()<S.res.length,ok:()=>houseBedCount()>=S.res.length,get n(){return S?S.res.length:1},now:()=>houseBedCount(),rw:15},
-  {k:'benchwood',w:1,how:'ベンチを置くと、木の力がたまる。たまった次の朝、神殿の「！」で木のせいれいを呼べる',g:'water',L:[['K','花を植えるのは、木のせいれいの役目なのです。'],['K','ベンチを置いて、みなさんがくつろぐと、木の力がたまるそうですよ。'],['K','木の力がたまったら、木のせいれいを呼べますね。']],X:[['K','木の力が、たまりましたね。'],['K','守り神さま、ありがとうございます。']],t:'ベンチを置いて、木の力をためよう',ln:'木のせいれいに来てもらえたら、花が植えられるのですが',at:()=>qAt('西の温泉に、あし湯をつくろう')&&elemCount('wood')<1&&(ATTR.wood||0)<needFor('wood'),ok:()=>elemCount('wood')>=1||(ATTR.wood||0)>=needFor('wood'),get n(){return S?needFor('wood'):1},now:()=>Math.floor(ATTR.wood||0),rw:10},
-  {k:'yoganup',w:1,how:'ようがん台をタップして「強化する」をえらぶ。パワーと素材を使う',g:'fire',L:[['K','火山の上の、いやな気配……きっと大物が来るよ。'],['K','ようがん台を、もっと強くしておきたいね。']],X:[['K','ようがん台の火の玉、ひとまわり大きくなった！'],['K','これなら、大物が来ても、やりあえるよ。ありがとよ、守り神。']],t:'ようがん台を強くしよう',ln:'ようがん台を、もっと強くしておきたいね',at:()=>qAt('ヒノオオカゲを追いはらおう')&&!yoganUp(),ok:()=>yoganUp(),n:1,now:()=>yoganUp()?1:0,rw:15},
-  {k:'fbench2',w:1,how:'神殿の依頼ボードをタップ →「庭」→「ベンチ」をはる。できたら「おく」で外に置く',g:'fire',L:[['K','はたらきづめだと、くたびれちまうよ。'],['K','外にベンチがあったら、ひと休みできるんだけどね。2つあると、ならんでおしゃべりもできるさ。']],X:[['K','ふう、いい座りごこちだ。休むと、また力がわいてくるね。'],['K','ありがとよ、守り神。']],t:'外にベンチを2つ置こう',ln:'外でひと休みできる所がほしいね',at:()=>qAt('村レベルを3にしよう'),ok:()=>cnt('bench')>=2,n:2,now:()=>cnt('bench'),rw:10},
-  {k:'fbed2',w:1,how:'神殿の依頼ボードをタップ →「家具」→「ベッド」をはる。できたら「おく」で家の中に置く',g:'water',L:[['K','夜は、まだ冷えますね。'],['K','家の中に、ベッドがもう1つあれば、ふたりともあたたかく眠れるのですが。']],X:[['K','ふかふかです……。これで、ぐっすり眠れますね。'],['K','守り神さま、ありがとうございます。']],t:'家のベッドを2つにしよう',ln:'家の中で、あたたかく眠れたらいいのですが',at:()=>qAt('村レベルを3にしよう')&&HOUSES.length>0,ok:()=>houseBedCount()>=2,n:2,now:()=>houseBedCount(),rw:10},
-  {k:'twbox1',w:1,how:'神殿の依頼ボードをタップ →「家具」→「素材箱」などをはる。素材箱1つに50こ入る',g:'water',L:[['K','台座には、木材と石材がたくさんいるそうです。'],['K','ぜんぶしまえるように、素材箱をふやしておきましょう。']],X:[['K','これで、台座の素材もしまえますね。'],['K','守り神さま、ありがとうございます。']],t:'素材箱に225こ入るようにしよう',ln:'台座の素材を、しまっておく場所がほしいですね',at:()=>qAt('守護の台座を建ててもらおう')&&matCap()<225,ok:()=>matCap()>=225,n:225,now:()=>matCap(),rw:10},
-  {k:'twmat1',w:1,how:'せいれいが木をきったり、岩をほったりしてあつめる。カゲドロボウに盗まれないように、素材箱は村のおくに',g:'fire',L:[['K','台座には、木材150と石材75がいるんだってさ。'],['K','夜のカゲドロボウに盗まれないよう、気をつけてためていこうじゃないか。']],X:[['K','木材も石材も、そろったね！'],['K','ありがとよ、守り神。']],t:'木材150・石材75をためよう',ln:'台座の木材と石材を、ためておきたいね',at:()=>qAt('守護の台座を建ててもらおう')&&((S.mat.wood||0)<150||(S.mat.stone||0)<75),ok:()=>(S.mat.wood||0)>=150&&(S.mat.stone||0)>=75,n:225,now:()=>Math.min(150,S.mat.wood||0)+Math.min(75,S.mat.stone||0),rw:15},
+  {k:'benchwood',w:1,how:'ベンチを置くと、木の力がたまる。たまった次の朝、神殿の「！」で木のせいれいを呼べる',g:'water',L:[['K','花を植えるのは、木のせいれいの役目なのです。'],['K','ベンチを置いて、みなさんがくつろぐと、木の力がたまるそうですよ。'],['K','木の力がたまったら、木のせいれいを呼べますね。']],X:[['K','木の力が、たまりましたね。'],['K','守り神さま、ありがとうございます。']],t:'ベンチを置いて、木の力をためよう',ln:'木のせいれいに来てもらえたら、花が植えられるのですが',at:()=>qAt('ashiyu')&&elemCount('wood')<1&&(ATTR.wood||0)<needFor('wood'),ok:()=>elemCount('wood')>=1||(ATTR.wood||0)>=needFor('wood'),get n(){return S?needFor('wood'):1},now:()=>Math.floor(ATTR.wood||0),rw:10},
+  {k:'yoganup',w:1,how:'ようがん台をタップして「強化する」をえらぶ。パワーと素材を使う',g:'fire',L:[['K','火山の上の、いやな気配……きっと大物が来るよ。'],['K','ようがん台を、もっと強くしておきたいね。']],X:[['K','ようがん台の火の玉、ひとまわり大きくなった！'],['K','これなら、大物が来ても、やりあえるよ。ありがとよ、守り神。']],t:'ようがん台を強くしよう',ln:'ようがん台を、もっと強くしておきたいね',at:()=>qAt('hinoookage')&&!yoganUp(),ok:()=>yoganUp(),n:1,now:()=>yoganUp()?1:0,rw:15},
+  {k:'fbench2',w:1,how:'神殿の依頼ボードをタップ →「庭」→「ベンチ」をはる。できたら「おく」で外に置く',g:'fire',L:[['K','はたらきづめだと、くたびれちまうよ。'],['K','外にベンチがあったら、ひと休みできるんだけどね。2つあると、ならんでおしゃべりもできるさ。']],X:[['K','ふう、いい座りごこちだ。休むと、また力がわいてくるね。'],['K','ありがとよ、守り神。']],t:'外にベンチを2つ置こう',ln:'外でひと休みできる所がほしいね',at:()=>qAt('lv3'),ok:()=>cnt('bench')>=2,n:2,now:()=>cnt('bench'),rw:10},
+  {k:'fbed2',w:1,how:'神殿の依頼ボードをタップ →「家具」→「ベッド」をはる。できたら「おく」で家の中に置く',g:'water',L:[['K','夜は、まだ冷えますね。'],['K','家の中に、ベッドがもう1つあれば、ふたりともあたたかく眠れるのですが。']],X:[['K','ふかふかです……。これで、ぐっすり眠れますね。'],['K','守り神さま、ありがとうございます。']],t:'家のベッドを2つにしよう',ln:'家の中で、あたたかく眠れたらいいのですが',at:()=>qAt('lv3')&&HOUSES.length>0,ok:()=>houseBedCount()>=2,n:2,now:()=>houseBedCount(),rw:10},
+  {k:'twbox1',w:1,how:'神殿の依頼ボードをタップ →「家具」→「素材箱」などをはる。素材箱1つに50こ入る',g:'water',L:[['K','台座には、木材と石材がたくさんいるそうです。'],['K','ぜんぶしまえるように、素材箱をふやしておきましょう。']],X:[['K','これで、台座の素材もしまえますね。'],['K','守り神さま、ありがとうございます。']],t:'素材箱に225こ入るようにしよう',ln:'台座の素材を、しまっておく場所がほしいですね',at:()=>qAt('tower')&&matCap()<225,ok:()=>matCap()>=225,n:225,now:()=>matCap(),rw:10},
+  {k:'twmat1',w:1,how:'せいれいが木をきったり、岩をほったりしてあつめる。カゲドロボウに盗まれないように、素材箱は村のおくに',g:'fire',L:[['K','台座には、木材150と石材75がいるんだってさ。'],['K','夜のカゲドロボウに盗まれないよう、気をつけてためていこうじゃないか。']],X:[['K','木材も石材も、そろったね！'],['K','ありがとよ、守り神。']],t:'木材150・石材75をためよう',ln:'台座の木材と石材を、ためておきたいね',at:()=>qAt('tower')&&((S.mat.wood||0)<150||(S.mat.stone||0)<75),ok:()=>(S.mat.wood||0)>=150&&(S.mat.stone||0)>=75,n:225,now:()=>Math.min(150,S.mat.wood||0)+Math.min(75,S.mat.stone||0),rw:15},
   {k:'chair2',how:'神殿の依頼ボードをタップ →「家具」→いすやスツールをはる。できたら「おく」で食卓の隣に置く',g:'wood',L:[["K", "食べ物に土がつかなくなったの、うれしいな！ でも、立ったまま食べてると足がつかれちゃう。"], ["K", "ごはんを食べるとき、ぼくも座れたらいいなあ。"]],X:[["K", "わあ、これなら座って食べられるね！"], ["K", "足もらくちん。ゆっくり食べようっと。"], ["K", "守り神さま、ありがとう！"]],t:'いすを2つ置こう',ln:"ごはんを食べるとき、ぼくも座れたらいいな",at:()=>cnt('table')>=1,ok:()=>diningSeatCount()>=2,n:2,now:()=>diningSeatCount(),rw:10},
   {k:'bed3',how:'神殿の依頼ボードをタップ →「家具」→「ベッド」をはる。できたら「おく」で家の中に置く',g:'earth',L:[["K", "なかまが3人になって、にぎやかだねぇ。"], ["K", "……でもねぇ、まだ地面で寝ている子がいるんだよぉ。朝、背中が冷たそうでねぇ。"], ["K", "守り神さま、みんながあったかく眠れるように、してあげられないかなぁ。"]],X:[["K", "ふかふかが、みんなの分あるねぇ。これなら、冷たくないよぉ。"], ["K", "守り神さま、ありがとうねぇ。"]],w:0,t:'ベッドを3つにしよう',ln:"地面で寝ている子が、あったかく眠れたらいいねぇ",at:()=>S.res.length>=3&&houseBedCount()<3,learn:['bed'],ok:()=>houseBedCount()>=3,n:3,now:()=>houseBedCount(),rw:15},
   {k:'light3',how:'神殿の依頼ボードをタップ →「あかり」→たいまつやかがり火をはる。できたら「おく」で置く。たき火も数に入る',g:'fire',L:[["K", "夜の村、まっくらじゃないか。足もとが見えなくて、落ち着かないよ。"], ["K", "守り神、あたいの火、もっと遠くまで届けられないかい？"]],X:[['K','よし、明るくなった！ これで夜も、ちっとはマシだね。'],['K','ありがとよ、守り神。恩に着るよ。']],t:'たいまつ・かがり火・たき火を3つ置こう',ln:'夜の村、もうちょっと明るいといいね',at:()=>elemCount('fire')>=1,ok:()=>CN(['torch','lamp','campfire'])>=3,n:3,now:()=>CN(['torch','lamp','campfire']),rw:15},
@@ -2143,16 +2121,16 @@ const SUBQ=[/* サブクエスト：メインと別に、いつでもできる�
   {k:'boost1',how:'画面の下の「せいれい」をタップ → 強化したい子をえらぶ → 上の「強化」タブをタップ → 「パワーをそそぐ」をタップ。パワーを使って、ランダムな能力が1つ上がる',g:'earth',L:[['K','ねえ守り神さま、せいれいはね、パワーをそそいでもらうと、ちょっとだけ強くなれるんだよぉ。'],['K','だれか1人でいいから、そそいであげてねぇ。']],X:[['K','わぁ、元気になったみたいだねぇ。'],['K','これからも、ときどきそそいであげてねぇ。']],w:0,t:'せいれいにパワーをそそごう',ln:'せいれいに、パワーをそそいでみてほしいなぁ',at:()=>S.res.some(r=>r.elem==='fire'&&r.name===keyName('fire')),ok:()=>S.res.some(r=>(r.boost||0)>=1),n:1,now:()=>S.res.some(r=>(r.boost||0)>=1)?1:0,rw:10},
   {k:'oven',how:'神殿の依頼ボードをタップ →「ごはん」→「かまど」をはる。置いたら「みる」でかまどをタップして、作る料理をえらぶ',g:'fire',L:[["K", "おい守り神、あたいの火、ただ燃やしとくのはもったいないだろ？"], ["K", "食べ物をあっためたら、うまくなりそうなんだ。でも、そのまま火に近づけると、真っ黒になっちまってさ。"], ["K", "あんた、なにか思いつかないかい？"]],X:[["K", "へえ、この中に火を入れるのかい。あんた、よく考えたね！"], ["K", "焼けた匂い、たまらないだろ？ あたいも、うまくできたよ。"], ["K", "ありがとよ、守り神。"]],w:0,t:'かまどで料理してもらおう',ln:'火を使って、あったかいごはんを作れないかなぁ',at:()=>elemCount('fire')>=1,learn:['oven'],ok:()=>!!S.flags.cooked,rw:15},
   {k:'board',how:'木材15・石材10を集めて、この画面の「わたす」をタップ',g:'earth',L:[["K", "依頼ボード、紙が重なって、下の絵が見えないねぇ……。"], ["K", "もっとたくさん、見えるようにできないかなぁ。"], ["K", "守り神さまが形を考えてくれたら、ぼくも手伝うよぉ。"]],X:[['K','板をつぎたしたよぉ。これで、もっとたくさん貼れるねぇ。'],['K','守り神さま、ありがとうねぇ。']],w:0,t:'依頼ボードを広げよう',ln:"紙が重なって、下の絵が見えないねぇ",at:()=>elemCount('fire')>=1,pay:{wood:15,stone:10},ok:()=>!!S.flags.board5,rw:3},
-  {k:'lotus3',how:'「おく」→「ハスの種」を池の上に置く。せいれいに植えてもらい、花が咲くのを待とう',g:'earth',L:[['K','水の力をためるなら、池にハスを咲かせるといいよぉ。'],['K','ハスの種、少しあげるねぇ。']],X:[['K','ハスが咲いたねぇ。池が、うれしそうだよぉ。'],['K','守り神さま、ありがとうねぇ。']],w:0,t:'ハスを5つ咲かせよう',ln:'池にハスを咲かせたら、水の力がたまるよぉ。種、あげるねぇ',at:()=>qAt('水のせいれいをむかえよう'),give:{lotus:5},ok:()=>bloomCount('lotus')>=5,n:5,now:()=>bloomCount('lotus'),rw:10},
-  {k:'lily5',how:'「おく」→「ゆりの種」を置く。せいれいに植えてもらい、花が咲くのを待とう',g:'earth',L:[['K','風の力をためるなら、ゆりがいいねぇ。'],['K','ゆりの種、あげるよぉ。5つ咲いたら、いい風がふくかもねぇ。']],X:[['K','ゆりの香りが、風にのってるねぇ。'],['K','守り神さま、ありがとうねぇ。']],w:0,t:'ゆりを5つ咲かせよう',ln:'ゆりを咲かせれば、風の力がたまるはずだねぇ。種、あげるよぉ',at:()=>qAt('風のせいれいをむかえよう'),give:{lily:5},ok:()=>bloomCount('lily')>=5,n:5,now:()=>bloomCount('lily'),rw:10},
-  {k:'swing1',how:'神殿の依頼ボードをタップ →「遊び」→ブランコをはる。できたら「おく」で外に置く。風の力もたまる',g:'wood',L:[['K','ねえ、ゆらゆら揺れるブランコ、つくってみない？'],['K','風を受けて揺れるから、風の力もたまるんだって！']],X:[['K','ブランコ、できた！ 風がきもちいいね！'],['K','守り神さま、ありがとう！']],w:0,t:'ブランコを置こう',ln:'ブランコをつくったら、風の力がたまるんだって！',at:()=>qAt('風のせいれいをむかえよう'),learn:['swing'],ok:()=>CN(['swing'])>=1,n:1,now:()=>CN(['swing']),rw:10},
+  {k:'lotus3',how:'「おく」→「ハスの種」を池の上に置く。せいれいに植えてもらい、花が咲くのを待とう',g:'earth',L:[['K','水の力をためるなら、池にハスを咲かせるといいよぉ。'],['K','ハスの種、少しあげるねぇ。']],X:[['K','ハスが咲いたねぇ。池が、うれしそうだよぉ。'],['K','守り神さま、ありがとうねぇ。']],w:0,t:'ハスを5つ咲かせよう',ln:'池にハスを咲かせたら、水の力がたまるよぉ。種、あげるねぇ',at:()=>qAt('water'),give:{lotus:5},ok:()=>bloomCount('lotus')>=5,n:5,now:()=>bloomCount('lotus'),rw:10},
+  {k:'lily5',how:'「おく」→「ゆりの種」を置く。せいれいに植えてもらい、花が咲くのを待とう',g:'earth',L:[['K','風の力をためるなら、ゆりがいいねぇ。'],['K','ゆりの種、あげるよぉ。5つ咲いたら、いい風がふくかもねぇ。']],X:[['K','ゆりの香りが、風にのってるねぇ。'],['K','守り神さま、ありがとうねぇ。']],w:0,t:'ゆりを5つ咲かせよう',ln:'ゆりを咲かせれば、風の力がたまるはずだねぇ。種、あげるよぉ',at:()=>qAt('wind'),give:{lily:5},ok:()=>bloomCount('lily')>=5,n:5,now:()=>bloomCount('lily'),rw:10},
+  {k:'swing1',how:'神殿の依頼ボードをタップ →「遊び」→ブランコをはる。できたら「おく」で外に置く。風の力もたまる',g:'wood',L:[['K','ねえ、ゆらゆら揺れるブランコ、つくってみない？'],['K','風を受けて揺れるから、風の力もたまるんだって！']],X:[['K','ブランコ、できた！ 風がきもちいいね！'],['K','守り神さま、ありがとう！']],w:0,t:'ブランコを置こう',ln:'ブランコをつくったら、風の力がたまるんだって！',at:()=>qAt('wind'),learn:['swing'],ok:()=>CN(['swing'])>=1,n:1,now:()=>CN(['swing']),rw:10},
   {k:'lumber1',how:'「おく」→「伐採場」を置く（木25・石8）。せいれいが建てるのを待とう。ここで働くと木材がふえる',g:'wood',L:[['K','木材、ちょっとずつ足りなくなってきたね。'],['K','木を切るたびに、森がさみしくなっちゃう……。木を切らなくても、木材がもらえる場所があったらいいのにな。']],X:[['K','伐採場ができた！ ここで働けば、木をへらさずに木材がもらえるんだね。'],['K','守り神さま、ありがとう！']],learn:['lumber'],w:0,t:'伐採場を建てよう',ln:'木を切らなくても、木材がふえたらいいな',at:()=>S.lv>=5,ok:()=>cnt('lumber')>=1,n:1,now:()=>cnt('lumber'),rw:10},
   {k:'quarry1',how:'「おく」→「採石場」を置く（木15・石25）。せいれいが建てるのを待とう。ここで働くと石材がふえる',g:'earth',L:[['K','石も、だいぶ使っちゃったねぇ。'],['K','岩をくだくのも大変だよぉ。石をもらえる場所を、つくれないかなぁ。']],X:[['K','採石場ができたねぇ。ここなら、岩をへらさずに石がもらえるよぉ。'],['K','守り神さま、ありがとうねぇ。']],learn:['quarry'],w:0,t:'採石場を建てよう',ln:'石も、もっと楽に集めたいなぁ',at:()=>S.lv>=7,ok:()=>cnt('quarry')>=1,n:1,now:()=>cnt('quarry'),rw:10},
   {k:'stele1',how:'「おく」→「石碑」を置く（木12・石50）。土のせいれいが建てるのを待とう。まわりの壁がじょうぶになる',g:'earth',L:[['K','コワイノに壁をたたかれると、いつもひやひやするよぉ。'],['K','壁を、もっとじょうぶにできる物があったら安心だねぇ。']],X:[['K','石碑が立ったねぇ。まわりの壁が、前よりしっかりしてるよぉ。'],['K','守り神さま、ありがとうねぇ。']],learn:['stele'],w:0,t:'石碑を建てよう',ln:'壁をもっとじょうぶにしたいなぁ',at:()=>S.lv>=6&&elemCount('earth')>=1,ok:()=>cnt('stele')>=1,n:1,now:()=>cnt('stele'),rw:12},
   {k:'fountain1',how:'「おく」→「噴水」を置く（木15・石60）。水のせいれいが建てるのを待とう。3人まで遊べる',g:'water',L:[['K','みんなが遊べる場所が、もっとほしいですね。'],['K','水が空に向かってふき出す、広場の真ん中のような……そんな場所は、どうでしょう。']],X:[['K','噴水ができました。水がきらきらして、きれいですね。'],['K','守り神さま、ありがとうございます。']],learn:['fountain'],w:0,t:'噴水を建てよう',ln:'みんなで遊べる広場がほしいです',at:()=>S.lv>=6&&elemCount('water')>=1,ok:()=>cnt('fountain')>=1,n:1,now:()=>cnt('fountain'),rw:12},
   {k:'lighthouse1',how:'「おく」→「灯台」を置く（木25・石35）。火のせいれいが建てるのを待とう。遠くまで照らす',g:'fire',L:[['K','夜の見回り、まだ暗いところがあって不安なんだ。'],['K','もっと遠くまで照らせる、でっかい灯りがあれば、いいんだけどね。']],X:[['K','おお、灯台だ！ これなら遠くまでよく見える。'],['K','ありがとよ、守り神。']],learn:['lighthouse'],w:0,t:'灯台を建てよう',ln:'もっと遠くまで照らせたらいいな',at:()=>S.lv>=7&&elemCount('fire')>=1,ok:()=>cnt('lighthouse')>=1,n:1,now:()=>cnt('lighthouse'),rw:12},
   {k:'wmill',how:'「おく」→「風車」を置く（木60・石35）。せいれいが建てるのを待とう',learn:['windmill'],g:'wood',L:[["K", "ねえ、風って見えないけど、葉っぱをくるくる回すでしょ。"], ["K", "あの力、もっと大きなものを回せたりするのかな？ 守り神さま、見てみたいな！"]],X:[['K','風車がまわってる！ 見てるだけで、たのしいね！'],['K','守り神さま、ありがとう！']],w:0,t:'風車を建てよう',ln:"風がものを回すところ、もっと見てみたいな",at:()=>S.lv>=8&&elemCount('wind')>=1,ok:()=>cnt('windmill')>=1,n:1,now:()=>cnt('windmill'),rw:10},
-  {k:'clover3',how:'「おく」→「シロツメクサの種」を置く。せいれいに植えてもらい、花が咲くのを待とう',g:'wood',L:[['K','ねえ見て、シロツメクサの種を見つけたよ！'],['K','木の力がたまるんだって。5つ咲かせてみよう！']],X:[['K','シロツメクサ、かわいい！ 四つ葉、さがしてみようっと！'],['K','守り神さま、ありがとう！']],w:0,t:'シロツメクサを5つ咲かせよう',ln:'シロツメクサの種、見つけたよ！ 木の力がたまるんだって！',at:()=>qAt('木のせいれいを6人にしよう'),give:{clover:5},ok:()=>bloomCount('clover')>=5,n:5,now:()=>bloomCount('clover'),rw:10},
+  {k:'clover3',how:'「おく」→「シロツメクサの種」を置く。せいれいに植えてもらい、花が咲くのを待とう',g:'wood',L:[['K','ねえ見て、シロツメクサの種を見つけたよ！'],['K','木の力がたまるんだって。5つ咲かせてみよう！']],X:[['K','シロツメクサ、かわいい！ 四つ葉、さがしてみようっと！'],['K','守り神さま、ありがとう！']],w:0,t:'シロツメクサを5つ咲かせよう',ln:'シロツメクサの種、見つけたよ！ 木の力がたまるんだって！',at:()=>qAt('wood6'),give:{clover:5},ok:()=>bloomCount('clover')>=5,n:5,now:()=>bloomCount('clover'),rw:10},
   {k:'toy2',how:'神殿の依頼ボードをタップ →「遊び」→砂場をはる。できたら「おく」で置く',g:'fire',L:[["K", "なあ、守り神。ここ、走りまわれる場所はあるけど、ちょっと物足りなくないか？"], ["K", "砂の山をつくったり、穴をほったり……そういう遊び場があったら、みんな喜ぶと思うんだ。"], ["K", "守り神、どんな形を思い浮かべる？"]],X:[['K','おお、砂場だ！ さっそく山をつくろうじゃないか！'],['K','ありがとよ、守り神。']],t:'砂場を置こう',ln:'みんなで遊べる場所がほしいな！',at:()=>S.res.some(r=>r.elem==='fire'&&r.name===keyName('fire')),learn:['sandbox'],ok:()=>CN(['sandbox'])>=1,n:1,now:()=>CN(['sandbox']),rw:15},
   {k:'toy3',w:4,how:'神殿の依頼ボードをタップ →「遊び」→シーソーをはる。できたら「おく」で置く',g:'wind',L:[["K", "フッ……風は、ゆれるものに宿るのだよ。"], ["K", "板の両はしに乗って、ギッコン、バッタン……そんな遊び道具があれば、きっと風も楽しい。"], ["K", "守り神、きみなら、どんな形を思い浮かべる？"]],X:[['K','見たまえ、風がシーソーを動かしている。…美しいね。'],['K','…ありがとう、守り神。']],t:'シーソーを置こう',ln:'ギッコン、バッタン、遊びたいな！',at:()=>elemCount('wind')>=1,learn:['seesaw'],ok:()=>CN(['seesaw'])>=1,n:1,now:()=>CN(['seesaw']),rw:15},
   {k:'deco3',how:'神殿の依頼ボードをタップ →「庭」→生垣などをはる。できたら「おく」で置く。かんようしょくぶつも数に入る',g:'wood',L:[["K", "ねえ、村をもっとかわいくしたいな！"], ["K", "花とか、小鳥とか、好きなものを見ながら歩けたら、うれしいなあ。"], ["K", "守り神さま、どんなふうになるかな？"]],X:[['K','村が、どんどんかわいくなってく！ ありがとう、守り神さま！']],t:'かざりを3つ置こう',ln:"花や小鳥をながめながら歩けたらいいな",at:()=>S.lv>=2,ok:()=>CN(['hedge','birdbath','parasol','arch','signpost','monstera'])>=3,n:3,now:()=>CN(['hedge','birdbath','parasol','arch','signpost','monstera']),rw:15},
@@ -2162,15 +2140,15 @@ const SUBQ=[/* サブクエスト：メインと別に、いつでもできる�
   {k:'house2',how:'家の壁で囲って、ドアをつけると家になる',g:'earth',L:[['K','なかまがふえて、家がちょっときゅうくつだねぇ…。'],['K','もう1けん、家があるといいなぁ。']],X:[['K','新しい家だぁ。のびのび眠れるねぇ。'],['K','ものをしまえる場所や、お湯につかってゆっくりできる場所もあったらいいねぇ。'],['K','守り神さま、ありがとうねぇ。']],t:'家を2けんにしよう',ln:'なかまがふえて、家がきゅうくつだねぇ',at:()=>S.baseLv>=1&&S.res.length>=4&&elemCount('fire')>=1,ok:()=>HOUSES.length>=2,n:2,now:()=>HOUSES.length,rw:20},
   {k:'room',how:'神殿の依頼ボードをタップ →「家具」から本棚・ラグ・かざり物など、好きなものをはる。できたら「おく」で家の中に置く（カーテンや壁にかけるものは数に入らない）',g:'wind',L:[["K", "家の中が、どうにも味気ないね。"], ["K", "本棚でも、ラグでも、ぼくの好きなもので、おへやをかざれたら……。"], ["K", "守り神、きみの考える形を、見せてくれないか。"]],X:[['K','うん、悪くない。ぼくにふさわしい、品のあるおへやだ。'],['K','…ありがとう、守り神。きみには感謝しているよ。']],t:'家の中に家具やかざりを5つ置こう',ln:'家の中を、すてきにかざりたいな',at:()=>HOUSES.length>=1&&S.lv>=3,ok:()=>inHouseFurn()>=5,n:5,now:()=>inHouseFurn(),rw:15},
   {k:'paint',how:'神殿の依頼ボードをタップ →「家具」→絵（額）をはる。できたら「おく」で家の横向きの家の壁にかける',g:'water',L:[["K", "家の壁を見ていると、少しさみしく感じます。"], ["K", "きれいな景色を、ここに残しておけたら……。季節が変わっても、見られるように。"], ["K", "守り神さま、そんなことはできるでしょうか。"]],X:[["K", "壁に、景色が……！ こんなふうに残せるのですね。"], ["K", "見ていると、考えごとがはかどります。"], ["K", "守り神さま、ありがとうございます。"]],t:'壁に絵をかざろう',ln:"きれいな景色を、壁に残しておけたら……",at:()=>S.lv>=7,ok:()=>Object.values(S.win||{}).some(v=>v==='paint1'||v==='paint2'||v==='paint3'),rw:15},
-  {k:'trap4',how:'神殿の依頼ボードをタップ →「ワナ」→とげの罠などをはる。できたら「おく」で「コワイノ」が通りそうな所に置く',g:'fire',L:[["K", "守ってばっかりじゃ、つまらないね。"], ["K", "近づいてくる「コワイノ」を、途中でびっくりさせてやりたいよ。"], ["K", "守り神、もう少し手を打てないかい？"]],X:[['K','いいねえ、罠だらけだ！ 来るなら来いってんだ！'],['K','ありがとよ、守り神。恩に着るよ。']],t:'罠をあと4つ置こう',at:()=>elemCount('fire')>=1&&S.enemyOn&&(WD===1||(S.bossKills||0)>=1||qAt('オオカゲを追いはらおう')),ok:()=>CN(TRAPS)-((S.subB||{}).trap4||0)>=4,n:4,now:()=>Math.max(0,CN(TRAPS)-((S.subB||{}).trap4||0)),base:()=>CN(TRAPS),rw:15},
+  {k:'trap4',how:'神殿の依頼ボードをタップ →「ワナ」→とげの罠などをはる。できたら「おく」で「コワイノ」が通りそうな所に置く',g:'fire',L:[["K", "守ってばっかりじゃ、つまらないね。"], ["K", "近づいてくる「コワイノ」を、途中でびっくりさせてやりたいよ。"], ["K", "守り神、もう少し手を打てないかい？"]],X:[['K','いいねえ、罠だらけだ！ 来るなら来いってんだ！'],['K','ありがとよ、守り神。恩に着るよ。']],t:'罠をあと4つ置こう',at:()=>elemCount('fire')>=1&&S.enemyOn&&(WD===1||(S.bossKills||0)>=1||qAt('ookage')),ok:()=>CN(TRAPS)-((S.subB||{}).trap4||0)>=4,n:4,now:()=>Math.max(0,CN(TRAPS)-((S.subB||{}).trap4||0)),base:()=>CN(TRAPS),rw:15},
   {k:'jar2',how:'神殿の依頼ボードをタップ →「庭」→「みずがめ」をはる。できたら「おく」で畑のそばに置く',w:0,g:'water',L:[["K", "畑まで水を運んでいると、すぐ土が乾いてしまうのです。"], ["K", "そばに水を残しておけたら、少しずつ染みこませられそうなのですが……。"], ["K", "守り神さま、何かよい形を思いつきませんか。"]],X:[["K", "この形なら、水をためておけるのですね。"], ["K", "……畑の土が、しっとりしています。守り神さま、ありがとうございます。"]],t:'みずがめを2つ置こう',at:()=>elemCount('water')>=1,ok:()=>cnt('jar')>=2,n:2,now:()=>cnt('jar'),rw:15},
   {k:'fish5',how:'池や水べがあると、せいれいがつりをする。水のせいれいはよくつれる。池のそばにいすを置くとつりスポットになり、つりやすくなる',g:'water',L:[["K", "池のさかな、何びきいるか、数えてみたいんです。"], ["K", "守り神さま、せいれいたちに、さかなをつってもらえませんか？ まずは5ひき。記録しておきますから。"], ["K", "水べでじっと待つのは、少し足がつかれますね。ゆっくり待てる場所も、あればうれしいのですが。"]],X:[['K','5ひき、たしかに。…記録によると、まだまだいそうですね。'],['K','守り神さま、ありがとうございます。']],t:'せいれいたちにさかなを5ひきつってもらおう',at:()=>elemCount('water')>=1,ok:()=>(S.fishN||0)-((S.subB||{}).fish5||0)>=5,n:5,now:()=>Math.max(0,(S.fishN||0)-((S.subB||{}).fish5||0)),base:()=>S.fishN||0,rw:15},
   {k:'parasol',how:'神殿の依頼ボードをタップ →「庭」→「パラソル」をはる。できたら「おく」で置く',g:'wind',L:[["K", "フッ……日なたは好きだが、ずっといると、さすがに暑いね。"], ["K", "風を感じながら、日ざしだけ避けられたら、優雅に過ごせそうだ。"], ["K", "守り神、きみに任せてみてもいいかな。"]],X:[['K','いい日かげだ。ここでお茶でもいかがかな？'],['K','…ありがとう、守り神。きみには感謝しているよ。']],t:'パラソルを置こう',at:()=>elemCount('wind')>=1,ok:()=>cnt('parasol')>=1,n:1,now:()=>cnt('parasol'),rw:15},
-  {k:'stor2',how:'神殿の依頼ボードをタップ →「収納」→「食料箱」をはる。できたら「おく」で置く',g:'wood',w:0,L:[['K','土地が広くなったね！ ごはんをしまう場所も、もっとほしいな。'],['K','食料箱をもう1つ、ふやせないかな？']],X:[['K','食料箱が2つ！ 食べものがいっぱい入るね！'],['K','守り神さま、ありがとう！']],t:'食料箱を2つにしよう',ln:'食料箱がもう1つあると安心だな',at:()=>qAt('基地を広げよう')&&S.baseLv>=1,ok:()=>cnt('stor')>=2,n:2,now:()=>cnt('stor'),rw:15},
+  {k:'stor2',how:'神殿の依頼ボードをタップ →「収納」→「食料箱」をはる。できたら「おく」で置く',g:'wood',w:0,L:[['K','土地が広くなったね！ ごはんをしまう場所も、もっとほしいな。'],['K','食料箱をもう1つ、ふやせないかな？']],X:[['K','食料箱が2つ！ 食べものがいっぱい入るね！'],['K','守り神さま、ありがとう！']],t:'食料箱を2つにしよう',ln:'食料箱がもう1つあると安心だな',at:()=>qAt('baseUp')&&S.baseLv>=1,ok:()=>cnt('stor')>=2,n:2,now:()=>cnt('stor'),rw:15},
   {k:'mbox2',how:'神殿の依頼ボードをタップ →「収納」→「素材箱」をはる。できたら「おく」で置く',g:'earth',w:0,L:[['K','木材も石材も、ふえてきたねぇ。'],['K','素材箱がもう1つあったら、あふれずにすむよぉ。']],X:[['K','素材箱が2つだぁ。ぜんぶしまえて、すっきりだねぇ。'],['K','守り神さま、ありがとうねぇ。']],t:'素材箱を2つにしよう',ln:'素材箱がもう1つほしいねぇ',at:()=>elemCount('water')>=1,ok:()=>cnt('mbox')>=2,n:2,now:()=>cnt('mbox'),rw:15},
   {k:'fence20',how:'神殿の依頼ボードをタップ →「道・囲い」→「柵」をはる。できたら「おく」で、広げた土地のふちに置く',g:'fire',w:0,L:[['K','土地が広がったぶん、守る場所もふえたね。'],['K','ふちのほうは、まだがら空きじゃないか。'],['K','柵をずらっと並べて、「コワイノ」の足を止めてやろうじゃないか。']],X:[['K','いいじゃないか、これならそう簡単には入ってこれないよ！'],['K','ありがとよ、守り神。']],t:'柵を20こ並べよう',ln:'ふちのほうが、がら空きだね',at:()=>S.baseLv>=1&&S.enemyOn,ok:()=>CN(['fence','logfence','bamboofence','stonefence'])>=20,n:20,now:()=>CN(['fence','logfence','bamboofence','stonefence']),rw:20},
   {k:'house3',how:'家の壁で囲んで、ドアをつけると家になる',g:'earth',w:0,L:[['K','広い土地ができたから、もう1けん、家を建てたいねぇ。'],['K','みんなで、ゆったり暮らせるようにしたいよぉ。']],X:[['K','3けんめの家だぁ。村らしくなってきたねぇ。'],['K','守り神さま、ありがとうねぇ。']],t:'家を3けんにしよう',ln:'もう1けん、家がほしいねぇ',at:()=>S.baseLv>=2&&!!(S.subDone||{}).house2,ok:()=>HOUSES.length>=3,n:3,now:()=>HOUSES.length,rw:25},
-  {k:'fruit1',how:'「おく」で果物の苗を置く。せいれいが植えるのを待とう。育つまで少しかかる',g:'wood',w:0,give:{fruit:1},L:[['K','広い土地に、おいしい実のなる木があったらいいな。'],['K','りんごの木、植えてみたい！']],X:[['K','わあ、りんごの木だ！ 実がなるの、たのしみだね！'],['K','守り神さま、ありがとう！']],t:'果物の木を育てよう',ln:'実のなる木があったらうれしいな',at:()=>qAt('基地を広げよう')&&S.baseLv>=1&&S.lv>=6,ok:()=>bloomCount('fruit')>=1,n:1,now:()=>bloomCount('fruit'),rw:15},
+  {k:'fruit1',how:'「おく」で果物の苗を置く。せいれいが植えるのを待とう。育つまで少しかかる',g:'wood',w:0,give:{fruit:1},L:[['K','広い土地に、おいしい実のなる木があったらいいな。'],['K','りんごの木、植えてみたい！']],X:[['K','わあ、りんごの木だ！ 実がなるの、たのしみだね！'],['K','守り神さま、ありがとう！']],t:'果物の木を育てよう',ln:'実のなる木があったらうれしいな',at:()=>qAt('baseUp')&&S.baseLv>=1&&S.lv>=6,ok:()=>bloomCount('fruit')>=1,n:1,now:()=>bloomCount('fruit'),rw:15},
 ];
 /* 建築に必要なLvは案内する。家具用の旧Lv待ちは、既存の報告待ちの互換性だけ残す */
 {const LVL={wood:[n=>[['K','お願いしたいことがあるんだけど、まだ村がちいさいみたい！'],['K','村がもっと育ったら、おねがいするね！']],n=>[['K','村、大きくなったね！ やったね、ありがとう！']]],
@@ -2197,8 +2175,8 @@ const THX={"table": "テーブル、ありがとう！ これで、ベリーを�
 SUBQ.forEach(q=>{const T=THX[q.k],X=q.X;if(!T||!X||!X.length)return;if(/ありがと|感謝|恩に着る/.test(X[X.length-1][1]))X[X.length-1]=['K',T];else X.push(['K',T])});
 for(const k in THXB)if(FIREB[k])FIREB[k].X.push(['K',THXB[k]]);
 function inHouseFurn(){let n=0;for(let j=0;j<S.obj.length;j++){const o=S.obj[j];if(!o||!BL[o]||BL[o].kind!=='furn'||BL[o].trap)continue;if(HOUSES.some(h=>h.set&&h.set.has(j)))n++}return n}
-function qAt(t){const qi=QUESTS.findIndex(q=>q.text===t);if(qi<0)return false;return (S.quest>qi||S.quest===qi&&!!S.qTalked)}/* そのメインクエストを受けたあと */
-function qDone(text){const index=QUESTS.findIndex(q=>q.text===text);if(index<0)return false;if(S.qStory===index)return false;return S.quest>index}
+function qAt(id){const qi=QUESTS.findIndex(q=>q.id===id);if(qi<0)return false;return (S.quest>qi||S.quest===qi&&!!S.qTalked)}/* そのメインクエストを受けたあと */
+function qDone(id){const index=QUESTS.findIndex(q=>q.id===id);if(index<0)return false;if(S.qStory===index)return false;return S.quest>index}
 const SUB_MAIN_AFTER={chair2:'食卓をたのもう',farm10:'畑を6つにしよう',light3:'火のせいれいをむかえよう',oven:'火のせいれいをむかえよう'};
 function subOfferReady(q){if(S.qStory!=null||QUEST_CLEAR_WAIT)return false;return WD!==0||!SUB_MAIN_AFTER[q.k]||qDone(SUB_MAIN_AFTER[q.k])}
 const LEVEL_HELP={2:['benchbreak','chair2'],3:['oven','bed3'],4:['jar2','farm10'],5:['toy2','deco3'],8:['room','paint','parasol']};
@@ -2226,7 +2204,7 @@ function checkSub(){const D=S.subDone||(S.subDone={}),Sn=S.subSeen||(S.subSeen={
   const spaced=!isNight()&&(S.subTalkAt==null||S.t-S.subTalkAt>=120);/* 新しいサブクエストは、昼だけ */
   if(spaced&&!Object.values(busy).some(q=>St[q.k]===1||St[q.k]===3)&&SL.filter(q=>!D[q.k]&&St[q.k]===2).length<4)for(const q of SL){if(D[q.k]||St[q.k])continue;if(busy[q.g]&&!LH.includes(q.k))continue;const w=keyName(q.g);if(!w||!q.at()||!subOfferReady(q))continue;St[q.k]=1;busy[q.g]=q;break}
   if(spaced&&waitingBellflowers()&&!SL.some(q=>St[q.k]===1||St[q.k]===3)&&SL.filter(q=>St[q.k]===2).length<3){const next=SL.find(q=>q.k.startsWith('seedwait_')&&!D[q.k]&&!St[q.k]&&q.at());if(next&&subOfferReady(next))St[next.k]=1}
-  const summonHelp=WD===0&&S.qStory==null&&S.qTalked?({'火のせいれいをむかえよう':'salvia3','水のせいれいをむかえよう':'lotus3','風のせいれいをむかえよう':'lily5'}[QUESTS[S.quest]?.text]||''):'',supportKeys=summonHelp?(summonHelp==='salvia3'?['salvia3','watch2']:summonHelp==='lily5'?['lily5','swing1']:[summonHelp]):[];
+  const summonHelp=WD===0&&S.qStory==null&&S.qTalked?({fire:'salvia3',water:'lotus3',wind:'lily5'}[QUESTS[S.quest]?.id]||''):'',supportKeys=summonHelp?(summonHelp==='salvia3'?['salvia3','watch2']:summonHelp==='lily5'?['lily5','swing1']:[summonHelp]):[];
   for(const k of supportKeys){if(D[k]||St[k])continue;const q=SL.find(q=>q.k===k);if(!q||!q.at()||!subOfferReady(q)||!keyName(q.g))continue;if(!isNight()&&(k===summonHelp||spaced)){St[k]=1;break}}
   const visiting=!!QUEST_CLEAR_WAIT&&!QUEST_CLEAR_WAIT.done||Object.values(SUB_CLEAR_WAIT).some(w=>w&&!w.done)||S.res.some(r=>(QUEST_VISITS.get(r)||[]).length||r.act&&r.act.type==='questjoy'&&r.act.joyAt==null);/* クエストのものを見にいく途中は、新しい話の黄色い吹き出しは出さない（着いて喜び始めてから） */
   const requests=visiting?[]:SL.filter(q=>St[q.k]===1&&!isNight()&&(spaced||summonHelp&&q.k===summonHelp));
@@ -2252,7 +2230,7 @@ function symNear(el){const id=SYMB[el];if(!id||!cnt(id))return false;const q=S.r
 function atFarm(r){if(!r||r.hidden||r.act&&['flee','faint','sleep'].includes(r.act.type))return false;for(let j=0;j<S.obj.length;j++)if(S.obj[j]==='farm'&&Math.hypot((j%W+.5)-r.x,((j/W)|0)+.5-r.y)<=1.35)return true;return false}
 const SEV1=[
  {k:'e04',at:()=>!!S.flags.minaCame&&cnt('table')>=1,L:[['F','ノドカ！ いっしょにごはん食べよ！'],['N','いいよぉ。なにを食べようかねぇ。'],['F','えっとね、ベリー！ ……あれ、どこにしまったっけ？'],['N','ふふ。食料箱の中だよぉ。'],['F','そうだった！ えへへ、ふたりだと楽しいね！']]},
- {k:'e04b',at:()=>{if(!S.flags.minaCame)return false;if(S.flags.mnN==null)S.flags.mnN=S.nights||0;return (S.nights||0)>S.flags.mnN&&S.lastMorning>S.lastNight},L:[['F','ノドカ、おはよう！'],['F','ノドカが来てからね、ぐっすり眠れるようになったんだ。'],['N','そうなのぉ？'],['F','となりにだれかいるって、こんなに安心するんだね。'],['N','ふふ。ぼくも、ぐっすりだったよぉ。']]},
+ {k:'e04b',at:()=>!!S.flags.minaCame&&S.flags.mnN!=null&&(S.nights||0)>S.flags.mnN&&S.lastMorning>S.lastNight,L:[['F','ノドカ、おはよう！'],['F','ノドカが来てからね、ぐっすり眠れるようになったんだ。'],['N','そうなのぉ？'],['F','となりにだれかいるって、こんなに安心するんだね。'],['N','ふふ。ぼくも、ぐっすりだったよぉ。']]},
  {k:'e05',at:()=>!!(S.subDone||{}).bed3,L:[['F','こんなになかまがふえたよ！ ぼく、うれしいな！'],['F','……でも、また「コワイノ」が来たら、どうしよう。'],['N','みんなで考えたらいいよぉ。ひとりじゃないんだからねぇ。'],['F','そうだね！ ぼくだって、だれかを守れるようになりたい！']]},
  {k:'e06',at:()=>sevHere('H')&&S.enemyOn&&(S.bossKills||0)>=1&&!S.flags.guard&&!S.flags.hDied,/* こもれびのまもりは、最初のオオカゲを追いはらったあと、火の子を心配する流れで */L:[['F','@H……オオカゲとたたかって、だいじょうぶだった！？'],['H',{A:'へっちゃらさ。これくらいで、へこたれるあたいじゃないよ。',B:'へっちゃらだ。これくらいで、へこたれるおれじゃねえ。'}],['F','……あの大きな影を思い出すと、まだ手がふるえるんだ。'],['H',{A:'あんた、あの影のあいだ、家でずっとふるえてたもんな。……こわくて、あたりまえさ。',B:'おまえ、あの影のあいだ、家でずっとふるえてたもんな。……こわくて、あたりめえだ。'}],['F','……ぼく、なんにもできなかった。むかしね、ぼくのきょうだいは、前に出て、ぼくを守ってくれたのに。'],['H',{A:'あたいらが前に出られるのは、あんたたちが家で待っててくれるからさ。村のちびたちを守りたいのは、あんたも同じだろ？',B:'おれたちが前に出られるのは、おまえらが家で待っててくれるからだ。村のちびたちを守りたいのは、おまえも同じだろ？'}],['F','……うん。ぼくも、守りたい！'],['F','ぼくは@Hみたいに強くないけど……葉っぱで守ることならできるかも！'],['F','ほらっ！ こもれびの、まもり！ ……わっ、葉っぱが顔にくっついた！',0,'guarddemo'],['H',{A:'……ぷっ。まったく、しょうがない子だね。……ありがとよ。いっしょに守ろう。',B:'……ははっ。しょうがねえやつだな。……ありがとな。いっしょに守ろうぜ。'}]],
   go:()=>{S.flags.guard=true;toast('フタバが「こもれびのまもり」をおぼえた！','good');memo('🍃','フタバが「こもれびのまもり」をおぼえた')}},
@@ -2271,14 +2249,14 @@ const SEV1=[
  {k:'p1',at:()=>!!S.flags.minaCame&&S.quest>=12,L:[['N','フタバは、ずっとひとりでここにいたのぉ？'],['F','……うん。でもね、まえは、きょうだいがいっぱいいたんだ。'],['F','ぼくがいちばん下で、みんなでくっついて寝てたの。にぎやかだったなあ。'],['N','そっかぁ。……いまは、どこにいるのかなぁ。'],['F','……わかんない。でも、いつか会えるって思ってる！'],['N','うん。それまで、ぼくがとなりにいるよぉ。']]},
  {k:'e12n',at:()=>false,/* 火の子を心配する話は、こもれびのまもりの話（e06）にまとめた */L:[['F','あのとき、だいじょうぶだった！？ いっぱい、たたかれてたよ！'],['H',{A:'へっちゃらさ。これくらいで、へこたれるあたいじゃないよ。',B:'へっちゃらだ。これくらいで、へこたれるおれじゃねえ。'}],['F','……むりしないで。ぼく、まだ戦えないけど……そばについてるから！'],['H',{A:'……ふん。そばにいてくれるだけで、じゅうぶんさ。',B:'……へっ。そばにいてくれるだけで、じゅうぶんだぜ。'}],['F','だって、心配なんだもん！'],['H',{A:'……ばか。そんな顔するんじゃないよ。……ありがと。',B:'……ばか。そんな顔すんな。……ありがとな。'}]]},
  {k:'e12f',at:()=>!!S.flags.fHurt&&!!S.flags.guard&&!(S.sev||{}).e12n&&sevHere('H'),L:[['F','あのとき、だいじょうぶだった！？ いっぱい、たたかれてたよ！'],['H',{A:'へっちゃらさ。あれくらい、なんでもないよ。',B:'へっちゃらだ。あれくらい、なんでもねえよ。'}],['F','……むりしないで。ぼく、もっと早く葉っぱで守れるようになるから！'],['H',{A:'……ふん。じゃあ、たよりにしてるよ。',B:'……へっ。じゃあ、たよりにしてるぜ。'}],['F','……でも、ほんとうに心配したんだよ！'],['H',{A:'……ばか。そんな顔するんじゃないよ。……ありがと。',B:'……ばか。そんな顔すんな。……ありがとな。'}]]},
- {k:'e13m',at:()=>sevHere('M')&&(S.bossKills||0)>=1&&qDone('オオカゲを追いはらおう')&&!!(S.sev||{}).e07,L:[['M','守り神さま、オオカゲが来た場所を調べてみました。ふしぎな力が、地面に少しだけ残っていました。'],['M','そこに置いた花は、いつもより長く咲いていて……光の色も、見る角度で変わるんです。'],['F','ふしぎ！ どうして？'],['M','ノドカさんの話では、ヌシ様の力は3つのかけらになったそうですね。言い伝えでは、「守る力」「育てる力」「想う力」の3つ。そのかけらが、あちこちに散らばっているのかもしれません。','N'],['M','言い伝えでは、ヌシ様の力は「守る力」「育てる力」「想う力」の3つ。そのかけらが、あちこちに散らばっているのかもしれません。','!N'],['N','3つそろったら、ヌシ様の形にもどれるんだよねぇ。',1],['M','ええ。かけらを3つ集めれば、ヌシ様にもどれるはずです。']]},
+ {k:'e13m',at:()=>sevHere('M')&&(S.bossKills||0)>=1&&qDone('ookage')&&!!(S.sev||{}).e07,L:[['M','守り神さま、オオカゲが来た場所を調べてみました。ふしぎな力が、地面に少しだけ残っていました。'],['M','そこに置いた花は、いつもより長く咲いていて……光の色も、見る角度で変わるんです。'],['F','ふしぎ！ どうして？'],['M','ノドカさんの話では、ヌシ様の力は3つのかけらになったそうですね。言い伝えでは、「守る力」「育てる力」「想う力」の3つ。そのかけらが、あちこちに散らばっているのかもしれません。','N'],['M','言い伝えでは、ヌシ様の力は「守る力」「育てる力」「想う力」の3つ。そのかけらが、あちこちに散らばっているのかもしれません。','!N'],['N','3つそろったら、ヌシ様の形にもどれるんだよねぇ。',1],['M','ええ。かけらを3つ集めれば、ヌシ様にもどれるはずです。']]},
  {k:'r1',at:()=>!!(S.sev||{}).e04&&sevHere('N')&&S.qStory==null,L:[['F','ノドカ。……なんだか、なつかしい匂いがするね。'],['N','そうかなぁ。ここの土の匂いじゃないのぉ？'],['F','うーん……ちがう気がする。でも、いい匂い！'],['N','ふふ。フタバがそう言うなら、そうなのかもねぇ。']]},
  {k:'r2',at:()=>sevHere('H')&&symNear('fire')&&S.qStory==null,L:[['H',{A:'……なあ、フタバ。この灯台の光のそばにいるとさ、背中がやけに落ち着くんだ。',B:'……なあ、フタバ。この灯台の光のそばにいるとな、背中がやけに落ち着くんだ。'}],['F','えっ、ぼくも！ @Hといると、ほっとする！'],['H',{A:'ふん……気のせいだろ。ずっと前から知ってるわけでもないのにさ。',B:'ふん……気のせいだろ。ずっと前から知ってるわけでもねえのによ。'}],['F','えへへ。そうだよね。']]},
  {k:'r3',at:()=>sevHere('M')&&symNear('water')&&S.qStory==null,L:[['M','……不思議なんです。この噴水の水の音を聞いていると、前にも同じ音を聞いた気がして。'],['F','えっ、来たことあるの？'],['M','いえ。この土地に来たのは、初めてのはずです。……計算では、ありえません。'],['M','ですが、なぜか耳が覚えているんです。']]},
  {k:'r4',at:()=>sevHere('K')&&symNear('wind')&&S.qStory==null,L:[['K','フッ…おかしなものだね。この風車をまわす風の道を、ぼくは前にも通った気がするんだ。'],['F','風の道？ 来たことあるの？'],['K','いいや、初めてさ。……だからこそ、不思議なんだ。'],['K','風はなんでも知っている、と言ったが。知っているのは、ぼくのほうなのかもしれないね。']]},
  {k:'r5',at:()=>sevHere('N')&&symNear('earth')&&S.qStory==null,L:[['N','……フタバ。この石碑の石をさわるとねぇ、ずっと前からここにいたみたいな気分になるんだよぉ。'],['F','ノドカ、さいしょから、ここにいたんじゃないの？'],['N','ううん。ぼくが来たのは、つい最近のはずなんだけどねぇ。……ふしぎだねぇ。']]},
  {k:'e14k',at:()=>sevHere('K')&&!!(S.sev||{}).e10&&(S.bossKills||0)>=2,L:[['K','……風が、熱を失っている。'],['F','え？'],['K','遠くの火の山から吹いてくる風が、冷たいんだ。あそこにも、困っている子たちがいるのかもしれないね。'],['F','……ここみたいに？'],['K','フッ…いつか、だれかが助けに行くさ。たとえば、守り神とかね。']]},
- {k:'e11',at:()=>qAt('ヌシ様をむかえよう'),L:[['F','……ヌシ様、ほんとうに帰ってきてくれるかな。'],['N','ここまでできたんだよぉ。あと少しだねぇ。',1],['H',{A:'夜はあたいにまかせな。最後まで村を守りぬくよ。',B:'夜はおれにまかせろ。最後まで村を守りぬくぜ。'},1],['M','準備は進んでいます。できることを、ひとつずつ続けましょう。',1],['K','この場所なら、遠くからでも光が見えるはずさ。',1],['F','……うん！ ぼくも、みんなといっしょにやる！'],['F','守り神さま！ ヌシ様を迎えに行こう！']]},
+ {k:'e11',at:()=>qAt('nushi'),L:[['F','……ヌシ様、ほんとうに帰ってきてくれるかな。'],['N','ここまでできたんだよぉ。あと少しだねぇ。',1],['H',{A:'夜はあたいにまかせな。最後まで村を守りぬくよ。',B:'夜はおれにまかせろ。最後まで村を守りぬくぜ。'},1],['M','準備は進んでいます。できることを、ひとつずつ続けましょう。',1],['K','この場所なら、遠くからでも光が見えるはずさ。',1],['F','……うん！ ぼくも、みんなといっしょにやる！'],['F','守り神さま！ ヌシ様を迎えに行こう！']]},
  {k:'e16',at:()=>(S.finalNight||S.finalOn)&&!S.cleared,L:[['F','守護の台座が、光ってる…！'],['N','光ってるねぇ。……でも、この光、「コワイノ」も気づいちゃうかもねぇ。',1],['N','……フタバ。はじめて会ったころより、ずっと頼もしくなったねぇ。',1],['F','えっ、ほんと！？ えへへ……ありがとう、ノドカ！','N'],['H',{A:'来るなら来な。今夜でぜんぶ終わらせてやるよ。',B:'来るなら来い。今夜でぜんぶ終わらせてやるぜ。'},1],['F','……うん。夜をこえたら、ヌシ様に会えるんだ！']]},
  {k:'e15',night:1,at:()=>!!(S.ns&&S.ns.final)&&S.enemies.some(e=>e.type==='boss2'&&e.spawned&&!e.dead)&&sevHere('F'),L:[['F','……来た。ヨルノオオカゲ……！',0,'shake'],['F','あの夜も、こんな大きな影だった。'],['F','きょうだいたちが前に出て……ぼくは、奥でふるえてるだけだった。'],['F','……っ！',0,'dash'],['H',{A:'くっ……数が多すぎる……！',B:'くそっ……数が多すぎる……！'},1],['N','フタバ、あぶないよぉ！',1],['F','……ううん。もう、ふるえてるだけじゃない！',0,'beat'],['F','むかしは、みんなに守ってもらったけど……'],['F','今度は、ぼくが守る番だ！',0,'flash'],['F','守り神さまも、おねがい！ 光で、「コワイノ」をおどかして！']],
   go:()=>{S.flags.finF=1;S.flags.guard=true;toast('フタバが、近くのみんなを葉っぱで守る！','good')}},
@@ -2380,10 +2358,10 @@ const JOYU=new WeakMap(),RHOLD=new WeakMap(),DLGN=new Set();/* HOLD：話して�
 const onHold=r=>(RHOLD.get(r)||0)>performance.now()||DLGN.has(r.name)&&!document.getElementById('dialog').hidden;/* 画面だけの時間（セーブしない） */
 
 /* 会話はせいれいの願い、図案はプレイヤーである守り神のひらめき。 */
-const QUEST_INSPIRATIONS={"食料箱を置こう": ["stor"], "素材箱を置こう": ["mbox"], "食卓をたのもう": ["table"], "基地を広げよう": ["kamizo"], "家にベッドを置こう": ["bed"], "見張り台ととげの罠を置こう": ["watch", "spike"], "風のせいれいをむかえよう": ["swing"], "木のせいれいを6人にしよう": [], "フタバのおねがい：花を50こさかせよう": ["campfire"], "シズクのおねがい：温泉のそばに休憩所を作ろう": ["bench", "tub"], "第1話 はじめての居場所：家とベッド2つ": ["bed"], "第2話 みんなの好きなもの：花10・食卓・遊び道具": ["table", "swing", "sandbox"], "第4話 ここが好き！：噴水の広場": ["fountain"], "最終話 みんなのふるさと：たき火とせいれい6人": ["campfire"], "chair2": ["chair"], "bed3": ["bed"], "light3": ["torch"], "houselight": ["lantern"], "oven": ["oven"], "board": ["board"], "watch2": ["watch"], "wmill": ["windmill"], "toy2": ["sandbox"], "toy3": ["seesaw"], "swing1": ["swing"], "deco3": ["hedge"], "room": ["shelf1", "rug1", "curtain1"], "paint": ["paint2"], "trap4": ["spike"], "jar2": ["jar"], "parasol": ["parasol"]};
-const QUEST_INSPIRATIONS_CLEAR={"素材箱を置こう": ["crate"], "chair2": ["stool"], "木のせいれいを6人にしよう": [], "フタバのおねがい：花を50こさかせよう": [], "シズクのおねがい：温泉のそばに休憩所を作ろう": ["sink"], "第1話 はじめての居場所：家とベッド2つ": ["crate", "rug1"], "第2話 みんなの好きなもの：花10・食卓・遊び道具": [], "第4話 ここが好き！：噴水の広場": ["parasol"], "最終話 みんなのふるさと：たき火とせいれい6人": [], "bed3": ["rug1"], "light3": [], "houselight": [], "oven": ["sink"], "board": ["shelf1"], "watch2": ["signpost"], "toy2": [], "deco3": ["hedge"], "house2": [], "room": [], "paint": [], "jar2": ["tub"], "fish5": ["bench"], "parasol": []};
-function questRecipeIds(q,phase='accept'){return [...new Set(phase==='clear'?(QUEST_INSPIRATIONS_CLEAR[q.k||q.text]||[]):[...(QUEST_INSPIRATIONS[q.k||q.text]||[]),...(q.learn||[]),...(q.talk&&q.talk.learn||[])])].filter(id=>!!BL[id]&&!(BL[id].offerOnly&&BL[id].kind==='furn'))}
-function ideaDialogue(q,lines,phase='accept'){const result=lines.map(x=>x.slice()),ids=questRecipeIds(q,phase).filter(id=>!(S.guardianIdeas||{})[id]&&(!S.free||BL[id].kind!=='furn'));if(!ids.length)return result;const response=phase==='accept'&&q.text!=='見張り台ととげの罠を置こう'?result.findIndex(x=>x[0]===GOD&&(/思いつ|その形|おヌシ|お主|ひらめ/.test(x[1])||ids.some(id=>BL[id]&&x[1].includes(BL[id].name)))):-1;result.splice(response>=0?response:result.length,0,['@idea',ids]);return result}
+const QUEST_INSPIRATIONS={"stor": ["stor"], "mbox": ["mbox"], "table": ["table"], "baseUp": ["kamizo"], "bed": ["bed"], "watch1": ["watch", "spike"], "wind": ["swing"], "wood6": [], "flower50": ["campfire"], "shizukuRest": ["bench", "tub"], "ep1": ["bed"], "ep2": ["table", "swing", "sandbox"], "ep4": ["fountain"], "ep5": ["campfire"], "chair2": ["chair"], "bed3": ["bed"], "light3": ["torch"], "houselight": ["lantern"], "oven": ["oven"], "board": ["board"], "watch2": ["watch"], "wmill": ["windmill"], "toy2": ["sandbox"], "toy3": ["seesaw"], "swing1": ["swing"], "deco3": ["hedge"], "room": ["shelf1", "rug1", "curtain1"], "paint": ["paint2"], "trap4": ["spike"], "jar2": ["jar"], "parasol": ["parasol"]};
+const QUEST_INSPIRATIONS_CLEAR={"mbox": ["crate"], "chair2": ["stool"], "wood6": [], "flower50": [], "shizukuRest": ["sink"], "ep1": ["crate", "rug1"], "ep2": [], "ep4": ["parasol"], "ep5": [], "bed3": ["rug1"], "light3": [], "houselight": [], "oven": ["sink"], "board": ["shelf1"], "watch2": ["signpost"], "toy2": [], "deco3": ["hedge"], "house2": [], "room": [], "paint": [], "jar2": ["tub"], "fish5": ["bench"], "parasol": []};
+function questRecipeIds(q,phase='accept'){return [...new Set(phase==='clear'?(QUEST_INSPIRATIONS_CLEAR[q.k||q.id]||[]):[...(QUEST_INSPIRATIONS[q.k||q.id]||[]),...(q.learn||[]),...(q.talk&&q.talk.learn||[])])].filter(id=>!!BL[id]&&!(BL[id].offerOnly&&BL[id].kind==='furn'))}
+function ideaDialogue(q,lines,phase='accept'){const result=lines.map(x=>x.slice()),ids=questRecipeIds(q,phase).filter(id=>!(S.guardianIdeas||{})[id]&&(!S.free||BL[id].kind!=='furn'));if(!ids.length)return result;const response=phase==='accept'&&q.id!=='watch1'?result.findIndex(x=>x[0]===GOD&&(/思いつ|その形|おヌシ|お主|ひらめ/.test(x[1])||ids.some(id=>BL[id]&&x[1].includes(BL[id].name)))):-1;result.splice(response>=0?response:result.length,0,['@idea',ids]);return result}
 function showGuardianIdea(ids,done){voiceStop();const overlay=document.createElement('div');overlay.className='idea-reveal';overlay.setAttribute('role','dialog');overlay.setAttribute('aria-modal','true');overlay.setAttribute('aria-label','あたらしいかたち');const rays=document.createElement('div');rays.className='idea-rays';overlay.appendChild(rays);for(let k=0;k<18;k++){const star=document.createElement('span');star.className='idea-spark';star.textContent=k%3?'✦':'✧';const a=k*Math.PI*2/18;star.style.setProperty('--sx',Math.cos(a)*(120+k%4*45)+'px');star.style.setProperty('--sy',Math.sin(a)*(150+k%4*50)+'px');star.style.animationDelay=k%4*.08+'s';overlay.appendChild(star)}const card=document.createElement('div');card.className='idea-card';const symbol=document.createElement('div');symbol.className='idea-symbol';symbol.textContent='💡';const heading=document.createElement('h2');heading.textContent='あたらしいかたち';const list=document.createElement('div');list.className='idea-items';for(const id of ids){const item=document.createElement('div');item.className='idea-item';const img=document.createElement('img');img.src=iconURL(id);img.alt='';const name=document.createElement('span');name.textContent=BL[id].name;item.append(img,name);list.appendChild(item)}const button=document.createElement('button');button.type='button';button.className='btn pri';button.textContent='つづける';button.disabled=true;card.append(symbol,heading,list,button);overlay.appendChild(card);document.body.appendChild(overlay);sfx('level');let ended=false;const prior=document.activeElement;setTimeout(()=>{if(!overlay.isConnected)return;button.disabled=false;button.focus({preventScroll:true})},1300);button.onclick=()=>{if(ended||button.disabled)return;ended=true;overlay.remove();if(prior&&prior.isConnected)prior.focus({preventScroll:true});done()}}
 function inspireQuest(q,phase='accept'){const ids=questRecipeIds(q,phase).filter(id=>!S.free||BL[id].kind!=='furn');if(!ids.length)return;
   const known=S.guardianIdeas||(S.guardianIdeas={});S.recipes||(S.recipes={});const fresh=ids.filter(id=>!known[id]);ids.forEach(id=>{known[id]=true;S.recipes[id]=true});if(!fresh.length)return;
@@ -2400,17 +2378,17 @@ function syncQuestRecipes(s){const shared=s.free?otherModeFurnitureRecipes():nul
     for(const id of FURN){if(shared.has(id)){(s.recipes||(s.recipes={}))[id]=true;(s.guardianIdeas||(s.guardianIdeas={}))[id]=true}else{delete(s.recipes||{})[id];delete(s.guardianIdeas||{})[id]}}}
 }
 /* クエスト達成の喜び：経路で対象のそばへ行く。会話や進行は自動で開かない。 */
-const QUEST_VISIT_MAIN={"温泉宿をつくろう": ["bed"], "西の温泉に、あし湯をつくろう": ["bench"], "神殿を建ててもらおう": ["statue"], "食料箱を置こう": ["stor"], "素材箱を置こう": ["mbox"], "食卓をたのもう": ["table"], "家の壁を直そう": ["hwall", "door"], "家にベッドを置こう": ["bed"], "柵を4つ置こう": ["fence", "logfence", "bamboofence", "stonefence", "wall"], "見張り台ととげの罠を置こう": ["watch", "spike"], "ききょうを植えて、土の力をためよう": ["bellf"], "畑を6つにしよう": ["farm"], "畑にたねをまこう": ["farm"], "守護の台座を建ててもらおう": ["tower"], "フタバのおねがい：花を50こさかせよう": ["clover", "bellf", "salvia", "lily", "lotus"], "温泉をよみがえらせよう": ["hotstone"], "シズクのおねがい：温泉のそばに休憩所を作ろう": ["bench", "tub"], "第1話 はじめての居場所：家とベッド2つ": ["hwall", "door", "bed"], "第2話 みんなの好きなもの：花10・食卓・遊び道具": ["clover", "bellf", "salvia", "lily", "lotus", "table", "swing", "sandbox"], "第4話 ここが好き！：噴水の広場": ["fountain"], "最終話 みんなのふるさと：たき火とせいれい6人": ["campfire"]};
+const QUEST_VISIT_MAIN={"inn": ["bed"], "ashiyu": ["bench"], "statue": ["statue"], "stor": ["stor"], "mbox": ["mbox"], "table": ["table"], "wall": ["hwall", "door"], "bed": ["bed"], "fence4": ["fence", "logfence", "bamboofence", "stonefence", "wall"], "watch1": ["watch", "spike"], "kikyo": ["bellf"], "farm6": ["farm"], "imoseed": ["farm"], "tower": ["tower"], "flower50": ["clover", "bellf", "salvia", "lily", "lotus"], "springA": ["hotstone"], "shizukuRest": ["bench", "tub"], "ep1": ["hwall", "door", "bed"], "ep2": ["clover", "bellf", "salvia", "lily", "lotus", "table", "swing", "sandbox"], "ep4": ["fountain"], "ep5": ["campfire"]};
 const QUEST_VISIT_SUB={"fence20": ["fence", "logfence", "bamboofence", "stonefence", "wall"], "lumber1": ["lumber"], "quarry1": ["quarry"], "stele1": ["stele"], "fountain1": ["fountain"], "lighthouse1": ["lighthouse"], "fruit1": ["fruit"], "stor2": ["stor"], "mbox2": ["mbox"], "seedwait_gate": ["gate"], "benchbreak": ["bench"], "chair2": ["chair", "stool", "achair", "bench", "pouf", "sofa1"], "bed3": ["bed"], "light3": ["torch", "lamp", "campfire"], "houselight": ["candle", "lantern", "flamp"], "oven": ["oven"], "salvia3": ["salvia"], "watch2": ["watch"], "lotus3": ["lotus"], "lily5": ["lily"], "wmill": ["windmill"], "clover3": ["clover"], "toy2": ["sandbox"], "toy3": ["seesaw"], "swing1": ["swing"], "deco3": ["hedge", "birdbath", "parasol", "arch", "signpost", "monstera"], "tree5": ["tree", "fruit"], "farm10": ["farm"], "house2": ["hwall", "door"], "room": ["@furniture"], "paint": ["@painting"], "trap4": ["spike", "sticky", "puddle", "firetrap", "gust"], "jar2": ["jar"], "parasol": ["parasol"]};
 const QUEST_PLACEMENTS=new WeakMap(),QUEST_VISITS=new WeakMap();let questPlaceSerial=0,QUEST_CLEAR_WAIT=null,SUB_CLEAR_WAIT={};const questGuideBlocked=()=>!!QUEST_CLEAR_WAIT||Object.keys(SUB_CLEAR_WAIT).some(k=>!!SUB_CLEAR_WAIT[k])||Object.keys(SUBW).length>0;const questGuideBlockedNow=()=>!!QUEST_CLEAR_WAIT;const questGuideAccepted=()=>{const q=S&&QUESTS[S.quest];return !!q&&!S.cleared&&S.qStory==null&&(!q.talk||S.qTalked)};
 const QUEST_PARTS={
-  '見張り台ととげの罠を置こう':[[['watch'],()=>cnt('watch')>=1],[['spike'],()=>(S.placed.spike||0)>=2]],
-  'シズクのおねがい：温泉のそばに休憩所を作ろう':[[['bench'],()=>nearSp('bench')],[['tub'],()=>nearSp('tub')]],
-  '第1話 はじめての居場所：家とベッド2つ':[[['hwall','door'],()=>HOUSES.length>=1],[['bed'],()=>cnt('bed')>=2]],
-  '第2話 みんなの好きなもの：花10・食卓・遊び道具':[[['clover','bellf','salvia','lily','lotus'],()=>flowerN()>=10],[['table'],()=>cnt('table')>=1],[['swing','sandbox'],()=>CN(TOYS4)>=1]],
-  '最終話 みんなのふるさと：たき火とせいれい6人':[[['campfire'],()=>cnt('campfire')>=1]]
+  'watch1':[[['watch'],()=>cnt('watch')>=1],[['spike'],()=>(S.placed.spike||0)>=2]],
+  'shizukuRest':[[['bench'],()=>nearSp('bench')],[['tub'],()=>nearSp('tub')]],
+  'ep1':[[['hwall','door'],()=>HOUSES.length>=1],[['bed'],()=>cnt('bed')>=2]],
+  'ep2':[[['clover','bellf','salvia','lily','lotus'],()=>flowerN()>=10],[['table'],()=>cnt('table')>=1],[['swing','sandbox'],()=>CN(TOYS4)>=1]],
+  'ep5':[[['campfire'],()=>cnt('campfire')>=1]]
 };
-function checkQuestParts(q){const parts=QUEST_PARTS[q.text];if(!parts)return;for(let i=0;i<parts.length;i++){const [ids,ready]=parts[i],partKey=(S.world||0)+':'+q.text+':'+i;if((S.questPartSeen||{})[partKey]||!ready())continue;
+function checkQuestParts(q){const parts=QUEST_PARTS[q.id];if(!parts)return;for(let i=0;i<parts.length;i++){const [ids,ready]=parts[i],partKey=(S.world||0)+':'+q.text+':'+i;if((S.questPartSeen||{})[partKey]||!ready())continue;
   if(S.res.some(r=>r.act&&r.act.partKey===partKey||(QUEST_VISITS.get(r)||[]).some(v=>v.partKey===partKey)))continue;
   queueQuestVisit(q,storyWho(q),ids,partKey);
 }}
@@ -2419,13 +2397,13 @@ function noteQuestPlacement(id,j){let m=QUEST_PLACEMENTS.get(S);if(!m){m=new Map
 function questVisitTarget(q,ids,j){const o=S.obj[j];if(!o||o==='part'||!BL[o])return false;
   if(!ids.includes(o)&&!(ids.includes('@furniture')&&BL[o].kind==='furn')&&!(ids.includes('@painting')&&['paint1','paint2','paint3'].includes((S.win||{})[j])))return false;
   if(FLOWERS.has(o)&&isBud(j))return false;
-  if(q.text==='畑にたねをまこう')return imoSeedQuestPlots().includes(j);
-  if(q.k==='bed3'||q.k==='houselight'||q.k==='room'||q.text==='家にベッドを置こう')return HOUSES.some(h=>h.inside.has(j));
-  if(q.text==='シズクのおねがい：温泉のそばに休憩所を作ろう')return nearHot(j,4);
+  if(q.id==='imoseed')return imoSeedQuestPlots().includes(j);
+  if(q.k==='bed3'||q.k==='houselight'||q.k==='room'||q.id==='bed')return HOUSES.some(h=>h.inside.has(j));
+  if(q.id==='shizukuRest')return nearHot(j,4);
   if(q.k==='chair2')return [-1,1,-W,W].some(d=>{const k=j+d;return k>=0&&k<W*H&&Math.abs(k%W-j%W)+Math.abs((k/W|0)-(j/W|0))===1&&S.obj[k]==='table'});
   return true;
 }
-function queueQuestVisit(q,who,partIds,partKey){const ids=partIds||(q.k?QUEST_VISIT_SUB[q.k]:QUEST_VISIT_MAIN[q.text]);if(!ids)return null;
+function queueQuestVisit(q,who,partIds,partKey){const ids=partIds||(q.k?QUEST_VISIT_SUB[q.k]:QUEST_VISIT_MAIN[q.id]);if(!ids)return null;
   const r=S.res.find(r=>r.name===who)||S.res.find(r=>r.name===(q.talk&&q.talk.who))||S.res.find(r=>(q.story||[]).some(line=>line[0]===r.name))||S.res.find(r=>!r.hidden)||S.res[0];if(!r)return;
   const recent=QUEST_PLACEMENTS.get(S);let target=-1,best=-Infinity;
   for(let j=0;j<S.obj.length;j++){if(!questVisitTarget(q,ids,j))continue;const last=recent&&recent.get(j),score=(last&&last.id===S.obj[j]?last.n*100000:0)-Math.hypot(j%W+.5-r.x,(j/W|0)+.5-r.y);if(score>best){best=score;target=j}}
@@ -2454,7 +2432,7 @@ function tryQuestVisit(r){const list=QUEST_VISITS.get(r);if(!list||!list.length|
   endAct(r);startAct(r,G,'questjoy',stand,{obj:v.obj,targetId:v.id,partKey:v.partKey});return true;
 }
 ACT.questjoy={start(r,a){if(S.obj[a.obj]!==a.targetId||!questVisitReached(r,a.obj))return false;const now=performance.now();a.joyAt=now;a.joyUntil=now+2400;if(a.partKey)(S.questPartSeen||(S.questPartSeen={}))[a.partKey]=true;JOYU.set(r,a.joyUntil);JUMP.set(r,now);r.shine=now;r.bubble='😊';r.face=a.obj%W+.5>=r.x?1:-1;sfxAt('good',r.x,r.y);
-  const main=QUEST_CLEAR_WAIT;if(main&&main.r===r&&main.obj===a.obj&&!main.prompted){main.prompted=true;const q=QUESTS[main.quest];if(q&&q.story&&S.quest===main.quest){PAYOK=false;if(q.pay)for(const k in q.pay)S.mat[k]=Math.max(0,(S.mat[k]||0)-q.pay[k]);S.qTalked=false;S.qStory=main.quest;sfx('quest');logEv('目標「'+q.text+'」をたっせい');TALKW=questReplyWho(q);QUESTCLEARW=TALKW;if(q.text.startsWith('村レベル'))focusQuestSpeaker(TALKW);renderQuest();renderPalette()}}
+  const main=QUEST_CLEAR_WAIT;if(main&&main.r===r&&main.obj===a.obj&&!main.prompted){main.prompted=true;const q=QUESTS[main.quest];if(q&&q.story&&S.quest===main.quest){PAYOK=false;if(q.pay)for(const k in q.pay)S.mat[k]=Math.max(0,(S.mat[k]||0)-q.pay[k]);S.qTalked=false;S.qStory=main.quest;sfx('quest');logEv('目標「'+q.text+'」をたっせい');TALKW=questReplyWho(q);QUESTCLEARW=TALKW;if(/^lv\d/.test(q.id))focusQuestSpeaker(TALKW);renderQuest();renderPalette()}}
   for(const k in SUB_CLEAR_WAIT){const w=SUB_CLEAR_WAIT[k];if(!w||w.r!==r||w.obj!==a.obj||w.prompted)continue;const q=SUBQ.find(x=>x.k===k);if(!q)continue;w.prompted=true;(S.subArrived||(S.subArrived={}))[k]=true;S.subSt[k]=3;const reply=questReplyWho(q);if(reply)SUBW[reply]=k}
 },
   tick(r,a){if(!a.secondHop&&performance.now()-a.joyAt>=900){a.secondHop=true;JUMP.set(r,performance.now())}},
@@ -2516,7 +2494,7 @@ function usable(id){const b=BL[id];if(WIND_STAGE_TOYS.has(id)&&WD!==4)return fal
   if(STATUE<0)return false;
   return false}
 /* 井戸は「水のせいれいをむかえよう」のあとに思いつく */
-function wellOK(){const qi=QUESTS.findIndex(q=>q.text==='水のせいれいをむかえよう');return qi<0||!!S.flags.wellR||S.quest>qi+1||(S.quest===qi+1&&S.qStory==null)}
+function wellOK(){const qi=QUESTS.findIndex(q=>q.id==='water');return qi<0||!!S.flags.wellR||S.quest>qi+1||(S.quest===qi+1&&S.qStory==null)}
 function statueSite(){for(const k in S.dyn)if(S.obj[k]==='site'&&S.dyn[k].build==='statue')return true;return false}
 const BADC={k:'',t:0,L:[]};
 const RUGS=new Set(['rug1','rug2']);/* ラグは、家具の下にも敷ける（S.rug にしまう） */
@@ -2548,7 +2526,7 @@ function place(id,x,y){
   if(WALLD.has(id)){if(!usable(id))return toast(BL[id].name+'が足りません','warn');if(!canPlace(id,x,y))return;const j=y*W+x;S.inv[id]--;if((id==='curtain1'||id==='curtain2')&&S.win&&S.win[j]===1){giveItem('window',1);toast('窓にカーテンをかけた（窓はおそなえ箱にもどった）')}/* 窓のある壁には、カーテンをかけられる。カーテンの絵には窓がふくまれる */(S.win||(S.win={}))[j]=id==='window'?1:id;noteQuestPlacement(S.obj[j]==='door'?'door':'hwall',j);burst(j,'furn');recount();dirty=true;renderPalette();return}
   if(b.kind==='seed'){const k=id.slice(5),j=y*W+x,d=S.dyn[j];if(S.obj[j]!=='farm'||!d)return toast('たねは、畑にしかまけません');
     if(d.crop&&d.sown!==false)return toast('もう'+CROPS[d.crop].name+'が植えてある');if(cseed(k)<1)return toast('たねがありません');
-    if(d.paid&&d.crop)S.cseed[d.crop]=cseed(d.crop)+1;S.cseed[k]--;d.paid=true;/* たねは、えらんだときに減る */d.crop=k;d.sown=false;if(k==='imo'&&QUESTS[S.quest]?.text==='畑にたねをまこう'&&S.qTalked){const plots=imoSeedQuestPlots();if(!plots.includes(j))plots.push(j)}noteQuestPlacement('farm',j);burst(j,'plant','pat');toast(CROPS[k].name+'のたねをまいた');checkQuest();renderPalette();return}/* せいれいが、たねをまく */
+    if(d.paid&&d.crop)S.cseed[d.crop]=cseed(d.crop)+1;S.cseed[k]--;d.paid=true;/* たねは、えらんだときに減る */d.crop=k;d.sown=false;if(k==='imo'&&QUESTS[S.quest]?.id==='imoseed'&&S.qTalked){const plots=imoSeedQuestPlots();if(!plots.includes(j))plots.push(j)}noteQuestPlacement('farm',j);burst(j,'plant','pat');toast(CROPS[k].name+'のたねをまいた');checkQuest();renderPalette();return}/* せいれいが、たねをまく */
   if(id==='tower'&&!towerReady())return openSheet('clear');/* 条件がそろうまで、台座は建てられない */
   if(!usable(id)){if(b.kind==='furn'){toast(b.name+'が足りません','warn')}/* 足りないときは、知らせるだけ（画面は開かない） */else toast('まだつかえません');return}
   if(!canPlace(id,x,y))return;
@@ -2605,7 +2583,7 @@ function dropFlower(){/* なくした花だん：置いてある物・持ち物�
   if(S.recipes)delete S.recipes.flower;if(S.guardianIdeas)delete S.guardianIdeas.flower;if(S.unlocked&&S.unlocked.flower){delete S.unlocked.flower;S.unlocked.clover=true}}
 function fixBeds(){/* 2マスだったころのベッド：のこりのマス（part）をあける。下にしいてあったラグは出てくる */
   for(const k in S.ref){const j=S.ref[k];if(S.obj[k]==='part'&&S.obj[j]==='bed'){S.obj[k]='';delete S.ref[k];if(S.rug&&S.rug[k]){S.obj[k]=S.rug[k];delete S.rug[k];if(S.rugRot&&S.rugRot[k]){(S.rot||(S.rot={}))[k]=S.rugRot[k];delete S.rugRot[k]}}}}}
-function clearObj(j){j=anc(j);const o=S.obj[j];const tl=o&&BL[o]&&BL[o].sz?fp(o,j%W,(j/W)|0).map(([a,b])=>b*W+a):[j];delete S.hp['L'+j];if(S.win&&S.win[j]){giveItem(S.win[j]===1?'window':S.win[j],1);delete S.win[j]}if(S.rot)delete S.rot[j];for(const k in S.ref)if(S.ref[k]===j){S.obj[k]='';delete S.ref[k]}S.obj[j]='';delete S.dyn[j];delete S.hp[j];delete S.hp['L'+j];
+function clearObj(j){j=anc(j);const o=S.obj[j];if(S.bedOwn)delete S.bedOwn[j];/* ベッドをどけたら、だれのベッドかも消す */const tl=o&&BL[o]&&BL[o].sz?fp(o,j%W,(j/W)|0).map(([a,b])=>b*W+a):[j];delete S.hp['L'+j];if(S.win&&S.win[j]){giveItem(S.win[j]===1?'window':S.win[j],1);delete S.win[j]}if(S.rot)delete S.rot[j];for(const k in S.ref)if(S.ref[k]===j){S.obj[k]='';delete S.ref[k]}S.obj[j]='';delete S.dyn[j];delete S.hp[j];delete S.hp['L'+j];
   if(S.rug&&!RUGS.has(o))for(const k of tl){const rg=S.rug[k];if(rg&&!S.obj[k]){S.obj[k]=rg;delete S.rug[k]}}/* 下に敷いてあったラグが出てくる */
   for(const r of S.res)if(r.act&&r.act.obj===j)endAct(r);return o}
 function removeAt(x,y){
@@ -2685,8 +2663,8 @@ function cancelOrder(oid){const k=S.orders.findIndex(q=>q.id===oid);if(k<0)retur
   S.pt+=b.pc;for(const m in b.mat||{})S.mat[m]=(S.mat[m]||0)+b.mat[m];
   for(const r of S.res)if(r.act&&r.act.type==='craft'&&r.act.order===oid){endAct(r);r.act=null;r.path=[]}
   toast(b.name+'の依頼をやめた');sfx('post');renderSheet()}
-const ORDER_LOCK={'食料箱を置こう':'stor','素材箱を置こう':'mbox','依頼ボードでかまどをたのんで、置こう':'oven'};
-const orderLock=()=>{const q=QUESTS[S.quest];return !S.cleared&&q&&ORDER_LOCK[q.text]||null};/* このクエストのあいだは、そのものしかたのめない（ほかをたのむと、材料がなくなって進めなくなる） */
+const ORDER_LOCK={'stor':'stor','mbox':'mbox','依頼ボードでかまどをたのんで、置こう':'oven'};
+const orderLock=()=>{const q=QUESTS[S.quest];return !S.cleared&&q&&ORDER_LOCK[q.id]||null};/* このクエストのあいだは、そのものしかたのめない（ほかをたのむと、材料がなくなって進めなくなる） */
 function orderFurn(id){if(!recipeKnown(id))return;if(!lvOK(id))return toast('村Lv'+BL[id].lv+'から作れます');{const L=orderLock();if(L&&id!==L)return toast('いまは「'+BL[L].name+'」だけたのめます')}
   const b=BL[id];if(BOARD<0)return toast('神殿がありません');if(S.orders.length>=boardMax())return toast('依頼ボードがいっぱいです（'+boardMax()+'まい）');if(S.pt<b.pc)return toast('パワーが足りません');if(!matOK(b.mat))return toast('素材が足りません（'+matTxt(b.mat)+'）');
   S.pt-=b.pc;for(const k in b.mat||{})S.mat[k]-=b.mat[k];S.orders.push({id:S.nid++,type:id,prog:0,need:b.time,worker:null});toast(b.name+'の依頼をはった');sfx('post');renderSheet();
@@ -2727,7 +2705,7 @@ function checkQuest(){
     PAYOK=false;
     if(q.pay)for(const k in q.pay)S.mat[k]=Math.max(0,(S.mat[k]||0)-q.pay[k]);/* 材料を使うクエスト */
     S.quest++;S.qTalked=false;sfx('quest');logEv('目標「'+q.text+'」をたっせい');
-    if(q.story){S.qStory=S.quest-1;TALKW=storyWho(q);QUESTCLEARW=TALKW;if(q.text.startsWith('村レベル'))focusQuestSpeaker(TALKW);renderQuest();renderPalette();/* お礼は吹き出しをタップしてから。自動では会話を開かない */return}
+    if(q.story){S.qStory=S.quest-1;TALKW=storyWho(q);QUESTCLEARW=TALKW;if(/^lv\d/.test(q.id))focusQuestSpeaker(TALKW);renderQuest();renderPalette();/* お礼は吹き出しをタップしてから。自動では会話を開かない */return}
     const after=questGives(q);inspireQuest(q,'clear');if(after)after();
     renderQuest();renderPalette();
   }else renderQuest();
@@ -2750,7 +2728,7 @@ function questGives(q,g){g=g||q.gives||{};
     (g.feat||[]).forEach(f=>S.feat[f]=true);for(const k in (g.food||{}))addFood(k,g.food[k]);for(const k in (g.mat||{}))S.mat[k]=(S.mat[k]||0)+g.mat[k];for(const k in (g.items||{})){S.unlocked[k]=true;giveItem(k,g.items[k])}queueItemGift(g.items);
     if(g.flags)g.flags.forEach(f=>S.flags[f]=true);if(g.recipes)g.recipes.forEach(id=>S.recipes[id]=true);if(g.shard)giveShard(g.shard);if(g.enemy)S.enemyOn=true;if(g.shrine)S.flags.shrine=true;if(g.flag){S.flags[g.flag]=true;if(g.flag==='onsen')dirty=true}
     if(g.godLeave){S.godGone=true;const GX=godX(),GY=godY();fx.push({k:'ring',x:GX*TS,y:GY*TS,life:1});for(let n=0;n<20;n++){const a=Math.random()*7;fx.push({k:'p',x:GX*TS,y:GY*TS,vx:Math.cos(a)*90,vy:Math.sin(a)*90-40,life:1,col:'#fff',r:3})}sfx('poof')}
-    if(g.fest)freeFest();applyFeats();
+    if(g.fest)freeFest();if(g.msg)toast(g.msg,'good');applyFeats();
     const hadW=g.watchNow&&(cnt('watch')>0||S.obj.some((o,j)=>o==='site'&&S.dyn[j]&&S.dyn[j].build==='watch'));// 先に建てていたら、その分のパワーを返す（おごり）
     const after=g.watchNow?(hadW?()=>{S.pt+=BL.watch.pc;for(const k in BL.watch.mat)S.mat[k]=(S.mat[k]||0)+BL.watch.mat[k];toast('見張り台の分のパワーと素材をカミサマが返してくれた','good');checkQuest()}:()=>{setMode('build');sel='watch';renderPalette();toast('見張り台を置く場所をタップ')}):null;
     return after}
@@ -4547,7 +4525,7 @@ function onTap(sx,sy){
     if(o==='plot')return toast('耕す前の畑：せいれいが耕しにくる');
     if(o==='sprout')return toast(BL[S.dyn[j].plant].name+'を植える場所：せいれいが植えにくる');
     if(o==='site'){const d=S.dyn[j];return toast(BL[d.build].name+'を建設中：'+Math.floor(d.p/d.need*100)+'%')}
-    if(o==='berry'||o==='fruit'){if(!S.dyn[j])S.dyn[j]={g:0};return toast(BL[o].name+'：'+(S.dyn[j].g>=100?'実がなっている':'実がなるまで あと'+Math.max(1,Math.ceil((100-S.dyn[j].g)/25))+'日'))}
+    if(o==='berry'||o==='fruit'){const g=(S.dyn[j]||{g:0}).g;return toast(BL[o].name+'：'+(g>=100?'実がなっている':'実がなるまで あと'+Math.max(1,Math.ceil((100-g)/25))+'日'))}/* タップで見るだけ（セーブの中身はかえない） */
     if(breakable(o)&&BL[o].brk&&!BL[o].trap&&o!=='tower')return toast(BL[o].name+'：'+withAttr(o,BL[o].desc||'')+'（じょうぶさ '+Math.floor(S.hp[j]??BL[o].hp)+'/'+BL[o].hp+'）');/* 道をふさぐ物：時間を止めず、説明とじょうぶさをいっしょに出す */
     if(breakable(o)&&o!=='tower')return toast(BL[o].name+'：じょうぶさ '+Math.floor(S.hp[j]??BL[o].hp)+'/'+BL[o].hp);
     if(o==='rock'||o==='deadtree'||o==='ntree')return toast(BL[o].name+'：のこり '+Math.max(0,10-(S.hp['n'+j]||0))+'/10');
@@ -4800,7 +4778,7 @@ function attrPop(k){
 function openSheet(k,arg){if(NEWRES!=null&&!(k==='res'&&arg===NEWRES))unhold();if(k==='shop')shopSay=pick(S.pt<2?GOD_POOR:GOD_SHOP);sheet=k;sheetArg=arg;$('#sheetWrap').hidden=false;renderSheet()}
 let resTab=0,tapPend=false,DLG_KEEP=false,NEWQ=[],NEWRES=null,HOLD=new Set();// 新しいせいれいが来たら、ステータスを見せてから進める
 function unhold(){if(NEWRES!=null){HOLD.delete(NEWRES);const r=S&&S.res.find(x=>x.id===NEWRES);if(r)JUMP.set(r,performance.now())}NEWRES=null}
-function closeSheet(){sheet=null;unhold();$('#sheetWrap').hidden=true;if(LVQ){const q=LVQ;LVQ=null;setTimeout(()=>{if(sheet)LVQ=q;else lvShow(...q)},250)}if(S&&S.flags.tapPend&&!S.flags.tapped&&!(S.pendTalk&&S.pendTalk.tapped)){talkOnce('tapped',[[GOD,'そうそう、そんな感じじゃ。おなかやたのしさが減っておったら、気にかけてやっておくれ。'],[POKO,'えへへ、見られちゃった。']],250);setTimeout(checkQuest,400)}}
+function closeSheet(){if(S&&S.flags){if(sheet==='shop'&&S.flags.traded)S.flags.tradedSeen=1;if(sheet==='menu'&&sheetArg==='oracle'&&S.flags.oracleSet)S.flags.oracleSeen=1}sheet=null;unhold();$('#sheetWrap').hidden=true;if(LVQ){const q=LVQ;LVQ=null;setTimeout(()=>{if(sheet)LVQ=q;else lvShow(...q)},250)}if(S&&S.flags.tapPend&&!S.flags.tapped&&!(S.pendTalk&&S.pendTalk.tapped)){talkOnce('tapped',[[GOD,'そうそう、そんな感じじゃ。おなかやたのしさが減っておったら、気にかけてやっておくれ。'],[POKO,'えへへ、見られちゃった。']],250);setTimeout(checkQuest,400)}}
 function el(html){const d=document.createElement('div');d.innerHTML=html.trim();return d.firstElementChild}
 /* たね：たね袋の絵＋作物の小さな絵 */
 function seedIcon(k){const c=document.createElement('canvas');c.width=c.height=64;const g=c.getContext('2d');const a=ART.bag;if(a&&a.ok){const h=56,w=h*a.w/a.h;g.drawImage(a.img,(64-w)/2-4,4,w,h)}g.save();g.translate(30,26);g.scale(1.1,1.1);drawCrop(g,k,0,0,100,true);g.restore();return c.toDataURL()}
@@ -4830,7 +4808,7 @@ function renderSheet(){
     T.textContent='カミサマと交換';
     {const sb=el('<div class="godSay"><b>カミサマ</b><span></span></div>');sb.querySelector('span').textContent='「'+shopSay+'」';body.appendChild(sb)}
     body.appendChild(el('<p class="note">カミサマの持ち物と、パワーを交換します。</p>'));
-    if(S.flags.traded&&QUESTS[S.quest]&&QUESTS[S.quest].text==='カミサマと交換してみよう'){const eb=el('<button class="btn" id="shopEnd" style="width:100%;margin-bottom:8px">交換をおわる</button>');eb.onclick=()=>{sfx('next');closeSheet();checkQuest()};body.appendChild(eb)}// チュートリアル：買いおわったら帰る
+    if(S.flags.traded&&QUESTS[S.quest]&&QUESTS[S.quest].id==='trade'){const eb=el('<button class="btn" id="shopEnd" style="width:100%;margin-bottom:8px">交換をおわる</button>');eb.onclick=()=>{sfx('next');closeSheet();checkQuest()};body.appendChild(eb)}// チュートリアル：買いおわったら帰る
     const sec=(t)=>{const d=el('<div class="sec"><h3></h3><div class="rows"></div></div>');d.querySelector('h3').textContent=t;body.appendChild(d);return d.querySelector('.rows')};
     const trade=()=>{shopSay=pick(GOD_BUY);S.flags.traded=true;sfx('furn');checkQuest();renderSheet();renderPalette()};
     const row=(rows,title,desc,img,done)=>{const r=rowEl(title,desc,img);if(done)r.classList.add('done');const bx=el('<div style="display:flex;flex-direction:column;gap:4px;flex:none"></div>');r.appendChild(bx);rows.appendChild(r);return bx};
@@ -4971,7 +4949,7 @@ function renderSheet(){
   }else if(sheet==='bed'){const j=sheetArg;if(S.obj[j]!=='bed')return closeSheet();
     const o=bedOwner(j);T.textContent='ベッド';
 
-    const rows=el('<div class="rows"></div>'),set=id=>{const B=S.bedOwn||(S.bedOwn={});for(const k in B)if(B[k]===id||S.obj[k]!=='bed')delete B[k];if(id==null)delete B[j];else B[j]=id;sfx('next');renderSheet()};
+    const rows=el('<div class="rows"></div>'),set=id=>{const B=S.bedOwn||(S.bedOwn={});for(const k in B)if(B[k]===id)delete B[k];if(id==null)delete B[j];else B[j]=id;sfx('next');renderSheet()};
     {const row=el('<button class="row" style="text-align:left;width:100%"><span class="dot" style="background:#efe6d2"></span><div class="tx"><b></b><small></small></div></button>');row.querySelector('b').textContent=(o?'':'✓ ')+'だれでも';row.querySelector('small').textContent='あいていれば、だれでも眠れる';row.onclick=()=>set(null);rows.appendChild(row)}
     for(const r of S.res){const mb=myBed(r),row=el('<button class="row" style="text-align:left;width:100%"><span class="dot"></span><div class="tx"><b></b><small></small></div></button>');
       row.querySelector('.dot').style.cssText='background:#f6f1e6 url('+spiritPort(r.elem,96)+') center/86% no-repeat;box-shadow:inset 0 0 0 2px '+ELEM[r.elem].col;
@@ -5275,7 +5253,7 @@ function arrive(){
 }
 function talkOnce(key,lines,delay){/* 1回だけの会話：最後まで見てから「見た」にする。とちゅうでとじたら、次に開いたときにもう一度 */if(!S||S.flags[key]||!lines||!lines.length)return;const P=S.pendTalk||(S.pendTalk={});P[key]=lines;setTimeout(()=>{if(!S||S.flags[key])return;dialog(P[key]||lines,()=>{S.flags[key]=1;if(S.pendTalk)delete S.pendTalk[key]})},delay||900)}
 function replayTalks(){if(!S||!S.pendTalk)return;for(const k in S.pendTalk){if(S.flags[k]){delete S.pendTalk[k];continue}talkOnce(k,S.pendTalk[k],1500)}}
-function continueGame(saved){if(saved&&saved.summary)saved=loadStage(saved.world);if(!saved)return;setWorld(saved.world||0);S=saved;LIVE[WD]=S;ensureStor(S);if((S.mig||0)<1){fixBeds();dropChair2();dropBirdhouse();dropFlower();dropNtree();if(((S.subSt||{}).watch2||0)>=4){S.recipes=S.recipes||{};S.guardianIdeas=S.guardianIdeas||{};S.recipes.signpost=true;S.guardianIdeas.signpost=true}/* 見張り台を2つにしたあと（フタバの「道がわかる目印」）で、道しるべをおぼえる */S.mig=1}/* 古いセーブを直すのは、1回だけ */setTimeout(replayTalks,2500);/* とちゅうでとじた会話を、もう一度 */if(S.flags&&S.flags.nushiDue&&!S.cleared)setTimeout(()=>{if(!S.cleared)nushiReturns()},3000);/* ヌシ様が帰ってくる場面を、とちゅうでとじていたら、はじめから */syncTools(S);dirty=true;closeSheet();S.res.forEach(r=>{r.act=null;r.path=[]});S.orders.forEach(o=>o.worker=null);recount();renderQuest();applyFeats();setMode('look');glassUI();
+function continueGame(saved){if(saved&&saved.summary)saved=loadStage(saved.world);if(!saved)return;setWorld(saved.world||0);S=saved;LIVE[WD]=S;ensureStor(S);if((S.mig||0)<1){fixBeds();dropChair2();dropBirdhouse();dropFlower();dropNtree();if(((S.subSt||{}).watch2||0)>=4){S.recipes=S.recipes||{};S.guardianIdeas=S.guardianIdeas||{};S.recipes.signpost=true;S.guardianIdeas.signpost=true}/* 見張り台を2つにしたあと（フタバの「道がわかる目印」）で、道しるべをおぼえる */S.mig=1}if(S.mig<2){if(S.flags.traded)S.flags.tradedSeen=1;if(S.flags.oracleSet)S.flags.oracleSeen=1;if(S.flags.minaCame&&S.flags.mnN==null)S.flags.mnN=S.nights||0;S.mig=2}/* 古いセーブを直すのは、1回だけ */setTimeout(replayTalks,2500);/* とちゅうでとじた会話を、もう一度 */if(S.flags&&S.flags.nushiDue&&!S.cleared)setTimeout(()=>{if(!S.cleared)nushiReturns()},3000);/* ヌシ様が帰ってくる場面を、とちゅうでとじていたら、はじめから */syncTools(S);dirty=true;closeSheet();S.res.forEach(r=>{r.act=null;r.path=[]});S.orders.forEach(o=>o.worker=null);recount();renderQuest();applyFeats();setMode('look');glassUI();
   cam.z=homeZ();centerOn(CX*TS,CY*TS);$('#title').hidden=true;$('#maps').hidden=true;started=true;stageMusic();showUI(true);if(!WD&&S.flags&&S.flags.ret1===1){S.flags.ret1=2;(S.sevQ||(S.sevQ=[])).push('ret')}}
 
 
@@ -5319,7 +5297,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='513';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='514';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
@@ -5370,7 +5348,7 @@ function tutSpot(id){const sz=BL[id].sz||[1,1],V=tutView(),vc=[Math.floor((cam.x
   const near=(c0,need)=>{for(const f of nf?[1,0]:[0])for(let r=0;r<14;r++)for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){if(Math.max(Math.abs(dx),Math.abs(dy))!==r)continue;const x=c0[0]+dx,y=c0[1]+dy;if((!need||inV(x,y))&&canPlace(id,x,y,true)&&(!f||bare(x,y))&&!(gap&&fp(id,x,y).some(([a,c])=>c===CY-2&&a>=CX-5&&a<=CX-3)))return[x,y]}return null};
   if(id==='hotstone'){let bd=1e9;for(let j=0;j<W*H;j++){const x=j%W,y=(j/W)|0;if(S.ground[j]===1||S.obj[j]||adjOf(j,k=>S.ground[k]===1)<0||!canPlace(id,x,y,true))continue;const d=Math.hypot(x-CX,y-CY);if(d<bd){bd=d;v=[x,y]}}}/* 温泉の水べを指す */
   else if(id==='bed'&&HOUSES.length){for(const j of HOUSES[0].inside){const x=j%W,y=(j/W)|0;if(!S.obj[j]&&canPlace(id,x,y,true)){v=[x,y];break}}if(!v)v=near(vc,true)}/* ベッドは家の中を指す */
-  else if(id==='hwall'&&QUESTS[S.quest]&&QUESTS[S.quest].text==='家の壁を直そう'){for(let d=3;d<=6;d++){const x=WD===1?CX+d:CX-d,y=CY-2;if(!S.obj[y*W+x]&&canPlace(id,x,y,true)){v=[x,y];break}}if(!v)v=near([WD===1?CX+3:CX-4,CY-2],false)}/* 家のすきまを指す */
+  else if(id==='hwall'&&QUESTS[S.quest]&&QUESTS[S.quest].id==='wall'){for(let d=3;d<=6;d++){const x=WD===1?CX+d:CX-d,y=CY-2;if(!S.obj[y*W+x]&&canPlace(id,x,y,true)){v=[x,y];break}}if(!v)v=near([WD===1?CX+3:CX-4,CY-2],false)}/* 家のすきまを指す */
   else v=near(vc,true)||near(id==='statue'?[CX,CY-8]:[CX+2,CY+2],false);/* 指は画面の右下。置けないときは、いちばん近い置ける所 */
   if(v&&!inV(v[0],v[1])&&tutCache.pan!==k){tutCache.pan=k;const s=V[1]+V[3]-VH;centerOn((v[0]+sz[0]/2)*TS,(v[1]+sz[1]/2)*TS-s/2/cam.z)}/* 見えない所なら、一度だけそこへカメラを寄せる */
   tutCache={k,t:performance.now(),v,pan:tutCache.pan};return v}
@@ -5378,7 +5356,7 @@ function palArrows(){const b=$('#palItems');if(!b)return;const m=b.scrollWidth-b
 function updTut(){
   const hand=$('#tutHand');const hide=()=>{hand.hidden=true};
   if(!S||GIFT_ACTIVE||!$('#dialog').hidden||!$('#lvup').hidden||!$('#rlv').hidden||!$('#title').hidden||!$('#maps').hidden||!$('#pro').hidden||S.cleared||questGuideBlockedNow())return hide();
-  const q=QUESTS[S.quest];if(!q)return hide();const qt=q.text;
+  const q=QUESTS[S.quest];if(!q)return hide();const qt=q.id;
   let el=null,wp=null,lbl='ここをタップ',swipe=0;
   const placeHint=id=>{
     if(sheet)return;
@@ -5394,21 +5372,21 @@ function updTut(){
   else if(S.flags.tapAsk&&!S.flags.tapped&&$('#dialog').hidden){if(sheet==='res'){el=$('#sheetX');lbl='見たら、とじる'}else if(!sheet){if(mode!=='look'){el=document.querySelector('#dock [data-mode="look"]');lbl='「みる」をタップ'}else{const r=S.res.find(q=>!q.hidden);if(r){wp=[r.x*TS,(r.y-.5)*TS];lbl='せいれいをタップ'}}}}/* 神殿のあと：せいれいをタップしてステータスを見る */
   else if(q.talk&&!S.qTalked){}/* 会話の前は、クエストの案内を出さない */
   else if(qt==='つぼを置いて、土の力をためよう'){if(inv('rockart')>0)placeHint('rockart')}
-  else if(qt==='神殿を建ててもらおう'){if(STATUE<0&&!S.obj.includes('site'))placeHint('statue')}
+  else if(qt==='statue'){if(STATUE<0&&!S.obj.includes('site'))placeHint('statue')}
   else if(qt==='せいれいをタップして、ようすを見よう'){if(sheet==='res'){el=$('#sheetX');lbl='見たら、とじる'}else if(!sheet){if(mode!=='look'){el=document.querySelector('#dock [data-mode="look"]');lbl='「みる」をタップ'}else{const r=S.res.find(q=>!q.hidden);if(r){wp=[r.x*TS,(r.y-.5)*TS];lbl='せいれいをタップ'}}}}
-  else if(qt==='温泉をよみがえらせよう'){if(inv('hotstone')>0)placeHint('hotstone')}
+  else if(qt==='springA'){if(inv('hotstone')>0)placeHint('hotstone')}
   else if(qt==='依頼ボードでかまどをたのんで、置こう'){
     if(inv('oven')>0)placeHint('oven');
     else if(!S.orders.some(o=>o.type==='oven')){
       if(sheet==='craft'){if(craftTab!==craftTabFor('oven')){el=document.querySelectorAll('.ctab')[craftTabFor('oven')];lbl='「ごはん」をタップ'}else{const row=[...document.querySelectorAll('#sheetBody .row')].find(r=>r.textContent.includes('かまど'));el=row&&row.querySelector('button');lbl=el&&el.disabled?'材料が集まるまで待とう':'「はる」をタップ'}}
       else if(!sheet){if(mode!=='look'){el=document.querySelector('#dock [data-mode="look"]');lbl='「みる」をタップ'}else if(BOARD>=0){wp=[(BOARD%W+.5)*TS,((BOARD/W)|0)*TS+8];lbl='依頼ボードをタップ'}}}}
-  else if(qt==='食卓をたのもう'){const g=orderTut('table');if(g&&g.kind==='place')placeHint('table');else if(g&&g.kind==='close'){el=$('#sheetX');lbl='依頼ボードをとじる'}else if(g&&g.kind==='look'){el=document.querySelector('#dock [data-mode="look"]');lbl='「みる」をタップ'}else if(g&&g.kind==='board'){wp=[(BOARD%W+.5)*TS,((BOARD/W)|0)*TS+8];lbl='依頼ボードをタップ'}else if(g&&g.kind==='tab'){el=document.querySelectorAll('.ctab')[g.tab];lbl='「家具」をタップ'}else if(g&&g.kind==='row'){const row=[...document.querySelectorAll('#sheetBody .row')].find(r=>r.textContent.includes(BL.table.name));el=row&&row.querySelector('button');lbl=el&&el.disabled?'パワーや素材が集まるまで待とう':'食卓の「はる」をタップ'}}
-  else if((qt==='食料箱を置こう'||qt==='素材箱を置こう')&&sheet==='craft'&&S.orders.some(o=>o.type===(qt==='食料箱を置こう'?'stor':'mbox'))&&inv(qt==='食料箱を置こう'?'stor':'mbox')<=0){el=$('#sheetX');lbl='とじる'}/* はったあと：画面をとじて、できあがりを待つ */
-  else if(qt==='畑を6つにしよう'){if(inv('farm')>0)placeHint('farm')}
-  else if(qt==='畑にたねをまこう'){if(imoSeedQuestPlots().length>=2)return hide();if(sheet){el=$('#sheetX');lbl='とじる'}else if(mode!=='build'){el=document.querySelector('#dock [data-mode="build"]');lbl='「おく」をタップ'}
+  else if(qt==='table'){const g=orderTut('table');if(g&&g.kind==='place')placeHint('table');else if(g&&g.kind==='close'){el=$('#sheetX');lbl='依頼ボードをとじる'}else if(g&&g.kind==='look'){el=document.querySelector('#dock [data-mode="look"]');lbl='「みる」をタップ'}else if(g&&g.kind==='board'){wp=[(BOARD%W+.5)*TS,((BOARD/W)|0)*TS+8];lbl='依頼ボードをタップ'}else if(g&&g.kind==='tab'){el=document.querySelectorAll('.ctab')[g.tab];lbl='「家具」をタップ'}else if(g&&g.kind==='row'){const row=[...document.querySelectorAll('#sheetBody .row')].find(r=>r.textContent.includes(BL.table.name));el=row&&row.querySelector('button');lbl=el&&el.disabled?'パワーや素材が集まるまで待とう':'食卓の「はる」をタップ'}}
+  else if((qt==='stor'||qt==='mbox')&&sheet==='craft'&&S.orders.some(o=>o.type===(qt==='stor'?'stor':'mbox'))&&inv(qt==='stor'?'stor':'mbox')<=0){el=$('#sheetX');lbl='とじる'}/* はったあと：画面をとじて、できあがりを待つ */
+  else if(qt==='farm6'){if(inv('farm')>0)placeHint('farm')}
+  else if(qt==='imoseed'){if(imoSeedQuestPlots().length>=2)return hide();if(sheet){el=$('#sheetX');lbl='とじる'}else if(mode!=='build'){el=document.querySelector('#dock [data-mode="build"]');lbl='「おく」をタップ'}
     else if(!(sel==='seed:imo'&&cseed('imo')>0)){const c=[...document.querySelectorAll('#palItems .chip')].find(b=>b.textContent.includes(CROPS.imo.name+'のたね')&&!b.classList.contains('zero'));if(c){el=c;lbl='たねをえらぶ'}else{el=$('#palMore');lbl='ほかをえらぶ'}}
     else{let fj=-1;for(let j=0;j<S.obj.length;j++)if(S.obj[j]==='farm'&&S.dyn[j]&&S.dyn[j].crop===null&&!imoSeedQuestPlots().includes(j)){fj=j;break}if(fj>=0){wp=[(fj%W+.5)*TS,((fj/W)|0)*TS+16];lbl='畑をタップ'}}}/* たねは「おく」からえらんで、畑をタップ */
-  else if(qt==='おつげを出してみよう'){
+  else if(qt==='oracle'){
     if(S.flags.oracleSet){if(sheet){el=$('#sheetX');lbl='とじて、話を聞こう'}}
     else if(sheet==='menu'&&sheetArg==='oracle'){el=document.querySelector('#sheetBody [data-oracle="food"]');lbl='好きな方針をえらぶ'}
     else if(sheet==='menu'&&!sheetArg){el=document.querySelector('#sheetBody [data-menu="oracle"]');lbl='「おつげ」をタップ'}
@@ -5418,16 +5396,16 @@ function updTut(){
   }
   else if(qt==='道を6マスのばそう'){if(inv('path')>0)placeHint('path')}
   else if(qt==='花を植えてもらおう'){if(inv('clover')>0)placeHint('clover')}
-  else if(qt==='食料箱を置こう'||qt==='素材箱を置こう'){const bid=qt==='食料箱を置こう'?'stor':'mbox',tb=craftTabFor(bid),tn=CRAFT_TABS[tb][0],bn=BL[bid].name;
+  else if(qt==='stor'||qt==='mbox'){const bid=qt==='stor'?'stor':'mbox',tb=craftTabFor(bid),tn=CRAFT_TABS[tb][0],bn=BL[bid].name;
     if(inv(bid)>0)placeHint(bid);
     else if(!S.orders.some(o=>o.type===bid)){
       if(sheet==='craft'){if(craftTab!==tb){el=document.querySelectorAll('.ctab')[tb];lbl='「'+tn+'」をタップ'}else{const row=[...document.querySelectorAll('#sheetBody .row')].find(r=>r.textContent.includes(bn));el=row&&row.querySelector('button');lbl=el&&el.disabled?'木材が集まるまで待とう':'「はる」をタップ'}}
       else if(!sheet){if(mode!=='look'){el=document.querySelector('#dock [data-mode="look"]');lbl='「みる」をタップ'}else if(BOARD>=0){wp=[(BOARD%W+.5)*TS,((BOARD/W)|0)*TS+8];lbl='依頼ボードをタップ'}}}}
-  else if(qt==='柵を4つ置こう'){if(inv('fence')>0)placeHint('fence')}
-  else if(qt==='家の壁を直そう'){if(inv('hwall')>0)placeHint('hwall')}
-  else if(qt==='家にベッドを置こう'){if(inv('bed')>0)placeHint('bed')}
-  else if(qt==='見張り台ととげの罠を置こう'){if(watchQ())placeHint('watch');else if(inv('spike')>0&&(S.placed.spike||0)<2)placeHint('spike')}
-  else if(qt==='カミサマと交換してみよう'){if(sheet==='shop'){if(S.flags.traded){el=$('#shopEnd');lbl='交換がおわったら「交換をおわる」'}else{el=[...document.querySelectorAll('#sheetBody .btn.pri')].find(b=>!b.disabled);lbl='交換してみよう'}}else if(!sheet&&godHere()){if(mode!=='look'){el=document.querySelector('#dock [data-mode="look"]');lbl='「みる」をタップ'}else{wp=[godX()*TS,(godY()-.2)*TS];lbl='カミサマをタップ'}}}
+  else if(qt==='fence4'){if(inv('fence')>0)placeHint('fence')}
+  else if(qt==='wall'){if(inv('hwall')>0)placeHint('hwall')}
+  else if(qt==='bed'){if(inv('bed')>0)placeHint('bed')}
+  else if(qt==='watch1'){if(watchQ())placeHint('watch');else if(inv('spike')>0&&(S.placed.spike||0)<2)placeHint('spike')}
+  else if(qt==='trade'){if(sheet==='shop'){if(S.flags.traded){el=$('#shopEnd');lbl='交換がおわったら「交換をおわる」'}else{el=[...document.querySelectorAll('#sheetBody .btn.pri')].find(b=>!b.disabled);lbl='交換してみよう'}}else if(!sheet&&godHere()){if(mode!=='look'){el=document.querySelector('#dock [data-mode="look"]');lbl='「みる」をタップ'}else{wp=[godX()*TS,(godY()-.2)*TS];lbl='カミサマをタップ'}}}
   let x,y;
   if(el){const r=el.getBoundingClientRect(),ar=$('#app').getBoundingClientRect();if(!r.width)return hide();x=r.left-ar.left+r.width/2;y=r.top-ar.top+r.height/2}
   else if(wp){const ar=$('#app').getBoundingClientRect(),cr=cv.getBoundingClientRect();x=cr.left-ar.left+(wp[0]-cam.x)*cam.z*(cr.width/VW);y=cr.top-ar.top+(wp[1]-cam.y)*cam.z*(cr.height/VH);if(x<0||y<0||x>ar.width||y>ar.height)return hide()}
