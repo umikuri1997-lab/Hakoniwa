@@ -3775,7 +3775,7 @@ function spPose(o,t,tr,back){/* せいれいの動きの計算：腕の角度・
   if(o.carry&&!back){frontArm=bothF=true}
   if(tr>.5)bothF=false;
   return {br,st,arm,A,aN,aF,prop,lean2,sq,frontArm,bothF}}
-function spProp(c,prop,sx,a,t,o){/* せいれいが手に持つ道具 */c.save();c.translate(sx*15,0);if(prop!=='food')c.scale(1.5,1.5);
+function spProp(c,prop,sx,a,t,o){/* せいれいが手に持つ道具 */c.save();c.translate(sx*15,0);if((o.turn||0)>.5&&prop!=='food'&&prop!=='splash'){const g=sx*(.35+a);c.translate(Math.sin(g)*6,Math.cos(g)*6)}/* 横向きのときは、手より下（画面の下へ6）で持つ */if(prop!=='food')c.scale(1.5,1.5);
     if(prop==='splash'){for(let k=0;k<5;k++){const ph=(t*1.2+k*.2)%1,dx=sx*(-4+k*2.2)+Math.sin(k*2.1)*2,dy=-8-ph*16+ph*ph*30;c.globalAlpha=Math.max(0,1-ph);c.fillStyle=k%2?'#d6f2ff':'#6fc0ff';c.beginPath();c.arc(dx*1.4,dy,2.6-ph,0,7);c.fill()}c.globalAlpha=1;c.restore();return}/* 水しぶき */
     const TPL={hammer:[-5,.5,26],axe:[-5,.68,30],pick:[-5,.5,30],saw:[-6,.4,32],hoe:[-5,.8,32]}[prop];
     if(TPL&&PSPR[prop]&&PSPR[prop].ok){const g=PSPR[prop],h=TPL[2]*g.h/g.w;c.save();c.scale(sx,prop==='axe'?-1:1);/* 斧の刃は、ふりおろす向き（下）に */c.drawImage(g.img,TPL[0],-h*TPL[1],TPL[2],h);c.restore()}
@@ -5309,7 +5309,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='480';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='481';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
