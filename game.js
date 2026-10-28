@@ -2712,8 +2712,7 @@ const STAMPC10={farm:32,fence:16,stone:16,path:8};/* スタンプで足りない
 function stampCost(need){let c10=0;const parts=[];for(const id in need){const short=Math.max(0,need[id]-inv(id));c10+=short*(BL[id].qty||STAMPC10[id]==null?Infinity:STAMPC10[id]);if(short)parts.push(BL[id].name+short+'こ')}return {cost:Math.ceil(c10/10),parts}}
 function shortCost(need){let cost=0;const parts=[];for(const id in need){const short=Math.max(0,need[id]-inv(id));cost+=short*(BL[id].qty?Infinity:BL[id].cost);if(short)parts.push(BL[id].name+short+'こ')}return {cost,parts}}
 function askBulk(id,cells){
-  const under=j=>{let o=S.obj[j];if(o==='part')o=S.obj[S.ref[j]];return !!o&&!(BL[o]&&BL[o].kind==='furn')};/* 床・道は、壁・柵・畑・木などの下にはぬらない（見えないのに、数だけへるので）。家具の下にはぬれる */
-  const ok=cells.filter(([x,y])=>canPlace(id,x,y,true)&&!(BL[id].floor&&under(y*W+x)));
+  const ok=cells.filter(([x,y])=>canPlace(id,x,y,true));
   if(!ok.length){toast('置ける場所がありません');return}
   const b=BL[id];
   if(b.kind==='plant'){const n=Math.min(ok.length,inv(id));if(!n)return toast(iname(id)+'がおそなえ箱にありません');ok.length=n;pending={kind:'plant',id,cells:ok};$('#confirmTxt').textContent=iname(id)+'を'+n+'か所に植えてもらう';$('#cYes').disabled=false}
@@ -5451,7 +5450,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='563';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='564';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
