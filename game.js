@@ -1099,7 +1099,7 @@ function avoidPath(r,G,goal){const bl=occTiles(r);if(FLEEBL)for(const k of FLEEB
   const G2=roadSearch(r.x|0,r.y|0,bl);return G2.dist[goal]>=0?pathTo(G2,goal):pathTo(G,goal)}
 const benchSpot=G=>nearest(G,j=>(S.obj[j]==='bench'||(S.obj[j]==='part'&&S.obj[S.ref[j]]==='bench'))&&!ashed(anc(j))&&free('o'+j,1),40);
 function startAct(r,G,type,stand,o){
-  if(stand>=0&&stand===r.avoidJ&&S.t<r.avoidU&&type!=='idle')return startAct(r,G,'idle',-1,{dur:15});/* 30分止まったままだった行き先は、しばらくえらばない */
+  if(stand>=0&&stand===r.avoidJ&&S.t<r.avoidU&&type!=='idle')return startAct(r,G,'idle',-1,{dur:15});/* 10分止まったままだった行き先は、しばらくえらばない */
   if((type==='sleep'||type==='stay'||type==='patrol'&&!(o&&o.hunt!=null))&&G&&!(o&&o.run)&&!r.coffin){let k=-1;if(matN(r)>0&&matCap()>0){k=nearest(G,j=>adjOf(j,q=>storageAt(q,'mat'))>=0,200);if(k>=0){type='smat';stand=k;o=null}}if(k<0&&carryN(r)>0&&foodCap()>0){k=nearest(G,j=>adjOf(j,q=>storageAt(q,'food'))>=0,200);if(k>=0){type='store';stand=k;o=null}}}/* 寝る前・見回りの前に、持っている物を箱へしまう（コワイノからにげるときと、たたかいに行くときはそのまま） */
   if(type==='idle'&&stand<0&&G&&!isNight()&&(r.restCD||0)<=S.t){const bj=benchSpot(G);if(bj>=0){type='rest';stand=bj;o={key:'o'+bj,obj:anc(bj),seat:bj,dur:Math.max(30,(o&&o.dur)||15)}}}/* ひとやすみは、あいているベンチがあればベンチで */
   r.bubble='';/* 前の行動の吹き出し（💤など）を残さない */
@@ -1702,7 +1702,7 @@ const WORKT=new Set(['till','sow','plant','build','craft','water','tend','repair
 function rescueStuck(r){if(r.hidden)return;const cj=(r.y|0)*W+(r.x|0),o=S.obj[cj];if(!(HOME_WALLS.has(o)||(FENCE_IDS.has(o)&&!GATE_IDS.has(o))||S.ground[cj]===1&&!(r.act&&(r.act.type==='bathe'||r.act.type==='plant'&&r.act.wade))))return;/* 水浴び・池のまんなかのハス植えは、水に入ってよい */if(r.act&&r.act.type==='step'||(r.stepT||0)>S.t)return;r.stepT=S.t+5;/* 壁や柵・水の中にいたら、いちばん近い歩ける場所へ歩いて出る（5分ごとにさがす） */const G=bfs(cj%W,(cj/W)|0),k=nearest(G,j=>j!==cj&&walk(j)&&!S.obj[j],12);if(k>=0){endAct(r);startAct(r,G,'step',k,{run:true})}}
 function updRes(r,dt){rescueStuck(r);if((RHOLD.get(r)||0)>performance.now())return;/* 喜んでいる・話したあとの少しの間は、手をとめる */if(r._pe!=null&&r.energy>r._pe+1e-6)r.eUp=S.t;r._pe=r.energy;/* 元気が回復しているか */
   if(HOLD.has(r.id)){if(r.act)endAct(r);r.act=null;return}
-  if(r.hidden||r.act&&r.act.stage==='do'||Math.hypot(r.x-(r.stX??r.x),r.y-(r.stY??r.y))>.3){r.stX=r.x;r.stY=r.y;r.stT=S.t}else if(S.t-(r.stT??S.t)>=30){if(r.act&&r.act.stand>=0){r.avoidJ=r.act.stand;r.avoidU=S.t+120}r.stX=r.x;r.stY=r.y;r.stT=S.t;if(r.act)endAct(r)}/* 動いてもいない・作業もしていないまま30分たったら、いまの行動をやめて、べつの行動をえらぶ */
+  if(r.hidden||r.act&&r.act.stage==='do'||Math.hypot(r.x-(r.stX??r.x),r.y-(r.stY??r.y))>.3){r.stX=r.x;r.stY=r.y;r.stT=S.t}else if(S.t-(r.stT??S.t)>=10){if(r.act&&r.act.stand>=0){r.avoidJ=r.act.stand;r.avoidU=S.t+120}r.stX=r.x;r.stY=r.y;r.stT=S.t;if(r.act)endAct(r)}/* 動いてもいない・作業もしていないまま10分たったら、いまの行動をやめて、べつの行動をえらぶ */
   const sleeping=r.act&&r.act.type==='sleep'&&r.act.stage==='do';
   const mv=r.act&&(r.act.stage==='walk'||r.act.type==='tag');const lazy=!r.act||r.act.type==='idle'||r.act.type==='wander'||r.act.type==='stay';const wk=r.act&&r.act.stage==='do'&&WORKT.has(r.act.type);/* おなかは、作業するとへる。つかれているほどへりやすい */r.hunger-=(sleeping?.003:wk?.3:mv?.04:.02)*(lazy?.5:1)*(r.energy<10?2:r.energy<30?1.5:1)*dt*(trt(r,'shoshoku')?.8:1)*(r.full>S.t?.6:1);
   if(!sleeping)r.fun-=.07*dt*(trt(r,'genki')?.6:1);
@@ -5434,7 +5434,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='546';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='547';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
