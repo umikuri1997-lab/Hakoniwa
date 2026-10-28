@@ -892,6 +892,7 @@ const cropOn=k=>!!S.crops[k];/* 使える作物 */
 const CROPS={mugi:{name:'こむぎ',days:2,yield:1,desc:'2日で育つ。パンの材料'},tomato:{name:'キャベツ',days:2,yield:1,desc:'2日で育つ'},imo:{name:'いも',days:3,yield:2,desc:'3日で育つ。たくさんとれる'}};
 /* たねは、おそなえ箱からえらんで畑にまく */
 const ALLRECIPES=[{out:'soup',need:{tomato:1,imo:1},time:153,timeR:107.1},{out:'bread',need:{mugi:2},time:120,timeR:84},{out:'yakizakana',need:{fish:1},time:60,timeR:42},{out:'yakiimo',need:{imo:1},time:50,timeR:35},{out:'yakiberry',need:{berry:2},time:60,timeR:42},{out:'yakiapple',need:{apple:1},time:60,timeR:42},{out:'salad',need:{tomato:2},time:90,timeR:63}];/* time：料理にかかる時間（分）。timeR：料理がとくいな子の時間 */
+const repairTime=a=>a.re?30:20;/* 修理にかかる時間（分）：建て直しは30、ふつうの修理は20（ゲームの処理と、ゲージの表示で同じものを使う） */
 function cookTime(r,ov){const R=RECIPES.find(x=>x.out===(r.cing&&r.cing.rec))||{time:30,timeR:21};return (trt(r,'ryouri')?R.timeR:R.time)*ovenMul(ov)}/* 料理にかかる時間（ゲームの処理と、ゲージの表示で同じものを使う） *//* 料理でふくれるおなか（v）は、FOODS に実数で書く（使った材料の合計と同じ） */let RECIPES=ALLRECIPES;soupFilter();/* time：料理にかかる時間（レシピごと） */
 function syncFood(){let n=0;for(const k in S.fs)n+=S.fs[k]||0;S.food=n}
 function addFood(k,n){S.fs[k]=(S.fs[k]||0)+n;syncFood()}
@@ -1162,7 +1163,7 @@ const ACT={
     done:(r,a)=>{const o=S.orders.find(q=>q.id===a.order);return a.t>=60||!o||o.prog>=o.need},end(r,a){const o=S.orders.find(q=>q.id===a.order);if(o&&o.prog>=o.need)finishCraft(o,r);else addSpiritXp(1,r)}},
   dance:{start(r,a){r.bubble='🎵'},tick(r,a,dt){r.fun=Math.min(100,r.fun+.5*dt);a.h=(a.h||0)+dt;if(a.h>=1.2){a.h=0;JUMP.set(r,performance.now());r.face=-(r.face||1);r.bubble=pick(['🎵','🎶','🍡','😆'])}},done:(r,a)=>a.t>=40||!festOn()||isNight()||hour()>=20,end(r,a){}},/* おまつりのおどり（ごちそうも食べる） */
   douse:{start(r,a){if(!fireAt(a.obj))return false;r.bubble='💧';sfxAt('pour',r.x,r.y)},tick(r,a,dt){work(r,dt)},done:(r,a)=>a.t>=10||!fireAt(a.obj)||isNight(),end(r,a){if(a.t>=10&&fireAt(a.obj)){delete S.st2.fire[a.obj];sfxAt('pour',r.x,r.y);addSpiritXp(1,r)}}},/* 水をかけて、火を消す */
-  repair:{start(r,a){const b=!S.obj[a.obj]?brokenAt(a.obj):null;if(!b&&!breakable(S.obj[a.obj])&&!DEFS.has(S.obj[a.obj])&&!burnt(a.obj))return false;a.re=b?b.id:null;r.bubble='🔨'},tick(r,a,dt){work(r,dt);a.h=(a.h||0)+dt;if(a.h>=3){a.h=0;sfxAt('nail',r.x,r.y)}},done:(r,a)=>a.t>=(a.re?30:20)&&(!a.re||a.t>=60||repairFree(a)),/* 建て直す場所にだれかが立っているあいだは、終わらずに待つ（さいごまで空かなければ、素材をもどしてやめる） */end(r,a){if(a.re){const cells=fp(a.re,a.obj%W,(a.obj/W)|0).map(([cx,cy])=>cy*W+cx);if(!repairFree(a)){addFloat(r.x,r.y-1.2,'人がいて直せなかった','#ffd2cc')}else if(cells.every(k=>!S.obj[k])){S.obj[a.obj]=a.re;setParts(a.re,a.obj,'part');delete S.hp[a.obj];if(BL[a.re].dyn)S.dyn[a.obj]={g:0};{const bk=brokenAt(a.obj);if(bk&&bk.L)S.hp['L'+a.obj]=bk.L}/* 強化レベルは、建てなおしてももとにもどす */S.broken=S.broken.filter(b=>b.j!==a.obj);recount();dirty=true;burst(a.obj,'block');sfxAt('repair',r.x,r.y)}}else{const o=S.obj[a.obj];if(breakable(o)){S.hp[a.obj]=BL[o].hp;sfxAt('repair',r.x,r.y)}else if(DEFS.has(o)||burnt(a.obj)){delete S.hp[a.obj];sfxAt('repair',r.x,r.y)}}addSpiritXp(1,r)}},
+  repair:{start(r,a){const b=!S.obj[a.obj]?brokenAt(a.obj):null;if(!b&&!breakable(S.obj[a.obj])&&!DEFS.has(S.obj[a.obj])&&!burnt(a.obj))return false;a.re=b?b.id:null;r.bubble='🔨'},tick(r,a,dt){work(r,dt);a.h=(a.h||0)+dt;if(a.h>=3){a.h=0;sfxAt('nail',r.x,r.y)}},done:(r,a)=>a.t>=repairTime(a)&&(!a.re||a.t>=60||repairFree(a)),/* 建て直す場所にだれかが立っているあいだは、終わらずに待つ（さいごまで空かなければ、素材をもどしてやめる） */end(r,a){if(a.re){const cells=fp(a.re,a.obj%W,(a.obj/W)|0).map(([cx,cy])=>cy*W+cx);if(!repairFree(a)){addFloat(r.x,r.y-1.2,'人がいて直せなかった','#ffd2cc')}else if(cells.every(k=>!S.obj[k])){S.obj[a.obj]=a.re;setParts(a.re,a.obj,'part');delete S.hp[a.obj];if(BL[a.re].dyn)S.dyn[a.obj]={g:0};{const bk=brokenAt(a.obj);if(bk&&bk.L)S.hp['L'+a.obj]=bk.L}/* 強化レベルは、建てなおしてももとにもどす */S.broken=S.broken.filter(b=>b.j!==a.obj);recount();dirty=true;burst(a.obj,'block');sfxAt('repair',r.x,r.y)}}else{const o=S.obj[a.obj];if(breakable(o)){S.hp[a.obj]=BL[o].hp;sfxAt('repair',r.x,r.y)}else if(DEFS.has(o)||burnt(a.obj)){delete S.hp[a.obj];sfxAt('repair',r.x,r.y)}}addSpiritXp(1,r)}},
   harvest:{start(r,a){const d=S.dyn[a.obj];if(!d||d.g<100)return false;r.bubble='🧺';sfxAt('bush',r.x,r.y)},tick(r,a,dt){work(r,dt)},done:(r,a)=>a.t>=12,end(r,a){const d=S.dyn[a.obj];if(!d)return;d.g=0;const fk=S.obj[a.obj]==='farm'?(cropK(d)):S.obj[a.obj]==='fruit'?'apple':'berry';if(S.obj[a.obj]==='farm'){if(Math.random()<.75){S.cseed[fk]=cseed(fk)+1;addFloat(r.x,r.y-1.2,CROPS[fk].name+'のたね+1','#e8d38a')}/* たねがとれるのは75% */d.sown=false;d.crop=null}/* 収穫したら、また植えないと育たない */const cr=CROPS[fk]||{yield:a.food||3},food=((fk==='berry'||fk==='apple')?2:cr.yield+(NEARMILL.has(a.obj)?1:0)+(NEARFLOWER.has(a.obj)?1:0))+(trt(r,'shukaku')?1:0)+(r.elem==='wood'&&S.obj[a.obj]==='farm'?1:0)+(S.today==='hosaku'?1:0);{const rm=roomN(r);addCarry(r,fk,Math.min(food,rm));if(food>rm)dropAt(r.x,r.y,'food:'+fk,food-rm)}/* 持ちきれない分は、足もとに置いて、あとでひろう */kurashi('hv:'+fk,['🧺','はじめて'+FOODS[fk].name+'を収穫した']);sfxAt('harvest',r.x,r.y);addSpiritXp(1,r)}},
   gather:{start(r,a){const d=S.dyn[a.obj];if(!d||d.g<100)return false;d.g=0;r.bubble='🧺';sfxAt('bush',r.x,r.y)},tick(r,a,dt){work(r,dt)},done:(r,a)=>a.t>=15,end(r,a){{const rm=roomN(r);addCarry(r,'berry',Math.min(2,rm));if(2>rm)dropAt(r.x,r.y,'food:berry',2-rm)}/* 持ちきれない分は、足もとに置いて、あとでひろう */}},
   offer:{start(r,a){if(OBOX<0)return false;r.bubble='🎁'},done:(r,a)=>a.t>=10,end(r,a){r.offT=S.t;r.offDay=dayNo();r.fun=60;{const oo=FURN.filter(id=>BL[id]&&BL[id].offerOnly&&BL[id].maker===r.elem&&(!WIND_STAGE_TOYS.has(id)||WD===4));/* 風の村の遊具は、ほかのステージでは出さない */if(oo.length&&Math.random()<.06){/* おそなえでしか手に入らない家具 */const id=pick(oo);giveItem(id,1);addFloat(r.x,r.y-1.8,'レア！');toast(r.name+'が「'+BL[id].name+'」をおそなえした！（レア）','good');addSpiritXp(1,r);return}const fs=FURN.filter(id=>BL[id]&&BL[id].maker===r.elem&&!BL[id].trap&&!BL[id].offerOnly&&lvOK(id));if(fs.length&&Math.random()<.06){/* まれに家具（レア） */const id=pick(fs);giveItem(id,1);addFloat(r.x,r.y-1.8,'レア！');toast(r.name+'が「'+BL[id].name+'」をおそなえした！','good');addSpiritXp(1,r);return}}const g=offerFor(r);if(!g)return;giveItem(g[0],g[1]);addSpiritXp(1,r);
@@ -3590,7 +3591,7 @@ function findHouses(){const isB=j=>HOME_WALLS.has(typeAt(j))||HOME_DOORS.has(typ
 /* 屋根は、ズームでは変えない。「みる」では屋根あり、置く・こわすときだけ外して中を見せる */
 /* 屋根は家ごと。家をタップすると屋根が消えて中が見える。家の外をタップすると、もどる */
 const OPENH=new Set(),ROOFS=new Map(),hKey=h=>h.x0+','+h.y0;
-function roofAOf(h){const k=hKey(h),now=performance.now();let v=ROOFS.get(k);if(!v){v={a:OPENH.has(k)?0:1,t:now};ROOFS.set(k,v)}const dt=Math.min(.1,Math.max(0,(now-v.t)/1000));v.t=now;const tg=OPENH.has(k)?0:1;v.a+=Math.sign(tg-v.a)*Math.min(Math.abs(tg-v.a),dt*5);return v.a}
+function roofAOf(h){const k=hKey(h);let v=ROOFS.get(k);if(!v){v={a:OPENH.has(k)?0:1};ROOFS.set(k,v)}return v.a}/* 描くときは読むだけ。すけぐあいは stepLooks で進める */
 function roofCache(h,sc){/* 屋根の絵は、家ごとに1回だけ描いて使い回す（形がかわるまで） */
   let minx=W,maxx=0,miny=H,maxy=0;for(const j of h.set){const x=j%W,y=(j/W)|0;minx=Math.min(minx,x);maxx=Math.max(maxx,x);miny=Math.min(miny,y);maxy=Math.max(maxy,y)}
   const ox=minx*TS-3,oy=miny*TS-16,w=(maxx-minx+1)*TS+6,hh=(maxy-miny+1)*TS+26;
@@ -3966,7 +3967,7 @@ const portCache={};
 function spiritPort(el,sz,vr){const k=el+sz+(vr?JSON.stringify(vr):'');if(portCache[k])return portCache[k];const cv=document.createElement('canvas');cv.width=cv.height=sz;const g=cv.getContext('2d');drawSpirit(g,el,sz/2,sz*.97,sz/124,1,{t:0,vr});return portCache[k]=cv.toDataURL()}
 const WALLHIT=new Map(),JUMP=new WeakMap(),DOOROP=new Map(),SPV=new WeakMap();
 /* ドアの開き：せいれいが近づいたら、通る前に開く（開きはじめにガチャ） */
-function doorOp(i,x,y,ax,ay){const cx=x/TS+.5,cy=y/TS+.5,near=S.res.some(r=>!r.hidden&&Math.abs(r.x-cx)<ax&&Math.abs(r.y-cy)<ay);const cur=DOOROP.get(i)||0;if(near&&cur<.03)sfxAt('door',cx,cy);const op=cur+((near?1:0)-cur)*.3;DOOROP.set(i,op);return op}
+function doorOp(i,x,y,ax,ay){let d=DOOROP.get(i);if(!d){d={op:0};DOOROP.set(i,d)}d.cx=x/TS+.5;d.cy=y/TS+.5;d.ax=ax;d.ay=ay;return d.op}/* 描くときは読むだけ。開け閉めは stepLooks で進める（ax・ay：せいれいが近いとみなす はんい） */
 /* レベルアップ：みんながこっちを向いて拍手する */
 /* レベルアップの画面が出ているあいだ、せいれいはこっちを向いて拍手する。タップでおわり */
 let CLAPT=-1e9,CLAPON=false,CLAPS=0;function startClap(){CLAPT=performance.now();CLAPON=true;CLAPS=CLAPT}
@@ -4004,7 +4005,7 @@ let BUBQ=null;
 function objBelow(r){const j=r.faceObj;if(j==null||j<0)return false;return ((j/W)|0)+.5>r.y+.3&&Math.abs(j%W+.5-r.x)<.6}/* 下にある木・岩は正面のまま */
 function drawRes(r,now){
   if(r.spawnT){const e=now-r.spawnT;if(e<450)return;if(e<1300){const k=e<900?(e-450)/450:1,sq=e<900?1:1+Math.sin((e-900)/400*Math.PI)*.18,px=r.x*TS,py=r.y*TS+9,rise=(1-k)*14;
-    ctx.save();ctx.translate(px,py-rise);ctx.scale(k*(2-sq),k*sq);ctx.translate(-px,-py);drawRes0(r,now);ctx.restore();return}r.spawnT=0;JUMP.set(r,now)}
+    ctx.save();ctx.translate(px,py-rise);ctx.scale(k*(2-sq),k*sq);ctx.translate(-px,-py);drawRes0(r,now);ctx.restore();return}}
   drawRes0(r,now);if((r.shU||0)>S.t)drawLeaf(r,now)}
 // ベンチ。front=true のときは、すわった子の前に来る座面のふちと脚だけ
 function drawBench(c,x,y,front){/* ベンチは横2マス */
@@ -4026,9 +4027,8 @@ function drawRes0(r,now){
   if(!walking){v.back=false;v.turn=r.act&&r.act.stage==='do'&&(r.act.type==='chop'||r.act.type==='mine')&&!objBelow(r)||benchV?1:0}/* 木・岩は横向きで、そちらを向いて切る */else if(Math.abs(dx)+Math.abs(dy)>.002){const ax=Math.abs(dx),ay=Math.abs(dy);v.turn=ax>ay*1.2?1:0;v.back=!v.turn&&dy<0}v.x=r.x;v.y=r.y;
   const at=r.act&&r.act.type,ad=r.act&&r.act.stage==='do',jt=JUMP.get(r),held=HOLD.has(r.id),jumping=held||jt!=null&&now-jt<1000;
   const reacting=at==='sevreact'&&ad&&r.act.reactAt!=null,rm=reacting?r.act.reactMotion:'',rp=reacting?dialoguePose(rm,now-r.act.reactAt):null;if(rp){px+=rp.x*.4;py+=rp.y*.4}
-  if(isWatch(r)&&(at==='patrol'&&r.act.hunt!=null||now-(r.swing||-1e9)<900))BRAVET.set(r,now);const brave=now-(BRAVET.get(r)||-1e9)<1500;/* 勇ましい顔は、行動の切りかわりや、たたかれた時に、ちらちら消えないよう、1.5秒つづける */
+  const brave=now-(BRAVET.get(r)||-1e9)<1500;/* 勇ましい顔は、行動の切りかわりや、たたかれた時に、ちらちら消えないよう、1.5秒つづける */
   const mood=reacting?({joy:'joy',shock:'shock',sad:'teary',think:'sad',nod:'smile'}[rm]||'smile'):((r.cryU||0)>S.t&&at!=='sleep'||r.coffin||at==='bury'||at==='pray'||at==='shiver')?'teary':/* 棺をはこぶ・埋葬するときは、うるうる顔 */r.hunger<20?'sad':(JOYU.get(r)||0)>now?'joy':(ad&&['chop','mine','till','build','repair'].includes(at))?'strain':jumping?'joy':at==='flee'?'strain':brave?'brave'/* たたかいに行く・たたいているときは、勇ましい顔 */:r.hurt>25?'strain':(at==='eat'&&ad)?'eat':(ad&&['play','chat','chatwait','npl','fish','tag','rest','bathe'].includes(at))||at==='tag'?'smile':'';
-  if(now>v.bl+140)v.bl=now+2500+Math.random()*3500;
   const bob=(walking?Math.abs(Math.sin(now/110+r.id))*2.5:0)+(()=>{const jt=JUMP.get(r),d=jt==null?-1:now-jt;return d>=0&&d<1000?Math.abs(Math.sin(d/130))*9*(1-d/1000):0})();
   {const sw=Math.max(r.swing||0,r.swingT||0),sd=now-sw;if(sw&&sd>=0&&sd<280)px+=(r.face<0?-1:1)*Math.sin(sd/280*Math.PI)*8}/* 攻撃のとき、前にとびだす */
   if(at==='shiver'&&ad)px+=Math.sin(now/26+r.id*3)*1.4;/* ふるえる */
@@ -4070,7 +4070,7 @@ function drawRes0(r,now){
     ctx.fillStyle=warn?'#ffd2cc':'#fff';rr(ctx,px-bw/2,by-45,bw,24,9);ctx.beginPath();ctx.moveTo(px-4.5,by-21.5);ctx.lineTo(px,by-15);ctx.lineTo(px+4.5,by-21.5);ctx.fill();
     if(t==='💬'){for(let d=-1;d<=1;d++)circ(ctx,px+d*6.5,by-33,2.3,'#7a7064')}/* おしゃべりは点々だけ */
     else if(t==='🪓'&&PSPR.axe&&PSPR.axe.ok){const g=PSPR.axe.img,ih=17,iw=ih*g.width/g.height;ctx.save();ctx.translate(px,by-33);ctx.rotate(-Math.PI/4);ctx.drawImage(g,-iw/2,-ih/2,iw,ih);ctx.restore()}else{const ei=emoImg(t);if(ei){const ih=19.5,iw=ih*ei.width/ei.height;ctx.drawImage(ei,px-iw/2,by-33-ih/2,iw,ih)}else{ctx.font='16px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle='#000';ctx.fillText(t,px,by-33);ctx.textAlign='start';ctx.textBaseline='alphabetic'}}}};
-  if(r.act&&r.act.type==='repair'&&r.act.stage==='do'&&r.act.obj!=null){const a=r.act,p=Math.min(1,(a.t||0)/(a.re?30:20)),gx=(a.obj%W)*TS+2,gy=((a.obj/W)|0)*TS-8,g=()=>{ctx.fillStyle='rgba(0,0,0,.5)';rr(ctx,gx,gy,28,6,3);ctx.fillStyle='#ecdcbc';rr(ctx,gx+1,gy+1,26*p,4,2)};if(BUBQ)BUBQ.push(g);else g()}/* 修理の進みぐあい */
+  if(r.act&&r.act.type==='repair'&&r.act.stage==='do'&&r.act.obj!=null){const a=r.act,p=Math.min(1,(a.t||0)/repairTime(a)),gx=(a.obj%W)*TS+2,gy=((a.obj/W)|0)*TS-8,g=()=>{ctx.fillStyle='rgba(0,0,0,.5)';rr(ctx,gx,gy,28,6,3);ctx.fillStyle='#ecdcbc';rr(ctx,gx+1,gy+1,26*p,4,2)};if(BUBQ)BUBQ.push(g);else g()}/* 修理の進みぐあい */
   if(r.act&&r.act.type==='cook'&&r.act.stage==='do'&&r.act.obj!=null&&r.cing){const a=r.act,tot=cookTime(r,a.obj),p=Math.min(1,(a.t||0)/Math.max(1,tot)),gx=(a.obj%W)*TS+2,gy=((a.obj/W)|0)*TS-12,g=()=>{ctx.fillStyle='rgba(0,0,0,.5)';rr(ctx,gx,gy,28,6,3);ctx.fillStyle='#ffd38a';rr(ctx,gx+1,gy+1,26*p,4,2)};if(BUBQ)BUBQ.push(g);else g()}/* 料理の進みぐあい */
   if(BUBQ)BUBQ.push(over);else over();
 }
@@ -5310,7 +5310,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='520';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='521';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
@@ -5345,7 +5345,7 @@ $('#mBack').onclick=()=>{$('#maps').hidden=true;$('#title').hidden=false};
 $('#tStart').onclick=()=>{audioInit();curSong=wantSong='opening';step=0;nextT=AC?AC.currentTime+.15:0;sfx('furn');const t0=Date.now(),go=()=>{if(KV.ready()||Date.now()-t0>5000)showMaps();else setTimeout(go,150)};if(!KV.ready())toast('セーブを読みこみ中…');go()};/* クラウドのセーブを待ってから、土地をえらぶ */
 
 /* ---------- ループ ---------- */
-let last=performance.now(),lastDraw=0,saveT=0,questT=0,running=true;
+let last=performance.now(),frameT=0,tutT=0,saveT=0,questT=0,running=true;
 const paused=()=>performance.now()<BOSSHOLD||GIFT_ACTIVE||!started||sheet!=null||!$('#dialog').hidden||!$('#lvup').hidden||!$('#rlv').hidden||NEWRES!=null||!$('#idle').hidden;
 /* 寝落ち対策：2分さわらないと、時間を止める */
 let lastIn=performance.now();
@@ -5418,12 +5418,19 @@ function updTut(){
   hand.classList.toggle('swipe',!!swipe);hand.classList.toggle('rev',swipe<0);hand.querySelector('.lbl').textContent=lbl;{const L=hand.querySelector('.lbl');L.style.marginLeft='0px';const lr=L.getBoundingClientRect();let sh=0;if(lr.right>innerWidth-8)sh=innerWidth-8-lr.right;else if(lr.left<8)sh=8-lr.left;L.style.marginLeft=sh+'px'}// ラベルが画面からはみ出さないように
 }
 function frameErr(w,e){/* 1コマで失敗しても、表示（HUD）の更新や次のコマは止めない。原因をたどれるよう、メッセージをのこす */const m=w+': '+(e&&e.message)+' @'+((e&&e.stack||'').split('\n')[1]||'').replace(/^.*[\/\\]/,'').slice(-60);window.__frameErr=m;if(frameErr.last!==m){frameErr.last=m;console.error(m);try{toast('エラー '+m)}catch(x){}}}
+function stepLooks(now,rdt){/* 見た目だけの動き（ドアの開け閉め・屋根のすけぐあい・まばたき・勇ましい顔・あらわれる演出）を、1コマに1回進める */
+  const kd=1-Math.pow(.7,rdt*30);for(const[i,d]of DOOROP){if(!S.obj[i]){DOOROP.delete(i);continue}const near=S.res.some(r=>!r.hidden&&Math.abs(r.x-d.cx)<d.ax&&Math.abs(r.y-d.cy)<d.ay);if(near&&d.op<.03)sfxAt('door',d.cx,d.cy);d.op+=((near?1:0)-d.op)*kd}/* せいれいが近づいたら、通る前に開く（開きはじめにガチャ） */
+  const dt=Math.min(.1,rdt);for(const[k,v]of ROOFS){const tg=OPENH.has(k)?0:1;v.a+=Math.sign(tg-v.a)*Math.min(Math.abs(tg-v.a),dt*5)}
+  for(const r of S.res){
+    if(r.spawnT&&now-r.spawnT>=1300){r.spawnT=0;JUMP.set(r,now)}
+    if(isWatch(r)&&(r.act&&r.act.type==='patrol'&&r.act.hunt!=null||now-(r.swing||-1e9)<900))BRAVET.set(r,now);/* 勇ましい顔は、ちらちら消えないよう、1.5秒つづける */
+    const v=SPV.get(r);if(v&&now>v.bl+140)v.bl=now+2500+Math.random()*3500}}
 function frame(now){
   if(!running)return;requestAnimationFrame(frame);
   const menuOpen=!$('#title').hidden||!$('#maps').hidden;
   if(!S){last=now;return}
-  if(now-(frame.lr||0)<(menuOpen?125:31))return;frame.lr=now;/* タイトルは静止画なので8コマ/秒。ゲーム中は30コマ/秒 */
-  if(now-(frame.tutT||0)>120){frame.tutT=now;try{palArrows();updTut()}catch(e){}}
+  if(now-frameT<(menuOpen?125:31))return;frameT=now;/* タイトルは静止画なので8コマ/秒。ゲーム中は30コマ/秒 */
+  if(now-tutT>120){tutT=now;try{palArrows();updTut()}catch(e){}}
   const rdt=Math.min(.25,(now-last)/1000);last=now;
   const PZ=started&&sheet!=null,prdt=PZ?0:rdt;/* メニューを開いているあいだは、アニメーションも止める */
   if(camAnim){camAnim.t+=rdt;const p=Math.min(1,camAnim.t/camAnim.dur),e=p<.5?2*p*p:1-Math.pow(-2*p+2,2)/2;cam.z=camAnim.fz+(camAnim.tz-camAnim.fz)*e;centerOn(camAnim.fx+(camAnim.tx-camAnim.fx)*e,camAnim.fy+(camAnim.ty-camAnim.fy)*e);if(p>=1){const d=camAnim.done;camAnim=null;if(d)d()}}
@@ -5437,7 +5444,8 @@ function frame(now){
   for(let i=fx.length-1;i>=0;i--)if(fx[i].life<=0)fx.splice(i,1);
   for(const m of motes){m.y-=prdt*.012*m.s;m.x+=Math.sin(now/2000+m.p)*prdt*.004;if(m.y<0){m.y=1;m.x=Math.random()}}
   if(S.rain)for(const d of rain){d.y+=prdt*1.2*d.s;if(d.y>1){d.y=0;d.x=Math.random()}}
-  if(now-lastDraw>=32&&!PZ&&!menuOpen&&$('#pro').hidden){lastDraw=now;try{render(now)}catch(e){frameErr('render',e)}}/* タイトル・導入会話・メニュー中は、背景ワールドを描かない */
+  stepLooks(now,rdt);
+  if(!PZ&&!menuOpen&&$('#pro').hidden){try{render(now)}catch(e){frameErr('render',e)}}/* タイトル・導入会話・メニュー中は、背景ワールドを描かない */
   if(AC)wantSong=(!$('#title').hidden||!$('#maps').hidden||!$('#pro').hidden)?'opening':(isDark()?'night':'day');
   if(started){hudT+=rdt;if(hudT>.3){hudT=0;updHUD()}
     if(!GIFT_ACTIVE&&RLVQ.length&&sheet==null&&NEWRES==null&&$('#dialog').hidden&&$('#lvup').hidden&&$('#rlv').hidden)rlvShow(RLVQ.shift());
