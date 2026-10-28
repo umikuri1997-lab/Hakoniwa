@@ -2889,10 +2889,10 @@ function drawWaterAll(c){
   if(waterChipsOK()){/* ドット絵：マスの角ごとに、まわり4マスの水のあるなし（16通り）で形をえらぶ */
     const C=window.CHIPS,dc=(k,x,y)=>{const ch=C[k];if(ch)drawChip(c,ch,'water',x,y,0)};
     const corners=(f,k)=>{for(let y=0;y<=H;y++)for(let x=0;x<=W;x++){const b=(f(x-1,y-1)?1:0)|(f(x,y-1)?2:0)|(f(x-1,y)?4:0)|(f(x,y)?8:0);if(b)dc(k+':'+b,x*TS,y*TS)}};
-    {const L=(x,y)=>x>=0&&y>=0&&x<W&&y<H&&!isW0(x,y),h2=TS/2,mir=(sx,sy,sw,sh,dx,dy,fx,fy)=>{c.save();c.translate(dx+(fx?sw:0),dy+(fy?sh:0));c.scale(fx?-1:1,fy?-1:1);c.drawImage(c.canvas,sx,sy,sw,sh,0,0,sw,sh);c.restore()};
+    {const L=(x,y)=>x>=0&&y>=0&&x<W&&y<H&&!isW0(x,y),h2=TS/2,cp=document.createElement('canvas');cp.width=c.canvas.width;cp.height=c.canvas.height;cp.getContext('2d').drawImage(c.canvas,0,0);/* 地面を1回だけ写しておき、そこから鏡うつしにする（同じキャンバスから何百回も写すと、とても重い） */const mir=(sx,sy,sw,sh,dx,dy,fx,fy)=>{c.save();c.translate(dx+(fx?sw:0),dy+(fy?sh:0));c.scale(fx?-1:1,fy?-1:1);c.drawImage(cp,sx,sy,sw,sh,0,0,sw,sh);c.restore()};
      for(let y=0;y<H;y++)for(let x=0;x<W;x++){if(!isW0(x,y))continue;const px=x*TS,py=y*TS,l=L(x-1,y),rr=L(x+1,y),u=L(x,y-1),d=L(x,y+1);
       if(l)mir(px-h2,py,h2,TS,px,py,1,0);if(rr)mir(px+TS,py,h2,TS,px+h2,py,1,0);if(u)mir(px,py-h2,TS,h2,px,py,0,1);if(d)mir(px,py+TS,TS,h2,px,py+h2,0,1);
-      if(!l&&!u&&L(x-1,y-1))mir(px-h2,py-h2,h2,h2,px,py,1,1);if(!rr&&!u&&L(x+1,y-1))mir(px+TS,py-h2,h2,h2,px+h2,py,1,1);if(!l&&!d&&L(x-1,y+1))mir(px-h2,py+TS,h2,h2,px,py+h2,1,1);if(!rr&&!d&&L(x+1,y+1))mir(px+TS,py+TS,h2,h2,px+h2,py+h2,1,1)}}/* 水のふちは水のマスの内がわにあるので、そのすき間には、となりの地面を鏡うつしにして続ける */
+      if(!l&&!u&&L(x-1,y-1))mir(px-h2,py-h2,h2,h2,px,py,1,1);if(!rr&&!u&&L(x+1,y-1))mir(px+TS,py-h2,h2,h2,px+h2,py,1,1);if(!l&&!d&&L(x-1,y+1))mir(px-h2,py+TS,h2,h2,px,py+h2,1,1);if(!rr&&!d&&L(x+1,y+1))mir(px+TS,py+TS,h2,h2,px+h2,py+h2,1,1)}cp.width=cp.height=0}/* 水のふちは水のマスの内がわにあるので、そのすき間には、となりの地面を鏡うつしにして続ける *//* 写しのキャンバスは、すぐ手ばなす（スマホのメモリのため） */
     corners(isW0,VW2?'waterr':'water');
     if(VW2&&S.st2){const M=sprMap();corners((x,y)=>isW0(x,y)&&springOn(M[y*W+x]),'waterh')}/* よみがえった温泉だけ、乳白色の湯 */
     for(let y=0;y<H;y++)for(let x=0;x<W;x++){if(!isW0(x,y))continue;const i=y*W+x,x0=isW0(x-1,y)?2:12,x1=isW0(x+1,y)?18:8,y0=isW0(x,y-1)?4:14,y1=isW0(x,y+1)?28:18;dc('wave#'+((hash(i*5+2)*4)|0),x*TS+x0+hash(i)*Math.max(0,x1-x0)|0,y*TS+y0+hash(i*3)*Math.max(0,y1-y0)|0)}/* さざなみ（水のふちは水の内がわにあるので、ふちにかからない所に） */
@@ -5310,7 +5310,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='503';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='504';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
