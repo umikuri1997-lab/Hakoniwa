@@ -4635,8 +4635,9 @@ function onTap(sx,sy){
     if(o==='sprout')return toast(BL[S.dyn[j].plant].name+'を植える場所：せいれいが植えにくる');
     if(o==='site'){const d=S.dyn[j];return toast(BL[d.build].name+'を建設中：'+Math.floor(d.p/d.need*100)+'%')}
     if(o==='berry'||o==='fruit'){const g=(S.dyn[j]||{g:0}).g;return toast(BL[o].name+'：'+(g>=100?'実がなっている':'実がなるまで あと'+Math.max(1,Math.ceil((100-g)/25))+'日'))}/* タップで見るだけ（セーブの中身はかえない） */
-    if(breakable(o)&&BL[o].brk&&!BL[o].trap&&o!=='tower')return toast(BL[o].name+'：'+withAttr(o,BL[o].desc||'')+'（じょうぶさ '+Math.floor(S.hp[j]??BL[o].hp)+'/'+BL[o].hp+'）');/* 道をふさぐ物：時間を止めず、説明とじょうぶさをいっしょに出す */
-    if(breakable(o)&&o!=='tower')return toast(BL[o].name+'：じょうぶさ '+Math.floor(S.hp[j]??BL[o].hp)+'/'+BL[o].hp);
+    const fw=o&&(FENCE_IDS.has(o)||HOME_WALLS.has(o)||HOME_DOORS.has(o));/* 柵・塀・家の壁・ドア・門は、短い知らせのまま */
+    if(fw&&breakable(o)&&BL[o].brk)return toast(BL[o].name+'：'+withAttr(o,BL[o].desc||'')+'（じょうぶさ '+Math.floor(S.hp[j]??BL[o].hp)+'/'+BL[o].hp+'）');
+    if(fw&&breakable(o))return toast(BL[o].name+'：じょうぶさ '+Math.floor(S.hp[j]??BL[o].hp)+'/'+BL[o].hp);
     if(o==='rock'||o==='deadtree'||o==='ntree')return toast(BL[o].name+'：のこり '+Math.max(0,10-(S.hp['n'+j]||0))+'/10');
     if(o==='watch'||o==='yogan')return openSheet('watch',j);
     if(o==='obox')return S.feat.inv?openSheet('inv'):toast('おそなえ箱');
@@ -4645,9 +4646,10 @@ function onTap(sx,sy){
     if(o==='board')return S.feat.craft?openSheet('craft'):toast('依頼ボード。もう少ししたら使えるようになる');
     if(o==='statue')return toast('女神像。守り神の居場所');
     if(o==='altar')return toast('カミサマの台座。カミサマはここに現れる');
-    if(o&&BL[o].kind==='furn'&&!BL[o].trap)return openSheet('furn',j);/* 家具：説明と、向きをかえる */
+    if(o&&BL[o].kind==='furn'&&!BL[o].trap&&!fw)return openSheet('furn',j);/* 家具：説明と、向きをかえる */
     if(!o&&RUGC.has(ty*W+tx))return openSheet('furn',RUGC.get(ty*W+tx));/* ラグ */
-    if(o)return toast(BL[o].name+'：'+withAttr(o,BL[o].desc||'')+(BL[o].brk?'（じょうぶさ '+Math.floor(S.hp[j]??BL[o].hp)+'/'+BL[o].hp+'）':''));/* 道をふさぐ物も、説明を出す */
+    if(o&&fw)return toast(BL[o].name+'：'+withAttr(o,BL[o].desc||''));
+    if(o)return openSheet('furn',j);/* 噴水・建物・植物・ワナなども、下から説明を出す */
     if(S.ground[j]===1)return toast('池。そばでつりができる');
     if(!inBase(tx,ty))return toast('基地の外のフィールド');
     return toast(REV.has(j)?'よみがえった土地':'荒れた土地。まわりに何か置くと、よみがえる');
@@ -5156,6 +5158,7 @@ function renderSheet(){
     {const b=el('<button class="btn">もどる</button>');b.onclick=()=>{sfx('tap');openSheet('menu')};body.appendChild(b)}
   }else if(sheet==='furn'){const j=sheetArg,o=S.obj[j]||(S.rug||{})[j];if(!o||!BL[o])return closeSheet();T.textContent=BL[o].name;{const te=tagsEl(o);if(te)body.appendChild(te)}
     body.appendChild(rowEl(BL[o].name,withAttr(o,BL[o].desc||''),iconURL(o)));
+    if(BL[o].hp&&S.obj[j]===o)body.appendChild(el('<div class="rows"></div>')).appendChild(rowEl('じょうぶさ',Math.floor(S.hp[j]??BL[o].hp)+' / '+BL[o].hp));/* 建物などのじょうぶさ */
     {const R=rangeOf(o,j);if(R&&!BL[o].env&&o!=='bench')body.appendChild(el('<div class="rows"></div>')).appendChild(rowEl('効果のはんい','まわり'+(R.cells||R.r)+'マス（「みる」でタップすると、色で出る）'))}
     if(SEATS.includes(o)&&spotW(j)>=0)body.appendChild(el('<div class="rows"></div>')).appendChild(rowEl('つりスポット','池のそばのいす。せいれいが、ここにすわってつりをする。ふつうの水べより、魚がつれやすい（水のせいれいは、さらによくつれる）'));/* 池のそばの椅子＝釣りスポット */
     if(o==='table'){const h=roomOf(j);let n=0;if(h)for(const q of h.inside){const oo=S.obj[q];if(oo&&BL[oo]&&BL[oo].cat==='living')n+=BL[oo].dw||1}if(h)for(const oo of rugsIn(h.inside))n+=BL[oo].dw||1;const bon=h?DINEPT[Math.min(6,n)]:0;
@@ -5431,7 +5434,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='545';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='546';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
