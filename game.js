@@ -1256,6 +1256,9 @@ function decide0(r){
   if(r.meal)return goMeal(r,G);
   if(r.hunger<30||(r.hunger<45&&Math.hypot(r.x-CX,r.y-CY)>20)){if(!foeNear(r))return goEat(r,G);if(goEatSafe(r))return}/* そばにコワイノがいても、安全に行ける食料箱（家の中か、コワイノから4マス以上はなれた所）なら食べにいく *//* ごはんは、なによりも先（すぐそばにコワイノがいるときは、逃げるのが先）。基地から遠いときは早めに帰る */
   if(r.alarm!=null&&S.t-r.alarm<120&&r.hunger>=10&&!r.meal&&!(r.elem==='fire'&&r.hunger>=50)&&S.enemies.some(e=>e.spawned&&!e.flee&&Math.hypot(e.x-r.x,e.y-r.y)<10)){if(withFlee(r,fleeAlarm,G))return}
+  if(isNight()&&r.hunger<hMax(r)*.5&&S.food>0){if(!S.enemies.some(e=>e.spawned&&!e.dead&&Math.hypot(e.x-r.x,e.y-r.y)<7))return goEat(r,G);if(goEatSafe(r))return}/* 夜も、おなかが半分になったら食べにいく（見回りの子もふくめて） */
+  if(r.elem==='fire'&&r.hunger>=50&&!r.refill&&!r.coffin){{const st=springThreat(r);if(st){const j=huntSpot(G,st,60,r);if(j>=0)return startAct(r,G,'patrol',j,{hunt:S.t})}}/* 最後の夜は、温泉を守りに行く */const br=BASE_R[S.baseLv]+3,en=pickFoe(r,S.enemies.filter(e=>e.spawned&&!e.dead&&e.x>=CX-br&&e.x<CX+br&&e.y>=CY-br&&e.y<CY+br));/* 「コワイノ」が拠点に近づいたら、たたかいに行く（おなか＝体力が少ないときは行かない）。おなかいっぱいになったら、ほかのことより先に、すぐ行く */
+    if(en){const j=guardSpot(G,en,r);/* 敵と同じマスではなく、ひとます離れて */if(j>=0)return startAct(r,G,'patrol',j,{hunt:S.t})}}/* となりに行けなくても、いちばん近くまで行く。見回りの中断でぐるぐるしないよう hunt をつける */
   if((r.coffin||cnt('grave'))&&goBurial(r,G))return;
   if(r.cing&&!isNight()){const ov=q=>S.obj[q]==='oven'&&free('o'+q,1);let j=nearest(G,j=>adjOf(j,q=>q===r.cing.ov&&ov(q))>=0,90);if(j<0)j=nearest(G,j=>adjOf(j,ov)>=0,90);
     if(j>=0){const q=adjOf(j,k=>k===r.cing.ov&&ov(k))>=0?r.cing.ov:adjOf(j,ov);r.cing.ov=q;const st=ovenStand(G,q);return startAct(r,G,'cook',st>=0?st:j,{key:'o'+q,obj:q})}
@@ -1270,9 +1273,6 @@ function decide0(r){
   if(heldN(r)>0){if(heldN(r)<capOf(r)&&!isNight()&&r.hunger>=30&&!r.highFirst){const cm=r.cmat||{},gm=(cm.stone||0)>0?['mine']:(cm.wood||0)>0?['chop']:[],gat=true;for(const k of['harvest',...gm,'gather'])if(tryJob(r,G,k))return}
     if(carryN(r)>0&&foodCap()>0)return goStore(r,G)}
   if(r.cmat&&matCap()>0)return goStoreMat(r,G);
-  if(isNight()&&r.hunger<hMax(r)*.5&&S.food>0){if(!S.enemies.some(e=>e.spawned&&!e.dead&&Math.hypot(e.x-r.x,e.y-r.y)<7))return goEat(r,G);if(goEatSafe(r))return}/* 夜も、おなかが半分になったら食べにいく（見回りの子もふくめて） */
-  if(r.elem==='fire'&&r.hunger>=50&&!r.refill){{const st=springThreat(r);if(st){const j=huntSpot(G,st,60,r);if(j>=0)return startAct(r,G,'patrol',j,{hunt:S.t})}}/* 最後の夜は、温泉を守りに行く */const br=BASE_R[S.baseLv]+3,en=pickFoe(r,S.enemies.filter(e=>e.spawned&&!e.dead&&e.x>=CX-br&&e.x<CX+br&&e.y>=CY-br&&e.y<CY+br));/* 「コワイノ」が拠点に近づいたら、たたかいに行く（おなか＝体力が少ないときは行かない） */
-    if(en){const j=guardSpot(G,en,r);/* 敵と同じマスではなく、ひとます離れて */if(j>=0)return startAct(r,G,'patrol',j,{hunt:S.t})}}/* となりに行けなくても、いちばん近くまで行く。見回りの中断でぐるぐるしないよう hunt をつける */
   if(isNight()&&r.elem==='fire'&&offShift(r)){r.bubble='💤'}/* 火のせいれいが2人以上いれば、交代で見張って、交代で眠る */
   else if(isNight()&&isWatch(r)){// 火のせいれい（と、まもりをおぼえたフタバ）は寝ないで見回り
     if(r.elem==='fire'&&r.hunger<50&&hideIn(r,G))return;/* おなかが50より少ないときは、たたかわずに家へにげる */
@@ -5308,7 +5308,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='498';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='499';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
