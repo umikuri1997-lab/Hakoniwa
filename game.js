@@ -786,8 +786,8 @@ function genWorld(s,w){
       const core=Math.abs(x+.5-CX)<7&&Math.abs(y+.5-CY)<7;
       if(!core&&r<(V?.03:.05))s.obj[i]='deadtree';else if(!core&&r<(V?.09:.08))s.obj[i]='rock';
       continue}
-    if(forest){if(r<.38)s.obj[i]=V||w===FREE?'ntree':'deadtree';/* 草原は、はじめは森の木もみんな枯れている */else if(r<.42)s.obj[i]='rock';else if(r<.48){s.obj[i]='berry';s.dyn[i]={g:100}}}
-    else if(V){if(r<.05)s.obj[i]='deadtree';else if(r<.13)s.obj[i]='rock';else if(r<.16){s.obj[i]='berry';s.dyn[i]={g:100}}else if(r<.17)s.obj[i]='ntree'}/* 火山のふもとは岩が多い */
+    if(forest){if(r<.38)s.obj[i]=w===FREE?'ntree':'deadtree';/* 敷地の外の木は、みんな枯れている（フリーモードはべつ） */else if(r<.42)s.obj[i]='rock';else if(r<.48){s.obj[i]='berry';s.dyn[i]={g:100}}}
+    else if(V){if(r<.05)s.obj[i]='deadtree';else if(r<.13)s.obj[i]='rock';else if(r<.16){s.obj[i]='berry';s.dyn[i]={g:100}}else if(r<.17)s.obj[i]='deadtree'}/* 火山のふもとは岩が多い */
     else{if(r<.07)s.obj[i]='deadtree';else if(r<.1)s.obj[i]='rock';else if(r<.13){s.obj[i]='berry';s.dyn[i]={g:100}}else if(r<.15)s.obj[i]=w===FREE?'ntree':'deadtree'}
   }
   for(let y=CY-8;y<CY+12;y++)s.floor[y*W+CX]='path';
@@ -2593,6 +2593,7 @@ function dropBirdhouse(){/* なくした巣箱：置いてある物・持ち物�
   if(S.inv&&S.inv.birdhouse){S.inv.hedge=(S.inv.hedge||0)+S.inv.birdhouse;delete S.inv.birdhouse}
   for(const o of S.orders||[])if(o.type==='birdhouse')o.type='hedge';
   if(S.recipes)delete S.recipes.birdhouse;if(S.guardianIdeas)delete S.guardianIdeas.birdhouse}
+function dropNtree(){/* 敷地の外の森の木は、枯れ木にする（生えなおす木も）。フリーモードはべつ */if(WD===FREE)return;for(let j=0;j<W*H;j++)if(S.obj[j]==='ntree'&&!inBase(j%W,(j/W)|0))S.obj[j]='deadtree';for(const g of S.regrow||[])if(g.id==='ntree'&&!inBase(g.j%W,(g.j/W)|0))g.id='deadtree'}
 function dropFlower(){/* なくした花だん：置いてある物・持ち物・依頼は、シロツメクサにかえる。レシピ・しるしからはけす */
   for(let j=0;j<W*H;j++)if(S.obj[j]==='flower')S.obj[j]='clover';
   if(S.inv&&S.inv.flower){S.inv.clover=(S.inv.clover||0)+S.inv.flower;delete S.inv.flower}
@@ -5257,7 +5258,7 @@ function arrive(){
 }
 function talkOnce(key,lines,delay){/* 1回だけの会話：最後まで見てから「見た」にする。とちゅうでとじたら、次に開いたときにもう一度 */if(!S||S.flags[key]||!lines||!lines.length)return;const P=S.pendTalk||(S.pendTalk={});P[key]=lines;setTimeout(()=>{if(!S||S.flags[key])return;dialog(P[key]||lines,()=>{S.flags[key]=1;if(S.pendTalk)delete S.pendTalk[key]})},delay||900)}
 function replayTalks(){if(!S||!S.pendTalk)return;for(const k in S.pendTalk){if(S.flags[k]){delete S.pendTalk[k];continue}talkOnce(k,S.pendTalk[k],1500)}}
-function continueGame(saved){if(saved&&saved.summary)saved=loadStage(saved.world);if(!saved)return;setWorld(saved.world||0);S=saved;LIVE[WD]=S;ensureStor(S);fixBeds();dropChair2();dropBirdhouse();dropFlower();setTimeout(replayTalks,2500);/* とちゅうでとじた会話を、もう一度 */syncTools(S);dirty=true;closeSheet();S.res.forEach(r=>{r.act=null;r.path=[]});S.orders.forEach(o=>o.worker=null);recount();renderQuest();applyFeats();setMode('look');glassUI();
+function continueGame(saved){if(saved&&saved.summary)saved=loadStage(saved.world);if(!saved)return;setWorld(saved.world||0);S=saved;LIVE[WD]=S;ensureStor(S);fixBeds();dropChair2();dropBirdhouse();dropFlower();dropNtree();setTimeout(replayTalks,2500);/* とちゅうでとじた会話を、もう一度 */syncTools(S);dirty=true;closeSheet();S.res.forEach(r=>{r.act=null;r.path=[]});S.orders.forEach(o=>o.worker=null);recount();renderQuest();applyFeats();setMode('look');glassUI();
   cam.z=homeZ();centerOn(CX*TS,CY*TS);$('#title').hidden=true;$('#maps').hidden=true;started=true;stageMusic();showUI(true);if(!WD&&S.flags&&S.flags.ret1===1){S.flags.ret1=2;(S.sevQ||(S.sevQ=[])).push('ret')}}
 
 
@@ -5301,7 +5302,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='487';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='488';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
