@@ -41,7 +41,7 @@ const ELEM_KEYS=Object.keys(ELEM);
 const BL={
   path:{name:'あぜ道',kind:'block',floor:1,lv:2,cost:1,pc:2,time:30,maker:'earth',qty:10,mat:{stone:2},attr:{earth:.25},desc:'草地のあいだを通る土の道。歩く速さ×1.25'},
   gravel:{name:'砂利道',kind:'block',floor:1,cost:1,pc:3,time:30,maker:'earth',qty:10,lv:5,mat:{stone:3},attr:{earth:.4},desc:'小石をしいた道。歩く速さ×1.4'},
-  brick:{name:'レンガ道',kind:'block',floor:1,cost:3,pc:5,time:50,maker:'fire',qty:10,lv:8,mat:{stone:8},attr:{fire:.4,earth:.3},desc:'いちばん速く歩ける道。歩く速さ×1.75'},
+  brick:{name:'レンガ道',kind:'block',floor:1,cost:3,pc:5,time:50,maker:'fire',qty:10,lv:8,mat:{stone:8},attr:{fire:.4,earth:.3},desc:'レンガをしきつめた道。歩く速さ×1.75'},
   floor:{name:'フローリング',kind:'block',floor:1,lv:4,cost:1,pc:2,time:30,maker:'wood',qty:10,mat:{wood:2},attr:{wood:.5},desc:'木目のそろった板の床。歩く速さ×1.15'},
   brickfloor:{name:'レンガ床',kind:'block',floor:1,lv:8,cost:3,pc:5,time:50,maker:'fire',qty:10,mat:{stone:3},attr:{fire:.4,earth:.3},desc:'レンガをしきつめた家の床。歩く速さ×1.15'},
   stonefloor:{name:'石の床',kind:'block',floor:1,lv:6,cost:2,pc:4,time:40,maker:'earth',qty:10,mat:{stone:3},attr:{earth:.5},desc:'石をしきつめた家の床。歩く速さ×1.15'},
@@ -5434,7 +5434,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='547';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='548';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
