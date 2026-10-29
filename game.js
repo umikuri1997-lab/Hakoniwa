@@ -2121,7 +2121,7 @@ function takeDrop(d,r){let nm;
   if(d.id.startsWith('food:')){const k=d.id.slice(5),add=Math.max(0,Math.min(d.n,foodCap()-S.food));if(add)addFood(k,add);if(add<d.n)S.drops.push(Object.assign({},d,{n:d.n-add}));/* 食料箱に入りきらない分は、そのまま地面にのこる */nm=FOODS[k].name+(add?'×'+add:'（食料箱がいっぱい）')}
   else if(d.id.startsWith('mat:')){const k=d.id.slice(4),add=Math.max(0,Math.min(d.n,matCap()-matTot()));S.mat[k]=(S.mat[k]||0)+add;if(!S.gotMat)S.gotMat={};S.gotMat[k]=(S.gotMat[k]||0)+add;nm=MATN[k]+(add?'×'+add:'（素材箱がいっぱい）')}
   else{giveItem(d.id,d.n);nm=(d.id.startsWith('seed:')?CROPS[d.id.slice(5)].name+'のたね':BL[d.id].item||BL[d.id].name)+'×'+d.n}
-  toast((r?r.name+'が':'')+'おとしものをひろった：'+nm,'good')}
+  if(!d.lt)toast((r?r.name+'が':'')+'おとしものをひろった：'+nm,'good')}/* 守りの光で落とした素材は、だまってひろう */
 const watchUp=()=>Object.keys(S.hp).some(k=>k[0]==='L'&&S.hp[k]>=2&&S.obj[+k.slice(1)]==='watch');/* Lv2以上の見張り台がある */
 const WUP=[null,{pc:30,mat:{wood:30,stone:35}},{pc:100,mat:{wood:45,stone:75}}],YUP=[null,{pc:30,mat:{wood:30,stone:35}},{pc:60,mat:{wood:45,stone:75}}];/* 見張り台・ようがん台の強化 */const WATCH=[null,{dmg:1,range:6,cd:10},{dmg:2,range:6.5,cd:10},{dmg:3,range:7,cd:10}];/* cd：攻撃の間かく（分） */
 const YOGAN=[null,{dmg:1,range:5,cd:8,splash:1.5,sdmg:.5},{dmg:2,range:5.5,cd:8,splash:1.5,sdmg:1},{dmg:3,range:6,cd:8,splash:1.5,sdmg:1.5}];/* ようがん台（火山のふもと）：火の玉。当たったまわりにもダメージ */
@@ -2661,11 +2661,12 @@ function morning(){sfx('morning');if(S.cleared&&S.daily)dailyCheck();/* 夜の�
   summonMorning();
 }
 const LIGHTNAT={ntree:'wood',deadtree:'wood',tree:'wood',rock:'stone'},NATHIT=new Map();/* 守り神の光をあてられる木・岩と、落ちる素材 */
+const hudIc=id=>{const b=$('#'+id),im=b&&b.previousElementSibling;return im&&im.tagName==='IMG'?im:null};/* 画面の上の木材・石材のアイコン */
 function natLight(j){const o=S.obj[j],k=LIGHTNAT[o];if(LIGHTCD>0){toast('まもりの光は、あと'+Math.ceil(LIGHTCD/(S.speed||1))+'秒');return}if(S.pt<1){toast('パワーが足りません');return}S.pt-=1;LIGHTCD=10;/* 1回パワー1。コワイノと同じ待ち時間 */
   const x=j%W,y=(j/W)|0,n=(S.hp['lt'+j]||0)+1,cx=x*TS+16,cy=y*TS+8;fx.push({k:'ring',x:cx,y:cy,life:1});for(let m=0;m<12;m++){const a=Math.random()*7,v=rnd(40,100);fx.push({k:'p',x:cx,y:cy,vx:Math.cos(a)*v,vy:Math.sin(a)*v-40,life:1,col:pick(['#fffbe0','#fff','#ffe9a0']),r:rnd(1.5,3)})}sfxAt('shoot',x,y);
   NATHIT.set(j,performance.now());if(n<3){S.hp['lt'+j]=n;return}/* 3回あてると、木材・石材が1こ落ちる。のこりは、たいきゅうバーで見せる */
-  delete S.hp['lt'+j];useNat(j);dropAt(x,y,'mat:'+k,1);addFloat(x+.5,y-.5,MATN[k]+'が落ちた','#ecdcbc')}/* 落ちた物は、せいれいがひろう。木や岩は、せいれいが切ったときと同じようにへる */
-function findTalk(){if(WD!==0){S.flags.lightTold=1;return}/* 説明は1章（草原）だけ。ほかの章では、もう知っているので話さない */if(!qDone('table')||!$('#dialog').hidden)return;/* 食卓のクエストがおわってから話す */const sp=S.res.find(r=>r.name===POKO&&!r.hidden);if(!sp)return;S.flags.lightTold=1;
+  delete S.hp['lt'+j];useNat(j);const n0=(S.drops||[]).length;dropAt(x,y,'mat:'+k,1);if(S.drops&&S.drops.length>n0)S.drops[S.drops.length-1].lt=1}/* 何も言わずに、木材・石材のアイコンを落とす *//* 落ちた物は、せいれいがひろう。木や岩は、せいれいが切ったときと同じようにへる */
+function findTalk(){if(WD!==0){S.flags.lightTold=1;return}/* 説明は1章（草原）だけ。ほかの章では、もう知っているので話さない */if(!qDone('bed')||!(S.nights>=1)||!$('#dialog').hidden)return;/* 守り神の光を知ってから（はじめての夜をこえてから）話す */const sp=S.res.find(r=>r.name===POKO&&!r.hidden);if(!sp)return;S.flags.lightTold=1;
   dialog([[POKO,'#think|ねえ、守り神さま。木材や石材、もっとたくさんあったらいいのにね。'],[POKO,'#surprise|……そうだ！ 守り神さまの光、木や岩にもあてられないかな？'],[POKO,'#joy|光があたったら、木ぎれや石ころが、ころんって落ちてくるかも。そしたら、ぼくたちがひろって、箱にしまうよ！']],()=>toast('守りの光をえらんで木や岩をタップすると、守りの光をあてられる（パワー1）'))}
 function spawnSeed(){
   for(let t=0;t<40;t++){const x=OFF+((Math.random()*OW)|0),y=OFF+((Math.random()*OW)|0),j=y*W+x;/* 前からの土地の中に落ちる */
@@ -4697,6 +4698,7 @@ function render(now){
       ctx.fillStyle='rgba(255,240,170,'+(.18+tw*.2)+')';ctx.beginPath();ctx.arc(cx,fy,13+tw*3,0,7);ctx.fill();
       ctx.fillStyle='#ffe58a';ctx.beginPath();ctx.moveTo(cx,fy-11);ctx.lineTo(cx+7,fy-1);ctx.lineTo(cx,fy+10);ctx.lineTo(cx-7,fy-1);ctx.closePath();ctx.fill();
       ctx.fillStyle='#fff8d8';ctx.beginPath();ctx.moveTo(cx,fy-11);ctx.lineTo(cx+3,fy-1);ctx.lineTo(cx,fy+10);ctx.lineTo(cx-2,fy-1);ctx.closePath();ctx.fill();continue}
+    if(d.lt){const im=hudIc(d.id==='mat:wood'?'woodN':'stoneN'),ih=20;ctx.fillStyle='rgba(40,25,10,.18)';ctx.beginPath();ctx.ellipse(cx,cy+6,9,2.7,0,0,7);ctx.fill();if(im&&im.complete&&im.naturalWidth){const iw=ih*im.naturalWidth/im.naturalHeight;ctx.drawImage(im,Math.round(cx-iw/2),Math.round(cy-ih/2-1),iw,ih)}continue}/* 守りの光で落とした木材・石材：上の木材・石材と同じアイコン */
     /* 小さなふくろ */
     ctx.fillStyle='rgba(40,25,10,.22)';ctx.beginPath();ctx.ellipse(cx,cy+8,9,3,0,0,7);ctx.fill();
     ctx.fillStyle='#b5854e';ctx.beginPath();ctx.ellipse(cx,cy+1,8.5,7.5,0,0,7);ctx.fill();ctx.fillStyle='#c99a60';ctx.beginPath();ctx.ellipse(cx-2.5,cy-1,3.5,3,0,0,7);ctx.fill();
@@ -5687,7 +5689,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='635';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='636';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
