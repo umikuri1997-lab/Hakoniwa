@@ -2238,7 +2238,7 @@ function stepWorld(dt){if((SUBT+=dt)>1){SUBT=0;checkSub();checkSev();guardTick()
   if(S.seedDay!==dayNo()&&h>=6){S.seedDay=dayNo();const n=Math.random()<.5?1:0,b=S.t-S.t%1440;S.seeds=[];S.seedPlan=Array.from({length:n},()=>b+360+Math.random()*720).sort((x,y)=>x-y)}/* ふしぎな種は1日1こまで（50%）。ひろわなかったら、あしたには消える */
   if(S.seedPlan&&S.seedPlan.length&&S.t>=S.seedPlan[0]){S.seedPlan.shift();spawnSeed()}
   if(S.findDay!==dayNo()&&h>=6){S.findDay=dayNo();S.finds=[]}/* ひろいもの：ひろわなかった物は、つぎの日の朝に消える */
-  {const hr=Math.floor(clk()/30);if(S.findHr!==hr){S.findHr=hr;if(!isNight())spawnFind()}}/* 6時〜23時のあいだ、30分に1こ落ちる。せいれいが何人でも落ちる */
+  {const hr=Math.floor(clk()/10);if(S.findHr!==hr){S.findHr=hr;if(!isNight())spawnFind()}}/* 6時〜23時のあいだ、10分に1こ落ちる。せいれいが何人でも落ちる */
   if(prevH<3&&h>=3&&S.today==='hoshi')for(const r of S.res)if(r.act&&r.act.type==='sleep')r.fun=Math.min(100,r.fun+15);
 }
 const FREEG=[{k:'g900',t:'みどりのマスを900に',now:()=>GRASSN,ok:()=>GRASSN>=900,rw:30},{k:'r15',t:'せいれいを15人に',now:()=>S.res.length,ok:()=>S.res.length>=15,rw:30},{k:'fl30',t:'花を30こさかせる',now:()=>flowerN(),ok:()=>flowerN()>=30,rw:40},
@@ -5694,7 +5694,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='619';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='620';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
