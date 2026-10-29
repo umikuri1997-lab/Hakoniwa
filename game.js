@@ -3939,7 +3939,7 @@ let SSIG=null,SSIG_S=null,SSIG_G='',NOISEC=null,STMP=null;
 function staticSig(){/* マスごとに、地面の絵にかかわる中身を文字にしておく（前とくらべて、変わったマスだけ描き直すため） */const hs=new Set();for(const h of HOUSES)for(const j of h.set)hs.add(j);const M=WD===1&&S.st2?sprMap():null,sg=new Array(W*H);
   for(let i=0;i<W*H;i++){const o=S.obj[i],st=o&&BL[o]&&!(BL[o].dyn||BL[o].anim||TREES.has(o));sg[i]=o+'|'+(S.ref[i]??'')+'|'+S.ground[i]+'|'+(S.floor[i]||'')+'|'+(REV.has(i)?1:0)+(hs.has(i)?1:0)+(ashed(i)?1:0)+(M&&S.ground[i]===1&&springOn(M[i])?1:0)+(S.trapCd&&S.trapCd[i]>S.t?1:0)+'|'+(st&&S.dyn[i]?JSON.stringify(S.dyn[i]):'')+'|'+((S.win||{})[i]||'')+'|'+((S.rot||{})[i]||'')+'|'+(RUGC.has(i)?RUGC.get(i)+S.rug[RUGC.get(i)]+((S.rugRot||{})[RUGC.get(i)]||''):'')+'|'+(S.hp['L'+i]||'')}
   return sg}
-function rebuildStatic(full){findHouses();
+let STATN=0;function rebuildStatic(full){STATN++;findHouses();
   const g=[WD,S.baseLv,CX,CY,W,H,groundChipsOK(),waterChipsOK()].join(),sg=staticSig();
   if(!full&&SSIG&&SSIG_S===S&&SSIG_G===g){/* 変わったマスのまわりだけ描き直す */
     let R=[];for(let i=0;i<W*H;i++)if(sg[i]!==SSIG[i]){const x=i%W,y=(i/W)|0;R.push([Math.max(0,x-3),Math.max(0,y-6),Math.min(W-1,x+3),Math.min(H-1,y+1)])}/* 背の高い物は上へ6マスまで、横へ3マスまで絵がはみ出す */
@@ -4660,6 +4660,18 @@ function objectDepth(o,j){const y=(j/W)|0;if(FLAT.has(o))return y+.02;if((o==='d
   const b=o==='site'&&S.dyn[j]&&BL[S.dyn[j].build]||BL[o];
   return y+(b&&b.sz?(o==='site'?b.sz[1]:szAt(o,j)[1]):1)+(o==='obox'?.01:0);
 }
+const WSH={k:'',m:null,o:null,any:false};
+function waterShimmer(now,x0,y0,x1,y1){/* 水面が少しゆらぐ：見えている所の水の形の中に、ゆっくり動く水のもようを、うすく重ねる（形は画面が動いたときだけ作りなおす） */
+  if(WD===1||!waterChipsOK())return;const C=window.CHIPS,im=chipImgs(C['tex:water'],'water')[0],w=(x1-x0)*TS,h=(y1-y0)*TS;if(w<=0||h<=0||w*h>4e6)return;
+  const k=x0+','+y0+','+x1+','+y1+','+STATN;
+  if(WSH.k!==k){WSH.k=k;const m=WSH.m||(WSH.m=document.createElement('canvas'));m.width=w;m.height=h;const g=m.getContext('2d');let any=false;
+    const isW=(x,y)=>x>=0&&y>=0&&x<W&&y<H&&S.ground[y*W+x]===1;
+    for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++){const b=(isW(x-1,y-1)?1:0)|(isW(x,y-1)?2:0)|(isW(x-1,y)?4:0)|(isW(x,y)?8:0);if(!b)continue;const ch=C['waterm:'+b];if(ch){drawChip(g,ch,'water',(x-x0)*TS,(y-y0)*TS,0);any=true}}
+    WSH.any=any;const o=WSH.o||(WSH.o=document.createElement('canvas'));o.width=w;o.height=h}
+  if(!WSH.any)return;
+  const o=WSH.o,g=o.getContext('2d'),t=now/1000;g.globalCompositeOperation='copy';g.drawImage(WSH.m,0,0);g.globalCompositeOperation='source-in';
+  const pt=g.createPattern(im,'repeat');pt.setTransform(new DOMMatrix().translate(-x0*TS+Math.sin(t*.6)*5,-y0*TS+Math.cos(t*.45)*3));g.fillStyle=pt;g.fillRect(0,0,w,h);g.globalCompositeOperation='source-over';
+  ctx.globalAlpha=.3+Math.sin(t*.8)*.08;ctx.drawImage(o,x0*TS,y0*TS);ctx.globalAlpha=1}
 function render(now){
   if(dirty)rebuildStatic(STATICFULL);
   ctx.setTransform(1,0,0,1,0,0);ctx.fillStyle='#8f8262';ctx.fillRect(0,0,cv.width,cv.height);
@@ -4667,6 +4679,7 @@ function render(now){
   ctx.setTransform(k,0,0,k,-cam.x*k,-cam.y*k);
   ctx.drawImage(stat,0,0);
   const x0=Math.max(0,Math.floor(cam.x/TS)-1),y0=Math.max(0,Math.floor(cam.y/TS)-2),x1=Math.min(W,Math.ceil((cam.x+VW/cam.z)/TS)+1),y1=Math.min(H,Math.ceil((cam.y+VH/cam.z)/TS)+2);
+  waterShimmer(now,x0,y0,x1,y1);
   for(let y=y0;y<y1;y++)for(let x=x0;x<x1;x++){const i=y*W+x;
     if(S.ground[i]===1){const ph=now/900+hash(i)*6,a=Math.max(0,Math.sin(ph))*.45;if(a>.05){ctx.fillStyle='rgba(255,255,255,'+a+')';ctx.fillRect(x*TS+5+hash(i*3)*16,y*TS+8+hash(i*5)*14,7,1.5)}continue}
   }
@@ -5675,7 +5688,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='607';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='608';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
