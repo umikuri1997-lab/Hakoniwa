@@ -1314,7 +1314,7 @@ function decide0(r){
   if(r.afterBath>S.t&&!isNight()&&(r.restCD||0)<=S.t){r.afterBath=0;const isB=j=>(S.obj[j]==='bench'||(S.obj[j]==='part'&&S.obj[S.ref[j]]==='bench'))&&!ashed(anc(j));const bj=nearest(G,j=>isB(j)&&free('o'+j,1),40);if(bj>=0)return startAct(r,G,'rest',bj,{key:'o'+bj,obj:anc(bj),seat:bj})}/* 湯上がりは、ベンチでひと休み *//* 水浴びは18時。せいれいごとに少しずつずれる */
   if(r.elem==='water'&&r.hunger>=25&&!isNight()&&goDouse(r,G))return;/* 水の子は、燃えている物があれば、まず消しにいく */
    if(heldN(r)>0&&r.elem==='earth'&&r.hunger>=55&&!isNight()&&tryJob(r,G,'repair'))return;/* 土のせいれいは、ついでの収穫・木切りより修理が先 */
-  if(heldN(r)>0){if(heldN(r)<capOf(r)&&!isNight()&&r.hunger>=30&&!r.highFirst){const cm=r.cmat||{},gm=(cm.stone||0)>0?['mine']:(cm.wood||0)>0?['chop']:[];for(const k of['harvest',...gm,'gather'])if(tryJob(r,G,k))return}
+  if(heldN(r)>0){if(heldN(r)<capOf(r)&&!isNight()&&r.hunger>=30&&!r.highFirst){const cm=r.cmat||{},gm=(cm.stone||0)>0?['mine']:(cm.wood||0)>0?['chop']:[];for(const k of['drop','harvest',...gm,'gather'])if(tryJob(r,G,k))return}/* 落ちている素材・食べ物も、持てる数までまとめてひろってから運ぶ */
     if(carryN(r)>0&&foodCap()>0)return goStore(r,G)}
   if(r.cmat&&matCap()>0)return goStoreMat(r,G);
   else if(isNight()&&isWatch(r)){// 火のせいれい（と、まもりをおぼえたフタバ）は寝ないで見回り
@@ -2414,6 +2414,7 @@ function Sn0(k){(S.subSeen||(S.subSeen={}))[k]=1}
    いない子のセリフ（3つめに1）はとばす。need の子がいないと出ない */
 const NUSHI1='草原のヌシ';
 function sevName(t){return t==='F'?POKO:t==='N'?MINA:t==='H'?keyName('fire'):t==='M'?keyName('water'):t==='K'?keyName('wind'):t==='G'?GOD:t==='U'?NUSHI1:t}
+function sevAllHere(e){return (e.L||[]).every(x=>typeof x[2]==='string'||sevHere(x[0]))}/* ピンクの会話：話す子がみんな村にいるときだけ（「Nがいるときだけ」の行はのぞく） */
 function sevHere(t){if(t==='G'||t==='U')return true;const n=sevName(t);return !!n&&S.res.some(r=>r.name===n)}
 function sevLines(L,dead){const out=[];for(const x of L){const t=x[0],dp=x[2];if(dp==='1st'&&S.flags&&S.flags.kizunaTold)continue;/* '1st'=最初にもどった子の会話だけ */if(typeof dp==='string'&&dp!=='1st'&&(dp[0]==='!'?sevHere(dp.slice(1)):!sevHere(dp)))continue;/* 3つめが'N'なら「Nがいるときだけ」、'!N'なら「Nがいないときだけ」 */if(!sevHere(t)){if(dp)continue;return null}const n=sevName(t);let s=x[1];
   if(typeof s==='object'){const r=S.res.find(q=>q.name===n);s=r&&elemKey(r)==='fireB'?s.B:s.A}out.push([n,s.split('$').join(dead||'').replace(/@([HMK])/g,(m,c)=>sevName(c)),typeof x[3]==='string'?x[3]:0])}return out}
@@ -2475,7 +2476,7 @@ function checkSev(){if(WD||!S){SEVW={};return}if(!sevBusy())sevBub();if(S.cleare
   const h=hour(),day=h>=6&&h<21;
   for(const e of SEV1){if(e.q||D[e.k]||(S.sevMiss||{})[e.k]||SEVRUN.has(e.k)||(S.sevP||[]).includes(e.k))continue;if(!e.night&&!day)continue;if(!e.at())continue;const L=sevLines(e.L);if(!L)continue;
     if(e.k==='e08'||e.k==='e15'||e.k==='e09'||e.k==='e16g'||e.k==='e16v'){SEVRUN.add(e.k);const f=S.res.find(r=>r.name===POKO);if(f)centerOn(f.x*TS,f.y*TS);const run=()=>dialog(L,()=>{D[e.k]=1;SEVRUN.delete(e.k);if(e.go)e.go()});return e.vis?visionFX(e.vis,run):run()}/* ムービー・会話は、最後まで見てから「見た」にする（途中でゲームをとじたら、はじめから） */
-    (S.sevP||(S.sevP=[])).push(e.k)}/* ふつうの条件会話は、吹き出しをタップしてから。「見た」にするのは、最後まで見てから */
+    if(!sevAllHere(e))continue;(S.sevP||(S.sevP=[])).push(e.k)}/* ふつうの条件会話は、吹き出しをタップしてから。「見た」にするのは、最後まで見てから */
   sevBub()}
 /* 話したそうな子：S.sevP にたまった条件会話を、先頭のセリフの子の吹き出しにする */
 let SEVW={};
@@ -2509,7 +2510,7 @@ function sevBub(){SEVW={};if(!S)return;const P=S.sevP||[];for(let i=P.length-1;i
   let enc=SEV_ENCOUNTERS.get(S);if(enc&&(!P.includes(enc.k)||!sevTargetAlive(enc.target))){sevCancel(enc);enc=null}
   if(sevBusy()||sevQuestBusy()||S.qStory!=null||isNight()||S.sevTalkAt!=null&&S.t-S.sevTalkAt<180)return;
   if(enc){if(!sevEncounterSafe(enc)){sevCancel(enc);return}if(enc.ready){if(sevNear(enc.L)&&enc.actors.every(r=>sevClose(r,enc.target)))SEVW[enc.speaker.name]=enc.k;else sevCancel(enc)}return}
-  const retry=SEV_RETRY.get(S)||{};for(const k of P){if(retry[k]>S.t)continue;const e=SEV1.find(x=>x.k===k),L=sevLines(e.L);if(!L)continue;if(sevBegin(e,L))return;retry[k]=S.t+5}SEV_RETRY.set(S,retry)}
+  const retry=SEV_RETRY.get(S)||{};for(const k of P){if(retry[k]>S.t)continue;const e=SEV1.find(x=>x.k===k),L=sevLines(e.L);if(!L||!sevAllHere(e))continue;if(sevBegin(e,L))return;retry[k]=S.t+5}SEV_RETRY.set(S,retry)}
 function pauseAfterPink(lines){S.sevTalkAt=S.t;S.sevQuietUntil=S.t+180;for(const [name]of lines){const r=S.res.find(r=>r.name===name);if(r)r.chatCD=Math.max(r.chatCD||0,S.sevQuietUntil)}}
 function sevTalk(k){if(!$('#dialog').hidden)return;const enc=SEV_ENCOUNTERS.get(S);if(!enc||enc.k!==k||!enc.ready||SEVW[enc.speaker.name]!==k)return;const P=S.sevP||[],i=P.indexOf(k),e=SEV1.find(x=>x.k===k);if(i<0||!e)return;const L=sevLines(e.L);if(!L)return;P.splice(i,1);S.sevTalkAt=S.t;const actors=enc.actors.filter(r=>!r.hidden);if(actors.length){const tx=actors.reduce((v,r)=>v+r.x,0)/actors.length*TS,ty=(actors.reduce((v,r)=>v+r.y,0)/actors.length-.7)*TS;camAnim={fz:cam.z,tz:cam.z,fx:cam.x+VW/cam.z/2,fy:cam.y+VH/cam.z/2,tx,ty,t:0,dur:.6}}sevCancel(enc,null,false);sevBub();pauseAfterPink(L);for(const r of actors)r.chatCD=Math.max(r.chatCD||0,S.sevQuietUntil);/* ピンクの会話のあいだ、ふつうの会話は始めない */
   const run=()=>dialog(L,()=>{(S.sev||(S.sev={}))[k]=1;pauseAfterPink(L);if(e.go)e.go()});e.vis?visionFX(e.vis,run):run()}/* 最後まで見てから「見た」にする（途中でゲームをとじたら、はじめから） */
@@ -5712,7 +5713,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='643';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='644';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
