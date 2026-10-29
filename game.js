@@ -4048,6 +4048,7 @@ const hex2hsl=h=>{const n=parseInt(h.slice(1),16),r=(n>>16)/255,g=(n>>8&255)/255
 const hsl2hex=(H,S2,l)=>{const k=n=>(n+H/30)%12,a=S2*Math.min(l,1-l),f=n=>l-a*Math.max(-1,Math.min(k(n)-3,9-k(n),1));return'#'+[f(0),f(8),f(4)].map(v=>Math.round(Math.max(0,Math.min(1,v))*255).toString(16).padStart(2,'0')).join('')};
 const SPCV={};function spcVar(el,v){const B=SPC[el]||SPC.wood;if(!v||(!v.h&&!v.l))return B;const k=el+v.h+'_'+v.l;if(SPCV[k])return SPCV[k];const o={};for(const q in B){if(q==='line'||q==='hand'){o[q]=B[q];continue}const[H,S2,l]=hex2hsl(B[q]);o[q]=hsl2hex((H+v.h+360)%360,S2,Math.max(.08,Math.min(.92,l+v.l)))}return SPCV[k]=o}
 let HOODB=[4,-.05];
+let EATSIDE=-.1;
 function spPose(o,t,tr,back){/* せいれいの動きの計算：腕の角度・かたむき・道具など（描き方とは別） */
   const br=o.sleep?Math.sin(t*1.6)*.035:Math.sin(t*2.6)*.022;
   const st=o.walk?Math.sin(t*9):0,arm=o.carry?0:o.work?Math.sin(t*12)*.6:o.walk?st*.35:Math.sin(t*1.7)*.08;
@@ -4057,7 +4058,7 @@ function spPose(o,t,tr,back){/* せいれいの動きの計算：腕の角度・
   else if(A==='pray'){aN=aF=-2.4+Math.sin(t*1.4)*.03;lean2=.07+Math.sin(t*1.4)*.015;frontArm=bothF=true}/* おいのり：胸の前で手を合わせて、少しうつむく */
   else if(A==='pluck'){aN=-1.95+Math.sin(t*9)*.28;aF=.15;lean2=.03;frontArm=true}/* ベリーをむしる：片手を上げて、ひっぱる */
   else if(A==='hold'){aN=aF=-.85+Math.sin(t*3)*.03;frontArm=bothF=true}/* 手に持つ */
-  else if(A==='eat'){aN=aF=-2.45+Math.sin(t*7)*.06;frontArm=bothF=true}
+  else if(A==='eat'){aN=aF=(tr?EATSIDE:-2.45)+Math.sin(t*7)*.06;frontArm=bothF=true}/* 横向きは、両手を前にのばして、食べ物を持つ */
   else if(A==='chop'||A==='mine'||A==='till'){const p=cyc(1.4),v=p<.72?-2.3*(p/.72):-2.3+2.9*((p-.72)/.28);aN=v;aF=v;prop=A==='chop'?'axe':A==='mine'?'pick':'hoe';lean2=p<.72?-.06*(p/.72):-.06+.2*((p-.72)/.28);frontArm=true}
   else if(A==='build'||A==='repair'||A==='craft'){const p=cyc(2.6),v=p<.6?-1.3*(p/.6):-1.3+1.7*((p-.6)/.4);aN=v;aF=.2;prop='hammer';lean2=p>.6?.06:0;frontArm=true}
   else if(A==='water'||A==='tend'){aN=-.55+Math.sin(t*2)*.08;aF=.25;prop='can';lean2=.05;frontArm=true}
@@ -4129,7 +4130,7 @@ function drawSpiritDot(c,el,x,y,s,f,o){
     for(const w of W)lf(w,'leaf');if(bk){c.globalAlpha=.25;lf(W[0],'leafW');lf(W[1],'leafW');c.globalAlpha=1}};/* うしろ向きは、上のはねを少し白っぽく */
   if(el==='wind'&&!back){c.save();c.translate(-tr*9+hDx,hDy);c.scale(1-tr*.3,1);wings();c.restore()}
   if(!back&&el!=='wind'&&tr)tail(-18,-16,-.85);
-  const armD=(sx,a)=>{c.save();c.translate(sx*14*TUNE.bodyW*(1-tr*.9)+(back?-1:1)*tr*2,-26*TUNE.bodyH+aDy);c.translate(aDx,0);c.rotate(sx*(.35+a));
+  const armD=(sx,a)=>{c.save();c.translate(sx*14*TUNE.bodyW*(1-tr*.9)+(back?-1:1)*tr*2+(A==='eat'&&tr&&o.food?13:0),-26*TUNE.bodyH+aDy);/* 横向きで食べるときは、うでを前に出して、食べ物までとどかせる */c.translate(aDx,0);c.rotate(sx*(.35+a));
     c.save();c.scale(sx,1);spr('sp:arm'+S);c.restore();if(prop&&sx===-farA&&!back)spProp(c,prop,sx,a,t,o);c.save();c.scale(sx,1);spr('sp:hand');c.restore();c.restore()};
   const farA=back?1:-1,aA0=sx=>o.carry?-1.85+Math.sin(t*9)*.08:tr?1.22+(o.walk?st*.6:Math.sin(t*1.7)*.05):(back?1:-1)*sx*arm+(back?0:.35),aA=sx=>sx===-farA?(aN!=null?aN:aA0(sx)):(aF!=null&&!o.carry?aF:aA0(sx));
   if(!bothF&&!tr)armD(farA,aA(farA));if(!tr&&!frontArm)armD(-farA,aA(-farA));
@@ -4160,7 +4161,8 @@ function drawSpiritDot(c,el,x,y,s,f,o){
     if(vr&&vr.lash&&fm!=='strain')spr('sp:lash'+S+'#'+fm,0,fy)}/* まつげは、表情ごとの目に合わせた絵 */
   c.restore();
   if(bothF)armD(farA,aA(farA));if(frontArm)armD(-farA,aA(-farA));
-  if((A==='eat'||A==='hold')&&o.food&&!back){const ei=emoImg(o.food),yy=A==='hold'?-17:-27+Math.sin(t*7)*.8,xx=tr?60:0;/* 横向きのときは、食べ物を顔の前に（体の大きさ0.435で、およそ26ドット前） */if(ei){const ih=40,iw=ih*ei.width/ei.height;c.drawImage(ei,xx-iw/2,yy-ih/2,iw,ih)}else{c.font='40px sans-serif';c.textAlign='center';c.textBaseline='middle';c.fillStyle='#000';c.fillText(o.food,xx,yy);c.textAlign='start';c.textBaseline='alphabetic'}}
+  if((A==='eat'||A==='hold')&&o.food&&!back){const ei=emoImg(o.food),yy=A==='hold'?-17:-27+Math.sin(t*7)*.8,xx=tr?48:0;/* 横向きのときは、食べ物を顔の前に（体の大きさ0.435で、およそ21ドット前） */if(ei){const ih=40,iw=ih*ei.width/ei.height;c.drawImage(ei,xx-iw/2,yy-ih/2,iw,ih)}else{c.font='40px sans-serif';c.textAlign='center';c.textBaseline='middle';c.fillStyle='#000';c.fillText(o.food,xx,yy);c.textAlign='start';c.textBaseline='alphabetic'}}
+  if(A==='eat'&&tr&&o.food&&!back)armD(-farA,aA(-farA));/* 横向きで食べるときは、手前の手を食べ物の上にかさねて、持っている形に */
   c.imageSmoothingEnabled=sm;c.restore();return true}
 function drawSpirit(c,el,x,y,s,f,o){
   if(o.dot&&drawSpiritDot(c,el,x,y,s,f,o))return;
@@ -5673,7 +5675,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='604';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='605';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
