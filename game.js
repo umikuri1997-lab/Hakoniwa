@@ -1210,7 +1210,7 @@ const ACT={
   yatai:{start(r,a){r.bubble='🏮';r.face=1},done:(r,a)=>a.t>=4,end(r,a){const t=(S.fst&&S.fst.L||[]).find(t=>t.x===a.sx);if(!t)return;const M=STALLM[t.el],kp=S.res.find(o=>o.id===t.id);r.fyN=(r.fyN||0)+1;JUMP.set(r,performance.now());sfxAt('offer',r.x,r.y);addPt(.9,r,2);/* 屋台をまわると、パワーも少し */
     if(kp){JUMP.set(kp,performance.now());addFloat(kp.x,kp.y-1.3,'ありがとう！','#fff3d6')}
     if(t.el==='wind'&&Math.random()<.5){const ok=Math.random()<.35;r.fun=Math.min(100,r.fun+(ok?20:8));r.bubble=ok?'🎯':'😣';addFloat(r.x,r.y-1.2,ok?'わなげ、あたり！':'わなげ、おしい…',ok?'#ffd38a':'#fff3d6');return}/* 風の屋台は、わなげも */
-    const f=FOODS[M.L[0][1]];r.hunger=Math.min(hMax(r),r.hunger+20);r.fun=Math.min(100,r.fun+10);r.bubble=f.e;r.fsnack=f.e;addFloat(r.x,r.y-1.2,f.name+'！','#ffd38a')}},/* 屋台の食べ物：おなか+20・たのしさ+10（食料箱はへらない） */
+    const f=FOODS[M.L[0][1]];r.hunger=Math.min(hMax(r),r.hunger+20);r.fun=Math.min(100,r.fun+10);r.bubble=f.e;r.fsnack=f.e}},/* 屋台の食べ物：おなか+20・たのしさ+10（食料箱はへらない） */
   fwalk:{start(r,a){a.dur=5+Math.random()*6;r.bubble=r.fsnack&&Math.random()<.5?r.fsnack:pick(['🏮','✨','😊','🎵'])},done:(r,a)=>a.t>=a.dur,end(r){r.fsnack=null}},/* おまつりを見てまわる */
   hanabi:{start(r){r.bubble='🎆';r.face=Math.random()<.5?1:-1},tick(r,a,dt){r.fun=Math.min(100,r.fun+.4*dt);a.h=(a.h||0)+dt;if(a.h>=2){a.h=0;r.bubble=pick(['🎆','🎇','✨','😆']);if(Math.random()<.15)addFloat(r.x,r.y-1.3,pick(['たまやー！','きれい…！','わあ…！']),'#fff3d6')}},done:(r,a)=>hour()>=21||!festOn()||isNight()},/* 花火を見る */
   douse:{start(r,a){if(!fireAt(a.obj))return false;r.bubble='💧';sfxAt('pour',r.x,r.y)},tick(r,a,dt){work(r,dt)},done:(r,a)=>a.t>=10||!fireAt(a.obj)||isNight(),end(r,a){if(a.t>=10&&fireAt(a.obj)){delete S.st2.fire[a.obj];sfxAt('pour',r.x,r.y);addSpiritXp(1,r)}}},/* 水をかけて、火を消す */
@@ -4254,7 +4254,7 @@ function objBelow(r){const j=r.faceObj;if(j==null||j<0)return false;return ((j/W
 function drawRes(r,now){
   if(r.spawnT){const e=now-r.spawnT;if(e<450)return;if(e<1300){const k=e<900?(e-450)/450:1,sq=e<900?1:1+Math.sin((e-900)/400*Math.PI)*.18,px=r.x*TS,py=r.y*TS+9,rise=(1-k)*14;
     ctx.save();ctx.translate(px,py-rise);ctx.scale(k*(2-sq),k*sq);ctx.translate(-px,-py);drawRes0(r,now);ctx.restore();return}}
-  const yk=r.act&&r.act.type==='shopkeep'&&r.act.stage==='do'&&r.elem!=='wind';if(yk){ctx.save();ctx.translate(0,-10)}/* 屋台の中の店番の子は、10点上に（屋台の台のうしろから見える） */
+  const yk=r.act&&r.act.type==='shopkeep'&&r.act.stage==='do'&&r.elem!=='wind';if(yk){ctx.save();ctx.translate(0,-20)}/* 屋台の中の店番の子は、20点上に（屋台の台のうしろから見える） */
   drawRes0(r,now);if((r.shU||0)>S.t)drawLeaf(r,now);if(yk)ctx.restore()}
 // ベンチ。front=true のときは、すわった子の前に来る座面のふちと脚だけ
 function drawBench(c,x,y,front){/* ベンチは横2マス */
@@ -5625,7 +5625,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='588';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='589';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
