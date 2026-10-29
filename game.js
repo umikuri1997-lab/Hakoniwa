@@ -1235,9 +1235,10 @@ const ACT={
   idle:{start(r){r.bubble='☕'},done:(r,a)=>a.t>=a.dur},/* ひとやすみ中は、休けいの吹き出し */
   // ベッドがない子は、家の中で起きたまま夜をすごす
   stay:{start(r){r.bubble='🏠'},done:(r,a)=>r.hunger<18||!isNight()},
-  shiver:{start(r){r.bubble='😨'},done:(r,a)=>r.hunger<30||!hostileNow()||r.hunger<hMax(r)*.5&&S.food>0&&!(r.eatTry>S.t)},/* おなかが半分より少なくなったら、ふるえるのをやめて、安全に行ける食料箱へ食べにいく *//* たたかえない子は、コワイノがいるあいだ、家の中でふるえている */
+  shiver:{start(r){r.bubble='😨'},done:(r,a)=>r.hunger<30||!hostileNow()||r.hunger<hMax(r)*.5&&S.food>0&&!(r.eatTry>S.t),end(r){if(!hostileNow()&&r.hunger>=30)r.phewNext=true}},/* コワイノがいなくなったら、「ふぅ」とひと息ついてから寝る */
+  phew:{start(r,a){r.bubble='';a.dl=PHEWDL[r.elem]||0},tick(r,a){r.bubble='';if(a.reactAt==null&&a.t>=a.dl){a.reactAt=performance.now();a.reactMotion='phew'}},done:(r,a)=>a.t>=a.dl+2},/* ふぅ：吹き出しは出さない。属性ごとに、すこしずつずらす *//* おなかが半分より少なくなったら、ふるえるのをやめて、安全に行ける食料箱へ食べにいく *//* たたかえない子は、コワイノがいるあいだ、家の中でふるえている */
 };
-const ACT_LBL={shopkeep:'屋台の店番をしている',dance:'おどっている',bon:'おどりの輪でおどっている',yatai:'屋台にいる',fwalk:'おまつりを見てまわっている',hanabi:'花火を見ている',step:'あるいている',shiver:'こわくて、ふるえている',reunion:'なかよしに会いにいく',bury:'お墓へむかう',pray:'神殿でおいのり',sevreact:'気づいたものを見にいく',questjoy:'よろこんでいる',stay:'起きてすごしている',sow:'種をまいている',faint:'目をまわしている',eat:'ごはん中',forage:'ベリーを食べている',sleep:'おやすみ中',play:'遊んでいる',fish:'つりをしている',chat:'おしゃべり中',cook:'料理中',chop:'木を切っている',mine:'石をほっている',smat:'素材をしまう',store:'食料をしまう',fetch:'食料をとりに',chatwait:'待ちあわせ',npl:'ヌシ様と遊んでいる',tag:'おいかけっこ',tend:'畑の世話',water:'水やり',till:'畑を耕している',plant:'植えている',build:'建てている',craft:'家具づくり',harvest:'収穫中',gather:'ベリーあつめ',repair:'柵の修理',pickseed:'種ひろい',pickdrop:'おとしものひろい',offer:'おそなえ中',flee:'にげている',patrol:'見回り',wander:'おさんぽ',idle:'ひとやすみ'};
+const ACT_LBL={phew:'ほっとしている',shopkeep:'屋台の店番をしている',dance:'おどっている',bon:'おどりの輪でおどっている',yatai:'屋台にいる',fwalk:'おまつりを見てまわっている',hanabi:'花火を見ている',step:'あるいている',shiver:'こわくて、ふるえている',reunion:'なかよしに会いにいく',bury:'お墓へむかう',pray:'神殿でおいのり',sevreact:'気づいたものを見にいく',questjoy:'よろこんでいる',stay:'起きてすごしている',sow:'種をまいている',faint:'目をまわしている',eat:'ごはん中',forage:'ベリーを食べている',sleep:'おやすみ中',play:'遊んでいる',fish:'つりをしている',chat:'おしゃべり中',cook:'料理中',chop:'木を切っている',mine:'石をほっている',smat:'素材をしまう',store:'食料をしまう',fetch:'食料をとりに',chatwait:'待ちあわせ',npl:'ヌシ様と遊んでいる',tag:'おいかけっこ',tend:'畑の世話',water:'水やり',till:'畑を耕している',plant:'植えている',build:'建てている',craft:'家具づくり',harvest:'収穫中',gather:'ベリーあつめ',repair:'柵の修理',pickseed:'種ひろい',pickdrop:'おとしものひろい',offer:'おそなえ中',flee:'にげている',patrol:'見回り',wander:'おさんぽ',idle:'ひとやすみ'};
 
 function decide(r){TAKEN=new Set();for(const q of S.res){if(q===r||q.hidden)continue;if(q.act&&q.act.stand>=0)TAKEN.add(q.act.stand);if(!q.act||q.act.stage!=='walk')TAKEN.add((q.y|0)*W+(q.x|0))}
   for(const [j,t]of Object.entries(r.routeAvoid||{})){if(t>S.t)TAKEN.add(+j);else delete r.routeAvoid[j]}
@@ -1277,8 +1278,10 @@ function fleeAlarm(r,G){
   const en=S.enemies.find(e=>e.spawned&&!e.flee);if(!en)return false;const fo=fenceOut();let best=-1,bs=-1e9;for(let j=0;j<W*H;j++){const d=G.dist[j],ins=!fo[j];if(d<2||d>(ins?30:12)||!inBase(j%W,(j/W)|0))continue;/* にげるのは基地の中だけ */const sc=Math.hypot(j%W+.5-en.x,((j/W)|0)+.5-en.y)-d*.2+(ins?10:0);if(sc>bs){bs=sc;best=j}}/* 柵の内側へ、すすんで逃げる */
   if(best>=0){startAct(r,G,'flee',best);return true}return false}
 const foeNear=r=>S.enemies.some(e=>e.spawned&&!e.dead&&!e.flee&&Math.hypot(e.x-r.x,e.y-r.y)<7);/* すぐそば（7マス）にコワイノがいる */
+const PHEWDL={wood:0,water:.4,earth:.8,fire:1.2,wind:1.6};/* ふぅのリアクションを始めるまでの時間（秒） */
 function decide0(r){
   const tx=r.x|0,ty=r.y|0,G=bfs(tx,ty),here=ty*W+tx;
+  if(r.phewNext){r.phewNext=false;if(!hostileNow())return startAct(r,G,'phew',-1)}/* コワイノがいなくなったら、その場で「ふぅ」 */
   if(r.cing&&isNight()){const R=RECIPES.find(x=>x.out===r.cing.rec);if(R)for(const k in R.need)addFood(k,R.need[k]);r.cing=null}/* 夜は料理ができないので、持っている材料は食料箱にもどす */
   if(r.wantEat){r.wantEat=0;if(r.hunger<hMax(r)-8&&!r.meal&&goEat(r,G))return}
   if(r.refill&&r.hunger<hMax(r)-1&&S.food>0&&!r.meal&&goEat(r,G))return;/* マックスまで食べてから、たたかいにもどる */
@@ -1723,7 +1726,7 @@ function hasHighWork(r){
     if(o==='sprout'&&canJob(r,'plant')&&free('o'+j,1))return true}
   return false}
 const ROUTINE=['chop','mine','gather'];
-const URGNO=['sevreact','questjoy','nmeet','step','shiver','reunion','bury','pray','build','craft','repair','eat','sleep','flee','faint','cook','store','smat','fetch','cgrab','chat','chatwait','npl','tag','offer','pickdrop','pickseed','bathe','rest'];/* 水浴びやベンチの休けいは、とちゅうでやめない */
+const URGNO=['phew','sevreact','questjoy','nmeet','step','shiver','reunion','bury','pray','build','craft','repair','eat','sleep','flee','faint','cook','store','smat','fetch','cgrab','chat','chatwait','npl','tag','offer','pickdrop','pickseed','bathe','rest'];/* 水浴びやベンチの休けいは、とちゅうでやめない */
 function hasUrgent(r){/* 建てる場所か、だれも受けていない依頼があるか */
   if(canJob(r,'build')&&S.obj.some((o,j)=>o==='site'&&free('o'+j,2)))return true;
   return S.orders.some(q=>(!q.worker||!S.res.some(x=>x.id===q.worker))&&craftOK(r,q))}
@@ -1795,7 +1798,7 @@ function moveR(r,dt){
     if(r.wkT>30&&r.act.type!=='nmeet'){if(r.act.key)BAN.set(r.act.key,S.t+180);noPass(r);endAct(r);r.path=[];r.act={type:'idle',stage:'do',t:0,dur:8};r.wkA=null;return}}
   if(!r.path.length&&r.act)beginDo(r);
 }
-const NIGHT_OK=['step','sleep','stay','shiver','eat','fetch','store','smat','flee','patrol','faint','forage','questjoy'];
+const NIGHT_OK=['phew','step','sleep','stay','shiver','eat','fetch','store','smat','flee','patrol','faint','forage','questjoy'];
 const WORKT=new Set(['till','sow','plant','build','craft','water','tend','repair','harvest','gather','chop','mine','cook']);
 function rescueStuck(r){if(r.hidden)return;const cj=(r.y|0)*W+(r.x|0),o=S.obj[cj];if(!(HOME_WALLS.has(o)||(FENCE_IDS.has(o)&&!GATE_IDS.has(o))||S.ground[cj]===1&&!(r.act&&(r.act.type==='bathe'||r.act.type==='plant'&&r.act.wade))))return;/* 水浴び・池のまんなかのハス植えは、水に入ってよい */if(r.act&&r.act.type==='step'||(r.stepT||0)>S.t)return;r.stepT=S.t+5;/* 壁や柵・水の中にいたら、いちばん近い歩ける場所へ歩いて出る（5分ごとにさがす） */const G=bfs(cj%W,(cj/W)|0),k=nearest(G,j=>j!==cj&&walk(j)&&!S.obj[j],12);if(k>=0){endAct(r);startAct(r,G,'step',k,{run:true})}}
 function updRes(r,dt){rescueStuck(r);if((RHOLD.get(r)||0)>performance.now())return;/* 喜んでいる・話したあとの少しの間は、手をとめる */if(r._pe!=null&&r.energy>r._pe+1e-6)r.eUp=S.t;r._pe=r.energy;/* 元気が回復しているか */
@@ -4317,9 +4320,9 @@ function drawRes0(r,now){
   if(!walking){v.back=false;v.turn=r.act&&r.act.stage==='do'&&(r.act.type==='chop'||r.act.type==='mine')&&!objBelow(r)||benchV?1:0}/* 木・岩は横向きで、そちらを向いて切る */else if(Math.abs(dx)+Math.abs(dy)>.002){const ax=Math.abs(dx),ay=Math.abs(dy);v.turn=ax>ay*1.2?1:0;v.back=!v.turn&&dy<0}v.x=r.x;v.y=r.y;
   {const sj=(r.y|0)*W+(r.x|0),so=S.obj[sj];if(!walking&&r.act&&r.act.stage==='do'&&so&&ROTS[so]===4&&SEATS.includes(so)){const ro=rotAt(sj);v.back=ro===2;v.turn=ro===1||ro===3?1:0;if(v.turn)r.face=ro===1?1:-1}if(!walking&&benchJ>=0)v.back=benchR===2}/* ベンチで「後ろ」向きなら、せなかが見える *//* いすにすわっている子は、いすの向きにすわる（うしろ向きのいすなら、うしろ向き） */
   const at=r.act&&r.act.type,ad=r.act&&r.act.stage==='do',jt=JUMP.get(r),held=HOLD.has(r.id),jumping=held||jt!=null&&now-jt<1000;
-  const reacting=at==='sevreact'&&ad&&r.act.reactAt!=null,rm=reacting?r.act.reactMotion:'',rp=reacting?dialoguePose(rm,now-r.act.reactAt):null;if(rp){px+=rp.x*.4;py+=rp.y*.4}
+  const reacting=(at==='sevreact'||at==='phew')&&ad&&r.act.reactAt!=null,rm=reacting?r.act.reactMotion:'',rp=reacting?dialoguePose(rm,now-r.act.reactAt):null;if(rp){const k=rm==='phew'?1:.4;px+=rp.x*k;py+=rp.y*k}
   const brave=now-(BRAVET.get(r)||-1e9)<1500;/* 勇ましい顔は、行動の切りかわりや、たたかれた時に、ちらちら消えないよう、1.5秒つづける */
-  const mood=reacting?({joy:'joy',shock:'shock',sad:'teary',think:'sad',nod:'smile'}[rm]||'smile'):((r.cryU||0)>S.t&&at!=='sleep'||r.coffin||at==='bury'||at==='pray'||at==='shiver')?'teary':/* 棺をはこぶ・埋葬するときは、うるうる顔 */r.hunger<20?'sad':(JOYU.get(r)||0)>now?'joy':(ad&&['chop','mine','till','build','repair'].includes(at))?'strain':jumping?'joy':at==='flee'?'strain':brave?'brave'/* たたかいに行く・たたいているときは、勇ましい顔 */:r.hurt>25?'strain':(at==='eat'&&ad)?'eat':(ad&&['play','chat','chatwait','npl','fish','tag','rest','bathe','bon','yatai','fwalk','hanabi','dance','shopkeep'].includes(at))||at==='tag'?'smile':'';
+  const mood=reacting?({joy:'joy',shock:'shock',sad:'teary',think:'sad',nod:'smile',phew:'smile'}[rm]||'smile'):((r.cryU||0)>S.t&&at!=='sleep'||r.coffin||at==='bury'||at==='pray'||at==='shiver')?'teary':/* 棺をはこぶ・埋葬するときは、うるうる顔 */r.hunger<20?'sad':(JOYU.get(r)||0)>now?'joy':(ad&&['chop','mine','till','build','repair'].includes(at))?'strain':jumping?'joy':at==='flee'?'strain':brave?'brave'/* たたかいに行く・たたいているときは、勇ましい顔 */:r.hurt>25?'strain':(at==='eat'&&ad)?'eat':(ad&&['play','chat','chatwait','npl','fish','tag','rest','bathe','bon','yatai','fwalk','hanabi','dance','shopkeep'].includes(at))||at==='tag'?'smile':'';
   const bob=(walking?Math.abs(Math.sin(now/110+r.id))*2.5:0)+(()=>{const jt=JUMP.get(r),d=jt==null?-1:now-jt;return d>=0&&d<1000?Math.abs(Math.sin(d/130))*9*(1-d/1000):0})();
   {const sw=Math.max(r.swing||0,r.swingT||0),sd=now-sw;if(sw&&sd>=0&&sd<280)px+=(r.face<0?-1:1)*Math.sin(sd/280*Math.PI)*8}/* 攻撃のとき、前にとびだす */
   if(at==='shiver'&&ad)px+=Math.sin(now/26+r.id*3)*1.4;/* ふるえる */
@@ -5548,7 +5551,7 @@ function dashDemo(){/* フタバが、ヨルノオオカゲのほうへ飛び出
 function dlgCue(c){if(!c)return;if(c==='dash'){dashDemo();return}if(c==='guarddemo'){const f=S.res.find(r=>r.name===POKO);if(f)leafFX(f);sfx('plant');return}/* おぼえる場面では、フタバのまわりに葉っぱが舞うだけ（守りはかけない） */if(c==='shake'){const v=$('#cv');v.classList.remove('shk');void v.offsetWidth;v.classList.add('shk');sfx('hit');setTimeout(()=>v.classList.remove('shk'),600)}else if(c==='flash'||c==='dim'){const d=document.createElement('div');const fl=c==='flash';d.style.cssText='position:fixed;inset:0;pointer-events:none;z-index:19;opacity:0;background:'+(fl?'#fff':'#0b0f0a')+';transition:opacity '+(fl?.12:.7)+'s ease';document.body.appendChild(d);requestAnimationFrame(()=>requestAnimationFrame(()=>{d.style.opacity=fl?'.75':'.4'}));setTimeout(()=>{d.style.transition='opacity '+(fl?.7:1.2)+'s ease';d.style.opacity='0';setTimeout(()=>d.remove(),1300)},fl?160:1400)}}
 function dialoguePause(ch,previous){return ch==='…'?(previous==='…'?90:340):/[。！？!?]/.test(ch)?220:ch==='、'?100:0}
 function dialogueSpiritAnim(motion,talking,elapsed,hold,wave,reduced){if(reduced)return '';if(elapsed<950&&wave)return 'wave';if(!talking&&elapsed>=hold)return '';return ({joy:'talkjoy',shock:'talkshock',think:'talkthink',sad:'talksad'})[motion]||(talking?'talk':'')}
-function dialoguePose(motion,elapsed){const durations={joy:950,shock:720,nod:650,think:1050,sad:950},d=durations[motion]||1,p=Math.max(0,Math.min(1,elapsed/d)),fade=Math.sin(p*Math.PI);if(p>=1)return {x:0,y:0,angle:0};if(motion==='joy')return {x:0,y:-Math.abs(Math.sin(p*Math.PI*2))*17,angle:Math.sin(p*Math.PI*4)*.045};if(motion==='shock')return {x:Math.sin(p*Math.PI*5)*4*(1-p),y:-fade*10,angle:-fade*.06};if(motion==='nod')return {x:0,y:Math.sin(p*Math.PI*2)*6,angle:Math.sin(p*Math.PI*2)*.045};return {x:0,y:fade*(motion==='sad'?5:0),angle:fade*(motion==='sad'?.08:-.1)}}
+function dialoguePose(motion,elapsed){const durations={joy:950,shock:720,nod:650,think:1050,sad:950,phew:1400},d=durations[motion]||1,p=Math.max(0,Math.min(1,elapsed/d)),fade=Math.sin(p*Math.PI);if(p>=1)return {x:0,y:0,angle:0};if(motion==='joy')return {x:0,y:-Math.abs(Math.sin(p*Math.PI*2))*17,angle:Math.sin(p*Math.PI*4)*.045};if(motion==='shock')return {x:Math.sin(p*Math.PI*5)*4*(1-p),y:-fade*10,angle:-fade*.06};if(motion==='nod')return {x:0,y:Math.sin(p*Math.PI*2)*6,angle:Math.sin(p*Math.PI*2)*.045};if(motion==='phew')return p<.35?{x:0,y:-Math.sin(p/.35*Math.PI/2)*3,angle:0}:{x:0,y:-3+Math.sin((p-.35)/.65*Math.PI/2)*7*(1-(p-.35)/.65*.6),angle:0};/* ふぅ：すこし息をすって、肩をおとす */return {x:0,y:fade*(motion==='sad'?5:0),angle:fade*(motion==='sad'?.08:-.1)}}
 let GODVOICE_T=0;/* 遠くからの声のあいさつを、さいごに出した時刻 */
 function dialog(lines,after,lastLabel,who){
   const d=$('#dialog');if(!d.hidden){DLGQ.push([lines,after,lastLabel,who]);return}
@@ -5689,7 +5692,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='637';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='638';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
