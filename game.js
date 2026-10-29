@@ -2237,7 +2237,6 @@ function stepWorld(dt){if((SUBT+=dt)>1){SUBT=0;checkSub();checkSev();guardTick()
   if(prevH>h&&S.enemyOn&&S.wave&&S.lastNight!==dayNo()-1){S.lastNight=dayNo()-1;/* 「コワイノ」は夜12時に来る（前の日の夜としてかぞえる） */S.nights++;let w=S.wave;S.wave=null;const rn=S.res.length;if(rn<7&&!S.rushOn)w=w.filter(t=>EN[t].boss&&!S.wipe).concat(w.filter(t=>!EN[t].boss).slice(0,(WD===1?[0,3,4,5,6,8,9]:[0,1,2,3,4,6,7])[rn]));/* せいれいが少ない夜は、コワイノの数に上限：1人1体・2人2体・3人3体・4人4体・5人6体・6人7体（火山のふもとは1人3体・2人4体・3人5体・4人6体・5人8体・6人9体）（全滅のあと5人そろうまでは、オオカゲも来ない） */if(w.length)spawnWave(w)}
   if(S.seedDay!==dayNo()&&h>=6){S.seedDay=dayNo();const n=Math.random()<.5?1:0,b=S.t-S.t%1440;S.seeds=[];S.seedPlan=Array.from({length:n},()=>b+360+Math.random()*720).sort((x,y)=>x-y)}/* ふしぎな種は1日1こまで（50%）。ひろわなかったら、あしたには消える */
   if(S.seedPlan&&S.seedPlan.length&&S.t>=S.seedPlan[0]){S.seedPlan.shift();spawnSeed()}
-  if(S.findDay!==dayNo()&&h>=6){S.findDay=dayNo();S.finds=[]}/* ひろいもの：ひろわなかった物は、つぎの日の朝に消える */
   {const hr=Math.floor(clk()/10);if(S.findHr!==hr){S.findHr=hr;if(!isNight())spawnFind()}}/* 6時〜23時のあいだ、10分に1こ落ちる。せいれいが何人でも落ちる */
   if(prevH<3&&h>=3&&S.today==='hoshi')for(const r of S.res)if(r.act&&r.act.type==='sleep')r.fun=Math.min(100,r.fun+15);
 }
@@ -2662,7 +2661,7 @@ function spawnFind(quiet){if(!S.finds)S.finds=[];/* quiet：章のはじめに�
   for(let t=0;t<300;t++){const x=OFF+((Math.random()*OW)|0),y=OFF+((Math.random()*OW)|0),j=y*W+x;/* まん中の72×72（前からの土地）にだけ落ちる */
     if(!walk(j)||S.obj[j]||S.finds.some(f=>f.x===x&&f.y===y)||S.seeds.some(f=>f.x===x&&f.y===y)||(S.drops||[]).some(f=>f.x===x&&f.y===y))continue;
     if(![[-1,0],[1,0],[0,-1],[0,1]].some(([dx,dy])=>{const X=x+dx,Y=y+dy;return X>=0&&X<W&&Y>=0&&Y<H&&near.includes(typeAt(Y*W+X))}))continue;/* となりに、木・岩・茂みがあるマス */
-    S.finds.push({x,y,id,n});if(!quiet&&!S.flags.findTold)findTalk();return}
+    if(S.finds.length>=30)S.finds.shift();/* 30こまで。こえたら、いちばん古い物から消える */S.finds.push({x,y,id,n});if(!quiet&&!S.flags.findTold)findTalk();return}
 }
 const hudIc=id=>{const b=$('#'+id),im=b&&b.previousElementSibling;return im&&im.tagName==='IMG'?im:null};/* 画面上の木材・石材のアイコン */
 function findTalk(){if(WD!==0){S.flags.findTold=1;return}/* 説明は1章（草原）だけ。ほかの章では、もう知っているので話さない */if(!qDone('table')||!$('#dialog').hidden)return;/* 食卓のクエストがおわってから話す */const sp=S.res.find(r=>r.name===POKO&&!r.hidden);if(!sp)return;S.flags.findTold=1;/* はじめて落ちたとき、ひろいものの話をする（話せないときは、つぎに落ちたときに） */
@@ -4708,9 +4707,9 @@ function render(now){
     ctx.fillStyle='#a07240';rr(ctx,cx-4,cy-10,8,5,2);ctx.fillStyle='#6b4524';ctx.fillRect(cx-5,cy-6,10,2);
     ctx.fillStyle='rgba(255,245,170,'+(.4+tw*.6)+')';const sx=cx+7,sy=cy-10,sr=2+tw*2.5;ctx.beginPath();for(let a=0;a<8;a++){const r2=a%2?sr*.35:sr,an=a*Math.PI/4;ctx.lineTo(sx+Math.cos(an)*r2,sy+Math.sin(an)*r2)}ctx.fill()}
   for(const f of S.finds||[]){const cx=f.x*TS+16,cy=f.y*TS+20,tw=Math.sin(now/300+f.x*1.3+f.y)*.5+.5;/* ひろいもの：木材・石材・ベリーのアイコン。ちいさく光る */
-    ctx.fillStyle='rgba(40,25,10,.18)';ctx.beginPath();ctx.ellipse(cx,cy+5,8,2.4,0,0,7);ctx.fill();
-    {const im=f.id.startsWith('mat:')?hudIc(f.id==='mat:wood'?'woodN':'stoneN'):emoImg(FOODS[f.id.slice(5)].e),ih=18;if(im&&im.complete&&im.naturalWidth){const iw=ih*im.naturalWidth/im.naturalHeight;ctx.drawImage(im,Math.round(cx-iw/2),Math.round(cy-ih/2-1),iw,ih)}}/* 絵は、上の木材・石材と同じドット絵のアイコン。ベリーは食べ物のアイコン */
-    ctx.fillStyle='rgba(255,245,170,'+(.35+tw*.6)+')';{const sx=cx+8,sy=cy-8,sr=1.6+tw*2.2;ctx.beginPath();for(let a=0;a<8;a++){const r2=a%2?sr*.35:sr,an=a*Math.PI/4;ctx.lineTo(sx+Math.cos(an)*r2,sy+Math.sin(an)*r2)}ctx.fill()}}
+    ctx.fillStyle='rgba(40,25,10,.18)';ctx.beginPath();ctx.ellipse(cx,cy+8,12,3.6,0,0,7);ctx.fill();
+    {const im=f.id.startsWith('mat:')?hudIc(f.id==='mat:wood'?'woodN':'stoneN'):emoImg(FOODS[f.id.slice(5)].e),ih=27;if(im&&im.complete&&im.naturalWidth){const iw=ih*im.naturalWidth/im.naturalHeight;ctx.drawImage(im,Math.round(cx-iw/2),Math.round(cy-ih/2-1),iw,ih)}}/* 絵は、上の木材・石材と同じドット絵のアイコン。ベリーは食べ物のアイコン */
+    ctx.fillStyle='rgba(255,245,170,'+(.35+tw*.6)+')';{const sx=cx+12,sy=cy-12,sr=1.6+tw*2.2;ctx.beginPath();for(let a=0;a<8;a++){const r2=a%2?sr*.35:sr,an=a*Math.PI/4;ctx.lineTo(sx+Math.cos(an)*r2,sy+Math.sin(an)*r2)}ctx.fill()}}
   for(const s of S.seeds){const tw=Math.sin(now/250+s.x)*.5+.5;ctx.fillStyle='rgba(255,240,150,'+(.5+tw*.5)+')';const cx=s.x*TS+16,cy=s.y*TS+16;ctx.beginPath();for(let a=0;a<8;a++){const r2=a%2?3:9+tw*2,an=a*Math.PI/4+now/900;ctx.lineTo(cx+Math.cos(an)*r2,cy+Math.sin(an)*r2)}ctx.fill();circ(ctx,cx,cy,3,'#fff')}
   drawHeat(now);drawRanges(now);
   if(mode==='build'&&sel&&BL[sel]&&!selRect&&!pending){const k=sel+'|'+S.placed[sel]+'|'+S.baseLv;if(BADC.k!==k||now-BADC.t>600){BADC.k=k;BADC.t=now;BADC.L=[];for(let j=0;j<W*H;j++){const x=j%W,y=(j/W)|0;if(inBase(x,y)&&!canPlace(sel,x,y,true))BADC.L.push(j)}}
@@ -5632,7 +5631,7 @@ let started=false,titleDrift=0,STOCKSIG='';
 function showUI(on){$('#topUI').hidden=!on;$('#botUI').hidden=!on}
 /* 引き継ぎ：便利な道具（ひろびろハケ・かたどりスタンプ・つけかえトンカチ）だけは、ほかの土地でもらっていれば使える */
 function syncTools(s){for(const L of LIVE)if(L&&L!==s){if(L.bulk)s.bulk=true;if(L.stamps)s.stamps=true;if(L.swap)s.swap=true}}
-function newGame(w){w=w||0;if(sheet!=null)closeSheet();setWorld(w);resetQuestPrompts();DLGQ.length=0;try{KV.removeItem(SAVE_KEYS[w])}catch(e){}resv.clear();S=newState(w);LIVE[w]=S;syncTools(S);dirty=true;recount();S.findDay=dayNo();for(let k=0;k<10;k++)spawnFind(true);/* 章のはじめに、ひろいものを10こ落としておく */undoStack=[];renderQuest();applyFeats();setMode('look');$('#title').hidden=true;startPrologue()}
+function newGame(w){w=w||0;if(sheet!=null)closeSheet();setWorld(w);resetQuestPrompts();DLGQ.length=0;try{KV.removeItem(SAVE_KEYS[w])}catch(e){}resv.clear();S=newState(w);LIVE[w]=S;syncTools(S);dirty=true;recount();for(let k=0;k<10;k++)spawnFind(true);/* 章のはじめに、ひろいものを10こ落としておく */undoStack=[];renderQuest();applyFeats();setMode('look');$('#title').hidden=true;startPrologue()}
 function startPrologue(){
   showUI(false);started=false;let i=0;const pro=$('#pro');pro.style.transition='none';pro.hidden=false;pro.style.opacity='1';void pro.offsetWidth;pro.style.transition='';/* フェードせずに、すぐまっくらにする（前のデータの画面が一瞬見えないように） */
   cam.z=minZ();centerOn(CX*TS,CY*TS);
@@ -5694,7 +5693,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='620';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='621';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
