@@ -815,7 +815,7 @@ const FESTC={k:null,L:[]};function festPoles(){const r=BASE_R[S.baseLv],k=WD+':'
 function drawFestPole(x,y,now){if(!FESTA.ok)return;const h=hour(),on=h>=18||h<6,f=FESTA.F[on?'pole_on':'pole_off'],x0=x*TS+16-7,y0=y*TS+30-f[3];shadow(ctx,x*TS+16,y*TS+29,6,2);
   const sm=ctx.imageSmoothingEnabled;ctx.imageSmoothingEnabled=false;ctx.drawImage(FESTA.img,f[0],f[1],f[2],f[3],x0,y0,f[2],f[3]);ctx.imageSmoothingEnabled=sm;
   if(on){const lx=x0+17,ly=y0+20,g=ctx.createRadialGradient(lx,ly,1,lx,ly,14);g.addColorStop(0,'rgba(255,190,110,.35)');g.addColorStop(1,'rgba(255,190,110,0)');ctx.fillStyle=g;ctx.fillRect(lx-14,ly-14,28,28)}}/* 夕方からちょうちんがともる */
-const STALLM={wood:{nm:'りんごあめ',e:'🍭',col:'#d8452f',L:[['f','ringoame',15],['m','wood',50]]},fire:{nm:'たこ焼き・焼きそば',e:'🐙',col:'#e07a2a',L:[['f','takoyaki',20],['f','yakisoba',20]]},water:{nm:'かき氷',e:'🍧',col:'#4a8fd8',L:[['f','kakigori',15],['mebuki',400]]},earth:{nm:'ポテト',e:'🍠',col:'#9a6a3a',L:[['f','yakiimo',15],['m','stone',50]]},wind:{nm:'わたあめ・わなげ',e:'🍬',col:'#3aa88a',L:[['f','wataame',15],['chochin',60]]}};/* せいれいの屋台：店番の子の属性で、売る物がかわる。['f',食べ物,パワー]は5つ・['m',素材,パワー]は10こ */
+const STALLM={wood:{nm:'りんごあめ',e:'🍭',col:'#d8452f',L:[['f','ringoame',15]]},fire:{nm:'たこ焼き・焼きそば',e:'🐙',col:'#e07a2a',L:[['f','takoyaki',20],['f','yakisoba',20]]},water:{nm:'かき氷',e:'🍧',col:'#4a8fd8',L:[['f','kakigori',15],['mebuki',400]]},earth:{nm:'ポテト',e:'🍠',col:'#9a6a3a',L:[['f','yakiimo',15]]},wind:{nm:'わたあめ・わなげ',e:'🍬',col:'#3aa88a',L:[['f','wataame',15],['chochin',60]]}};/* せいれいの屋台：店番の子の属性で、売る物がかわる。['f',食べ物,パワー]は5つ。木材・石材は売らない */
 const STALLSAY=['いらっしゃい！','どれにする？','できたてだよ！','おまつりだから、とくべつだよ！'];
 function festStalls(){if(!festOn()||STATUE<0||hour()<7)return [];const sh=Math.min(4,Math.floor((hour()-7)/3)),k=dayNo()+':'+sh+':'+S.baseLv;if(S.fst&&S.fst.k===k)return S.fst.L;/* 3時間ごとに店番が交代 */
   const R=S.res.filter(r=>!r.hidden),n=Math.floor(R.length/2),r0=BASE_R[S.baseLv],y=CY-r0-1,P=[];
@@ -5189,7 +5189,7 @@ function renderSheet(){
     {const T=WD===0?['bulk','ひろびろハケ','指でなぞった範囲を、ブロックでまとめてぬれる。種もまとめて植えてもらえる','hake']:WD===1?['swap','つけかえトンカチ','つながっている柵・塀・家の壁・道・床を、まとめてべつの種類にかえる。はずした物は、おそなえ箱にもどる','swap']:null;/* 道具は、土地ごとに1つ（草原：ハケ・火山：トンカチ・つぎの土地：スタンプ）。もらった道具は、ほかの土地でも使える */
       if(T){const r3=sec('道具'),bx=row(r3,T[1],T[2],toolIcon(T[3]),S[T[0]]);if(S[T[0]])btn(bx,'もらった',true);else btn(bx,SP(3000),S.pt<3000,()=>{S.pt-=3000;S[T[0]]=true;applyFeats();toast(T[1]+'をもらった！「どうぐ」から使える','good');trade()},1)}}
     if(WD===0&&(S.bossKills||0)>=1){const r5=sec('とくべつな交換'),bx=row(r5,'めぶきのしずく','消えてしまったせいれいを、よみがえらせる（所持：'+(S.mebuki||0)+'）',null);btn(bx,SP(400),S.pt<400,()=>{S.pt-=400;S.mebuki=(S.mebuki||0)+1;toast('めぶきのしずくをもらった','good');trade()},1)}/* 草原には、おまつりがない。しずくはカミサマから */
-    if(WD===1&&(qAt('fest')||S.cleared)){const r5=sec('とくべつな交換');/* 火山のふもと：「おまつりをひらこう」のあとから、いつでもおまつり。めぶきのしずく・素材・ごちそうは、おまつりの日に、せいれいの屋台で */
+    if(WD===1&&(qAt('fest')||S.cleared)){const r5=sec('とくべつな交換');/* 火山のふもと：「おまつりをひらこう」のあとから、いつでもおまつり。めぶきのしずく・ごちそうは、おまつりの日に、せいれいの屋台で */
       {const done=S.festDay!=null&&S.festDay>=dayNo(),bx=row(r5,'おまつり','つぎの日が、おまつりになる',null,done);btn(bx,done?(S.festDay>dayNo()?'あしたはおまつり':'きょうはおまつり'):SP(200),done||S.pt<200,()=>{S.pt-=200;S.festDay=dayNo()+1;sfx('good');toast('あしたは、おまつり！','good');trade()},1)}/* たのんだつぎの日の朝7時に、おまつりがはじまる */
       }
     if(S.lv>=5||(S.bossKills||0)>=1||S.flags.hinoDown){const r6=sec('カミサマのかざり（日によってかわる）');const DECO=[['furin',120],['ema',150],['kadomatsu',180],['komainu',200]],d=dayNo();
@@ -5687,7 +5687,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='634';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='635';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
