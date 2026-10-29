@@ -276,7 +276,7 @@ const QUESTS1=[
   {id:'wall',text:'家の壁を直そう',how:"「おく」→「木の壁」をえらんで、家の壁のすきまをふさぐ",check:()=>HOUSES.length>=1,
    talk:{who:GOD,when:()=>true,lines:[
     [GOD,'しまう場所もできたのう。…そろそろ、夜のことも話しておかんとな。'],[GOD,'#alarm|この土地には、夜になると「コワイノ」が来るんじゃ。'],
-    [POKO,'#scared|コワイノ……夜に、外で音がするよね。'],
+    [POKO,'#scared|コワイノ……。夜は、あの穴のあいた家にかくれたり、にげまわったりしてるんだ。'],
     [GOD,'うむ。じゃが、これからは守り神がついておるぞ。'],
     [GOD,'#alarm|コワイノは、せいれいや食べ物をねらって来る。'],
     [GOD,'#scared|家の中にいればおそわれん。じゃが、壁にすきまがあると、こわして入ろうとするんじゃ。'],
@@ -2232,7 +2232,7 @@ function stepWorld(dt){if((SUBT+=dt)>1){SUBT=0;checkSub();checkSev();guardTick()
   if(S.seedDay!==dayNo()&&h>=6){S.seedDay=dayNo();const n=Math.random()<.5?1:0,b=S.t-S.t%1440;S.seeds=[];S.seedPlan=Array.from({length:n},()=>b+360+Math.random()*720).sort((x,y)=>x-y)}/* ふしぎな種は1日1こまで（50%）。ひろわなかったら、あしたには消える */
   if(S.seedPlan&&S.seedPlan.length&&S.t>=S.seedPlan[0]){S.seedPlan.shift();spawnSeed()}
   if(S.findDay!==dayNo()&&h>=6){S.findDay=dayNo();S.finds=[]}/* ひろいもの：ひろわなかった物は、つぎの日の朝に消える */
-  {const hr=Math.floor(clk()/60);if(S.findHr!==hr){S.findHr=hr;if(!isNight()&&S.res.length<3)for(let k=0;k<3;k++)spawnFind()}}/* せいれいが2人までのあいだ、昼は1時間に3こ落ちる（夜は落ちない） */
+  {const hr=Math.floor(clk()/30);if(S.findHr!==hr){S.findHr=hr;if(!isNight())spawnFind()}}/* 昼は30分に1こ落ちる（夜は落ちない）。せいれいが何人でも落ちる */
   if(prevH<3&&h>=3&&S.today==='hoshi')for(const r of S.res)if(r.act&&r.act.type==='sleep')r.fun=Math.min(100,r.fun+15);
 }
 const FREEG=[{k:'g900',t:'みどりのマスを900に',now:()=>GRASSN,ok:()=>GRASSN>=900,rw:30},{k:'r15',t:'せいれいを15人に',now:()=>S.res.length,ok:()=>S.res.length>=15,rw:30},{k:'fl30',t:'花を30こさかせる',now:()=>flowerN(),ok:()=>flowerN()>=30,rw:40},
@@ -2650,7 +2650,7 @@ function morning(){sfx('morning');if(S.cleared&&S.daily)dailyCheck();/* 夜の�
   checkFree();
   summonMorning();
 }
-const FINDS=[['mat:wood',2,['deadtree','ntree','tree','fruit']],['mat:stone',2,['rock','boulder']],['food:berry',1,['berry']]];/* ひろいもの：木材2は木のそば・石材2は岩のそば・ベリー1はベリーの茂みのそば */
+const FINDS=[['mat:wood',1,['deadtree','ntree','tree','fruit']],['mat:stone',1,['rock','boulder']],['food:berry',1,['berry']]];/* ひろいもの：木材1は木のそば・石材1は岩のそば・ベリー1はベリーの茂みのそば */
 function spawnFind(){if(!S.finds)S.finds=[];const L=FINDS.filter(([id])=>id.startsWith('food:')?foodCap()>0:matCap()>0);if(!L.length)return;/* しまう箱がまだないものは、落ちない */
   const[id,n,near]=pick(L);
   for(let t=0;t<300;t++){const x=(Math.random()*W)|0,y=(Math.random()*H)|0,j=y*W+x;/* 広げた外がわもふくめて、マップのどこにでも落ちる */
@@ -5688,7 +5688,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='613';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='614';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
