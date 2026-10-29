@@ -276,10 +276,8 @@ const QUESTS1=[
   {id:'wall',text:'家の壁を直そう',how:"「おく」→「木の壁」をえらんで、家の壁のすきまをふさぐ",check:()=>HOUSES.length>=1,
    talk:{who:GOD,when:()=>true,lines:[
     [GOD,'しまう場所もできたのう。…そろそろ、夜のことも話しておかんとな。'],[GOD,'#alarm|この土地には、夜になると「コワイノ」が来るんじゃ。'],
-    [POKO,'夜になると、いつも隠れてたの。朝になるまで、じっと……。'],
-    [GOD,'#cry|そうじゃったか……。ひとりで朝まで、怖かったじゃろう。'],
-    [POKO,'#nod|うん……音がするたび、息をひそめてた。'],
-    [GOD,'そうか……。今度は、守り神がついておるぞ。'],
+    [POKO,'#scared|コワイノ……夜に、外で音がするよね。'],
+    [GOD,'うむ。じゃが、これからは守り神がついておるぞ。'],
     [GOD,'#alarm|コワイノは、せいれいや食べ物をねらって来る。'],
     [GOD,'#scared|家の中にいればおそわれん。じゃが、壁にすきまがあると、こわして入ろうとするんじゃ。'],
     [GOD,'#scared|あそこの家、壁がこわれたままなんじゃ。木の壁を3つ入れといたから、すきまをふさいでみい。']],gives:{feat:['people'],items:{hwall:3}}},
@@ -2553,7 +2551,7 @@ function syncQuestRecipes(s){const shared=s.free?otherModeFurnitureRecipes():nul
     for(const id of FURN){if(shared.has(id)){(s.recipes||(s.recipes={}))[id]=true;(s.guardianIdeas||(s.guardianIdeas={}))[id]=true}else{delete(s.recipes||{})[id];delete(s.guardianIdeas||{})[id]}}}
 }
 /* クエスト達成の喜び：経路で対象のそばへ行く。会話や進行は自動で開かない。 */
-const QUEST_VISIT_MAIN={"inn": ["bed"], "ashiyu": ["bench"], "statue": ["statue"], "stor": ["stor"], "mbox": ["mbox"], "table": ["table"], "wall": ["hwall", "door"], "bed": ["bed"], "fence4": ["fence", "logfence", "bamboofence", "stonefence", "wall"], "watch1": ["watch", "spike"], "kikyo": ["bellf"], "farm6": ["farm"], "imoseed": ["farm"], "tower": ["tower"], "flower50": ["clover", "bellf", "salvia", "lily", "lotus"], "springA": ["hotstone"], "shizukuRest": ["bench", "tub"], "ep1": ["hwall", "door", "bed"], "ep2": ["clover", "bellf", "salvia", "lily", "lotus", "table", "swing", "sandbox"], "ep4": ["fountain"], "ep5": ["campfire"]};
+const QUEST_VISIT_MAIN={"inn": ["bed"], "ashiyu": ["bench"], "statue": ["statue"], "stor": ["stor"], "mbox": ["mbox"], "table": ["table"], "wall": ["hwall", "door"], "path": ["path"], "bed": ["bed"], "fence4": ["fence", "logfence", "bamboofence", "stonefence", "wall"], "watch1": ["watch", "spike"], "kikyo": ["bellf"], "farm6": ["farm"], "imoseed": ["farm"], "tower": ["tower"], "flower50": ["clover", "bellf", "salvia", "lily", "lotus"], "springA": ["hotstone"], "shizukuRest": ["bench", "tub"], "ep1": ["hwall", "door", "bed"], "ep2": ["clover", "bellf", "salvia", "lily", "lotus", "table", "swing", "sandbox"], "ep4": ["fountain"], "ep5": ["campfire"]};
 const QUEST_VISIT_SUB={"fence20": ["fence", "logfence", "bamboofence", "stonefence", "wall"], "lumber1": ["lumber"], "quarry1": ["quarry"], "stele1": ["stele"], "fountain1": ["fountain"], "lighthouse1": ["lighthouse"], "fruit1": ["fruit"], "stor2": ["stor"], "mbox2": ["mbox"], "seedwait_gate": ["gate"], "benchbreak": ["bench"], "chair2": ["chair", "stool", "achair", "bench", "pouf", "sofa1"], "bed3": ["bed"], "light3": ["torch", "lamp", "campfire"], "houselight": ["candle", "lantern", "flamp"], "oven": ["oven"], "salvia3": ["salvia"], "watch2": ["watch"], "lotus3": ["lotus"], "lily5": ["lily"], "wmill": ["windmill"], "clover3": ["clover"], "toy2": ["sandbox"], "toy3": ["seesaw"], "swing1": ["swing"], "deco3": ["hedge", "birdbath", "parasol", "arch", "signpost", "monstera"], "tree5": ["tree", "fruit"], "farm10": ["farm"], "house2": ["hwall", "door"], "room": ["@furniture"], "paint": ["@painting"], "trap4": ["spike", "sticky", "puddle", "firetrap", "gust"], "jar2": ["jar"], "parasol": ["parasol"]};
 const QUEST_PLACEMENTS=new WeakMap(),QUEST_VISITS=new WeakMap();let questPlaceSerial=0,QUEST_CLEAR_WAIT=null,SUB_CLEAR_WAIT={};const questGuideBlocked=()=>!!QUEST_CLEAR_WAIT||Object.keys(SUB_CLEAR_WAIT).some(k=>!!SUB_CLEAR_WAIT[k])||Object.keys(SUBW).length>0;const questGuideBlockedNow=()=>!!QUEST_CLEAR_WAIT;const questGuideAccepted=()=>{const q=S&&QUESTS[S.quest];return !!q&&!S.cleared&&S.qStory==null&&(!q.talk||S.qTalked)};
 const QUEST_PARTS={
@@ -2569,7 +2567,8 @@ function checkQuestParts(q){const parts=QUEST_PARTS[q.id];if(!parts)return;for(l
 }}
 function questReplyWho(q){if(!q.k)return storyWho(q);const who=subWho(q);return firstSpk((q.X||[]).map(line=>[line[0]==='K'?who:line[0],line[1]]),who)}
 function noteQuestPlacement(id,j){let m=QUEST_PLACEMENTS.get(S);if(!m){m=new Map();QUEST_PLACEMENTS.set(S,m)}m.set(j,{id,n:++questPlaceSerial})}
-function questVisitTarget(q,ids,j){const o=S.obj[j];if(!o||o==='part'||!BL[o])return false;
+function qvHas(j,id){return S.obj[j]===id||S.floor[j]===id}/* 見にくる物が、置いた物か、しいた床（あぜ道など）か */
+function questVisitTarget(q,ids,j){if(ids.includes(S.floor[j]))return true;const o=S.obj[j];if(!o||o==='part'||!BL[o])return false;
   if(!ids.includes(o)&&!(ids.includes('@furniture')&&BL[o].kind==='furn')&&!(ids.includes('@painting')&&['paint1','paint2','paint3'].includes((S.win||{})[j])))return false;
   if(FLOWERS.has(o)&&isBud(j))return false;
   if(q.id==='imoseed')return imoSeedQuestPlots().includes(j);
@@ -2581,15 +2580,15 @@ function questVisitTarget(q,ids,j){const o=S.obj[j];if(!o||o==='part'||!BL[o])re
 function queueQuestVisit(q,who,partIds,partKey){const ids=partIds||(q.k?QUEST_VISIT_SUB[q.k]:QUEST_VISIT_MAIN[q.id]);if(!ids)return null;
   const r=S.res.find(r=>r.name===who)||S.res.find(r=>r.name===(q.talk&&q.talk.who))||S.res.find(r=>(q.story||[]).some(line=>line[0]===r.name))||S.res.find(r=>!r.hidden)||S.res[0];if(!r)return;
   const recent=QUEST_PLACEMENTS.get(S);let target=-1,best=-Infinity;
-  for(let j=0;j<S.obj.length;j++){if(!questVisitTarget(q,ids,j))continue;const last=recent&&recent.get(j),score=(last&&last.id===S.obj[j]?last.n*100000:0)-Math.hypot(j%W+.5-r.x,(j/W|0)+.5-r.y);if(score>best){best=score;target=j}}
+  for(let j=0;j<S.obj.length;j++){if(!questVisitTarget(q,ids,j))continue;const last=recent&&recent.get(j),score=(last&&qvHas(j,last.id)?last.n*100000:0)-Math.hypot(j%W+.5-r.x,(j/W|0)+.5-r.y);if(score>best){best=score;target=j}}
   if(target<0)return null;
   // メインの訪問は、未完了のサブの訪問より先に行う。中断したサブは後で再開する。
   if(!q.k&&!partKey&&r.act&&r.act.type==='questjoy'&&r.act.obj!==target)endAct(r);
-  const id=S.obj[target],list=(QUEST_VISITS.get(r)||[]).filter(v=>v.obj!==target||v.id!==id);
+  const id=ids.includes(S.floor[target])&&!ids.includes(S.obj[target])?S.floor[target]:S.obj[target],list=(QUEST_VISITS.get(r)||[]).filter(v=>v.obj!==target||v.id!==id);
   if(q.k||partKey)list.push({obj:target,id,partKey});else list.unshift({obj:target,id});QUEST_VISITS.set(r,list.slice(0,4));return{r,obj:target,id};
 }
-function settleQuestVisit(r,a){const waits=[];if(QUEST_CLEAR_WAIT&&QUEST_CLEAR_WAIT.r===r&&QUEST_CLEAR_WAIT.obj===a.obj)waits.push(QUEST_CLEAR_WAIT);for(const k in SUB_CLEAR_WAIT){const w=SUB_CLEAR_WAIT[k];if(w&&w.r===r&&w.obj===a.obj)waits.push(w)}if(a.partKey&&a.joyAt==null&&S.obj[a.obj]===a.targetId){const list=QUEST_VISITS.get(r)||[];if(!list.some(v=>v.partKey===a.partKey))list.push({obj:a.obj,id:a.targetId,partKey:a.partKey});QUEST_VISITS.set(r,list)}if(!waits.length)return;const arrived=a.joyUntil!=null&&performance.now()>=a.joyUntil&&S.obj[a.obj]===a.targetId;
-  for(const w of waits){if(arrived){w.done=true;if(w===QUEST_CLEAR_WAIT&&S.qStory===w.quest)QUEST_CLEAR_WAIT=null;continue}if(S.obj[a.obj]===a.targetId){const list=QUEST_VISITS.get(r)||[];if(!list.some(v=>v.obj===a.obj&&v.id===a.targetId))list.unshift({obj:a.obj,id:a.targetId});QUEST_VISITS.set(r,list)}else if(w===QUEST_CLEAR_WAIT)QUEST_CLEAR_WAIT=null;else for(const k in SUB_CLEAR_WAIT)if(SUB_CLEAR_WAIT[k]===w)delete SUB_CLEAR_WAIT[k]}}
+function settleQuestVisit(r,a){const waits=[];if(QUEST_CLEAR_WAIT&&QUEST_CLEAR_WAIT.r===r&&QUEST_CLEAR_WAIT.obj===a.obj)waits.push(QUEST_CLEAR_WAIT);for(const k in SUB_CLEAR_WAIT){const w=SUB_CLEAR_WAIT[k];if(w&&w.r===r&&w.obj===a.obj)waits.push(w)}if(a.partKey&&a.joyAt==null&&qvHas(a.obj,a.targetId)){const list=QUEST_VISITS.get(r)||[];if(!list.some(v=>v.partKey===a.partKey))list.push({obj:a.obj,id:a.targetId,partKey:a.partKey});QUEST_VISITS.set(r,list)}if(!waits.length)return;const arrived=a.joyUntil!=null&&performance.now()>=a.joyUntil&&qvHas(a.obj,a.targetId);
+  for(const w of waits){if(arrived){w.done=true;if(w===QUEST_CLEAR_WAIT&&S.qStory===w.quest)QUEST_CLEAR_WAIT=null;continue}if(qvHas(a.obj,a.targetId)){const list=QUEST_VISITS.get(r)||[];if(!list.some(v=>v.obj===a.obj&&v.id===a.targetId))list.unshift({obj:a.obj,id:a.targetId});QUEST_VISITS.set(r,list)}else if(w===QUEST_CLEAR_WAIT)QUEST_CLEAR_WAIT=null;else for(const k in SUB_CLEAR_WAIT)if(SUB_CLEAR_WAIT[k]===w)delete SUB_CLEAR_WAIT[k]}}
 function questVisitSafe(r,j){return !S.enemies.some(e=>e.spawned&&!e.dead&&!e.flee&&(Math.hypot(e.x-r.x,e.y-r.y)<8||Math.hypot(e.x-(j%W+.5),e.y-((j/W|0)+.5))<8))}
 function questVisitStand(r,G,j){const b=BL[S.obj[j]],z=b&&szAt(S.obj[j],j)||[1,1],x=j%W,y=(j/W)|0,occupied=occTiles(r);let stand=-1,best=Infinity;
   for(let yy=Math.max(0,y-1);yy<=Math.min(H-1,y+z[1]);yy++)for(let xx=Math.max(0,x-1);xx<=Math.min(W-1,x+z[0]);xx++){
@@ -2600,18 +2599,18 @@ function questVisitStand(r,G,j){const b=BL[S.obj[j]],z=b&&szAt(S.obj[j],j)||[1,1
 function questVisitReached(r,j){const b=BL[S.obj[j]],z=b&&szAt(S.obj[j],j)||[1,1],x=j%W,y=(j/W)|0,dx=Math.max(x-r.x,0,r.x-(x+z[0])),dy=Math.max(y-r.y,0,r.y-(y+z[1]));return Math.hypot(dx,dy)<=1.05}
 function questVisitOpen(G,j){const b=BL[S.obj[j]],z=b&&szAt(S.obj[j],j)||[1,1],x=j%W,y=(j/W)|0;for(let yy=Math.max(0,y-1);yy<=Math.min(H-1,y+z[1]);yy++)for(let xx=Math.max(0,x-1);xx<=Math.min(W-1,x+z[0]);xx++){const k=yy*W+xx;if(G.dist[k]>=0&&walk(k))return true}return false}/* まわりに、歩いて行けるマスがあるか */
 function tryQuestVisit(r){const list=QUEST_VISITS.get(r);if(!list||!list.length||r.act&&r.act.type==='questjoy')return false;
-  const v=list[0];if(S.obj[v.obj]!==v.id){list.shift();return false}
+  const v=list[0];if(!qvHas(v.obj,v.id)){list.shift();return false}
   if(r.hunger<30||(r.visitRetryAt||0)>S.t||onHold(r)||HOLD.has(r.id)||!questVisitSafe(r,v.obj))return false;
   if(r.act&&['eat','fetch','flee','faint'].includes(r.act.type))return false;/* おなかがすいているとき以外は、ねむくても、すぐ見にいく */
   const G=bfs(r.x|0,r.y|0),stand=questVisitStand(r,G,v.obj);if(stand<0){if(!questVisitOpen(G,v.obj)){r.visitRetryAt=S.t+10;if(!v.told){v.told=1;toast(r.name+'が'+(BL[v.id]?BL[v.id].name:'')+'まで行けません','warn')}}return false}list.shift();/* 見にいけないときは、見たことにせず、知らせて、行けるようになるまで待つ */
   endAct(r);startAct(r,G,'questjoy',stand,{obj:v.obj,targetId:v.id,partKey:v.partKey});return true;
 }
-ACT.questjoy={start(r,a){if(S.obj[a.obj]!==a.targetId||!questVisitReached(r,a.obj))return false;const now=performance.now();a.joyAt=now;a.joyUntil=now+2400;if(a.partKey)(S.questPartSeen||(S.questPartSeen={}))[a.partKey]=true;JOYU.set(r,a.joyUntil);JUMP.set(r,now);r.shine=now;r.bubble='😊';r.face=a.obj%W+.5>=r.x?1:-1;sfxAt('good',r.x,r.y);
+ACT.questjoy={start(r,a){if(!qvHas(a.obj,a.targetId)||!questVisitReached(r,a.obj))return false;const now=performance.now();a.joyAt=now;a.joyUntil=now+2400;if(a.partKey)(S.questPartSeen||(S.questPartSeen={}))[a.partKey]=true;JOYU.set(r,a.joyUntil);JUMP.set(r,now);r.shine=now;r.bubble='😊';r.face=a.obj%W+.5>=r.x?1:-1;sfxAt('good',r.x,r.y);
   const main=QUEST_CLEAR_WAIT;if(main&&main.r===r&&main.obj===a.obj&&!main.prompted){main.prompted=true;const q=QUESTS[main.quest];if(q&&q.story&&S.quest===main.quest){PAYOK=false;if(q.pay)for(const k in q.pay)S.mat[k]=Math.max(0,(S.mat[k]||0)-q.pay[k]);S.qTalked=false;S.qStory=main.quest;sfx('quest');logEv('目標「'+q.text+'」をたっせい');TALKW=questReplyWho(q);QUESTCLEARW=TALKW;if(/^lv\d/.test(q.id))focusQuestSpeaker(TALKW);renderQuest();renderPalette()}}
   for(const k in SUB_CLEAR_WAIT){const w=SUB_CLEAR_WAIT[k];if(!w||w.r!==r||w.obj!==a.obj||w.prompted)continue;const q=SUBQ.find(x=>x.k===k);if(!q)continue;w.prompted=true;(S.subArrived||(S.subArrived={}))[k]=true;S.subSt[k]=3;const reply=questReplyWho(q);if(reply)SUBW[reply]=k}
 },
   tick(r,a){if(!a.secondHop&&performance.now()-a.joyAt>=900){a.secondHop=true;JUMP.set(r,performance.now())}},
-  done:(r,a)=>S.obj[a.obj]!==a.targetId||performance.now()>=a.joyUntil,
+  done:(r,a)=>!qvHas(a.obj,a.targetId)||performance.now()>=a.joyUntil,
   end(r,a){if(JOYU.get(r)===a.joyUntil)JOYU.delete(r)}};
 function upFx(r,nm,txt,big){const now=performance.now();JOYU.set(r,now+2600);RHOLD.set(r,now+2600);r.bubble='😆';r.shine=now;JUMP.set(r,now);setTimeout(()=>{if(S.res.includes(r))JUMP.set(r,performance.now())},900);
   fx.push({k:'ring',x:r.x*TS,y:(r.y-.5)*TS,life:1});for(let n=0;n<(big?36:22);n++){const a=Math.random()*7;fx.push({k:'p',x:r.x*TS,y:(r.y-.6)*TS,vx:Math.cos(a)*(60+Math.random()*60),vy:Math.sin(a)*70-60,life:1,col:pick(['#fff3a0','#9fe8ff','#ffc6ec','#fff']),r:2.5})}
@@ -2734,7 +2733,7 @@ function place(id,x,y){
     else setBlock(id,j)
   }
   if(undoStack.length>30)undoStack.shift();
-  S.placed[id]=(S.placed[id]||0)+1;recount();if(S.obj[j]===id||RUGS.has(id)&&S.rug&&S.rug[j]===id)noteQuestPlacement(id,j);burst(j,b.kind==='block'?'block':b.kind==='plant'?'plant':'furn',b.kind==='furn'?'furnPlace':b.kind==='plant'?'pat':null);if(SEATS.includes(id)&&spotW(j)>=0)addFloat(j%W+.5,(j/W|0)-.3,'つりスポット！');renderPalette();checkQuest();
+  S.placed[id]=(S.placed[id]||0)+1;recount();if(S.obj[j]===id||S.floor[j]===id||RUGS.has(id)&&S.rug&&S.rug[j]===id)noteQuestPlacement(id,j);burst(j,b.kind==='block'?'block':b.kind==='plant'?'plant':'furn',b.kind==='furn'?'furnPlace':b.kind==='plant'?'pat':null);if(SEATS.includes(id)&&spotW(j)>=0)addFloat(j%W+.5,(j/W|0)-.3,'つりスポット！');renderPalette();checkQuest();
   if(id==='door'){const w=houseWhy(j);if(w)setTimeout(()=>toast(w,'warn'),400);else if(HOUSES.some(h=>h.set.has(j)))setTimeout(()=>toast('家ができた！','good'),400)}/* ドアを置いたら、家になったかを知らせる */
 }
 function undo(){
@@ -2846,7 +2845,7 @@ function confirmYes(){
   S.pt-=p.cost;for(const id in p.need)S.inv[id]=Math.max(0,inv(id)-p.need[id]);
   const put=(id,j)=>{if(BL[id].floor&&S.floor[j])giveItem(S.floor[j],1);setBlock(id,j)};
   const cells=[];
-  if(p.kind==='bulk'){for(const[x,y]of p.cells){put(p.id,y*W+x);cells.push([x,y]);if(BL[p.id].kind==='furn')noteQuestPlacement(p.id,y*W+x)}S.placed[p.id]=(S.placed[p.id]||0)+p.cells.length}
+  if(p.kind==='bulk'){for(const[x,y]of p.cells){put(p.id,y*W+x);cells.push([x,y]);if(BL[p.id].kind==='furn'||BL[p.id].floor)noteQuestPlacement(p.id,y*W+x)}S.placed[p.id]=(S.placed[p.id]||0)+p.cells.length}
   else for(const[dx,dy,id]of STAMPS[p.sid].cells){put(id,(p.y+dy)*W+p.x+dx);cells.push([p.x+dx,p.y+dy])}
   cells.forEach(([x,y],i)=>{if(i<14)burstAt(x,y,'block')});
   undoStack=[];recount();renderPalette();checkQuest();toast('ぬりおわった！','good');
@@ -2900,7 +2899,7 @@ function checkQuest(){
       askYesNo(who,matTxt(q.pay)+'、もらってもいい？',()=>{ASKING=false;PAYOK=true;checkQuest()},()=>{ASKING=false;S.payNo=S.t;renderQuest()})}renderQuest();return}/* 材料を使うクエストは、きいてから */
     let wait=QUEST_CLEAR_WAIT;
     if(wait&&wait.quest!==S.quest){QUEST_CLEAR_WAIT=wait=null}
-    if(wait&&!wait.done){if(S.obj[wait.obj]!==wait.id||!S.res.includes(wait.r))QUEST_CLEAR_WAIT=wait=null;else{renderQuest();return}}/* 見にくる子が消えたら、べつの子で見にくるのを入れなおす */
+    if(wait&&!wait.done){if(!qvHas(wait.obj,wait.id)||!S.res.includes(wait.r))QUEST_CLEAR_WAIT=wait=null;else{renderQuest();return}}/* 見にくる子が消えたら、べつの子で見にくるのを入れなおす */
     if(wait&&wait.done)QUEST_CLEAR_WAIT=null;
     if(!wait){const visit=queueQuestVisit(q,storyWho(q));if(visit){QUEST_CLEAR_WAIT=Object.assign({quest:S.quest,done:false},visit);renderQuest();return}}
     PAYOK=false;
@@ -4303,8 +4302,9 @@ function drawRes0(r,now){
   const ci=carryIcon(r);
   const over=()=>{
   if(ci){const cb=walking?Math.abs(Math.sin(now/110+r.id))*1.2:0;ctx.font='26px sans-serif';ctx.fillStyle='#000';ctx.textAlign='center';ctx.textBaseline='middle';{let cl=carryIcons(r);if(!cl.length)cl=[ci];if(!cl[0])cl=[];const hn=cl.length;/* 持っている数だけ、そのまま積む */if(cl[0]==='⚰️'){const cb0=coffinBmp(),cy=fy-(r.elem==='wood'?34:29)-cb+10;if(cb0)ctx.drawImage(cb0.c,px-cb0.w/2,cy-cb0.h,cb0.w,cb0.h);cl=[]}/* 棺は、いつもの1.5倍の大きさ（39px）で、頭の上に乗せる（木の子は葉っぱの上） */for(let i=0;i<cl.length;i++){const e1=cl[i],ei=emoImg(e1),ox=(i%2?3:-3)*(hn>1?1:0),oy=-i*7;if(ei){const k=30/Math.max(ei.width,ei.height),iw=ei.width*k,ih=ei.height*k;ctx.drawImage(ei,px-iw/2+ox,fy-47-cb-ih/2+oy+(hn-1)*3+(e1==='⚰️'?7:0),iw,ih)}else ctx.fillText(e1,px+ox,fy-47-cb+oy+(hn-1)*3)}}/* たくさん持つときは、アイコンを重ねる */ctx.textAlign='start';ctx.textBaseline='alphabetic'}
-  if(!(r.hurt>0)&&S.t-(r.eUp||-9)<3&&r.energy<99.5){const v=r.energy/100,bx=px-12,byy=py+11;ctx.fillStyle='rgba(0,0,0,.45)';rr(ctx,bx,byy,24,5,2.5);ctx.fillStyle='#7ed99a';rr(ctx,bx+1,byy+1,Math.max(2,22*v),3,1.5);const ph=(now/600)%1;ctx.globalAlpha=1-ph;ctx.fillStyle='#7ed99a';ctx.font='bold 9px \"Hikomi\",\"Hiragino Maru Gothic ProN\",sans-serif';ctx.textAlign='center';ctx.fillText('+',px+15,byy+4-ph*8);ctx.globalAlpha=1}/* 元気が回復中：みどりのバー */
-  if(r.hurt>0){const v=r.hunger/hMax(r),a=Math.min(1,r.hurt/8);ctx.globalAlpha=a;ctx.fillStyle='rgba(0,0,0,.6)';rr(ctx,px-12,py+11,24,5,2.5);ctx.fillStyle=v>.5?'#7ee08a':v>.25?'#ecdcbc':'#ff6b6b';rr(ctx,px-11,py+12,Math.max(2,22*v),3,1.5);ctx.globalAlpha=1}
+  const gx=bedH?px-10:px,gy=bedH?py+20:py+11;/* 横のベッドで寝ているときは、横になった体の下のまん中に出す */
+  if(!(r.hurt>0)&&S.t-(r.eUp||-9)<3&&r.energy<99.5){const v=r.energy/100,bx=gx-12,byy=gy;ctx.fillStyle='rgba(0,0,0,.45)';rr(ctx,bx,byy,24,5,2.5);ctx.fillStyle='#7ed99a';rr(ctx,bx+1,byy+1,Math.max(2,22*v),3,1.5);const ph=(now/600)%1;ctx.globalAlpha=1-ph;ctx.fillStyle='#7ed99a';ctx.font='bold 9px \"Hikomi\",\"Hiragino Maru Gothic ProN\",sans-serif';ctx.textAlign='center';ctx.fillText('+',gx+15,byy+4-ph*8);ctx.globalAlpha=1}/* 元気が回復中：みどりのバー */
+  if(r.hurt>0){const v=r.hunger/hMax(r),a=Math.min(1,r.hurt/8);ctx.globalAlpha=a;ctx.fillStyle='rgba(0,0,0,.6)';rr(ctx,gx-12,gy,24,5,2.5);ctx.fillStyle=v>.5?'#7ee08a':v>.25?'#ecdcbc':'#ff6b6b';rr(ctx,gx-11,gy+1,Math.max(2,22*v),3,1.5);ctx.globalAlpha=1}
   if(at==='craft'&&ad){const o=S.orders.find(q=>q.id===r.act.order);if(o){const f=Math.min(1,o.prog/o.need),bx=px-16,byy=py+(r.hurt>0?19:12);ctx.fillStyle='rgba(150,115,75,.5)';rr(ctx,bx-1.5,byy-1.5,35,8,4);ctx.fillStyle='#e8dcc0';rr(ctx,bx,byy,32,5,2.5);ctx.fillStyle='#e0a43a';rr(ctx,bx,byy,Math.max(2.5,32*f),5,2.5)}}/* 依頼の作業の進み具合は足もと。吹き出しは上に出す */
   if(r.act&&r.act.stage==='do'&&WORKP[r.act.type]){const f=Math.max(0,Math.min(1,WORKP[r.act.type](r,r.act)||0)),bx=px-16,byy=py+(r.hurt>0?19:12);ctx.fillStyle='rgba(150,115,75,.5)';rr(ctx,bx-1.5,byy-1.5,35,8,4);ctx.fillStyle='#e8dcc0';rr(ctx,bx,byy,32,5,2.5);ctx.fillStyle='#e0a43a';rr(ctx,bx,byy,Math.max(2.5,32*f),5,2.5)}/* 木を切る・石を掘る・畑・建てる・料理など、作業の進み具合 */
   const zzz=r.act&&r.act.type==='sleep';/* 寝ているあいだは、話しかけの吹き出しを出さない */
@@ -5625,7 +5625,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='599';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='600';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
