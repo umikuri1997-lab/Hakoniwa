@@ -306,7 +306,7 @@ const QUESTS1=[
     [POKO,'#surprise|わあ、歩きやすい！ 足が、すいすい進むよ。'],
     [GOD,'道の上は、せいれいたちも速く歩けるんじゃ。'],
     [POKO,'#joy|どうりで！ 神殿まで、走っていきたくなっちゃう！']]},
-  {id:'lv2',text:'村レベルを2にしよう',check:()=>S.lv>=2,how:'せいれいが満足してパワーがたまると、村レベルが上がる。夜は「コワイノ」をタップすると、パワー1で光をあてておどかせる',prog:()=>'いま 村レベル'+S.lv,
+  {id:'lv2',text:'村レベルを2にしよう',check:()=>S.lv>=2,how:'せいれいが満足してパワーがたまると、村レベルが上がる。夜は、守りの光のアイコンをタップしてから「コワイノ」をタップすると、パワー1で光をあてておどかせる',prog:()=>'いま 村レベル'+S.lv,
    talk:{who:POKO,when:()=>true,lines:[
     [POKO,'守り神さま、ここで楽しく暮らすと、村も育っていくんだって！'],
     [GOD,'#nod|うむ。せいれいたちが満足して、パワーがたまるほど、村は育っていくんじゃ。'],
@@ -1280,6 +1280,7 @@ const foeNear=r=>S.enemies.some(e=>e.spawned&&!e.dead&&!e.flee&&Math.hypot(e.x-r
 function decide0(r){
   const tx=r.x|0,ty=r.y|0,G=bfs(tx,ty),here=ty*W+tx;
   if(r.cing&&isNight()){const R=RECIPES.find(x=>x.out===r.cing.rec);if(R)for(const k in R.need)addFood(k,R.need[k]);r.cing=null}/* 夜は料理ができないので、持っている材料は食料箱にもどす */
+  if(r.cmat&&matCap()>0&&r.hunger>35&&!isNight()&&!hostileNow()&&!foeNear(r))return goStoreMat(r,G);/* ごはんに行く前に、持っている素材をしまう（おなか35以下なら、そのまま食べにいく） */
   if(r.wantEat){r.wantEat=0;if(r.hunger<hMax(r)-8&&!r.meal&&goEat(r,G))return}
   if(r.refill&&r.hunger<hMax(r)-1&&S.food>0&&!r.meal&&goEat(r,G))return;/* マックスまで食べてから、たたかいにもどる */
   if(r.meal&&S.enemies.some(e=>e.spawned&&!e.dead))return startAct(r,G,'eat',-1,{pt:0,pw:0});/* コワイノがいるときは、とってきたごはんを、その場で食べる */
@@ -2084,7 +2085,7 @@ function hitRes(e,r,D){if(BOSSFX[e.type]){shakeScreen();fx.push({k:'ring',x:r.x*
   if(h0>=12&&r.hunger<3)r.hunger=3;/* 一撃では消えない */
   {const L=lightAt(e.x,e.y);e.rest=fire?(D.boss?(L?2:1.5):(L?2.667:2)):(D.boss?(L?4:3):(L?5.333:4))}/* たたいたあと、コワイノがひと休みする時間（明かりの中は長い）。やられて止まる stun とはちがい、うすくならない */e.path=[];e.repath=0;
 }
-let LIGHTCD=0;/* のこり秒（倍速なら早くもどる） */
+let LIGHTCD=0,LIGHTARM=false;/* 守りの光：アイコンをタップしてから、コワイノ・木・岩をタップする *//* のこり秒（倍速なら早くもどる） */
 function guardLight(e){if(LIGHTCD>0){toast('まもりの光は、あと'+Math.ceil(LIGHTCD/(S.speed||1))+'秒');return}if(S.pt<1){toast('パワーが足りません');return}S.pt-=1;LIGHTCD=10;
   const D=EN[e.type];e.hp-=1;e.flash=8;/* ダメージは1だけ */e.stun=D.boss?1:2.5;e.path=[];e.repath=0;
   const cx=e.x*TS,cy=e.y*TS-18;fx.push({k:'ring',x:cx,y:cy,life:1});for(let n=0;n<18;n++){const a=Math.random()*7,v=rnd(50,120);fx.push({k:'p',x:cx,y:cy,vx:Math.cos(a)*v,vy:Math.sin(a)*v-40,life:1,col:pick(['#fffbe0','#fff','#ffe9a0']),r:rnd(1.5,3)})}sfxAt('shoot',e.x,e.y);
@@ -2139,7 +2140,7 @@ function updTowers(dt){
 }
 
 /* ---------- レベル ---------- */
-const LV_XP=[0,40,140,308,618,1190,2250,3200,4400,6000,8000,10500,13500,17000,21000];/* 1段の必要量＝（前の段＋その前の段）×1.2。クリア後はLv15まで */
+const LV_XP=[0,60,210,462,927,1785,3375,4800,6600,9000,12000,15750,20250,25500,31500];/* 村レベルに必要なパワーの合計。クリア後はLv15まで */
 const maxLv=()=>S&&S.cleared?15:10;
 function vLv(){let l=1;while(l<maxLv()&&S.totalPt>=LV_XP[l])l++;return l}
 const LVXP=[0,0,25,100,225,400,625,900,1225,1600,2025,2500,3025,3600,4225,4900,5625,6400,7225,8100,9025,10000,11025,12100,13225,14400,15625,16900,18225,19600,21025,22500,24025,25600,27225,28900,30625,32400,34225,36100,38025];/* せいれいのレベル：そのレベルになるのに要る経験値（Lv1〜40） */
@@ -2185,7 +2186,7 @@ const LEVELUP_ITEMS=new Set(['path','gate','hwall','door','floor','brickfloor','
 const levelUpItemsAt=n=>Object.keys(BL).filter(id=>LEVELUP_ITEMS.has(id)&&BL[id].lv===n&&!BL[id].offerOnly);
 const visibleLevelRewardsAt=n=>levelUpItemsAt(n).filter(id=>id!=='curtain1'||!S.free);
 function checkLevel(){
-  const l=vLv();if(S.lv>l)S.lv=l;const old=S.lv||1,priorUnlocks={...(S.unlocked||{})},priorRecipes={...(S.recipes||{})};
+  const l=vLv();if(S.lv>l)return;/* 必要なパワーをふやしても、いまの村レベルは下げない */const old=S.lv||1,priorUnlocks={...(S.unlocked||{})},priorRecipes={...(S.recipes||{})};
   for(let n=2;n<=l;n++)for(const id of visibleLevelRewardsAt(n)){if(BL[id].kind==='block')S.unlocked[id]=true;else if(id==='curtain1'&&!S.free){S.recipes||(S.recipes={});S.recipes[id]=true}}
   if(l>=2)S.unlocked.path=true;
   if(l>=4&&!S.free){S.unlocked.window=true;S.recipes||(S.recipes={});S.guardianIdeas||(S.guardianIdeas={});S.recipes.window=true;S.guardianIdeas.window=true}
@@ -2659,13 +2660,13 @@ function morning(){sfx('morning');if(S.cleared&&S.daily)dailyCheck();/* 夜の�
   checkFree();
   summonMorning();
 }
-const LIGHTNAT={ntree:'wood',deadtree:'wood',tree:'wood',rock:'stone'};/* 守り神の光をあてられる木・岩と、落ちる素材 */
+const LIGHTNAT={ntree:'wood',deadtree:'wood',tree:'wood',rock:'stone'},NATHIT=new Map();/* 守り神の光をあてられる木・岩と、落ちる素材 */
 function natLight(j){const o=S.obj[j],k=LIGHTNAT[o];if(LIGHTCD>0){toast('まもりの光は、あと'+Math.ceil(LIGHTCD/(S.speed||1))+'秒');return}if(S.pt<1){toast('パワーが足りません');return}S.pt-=1;LIGHTCD=10;/* 1回パワー1。コワイノと同じ待ち時間 */
   const x=j%W,y=(j/W)|0,n=(S.hp['lt'+j]||0)+1,cx=x*TS+16,cy=y*TS+8;fx.push({k:'ring',x:cx,y:cy,life:1});for(let m=0;m<12;m++){const a=Math.random()*7,v=rnd(40,100);fx.push({k:'p',x:cx,y:cy,vx:Math.cos(a)*v,vy:Math.sin(a)*v-40,life:1,col:pick(['#fffbe0','#fff','#ffe9a0']),r:rnd(1.5,3)})}sfxAt('shoot',x,y);
-  if(n<3){S.hp['lt'+j]=n;addFloat(x+.5,y-.5,n+'/3','#fff3c0');return}/* 3回あてると、木材・石材が1こ落ちる */
+  NATHIT.set(j,performance.now());if(n<3){S.hp['lt'+j]=n;return}/* 3回あてると、木材・石材が1こ落ちる。のこりは、たいきゅうバーで見せる */
   delete S.hp['lt'+j];useNat(j);dropAt(x,y,'mat:'+k,1);addFloat(x+.5,y-.5,MATN[k]+'が落ちた','#ecdcbc')}/* 落ちた物は、せいれいがひろう。木や岩は、せいれいが切ったときと同じようにへる */
 function findTalk(){if(WD!==0){S.flags.lightTold=1;return}/* 説明は1章（草原）だけ。ほかの章では、もう知っているので話さない */if(!qDone('table')||!$('#dialog').hidden)return;/* 食卓のクエストがおわってから話す */const sp=S.res.find(r=>r.name===POKO&&!r.hidden);if(!sp)return;S.flags.lightTold=1;
-  dialog([[POKO,'#think|ねえ、守り神さま。木材や石材、もっとたくさんあったらいいのにね。'],[POKO,'#surprise|……そうだ！ 守り神さまの光、木や岩にもあてられないかな？'],[POKO,'#joy|光が3回あたったら、木ぎれや石ころが、ころんって落ちてくるかも。そしたら、ぼくたちがひろって、箱にしまうよ！']],()=>toast('木や岩をタップすると、光をあてられる（パワー1）。3回で1こ落ちる'))}
+  dialog([[POKO,'#think|ねえ、守り神さま。木材や石材、もっとたくさんあったらいいのにね。'],[POKO,'#surprise|……そうだ！ 守り神さまの光、木や岩にもあてられないかな？'],[POKO,'#joy|光があたったら、木ぎれや石ころが、ころんって落ちてくるかも。そしたら、ぼくたちがひろって、箱にしまうよ！']],()=>toast('守りの光をえらんで木や岩をタップすると、守りの光をあてられる（パワー1）'))}
 function spawnSeed(){
   for(let t=0;t<40;t++){const x=OFF+((Math.random()*OW)|0),y=OFF+((Math.random()*OW)|0),j=y*W+x;/* 前からの土地の中に落ちる */
     if(!inBase(x,y)&&S.ground[j]!==1&&!S.obj[j]){S.seeds.push({x,y});return}}
@@ -2875,7 +2876,7 @@ function confirmYes(){
 const RLOCK=new Set(['lumber','quarry','stele','fountain','lighthouse','windmill','bed','campfire','oven','swing','lamp','bench','chair','stool']);/* 会話でひらめくまで作れない家具 */
 function recipeKnown(id,s=S){const b=BL[id];return !!b&&(!WIND_STAGE_TOYS.has(id)||WD===4)&&(id!=='noren'||WD>=1)/* のれんは火山のふもとから */&&(id!=='window'||!!(s.unlocked||{}).window)&&(!(b.kind==='furn'||RLOCK.has(id)||b.offerOnly)||!!(s.recipes||{})[id])}
 
-const MANUAL=[['せいれいのようす',[['おなか','へると元気がなくなり、0になると消えてしまう。食料箱のごはんを食べる。料理はおなかがたくさんふくれる。'],['たのしさ','遊ぶ・おしゃべり・水浴びでふえる。おもちゃで遊ぶといちばんふえる。満タンになると、おそなえ箱におそなえをしてくれる。低いと疲れやすくなる。'],['つかれ','はたらくとたまる。たまると昼でもひと休みする。夜はベッドや家で眠ってなおす。'],['住み心地','家をタップすると見られる。家具・床がふえると上がる。つぼなどのかざりは、家の中か、家のそば（かざりごとに決まった範囲。つぼは1マス）にあれば入る。そのせいれいの好きな家具は、その家具のぶんのポイントが2倍になる。'],['住み心地の効果','高いほど、眠ったときのつかれのとれ方が速くなる（0.6〜3.3倍）。住み心地は最大300まで上がる。180以上でぐっすり眠れて、朝にたのしさ+10。90未満だと、たのしさ-5。'],['ベッドの数','家の中の広さ4マスにつき、ベッド1つがおすすめ。それより多く置くと、きゅうくつで住み心地が大きく下がり、元気とたのしさも下がる。']]],['ステータス',[['作業スピード','仕事の速さ。たき火で遊ぶとのびる。'],['移動速度','歩く速さ。ブランコで遊ぶとのびる。道の上はもっと速い。'],['スタミナ','疲れにくさ。噴水で遊ぶとのびる。'],['持てる数','一度に運べる数。'],['攻撃力','「コワイノ」とたたかう力。火のせいれいがいちばん強い。']]],['属性と得意なこと',[['木','畑の収穫+1・畑の世話・花や木を植える・木の家具づくり'],['水','作業の速さ1.3倍・スタミナ0.7倍・水やり・つり・水の家具づくり'],['火','「コワイノ」とたたかう・夜の見回り・料理・火の家具づくり'],['土','作業の速さ0.75倍・スタミナ1.45倍・畑を耕す・柵を直す・土の家具づくり'],['風','歩く速さ1.45倍・たのしさ60より下で遊びに行く（ほかの子は30）・ふしぎな種を拾う・風の家具づくり'],['みんな','建てる・収穫・種まき・木や石を集める・おそなえ']]],['家具の種類',[['【ダイニング家具】','いす・ソファ・ローテーブル・ラグ・ひくい棚など。食卓のある家（ダイニング）の中に置くと、その家の食卓で食べたときにもらえるパワーがふえる。たくさん置くほどふえて、いちばん多くて+3。ソファやひくい棚は、1つでも大きくふえる。家の中の食卓で食べるだけでも+1。食卓をタップすると、いまどれだけふえるか見られる。'],['【料理家具】','水おけ・流し台など。かまどのまわり3マスにあると、料理が早くなる（料理家具の種類1つにつき10%）。かまどをタップすると、いまの料理の速さが見られる。'],['【あかり】','たいまつ・ランタン・ろうそくなど。夜の見回りや、家の中を明るくするのに使う。ろうそく・ランタン・フロアランプは、家の中に置くとその家ぜんたいを照らす（家の外では1.5マス）。'],['【庭の家具】','生垣はまわり2マス、水飲み鳥・ガーデンアーチは3マスと範囲が広いかわりに、効果は小さめ。パラソルは、まわり1マスだけだが、効果が大きい。どれも、たのしさがふえる（休けい中は、つかれもとれる）。'],['【あそび道具】','ブランコ・シーソー・すべり台など。遊ぶと、たのしさがいちばんふえる。'],['【かべ・かざり】','絵・カーテン・窓・かざり棚など。住み心地が上がる。絵は横向きの家の壁に、カーテンは家の上がわの壁の窓にかける。'],['おそなえでしか手に入らない家具','依頼ボードでは作れない家具もある。せいれいが、ごくまれにおそなえしてくれる（その子の属性の家具だけ）。']]],['くらし',[['床','家の中の床のわりあいに応じて、住み心地が最大+45（床100%のとき）。床は歩く速さも上がる。'],['水浴び','夕方、水べか、バスタブで水浴びをする。できないと、たのしさが下がる。'],['あかり','家の中か、すぐそばに灯り（たいまつ・ランタン・ろうそくなど）があると、住み心地がいい。'],['畑とたね','おそなえ箱や「おく」でたねをえらんで、畑をタップしてまく。収穫したら、また植える。耕しただけでは、なにも育たない。はじめはいもだけ。火のせいれいが来ると、こむぎとキャベツもつくれる。'],['ベッド','ベッドをタップすると、そこで眠るせいれいをきめられる。家をタップしても、中のベッドをえらべる。'],['かまど','「みる」でかまどをタップして、作る料理をえらぶ。料理ごとに時間がちがう。']]],['守り神のちから',[['おつげ','メニューから、きょういちにちの指示を出せる（木をあつめる・食料をあつめる など）。'],['依頼ボード','家具や罠をたのむ。手のあいたせいれいが作ってくれる。'],['なかまを呼ぶ','属性の力がたまった次の朝、神殿の「！」をタップ。']]],['夜と「コワイノ」',[['「コワイノ」','夜12時ごろ、南からやってくる。せいれいをねらってくる。柵や壁の中にいても、こわして入ってくる。見張り台や罠をこわしにくるのはワナクイだけ。オオカゲを追いはらうほど、数も強さもふえる。'],['まもりの光','夜、「コワイノ」をタップすると、パワー1を使い、光でおどかしてダメージをあたえる。10秒ごとに使える。'],['直す','こわれた柵・壁・見張り台・罠は、昼に土のせいれいが素材を使って直す。'],['火事（火山のふもと）','木でできた家具・柵・壁は、ハイカゲ・ヒノオオカゲにふれたり、昼に火の粉がとんできたりすると燃える。燃えているあいだ、15分ごとにじょうぶさが1へり、0になるとこわれる。昼なら、水のせいれいが消しにいく。家の中の物には、火の粉はとどかない。'],['朝まで休む','「コワイノ」をぜんぶ追いはらった夜や、せいれいがみんな消えてしまった夜は、上の「朝まで休む」で朝までとばせる。'],['そなえ','柵・壁・見張り台・罠でまもる。家の中にいるせいれいは攻撃されない。でも、「コワイノ」は家の壁をこわそうとする。'],['おとしもの','「コワイノ」を追いはらうと、たまにおとしものをする。朝になると、せいれいが拾ってくれる。'],['ヌシのかけら','3つ集めて台座にはめると、ヌシ様がもどってくる。手に入れかたは土地ごとにちがう。'],['めぶきのしずく','オオカゲを追いはらうと、半分くらいの確率で落とす。せいれいのリストの「消えてしまったせいれい」から使うと、そのせいれいがもどってくる（Lv1から）。'],['おみおくり','消えた子のお墓は、なかま（なかよしがいればその子）が神殿へはこび、おいのりして、おみおくりする。'],['お墓','この土地に深くなじんだ「めぐりの子」は、土地とのつながりをたどり、次の朝、神殿の「！」から、レベルそのままで戻ってこられる。ほかの子は、消えると自然にかえり、同じ姿では戻れない。「めぶきのしずく」があれば別（Lv1から）。']]]];
+const MANUAL=[['せいれいのようす',[['おなか','へると元気がなくなり、0になると消えてしまう。食料箱のごはんを食べる。料理はおなかがたくさんふくれる。'],['たのしさ','遊ぶ・おしゃべり・水浴びでふえる。おもちゃで遊ぶといちばんふえる。満タンになると、おそなえ箱におそなえをしてくれる。低いと疲れやすくなる。'],['つかれ','はたらくとたまる。たまると昼でもひと休みする。夜はベッドや家で眠ってなおす。'],['住み心地','家をタップすると見られる。家具・床がふえると上がる。つぼなどのかざりは、家の中か、家のそば（かざりごとに決まった範囲。つぼは1マス）にあれば入る。そのせいれいの好きな家具は、その家具のぶんのポイントが2倍になる。'],['住み心地の効果','高いほど、眠ったときのつかれのとれ方が速くなる（0.6〜3.3倍）。住み心地は最大300まで上がる。180以上でぐっすり眠れて、朝にたのしさ+10。90未満だと、たのしさ-5。'],['ベッドの数','家の中の広さ4マスにつき、ベッド1つがおすすめ。それより多く置くと、きゅうくつで住み心地が大きく下がり、元気とたのしさも下がる。']]],['ステータス',[['作業スピード','仕事の速さ。たき火で遊ぶとのびる。'],['移動速度','歩く速さ。ブランコで遊ぶとのびる。道の上はもっと速い。'],['スタミナ','疲れにくさ。噴水で遊ぶとのびる。'],['持てる数','一度に運べる数。'],['攻撃力','「コワイノ」とたたかう力。火のせいれいがいちばん強い。']]],['属性と得意なこと',[['木','畑の収穫+1・畑の世話・花や木を植える・木の家具づくり'],['水','作業の速さ1.3倍・スタミナ0.7倍・水やり・つり・水の家具づくり'],['火','「コワイノ」とたたかう・夜の見回り・料理・火の家具づくり'],['土','作業の速さ0.75倍・スタミナ1.45倍・畑を耕す・柵を直す・土の家具づくり'],['風','歩く速さ1.45倍・たのしさ60より下で遊びに行く（ほかの子は30）・ふしぎな種を拾う・風の家具づくり'],['みんな','建てる・収穫・種まき・木や石を集める・おそなえ']]],['家具の種類',[['【ダイニング家具】','いす・ソファ・ローテーブル・ラグ・ひくい棚など。食卓のある家（ダイニング）の中に置くと、その家の食卓で食べたときにもらえるパワーがふえる。たくさん置くほどふえて、いちばん多くて+3。ソファやひくい棚は、1つでも大きくふえる。家の中の食卓で食べるだけでも+1。食卓をタップすると、いまどれだけふえるか見られる。'],['【料理家具】','水おけ・流し台など。かまどのまわり3マスにあると、料理が早くなる（料理家具の種類1つにつき10%）。かまどをタップすると、いまの料理の速さが見られる。'],['【あかり】','たいまつ・ランタン・ろうそくなど。夜の見回りや、家の中を明るくするのに使う。ろうそく・ランタン・フロアランプは、家の中に置くとその家ぜんたいを照らす（家の外では1.5マス）。'],['【庭の家具】','生垣はまわり2マス、水飲み鳥・ガーデンアーチは3マスと範囲が広いかわりに、効果は小さめ。パラソルは、まわり1マスだけだが、効果が大きい。どれも、たのしさがふえる（休けい中は、つかれもとれる）。'],['【あそび道具】','ブランコ・シーソー・すべり台など。遊ぶと、たのしさがいちばんふえる。'],['【かべ・かざり】','絵・カーテン・窓・かざり棚など。住み心地が上がる。絵は横向きの家の壁に、カーテンは家の上がわの壁の窓にかける。'],['おそなえでしか手に入らない家具','依頼ボードでは作れない家具もある。せいれいが、ごくまれにおそなえしてくれる（その子の属性の家具だけ）。']]],['くらし',[['床','家の中の床のわりあいに応じて、住み心地が最大+45（床100%のとき）。床は歩く速さも上がる。'],['水浴び','夕方、水べか、バスタブで水浴びをする。できないと、たのしさが下がる。'],['あかり','家の中か、すぐそばに灯り（たいまつ・ランタン・ろうそくなど）があると、住み心地がいい。'],['畑とたね','おそなえ箱や「おく」でたねをえらんで、畑をタップしてまく。収穫したら、また植える。耕しただけでは、なにも育たない。はじめはいもだけ。火のせいれいが来ると、こむぎとキャベツもつくれる。'],['ベッド','ベッドをタップすると、そこで眠るせいれいをきめられる。家をタップしても、中のベッドをえらべる。'],['かまど','「みる」でかまどをタップして、作る料理をえらぶ。料理ごとに時間がちがう。']]],['守り神のちから',[['おつげ','メニューから、きょういちにちの指示を出せる（木をあつめる・食料をあつめる など）。'],['依頼ボード','家具や罠をたのむ。手のあいたせいれいが作ってくれる。'],['なかまを呼ぶ','属性の力がたまった次の朝、神殿の「！」をタップ。']]],['夜と「コワイノ」',[['「コワイノ」','夜12時ごろ、南からやってくる。せいれいをねらってくる。柵や壁の中にいても、こわして入ってくる。見張り台や罠をこわしにくるのはワナクイだけ。オオカゲを追いはらうほど、数も強さもふえる。'],['まもりの光','守りの光のアイコンをタップしてから「コワイノ」をタップすると、パワー1を使い、光でおどかしてダメージ1をあたえる。木や岩にあてると、3回で木材・石材が1こ落ちる。10秒ごとに使える。'],['直す','こわれた柵・壁・見張り台・罠は、昼に土のせいれいが素材を使って直す。'],['火事（火山のふもと）','木でできた家具・柵・壁は、ハイカゲ・ヒノオオカゲにふれたり、昼に火の粉がとんできたりすると燃える。燃えているあいだ、15分ごとにじょうぶさが1へり、0になるとこわれる。昼なら、水のせいれいが消しにいく。家の中の物には、火の粉はとどかない。'],['朝まで休む','「コワイノ」をぜんぶ追いはらった夜や、せいれいがみんな消えてしまった夜は、上の「朝まで休む」で朝までとばせる。'],['そなえ','柵・壁・見張り台・罠でまもる。家の中にいるせいれいは攻撃されない。でも、「コワイノ」は家の壁をこわそうとする。'],['おとしもの','「コワイノ」を追いはらうと、たまにおとしものをする。朝になると、せいれいが拾ってくれる。'],['ヌシのかけら','3つ集めて台座にはめると、ヌシ様がもどってくる。手に入れかたは土地ごとにちがう。'],['めぶきのしずく','オオカゲを追いはらうと、半分くらいの確率で落とす。せいれいのリストの「消えてしまったせいれい」から使うと、そのせいれいがもどってくる（Lv1から）。'],['おみおくり','消えた子のお墓は、なかま（なかよしがいればその子）が神殿へはこび、おいのりして、おみおくりする。'],['お墓','この土地に深くなじんだ「めぐりの子」は、土地とのつながりをたどり、次の朝、神殿の「！」から、レベルそのままで戻ってこられる。ほかの子は、消えると自然にかえり、同じ姿では戻れない。「めぶきのしずく」があれば別（Lv1から）。']]]];
 const boardMax=()=>S.flags.board5?5:3;
 /* 依頼をやめる：パワーと素材はもどる。作っていた子は手をとめる */
 function cancelOrder(oid){const k=S.orders.findIndex(q=>q.id===oid);if(k<0)return;const o=S.orders[k],b=BL[o.type];S.orders.splice(k,1);
@@ -4741,6 +4742,8 @@ function render(now){
   if(S.summon&&STATUE>=0){const qx=(STATUE%W+.5)*TS,qy=((STATUE/W)|0)*TS-58+Math.sin(now/220)*4;bubs.push(()=>{ctx.fillStyle='rgba(255,236,120,.35)';ctx.beginPath();ctx.arc(qx,qy,19+Math.sin(now/300)*2,0,7);ctx.fill();circ(ctx,qx,qy,14,'#ffd84a');ctx.strokeStyle='#fff';ctx.lineWidth=2.5;ctx.beginPath();ctx.arc(qx,qy,14,0,7);ctx.stroke();ctx.fillStyle='#7a4a10';ctx.font='bold 20px \"Hikomi\",\"Hiragino Maru Gothic ProN\",sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('！',qx,qy+1);ctx.textAlign='start';ctx.textBaseline='alphabetic'})}/* 召喚できる合図 */
   
   BUBQ=null;for(const f of bubs)f();
+  for(const[j,ht]of NATHIT){if(now-ht>4000||!LIGHTNAT[S.obj[j]]){NATHIT.delete(j);continue}const v=(3-(S.hp['lt'+j]||0))/3,a=Math.min(1,(4000-(now-ht))/600),bx=(j%W)*TS+3,byy=((j/W)|0)*TS-(S.obj[j]==='rock'?7:30);/* 守りの光をあてた木・岩の、たいきゅうバー */
+    ctx.globalAlpha=a;ctx.fillStyle='rgba(0,0,0,.6)';rr(ctx,bx-1,byy-1,TS-4,7,3);ctx.fillStyle='#ffe58a';rr(ctx,bx,byy,Math.max(2,(TS-6)*v),5,2.5);ctx.globalAlpha=1}
   for(const[j,ht]of WALLHIT){const o=S.obj[j];if(now-ht>4000||!o||!BL[o]||!(BL[o].hp||DEFS.has(o))){WALLHIT.delete(j);continue}const mx=BL[o].hp||defHp(o),hp=Math.max(0,S.hp[j]??mx),v=hp/mx,a=Math.min(1,(4000-(now-ht))/600);
     const bx=(j%W)*TS+3,byy=((j/W)|0)*TS-7;ctx.globalAlpha=a;ctx.fillStyle='rgba(0,0,0,.6)';rr(ctx,bx-1,byy-1,TS-4,7,3);ctx.fillStyle=v>.5?'#7ee08a':v>.25?'#ecdcbc':'#ff6b6b';rr(ctx,bx,byy,Math.max(2,(TS-6)*v),5,2.5);
     ctx.font='bold 8px \"Hikomi\",\"Hiragino Maru Gothic ProN\",sans-serif';ctx.textAlign='center';ctx.fillStyle='#fff';ctx.fillText(Math.floor(hp)+'/'+mx,bx+TS/2-3,byy-2);ctx.textAlign='start';ctx.globalAlpha=1}
@@ -4830,14 +4833,14 @@ cv.addEventListener('wheel',e=>{e.preventDefault();if(!started)return;const w=to
 function onTap(sx,sy){
   const w=toWorld(sx,sy),tx=Math.floor(w.x/TS),ty=Math.floor(w.y/TS);
   if(AREAARM){AREAARM=false;return areaBlast(w.x/TS,w.y/TS)}/* ひかりのはどう：タップした場所のまわり */
+  if(LIGHTARM){LIGHTARM=false;const en=S.enemies.find(e=>e.spawned&&Math.hypot(e.x-w.x/TS,e.y-w.y/TS)<.8);if(en)return guardLight(en);const tj=ty*W+tx;if(S.flags.lightTold&&tx>=0&&ty>=0&&tx<W&&ty<H&&LIGHTNAT[S.obj[tj]]&&!isBud(tj))return natLight(tj)}/* 守りの光：アイコンのあとにタップした「コワイノ」・木・岩にあてる */
   const si=S.seeds.findIndex(s=>s.x===tx&&s.y===ty);
   if(tx>=0&&ty>=0&&tx<W&&ty<H){const hh=HOUSES.find(h=>h.set.has(ty*W+tx));/* 開けた屋根は、壁をタップするまでそのまま */
     if(hh&&mode!=='look'&&!OPENH.has(hKey(hh))){OPENH.add(hKey(hh));dirty=true;return}}/* 置く・こわすときも、まず家をタップして中を見る */
   if(si>=0){sfx('seed');S.seeds.splice(si,1);S.mseed=(S.mseed||0)+1;S.mseedGot=(S.mseedGot||0)+1;addFloat(tx+.5,ty,'ふしぎな種+1','#d8f5c0');burstAt(tx,ty,'plant');toast('ふしぎな種をひろった','good');return}
   if(mode==='look'){
     const en=S.enemies.find(e=>e.spawned&&Math.hypot(e.x-w.x/TS,e.y-w.y/TS)<.8);
-    if(en)return guardLight(en);/* 夜は「コワイノ」をタップして、守り神の光でおどかす */
-    if(S.flags.lightTold&&tx>=0&&ty>=0&&tx<W&&ty<H&&LIGHTNAT[S.obj[ty*W+tx]]&&!isBud(ty*W+tx))return natLight(ty*W+tx);/* 木や岩をタップすると、守り神の光をあてる */
+    if(en)return;/* 「コワイノ」に守りの光をあてるのは、アイコンをえらんでから */
     {const st=festStalls().find(t=>Math.abs(w.x/TS-(t.x+.5))<1.3&&w.y/TS>t.y-2.6&&w.y/TS<t.y+1);if(st){sfx('tap');openSheet('stall',st.x);return}}/* 屋台をタップすると、その屋台の品物 */
     if(godHere()&&Math.hypot(w.x/TS-godX(),w.y/TS-godY())<1.1){if(TALKW===GOD)return startTalk();if(S.feat.shop){const ln=pick(S.pt<2?GOD_POOR:GOD_SHOP);return dialog([[GOD,ln]],()=>{openSheet('shop');shopSay=ln;renderSheet()},'交換する')}toast('カミサマ「'+pick(GOD_IDLE)+'」');return}
     if(S.nushi&&Math.hypot(w.x/TS-S.nushi.x,w.y/TS-(S.nushi.y-.6))<1.4){sfx('tap');return nushiTalk()}/* ヌシ様と話す */
@@ -5603,7 +5606,7 @@ function updHUD(){
   const h=hour(),m=Math.floor(clk()%60);
   $('#dayLbl').textContent=(S.rain?'☔雨':'☀晴れ')+(S.today?'・'+DAYEV[S.today][1]:'');/* 何日目は出さない（きろくで見る） */
   {const tx=String(Math.floor(h)).padStart(2,'0')+':'+String(Math.floor(m/10)*10).padStart(2,'0'),el=$('#timeLbl');if(el.dataset.t!==tx){el.dataset.t=tx;el.innerHTML=[...tx].map(ch=>ch===':'?'<i class="c">:</i>':'<i>'+ch+'</i>').join('')}}/* 数字を1文字ずつ同じはばのわくに入れ、時刻で表示がずれないようにする */
-  {const gs=$('#guardStatus'),night=isNight();gs.hidden=!night;if(night){const gc=gs.querySelector('.gc');let p=1;if(LIGHTCD>0)p=1-LIGHTCD/10;else if(S.pt<1)p=0;gc.style.setProperty('--gp',(p*360)+'deg')}}
+  {const gs=$('#guardStatus'),night=isNight()||!!(S.flags&&S.flags.lightTold);gs.hidden=!night;if(LIGHTARM&&(LIGHTCD>0||S.pt<1))LIGHTARM=false;gs.classList.toggle('armed',LIGHTARM);if(night){const gc=gs.querySelector('.gc');let p=1;if(LIGHTCD>0)p=1-LIGHTCD/10;else if(S.pt<1)p=0;gc.style.setProperty('--gp',(p*360)+'deg')}}
   {const ab=$('#areaBtn'),on=!!(S.flags&&S.flags.areaSkill)&&isNight();ab.hidden=!on;if(on){let p=1;if(AREACD>0)p=1-AREACD/5;else if(S.pt<3)p=0;if(AREAARM&&(AREACD>0||S.pt<3))AREAARM=false;ab.querySelector('.gc').style.setProperty('--gp',(p*360)+'deg');ab.classList.toggle('armed',AREAARM)}else AREAARM=false}
   const L=S.lv,a=LV_XP[L-1],b=L>=maxLv()?a:LV_XP[L]??a;$('#lvLbl').textContent=L;$('#xpBar').style.width=(b>a?clamp((S.totalPt-a)/(b-a),0,1)*100:100)+'%';$('#xpTxt').textContent=b>a?Math.floor(S.totalPt-a)+' / '+(b-a):'MAX';
   $('#pt').textContent=S.pt;$('#food').textContent=S.food;$('#woodN').textContent=S.mat.wood||0;$('#stoneN').textContent=S.mat.stone||0;{const fc=foodCap(),mc=matCap(),fb=$('#foodBar'),mb=$('#matBar');fb.style.width=(fc?Math.min(100,S.food/fc*100):0)+'%';fb.style.background=fc&&S.food>=fc?'#d9a441':'';mb.style.width=(mc?Math.min(100,matTot()/mc*100):0)+'%';mb.style.background=mc&&matTot()>=mc?'#d9a441':'#c9a46a'}$('#resN').textContent=S.res.length;if(!$('#resIc').src)$('#resIc').src=spiritPort('wood',48,null);$('#revLbl').textContent='みどり '+GRASSN;
@@ -5684,7 +5687,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='631';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='632';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
@@ -5835,7 +5838,8 @@ addEventListener('resize',resize);
 for(const ev of ['pointerdown','touchend','click'])document.addEventListener(ev,()=>{if(AC&&AC.state!=='running'&&!document.hidden)AC.resume().catch(()=>{})},true);addEventListener('focus',()=>{if(AC&&AC.state!=='running')AC.resume().catch(()=>{})});
 
 $('#alert').addEventListener('click',()=>{const L=S.enemies.filter(e=>e.spawned&&!e.dead);if(!L.length)return;ALI=(ALI+1)%L.length;const e=L[ALI];centerOn(e.x*TS,e.y*TS);sfx('tap')});/* 「コワイノ ○体」をタップすると、その場所へ */
-$('#areaBtn').addEventListener('click',e=>{e.stopPropagation();if(AREACD>0)return toast('ひかりのはどうは、あと'+Math.ceil(AREACD/(S.speed||1))+'秒');if(S.pt<3)return toast('パワーが足りません');sfx('tap');AREAARM=!AREAARM;if(AREAARM)toast('光をはなつ場所をタップ（まわり2マス）')});
+$('#guardStatus').addEventListener('click',e=>{e.stopPropagation();if(!S||!started)return;if(LIGHTCD>0)return toast('まもりの光は、あと'+Math.ceil(LIGHTCD/(S.speed||1))+'秒');if(S.pt<1)return toast('パワーが足りません');sfx('tap');LIGHTARM=!LIGHTARM;AREAARM=false;if(LIGHTARM)toast('光をあてる物をタップ')});
+$('#areaBtn').addEventListener('click',e=>{e.stopPropagation();if(AREACD>0)return toast('ひかりのはどうは、あと'+Math.ceil(AREACD/(S.speed||1))+'秒');if(S.pt<3)return toast('パワーが足りません');sfx('tap');AREAARM=!AREAARM;LIGHTARM=false;if(AREAARM)toast('光をはなつ場所をタップ（まわり2マス）')});
 $('#skipBtn').addEventListener('click',()=>{if(!canSkip())return;sfx('tap');SKIP=true;$('#skipBtn').hidden=true;toast('朝まで休もう…','good')});
 let RLVR=null;
 function rlvShow(q){const r=S.res.find(x=>x.id===q.id);if(!r)return;RLVR=r;const o=$('#rlv'),a=rStat(r,q.from),b=rStat(r,q.to);
