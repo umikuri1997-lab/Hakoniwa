@@ -1668,7 +1668,7 @@ function goPlay(r,G,strict){
   if(best.type==='chat'){const o=S.res.find(q=>q.id===best.o.partner);if(o){endAct(o);o.act={type:'chatwait',stage:'do',t:0,partner:r.id};o.bubble='👋'}}
   startAct(r,G,best.type,best.stand,best.o);return true
 }
-const PREF={wood:['plant','tend','craft','water','till','build','cook','chop'],water:['water','plant','craft','till','build','cook','chop'],fire:['cook','craft','build','water','till','plant','chop','mine'],earth:['repair','till','build','craft','water','plant','cook','mine'],wind:['seed','craft','build','water','plant','till','cook','chop','mine']};
+const SPEC={wood:['plant','tend'],water:['water'],fire:['cook'],earth:['repair','till'],wind:['seed']};/* 属性ごとの得意な仕事：ほかの仕事より先にする */
 /* 得意な仕事は、その属性の子だけ。建てるのはみんなできる */
 const OWN={plant:'wood',tend:'wood',water:'water',fish:'water',till:'earth',repair:'earth',cook:'fire',seed:'wind'};
 function ownOK(r,el){return !el||r.elem===el}
@@ -1748,6 +1748,8 @@ function goWork(r,G,nw){
   // 花や木の苗は、空腹などの急ぎの用事を除いて、ほかの仕事より先に植える
   if(tryJob(r,G,'plant'))return true;
   if(S.oracle&&ORACLE[S.oracle])for(const k of ORACLE[S.oracle].jobs)if(tryJob(r,G,k))return true;
+  // 得意な仕事は、ほかの仕事より先にする
+  for(const k of SPEC[r.elem]||[])if(tryJob(r,G,k))return true;
   for(const cat of JOBCAT)for(const k of cat){
     if(k==='chop'||k==='mine'){if(gd)continue;gd=true;for(const m of mo)if(tryJob(r,G,m))return true;continue}
     if(tryJob(r,G,k))return true}
@@ -5694,7 +5696,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='625';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='626';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
