@@ -11,7 +11,7 @@ const KV=(()=>{
     push(){},onCloud(){},ready:()=>true,status:()=>({available,lastSaved})
   };
 })();
-const W=72,H=72,TS=32,CX=36,CY=36;
+const W=108,H=108,TS=32,CX=54,CY=54,OW=72,OFF=18;/* マップは108×108マス。まん中の72×72（OFF=18マス内がわ）が、前からの土地。コワイノ・種などは、この中から来る */
 const SP=n=>'パワー'+n;
 const BASE_R=[8,10,12,14,16,18,20,22,24,26,28], BASE_COST=[25,35,50,70,90,120,150,190,240,300], BASE_LV=[2,3,4,5,6,7,8,9,10,11];/* 2マスずつ、10回広げられる */
 const MIN_PER_SEC=2.5;         // 1倍速: 1秒 = ゲーム内2.5分
@@ -341,7 +341,7 @@ const QUESTS1=[
     [POKO,'ききょう、きれいだね！ 土の力が満ちたみたい！'],
     [GOD,'#nod|うむ、これで土のせいれいが来てくれるぞい。'],[POKO,'なかま、どんな子かなあ。どきどきする！']]},
   {id:'summon',text:'朝になったら、神殿の「！」でなかまを呼ぼう',how:"朝、神殿の上に「！」が出たら、「みる」で神殿をタップ",check:()=>!!S.flags.minaCame&&NEWRES==null&&!NEWQ.length,
-   talk:{who:GOD,when:()=>true,lines:[
+   talk:{who:GOD,when:()=>nextOK(),lines:[
     [GOD,'力が満ちた次の朝、神殿で、なかまを呼べるぞい。'],
     [POKO,'あしたの朝がたのしみ！']],gives:{flag:'sumTold'}},
    by:MINA,story:[
@@ -387,7 +387,7 @@ const QUESTS1=[
     [MINA,'おつげは、あくまでお願いだよぉ。みんなの得意なことや、体の調子もあるからねぇ。'],
     [POKO,'足りないものがあるときに使うと、よさそうだね！']]},
   {id:'fire',text:'火のせいれいをむかえよう',check:()=>elemCount('fire')>=1&&NEWRES==null,how:'見張り台やサルビアを置いて火の力をためる。満ちた次の朝、神殿の「！」からなかまを呼ぶ',prog:()=>'火の力 '+Math.floor(ATTR.fire)+'/'+needFor('fire'),
-   talk:{who:POKO,when:()=>true,lines:[
+   talk:{who:POKO,when:()=>nextOK(),lines:[
     [POKO,'#alarm|ねえノドカ、「コワイノ」に立ち向かえるせいれいがいたら、心強いよね。'],
     [MINA,'#danger|火のせいれいなら、「コワイノ」とたたかえるらしいよぉ。'],
     [POKO,'火の力をためて、火のせいれいをむかえよう！']]},
@@ -400,7 +400,7 @@ const QUESTS1=[
     [POKO,'3になった！ ぼく、はじめのころより、ずいぶん楽しく暮らせてる気がするよ。'],
     ['H',{A:'へぇ、悪くない村になってきたじゃないか。夜の見はりも、まかせときな。',B:'へぇ、悪くない村になってきたじゃねえか。夜の見はりも、まかせときな。'}]])}},
   {id:'water',text:'水のせいれいをむかえよう',how:"ハスを植えて水の力をため、朝に神殿の「！」から呼ぶ",check:()=>elemCount('water')>=1&&NEWRES==null,prog:()=>'水の力 '+Math.floor(ATTR.water)+'/'+needFor('water'),
-   talk:{who:POKO,when:()=>true,lines:[
+   talk:{who:POKO,when:()=>nextOK(),lines:[
     [POKO,'畑がふえて、水やりがたいへんになってきたね…。'],
     [MINA,'水やりは、水のせいれいが得意なんだよぉ。'],
     [MINA,'水の力をためたら、水のせいれいが来てくれるかもねぇ。']]},
@@ -445,7 +445,7 @@ const QUESTS1=[
     [POKO,'じゃあ、かけらを集めたら、ヌシ様がもどってくるかも！'],
     [MINA,'3つそろえて台座にそなえたら、ヌシ様の形にもどれるはずだよぉ。'],[POKO,'かけらは、どこにあるのかな……。'],[MINA,'わからないねぇ。でも、きっとどこかで待ってるよぉ。'],[MINA,'5つの属性のなかまがそろったら、そなえる台座を建てようねぇ。']]},
   {id:'wind',text:'風のせいれいをむかえよう',how:"「おく」→「ゆりの種」を植えたり、ブランコを置いたりして風の力をため、朝に神殿の「！」から呼ぶ",check:()=>elemCount('wind')>=1&&NEWRES==null,prog:()=>'風の力 '+Math.floor(ATTR.wind)+'/'+needFor('wind'),
-   talk:{who:POKO,when:()=>true,learn:['swing'],lines:[
+   talk:{who:POKO,when:()=>nextOK(),learn:['swing'],lines:[
     [POKO,'オオカゲを追いはらえて、ほっとしたよ。'],
     [MINA,'つぎは風のせいれいかなぁ。足が速くて、よく遊ぶらしいよぉ。'],
     [MINA,'風の力をためれば、来てくれるはずだねぇ。'],
@@ -545,7 +545,7 @@ const QUESTS2=[
     [GOD,'では、わしはほかの土地を見まわってくるぞい。ときどき遊びに来るからの。わからんことは「ひでんのしょ」を見るんじゃ。ではな〜！']],
    gives:{flag:'onsen',feat:['summon','shop'],shard:'land',godLeave:true}},
   {id:'summon',text:'朝になったら、神殿の「！」でなかまを呼ぼう',check:()=>!!S.flags.minaCame&&NEWRES==null&&!NEWQ.length,how:'朝、神殿の上に「！」が出たら、「みる」で神殿をタップ',
-   talk:{who:HOMURA,when:()=>true,lines:[
+   talk:{who:HOMURA,when:()=>nextOK(),lines:[
     [HOMURA,'お湯から、水の力が満ちてきたね。あしたの朝、神殿を見てごらん。'],
     [HOMURA,'なかまか…。にぎやかになるのは、悪くないね。']],gives:{flag:'sumTold'}},
    by:SHIZUKU,story:[
@@ -588,7 +588,7 @@ const QUESTS2=[
     [HOMURA,'左にむければ、西の温泉に熱がとどくはずさ。']]},
    story:[[HOMURA,'西の温泉にも、湯気が上がった！'],[SHIZUKU,'すばらしいです。…残るは、奥の温泉ですね。'],[SHIZUKU,'#joy|ありがとうございます、守り神さま。']]},
   {id:'fire3',text:'火のせいれいを3人にしよう',check:()=>elemCount('fire')>=3&&NEWRES==null,how:'ようがん台を置いて火の力をためる。満ちた次の朝、神殿の「！」からなかまを呼ぶ',prog:()=>'火のせいれい '+Math.min(3,elemCount('fire'))+'/3・火の力 '+Math.floor(ATTR.fire)+'/'+needFor('fire'),
-   talk:{who:HOMURA,when:()=>true,lines:[
+   talk:{who:HOMURA,when:()=>nextOK(),lines:[
     [HOMURA,'#think|……なあ、守り神。むかし、この村には、火のせいれいがたくさんいたんだ。'],
     [HOMURA,'#danger|温泉が冷えて、コワイノのうろつく寒い夜がつづいてさ……でも、あたいら火のせいれいは、からだが強いからね。消えずに、ちりぢりに逃げのびたんだ。'],
     [HOMURA,'あたいだけは、この村をはなれられなくて、ひとりでのこったのさ。'],
@@ -760,15 +760,15 @@ function mkRes(s,name,elem,x,y,like){
 function genWorld(s,w){
   const R=mulberry(w===1?20261102:w===FREE?20261022:20261018),V=w===1;/* V：火山のふもと */
   const pond=(cx,cy,rx,ry)=>{const a=R()*6.28,b=R()*6.28,e=R()*6.28;for(let y=0;y<H;y++)for(let x=0;x<W;x++){const dx=(x+.5-cx)/rx,dy=(y+.5-cy)/ry,th=Math.atan2(dy,dx),lim=1+.2*Math.sin(2*th+a)+.13*Math.sin(3*th+b)+.07*Math.sin(5*th+e);if(Math.hypot(dx,dy)<lim)s.ground[y*W+x]=1}};
-  if(V){pond(12,58,3.4,2.4);pond(60,14,2.8,2);pond(CX+4.8,CY+4.8,2.4,1.7);pond(CX+6.4,CY+3.7,1.3,1);pond(HSPC.b[0],HSPC.b[1],2.4,1.7);pond(HSPC.c[0],HSPC.c[1],2.2,1.6)}/* 温泉（はじめは冷えている） */
-  else{pond(8,10,5,3.6);pond(11.5,12.5,3,2.2);pond(62,60,6,3.6);pond(58.5,58,2.6,2);pond(60,8,3,2.4);pond(CX+4.8,CY+4.8,2.4,1.7);pond(CX+6.4,CY+3.7,1.3,1);pond(CX+3.6,CY+6.6,1.2,.9)}
+  if(V){pond(OFF+12,OFF+58,3.4,2.4);pond(OFF+60,OFF+14,2.8,2);pond(CX+4.8,CY+4.8,2.4,1.7);pond(CX+6.4,CY+3.7,1.3,1);pond(HSPC.b[0],HSPC.b[1],2.4,1.7);pond(HSPC.c[0],HSPC.c[1],2.2,1.6)}/* 温泉（はじめは冷えている） */
+  else{pond(OFF+8,OFF+10,5,3.6);pond(OFF+11.5,OFF+12.5,3,2.2);pond(OFF+62,OFF+60,6,3.6);pond(OFF+58.5,OFF+58,2.6,2);pond(OFF+60,OFF+8,3,2.4);pond(CX+4.8,CY+4.8,2.4,1.7);pond(CX+6.4,CY+3.7,1.3,1);pond(CX+3.6,CY+6.6,1.2,.9);pond(10,30,4,3);pond(96,70,4.5,3);pond(40,98,3.5,2.6);pond(80,6,3,2.2)}/* 外がわにも池 */
   for(let pass=0;pass<2;pass++){const g=s.ground.slice();for(let y=1;y<H-1;y++)for(let x=1;x<W-1;x++){const j=y*W+x,n=(g[j-1]===1)+(g[j+1]===1)+(g[j-W]===1)+(g[j+W]===1);if(g[j]===1&&n<=1)s.ground[j]=0;else if(g[j]!==1&&n>=3)s.ground[j]=1}}
   for(let y=CY+12;y<H;y++)s.floor[y*W+CX]='path';
   for(let y=0;y<H;y++)for(let x=0;x<W;x++){
     const i=y*W+x;if(s.ground[i]===1)continue;
     const dx=Math.max(Math.abs(x+.5-CX)-BASE_R[0],0),dy=Math.max(Math.abs(y+.5-CY)-BASE_R[0],0),out=Math.max(dx,dy);
     if(x===CX&&y>=CY+11)continue;
-    const forest=V?(x<14&&y<16):(x>54&&y<24)||(x<16&&y>48);
+    const ox=x-OFF,oy=y-OFF,forest=V?(ox<14&&oy<16):(ox>54&&oy<24)||(ox<16&&oy>48);/* 森は、前からの土地の角から、外がわへつづく */
     const r=R();
     if(out<1.2){ // 基地の中：枯れ木と岩がちらばる
       const core=Math.abs(x+.5-CX)<7&&Math.abs(y+.5-CY)<7;
@@ -796,7 +796,7 @@ function genWorld(s,w){
 
 /* ---------- 火山のふもと（ステージ2）：温泉3か所・火山・熱の道 ---------- */
 const HSPC={a:[CX+4.8,CY+4.8],b:[CX-8.5,CY-8],c:[CX+.5,CY-15]},SPN={a:'入口の温泉',b:'西の温泉',c:'奥の温泉'};
-const VOLJ=1*W+(CX-1),D1=9*W+(CX-4),D2=(CY-18)*W+(CX+5),CRACKS=[-2,-1,0,1,2].map(d=>9*W+CX+d),BVOL=[D2-1,D2+1,D2-W,D2+W];
+const VOLJ=(OFF+1)*W+(CX-1),D1=(OFF+9)*W+(CX-4),D2=(CY-18)*W+(CX+5),CRACKS=[-2,-1,0,1,2].map(d=>(OFF+9)*W+CX+d),BVOL=[D2-1,D2+1,D2-W,D2+W];
 const ASHT=new Set(['oven','bench','tub','sink','campfire','hotstone']);
 const NATK=['rock','deadtree','ntree','berry'];
 const festOn=()=>!!S&&WD===1&&S.festDay!=null&&(S.festDay===dayNo()||S.festDay===dayNo()-1&&hour()<6);/* おまつり：その日の朝6時まで */
@@ -890,6 +890,7 @@ function drawHeat(now){if(WD!==1||!S.st2)return;const c=ctx;c.save();c.lineCap='
 const clk=()=>S.t-(S.hold||0);/* 時計の時刻 */
 const hour=()=>(clk()/60)%24;
 const dayNo=()=>Math.floor(clk()/1440)+1;
+const nextOK=()=>dayNo()>=(S.lastCame??Math.max(0,...S.res.map(r=>r.came||0)))+1;/* つぎのなかまをむかえるクエストは、前の子が来た日の、つぎの日から */
 const nightLock=()=>S&&S.enemyOn&&isNight();/* 夜（コワイノの時間）は、建てることも解体もできない */
 const isNight=()=>{const h=hour();return h>=23||h<6},isDark=()=>{const h=hour();return h>=21||h<6};/* せいれいが寝るのは23時 */
 function nearBase(e){const br=BASE_R[S.baseLv]+3;return e.x>=CX-br&&e.x<CX+br&&e.y>=CY-br&&e.y<CY+br}/* 拠点のまわり＋3マス（壁をたたける所）まで */
@@ -898,7 +899,7 @@ const anc=j=>{if(S.obj[j]==='part'||(S.obj[j]==='site2'&&S.ref[j]!=null))return 
 const typeAt=j=>S.obj[anc(j)];
 
 const solidOf=j=>{const o=typeAt(j);return !!(o&&BL[o]&&BL[o].solid)};
-const FRONTS=new Set(['chair','achair','sofa1','bench']);/* 正面のある家具（置くときに矢印を出す） */const ROTS={chair:4,achair:4,sofa1:4,bench:2,bed:2,sandbox:2,ltable:2,bathtub:2,slide:1,seesaw:1,swing:1,signpost:1,vane:1,oven:1};/* 向きをかえられる家具。4：前・右・後ろ・左　2：横・縦　1：左右反転だけ */
+const FRONTS=new Set(['chair','achair','sofa1','bench']);/* 正面のある家具（置くときに矢印を出す） */const ROTS={chair:4,achair:4,sofa1:4,bench:4,bed:2,sandbox:2,ltable:2,bathtub:2,slide:1,seesaw:1,swing:1,signpost:1,vane:1,oven:1};/* 向きをかえられる家具。4：前・右・後ろ・左　2：横・縦　1：左右反転だけ */
 const BEDHX=26,BEDHY=-1,BEDVY=10,BEDHS=.85;/* 横のベッド：寝る子の足もと（x,y）。たてのベッド：寝る子の足もとのy。BEDHS：横向きで寝るときの、せいれいの横はば。ふとんは重ねない（ベッドの上に寝る子をかく） */
 const ROTN=id=>ROTS[id]===4?4:ROTS[id]?2:1,ROTL={4:['前','右','後ろ','左'],2:['横','縦'],1:['そのまま','反転']};
 let PLROTS={};/* 置くときにえらんでいる向き（家具ごと） */
@@ -1894,7 +1895,7 @@ function doSummon(){
     r=mkRes(S,name,sm.elem,sp[0]+.5,sp[1]+.5);toast(ELEM[sm.elem].name+'のせいれい「'+name+'」がやってきた！','good')
     if(sm.elem==='fire'&&S.crops&&!S.crops.mugi){S.crops.mugi=S.crops.tomato=true}}/* 火のせいれいが来たら、パン・スープの作物がふえる */
   if(STATUE>=0&&S.obj[STATUE+W]==='altar'){r.x=STATUE%W+.5;r.y=((STATUE/W)|0)+1.12;sp=[STATUE%W,((STATUE/W)|0)+1]}/* 神殿のまんなか（台座の上）からあらわれる */
-  r.hunger=75;r.spawnT=performance.now();if(!r.came)r.came=dayNo();S.res.push(r);S.summons=(S.summons||0)+1;memo(r.back?'🌱':'🌟',r.back?r.name+'がもどってきた':r.name+'（'+ELEM[r.elem].name+'のせいれい）が村にやってきた');logEv(r.back?r.name+'がもどってきた':r.name+'（'+ELEM[r.elem].name+'のせいれい）がやってきた');NEWQ.push({id:r.id,t:performance.now()+1300});HOLD.add(r.id);/* ステータスをとじるまで、わーいのポーズで止まる */
+  r.hunger=75;r.spawnT=performance.now();if(!r.came)r.came=dayNo();if(!r.back)S.lastCame=dayNo();S.res.push(r);S.summons=(S.summons||0)+1;memo(r.back?'🌱':'🌟',r.back?r.name+'がもどってきた':r.name+'（'+ELEM[r.elem].name+'のせいれい）が村にやってきた');logEv(r.back?r.name+'がもどってきた':r.name+'（'+ELEM[r.elem].name+'のせいれい）がやってきた');NEWQ.push({id:r.id,t:performance.now()+1300});HOLD.add(r.id);/* ステータスをとじるまで、わーいのポーズで止まる */
   spawnFX(sp[0],sp[1],ELEM[r.elem].col);centerOn((sp[0]+.5)*TS,(sp[1]+.5)*TS);sfx('arrive');recount();
 }
 
@@ -1946,12 +1947,12 @@ function spawnWave(list){SKIP=false;/* コワイノが来たら、早送りを�
 }
 // 出現場所：基地の外のどこかランダム（明かりの中・水・障害物はさける）
 function spawnSpot(){
-  for(let tries=0;tries<200;tries++){const x=(Math.random()*W)|0,y=(CY+14+Math.random()*(H-CY-15))|0,j=y*W+x;/* 南からだけ来る */
+  for(let tries=0;tries<200;tries++){const x=OFF+((Math.random()*OW)|0),y=(CY+14+Math.random()*(OFF+OW-CY-15))|0,j=y*W+x;/* 南からだけ来る（前からの土地の中） */
     if(inBase(x,y)||S.ground[j]===1||solidOf(j)||lightAt(x+.5,y+.5))continue;{let n=0;for(let dy=-2;dy<=2;dy++)for(let dx=-2;dx<=2;dx++){const q=(y+dy)*W+x+dx;if(q>=0&&q<W*H&&solidOf(q))n++}if(n>=5)continue}/* 森の中（まわりに木や岩が多い所）からは出てこない */if(Math.hypot(x-CX,y-CY)<16||S.res.some(r=>Math.hypot(r.x-x,r.y-y)<8))continue;return [x+.5,y+.5]}
   return edgeSpot();
 }
 function edgeSpot(){
-  for(let tries=0;tries<80;tries++){const x=(Math.random()*W)|0,y=H-1,j=y*W+x;/* 下の端から */
+  for(let tries=0;tries<80;tries++){const x=OFF+((Math.random()*OW)|0),y=OFF+OW-1,j=y*W+x;/* 前からの土地の下の端から */
     if(S.ground[j]!==1&&!solidOf(j))return [x+.5,y+.5]}
   return [CX+.5,H-.5];
 }
@@ -2659,7 +2660,7 @@ function takeFind(i){const f=S.finds[i],k=f.id.slice(f.id.indexOf(':')+1);let ad
   if(!add)return toast((f.id.startsWith('food:')?'食料箱':'素材箱')+'がいっぱいです','warn');/* 入らないときは、地面にのこす */
   S.finds.splice(i,1);sfx('seed');addFloat(f.x+.5,f.y,nm+'+'+add,'#ecdcbc');burstAt(f.x,f.y,'plant')}
 function spawnSeed(){
-  for(let t=0;t<40;t++){const x=(Math.random()*W)|0,y=(Math.random()*H)|0,j=y*W+x;
+  for(let t=0;t<40;t++){const x=OFF+((Math.random()*OW)|0),y=OFF+((Math.random()*OW)|0),j=y*W+x;/* 前からの土地の中に落ちる */
     if(!inBase(x,y)&&S.ground[j]!==1&&!S.obj[j]){S.seeds.push({x,y});return}}
 }
 
@@ -3077,7 +3078,25 @@ function updNushi(dt){const n=S.nushi;if(n.app==null)n.app=1;if(n.app<1){n.app=M
 /* ---------- 保存 ---------- */
 let NOSAVE=false;/* 読みこみ直後は、いまの状態で上書きしない */
 function save(){if(NOSAVE||!S||!S.introSeen)return false;try{const d=Object.assign({},S,{savedAt:Date.now(),res:S.res.map(r=>{const c=Object.assign({},r);c.act=null;c.path=[];c.hidden=false;return c}),orders:S.orders.map(o=>Object.assign({},o,{worker:null}))});return KV.setItem(SAVE_KEYS[S.world||0],JSON.stringify(d))}catch(e){return false}}
-function load(w){try{const t=KV.getItem(SAVE_KEYS[w||0]);if(!t)return null;const d=JSON.parse(t);if(d&&d.v===8){if((d.mig||0)<1){const fx=v=>{if(!v)return;if(v.key){v.lash=false;v.cheek=true}};/* キーキャラは、まつげなし・ほっぺあり */(d.res||[]).concat(d.buried||[],d.lost||[]).forEach(r=>{if(r.like==='flower')r.like='chat'});(d.res||[]).forEach(r=>{fx(r.vr);if(r.name==='ノドカ'&&r.vr)r.vr.lash=false});(d.buried||[]).forEach(r=>fx(r.vr));(d.lost||[]).forEach(r=>fx(r.vr))}/* 古いセーブを直すのは、1回だけ（mig） */return d}}catch(e){}return null}
+/* 72×72マスのセーブを、108×108マスに広げる（いまの村は、まん中にそのままのこす。外がわは、新しい土地） */
+function expandMap(d){const O=OFF,mi=j=>(((j/OW)|0)+O)*W+(j%OW)+O,inner=j=>{const x=j%W,y=(j/W)|0;return x>=O&&x<O+OW&&y>=O&&y<O+OW};
+  const t={ground:new Array(W*H).fill(0),floor:new Array(W*H).fill(''),obj:new Array(W*H).fill(''),dyn:{},ref:{},hp:{},rot:{},regrow:[],flags:{},res:[],world:d.world||0};genWorld(t,d.world||0);
+  const G=t.ground.map((v,j)=>inner(j)?0:v),F=t.floor.map((v,j)=>inner(j)?'':v),Ob=t.obj.map((v,j)=>inner(j)?'':v),Dy={},Rf={};
+  for(const k in t.dyn)if(!inner(+k))Dy[k]=t.dyn[k];for(const k in t.ref)if(!inner(+k))Rf[k]=t.ref[k];
+  for(let j=0;j<OW*OW;j++){const n=mi(j);G[n]=d.ground[j];F[n]=d.floor[j];Ob[n]=d.obj[j]}
+  const mk=o=>{const r={};for(const k in o||{}){const m=/^([A-Za-z]*)(\d+)$/.exec(k);r[m?m[1]+mi(+m[2]):k]=o[k]}return r};/* マスの番号がキーのもの（「L12」などの頭の文字はそのまま） */
+  d.ground=G;d.floor=F;d.obj=Ob;d.dyn=Object.assign(Dy,mk(d.dyn));
+  const rf=mk(d.ref);for(const k in rf)rf[k]=mi(rf[k]);d.ref=Object.assign(Rf,rf);
+  for(const f of['hp','rot','win','rug','rugRot','bud','ovenSet','bedOwn','freeB','trapCd'])if(d[f])d[f]=mk(d[f]);
+  if(d.st2)for(const f of['fire','frz','ash','hvb'])if(d.st2[f])d.st2[f]=mk(d.st2[f]);
+  if(d.imoSeedQuestPlots)d.imoSeedQuestPlots=d.imoSeedQuestPlots.map(mi);
+  for(const L of[d.regrow,d.broken])for(const q of L||[])q.j=mi(q.j);
+  for(const L of[d.drops,d.seeds,d.finds])for(const q of L||[]){q.x+=O;q.y+=O}
+  for(const q of[d.nushi,d.b2At])if(q){q.x+=O;q.y+=O;if(q.path)q.path=[]}
+  for(const e of d.enemies||[]){e.x+=O;e.y+=O;e.path=[]}
+  for(const r of d.res||[]){r.x+=O;r.y+=O;if(r.stX!=null)r.stX+=O;if(r.stY!=null)r.stY+=O;r.act=null;r.path=[];delete r.avoidJ;delete r.faceObj;delete r.lastToy;if(r.cing&&r.cing.ov!=null)r.cing.ov=mi(r.cing.ov)}/* 歩いている途中・作業の途中は、やりなおし */
+  delete d.fst}
+function load(w){try{const t=KV.getItem(SAVE_KEYS[w||0]);if(!t)return null;const d=JSON.parse(t);if(d&&d.v===8){if(d.ground&&d.ground.length===OW*OW)expandMap(d);if((d.mig||0)<1){const fx=v=>{if(!v)return;if(v.key){v.lash=false;v.cheek=true}};/* キーキャラは、まつげなし・ほっぺあり */(d.res||[]).concat(d.buried||[],d.lost||[]).forEach(r=>{if(r.like==='flower')r.like='chat'});(d.res||[]).forEach(r=>{fx(r.vr);if(r.name==='ノドカ'&&r.vr)r.vr.lash=false});(d.buried||[]).forEach(r=>fx(r.vr));(d.lost||[]).forEach(r=>fx(r.vr))}/* 古いセーブを直すのは、1回だけ（mig） */return d}}catch(e){}return null}
 
 /* ---------- 描画 ---------- */
 const cv=$('#cv'),ctx=cv.getContext('2d');
@@ -4134,7 +4153,7 @@ function drawSpiritDot(c,el,x,y,s,f,o){
     if(vr&&vr.lash&&fm!=='strain')spr('sp:lash'+S+'#'+fm,0,fy)}/* まつげは、表情ごとの目に合わせた絵 */
   c.restore();
   if(bothF)armD(farA,aA(farA));if(frontArm)armD(-farA,aA(-farA));
-  if((A==='eat'||A==='hold')&&o.food&&!back){const ei=emoImg(o.food),yy=A==='hold'?-17:-27+Math.sin(t*7)*.8;if(ei){const ih=40,iw=ih*ei.width/ei.height;c.drawImage(ei,-iw/2,yy-ih/2,iw,ih)}else{c.font='40px sans-serif';c.textAlign='center';c.textBaseline='middle';c.fillStyle='#000';c.fillText(o.food,0,yy);c.textAlign='start';c.textBaseline='alphabetic'}}
+  if((A==='eat'||A==='hold')&&o.food&&!back){const ei=emoImg(o.food),yy=A==='hold'?-17:-27+Math.sin(t*7)*.8,xx=tr?14:0;/* 横向きのときは、食べ物を顔の前に */if(ei){const ih=40,iw=ih*ei.width/ei.height;c.drawImage(ei,xx-iw/2,yy-ih/2,iw,ih)}else{c.font='40px sans-serif';c.textAlign='center';c.textBaseline='middle';c.fillStyle='#000';c.fillText(o.food,xx,yy);c.textAlign='start';c.textBaseline='alphabetic'}}
   c.imageSmoothingEnabled=sm;c.restore();return true}
 function drawSpirit(c,el,x,y,s,f,o){
   if(o.dot&&drawSpiritDot(c,el,x,y,s,f,o))return;
@@ -4281,11 +4300,11 @@ const forageAnim=r=>{const t=r.act.t||0;return t<2?'pluck':t<3.5?'hold':'eat'};
 function drawRes0(r,now){
   if(r.hidden&&!peekH(r))return;
   const sleeping=r.act&&r.act.type==='sleep'&&r.act.stage==='do',bedJ=sleeping&&r.act.obj!=null&&S.obj[r.act.obj]==='bed'&&BEDSPR.ok?r.act.obj:-1,benchJ=r.act&&r.act.type==='rest'&&r.act.stage==='do'&&S.obj[r.act.obj]==='bench'?(r.act.seat??r.act.obj):-1;/* ベンチではすわって見える *//* ベッドで眠るときは、まくらに頭をのせて、ふとんをかける */
-  const bedH=bedJ>=0&&rotAt(bedJ)===1;/* 横に置いたベッド */const benchV=benchJ>=0&&rotAt(r.act.obj)===1,benchD=benchV&&S.obj[benchJ+1]&&!S.obj[benchJ-1]?-1:1;/* たてのベンチでは横を向いてすわる（右がふさがっていれば左向き） */let sj=bedJ>=0?bedJ:benchJ,px=bedH?(bedJ%W)*TS+BEDHX:sj>=0?(sj%W+.5)*TS:r.x*TS,py=bedH?((bedJ/W)|0)*TS+BEDHY:bedJ>=0?((bedJ/W)|0)*TS+BEDVY:benchJ>=0?(((benchJ/W)|0)+.5)*TS+1:r.y*TS;const talking=DLGA.who===r.name&&!(DLGEL||(DLGEL=$('#dialog'))).hidden,walking=!talking&&r.act&&(r.act.stage==='walk'&&r.path.length>0||r.act.type==='tag');/* 話しているときはこっちを向く */
+  const bedH=bedJ>=0&&rotAt(bedJ)===1;/* 横に置いたベッド */const benchR=benchJ>=0?rotAt(r.act.obj):0,benchV=benchJ>=0&&benchR%2===1,benchD=benchR===3?-1:1;/* ベンチは、置いたときの向き（前・右・後ろ・左）にすわる */let sj=bedJ>=0?bedJ:benchJ,px=bedH?(bedJ%W)*TS+BEDHX:sj>=0?(sj%W+.5)*TS:r.x*TS,py=bedH?((bedJ/W)|0)*TS+BEDHY:bedJ>=0?((bedJ/W)|0)*TS+BEDVY:benchJ>=0?(((benchJ/W)|0)+.5)*TS+1:r.y*TS;const talking=DLGA.who===r.name&&!(DLGEL||(DLGEL=$('#dialog'))).hidden,walking=!talking&&r.act&&(r.act.stage==='walk'&&r.path.length>0||r.act.type==='tag');/* 話しているときはこっちを向く */
   const working=!onHold(r)&&r.act&&r.act.stage==='do'&&['till','sow','plant','build','craft','water','tend','repair','harvest','gather','chop','mine','cook'].includes(r.act.type);
   if(!SPV.has(r))SPV.set(r,{x:r.x,y:r.y,back:false,turn:0,bl:now+2000+Math.random()*3000});const v=SPV.get(r),dx=r.x-v.x,dy=r.y-v.y;
   if(!walking){v.back=false;v.turn=r.act&&r.act.stage==='do'&&(r.act.type==='chop'||r.act.type==='mine')&&!objBelow(r)||benchV?1:0}/* 木・岩は横向きで、そちらを向いて切る */else if(Math.abs(dx)+Math.abs(dy)>.002){const ax=Math.abs(dx),ay=Math.abs(dy);v.turn=ax>ay*1.2?1:0;v.back=!v.turn&&dy<0}v.x=r.x;v.y=r.y;
-  {const sj=(r.y|0)*W+(r.x|0),so=S.obj[sj];if(!walking&&r.act&&r.act.stage==='do'&&so&&ROTS[so]===4&&SEATS.includes(so)){const ro=rotAt(sj);v.back=ro===2;v.turn=ro===1||ro===3?1:0;if(v.turn)r.face=ro===1?1:-1}}/* いすにすわっている子は、いすの向きにすわる（うしろ向きのいすなら、うしろ向き） */
+  {const sj=(r.y|0)*W+(r.x|0),so=S.obj[sj];if(!walking&&r.act&&r.act.stage==='do'&&so&&ROTS[so]===4&&SEATS.includes(so)){const ro=rotAt(sj);v.back=ro===2;v.turn=ro===1||ro===3?1:0;if(v.turn)r.face=ro===1?1:-1}if(!walking&&benchJ>=0)v.back=benchR===2}/* ベンチで「後ろ」向きなら、せなかが見える *//* いすにすわっている子は、いすの向きにすわる（うしろ向きのいすなら、うしろ向き） */
   const at=r.act&&r.act.type,ad=r.act&&r.act.stage==='do',jt=JUMP.get(r),held=HOLD.has(r.id),jumping=held||jt!=null&&now-jt<1000;
   const reacting=at==='sevreact'&&ad&&r.act.reactAt!=null,rm=reacting?r.act.reactMotion:'',rp=reacting?dialoguePose(rm,now-r.act.reactAt):null;if(rp){px+=rp.x*.4;py+=rp.y*.4}
   const brave=now-(BRAVET.get(r)||-1e9)<1500;/* 勇ましい顔は、行動の切りかわりや、たたかれた時に、ちらちら消えないよう、1.5秒つづける */
@@ -4660,11 +4679,9 @@ function render(now){
     ctx.fillStyle='#b5854e';ctx.beginPath();ctx.ellipse(cx,cy+1,8.5,7.5,0,0,7);ctx.fill();ctx.fillStyle='#c99a60';ctx.beginPath();ctx.ellipse(cx-2.5,cy-1,3.5,3,0,0,7);ctx.fill();
     ctx.fillStyle='#a07240';rr(ctx,cx-4,cy-10,8,5,2);ctx.fillStyle='#6b4524';ctx.fillRect(cx-5,cy-6,10,2);
     ctx.fillStyle='rgba(255,245,170,'+(.4+tw*.6)+')';const sx=cx+7,sy=cy-10,sr=2+tw*2.5;ctx.beginPath();for(let a=0;a<8;a++){const r2=a%2?sr*.35:sr,an=a*Math.PI/4;ctx.lineTo(sx+Math.cos(an)*r2,sy+Math.sin(an)*r2)}ctx.fill()}
-  for(const f of S.finds||[]){const cx=f.x*TS+16,cy=f.y*TS+20,tw=Math.sin(now/300+f.x*1.3+f.y)*.5+.5;/* ひろいもの：小枝・小石・ベリー。ちいさく光る */
+  for(const f of S.finds||[]){const cx=f.x*TS+16,cy=f.y*TS+20,tw=Math.sin(now/300+f.x*1.3+f.y)*.5+.5;/* ひろいもの：木材・石材・ベリーのアイコン。ちいさく光る */
     ctx.fillStyle='rgba(40,25,10,.18)';ctx.beginPath();ctx.ellipse(cx,cy+5,8,2.4,0,0,7);ctx.fill();
-    if(f.id==='mat:wood'){ctx.save();ctx.translate(cx,cy);ctx.rotate(-.35);ctx.fillStyle='#8a5a33';rr(ctx,-9,-1.6,18,3.2,1.6);ctx.fillStyle='#a8733f';rr(ctx,-9,-1.6,18,1.4,.7);ctx.rotate(.7);ctx.fillStyle='#7a4e2b';rr(ctx,-6,1,12,2.8,1.4);ctx.restore()}
-    else if(f.id==='mat:stone'){circ(ctx,cx-3,cy+1,4.2,'#8f97a0');circ(ctx,cx+3,cy+2,3.4,'#a3a9b0');circ(ctx,cx-4,cy,1.4,'#c9ced3')}
-    else{circ(ctx,cx-3,cy+1,3.2,'#7b4fb8');circ(ctx,cx+2.5,cy+1.5,3.2,'#8d5cc9');circ(ctx,cx,cy-2.5,3.2,'#6f44a8');circ(ctx,cx-.8,cy-3.4,1,'#e2d2f6');ctx.fillStyle='#5aa14a';ctx.fillRect(cx-.6,cy-8,1.2,4)}
+    {const e=f.id==='mat:wood'?'🪵':f.id==='mat:stone'?'🪨':FOODS[f.id.slice(5)].e,im=emoImg(e),ih=18;if(im){const iw=ih*im.width/im.height;ctx.drawImage(im,cx-iw/2,cy-ih/2-1,iw,ih)}else{ctx.font='16px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(e,cx,cy-1);ctx.textAlign='start';ctx.textBaseline='alphabetic'}}/* 絵は、素材・食べ物のいつものアイコン */
     ctx.fillStyle='rgba(255,245,170,'+(.35+tw*.6)+')';{const sx=cx+8,sy=cy-8,sr=1.6+tw*2.2;ctx.beginPath();for(let a=0;a<8;a++){const r2=a%2?sr*.35:sr,an=a*Math.PI/4;ctx.lineTo(sx+Math.cos(an)*r2,sy+Math.sin(an)*r2)}ctx.fill()}}
   for(const s of S.seeds){const tw=Math.sin(now/250+s.x)*.5+.5;ctx.fillStyle='rgba(255,240,150,'+(.5+tw*.5)+')';const cx=s.x*TS+16,cy=s.y*TS+16;ctx.beginPath();for(let a=0;a<8;a++){const r2=a%2?3:9+tw*2,an=a*Math.PI/4+now/900;ctx.lineTo(cx+Math.cos(an)*r2,cy+Math.sin(an)*r2)}ctx.fill();circ(ctx,cx,cy,3,'#fff')}
   drawHeat(now);drawRanges(now);
@@ -4681,7 +4698,7 @@ function render(now){
   // せいれい・敵・置いてある物・屋根を、ぜんぶ足もとの順に描く
   const D=[];BUBQ=[];const bubs=BUBQ;
   const add=(k,t,box,draw,own)=>D.push({k,t,box,draw,own});
-  for(const r of S.res)if(vis(r)){const px=r.x*TS,fy=r.y*TS,onB=r.act&&r.act.type==='rest'&&r.act.stage==='do'&&S.obj[r.act.obj]==='bench',onAl=STATUE>=0&&(r.y|0)*W+(r.x|0)===STATUE+W;/* ベンチにすわっている子は、ベンチの背もたれより手前（縦のベンチは2マスめより手前）。神殿の台座の上にいる子は、台座より手前 */const rj=(r.y|0)*W+(r.x|0),inJ=typeAt(rj)==='bed'?anc(rj):r.act&&r.act.stage==='do'?(r.act.type==='sleep'&&S.obj[r.act.obj]==='bed'?r.act.obj:r.act.type==='bathe'&&r.act.tub!=null?r.act.tub:-1):-1,inO=inJ>=0?S.obj[anc(inJ)]:null;/* ベッドの上にいる子（寝る子も、歩いている子も）・バスタブに入る子は、その家具より手前 */const inDr=HOME_DOORS.has(typeAt((r.y|0)*W+(r.x|0)))||GATE_IDS.has(typeAt((r.y|0)*W+(r.x|0)))||SEATS.includes(typeAt((r.y|0)*W+(r.x|0)));/* いすにすわる子も、いすより手前 *//* ドアのマスを通る子は、ドアより手前 */add(toyR(r)?toyPose(r,now).z:inO&&BL[inO]?objectDepth(inO,anc(inJ))+.02:onB?((r.act.obj/W)|0)+(rotAt(r.act.obj)===1?2.05:1.05):onAl?((STATUE/W)|0)+2.03:inDr?(r.y|0)+1.02:rDepth(r),2,[px-22,fy-64,px+22,fy+13],()=>drawRes(r,now),(r.y|0)*W+(r.x|0))}
+  for(const r of S.res)if(vis(r)){const px=r.x*TS,fy=r.y*TS,onB=r.act&&r.act.type==='rest'&&r.act.stage==='do'&&S.obj[r.act.obj]==='bench',onAl=STATUE>=0&&(r.y|0)*W+(r.x|0)===STATUE+W;/* ベンチにすわっている子は、ベンチの背もたれより手前（縦のベンチは2マスめより手前）。神殿の台座の上にいる子は、台座より手前 */const rj=(r.y|0)*W+(r.x|0),inJ=typeAt(rj)==='bed'?anc(rj):r.act&&r.act.stage==='do'?(r.act.type==='sleep'&&S.obj[r.act.obj]==='bed'?r.act.obj:r.act.type==='bathe'&&r.act.tub!=null?r.act.tub:-1):-1,inO=inJ>=0?S.obj[anc(inJ)]:null;/* ベッドの上にいる子（寝る子も、歩いている子も）・バスタブに入る子は、その家具より手前 */const inDr=HOME_DOORS.has(typeAt((r.y|0)*W+(r.x|0)))||GATE_IDS.has(typeAt((r.y|0)*W+(r.x|0)))||SEATS.includes(typeAt((r.y|0)*W+(r.x|0)));/* いすにすわる子も、いすより手前 *//* ドアのマスを通る子は、ドアより手前 */add(toyR(r)?toyPose(r,now).z:inO&&BL[inO]?objectDepth(inO,anc(inJ))+.02:onB?((r.act.obj/W)|0)+(rotAt(r.act.obj)%2===1?2.05:1.05):onAl?((STATUE/W)|0)+2.03:inDr?(r.y|0)+1.02:rDepth(r),2,[px-22,fy-64,px+22,fy+13],()=>drawRes(r,now),(r.y|0)*W+(r.x|0))}
   if(EVAP.length){EVAP=EVAP.filter(it=>now-it.t0<(it.dur||1800)+600);for(const it of EVAP){const e=it.e,z=EN[e.type].size||1,px=e.x*TS,fy=e.y*TS;add(e.y,2,[px-30*z,fy-110*z,px+30*z,fy+15],()=>drawEvap(it,now),(e.y|0)*W+(e.x|0))}}
   for(const e of S.enemies)if(vis(e)&&!(e.dead&&EVAP.some(it=>it.e===e))){/* 消えていく途中のコワイノは、消える演出だけを描く */const s=EN[e.type].size||1,px=e.x*TS,fy=e.y*TS;add(e.y,2,[px-24*s,fy-56*s-10,px+24*s,fy+15],()=>drawEnemy(e,now),(e.y|0)*W+(e.x|0))}
   if(godHere()){const GX=godX(),GY=godY(),px=GX*TS,py=GY*TS,onA=STATUE>=0&&S.obj[STATUE+W]==='altar',gk=onA?((STATUE/W)|0)+1.02:GY+.5,gt=onA?1.5:2;add(gk,gt,/* 神殿の柱とおそなえ箱より手前 */[px-36,py-64,px+36,py+24],()=>drawGod(now),(GY|0)*W+(GX|0));}
@@ -4699,8 +4716,8 @@ function render(now){
   // 置く前のプレビューは、家の壁や屋根より手前に描く
   if(pending&&pending.kind==='one'){const px=pending.x*TS,py=pending.y*TS,TP=pending.id==='statue'?[[-1,0,'obox'],[0,0,'statue'],[1,0,'board'],[0,1,'altar']]:[[0,0,pending.id]];ctx.save();ctx.globalAlpha=.6+Math.sin(now/250)*.15;const rch=ROTS[pending.id]&&PLROTS[pending.id]&&chipOf(pending.id,null,PLROTS[pending.id]);if(rch)drawChip(ctx,rch,pending.id,px,py,now);/* 向きをかえられる物は、えらんだ向きの絵だけを見せる（元の向きの絵は出さない） */else for(const[dx,dy,id2]of TP)drawObj(ctx,id2,px+dx*TS,py+dy*TS,pending.y*W+pending.x+dx+dy*W,100,now);ctx.restore()}
   if(pending&&pending.kind==='one'&&FRONTS.has(pending.id)){/* すわる家具は、置くときに正面（すわった子が向く方）を矢印で出す */
-    const id=pending.id,rot=PLROTS[id]||0,z=szR(id,rot)||[1,1],w=z[0]*TS,h=z[1]*TS,j=pending.y*W+pending.x;
-    const d=id==='bench'?(rot===1?(S.obj[j+1]&&!S.obj[j-1]?[-1,0]:[1,0]):[0,1]):[[0,1],[1,0],[0,-1],[-1,0]][rot];/* たてのベンチは、右がふさがっていれば左向き（すわるときと同じ） */
+    const id=pending.id,rot=PLROTS[id]||0,z=szR(id,rot)||[1,1],w=z[0]*TS,h=z[1]*TS;
+    const d=[[0,1],[1,0],[0,-1],[-1,0]][rot];
     const bob=Math.sin(now/220)*2,cx=pending.x*TS+w/2+d[0]*(w/2+9+bob),cy=pending.y*TS+h/2+d[1]*(h/2+9+bob);
     ctx.save();ctx.translate(cx,cy);ctx.rotate(Math.atan2(d[1],d[0]));ctx.fillStyle='#ffe066';ctx.strokeStyle='#7a5a1c';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(9,0);ctx.lineTo(-5,-8);ctx.lineTo(-5,8);ctx.closePath();ctx.stroke();ctx.fill();ctx.restore()}
   if(S.summon&&STATUE>=0){const qx=(STATUE%W+.5)*TS,qy=((STATUE/W)|0)*TS-58+Math.sin(now/220)*4;bubs.push(()=>{ctx.fillStyle='rgba(255,236,120,.35)';ctx.beginPath();ctx.arc(qx,qy,19+Math.sin(now/300)*2,0,7);ctx.fill();circ(ctx,qx,qy,14,'#ffd84a');ctx.strokeStyle='#fff';ctx.lineWidth=2.5;ctx.beginPath();ctx.arc(qx,qy,14,0,7);ctx.stroke();ctx.fillStyle='#7a4a10';ctx.font='bold 20px \"Hikomi\",\"Hiragino Maru Gothic ProN\",sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('！',qx,qy+1);ctx.textAlign='start';ctx.textBaseline='alphabetic'})}/* 召喚できる合図 */
@@ -5649,7 +5666,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='601';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='602';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
