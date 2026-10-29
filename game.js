@@ -2657,19 +2657,19 @@ function morning(){sfx('morning');if(S.cleared&&S.daily)dailyCheck();/* 夜の�
   summonMorning();
 }
 const FINDS=[['mat:wood',1,['deadtree','ntree','tree','fruit']],['mat:stone',1,['rock','boulder']],['food:berry',1,['berry']]];/* ひろいもの：木材1は木のそば・石材1は岩のそば・ベリー1はベリーの茂みのそば */
-function spawnFind(){if(!S.finds)S.finds=[];const L=FINDS.filter(([id])=>id.startsWith('food:')?foodCap()>0:matCap()>0);if(!L.length)return;/* しまう箱がまだないものは、落ちない */
-  const[id,n,near]=pick(L);
+function spawnFind(quiet){if(!S.finds)S.finds=[];/* quiet：章のはじめにまとめて落とすときは、フタバの話をしない */
+  const[id,n,near]=pick(FINDS);
   for(let t=0;t<300;t++){const x=OFF+((Math.random()*OW)|0),y=OFF+((Math.random()*OW)|0),j=y*W+x;/* まん中の72×72（前からの土地）にだけ落ちる */
     if(!walk(j)||S.obj[j]||S.finds.some(f=>f.x===x&&f.y===y)||S.seeds.some(f=>f.x===x&&f.y===y)||(S.drops||[]).some(f=>f.x===x&&f.y===y))continue;
     if(![[-1,0],[1,0],[0,-1],[0,1]].some(([dx,dy])=>{const X=x+dx,Y=y+dy;return X>=0&&X<W&&Y>=0&&Y<H&&near.includes(typeAt(Y*W+X))}))continue;/* となりに、木・岩・茂みがあるマス */
-    S.finds.push({x,y,id,n});if(!S.flags.findTold)findTalk();return}
+    S.finds.push({x,y,id,n});if(!quiet&&!S.flags.findTold)findTalk();return}
 }
 const hudIc=id=>{const b=$('#'+id),im=b&&b.previousElementSibling;return im&&im.tagName==='IMG'?im:null};/* 画面上の木材・石材のアイコン */
 function findTalk(){if(WD!==0){S.flags.findTold=1;return}/* 説明は1章（草原）だけ。ほかの章では、もう知っているので話さない */if(!$('#dialog').hidden)return;const sp=S.res.find(r=>r.name===POKO&&!r.hidden);if(!sp)return;S.flags.findTold=1;/* はじめて落ちたとき、ひろいものの話をする（話せないときは、つぎに落ちたときに） */
   dialog([[POKO,'#surprise|あっ、守り神さま！ さっき、むこうの木のそばを通ったらね、木ぎれが落ちてたんだ。'],[POKO,'#think|岩のそばにも、石ころがころがってたよ。風でとばされてきたのかな？'],[POKO,'#joy|あれをあつめたら、なにか作れるかも。守り神さま、いっしょにひろってみようよ！']],()=>toast('落ちている物は、タップでひろえる'))}
 function takeFind(i){const f=S.finds[i],k=f.id.slice(f.id.indexOf(':')+1);let add=0,nm='';
-  if(f.id.startsWith('food:')){add=Math.max(0,Math.min(f.n,foodCap()-S.food));if(add)addFood(k,add);nm=FOODS[k].name}
-  else{add=Math.max(0,Math.min(f.n,matCap()-matTot()));S.mat[k]=(S.mat[k]||0)+add;if(!S.gotMat)S.gotMat={};S.gotMat[k]=(S.gotMat[k]||0)+add;nm=MATN[k]}
+  if(f.id.startsWith('food:')){add=foodCap()>0?Math.max(0,Math.min(f.n,foodCap()-S.food)):f.n;/* 箱がまだないときも、ひろえる */if(add)addFood(k,add);nm=FOODS[k].name}
+  else{add=matCap()>0?Math.max(0,Math.min(f.n,matCap()-matTot())):f.n;S.mat[k]=(S.mat[k]||0)+add;if(!S.gotMat)S.gotMat={};S.gotMat[k]=(S.gotMat[k]||0)+add;nm=MATN[k]}
   if(!add)return toast((f.id.startsWith('food:')?'食料箱':'素材箱')+'がいっぱいです','warn');/* 入らないときは、地面にのこす */
   S.finds.splice(i,1);sfx('seed');addFloat(f.x+.5,f.y,nm+'+'+add,'#ecdcbc');burstAt(f.x,f.y,'plant')}
 function spawnSeed(){
@@ -5632,7 +5632,7 @@ let started=false,titleDrift=0,STOCKSIG='';
 function showUI(on){$('#topUI').hidden=!on;$('#botUI').hidden=!on}
 /* 引き継ぎ：便利な道具（ひろびろハケ・かたどりスタンプ・つけかえトンカチ）だけは、ほかの土地でもらっていれば使える */
 function syncTools(s){for(const L of LIVE)if(L&&L!==s){if(L.bulk)s.bulk=true;if(L.stamps)s.stamps=true;if(L.swap)s.swap=true}}
-function newGame(w){w=w||0;if(sheet!=null)closeSheet();setWorld(w);resetQuestPrompts();DLGQ.length=0;try{KV.removeItem(SAVE_KEYS[w])}catch(e){}resv.clear();S=newState(w);LIVE[w]=S;syncTools(S);dirty=true;recount();undoStack=[];renderQuest();applyFeats();setMode('look');$('#title').hidden=true;startPrologue()}
+function newGame(w){w=w||0;if(sheet!=null)closeSheet();setWorld(w);resetQuestPrompts();DLGQ.length=0;try{KV.removeItem(SAVE_KEYS[w])}catch(e){}resv.clear();S=newState(w);LIVE[w]=S;syncTools(S);dirty=true;recount();S.findDay=dayNo();for(let k=0;k<10;k++)spawnFind(true);/* 章のはじめに、ひろいものを10こ落としておく */undoStack=[];renderQuest();applyFeats();setMode('look');$('#title').hidden=true;startPrologue()}
 function startPrologue(){
   showUI(false);started=false;let i=0;const pro=$('#pro');pro.style.transition='none';pro.hidden=false;pro.style.opacity='1';void pro.offsetWidth;pro.style.transition='';/* フェードせずに、すぐまっくらにする（前のデータの画面が一瞬見えないように） */
   cam.z=minZ();centerOn(CX*TS,CY*TS);
@@ -5694,7 +5694,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='616';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='617';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
