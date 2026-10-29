@@ -890,7 +890,7 @@ function drawHeat(now){if(WD!==1||!S.st2)return;const c=ctx;c.save();c.lineCap='
 const clk=()=>S.t-(S.hold||0);/* 時計の時刻 */
 const hour=()=>(clk()/60)%24;
 const dayNo=()=>Math.floor(clk()/1440)+1;
-const nextOK=()=>dayNo()>=(S.lastCame??Math.max(0,...S.res.map(r=>r.came||0)))+1;/* つぎのなかまをむかえるクエストは、前の子が来た日の、つぎの日から */
+const nextOK=()=>dayNo()>=(S.lastCame??Math.max(0,...S.res.map(r=>r.came||0)))+2;/* つぎのなかまをむかえるクエストは、前の子が来た日の、2日後から */
 const nightLock=()=>S&&S.enemyOn&&isNight();/* 夜（コワイノの時間）は、建てることも解体もできない */
 const isNight=()=>{const h=hour();return h>=23||h<6},isDark=()=>{const h=hour();return h>=21||h<6};/* せいれいが寝るのは23時 */
 function nearBase(e){const br=BASE_R[S.baseLv]+3;return e.x>=CX-br&&e.x<CX+br&&e.y>=CY-br&&e.y<CY+br}/* 拠点のまわり＋3マス（壁をたたける所）まで */
@@ -5673,7 +5673,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='603';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='604';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
