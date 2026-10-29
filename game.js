@@ -2659,8 +2659,8 @@ function spawnFind(){if(!S.finds)S.finds=[];const L=FINDS.filter(([id])=>id.star
     S.finds.push({x,y,id,n});if(!S.flags.findTold)findTalk();return}
 }
 const hudIc=id=>{const b=$('#'+id),im=b&&b.previousElementSibling;return im&&im.tagName==='IMG'?im:null};/* 画面上の木材・石材のアイコン */
-function findTalk(){if(!$('#dialog').hidden)return;const sp=S.res.find(r=>r.name===POKO&&!r.hidden)||S.res.find(r=>r.name===HOMURA&&!r.hidden);if(!sp)return;S.flags.findTold=1;/* はじめて落ちたとき、ひろいものの話をする（話せないときは、つぎに落ちたときに） */
-  dialog(sp.name===POKO?[[POKO,'#think|ねえ、守り神さま。村のまわりの、木や岩のそばに、木ぎれや石ころが落ちてるみたい。'],[POKO,'#joy|ひろってくれたら、すごくたすかるな！']]:[[HOMURA,'守り神。木や岩のそばに、木ぎれや石ころが落ちてるよ。'],[HOMURA,'ひろっといてくれると、たすかるね。']],()=>toast('落ちている物は、タップでひろえる'))}
+function findTalk(){if(WD!==0){S.flags.findTold=1;return}/* 説明は1章（草原）だけ。ほかの章では、もう知っているので話さない */if(!$('#dialog').hidden)return;const sp=S.res.find(r=>r.name===POKO&&!r.hidden);if(!sp)return;S.flags.findTold=1;/* はじめて落ちたとき、ひろいものの話をする（話せないときは、つぎに落ちたときに） */
+  dialog([[POKO,'#think|ねえ、守り神さま。村のまわりの、木や岩のそばに、木ぎれや石ころが落ちてるみたい。'],[POKO,'#joy|ひろってくれたら、すごくたすかるな！']],()=>toast('落ちている物は、タップでひろえる'))}
 function takeFind(i){const f=S.finds[i],k=f.id.slice(f.id.indexOf(':')+1);let add=0,nm='';
   if(f.id.startsWith('food:')){add=Math.max(0,Math.min(f.n,foodCap()-S.food));if(add)addFood(k,add);nm=FOODS[k].name}
   else{add=Math.max(0,Math.min(f.n,matCap()-matTot()));S.mat[k]=(S.mat[k]||0)+add;if(!S.gotMat)S.gotMat={};S.gotMat[k]=(S.gotMat[k]||0)+add;nm=MATN[k]}
@@ -5675,7 +5675,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='606';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='607';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
