@@ -466,10 +466,16 @@ html,body{margin:0;width:100%;min-width:0}
   <div id="pro" class="pro" hidden><div class="proWho" id="proWho"></div><p id="proText"></p><div class="hint">タップで進む</div><button id="proSkip" class="btn">スキップ</button></div>
 </div>
 
-<script>/* ゲームのデータ（chips.js・game.js）を読みこむあいだに「はじめる」をおしたら、なにを待っているかを出す。読みこめたら、そのまま進む */
-(function(){var st={c:0,g:0},want=0,t0=0,b=document.getElementById('tStart'),m=document.getElementById('tLoad');
-function show(){if(!want||window.__ldDone)return;m.hidden=false;m.textContent='ゲームのデータを読みこみ中…（ドット絵'+(st.c?' ✓':'')+'・プログラム'+(st.g?' ✓':'')+'）'+Math.floor((Date.now()-t0)/1000)+'秒'}
-b.onclick=function(){if(want)return;want=1;t0=Date.now();show();window.__ldT=setInterval(show,500)};
-window.__ld=function(k){st[k]=1;show()};window.__ldWant=function(){return want}})();</script>
-<script src="chips.js?v=dev" defer onload="__ld('c')"></script>
-<script src="game.js?v=dev" defer onload="__ld('g')"></script>
+<script>/* ゲームのデータ（chips.js・game.js）を読みこむ。読みこむあいだに「はじめる」をおしたら、何パーセント読みこめたかを出す。読みこめたら、そのまま進む */
+(function(){var U=["chips.js?v=dev","game.js?v=dev"],E=[2600000,3400000],L=[0,0],T=[0,0],X=[null,null],ran=0,want=0,b=document.getElementById('tStart'),m=document.getElementById('tLoad');
+function pct(){var l=0,t=0;for(var i=0;i<2;i++){var tt=T[i]||E[i];t+=tt;l+=Math.min(L[i],tt)}return Math.min(99,Math.floor(l*100/t))}
+function show(){if(!want||window.__ldDone)return;m.hidden=false;m.textContent='ゲームのデータを読みこみ中… '+pct()+'%'}
+b.onclick=function(){if(want)return;want=1;show();window.__ldT=setInterval(show,300)};
+window.__ldWant=function(){return want};
+function tag(i,src){var s=document.createElement('script');s.src=src;s.onload=function(){ran=i+1;go()};document.body.appendChild(s)}
+function go(){/* ドット絵（chips.js）→プログラム（game.js）の順に動かす */if(ran===0&&X[0]!=null)tag(0,X[0]);else if(ran===1&&X[1]!=null)tag(1,X[1])}
+U.forEach(function(u,i){var x=new XMLHttpRequest();x.open('GET',u);
+  x.onprogress=function(e){L[i]=e.loaded;if(e.lengthComputable)T[i]=e.total;show()};
+  x.onload=function(){if(x.status>=200&&x.status<300){L[i]=T[i]||E[i];X[i]=URL.createObjectURL(new Blob([x.responseText],{type:'text/javascript'}))}else X[i]=u;show();go()};
+  x.onerror=function(){X[i]=u;go()};/* 読めなかったら、ふつうに読みこむ */
+  x.send()})})();</script>
