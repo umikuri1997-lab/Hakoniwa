@@ -1160,7 +1160,7 @@ const fast=(r,el)=>r.elem===el?2:1;
 
 const ACT={
   eat:{start(r,a){if(!r.meal)return false;const m=typeof r.meal==='number'?{u:r.meal,pt:0,pw:0,e:'🍙'}:r.meal;r.meal=null;sfxAt('eat',r.x,r.y);a.to=Math.min(hMax(r),r.hunger+m.u*100/fullN(r));{const seat=!!a.pt;a.pt=(a.pt||0)+(seat?m.pt:Math.floor(m.pt/2));a.pw=(a.pw||0)+(seat?(m.pw||0):(m.pw||0)/2)}/* 席がないと、料理のぶんは半分 */a.e=m.e;a.items=m.items;r.bubble=m.e;if(a.tdir===-1||a.tdir===1)r.face=a.tdir;if(a.tdir!=null){const h=roomOf((r.y|0)*W+(r.x|0));if(h){let n=0;for(const j of h.inside){const o=S.obj[j];if(o&&BL[o]&&BL[o].cat==='living')n+=BL[o].dw||1}for(const o of rugsIn(h.inside))n+=BL[o].dw||1;a.pt=(a.pt||0)+DINEPT[Math.min(6,n)];a.pw=(a.pw||0)+HOUSEPW[Math.min(6,n)]}}/* 家の中の食卓：ダイニング家具が多いほど、パワーが多い */},tick(r,a,dt){r.hunger=Math.min(a.to,r.hunger+2.6*dt);if(a.tdir!=null){a.bt=(a.bt||0)+dt;if(a.bt>5){a.bt=0;const m=S.res.some(q=>q!==r&&q.act&&q.act.type==='eat'&&q.act.stage==='do'&&q.act.tdir!=null&&Math.hypot(q.x-r.x,q.y-r.y)<3.5);r.bubble=m?pick(['😊',a.e||'🍙','😋','🎵']):(a.e||'🍙');if(m){r.fun=Math.min(100,r.fun+1);if(!a.mc){const q=S.res.find(q=>q!==r&&q.act&&q.act.type==='eat'&&q.act.stage==='do'&&q.act.tdir!=null&&Math.hypot(q.x-r.x,q.y-r.y)<3.5);if(q&&!q.act.mc){a.mc=q.act.mc=1;mate(r,q)}}}}}},done:(r,a)=>r.hunger>=a.to-.01||a.t>=60,end(r,a){const it=a.items||[];if(it.includes('berry')||it.includes('apple'))r.fun=Math.min(100,r.fun+8);if(it.includes('yakiberry'))r.fun=Math.min(100,r.fun+15);if(it.includes('yakiimo'))r.wkT=S.t+180;if(it.includes('yakiapple'))r.mvT=S.t+180;if(it.includes('bread'))r.full=S.t+300;if(it.includes('soup'))r.energy=Math.min(100,r.energy+25);if(it.includes('salad')){r.energy=Math.min(100,r.energy+10);r.fun=Math.min(100,r.fun+10)}if(it.includes('yakisoba')){r.energy=Math.min(100,r.energy+20);r.fun=Math.min(100,r.fun+10)}if(it.includes('takoyaki'))r.fun=Math.min(100,r.fun+25);if(it.includes('ringoame'))r.fun=Math.min(100,r.fun+20);if(it.includes('kakigori')){r.energy=Math.min(100,r.energy+15);r.fun=Math.min(100,r.fun+10)}if(it.includes('wataame'))r.fun=Math.min(100,r.fun+25);if(it.includes(favDish(r))){a.pt=(a.pt||0)+2;a.pw=(a.pw||0)+.9;addFloat(r.x,r.y-1.6,'だいすきな味！','#ffd38a')}addPt(a.pw,r,a.pt);if(a.snack){r.bubble='😊';r.fun=Math.min(100,r.fun+10);r.shine=performance.now()}}},/* 料理ごとの効果 */
-  forage:{start(r,a){const d=S.dyn[a.obj];if(!d||d.g<100)return false;d.g=0;a.e=S.obj[a.obj]==='fruit'?'🍎':'🍇';r.bubble=a.e;sfxAt('bush',r.x,r.y)},tick(r,a,dt){if(a.t>=3.5)r.hunger=Math.min(hMax(r),r.hunger+1.3*dt)}/* むしる(2秒)→手に持つ(1.5秒)→食べる */,done:(r,a)=>a.t>=27,end(r){addPt(.45,r,1)}},
+  forage:{start(r,a){const d=S.dyn[a.obj];if(!d||d.g<100)return false;d.g=0;a.e=S.obj[a.obj]==='fruit'?'🍎':'🫐';r.bubble=a.e;sfxAt('bush',r.x,r.y)},tick(r,a,dt){if(a.t>=3.5)r.hunger=Math.min(hMax(r),r.hunger+1.3*dt)}/* むしる(2秒)→手に持つ(1.5秒)→食べる */,done:(r,a)=>a.t>=27,end(r){addPt(.45,r,1)}},
   sleep:{start(r,a){r.bubble='💤';if(a.house||isNight()&&a.obj!=null&&roomOf(a.obj))r.hidden=true;/* 夜、家のベッドで寝ている子は、かくれている（コワイノにねらわれない） */a.night=isNight();{const h=a.stand>=0?roomOf(a.obj!=null?a.obj:a.stand):null;a.cf=h?.6+comfyFor(h,r)/100*.9:1}/* 家の住み心地で、つかれのとれる速さが変わる（0→0.6倍、100→1.5倍、300→3.3倍） */},tick(r,a,dt){if(a.ground&&!isNight()&&((a.bchk=(a.bchk||0)+dt)>2)){a.bchk=0;let bj=-1;for(let j=0;j<W*H&&bj<0;j++)if((S.obj[j]==='bench'||(S.obj[j]==='part'&&S.obj[S.ref[j]]==='bench'))&&!ashed(anc(j))&&free('o'+j,1))bj=j;if(bj>=0){endAct(r);return}}/* 昼に地面で休んでいる子は、ベンチがあいたら、そっちにすわりなおす */const cap=a.ground?50:100;if(r.energy<cap)r.energy=Math.min(cap,r.energy+a.rate*(a.night?1:2)*(a.cf||1)*mateK(r,'sleep')*recK(r)*dt)},
     done:(r,a)=>r.hunger<18||(a.night?!isNight():r.energy>=(a.ground?50:90)),end(r,a){}/* 寝るだけでは、パワーも経験値もふえない */},/* 起きたときのパワーも住み心地で変わる */
   bury:{start(r,a){const d=S.dyn[a.obj];if(S.obj[a.obj]!=='grave'||!d||d.buried||r.coffin||heldN(r))return false},done:(r,a)=>a.t>=2,end(r,a){const d=S.dyn[a.obj];if(S.obj[a.obj]==='grave'&&d&&!d.buried){r.coffin={name:d.name};S.obj[a.obj]='';delete S.dyn[a.obj];recount()}}},/* お墓から棺を持ちあげる（ほかのものは持たない） */
@@ -1822,6 +1822,7 @@ function updRes(r,dt){rescueStuck(r);if((RHOLD.get(r)||0)>performance.now())retu
   if(r.act&&r.hunger<=(r.act.type==='cook'?25:50)&&S.food>0&&!isNight()&&WORKT.has(r.act.type)){endAct(r)}/* おなかが50いかになったら、作業をやめて食べにいく */
   if(r.refill&&(r.refill<=S.t||r.hunger>=hMax(r)-1||S.food<=0))r.refill=0;/* にげて食べに来たときは、マックスまで食べる */
   if(r.elem==='fire'&&r.hunger>=50&&!r.refill){r.fleeNow=false;if(r.act&&r.act.type==='flee')endAct(r)}
+  {const hj=(r.y|0)*W+(r.x|0);if((r.meal||r.act&&r.act.type==='eat'&&r.act.stage==='do')&&!r.hidden&&S.enemies.some(e=>e.spawned&&!e.dead)&&(!fenceOut()[hj]||HOUSES.some(h=>h.inside.has(hj)))){r.fleeNow=false;if(!(r.act&&r.act.type==='eat')){endAct(r);startAct(r,bfs(r.x|0,r.y|0),'eat',-1,{pt:0,pw:0});return}}}/* ごはんを持っていて（食べている途中も）、柵や家の壁の中にいるなら、コワイノが近くにいても、にげずにその場で食べる */
   if(r.fleeNow&&!r.hidden&&!(r.act&&(r.act.type==='flee'||r.act.run))){r.fleeNow=false;
     const fh=r.fleeHouse;r.fleeHouse=false;const en=S.enemies.find(e=>e.spawned&&Math.hypot(e.x-r.x,e.y-r.y)<(fh?12:6));/* 家の壁がこわされたときは、少しはなれたコワイノからも逃げる */
     if(en){r.fleeT=S.t;endAct(r);const G=bfs(r.x|0,r.y|0);if(withFlee(r,fleeHit,G))return}}
@@ -2230,8 +2231,8 @@ function stepWorld(dt){if((SUBT+=dt)>1){SUBT=0;checkSub();checkSev();guardTick()
   if(prevH>h&&S.enemyOn&&S.wave&&S.lastNight!==dayNo()-1){S.lastNight=dayNo()-1;/* 「コワイノ」は夜12時に来る（前の日の夜としてかぞえる） */S.nights++;let w=S.wave;S.wave=null;const rn=S.res.length;if(rn<7&&!S.rushOn)w=w.filter(t=>EN[t].boss&&!S.wipe).concat(w.filter(t=>!EN[t].boss).slice(0,(WD===1?[0,3,4,5,6,8,9]:[0,1,2,3,4,6,7])[rn]));/* せいれいが少ない夜は、コワイノの数に上限：1人1体・2人2体・3人3体・4人4体・5人6体・6人7体（火山のふもとは1人3体・2人4体・3人5体・4人6体・5人8体・6人9体）（全滅のあと5人そろうまでは、オオカゲも来ない） */if(w.length)spawnWave(w)}
   if(S.seedDay!==dayNo()&&h>=6){S.seedDay=dayNo();const n=Math.random()<.5?1:0,b=S.t-S.t%1440;S.seeds=[];S.seedPlan=Array.from({length:n},()=>b+360+Math.random()*720).sort((x,y)=>x-y)}/* ふしぎな種は1日1こまで（50%）。ひろわなかったら、あしたには消える */
   if(S.seedPlan&&S.seedPlan.length&&S.t>=S.seedPlan[0]){S.seedPlan.shift();spawnSeed()}
-  if(S.findDay!==dayNo()&&h>=6){S.findDay=dayNo();const b=S.t-S.t%1440;S.finds=[];S.findPlan=S.res.length<3?Array.from({length:6},()=>b+420+Math.random()*600).filter(t=>t>S.t).sort((x,y)=>x-y):[]}/* ひろいもの：せいれいが2人までのあいだ、昼（7時〜17時）に1日6こ、村のなかに落ちる。ひろわなかったら、あしたには消える */
-  if(S.findPlan&&S.findPlan.length&&S.t>=S.findPlan[0]){S.findPlan.shift();spawnFind()}
+  if(S.findDay!==dayNo()&&h>=6){S.findDay=dayNo();S.finds=[]}/* ひろいもの：ひろわなかった物は、つぎの日の朝に消える */
+  {const hr=Math.floor(clk()/60);if(S.findHr!==hr){S.findHr=hr;if(!isNight()&&S.res.length<3)for(let k=0;k<3;k++)spawnFind()}}/* せいれいが2人までのあいだ、昼は1時間に3こ落ちる（夜は落ちない） */
   if(prevH<3&&h>=3&&S.today==='hoshi')for(const r of S.res)if(r.act&&r.act.type==='sleep')r.fun=Math.min(100,r.fun+15);
 }
 const FREEG=[{k:'g900',t:'みどりのマスを900に',now:()=>GRASSN,ok:()=>GRASSN>=900,rw:30},{k:'r15',t:'せいれいを15人に',now:()=>S.res.length,ok:()=>S.res.length>=15,rw:30},{k:'fl30',t:'花を30こさかせる',now:()=>flowerN(),ok:()=>flowerN()>=30,rw:40},
@@ -2649,11 +2650,17 @@ function morning(){sfx('morning');if(S.cleared&&S.daily)dailyCheck();/* 夜の�
   checkFree();
   summonMorning();
 }
-const FINDS=[['mat:wood',2],['mat:stone',2],['food:berry',1]];/* ひろいもの：小枝（木材2）・小石（石材2）・ベリー1 */
-function spawnFind(){if(!S.finds)S.finds=[];if(S.finds.length>=4)return;const L=FINDS.filter(([id])=>id.startsWith('food:')?foodCap()>0:matCap()>0);if(!L.length)return;/* しまう箱がまだないものは、落ちない */
-  for(let t=0;t<40;t++){const x=(Math.random()*W)|0,y=(Math.random()*H)|0,j=y*W+x;
-    if(inBase(x,y)&&walk(j)&&!S.obj[j]&&!S.finds.some(f=>f.x===x&&f.y===y)&&!S.seeds.some(f=>f.x===x&&f.y===y)&&!(S.drops||[]).some(f=>f.x===x&&f.y===y)){const[id,n]=pick(L);S.finds.push({x,y,id,n});if(!S.flags.findTold){S.flags.findTold=1;toast('村に、なにか落ちている。タップでひろえる')}return}}
+const FINDS=[['mat:wood',2,['deadtree','ntree','tree','fruit']],['mat:stone',2,['rock','boulder']],['food:berry',1,['berry']]];/* ひろいもの：木材2は木のそば・石材2は岩のそば・ベリー1はベリーの茂みのそば */
+function spawnFind(){if(!S.finds)S.finds=[];const L=FINDS.filter(([id])=>id.startsWith('food:')?foodCap()>0:matCap()>0);if(!L.length)return;/* しまう箱がまだないものは、落ちない */
+  const[id,n,near]=pick(L);
+  for(let t=0;t<300;t++){const x=OFF+((Math.random()*OW)|0),y=OFF+((Math.random()*OW)|0),j=y*W+x;
+    if(!walk(j)||S.obj[j]||S.finds.some(f=>f.x===x&&f.y===y)||S.seeds.some(f=>f.x===x&&f.y===y)||(S.drops||[]).some(f=>f.x===x&&f.y===y))continue;
+    if(![-1,1,-W,W].some(d=>{const k=j+d;return k>=0&&k<W*H&&near.includes(typeAt(k))}))continue;/* となりに、木・岩・茂みがあるマス */
+    S.finds.push({x,y,id,n});if(!S.flags.findTold)findTalk();return}
 }
+const hudIc=id=>{const b=$('#'+id),im=b&&b.previousElementSibling;return im&&im.tagName==='IMG'?im:null};/* 画面上の木材・石材のアイコン */
+function findTalk(){if(!$('#dialog').hidden)return;const sp=S.res.find(r=>r.name===POKO&&!r.hidden)||S.res.find(r=>r.name===HOMURA&&!r.hidden);if(!sp)return;S.flags.findTold=1;/* はじめて落ちたとき、ひろいものの話をする（話せないときは、つぎに落ちたときに） */
+  dialog(sp.name===POKO?[[POKO,'#think|ねえ、守り神さま。村のまわりの、木や岩のそばに、木ぎれや石ころが落ちてるみたい。'],[POKO,'#joy|ひろってくれたら、すごくたすかるな！']]:[[HOMURA,'守り神。木や岩のそばに、木ぎれや石ころが落ちてるよ。'],[HOMURA,'ひろっといてくれると、たすかるね。']],()=>toast('落ちている物は、タップでひろえる'))}
 function takeFind(i){const f=S.finds[i],k=f.id.slice(f.id.indexOf(':')+1);let add=0,nm='';
   if(f.id.startsWith('food:')){add=Math.max(0,Math.min(f.n,foodCap()-S.food));if(add)addFood(k,add);nm=FOODS[k].name}
   else{add=Math.max(0,Math.min(f.n,matCap()-matTot()));S.mat[k]=(S.mat[k]||0)+add;if(!S.gotMat)S.gotMat={};S.gotMat[k]=(S.gotMat[k]||0)+add;nm=MATN[k]}
@@ -4153,7 +4160,7 @@ function drawSpiritDot(c,el,x,y,s,f,o){
     if(vr&&vr.lash&&fm!=='strain')spr('sp:lash'+S+'#'+fm,0,fy)}/* まつげは、表情ごとの目に合わせた絵 */
   c.restore();
   if(bothF)armD(farA,aA(farA));if(frontArm)armD(-farA,aA(-farA));
-  if((A==='eat'||A==='hold')&&o.food&&!back){const ei=emoImg(o.food),yy=A==='hold'?-17:-27+Math.sin(t*7)*.8,xx=tr?14:0;/* 横向きのときは、食べ物を顔の前に */if(ei){const ih=40,iw=ih*ei.width/ei.height;c.drawImage(ei,xx-iw/2,yy-ih/2,iw,ih)}else{c.font='40px sans-serif';c.textAlign='center';c.textBaseline='middle';c.fillStyle='#000';c.fillText(o.food,xx,yy);c.textAlign='start';c.textBaseline='alphabetic'}}
+  if((A==='eat'||A==='hold')&&o.food&&!back){const ei=emoImg(o.food),yy=A==='hold'?-17:-27+Math.sin(t*7)*.8,xx=tr?60:0;/* 横向きのときは、食べ物を顔の前に（体の大きさ0.435で、およそ26ドット前） */if(ei){const ih=40,iw=ih*ei.width/ei.height;c.drawImage(ei,xx-iw/2,yy-ih/2,iw,ih)}else{c.font='40px sans-serif';c.textAlign='center';c.textBaseline='middle';c.fillStyle='#000';c.fillText(o.food,xx,yy);c.textAlign='start';c.textBaseline='alphabetic'}}
   c.imageSmoothingEnabled=sm;c.restore();return true}
 function drawSpirit(c,el,x,y,s,f,o){
   if(o.dot&&drawSpiritDot(c,el,x,y,s,f,o))return;
@@ -4681,7 +4688,7 @@ function render(now){
     ctx.fillStyle='rgba(255,245,170,'+(.4+tw*.6)+')';const sx=cx+7,sy=cy-10,sr=2+tw*2.5;ctx.beginPath();for(let a=0;a<8;a++){const r2=a%2?sr*.35:sr,an=a*Math.PI/4;ctx.lineTo(sx+Math.cos(an)*r2,sy+Math.sin(an)*r2)}ctx.fill()}
   for(const f of S.finds||[]){const cx=f.x*TS+16,cy=f.y*TS+20,tw=Math.sin(now/300+f.x*1.3+f.y)*.5+.5;/* ひろいもの：木材・石材・ベリーのアイコン。ちいさく光る */
     ctx.fillStyle='rgba(40,25,10,.18)';ctx.beginPath();ctx.ellipse(cx,cy+5,8,2.4,0,0,7);ctx.fill();
-    {const e=f.id==='mat:wood'?'🪵':f.id==='mat:stone'?'🪨':FOODS[f.id.slice(5)].e,im=emoImg(e),ih=18;if(im){const iw=ih*im.width/im.height;ctx.drawImage(im,cx-iw/2,cy-ih/2-1,iw,ih)}else{ctx.font='16px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(e,cx,cy-1);ctx.textAlign='start';ctx.textBaseline='alphabetic'}}/* 絵は、素材・食べ物のいつものアイコン */
+    {const im=f.id.startsWith('mat:')?hudIc(f.id==='mat:wood'?'woodN':'stoneN'):emoImg(FOODS[f.id.slice(5)].e),ih=18;if(im&&im.complete&&im.naturalWidth){const iw=ih*im.naturalWidth/im.naturalHeight;ctx.drawImage(im,Math.round(cx-iw/2),Math.round(cy-ih/2-1),iw,ih)}}/* 絵は、上の木材・石材と同じドット絵のアイコン。ベリーは食べ物のアイコン */
     ctx.fillStyle='rgba(255,245,170,'+(.35+tw*.6)+')';{const sx=cx+8,sy=cy-8,sr=1.6+tw*2.2;ctx.beginPath();for(let a=0;a<8;a++){const r2=a%2?sr*.35:sr,an=a*Math.PI/4;ctx.lineTo(sx+Math.cos(an)*r2,sy+Math.sin(an)*r2)}ctx.fill()}}
   for(const s of S.seeds){const tw=Math.sin(now/250+s.x)*.5+.5;ctx.fillStyle='rgba(255,240,150,'+(.5+tw*.5)+')';const cx=s.x*TS+16,cy=s.y*TS+16;ctx.beginPath();for(let a=0;a<8;a++){const r2=a%2?3:9+tw*2,an=a*Math.PI/4+now/900;ctx.lineTo(cx+Math.cos(an)*r2,cy+Math.sin(an)*r2)}ctx.fill();circ(ctx,cx,cy,3,'#fff')}
   drawHeat(now);drawRanges(now);
@@ -5666,7 +5673,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='602';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='603';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
