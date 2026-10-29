@@ -2653,9 +2653,9 @@ function morning(){sfx('morning');if(S.cleared&&S.daily)dailyCheck();/* 夜の�
 const FINDS=[['mat:wood',2,['deadtree','ntree','tree','fruit']],['mat:stone',2,['rock','boulder']],['food:berry',1,['berry']]];/* ひろいもの：木材2は木のそば・石材2は岩のそば・ベリー1はベリーの茂みのそば */
 function spawnFind(){if(!S.finds)S.finds=[];const L=FINDS.filter(([id])=>id.startsWith('food:')?foodCap()>0:matCap()>0);if(!L.length)return;/* しまう箱がまだないものは、落ちない */
   const[id,n,near]=pick(L);
-  for(let t=0;t<300;t++){const x=OFF+((Math.random()*OW)|0),y=OFF+((Math.random()*OW)|0),j=y*W+x;
+  for(let t=0;t<300;t++){const x=(Math.random()*W)|0,y=(Math.random()*H)|0,j=y*W+x;/* 広げた外がわもふくめて、マップのどこにでも落ちる */
     if(!walk(j)||S.obj[j]||S.finds.some(f=>f.x===x&&f.y===y)||S.seeds.some(f=>f.x===x&&f.y===y)||(S.drops||[]).some(f=>f.x===x&&f.y===y))continue;
-    if(![-1,1,-W,W].some(d=>{const k=j+d;return k>=0&&k<W*H&&near.includes(typeAt(k))}))continue;/* となりに、木・岩・茂みがあるマス */
+    if(![[-1,0],[1,0],[0,-1],[0,1]].some(([dx,dy])=>{const X=x+dx,Y=y+dy;return X>=0&&X<W&&Y>=0&&Y<H&&near.includes(typeAt(Y*W+X))}))continue;/* となりに、木・岩・茂みがあるマス */
     S.finds.push({x,y,id,n});if(!S.flags.findTold)findTalk();return}
 }
 const hudIc=id=>{const b=$('#'+id),im=b&&b.previousElementSibling;return im&&im.tagName==='IMG'?im:null};/* 画面上の木材・石材のアイコン */
@@ -5688,7 +5688,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='612';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='613';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
