@@ -2665,7 +2665,7 @@ function spawnFind(quiet){if(!S.finds)S.finds=[];/* quiet：章のはじめに�
     S.finds.push({x,y,id,n});if(!quiet&&!S.flags.findTold)findTalk();return}
 }
 const hudIc=id=>{const b=$('#'+id),im=b&&b.previousElementSibling;return im&&im.tagName==='IMG'?im:null};/* 画面上の木材・石材のアイコン */
-function findTalk(){if(WD!==0){S.flags.findTold=1;return}/* 説明は1章（草原）だけ。ほかの章では、もう知っているので話さない */if(!$('#dialog').hidden)return;const sp=S.res.find(r=>r.name===POKO&&!r.hidden);if(!sp)return;S.flags.findTold=1;/* はじめて落ちたとき、ひろいものの話をする（話せないときは、つぎに落ちたときに） */
+function findTalk(){if(WD!==0){S.flags.findTold=1;return}/* 説明は1章（草原）だけ。ほかの章では、もう知っているので話さない */if(!qDone('table')||!$('#dialog').hidden)return;/* 食卓のクエストがおわってから話す */const sp=S.res.find(r=>r.name===POKO&&!r.hidden);if(!sp)return;S.flags.findTold=1;/* はじめて落ちたとき、ひろいものの話をする（話せないときは、つぎに落ちたときに） */
   dialog([[POKO,'#surprise|あっ、守り神さま！ さっき、むこうの木のそばを通ったらね、木ぎれが落ちてたんだ。'],[POKO,'#think|岩のそばにも、石ころがころがってたよ。風でとばされてきたのかな？'],[POKO,'#joy|あれをあつめたら、なにか作れるかも。守り神さま、いっしょにひろってみようよ！']],()=>toast('落ちている物は、タップでひろえる'))}
 function takeFind(i){const f=S.finds[i],k=f.id.slice(f.id.indexOf(':')+1);let add=0,nm='';
   if(f.id.startsWith('food:')){add=foodCap()>0?Math.max(0,Math.min(f.n,foodCap()-S.food)):f.n;/* 箱がまだないときも、ひろえる */if(add)addFood(k,add);nm=FOODS[k].name}
@@ -5694,7 +5694,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='617';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='618';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
