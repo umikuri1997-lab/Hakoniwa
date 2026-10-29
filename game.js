@@ -4710,9 +4710,9 @@ function render(now){
     ctx.fillStyle='#a07240';rr(ctx,cx-4,cy-10,8,5,2);ctx.fillStyle='#6b4524';ctx.fillRect(cx-5,cy-6,10,2);
     ctx.fillStyle='rgba(255,245,170,'+(.4+tw*.6)+')';const sx=cx+7,sy=cy-10,sr=2+tw*2.5;ctx.beginPath();for(let a=0;a<8;a++){const r2=a%2?sr*.35:sr,an=a*Math.PI/4;ctx.lineTo(sx+Math.cos(an)*r2,sy+Math.sin(an)*r2)}ctx.fill()}
   for(const f of S.finds||[]){const cx=f.x*TS+16,cy=f.y*TS+20,tw=Math.sin(now/300+f.x*1.3+f.y)*.5+.5;/* ひろいもの：木材・石材・ベリーのアイコン。ちいさく光る */
-    ctx.fillStyle='rgba(40,25,10,.18)';ctx.beginPath();ctx.ellipse(cx,cy+8,12,3.6,0,0,7);ctx.fill();
-    {const im=f.id.startsWith('mat:')?hudIc(f.id==='mat:wood'?'woodN':'stoneN'):emoImg(FOODS[f.id.slice(5)].e),ih=27;if(im&&im.complete&&im.naturalWidth){const iw=ih*im.naturalWidth/im.naturalHeight;ctx.drawImage(im,Math.round(cx-iw/2),Math.round(cy-ih/2-1),iw,ih)}}/* 絵は、上の木材・石材と同じドット絵のアイコン。ベリーは食べ物のアイコン */
-    ctx.fillStyle='rgba(255,245,170,'+(.35+tw*.6)+')';{const sx=cx+12,sy=cy-12,sr=1.6+tw*2.2;ctx.beginPath();for(let a=0;a<8;a++){const r2=a%2?sr*.35:sr,an=a*Math.PI/4;ctx.lineTo(sx+Math.cos(an)*r2,sy+Math.sin(an)*r2)}ctx.fill()}}
+    ctx.fillStyle='rgba(40,25,10,.18)';ctx.beginPath();ctx.ellipse(cx,cy+6,9,2.7,0,0,7);ctx.fill();
+    {const im=f.id.startsWith('mat:')?hudIc(f.id==='mat:wood'?'woodN':'stoneN'):emoImg(FOODS[f.id.slice(5)].e),ih=20;if(im&&im.complete&&im.naturalWidth){const iw=ih*im.naturalWidth/im.naturalHeight;ctx.drawImage(im,Math.round(cx-iw/2),Math.round(cy-ih/2-1),iw,ih)}}/* 絵は、上の木材・石材と同じドット絵のアイコン。ベリーは食べ物のアイコン */
+    ctx.fillStyle='rgba(255,245,170,'+(.35+tw*.6)+')';{const sx=cx+9,sy=cy-9,sr=1.6+tw*2.2;ctx.beginPath();for(let a=0;a<8;a++){const r2=a%2?sr*.35:sr,an=a*Math.PI/4;ctx.lineTo(sx+Math.cos(an)*r2,sy+Math.sin(an)*r2)}ctx.fill()}}
   for(const s of S.seeds){const tw=Math.sin(now/250+s.x)*.5+.5;ctx.fillStyle='rgba(255,240,150,'+(.5+tw*.5)+')';const cx=s.x*TS+16,cy=s.y*TS+16;ctx.beginPath();for(let a=0;a<8;a++){const r2=a%2?3:9+tw*2,an=a*Math.PI/4+now/900;ctx.lineTo(cx+Math.cos(an)*r2,cy+Math.sin(an)*r2)}ctx.fill();circ(ctx,cx,cy,3,'#fff')}
   drawHeat(now);drawRanges(now);
   if(mode==='build'&&sel&&BL[sel]&&!selRect&&!pending){const k=sel+'|'+S.placed[sel]+'|'+S.baseLv;if(BADC.k!==k||now-BADC.t>600){BADC.k=k;BADC.t=now;BADC.L=[];for(let j=0;j<W*H;j++){const x=j%W,y=(j/W)|0;if(inBase(x,y)&&!canPlace(sel,x,y,true))BADC.L.push(j)}}
@@ -5696,7 +5696,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='627';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='628';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
