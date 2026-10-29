@@ -1280,7 +1280,6 @@ const foeNear=r=>S.enemies.some(e=>e.spawned&&!e.dead&&!e.flee&&Math.hypot(e.x-r
 function decide0(r){
   const tx=r.x|0,ty=r.y|0,G=bfs(tx,ty),here=ty*W+tx;
   if(r.cing&&isNight()){const R=RECIPES.find(x=>x.out===r.cing.rec);if(R)for(const k in R.need)addFood(k,R.need[k]);r.cing=null}/* 夜は料理ができないので、持っている材料は食料箱にもどす */
-  if(r.cmat&&matCap()>0&&r.hunger>35&&!isNight()&&!hostileNow()&&!foeNear(r))return goStoreMat(r,G);/* ごはんに行く前に、持っている素材をしまう（おなか35以下なら、そのまま食べにいく） */
   if(r.wantEat){r.wantEat=0;if(r.hunger<hMax(r)-8&&!r.meal&&goEat(r,G))return}
   if(r.refill&&r.hunger<hMax(r)-1&&S.food>0&&!r.meal&&goEat(r,G))return;/* マックスまで食べてから、たたかいにもどる */
   if(r.meal&&S.enemies.some(e=>e.spawned&&!e.dead))return startAct(r,G,'eat',-1,{pt:0,pw:0});/* コワイノがいるときは、とってきたごはんを、その場で食べる */
@@ -1341,7 +1340,7 @@ function goStoreMat(r,G){const j=nearest(G,j=>adjOf(j,k=>storageAt(k,'mat'))>=0,
 function goStore(r,G){const j=nearest(G,j=>adjOf(j,k=>storageAt(k,'food'))>=0,90);if(j>=0)return startAct(r,G,'store',j);return startAct(r,G,'idle',-1,{dur:15})}
 function goEatSafe(r,any){/* コワイノのすぐそばを通らずに行けて、家の中・柵や壁でかこまれた所（コワイノが中にいない）・コワイノから4マス以上はなれた所の食料箱へ、走って食べにいく */if(!(S.food>0))return false;const Gf=fleeGraph(r),fo=fenceOut(),al=S.enemies.filter(e=>e.spawned&&!e.dead),encl=al.every(e=>fo[(e.y|0)*W+(e.x|0)]),safe=j=>!!roomOf(j)||(encl&&!fo[j])||!al.some(e=>Math.hypot(e.x-(j%W+.5),e.y-(((j/W)|0)+.5))<4);
   const j=nearest(Gf,j=>(any||safe(j))&&adjOf(j,k=>storageAt(k,'food'))>=0,200);if(j<0)return false;r.refill=S.t+60;startAct(r,Gf,'fetch',j,{run:true});return !!r.act}
-function goEat(r,G){
+function goEat(r,G){if(r.cmat&&matCap()>0&&r.hunger>35&&!isNight()&&!hostileNow()&&!foeNear(r))return goStoreMat(r,G);/* ごはんに行く前に、持っている素材をしまう（おなか35以下なら、そのまま食べにいく） */
   if(S.food>0){
     const j=nearest(G,j=>adjOf(j,k=>storageAt(k,'food'))>=0,200);
     if(j>=0){startAct(r,G,'fetch',j);return r.act&&r.act.type==='fetch'}
@@ -2584,7 +2583,7 @@ function noteQuestPlacement(id,j){let m=QUEST_PLACEMENTS.get(S);if(!m){m=new Map
 function qvHas(j,id){return S.obj[j]===id||S.floor[j]===id}/* 見にくる物が、置いた物か、しいた床（あぜ道など）か */
 function questVisitTarget(q,ids,j){if(ids.includes(S.floor[j]))return true;const o=S.obj[j];if(!o||o==='part'||!BL[o])return false;
   if(!ids.includes(o)&&!(ids.includes('@furniture')&&BL[o].kind==='furn')&&!(ids.includes('@painting')&&['paint1','paint2','paint3'].includes((S.win||{})[j])))return false;
-  if(FLOWERS.has(o)&&isBud(j))return false;
+  if(PLANTS.includes(o)&&isBud(j))return false;/* 花も木も、育ってから見にいく */
   if(q.id==='imoseed')return imoSeedQuestPlots().includes(j);
   if(q.k==='bed3'||q.k==='houselight'||q.k==='room'||q.id==='bed')return HOUSES.some(h=>h.inside.has(j));
   if(q.id==='shizukuRest')return nearHot(j,4);
@@ -5687,7 +5686,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='632';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='633';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
