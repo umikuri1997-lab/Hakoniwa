@@ -452,7 +452,8 @@ const QUESTS1=[
   {id:'wind',text:'風のせいれいをむかえよう',how:"「おく」→「ゆりの種」を植えたり、ブランコを置いたりして風の力をため、朝に神殿の「！」から呼ぶ",check:()=>elemCount('wind')>=1&&NEWRES==null,prog:()=>'風の力 '+Math.floor(ATTR.wind)+'/'+needFor('wind'),
    talk:{who:POKO,when:()=>nextOK(),learn:['swing'],lines:[
     [POKO,'オオカゲを追いはらえて、ほっとしたよ。'],
-    [MINA,'つぎは風のせいれいかなぁ。足が速くて、よく遊ぶらしいよぉ。'],
+    [MINA,'つぎは風のせいれいかなぁ。風みたいに、ぴゅーっと村をかけまわる子たちなんだよぉ。'],
+    [MINA,'遊ぶのが大好きでねぇ。遠くに落ちてるふしぎな種も、見つけてひろってきてくれるんだぁ。'],
     [MINA,'風の力をためれば、来てくれるはずだねぇ。'],
     [POKO,'#think|風に乗って、ふわっと浮かべたら、たのしそう！ 守り神さまなら、なにか思いつくかな？'],['@idea']]},
    get story(){return KS([['K','フッ…風に呼ばれて来てみれば、ずいぶん素朴な村だね。'],[POKO,'風のせいれいが来た！ これで5つの属性がそろったね！'],['K','いいさ。ぼくの風で、この村をもっと華やかにしてあげよう。'],[MINA,'にぎやかになったねぇ。']])}},
@@ -5693,7 +5694,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='624';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='625';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
