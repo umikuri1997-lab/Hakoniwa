@@ -3437,7 +3437,7 @@ function wallBand(c,mat,a,b,x,y,i){/* 壁の正面（1マスの高さ：y〜y+28
 function yozoraFront(c,x,y,i){/* よぞらの壁：外がわはダークチェリーの部品（柱も）。家の中から見える正面だけ、夜空の帯と巾木を、木の壁の正面と同じ所にかさねる（角は、はしまで） */
   if(i==null||ICON||!HOUSES.some(h=>h.inside.has(i+W)||h.inside.has(i+W-1)||h.inside.has(i+W+1)))return;
   const isW=k=>{const t=typeAt(k);return t!=='wall'&&t!=='sdoor'&&(HOME_WALLS.has(t)||HOME_DOORS.has(t))},L=isW(i-1),R=isW(i+1),U=isW(i-W),D=isW(i+W),hasH=L||R||!(U||D);if(!hasH)return;
-  const f=(a,b)=>wallBand(c,'night',a,b,x,y,i);c._noSh=1;if(!D&&L&&R&&!U)f(x,x+TS);else{if(L)f(x,x+5);if(R)f(x+27,x+TS)}c._noSh=0}
+  const o=.5,f=(a,b)=>wallBand(c,'night',a,b,x,y,i);c._noSh=1;if(!D&&L&&R&&!U)f(x-o,x+TS+o);else{if(L)f(x-o,x+5);if(R)f(x+27,x+TS+o)}c._noSh=0}/* となりの壁に0.5だけ重ねて描く（拡大したとき、マスのさかいめにすきまの線が出ないように） */
 const SEC={a:null,b:null,cache:new Map()};
 function drawSection(c,ox,oy,rs){/* 断面（壁・柱のてっぺん）：形のまわりだけ少し濃く、内がわは少し薄く。つながる側へはみ出した分で、マスのさかいめにも線が出ない。形ごとに1回だけ絵にして使いまわす */
   const W0=TS+16,H0=TS+40,X=ox-8,Y=oy-8,key=rs.map(r=>r.map((v,k)=>Math.round((v-(k%2?oy:ox))*100)).join(',')).join('|');let sp=SEC.cache.get(key);
@@ -5736,7 +5736,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='665';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='666';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
