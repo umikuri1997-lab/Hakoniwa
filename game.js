@@ -3243,7 +3243,7 @@ const ROADF=new Set(['path','gravel','stone','brick']);
 const shU=(c,i,iso)=>c._shU!=null?c._shU:!iso&&HOME_WALLS.has(S.obj[i-W]);/* 床の上はしの「壁の下のかげ」を描くか（壁の下にのばす床は、となりの床マスに合わせる） */
 function wallMarg(c,i,x,y){const isW=k=>HOME_WALLS.has(typeAt(k))||HOME_DOORS.has(typeAt(k));const door=HOME_DOORS.has(S.obj[i]);
   {const fl=k=>S.floor[k]&&!ROADF.has(S.floor[k])&&!isW(k);/* 道（砂利・石など）は家の床とみなさない */
-      const fr=door&&(isW(i-1)||isW(i+1)),dirs=door?[[-1,0,0,16,32],[1,16,0,16,32],[-W,0,0,32,fr?28:16],[W,0,fr?28:16,32,fr?4:16]].filter(d=>fl(i+d[0])):/* ドアの下は、家の中がわだけ床。外がわは外の地面のまま。正面のあるドア（よこの壁のドア）は、上の床をしきいの上の面の下まで（y+28）のばす（開いたときに外の地面が見えないように）。下の床は、しきいの下（y+28〜）だけ（上の壁のドアを開くと、外の地面だけが見える） */[[-1,0,0,16,32],[1,16,0,16,32],[-W,0,0,32,16],[W,0,16,32,16],[-W-1,0,0,16,16],[-W+1,16,0,16,16],[W-1,0,16,16,16],[W+1,16,16,16,16]].filter(d=>fl(i+d[0]));
+      const fr=door&&(isW(i-1)||isW(i+1)),dirs=door?[[-1,0,0,16,32],[1,16,0,16,32],[-W,0,0,32,fr?30:16],[W,0,fr?30:16,32,fr?2:16]].filter(d=>fl(i+d[0])):/* ドアの下は、家の中がわだけ床。外がわは外の地面のまま。正面のあるドア（よこの壁のドア）は、上の床をしきいの上の面の下まで（y+30）のばす（開いたときに外の地面が見えないように）。下の床は、しきいの下（y+30〜）だけ（上の壁のドアを開くと、外の地面だけが見える） */[[-1,0,0,16,32],[1,16,0,16,32],[-W,0,0,32,16],[W,0,16,32,16],[-W-1,0,0,16,16],[-W+1,16,0,16,16],[W-1,0,16,16,16],[W+1,16,16,16,16]].filter(d=>fl(i+d[0]));
       for(const sh of [false,true]){const D=dirs.filter(d=>HOME_WALLS.has(typeAt(i+d[0]-W))===sh);if(!D.length)continue;c.save();c.beginPath();for(const d of D)c.rect(x+d[1],y+d[2],d[3],d[4]);c.clip();c._shU=sh;drawFloor(c,S.floor[i+D[0][0]],x,y,i,true);c._shU=null;c.restore()}}/* となりの床マスの上が壁なら、床と同じ「壁の下のかげ」も、壁の下までつなげる */
 }
 // 道は、同じ種類どうしだけつながる（ちがう種類の道は、べつの道としてふちをかく）。マップのはし・水とはつながらない
