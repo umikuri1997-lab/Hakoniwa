@@ -44,6 +44,10 @@ const BL={
   stairs_wood:{name:'木の階段',kind:'build',lv:8,pc:3,time:50,maker:'wood',mat:{wood:3},attr:{wood:.3},desc:'段差の下に置く。せいれいが建てる。段差を飛ばずに上り下りできる（1マス歩く時間。飛ぶと3倍）'},
   stairs_brick:{name:'レンガの階段',kind:'build',lv:6,w:1,pc:5,time:60,maker:'fire',mat:{stone:6},attr:{fire:.5},desc:'段差の下に置く。せいれいが建てる。段差を飛ばずに上り下りできる（1マス歩く時間。飛ぶと3倍）'},
   stairs_stone:{name:'石の階段',kind:'build',lv:4,w:1,pc:4,time:60,maker:'earth',mat:{stone:5},attr:{earth:.5},desc:'段差の下に置く。せいれいが建てる。段差を飛ばずに上り下りできる（1マス歩く時間。飛ぶと3倍）'},
+  slope_earth:{name:'土の坂',kind:'build',lv:3,pc:3,time:40,maker:'earth',mat:{stone:3},attr:{earth:.25},desc:'段差の下に置く。せいれいが建てる。段差を飛ばずに上り下りできる（1マス歩く時間。飛ぶと3倍）'},
+  slope_wood:{name:'木の坂',kind:'build',lv:9,pc:4,time:50,maker:'wood',mat:{wood:4},attr:{wood:.3},desc:'段差の下に置く。せいれいが建てる。段差を飛ばずに上り下りできる（1マス歩く時間。飛ぶと3倍）'},
+  slope_stone:{name:'石の坂',kind:'build',lv:5,w:1,pc:5,time:60,maker:'earth',mat:{stone:6},attr:{earth:.5},desc:'段差の下に置く。せいれいが建てる。段差を飛ばずに上り下りできる（1マス歩く時間。飛ぶと3倍）'},
+  slope_brick:{name:'レンガの坂',kind:'build',lv:7,w:1,pc:6,time:60,maker:'fire',mat:{stone:7},attr:{fire:.5},desc:'段差の下に置く。せいれいが建てる。段差を飛ばずに上り下りできる（1マス歩く時間。飛ぶと3倍）'},
   woodpath:{name:'木の道',kind:'block',floor:1,cost:2,pc:4,time:40,maker:'wood',qty:10,lv:7,mat:{wood:6},attr:{wood:.75},desc:'木の板をしいた道。歩く速さ×1.55'},
   gravel:{name:'砂利道',kind:'block',floor:1,cost:1,pc:3,time:30,maker:'earth',qty:10,lv:5,mat:{stone:3},attr:{earth:.4},desc:'小石をしいた道。歩く速さ×1.4'},
   brick:{name:'レンガ道',kind:'block',floor:1,cost:3,pc:5,time:50,maker:'fire',qty:10,lv:6,w:1,mat:{stone:8},attr:{fire:.4,earth:.3},desc:'レンガをしきつめた道。歩く速さ×1.75'},
@@ -207,7 +211,7 @@ function furnitureGroups(ids){const wanted=new Set(ids);return CRAFT_TABS.map(([
 const FURN=['hoshirug','yorubed','toro','table','chair','stor','mbox','oven','bed','bench','takebench','takeakari','shishiodoshi','campfire','swing','torch','jar','rockart','vane','spike','puddle','stool','stable','pouf','achair','ltable','rug1','sofa1','rug2','tub','sink','crate','monstera','shelf1','wreath','curtain1','cabinet','paint2','shelf2','curtain2','paint3','wshelf','paint1','bathtub','candle','lantern','flamp','signpost','hedge','birdbath','parasol','arch','slide','sandbox','seesaw','kamizo','noren'];// 属性の罠（sticky/firetrap/gust）は次のステージから
 
 const TERRA=new Set(['dig','mound']);/* だんさスコップの工事 */
-const BUILDS=['statue','watch','stairs_earth','stairs_wood','stairs_stone','stairs_brick','yogan','lumber','well','quarry','windmill','fountain','lighthouse','stele','tower'];
+const BUILDS=['statue','watch','stairs_earth','stairs_wood','stairs_stone','stairs_brick','slope_earth','slope_wood','slope_stone','slope_brick','yogan','lumber','well','quarry','windmill','fountain','lighthouse','stele','tower'];
 const STAMPS={
   fields:{name:'畑セット',cells:[[0,0,'farm'],[1,0,'farm'],[2,0,'farm'],[0,1,'farm'],[1,1,'farm'],[2,1,'farm']]},
   ring:{name:'柵の囲い',cells:(()=>{const c=[];for(let y=0;y<5;y++)for(let x=0;x<5;x++)if(x===0||y===0||x===4||y===4)c.push([x,y,'fence']);return c})()},
@@ -942,7 +946,7 @@ const anc=j=>{if(S.obj[j]==='part'||(S.obj[j]==='site2'&&S.ref[j]!=null))return 
 const typeAt=j=>S.obj[anc(j)];
 
 const solidOf=j=>{const o=typeAt(j);return !!(o&&BL[o]&&BL[o].solid)};
-const FRONTS=new Set(['chair','achair','sofa1','bench']);/* 正面のある家具（置くときに矢印を出す） */const ROTS={chair:4,achair:4,sofa1:4,bench:4,bed:2,yorubed:2,sandbox:2,ltable:2,bathtub:2,slide:1,seesaw:1,swing:1,signpost:1,vane:1,oven:1,stairs_earth:5,stairs_wood:5,stairs_stone:5,stairs_brick:5};/* 向きをかえられる家具。4：前・右・後ろ・左　2：横・縦　1：左右反転だけ */
+const FRONTS=new Set(['chair','achair','sofa1','bench']);/* 正面のある家具（置くときに矢印を出す） */const ROTS={chair:4,achair:4,sofa1:4,bench:4,bed:2,yorubed:2,sandbox:2,ltable:2,bathtub:2,slide:1,seesaw:1,swing:1,signpost:1,vane:1,oven:1,stairs_earth:5,stairs_wood:5,stairs_stone:5,stairs_brick:5,slope_earth:5,slope_wood:5,slope_stone:5,slope_brick:5};/* 向きをかえられる家具。4：前・右・後ろ・左　2：横・縦　1：左右反転だけ */
 const BEDHX=26,BEDHY=-1,BEDVY=10,BEDHS=.85;/* 横のベッド：寝る子の足もと（x,y）。たてのベッド：寝る子の足もとのy。BEDHS：横向きで寝るときの、せいれいの横はば。ふとんは重ねない（ベッドの上に寝る子をかく） */
 const ROTN=id=>ROTS[id]===5?5:ROTS[id]===4?4:ROTS[id]?2:1,ROTL={5:['じどう','手前へ','右へ','左へ','奥へ'],4:['前','右','後ろ','左'],2:['横','縦'],1:['そのまま','反転']};/* 5：階段の下りる向き（S.rot は 1手前 2右 3左 4奥、0は自動） */
 let PLROTS={};/* 置くときにえらんでいる向き（家具ごと） */
@@ -953,7 +957,7 @@ const fp=(id,x,y,rot)=>{const z=rot!=null?szR(id,rot):szAt(id,y*W+x);if(!z)retur
 function walk(j){if(j<0||j>=W*H||S.ground[j]===1)return false;return !solidOf(j)}
 const LIFT=26;/* 段差1だんの高さ（ドット）。高いマスの上の物は、これだけ上に描く */
 function hiAt(j){return S.hi?S.hi[j]|0:0}
-const STAIRS=new Set(['stairs_earth','stairs_wood','stairs_stone','stairs_brick']),SDIR=[[0,1],[1,0],[0,-1],[-1,0]];/* 階段の向き：0下 1右 2上 3左（低いほう） */
+const SLOPES=new Set(['slope_earth','slope_wood','slope_stone','slope_brick']),STAIRS=new Set(['stairs_earth','stairs_wood','stairs_stone','stairs_brick',...SLOPES]),SDIR=[[0,1],[1,0],[0,-1],[-1,0]];/* 階段の向き：0下 1右 2上 3左（低いほう） */
 const SROT=[-1,0,1,3,2];/* 置くときにえらんだ向き（S.rot）→ 下りる向き */
 function stairOK(j,d){/* j に、d の向きに下りる階段を置けるか：j のうしろが高いマス。j と、その先のマスは、低い地面（水でない） */const x=j%W,y=(j/W)|0,bx=x-SDIR[d][0],by=y-SDIR[d][1],ox=x+SDIR[d][0],oy=y+SDIR[d][1];if(bx<0||by<0||bx>=W||by>=H||ox<0||oy<0||ox>=W||oy>=H)return false;const o=oy*W+ox;return hiAt(by*W+bx)&&!hiAt(j)&&(d===0||!hiAt(o)&&S.ground[o]!==1)}/* 手前向きは1マス（がけの正面を1マスと数える）、ほかは2マス */
 function stairDir(j){/* 階段は、段差の下（低い地面）に置く1×2。高いマスのほうから、はなれる向きに下りる。えらんだ向きがなければ、下・右・左・上の順にえらぶ */const v=(S.rot||{})[j];if(v)return SROT[v];for(const d of[0,1,3,2])if(stairOK(j,d))return d;return -1}
@@ -2259,7 +2263,7 @@ function lvShow(l,bonus,opens){
   startClap();/* タップするまで、こっちを向いて拍手 */
   if(STATUE>=0)for(let n=0;n<3;n++)setTimeout(()=>burst(STATUE,'furn','none'),n*260);
 }
-const LEVELUP_ITEMS=new Set(['path','woodpath','stairs_earth','stairs_wood','stairs_stone','stairs_brick','gate','hwall','door','logfence','bamboofence','floor','brickfloor','stonefloor','window','plasterwall','gravel','wall','sdoor','logwall','brick','brickwall','carpet','curtain1','stone','stonegate']);
+const LEVELUP_ITEMS=new Set(['path','woodpath','stairs_earth','stairs_wood','stairs_stone','stairs_brick','slope_earth','slope_wood','slope_stone','slope_brick','gate','hwall','door','logfence','bamboofence','floor','brickfloor','stonefloor','window','plasterwall','gravel','wall','sdoor','logwall','brick','brickwall','carpet','curtain1','stone','stonegate']);
 const levelUpItemsAt=n=>Object.keys(BL).filter(id=>LEVELUP_ITEMS.has(id)&&BL[id].lv===n&&!BL[id].offerOnly&&(BL[id].w||0)<=WD);
 const visibleLevelRewardsAt=n=>levelUpItemsAt(n).filter(id=>id!=='curtain1'||!S.free);
 function checkLevel(){
@@ -4813,19 +4817,27 @@ function uLift(o){/* 段差の上にいる子・コワイノは、LIFT だけ上
   if(!S.hi||!o)return 0;const cj=(o.y|0)*W+(o.x|0),n=o.path&&o.path.length?o.path[0]:-1;
   if(n>=0&&n!==cj||n>=0){const nx=n%W+.5,ny=((n/W)|0)+.5,ddx=nx-o.x,ddy=ny-o.y,d=Math.hypot(ddx,ddy);if(d>.001&&d<1.01){const sx=Math.abs(ddx)>=Math.abs(ddy)?Math.sign(ddx):0,sy=sx?0:Math.sign(ddy),a=n-sy*W-sx,ha=hiAt(a),hn=hiAt(n);if(jumpEdge(a,n)){const t=1-d;return LIFT*(ha+(hn-ha)*t)+Math.sin(Math.PI*t)*10}}}
   return zAt(o.x,o.y)}
-const STPAL={stairs_earth:['#c19466','#8f6642','#6e4c30'],stairs_wood:['#dcae72','#a9784b','#86593a'],stairs_brick:['#dba48c','#b8735c','#935a47'],stairs_stone:['#d3cdc2','#a59d91','#837b70']};
+const STPAL={stairs_earth:['#c19466','#8f6642','#6e4c30'],stairs_wood:['#dcae72','#a9784b','#86593a'],stairs_brick:['#dba48c','#b8735c','#935a47'],stairs_stone:['#d3cdc2','#a59d91','#837b70']};for(const m of['earth','wood','stone','brick'])STPAL['slope_'+m]=STPAL['stairs_'+m];/* 坂は、同じ素材の階段と同じ色 */
 function drawStair(c,id,px,py,d,top,bot){/* 階段のアイコン（仮の絵）：手前へ下りる5だん */
-  const P=STPAL[id]||STPAL.stairs_earth,br=id==='stairs_brick',n=5,h=(bot-top)/n,x0=px+3,w=TS-6;
+  const P=STPAL[id]||STPAL.stairs_earth,br=id.endsWith('_brick'),n=5,h=(bot-top)/n,x0=px+3,w=TS-6;
+  if(SLOPES.has(id)){c.fillStyle=P[1];c.beginPath();c.moveTo(x0,bot);c.lineTo(x0+w,bot);c.lineTo(x0+w,top+4);c.closePath();c.fill();c.fillStyle=P[0];c.beginPath();c.moveTo(x0,bot);c.lineTo(x0+w,top+4);c.lineTo(x0+w,top);c.lineTo(x0,bot-4);c.closePath();c.fill();return}/* 坂のアイコン */
   for(let k=0;k<n;k++){const y=top+k*h;c.fillStyle=P[0];c.fillRect(x0,y,w,h*.5+.5);c.fillStyle=P[1];c.fillRect(x0,y+h*.5,w,h*.5+.5);if(br){c.fillStyle='rgba(235,220,205,.55)';const bw=w/4,o=k%2?bw/2:0;for(let xx=x0+o;xx<x0+w;xx+=bw)c.fillRect(xx,y+h*.5,.6,h*.5)}}}
 const SN=6;/* 階段の段の数（どの向きも同じ） */
 function drawStairObj(c,a){/* 階段（仮の絵）：段差の下の低い地面に置く。手前向きは1マス（がけの正面とあわせて2マスぶんに見える）、ほかは1×2。高いほうのはしの高さ LIFT から地面まで6だん（段の高さ LIFT/7） */
-  const id=S.obj[a],d=stairDir(a);if(d<0)return;const P=STPAL[id]||STPAL.stairs_earth,br=id==='stairs_brick',Dn=(d===0?TS:2*TS)/SN,z=n=>n>=SN?0:LIFT*(SN-n)/(SN+1),MO='rgba(235,220,205,.55)',ax=(a%W)*TS,ay=((a/W)|0)*TS;
+  const id=S.obj[a],d=stairDir(a);if(d<0)return;const P=STPAL[id]||STPAL.stairs_earth,br=id.endsWith('_brick'),Dn=(d===0?TS:2*TS)/SN,z=n=>n>=SN?0:LIFT*(SN-n)/(SN+1),MO='rgba(235,220,205,.55)',ax=(a%W)*TS,ay=((a/W)|0)*TS;
   const mo=(x,y,w,h)=>{c.fillStyle=MO;c.fillRect(x,y,w,h)};
   const vjoin=(x,y,w,h,off)=>{for(let xx=Math.floor((x-off)/16)*16+off;xx<x+w;xx+=16)if(xx>x+.5)mo(xx,y,.6,h)};/* たての目地（世界の座標で16ドットごと：レンガ1こ16×8） */
   const riser=(x,y,w,h,n)=>{c.fillStyle=P[1];c.fillRect(x,y,w,h);if(br)vjoin(x,y,w,h,n%2?8:0)};/* 段の手前の面（レンガは、上の段と同じならび） */
   const face=(x,y,w,h,gy)=>{c.fillStyle=P[1];c.fillRect(x,y,w,h);if(!br)return;for(let k=0;gy-8*k>y;k++){const yb=gy-8*k,yt=Math.max(y,yb-8);if(k)mo(x,yb,w,.6);vjoin(x,yt,w,yb-yt,k%2?8:0)}};/* 横の側面（地面から8ドットずつ積む） */
   const tread=(x,y,w,h,n,dark,vert)=>{c.fillStyle=P[0];c.fillRect(x,y,w,h);if(dark){c.fillStyle='rgba(60,45,30,'+(.05*n)+')';c.fillRect(x,y,w,h)}if(!br)return;if(vert){for(let yy=y+(n%2?8:0);yy<y+h;yy+=16)if(yy>y+.5)mo(x,yy,w,.6)}else vjoin(x,y,w,h,n%2?8:0)};/* 段の上の面：1段に1列（レンガは、段ごとに半分ずらす） */
-  if(d===0){/* 手前へ下りる：段の上の面と、手前の面 */riser(ax,ay-LIFT,TS,LIFT-z(0)+.5,1);for(let n=0;n<SN;n++){const ya=ay+n*Dn,yb=ya+Dn;tread(ax,ya-z(n),TS,Dn+.5,n,0,0);riser(ax,yb-z(n),TS,z(n)-z(n+1)+.5,n)}}
+  if(SLOPES.has(id)){/* 坂：段のない、ひとつづきの面（素材のもようは、下りる向きに6つ） */const mat=id.slice(6),X0=d===1?ax:d===3?ax-TS:ax,len=d===0?TS:2*TS,poly=pts=>{c.beginPath();c.moveTo(pts[0][0],pts[0][1]);for(const q of pts)c.lineTo(q[0],q[1]);c.closePath()};
+    const surf=(x,y,w,h,along)=>{c.fillStyle=P[0];c.fillRect(x,y,w,h);const g=c.createLinearGradient(along?x:0,along?0:y,along?x+w:0,along?0:y+h);g.addColorStop(0,'rgba(255,250,235,.18)');g.addColorStop(1,'rgba(60,45,30,.12)');c.fillStyle=g;c.fillRect(x,y,w,h);if(mat==='earth')return;
+      const N=mat==='stone'?3:6,L='rgba(60,45,30,.18)';for(let k=1;k<N;k++){c.fillStyle=br?MO:L;if(along)c.fillRect(x+w*k/N,y,.7,h);else c.fillRect(x,y+h*k/N,w,.7)}/* 下りる向きに、板・石・レンガの列 */
+      if(mat!=='wood')for(let k=0;k<N;k++){const off=k%2?8:0;if(along){for(let yy=Math.floor((y-off)/16)*16+off;yy<y+h;yy+=16)if(yy>y)mo(x+w*k/N,yy,w/N,.6)}else vjoin(x,y+h*k/N,w,h/N,off)}};/* 石・レンガの目地 */
+    if(d===0){surf(ax,ay-LIFT,TS,TS+LIFT,0)}
+    else if(d===2){surf(ax,ay-TS,TS,2*TS-LIFT,0)}
+    else{const xi=d===1?ax:ax+TS,xo=d===1?ax+2*TS:ax-TS,gy=ay+TS;c.save();poly([[xi,ay-LIFT],[xo,ay],[xo,gy],[xi,gy-LIFT]]);c.clip();surf(X0,ay-LIFT,len,TS+LIFT,1);c.restore();c.save();poly([[xi,gy-LIFT],[xo,gy],[xi,gy]]);c.clip();face(X0,gy-LIFT,len,LIFT,gy);c.restore()}}/* 横向き：上の面と、手前の三角の側面 */
+  else if(d===0){/* 手前へ下りる：段の上の面と、手前の面 */riser(ax,ay-LIFT,TS,LIFT-z(0)+.5,1);for(let n=0;n<SN;n++){const ya=ay+n*Dn,yb=ya+Dn;tread(ax,ya-z(n),TS,Dn+.5,n,0,0);riser(ax,yb-z(n),TS,z(n)-z(n+1)+.5,n)}}
   else if(d===2){/* 奥へ下りる：手前の段ほど高い。向こうの段から描いて、手前の段でかくす */const Y1=ay+TS;for(let n=SN-1;n>=0;n--){const yb=Y1-n*Dn,ya=yb-Dn;tread(ax,ya-z(n),TS,Dn+.5,n,1,0);c.fillStyle='rgba(255,250,235,.25)';c.fillRect(ax,ya-z(n),TS,1)}}
   else{/* 横へ下りる：段の上の面と、手前の側面 */const X0=d===1?ax:ax-TS;for(let n=0;n<SN;n++){const x=d===1?X0+n*Dn:X0+2*TS-(n+1)*Dn,zz=z(n),gy=ay+TS;tread(x,ay-zz,Dn+.5,TS,n,1,1);face(x,gy-zz,Dn+.5,zz,gy)}}
   {/* 側板：横に壁・柵・がけがないがわに、階段と同じ素材の板をつける */const o=d?stairOut(a,d):-1,cl=k=>{const t=typeAt(k);return hiAt(k)||HOME_WALLS.has(t)||HOME_DOORS.has(t)||FENCE_IDS.has(t)},free=ks=>ks.every(k=>k>=0&&!cl(k)),BW=3;
@@ -5920,7 +5932,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='771';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='772';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
