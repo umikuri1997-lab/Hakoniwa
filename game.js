@@ -3259,7 +3259,8 @@ function drawFloor(c,id,x,y,i,iso){
   const n=k=>!iso&&!!S.floor[k],gx=i%W,gy=(i/W)|0;
   const flat=id==='brickfloor'||id==='stonefloor';if(flat)id=id==='brickfloor'?'brick':'stone';/* 家の床は、道と同じ絵で、道のふち・つなぎはなし */
   const road=!flat&&ROADF.has(id),links=road?roadLinks(i,iso):null;if(road){c.save();roadShape(c,x,y,links);c.clip()}/* 縁の外には、床の絵をはみ出させない */
-  if(id==='hoshifloor'){c.fillStyle='#2a3168';c.fillRect(x,y,TS,TS);c.fillStyle='rgba(255,255,255,.08)';c.fillRect(x,y,TS,1);c.fillRect(x,y,1,TS);for(let n=0;n<5;n++){const k=hash(i*7+n);c.fillStyle=k>.7?'#fff3b8':'rgba(220,230,255,.75)';c.fillRect(x+2+hash(i*3+n)*27,y+2+hash(i*11+n*5)*27,k>.7?2:1,k>.7?2:1)}}/* ほしくずの床（仮の絵） */
+  if(id==='hoshifloor'&&window.CHIPS&&CHIPS['hoshifloor#0']&&drawChip(c,CHIPS['hoshifloor#'+Math.floor(hash(i)*9)],id,x,y,null,i)){}/* ほしくずの床：もらった絵の9まいから1まい */
+  else if(id==='hoshifloor'){c.fillStyle='#2a3168';c.fillRect(x,y,TS,TS);c.fillStyle='rgba(255,255,255,.08)';c.fillRect(x,y,TS,1);c.fillRect(x,y,1,TS);for(let n=0;n<5;n++){const k=hash(i*7+n);c.fillStyle=k>.7?'#fff3b8':'rgba(220,230,255,.75)';c.fillRect(x+2+hash(i*3+n)*27,y+2+hash(i*11+n*5)*27,k>.7?2:1,k>.7?2:1)}}/* ほしくずの床（仮の絵） */
   else if(id==='path'){c.fillStyle='#e6c48c';c.fillRect(x,y,TS,TS);
     c.fillStyle='#d4b07a';c.beginPath();c.ellipse(x+9+hash(i)*12,y+11+hash(i+5)*6,4.5,2.6,0,0,7);c.fill();c.beginPath();c.ellipse(x+20,y+21+hash(i+3)*5,3.5,2.2,0,0,7);c.fill();c.fillStyle='rgba(255,250,235,.45)';c.beginPath();c.ellipse(x+14+hash(i+7)*8,y+16,2.5,1.4,0,0,7);c.fill()}
   else if(id==='floor'){const fw=k=>!iso&&(HOME_WALLS.has(typeAt(k))||HOME_DOORS.has(typeAt(k)))&&!S.floor[k],same=k=>n(k)&&S.floor[k]===id||fw(k),L=same(i-1),R2=same(i+1),U=same(i-W),D=same(i+W);/* 板目は座標に合わせて並べ、隣の床へ連続させる */
@@ -3420,7 +3421,8 @@ const WALLMAT={plasterwall:'plaster',logwall:'log',brickwall:'brick',yozorawall:
 function wallBand(c,mat,a,b,x,y,i){/* 壁の正面（1マスの高さ：y〜y+28が板、その下が巾木）。世界の座標で模様をつなぐので、マスのさかいめに継ぎ目が出ない */
   if(b<=a)return;const gx=(i!=null&&!ICON?(i%W)*TS:0)-x,FH=28.4;
   c.fillStyle='rgba(0,0,0,.18)';c.fillRect(a,y+TS,b-a,2);c.save();c.beginPath();c.rect(a,y,b-a,FH);c.clip();
-  if(mat==='night'){c.fillStyle='#283063';c.fillRect(a,y,b-a,FH);c.fillStyle='#1e2550';c.fillRect(a,y+FH-3,b-a,3);for(let n=Math.floor((a+gx)/7)-1;n*7<b+gx;n++){const k=hash(n*13+7);if(k<.5)continue;c.fillStyle=k>.85?'#fff3b8':'rgba(220,230,255,.8)';c.fillRect(n*7+hash(n*5)*5-gx,y+3+hash(n*29)*20,k>.85?1.6:1,k>.85?1.6:1)}}/* よぞらの壁（仮の絵）：夜空の色に星 */
+  if(mat==='night'&&window.CHIPS&&CHIPS['yozorawall:band']&&(()=>{const ch=CHIPS['yozorawall:band'],ims=chipImgs(ch,'yozorawall:band'),im=ims[0];if(!im||!im.ok)return false;const pw=ch.w*FH/ch.h;let wx=Math.floor((a+gx)/pw)*pw;for(;wx<b+gx;wx+=pw)c.drawImage(im,wx-gx,y,pw,FH);return true})()){}/* よぞらの壁：もらった絵の帯をならべる */
+  else if(mat==='night'){c.fillStyle='#283063';c.fillRect(a,y,b-a,FH);c.fillStyle='#1e2550';c.fillRect(a,y+FH-3,b-a,3);for(let n=Math.floor((a+gx)/7)-1;n*7<b+gx;n++){const k=hash(n*13+7);if(k<.5)continue;c.fillStyle=k>.85?'#fff3b8':'rgba(220,230,255,.8)';c.fillRect(n*7+hash(n*5)*5-gx,y+3+hash(n*29)*20,k>.85?1.6:1,k>.85?1.6:1)}}/* よぞらの壁（仮の絵）：夜空の色に星 */
   else if(mat==='plaster'){c.fillStyle='#efdfc1';c.fillRect(a,y,b-a,FH);c.fillStyle='rgba(120,84,50,.16)';c.fillRect(a,y,b-a,1.6);c.fillStyle='#f8edd4';c.fillRect(a,y+1.6,b-a,1.6);c.fillStyle='#d7c3a0';c.fillRect(a,y+FH-3,b-a,3);
     for(let n=Math.floor((a+gx)/8)-1;n*8<b+gx;n++){const k=hash(n*17+5);if(k<.45)continue;c.fillStyle=k>.75?'rgba(198,173,137,.28)':'rgba(255,250,232,.6)';c.beginPath();c.ellipse(n*8+hash(n*3)*6-gx,y+6+hash(n*31)*16,1.2+hash(n+7)*.8,.7,0,0,7);c.fill()}}
   else if(mat==='wood'){const art=HOUSEART['wall-wood'];if(art&&art.complete&&art.naturalWidth){const k=art.naturalHeight/FH,sw=art.naturalWidth-8,pw=sw/k;let wx=Math.floor((a+gx)/pw)*pw;for(;wx<b+gx;wx+=pw)c.drawImage(art,4,0,sw,art.naturalHeight,wx-gx,y,pw,FH)}else{c.fillStyle='#c6905f';c.fillRect(a,y,b-a,FH)}}
@@ -3489,7 +3491,7 @@ function drawDoorChip(c,id,x,y,i,now){const C=window.CHIPS;if(!C)return false;
   const isF=k=>{const t=typeAt(k);return FENCE_IDS.has(t)||t==='wall'||t==='sdoor'},ver=!(isF(i-1)||isF(i+1))&&(isF(i-W)||isF(i+W)),o=ver?'v':'h';if(!ok(o))return false;
   return drawChip(c,pick(o,doorOp(i,x,y,ver?2.1:.9,ver?.9:2.1)),id,x,y,now,i)}
 function drawObj(c,id,x,y,i,g,now){
-  if(id==='yorubed'){drawObj(c,'bed',x,y,i,g,now);const v=i!=null&&S&&S.rot&&S.rot[i]%2===1;c.save();c.globalAlpha=.55;c.fillStyle='#2a3168';if(v)c.fillRect(x+6,y+8,20,-30<0?20:20);else c.fillRect(x+12,y+4,16,22);c.globalAlpha=1;c.fillStyle='#fff3b8';for(let n=0;n<4;n++)c.fillRect(x+(v?8:14)+hash((i||0)+n)*12,y+(v?10:6)+hash((i||0)*3+n)*16,1.5,1.5);c.restore();return}/* よぞらのベッド（仮の絵）：ふつうのベッドに夜空色のふとん */
+  if(id==='yorubed'&&!chipOf('yorubed',i)){drawObj(c,'bed',x,y,i,g,now);const v=i!=null&&S&&S.rot&&S.rot[i]%2===1;c.save();c.globalAlpha=.55;c.fillStyle='#2a3168';if(v)c.fillRect(x+6,y+8,20,-30<0?20:20);else c.fillRect(x+12,y+4,16,22);c.globalAlpha=1;c.fillStyle='#fff3b8';for(let n=0;n<4;n++)c.fillRect(x+(v?8:14)+hash((i||0)+n)*12,y+(v?10:6)+hash((i||0)*3+n)*16,1.5,1.5);c.restore();return}/* よぞらのベッド（仮の絵）：ふつうのベッドに夜空色のふとん */
   if(!c._chip&&id==='farm'&&drawFarmChip(c,x,y,i,g,now))return;/* 畑のドット絵 */
   if(!c._chip&&DOORCH.has(id)&&!(S&&S.win&&i!=null&&S.win[i]&&!c._win)&&drawDoorChip(c,id,x,y,i,now))return;/* ドア・門のドット絵（リースのあるドアは、リースの前にドアだけ） */
   if(CONN[id]&&!c._chip&&!(HOME_WALLS.has(id)&&S&&S.win&&S.win[i]&&!c._win)){if(HOME_WALLS.has(id)&&!ICON&&i!=null)wallMarg(c,i,x,y);if(drawConn(c,id,x,y,i,now))return}/* つながる物は部品で（窓のある壁は、窓の前に壁だけ）。家の壁は、先に、となりの床を壁のふちまでのばす */
@@ -4735,6 +4737,7 @@ function render(now){
       ctx.fillStyle='#fff8d8';ctx.beginPath();ctx.moveTo(cx,fy-11);ctx.lineTo(cx+3,fy-1);ctx.lineTo(cx,fy+10);ctx.lineTo(cx-2,fy-1);ctx.closePath();ctx.fill();continue}
     if(d.lt){const im=hudIc(d.id==='mat:wood'?'woodN':'stoneN'),ih=20;let ix=cx,iy=cy,sh=1,rot=0;const fx0=DROPFX.get(d);if(fx0){const e=(now-fx0.t0)/700;if(e>=1)DROPFX.delete(d);else{/* とびだして弧をえがき、地面で小さくはねる */const f=Math.min(1,e/.7),hop=e<.7?Math.sin(f*Math.PI)*26:Math.sin((e-.7)/.3*Math.PI)*5;ix=fx0.sx+(cx-fx0.sx)*f;iy=fx0.sy+(cy-fx0.sy)*f-hop;sh=.5+.5*f;rot=(1-f)*Math.PI*1.5}}
       ctx.fillStyle='rgba(40,25,10,'+(.18*sh)+')';ctx.beginPath();ctx.ellipse(ix,cy+6,9*sh,2.7*sh,0,0,7);ctx.fill();if(im&&im.complete&&im.naturalWidth){const iw=ih*im.naturalWidth/im.naturalHeight;if(rot){ctx.save();ctx.translate(ix,iy-1);ctx.rotate(rot);ctx.drawImage(im,Math.round(-iw/2),Math.round(-ih/2),iw,ih);ctx.restore()}else ctx.drawImage(im,Math.round(ix-iw/2),Math.round(iy-ih/2-1),iw,ih)}continue}/* 守りの光で落とした木材・石材：上の木材・石材と同じアイコン */
+    if(d.id==='sand'){const ch=window.CHIPS&&CHIPS.sand;if(ch&&drawChip(ctx,ch,'sand',d.x*TS,d.y*TS,now))continue}/* やすらぎの砂：もらった絵 */
     /* 小さなふくろ */
     ctx.fillStyle='rgba(40,25,10,.22)';ctx.beginPath();ctx.ellipse(cx,cy+8,9,3,0,0,7);ctx.fill();
     ctx.fillStyle='#b5854e';ctx.beginPath();ctx.ellipse(cx,cy+1,8.5,7.5,0,0,7);ctx.fill();ctx.fillStyle='#c99a60';ctx.beginPath();ctx.ellipse(cx-2.5,cy-1,3.5,3,0,0,7);ctx.fill();
@@ -5726,7 +5729,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='650';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='651';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
