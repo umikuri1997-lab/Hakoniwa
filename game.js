@@ -939,9 +939,9 @@ const anc=j=>{if(S.obj[j]==='part'||(S.obj[j]==='site2'&&S.ref[j]!=null))return 
 const typeAt=j=>S.obj[anc(j)];
 
 const solidOf=j=>{const o=typeAt(j);return !!(o&&BL[o]&&BL[o].solid)};
-const FRONTS=new Set(['chair','achair','sofa1','bench']);/* 正面のある家具（置くときに矢印を出す） */const ROTS={chair:4,achair:4,sofa1:4,bench:4,bed:2,yorubed:2,sandbox:2,ltable:2,bathtub:2,slide:1,seesaw:1,swing:1,signpost:1,vane:1,oven:1};/* 向きをかえられる家具。4：前・右・後ろ・左　2：横・縦　1：左右反転だけ */
+const FRONTS=new Set(['chair','achair','sofa1','bench']);/* 正面のある家具（置くときに矢印を出す） */const ROTS={chair:4,achair:4,sofa1:4,bench:4,bed:2,yorubed:2,sandbox:2,ltable:2,bathtub:2,slide:1,seesaw:1,swing:1,signpost:1,vane:1,oven:1,stairs_earth:5,stairs_wood:5,stairs_stone:5,stairs_brick:5};/* 向きをかえられる家具。4：前・右・後ろ・左　2：横・縦　1：左右反転だけ */
 const BEDHX=26,BEDHY=-1,BEDVY=10,BEDHS=.85;/* 横のベッド：寝る子の足もと（x,y）。たてのベッド：寝る子の足もとのy。BEDHS：横向きで寝るときの、せいれいの横はば。ふとんは重ねない（ベッドの上に寝る子をかく） */
-const ROTN=id=>ROTS[id]===4?4:ROTS[id]?2:1,ROTL={4:['前','右','後ろ','左'],2:['横','縦'],1:['そのまま','反転']};
+const ROTN=id=>ROTS[id]===5?5:ROTS[id]===4?4:ROTS[id]?2:1,ROTL={5:['じどう','手前へ','右へ','左へ','奥へ'],4:['前','右','後ろ','左'],2:['横','縦'],1:['そのまま','反転']};/* 5：階段の下りる向き（S.rot は 1手前 2右 3左 4奥、0は自動） */
 let PLROTS={};/* 置くときにえらんでいる向き（家具ごと） */
 const rotAt=j=>(S&&S.rot&&S.rot[j])||0;
 const szR=(id,rot)=>{const z=BL[id]&&BL[id].sz;if(!z)return null;return (ROTS[id]===2&&rot===1||ROTS[id]===4&&rot%2===1)?[z[1],z[0]]:z};/* 向きをかえると、たて・よこが入れかわる */
@@ -951,7 +951,9 @@ function walk(j){if(j<0||j>=W*H||S.ground[j]===1)return false;return !solidOf(j)
 const LIFT=26;/* 段差1だんの高さ（ドット）。高いマスの上の物は、これだけ上に描く */
 function hiAt(j){return S.hi?S.hi[j]|0:0}
 const STAIRS=new Set(['stairs_earth','stairs_wood','stairs_stone','stairs_brick']),SDIR=[[0,1],[1,0],[0,-1],[-1,0]];/* 階段の向き：0下 1右 2上 3左（低いほう） */
-function stairDir(j){/* 階段は、高いマスのふち。となりの低いマス（水でない）のほうへ下りる（下・右・左・上の順にえらぶ） */const x=j%W,y=(j/W)|0;for(const d of[0,1,3,2]){const nx=x+SDIR[d][0],ny=y+SDIR[d][1];if(nx<0||ny<0||nx>=W||ny>=H)continue;const n=ny*W+nx;if(!hiAt(n)&&S.ground[n]!==1)return d}return -1}
+const SROT=[-1,0,1,3,2];/* 置くときにえらんだ向き（S.rot）→ 下りる向き */
+function stairLow(j,d){const x=j%W+SDIR[d][0],y=((j/W)|0)+SDIR[d][1];if(x<0||y<0||x>=W||y>=H)return false;const n=y*W+x;return !hiAt(n)&&S.ground[n]!==1}/* その向きのとなりが、低い地面（水でない） */
+function stairDir(j){/* 階段は、高いマスのふち。えらんだ向きがなければ、となりの低いマス（水でない）のほうへ下りる（下・右・左・上の順にえらぶ） */const v=(S.rot||{})[j];if(v&&stairLow(j,SROT[v]))return SROT[v];for(const d of[0,1,3,2])if(stairLow(j,d))return d;return -1}
 function stairLink(a,b){/* aが階段で、bがその下りる先 */if(!STAIRS.has(S.obj[a])||!hiAt(a))return false;const d=stairDir(a);return d>=0&&a+SDIR[d][1]*W+SDIR[d][0]===b}
 function stairS(j){return STAIRS.has(S.obj[j])&&hiAt(j)&&stairDir(j)===0}/* 手前へ下りる階段：がけを切りこんだ階段（上の面・がけの正面は描かない） */
 function topAt(j){return hiAt(j)&&!stairS(j)}/* 左右のつながりを見るときの「上の面がある」（手前へ下りる階段のマスは上の面がない） */
@@ -2789,6 +2791,7 @@ function canPlace1(id,x,y,quiet){
   const j=y*W+x;if(id==='lotus'){if(S.ground[j]!==1){if(!quiet)toast('ハスは池の上にだけ植えられます');return false}if(S.obj[j]){if(!quiet)toast('ここにはもう何かあります');return false}return true}
   if(S.ground[j]===1){if(!quiet)toast('水の上には置けません');return false}
   if(STAIRS.has(id)&&!(hiAt(j)&&stairDir(j)>=0)){if(!quiet)toast('段差のふち（高い所）にだけ置けます');return false}
+  if(STAIRS.has(id)&&PLROTS[id]&&!stairLow(j,SROT[PLROTS[id]])){if(!quiet)toast(ROTL[5][PLROTS[id]]+'は低くないので、置けません');return false}
   if(BL[id].floor)return S.floor[j]!==id&&!(S.obj[j]&&BL[S.obj[j]].job);
   if(S.obj[j]){if(!quiet)toast('ここにはもう何かあります');return false}
   if(RFC.has(j)&&!LOWROOF.has(id)){if(!quiet)toast('屋根の下には、ひくい物だけ置けます');return false}
@@ -3508,7 +3511,7 @@ function drawSection(c,ox,oy,rs){/* 断面（壁・柱のてっぺん）：形�
   c.drawImage(sp,X,Y)}
 /* ドット絵（chips.js）：ある物は、プログラムの絵のかわりにこれを使う。1ドット＝ゲームの1（ぼかさない） */
 function chipOf(id,i,rot,sf=''){const C=window.CHIPS;if(!C)return null;const L=(id==='watch'||id==='yogan')&&i!=null&&S&&S.hp?(S.hp['L'+i]||1):1;let ch=C[(L>1?id+'@'+L:id)+sf]||C[id+sf]||null;
-  const t=ROTS[id];if(!t)return ch;const r=rot!=null?rot:i==null||!S?0:RUGS.has(id)&&S.rug&&S.rug[i]===id&&S.obj[i]!==id?((S.rugRot||{})[i]||0):S.obj[i]===id?rotAt(i):0;if(!r)return ch;
+  const t=ROTS[id];if(!t||t===5)return ch;const r=rot!=null?rot:i==null||!S?0:RUGS.has(id)&&S.rug&&S.rug[i]===id&&S.obj[i]!==id?((S.rugRot||{})[i]||0):S.obj[i]===id?rotAt(i):0;if(!r)return ch;
   let fl=false;if(t===1)fl=true;else if(C[id+'>'+r+sf])ch=C[id+'>'+r+sf];else if(t===4&&r===3&&C[id+'>1'+sf]){ch=C[id+'>1'+sf];fl=true}else if(sf)return null;/* sf='.front'：せいれいの手前に重ねる絵 */
   if(!ch||!fl)return ch;const fw=((szR(id,r)||[1,1])[0])*32;return ch._fl&&ch._fl.fw===fw?ch._fl:(ch._fl={src:ch,ax:ch.ax,ay:ch.ay,w:ch.w,h:ch.h,f:ch.f,flip:1,fw})}/* 向きのある家具は「id>向き」の絵。左向きは右向きの反転。左右反転だけの物は、もとの絵を反転 */
 function chipImgs(ch,id){if(!ch._im)ch._im=ch.f.map(u=>{const im=new Image();im.onload=()=>{im.ok=1;dirty=true;try{delete iconCache[id]}catch(e){}};im.src=u;return im});return ch._im}
@@ -4802,11 +4805,12 @@ function uLift(o){/* 段差の上にいる子・コワイノは、LIFT だけ上
   if(n>=0&&n!==cj||n>=0){const nx=n%W+.5,ny=((n/W)|0)+.5,ddx=nx-o.x,ddy=ny-o.y,d=Math.hypot(ddx,ddy);if(d>.001&&d<1.01){const sx=Math.abs(ddx)>=Math.abs(ddy)?Math.sign(ddx):0,sy=sx?0:Math.sign(ddy),a=n-sy*W-sx,ha=hiAt(a),hn=hiAt(n);if(jumpEdge(a,n)){const t=1-d;return LIFT*(ha+(hn-ha)*t)+Math.sin(Math.PI*t)*10}}}
   return zAt(o.x,o.y)}
 function notchGeom(px,py,d){/* 横・奥へ下りる階段の、上の面の切りこみ（ひらいた側は外へのばす。ほかは少しでこぼこ） */
-  const T0=py-LIFT,nx0=d===3?px:d===1?px+TS*.38:px+5,nx1=d===3?px+TS*.62:d===1?px+TS:px+TS-5,ny0=d===2?T0:T0+TS*.2,ny1=d===2?T0+TS*.56:T0+TS*.8,op=d===3?'L':d===1?'R':'U',hz=n=>hash(((px*7+py*13)|0)+n*131),wv=n=>(hz(n)-.5)*1.1,NP=new Path2D(),pts=[],ex=8;
-  const X0=op==='L'?nx0-ex:nx0,X1=op==='R'?nx1+ex:nx1,Y0=op==='U'?ny0-ex:ny0,Y1=ny1;
+  const j=(py/TS|0)*W+(px/TS|0),fr=(d===1||d===3)&&!hiAt(j+W);/* fr：手前が低い（がけの正面がある）マスの横向きの階段は、手前のふちまで切りこんで、階段の側面を見せる */
+  const T0=py-LIFT,nx0=d===3?px:d===1?px+TS*.38:px+5,nx1=d===3?px+TS*.62:d===1?px+TS:px+TS-5,ny0=d===2?T0:T0+TS*.2,ny1=d===2?T0+TS*.56:fr?T0+TS:T0+TS*.8,op=d===3?'L':d===1?'R':'U',hz=n=>hash(((px*7+py*13)|0)+n*131),wv=n=>(hz(n)-.5)*1.1,NP=new Path2D(),pts=[],ex=8;
+  const X0=op==='L'?nx0-ex:nx0,X1=op==='R'?nx1+ex:nx1,Y0=op==='U'?ny0-ex:ny0,Y1=fr?ny1+4:ny1;
   const edge=(xa,ya,xb,yb,open,seed)=>{const L=Math.hypot(xb-xa,yb-ya),N=Math.max(2,Math.round(L/3));for(let i=0;i<=N;i++){const t=i/N,x=xa+(xb-xa)*t,y=ya+(yb-ya)*t,w=open?0:wv(seed+i);pts.push([x+(ya===yb?0:w),y+(xa===xb?0:w)])}};
-  edge(X0,Y0,X1,Y0,op==='U',10);edge(X1,Y0,X1,Y1,op==='R',40);edge(X1,Y1,X0,Y1,false,70);edge(X0,Y1,X0,Y0,op==='L',100);
-  NP.moveTo(pts[0][0],pts[0][1]);for(const q of pts)NP.lineTo(q[0],q[1]);NP.closePath();return {nx0,nx1,ny0,ny1,nw:nx1-nx0,nh:ny1-ny0,op,NP,hz}}
+  edge(X0,Y0,X1,Y0,op==='U',10);edge(X1,Y0,X1,Y1,op==='R',40);edge(X1,Y1,X0,Y1,fr,70);edge(X0,Y1,X0,Y0,op==='L',100);
+  NP.moveTo(pts[0][0],pts[0][1]);for(const q of pts)NP.lineTo(q[0],q[1]);NP.closePath();return {nx0,nx1,ny0,ny1,nw:nx1-nx0,nh:ny1-ny0,op,NP,hz,fr,X0,X1}}
 const STPAL={stairs_earth:['#c19466','#8f6642','#6e4c30'],stairs_wood:['#dcae72','#a9784b','#86593a'],stairs_brick:['#dba48c','#b8735c','#935a47'],stairs_stone:['#d3cdc2','#a59d91','#837b70']};
 function drawStair(c,id,px,py,d,top,bot,grass){/* 階段（仮の絵）：5だん。d：0下 1右 2上 3左（下りる向き）。top/bot はアイコン用 */
   const P=STPAL[id]||STPAL.stairs_earth,br=id==='stairs_brick',n=5;
@@ -4814,15 +4818,17 @@ function drawStair(c,id,px,py,d,top,bot,grass){/* 階段（仮の絵）：5だ�
 
     for(let k=0;k<n;k++){const y=yT+k*h;c.fillStyle=P[0];c.fillRect(x0,y,w,h*.5+.5);c.fillStyle=P[1];c.fillRect(x0,y+h*.5,w,h*.5+.5);if(br){c.fillStyle='rgba(235,220,205,.55)';const bw=w/4,o=k%2?bw/2:0;for(let xx=x0+o;xx<x0+w;xx+=bw)c.fillRect(xx,y+h*.5,.6,h*.5)}/* レンガ：手前の面に目地 */c.fillStyle=P[2];c.fillRect(x0,y+h-1,w,1)}
     c.fillStyle=P[2];c.fillRect(x0-1,yT,1,yB-yT);c.fillRect(x0+w,yT,1,yB-yT);return}
-  const C=window.CHIPS||{},{nx0,nx1,ny0,ny1,nw,nh,op,NP,hz}=notchGeom(px,py,d);/* 横・奥へ下りる階段：上の面の切りこみの中身（まわりのふちの帯は、上の面の形から作る：cliffStrip） */
-  c.save();c.clip(NP);c.beginPath();c.rect(px,py-LIFT,TS,TS);c.clip();/* 切りこみの中身は、そのマスの中だけ */
+  const C=window.CHIPS||{},{nx0,nx1,ny0,ny1,nw,nh,op,NP,hz,fr,X0,X1}=notchGeom(px,py,d);/* 横・奥へ下りる階段：上の面の切りこみの中身（まわりのふちの帯は、上の面の形から作る：cliffStrip） */
+  c.save();if(fr){const U=new Path2D(NP);U.rect(X0,ny1-1,X1-X0,py+TS-ny1+1);c.clip(U)}else c.clip(NP);c.beginPath();c.rect(px,py-LIFT,TS,TS+(fr?LIFT:0));c.clip();/* 切りこみの中身は、そのマスの中だけ（手前のふちの階段は、がけの正面まで） */
   if(d!==2){const ch=C['cliff:face'];if(ch){for(let x=px;x<px+TS;x+=TS)drawChip(c,ch,'cliff',x,ny1-TS,0)}else{c.fillStyle='#d8c2a4';c.fillRect(nx0,ny0,nw,nh)}}/* 横向きの切りこみのおくの、石のかべ */
   const m=3;
   if(d===2){const t=3.2,g2=c.createLinearGradient(0,ny1-t-6,0,ny1-t);g2.addColorStop(0,'rgba(45,35,20,0)');g2.addColorStop(1,'rgba(45,35,20,.22)');c.fillStyle=g2;c.fillRect(nx0-8,ny1-t-6,nw+16,6);c.fillStyle=P[2];c.fillRect(nx0-8,ny1-t-1.6,nw+16,1.6);c.fillStyle=P[0];c.fillRect(nx0-8,ny1-t,nw+16,t);c.fillStyle='rgba(40,30,20,.25)';c.fillRect(nx0-8,ny1-t,nw+16,.8)}/* 奥へ下りる：いちばん上の段と、その先の段のはしだけ見える。その向こうは、すぐ奥の低い地面（cliffStrip で上の面をぬく） */
-  else{const sw=nw/m;for(let k=0;k<m;k++){const kk=d===3?k:m-1-k,x=nx0+kk*sw-(d===3&&kk===0?8:0),ww=sw+(kk===0&&d===3||kk===m-1&&d===1?8:0),hh=nh*(k+1)/m,yt=ny1-hh;c.fillStyle=P[1];c.fillRect(x,yt,ww+.5,hh+2);c.fillStyle=P[0];c.fillRect(x,yt,ww+.5,2.4)}}/* 横へ下りる：内がわほど高い段（段と段のあいだに線は引かない） */
+  else{const sw=nw/m;for(let k=0;k<m;k++){const kk=d===3?k:m-1-k,x=nx0+kk*sw-(d===3&&kk===0?8:0),ww=sw+(kk===0&&d===3||kk===m-1&&d===1?8:0),dr=nh*(m-1-k)/m,yt=ny0+dr,yb=fr?ny1+dr:ny1+2;
+      c.fillStyle=P[0];c.fillRect(x,yt,ww+.5,yb-yt);c.fillStyle='rgba(60,45,30,'+(.07*(m-1-k))+')';c.fillRect(x,yt,ww+.5,yb-yt);c.fillStyle='rgba(60,45,30,.14)';c.fillRect(x,yt,ww+.5,1.4);/* 低い段ほど少し暗い *//* 段の上の面（うしろのかべのかげが少し落ちる） */
+      if(fr){c.fillStyle=P[1];c.fillRect(x,yb,ww+.5,py+TS-yb);if(br){c.fillStyle='rgba(235,220,205,.55)';for(let yy=yb+4;yy<py+TS;yy+=4)c.fillRect(x,yy,ww+.5,.6)}}}}/* 横へ下りる：内がわほど高い段。見えるのは段の上の面。手前のふちでは、その下に階段の側面（段と段のあいだに線は引かない） */
   if(d!==2){c.fillStyle='rgba(40,30,20,.18)';c.fillRect(nx0-8,ny0,nw+16,1.6)}c.restore();
   if(grass){c.fillStyle='#5f8240';const bl=(x,y,dx,dy,n)=>{const L=1.4+hz(n)*2.4,ln=(hz(n+9)-.5)*1.2;c.beginPath();c.moveTo(x-dy*.8,y-dx*.8);c.lineTo(x+dy*.8,y+dx*.8);c.lineTo(x+dx*L+dy*ln,y+dy*L+dx*ln);c.fill()};
-    if(op!=='U')for(let i=0;i<nw;i+=1.5)bl(nx0+i,ny0,0,1,i);for(let i=0;i<nw;i+=1.7)bl(nx0+i,ny1,0,-1,i+300);
+    if(op!=='U')for(let i=0;i<nw;i+=1.5)bl(nx0+i,ny0,0,1,i);if(!fr)for(let i=0;i<nw;i+=1.7)bl(nx0+i,ny1,0,-1,i+300);
     if(op!=='L'&&d!==1)for(let v=0;v<nh;v+=1.6)bl(nx0,ny0+v,1,0,v+600);if(op!=='R'&&d!==3)for(let v=0;v<nh;v+=1.6)bl(nx1,ny0+v,-1,0,v+900);
     if(d===3)for(let v=0;v<nh;v+=1.6)bl(nx1,ny0+v,-1,0,v+900);if(d===1)for(let v=0;v<nh;v+=1.6)bl(nx0,ny0+v,1,0,v+600)}}/* 切りこみのふちから、草が中へたれる */
 const CLC={n:-1,s:null,rows:null};/* 段差の絵は、行ごとのかたまり（つづいた高いマス）ごとに1まい作っておく。下絵が変わったら作りなおす */
@@ -4867,7 +4873,8 @@ function cliffStrip(y,Rn){/* 1つのかたまりの絵：横のふち・がけ�
     if(!D){g.save();g.translate(0,2*(py+TS));g.scale(1,-1);g.drawImage(stat,px-6,py+TS,TS+12,8,px-6,py+TS,TS+12,8);g.restore()}/* がけの下はしのすきまには、すぐ下の低い地面（下絵を上下に鏡うつし）を見せる */
     if(st===0)continue;
     {const U=y>0&&hiAt(j-W);if(!L||!R){f.save();f.beginPath();f.rect(px-8,py-LIFT+(U?0:5),TS+16,TS);f.clip();if(!L)fd('cliff:sideL',px,py);if(!R)fd('cliff:sideR',px,py);f.restore()}/* 横の岩（マスの外へはみ出す。上の角の丸みより下から） */
-      if(st===1||st===3){const G=notchGeom(px,py,st);f.save();f.setTransform(...T0);f.clearRect(st===3?px-5:px+TS,G.ny0-.5,5,G.nh+1);f.restore()}}/* 横向きの階段の、ひらいた側には横の岩を描かない */
+      if(st===1||st===3){const G=notchGeom(px,py,st);f.save();f.setTransform(...T0);f.clearRect(st===3?px-5:px+TS,G.ny0-.5,5,(G.fr?py+TS:G.ny1)-G.ny0+1);f.restore()}}/* 横向きの階段の、ひらいた側には横の岩を描かない */
+    if(!D&&(st===1||st===3)){fd('cliff:face',px,py);drawStair(f,S.obj[j],px,py,st);continue}/* 手前のふちの横向きの階段：がけの正面（ひらいた側も丸いはしにしない）の上に、階段の側面（かげを作るため、ここでも描く） */
     if(!D){for(const[sd,ok]of[[0,!L],[1,!R]])if(ok){f.save();f.beginPath();f.rect(sd?px+TS-6:px-3,py+TS-LIFT-6,9,7);f.clip();fd(sd?'cliff:faceR':'cliff:faceL',px,py-6);f.restore()}}/* 上の面の手前の角（丸み）のうしろにも、がけの岩 */
     if(!D)fd('cliff:'+(!L&&!R?'faceLR':!L?'faceL':!R?'faceR':'face'),px,py)}
   g.save();g.setTransform(1,0,0,1,0,0);g.filter='brightness(0) blur('+(2*K)+'px)';g.globalAlpha=.3;g.drawImage(fc,0,3*K);g.restore();/* がけのかげ：がけの形を、下へ3ドットずらしてぼかす */
@@ -5912,7 +5919,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='762';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='763';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
