@@ -4795,8 +4795,8 @@ function uLift(o){/* 段差の上にいる子・コワイノは、LIFT だけ上
 const STPAL={stairs_earth:['#c19466','#8f6642','#6e4c30'],stairs_wood:['#dcae72','#a9784b','#86593a'],stairs_log:['#c08a55','#8b5b35','#6b4428'],stairs_stone:['#d3cdc2','#a59d91','#837b70']};
 function drawStair(c,id,px,py,d,top,bot){/* 階段（仮の絵）：5だん。d：0下 1右 2上 3左（下りる向き）。top/bot はアイコン用 */
   const P=STPAL[id]||STPAL.stairs_earth,lg=id==='stairs_log',n=5;
-  if(d===0){const yT=top!=null?top:py-LIFT+2,yB=bot!=null?bot:py+TS,h=(yB-yT)/n,x0=px+4,w=TS-8;
-    if(top==null){c.fillStyle='#cbb294';c.fillRect(px,py-LIFT,4,yB-py+LIFT);c.fillRect(px+TS-4,py-LIFT,4,yB-py+LIFT);c.fillStyle='rgba(60,40,20,.28)';c.fillRect(px+4,py-LIFT,2,yB-py+LIFT);c.fillRect(px+TS-6,py-LIFT,2,yB-py+LIFT);c.fillStyle='#e2cfb3';c.fillRect(px,py-LIFT,4,1.2);c.fillRect(px+TS-4,py-LIFT,4,1.2)}/* 階段の両がわの石のかべ（がけと同じ色）と、かべのかげ */
+  if(d===0){const yT=top!=null?top:py-LIFT+2,yB=bot!=null?bot:py+TS,h=(yB-yT)/n,x0=top!=null?px+3:px,w=top!=null?TS-6:TS;
+
     for(let k=0;k<n;k++){const y=yT+k*h;c.fillStyle=P[0];c.fillRect(x0,y,w,h*.5+.5);c.fillStyle=P[1];if(lg){c.beginPath();c.roundRect(x0,y+h*.5,w,h*.5,h*.25);c.fill();c.fillStyle=P[0];c.beginPath();c.ellipse(x0+2,y+h*.75,1.6,h*.25,0,0,7);c.ellipse(x0+w-2,y+h*.75,1.6,h*.25,0,0,7);c.fill()}else c.fillRect(x0,y+h*.5,w,h*.5+.5);c.fillStyle=P[2];c.fillRect(x0,y+h-1,w,1)}
     c.fillStyle=P[2];c.fillRect(x0-1,yT,1,yB-yT);c.fillRect(x0+w,yT,1,yB-yT);return}
   if(d===2){const yT=py-LIFT,h=TS/n;for(let k=0;k<n;k++){const y=yT+k*h;c.fillStyle=k%2?P[0]:P[1];c.globalAlpha=.55+.09*k;c.fillRect(px+3,y,TS-6,h+.5);c.globalAlpha=1;c.fillStyle=P[2];c.fillRect(px+3,y+h-1,TS-6,1)}return}/* 奥へ下りる：奥ほど低い（うすく） */
@@ -4808,7 +4808,7 @@ function cliffRuns(){if(CLC.n===STATN&&CLC.s===S&&CLC.rows)return CLC.rows;CLC.n
 function cliffTop(P,E,y,k){/* 高いマスの上の面の形：ふち（となりが低い向き）は少しでこぼこ、外がわの角は丸く。P：面（ぬる形）、E：ふちの線 */
   const j=y*W+k,px=k*TS,x1=px+TS,y0=y*TS-LIFT,y1=y0+TS,r=5,nz=(a,b)=>(hash(a*131+b*7919+17)-.5)*2;
   if(stairS(j))return;const U=!(y>0&&hiAt(j-W)),D=!(y<H-1&&hiAt(j+W)),L=!(k>0&&topAt(j-1)),R=!(k<W-1&&topAt(j+1));
-  const yN=x=>U?y0+.3+nz(x,y*2)*.5:y0-.6,yS=x=>D?y1+1.6+nz(x,y*2+1)*.8:y1+.6,xW=v=>L?px+3+nz(k*2,v)*.4:px-.6,xE=v=>R?x1-3+nz(k*2+1,v)*.4:x1+.6;/* 上と手前は、マスのさかいのまま。左右は3ドット内がわ（その外に、横の岩が見える） */
+  const yN=x=>U?y0+.3+nz(x,y*2)*.5:y0-.6,yS=x=>D?y1+1.6+nz(x,y*2+1)*.8:y1+.6,xW=v=>L?px-.2+nz(k*2,v)*.4:px-.6,xE=v=>R?x1+.2+nz(k*2+1,v)*.4:x1+.6;/* ふちは、マスのさかい（横の岩は、その外にはみ出す） */
   const TL=U&&L,TR=U&&R,BR=D&&R,BL=D&&L,st=[];for(let v=0;v<=TS;v+=4)st.push(v);
   const N=st.filter(v=>v>=(TL?r:0)&&v<=TS-(TR?r:0)).map(v=>[px+v,yN(px+v)]),Ea=st.filter(v=>v>=(TR?r:0)&&v<=TS-(BR?r:0)).map(v=>[xE(y0+v),y0+v]),
     So=st.filter(v=>v>=(BL?r:0)&&v<=TS-(BR?r:0)).reverse().map(v=>[px+v,yS(px+v)]),Wd=st.filter(v=>v>=(TL?r:0)&&v<=TS-(BL?r:0)).reverse().map(v=>[xW(y0+v),y0+v]);
@@ -4820,10 +4820,10 @@ function cliffTop(P,E,y,k){/* 高いマスの上の面の形：ふち（とな�
 const CGR=['#567935','#5f8240','#6a8f45','#76994b','#4f6f30'];/* 草のはみ出し：もらった段差の絵のふちの草の明るさの差を、ゲームの草の色にあてた色 */
 function cliffRim(g,P,y,k,grass){/* 上の面のふちの帯（もらった段差の絵と同じ：ふちに こい色の帯、内がわは四角いでこぼこ）。草地はこい緑、地面はこい土色 */
   const j=y*W+k,px=k*TS,x1=px+TS,y0=y*TS-LIFT,y1=y0+TS,U=!(y>0&&hiAt(j-W)),D=!(y<H-1&&hiAt(j+W)),L=!(k>0&&topAt(j-1)),R=!(k<W-1&&topAt(j+1)),hz=n=>hash(j*613+n*97),b=2.2;if(stairS(j))return;
-  g.save();g.clip(P);g.fillStyle=grass?'rgba(92,134,58,.8)':'rgba(110,78,46,.42)';
+  g.save();g.clip(P);g.fillStyle=grass?'rgba(92,134,58,.5)':'rgba(110,78,46,.26)';
   if(U){g.fillRect(px,y0-1,TS,b+1);for(let x=px;x<x1;x+=2.6)if(hz(x)<.55)g.fillRect(x,y0+b,1.8,.8+hz(x+9)*1.3)}
-  if(L){g.fillRect(px,y0,3+b,TS+2);for(let v=y0;v<y1;v+=2.6)if(hz(v)<.55)g.fillRect(px+3+b,v,.8+hz(v+9)*1.3,1.8)}
-  if(R){g.fillRect(x1-3-b,y0,3+b,TS+2);for(let v=y0;v<y1;v+=2.6)if(hz(v+500)<.55){const w=.8+hz(v+509)*1.3;g.fillRect(x1-3-b-w,v,w,1.8)}}
+  if(L){g.fillRect(px-1,y0,b+1,TS+2);for(let v=y0;v<y1;v+=2.6)if(hz(v)<.55)g.fillRect(px+b,v,.8+hz(v+9)*1.3,1.8)}
+  if(R){g.fillRect(x1-b,y0,b+1,TS+2);for(let v=y0;v<y1;v+=2.6)if(hz(v+500)<.55){const w=.8+hz(v+509)*1.3;g.fillRect(x1-b-w,v,w,1.8)}}
   if(D){g.fillRect(px,y1-1.2,TS,4);for(let x=px;x<x1;x+=2.6)if(hz(x+900)<.55){const h=.8+hz(x+909)*1.3;g.fillRect(x,y1-1.2-h,1.8,h)}}
   g.restore()}
 function cliffGrass(g,y,k){/* 草のはみ出し：となりが低い向きのふちに、短い草の葉を外向きに。正面の上は、がけに少したれる */
@@ -4832,14 +4832,20 @@ function cliffGrass(g,y,k){/* 草のはみ出し：となりが低い向きの�
   for(let v=.8;v<TS;v+=1.3){const n=(v*10)|0;
     if(U&&!(L&&v<5)&&!(R&&v>TS-5))blade(px+v,y0+1.2,0,-1,n);
     if(D&&!(L&&v<5)&&!(R&&v>TS-5))blade(px+v,y1+.8,0,1,n+1000);
-    if(L&&!(U&&v<5)&&!(D&&v>TS-5))blade(px+3.6,y0+v,-1,0,n+2000);
-    if(R&&!(U&&v<5)&&!(D&&v>TS-5))blade(px+TS-3.6,y0+v,1,0,n+3000)}}
+    if(L&&!(U&&v<5)&&!(D&&v>TS-5))blade(px+.6,y0+v,-1,0,n+2000);
+    if(R&&!(U&&v<5)&&!(D&&v>TS-5))blade(px+TS-.6,y0+v,1,0,n+3000)}}
 function cliffStrip(y,Rn){/* 1つのかたまりの絵：横のふち・がけの正面・かげ・持ち上げた地面（ふちはでこぼこ）・ふちの線・階段 */
   const K=2,x0=Rn.x0,x1=Rn.x1,w=(x1-x0+1)*TS,ox=x0*TS-6,top=y*TS-LIFT-6,h=TS+LIFT+14,cv=document.createElement('canvas');cv.width=(w+12)*K;cv.height=h*K;/* まわり6ドットは、はみ出す草のぶん */
   const g=cv.getContext('2d'),T0=[K,0,0,K,-ox*K,-top*K];g.setTransform(...T0);const C=window.CHIPS||{},dc=(k,px,py)=>{const ch=C[k];if(ch)drawChip(g,ch,'cliff',px,py,0)};
-  for(let k=x0;k<=x1;k++){const j=y*W+k,L=k>0&&topAt(j-1),R=k<W-1&&topAt(j+1),D=y<H-1&&hiAt(j+W),px=k*TS,py=y*TS,st=STAIRS.has(S.obj[j])?stairDir(j):-1,shd=()=>{const gr=g.createLinearGradient(0,py+TS,0,py+TS+7);gr.addColorStop(0,'rgba(40,30,20,.22)');gr.addColorStop(1,'rgba(40,30,20,0)');g.fillStyle=gr;g.fillRect(px,py+TS,TS,7)};if(st===0){if(!D)shd();continue}/* 手前へ下りる階段のマスは、あとで階段だけ描く（となりのがけは、階段の側が丸いはし） */
-    {const U=y>0&&hiAt(j-W);if(!L||!R){g.save();g.beginPath();g.rect(px-2,py-LIFT+(U?0:4),TS+4,TS);g.clip();if(!L)dc('cliff:sideL',px,py);if(!R)dc('cliff:sideR',px,py);g.restore()}}/* 横の岩（上の面の左右のふちの外がわ） */
-    if(!D&&st!==0){dc('cliff:'+(!L&&!R?'faceLR':!L?'faceL':!R?'faceR':'face'),px,py);const gr=g.createLinearGradient(0,py+TS,0,py+TS+7);gr.addColorStop(0,'rgba(40,30,20,.22)');gr.addColorStop(1,'rgba(40,30,20,0)');g.fillStyle=gr;g.fillRect(px,py+TS,TS,7)}}/* がけの下のかげ */
+  const fc=document.createElement('canvas');fc.width=cv.width;fc.height=cv.height;const f=fc.getContext('2d');f.setTransform(...T0);const fd=(k,px,py)=>{const ch=C[k];if(ch)drawChip(f,ch,'cliff',px,py,0)};/* がけ（階段・横の岩・正面）は、いったん別のキャンバスに描いて、その形でかげを作る */
+  for(let k=x0;k<=x1;k++)if(stairS(y*W+k))drawStair(f,S.obj[y*W+k],k*TS,y*TS,0);/* 手前へ下りる階段を先に（となりのがけの丸いはし・横の岩が、両わきにかかる） */
+  for(let k=x0;k<=x1;k++){const j=y*W+k,L=k>0&&topAt(j-1),R=k<W-1&&topAt(j+1),D=y<H-1&&hiAt(j+W),px=k*TS,py=y*TS,st=STAIRS.has(S.obj[j])?stairDir(j):-1;
+    if(!D){g.save();g.translate(0,2*(py+TS));g.scale(1,-1);g.drawImage(stat,px-6,py+TS,TS+12,8,px-6,py+TS,TS+12,8);g.restore()}/* がけの下はしのすきまには、すぐ下の低い地面（下絵を上下に鏡うつし）を見せる */
+    if(st===0)continue;
+    {const U=y>0&&hiAt(j-W);if(!L||!R){f.save();f.beginPath();f.rect(px-8,py-LIFT+(U?0:4),TS+16,TS);f.clip();if(!L)fd('cliff:sideL',px,py);if(!R)fd('cliff:sideR',px,py);f.restore()}}/* 横の岩（マスの外へはみ出す） */
+    if(!D)fd('cliff:'+(!L&&!R?'faceLR':!L?'faceL':!R?'faceR':'face'),px,py)}
+  g.save();g.setTransform(1,0,0,1,0,0);g.filter='brightness(0) blur('+(2*K)+'px)';g.globalAlpha=.3;g.drawImage(fc,0,3*K);g.restore();/* がけのかげ：がけの形を、下へ3ドットずらしてぼかす */
+  g.save();g.setTransform(1,0,0,1,0,0);g.drawImage(fc,0,0);g.restore();
   const tc=document.createElement('canvas');tc.width=cv.width;tc.height=cv.height;const t=tc.getContext('2d');t.setTransform(...T0);
   t.drawImage(stat,x0*TS,y*TS,w,TS+4,x0*TS,y*TS-LIFT,w,TS+4);t.fillStyle='rgba(255,250,225,.10)';t.fillRect(x0*TS,y*TS-LIFT,w,TS+4);/* 高い所は少し明るく */
   const P=new Path2D(),E=new Path2D();for(let k=x0;k<=x1;k++)cliffTop(P,E,y,k);
@@ -4847,7 +4853,7 @@ function cliffStrip(y,Rn){/* 1つのかたまりの絵：横のふち・がけ�
   g.save();g.clip(P);g.filter='blur(1.4px)';g.lineJoin='round';g.strokeStyle='rgba(45,35,20,.16)';g.lineWidth=6;g.stroke(E);g.restore();/* ふちに向かって少しずつ暗くなる丸み（ぼかし） */
   for(let k=x0;k<=x1;k++)cliffRim(g,P,y,k,REV.has(y*W+k));/* ふちの帯（内がわがでこぼこ） */
   for(let k=x0;k<=x1;k++)if(REV.has(y*W+k))cliffGrass(g,y,k);/* 上が草地なら、ふちから草がはみ出す（手前は、がけにたれる） */
-  for(let k=x0;k<=x1;k++){const j=y*W+k;if(STAIRS.has(S.obj[j])){const d=stairDir(j);if(d>=0)drawStair(g,S.obj[j],k*TS,y*TS,d)}}
+  for(let k=x0;k<=x1;k++){const j=y*W+k;if(STAIRS.has(S.obj[j])){const d=stairDir(j);if(d>0)drawStair(g,S.obj[j],k*TS,y*TS,d)}}/* 横・奥へ下りる階段は、上の面の上に */
   return cv}
 function render(now){
   if(dirty)rebuildStatic(STATICFULL);
@@ -5869,7 +5875,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='754';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='755';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
