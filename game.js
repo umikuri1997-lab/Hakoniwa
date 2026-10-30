@@ -123,7 +123,7 @@ const BL={
   bench:{name:'ベンチ',sz:[2,1],kind:'furn',pc:3,time:100,maker:'wood',attr:{wood:1},mat:{wood:5},desc:'2人すわれる。昼につかれたら、ここで休む（つかれ −20／1時間）。住み心地+5'},
   bed:{name:'ベッド',kind:'furn',pc:10,time:200,maker:'wood',sleep:{cap:1,pt:5,rate:.2},attr:{wood:2},mat:{wood:8},desc:'1人眠れる。つかれ −12／1時間。家の住み心地で0.6〜3.3倍'},
   yorubed:{name:'よぞらのベッド',kind:'furn',pc:10,time:200,maker:'wood',sleep:{cap:1,pt:5,rate:.2},attr:{wood:2},mat:{wood:8},kwr:1,desc:'夜空の色のふとんのベッド。1人眠れる。つかれ −12／1時間。家の住み心地で0.6〜3.3倍'},/* コワイノのレシピ（落とし物でまれに手に入る）。ふつうのベッドと同じはたらき */
-  yozorawall:{name:'よぞらの壁',fix:5,fixm:{wood:3,stone:2},kind:'block',cost:4,pc:11,time:90,maker:'earth',qty:10,lv:1,solid:1,hp:48,hpS:55,brk:1,attr:{},mat:{wood:6,stone:3},kwr:1,desc:'家の中がわが夜空の色になる壁。外がわは木の壁と同じ見た目（じょうぶさ48）'},
+  yozorawall:{name:'よぞらの壁',fix:5,fixm:{wood:3,stone:2},kind:'block',cost:4,pc:11,time:90,maker:'earth',qty:10,lv:1,solid:1,hp:48,hpS:55,brk:1,attr:{},mat:{wood:6,stone:3},kwr:1,desc:'夜空の色の家の壁（じょうぶさ48）'},
   hoshifloor:{name:'ほしくずの床',kind:'block',floor:1,lv:1,cost:2,pc:4,time:40,maker:'earth',qty:10,mat:{stone:3},attr:{earth:.5},kwr:1,desc:'星をちりばめた家の床。歩く速さ1.15倍'},
   lamp:{hp:5,brk:1,fix:3,fixm:{wood:2,stone:2},name:'かがり火',kind:'furn',pc:5,time:160,maker:'fire',solid:1,anim:1,attr:{fire:3},mat:{wood:3,stone:3},desc:'まわり3.5マスを照らす。住み心地+6'},
   campfire:{hp:5,brk:1,fix:4,fixm:{wood:6,stone:4},name:'たき火',kind:'furn',pc:7,time:160,maker:'fire',lv:6,solid:1,anim:1,attr:{fire:4},play:{pt:3,pw:1.35,fun:25,dur:40,cap:3,adj:1},mat:{wood:11,stone:8},desc:'3人まで遊べる。たのしさ +25（40分）。まわり3.5マスも照らす。'},
@@ -5729,7 +5729,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='651';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='652';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
