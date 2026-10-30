@@ -3423,7 +3423,7 @@ function drawMossGate(c,x,y,i,ver,op){
 const WALLMAT={plasterwall:'plaster',logwall:'log',brickwall:'brick',yozorawall:'night'};
 function wallBand(c,mat,a,b,x,y,i){/* 壁の正面（1マスの高さ：y〜y+28が板、その下が巾木）。世界の座標で模様をつなぐので、マスのさかいめに継ぎ目が出ない */
   if(b<=a)return;const gx=(i!=null&&!ICON?(i%W)*TS:0)-x,FH=28.4;
-  c.fillStyle='rgba(0,0,0,.18)';c.fillRect(a,y+TS,b-a,2);c.save();c.beginPath();c.rect(a,y,b-a,FH);c.clip();
+  if(!c._noSh){c.fillStyle='rgba(0,0,0,.18)';c.fillRect(a,y+TS,b-a,2)}c.save();c.beginPath();c.rect(a,y,b-a,FH);c.clip();
   if(mat==='night'&&window.CHIPS&&CHIPS['yozorawall:band']&&(()=>{const ch=CHIPS['yozorawall:band'],ims=chipImgs(ch,'yozorawall:band'),im=ims[0];if(!im||!im.ok)return false;const pw=ch.w*FH/ch.h;let wx=Math.floor((a+gx)/pw)*pw;for(;wx<b+gx;wx+=pw)c.drawImage(im,wx-gx,y,pw,FH);return true})()){}/* よぞらの壁：もらった絵の帯をならべる */
   else if(mat==='night'){c.fillStyle='#283063';c.fillRect(a,y,b-a,FH);c.fillStyle='#1e2550';c.fillRect(a,y+FH-3,b-a,3);for(let n=Math.floor((a+gx)/7)-1;n*7<b+gx;n++){const k=hash(n*13+7);if(k<.5)continue;c.fillStyle=k>.85?'#fff3b8':'rgba(220,230,255,.8)';c.fillRect(n*7+hash(n*5)*5-gx,y+3+hash(n*29)*20,k>.85?1.6:1,k>.85?1.6:1)}}/* よぞらの壁（仮の絵）：夜空の色に星 */
   else if(mat==='plaster'){c.fillStyle='#efdfc1';c.fillRect(a,y,b-a,FH);c.fillStyle='rgba(120,84,50,.16)';c.fillRect(a,y,b-a,1.6);c.fillStyle='#f8edd4';c.fillRect(a,y+1.6,b-a,1.6);c.fillStyle='#d7c3a0';c.fillRect(a,y+FH-3,b-a,3);
@@ -3433,6 +3433,10 @@ function wallBand(c,mat,a,b,x,y,i){/* 壁の正面（1マスの高さ：y〜y+28
       for(let n=Math.floor((a+gx)/13)-1;n*13<b+gx;n++)if(hash(n*7+r*13+3)>.55){c.fillStyle='rgba(150,98,62,.7)';c.fillRect(n*13+2+hash(n*3+r)*6-gx,yy+rh/2-.4,3.2,.9)}}}
   else{const rh=FH/6;c.fillStyle='#eccaad';c.fillRect(a,y,b-a,FH);for(let r=0;r<6;r++){const yy=y+r*rh+.5,off=r%2?6:0;for(let n=Math.floor((a+gx-off)/12)-1;n*12+off<b+gx;n++){const bx=n*12+off-gx;c.fillStyle=hash(n*5+r*11)>.7?'#ae6b56':'#b8725b';c.fillRect(bx+.5,yy,11,rh-1);c.fillStyle='rgba(255,205,170,.35)';c.fillRect(bx+1,yy+.3,10,.6);c.fillStyle='rgba(90,40,28,.25)';c.fillRect(bx+.5,yy+rh-1.6,11,.6)}}}
   c.restore();const nt=mat==='night';c.fillStyle=nt?'#522d1d':'#8a5e3c';c.fillRect(a,y+FH,b-a,TS-FH);c.fillStyle=nt?'#86552f':'#a8784e';c.fillRect(a,y+FH,b-a,.9);/* 巾木：よぞらの壁は、よぞらのベッドと同じ木の色 */c.fillStyle='rgba(0,0,0,.2)';c.fillRect(a,y+TS-.8,b-a,.8)}
+function yozoraFront(c,x,y,i){/* よぞらの壁：外がわはダークチェリーの部品（柱も）。家の中から見える正面だけ、夜空の帯と巾木を、木の壁の正面と同じ所にかさねる（角は、はしまで） */
+  if(i==null||ICON||!HOUSES.some(h=>h.inside.has(i+W)||h.inside.has(i+W-1)||h.inside.has(i+W+1)))return;
+  const isW=k=>{const t=typeAt(k);return t!=='wall'&&t!=='sdoor'&&(HOME_WALLS.has(t)||HOME_DOORS.has(t))},L=isW(i-1),R=isW(i+1),U=isW(i-W),D=isW(i+W),hasH=L||R||!(U||D);if(!hasH)return;
+  const f=(a,b)=>wallBand(c,'night',a,b,x,y,i);c._noSh=1;if(!D&&L&&R&&!U)f(x,x+TS);else{if(L)f(x,x+5);if(R)f(x+27,x+TS)}c._noSh=0}
 const SEC={a:null,b:null,cache:new Map()};
 function drawSection(c,ox,oy,rs){/* 断面（壁・柱のてっぺん）：形のまわりだけ少し濃く、内がわは少し薄く。つながる側へはみ出した分で、マスのさかいめにも線が出ない。形ごとに1回だけ絵にして使いまわす */
   const W0=TS+16,H0=TS+40,X=ox-8,Y=oy-8,key=rs.map(r=>r.map((v,k)=>Math.round((v-(k%2?oy:ox))*100)).join(',')).join('|');let sp=SEC.cache.get(key);
@@ -3497,7 +3501,7 @@ function drawObj(c,id,x,y,i,g,now){
   if(id==='yorubed'&&!chipOf('yorubed',i)){drawObj(c,'bed',x,y,i,g,now);const v=i!=null&&S&&S.rot&&S.rot[i]%2===1;c.save();c.globalAlpha=.55;c.fillStyle='#2a3168';if(v)c.fillRect(x+6,y+8,20,-30<0?20:20);else c.fillRect(x+12,y+4,16,22);c.globalAlpha=1;c.fillStyle='#fff3b8';for(let n=0;n<4;n++)c.fillRect(x+(v?8:14)+hash((i||0)+n)*12,y+(v?10:6)+hash((i||0)*3+n)*16,1.5,1.5);c.restore();return}/* よぞらのベッド（仮の絵）：ふつうのベッドに夜空色のふとん */
   if(!c._chip&&id==='farm'&&drawFarmChip(c,x,y,i,g,now))return;/* 畑のドット絵 */
   if(!c._chip&&DOORCH.has(id)&&!(S&&S.win&&i!=null&&S.win[i]&&!c._win)&&drawDoorChip(c,id,x,y,i,now))return;/* ドア・門のドット絵（リースのあるドアは、リースの前にドアだけ） */
-  if(CONN[id]&&!c._chip&&!(HOME_WALLS.has(id)&&S&&S.win&&S.win[i]&&!c._win)){if(HOME_WALLS.has(id)&&!ICON&&i!=null)wallMarg(c,i,x,y);if(drawConn(c,id,x,y,i,now))return}/* つながる物は部品で（窓のある壁は、窓の前に壁だけ）。家の壁は、先に、となりの床を壁のふちまでのばす */
+  if(CONN[id]&&!c._chip&&!(HOME_WALLS.has(id)&&S&&S.win&&S.win[i]&&!c._win)){if(HOME_WALLS.has(id)&&!ICON&&i!=null)wallMarg(c,i,x,y);if(drawConn(c,id,x,y,i,now)){if(id==='yozorawall')yozoraFront(c,x,y,i);return}}/* つながる物は部品で（窓のある壁は、窓の前に壁だけ）。家の壁は、先に、となりの床を壁のふちまでのばす */
   if(!c._chip&&PCH.has(id)){const ch=plantChip(id,i,g);if(ch&&drawChip(c,ch,id,x,y,now,i)){if(id==='berry'&&g>=100)berryOn(c,x,y);if(id==='statue'&&i!=null&&!ICON)for(const q of[i-1,i+1])if(S.obj[q]==='obox'||S.obj[q]==='board')drawObj(c,S.obj[q],x+(q-i)*TS,y,q,0,now);/* 女神像の横の箱・ボードを手前に */return}}
   if(!c._chip&&!c._win&&!SEATS.includes(id)&&!PCH.has(id)&&!DOORCH.has(id)&&id!=='farm'){const ch=chipOf(id,i);if(ch&&drawChip(c,ch,id,x,y,now,i))return}/* ドット絵があれば、それを使う（いすは、つりざおをかいてから下で） */
   if(BL[id]&&BL[id].cs&&!ICON&&!c._cs){const k=BL[id].cs;c.save();c.translate(x+16,y+20);c.scale(k,k);c.translate(-x-16,-y-20);c._cs=1;drawObj(c,id,x,y,i,g,now);c._cs=0;c.restore();return}/* ラグは、絵だけ大きく（判定はそのまま） */
@@ -5732,7 +5736,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='656';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='657';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
