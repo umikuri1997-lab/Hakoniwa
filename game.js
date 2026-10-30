@@ -3438,12 +3438,12 @@ function wallBand(c,mat,a,b,x,y,i){/* 壁の正面（1マスの高さ：y〜y+28
   else{const rh=FH/6;c.fillStyle='#eccaad';c.fillRect(a,y,b-a,FH);for(let r=0;r<6;r++){const yy=y+r*rh+.5,off=r%2?6:0;for(let n=Math.floor((a+gx-off)/12)-1;n*12+off<b+gx;n++){const bx=n*12+off-gx;c.fillStyle=hash(n*5+r*11)>.7?'#ae6b56':'#b8725b';c.fillRect(bx+.5,yy,11,rh-1);c.fillStyle='rgba(255,205,170,.35)';c.fillRect(bx+1,yy+.3,10,.6);c.fillStyle='rgba(90,40,28,.25)';c.fillRect(bx+.5,yy+rh-1.6,11,.6)}}}
   c.restore();const nt=mat==='night';c.fillStyle=nt?'#522d1d':'#8a5e3c';c.fillRect(a,y+FH,b-a,TS-FH);c.fillStyle=nt?'#86552f':'#a8784e';c.fillRect(a,y+FH,b-a,.9);/* 巾木：よぞらの壁は、よぞらのベッドと同じ木の色 */c.fillStyle='rgba(0,0,0,.2)';c.fillRect(a,y+TS-.8,b-a,.8)}
 function wallFront(c,id,x,y,i){/* 家の壁の正面：断面と形は部品の絵（drawConn）。正面は、もらった絵（正面 id:ext を世界の座標でならべる・柱 id:post）をかさねる。よぞらの壁は、家の中から見える正面だけ夜空の帯と巾木。木の壁の正面と同じ所（角は、はしまで） */
-  if(i==null||ICON)return;const C=window.CHIPS,E=C&&C[id+':ext'],P=C&&C[id+':post'],ei=E&&chipImgs(E,id)[0],pi=P&&chipImgs(P,id)[0];
+  if(i==null||ICON)return;const C=window.CHIPS,eid=id==='hwall'&&WD===1&&C&&C['bamboowall:ext']?'bamboowall':id/* 火山の竹の壁は、竹の絵 */,E=C&&C[eid+':ext'],P=C&&C[id+':post'],ei=E&&chipImgs(E,eid)[0],pi=P&&chipImgs(P,id)[0];
   const inn=id==='yozorawall'&&HOUSES.some(h=>h.inside.has(i+W)||h.inside.has(i+W-1)||h.inside.has(i+W+1));
   const isW=k=>{const t=typeAt(k);return t!=='wall'&&t!=='sdoor'&&(HOME_WALLS.has(t)||HOME_DOORS.has(t))},L=isW(i-1),R=isW(i+1),U=isW(i-W),D=isW(i+W),hasH=L||R||!(U||D);
-  const gx=(i%W)*TS-x,ext=(a,b)=>{if(!ei||!ei.ok)return;const pw=E.w*TS/E.h;c.save();c.beginPath();c.rect(a,y,b-a,TS);c.clip();for(let wx=Math.floor((a+gx)/pw)*pw;wx<b+gx;wx+=pw)c.drawImage(ei,wx-gx,y,pw,TS);c.restore()};/* 外から見える正面：絵を世界の座標でならべる */
+  const gx=(i%W)*TS-x,eh=E?E.h/2:TS,ey=y+(E?E.ay/2:0),ext=(a,b,cb)=>{if(!ei||!ei.ok)return;const pw=E.w*eh/E.h;c.save();c.beginPath();c.rect(a,ey,b-a,(cb||ey+eh)-ey);c.clip();for(let wx=Math.floor((a+gx)/pw)*pw;wx<b+gx;wx+=pw)c.drawImage(ei,wx-gx,ey,pw,eh);c.restore()};/* 外から見える正面：絵（てっぺんから正面の下まで。y−9〜y+32）を世界の座標でならべる */
   const post=()=>{if(pi&&pi.ok)c.drawImage(pi,x+P.ax/2,y+P.ay/2,P.w/2,P.h/2)};/* 柱の正面 */
-  const o=.5,f=(a,b)=>inn?wallBand(c,'night',a,b,x,y,i):ext(a,b);c._noSh=1;
+  const o=.5,f=(a,b)=>{if(inn){ext(a,b,y);wallBand(c,'night',a,b,x,y,i)}else ext(a,b)};/* 家の中から見える正面：てっぺんだけ絵、その下は夜空の帯 */c._noSh=1;
   if(hasH){if(!D){if(L&&R)f(x-o,x+TS+o);else{post();if(L)f(x-o,x+5);if(R)f(x+27,x+TS+o)}}/* 上にしきりの壁がつながっていても、正面は柱を立てずにつなげる（しきりは正面から見えない） */else{if(L)f(x-o,x+5);if(R)f(x+27,x+TS+o)}}else if(!D)post();
   c._noSh=0}/* となりの壁に0.5だけ重ねて描く（拡大したとき、マスのさかいめにすきまの線が出ないように） */
 function stoneFront(c,x,y,i){/* 石の塀（石垣）の正面：もらった絵（正面 wall:ext を世界の座標でならべる・柱 wall:post）を、部品の絵にかさねる */
@@ -5751,7 +5751,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='680';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='681';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
