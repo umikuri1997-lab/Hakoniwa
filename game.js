@@ -4749,17 +4749,18 @@ function objectDepth(o,j){const y=(j/W)|0;if(FLAT.has(o))return y+.02;if(HOME_DO
   return y+(b&&b.sz?(o==='site'?b.sz[1]:szAt(o,j)[1]):1)+(o==='obox'?.01:0);
 }
 const WSH={k:'',m:null,o:null,any:false};
-function waterShimmer(now,x0,y0,x1,y1){/* 水面が少しゆらぐ：見えている所の水の形の中に、ゆっくり動く水のもようを、うすく重ねる（形は画面が動いたときだけ作りなおす） */
+function waterShimmer(now,x0,y0,x1,y1){/* 水面：見えている所の水の形（waterm）の中に、水のテクスチャ（tex:water）をしきつめて、ゆっくりスクロールさせる。その上に水のふち（water:1〜15）。形とふちは画面が動いたときだけ作りなおす */
   if(WD===1||!waterChipsOK())return;const C=window.CHIPS,im=chipImgs(C['tex:water'],'water')[0],w=(x1-x0)*TS,h=(y1-y0)*TS;if(w<=0||h<=0||w*h>4e6)return;
   const k=x0+','+y0+','+x1+','+y1+','+STATN;
-  if(WSH.k!==k){WSH.k=k;const m=WSH.m||(WSH.m=document.createElement('canvas'));m.width=w;m.height=h;const g=m.getContext('2d');let any=false;
+  if(WSH.k!==k){WSH.k=k;const m=WSH.m||(WSH.m=document.createElement('canvas'));m.width=w;m.height=h;const g=m.getContext('2d');const e=WSH.e||(WSH.e=document.createElement('canvas'));e.width=w;e.height=h;const ge=e.getContext('2d');let any=false;
     const isW=(x,y)=>x>=0&&y>=0&&x<W&&y<H&&S.ground[y*W+x]===1;
-    for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++){const b=(isW(x-1,y-1)?1:0)|(isW(x,y-1)?2:0)|(isW(x-1,y)?4:0)|(isW(x,y)?8:0);if(!b)continue;const ch=C['waterm:'+b];if(ch){drawChip(g,ch,'water',(x-x0)*TS,(y-y0)*TS,0);any=true}}
+    for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++){const b=(isW(x-1,y-1)?1:0)|(isW(x,y-1)?2:0)|(isW(x-1,y)?4:0)|(isW(x,y)?8:0);if(!b)continue;const ch=C['waterm:'+b];if(ch){drawChip(g,ch,'water',(x-x0)*TS,(y-y0)*TS,0);any=true}const ce=C['water:'+b];if(ce)drawChip(ge,ce,'water',(x-x0)*TS,(y-y0)*TS,0)}
     WSH.any=any;const o=WSH.o||(WSH.o=document.createElement('canvas'));o.width=w;o.height=h}
   if(!WSH.any)return;
-  const o=WSH.o,g=o.getContext('2d'),t=now/1000;g.globalCompositeOperation='copy';g.drawImage(WSH.m,0,0);g.globalCompositeOperation='source-in';
-  const pt=g.createPattern(im,'repeat');pt.setTransform(new DOMMatrix().translate(-x0*TS+Math.sin(t*.6)*5,-y0*TS+Math.cos(t*.45)*3));g.fillStyle=pt;g.fillRect(0,0,w,h);g.globalCompositeOperation='source-over';
-  ctx.globalAlpha=.3+Math.sin(t*.8)*.08;ctx.drawImage(o,x0*TS,y0*TS);ctx.globalAlpha=1}
+  const o=WSH.o,g=o.getContext('2d'),t=now/1000,sx=Math.floor(t*4)%128,sy=Math.floor(t*2)%128;/* 1秒に よこ4・たて2ドット（テクスチャの1ドットずつ動かす） */
+  g.globalCompositeOperation='copy';g.drawImage(WSH.m,0,0);g.globalCompositeOperation='source-in';
+  const pt=g.createPattern(im,'repeat');pt.setTransform(new DOMMatrix().translate(-x0*TS+sx,-y0*TS+sy));g.fillStyle=pt;g.fillRect(0,0,w,h);g.globalCompositeOperation='source-over';g.drawImage(WSH.e,0,0);
+  ctx.drawImage(o,x0*TS,y0*TS)}
 function render(now){
   if(dirty)rebuildStatic(STATICFULL);
   ctx.setTransform(1,0,0,1,0,0);ctx.fillStyle='#8f8262';ctx.fillRect(0,0,cv.width,cv.height);
@@ -4768,9 +4769,6 @@ function render(now){
   ctx.drawImage(stat,0,0);
   const x0=Math.max(0,Math.floor(cam.x/TS)-1),y0=Math.max(0,Math.floor(cam.y/TS)-2),x1=Math.min(W,Math.ceil((cam.x+VW/cam.z)/TS)+1),y1=Math.min(H,Math.ceil((cam.y+VH/cam.z)/TS)+2);
   waterShimmer(now,x0,y0,x1,y1);drawRugsLive(x0,y0,x1,y1);
-  for(let y=y0;y<y1;y++)for(let x=x0;x<x1;x++){const i=y*W+x;
-    if(S.ground[i]===1){const ph=now/900+hash(i)*6,a=Math.max(0,Math.sin(ph))*.45;if(a>.05){ctx.fillStyle='rgba(255,255,255,'+a+')';ctx.fillRect(x*TS+5+hash(i*3)*16,y*TS+8+hash(i*5)*14,7,1.5)}continue}
-  }
   for(const[j,t0]of pops){const a=1-(now-t0)/350;if(a<=0){pops.delete(j);continue}ctx.fillStyle='rgba(255,255,240,'+a*.6+')';const s=4*(1-a);rr(ctx,(j%W)*TS-s,((j/W)|0)*TS-s,TS+s*2,TS+s*2,6)}
   for(const d of S.drops||[]){const cx=d.x*TS+16,cy=d.y*TS+19,tw=Math.sin(now/260+d.x*1.7)*.5+.5;
     if(d.id==='mebuki'){const fy=cy-4+Math.sin(now/380)*2;/* めぶきのしずく：若葉をのせた緑のしずく */
@@ -5780,7 +5778,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='740';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='741';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
