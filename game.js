@@ -3556,7 +3556,7 @@ function drawObj(c,id,x,y,i,g,now){
     for(const[dx,dy,r,col]of[[-9,-5,6,D],[9,-5,6,D],[-6,-11,7,B],[6,-11,7,B],[0,-15,7,L],[-10,0,6,B],[10,0,6,B],[0,-4,10,B]])circ(c,x+16+dx,y+24+dy,r,col);
     tuft(c,x+5,y+29,.6,D);tuft(c,x+27,y+29,.6,D);
     if(g>=100)for(const[dx,dy]of[[-6,-12],[5,-8],[-3,-2],[8,-15]]){circ(c,x+16+dx,y+24+dy,3,'#5b6fd1');c.fillStyle='#3f50a8';c.fillRect(x+15+dx,y+21.6+dy,2,1.2)}break}
-  case'logwall':case'plasterwall':case'brickwall':case'yozorawall':{/* 丸太・しっくい・レンガ・よぞらの壁も、木の壁と同じ形（柱・断面・巾木・つなぎめなし）で、正面の帯だけ材質を変える */if(id==='yozorawall'&&!(i!=null&&!ICON&&HOUSES.some(h=>h.inside.has(i+W)))){drawObj(c,'hwall',x,y,i,g,now);break}/* よぞらの壁：家の外がわから見える面は、木の壁と同じ */c._mat=id==='logwall'?'log':id==='plasterwall'?'plaster':id==='yozorawall'?'night':'brick';{const ck=c._chip;if(id==='yozorawall')c._chip=1;/* 家の中から見える面だけ夜空の色（木の壁のドット絵は使わない） */drawObj(c,'hwall',x,y,i,g,now);c._chip=ck}c._mat=0;break}
+  case'logwall':case'plasterwall':case'brickwall':case'yozorawall':{/* 丸太・しっくい・レンガ・よぞらの壁も、木の壁と同じ形（柱・断面・巾木・つなぎめなし）で、正面の帯だけ材質を変える */if(id==='yozorawall'&&!(i!=null&&!ICON&&HOUSES.some(h=>h.inside.has(i+W)||h.inside.has(i+W-1)||h.inside.has(i+W+1)))){drawObj(c,'hwall',x,y,i,g,now);break}/* よぞらの壁：家の外がわから見える面は、木の壁と同じ。家の角の壁も、中から見える面は夜空の色にして、はしまでつなげる */c._mat=id==='logwall'?'log':id==='plasterwall'?'plaster':id==='yozorawall'?'night':'brick';{const ck=c._chip;if(id==='yozorawall')c._chip=1;/* 家の中から見える面だけ夜空の色（木の壁のドット絵は使わない） */drawObj(c,'hwall',x,y,i,g,now);c._chip=ck}c._mat=0;break}
   case'door':case'hwall':{/* 壁：正面は1マスの高さ（y〜y+32）、断面（てっぺん）はその上（y-9〜y）にブラウン1色 */
     const door=id==='door';if(ICON&&door){const art=HOUSEART&&HOUSEART['wall-door'];if(art&&art.complete&&art.naturalWidth){c.drawImage(art,x+2,y+1,28,30);break}}
     if(ICON){c.save();c.translate(x+16,y+32);c.scale(.75,.75);c.translate(-x-16,-y-32)}
@@ -5726,7 +5726,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='654';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='655';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
