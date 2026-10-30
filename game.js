@@ -3507,8 +3507,9 @@ function drawDoorChip(c,id,x,y,i,now){const C=window.CHIPS;if(!C)return false;
   if(ICON||i==null||!S){const ch=C[id];return !!ch&&drawChip(c,ch,id,x,y,now,i)}
   const pick=(o,op)=>C[id+'#'+o+Math.min(3,Math.round(op*3))],ok=o=>{const ch=C[id+'#'+o+'0'];return !!ch&&chipImgs(ch,id)[0].ok};
   if(id==='door'||id==='yozoradoor'){const isW=k=>{const t=typeAt(k);return t!=='wall'&&t!=='sdoor'&&(HOME_WALLS.has(t)||HOME_DOORS.has(t))},L=isW(i-1),R=isW(i+1),U=isW(i-W),D=isW(i+W),hasV=U||D,hasH=L||R||!hasV;
-    if(c._doorBack){if(!hasH)return true;const yz=[i-1,i+1,i-W,i+W].some(k=>typeAt(k)==='yozorawall'),ch=C[(yz?'yozoradoor':id)+':'+((L?1:0)|(R?2:0)|(U?4:0)|(D?8:0))];/* よぞらの壁のとなりのドアは、上のふちもダークチェリー（壁がとぎれて見えないように） */return !!ch&&drawChip(c,ch,id,x,y,now,i)}/* ドアの上の断面（静的な層） */
-    const o=hasH?'h':'v';if(!ok(o))return false;const op=hasH?doorOp(i,x,y,.9,2.1):doorOp(i,x,y,2.1,.9);return drawChip(c,pick(o,op),id,x,y,now,i)}
+    const wt=(hasH?[i-1,i+1,i-W,i+W]:[i-W,i+W,i-1,i+1]).map(typeAt).find(t=>t!=='wall'&&HOME_WALLS.has(t));/* 断面の色は、となりの壁に合わせる：よこ置きは左→右、たて置きは上→下 */
+    if(c._doorBack){if(!hasH)return true;const m=(L?1:0)|(R?2:0)|(U?4:0)|(D?8:0),ch=(wt&&C[wt+'.'+id+':'+m])||C[id+':'+m];return !!ch&&drawChip(c,ch,id,x,y,now,i)}/* ドアの上の断面（静的な層） */
+    const o=hasH?'h':'v';if(!ok(o))return false;const op=hasH?doorOp(i,x,y,.9,2.1):doorOp(i,x,y,2.1,.9),n=Math.min(3,Math.round(op*3));return drawChip(c,(o==='v'&&wt&&C[wt+'.'+id+'#v'+n])||pick(o,op),id,x,y,now,i)}
   if(id==='stonegate'){const wide=S.obj[i]!==id||(S.obj[i+1]==='part'&&S.ref[i+1]===i);if(!wide||!ok('h'))return false;return drawChip(c,pick('h',doorOp(i,x+16,y,1.8,2.1)),id,x,y,now,i)}/* 石の大門は2マスはば */
   const isF=k=>{const t=typeAt(k);return FENCE_IDS.has(t)||t==='wall'||t==='sdoor'},ver=!(isF(i-1)||isF(i+1))&&(isF(i-W)||isF(i+W)),o=ver?'v':'h';if(!ok(o))return false;
   return drawChip(c,pick(o,doorOp(i,x,y,ver?2.1:.9,ver?.9:2.1)),id,x,y,now,i)}
@@ -5750,7 +5751,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='703';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='704';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
