@@ -178,8 +178,8 @@ const bloomCount=id=>S.obj.reduce((n,o,j)=>n+(o===id&&!isBud(j)?1:0),0);
 const FLOWER_QUESTS=new Set(['salvia3','lotus3','lily5','clover3']);
 const BEDSET=new Set(['bed','yorubed']);/* ねむれるベッド（よぞらのベッドも同じはたらき） */const KWR=['yozorawall','yozoradoor','yozorawin','yorubed','hoshirug','herrfloor'];const KWRKEY='hakoniwa-kwr-v1';/* コワイノのレシピは、どのステージでもおぼえたまま（ステージべつのセーブとはべつにしまう） */
 function kwrSync(){if(!S)return;let g=[];try{g=JSON.parse(KV.getItem(KWRKEY)||'[]')}catch(e){}const G=new Set(g.filter(id=>KWR.includes(id)));for(const id of KWR)if((S.recipes||{})[id])G.add(id);for(const id of G){(S.recipes||(S.recipes={}))[id]=true;if(BL[id].kind==='block')(S.unlocked||(S.unlocked={}))[id]=true}try{KV.setItem(KWRKEY,JSON.stringify([...G]))}catch(e){}}/* コワイノのレシピ：落とし物でまれに手に入る */
-const CRAFTB=['floor','brickfloor','stonefloor','herrfloor','carpet','path','gravel','stone','brick','hwall','logwall','plasterwall','brickwall','yozorawall','door','yozoradoor','fence','gate','archedgate','stonegate','wall','sdoor','window','yozorawin'];
-const CRAFT_TABS=[["家具", ["table", "chair", "stool", "stable", "pouf", "achair", "ltable", "rug1", "rug2", "hoshirug", "bed", "yorubed", "sofa1", "monstera", "wreath", "curtain1", "curtain2", "paint1", "paint2", "paint3", "bathtub"]], ["収納", ["stor", "mbox", "crate", "shelf1", "wshelf", "cabinet", "shelf2"]], ["遊び", ["swing", "slide", "sandbox", "seesaw", "campfire"]], ["庭", ["bench", "hedge", "birdbath", "parasol", "noren", "arch", "kamizo", "jar", "rockart", "signpost", "vane"]], ["あかり", ["torch", "candle", "lantern", "flamp", "toro"]], ["ごはん", ["oven", "tub", "sink"]], ["ワナ", ["spike", "puddle"]], ["家づくり", ["floor", "brickfloor", "stonefloor", "herrfloor", "carpet", "hwall", "logwall", "plasterwall", "brickwall", "yozorawall", "door", "yozoradoor", "window", "yozorawin"]], ["道・囲い", ["path", "gravel", "stone", "brick", "fence", "gate", "archedgate", "stonegate", "wall", "sdoor"]]];let craftTab=0;
+const CRAFTB=['floor','brickfloor','stonefloor','herrfloor','carpet','path','gravel','stone','brick','hwall','logwall','plasterwall','brickwall','yozorawall','door','yozoradoor','fence','logfence','gate','archedgate','stonegate','wall','sdoor','window','yozorawin'];
+const CRAFT_TABS=[["家具", ["table", "chair", "stool", "stable", "pouf", "achair", "ltable", "rug1", "rug2", "hoshirug", "bed", "yorubed", "sofa1", "monstera", "wreath", "curtain1", "curtain2", "paint1", "paint2", "paint3", "bathtub"]], ["収納", ["stor", "mbox", "crate", "shelf1", "wshelf", "cabinet", "shelf2"]], ["遊び", ["swing", "slide", "sandbox", "seesaw", "campfire"]], ["庭", ["bench", "hedge", "birdbath", "parasol", "noren", "arch", "kamizo", "jar", "rockart", "signpost", "vane"]], ["あかり", ["torch", "candle", "lantern", "flamp", "toro"]], ["ごはん", ["oven", "tub", "sink"]], ["ワナ", ["spike", "puddle"]], ["家づくり", ["floor", "brickfloor", "stonefloor", "herrfloor", "carpet", "hwall", "logwall", "plasterwall", "brickwall", "yozorawall", "door", "yozoradoor", "window", "yozorawin"]], ["道・囲い", ["path", "gravel", "stone", "brick", "fence", "logfence", "gate", "archedgate", "stonegate", "wall", "sdoor"]]];let craftTab=0;
 const craftTabFor=id=>CRAFT_TABS.findIndex(([,ids])=>ids.includes(id));
 const GIFTF=['furin','ema','kadomatsu','komainu','chochin','mimamori','yomawari','oyasumi','yonaka'];/* 交換・おみやげ・コワイノの落とし物でもらう家具 */
 function furnitureGroups(ids){const wanted=new Set(ids);return CRAFT_TABS.map(([name,items])=>[name,items.filter(id=>wanted.has(id))]).filter(([,items])=>items.length)}
@@ -847,7 +847,7 @@ function festAct(r,G){if(STATUE<0)return false;const h=hour(),ib=k=>inBase(k%W,(
   if(x<.72&&trySocial(r,G))return true;/* おまつりのおしゃべり */
   const j=festSpot(G,k=>ib(k)&&Math.hypot(k%W+.5-r.x,((k/W)|0)+.5-r.y)>=4,30);if(j>=0){startAct(r,G,'fwalk',j);if(r.fsnack&&Math.random()<.6)r.bubble=r.fsnack;return true}/* 村の中を、ぶらぶら見てまわる */
   return false}
-Object.defineProperty(BL.hwall,'name',{get:()=>WD===1?'竹の壁':'オークの壁'});Object.defineProperty(BL.hwall,'desc',{get:()=>WD===1?'火山にはえる竹でつくった壁。かこってドアをつけると家になる（じょうぶさ30）':'かこってドアをつけると家になる（じょうぶさ30）'});/* 草原の家はオークの木、火山のふもとの家は竹で建てる */
+Object.defineProperty(BL.logfence,'offerOnly',{get:()=>WD!==0,configurable:true});/* 丸太の柵は、草原では村レベルで作れる。ほかのステージではおそなえだけ */Object.defineProperty(BL.hwall,'name',{get:()=>WD===1?'竹の壁':'オークの壁'});Object.defineProperty(BL.hwall,'desc',{get:()=>WD===1?'火山にはえる竹でつくった壁。かこってドアをつけると家になる（じょうぶさ30）':'かこってドアをつけると家になる（じょうぶさ30）'});/* 草原の家はオークの木、火山のふもとの家は竹で建てる */
 const FLAM=new Set(Object.keys(BL).filter(id=>id!=='hwall'&&id!=='door'&&id!=='yozoradoor'&&(()=>{const b=BL[id],m=b.mat||{};return (b.kind==='furn'||b.kind==='block'||b.kind==='build')&&m.wood>0&&!m.stone&&!b.natural&&id!=='torch'&&id!=='candle'})()));/* 火山のふもとで燃える物：木材だけで作る家具・柵・壁など（たいまつ・ろうそくは、もともと火がついている物なのでのぞく） */
 const burnHp=o=>BL[o].hp||10,fireAt=j=>WD===1&&!!S.st2&&!!S.st2.fire&&S.st2.fire[j]!=null;/* じょうぶさのない家具は、燃えるときだけ10とする */
 function ignite(j){if(WD!==1||!S.st2)return;const o=S.obj[j];if(!FLAM.has(o))return;const F=S.st2.fire||(S.st2.fire={});if(F[j]!=null)return;F[j]=S.t;toast(BL[o].name+'が燃えている！','warn');sfxAt('cookfire',j%W+.5,(j/W)|0)}
@@ -1881,8 +1881,8 @@ function die(r){
   toast(r.name+'が消えてしまった…','warn');
   {const DT=S.res.length?deathTalk(r):null;if(DT&&DT.length)setTimeout(()=>dialog(DT),900);else{const key=isKey(r.name),fk=key?'deathTold':'death2Told';if(!S.flags[fk]&&S.res.length){const sp=S.res.find(q=>KEYRES.includes(q.name))||S.res[0],n=r.name;
     talkOnce(fk,(key?DEATHL:DEATHL2)[elemKey(sp)](n).map(t=>[sp.name,t]))}}}/* 話す子の性格で説明する */
-  if(!S.res.length){S.wipe=true;S.wipeGift=lvOK('wall')?'wall':'fence';giveItem(S.wipeGift,10);/* おくりものは、先にわたしておく（会話のとちゅうでとじても、なくならない） */for(const L of[S.buried||[],S.lost||[]])for(const q of L)delete q.unb}/* 全滅：埋葬する子がいないので、埋葬の前でも、次の朝から呼びもどせるようにする（お墓はそのまま） */
-  if(!S.res.length)setTimeout(()=>STATUE<0?gameOver():dialog([[GOD,'みんな、消えてしもうた…。'],[GOD,'じゃが、だいじょうぶじゃ。朝になれば、この土地に深くなじんだ子から、神殿で呼びもどせるぞい。'],[GOD,'#alarm|人数が少ないうちは、「コワイノ」も少なめじゃ。オオカゲも、なかまがそろうまでは来んはずじゃ。'],[GOD,'それと…これを使うがよい。'+(lvOK('wall')?'石の塀':'柵')+'を10こ、やろう。']],()=>toast(BL[S.wipeGift||'fence'].name+'を10こもらった','good')),800);/* 石の塀を覚えていたら、石の塀 */
+  if(!S.res.length){S.wipe=true;S.wipeGift=WD===0?(lvOK('logfence')?'logfence':'fence'):(lvOK('wall')?'wall':'fence');giveItem(S.wipeGift,10);/* おくりものは、先にわたしておく（会話のとちゅうでとじても、なくならない） */for(const L of[S.buried||[],S.lost||[]])for(const q of L)delete q.unb}/* 全滅：埋葬する子がいないので、埋葬の前でも、次の朝から呼びもどせるようにする（お墓はそのまま） */
+  if(!S.res.length)setTimeout(()=>STATUE<0?gameOver():dialog([[GOD,'みんな、消えてしもうた…。'],[GOD,'じゃが、だいじょうぶじゃ。朝になれば、この土地に深くなじんだ子から、神殿で呼びもどせるぞい。'],[GOD,'#alarm|人数が少ないうちは、「コワイノ」も少なめじゃ。オオカゲも、なかまがそろうまでは来んはずじゃ。'],[GOD,'それと…これを使うがよい。'+BL[S.wipeGift||'fence'].name+'を10こ、やろう。']],()=>toast(BL[S.wipeGift||'fence'].name+'を10こもらった','good')),800);/* 石の塀を覚えていたら、石の塀 */
 }
 
 /* ---------- せいれいがやってくる ---------- */
@@ -2206,8 +2206,9 @@ function lvShow(l,bonus,opens){
   startClap();/* タップするまで、こっちを向いて拍手 */
   if(STATUE>=0)for(let n=0;n<3;n++)setTimeout(()=>burst(STATUE,'furn','none'),n*260);
 }
-const LEVELUP_ITEMS=new Set(['path','gate','hwall','door','floor','brickfloor','stonefloor','window','plasterwall','gravel','wall','sdoor','logwall','brick','brickwall','carpet','curtain1','stone','stonegate']);
-const levelUpItemsAt=n=>Object.keys(BL).filter(id=>LEVELUP_ITEMS.has(id)&&BL[id].lv===n&&!BL[id].offerOnly);
+const LEVELUP_ITEMS=new Set(['path','gate','hwall','door','logfence','floor','brickfloor','stonefloor','window','plasterwall','gravel','wall','sdoor','logwall','brick','brickwall','carpet','curtain1','stone','stonegate']);
+const STAGE_FENCE=id=>WD===0?id!=='wall'&&id!=='sdoor':id!=='logfence';/* 草原（木のステージ）の2つめの塀は丸太の柵。石の塀（石垣）とそのドアは火山から */
+const levelUpItemsAt=n=>Object.keys(BL).filter(id=>LEVELUP_ITEMS.has(id)&&BL[id].lv===n&&!BL[id].offerOnly&&STAGE_FENCE(id));
 const visibleLevelRewardsAt=n=>levelUpItemsAt(n).filter(id=>id!=='curtain1'||!S.free);
 function checkLevel(){
   const l=vLv();if(S.lv>l)return;/* 必要なパワーをふやしても、いまの村レベルは下げない */const old=S.lv||1,priorUnlocks={...(S.unlocked||{})},priorRecipes={...(S.recipes||{})};
@@ -3436,15 +3437,22 @@ function wallBand(c,mat,a,b,x,y,i){/* 壁の正面（1マスの高さ：y〜y+28
       for(let n=Math.floor((a+gx)/13)-1;n*13<b+gx;n++)if(hash(n*7+r*13+3)>.55){c.fillStyle='rgba(150,98,62,.7)';c.fillRect(n*13+2+hash(n*3+r)*6-gx,yy+rh/2-.4,3.2,.9)}}}
   else{const rh=FH/6;c.fillStyle='#eccaad';c.fillRect(a,y,b-a,FH);for(let r=0;r<6;r++){const yy=y+r*rh+.5,off=r%2?6:0;for(let n=Math.floor((a+gx-off)/12)-1;n*12+off<b+gx;n++){const bx=n*12+off-gx;c.fillStyle=hash(n*5+r*11)>.7?'#ae6b56':'#b8725b';c.fillRect(bx+.5,yy,11,rh-1);c.fillStyle='rgba(255,205,170,.35)';c.fillRect(bx+1,yy+.3,10,.6);c.fillStyle='rgba(90,40,28,.25)';c.fillRect(bx+.5,yy+rh-1.6,11,.6)}}}
   c.restore();const nt=mat==='night';c.fillStyle=nt?'#522d1d':'#8a5e3c';c.fillRect(a,y+FH,b-a,TS-FH);c.fillStyle=nt?'#86552f':'#a8784e';c.fillRect(a,y+FH,b-a,.9);/* 巾木：よぞらの壁は、よぞらのベッドと同じ木の色 */c.fillStyle='rgba(0,0,0,.2)';c.fillRect(a,y+TS-.8,b-a,.8)}
-function yozoraFront(c,x,y,i){/* よぞらの壁：断面と形はダークチェリーの部品。正面は、もらった絵（外から見える正面・柱）と、家の中から見える正面だけ夜空の帯と巾木。木の壁の正面と同じ所にかさねる（角は、はしまで） */
-  if(i==null||ICON)return;const C=window.CHIPS,E=C&&C['yozorawall:ext'],P=C&&C['yozorawall:post'],ei=E&&chipImgs(E,'yozorawall')[0],pi=P&&chipImgs(P,'yozorawall')[0];
-  const inn=HOUSES.some(h=>h.inside.has(i+W)||h.inside.has(i+W-1)||h.inside.has(i+W+1));
+function wallFront(c,id,x,y,i){/* 家の壁の正面：断面と形は部品の絵（drawConn）。正面は、もらった絵（正面 id:ext を世界の座標でならべる・柱 id:post）をかさねる。よぞらの壁は、家の中から見える正面だけ夜空の帯と巾木。木の壁の正面と同じ所（角は、はしまで） */
+  if(i==null||ICON)return;const C=window.CHIPS,E=C&&C[id+':ext'],P=C&&C[id+':post'],ei=E&&chipImgs(E,id)[0],pi=P&&chipImgs(P,id)[0];
+  const inn=id==='yozorawall'&&HOUSES.some(h=>h.inside.has(i+W)||h.inside.has(i+W-1)||h.inside.has(i+W+1));
   const isW=k=>{const t=typeAt(k);return t!=='wall'&&t!=='sdoor'&&(HOME_WALLS.has(t)||HOME_DOORS.has(t))},L=isW(i-1),R=isW(i+1),U=isW(i-W),D=isW(i+W),hasH=L||R||!(U||D);
   const gx=(i%W)*TS-x,ext=(a,b)=>{if(!ei||!ei.ok)return;const pw=E.w*TS/E.h;c.save();c.beginPath();c.rect(a,y,b-a,TS);c.clip();for(let wx=Math.floor((a+gx)/pw)*pw;wx<b+gx;wx+=pw)c.drawImage(ei,wx-gx,y,pw,TS);c.restore()};/* 外から見える正面：絵を世界の座標でならべる */
-  const post=()=>{if(pi&&pi.ok)c.drawImage(pi,x+5,y,22,TS)};/* 柱の正面 */
+  const post=()=>{if(pi&&pi.ok)c.drawImage(pi,x+P.ax/2,y+P.ay/2,P.w/2,P.h/2)};/* 柱の正面 */
   const o=.5,f=(a,b)=>inn?wallBand(c,'night',a,b,x,y,i):ext(a,b);c._noSh=1;
   if(hasH){if(!D){if(L&&R&&!U)f(x-o,x+TS+o);else{post();if(L)f(x-o,x+5);if(R)f(x+27,x+TS+o)}}else{if(L)f(x-o,x+5);if(R)f(x+27,x+TS+o)}}else if(!D)post();
   c._noSh=0}/* となりの壁に0.5だけ重ねて描く（拡大したとき、マスのさかいめにすきまの線が出ないように） */
+function stoneFront(c,x,y,i){/* 石の塀（石垣）の正面：もらった絵（正面 wall:ext を世界の座標でならべる・柱 wall:post）を、部品の絵にかさねる */
+  if(i==null||ICON)return;const C=window.CHIPS,E=C&&C['wall:ext'],P=C&&C['wall:post'],ei=E&&chipImgs(E,'wall')[0],pi=P&&chipImgs(P,'wall')[0];if(!ei||!ei.ok)return;
+  const f=k=>{const o=typeAt(k);return o==='wall'||o==='stonegate'},sd=k=>typeAt(k)==='sdoor',L=f(i-1),R=f(i+1),U=f(i-W),D=f(i+W),dl=sd(i-1),dr=sd(i+1),hasH=L||R||dl||dr||!(U||D);if(!hasH)return;
+  const gx=(i%W)*TS-x,eh=E.h/2,ey=y+E.ay/2,pw=E.w*eh/E.h,o=.5,ext=(a,b)=>{c.save();c.beginPath();c.rect(a,ey,b-a,eh);c.clip();for(let wx=Math.floor((a+gx)/pw)*pw;wx<b+gx;wx+=pw)c.drawImage(ei,wx-gx,ey,pw,eh);c.restore()};
+  const post=cx=>{if(pi&&pi.ok)c.drawImage(pi,cx-P.w/4,y+P.ay/2,P.w/2,P.h/2)};
+  if((L||dl)&&(R||dr)&&!U&&!D)ext(x-o,x+TS+o);else{if(L||dl)ext(x-o,x+16);if(R||dr)ext(x+16,x+TS+o)}
+  if(dl)post(x+P.w/4);if(dr)post(x+TS-P.w/4);if(!(L&&R)&&!(dl&&R)&&!(L&&dr)&&!(dl&&dr)||U||D)post(x+16)}/* 石の塀のドアのとなりは、塀をドアのふちまでのばして、柱をドアにつける */
 const SEC={a:null,b:null,cache:new Map()};
 function drawSection(c,ox,oy,rs){/* 断面（壁・柱のてっぺん）：形のまわりだけ少し濃く、内がわは少し薄く。つながる側へはみ出した分で、マスのさかいめにも線が出ない。形ごとに1回だけ絵にして使いまわす */
   const W0=TS+16,H0=TS+40,X=ox-8,Y=oy-8,key=rs.map(r=>r.map((v,k)=>Math.round((v-(k%2?oy:ox))*100)).join(',')).join('|');let sp=SEC.cache.get(key);
@@ -3509,7 +3517,7 @@ function drawObj(c,id,x,y,i,g,now){
   if(id==='yorubed'&&!chipOf('yorubed',i)){drawObj(c,'bed',x,y,i,g,now);const v=i!=null&&S&&S.rot&&S.rot[i]%2===1;c.save();c.globalAlpha=.55;c.fillStyle='#2a3168';if(v)c.fillRect(x+6,y+8,20,-30<0?20:20);else c.fillRect(x+12,y+4,16,22);c.globalAlpha=1;c.fillStyle='#fff3b8';for(let n=0;n<4;n++)c.fillRect(x+(v?8:14)+hash((i||0)+n)*12,y+(v?10:6)+hash((i||0)*3+n)*16,1.5,1.5);c.restore();return}/* よぞらのベッド（仮の絵）：ふつうのベッドに夜空色のふとん */
   if(!c._chip&&id==='farm'&&drawFarmChip(c,x,y,i,g,now))return;/* 畑のドット絵 */
   if(!c._chip&&DOORCH.has(id)&&!(S&&S.win&&i!=null&&S.win[i]&&!c._win)&&drawDoorChip(c,id,x,y,i,now))return;/* ドア・門のドット絵（リースのあるドアは、リースの前にドアだけ） */
-  if(CONN[id]&&!c._chip&&!(HOME_WALLS.has(id)&&S&&S.win&&S.win[i]&&!c._win)){if(drawConn(c,id,x,y,i,now)){if(id==='yozorawall')yozoraFront(c,x,y,i);return}}/* つながる物は部品で（窓のある壁は、窓の前に壁だけ）。家の壁は、先に、となりの床を壁のふちまでのばす */
+  if(CONN[id]&&!c._chip&&!(HOME_WALLS.has(id)&&S&&S.win&&S.win[i]&&!c._win)){if(drawConn(c,id,x,y,i,now)){if(id==='wall')stoneFront(c,x,y,i);else if(HOME_WALLS.has(id)&&window.CHIPS[id+':ext'])wallFront(c,id,x,y,i);return}}/* つながる物は部品で（窓のある壁は、窓の前に壁だけ）。家の壁は、先に、となりの床を壁のふちまでのばす */
   if(!c._chip&&PCH.has(id)){const ch=plantChip(id,i,g);if(ch&&drawChip(c,ch,id,x,y,now,i)){if(id==='berry'&&g>=100)berryOn(c,x,y);if(id==='statue'&&i!=null&&!ICON)for(const q of[i-1,i+1])if(S.obj[q]==='obox'||S.obj[q]==='board')drawObj(c,S.obj[q],x+(q-i)*TS,y,q,0,now);/* 女神像の横の箱・ボードを手前に */return}}
   if(!c._chip&&!c._win&&!SEATS.includes(id)&&!PCH.has(id)&&!DOORCH.has(id)&&id!=='farm'){const ch=chipOf(id,i);if(ch&&drawChip(c,ch,id,x,y,now,i))return}/* ドット絵があれば、それを使う（いすは、つりざおをかいてから下で） */
   if(BL[id]&&BL[id].cs&&!ICON&&!c._cs){const k=BL[id].cs;c.save();c.translate(x+16,y+20);c.scale(k,k);c.translate(-x-16,-y-20);c._cs=1;drawObj(c,id,x,y,i,g,now);c._cs=0;c.restore();return}/* ラグは、絵だけ大きく（判定はそのまま） */
@@ -5743,7 +5751,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='671';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='672';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
