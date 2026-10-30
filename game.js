@@ -154,6 +154,8 @@ const BL={
   puddle:{name:'すべる水たまり',fix:1,fixm:{stone:1},kind:'furn',lv:4,pc:1,time:80,maker:'water',qty:2,trap:1,anim:1,attr:{water:.5},mat:{stone:2},desc:'ふんだ「コワイノ」が8分止まる（オオカゲは3分）。つぎに使えるまで2時間',anim:1},
   firetrap:{name:'ほのおの罠',fix:2,fixm:{wood:1,stone:1},kind:'furn',pc:3,time:120,maker:'fire',lv:4,qty:2,trap:1,anim:1,attr:{fire:.5},mat:{wood:2,stone:2},desc:'ふんだ「コワイノ」に4ダメージ。つぎに使えるまで3時間',anim:1},
   gust:{name:'つむじ風の罠',fix:2,fixm:{wood:1},kind:'furn',pc:3,time:120,maker:'wind',lv:5,qty:2,trap:1,anim:1,attr:{wind:.5},mat:{wood:2},desc:'ふんだ「コワイノ」を6マスふきとばし、2分止める。つぎに使えるまで2時間30分',anim:1},
+  dig:{name:'けずる',kind:'build',pc:10,time:40,maker:'earth',attr:{},desc:'高いマスを1だん低くする工事（パワー10）'},
+  mound:{name:'もる',kind:'build',pc:10,time:40,maker:'earth',attr:{},desc:'低いマスを1だん高くする工事（パワー10）'},
   watch:{name:'見張り台',fix:10,fixm:{wood:10,stone:10},kind:'build',sz:[2,2],mat:{wood:25,stone:20},pc:20,time:150,maker:'earth',lv:2,solid:1,attr:{fire:2,earth:2},desc:'「コワイノ」に光の矢を放つ。Lv1：ダメージ1／10分ごと／範囲6マス（Lv3：ダメージ3／10分ごと／範囲7マス）'},
   yogan:{name:'ようがん台',fix:10,fixm:{stone:15},kind:'build',sz:[2,2],mat:{wood:5,stone:40},pc:20,time:150,maker:'fire',lv:1,solid:1,attr:{fire:3},desc:'火山のふもとの守り。「コワイノ」に火の玉を飛ばし、当たったまわり1.5マスにもダメージ。Lv1：ダメージ1（まわり0.5）／8分ごと／範囲5マス（Lv3：ダメージ3（まわり1.5）／8分ごと／範囲6マス）'},
   well:{hp:5,brk:1,fix:10,fixm:{wood:4,stone:15},name:'井戸',kind:'build',mat:{wood:8,stone:30},pc:20,time:140,maker:'water',lv:6,solid:1,attr:{water:4},desc:'まわり3マスの畑は水やりなしで育つ'},
@@ -189,7 +191,7 @@ const FLOWER_QUESTS=new Set(['salvia3','lotus3','lily5','clover3']);
 const BEDSET=new Set(['bed','yorubed']);/* ねむれるベッド（よぞらのベッドも同じはたらき） */const KWR=['yozorawall','yozoradoor','yorubed','hoshirug','herrfloor'];const KWRKEY='hakoniwa-kwr-v1';/* コワイノのレシピは、どのステージでもおぼえたまま（ステージべつのセーブとはべつにしまう） */
 function kwrSync(){if(!S)return;let g=[];try{g=JSON.parse(KV.getItem(KWRKEY)||'[]')}catch(e){}const G=new Set(g.filter(id=>KWR.includes(id)));for(const id of KWR)if((S.recipes||{})[id])G.add(id);for(const id of G){(S.recipes||(S.recipes={}))[id]=true;if(BL[id].kind==='block')(S.unlocked||(S.unlocked={}))[id]=true}try{KV.setItem(KWRKEY,JSON.stringify([...G]))}catch(e){}}/* コワイノのレシピ：落とし物でまれに手に入る */
 const STAGEONLY={logfence:0,gazebo:0,bamboofence:1,takebench:1,takeakari:1,shishiodoshi:1,azumaya:1};/* そのステージで作れる物（草原0・火山1）。おぼえたら、どのステージでも作れる */
-const GRECKEY='hakoniwa-rec-v1',GNOREC=new Set(['statue','tower','yogan','watch']);let GREC=null;/* おぼえたレシピは、どのステージでもおぼえたまま（ステージべつのセーブとはべつにしまう）。神殿・台座・ようがん台・見張り台は、ステージのお話で決まるので入れない */
+const GRECKEY='hakoniwa-rec-v1',GNOREC=new Set(['statue','tower','yogan','watch','dig','mound']);let GREC=null;/* おぼえたレシピは、どのステージでもおぼえたまま（ステージべつのセーブとはべつにしまう）。神殿・台座・ようがん台・見張り台は、ステージのお話で決まるので入れない */
 function learnedIn(s,w){const out=[];for(const id in BL){const b=BL[id];if(GNOREC.has(id)||STAGEONLY[id]==null&&b.offerOnly&&b.kind==='furn')continue;/* おそなえだけの家具は、レシピにしない */
   if((s.recipes||{})[id]||(s.unlocked||{})[id])out.push(id);
   else if((b.kind==='block'||b.kind==='build'||b.kind==='plant')&&b.lv&&!QB.has(id)&&(s.lv||1)>=b.lv&&(b.w||0)<=w&&(STAGEONLY[id]==null?!b.offerOnly:STAGEONLY[id]===w))out.push(id)}/* 村レベルで使えるようになった物 */
@@ -204,6 +206,7 @@ const GIFTF=['furin','ema','kadomatsu','komainu','chochin','mimamori','yomawari'
 function furnitureGroups(ids){const wanted=new Set(ids);return CRAFT_TABS.map(([name,items])=>[name,items.filter(id=>wanted.has(id))]).filter(([,items])=>items.length)}
 const FURN=['hoshirug','yorubed','toro','table','chair','stor','mbox','oven','bed','bench','takebench','takeakari','shishiodoshi','campfire','swing','torch','jar','rockart','vane','spike','puddle','stool','stable','pouf','achair','ltable','rug1','sofa1','rug2','tub','sink','crate','monstera','shelf1','wreath','curtain1','cabinet','paint2','shelf2','curtain2','paint3','wshelf','paint1','bathtub','candle','lantern','flamp','signpost','hedge','birdbath','parasol','arch','slide','sandbox','seesaw','kamizo','noren'];// 属性の罠（sticky/firetrap/gust）は次のステージから
 
+const TERRA=new Set(['dig','mound']);/* だんさスコップの工事 */
 const BUILDS=['statue','watch','yogan','lumber','well','quarry','windmill','fountain','lighthouse','stele','tower'];
 const STAMPS={
   fields:{name:'畑セット',cells:[[0,0,'farm'],[1,0,'farm'],[2,0,'farm'],[0,1,'farm'],[1,1,'farm'],[2,1,'farm']]},
@@ -2792,6 +2795,7 @@ function canPlace1(id,x,y,quiet){
   if(!inBase(x,y)){if(!quiet)toast('基地の中にだけ置けます');return false}
   const j=y*W+x;if(id==='lotus'){if(S.ground[j]!==1){if(!quiet)toast('ハスは池の上にだけ植えられます');return false}if(S.obj[j]){if(!quiet)toast('ここにはもう何かあります');return false}return true}
   if(S.ground[j]===1){if(!quiet)toast('水の上には置けません');return false}
+  if(TERRA.has(id)){const k=id==='dig';if(!!hiAt(j)!==k){if(!quiet)toast(k?'高いマスだけ、けずれます':'低いマスだけ、もれます');return false}if(S.obj[j]||S.floor[j]){if(!quiet)toast('なにもない所だけです');return false}if(k&&[j-1,j+1,j-W,j+W].some(n=>STAIRS.has(S.obj[n])&&stairTop(n,stairDir(n))===j)){if(!quiet)toast('階段のうしろは、けずれません');return false}return true}/* だんさスコップ：けずる・もる */
   if(STAIRS.has(id)){const d=PLROTS[id]?SROT[PLROTS[id]]:stairDir(j);if(d<0||!stairOK(j,d)){if(!quiet)toast(PLROTS[id]?ROTL[5][PLROTS[id]]+'には置けません（うしろが段差で、2マスあいている所）':'段差の下に、2マスあいている所に置けます');return false}if(d){const o=stairOut(j,d);if(S.obj[o]||!inBase(o%W,(o/W)|0)){if(!quiet)toast('階段は2マスいります');return false}}}/* 階段は、段差の下の低い地面に1×2 */
   if(BL[id].floor)return S.floor[j]!==id&&!(S.obj[j]&&BL[S.obj[j]].job);
   if(S.obj[j]){if(!quiet)toast('ここにはもう何かあります');return false}
@@ -2827,7 +2831,7 @@ function place(id,x,y){
     if(b.kind==='build'&&S.pt<pc)return toast('パワーが足りません（'+SP(b.pc)+'）');
     if(b.kind==='build'&&!matOK(bm))return toast('素材が足りません（'+matTxt(bm)+'）');
     if(b.kind==='plant'&&cnt('sprout')>=10)return toast('植える予定がいっぱいです');
-    if(b.kind==='build'&&cnt('site')>=3)return toast('建てる予定がいっぱいです');
+    if(b.kind==='build'&&!TERRA.has(id)&&cnt('site')>=3)return toast('建てる予定がいっぱいです');
     if(b.kind==='plant'){S.inv[id]--;S.obj[j]='sprout';S.dyn[j]={plant:id,p:0,userMound:true};undoStack.push({j,id,seed:1})}
     else{S.pt-=pc;for(const k in bm||{})S.mat[k]-=bm[k];S.obj[j]='site';S.dyn[j]={build:id,p:0,need:b.time,mat:bm||undefined};undoStack.push({j,id,pc,mat:bm});
       if(id==='statue'){for(const k of[j-1,j+1,j+W]){S.obj[k]='site2';S.ref[k]=j}}else setParts(id,j,'site2')}/* 足場のどのマスからでも、まわりから作業できる */
@@ -2901,6 +2905,7 @@ function removeAt(x,y){const tx0=x,ty0=y;
   if(S.floor[j]){const f=S.floor[j];S.floor[j]='';giveItem(f,1);burst(j,'block','rm');recount();renderPalette()}
 }
 function finishBuild(j,r){
+  if(TERRA.has(S.dyn[j]&&S.dyn[j].build)){const up=S.dyn[j].build==='mound';delete S.dyn[j];S.obj[j]='';S.hi[j]=up?1:0;recount();dirty=true;burst(j,'block');if(r)addSpiritXp(2,r);return}/* けずる・もる：段差の高さをかえる */
   const d=S.dyn[j],id=d.build;if(!d.mat&&BL[id].mat&&id!=='tower')(S.freeB||(S.freeB={}))[j]=1;/* ただで建てた（素材を使わなかった） */delete S.dyn[j];S.obj[j]=id;noteQuestPlacement(id,j);setParts(id,j,'part');if(BL[id].hp)S.hp[j]=BL[id].hp;if(BL[id].dyn)S.dyn[j]={g:0};
   recount();burst(j,'furn');if(r){addSpiritXp(4,r);r.made=(r.made||0)+1}kurashi('b:'+id,['🏠','はじめて'+BL[id].name+'が建った']);toast(BL[id].name+'が建った！','good');checkQuest();
   if(id==='statue'){S.obj[j-1]='obox';S.obj[j+1]='board';S.obj[j+W]='altar';recount();burst(j-1,'furn');burst(j+1,'furn')}
@@ -4099,6 +4104,7 @@ function toolIcon(k){
   if(k==='glass'){g.fillStyle='#8a5a33';g.fillRect(16,8,40,6);g.fillRect(16,58,40,6);g.fillStyle='#6d4424';g.fillRect(20,14,4,44);g.fillRect(48,14,4,44);
     g.fillStyle='rgba(200,235,255,.55)';g.beginPath();g.moveTo(24,14);g.lineTo(48,14);g.quadraticCurveTo(48,30,37,36);g.quadraticCurveTo(48,42,48,58);g.lineTo(24,58);g.quadraticCurveTo(24,42,35,36);g.quadraticCurveTo(24,30,24,14);g.fill();
     g.fillStyle='#ffcf4a';g.beginPath();g.moveTo(28,22);g.lineTo(44,22);g.lineTo(36,34);g.fill();g.beginPath();g.moveTo(36,40);g.lineTo(45,56);g.lineTo(27,56);g.fill();g.fillRect(35.5,34,1.5,8)}
+  else if(k==='scoop'||k==='dig'||k==='mound'){/* だんさスコップ・けずる・もる */if(k!=='scoop'){g.fillStyle='#8cc35c';g.fillRect(12,k==='dig'?30:20,48,8);g.fillStyle='#b08a5e';g.fillRect(12,k==='dig'?38:28,48,k==='dig'?20:30);g.fillStyle='#fff6df';g.beginPath();if(k==='dig'){g.moveTo(36,26);g.lineTo(24,10);g.lineTo(48,10)}else{g.moveTo(36,4);g.lineTo(24,18);g.lineTo(48,18)}g.fill()}else{g.save();g.translate(36,36);g.rotate(.6);g.fillStyle='#b07c50';rr(g,-3,-32,6,34,3);g.fillStyle='#9aa3ad';g.beginPath();g.moveTo(-11,2);g.lineTo(11,2);g.lineTo(9,22);g.quadraticCurveTo(0,30,-9,22);g.closePath();g.fill();g.restore()}}
   else if(k==='hake'){g.save();g.translate(36,36);g.rotate(-.7);g.fillStyle='#b07c50';rr(g,-5,-30,10,30,4);g.fillStyle='#8a5a33';g.fillRect(-5,-30,3,30);
     g.fillStyle='#c4c8cf';g.fillRect(-12,0,24,7);g.fillStyle='#e9d6a8';g.fillRect(-12,7,24,16);g.fillStyle='#d4bc86';for(let i=0;i<6;i++)g.fillRect(-11+i*4,9,1.5,14);
     g.fillStyle='#86d68f';g.fillRect(-12,19,24,6);g.restore()}
@@ -5273,7 +5279,7 @@ const FEATS={inv:'#dockInv',build:'[data-mode="build"]',remove:'[data-mode="remo
 function applyFeats(){
   if(S.glassT==null&&glassUnlocked())S.glassT=600;/* はじめの10分は無料 */$('#speedBtn').hidden=!(glassUnlocked()||TESTSPD||TESTM);if(!(hasGlass()||TESTM))S.speed=1;if(!TESTM&&S.speed>2)S.speed=1;glassUI();
   for(const k in FEATS)document.querySelector(k==='inv'?FEATS[k]:'#dock '+FEATS[k]).hidden=!S.feat[k]||k==='craft'||k==='inv';/* 依頼は依頼ボードから。おそなえ箱は神殿のおそなえ箱をタップ */
-  document.querySelector('#dock [data-mode="bulk"]').hidden=!(S.bulk||S.stamps||S.swap);/* おそなえ箱のボタン */
+  document.querySelector('#dock [data-mode="bulk"]').hidden=!(S.bulk||S.stamps||S.swap||S.dig);/* おそなえ箱のボタン */
   const n=[...document.querySelectorAll('#dock button')].filter(b=>!b.hidden).length;
   $('#dock').style.gridTemplateColumns='repeat('+n+',1fr)';
 }
@@ -5320,6 +5326,7 @@ function renderPalette(){
     if(S.bulk){lbl(box,'ハケ');box.appendChild(chip(toolIcon('hake'),'ひろびろハケ','下からえらぶ','wide',()=>toast('ぬりたいブロックや種をえらんで、指でなぞろう')))}/* もらった道具だけ出す */
     if(S.stamps){lbl(box,'スタンプ');for(const sid in STAMPS)box.appendChild(chip(stampIcon(sid),STAMPS[sid].name,'スタンプ','wide'+(selStamp===sid?' sel':''),()=>{selStamp=sid;palOpen=false;renderPalette();toast('置きたい場所の左上をタップ')}))}
     if(S.swap){lbl(box,'つけかえ');for(const id of SWAPG.flat().filter(id=>S.unlocked[id])){const k='swap:'+id;box.appendChild(chip(iconURL(id),BL[id].name,'×'+inv(id),selStamp===k?'sel':'',()=>{selStamp=k;palOpen=false;renderPalette();toast('つけかえたい物をタップ')}))}}/* つけかえトンカチ：つながっている柵・塀・家の壁・道・床を、えらんだ種類にまとめてかえる */
+    if(S.dig){lbl(box,'だんさ');for(const id of['dig','mound'])box.appendChild(chip(toolIcon(id),BL[id].name,SP(BL[id].pc),sel===id?'sel':'',pickItem(id)))}/* だんさスコップ：けずる・もるを、せいれいにたのむ */
     if(!S.bulk)return/* ハケがなければ、ぬるブロック・種は出さない */
   }
   const blocks=STATUE<0?[]:BLOCKS.filter(id=>inv(id)>0);
@@ -5403,7 +5410,8 @@ function renderSheet(){
       const bx=row(r2,b.name,'',iconURL(id),S.unlocked[id]);helpify(bx.parentNode,withAttr(id,b.desc));
       if(S.unlocked[id])btn(bx,'もらった',true);else if(!lvOK(id))btn(bx,'村Lv'+b.lv,true);else btn(bx,SP(b.unlock),S.pt<b.unlock,()=>{S.pt-=b.unlock;S.unlocked[id]=true;giveItem(id,2);toast(b.name+'をもらった！ おそなえ箱に2こ入った','good');trade()},1)}
     {const T=WD===0?['bulk','ひろびろハケ','指でなぞった範囲を、ブロックでまとめてぬれる。種もまとめて植えてもらえる','hake']:WD===1?['swap','つけかえトンカチ','つながっている柵・塀・家の壁・道・床を、まとめてべつの種類にかえる。はずした物は、おそなえ箱にもどる','swap']:null;/* 道具は、土地ごとに1つ（草原：ハケ・火山：トンカチ・つぎの土地：スタンプ）。もらった道具は、ほかの土地でも使える */
-      if(T){const r3=sec('道具'),bx=row(r3,T[1],T[2],toolIcon(T[3]),S[T[0]]);if(S[T[0]])btn(bx,'もらった',true);else btn(bx,SP(3000),S.pt<3000,()=>{S.pt-=3000;S[T[0]]=true;applyFeats();toast(T[1]+'をもらった！「どうぐ」から使える','good');trade()},1)}}
+      if(T){const r3=sec('道具'),bx=row(r3,T[1],T[2],toolIcon(T[3]),S[T[0]]);if(S[T[0]])btn(bx,'もらった',true);else btn(bx,SP(3000),S.pt<3000,()=>{S.pt-=3000;S[T[0]]=true;applyFeats();toast(T[1]+'をもらった！「どうぐ」から使える','good');trade()},1)
+        if(WD===0){const b2=row(r3,'だんさスコップ','段差をけずる・もる工事を、せいれいにたのめる（1マスでパワー10）',toolIcon('scoop'),S.dig);if(S.dig)btn(b2,'もらった',true);else btn(b2,SP(1000),S.pt<1000,()=>{S.pt-=1000;S.dig=true;applyFeats();toast('だんさスコップをもらった！「どうぐ」から使える','good');trade()},1)}}}/* だんさスコップは草原のカミサマから（ほかの土地でも使える） */
     if(WD===0&&(S.bossKills||0)>=1){const r5=sec('とくべつな交換'),bx=row(r5,'めぶきのしずく','消えてしまったせいれいを、よみがえらせる（所持：'+(S.mebuki||0)+'）',null);btn(bx,SP(400),S.pt<400,()=>{S.pt-=400;S.mebuki=(S.mebuki||0)+1;toast('めぶきのしずくをもらった','good');trade()},1)}/* 草原には、おまつりがない。しずくはカミサマから */
     if(WD===1&&(qAt('fest')||S.cleared)){const r5=sec('とくべつな交換');/* 火山のふもと：「おまつりをひらこう」のあとから、いつでもおまつり。めぶきのしずく・ごちそうは、おまつりの日に、せいれいの屋台で */
       {const done=S.festDay!=null&&S.festDay>=dayNo(),bx=row(r5,'おまつり','つぎの日が、おまつりになる',null,done);btn(bx,done?(S.festDay>dayNo()?'あしたはおまつり':'きょうはおまつり'):SP(200),done||S.pt<200,()=>{S.pt-=200;S.festDay=dayNo()+1;sfx('good');toast('あしたは、おまつり！','good');trade()},1)}/* たのんだつぎの日の朝7時に、おまつりがはじまる */
@@ -5840,7 +5848,7 @@ function updHUD(){
 let started=false,titleDrift=0,STOCKSIG='';
 function showUI(on){$('#topUI').hidden=!on;$('#botUI').hidden=!on}
 /* 引き継ぎ：便利な道具（ひろびろハケ・かたどりスタンプ・つけかえトンカチ）だけは、ほかの土地でもらっていれば使える */
-function syncTools(s){for(const L of LIVE)if(L&&L!==s){if(L.bulk)s.bulk=true;if(L.stamps)s.stamps=true;if(L.swap)s.swap=true}}
+function syncTools(s){for(const L of LIVE)if(L&&L!==s){if(L.bulk)s.bulk=true;if(L.stamps)s.stamps=true;if(L.swap)s.swap=true;if(L.dig)s.dig=true}}
 function newGame(w){w=w||0;if(sheet!=null)closeSheet();recSync();setWorld(w);resetQuestPrompts();DLGQ.length=0;try{KV.removeItem(SAVE_KEYS[w])}catch(e){}resv.clear();S=newState(w);LIVE[w]=S;syncTools(S);dirty=true;recount();kwrSync();recSync();undoStack=[];renderQuest();applyFeats();setMode('look');$('#title').hidden=true;startPrologue()}
 function startPrologue(){
   showUI(false);started=false;let i=0;const pro=$('#pro');pro.style.transition='none';pro.hidden=false;pro.style.opacity='1';void pro.offsetWidth;pro.style.transition='';/* フェードせずに、すぐまっくらにする（前のデータの画面が一瞬見えないように） */
@@ -5904,7 +5912,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='768';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='769';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
