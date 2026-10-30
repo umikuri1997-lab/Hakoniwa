@@ -3536,7 +3536,7 @@ function drawDoorChip(c,id,x,y,i,now){const C=window.CHIPS;if(!C)return false;
   if(id==='stonegate'){const wide=S.obj[i]!==id||(S.obj[i+1]==='part'&&S.ref[i+1]===i);if(!wide||!ok('h'))return false;return drawChip(c,pick('h',doorOp(i,x+16,y,1.8,2.1)),id,x,y,now,i)}/* 石の大門は2マスはば */
   const isF=k=>{const t=typeAt(k);return FENCE_IDS.has(t)||t==='wall'||t==='sdoor'},ver=!(isF(i-1)||isF(i+1))&&(isF(i-W)||isF(i+W)),o=ver?'v':'h';if(!ok(o))return false;
   return drawChip(c,pick(o,doorOp(i,x,y,ver?2.1:.9,ver?.9:2.1)),id,x,y,now,i)}
-function drawRoofItem(c,id,x,y){/* ガゼボ・東屋：2×2マス（左上が x,y）。絵（チップ）があれば、それを使う */const ch=window.CHIPS&&CHIPS[id];if(ch&&drawChip(c,ch,id,x,y,0))return;
+function drawRoofItem(c,id,x,y){/* ガゼボ・東屋：2×2マス（左上が x,y）。絵（チップ）があれば、それを使う（うしろの柱 <id>:back は、べつの段でかく） */const ch=window.CHIPS&&CHIPS[id];if(ch&&drawChip(c,ch,id,x,y,0))return;
   const gz=id==='gazebo',P=gz?['#f4efe6','#d9d0c2']:['#8a5e3c','#6b4528'],R=gz?['#9cc7a3','#7fae88','#c9e3cc']:['#7d8590','#646b75','#a3abb5'];
   const post=(px,top,bot)=>{c.fillStyle=P[1];c.fillRect(px-2.5,top,5,bot-top);c.fillStyle=P[0];c.fillRect(px-2.5,top,3,bot-top)};
   post(x+8,y+4,y+34);post(x+56,y+4,y+34);/* おくの柱 */
@@ -3548,7 +3548,7 @@ function drawRoofItem(c,id,x,y){/* ガゼボ・東屋：2×2マス（左上が x
   c.fillStyle=R[2];c.fillRect(x-2,y+8,68,2);c.fillRect(x+12,y-15,40,1.5);
   if(gz){c.fillStyle='#efe7da';c.fillRect(x+30,y-38,4,9);c.beginPath();c.arc(x+32,y-39,3,0,7);c.fill()}else{c.fillStyle=R[1];c.fillRect(x+22,y-33,20,4)}}
 function drawObj(c,id,x,y,i,g,now){
-  if(CANOPY.has(id)){if(ICON||i==null){const ch=window.CHIPS&&CHIPS[id];if(ch&&drawChip(c,ch,id,x,y,0,i))return;c.save();c.translate(x+3,y+11);c.scale(.4,.4);drawRoofItem(c,id,0,0);c.restore()}else drawRoofItem(c,id,x,y);return}/* ガゼボ・東屋（アイコンは小さく） */
+  if(CANOPY.has(id)){if(ICON||i==null){const ch=window.CHIPS&&CHIPS[id],bk=window.CHIPS&&CHIPS[id+':back'];if(bk)drawChip(c,bk,id,x,y,0,i);if(ch&&drawChip(c,ch,id,x,y,0,i))return;c.save();c.translate(x+3,y+11);c.scale(.4,.4);drawRoofItem(c,id,0,0);c.restore()}else drawRoofItem(c,id,x,y);return}/* ガゼボ・東屋（アイコンは小さく） */
   if(id==='yorubed'&&!chipOf('yorubed',i)){drawObj(c,'bed',x,y,i,g,now);const v=i!=null&&S&&S.rot&&S.rot[i]%2===1;c.save();c.globalAlpha=.55;c.fillStyle='#2a3168';if(v)c.fillRect(x+6,y+8,20,-30<0?20:20);else c.fillRect(x+12,y+4,16,22);c.globalAlpha=1;c.fillStyle='#fff3b8';for(let n=0;n<4;n++)c.fillRect(x+(v?8:14)+hash((i||0)+n)*12,y+(v?10:6)+hash((i||0)*3+n)*16,1.5,1.5);c.restore();return}/* よぞらのベッド（仮の絵）：ふつうのベッドに夜空色のふとん */
   if(!c._chip&&id==='farm'&&drawFarmChip(c,x,y,i,g,now))return;/* 畑のドット絵 */
   if(!c._chip&&DOORCH.has(id)&&!(S&&S.win&&i!=null&&S.win[i]&&!c._win)&&drawDoorChip(c,id,x,y,i,now))return;/* ドア・門のドット絵（リースのあるドアは、リースの前にドアだけ） */
@@ -4829,7 +4829,7 @@ function render(now){
   for(let y=Math.max(0,y0-2);y<Math.min(H,y1+4);y++)for(let x=Math.max(0,x0-4);x<x1;x++){const i=y*W+x,o=S.obj[i];if(!o||o==='part'||!BL[o]||S.ground[i]===1&&o!=='lotus'&&o!=='sprout'||(FLAT.has(o)||BL[o].floor)&&!(BL[o].dyn||BL[o].anim||TREES.has(o)))continue;/* 立っている物は、動く物も動かない物も、毎コマ足もとの順に描く */
     if(o==='door'||o==='yozoradoor')add((i/W|0)+.01,0,null,()=>{ctx._doorBack=1;drawObj(ctx,o,x*TS,y*TS,i);ctx._doorBack=0},i);/* ドアの奥の面 */
     add(objectDepth(o,i),BL[o].kind==='block'?0:1,null,()=>drawObj(ctx,o,x*TS,y*TS,i,S.dyn[i]?(S.dyn[i].g!=null?S.dyn[i].g:S.dyn[i].p):0,now),i)}
-  for(const k in S.roof||{}){const j=+k,x=j%W,y=(j/W)|0,id=S.roof[k];if(!vis({x:x+1,y:y+1}))continue;add(y+2.001,3,[x*TS-8,y*TS-44,x*TS+72,y*TS+70],()=>drawRoofItem(ctx,id,x*TS,y*TS),j)}/* ガゼボ・東屋：家の屋根と同じ（2マスめの行のすぐ後）。下に置いた物より上 */
+  for(const k in S.roof||{}){const j=+k,x=j%W,y=(j/W)|0,id=S.roof[k];if(!vis({x:x+1,y:y+1}))continue;add(y+2.001,3,[x*TS-8,y*TS-44,x*TS+72,y*TS+70],()=>drawRoofItem(ctx,id,x*TS,y*TS),j);{const bk=window.CHIPS&&CHIPS[id+':back'];if(bk)add(y,0,[x*TS-8,y*TS-44,x*TS+72,y*TS+70],()=>drawChip(ctx,bk,id,x*TS,y*TS,0),j)}}/* うしろの柱は、その行のはじめ（せいれいや家具より下） *//* ガゼボ・東屋：家の屋根と同じ（2マスめの行のすぐ後）。下に置いた物より上 */
   if(WD===1&&S.st2&&S.st2.fire)for(const k in S.st2.fire){const j=+k,o=S.obj[j];if(!o||!BL[o])continue;add(objectDepth(o,j)+.005,1,objBox(o,j),()=>drawFire1(j,now),j)}/* 燃えている物のほのおは、その物のすぐ手前に */
   if(festOn()){const SL=festStalls();for(const[x,y]of festPoles()){const j=y*W+x;if(S.obj[j]||S.ground[j]===1||!vis({x:x+.5,y:y+.5})||SL.some(t=>t.y===y&&Math.abs(t.x-x)<=2))continue;add(y+1,1,[x*TS,y*TS-24,x*TS+TS+8,y*TS+TS],()=>drawFestPole(x,y,now),-1)}}/* おまつりのちょうちん（木や岩・水の上、屋台のところには立てない） */
   for(const h of HOUSES){const bot=h.y1,ib=h.ib;if(bot<y0-1||h.y0>y1+1||h.x1<x0-1||h.x0>x1+1)continue;
@@ -5793,7 +5793,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='714';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='715';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
