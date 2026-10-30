@@ -40,6 +40,10 @@ const ELEM_KEYS=Object.keys(ELEM);
 // kind: block・plant=おそなえ/カミサマとの交換でおそなえ箱に入る / furn=依頼ボードでせいれいが作る / build=せいれいが建てる（パワー）
 const BL={
   path:{name:'あぜ道',kind:'block',floor:1,lv:2,cost:1,pc:2,time:30,maker:'earth',qty:10,mat:{stone:2},attr:{earth:.25},desc:'草地のあいだを通る土の道。歩く速さ×1.25'},
+  stairs_earth:{name:'土の階段',kind:'block',lv:1,cost:1,pc:2,time:40,maker:'earth',qty:2,mat:{stone:2},attr:{earth:.25},desc:'段差のふちに置く。段差を飛ばずに上り下りできる（1マス歩く時間。飛ぶと3倍）'},
+  stairs_wood:{name:'木の階段',kind:'block',lv:2,cost:1,pc:3,time:50,maker:'wood',qty:2,mat:{wood:3},attr:{wood:.3},desc:'段差のふちに置く。段差を飛ばずに上り下りできる（1マス歩く時間。飛ぶと3倍）'},
+  stairs_log:{name:'丸太の階段',kind:'block',lv:3,cost:2,pc:4,time:60,maker:'wood',qty:2,mat:{wood:5},attr:{wood:.5},desc:'段差のふちに置く。段差を飛ばずに上り下りできる（1マス歩く時間。飛ぶと3倍）'},
+  stairs_stone:{name:'石の階段',kind:'block',lv:4,cost:2,pc:4,time:60,maker:'earth',qty:2,mat:{stone:5},attr:{earth:.5},desc:'段差のふちに置く。段差を飛ばずに上り下りできる（1マス歩く時間。飛ぶと3倍）'},
   gravel:{name:'砂利道',kind:'block',floor:1,cost:1,pc:3,time:30,maker:'earth',qty:10,lv:5,mat:{stone:3},attr:{earth:.4},desc:'小石をしいた道。歩く速さ×1.4'},
   brick:{name:'レンガ道',kind:'block',floor:1,cost:3,pc:5,time:50,maker:'fire',qty:10,lv:8,mat:{stone:8},attr:{fire:.4,earth:.3},desc:'レンガをしきつめた道。歩く速さ×1.75'},
   floor:{name:'フローリング',kind:'block',floor:1,lv:4,cost:1,pc:2,time:30,maker:'wood',qty:10,mat:{wood:2},attr:{wood:.5},desc:'木目のそろった板の床。歩く速さ×1.15'},
@@ -936,6 +940,11 @@ const fp=(id,x,y,rot)=>{const z=rot!=null?szR(id,rot):szAt(id,y*W+x);if(!z)retur
 function walk(j){if(j<0||j>=W*H||S.ground[j]===1)return false;return !solidOf(j)}
 const LIFT=26;/* 段差1だんの高さ（ドット）。高いマスの上の物は、これだけ上に描く */
 function hiAt(j){return S.hi?S.hi[j]|0:0}
+const STAIRS=new Set(['stairs_earth','stairs_wood','stairs_log','stairs_stone']),SDIR=[[0,1],[1,0],[0,-1],[-1,0]];/* 階段の向き：0下 1右 2上 3左（低いほう） */
+function stairDir(j){/* 階段は、高いマスのふち。となりの低いマス（水でない）のほうへ下りる（下・右・左・上の順にえらぶ） */const x=j%W,y=(j/W)|0;for(const d of[0,1,3,2]){const nx=x+SDIR[d][0],ny=y+SDIR[d][1];if(nx<0||ny<0||nx>=W||ny>=H)continue;const n=ny*W+nx;if(!hiAt(n)&&S.ground[n]!==1)return d}return -1}
+function stairLink(a,b){/* aが階段で、bがその下りる先 */if(!STAIRS.has(S.obj[a])||!hiAt(a))return false;const d=stairDir(a);return d>=0&&a+SDIR[d][1]*W+SDIR[d][0]===b}
+function jumpEdge(a,b){return hiAt(a)!==hiAt(b)&&!stairLink(a,b)&&!stairLink(b,a)}/* 段差を飛ぶ所（階段で上り下りする所はちがう） */
+function zAt(x,y){/* その場所の高さ（ドット）。階段の上は、低いほうへ少しずつ下がる */const c=(y|0)*W+(x|0);if(!hiAt(c))return 0;if(!STAIRS.has(S.obj[c]))return LIFT;const d=stairDir(c);if(d<0)return LIFT;const fx=x-(x|0),fy=y-(y|0),f=d===0?fy:d===1?fx:d===2?1-fy:1-fx;return LIFT*(1-f)}
 const HI_OK=new Set(['deadtree','rock','berry','bamboo','tree','ntree','fruit']);/* 段差を作ってよい物（自然の物） */
 function genHeights(s,w){/* 段差：マップのところどころに、1だん高い土地。村のまん中（14マス）と、水のまわり・床・人の作った物の所には作らない */
   const R=mulberry((w===1?20261102:w===FREE?20261022:20261018)+77),h=new Array(W*H).fill(0);
@@ -1072,7 +1081,7 @@ function roadSearch(sx,sy,block){
   const s=clamp(sy,0,H-1)*W+clamp(sx,0,W-1);cost[s]=0;dist[s]=0;B[0]=[s];
   for(let c=0;c<B.length;c++){const L=B[c];if(!L)continue;for(const i of L){if(cost[i]!==c)continue;const x=i%W,y=(i/W)|0;
     for(const[dx,dy]of DIRS){const nx=x+dx,ny=y+dy;if(nx<0||ny<0||nx>=W||ny>=H)continue;const j=ny*W+nx;if(!walk(j)&&!(S.ground[i]===1&&S.ground[j]===1&&!solidOf(j))||block&&block.has(j))continue;/* 水の中にいるときは、水の中も歩ける */
-      const fl=S.floor[j],nc=c+(FCOST[fl]||6)*(hiAt(i)!==hiAt(j)?3:1);/* 段差を飛ぶのは、歩くより3倍の手間 */if(cost[j]>=0&&cost[j]<=nc)continue;
+      const fl=S.floor[j],nc=c+(FCOST[fl]||6)*(jumpEdge(i,j)?3:1);/* 段差を飛ぶのは、歩くより3倍の手間 */if(cost[j]>=0&&cost[j]<=nc)continue;
       cost[j]=nc;dist[j]=dist[i]+1;prev[j]=i;(B[nc]||(B[nc]=[])).push(j)}}}
   return {dist,prev};
 }
@@ -1092,7 +1101,7 @@ function bfsE(sx,sy,wk,sd){
   for(let c=0;c<B.length;c++){const L=B[c];if(!L)continue;for(const i of L){if(cost[i]!==c)continue;const x=i%W,y=(i/W)|0;
     for(const[dx,dy]of DIRS){const nx=x+dx,ny=y+dy;if(nx<0||ny<0||nx>=W||ny>=H)continue;const j=ny*W+nx;if(S.ground[j]===1)continue;
       let add=2+((Math.imul(j^sd,2654435761)>>>29)&1);const o=typeAt(j);
-      if(hiAt(i)!==hiAt(j))add*=3;/* 段差を飛ぶのは3倍 */if(solidOf(j)||HOME_DOORS.has(o)||GATE_IDS.has(o)){if(!breakable(o))continue;add+=wk}/* 壁はどれも同じ手間（守りの薄い所をねらうことはしない） */
+      if(jumpEdge(i,j))add*=3;/* 段差を飛ぶのは3倍 */if(solidOf(j)||HOME_DOORS.has(o)||GATE_IDS.has(o)){if(!breakable(o))continue;add+=wk}/* 壁はどれも同じ手間（守りの薄い所をねらうことはしない） */
       const nc=c+add;if(cost[j]>=0&&cost[j]<=nc)continue;cost[j]=nc;dist[j]=dist[i]+1;prev[j]=i;(B[nc]||(B[nc]=[])).push(j)}}}
   return {dist,prev};
 }
@@ -1821,7 +1830,7 @@ function moveR(r,dt){
   if(r.path.length){const cj=(r.y|0)*W+(r.x|0),n0=r.path[0];if(n0!==cj&&Math.abs(n0%W-cj%W)+Math.abs(((n0/W)|0)-((cj/W)|0))>1){/* 次のマスがとなりでない（古い道・押されてずれた）ときは、いまの場所から道を引きなおす。壁をすりぬけない */
     const g=r.path[r.path.length-1],G0=roadSearch(r.x|0,r.y|0);r.path=G0.dist[g]>=0?avoidPath(r,G0,g):[];if(!r.path.length&&g!==cj){noPass(r);endAct(r);return}}}
   while(step>0&&r.path.length){const j=r.path[0];if(!walk(j)&&!(S.ground[j]===1&&!solidOf(j)&&(S.ground[(r.y|0)*W+(r.x|0)]===1||r.act&&r.act.wade))){const goal=r.path[r.path.length-1],G=roadSearch(r.x|0,r.y|0);if(G.dist[goal]>=0&&walk(goal)){r.path=avoidPath(r,G,goal);if(r.path.length)return}noPass(r);endAct(r);return}
-    const tx=j%W+.5,ty=((j/W)|0)+.5,dx=tx-r.x,dy=ty-r.y,d=Math.hypot(dx,dy),jf=hiAt((r.y|0)*W+(r.x|0))!==hiAt(j)?5:1;/* 段差を飛ぶ間（マスのさかいまで）は5倍ゆっくり＝1マスで3倍の時間 */
+    const tx=j%W+.5,ty=((j/W)|0)+.5,dx=tx-r.x,dy=ty-r.y,d=Math.hypot(dx,dy),jf=jumpEdge((r.y|0)*W+(r.x|0),j)?5:1;/* 段差を飛ぶ間（マスのさかいまで）は5倍ゆっくり＝1マスで3倍の時間 */
     if(dx)r.face=dx<0?-1:1;
     if(d*jf<=step){r.x=tx;r.y=ty;r.path.shift();step-=d*jf}else{r.x+=dx/d*step/jf;r.y+=dy/d*step/jf;step=0}}
   // ぶつかって進めないときは、止まっている子のマスを避けた道を探して回り込む。道がなければ少しの間すりぬける
@@ -2109,7 +2118,7 @@ function updEnemy(e,dt){
       if(S.hp[j]<=0){const nm=BL[S.obj[j]].name;(S.broken||(S.broken=[])).push({j,id:S.obj[j],L:S.hp['L'+j]});sfxAt('wbreak',j%W+.5,(j/W)|0);if(S.ns)S.ns.broke++;{const hb=HOUSES.find(h=>h.set.has(j));clearObj(j);recount();houseBreakFlee(hb)}toast(nm+'がこわされた！','warn')}}
     return}}
   if(!walk(j)){e.path=[];return}
-  let sp=D.sp*dt*e.slow*(e.flee&&D.thief?1.8:1);if(!e.flee)sp*=lightMul(e.x,e.y);/* 光の中は、移動の速さ0.8倍 */if(hiAt((e.y|0)*W+(e.x|0))!==hiAt(j))sp/=5;/* 段差を飛ぶ間は5倍ゆっくり */
+  let sp=D.sp*dt*e.slow*(e.flee&&D.thief?1.8:1);if(!e.flee)sp*=lightMul(e.x,e.y);/* 光の中は、移動の速さ0.8倍 */if(jumpEdge((e.y|0)*W+(e.x|0),j))sp/=5;/* 段差を飛ぶ間は5倍ゆっくり */
   const tx=j%W+.5,ty=((j/W)|0)+.5,dx=tx-e.x,dy=ty-e.y,d=Math.hypot(dx,dy);
   if(d<=sp){e.x=tx;e.y=ty;e.path.shift()}else{e.x+=dx/d*sp;e.y+=dy/d*sp}e.stk=0
 }
@@ -2768,6 +2777,7 @@ function canPlace1(id,x,y,quiet){
   if(!inBase(x,y)){if(!quiet)toast('基地の中にだけ置けます');return false}
   const j=y*W+x;if(id==='lotus'){if(S.ground[j]!==1){if(!quiet)toast('ハスは池の上にだけ植えられます');return false}if(S.obj[j]){if(!quiet)toast('ここにはもう何かあります');return false}return true}
   if(S.ground[j]===1){if(!quiet)toast('水の上には置けません');return false}
+  if(STAIRS.has(id)&&!(hiAt(j)&&stairDir(j)>=0)){if(!quiet)toast('段差のふち（高い所）にだけ置けます');return false}
   if(BL[id].floor)return S.floor[j]!==id&&!(S.obj[j]&&BL[S.obj[j]].job);
   if(S.obj[j]){if(!quiet)toast('ここにはもう何かあります');return false}
   if(RFC.has(j)&&!LOWROOF.has(id)){if(!quiet)toast('屋根の下には、ひくい物だけ置けます');return false}
@@ -3551,6 +3561,7 @@ function drawRoofItem(c,id,x,y){/* ガゼボ・東屋：2×2マス（左上が x
   c.fillStyle=R[2];c.fillRect(x-2,y+8,68,2);c.fillRect(x+12,y-15,40,1.5);
   if(gz){c.fillStyle='#efe7da';c.fillRect(x+30,y-38,4,9);c.beginPath();c.arc(x+32,y-39,3,0,7);c.fill()}else{c.fillStyle=R[1];c.fillRect(x+22,y-33,20,4)}}
 function drawObj(c,id,x,y,i,g,now){
+  if(STAIRS.has(id)){if(ICON||i==null)drawStair(c,id,x,y,0,y+3,y+29);return}/* 階段は、段差といっしょに cliffRow で描く（ここはアイコンだけ） */
   if(CANOPY.has(id)){if(ICON||i==null){const ch=window.CHIPS&&CHIPS[id],bk=window.CHIPS&&CHIPS[id+':back'];if(bk)drawChip(c,bk,id,x,y,0,i);if(ch&&drawChip(c,ch,id,x,y,0,i))return;c.save();c.translate(x+3,y+11);c.scale(.4,.4);drawRoofItem(c,id,0,0);c.restore()}else drawRoofItem(c,id,x,y);return}/* ガゼボ・東屋（アイコンは小さく） */
   if(id==='yorubed'&&!chipOf('yorubed',i)){drawObj(c,'bed',x,y,i,g,now);const v=i!=null&&S&&S.rot&&S.rot[i]%2===1;c.save();c.globalAlpha=.55;c.fillStyle='#2a3168';if(v)c.fillRect(x+6,y+8,20,-30<0?20:20);else c.fillRect(x+12,y+4,16,22);c.globalAlpha=1;c.fillStyle='#fff3b8';for(let n=0;n<4;n++)c.fillRect(x+(v?8:14)+hash((i||0)+n)*12,y+(v?10:6)+hash((i||0)*3+n)*16,1.5,1.5);c.restore();return}/* よぞらのベッド（仮の絵）：ふつうのベッドに夜空色のふとん */
   if(!c._chip&&id==='farm'&&drawFarmChip(c,x,y,i,g,now))return;/* 畑のドット絵 */
@@ -4756,7 +4767,7 @@ function siteSpan(id){const b=BL[id];if(!b)return null;if(id==='statue')return{x
 function objBox(o,j){if(o==='site'&&S.dyn[j]){const sp=siteSpan(S.dyn[j].build);if(sp){const x=j%W,y=(j/W)|0,L=x*TS+sp.x0*TS-4,Wd=sp.w*TS+8,B=(y+sp.rows)*TS+3;return[L,B-Wd*91/104*sp.hf-20,L+Wd,B]}}
 const x=j%W,y=(j/W)|0,b=BL[o],z=szAt(o,j)||[1,1],k=BIG2.has(o)?2:TREES.has(o)?2.25:(o==='stor'||o==='mbox')?1.25:BIG.has(o)?(BIGK[o]||1.5):1,tall=BIG2.has(o)||TREES.has(o)||b.kind==='build';
   const cx=x*TS+16*z[0],by=(y+z[1])*TS+3,hw=Math.max(16*z[0]*k,tall?28:16)+6,ht=tall?150:b.kind==='block'?44:48*k*z[1]+8;return[cx-hw,by-ht,cx+hw,by]}
-const FLAT=new Set(['rug1','rug2','hoshirug','farm','plot','sprout','spike','puddle','sticky','firetrap','gust','crack']);/* 地面に近い物：その上に立つせいれいより下に描く */
+const FLAT=new Set(['stairs_earth','stairs_wood','stairs_log','stairs_stone','rug1','rug2','hoshirug','farm','plot','sprout','spike','puddle','sticky','firetrap','gust','crack']);/* 地面に近い物：その上に立つせいれいより下に描く */
 function objectDepth(o,j){const y=(j/W)|0;if(FLAT.has(o))return y+.02;if(HOME_DOORS.has(o)&&HOUSES.some(h=>h.set.has(j)))return y+.3;/* 家のドアは、屋根より下の層 */
   const b=o==='site'&&S.dyn[j]&&BL[S.dyn[j].build]||BL[o];
   return y+(b&&b.sz?(o==='site'?b.sz[1]:szAt(o,j)[1]):1)+(o==='obox'?.01:0);
@@ -4777,15 +4788,25 @@ function waterShimmer(now,x0,y0,x1,y1){/* 水面：見えている所の水の�
 function liftDraw(z,f){if(!z){f();return}ctx.save();ctx.translate(0,-z);f();ctx.restore()}
 function uLift(o){/* 段差の上にいる子・コワイノは、LIFT だけ上に。段差を飛んでいる間は、高さを少しずつかえて、ぴょんと弧をえがく */
   if(!S.hi||!o)return 0;const cj=(o.y|0)*W+(o.x|0),n=o.path&&o.path.length?o.path[0]:-1;
-  if(n>=0&&n!==cj||n>=0){const nx=n%W+.5,ny=((n/W)|0)+.5,ddx=nx-o.x,ddy=ny-o.y,d=Math.hypot(ddx,ddy);if(d>.001&&d<1.01){const sx=Math.abs(ddx)>=Math.abs(ddy)?Math.sign(ddx):0,sy=sx?0:Math.sign(ddy),a=n-sy*W-sx,ha=hiAt(a),hn=hiAt(n);if(ha!==hn){const t=1-d;return LIFT*(ha+(hn-ha)*t)+Math.sin(Math.PI*t)*10}}}
-  return hiAt(cj)*LIFT}
+  if(n>=0&&n!==cj||n>=0){const nx=n%W+.5,ny=((n/W)|0)+.5,ddx=nx-o.x,ddy=ny-o.y,d=Math.hypot(ddx,ddy);if(d>.001&&d<1.01){const sx=Math.abs(ddx)>=Math.abs(ddy)?Math.sign(ddx):0,sy=sx?0:Math.sign(ddy),a=n-sy*W-sx,ha=hiAt(a),hn=hiAt(n);if(jumpEdge(a,n)){const t=1-d;return LIFT*(ha+(hn-ha)*t)+Math.sin(Math.PI*t)*10}}}
+  return zAt(o.x,o.y)}
+const STPAL={stairs_earth:['#c19466','#8f6642','#6e4c30'],stairs_wood:['#dcae72','#a9784b','#86593a'],stairs_log:['#c08a55','#8b5b35','#6b4428'],stairs_stone:['#d3cdc2','#a59d91','#837b70']};
+function drawStair(c,id,px,py,d,top,bot){/* 階段（仮の絵）：5だん。d：0下 1右 2上 3左（下りる向き）。top/bot はアイコン用 */
+  const P=STPAL[id]||STPAL.stairs_earth,lg=id==='stairs_log',n=5;
+  if(d===0){const yT=top!=null?top:py-LIFT+2,yB=bot!=null?bot:py+TS,h=(yB-yT)/n,x0=px+3,w=TS-6;
+    for(let k=0;k<n;k++){const y=yT+k*h;c.fillStyle=P[0];c.fillRect(x0,y,w,h*.5+.5);c.fillStyle=P[1];if(lg){c.beginPath();c.roundRect(x0,y+h*.5,w,h*.5,h*.25);c.fill();c.fillStyle=P[0];c.beginPath();c.ellipse(x0+2,y+h*.75,1.6,h*.25,0,0,7);c.ellipse(x0+w-2,y+h*.75,1.6,h*.25,0,0,7);c.fill()}else c.fillRect(x0,y+h*.5,w,h*.5+.5);c.fillStyle=P[2];c.fillRect(x0,y+h-1,w,1)}
+    c.fillStyle=P[2];c.fillRect(x0-1,yT,1,yB-yT);c.fillRect(x0+w,yT,1,yB-yT);return}
+  if(d===2){const yT=py-LIFT,h=TS/n;for(let k=0;k<n;k++){const y=yT+k*h;c.fillStyle=k%2?P[0]:P[1];c.globalAlpha=.55+.09*k;c.fillRect(px+3,y,TS-6,h+.5);c.globalAlpha=1;c.fillStyle=P[2];c.fillRect(px+3,y+h-1,TS-6,1)}return}/* 奥へ下りる：奥ほど低い（うすく） */
+  const w=TS/n,dz=LIFT/n;for(let k=0;k<n;k++){const kk=d===1?k:n-1-k,x=px+kk*w,yT=py-LIFT+(k+.5)*dz;c.fillStyle=P[0];c.fillRect(x,yT,w+.5,TS);c.fillStyle=P[1];c.fillRect(x,yT+TS,w+.5,py+TS-(yT+TS));c.fillStyle=P[2];c.fillRect(d===1?x+w-1:x,yT,1,TS)}}/* 横へ下りる：となりへ行くほど低い */
 function cliffRow(c,y,xa,xb){/* 段差：その行の高いマスの地面を、下絵(stat)から LIFT だけ上にうつして、がけの正面・横のふちを描く */
   const C=window.CHIPS||{},dc=(k,px,py)=>{const ch=C[k];if(ch)drawChip(c,ch,'cliff',px,py,0)};let x=xa;
   while(x<=xb){if(!hiAt(y*W+x)){x++;continue}let e=x;while(e+1<=xb&&hiAt(y*W+e+1))e++;
     c.drawImage(stat,x*TS,y*TS,(e-x+1)*TS,TS,x*TS,y*TS-LIFT,(e-x+1)*TS,TS);
     for(let k=x;k<=e;k++){const j=y*W+k,L=k>0&&hiAt(j-1),R=k<W-1&&hiAt(j+1),U=y>0&&hiAt(j-W),D=y<H-1&&hiAt(j+W),px=k*TS,py=y*TS;
       if(!L)dc('cliff:sideL',px,py);if(!R)dc('cliff:sideR',px,py);
-      if(!D)dc('cliff:'+(!L&&!R?'faceLR':!L?'faceL':!R?'faceR':'face'),px,py);
+      const st=STAIRS.has(S.obj[j])?stairDir(j):-1;
+      if(!D&&st!==0)dc('cliff:'+(!L&&!R?'faceLR':!L?'faceL':!R?'faceR':'face'),px,py);
+      if(st>=0)drawStair(c,S.obj[j],px,py,st);
       c.fillStyle='rgba(255,250,225,.10)';c.fillRect(px,py-LIFT,TS,TS);/* 高い所は、少し明るく */
       if(!D){const g=c.createLinearGradient(0,py+TS,0,py+TS+7);g.addColorStop(0,'rgba(40,30,20,.22)');g.addColorStop(1,'rgba(40,30,20,0)');c.fillStyle=g;c.fillRect(px,py+TS,TS,7)}/* がけの下のかげ */
       c.fillStyle='rgba(60,45,30,.35)';if(!U)c.fillRect(px,py-LIFT,TS,1);if(!L)c.fillRect(px,py-LIFT,1,TS);if(!R)c.fillRect(px+TS-1,py-LIFT,1,TS)}
@@ -5808,7 +5829,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='748';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='749';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
