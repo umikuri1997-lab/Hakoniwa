@@ -1043,7 +1043,7 @@ const withAttr=(id,t)=>{const a=attrTxt(id);return a?(t?t+'　':'')+'【'+a+'】
 function recount(){if(S.broken)S.broken=S.broken.filter(b=>!S.obj[b.j]);/* こわれた物の場所に、なにか置いたら、こわれた物のリストからはずす */
   for(const key in S.win||{}){const j=+key,wall=k=>HOME_WALLS.has(S.obj[k])||HOME_DOORS.has(S.obj[k]);if(S.win[j]==='wreath'&&S.obj[j]==='door'&&(wall(j-W)||wall(j+W))&&!(wall(j-1)||wall(j+1))){S.inv.wreath=(S.inv.wreath||0)+1;delete S.win[j];toast('たてのドアのリースを、持ち物にもどしました')}}/* たてのドアにはリースをかけられない。まわりの壁が変わってたてになったら、知らせてもどす */
   STATUE=-1;OBOX=-1;BOARD=-1;counts={};LIGHTS=[];STELES=[];TOWERS=[];NEARFLOWER=new Set();NEARWELL=new Set();NEARMILL=new Set();NEARVANE=new Set();NEARSIGN=new Set();NEARPARA=new Set();RUGC=new Map();for(const k in S.rug||{})for(const c of rugCells(+k))RUGC.set(c,+k);RFC=new Map();for(const k in S.roof||{})for(const c of rugCells(+k))RFC.set(c,+k);/* 屋根の下のマス→屋根の左上 *//* ラグがしいてあるマス→ラグの左上 */ENVG=new Float32Array(W*H);REV=new Set();ATTR={};ELEM_KEYS.forEach(k=>ATTR[k]=0);
-  const around=(j,r,set)=>{const x=j%W,y=(j/W)|0;for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){if(dx*dx+dy*dy>r*r+1)continue;const nx=x+dx,ny=y+dy;if(nx>=0&&ny>=0&&nx<W&&ny<H)set.add(ny*W+nx)}};
+  const around=(j,r,set)=>{const x=j%W,y=(j/W)|0,h=set===REV?hiAt(j):-1;for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){if(dx*dx+dy*dy>r*r+1)continue;const nx=x+dx,ny=y+dy;if(nx>=0&&ny>=0&&nx<W&&ny<H&&!(h>=0&&hiAt(ny*W+nx)!==h))set.add(ny*W+nx)}};/* 緑の広がり（REV）は、段差をこえない */
   const addA=a=>{if(a)for(const k in a)ATTR[k]+=a[k]};
   let baseN=0,revN=0;
   for(const k in S.rug||{}){const o=S.rug[k];counts[o]=(counts[o]||0)+1;if(inBase(k%W,(k/W)|0)&&BL[o])addA(BL[o].attr)}/* ラグ（床の上の層）も数える */
@@ -4805,7 +4805,7 @@ function cliffRuns(){if(CLC.n===STATN&&CLC.s===S&&CLC.rows)return CLC.rows;CLC.n
 function cliffTop(P,E,y,k){/* 高いマスの上の面の形：ふち（となりが低い向き）は少しでこぼこ、外がわの角は丸く。P：面（ぬる形）、E：ふちの線 */
   const j=y*W+k,px=k*TS,x1=px+TS,y0=y*TS-LIFT,y1=y0+TS,r=5,nz=(a,b)=>(hash(a*131+b*7919+17)-.5)*2;
   const U=!(y>0&&hiAt(j-W)),D=!(y<H-1&&hiAt(j+W)),L=!(k>0&&hiAt(j-1)),R=!(k<W-1&&hiAt(j+1));
-  const yN=x=>U?y0+1.4+nz(x,y*2)*1.3:y0-.6,yS=x=>D?y1+1.8+nz(x,y*2+1)*1.2:y1+.6,xW=v=>L?px+3.4+nz(k*2,v)*1.3:px-.6,xE=v=>R?x1-3.4+nz(k*2+1,v)*1.3:x1+.6;
+  const yN=x=>U?y0+.3+nz(x,y*2)*.5:y0-.6,yS=x=>D?y1+1.6+nz(x,y*2+1)*.8:y1+.6,xW=v=>L?px+.3+nz(k*2,v)*.5:px-.6,xE=v=>R?x1-.3+nz(k*2+1,v)*.5:x1+.6;/* ふちは、マスのさかいのまま（内がわに切りこまない：外に地面が見えないように） */
   const TL=U&&L,TR=U&&R,BR=D&&R,BL=D&&L,st=[];for(let v=0;v<=TS;v+=4)st.push(v);
   const N=st.filter(v=>v>=(TL?r:0)&&v<=TS-(TR?r:0)).map(v=>[px+v,yN(px+v)]),Ea=st.filter(v=>v>=(TR?r:0)&&v<=TS-(BR?r:0)).map(v=>[xE(y0+v),y0+v]),
     So=st.filter(v=>v>=(BL?r:0)&&v<=TS-(BR?r:0)).reverse().map(v=>[px+v,yS(px+v)]),Wd=st.filter(v=>v>=(TL?r:0)&&v<=TS-(BL?r:0)).reverse().map(v=>[xW(y0+v),y0+v]);
@@ -4814,17 +4814,26 @@ function cliffTop(P,E,y,k){/* 高いマスの上の面の形：ふち（とな�
   side.forEach(([pts,ex,rc,cp],n)=>{for(const p of pts)P.lineTo(p[0],p[1]);const nx=side[(n+1)%4][0][0];if(rc)P.quadraticCurveTo(cp[0],cp[1],nx[0],nx[1]);else P.lineTo(nx[0],nx[1]);
     if(ex){E.moveTo(pts[0][0],pts[0][1]);for(const p of pts)E.lineTo(p[0],p[1]);if(rc)E.quadraticCurveTo(cp[0],cp[1],nx[0],nx[1])}});
   P.closePath()}
+const CGR=['#8fb267','#9dbd69','#a9c66d','#b2ce73','#86a85e'];
+function cliffGrass(g,y,k){/* 草のはみ出し：となりが低い向きのふちに、短い草の葉を外向きに。正面の上は、がけに少したれる */
+  const j=y*W+k,px=k*TS,y0=y*TS-LIFT,y1=y0+TS,U=!(y>0&&hiAt(j-W)),D=!(y<H-1&&hiAt(j+W)),L=!(k>0&&hiAt(j-1)),R=!(k<W-1&&hiAt(j+1)),hz=n=>hash(j*977+n*131);
+  const blade=(x,yy,dx,dy,n)=>{const len=2.2+hz(n)*3.6,lean=(hz(n+50)-.5)*2.6,w=.9+hz(n+90)*.9;g.fillStyle=CGR[(hz(n+7)*CGR.length)|0];g.beginPath();g.moveTo(x-dy*w,yy-dx*w);g.lineTo(x+dy*w,yy+dx*w);g.lineTo(x+dx*len+dy*lean,yy+dy*len+dx*lean);g.closePath();g.fill()};
+  for(let v=.8;v<TS;v+=1.3){const n=(v*10)|0;
+    if(U&&!(L&&v<5)&&!(R&&v>TS-5))blade(px+v,y0+1.2,0,-1,n);
+    if(D&&!(L&&v<5)&&!(R&&v>TS-5))blade(px+v,y1+.8,0,1,n+1000);
+    if(L&&!(U&&v<5)&&!(D&&v>TS-5))blade(px+1.2,y0+v,-1,0,n+2000);
+    if(R&&!(U&&v<5)&&!(D&&v>TS-5))blade(px+TS-1.2,y0+v,1,0,n+3000)}}
 function cliffStrip(y,Rn){/* 1つのかたまりの絵：横のふち・がけの正面・かげ・持ち上げた地面（ふちはでこぼこ）・ふちの線・階段 */
-  const K=2,x0=Rn.x0,x1=Rn.x1,w=(x1-x0+1)*TS,top=y*TS-LIFT-2,h=TS+LIFT+10,cv=document.createElement('canvas');cv.width=w*K;cv.height=h*K;
-  const g=cv.getContext('2d'),T0=[K,0,0,K,-x0*TS*K,-top*K];g.setTransform(...T0);const C=window.CHIPS||{},dc=(k,px,py)=>{const ch=C[k];if(ch)drawChip(g,ch,'cliff',px,py,0)};
+  const K=2,x0=Rn.x0,x1=Rn.x1,w=(x1-x0+1)*TS,ox=x0*TS-6,top=y*TS-LIFT-6,h=TS+LIFT+14,cv=document.createElement('canvas');cv.width=(w+12)*K;cv.height=h*K;/* まわり6ドットは、はみ出す草のぶん */
+  const g=cv.getContext('2d'),T0=[K,0,0,K,-ox*K,-top*K];g.setTransform(...T0);const C=window.CHIPS||{},dc=(k,px,py)=>{const ch=C[k];if(ch)drawChip(g,ch,'cliff',px,py,0)};
   for(let k=x0;k<=x1;k++){const j=y*W+k,L=k>0&&hiAt(j-1),R=k<W-1&&hiAt(j+1),D=y<H-1&&hiAt(j+W),px=k*TS,py=y*TS,st=STAIRS.has(S.obj[j])?stairDir(j):-1;
-    const U=y>0&&hiAt(j-W);if(!L||!R){g.save();g.beginPath();g.rect(px-2,py-LIFT+(U?0:6),TS+4,TS+LIFT);g.clip();if(!L)dc('cliff:sideL',px,py);if(!R)dc('cliff:sideR',px,py);g.restore()}/* 横のふちは、上の角の丸みより下から */
     if(!D&&st!==0){dc('cliff:'+(!L&&!R?'faceLR':!L?'faceL':!R?'faceR':'face'),px,py);const gr=g.createLinearGradient(0,py+TS,0,py+TS+7);gr.addColorStop(0,'rgba(40,30,20,.22)');gr.addColorStop(1,'rgba(40,30,20,0)');g.fillStyle=gr;g.fillRect(px,py+TS,TS,7)}}/* がけの下のかげ */
   const tc=document.createElement('canvas');tc.width=cv.width;tc.height=cv.height;const t=tc.getContext('2d');t.setTransform(...T0);
   t.drawImage(stat,x0*TS,y*TS,w,TS+4,x0*TS,y*TS-LIFT,w,TS+4);t.fillStyle='rgba(255,250,225,.10)';t.fillRect(x0*TS,y*TS-LIFT,w,TS+4);/* 高い所は少し明るく */
   const P=new Path2D(),E=new Path2D();for(let k=x0;k<=x1;k++)cliffTop(P,E,y,k);
   t.globalCompositeOperation='destination-in';t.fillStyle='#000';t.fill(P);g.setTransform(1,0,0,1,0,0);g.drawImage(tc,0,0);g.setTransform(...T0);
-  g.lineJoin='round';g.strokeStyle='rgba(40,30,20,.55)';g.lineWidth=1.4;g.stroke(E);g.save();g.translate(0,.9);g.strokeStyle='rgba(255,250,225,.28)';g.stroke(E);g.restore();/* ふちの線（こい線と、内がわのうすい明るい線） */
+  g.save();g.clip(P);g.filter='blur(1.6px)';g.lineJoin='round';g.strokeStyle='rgba(45,35,20,.26)';g.lineWidth=5;g.stroke(E);g.restore();/* ふちは線でなく、ふちに向かって少しずつ暗くなる丸み（ぼかし） */
+  for(let k=x0;k<=x1;k++)if(REV.has(y*W+k))cliffGrass(g,y,k);/* 上が草地なら、ふちから草がぼさぼさにはみ出す */
   for(let k=x0;k<=x1;k++){const j=y*W+k;if(STAIRS.has(S.obj[j])){const d=stairDir(j);if(d>=0)drawStair(g,S.obj[j],k*TS,y*TS,d)}}
   return cv}
 function render(now){
@@ -4885,7 +4894,7 @@ function render(now){
   if(festOn()){const SL=festStalls();for(const[x,y]of festPoles()){const j=y*W+x;if(S.obj[j]||S.ground[j]===1||!vis({x:x+.5,y:y+.5})||SL.some(t=>t.y===y&&Math.abs(t.x-x)<=2))continue;add(y+1,1,[x*TS,y*TS-24,x*TS+TS+8,y*TS+TS],()=>drawFestPole(x,y,now),-1)}}/* おまつりのちょうちん（木や岩・水の上、屋台のところには立てない） */
   for(const h of HOUSES){const bot=h.y1,ib=h.ib;if(bot<y0-1||h.y0>y1+1||h.x1<x0-1||h.x0>x1+1)continue;
     add(bot+1.001,3,/* 屋根は、その家の壁（手前の壁もふくむ）のすぐ後に描く。家の前にいる物は屋根より手前 */[h.x0*TS-6,h.y0*TS-40,(h.x1+1)*TS+6,(ib+1)*TS+12],()=>liftDraw([...h.set].every(j=>hiAt(j))?LIFT:0,()=>drawRoofs(ctx,now,[h])),-1)}/* 屋根は家ごとにひとまとまり。その家の壁は屋根の上に描き直さない *//* 屋根は、横の壁より後・手前の壁より先に描く */
-  if(S.hi){const RW=cliffRuns();for(let y=Math.max(0,y0-1);y<Math.min(H,y1+2);y++){const L=RW.get(y);if(!L)continue;const vs=L.filter(R=>R.x1>=x0-1&&R.x0<=x1);if(vs.length)add(y+.001,-1,null,()=>{for(const R of vs){if(!R.c)R.c=cliffStrip(y,R);ctx.drawImage(R.c,R.x0*TS,y*TS-LIFT-2,(R.x1-R.x0+1)*TS,TS+LIFT+10)}},-1)}}/* 段差：行ごとに、その行の物より先（ひとつ上の行の物より後） */
+  if(S.hi){const RW=cliffRuns();for(let y=Math.max(0,y0-1);y<Math.min(H,y1+2);y++){const L=RW.get(y);if(!L)continue;const vs=L.filter(R=>R.x1>=x0-1&&R.x0<=x1);if(vs.length)add(y+.001,-1,null,()=>{for(const R of vs){if(!R.c)R.c=cliffStrip(y,R);ctx.drawImage(R.c,R.x0*TS-6,y*TS-LIFT-6,(R.x1-R.x0+1)*TS+12,TS+LIFT+14)}},-1)}}/* 段差：行ごとに、その行の物より先（ひとつ上の行の物より後） */
   D.sort((a,b)=>a.k-b.k||a.t-b.t);
   for(const it of D)it.draw();
   // 置く前のプレビューは、家の壁や屋根より手前に描く
@@ -5845,7 +5854,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='751';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='752';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
