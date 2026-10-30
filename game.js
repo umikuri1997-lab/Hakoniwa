@@ -3480,9 +3480,9 @@ function drawChip(c,ch,id,x,y,now,i){const src=ch.src||ch,g64=src.g===64,ims=chi
 if(window.CHIPS)for(const k in window.CHIPS){const ch=window.CHIPS[k],id=k.split(/[@>:]/)[0];chipImgs(ch,id);for(const p of ch.parts||[])partImg(p,id)}/* 動く部品（ブランコの座面など）も *//* はじめに読みこんでおく */
 const CONN={fence:'f',logfence:'f',bamboofence:'f',stonefence:'f',wall:'w',hwall:'h',logwall:'h',plasterwall:'h',brickwall:'h',yozorawall:'h'},CONNR={'fence':'HV','logfence':'HV','bamboofence':'VH','stonefence':'Hclip','wall':'HV','hwall':'HV','logwall':'HV','plasterwall':'HV','brickwall':'HV'};/* つながる物：横の部品（H0 柱・HL・HR・HLR 横板）と縦の部品（VU・VD・VUD 縦板）を、となりのつながりで組み合わせる。CONNR：角で横と縦を重ねる順 */
 function connMask(id,i){if(ICON)return 3;/* アイコンは、左右につながった形で見せる */if(i==null||!S)return 0;const t=CONN[id];let f;if(t==='f')f=k=>FENCE_IDS.has(typeAt(k));else if(t==='w')f=k=>{const o=typeAt(k);return o==='wall'||o==='stonegate'};else f=k=>{const o=typeAt(k);return o!=='wall'&&o!=='sdoor'&&(HOME_WALLS.has(o)||HOME_DOORS.has(o))};return (f(i-1)?1:0)|(f(i+1)?2:0)|(f(i-W)?4:0)|(f(i+W)?8:0)}/* 石の塀は、石の塀のドアのとなりでは終わる */
-function drawConn(c,id,x,y,i,now){const C=window.CHIPS;if(!C)return false;const m=connMask(id,i),hm=m&3,vm=m&12,H=C[id+':'+['H0','HL','HR','HLR'][hm]],V=vm?C[id+':'+{4:'VU',8:'VD',12:'VUD'}[vm]]:null;if(!H||vm&&!V)return false;
+function drawConn(c,id,x,y,i,now){const C=window.CHIPS;if(!C)return false;const inn=!ICON&&i!=null&&HOME_WALLS.has(id)&&HOUSES.some(h=>h.inside.has(i+W)||h.inside.has(i+W-1)||h.inside.has(i+W+1)),K=k=>(inn&&C[k+'~in'])||C[k]/* 下かななめ下が家の中なら、かげのうすい絵（家の角も） */,m=connMask(id,i),hm=m&3,vm=m&12,H=K(id+':'+['H0','HL','HR','HLR'][hm]),V=vm?K(id+':'+{4:'VU',8:'VD',12:'VUD'}[vm]):null;if(!H||vm&&!V)return false;
   if(id==='wall'&&!vm&&!ICON){const dl=!(hm&1)&&typeAt(i-1)==='sdoor',dr=!(hm&2)&&typeAt(i+1)==='sdoor';if(dl||dr){const H2=C['wall:'+['H0','HL','HR','HLR'][hm|(dl?1:0)|(dr?2:0)]],P=C['wall:H0'];if(!H2||!P||!drawChip(c,H2,id,x,y,now,i))return false;if(dl)drawChip(c,P,id,x-8,y,now,i);if(dr)drawChip(c,P,id,x+8,y,now,i);return true}}/* となりが石の塀のドア：塀はマスのはしまでのばし、端の柱をドアにぴったり寄せる（前の drawMossWall と同じ形） */
-  if(!vm)return drawChip(c,H,id,x,y,now,i);if(hm&&C[id+':m'+m])return drawChip(c,C[id+':m'+m],id,x,y,now,i);/* 角・つなぎ目の絵があれば、部品を重ねずにそれを使う */if(!hm)return drawChip(c,V,id,x,y,now,i);const r=CONNR[id]||'HV';
+  if(!vm)return drawChip(c,H,id,x,y,now,i);if(hm&&C[id+':m'+m])return drawChip(c,K(id+':m'+m),id,x,y,now,i);/* 角・つなぎ目の絵があれば、部品を重ねずにそれを使う */if(!hm)return drawChip(c,V,id,x,y,now,i);const r=CONNR[id]||'HV';
   if(r==='VH'){if(!drawChip(c,V,id,x,y,now,i))return false;return drawChip(c,H,id,x,y,now,i)}
   if(!drawChip(c,H,id,x,y,now,i))return false;if(r==='Hclip'){c.save();c.beginPath();if(vm&4)c.rect(x-64,y-64,192,66);if(vm&8)c.rect(x-64,y+26,192,96);c.clip();drawChip(c,V,id,x,y,now,i);c.restore();return true}return drawChip(c,V,id,x,y,now,i)}
 function berryOn(c,x,y){const bi=emoImg('🫐');if(!bi)return;for(const[cx,cy]of[[7,13.5],[25,19.5]]){const iw=14,ih=iw*bi.height/bi.width;c.drawImage(bi,x+cx-iw/2,y+cy-ih/2,iw,ih)}}/* 実ったベリーの茂み：運ぶときと同じベリーの絵を2つ、前の青い実と同じ位置・大きさ（はば14）にのせる */
@@ -3509,7 +3509,7 @@ function drawDoorChip(c,id,x,y,i,now){const C=window.CHIPS;if(!C)return false;
   if(id==='door'||id==='yozoradoor'){const isW=k=>{const t=typeAt(k);return t!=='wall'&&t!=='sdoor'&&(HOME_WALLS.has(t)||HOME_DOORS.has(t))},L=isW(i-1),R=isW(i+1),U=isW(i-W),D=isW(i+W),hasV=U||D,hasH=L||R||!hasV;
     const wt=(hasH?[i-1,i+1,i-W,i+W]:[i-W,i+W,i-1,i+1]).map(typeAt).find(t=>t!=='wall'&&HOME_WALLS.has(t));/* 断面の色は、となりの壁に合わせる：よこ置きは左→右、たて置きは上→下 */
     if(c._doorBack){if(!hasH)return true;const m=(L?1:0)|(R?2:0)|(U?4:0)|(D?8:0),ch=(wt&&C[wt+'.'+id+':'+m])||C[id+':'+m];return !!ch&&drawChip(c,ch,id,x,y,now,i)}/* ドアの上の断面（静的な層） */
-    const o=hasH?'h':'v';if(!ok(o))return false;const op=hasH?doorOp(i,x,y,.9,2.1):doorOp(i,x,y,2.1,.9),n=Math.min(3,Math.round(op*3));return drawChip(c,(wt&&C[wt+'.'+id+'#'+o+n])||pick(o,op),id,x,y,now,i)}/* ドアの枠（よこ置き）・たて置きの断面も、となりの壁ごとの絵 */
+    const o=hasH?'h':'v';if(!ok(o))return false;const op=hasH?doorOp(i,x,y,.9,2.1):doorOp(i,x,y,2.1,.9),n=Math.min(3,Math.round(op*3));const sx=o==='h'&&HOUSES.some(h=>h.inside.has(i+W))?'~in':'';return drawChip(c,(wt&&(C[wt+'.'+id+'#'+o+n+sx]||C[wt+'.'+id+'#'+o+n]))||C[id+'#'+o+n+sx]||pick(o,op),id,x,y,now,i)}/* ドアの枠（よこ置き）・たて置きの断面も、となりの壁ごとの絵 */
   if(id==='stonegate'){const wide=S.obj[i]!==id||(S.obj[i+1]==='part'&&S.ref[i+1]===i);if(!wide||!ok('h'))return false;return drawChip(c,pick('h',doorOp(i,x+16,y,1.8,2.1)),id,x,y,now,i)}/* 石の大門は2マスはば */
   const isF=k=>{const t=typeAt(k);return FENCE_IDS.has(t)||t==='wall'||t==='sdoor'},ver=!(isF(i-1)||isF(i+1))&&(isF(i-W)||isF(i+W)),o=ver?'v':'h';if(!ok(o))return false;
   return drawChip(c,pick(o,doorOp(i,x,y,ver?2.1:.9,ver?.9:2.1)),id,x,y,now,i)}
@@ -5751,7 +5751,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='709';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='710';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
