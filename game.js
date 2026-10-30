@@ -40,10 +40,10 @@ const ELEM_KEYS=Object.keys(ELEM);
 // kind: block・plant=おそなえ/カミサマとの交換でおそなえ箱に入る / furn=依頼ボードでせいれいが作る / build=せいれいが建てる（パワー）
 const BL={
   path:{name:'あぜ道',kind:'block',floor:1,lv:2,cost:1,pc:2,time:30,maker:'earth',qty:10,mat:{stone:2},attr:{earth:.25},desc:'草地のあいだを通る土の道。歩く速さ×1.25'},
-  stairs_earth:{name:'土の階段',kind:'block',lv:1,cost:1,pc:2,time:40,maker:'earth',qty:2,mat:{stone:2},attr:{earth:.25},desc:'段差のふちに置く。段差を飛ばずに上り下りできる（1マス歩く時間。飛ぶと3倍）'},
-  stairs_wood:{name:'木の階段',kind:'block',lv:2,cost:1,pc:3,time:50,maker:'wood',qty:2,mat:{wood:3},attr:{wood:.3},desc:'段差のふちに置く。段差を飛ばずに上り下りできる（1マス歩く時間。飛ぶと3倍）'},
-  stairs_log:{name:'丸太の階段',kind:'block',lv:3,cost:2,pc:4,time:60,maker:'wood',qty:2,mat:{wood:5},attr:{wood:.5},desc:'段差のふちに置く。段差を飛ばずに上り下りできる（1マス歩く時間。飛ぶと3倍）'},
-  stairs_stone:{name:'石の階段',kind:'block',lv:4,cost:2,pc:4,time:60,maker:'earth',qty:2,mat:{stone:5},attr:{earth:.5},desc:'段差のふちに置く。段差を飛ばずに上り下りできる（1マス歩く時間。飛ぶと3倍）'},
+  stairs_earth:{name:'土の階段',kind:'block',lv:2,cost:1,pc:2,time:40,maker:'earth',qty:2,mat:{stone:2},attr:{earth:.25},desc:'段差のふちに置く。段差を飛ばずに上り下りできる（1マス歩く時間。飛ぶと3倍）'},
+  stairs_wood:{name:'木の階段',kind:'block',lv:4,cost:1,pc:3,time:50,maker:'wood',qty:2,mat:{wood:3},attr:{wood:.3},desc:'段差のふちに置く。段差を飛ばずに上り下りできる（1マス歩く時間。飛ぶと3倍）'},
+  stairs_log:{name:'丸太の階段',kind:'block',lv:5,cost:2,pc:4,time:60,maker:'wood',qty:2,mat:{wood:5},attr:{wood:.5},desc:'段差のふちに置く。段差を飛ばずに上り下りできる（1マス歩く時間。飛ぶと3倍）'},
+  stairs_stone:{name:'石の階段',kind:'block',lv:6,cost:2,pc:4,time:60,maker:'earth',qty:2,mat:{stone:5},attr:{earth:.5},desc:'段差のふちに置く。段差を飛ばずに上り下りできる（1マス歩く時間。飛ぶと3倍）'},
   gravel:{name:'砂利道',kind:'block',floor:1,cost:1,pc:3,time:30,maker:'earth',qty:10,lv:5,mat:{stone:3},attr:{earth:.4},desc:'小石をしいた道。歩く速さ×1.4'},
   brick:{name:'レンガ道',kind:'block',floor:1,cost:3,pc:5,time:50,maker:'fire',qty:10,lv:8,mat:{stone:8},attr:{fire:.4,earth:.3},desc:'レンガをしきつめた道。歩く速さ×1.75'},
   floor:{name:'フローリング',kind:'block',floor:1,lv:4,cost:1,pc:2,time:30,maker:'wood',qty:10,mat:{wood:2},attr:{wood:.5},desc:'木目のそろった板の床。歩く速さ×1.15'},
@@ -5845,7 +5845,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='750';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='751';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
