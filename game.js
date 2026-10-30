@@ -123,7 +123,7 @@ const BL={
   bench:{name:'ベンチ',sz:[2,1],kind:'furn',pc:3,time:100,maker:'wood',attr:{wood:1},mat:{wood:5},desc:'2人すわれる。昼につかれたら、ここで休む（つかれ −20／1時間）。住み心地+5'},
   bed:{name:'ベッド',kind:'furn',pc:10,time:200,maker:'wood',sleep:{cap:1,pt:5,rate:.2},attr:{wood:2},mat:{wood:8},desc:'1人眠れる。つかれ −12／1時間。家の住み心地で0.6〜3.3倍'},
   yorubed:{name:'よぞらのベッド',kind:'furn',pc:10,time:200,maker:'wood',sleep:{cap:1,pt:5,rate:.2},attr:{wood:2},mat:{wood:8},kwr:1,desc:'夜空の色のふとんのベッド。1人眠れる。つかれ −12／1時間。家の住み心地で0.6〜3.3倍'},/* コワイノのレシピ（落とし物でまれに手に入る）。ふつうのベッドと同じはたらき */
-  yozorawall:{name:'よぞらの壁',fix:5,fixm:{wood:3,stone:2},kind:'block',cost:4,pc:11,time:90,maker:'earth',qty:10,lv:1,solid:1,hp:48,hpS:55,brk:1,attr:{},mat:{wood:6,stone:3},kwr:1,desc:'夜空の色の家の壁（じょうぶさ48）'},
+  yozorawall:{name:'よぞらの壁',fix:5,fixm:{wood:3,stone:2},kind:'block',cost:4,pc:11,time:90,maker:'earth',qty:10,lv:1,solid:1,hp:48,hpS:55,brk:1,attr:{},mat:{wood:6,stone:3},kwr:1,desc:'家の中がわが夜空の色になる壁。外がわは木の壁と同じ見た目（じょうぶさ48）'},
   hoshifloor:{name:'ほしくずの床',kind:'block',floor:1,lv:1,cost:2,pc:4,time:40,maker:'earth',qty:10,mat:{stone:3},attr:{earth:.5},kwr:1,desc:'星をちりばめた家の床。歩く速さ1.15倍'},
   lamp:{hp:5,brk:1,fix:3,fixm:{wood:2,stone:2},name:'かがり火',kind:'furn',pc:5,time:160,maker:'fire',solid:1,anim:1,attr:{fire:3},mat:{wood:3,stone:3},desc:'まわり3.5マスを照らす。住み心地+6'},
   campfire:{hp:5,brk:1,fix:4,fixm:{wood:6,stone:4},name:'たき火',kind:'furn',pc:7,time:160,maker:'fire',lv:6,solid:1,anim:1,attr:{fire:4},play:{pt:3,pw:1.35,fun:25,dur:40,cap:3,adj:1},mat:{wood:11,stone:8},desc:'3人まで遊べる。たのしさ +25（40分）。まわり3.5マスも照らす。'},
@@ -3557,7 +3557,7 @@ function drawObj(c,id,x,y,i,g,now){
     for(const[dx,dy,r,col]of[[-9,-5,6,D],[9,-5,6,D],[-6,-11,7,B],[6,-11,7,B],[0,-15,7,L],[-10,0,6,B],[10,0,6,B],[0,-4,10,B]])circ(c,x+16+dx,y+24+dy,r,col);
     tuft(c,x+5,y+29,.6,D);tuft(c,x+27,y+29,.6,D);
     if(g>=100)for(const[dx,dy]of[[-6,-12],[5,-8],[-3,-2],[8,-15]]){circ(c,x+16+dx,y+24+dy,3,'#5b6fd1');c.fillStyle='#3f50a8';c.fillRect(x+15+dx,y+21.6+dy,2,1.2)}break}
-  case'logwall':case'plasterwall':case'brickwall':case'yozorawall':{/* 丸太・しっくい・レンガ・よぞらの壁も、木の壁と同じ形（柱・断面・巾木・つなぎめなし）で、正面の帯だけ材質を変える */c._mat=id==='logwall'?'log':id==='plasterwall'?'plaster':id==='yozorawall'?'night':'brick';{const ck=c._chip;if(id==='yozorawall')c._chip=1;/* よぞらの壁は、木の壁のドット絵を使わない */drawObj(c,'hwall',x,y,i,g,now);c._chip=ck}c._mat=0;break}
+  case'logwall':case'plasterwall':case'brickwall':case'yozorawall':{/* 丸太・しっくい・レンガ・よぞらの壁も、木の壁と同じ形（柱・断面・巾木・つなぎめなし）で、正面の帯だけ材質を変える */if(id==='yozorawall'&&!(i!=null&&!ICON&&HOUSES.some(h=>h.inside.has(i+W)))){drawObj(c,'hwall',x,y,i,g,now);break}/* よぞらの壁：家の外がわから見える面は、木の壁と同じ */c._mat=id==='logwall'?'log':id==='plasterwall'?'plaster':id==='yozorawall'?'night':'brick';{const ck=c._chip;if(id==='yozorawall')c._chip=1;/* 家の中から見える面だけ夜空の色（木の壁のドット絵は使わない） */drawObj(c,'hwall',x,y,i,g,now);c._chip=ck}c._mat=0;break}
   case'door':case'hwall':{/* 壁：正面は1マスの高さ（y〜y+32）、断面（てっぺん）はその上（y-9〜y）にブラウン1色 */
     const door=id==='door';if(ICON&&door){const art=HOUSEART&&HOUSEART['wall-door'];if(art&&art.complete&&art.naturalWidth){c.drawImage(art,x+2,y+1,28,30);break}}
     if(ICON){c.save();c.translate(x+16,y+32);c.scale(.75,.75);c.translate(-x-16,-y-32)}
@@ -5726,7 +5726,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='649';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='650';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
