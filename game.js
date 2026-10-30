@@ -3406,7 +3406,7 @@ function drawF2(c,id,x,y,i,now){const C=F2C,cx=x+16,T=(now||0)/1000;
 function wallArt(c,p,x,y,i,now){const ch=chipOf(p);if(!(ch&&drawChip(c,ch,p,x,y,now,i)))drawF2(c,p,x,y,i,now)}/* 壁にかけた物：ドット絵があればそれを、なければ線でかく */
 const WALLD=new Set(['yonaka','window','yozorawin','paint1','paint2','paint3','curtain1','curtain2','wshelf','wreath']);/* 壁・リースをかけるもの */
 function winCovered(qx,qy){for(let dy=1;dy<=3;dy++)for(let dx=-1;dx<=1;dx++){const X=qx+dx,Y=qy+dy;if(X<0||Y<0||X>=W||Y>=H)continue;const o=S.obj[Y*W+X];if(o&&!FLAT.has(o)&&!HOME_WALLS.has(o)&&!HOME_DOORS.has(o)&&!FENCE_IDS.has(o)&&BL[o]&&BL[o].kind!=='plant')return true}return false}
-function drawWin(c,i,x,y){const C=window.CHIPS,wk=i!=null&&!ICON&&S&&S.ywin&&S.ywin[i]?'yozorawin':'window',wc=C&&C[wk];if(wc&&drawChip(c,wc,wk,x,y,0,i))return;/* 窓のチップ（大きさはチップそのもの。ゲームの中では拡大しない） */c.save();c.translate(x+16,y+3);c.scale(1.125,1.125);c.translate(-x-16,-y-9);drawWin0(c,i,x,y);c.restore()}
+function drawWin(c,i,x,y){const C=window.CHIPS,wk=i!=null&&!ICON&&S&&S.ywin&&S.ywin[i]?'yozorawin':'window',wt=i!=null&&!ICON&&S&&S.obj[i],wc=C&&((wt&&C[wt+'.'+wk])||C[wk]);if(wc&&drawChip(c,wc,wk,x,y,0,i))return;/* 窓のわくの木は、窓をつけた壁の色の絵（<壁>.window） *//* 窓のチップ（大きさはチップそのもの。ゲームの中では拡大しない） */c.save();c.translate(x+16,y+3);c.scale(1.125,1.125);c.translate(-x-16,-y-9);drawWin0(c,i,x,y);c.restore()}
 function drawWin0(c,i,x,y){const wa=HOUSEART&&HOUSEART['wall-window'];if(wa&&wa.complete&&wa.naturalWidth){c.drawImage(wa,x+5,y+9,22,19.3);return}/* 窓は、壁のまん中に小さめに */c.fillStyle='rgba(68,43,28,.28)';rr(c,x+5,y+10,22,16,2.5);c.fillStyle='#70482e';rr(c,x+6,y+8,20,16,2.5);c.fillStyle='#d3a06c';rr(c,x+7.5,y+9.5,17,12.5,1.4);c.fillStyle='#a9d7e8';rr(c,x+9,y+11,14,9.5,1);c.fillStyle='rgba(255,255,255,.7)';c.beginPath();c.moveTo(x+10,y+12);c.lineTo(x+15,y+12);c.lineTo(x+11,y+17);c.lineTo(x+9.5,y+17);c.closePath();c.fill();c.fillStyle='#795033';rr(c,x+15.5,y+10.5,1.6,10.5,.7);rr(c,x+8.5,y+15.4,15,1.5,.7);c.fillStyle='#d8aa71';rr(c,x+5,y+21,22,3,1.4);c.fillStyle='#f0d3a3';rr(c,x+6,y+21,20,1,0.5)}
 
 // 送ってもらった家づくりパーツ画像から切り出した質感を、壁・扉・窓に使用。
@@ -5775,7 +5775,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='711';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='712';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
