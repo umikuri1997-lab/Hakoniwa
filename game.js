@@ -1317,6 +1317,7 @@ function startAct(r,G,type,stand,o){
   if(!r.path.length)beginDo(r);
 }
 function noPass(r){if(r.act){if(r.act.key)BAN.set(r.act.key,S.t+60);if(r.act.stand>=0){r.routeAvoid=r.routeAvoid||{};r.routeAvoid[r.act.stand]=S.t+60}}r.visitRetryAt=S.t+10;if((r.npT||0)>S.t)return;r.npT=S.t+90;addFloat(r.x,r.y-1.6,'通れないよ…','#ffd0c0')}
+const workOn=j=>j!=null&&!!S&&S.res.some(r=>r.act&&r.act.stage==='do'&&r.act.obj===j&&WORKP[r.act.type]&&WORKP[r.act.type](r,r.act)!=null);/* せいれいが作業中のマス：そのマスの育ちぐあいのバーは出さない（足もとの作業のバーと二重にしない） */
 const WORKP={/* 作業の進み具合（0〜1）。足もとの進捗バーに出す（建てる・直す・料理は、その場所のバーだけ出す） */
 chop:(r,a)=>a.camp?a.t/20:null,mine:(r,a)=>a.camp?a.t/20:null,/* 木・岩は、その木・岩の上の「のこり」のバーだけ（足もとのバーと二重にしない） */
 tend:(r,a)=>a.t/20,water:(r,a)=>a.t/(r.elem==='water'?8:16),sow:(r,a)=>a.t/10,harvest:(r,a)=>a.t/12,gather:(r,a)=>a.t/15,offer:(r,a)=>a.t/10,pickseed:(r,a)=>a.t/8,fish:(r,a)=>a.t/50,
@@ -3740,7 +3741,7 @@ function drawFarmChip(c,x,y,i,g,now){const C=window.CHIPS;if(!C)return false;if(
   if(d&&d.crop&&d.sown===false)ov(wet?'farm.moundw':'farm.mound');/* たねをえらんだ畑は、土がこんもり */
   if(d&&d.sown!==false&&!(g>0))ov('farm.sprout');/* 植え付けたら、土のもりあがりに小さい芽（育ちはじめたら作物の絵だけ） */
   if(g>0){const k=(d&&d.crop)||'mugi',st=g>=100?3:g>=60?2:1;ov(C['crop:'+k+st]?'crop:'+k+st:'crop:mugi'+st)}/* 作物：育ちぐあい3だん（土のもりあがりごと） */
-  if(d&&d.sown!==false){if(g<100){c.fillStyle='rgba(30,20,10,.45)';rr(c,x+4,y+TS-5,TS-8,4,2);c.fillStyle='#8fe06a';if(g>0)rr(c,x+4,y+TS-5,(TS-8)*g/100,4,2)}
+  if(d&&d.sown!==false){if(g<100&&!workOn(i)){c.fillStyle='rgba(30,20,10,.45)';rr(c,x+4,y+TS-5,TS-8,4,2);c.fillStyle='#8fe06a';if(g>0)rr(c,x+4,y+TS-5,(TS-8)*g/100,4,2)}
     else{const tw=Math.sin((now||0)/300+i)*.5+.5;c.fillStyle='rgba(255,245,170,'+(.5+tw*.5)+')';const sx=x+TS-6,sy=y+5,r=2+tw*1.5;c.fillRect(sx-r,sy-.6,r*2,1.2);c.fillRect(sx-.6,sy-r,1.2,r*2)}}/* 育つまでのバーと、とれごろのきらきら */
   return true}
 const DOORCH=new Set(['door','yozoradoor','gate','archedgate','stonegate','sdoor']);/* ドア・門は、開きぐあいで絵をえらぶ */
@@ -3896,7 +3897,7 @@ function drawObj(c,id,x,y,i,g,now){
     if(!ICON&&S.dyn[i]&&S.dyn[i].crop&&S.dyn[i].sown===false){c.fillStyle='rgba(40,25,10,.3)';c.beginPath();c.ellipse(x+16,y+21,10,4.5,0,0,7);c.fill();c.fillStyle=wet>0?'#8a5c3e':'#a87650';c.beginPath();c.ellipse(x+16,y+18,10,6.5,0,Math.PI,0);c.ellipse(x+16,y+18,10,3,0,0,Math.PI);c.fill();c.fillStyle=wet>0?'rgba(190,140,100,.45)':'rgba(220,170,120,.5)';c.beginPath();c.ellipse(x+14,y+14.5,5,2,-.15,0,7);c.fill()/* たねをえらんだ畑は、土がこんもり */}
     if(!ICON&&S.dyn[i]&&S.dyn[i].sown!==false&&g<20){c.strokeStyle='#5fbf4f';c.lineWidth=1.6;c.beginPath();c.moveTo(x+16,y+19);c.lineTo(x+16,y+14.5);c.stroke();circ(c,x+14,y+14.5,2.2,'#7fd36b');circ(c,x+18,y+14,2.2,'#7fd36b')}/* 植え付けたら、小さい芽 */
     if(g>0)drawCrop(c,ICON?'imo':(S.dyn[i]&&S.dyn[i].crop)||'mugi',x,y,g,true);
-    if(!ICON&&S.dyn[i]&&S.dyn[i].sown!==false){if(g<100){c.fillStyle='rgba(30,20,10,.45)';rr(c,x+4,y+TS-5,TS-8,4,2);c.fillStyle='#8fe06a';if(g>0)rr(c,x+4,y+TS-5,(TS-8)*g/100,4,2)}
+    if(!ICON&&S.dyn[i]&&S.dyn[i].sown!==false){if(g<100&&!workOn(i)){c.fillStyle='rgba(30,20,10,.45)';rr(c,x+4,y+TS-5,TS-8,4,2);c.fillStyle='#8fe06a';if(g>0)rr(c,x+4,y+TS-5,(TS-8)*g/100,4,2)}
       else{const tw=Math.sin((now||0)/300+i)*.5+.5;c.fillStyle='rgba(255,245,170,'+(.5+tw*.5)+')';const sx=x+TS-6,sy=y+5,r=2+tw*1.5;c.fillRect(sx-r,sy-.6,r*2,1.2);c.fillRect(sx-.6,sy-r,1.2,r*2)}}
     break}
   case'sprout':{if(!ICON&&S&&i!=null&&S.ground[i]!==1&&S.dyn[i]&&S.dyn[i].userMound){const bob=Math.sin((now||0)/600+i)*.6;if(chipOK('mound#0')&&chipOK('seed#s')){drawChip(c,CHIPS['mound#'+Math.min(2,(hash(i*13+5)*3)|0)],'mound',x+16,y+28,0);drawChip(c,CHIPS['seed#s'],'seed',x+16,y+23+Math.round(bob),0);break}plantMound(c,x,y,i);drawSeedShape(c,x+16,y+23+bob,.48);break}if(S&&i!=null&&S.ground[i]===1&&!ICON){const b=Math.sin((now||0)/600+i)*1.5;if(chipOK('seedring')&&chipOK('seed')){drawChip(c,CHIPS.seedring,'seed',x+16,y+21,0);drawChip(c,CHIPS.seed,'seed',x+16,y+17+Math.round(b),0);break}c.fillStyle='rgba(255,255,255,.35)';c.beginPath();c.ellipse(x+16,y+21,9,3,0,0,7);c.fill();drawSeedShape(c,x+16,y+17+b,1);break}/* 池に植える予定：種がぷかぷか */if(chipOK('sprout#plan'))drawChip(c,CHIPS['sprout#plan'],'sprout',x+16,y+22,0);else{c.fillStyle='rgba(120,90,50,.6)';c.beginPath();c.ellipse(x+16,y+22,9,5,0,0,7);c.fill();c.strokeStyle='#5fbf4f';c.lineWidth=2;c.beginPath();c.moveTo(x+16,y+21);c.lineTo(x+16,y+14);c.stroke();circ(c,x+13,y+14,3,'#7fd36b');circ(c,x+19,y+13,3,'#7fd36b')}
@@ -6237,7 +6238,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='836';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='837';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
