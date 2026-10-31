@@ -788,7 +788,7 @@ function finalCheck(){if(WD||!S||S.cleared||S.finalNight||S.finalOn||!S.enemyOn|
 /* ---------- 状態 ---------- */
 let S=null;
 const resv=new Map();
-let STATUE=-1,OBOX=-1,BOARD=-1,counts={},LIGHTS=[],LITP=[],STELES=[],TOWERS=[],NEARFLOWER=new Set(),NEARWELL=new Set(),NEARMILL=new Set(),NEARVANE=new Set(),NEARSIGN=new Set(),NEARPARA=new Set(),SPOTJ=new Map(),SPOTM=new Map(),SPOTI=[],RUGC=new Map(),RFC=new Map(),ENVG=null,REV=new Set(),ATTR={},BASEPCT=0,GRASSN=0;const GRASS_GOAL=600;
+let STATUE=-1,OBOX=-1,BOARD=-1,counts={},LIGHTS=[],LITP=[],STELES=[],TOWERS=[],NEARFLOWER=new Set(),NEARWELL=new Set(),NEARMILL=new Set(),NEARVANE=new Set(),NEARSIGN=new Set(),NEARPARA=new Set(),SPOTJ=new Map(),SPOTM=new Map(),SPOTI=[],RUGC=new Map(),RFC=new Map(),ENVG=null,REV=new Set(),ATTR={},BASEPCT=0,GRASSN=0;const GRASS_GOAL=2500;
 function newState(w){w=w||0;
   const s={v:8,mig:9,flags:{berryHalf:1,land2:1,land3:1,land4:1},placed:{},feat:{build:true},inv:{},orders:[],enemyOn:false,nights:0,godGone:false,godShown:false,nushi:null,
     lv:1,bossKills:0,nightHurt:0,nightHad:false,wave:null,lastWarn:0,
@@ -1234,6 +1234,7 @@ function bfsE(sx,sy,wk,sd){
 function pathTo(G,j){const p=[];while(j>=0&&G.dist[j]>0){p.push(j);j=G.prev[j]}return p.reverse()}
 // ほかの子がいる・向かっているマスは避けて、空いている別のマスから作業する（空きがなければ同じマスも使う）
 let TAKEN=null;
+function wreqList(){/* 「みる」でタップした草・きのこ（のこっている物だけ） */const q=S.wreq;if(!q)return [];const L=[];for(const k in q){if(WEEDS.has(S.obj[+k]))L.push(+k);else delete q[k]}return L}
 function nearest(G,pred,maxD=60){let best=-1,bd=1e9;for(let j=0;j<W*H;j++){const d=G.dist[j];if(d<0||d>=bd||d>maxD)continue;if(TAKEN&&TAKEN.has(j))continue;if(pred(j)){best=j;bd=d}}
   return best}
 function nearestVia(G,G2,pred,maxD=60){let best=-1,bd=1e9;for(let j=0;j<W*H;j++){const d=G.dist[j],d2=G2.dist[j];if(d<0||d2<0||d>maxD||d+d2>=bd)continue;if(TAKEN&&TAKEN.has(j))continue;if(pred(j)){best=j;bd=d+d2}}
@@ -1898,10 +1899,10 @@ function tryJob(r,G,k){
     const fr=ripeAdj(['fruit']);j=roomN(r)>=1&&fRoom>=2?nearest(G,j=>fr(j)>=0):-1;if(j>=0){const q=fr(j);startAct(r,G,'harvest',j,{key:'o'+q,obj:q,food:1});return true}return false}
   case'offer':{if(OBOX<0||isNight()||r.fun<99||r.offDay===dayNo())return false;/* おそなえは1人1日1回まで *//* たのしさが満タンになったら、おそなえする */j=nearTile(G,OBOX);if(j>=0){startAct(r,G,'offer',j);return true}return false}
   case'gather':{if(S.food>=(r.elem==='earth'?25:12)||isNight()||roomN(r)<1)return false;const bb=ripeAdj(['berry','takenoko']);j=nearest(G,j=>bb(j)>=0);if(j>=0){const q=bb(j);startAct(r,G,'gather',j,{key:'o'+q,obj:q});return true}return false}
-  case'drop':if(!(S.drops&&S.drops.length)||isNight())return false;const noF=!S.res.some(x=>x.name===POKO&&!x.hidden);j=nearest(G,j=>S.drops.some(q=>q.y*W+q.x===j&&(q.id==='shard'||q.lt||Math.hypot(q.x+.5-r.x,q.y+.5-r.y)<=(r.elem==='wind'?10:5))/* 落ちている物は、まわり5マス（風の子は10マス）に来て見つけたときにひろう（ヌシのかけらと、守り神の光でこわした物はべつ：どこでも、木を切る・石をほるより先にひろいに行く） */&&(q.id!=='shard'||r.name===POKO||noF)&&!(q.id.startsWith('food:')&&foodCap()-S.food<=0)&&!(q.id.startsWith('mat:')&&matCap()-matTot()<=0)&&!((q.id.startsWith('food:')||q.id.startsWith('mat:'))&&roomN(r)<1))&&free('d'+j,1),90);/* 食料箱がいっぱいのときは、食料のおとしものはひろわない */if(j>=0){startAct(r,G,'pickdrop',j,{key:'d'+j,obj:j});return true}return false;
+  case'drop':if(!(S.drops&&S.drops.length)||isNight())return false;const noF=!S.res.some(x=>x.name===POKO&&!x.hidden);j=nearest(G,j=>S.drops.some(q=>q.y*W+q.x===j&&(q.id==='shard'||q.lt||q.tap||Math.hypot(q.x+.5-r.x,q.y+.5-r.y)<=(r.elem==='wind'?10:5))/* 落ちている物は、まわり5マス（風の子は10マス）に来て見つけたときにひろう（ヌシのかけらと、守り神の光でこわした物はべつ：どこでも、木を切る・石をほるより先にひろいに行く） */&&(q.id!=='shard'||r.name===POKO||noF)&&!(q.id.startsWith('food:')&&foodCap()-S.food<=0)&&!(q.id.startsWith('mat:')&&matCap()-matTot()<=0)&&!((q.id.startsWith('food:')||q.id.startsWith('mat:'))&&roomN(r)<1))&&free('d'+j,1),S.drops.some(q=>q.tap||q.lt)?9999:90);/* 食料箱がいっぱいのときは、食料のおとしものはひろわない */if(j>=0){startAct(r,G,'pickdrop',j,{key:'d'+j,obj:j});return true}return false;
   case'otaki':{if(isNight()||STATUE<0)return false;if(r.otaki){j=nearest(G,j=>adjOf(j,k=>k===STATUE||k===STATUE+W)>=0,300);if(j>=0){startAct(r,G,'otaki',j,{});return true}return false}
     if(!S.otakiQ||!Object.keys(S.otakiQ).length||S.res.some(q=>q!==r&&q.act&&q.act.type==='otakiget'))return false;j=nearest(G,j=>adjOf(j,k=>storageAt(k,'mat'))>=0,200);if(j>=0){startAct(r,G,'otakiget',j,{});return true}return false}/* おたきあげ：素材箱から素材をとって、神殿へ */
-  case'weed':{if(isNight()||matTot()+matN(r)>=matCap()||roomN(r)<1)return false;j=nearest(G,j=>WEEDS.has(S.obj[j])&&free('o'+j,1),r.elem==='wind'?120:60);if(j>=0){startAct(r,G,'weed',j,{key:'o'+j,obj:j});return true}return false}
+  case'weed':{if(isNight()||matTot()+matN(r)>=matCap()||roomN(r)<1)return false;{const RQ=wreqList();j=RQ.length?nearest(G,j=>RQ.includes(j)&&free('o'+j,1),9999):-1}if(j<0)j=nearest(G,j=>WEEDS.has(S.obj[j])&&free('o'+j,1),r.elem==='wind'?120:60);/* 「みる」でタップした草は、遠くてもさきに */if(j>=0){startAct(r,G,'weed',j,{key:'o'+j,obj:j});return true}return false}
       case'seed':if(!S.seeds.length||isNight())return false;j=nearest(G,j=>S.seeds.some(q=>q.y*W+q.x===j)&&free('s'+j,1),90);if(j>=0){startAct(r,G,'pickseed',j,{key:'s'+j,obj:j});return true}return false;
   }
   return false;
@@ -1911,7 +1912,7 @@ const ALLJOB=['harvest','sow','offer','gather'],FARMJ=['harvest','water','tend',
 const IDLE_ACTS=['fish','play','wander','idle'];
 // 種まき・植える・依頼・建築があるか（いつもの作業を中断してでも向かう仕事）
 function hasHighWork(r){
-  if(!isNight()&&!(r.act&&(r.act.type==='pickdrop'||FARMJ.includes(r.act.type)))&&(S.drops||[]).some(q=>q.lt&&free('d'+(q.y*W+q.x),1))&&matCap()-matTot()>0)return true;/* 守り神がこわした物があれば、いまの作業をやめてひろいに行く（畑の世話をしているときは、やめない） */
+  if(!isNight()&&!(r.act&&(r.act.type==='pickdrop'||FARMJ.includes(r.act.type)))&&((S.drops||[]).some(q=>(q.lt||q.tap)&&free('d'+(q.y*W+q.x),1))||!(r.act&&r.act.type==='weed')&&wreqList().some(k=>free('o'+k,1)))&&matCap()-matTot()>0)return true;/* 「みる」でタップした草・落とし物も同じ *//* 守り神がこわした物があれば、いまの作業をやめてひろいに行く（畑の世話をしているときは、やめない） */
   if(S.food<6&&foodCap()>0&&!(r.act&&(r.act.type==='gather'||r.act.type==='harvest'))){const bb=ripeAdj(['berry']);if(S.obj.some((o,j)=>(o==='farm'&&S.dyn[j]&&S.dyn[j].g>=100&&free('o'+j,1))||((o==='berry'||o==='takenoko')&&S.dyn[j]&&S.dyn[j].g>=100&&free('o'+j,1))))return true}
   if(canJob(r,'build')&&S.obj.some((o,j)=>o==='site'&&free('o'+j,2)))return true;
   if(!isNight()&&canJob(r,'repair')&&S.obj.some((o,q)=>o&&BL[o]&&(breakable(o)&&(S.hp[q]??BL[o].hp)<BL[o].hp||DEFS.has(o)&&S.hp[q]!=null||burnt(q))&&free('o'+q,1)||!o&&canRebuild(q)))return true;/* こわれた所があれば、木を切るより先に直す */
@@ -1948,7 +1949,7 @@ function goWork(r,G,nw){
   // 花や木の苗は、空腹などの急ぎの用事を除いて、ほかの仕事より先に植える
   if(tryJob(r,G,'plant'))return true;
   if(tryJob(r,G,'otaki'))return true;
-  if((S.drops||[]).some(q=>q.lt)){for(const k of FARMJ)if(tryJob(r,G,k))return true;if(tryJob(r,G,'drop'))return true}/* 守り神の光でこわした物（落ちた木材・石材）は、おつげ・木を切る・石をほるより先にひろう。畑の世話よりはあと */
+  if((S.drops||[]).some(q=>q.lt||q.tap)||wreqList().length){for(const k of FARMJ)if(tryJob(r,G,k))return true;if(tryJob(r,G,'drop'))return true;if(wreqList().length&&tryJob(r,G,'weed'))return true}/* 「みる」でタップした草・きのこ・落とし物も、ここでとりにいく *//* 守り神の光でこわした物（落ちた木材・石材）は、おつげ・木を切る・石をほるより先にひろう。畑の世話よりはあと */
   if(S.oracle&&ORACLE[S.oracle])for(const k of ORACLE[S.oracle].jobs)if(tryJob(r,G,k))return true;
   // 建てる・家具づくりがいちばん先。そのつぎに得意な仕事をする
   for(const k of['build','craft',...(SPEC[r.elem]||[])])if(tryJob(r,G,k))return true;
@@ -2385,7 +2386,7 @@ const RSTN=[['work','作業スピード'],['move','移動速度'],['cap','持て
 const fullN=r=>1+Math.floor((rLv(r)-1)/4)+(r.elem==='fire'?1:0);/* レベルが上がっても、食べる量はゆるやかにしかふえない */
 let LVQ=null;
 function lvShow(l,bonus,opens){
-  const o=$('#lvup');o.querySelector('.n').textContent=l;o.querySelector('.pw').hidden=true;
+  const o=$('#lvup');o.querySelector('.n').textContent=l;{const pw=o.querySelector('.pw'),a=LIGHTCDL[l-1]||10,b=LIGHTCDL[l]||10;pw.hidden=!(b<a);pw.textContent='まもりの光のチャージ '+a+'秒 → '+b+'秒'}/* 村レベルで、まもりの光のチャージがみじかくなったら書く */
   const u=o.querySelector('.op');u.innerHTML='';u.hidden=!opens.length;
   const od=o.querySelector('.opd');od.hidden=true;
   if(opens.length){u.appendChild(el('<small>あたらしく使える（タップで説明）</small>'));for(const id of [...new Set(opens)]){const b=el('<button class="lvic"><img alt=""><span></span></button>');b.querySelector('img').src=iconURL(id);b.querySelector('span').textContent=iname(id);b.onclick=e=>{e.stopPropagation();sfx('tap');u.querySelectorAll('.lvic').forEach(x=>x.classList.toggle('on',x===b));od.hidden=false;od.innerHTML='<b></b><p></p>';od.querySelector('b').textContent=iname(id);od.querySelector('p').textContent=withAttr(id,(BL[id]&&BL[id].desc)||'')};u.appendChild(b)}}/* 解放されたものはアイコン。タップで説明 */
@@ -3361,7 +3362,7 @@ function expandMap(d){const O=OFF,mi=j=>(((j/OW)|0)+O)*W+(j%OW)+O,inner=j=>{cons
   const mk=o=>{const r={};for(const k in o||{}){const m=/^([A-Za-z]*)(\d+)$/.exec(k);r[m?m[1]+mi(+m[2]):k]=o[k]}return r};/* マスの番号がキーのもの（「L12」などの頭の文字はそのまま） */
   d.ground=G;d.floor=F;d.obj=Ob;d.dyn=Object.assign(Dy,mk(d.dyn));
   const rf=mk(d.ref);for(const k in rf)rf[k]=mi(rf[k]);d.ref=Object.assign(Rf,rf);
-  for(const f of['hp','rot','win','rug','rugRot','roof','bud','ovenSet','bedOwn','freeB','trapCd'])if(d[f])d[f]=mk(d[f]);
+  for(const f of['hp','rot','win','rug','rugRot','roof','bud','ovenSet','bedOwn','freeB','trapCd','wreq'])if(d[f])d[f]=mk(d[f]);
   if(d.st2)for(const f of['fire','frz','ash','hvb'])if(d.st2[f])d.st2[f]=mk(d.st2[f]);if(d.st2&&Array.isArray(d.st2.bw))d.st2.bw=d.st2.bw.map(mi);
   if(d.imoSeedQuestPlots)d.imoSeedQuestPlots=d.imoSeedQuestPlots.map(mi);
   for(const L of[d.regrow,d.broken])for(const q of L||[])q.j=mi(q.j);
@@ -3375,14 +3376,17 @@ function load(w){try{const t=KV.getItem(SAVE_KEYS[w||0]);if(!t)return null;const
 /* ---------- 描画 ---------- */
 const cv=$('#cv'),ctx=cv.getContext('2d');
 let dpr=1,VW=0,VH=0;const cam={x:0,y:0,z:1};let camAnim=null;
-const GCS=16,GPX=GCS*TS,GFULL=24,GBUD=8;/* 地面の下絵の区画：16×16マス（512ドット）。くわしい区画は24こまで（約24MB、古い順にすてる）。半分の細かさの区画（ちぢめたとき用、1こ約0.25MB）は、ぜんぶとっておく。区画を作る時間は1コマ8ミリ秒まで（少なくとも1こ） */
-const GRD={s:null,c:new Map(),bt:0,any:false};/* key → {f:くわしい絵, l:半分の絵, u:さいごに使ったコマ, st:作りなおすしるし} */
+const GCS=16,GPX=GCS*TS,GFULL=64,GBUD=8;/* 地面の下絵の区画：16×16マス（512ドット）。くわしい区画は、ステージを開くときにぜんぶ作って、すてない（64こまで。マップは7×7＝49こ）。半分の細かさの区画（ちぢめたとき用、1こ約0.25MB）は、ぜんぶとっておく。区画を作る時間は1コマ8ミリ秒まで（少なくとも1こ） */
+const GRD={s:null,c:new Map(),bt:0,any:false,pre:null,busy:false};/* key → {f:くわしい絵, l:半分の絵, u:さいごに使ったコマ, st:作りなおすしるし} */
 function gq(cx,cy){const k=cy*64+cx;let q=GRD.c.get(k);if(!q){q={f:null,l:null,u:0,st:false};GRD.c.set(k,q)}return q}
 function gbuild(cx,cy,q){/* 区画 (cx,cy) のくわしい絵を作る（まわり4マス・下へ6マスもいっしょに描いて、区画の中だけをのこす：となりのマスからはみ出す平らな物・水のふち・草のふち）。半分の細かさの絵も、ここから作る */const t0=performance.now(),X0=cx*GCS,Y0=cy*GCS,X1=Math.min(W,X0+GCS)-1,Y1=Math.min(H,Y0+GCS)-1,w=(X1-X0+1)*TS,h=(Y1-Y0+1)*TS;
   const c=q.f||document.createElement('canvas');if(c.width!==w||c.height!==h){c.width=w;c.height=h}const g=c.getContext('2d');g.setTransform(1,0,0,1,0,0);g.clearRect(0,0,w,h);g.setTransform(1,0,0,1,-X0*TS,-Y0*TS);drawStaticArea(g,Math.max(0,X0-4),Math.max(0,Y0-4),Math.min(W-1,X1+4),Math.min(H-1,Y1+6));g.setTransform(1,0,0,1,0,0);
   const l=q.l||document.createElement('canvas');l.width=Math.ceil(w/2);l.height=Math.ceil(h/2);const gl=l.getContext('2d');gl.imageSmoothingEnabled=true;gl.imageSmoothingQuality='high';gl.drawImage(c,0,0,l.width,l.height);
   q.f=c;q.l=l;q.st=false;q.u=RFN;GRD.bt+=performance.now()-t0;
   let n=0;for(const v of GRD.c.values())if(v.f)n++;if(n>GFULL){const L=[...GRD.c.values()].filter(v=>v.f&&v.u<RFN-1).sort((a,b)=>a.u-b.u);for(const v of L){if(n<=GFULL)break;v.f.width=v.f.height=0;v.f=null;n--}}/* くわしい区画が多すぎたら、しばらく使っていない区画からすてる（半分の絵はのこす） */}
+function stagePreload(){/* マップ全体：地面の区画（くわしい絵と半分の絵）・水面の区画・段差の部品を、ぜんぶ作る */if(dirty)rebuildStatic(STATICFULL);if(GRD.s!==S)gclear();for(let cy=0;cy<=(H-1)>>4;cy++)for(let cx=0;cx<=(W-1)>>4;cx++){const q=gq(cx,cy);if(!q.f||q.st)gbuild(cx,cy,q)}GRD.any=true;
+  if(WD!==1&&waterChipsOK())for(let cy=0;cy<=(H-1)>>4;cy++)for(let cx=0;cx<=(W-1)>>4;cx++)waterChunk(cx,cy);if(S.hi&&cliffChipsOK()){CPRE=S;cliffPreload()}GRD.pre=S}
+function stageLoading(on){/* 「マップを読みこみ中…」（作るあいだ、画面をおおう） */let d=document.getElementById('stageLd');if(!d){d=document.createElement('div');d.id='stageLd';d.textContent='マップを読みこみ中…';d.style.cssText='position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;background:rgba(30,24,16,.55);color:#fff3d6;font-size:16px';document.body.appendChild(d)}d.hidden=!on;return d}
 function gget(cx,cy){/* 区画のくわしい絵（なければ・古ければ、すぐ作る） */if(GRD.s!==S)gclear();const q=gq(cx,cy);if(!q.f||q.st)gbuild(cx,cy,q);q.u=RFN;return q.f}
 function gclear(){for(const v of GRD.c.values()){if(v.f)v.f.width=v.f.height=0;if(v.l)v.l.width=v.l.height=0}GRD.c.clear();GRD.s=S;GRD.any=false}
 function gblit(c,sx,sy,sw,sh,dx,dy,dw,dh,lod){/* 地面の下絵の (sx,sy,sw,sh) を、c の (dx,dy,dw,dh) へ描く（区画をまたいでもよい）。lod：半分の細かさの絵を使う */const kx=dw/sw,ky=dh/sh;
@@ -5250,6 +5254,7 @@ function cliffRow(y,R,top){/* 1つのかたまり（行・段）の段差を描�
 const natBarY=j=>((j/W)|0)*TS-(S.obj[j]==='rock'?7:30)-hiAt(j)*LIFT;/* 木・岩の上の、のこりのバーの上はし */
 function render(now){RFN++;
   if(dirty)rebuildStatic(STATICFULL);
+  if(GRD.pre!==S&&!GRD.busy&&groundChipsOK()&&(WD===1||waterChipsOK())&&cliffChipsOK()){GRD.busy=true;const ld=stageLoading(true),me=S;setTimeout(()=>{try{if(S===me)stagePreload()}finally{GRD.busy=false;stageLoading(false)}},40)}/* ステージを開いたら、マップ全体を先に作っておく（ゲーム中に作らない） */
   if(S.hi&&CPRE!==S&&cliffChipsOK()){CPRE=S;cliffPreload()}
   ctx.setTransform(1,0,0,1,0,0);ctx.fillStyle='#8f8262';ctx.fillRect(0,0,cv.width,cv.height);
   const k=dpr*cam.z;
@@ -5448,6 +5453,7 @@ function onTap(sx,sy){
       if(o==='heatv')return openSheet('heatv',j);
       if(o==='boulder')return toast('大岩：のこり '+Math.max(0,4-(S.hp['n'+j]||0))+'/4');
       if(o==='crack'){if((S.mat.stone||0)<2)return toast('ひびわれ：石材2で直せる（いま石材'+(S.mat.stone||0)+'）');S.mat.stone-=2;clearObj(j);S.floor[j]='path';burst(j,'block');sfx('level');recount();dirty=true;toast('ひびわれを直した（石材-2）','good');return checkQuest()}}
+    {const g=ty*W+tx,dp=(S.drops||[]).find(q=>q.y*W+q.x===g&&q.id!=='shard');if(WEEDS.has(o)||dp){if((WEEDS.has(o)||dp.id.startsWith('mat:'))&&matCap()-matTot()<=0)return toast('素材箱に入りません');if(dp&&dp.id.startsWith('food:')&&foodCap()-S.food<=0)return toast('食料箱に入りません');let nm;if(WEEDS.has(o)){(S.wreq||(S.wreq={}))[j]=1;nm=BL[o].name}else{dp.tap=1;nm=dp.id.startsWith('mat:')?(MATN[dp.id.slice(4)]||'おとしもの'):'おとしもの'}sfx('tap');return toast(nm+'：せいれいがとりにいく'+(isNight()?'（朝になったら）':''))}}/* 草・きのこ・枝などの落とし物は、タップすると、せいれいがとりにいく */
     if(HOME_WALLS.has(o)||HOME_DOORS.has(o)){const w=houseWhy(j);if(w)toast(w)}/* 家にならないかべ・ドアをタップすると、理由を出す */
     if(o&&rangeOf(o,j))SHOWR={j,o,until:performance.now()+4000};
     if(o==='farm')return openSheet('farm',j);
@@ -6294,7 +6300,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='857';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='858';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
