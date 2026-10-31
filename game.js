@@ -5168,10 +5168,10 @@ function cliffGrass(g,y,k){/* 草のはみ出し：となりが低い向きの�
     if(L&&!(U&&v<5)&&!(D&&v>TS-5))blade(px+.6,y0+v,-1,0,n+2000);
     if(R&&!(U&&v<5)&&!(D&&v>TS-5))blade(px+TS-.6,y0+v,1,0,n+3000)}}
 const STRIPN=16,STRIPPX=8e6,SBUD=6;let RFN=0,SBT=0;/* SBUD：段差の絵を1コマで作ってよい時間（ミリ秒）。こえたら、のこりはつぎのコマで（はじめの1コマは、見えている分をぜんぶ作る） */
-let SBE=6,CAMK='';const stripTime=()=>SBT===0||SBT+SBE<=SBUD||CLC.fresh;/* SBE：段差の絵1まいを作るのにかかる時間（ならし） */
+let SBE=6,CAMK='',CAMK2='',CMOV=false;/* CMOV：このコマで画面が動いている（動いているあいだは、新しい段差の絵をあらい細かさ（1倍）で早く作る。止まったら、手のあいたコマで細かい絵に作りかえる） */const stripTime=()=>SBT===0||SBT+SBE<=SBUD||CLC.fresh;/* SBE：段差の絵1まいを作るのにかかる時間（ならし） */
 const DOTT={};function dotPat(g,K){/* 段差のふちの帯の点々（104ドットごとにくりかえすもよう。1まいだけ作っておく） */let e=DOTT[K];if(!e){const N=40,T=N*2.6;e=DOTT[K]=document.createElement('canvas');e.width=e.height=Math.round(T*K);const c=e.getContext('2d');c.scale(K,K);c.fillStyle='#000';for(let i=0;i<N;i++)for(let j=0;j<N;j++){const q=hash(i*131+j*7919+3);if(q<.5)c.fillRect(i*2.6,j*2.6,1.8,.8+q*2.6)}}const p=g.createPattern(e,'repeat');if(p.setTransform)p.setTransform(new DOMMatrix().scale(1/K));return p}
 function softOf(m,b){/* ぼかし（軽い作り方）：小さくして、なめらかに大きくもどす。b：ちぢめる倍率 */const t=TMPC();t.width=Math.max(1,Math.ceil(m.width/b));t.height=Math.max(1,Math.ceil(m.height/b));const c=t.getContext('2d');c.imageSmoothingEnabled=true;c.imageSmoothingQuality='high';c.drawImage(m,0,0,t.width,t.height);return t}
-function cliffQuick(y,R){/* まだ作っていない段差の絵のかわりに、かんたんな絵（上の面と、がけの正面だけ）。つぎのコマ以降で、ちゃんとした絵にかわる */const C=window.CHIPS||{},lv=R.lv,L=(lv-1)*LIFT;for(let k=R.x0;k<=R.x1;k++){const j=y*W+k,px=k*TS,py=y*TS;if(y<H-1&&hiAt(j+W)<lv){const ch=C['cliff:face'];if(ch)drawChip(ctx,ch,'cliff',px,py-L,0)}ctx.drawImage(stat,px,py,TS,TS,px,py-lv*LIFT,TS,TS)}}
+function cliffQuick(y,R){/* まだ作っていない段差の絵のかわりに、かんたんな絵（上の面と、がけの正面だけ）。つぎのコマ以降で、ちゃんとした絵にかわる */const C=window.CHIPS||{},lv=R.lv,L=(lv-1)*LIFT;const ch=C['cliff:face'];if(ch)for(let k=R.x0;k<=R.x1;k++){const j=y*W+k;if(y<H-1&&hiAt(j+W)<lv)drawChip(ctx,ch,'cliff',k*TS,y*TS-L,0)}const w=(R.x1-R.x0+1)*TS;ctx.drawImage(stat,R.x0*TS,y*TS,w,TS,R.x0*TS,y*TS-lv*LIFT,w,TS)}/* 上の面は、かたまりごとに1回で描く */
 function cliffPrefetch(x0,y0,x1,y1){/* 手があいたコマで、画面のすぐ外（まわり4マス）の段差の絵を先に作っておく（動かしたときに、その場で作らなくてすむように） */const ck=cam.x.toFixed(1)+','+cam.y.toFixed(1)+','+cam.z.toFixed(3),still=ck===CAMK;CAMK=ck;if(!S||!S.hi||!still||SBT>0)return;/* マップを動かしているあいだは作らない（止まっているコマで、1まいずつ） */let px=0;for(const o of STRIPQ)if(o.c)px+=o.c.width*o.c.height;if(px>=STRIPPX*.9)return;/* 作っておく絵がもういっぱいなら、先に作らない（作っても、すぐ手ばなすことになるので） */const RW=cliffRuns(),SK=cam.z>=1?2:1,cy=(y0+y1)/2,ys=[];for(let y=Math.max(0,y0-5);y<Math.min(H,y1+6);y++)ys.push(y);ys.sort((a,b)=>Math.abs(a-cy)-Math.abs(b-cy));
   for(const y of ys){const L=RW.get(y);if(!L)continue;for(const R of L){if(R.x1<x0-5||R.x0>x1+5||R.c&&R.K===SK&&!R.stale)continue;if(SBT>0||px>=STRIPPX*.9)return;R.stale=false;if(R.c){px-=R.c.width*R.c.height;R.c.width=R.c.height=0;R.c=null;const q=STRIPQ.indexOf(R);if(q>=0)STRIPQ.splice(q,1)}const t0=performance.now();R.K=SK;R.c=cliffStrip(y,R,SK);px+=R.c.width*R.c.height;R.f=RFN;{const dt=performance.now()-t0;SBT+=dt;SBE=SBE*.8+dt*.2}STRIPQ.push(R)}}}/* 段差の絵：1まいは16マスまで。作っておく絵は、ぜんぶで800万ドットまで（いま見えている絵は手ばなさない） */
 const STRIPQ=[],TMPL=[],TMPC=()=>{const c=document.createElement('canvas');TMPL.push(c);return c};/* 作業用のキャンバス：使いおわったら、すぐ手ばなす（iPhone は、キャンバスのメモリの上限が小さく、こえるとページが落ちる） */
@@ -5184,7 +5184,7 @@ function cliffStrip0(y,Rn,K){/* 1つのかたまりの絵：横のふち・が�
     if(!D&&!(CLV>1&&y<H-1&&hiAt(j+W)<CLV-1)){g.save();g.translate(0,2*(py+TS));g.scale(1,-1);g.drawImage(stat,px-6,py+TS,TS+12,8,px-6,py+TS,TS+12,8);g.restore()}/* がけの下はしのすきまには、すぐ下の低い地面（下絵を上下に鏡うつし）を見せる。下にもう1だんがけがつづくときは見せない */
     {const U=y>0&&topAt(j-W);if(!L||!R){f.save();f.beginPath();f.rect(px-8,py-LIFT+(U?0:5),TS+16,TS);f.clip();{const dz=REV.has(j)?'':'~d';if(!L)fd('cliff:sideL'+dz,px,py);if(!R)fd('cliff:sideR'+dz,px,py)}/* 上が乾いた地面なら、ふちに草のない横の岩 */f.restore()}/* 横の岩（マスの外へはみ出す。上の角の丸みより下から） */}
     if(!D){const fk='cliff:'+(!L&&!R?'faceLR':!L?'faceL':!R?'faceR':'face');if(CLV>1&&y<H-1&&hiAt(j+W)<CLV-1)fd(fk,px,py+8);/* 下にもう1だんがけがつづくときは、岩を下へのばして、すきまをうめる */fd(fk,px,py)}}
-  g.save();g.setTransform(1,0,0,1,0,0);g.filter='brightness(0) blur('+(2*K)+'px)';g.globalAlpha=.3;g.drawImage(fc,0,3*K);g.restore();/* がけのかげ：がけの形を、下へ3ドットずらしてぼかす */
+  {const sc=TMPC();sc.width=fc.width;sc.height=fc.height;const c=sc.getContext('2d');c.drawImage(fc,0,0);c.globalCompositeOperation='source-in';c.fillStyle='#000';c.fillRect(0,0,sc.width,sc.height);g.save();g.setTransform(1,0,0,1,0,0);g.globalAlpha=.3;g.imageSmoothingEnabled=true;g.drawImage(softOf(sc,Math.round(4*K)),0,3*K,sc.width,sc.height);g.restore()}/* がけのかげ：がけの形を、下へ3ドットずらしてぼかす（filter の blur は重いので、小さくして大きくもどす softOf） */
   g.save();g.setTransform(1,0,0,1,0,0);g.drawImage(fc,0,0);g.restore();
   const tc=TMPC();tc.width=cv.width;tc.height=cv.height;const t=tc.getContext('2d');t.setTransform(...T0);
   t.drawImage(stat,x0*TS,y*TS,w,TS,x0*TS,y*TS-LIFT,w,TS);t.drawImage(stat,x0*TS,y*TS+TS-1,w,1,x0*TS,y*TS-LIFT+TS,w,4);t.drawImage(stat,x0*TS,y*TS,1,TS,x0*TS-3,y*TS-LIFT,3,TS);t.drawImage(stat,x0*TS+w-1,y*TS,1,TS,x0*TS+w,y*TS-LIFT,3,TS);/* 上の面の絵は、自分のマスの下絵だけ（ふちのはみ出しは、はしの1ドットをのばす。となりの低いマスの草をまぜない） */t.fillStyle='rgba(255,250,225,.10)';t.fillRect(x0*TS,y*TS-LIFT,w,TS+4);/* 高い所は少し明るく */
@@ -5205,7 +5205,7 @@ function cliffStrip0(y,Rn,K){/* 1つのかたまりの絵：横のふち・が�
   for(let k=x0;k<=x1;k++)if(REV.has(y*W+k)&&hiAt(y*W+k)===CLV)cliffGrass(g,y,k);/* もっと高いマスの草は、この段のふちには出さない（上の段の草が、がけのとちゅうにたれないように） *//* 上が草地なら、ふちから草がはみ出す（手前は、がけにたれる） */
   return cv}
 const natBarY=j=>((j/W)|0)*TS-(S.obj[j]==='rock'?7:30)-hiAt(j)*LIFT;/* 木・岩の上の、のこりのバーの上はし */
-function render(now){RFN++;SBT=0;
+function render(now){RFN++;SBT=0;{const ck=cam.x.toFixed(1)+','+cam.y.toFixed(1)+','+cam.z.toFixed(3);CMOV=ck!==CAMK2;CAMK2=ck}
   if(dirty)rebuildStatic(STATICFULL);
   ctx.setTransform(1,0,0,1,0,0);ctx.fillStyle='#8f8262';ctx.fillRect(0,0,cv.width,cv.height);
   const k=dpr*cam.z;
@@ -5265,7 +5265,7 @@ function render(now){RFN++;SBT=0;
   if(festOn()){const SL=festStalls();for(const[x,y]of festPoles()){const j=y*W+x;if(S.obj[j]||S.ground[j]===1||!vis({x:x+.5,y:y+.5})||SL.some(t=>t.y===y&&Math.abs(t.x-x)<=2))continue;add(y+1,1,[x*TS,y*TS-24,x*TS+TS+8,y*TS+TS],()=>drawFestPole(x,y,now),-1)}}/* おまつりのちょうちん（木や岩・水の上、屋台のところには立てない） */
   for(const h of HOUSES){const bot=h.y1,ib=h.ib;if(bot<y0-1||h.y0>y1+1||h.x1<x0-1||h.x0>x1+1)continue;
     add(bot+1.001,3,/* 屋根は、その家の壁（手前の壁もふくむ）のすぐ後に描く。家の前にいる物は屋根より手前 */[h.x0*TS-6,h.y0*TS-40,(h.x1+1)*TS+6,(ib+1)*TS+12],()=>liftDraw((()=>{const L=[...h.set],h0=hiAt(L[0]);return L.every(j=>hiAt(j)===h0)?h0*LIFT:0})(),()=>drawRoofs(ctx,now,[h])),-1)}/* 屋根は家ごとにひとまとまり。その家の壁は屋根の上に描き直さない *//* 屋根は、横の壁より後・手前の壁より先に描く */
-  if(S.hi){const RW=cliffRuns();for(let y=Math.max(0,y0-1);y<Math.min(H,y1+2);y++){const L=RW.get(y);if(!L)continue;const vs=L.filter(R=>R.x1>=x0-1&&R.x0<=x1);if(!vs.length)continue;const SK=cam.z>=1?2:1,dr=R=>{R.f=RFN;if(R.c&&(R.K!==SK||R.stale)&&stripTime()){R.stale=false;R.c.width=R.c.height=0;R.c=null;const q=STRIPQ.indexOf(R);if(q>=0)STRIPQ.splice(q,1)}/* 大きく見ているときだけ2倍の細かさ（ズームアウトでは、マップ全体の段差が見えるので、ふつうの細かさにしてメモリをへらす）。作る時間がないコマは、前の細かさの絵をそのまま使う */if(!R.c){if(!stripTime())return cliffQuick(y,R);const t0=performance.now();R.K=SK;R.c=cliffStrip(y,R,SK);{const dt=performance.now()-t0;SBT+=dt;SBE=SBE*.8+dt*.2}STRIPQ.push(R);let px=0;for(const o of STRIPQ)if(o.c)px+=o.c.width*o.c.height;for(let k=0;k<STRIPQ.length&&px>STRIPPX;){const o=STRIPQ[k];if(o.f>=RFN-1){k++;continue}/* このコマと前のコマで描いた絵は手ばなさない（このコマのあとで描く絵を消さないように） */STRIPQ.splice(k,1);if(o.c){px-=o.c.width*o.c.height;o.c.width=o.c.height=0;o.c=null}}}/* 作った段差の絵は、古いものから手ばなす */const K=R.c.width/((R.bx1-R.bx0+1)*TS+12),WL=R.x0*TS-(R.x0===R.rx0?6:0),WR=(R.x1+1)*TS+(R.x1===R.rx1?6:0);ctx.drawImage(R.c,(WL-(R.bx0*TS-6))*K,0,(WR-WL)*K,R.c.height,WL,y*TS-R.lv*LIFT-6,WR-WL,TS+LIFT+14)};
+  if(S.hi){const RW=cliffRuns();for(let y=Math.max(0,y0-1);y<Math.min(H,y1+2);y++){const L=RW.get(y);if(!L)continue;const vs=L.filter(R=>R.x1>=x0-1&&R.x0<=x1);if(!vs.length)continue;const SKW=cam.z>=1?2:1,SK=CMOV?1:SKW,dr=R=>{R.f=RFN;if(R.c&&(R.K>SKW||R.K<SK||R.stale)&&stripTime()){R.stale=false;R.c.width=R.c.height=0;R.c=null;const q=STRIPQ.indexOf(R);if(q>=0)STRIPQ.splice(q,1)}/* 大きく見ているときだけ2倍の細かさ（ズームアウトでは、マップ全体の段差が見えるので、ふつうの細かさにしてメモリをへらす）。作る時間がないコマは、前の細かさの絵をそのまま使う */if(!R.c){if(!stripTime())return cliffQuick(y,R);const t0=performance.now();R.K=SK;R.c=cliffStrip(y,R,SK);{const dt=performance.now()-t0;SBT+=dt;SBE=SBE*.8+dt*.2}STRIPQ.push(R);let px=0;for(const o of STRIPQ)if(o.c)px+=o.c.width*o.c.height;for(let k=0;k<STRIPQ.length&&px>STRIPPX;){const o=STRIPQ[k];if(o.f>=RFN-1){k++;continue}/* このコマと前のコマで描いた絵は手ばなさない（このコマのあとで描く絵を消さないように） */STRIPQ.splice(k,1);if(o.c){px-=o.c.width*o.c.height;o.c.width=o.c.height=0;o.c=null}}}/* 作った段差の絵は、古いものから手ばなす */const K=R.c.width/((R.bx1-R.bx0+1)*TS+12),WL=R.x0*TS-(R.x0===R.rx0?6:0),WR=(R.x1+1)*TS+(R.x1===R.rx1?6:0);ctx.drawImage(R.c,(WL-(R.bx0*TS-6))*K,0,(WR-WL)*K,R.c.height,WL,y*TS-R.lv*LIFT-6,WR-WL,TS+LIFT+14)};
     add(y-1+.0005,-1,null,()=>{for(const R of vs)dr(R)},-1);/* ひとつ上の行の物より先：段差の上の物のかげが、手前の行の上の面にかくれないように */
     add(y+.001,-1,null,()=>{for(const R of vs){ctx.save();ctx.beginPath();let any=false;for(let x=R.x0;x<=R.x1;x++)if(!(y>0&&hiAt((y-1)*W+x)>=R.lv)){any=true;ctx.rect(x*TS-(x===R.x0?6:0),y*TS-R.lv*LIFT-6,TS+(x===R.x0?6:0)+(x===R.x1?6:0),LIFT+6)}if(any){ctx.clip();dr(R)}ctx.restore()}},-1)}}/* 段差：行ごとに、その行の物より先（ひとつ上の行の物より後） */
   D.sort((a,b)=>a.k-b.k||a.t-b.t);
@@ -5446,7 +5446,7 @@ let bgmF=null,bgmSw=0,AC=null,bgmG=null,sfxG=null,noiseBuf=null,curSong='day',wa
 const mf=m=>440*Math.pow(2,(m-69)/12);
 // [音, 長さ(8分音符)]。0は休み
 const SONGS={
-  opening:{bpm:78,lead:'sine',chords:[[48,[60,64,67]],[43,[55,59,62]],[45,[57,60,64]],[41,[53,57,60]]],
+  opening:{bpm:78,lead:'triangle',chords:[[48,[60,64,67]],[43,[55,59,62]],[45,[57,60,64]],[41,[53,57,60]]],
     mel:[[72,4],[76,4],[79,4],[84,4],[83,4],[79,4],[76,4],[74,4],[72,4],[76,4],[81,4],[79,4],[76,4],[74,4],[72,8]]},
   day:{bpm:92,lead:'triangle',chords:[[48,[60,64,67]],[45,[57,60,64]],[41,[53,57,60]],[43,[55,59,62]]],
     mel:[[76,2],[79,2],[81,2],[79,2],[76,2],[74,1],[72,1],[74,4],[72,2],[74,2],[76,2],[81,2],[79,6],[0,2],
@@ -5511,10 +5511,10 @@ function sched(){
    else if(bgmSw&&now>=bgmSw){bgmSw=0;curSong=wantSong;step=0;nextT=now+.05;bgmF.gain.cancelScheduledValues(now);bgmF.gain.setValueAtTime(0,now);bgmF.gain.linearRampToValueAtTime(1,now+3)}}
   while(nextT<AC.currentTime+.3){
     const g=SONGS[curSong],e=60/g.bpm/2,t=nextT,bar=(step/8)|0,ch=g.chords[bar%4],night=curSong==='night',opening=curSong==='opening';
-    const n=g.at[step];if(n)tone(n[0],t,n[1]*e*.95,g.lead,opening?.055:night?.09:.075,bgmG);
-    if(step%8===0)tone(ch[0],t,e*(opening?6:night?7.5:3.6),opening?'sine':'triangle',opening?.055:.13,bgmG);
+    const n=g.at[step];if(n)tone(n[0],t,n[1]*e*.95,g.lead,opening?.08:night?.09:.075,bgmG);/* マップ画面の曲（opening）：サインだけだとスマホのスピーカーで聞こえないので、三角波でほかの曲と同じくらいの大きさに */
+    if(step%8===0)tone(ch[0],t,e*(opening?6:night?7.5:3.6),'triangle',opening?.11:.13,bgmG);
     if(!night&&step%8===4)tone(ch[0]+7,t,e*3.4,'triangle',.1,bgmG);
-    if(opening){if(step%8===0)for(const c of ch[1])tone(c,t,e*7.2,'sine',.018,bgmG);if(step%4===2)tone(ch[1][(step>>2)%3]+24,t,e*1.8,'sine',.012,bgmG)}
+    if(opening){if(step%8===0)for(const c of ch[1])tone(c,t,e*7.2,'sine',.03,bgmG);if(step%4===2)tone(ch[1][(step>>2)%3]+24,t,e*1.8,'triangle',.025,bgmG)}
     else if(night){if(step%8===0)for(const c of ch[1])tone(c,t,e*7.8,'sine',.025,bgmG);if(step%4===2)tone(ch[1][(step>>2)%3]+12,t,e*1.6,'sine',.02,bgmG)}
     else{tone(ch[1][step%3]+12,t,e*.55,'square',.012,bgmG);if(step%2===1)noise(t,.03,.025,bgmG)}
     nextT+=e;step=(step+1)%64;
@@ -6249,7 +6249,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='849';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='850';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
