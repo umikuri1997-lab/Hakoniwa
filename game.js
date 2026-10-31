@@ -774,7 +774,7 @@ function finalCheck(){if(WD||!S||S.cleared||S.finalNight||S.finalOn||!S.enemyOn|
 /* ---------- 状態 ---------- */
 let S=null;
 const resv=new Map();
-let STATUE=-1,OBOX=-1,BOARD=-1,counts={},LIGHTS=[],STELES=[],TOWERS=[],NEARFLOWER=new Set(),NEARWELL=new Set(),NEARMILL=new Set(),NEARVANE=new Set(),NEARSIGN=new Set(),NEARPARA=new Set(),RUGC=new Map(),RFC=new Map(),ENVG=null,REV=new Set(),ATTR={},BASEPCT=0,GRASSN=0;const GRASS_GOAL=600;
+let STATUE=-1,OBOX=-1,BOARD=-1,counts={},LIGHTS=[],STELES=[],TOWERS=[],NEARFLOWER=new Set(),NEARWELL=new Set(),NEARMILL=new Set(),NEARVANE=new Set(),NEARSIGN=new Set(),NEARPARA=new Set(),SPOTJ=new Map(),RUGC=new Map(),RFC=new Map(),ENVG=null,REV=new Set(),ATTR={},BASEPCT=0,GRASSN=0;const GRASS_GOAL=600;
 function newState(w){w=w||0;
   const s={v:8,mig:9,flags:{},placed:{},feat:{build:true},inv:{},orders:[],enemyOn:false,nights:0,godGone:false,godShown:false,nushi:null,
     lv:1,bossKills:0,nightHurt:0,nightHad:false,wave:null,lastWarn:0,
@@ -996,7 +996,7 @@ const CROPS={mugi:{name:'こむぎ',days:2,yield:1,desc:'2日で育つ。パン�
 /* たねは、おそなえ箱からえらんで畑にまく */
 const ALLRECIPES=[{out:'soup',need:{tomato:1,imo:1},time:153,timeR:107.1},{out:'bread',need:{mugi:2},time:120,timeR:84},{out:'yakizakana',need:{fish:1},time:60,timeR:42},{out:'yakiimo',need:{imo:1},time:50,timeR:35},{out:'yakiberry',need:{berry:2},time:60,timeR:42},{out:'yakiapple',need:{apple:1},time:60,timeR:42},{out:'salad',need:{tomato:2},time:90,timeR:63}];/* time：料理にかかる時間（分）。timeR：料理がとくいな子の時間 */
 const repairTime=a=>a.re?30:20;/* 修理にかかる時間（分）：建て直しは30、ふつうの修理は20（ゲームの処理と、ゲージの表示で同じものを使う） */
-function cookTime(r,ov){const R=RECIPES.find(x=>x.out===(r.cing&&r.cing.rec))||{time:30,timeR:21};return (trt(r,'ryouri')?R.timeR:R.time)*ovenMul(ov)}/* 料理にかかる時間（ゲームの処理と、ゲージの表示で同じものを使う） *//* 料理でふくれるおなか（v）は、FOODS に実数で書く（使った材料の合計と同じ） */let RECIPES=ALLRECIPES;soupFilter();/* time：料理にかかる時間（レシピごと） */
+function cookTime(r,ov){const R=RECIPES.find(x=>x.out===(r.cing&&r.cing.rec))||{time:30,timeR:21};return (trt(r,'ryouri')?R.timeR:R.time)*ovenMul(ov)/(ov!=null&&spotHas(ov,'kitchen')?1.1:1)}/* キッチン：料理の速さ+10% *//* 料理にかかる時間（ゲームの処理と、ゲージの表示で同じものを使う） *//* 料理でふくれるおなか（v）は、FOODS に実数で書く（使った材料の合計と同じ） */let RECIPES=ALLRECIPES;soupFilter();/* time：料理にかかる時間（レシピごと） */
 function syncFood(){let n=0;for(const k in S.fs)n+=S.fs[k]||0;S.food=n}
 function addFood(k,n){S.fs[k]=(S.fs[k]||0)+n;syncFood()}
 function takeFood(n,pref){let got=[];const keys=Object.keys(S.fs).filter(k=>S.fs[k]>0);if(pref==='raw')keys.sort((a,b)=>(FOODS[a].v-FOODS[b].v));else keys.sort((a,b)=>FOODS[b].v-FOODS[a].v||Math.random()-.5);
@@ -1035,6 +1035,20 @@ const reserve=k=>resv.set(k,(resv.get(k)||0)+1);
 const release=k=>{const v=(resv.get(k)||0)-1;if(v<=0)resv.delete(k);else resv.set(k,v)};
 function nearLotus(r){const x0=r.x|0,y0=r.y|0;for(let y=y0-2;y<=y0+2;y++)for(let x=x0-2;x<=x0+2;x++){if(x<0||y<0||x>=W||y>=H)continue;if(S.obj[y*W+x]==='lotus')return true}return false}
 const SEATS=['chair','stool','achair','bench','takebench','pouf','sofa1'],BENCHES=new Set(['bench','takebench']);/* BENCHES：休けい（rest）ができるベンチ */function fSpot(j){const t=typeAt(j);return !!t&&SEATS.includes(t)&&spotW(j)>=0}/* 水のすぐとなり（上下左右）の椅子＝釣りスポット（椅子にすわって釣る） */
+/* スポット：組み合わせて置くと、効果が少し上がる（物どうしがまわり3マス以内）。main のまわりに need がそろうとできる */
+const SPOTS=[
+  {k:'dining',n:'ダイニング',main:o=>o==='table',need:[[o=>SEATS.includes(o),2]],how:'食卓と、いす2つ',eff:'ここで食べたときのパワー+10%'},
+  {k:'fishspot',n:'つりスポット',main:(o,j)=>SEATS.includes(o)&&spotW(j)>=0,need:[[o=>o==='parasol',1]],how:'水べのいすと、パラソル',eff:'魚がつれる確率+5%'},
+  {k:'park',n:'ちかばの公園',main:o=>o==='swing',need:[[o=>o==='sandbox',1]],how:'ブランコと、砂場',eff:'ここで遊ぶと、たのしさ+10%'},
+  {k:'park2',n:'たのしい公園',main:o=>o==='swing',need:[[o=>o==='sandbox',1],[o=>o==='seesaw',1]],how:'ブランコと、砂場と、シーソー',eff:'ここで遊ぶと、たのしさ+20%（ちかばの公園のかわり）'},
+  {k:'kitchen',n:'キッチン',main:o=>o==='oven',need:[[o=>o==='sink',1],[o=>o==='tub',1]],how:'かまどと、流し台と、水おけ',eff:'料理の速さ+10%'},
+  {k:'yasumi',n:'やすみば',main:o=>BENCHES.has(o),need:[[o=>o==='parasol',1]],how:'ベンチと、パラソル',eff:'ベンチで休むと、つかれのとれ方+10%'}];
+const spotHas=(j,k)=>{const t=SPOTJ.get(anc(j));return !!t&&t.has(k)};
+function calcSpots(){SPOTJ=new Map();const add=(j,k)=>{let t=SPOTJ.get(j);if(!t)SPOTJ.set(j,t=new Set());t.add(k)};
+  for(let j=0;j<W*H;j++){const o=S.obj[j];if(!o||o==='part')continue;for(const sp of SPOTS){if(!sp.main(o,j))continue;const x0=j%W,y0=(j/W)|0,found=sp.need.map(()=>[]);
+    for(let y=Math.max(0,y0-3);y<=Math.min(H-1,y0+3);y++)for(let x=Math.max(0,x0-3);x<=Math.min(W-1,x0+3);x++){const q=y*W+x,t=S.obj[q];if(q===j||!t||t==='part')continue;sp.need.forEach((nd,i)=>{if(nd[0](t,q))found[i].push(q)})}
+    if(sp.need.every((nd,i)=>found[i].length>=nd[1])){add(j,sp.k);for(const L of found)for(const q of L)add(q,sp.k)}}}
+  const seen=S.spotSeen||(S.spotSeen={});for(const sp of SPOTS){if(seen[sp.k])continue;let on=false;for(const t of SPOTJ.values())if(t.has(sp.k)){on=true;break}if(on){seen[sp.k]=1;toast('「'+sp.n+'」ができた','good')}}}/* はじめてできたときだけ知らせる */
 const TOYS=new Set(['swing','seesaw','sandbox','slide']);/* 平らな物のうち、毎コマかく物（ラグ・罠など）は、BL に anim:1 と書く */
 const win64=i=>!!(S&&S.win&&typeof S.win[i]==='string'&&window.CHIPS&&window.CHIPS[S.win[i]]&&window.CHIPS[S.win[i]].g===64);/* 1マス64ドットの絵をかけた壁・ドアも、画面の大きさでかく */
 function toyR(r){const a=r.act;return a&&a.type==='play'&&a.stage==='do'&&TOYS.has(a.what)&&a.obj!=null&&S.obj[a.obj]===a.what?a:null}
@@ -1064,7 +1078,7 @@ function revRadius(o){const b=BL[o];if(!b)return 0;if(o==='tower')return 7;if(o=
 /* 属性の力の表示（例：属性 木+1・土+2） */
 function attrTxt(id){const b=BL[id];if(!b||!b.attr||b.kind==='block')return'';const a=Object.entries(b.attr).filter(e=>e[1]>0);return a.length?'属性 '+a.map(([k,v])=>ELEM[k].name+'+'+(+v.toFixed(2))).join('・'):''}
 const withAttr=(id,t)=>{const a=attrTxt(id);return a?(t?t+'　':'')+'【'+a+'】':t||''};
-function recount(){if(S.broken)S.broken=S.broken.filter(b=>!S.obj[b.j]);/* こわれた物の場所に、なにか置いたら、こわれた物のリストからはずす */
+function recount(){if(S.broken)S.broken=S.broken.filter(b=>!S.obj[b.j]);calcSpots();/* こわれた物の場所に、なにか置いたら、こわれた物のリストからはずす */
   for(const key in S.win||{}){const j=+key,wall=k=>HOME_WALLS.has(S.obj[k])||HOME_DOORS.has(S.obj[k]);if(S.win[j]==='wreath'&&HOME_DOORS.has(S.obj[j])&&(wall(j-W)||wall(j+W))&&!(wall(j-1)||wall(j+1))){S.inv.wreath=(S.inv.wreath||0)+1;delete S.win[j];toast('たてのドアのリースを、持ち物にもどしました')}}/* たてのドアにはリースをかけられない。まわりの壁が変わってたてになったら、知らせてもどす */
   STATUE=-1;OBOX=-1;BOARD=-1;counts={};LIGHTS=[];STELES=[];TOWERS=[];NEARFLOWER=new Set();NEARWELL=new Set();NEARMILL=new Set();NEARVANE=new Set();NEARSIGN=new Set();NEARPARA=new Set();RUGC=new Map();for(const k in S.rug||{})for(const c of rugCells(+k))RUGC.set(c,+k);RFC=new Map();for(const k in S.roof||{})for(const c of rugCells(+k))RFC.set(c,+k);/* 屋根の下のマス→屋根の左上 *//* ラグがしいてあるマス→ラグの左上 */ENVG=new Float32Array(W*H);REV=new Set();ATTR={};ELEM_KEYS.forEach(k=>ATTR[k]=0);
   const around=(j,r,set)=>{const x=j%W,y=(j/W)|0,h=set===REV?hiAt(j):-1;for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){if(dx*dx+dy*dy>r*r+1)continue;const nx=x+dx,ny=y+dy;if(nx>=0&&ny>=0&&nx<W&&ny<H&&!(h>=0&&hiAt(ny*W+nx)!==h))set.add(ny*W+nx)}};/* 緑の広がり（REV）は、段差をこえない */
@@ -1238,12 +1252,12 @@ const ACT={
   bury:{start(r,a){const d=S.dyn[a.obj];if(S.obj[a.obj]!=='grave'||!d||d.buried||r.coffin||heldN(r))return false},done:(r,a)=>a.t>=2,end(r,a){const d=S.dyn[a.obj];if(S.obj[a.obj]==='grave'&&d&&!d.buried){r.coffin={name:d.name};S.obj[a.obj]='';delete S.dyn[a.obj];recount()}}},/* お墓から棺を持ちあげる（ほかのものは持たない） */
   reunion:{start(r,a){r.bubble='💕';JOYU.set(r,performance.now()+4000);const q=S.res.find(x=>x.id===a.who);if(q){r.face=q.x>=r.x?1:-1;q.bubble='💕';JOYU.set(q,performance.now()+4000)}addFloat(r.x,r.y-1.2,'💕','#fff')},done:(r,a)=>a.t>=6},/* もどってきたなかよしに会えてよろこぶ */
   pray:{start(r){if(!r.coffin)return false},done:(r,a)=>a.t>=12,end(r){finishBurial(r)}},/* 神殿でおいのりして、埋葬する */
-  rest:{start(r,a){if(!BENCHES.has(S.obj[a.obj]))return false;r.bubble='☕'},tick(r,a,dt){if(a.partner!=null&&!S.res.some(x=>x.id===a.partner&&x.act&&x.act.type==='rest'&&x.act.obj===a.obj)){a.topic=null;a.partner=null;a.sub=0;a.ended=1;r.bubble='☕'}/* 片方が休けいを終えたら、おしゃべりもおわり */r.energy=Math.min(100,r.energy+dt/3*mateK(r,'rest')*recK(r));r.fun=Math.min(100,r.fun+.08*dt);
+  rest:{start(r,a){if(!BENCHES.has(S.obj[a.obj]))return false;r.bubble='☕'},tick(r,a,dt){if(a.partner!=null&&!S.res.some(x=>x.id===a.partner&&x.act&&x.act.type==='rest'&&x.act.obj===a.obj)){a.topic=null;a.partner=null;a.sub=0;a.ended=1;r.bubble='☕'}/* 片方が休けいを終えたら、おしゃべりもおわり */r.energy=Math.min(100,r.energy+dt/3*mateK(r,'rest')*recK(r)*(spotHas(a.obj,'yasumi')?1.1:1));/* やすみば：+10% */r.fun=Math.min(100,r.fun+.08*dt);
     if(a.topic==null){const q=a.ended||(r.chatCD||0)>S.t?null:S.res.find(x=>x!==r&&(x.chatCD||0)<=S.t&&x.act&&x.act.type==='rest'&&x.act.stage==='do'&&x.act.obj===a.obj&&x.act.topic==null);if(q){const t=chatTopic(r,q);a.topic=t;a.partner=q.id;q.act.topic=t;q.act.partner=r.id;q.act.sub=1;r.bubble=q.bubble='💬';mate(r,q);for(const x of[r,q])addPt(.45+(x.like==='chat'?.9:0)+(S.today==='oshaberi'?.9:0),x,1+(x.like==='chat'?2:0)+(S.today==='oshaberi'?2:0))}}/* ベンチに2人すわったら、おしゃべり */
     else{a.bt=(a.bt||0)+dt;if(a.bt>4){a.bt=0;r.bubble=pick(['💬','💬','😊','🎵','😆'])}r.fun=Math.min(100,r.fun+.3*dt)}},done:(r,a)=>(r.energy>=100&&a.t>=15)||a.t>=(a.dur||90)||isNight()||!BENCHES.has(S.obj[a.obj]),end(r,a){r.restCD=S.t+90;if(a&&a.t>=10)addPt(.45,r,1)}},/* ベンチでひと休み：すぐ終わったときはポイントなし。しばらくは、またベンチにはすわらない */
-  play:{start(r,a){r.bubble={flower:'🌼',fountain:'💦',campfire:'🔥'}[a.what]||'🎵';if(a.nig){r.bubble='😣';if(Math.random()<.5)addFloat(r.x,r.y-1.2,'ちょっと、にがて…','#fff3d6')}},/* にがてなおもちゃ */tick(r,a,dt){r.fun=Math.min(100,r.fun+a.fun/a.dur*dt)}/* おもちゃは、お話よりたのしさがたまりやすい */,done:(r,a)=>a.t>=a.dur,end(r,a){addPt(a.pw+(r.like===a.what?.9:0),r,a.pt+(r.like===a.what?2:0));train(r,a.what);if(a.what!=='flower')r.lastToy={j:a.obj,t:S.t}}},/* 遊んだ遊び家具は覚えておき、しばらくは行かない */
+  play:{start(r,a){r.bubble={flower:'🌼',fountain:'💦',campfire:'🔥'}[a.what]||'🎵';if(a.obj!=null&&!a.pk){a.pk=1;a.fun*=spotHas(a.obj,'park2')?1.2:spotHas(a.obj,'park')?1.1:1}/* 公園：たのしさ+10%・+20% */if(a.nig){r.bubble='😣';if(Math.random()<.5)addFloat(r.x,r.y-1.2,'ちょっと、にがて…','#fff3d6')}},/* にがてなおもちゃ */tick(r,a,dt){r.fun=Math.min(100,r.fun+a.fun/a.dur*dt)}/* おもちゃは、お話よりたのしさがたまりやすい */,done:(r,a)=>a.t>=a.dur,end(r,a){addPt(a.pw+(r.like===a.what?.9:0),r,a.pt+(r.like===a.what?2:0));train(r,a.what);if(a.what!=='flower')r.lastToy={j:a.obj,t:S.t}}},/* 遊んだ遊び家具は覚えておき、しばらくは行かない */
   bathe:{start(r,a){const w=a.tub!=null?(typeAt(a.tub)==='bathtub'?a.tub:-1):adjOf(a.stand,k=>S.ground[k]===1);if(w<0)return false;r.face=w%W+.5>=r.x?1:-1;r.bubble='💦';sfxAt('wave',r.x,r.y);a.sx=r.x;a.sy=r.y;a.wx=w%W+.5;a.wy=((w/W)|0)+.5;a.in=0;a.hot=a.tub!=null?false:hotW(w)},tick(r,a,dt){/* 水の中まで入って、出てくる */a.in=Math.max(0,Math.min(1,a.t/3,(30-a.t)/3));const mv=a.tub!=null?1:.8;r.x=a.sx+(a.wx-a.sx)*a.in*mv;r.y=a.sy+(a.wy-a.sy)*a.in*mv;const hot=!!a.hot,m=S.res.find(q=>q!==r&&q.act&&q.act.type==='bathe'&&Math.hypot(q.x-r.x,q.y-r.y)<3.5);if(m){r.face=m.x>=r.x?1:-1;r.bubble=Math.floor(a.t/1.5)%2?'🎵':'💦'}else r.bubble=a.tub!=null?(Math.floor(a.t/3)%2?'♨️':'🎵'):'💦';/* ほかの子がいたら、いっしょに水かけっこ */const lo=nearLotus(r);r.fun=Math.min(100,r.fun+(hot?.45:.3)*(m?1.5:1)*(lo?1.5:1)*(hot&&r.elem==='fire'?1.3:1)*dt);if(hot&&r.elem==='fire'&&Math.floor(a.t/2)%3===0)r.bubble='♨️';/* 火の子は温泉が大好き */if(lo)r.energy=Math.min(100,r.energy+.15*recK(r)*dt);/* ハスの近くの水浴びは、たのしい */if(hot)r.energy=Math.min(100,r.energy+.35*recK(r)*dt);/* 温泉は、つかれもとれる */a.h=(a.h||0)+dt;if(a.h>=4.5){a.h=0;sfxAt('wave',r.x,r.y)}},done:(r,a)=>a.t>=30,end(r,a){r.bathD=dayNo();r.bubble='✨';r.shine=performance.now();addPt(.45,r,1);if(a&&a.hot)r.afterBath=S.t+90}},
-  fish:{start(r,a){const w=fishW(a.stand);if(w>=0)r.face=w%W+.5>=r.x?1:-1;/* 釣竿は水のほうへ */r.bubble='🎣';sfxAt('cast',r.x,r.y)},tick(r,a,dt){r.fun=Math.min(100,r.fun+.5*dt)},done:(r,a)=>a.t>=50,end(r,a){const w=r.elem==='water';addPt(1.35+(r.like==='fish'?.9:0),r,3+(r.like==='fish'?2:0));if(Math.random()<(w?.7:.35)+(a&&a.spot?.25:0)){addCarry(r,'fish',1);S.fishN=(S.fishN||0)+1;kurashi('fish',['🐟','はじめて魚がつれた']);r.bubble='🐟';sfxAt('catch',r.x,r.y)}else fishLoot(r)}},
+  fish:{start(r,a){const w=fishW(a.stand);if(w>=0)r.face=w%W+.5>=r.x?1:-1;/* 釣竿は水のほうへ */r.bubble='🎣';sfxAt('cast',r.x,r.y)},tick(r,a,dt){r.fun=Math.min(100,r.fun+.5*dt)},done:(r,a)=>a.t>=50,end(r,a){const w=r.elem==='water';addPt(1.35+(r.like==='fish'?.9:0),r,3+(r.like==='fish'?2:0));if(Math.random()<(w?.7:.35)+(a&&a.spot?.25:0)+(a&&spotHas(a.stand,'fishspot')?.05:0)){/* つりスポット：+5% */addCarry(r,'fish',1);S.fishN=(S.fishN||0)+1;kurashi('fish',['🐟','はじめて魚がつれた']);r.bubble='🐟';sfxAt('catch',r.x,r.y)}else fishLoot(r)}},
   chat:{start(r,a){const p=S.res.find(q=>q.id===a.partner);if(!p||!p.act||p.act.type!=='chatwait'||p.act.partner!==r.id||(r.chatCD||0)>S.t||(p.chatCD||0)>S.t)return false;mate(r,p);
       if(a.tag){const cx=Math.round((r.x+p.x)/2-.5),cy=Math.round((r.y+p.y)/2-.5);let ok=true;for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++)if(!walk((cy+dy)*W+cx+dx))ok=false;
         if(ok){r.act={type:'tag',stage:'do',t:0,cx:cx+.5,cy:cy+.5,ph:0,partner:p.id,key:a.key};endAct(p);p.act={type:'tag',stage:'do',t:0,cx:cx+.5,cy:cy+.5,ph:Math.PI,partner:r.id};r.bubble='😆';p.bubble='😆';return}}
@@ -1388,6 +1402,7 @@ function decide0(r){
   if(!isNight()&&r.fun>=99&&tryJob(r,G,'offer'))return;
   // 楽しさが低いときは、仕事より先に遊びにいく
   if(!isNight()&&r.fun<(r.elem==='wind'?60:30)&&goPlay(r,G,true))return;/* 風の子はよく遊ぶ */
+  if(!isNight()&&Math.random()<.05&&goPlay(r,G,true)){if(r.act)r.act.rand=1;return}/* たのしさがへっていなくても、ときどき（5%）遊ぶ */
   if(goWork(r,G,true))return;
   if(!isNight()&&r.fun<80&&Math.random()<(S.today==='oshaberi'?.75:.45)&&trySocial(r,G))return;
   return goPlay(r,G);
@@ -1399,7 +1414,7 @@ function goMeal(r,G){
   let best=-1,bs=1e9,tdir=0;
   for(let j=0;j<W*H;j++){const d=G.dist[j];if(d<0||d>40||!free('seat'+j,1))continue;
     const td=[-1,1,-W,W].find(o=>typeAt(j+o)==='table');if(td==null)continue;const sc=d-(SEATPT[S.obj[j]]||0)*10;if(sc<bs){bs=sc;best=j;tdir=td}}
-  if(best>=0)return startAct(r,G,'eat',best,{key:'seat'+best,tdir,pt:BL.table.eat.pt+(SEATPT[S.obj[best]]||0),pw:BL.table.eat.pw+(SEATPW[S.obj[best]]||0)});
+  if(best>=0)return startAct(r,G,'eat',best,{key:'seat'+best,tdir,pt:BL.table.eat.pt+(SEATPT[S.obj[best]]||0),pw:(BL.table.eat.pw+(SEATPW[S.obj[best]]||0))*(spotHas(best+tdir,'dining')?1.1:1)});/* ダイニング：パワー+10% */
   return startAct(r,G,'eat',-1,{pt:0,pw:0});
 }
 function fishLoot(r){/* つり：魚でないときは、空き缶・枝・レシピ・レアな家具 */const q=Math.random();sfxAt('catch',r.x,r.y);
@@ -1905,7 +1920,7 @@ function updRes(r,dt){rescueStuck(r);if((RHOLD.get(r)||0)>performance.now())retu
   if(r.elem==='fire'&&r.act&&r.act.type==='patrol'&&isNight()&&S.enemyOn&&(r.act.hunt!=null?S.t-r.act.hunt>3:S.enemies.some(e=>e.spawned&&!e.dead&&nearBase(e))))endAct(r);/* 見回り中でも、拠点＋3マスにコワイノが来たらすぐ向かう */
   if(r.elem==='fire'&&r.act&&!['step','patrol','eat','fetch','flee','faint','forage','bury'].includes(r.act.type)&&r.hunger>=50&&!r.refill&&!r.coffin&&!r.meal&&S.enemies.some(e=>e.spawned&&!e.dead&&nearBase(e)))endAct(r);/* 火の子は、ほかのことをしていても、拠点＋3マスにコワイノが来たら、やめてたたかいに行く */
   if(r.act&&r.act.type==='wander'&&isNight()&&!(isWatch(r)&&S.enemyOn)){endAct(r)}/* 夜になったら、お散歩をやめて帰る */
-  if(r.act&&IDLE_ACTS.includes(r.act.type)&&!isNight()&&r.hunger>=55&&!(r.fun<(S.oracle==='play'?98:r.elem==='wind'?60:30)&&r.act.type!=='wander'&&r.act.type!=='idle')/* 遊ぶきまり（decide0・おつげ）と同じ数で、遊びをやめない */){r.wchk=(r.wchk||0)+dt;if(r.wchk>=3){r.wchk=0;if(hasWork(r)){// 実際に仕事を始められたときだけ遊びをやめる（できないなら続ける）
+  if(r.act&&IDLE_ACTS.includes(r.act.type)&&!isNight()&&r.hunger>=55&&!(r.fun<(S.oracle==='play'?98:r.elem==='wind'?60:30)&&r.act.type!=='wander'&&r.act.type!=='idle')&&!r.act.rand/* 遊ぶきまり（decide0・おつげ）と同じ数で、遊びをやめない */){r.wchk=(r.wchk||0)+dt;if(r.wchk>=3){r.wchk=0;if(hasWork(r)){// 実際に仕事を始められたときだけ遊びをやめる（できないなら続ける）
     const old=r.act,op=r.path,ob=r.bubble;endAct(r);if(!goWork(r,bfs(r.x|0,r.y|0),true)){r.act=old;r.path=op;r.bubble=ob;if(old.key)reserve(old.key)}}}}
   else if(r.act&&ROUTINE.includes(r.act.type)&&!isNight()&&!r.cing&&!(r.noInt>S.t)){r.wchk=(r.wchk||0)+dt;if(r.wchk>=3){r.wchk=0;if(hasHighWork(r)){const was=r.act.type;endAct(r);r.highFirst=true;decide(r);r.highFirst=false;if(r.act&&r.act.type===was)r.noInt=S.t+60}}}
   if(r.hurt>0)r.hurt-=dt;
@@ -5687,13 +5702,15 @@ function renderSheet(){
       body.insertBefore(bar,body.children[1]);
       const how=body.querySelector('.story').parentNode;how.hidden=MANC!=='あそびかた';
       const cur=CAT.find(c=>c[0]===MANC);
-      for(const[t,items]of MANUAL){if(!cur[1].includes(t))continue;const sec=el('<div class="sec"><h3></h3><div class="rows"></div></div>');sec.querySelector('h3').textContent=t;for(const[a,b]of items)sec.querySelector('.rows').appendChild(rowEl(a,b));body.appendChild(sec)}}
+      for(const[t,items]of MANUAL){if(!cur[1].includes(t))continue;const sec=el('<div class="sec"><h3></h3><div class="rows"></div></div>');sec.querySelector('h3').textContent=t;for(const[a,b]of items)sec.querySelector('.rows').appendChild(rowEl(a,b));body.appendChild(sec)}
+      if(cur[0]==='くらし・家具'){const sec=el('<div class="sec"><h3>スポット</h3><div class="rows"></div></div>');const on=new Set();for(const t of SPOTJ.values())for(const k of t)on.add(k);for(const sp of SPOTS)sec.querySelector('.rows').appendChild(rowEl(sp.n+(on.has(sp.k)?'（村にある）':''),sp.how+'を、まわり3マスに置く。'+sp.eff));body.appendChild(sec)}}/* スポットの一覧 */
     {const b=el('<button class="btn">もどる</button>');b.onclick=()=>{sfx('tap');openSheet('menu')};body.appendChild(b)}
   }else if(sheet==='furn'){const j=sheetArg,o=S.obj[j]||(S.rug||{})[j];if(!o||!BL[o])return closeSheet();T.textContent=BL[o].name;{const te=tagsEl(o);if(te)body.appendChild(te)}
     body.appendChild(rowEl(BL[o].name,withAttr(o,BL[o].desc||''),iconURL(o)));
     if(BL[o].hp&&S.obj[j]===o)body.appendChild(el('<div class="rows"></div>')).appendChild(rowEl('じょうぶさ',Math.floor(S.hp[j]??BL[o].hp)+' / '+BL[o].hp));/* 建物などのじょうぶさ */
     {const R=rangeOf(o,j);if(R&&!BL[o].env&&!BENCHES.has(o))body.appendChild(el('<div class="rows"></div>')).appendChild(rowEl('効果のはんい','まわり'+(R.cells||R.r)+'マス（「みる」でタップすると、色で出る）'))}
-    if(SEATS.includes(o)&&spotW(j)>=0)body.appendChild(el('<div class="rows"></div>')).appendChild(rowEl('つりスポット','池のそばのいす。せいれいが、ここにすわってつりをする。ふつうの水べより、魚がつれやすい（水のせいれいは、さらによくつれる）'));/* 池のそばの椅子＝釣りスポット */
+    if(SEATS.includes(o)&&spotW(j)>=0)body.appendChild(el('<div class="rows"></div>')).appendChild(rowEl('つりができるいす','池のそばのいす。せいれいが、ここにすわってつりをする。ふつうの水べより、魚がつれやすい（水のせいれいは、さらによくつれる）'));/* 池のそばの椅子＝釣りスポット */
+    {const t=SPOTJ.get(j);if(t)for(const sp of SPOTS){if(!t.has(sp.k)||sp.k==='park'&&t.has('park2'))continue;body.appendChild(el('<div class="rows"></div>')).appendChild(rowEl('スポット：'+sp.n,sp.eff))}}/* スポット */
     if(o==='table'){const h=roomOf(j);let n=0;if(h)for(const q of h.inside){const oo=S.obj[q];if(oo&&BL[oo]&&BL[oo].cat==='living')n+=BL[oo].dw||1}if(h)for(const oo of rugsIn(h.inside))n+=BL[oo].dw||1;const bon=h?DINEPT[Math.min(6,n)]:0;
       body.appendChild(el('<div class="rows"></div>')).appendChild(rowEl('ここで食べたときのパワー（いま）',h?'+'+bon+'（家の中の食卓 +1・ダイニング家具で +'+(DINEPT[Math.min(6,n)]-1)+(n/2<3?'。ダイニング家具をふやすと、まだふえる':'。いちばん多い')+'）':'家の外なので、ふえない（家の中に置くと +1、ダイニング家具でさらに +3 まで）'))}/* 食卓：いまのパワーのボーナス */
     if(BENCHES.has(o)){const ev=ENVG?Math.min(12,Math.max(ENVG[j]||0,ENVG[j+1]||0)):0;/* ベンチ：まわりのかざりで上がった回復 */
@@ -5978,7 +5995,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='790';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='791';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
