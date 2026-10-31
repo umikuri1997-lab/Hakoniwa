@@ -5914,7 +5914,7 @@ function updHUD(){
 let started=false,titleDrift=0,STOCKSIG='';
 function showUI(on){$('#topUI').hidden=!on;$('#botUI').hidden=!on}
 /* 引き継ぎ：便利な道具（ひろびろハケ・かたどりスタンプ・つけかえトンカチ）だけは、ほかの土地でもらっていれば使える */
-function syncTools(s){for(const L of LIVE)if(L&&L!==s){if(L.bulk)s.bulk=true;if(L.stamps)s.stamps=true;if(L.swap)s.swap=true;if(L.dig)s.dig=true}}
+function syncTools(s){for(const L of LIVE)if(L&&L!==s){if(L.bulk)s.bulk=true;if(L.stamps)s.stamps=true;if(L.swap)s.swap=true;if(L.dig)s.dig=true;if(L.areaSkill||L.flags&&L.flags.areaSkill)(s.flags||(s.flags={})).areaSkill=true}}/* 「ひかりのはどう」も、草原でおぼえたら、ほかのステージで使える */
 function newGame(w){w=w||0;if(sheet!=null)closeSheet();recSync();setWorld(w);resetQuestPrompts();DLGQ.length=0;try{KV.removeItem(SAVE_KEYS[w])}catch(e){}resv.clear();S=newState(w);LIVE[w]=S;syncTools(S);dirty=true;recount();kwrSync();recSync();weedMorning();/* はじめから雑草・枝がある */undoStack=[];renderQuest();applyFeats();setMode('look');$('#title').hidden=true;startPrologue()}
 function startPrologue(){
   showUI(false);started=false;let i=0;const pro=$('#pro');pro.style.transition='none';pro.hidden=false;pro.style.opacity='1';void pro.offsetWidth;pro.style.transition='';/* フェードせずに、すぐまっくらにする（前のデータの画面が一瞬見えないように） */
@@ -5946,7 +5946,7 @@ function stageInfo(w){
   // 旧セーブもマップ配列をJSON展開せず、選択画面に必要な項目だけ拾う。
   const flag=k=>new RegExp('"'+k+'"\\s*:\\s*true').test(raw);
   const lv=raw.match(/"lv"\s*:\s*(\d+)/);
-  return {summary:true,world:w,introSeen:flag('introSeen'),cleared:flag('cleared'),bulk:flag('bulk'),stamps:flag('stamps'),swap:flag('swap'),dig:flag('dig'),lv:lv?+lv[1]:1,res:[]};
+  return {summary:true,world:w,introSeen:flag('introSeen'),cleared:flag('cleared'),bulk:flag('bulk'),stamps:flag('stamps'),swap:flag('swap'),dig:flag('dig'),areaSkill:flag('areaSkill'),lv:lv?+lv[1]:1,res:[]};
 }
 function loadStage(w){if(LIVE[w]&&!LIVE[w].summary)return LIVE[w];return LIVE[w]=load(w)}
 function refreshStageInfo(){for(const w of[0,1,FREE])if(!LIVE[w]||LIVE[w].summary)LIVE[w]=stageInfo(w)}
@@ -5978,7 +5978,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='788';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='789';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
