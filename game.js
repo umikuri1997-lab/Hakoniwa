@@ -40,6 +40,7 @@ const ELEM_KEYS=Object.keys(ELEM);
 // kind: block・plant=おそなえ/カミサマとの交換でおそなえ箱に入る / furn=依頼ボードでせいれいが作る / build=せいれいが建てる（パワー）
 const BL={
   path:{name:'あぜ道',kind:'block',floor:1,lv:2,cost:1,pc:2,time:30,maker:'earth',qty:10,mat:{stone:2},attr:{earth:.25},desc:'草地のあいだを通る土の道。歩く速さ×1.25'},
+  bridge:{name:'木の橋',kind:'build',lv:2,pc:2,time:40,maker:'wood',mat:{wood:4},desc:'川や池の上にかける。せいれいが建てる。歩いてわたれる'},
   stairs_wood:{name:'木の階段',kind:'build',lv:8,pc:3,time:50,maker:'wood',mat:{wood:3},attr:{wood:.3},desc:'段差の下に置く。せいれいが建てる。段差を飛ばずに上り下りできる（1マス歩く時間。飛ぶと3倍）'},
   stairs_brick:{name:'レンガの階段',kind:'build',lv:6,w:1,pc:5,time:60,maker:'fire',mat:{stone:6},attr:{fire:.5},desc:'段差の下に置く。せいれいが建てる。段差を飛ばずに上り下りできる（1マス歩く時間。飛ぶと3倍）'},
   stairs_stone:{name:'石の階段',kind:'build',lv:4,w:1,pc:4,time:60,maker:'earth',mat:{stone:5},attr:{earth:.5},desc:'段差の下に置く。せいれいが建てる。段差を飛ばずに上り下りできる（1マス歩く時間。飛ぶと3倍）'},
@@ -211,7 +212,7 @@ function furnitureGroups(ids){const wanted=new Set(ids);return CRAFT_TABS.map(([
 const FURN=['hoshirug','yorubed','toro','table','chair','stor','mbox','oven','bed','bench','takebench','takeakari','shishiodoshi','campfire','swing','torch','jar','rockart','vane','spike','puddle','stool','stable','pouf','achair','ltable','rug1','sofa1','rug2','tub','sink','crate','monstera','shelf1','wreath','curtain1','cabinet','paint2','shelf2','curtain2','paint3','wshelf','paint1','bathtub','candle','lantern','flamp','signpost','hedge','birdbath','parasol','arch','slide','sandbox','seesaw','kamizo','noren'];// 属性の罠（sticky/firetrap/gust）は次のステージから
 
 const TERRA=new Set(['dig','mound']);/* だんさスコップの工事 */
-const BUILDS=['statue','watch','slope_earth','stairs_wood','stairs_stone','stairs_brick','yogan','lumber','well','quarry','windmill','fountain','lighthouse','stele','tower'];
+const BUILDS=['statue','watch','bridge','slope_earth','stairs_wood','stairs_stone','stairs_brick','yogan','lumber','well','quarry','windmill','fountain','lighthouse','stele','tower'];
 const STAMPS={
   fields:{name:'畑セット',cells:[[0,0,'farm'],[1,0,'farm'],[2,0,'farm'],[0,1,'farm'],[1,1,'farm'],[2,1,'farm']]},
   ring:{name:'柵の囲い',cells:(()=>{const c=[];for(let y=0;y<5;y++)for(let x=0;x<5;x++)if(x===0||y===0||x===4||y===4)c.push([x,y,'fence']);return c})()},
@@ -776,7 +777,7 @@ let S=null;
 const resv=new Map();
 let STATUE=-1,OBOX=-1,BOARD=-1,counts={},LIGHTS=[],STELES=[],TOWERS=[],NEARFLOWER=new Set(),NEARWELL=new Set(),NEARMILL=new Set(),NEARVANE=new Set(),NEARSIGN=new Set(),NEARPARA=new Set(),SPOTJ=new Map(),SPOTM=new Map(),SPOTI=[],RUGC=new Map(),RFC=new Map(),ENVG=null,REV=new Set(),ATTR={},BASEPCT=0,GRASSN=0;const GRASS_GOAL=600;
 function newState(w){w=w||0;
-  const s={v:8,mig:9,flags:{berryHalf:1},placed:{},feat:{build:true},inv:{},orders:[],enemyOn:false,nights:0,godGone:false,godShown:false,nushi:null,
+  const s={v:8,mig:9,flags:{berryHalf:1,land2:1},placed:{},feat:{build:true},inv:{},orders:[],enemyOn:false,nights:0,godGone:false,godShown:false,nushi:null,
     lv:1,bossKills:0,nightHurt:0,nightHad:false,wave:null,lastWarn:0,
     ref:{},ground:new Array(W*H).fill(0),floor:new Array(W*H).fill(''),obj:new Array(W*H).fill(''),dyn:{},hp:{},
     res:[],enemies:[],pt:25,totalPt:0,food:0,fs:{},cseed:{imo:4},crops:{imo:true},mat:{wood:0,stone:0},regrow:[],t:w===0?15*60:12*60,/* 草原は15時からはじまる */speed:1,
@@ -838,7 +839,7 @@ function genWorld(s,w){
   for(let d=1;d<=4;d++){const j=(CY-4)*W+hx(d);s.obj[j]='farm';s.floor[j]='';s.dyn[j]={g:50,wet:0,crop:'imo'}}/* 最初の畑は4つ。家の道をはさんだ向かいに横1列。作物は、はじめはいもだけ */
   }
   if(V){const put=id=>{let best=-1,bd=1e9;for(let y=CY-7;y<CY;y++)for(let x=CX-6;x<CX;x++){const j=y*W+x;if(s.ground[j]===1||s.obj[j]||s.floor[j])continue;if([j-1,j+1,j-W,j+W,j-W-1,j-W+1,j+W-1,j+W+1].some(k=>s.ground[k]===1||s.obj[k]==='stor'||s.obj[k]==='mbox'))continue;const d=Math.hypot(x+.5-(CX-3),y+.5-(CY-3.5));if(d<bd){bd=d;best=j}}if(best>=0)s.obj[best]=id};{const j=(CY+4)*W+CX-8;s.obj[j]='stor';s.floor[j]='floor'}put('mbox');for(let y=CY-13;y<CY-8;y++){const j=y*W+CX;if(!s.obj[j]&&s.ground[j]!==1)s.floor[j]='path'}st2Place(s)}/* 火山のふもと：食料箱は古い家の中、素材箱は村の北西に（コワイノは南から来るので） */
-  genHeights(s,w)/* 段差（いちばん最後：ほかの物をおいたあと） */
+  genLand(s,w)/* 川と段差（いちばん最後：ほかの物をおいたあと） */
 }
 
 /* ---------- 火山のふもと（ステージ2）：温泉3か所・火山・熱の道 ---------- */
@@ -954,7 +955,8 @@ const rotAt=j=>(S&&S.rot&&S.rot[j])||0;
 const szR=(id,rot)=>{const z=BL[id]&&BL[id].sz;if(!z)return null;return (ROTS[id]===2&&rot===1||ROTS[id]===4&&rot%2===1)?[z[1],z[0]]:z};/* 向きをかえると、たて・よこが入れかわる */
 const szAt=(id,j)=>szR(id,j==null?0:(S.obj[j]===id||S.obj[j]==='site'?rotAt(j):(PLROTS[id]||0)));
 const fp=(id,x,y,rot)=>{const z=rot!=null?szR(id,rot):szAt(id,y*W+x);if(!z)return [[x,y]];const c=[];for(let b=0;b<z[1];b++)for(let a=0;a<z[0];a++)c.push([x+a,y+b]);return c};
-function walk(j){if(j<0||j>=W*H||S.ground[j]===1)return false;return !solidOf(j)}
+function walk(j){if(j<0||j>=W*H||S.ground[j]===1&&S.obj[j]!=='bridge')return false;return !solidOf(j)}/* 橋の上は歩ける。浅瀬（ground 2）は歩ける（ゆっくり） */
+const wetJ=j=>S.ground[j]===1&&S.obj[j]!=='bridge';/* 歩けない水 */
 const LIFT=26;/* 段差1だんの高さ（ドット）。高いマスの上の物は、これだけ上に描く */
 function hiAt(j){return S.hi?S.hi[j]|0:0}
 const SLOPES=new Set(['slope_earth']),STAIRS=new Set(['stairs_wood','stairs_stone','stairs_brick',...SLOPES]),/* 土は坂だけ、木・石・レンガは階段だけ */SDIR=[[0,1],[1,0],[0,-1],[-1,0]];/* 階段の向き：0下 1右 2上 3左（低いほう） */
@@ -972,14 +974,36 @@ function cliff2(a,b){return Math.abs(hiAt(a)-hiAt(b))>1}/* 2だん以上ちが�
 function jumpEdge(a,b){return hiAt(a)!==hiAt(b)&&!stairLink(a,b)&&!stairLink(b,a)}/* 段差を飛ぶ所（階段で上り下りする所はちがう） */
 function zAt(x,y){/* その場所の高さ（ドット）。階段の上は、高いほうのはしから低いほうへ少しずつ下がる */const c=(y|0)*W+(x|0);const a=stairOf(c);if(a<0)return hiAt(c)*LIFT;const d=stairDir(a);if(d<0)return hiAt(c)*LIFT;const ax=a%W,ay=(a/W)|0,t=d===0?2*(y-ay):d===1?x-ax:d===2?ay+1-y:ax+1-x;return LIFT*hiAt(a)+LIFT*Math.max(0,Math.min(1,1-t/2))}/* 2マスで下がる（手前向きは1マス） */
 const HI_OK=new Set(['deadtree','rock','berry','bamboo','tree','ntree','fruit']);/* 段差を作ってよい物（自然の物） */
-function genHeights(s,w){/* 段差：マップのところどころに、1だん高い土地。村のまん中（14マス）と、水のまわり・床・人の作った物の所には作らない */
-  const R=mulberry((w===1?20261102:w===FREE?20261022:20261018)+77),h=new Array(W*H).fill(0);
-  const ok=j=>{const x=j%W,y=(j/W)|0;if(x<2||y<2||x>=W-2||y>=H-2)return false;if(Math.max(Math.abs(x+.5-CX),Math.abs(y+.5-CY))<14)return false;if(s.floor[j])return false;const o=s.obj[j];if(o&&!HI_OK.has(o))return false;for(let b=-1;b<=1;b++)for(let a=-1;a<=1;a++)if(s.ground[j+b*W+a]===1)return false;return true};
-  for(let n=0;n<14;n++){const cx=4+R()*(W-8),cy=4+R()*(H-8),rx=2.5+R()*3.5,ry=2+R()*3,a=R()*6.28;
-    for(let y=Math.floor(cy-ry-2);y<=cy+ry+2;y++)for(let x=Math.floor(cx-rx-2);x<=cx+rx+2;x++){if(x<0||y<0||x>=W||y>=H)continue;const dx=(x+.5-cx)/rx,dy=(y+.5-cy)/ry;if(Math.hypot(dx,dy)<1+.18*Math.sin(3*Math.atan2(dy,dx)+a))h[y*W+x]=1}}
+const LANDSEED=w=>w===1?20261102:w===FREE?20261022:20261018;
+function landMade(s,j){const o=s.obj[j];return !!s.floor[j]||o==='part'||!!o&&!!BL[o]&&!BL[o].natural&&!WEEDS.has(o)}/* 人の作った物（床・道・家具・建物）がある */
+function genRiver(s,w){/* 川：北のはしから南のはしへ、村のまん中から26〜30マスはなれた所を、くねくね流れる。支流が1本。浅瀬（ground 2）は、本流に3か所・支流に1か所 */
+  const R=mulberry(LANDSEED(w)+333),side=R()<.5?-1:1,base=CX+side*(26+R()*4),p1=R()*6.28,p2=R()*6.28,p3=R()*6.28,riv=new Uint8Array(W*H);
+  const set=(x,y)=>{if(x<0||y<0||x>=W||y>=H)return;const j=y*W+x;if(landMade(s,j)||s.ground[j]===1&&!riv[j])return;riv[j]=1};
+  const xc=y=>base+5*Math.sin(y*.09+p1)+2.5*Math.sin(y*.23+p2);
+  for(let y=0;y<H;y++){const c=xc(y),wd=2.3+.9*Math.sin(y*.13+p3),a=Math.round(c-wd/2),b=Math.round(c+wd/2);for(let x=a;x<b;x++)set(x,y);const c2=xc(y+1);for(let x=Math.min(Math.round(c2-wd/2),a);x<Math.max(Math.round(c2+wd/2),b);x++)if(Math.abs(x+.5-(c+c2)/2)<wd/2+.6)set(x,y)}/* となりの行とつながるように、あいだもうめる */
+  const yt=Math.round(CY+(R()<.5?-1:1)*(14+R()*14)),p4=R()*6.28,ex=side<0?0:W-1,mx=Math.round(xc(yt));/* 支流：外がわのはしから、本流へ */
+  for(let x=Math.min(ex,mx);x<=Math.max(ex,mx);x++){const c=yt+3*Math.sin(x*.15+p4);for(let y=Math.round(c-1);y<Math.round(c+1);y++)set(x,y);const c2=yt+3*Math.sin((x+1)*.15+p4);if(Math.abs(c2-c)>.6)set(x,Math.round((c+c2)/2))}
+  for(let j=0;j<W*H;j++)if(riv[j]){const o=s.obj[j];if(o){s.obj[j]='';delete s.dyn[j];delete s.hp[j];delete s.hp['n'+j]}s.ground[j]=1}
+  const ford=(y)=>{for(let x=0;x<W;x++){const j=y*W+x;if(riv[j]&&Math.abs(x-xc(y))<4)s.ground[j]=2}};
+  for(const y of[Math.round(CY-26+R()*8),Math.round(CY-3+R()*6),Math.round(CY+20+R()*8)]){ford(y);ford(y+1)}
+  {const fx=Math.round((ex+mx)/2);for(let y=0;y<H;y++){const j=y*W+fx;if(riv[j])s.ground[j]=2;if(riv[j+(side<0?1:-1)])s.ground[j+(side<0?1:-1)]=2}}
+  return riv}
+function genHeights(s,w){/* 段差：なめらかなノイズから、0〜3だんの台地。村のまん中（13マス）は平ら。外へいくほど高い。水・浅瀬のまわり・床・人の作った物の所には作らない。となりとの差は1だんまで（段々の台地） */
+  const R=mulberry(LANDSEED(w)+77),h=new Array(W*H).fill(0);
+  const ok=j=>{const x=j%W,y=(j/W)|0;if(x<2||y<2||x>=W-2||y>=H-2)return false;if(Math.max(Math.abs(x+.5-CX),Math.abs(y+.5-CY))<13)return false;if(s.floor[j])return false;const o=s.obj[j];if(o&&!HI_OK.has(o))return false;for(let b=-1;b<=1;b++)for(let a=-1;a<=1;a++)if(s.ground[j+b*W+a])return false;if(w===1&&Math.abs(x+.5-CX)<9&&y<OFF+16)return false;/* 火山：北の火口のまわりは平ら */return true};
+  const oct=sc=>{const gw=Math.ceil(W/sc)+2,gh=Math.ceil(H/sc)+2,g=new Float32Array(gw*gh);for(let k=0;k<g.length;k++)g[k]=R();const sm=t=>t*t*(3-2*t);
+    return (x,y)=>{const fx=x/sc,fy=y/sc,ix=Math.floor(fx),iy=Math.floor(fy),tx=sm(fx-ix),ty=sm(fy-iy),v=(a,b)=>g[(iy+b)*gw+ix+a];return (v(0,0)*(1-tx)+v(1,0)*tx)*(1-ty)+(v(0,1)*(1-tx)+v(1,1)*tx)*ty}};
+  const n1=oct(24),n2=oct(11),n3=oct(5.5);
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++){const j=y*W+x,c=Math.max(Math.abs(x+.5-CX),Math.abs(y+.5-CY)),f=Math.min(1,Math.max(0,(c-13)/14)),v=(.6*n1(x,y)+.3*n2(x,y)+.1*n3(x,y))*(.55+.45*f)+.12*f;
+    h[j]=v>.70?3:v>.60?2:v>.50?1:0}
+  for(let pass=0;pass<2;pass++)for(let lv=1;lv<=HMAX;lv++){const g=h.slice();for(let y=1;y<H-1;y++)for(let x=1;x<W-1;x++){const j=y*W+x;let n=0;for(let b=-1;b<=1;b++)for(let a=-1;a<=1;a++)if((a||b)&&g[j+b*W+a]>=lv)n++;if(g[j]>=lv&&n<=2)h[j]=Math.min(h[j],lv-1);else if(g[j]<lv&&n>=6)h[j]=Math.max(h[j],lv)}}/* まわり8マスの多いほうにそろえて、ふちをまるく */
   for(let j=0;j<W*H;j++)if(h[j]&&!ok(j))h[j]=0;
-  for(let pass=0;pass<3;pass++){const g=h.slice();for(let y=1;y<H-1;y++)for(let x=1;x<W-1;x++){const j=y*W+x,n=g[j-1]+g[j+1]+g[j-W]+g[j+W];if(g[j]&&n<2)h[j]=0;else if(!g[j]&&n>=3&&ok(j))h[j]=1}}/* 1マスだけ・ほそい所はけす、くぼみはうめる */
+  const fix=()=>{for(let it=0;it<4;it++){let ch=0;for(let y=0;y<H;y++)for(let x=0;x<W;x++){const j=y*W+x;let m=h[j];for(let b=-1;b<=1;b++)for(let a=-1;a<=1;a++){const xx=x+a,yy=y+b;if(xx<0||yy<0||xx>=W||yy>=H)continue;m=Math.min(m,h[yy*W+xx])}if(h[j]>m+1){h[j]=m+1;ch=1}}if(!ch)break}};/* となりとの差は1だんまで */
+  fix();
+  for(let pass=0;pass<3;pass++)for(let lv=HMAX;lv>=1;lv--){const g=h.slice();for(let y=1;y<H-1;y++)for(let x=1;x<W-1;x++){const j=y*W+x,n=(g[j-1]>=lv)+(g[j+1]>=lv)+(g[j-W]>=lv)+(g[j+W]>=lv);if(g[j]>=lv&&n<2)h[j]=lv-1;else if(g[j]===lv-1&&n>=3&&ok(j))h[j]=lv}}/* ほそい所はけす、くぼみはうめる */
+  fix();
   s.hi=h}
+function genLand(s,w){genRiver(s,w);genHeights(s,w)}/* 地形：川（と浅瀬）、そのあと段差 */
 const cnt=id=>counts[id]||0;
 const FOODS={mugi:{name:'こむぎ',v:1,e:'🌾'},imo:{name:'いも',v:1,e:'🥔'},tomato:{name:'キャベツ',v:1,e:'🥬'},berry:{name:'ベリー',v:1,e:'🫐',fx:'たのしさ+8'},apple:{name:'りんご',v:1,e:'🍎',fx:'たのしさ+8'},fish:{name:'さかな',v:1,e:'🐟'},takenoko:{name:'たけのこ',v:1,e:'🎍'},
   bread:{name:'パン',v:2,pt:3,pw:1.35,dish:1,e:'🍞',fx:'おなかのへる速さ×0.6'},soup:{name:'キャベツスープ',v:2,pt:3,pw:1.35,dish:1,e:'🍲',fx:'つかれ−25'},yakiimo:{name:'ベイクドポテト',v:1,pt:2,pw:.9,dish:1,e:'🍠',fx:'3時間、作業スピード×1.15'},yakizakana:{name:'焼き魚',v:1,pt:4,pw:1.8,dish:1,e:'🐠',fx:''},yakiberry:{name:'焼きベリー',v:2,pt:2,pw:.9,dish:1,e:'🍮',fx:'たのしさ+15'},yakiapple:{name:'焼きりんご',v:1,pt:2,pw:.9,dish:1,e:'🥧',fx:'3時間、移動速度×1.15'},salad:{name:'サラダ',v:2,pt:2,pw:.9,dish:1,e:'🥗',fx:'つかれ−10・たのしさ+10'},
@@ -1154,7 +1178,7 @@ function roadSearch(sx,sy,block){
   const s=clamp(sy,0,H-1)*W+clamp(sx,0,W-1);cost[s]=0;dist[s]=0;B[0]=[s];
   for(let c=0;c<B.length;c++){const L=B[c];if(!L)continue;for(const i of L){if(cost[i]!==c)continue;const x=i%W,y=(i/W)|0;
     for(const[dx,dy]of DIRS){const nx=x+dx,ny=y+dy;if(nx<0||ny<0||nx>=W||ny>=H)continue;const j=ny*W+nx;if(!walk(j)&&!(S.ground[i]===1&&S.ground[j]===1&&!solidOf(j))||block&&block.has(j)||cliff2(i,j))continue;/* 水の中にいるときは、水の中も歩ける */
-      const fl=S.floor[j],nc=c+(FCOST[fl]||6)*(jumpEdge(i,j)?3:1);/* 段差を飛ぶのは、歩くより3倍の手間 */if(cost[j]>=0&&cost[j]<=nc)continue;
+      const fl=S.floor[j],nc=c+(FCOST[fl]||6)*(jumpEdge(i,j)?3:1)*(S.ground[j]===2?2:1);/* 段差を飛ぶのは、歩くより3倍の手間 */if(cost[j]>=0&&cost[j]<=nc)continue;
       cost[j]=nc;dist[j]=dist[i]+1;prev[j]=i;(B[nc]||(B[nc]=[])).push(j)}}}
   return {dist,prev};
 }
@@ -1163,7 +1187,7 @@ function bfs0(sx,sy,enemy){
   let h=0,t=0;const s=clamp(sy,0,H-1)*W+clamp(sx,0,W-1);dist[s]=0;q[t++]=s;
   while(h<t){const i=q[h++],x=i%W,y=(i/W)|0;
     for(const[dx,dy]of DIRS){const nx=x+dx,ny=y+dy;if(nx<0||ny<0||nx>=W||ny>=H)continue;const j=ny*W+nx;if(dist[j]>=0)continue;
-      if(S.ground[j]===1||cliff2(i,j))continue;if((solidOf(j)||HOME_DOORS.has(typeAt(j))||GATE_IDS.has(typeAt(j)))&&(enemy===2||!breakable(typeAt(j))))continue;
+      if(wetJ(j)||cliff2(i,j))continue;if((solidOf(j)||HOME_DOORS.has(typeAt(j))||GATE_IDS.has(typeAt(j)))&&(enemy===2||!breakable(typeAt(j))))continue;
       dist[j]=dist[i]+1;prev[j]=i;q[t++]=j}}
   return {dist,prev};
 }
@@ -1172,9 +1196,9 @@ function bfsE(sx,sy,wk,sd){
   const N=W*H,dist=new Int16Array(N).fill(-1),prev=new Int32Array(N).fill(-1),cost=new Int32Array(N).fill(-1),B=[];
   const s=clamp(sy,0,H-1)*W+clamp(sx,0,W-1);cost[s]=0;dist[s]=0;B[0]=[s];
   for(let c=0;c<B.length;c++){const L=B[c];if(!L)continue;for(const i of L){if(cost[i]!==c)continue;const x=i%W,y=(i/W)|0;
-    for(const[dx,dy]of DIRS){const nx=x+dx,ny=y+dy;if(nx<0||ny<0||nx>=W||ny>=H)continue;const j=ny*W+nx;if(S.ground[j]===1||cliff2(i,j))continue;
+    for(const[dx,dy]of DIRS){const nx=x+dx,ny=y+dy;if(nx<0||ny<0||nx>=W||ny>=H)continue;const j=ny*W+nx;if(wetJ(j)||cliff2(i,j))continue;
       let add=2+((Math.imul(j^sd,2654435761)>>>29)&1);const o=typeAt(j);
-      if(jumpEdge(i,j))add*=3;/* 段差を飛ぶのは3倍 */if(solidOf(j)||HOME_DOORS.has(o)||GATE_IDS.has(o)){if(!breakable(o))continue;add+=wk}/* 壁はどれも同じ手間（守りの薄い所をねらうことはしない） */
+      if(jumpEdge(i,j))add*=3;/* 段差を飛ぶのは3倍 */if(S.ground[j]===2)add*=2;/* 浅瀬は2倍 */if(solidOf(j)||HOME_DOORS.has(o)||GATE_IDS.has(o)){if(!breakable(o))continue;add+=wk}/* 壁はどれも同じ手間（守りの薄い所をねらうことはしない） */
       const nc=c+add;if(cost[j]>=0&&cost[j]<=nc)continue;cost[j]=nc;dist[j]=dist[i]+1;prev[j]=i;(B[nc]||(B[nc]=[])).push(j)}}}
   return {dist,prev};
 }
@@ -1924,7 +1948,7 @@ function moveR(r,dt){
   if(r.path.length){const cj=(r.y|0)*W+(r.x|0),n0=r.path[0];if(n0!==cj&&Math.abs(n0%W-cj%W)+Math.abs(((n0/W)|0)-((cj/W)|0))>1){/* 次のマスがとなりでない（古い道・押されてずれた）ときは、いまの場所から道を引きなおす。壁をすりぬけない */
     const g=r.path[r.path.length-1],G0=roadSearch(r.x|0,r.y|0);r.path=G0.dist[g]>=0?avoidPath(r,G0,g):[];if(!r.path.length&&g!==cj){noPass(r);endAct(r);return}}}
   while(step>0&&r.path.length){const j=r.path[0];if(!walk(j)&&!(S.ground[j]===1&&!solidOf(j)&&(S.ground[(r.y|0)*W+(r.x|0)]===1||r.act&&r.act.wade))){const goal=r.path[r.path.length-1],G=roadSearch(r.x|0,r.y|0);if(G.dist[goal]>=0&&walk(goal)){r.path=avoidPath(r,G,goal);if(r.path.length)return}noPass(r);endAct(r);return}
-    const tx=j%W+.5,ty=((j/W)|0)+.5,dx=tx-r.x,dy=ty-r.y,d=Math.hypot(dx,dy),jf=jumpEdge((r.y|0)*W+(r.x|0),j)?5:1;/* 段差を飛ぶ間（マスのさかいまで）は5倍ゆっくり＝1マスで3倍の時間 */
+    const tx=j%W+.5,ty=((j/W)|0)+.5,dx=tx-r.x,dy=ty-r.y,d=Math.hypot(dx,dy),jf=(jumpEdge((r.y|0)*W+(r.x|0),j)?5:1)*(S.ground[j]===2?2:1);/* 浅瀬は2倍ゆっくり *//* 段差を飛ぶ間（マスのさかいまで）は5倍ゆっくり＝1マスで3倍の時間 */
     if(dx)r.face=dx<0?-1:1;
     if(d*jf<=step){r.x=tx;r.y=ty;r.path.shift();step-=d*jf}else{r.x+=dx/d*step/jf;r.y+=dy/d*step/jf;step=0}}
   // ぶつかって進めないときは、止まっている子のマスを避けた道を探して回り込む。道がなければ少しの間すりぬける
@@ -2213,7 +2237,7 @@ function updEnemy(e,dt){
       if(S.hp[j]<=0){const nm=BL[S.obj[j]].name;(S.broken||(S.broken=[])).push({j,id:S.obj[j],L:S.hp['L'+j],rot:rotAt(j)});sfxAt('wbreak',j%W+.5,(j/W)|0);if(S.ns)S.ns.broke++;{const hb=HOUSES.find(h=>h.set.has(j));clearObj(j);recount();houseBreakFlee(hb)}toast(nm+'がこわされた！','warn')}}
     return}}
   if(!walk(j)){e.path=[];return}
-  let sp=D.sp*dt*e.slow*(e.flee&&D.thief?1.8:1);if(!e.flee)sp*=lightMul(e.x,e.y);/* 光の中は、移動の速さ0.8倍 */if(jumpEdge((e.y|0)*W+(e.x|0),j))sp/=5;/* 段差を飛ぶ間は5倍ゆっくり */
+  let sp=D.sp*dt*e.slow*(e.flee&&D.thief?1.8:1);if(!e.flee)sp*=lightMul(e.x,e.y);/* 光の中は、移動の速さ0.8倍 */if(jumpEdge((e.y|0)*W+(e.x|0),j))sp/=5;if(S.ground[j]===2)sp/=2;/* 浅瀬は2倍ゆっくり *//* 段差を飛ぶ間は5倍ゆっくり */
   const tx=j%W+.5,ty=((j/W)|0)+.5,dx=tx-e.x,dy=ty-e.y,d=Math.hypot(dx,dy);
   if(d<=sp){e.x=tx;e.y=ty;e.path.shift()}else{e.x+=dx/d*sp;e.y+=dy/d*sp}e.stk=0
 }
@@ -2829,7 +2853,7 @@ function findTalk(){if(WD!==0){S.flags.lightTold=1;return}/* 説明は1章（草
   dialog([[POKO,'#think|ねえ、守り神さま。木材や石材、もっとたくさんあったらいいのにね。'],[POKO,'#surprise|……そうだ！ 守り神さまの光、木や岩にもあてられないかな？'],[POKO,'#joy|光があたったら、木ぎれや石ころが、ころんって落ちてくるかも。そしたら、ぼくたちがひろって、箱にしまうよ！']],()=>{S.flags.lightTold=1;toast('守りの光をえらんで木や岩をタップすると、守りの光をあてられる（パワー1）')})}/* さいごまで見てから「見た」に */
 function spawnSeed(){
   for(let t=0;t<40;t++){const x=OFF+((Math.random()*OW)|0),y=OFF+((Math.random()*OW)|0),j=y*W+x;/* 前からの土地の中に落ちる */
-    if(!VILL[j]&&S.ground[j]!==1&&!S.obj[j]){S.seeds.push({x,y});return}}
+    if(!VILL[j]&&!S.ground[j]&&!S.obj[j]){S.seeds.push({x,y});return}}
 }
 
 /* ---------- 置く・こわす ---------- */
@@ -2870,7 +2894,9 @@ function canPlace1(id,x,y,quiet){
   if(x<0||y<0||x>=W||y>=H)return false;
   if(WALLD.has(id)){const j=y*W+x,iw=k=>HOME_WALLS.has(typeAt(k))||HOME_DOORS.has(typeAt(k)),wreath=id==='wreath',target=HOME_WALLS.has(S.obj[j])&&S.obj[j]!=='wall'||wreath&&HOME_DOORS.has(S.obj[j]);/* 石の塀にはかけられない */if(!target||wreath&&HOME_DOORS.has(S.obj[j])&&(iw(j-W)||iw(j+W))&&!(iw(j-1)||iw(j+1))||!wreath&&(iw(j-W)||iw(j+W))||(S.win&&S.win[j]&&!((id==='curtain1'||id==='curtain2')&&S.win[j]===1))||((id==='curtain1'||id==='curtain2')&&!(S.win&&S.win[j]===1&&HOUSES.some(h=>h.set.has(j)&&h.inside.has(j+W)&&!h.inside.has(j-W))))){if(!quiet)toast((id==='curtain1'||id==='curtain2')?'カーテンは、家の上がわの窓にだけかけられます':wreath?'リースは、壁か横向きのドアにだけかけられます':BL[id].name+'は、横向きの家の壁にだけかけられます');return false}return true}/* 窓は壁にはめる */
   const j=y*W+x;if(id==='lotus'){if(S.ground[j]!==1){if(!quiet)toast('ハスは池の上にだけ植えられます');return false}if(S.obj[j]){if(!quiet)toast('ここにはもう何かあります');return false}return true}
+  if(id==='bridge'){if(S.ground[j]!==1){if(!quiet)toast('橋は水の上にだけかけられます');return false}if(S.obj[j]){if(!quiet)toast('ここにはもう何かあります');return false}return true}
   if(S.ground[j]===1){if(!quiet)toast('水の上には置けません');return false}
+  if(S.ground[j]===2){if(!quiet)toast('浅瀬には置けません');return false}
   if(TERRA.has(id)){const k=id==='dig';if(k?!hiAt(j):hiAt(j)>=HMAX){if(!quiet)toast(k?'高いマスだけ、けずれます':'これより高くは、もれません');return false}if(S.obj[j]&&!WEEDS.has(S.obj[j])||S.floor[j]){if(!quiet)toast('なにもない所だけです');return false}if([j-1,j+1,j-W,j+W].some(n=>STAIRS.has(S.obj[n])&&stairTop(n,stairDir(n))===j)){if(!quiet)toast(k?'階段のうしろは、けずれません':'階段のうしろは、もれません');return false}return true}/* だんさスコップ：けずる・もる */
   if(STAIRS.has(id)){const d=PLROTS[id]?SROT[PLROTS[id]]:stairDir(j);if(d<0||!stairOK(j,d)){if(!quiet)toast(PLROTS[id]?ROTL[5][PLROTS[id]]+'には置けません（うしろが段差で、2マスあいている所）':'段差の下に、2マスあいている所に置けます');return false}if(d){const o=stairOut(j,d);if(S.obj[o]&&!WEEDS.has(S.obj[o])||o<0||o>=W*H){if(!quiet)toast('階段は2マスいります');return false}}}/* 階段は、段差の下の低い地面に1×2 */
   if(BL[id].floor)return S.floor[j]!==id&&!(S.obj[j]&&BL[S.obj[j]].job);
@@ -3338,7 +3364,7 @@ function grassBoundaryCorners(i){
 }
 function drawGrassBoundary(c,i,x,y){for(const [dx,dy,side] of grassBoundaryEdges(i)){c.save();c.translate(x+(side===1||side===2?TS:0),y+(side>=2?TS:0));c.rotate(side*Math.PI/2);const gx=i%W,gy=(i/W)|0,axis=side===0||side===2?0:1,line=axis?gx+(side===1?1:0):gy+(side===2?1:0),seed=i*137+side*29,world=p=>(axis?gy*TS+p:gx*TS+p),noise=p=>{const z=world(p)/16,a=Math.floor(z),f=z-a,t=f*f*(3-2*f),key=line*7919+axis*104729;return(hash(key+a*374761393)*2-1)*(1-t)+(hash(key+(a+1)*374761393)*2-1)*t},wave=p=>noise(p)*2.6+Math.sin(world(p)*.1+line*1.7)*.55+Math.sin(world(p)*.25+line*2.3)*.2,barren=WD===1?'#a39280':'#b3a37c';c.fillStyle=barren;c.beginPath();c.moveTo(3,-17);c.lineTo(TS-3,-17);c.quadraticCurveTo(TS+1,-10,TS-3,wave(TS-3));for(let p=TS-3;p>=3;p-=2)c.lineTo(p,wave(p));c.quadraticCurveTo(-1,-10,3,-17);c.closePath();c.fill();for(let k=0;k<20;k++){const v=hash(seed*31+k*71),pos=k*1.7-1+hash(seed+k*37)*1.8,depth=2+v*4.3;c.fillStyle=k%4?'#9dc26e':'#8cb262';c.beginPath();c.ellipse(pos,wave(pos)+.6,2+hash(seed+k*17)*1.6,depth*.7,0,0,Math.PI*2);c.fill();c.beginPath();c.moveTo(pos-1.7,wave(pos));c.quadraticCurveTo(pos-1.7,wave(pos)+depth*.6,pos+(v-.5)*3,wave(pos)+depth+1.5);c.quadraticCurveTo(pos+1.9,wave(pos)+depth*.4,pos+1.7,wave(pos));c.closePath();c.fill()}c.restore()}const radius=4.5;c.fillStyle=WD===1?'#a39280':'#b3a37c';for(const [cx,cy] of grassBoundaryCorners(i)){c.beginPath();c.arc(x+cx-i%W*TS,y+cy-((i/W)|0)*TS,radius,0,Math.PI*2);c.fill()}}
 function drawWaterAll(c,X0=0,Y0=0,X1=W-1,Y1=H-1){
-  const isW0=(x,y)=>x>=0&&y>=0&&x<W&&y<H&&S.ground[y*W+x]===1,h=TS/2;let isW=isW0;
+  const isW0=(x,y)=>x>=0&&y>=0&&x<W&&y<H&&S.ground[y*W+x]>=1,h=TS/2;/* 浅瀬も水として描く（石は毎コマ上に描く） */let isW=isW0;
   const blob=(r)=>{c.beginPath();for(let y=0;y<H;y++)for(let x=0;x<W;x++){if(!isW(x,y))continue;const cx=x*TS+h,cy=y*TS+h;
       const rr=r+hash(y*W+x)*3.5-.5,rb=r-1;c.moveTo(cx+rr,cy);c.arc(cx,cy,rr,0,7);
       if(isW(x+1,y))c.rect(cx,cy-rb,TS,rb*2);if(isW(x,y+1))c.rect(cx-rb,cy,rb*2,TS);
@@ -3941,6 +3967,11 @@ function drawObj(c,id,x,y,i,g,now){
     for(const[dx,dy,r,col]of[[-8,1,7.5,'#5a9441'],[8,1,7.5,'#5a9441'],[-5,-7,8,'#6ea84e'],[5,-7,8,'#6ea84e'],[0,-11,8,'#86bf63'],[0,-1,9,'#78b257'],[-3,-10,3.5,'#9fd07c']])circ(c,x+16+dx,y+13+dy,r,col);
     tuft(c,x+7,y+30,.6,'#7ab35a');tuft(c,x+25,y+30,.6,'#7ab35a');
     if(g>=100)for(const[dx,dy]of[[-6,-1],[5,-6],[7,3]]){const fx2=x+16+dx,fy=y+13+dy;circ(c,fx2,fy,3.6,'#e8604f');c.fillStyle='#7a4a2a';c.fillRect(fx2-.5,fy-5,1.1,2.4);circ(c,fx2-1.2,fy-1.2,1,'rgba(255,255,255,.4)')}break}
+  case'bridge':{/* 木の橋（仮の絵）：わたる向きに板をならべ、両がわに手すり */const wt=k=>k>=0&&k<W*H&&S.ground[k]===1&&S.obj[k]!=='bridge',hz=i==null||!S?true:(wt(i-W)||wt(i+W))&&!(wt(i-1)&&wt(i+1))||!(wt(i-W)||wt(i+W))&&!(wt(i-1)||wt(i+1));const D='#8a5f35',M='#b98a55',L='#d2a46c';
+    c.fillStyle='rgba(20,40,60,.22)';if(hz)c.fillRect(x,y+24,TS,4);else c.fillRect(x+24,y,4,TS);
+    if(hz){c.fillStyle=M;c.fillRect(x,y+7,TS,17);c.fillStyle=D;for(let k=0;k<=TS;k+=5)c.fillRect(x+k,y+7,.8,17);c.fillStyle=L;c.fillRect(x,y+7,TS,1.2);c.fillStyle=D;c.fillRect(x,y+4,TS,2.4);c.fillRect(x,y+23,TS,2.4)}
+    else{c.fillStyle=M;c.fillRect(x+7,y,17,TS);c.fillStyle=D;for(let k=0;k<=TS;k+=5)c.fillRect(x+7,y+k,17,.8);c.fillStyle=L;c.fillRect(x+7,y,1.2,TS);c.fillStyle=D;c.fillRect(x+4,y,2.4,TS);c.fillRect(x+23,y,2.4,TS)}
+    break}
   case'well':shadow(c,x+16,y+29,13,3);c.fillStyle='#7d8088';rr(c,x+5,y+14,22,15,4);c.fillStyle='#a3a6ae';rr(c,x+5,y+12,22,6,3);c.fillStyle='#3a8cc4';c.fillRect(x+8,y+13,16,3);c.fillStyle='#6d4424';c.fillRect(x+6,y-4,3,18);c.fillRect(x+23,y-4,3,18);c.fillStyle='#c4523f';c.beginPath();c.moveTo(x+2,y-2);c.lineTo(x+16,y-10);c.lineTo(x+30,y-2);c.fill();c.strokeStyle='#ddd';c.lineWidth=1;c.beginPath();c.moveTo(x+16,y-2);c.lineTo(x+16,y+9);c.stroke();c.fillStyle='#8a5a33';c.fillRect(x+13,y+8,6,4);break;
   case'windmill':{if(c._part!=='part'){shadow(c,x+16,y+29,12,3);c.fillStyle='#f1e2c4';c.beginPath();c.moveTo(x+8,y+29);c.lineTo(x+12,y-4);c.lineTo(x+20,y-4);c.lineTo(x+24,y+29);c.fill();c.fillStyle='#8a5a33';c.fillRect(x+13,y+19,6,10);c.fillStyle='#c4523f';c.beginPath();c.moveTo(x+10,y-3);c.lineTo(x+16,y-11);c.lineTo(x+22,y-3);c.fill()}
     const a=c._neutral?0:(now||0)/900;if(c._part!=='base'){c.save();c.translate(x+16,y-4);c.rotate(a);c.fillStyle='#fff';for(let k=0;k<4;k++){c.rotate(Math.PI/2);c.fillRect(-2,2,4,15);c.fillStyle='#e9e2d0';c.fillRect(-2,8,4,2);c.fillStyle='#fff'}c.restore();circ(c,x+16,y-4,2.4,'#6d4424')}break}
@@ -4886,16 +4917,18 @@ function objBox(o,j){if(STAIRS.has(o)){const x=(j%W)*TS,y=((j/W)|0)*TS;return[x-
 const x=j%W,y=(j/W)|0,b=BL[o],z=szAt(o,j)||[1,1],k=BIG2.has(o)?2:TREES.has(o)?2.25:(o==='stor'||o==='mbox')?1.25:BIG.has(o)?(BIGK[o]||1.5):1,tall=BIG2.has(o)||TREES.has(o)||b.kind==='build';
   const cx=x*TS+16*z[0],by=(y+z[1])*TS+3,hw=Math.max(16*z[0]*k,tall?28:16)+6,ht=tall?150:b.kind==='block'?44:48*k*z[1]+8;return[cx-hw,by-ht,cx+hw,by]}
 const FLAT=new Set(['rug1','rug2','hoshirug','farm','plot','sprout','spike','puddle','sticky','firetrap','gust','crack']);/* 地面に近い物：その上に立つせいれいより下に描く */
-function objectDepth(o,j){const y=(j/W)|0;if(FLAT.has(o))return y+.02;if(STAIRS.has(o))return (stairDir(j)===2?y-1:y)+.02;/* 階段は、いちばん上の行のはじめ（上に立つせいれいより下） */if(HOME_DOORS.has(o)&&HOUSES.some(h=>h.set.has(j)))return y+.3;/* 家のドアは、屋根より下の層 */
+function objectDepth(o,j){const y=(j/W)|0;if(FLAT.has(o))return y+.02;if(o==='bridge')return y+.01;/* 橋は、上を歩く子より下 */if(STAIRS.has(o))return (stairDir(j)===2?y-1:y)+.02;/* 階段は、いちばん上の行のはじめ（上に立つせいれいより下） */if(HOME_DOORS.has(o)&&HOUSES.some(h=>h.set.has(j)))return y+.3;/* 家のドアは、屋根より下の層 */
   const b=o==='site'&&S.dyn[j]&&BL[S.dyn[j].build]||BL[o];
   return y+(b&&b.sz?(o==='site'?b.sz[1]:szAt(o,j)[1]):1)+(o==='obox'?.01:0);
 }
 const WSH={k:'',m:null,o:null,any:false};
+function drawFords(x0,y0,x1,y1){/* 浅瀬（仮の絵）：水の上に、ひらたいふみ石を2つずつ（となりのマスと、ずらしてならべる） */for(let y=Math.max(0,y0);y<Math.min(H,y1);y++)for(let x=Math.max(0,x0);x<Math.min(W,x1);x++){const j=y*W+x;if(S.ground[j]!==2)continue;const px=x*TS,py=y*TS;
+  for(let n=0;n<2;n++){const sx=px+(n?22:9)+(hash(j*11+n)-.5)*5,sy=py+(n?20:10)+((x+y)%2?6:0)*(n?-1:1)+(hash(j*17+n)-.5)*4,r=5.5+hash(j*23+n)*2;ctx.fillStyle='rgba(30,70,90,.25)';ctx.beginPath();ctx.ellipse(sx+.5,sy+2,r+.5,r*.62,0,0,7);ctx.fill();ctx.fillStyle='#b9b2a2';ctx.beginPath();ctx.ellipse(sx,sy,r,r*.62,0,0,7);ctx.fill();ctx.fillStyle='rgba(255,250,235,.4)';ctx.beginPath();ctx.ellipse(sx-.8,sy-1,r*.6,r*.32,0,0,7);ctx.fill();ctx.fillStyle='rgba(255,255,255,.35)';ctx.fillRect(sx-r-1.5,sy+r*.5,2*r+3,.8)}}}
 function waterShimmer(now,x0,y0,x1,y1){/* 水面：見えている所の水の形（waterm）の中に、水のテクスチャ（tex:water）をしきつめて、ゆっくりスクロールさせる。その上に水のふち（water:1〜15）。形とふちは画面が動いたときだけ作りなおす */
   if(WD===1||!waterChipsOK())return;const C=window.CHIPS,im=chipImgs(C['tex:water'],'water')[0],w=(x1-x0)*TS,h=(y1-y0)*TS;if(w<=0||h<=0||w*h>4e6)return;
   const k=x0+','+y0+','+x1+','+y1+','+STATN;
   if(WSH.k!==k){WSH.k=k;const m=WSH.m||(WSH.m=document.createElement('canvas'));m.width=w;m.height=h;const g=m.getContext('2d');const e=WSH.e||(WSH.e=document.createElement('canvas'));e.width=w;e.height=h;const ge=e.getContext('2d');let any=false;
-    const isW=(x,y)=>x>=0&&y>=0&&x<W&&y<H&&S.ground[y*W+x]===1;
+    const isW=(x,y)=>x>=0&&y>=0&&x<W&&y<H&&S.ground[y*W+x]>=1;
     for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++){const b=(isW(x-1,y-1)?1:0)|(isW(x,y-1)?2:0)|(isW(x-1,y)?4:0)|(isW(x,y)?8:0);if(!b)continue;const ch=C['waterm:'+b];if(ch){drawChip(g,ch,'water',(x-x0)*TS,(y-y0)*TS,0);any=true}const ce=C['water:'+b];if(ce)drawChip(ge,ce,'water',(x-x0)*TS,(y-y0)*TS,0)}
     WSH.any=any;const o=WSH.o||(WSH.o=document.createElement('canvas'));o.width=w;o.height=h}
   if(!WSH.any)return;
@@ -5029,7 +5062,7 @@ function render(now){
   ctx.setTransform(k,0,0,k,-cam.x*k,-cam.y*k);
   ctx.drawImage(stat,0,0);
   const x0=Math.max(0,Math.floor(cam.x/TS)-1),y0=Math.max(0,Math.floor(cam.y/TS)-2),x1=Math.min(W,Math.ceil((cam.x+VW/cam.z)/TS)+1),y1=Math.min(H,Math.ceil((cam.y+VH/cam.z)/TS)+2);
-  waterShimmer(now,x0,y0,x1,y1);drawRugsLive(x0,y0,x1,y1);
+  waterShimmer(now,x0,y0,x1,y1);drawFords(x0,y0,x1,y1);drawRugsLive(x0,y0,x1,y1);
   for(const[j,t0]of pops){const a=1-(now-t0)/350;if(a<=0){pops.delete(j);continue}ctx.fillStyle='rgba(255,255,240,'+a*.6+')';const s=4*(1-a);rr(ctx,(j%W)*TS-s,((j/W)|0)*TS-s,TS+s*2,TS+s*2,6)}
   for(const d of S.drops||[]){const dz=hiAt(d.y*W+d.x)*LIFT,cx=d.x*TS+16,cy=d.y*TS+19-dz,tw=Math.sin(now/260+d.x*1.7)*.5+.5;
     if(d.id==='mat:eda'||d.id==='mat:can'){const ch=window.CHIPS&&CHIPS['drop:'+d.id.slice(4)];if(ch&&drawChip(ctx,ch,d.id,d.x*TS,d.y*TS-dz,0))continue;ctx.fillStyle='rgba(40,25,10,.18)';ctx.beginPath();ctx.ellipse(cx,cy+8,7,2.2,0,0,7);ctx.fill();drawMatIc(ctx,d.id.slice(4),cx,cy+2,18);continue}/* 枝・空き缶の落とし物 */
@@ -5073,7 +5106,7 @@ function render(now){
   if(godHere()){const GX=godX(),GY=godY(),px=GX*TS,py=GY*TS,onA=STATUE>=0&&S.obj[STATUE+W]==='altar',gk=onA?((STATUE/W)|0)+1.02:GY+.5,gt=onA?1.5:2;add(gk,gt,/* 神殿の柱とおそなえ箱より手前 */[px-36,py-64,px+36,py+24],()=>drawGod(now),(GY|0)*W+(GX|0));}
   if(festOn())for(const st of festStalls()){const px=(st.x+.5)*TS,py=(st.y+.5)*TS-4;if(!vis({x:st.x+.5,y:st.y+.5}))continue;add(st.y+.3,2,[px-48,py-100,px+48,py+26],()=>drawYatai(px,py,0,now,st),-1);add(st.y+.75,2,[px-48,py-100,px+48,py+26],()=>drawYatai(px,py,1,now,st),-1)}/* せいれいの屋台（屋根は店番のうしろ、台は前） */
   if(S.nushi){const n=S.nushi,px=n.x*TS,py=n.y*TS;add(n.y+.2,2,[px-100,py-150,px+100,py+20],()=>drawNushi(now),-1)}
-  for(let y=Math.max(0,y0-2);y<Math.min(H,y1+4);y++)for(let x=Math.max(0,x0-4);x<x1;x++){const i=y*W+x,o=S.obj[i];if(!o||o==='part'||!BL[o]||S.ground[i]===1&&o!=='lotus'&&o!=='sprout'||(FLAT.has(o)||BL[o].floor)&&!(BL[o].dyn||BL[o].anim||TREES.has(o)))continue;/* 立っている物は、動く物も動かない物も、毎コマ足もとの順に描く */
+  for(let y=Math.max(0,y0-2);y<Math.min(H,y1+4);y++)for(let x=Math.max(0,x0-4);x<x1;x++){const i=y*W+x,o=S.obj[i];if(!o||o==='part'||!BL[o]||S.ground[i]===1&&o!=='lotus'&&o!=='sprout'&&o!=='bridge'||(FLAT.has(o)||BL[o].floor)&&!(BL[o].dyn||BL[o].anim||TREES.has(o)))continue;/* 立っている物は、動く物も動かない物も、毎コマ足もとの順に描く */
     if(o==='door'||o==='yozoradoor')add((i/W|0)+.01,0,null,()=>{ctx._doorBack=1;drawObj(ctx,o,x*TS,y*TS-hiAt(i)*LIFT,i);ctx._doorBack=0},i);/* ドアの奥の面 */
     add(objectDepth(o,i),BL[o].kind==='block'?0:1,null,()=>drawObj(ctx,o,x*TS,y*TS-hiAt(i)*LIFT,i,S.dyn[i]?(S.dyn[i].g!=null?S.dyn[i].g:S.dyn[i].p):0,now),i)}
   for(const k in S.roof||{}){const j=+k,x=j%W,y=(j/W)|0,id=S.roof[k];if(!vis({x:x+1,y:y+1}))continue;add(y+2.001,3,[x*TS-8,y*TS-44,x*TS+72,y*TS+70],()=>drawRoofItem(ctx,id,x*TS,y*TS-hiAt(j)*LIFT),j);{const bk=window.CHIPS&&CHIPS[id+':back'];if(bk)add(y,0,[x*TS-8,y*TS-44,x*TS+72,y*TS+70],()=>drawChip(ctx,bk,id,x*TS,y*TS-hiAt(j)*LIFT,0),j)}}/* うしろの柱は、その行のはじめ（せいれいや家具より下） *//* ガゼボ・東屋：家の屋根と同じ（2マスめの行のすぐ後）。下に置いた物より上 */
@@ -6006,7 +6039,7 @@ function arrive(){
 }
 function talkOnce(key,lines,delay){/* 1回だけの会話：最後まで見てから「見た」にする。とちゅうでとじたら、次に開いたときにもう一度 */if(!S||S.flags[key]||!lines||!lines.length)return;const P=S.pendTalk||(S.pendTalk={});P[key]=lines;setTimeout(()=>{if(!S||S.flags[key])return;dialog(P[key]||lines,()=>{S.flags[key]=1;if(S.pendTalk)delete S.pendTalk[key]})},delay||900)}
 function replayTalks(){if(!S||!S.pendTalk)return;for(const k in S.pendTalk){if(S.flags[k]){delete S.pendTalk[k];continue}talkOnce(k,S.pendTalk[k],1500)}}
-function continueGame(saved){if(saved&&saved.summary)saved=loadStage(saved.world);if(!saved)return;recSync();/* いまのステージでおぼえた物を、先にしまう */setWorld(saved.world||0);S=saved;LIVE[WD]=S;ensureStor(S);if(!S.hi)genHeights(S,WD);/* 段差がないセーブには、段差を作る（自然の物の所だけ） */bambooMig();{for(let j=0;j<S.floor.length;j++)if(S.floor[j]==='hoshifloor')S.floor[j]='stonefloor';if(S.inv&&S.inv.hoshifloor){S.inv.stonefloor=(S.inv.stonefloor||0)+S.inv.hoshifloor;delete S.inv.hoshifloor}if(S.recipes)delete S.recipes.hoshifloor;if(S.unlocked)delete S.unlocked.hoshifloor;for(const o of S.orders||[])if(o.type==='hoshifloor'){S.pt+=4;S.mat.stone=(S.mat.stone||0)+3}/* 依頼中だった分は、パワー4・石材3をもどす */S.orders=(S.orders||[]).filter(o=>o.type!=='hoshifloor')}/* ほしくずの床はなくした：置いた床は石の床に */{delete S.ywin;if(S.inv&&S.inv.yozorawin){S.inv.window=(S.inv.window||0)+S.inv.yozorawin;delete S.inv.yozorawin}if(S.recipes)delete S.recipes.yozorawin;if(S.unlocked)delete S.unlocked.yozorawin;for(const o of S.orders||[])if(o.type==='yozorawin'){S.pt+=3;S.mat.wood=(S.mat.wood||0)+3}/* 依頼中だった分は、パワー3・木材3をもどす */S.orders=(S.orders||[]).filter(o=>o.type!=='yozorawin')}/* よぞらの窓はなくした：置いてあった窓は、ふつうの窓に */{for(let j=0;j<S.obj.length;j++){if(S.obj[j]==='stairs_log')S.obj[j]='stairs_wood';if(S.dyn[j]&&S.dyn[j].build==='stairs_log')S.dyn[j].build='stairs_wood'}if(S.inv&&S.inv.stairs_log){S.inv.stairs_wood=(S.inv.stairs_wood||0)+S.inv.stairs_log;delete S.inv.stairs_log}if(S.recipes)delete S.recipes.stairs_log;if(S.unlocked)delete S.unlocked.stairs_log;for(const o of S.orders||[])if(o.type==='stairs_log'){S.pt+=4;S.mat.wood=(S.mat.wood||0)+5}S.orders=(S.orders||[]).filter(o=>o.type!=='stairs_log')}/* 丸太の階段はなくした：置いてあった分・持っていた分は木の階段に、依頼中の分はパワー4・木材5をもどす */{for(let j=0;j<S.obj.length;j++)if(S.obj[j]==='stonefence')S.obj[j]='wall';if(S.inv&&S.inv.stonefence){S.inv.wall=(S.inv.wall||0)+S.inv.stonefence;delete S.inv.stonefence}if(S.recipes)delete S.recipes.stonefence;if(S.unlocked)delete S.unlocked.stonefence;for(const o of S.orders||[])if(o.type==='stonefence'){S.pt+=9;S.mat.stone=(S.mat.stone||0)+6}/* 依頼中だった分は、パワー9・石材6をもどす */S.orders=(S.orders||[]).filter(o=>o.type!=='stonefence')}/* 石の柵はなくした：置いてあった石の柵は、石の塀に */{const MV={stairs_earth:'slope_earth',slope_wood:'stairs_wood',slope_stone:'stairs_stone',slope_brick:'stairs_brick'};for(let j=0;j<S.obj.length;j++){if(MV[S.obj[j]])S.obj[j]=MV[S.obj[j]];const d=S.dyn[j];if(d&&MV[d.build])d.build=MV[d.build]}for(const id in MV){if(S.recipes)delete S.recipes[id];if(S.unlocked)delete S.unlocked[id]}}/* 土は坂だけ、木・石・レンガは階段だけ：なくした物は、同じ素材のほうにかえる */{let back=0;for(let j=0;j<S.obj.length;j++){const id=S.obj[j];if(!STAIRS.has(id))continue;{const d=stairDir(j);if(d>=0&&stairOK(j,d))continue}S.pt+=BL[id].pc;for(const k in BL[id].mat||{})S.mat[k]=(S.mat[k]||0)+BL[id].mat[k];clearObj(j);back++}if(back)setTimeout(()=>toast('置けない所の階段を'+back+'つ、パワーと素材にもどしました'),1500)}/* 前の、段差の上に切りこんだ階段（なまえのかえを先にしてから） */for(const k in S.ref){const a=S.ref[k];if(STAIRS.has(S.obj[a])&&stairDir(a)===0&&S.obj[k]==='part'){S.obj[k]='';delete S.ref[k]}}/* 手前向きの階段は1マスになった */for(const id of STAIRS){const n=(S.inv||{})[id]||0;if(n){S.pt+=n*BL[id].pc;delete S.inv[id]}for(const o of S.orders||[])if(o.type===id){S.pt+=BL[id].pc;for(const k in BL[id].mat)S.mat[k]=(S.mat[k]||0)+BL[id].mat[k]}S.orders=(S.orders||[]).filter(o=>o.type!==id);if(S.recipes)delete S.recipes[id]}/* 階段は建物になった：持っていた階段・依頼中の階段は、パワー（と素材）にもどす */{const MV={kusa:WD===1?'kuru':'shina',kare:WD===1?'chiri':'kasa'},mv=o=>{if(!o)return;for(const k in MV)if(o[k]!=null){o[MV[k]]=(o[MV[k]]||0)+o[k];delete o[k]}};mv(S.mat);mv(S.gotMat);for(const r of S.res)mv(r.cmat)}/* 草・かれ草は、草の名前ごとの素材になった */kwrSync();recSync();for(const r of S.res){delete r.swing;delete r.swingT}/* たたいた時刻（画面の時計）は、読みこみなおしたら使えない */if((S.mig||0)<1){fixBeds();dropChair2();dropBirdhouse();dropFlower();dropNtree();if(((S.subSt||{}).watch2||0)>=4){S.recipes=S.recipes||{};S.guardianIdeas=S.guardianIdeas||{};S.recipes.signpost=true;S.guardianIdeas.signpost=true}/* 見張り台を2つにしたあと（フタバの「道がわかる目印」）で、道しるべをおぼえる */S.mig=1}if(S.mig<2){if(S.flags.traded)S.flags.tradedSeen=1;if(S.flags.oracleSet)S.flags.oracleSeen=1;if(S.flags.minaCame&&S.flags.mnN==null)S.flags.mnN=S.nights||0;S.mig=2}if(S.mig<3){swingWide();S.mig=3}if(S.mig<4){recount();rugsBig();S.mig=4}if(S.mig<5){for(const r of [...S.res,...(S.lost||[]),...(S.buried||[])])if(r.vr&&r.vr.tr==='ryouri'&&r.elem!=='fire')r.vr.tr=pick(TRK(r.elem));S.mig=5}if(S.mig<6){const N=new Set([19,25,36,44,48,49,51,55,59,71,72,85,89,90,91,98,99,120,127,134,168,174,177,183,202]);S.chatRec=(S.chatRec||[]).filter(i=>!N.has(i));S.mig=6}if(S.mig<7){for(const r of [...S.res,...(S.lost||[]),...(S.buried||[])])if((NIGATE[r.elem]||{})[r.like]!=null)r.like=pick(LIKE_KEYS.filter(k=>(k!=='slide'||WD===4)&&(NIGATE[r.elem]||{})[k]==null));S.mig=7}if(S.mig<8&&S.mig>=7){if(WD===1){const fi=QUESTS.findIndex(q=>q.id==='fest');if(fi>=0&&S.quest>=fi){S.quest++;if(S.qStory!=null&&S.qStory>=fi)S.qStory++}}S.mig=8}if(S.mig<9){for(const r of [...S.res,...(S.lost||[]),...(S.buried||[])])if(r.vr&&KEYVR[r.name]&&KEYVR[r.name].tr==='nebari')r.vr.tr='nebari';S.mig=9}/* 章のはじめからいる子（フタバ・ホムラ）の特技を、ねばりづよいに *//* 火山のふもとに「おまつりをひらこう」を足したので、それより先のクエストの番号をずらす *//* 好きな遊びが、にがてなおもちゃだった子は、えらびなおす *//* 似ていた会話を、べつの会話にさしかえた：さしかえた会話は、まだしていない話にもどす *//* 料理じょうずは火の子だけ：ほかの子は、べつの特技に *//* 古いセーブを直すのは、1回だけ */setTimeout(replayTalks,2500);/* とちゅうでとじた会話を、もう一度 */if(S.flags&&S.flags.nushiDue&&!S.cleared)setTimeout(()=>{if(!S.cleared)nushiReturns()},3000);else if(!S.cleared&&(S.setSh||0)>=3&&S.flags&&!S.flags.nushiWait)setTimeout(shards3,3000);/* かけら3つの会話を、とちゅうでとじていたら、もう一度 *//* ヌシ様が帰ってくる場面を、とちゅうでとじていたら、はじめから */syncTools(S);dirty=true;closeSheet();{const F=S.flags||(S.flags={});if(!F.berryHalf){F.berryHalf=1;let n=0;for(let j=0;j<S.obj.length;j++)if(S.obj[j]==='berry'&&(n++)%2){S.obj[j]='';delete S.dyn[j]}}}/* ベリーの茂みを、半分にした（前からのセーブも1回だけ） */undoStack=[];resv.clear();BAN.clear();/* ほかのステージの「もどす」・予約・しばらく行かない場所は使わない */S.res.forEach(r=>{r.act=null;r.path=[];r.hidden=false});S.orders.forEach(o=>o.worker=null);recount();renderQuest();applyFeats();setMode('look');glassUI();
+function continueGame(saved){if(saved&&saved.summary)saved=loadStage(saved.world);if(!saved)return;recSync();/* いまのステージでおぼえた物を、先にしまう */setWorld(saved.world||0);S=saved;LIVE[WD]=S;ensureStor(S);S.flags=S.flags||{};if(!S.flags.land2){S.flags.land2=1;genLand(S,WD);/* 地形を作りなおす（川・浅瀬・0〜3だんの段差）。人の作った物の所は、そのまま */S.drops=(S.drops||[]).filter(d=>!S.ground[d.y*W+d.x]);S.seeds=(S.seeds||[]).filter(d=>!S.ground[d.y*W+d.x]);S.regrow=(S.regrow||[]).filter(g=>!S.ground[g.j])}else if(!S.hi)genHeights(S,WD);bambooMig();{for(let j=0;j<S.floor.length;j++)if(S.floor[j]==='hoshifloor')S.floor[j]='stonefloor';if(S.inv&&S.inv.hoshifloor){S.inv.stonefloor=(S.inv.stonefloor||0)+S.inv.hoshifloor;delete S.inv.hoshifloor}if(S.recipes)delete S.recipes.hoshifloor;if(S.unlocked)delete S.unlocked.hoshifloor;for(const o of S.orders||[])if(o.type==='hoshifloor'){S.pt+=4;S.mat.stone=(S.mat.stone||0)+3}/* 依頼中だった分は、パワー4・石材3をもどす */S.orders=(S.orders||[]).filter(o=>o.type!=='hoshifloor')}/* ほしくずの床はなくした：置いた床は石の床に */{delete S.ywin;if(S.inv&&S.inv.yozorawin){S.inv.window=(S.inv.window||0)+S.inv.yozorawin;delete S.inv.yozorawin}if(S.recipes)delete S.recipes.yozorawin;if(S.unlocked)delete S.unlocked.yozorawin;for(const o of S.orders||[])if(o.type==='yozorawin'){S.pt+=3;S.mat.wood=(S.mat.wood||0)+3}/* 依頼中だった分は、パワー3・木材3をもどす */S.orders=(S.orders||[]).filter(o=>o.type!=='yozorawin')}/* よぞらの窓はなくした：置いてあった窓は、ふつうの窓に */{for(let j=0;j<S.obj.length;j++){if(S.obj[j]==='stairs_log')S.obj[j]='stairs_wood';if(S.dyn[j]&&S.dyn[j].build==='stairs_log')S.dyn[j].build='stairs_wood'}if(S.inv&&S.inv.stairs_log){S.inv.stairs_wood=(S.inv.stairs_wood||0)+S.inv.stairs_log;delete S.inv.stairs_log}if(S.recipes)delete S.recipes.stairs_log;if(S.unlocked)delete S.unlocked.stairs_log;for(const o of S.orders||[])if(o.type==='stairs_log'){S.pt+=4;S.mat.wood=(S.mat.wood||0)+5}S.orders=(S.orders||[]).filter(o=>o.type!=='stairs_log')}/* 丸太の階段はなくした：置いてあった分・持っていた分は木の階段に、依頼中の分はパワー4・木材5をもどす */{for(let j=0;j<S.obj.length;j++)if(S.obj[j]==='stonefence')S.obj[j]='wall';if(S.inv&&S.inv.stonefence){S.inv.wall=(S.inv.wall||0)+S.inv.stonefence;delete S.inv.stonefence}if(S.recipes)delete S.recipes.stonefence;if(S.unlocked)delete S.unlocked.stonefence;for(const o of S.orders||[])if(o.type==='stonefence'){S.pt+=9;S.mat.stone=(S.mat.stone||0)+6}/* 依頼中だった分は、パワー9・石材6をもどす */S.orders=(S.orders||[]).filter(o=>o.type!=='stonefence')}/* 石の柵はなくした：置いてあった石の柵は、石の塀に */{const MV={stairs_earth:'slope_earth',slope_wood:'stairs_wood',slope_stone:'stairs_stone',slope_brick:'stairs_brick'};for(let j=0;j<S.obj.length;j++){if(MV[S.obj[j]])S.obj[j]=MV[S.obj[j]];const d=S.dyn[j];if(d&&MV[d.build])d.build=MV[d.build]}for(const id in MV){if(S.recipes)delete S.recipes[id];if(S.unlocked)delete S.unlocked[id]}}/* 土は坂だけ、木・石・レンガは階段だけ：なくした物は、同じ素材のほうにかえる */{let back=0;for(let j=0;j<S.obj.length;j++){const id=S.obj[j];if(!STAIRS.has(id))continue;{const d=stairDir(j);if(d>=0&&stairOK(j,d))continue}S.pt+=BL[id].pc;for(const k in BL[id].mat||{})S.mat[k]=(S.mat[k]||0)+BL[id].mat[k];clearObj(j);back++}if(back)setTimeout(()=>toast('置けない所の階段を'+back+'つ、パワーと素材にもどしました'),1500)}/* 前の、段差の上に切りこんだ階段（なまえのかえを先にしてから） */for(const k in S.ref){const a=S.ref[k];if(STAIRS.has(S.obj[a])&&stairDir(a)===0&&S.obj[k]==='part'){S.obj[k]='';delete S.ref[k]}}/* 手前向きの階段は1マスになった */for(const id of STAIRS){const n=(S.inv||{})[id]||0;if(n){S.pt+=n*BL[id].pc;delete S.inv[id]}for(const o of S.orders||[])if(o.type===id){S.pt+=BL[id].pc;for(const k in BL[id].mat)S.mat[k]=(S.mat[k]||0)+BL[id].mat[k]}S.orders=(S.orders||[]).filter(o=>o.type!==id);if(S.recipes)delete S.recipes[id]}/* 階段は建物になった：持っていた階段・依頼中の階段は、パワー（と素材）にもどす */{const MV={kusa:WD===1?'kuru':'shina',kare:WD===1?'chiri':'kasa'},mv=o=>{if(!o)return;for(const k in MV)if(o[k]!=null){o[MV[k]]=(o[MV[k]]||0)+o[k];delete o[k]}};mv(S.mat);mv(S.gotMat);for(const r of S.res)mv(r.cmat)}/* 草・かれ草は、草の名前ごとの素材になった */kwrSync();recSync();for(const r of S.res){delete r.swing;delete r.swingT}/* たたいた時刻（画面の時計）は、読みこみなおしたら使えない */if((S.mig||0)<1){fixBeds();dropChair2();dropBirdhouse();dropFlower();dropNtree();if(((S.subSt||{}).watch2||0)>=4){S.recipes=S.recipes||{};S.guardianIdeas=S.guardianIdeas||{};S.recipes.signpost=true;S.guardianIdeas.signpost=true}/* 見張り台を2つにしたあと（フタバの「道がわかる目印」）で、道しるべをおぼえる */S.mig=1}if(S.mig<2){if(S.flags.traded)S.flags.tradedSeen=1;if(S.flags.oracleSet)S.flags.oracleSeen=1;if(S.flags.minaCame&&S.flags.mnN==null)S.flags.mnN=S.nights||0;S.mig=2}if(S.mig<3){swingWide();S.mig=3}if(S.mig<4){recount();rugsBig();S.mig=4}if(S.mig<5){for(const r of [...S.res,...(S.lost||[]),...(S.buried||[])])if(r.vr&&r.vr.tr==='ryouri'&&r.elem!=='fire')r.vr.tr=pick(TRK(r.elem));S.mig=5}if(S.mig<6){const N=new Set([19,25,36,44,48,49,51,55,59,71,72,85,89,90,91,98,99,120,127,134,168,174,177,183,202]);S.chatRec=(S.chatRec||[]).filter(i=>!N.has(i));S.mig=6}if(S.mig<7){for(const r of [...S.res,...(S.lost||[]),...(S.buried||[])])if((NIGATE[r.elem]||{})[r.like]!=null)r.like=pick(LIKE_KEYS.filter(k=>(k!=='slide'||WD===4)&&(NIGATE[r.elem]||{})[k]==null));S.mig=7}if(S.mig<8&&S.mig>=7){if(WD===1){const fi=QUESTS.findIndex(q=>q.id==='fest');if(fi>=0&&S.quest>=fi){S.quest++;if(S.qStory!=null&&S.qStory>=fi)S.qStory++}}S.mig=8}if(S.mig<9){for(const r of [...S.res,...(S.lost||[]),...(S.buried||[])])if(r.vr&&KEYVR[r.name]&&KEYVR[r.name].tr==='nebari')r.vr.tr='nebari';S.mig=9}/* 章のはじめからいる子（フタバ・ホムラ）の特技を、ねばりづよいに *//* 火山のふもとに「おまつりをひらこう」を足したので、それより先のクエストの番号をずらす *//* 好きな遊びが、にがてなおもちゃだった子は、えらびなおす *//* 似ていた会話を、べつの会話にさしかえた：さしかえた会話は、まだしていない話にもどす *//* 料理じょうずは火の子だけ：ほかの子は、べつの特技に *//* 古いセーブを直すのは、1回だけ */setTimeout(replayTalks,2500);/* とちゅうでとじた会話を、もう一度 */if(S.flags&&S.flags.nushiDue&&!S.cleared)setTimeout(()=>{if(!S.cleared)nushiReturns()},3000);else if(!S.cleared&&(S.setSh||0)>=3&&S.flags&&!S.flags.nushiWait)setTimeout(shards3,3000);/* かけら3つの会話を、とちゅうでとじていたら、もう一度 *//* ヌシ様が帰ってくる場面を、とちゅうでとじていたら、はじめから */syncTools(S);dirty=true;closeSheet();{const F=S.flags||(S.flags={});if(!F.berryHalf){F.berryHalf=1;let n=0;for(let j=0;j<S.obj.length;j++)if(S.obj[j]==='berry'&&(n++)%2){S.obj[j]='';delete S.dyn[j]}}}/* ベリーの茂みを、半分にした（前からのセーブも1回だけ） */undoStack=[];resv.clear();BAN.clear();/* ほかのステージの「もどす」・予約・しばらく行かない場所は使わない */S.res.forEach(r=>{r.act=null;r.path=[];r.hidden=false});S.orders.forEach(o=>o.worker=null);recount();renderQuest();applyFeats();setMode('look');glassUI();
   cam.z=homeZ();centerOn(CX*TS,CY*TS);$('#title').hidden=true;$('#maps').hidden=true;started=true;stageMusic();showUI(true);if(!WD&&S.flags&&S.flags.ret1===1){S.flags.ret1=2;(S.sevQ||(S.sevQ=[])).push('ret')}}
 
 
@@ -6050,7 +6083,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='812';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='813';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
