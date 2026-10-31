@@ -1318,7 +1318,7 @@ function startAct(r,G,type,stand,o){
 }
 function noPass(r){if(r.act){if(r.act.key)BAN.set(r.act.key,S.t+60);if(r.act.stand>=0){r.routeAvoid=r.routeAvoid||{};r.routeAvoid[r.act.stand]=S.t+60}}r.visitRetryAt=S.t+10;if((r.npT||0)>S.t)return;r.npT=S.t+90;addFloat(r.x,r.y-1.6,'通れないよ…','#ffd0c0')}
 const WORKP={/* 作業の進み具合（0〜1）。足もとの進捗バーに出す（建てる・直す・料理は、その場所のバーだけ出す） */
-chop:(r,a)=>a.t/(a.camp?20:30),mine:(r,a)=>a.t/(a.camp?20:35),
+chop:(r,a)=>a.camp?a.t/20:null,mine:(r,a)=>a.camp?a.t/20:null,/* 木・岩は、その木・岩の上の「のこり」のバーだけ（足もとのバーと二重にしない） */
 tend:(r,a)=>a.t/20,water:(r,a)=>a.t/(r.elem==='water'?8:16),sow:(r,a)=>a.t/10,harvest:(r,a)=>a.t/12,gather:(r,a)=>a.t/15,offer:(r,a)=>a.t/10,pickseed:(r,a)=>a.t/8,fish:(r,a)=>a.t/50,
 till:(r,a)=>{const d=S.dyn[a.obj];return Math.max(a.t/45,d&&d.p!=null?d.p/30:0)},
 plant:(r,a)=>{const d=S.dyn[a.obj];return Math.max(a.t/40,d&&d.p!=null?d.p/20:0)}};
@@ -1904,11 +1904,11 @@ function tryJob(r,G,k){
   return false;
 }
 const JOBCAT=[['build','repair'],['craft'],['drop','harvest','water','tend','till','sow','plant'],['cook','chop','mine','seed','offer','gather','weed']];
-const ALLJOB=['harvest','sow','offer','gather'];
+const ALLJOB=['harvest','sow','offer','gather'],FARMJ=['harvest','water','tend','till','sow'];/* 畑の世話 */
 const IDLE_ACTS=['fish','play','wander','idle'];
 // 種まき・植える・依頼・建築があるか（いつもの作業を中断してでも向かう仕事）
 function hasHighWork(r){
-  if(!isNight()&&!(r.act&&r.act.type==='pickdrop')&&(S.drops||[]).some(q=>q.lt&&free('d'+(q.y*W+q.x),1))&&matCap()-matTot()>0)return true;/* 守り神がこわした物があれば、いまの作業をやめてひろいに行く */
+  if(!isNight()&&!(r.act&&(r.act.type==='pickdrop'||FARMJ.includes(r.act.type)))&&(S.drops||[]).some(q=>q.lt&&free('d'+(q.y*W+q.x),1))&&matCap()-matTot()>0)return true;/* 守り神がこわした物があれば、いまの作業をやめてひろいに行く（畑の世話をしているときは、やめない） */
   if(S.food<6&&foodCap()>0&&!(r.act&&(r.act.type==='gather'||r.act.type==='harvest'))){const bb=ripeAdj(['berry']);if(S.obj.some((o,j)=>(o==='farm'&&S.dyn[j]&&S.dyn[j].g>=100&&free('o'+j,1))||((o==='berry'||o==='takenoko')&&S.dyn[j]&&S.dyn[j].g>=100&&free('o'+j,1))))return true}
   if(canJob(r,'build')&&S.obj.some((o,j)=>o==='site'&&free('o'+j,2)))return true;
   if(!isNight()&&canJob(r,'repair')&&S.obj.some((o,q)=>o&&BL[o]&&(breakable(o)&&(S.hp[q]??BL[o].hp)<BL[o].hp||DEFS.has(o)&&S.hp[q]!=null||burnt(q))&&free('o'+q,1)||!o&&canRebuild(q)))return true;/* こわれた所があれば、木を切るより先に直す */
@@ -1945,7 +1945,7 @@ function goWork(r,G,nw){
   // 花や木の苗は、空腹などの急ぎの用事を除いて、ほかの仕事より先に植える
   if(tryJob(r,G,'plant'))return true;
   if(tryJob(r,G,'otaki'))return true;
-  if((S.drops||[]).some(q=>q.lt)&&tryJob(r,G,'drop'))return true;/* 守り神の光でこわした物（落ちた木材・石材）は、おつげ・木を切る・石をほるより先にひろう */
+  if((S.drops||[]).some(q=>q.lt)){for(const k of FARMJ)if(tryJob(r,G,k))return true;if(tryJob(r,G,'drop'))return true}/* 守り神の光でこわした物（落ちた木材・石材）は、おつげ・木を切る・石をほるより先にひろう。畑の世話よりはあと */
   if(S.oracle&&ORACLE[S.oracle])for(const k of ORACLE[S.oracle].jobs)if(tryJob(r,G,k))return true;
   // 建てる・家具づくりがいちばん先。そのつぎに得意な仕事をする
   for(const k of['build','craft',...(SPEC[r.elem]||[])])if(tryJob(r,G,k))return true;
@@ -4692,10 +4692,10 @@ function drawRes0(r,now){
   const over=()=>{
   if(ci){const cb=walking?Math.abs(Math.sin(now/110+r.id))*1.2:0;ctx.font='26px sans-serif';ctx.fillStyle='#000';ctx.textAlign='center';ctx.textBaseline='middle';{let cl=carryIcons(r);if(!cl.length)cl=[ci];if(!cl[0])cl=[];const hn=cl.length;/* 持っている数だけ、そのまま積む */if(cl[0]==='⚰️'){const cb0=coffinBmp(),cy=fy-(r.elem==='wood'?34:29)-cb+10;if(cb0)ctx.drawImage(cb0.c,px-cb0.w/2,cy-cb0.h,cb0.w,cb0.h);cl=[]}/* 棺は、いつもの1.5倍の大きさ（39px）で、頭の上に乗せる（木の子は葉っぱの上） */for(let i=0;i<cl.length;i++){const e1=cl[i],ei=emoImg(e1),ox=(i%2?3:-3)*(hn>1?1:0),oy=-i*7;if(ei){const k=30/Math.max(ei.width,ei.height),iw=ei.width*k,ih=ei.height*k;ctx.drawImage(ei,px-iw/2+ox,fy-47-cb-ih/2+oy+(hn-1)*3+(e1==='⚰️'?7:0),iw,ih)}else ctx.fillText(e1,px+ox,fy-47-cb+oy+(hn-1)*3)}}/* たくさん持つときは、アイコンを重ねる */ctx.textAlign='start';ctx.textBaseline='alphabetic'}
   const gx=bedH?px-10:px,gy=bedH?py+20:py+11;/* 横のベッドで寝ているときは、横になった体の下のまん中に出す */
-  if(!(r.hurt>0)&&S.t-(r.eUp||-9)<3&&r.energy<99.5){const v=r.energy/100,bx=gx-12,byy=gy;ctx.fillStyle='rgba(0,0,0,.45)';rr(ctx,bx,byy,24,5,2.5);ctx.fillStyle='#7ed99a';rr(ctx,bx+1,byy+1,Math.max(2,22*v),3,1.5);const ph=(now/600)%1;ctx.globalAlpha=1-ph;ctx.fillStyle='#7ed99a';ctx.font='bold 9px \"Hikomi\",\"Hiragino Maru Gothic ProN\",sans-serif';ctx.textAlign='center';ctx.fillText('+',gx+15,byy+4-ph*8);ctx.globalAlpha=1}/* 元気が回復中：みどりのバー */
+  if(!(r.hurt>0)&&S.t-(r.eUp||-9)<3&&r.energy<99.5){const v=r.energy/100,bx=gx-12,byy=gy;ctx.fillStyle='rgba(0,0,0,.45)';rr(ctx,bx,byy,24,5,2.5);ctx.fillStyle='#7ed99a';rr(ctx,bx+1,byy+1,Math.max(2,22*v),3,1.5);const ph=(now/600)%1;ctx.globalAlpha=1-ph;ctx.fillStyle='#7ed99a';ctx.font='bold 9px \"DotGothic16\",\"Hikomi\",\"Hiragino Maru Gothic ProN\",sans-serif';ctx.textAlign='center';ctx.fillText('+',gx+15,byy+4-ph*8);ctx.globalAlpha=1}/* 元気が回復中：みどりのバー */
   if(r.hurt>0){const v=r.hunger/hMax(r),a=Math.min(1,r.hurt/8);ctx.globalAlpha=a;ctx.fillStyle='rgba(0,0,0,.6)';rr(ctx,gx-12,gy,24,5,2.5);ctx.fillStyle=v>.5?'#7ee08a':v>.25?'#ecdcbc':'#ff6b6b';rr(ctx,gx-11,gy+1,Math.max(2,22*v),3,1.5);ctx.globalAlpha=1}
   if(at==='craft'&&ad){const o=S.orders.find(q=>q.id===r.act.order);if(o){const f=Math.min(1,o.prog/o.need),bx=px-16,byy=py+(r.hurt>0?19:12);ctx.fillStyle='rgba(150,115,75,.5)';rr(ctx,bx-1.5,byy-1.5,35,8,4);ctx.fillStyle='#e8dcc0';rr(ctx,bx,byy,32,5,2.5);ctx.fillStyle='#e0a43a';rr(ctx,bx,byy,Math.max(2.5,32*f),5,2.5)}}/* 依頼の作業の進み具合は足もと。吹き出しは上に出す */
-  if(r.act&&r.act.stage==='do'&&WORKP[r.act.type]){const f=Math.max(0,Math.min(1,WORKP[r.act.type](r,r.act)||0)),bx=px-16,byy=py+(r.hurt>0?19:12);ctx.fillStyle='rgba(150,115,75,.5)';rr(ctx,bx-1.5,byy-1.5,35,8,4);ctx.fillStyle='#e8dcc0';rr(ctx,bx,byy,32,5,2.5);ctx.fillStyle='#e0a43a';rr(ctx,bx,byy,Math.max(2.5,32*f),5,2.5)}/* 木を切る・石を掘る・畑・建てる・料理など、作業の進み具合 */
+  if(r.act&&r.act.stage==='do'&&WORKP[r.act.type]&&WORKP[r.act.type](r,r.act)!=null){const f=Math.max(0,Math.min(1,WORKP[r.act.type](r,r.act)||0)),bx=px-16,byy=py+(r.hurt>0?19:12);ctx.fillStyle='rgba(150,115,75,.5)';rr(ctx,bx-1.5,byy-1.5,35,8,4);ctx.fillStyle='#e8dcc0';rr(ctx,bx,byy,32,5,2.5);ctx.fillStyle='#e0a43a';rr(ctx,bx,byy,Math.max(2.5,32*f),5,2.5)}/* 木を切る・石を掘る・畑・建てる・料理など、作業の進み具合 */
   const zzz=r.act&&r.act.type==='sleep';/* 寝ているあいだは、話しかけの吹き出しを出さない */
   if(!zzz&&QUESTCLEARW===r.name&&!isNight()){talkBub(px,by,now,'#ffd56b');return}
   if(r.act&&(r.act.type==='eat'||r.act.type==='forage')&&r.act.stage==='do'&&!zzz){const p=Math.max(0,Math.min(1,r.hunger/hMax(r))),gx=px-12,gy=py+11,g=()=>{ctx.fillStyle='rgba(0,0,0,.5)';rr(ctx,gx,gy,24,6,3);ctx.fillStyle=p>=.999?'#8fd36a':'#ffc766';rr(ctx,gx+1,gy+1,Math.max(2,22*p),4,2)};if(BUBQ)BUBQ.push(g);else g()}/* ごはん中の、お腹ゲージの回復 */
@@ -4734,7 +4734,7 @@ function drawGod(now){
   shadow(ctx,px,GY*TS+16,14,4);
   if(QUESTCLEARW===GOD){const f=()=>talkBub(px,py-28,now,'#ffd56b');if(BUBQ)BUBQ.push(f);else f()}
   else if(TALKW===GOD){const f=()=>talkBub(px,py-28,now);if(BUBQ)BUBQ.push(f);else f()}
-  else if(S.feat.shop){ctx.fillStyle='rgba(31,59,58,.9)';rr(ctx,px-17,py-58,34,13,6);ctx.fillStyle='#ecdcbc';ctx.font='bold 9px \"Hikomi\",\"Hiragino Maru Gothic ProN\",sans-serif';ctx.textAlign='center';ctx.fillText('こうかん',px,py-48.5);ctx.textAlign='start'}
+  else if(S.feat.shop){ctx.fillStyle='rgba(31,59,58,.9)';rr(ctx,px-17,py-58,34,13,6);ctx.fillStyle='#ecdcbc';ctx.font='bold 9px \"DotGothic16\",\"Hikomi\",\"Hiragino Maru Gothic ProN\",sans-serif';ctx.textAlign='center';ctx.fillText('こうかん',px,py-48.5);ctx.textAlign='start'}
   const g=ctx.createRadialGradient(px,py-12,4,px,py-12,36);g.addColorStop(0,'rgba(255,250,210,.4)');g.addColorStop(1,'rgba(255,250,210,0)');ctx.fillStyle=g;ctx.fillRect(px-36,py-48,72,72);
   const G2=SPR.god,GC=window.CHIPS&&CHIPS.god,GI=GC&&chipImgs(GC,'god')[0];if(GI&&GI.ok){const sm=ctx.imageSmoothingEnabled;ctx.imageSmoothingEnabled=false;ctx.drawImage(GI,Math.round(px*2)/2+GC.ax/2,Math.round((py+16)*2)/2+GC.ay/2,GC.w/2,GC.h/2);ctx.imageSmoothingEnabled=sm}/* ドット絵（1ドットを2×2に分けた細かさ） */else if(G2.ok){const h=58,w=h*G2.w/G2.h;ctx.drawImage(G2.img,px-w/2,py+16-h,w,h)}else{
   circ(ctx,px-10,py+6,7,'#fff');circ(ctx,px+10,py+6,7,'#fff');circ(ctx,px,py+4,9,'#fff');circ(ctx,px-4,py+9,6,'#eef4ff');circ(ctx,px+5,py+9,6,'#eef4ff');
@@ -5217,7 +5217,7 @@ function render(now){RFN++;SBT=0;
       ctx.fillStyle='rgba(255,240,170,'+(.18+tw*.2)+')';ctx.beginPath();ctx.arc(cx,fy,13+tw*3,0,7);ctx.fill();
       ctx.fillStyle='#ffe58a';ctx.beginPath();ctx.moveTo(cx,fy-11);ctx.lineTo(cx+7,fy-1);ctx.lineTo(cx,fy+10);ctx.lineTo(cx-7,fy-1);ctx.closePath();ctx.fill();
       ctx.fillStyle='#fff8d8';ctx.beginPath();ctx.moveTo(cx,fy-11);ctx.lineTo(cx+3,fy-1);ctx.lineTo(cx,fy+10);ctx.lineTo(cx-2,fy-1);ctx.closePath();ctx.fill();continue}
-    if(d.lt){const im=hudIc('matN'),ih=20;let ix=cx,iy=cy,sh=1,rot=0;const fx0=DROPFX.get(d);if(fx0){const e=(now-fx0.t0)/700;if(e>=1)DROPFX.delete(d);else{/* とびだして弧をえがき、地面で小さくはねる */const f=Math.min(1,e/.7),hop=e<.7?Math.sin(f*Math.PI)*26:Math.sin((e-.7)/.3*Math.PI)*5;ix=fx0.sx+(cx-fx0.sx)*f;iy=fx0.sy+(cy-fx0.sy)*f-hop;sh=.5+.5*f;rot=(1-f)*Math.PI*1.5}}
+    if(d.lt){const mk=d.id.slice(4),im=mk==='bamboo'&&ICI.bamboo&&ICI.bamboo.ok?ICI.bamboo:emoImg(mk==='stone'?'🪨':mk==='bamboo'?'🎋':'🪵')||hudIc('matN'),ih=20;/* 落ちた物のアイコン：木材・石材・竹（素材箱のアイコンにしない） */let ix=cx,iy=cy,sh=1,rot=0;const fx0=DROPFX.get(d);if(fx0){const e=(now-fx0.t0)/700;if(e>=1)DROPFX.delete(d);else{/* とびだして弧をえがき、地面で小さくはねる */const f=Math.min(1,e/.7),hop=e<.7?Math.sin(f*Math.PI)*26:Math.sin((e-.7)/.3*Math.PI)*5;ix=fx0.sx+(cx-fx0.sx)*f;iy=fx0.sy+(cy-fx0.sy)*f-hop;sh=.5+.5*f;rot=(1-f)*Math.PI*1.5}}
       ctx.fillStyle='rgba(40,25,10,'+(.18*sh)+')';ctx.beginPath();ctx.ellipse(ix,cy+6,9*sh,2.7*sh,0,0,7);ctx.fill();if(im&&im.complete&&im.naturalWidth){const iw=ih*im.naturalWidth/im.naturalHeight;if(rot){ctx.save();ctx.translate(ix,iy-1);ctx.rotate(rot);ctx.drawImage(im,Math.round(-iw/2),Math.round(-ih/2),iw,ih);ctx.restore()}else ctx.drawImage(im,Math.round(ix-iw/2),Math.round(iy-ih/2-1),iw,ih)}continue}/* 守りの光で落とした木材・石材：上の木材・石材と同じアイコン */
     if(d.id==='sand'){const ch=window.CHIPS&&CHIPS.sand;if(ch&&drawChip(ctx,ch,'sand',d.x*TS,d.y*TS,now))continue}/* やすらぎの砂：もらった絵 */
     /* 小さなふくろ */
@@ -5267,14 +5267,14 @@ function render(now){RFN++;SBT=0;
     const d=[[0,1],[1,0],[0,-1],[-1,0]][rot];
     const bob=Math.sin(now/220)*2,cx=pending.x*TS+w/2+d[0]*(w/2+9+bob),cy=pending.y*TS+h/2+d[1]*(h/2+9+bob);
     ctx.save();ctx.translate(cx,cy);ctx.rotate(Math.atan2(d[1],d[0]));ctx.fillStyle='#ffe066';ctx.strokeStyle='#7a5a1c';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(9,0);ctx.lineTo(-5,-8);ctx.lineTo(-5,8);ctx.closePath();ctx.stroke();ctx.fill();ctx.restore()}
-  if(S.summon&&STATUE>=0){const qx=(STATUE%W+.5)*TS,qy=((STATUE/W)|0)*TS-58+Math.sin(now/220)*4;bubs.push(()=>{ctx.fillStyle='rgba(255,236,120,.35)';ctx.beginPath();ctx.arc(qx,qy,19+Math.sin(now/300)*2,0,7);ctx.fill();circ(ctx,qx,qy,14,'#ffd84a');ctx.strokeStyle='#fff';ctx.lineWidth=2.5;ctx.beginPath();ctx.arc(qx,qy,14,0,7);ctx.stroke();ctx.fillStyle='#7a4a10';ctx.font='bold 20px \"Hikomi\",\"Hiragino Maru Gothic ProN\",sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('！',qx,qy+1);ctx.textAlign='start';ctx.textBaseline='alphabetic'})}/* 召喚できる合図 */
+  if(S.summon&&STATUE>=0){const qx=(STATUE%W+.5)*TS,qy=((STATUE/W)|0)*TS-58+Math.sin(now/220)*4;bubs.push(()=>{ctx.fillStyle='rgba(255,236,120,.35)';ctx.beginPath();ctx.arc(qx,qy,19+Math.sin(now/300)*2,0,7);ctx.fill();circ(ctx,qx,qy,14,'#ffd84a');ctx.strokeStyle='#fff';ctx.lineWidth=2.5;ctx.beginPath();ctx.arc(qx,qy,14,0,7);ctx.stroke();ctx.fillStyle='#7a4a10';ctx.font='bold 20px \"DotGothic16\",\"Hikomi\",\"Hiragino Maru Gothic ProN\",sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('！',qx,qy+1);ctx.textAlign='start';ctx.textBaseline='alphabetic'})}/* 召喚できる合図 */
   
   BUBQ=null;for(const f of bubs)f();
-  for(const[j,ht]of NATHIT){if(now-ht>4000||!LIGHTNAT[S.obj[j]]){NATHIT.delete(j);continue}const v=Math.max(0,1-(S.hp['lp'+j]||0)/NATG[S.obj[j]]),a=Math.min(1,(4000-(now-ht))/600),bx=(j%W)*TS+3,byy=((j/W)|0)*TS-(S.obj[j]==='rock'?7:30);/* 守りの光をあてた木・岩の、たいきゅうバー */
+  for(const[j,ht]of NATHIT){if(now-ht>4000||!LIGHTNAT[S.obj[j]]){NATHIT.delete(j);continue}const v=Math.max(0,1-(S.hp['lp'+j]||0)/NATG[S.obj[j]]),a=Math.min(1,(4000-(now-ht))/600),bx=(j%W)*TS+3,byy=((j/W)|0)*TS-(S.obj[j]==='rock'?7:30)-hiAt(j)*LIFT;/* 守りの光をあてた木・岩・せいれいが切っている木・ほっている岩の、のこりのバー（高いマスでは持ち上げる） */
     ctx.globalAlpha=a;ctx.fillStyle='rgba(0,0,0,.6)';rr(ctx,bx-1,byy-1,TS-4,7,3);ctx.fillStyle='#ffe58a';rr(ctx,bx,byy,Math.max(2,(TS-6)*v),5,2.5);ctx.globalAlpha=1}
   for(const[j,ht]of WALLHIT){const o=S.obj[j];if(now-ht>4000||!o||!BL[o]||!(BL[o].hp||DEFS.has(o))){WALLHIT.delete(j);continue}const mx=BL[o].hp||defHp(o),hp=Math.max(0,S.hp[j]??mx),v=hp/mx,a=Math.min(1,(4000-(now-ht))/600);
     const bx=(j%W)*TS+3,byy=((j/W)|0)*TS-7;ctx.globalAlpha=a;ctx.fillStyle='rgba(0,0,0,.6)';rr(ctx,bx-1,byy-1,TS-4,7,3);ctx.fillStyle=v>.5?'#7ee08a':v>.25?'#ecdcbc':'#ff6b6b';rr(ctx,bx,byy,Math.max(2,(TS-6)*v),5,2.5);
-    ctx.font='bold 8px \"Hikomi\",\"Hiragino Maru Gothic ProN\",sans-serif';ctx.textAlign='center';ctx.fillStyle='#fff';ctx.fillText(Math.floor(hp)+'/'+mx,bx+TS/2-3,byy-2);ctx.textAlign='start';ctx.globalAlpha=1}
+    ctx.font='bold 8px \"DotGothic16\",\"Hikomi\",\"Hiragino Maru Gothic ProN\",sans-serif';ctx.textAlign='center';ctx.fillStyle='#fff';ctx.fillText(Math.floor(hp)+'/'+mx,bx+TS/2-3,byy-2);ctx.textAlign='start';ctx.globalAlpha=1}
   if(WD===1&&S.st2)for(const k in S.st2.ash){const ax=(k%W)*TS,ay=((k/W)|0)*TS;ctx.fillStyle='rgba(95,90,86,.6)';for(let n=0;n<5;n++){ctx.beginPath();ctx.arc(ax+6+hash(k*3+n)*20,ay+6+hash(k*5+n)*18,3.5+hash(+k+n)*3,0,7);ctx.fill()}}/* 灰でよごれた設備 */
   if(WD===1&&S.st2)for(let y=Math.max(0,y0-1);y<Math.min(H,y1+2);y++)for(let x=Math.max(0,x0-1);x<Math.min(W,x1+1);x++){const i=y*W+x;if(S.ground[i]!==1||hash(i*7)>.45||!hotW(i))continue;const ph=((now/2600+hash(i*3))%1),sx=(i%W)*TS+8+hash(i*5)*16+Math.sin(now/700+i)*3,sy=((i/W)|0)*TS+14-ph*26;/* 温泉の湯気 */
     ctx.fillStyle='rgba(255,255,255,'+(.5*(1-ph))+')';ctx.beginPath();ctx.arc(sx,sy,5+ph*7,0,7);ctx.fill()}
@@ -5293,7 +5293,7 @@ function render(now){RFN++;SBT=0;
     ctx.save();ctx.lineCap='round';if(s.fire&&h<1){ctx.fillStyle='rgba(255,120,40,.5)';ctx.beginPath();ctx.arc(X(h),Y(h),7,0,7);ctx.fill();ctx.fillStyle='#ffcf6a';ctx.beginPath();ctx.arc(X(h),Y(h),4,0,7);ctx.fill()}/* ようがん台の火の玉 */
     else if(h<1){ctx.strokeStyle='rgba(255,236,150,.55)';ctx.lineWidth=7;ctx.beginPath();ctx.moveTo(X(tl),Y(tl));ctx.lineTo(X(h),Y(h));ctx.stroke();ctx.strokeStyle='#fffbe0';ctx.lineWidth=3;ctx.stroke();ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(X(h),Y(h),4,0,7);ctx.fill()}
     else{const q=(p-1/2.4)/(1-1/2.4);ctx.globalAlpha=1-q;ctx.strokeStyle='#fff3b0';ctx.lineWidth=3;ctx.beginPath();ctx.arc(s.x2*TS,s.y2*TS,6+q*18,0,7);ctx.stroke();ctx.fillStyle='rgba(255,250,210,.7)';ctx.beginPath();ctx.arc(s.x2*TS,s.y2*TS,9*(1-q),0,7);ctx.fill()}ctx.restore()}ctx.globalAlpha=1;
-  ctx.font='bold 11px "Hikomi",sans-serif';ctx.textAlign='center';
+  ctx.font='bold 11px "DotGothic16","Hikomi",sans-serif';ctx.textAlign='center';
   for(const f of floats){ctx.globalAlpha=Math.min(1,f.life*2);const yy=(f.y-(1-f.life)*1.2)*TS;ctx.lineJoin='round';ctx.lineWidth=3;ctx.strokeStyle='rgba(176,138,100,.9)';{const fi=emoImg(f.text);if(fi){const ih=20,iw=ih*fi.width/fi.height;ctx.drawImage(fi,f.x*TS-iw/2,yy-ih+4,iw,ih)}else{ctx.strokeText(f.text,f.x*TS,yy);ctx.fillStyle='#fff3d6';ctx.fillText(f.text,f.x*TS,yy)}}}/* 文字はぜんぶクリーム色 *//* 文字のふちどりはうすい茶色 */
   ctx.globalAlpha=1;ctx.textAlign='start';
   const dk=darkness();
@@ -6237,7 +6237,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='834';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='835';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
