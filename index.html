@@ -421,6 +421,8 @@ html,body{margin:0;width:100%;min-width:0}
 .tapStk{cursor:pointer;border-radius:8px}.tapStk:active{background:rgba(255,255,255,.25)}
 .stockSec{margin-bottom:14px}.stockHead{display:flex;align-items:baseline;justify-content:space-between;gap:8px}.stockHead h3{margin:0}.stockN{font-weight:800;font-variant-numeric:tabular-nums}
 .stockBar{width:100%;height:8px;margin:6px 0 10px;border-radius:4px}.stockEmo{font-size:32px;line-height:40px;height:40px}
+
+/* 上の数は1列にまとめる（パワー・せいれい・食料・素材） */#topUI .stock{display:flex!important;flex-wrap:nowrap!important;gap:4px 8px!important;justify-content:space-between;align-items:center}#topUI .stock>.stk,#topUI .stock>.stat{flex:0 1 auto!important;min-width:0;grid-column:auto!important;padding:0!important;background:none!important;gap:3px!important}#topUI .stock .gauge{flex:0 0 26px!important;width:26px!important;min-width:0}#topUI .stock .ic{width:18px;height:18px}
 </style>
 
 <div id="app">
