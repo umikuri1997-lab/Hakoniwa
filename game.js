@@ -4874,13 +4874,16 @@ function drawStairObj(c,a){/* 階段（仮の絵）：段差の下の低い地�
     else{const xi=d===1?ax:ax+TS,xo=d===1?ax+2*TS:ax-TS,gy=ay+TS;c.save();poly([[xi,ay-LIFT],[xo,ay],[xo,gy],[xi,gy-LIFT]]);c.clip();surf(X0,ay-LIFT,len,TS+LIFT,1);c.restore();c.save();poly([[xi,gy-LIFT],[xo,gy],[xi,gy]]);c.clip();face(X0,gy-LIFT,len,LIFT,gy);c.restore()}}/* 横向き：上の面と、手前の三角の側面 */
   else if(d===0){/* 手前へ下りる：段の上の面と、手前の面 */riser(ax,ay-LIFT,TS,LIFT-z(0)+.5,1);for(let n=0;n<SN;n++){const ya=ay+n*Dn,yb=ya+Dn;tread(ax,ya-z(n),TS,Dn+.5,n,0,0);riser(ax,yb-z(n),TS,z(n)-z(n+1)+.5,n)}}
   else if(d===2){/* 奥へ下りる：手前の段ほど高い。向こうの段から描いて、手前の段でかくす */const Y1=ay+TS;for(let n=SN-1;n>=0;n--){const yb=Y1-n*Dn,ya=yb-Dn;const t0=ya-z(n);tread(ax,t0,TS,Dn+.5,n,1,0);if(n<SN-1){c.fillStyle=SH1;c.fillRect(ax,t0-1,TS,1);c.fillStyle=SH2;c.fillRect(ax,t0-2,TS,1)}}}/* 段のさかい：手前の段のふちの上（おくの段）に、かげ2ドット */
-  else{/* 横へ下りる：段の上の面と、手前の側面 */const X0=d===1?ax:ax-TS;for(let n=0;n<SN;n++){const x=d===1?X0+n*Dn:X0+2*TS-(n+1)*Dn,zz=z(n),gy=ay+TS;tread(x,ay-zz,Dn+.5,TS,n,1,1);face(x,gy-zz,Dn+.5,zz,gy);if(n){const ex=d===1?x:x+Dn-1,dx=d===1?1:-1;c.fillStyle=SH1;c.fillRect(ex,ay-zz,1,TS);c.fillStyle=SH2;c.fillRect(ex+dx,ay-zz,1,TS)}}}/* 段のさかい：高い段のとなりの低い段に、かげ2ドット */
+  else{/* 横へ下りる：おくの側板（うしろなので先に）→ 段の上の面・段の正面（けこみ）→ 手前の側板 */const X0=d===1?ax:ax-TS,o=stairOut(a,d),xi=d===1?ax:ax+TS,xo=d===1?ax+2*TS:ax-TS,zb=f=>LIFT*(1-f)+2;
+    if([a-W,o-W].every(k=>{const t=typeAt(k);return !(hiAt(k)||HOME_WALLS.has(t)||HOME_DOORS.has(t)||FENCE_IDS.has(t))})){c.beginPath();c.moveTo(xi,ay-zb(0));c.lineTo(xo,ay-zb(1));c.lineTo(xo,ay+3-zb(1));c.lineTo(xi,ay+3-zb(0));c.closePath();c.fillStyle=P[1];c.fill()}/* おくの側板：段より奥なので、段の前に描く（段のぎざぎざが見える） */
+    for(let n=0;n<SN;n++){const x=d===1?X0+n*Dn:X0+2*TS-(n+1)*Dn,zz=z(n),gy=ay+TS;tread(x,ay-zz,Dn+.5,TS,n,1,1);face(x,gy-zz,Dn+.5,zz,gy);
+      if(n){const RW=3,rx=d===1?x:x+Dn-RW,sx=d===1?x+RW:x+Dn-RW-1,dx=d===1?1:-1;c.fillStyle=P[1];c.fillRect(rx,ay-zz,RW,TS);if(br){c.fillStyle=MO;for(let yy=ay-zz+8;yy<ay-zz+TS;yy+=8)c.fillRect(rx,yy,RW,.6)}c.fillStyle=SH1;c.fillRect(sx,ay-zz,1,TS);c.fillStyle=SH2;c.fillRect(sx+dx,ay-zz,1,TS);c.fillStyle='rgba(255,250,235,.45)';c.fillRect(d===1?x-1:x+Dn,ay-z(n-1),1,TS)}}}/* 段のさかい：高い段の正面（けこみ、3ドット）・そのとなりにかげ2ドット・高い段のふちを明るく */
   {/* 側板：横に壁・柵・がけがないがわに、階段と同じ素材の板をつける */const o=d?stairOut(a,d):-1,cl=k=>{const t=typeAt(k);return hiAt(k)||HOME_WALLS.has(t)||HOME_DOORS.has(t)||FENCE_IDS.has(t)},free=ks=>ks.every(k=>k>=0&&!cl(k)),BW=3;
     const band=(x,y0,y1)=>{c.fillStyle=P[1];c.fillRect(x,y0,BW,y1-y0);c.fillStyle='rgba(255,250,235,.3)';c.fillRect(x,y0,1,y1-y0)};
     if(d===0){if(free([a-1]))band(ax,ay-LIFT-2,ay+TS);if(free([a+1]))band(ax+TS-BW,ay-LIFT-2,ay+TS)}
     else if(d===2){if(free([a-1,o-1]))band(ax,ay-TS-2,ay+TS-LIFT);if(free([a+1,o+1]))band(ax+TS-BW,ay-TS-2,ay+TS-LIFT)}
     else{const xi=d===1?ax:ax+TS,xo=d===1?ax+2*TS:ax-TS,zb=f=>LIFT*(1-f)+2,poly=pts=>{c.beginPath();c.moveTo(pts[0][0],pts[0][1]);for(const q of pts)c.lineTo(q[0],q[1]);c.closePath()};
-      if(free([a-W,o-W])){poly([[xi,ay-zb(0)],[xo,ay-zb(1)],[xo,ay+BW-zb(1)],[xi,ay+BW-zb(0)]]);c.fillStyle=P[1];c.fill()}
+      if(SLOPES.has(id)&&free([a-W,o-W])){poly([[xi,ay-zb(0)],[xo,ay-zb(1)],[xo,ay+BW-zb(1)],[xi,ay+BW-zb(0)]]);c.fillStyle=P[1];c.fill()}/* 階段のおくの側板は、段の前に描いてある */
       if(free([a+W,o+W])){const gy=ay+TS;c.save();poly([[xi,gy-zb(0)],[xo,gy-zb(1)],[xo,gy],[xi,gy]]);c.clip();face(Math.min(xi,xo),gy-LIFT-2,2*TS,LIFT+2,gy);c.restore();poly([[xi,gy-BW-zb(0)],[xo,gy-BW-zb(1)],[xo,gy-zb(1)],[xi,gy-zb(0)]]);c.fillStyle=P[0];c.fill()}}}/* 側板：段にそわない、まっすぐななめの板（階段も坂も） */
   c.restore();if(lat){for(const k of lat[0])if(hiAt(k))cliffEdgeOver(c,k,1);for(const k of lat[1])if(hiAt(k))cliffEdgeOver(c,k,0)}}/* 左右ががけなら、階段を描いたあとに、がけの横のはし（横の岩・丸いはし）をもう一度上に描く（切りとらない） */
 const CLC={n:-1,s:null,rows:null};/* 段差の絵は、行ごとのかたまり（つづいた高いマス）ごとに1まい作っておく。下絵が変わったら作りなおす */
@@ -5968,7 +5971,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='777';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='778';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
