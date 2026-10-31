@@ -1831,7 +1831,7 @@ function tryJob(r,G,k){
     const fr=ripeAdj(['fruit']);j=roomN(r)>=1&&fRoom>=2?nearest(G,j=>fr(j)>=0):-1;if(j>=0){const q=fr(j);startAct(r,G,'harvest',j,{key:'o'+q,obj:q,food:1});return true}return false}
   case'offer':{if(OBOX<0||isNight()||r.fun<99||r.offDay===dayNo())return false;/* おそなえは1人1日1回まで *//* たのしさが満タンになったら、おそなえする */j=nearTile(G,OBOX);if(j>=0){startAct(r,G,'offer',j);return true}return false}
   case'gather':{if(S.food>=(r.elem==='earth'?25:12)||isNight()||roomN(r)<1)return false;const bb=ripeAdj(['berry','takenoko']);j=nearest(G,j=>bb(j)>=0);if(j>=0){const q=bb(j);startAct(r,G,'gather',j,{key:'o'+q,obj:q});return true}return false}
-  case'drop':if(!(S.drops&&S.drops.length)||isNight())return false;const noF=!S.res.some(x=>x.name===POKO&&!x.hidden);j=nearest(G,j=>S.drops.some(q=>q.y*W+q.x===j&&(q.id==='shard'||Math.hypot(q.x+.5-r.x,q.y+.5-r.y)<=5)/* 落ちている物は、まわり5マスに来て見つけたときにひろう（ヌシのかけらはべつ） */&&(q.id!=='shard'||r.name===POKO||noF)&&!(q.id.startsWith('food:')&&foodCap()-S.food<=0)&&!(q.id.startsWith('mat:')&&matCap()-matTot()<=0)&&!((q.id.startsWith('food:')||q.id.startsWith('mat:'))&&roomN(r)<1))&&free('d'+j,1),90);/* 食料箱がいっぱいのときは、食料のおとしものはひろわない */if(j>=0){startAct(r,G,'pickdrop',j,{key:'d'+j,obj:j});return true}return false;
+  case'drop':if(!(S.drops&&S.drops.length)||isNight())return false;const noF=!S.res.some(x=>x.name===POKO&&!x.hidden);j=nearest(G,j=>S.drops.some(q=>q.y*W+q.x===j&&(q.id==='shard'||Math.hypot(q.x+.5-r.x,q.y+.5-r.y)<=(r.elem==='wind'?10:5))/* 落ちている物は、まわり5マス（風の子は10マス）に来て見つけたときにひろう（ヌシのかけらはべつ） */&&(q.id!=='shard'||r.name===POKO||noF)&&!(q.id.startsWith('food:')&&foodCap()-S.food<=0)&&!(q.id.startsWith('mat:')&&matCap()-matTot()<=0)&&!((q.id.startsWith('food:')||q.id.startsWith('mat:'))&&roomN(r)<1))&&free('d'+j,1),90);/* 食料箱がいっぱいのときは、食料のおとしものはひろわない */if(j>=0){startAct(r,G,'pickdrop',j,{key:'d'+j,obj:j});return true}return false;
   case'weed':{if(isNight()||matTot()+matN(r)>=matCap()||roomN(r)<1)return false;j=nearest(G,j=>WEEDS.has(S.obj[j])&&free('o'+j,1),r.elem==='wind'?120:60);if(j>=0){startAct(r,G,'weed',j,{key:'o'+j,obj:j});return true}return false}
       case'seed':if(!S.seeds.length||isNight())return false;j=nearest(G,j=>S.seeds.some(q=>q.y*W+q.x===j)&&free('s'+j,1),90);if(j>=0){startAct(r,G,'pickseed',j,{key:'s'+j,obj:j});return true}return false;
   }
@@ -6026,7 +6026,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='802';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='803';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
