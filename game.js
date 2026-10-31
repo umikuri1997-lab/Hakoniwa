@@ -3345,7 +3345,7 @@ function roadGrassEdge(c,id,x,y,i,q,iso){if(id!=='path'&&id!=='gravel'&&id!=='wo
 
 function roadShape(c,x,y,q){const l=x+(q.L?0:2),r=x+TS-(q.R?0:2),t=y+(q.U?0:2),b=y+TS-(q.D?0:2),tl=!q.L&&!q.U?6:0,tr=!q.R&&!q.U?6:0,br=!q.R&&!q.D?6:0,bl=!q.L&&!q.D?6:0;c.beginPath();c.moveTo(l+tl,t);c.lineTo(r-tr,t);c.quadraticCurveTo(r,t,r,t+tr);c.lineTo(r,b-br);c.quadraticCurveTo(r,b,r-br,b);c.lineTo(l+bl,b);c.quadraticCurveTo(l,b,l,b-bl);c.lineTo(l,t+tl);c.quadraticCurveTo(l,t,l+tl,t);c.closePath()}
 function drawFloorChip(c,id0,x,y,i,iso){const C=window.CHIPS;if(!C)return false;const gx=i%W,gy=(i/W)|0,flat=id0==='brickfloor'||id0==='stonefloor',id=flat?(id0==='brickfloor'?'brick':'stone'):id0;
-  const base=id==='carpet'?C.carpet:C[(id==='woodpath'?'floor':id)/* 木の道：絵ができるまでは、フローリングの絵 */+'#'+(id==='path'||id==='gravel'?((hash(i*13+5)*4)|0):(gx%2)+(gy%2)*2)];if(!base||!chipImgs(base,id)[0].ok)return false;/* 床のもよう：土・砂利は4しゅるい、石・レンガ・板は2×2マスでつながる絵 */
+  const base=id==='carpet'?C.carpet:C[(id==='woodpath'?'floor':id0==='stonefloor'?'stonefloor':id)/* 木の道：絵ができるまでは、フローリングの絵。石の床は、石畳とはべつの絵 */+'#'+(id==='path'||id==='gravel'?((hash(i*13+5)*4)|0):(gx%2)+(gy%2)*2)];if(!base||!chipImgs(base,id)[0].ok)return false;/* 床のもよう：土・砂利は4しゅるい、石・レンガ・板は2×2マスでつながる絵 */
   const road=!flat&&ROADF.has(id),q=road?roadLinks(i,iso):null;if(road){c.save();roadShape(c,x,y,q);c.clip()}
   drawChip(c,base,id,x,y,0,i);
   if(id==='carpet'){const same=k=>!iso&&S.floor[k]==='carpet';for(const[s,k]of[['U',i-W],['D',i+W],['L',i-1],['R',i+1]])if(!same(k)&&C['carpet:'+s])drawChip(c,C['carpet:'+s],id,x,y,0,i)}/* じゅうたんのふち */
@@ -4855,7 +4855,7 @@ function drawStair(c,id,px,py,d,top,bot){/* 階段のアイコン（仮の絵）
 const SN=6;/* 階段の段の数（どの向きも同じ） */
 const SLTEX=new Map();function slopeTex(a,d){/* 坂の面のもようは、のぼった先の高いマスの地面と同じ（草地・あれ地・あぜ道・砂利道など）。ふちのない、その地面の絵をくりかえす */
   const t=stairTop(a,d),f=S.floor[t]||'',g=REV.has(t);let e=SLTEX.get(a);if(e&&e.t===t&&e.f===f&&e.g===g&&e.w===WD)return e.p;const C=window.CHIPS||{},mk=(ch,id)=>{if(!ch)return null;const cv=document.createElement('canvas');cv.width=cv.height=TS;drawChip(cv.getContext('2d'),ch,id,0,0,0);return cv};
-  let src=f?mk(C[(f==='woodpath'?'floor':f==='brickfloor'?'brick':f==='stonefloor'?'stone':f)+'#0'],f):g?(C['tex:grass']&&chipImgs(C['tex:grass'],'ground')[0]):WD===1?mk(C['groundr#0'],'ground'):(C['tex:dry']&&chipImgs(C['tex:dry'],'ground')[0]);
+  let src=f?mk(C[(f==='woodpath'?'floor':f==='brickfloor'?'brick':f==='stonefloor'?'stonefloor':f)+'#0'],f):g?(C['tex:grass']&&chipImgs(C['tex:grass'],'ground')[0]):WD===1?mk(C['groundr#0'],'ground'):(C['tex:dry']&&chipImgs(C['tex:dry'],'ground')[0]);
   if(!src||src.ok===false)return null;e={t,f,g,w:WD,p:document.createElement('canvas').getContext('2d').createPattern(src,'repeat')};SLTEX.set(a,e);return e.p}
 function cliffEdgeOver(c,k,sd){/* 高いマス k の、sd がわ（0左・1右）のはし：横の岩と、がけの正面の丸いはし（cliffStrip と同じ描き方） */
   const C=window.CHIPS||{},fd=(key,x,y)=>{const ch=C[key];if(ch)drawChip(c,ch,'cliff',x,y,0)},px=(k%W)*TS,py=((k/W)|0)*TS,U=hiAt(k-W),D=hiAt(k+W),L=topAt(k-1),R=topAt(k+1),cl=(x,y,w,h,f)=>{c.save();c.beginPath();c.rect(x,y,w,h);c.clip();f();c.restore()};
@@ -5976,7 +5976,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='786';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='787';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
