@@ -3708,7 +3708,7 @@ function drawChip(c,ch,id,x,y,now,i){const src=ch.src||ch,g64=src.g===64,ims=chi
 if(window.CHIPS)for(const k in window.CHIPS){const ch=window.CHIPS[k],id=k.split(/[@>:]/)[0];chipImgs(ch,id);for(const p of ch.parts||[])partImg(p,id)}/* 動く部品（ブランコの座面など）も *//* はじめに読みこんでおく */
 const CONN={fence:'f',logfence:'f',bamboofence:'f',wall:'w',hwall:'h',logwall:'h',plasterwall:'h',brickwall:'h',yozorawall:'h'},CONNR={'fence':'HV','logfence':'HV','bamboofence':'VH','wall':'HV','hwall':'HV','logwall':'HV','plasterwall':'HV','brickwall':'HV'};/* つながる物：横の部品（H0 柱・HL・HR・HLR 横板）と縦の部品（VU・VD・VUD 縦板）を、となりのつながりで組み合わせる。CONNR：角で横と縦を重ねる順 */
 function connMask(id,i){if(ICON)return 3;/* アイコンは、左右につながった形で見せる */if(i==null||!S)return 0;const t=CONN[id];let f;if(t==='f')f=k=>FENCE_IDS.has(typeAt(k));else if(t==='w')f=k=>{const o=typeAt(k);return o==='wall'||o==='stonegate'};else f=(k,v)=>{const o=typeAt(k);return o!=='wall'&&o!=='sdoor'&&(HOME_WALLS.has(o)||!v&&HOME_DOORS.has(o))};/* 上下のドア（たて置きのドア）とはつながらない：ドアの上下の壁には、はしの柱を立てる */return (f(i-1)?1:0)|(f(i+1)?2:0)|(f(i-W,1)?4:0)|(f(i+W,1)?8:0)}/* 石の塀は、石の塀のドアのとなりでは終わる */
-const FRAIL={fence:13.6,logfence:13.5,bamboofence:15.5};/* 柵の上の横木のてっぺん（マスの上から。たての帯をここから柱にかぶせる） */
+const FRAIL={fence:9.9,logfence:13.5,bamboofence:15.5};/* 柵の上の横木のてっぺん（マスの上から。たての帯をここから柱にかぶせる） */
 function drawConn(c,id,x,y,i,now){const C=window.CHIPS;if(!C)return false;const inn=!ICON&&i!=null&&HOME_WALLS.has(id)&&HOUSES.some(h=>h.inside.has(i+W)||h.inside.has(i+W-1)||h.inside.has(i+W+1)),K=k=>(inn&&C[k+'~in'])||C[k]/* 下かななめ下が家の中なら、かげのうすい絵（家の角も） */,m=connMask(id,i),hm=m&3,vm=m&12,H=K(id+':'+['H0','HL','HR','HLR'][hm]),V=vm?K(id+':'+{4:'VU',8:'VD',12:'VUD'}[vm]):null;if(!H||vm&&!V)return false;
   if(id==='wall'&&!vm&&!ICON){const dl=!(hm&1)&&typeAt(i-1)==='sdoor',dr=!(hm&2)&&typeAt(i+1)==='sdoor';if(dl||dr){const H2=C['wall:'+['H0','HL','HR','HLR'][hm|(dl?1:0)|(dr?2:0)]];if(!H2||!drawChip(c,H2,id,x,y,now,i))return false;return true}}/* となりが石の塀のドア：塀はマスのはしまでのばす（ドアにつける柱は stoneFront でかく） */
   if(vm&4&&CONN[id]==='f'&&!ICON&&!(connMask(id,i-W)&4)){/* たての柵：上のマスがはしの柱なら、横木は柱の前を通るので、帯を柱の上の横木のてっぺん（FRAIL）から柱にかぶせて、そこに区切り線 */const V4=C[id+':'+(vm===12?'VUD':'VU')],t=y-32+FRAIL[id];const ok=hm?(drawChip(c,H,id,x,y,now,i),drawChip(c,V4,id,x,y,now,i)):drawChip(c,V4,id,x,y,now,i);if(ok){c.save();c.beginPath();c.rect(x-64,t,192,y-t);c.clip();const Vs=C[id+':VUD']||V4;drawChip(c,Vs,id,x,y-32,now,i);c.restore();c.fillStyle='rgba(70,45,25,.55)';c.fillRect(x+Vs.ax/2,t,Vs.w/2,1)}return ok}
@@ -6204,7 +6204,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='826';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='827';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
