@@ -5010,24 +5010,30 @@ function objectDepth(o,j){const y=(j/W)|0;if(FLAT.has(o)||LADDERS.has(o))return 
   const b=o==='site'&&S.dyn[j]&&BL[S.dyn[j].build]||BL[o];
   return y+(b&&b.sz?(o==='site'?b.sz[1]:szAt(o,j)[1]):1)+(o==='obox'?.01:0);
 }
-const WSH={k:'',m:null,o:null,any:false};
+const WSH={k:'',ok:'',m:null,e:null,o:null,any:false};
 function drawFords(x0,y0,x1,y1){/* 浅瀬（仮の絵）：水の底の砂がすけて見える（ふちはぼかして、となりの浅瀬とつながる）・小さな石・ゆっくり流れるさざなみ */const now=performance.now();
   for(let y=Math.max(0,y0-1);y<Math.min(H,y1+1);y++)for(let x=Math.max(0,x0-1);x<Math.min(W,x1+1);x++){const j=y*W+x;if(S.ground[j]!==2)continue;const cx=x*TS+16,cy=y*TS+16,g=ctx.createRadialGradient(cx,cy,3,cx,cy,22);g.addColorStop(0,'rgba(226,214,170,.55)');g.addColorStop(.6,'rgba(214,204,160,.32)');g.addColorStop(1,'rgba(214,204,160,0)');ctx.fillStyle=g;ctx.fillRect(cx-22,cy-22,44,44)}
   for(let y=Math.max(0,y0);y<Math.min(H,y1);y++)for(let x=Math.max(0,x0);x<Math.min(W,x1);x++){const j=y*W+x;if(S.ground[j]!==2)continue;const px=x*TS,py=y*TS,n=4+((hash(j*3)*3)|0);
     for(let k=0;k<n;k++){const sx=px+4+hash(j*11+k)*24,sy=py+4+hash(j*17+k)*24,r=1.2+hash(j*23+k)*2.2;ctx.fillStyle='rgba(60,80,80,.18)';ctx.beginPath();ctx.ellipse(sx+.4,sy+.8,r,r*.7,0,0,7);ctx.fill();ctx.fillStyle=k%3?'#b4ab98':'#a39a88';ctx.beginPath();ctx.ellipse(sx,sy,r,r*.7,0,0,7);ctx.fill();ctx.fillStyle='rgba(255,252,240,.35)';ctx.beginPath();ctx.ellipse(sx-.4,sy-.4,r*.5,r*.28,0,0,7);ctx.fill()}/* 小さな石（大きさ・色がばらばら） */
     ctx.strokeStyle='rgba(255,255,255,.45)';ctx.lineWidth=.8;for(let k=0;k<2;k++){const ph=((now/2600+hash(j*29+k))%1),sx=px+6+hash(j*31+k)*20,sy=py+8+k*12+ph*4;ctx.globalAlpha=Math.sin(ph*Math.PI);ctx.beginPath();ctx.moveTo(sx-4,sy);ctx.quadraticCurveTo(sx,sy-1.6,sx+4,sy);ctx.stroke()}ctx.globalAlpha=1}}/* 石のあいだを流れるさざなみ */
-function waterShimmer(now,x0,y0,x1,y1){/* 水面：見えている所の水の形（waterm）の中に、水のテクスチャ（tex:water）をしきつめて、ゆっくりスクロールさせる。その上に水のふち（water:1〜15）。形とふちは画面が動いたときだけ作りなおす */
-  if(WD===1||!waterChipsOK())return;const C=window.CHIPS,im=chipImgs(C['tex:water'],'water')[0],w=(x1-x0)*TS,h=(y1-y0)*TS;if(w<=0||h<=0||w*h>4e6)return;
-  const k=x0+','+y0+','+x1+','+y1+','+STATN;
-  if(WSH.k!==k){WSH.k=k;const m=WSH.m||(WSH.m=document.createElement('canvas'));m.width=w;m.height=h;const g=m.getContext('2d');const e=WSH.e||(WSH.e=document.createElement('canvas'));e.width=w;e.height=h;const ge=e.getContext('2d');let any=false;
-    const isW=(x,y)=>x>=0&&y>=0&&x<W&&y<H&&S.ground[y*W+x]>=1;
-    for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++){const b=(isW(x-1,y-1)?1:0)|(isW(x,y-1)?2:0)|(isW(x-1,y)?4:0)|(isW(x,y)?8:0);if(!b)continue;const ch=C['waterm:'+b];if(ch){drawChip(g,ch,'water',(x-x0)*TS,(y-y0)*TS,0);any=true}const ce=C['water:'+b];if(ce)drawChip(ge,ce,'water',(x-x0)*TS,(y-y0)*TS,0)}
+function waterShimmer(now,x0,y0,x1,y1){/* 水面：見えている所の水の形（waterm）の中に、水のテクスチャ（tex:water）をしきつめて、ゆっくりスクロールさせる。その上に水のふち（water:1〜15）。
+ 形とふちは、見えている所を8マスずつに広げた所で作り、画面がその外へ出たときだけ作りなおす。テクスチャをかさねるのは、テクスチャが1ドット動いたときだけ（1秒に6回）。
+ ちぢめて見ているとき（拡大率0.6より小さい）は、半分の細かさで作り、テクスチャは動かさない（マップの広い所が見えて重いので） */
+  if(WD===1||!waterChipsOK())return;const C=window.CHIPS,im=chipImgs(C['tex:water'],'water')[0];if(!im.ok)return;
+  x0=Math.max(0,Math.floor(x0/8)*8);y0=Math.max(0,Math.floor(y0/8)*8);x1=Math.min(W,Math.ceil(x1/8)*8);y1=Math.min(H,Math.ceil(y1/8)*8);
+  let K=cam.z<.6?.5:1;while(K>.25&&(x1-x0)*(y1-y0)*TS*TS*K*K>2e6)K/=2;/* 絵は200万ドットまで（大きな画面でマップ全体が見えるときは、もっとあらく） */
+  const w=Math.ceil((x1-x0)*TS*K),h=Math.ceil((y1-y0)*TS*K);if(w<=0||h<=0)return;
+  const k=x0+','+y0+','+x1+','+y1+','+K+','+STATN;
+  if(WSH.k!==k){WSH.k=k;WSH.ok='';const m=WSH.m||(WSH.m=document.createElement('canvas'));m.width=w;m.height=h;const g=m.getContext('2d');const e=WSH.e||(WSH.e=document.createElement('canvas'));e.width=w;e.height=h;const ge=e.getContext('2d');let any=false;
+    g.setTransform(K,0,0,K,0,0);ge.setTransform(K,0,0,K,0,0);g.imageSmoothingEnabled=ge.imageSmoothingEnabled=K<1;
+    const isW=(x,y)=>x>=0&&y>=0&&x<W&&y<H&&S.ground[y*W+x]>=1,put=(c,ch,x,y)=>{const src=ch.src||ch,i=chipImgs(src,'water')[0];if(!i.ok)return false;if(src.g===64)c.drawImage(i,x+src.ax/2,y+src.ay/2,src.w/2,src.h/2);else c.drawImage(i,x+src.ax,y+src.ay);return true};
+    for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++){const b=(isW(x-1,y-1)?1:0)|(isW(x,y-1)?2:0)|(isW(x-1,y)?4:0)|(isW(x,y)?8:0);if(!b)continue;const ch=C['waterm:'+b];if(ch&&put(g,ch,(x-x0)*TS,(y-y0)*TS))any=true;const ce=C['water:'+b];if(ce)put(ge,ce,(x-x0)*TS,(y-y0)*TS)}
     WSH.any=any;const o=WSH.o||(WSH.o=document.createElement('canvas'));o.width=w;o.height=h}
   if(!WSH.any)return;
-  const o=WSH.o,g=o.getContext('2d'),t=now/1000,sx=Math.floor(t*4)%128,sy=Math.floor(t*2)%128;/* 1秒に よこ4・たて2ドット（テクスチャの1ドットずつ動かす） */
-  g.globalCompositeOperation='copy';g.drawImage(WSH.m,0,0);g.globalCompositeOperation='source-in';
-  const pt=g.createPattern(im,'repeat');pt.setTransform(new DOMMatrix().translate(-x0*TS+sx,-y0*TS+sy));g.fillStyle=pt;g.fillRect(0,0,w,h);g.globalCompositeOperation='source-over';g.drawImage(WSH.e,0,0);
-  ctx.drawImage(o,x0*TS,y0*TS)}
+  const o=WSH.o,t=now/1000,sx=K<1?0:Math.floor(t*4)%128,sy=K<1?0:Math.floor(t*2)%128;/* 1秒に よこ4・たて2ドット（テクスチャの1ドットずつ動かす） */
+  if(WSH.ok!==sx+','+sy){WSH.ok=sx+','+sy;const g=o.getContext('2d');g.setTransform(1,0,0,1,0,0);g.globalCompositeOperation='copy';g.drawImage(WSH.m,0,0);g.globalCompositeOperation='source-in';
+    const pt=g.createPattern(im,'repeat');pt.setTransform(new DOMMatrix().scale(K).translate(-x0*TS+sx,-y0*TS+sy));g.fillStyle=pt;g.fillRect(0,0,w,h);g.globalCompositeOperation='source-over';g.drawImage(WSH.e,0,0)}
+  const sm=ctx.imageSmoothingEnabled;ctx.imageSmoothingEnabled=K<1;ctx.drawImage(o,x0*TS,y0*TS,w/K,h/K);ctx.imageSmoothingEnabled=sm}
 function sideClip(i,f){/* 低いマスの物が、となりの高いマスの上へはみ出さないように：となりのマスが高ければ、そのマスの高い面（上の面のてっぺんより下）には描かない */const x=i%W,y=(i/W)|0,h=hiAt(i),L=x>0&&hiAt(i-1)>h?hiAt(i-1):0,R=x<W-1&&hiAt(i+1)>h?hiAt(i+1):0;if(!L&&!R){f();return}
   ctx.save();ctx.beginPath();ctx.rect(x*TS-200,y*TS-400,TS+400,600);if(L)ctx.rect(x*TS-200,y*TS-L*LIFT,200,TS+L*LIFT+200);if(R)ctx.rect((x+1)*TS,y*TS-R*LIFT,200,TS+R*LIFT+200);ctx.clip('evenodd');f();ctx.restore()}
 function liftDraw(z,f){if(!z){f();return}ctx.save();ctx.translate(0,-z);f();ctx.restore()}
@@ -5164,8 +5170,8 @@ let SBE=6,CAMK='';const stripTime=()=>SBT===0||SBT+SBE<=SBUD||CLC.fresh;/* SBE�
 const DOTT={};function dotPat(g,K){/* 段差のふちの帯の点々（104ドットごとにくりかえすもよう。1まいだけ作っておく） */let e=DOTT[K];if(!e){const N=40,T=N*2.6;e=DOTT[K]=document.createElement('canvas');e.width=e.height=Math.round(T*K);const c=e.getContext('2d');c.scale(K,K);c.fillStyle='#000';for(let i=0;i<N;i++)for(let j=0;j<N;j++){const q=hash(i*131+j*7919+3);if(q<.5)c.fillRect(i*2.6,j*2.6,1.8,.8+q*2.6)}}const p=g.createPattern(e,'repeat');if(p.setTransform)p.setTransform(new DOMMatrix().scale(1/K));return p}
 function softOf(m,b){/* ぼかし（軽い作り方）：小さくして、なめらかに大きくもどす。b：ちぢめる倍率 */const t=TMPC();t.width=Math.max(1,Math.ceil(m.width/b));t.height=Math.max(1,Math.ceil(m.height/b));const c=t.getContext('2d');c.imageSmoothingEnabled=true;c.imageSmoothingQuality='high';c.drawImage(m,0,0,t.width,t.height);return t}
 function cliffQuick(y,R){/* まだ作っていない段差の絵のかわりに、かんたんな絵（上の面と、がけの正面だけ）。つぎのコマ以降で、ちゃんとした絵にかわる */const C=window.CHIPS||{},lv=R.lv,L=(lv-1)*LIFT;for(let k=R.x0;k<=R.x1;k++){const j=y*W+k,px=k*TS,py=y*TS;if(y<H-1&&hiAt(j+W)<lv){const ch=C['cliff:face'];if(ch)drawChip(ctx,ch,'cliff',px,py-L,0)}ctx.drawImage(stat,px,py,TS,TS,px,py-lv*LIFT,TS,TS)}}
-function cliffPrefetch(x0,y0,x1,y1){/* 手があいたコマで、画面のすぐ外（まわり4マス）の段差の絵を先に作っておく（動かしたときに、その場で作らなくてすむように） */const ck=cam.x.toFixed(1)+','+cam.y.toFixed(1)+','+cam.z.toFixed(3),still=ck===CAMK;CAMK=ck;if(!S||!S.hi||!still||SBT>0)return;/* マップを動かしているあいだは作らない（止まっているコマで、1まいずつ） */const RW=cliffRuns(),SK=cam.z>=1?2:1,cy=(y0+y1)/2,ys=[];for(let y=Math.max(0,y0-5);y<Math.min(H,y1+6);y++)ys.push(y);ys.sort((a,b)=>Math.abs(a-cy)-Math.abs(b-cy));
-  for(const y of ys){const L=RW.get(y);if(!L)continue;for(const R of L){if(R.x1<x0-5||R.x0>x1+5||R.c&&R.K===SK&&!R.stale)continue;if(SBT>0)return;R.stale=false;if(R.c){R.c.width=R.c.height=0;R.c=null;const q=STRIPQ.indexOf(R);if(q>=0)STRIPQ.splice(q,1)}const t0=performance.now();R.K=SK;R.c=cliffStrip(y,R,SK);R.f=RFN;{const dt=performance.now()-t0;SBT+=dt;SBE=SBE*.8+dt*.2}STRIPQ.push(R)}}}/* 段差の絵：1まいは16マスまで。作っておく絵は、ぜんぶで800万ドットまで（いま見えている絵は手ばなさない） */
+function cliffPrefetch(x0,y0,x1,y1){/* 手があいたコマで、画面のすぐ外（まわり4マス）の段差の絵を先に作っておく（動かしたときに、その場で作らなくてすむように） */const ck=cam.x.toFixed(1)+','+cam.y.toFixed(1)+','+cam.z.toFixed(3),still=ck===CAMK;CAMK=ck;if(!S||!S.hi||!still||SBT>0)return;/* マップを動かしているあいだは作らない（止まっているコマで、1まいずつ） */let px=0;for(const o of STRIPQ)if(o.c)px+=o.c.width*o.c.height;if(px>=STRIPPX*.9)return;/* 作っておく絵がもういっぱいなら、先に作らない（作っても、すぐ手ばなすことになるので） */const RW=cliffRuns(),SK=cam.z>=1?2:1,cy=(y0+y1)/2,ys=[];for(let y=Math.max(0,y0-5);y<Math.min(H,y1+6);y++)ys.push(y);ys.sort((a,b)=>Math.abs(a-cy)-Math.abs(b-cy));
+  for(const y of ys){const L=RW.get(y);if(!L)continue;for(const R of L){if(R.x1<x0-5||R.x0>x1+5||R.c&&R.K===SK&&!R.stale)continue;if(SBT>0||px>=STRIPPX*.9)return;R.stale=false;if(R.c){px-=R.c.width*R.c.height;R.c.width=R.c.height=0;R.c=null;const q=STRIPQ.indexOf(R);if(q>=0)STRIPQ.splice(q,1)}const t0=performance.now();R.K=SK;R.c=cliffStrip(y,R,SK);px+=R.c.width*R.c.height;R.f=RFN;{const dt=performance.now()-t0;SBT+=dt;SBE=SBE*.8+dt*.2}STRIPQ.push(R)}}}/* 段差の絵：1まいは16マスまで。作っておく絵は、ぜんぶで800万ドットまで（いま見えている絵は手ばなさない） */
 const STRIPQ=[],TMPL=[],TMPC=()=>{const c=document.createElement('canvas');TMPL.push(c);return c};/* 作業用のキャンバス：使いおわったら、すぐ手ばなす（iPhone は、キャンバスのメモリの上限が小さく、こえるとページが落ちる） */
 function cliffStrip(y,Rn,K){const cv=CLV;CLV=Rn.lv||1;try{return cliffStrip0(y,Rn.bx0!=null?{x0:Rn.bx0,x1:Rn.bx1,lv:Rn.lv}:Rn,K||2)}finally{CLV=cv;for(const c of TMPL)c.width=c.height=0;TMPL.length=0}}/* 段 Rn.lv のかたまりの絵（1だんめと同じ形で作り、描くときに (lv-1)*LIFT 上へ） */
 function cliffStrip0(y,Rn,K){/* 1つのかたまりの絵：横のふち・がけの正面・かげ・持ち上げた地面（ふちはでこぼこ）・ふちの線・階段。K：細かさ（1マス32ドットの何倍か） */
@@ -6238,7 +6244,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='843';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='844';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
