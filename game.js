@@ -1099,10 +1099,17 @@ const SPOTS=[
 const spotNear=(j,k)=>{if(j==null||j<0)return false;const x0=j%W,y0=(j/W)|0;for(let y=Math.max(0,y0-3);y<=Math.min(H-1,y0+3);y++)for(let x=Math.max(0,x0-3);x<=Math.min(W-1,x0+3);x++){const t=SPOTM.get(y*W+x);if(t&&t.has(k))return true}return false};/* そのマスのまわり3マスに、スポットのもとの物（伐採場・井戸・道しるべなど）があるか */
 const spotN=(j,...ks)=>ks.reduce((n,k)=>n+(spotHas(j,k)?1:0),0);/* おなじスポットは重ならない（いくつできても1こ分）。ちがうスポットは、たし算で重なる */
 const spotHas=(j,k)=>{const t=SPOTJ.get(anc(j));return !!t&&t.has(k)};
+let SPOTPREV=null;const SPOTFX=[];/* できたスポットのかこみ {x0,y0,x1,y1,t0} */
+function spotCells(I){const L=[I.j,...I.found.flat()],out=[];for(const q of L){const a=anc(q),o=S.obj[a];if(!o){out.push(q);continue}for(const[x,y]of fp(o,a%W,(a/W)|0))out.push(y*W+x)}return out}/* スポットになった物のマス（大きい物は、その大きさぶん） */
+function spotFx(I){const C=spotCells(I);let x0=W,y0=H,x1=0,y1=0;for(const q of C){const x=q%W,y=(q/W)|0;x0=Math.min(x0,x);y0=Math.min(y0,y);x1=Math.max(x1,x);y1=Math.max(y1,y)}SPOTFX.push({x0,y0,x1,y1,t0:performance.now(),h:hiAt(I.j)});if(SPOTFX.length>6)SPOTFX.shift();dirty=true}
+function drawSpotFx(now){for(let i=SPOTFX.length-1;i>=0;i--){const f=SPOTFX[i],e=(now-f.t0)/4000;if(e>=1){SPOTFX.splice(i,1);continue}const a=e<.1?e/.1:e>.75?(1-e)/.25:1,z=f.h*LIFT,x=f.x0*TS-3,y=f.y0*TS-3-z,w=(f.x1-f.x0+1)*TS+6,h=(f.y1-f.y0+1)*TS+6;
+    ctx.save();ctx.globalAlpha=a;ctx.setLineDash([5,4]);ctx.lineDashOffset=-now/60;ctx.lineWidth=2;ctx.strokeStyle='rgba(255,246,190,.95)';ctx.beginPath();ctx.roundRect?ctx.roundRect(x,y,w,h,6):ctx.rect(x,y,w,h);ctx.stroke();ctx.strokeStyle='rgba(200,150,40,.55)';ctx.lineWidth=1;ctx.beginPath();ctx.roundRect?ctx.roundRect(x+1.5,y+1.5,w-3,h-3,5):ctx.rect(x+1.5,y+1.5,w-3,h-3);ctx.stroke();ctx.setLineDash([]);/* 点線のかこみ（ゆっくりまわる） */
+    const n=Math.min(14,4+Math.round((f.x1-f.x0+1)*(f.y1-f.y0+1)*.8));for(let k=0;k<n;k++){const px=x+6+hash(k*31+f.x0*7+f.y0)*(w-12),py=y+6+hash(k*17+f.y1*5+f.x1)*(h-12),tw=Math.sin(now/170+k*1.9);if(tw>0)star4(ctx,px,py,(2+hash(k*13)*2.5)*tw)}ctx.restore()}}/* 中でキラキラ */
 function calcSpots(){SPOTJ=new Map();SPOTM=new Map();SPOTI=[];const add=(j,k)=>{let t=SPOTJ.get(j);if(!t)SPOTJ.set(j,t=new Set());t.add(k)};
   for(let j=0;j<W*H;j++){const o=S.obj[j];if(!o||o==='part')continue;for(const sp of SPOTS){if(!sp.main(o,j))continue;const x0=j%W,y0=(j/W)|0,found=sp.need.map(()=>[]);
     for(let y=Math.max(0,y0-3);y<=Math.min(H-1,y0+3);y++)for(let x=Math.max(0,x0-3);x<=Math.min(W-1,x0+3);x++){const q=y*W+x,t=S.obj[q];if(q===j||!t||t==='part')continue;sp.need.forEach((nd,i)=>{if(nd[0](t,q))found[i].push(q)})}
     if(sp.need.every((nd,i)=>found[i].length>=nd[1])){add(j,sp.k);for(const L of found)for(const q of L)add(q,sp.k);{let t=SPOTM.get(j);if(!t)SPOTM.set(j,t=new Set());t.add(sp.k)}SPOTI.push({sp,j,found})}/* SPOTM：スポットのもとの物（まわり3マスで効くスポットは、ここからはかる）。SPOTI：できたスポットの一覧 */}}
+  {const cur=new Set(SPOTI.map(I=>I.sp.k+':'+I.j));if(SPOTPREV&&SPOTPREV.s===S)for(const I of SPOTI)if(!SPOTPREV.k.has(I.sp.k+':'+I.j))spotFx(I);SPOTPREV={s:S,k:cur}}/* 新しくできたスポットは、点線でかこんでキラキラ（読みこんだときはしない） */
   const seen=S.spotSeen||(S.spotSeen={});for(const sp of SPOTS){if(seen[sp.k])continue;let on=false;for(const t of SPOTJ.values())if(t.has(sp.k)){on=true;break}if(on){seen[sp.k]=1;toast('「'+sp.n+'」ができた','good')}}}/* はじめてできたときだけ知らせる */
 const TOYS=new Set(['swing','seesaw','sandbox','slide']);/* 平らな物のうち、毎コマかく物（ラグ・罠など）は、BL に anim:1 と書く */
 const win64=i=>!!(S&&S.win&&typeof S.win[i]==='string'&&window.CHIPS&&window.CHIPS[S.win[i]]&&window.CHIPS[S.win[i]].g===64);/* 1マス64ドットの絵をかけた壁・ドアも、画面の大きさでかく */
@@ -5194,6 +5201,7 @@ function render(now){
   if(WD===1&&S.st2)for(const k in S.st2.ash){const ax=(k%W)*TS,ay=((k/W)|0)*TS;ctx.fillStyle='rgba(95,90,86,.6)';for(let n=0;n<5;n++){ctx.beginPath();ctx.arc(ax+6+hash(k*3+n)*20,ay+6+hash(k*5+n)*18,3.5+hash(+k+n)*3,0,7);ctx.fill()}}/* 灰でよごれた設備 */
   if(WD===1&&S.st2)for(let y=Math.max(0,y0-1);y<Math.min(H,y1+2);y++)for(let x=Math.max(0,x0-1);x<Math.min(W,x1+1);x++){const i=y*W+x;if(S.ground[i]!==1||hash(i*7)>.45||!hotW(i))continue;const ph=((now/2600+hash(i*3))%1),sx=(i%W)*TS+8+hash(i*5)*16+Math.sin(now/700+i)*3,sy=((i/W)|0)*TS+14-ph*26;/* 温泉の湯気 */
     ctx.fillStyle='rgba(255,255,255,'+(.5*(1-ph))+')';ctx.beginPath();ctx.arc(sx,sy,5+ph*7,0,7);ctx.fill()}
+  drawSpotFx(now);/* スポットのかこみ・キラキラは、物より上に */
   for(const f of fx){ctx.globalAlpha=Math.max(0,Math.min(1,f.life));
     if(f.k==='pillar'){const k=Math.min(1,f.life),w=26*k+6,h=150;const g=ctx.createLinearGradient(0,f.y-h,0,f.y);g.addColorStop(0,'rgba(255,255,255,0)');g.addColorStop(.5,f.col+'99');g.addColorStop(1,'#ffffffee');ctx.fillStyle=g;ctx.fillRect(f.x-w/2,f.y-h,w,h+4);ctx.fillStyle='rgba(255,255,255,.85)';ctx.fillRect(f.x-w/6,f.y-h,w/3,h+4);
       const gg=ctx.createRadialGradient(f.x,f.y,2,f.x,f.y,46);gg.addColorStop(0,'rgba(255,255,255,.9)');gg.addColorStop(1,'rgba(255,255,255,0)');ctx.fillStyle=gg;ctx.fillRect(f.x-46,f.y-46,92,92)}
@@ -5862,7 +5870,7 @@ function renderSheet(){
     if(BL[o].hp&&S.obj[j]===o)body.appendChild(el('<div class="rows"></div>')).appendChild(rowEl('じょうぶさ',Math.floor(S.hp[j]??BL[o].hp)+' / '+BL[o].hp));/* 建物などのじょうぶさ */
     {const R=rangeOf(o,j);if(R&&!BL[o].env&&!BENCHES.has(o))body.appendChild(el('<div class="rows"></div>')).appendChild(rowEl('効果のはんい','まわり'+(R.cells||R.r)+'マス（「みる」でタップすると、色で出る）'))}
     if(SEATS.includes(o)&&spotW(j)>=0)body.appendChild(el('<div class="rows"></div>')).appendChild(rowEl('つりができるいす','池のそばのいす。せいれいが、ここにすわってつりをする。ふつうの水べより、魚がつれやすい（水のせいれいは、さらによくつれる）'));/* 池のそばの椅子＝釣りスポット */
-    {const t=SPOTJ.get(j);if(t)for(const sp of SPOTS){if(!t.has(sp.k))continue;body.appendChild(el('<div class="rows"></div>')).appendChild(rowEl('スポット：'+sp.n,sp.eff))}}/* スポット */
+    {const t=SPOTJ.get(j);if(t){for(const I of SPOTI)if(t.has(I.sp.k)&&spotCells(I).includes(j))spotFx(I)}/* 家具をタップしたときも、そのスポットを点線でかこむ */if(t)for(const sp of SPOTS){if(!t.has(sp.k))continue;body.appendChild(el('<div class="rows"></div>')).appendChild(rowEl('スポット：'+sp.n,sp.eff))}}/* スポット */
     if(o==='table'){const h=roomOf(j);let n=0;if(h)for(const q of h.inside){const oo=S.obj[q];if(oo&&BL[oo]&&BL[oo].cat==='living')n+=BL[oo].dw||1}if(h)for(const oo of rugsIn(h.inside))n+=BL[oo].dw||1;const bon=h?DINEPT[Math.min(6,n)]:0;
       body.appendChild(el('<div class="rows"></div>')).appendChild(rowEl('ここで食べたときのパワー（いま）',h?'+'+bon+'（家の中の食卓 +1・ダイニング家具で +'+(DINEPT[Math.min(6,n)]-1)+(n/2<3?'。ダイニング家具をふやすと、まだふえる':'。いちばん多い')+'）':'家の外なので、ふえない（家の中に置くと +1、ダイニング家具でさらに +3 まで）'))}/* 食卓：いまのパワーのボーナス */
     if(BENCHES.has(o)){const ev=ENVG?Math.min(12,Math.max(ENVG[j]||0,ENVG[j+1]||0)):0;/* ベンチ：まわりのかざりで上がった回復 */
@@ -6147,7 +6155,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='819';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='820';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
