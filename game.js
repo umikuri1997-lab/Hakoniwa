@@ -4022,9 +4022,10 @@ function drawObj(c,id,x,y,i,g,now){
     const rung=(x1,y1,x2,y2)=>{c.strokeStyle=RD;c.lineWidth=2;c.beginPath();c.moveTo(x1,y1);c.lineTo(x2,y2);c.stroke();c.strokeStyle=bb?'#cfd683':'#cf9f66';c.lineWidth=1.1;c.beginPath();c.moveTo(x1,y1-.3);c.lineTo(x2,y2-.3);c.stroke()};
     const lad=(x1,x2,top,bot)=>{for(let yy=bot-4;yy>top+2;yy-=5)rung(x1+.5,yy,x2-.5,yy);rail(x1,top,x1,bot);rail(x2,top,x2,bot);if(bb)for(const xx of[x1,x2])for(let yy=bot-7;yy>top+1;yy-=10){c.fillStyle=RD;c.fillRect(xx-1.6,yy,3.2,1)}};/* まっすぐ立てたハシゴ（竹は節つき） */
     if(d<=0||ICON){const top=ICON?y+2:y-LIFT-1,bot=ICON?y+TS-3:y+2;if(!ICON){c.fillStyle='rgba(40,30,20,.16)';c.fillRect(x+10,top+2,15,bot-top-2)}/* がけにおちるかげ */lad(x+9,x+23,top,bot)}/* 正面：がけの正面だけ（下のマスにはみ出さない） */
-    else{const xa=d===1?x-3:x+5,xb=d===1?x+TS-5:x+TS+3,ya=y+9,yb=y+22;/* 横向き：上から見た形。低いマスから、となりの高い面のふちまで（ふちに3ドットかける）。レールは横、段はたて */
-      c.fillStyle='rgba(40,30,20,.16)';c.fillRect(xa+1,ya+2,xb-xa,yb-ya+2);/* かげ */
-      for(let xx=xa+4;xx<xb-2;xx+=5)rung(xx,ya,xx,yb);rail(xa,ya,xb,ya);rail(xa,yb,xb,yb);if(bb)for(const yy of[ya,yb])for(let xx=xa+6;xx<xb-2;xx+=10){c.fillStyle=RD;c.fillRect(xx,yy-1.6,1,3.2)}}/* 竹の節 */
+    else{const x0=d===1?x+.5:x+TS-4.5,ya=y+8,yb=y+24;/* 横向き：がけのよこに立てかけたハシゴを真上から見た形。ほぼ一本の線（はばの向きに、がけのふちにそって）。両はしがレールの頭 */
+      c.fillStyle='rgba(40,30,20,.18)';c.fillRect(d===1?x0+4:x0-1.5,ya+1,1.5,yb-ya);/* かげ */
+      c.fillStyle=RD;c.fillRect(x0,ya,4,yb-ya);c.fillStyle=RC;c.fillRect(x0+.6,ya+.6,2.8,yb-ya-1.2);c.fillStyle=RL;c.fillRect(x0+.6,ya+.6,1,yb-ya-1.2);/* いちばん上の段（上から見ると、この線だけ見える） */
+      for(const yy of[ya,yb-4]){c.fillStyle=RD;c.fillRect(x0-.5,yy,5,4);c.fillStyle=RC;c.fillRect(x0+.2,yy+.6,3.6,2.8);c.fillStyle=RL;c.fillRect(x0+.2,yy+.6,3.6,.8)}}/* レールの頭 */
     break}
   case'bridge':{/* 木の橋（仮の絵）：わたる向きに板をならべ、両がわに手すり */const wt=k=>k>=0&&k<W*H&&S.ground[k]===1&&S.obj[k]!=='bridge',hz=i==null||!S?true:(wt(i-W)||wt(i+W))&&!(wt(i-1)&&wt(i+1))||!(wt(i-W)||wt(i+W))&&!(wt(i-1)||wt(i+1));const D='#8a5f35',M='#b98a55',L='#d2a46c';
     c.fillStyle='rgba(20,40,60,.22)';if(hz)c.fillRect(x,y+24,TS,4);else c.fillRect(x+24,y,4,TS);
@@ -6200,7 +6201,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='830';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='831';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
