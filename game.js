@@ -128,7 +128,7 @@ const BL={
   stonegate:{sz:[2,1],name:'石の大門',fix:5,fixm:{stone:3},kind:'block',anim:1,brk:1,hp:35,hpS:40,cost:5,pc:10,time:90,maker:'earth',qty:1,lv:10,attr:{},mat:{stone:5},desc:'石柱で支える大きな柵の出入り口（じょうぶさ35）'},
   yozoradoor:{name:'よぞらのドア',fix:2,fixm:{wood:1},kind:'block',anim:1,hp:20,hpS:23,cost:2,pc:5,time:40,maker:'wood',qty:1,lv:1,attr:{},mat:{wood:3},kwr:1,desc:'窓のついたダークチェリーのドア（じょうぶさ20）'},/* コワイノのレシピ */
   door:{name:'ドア',fix:2,fixm:{wood:1},kind:'block',anim:1,hp:20,hpS:23,cost:2,pc:5,time:40,maker:'wood',qty:1,lv:3,attr:{},mat:{wood:2},desc:'壁にはめる出入り口（じょうぶさ20）'},
-  chair:{name:'いす',kind:'furn',lv:3,pc:1,time:60,maker:'wood',attr:{wood:1},mat:{wood:3},mat1:{bamboo:3},desc:'食卓のとなりに置く。ここで食べると、パワー+0.9。住み心地+4'},
+  chair:{name:'いす',kind:'furn',lv:3,pc:3,time:60,maker:'wood',attr:{wood:1},mat:{wood:3},mat1:{bamboo:3},desc:'食卓のとなりに置く。ここで食べると、パワー+0.9。住み心地+4'},
   takebench:{name:'竹のベンチ',sz:[2,1],kind:'furn',lv:3,pc:3,time:100,maker:'wood',attr:{wood:1},mat:{bamboo:6},desc:'2人すわれる。昼につかれたら、ここで休む（つかれ −20／1時間）。住み心地+5'},
   takeakari:{hp:5,brk:1,fix:2,fixm:{bamboo:2},name:'竹あかり',kind:'furn',cat:'light',lv:4,pc:4,time:90,maker:'fire',solid:1,anim:1,attr:{fire:1,wood:1},mat:{bamboo:4},desc:'まわり3.5マスを照らす。住み心地+5'},
   shishiodoshi:{hp:5,brk:1,fix:2,fixm:{bamboo:2,stone:1},name:'ししおどし',kind:'furn',cat:'env',lv:5,pc:6,time:110,maker:'water',solid:1,anim:1,attr:{water:1,wood:1},mat:{bamboo:5,stone:3},desc:'水でうごく竹のかざり。住み心地+6'},
@@ -1484,7 +1484,8 @@ function fishLoot(r){/* つり：魚でないときは、空き缶・枝・レ�
   const k=q<.6?'can':'eda';r.bubble=k==='can'?'🥫':'🪵';if(roomN(r)>0)addMat(r,k,1);else dropAt(r.x,r.y,'mat:'+k,1)}
 function weedMorning(){/* 毎朝：雑草12本（マップ全体。よみがえった土地は緑の草、荒れた土地は枯れた草）・きのこ（ときどき、木のそば）・枝（落とし物） */
   const st=WD===1?1:0,ok=k=>S.ground[k]===0&&!S.obj[k]&&!S.floor[k]&&!RFC.has(k)&&!RUGC.has(k);let n=S.obj.reduce((a,o)=>a+(WEEDS.has(o)?1:0),0),add=0;
-  for(let t=0;t<600&&add<12&&n<60;t++){const k=(Math.random()*W*H)|0;if(!ok(k))continue;S.obj[k]=Math.random()<.3?'weedc':'weed'+st+(REV.has(k)?'g':'k');add++;n++}/* 3本に1本くらいは、どの土地にも生えるふんばり草 *//* 毎朝12本、マップにのこる雑草は60本まで */
+  for(let t=0;t<600&&add<12&&n<60;t++){const k=(Math.random()*W*H)|0;if(!ok(k))continue;S.obj[k]=REV.has(k)&&Math.random()<.3?'weedc':'weed'+st+(REV.has(k)?'g':'k');add++;n++}/* よみがえった土地は、3本に1本くらいふんばり草（緑の草）。荒れた土地には、枯れた草だけ */
+  for(let j=0;j<W*H;j++)if(S.obj[j]==='weedc'&&!REV.has(j))S.obj[j]='weed'+st+'k';/* 荒れた土地のふんばり草は、枯れた草にする *//* 毎朝12本、マップにのこる雑草は60本まで */
   if(Math.random()<.5&&S.obj.reduce((a,o)=>a+(o==='kinoko'?1:0),0)<10){const T=[];S.obj.forEach((o,j)=>{if(o==='ntree'||o==='tree'||o==='deadtree'||o==='bamboo')T.push(j)});for(let t=0;t<30&&T.length;t++){const j=pick(T),c=[j-1,j+1,j-W,j+W].filter(ok);if(c.length){S.obj[pick(c)]='kinoko';break}}}/* きのこ：半分の日に1本（10本まで） */
   const ne=(S.drops||[]).filter(d=>d.id==='mat:eda').length;for(let i=0;i<4&&ne+i<15;i++){const x=(Math.random()*W)|0,y=(Math.random()*H)|0;if(ok(y*W+x))dropAt(x,y,'mat:eda',1)}/* 枝：毎日4本の落とし物（地面にのこるのは15本まで） */
 }
@@ -3398,7 +3399,7 @@ function drawWaterAll(c,X0=0,Y0=0,X1=W-1,Y1=H-1){
     const corners=(f,k,d=dc)=>{for(let y=Y0;y<=Y1+1;y++)for(let x=X0;x<=X1+1;x++){const b=(f(x-1,y-1)?1:0)|(f(x,y-1)?2:0)|(f(x-1,y)?4:0)|(f(x,y)?8:0);if(b)d(k+':'+b,x*TS,y*TS)}};
     {const L=(x,y)=>x>=0&&y>=0&&x<W&&y<H&&!isW0(x,y),h2=TS/2,cp=document.createElement('canvas');cp.width=c.canvas.width;cp.height=c.canvas.height;cp.getContext('2d').drawImage(c.canvas,0,0);const T=c.getTransform(),ox=T.e,oy=T.f;/* 地面を1回だけ写しておき、そこから鏡うつしにする（同じキャンバスから何百回も写すと、とても重い） */const mir=(sx,sy,sw,sh,dx,dy,fx,fy)=>{c.save();c.translate(dx+(fx?sw:0),dy+(fy?sh:0));c.scale(fx?-1:1,fy?-1:1);c.drawImage(cp,sx+ox,sy+oy,sw,sh,0,0,sw,sh);c.restore()};
      for(let y=Y0;y<=Y1;y++)for(let x=X0;x<=X1;x++){if(!isW0(x,y))continue;const px=x*TS,py=y*TS,l=L(x-1,y),rr=L(x+1,y),u=L(x,y-1),d=L(x,y+1);
-      if(l)mir(px-h2,py,h2,TS,px,py,1,0);if(rr)mir(px+TS,py,h2,TS,px+h2,py,1,0);if(u)mir(px,py-h2,TS,h2,px,py,0,1);if(d)mir(px,py+TS,TS,h2,px,py+h2,0,1);
+      if(l)mir(px-h2,py,h2,TS,px,py,1,0);if(rr)mir(px+TS,py,h2,TS,px+h2,py,1,0);if(u)mir(px,py-h2,TS,h2,px,py,0,1);if(d)mir(px,py+TS,TS,h2,px,py+h2,0,1);{const rd=k=>!!S.floor[k]&&ROADF.has(S.floor[k]),i=y*W+x;/* かどで、上下が道・左右が道でないときは、かどのうつしを左右の地面に（道のうつしが三角に出ないように） */if(l&&u&&rd(i-W)&&!rd(i-1))mir(px-h2,py,h2,h2,px,py,1,0);if(rr&&u&&rd(i-W)&&!rd(i+1))mir(px+TS,py,h2,h2,px+h2,py,1,0);if(l&&d&&rd(i+W)&&!rd(i-1))mir(px-h2,py+h2,h2,h2,px,py+h2,1,0);if(rr&&d&&rd(i+W)&&!rd(i+1))mir(px+TS,py+h2,h2,h2,px+h2,py+h2,1,0)}
       if(!l&&!u&&L(x-1,y-1))mir(px-h2,py-h2,h2,h2,px,py,1,1);if(!rr&&!u&&L(x+1,y-1))mir(px+TS,py-h2,h2,h2,px+h2,py,1,1);if(!l&&!d&&L(x-1,y+1))mir(px-h2,py+TS,h2,h2,px,py+h2,1,1);if(!rr&&!d&&L(x+1,y+1))mir(px+TS,py+TS,h2,h2,px+h2,py+h2,1,1)}cp.width=cp.height=0}/* 水のふちは水のマスの内がわにあるので、そのすき間には、となりの地面を鏡うつしにして続ける *//* 写しのキャンバスは、すぐ手ばなす（スマホのメモリのため） */
     if(!VW2){const t=document.createElement('canvas');t.width=c.canvas.width;t.height=c.canvas.height;const tc=t.getContext('2d');tc.setTransform(c.getTransform());const dm=(k,x,y)=>{const ch=C[k];if(ch)drawChip(tc,ch,'water',x,y,0)};corners(isW0,'waterm',dm);tc.globalCompositeOperation='source-in';const pt=tc.createPattern(chipImgs(C['tex:water'],'water')[0],'repeat');tc.fillStyle=pt;tc.fillRect(X0*TS,Y0*TS,(X1-X0+1)*TS,(Y1-Y0+1)*TS);c.save();c.setTransform(1,0,0,1,0,0);c.drawImage(t,0,0);c.restore();t.width=t.height=0}/* 水面：水の形（waterm）の中だけに、128×128の水のテクスチャをしきつめる */
     corners(isW0,VW2?'waterr':'water');
@@ -4193,7 +4194,8 @@ function groundChipsOK(){const C=window.CHIPS;return !!C&&GCH.every(k=>C[k]&&chi
 function drawGroundChips(sc,X0,Y0,X1,Y1){const inR=i=>{const x=i%W,y=(i/W)|0;return x>=X0&&x<=X1&&y>=Y0&&y<=Y1};const C=window.CHIPS,r=WD===1?'r':'',dc=(k,x,y,i)=>{const ch=C[k];if(ch)drawChip(sc,ch,'ground',x,y,0,i)};
   if(WD===0){const dt=chipImgs(C['tex:dry'],'ground')[0];for(let y=Y0;y<=Y1;y++)for(let x=X0;x<=X1;x++){const px=x*TS,py=y*TS;sc.drawImage(dt,px%288,py%288,TS,TS,px,py,TS,TS)}}/* 草原のあれ地：288×288のテクスチャを、マップの位置どおりにしきつめる */
   else for(let y=Y0;y<=Y1;y++)for(let x=X0;x<=X1;x++){const i=y*W+x;dc('ground'+r+'#'+((hash(i*7+1)*8)|0),x*TS,y*TS,i)}/* 火山のあれ地：8しゅるい */
-  const gt=chipImgs(C['tex:grass'],'ground')[0];for(const i of REV){if(!inR(i))continue;const x=i%W*TS,y=((i/W)|0)*TS;sc.drawImage(gt,x%96,y%96,TS,TS,x,y,TS,TS)}/* 草地：96×96のテクスチャを、マップの位置どおりにしきつめる */
+  const gt=chipImgs(C['tex:grass'],'ground')[0];for(const i of REV){if(!inR(i))continue;const x=i%W*TS,y=((i/W)|0)*TS;sc.drawImage(gt,x%96,y%96,TS,TS,x,y,TS,TS)}
+  for(let y=Y0;y<=Y1;y++)for(let x=X0;x<=X1;x++){const i=y*W+x;if(S.ground[i]>=1&&!REV.has(i))sc.drawImage(gt,(x*TS)%96,(y*TS)%96,TS,TS,x*TS,y*TS,TS,TS)}/* 水のマスの下も草地（水のふちは草なので、かどの丸みから荒れた地面がのぞかないように） *//* 草地：96×96のテクスチャを、マップの位置どおりにしきつめる */
   for(const i of REV){if(!inR(i))continue;const x=i%W*TS,y=((i/W)|0)*TS;for(const[dx,dy,side]of grassBoundaryEdges(i))dc('gedge'+r+':'+side+'#'+((hash(i*13+side)*4)|0),x,y,i);for(const[cx,cy]of grassBoundaryCorners(i))dc('gcorner'+r,cx,cy,i)}}/* 草とあれ地のさかい */
 function drawRug(c,id,x,y,i){const ch=chipOf(id,i);if(ch&&drawChip(c,ch,id,x,y,0,i))return;/* ドット絵のラグは、2×2マスの絵なので、そのままの大きさで */c.save();c.translate(x+32,y+32);c.scale(1.4,1.4);c.translate(-16,-20);drawObj(c,id,0,0,i);c.restore()}/* ラグ：2×2マスのまんなかに、2マスはばの大きさで */
 function drawRugsLive(x0,y0,x1,y1){for(const k in S.rug||{}){const j=+k,x=j%W,y=(j/W)|0;if(x+2<x0||y+2<y0||x>x1||y>y1)continue;drawRug(ctx,S.rug[k],x*TS,y*TS,j);for(const q of rugCells(j)){const o=S.obj[q];if(o&&o!=='part'&&BL[o]&&FLAT.has(o)&&!(BL[o].dyn||BL[o].anim||TREES.has(o)))drawObj(ctx,o,(q%W)*TS,((q/W)|0)*TS,q)}}}/* ラグは毎コマ、画面の細かさで描く（地面の下絵は1マス32ドットなので、64ドットの絵があらくなる）。ラグの上の平らな物も、ラグのあとに */
@@ -6108,7 +6110,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='814';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='815';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
