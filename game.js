@@ -3758,7 +3758,7 @@ function drawObj(c,id,x,y,i,g,now){
   if(id==='yorubed'&&!chipOf('yorubed',i)){drawObj(c,'bed',x,y,i,g,now);const v=i!=null&&S&&S.rot&&S.rot[i]%2===1;c.save();c.globalAlpha=.55;c.fillStyle='#2a3168';if(v)c.fillRect(x+6,y+8,20,-30<0?20:20);else c.fillRect(x+12,y+4,16,22);c.globalAlpha=1;c.fillStyle='#fff3b8';for(let n=0;n<4;n++)c.fillRect(x+(v?8:14)+hash((i||0)+n)*12,y+(v?10:6)+hash((i||0)*3+n)*16,1.5,1.5);c.restore();return}/* よぞらのベッド（仮の絵）：ふつうのベッドに夜空色のふとん */
   if(!c._chip&&id==='farm'&&drawFarmChip(c,x,y,i,g,now))return;/* 畑のドット絵 */
   if(!c._chip&&DOORCH.has(id)&&!(S&&S.win&&i!=null&&S.win[i]&&!c._win)&&drawDoorChip(c,id,x,y,i,now))return;/* ドア・門のドット絵（リースのあるドアは、リースの前にドアだけ） */
-  if(CONN[id]&&!c._chip&&!(HOME_WALLS.has(id)&&S&&S.win&&S.win[i]&&!c._win)){const gL=CONN[id]==='f'&&!ICON&&i!=null&&typeAt(i-1)==='gate';if(gL){c.save();c.beginPath();c.rect(x+3,y-64,96,160);c.clip()}/* 左が柵のドア：ドアの右の柱（このマスの左はし3ドット）にかぶる板を描かない */const ok=drawConn(c,id,x,y,i,now);if(gL)c.restore();if(ok){if(id==='wall')stoneFront(c,x,y,i);else if(HOME_WALLS.has(id)&&window.CHIPS[id+':ext'])wallFront(c,id,x,y,i);return}}/* つながる物は部品で（窓のある壁は、窓の前に壁だけ）。家の壁は、先に、となりの床を壁のふちまでのばす */
+  if(CONN[id]&&!c._chip&&!(HOME_WALLS.has(id)&&S&&S.win&&S.win[i]&&!c._win)){const gL=CONN[id]==='f'&&!ICON&&i!=null&&typeAt(i-1)==='gate';if(gL){c.save();c.beginPath();c.rect(x+2.2,y-64,96,160);c.clip()}/* 左が柵のドア：ドアの右の柱（このマスの左はし2.4ドット。すきまが出ないよう2.2から描く）にかぶる板を描かない（横木は柱のふちから） */const ok=drawConn(c,id,x,y,i,now);if(gL)c.restore();if(ok){if(id==='wall')stoneFront(c,x,y,i);else if(HOME_WALLS.has(id)&&window.CHIPS[id+':ext'])wallFront(c,id,x,y,i);return}}/* つながる物は部品で（窓のある壁は、窓の前に壁だけ）。家の壁は、先に、となりの床を壁のふちまでのばす */
   if(!c._chip&&PCH.has(id)){const ch=plantChip(id,i,g);if(ch&&drawChip(c,ch,id,x,y,now,i)){if(id==='berry'&&g>=100)berryOn(c,x,y);if(id==='statue'&&i!=null&&!ICON)for(const q of[i-1,i+1])if(S.obj[q]==='obox'||S.obj[q]==='board')drawObj(c,S.obj[q],x+(q-i)*TS,y,q,0,now);/* 女神像の横の箱・ボードを手前に */return}}
   if(!c._chip&&!c._win&&!SEATS.includes(id)&&!PCH.has(id)&&!DOORCH.has(id)&&id!=='farm'){const ch=chipOf(id,i);if(ch&&drawChip(c,ch,id,x,y,now,i))return}/* ドット絵があれば、それを使う（いすは、つりざおをかいてから下で） */
   if(BL[id]&&BL[id].cs&&!ICON&&!c._cs){const k=BL[id].cs;c.save();c.translate(x+16,y+20);c.scale(k,k);c.translate(-x-16,-y-20);c._cs=1;drawObj(c,id,x,y,i,g,now);c._cs=0;c.restore();return}/* ラグは、絵だけ大きく（判定はそのまま） */
@@ -6199,7 +6199,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='828';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='829';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
