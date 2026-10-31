@@ -4295,12 +4295,12 @@ let STATN=0,STDIRTY=null;/* STDIRTY：下絵の一部だけ描きなおしたと
     SSIG=sg;
     for(let m=true;m;){m=false;for(let a=0;a<R.length&&!m;a++)for(let b=a+1;b<R.length;b++){const p=R[a],q=R[b];if(p[0]<=q[2]+1&&q[0]<=p[2]+1&&p[1]<=q[3]+1&&q[1]<=p[3]+1){R[a]=[Math.min(p[0],q[0]),Math.min(p[1],q[1]),Math.max(p[2],q[2]),Math.max(p[3],q[3])];R.splice(b,1);m=true;break}}}/* かさなる四角は1つにまとめる */
     let area=0;for(const r of R)area+=(r[2]-r[0]+1)*(r[3]-r[1]+1);
-    if(area<W*H*.4){STDIRTY=R.map(r=>[r[0],r[1],r[2],r[3]]);for(const r of R){const D=[Math.max(0,r[0]-6),Math.max(0,r[1]-6),Math.min(W-1,r[2]+6),Math.min(H-1,r[3]+6)],cw=(D[2]-D[0]+1)*TS,ch=(D[3]-D[1]+1)*TS;/* まわり6マスもいっしょに描いて（となりの物のはみ出し・水のふち・壁のつながり）、まん中だけを使う */
+    if(area<W*H*.4){STDIRTY=R.map(r=>[r[0],r[1],r[2],r[3]]);waterDirty(R);for(const r of R){const D=[Math.max(0,r[0]-6),Math.max(0,r[1]-6),Math.min(W-1,r[2]+6),Math.min(H-1,r[3]+6)],cw=(D[2]-D[0]+1)*TS,ch=(D[3]-D[1]+1)*TS;/* まわり6マスもいっしょに描いて（となりの物のはみ出し・水のふち・壁のつながり）、まん中だけを使う */
         const t=STMP||(STMP=document.createElement('canvas'));if(t.width<cw||t.height<ch){t.width=Math.max(t.width,cw);t.height=Math.max(t.height,ch)}const tc=t.getContext('2d');tc.setTransform(1,0,0,1,0,0);tc.clearRect(0,0,cw,ch);tc.setTransform(1,0,0,1,-D[0]*TS,-D[1]*TS);
         drawStaticArea(tc,D[0],D[1],D[2],D[3]);tc.setTransform(1,0,0,1,0,0);
         const w=(r[2]-r[0]+1)*TS,h=(r[3]-r[1]+1)*TS;sc.clearRect(r[0]*TS,r[1]*TS,w,h);sc.drawImage(t,(r[0]-D[0])*TS,(r[1]-D[1])*TS,w,h,r[0]*TS,r[1]*TS,w,h)}
       if(STMP){STMP.width=STMP.height=0;STMP=null}/* 作業用のキャンバスは、すぐ手ばなす */dirty=false;return}}
-  SSIG=sg;SSIG_S=S;SSIG_G=g;drawStaticArea(sc,0,0,W-1,H-1);dirty=false;STATICFULL=false;
+  SSIG=sg;SSIG_S=S;SSIG_G=g;drawStaticArea(sc,0,0,W-1,H-1);waterDirty(null);dirty=false;STATICFULL=false;
 }
 const iconCache={};
 let ICONTMP=null;
@@ -5014,7 +5014,7 @@ function objectDepth(o,j){const y=(j/W)|0;if(FLAT.has(o)||LADDERS.has(o))return 
   const b=o==='site'&&S.dyn[j]&&BL[S.dyn[j].build]||BL[o];
   return y+(b&&b.sz?(o==='site'?b.sz[1]:szAt(o,j)[1]):1)+(o==='obox'?.01:0);
 }
-const WSH={k:'',ok:'',m:null,e:null,o:null,any:false};
+
 const FORDS={s:null,n:-1,glow:null,st:new Map()};/* 浅瀬の絵：砂の光（どのマスも同じ1まい）と、マスごとの小石の絵（1回だけ作っておく） */
 function fordStones(j){/* マス j の小石の絵（2倍の細かさ） */let c=FORDS.st.get(j);if(c)return c;c=document.createElement('canvas');c.width=c.height=64;const g=c.getContext('2d');g.scale(2,2);const n=4+((hash(j*3)*3)|0);
   for(let k=0;k<n;k++){const sx=4+hash(j*11+k)*24,sy=4+hash(j*17+k)*24,r=1.2+hash(j*23+k)*2.2;g.fillStyle='rgba(60,80,80,.18)';g.beginPath();g.ellipse(sx+.4,sy+.8,r,r*.7,0,0,7);g.fill();g.fillStyle=k%3?'#b4ab98':'#a39a88';g.beginPath();g.ellipse(sx,sy,r,r*.7,0,0,7);g.fill();g.fillStyle='rgba(255,252,240,.35)';g.beginPath();g.ellipse(sx-.4,sy-.4,r*.5,r*.28,0,0,7);g.fill()}/* 小さな石（大きさ・色がばらばら） */
@@ -5025,24 +5025,27 @@ function drawFords(x0,y0,x1,y1){/* 浅瀬（仮の絵）：水の底の砂がす
   for(let y=Math.max(0,y0-1);y<Math.min(H,y1+1);y++)for(let x=Math.max(0,x0-1);x<Math.min(W,x1+1);x++){if(S.ground[y*W+x]!==2)continue;ctx.drawImage(FORDS.glow,x*TS-6,y*TS-6,44,44)}
   for(let y=Math.max(0,y0);y<Math.min(H,y1);y++)for(let x=Math.max(0,x0);x<Math.min(W,x1);x++){const j=y*W+x;if(S.ground[j]!==2)continue;const px=x*TS,py=y*TS;ctx.drawImage(fordStones(j),px,py,TS,TS);
     ctx.strokeStyle='rgba(255,255,255,.45)';ctx.lineWidth=.8;for(let k=0;k<2;k++){const ph=((now/2600+hash(j*29+k))%1),sx=px+6+hash(j*31+k)*20,sy=py+8+k*12+ph*4;ctx.globalAlpha=Math.sin(ph*Math.PI);ctx.beginPath();ctx.moveTo(sx-4,sy);ctx.quadraticCurveTo(sx,sy-1.6,sx+4,sy);ctx.stroke()}ctx.globalAlpha=1}}/* 石のあいだを流れるさざなみ（動くので毎コマ） */
-function waterShimmer(now,x0,y0,x1,y1){/* 水面：見えている所の水の形（waterm）の中に、水のテクスチャ（tex:water）をしきつめて、ゆっくりスクロールさせる。その上に水のふち（water:1〜15）。
- 形とふちは、見えている所を8マスずつに広げた所で作り、画面がその外へ出たときだけ作りなおす。テクスチャをかさねるのは、テクスチャが1ドット動いたときだけ（1秒に6回）。
- ちぢめて見ているとき（拡大率0.6より小さい）は、半分の細かさで作り、テクスチャは動かさない（マップの広い所が見えて重いので） */
+const WCK={s:null,c:new Map(),pt:null};/* 水面の区画（16×16マス）：水ぎわの陸の地面と水のふちの絵（上にかさねる）と、水の模様をぬる所の形。区画の地面が変わったときだけ作りなおす */
+function waterDirty(R){if(!R){for(const q of WCK.c.values())if(q&&q.o)q.o.width=q.o.height=0;WCK.c.clear();return}for(const r of R)for(let cy=Math.max(0,(r[1]-1)>>4);cy<=Math.min((H-1)>>4,(r[3]+1)>>4);cy++)for(let cx=Math.max(0,(r[0]-1)>>4);cx<=Math.min((W-1)>>4,(r[2]+1)>>4);cx++){const k=cy*64+cx,q=WCK.c.get(k);if(q&&q.o)q.o.width=q.o.height=0;WCK.c.delete(k)}}/* 下絵がかわった所の区画を作りなおす（R がなければ、ぜんぶ） */
+function waterChunk(cx,cy){const k=cy*64+cx;if(WCK.c.has(k))return WCK.c.get(k);const C=window.CHIPS,X0=cx*16,Y0=cy*16,X1=Math.min(W,X0+16),Y1=Math.min(H,Y0+16),isW=(x,y)=>x>=0&&y>=0&&x<W&&y<H&&S.ground[y*W+x]>=1,near=(x,y)=>{for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++)if(isW(x+dx,y+dy))return true;return false};
+  const P=new Path2D();let any=false;for(let y=Y0;y<Y1;y++){let x=X0;while(x<X1){if(!near(x,y)){x++;continue}let e=x;while(e+1<X1&&near(e+1,y))e++;P.rect(x*TS,y*TS,(e-x+1)*TS,TS);any=true;x=e+1}}/* 水の模様をぬる所：水のマスと、そのまわり1マス */
+  if(!any){WCK.c.set(k,null);return null}
+  const w=(X1-X0)*TS,h=(Y1-Y0)*TS,put=(c,ch,x,y)=>{const src=ch.src||ch,i=chipImgs(src,'water')[0];if(!i.ok)return false;if(src.g===64)c.drawImage(i,x+src.ax/2,y+src.ay/2,src.w/2,src.h/2);else c.drawImage(i,x+src.ax,y+src.ay);return true};
+  const m=TMPC();m.width=w;m.height=h;const gm=m.getContext('2d');gm.translate(-X0*TS,-Y0*TS);const o=document.createElement('canvas');o.width=w;o.height=h;const g=o.getContext('2d');
+  for(let y=Y0-1;y<=Y1+1;y++)for(let x=X0-1;x<=X1+1;x++){const b=(isW(x-1,y-1)?1:0)|(isW(x,y-1)?2:0)|(isW(x-1,y)?4:0)|(isW(x,y)?8:0);if(!b)continue;const ch=C['waterm:'+b];if(ch)put(gm,ch,x*TS,y*TS)}
+  g.drawImage(stat,X0*TS,Y0*TS,w,h,0,0,w,h);g.globalCompositeOperation='destination-out';g.drawImage(m,0,0);g.globalCompositeOperation='source-over';g.translate(-X0*TS,-Y0*TS);/* 陸の地面（下絵）のうち、水でない所（区画ぜんぶ。水の模様をぬった所のふちの、うすい線もかくれる） */
+  for(let y=Y0-1;y<=Y1+1;y++)for(let x=X0-1;x<=X1+1;x++){const b=(isW(x-1,y-1)?1:0)|(isW(x,y-1)?2:0)|(isW(x-1,y)?4:0)|(isW(x,y)?8:0);if(!b)continue;const ce=C['water:'+b];if(ce)put(g,ce,x*TS,y*TS)}/* 水のふち */
+  m.width=m.height=0;const q={o,P};WCK.c.set(k,q);return q}
+function waterShimmer(now,x0,y0,x1,y1){/* 水面（ふつうのタイルのやり方）：水の模様（tex:water）を、水のマスとまわり1マスに、世界の座標でしきつめてぬる（ゆっくりスクロール）。その上に、区画ごとに作っておいた「水ぎわの陸の地面と水のふち」の絵をかさねる */
   if(WD===1||!waterChipsOK())return;const C=window.CHIPS,im=chipImgs(C['tex:water'],'water')[0];if(!im.ok)return;
-  x0=Math.max(0,Math.floor(x0/8)*8);y0=Math.max(0,Math.floor(y0/8)*8);x1=Math.min(W,Math.ceil(x1/8)*8);y1=Math.min(H,Math.ceil(y1/8)*8);
-  let K=cam.z<.6?.5:1;while(K>.25&&(x1-x0)*(y1-y0)*TS*TS*K*K>2e6)K/=2;/* 絵は200万ドットまで（大きな画面でマップ全体が見えるときは、もっとあらく） */
-  const w=Math.ceil((x1-x0)*TS*K),h=Math.ceil((y1-y0)*TS*K);if(w<=0||h<=0)return;
-  const k=x0+','+y0+','+x1+','+y1+','+K+','+STATN;
-  if(WSH.k!==k){WSH.k=k;WSH.ok='';const m=WSH.m||(WSH.m=document.createElement('canvas'));m.width=w;m.height=h;const g=m.getContext('2d');const e=WSH.e||(WSH.e=document.createElement('canvas'));e.width=w;e.height=h;const ge=e.getContext('2d');let any=false;
-    g.setTransform(K,0,0,K,0,0);ge.setTransform(K,0,0,K,0,0);g.imageSmoothingEnabled=ge.imageSmoothingEnabled=K<1;
-    const isW=(x,y)=>x>=0&&y>=0&&x<W&&y<H&&S.ground[y*W+x]>=1,put=(c,ch,x,y)=>{const src=ch.src||ch,i=chipImgs(src,'water')[0];if(!i.ok)return false;if(src.g===64)c.drawImage(i,x+src.ax/2,y+src.ay/2,src.w/2,src.h/2);else c.drawImage(i,x+src.ax,y+src.ay);return true};
-    for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++){const b=(isW(x-1,y-1)?1:0)|(isW(x,y-1)?2:0)|(isW(x-1,y)?4:0)|(isW(x,y)?8:0);if(!b)continue;const ch=C['waterm:'+b];if(ch&&put(g,ch,(x-x0)*TS,(y-y0)*TS))any=true;const ce=C['water:'+b];if(ce)put(ge,ce,(x-x0)*TS,(y-y0)*TS)}
-    WSH.any=any;const o=WSH.o||(WSH.o=document.createElement('canvas'));o.width=w;o.height=h}
-  if(!WSH.any)return;
-  const o=WSH.o,t=now/1000,sx=K<1?0:Math.floor(t*4)%128,sy=K<1?0:Math.floor(t*2)%128;/* 1秒に よこ4・たて2ドット（テクスチャの1ドットずつ動かす） */
-  if(WSH.ok!==sx+','+sy){WSH.ok=sx+','+sy;const g=o.getContext('2d');g.setTransform(1,0,0,1,0,0);g.globalCompositeOperation='copy';g.drawImage(WSH.m,0,0);g.globalCompositeOperation='source-in';
-    const pt=g.createPattern(im,'repeat');pt.setTransform(new DOMMatrix().scale(K).translate(-x0*TS+sx,-y0*TS+sy));g.fillStyle=pt;g.fillRect(0,0,w,h);g.globalCompositeOperation='source-over';g.drawImage(WSH.e,0,0)}
-  const sm=ctx.imageSmoothingEnabled;ctx.imageSmoothingEnabled=K<1;ctx.drawImage(o,x0*TS,y0*TS,w/K,h/K);ctx.imageSmoothingEnabled=sm}
+  if(WCK.s!==S){waterDirty(null);WCK.s=S;WCK.pt=null}
+  const t=now/1000,sx=Math.floor(t*4)%128,sy=Math.floor(t*2)%128;/* 1秒に よこ4・たて2ドット（テクスチャの1ドットずつ動かす） */
+  const qs=[];for(let cy=Math.max(0,(y0-1)>>4);cy<=Math.min((H-1)>>4,(y1+1)>>4);cy++)for(let cx=Math.max(0,(x0-1)>>4);cx<=Math.min((W-1)>>4,(x1+1)>>4);cx++){const q=waterChunk(cx,cy);if(q)qs.push([cx,cy,q])}
+  if(!qs.length)return;
+  const P=new Path2D();for(const[,,q]of qs)P.addPath(q.P);/* 見えている区画の形を1つにして、1回でぬる（区画のさかいに線が出ないように） */
+  const pt=WCK.pt||(WCK.pt=ctx.createPattern(im,'repeat'));pt.setTransform(new DOMMatrix().translate(sx,sy));ctx.fillStyle=pt;ctx.fill(P);
+  const kz=dpr*cam.z,SX=v=>cam.x+Math.round((v-cam.x)*kz)/kz,SY=v=>cam.y+Math.round((v-cam.y)*kz)/kz;
+  for(const[cx,cy,q]of qs){const a=SX(cx*16*TS),b=SY(cy*16*TS);ctx.drawImage(q.o,a,b,SX(cx*16*TS+q.o.width)-a,SY(cy*16*TS+q.o.height)-b)}}/* 区画の絵は、画面のドットのさかいに合わせておく */
 function sideClip(i,f){/* 低いマスの物が、となりの高いマスの上へはみ出さないように：となりのマスが高ければ、そのマスの高い面（上の面のてっぺんより下）には描かない */const x=i%W,y=(i/W)|0,h=hiAt(i),L=x>0&&hiAt(i-1)>h?hiAt(i-1):0,R=x<W-1&&hiAt(i+1)>h?hiAt(i+1):0;if(!L&&!R){f();return}
   ctx.save();ctx.beginPath();ctx.rect(x*TS-200,y*TS-400,TS+400,600);if(L)ctx.rect(x*TS-200,y*TS-L*LIFT,200,TS+L*LIFT+200);if(R)ctx.rect((x+1)*TS,y*TS-R*LIFT,200,TS+R*LIFT+200);ctx.clip('evenodd');f();ctx.restore()}
 function liftDraw(z,f){if(!z){f();return}ctx.save();ctx.translate(0,-z);f();ctx.restore()}
@@ -6271,7 +6274,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='854';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='855';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
