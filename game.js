@@ -5056,7 +5056,8 @@ function cliffTop(P,E,y,k,ext){ext=ext||.6;/* 高いマスの上の面の形：�
     So=st.filter(v=>v>=(BL?r:0)&&v<=TS-(BR?r:0)).reverse().map(v=>[px+v,yS(px+v)]),Wd=st.filter(v=>v>=(TL?r:0)&&v<=TS-(BL?r:0)).reverse().map(v=>[xW(y0+v),y0+v]);
   const side=[[N,U,TR,[xE(y0),yN(x1)]],[Ea,R,BR,[xE(y1),yS(x1)]],[So,D,BL,[xW(y1),yS(px)]],[Wd,L,TL,[xW(y0),yN(px)]]];
   P.moveTo(N[0][0],N[0][1]);
-  side.forEach(([pts,ex,rc,cp],n)=>{for(const p of pts)P.lineTo(p[0],p[1]);const nx=side[(n+1)%4][0][0];if(rc)P.quadraticCurveTo(cp[0],cp[1],nx[0],nx[1]);else P.lineTo(nx[0],nx[1]);
+  const inner=[!U&&!R&&!(y>0&&k<W-1&&topAt(j-W+1))?[x1,y0]:null,!R&&!D&&!(y<H-1&&k<W-1&&topAt(j+W+1))?[x1,y1]:null,!D&&!L&&!(y<H-1&&k>0&&topAt(j+W-1))?[px,y1]:null,!L&&!U&&!(y>0&&k>0&&topAt(j-W-1))?[px,y0]:null];/* 入隅（となり2つは高く、ななめが低い角）は、外へのばさず、角でまっすぐ折る（となりのマスのふちの帯をけずらないように） */
+  side.forEach(([pts,ex,rc,cp],n)=>{for(const p of pts)P.lineTo(p[0],p[1]);const nx=side[(n+1)%4][0][0];if(inner[n])P.lineTo(inner[n][0],inner[n][1]);if(rc)P.quadraticCurveTo(cp[0],cp[1],nx[0],nx[1]);else P.lineTo(nx[0],nx[1]);
     if(ex){E.moveTo(pts[0][0],pts[0][1]);for(const p of pts)E.lineTo(p[0],p[1]);if(rc)E.quadraticCurveTo(cp[0],cp[1],nx[0],nx[1])}});
   P.closePath()}
 const CGR=['#567935','#5f8240','#6a8f45','#76994b','#4f6f30'];/* 草のはみ出し：もらった段差の絵のふちの草の明るさの差を、ゲームの草の色にあてた色 */
@@ -6136,7 +6137,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='816';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='817';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
