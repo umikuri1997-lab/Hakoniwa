@@ -1868,7 +1868,7 @@ function tryJob(r,G,k){
     const fr=ripeAdj(['fruit']);j=roomN(r)>=1&&fRoom>=2?nearest(G,j=>fr(j)>=0):-1;if(j>=0){const q=fr(j);startAct(r,G,'harvest',j,{key:'o'+q,obj:q,food:1});return true}return false}
   case'offer':{if(OBOX<0||isNight()||r.fun<99||r.offDay===dayNo())return false;/* おそなえは1人1日1回まで *//* たのしさが満タンになったら、おそなえする */j=nearTile(G,OBOX);if(j>=0){startAct(r,G,'offer',j);return true}return false}
   case'gather':{if(S.food>=(r.elem==='earth'?25:12)||isNight()||roomN(r)<1)return false;const bb=ripeAdj(['berry','takenoko']);j=nearest(G,j=>bb(j)>=0);if(j>=0){const q=bb(j);startAct(r,G,'gather',j,{key:'o'+q,obj:q});return true}return false}
-  case'drop':if(!(S.drops&&S.drops.length)||isNight())return false;const noF=!S.res.some(x=>x.name===POKO&&!x.hidden);j=nearest(G,j=>S.drops.some(q=>q.y*W+q.x===j&&(q.id==='shard'||Math.hypot(q.x+.5-r.x,q.y+.5-r.y)<=(r.elem==='wind'?10:5))/* 落ちている物は、まわり5マス（風の子は10マス）に来て見つけたときにひろう（ヌシのかけらはべつ） */&&(q.id!=='shard'||r.name===POKO||noF)&&!(q.id.startsWith('food:')&&foodCap()-S.food<=0)&&!(q.id.startsWith('mat:')&&matCap()-matTot()<=0)&&!((q.id.startsWith('food:')||q.id.startsWith('mat:'))&&roomN(r)<1))&&free('d'+j,1),90);/* 食料箱がいっぱいのときは、食料のおとしものはひろわない */if(j>=0){startAct(r,G,'pickdrop',j,{key:'d'+j,obj:j});return true}return false;
+  case'drop':if(!(S.drops&&S.drops.length)||isNight())return false;const noF=!S.res.some(x=>x.name===POKO&&!x.hidden);j=nearest(G,j=>S.drops.some(q=>q.y*W+q.x===j&&(q.id==='shard'||q.lt||Math.hypot(q.x+.5-r.x,q.y+.5-r.y)<=(r.elem==='wind'?10:5))/* 落ちている物は、まわり5マス（風の子は10マス）に来て見つけたときにひろう（ヌシのかけらと、守り神の光でこわした物はべつ：どこでも、木を切る・石をほるより先にひろいに行く） */&&(q.id!=='shard'||r.name===POKO||noF)&&!(q.id.startsWith('food:')&&foodCap()-S.food<=0)&&!(q.id.startsWith('mat:')&&matCap()-matTot()<=0)&&!((q.id.startsWith('food:')||q.id.startsWith('mat:'))&&roomN(r)<1))&&free('d'+j,1),90);/* 食料箱がいっぱいのときは、食料のおとしものはひろわない */if(j>=0){startAct(r,G,'pickdrop',j,{key:'d'+j,obj:j});return true}return false;
   case'otaki':{if(isNight()||STATUE<0)return false;if(r.otaki){j=nearest(G,j=>adjOf(j,k=>k===STATUE||k===STATUE+W)>=0,300);if(j>=0){startAct(r,G,'otaki',j,{});return true}return false}
     if(!S.otakiQ||!Object.keys(S.otakiQ).length||S.res.some(q=>q!==r&&q.act&&q.act.type==='otakiget'))return false;j=nearest(G,j=>adjOf(j,k=>storageAt(k,'mat'))>=0,200);if(j>=0){startAct(r,G,'otakiget',j,{});return true}return false}/* おたきあげ：素材箱から素材をとって、神殿へ */
   case'weed':{if(isNight()||matTot()+matN(r)>=matCap()||roomN(r)<1)return false;j=nearest(G,j=>WEEDS.has(S.obj[j])&&free('o'+j,1),r.elem==='wind'?120:60);if(j>=0){startAct(r,G,'weed',j,{key:'o'+j,obj:j});return true}return false}
@@ -1881,6 +1881,7 @@ const ALLJOB=['harvest','sow','offer','gather'];
 const IDLE_ACTS=['fish','play','wander','idle'];
 // 種まき・植える・依頼・建築があるか（いつもの作業を中断してでも向かう仕事）
 function hasHighWork(r){
+  if(!isNight()&&!(r.act&&r.act.type==='pickdrop')&&(S.drops||[]).some(q=>q.lt&&free('d'+(q.y*W+q.x),1))&&matCap()-matTot()>0)return true;/* 守り神がこわした物があれば、いまの作業をやめてひろいに行く */
   if(S.food<6&&foodCap()>0&&!(r.act&&(r.act.type==='gather'||r.act.type==='harvest'))){const bb=ripeAdj(['berry']);if(S.obj.some((o,j)=>(o==='farm'&&S.dyn[j]&&S.dyn[j].g>=100&&free('o'+j,1))||((o==='berry'||o==='takenoko')&&S.dyn[j]&&S.dyn[j].g>=100&&free('o'+j,1))))return true}
   if(canJob(r,'build')&&S.obj.some((o,j)=>o==='site'&&free('o'+j,2)))return true;
   if(!isNight()&&canJob(r,'repair')&&S.obj.some((o,q)=>o&&BL[o]&&(breakable(o)&&(S.hp[q]??BL[o].hp)<BL[o].hp||DEFS.has(o)&&S.hp[q]!=null||burnt(q))&&free('o'+q,1)||!o&&canRebuild(q)))return true;/* こわれた所があれば、木を切るより先に直す */
@@ -1917,6 +1918,7 @@ function goWork(r,G,nw){
   // 花や木の苗は、空腹などの急ぎの用事を除いて、ほかの仕事より先に植える
   if(tryJob(r,G,'plant'))return true;
   if(tryJob(r,G,'otaki'))return true;
+  if((S.drops||[]).some(q=>q.lt)&&tryJob(r,G,'drop'))return true;/* 守り神の光でこわした物（落ちた木材・石材）は、おつげ・木を切る・石をほるより先にひろう */
   if(S.oracle&&ORACLE[S.oracle])for(const k of ORACLE[S.oracle].jobs)if(tryJob(r,G,k))return true;
   // 建てる・家具づくりがいちばん先。そのつぎに得意な仕事をする
   for(const k of['build','craft',...(SPEC[r.elem]||[])])if(tryJob(r,G,k))return true;
@@ -3434,7 +3436,8 @@ function wallMarg(c,i,x,y){const isW=k=>HOME_WALLS.has(typeAt(k))||HOME_DOORS.ha
       for(const sh of [false,true]){const D=dirs.filter(d=>HOME_WALLS.has(typeAt(i+d[0]-W))===sh);if(!D.length)continue;c.save();c.beginPath();for(const d of D)c.rect(x+d[1],y+d[2],d[3],d[4]);c.clip();c._shU=sh;drawFloor(c,S.floor[i+D[0][0]],x,y,i,true);c._shU=null;c.restore()}}/* となりの床マスの上が壁なら、床と同じ「壁の下のかげ」も、壁の下までつなげる */
 }
 // 道は、同じ種類どうしだけつながる（ちがう種類の道は、べつの道としてふちをかく）。マップのはし・水とはつながらない
-function roadLinks(i,iso){const gx=i%W,gy=(i/W)|0,me=S.floor[i],has=(x,y)=>!iso&&x>=0&&y>=0&&x<W&&y<H&&S.ground[y*W+x]!==1&&ROADF.has(me)&&(S.floor[y*W+x]===me||slopeFrom(y*W+x)===i);return {L:has(gx-1,gy),R:has(gx+1,gy),U:has(gx,gy-1),D:has(gx,gy+1)}}
+function roadLinks(i,iso){const gx=i%W,gy=(i/W)|0,me=S.floor[i],has=(x,y)=>!iso&&x>=0&&y>=0&&x<W&&y<H&&S.ground[y*W+x]!==1&&ROADF.has(me)&&(S.floor[y*W+x]===me||slopeFrom(y*W+x)===i||slopeExit(y*W+x)===i&&S.floor[slopeFrom(y*W+x)]===me);return {L:has(gx-1,gy),R:has(gx+1,gy),U:has(gx,gy-1),D:has(gx,gy+1)}}
+function slopeExit(k){/* k が坂の低いほうのはしのマスなら、坂をおりた先のマス。ちがえば -1（おりた先の道も、坂へつづける） */const a=stairOf(k);if(a<0||!SLOPES.has(S.obj[a]))return -1;const d=stairDir(a);if(d<0)return -1;const lo=d===0?a:stairOut(a,d);return k===lo?lo+SDIR[d][1]*W+SDIR[d][0]:-1}
 function slopeFrom(k){/* k が坂（のマス）なら、その坂をのぼった先の高いマス。ちがえば -1（のぼった先の道は、坂へつづける） */const a=stairOf(k);if(a<0||!SLOPES.has(S.obj[a]))return -1;const d=stairDir(a);return d<0?-1:stairTop(a,d)}
 function roadCorners(i,iso){const gx=i%W,gy=(i/W)|0,q=roadLinks(i,iso),has=(dx,dy)=>!iso&&gx+dx>=0&&gy+dy>=0&&gx+dx<W&&gy+dy<H&&S.ground[i+dy*W+dx]!==1&&S.floor[i+dy*W+dx]===S.floor[i];return [q.L&&q.U&&!has(-1,-1),q.R&&q.U&&!has(1,-1),q.R&&q.D&&!has(1,1),q.L&&q.D&&!has(-1,1)]}
 function roadInnerEdges(c,id,x,y,i,iso){if(id==='path'||id==='gravel'||id==='woodpath')return;const colors={path:['#bb925e','#d4b07a'],gravel:['#938775','#c2b7a1'],stone:['#817d73','#c0bdb4'],brick:['#956353','#d8a784']},p=colors[id],corners=roadCorners(i,iso);for(let k=0;k<4;k++){if(!corners[k])continue;c.save();c.translate(x+(k===1||k===2?TS:0),y+(k>=2?TS:0));c.rotate(k*Math.PI/2);const band=(outer,inner)=>{c.beginPath();c.arc(0,0,outer,0,Math.PI/2);c.lineTo(0,inner);c.arc(0,0,inner,Math.PI/2,0,true);c.closePath();c.fill()};c.fillStyle=p[0];band(9,0);c.fillStyle=p[1];band(8,2);c.restore()}}
@@ -3678,7 +3681,7 @@ function drawChip(c,ch,id,x,y,now,i){const src=ch.src||ch,g64=src.g===64,ims=chi
   if(sv)c.restore();c.imageSmoothingEnabled=sm;return true}
 if(window.CHIPS)for(const k in window.CHIPS){const ch=window.CHIPS[k],id=k.split(/[@>:]/)[0];chipImgs(ch,id);for(const p of ch.parts||[])partImg(p,id)}/* 動く部品（ブランコの座面など）も *//* はじめに読みこんでおく */
 const CONN={fence:'f',logfence:'f',bamboofence:'f',wall:'w',hwall:'h',logwall:'h',plasterwall:'h',brickwall:'h',yozorawall:'h'},CONNR={'fence':'HV','logfence':'HV','bamboofence':'VH','wall':'HV','hwall':'HV','logwall':'HV','plasterwall':'HV','brickwall':'HV'};/* つながる物：横の部品（H0 柱・HL・HR・HLR 横板）と縦の部品（VU・VD・VUD 縦板）を、となりのつながりで組み合わせる。CONNR：角で横と縦を重ねる順 */
-function connMask(id,i){if(ICON)return 3;/* アイコンは、左右につながった形で見せる */if(i==null||!S)return 0;const t=CONN[id];let f;if(t==='f')f=k=>FENCE_IDS.has(typeAt(k));else if(t==='w')f=k=>{const o=typeAt(k);return o==='wall'||o==='stonegate'};else f=k=>{const o=typeAt(k);return o!=='wall'&&o!=='sdoor'&&(HOME_WALLS.has(o)||HOME_DOORS.has(o))};return (f(i-1)?1:0)|(f(i+1)?2:0)|(f(i-W)?4:0)|(f(i+W)?8:0)}/* 石の塀は、石の塀のドアのとなりでは終わる */
+function connMask(id,i){if(ICON)return 3;/* アイコンは、左右につながった形で見せる */if(i==null||!S)return 0;const t=CONN[id];let f;if(t==='f')f=k=>FENCE_IDS.has(typeAt(k));else if(t==='w')f=k=>{const o=typeAt(k);return o==='wall'||o==='stonegate'};else f=(k,v)=>{const o=typeAt(k);return o!=='wall'&&o!=='sdoor'&&(HOME_WALLS.has(o)||!v&&HOME_DOORS.has(o))};/* 上下のドア（たて置きのドア）とはつながらない：ドアの上下の壁には、はしの柱を立てる */return (f(i-1)?1:0)|(f(i+1)?2:0)|(f(i-W,1)?4:0)|(f(i+W,1)?8:0)}/* 石の塀は、石の塀のドアのとなりでは終わる */
 const FRAIL={fence:16.5,logfence:13.5,bamboofence:15.5};/* 柵の上の横木のてっぺん（マスの上から。たての帯をここから柱にかぶせる） */
 function drawConn(c,id,x,y,i,now){const C=window.CHIPS;if(!C)return false;const inn=!ICON&&i!=null&&HOME_WALLS.has(id)&&HOUSES.some(h=>h.inside.has(i+W)||h.inside.has(i+W-1)||h.inside.has(i+W+1)),K=k=>(inn&&C[k+'~in'])||C[k]/* 下かななめ下が家の中なら、かげのうすい絵（家の角も） */,m=connMask(id,i),hm=m&3,vm=m&12,H=K(id+':'+['H0','HL','HR','HLR'][hm]),V=vm?K(id+':'+{4:'VU',8:'VD',12:'VUD'}[vm]):null;if(!H||vm&&!V)return false;
   if(id==='wall'&&!vm&&!ICON){const dl=!(hm&1)&&typeAt(i-1)==='sdoor',dr=!(hm&2)&&typeAt(i+1)==='sdoor';if(dl||dr){const H2=C['wall:'+['H0','HL','HR','HLR'][hm|(dl?1:0)|(dr?2:0)]];if(!H2||!drawChip(c,H2,id,x,y,now,i))return false;return true}}/* となりが石の塀のドア：塀はマスのはしまでのばす（ドアにつける柱は stoneFront でかく） */
@@ -5027,9 +5030,9 @@ function drawStairObj0(c,a){/* 階段（仮の絵）：段差の下の低い地�
       const x0=lat?Math.min(xi,xo):ax,x1=lat?Math.max(xi,xo):ax+TS,y0=d===0?ay-LIFT:d===2?ay-TS:ay-LIFT,y1=d===0?ay+TS:d===2?ay+TS-LIFT:ay+TS-LIFT;/* 坂の面（横向きは、ななめの面をまっすぐにのばした形で） */
       const sideF=lat?[free([a-W,o-W]),free([a+W,o+W])]:d===0?[free([a-1]),free([a+1])]:[free([a-1,o-1]),free([a+1,o+1])];
       c.save();if(lat)c.transform(1,k,0,1,0,-k*xi);c.beginPath();c.rect(x0,y0,x1-x0,y1-y0);c.clip();
-      if(rd){const ch=C[rd+(lat?':3':':12')];if(ch){const half=(s1,dx,dy)=>{c.save();c.beginPath();if(lat)c.rect(x0,s1?y0+TS/2:y0,x1-x0,TS/2);else c.rect(s1?x0+TS/2:x0,y0,TS/2,y1-y0);c.clip();c.translate(dx,dy);if(lat)for(let x=x0-TS;x<x1+TS;x+=TS)drawChip(c,ch,rd,x,y0,0);else for(let y=y0-TS;y<y1;y+=TS)drawChip(c,ch,rd,x0,y,0);c.restore()};if(lat){half(0,0,2);half(1,0,-2)}else{half(0,2,0);half(1,-2,0)}}}/* へりは、道と同じく、ふちから2ドット内がわ *//* へりの石・レンガ（よこ向きは上下、たて向きは左右） */
+      if(rd){const ch=C[rd+(lat?':3':':12')];if(ch){c.save();c.beginPath();if(lat)c.rect(x0,y0+2,x1-x0,y1-y0-4);else c.rect(x0+2,y0,x1-x0-4,y1-y0);c.clip();if(lat)for(let x=x0-TS;x<x1+TS;x+=TS)drawChip(c,ch,rd,x,y0,0);else for(let y=y0-TS;y<y1;y+=TS)drawChip(c,ch,rd,x0,y,0);c.restore()}}/* へりは、道と同じ位置のまま、外の2ドットを切る（道も、つながっていないがわは2ドット内がわで切ってある） *//* へりの石・レンガ（よこ向きは上下、たて向きは左右） */
       else{const col=gr?'rgba(92,134,58,.5)':'rgba(110,78,46,.26)',B=2.2,ed=lat?[[x0,y0,x1-x0,B,0,1],[x0,y1-B,x1-x0,B,0,-1]]:[[x0,y0,B,y1-y0,1,0],[x1-B,y0,B,y1-y0,-1,0]];
-        ed.forEach(([x,y,w,h,dx,dy],n)=>{if(!sideF[n])return;c.fillStyle=col;c.fillRect(x,y,w,h);const g=dx?c.createLinearGradient(dx>0?x+B:x,0,dx>0?x+B+6:x-6,0):c.createLinearGradient(0,dy>0?y+B:y,0,dy>0?y+B+6:y-6);g.addColorStop(0,'rgba(45,35,20,.14)');g.addColorStop(1,'rgba(45,35,20,0)');c.fillStyle=g;if(dx)c.fillRect(dx>0?x+B:x-6,y,6,h);else c.fillRect(x,dy>0?y+B:y-6,w,6)})}
+        ed.forEach(([x,y,w,h,dx,dy],n)=>{if(!sideF[n])return;c.fillStyle=col;c.fillRect(x,y,w,h);const g=dx?c.createLinearGradient(dx>0?x+B:x,0,dx>0?x+B+3:x-3,0):c.createLinearGradient(0,dy>0?y+B:y,0,dy>0?y+B+3:y-3);g.addColorStop(0,'rgba(45,35,20,.14)');g.addColorStop(1,'rgba(45,35,20,0)');c.fillStyle=g;if(dx)c.fillRect(dx>0?x+B:x-3,y,3,h);else c.fillRect(x,dy>0?y+B:y-3,w,3)})}/* 内がわのかげは3ドットでぼかす */
       c.restore();
       if(gr&&!rd){c.save();if(lat)c.transform(1,k,0,1,0,-k*xi);const hz=n=>hash(a*977+n*131),bl=(x,yy,dx,dy,n)=>{const len=1+hz(n)*1.6,w=.9+hz(n+90)*.8;c.fillStyle=CGR[(hz(n+7)*CGR.length)|0];c.beginPath();c.moveTo(x-dy*w,yy-dx*w);c.lineTo(x+dy*w,yy+dx*w);c.lineTo(x+dx*len,yy+dy*len);c.closePath();c.fill()};
         if(lat){if(sideF[0])for(let v=.8;v<x1-x0;v+=1.3)bl(x0+v,y0+.6,0,-1,(v*10)|0);if(sideF[1])for(let v=.8;v<x1-x0;v+=1.3)bl(x0+v,y1-.6,0,1,((v*10)|0)+1000)}
@@ -5128,7 +5131,7 @@ function render(now){
       ctx.fillStyle='rgba(255,240,170,'+(.18+tw*.2)+')';ctx.beginPath();ctx.arc(cx,fy,13+tw*3,0,7);ctx.fill();
       ctx.fillStyle='#ffe58a';ctx.beginPath();ctx.moveTo(cx,fy-11);ctx.lineTo(cx+7,fy-1);ctx.lineTo(cx,fy+10);ctx.lineTo(cx-7,fy-1);ctx.closePath();ctx.fill();
       ctx.fillStyle='#fff8d8';ctx.beginPath();ctx.moveTo(cx,fy-11);ctx.lineTo(cx+3,fy-1);ctx.lineTo(cx,fy+10);ctx.lineTo(cx-2,fy-1);ctx.closePath();ctx.fill();continue}
-    if(d.lt){const im=hudIc(d.id==='mat:wood'?'woodN':d.id==='mat:bamboo'?'bambooN':'stoneN'),ih=20;let ix=cx,iy=cy,sh=1,rot=0;const fx0=DROPFX.get(d);if(fx0){const e=(now-fx0.t0)/700;if(e>=1)DROPFX.delete(d);else{/* とびだして弧をえがき、地面で小さくはねる */const f=Math.min(1,e/.7),hop=e<.7?Math.sin(f*Math.PI)*26:Math.sin((e-.7)/.3*Math.PI)*5;ix=fx0.sx+(cx-fx0.sx)*f;iy=fx0.sy+(cy-fx0.sy)*f-hop;sh=.5+.5*f;rot=(1-f)*Math.PI*1.5}}
+    if(d.lt){const im=hudIc('matN'),ih=20;let ix=cx,iy=cy,sh=1,rot=0;const fx0=DROPFX.get(d);if(fx0){const e=(now-fx0.t0)/700;if(e>=1)DROPFX.delete(d);else{/* とびだして弧をえがき、地面で小さくはねる */const f=Math.min(1,e/.7),hop=e<.7?Math.sin(f*Math.PI)*26:Math.sin((e-.7)/.3*Math.PI)*5;ix=fx0.sx+(cx-fx0.sx)*f;iy=fx0.sy+(cy-fx0.sy)*f-hop;sh=.5+.5*f;rot=(1-f)*Math.PI*1.5}}
       ctx.fillStyle='rgba(40,25,10,'+(.18*sh)+')';ctx.beginPath();ctx.ellipse(ix,cy+6,9*sh,2.7*sh,0,0,7);ctx.fill();if(im&&im.complete&&im.naturalWidth){const iw=ih*im.naturalWidth/im.naturalHeight;if(rot){ctx.save();ctx.translate(ix,iy-1);ctx.rotate(rot);ctx.drawImage(im,Math.round(-iw/2),Math.round(-ih/2),iw,ih);ctx.restore()}else ctx.drawImage(im,Math.round(ix-iw/2),Math.round(iy-ih/2-1),iw,ih)}continue}/* 守りの光で落とした木材・石材：上の木材・石材と同じアイコン */
     if(d.id==='sand'){const ch=window.CHIPS&&CHIPS.sand;if(ch&&drawChip(ctx,ch,'sand',d.x*TS,d.y*TS,now))continue}/* やすらぎの砂：もらった絵 */
     /* 小さなふくろ */
@@ -5495,8 +5498,8 @@ function toast(msg,kind){if(kind==='good')sfx('good');else if(kind==='warn')sfx(
 const FEATS={inv:'#dockInv',build:'[data-mode="build"]',remove:'[data-mode="remove"]',craft:'[data-sheet="craft"]',people:'[data-sheet="people"]'};
 function applyFeats(){
   if(S.glassT==null&&glassUnlocked())S.glassT=600;/* はじめの10分は無料 */$('#speedBtn').hidden=!(glassUnlocked()||TESTSPD||TESTM);if(!(hasGlass()||TESTM))S.speed=1;if(!TESTM&&S.speed>2)S.speed=1;glassUI();
-  for(const k in FEATS)document.querySelector(k==='inv'?FEATS[k]:'#dock '+FEATS[k]).hidden=!S.feat[k]||k==='craft'||k==='inv';/* 依頼は依頼ボードから。おそなえ箱は神殿のおそなえ箱をタップ */
-  document.querySelector('#dock [data-mode="bulk"]').hidden=!(S.bulk||S.stamps||S.swap||S.mover);/* おそなえ箱のボタン */
+  for(const k in FEATS)document.querySelector(k==='inv'?FEATS[k]:'#dock '+FEATS[k]).hidden=!S.feat[k]||k==='craft';/* 依頼は依頼ボードから。おそなえ箱は下のバーにも出す */
+  document.querySelector('#dock [data-mode="bulk"]').hidden=true;/* 道具は「おく」の中からえらぶ（下のバーには出さない） *//* おそなえ箱のボタン */
   const n=[...document.querySelectorAll('#dock button')].filter(b=>!b.hidden).length;
   $('#dock').style.gridTemplateColumns='repeat('+n+',1fr)';
 }
@@ -5504,7 +5507,7 @@ let palOpen=false;/* 「おく」をおすと、アイテム欄が大きくひ�
 function setMode(m){
   mode=m;palOpen=m==='build'||m==='bulk';pending=null;selRect=null;$('#confirm').hidden=true;
   if(S&&STATUE<0&&m==='build'&&usable('statue'))sel='statue';else if(sel==='statue'&&STATUE>=0)sel='farm';
-  document.querySelectorAll('#dock [data-mode]').forEach(b=>b.classList.toggle('on',b.dataset.mode===m));
+  document.querySelectorAll('#dock [data-mode]').forEach(b=>b.classList.toggle('on',b.dataset.mode===(m==='bulk'?'build':m)));/* 道具を使っているあいだは「おく」を光らせる */
   $('#palette').hidden=!(m==='build'||m==='bulk');renderPalette();
 }
 function chip(img,name,cost,cls,onClick,mat){
@@ -5547,6 +5550,11 @@ function renderPalette(){
     if(S.swap){lbl(box,'つけかえ');for(const id of SWAPG.flat().filter(id=>S.unlocked[id])){const k='swap:'+id;box.appendChild(chip(iconURL(id),BL[id].name,'×'+inv(id),selStamp===k?'sel':'',()=>{selStamp=k;palOpen=false;renderPalette();toast('つけかえたい物をタップ')}))}}/* つけかえトンカチ：つながっている柵・塀・家の壁・道・床を、えらんだ種類にまとめてかえる */
     if(!S.bulk)return/* ハケがなければ、ぬるブロック・種は出さない */
   }
+  if(mode==='build'&&(S.bulk||S.stamps||S.swap||S.mover)){lbl(box,'どうぐ');/* 道具は「おく」の中でえらぶ */
+    if(S.mover)box.appendChild(chip(toolIcon('mover'),'ひっこしミトン','うつす','wide',()=>{sfx('tap');setMode('bulk');selStamp='move';MOVESRC=null;palOpen=false;renderPalette();toast('うつしたい家具・建物をタップ')}));
+    if(S.bulk)box.appendChild(chip(toolIcon('hake'),'ひろびろハケ','まとめてぬる','wide',()=>{sfx('tap');setMode('bulk');selStamp=null;toast('ぬりたいブロックや種をえらんで、指でなぞろう')}));
+    if(S.stamps)box.appendChild(chip(toolIcon('stamp'),'かたどりスタンプ','スタンプ','wide',()=>{sfx('tap');setMode('bulk');selStamp=null}));
+    if(S.swap)box.appendChild(chip(toolIcon('swap'),'つけかえトンカチ','つけかえ','wide',()=>{sfx('tap');setMode('bulk');selStamp=null}))}
   const blocks=STATUE<0?[]:BLOCKS.filter(id=>inv(id)>0&&!(mode==='bulk'&&WALLD.has(id)));
   if(mode==='bulk'&&STATUE>=0&&inv('spike')>0)blocks.push('spike');/* とげの罠も、なぞってまとめて置ける */
   if(blocks.length){lbl(box,'ブロック');for(const id of blocks){const n=inv(id);box.appendChild(chip(iconURL(id),BL[id].name,'×'+n,(n?'':'zero')+(sel===id&&!selStamp?' sel':''),pickItem(id)))}}
@@ -6058,7 +6066,7 @@ function updHUD(){
   {const gs=$('#guardStatus'),night=isNight()||!!(S.flags&&S.flags.lightTold);gs.hidden=!night;if(LIGHTARM&&(LIGHTCD>0||S.pt<1))LIGHTARM=false;gs.classList.toggle('armed',LIGHTARM);if(night){const gc=gs.querySelector('.gc');let p=1;if(LIGHTCD>0)p=1-LIGHTCD/(LIGHTCDL[S.lv]||10);else if(S.pt<1)p=0;gc.style.setProperty('--gp',(p*360)+'deg')}}
   {const ab=$('#areaBtn'),on=!!(S.flags&&S.flags.areaSkill)&&isNight();ab.hidden=!on;if(on){let p=1;if(AREACD>0)p=1-AREACD/5;else if(S.pt<3)p=0;if(AREAARM&&(AREACD>0||S.pt<3))AREAARM=false;ab.querySelector('.gc').style.setProperty('--gp',(p*360)+'deg');ab.classList.toggle('armed',AREAARM)}else AREAARM=false}
   const L=S.lv,a=LV_XP[L-1],b=L>=maxLv()?a:LV_XP[L]??a;$('#lvLbl').textContent=L;$('#xpBar').style.width=(b>a?clamp((S.totalPt-a)/(b-a),0,1)*100:100)+'%';$('#xpTxt').textContent=b>a?Math.floor(S.totalPt-a)+' / '+(b-a):'MAX';
-  $('#pt').textContent=S.pt;$('#food').textContent=S.food;$('#woodN').textContent=S.mat.wood||0;$('#stoneN').textContent=S.mat.stone||0;{const bn=$('#bambooN'),bi=$('#bambooIc'),on=bambooOn();if(bn){bn.textContent=S.mat.bamboo||0;bn.hidden=!on;bi.hidden=!on;if(!bi.src)bi.src=ICONS.bamboo}}{const fc=foodCap(),mc=matCap(),fb=$('#foodBar'),mb=$('#matBar');fb.style.width=(fc?Math.min(100,S.food/fc*100):0)+'%';fb.style.background=fc&&S.food>=fc?'#d9a441':'';mb.style.width=(mc?Math.min(100,matTot()/mc*100):0)+'%';mb.style.background=mc&&matTot()>=mc?'#d9a441':'#c9a46a'}$('#resN').textContent=S.res.length;if(!$('#resIc').src)$('#resIc').src=spiritPort('wood',48,null);$('#revLbl').textContent='みどり '+GRASSN;
+  $('#pt').textContent=S.pt;$('#food').textContent=S.food;$('#woodN').textContent=S.mat.wood||0;$('#matN').textContent=matTot();{const mi=$('#matIc');if(mi&&!mi.dataset.ok){const u=iconURL('mbox');if(u){mi.src=u;mi.dataset.ok=1}}}/* 素材は種類が多いので、上には総量だけ */$('#stoneN').textContent=S.mat.stone||0;{const bn=$('#bambooN'),bi=$('#bambooIc'),on=bambooOn();if(bn){bn.textContent=S.mat.bamboo||0;bn.hidden=!on;bi.hidden=!on;if(!bi.src)bi.src=ICONS.bamboo}}{const fc=foodCap(),mc=matCap(),fb=$('#foodBar'),mb=$('#matBar');fb.style.width=(fc?Math.min(100,S.food/fc*100):0)+'%';fb.style.background=fc&&S.food>=fc?'#d9a441':'';mb.style.width=(mc?Math.min(100,matTot()/mc*100):0)+'%';mb.style.background=mc&&matTot()>=mc?'#d9a441':'#c9a46a'}$('#resN').textContent=S.res.length;if(!$('#resIc').src)$('#resIc').src=spiritPort('wood',48,null);$('#revLbl').textContent='みどり '+GRASSN;
   const hungry=S.res.filter(r=>r.hunger<20).length,en=S.enemies.filter(e=>e.spawned).length;
   const al=$('#alert');const msg=[];if(en)msg.push('「コワイノ」 '+en+'体');if(hungry)msg.push('おなかがすいたせいれい '+hungry+'人');if(S.food===0&&S.enemyOn)msg.push(cnt('stor')?'食料ゼロ':'食料箱がありません');/* 足りない理由もいっしょに出す */
   al.hidden=!msg.length;al.textContent=msg.join('・');
@@ -6137,7 +6145,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='817';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='818';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
