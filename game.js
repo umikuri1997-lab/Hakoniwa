@@ -4273,12 +4273,12 @@ function drawGroundChips(sc,X0,Y0,X1,Y1){const inR=i=>{const x=i%W,y=(i/W)|0;ret
   const gt=chipImgs(C['tex:grass'],'ground')[0];for(const i of REV){if(!inR(i))continue;const x=i%W*TS,y=((i/W)|0)*TS;sc.drawImage(gt,x%96,y%96,TS,TS,x,y,TS,TS)}
   {/* 水のマスの下（水のふちのすきまに見える所）：となりの陸の地面（草地・乾いた地面）を、そのマスのがわの半マスに、同じもようでしきつめる（鏡うつしはしない）。ななめだけ陸なら、その角の4分の1 */
     const land=k=>S.ground[k]===0,dpt0=WD===0?chipImgs(C['tex:dry'],'ground')[0]:null,put=(n,rx,ry,rw,rh)=>{if(REV.has(n))sc.drawImage(gt,rx%96,ry%96,rw,rh,rx,ry,rw,rh);else if(dpt0)sc.drawImage(dpt0,rx%288,ry%288,rw,rh,rx,ry,rw,rh);else{sc.save();sc.beginPath();sc.rect(rx,ry,rw,rh);sc.clip();dc('ground'+r+'#'+((hash(n*7+1)*8)|0),Math.floor(rx/TS)*TS,Math.floor(ry/TS)*TS,n);sc.restore()}},h2=TS/2;
-    for(let y=Y0;y<=Y1;y++)for(let x=X0;x<=X1;x++){const i=y*W+x;if(S.ground[i]<1)continue;const px=x*TS,py=y*TS;if(REV.has(i))sc.drawImage(gt,px%96,py%96,TS,TS,px,py,TS,TS);
+    for(let y=Y0;y<=Y1;y++)for(let x=X0;x<=X1;x++){const i=y*W+x;if(S.ground[i]<1)continue;const px=x*TS,py=y*TS;/* 水のマスそのものが緑のマスでも、草はしかない（はしに見える所は、となりの陸の地面） */
       const L=x>0&&land(i-1),R=x<W-1&&land(i+1),U=y>0&&land(i-W),D=y<H-1&&land(i+W);
       if(L)put(i-1,px,py,h2,TS);if(R)put(i+1,px+h2,py,h2,TS);if(U)put(i-W,px,py,TS,h2);if(D)put(i+W,px,py+h2,TS,h2);
       if(!L&&!U&&x>0&&y>0&&land(i-W-1))put(i-W-1,px,py,h2,h2);if(!R&&!U&&x<W-1&&y>0&&land(i-W+1))put(i-W+1,px+h2,py,h2,h2);if(!L&&!D&&x>0&&y<H-1&&land(i+W-1))put(i+W-1,px,py+h2,h2,h2);if(!R&&!D&&x<W-1&&y<H-1&&land(i+W+1))put(i+W+1,px+h2,py+h2,h2,h2)}}
   {/* 草とあれ地のさかい：あぜ道のふちと同じ。あれ地のマスの、草地がわのふちに、草のふちの絵（fringeg）をかさねる（となりの草地からはみ出す草）。ななめだけ草地の角には、角の絵 */
-    const G=k=>REV.has(k),open=k=>!REV.has(k)&&S.ground[k]!==1;
+    const G=k=>REV.has(k)&&S.ground[k]!==1/* 水のマスからは草をはみ出させない */,open=k=>!REV.has(k)&&S.ground[k]!==1;
     for(let y=Y0;y<=Y1;y++)for(let x=X0;x<=X1;x++){const i=y*W+x;if(!open(i))continue;const hi0=hiAt(i),g=(dx,dy)=>x+dx>=0&&x+dx<W&&y+dy>=0&&y+dy<H&&G(i+dy*W+dx)&&hiAt(i+dy*W+dx)===hi0,/* 高さのちがう草地からは、はみ出さない */u=g(0,-1),d=g(0,1),l=g(-1,0),r=g(1,0),px=x*TS,py=y*TS;
       if(!(u||d||l||r||g(-1,-1)||g(1,-1)||g(1,1)||g(-1,1)))continue;const sh=(dx,dy)=>x+dx>=0&&x+dx<W&&y+dy>=0&&y+dy<H&&hiAt(i+dy*W+dx)===hi0,m=4;sc.save();sc.beginPath();sc.rect(px-(sh(-1,0)?m:0),py-(sh(0,-1)?m:0),TS+(sh(-1,0)?m:0)+(sh(1,0)?m:0),TS+(sh(0,-1)?m:0)+(sh(0,1)?m:0));sc.clip();/* 草のふちの絵はマスの外へ少しはみ出すので、高さのちがうとなりのマスには出さない */
       if(u)dc('fringeg:U',px,py,i);if(d)dc('fringeg:D',px,py,i);if(l)dc('fringeg:L',px,py,i);if(r)dc('fringeg:R',px,py,i);
@@ -6299,7 +6299,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='862';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='863';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
