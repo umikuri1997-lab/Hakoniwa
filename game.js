@@ -5151,7 +5151,7 @@ function onTap(sx,sy){
     if(HOME_WALLS.has(o)||HOME_DOORS.has(o)){const w=houseWhy(j);if(w&&(o!=='wall'||!w.includes('ドアをつける')))toast(w)}/* 家にならないかべ・ドアをタップすると、理由を出す */
     if(o&&rangeOf(o,j))SHOWR={j,o,until:performance.now()+4000};
     if(o==='farm')return openSheet('farm',j);
-    if(o==='bed')return openSheet('bed',j);
+    if(BEDSET.has(o))return openSheet('bed',j);
     if(o==='stor')return openSheet('food');
     if(o==='oven')return openSheet('oven',j);
     if(o==='plot')return toast('耕す前の畑：せいれいが耕しにくる');
@@ -5587,7 +5587,7 @@ function renderSheet(){
      const cs=el('<div class="sec"><h3>住み心地</h3><p class="comfy"><span class="stars"></span><b></b></p><div class="recs"></div><p class="note" style="margin-top:8px"></p></div>');
      cs.querySelector('.stars').textContent=comfyStars(C.v);cs.querySelector('b').textContent=C.v+' / '+COMFMAX;
      for(const[a,b]of[['ベッド',C.bed+' / '+cap+'こ'],['家具・かざり',C.kinds+'しゅるい'],['床',C.floorPct+'%'],['いまの人数',L.length+'人']]){const d=el('<div class="st"><span></span><b></b></div>');d.firstChild.textContent=a;d.lastChild.textContent=b;cs.querySelector('.recs').appendChild(d)}
-     cs.querySelector('.note').textContent=C.over?'ベッドが多すぎて、きゅうくつ！ 住み心地が大きく下がる':'つかれのとれる速さ・起きたときのパワー：'+(.6+C.v/100*.9).toFixed(1)+'倍'+(C.over?'・きゅうくつ！ よく眠れない':C.v>=180?'・ぐっすり眠れて、たのしさもふえる':C.v<90?'・たのしさが少し下がる':'');
+     cs.querySelector('.note').textContent=C.over?'ベッドが多すぎて、きゅうくつ！ 住み心地が大きく下がる':'つかれのとれる速さ・起きたときのパワー：'+(.6+C.v/100*.9).toFixed(1)+'倍'+(C.v>=180?'・ぐっすり眠れて、朝にたのしさ+10':C.v<90?'・たのしさ-5':'');/* 効果は数字で */
      body.appendChild(cs)}
     {const bs=[...h.inside].filter(j=>BEDSET.has(S.obj[j]));if(bs.length){const sec=el('<div class="sec"><h3>ベッド</h3><div class="rows"></div></div>');bs.forEach((j,k)=>{const o=bedOwner(j),row=el('<button class="row" style="text-align:left;width:100%"><span class="dot"></span><div class="tx"><b></b><small></small></div></button>');row.querySelector('.dot').style.cssText=o?'background:#f6f1e6 url('+spiritPort(o.elem,96)+') center/86% no-repeat;box-shadow:inset 0 0 0 2px '+ELEM[o.elem].col:'background:#efe6d2';row.querySelector('b').textContent='ベッド'+(k+1);row.querySelector('small').textContent=o?o.name+'のベッド':'だれでも使える';row.onclick=()=>openSheet('bed',j);sec.querySelector('.rows').appendChild(row)});body.appendChild(sec)}}
     if(!L.length)body.appendChild(el('<p class="story">いまは、だれもいない</p>'));
@@ -5599,7 +5599,7 @@ function renderSheet(){
     body.appendChild(rows);
   }else if(sheet==='clear'){T.textContent='守護の台座';
     const rows=el('<div class="rows"></div>');for(const[t,ok]of(WD||cnt('tower')>=1?clearConds():towerConds())){const r=el('<div class="row"><div class="tx"><b></b></div></div>');r.querySelector('b').textContent=(ok?'✓ ':'・')+t;if(ok)r.classList.add('done');rows.appendChild(r)}body.appendChild(rows);
-  }else if(sheet==='bed'){const j=sheetArg;if(S.obj[j]!=='bed')return closeSheet();
+  }else if(sheet==='bed'){const j=sheetArg;if(!BEDSET.has(S.obj[j]))return closeSheet();/* よぞらのベッドも */
     const o=bedOwner(j);T.textContent='ベッド';
 
     const rows=el('<div class="rows"></div>'),set=id=>{const B=S.bedOwn||(S.bedOwn={});for(const k in B)if(B[k]===id)delete B[k];if(id==null)delete B[j];else B[j]=id;sfx('next');renderSheet()};
@@ -5976,7 +5976,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='783';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='785';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
