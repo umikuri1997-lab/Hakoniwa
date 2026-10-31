@@ -4830,6 +4830,7 @@ function drawStairObj(c,a){/* 階段（仮の絵）：段差の下の低い地�
   const riser=(x,y,w,h,n)=>{c.fillStyle=P[1];c.fillRect(x,y,w,h);if(br)vjoin(x,y,w,h,n%2?8:0)};/* 段の手前の面（レンガは、上の段と同じならび） */
   const face=(x,y,w,h,gy)=>{c.fillStyle=P[1];c.fillRect(x,y,w,h);if(!br)return;for(let k=0;gy-8*k>y;k++){const yb=gy-8*k,yt=Math.max(y,yb-8);if(k)mo(x,yb,w,.6);vjoin(x,yt,w,yb-yt,k%2?8:0)}};/* 横の側面（地面から8ドットずつ積む） */
   const tread=(x,y,w,h,n,dark,vert)=>{c.fillStyle=P[0];c.fillRect(x,y,w,h);if(dark){c.fillStyle='rgba(60,45,30,'+(.05*n)+')';c.fillRect(x,y,w,h)}if(!br)return;if(vert){for(let yy=y+(n%2?8:0);yy<y+h;yy+=16)if(yy>y+.5)mo(x,yy,w,.6)}else vjoin(x,y,w,h,n%2?8:0)};/* 段の上の面：1段に1列（レンガは、段ごとに半分ずらす） */
+  const lat=d===0?[[a-1],[a+1]]:d===2?[[a-1,a-1-W],[a+1,a+1-W]]:null;c.save();if(lat){const hL=lat[0].some(k=>hiAt(k)),hR=lat[1].some(k=>hiAt(k));c.beginPath();c.rect(ax+(hL?6:0),ay-2*TS,TS-(hL?6:0)-(hR?6:0),4*TS);c.clip()}/* 左右ががけなら、がけの横の岩（マスの外へ6ドット）のほうを上に見せる */
   if(SLOPES.has(id)){/* 坂：段のない、ひとつづきの面（素材のもようは、下りる向きに6つ） */const mat=id.slice(6),X0=d===1?ax:d===3?ax-TS:ax,len=d===0?TS:2*TS,poly=pts=>{c.beginPath();c.moveTo(pts[0][0],pts[0][1]);for(const q of pts)c.lineTo(q[0],q[1]);c.closePath()};
     const surf=(x,y,w,h,along)=>{c.fillStyle=P[0];c.fillRect(x,y,w,h);const g=c.createLinearGradient(along?x:0,along?0:y,along?x+w:0,along?0:y+h);g.addColorStop(0,'rgba(255,250,235,.18)');g.addColorStop(1,'rgba(60,45,30,.12)');c.fillStyle=g;c.fillRect(x,y,w,h);if(mat==='earth')return;
       const N=mat==='stone'?3:6,L='rgba(60,45,30,.18)';for(let k=1;k<N;k++){c.fillStyle=br?MO:L;if(along)c.fillRect(x+w*k/N,y,.7,h);else c.fillRect(x,y+h*k/N,w,.7)}/* 下りる向きに、板・石・レンガの列 */
@@ -4838,16 +4839,19 @@ function drawStairObj(c,a){/* 階段（仮の絵）：段差の下の低い地�
     else if(d===2){surf(ax,ay-TS,TS,2*TS-LIFT,0)}
     else{const xi=d===1?ax:ax+TS,xo=d===1?ax+2*TS:ax-TS,gy=ay+TS;c.save();poly([[xi,ay-LIFT],[xo,ay],[xo,gy],[xi,gy-LIFT]]);c.clip();surf(X0,ay-LIFT,len,TS+LIFT,1);c.restore();c.save();poly([[xi,gy-LIFT],[xo,gy],[xi,gy]]);c.clip();face(X0,gy-LIFT,len,LIFT,gy);c.restore()}}/* 横向き：上の面と、手前の三角の側面 */
   else if(d===0){/* 手前へ下りる：段の上の面と、手前の面 */riser(ax,ay-LIFT,TS,LIFT-z(0)+.5,1);for(let n=0;n<SN;n++){const ya=ay+n*Dn,yb=ya+Dn;tread(ax,ya-z(n),TS,Dn+.5,n,0,0);riser(ax,yb-z(n),TS,z(n)-z(n+1)+.5,n)}}
-  else if(d===2){/* 奥へ下りる：手前の段ほど高い。向こうの段から描いて、手前の段でかくす */const Y1=ay+TS;for(let n=SN-1;n>=0;n--){const yb=Y1-n*Dn,ya=yb-Dn;tread(ax,ya-z(n),TS,Dn+.5,n,1,0);c.fillStyle='rgba(255,250,235,.25)';c.fillRect(ax,ya-z(n),TS,1)}}
+  else if(d===2){/* 奥へ下りる：手前の段ほど高い。向こうの段から描いて、手前の段でかくす */const Y1=ay+TS;for(let n=SN-1;n>=0;n--){const yb=Y1-n*Dn,ya=yb-Dn;tread(ax,ya-z(n),TS,Dn+.5,n,1,0);{const t0=ya-z(n),g=c.createLinearGradient(0,t0,0,t0+Dn-LIFT/(SN+1));g.addColorStop(0,'rgba(255,250,235,.35)');g.addColorStop(1,'rgba(60,45,30,.16)');c.fillStyle=g;c.fillRect(ax,t0,TS,Dn)}}}/* 段ごとに、手前のふちを明るく・おくを少し暗く（段に見えるように） */
   else{/* 横へ下りる：段の上の面と、手前の側面 */const X0=d===1?ax:ax-TS;for(let n=0;n<SN;n++){const x=d===1?X0+n*Dn:X0+2*TS-(n+1)*Dn,zz=z(n),gy=ay+TS;tread(x,ay-zz,Dn+.5,TS,n,1,1);face(x,gy-zz,Dn+.5,zz,gy)}}
   {/* 側板：横に壁・柵・がけがないがわに、階段と同じ素材の板をつける */const o=d?stairOut(a,d):-1,cl=k=>{const t=typeAt(k);return hiAt(k)||HOME_WALLS.has(t)||HOME_DOORS.has(t)||FENCE_IDS.has(t)},free=ks=>ks.every(k=>k>=0&&!cl(k)),BW=3;
     const band=(x,y0,y1)=>{c.fillStyle=P[1];c.fillRect(x,y0,BW,y1-y0);c.fillStyle='rgba(255,250,235,.3)';c.fillRect(x,y0,1,y1-y0)};
     if(d===0){if(free([a-1]))band(ax,ay-LIFT-2,ay+TS);if(free([a+1]))band(ax+TS-BW,ay-LIFT-2,ay+TS)}
     else if(d===2){if(free([a-1,o-1]))band(ax,ay-TS-2,ay+TS-LIFT);if(free([a+1,o+1]))band(ax+TS-BW,ay-TS-2,ay+TS-LIFT)}
     else{const xi=d===1?ax:ax+TS,xo=d===1?ax+2*TS:ax-TS,zb=f=>LIFT*(1-f)+2,poly=pts=>{c.beginPath();c.moveTo(pts[0][0],pts[0][1]);for(const q of pts)c.lineTo(q[0],q[1]);c.closePath()};
-      if(free([a-W,o-W])){poly([[xi,ay-zb(0)],[xo,ay-zb(1)],[xo,ay+BW-zb(1)],[xi,ay+BW-zb(0)]]);c.fillStyle=P[1];c.fill()}/* おくの側板（上の面だけ見える） */
-      if(free([a+W,o+W])){const gy=ay+TS;c.save();poly([[xi,gy-zb(0)],[xo,gy-zb(1)],[xo,gy],[xi,gy]]);c.clip();face(Math.min(xi,xo),gy-LIFT-2,2*TS,LIFT+2,gy);c.restore();poly([[xi,gy-BW-zb(0)],[xo,gy-BW-zb(1)],[xo,gy-zb(1)],[xi,gy-zb(0)]]);c.fillStyle=P[0];c.fill()}}}/* 手前の側板：段の横がかくれる */
-}
+      if(SLOPES.has(id)){if(free([a-W,o-W])){poly([[xi,ay-zb(0)],[xo,ay-zb(1)],[xo,ay+BW-zb(1)],[xi,ay+BW-zb(0)]]);c.fillStyle=P[1];c.fill()}
+        if(free([a+W,o+W])){const gy=ay+TS;c.save();poly([[xi,gy-zb(0)],[xo,gy-zb(1)],[xo,gy],[xi,gy]]);c.clip();face(Math.min(xi,xo),gy-LIFT-2,2*TS,LIFT+2,gy);c.restore();poly([[xi,gy-BW-zb(0)],[xo,gy-BW-zb(1)],[xo,gy-zb(1)],[xi,gy-zb(0)]]);c.fillStyle=P[0];c.fill()}}/* 坂の側板：まっすぐななめ */
+      else{const H=4,gy=ay+TS,cols=[];for(let n=0;n<SN;n++)cols.push([d===1?xi+n*Dn:xi-(n+1)*Dn,z(n)+H]);/* 階段の側板：段の形にそって、段より少し高い（H） */
+        if(free([a-W,o-W]))for(const[x,zz]of cols){c.fillStyle=P[0];c.fillRect(x,ay-zz,Dn+.5,BW);c.fillStyle=P[1];c.fillRect(x,ay+BW-zz,Dn+.5,H)}/* おくの側板：上の面と、手前に向いた側面 */
+        if(free([a+W,o+W]))for(const[x,zz]of cols){face(x,gy-zz,Dn+.5,zz,gy);c.fillStyle=P[0];c.fillRect(x,gy-BW-zz,Dn+.5,BW)}}}}/* 手前の側板：段の形の板（坂はななめの板） */
+  c.restore()}
 const CLC={n:-1,s:null,rows:null};/* 段差の絵は、行ごとのかたまり（つづいた高いマス）ごとに1まい作っておく。下絵が変わったら作りなおす */
 function cliffRuns(){if(CLC.n===STATN&&CLC.s===S&&CLC.rows)return CLC.rows;CLC.n=STATN;CLC.s=S;const rows=new Map();
   for(let y=0;y<H;y++){let x=0;while(x<W){if(!hiAt(y*W+x)){x++;continue}let e=x;while(e+1<W&&hiAt(y*W+e+1))e++;if(!rows.has(y))rows.set(y,[]);rows.get(y).push({x0:x,x1:e,c:null});x=e+1}}
@@ -5932,7 +5936,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='772';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='773';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
