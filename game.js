@@ -3476,7 +3476,7 @@ function roadGrassEdge(c,id,x,y,i,q,iso){if(id!=='path'&&id!=='gravel'&&id!=='wo
 function roadShape(c,x,y,q){const l=x+(q.L?0:2),r=x+TS-(q.R?0:2),t=y+(q.U?0:2),b=y+TS-(q.D?0:2),tl=!q.L&&!q.U?6:0,tr=!q.R&&!q.U?6:0,br=!q.R&&!q.D?6:0,bl=!q.L&&!q.D?6:0;c.beginPath();c.moveTo(l+tl,t);c.lineTo(r-tr,t);c.quadraticCurveTo(r,t,r,t+tr);c.lineTo(r,b-br);c.quadraticCurveTo(r,b,r-br,b);c.lineTo(l+bl,b);c.quadraticCurveTo(l,b,l,b-bl);c.lineTo(l,t+tl);c.quadraticCurveTo(l,t,l+tl,t);c.closePath()}
 function drawFloorChip(c,id0,x,y,i,iso){const C=window.CHIPS;if(!C)return false;const gx=i%W,gy=(i/W)|0,flat=id0==='brickfloor'||id0==='stonefloor',id=flat?(id0==='brickfloor'?'brick':'stone'):id0;
   const base=id==='carpet'?C.carpet:C[(id==='woodpath'?'floor':id0==='stonefloor'?'stonefloor':id)/* 木の道：絵ができるまでは、フローリングの絵。石の床は、石畳とはべつの絵 */+'#'+(id==='path'||id==='gravel'?((hash(i*13+5)*4)|0):id0==='stonefloor'?(gx%4)+(gy%4)*4:(gx%2)+(gy%2)*2)];/* 石の床は4×4マスでつながる絵 */if(!base||!chipImgs(base,id)[0].ok)return false;/* 床のもよう：土・砂利は4しゅるい、石・レンガ・板は2×2マスでつながる絵 */
-  const road=!flat&&ROADF.has(id),q=road?roadLinks(i,iso):null;if(road){c.save();roadShape(c,x,y,q);c.clip()}
+  const road=!flat&&ROADF.has(id),q=road?roadLinks(i,iso):null,edged=id==='stone'||id==='brick';if(road){c.save();if(!edged){roadShape(c,x,y,q);c.clip()}}/* 石畳・レンガ道は1マスぴったりのはば（へりはマスのふちまで）。あぜ道・砂利道は、ふちを少しまるく */
   drawChip(c,base,id,x,y,0,i);
   if(id==='carpet'&&c._shU==null){const same=k=>!iso&&S.floor[k]==='carpet';/* 壁の下にのばすじゅうたん（wallMarg）には、ふちを描かない */for(const[s,k]of[['U',i-W],['D',i+W],['L',i-1],['R',i+1]])if(!same(k)&&C['carpet:'+s])drawChip(c,C['carpet:'+s],id,x,y,0,i)}/* じゅうたんのふち */
   if(road){const cn=roadCorners(i,iso);
@@ -4217,7 +4217,17 @@ function drawGroundChips(sc,X0,Y0,X1,Y1){const inR=i=>{const x=i%W,y=(i/W)|0;ret
   else for(let y=Y0;y<=Y1;y++)for(let x=X0;x<=X1;x++){const i=y*W+x;dc('ground'+r+'#'+((hash(i*7+1)*8)|0),x*TS,y*TS,i)}/* 火山のあれ地：8しゅるい */
   const gt=chipImgs(C['tex:grass'],'ground')[0];for(const i of REV){if(!inR(i))continue;const x=i%W*TS,y=((i/W)|0)*TS;sc.drawImage(gt,x%96,y%96,TS,TS,x,y,TS,TS)}
   for(let y=Y0;y<=Y1;y++)for(let x=X0;x<=X1;x++){const i=y*W+x;if(S.ground[i]>=1&&!REV.has(i))sc.drawImage(gt,(x*TS)%96,(y*TS)%96,TS,TS,x*TS,y*TS,TS,TS)}/* 水のマスの下も草地（水のふちは草なので、かどの丸みから荒れた地面がのぞかないように） *//* 草地：96×96のテクスチャを、マップの位置どおりにしきつめる */
-  for(const i of REV){if(!inR(i))continue;const x=i%W*TS,y=((i/W)|0)*TS;for(const[dx,dy,side]of grassBoundaryEdges(i))dc('gedge'+r+':'+side+'#'+((hash(i*13+side)*4)|0),x,y,i);for(const[cx,cy]of grassBoundaryCorners(i))dc('gcorner'+r,cx,cy,i)}}/* 草とあれ地のさかい */
+  {/* 草とあれ地のさかい：マスのふちから外へ、ゆるやかに波うつ（0〜4ドット）。波は世界の座標できめるので、となりのマスとつながる。草地のはしでは細くして丸める。ふちに、こい緑の線と明るい線、ときどき短い草 */
+    const G=k=>k>=0&&k<W*H&&REV.has(k),open=k=>k>=0&&k<W*H&&!REV.has(k)&&S.ground[k]!==1,pt=sc.createPattern(gt,'repeat'),dpt=WD===0?sc.createPattern(chipImgs(C['tex:dry'],'ground')[0],'repeat'):(C['groundr#0']?sc.createPattern(chipImgs(C['groundr#0'],'ground')[0],'repeat'):null),nz=(u,s0)=>{const a0=Math.floor(u/9),f=u/9-a0,sm=f*f*(3-2*f),h0=hash(a0*53+s0*7919),h1=hash((a0+1)*53+s0*7919);return h0+(h1-h0)*sm};
+    for(const i of REV){if(!inR(i))continue;const gx=i%W,gy=(i/W)|0,x=gx*TS,y=gy*TS;
+      for(const[dx,dy]of[[0,-1],[1,0],[0,1],[-1,0]]){const n=i+dy*W+dx;if(gx+dx<0||gx+dx>=W||gy+dy<0||gy+dy>=H||!open(n))continue;const hor=dy!==0,line=hor?(dy<0?y:y+TS):(dx<0?x:x+TS),key=hor?gy*2+(dy>0?1:0)+5000:gx*2+(dx>0?1:0)+9000;
+        const pa=hor?[i-1,i+1]:[i-W,i+W],endA=!G(pa[0])||open(pa[0]+dy*W+dx)===false&&G(pa[0]+dy*W+dx),endB=!G(pa[1])||open(pa[1]+dy*W+dx)===false&&G(pa[1]+dy*W+dx);/* はしで草地がとぎれるなら、細くする */
+        const P=[];for(let t=0;t<=TS;t+=2){const u=(hor?x:y)+t;let o=-2.5+8.5*nz(u,key);if(endA){const e=Math.min(1,t/9);o=o*e-3*(1-e)*(1-e)}if(endB){const e=Math.min(1,(TS-t)/9);o=o*e-3*(1-e)*(1-e)}/* はしの角は、内がわへ丸める */P.push([u,line+(hor?dy:dx)*o])}
+        const s1=hor?dy:dx,in3=line-s1*3;if(dpt){sc.beginPath();if(hor)sc.rect(x,Math.min(line,in3),TS,3);else sc.rect(Math.min(line,in3),y,3,TS);sc.fillStyle=dpt;sc.fill()}/* 内がわ3ドットを、いったんあれ地にもどす（内へ入りこむ所のため） */
+        sc.beginPath();if(hor){sc.moveTo(x,in3);for(const[u,v]of P)sc.lineTo(u,v);sc.lineTo(x+TS,in3)}else{sc.moveTo(in3,y);for(const[u,v]of P)sc.lineTo(v,u);sc.lineTo(in3,y+TS)}sc.closePath();sc.fillStyle=pt;sc.fill();
+        sc.beginPath();P.forEach(([u,v],k)=>hor?(k?sc.lineTo(u,v):sc.moveTo(u,v)):(k?sc.lineTo(v,u):sc.moveTo(v,u)));sc.strokeStyle='rgba(74,112,44,.55)';sc.lineWidth=1;sc.stroke();
+        sc.beginPath();P.forEach(([u,v],k)=>{const w=v-(hor?dy:dx)*1.3;hor?(k?sc.lineTo(u,w):sc.moveTo(u,w)):(k?sc.lineTo(w,u):sc.moveTo(w,u))});sc.strokeStyle='rgba(190,225,130,.35)';sc.lineWidth=.8;sc.stroke();
+        for(let k=1;k<P.length-1;k++){if(hash(P[k][0]*7+key*3)>.28)continue;const[u,v]=P[k],L=1.5+hash(P[k][0]+key)*2.5,lean=(hash(P[k][0]*3+key)-.5)*2.4;sc.fillStyle=hash(P[k][0]*11)<.5?'#6a9a46':'#5d8c3c';sc.beginPath();if(hor){sc.moveTo(u-.9,v);sc.lineTo(u+.9,v);sc.lineTo(u+lean,v+dy*L)}else{sc.moveTo(v,u-.9);sc.lineTo(v,u+.9);sc.lineTo(v+dx*L,u+lean)}sc.closePath();sc.fill()}}}}}/* 草とあれ地のさかい */
 function drawRug(c,id,x,y,i){const ch=chipOf(id,i);if(ch&&drawChip(c,ch,id,x,y,0,i))return;/* ドット絵のラグは、2×2マスの絵なので、そのままの大きさで */c.save();c.translate(x+32,y+32);c.scale(1.4,1.4);c.translate(-16,-20);drawObj(c,id,0,0,i);c.restore()}/* ラグ：2×2マスのまんなかに、2マスはばの大きさで */
 function drawRugsLive(x0,y0,x1,y1){for(const k in S.rug||{}){const j=+k,x=j%W,y=(j/W)|0;if(x+2<x0||y+2<y0||x>x1||y>y1)continue;drawRug(ctx,S.rug[k],x*TS,y*TS,j);for(const q of rugCells(j)){const o=S.obj[q];if(o&&o!=='part'&&BL[o]&&FLAT.has(o)&&!(BL[o].dyn||BL[o].anim||TREES.has(o)))drawObj(ctx,o,(q%W)*TS,((q/W)|0)*TS,q)}}}/* ラグは毎コマ、画面の細かさで描く（地面の下絵は1マス32ドットなので、64ドットの絵があらくなる）。ラグの上の平らな物も、ラグのあとに */
 function drawStaticArea(sc,X0,Y0,X1,Y1){/* 地面・床・水・動かない物を、マス(X0,Y0)〜(X1,Y1)のはんいだけ描く */const inR=i=>{const x=i%W,y=(i/W)|0;return x>=X0&&x<=X1&&y>=Y0&&y<=Y1};
@@ -4266,7 +4276,7 @@ function iconURL(id){/* アイコンは、大きなキャンバスに2倍の細�
   const d=t.getImageData(0,0,N,N).data;let x0=N,y0=N,x1=-1,y1=-1;for(let y=0;y<N;y++)for(let x=0;x<N;x++)if(d[(y*N+x)*4+3]>8){if(x<x0)x0=x;if(x>x1)x1=x;if(y<y0)y0=y;if(y>y1)y1=y}
   const c=document.createElement('canvas');c.width=144;c.height=144;
   if(x1>=0){const g=c.getContext('2d'),bw=x1-x0+1,bh=y1-y0+1,sc=Math.min(132/bw,132/bh,2),dw=bw*sc,dh=bh*sc;g.imageSmoothingEnabled=true;g.imageSmoothingQuality='high';g.drawImage(T,x0,y0,bw,bh,(144-dw)/2,(144-dh)/2,dw,dh)}/* 144×144（画面では72にちぢめて出すので、細かい画面でもくっきり）。のばす・ちぢめるときは、なめらかに（がたがたにしない）。小さい物は2倍まで */
-  return iconCache[id]=c.toDataURL();
+  const u=c.toDataURL();c.width=c.height=0;return iconCache[id]=u;
 }
 function toolIcon(k){
   const key='tool_'+k;if(iconCache[key])return iconCache[key];
@@ -4619,7 +4629,7 @@ function drawRes0(r,now){
   const bedH=bedJ>=0&&rotAt(bedJ)===1;/* 横に置いたベッド */const benchR=benchJ>=0?rotAt(r.act.obj):0,benchV=benchJ>=0&&benchR%2===1,benchD=benchR===3?-1:1;/* ベンチは、置いたときの向き（前・右・後ろ・左）にすわる */let sj=bedJ>=0?bedJ:benchJ,px=bedH?(bedJ%W)*TS+BEDHX:sj>=0?(sj%W+.5)*TS:r.x*TS,py=bedH?((bedJ/W)|0)*TS+BEDHY:bedJ>=0?((bedJ/W)|0)*TS+BEDVY:benchJ>=0?(((benchJ/W)|0)+.5)*TS+1:r.y*TS;const talking=DLGA.who===r.name&&!(DLGEL||(DLGEL=$('#dialog'))).hidden,walking=!talking&&r.act&&(r.act.stage==='walk'&&r.path.length>0||r.act.type==='tag');/* 話しているときはこっちを向く */
   const working=!onHold(r)&&r.act&&r.act.stage==='do'&&['till','sow','plant','build','craft','water','tend','repair','harvest','gather','chop','mine','cook'].includes(r.act.type);
   if(!SPV.has(r))SPV.set(r,{x:r.x,y:r.y,back:false,turn:0,bl:now+2000+Math.random()*3000});const v=SPV.get(r),dx=r.x-v.x,dy=r.y-v.y;
-  if(!walking){v.back=false;v.turn=r.act&&r.act.stage==='do'&&(r.act.type==='chop'||r.act.type==='mine')&&!objBelow(r)||benchV?1:0}/* 木・岩は横向きで、そちらを向いて切る */else if(Math.abs(dx)+Math.abs(dy)>.002){const ax=Math.abs(dx),ay=Math.abs(dy);v.turn=ax>ay*1.2?1:0;v.back=!v.turn&&dy<0}v.x=r.x;v.y=r.y;
+  if(!walking){v.back=false;v.turn=r.act&&r.act.stage==='do'&&(r.act.type==='chop'||r.act.type==='mine')&&!objBelow(r)||benchV?1:0}/* 木・岩は横向きで、そちらを向いて切る */else if(Math.abs(dx)+Math.abs(dy)>.002){const ax=Math.abs(dx),ay=Math.abs(dy);v.turn=ax>ay*1.2?1:0;v.back=!v.turn&&dy<0}{const cj=(r.y|0)*W+(r.x|0),n=r.path&&r.path.length?r.path[0]:-1;if(n>=0&&n===cj-W&&jumpEdge(cj,n)&&hiAt(n)>hiAt(cj)){v.back=true;v.turn=0}}/* 正面のがけをよじのぼるときは、うしろ向き */v.x=r.x;v.y=r.y;
   {const sj=(r.y|0)*W+(r.x|0),so=S.obj[sj];if(!walking&&r.act&&r.act.stage==='do'&&so&&ROTS[so]===4&&SEATS.includes(so)){const ro=rotAt(sj);v.back=ro===2;v.turn=ro===1||ro===3?1:0;if(v.turn)r.face=ro===1?1:-1}if(!walking&&benchJ>=0)v.back=benchR===2}/* ベンチで「後ろ」向きなら、せなかが見える *//* いすにすわっている子は、いすの向きにすわる（うしろ向きのいすなら、うしろ向き） */
   const at=r.act&&r.act.type,ad=r.act&&r.act.stage==='do',jt=JUMP.get(r),held=HOLD.has(r.id),jumping=held||jt!=null&&now-jt<1000;
   const reacting=(at==='sevreact'||at==='phew')&&ad&&r.act.reactAt!=null,rm=reacting?r.act.reactMotion:'',rp=reacting?dialoguePose(rm,now-r.act.reactAt):null;if(rp){const k=rm==='phew'?1:.4;px+=rp.x*k;py+=rp.y*k}
@@ -5061,7 +5071,7 @@ function drawStairObj0(c,a){/* 階段（仮の絵）：段差の下の低い地�
       const x0=lat?Math.min(xi,xo):ax,x1=lat?Math.max(xi,xo):ax+TS,y0=d===0?ay-LIFT:d===2?ay-TS:ay-LIFT,y1=d===0?ay+TS:d===2?ay+TS-LIFT:ay+TS-LIFT;/* 坂の面（横向きは、ななめの面をまっすぐにのばした形で） */
       const sideF=lat?[free([a-W,o-W]),free([a+W,o+W])]:d===0?[free([a-1]),free([a+1])]:[free([a-1,o-1]),free([a+1,o+1])];
       c.save();if(lat)c.transform(1,k,0,1,0,-k*xi);c.beginPath();if(vnat)sPath();else c.rect(x0,y0,x1-x0,y1-y0);c.clip();
-      if(rd){const ch=C[rd+(lat?':3':':12')];if(ch){c.save();c.beginPath();if(lat)c.rect(x0,y0+2,x1-x0,y1-y0-4);else c.rect(x0+2,y0,x1-x0-4,y1-y0);c.clip();if(lat)for(let x=x0-TS;x<x1+TS;x+=TS)drawChip(c,ch,rd,x,y0,0);else for(let y=y0-TS;y<y1;y+=TS)drawChip(c,ch,rd,x0,y,0);c.restore()}}/* へりは、道と同じ位置のまま、外の2ドットを切る（道も、つながっていないがわは2ドット内がわで切ってある） *//* へりの石・レンガ（よこ向きは上下、たて向きは左右） */
+      if(rd){const ch=C[rd+(lat?':3':':12')];if(ch){c.save();c.beginPath();c.rect(x0,y0,x1-x0,y1-y0);c.clip();if(lat)for(let x=x0-TS;x<x1+TS;x+=TS)drawChip(c,ch,rd,x,y0,0);else for(let y=y0-TS;y<y1;y+=TS)drawChip(c,ch,rd,x0,y,0);c.restore()}}/* へりは、道と同じ位置のまま、外の2ドットを切る（道も、つながっていないがわは2ドット内がわで切ってある） *//* へりの石・レンガ（よこ向きは上下、たて向きは左右） */
       else{const col=gr?'rgba(92,134,58,.5)':'rgba(110,78,46,.26)',B=2.2,ed=lat?[[x0,y0,x1-x0,B,0,1],[x0,y1-B,x1-x0,B,0,-1]]:[[x0,y0,B,y1-y0,1,0],[x1-B,y0,B,y1-y0,-1,0]];
         if(vnat){for(let y=y0;y<y1;y++)for(const sd of[0,1]){if(!sideF[sd])continue;const e=eX(y+.5,sd),dir=sd?-1:1;c.fillStyle=col;c.fillRect(sd?e-B:e,y,B,1);for(let q=0;q<3;q++){c.fillStyle='rgba(45,35,20,'+(.12-q*.04)+')';c.fillRect(sd?e-B-1-q:e+B+q,y,1,1)}}}/* でこぼこのふちにそって、帯とかげ */else ed.forEach(([x,y,w,h,dx,dy],n)=>{if(!sideF[n])return;c.fillStyle=col;c.fillRect(x,y,w,h);const g=dx?c.createLinearGradient(dx>0?x+B:x,0,dx>0?x+B+3:x-3,0):c.createLinearGradient(0,dy>0?y+B:y,0,dy>0?y+B+3:y-3);g.addColorStop(0,'rgba(45,35,20,.14)');g.addColorStop(1,'rgba(45,35,20,0)');c.fillStyle=g;if(dx)c.fillRect(dx>0?x+B:x-3,y,3,h);else c.fillRect(x,dy>0?y+B:y-3,w,3)})}/* 内がわのかげは3ドットでぼかす */
       c.restore();
@@ -5078,7 +5088,7 @@ function drawStairObj0(c,a){/* 階段（仮の絵）：段差の下の低い地�
       if(free([a+W,o+W])){const gy=ay+TS;for(const[k,col]of[[1,SH1],[2,SH2]]){poly([[xi,gy-BW-zb(0)-k],[xo,gy-BW-zb(1)-k],[xo,gy-BW-zb(1)-k+1],[xi,gy-BW-zb(0)-k+1]]);c.fillStyle=col;c.fill()}/* 手前の側板に接する面のかげ2ドット */c.save();poly([[xi,gy-zb(0)],[xo,gy-zb(1)],[xo,gy],[xi,gy]]);c.clip();face(Math.min(xi,xo),gy-LIFT-6,2*TS,LIFT+6,gy);c.restore();poly([[xi,gy-BW-zb(0)],[xo,gy-BW-zb(1)],[xo,gy-zb(1)],[xi,gy-zb(0)]]);c.fillStyle=P[0];c.fill()}}}}/* 側板：段にそわない、まっすぐななめの板 */
   c.restore();if(SLOPES.has(id))slopeFeather(c,a,d);if(lat){for(const k of lat[0])if(hiAt(k)>=CLV)cliffEdgeOver(c,k,1);for(const k of lat[1])if(hiAt(k)>=CLV)cliffEdgeOver(c,k,0)}}/* 左右ががけなら、階段を描いたあとに、がけの横のはし（横の岩・丸いはし）をもう一度上に描く（切りとらない） */
 const CLC={n:-1,s:null,rows:null};/* 段差の絵は、行ごとのかたまり（つづいた高いマス）ごとに1まい作っておく。下絵が変わったら作りなおす */
-function cliffRuns(){if(CLC.n===STATN&&CLC.s===S&&CLC.rows)return CLC.rows;CLC.n=STATN;CLC.s=S;const rows=new Map();
+function cliffRuns(){if(CLC.n===STATN&&CLC.s===S&&CLC.rows)return CLC.rows;if(CLC.rows)for(const L of CLC.rows.values())for(const R of L)if(R.c){R.c.width=R.c.height=0;R.c=null}STRIPQ.length=0;/* 前の段差の絵は、すぐ手ばなす */CLC.n=STATN;CLC.s=S;const rows=new Map();
   for(let y=0;y<H;y++)for(let lv=1;lv<=HMAX;lv++){let x=0;while(x<W){if(hiAt(y*W+x)<lv){x++;continue}let e=x;while(e+1<W&&hiAt(y*W+e+1)>=lv)e++;if(!rows.has(y))rows.set(y,[]);rows.get(y).push({x0:x,x1:e,lv,c:null});x=e+1}}/* 段ごとのかたまり（低い段から順に。高い段は、あとで上に描く） */
   return CLC.rows=rows}
 function cliffTop(P,E,y,k,ext){ext=ext||.6;/* 高いマスの上の面の形：ふち（となりが低い向き）は少しでこぼこ、外がわの角は丸く。P：面（ぬる形）、E：ふちの線 */
@@ -5111,24 +5121,25 @@ function cliffGrass(g,y,k){/* 草のはみ出し：となりが低い向きの�
     if(D&&!(L&&v<5)&&!(R&&v>TS-5))blade(px+v,y1+.8,0,1,n+1000);
     if(L&&!(U&&v<5)&&!(D&&v>TS-5))blade(px+.6,y0+v,-1,0,n+2000);
     if(R&&!(U&&v<5)&&!(D&&v>TS-5))blade(px+TS-.6,y0+v,1,0,n+3000)}}
-function cliffStrip(y,Rn){const cv=CLV;CLV=Rn.lv||1;try{return cliffStrip0(y,Rn)}finally{CLV=cv}}/* 段 Rn.lv のかたまりの絵（1だんめと同じ形で作り、描くときに (lv-1)*LIFT 上へ） */
+const STRIPQ=[],TMPL=[],TMPC=()=>{const c=document.createElement('canvas');TMPL.push(c);return c};/* 作業用のキャンバス：使いおわったら、すぐ手ばなす（iPhone は、キャンバスのメモリの上限が小さく、こえるとページが落ちる） */
+function cliffStrip(y,Rn){const cv=CLV;CLV=Rn.lv||1;try{return cliffStrip0(y,Rn)}finally{CLV=cv;for(const c of TMPL)c.width=c.height=0;TMPL.length=0}}/* 段 Rn.lv のかたまりの絵（1だんめと同じ形で作り、描くときに (lv-1)*LIFT 上へ） */
 function cliffStrip0(y,Rn){/* 1つのかたまりの絵：横のふち・がけの正面・かげ・持ち上げた地面（ふちはでこぼこ）・ふちの線・階段 */
   const K=2,x0=Rn.x0,x1=Rn.x1,w=(x1-x0+1)*TS,ox=x0*TS-6,top=y*TS-LIFT-6,h=TS+LIFT+14,cv=document.createElement('canvas');cv.width=(w+12)*K;cv.height=h*K;/* まわり6ドットは、はみ出す草のぶん */
   const g=cv.getContext('2d'),T0=[K,0,0,K,-ox*K,-top*K];g.setTransform(...T0);const C=window.CHIPS||{},dc=(k,px,py)=>{const ch=C[k];if(ch)drawChip(g,ch,'cliff',px,py,0)};
-  const fc=document.createElement('canvas');fc.width=cv.width;fc.height=cv.height;const f=fc.getContext('2d');f.setTransform(...T0);const fd=(k,px,py)=>{const ch=C[k];if(ch)drawChip(f,ch,'cliff',px,py,0)};/* がけ（階段・横の岩・正面）は、いったん別のキャンバスに描いて、その形でかげを作る */
+  const fc=TMPC();fc.width=cv.width;fc.height=cv.height;const f=fc.getContext('2d');f.setTransform(...T0);const fd=(k,px,py)=>{const ch=C[k];if(ch)drawChip(f,ch,'cliff',px,py,0)};/* がけ（階段・横の岩・正面）は、いったん別のキャンバスに描いて、その形でかげを作る */
   for(let k=x0;k<=x1;k++){const j=y*W+k,L=k>0&&topAt(j-1),R=k<W-1&&topAt(j+1),D=y<H-1&&topAt(j+W),px=k*TS,py=y*TS;
     if(!D&&!(CLV>1&&y<H-1&&hiAt(j+W)<CLV-1)){g.save();g.translate(0,2*(py+TS));g.scale(1,-1);g.drawImage(stat,px-6,py+TS,TS+12,8,px-6,py+TS,TS+12,8);g.restore()}/* がけの下はしのすきまには、すぐ下の低い地面（下絵を上下に鏡うつし）を見せる。下にもう1だんがけがつづくときは見せない */
     {const U=y>0&&topAt(j-W);if(!L||!R){f.save();f.beginPath();f.rect(px-8,py-LIFT+(U?0:5),TS+16,TS);f.clip();{const dz=REV.has(j)?'':'~d';if(!L)fd('cliff:sideL'+dz,px,py);if(!R)fd('cliff:sideR'+dz,px,py)}/* 上が乾いた地面なら、ふちに草のない横の岩 */f.restore()}/* 横の岩（マスの外へはみ出す。上の角の丸みより下から） */}
     if(!D){const fk='cliff:'+(!L&&!R?'faceLR':!L?'faceL':!R?'faceR':'face');if(CLV>1&&y<H-1&&hiAt(j+W)<CLV-1)fd(fk,px,py+8);/* 下にもう1だんがけがつづくときは、岩を下へのばして、すきまをうめる */fd(fk,px,py)}}
   g.save();g.setTransform(1,0,0,1,0,0);g.filter='brightness(0) blur('+(2*K)+'px)';g.globalAlpha=.3;g.drawImage(fc,0,3*K);g.restore();/* がけのかげ：がけの形を、下へ3ドットずらしてぼかす */
   g.save();g.setTransform(1,0,0,1,0,0);g.drawImage(fc,0,0);g.restore();
-  const tc=document.createElement('canvas');tc.width=cv.width;tc.height=cv.height;const t=tc.getContext('2d');t.setTransform(...T0);
+  const tc=TMPC();tc.width=cv.width;tc.height=cv.height;const t=tc.getContext('2d');t.setTransform(...T0);
   t.drawImage(stat,x0*TS,y*TS,w,TS,x0*TS,y*TS-LIFT,w,TS);t.drawImage(stat,x0*TS,y*TS+TS-1,w,1,x0*TS,y*TS-LIFT+TS,w,4);t.drawImage(stat,x0*TS,y*TS,1,TS,x0*TS-3,y*TS-LIFT,3,TS);t.drawImage(stat,x0*TS+w-1,y*TS,1,TS,x0*TS+w,y*TS-LIFT,3,TS);/* 上の面の絵は、自分のマスの下絵だけ（ふちのはみ出しは、はしの1ドットをのばす。となりの低いマスの草をまぜない） */t.fillStyle='rgba(255,250,225,.10)';t.fillRect(x0*TS,y*TS-LIFT,w,TS+4);/* 高い所は少し明るく */
   const P=new Path2D(),E=new Path2D();for(let k=x0;k<=x1;k++)cliffTop(P,E,y,k);
   t.globalCompositeOperation='destination-in';t.fillStyle='#000';t.fill(P);
   g.setTransform(1,0,0,1,0,0);g.drawImage(tc,0,0);g.setTransform(...T0);
   {/* ふちの帯とかげは、上の面ぜんたいの形から作る（マスごとに描くと、角・内がわの角で形がずれる） */
-    const mk=f2=>{const m=document.createElement('canvas');m.width=cv.width;m.height=cv.height;const c=m.getContext('2d');c.setTransform(...T0);f2(c);c.setTransform(1,0,0,1,0,0);c.globalCompositeOperation='source-over';return m},er=(m,r)=>{const e=document.createElement('canvas');e.width=m.width;e.height=m.height;const c=e.getContext('2d');c.drawImage(m,0,0);c.globalCompositeOperation='destination-in';for(let a=0;a<8;a++)c.drawImage(m,Math.round(Math.cos(a*Math.PI/4)*r),Math.round(Math.sin(a*Math.PI/4)*r));return e};
+    const mk=f2=>{const m=TMPC();m.width=cv.width;m.height=cv.height;const c=m.getContext('2d');c.setTransform(...T0);f2(c);c.setTransform(1,0,0,1,0,0);c.globalCompositeOperation='source-over';return m},er=(m,r)=>{const e=TMPC();e.width=m.width;e.height=m.height;const c=e.getContext('2d');c.drawImage(m,0,0);c.globalCompositeOperation='destination-in';for(let a=0;a<8;a++)c.drawImage(m,Math.round(Math.cos(a*Math.PI/4)*r),Math.round(Math.sin(a*Math.PI/4)*r));return e};
     const Pm=new Path2D(),Em=new Path2D();for(let k=x0;k<=x1;k++)cliffTop(Pm,Em,y,k,9);/* つながっている向きは、外へ大きくのばす（そこに帯ができないように） */
     const M=mk(c=>{c.fillStyle='#000';c.fill(Pm);});
     const E1=er(M,2.2*K),E2=er(M,3.8*K);
@@ -5200,7 +5211,7 @@ function render(now){
   if(festOn()){const SL=festStalls();for(const[x,y]of festPoles()){const j=y*W+x;if(S.obj[j]||S.ground[j]===1||!vis({x:x+.5,y:y+.5})||SL.some(t=>t.y===y&&Math.abs(t.x-x)<=2))continue;add(y+1,1,[x*TS,y*TS-24,x*TS+TS+8,y*TS+TS],()=>drawFestPole(x,y,now),-1)}}/* おまつりのちょうちん（木や岩・水の上、屋台のところには立てない） */
   for(const h of HOUSES){const bot=h.y1,ib=h.ib;if(bot<y0-1||h.y0>y1+1||h.x1<x0-1||h.x0>x1+1)continue;
     add(bot+1.001,3,/* 屋根は、その家の壁（手前の壁もふくむ）のすぐ後に描く。家の前にいる物は屋根より手前 */[h.x0*TS-6,h.y0*TS-40,(h.x1+1)*TS+6,(ib+1)*TS+12],()=>liftDraw((()=>{const L=[...h.set],h0=hiAt(L[0]);return L.every(j=>hiAt(j)===h0)?h0*LIFT:0})(),()=>drawRoofs(ctx,now,[h])),-1)}/* 屋根は家ごとにひとまとまり。その家の壁は屋根の上に描き直さない *//* 屋根は、横の壁より後・手前の壁より先に描く */
-  if(S.hi){const RW=cliffRuns();for(let y=Math.max(0,y0-1);y<Math.min(H,y1+2);y++){const L=RW.get(y);if(!L)continue;const vs=L.filter(R=>R.x1>=x0-1&&R.x0<=x1);if(!vs.length)continue;const dr=R=>{if(!R.c)R.c=cliffStrip(y,R);ctx.drawImage(R.c,R.x0*TS-6,y*TS-R.lv*LIFT-6,(R.x1-R.x0+1)*TS+12,TS+LIFT+14)};
+  if(S.hi){const RW=cliffRuns();for(let y=Math.max(0,y0-1);y<Math.min(H,y1+2);y++){const L=RW.get(y);if(!L)continue;const vs=L.filter(R=>R.x1>=x0-1&&R.x0<=x1);if(!vs.length)continue;const dr=R=>{if(!R.c){R.c=cliffStrip(y,R);STRIPQ.push(R);while(STRIPQ.length>160){const o=STRIPQ.shift();if(o.c){o.c.width=o.c.height=0;o.c=null}}}/* 作った段差の絵は160まいまで（古いものから手ばなす） */ctx.drawImage(R.c,R.x0*TS-6,y*TS-R.lv*LIFT-6,(R.x1-R.x0+1)*TS+12,TS+LIFT+14)};
     add(y-1+.0005,-1,null,()=>{for(const R of vs)dr(R)},-1);/* ひとつ上の行の物より先：段差の上の物のかげが、手前の行の上の面にかくれないように */
     add(y+.001,-1,null,()=>{for(const R of vs){ctx.save();ctx.beginPath();let any=false;for(let x=R.x0;x<=R.x1;x++)if(!(y>0&&hiAt((y-1)*W+x)>=R.lv)){any=true;ctx.rect(x*TS-(x===R.x0?6:0),y*TS-R.lv*LIFT-6,TS+(x===R.x0?6:0)+(x===R.x1?6:0),LIFT+6)}if(any){ctx.clip();dr(R)}ctx.restore()}},-1)}}/* 段差：行ごとに、その行の物より先（ひとつ上の行の物より後） */
   D.sort((a,b)=>a.k-b.k||a.t-b.t);
@@ -6177,7 +6188,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='824';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='825';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
