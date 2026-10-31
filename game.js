@@ -180,6 +180,7 @@ const BL={
   takenoko:{name:'たけのこ',natural:1,dyn:1},
   weed0g:{name:'しなやかな草',natural:1,weed:'kusa'},weed0k:{name:'かさかさ草',natural:1,weed:'kare'},/* 草原の雑草（よみがえった土地・荒れた土地） */
   weed1g:{name:'くるくる草',natural:1,weed:'kusa'},weed1k:{name:'ちりちり草',natural:1,weed:'kare'},/* 火山の雑草 */
+  weedc:{name:'ふんばり草',natural:1,weed:'kusa'},/* どの土地にも生える雑草（オヒシバ） */
   kinoko:{name:'きのこ',natural:1,weed:'kinoko'},
   plot:{name:'耕す前の畑',job:1,dyn:1},
   sprout:{name:'植える場所',job:1,dyn:1},
@@ -1010,7 +1011,7 @@ const STORAGE={stor:{type:'food',cap:30},mbox:{type:'mat',cap:50},crate:{type:'m
 function storageAt(j,type){const id=S.obj[j],wall=HOME_WALLS.has(id)&&(S.win||{})[j],b=STORAGE[wall]||STORAGE[id];return !!(b&&b.type===type)}
 function storageCapacity(type){let n=0;for(const id in STORAGE){const b=STORAGE[id];if(b.type===type)n+=cnt(id)*b.cap}for(const j in S.win||{}){const b=STORAGE[S.win[j]];if(HOME_WALLS.has(S.obj[j])&&b&&b.type===type)n+=b.cap}return n}
 const foodCap=()=>storageCapacity('food'),matCap=()=>storageCapacity('mat'),matTot=()=>Object.keys(MATN).reduce((a,k)=>a+(S.mat[k]||0),0);
-const MATN={wood:'木材',stone:'石材',bamboo:'竹',kusa:'草',kare:'かれ草',eda:'枝',kinoko:'きのこ',can:'空き缶'},WEEDS=new Set(['weed0g','weed0k','weed1g','weed1k','kinoko']),bambooOn=()=>WD===1||(S.mat.bamboo||0)>0;/* 竹は火山の素材。ほかのステージでは、持っているときだけ出す */const matTxt=m=>Object.keys(m||{}).map(k=>MATN[k]+m[k]).join('・');/* 素材は文字ではなくアイコンで */const esc=t=>String(t).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'})[c]);const matHTML=m=>Object.keys(m||{}).map(k=>'<span class="mic"><img src="'+(ICONS[k]||'')+'" alt="'+MATN[k]+'">'+m[k]+'</span>').join('');const matOK=m=>Object.keys(m||{}).every(k=>(S.mat[k]||0)>=m[k]);
+const MATN={wood:'木材',stone:'石材',bamboo:'竹',kusa:'草',kare:'かれ草',eda:'枝',kinoko:'きのこ',can:'空き缶'},WEEDS=new Set(['weed0g','weed0k','weed1g','weed1k','weedc','kinoko']),bambooOn=()=>WD===1||(S.mat.bamboo||0)>0;/* 竹は火山の素材。ほかのステージでは、持っているときだけ出す */const matTxt=m=>Object.keys(m||{}).map(k=>MATN[k]+m[k]).join('・');/* 素材は文字ではなくアイコンで */const esc=t=>String(t).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'})[c]);const matHTML=m=>Object.keys(m||{}).map(k=>'<span class="mic"><img src="'+(ICONS[k]||'')+'" alt="'+MATN[k]+'">'+m[k]+'</span>').join('');const matOK=m=>Object.keys(m||{}).every(k=>(S.mat[k]||0)>=m[k]);
 const watchQ=()=>!!(S.qTalked&&QUESTS[S.quest]&&QUESTS[S.quest].id==='watch1'&&!cnt('watch')&&!S.obj.some((o,j)=>o==='site'&&S.dyn[j]&&S.dyn[j].build==='watch'));
 const QB=new Set(['lumber','quarry','stele','fountain','lighthouse','windmill']),/* クエストでおぼえるまで建てられない建物（村レベルだけでは、使えない） */lvOK=id=>BL[id].kind==='furn'||(QB.has(id)?(!!(S.recipes||{})[id]||cnt(id)>0):id==='yogan'?(WD===1&&!!S.flags.yoganLearned):id==='watch'?(!!S.flags.watchLearned||watchQ()):S.lv>=(BL[id].lv||1)&&(BL[id].w||0)<=WD)||!!S.flags['lv_'+id]||grec(id);/* w：このステージから（それより前のステージでは、おぼえていないと作れない） */
 const breakable=o=>o==='fence'||o==='wall'||o==='hwall'||o==='door'||o==='yozoradoor'||o==='gate'||o==='sdoor'||!!(o&&BL[o]&&BL[o].brk);
@@ -1406,7 +1407,7 @@ function fishLoot(r){/* つり：魚でないときは、空き缶・枝・レ�
   const k=q<.6?'can':'eda';r.bubble=k==='can'?'🥫':'🪵';if(roomN(r)>0)addMat(r,k,1);else dropAt(r.x,r.y,'mat:'+k,1)}
 function weedMorning(){/* 毎朝：雑草30本（マップ全体。よみがえった土地は緑の草、荒れた土地は枯れた草）・きのこ（ときどき、木のそば）・枝（落とし物） */
   const st=WD===1?1:0,ok=k=>S.ground[k]===0&&!S.obj[k]&&!S.floor[k]&&!RFC.has(k);let n=S.obj.reduce((a,o)=>a+(WEEDS.has(o)?1:0),0),add=0;
-  for(let t=0;t<600&&add<30&&n<150;t++){const k=(Math.random()*W*H)|0;if(!ok(k))continue;S.obj[k]='weed'+st+(REV.has(k)?'g':'k');add++;n++}/* マップにのこる雑草は150本まで */
+  for(let t=0;t<600&&add<30&&n<150;t++){const k=(Math.random()*W*H)|0;if(!ok(k))continue;S.obj[k]=Math.random()<.3?'weedc':'weed'+st+(REV.has(k)?'g':'k');add++;n++}/* 3本に1本くらいは、どの土地にも生えるふんばり草 *//* マップにのこる雑草は150本まで */
   if(Math.random()<.5&&S.obj.reduce((a,o)=>a+(o==='kinoko'?1:0),0)<10){const T=[];S.obj.forEach((o,j)=>{if(o==='ntree'||o==='tree'||o==='deadtree'||o==='bamboo')T.push(j)});for(let t=0;t<30&&T.length;t++){const j=pick(T),c=[j-1,j+1,j-W,j+W].filter(ok);if(c.length){S.obj[pick(c)]='kinoko';break}}}/* きのこ：半分の日に1本（10本まで） */
   const ne=(S.drops||[]).filter(d=>d.id==='mat:eda').length;for(let i=0;i<8&&ne+i<30;i++){const x=(Math.random()*W)|0,y=(Math.random()*H)|0;if(ok(y*W+x))dropAt(x,y,'mat:eda',1)}/* 枝：毎日8本の落とし物（地面にのこるのは30本まで） */
 }
@@ -3231,6 +3232,8 @@ function circ(c,x,y,r,col){c.fillStyle=col;c.beginPath();c.arc(x,y,r,0,7);c.fill
 function drawWeed(c,id,x,y){/* 雑草・きのこ（仮の絵）。草原：しなやかな草（エノコログサ）・かさかさ草（かれたエノコログサ）。火山：くるくる草（ゼンマイ）・ちりちり草（かれたゼンマイ） */
   const h=k=>hash(((x*7+y*13)|0)+k*131),dry=id.endsWith('k');
   if(id==='kinoko'){shadow(c,x+16,y+27,7,2);c.fillStyle='#efe2c8';c.fillRect(x+14,y+19,4,8);c.fillStyle='#d8876a';c.beginPath();c.ellipse(x+16,y+19,7,4.5,0,Math.PI,0);c.fill();c.fillStyle='#f6e9d6';c.beginPath();c.arc(x+13.5,y+16.5,1.1,0,7);c.arc(x+18.5,y+17,1,0,7);c.fill();return}
+  if(id==='weedc'){shadow(c,x+16,y+27,8,2);/* ふんばり草（オヒシバ）：ひくく広がる葉と、指のようにひらいた穂 */c.strokeStyle='#5f9a3e';c.lineWidth=1.3;for(let k=0;k<5;k++){const a=Math.PI*(.15+k*.175),L=7+h(k)*3;c.beginPath();c.moveTo(x+16,y+27);c.quadraticCurveTo(x+16+Math.cos(a+Math.PI)*L*.5,y+25,x+16-Math.cos(a)*L,y+27-Math.sin(a)*2.5);c.stroke()}
+    for(let k=0;k<2;k++){const bx=x+13+k*6,top=y+14+h(k+3)*2;c.strokeStyle='#6aa34a';c.beginPath();c.moveTo(bx,y+27);c.lineTo(bx,top);c.stroke();c.strokeStyle='#8cc566';c.lineWidth=1.1;for(let f=0;f<4;f++){const a=-Math.PI/2+(f-1.5)*.42;c.beginPath();c.moveTo(bx,top);c.lineTo(bx+Math.cos(a)*5,top+Math.sin(a)*5+1.5);c.stroke()}c.lineWidth=1.3}return}
   shadow(c,x+16,y+27,7,2);const G=dry?['#c9ad78','#b39462','#dcc392']:['#7fb85a','#6aa34a','#a8d97c'];
   if(id.startsWith('weed0')){for(let k=0;k<5;k++){const bx=x+11+k*2.5,lean=(h(k)-.5)*5;c.strokeStyle=G[k%2];c.lineWidth=1.2;c.beginPath();c.moveTo(bx,y+27);c.quadraticCurveTo(bx+lean*.3,y+21,bx+lean,y+15+h(k+5)*4);c.stroke()}
     for(let k=0;k<2;k++){const tx=x+13+k*6+(h(k+9)-.5)*2,ty=y+12+h(k+3)*3;c.fillStyle=G[2];c.beginPath();c.ellipse(tx,ty,1.8,4.2,(k?.35:-.35),0,7);c.fill()}return}/* 穂のある細い草 */
@@ -3841,7 +3844,7 @@ function drawObj(c,id,x,y,i,g,now){
     F(10,13,12,10,'#b9b3aa');F(9,8,10,8,'#c4beb4');F(18,10,5,4,'#b9b3aa');F(8,7,4,4,'#9b958c');F(16,7,4,3,'#9b958c');F(11,16,4,5,'#9b958c');F(20,18,3,5,'#a59f96');
     F(12,10,2,2,'#2b2b33');F(21,12,2,1,'#6f6a64');F(10,22,4,1,'#8f8a84');F(18,22,4,1,'#8f8a84');F(22,13,3,3,'#9b958c');break}
   case'bamboo':{/* 竹（仮の絵）：3本の竹と葉 */shadow(c,x+16,y+28,11,3);for(const[sx,top,col]of[[9,-14,'#7fb069'],[23,-8,'#76a862'],[16,-22,'#8fc078']]){c.fillStyle=col;c.fillRect(x+sx-2,y+top,4,29-top);c.fillStyle='#b5d99c';c.fillRect(x+sx-1.5,y+top,1,29-top);c.fillStyle='#5e8f4c';for(let ny=top+7;ny<27;ny+=8)c.fillRect(x+sx-2.5,y+ny,5,1.2)}c.fillStyle='#9fcf7f';for(const[lx,ly,a]of[[12,-18,-.6],[20,-24,.6],[27,-10,.5],[5,-12,-.5],[19,-14,.4]]){c.beginPath();c.ellipse(x+lx,y+ly,5,1.8,a,0,7);c.fill()}break}
-  case'weed0g':case'weed0k':case'weed1g':case'weed1k':case'kinoko':drawWeed(c,id,x,y);break;
+  case'weed0g':case'weed0k':case'weed1g':case'weed1k':case'weedc':case'kinoko':drawWeed(c,id,x,y);break;
     case'takenoko':{/* たけのこ（仮の絵） */shadow(c,x+16,y+28,6,2);c.fillStyle='#c99c60';c.beginPath();c.moveTo(x+10.5,y+28);c.lineTo(x+16,y+13);c.lineTo(x+21.5,y+28);c.closePath();c.fill();c.fillStyle='#a87b47';c.beginPath();c.moveTo(x+10.5,y+28);c.lineTo(x+16,y+19);c.lineTo(x+13.5,y+28);c.closePath();c.fill();c.fillStyle='#e4c58f';c.beginPath();c.moveTo(x+21.5,y+28);c.lineTo(x+16,y+20);c.lineTo(x+18.5,y+28);c.closePath();c.fill();c.fillStyle='#9cc56f';c.beginPath();c.moveTo(x+14.5,y+16);c.lineTo(x+16,y+11);c.lineTo(x+17.5,y+16);c.closePath();c.fill();break}
   case'takebench':{/* 竹のベンチ（仮の絵）：横2マス */const w2=ICON?32:64,k=w2/64;shadow(c,x+w2/2,y+28,26*k,3);c.fillStyle='#6f9a52';for(const lx of[8,56])c.fillRect(x+lx*k-2,y+17,4,11);for(const[yy,col]of[[11,'#86b467'],[15.5,'#7aa95c'],[20,'#86b467']]){c.fillStyle=col;c.fillRect(x+3*k,y+yy,58*k,4);c.fillStyle='#b8dc9c';c.fillRect(x+3*k,y+yy,58*k,1);c.fillStyle='#5e8a45';for(const nx of[20,44])c.fillRect(x+nx*k,y+yy,1.2,4)}break}
   case'takeakari':{/* 竹あかり（仮の絵） */const T2=(now||0)/1000;shadow(c,x+16,y+28,6,2);c.fillStyle='#7fae62';c.fillRect(x+12,y+5,8,23);c.fillStyle='#a9d08a';c.fillRect(x+13,y+5,2,23);c.fillStyle='#5f8c47';c.fillRect(x+11.5,y+15,9,1.4);c.fillStyle='#e6f2d8';c.beginPath();c.ellipse(x+16,y+5,4,1.5,0,0,7);c.fill();const fl=.75+.25*Math.sin(T2*6+(i||0));c.fillStyle='rgba(255,214,120,'+fl+')';for(const[hx,hy]of[[16,9],[14,19],[18,21],[16,25]])c.fillRect(x+hx-.9,y+hy-.9,1.8,1.8);break}
@@ -4874,17 +4877,17 @@ function drawStairObj(c,a){/* 階段（仮の絵）：段差の下の低い地�
     else{const xi=d===1?ax:ax+TS,xo=d===1?ax+2*TS:ax-TS,gy=ay+TS;c.save();poly([[xi,ay-LIFT],[xo,ay],[xo,gy],[xi,gy-LIFT]]);c.clip();surf(X0,ay-LIFT,len,TS+LIFT,1);c.restore();c.save();poly([[xi,gy-LIFT],[xo,gy],[xi,gy]]);c.clip();face(X0,gy-LIFT,len,LIFT,gy);c.restore()}}/* 横向き：上の面と、手前の三角の側面 */
   else if(d===0){/* 手前へ下りる：段の上の面と、手前の面 */riser(ax,ay-LIFT,TS,LIFT-z(0)+.5,1);for(let n=0;n<SN;n++){const ya=ay+n*Dn,yb=ya+Dn;tread(ax,ya-z(n),TS,Dn+.5,n,0,0);riser(ax,yb-z(n),TS,z(n)-z(n+1)+.5,n)}}
   else if(d===2){/* 奥へ下りる：手前の段ほど高い。向こうの段から描いて、手前の段でかくす */const Y1=ay+TS;for(let n=SN-1;n>=0;n--){const yb=Y1-n*Dn,ya=yb-Dn;const t0=ya-z(n);tread(ax,t0,TS,Dn+.5,n,1,0);if(n<SN-1){c.fillStyle=SH1;c.fillRect(ax,t0-1,TS,1);c.fillStyle=SH2;c.fillRect(ax,t0-2,TS,1)}}}/* 段のさかい：手前の段のふちの上（おくの段）に、かげ2ドット */
-  else{/* 横へ下りる：おくの側板（うしろなので先に）→ 段の上の面・段の正面（けこみ）→ 手前の側板 */const X0=d===1?ax:ax-TS,o=stairOut(a,d),xi=d===1?ax:ax+TS,xo=d===1?ax+2*TS:ax-TS,zb=f=>LIFT*(1-f)+2;
-    if([a-W,o-W].every(k=>{const t=typeAt(k);return !(hiAt(k)||HOME_WALLS.has(t)||HOME_DOORS.has(t)||FENCE_IDS.has(t))})){c.beginPath();c.moveTo(xi,ay-zb(0));c.lineTo(xo,ay-zb(1));c.lineTo(xo,ay+3-zb(1));c.lineTo(xi,ay+3-zb(0));c.closePath();c.fillStyle=P[1];c.fill()}/* おくの側板：段より奥なので、段の前に描く（段のぎざぎざが見える） */
-    for(let n=0;n<SN;n++){const x=d===1?X0+n*Dn:X0+2*TS-(n+1)*Dn,zz=z(n),gy=ay+TS;tread(x,ay-zz,Dn+.5,TS,n,1,1);face(x,gy-zz,Dn+.5,zz,gy);
+  else{/* 横へ下りる：おくの側板（うしろなので先に）→ 段の上の面・段の正面（けこみ）→ 手前の側板 */const X0=d===1?ax:ax-TS,o=stairOut(a,d),xi=d===1?ax:ax+TS,xo=d===1?ax+2*TS:ax-TS,zb=f=>LIFT*(1-f)+2;let bkN=0;
+    if([a-W,o-W].every(k=>{const t=typeAt(k);return !(hiAt(k)||HOME_WALLS.has(t)||HOME_DOORS.has(t)||FENCE_IDS.has(t))})){c.beginPath();c.moveTo(xi,ay-zb(0));c.lineTo(xo,ay-zb(1));c.lineTo(xo,ay+TS);c.lineTo(xi,ay+TS);c.closePath();c.fillStyle=P[1];c.fill();c.beginPath();c.moveTo(xi,ay-zb(0));c.lineTo(xo,ay-zb(1));c.lineTo(xo,ay+3-zb(1));c.lineTo(xi,ay+3-zb(0));c.closePath();c.fillStyle=P[0];c.fill();bkN=1}/* おくの側板（上の面と、手前に向いた面）：段より奥なので、段の前に描く（段のぎざぎざが見える） */
+    for(let n=0;n<SN;n++){const x=d===1?X0+n*Dn:X0+2*TS-(n+1)*Dn,zz=z(n),gy=ay+TS;tread(x,ay-zz,Dn+.5,TS,n,1,1);face(x,gy-zz,Dn+.5,zz,gy);if(bkN){c.fillStyle=SH1;c.fillRect(x,ay-zz,Dn+.5,1);c.fillStyle=SH2;c.fillRect(x,ay-zz+1,Dn+.5,1)}/* おくの側板に接するふちのかげ */
       if(n){const RW=3,rx=d===1?x:x+Dn-RW,sx=d===1?x+RW:x+Dn-RW-1,dx=d===1?1:-1;c.fillStyle=P[1];c.fillRect(rx,ay-zz,RW,TS);if(br){c.fillStyle=MO;for(let yy=ay-zz+8;yy<ay-zz+TS;yy+=8)c.fillRect(rx,yy,RW,.6)}c.fillStyle=SH1;c.fillRect(sx,ay-zz,1,TS);c.fillStyle=SH2;c.fillRect(sx+dx,ay-zz,1,TS);c.fillStyle='rgba(255,250,235,.45)';c.fillRect(d===1?x-1:x+Dn,ay-z(n-1),1,TS)}}}/* 段のさかい：高い段の正面（けこみ、3ドット）・そのとなりにかげ2ドット・高い段のふちを明るく */
   {/* 側板：横に壁・柵・がけがないがわに、階段と同じ素材の板をつける */const o=d?stairOut(a,d):-1,cl=k=>{const t=typeAt(k);return hiAt(k)||HOME_WALLS.has(t)||HOME_DOORS.has(t)||FENCE_IDS.has(t)},free=ks=>ks.every(k=>k>=0&&!cl(k)),BW=3;
-    const band=(x,y0,y1)=>{c.fillStyle=P[1];c.fillRect(x,y0,BW,y1-y0);c.fillStyle='rgba(255,250,235,.3)';c.fillRect(x,y0,1,y1-y0)};
+    const band=(x,y0,y1)=>{c.fillStyle=P[1];c.fillRect(x,y0,BW,y1-y0);c.fillStyle='rgba(255,250,235,.3)';c.fillRect(x,y0,1,y1-y0);const ins=x<ax+TS/2?1:-1,ix=ins>0?x+BW:x-1;c.fillStyle=SH1;c.fillRect(ix,y0,1,y1-y0);c.fillStyle=SH2;c.fillRect(ix+ins,y0,1,y1-y0)};/* 側板と、板に接する面（段・坂）のかげ2ドット */
     if(d===0){if(free([a-1]))band(ax,ay-LIFT-2,ay+TS);if(free([a+1]))band(ax+TS-BW,ay-LIFT-2,ay+TS)}
     else if(d===2){if(free([a-1,o-1]))band(ax,ay-TS-2,ay+TS-LIFT);if(free([a+1,o+1]))band(ax+TS-BW,ay-TS-2,ay+TS-LIFT)}
     else{const xi=d===1?ax:ax+TS,xo=d===1?ax+2*TS:ax-TS,zb=f=>LIFT*(1-f)+2,poly=pts=>{c.beginPath();c.moveTo(pts[0][0],pts[0][1]);for(const q of pts)c.lineTo(q[0],q[1]);c.closePath()};
       if(SLOPES.has(id)&&free([a-W,o-W])){poly([[xi,ay-zb(0)],[xo,ay-zb(1)],[xo,ay+BW-zb(1)],[xi,ay+BW-zb(0)]]);c.fillStyle=P[1];c.fill()}/* 階段のおくの側板は、段の前に描いてある */
-      if(free([a+W,o+W])){const gy=ay+TS;c.save();poly([[xi,gy-zb(0)],[xo,gy-zb(1)],[xo,gy],[xi,gy]]);c.clip();face(Math.min(xi,xo),gy-LIFT-2,2*TS,LIFT+2,gy);c.restore();poly([[xi,gy-BW-zb(0)],[xo,gy-BW-zb(1)],[xo,gy-zb(1)],[xi,gy-zb(0)]]);c.fillStyle=P[0];c.fill()}}}/* 側板：段にそわない、まっすぐななめの板（階段も坂も） */
+      if(free([a+W,o+W])){const gy=ay+TS;for(const[k,col]of[[1,SH1],[2,SH2]]){poly([[xi,gy-BW-zb(0)-k],[xo,gy-BW-zb(1)-k],[xo,gy-BW-zb(1)-k+1],[xi,gy-BW-zb(0)-k+1]]);c.fillStyle=col;c.fill()}/* 手前の側板に接する面のかげ2ドット */c.save();poly([[xi,gy-zb(0)],[xo,gy-zb(1)],[xo,gy],[xi,gy]]);c.clip();face(Math.min(xi,xo),gy-LIFT-2,2*TS,LIFT+2,gy);c.restore();poly([[xi,gy-BW-zb(0)],[xo,gy-BW-zb(1)],[xo,gy-zb(1)],[xi,gy-zb(0)]]);c.fillStyle=P[0];c.fill()}}}/* 側板：段にそわない、まっすぐななめの板（階段も坂も） */
   c.restore();if(lat){for(const k of lat[0])if(hiAt(k))cliffEdgeOver(c,k,1);for(const k of lat[1])if(hiAt(k))cliffEdgeOver(c,k,0)}}/* 左右ががけなら、階段を描いたあとに、がけの横のはし（横の岩・丸いはし）をもう一度上に描く（切りとらない） */
 const CLC={n:-1,s:null,rows:null};/* 段差の絵は、行ごとのかたまり（つづいた高いマス）ごとに1まい作っておく。下絵が変わったら作りなおす */
 function cliffRuns(){if(CLC.n===STATN&&CLC.s===S&&CLC.rows)return CLC.rows;CLC.n=STATN;CLC.s=S;const rows=new Map();
@@ -5971,7 +5974,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='778';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='779';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
