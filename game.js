@@ -4688,12 +4688,12 @@ function drawRes0(r,now){
   if(tubB){const wl=((r.act.tub/W)|0)*TS+17;ctx.fillStyle='rgba(255,255,255,.85)';for(let k=0;k<5;k++){const bx=px-9+k*4.5+Math.sin(now/700+k*1.7)*1.2,ph=(now/1400+k*.23+r.id)%1;ctx.globalAlpha=.55+.4*Math.sin(now/500+k);ctx.beginPath();ctx.arc(bx,wl+.5-Math.sin(ph*Math.PI)*.8,1.7+((k*7)%3)*.45,0,7);ctx.fill()}ctx.globalAlpha=1}/* 湯ぶねのあわ */
   else if(wade){const wl=fy-wade*11,rp=(now/900+r.id)%1;ctx.strokeStyle='rgba(255,255,255,.75)';ctx.lineWidth=1.6;ctx.beginPath();ctx.ellipse(px,wl,11+rp*6,3+rp*1.5,0,0,7);ctx.globalAlpha=1-rp*.8;ctx.stroke();ctx.globalAlpha=1;ctx.strokeStyle='rgba(255,255,255,.9)';ctx.beginPath();ctx.ellipse(px,wl,10,2.6,0,0,7);ctx.stroke()}/* 水面の波紋 */
   /* ベンチは1つの物として、すわった子の後ろにまとめて描く */
-  const by=fy-27;
+  let by=fy-27;
   const ci=carryIcon(r);
   const over=()=>{
   if(ci){const cb=walking?Math.abs(Math.sin(now/110+r.id))*1.2:0;ctx.font='26px sans-serif';ctx.fillStyle='#000';ctx.textAlign='center';ctx.textBaseline='middle';{let cl=carryIcons(r);if(!cl.length)cl=[ci];if(!cl[0])cl=[];const hn=cl.length;/* 持っている数だけ、そのまま積む */if(cl[0]==='⚰️'){const cb0=coffinBmp(),cy=fy-(r.elem==='wood'?34:29)-cb+10;if(cb0)ctx.drawImage(cb0.c,px-cb0.w/2,cy-cb0.h,cb0.w,cb0.h);cl=[]}/* 棺は、いつもの1.5倍の大きさ（39px）で、頭の上に乗せる（木の子は葉っぱの上） */for(let i=0;i<cl.length;i++){const e1=cl[i],ei=emoImg(e1),ox=(i%2?3:-3)*(hn>1?1:0),oy=-i*7;if(ei){const k=30/Math.max(ei.width,ei.height),iw=ei.width*k,ih=ei.height*k;ctx.drawImage(ei,px-iw/2+ox,fy-47-cb-ih/2+oy+(hn-1)*3+(e1==='⚰️'?7:0),iw,ih)}else ctx.fillText(e1,px+ox,fy-47-cb+oy+(hn-1)*3)}}/* たくさん持つときは、アイコンを重ねる */ctx.textAlign='start';ctx.textBaseline='alphabetic'}
   const gx=bedH?px-10:px,gy=bedH?py+20:py+11;/* 横のベッドで寝ているときは、横になった体の下のまん中に出す */
-  if(!(r.hurt>0)&&S.t-(r.eUp||-9)<3&&r.energy<99.5){const v=r.energy/100,bx=gx-12,byy=gy;ctx.fillStyle='rgba(0,0,0,.45)';rr(ctx,bx,byy,24,5,2.5);ctx.fillStyle='#7ed99a';rr(ctx,bx+1,byy+1,Math.max(2,22*v),3,1.5);const ph=(now/600)%1;ctx.globalAlpha=1-ph;ctx.fillStyle='#7ed99a';ctx.font='bold 9px \"DotGothic16\",\"Hikomi\",\"Hiragino Maru Gothic ProN\",sans-serif';ctx.textAlign='center';ctx.fillText('+',gx+15,byy+4-ph*8);ctx.globalAlpha=1}/* 元気が回復中：みどりのバー */
+  if(!(r.hurt>0)&&S.t-(r.eUp||-9)<3&&r.energy<99.5){const v=r.energy/100,bx=gx-12,byy=gy;ctx.fillStyle='rgba(0,0,0,.45)';rr(ctx,bx,byy,24,5,2.5);ctx.fillStyle='#7ed99a';rr(ctx,bx+1,byy+1,Math.max(2,22*v),3,1.5);const ph=(now/600)%1;ctx.globalAlpha=1-ph;ctx.fillStyle='#7ed99a';ctx.font='9px \"PixelMplus10\",\"Hikomi\",\"Hiragino Maru Gothic ProN\",sans-serif';ctx.textAlign='center';ctx.fillText('+',gx+15,byy+4-ph*8);ctx.globalAlpha=1}/* 元気が回復中：みどりのバー */
   if(r.hurt>0){const v=r.hunger/hMax(r),a=Math.min(1,r.hurt/8);ctx.globalAlpha=a;ctx.fillStyle='rgba(0,0,0,.6)';rr(ctx,gx-12,gy,24,5,2.5);ctx.fillStyle=v>.5?'#7ee08a':v>.25?'#ecdcbc':'#ff6b6b';rr(ctx,gx-11,gy+1,Math.max(2,22*v),3,1.5);ctx.globalAlpha=1}
   if(at==='craft'&&ad){const o=S.orders.find(q=>q.id===r.act.order);if(o){const f=Math.min(1,o.prog/o.need),bx=px-16,byy=py+(r.hurt>0?19:12);ctx.fillStyle='rgba(150,115,75,.5)';rr(ctx,bx-1.5,byy-1.5,35,8,4);ctx.fillStyle='#e8dcc0';rr(ctx,bx,byy,32,5,2.5);ctx.fillStyle='#e0a43a';rr(ctx,bx,byy,Math.max(2.5,32*f),5,2.5)}}/* 依頼の作業の進み具合は足もと。吹き出しは上に出す */
   if(r.act&&r.act.stage==='do'&&WORKP[r.act.type]&&WORKP[r.act.type](r,r.act)!=null){const f=Math.max(0,Math.min(1,WORKP[r.act.type](r,r.act)||0)),bx=px-16,byy=py+(r.hurt>0?19:12);ctx.fillStyle='rgba(150,115,75,.5)';rr(ctx,bx-1.5,byy-1.5,35,8,4);ctx.fillStyle='#e8dcc0';rr(ctx,bx,byy,32,5,2.5);ctx.fillStyle='#e0a43a';rr(ctx,bx,byy,Math.max(2.5,32*f),5,2.5)}/* 木を切る・石を掘る・畑・建てる・料理など、作業の進み具合 */
@@ -4706,6 +4706,7 @@ function drawRes0(r,now){
   if(CLAPON)return;/* 拍手中は吹き出しを出さない */
   const warn=r.hunger<20;
   if(!ci&&(r.bubble||warn)){const t=NOFACE[warn&&!r.bubble?'🍙':r.bubble]||(warn&&!r.bubble?'🍙':r.bubble);/* 顔の絵文字は使わない */
+    {const a=r.act;if(a&&a.stage==='do'&&(a.type==='mine'||a.type==='chop')&&NATHIT.has(a.obj)&&Math.abs((a.obj%W+.5)*TS-px)<TS+20){const yb=natBarY(a.obj);if(by-45<yb+7&&by-15>yb-2)by=yb+12}}/* 木・岩ののこりのバーと重なるときは、ふきだしをバーの上へ */
     ctx.font='16px sans-serif';const bw=Math.max(27,Math.ceil(ctx.measureText(t).width)+9);/* 吹き出しは1.5倍 */
     ctx.fillStyle=warn?'#ffd2cc':'#fff';rr(ctx,px-bw/2,by-45,bw,24,9);ctx.beginPath();ctx.moveTo(px-4.5,by-21.5);ctx.lineTo(px,by-15);ctx.lineTo(px+4.5,by-21.5);ctx.fill();
     if(t==='💬'){for(let d=-1;d<=1;d++)circ(ctx,px+d*6.5,by-33,2.3,'#7a7064')}/* おしゃべりは点々だけ */
@@ -4735,7 +4736,7 @@ function drawGod(now){
   shadow(ctx,px,GY*TS+16,14,4);
   if(QUESTCLEARW===GOD){const f=()=>talkBub(px,py-28,now,'#ffd56b');if(BUBQ)BUBQ.push(f);else f()}
   else if(TALKW===GOD){const f=()=>talkBub(px,py-28,now);if(BUBQ)BUBQ.push(f);else f()}
-  else if(S.feat.shop){ctx.fillStyle='rgba(31,59,58,.9)';rr(ctx,px-17,py-58,34,13,6);ctx.fillStyle='#ecdcbc';ctx.font='bold 9px \"DotGothic16\",\"Hikomi\",\"Hiragino Maru Gothic ProN\",sans-serif';ctx.textAlign='center';ctx.fillText('こうかん',px,py-48.5);ctx.textAlign='start'}
+  else if(S.feat.shop){ctx.fillStyle='rgba(31,59,58,.9)';rr(ctx,px-17,py-58,34,13,6);ctx.fillStyle='#ecdcbc';ctx.font='9px \"PixelMplus10\",\"Hikomi\",\"Hiragino Maru Gothic ProN\",sans-serif';ctx.textAlign='center';ctx.fillText('こうかん',px,py-48.5);ctx.textAlign='start'}
   const g=ctx.createRadialGradient(px,py-12,4,px,py-12,36);g.addColorStop(0,'rgba(255,250,210,.4)');g.addColorStop(1,'rgba(255,250,210,0)');ctx.fillStyle=g;ctx.fillRect(px-36,py-48,72,72);
   const G2=SPR.god,GC=window.CHIPS&&CHIPS.god,GI=GC&&chipImgs(GC,'god')[0];if(GI&&GI.ok){const sm=ctx.imageSmoothingEnabled;ctx.imageSmoothingEnabled=false;ctx.drawImage(GI,Math.round(px*2)/2+GC.ax/2,Math.round((py+16)*2)/2+GC.ay/2,GC.w/2,GC.h/2);ctx.imageSmoothingEnabled=sm}/* ドット絵（1ドットを2×2に分けた細かさ） */else if(G2.ok){const h=58,w=h*G2.w/G2.h;ctx.drawImage(G2.img,px-w/2,py+16-h,w,h)}else{
   circ(ctx,px-10,py+6,7,'#fff');circ(ctx,px+10,py+6,7,'#fff');circ(ctx,px,py+4,9,'#fff');circ(ctx,px-4,py+9,6,'#eef4ff');circ(ctx,px+5,py+9,6,'#eef4ff');
@@ -5202,6 +5203,7 @@ function cliffStrip0(y,Rn,K){/* 1つのかたまりの絵：横のふち・が�
     g.save();g.clip(P);g.setTransform(1,0,0,1,0,0);g.drawImage(sh,0,0);g.drawImage(rim,0,0);g.restore()}/* ふちに向かって少し暗くなる丸み（ぼかし）と、ふちの帯 */
   for(let k=x0;k<=x1;k++)if(REV.has(y*W+k)&&hiAt(y*W+k)===CLV)cliffGrass(g,y,k);/* もっと高いマスの草は、この段のふちには出さない（上の段の草が、がけのとちゅうにたれないように） *//* 上が草地なら、ふちから草がはみ出す（手前は、がけにたれる） */
   return cv}
+const natBarY=j=>((j/W)|0)*TS-(S.obj[j]==='rock'?7:30)-hiAt(j)*LIFT;/* 木・岩の上の、のこりのバーの上はし */
 function render(now){RFN++;SBT=0;
   if(dirty)rebuildStatic(STATICFULL);
   ctx.setTransform(1,0,0,1,0,0);ctx.fillStyle='#8f8262';ctx.fillRect(0,0,cv.width,cv.height);
@@ -5274,14 +5276,14 @@ function render(now){RFN++;SBT=0;
     const d=[[0,1],[1,0],[0,-1],[-1,0]][rot];
     const bob=Math.sin(now/220)*2,cx=pending.x*TS+w/2+d[0]*(w/2+9+bob),cy=pending.y*TS+h/2+d[1]*(h/2+9+bob);
     ctx.save();ctx.translate(cx,cy);ctx.rotate(Math.atan2(d[1],d[0]));ctx.fillStyle='#ffe066';ctx.strokeStyle='#7a5a1c';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(9,0);ctx.lineTo(-5,-8);ctx.lineTo(-5,8);ctx.closePath();ctx.stroke();ctx.fill();ctx.restore()}
-  if(S.summon&&STATUE>=0){const qx=(STATUE%W+.5)*TS,qy=((STATUE/W)|0)*TS-58+Math.sin(now/220)*4;bubs.push(()=>{ctx.fillStyle='rgba(255,236,120,.35)';ctx.beginPath();ctx.arc(qx,qy,19+Math.sin(now/300)*2,0,7);ctx.fill();circ(ctx,qx,qy,14,'#ffd84a');ctx.strokeStyle='#fff';ctx.lineWidth=2.5;ctx.beginPath();ctx.arc(qx,qy,14,0,7);ctx.stroke();ctx.fillStyle='#7a4a10';ctx.font='bold 20px \"DotGothic16\",\"Hikomi\",\"Hiragino Maru Gothic ProN\",sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('！',qx,qy+1);ctx.textAlign='start';ctx.textBaseline='alphabetic'})}/* 召喚できる合図 */
+  if(S.summon&&STATUE>=0){const qx=(STATUE%W+.5)*TS,qy=((STATUE/W)|0)*TS-58+Math.sin(now/220)*4;bubs.push(()=>{ctx.fillStyle='rgba(255,236,120,.35)';ctx.beginPath();ctx.arc(qx,qy,19+Math.sin(now/300)*2,0,7);ctx.fill();circ(ctx,qx,qy,14,'#ffd84a');ctx.strokeStyle='#fff';ctx.lineWidth=2.5;ctx.beginPath();ctx.arc(qx,qy,14,0,7);ctx.stroke();ctx.fillStyle='#7a4a10';ctx.font='20px \"PixelMplus10\",\"Hikomi\",\"Hiragino Maru Gothic ProN\",sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('！',qx,qy+1);ctx.textAlign='start';ctx.textBaseline='alphabetic'})}/* 召喚できる合図 */
   
   BUBQ=null;for(const f of bubs)f();
-  for(const[j,ht]of NATHIT){if(now-ht>4000||!LIGHTNAT[S.obj[j]]){NATHIT.delete(j);continue}const v=Math.max(0,1-(S.hp['lp'+j]||0)/NATG[S.obj[j]]),a=Math.min(1,(4000-(now-ht))/600),bx=(j%W)*TS+3,byy=((j/W)|0)*TS-(S.obj[j]==='rock'?7:30)-hiAt(j)*LIFT;/* 守りの光をあてた木・岩・せいれいが切っている木・ほっている岩の、のこりのバー（高いマスでは持ち上げる） */
+  for(const[j,ht]of NATHIT){if(now-ht>4000||!LIGHTNAT[S.obj[j]]){NATHIT.delete(j);continue}const v=Math.max(0,1-(S.hp['lp'+j]||0)/NATG[S.obj[j]]),a=Math.min(1,(4000-(now-ht))/600),bx=(j%W)*TS+3,byy=natBarY(j);/* 守りの光をあてた木・岩・せいれいが切っている木・ほっている岩の、のこりのバー（高いマスでは持ち上げる） */
     ctx.globalAlpha=a;ctx.fillStyle='rgba(0,0,0,.6)';rr(ctx,bx-1,byy-1,TS-4,7,3);ctx.fillStyle='#ffe58a';rr(ctx,bx,byy,Math.max(2,(TS-6)*v),5,2.5);ctx.globalAlpha=1}
   for(const[j,ht]of WALLHIT){const o=S.obj[j];if(now-ht>4000||!o||!BL[o]||!(BL[o].hp||DEFS.has(o))){WALLHIT.delete(j);continue}const mx=BL[o].hp||defHp(o),hp=Math.max(0,S.hp[j]??mx),v=hp/mx,a=Math.min(1,(4000-(now-ht))/600);
     const bx=(j%W)*TS+3,byy=((j/W)|0)*TS-7;ctx.globalAlpha=a;ctx.fillStyle='rgba(0,0,0,.6)';rr(ctx,bx-1,byy-1,TS-4,7,3);ctx.fillStyle=v>.5?'#7ee08a':v>.25?'#ecdcbc':'#ff6b6b';rr(ctx,bx,byy,Math.max(2,(TS-6)*v),5,2.5);
-    ctx.font='bold 8px \"DotGothic16\",\"Hikomi\",\"Hiragino Maru Gothic ProN\",sans-serif';ctx.textAlign='center';ctx.fillStyle='#fff';ctx.fillText(Math.floor(hp)+'/'+mx,bx+TS/2-3,byy-2);ctx.textAlign='start';ctx.globalAlpha=1}
+    ctx.font='8px \"PixelMplus10\",\"Hikomi\",\"Hiragino Maru Gothic ProN\",sans-serif';ctx.textAlign='center';ctx.fillStyle='#fff';ctx.fillText(Math.floor(hp)+'/'+mx,bx+TS/2-3,byy-2);ctx.textAlign='start';ctx.globalAlpha=1}
   if(WD===1&&S.st2)for(const k in S.st2.ash){const ax=(k%W)*TS,ay=((k/W)|0)*TS;ctx.fillStyle='rgba(95,90,86,.6)';for(let n=0;n<5;n++){ctx.beginPath();ctx.arc(ax+6+hash(k*3+n)*20,ay+6+hash(k*5+n)*18,3.5+hash(+k+n)*3,0,7);ctx.fill()}}/* 灰でよごれた設備 */
   if(WD===1&&S.st2)for(let y=Math.max(0,y0-1);y<Math.min(H,y1+2);y++)for(let x=Math.max(0,x0-1);x<Math.min(W,x1+1);x++){const i=y*W+x;if(S.ground[i]!==1||hash(i*7)>.45||!hotW(i))continue;const ph=((now/2600+hash(i*3))%1),sx=(i%W)*TS+8+hash(i*5)*16+Math.sin(now/700+i)*3,sy=((i/W)|0)*TS+14-ph*26;/* 温泉の湯気 */
     ctx.fillStyle='rgba(255,255,255,'+(.5*(1-ph))+')';ctx.beginPath();ctx.arc(sx,sy,5+ph*7,0,7);ctx.fill()}
@@ -5300,7 +5302,7 @@ function render(now){RFN++;SBT=0;
     ctx.save();ctx.lineCap='round';if(s.fire&&h<1){ctx.fillStyle='rgba(255,120,40,.5)';ctx.beginPath();ctx.arc(X(h),Y(h),7,0,7);ctx.fill();ctx.fillStyle='#ffcf6a';ctx.beginPath();ctx.arc(X(h),Y(h),4,0,7);ctx.fill()}/* ようがん台の火の玉 */
     else if(h<1){ctx.strokeStyle='rgba(255,236,150,.55)';ctx.lineWidth=7;ctx.beginPath();ctx.moveTo(X(tl),Y(tl));ctx.lineTo(X(h),Y(h));ctx.stroke();ctx.strokeStyle='#fffbe0';ctx.lineWidth=3;ctx.stroke();ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(X(h),Y(h),4,0,7);ctx.fill()}
     else{const q=(p-1/2.4)/(1-1/2.4);ctx.globalAlpha=1-q;ctx.strokeStyle='#fff3b0';ctx.lineWidth=3;ctx.beginPath();ctx.arc(s.x2*TS,s.y2*TS,6+q*18,0,7);ctx.stroke();ctx.fillStyle='rgba(255,250,210,.7)';ctx.beginPath();ctx.arc(s.x2*TS,s.y2*TS,9*(1-q),0,7);ctx.fill()}ctx.restore()}ctx.globalAlpha=1;
-  ctx.font='bold 11px "DotGothic16","Hikomi",sans-serif';ctx.textAlign='center';
+  ctx.font='11px "PixelMplus10","Hikomi",sans-serif';ctx.textAlign='center';
   for(const f of floats){ctx.globalAlpha=Math.min(1,f.life*2);const yy=(f.y-(1-f.life)*1.2)*TS;ctx.lineJoin='round';ctx.lineWidth=3;ctx.strokeStyle='rgba(176,138,100,.9)';{const fi=emoImg(f.text);if(fi){const ih=20,iw=ih*fi.width/fi.height;ctx.drawImage(fi,f.x*TS-iw/2,yy-ih+4,iw,ih)}else{ctx.strokeText(f.text,f.x*TS,yy);ctx.fillStyle='#fff3d6';ctx.fillText(f.text,f.x*TS,yy)}}}/* 文字はぜんぶクリーム色 *//* 文字のふちどりはうすい茶色 */
   ctx.globalAlpha=1;ctx.textAlign='start';
   const dk=darkness();
@@ -6244,7 +6246,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='844';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='845';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
@@ -6298,7 +6300,7 @@ function tutSpot(id){const sz=BL[id].sz||[1,1],V=tutView(),vc=[Math.floor((cam.x
   else if(id==='bed'&&HOUSES.length){for(const j of HOUSES[0].inside){const x=j%W,y=(j/W)|0;if(!S.obj[j]&&canPlace(id,x,y,true)){v=[x,y];break}}if(!v)v=near(vc,true)}/* ベッドは家の中を指す */
   else if(id==='hwall'&&QUESTS[S.quest]&&QUESTS[S.quest].id==='wall'){for(let d=3;d<=6;d++){const x=WD===1?CX+d:CX-d,y=CY-2;if(!S.obj[y*W+x]&&canPlace(id,x,y,true)){v=[x,y];break}}if(!v)v=near([WD===1?CX+3:CX-4,CY-2],false)}/* 家のすきまを指す */
   else v=near(vc,true)||near(id==='statue'?[CX,CY-8]:[CX+2,CY+2],false);/* 指は画面の右下。置けないときは、いちばん近い置ける所 */
-  if(v&&!inV(v[0],v[1])&&tutCache.pan!==k){tutCache.pan=k;const s=V[1]+V[3]-VH;centerOn((v[0]+sz[0]/2)*TS,(v[1]+sz[1]/2)*TS-s/2/cam.z)}/* 見えない所なら、一度だけそこへカメラを寄せる */
+  const pk=S.quest+':'+id;if(v&&!inV(v[0],v[1])&&tutCache.pan!==pk){tutCache.pan=pk;const s=V[1]+V[3]-VH;centerOn((v[0]+sz[0]/2)*TS,(v[1]+sz[1]/2)*TS-s/2/cam.z)}/* 見えない所なら、一度だけそこへカメラを寄せる（クエストと物ごとに1回。画面を動かしたあとに、もう一度引きもどさない） */
   tutCache={k,t:performance.now(),v,pan:tutCache.pan};return v}
 function palArrows(){const b=$('#palItems');if(!b)return;const m=b.scrollWidth-b.clientWidth;$('#palL').hidden=!(m>4&&b.scrollLeft>4);$('#palR').hidden=!(m>4&&b.scrollLeft<m-4)}
 function updTut(){
