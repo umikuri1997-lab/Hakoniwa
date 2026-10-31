@@ -5027,6 +5027,8 @@ function waterShimmer(now,x0,y0,x1,y1){/* 水面：見えている所の水の�
   g.globalCompositeOperation='copy';g.drawImage(WSH.m,0,0);g.globalCompositeOperation='source-in';
   const pt=g.createPattern(im,'repeat');pt.setTransform(new DOMMatrix().translate(-x0*TS+sx,-y0*TS+sy));g.fillStyle=pt;g.fillRect(0,0,w,h);g.globalCompositeOperation='source-over';g.drawImage(WSH.e,0,0);
   ctx.drawImage(o,x0*TS,y0*TS)}
+function sideClip(i,f){/* 低いマスの物が、となりの高いマスの上へはみ出さないように：となりのマスが高ければ、そのマスの高い面（上の面のてっぺんより下）には描かない */const x=i%W,y=(i/W)|0,h=hiAt(i),L=x>0&&hiAt(i-1)>h?hiAt(i-1):0,R=x<W-1&&hiAt(i+1)>h?hiAt(i+1):0;if(!L&&!R){f();return}
+  ctx.save();ctx.beginPath();ctx.rect(x*TS-200,y*TS-400,TS+400,600);if(L)ctx.rect(x*TS-200,y*TS-L*LIFT,200,TS+L*LIFT+200);if(R)ctx.rect((x+1)*TS,y*TS-R*LIFT,200,TS+R*LIFT+200);ctx.clip('evenodd');f();ctx.restore()}
 function liftDraw(z,f){if(!z){f();return}ctx.save();ctx.translate(0,-z);f();ctx.restore()}
 const CLIMB=new Set();/* いま段差をよじのぼっている・おりているせいれい（uLift で入れる） */
 function uLift(o){if(o&&o.elem){CLIMB.delete(o);if(S&&LADDERS.has(S.obj[(o.y|0)*W+(o.x|0)])&&o.path&&o.path.length)CLIMB.add(o)}/* ハシゴの上を動いている子も、よじのぼる動き *//* 段差の上にいる子・コワイノは、LIFT だけ上に。段差を飛んでいる間は、高さを少しずつかえて、ぴょんと弧をえがく */
@@ -5247,7 +5249,7 @@ function render(now){RFN++;SBT=0;
   if(S.nushi){const n=S.nushi,px=n.x*TS,py=n.y*TS;add(n.y+.2,2,[px-100,py-150,px+100,py+20],()=>drawNushi(now),-1)}
   for(let y=Math.max(0,y0-2);y<Math.min(H,y1+4);y++)for(let x=Math.max(0,x0-4);x<x1;x++){const i=y*W+x,o=S.obj[i];if(!o||o==='part'||!BL[o]||S.ground[i]===1&&o!=='lotus'&&o!=='sprout'&&o!=='bridge'||(FLAT.has(o)||BL[o].floor)&&!(BL[o].dyn||BL[o].anim||TREES.has(o)))continue;/* 立っている物は、動く物も動かない物も、毎コマ足もとの順に描く */
     if(o==='door'||o==='yozoradoor')add((i/W|0)+.01,0,null,()=>{ctx._doorBack=1;drawObj(ctx,o,x*TS,y*TS-hiAt(i)*LIFT,i);ctx._doorBack=0},i);/* ドアの奥の面 */
-    add(objectDepth(o,i),BL[o].kind==='block'?0:1,null,()=>drawObj(ctx,o,x*TS,y*TS-hiAt(i)*LIFT,i,S.dyn[i]?(S.dyn[i].g!=null?S.dyn[i].g:S.dyn[i].p):0,now),i)}
+    add(objectDepth(o,i),BL[o].kind==='block'?0:1,null,()=>sideClip(i,()=>drawObj(ctx,o,x*TS,y*TS-hiAt(i)*LIFT,i,S.dyn[i]?(S.dyn[i].g!=null?S.dyn[i].g:S.dyn[i].p):0,now)),i)}
   for(const k in S.roof||{}){const j=+k,x=j%W,y=(j/W)|0,id=S.roof[k];if(!vis({x:x+1,y:y+1}))continue;add(y+2.001,3,[x*TS-8,y*TS-44,x*TS+72,y*TS+70],()=>drawRoofItem(ctx,id,x*TS,y*TS-hiAt(j)*LIFT),j);{const bk=window.CHIPS&&CHIPS[id+':back'];if(bk)add(y,0,[x*TS-8,y*TS-44,x*TS+72,y*TS+70],()=>drawChip(ctx,bk,id,x*TS,y*TS-hiAt(j)*LIFT,0),j)}}/* うしろの柱は、その行のはじめ（せいれいや家具より下） *//* ガゼボ・東屋：家の屋根と同じ（2マスめの行のすぐ後）。下に置いた物より上 */
   if(WD===1&&S.st2&&S.st2.fire)for(const k in S.st2.fire){const j=+k,o=S.obj[j];if(!o||!BL[o])continue;add(objectDepth(o,j)+.005,1,objBox(o,j),()=>drawFire1(j,now),j)}/* 燃えている物のほのおは、その物のすぐ手前に */
   if(festOn()){const SL=festStalls();for(const[x,y]of festPoles()){const j=y*W+x;if(S.obj[j]||S.ground[j]===1||!vis({x:x+.5,y:y+.5})||SL.some(t=>t.y===y&&Math.abs(t.x-x)<=2))continue;add(y+1,1,[x*TS,y*TS-24,x*TS+TS+8,y*TS+TS],()=>drawFestPole(x,y,now),-1)}}/* おまつりのちょうちん（木や岩・水の上、屋台のところには立てない） */
@@ -6235,7 +6237,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='833';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='834';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
