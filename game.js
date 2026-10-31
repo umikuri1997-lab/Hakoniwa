@@ -4852,6 +4852,10 @@ const SLTEX=new Map();function slopeTex(a,d){/* 坂の面のもようは、の�
   const t=stairTop(a,d),f=S.floor[t]||'',g=REV.has(t);let e=SLTEX.get(a);if(e&&e.t===t&&e.f===f&&e.g===g&&e.w===WD)return e.p;const C=window.CHIPS||{},mk=(ch,id)=>{if(!ch)return null;const cv=document.createElement('canvas');cv.width=cv.height=TS;drawChip(cv.getContext('2d'),ch,id,0,0,0);return cv};
   let src=f?mk(C[(f==='woodpath'?'floor':f==='brickfloor'?'brick':f==='stonefloor'?'stone':f)+'#0'],f):g?(C['tex:grass']&&chipImgs(C['tex:grass'],'ground')[0]):WD===1?mk(C['groundr#0'],'ground'):(C['tex:dry']&&chipImgs(C['tex:dry'],'ground')[0]);
   if(!src||src.ok===false)return null;e={t,f,g,w:WD,p:document.createElement('canvas').getContext('2d').createPattern(src,'repeat')};SLTEX.set(a,e);return e.p}
+function cliffEdgeOver(c,k,sd){/* 高いマス k の、sd がわ（0左・1右）のはし：横の岩と、がけの正面の丸いはし（cliffStrip と同じ描き方） */
+  const C=window.CHIPS||{},fd=(key,x,y)=>{const ch=C[key];if(ch)drawChip(c,ch,'cliff',x,y,0)},px=(k%W)*TS,py=((k/W)|0)*TS,U=hiAt(k-W),D=hiAt(k+W),L=topAt(k-1),R=topAt(k+1),cl=(x,y,w,h,f)=>{c.save();c.beginPath();c.rect(x,y,w,h);c.clip();f();c.restore()};
+  cl(sd?px+TS-3:px-8,py-LIFT+(U?0:5),11,TS,()=>fd('cliff:side'+(sd?'R':'L'),px,py));
+  if(!D){cl(sd?px+TS-6:px-3,py+TS-LIFT-6,9,7,()=>fd(sd?'cliff:faceR':'cliff:faceL',px,py-6));cl(sd?px+TS-8:px-8,py+TS-LIFT-8,16,LIFT+10,()=>fd('cliff:'+(!L&&!R?'faceLR':sd?'faceR':'faceL'),px,py))}}
 function drawStairObj(c,a){/* 階段（仮の絵）：段差の下の低い地面に置く。手前向きは1マス（がけの正面とあわせて2マスぶんに見える）、ほかは1×2。高いほうのはしの高さ LIFT から地面まで6だん（段の高さ LIFT/7） */
   const id=S.obj[a],d=stairDir(a);if(d<0)return;const P=STPAL[id]||STPAL.slope_earth,br=id.endsWith('_brick'),Dn=(d===0?TS:2*TS)/SN,z=n=>n>=SN?0:LIFT*(SN-n)/(SN+1),MO='rgba(235,220,205,.55)',ax=(a%W)*TS,ay=((a/W)|0)*TS;
   const mo=(x,y,w,h)=>{c.fillStyle=MO;c.fillRect(x,y,w,h)};
@@ -4860,7 +4864,7 @@ function drawStairObj(c,a){/* 階段（仮の絵）：段差の下の低い地�
   const face=(x,y,w,h,gy)=>{c.fillStyle=P[1];c.fillRect(x,y,w,h);if(!br)return;for(let k=0;gy-8*k>y;k++){const yb=gy-8*k,yt=Math.max(y,yb-8);if(k)mo(x,yb,w,.6);vjoin(x,yt,w,yb-yt,k%2?8:0)}};/* 横の側面（地面から8ドットずつ積む） */
   const tread=(x,y,w,h,n,dark,vert)=>{c.fillStyle=P[0];c.fillRect(x,y,w,h);if(!br)return;if(vert){for(let yy=y+(n%2?8:0);yy<y+h;yy+=16)if(yy>y+.5)mo(x,yy,w,.6)}else vjoin(x,y,w,h,n%2?8:0)};/* 段の上の面：1段に1列（レンガは、段ごとに半分ずらす） */
   const SH1='rgba(60,45,30,.3)',SH2='rgba(60,45,30,.13)';/* 段のさかい：1ドットのかげと、その外がわにもう1ドットうすいかげ */
-  const lat=d===0?[[a-1],[a+1]]:d===2?[[a-1,a-1-W],[a+1,a+1-W]]:null;c.save();if(lat){const hL=lat[0].some(k=>hiAt(k)),hR=lat[1].some(k=>hiAt(k));c.beginPath();c.rect(ax+(hL?6:0),ay-2*TS,TS-(hL?6:0)-(hR?6:0),4*TS);c.clip()}/* 左右ががけなら、がけの横の岩（マスの外へ6ドット）のほうを上に見せる */
+  const lat=d===0?[[a-1,a-1+W],[a+1,a+1+W]]:d===2?[[a-1,a-1-W],[a+1,a+1-W]]:null;c.save();
   if(SLOPES.has(id)){/* 坂：段のない、ひとつづきの面（素材のもようは、下りる向きに6つ） */const mat=id.slice(6),X0=d===1?ax:d===3?ax-TS:ax,len=d===0?TS:2*TS,poly=pts=>{c.beginPath();c.moveTo(pts[0][0],pts[0][1]);for(const q of pts)c.lineTo(q[0],q[1]);c.closePath()};
     const surf=(x,y,w,h,along)=>{c.fillStyle=slopeTex(a,d)||P[0];c.fillRect(x,y,w,h);const g=c.createLinearGradient(along?x:0,along?0:y,along?x+w:0,along?0:y+h);g.addColorStop(0,'rgba(255,250,235,.18)');g.addColorStop(1,'rgba(60,45,30,.12)');c.fillStyle=g;c.fillRect(x,y,w,h);if(mat==='earth')return;
       const N=mat==='stone'?3:6,L='rgba(60,45,30,.18)';for(let k=1;k<N;k++){c.fillStyle=br?MO:L;if(along)c.fillRect(x+w*k/N,y,.7,h);else c.fillRect(x,y+h*k/N,w,.7)}/* 下りる向きに、板・石・レンガの列 */
@@ -4878,7 +4882,7 @@ function drawStairObj(c,a){/* 階段（仮の絵）：段差の下の低い地�
     else{const xi=d===1?ax:ax+TS,xo=d===1?ax+2*TS:ax-TS,zb=f=>LIFT*(1-f)+2,poly=pts=>{c.beginPath();c.moveTo(pts[0][0],pts[0][1]);for(const q of pts)c.lineTo(q[0],q[1]);c.closePath()};
       if(free([a-W,o-W])){poly([[xi,ay-zb(0)],[xo,ay-zb(1)],[xo,ay+BW-zb(1)],[xi,ay+BW-zb(0)]]);c.fillStyle=P[1];c.fill()}
       if(free([a+W,o+W])){const gy=ay+TS;c.save();poly([[xi,gy-zb(0)],[xo,gy-zb(1)],[xo,gy],[xi,gy]]);c.clip();face(Math.min(xi,xo),gy-LIFT-2,2*TS,LIFT+2,gy);c.restore();poly([[xi,gy-BW-zb(0)],[xo,gy-BW-zb(1)],[xo,gy-zb(1)],[xi,gy-zb(0)]]);c.fillStyle=P[0];c.fill()}}}/* 側板：段にそわない、まっすぐななめの板（階段も坂も） */
-  c.restore()}
+  c.restore();if(lat){for(const k of lat[0])if(hiAt(k))cliffEdgeOver(c,k,1);for(const k of lat[1])if(hiAt(k))cliffEdgeOver(c,k,0)}}/* 左右ががけなら、階段を描いたあとに、がけの横のはし（横の岩・丸いはし）をもう一度上に描く（切りとらない） */
 const CLC={n:-1,s:null,rows:null};/* 段差の絵は、行ごとのかたまり（つづいた高いマス）ごとに1まい作っておく。下絵が変わったら作りなおす */
 function cliffRuns(){if(CLC.n===STATN&&CLC.s===S&&CLC.rows)return CLC.rows;CLC.n=STATN;CLC.s=S;const rows=new Map();
   for(let y=0;y<H;y++){let x=0;while(x<W){if(!hiAt(y*W+x)){x++;continue}let e=x;while(e+1<W&&hiAt(y*W+e+1))e++;if(!rows.has(y))rows.set(y,[]);rows.get(y).push({x0:x,x1:e,c:null});x=e+1}}
@@ -5964,7 +5968,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='776';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='777';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
