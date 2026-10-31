@@ -198,14 +198,25 @@ const FLOWER_QUESTS=new Set(['salvia3','lotus3','lily5','clover3']);
 const BEDSET=new Set(['bed','yorubed']);/* ねむれるベッド（よぞらのベッドも同じはたらき） */const KWR=['yozorawall','yozoradoor','yorubed','hoshirug','herrfloor'];const KWRKEY='hakoniwa-kwr-v1';/* コワイノのレシピは、どのステージでもおぼえたまま（ステージべつのセーブとはべつにしまう） */
 function kwrSync(){if(!S)return;let g=[];try{g=JSON.parse(KV.getItem(KWRKEY)||'[]')}catch(e){}const G=new Set(g.filter(id=>KWR.includes(id)));for(const id of KWR)if((S.recipes||{})[id])G.add(id);for(const id of G){(S.recipes||(S.recipes={}))[id]=true;if(BL[id].kind==='block')(S.unlocked||(S.unlocked={}))[id]=true}try{KV.setItem(KWRKEY,JSON.stringify([...G]))}catch(e){}}/* コワイノのレシピ：落とし物でまれに手に入る */
 const STAGEONLY={logfence:0,gazebo:0,bamboofence:1,takebench:1,takeakari:1,shishiodoshi:1,azumaya:1};/* そのステージで作れる物（草原0・火山1）。おぼえたら、どのステージでも作れる */
-const GRECKEY='hakoniwa-rec-v1',GNOREC=new Set(['statue','tower','yogan','watch','dig','mound']);let GREC=null;/* おぼえたレシピは、どのステージでもおぼえたまま（ステージべつのセーブとはべつにしまう）。神殿・台座・ようがん台・見張り台は、ステージのお話で決まるので入れない */
+const GRECKEY='hakoniwa-rec-v1',GRECKEY2='hakoniwa-rec-v2',GNOREC=new Set(['statue','tower','yogan','watch','dig','mound']);let GREC=null;/* おぼえたレシピは、どのステージでもおぼえたまま（ステージべつのセーブとはべつにしまう）。神殿・台座・ようがん台・見張り台は、ステージのお話で決まるので入れない */
 function learnedIn(s,w){const out=[];for(const id in BL){const b=BL[id];if(GNOREC.has(id)||STAGEONLY[id]==null&&b.offerOnly&&b.kind==='furn')continue;/* おそなえだけの家具は、レシピにしない */
   if((s.recipes||{})[id]||(s.unlocked||{})[id])out.push(id);
   else if((b.kind==='block'||b.kind==='build'||b.kind==='plant')&&b.lv&&!QB.has(id)&&(s.lv||1)>=b.lv&&(b.w||0)<=w&&(STAGEONLY[id]==null?!b.offerOnly:STAGEONLY[id]===w))out.push(id)}/* 村レベルで使えるようになった物 */
   return out}
-function grecOf(){if(!GREC){let g=null;try{g=JSON.parse(KV.getItem(GRECKEY)||'null')}catch(e){}GREC=new Set(g||[]);if(!g)for(const w of[0,1]){let d=null;try{const raw=KV.getItem(SAVE_KEYS[w]);if(raw)d=JSON.parse(raw)}catch(e){}if(d&&!d.free)learnedIn(d,w).forEach(id=>GREC.add(id))}}/* はじめて読むときは、いまあるセーブからあつめる */return GREC}
+function ownLearned(d,w){/* そのステージが、自分のクエスト・村レベル・持ち物でおぼえる物（ほかのステージからもらった物はふくめない） */const s2={world:w,free:false,quest:d.quest||0,qTalked:d.qTalked,qStory:d.qStory,subDone:d.subDone,subSt:d.subSt,subSeen:d.subSeen,lv:d.lv,inv:d.inv,obj:d.obj,orders:d.orders||[],win:d.win,recipes:{},guardianIdeas:{},unlocked:{}};try{syncQuestRecipes(s2)}catch(e){}return new Set(learnedIn(s2,w))}
+function savedStage(w){let d=LIVE&&LIVE[w]&&!LIVE[w].summary?LIVE[w]:null;if(!d)try{const raw=KV.getItem(SAVE_KEYS[w]);if(raw)d=JSON.parse(raw)}catch(e){}return d&&!d.free?d:null}
+function grecOf(){if(!GREC){/* id → おぼえたステージ（どのステージでおぼえたか。「はじめから」で、そのステージの分だけわすれるため） */let g=null;try{g=JSON.parse(KV.getItem(GRECKEY2)||'null')}catch(e){}GREC=new Map(g&&typeof g==='object'&&!Array.isArray(g)?Object.entries(g):[]);
+    if(!g){let a=null;try{a=JSON.parse(KV.getItem(GRECKEY)||'null')}catch(e){}const ids=new Set(Array.isArray(a)?a:[]),own=[0,1].map(w=>{const d=savedStage(w);if(d)learnedIn(d,w).forEach(id=>ids.add(id));return d?ownLearned(d,w):new Set()});
+      for(const id of ids){if(!BL[id])continue;GREC.set(id,own[0].has(id)?0:own[1].has(id)?1:STAGEONLY[id]!=null?STAGEONLY[id]:(BL[id].w||0))}/* 前の形のしまい方からうつす：自分のクエスト・村レベルでおぼえるステージ、わからなければその物のステージ */
+      grecSave()}}return GREC}
+function grecSave(){try{KV.setItem(GRECKEY2,JSON.stringify(Object.fromEntries(GREC)))}catch(e){}}
+function grecForget(w){/* 「はじめから」：そのステージでおぼえたレシピをわすれる（ほかのステージのセーブからも消す。ほかのステージが自分でおぼえる物はのこす） */const G=grecOf(),gone=[...G].filter(([,o])=>o===w).map(([id])=>id);if(!gone.length)return;for(const id of gone)G.delete(id);
+  const cut=(d,own)=>{for(const id of gone){if(own.has(id))continue;if(d.recipes)delete d.recipes[id];if(d.guardianIdeas)delete d.guardianIdeas[id];if(d.unlocked)delete d.unlocked[id]}};
+  for(const w2 of[0,1]){if(w2===w)continue;const L=LIVE&&LIVE[w2]&&!LIVE[w2].summary&&!LIVE[w2].free?LIVE[w2]:null;let k=null;try{const raw=KV.getItem(SAVE_KEYS[w2]);if(raw)k=JSON.parse(raw)}catch(e){}if(k&&k.free)k=null;const base=L||k;if(!base)continue;
+    const own=ownLearned(base,w2);for(const id of gone)if(own.has(id))G.set(id,w2);if(L)cut(L,own);if(k){cut(k,own);try{KV.setItem(SAVE_KEYS[w2],JSON.stringify(k))}catch(e){}}}/* 動いているデータと、しまってあるセーブの両方から消す */
+  grecSave()}
 const grec=id=>!!S&&!S.free&&grecOf().has(id);
-function recSync(){if(!S||S.free)return;const G=grecOf(),n=G.size;learnedIn(S,WD).forEach(id=>G.add(id));for(const id of G){const b=BL[id];if(!b)continue;if(b.kind==='block'||b.kind==='plant')(S.unlocked||(S.unlocked={}))[id]=true;else{(S.recipes||(S.recipes={}))[id]=true;(S.guardianIdeas||(S.guardianIdeas={}))[id]=true}}if(G.size!==n||!KV.getItem(GRECKEY))try{KV.setItem(GRECKEY,JSON.stringify([...G]))}catch(e){}}/* このステージでおぼえた物を足して、ほかのステージでおぼえた物をもらう */
+function recSync(){if(!S||S.free)return;const G=grecOf();let add=false;for(const id of learnedIn(S,WD))if(!G.has(id)){G.set(id,WD);add=true}for(const[id]of G){const b=BL[id];if(!b)continue;if(b.kind==='block'||b.kind==='plant')(S.unlocked||(S.unlocked={}))[id]=true;else{(S.recipes||(S.recipes={}))[id]=true;(S.guardianIdeas||(S.guardianIdeas={}))[id]=true}}if(add||!KV.getItem(GRECKEY2))grecSave()}/* このステージでおぼえた物を足して（おぼえたステージもしまう）、ほかのステージでおぼえた物をもらう */
 const CRAFTB=['floor','brickfloor','stonefloor','herrfloor','carpet','path','gravel','woodpath','stone','brick','hwall','logwall','plasterwall','brickwall','yozorawall','door','yozoradoor','fence','logfence','bamboofence','gate','archedgate','stonegate','wall','sdoor','window','yozorawin'];
 const CRAFT_TABS=[["家具", ["table", "chair", "stool", "stable", "pouf", "achair", "ltable", "rug1", "rug2", "hoshirug", "bed", "yorubed", "sofa1", "monstera", "wreath", "curtain1", "curtain2", "paint1", "paint2", "paint3", "bathtub"]], ["収納", ["stor", "mbox", "crate", "shelf1", "wshelf", "cabinet", "shelf2"]], ["遊び", ["swing", "slide", "sandbox", "seesaw", "campfire"]], ["庭", ["bench", "takebench", "shishiodoshi", "hedge", "birdbath", "parasol", "noren", "arch", "kamizo", "jar", "rockart", "signpost", "vane"]], ["あかり", ["torch", "takeakari", "candle", "lantern", "flamp", "toro"]], ["ごはん", ["oven", "tub", "sink"]], ["ワナ", ["spike", "puddle"]], ["家づくり", ["floor", "brickfloor", "stonefloor", "herrfloor", "carpet", "hwall", "logwall", "plasterwall", "brickwall", "yozorawall", "door", "yozoradoor", "window"]], ["道・囲い", ["path", "gravel", "woodpath", "stone", "brick", "fence", "logfence", "bamboofence", "gate", "archedgate", "stonegate", "wall", "sdoor"]]];let craftTab=0;
 const craftTabFor=id=>CRAFT_TABS.findIndex(([,ids])=>ids.includes(id));
@@ -4264,14 +4275,14 @@ let SSIG=null,SSIG_S=null,SSIG_G='',NOISEC=null,STMP=null;
 function staticSig(){/* マスごとに、地面の絵にかかわる中身を文字にしておく（前とくらべて、変わったマスだけ描き直すため） */const hs=new Set();for(const h of HOUSES)for(const j of h.set)hs.add(j);const M=WD===1&&S.st2?sprMap():null,sg=new Array(W*H);
   for(let i=0;i<W*H;i++){const o=S.obj[i],st=o&&BL[o]&&!(BL[o].dyn||BL[o].anim||TREES.has(o));sg[i]=o+'|'+(S.ref[i]??'')+'|'+S.ground[i]+'|'+(S.floor[i]||'')+'|'+(REV.has(i)?1:0)+(hs.has(i)?1:0)+(ashed(i)?1:0)+(M&&S.ground[i]===1&&springOn(M[i])?1:0)+(S.trapCd&&S.trapCd[i]>S.t?1:0)+'|'+(st&&S.dyn[i]?JSON.stringify(S.dyn[i]):'')+'|'+((S.win||{})[i]||'')+'|'+((S.rot||{})[i]||'')+'|'+(RUGC.has(i)?RUGC.get(i)+S.rug[RUGC.get(i)]+((S.rugRot||{})[RUGC.get(i)]||''):'')+'|'+(S.hp['L'+i]||'')}
   return sg}
-let STATN=0;function rebuildStatic(full){STATN++;findHouses();
+let STATN=0,STDIRTY=null;/* STDIRTY：下絵の一部だけ描きなおしたときの行の範囲（段差の絵は、そこだけ作りなおす） */function rebuildStatic(full){STATN++;STDIRTY=null;findHouses();
   const g=[WD,CX,CY,W,H,groundChipsOK(),waterChipsOK()].join(),sg=staticSig();
   if(!full&&SSIG&&SSIG_S===S&&SSIG_G===g){/* 変わったマスのまわりだけ描き直す */
     let R=[];for(let i=0;i<W*H;i++)if(sg[i]!==SSIG[i]){const x=i%W,y=(i/W)|0;R.push([Math.max(0,x-3),Math.max(0,y-6),Math.min(W-1,x+3),Math.min(H-1,y+1)])}/* 背の高い物は上へ6マスまで、横へ3マスまで絵がはみ出す */
     SSIG=sg;
     for(let m=true;m;){m=false;for(let a=0;a<R.length&&!m;a++)for(let b=a+1;b<R.length;b++){const p=R[a],q=R[b];if(p[0]<=q[2]+1&&q[0]<=p[2]+1&&p[1]<=q[3]+1&&q[1]<=p[3]+1){R[a]=[Math.min(p[0],q[0]),Math.min(p[1],q[1]),Math.max(p[2],q[2]),Math.max(p[3],q[3])];R.splice(b,1);m=true;break}}}/* かさなる四角は1つにまとめる */
     let area=0;for(const r of R)area+=(r[2]-r[0]+1)*(r[3]-r[1]+1);
-    if(area<W*H*.4){for(const r of R){const D=[Math.max(0,r[0]-6),Math.max(0,r[1]-6),Math.min(W-1,r[2]+6),Math.min(H-1,r[3]+6)],cw=(D[2]-D[0]+1)*TS,ch=(D[3]-D[1]+1)*TS;/* まわり6マスもいっしょに描いて（となりの物のはみ出し・水のふち・壁のつながり）、まん中だけを使う */
+    if(area<W*H*.4){STDIRTY=R.map(r=>[r[0],r[1],r[2],r[3]]);for(const r of R){const D=[Math.max(0,r[0]-6),Math.max(0,r[1]-6),Math.min(W-1,r[2]+6),Math.min(H-1,r[3]+6)],cw=(D[2]-D[0]+1)*TS,ch=(D[3]-D[1]+1)*TS;/* まわり6マスもいっしょに描いて（となりの物のはみ出し・水のふち・壁のつながり）、まん中だけを使う */
         const t=STMP||(STMP=document.createElement('canvas'));if(t.width<cw||t.height<ch){t.width=Math.max(t.width,cw);t.height=Math.max(t.height,ch)}const tc=t.getContext('2d');tc.setTransform(1,0,0,1,0,0);tc.clearRect(0,0,cw,ch);tc.setTransform(1,0,0,1,-D[0]*TS,-D[1]*TS);
         drawStaticArea(tc,D[0],D[1],D[2],D[3]);tc.setTransform(1,0,0,1,0,0);
         const w=(r[2]-r[0]+1)*TS,h=(r[3]-r[1]+1)*TS;sc.clearRect(r[0]*TS,r[1]*TS,w,h);sc.drawImage(t,(r[0]-D[0])*TS,(r[1]-D[1])*TS,w,h,r[0]*TS,r[1]*TS,w,h)}
@@ -5100,8 +5111,11 @@ function drawStairObj0(c,a){/* 階段（仮の絵）：段差の下の低い地�
       if(free([a+W,o+W])){const gy=ay+TS;for(const[k,col]of[[1,SH1],[2,SH2]]){poly([[xi,gy-BW-zb(0)-k],[xo,gy-BW-zb(1)-k],[xo,gy-BW-zb(1)-k+1],[xi,gy-BW-zb(0)-k+1]]);c.fillStyle=col;c.fill()}/* 手前の側板に接する面のかげ2ドット */c.save();poly([[xi,gy-zb(0)],[xo,gy-zb(1)],[xo,gy],[xi,gy]]);c.clip();face(Math.min(xi,xo),gy-LIFT-6,2*TS,LIFT+6,gy);c.restore();poly([[xi,gy-BW-zb(0)],[xo,gy-BW-zb(1)],[xo,gy-zb(1)],[xi,gy-zb(0)]]);c.fillStyle=P[0];c.fill()}}}}/* 側板：段にそわない、まっすぐななめの板 */
   c.restore();if(SLOPES.has(id))slopeFeather(c,a,d);if(lat){for(const k of lat[0])if(hiAt(k)>=CLV)cliffEdgeOver(c,k,1);for(const k of lat[1])if(hiAt(k)>=CLV)cliffEdgeOver(c,k,0)}}/* 左右ががけなら、階段を描いたあとに、がけの横のはし（横の岩・丸いはし）をもう一度上に描く（切りとらない） */
 const CLC={n:-1,s:null,rows:null};/* 段差の絵は、行ごとのかたまり（つづいた高いマス）ごとに1まい作っておく。下絵が変わったら作りなおす */
-function cliffRuns(){if(CLC.n===STATN&&CLC.s===S&&CLC.rows)return CLC.rows;if(CLC.rows)for(const L of CLC.rows.values())for(const R of L)if(R.c){R.c.width=R.c.height=0;R.c=null}STRIPQ.length=0;/* 前の段差の絵は、すぐ手ばなす */CLC.n=STATN;CLC.s=S;const rows=new Map();
-  for(let y=0;y<H;y++)for(let lv=1;lv<=HMAX;lv++){let x=0;while(x<W){if(hiAt(y*W+x)<lv){x++;continue}let e=x;while(e+1<W&&hiAt(y*W+e+1)>=lv)e++;if(!rows.has(y))rows.set(y,[]);for(let a=x;a<=e;a+=STRIPN){const b=Math.min(e,a+STRIPN-1);rows.get(y).push({x0:a,x1:b,bx0:Math.max(x,a-1),bx1:Math.min(e,b+1),rx0:x,rx1:e,lv,c:null})}x=e+1}}/* 段ごとのかたまり（低い段から順に。高い段は、あとで上に描く）。長いかたまりは16マスずつに分けて絵にする（作るときの作業用キャンバスが大きくなりすぎないように）。分けた所のつながりのため、両どなり1マスもいっしょに作って、まん中だけを使う */
+function cliffRuns(){if(CLC.n===STATN&&CLC.s===S&&CLC.rows)return CLC.rows;
+  const hs=S.hi?Array.from(S.hi,v=>v|0).join(''):'',free=R=>{if(R.c){R.c.width=R.c.height=0;R.c=null}const q=STRIPQ.indexOf(R);if(q>=0)STRIPQ.splice(q,1)},mk=(rows,y)=>{rows.delete(y);for(let lv=1;lv<=HMAX;lv++){let x=0;while(x<W){if(hiAt(y*W+x)<lv){x++;continue}let e=x;while(e+1<W&&hiAt(y*W+e+1)>=lv)e++;if(!rows.has(y))rows.set(y,[]);for(let a=x;a<=e;a+=STRIPN){const b=Math.min(e,a+STRIPN-1);rows.get(y).push({x0:a,x1:b,bx0:Math.max(x,a-1),bx1:Math.min(e,b+1),rx0:x,rx1:e,lv,c:null})}x=e+1}}};
+  if(CLC.rows&&CLC.s===S&&CLC.hs===hs&&STDIRTY){/* 下絵の一部だけが変わったとき（高さは同じ）：かたまりの形はそのまま。変わったマスの絵を使う段差の絵だけ、作りなおすしるしをつける（作りなおすまでは前の絵を使う。ぜんぶ作りなおすと、物を置くたびにがくっと止まる） */const rows=CLC.rows;for(const[rx0,ry0,rx1,ry1]of STDIRTY)for(let y=Math.max(0,ry0-1);y<=Math.min(H-1,ry1);y++)for(const R of rows.get(y)||[])if(R.bx1>=rx0-1&&R.bx0<=rx1+1)R.stale=true;CLC.n=STATN;STDIRTY=null;return rows}
+  if(CLC.rows)for(const L of CLC.rows.values())for(const R of L)if(R.c){R.c.width=R.c.height=0;R.c=null}STRIPQ.length=0;/* 前の段差の絵は、すぐ手ばなす */CLC.n=STATN;CLC.s=S;CLC.hs=hs;STDIRTY=null;CLC.fresh=true;const rows=new Map();
+  for(let y=0;y<H;y++)mk(rows,y);/* 段ごとのかたまり（低い段から順に。高い段は、あとで上に描く）。長いかたまりは16マスずつに分けて絵にする（作るときの作業用キャンバスが大きくなりすぎないように）。分けた所のつながりのため、両どなり1マスもいっしょに作って、まん中だけを使う */
   return CLC.rows=rows}
 function cliffTop(P,E,y,k,ext){ext=ext||.6;/* 高いマスの上の面の形：ふち（となりが低い向き）は少しでこぼこ、外がわの角は丸く。P：面（ぬる形）、E：ふちの線 */
   const j=y*W+k,px=k*TS,x1=px+TS,y0=y*TS-LIFT,y1=y0+TS,r=5,nz=(a,b)=>(hash(a*131+b*7919+17)-.5)*2;
@@ -5133,7 +5147,13 @@ function cliffGrass(g,y,k){/* 草のはみ出し：となりが低い向きの�
     if(D&&!(L&&v<5)&&!(R&&v>TS-5))blade(px+v,y1+.8,0,1,n+1000);
     if(L&&!(U&&v<5)&&!(D&&v>TS-5))blade(px+.6,y0+v,-1,0,n+2000);
     if(R&&!(U&&v<5)&&!(D&&v>TS-5))blade(px+TS-.6,y0+v,1,0,n+3000)}}
-const STRIPN=16,STRIPPX=8e6;let RFN=0;/* 段差の絵：1まいは16マスまで。作っておく絵は、ぜんぶで800万ドットまで（いま見えている絵は手ばなさない） */
+const STRIPN=16,STRIPPX=8e6,SBUD=6;let RFN=0,SBT=0;/* SBUD：段差の絵を1コマで作ってよい時間（ミリ秒）。こえたら、のこりはつぎのコマで（はじめの1コマは、見えている分をぜんぶ作る） */
+let SBE=6,CAMK='';const stripTime=()=>SBT===0||SBT+SBE<=SBUD||CLC.fresh;/* SBE：段差の絵1まいを作るのにかかる時間（ならし） */
+const DOTT={};function dotPat(g,K){/* 段差のふちの帯の点々（104ドットごとにくりかえすもよう。1まいだけ作っておく） */let e=DOTT[K];if(!e){const N=40,T=N*2.6;e=DOTT[K]=document.createElement('canvas');e.width=e.height=Math.round(T*K);const c=e.getContext('2d');c.scale(K,K);c.fillStyle='#000';for(let i=0;i<N;i++)for(let j=0;j<N;j++){const q=hash(i*131+j*7919+3);if(q<.5)c.fillRect(i*2.6,j*2.6,1.8,.8+q*2.6)}}const p=g.createPattern(e,'repeat');if(p.setTransform)p.setTransform(new DOMMatrix().scale(1/K));return p}
+function softOf(m,b){/* ぼかし（軽い作り方）：小さくして、なめらかに大きくもどす。b：ちぢめる倍率 */const t=TMPC();t.width=Math.max(1,Math.ceil(m.width/b));t.height=Math.max(1,Math.ceil(m.height/b));const c=t.getContext('2d');c.imageSmoothingEnabled=true;c.imageSmoothingQuality='high';c.drawImage(m,0,0,t.width,t.height);return t}
+function cliffQuick(y,R){/* まだ作っていない段差の絵のかわりに、かんたんな絵（上の面と、がけの正面だけ）。つぎのコマ以降で、ちゃんとした絵にかわる */const C=window.CHIPS||{},lv=R.lv,L=(lv-1)*LIFT;for(let k=R.x0;k<=R.x1;k++){const j=y*W+k,px=k*TS,py=y*TS;if(y<H-1&&hiAt(j+W)<lv){const ch=C['cliff:face'];if(ch)drawChip(ctx,ch,'cliff',px,py-L,0)}ctx.drawImage(stat,px,py,TS,TS,px,py-lv*LIFT,TS,TS)}}
+function cliffPrefetch(x0,y0,x1,y1){/* 手があいたコマで、画面のすぐ外（まわり4マス）の段差の絵を先に作っておく（動かしたときに、その場で作らなくてすむように） */const ck=cam.x.toFixed(1)+','+cam.y.toFixed(1)+','+cam.z.toFixed(3),still=ck===CAMK;CAMK=ck;if(!S||!S.hi||!still||SBT>0)return;/* マップを動かしているあいだは作らない（止まっているコマで、1まいずつ） */const RW=cliffRuns(),SK=cam.z>=1?2:1,cy=(y0+y1)/2,ys=[];for(let y=Math.max(0,y0-5);y<Math.min(H,y1+6);y++)ys.push(y);ys.sort((a,b)=>Math.abs(a-cy)-Math.abs(b-cy));
+  for(const y of ys){const L=RW.get(y);if(!L)continue;for(const R of L){if(R.x1<x0-5||R.x0>x1+5||R.c&&R.K===SK&&!R.stale)continue;if(SBT>0)return;R.stale=false;if(R.c){R.c.width=R.c.height=0;R.c=null;const q=STRIPQ.indexOf(R);if(q>=0)STRIPQ.splice(q,1)}const t0=performance.now();R.K=SK;R.c=cliffStrip(y,R,SK);R.f=RFN;{const dt=performance.now()-t0;SBT+=dt;SBE=SBE*.8+dt*.2}STRIPQ.push(R)}}}/* 段差の絵：1まいは16マスまで。作っておく絵は、ぜんぶで800万ドットまで（いま見えている絵は手ばなさない） */
 const STRIPQ=[],TMPL=[],TMPC=()=>{const c=document.createElement('canvas');TMPL.push(c);return c};/* 作業用のキャンバス：使いおわったら、すぐ手ばなす（iPhone は、キャンバスのメモリの上限が小さく、こえるとページが落ちる） */
 function cliffStrip(y,Rn,K){const cv=CLV;CLV=Rn.lv||1;try{return cliffStrip0(y,Rn.bx0!=null?{x0:Rn.bx0,x1:Rn.bx1,lv:Rn.lv}:Rn,K||2)}finally{CLV=cv;for(const c of TMPL)c.width=c.height=0;TMPL.length=0}}/* 段 Rn.lv のかたまりの絵（1だんめと同じ形で作り、描くときに (lv-1)*LIFT 上へ） */
 function cliffStrip0(y,Rn,K){/* 1つのかたまりの絵：横のふち・がけの正面・かげ・持ち上げた地面（ふちはでこぼこ）・ふちの線・階段。K：細かさ（1マス32ドットの何倍か） */
@@ -5156,15 +5176,15 @@ function cliffStrip0(y,Rn,K){/* 1つのかたまりの絵：横のふち・が�
     const Pm=new Path2D(),Em=new Path2D();for(let k=x0;k<=x1;k++)cliffTop(Pm,Em,y,k,9);/* つながっている向きは、外へ大きくのばす（そこに帯ができないように） */
     const M=mk(c=>{c.fillStyle='#000';c.fill(Pm);});
     const E1=er(M,2.2*K),E2=er(M,3.8*K);
-    const B=mk(c=>{c.fillStyle='#000';for(let xx=ox;xx<ox+w+12;xx+=2.6){if(!REV.has(y*W+Math.min(x1,Math.max(x0,Math.floor(xx/TS)))))continue;/* 乾いた地面のふちには、点々を出さない */for(let yy=top;yy<top+h;yy+=2.6){const q=hash(((xx*7)|0)*31+((yy*5)|0)*17);if(q<.5)c.fillRect(xx,yy,1.8,.8+q*2.6)}}});/* 帯の内がわの、四角いでこぼこ（草地だけ） */
+    const B=mk(c=>{c.fillStyle=dotPat(c,K);for(let k=x0;k<=x1;k++){if(!REV.has(y*W+k))continue;/* 乾いた地面のふちには、点々を出さない */const a=k===x0?ox:k*TS,b=k===x1?ox+w+12:(k+1)*TS;c.fillRect(a,top,b-a,h)}});/* 帯の内がわの、四角いでこぼこ（草地だけ）。点々は、前もって作ったもよう（世界の座標でしきつめる） */
     const band=mk(c=>{});{const c=band.getContext('2d');c.drawImage(E1,0,0);c.globalCompositeOperation='destination-out';c.drawImage(E2,0,0);c.globalCompositeOperation='destination-in';c.drawImage(B,0,0)}
     const col=mk(c=>{for(let k=x0;k<=x1;k++){c.fillStyle=REV.has(y*W+k)?'rgba(92,134,58,.5)':'rgba(110,78,46,.26)';c.fillRect(k*TS-(k===x0?8:0),top,TS+(k===x0?8:0)+(k===x1?8:0),h)}});
     const rim=mk(c=>{});{const c=rim.getContext('2d');c.drawImage(M,0,0);c.globalCompositeOperation='destination-out';c.drawImage(E1,0,0);c.globalCompositeOperation='source-over';c.drawImage(band,0,0);c.globalCompositeOperation='source-in';c.drawImage(col,0,0)}
-    const sh=mk(c=>{});{const c=sh.getContext('2d');c.drawImage(M,0,0);c.globalCompositeOperation='source-in';c.fillStyle='rgba(45,35,20,.16)';c.fillRect(0,0,sh.width,sh.height);c.globalCompositeOperation='destination-out';c.filter='blur('+(2.4*K)+'px)';c.drawImage(E1,0,0)}
+    const sh=mk(c=>{});{const c=sh.getContext('2d');c.drawImage(M,0,0);c.globalCompositeOperation='source-in';c.fillStyle='rgba(45,35,20,.16)';c.fillRect(0,0,sh.width,sh.height);c.globalCompositeOperation='destination-out';c.drawImage(softOf(E1,Math.round(4.8*K)),0,0,E1.width,E1.height)}
     g.save();g.clip(P);g.setTransform(1,0,0,1,0,0);g.drawImage(sh,0,0);g.drawImage(rim,0,0);g.restore()}/* ふちに向かって少し暗くなる丸み（ぼかし）と、ふちの帯 */
   for(let k=x0;k<=x1;k++)if(REV.has(y*W+k)&&hiAt(y*W+k)===CLV)cliffGrass(g,y,k);/* もっと高いマスの草は、この段のふちには出さない（上の段の草が、がけのとちゅうにたれないように） *//* 上が草地なら、ふちから草がはみ出す（手前は、がけにたれる） */
   return cv}
-function render(now){RFN++;
+function render(now){RFN++;SBT=0;
   if(dirty)rebuildStatic(STATICFULL);
   ctx.setTransform(1,0,0,1,0,0);ctx.fillStyle='#8f8262';ctx.fillRect(0,0,cv.width,cv.height);
   const k=dpr*cam.z;
@@ -5224,7 +5244,7 @@ function render(now){RFN++;
   if(festOn()){const SL=festStalls();for(const[x,y]of festPoles()){const j=y*W+x;if(S.obj[j]||S.ground[j]===1||!vis({x:x+.5,y:y+.5})||SL.some(t=>t.y===y&&Math.abs(t.x-x)<=2))continue;add(y+1,1,[x*TS,y*TS-24,x*TS+TS+8,y*TS+TS],()=>drawFestPole(x,y,now),-1)}}/* おまつりのちょうちん（木や岩・水の上、屋台のところには立てない） */
   for(const h of HOUSES){const bot=h.y1,ib=h.ib;if(bot<y0-1||h.y0>y1+1||h.x1<x0-1||h.x0>x1+1)continue;
     add(bot+1.001,3,/* 屋根は、その家の壁（手前の壁もふくむ）のすぐ後に描く。家の前にいる物は屋根より手前 */[h.x0*TS-6,h.y0*TS-40,(h.x1+1)*TS+6,(ib+1)*TS+12],()=>liftDraw((()=>{const L=[...h.set],h0=hiAt(L[0]);return L.every(j=>hiAt(j)===h0)?h0*LIFT:0})(),()=>drawRoofs(ctx,now,[h])),-1)}/* 屋根は家ごとにひとまとまり。その家の壁は屋根の上に描き直さない *//* 屋根は、横の壁より後・手前の壁より先に描く */
-  if(S.hi){const RW=cliffRuns();for(let y=Math.max(0,y0-1);y<Math.min(H,y1+2);y++){const L=RW.get(y);if(!L)continue;const vs=L.filter(R=>R.x1>=x0-1&&R.x0<=x1);if(!vs.length)continue;const SK=cam.z>=1?2:1,dr=R=>{R.f=RFN;if(R.c&&R.K!==SK){R.c.width=R.c.height=0;R.c=null;const q=STRIPQ.indexOf(R);if(q>=0)STRIPQ.splice(q,1)}/* 大きく見ているときだけ2倍の細かさ（ズームアウトでは、マップ全体の段差が見えるので、ふつうの細かさにしてメモリをへらす） */if(!R.c){R.K=SK;R.c=cliffStrip(y,R,SK);STRIPQ.push(R);let px=0;for(const o of STRIPQ)if(o.c)px+=o.c.width*o.c.height;for(let k=0;k<STRIPQ.length&&px>STRIPPX;){const o=STRIPQ[k];if(o.f===RFN){k++;continue}STRIPQ.splice(k,1);if(o.c){px-=o.c.width*o.c.height;o.c.width=o.c.height=0;o.c=null}}}/* 作った段差の絵は、古いものから手ばなす */const K=R.c.width/((R.bx1-R.bx0+1)*TS+12),WL=R.x0*TS-(R.x0===R.rx0?6:0),WR=(R.x1+1)*TS+(R.x1===R.rx1?6:0);ctx.drawImage(R.c,(WL-(R.bx0*TS-6))*K,0,(WR-WL)*K,R.c.height,WL,y*TS-R.lv*LIFT-6,WR-WL,TS+LIFT+14)};
+  if(S.hi){const RW=cliffRuns();for(let y=Math.max(0,y0-1);y<Math.min(H,y1+2);y++){const L=RW.get(y);if(!L)continue;const vs=L.filter(R=>R.x1>=x0-1&&R.x0<=x1);if(!vs.length)continue;const SK=cam.z>=1?2:1,dr=R=>{R.f=RFN;if(R.c&&(R.K!==SK||R.stale)&&stripTime()){R.stale=false;R.c.width=R.c.height=0;R.c=null;const q=STRIPQ.indexOf(R);if(q>=0)STRIPQ.splice(q,1)}/* 大きく見ているときだけ2倍の細かさ（ズームアウトでは、マップ全体の段差が見えるので、ふつうの細かさにしてメモリをへらす）。作る時間がないコマは、前の細かさの絵をそのまま使う */if(!R.c){if(!stripTime())return cliffQuick(y,R);const t0=performance.now();R.K=SK;R.c=cliffStrip(y,R,SK);{const dt=performance.now()-t0;SBT+=dt;SBE=SBE*.8+dt*.2}STRIPQ.push(R);let px=0;for(const o of STRIPQ)if(o.c)px+=o.c.width*o.c.height;for(let k=0;k<STRIPQ.length&&px>STRIPPX;){const o=STRIPQ[k];if(o.f>=RFN-1){k++;continue}/* このコマと前のコマで描いた絵は手ばなさない（このコマのあとで描く絵を消さないように） */STRIPQ.splice(k,1);if(o.c){px-=o.c.width*o.c.height;o.c.width=o.c.height=0;o.c=null}}}/* 作った段差の絵は、古いものから手ばなす */const K=R.c.width/((R.bx1-R.bx0+1)*TS+12),WL=R.x0*TS-(R.x0===R.rx0?6:0),WR=(R.x1+1)*TS+(R.x1===R.rx1?6:0);ctx.drawImage(R.c,(WL-(R.bx0*TS-6))*K,0,(WR-WL)*K,R.c.height,WL,y*TS-R.lv*LIFT-6,WR-WL,TS+LIFT+14)};
     add(y-1+.0005,-1,null,()=>{for(const R of vs)dr(R)},-1);/* ひとつ上の行の物より先：段差の上の物のかげが、手前の行の上の面にかくれないように */
     add(y+.001,-1,null,()=>{for(const R of vs){ctx.save();ctx.beginPath();let any=false;for(let x=R.x0;x<=R.x1;x++)if(!(y>0&&hiAt((y-1)*W+x)>=R.lv)){any=true;ctx.rect(x*TS-(x===R.x0?6:0),y*TS-R.lv*LIFT-6,TS+(x===R.x0?6:0)+(x===R.x1?6:0),LIFT+6)}if(any){ctx.clip();dr(R)}ctx.restore()}},-1)}}/* 段差：行ごとに、その行の物より先（ひとつ上の行の物より後） */
   D.sort((a,b)=>a.k-b.k||a.t-b.t);
@@ -5284,6 +5304,7 @@ function render(now){RFN++;
   if(S.rain){ctx.strokeStyle='rgba(200,225,255,.45)';ctx.lineWidth=1;ctx.beginPath();for(const d of rain){const x=d.x*VW,y=d.y*VH;ctx.moveTo(x,y);ctx.lineTo(x-3,y+10*d.s)}ctx.stroke()}
   if(!VIG||VIG.w!==VW||VIG.h!==VH){const c2=document.createElement('canvas');c2.width=VW;c2.height=VH;const g2=c2.getContext('2d');const vg=g2.createRadialGradient(VW/2,VH/2,Math.min(VW,VH)*.45,VW/2,VH/2,Math.max(VW,VH)*.75);vg.addColorStop(0,'rgba(0,0,0,0)');vg.addColorStop(1,'rgba(10,20,15,.28)');g2.fillStyle=vg;g2.fillRect(0,0,VW,VH);VIG={c:c2,w:VW,h:VH}}
   ctx.drawImage(VIG.c,0,0);
+  cliffPrefetch(x0,y0,x1,y1);CLC.fresh=false;/* 手があいていれば、画面のすぐ外の段差の絵を先に作る */
 }
 
 /* ---------- カメラ・入力 ---------- */
@@ -6138,7 +6159,7 @@ let started=false,titleDrift=0,STOCKSIG='';
 function showUI(on){$('#topUI').hidden=!on;$('#botUI').hidden=!on}
 /* 引き継ぎ：便利な道具（ひろびろハケ・かたどりスタンプ・つけかえトンカチ・ひっこしミトン）だけは、ほかの土地でもらっていれば使える */
 function syncTools(s){for(const L of LIVE)if(L&&L!==s){if(L.bulk)s.bulk=true;if(L.stamps)s.stamps=true;if(L.swap)s.swap=true;if(L.dig)s.dig=true;if(L.mover)s.mover=true;if(L.areaSkill||L.flags&&L.flags.areaSkill)(s.flags||(s.flags={})).areaSkill=true}}/* 「ひかりのはどう」も、草原でおぼえたら、ほかのステージで使える */
-function newGame(w){w=w||0;if(sheet!=null)closeSheet();recSync();setWorld(w);resetQuestPrompts();DLGQ.length=0;try{KV.removeItem(SAVE_KEYS[w])}catch(e){}resv.clear();BAN.clear();S=newState(w);LIVE[w]=S;syncTools(S);dirty=true;recount();kwrSync();recSync();weedMorning();/* はじめから雑草・枝がある */undoStack=[];renderQuest();applyFeats();setMode('look');$('#title').hidden=true;startPrologue()}
+function newGame(w){w=w||0;if(sheet!=null)closeSheet();recSync();if(w!==FREE)grecForget(w);/* はじめから：このステージでおぼえたレシピはわすれる（会話でまた思いつく） */setWorld(w);resetQuestPrompts();DLGQ.length=0;try{KV.removeItem(SAVE_KEYS[w])}catch(e){}resv.clear();BAN.clear();S=newState(w);LIVE[w]=S;syncTools(S);dirty=true;recount();kwrSync();recSync();weedMorning();/* はじめから雑草・枝がある */undoStack=[];renderQuest();applyFeats();setMode('look');$('#title').hidden=true;startPrologue()}
 function startPrologue(){
   showUI(false);started=false;let i=0;const pro=$('#pro');pro.style.transition='none';pro.hidden=false;pro.style.opacity='1';void pro.offsetWidth;pro.style.transition='';/* フェードせずに、すぐまっくらにする（前のデータの画面が一瞬見えないように） */
   cam.z=minZ();centerOn(CX*TS,CY*TS);
@@ -6201,7 +6222,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='831';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='832';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
