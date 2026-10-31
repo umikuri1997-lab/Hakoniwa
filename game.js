@@ -1011,7 +1011,8 @@ const STORAGE={stor:{type:'food',cap:30},mbox:{type:'mat',cap:50},crate:{type:'m
 function storageAt(j,type){const id=S.obj[j],wall=HOME_WALLS.has(id)&&(S.win||{})[j],b=STORAGE[wall]||STORAGE[id];return !!(b&&b.type===type)}
 function storageCapacity(type){let n=0;for(const id in STORAGE){const b=STORAGE[id];if(b.type===type)n+=cnt(id)*b.cap}for(const j in S.win||{}){const b=STORAGE[S.win[j]];if(HOME_WALLS.has(S.obj[j])&&b&&b.type===type)n+=b.cap}return n}
 const foodCap=()=>storageCapacity('food'),matCap=()=>storageCapacity('mat'),matTot=()=>Object.keys(MATN).reduce((a,k)=>a+(S.mat[k]||0),0);
-const MATTRADE={shina:5,kasa:5,kuru:5,chiri:5,funba:5,wood:3,stone:3,bamboo:3,eda:3,kinoko:2,can:2};/* お焚き上げ：素材をパワー1にかえるのに要る数（よく手に入る物ほど多い） */
+let OTAKI_SEL={};/* そうこで、おたきあげにえらんでいる数 */
+const MATTRADE={shina:5,kasa:5,kuru:5,chiri:5,funba:5,wood:3,stone:3,bamboo:3,eda:3,kinoko:2,can:2};/* おたきあげ：素材をパワー1にかえるのに要る数（よく手に入る物ほど多い） */
 const MATN={wood:'木材',stone:'石材',bamboo:'竹',shina:'しなやかな草',kasa:'かさかさ草',kuru:'くるくる草',chiri:'ちりちり草',funba:'ふんばり草',eda:'枝',kinoko:'きのこ',can:'空き缶'},WEEDS=new Set(['weed0g','weed0k','weed1g','weed1k','weedc','kinoko']),bambooOn=()=>WD===1||(S.mat.bamboo||0)>0;/* 竹は火山の素材。ほかのステージでは、持っているときだけ出す */const matTxt=m=>Object.keys(m||{}).map(k=>MATN[k]+m[k]).join('・');/* 素材は文字ではなくアイコンで */const esc=t=>String(t).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'})[c]);const matHTML=m=>Object.keys(m||{}).map(k=>'<span class="mic"><img src="'+(ICONS[k]||'')+'" alt="'+MATN[k]+'">'+m[k]+'</span>').join('');const matOK=m=>Object.keys(m||{}).every(k=>(S.mat[k]||0)>=m[k]);
 const watchQ=()=>!!(S.qTalked&&QUESTS[S.quest]&&QUESTS[S.quest].id==='watch1'&&!cnt('watch')&&!S.obj.some((o,j)=>o==='site'&&S.dyn[j]&&S.dyn[j].build==='watch'));
 const QB=new Set(['lumber','quarry','stele','fountain','lighthouse','windmill']),/* クエストでおぼえるまで建てられない建物（村レベルだけでは、使えない） */lvOK=id=>BL[id].kind==='furn'||(QB.has(id)?(!!(S.recipes||{})[id]||cnt(id)>0):id==='yogan'?(WD===1&&!!S.flags.yoganLearned):id==='watch'?(!!S.flags.watchLearned||watchQ()):S.lv>=(BL[id].lv||1)&&(BL[id].w||0)<=WD)||!!S.flags['lv_'+id]||grec(id);/* w：このステージから（それより前のステージでは、おぼえていないと作れない） */
@@ -1278,6 +1279,8 @@ const ACT={
     done:(r,a)=>hungry(r)&&a.t>5||r.hunger<18||(a.night?!isNight():r.energy>=(a.ground?50:90)),end(r,a){}/* 寝るだけでは、パワーも経験値もふえない */},/* 起きたときのパワーも住み心地で変わる */
   bury:{start(r,a){const d=S.dyn[a.obj];if(S.obj[a.obj]!=='grave'||!d||d.buried||r.coffin||heldN(r))return false},done:(r,a)=>a.t>=2,end(r,a){const d=S.dyn[a.obj];if(S.obj[a.obj]==='grave'&&d&&!d.buried){r.coffin={name:d.name};S.obj[a.obj]='';delete S.dyn[a.obj];recount()}}},/* お墓から棺を持ちあげる（ほかのものは持たない） */
   reunion:{start(r,a){r.bubble='💕';JOYU.set(r,performance.now()+4000);const q=S.res.find(x=>x.id===a.who);if(q){r.face=q.x>=r.x?1:-1;q.bubble='💕';JOYU.set(q,performance.now()+4000)}addFloat(r.x,r.y-1.2,'💕','#fff')},done:(r,a)=>a.t>=6},/* もどってきたなかよしに会えてよろこぶ */
+  otakiget:{start(r){if(!S.otakiQ||!Object.keys(S.otakiQ).length)return false;r.bubble='📦';sfxAt('box',r.x,r.y)},done:(r,a)=>a.t>=4,end(r){r.otaki=S.otakiQ;S.otakiQ={};r.bubble='🔥'}},/* おたきあげ：素材箱から、たのまれた素材をとる */
+  otaki:{start(r){if(!r.otaki||STATUE<0)return false;r.bubble='🔥';sfxAt('cookfire',r.x,r.y)},tick(r,a,dt){a.h=(a.h||0)+dt;if(a.h>=2.5){a.h=0;const x=STATUE%W+.5,y=((STATUE/W)|0)+.2;for(let n=0;n<6;n++){const an=Math.random()*7,v=rnd(20,50);fx.push({k:'p',x:x*TS,y:y*TS,vx:Math.cos(an)*v*.4,vy:-v,life:1,col:pick(['#ffd38a','#ff9f5a','#fff3c4']),r:rnd(1.5,3)})}}},done:(r,a)=>a.t>=10,end(r){let p=0;for(const k in r.otaki||{})p+=Math.floor(r.otaki[k]/(MATTRADE[k]||5));r.otaki=null;S.pt+=p;burst(STATUE,'furn');sfx('level');toast('おたきあげ：パワー+'+p,'good');addSpiritXp(1,r)}},/* 神殿で、おたきあげ */
   pray:{start(r){if(!r.coffin)return false},done:(r,a)=>a.t>=12,end(r){finishBurial(r)}},/* 神殿でおいのりして、埋葬する */
   rest:{start(r,a){if(!BENCHES.has(S.obj[a.obj]))return false;r.bubble='☕'},tick(r,a,dt){if(a.partner!=null&&!S.res.some(x=>x.id===a.partner&&x.act&&x.act.type==='rest'&&x.act.obj===a.obj)){a.topic=null;a.partner=null;a.sub=0;a.ended=1;r.bubble='☕'}/* 片方が休けいを終えたら、おしゃべりもおわり */r.energy=Math.min(100,r.energy+dt/3*mateK(r,'rest')*recK(r)*(1+.1*spotN(a.obj,'yasumi','wa','terrace')));/* やすみば・和の庭：+10% */r.fun=Math.min(100,r.fun+.08*dt*(1+.1*spotN(a.obj,'hana','chaya','kotori')));/* 花のベンチ・茶屋：+10% */
     if(a.topic==null){const q=a.ended||(r.chatCD||0)>S.t?null:S.res.find(x=>x!==r&&(x.chatCD||0)<=S.t&&x.act&&x.act.type==='rest'&&x.act.stage==='do'&&x.act.obj===a.obj&&x.act.topic==null);if(q){const t=chatTopic(r,q);a.topic=t;a.partner=q.id;q.act.topic=t;q.act.partner=r.id;q.act.sub=1;r.bubble=q.bubble='💬';mate(r,q);for(const x of[r,q])addPt(.45+(x.like==='chat'?.9:0)+(S.today==='oshaberi'?.9:0),x,1+(x.like==='chat'?2:0)+(S.today==='oshaberi'?2:0))}}/* ベンチに2人すわったら、おしゃべり */
@@ -1345,7 +1348,7 @@ const ACT={
   shiver:{start(r){r.bubble='😨'},done:(r,a)=>r.hunger<50||!hostileNow()||r.hunger<hMax(r)*.5&&S.food>0&&!(r.eatTry>S.t),end(r){if(!hostileNow()&&r.hunger>=30)r.phewNext=true}},/* コワイノがいなくなったら、「ふぅ」とひと息ついてから寝る */
   phew:{start(r,a){r.bubble='';a.dl=PHEWDL[r.elem]||0},tick(r,a){r.bubble='';if(a.reactAt==null&&a.t>=a.dl){a.reactAt=performance.now();a.reactMotion='phew'}},done:(r,a)=>a.t>=a.dl+2},/* ふぅ：吹き出しは出さない。属性ごとに、すこしずつずらす *//* おなかが半分より少なくなったら、ふるえるのをやめて、安全に行ける食料箱へ食べにいく *//* たたかえない子は、コワイノがいるあいだ、家の中でふるえている */
 };
-const ACT_LBL={phew:'ほっとしている',shopkeep:'屋台の店番をしている',dance:'おどっている',bon:'おどりの輪でおどっている',yatai:'屋台にいる',fwalk:'おまつりを見てまわっている',hanabi:'花火を見ている',step:'あるいている',shiver:'こわくて、ふるえている',reunion:'なかよしに会いにいく',bury:'お墓へむかう',pray:'神殿でおいのり',sevreact:'気づいたものを見にいく',questjoy:'よろこんでいる',stay:'起きてすごしている',sow:'種をまいている',faint:'目をまわしている',eat:'ごはん中',forage:'ベリーを食べている',sleep:'おやすみ中',play:'遊んでいる',fish:'つりをしている',chat:'おしゃべり中',cook:'料理中',chop:'木を切っている',mine:'石をほっている',smat:'素材をしまう',store:'食料をしまう',fetch:'食料をとりに',chatwait:'待ちあわせ',npl:'ヌシ様と遊んでいる',tag:'おいかけっこ',tend:'畑の世話',water:'水やり',till:'畑を耕している',plant:'植えている',build:'建てている',craft:'家具づくり',harvest:'収穫中',gather:'食べ物あつめ',repair:'修理',rest:'ベンチで休んでいる',bathe:'おふろに入っている',weed:'草むしり',douse:'火を消している',cgrab:'料理の材料をとりに',nmeet:'ヌシ様をむかえる',pickseed:'種ひろい',pickdrop:'おとしものひろい',offer:'おそなえ中',flee:'にげている',patrol:'見回り',wander:'おさんぽ',idle:'ひとやすみ'};
+const ACT_LBL={phew:'ほっとしている',shopkeep:'屋台の店番をしている',dance:'おどっている',bon:'おどりの輪でおどっている',yatai:'屋台にいる',fwalk:'おまつりを見てまわっている',hanabi:'花火を見ている',step:'あるいている',shiver:'こわくて、ふるえている',reunion:'なかよしに会いにいく',bury:'お墓へむかう',pray:'神殿でおいのり',sevreact:'気づいたものを見にいく',questjoy:'よろこんでいる',stay:'起きてすごしている',sow:'種をまいている',faint:'目をまわしている',eat:'ごはん中',forage:'ベリーを食べている',sleep:'おやすみ中',play:'遊んでいる',fish:'つりをしている',chat:'おしゃべり中',cook:'料理中',chop:'木を切っている',mine:'石をほっている',smat:'素材をしまう',store:'食料をしまう',fetch:'食料をとりに',chatwait:'待ちあわせ',npl:'ヌシ様と遊んでいる',tag:'おいかけっこ',tend:'畑の世話',water:'水やり',till:'畑を耕している',plant:'植えている',build:'建てている',craft:'家具づくり',harvest:'収穫中',gather:'食べ物あつめ',repair:'修理',otakiget:'おたきあげの素材をとりに',otaki:'おたきあげ',rest:'ベンチで休んでいる',bathe:'おふろに入っている',weed:'草むしり',douse:'火を消している',cgrab:'料理の材料をとりに',nmeet:'ヌシ様をむかえる',pickseed:'種ひろい',pickdrop:'おとしものひろい',offer:'おそなえ中',flee:'にげている',patrol:'見回り',wander:'おさんぽ',idle:'ひとやすみ'};
 
 function decide(r){TAKEN=new Set();for(const q of S.res){if(q===r||q.hidden)continue;if(q.act&&q.act.stand>=0)TAKEN.add(q.act.stand);if(!q.act||q.act.stage!=='walk')TAKEN.add((q.y|0)*W+(q.x|0))}
   for(const [j,t]of Object.entries(r.routeAvoid||{})){if(t>S.t)TAKEN.add(+j);else delete r.routeAvoid[j]}
@@ -1834,6 +1837,8 @@ function tryJob(r,G,k){
   case'offer':{if(OBOX<0||isNight()||r.fun<99||r.offDay===dayNo())return false;/* おそなえは1人1日1回まで *//* たのしさが満タンになったら、おそなえする */j=nearTile(G,OBOX);if(j>=0){startAct(r,G,'offer',j);return true}return false}
   case'gather':{if(S.food>=(r.elem==='earth'?25:12)||isNight()||roomN(r)<1)return false;const bb=ripeAdj(['berry','takenoko']);j=nearest(G,j=>bb(j)>=0);if(j>=0){const q=bb(j);startAct(r,G,'gather',j,{key:'o'+q,obj:q});return true}return false}
   case'drop':if(!(S.drops&&S.drops.length)||isNight())return false;const noF=!S.res.some(x=>x.name===POKO&&!x.hidden);j=nearest(G,j=>S.drops.some(q=>q.y*W+q.x===j&&(q.id==='shard'||Math.hypot(q.x+.5-r.x,q.y+.5-r.y)<=(r.elem==='wind'?10:5))/* 落ちている物は、まわり5マス（風の子は10マス）に来て見つけたときにひろう（ヌシのかけらはべつ） */&&(q.id!=='shard'||r.name===POKO||noF)&&!(q.id.startsWith('food:')&&foodCap()-S.food<=0)&&!(q.id.startsWith('mat:')&&matCap()-matTot()<=0)&&!((q.id.startsWith('food:')||q.id.startsWith('mat:'))&&roomN(r)<1))&&free('d'+j,1),90);/* 食料箱がいっぱいのときは、食料のおとしものはひろわない */if(j>=0){startAct(r,G,'pickdrop',j,{key:'d'+j,obj:j});return true}return false;
+  case'otaki':{if(isNight()||STATUE<0)return false;if(r.otaki){j=nearest(G,j=>adjOf(j,k=>k===STATUE||k===STATUE+W)>=0,300);if(j>=0){startAct(r,G,'otaki',j,{});return true}return false}
+    if(!S.otakiQ||!Object.keys(S.otakiQ).length||S.res.some(q=>q!==r&&q.act&&q.act.type==='otakiget'))return false;j=nearest(G,j=>adjOf(j,k=>storageAt(k,'mat'))>=0,200);if(j>=0){startAct(r,G,'otakiget',j,{});return true}return false}/* おたきあげ：素材箱から素材をとって、神殿へ */
   case'weed':{if(isNight()||matTot()+matN(r)>=matCap()||roomN(r)<1)return false;j=nearest(G,j=>WEEDS.has(S.obj[j])&&free('o'+j,1),r.elem==='wind'?120:60);if(j>=0){startAct(r,G,'weed',j,{key:'o'+j,obj:j});return true}return false}
       case'seed':if(!S.seeds.length||isNight())return false;j=nearest(G,j=>S.seeds.some(q=>q.y*W+q.x===j)&&free('s'+j,1),90);if(j>=0){startAct(r,G,'pickseed',j,{key:'s'+j,obj:j});return true}return false;
   }
@@ -1858,6 +1863,7 @@ function hasUrgent(r){/* 建てる場所か、だれも受けていない依頼�
   if(canJob(r,'build')&&S.obj.some((o,j)=>o==='site'&&free('o'+j,2)))return true;
   return S.orders.some(q=>(!q.worker||!S.res.some(x=>x.id===q.worker))&&craftOK(r,q))}
 function hasWork(r){
+  if(!isNight()&&STATUE>=0&&(r.otaki||S.otakiQ&&Object.keys(S.otakiQ).length))return true;
   if(!isNight()&&S.drops&&S.drops.length&&S.drops.some(q=>(q.id==='shard'||Math.hypot(q.x+.5-r.x,q.y+.5-r.y)<=(r.elem==='wind'?10:5))&&(q.id!=='shard'||r.name===POKO||!S.res.some(x=>x.name===POKO&&!x.hidden))&&walk(q.y*W+q.x)&&free('d'+(q.y*W+q.x),1)))return true;
   if(canJob(r,'build')&&S.obj.some((o,j)=>o==='site'&&free('o'+j,2)))return true;
   if(S.orders.some(q=>(!q.worker||!S.res.some(x=>x.id===q.worker))&&craftOK(r,q)))return true;
@@ -1878,6 +1884,7 @@ function goWork(r,G,nw){
   if(S.food<6&&foodCap()>0)for(const k of['harvest','gather'])if(tryJob(r,G,k))return true;/* 食料が6より少なくなったら、ほかの仕事より先に食べ物をあつめる */
   // 花や木の苗は、空腹などの急ぎの用事を除いて、ほかの仕事より先に植える
   if(tryJob(r,G,'plant'))return true;
+  if(tryJob(r,G,'otaki'))return true;
   if(S.oracle&&ORACLE[S.oracle])for(const k of ORACLE[S.oracle].jobs)if(tryJob(r,G,k))return true;
   // 建てる・家具づくりがいちばん先。そのつぎに得意な仕事をする
   for(const k of['build','craft',...(SPEC[r.elem]||[])])if(tryJob(r,G,k))return true;
@@ -1987,7 +1994,7 @@ function goBurial(r,G){/* 消えてしまった子のお墓へ行き、棺を神
   const ok=j=>{if(S.obj[j]!=='grave')return false;const d=S.dyn[j];if(!d||d.buried||!free('bury'+j,1))return false;if(d.mate&&d.mate!==r.name&&S.res.some(q=>q.name===d.mate&&!q.hidden)&&S.t-(d.t0||0)<240)return false;return true};
   const gs=[];for(let j=0;j<W*H;j++)if(S.obj[j]==='grave'&&ok(j))gs.push(j);if(!gs.length)return false;
   const st=nearest(G,k=>adjOf(k,q=>gs.includes(q))>=0,200);if(st<0)return false;const g=adjOf(st,q=>gs.includes(q));startAct(r,G,'bury',st,{key:'bury'+g,obj:g});return true}
-function die(r){
+function die(r){if(r.otaki){const Q=S.otakiQ||(S.otakiQ={});for(const k in r.otaki)Q[k]=(Q[k]||0)+r.otaki[k];r.otaki=null}/* 持っていたおたきあげの素材は、まちにもどす */
   endAct(r);const dm=bestMate(r),dmN=dm?dm.name:null;{const t0=(r.y|0)*W+(r.x|0);let gj=-1;for(let rad=0;rad<4&&gj<0;rad++)for(let dy=-rad;dy<=rad&&gj<0;dy++)for(let dx=-rad;dx<=rad;dx++){const k=t0+dy*W+dx;if(k>=0&&k<W*H&&!S.obj[k]&&S.ground[k]!==1){gj=k;break}}
     if(gj>=0){S.obj[gj]='grave';S.dyn[gj]={name:r.name,buried:false,mate:dmN,t0:S.t};recount()}}S.res=S.res.filter(q=>q!==r);S.deaths++;for(const q of S.res)if(Math.hypot(q.x-r.x,q.y-r.y)<14)q.cryU=S.t+90;/* 近くのせいれいは、しばらく泣く */logEv(r.name+'が消えてしまった');
   if(!S.buried)S.buried=[];if(isKey(r.name)&&r.elem==='fire'&&!S.flags.guard&&S.ns&&S.ns.boss&&isNight())S.flags.hDied=1;/* こもれびのまもりをおぼえる前に、オオカゲの夜に火の子がいなくなった */if(isKey(r.name))S.buried.push({name:r.name,elem:r.elem,vr:r.vr,xp:r.xp||0,xpf:r.xpf||0,like:r.like,came:r.came,made:r.made,beat:r.beat,bst:r.bst,sst:r.sst,boost:r.boost,mate:dmN,unb:true});else{if(!S.lost)S.lost=[];S.lost.push({name:r.name,elem:r.elem,vr:r.vr,xp:r.xp||0,xpf:r.xpf||0,like:r.like,came:r.came,made:r.made,beat:r.beat,bst:r.bst,sst:r.sst,boost:r.boost,mate:dmN,unb:true})}/* 埋葬されるまでは、よみがえらせない（unb） *//* キーキャラは特性「きずな」でレベルそのまま。ふつうのせいれいは「めぶきのしずく」がないともどらない *//* もどってくるのはキーキャラだけ *//* 次の朝の召喚で、いちばんにもどってくる */
@@ -5612,12 +5619,13 @@ function renderSheet(){
     const fk=Object.keys(FOODS).filter(k=>(S.fs[k]||0)>0),raw=fk.filter(k=>!FOODS[k].dish),dish=fk.filter(k=>FOODS[k].dish),fi=k=>[ICONS[k]||null,FOODS[k].e,FOODS[k].name,S.fs[k]];
     box('食料箱',S.food,foodCap(),[...raw.map(fi),...dish.map(fi)],'食べ物は、ありません');
     const mk=Object.keys(S.mat).filter(k=>(S.mat[k]||0)>0&&MATN[k]);box('素材箱',matTot(),matCap(),mk.map(k=>[ICONS[k]||null,'',MATN[k],S.mat[k]]),'素材は、ありません');
-    if(mk.length){const sec=el('<div class="sec"><h3>お焚き上げ</h3><p class="note">素材を焚き上げて、パワーにかえる</p><div class="rows"></div></div>'),rw=sec.querySelector('.rows');/* お焚き上げ（MATTRADE の数でパワー1）・すてる */
-      for(const k of mk){const n=S.mat[k]||0,tr=MATTRADE[k],row=el('<div class="row matRow"><span class="tx"><b></b><small></small></span><span class="mbtns" style="display:flex;gap:6px;flex-wrap:wrap"></span></div>');row.querySelector('b').textContent=MATN[k]+' '+n;row.querySelector('small').textContent=tr?tr+'こでパワー1':'';const bx=row.querySelector('.mbtns');
-        const btn=(t,ok,fn)=>{const b=el('<button class="btn"></button>');b.textContent=t;b.disabled=!ok;b.onclick=()=>{sfx('tap');fn();updHUD&&updHUD();renderSheet()};bx.appendChild(b)};
-        if(tr){btn('焚き上げ',n>=tr,()=>{S.mat[k]-=tr;S.pt+=1;toast(MATN[k]+'-'+tr+'・パワー+1','good')});btn('ぜんぶ',n>=tr,()=>{const q=Math.floor(n/tr);S.mat[k]-=q*tr;S.pt+=q;toast(MATN[k]+'-'+q*tr+'・パワー+'+q,'good')})}
-        btn('5こすてる',n>0,()=>{const q=Math.min(5,S.mat[k]||0);S.mat[k]-=q;toast(MATN[k]+'を'+q+'こすてた')});rw.appendChild(row)}
-      body.appendChild(sec)}if(S.sand){const p=el('<p class="note"></p>');p.textContent='やすらぎの砂：'+S.sand+'（コワイノの落とし物。素材箱には入らない）';body.appendChild(p)}
+    {const q=S.otakiQ||{},held=S.res.filter(r=>r.otaki);if(mk.length||Object.keys(q).length||held.length){const sec=el('<div class="sec"><h3>おたきあげ</h3><p class="note">えらんだ素材を、せいれいが素材箱から神殿へもっていき、おたきあげしてパワーにする</p><div class="rows"></div></div>'),rw=sec.querySelector('.rows');let P=0;
+      for(const k of mk){const n=S.mat[k]||0,tr=MATTRADE[k]||5,mx=Math.floor(n/tr)*tr,v=Math.min(OTAKI_SEL[k]||0,mx);OTAKI_SEL[k]=v;P+=v/tr;const row=el('<div class="row matRow"><span class="tx"><b></b><small></small></span><span class="mbtns" style="display:flex;gap:6px;align-items:center"></span></div>');row.querySelector('b').textContent=MATN[k]+' '+n;row.querySelector('small').textContent=tr+'こでパワー1';const bx=row.querySelector('.mbtns');
+        const btn=(t,ok,d)=>{const b=el('<button class="btn"></button>');b.textContent=t;b.disabled=!ok;b.onclick=()=>{sfx('tap');OTAKI_SEL[k]=Math.max(0,Math.min(mx,(OTAKI_SEL[k]||0)+d));renderSheet()};bx.appendChild(b)};
+        btn('−',v>0,-tr);const lb=el('<b style="min-width:2.4em;text-align:center"></b>');lb.textContent=v;bx.appendChild(lb);btn('+',v<mx,tr);rw.appendChild(row)}
+      body.appendChild(sec);
+      {const b=el('<button class="btn pri" style="margin-top:6px"></button>');b.textContent='おたきあげ（パワー+'+P+'）';b.disabled=!P;b.onclick=()=>{sfx('quest');const Q=S.otakiQ||(S.otakiQ={});for(const k in OTAKI_SEL){const v=OTAKI_SEL[k]||0;if(v>0&&(S.mat[k]||0)>=v){S.mat[k]-=v;Q[k]=(Q[k]||0)+v}}OTAKI_SEL={};toast('おたきあげをたのんだ','good');renderSheet()};sec.appendChild(b)}
+      {const L=[];const add=o=>{for(const k in o)if(o[k])L.push(MATN[k]+o[k])};add(q);held.forEach(r=>add(r.otaki));if(L.length){const p=el('<p class="note"></p>');p.textContent='おたきあげまち：'+L.join('・');sec.appendChild(p)}}}}/* おたきあげ（MATTRADE の数でパワー1） */if(S.sand){const p=el('<p class="note"></p>');p.textContent='やすらぎの砂：'+S.sand+'（コワイノの落とし物。素材箱には入らない）';body.appendChild(p)}
     const hold=S.res.filter(r=>heldN(r)>0);if(hold.length){const p=el('<p class="note"></p>');p.textContent='せいれいが運んでいるとちゅう：'+hold.map(r=>r.name+'（'+[...Object.entries(r.carry&&typeof r.carry==='object'?r.carry:{}).map(([k,n])=>FOODS[k].name+n),...Object.entries(r.cmat||{}).map(([k,n])=>MATN[k]+n)].join('・')+'）').join('、');body.appendChild(p)}
   }else if(sheet==='people'){
     T.textContent='せいれい '+S.res.length+'人';
@@ -6035,7 +6043,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='808';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='809';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
