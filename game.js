@@ -273,7 +273,7 @@ const hasGlass=()=>TESTSPD||(glassUnlocked()&&(S.glassT||0)>0);/* 使える時�
 const fmtT=t=>Math.floor(t/60)+':'+String(Math.floor(t%60)).padStart(2,'0');
 function glassUI(){const e=$('#spdN');if(!e)return;const t=TESTSPD||TESTM?'':(S.speed>1&&S.glassT>0?' '+fmtT(S.glassT):S.glassT>0?'':' 広告');const v='×'+S.speed+t;if(e.textContent!==v)e.textContent=v}
 function adPrompt(){if($('#adBox'))return;const d=document.createElement('div');d.id='adBox';d.style.cssText='position:fixed;inset:0;z-index:70;background:rgba(5,15,14,.72);display:flex;align-items:center;justify-content:center;padding:24px';
-  d.innerHTML='<div style="background:var(--panel);color:var(--ink);border-radius:16px;padding:20px;max-width:320px;width:100%;text-align:center;font-weight:700;line-height:1.7"><div>広告を見ると、10分間<br>ゲームの速さを2倍にできるよ</div><div id="adMsg" style="margin:10px 0;font-weight:400;min-height:1.7em"></div><div style="display:flex;gap:8px;justify-content:center"><button class="btn pri" id="adGo">広告を見る</button><button class="btn" id="adNo">やめる</button></div></div>';
+  d.innerHTML='<div class="pxcard" style="background:var(--panel);color:var(--ink);border-radius:16px;padding:20px;max-width:320px;width:100%;text-align:center;font-weight:700;line-height:1.7"><div>広告を見ると、10分間<br>ゲームの速さを2倍にできるよ</div><div id="adMsg" style="margin:10px 0;font-weight:400;min-height:1.7em"></div><div style="display:flex;gap:8px;justify-content:center"><button class="btn pri" id="adGo">広告を見る</button><button class="btn" id="adNo">やめる</button></div></div>';
   document.body.appendChild(d);const close=()=>d.remove();$('#adNo').onclick=close;
   $('#adGo').onclick=()=>{$('#adGo').disabled=true;$('#adNo').disabled=true;let n=5;const m=$('#adMsg');m.textContent='広告 '+n;const iv=setInterval(()=>{n--;if(n>0){m.textContent='広告 '+n;return}clearInterval(iv);S.glassT=Math.min(1800,(S.glassT||0)+600);sfx('level');toast('スピードアップが10分使えるようになった','good');close();applyFeats()},1000)}}/* 広告を見たらスピードアップ10分（いまは広告のかわりの5秒の画面） */
 const GOD_SHOP=['いらっしゃ〜い。なにがほしいかの？','おっ、来たのう。今日はなにと交換する？','パワーたまっとるか？ ゆっくり見ていくがよい。','どれも自慢の品じゃよ。たぶん。','ほれ、えらべえらべ。まけんがの。'],GOD_BUY=['まいど〜！ だいじに使うんじゃぞ。','いい買い物をしたのう〜。','それをえらぶか？ わかっとるのう。','ありがとさん〜。パワーはだいじにあずかっとくぞい。','また来るんじゃよ。…おっと、来とるのはわしのほうか。'],GOD_POOR=['パワーが足りんのう〜。せいれいたちにがんばってもらうんじゃ。','ツケはなしじゃぞ〜。'];let shopSay='';
@@ -1191,6 +1191,7 @@ function recount(){if(S.broken)S.broken=S.broken.filter(b=>!S.obj[b.j]);calcSpot
     for(let j=0;j<W*H;j++)if(v[j]&&S.ground[j]===1)ATTR.water+=.3}/* 水の力は、村の中の池・川だけ（1マス0.3） */
   for(const k of NEARPARA)ENVG[k]+=7;/* パラソルがいくつ重なっても、1つぶん（BL.parasol.env） */
   if(WD===FREE)for(let j=0;j<W*H;j++)REV.add(j);/* フリーモードの土地は荒れていない */
+  {const st=WD===1?1:0,g='weed'+st+'g',k='weed'+st+'k';for(let j=0;j<W*H;j++){const o=S.obj[j];if(o===k&&REV.has(j))S.obj[j]=g;else if((o===g||o==='weedc')&&!REV.has(j))S.obj[j]=k}}/* 雑草は土地に合わせる：よみがえった土地（緑）は緑の草、荒れた土地は枯れた草（あとから緑になった所の枯れた草も、緑の草に） */
   for(let j=0;j<W*H;j++){if(S.ground[j]===1)continue;baseN++;if(REV.has(j))revN++}
   /* 属性値は、せいれいの依頼が出る前から基地にある対象物も含めて数える。依頼開始時の基準化・差し引きはしない。 */
   BASEPCT=Math.round(revN/Math.max(1,baseN)*100);GRASSN=revN;// マップぜんぶの、みどりのマス
@@ -2846,7 +2847,7 @@ function upFx(r,nm,txt,big){const now=performance.now();JOYU.set(r,now+2600);RHO
   const o=$('#upfx');o.querySelector('.upt').style.backgroundImage='url('+spiritPort(r.elem,120,r.vr)+')';o.querySelector('.utt').textContent=r.name+'の'+nm;const u=o.querySelector('.unn');u.textContent=txt+(big?'！！':'！');u.classList.toggle('big',!!big);
   o.querySelectorAll('i').forEach(e=>e.remove());for(let n=0;n<(big?18:12);n++){const e=document.createElement('i'),a=n/(big?18:12)*6.28,d=110+Math.random()*60;e.textContent=pick(['✨','⭐','💫','✨']);e.style.setProperty('--dx',Math.cos(a)*d+'px');e.style.setProperty('--dy',Math.sin(a)*d+'px');e.style.animationDelay=(Math.random()*.25)+'s';o.appendChild(e)}
   o.hidden=false;const rays=o.querySelector('.rays');rays.style.animation='none';void rays.offsetWidth;rays.style.animation='';clearTimeout(upFx.t);const end=()=>{o.hidden=true};upFx.t=setTimeout(end,1800);o.onclick=()=>{clearTimeout(upFx.t);end()}}
-function howBtn(r,how){if(!how)return;const b=el('<button class="btn" style="min-width:34px;padding:4px 0;border-radius:50%">？</button>');b.onclick=()=>{const o=el('<div style="position:absolute;inset:0;z-index:40;display:flex;align-items:center;justify-content:center;background:rgba(30,24,16,.45);padding:24px"><div style="background:var(--panel);border:2px solid var(--line);border-radius:16px;padding:16px 18px;max-width:340px;width:100%;animation:sup .18s ease-out"><b style="display:block;margin-bottom:8px"></b><p style="margin:0 0 14px;white-space:pre-line;line-height:1.7;font-size:14px"></p><button class="btn" style="width:100%">とじる</button></div></div>');o.querySelector('b').textContent='やりかた';o.querySelector('p').textContent=how;o.onclick=e=>{if(e.target===o||e.target.tagName==='BUTTON')o.remove()};$('#upfx').parentNode.appendChild(o);sfx('tap')};r.appendChild(b)}/* やりかたは「？」でポップアップ */
+function howBtn(r,how){if(!how)return;const b=el('<button class="btn" style="min-width:34px;padding:4px 0;border-radius:50%">？</button>');b.onclick=()=>{const o=el('<div style="position:absolute;inset:0;z-index:40;display:flex;align-items:center;justify-content:center;background:rgba(30,24,16,.45);padding:24px"><div class="pxcard" style="background:var(--panel);border:2px solid var(--line);border-radius:16px;padding:16px 18px;max-width:340px;width:100%;animation:sup .18s ease-out"><b style="display:block;margin-bottom:8px"></b><p style="margin:0 0 14px;white-space:pre-line;line-height:1.7;font-size:14px"></p><button class="btn" style="width:100%">とじる</button></div></div>');o.querySelector('b').textContent='やりかた';o.querySelector('p').textContent=how;o.onclick=e=>{if(e.target===o||e.target.tagName==='BUTTON')o.remove()};$('#upfx').parentNode.appendChild(o);sfx('tap')};r.appendChild(b)}/* やりかたは「？」でポップアップ */
 function subSec(body,main){const D=S.subDone||{},St=S.subSt||{},L=subList().filter(q=>St[q.k]>=2),on=L.filter(q=>!D[q.k]).sort((a,b)=>(St[b.k]===3)-(St[a.k]===3)),dn=L.filter(q=>D[q.k]);
   const sec=(h)=>{const f=el('<div class="sec"><h3></h3><div class="rows"></div></div>');f.querySelector('h3').textContent=h;body.appendChild(f);return f.querySelector('.rows')};
   {const rw=sec('進行中');let n=0;
@@ -5677,7 +5678,7 @@ function attrPop(k){
   const src={};const add=(name,v)=>{const r=src[name]||(src[name]={n:0,v:0});r.n++;r.v+=v};
   for(let j=0;j<W*H;j++){if(k==='water'&&S.ground[j]===1&&VILL[j])add('池・水べ（1マス0.3）',.3);const id=S.obj[j],b=BL[id];if(!b||b.kind==='block'||(FLOWERS.has(id)||id==='tree'||id==='fruit')&&isBud(j))continue;if((b.attr||{})[k]>0)add(b.name,b.attr[k])}
   const ov=el('<div style="position:absolute;inset:0;z-index:30;background:rgba(0,0,0,.45);display:grid;place-items:center;padding:24px"></div>');
-  const card=el('<div class="sec" style="background:var(--panel);border:2px solid var(--line);border-radius:16px;padding:14px;width:100%;max-width:340px;max-height:70%;overflow:auto"></div>');
+  const card=el('<div class="sec pxcard" style="background:var(--panel);border:2px solid var(--line);border-radius:16px;padding:14px;width:100%;max-width:340px;max-height:70%;overflow:auto"></div>');
   const h=document.createElement('h3');h.textContent=ELEM[k].name+'の力：'+Number(ATTR[k].toFixed(1))+' / '+needFor(k);card.appendChild(h);
   for(const[name,r]of Object.entries(src))card.appendChild(rowEl(name+' ×'+r.n,'+'+Number(r.v.toFixed(1))));
   if(!Object.keys(src).length)card.appendChild(el('<p class="note">まだありません</p>'));
@@ -5787,7 +5788,7 @@ function renderSheet(){
       if(!recipeKnown(id)||!lvOK(id)&&!S.recipes[id])continue;/* 思いついていない・レベル不足は出さない */
       /* レシピをまだ知らない */
       const r=helpify(rowEl(b.name+(b.qty?'×'+b.qty:'')+'　所持：'+inv(id),'',iconURL(id),b.mat?matNeedHTML(b.mat)+(b.sand?'やすらぎの砂'+b.sand+' ':'')+' ':''),withAttr(id,b.desc));
-      if(makerOf(id)){const has=elemCount(b.maker)>0,mk=el('<span style="display:inline-flex;align-items:center;vertical-align:middle;margin-right:4px;border-radius:9px;padding:0 5px 0 1px;font-size:10px;line-height:16px;color:#fff"><img alt="" style="width:16px;height:16px;margin:0"><b style="font-weight:700"></b></span>');mk.style.background=has?ELEM[b.maker].col:'#8a8f8c';mk.querySelector('img').src=spiritPort(b.maker,48);if(!has)mk.querySelector('img').style.filter='grayscale(1) opacity(.7)';mk.querySelector('b').textContent=ELEM[b.maker].name+(has?'':'・いない');r.querySelector('small').prepend(mk)}/* 作るせいれいの属性：アイコンで短く */
+      if(makerOf(id)){const has=elemCount(b.maker)>0,mk=el('<span class="pxpill" style="display:inline-flex;align-items:center;vertical-align:middle;margin-right:4px;border-radius:9px;padding:0 5px 0 1px;font-size:10px;line-height:16px;color:#fff"><img alt="" style="width:16px;height:16px;margin:0"><b style="font-weight:700"></b></span>');mk.style.background=has?ELEM[b.maker].col:'#8a8f8c';mk.querySelector('img').src=spiritPort(b.maker,48);if(!has)mk.querySelector('img').style.filter='grayscale(1) opacity(.7)';mk.querySelector('b').textContent=ELEM[b.maker].name+(has?'':'・いない');r.querySelector('small').prepend(mk)}/* 作るせいれいの属性：アイコンで短く */
       const bt=el('<button class="btn pri"></button>');
       if(!lvOK(id)){bt.textContent='村Lv'+b.lv;bt.disabled=true;r.classList.add('done')}else{bt.textContent='はる　'+SP(b.pc);bt.disabled=S.pt<b.pc||S.orders.length>=boardMax()||!matOK(b.mat)||!!(orderLock()&&orderLock()!==id);bt.onclick=()=>orderFurn(id)}
       r.appendChild(bt);s2.querySelector('.rows').appendChild(r)}
@@ -6246,7 +6247,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='845';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='846';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
