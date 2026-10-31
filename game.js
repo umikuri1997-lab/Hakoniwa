@@ -3250,7 +3250,8 @@ function circ(c,x,y,r,col){c.fillStyle=col;c.beginPath();c.arc(x,y,r,0,7);c.fill
 function drawWeed(c,id,x,y){/* 雑草・きのこ（仮の絵）。草原：しなやかな草（エノコログサ）・かさかさ草（かれたエノコログサ）。火山：くるくる草（ゼンマイ）・ちりちり草（かれたゼンマイ） */
   const h=k=>hash(((x*7+y*13)|0)+k*131),dry=id.endsWith('k');
   if(id==='kinoko'){shadow(c,x+16,y+27,7,2);c.fillStyle='#efe2c8';c.fillRect(x+14,y+19,4,8);c.fillStyle='#d8876a';c.beginPath();c.ellipse(x+16,y+19,7,4.5,0,Math.PI,0);c.fill();c.fillStyle='#f6e9d6';c.beginPath();c.arc(x+13.5,y+16.5,1.1,0,7);c.arc(x+18.5,y+17,1,0,7);c.fill();return}
-  if(id==='weedc'){shadow(c,x+16,y+27,6,2);/* ふんばり草（若いオヒシバ）：3本の葉だけ（穂はない） */c.lineCap='round';c.lineWidth=1.8;for(let k=0;k<3;k++){const a=-Math.PI/2+(k-1)*.55+(h(k)-.5)*.2,L=8+h(k+1)*3;c.strokeStyle=k===1?'#6aa34a':'#5f9a3e';c.beginPath();c.moveTo(x+16,y+27);c.quadraticCurveTo(x+16+Math.cos(a)*L*.4,y+27+Math.sin(a)*L*.6,x+16+Math.cos(a)*L*.9,y+27+Math.sin(a)*L*.8);c.stroke()}c.lineCap='butt';return}
+  if(id==='weedc'){shadow(c,x+16,y+27,8,2);/* ふんばり草（オヒシバ）：ひくく広がる葉と、指のようにひらいた穂 */c.strokeStyle='#5f9a3e';c.lineWidth=1.3;for(let k=0;k<5;k++){const a=Math.PI*(.15+k*.175),L=7+h(k)*3;c.beginPath();c.moveTo(x+16,y+27);c.quadraticCurveTo(x+16+Math.cos(a+Math.PI)*L*.5,y+25,x+16-Math.cos(a)*L,y+27-Math.sin(a)*2.5);c.stroke()}
+    for(let k=0;k<2;k++){const bx=x+13+k*6,top=y+14+h(k+3)*2;c.strokeStyle='#6aa34a';c.beginPath();c.moveTo(bx,y+27);c.lineTo(bx,top);c.stroke();c.strokeStyle='#8cc566';c.lineWidth=1.1;for(let f=0;f<4;f++){const a=-Math.PI/2+(f-1.5)*.42;c.beginPath();c.moveTo(bx,top);c.lineTo(bx+Math.cos(a)*5,top+Math.sin(a)*5+1.5);c.stroke()}c.lineWidth=1.3}return}
   shadow(c,x+16,y+27,7,2);const G=dry?['#c9ad78','#b39462','#dcc392']:['#7fb85a','#6aa34a','#a8d97c'];
   if(id.startsWith('weed0')){for(let k=0;k<5;k++){const bx=x+11+k*2.5,lean=(h(k)-.5)*5;c.strokeStyle=G[k%2];c.lineWidth=1.2;c.beginPath();c.moveTo(bx,y+27);c.quadraticCurveTo(bx+lean*.3,y+21,bx+lean,y+15+h(k+5)*4);c.stroke()}
     for(let k=0;k<2;k++){const tx=x+13+k*6+(h(k+9)-.5)*2,ty=y+12+h(k+3)*3;c.fillStyle=G[2];c.beginPath();c.ellipse(tx,ty,1.8,4.2,(k?.35:-.35),0,7);c.fill()}return}/* 穂のある細い草 */
@@ -5995,7 +5996,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='791';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='792';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
