@@ -3495,7 +3495,7 @@ function wallMarg(c,i,x,y){const isW=k=>HOME_WALLS.has(typeAt(k))||HOME_DOORS.ha
       for(const sh of [false,true]){const D=dirs.filter(d=>HOME_WALLS.has(typeAt(i+d[0]-W))===sh);if(!D.length)continue;c.save();c.beginPath();for(const d of D)c.rect(x+d[1],y+d[2],d[3],d[4]);c.clip();c._shU=sh;drawFloor(c,S.floor[i+D[0][0]],x,y,i,true);c._shU=null;c.restore()}}/* となりの床マスの上が壁なら、床と同じ「壁の下のかげ」も、壁の下までつなげる */
 }
 // 道は、同じ種類どうしだけつながる（ちがう種類の道は、べつの道としてふちをかく）。マップのはし・水とはつながらない
-function roadLinks(i,iso){const gx=i%W,gy=(i/W)|0,me=S.floor[i],wl=me==='path'||me==='gravel',has=(x,y)=>!iso&&x>=0&&y>=0&&x<W&&y<H&&(wl&&S.ground[y*W+x]>=1||/* あぜ道・砂利道は、水ぎわまでつなげる（水のマスのすきまに、道のもようをしきつめる：waterGap） */S.ground[y*W+x]!==1&&ROADF.has(me)&&(S.floor[y*W+x]===me||slopeFrom(y*W+x)===i||slopeExit(y*W+x)===i&&S.floor[slopeFrom(y*W+x)]===me));return {L:has(gx-1,gy),R:has(gx+1,gy),U:has(gx,gy-1),D:has(gx,gy+1)}}
+function roadLinks(i,iso){const gx=i%W,gy=(i/W)|0,me=S.floor[i],wl=me==='path'||me==='gravel',has=(x,y)=>!iso&&x>=0&&y>=0&&x<W&&y<H&&(S.ground[y*W+x]!==1&&ROADF.has(me)&&(S.floor[y*W+x]===me||slopeFrom(y*W+x)===i||slopeExit(y*W+x)===i&&S.floor[slopeFrom(y*W+x)]===me));return {L:has(gx-1,gy),R:has(gx+1,gy),U:has(gx,gy-1),D:has(gx,gy+1)}}
 function slopeExit(k){/* k が坂の低いほうのはしのマスなら、坂をおりた先のマス。ちがえば -1（おりた先の道も、坂へつづける） */const a=stairOf(k);if(a<0||!SLOPES.has(S.obj[a]))return -1;const d=stairDir(a);if(d<0)return -1;const lo=d===0?a:stairOut(a,d);return k===lo?lo+SDIR[d][1]*W+SDIR[d][0]:-1}
 function slopeFrom(k){/* k が坂（のマス）なら、その坂をのぼった先の高いマス。ちがえば -1（のぼった先の道は、坂へつづける） */const a=stairOf(k);if(a<0||!SLOPES.has(S.obj[a]))return -1;const d=stairDir(a);return d<0?-1:stairTop(a,d)}
 function roadCorners(i,iso){const gx=i%W,gy=(i/W)|0,q=roadLinks(i,iso),has=(dx,dy)=>!iso&&gx+dx>=0&&gy+dy>=0&&gx+dx<W&&gy+dy<H&&S.ground[i+dy*W+dx]!==1&&S.floor[i+dy*W+dx]===S.floor[i];return [q.L&&q.U&&!has(-1,-1),q.R&&q.U&&!has(1,-1),q.R&&q.D&&!has(1,1),q.L&&q.D&&!has(-1,1)]}
@@ -4295,8 +4295,6 @@ function drawStaticArea(sc,X0,Y0,X1,Y1){/* 地面・床・水・動かない物�
       const k=(y*W+x)*4;if(v>0){im.data[k]=255;im.data[k+1]=250;im.data[k+2]=220}else{im.data[k]=40;im.data[k+1]=55;im.data[k+2]=20}im.data[k+3]=Math.min(255,Math.abs(v)*2*70)}
     nx.putImageData(im,0,0)}sc.save();sc.imageSmoothingEnabled=true;sc.imageSmoothingQuality='high';sc.drawImage(nc,-TS/2,-TS/2,(W+1)*TS,(H+1)*TS);sc.restore()}
   for(let y=Y0;y<=Y1;y++)for(let x=X0;x<=X1;x++){const i=y*W+x;if(S.ground[i]!==1&&S.floor[i]&&!((HOME_WALLS.has(S.obj[i])||HOME_DOORS.has(S.obj[i]))&&!ROADF.has(S.floor[i])))drawFloor(sc,S.floor[i],x*TS,y*TS,i);/* 壁の下の床は、家の中がわだけ（wallMargで描く） */if(HOME_DOORS.has(S.obj[i])||HOME_WALLS.has(S.obj[i]))wallMarg(sc,i,x*TS,y*TS)}/* 壁・ドアの下の床（家の中がわ）も、地面の下絵に描く（毎コマ描くと、下絵とのさかいめに線が出る） */
-  {/* 水のマスの下：となりがあぜ道・砂利道なら、そのがわの半マスに道のもようをしきつめる（道を水ぎわまでつなげる） */const C=window.CHIPS||{},h2=TS/2;for(let y=Y0;y<=Y1;y++)for(let x=X0;x<=X1;x++){const i=y*W+x;if(S.ground[i]<1)continue;const px=x*TS,py=y*TS;
-    for(const[n,rx,ry,rw,rh]of[[x>0?i-1:-1,px,py,h2,TS],[x<W-1?i+1:-1,px+h2,py,h2,TS],[y>0?i-W:-1,px,py,TS,h2],[y<H-1?i+W:-1,px,py+h2,TS,h2]]){if(n<0||S.ground[n]!==0)continue;const f=S.floor[n];if(f!=='path'&&f!=='gravel')continue;const ch=C[f+'#'+((hash(n*13+5)*4)|0)];if(!ch)continue;sc.save();sc.beginPath();sc.rect(rx,ry,rw,rh);sc.clip();drawChip(sc,ch,f,px,py,0,i);sc.restore()}}}
   drawWaterAll(sc,X0,Y0,X1,Y1);
   // 固定物も、アニメーションする物と同じ足元の奥行きで並べる。
   const fixed=[];
@@ -6300,7 +6298,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='858';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='859';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
