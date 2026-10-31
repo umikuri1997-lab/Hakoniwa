@@ -4236,8 +4236,9 @@ function drawGroundChips(sc,X0,Y0,X1,Y1){const inR=i=>{const x=i%W,y=(i/W)|0;ret
   {/* 草とあれ地のさかい：あぜ道のふちと同じ。あれ地のマスの、草地がわのふちに、草のふちの絵（fringeg）をかさねる（となりの草地からはみ出す草）。ななめだけ草地の角には、角の絵 */
     const G=k=>REV.has(k),open=k=>!REV.has(k)&&S.ground[k]!==1;
     for(let y=Y0;y<=Y1;y++)for(let x=X0;x<=X1;x++){const i=y*W+x;if(!open(i))continue;const hi0=hiAt(i),g=(dx,dy)=>x+dx>=0&&x+dx<W&&y+dy>=0&&y+dy<H&&G(i+dy*W+dx)&&hiAt(i+dy*W+dx)===hi0,/* 高さのちがう草地からは、はみ出さない */u=g(0,-1),d=g(0,1),l=g(-1,0),r=g(1,0),px=x*TS,py=y*TS;
+      if(!(u||d||l||r||g(-1,-1)||g(1,-1)||g(1,1)||g(-1,1)))continue;const sh=(dx,dy)=>x+dx>=0&&x+dx<W&&y+dy>=0&&y+dy<H&&hiAt(i+dy*W+dx)===hi0,m=4;sc.save();sc.beginPath();sc.rect(px-(sh(-1,0)?m:0),py-(sh(0,-1)?m:0),TS+(sh(-1,0)?m:0)+(sh(1,0)?m:0),TS+(sh(0,-1)?m:0)+(sh(0,1)?m:0));sc.clip();/* 草のふちの絵はマスの外へ少しはみ出すので、高さのちがうとなりのマスには出さない */
       if(u)dc('fringeg:U',px,py,i);if(d)dc('fringeg:D',px,py,i);if(l)dc('fringeg:L',px,py,i);if(r)dc('fringeg:R',px,py,i);
-      if(!u&&!l&&g(-1,-1))dc('fringeg:c0',px,py,i);if(!u&&!r&&g(1,-1))dc('fringeg:c1',px,py,i);if(!d&&!r&&g(1,1))dc('fringeg:c2',px,py,i);if(!d&&!l&&g(-1,1))dc('fringeg:c3',px,py,i)}}}/* 草とあれ地のさかい */
+      if(!u&&!l&&g(-1,-1))dc('fringeg:c0',px,py,i);if(!u&&!r&&g(1,-1))dc('fringeg:c1',px,py,i);if(!d&&!r&&g(1,1))dc('fringeg:c2',px,py,i);if(!d&&!l&&g(-1,1))dc('fringeg:c3',px,py,i);sc.restore()}}}/* 草とあれ地のさかい */
 function drawRug(c,id,x,y,i){const ch=chipOf(id,i);if(ch&&drawChip(c,ch,id,x,y,0,i))return;/* ドット絵のラグは、2×2マスの絵なので、そのままの大きさで */c.save();c.translate(x+32,y+32);c.scale(1.4,1.4);c.translate(-16,-20);drawObj(c,id,0,0,i);c.restore()}/* ラグ：2×2マスのまんなかに、2マスはばの大きさで */
 function drawRugsLive(x0,y0,x1,y1){for(const k in S.rug||{}){const j=+k,x=j%W,y=(j/W)|0;if(x+2<x0||y+2<y0||x>x1||y>y1)continue;drawRug(ctx,S.rug[k],x*TS,y*TS,j);for(const q of rugCells(j)){const o=S.obj[q];if(o&&o!=='part'&&BL[o]&&FLAT.has(o)&&!(BL[o].dyn||BL[o].anim||TREES.has(o)))drawObj(ctx,o,(q%W)*TS,((q/W)|0)*TS,q)}}}/* ラグは毎コマ、画面の細かさで描く（地面の下絵は1マス32ドットなので、64ドットの絵があらくなる）。ラグの上の平らな物も、ラグのあとに */
 function drawStaticArea(sc,X0,Y0,X1,Y1){/* 地面・床・水・動かない物を、マス(X0,Y0)〜(X1,Y1)のはんいだけ描く */const inR=i=>{const x=i%W,y=(i/W)|0;return x>=X0&&x<=X1&&y>=Y0&&y<=Y1};
@@ -6199,7 +6200,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='829';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='830';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
