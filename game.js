@@ -1178,7 +1178,7 @@ function roadSearch(sx,sy,block){
   const s=clamp(sy,0,H-1)*W+clamp(sx,0,W-1);cost[s]=0;dist[s]=0;B[0]=[s];
   for(let c=0;c<B.length;c++){const L=B[c];if(!L)continue;for(const i of L){if(cost[i]!==c)continue;const x=i%W,y=(i/W)|0;
     for(const[dx,dy]of DIRS){const nx=x+dx,ny=y+dy;if(nx<0||ny<0||nx>=W||ny>=H)continue;const j=ny*W+nx;if(!walk(j)&&!(S.ground[i]===1&&S.ground[j]===1&&!solidOf(j))||block&&block.has(j)||cliff2(i,j))continue;/* 水の中にいるときは、水の中も歩ける */
-      const fl=S.floor[j],nc=c+(FCOST[fl]||6)*(jumpEdge(i,j)?3:1)*(S.ground[j]===2?2:1);/* 段差を飛ぶのは、歩くより3倍の手間 */if(cost[j]>=0&&cost[j]<=nc)continue;
+      const fl=S.floor[j],nc=c+(FCOST[fl]||6)*(jumpEdge(i,j)?5:1)*(S.ground[j]===2?2:1);/* せいれいは、段差をよじのぼると5倍の手間（階段・坂をえらびやすい） *//* 段差を飛ぶのは、歩くより3倍の手間 */if(cost[j]>=0&&cost[j]<=nc)continue;
       cost[j]=nc;dist[j]=dist[i]+1;prev[j]=i;(B[nc]||(B[nc]=[])).push(j)}}}
   return {dist,prev};
 }
@@ -1951,7 +1951,7 @@ function moveR(r,dt){
   if(r.path.length){const cj=(r.y|0)*W+(r.x|0),n0=r.path[0];if(n0!==cj&&Math.abs(n0%W-cj%W)+Math.abs(((n0/W)|0)-((cj/W)|0))>1){/* 次のマスがとなりでない（古い道・押されてずれた）ときは、いまの場所から道を引きなおす。壁をすりぬけない */
     const g=r.path[r.path.length-1],G0=roadSearch(r.x|0,r.y|0);r.path=G0.dist[g]>=0?avoidPath(r,G0,g):[];if(!r.path.length&&g!==cj){noPass(r);endAct(r);return}}}
   while(step>0&&r.path.length){const j=r.path[0];if(!walk(j)&&!(S.ground[j]===1&&!solidOf(j)&&(S.ground[(r.y|0)*W+(r.x|0)]===1||r.act&&r.act.wade))){const goal=r.path[r.path.length-1],G=roadSearch(r.x|0,r.y|0);if(G.dist[goal]>=0&&walk(goal)){r.path=avoidPath(r,G,goal);if(r.path.length)return}noPass(r);endAct(r);return}
-    const tx=j%W+.5,ty=((j/W)|0)+.5,dx=tx-r.x,dy=ty-r.y,d=Math.hypot(dx,dy),jf=(jumpEdge((r.y|0)*W+(r.x|0),j)?5:1)*(S.ground[j]===2?2:1);/* 浅瀬は2倍ゆっくり *//* 段差を飛ぶ間（マスのさかいまで）は5倍ゆっくり＝1マスで3倍の時間 */
+    const tx=j%W+.5,ty=((j/W)|0)+.5,dx=tx-r.x,dy=ty-r.y,d=Math.hypot(dx,dy),jf=(jumpEdge((r.y|0)*W+(r.x|0),j)?9:1)*(S.ground[j]===2?2:1);/* 段差をよじのぼる・おりる間（マスのさかいまで）は9倍ゆっくり＝1マスで5倍の時間 *//* 浅瀬は2倍ゆっくり *//* 段差を飛ぶ間（マスのさかいまで）は5倍ゆっくり＝1マスで3倍の時間 */
     if(dx)r.face=dx<0?-1:1;
     if(d*jf<=step){r.x=tx;r.y=ty;r.path.shift();step-=d*jf}else{r.x+=dx/d*step/jf;r.y+=dy/d*step/jf;step=0}}
   // ぶつかって進めないときは、止まっている子のマスを避けた道を探して回り込む。道がなければ少しの間すりぬける
@@ -4342,7 +4342,8 @@ function spPose(o,t,tr,back){/* せいれいの動きの計算：腕の角度・
   const st=o.walk?Math.sin(t*9):0,arm=o.carry?0:o.work?Math.sin(t*12)*.6:o.walk?st*.35:Math.sin(t*1.7)*.08;
   // 作業ごとの動き：aN=手前の腕、aF=奥の腕（負で上がる）
   const A=o.anim||'',cyc=(sp)=>(t*sp)%1;let aN=null,aF=null,prop='',lean2=0,sq=0,frontArm=false,bothF=false;
-  if(A==='punch'){const p=Math.min(1,o.pp||0),v=p<.55?-1.95*(p/.55):-1.95+2.4*((p-.55)/.45);aN=aF=v;lean2=p<.55?-.04:.07;frontArm=bothF=true}/* 攻撃：両手を振り上げて、ぽかっと振り下ろす */
+  if(A==='climb'){aN=-2.5+Math.sin(t*8)*.4;aF=-2.5-Math.sin(t*8)*.4;lean2=-.05;sq=Math.abs(Math.sin(t*8))*.02;frontArm=bothF=true}/* 段差をよじのぼる：両手を上にのばして、こうごに動かす */
+  else if(A==='punch'){const p=Math.min(1,o.pp||0),v=p<.55?-1.95*(p/.55):-1.95+2.4*((p-.55)/.45);aN=aF=v;lean2=p<.55?-.04:.07;frontArm=bothF=true}/* 攻撃：両手を振り上げて、ぽかっと振り下ろす */
   else if(A==='pray'){aN=aF=-2.4+Math.sin(t*1.4)*.03;lean2=.07+Math.sin(t*1.4)*.015;frontArm=bothF=true}/* おいのり：胸の前で手を合わせて、少しうつむく */
   else if(A==='pluck'){aN=-1.95+Math.sin(t*9)*.28;aF=.15;lean2=.03;frontArm=true}/* ベリーをむしる：片手を上げて、ひっぱる */
   else if(A==='hold'){aN=aF=-.85+Math.sin(t*3)*.03;frontArm=bothF=true}/* 手に持つ */
@@ -4621,7 +4622,7 @@ function drawRes0(r,now){
   ctx.save();// 発熱対策：ぼかし影はなし
   if(bedH){ctx.translate(px,fy);ctx.rotate(-Math.PI/2);ctx.scale(BEDHS,1);ctx.translate(-px,-fy)}/* 横のベッドでは、頭をまくら（左）にして横になる */
   if(wade){ctx.beginPath();ctx.rect(px-40,fy-90,80,tubB?Math.max(0,fy+(((r.act.tub/W)|0)*TS+17-fy)*wade-(fy-90)):90-wade*11);ctx.clip()}
-  const ci0=carryIcon(r),an=r.act&&r.act.stage==='do'&&!sleeping&&!onHold(r)?(r.act.type==='bathe'&&r.act.tub!=null?'tubbath':r.act.type):'';const joy=(JOYU.get(r)||0)>now&&!sleeping,clap=(CLAPON||now-CLAPT<3200||joy)&&!sleeping,wv=!clap&&!sleeping&&(r.waveU||0)>S.t,facePlayer=!$('#dialog').hidden&&DLGN.has(r.name)&&!clap&&!sleeping;/* 会話中は話し手がこちらを向く */const pk=(()=>{const sw=Math.max(r.swing||0,r.swingT||0),sd=now-sw;return sw&&sd>=0&&sd<420&&!clap&&!sleeping?sd/420:null})();drawSpirit(ctx,r.elem,px,fy,.435,clap?1:benchV&&!facePlayer?benchD:r.face<0?-1:1,{dot:1,t:tt,vr:r.vr,banzai:held,pp:pk,anim:pk!=null?'punch':clap?'clap':wv?'wave':reacting?({shock:'talkshock',think:'talkthink',sad:'talksad',nod:'talk'}[rm]||(an==='forage'?forageAnim(r):an)):(an==='forage'?forageAnim(r):an),food:(an==='eat'||an==='forage'&&r.act.t>=2)&&!clap?(r.act.e||'🍙'):'',/* ベリーを直接とって食べるときも、手に持って食べる */carry:!!ci0&&!clap&&an!=='pray',back:clap||wv||facePlayer?false:v.back,turn:clap||wv||facePlayer?0:v.turn,mood,walk:walking,work:working,sleep:sleeping,bed:bedJ>=0,sit:benchV&&!facePlayer,blink:now>v.bl,lean:rp?rp.angle:sleeping?Math.sin(tt*.8)*.06:0});ctx.restore();{const sj2=(r.y|0)*W+(r.x|0),o2=S.obj[sj2];if(o2&&SEATS.includes(o2)&&r.act&&r.act.stage==='do'&&!walking){const f=chipOf(o2,sj2,null,'.front');if(f)drawChip(ctx,f,o2,(sj2%W)*TS,((sj2/W)|0)*TS,now,sj2)}}/* いすにすわる子の手前に、いすの「.front」（後ろ向きのいすの背もたれなど）を重ねる */
+  const ci0=carryIcon(r),an=r.act&&r.act.stage==='do'&&!sleeping&&!onHold(r)?(r.act.type==='bathe'&&r.act.tub!=null?'tubbath':r.act.type):'';const joy=(JOYU.get(r)||0)>now&&!sleeping,clap=(CLAPON||now-CLAPT<3200||joy)&&!sleeping,wv=!clap&&!sleeping&&(r.waveU||0)>S.t,facePlayer=!$('#dialog').hidden&&DLGN.has(r.name)&&!clap&&!sleeping;/* 会話中は話し手がこちらを向く */const pk=(()=>{const sw=Math.max(r.swing||0,r.swingT||0),sd=now-sw;return sw&&sd>=0&&sd<420&&!clap&&!sleeping?sd/420:null})();drawSpirit(ctx,r.elem,px,fy,.435,clap?1:benchV&&!facePlayer?benchD:r.face<0?-1:1,{dot:1,t:tt,vr:r.vr,banzai:held,pp:pk,anim:CLIMB.has(r)?'climb':pk!=null?'punch':clap?'clap':wv?'wave':reacting?({shock:'talkshock',think:'talkthink',sad:'talksad',nod:'talk'}[rm]||(an==='forage'?forageAnim(r):an)):(an==='forage'?forageAnim(r):an),food:(an==='eat'||an==='forage'&&r.act.t>=2)&&!clap?(r.act.e||'🍙'):'',/* ベリーを直接とって食べるときも、手に持って食べる */carry:!!ci0&&!clap&&an!=='pray',back:clap||wv||facePlayer?false:v.back,turn:clap||wv||facePlayer?0:v.turn,mood,walk:walking,work:working,sleep:sleeping,bed:bedJ>=0,sit:benchV&&!facePlayer,blink:now>v.bl,lean:rp?rp.angle:sleeping?Math.sin(tt*.8)*.06:0});ctx.restore();{const sj2=(r.y|0)*W+(r.x|0),o2=S.obj[sj2];if(o2&&SEATS.includes(o2)&&r.act&&r.act.stage==='do'&&!walking){const f=chipOf(o2,sj2,null,'.front');if(f)drawChip(ctx,f,o2,(sj2%W)*TS,((sj2/W)|0)*TS,now,sj2)}}/* いすにすわる子の手前に、いすの「.front」（後ろ向きのいすの背もたれなど）を重ねる */
   if(lvR>=5&&!sleeping&&!wade){const n=Math.min(6,Math.floor(lvR/5));for(let i=0;i<n;i++){const SL=LVSLOT[i],bx=px+SL[0]+Math.cos(now/900+i*2.1+r.id)*1.5,by=fy+SL[1]+Math.sin(now/700+i*1.7+r.id)*2.6;lvCharm(ctx,r.elem,bx,by,now/1000+i+r.id)}}/* Lv5ごとに1つ、属性の小物がまわりにふわふわ浮かぶ（顔や体にはかさねない） */
   if(r.shine&&now>=r.shine&&now-r.shine<3500&&!wade){const e=(now-r.shine)/3500;for(let i=0;i<6;i++){const SP=SHINE[i],tw=Math.sin(now/160+i*1.9),k=Math.max(0,(.55+.45*tw)*(e>.75?(1-e)/.25:1));if(k>0)star4(ctx,px+SP[0],fy+SP[1]-e*8,SP[2]*k)}}/* 水浴びのあと：キラキラ */
   if(tubB){const wl=((r.act.tub/W)|0)*TS+17;ctx.fillStyle='rgba(255,255,255,.85)';for(let k=0;k<5;k++){const bx=px-9+k*4.5+Math.sin(now/700+k*1.7)*1.2,ph=(now/1400+k*.23+r.id)%1;ctx.globalAlpha=.55+.4*Math.sin(now/500+k);ctx.beginPath();ctx.arc(bx,wl+.5-Math.sin(ph*Math.PI)*.8,1.7+((k*7)%3)*.45,0,7);ctx.fill()}ctx.globalAlpha=1}/* 湯ぶねのあわ */
@@ -4965,9 +4966,10 @@ function waterShimmer(now,x0,y0,x1,y1){/* 水面：見えている所の水の�
   const pt=g.createPattern(im,'repeat');pt.setTransform(new DOMMatrix().translate(-x0*TS+sx,-y0*TS+sy));g.fillStyle=pt;g.fillRect(0,0,w,h);g.globalCompositeOperation='source-over';g.drawImage(WSH.e,0,0);
   ctx.drawImage(o,x0*TS,y0*TS)}
 function liftDraw(z,f){if(!z){f();return}ctx.save();ctx.translate(0,-z);f();ctx.restore()}
-function uLift(o){/* 段差の上にいる子・コワイノは、LIFT だけ上に。段差を飛んでいる間は、高さを少しずつかえて、ぴょんと弧をえがく */
+const CLIMB=new Set();/* いま段差をよじのぼっている・おりているせいれい（uLift で入れる） */
+function uLift(o){if(o&&o.elem)CLIMB.delete(o);/* 段差の上にいる子・コワイノは、LIFT だけ上に。段差を飛んでいる間は、高さを少しずつかえて、ぴょんと弧をえがく */
   if(!S.hi||!o)return 0;const cj=(o.y|0)*W+(o.x|0),n=o.path&&o.path.length?o.path[0]:-1;
-  if(n>=0&&n!==cj||n>=0){const nx=n%W+.5,ny=((n/W)|0)+.5,ddx=nx-o.x,ddy=ny-o.y,d=Math.hypot(ddx,ddy);if(d>.001&&d<1.01){const sx=Math.abs(ddx)>=Math.abs(ddy)?Math.sign(ddx):0,sy=sx?0:Math.sign(ddy),a=n-sy*W-sx,ha=hiAt(a),hn=hiAt(n);if(jumpEdge(a,n)){const t=1-d;return LIFT*(ha+(hn-ha)*t)+Math.sin(Math.PI*t)*10}}}
+  if(n>=0&&n!==cj||n>=0){const nx=n%W+.5,ny=((n/W)|0)+.5,ddx=nx-o.x,ddy=ny-o.y,d=Math.hypot(ddx,ddy);if(d>.001&&d<1.01){const sx=Math.abs(ddx)>=Math.abs(ddy)?Math.sign(ddx):0,sy=sx?0:Math.sign(ddy),a=n-sy*W-sx,ha=hiAt(a),hn=hiAt(n);if(jumpEdge(a,n)){const t=1-d;if(o.elem){CLIMB.add(o);return LIFT*(ha+(hn-ha)*t)+Math.abs(Math.sin(t*Math.PI*4))*1.5}/* せいれいは、よじのぼる・おりる（少しずつ高さをかえ、1歩ごとに小さくゆれる） */return LIFT*(ha+(hn-ha)*t)+Math.sin(Math.PI*t)*10}}}
   return zAt(o.x,o.y)}
 const STPAL={slope_earth:['#c19466','#8f6642','#6e4c30'],stairs_wood:['#dcae72','#a9784b','#86593a'],stairs_brick:['#dba48c','#b8735c','#935a47'],stairs_stone:['#d3cdc2','#a59d91','#837b70']};
 function drawStair(c,id,px,py,d,top,bot){/* 階段のアイコン（仮の絵）：手前へ下りる5だん */
@@ -6145,7 +6147,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='818';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='819';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
