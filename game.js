@@ -84,7 +84,7 @@ const BL={
   rug2:{offerOnly:1,cs:1.5,sz:[2,2],dw:1.75,name:'くもラグ',kind:'furn',cat:'living',f2:1,lv:7,pc:5,time:100,maker:'wind',attr:{wind:1},mat:{wood:15},desc:'くもの形のラグ。住み心地+6',anim:1},
   tub:{hp:5,brk:1,fix:2,fixm:{wood:1,funba:1},name:'水おけ',kind:'furn',cat:'cook',f2:1,lv:3,pc:3,time:80,maker:'water',attr:{water:1},mat:{wood:3},solid:1,desc:'調理：かまどのそば（3マス）にあると、料理の時間-10%。住み心地+3'},
   sink:{hp:5,brk:1,fix:4,fixm:{stone:3},name:'流し台',kind:'furn',cat:'cook',f2:1,lv:4,pc:7,time:120,maker:'water',attr:{water:1},mat:{stone:5},solid:1,desc:'調理：かまどのそば（3マス）にあると、料理の時間-10%。住み心地+4'},
-  crate:{hp:5,brk:1,fix:2,fixm:{wood:4},name:'木箱',kind:'furn',cat:'other',f2:1,lv:2,pc:3,time:80,maker:'earth',attr:{earth:1},mat:{wood:8},solid:1,desc:'なんでも入る木の箱。住み心地+6。木材・石材を合わせて50までしまえる'},
+  crate:{hp:5,brk:1,fix:2,fixm:{wood:4},name:'木箱',kind:'furn',cat:'other',f2:1,lv:2,pc:3,time:80,maker:'earth',attr:{earth:1},mat:{wood:8},solid:1,desc:'食料を30・素材を30までしまえる。住み心地+6'},
   monstera:{hp:5,brk:1,fix:2,fixm:{funba:3,stone:2},name:'かんようしょくぶつ',kind:'furn',cat:'other',f2:1,lv:4,pc:4,time:80,maker:'wood',attr:{wood:1},mat:{shina:5,stone:3},mat1:{kuru:5,stone:3},solid:1,desc:'大きな葉の鉢植え。住み心地+10'},
   shelf1:{hp:5,brk:1,fix:5,fixm:{wood:10},name:'本棚',kind:'furn',cat:'other',f2:1,lv:6,pc:9,time:120,maker:'wood',attr:{wood:1},mat:{wood:20},solid:1,desc:'本と植物の棚。住み心地+12。木材・石材を合わせて50までしまえる'},
   wreath:{hp:5,brk:1,fix:2,fixm:{eda:3,funba:3},offerOnly:1,name:'リース',kind:'furn',cat:'other',f2:1,lv:6,pc:4,time:80,maker:'wood',attr:{wood:1},mat:{eda:6,shina:6},mat1:{eda:6,kuru:6},solid:1,desc:'葉と花のリース。住み心地+10'},
@@ -1054,9 +1054,9 @@ function addCarry(r,k,n){if(typeof r.carry==='number')r.carry={mugi:r.carry};n=M
 function addMat(r,k,n){n=Math.min(n,roomN(r));if(n<=0)return;r.cmat=r.cmat||{};r.cmat[k]=(r.cmat[k]||0)+n}
 function hYield(j,def){const o=S.obj[j],d=S.dyn[j];const cr=o==='farm'?CROPS[(d&&d.crop)||'mugi']:null;return (cr?cr.yield:def)+(NEARMILL.has(j)?1:0)+(NEARFLOWER.has(j)?1:0)}
 // STORAGE: placed shelves share the village stock; wall attachments count only on standing walls.
-const STORAGE={stor:{type:'food',cap:30},mbox:{type:'mat',cap:50},crate:{type:'mat',cap:50},shelf1:{type:'mat',cap:50},shelf2:{type:'mat',cap:50},wshelf:{type:'mat',cap:50},cabinet:{type:'food',cap:30}};
-function storageAt(j,type){const id=S.obj[j],wall=HOME_WALLS.has(id)&&(S.win||{})[j],b=STORAGE[wall]||STORAGE[id];return !!(b&&b.type===type)}
-function storageCapacity(type){let n=0;for(const id in STORAGE){const b=STORAGE[id];if(b.type===type)n+=cnt(id)*b.cap}for(const j in S.win||{}){const b=STORAGE[S.win[j]];if(HOME_WALLS.has(S.obj[j])&&b&&b.type===type)n+=b.cap}return n}
+const STORAGE={stor:{food:30},mbox:{mat:50},crate:{food:30,mat:30},shelf1:{mat:50},shelf2:{mat:50},wshelf:{mat:50},cabinet:{food:30}};/* しまえる数（食料・素材） */
+function storageAt(j,type){const id=S.obj[j],wall=HOME_WALLS.has(id)&&(S.win||{})[j],b=STORAGE[wall]||STORAGE[id];return !!(b&&b[type])}
+function storageCapacity(type){let n=0;for(const id in STORAGE){const c=STORAGE[id][type];if(c)n+=cnt(id)*c}for(const j in S.win||{}){const c=(STORAGE[S.win[j]]||{})[type];if(HOME_WALLS.has(S.obj[j])&&c)n+=c}return n}
 const foodCap=()=>storageCapacity('food'),matCap=()=>storageCapacity('mat'),matTot=()=>Object.keys(MATN).reduce((a,k)=>a+(S.mat[k]||0),0);
 let OTAKI_SEL={};/* そうこで、おたきあげにえらんでいる数 */
 const MATTRADE={shina:5,kasa:5,kuru:5,chiri:5,funba:5,wood:3,stone:3,bamboo:3,eda:3,kinoko:2,can:2};/* おたきあげ：素材をパワー1にかえるのに要る数（よく手に入る物ほど多い） */
@@ -1432,7 +1432,7 @@ let FOUT=null,FOUTT=-1;function fenceOut(){/* 柵（門もふくむ）と壁で�
 function graveCheck(){if(isNight()||STATUE<0||!cnt('grave')||S.graveDay===dayNo())return;const gs=[];for(let j=0;j<W*H;j++)if(S.obj[j]==='grave'&&S.dyn[j]&&!S.dyn[j].buried)gs.push(j);if(!gs.length)return;
   let G=null;for(const r of S.res){if(r.hidden)continue;const g=bfs(r.x|0,r.y|0);if(nearest(g,j=>adjOf(j,k=>k===STATUE||k===STATUE+W)>=0,300)>=0){G=g;break}}if(!G)return;/* 神殿まで行ける子から見て */
   if(gs.some(j=>nearest(G,k=>adjOf(k,q=>q===j)>=0,300)<0)){S.graveDay=dayNo();toast('お墓まで行けません','warn')}}/* とどかない所にあるお墓は、動かさずに知らせる（1日1回） */
-function trapCheck(){if(isNight()||!S.obj.some(o=>o==='stor'||o==='cabinet'))return;for(const r of S.res){if(r.hidden||!isKey(r.name)||r.trapDay===dayNo())continue;const G=bfs(r.x|0,r.y|0);if(nearest(G,j=>adjOf(j,k=>storageAt(k,'food'))>=0,400)<0){r.trapDay=dayNo();toast(r.name+'がとじこめられています','warn')}}}/* 物語の子が、かこまれて食料箱へ行けないときは知らせる（1日1回） */
+function trapCheck(){if(isNight()||!S.obj.some((o,j)=>storageAt(j,'food')))return;for(const r of S.res){if(r.hidden||!isKey(r.name)||r.trapDay===dayNo())continue;const G=bfs(r.x|0,r.y|0);if(nearest(G,j=>adjOf(j,k=>storageAt(k,'food'))>=0,400)<0){r.trapDay=dayNo();toast(r.name+'がとじこめられています','warn')}}}/* 物語の子が、かこまれて食料箱へ行けないときは知らせる（1日1回） */
 function hideIn(r,G){if(S.food>0&&S.enemies.some(e=>e.spawned&&!e.dead&&!e.flee&&Math.hypot(e.x-r.x,e.y-r.y)<7)&&(goEatSafe(r)||goEatSafe(r,true)))return true;/* 食料があれば、かくれずに、すぐ食料箱へ食べにいく（安全な箱がなければ、コワイノのすぐそばを通らずに行ける箱へ） */if(!HOUSES.length||!S.enemies.some(e=>e.spawned&&!e.dead&&!e.flee&&Math.hypot(e.x-r.x,e.y-r.y)<7))return false;const hs=new Set();for(const h of HOUSES)for(const q of h.inside)hs.add(q);const k=nearest(G,j=>hs.has(j)&&walk(j)&&!HOME_DOORS.has(S.obj[j]),60);if(k<0)return false;startAct(r,G,'flee',k,{house:true,food:1,run:true});return true}/* 火の子は、おなかがへってコワイノがそばにいたら、まず家の中へにげこんで、それから食べにいく */
 function fleeHit(r,G){
   if(r.elem==='fire'&&r.hunger<50&&hideIn(r,G))return true;
@@ -2492,7 +2492,7 @@ function houseBedCount(){const cells=new Set(HOUSES.flatMap(h=>[...h.inside]));r
 function diningSeatCount(){return S.obj.reduce((n,o,j)=>n+(SEATS.includes(o)&&[-1,1,-W,W].some(d=>{const k=j+d;return k>=0&&k<W*H&&Math.abs(k%W-j%W)+Math.abs((k/W|0)-(j/W|0))===1&&S.obj[k]==='table'})),0)}
 const waitingBellflowers=()=>WD===0&&qAt('kikyo')&&cnt('bellf')>0&&bloomCount('bellf')<2&&!S.flags.minaCame;
 const yoganUp=()=>Object.keys(S.hp).some(k=>k[0]==='L'&&S.hp[k]>=2&&S.obj[+k.slice(1)]==='yogan');/* ようがん台を強化した */
-const houseFood=()=>HOUSES.some(h=>[...h.inside].some(j=>S.obj[j]==='stor'||S.obj[j]==='cabinet'));/* 家の中に食べ物の箱がある */
+const houseFood=()=>HOUSES.some(h=>[...h.inside].some(j=>storageAt(j,'food')));/* 家の中に食べ物の箱がある */
 const SUBQ=[/* サブクエスト：メインと別に、いつでもできるおねがい。at=出てくる条件 */
   {k:'seedwait_gate',w:0,g:'wood',t:'柵に出入り口をつくろう',how:'柵の途中を「こわす」で1マス戻し、依頼ボードの「道・囲い」で柵のドアをはる。できたら空いた場所に置く',L:[['K','ききょうがさくまで、もうすこしかかりそう。そのあいだに、村をひと回りしてこようっと。'],['K','#think|……あれ？ この柵、ぐるっと遠回りしないと、むこうに出られないや。'],['K','通るときだけ開くところがあったら、すぐ行き来できるのにな。']],X:[['K','ぱたん、って開いた！ こっちからも出られるね。'],['K','#joy|守り神さま、ありがとう！']],at:()=>waitingBellflowers(),ok:()=>cnt('gate')>=1,n:1,now:()=>cnt('gate'),rw:5},
   {k:'seedwait_food',w:0,g:'wood',t:'朝のごはんを10こ用意しよう',how:'フタバがベリーの茂みから実を集め、食料箱へ運ぶのを手伝おう。食料箱の食べ物を10こ以上にする',L:[['K','なかまが来てくれたら……いっしょにごはん、食べたいな。'],['K','食料箱に、少し多めに入れておこうよ。ぼく、ベリーを集めてくる！']],X:[['K','これだけあれば、新しい子のぶんもあるね。'],['K','#joy|どんな子かなあ。……えへへ、たのしみ！']],at:()=>waitingBellflowers(),ok:()=>FOODN()>=10,n:10,now:()=>Math.min(10,FOODN()),rw:5},
@@ -6299,7 +6299,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='861';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='862';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
