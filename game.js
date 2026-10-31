@@ -1011,7 +1011,7 @@ const STORAGE={stor:{type:'food',cap:30},mbox:{type:'mat',cap:50},crate:{type:'m
 function storageAt(j,type){const id=S.obj[j],wall=HOME_WALLS.has(id)&&(S.win||{})[j],b=STORAGE[wall]||STORAGE[id];return !!(b&&b.type===type)}
 function storageCapacity(type){let n=0;for(const id in STORAGE){const b=STORAGE[id];if(b.type===type)n+=cnt(id)*b.cap}for(const j in S.win||{}){const b=STORAGE[S.win[j]];if(HOME_WALLS.has(S.obj[j])&&b&&b.type===type)n+=b.cap}return n}
 const foodCap=()=>storageCapacity('food'),matCap=()=>storageCapacity('mat'),matTot=()=>Object.keys(MATN).reduce((a,k)=>a+(S.mat[k]||0),0);
-const MATTRADE={shina:5,kasa:5,kuru:5,chiri:5,funba:5,wood:3,stone:3};/* 素材をパワー1にかえるのに要る数 */
+const MATTRADE={shina:5,kasa:5,kuru:5,chiri:5,funba:5,wood:3,stone:3,bamboo:3,eda:3,kinoko:2,can:2};/* お焚き上げ：素材をパワー1にかえるのに要る数（よく手に入る物ほど多い） */
 const MATN={wood:'木材',stone:'石材',bamboo:'竹',shina:'しなやかな草',kasa:'かさかさ草',kuru:'くるくる草',chiri:'ちりちり草',funba:'ふんばり草',eda:'枝',kinoko:'きのこ',can:'空き缶'},WEEDS=new Set(['weed0g','weed0k','weed1g','weed1k','weedc','kinoko']),bambooOn=()=>WD===1||(S.mat.bamboo||0)>0;/* 竹は火山の素材。ほかのステージでは、持っているときだけ出す */const matTxt=m=>Object.keys(m||{}).map(k=>MATN[k]+m[k]).join('・');/* 素材は文字ではなくアイコンで */const esc=t=>String(t).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'})[c]);const matHTML=m=>Object.keys(m||{}).map(k=>'<span class="mic"><img src="'+(ICONS[k]||'')+'" alt="'+MATN[k]+'">'+m[k]+'</span>').join('');const matOK=m=>Object.keys(m||{}).every(k=>(S.mat[k]||0)>=m[k]);
 const watchQ=()=>!!(S.qTalked&&QUESTS[S.quest]&&QUESTS[S.quest].id==='watch1'&&!cnt('watch')&&!S.obj.some((o,j)=>o==='site'&&S.dyn[j]&&S.dyn[j].build==='watch'));
 const QB=new Set(['lumber','quarry','stele','fountain','lighthouse','windmill']),/* クエストでおぼえるまで建てられない建物（村レベルだけでは、使えない） */lvOK=id=>BL[id].kind==='furn'||(QB.has(id)?(!!(S.recipes||{})[id]||cnt(id)>0):id==='yogan'?(WD===1&&!!S.flags.yoganLearned):id==='watch'?(!!S.flags.watchLearned||watchQ()):S.lv>=(BL[id].lv||1)&&(BL[id].w||0)<=WD)||!!S.flags['lv_'+id]||grec(id);/* w：このステージから（それより前のステージでは、おぼえていないと作れない） */
@@ -5612,10 +5612,10 @@ function renderSheet(){
     const fk=Object.keys(FOODS).filter(k=>(S.fs[k]||0)>0),raw=fk.filter(k=>!FOODS[k].dish),dish=fk.filter(k=>FOODS[k].dish),fi=k=>[ICONS[k]||null,FOODS[k].e,FOODS[k].name,S.fs[k]];
     box('食料箱',S.food,foodCap(),[...raw.map(fi),...dish.map(fi)],'食べ物は、ありません');
     const mk=Object.keys(S.mat).filter(k=>(S.mat[k]||0)>0&&MATN[k]);box('素材箱',matTot(),matCap(),mk.map(k=>[ICONS[k]||null,'',MATN[k],S.mat[k]]),'素材は、ありません');
-    if(mk.length){const sec=el('<div class="sec"><h3>素材をへらす</h3><div class="rows"></div></div>'),rw=sec.querySelector('.rows');/* すてる・パワーにかえる（草5こ→1、木材・石材3こ→1） */
+    if(mk.length){const sec=el('<div class="sec"><h3>お焚き上げ</h3><p class="note">素材を焚き上げて、パワーにかえる</p><div class="rows"></div></div>'),rw=sec.querySelector('.rows');/* お焚き上げ（MATTRADE の数でパワー1）・すてる */
       for(const k of mk){const n=S.mat[k]||0,tr=MATTRADE[k],row=el('<div class="row matRow"><span class="tx"><b></b><small></small></span><span class="mbtns" style="display:flex;gap:6px;flex-wrap:wrap"></span></div>');row.querySelector('b').textContent=MATN[k]+' '+n;row.querySelector('small').textContent=tr?tr+'こでパワー1':'';const bx=row.querySelector('.mbtns');
         const btn=(t,ok,fn)=>{const b=el('<button class="btn"></button>');b.textContent=t;b.disabled=!ok;b.onclick=()=>{sfx('tap');fn();updHUD&&updHUD();renderSheet()};bx.appendChild(b)};
-        if(tr){btn('パワーにかえる',n>=tr,()=>{S.mat[k]-=tr;S.pt+=1;toast(MATN[k]+'-'+tr+'・パワー+1','good')});btn('ぜんぶかえる',n>=tr,()=>{const q=Math.floor(n/tr);S.mat[k]-=q*tr;S.pt+=q;toast(MATN[k]+'-'+q*tr+'・パワー+'+q,'good')})}
+        if(tr){btn('焚き上げ',n>=tr,()=>{S.mat[k]-=tr;S.pt+=1;toast(MATN[k]+'-'+tr+'・パワー+1','good')});btn('ぜんぶ',n>=tr,()=>{const q=Math.floor(n/tr);S.mat[k]-=q*tr;S.pt+=q;toast(MATN[k]+'-'+q*tr+'・パワー+'+q,'good')})}
         btn('5こすてる',n>0,()=>{const q=Math.min(5,S.mat[k]||0);S.mat[k]-=q;toast(MATN[k]+'を'+q+'こすてた')});rw.appendChild(row)}
       body.appendChild(sec)}if(S.sand){const p=el('<p class="note"></p>');p.textContent='やすらぎの砂：'+S.sand+'（コワイノの落とし物。素材箱には入らない）';body.appendChild(p)}
     const hold=S.res.filter(r=>heldN(r)>0);if(hold.length){const p=el('<p class="note"></p>');p.textContent='せいれいが運んでいるとちゅう：'+hold.map(r=>r.name+'（'+[...Object.entries(r.carry&&typeof r.carry==='object'?r.carry:{}).map(([k,n])=>FOODS[k].name+n),...Object.entries(r.cmat||{}).map(([k,n])=>MATN[k]+n)].join('・')+'）').join('、');body.appendChild(p)}
@@ -6035,7 +6035,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='806';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='807';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
