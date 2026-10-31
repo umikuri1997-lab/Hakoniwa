@@ -5028,11 +5028,12 @@ function drawStairObj0(c,a){/* 階段（仮の絵）：段差の下の低い地�
   const vnat=SLOPES.has(id)&&(d===0||d===2)&&!['stone','brick'].includes(S.floor[stairTop(a,d)]||''),sL=vnat&&sfree(d===0?[a-1]:[a-1,o2-1]),sR=vnat&&sfree(d===0?[a+1]:[a+1,o2+1]);/* たて向きの坂（土・草地）：両わきは、がけの上の面のように、少しでこぼこのふち（外へ1〜2ドット） */
   const sje=(y,sd)=>{const k=Math.floor(y/3),f=y/3-k,h0=hz(9000+k*2+sd),h1=hz(9000+(k+1)*2+sd);return .8+(h0+(h1-h0)*f)*1.4},eX=(y,sd)=>sd?ax+TS+(sR?sje(y,1):0):ax-(sL?sje(y,0):0);
   const sPath=()=>{c.beginPath();c.moveTo(eX(sTop,0),sTop);for(let y=sTop;y<=sBot;y++)c.lineTo(eX(y,0),y);for(let y=sBot;y>=sTop;y--)c.lineTo(eX(y,1),y);c.closePath()};
-  const wood=(x,y,w,h,n,vert)=>{/* 木目：板のつなぎ目（16ドットごと、段ごとにずらす）と、板にそった細い木目 */c.save();c.beginPath();c.rect(x,y,w,h);c.clip();c.fillStyle='rgba(120,78,40,.22)';if(vert){for(let k=0;k<3;k++)c.fillRect(x+w*(.25+k*.25)+(hz(n*7+k)-.5)*2,y,.6,h);for(let yy=Math.floor(y/16)*16+(n%2?8:0);yy<y+h;yy+=16)if(yy>y+.5){c.fillStyle='rgba(95,60,30,.45)';c.fillRect(x,yy,w,.8)}}else{for(let k=0;k<3;k++)c.fillRect(x,y+h*(.25+k*.25)+(hz(n*7+k)-.5)*1.5,w,.6);for(let xx=Math.floor(x/16)*16+(n%2?8:0);xx<x+w;xx+=16)if(xx>x+.5){c.fillStyle='rgba(95,60,30,.45)';c.fillRect(xx,y,.8,h)}}if(hz(n*13)<.4){const kx=x+w*(.2+hz(n*5)*.6),ky=y+h*(.3+hz(n*9)*.4);c.fillStyle='rgba(110,70,38,.35)';c.beginPath();c.ellipse(kx,ky,1.6,1,0,0,7);c.fill()}c.restore()};/* ふしも、ときどき */
-  const stone=(x,y,w,h,n,vert)=>{/* 石：大きさのそろわない石を、目地でくぎる（石ごとに少し色をかえる。ざらざらはつけない） */c.save();c.beginPath();c.rect(x,y,w,h);c.clip();const L=vert?h:w;let p=-hz(n*3)*8,k=0;while(p<L){const q=p+9+hz(n*11+k)*8,t=hz(n*17+k);c.fillStyle=t<.5?'rgba(255,252,240,'+(.06+t*.12)+')':'rgba(70,64,56,'+((t-.5)*.16)+')';if(vert)c.fillRect(x,y+p,w,q-p);else c.fillRect(x+p,y,q-p,h);if(q<L){c.fillStyle='rgba(95,88,78,.5)';if(vert)c.fillRect(x,y+q,w,.8);else c.fillRect(x+q,y,.8,h)}p=q;k++}c.restore()};
-  const riser=(x,y,w,h,n)=>{c.fillStyle=P[1];c.fillRect(x,y,w,h);if(br)vjoin(x,y,w,h,n%2?8:0);else if(wd)wood(x,y,w,h,n,0);else if(stn)stone(x,y,w,h,n,0)};/* 段の手前の面（レンガは、上の段と同じならび） */
-  const face=(x,y,w,h,gy)=>{c.fillStyle=P[1];c.fillRect(x,y,w,h);if(wd)wood(x,y,w,h,(x/4)|0,0);else if(stn)stone(x,y,w,h,(x/4)|0,0);if(!br)return;for(let k=0;gy-8*k>y;k++){const yb=gy-8*k,yt=Math.max(y,yb-8);if(k)mo(x,yb,w,.6);vjoin(x,yt,w,yb-yt,k%2?8:0)}};/* 横の側面（地面から8ドットずつ積む） */
-  const tread=(x,y,w,h,n,dark,vert)=>{c.fillStyle=P[0];c.fillRect(x,y,w,h);if(wd)wood(x,y,w,h,n,vert);else if(stn)stone(x,y,w,h,n,vert);if(!br)return;if(vert){for(let yy=y+(n%2?8:0);yy<y+h;yy+=16)if(yy>y+.5)mo(x,yy,w,.6)}else vjoin(x,y,w,h,n%2?8:0)};/* 段の上の面：1段に1列（レンガは、段ごとに半分ずらす） */
+  const txp=rot=>{const k=wd?'tex:planks':'tex:granite',ch=(window.CHIPS||{})[k];if(!ch)return null;const im=chipImgs(ch,k)[0];if(!im||!im.ok)return null;const p=c.createPattern(im,'repeat'),m=new DOMMatrix();if(rot)m.rotateSelf(90);m.scaleSelf(.5,.5);p.setTransform(m);return p};/* もらったテクスチャ（木は板、石はみかげ石）を、1マス64ドットの細かさでしきつめる。木は、段にそって板がならぶ向き */
+  const tex=(x,y,w,h,rot,dk)=>{const p=txp(rot);if(!p)return false;c.fillStyle=p;c.fillRect(x,y,w,h);if(dk){c.fillStyle=dk;c.fillRect(x,y,w,h)}return true};
+  const DK=wd?'rgba(70,42,20,.3)':'rgba(40,40,44,.24)';/* 段の手前の面・側板は、上の面より暗く */
+  const riser=(x,y,w,h,n)=>{c.fillStyle=P[1];c.fillRect(x,y,w,h);if(br)vjoin(x,y,w,h,n%2?8:0);else if(wd||stn)tex(x,y,w,h,1,DK)};/* 段の手前の面（レンガは、上の段と同じならび） */
+  const face=(x,y,w,h,gy)=>{c.fillStyle=P[1];c.fillRect(x,y,w,h);if(wd||stn)tex(x,y,w,h,1,DK);if(!br)return;for(let k=0;gy-8*k>y;k++){const yb=gy-8*k,yt=Math.max(y,yb-8);if(k)mo(x,yb,w,.6);vjoin(x,yt,w,yb-yt,k%2?8:0)}};/* 横の側面（地面から8ドットずつ積む） */
+  const tread=(x,y,w,h,n,dark,vert)=>{c.fillStyle=P[0];c.fillRect(x,y,w,h);if(wd||stn)tex(x,y,w,h,!vert,null);if(!br)return;if(vert){for(let yy=y+(n%2?8:0);yy<y+h;yy+=16)if(yy>y+.5)mo(x,yy,w,.6)}else vjoin(x,y,w,h,n%2?8:0)};/* 段の上の面：1段に1列（レンガは、段ごとに半分ずらす） */
   const SH1='rgba(50,36,24,.5)',SH2='rgba(60,45,30,0)',HI='rgba(255,252,238,.6)';/* 段のふち：手前のふちに明るい線1ドット、段の奥に濃いかげ1ドット *//* 段のさかい：1ドットのかげと、その外がわにもう1ドットうすいかげ */
   const lat=d===0?[[a-1,a-1+W],[a+1,a+1+W]]:d===2?[[a-1,a-1-W],[a+1,a+1-W]]:null;c.save();
   {const tj=stairTop(a,d);if(tj!=null&&tj>=0&&hiAt(tj)>=CLV){const Q=new Path2D(),E=new Path2D();Q.rect(ax-3*TS,ay-3*TS,7*TS,7*TS);cliffTop(Q,E,(tj/W)|0,tj%W);c.clip(Q,'evenodd')}}/* のぼった先の高いマスの上の面（でこぼこのふち）には、階段をかぶせない */
@@ -6176,7 +6177,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='823';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='824';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
