@@ -140,7 +140,7 @@ function attrTxt(id){const b=BL[id];if(!b||!b.attr||b.kind==='block')return'';co
 const withAttr=(id,t)=>{const a=attrTxt(id);return a?(t?t+'　':'')+'【'+a+'】':t||''};
 function recount(){if(S.broken)S.broken=S.broken.filter(b=>!S.obj[b.j]);calcSpots();/* こわれた物の場所に、なにか置いたら、こわれた物のリストからはずす */
   for(const key in S.win||{}){const j=+key,wall=k=>HOME_WALLS.has(S.obj[k])||HOME_DOORS.has(S.obj[k]);if(S.win[j]==='wreath'&&HOME_DOORS.has(S.obj[j])&&(wall(j-W)||wall(j+W))&&!(wall(j-1)||wall(j+1))){S.inv.wreath=(S.inv.wreath||0)+1;delete S.win[j];toast('たてのドアのリースを、持ち物にもどしました')}}/* たてのドアにはリースをかけられない。まわりの壁が変わってたてになったら、知らせてもどす */
-  STATUE=-1;OBOX=-1;BOARD=-1;counts={};LIGHTS=[];LITP=[];STELES=[];TOWERS=[];NEARFLOWER=new Set();NEARWELL=new Set();NEARMILL=new Set();NEARVANE=new Set();NEARCART=new Set();NEARSIGN=new Set();NEARPARA=new Set();NEARTREE=new Set();RUGC=new Map();for(const k in S.rug||{})for(const c of rugCells(+k))RUGC.set(c,+k);RFC=new Map();for(const k in S.roof||{})for(const c of rugCells(+k))RFC.set(c,+k);/* 屋根の下のマス→屋根の左上 *//* ラグがしいてあるマス→ラグの左上 */ENVG=new Float32Array(W*H);REV=new Set();ATTR={};ELEM_KEYS.forEach(k=>ATTR[k]=0);
+  STATUE=-1;OBOX=-1;BOARD=-1;counts={};LIGHTS=[];LITP=[];STELES=[];TOWERS=[];NEARFLOWER=new Set();NEARWELL=new Set();NEARMILL=new Set();NEARVANE=new Set();NEARCART=new Set();NEARTOOL=new Set();NEARSIGN=new Set();NEARPARA=new Set();NEARTREE=new Set();RUGC=new Map();for(const k in S.rug||{})for(const c of rugCells(+k))RUGC.set(c,+k);RFC=new Map();for(const k in S.roof||{})for(const c of rugCells(+k))RFC.set(c,+k);/* 屋根の下のマス→屋根の左上 *//* ラグがしいてあるマス→ラグの左上 */ENVG=new Float32Array(W*H);REV=new Set();ATTR={};ELEM_KEYS.forEach(k=>ATTR[k]=0);
   const around=(j,r,set)=>{const x=j%W,y=(j/W)|0,h=set===REV?hiAt(j):-1;for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){if(dx*dx+dy*dy>r*r+1)continue;const nx=x+dx,ny=y+dy;if(nx>=0&&ny>=0&&nx<W&&ny<H&&!(h>=0&&hiAt(ny*W+nx)!==h))set.add(ny*W+nx)}};/* 緑の広がり（REV）は、段差をこえない */
   const addA=a=>{if(a)for(const k in a)ATTR[k]+=a[k]};
   let baseN=0,revN=0;
@@ -159,7 +159,7 @@ function recount(){if(S.broken)S.broken=S.broken.filter(b=>!S.obj[b.j]);calcSpot
     if(FLOWERS.has(o)&&o!=='lotus'&&!isBud(j))around(j,1,NEARFLOWER);/* 花：まわり1マス・かさならない */
     if(o==='well')around(j,3,NEARWELL);
     if(o==='windmill')around(j,5,NEARMILL);
-    if(o==='jar')around(j,1,NEARWELL);/* みずがめ：まわり1マスの畑は水やりいらず */if(o==='vane')around(j,3,NEARVANE);if(o==='niguruma')around(j,3,NEARCART);/* にぐるま：まわり3マスの箱は、しまうのが速い */if(o==='signpost')around(j,3,NEARSIGN);/* 風見鶏：まわり3マスは足が速い */
+    if(o==='jar')around(j,1,NEARWELL);/* みずがめ：まわり1マスの畑は水やりいらず */if(o==='vane')around(j,3,NEARVANE);if(o==='niguruma')around(j,3,NEARCART);if(o==='kabedougu')around(j,3,NEARTOOL);/* にぐるま：まわり3マスの箱は、しまうのが速い */if(o==='signpost')around(j,3,NEARSIGN);/* 風見鶏：まわり3マスは足が速い */
     const tbud=(o==='tree'||o==='fruit')&&isBud(j);/* 木も花と同じ。芽のあいだは、効果なし */
     if(o==='parasol')around(j,1,NEARPARA);/* パラソル：まわり1マス・かさならない */else if(!tbud&&BL[o]&&BL[o].env){const er=BL[o].er||3;for(let dy=-er;dy<=er;dy++)for(let dx=-er;dx<=er;dx++){const nx=x+dx,ny=y+dy;if(nx>=0&&ny>=0&&nx<W&&ny<H)ENVG[ny*W+nx]+=BL[o].env}}/* にわの家具：まわりの環境 */
     if(BL[o]&&BL[o].kind!=='block'&&(!FLOWERS.has(o)||!isBud(j))&&!tbud)addA(BL[o].attr);
