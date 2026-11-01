@@ -312,7 +312,7 @@ function drawRes(r,now){
   if(r.spawnT){const e=now-r.spawnT;if(e<450)return;if(e<1300){const k=e<900?(e-450)/450:1,sq=e<900?1:1+Math.sin((e-900)/400*Math.PI)*.18,px=r.x*TS,py=r.y*TS+9,rise=(1-k)*14;
     ctx.save();ctx.translate(px,py-rise);ctx.scale(k*(2-sq),k*sq);ctx.translate(-px,-py);drawRes0(r,now);ctx.restore();return}}
   const yk=r.act&&r.act.type==='shopkeep'&&r.act.stage==='do'&&r.elem!=='wind';if(yk){ctx.save();ctx.translate(0,-20)}/* 屋台の中の店番の子は、20点上に（屋台の台のうしろから見える） */
-  drawRes0(r,now);if((r.shU||0)>S.t)drawLeaf(r,now);if(yk)ctx.restore()}
+  drawRes0(r,now);if((r.shU||0)>S.t||r.shDemo&&now<r.shDemo&&r.shDemo-now<4000)drawLeaf(r,now)/* shDemo：おぼえる場面で見せるだけ（守りはかけない） */;if(yk)ctx.restore()}
 // ベンチ。front=true のときは、すわった子の前に来る座面のふちと脚だけ
 function drawBench(c,x,y,front){/* ベンチは横2マス */
   const L=64;
