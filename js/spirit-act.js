@@ -326,13 +326,16 @@ function fishLoot(r){/* つり：魚でないときは、空き缶・枝・レ�
   if(q<.07){const oo=FURN.filter(id=>BL[id]&&BL[id].offerOnly&&(!WIND_STAGE_TOYS.has(id)||WD===4));if(oo.length){const id=pick(oo);giveItem(id,1);r.bubble='✨';addFloat(r.x,r.y-1.8,'レア！');queueItemGift({[id]:1},'つりあげた！');return}}
   if(q<.15){r.bubble='📜';takeDrop({id:'recipe',n:1},r);return}
   const k=q<.6?'can':'eda';r.bubble='chip:drop:'+k;/* 落ちているときと同じ絵 */if(roomN(r)>0)addMat(r,k,1);else dropAt(r.x,r.y,'mat:'+k,1)}
-const AREAW=27,AREAN=4,areaOf=k=>((((k/W)|0)/AREAW)|0)*AREAN+((k%W)/AREAW|0);/* マップを4×4の16エリア（1エリア27×27マス）にわける */const WEEDMAX=20,KINOMAX=5,EDADAY=5,EDAMAX=20;/* 1エリアの雑草・きのこの最大 */
-function weedMorning(first){/* first：ステージのはじめ（雑草100本） *//* 毎朝：雑草30本（マップ全体。よみがえった土地は緑の草、荒れた土地は枯れた草）・きのこ（ときどき、木のそば）・枝（落とし物、16エリアごと） */
-  const st=WD===1?1:0,ok=k=>S.ground[k]===0&&!S.obj[k]&&!S.floor[k]&&!RFC.has(k)&&!RUGC.has(k);const WN=new Array(AREAN*AREAN).fill(0),KN=new Array(AREAN*AREAN).fill(0);S.obj.forEach((o,j)=>{if(o==='kinoko')KN[areaOf(j)]++;else if(WEEDS.has(o))WN[areaOf(j)]++});let add=0;/* エリアごとの雑草・きのこの数 */
-  {const RV=[...REV];let f=0;for(let t=0;t<2000&&RV.length&&f<(first?10:3);t++){const k=RV[(Math.random()*RV.length)|0];if(!ok(k)||WN[areaOf(k)]>=WEEDMAX)continue;S.obj[k]='weedc';f++;add++;WN[areaOf(k)]++}}/* ふんばり草：毎朝3本（ステージのはじめは10本）、よみがえった土地に */
-  for(let t=0;t<3000&&add<(first?100:30);t++){const k=(Math.random()*W*H)|0;if(!ok(k)||WN[areaOf(k)]>=WEEDMAX)continue;S.obj[k]='weed'+st+(REV.has(k)?'g':'k');add++;WN[areaOf(k)]++}/* のこりは、よみがえった土地は緑の草、荒れた土地は枯れた草 */
-  for(let j=0;j<W*H;j++)if(S.obj[j]==='weedc'&&!REV.has(j))S.obj[j]='weed'+st+'k';/* 荒れた土地のふんばり草は、枯れた草にする *//* 毎朝30本、雑草は1エリアに20本まで */
-  if(Math.random()<.5){const T=[];S.obj.forEach((o,j)=>{if((o==='ntree'||o==='tree'||o==='deadtree'||o==='bamboo')&&KN[areaOf(j)]<KINOMAX)T.push(j)});for(let t=0;t<30&&T.length;t++){const j=pick(T),c=[j-1,j+1,j-W,j+W].filter(k=>ok(k)&&KN[areaOf(k)]<KINOMAX);if(c.length){S.obj[pick(c)]='kinoko';break}}}/* きのこ：半分の日に1本（1エリアに5本まで） */
+const AREAW=27,AREAN=4,areaOf=k=>((((k/W)|0)/AREAW)|0)*AREAN+((k%W)/AREAW|0);/* マップを4×4の16エリア（1エリア27×27マス）にわける */const WEEDDAY=3,WEEDMAX=20,FUNDAY=3,FUNMAX=20,KINODAY=1,KINOMAX=5,EDADAY=5,EDAMAX=20;/* 1エリアの雑草・きのこの最大 */
+function weedMorning(first){/* 毎朝、16エリアごとに：雑草3本（20本まで）・ふんばり草3本（よみがえった土地、20本まで）・きのこ1本（木のそば、5本まで）・枝5本（落とし物、20本まで） */
+  const st=WD===1?1:0,ok=k=>S.ground[k]===0&&!S.obj[k]&&!S.floor[k]&&!RFC.has(k)&&!RUGC.has(k),NA=AREAN*AREAN;const WN=new Array(NA).fill(0),FN=new Array(NA).fill(0),KN=new Array(NA).fill(0),RV=Array.from({length:NA},()=>[]),KT=Array.from({length:NA},()=>[]);
+  S.obj.forEach((o,j)=>{const a=areaOf(j);if(o==='kinoko')KN[a]++;else if(o==='weedc')FN[a]++;else if(WEEDS.has(o))WN[a]++;if(o==='ntree'||o==='tree'||o==='deadtree'||o==='bamboo')KT[a].push(j)});for(const k of REV)RV[areaOf(k)].push(k);/* エリアごとの数 */
+  const rk=a=>((((a/AREAN)|0)*AREAW+((Math.random()*AREAW)|0))*W+(a%AREAN)*AREAW+((Math.random()*AREAW)|0));/* エリアの中のマス */
+  for(let a=0;a<NA;a++){
+    for(let f=0,t=0;t<200&&RV[a].length&&f<FUNDAY&&FN[a]<FUNMAX;t++){const k=pick(RV[a]);if(!ok(k))continue;S.obj[k]='weedc';f++;FN[a]++}/* ふんばり草：よみがえった土地に */
+    for(let n=0,t=0;t<200&&n<WEEDDAY&&WN[a]<WEEDMAX;t++){const k=rk(a);if(k<0||k>=W*H||!ok(k))continue;S.obj[k]='weed'+st+(REV.has(k)?'g':'k');n++;WN[a]++}/* 雑草：よみがえった土地は緑の草、荒れた土地は枯れた草 */
+    for(let n=0,t=0;t<60&&KT[a].length&&n<KINODAY&&KN[a]<KINOMAX;t++){const j=pick(KT[a]),c=[j-1,j+1,j-W,j+W].filter(k=>k>=0&&k<W*H&&areaOf(k)===a&&ok(k));if(c.length){S.obj[pick(c)]='kinoko';n++;KN[a]++}}}/* きのこ：木のそば */
+  for(let j=0;j<W*H;j++)if(S.obj[j]==='weedc'&&!REV.has(j))S.obj[j]='weed'+st+'k';/* 荒れた土地のふんばり草は、枯れた草にする */
   {const TR=Array.from({length:AREAN*AREAN},()=>[]),EN=new Array(AREAN*AREAN).fill(0);S.obj.forEach((o,j)=>{if(o==='ntree'||o==='tree'||o==='deadtree'||o==='fruit')TR[areaOf(j)].push(j)});for(const d of S.drops||[])if(d.id==='mat:eda')EN[areaOf(d.y*W+d.x)]++;
    for(let a=0;a<AREAN*AREAN;a++){const T=TR[a];let add=0;for(let t=0;t<200&&T.length&&add<EDADAY&&EN[a]<EDAMAX;t++){const j=pick(T),k=j+((Math.random()*5)|0)-2+(((Math.random()*5)|0)-2)*W;if(k<0||k>=W*H||!ok(k)||areaOf(k)!==a||S.drops.some(d=>d.y*W+d.x===k))continue;S.drops.push({x:k%W,y:(k/W)|0,id:'mat:eda',n:1});add++;EN[a]++}}}/* 枝：16エリアごとに、木のまわり2マスに毎朝5本（1エリアの地面に20本まで） */
 }
