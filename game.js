@@ -997,7 +997,7 @@ const LADDERS=new Set(['ladder_wood','ladder_bamboo']);/* ハシゴ：段差の�
 function ladderDir(j){/* ハシゴの向き（0：うしろが上のマス、1：左、3：右）。置いたときの向き S.rot、なければ自動 */const v=(S.rot||{})[j];if(v!=null&&LADDERS.has(S.obj[j]))return v;const h=hiAt(j),x=j%W;for(const d of[0,1,3]){const t=j-SDIR[d][1]*W-SDIR[d][0];if(t<0||t>=W*H||Math.abs(t%W-x)>1)continue;if(hiAt(t)===h+1&&S.ground[t]!==1)return d}return -1}
 const ladderTop=(j,d)=>j-SDIR[d][1]*W-SDIR[d][0];
 function ladderLink(a,b){/* b がハシゴで、a がその上のマス */if(!LADDERS.has(S.obj[b]))return false;const d=ladderDir(b);return d>=0&&ladderTop(b,d)===a}
-const onLadder=(a,b)=>LADDERS.has(S.obj[a])||LADDERS.has(S.obj[b]);/* ハシゴを通る1歩 */
+const onLadder=(a,b)=>ladderLink(b,a)||ladderLink(a,b);/* ハシゴで上り下りする1歩（ハシゴと、その上のマスのあいだ）。ハシゴのマスに横から入るのは、ふつうに歩く */
 function jumpEdge(a,b){return hiAt(a)!==hiAt(b)&&!stairLink(a,b)&&!stairLink(b,a)&&!ladderLink(a,b)&&!ladderLink(b,a)}/* 段差を飛ぶ所（階段で上り下りする所はちがう） */
 function zAt(x,y){/* その場所の高さ（ドット）。階段の上は、高いほうのはしから低いほうへ少しずつ下がる */const c=(y|0)*W+(x|0);if(S&&LADDERS.has(S.obj[c])){const d=ladderDir(c),ax=c%W,ay=(c/W)|0,t=d===0?y-ay:d===1?x-ax:ax+1-x;return hiAt(c)*LIFT+(d<0?0:LIFT*Math.max(0,Math.min(1,1-t)))}/* ハシゴの上：うしろの高いマスへ近いほど高い */const a=stairOf(c);if(a<0)return hiAt(c)*LIFT;const d=stairDir(a);if(d<0)return hiAt(c)*LIFT;const ax=a%W,ay=(a/W)|0,t=d===0?2*(y-ay):d===1?x-ax:d===2?ay+1-y:ax+1-x;return LIFT*hiAt(a)+LIFT*Math.max(0,Math.min(1,1-t/2))}/* 2マスで下がる（手前向きは1マス） */
 const HI_OK=new Set(['deadtree','rock','berry','bamboo','tree','ntree','fruit']);/* 段差を作ってよい物（自然の物） */
@@ -1996,7 +1996,7 @@ function moveR(r,dt){
   if(r.path.length){const cj=(r.y|0)*W+(r.x|0),n0=r.path[0];if(n0!==cj&&Math.abs(n0%W-cj%W)+Math.abs(((n0/W)|0)-((cj/W)|0))>1){/* 次のマスがとなりでない（古い道・押されてずれた）ときは、いまの場所から道を引きなおす。壁をすりぬけない */
     const g=r.path[r.path.length-1],G0=roadSearch(r.x|0,r.y|0);r.path=G0.dist[g]>=0?avoidPath(r,G0,g):[];if(!r.path.length&&g!==cj){noPass(r);endAct(r);return}}}
   while(step>0&&r.path.length){const j=r.path[0];if(!walk(j)&&!(S.ground[j]===1&&!solidOf(j)&&(S.ground[(r.y|0)*W+(r.x|0)]===1||r.act&&r.act.wade))){const goal=r.path[r.path.length-1],G=roadSearch(r.x|0,r.y|0);if(G.dist[goal]>=0&&walk(goal)){r.path=avoidPath(r,G,goal);if(r.path.length)return}noPass(r);endAct(r);return}
-    const tx=j%W+.5,ty=((j/W)|0)+.5,dx=tx-r.x,dy=ty-r.y,d=Math.hypot(dx,dy),jf=(jumpEdge((r.y|0)*W+(r.x|0),j)?9:1)*(S.ground[j]===2?2:1)*(onLadder((r.y|0)*W+(r.x|0),j)?2:1);/* ハシゴは歩く速さ×0.5 *//* 段差をよじのぼる・おりる間（マスのさかいまで）は9倍ゆっくり＝1マスで5倍の時間 *//* 浅瀬は2倍ゆっくり *//* 段差を飛ぶ間（マスのさかいまで）は5倍ゆっくり＝1マスで3倍の時間 */
+    const tx=j%W+.5,ty=((j/W)|0)+.5,dx=tx-r.x,dy=ty-r.y,d=Math.hypot(dx,dy),jf=(jumpEdge((r.y|0)*W+(r.x|0),j)?9:1)*(S.ground[j]===2?2:1)*(onLadder((r.y|0)*W+(r.x|0),j)?3:1);/* ハシゴは歩く速さ×0.5（マスのさかいまで3倍ゆっくり＝1マスで2倍の時間） *//* 段差をよじのぼる・おりる間（マスのさかいまで）は9倍ゆっくり＝1マスで5倍の時間 *//* 浅瀬は2倍ゆっくり *//* 段差を飛ぶ間（マスのさかいまで）は5倍ゆっくり＝1マスで3倍の時間 */
     if(dx)r.face=dx<0?-1:1;
     if(d*jf<=step){r.x=tx;r.y=ty;r.path.shift();step-=d*jf}else{r.x+=dx/d*step/jf;r.y+=dy/d*step/jf;step=0}}
   // ぶつかって進めないときは、止まっている子のマスを避けた道を探して回り込む。道がなければ少しの間すりぬける
@@ -6330,7 +6330,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='911';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='912';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
