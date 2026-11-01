@@ -1443,6 +1443,13 @@ let FOUT=null,FOUTT=-1;function fenceOut(){/* 柵（門もふくむ）と壁で�
   for(let x=0;x<W;x++)for(const y of[0,H-1]){const j=y*W+x;if(open(j)&&!out[j]){out[j]=1;q.push(j)}}for(let y=0;y<H;y++)for(const x of[0,W-1]){const j=y*W+x;if(open(j)&&!out[j]){out[j]=1;q.push(j)}}
   while(q.length){const j=q.pop(),x=j%W,y=(j/W)|0;for(const[dx,dy]of DIRS){const nx=x+dx,ny=y+dy;if(nx<0||ny<0||nx>=W||ny>=H)continue;const k=ny*W+nx;if(!out[k]&&open(k)){out[k]=1;q.push(k)}}}
   FOUT=out;FOUTT=t;return out}
+let PMASK=null,PMASKT=-1;function patrolMask(){/* 見回りの場所：1＝柵・塀（家の壁・ドアがまざってもよい）でかこまれた所、2＝家のまわり3マス、3＝家の中。1時間ごとに作りなおす */const t=Math.floor(S.t);if(PMASK&&PMASKT===t)return PMASK;
+  const m=new Uint8Array(W*H),out=new Uint8Array(W*H),q=[],bar=j=>{const o=typeAt(j);return FENCE_IDS.has(o)||HOME_WALLS.has(o)||HOME_DOORS.has(o)};
+  for(let x=0;x<W;x++)for(const y of[0,H-1]){const j=y*W+x;if(!bar(j)&&!out[j]){out[j]=1;q.push(j)}}for(let y=0;y<H;y++)for(const x of[0,W-1]){const j=y*W+x;if(!bar(j)&&!out[j]){out[j]=1;q.push(j)}}
+  while(q.length){const j=q.pop(),x=j%W,y=(j/W)|0;for(const[dx,dy]of DIRS){const nx=x+dx,ny=y+dy;if(nx<0||ny<0||nx>=W||ny>=H)continue;const k=ny*W+nx;if(!out[k]&&!bar(k)){out[k]=1;q.push(k)}}}
+  for(const h of HOUSES)for(const j of h.set){const x=j%W,y=(j/W)|0;for(let dy=-3;dy<=3;dy++)for(let dx=-3;dx<=3;dx++){const nx=x+dx,ny=y+dy;if(nx>=0&&ny>=0&&nx<W&&ny<H)m[ny*W+nx]=2}}
+  for(let j=0;j<W*H;j++)if(!out[j]&&!bar(j))m[j]=1;for(const h of HOUSES)for(const j of h.set)m[j]=3;
+  PMASK=m;PMASKT=t;return m}
 function graveCheck(){if(isNight()||STATUE<0||!cnt('grave')||S.graveDay===dayNo())return;const gs=[];for(let j=0;j<W*H;j++)if(S.obj[j]==='grave'&&S.dyn[j]&&!S.dyn[j].buried)gs.push(j);if(!gs.length)return;
   let G=null;for(const r of S.res){if(r.hidden)continue;const g=bfs(r.x|0,r.y|0);if(nearest(g,j=>adjOf(j,k=>k===STATUE||k===STATUE+W)>=0,300)>=0){G=g;break}}if(!G)return;/* 神殿まで行ける子から見て */
   if(gs.some(j=>nearest(G,k=>adjOf(k,q=>q===j)>=0,300)<0)){S.graveDay=dayNo();toast('お墓まで行けません','warn')}}/* とどかない所にあるお墓は、動かさずに知らせる（1日1回） */
@@ -1502,7 +1509,10 @@ function decide0(r){
     if(r.elem==='fire'&&r.hunger<50&&hideIn(r,G))return;/* おなかが50より少ないときは、たたかわずに家へにげる */
     {const e=r.elem!=='fire'?null:pickFoe(r,S.enemies.filter(e=>e.spawned&&!e.dead&&nearRes(e)));if(e){const t=huntSpot(G,e,60,r);/* 届かない所にいても、いちばん近くまで行く */if(t>=0)return startAct(r,G,'patrol',t,{hunt:S.t})}}/* 拠点にコワイノが入ったら、まっすぐたたかいに行く */
     if(r.name===POKO){const hk=keyName('fire'),fs=S.res.filter(t=>t!==r&&!t.hidden&&t.elem==='fire'),tg=fs.find(t=>t.name===hk)||fs[0];if(tg&&Math.hypot(tg.x-r.x,tg.y-r.y)>1.5){let q=-1,bd=1e9;for(let k=0;k<W*H;k++){if(G.dist[k]<0||G.dist[k]>40||!walk(k))continue;const d=Math.hypot(k%W+.5-tg.x,((k/W)|0)+.5-tg.y)+G.dist[k]*.02;if(d<bd){bd=d;q=k}}if(q>=0)return startAct(r,G,'patrol',q)}}/* フタバは、火の子のそばについて回る */
-    const ib=j=>VILL[j];let j=nearest(G,j=>walk(j)&&!roomOf(j)&&ib(j)&&Math.random()<.04,8);if(j<0)j=nearest(G,j=>walk(j)&&!roomOf(j)&&ib(j),80);/* 家の中にいたら、まず外へ出る */if(j>=0)return startAct(r,G,'patrol',j);/* 夜は家の外を見回る */return startAct(r,G,'wander',(r.y|0)*W+(r.x|0))}
+    {const pm=patrolMask(),others=S.res.filter(t=>t!==r&&!t.hidden&&!t.dead),sx=STATUE%W,sy=(STATUE/W)|0;/* 見回る所：柵・塀でかこまれた所 → 家のまわり3マス → ほかの子のまわり3マス → 神殿のまわり3マス（家の中はのぞく） */
+      const tiers=[j=>pm[j]===1,j=>pm[j]===2,others.length?j=>others.some(t=>Math.abs(j%W+.5-t.x)<3.5&&Math.abs(((j/W)|0)+.5-t.y)<3.5):null,STATUE>=0?j=>Math.abs(j%W-sx)<=3&&Math.abs(((j/W)|0)-sy)<=3:null];
+      for(const f of tiers){if(!f)continue;const ok=j=>walk(j)&&pm[j]!==3&&f(j);let j=nearest(G,j=>ok(j)&&Math.random()<.04,8);if(j<0)j=nearest(G,ok,200);if(j>=0)return startAct(r,G,'patrol',j)}}
+    return startAct(r,G,'wander',(r.y|0)*W+(r.x|0))}
   if(r.energy<25||isNight())return goSleep(r,G,S.enemies.some(e=>e.spawned));
   if(r.hunger<55&&!foeNear(r))return goEat(r,G);
   if(festOn()&&!isNight()&&r.energy>=30&&!foeNear(r)&&festAct(r,G))return;/* おまつりの日は、朝7時から夜10時まで、おどる・屋台・おしゃべり・見てまわる。夜8時から9時は花火 */
@@ -6338,7 +6348,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='925';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='926';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
