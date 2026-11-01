@@ -5421,7 +5421,7 @@ function endPtr(e){
 cv.addEventListener('pointerup',endPtr);cv.addEventListener('pointercancel',endPtr);
 cv.addEventListener('wheel',e=>{e.preventDefault();if(!started)return;const w=toWorld(e.clientX,e.clientY);cam.z=clamp(cam.z*(e.deltaY<0?1.12:.89),minZ(),3);cam.x=w.x-e.clientX/cam.z;cam.y=w.y-e.clientY/cam.z;clampCam()},{passive:false});
 
-function onTap(sx,sy){
+function onTap(sx,sy){DLGTAP=performance.now();/* タップで始める会話は、またずにすぐ出す */
   const w=toWorld(sx,sy),tx=Math.floor(w.x/TS),ty=Math.floor(w.y/TS);
   if(AREAARM){AREAARM=false;return areaBlast(w.x/TS,w.y/TS)}/* ひかりのはどう：タップした場所のまわり */
   if(LIGHTARM){LIGHTARM=false;const en=S.enemies.find(e=>e.spawned&&Math.hypot(e.x-w.x/TS,e.y-w.y/TS)<.8);if(en)return guardLight(en);const tj=ty*W+tx;if(tx>=0&&ty>=0&&tx<W&&ty<H&&LIGHTNAT[S.obj[tj]]&&!isBud(tj))return natLight(tj)}/* 守りの光：アイコンのあとにタップした「コワイノ」・木・岩にあてる */
@@ -6149,9 +6149,9 @@ function renderSheet(){
     }
   }
 }
-const DLGQ=[];let DLGGAP=0;const DLGWAIT=3000;/* 会話がおわってから、つぎのべつの会話を出すまでの間（ミリ秒） */
+const DLGQ=[];let DLGGAP=0,DLGTAP=-1e9,DLGCUR='';const DLGWAIT=3000;/* 会話がおわってから、つぎのべつの会話を出すまでの間（ミリ秒） */
 function dlgGap(){DLGGAP=performance.now()+DLGWAIT;setTimeout(dlgNext,DLGWAIT+20)}
-function dlgNext(){const d=$('#dialog');if(!d.hidden||!DLGQ.length)return;const w=DLGGAP-performance.now();if(w>0){setTimeout(dlgNext,w+20);return}dialog(...DLGQ.shift())}
+function dlgNext(){const d=$('#dialog');if(!d.hidden||!DLGQ.length)return;const w=DLGGAP-performance.now();if(w>0){setTimeout(dlgNext,w+20);return}{const q=DLGQ.shift();dialog(q[0],q[1],q[2],q[3])}}
 /* 会話の演出：shake=画面がゆれる／flash=白く光る／dim=少し暗くなる／beat=ひと呼吸おく */
 function dashDemo(){/* フタバが、ヨルノオオカゲのほうへ飛び出す（会話中は世界が止まるので、ここで動かす） */const f=S.res.find(r=>r.name===POKO),e=S.enemies.find(q=>q.type==='boss2'&&q.spawned&&!q.dead);if(!f||!e||(f.dashAt!=null&&performance.now()-f.dashAt<30000))return;f.dashAt=performance.now();
   const dx=e.x-f.x,dy=e.y-f.y,d=Math.hypot(dx,dy)||1,len=Math.min(4,Math.max(0,d-3)),sx=f.x,sy=f.y;let tx=sx+dx/d*len,ty=sy+dy/d*len;
@@ -6163,7 +6163,8 @@ function dialogueSpiritAnim(motion,talking,elapsed,hold,wave,reduced){if(reduced
 function dialoguePose(motion,elapsed){const durations={joy:950,shock:720,nod:650,think:1050,sad:950,phew:1400},d=durations[motion]||1,p=Math.max(0,Math.min(1,elapsed/d)),fade=Math.sin(p*Math.PI);if(p>=1)return {x:0,y:0,angle:0};if(motion==='joy')return {x:0,y:-Math.abs(Math.sin(p*Math.PI*2))*17,angle:Math.sin(p*Math.PI*4)*.045};if(motion==='shock')return {x:Math.sin(p*Math.PI*5)*4*(1-p),y:-fade*10,angle:-fade*.06};if(motion==='nod')return {x:0,y:Math.sin(p*Math.PI*2)*6,angle:Math.sin(p*Math.PI*2)*.045};if(motion==='phew')return p<.35?{x:0,y:-Math.sin(p/.35*Math.PI/2)*3,angle:0}:{x:0,y:-3+Math.sin((p-.35)/.65*Math.PI/2)*7*(1-(p-.35)/.65*.6),angle:0};/* ふぅ：すこし息をすって、肩をおとす */return {x:0,y:fade*(motion==='sad'?5:0),angle:fade*(motion==='sad'?.08:-.1)}}
 let GODVOICE_T=0;/* 遠くからの声のあいさつを、さいごに出した時刻 */
 function dialog(lines,after,lastLabel,who){
-  const d=$('#dialog');if(!d.hidden||performance.now()<DLGGAP){DLGQ.push([lines,after,lastLabel,who]);return}/* 会話がおわってすぐの、べつの会話は、少しまってから */
+  const d=$('#dialog'),key=JSON.stringify(lines);if(!d.hidden&&key===DLGCUR||DLGQ.some(q=>q[4]===key))return;/* 同じ会話を、かさねて出さない（何回かタップしても1回だけ） */
+  if(!d.hidden||performance.now()<DLGGAP&&performance.now()-DLGTAP>400){DLGQ.push([lines,after,lastLabel,who,key]);return}/* 会話がおわってすぐの、べつの会話は、少しまってから（タップで始めた会話はすぐ） */DLGCUR=key;
   if(S&&!godHere()){/* 遠くからの声：「聞こえるかの？ 遠くから、声だけ届けておるぞい。」は、1つの会話で1回だけ。つづけて開く別の会話（90秒いない）でも出さない */const PRE='……聞こえるかの？ 遠くから、声だけ届けておるぞい。',reP=/……聞こえるかの？ 遠くから、声だけ届けておるぞい。/g;lines=lines.map(ln=>Array.isArray(ln)?ln.slice():ln);let first=true;const recent=performance.now()-GODVOICE_T<90000;for(const ln of lines){if(!Array.isArray(ln)||ln[0]!==GOD||typeof ln[1]!=='string')continue;ln[1]=ln[1].replace(reP,'');if(first){first=false;if(!recent){ln[1]=PRE+ln[1];GODVOICE_T=performance.now()}}}}
   if(sheet&&!DLG_KEEP)closeSheet();d.classList.toggle('dtop',DLG_KEEP);requestAnimationFrame(fitTopDlg);
   let i=0;d.hidden=false;DLGN.clear();for(const ln of lines)if(Array.isArray(ln)&&ln[0])DLGN.add(ln[0]);if(who)DLGN.add(who);
@@ -6303,7 +6304,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='867';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='868';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
