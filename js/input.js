@@ -42,6 +42,7 @@ function endPtr(e){
 cv.addEventListener('pointerup',endPtr);cv.addEventListener('pointercancel',endPtr);
 cv.addEventListener('wheel',e=>{e.preventDefault();if(!started)return;const w=toWorld(e.clientX,e.clientY);cam.z=clamp(cam.z*(e.deltaY<0?1.12:.89),minZ(),3);cam.x=w.x-e.clientX/cam.z;cam.y=w.y-e.clientY/cam.z;clampCam()},{passive:false});
 
+const tapY=r=>r.y-(r.act&&r.act.type==='watchpost'&&r.act.stage==='do'?WPLIFT*Math.min(1,r.act.cl||0)/TS:0);/* 見張り台の上の子は、上に描いた所でタップする（見張り台の足もとをタップしても、子をえらばない） */
 function tapLv(wx,wy){if(!S||!S.hi)return 0;const tx=Math.floor(wx/TS);if(tx<0||tx>=W)return 0;for(let lv=HMAX;lv>=1;lv--){const ty=Math.floor((wy+lv*LIFT)/TS);if(ty>=0&&ty<H&&hiAt(ty*W+tx)===lv)return lv}return 0}/* タップした所に見えている、いちばん手前の高い段 */
 function onTap(sx,sy){DLGTAP=performance.now();/* タップで始める会話は、またずにすぐ出す */
   let w=toWorld(sx,sy);const tx=Math.floor(w.x/TS);{const tl=tapLv(w.x,w.y);if(tl)w={x:w.x,y:w.y+tl*LIFT}}const ty=Math.floor(w.y/TS);/* 高い段のマス・物・せいれい・コワイノは上にずらして描くので、タップの場所も高さの分だけ下へもどす */
@@ -60,10 +61,10 @@ function onTap(sx,sy){DLGTAP=performance.now();/* タップで始める会話は
     if(S.cleared){const tw=S.obj.indexOf('tower');if(tw>=0&&Math.hypot(w.x/TS-(tw%W+1),w.y/TS-((tw/W|0)+.6))<1.4)return openSheet('travel')}/* クリア後は、台座から次の土地へ */
     if(sumHit(w.x/TS,w.y/TS))return doSummon();
     if(TALKW===GOD&&godHere()&&Math.hypot(w.x/TS-godX(),w.y/TS-(godY()-1.6))<1.2)return startTalk();
-    if(TALKW){const tr=S.res.find(r=>r.name===TALKW&&!r.hidden&&!(r.act&&r.act.type==='sleep'));if(tr&&Math.hypot(tr.x-w.x/TS,(tr.y-1)-w.y/TS)<1.4){panTo(tr.x*TS,(tr.y-.7)*TS);return startTalk()}}
-    {const tr=S.res.find(r=>SEVW[r.name]&&!r.hidden&&!(r.act&&r.act.type==='sleep')&&Math.hypot(r.x-w.x/TS,(r.y-1)-w.y/TS)<1.4);if(tr)return sevTalk(SEVW[tr.name])}
-    {const tr=S.res.find(r=>SUBW[r.name]&&!r.hidden&&!(r.act&&r.act.type==='sleep')&&Math.hypot(r.x-w.x/TS,(r.y-1)-w.y/TS)<1.4);if(tr){panTo(tr.x*TS,(tr.y-.7)*TS);return subTalk(SUBW[tr.name])}}
-    let best=null,bd=1.1;for(const r of S.res){if(r.hidden&&!peekH(r))continue;const d=Math.hypot(r.x-w.x/TS,(r.y-.5)-w.y/TS);if(d<bd){bd=d;best=r}}
+    if(TALKW){const tr=S.res.find(r=>r.name===TALKW&&!r.hidden&&!(r.act&&r.act.type==='sleep'));if(tr&&Math.hypot(tr.x-w.x/TS,(tapY(tr)-1)-w.y/TS)<1.4){panTo(tr.x*TS,(tr.y-.7)*TS);return startTalk()}}
+    {const tr=S.res.find(r=>SEVW[r.name]&&!r.hidden&&!(r.act&&r.act.type==='sleep')&&Math.hypot(r.x-w.x/TS,(tapY(r)-1)-w.y/TS)<1.4);if(tr)return sevTalk(SEVW[tr.name])}
+    {const tr=S.res.find(r=>SUBW[r.name]&&!r.hidden&&!(r.act&&r.act.type==='sleep')&&Math.hypot(r.x-w.x/TS,(tapY(r)-1)-w.y/TS)<1.4);if(tr){panTo(tr.x*TS,(tr.y-.7)*TS);return subTalk(SUBW[tr.name])}}
+    let best=null,bd=1.1;for(const r of S.res){if(r.hidden&&!peekH(r))continue;const d=Math.hypot(r.x-w.x/TS,(tapY(r)-.5)-w.y/TS);if(d<bd){bd=d;best=r}}
     if(best&&best.act&&(best.act.type==='chat'||best.act.type==='rest')&&best.act.stage==='do'&&best.act.topic!=null&&best.act.seen!==best.act.topic){const p=S.res.find(q=>q.id===best.act.partner);if(p){const A=best.act.sub?p:best,B=best.act.sub?best:p;const C=CHATS[best.act.topic];for(const q of [A,B])if(q.act&&q.act.topic===best.act.topic)q.act.seen=best.act.topic;/* 一度見たおしゃべりは、もう一度タップしても出さない（ようすを出す） */return dialog(C.map((l,i)=>{const sp=l[0]?B:A;return [sp.name,((C.el&&!l[0])?l[1]:chatTone(l[1],sp,i)).replace(/@([HMK])/g,(m,c)=>sevName(c))]}),C.wave?()=>{A.waveU=B.waveU=S.t+4}:null)}}/* おしゃべり中の子をタップすると、会話が見られる */
     if(best){if(!S.flags.tapped&&S.flags.tapAsk){S.flags.tapPend=true}voiceHmm(best);return openSheet('res',best.id)}// ステータスを見て閉じたら、会話に進む
     if(tx<0||ty<0||tx>=W||ty>=H)return;
