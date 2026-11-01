@@ -5023,7 +5023,7 @@ function drawEnemy(e,now){
    const OFF=[[o,0],[-o,0],[0,o],[0,-o],[o*.7,o*.7],[-o*.7,o*.7],[o*.7,-o*.7],[-o*.7,-o*.7]];for(const[dx,dy]of OFF)ctx.drawImage(EOS,0,0,cw,ch,ox+dx,oy+dy,sw,sh);
    /* 夜は暗くなってふちが見えにくいので、物にかくれていなければ、暗さの上からもう一度ふちを光らせる */
    if(darkness()>0&&!enemyHidden(e,ox,oy,ox+ww,py+8)){if(GLW.width!==cv.width||GLW.height!==cv.height){GLW.width=cv.width;GLW.height=cv.height}if(!GLWN){glx.setTransform(1,0,0,1,0,0);glx.clearRect(0,0,GLW.width,GLW.height)}GLWN++;
-     glx.setTransform(k,0,0,k,-cam.x*k,-cam.y*k);for(const[dx,dy]of OFF)glx.drawImage(EOS,0,0,cw,ch,ox+dx,oy+dy,sw,sh);glx.globalCompositeOperation='destination-out';glx.drawImage(EOC,0,0,cw,ch,ox,oy,sw,sh);glx.globalCompositeOperation='source-over'}
+     glx.setTransform(ctx.getTransform());/* 段差の上・よじのぼり中の高さ（liftDraw）も、本体と同じにする */for(const[dx,dy]of OFF)glx.drawImage(EOS,0,0,cw,ch,ox+dx,oy+dy,sw,sh);glx.globalCompositeOperation='destination-out';glx.drawImage(EOC,0,0,cw,ch,ox,oy,sw,sh);glx.globalCompositeOperation='source-over'}
    ctx.globalAlpha=e.stun>0?.55:1;ctx.drawImage(EOC,0,0,cw,ch,ox,oy,sw,sh);ctx.globalAlpha=1}
   const bw=Math.max(14,e.max*2.2)*Math.min(z,1.3),bx=px-bw/2,byy=py+8-27*z-6;
   const bar=()=>{let by=byy;for(const[j]of WALLHIT){const wx=(j%W)*TS,wy=((j/W)|0)*TS;if(bx<wx+TS&&bx+bw>wx&&by+3>wy-18&&by-1<wy){by=Math.min(by,wy-22)}}/* 柵などの体力ゲージと重なるときは、その上に出す */ctx.fillStyle='rgba(0,0,0,.5)';ctx.fillRect(bx-1,by-1,bw+2,4);ctx.fillStyle='#ff6b8a';ctx.fillRect(bx,by,bw*Math.max(0,e.hp)/e.max,2)};if(BUBQ)BUBQ.push(bar);else bar();/* 体力ゲージは物にかくれないよう最後に */
@@ -6330,7 +6330,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='917';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='918';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
