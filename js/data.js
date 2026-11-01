@@ -50,7 +50,7 @@ const BL={
   tub:{hp:5,brk:1,fix:2,fixm:{wood:1,funba:1},name:'水おけ',kind:'furn',cat:'cook',f2:1,lv:3,pc:3,time:80,maker:'water',attr:{water:1},mat:{wood:3},solid:1,desc:'かまどのまわり3マスにあると、料理の時間-10%。住み心地+3'},
   sink:{hp:5,brk:1,fix:4,fixm:{stone:3},name:'流し台',kind:'furn',cat:'cook',f2:1,lv:4,pc:7,time:120,maker:'water',attr:{water:1},mat:{stone:5},solid:1,desc:'かまどのまわり3マスにあると、料理の時間-10%。住み心地+4'},
   niguruma:{hp:5,brk:1,fix:2,fixm:{wood:4},name:'にぐるま',kind:'furn',cat:'other',f2:1,sz:[2,1],pc:4,time:90,maker:'wood',attr:{wood:1},mat:{wood:10},solid:1,desc:'荷物をはこぶ車。まわり3マスの箱に、しまう速さ+20%（重複なし）'},
-  kabedougu:{hp:5,brk:1,fix:2,fixm:{wood:3},name:'どうぐたて',kind:'furn',cat:'other',f2:1,pc:3,time:70,maker:'wood',attr:{wood:1},mat:{wood:6,stone:2},solid:1,desc:'おのとくわを立てておく道具たて。住み心地+3'},
+  kabedougu:{hp:5,brk:1,fix:2,fixm:{wood:3},name:'どうぐたて',kind:'furn',cat:'other',f2:1,pc:3,time:70,maker:'wood',attr:{wood:1},mat:{wood:6,stone:2},solid:1,desc:'おのとくわを立てておく道具たて。まわり3マスの箱に、しまう速さ+20%（重複なし）'},
   kabebukuro:{hp:5,brk:1,fix:2,fixm:{funba:3},name:'かべかけのふくろ',kind:'furn',cat:'other',f2:1,pc:3,time:70,maker:'earth',attr:{earth:1},mat:{funba:5,wood:2},solid:1,desc:'壁にかけるふくろ。食料を20までしまえる。住み心地+3'},
   taru:{hp:5,brk:1,fix:2,fixm:{wood:3},name:'たる',kind:'furn',cat:'other',f2:1,pc:3,time:80,maker:'wood',attr:{wood:1},mat:{wood:8},solid:1,desc:'食料を30までしまえる。住み心地+3'},
   asabukuro:{hp:5,brk:1,fix:2,fixm:{funba:3},name:'あさぶくろ',kind:'furn',cat:'other',f2:1,pc:3,time:70,maker:'earth',attr:{earth:1},mat:{funba:6,wood:2},solid:1,desc:'素材を30までしまえる。住み心地+3'},
