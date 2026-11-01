@@ -476,7 +476,7 @@ b.onclick=function(){if(want)return;want=1;show();window.__ldT=setInterval(show,
 window.__ldWant=function(){return want};
 function go(){/* ぜんぶ読みこめたら、書いてある順に、あいだをあけずに動かす（ファイルのあいだで、絵の読みこみなどの知らせが先に動かないように） */for(var i=0;i<N;i++)if(X[i]==null)return;if(ran)return;ran=1;
   if(X.every(function(t){return t!==false})){for(var i=0;i<N;i++){var s=document.createElement('script');s.text=X[i]+'\n//# sourceURL='+U[i].split('?')[0];document.body.appendChild(s)}return}
-  var k=0;(function one(){if(k>=N)return;var s=document.createElement('script');s.src=U[k++];s.onload=one;document.body.appendChild(s)})()}/* 読めなかった物があれば、ふつうに1つずつ読みこむ */
+  for(var i=0;i<N;i++){var s=document.createElement('script');s.src=U[i];s.async=false;document.body.appendChild(s)}}/* 読めなかった物があれば、ふつうに読みこむ（async=false で、書いてある順に、なるべく続けて動かす） */
 U.forEach(function(u,i){var x=new XMLHttpRequest();x.open('GET',u);
   x.onprogress=function(e){L[i]=e.loaded;if(e.lengthComputable)T[i]=e.total;show()};
   x.onload=function(){if(x.status>=200&&x.status<300){L[i]=T[i]||E[i];X[i]=x.responseText}else X[i]=false;show();go()};
