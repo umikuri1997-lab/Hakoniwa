@@ -140,7 +140,7 @@ function attrTxt(id){const b=BL[id];if(!b||!b.attr||b.kind==='block')return'';co
 const withAttr=(id,t)=>{const a=attrTxt(id);return a?(t?t+'　':'')+'【'+a+'】':t||''};
 function recount(){if(S.broken)S.broken=S.broken.filter(b=>!S.obj[b.j]);calcSpots();/* こわれた物の場所に、なにか置いたら、こわれた物のリストからはずす */
   for(const key in S.win||{}){const j=+key,wall=k=>HOME_WALLS.has(S.obj[k])||HOME_DOORS.has(S.obj[k]);if(S.win[j]==='wreath'&&HOME_DOORS.has(S.obj[j])&&(wall(j-W)||wall(j+W))&&!(wall(j-1)||wall(j+1))){S.inv.wreath=(S.inv.wreath||0)+1;delete S.win[j];toast('たてのドアのリースを、持ち物にもどしました')}}/* たてのドアにはリースをかけられない。まわりの壁が変わってたてになったら、知らせてもどす */
-  STATUE=-1;OBOX=-1;BOARD=-1;counts={};LIGHTS=[];LITP=[];STELES=[];TOWERS=[];NEARFLOWER=new Set();NEARWELL=new Set();NEARMILL=new Set();NEARVANE=new Set();NEARCART=new Set();NEARSIGN=new Set();NEARPARA=new Set();RUGC=new Map();for(const k in S.rug||{})for(const c of rugCells(+k))RUGC.set(c,+k);RFC=new Map();for(const k in S.roof||{})for(const c of rugCells(+k))RFC.set(c,+k);/* 屋根の下のマス→屋根の左上 *//* ラグがしいてあるマス→ラグの左上 */ENVG=new Float32Array(W*H);REV=new Set();ATTR={};ELEM_KEYS.forEach(k=>ATTR[k]=0);
+  STATUE=-1;OBOX=-1;BOARD=-1;counts={};LIGHTS=[];LITP=[];STELES=[];TOWERS=[];NEARFLOWER=new Set();NEARWELL=new Set();NEARMILL=new Set();NEARVANE=new Set();NEARCART=new Set();NEARSIGN=new Set();NEARPARA=new Set();NEARTREE=new Set();RUGC=new Map();for(const k in S.rug||{})for(const c of rugCells(+k))RUGC.set(c,+k);RFC=new Map();for(const k in S.roof||{})for(const c of rugCells(+k))RFC.set(c,+k);/* 屋根の下のマス→屋根の左上 *//* ラグがしいてあるマス→ラグの左上 */ENVG=new Float32Array(W*H);REV=new Set();ATTR={};ELEM_KEYS.forEach(k=>ATTR[k]=0);
   const around=(j,r,set)=>{const x=j%W,y=(j/W)|0,h=set===REV?hiAt(j):-1;for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){if(dx*dx+dy*dy>r*r+1)continue;const nx=x+dx,ny=y+dy;if(nx>=0&&ny>=0&&nx<W&&ny<H&&!(h>=0&&hiAt(ny*W+nx)!==h))set.add(ny*W+nx)}};/* 緑の広がり（REV）は、段差をこえない */
   const addA=a=>{if(a)for(const k in a)ATTR[k]+=a[k]};
   let baseN=0,revN=0;
@@ -152,7 +152,8 @@ function recount(){if(S.broken)S.broken=S.broken.filter(b=>!S.obj[b.j]);calcSpot
     if(!o||o==='part')continue;counts[o]=(counts[o]||0)+1;
     if(o==='statue')STATUE=j;if(o==='obox')OBOX=j;if(o==='board')BOARD=j;
     if(o==='stele')STELES.push(j);
-    if(o==='lamp'||o==='lighthouse'||o==='tower'||o==='campfire'||o==='statue'||o==='torch'||o==='candle'||o==='lantern'||o==='flamp'||o==='yomawari'||o==='toro'||o==='takeakari')LIGHTS.push(j);
+    if(o==='lamp'||o==='lighthouse'||o==='tower'||o==='campfire'||o==='statue'||o==='torch'||o==='candle'||o==='lantern'||o==='flamp'||o==='yomawari'||o==='toro'||o==='takeakari'||o==='andon')LIGHTS.push(j);
+    if(o==='shinboku'){const x0=j%W,y0=(j/W)|0;for(let b=-3;b<=4;b++)for(let a=-3;a<=4;a++){const nx=x0+a,ny=y0+b;if(nx>=0&&ny>=0&&nx<W&&ny<H)NEARTREE.add(ny*W+nx)}}/* ご神木のまわり3マス */
     if(LIGHTP[o])LITP.push(j);/* 夜に光をかく明かりの一覧 */
     if(o==='watch'||o==='yogan'||o==='tower')TOWERS.push(j);
     if(FLOWERS.has(o)&&o!=='lotus'&&!isBud(j))around(j,1,NEARFLOWER);/* 花：まわり1マス・かさならない */

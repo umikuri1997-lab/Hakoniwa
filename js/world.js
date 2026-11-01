@@ -32,7 +32,7 @@ function finalCheck(){if(WD||!S||S.cleared||S.finalNight||S.finalOn||!S.enemyOn|
 /* ---------- 状態 ---------- */
 let S=null;
 const resv=new Map();
-let STATUE=-1,OBOX=-1,BOARD=-1,counts={},LIGHTS=[],LITP=[],STELES=[],TOWERS=[],NEARFLOWER=new Set(),NEARWELL=new Set(),NEARMILL=new Set(),NEARVANE=new Set(),NEARCART=new Set(),NEARSIGN=new Set(),NEARPARA=new Set(),SPOTJ=new Map(),SPOTM=new Map(),SPOTI=[],RUGC=new Map(),RFC=new Map(),ENVG=null,REV=new Set(),ATTR={},BASEPCT=0,GRASSN=0;const GRASS_GOAL=2500;
+let STATUE=-1,OBOX=-1,BOARD=-1,counts={},LIGHTS=[],LITP=[],STELES=[],TOWERS=[],NEARFLOWER=new Set(),NEARWELL=new Set(),NEARMILL=new Set(),NEARVANE=new Set(),NEARCART=new Set(),NEARSIGN=new Set(),NEARTREE=new Set(),NEARPARA=new Set(),SPOTJ=new Map(),SPOTM=new Map(),SPOTI=[],RUGC=new Map(),RFC=new Map(),ENVG=null,REV=new Set(),ATTR={},BASEPCT=0,GRASSN=0;const GRASS_GOAL=2500;
 function newState(w){w=w||0;
   const s={v:8,mig:9,flags:{berryHalf:1,berryHalf2:1,land2:1,land3:1,land4:1,arrow0:1},placed:{},feat:{build:true},inv:{},orders:[],enemyOn:false,nights:0,godGone:false,godShown:false,nushi:null,
     lv:1,bossKills:0,nightHurt:0,nightHad:false,wave:null,lastWarn:0,
@@ -53,7 +53,7 @@ function ensureStor(s){for(const id in BL){const b=BL[id];if(b&&(b.offerOnly||b.
 /* 特性：ひとりにひとつ。キーキャラは決まっている */
 const TRK=el=>Object.keys(TRAITS).filter(k=>k!=='kizuna'&&k!=='tane'&&k!=='nebari'&&(k!=='ryouri'||el==='fire'));/* たねはこびは風の子だけ（mkRes）。料理じょうずは火の子だけ（料理をするのは火の子） */const TRAITS={hayaashi:['はやあし','歩く速さ1.25倍'],hataraki:['はたらきもの','作業の速さ1.25倍'],shukaku:['しゅうかく上手','畑や木の実の収穫+1'],kikori:['木こり','木を切ると、木材+1'],ishiku:['石工','石をほると、石材+1'],chikara:['力もち','持てる数+2'],shoshoku:['小食','おなかのへる速さ0.8倍'],tafu:['タフ','つかれる速さ0.75倍'],nebari:['ねばりづよい','つかれる速さ0.75倍・つかれのとれる速さ2倍'],kizuna:['めぐり','消えても、次の朝にもどってくる'],/* ねばりづよい・めぐりは、キーキャラだけ（TRK でのぞく）。ねばりづよいは、章のはじめからいる子 */genki:['元気いっぱい','たのしさのへる速さ0.6倍'],ryouri:['料理じょうず','料理にかかる時間0.7倍'],tane:['たねはこび','外のふしぎな種を拾いに行く']};
 const EL_WORK={water:1.3,earth:.75},EL_STA={water:.7,earth:1.45};/* 属性ごとの作業スピード・スタミナ */
-const trt=(r,k)=>!!(r&&r.vr&&r.vr.tr===k),recK=r=>trt(r,'nebari')?2:1;/* recK：つかれのとれる速さ（ねばりづよい子は2倍） */
+const trt=(r,k)=>!!(r&&r.vr&&r.vr.tr===k),recK=r=>(trt(r,'nebari')?2:1)*(NEARTREE.has((r.y|0)*W+(r.x|0))?1.1:1);/* ご神木のまわり3マス：つかれのとれる速さ+10% *//* recK：つかれのとれる速さ（ねばりづよい子は2倍） */
 /* せいれいごとのばらつき：色(h色相・l明るさ)、まつ毛・ほっぺ、足の速さ・食べる量・力 */
 const KEYVR={'フタバ':{key:true,tr:'nebari',h:0,l:0,lash:false,cheek:true,spd:1,eat:1,pow:1,sta:1,vo:1.18},'ノドカ':{key:true,tr:'tafu',h:0,l:0,lash:false,cheek:true,spd:1,eat:1,pow:1,sta:1,vo:1.02},'ホムラ':{key:true,tr:'nebari',pk:'fireA',h:0,l:0,lash:false,cheek:true,spd:1,eat:1,pow:1,sta:1,vo:1.08},'シズク':{key:true,tr:'hataraki',h:0,l:0,lash:false,cheek:true,spd:1,eat:1,pow:1,sta:1,vo:1.12},'ホノ':{key:true,tr:'',pk:'fireB',h:-6,l:.04,lash:false,cheek:false,spd:1,eat:1,pow:1,sta:1,vo:.95},'アオ':{key:true,tr:'shoshoku',h:8,l:0,lash:true,cheek:false,spd:1,eat:1,pow:1,sta:1,vo:1.12},'フウ':{key:true,tr:'hayaashi',h:0,l:-.03,lash:true,cheek:true,spd:1,eat:1,pow:1,sta:1,vo:1.05}};
 function mkVar(name,el){if(KEYVR[name])return Object.assign({},KEYVR[name]);const R=()=>Math.random()*2-1;const sg=Math.random()<.5?-1:1;return{h:Math.round(sg*(12+Math.random()*33)),l:Math.round(R()*14)/100,lash:Math.random()<.4,cheek:Math.random()<.5,spd:Math.round((1+R()*.2)*100)/100,eat:Math.round((1+R()*.2)*100)/100,pow:Math.round((1+R()*.25)*100)/100,sta:Math.round((1+R()*.2)*100)/100,vo:Math.round((1.12+R()*.16)*100)/100,tr:pick(TRK(el))}}

@@ -4,7 +4,7 @@ const houseRes=h=>S.res.filter(r=>h.set.has((r.y|0)*W+(r.x|0)));
 const COMFMAX=300;// 住み心地の上限
 // 住み心地（0〜300）：ベッド・家具・床・人数で決まる。高いとよく眠れて、低いとたのしさが下がる
 const COMFR={rockart:1,jar:1,torch:1,clover:1,bellf:1,salvia:1,lily:1,lotus:1,lamp:2,vane:2};/* 家の外でも住み心地に入る範囲（マス） */
-const COMFY={kabedougu:3,taru:3,asabukuro:3,makidana:3,kabebukuro:3,takebench:5,takeakari:5,shishiodoshi:6,hoshirug:5,mimamori:6,yomawari:6,oyasumi:8,yonaka:10,toro:6,stool:2,stable:4,pouf:3,achair:5,ltable:5,rug1:5,sofa1:6,rug2:6,tub:3,sink:4,crate:6,monstera:10,shelf1:12,wreath:10,curtain1:10,cabinet:12,paint2:10,shelf2:13,curtain2:10,paint3:10,wshelf:12,paint1:14,bathtub:16,candle:3,lantern:5,flamp:6,window:5,bed:10,table:8,chair:4,oven:6,lamp:6,torch:4,bench:5,jar:5,rockart:5,chochin:6,furin:8,ema:8,komainu:10,kadomatsu:10,vane:4,clover:4,bellf:4,salvia:4,lily:4,lotus:4,stor:3,mbox:3};
+const COMFY={kabedougu:3,taru:3,asabukuro:3,makidana:3,kabebukuro:3,takebench:5,takeakari:5,andon:5,shishiodoshi:6,hoshirug:5,mimamori:6,yomawari:6,oyasumi:8,yonaka:10,toro:6,stool:2,stable:4,pouf:3,achair:5,ltable:5,rug1:5,sofa1:6,rug2:6,tub:3,sink:4,crate:6,monstera:10,shelf1:12,wreath:10,curtain1:10,cabinet:12,paint2:10,shelf2:13,curtain2:10,paint3:10,wshelf:12,paint1:14,bathtub:16,candle:3,lantern:5,flamp:6,window:5,bed:10,table:8,chair:4,oven:6,lamp:6,torch:4,bench:5,jar:5,rockart:5,chochin:6,furin:8,ema:8,komainu:10,kadomatsu:10,vane:4,clover:4,bellf:4,salvia:4,lily:4,lotus:4,stor:3,mbox:3};
 function houseComfort(h){let bed=0,furn=0,fl=0,n=0;const seen=new Set();
   const kc={};for(const j of h.inside){n++;if(S.floor[j])fl++;const o=S.obj[j];if(!o)continue;if(BEDSET.has(o)){bed++;continue}/* ベッド（よぞらのベッドも）は数だけ */if(!COMFY[o])continue;{kc[o]=(kc[o]||0)+1;furn+=COMFY[o]*(kc[o]>2?.5:1);seen.add(o)}}/* 同じ家具は2つまで。3つ目からは半分 */
   for(const o of rugsIn(h.inside)){if(!COMFY[o])continue;kc[o]=(kc[o]||0)+1;furn+=COMFY[o]*(kc[o]>2?.5:1);seen.add(o)}/* ラグ（家の中に1マスでもかかっていれば） */
@@ -19,7 +19,7 @@ function houseComfort(h){let bed=0,furn=0,fl=0,n=0;const seen=new Set();
 
 
 
-const LIGHTF=new Set(['torch','lamp','lantern','candle','flamp','yomawari','toro','takeakari']);/* 灯りになる家具 */
+const LIGHTF=new Set(['torch','lamp','lantern','candle','flamp','yomawari','toro','takeakari','andon']);/* 灯りになる家具 */
 // すきな家具：その家具が家にあると、そのせいれいにとっての住み心地が上がる（名前から決まる）
 const LIKEF=['rockart','jar','vane','bench','table','torch','candle','lantern','sofa1','achair','rug1','monstera','shelf1','paint1','curtain1','birdbath','parasol','stool','pouf'];
 /* 新しいせいれいが来たときのひとこと。性格：木=げんき・土=のんびり・火=らんぼう（あねご／あにき）・水=知的・風=キザ・高貴 */
