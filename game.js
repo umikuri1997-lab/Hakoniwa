@@ -2189,7 +2189,7 @@ const INDL=new Set(['candle','lantern','flamp']);/* 室内の灯り：家の中�
 const LSPR=new Map();function lightSpr(R){/* 明かりの光の絵（半径 R、まん中の明るさ .9）。半径ごとに1まいだけ作っておく */let c=LSPR.get(R);if(c)return c;c=document.createElement('canvas');c.width=c.height=R*2;const g=c.getContext('2d'),gr=g.createRadialGradient(R,R,2,R,R,R);gr.addColorStop(0,'rgba(255,214,120,.9)');gr.addColorStop(1,'rgba(255,200,100,0)');g.fillStyle=gr;g.fillRect(0,0,R*2,R*2);LSPR.set(R,c);return c}
 const LIGHTP={/* 夜の明かり：光のまん中（マスの左上から dx・dy ドット）と、光の半径 R */
   lamp:{dx:16,dy:3,R:100},tower:{dx:16,dy:6,R:150},yogan:{dx:32,dy:8,R:60},lighthouse:{dx:32,dy:-78,R:130},campfire:{dx:16,dy:14,R:110},
-  statue:{dx:16,dy:-6,R:110},torch:{dx:16,dy:-12,R:105},candle:{dx:16,dy:10,R:45},lantern:{dx:16,dy:6,R:45},flamp:{dx:16,dy:-6,R:45},takeakari:{dx:16,dy:14,R:90}};
+  statue:{dx:16,dy:-6,R:110},torch:{dx:16,dy:-17,R:105},candle:{dx:16,dy:10,R:45},lantern:{dx:16,dy:6,R:45},flamp:{dx:16,dy:-6,R:45},takeakari:{dx:16,dy:14,R:90}};
 function steleF(j){const o=S.obj[j],b=o&&BL[o]&&BL[o].hp;if(!b||!STELES.length)return 1;const x=j%W,y=(j/W)|0;for(const q of STELES)if(Math.hypot(q%W-x,((q/W)|0)-y)<=5)return (BL[o].hpS||b)/b;return 1}/* 石碑：まわり5マスの壁は、じょうぶさが BL の hpS（実数で書いてある）になる */
 function litNear(h,x,y){for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++)if(h.set.has((y+dy)*W+x+dx))return true;return false}/* 家の中の灯り：家ぜんたいと、そこから1マス */
 function lightMul(x,y){for(const j of LIGHTS)if(S.obj[j]==='toro'&&(j%W+.5-x)**2+(((j/W)|0)+.5-y)**2<12.25)return .75;return lightAt(x,y)?.8:1}/* 灯りの中のコワイノの速さ：石どうろう0.75倍・ふつうの灯り0.8倍 */
@@ -5767,7 +5767,7 @@ function unhold(){if(NEWRES!=null){HOLD.delete(NEWRES);const r=S&&S.res.find(x=>
 function closeSheet(){if(S&&S.flags){if(sheet==='shop'&&S.flags.traded)S.flags.tradedSeen=1;if(sheet==='menu'&&S.flags.oracleSet)S.flags.oracleSeen=1}/* おつげをえらんだあと、メニューをとじたら（もどってからとじても） */sheet=null;unhold();$('#sheetWrap').hidden=true;if(LVQ){const q=LVQ;LVQ=null;setTimeout(()=>{if(sheet)LVQ=q;else lvShow(...q)},250)}if(S&&S.flags.tapPend&&!S.flags.tapped&&!(S.pendTalk&&S.pendTalk.tapped)){talkOnce('tapped',[[GOD,'そうそう、そんな感じじゃ。おなかやたのしさが減っておったら、気にかけてやっておくれ。'],[POKO,'#joy|えへへ、見られちゃった。']],250);setTimeout(checkQuest,400)}}
 function el(html){const d=document.createElement('div');d.innerHTML=html.trim();return d.firstElementChild}
 /* たね：たね袋の絵＋作物の小さな絵 */
-function seedIcon(k){const c=document.createElement('canvas');c.width=c.height=64;const g=c.getContext('2d');const a=ART.bag;if(a&&a.ok){const h=60,w=h*a.w/a.h;g.drawImage(a.img,(64-w)/2,2,w,h)}return c.toDataURL()}/* たねは、どの作物も同じ、たねのふくろの絵（もらった絵） */
+function seedIcon(k){const c=document.createElement('canvas');c.width=c.height=64;const g=c.getContext('2d');const a=ART.bag;if(a&&a.ok){const h=56,w=h*a.w/a.h;g.drawImage(a.img,(64-w)/2-4,4,w,h)}g.save();g.translate(30,26);g.scale(1.1,1.1);drawCrop(g,k,0,0,100,true);g.restore();return c.toDataURL()}/* たねは、たねのふくろ（もらった絵）と、育つ作物の絵のセット */
 function cropIcon(k){const c=document.createElement('canvas');c.width=c.height=64;const g=c.getContext('2d');g.scale(2,2);drawCrop(g,k,0,0,100,true);return c.toDataURL()}
 /* 説明は❓をおしたときだけ出す */
 function helpify(r,text){if(!r||!text)return r;const tx=r.querySelector('.tx');if(!tx)return r;const q=document.createElement('button');q.className='qbtn';q.textContent='?';q.setAttribute('aria-label','説明');const nm=tx.querySelector('b').textContent;q.onclick=e=>{e.stopPropagation();sfx('tap');helpPop(nm,text)};tx.querySelector('b').appendChild(q);return r}
@@ -6322,7 +6322,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='905';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='906';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
