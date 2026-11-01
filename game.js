@@ -1098,9 +1098,9 @@ const SPOTS=[
   {k:'yasumi',n:'やすみば',main:o=>BENCHES.has(o),need:[[o=>o==='parasol',1]],how:'ベンチと、パラソル',eff:'ベンチで休むと、つかれのとれ方+10%'},
   {k:'camp',n:'キャンプ場',main:o=>o==='campfire',need:[[o=>BENCHES.has(o),2]],how:'たき火と、ベンチ2つ',eff:'たき火で遊ぶと、たのしさ+10%'},
   {k:'funsui',n:'ふんすいひろば',main:o=>o==='fountain',need:[[o=>BENCHES.has(o),1],[(o,q)=>FLOWERS.has(o)&&!isBud(q),2]],how:'噴水と、ベンチと、花2つ',eff:'噴水で遊ぶと、たのしさ+10%'},
-  {k:'monoheya',n:'ものおき部屋',room:1,main:o=>o==='mbox',need:[[o=>o==='asabukuro',1],[o=>o==='makidana',1]],how:'家の中に、素材箱と、あさぶくろと、まき棚',eff:'素材をしまえる数+15%',cap:{mat:.15}},
-  {k:'chozo',n:'ちょぞう部屋',room:1,main:o=>o==='stor',need:[[o=>o==='taru',2]],how:'家の中に、食料箱と、たる2つ',eff:'食料をしまえる数+15%',cap:{food:.15}},
-  {k:'naya',n:'なや',room:1,main:o=>o==='crate',need:[[o=>o==='taru',1],[o=>o==='asabukuro',1]],how:'家の中に、木箱と、たると、あさぶくろ',eff:'食料と素材をしまえる数+10%',cap:{food:.1,mat:.1}},
+  {k:'monoheya',n:'ものおき部屋',room:1,main:o=>o==='mbox',need:[[o=>o==='asabukuro',1],[o=>o==='makidana',1]],how:'家の中に、素材箱と、あさぶくろと、まき棚',eff:'素材をしまえる数+20%',cap:{mat:.2}},
+  {k:'chozo',n:'ちょぞう部屋',room:1,main:o=>o==='stor',need:[[o=>o==='taru',2]],how:'家の中に、食料箱と、たる2つ',eff:'食料をしまえる数+20%',cap:{food:.2}},
+  {k:'naya',n:'なや',room:1,main:o=>o==='crate',need:[[o=>o==='taru',1],[o=>o==='asabukuro',1]],how:'家の中に、木箱と、たると、あさぶくろ',eff:'食料と素材をしまえる数+15%',cap:{food:.15,mat:.15}},
   {k:'shinshitsu',n:'しんしつ',room:1,main:o=>BEDSET.has(o),need:[[o=>o==='shelf1'||o==='shelf2',1]],how:'家の中に、ベッドと、本棚（かざり棚でも）',eff:'眠るときの、つかれのとれ方+10%'},
   {k:'ofuro',n:'おふろば',room:1,main:o=>o==='bathtub',need:[[o=>o==='tub',1]],how:'家の中に、バスタブと、水おけ',eff:'おふろのたのしさ+10%'},
   {k:'hana',n:'花のベンチ',main:o=>BENCHES.has(o),need:[[(o,q)=>FLOWERS.has(o)&&!isBud(q),3]],how:'ベンチと、花3つ',eff:'ベンチで休むと、たのしさ+10%'},
@@ -6314,7 +6314,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='886';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='888';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
