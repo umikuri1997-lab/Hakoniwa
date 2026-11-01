@@ -1443,7 +1443,7 @@ let FOUT=null,FOUTT=-1;function fenceOut(){/* 柵（門もふくむ）と壁で�
   for(let x=0;x<W;x++)for(const y of[0,H-1]){const j=y*W+x;if(open(j)&&!out[j]){out[j]=1;q.push(j)}}for(let y=0;y<H;y++)for(const x of[0,W-1]){const j=y*W+x;if(open(j)&&!out[j]){out[j]=1;q.push(j)}}
   while(q.length){const j=q.pop(),x=j%W,y=(j/W)|0;for(const[dx,dy]of DIRS){const nx=x+dx,ny=y+dy;if(nx<0||ny<0||nx>=W||ny>=H)continue;const k=ny*W+nx;if(!out[k]&&open(k)){out[k]=1;q.push(k)}}}
   FOUT=out;FOUTT=t;return out}
-let PMASK=null,PMASKT=-1;function patrolMask(){/* 見回りの場所：1＝柵・塀（家の壁・ドアがまざってもよい）でかこまれた所、2＝家のまわり3マス、3＝家の中。1時間ごとに作りなおす */const t=Math.floor(S.t);if(PMASK&&PMASKT===t)return PMASK;
+let PMASK=null,PMASKT=-1;function patrolMask(){/* 見回りの場所：1＝柵・塀（家の壁・ドアがまざってもよい）でかこまれた所、2＝家のまわり3マス、3＝家の中。ゲームの1分ごとに作りなおす */const t=Math.floor(S.t);if(PMASK&&PMASKT===t)return PMASK;
   const m=new Uint8Array(W*H),out=new Uint8Array(W*H),q=[],bar=j=>{const o=typeAt(j);return FENCE_IDS.has(o)||HOME_WALLS.has(o)||HOME_DOORS.has(o)};
   for(let x=0;x<W;x++)for(const y of[0,H-1]){const j=y*W+x;if(!bar(j)&&!out[j]){out[j]=1;q.push(j)}}for(let y=0;y<H;y++)for(const x of[0,W-1]){const j=y*W+x;if(!bar(j)&&!out[j]){out[j]=1;q.push(j)}}
   while(q.length){const j=q.pop(),x=j%W,y=(j/W)|0;for(const[dx,dy]of DIRS){const nx=x+dx,ny=y+dy;if(nx<0||ny<0||nx>=W||ny>=H)continue;const k=ny*W+nx;if(!out[k]&&!bar(k)){out[k]=1;q.push(k)}}}
@@ -1480,7 +1480,7 @@ function decide0(r){
   if(r.refill&&r.hunger<hMax(r)-1&&S.food>0&&!r.meal&&goEat(r,G))return;/* マックスまで食べてから、たたかいにもどる */
   if(r.meal&&S.enemies.some(e=>e.spawned&&!e.dead))return startAct(r,G,'eat',-1,{pt:0,pw:0});/* コワイノがいるときは、とってきたごはんを、その場で食べる */
   if(r.elem!=='fire'&&r.hunger<hMax(r)*.5&&S.food>0&&!(r.eatTry>S.t)&&S.enemies.some(e=>e.spawned&&!e.dead)){if(goEatSafe(r))return;r.eatTry=S.t+10}/* コワイノがいても、おなかが半分より少なければ、ふるえたり逃げたりするより先に、安全に行ける食料箱へ食べにいく（行けなければ10分ごとにためす） */
-  if(isNight()&&r.elem==='wood'&&r.hunger>=50&&!r.coffin&&enemyLive()){const w=TOWERS.find(j=>S.obj[j]==='watch'&&free('wp'+j,1)&&!S.res.some(q=>q!==r&&q.act&&q.act.type==='watchpost'&&q.act.obj===j));if(w!=null){const st=nearest(G,k=>walk(k)&&adjOf(k,q=>q===w||(S.obj[q]==='part'&&S.ref[q]===w))>=0,120);if(st>=0)return startAct(r,G,'watchpost',st,{key:'wp'+w,obj:w})}}/* 夜、コワイノがいるあいだ、木のせいれいが見張り台に立つ（1つに1人） */
+  if(isNight()&&r.elem==='wood'&&r.hunger>=50&&!r.coffin&&enemyLive()){for(const w of TOWERS){if(S.obj[w]!=='watch'||!free('wp'+w,1)||S.res.some(q=>q!==r&&q.act&&q.act.type==='watchpost'&&q.act.obj===w))continue;const st=nearest(G,k=>walk(k)&&adjOf(k,q=>q===w||(S.obj[q]==='part'&&S.ref[q]===w))>=0,120);if(st>=0)return startAct(r,G,'watchpost',st,{key:'wp'+w,obj:w})}}/* 行けない見張り台はとばして、行ける台へ *//* 夜、コワイノがいるあいだ、木のせいれいが見張り台に立つ（1つに1人） */
   if(!isWatch(r)&&hostileNow(r)&&r.hunger>=50&&!r.coffin&&goShiver(r,G))return;/* たたかえない子は、コワイノがいるあいだ、家でふるえる *//* 食べ物のところへ逃げてきたら、ちゃんと食べる */
   // 夜に家の中にいるせいれいは、おなかがすいても外へは出ない（見張り番の火のせいれいはべつ）
   if(isNight()&&!(isWatch(r)&&S.enemyOn&&r.hunger>=50)&&!(r.hunger<50&&S.food>0)&&!(r.hunger<hMax(r)*.5&&S.food>0)&&!HOME_DOORS.has(S.obj[here])){const out=insideSet();if(!out[here])for(let j=0;j<W*H;j++)if(out[j]||HOME_DOORS.has(S.obj[j]))G.dist[j]=-1}
@@ -2066,6 +2066,7 @@ function updRes(r,dt){rescueStuck(r);if((RHOLD.get(r)||0)>performance.now())retu
     const fh=r.fleeHouse;r.fleeHouse=false;const en=S.enemies.find(e=>e.spawned&&Math.hypot(e.x-r.x,e.y-r.y)<(fh?12:6));/* 家の壁がこわされたときは、少しはなれたコワイノからも逃げる */
     if(en){r.fleeT=S.t;endAct(r);const G=bfs(r.x|0,r.y|0);if(withFlee(r,fleeHit,G))return}}
   if(r.act&&!isWatch(r)&&hostileNow(r)&&r.hunger>=30&&!['shiver','eat','fetch','flee','faint','forage','pray','bury','reunion','sevreact','step','watchpost'].includes(r.act.type)&&!r.coffin)endAct(r);/* 寝ている子も、コワイノが基地に入ってきたら起きて、家でふるえる *//* たたかえない子は、コワイノがいるあいだ、家でふるえる */
+  if(r.elem==='wood'&&r.act&&(r.act.type==='sleep'||r.act.type==='stay')&&r.hunger>=50&&!r.coffin&&isNight()&&enemyLive()&&TOWERS.filter(j=>S.obj[j]==='watch').length>S.res.filter(q=>q.act&&q.act.type==='watchpost').length)endAct(r);/* コワイノが来たら、ねている木の子も起きて、だれも立っていない見張り台へ */
   if(r.act&&isNight()&&!NIGHT_OK.includes(r.act.type))endAct(r)
   if(r.act&&r.act.type==='sevreact'&&(r.hunger<30||hungry(r)||r.energy<10||!SEV_ENCOUNTERS.get(S)||!sevEncounterSafe(SEV_ENCOUNTERS.get(S))))endAct(r);
   if(r.act&&r.act.type==='questjoy'&&(r.hunger<30||hungry(r)||!questVisitSafe(r,r.act.obj)))endAct(r);
@@ -6348,7 +6349,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='926';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='927';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
