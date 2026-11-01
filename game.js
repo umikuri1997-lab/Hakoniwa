@@ -3397,7 +3397,9 @@ function gbuild(cx,cy,q){/* 区画 (cx,cy) のくわしい絵を作る（まわ�
   let n=0;for(const v of GRD.c.values())if(v.f)n++;if(n>GFULL){const L=[...GRD.c.values()].filter(v=>v.f&&v.u<RFN-1).sort((a,b)=>a.u-b.u);for(const v of L){if(n<=GFULL)break;v.f.width=v.f.height=0;v.f=null;n--}}/* くわしい区画が多すぎたら、しばらく使っていない区画からすてる（半分の絵はのこす） */}
 function stagePreload(){/* マップ全体：地面の区画（くわしい絵と半分の絵）・水面の区画・段差の部品を、ぜんぶ作る */if(dirty)rebuildStatic(STATICFULL);if(GRD.s!==S)gclear();for(let cy=0;cy<=(H-1)>>4;cy++)for(let cx=0;cx<=(W-1)>>4;cx++){const q=gq(cx,cy);if(!q.f||q.st)gbuild(cx,cy,q)}GRD.any=true;
   if(WD!==1&&waterChipsOK())for(let cy=0;cy<=(H-1)>>4;cy++)for(let cx=0;cx<=(W-1)>>4;cx++)waterChunk(cx,cy);if(S.hi&&cliffChipsOK()){CPRE=S;cliffPreload()}GRD.pre=S}
-function stageLoading(on){/* 「マップを読みこみ中…」（作るあいだ、画面をおおう） */let d=document.getElementById('stageLd');if(!d){d=document.createElement('div');d.id='stageLd';d.textContent='マップを読みこみ中…';d.style.cssText='position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;background:rgba(30,24,16,.55);color:#fff3d6;font-size:16px';document.body.appendChild(d)}d.hidden=!on;return d}
+function assetsOK(){/* 絵がぜんぶ読みこめたか（マップチップのアトラス・アイコン・そのほかの絵） */for(let n=0;n<(window.CHIPA||[]).length;n++){const a=chipPage(n);if(!a.ok&&!a.bad)return false}for(const k in ICI){const im=ICI[k];if(!im.ok&&!im.bad&&!im.complete)return false}for(const k in ART){const a=ART[k];if(!a.ok&&!a.bad)return false}return groundChipsOK()&&(WD===1||waterChipsOK())&&cliffChipsOK()}
+const stageReady=()=>GRD.pre===S;/* マップ全体を作りおわったか。おわるまで、マップを見せず、時間も止める */
+function stageLoading(on){/* 「マップを読みこみ中…」（作るあいだ、画面をおおう） */let d=document.getElementById('stageLd');if(!d){d=document.createElement('div');d.id='stageLd';d.textContent='マップを読みこみ中…';d.style.cssText='position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;background:#1e1810;color:#fff3d6;font-size:16px';document.body.appendChild(d)}d.hidden=!on;return d}
 function gget(cx,cy){/* 区画のくわしい絵（なければ・古ければ、すぐ作る） */if(GRD.s!==S)gclear();const q=gq(cx,cy);if(!q.f||q.st)gbuild(cx,cy,q);q.u=RFN;return q.f}
 function gclear(){for(const v of GRD.c.values()){if(v.f)v.f.width=v.f.height=0;if(v.l)v.l.width=v.l.height=0}GRD.c.clear();GRD.s=S;GRD.any=false}
 function gblit(c,sx,sy,sw,sh,dx,dy,dw,dh,lod){/* 地面の下絵の (sx,sy,sw,sh) を、c の (dx,dy,dw,dh) へ描く（区画をまたいでもよい）。lod：半分の細かさの絵を使う */const kx=dw/sw,ky=dh/sh;
@@ -3584,7 +3586,7 @@ function tStar(c,cx,cy,r){c.fillStyle=TGO;c.beginPath();for(let k=0;k<8;k++){con
 function tBanner(c,x,y,h,now){const w=Math.sin((now||0)/600+x)*1;c.fillStyle='#8a5a33';c.fillRect(x-.8,y-2,1.6,h+10);circ(c,x,y-3,1.6,TGO);c.fillStyle=TBL;c.beginPath();c.moveTo(x+1,y);c.lineTo(x+8,y+w*.3);c.lineTo(x+8+w*.5,y+h);c.lineTo(x+4.5,y+h-3);c.lineTo(x+1,y+h);c.closePath();c.fill();c.fillStyle=TGO;c.fillRect(x+3.6,y+h*.4-1.6,1.6,3.2);c.fillRect(x+2.8,y+h*.4-.8,3.2,1.6)}
 // 見た目だけ1.5倍にするもの（当たり判定・置けるマスはそのまま）
 const ART={"fl_salvia": {"w": 91, "h": 96, "src": "assets/g/106ba40c68.webp"}, "fl_lily": {"w": 106, "h": 96, "src": "assets/g/103f17950d.webp"}, "fl_clover": {"w": 91, "h": 96, "src": "assets/g/c8b2295da8.webp"}, "fl_lotus": {"w": 150, "h": 96, "src": "assets/g/5d30b7be2f.webp"}, "fl_bell": {"w": 116, "h": 96, "src": "assets/g/8618f36cec.webp"}, "tree": {"w": 140, "h": 140, "src": "assets/g/88a858c5e3.webp"}, "bush": {"w": 146, "h": 96, "src": "assets/g/7e209f4d1b.webp"}, "dead": {"w": 138, "h": 140, "src": "assets/g/8c9a3ef253.webp"}, "rock": {"w": 122, "h": 96, "src": "assets/g/9c4f9195d8.webp"}, "bag": {"w": 88, "h": 96, "src": "assets/g/c045f0c58f.webp"}};/* ユーザー提供の花・木・岩・茂み・たね袋 */
-for(const k in ART){const a=ART[k];a.img=new Image();a.img.onload=()=>{a.ok=true;artLoaded()};a.img.src=a.src}
+for(const k in ART){const a=ART[k];a.img=new Image();a.img.onload=()=>{a.ok=true;artLoaded()};a.img.onerror=()=>{a.bad=true};a.img.src=a.src}
 const BIG2=new Set(['windmill','statue']);/* 見張り台は2×2マスにぴったりの大きさ（拡大しない） */// 見た目2倍
 const TREES=new Set(['tree','ntree','fruit','deadtree']);// 木はさらに1.5倍
 const SPR_OBJ=new Set(['lumber','quarry','well','puddle','spike','firetrap','gust']);
@@ -3743,7 +3745,7 @@ function chipOf(id,i,rot,sf=''){const C=window.CHIPS;if(!C)return null;const L=(
   const t=ROTS[id];if(!t||t===5)return ch;const r=rot!=null?rot:i==null||!S?0:RUGS.has(id)&&S.rug&&S.rug[i]===id&&S.obj[i]!==id?((S.rugRot||{})[i]||0):S.obj[i]===id?rotAt(i):0;if(!r)return ch;
   let fl=false;if(t===1)fl=true;else if(C[id+'>'+r+sf])ch=C[id+'>'+r+sf];else if(t===4&&r===3&&C[id+'>1'+sf]){ch=C[id+'>1'+sf];fl=true}else if(sf)return null;/* sf='.front'：せいれいの手前に重ねる絵 */
   if(!ch||!fl)return ch;const fw=((szR(id,r)||[1,1])[0])*32;return ch._fl&&ch._fl.fw===fw?ch._fl:(ch._fl={src:ch,ax:ch.ax,ay:ch.ay,w:ch.w,h:ch.h,f:ch.f,flip:1,fw})}/* 向きのある家具は「id>向き」の絵。左向きは右向きの反転。左右反転だけの物は、もとの絵を反転 */
-const CHA={};function chipPage(n){/* マップチップのアトラス（大きな絵）。1まいごとに1回だけ読みこむ */let a=CHA[n];if(!a){a=CHA[n]={im:new Image(),ok:false,q:[]};a.im.onload=()=>{a.ok=true;const q=a.q;a.q=[];for(const f of q)f();dirty=true};a.im.src=(window.CHIPA||[])[n]}return a}
+const CHA={};function chipPage(n){/* マップチップのアトラス（大きな絵）。1まいごとに1回だけ読みこむ */let a=CHA[n];if(!a){a=CHA[n]={im:new Image(),ok:false,q:[]};a.im.onload=()=>{a.ok=true;const q=a.q;a.q=[];for(const f of q)f();dirty=true};a.im.onerror=()=>{a.bad=true};a.im.src=(window.CHIPA||[])[n]}return a}
 function atlasFrame(r,id){/* アトラスの (x,y,w,h) を、1まいの絵（キャンバス）に切り出す。読みこむまでは ok=0 */const[n,x,y,w,h]=r,c=document.createElement('canvas');c.width=w;c.height=h;c.ok=0;const a=chipPage(n),done=()=>{c.getContext('2d').drawImage(a.im,x,y,w,h,0,0,w,h);c.ok=1;try{delete iconCache[id]}catch(e){}};if(a.ok)done();else a.q.push(done);return c}
 function chipImgs(ch,id){if(!ch._im)ch._im=ch.f.map(r=>atlasFrame(r,id));return ch._im}
 const PARTMV={/* 動く部品の動き：rot＝回る角度、sx・sy＝のびちぢみ（どれも支点のまわり） */
@@ -4414,7 +4416,7 @@ const ICONS={shina:'assets/g/acf901b1ec.webp',kasa:'assets/g/7149963860.webp',ku
 /* 表情アイコン（いただいた絵） */
 /* メニューと吹き出しのアイコン */
 const EMO_IC={'🎋':'bamboo','🎍':'takenoko','🍧':'kakigori','🍬':'wataame','🍝':'yakisoba','🐙':'takoyaki','🍭':'ringoame','😊':'f_smile','😌':'f_smile','😆':'f_laugh','😠':'f_angry','😤':'f_angry','💤':'f_sleep','😴':'f_sleep','🌾':'mugi','🫐':'berry','🍎':'apple','🐟':'fish','🐠':'yakizakana','🍞':'bread','🍠':'yakiimo','🍮':'yakiberry','🥧':'yakiapple','🍲':'soup','🪵':'wood','🪨':'stone','🔥':'fire','🍳':'pan','📦':'m_box','💬':'m_chat','🥔':'potato','☕':'m_support'};
-const ICI={};for(const k in ICONS){const im=new Image();im.onload=()=>{im.ok=1;dirty=true};im.src=ICONS[k];ICI[k]=im}
+const ICI={};for(const k in ICONS){const im=new Image();im.onload=()=>{im.ok=1;dirty=true};im.onerror=()=>{im.bad=1};im.src=ICONS[k];ICI[k]=im}
 const icURL=t=>EMO_IC[t]?ICONS[EMO_IC[t]]:null;
 const OBJIC=new Map();/* 'obj:<id>'：その物の絵のアイコン */const emoImg=t=>{if(typeof t==='string'&&t.startsWith('chip:')){const k=t.slice(5),C=window.CHIPS;if(!C||!C[k])return null;const im=chipImgs(C[k],k)[0];return im&&im.ok?im:null}if(typeof t==='string'&&t.startsWith('ic:')){const q=ICI[t.slice(3)];return q&&q.ok?q:null}if(typeof t==='string'&&t.startsWith('obj:')){let im=OBJIC.get(t);if(!im){const u=iconURL(t.slice(4));if(!u)return null;im=new Image();im.src=u;OBJIC.set(t,im)}return im.complete&&im.naturalWidth?im:null}const ic=EMO_IC[t];if(ic&&ICI[ic].ok)return ICI[ic];if(t==='🪨')return rockImg();const k=EMO_OF[t];if(k&&EMOI[k].ok)return EMOI[k];const e=typeof EIMGI==='undefined'?null:EIMGI[nfe(t)];return e&&e.ok?e:null};
 const EIMG={"🥬": "assets/g/5060956a16.webp","🌱": "assets/g/ddb81b127a.webp", "🌼": "assets/g/0ed6b4aade.webp", "🍇": "assets/g/8e281cad26.webp", "🍙": "assets/g/b6579368c3.webp", "🎁": "assets/g/3b401b133d.webp", "🎈": "assets/g/5425865b42.webp", "🎣": "assets/g/dfb64cc0a7.webp", "🎵": "assets/g/55ef8edddb.webp", "👏": "assets/g/be7b7ab2f2.webp", "💚": "assets/g/5b43ce83e8.webp", "💦": "assets/g/6915a2afb8.webp", "💧": "assets/g/62e219622c.webp", "🔨": "assets/g/d16cde1f6d.webp", "🧺": "assets/g/2958eee0a3.webp", "🪓": "assets/g/aeb012eedf.webp", "⛏": "assets/g/e9f2ed80d0.webp", "✨": "assets/g/72f109c9a6.webp", "🏠": "assets/g/85c1f2f80d.webp", "🎉": "assets/g/766f579af3.webp", "♨": "assets/g/d36dfb2330.webp", "🤝": "assets/g/aef0a1bcc3.webp", "⚔": "assets/g/350754662b.webp", "💎": "assets/g/f37efc10fd.webp", "🏡": "assets/g/2e7280b902.webp", "🌙": "assets/g/85ca409800.webp", "🌑": "assets/g/528f694f20.webp", "🏆": "assets/g/5b656fb4a5.webp", "📌": "assets/g/04c7ab4501.webp", "🍃": "assets/g/1eb15e6975.webp", "🌟": "assets/g/adfec7ff83.webp", "🎯": "assets/g/6b1cb0d850.webp", "🪑": "assets/g/2e65a41c7d.webp", "⬆": "assets/g/3b473890f6.webp", "☀": "assets/g/df54e16892.webp", "☔": "assets/g/431750b5a8.webp", "★": "assets/g/0c3128f3de.webp", "☆": "assets/g/f442887829.webp", "♥": "assets/g/ce24a2a5c7.webp", "♪": "assets/g/92f4a76d1d.webp", "✓": "assets/g/301536d4a0.webp", "⚙": "assets/g/05c75a8ddf.webp", "⛩": "assets/g/fc15f6a949.webp", "📔": "assets/g/b5ad2cfa77.webp", "📜": "assets/g/6b126952c1.webp", "📺": "assets/g/5220592373.webp", "🔒": "assets/g/46046e6402.webp", "🧭": "assets/g/3b0b9bbe3e.webp", "🦌": "assets/g/b284f951ef.webp", "⭐": "assets/g/e239d430f8.webp", "💫": "assets/g/9fcb4f768d.webp", "👻": "assets/g/e415a63d84.webp", "🍅": "assets/g/bdf6d4891c.webp", "😋": "assets/g/4d4933be73.webp", "🌰": "assets/g/ddb81b127a.webp"};/* 絵文字のかわりに使う絵（いただいたもの） */
@@ -5270,7 +5272,6 @@ function cliffRow(y,R,top){/* 1つのかたまり（行・段）の段差を描�
 const natBarY=j=>((j/W)|0)*TS-(S.obj[j]==='rock'?7:30)-hiAt(j)*LIFT;/* 木・岩の上の、のこりのバーの上はし */
 function render(now){RFN++;
   if(dirty)rebuildStatic(STATICFULL);
-  if(GRD.pre!==S&&!GRD.busy&&groundChipsOK()&&(WD===1||waterChipsOK())&&cliffChipsOK()){GRD.busy=true;const ld=stageLoading(true),me=S;setTimeout(()=>{try{if(S===me)stagePreload()}finally{GRD.busy=false;stageLoading(false)}},40)}/* ステージを開いたら、マップ全体を先に作っておく（ゲーム中に作らない） */
   if(S.hi&&CPRE!==S&&cliffChipsOK()){CPRE=S;cliffPreload()}
   ctx.setTransform(1,0,0,1,0,0);ctx.fillStyle='#8f8262';ctx.fillRect(0,0,cv.width,cv.height);
   const k=dpr*cam.z;
@@ -6319,7 +6320,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='903';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='904';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
@@ -6356,7 +6357,7 @@ window.__ldDone=1;clearInterval(window.__ldT);$('#tLoad').hidden=true;if(window.
 
 /* ---------- ループ ---------- */
 let last=performance.now(),frameT=0,tutT=0,saveT=0,questT=0,running=true;
-const paused=()=>performance.now()<BOSSHOLD||GIFT_ACTIVE||!started||sheet!=null||!$('#dialog').hidden||!$('#lvup').hidden||!$('#rlv').hidden||NEWRES!=null||!$('#idle').hidden;
+let STLD=false;const paused=()=>!stageReady()||performance.now()<BOSSHOLD||GIFT_ACTIVE||!started||sheet!=null||!$('#dialog').hidden||!$('#lvup').hidden||!$('#rlv').hidden||NEWRES!=null||!$('#idle').hidden;
 /* 寝落ち対策：2分さわらないと、時間を止める */
 let lastIn=performance.now();
 for(const ev of['pointerdown','keydown','wheel'])addEventListener(ev,()=>{lastIn=performance.now();const d=$('#idle');if(!d.hidden){d.hidden=true;last=performance.now()}},true);
@@ -6439,7 +6440,9 @@ function frame(now){
   if(!running)return;requestAnimationFrame(frame);
   const menuOpen=!$('#title').hidden||!$('#maps').hidden;
   if(!S){last=now;return}
-  if(now-frameT<(menuOpen?125:31))return;frameT=now;/* タイトルは静止画なので8コマ/秒。ゲーム中は30コマ/秒 */
+  if(now-frameT<(menuOpen?125:31))return;frameT=now;
+  if(!stageReady()&&!GRD.busy&&started){if(GRD.wS!==S){GRD.wS=S;GRD.w0=now}if(assetsOK()||now-GRD.w0>20000){GRD.busy=true;const me=S;setTimeout(()=>{try{if(S===me)stagePreload()}catch(e){frameErr('preload',e)}finally{GRD.busy=false;if(S===me)GRD.pre=S}},40)}}/* ステージを開いたら、絵がぜんぶ読みこめてから、マップ全体を先に作る（ゲーム中に作らない） */
+  {const ld=started&&!stageReady()&&!menuOpen&&$('#pro').hidden;if(ld!==STLD){STLD=ld;stageLoading(ld)}}/* 作りおわるまで「マップを読みこみ中…」でマップをかくす *//* タイトルは静止画なので8コマ/秒。ゲーム中は30コマ/秒 */
   if(now-tutT>120){tutT=now;try{palArrows();updTut()}catch(e){}}
   const rdt=Math.min(.25,(now-last)/1000);last=now;
   const PZ=started&&sheet!=null,prdt=PZ?0:rdt;/* メニューを開いているあいだは、アニメーションも止める */
@@ -6455,7 +6458,7 @@ function frame(now){
   for(const m of motes){m.y-=prdt*.012*m.s;m.x+=Math.sin(now/2000+m.p)*prdt*.004;if(m.y<0){m.y=1;m.x=Math.random()}}
   if(S.rain)for(const d of rain){d.y+=prdt*1.2*d.s;if(d.y>1){d.y=0;d.x=Math.random()}}
   stepLooks(now,rdt);
-  if(!PZ&&!menuOpen&&$('#pro').hidden){try{render(now)}catch(e){frameErr('render',e)}}/* タイトル・導入会話・メニュー中は、背景ワールドを描かない */
+  if(!PZ&&!menuOpen&&$('#pro').hidden&&stageReady()){try{render(now)}catch(e){frameErr('render',e)}}/* タイトル・導入会話・メニュー中は、背景ワールドを描かない */
   if(AC)wantSong=(!$('#title').hidden||!$('#maps').hidden||!$('#pro').hidden)?'opening':(isDark()?'night':'day');
   if(started){hudT+=rdt;if(hudT>.3){hudT=0;updHUD()}
     if(!GIFT_ACTIVE&&RLVQ.length&&sheet==null&&NEWRES==null&&$('#dialog').hidden&&$('#lvup').hidden&&$('#rlv').hidden)rlvShow(RLVQ.shift());
