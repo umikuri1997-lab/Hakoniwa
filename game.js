@@ -2415,12 +2415,12 @@ function lvShow(l,bonus,opens){
   startClap();/* タップするまで、こっちを向いて拍手 */
   if(STATUE>=0)for(let n=0;n<3;n++)setTimeout(()=>burst(STATUE,'furn','none'),n*260);
 }
-const LEVELUP_ITEMS=new Set(['bridge','path','woodpath','ladder_wood','ladder_bamboo','slope_earth','stairs_wood','stairs_stone','stairs_brick','gate','hwall','door','logfence','bamboofence','floor','brickfloor','stonefloor','window','plasterwall','gravel','wall','sdoor','logwall','brick','brickwall','carpet','curtain1','stone','stonegate']);
+const LEVELUP_ITEMS=new Set(['bridge','path','woodpath','ladder_wood','ladder_bamboo','slope_earth','stairs_wood','stairs_stone','stairs_brick','gate','hwall','door','logfence','bamboofence','floor','brickfloor','stonefloor','window','plasterwall','gravel','wall','sdoor','logwall','brick','brickwall','carpet','curtain1','stone','stonegate','kamizo']);
 const levelUpItemsAt=n=>Object.keys(BL).filter(id=>LEVELUP_ITEMS.has(id)&&BL[id].lv===n&&!BL[id].offerOnly&&(BL[id].w||0)<=WD);
 const visibleLevelRewardsAt=n=>levelUpItemsAt(n).filter(id=>id!=='curtain1'||!S.free);
 function checkLevel(){
   const l=vLv();if(S.lv>l)return;/* 必要なパワーをふやしても、いまの村レベルは下げない */const old=S.lv||1,priorUnlocks={...(S.unlocked||{})},priorRecipes={...(S.recipes||{})};
-  for(let n=2;n<=l;n++)for(const id of visibleLevelRewardsAt(n)){if(BL[id].kind==='block')S.unlocked[id]=true;else if(id==='curtain1'&&!S.free){S.recipes||(S.recipes={});S.recipes[id]=true}}
+  for(let n=2;n<=l;n++)for(const id of visibleLevelRewardsAt(n)){if(BL[id].kind==='block')S.unlocked[id]=true;else if(BL[id].kind==='furn'&&!S.free){S.recipes||(S.recipes={});S.recipes[id]=true}}
   if(l>=2)S.unlocked.path=true;
   if(l>=4&&!S.free){S.unlocked.window=true;S.recipes||(S.recipes={});S.guardianIdeas||(S.guardianIdeas={});S.recipes.window=true;S.guardianIdeas.window=true}
   if(l>old){sfx('level');const allOpen=[];let allBonus=0;for(let n=old+1;n<=l;n++){const bonus=0;const opens=visibleLevelRewardsAt(n).filter(id=>BL[id].kind==='block'?!priorUnlocks[id]:!priorRecipes[id]);allOpen.push(...opens);allBonus+=bonus}
@@ -2523,7 +2523,7 @@ const SUBQ=[/* サブクエスト：メインと別に、いつでもできる�
   {k:'lv_watch2',how:'せいれいがくらしていると、村レベルが上がる',w:0,g:'wood',L:[["K","お願いしたいことがあるんだけど、まだ村がちいさいみたい！"],["K","村がもっと育ったら、おねがいするね！"]],X:[["K","#joy|村、大きくなったね！ やったね、ありがとう！"]],t:'村レベルを2にしよう',at:()=>(qAt('fire'))&&(S.lv<2||(S.subSt||{}).lv_watch2>=2),ok:()=>S.lv>=2,n:2,rw:3,now:()=>S.lv},
  {k:'watch2',how:'「おく」→「見張り台」を置き、合計2つにしよう。せいれいが建てるのを待とう',g:'wood',L:[["K", "あの矢が飛んでいくところ、見てると安心するね！"], ["K", "でも、向こうのはしは、まだ守りがうすいんだ。あっちも守れたらいいなあ。"],['@idea']],X:[['K','見張り台が2つになった！ これで夜も、ちょっと安心だね！'],['K','#joy|あっちへ行く道がすぐわかる目印もあるとうれしいね。'],['K','#joy|見張り台をもうひとつ建ててくれて、ありがとう！ 夜も、ぼくたち安心だね！']],w:0,t:'見張り台を2つにしよう',ln:"向こうのはしも、安心して過ごせたらいいな",at:()=>(qAt('fire'))&&S.lv>=2,ok:()=>cnt('watch')>=2,n:2,now:()=>cnt('watch'),rw:15},
   {k:'watchup',how:'見張り台をタップして「強化する」をえらぶ。パワーと素材を使う',g:'wood',L:[['K','オオカゲって、どのくらい強いのかな……。'],['K','見張り台の矢が、もっと強くなったら、安心して眠れるのになあ。']],X:[['K','見張り台が、ぐっと強くなった！'],['K','#joy|これなら、オオカゲが来ても、きっとだいじょうぶ。守り神さま、ありがとう！']],w:0,t:'見張り台を強くしよう',ln:'見張り台の矢、もっと強くならないかな',at:()=>qAt('ookage')&&!watchUp(),ok:()=>watchUp(),n:1,now:()=>watchUp()?1:0,rw:15},
-  {k:'stor2',how:'神殿の依頼ボードをタップ →「収納」→「食料箱」をはる。できたら「おく」で置く',g:'wood',w:0,L:[['K','土地が広くなったね！ ごはんをしまう場所も、もっとほしいな。'],['K','食料箱をもう1つ、ふやせないかな？']],X:[['K','食料箱が2つ！ 食べものがいっぱい入るね！'],['K','#joy|守り神さま、ありがとう！']],t:'食料箱を2つにしよう',ln:'食料箱がもう1つあると安心だな',at:()=>qAt('baseUp'),ok:()=>cnt('stor')>=2,n:2,now:()=>cnt('stor'),rw:15},
+  {k:'stor2',how:'神殿の依頼ボードをタップ →「収納」→「食料箱」をはる。できたら「おく」で置く',g:'wood',w:0,L:[['K','なかまがふえてきたね！ ごはんをしまう場所も、もっとほしいな。'],['K','食料箱をもう1つ、ふやせないかな？']],X:[['K','食料箱が2つ！ 食べものがいっぱい入るね！'],['K','#joy|守り神さま、ありがとう！']],t:'食料箱を2つにしよう',ln:'食料箱がもう1つあると安心だな',at:()=>qAt('baseUp'),ok:()=>cnt('stor')>=2,n:2,now:()=>cnt('stor'),rw:15},
   {k:'mbox2',how:'神殿の依頼ボードをタップ →「収納」→「素材箱」をはる。できたら「おく」で置く',g:'earth',w:0,L:[['K','木材も石材も、ふえてきたねぇ。'],['K','素材箱がもう1つあったら、あふれずにすむよぉ。']],X:[['K','素材箱が2つだぁ。ぜんぶしまえて、すっきりだねぇ。'],['K','#joy|守り神さま、ありがとうねぇ。']],t:'素材箱を2つにしよう',ln:'素材箱がもう1つほしいねぇ',at:()=>elemCount('water')>=1,ok:()=>cnt('mbox')>=2,n:2,now:()=>cnt('mbox'),rw:15},
   {k:'housefood',w:0,how:'神殿の依頼ボードをタップ →「収納」→「食料箱」をはる。できたら「おく」で家の中に置く',g:'earth',L:[['K','#alarm|夜、「コワイノ」からにげてるときにねぇ、おなかがすいて、外の食料箱まで走っちゃう子がいるんだよぉ。'],['K','家の中に食料箱があったら、外に出なくても食べられるのにねぇ。']],X:[['K','これで、夜におなかがすいても、家の中で食べられるねぇ。'],['K','#joy|守り神さま、ありがとうねぇ。']],t:'家の中に食料箱を置こう',ln:'夜も、家の中でごはんが食べられたらいいねぇ',at:()=>HOUSES.length>0&&S.res.length>=3&&!houseFood(),ok:()=>houseFood(),n:1,now:()=>houseFood()?1:0,rw:15},
   {k:'oldhouse',w:1,how:'「おく」→「オークの壁」をえらんで、南西の古い家のこわれた壁に置く',g:'fire',L:[['K','南西の古い家、壁がくずれてるだろ？'],['K','あそこ、直してやりたいんだ。手を貸しておくれよ。']],X:[['K','#joy|よし、これで家になった！'],['K','ありがとよ、守り神。']],t:'古い家の壁を直そう',ln:'古い家を直せば、夜も安心なんだけどね',at:()=>!!S.enemyOn&&!HOUSES.length,ok:()=>HOUSES.length>0,n:1,now:()=>HOUSES.length?1:0,rw:10},
@@ -2782,7 +2782,7 @@ const JOYU=new WeakMap(),RHOLD=new WeakMap(),DLGN=new Set();/* HOLD：話して�
 const onHold=r=>(RHOLD.get(r)||0)>performance.now()||DLGN.has(r.name)&&!document.getElementById('dialog').hidden;/* 画面だけの時間（セーブしない） */
 
 /* 会話はせいれいの願い、図案はプレイヤーである守り神のひらめき。 */
-const QUEST_INSPIRATIONS={"stor": ["stor"], "mbox": ["mbox"], "table": ["table"], "baseUp": ["kamizo"], "bed": ["bed"], "watch1": ["watch", "spike"], "wind": ["swing"], "wood6": [], "flower50": ["campfire"], "shizukuRest": ["bench", "tub"], "ep1": ["bed"], "ep2": ["table", "swing", "sandbox"], "ep4": ["fountain"], "ep5": ["campfire"], "chair2": ["chair"], "bed3": ["bed"], "light3": ["torch"], "houselight": ["lantern"], "oven": ["oven"], "board": ["board"], "watch2": ["watch"], "wmill": ["windmill"], "toy2": ["sandbox"], "toy3": ["seesaw"], "swing1": ["swing"], "deco3": ["hedge"], "room": ["shelf1", "rug1", "curtain1"], "paint": ["paint2"], "trap4": ["spike"], "jar2": ["jar"], "parasol": ["parasol"]};
+const QUEST_INSPIRATIONS={"stor": ["stor"], "mbox": ["mbox"], "table": ["table"], "bed": ["bed"], "watch1": ["watch", "spike"], "wind": ["swing"], "wood6": [], "flower50": ["campfire"], "shizukuRest": ["bench", "tub"], "ep1": ["bed"], "ep2": ["table", "swing", "sandbox"], "ep4": ["fountain"], "ep5": ["campfire"], "chair2": ["chair"], "bed3": ["bed"], "light3": ["torch"], "houselight": ["lantern"], "oven": ["oven"], "board": ["board"], "watch2": ["watch"], "wmill": ["windmill"], "toy2": ["sandbox"], "toy3": ["seesaw"], "swing1": ["swing"], "deco3": ["hedge"], "room": ["shelf1", "rug1", "curtain1"], "paint": ["paint2"], "trap4": ["spike"], "jar2": ["jar"], "parasol": ["parasol"]};
 const QUEST_INSPIRATIONS_CLEAR={"mbox": ["crate"], "stor2": ["taru", "kabebukuro"], "mbox2": ["asabukuro", "makidana", "niguruma", "kabedougu"], "chair2": ["stool"], "wood6": [], "flower50": [], "shizukuRest": ["sink"], "ep1": ["crate", "rug1"], "ep2": [], "ep4": ["parasol"], "ep5": [], "bed3": ["rug1"], "light3": [], "houselight": [], "oven": ["sink"], "board": ["shelf1"], "watch2": ["signpost"], "toy2": [], "deco3": ["hedge"], "house2": [], "room": [], "paint": [], "jar2": ["tub"], "fish5": ["bench"], "parasol": []};
 function questRecipeIds(q,phase='accept'){return [...new Set(phase==='clear'?(QUEST_INSPIRATIONS_CLEAR[q.k||q.id]||[]):[...(QUEST_INSPIRATIONS[q.k||q.id]||[]),...(q.learn||[]),...(q.talk&&q.talk.learn||[])])].filter(id=>!!BL[id]&&!(BL[id].offerOnly&&BL[id].kind==='furn'))}
 function ideaDialogue(q,lines,phase='accept'){const ids=questRecipeIds(q,phase).filter(id=>!(S.guardianIdeas||{})[id]&&(!S.free||BL[id].kind!=='furn')),out=[];let put=false;for(const x of lines){if(x[0]==='@idea'){if(ids.length)out.push(['@idea',ids]);put=true}else out.push(x.slice())}if(!put&&ids.length)out.push(['@idea',ids]);return out}/* セリフの表の ['@idea'] の場所で、思いついた形を見せる（印がなければ、さいごに） */
@@ -3785,7 +3785,7 @@ function drawConn(c,id,x,y,i,now){const C=window.CHIPS;if(!C)return false;const 
   if(!drawChip(c,H,id,x,y,now,i))return false;if(r==='Hclip'){c.save();c.beginPath();if(vm&4)c.rect(x-64,y-64,192,66);if(vm&8)c.rect(x-64,y+26,192,96);c.clip();drawChip(c,V,id,x,y,now,i);c.restore();return true}return drawChip(c,V,id,x,y,now,i)}
 function berryOn(c,x,y){const bi=emoImg('🫐');if(!bi)return;for(const[cx,cy]of[[7,13.5],[25,19.5]]){const iw=14,ih=iw*bi.height/bi.width;c.drawImage(bi,x+cx-iw/2,y+cy-ih/2,iw,ih)}}/* 実ったベリーの茂み：運ぶときと同じベリーの絵を2つ、前の青い実と同じ位置・大きさ（はば14）にのせる */
 const PCH=new Set(['tree','ntree','fruit','deadtree','berry','clover','bellf','salvia','lily','lotus','statue','volcano','hedge']);/* 植物などは、ようすで絵をえらぶ */
-function plantChip(id,i,g){const C=window.CHIPS;if(!C)return null;if(!ICON&&i!=null&&S&&PLANTS.includes(id)&&isBud(i))return C.bud||null;/* 芽 */
+function plantChip(id,i,g){const C=window.CHIPS;if(!C)return null;if(!ICON&&i!=null&&S&&PLANTS.includes(id)&&isBud(i))return (id==='lotus'&&C['bud~w'])||C.bud||null;/* 芽（ハスは水の上なので、土のない芽） */
   if(id==='fruit'&&g>=100)return C[id+'#mi']||null;/* 実った絵（ベリーは、茂みの上に、運ぶときと同じベリーをのせる） */
   if(id==='hedge'){if(ICON||i==null||!S)return C.hedge||null;const t=k=>typeAt(k)==='hedge',hl=i%W>0&&t(i-1),hr=i%W<W-1&&t(i+1),m=(hl?1:0)|(hr?2:0)|(t(i-W)?4:0)|(t(i+W)?8:0);if(m&8)return C['hedge:'+m]||null;
     const rD=hr&&t(i+1+W),lD=hl&&t(i-1+W),fi=rD&&lD?18:rD?16:lD?17:m;return C['hedge:'+m+(fi!==m?'/'+fi:'')]||null}/* 生け垣は、となりとのつながりの形で */
@@ -6338,7 +6338,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='923';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='924';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
