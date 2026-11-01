@@ -3746,7 +3746,8 @@ if(window.CHIPS)for(const k in window.CHIPS){const ch=window.CHIPS[k],id=k.split
 const CONN={fence:'f',logfence:'f',bamboofence:'f',wall:'w',hwall:'h',logwall:'h',plasterwall:'h',brickwall:'h',yozorawall:'h'},CONNR={'fence':'HV','logfence':'HV','bamboofence':'VH','wall':'HV','hwall':'HV','logwall':'HV','plasterwall':'HV','brickwall':'HV'};/* つながる物：横の部品（H0 柱・HL・HR・HLR 横板）と縦の部品（VU・VD・VUD 縦板）を、となりのつながりで組み合わせる。CONNR：角で横と縦を重ねる順 */
 function connMask(id,i){if(ICON)return 3;/* アイコンは、左右につながった形で見せる */if(i==null||!S)return 0;const t=CONN[id];let f;if(t==='f')f=k=>FENCE_IDS.has(typeAt(k));else if(t==='w')f=k=>{const o=typeAt(k);return o==='wall'||o==='stonegate'};else f=(k,v)=>{const o=typeAt(k);return o!=='wall'&&o!=='sdoor'&&(HOME_WALLS.has(o)||!v&&HOME_DOORS.has(o))};/* 上下のドア（たて置きのドア）とはつながらない：ドアの上下の壁には、はしの柱を立てる */return (f(i-1)?1:0)|(f(i+1)?2:0)|(f(i-W,1)?4:0)|(f(i+W,1)?8:0)}/* 石の塀は、石の塀のドアのとなりでは終わる */
 const FRAIL={fence:9.9,logfence:13.5,bamboofence:15.5};/* 柵の上の横木のてっぺん（マスの上から。たての帯をここから柱にかぶせる） */
-function drawConn(c,id,x,y,i,now){const C=window.CHIPS;if(!C)return false;const inn=!ICON&&i!=null&&HOME_WALLS.has(id)&&HOUSES.some(h=>h.inside.has(i+W)||h.inside.has(i+W-1)||h.inside.has(i+W+1)),K=k=>(inn&&C[k+'~in'])||C[k]/* 下かななめ下が家の中なら、かげのうすい絵（家の角も） */,m=connMask(id,i),hm=m&3,vm=m&12,H=K(id+':'+['H0','HL','HR','HLR'][hm]),V=vm?K(id+':'+{4:'VU',8:'VD',12:'VUD'}[vm]):null;if(!H||vm&&!V)return false;
+function doorVert(k){/* たて置きのドアか（左右に家の壁・ドアがなく、上か下にある） */if(!HOME_DOORS.has(typeAt(k)))return false;const isW=q=>{const t=typeAt(q);return t!=='wall'&&t!=='sdoor'&&(HOME_WALLS.has(t)||HOME_DOORS.has(t))};return !isW(k-1)&&!isW(k+1)&&(isW(k-W)||isW(k+W))}
+function drawConn(c,id,x,y,i,now){const C=window.CHIPS;if(!C)return false;const inn=!ICON&&i!=null&&HOME_WALLS.has(id)&&HOUSES.some(h=>h.inside.has(i+W)||h.inside.has(i+W-1)||h.inside.has(i+W+1)),K=k=>(inn&&C[k+'~in'])||C[k]/* 下かななめ下が家の中なら、かげのうすい絵（家の角も） */,m=connMask(id,i),hm=m&3,vm=(m&12)|(!ICON&&i!=null&&CONN[id]==='h'&&doorVert(i+W)?8:0)|(!ICON&&i!=null&&CONN[id]==='h'&&doorVert(i-W)?4:0)/* たて置きのドアの上と下の壁は、柱を立てず、断面のままドアの横の見切りまでつづける */,H=K(id+':'+['H0','HL','HR','HLR'][hm]),V=vm?K(id+':'+{4:'VU',8:'VD',12:'VUD'}[vm]):null;if(!H||vm&&!V)return false;
   if(id==='wall'&&!vm&&!ICON){const dl=!(hm&1)&&typeAt(i-1)==='sdoor',dr=!(hm&2)&&typeAt(i+1)==='sdoor';if(dl||dr){const H2=C['wall:'+['H0','HL','HR','HLR'][hm|(dl?1:0)|(dr?2:0)]];if(!H2||!drawChip(c,H2,id,x,y,now,i))return false;return true}}/* となりが石の塀のドア：塀はマスのはしまでのばす（ドアにつける柱は stoneFront でかく） */
   if(vm&4&&CONN[id]==='f'&&!ICON&&!(connMask(id,i-W)&4)){/* たての柵：上のマスがはしの柱なら、横木は柱の前を通るので、帯を柱の上の横木のてっぺん（FRAIL）から柱にかぶせて、そこに区切り線 */const V4=C[id+':'+(vm===12?'VUD':'VU')],t=y-32+FRAIL[id];const ok=hm?(drawChip(c,H,id,x,y,now,i),drawChip(c,V4,id,x,y,now,i)):drawChip(c,V4,id,x,y,now,i);if(ok){c.save();c.beginPath();c.rect(x-64,t,192,y-t);c.clip();const Vs=C[id+':VUD']||V4;drawChip(c,Vs,id,x,y-32,now,i);c.restore();c.fillStyle='rgba(70,45,25,.55)';c.fillRect(x+Vs.ax/2,t,Vs.w/2,1)}return ok}
   if(!vm)return drawChip(c,H,id,x,y,now,i);if(hm&&C[id+':m'+m])return drawChip(c,K(id+':m'+m),id,x,y,now,i);/* 角・つなぎ目の絵があれば、部品を重ねずにそれを使う */if(!hm)return drawChip(c,V,id,x,y,now,i);const r=CONNR[id]||'HV';
@@ -5983,7 +5984,7 @@ function renderSheet(){
   }else if(sheet==='farm'){const j=sheetArg,d=S.dyn[j];if(!d||S.obj[j]!=='farm'){closeSheet();return}
     const cr=CROPS[cropK(d)];T.textContent=cr?'畑：'+cr.name:'畑';
     body.appendChild(el('<p class="story">'+(!cr?'まだ、なにも植えていない':d.sown===false?(d.paid||cseed(cropK(d))>0?'種まきを待っている':'たねがなくて植えられない'):d.g>=100?'収穫できる':'収穫まであと'+Math.ceil((100-d.g)/(100/cr.days)-.01)+'日・きょうの水やり'+(d.wet>0?'ずみ':'まだ'))+'</p>'));
-    if(cr){const n=cr.yield+(NEARMILL.has(j)?1:0)+(NEARFLOWER.has(j)?1:0)+(S.today==='hosaku'?1:0);const yr=el('<div class="sec"><div class="stats"><div class="stat"><span>収穫できる数</span><b></b></div></div></div>');yr.querySelector('b').textContent=n+'こ'+(S.res.some(q=>!q.hidden&&q.elem==='wood')?'（木のせいれいがとると+1）':'');body.appendChild(yr)}/* いま収穫すると、いくつとれるか */
+    if(cr){const n=cr.yield+(NEARMILL.has(j)?1:0)+(NEARFLOWER.has(j)?1:0)+(S.today==='hosaku'?1:0);const yr=el('<div class="sec"><div class="stats"><div class="stat"><span>収穫できる数</span><b></b></div></div></div>');yr.querySelector('b').textContent=n+'こ';body.appendChild(yr)}/* いま収穫すると、いくつとれるか */
     if(!cr){const b2=el('<button class="btn pri">おそなえ箱からたねをえらぶ</button>');b2.onclick=()=>{sfx('tap');openSheet('inv',Object.keys(CROPS).filter(cropOn).map(k=>'seed:'+k).find(id=>inv(id)>0)||'seed:imo')};body.appendChild(b2)}
   }else if(sheet==='food'){T.textContent='食料箱';
     body.appendChild(el('<p class="story">'+S.food+'/'+foodCap()+'</p>'));
@@ -6304,7 +6305,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='870';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='871';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
