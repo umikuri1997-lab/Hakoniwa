@@ -1525,13 +1525,13 @@ function fishLoot(r){/* つり：魚でないときは、空き缶・枝・レ�
   if(q<.07){const oo=FURN.filter(id=>BL[id]&&BL[id].offerOnly&&(!WIND_STAGE_TOYS.has(id)||WD===4));if(oo.length){const id=pick(oo);giveItem(id,1);r.bubble='✨';addFloat(r.x,r.y-1.8,'レア！');queueItemGift({[id]:1},'つりあげた！');return}}
   if(q<.15){r.bubble='📜';takeDrop({id:'recipe',n:1},r);return}
   const k=q<.6?'can':'eda';r.bubble='chip:drop:'+k;/* 落ちているときと同じ絵 */if(roomN(r)>0)addMat(r,k,1);else dropAt(r.x,r.y,'mat:'+k,1)}
-const AREAW=27,AREAN=4,areaOf=k=>((((k/W)|0)/AREAW)|0)*AREAN+((k%W)/AREAW|0);/* マップを4×4の16エリア（1エリア27×27マス）にわける */const WEEDMAX=15,KINOMAX=2;/* 1エリアの雑草・きのこの最大 */
+const AREAW=27,AREAN=4,areaOf=k=>((((k/W)|0)/AREAW)|0)*AREAN+((k%W)/AREAW|0);/* マップを4×4の16エリア（1エリア27×27マス）にわける */const WEEDMAX=20,KINOMAX=5;/* 1エリアの雑草・きのこの最大 */
 function weedMorning(first){/* first：ステージのはじめ（雑草100本・枝15本） *//* 毎朝：雑草30本（マップ全体。よみがえった土地は緑の草、荒れた土地は枯れた草）・きのこ（ときどき、木のそば）・枝（落とし物） */
   const st=WD===1?1:0,ok=k=>S.ground[k]===0&&!S.obj[k]&&!S.floor[k]&&!RFC.has(k)&&!RUGC.has(k);const WN=new Array(AREAN*AREAN).fill(0),KN=new Array(AREAN*AREAN).fill(0);S.obj.forEach((o,j)=>{if(o==='kinoko')KN[areaOf(j)]++;else if(WEEDS.has(o))WN[areaOf(j)]++});let add=0;/* エリアごとの雑草・きのこの数 */
   {const RV=[...REV];let f=0;for(let t=0;t<2000&&RV.length&&f<(first?10:3);t++){const k=RV[(Math.random()*RV.length)|0];if(!ok(k)||WN[areaOf(k)]>=WEEDMAX)continue;S.obj[k]='weedc';f++;add++;WN[areaOf(k)]++}}/* ふんばり草：毎朝3本（ステージのはじめは10本）、よみがえった土地に */
   for(let t=0;t<3000&&add<(first?100:30);t++){const k=(Math.random()*W*H)|0;if(!ok(k)||WN[areaOf(k)]>=WEEDMAX)continue;S.obj[k]='weed'+st+(REV.has(k)?'g':'k');add++;WN[areaOf(k)]++}/* のこりは、よみがえった土地は緑の草、荒れた土地は枯れた草 */
-  for(let j=0;j<W*H;j++)if(S.obj[j]==='weedc'&&!REV.has(j))S.obj[j]='weed'+st+'k';/* 荒れた土地のふんばり草は、枯れた草にする *//* 毎朝30本、雑草は1エリアに15本まで */
-  if(Math.random()<.5){const T=[];S.obj.forEach((o,j)=>{if((o==='ntree'||o==='tree'||o==='deadtree'||o==='bamboo')&&KN[areaOf(j)]<KINOMAX)T.push(j)});for(let t=0;t<30&&T.length;t++){const j=pick(T),c=[j-1,j+1,j-W,j+W].filter(k=>ok(k)&&KN[areaOf(k)]<KINOMAX);if(c.length){S.obj[pick(c)]='kinoko';break}}}/* きのこ：半分の日に1本（1エリアに2本まで） */
+  for(let j=0;j<W*H;j++)if(S.obj[j]==='weedc'&&!REV.has(j))S.obj[j]='weed'+st+'k';/* 荒れた土地のふんばり草は、枯れた草にする *//* 毎朝30本、雑草は1エリアに20本まで */
+  if(Math.random()<.5){const T=[];S.obj.forEach((o,j)=>{if((o==='ntree'||o==='tree'||o==='deadtree'||o==='bamboo')&&KN[areaOf(j)]<KINOMAX)T.push(j)});for(let t=0;t<30&&T.length;t++){const j=pick(T),c=[j-1,j+1,j-W,j+W].filter(k=>ok(k)&&KN[areaOf(k)]<KINOMAX);if(c.length){S.obj[pick(c)]='kinoko';break}}}/* きのこ：半分の日に1本（1エリアに5本まで） */
   {const TR=[];S.obj.forEach((o,j)=>{if(o==='ntree'||o==='tree'||o==='deadtree'||o==='fruit')TR.push(j)});let ne=(S.drops||[]).filter(d=>d.id==='mat:eda').length,add=0;for(let t=0;t<400&&TR.length&&add<(first?40:10)&&ne<50;t++){const j=pick(TR),k=j+((Math.random()*5)|0)-2+(((Math.random()*5)|0)-2)*W;if(k<0||k>=W*H||!ok(k)||S.drops.some(d=>d.y*W+d.x===k))continue;S.drops.push({x:k%W,y:(k/W)|0,id:'mat:eda',n:1});add++;ne++}}/* 枝：木のまわり2マスに、毎朝10本（ステージのはじめは40本）。地面にのこるのは50本まで */
 }
 function takenokoMorning(){/* 火山：竹のとなりに、たけのこが生える（1本の竹ごとに8%・マップに12本まで）。とらずに3日たつと竹になる */let n=0,ch=false;const bam=[];for(let j=0;j<W*H;j++){const o=S.obj[j];if(o==='takenoko'){const d=S.dyn[j]||(S.dyn[j]={g:100,age:0});d.age=(d.age||0)+1;if(d.age>=3){S.obj[j]='bamboo';delete S.dyn[j];ch=true}else n++}else if(o==='bamboo')bam.push(j)}
@@ -5763,6 +5763,15 @@ function attrPop(k){
   if(!Object.keys(src).length)card.appendChild(el('<p class="note">まだありません</p>'));
   card.appendChild(el('<p class="note">マップにあるものを集計（池・川は、家・物のまわり3マスだけ）。花と木は育ってから加算されます。</p>'));
   ov.appendChild(card);ov.onclick=()=>ov.remove();$('#app').appendChild(ov)}/* 属性の内訳ポップアップ */
+function placeFromInv(id){/* もちものから「置く」：ウィンドウをとじて、「おく」でえらんだときと同じにする */closeSheet();setMode('build');sel=id;selStamp=null;palOpen=false;renderPalette();const b=BL[id];if(id.startsWith('seed:'))toast('たねをまきたい畑をタップ');else if(b&&b.kind==='plant')toast('置いた場所にせいれいが植えてくれる');else if(b&&b.kind==='build')toast('置いた場所にせいれいが建ててくれる')}
+function itemPop(id){/* もちもの：おそなえ箱の物・たね・ふしぎな種をタップしたときのメニュー */const o=el('<div style="position:fixed;inset:0;z-index:45;display:flex;align-items:center;justify-content:center;background:rgba(30,24,16,.45);padding:24px"><div class="pxcard" style="background:var(--panel);padding:16px 18px;max-width:320px;width:100%;color:var(--ink);max-height:80vh;overflow:auto"><div style="display:flex;gap:10px;align-items:center;margin-bottom:6px"><img alt="" style="width:44px;height:44px"><b class="t" style="font-size:16px"></b></div><p class="note n" style="margin:0 0 12px"></p><div class="rows"></div><div class="bt" style="display:flex;gap:8px;justify-content:flex-end;margin-top:10px"><button class="btn x">とじる</button></div></div></div>');
+  const close=()=>o.remove(),bt=o.querySelector('.bt'),add=(t,f,dis)=>{const b=el('<button class="btn pri"></button>');b.textContent=t;b.disabled=!!dis;b.onclick=()=>{sfx('tap');close();f()};bt.appendChild(b)};
+  o.querySelector('.x').onclick=()=>{sfx('tap');close()};o.onclick=e=>{if(e.target===o)close()};
+  if(id==='mseed'){o.querySelector('img').src=seedIco();o.querySelector('.t').textContent='ふしぎな種 '+(S.mseed||0)+'こ';o.querySelector('.n').textContent='せいれいにあげると、能力のどれかが+1（25%で+2）上がる。それぞれ+6まで。';
+    for(const r of S.res){const row=rowEl(r.name,ELEM[r.elem].name+'のせいれい'),b=el('<button class="btn pri">あげる</button>');row.appendChild(b);b.onclick=()=>{giveSeed(r);if((S.mseed||0)<1)close();else o.querySelector('.t').textContent='ふしぎな種 '+(S.mseed||0)+'こ';if(sheet==='inv')renderSheet()};o.querySelector('.rows').appendChild(row)}}
+  else if(id.startsWith('seed:')){const k=id.slice(5),c=CROPS[k];o.querySelector('img').src=seedIcon(k);o.querySelector('.t').textContent=c.name+'のたね '+cseed(k)+'こ';o.querySelector('.n').textContent=c.desc;add('畑にまく',()=>placeFromInv(id),cseed(k)<1)}
+  else{const b=BL[id];o.querySelector('img').src=iconURL(id);o.querySelector('.t').textContent=iname(id)+' '+inv(id)+'こ';o.querySelector('.n').textContent=b.desc||'';add('これを置く',()=>placeFromInv(id),!inv(id))}
+  document.body.appendChild(o)}
 function otakiPop(k){/* もちもの：素材をタップしたときのメニュー（おたきあげ）。数をえらんでたのむと、せいれいが素材箱から神殿へもっていく */const tr=MATTRADE[k]||5;let v=0;const o=el('<div style="position:fixed;inset:0;z-index:45;display:flex;align-items:center;justify-content:center;background:rgba(30,24,16,.45);padding:24px"><div class="pxcard" style="background:var(--panel);padding:16px 18px;max-width:320px;width:100%;color:var(--ink)"><b class="t" style="display:block;font-size:16px;margin-bottom:4px"></b><p class="note n" style="margin:0 0 10px"></p><div style="display:flex;gap:8px;align-items:center;justify-content:center;margin-bottom:12px"><button class="btn m">−</button><b class="v" style="min-width:3em;text-align:center;font-size:16px"></b><button class="btn p">＋</button></div><div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn x">とじる</button><button class="btn pri go"></button></div></div></div>');
   const upd=()=>{const n=S.mat[k]||0,mx=Math.floor(n/tr)*tr;v=Math.max(0,Math.min(v,mx));o.querySelector('.t').textContent=MATN[k]+' '+n+'こ';o.querySelector('.n').textContent='おたきあげ：'+tr+'こでパワー1';o.querySelector('.v').textContent=v;o.querySelector('.m').disabled=v<=0;o.querySelector('.p').disabled=v+tr>mx;const g=o.querySelector('.go');g.textContent='おたきあげ（パワー+'+v/tr+'）';g.disabled=!v};
   o.querySelector('.m').onclick=()=>{sfx('tap');v-=tr;upd()};o.querySelector('.p').onclick=()=>{sfx('tap');v+=tr;upd()};o.querySelector('.x').onclick=()=>{sfx('tap');o.remove()};o.onclick=e=>{if(e.target===o)o.remove()};
@@ -5841,21 +5850,13 @@ function renderSheet(){
     for(const [name,ids]of groups){if(!ids.length)continue;const heading=el('<b style="grid-column:1/-1;margin-top:8px"></b>');heading.textContent=name;grid.appendChild(heading);for(const id of ids){
       const b=el('<button class="slot"><span class="ct"></span><img alt=""><span class="nm"></span></button>');
       b.querySelector('img').src=iconURL(id);b.querySelector('.nm').textContent=iname(id);b.querySelector('.ct').textContent=inv(id);
-      if(!inv(id))b.classList.add('zero');if(sheetArg===id)b.classList.add('sel');
-      b.onclick=()=>{sheetArg=id;renderSheet()};grid.appendChild(b)}}
+      if(!inv(id))b.classList.add('zero');
+      b.onclick=()=>{sfx('tap');itemPop(id)};grid.appendChild(b)}}
     for(const k of Object.keys(CROPS).filter(k=>cropOn(k)&&cseed(k)>0)){const sid='seed:'+k,b=el('<button class="slot"><span class="ct"></span><img alt=""><span class="nm"></span></button>');/* たねも、ほかのアイテムと同じくアイコンで */
-      b.querySelector('img').src=seedIcon(k);b.querySelector('.nm').textContent=CROPS[k].name+'のたね';b.querySelector('.ct').textContent=cseed(k);if(!cseed(k))b.classList.add('zero');if(sheetArg===sid)b.classList.add('sel');b.onclick=()=>{sheetArg=sid;renderSheet()};grid.appendChild(b)}
-    if((S.mseed||0)>0){const b=el('<button class="slot"><span class="ct"></span><img src="'+seedIco()+'" style="width:40px;height:40px;display:block;margin:0 auto"><span class="nm">ふしぎな種</span></button>');b.querySelector('.ct').textContent=S.mseed;if(sheetArg==='mseed')b.classList.add('sel');b.onclick=()=>{sheetArg='mseed';renderSheet()};grid.appendChild(b)}
+      b.querySelector('img').src=seedIcon(k);b.querySelector('.nm').textContent=CROPS[k].name+'のたね';b.querySelector('.ct').textContent=cseed(k);if(!cseed(k))b.classList.add('zero');b.onclick=()=>{sfx('tap');itemPop(sid)};grid.appendChild(b)}
+    if((S.mseed||0)>0){const b=el('<button class="slot"><span class="ct"></span><img src="'+seedIco()+'" style="width:40px;height:40px;display:block;margin:0 auto"><span class="nm">ふしぎな種</span></button>');b.querySelector('.ct').textContent=S.mseed;b.onclick=()=>{sfx('tap');itemPop('mseed')};grid.appendChild(b)}
     body.appendChild(grid);
-    if(sheetArg==='mseed'&&(S.mseed||0)>0){const d=el('<div class="sec"><h3></h3><p class="story">せいれいにあげると、能力のどれかが+1（25%で+2）上がる。それぞれ+6まで。</p><div class="rows"></div></div>');d.querySelector('h3').textContent='ふしぎな種・所持：'+S.mseed;
-      for(const r of S.res){const row=rowEl(r.name,ELEM[r.elem].name+'のせいれい'),bt=el('<button class="btn pri">あげる</button>');row.appendChild(bt);bt.onclick=()=>giveSeed(r);d.querySelector('.rows').appendChild(row)}body.appendChild(d)}
-    if(typeof sheetArg==='string'&&sheetArg.startsWith('seed:')&&CROPS[sheetArg.slice(5)]){const c=CROPS[sheetArg.slice(5)],d=el('<div class="sec"><h3></h3><p class="story"></p></div>');d.querySelector('h3').textContent=c.name+'のたね・所持：'+cseed(sheetArg.slice(5));d.querySelector('.story').textContent=c.desc;const ub=el('<button class="btn pri" style="margin-top:10px">畑にまく</button>');ub.disabled=cseed(sheetArg.slice(5))<1;const sid=sheetArg;ub.onclick=()=>{sel=sid;selStamp=null;closeSheet();setMode('build');$('#palette').hidden=true;toast('たねをまきたい畑をタップ')};/* 置くウィンドウは開かずに、そのまま畑をタップ */d.appendChild(ub);body.appendChild(d);return}
-    const id=ids.includes(sheetArg)?sheetArg:null;
-    if(id){const b=BL[id];
-      const d=el('<div class="sec"><h3></h3><p class="story"></p><div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px"></div></div>');
-      d.querySelector('h3').textContent=iname(id)+'・所持：'+inv(id);d.querySelector('.story').textContent=b.desc||'';
-      const use=el('<button class="btn pri">これを置く</button>');use.disabled=!inv(id);use.onclick=()=>{sel=id;selStamp=null;closeSheet();setMode('build')};d.lastElementChild.appendChild(use);
-      body.appendChild(d)}
+    if(typeof sheetArg==='string'&&(sheetArg==='mseed'?(S.mseed||0)>0:sheetArg.startsWith('seed:')?!!CROPS[sheetArg.slice(5)]:ids.includes(sheetArg))){const a=sheetArg;sheetArg=null;itemPop(a)}/* ほかの画面から、物をえらんで開いたときは、そのメニューも出す */
   }else if(sheet==='craft'){
     T.textContent='依頼ボード';
     body.appendChild(el('<p class="note">'+(orderLock()?'いまは「'+BL[orderLock()].name+'」だけたのめます。':'できたものはおそなえ箱に入ります。')+'</p>'));
@@ -6329,7 +6330,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='909';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='910';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
