@@ -294,6 +294,6 @@ const SPEC={wood:['plant','tend'],water:['water'],fire:['cook'],earth:['repair',
 /* 得意な仕事は、その属性の子だけ。建てるのはみんなできる */
 const OWN={plant:'wood',tend:'wood',water:'water',fish:'water',till:'earth',repair:'earth',cook:'fire',seed:'wind'};
 function ownOK(r,el){return !el||r.elem===el}
-function canJob(r,k){if(k==='seed')return r.elem==='wind';/* 外にふしぎな種があれば、風の子はみんな拾いに行く */return ownOK(r,OWN[k])}
+function canJob(r,k){if(k==='seed')return r.elem==='wind';if(k==='harvest'&&r.elem!=='wood'&&S.res.some(q=>q.elem==='wood'))return false;/* 収穫は、木のせいれいがいれば木のせいれい */if(k==='tend'&&S.res.some(q=>q.elem==='water'))return false;/* 水やりは、水のせいれいがいれば水のせいれい（木の子の世話の水やりはしない） *//* 外にふしぎな種があれば、風の子はみんな拾いに行く */return ownOK(r,OWN[k])}
 const makerOf=id=>WD===1&&(id==='bench'||id==='noren')||id==='stor'||id==='mbox'?null:BL[id].maker;/* 箱は、だれでも作れる *//* 火山のふもと：温泉のクエストに使うベンチ・のれんは、だれでも作れる */
 function craftOK(r,o){return ownOK(r,makerOf(o.type))}
