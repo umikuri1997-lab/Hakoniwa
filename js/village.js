@@ -153,7 +153,7 @@ function recount(){if(S.broken)S.broken=S.broken.filter(b=>!S.obj[b.j]);calcSpot
     if(o==='statue')STATUE=j;if(o==='obox')OBOX=j;if(o==='board')BOARD=j;
     if(o==='stele')STELES.push(j);
     if(o==='lamp'||o==='lighthouse'||o==='tower'||o==='campfire'||o==='statue'||o==='torch'||o==='candle'||o==='lantern'||o==='flamp'||o==='yomawari'||o==='toro'||o==='takeakari'||o==='andon')LIGHTS.push(j);
-    if(o==='shinboku'){const x0=j%W,y0=(j/W)|0;for(let b=-3;b<=4;b++)for(let a=-3;a<=4;a++){const nx=x0+a,ny=y0+b;if(nx>=0&&ny>=0&&nx<W&&ny<H)NEARTREE.add(ny*W+nx)}}/* ご神木のまわり3マス */
+    if(o==='shinboku'){const x0=j%W,y0=(j/W)|0;for(let b=-3;b<=5;b++)for(let a=-3;a<=5;a++){const nx=x0+a,ny=y0+b;if(nx>=0&&ny>=0&&nx<W&&ny<H)NEARTREE.add(ny*W+nx)}}/* ご神木のまわり3マス */
     if(LIGHTP[o])LITP.push(j);/* 夜に光をかく明かりの一覧 */
     if(o==='watch'||o==='yogan'||o==='tower')TOWERS.push(j);
     if(FLOWERS.has(o)&&o!=='lotus'&&!isBud(j))around(j,1,NEARFLOWER);/* 花：まわり1マス・かさならない */

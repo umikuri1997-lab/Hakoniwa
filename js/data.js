@@ -142,7 +142,7 @@ const BL={
   onsen:{name:'露天ぶろ',sz:[2,2],kind:'build',mat:{stone:40},pc:60,time:200,maker:'earth',lv:9,w:1,solid:1,attr:{},desc:'岩でかこんだ温泉。入ると、つかれ−30・たのしさ+10'},
   signw:{name:'村の木の看板',sz:[2,1],kind:'build',mat:{wood:30},pc:80,time:160,maker:'wood',lv:11,solid:1,attr:{},desc:'村の入り口の看板。属性の力+10%（重複なし）'},
   signs:{name:'村の石の看板',sz:[2,1],kind:'build',mat:{stone:30},pc:80,time:160,maker:'earth',lv:11,w:1,solid:1,attr:{},desc:'村の入り口の看板。属性の力+10%（重複なし）'},
-  shinboku:{name:'ご神木',sz:[2,2],kind:'build',mat:{wood:40},pc:160,time:300,maker:'wood',lv:14,solid:1,attr:{wood:3},desc:'村の守りの大きな木。まわり3マスで、つかれのとれる速さ+10%'},
+  shinboku:{name:'ご神木',sz:[3,3],kind:'build',mat:{wood:40},pc:160,time:300,maker:'wood',lv:14,solid:1,attr:{wood:3},desc:'村の守りの大きな木。まわり3マスで、つかれのとれる速さ+10%'},
   lighthouse:{name:'灯台',sz:[2,2],kind:'build',mat:{wood:25,stone:35},pc:35,time:180,maker:'fire',lv:7,solid:1,anim:1,attr:{fire:4},desc:'まわり8マスを照らす'},
   stele:{hp:5,brk:1,fix:18,fixm:{wood:6,stone:25},name:'石碑',kind:'build',mat:{wood:12,stone:50},pc:35,time:180,maker:'earth',lv:6,solid:1,attr:{earth:4},desc:'まわり5マスの壁が、1.15倍じょうぶになる'},
   fountain:{name:'噴水',sz:[2,2],kind:'build',mat:{wood:15,stone:60},pc:45,time:200,maker:'water',lv:6,solid:1,anim:1,play:{pt:6,pw:2.7,fun:45,dur:50,cap:3,adj:1},attr:{water:6},desc:'3人まで遊べる。たのしさ +45（50分）。遊ぶと10%の確率で、スタミナ+1'},
