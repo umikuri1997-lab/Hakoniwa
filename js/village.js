@@ -62,6 +62,7 @@ const SEATS=['chair','stool','achair','bench','takebench','pouf','sofa1'],BENCHE
 /* スポット：組み合わせて置くと、効果が少し上がる（物どうしがまわり3マス以内）。main のまわりに need がそろうとできる */
 const SPOTS=[
   {k:'dining',n:'ダイニング',main:o=>o==='table',need:[[o=>SEATS.includes(o),2]],how:'食卓と、いす2つ',eff:'ここで食べたときのパワー+10%'},
+  {k:'tsuriba',n:'つり場',main:(o,j)=>SEATS.includes(o)&&spotW(j)>=0,need:[],how:'水べのいす',eff:'魚がつれる確率+25%'},/* 水べのいすは、それだけでスポット（魚+25% は fSpot でつりのときに入る） */
   {k:'fishspot',n:'つりスポット',main:(o,j)=>SEATS.includes(o)&&spotW(j)>=0,need:[[o=>o==='parasol',1]],how:'水べのいすと、パラソル',eff:'魚がつれる確率+5%'},
   {k:'park',n:'ちかばの公園',main:o=>o==='swing',need:[[o=>o==='sandbox',1]],how:'ブランコと、砂場',eff:'ここで遊ぶと、たのしさ+10%'},
   {k:'park2',n:'たのしい公園',main:o=>o==='swing',need:[[o=>o==='sandbox',1],[o=>o==='seesaw',1]],how:'ブランコと、砂場と、シーソー',eff:'ここで遊ぶと、たのしさ+10%'},
