@@ -249,7 +249,6 @@ function renderSheet(){
       g.insertAdjacentHTML('beforeend',`<span class="el" style="background:${ELEM[k].col}">${ELEM[k].name}</span><div class="bar"><i style="width:${p|0}%;background:${ELEM[k].col}"></i></div><small>${Math.floor(v)}/${n}</small>`);
       for(const c of[...g.children].slice(-3)){c.style.cursor='pointer';c.onclick=()=>{sfx('tap');attrPop(k)}}}/* 属性をタップすると、内訳のポップアップ */
     body.appendChild(a);
-    body.appendChild(el('<p class="note">属性をタップすると内訳が見られます。目もりに届いた次の朝、神殿の「！」から呼べます。いくつか届いていれば、呼ぶ属性をえらべます。池・植物・家具・建物から属性の力が集まります。</p>'));
     const rows=el('<div class="rows"></div>');
     for(const r of S.res){const row=el(`<button class="row" style="text-align:left;width:100%"><span class="dot"></span><div class="tx"><b></b><small></small></div></button>`);
       row.querySelector('.dot').style.cssText='background:#f6f1e6 url('+spiritPort(r.elem,96)+') center/86% no-repeat;box-shadow:inset 0 0 0 2px '+ELEM[r.elem].col;
