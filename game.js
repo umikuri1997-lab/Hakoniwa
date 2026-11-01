@@ -1511,7 +1511,7 @@ function goMeal(r,G){
   return startAct(r,G,'eat',-1,{pt:0,pw:0});
 }
 function fishLoot(r){/* つり：魚でないときは、空き缶・枝・レシピ・レアな家具 */const q=Math.random();sfxAt('catch',r.x,r.y);
-  if(q<.07){const oo=FURN.filter(id=>BL[id]&&BL[id].offerOnly&&(!WIND_STAGE_TOYS.has(id)||WD===4));if(oo.length){const id=pick(oo);giveItem(id,1);r.bubble='✨';addFloat(r.x,r.y-1.8,'レア！');queueItemGift({[id]:1},'めずらしい家具をつりあげた！');return}}
+  if(q<.07){const oo=FURN.filter(id=>BL[id]&&BL[id].offerOnly&&(!WIND_STAGE_TOYS.has(id)||WD===4));if(oo.length){const id=pick(oo);giveItem(id,1);r.bubble='✨';addFloat(r.x,r.y-1.8,'レア！');queueItemGift({[id]:1},'つりあげた！');return}}
   if(q<.15){r.bubble='📜';takeDrop({id:'recipe',n:1},r);return}
   const k=q<.6?'can':'eda';r.bubble=k==='can'?'🥫':'🪵';if(roomN(r)>0)addMat(r,k,1);else dropAt(r.x,r.y,'mat:'+k,1)}
 function weedMorning(first){/* first：ステージのはじめ（雑草100本・枝15本） *//* 毎朝：雑草30本（マップ全体。よみがえった土地は緑の草、荒れた土地は枯れた草）・きのこ（ときどき、木のそば）・枝（落とし物） */
@@ -2337,7 +2337,7 @@ function takeDrop(d,r){let nm;
   if(r&&(d.id.startsWith('food:')||d.id.startsWith('mat:'))){const food=d.id.startsWith('food:'),k=d.id.slice(food?5:4),n=Math.min(d.n,roomN(r));if(n>0){if(food)addCarry(r,k,n);else addMat(r,k,n)}if(n<d.n)S.drops.push(Object.assign({},d,{n:d.n-n}));/* せいれいがひろった食べ物・素材は、頭の上につんで、箱へはこぶ。持ちきれない分は地面にのこす */if(n>0&&!d.lt)toast(r.name+'がおとしものをひろった：'+(food?FOODS[k].name:MATN[k])+'×'+n,'good');return}
   if(d.id.startsWith('food:')){const k=d.id.slice(5),add=Math.max(0,Math.min(d.n,foodCap()-S.food));if(add)addFood(k,add);if(add<d.n)S.drops.push(Object.assign({},d,{n:d.n-add}));/* 食料箱に入りきらない分は、そのまま地面にのこる */nm=FOODS[k].name+(add?'×'+add:'（食料箱がいっぱい）')}
   else if(d.id.startsWith('mat:')){const k=d.id.slice(4),add=Math.max(0,Math.min(d.n,matCap()-matTot()));S.mat[k]=(S.mat[k]||0)+add;if(!S.gotMat)S.gotMat={};S.gotMat[k]=(S.gotMat[k]||0)+add;nm=MATN[k]+(add?'×'+add:'（素材箱がいっぱい）');bambooIdea()}
-  else{giveItem(d.id,d.n);nm=(d.id.startsWith('seed:')?CROPS[d.id.slice(5)].name+'のたね':BL[d.id].item||BL[d.id].name)+'×'+d.n;if(BL[d.id]&&BL[d.id].kind==='furn')queueItemGift({[d.id]:d.n},'めずらしい家具をひろった！')}/* 家具は、大きく知らせる */
+  else{giveItem(d.id,d.n);nm=(d.id.startsWith('seed:')?CROPS[d.id.slice(5)].name+'のたね':BL[d.id].item||BL[d.id].name)+'×'+d.n;if(BL[d.id]&&BL[d.id].kind==='furn')queueItemGift({[d.id]:d.n},'ひろった！')}/* 家具は、大きく知らせる */
   if(!d.lt)toast((r?r.name+'が':'')+'おとしものをひろった：'+nm,'good')}/* 守りの光で落とした素材は、だまってひろう */
 const watchUp=()=>Object.keys(S.hp).some(k=>k[0]==='L'&&S.hp[k]>=2&&S.obj[+k.slice(1)]==='watch');/* Lv2以上の見張り台がある */
 const WUP=[null,{pc:30,mat:{wood:30,stone:35}},{pc:100,mat:{wood:45,stone:75},sand:5}],YUP=[null,{pc:30,mat:{wood:30,stone:35}},{pc:60,mat:{wood:45,stone:75},sand:5}];/* sand：やすらぎの砂（Lv3への強化だけ） *//* 見張り台・ようがん台の強化 */const WATCH=[null,{dmg:1,range:6,cd:10},{dmg:2,range:6.5,cd:10},{dmg:3,range:7,cd:10}];/* cd：攻撃の間かく（分） */
@@ -6305,7 +6305,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='878';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='879';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
