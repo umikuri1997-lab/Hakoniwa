@@ -414,7 +414,7 @@ function morning(){sfx('morning');if(S.cleared&&S.daily)dailyCheck();/* 夜の�
   S.today=null;if(S.enemyOn&&dayNo()>=3&&Math.random()<.4){const ks=Object.keys(DAYEV).filter(k=>k!=='kami');const k=pick(ks),E=DAYEV[k];S.today=k;/* 日替わりのできごと */
     setTimeout(()=>toast('きょうは「'+E[1]+'」：'+E[2],'good'),1200);memo(E[0],'きょうは「'+E[1]+'」');
     if(k==='kami'){S.godVisit=true;S.godNextVisitDay=dayNo()+2;}
-    if(k==='mono')for(let i=0;i<4;i++)dropAt(CX-10+Math.random()*20,CY-10+Math.random()*20)}
+    if(k==='mono')monoDrops(4)}
   if(S.rain)toast('今日は雨');
   {const d=dayNo(),ev={6:[[MINA,'#alarm|村が大きくなってきたねぇ。…でも、夜の「コワイノ」も、前より多い気がするよぉ。'],[POKO,'#nod|にぎやかになるほど、よってくるのかな…。']],
 }[d];
