@@ -41,8 +41,8 @@ const ELEM_KEYS=Object.keys(ELEM);
 const BL={
   path:{name:'あぜ道',kind:'block',floor:1,lv:2,cost:1,pc:2,time:30,maker:'earth',qty:10,mat:{stone:2},attr:{earth:.25},desc:'草地のあいだを通る土の道。歩く速さ×1.25'},
   bridge:{name:'木の橋',kind:'build',lv:5,pc:2,time:40,maker:'wood',mat:{wood:4},desc:'川や池の上にかける。せいれいが建てる。歩いてわたれる'},
-  ladder_wood:{name:'オークのハシゴ',kind:'build',lv:3,pc:2,time:30,maker:'wood',mat:{wood:2},desc:'段差のがけに立てかける。せいれいが建てる。上り下りできる（歩く速さ×0.5）'},
-  ladder_bamboo:{name:'竹のハシゴ',kind:'build',lv:3,w:1,pc:2,time:30,maker:'wood',mat:{bamboo:2},desc:'段差のがけに立てかける。せいれいが建てる。上り下りできる（歩く速さ×0.5）'},
+  ladder_wood:{name:'オークのハシゴ',kind:'build',lv:3,pc:20,time:30,maker:'wood',mat:{wood:20},desc:'段差のがけに立てかける。せいれいが建てる。上り下りできる（歩く速さ×0.5）'},
+  ladder_bamboo:{name:'竹のハシゴ',kind:'build',lv:3,w:1,pc:20,time:30,maker:'wood',mat:{bamboo:20},desc:'段差のがけに立てかける。せいれいが建てる。上り下りできる（歩く速さ×0.5）'},
   stairs_wood:{name:'木の階段',kind:'build',lv:8,pc:3,time:50,maker:'wood',mat:{wood:3},attr:{wood:.3},desc:'段差の下に置く。せいれいが建てる。段差を飛ばずに上り下りできる（1マス歩く時間。飛ぶと3倍）'},
   stairs_brick:{name:'レンガの階段',kind:'build',lv:6,w:1,pc:5,time:60,maker:'fire',mat:{stone:6},attr:{fire:.5},desc:'段差の下に置く。せいれいが建てる。段差を飛ばずに上り下りできる（1マス歩く時間。飛ぶと3倍）'},
   stairs_stone:{name:'石の階段',kind:'build',lv:4,w:1,pc:4,time:60,maker:'earth',mat:{stone:5},attr:{earth:.5},desc:'段差の下に置く。せいれいが建てる。段差を飛ばずに上り下りできる（1マス歩く時間。飛ぶと3倍）'},
@@ -6305,7 +6305,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='872';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='873';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
