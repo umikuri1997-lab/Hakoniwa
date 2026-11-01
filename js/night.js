@@ -256,6 +256,9 @@ const DROPSEED={basic:'imo',fast:'tomato',thief:'mugi',brute:'imo',breaker:'mugi
 const DROPF={basic:'mimamori',fast:'yomawari',breaker:'oyasumi',boss:'yonaka'};/* コワイノの種類ごとの、落とし物だけの家具 */
 function dropRolls(t){const sd=DROPSEED[t]&&cropOn(DROPSEED[t])?DROPSEED[t]:'imo',L=[['mat:wood',3,.2],['mat:stone',3,.2],['seed:'+sd,2,.2],['sand',1,.1]];if(DROPF[t])L.push([DROPF[t],1,.005]);if(KWR.some(id=>!(S.recipes||{})[id]))L.push(['recipe',1,.001]);return L}/* [物, 数, 落とす確率]：木材・石材・種20%、やすらぎの砂10%、家具0.5%、コワイノのレシピ0.1% */
 function dropList(t){const sd=DROPSEED[t]&&cropOn(DROPSEED[t])?DROPSEED[t]:'imo',L=DROPS.concat([['seed:'+sd,2]]);if(DROPF[t])L.push([DROPF[t],1]);return L}
+function monoDrops(n){/* ものひろいの日：村の中の、せいれいが歩いて行ける空いた所に落とす */if(!S.drops)S.drops=[];const r0=S.res.find(q=>!q.hidden),G=bfs(r0?r0.x|0:CX,r0?r0.y|0:CY),C=[];
+  for(let q=0;q<W*H;q++)if(VILL[q]&&!S.obj[q]&&walk(q)&&G.dist[q]>=0&&!S.drops.some(d=>d.y*W+d.x===q))C.push(q);
+  for(let i=0;i<n&&C.length;i++){const q=C.splice((Math.random()*C.length)|0,1)[0],[id,m]=pick(dropList());S.drops.push({x:q%W,y:(q/W)|0,id,n:m})}}
 function dropAt(x,y,want,nn,et){if(!S.drops)S.drops=[];const x0=x|0,y0=y|0;let j=-1;const r0=S.res.find(q=>!q.hidden),G=want?bfs(r0?r0.x|0:CX,r0?r0.y|0:CY):null,reach=q=>!G||G.dist[q]>=0;/* かけら・しずくは、せいれいが行ける場所に落とす */
   for(let rr2=0;rr2<=(want?8:3)&&j<0;rr2++)for(let dy=-rr2;dy<=rr2&&j<0;dy++)for(let dx=-rr2;dx<=rr2;dx++){const xx=x0+dx,yy=y0+dy;if(xx<0||yy<0||xx>=W||yy>=H)continue;const q=yy*W+xx;if(!S.obj[q]&&walk(q)&&reach(q)&&!S.drops.some(d=>d.y*W+d.x===q)){j=q;break}}
   if(j<0&&G){let bd=1e9;for(let q=0;q<W*H;q++){if(G.dist[q]<0||S.obj[q]||!walk(q)||S.drops.some(d=>d.y*W+d.x===q))continue;const d=Math.hypot(q%W-x0,((q/W)|0)-y0);if(d<bd){bd=d;j=q}}}
