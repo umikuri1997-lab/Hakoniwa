@@ -50,6 +50,7 @@ function checkLevel(){
   const l=vLv();if(S.lv>l)return;/* 必要なパワーをふやしても、いまの村レベルは下げない */const old=S.lv||1,priorUnlocks={...(S.unlocked||{})},priorRecipes={...(S.recipes||{})};
   for(let n=2;n<=l;n++)for(const id of visibleLevelRewardsAt(n)){if(BL[id].kind==='block')S.unlocked[id]=true;else if(BL[id].kind==='furn'&&!S.free){S.recipes||(S.recipes={});S.recipes[id]=true}}
   if(l>=2)S.unlocked.path=true;
+  if(old<13&&l>=13)setTimeout(()=>toast('家の屋根の色を、えらべるようになりました','good'),1500);/* 屋根の色（家をタップしてえらぶ） */
   if(l>=4&&!S.free){S.unlocked.window=true;S.recipes||(S.recipes={});S.guardianIdeas||(S.guardianIdeas={});S.recipes.window=true;S.guardianIdeas.window=true}
   if(l>old){sfx('level');const allOpen=[];let allBonus=0;for(let n=old+1;n<=l;n++){const bonus=0;const opens=visibleLevelRewardsAt(n).filter(id=>BL[id].kind==='block'?!priorUnlocks[id]:!priorRecipes[id]);allOpen.push(...opens);allBonus+=bonus}
     S.lv=l;memo('🏡','村レベル'+l+'になった');renderPalette();if(sheet){if(LVQ){LVQ[1]+=allBonus;LVQ[2].push(...allOpen);LVQ[0]=l}else LVQ=[l,allBonus,allOpen]}else lvShow(l,allBonus,allOpen);

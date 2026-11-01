@@ -109,6 +109,12 @@ function findHouses(){const isB=j=>HOME_WALLS.has(typeAt(j))||HOME_DOORS.has(typ
 /* 屋根は家ごと。家をタップすると屋根が消えて中が見える。家の外をタップすると、もどる */
 const OPENH=new Set(),ROOFS=new Map(),hKey=h=>h.x0+','+h.y0;
 function roofAOf(h){const k=hKey(h);let v=ROOFS.get(k);if(!v){v={a:OPENH.has(k)?0:1};ROOFS.set(k,v)}return v.a}/* 描くときは読むだけ。すけぐあいは stepLooks で進める */
+const ROOFCOL={red:{h:6,s:.42,n:'赤'},blue:{h:212,s:.36,n:'青'},green:{h:105,s:.32,n:'緑'},brown:{h:24,s:.38,n:'こげ茶'}};/* 屋根の色：色あい（0〜360）とあざやかさ。明るさは、もとの絵のまま */
+function roofTint(c,cv,P){c.save();c.setTransform(1,0,0,1,0,0);const d=c.getImageData(0,0,cv.width,cv.height),p=d.data,H=P.h/360;
+  const f=(q,t,v)=>{if(v<0)v+=1;if(v>1)v-=1;return v<1/6?q+(t-q)*6*v:v<1/2?t:v<2/3?q+(t-q)*(2/3-v)*6:q};
+  for(let i=0;i<p.length;i+=4){if(!p[i+3])continue;const r=p[i]/255,g=p[i+1]/255,b=p[i+2]/255,mx=Math.max(r,g,b),mn=Math.min(r,g,b),l=(mx+mn)/2,s=P.s*(1-Math.abs(2*l-1)*.6);/* 明るい所・暗い所は、あざやかさを少しおさえる */
+    const t=l<.5?l*(1+s):l+s-l*s,q=2*l-t;p[i]=f(q,t,H+1/3)*255;p[i+1]=f(q,t,H)*255;p[i+2]=f(q,t,H-1/3)*255}
+  c.putImageData(d,0,0);c.restore()}
 function roofCache(h,sc){/* 屋根の絵は、家ごとに1回だけ描いて使い回す（形がかわるまで） */
   let minx=W,maxx=0,miny=H,maxy=0;for(const j of h.set){const x=j%W,y=(j/W)|0;minx=Math.min(minx,x);maxx=Math.max(maxx,x);miny=Math.min(miny,y);maxy=Math.max(maxy,y)}
   const ox=minx*TS-3,oy=miny*TS-16,w=(maxx-minx+1)*TS+6,hh=(maxy-miny+1)*TS+26;
@@ -134,6 +140,7 @@ function roofCache(h,sc){/* 屋根の絵は、家ごとに1回だけ描いて使
       if(!top.has(x-1)){c.fillStyle=(KW?'rgba(15,15,20,.6)':'rgba(110,55,45,.55)');c.fillRect(lx,t,1.5,b-t)}if(!top.has(x+1)){c.fillStyle=(KW?'rgba(15,15,20,.6)':'rgba(110,55,45,.55)');c.fillRect(rx-1.5,t,1.5,b-t)}
       {c.fillStyle='rgba(255,220,200,.18)';c.fillRect(lx,t,rx-lx,1.5)}}
     let chim=null;if(tx>=0){const xr=Math.max(...top.keys()),ccx=top.has(xr-1)?xr-1:xr,yb=bot.get(ccx),ccy=yb-1>top.get(ccx)?yb-1:yb,cx=ccx*TS+TS-10,cy=ccy*TS+8;/* 屋根の右下から、1マスずつ内がわ */chim={cx,cy}}
+    {const rc=S&&S.roofCol&&S.roofCol[hKey(h)],P=rc&&ROOFCOL[rc];if(P)roofTint(c,cv,P)}/* 屋根の色（村レベル13から、家をタップしてえらぶ） */
     return{cv,ox,oy,sc,chim}}}
 function drawRoofs(c,now,hs,eo){if(!HOUSES.length)return;c.save();
   for(const h of (hs||HOUSES)){const A=roofAOf(h);if(A<=0)continue;const sc=Math.max(1,Math.ceil(dpr*cam.z));if(!h._rc||h._rc.sc<sc)h._rc=roofCache(h,sc);const R=h._rc;c.globalAlpha=A;c.drawImage(R.cv,R.ox,R.oy,R.cv.width/R.sc,R.cv.height/R.sc);

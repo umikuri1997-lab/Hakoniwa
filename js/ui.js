@@ -268,6 +268,9 @@ function renderSheet(){
      cs.querySelector('.note').textContent=C.over?'ベッドが多すぎて、きゅうくつ！ 住み心地が大きく下がる':'つかれのとれる速さ・起きたときのパワー：'+(.6+C.v/100*.9).toFixed(1)+'倍'+(C.v>=180?'・ぐっすり眠れて、朝にたのしさ+10':C.v<90?'・たのしさ-5':'');/* 効果は数字で */
      body.appendChild(cs)}
     {const bs=[...h.inside].filter(j=>BEDSET.has(S.obj[j]));if(bs.length){const sec=el('<div class="sec"><h3>ベッド</h3><div class="rows"></div></div>');bs.forEach((j,k)=>{const o=bedOwner(j),row=el('<button class="row" style="text-align:left;width:100%"><span class="dot"></span><div class="tx"><b></b><small></small></div></button>');row.querySelector('.dot').style.cssText=o?'background:#f6f1e6 url('+spiritPort(o.elem,96)+') center/86% no-repeat;box-shadow:inset 0 0 0 2px '+ELEM[o.elem].col:'background:#efe6d2';row.querySelector('b').textContent='ベッド'+(k+1);row.querySelector('small').textContent=o?o.name+'のベッド':'だれでも使える';row.onclick=()=>openSheet('bed',j);sec.querySelector('.rows').appendChild(row)});body.appendChild(sec)}}
+    if((S.lv||1)>=13){const sec=el('<div class="sec"><h3>屋根の色</h3><div class="roofc" style="display:flex;flex-wrap:wrap;gap:6px"></div></div>'),k=hKey(h),cur=(S.roofCol||{})[k]||'';
+      for(const[id,nm]of[['','もとの色'],...Object.entries(ROOFCOL).map(([a,b])=>[a,b.n])]){const b=el('<button class="btn'+(cur===id?' pri':'')+'"></button>');b.textContent=nm;b.onclick=()=>{sfx('tap');S.roofCol||(S.roofCol={});if(id)S.roofCol[k]=id;else delete S.roofCol[k];h._rc=null;dirty=true;renderSheet()};sec.querySelector('.roofc').appendChild(b)}
+      body.appendChild(sec)}/* 屋根の色（村レベル13から） */
     if(!L.length)body.appendChild(el('<p class="story">いまは、だれもいない</p>'));
     const rows=el('<div class="rows"></div>');
     for(const r of L){const row=el(`<button class="row" style="text-align:left;width:100%"><span class="dot"></span><div class="tx"><b></b><small></small></div></button>`);
