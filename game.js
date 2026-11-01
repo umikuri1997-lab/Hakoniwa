@@ -3525,7 +3525,7 @@ function drawFloorChip(c,id0,x,y,i,iso){const C=window.CHIPS;if(!C)return false;
   if(id==='carpet'&&c._shU==null){const same=k=>!iso&&S.floor[k]==='carpet';/* 壁の下にのばすじゅうたん（wallMarg）には、ふちを描かない */for(const[s,k]of[['U',i-W],['D',i+W],['L',i-1],['R',i+1]])if(!same(k)&&C['carpet:'+s])drawChip(c,C['carpet:'+s],id,x,y,0,i)}/* じゅうたんのふち */
   if(road){const cn=roadCorners(i,iso);
     if(id==='stone'||id==='brick'){const m=(q.L?1:0)|(q.R?2:0)|(q.U?4:0)|(q.D?8:0);if(m<15&&C[id+':'+m])drawChip(c,C[id+':'+m],id,x,y,0,i);cn.forEach((v,k)=>{if(v&&C[id+':c'+k])drawChip(c,C[id+':c'+k],id,x,y,0,i)})}/* 道のふちの石・内がわの角 */
-    else{const tr=(dx,dy)=>{const j=i+dy*W+dx;if(!iso&&(gx+dx<0||gy+dy<0||gx+dx>=W||gy+dy>=H))return null;if(!iso&&(S.ground[j]===1||S.floor[j]||hiAt(j)!==hiAt(i)))return null;/* 高さのちがうマスの地面は、道のふちに出さない */const t=roadTerrain(j,iso);return t.grass?'g':WD===1?'r':'d'};
+    else{const tr=(dx,dy)=>{const j=i+dy*W+dx;if(!iso&&(gx+dx<0||gy+dy<0||gx+dx>=W||gy+dy>=H))return null;if(!iso&&(S.floor[j]||hiAt(j)!==hiAt(i)))return null;if(!iso&&S.ground[j]>=1){const t=roadTerrain(i,iso);return t.grass?'g':WD===1?'r':'d'}/* となりが水：水ぎわのすきまに見える地面（このマスの地面）のふちを、ほかのはしと同じに *//* 高さのちがうマスの地面は、道のふちに出さない */const t=roadTerrain(j,iso);return t.grass?'g':WD===1?'r':'d'};
       for(const[s,open,dx,dy]of[['U',!q.U,0,-1],['D',!q.D,0,1],['L',!q.L,-1,0],['R',!q.R,1,0]]){const t=open&&tr(dx,dy);if(t&&C['fringe'+t+':'+s])drawChip(c,C['fringe'+t+':'+s],id,x,y,0,i)}
       cn.forEach((v,k)=>{if(!v)return;const t=tr(k===0||k===3?-1:1,k<2?-1:1);if(t&&C['fringe'+t+':c'+k])drawChip(c,C['fringe'+t+':c'+k],id,x,y,0,i)})}/* 草・地面とのさかい */
     c.restore()}
@@ -6305,7 +6305,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='871';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='872';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
