@@ -299,8 +299,8 @@ const natBarY=j=>((j/W)|0)*TS-(S.obj[j]==='rock'?7:30)-hiAt(j)*LIFT;/* 木・岩
 function drawArrowTags(x0,y0,x1,y1){/* 見張り台の上の、木の矢の本数（夜の暗さより上にかく） */
   for(const j of TOWERS){if(S.obj[j]!=='watch')continue;const tx=(j%W)*TS,ty=((j/W)|0)*TS-hiAt(j+W)*LIFT;if(j%W<x0-2||j%W>x1+1||((j/W)|0)<y0-2||((j/W)|0)>y1+3)continue;/* 見張り台の上の、木の矢の本数（せいれいが立つ所より上） */
     const n=S.inv.arrow||0,L=S.hp['L'+j]||1,cx=tx+32,cy=ty-58-(L>1?16:0),t=String(n);ctx.font='9px "PixelMplus10","Hikomi","Hiragino Maru Gothic ProN",sans-serif';const tw=ctx.measureText(t).width,w=tw+19,lx=cx-w/2;
-    ctx.fillStyle='rgba(58,40,24,.78)';ctx.fillRect(lx,cy-6,w,12);ctx.fillRect(lx+1,cy-7,w-2,14);ctx.fillStyle='#e9d3a8';ctx.fillRect(lx+3,cy-.5,9,1.4);ctx.fillStyle='#cfd6de';ctx.beginPath();ctx.moveTo(lx+14,cy+.2);ctx.lineTo(lx+10.5,cy-2.6);ctx.lineTo(lx+10.5,cy+3);ctx.closePath();ctx.fill();ctx.fillStyle='#f6ecd6';ctx.fillRect(lx+2.5,cy-2,1.2,1.4);ctx.fillRect(lx+2.5,cy+1,1.2,1.4);/* 木の矢の絵 */
-    ctx.fillStyle=n>0?'#fff6dc':'#ff8a7a';ctx.textAlign='left';ctx.textBaseline='middle';ctx.fillText(t,lx+16,cy+.5);ctx.textAlign='start';ctx.textBaseline='alphabetic'}}
+    ctx.fillStyle='rgba(122,86,52,.82)';ctx.fillRect(lx,cy-6,w,12);ctx.fillRect(lx+1,cy-7,w-2,14);ctx.fillStyle='rgba(244,233,210,.9)';ctx.fillRect(lx+1,cy-5,w-2,10);ctx.fillRect(lx+2,cy-6,w-4,12);ctx.fillStyle='#8a5a33';ctx.fillRect(lx+3,cy-.5,9,1.4);ctx.fillStyle='#6b7480';ctx.beginPath();ctx.moveTo(lx+14,cy+.2);ctx.lineTo(lx+10.5,cy-2.6);ctx.lineTo(lx+10.5,cy+3);ctx.closePath();ctx.fill();ctx.fillStyle='#c0503a';ctx.fillRect(lx+2.5,cy-2,1.2,1.4);ctx.fillRect(lx+2.5,cy+1,1.2,1.4);/* 木の矢の絵 */
+    ctx.fillStyle=n>0?'#3b2a1a':'#c0392b';ctx.textAlign='left';ctx.textBaseline='middle';ctx.fillText(t,lx+16,cy+.5);ctx.textAlign='start';ctx.textBaseline='alphabetic'}}
 function render(now){RFN++;
   if(dirty)rebuildStatic(STATICFULL);
   if(S.hi&&CPRE!==S&&cliffChipsOK()){CPRE=S;cliffPreload()}
