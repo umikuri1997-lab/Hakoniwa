@@ -104,6 +104,7 @@ function drawFarmChip(c,x,y,i,g,now){const C=window.CHIPS;if(!C)return false;if(
   if(d&&d.sown!==false){if(g<100&&!workOn(i)){c.fillStyle='rgba(30,20,10,.45)';rr(c,x+4,y+TS-5,TS-8,4,2);c.fillStyle='#8fe06a';if(g>0)rr(c,x+4,y+TS-5,(TS-8)*g/100,4,2)}
     else{const tw=Math.sin((now||0)/300+i)*.5+.5;c.fillStyle='rgba(255,245,170,'+(.5+tw*.5)+')';const sx=x+TS-6,sy=y+5,r=2+tw*1.5;c.fillRect(sx-r,sy-.6,r*2,1.2);c.fillRect(sx-.6,sy-r,1.2,r*2)}}/* 育つまでのバーと、とれごろのきらきら */
   return true}
+let BELLRING=-1e9;/* 村の鐘が鳴りはじめた時（4秒ゆれる） */
 const DOORCH=new Set(['door','yozoradoor','gate','archedgate','stonegate','logdoor','loggate','sdoor']);/* ドア・門は、開きぐあいで絵をえらぶ */
 function drawDoorChip(c,id,x,y,i,now){const C=window.CHIPS;if(!C)return false;
   if(ICON||i==null||!S){const ch=C[id];return !!ch&&drawChip(c,ch,id,x,y,now,i)}
@@ -134,6 +135,7 @@ function drawObj(c,id,x,y,i,g,now){
   if(!c._chip&&DOORCH.has(id)&&!(S&&S.win&&i!=null&&S.win[i]&&!c._win)&&drawDoorChip(c,id,x,y,i,now))return;/* ドア・門のドット絵（リースのあるドアは、リースの前にドアだけ） */
   if(CONN[id]&&!c._chip&&!(HOME_WALLS.has(id)&&S&&S.win&&S.win[i]&&!c._win)){const gL=CONN[id]==='f'&&!ICON&&i!=null&&(typeAt(i-1)==='gate'||typeAt(i-1)==='logdoor');if(gL){const gx=typeAt(i-1)==='logdoor'?6.8:2.2;c.save();c.beginPath();c.rect(x+gx,y-64,96,160);c.clip()}/* 丸太の塀のドアの右の柱も、となりのマスにはみ出す *//* 左が柵のドア：ドアの右の柱（このマスの左はし2.4ドット。すきまが出ないよう2.2から描く）にかぶる板を描かない（横木は柱のふちから） */const ok=drawConn(c,id,x,y,i,now);if(gL)c.restore();if(ok){if(id==='wall')stoneFront(c,x,y,i);else if(HOME_WALLS.has(id)&&window.CHIPS[id+':ext'])wallFront(c,id,x,y,i);return}}/* つながる物は部品で（窓のある壁は、窓の前に壁だけ）。家の壁は、先に、となりの床を壁のふちまでのばす */
   if(!c._chip&&PCH.has(id)){const ch=plantChip(id,i,g);if(ch&&drawChip(c,ch,id,x,y,now,i)){if(id==='berry'&&g>=100)berryOn(c,x,y);if(id==='statue'&&i!=null&&!ICON)for(const q of[i-1,i+1])if(S.obj[q]==='obox'||S.obj[q]==='board')drawObj(c,S.obj[q],x+(q-i)*TS,y,q,0,now);/* 女神像の横の箱・ボードを手前に */return}}
+  if(id==='bell'&&!ICON&&!c._chip&&window.CHIPS&&CHIPS['bell#1']){const t=performance.now()-BELLRING,ch=t<4000&&Math.floor(t/260)%2?CHIPS['bell#1']:CHIPS.bell;if(drawChip(c,ch,id,x,y,now,i))return}/* 村の鐘：朝に鳴るあいだ、ゆれる */
   if(!c._chip&&!c._win&&!SEATS.includes(id)&&!PCH.has(id)&&!DOORCH.has(id)&&id!=='farm'){const ch=chipOf(id,i);if(ch&&drawChip(c,ch,id,x,y,now,i))return}/* ドット絵があれば、それを使う（いすは、つりざおをかいてから下で） */
   if(BL[id]&&BL[id].cs&&!ICON&&!c._cs){const k=BL[id].cs;c.save();c.translate(x+16,y+20);c.scale(k,k);c.translate(-x-16,-y-20);c._cs=1;drawObj(c,id,x,y,i,g,now);c._cs=0;c.restore();return}/* ラグは、絵だけ大きく（判定はそのまま） */
   if(!ICON&&i!=null&&S&&PLANTS.includes(id)&&isBud(i)){c.fillStyle='rgba(0,0,0,.18)';c.beginPath();c.ellipse(x+16,y+27,7,2.5,0,0,7);c.fill();c.fillStyle='#6fbf5a';c.fillRect(x+15,y+17,2,10);c.beginPath();c.ellipse(x+11,y+18,5,2.6,-.5,0,7);c.ellipse(x+21,y+18,5,2.6,.5,0,7);c.fill();return}/* 芽 */
