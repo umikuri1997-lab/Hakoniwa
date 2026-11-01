@@ -296,6 +296,11 @@ function cliffRow(y,R,top){/* 1つのかたまり（行・段）の段差を描�
   {let k=R.x0;while(k<=R.x1){if(!ok(k)){k++;continue}let e=k;while(e+1<=R.x1&&ok(e+1))e++;const w=(e-k+1)*TS;{const a=SX(k*TS),b=SY(y*TS-lv*LIFT);gblit(ctx,k*TS,y*TS,w,top?LIFT:TS,a,b,SX(k*TS+w)-a,SY(y*TS-lv*LIFT+(top?LIFT:TS))-b,GLOD)}{ctx.fillStyle='rgba(255,250,225,.10)';const a=SX(k*TS),b=SY(y*TS-lv*LIFT);ctx.fillRect(a,b,SX(k*TS+w)-a,SY(y*TS-lv*LIFT+(top?LIFT:TS))-b)}k=e+1}}/* 上の面の地面：地面の下絵を、そのまま上へずらす。高い所は少し明るく */
   part('b')}
 const natBarY=j=>((j/W)|0)*TS-(S.obj[j]==='rock'?7:30)-hiAt(j)*LIFT;/* 木・岩の上の、のこりのバーの上はし */
+function drawArrowTags(x0,y0,x1,y1){/* 見張り台の上の、木の矢の本数（夜の暗さより上にかく） */
+  for(const j of TOWERS){if(S.obj[j]!=='watch')continue;const tx=(j%W)*TS,ty=((j/W)|0)*TS-hiAt(j+W)*LIFT;if(j%W<x0-2||j%W>x1+1||((j/W)|0)<y0-2||((j/W)|0)>y1+3)continue;/* 見張り台の上の、木の矢の本数（せいれいが立つ所より上） */
+    const n=S.inv.arrow||0,L=S.hp['L'+j]||1,cx=tx+32,cy=ty-38-(L>1?16:0),t=String(n);ctx.font='9px "PixelMplus10","Hikomi","Hiragino Maru Gothic ProN",sans-serif';const tw=ctx.measureText(t).width,w=tw+19,lx=cx-w/2;
+    ctx.fillStyle='rgba(58,40,24,.78)';ctx.fillRect(lx,cy-6,w,12);ctx.fillRect(lx+1,cy-7,w-2,14);ctx.fillStyle='#e9d3a8';ctx.fillRect(lx+3,cy-.5,9,1.4);ctx.fillStyle='#cfd6de';ctx.beginPath();ctx.moveTo(lx+14,cy+.2);ctx.lineTo(lx+10.5,cy-2.6);ctx.lineTo(lx+10.5,cy+3);ctx.closePath();ctx.fill();ctx.fillStyle='#f6ecd6';ctx.fillRect(lx+2.5,cy-2,1.2,1.4);ctx.fillRect(lx+2.5,cy+1,1.2,1.4);/* 木の矢の絵 */
+    ctx.fillStyle=n>0?'#fff6dc':'#ff8a7a';ctx.textAlign='left';ctx.textBaseline='middle';ctx.fillText(t,lx+16,cy+.5);ctx.textAlign='start';ctx.textBaseline='alphabetic'}}
 function render(now){RFN++;
   if(dirty)rebuildStatic(STATICFULL);
   if(S.hi&&CPRE!==S&&cliffChipsOK()){CPRE=S;cliffPreload()}
@@ -415,6 +420,7 @@ function render(now){RFN++;
     {const wl=HOUSEART['wall-window-lit'];if(wl&&wl.complete&&wl.naturalWidth&&isDark()){ctx.globalAlpha=1;for(const h of litH)for(const q of h.set){if(((q/W)|0)===h.y0)continue;/* 上がわの壁の窓は、昼も夜も同じ色 */if(!S.win||S.win[q]!==1||!(HOME_WALLS.has(S.obj[q])||S.obj[q]==='window'))continue;const qx=q%W,qy=(q/W)|0;if(qx<x0-1||qx>x1||qy<y0-1||qy>y1)continue;if(winCovered(qx,qy))continue;/* 手前に背の高い物があれば、窓の光はかさねない */{const lk='window:lit',lc=window.CHIPS&&CHIPS[lk];if(!(lc&&drawChip(ctx,lc,lk,qx*TS,qy*TS-1.5,0,q)))ctx.drawImage(wl,qx*TS+3.625,qy*TS+1.5,24.75,21.7125)}}/* 明かりの絵もチップの大きさのまま */ctx.globalAlpha=1}}/* 夜（21時〜6時）だけ、灯りのある家の窓ガラスは中が明るい色に（暗さの上にかく） */
     ctx.setTransform(dpr,0,0,dpr,0,0)}
   if(GLWN){ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=Math.min(1,dk*1.5);ctx.globalCompositeOperation='lighter';ctx.drawImage(GLW,0,0);ctx.globalCompositeOperation='source-over';ctx.globalAlpha=1;ctx.setTransform(dpr,0,0,dpr,0,0);GLWN=0}
+  ctx.setTransform(k,0,0,k,-cam.x*k,-cam.y*k);drawArrowTags(x0,y0,x1,y1);ctx.setTransform(dpr,0,0,dpr,0,0);
   // 空気の粒（昼は花粉、夜はホタル）
   for(const m of motes){const x=m.x*VW,y=m.y*VH;if(dk>.3){const a=(Math.sin(now/400+m.p)*.5+.5)*.8;ctx.globalCompositeOperation='lighter';circ(ctx,x,y,2.2*m.s,'rgba(200,255,140,'+a+')');circ(ctx,x,y,6*m.s,'rgba(200,255,140,'+a*.15+')');ctx.globalCompositeOperation='source-over'}else{circ(ctx,x,y,1.4*m.s,'rgba(255,250,220,'+(.35+.2*Math.sin(now/600+m.p))+')')}}
   drawHanabi(now);
