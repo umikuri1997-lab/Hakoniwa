@@ -45,10 +45,11 @@ function showItemGift(){while(ITEM_GIFTS.length&&ITEM_GIFTS[0].state!==S)ITEM_GI
   const button=el('<button class="btn pri" type="button">'+(rec?'OK':'うけとる')+'</button>');button.disabled=true;card.append(button);overlay.append(card);document.body.append(overlay);sfx('good');const prior=document.activeElement;
   setTimeout(()=>{if(overlay.isConnected){button.disabled=false;button.focus({preventScroll:true})}},650);button.onclick=()=>{if(button.disabled)return;overlay.remove();GIFT_ACTIVE=false;if(prior&&prior.isConnected)prior.focus({preventScroll:true})};
 }
+const spotCond=sp=>(sp.room?'家の中に、':'')+sp.how.replace(/^家の中に、/,'').split('と、').map(t=>t.replace(/([0-9]+)(つ|本)$/,'×$1')).join('・');/* 「井戸と、畑3つ」→「井戸・畑×3」 */
 const SPOT_POPS=[];/* はじめてできたスポットの説明 */
 function showSpotPop(){while(SPOT_POPS.length&&SPOT_POPS[0].state!==S)SPOT_POPS.shift();if(!SPOT_POPS.length||GIFT_ACTIVE)return;
   GIFT_ACTIVE=true;const overlay=el('<div class="idea-reveal gift-reveal" role="dialog" aria-modal="true"></div>'),card=el('<div class="idea-card"><h2></h2><div class="spotpop"><b></b><p></p><p></p></div></div>');
-  const q=card.querySelector('.spotpop'),h=card.querySelector('h2');{const sp=SPOT_POPS.shift().sp;h.textContent='スポットができた！';q.children[0].textContent=sp.n;q.children[1].textContent=sp.how+(sp.room?'を置く。':'を、まわり3マスに置く。');q.children[2].textContent=sp.eff}overlay.setAttribute('aria-label',h.textContent);
+  const q=card.querySelector('.spotpop'),h=card.querySelector('h2');{const sp=SPOT_POPS.shift().sp;h.textContent='スポットができた！';q.children[0].textContent=sp.n;q.children[1].textContent='条件：'+spotCond(sp);q.children[2].textContent=sp.eff}overlay.setAttribute('aria-label',h.textContent);
   const button=el('<button class="btn pri" type="button">OK</button>');button.disabled=true;card.append(button);overlay.append(card);document.body.append(overlay);sfx('good');const prior=document.activeElement;
   setTimeout(()=>{if(overlay.isConnected){button.disabled=false;button.focus({preventScroll:true})}},650);button.onclick=()=>{if(button.disabled)return;overlay.remove();GIFT_ACTIVE=false;if(prior&&prior.isConnected)prior.focus({preventScroll:true})}}
 function questGives(q,g){g=g||q.gives||{};
