@@ -65,10 +65,10 @@ const BL={
   plasterwall:{name:'しっくいの壁',fix:5,fixm:{wood:3,stone:2},kind:'block',cost:4,pc:11,time:90,maker:'earth',qty:10,lv:5,solid:1,hp:48,hpS:55,brk:1,attr:{},mat:{wood:6,stone:3},desc:'明るいしっくい仕上げの家の壁。じょうぶさ48'},
   brickwall:{name:'レンガの壁',fix:6,fixm:{stone:7},kind:'block',cost:5,pc:13,time:100,maker:'fire',qty:10,lv:8,solid:1,hp:55,hpS:63,brk:1,attr:{},mat:{stone:14},desc:'レンガを積んだ家の壁。じょうぶさ55'},
   wall:{name:'石の塀',fix:6,fixm:{stone:5},kind:'block',cost:5,pc:12,time:100,maker:'earth',qty:10,lv:6,w:1,solid:1,hp:45,hpS:51,attr:{},mat:{stone:9},desc:'石を積んだ塀。じょうぶさ45'},
-  clover:{sp:9,name:'シロツメクサ',item:'シロツメクサの種',kind:'plant',cost:3,attr:{wood:1},desc:'まわり1マスの畑の収穫+1'},
-  bellf:{sp:9,name:'ききょう',item:'ききょうの種',kind:'plant',cost:3,attr:{earth:1},desc:'まわり1マスの畑の収穫+1'},
-  salvia:{sp:9,name:'サルビア',item:'サルビアの種',kind:'plant',cost:3,attr:{fire:1},desc:'まわり1マスの畑の収穫+1'},
-  lily:{sp:9,name:'ゆり',item:'ゆりの種',kind:'plant',cost:3,attr:{wind:1},desc:'まわり1マスの畑の収穫+1'},
+  clover:{sp:9,name:'シロツメクサ',item:'シロツメクサの種',kind:'plant',cost:3,attr:{wood:1},desc:'まわり1マスの畑の収穫+1（重複なし）'},
+  bellf:{sp:9,name:'ききょう',item:'ききょうの種',kind:'plant',cost:3,attr:{earth:1},desc:'まわり1マスの畑の収穫+1（重複なし）'},
+  salvia:{sp:9,name:'サルビア',item:'サルビアの種',kind:'plant',cost:3,attr:{fire:1},desc:'まわり1マスの畑の収穫+1（重複なし）'},
+  lily:{sp:9,name:'ゆり',item:'ゆりの種',kind:'plant',cost:3,attr:{wind:1},desc:'まわり1マスの畑の収穫+1（重複なし）'},
   lotus:{sp:9,name:'ハス',item:'ハスの種',kind:'plant',cost:3,attr:{water:1},desc:'まわり2マスで水浴びすると、たのしさ×1.5 / つかれ −9／1時間'},
   tree:{hp:5,brk:1,fix:1,fixm:{},name:'木',item:'木の苗',kind:'plant',cost:4,lv:3,solid:1,env:1,attr:{wood:3},desc:'まわり3マスを緑にする。まわり3マスで、たのしさ+0.4／1時間'},
   fruit:{hp:5,brk:1,fix:1,fixm:{},name:'果物の木',item:'果物の苗',kind:'plant',cost:10,lv:6,solid:1,dyn:1,env:1,attr:{wood:3,water:1},desc:'まわり3マスを緑にする。まわり3マスで、たのしさ+0.4／1時間。4日ごとに、りんごが実る。食料+2'},
@@ -84,7 +84,7 @@ const BL={
   rug2:{offerOnly:1,cs:1.5,sz:[2,2],dw:1.75,name:'くもラグ',kind:'furn',cat:'living',f2:1,lv:7,pc:5,time:100,maker:'wind',attr:{wind:1},mat:{wood:15},desc:'くもの形のラグ。住み心地+6',anim:1},
   tub:{hp:5,brk:1,fix:2,fixm:{wood:1,funba:1},name:'水おけ',kind:'furn',cat:'cook',f2:1,lv:3,pc:3,time:80,maker:'water',attr:{water:1},mat:{wood:3},solid:1,desc:'かまどのまわり3マスにあると、料理の時間-10%。住み心地+3'},
   sink:{hp:5,brk:1,fix:4,fixm:{stone:3},name:'流し台',kind:'furn',cat:'cook',f2:1,lv:4,pc:7,time:120,maker:'water',attr:{water:1},mat:{stone:5},solid:1,desc:'かまどのまわり3マスにあると、料理の時間-10%。住み心地+4'},
-  niguruma:{hp:5,brk:1,fix:2,fixm:{wood:4},name:'にぐるま',kind:'furn',cat:'other',f2:1,sz:[2,1],pc:4,time:90,maker:'wood',attr:{wood:1},mat:{wood:10},solid:1,desc:'まわり3マスの箱に、しまう速さ+20%'},
+  niguruma:{hp:5,brk:1,fix:2,fixm:{wood:4},name:'にぐるま',kind:'furn',cat:'other',f2:1,sz:[2,1],pc:4,time:90,maker:'wood',attr:{wood:1},mat:{wood:10},solid:1,desc:'まわり3マスの箱に、しまう速さ+20%（重複なし）'},
   kabedougu:{hp:5,brk:1,fix:2,fixm:{wood:3},name:'どうぐたて',kind:'furn',cat:'other',f2:1,pc:3,time:70,maker:'wood',attr:{wood:1},mat:{wood:6,stone:2},solid:1,desc:'住み心地+3'},
   kabebukuro:{hp:5,brk:1,fix:2,fixm:{funba:3},name:'かべかけのふくろ',kind:'furn',cat:'other',f2:1,pc:3,time:70,maker:'earth',attr:{earth:1},mat:{funba:5,wood:2},solid:1,desc:'食料を20までしまえる。住み心地+3'},
   taru:{hp:5,brk:1,fix:2,fixm:{wood:3},name:'たる',kind:'furn',cat:'other',f2:1,pc:3,time:80,maker:'wood',attr:{wood:1},mat:{wood:8},solid:1,desc:'食料を30までしまえる。住み心地+3'},
@@ -115,7 +115,7 @@ const BL={
   hedge:{hp:5,brk:1,fix:2,fixm:{funba:3},name:'生垣',kind:'furn',cat:'env',f2:1,lv:5,pc:3,time:80,maker:'wood',attr:{wood:1},mat:{wood:2,funba:5},solid:1,env:2,er:2,desc:'まわり2マスで、たのしさ+0.7／1時間'},
   birdbath:{hp:5,brk:1,fix:3,fixm:{stone:8},offerOnly:1,name:'水飲み鳥',kind:'furn',cat:'env',f2:1,lv:7,pc:5,time:100,maker:'water',attr:{water:1},mat:{stone:15},solid:1,env:3,desc:'まわり3マスで、たのしさ+1.1／1時間'},
   noren:{hp:5,brk:1,fix:3,fixm:{wood:4,funba:2},name:'のれん',anim:1,dsc:2,kind:'furn',cat:'env',f2:1,lv:5,pc:7,time:100,maker:'fire',attr:{fire:1},mat:{wood:8,funba:4},solid:1,env:7,er:1,desc:'まわり1マスで、たのしさ+2.5／1時間'},
-  parasol:{hp:5,brk:1,fix:4,fixm:{wood:4,funba:2},name:'パラソル',anim:1,dsc:2,kind:'furn',cat:'env',f2:1,lv:5,pc:7,time:100,maker:'wind',attr:{wind:1},mat:{wood:8,funba:4},solid:1,env:7,er:1,desc:'まわり1マスで、たのしさ+2.5／1時間'},
+  parasol:{hp:5,brk:1,fix:4,fixm:{wood:4,funba:2},name:'パラソル',anim:1,dsc:2,kind:'furn',cat:'env',f2:1,lv:5,pc:7,time:100,maker:'wind',attr:{wind:1},mat:{wood:8,funba:4},solid:1,env:7,er:1,desc:'まわり1マスで、たのしさ+2.5／1時間（重複なし）'},
   gazebo:{name:'ガゼボ',sz:[2,2],kind:'furn',cat:'env',lv:5,pc:8,time:120,maker:'wood',attr:{wood:2,wind:1},mat:{wood:18,stone:4},desc:'屋根のある休み場所。下に、いす・テーブル・ベンチ・ラグ・花を置ける'},
   azumaya:{name:'東屋',sz:[2,2],kind:'furn',cat:'env',lv:5,pc:8,time:120,maker:'earth',attr:{earth:2,fire:1},mat:{wood:18,stone:6},desc:'屋根のある休み場所。下に、いす・テーブル・ベンチ・ラグ・花を置ける'},
   arch:{offerOnly:1,anim:1,dsc:1.8,name:'ガーデンアーチ',kind:'furn',cat:'env',f2:1,lv:8,pc:9,time:120,maker:'wood',attr:{wood:1},mat:{wood:30},env:4,desc:'まわり3マスで、たのしさ+1.4／1時間'},
@@ -157,7 +157,7 @@ const BL={
   komainu:{name:'こまいぬ',kind:'furn',shopOnly:1,pc:10,solid:1,attr:{},desc:'カミサマのかざり。神殿をまもる石の犬。住み心地+10'},
   kadomatsu:{name:'かどまつ',kind:'furn',shopOnly:1,pc:10,solid:1,attr:{},desc:'カミサマのかざり。竹と松のおめでたいかざり。住み心地+10'},
   rockart:{hp:5,brk:1,fix:1,fixm:{stone:3},name:'つぼ',kind:'furn',lv:2,pc:1,time:100,maker:'earth',solid:1,attr:{earth:2},mat:{stone:5},desc:'土でできたかざり。住み心地+5'},
-  vane:{hp:5,brk:1,fix:4,fixm:{wood:2,stone:2},offerOnly:1,name:'風見鶏',kind:'furn',pc:7,time:160,maker:'wind',solid:1,anim:1,attr:{wind:4},mat:{wood:3,stone:3},desc:'風の向きをおしえる。まわり3マスのせいれいは移動速度×1.2。住み心地+4'},
+  vane:{hp:5,brk:1,fix:4,fixm:{wood:2,stone:2},offerOnly:1,name:'風見鶏',kind:'furn',pc:7,time:160,maker:'wind',solid:1,anim:1,attr:{wind:4},mat:{wood:3,stone:3},desc:'風の向きをおしえる。まわり3マスのせいれいは移動速度×1.2（重複なし）。住み心地+4'},
   spike:{name:'とげの罠',fix:1,fixm:{wood:1,stone:1},kind:'furn',lv:1,pc:1,time:100,maker:'wood',qty:2,trap:1,attr:{earth:.5},mat:{wood:2,stone:2},desc:'上にいる「コワイノ」に、15分ごとに0.5ダメージ',anim:1},
   sticky:{name:'ねばねば草',fix:1,fixm:{funba:1},kind:'furn',lv:2,pc:1,time:80,maker:'wood',qty:2,trap:1,attr:{wood:.5},mat:{funba:2,kinoko:1},desc:'上にいる「コワイノ」の速さが35%になる',anim:1},
   puddle:{name:'すべる水たまり',fix:1,fixm:{stone:1},kind:'furn',lv:4,pc:1,time:80,maker:'water',qty:2,trap:1,anim:1,attr:{water:.5},mat:{stone:2},desc:'ふんだ「コワイノ」が8分止まる。つぎに使えるまで2時間',anim:1},
@@ -178,7 +178,7 @@ const BL={
   altar:{name:'カミサマの台座',solid:1,anim:1},
   site2:{name:'建てている場所',solid:1,job:1},
   part:{name:''},
-  tower:{hp:100,hpS:114,brk:1,fix:20,fixm:{wood:20,stone:10},name:'守護の台座',sz:[2,2],kind:'build',pc:95,time:300,maker:null,solid:1,anim:1,attr:{wood:3,water:3,fire:3,earth:3,wind:3},desc:'光の矢：ダメージ1／10分ごと／範囲10マス。まわり7マスを照らす'},
+  tower:{hp:100,hpS:114,brk:1,fix:20,fixm:{wood:20,stone:10},name:'守護の台座',sz:[2,2],kind:'build',pc:95,time:300,maker:null,solid:1,anim:1,attr:{wood:3,water:3,fire:3,earth:3,wind:3},desc:'守護の力をとりもどす台座。ヌシ様が帰ってくる。光の矢：ダメージ1／10分ごと／範囲10マス。まわり7マスを照らす'},
   rock:{name:'岩',solid:1,natural:1},
   hotstone:{hp:5,brk:1,fix:1,fixm:{},name:'ほのお石',kind:'furn',pc:0,time:20,solid:1,anim:1,attr:{fire:3,water:1},desc:'水べに置くと、水があたたまって温泉になる'},
   volcano:{name:'火山',sz:[3,3],solid:1,anim:1},boulder:{name:'大岩',solid:1,natural:1},heatv:{name:'熱の切りかえ装置',solid:1,anim:1},crack:{name:'ひびわれ',anim:1},/* 火山のふもと */
@@ -6330,7 +6330,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='915';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='916';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
