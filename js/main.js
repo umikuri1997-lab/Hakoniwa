@@ -46,7 +46,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='945';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='946';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
@@ -216,7 +216,7 @@ document.querySelector('.hud').addEventListener('click',()=>{if(!S)return;sfx('t
 $('#dock').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;sfx('tap');if(b.dataset.mode)setMode(b.dataset.mode);else if(b.dataset.sheet)openSheet(b.dataset.sheet)});
 $('#sheetX').onclick=closeSheet;$('#scrim').onclick=closeSheet;
 $('#questChip').onclick=()=>openSheet('menu','goal');/* 目標の一覧を直接ひらく */
-$('#pauseBtn').onclick=()=>{sfx('tap');USERPAUSE=!USERPAUSE;$('#pauseIc').style.display=USERPAUSE?'none':'';$('#playIc').style.display=USERPAUSE?'':'none';$('#pauseBtn').setAttribute('aria-label',USERPAUSE?'うごかす':'とめる');$('#pauseBtn').classList.toggle('on',USERPAUSE);toast(USERPAUSE?'とめました':'うごかします')};
+$('#pauseBtn').onclick=()=>{sfx('tap');USERPAUSE=!USERPAUSE;$('#pauseIc').style.display=USERPAUSE?'none':'';$('#playIc').style.display=USERPAUSE?'':'none';$('#pauseBtn').setAttribute('aria-label',USERPAUSE?'うごかす':'とめる');$('#pauseBtn').classList.toggle('on',USERPAUSE)};
 $('#speedBtn').onclick=()=>{if(!(hasGlass()||TESTM)){if(glassUnlocked())adPrompt();return}sfx('tap');S.speed=S.speed===1?2:S.speed===2&&TESTM?3:S.speed===3&&TESTM?5:1;/* 広告でできるのは2倍まで */glassUI()};
 $('#helpPop').onclick=()=>{sfx('tap');$('#helpPop').hidden=true};$('#undoBtn').onclick=undo;$('#palL').onclick=()=>$('#palItems').scrollBy({left:-$('#palItems').clientWidth*.7,behavior:'smooth'});$('#palR').onclick=()=>$('#palItems').scrollBy({left:$('#palItems').clientWidth*.7,behavior:'smooth'});$('#palItems').addEventListener('scroll',palArrows,{passive:true});
 $('#cYes').onclick=confirmYes;$('#cRot').onclick=e=>{e.stopPropagation();rotPending()};$('#cNo').onclick=()=>{pending=null;selRect=null;$('#confirm').hidden=true};

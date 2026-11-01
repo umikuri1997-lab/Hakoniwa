@@ -1,4 +1,5 @@
 'use strict';
+let PTW={s:null,v:0,q:false};/* パワーの音：前に見たパワー（q：光・はどうで使ったので鳴らさない） */
 const DLGQ=[];let DLGGAP=0,DLGTAP=-1e9,DLGCUR='';const DLGWAIT=3000;/* 会話がおわってから、つぎのべつの会話を出すまでの間（ミリ秒） */
 function dlgGap(){DLGGAP=performance.now()+DLGWAIT;setTimeout(dlgNext,DLGWAIT+20)}
 function dlgNext(){const d=$('#dialog');if(!d.hidden||!DLGQ.length)return;const w=DLGGAP-performance.now();if(w>0){setTimeout(dlgNext,w+20);return}{const q=DLGQ.shift();dialog(q[0],q[1],q[2],q[3])}}
@@ -75,6 +76,7 @@ function updHUD(){
   {const gs=$('#guardStatus'),night=true;/* 守りの光は、昼も夜も（昼は木や岩に） */gs.hidden=!night;if(LIGHTARM&&(LIGHTCD>0||S.pt<1))LIGHTARM=false;gs.classList.toggle('armed',LIGHTARM);if(night){const gc=gs.querySelector('.gc');let p=1;if(LIGHTCD>0)p=1-LIGHTCD/(LIGHTCDL[S.lv]||10);else if(S.pt<1)p=0;gc.style.setProperty('--gp',(p*360)+'deg')}}
   {const ab=$('#areaBtn'),on=!!(S.flags&&S.flags.areaSkill)&&isNight();ab.hidden=!on;if(on){let p=1;if(AREACD>0)p=1-AREACD/5;else if(S.pt<3)p=0;if(AREAARM&&(AREACD>0||S.pt<3))AREAARM=false;ab.querySelector('.gc').style.setProperty('--gp',(p*360)+'deg');ab.classList.toggle('armed',AREAARM)}else AREAARM=false}
   const L=S.lv,a=LV_XP[L-1],b=L>=maxLv()?a:LV_XP[L]??a;$('#lvLbl').textContent=L;$('#xpBar').style.width=(b>a?clamp((S.totalPt-a)/(b-a),0,1)*100:100)+'%';$('#xpTxt').textContent=b>a?Math.floor(S.totalPt-a)+' / '+(b-a):'MAX';
+  if(PTW.s===S&&S.pt<PTW.v&&!PTW.q)sfx('power');PTW.s=S;PTW.v=S.pt;PTW.q=false;/* カミサマにパワーをわたして何かをもらったとき（光・はどうはべつの音） */
   $('#pt').textContent=S.pt;$('#food').textContent=S.food;$('#woodN').textContent=S.mat.wood||0;$('#matN').textContent=matTot();{const mi=$('#matIc');if(mi&&!mi.dataset.ok){const u=iconURL('mbox');if(u){mi.src=u;mi.dataset.ok=1}}}/* 素材は種類が多いので、上には総量だけ */$('#stoneN').textContent=S.mat.stone||0;{const bn=$('#bambooN'),bi=$('#bambooIc'),on=bambooOn();if(bn){bn.textContent=S.mat.bamboo||0;bn.hidden=!on;bi.hidden=!on;if(!bi.src)bi.src=ICONS.bamboo}}{const fc=foodCap(),mc=matCap(),fb=$('#foodBar'),mb=$('#matBar');fb.style.width=(fc?Math.min(100,S.food/fc*100):0)+'%';fb.style.background=fc&&S.food>=fc?'#d9a441':'';mb.style.width=(mc?Math.min(100,matTot()/mc*100):0)+'%';mb.style.background=mc&&matTot()>=mc?'#d9a441':'#c9a46a'}$('#resN').textContent=S.res.length;if(!$('#resIc').src)$('#resIc').src=spiritPort('wood',48,null);$('#revLbl').textContent='みどり '+GRASSN;
   const hungry=S.res.filter(r=>r.hunger<20).length,en=S.enemies.filter(e=>e.spawned).length;
   const al=$('#alert');const msg=[];if(en)msg.push('「コワイノ」 '+en+'体');if(hungry)msg.push('おなかがすいたせいれい '+hungry+'人');if(S.food===0&&S.enemyOn)msg.push(cnt('stor')?'食料ゼロ':'食料箱がありません');/* 足りない理由もいっしょに出す */

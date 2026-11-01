@@ -168,7 +168,7 @@ function updRes(r,dt){rescueStuck(r);if((RHOLD.get(r)||0)>performance.now())retu
     const fh=r.fleeHouse;r.fleeHouse=false;const en=S.enemies.find(e=>e.spawned&&Math.hypot(e.x-r.x,e.y-r.y)<(fh?12:6));/* 家の壁がこわされたときは、少しはなれたコワイノからも逃げる */
     if(en){r.fleeT=S.t;endAct(r);const G=bfs(r.x|0,r.y|0);if(withFlee(r,fleeHit,G))return}}
   if(r.act&&!isWatch(r)&&hostileNow(r)&&r.hunger>=30&&!['shiver','eat','fetch','flee','faint','forage','pray','bury','reunion','sevreact','step','watchpost'].includes(r.act.type)&&!r.coffin)endAct(r);/* 寝ている子も、コワイノが基地に入ってきたら起きて、家でふるえる *//* たたかえない子は、コワイノがいるあいだ、家でふるえる */
-  if(r.elem==='wood'&&r.act&&(r.act.type==='sleep'||r.act.type==='stay')&&r.hunger>=50&&!r.coffin&&isNight()&&enemyLive()&&TOWERS.filter(j=>S.obj[j]==='watch').length>S.res.filter(q=>q.act&&q.act.type==='watchpost').length)endAct(r);/* コワイノが来たら、ねている木の子も起きて、だれも立っていない見張り台へ */
+  if(r.elem==='wood'&&r.act&&(r.act.type==='sleep'||r.act.type==='stay')&&r.hunger>=50&&!r.coffin&&isNight()&&!(r.wpNo>S.t)&&TOWERS.filter(j=>S.obj[j]==='watch').length>S.res.filter(q=>q.act&&q.act.type==='watchpost').length)endAct(r);/* 夜（火の子が見回りをはじめるとき）、だれも立っていない見張り台があれば、ねている木の子も起きて見張り台へ */
   if(r.act&&isNight()&&!NIGHT_OK.includes(r.act.type))endAct(r)
   if(r.act&&r.act.type==='sevreact'&&(r.hunger<30||hungry(r)||r.energy<10||!SEV_ENCOUNTERS.get(S)||!sevEncounterSafe(SEV_ENCOUNTERS.get(S))))endAct(r);
   if(r.act&&r.act.type==='questjoy'&&(r.hunger<30||hungry(r)||!questVisitSafe(r,r.act.obj)))endAct(r);

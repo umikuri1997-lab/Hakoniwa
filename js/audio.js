@@ -99,6 +99,7 @@ function sfx(k){
   case'furn':seq([72,76,79,84],.06,'triangle',.07);break;
   case'furnPlace':if(playS('furniturePlace',.72))break;seq([72,76,79,84],.06,'triangle',.07);break;
   case'matDrop':if(playS('matDrop',.8))break;tone(520,t,.06,'triangle',.06,o,260);break;
+  case'power':seq([79,84,88,91],.055,'sine',.07);tone(1568,t+.24,.35,'triangle',.03,o,2093);break;/* パワーをカミサマにわたした：きらっとした音 */
   case'tap':tone(1300,t,.03,'square',.1,o);tone(1950,t+.025,.03,'triangle',.08,o);break;
   case'next':tone(88,t,.04,'triangle',.05,o);break;
   case'good':seq([84,88],.07,'sine',.06);break;
