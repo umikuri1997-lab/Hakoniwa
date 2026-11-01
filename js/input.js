@@ -28,10 +28,10 @@ cv.addEventListener('pointermove',e=>{
   const dx=e.clientX-gest.sx,dy=e.clientY-gest.sy;
   if(gest.type==='maybe'&&Math.hypot(dx,dy)>8){
     const k=BL[sel]&&BL[sel].kind;
-    if(mode==='bulk'&&!selStamp&&S.bulk&&(k==='block'&&S.unlocked[sel]||k==='plant'&&usable(sel)||sel==='spike'&&usable(sel))){const w=toWorld(gest.sx,gest.sy);gest.type='rect';gest.a={x:Math.floor(w.x/TS),y:Math.floor(w.y/TS)};$('#confirm').hidden=true;pending=null}
+    if(mode==='bulk'&&!selStamp&&S.bulk&&(k==='block'&&S.unlocked[sel]||k==='plant'&&usable(sel)||sel==='spike'&&usable(sel))){let w=toWorld(gest.sx,gest.sy);{const tl=tapLv(w.x,w.y);if(tl)w={x:w.x,y:w.y+tl*LIFT}}gest.type='rect';gest.a={x:Math.floor(w.x/TS),y:Math.floor(w.y/TS)};$('#confirm').hidden=true;pending=null}
     else gest.type='pan'}
   if(gest.type==='pan'){cam.x=gest.cx-dx/cam.z;cam.y=gest.cy-dy/cam.z;clampCam()}
-  if(gest.type==='rect'){const w=toWorld(e.clientX,e.clientY);selRect={a:gest.a,b:{x:Math.floor(w.x/TS),y:Math.floor(w.y/TS)}}}
+  if(gest.type==='rect'){let w=toWorld(e.clientX,e.clientY);{const tl=tapLv(w.x,w.y);if(tl)w={x:w.x,y:w.y+tl*LIFT}}selRect={a:gest.a,b:{x:Math.floor(w.x/TS),y:Math.floor(w.y/TS)}}}
 });
 function endPtr(e){
   if(!ptrs.has(e.pointerId))return;ptrs.delete(e.pointerId);

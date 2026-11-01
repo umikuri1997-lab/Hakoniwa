@@ -75,7 +75,7 @@ function goWork(r,G,nw){
   // おつげがあれば、それを先にする
   if(S.oracle==='play'&&r.fun<98&&goPlay(r,G,true))return true;
   // 食料がゼロなら、まず食べ物を集める
-  if(S.food<foodLow()&&foodCap()>0)for(const k of['harvest','gather'])if(tryJob(r,G,k))return true;/* 食料が6より少なくなったら、ほかの仕事より先に食べ物をあつめる */
+  if(S.food<foodLow()&&foodCap()>0)for(const k of['harvest','gather'])if(tryJob(r,G,k))return true;/* 食料が人数×2より少なくなったら、ほかの仕事より先に食べ物をあつめる */
   // 花や木の苗は、空腹などの急ぎの用事を除いて、ほかの仕事より先に植える
   if(tryJob(r,G,'plant'))return true;
   if(tryJob(r,G,'otaki'))return true;
