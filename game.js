@@ -1520,7 +1520,7 @@ function weedMorning(first){/* first：ステージのはじめ（雑草100本�
   for(let t=0;t<3000&&add<(first?100:30)&&n<200;t++){const k=(Math.random()*W*H)|0;if(!ok(k))continue;S.obj[k]='weed'+st+(REV.has(k)?'g':'k');add++;n++}/* のこりは、よみがえった土地は緑の草、荒れた土地は枯れた草 */
   for(let j=0;j<W*H;j++)if(S.obj[j]==='weedc'&&!REV.has(j))S.obj[j]='weed'+st+'k';/* 荒れた土地のふんばり草は、枯れた草にする *//* 毎朝30本、マップにのこる雑草は200本まで */
   if(Math.random()<.5&&S.obj.reduce((a,o)=>a+(o==='kinoko'?1:0),0)<10){const T=[];S.obj.forEach((o,j)=>{if(o==='ntree'||o==='tree'||o==='deadtree'||o==='bamboo')T.push(j)});for(let t=0;t<30&&T.length;t++){const j=pick(T),c=[j-1,j+1,j-W,j+W].filter(ok);if(c.length){S.obj[pick(c)]='kinoko';break}}}/* きのこ：半分の日に1本（10本まで） */
-  const ne=(S.drops||[]).filter(d=>d.id==='mat:eda').length;for(let i=0;i<(first?15:4)&&ne+i<15;i++){const x=(Math.random()*W)|0,y=(Math.random()*H)|0;if(ok(y*W+x))dropAt(x,y,'mat:eda',1)}/* 枝：毎日4本の落とし物（地面にのこるのは15本まで） */
+  {const TR=[];S.obj.forEach((o,j)=>{if(o==='ntree'||o==='tree'||o==='deadtree'||o==='fruit')TR.push(j)});let ne=(S.drops||[]).filter(d=>d.id==='mat:eda').length,add=0;for(let t=0;t<400&&TR.length&&add<(first?40:10)&&ne<50;t++){const j=pick(TR),k=j+((Math.random()*5)|0)-2+(((Math.random()*5)|0)-2)*W;if(k<0||k>=W*H||!ok(k)||S.drops.some(d=>d.y*W+d.x===k))continue;S.drops.push({x:k%W,y:(k/W)|0,id:'mat:eda',n:1});add++;ne++}}/* 枝：木のまわり2マスに、毎朝10本（ステージのはじめは40本）。地面にのこるのは50本まで */
 }
 function takenokoMorning(){/* 火山：竹のとなりに、たけのこが生える（1本の竹ごとに8%・マップに12本まで）。とらずに3日たつと竹になる */let n=0,ch=false;const bam=[];for(let j=0;j<W*H;j++){const o=S.obj[j];if(o==='takenoko'){const d=S.dyn[j]||(S.dyn[j]={g:100,age:0});d.age=(d.age||0)+1;if(d.age>=3){S.obj[j]='bamboo';delete S.dyn[j];ch=true}else n++}else if(o==='bamboo')bam.push(j)}
   for(const j of bam){if(n>=12)break;if(Math.random()>=.08)continue;const x=j%W,c=[j-1,j+1,j-W,j+W].filter(k=>k>=0&&k<W*H&&Math.abs(k%W-x)<=1&&!S.obj[k]&&!S.floor[k]&&S.ground[k]===0&&!RFC.has(k)&&!S.res.some(r=>(r.y|0)*W+(r.x|0)===k));if(!c.length)continue;const k=pick(c);S.obj[k]='takenoko';S.dyn[k]={g:100,age:0};n++;ch=true}
@@ -6305,7 +6305,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='880';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='881';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
