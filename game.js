@@ -43,10 +43,10 @@ const BL={
   bridge:{name:'木の橋',kind:'build',lv:5,pc:2,time:40,maker:'wood',mat:{wood:4},desc:'川や池にかける木の橋。歩いてわたれる'},
   ladder_wood:{name:'オークのハシゴ',kind:'build',lv:3,pc:20,time:30,maker:'wood',mat:{wood:20},desc:'段差のがけに立てかけるハシゴ。上り下りの速さ×0.5'},
   ladder_bamboo:{name:'竹のハシゴ',kind:'build',lv:3,w:1,pc:20,time:30,maker:'wood',mat:{bamboo:20},desc:'段差のがけに立てかけるハシゴ。上り下りの速さ×0.5'},
-  stairs_wood:{name:'木の階段',kind:'build',lv:8,pc:3,time:50,maker:'wood',mat:{wood:3},attr:{wood:.3},desc:'段差を上り下りできる'},
-  stairs_brick:{name:'レンガの階段',kind:'build',lv:6,w:1,pc:5,time:60,maker:'fire',mat:{stone:6},attr:{fire:.5},desc:'段差を上り下りできる'},
-  stairs_stone:{name:'石の階段',kind:'build',lv:4,w:1,pc:4,time:60,maker:'earth',mat:{stone:5},attr:{earth:.5},desc:'段差を上り下りできる'},
-  slope_earth:{name:'土の坂',kind:'build',lv:4,pc:3,time:40,maker:'earth',mat:{stone:3},attr:{earth:.25},desc:'段差を上り下りできる'},
+  stairs_wood:{name:'木の階段',kind:'build',lv:8,pc:25,time:50,maker:'wood',mat:{wood:25},attr:{wood:.3},desc:'段差を上り下りできる'},
+  stairs_brick:{name:'レンガの階段',kind:'build',lv:6,w:1,pc:35,time:60,maker:'fire',mat:{stone:35},attr:{fire:.5},desc:'段差を上り下りできる'},
+  stairs_stone:{name:'石の階段',kind:'build',lv:4,w:1,pc:30,time:60,maker:'earth',mat:{stone:30},attr:{earth:.5},desc:'段差を上り下りできる'},
+  slope_earth:{name:'土の坂',kind:'build',lv:4,pc:20,time:40,maker:'earth',mat:{stone:20},attr:{earth:.25},desc:'段差を上り下りできる'},
   woodpath:{name:'木の道',kind:'block',floor:1,cost:2,pc:4,time:40,maker:'wood',qty:10,lv:7,mat:{wood:6},attr:{wood:.75},desc:'木の板をしいた道。歩く速さ×1.55'},
   gravel:{name:'砂利道',kind:'block',floor:1,cost:1,pc:3,time:30,maker:'earth',qty:10,lv:5,mat:{stone:3},attr:{earth:.4},desc:'小石をしいた道。歩く速さ×1.4'},
   brick:{name:'レンガ道',kind:'block',floor:1,cost:3,pc:5,time:50,maker:'fire',qty:10,lv:6,w:1,mat:{stone:8},attr:{fire:.4,earth:.3},desc:'レンガをしきつめた道。歩く速さ×1.75'},
@@ -4455,7 +4455,7 @@ function spPose(o,t,tr,back){/* せいれいの動きの計算：腕の角度・
   const st=o.walk?Math.sin(t*9):0,arm=o.carry?0:o.work?Math.sin(t*12)*.6:o.walk?st*.35:Math.sin(t*1.7)*.08;
   // 作業ごとの動き：aN=手前の腕、aF=奥の腕（負で上がる）
   const A=o.anim||'',cyc=(sp)=>(t*sp)%1;let aN=null,aF=null,prop='',lean2=0,sq=0,frontArm=false,bothF=false;
-  if(A==='climb'){aN=-2.5+Math.sin(t*8)*.4;aF=-2.5-Math.sin(t*8)*.4;lean2=-.05;sq=Math.abs(Math.sin(t*8))*.02;frontArm=bothF=true}/* 段差をよじのぼる：両手を上にのばして、こうごに動かす */
+  if(A==='climb'){aN=-1.5+Math.sin(t*8)*.25;aF=-1.5-Math.sin(t*8)*.25;lean2=-.05;sq=Math.abs(Math.sin(t*8))*.02;frontArm=bothF=true}/* 段差をよじのぼる：両手を頭の左右へ、ななめ上にのばして、こうごに動かす（頭の前・うしろに手をかさねない） */
   else if(A==='punch'){const p=Math.min(1,o.pp||0),v=p<.55?-1.95*(p/.55):-1.95+2.4*((p-.55)/.45);aN=aF=v;lean2=p<.55?-.04:.07;frontArm=bothF=true}/* 攻撃：両手を振り上げて、ぽかっと振り下ろす */
   else if(A==='pray'){aN=aF=-2.4+Math.sin(t*1.4)*.03;lean2=.07+Math.sin(t*1.4)*.015;frontArm=bothF=true}/* おいのり：胸の前で手を合わせて、少しうつむく */
   else if(A==='pluck'){aN=-1.95+Math.sin(t*9)*.28;aF=.15;lean2=.03;frontArm=true}/* ベリーをむしる：片手を上げて、ひっぱる */
@@ -6338,7 +6338,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='924';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='925';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
