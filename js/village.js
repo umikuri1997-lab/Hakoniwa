@@ -168,6 +168,7 @@ function recount(){if(S.broken)S.broken=S.broken.filter(b=>!S.obj[b.j]);calcSpot
     const t=new Uint8Array(W*H);for(let y=0;y<H;y++)for(let x=0;x<W;x++){let f=0;for(let d=-3;d<=3&&!f;d++){const q=x+d;if(q>=0&&q<W&&m[y*W+q])f=1}t[y*W+x]=f}
     for(let y=0;y<H;y++)for(let x=0;x<W;x++){let f=0;for(let d=-3;d<=3&&!f;d++){const q=y+d;if(q>=0&&q<H&&t[q*W+x])f=1}v[y*W+x]=f}VILL=v;
     for(let j=0;j<W*H;j++)if(v[j]&&S.ground[j]===1)ATTR.water+=.3}/* 水の力は、村の中の池・川だけ（1マス0.3） */
+  if(counts.signw||counts.signs)for(const k in ATTR)ATTR[k]*=1.1;/* 村の看板：属性の力+10%（いくつあっても1回） */
   for(const k of NEARPARA)ENVG[k]+=7;/* パラソルがいくつ重なっても、1つぶん（BL.parasol.env） */
   if(WD===FREE)for(let j=0;j<W*H;j++)REV.add(j);/* フリーモードの土地は荒れていない */
   {const st=WD===1?1:0,g='weed'+st+'g',k='weed'+st+'k';for(let j=0;j<W*H;j++){const o=S.obj[j];if(o===k&&REV.has(j))S.obj[j]=g;else if((o===g||o==='weedc')&&!REV.has(j))S.obj[j]=k}}/* 雑草は土地に合わせる：よみがえった土地（緑）は緑の草、荒れた土地は枯れた草（あとから緑になった所の枯れた草も、緑の草に） */
