@@ -122,6 +122,7 @@ const BL={
   stor:{hp:5,brk:1,fix:2,fixm:{wood:3},name:'食料箱',kind:'furn',pc:3,time:120,maker:'earth',solid:1,attr:{earth:1},mat:{wood:5},desc:'食料を30までしまえる。ここから食べる。住み心地+3'},
   mbox:{hp:5,brk:1,fix:2,fixm:{wood:2,stone:2},name:'素材箱',kind:'furn',pc:3,time:120,maker:'earth',solid:1,attr:{earth:1},mat:{wood:3,stone:3},desc:'木材・石材を50までしまえる。住み心地+3'},
   lumber:{hp:5,brk:1,fix:8,fixm:{wood:13,stone:4},name:'伐採場',kind:'build',mat:{wood:25,stone:8},pc:15,time:120,maker:'wood',lv:5,solid:1,attr:{wood:2},desc:'せいれいがここで働くと、20分ごとに木材+1'},
+  soko:{hp:5,brk:1,fix:8,fixm:{wood:10,stone:7},name:'倉庫',kind:'build',sz:[2,2],mat:{wood:30,stone:20},pc:20,time:150,maker:'earth',lv:6,solid:1,attr:{earth:2},desc:'素材を500までしまえる'},
   quarry:{hp:5,brk:1,fix:10,fixm:{wood:8,stone:13},name:'採石場',kind:'build',mat:{wood:15,stone:25},pc:20,time:140,maker:'earth',lv:7,solid:1,attr:{earth:2},desc:'せいれいがここで働くと、20分ごとに石材+1'},
   oven:{hp:5,brk:1,fix:3,fixm:{wood:2,stone:4},name:'かまど',kind:'furn',anim:1,pc:5,time:160,maker:'fire',solid:1,attr:{fire:2,earth:1},mat:{wood:3,stone:8},desc:'せいれいが材料から料理を作る。住み心地+6'},
   grave:{name:'お墓',kind:'deco',attr:{},desc:''},
@@ -226,7 +227,7 @@ function furnitureGroups(ids){const wanted=new Set(ids);return CRAFT_TABS.map(([
 const FURN=['hoshirug','yorubed','toro','table','chair','stor','mbox','oven','bed','bench','takebench','takeakari','shishiodoshi','campfire','swing','torch','jar','rockart','vane','spike','puddle','stool','stable','pouf','achair','ltable','rug1','sofa1','rug2','tub','sink','crate','monstera','shelf1','wreath','curtain1','cabinet','paint2','shelf2','curtain2','paint3','wshelf','paint1','bathtub','candle','lantern','flamp','signpost','hedge','birdbath','parasol','arch','slide','sandbox','seesaw','kamizo','noren'];// 属性の罠（sticky/firetrap/gust）は次のステージから
 
 const TERRA=new Set(['dig','mound']);/* だんさスコップの工事 */
-const BUILDS=['statue','watch','bridge','ladder_wood','ladder_bamboo','slope_earth','stairs_wood','stairs_stone','stairs_brick','yogan','lumber','well','quarry','windmill','fountain','lighthouse','stele','tower'];
+const BUILDS=['statue','watch','bridge','ladder_wood','ladder_bamboo','slope_earth','stairs_wood','stairs_stone','stairs_brick','yogan','lumber','soko','well','quarry','windmill','fountain','lighthouse','stele','tower'];
 const STAMPS={
   fields:{name:'畑セット',cells:[[0,0,'farm'],[1,0,'farm'],[2,0,'farm'],[0,1,'farm'],[1,1,'farm'],[2,1,'farm']]},
   ring:{name:'柵の囲い',cells:(()=>{const c=[];for(let y=0;y<5;y++)for(let x=0;x<5;x++)if(x===0||y===0||x===4||y===4)c.push([x,y,'fence']);return c})()},
@@ -1055,8 +1056,8 @@ function addCarry(r,k,n){if(typeof r.carry==='number')r.carry={mugi:r.carry};n=M
 function addMat(r,k,n){n=Math.min(n,roomN(r));if(n<=0)return;r.cmat=r.cmat||{};r.cmat[k]=(r.cmat[k]||0)+n}
 function hYield(j,def){const o=S.obj[j],d=S.dyn[j];const cr=o==='farm'?CROPS[(d&&d.crop)||'mugi']:null;return (cr?cr.yield:def)+(NEARMILL.has(j)?1:0)+(NEARFLOWER.has(j)?1:0)}
 // STORAGE: placed shelves share the village stock; wall attachments count only on standing walls.
-const STORAGE={stor:{food:30},mbox:{mat:50},crate:{food:30,mat:30},shelf1:{mat:50},shelf2:{mat:50},wshelf:{mat:50},cabinet:{food:30}};/* しまえる数（食料・素材） */
-function storageAt(j,type){const id=S.obj[j],wall=HOME_WALLS.has(id)&&(S.win||{})[j],b=STORAGE[wall]||STORAGE[id];return !!(b&&b[type])}
+const STORAGE={stor:{food:30},mbox:{mat:50},soko:{mat:500},crate:{food:30,mat:30},shelf1:{mat:50},shelf2:{mat:50},wshelf:{mat:50},cabinet:{food:30}};/* しまえる数（食料・素材） */
+function storageAt(j,type){const id=S.obj[anc(j)],wall=HOME_WALLS.has(id)&&(S.win||{})[j],b=STORAGE[wall]||STORAGE[id];return !!(b&&b[type])}
 function storageCapacity(type){let n=0;for(const id in STORAGE){const c=STORAGE[id][type];if(c)n+=cnt(id)*c}for(const j in S.win||{}){const c=(STORAGE[S.win[j]]||{})[type];if(HOME_WALLS.has(S.obj[j])&&c)n+=c}return n}
 const foodCap=()=>storageCapacity('food'),matCap=()=>storageCapacity('mat'),matTot=()=>Object.keys(MATN).reduce((a,k)=>a+(S.mat[k]||0),0);
 let OTAKI_SEL={};/* そうこで、おたきあげにえらんでいる数 */
@@ -3827,7 +3828,7 @@ function drawObj(c,id,x,y,i,g,now){
   if(SPR_OBJ.has(id)&&PSPR[id]&&PSPR[id].ok){const g=PSPR[id],T=now||0,trap=BL[id].trap,rd=!trap||ICON||!(S&&S.trapCd&&S.trapCd[i]>S.t);
     const w=trap?TS:id==='well'?42:48,h=w*g.h/g.w,bob=(id==='firetrap'||id==='gust')&&rd&&!ICON?1+Math.sin(T/180+i)*.04:1;
     shadow(c,x+16,y+28,w*.42,2.4);c.save();if(!rd)c.globalAlpha=.45;c.translate(x+16,y+(trap?32:31));c.scale(1,bob);c.drawImage(g.img,-w/2,-h,w,h);c.restore();return}
-  const sz=BL[id]&&BL[id].sz;if(sz&&!ICON&&!c._sc&&id!=='bench'&&id!=='takebench'&&id!=='bed'&&id!=='yorubed'&&id!=='volcano'){/* ベンチ・ベッドは絵がもともと2マスぶん */c.save();c.translate(x,y);c.scale(sz[0],sz[1]);c._sc=1;drawObj(c,id,0,0,i,g,now);c._sc=0;c.restore();return}
+  const sz=BL[id]&&BL[id].sz;if(sz&&!ICON&&!c._sc&&id!=='bench'&&id!=='takebench'&&id!=='bed'&&id!=='yorubed'&&id!=='volcano'&&id!=='soko'){/* ベンチ・ベッドは絵がもともと2マスぶん */c.save();c.translate(x,y);c.scale(sz[0],sz[1]);c._sc=1;drawObj(c,id,0,0,i,g,now);c._sc=0;c.restore();return}
   const h=hash(i);
   switch(id){
   case'ntree':case'tree':shadow(c,x+16,y+28,12,4);c.fillStyle='#7a5132';c.fillRect(x+13,y+15,6,14);c.fillStyle='#5f3e25';c.fillRect(x+13,y+15,2,14);
@@ -3956,6 +3957,11 @@ function drawObj(c,id,x,y,i,g,now){
     c.fillStyle='#a8703f';rr(c,x+5,y+10,13,6,3);circ(c,x+6,y+13,3.2,'#ecc896');circ(c,x+6,y+13,1.5,'#d4a46a');
     blob(c,'#a9a39b',[[x+16,y+17],[x+17,y+10],[x+22,y+8],[x+25,y+12],[x+25,y+17]]);blob(c,'#8e8a84',[[x+22,y+16],[x+23,y+8],[x+28,y+7],[x+29,y+16]]);
     c.fillStyle='#7ab35a';c.beginPath();c.ellipse(x+26,y+6,1.8,4,.4,0,7);c.fill();crate(c,x,y);break}
+  case'soko':{/* 倉庫（2×2マス）：木の小屋に、かわらの屋根と両びらきの戸。絵はコードの仮の絵 */shadow(c,x+32,y+60,30,4);
+    c.fillStyle='#b98250';c.fillRect(x+4,y+22,56,38);c.fillStyle='#a06c3e';for(let k=0;k<7;k++)c.fillRect(x+4+k*8,y+22,1,38);c.fillStyle='#8a5a33';c.fillRect(x+4,y+57,56,3);
+    c.fillStyle='#7d8a96';c.beginPath();c.moveTo(x+1,y+24);c.lineTo(x+32,y+4);c.lineTo(x+63,y+24);c.closePath();c.fill();c.fillStyle='#95a3ae';for(let k=0;k<4;k++){c.fillRect(x+6+k*3,y+21-k*4,52-k*6,1.5)}c.fillStyle='#5f6b76';c.fillRect(x+1,y+23,62,2);
+    c.fillStyle='#7a4a28';c.fillRect(x+21,y+33,22,27);c.fillStyle='#93603a';c.fillRect(x+22,y+34,9.5,26);c.fillRect(x+32.5,y+34,9.5,26);c.strokeStyle='#6b4024';c.lineWidth=1.2;c.beginPath();c.moveTo(x+22,y+34);c.lineTo(x+31.5,y+59);c.moveTo(x+32.5,y+34);c.lineTo(x+42,y+59);c.stroke();
+    c.fillStyle='#c9a46a';rr(c,x+7,y+44,11,12,1.5);rr(c,x+46,y+44,11,12,1.5);c.fillStyle='#a8743f';c.fillRect(x+7,y+49,11,1.2);c.fillRect(x+46,y+49,11,1.2);break}
   case'lumber':{shadow(c,x+16,y+29,15,3);c.fillStyle='#8a5a33';for(let k=0;k<3;k++){rr(c,x+3,y+18+k*-5,20,5,2.5)}c.fillStyle='#c99460';for(let k=0;k<3;k++)circ(c,x+5,y+20.5+k*-5,2.2,'#d6a36a');
     c.fillStyle='#6d4424';rr(c,x+21,y+20,9,8,2);c.fillStyle='#b07c50';c.fillRect(x+21,y+20,9,2);c.fillStyle='#6d4424';c.save();c.translate(x+26,y+20);c.rotate(-.5);c.fillRect(-1,-12,2,12);c.fillStyle='#a3a6ae';c.fillRect(-1,-13,6,4);c.restore();break}
   case'quarry':{shadow(c,x+16,y+29,15,3);circ(c,x+10,y+22,7,'#7d8088');circ(c,x+20,y+23,6,'#8d9098');circ(c,x+15,y+16,6,'#a3a6ae');circ(c,x+13,y+14,2,'#d4d5da');
@@ -6305,7 +6311,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='883';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='884';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
