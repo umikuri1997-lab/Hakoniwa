@@ -16,7 +16,6 @@ let GODVOICE_T=0;/* 遠くからの声のあいさつを、さいごに出した
 function dialog(lines,after,lastLabel,who){
   const d=$('#dialog'),key=JSON.stringify(lines);if(!d.hidden&&key===DLGCUR||DLGQ.some(q=>q[4]===key))return;/* 同じ会話を、かさねて出さない（何回かタップしても1回だけ） */
   if(!d.hidden||performance.now()<DLGGAP&&performance.now()-DLGTAP>400){DLGQ.push([lines,after,lastLabel,who,key]);return}/* 会話がおわってすぐの、べつの会話は、少しまってから（タップで始めた会話はすぐ） */DLGCUR=key;
-  {const G=lines.filter(l=>l&&l[0]==='あんない');if(G.length){lines=lines.filter(l=>!(l&&l[0]==='あんない'));const a0=after;after=(...v)=>{for(const g of G)GUIDE_POPS.push({state:S,t:g[1]});if(a0)return a0(...v)};if(!lines.length){DLGCUR=null;after();return}}}/* 「あんない」の行は会話に出さず、会話のあとにポップアップで出す（showSpotPop） */
   if(S&&!godHere()){/* 遠くからの声：「聞こえるかの？ 遠くから、声だけ届けておるぞい。」は、1つの会話で1回だけ。つづけて開く別の会話（90秒いない）でも出さない */const PRE='……聞こえるかの？ 遠くから、声だけ届けておるぞい。',reP=/……聞こえるかの？ 遠くから、声だけ届けておるぞい。/g;lines=lines.map(ln=>Array.isArray(ln)?ln.slice():ln);let first=true;const recent=performance.now()-GODVOICE_T<90000;for(const ln of lines){if(!Array.isArray(ln)||ln[0]!==GOD||typeof ln[1]!=='string')continue;ln[1]=ln[1].replace(reP,'');if(first){first=false;if(!recent){ln[1]=PRE+ln[1];GODVOICE_T=performance.now()}}}}
   if(sheet&&!DLG_KEEP)closeSheet();d.classList.toggle('dtop',DLG_KEEP);requestAnimationFrame(fitTopDlg);
   let i=0;d.hidden=false;DLGN.clear();for(const ln of lines)if(Array.isArray(ln)&&ln[0])DLGN.add(ln[0]);if(who)DLGN.add(who);

@@ -42,8 +42,9 @@ function endPtr(e){
 cv.addEventListener('pointerup',endPtr);cv.addEventListener('pointercancel',endPtr);
 cv.addEventListener('wheel',e=>{e.preventDefault();if(!started)return;const w=toWorld(e.clientX,e.clientY);cam.z=clamp(cam.z*(e.deltaY<0?1.12:.89),minZ(),3);cam.x=w.x-e.clientX/cam.z;cam.y=w.y-e.clientY/cam.z;clampCam()},{passive:false});
 
+function tapLv(wx,wy){if(!S||!S.hi)return 0;const tx=Math.floor(wx/TS);if(tx<0||tx>=W)return 0;for(let lv=HMAX;lv>=1;lv--){const ty=Math.floor((wy+lv*LIFT)/TS);if(ty>=0&&ty<H&&hiAt(ty*W+tx)===lv)return lv}return 0}/* タップした所に見えている、いちばん手前の高い段 */
 function onTap(sx,sy){DLGTAP=performance.now();/* タップで始める会話は、またずにすぐ出す */
-  const w=toWorld(sx,sy),tx=Math.floor(w.x/TS),ty=Math.floor(w.y/TS);
+  let w=toWorld(sx,sy);const tx=Math.floor(w.x/TS);{const tl=tapLv(w.x,w.y);if(tl)w={x:w.x,y:w.y+tl*LIFT}}const ty=Math.floor(w.y/TS);/* 高い段のマス・物・せいれい・コワイノは上にずらして描くので、タップの場所も高さの分だけ下へもどす */
   if(AREAARM){AREAARM=false;return areaBlast(w.x/TS,w.y/TS)}/* ひかりのはどう：タップした場所のまわり */
   if(LIGHTARM){LIGHTARM=false;const en=S.enemies.find(e=>e.spawned&&Math.hypot(e.x-w.x/TS,e.y-w.y/TS)<.8);if(en)return guardLight(en);const tj=ty*W+tx;if(tx>=0&&ty>=0&&tx<W&&ty<H&&LIGHTNAT[S.obj[tj]]&&!isBud(tj))return natLight(tj)}/* 守りの光：アイコンのあとにタップした「コワイノ」・木・岩にあてる */
   const si=S.seeds.findIndex(s=>s.x===tx&&s.y===ty);

@@ -1,4 +1,5 @@
 'use strict';
+const foodLow=()=>S.res.filter(r=>!r.hidden).length*2;/* 食料箱が、せいれいの人数×2より少なくなったら、食べ物を先にあつめる */
 function tryJob(r,G,k){
   if(!canJob(r,k))return false;
   let j;
@@ -42,7 +43,7 @@ const IDLE_ACTS=['fish','play','wander','idle'];
 // 種まき・植える・依頼・建築があるか（いつもの作業を中断してでも向かう仕事）
 function hasHighWork(r){
   if(!isNight()&&!(r.act&&(r.act.type==='pickdrop'||FARMJ.includes(r.act.type)))&&((S.drops||[]).some(q=>(q.lt||q.tap)&&free('d'+(q.y*W+q.x),1))||!(r.act&&r.act.type==='weed')&&wreqList().some(k=>free('o'+k,1)))&&matCap()-matTot()>0)return true;/* 「みる」でタップした草・落とし物も同じ *//* 守り神がこわした物があれば、いまの作業をやめてひろいに行く（畑の世話をしているときは、やめない） */
-  if(S.food<6&&foodCap()>0&&!(r.act&&(r.act.type==='gather'||r.act.type==='harvest'))){const bb=ripeAdj(['berry']);if(S.obj.some((o,j)=>(o==='farm'&&S.dyn[j]&&S.dyn[j].g>=100&&free('o'+j,1))||((o==='berry'||o==='takenoko')&&S.dyn[j]&&S.dyn[j].g>=100&&free('o'+j,1))))return true}
+  if(S.food<foodLow()&&foodCap()>0&&!(r.act&&(r.act.type==='gather'||r.act.type==='harvest'))){const bb=ripeAdj(['berry']);if(S.obj.some((o,j)=>(o==='farm'&&S.dyn[j]&&S.dyn[j].g>=100&&free('o'+j,1))||((o==='berry'||o==='takenoko')&&S.dyn[j]&&S.dyn[j].g>=100&&free('o'+j,1))))return true}
   if(canJob(r,'build')&&S.obj.some((o,j)=>o==='site'&&free('o'+j,2)))return true;
   if(!isNight()&&canJob(r,'repair')&&S.obj.some((o,q)=>o&&BL[o]&&(breakable(o)&&(S.hp[q]??BL[o].hp)<BL[o].hp||DEFS.has(o)&&S.hp[q]!=null||burnt(q))&&free('o'+q,1)||!o&&canRebuild(q)))return true;/* こわれた所があれば、木を切るより先に直す */
   if(S.orders.some(q=>(!q.worker||!S.res.some(x=>x.id===q.worker))&&craftOK(r,q)))return true;
@@ -74,7 +75,7 @@ function goWork(r,G,nw){
   // おつげがあれば、それを先にする
   if(S.oracle==='play'&&r.fun<98&&goPlay(r,G,true))return true;
   // 食料がゼロなら、まず食べ物を集める
-  if(S.food<6&&foodCap()>0)for(const k of['harvest','gather'])if(tryJob(r,G,k))return true;/* 食料が6より少なくなったら、ほかの仕事より先に食べ物をあつめる */
+  if(S.food<foodLow()&&foodCap()>0)for(const k of['harvest','gather'])if(tryJob(r,G,k))return true;/* 食料が6より少なくなったら、ほかの仕事より先に食べ物をあつめる */
   // 花や木の苗は、空腹などの急ぎの用事を除いて、ほかの仕事より先に植える
   if(tryJob(r,G,'plant'))return true;
   if(tryJob(r,G,'otaki'))return true;
