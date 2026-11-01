@@ -143,9 +143,9 @@ const FEATHC=new Map();function slopeFeather(c,a,d){/* 坂をのぼった先：�
   c.save();if(!v){/* 横向き：坂の上は、ななめの面の中だけ */const xi=d===1?ax:ax+TS,xo=d===1?ax+2*TS:ax-TS,gy=ay+TS;c.beginPath();c.moveTo(xi,ay-LIFT);c.lineTo(xo,ay);c.lineTo(xo,gy);c.lineTo(xi,gy-LIFT);c.closePath();c.rect(d===1?ax-I:ax+TS,ay-LIFT,I,TS);c.clip('nonzero')}
   c.drawImage(e.cv,x,y,w,h);c.restore()}
 function slopeCliff(c,x0,y,len){/* がけの正面の岩の絵を、よこにならべる（坂の横の三角） */const ch=(window.CHIPS||{})['cliff:face'];if(!ch)return;for(let x=x0;x<x0+len;x+=TS)drawChip(c,ch,'cliff',x,y,0)}
-function drawStairObj(c,a){/* 階段は、置いた地面の高さ（hiAt）だけ上に描く。のぼった先は、その1だん上（CLV） */const L0=hiAt(a),cv=CLV;c.save();c.translate(0,-L0*LIFT);CLV=L0+1;try{drawStairObj0(c,a)}finally{CLV=cv;c.restore()}}
-function drawStairObj0(c,a){/* 階段（仮の絵）：段差の下の低い地面に置く。手前向きは1マス（がけの正面とあわせて2マスぶんに見える）、ほかは1×2。高いほうのはしの高さ LIFT から地面まで6だん（段の高さ LIFT/7） */
-  const id=S.obj[a],d=stairDir(a);if(d<0)return;const P=STPAL[id]||STPAL.slope_earth,br=id.endsWith('_brick'),Dn=(d===0?TS:2*TS)/SN,z=n=>n>=SN?0:LIFT*(SN-n)/(SN+1),MO='rgba(235,220,205,.55)',ax=(a%W)*TS,ay=((a/W)|0)*TS;
+function drawStairObj(c,a,id0){/* 階段は、置いた地面の高さ（hiAt）だけ上に描く。のぼった先は、その1だん上（CLV） */const L0=hiAt(a),cv=CLV;c.save();c.translate(0,-L0*LIFT);CLV=L0+1;try{drawStairObj0(c,a,id0)}finally{CLV=cv;c.restore()}}
+function drawStairObj0(c,a,id0){/* 階段（仮の絵）：段差の下の低い地面に置く。手前向きは1マス（がけの正面とあわせて2マスぶんに見える）、ほかは1×2。高いほうのはしの高さ LIFT から地面まで6だん（段の高さ LIFT/7） */
+  const id=id0||S.obj[a],d=stairDir(a);if(d<0)return;/* id0：置く前の見本（マスにまだ物がない） */const P=STPAL[id]||STPAL.slope_earth,br=id.endsWith('_brick'),Dn=(d===0?TS:2*TS)/SN,z=n=>n>=SN?0:LIFT*(SN-n)/(SN+1),MO='rgba(235,220,205,.55)',ax=(a%W)*TS,ay=((a/W)|0)*TS;
   const mo=(x,y,w,h)=>{c.fillStyle=MO;c.fillRect(x,y,w,h)};
   const vjoin=(x,y,w,h,off)=>{for(let xx=Math.floor((x-off)/16)*16+off;xx<x+w;xx+=16)if(xx>x+.5)mo(xx,y,.6,h)};/* たての目地（世界の座標で16ドットごと：レンガ1こ16×8） */
   const wd=id==='stairs_wood',stn=id==='stairs_stone',hz=k=>hash(a*977+k*131);
