@@ -43,10 +43,10 @@ const BL={
   bridge:{name:'木の橋',kind:'build',lv:5,pc:2,time:40,maker:'wood',mat:{wood:4},desc:'川や池の上にかける。せいれいが建てる。歩いてわたれる'},
   ladder_wood:{name:'オークのハシゴ',kind:'build',lv:3,pc:20,time:30,maker:'wood',mat:{wood:20},desc:'段差のがけに立てかける。せいれいが建てる。上り下りできる（歩く速さ×0.5）'},
   ladder_bamboo:{name:'竹のハシゴ',kind:'build',lv:3,w:1,pc:20,time:30,maker:'wood',mat:{bamboo:20},desc:'段差のがけに立てかける。せいれいが建てる。上り下りできる（歩く速さ×0.5）'},
-  stairs_wood:{name:'木の階段',kind:'build',lv:8,pc:3,time:50,maker:'wood',mat:{wood:3},attr:{wood:.3},desc:'段差の下に置く。せいれいが建てる。段差を上り下りできる（1マス歩く時間）'},
-  stairs_brick:{name:'レンガの階段',kind:'build',lv:6,w:1,pc:5,time:60,maker:'fire',mat:{stone:6},attr:{fire:.5},desc:'段差の下に置く。せいれいが建てる。段差を上り下りできる（1マス歩く時間）'},
-  stairs_stone:{name:'石の階段',kind:'build',lv:4,w:1,pc:4,time:60,maker:'earth',mat:{stone:5},attr:{earth:.5},desc:'段差の下に置く。せいれいが建てる。段差を上り下りできる（1マス歩く時間）'},
-  slope_earth:{name:'土の坂',kind:'build',lv:4,pc:3,time:40,maker:'earth',mat:{stone:3},attr:{earth:.25},desc:'段差の下に置く。せいれいが建てる。段差を上り下りできる（1マス歩く時間）'},
+  stairs_wood:{name:'木の階段',kind:'build',lv:8,pc:3,time:50,maker:'wood',mat:{wood:3},attr:{wood:.3},desc:'段差の下に置く。せいれいが建てる。段差を上り下りできる'},
+  stairs_brick:{name:'レンガの階段',kind:'build',lv:6,w:1,pc:5,time:60,maker:'fire',mat:{stone:6},attr:{fire:.5},desc:'段差の下に置く。せいれいが建てる。段差を上り下りできる'},
+  stairs_stone:{name:'石の階段',kind:'build',lv:4,w:1,pc:4,time:60,maker:'earth',mat:{stone:5},attr:{earth:.5},desc:'段差の下に置く。せいれいが建てる。段差を上り下りできる'},
+  slope_earth:{name:'土の坂',kind:'build',lv:4,pc:3,time:40,maker:'earth',mat:{stone:3},attr:{earth:.25},desc:'段差の下に置く。せいれいが建てる。段差を上り下りできる'},
   woodpath:{name:'木の道',kind:'block',floor:1,cost:2,pc:4,time:40,maker:'wood',qty:10,lv:7,mat:{wood:6},attr:{wood:.75},desc:'木の板をしいた道。歩く速さ×1.55'},
   gravel:{name:'砂利道',kind:'block',floor:1,cost:1,pc:3,time:30,maker:'earth',qty:10,lv:5,mat:{stone:3},attr:{earth:.4},desc:'小石をしいた道。歩く速さ×1.4'},
   brick:{name:'レンガ道',kind:'block',floor:1,cost:3,pc:5,time:50,maker:'fire',qty:10,lv:6,w:1,mat:{stone:8},attr:{fire:.4,earth:.3},desc:'レンガをしきつめた道。歩く速さ×1.75'},
@@ -64,7 +64,7 @@ const BL={
   logwall:{name:'丸太の壁',fix:4,fixm:{wood:5},kind:'block',cost:3,pc:9,time:80,maker:'wood',qty:10,lv:7,solid:1,hp:40,hpS:46,brk:1,attr:{},mat:{wood:9},desc:'丸太を組んだ家の壁（じょうぶさ40）'},
   plasterwall:{name:'しっくいの壁',fix:5,fixm:{wood:3,stone:2},kind:'block',cost:4,pc:11,time:90,maker:'earth',qty:10,lv:5,solid:1,hp:48,hpS:55,brk:1,attr:{},mat:{wood:6,stone:3},desc:'明るいしっくい仕上げの家の壁（じょうぶさ48）'},
   brickwall:{name:'レンガの壁',fix:6,fixm:{stone:7},kind:'block',cost:5,pc:13,time:100,maker:'fire',qty:10,lv:8,solid:1,hp:55,hpS:63,brk:1,attr:{},mat:{stone:14},desc:'レンガを積んだ家の壁（じょうぶさ55）'},
-  wall:{name:'石の塀',fix:6,fixm:{stone:5},kind:'block',cost:5,pc:12,time:100,maker:'earth',qty:10,lv:6,w:1,solid:1,hp:45,hpS:51,attr:{},mat:{stone:9},desc:'石を積んだ塀。家の壁にはならない（じょうぶさ45）'},
+  wall:{name:'石の塀',fix:6,fixm:{stone:5},kind:'block',cost:5,pc:12,time:100,maker:'earth',qty:10,lv:6,w:1,solid:1,hp:45,hpS:51,attr:{},mat:{stone:9},desc:'石を積んだ塀（じょうぶさ45）'},
   clover:{sp:9,name:'シロツメクサ',item:'シロツメクサの種',kind:'plant',cost:3,attr:{wood:1},desc:'まわり1マスの畑の収穫+1（重複なし）'},
   bellf:{sp:9,name:'ききょう',item:'ききょうの種',kind:'plant',cost:3,attr:{earth:1},desc:'まわり1マスの畑の収穫+1（重複なし）'},
   salvia:{sp:9,name:'サルビア',item:'サルビアの種',kind:'plant',cost:3,attr:{fire:1},desc:'まわり1マスの畑の収穫+1（重複なし）'},
@@ -154,7 +154,7 @@ const BL={
   vane:{hp:5,brk:1,fix:4,fixm:{wood:2,stone:2},offerOnly:1,name:'風見鶏',kind:'furn',pc:7,time:160,maker:'wind',solid:1,anim:1,attr:{wind:4},mat:{wood:3,stone:3},desc:'風の向きをおしえる。まわり3マスのせいれいは移動速度×1.2（重複なし）。住み心地+4'},
   spike:{name:'とげの罠',fix:1,fixm:{wood:1,stone:1},kind:'furn',lv:1,pc:1,time:100,maker:'wood',qty:2,trap:1,attr:{earth:.5},mat:{wood:2,stone:2},desc:'上にいる「コワイノ」に、15分ごとに0.5ダメージ',anim:1},
   sticky:{name:'ねばねば草',fix:1,fixm:{funba:1},kind:'furn',lv:2,pc:1,time:80,maker:'wood',qty:2,trap:1,attr:{wood:.5},mat:{funba:2,kinoko:1},desc:'上にいる「コワイノ」の速さが35%になる',anim:1},
-  puddle:{name:'すべる水たまり',fix:1,fixm:{stone:1},kind:'furn',lv:4,pc:1,time:80,maker:'water',qty:2,trap:1,anim:1,attr:{water:.5},mat:{stone:2},desc:'ふんだ「コワイノ」が8分止まる（オオカゲは3分）。つぎに使えるまで2時間',anim:1},
+  puddle:{name:'すべる水たまり',fix:1,fixm:{stone:1},kind:'furn',lv:4,pc:1,time:80,maker:'water',qty:2,trap:1,anim:1,attr:{water:.5},mat:{stone:2},desc:'ふんだ「コワイノ」が8分止まる。つぎに使えるまで2時間',anim:1},
   firetrap:{name:'ほのおの罠',fix:2,fixm:{wood:1,stone:1},kind:'furn',pc:3,time:120,maker:'fire',lv:4,qty:2,trap:1,anim:1,attr:{fire:.5},mat:{wood:1,can:2},desc:'ふんだ「コワイノ」に4ダメージ。つぎに使えるまで3時間',anim:1},
   gust:{name:'つむじ風の罠',fix:2,fixm:{eda:1},kind:'furn',pc:3,time:120,maker:'wind',lv:5,qty:2,trap:1,anim:1,attr:{wind:.5},mat:{eda:2},desc:'ふんだ「コワイノ」を6マスふきとばし、2分止める。つぎに使えるまで2時間30分',anim:1},
   dig:{name:'けずる',kind:'build',pc:10,time:40,maker:'earth',attr:{},desc:'高いマスを1だん低くする工事（パワー10）'},
@@ -164,7 +164,7 @@ const BL={
   well:{hp:5,brk:1,fix:10,fixm:{wood:4,stone:15},name:'井戸',kind:'build',mat:{wood:8,stone:30},pc:20,time:140,maker:'water',lv:6,solid:1,attr:{water:4},desc:'まわり3マスの畑は水やりなしで育つ'},
   windmill:{hp:5,brk:1,fix:13,fixm:{wood:30,stone:18},name:'風車',kind:'build',mat:{wood:60,stone:35},pc:25,time:160,maker:'wind',lv:8,solid:1,anim:1,attr:{wind:5},desc:'まわり5マスの畑の収穫+1'},
   lighthouse:{name:'灯台',sz:[2,2],kind:'build',mat:{wood:25,stone:35},pc:35,time:180,maker:'fire',lv:7,solid:1,anim:1,attr:{fire:4},desc:'まわり8マスを照らす。'},
-  stele:{hp:5,brk:1,fix:18,fixm:{wood:6,stone:25},name:'石碑',kind:'build',mat:{wood:12,stone:50},pc:35,time:180,maker:'earth',lv:6,solid:1,attr:{earth:4},desc:'まわり5マスの壁が、1.15倍じょうぶになる（小数点以下は切りすて）'},
+  stele:{hp:5,brk:1,fix:18,fixm:{wood:6,stone:25},name:'石碑',kind:'build',mat:{wood:12,stone:50},pc:35,time:180,maker:'earth',lv:6,solid:1,attr:{earth:4},desc:'まわり5マスの壁が、1.15倍じょうぶになる'},
   fountain:{name:'噴水',sz:[2,2],kind:'build',mat:{wood:15,stone:60},pc:45,time:200,maker:'water',lv:6,solid:1,anim:1,play:{pt:6,pw:2.7,fun:45,dur:50,cap:3,adj:1},attr:{water:6},desc:'3人まで遊べる。たのしさ +45（50分）。遊ぶと10%の確率で、スタミナ+1'},
   statue:{name:'神殿',kind:'build',anim:1,pc:0,time:50,maker:null,solid:1,attr:{wood:1,water:1,fire:1,earth:1,wind:1},desc:'守り神の居場所。女神像・おそなえ箱・依頼ボード・カミサマの台座がある'},
   obox:{name:'おそなえ箱',solid:1,anim:1},
@@ -6305,7 +6305,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='882';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='883';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
