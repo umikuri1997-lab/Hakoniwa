@@ -71,7 +71,7 @@ function siteSpan(id){const b=BL[id];if(!b)return null;if(id==='statue')return{x
 function objBox(o,j){if(STAIRS.has(o)){const x=(j%W)*TS,y=((j/W)|0)*TS;return[x-TS-4,y-TS-30,x+2*TS+4,y+2*TS+4]}/* 階段は1×2で、どの向きにものびる */if(o==='site'&&S.dyn[j]){const sp=siteSpan(S.dyn[j].build);if(sp){const x=j%W,y=(j/W)|0,L=x*TS+sp.x0*TS-4,Wd=sp.w*TS+8,B=(y+sp.rows)*TS+3;return[L,B-Wd*91/104*sp.hf-20,L+Wd,B]}}
 const x=j%W,y=(j/W)|0,b=BL[o],z=szAt(o,j)||[1,1],k=BIG2.has(o)?2:TREES.has(o)?2.25:(o==='stor'||o==='mbox')?1.25:BIG.has(o)?(BIGK[o]||1.5):1,tall=BIG2.has(o)||TREES.has(o)||b.kind==='build';
   const cx=x*TS+16*z[0],by=(y+z[1])*TS+3,hw=Math.max(16*z[0]*k,tall?28:16)+6,ht=tall?150:b.kind==='block'?44:48*k*z[1]+8;return[cx-hw,by-ht,cx+hw,by]}
-const FLAT=new Set(['rug1','rug2','hoshirug','farm','plot','sprout','spike','puddle','sticky','firetrap','gust','crack']);/* 地面に近い物：その上に立つせいれいより下に描く */
+const FLAT=new Set(['rug1','rug2','hoshirug','kusarug','farm','plot','sprout','spike','puddle','sticky','firetrap','gust','crack']);/* 地面に近い物：その上に立つせいれいより下に描く */
 function objectDepth(o,j){const y=(j/W)|0;if(FLAT.has(o)||LADDERS.has(o))return y+.02;if(o==='bridge')return y+.01;/* 橋は、上を歩く子より下 */if(STAIRS.has(o)){const d=stairDir(j);return (d===2||d===0?y-1:y)+.02}/* 階段・坂は、いちばん上の行（のぼった先の高いマスの行）のはじめ（上に立つせいれいより下） */if(HOME_DOORS.has(o)&&HOUSES.some(h=>h.set.has(j)))return y+.3;/* 家のドアは、屋根より下の層 */
   const b=o==='site'&&S.dyn[j]&&BL[S.dyn[j].build]||BL[o];
   return y+(b&&b.sz?(o==='site'?b.sz[1]:szAt(o,j)[1]):1)+(o==='obox'?.01:0);
