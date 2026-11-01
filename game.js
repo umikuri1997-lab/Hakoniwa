@@ -1511,7 +1511,7 @@ function goMeal(r,G){
   return startAct(r,G,'eat',-1,{pt:0,pw:0});
 }
 function fishLoot(r){/* つり：魚でないときは、空き缶・枝・レシピ・レアな家具 */const q=Math.random();sfxAt('catch',r.x,r.y);
-  if(q<.07){const oo=FURN.filter(id=>BL[id]&&BL[id].offerOnly&&(!WIND_STAGE_TOYS.has(id)||WD===4));if(oo.length){const id=pick(oo);giveItem(id,1);r.bubble='✨';addFloat(r.x,r.y-1.8,'レア！');toast(r.name+'が「'+BL[id].name+'」をつりあげた！（レア）','good');return}}
+  if(q<.07){const oo=FURN.filter(id=>BL[id]&&BL[id].offerOnly&&(!WIND_STAGE_TOYS.has(id)||WD===4));if(oo.length){const id=pick(oo);giveItem(id,1);r.bubble='✨';addFloat(r.x,r.y-1.8,'レア！');queueItemGift({[id]:1},'めずらしい家具をつりあげた！');return}}
   if(q<.15){r.bubble='📜';takeDrop({id:'recipe',n:1},r);return}
   const k=q<.6?'can':'eda';r.bubble=k==='can'?'🥫':'🪵';if(roomN(r)>0)addMat(r,k,1);else dropAt(r.x,r.y,'mat:'+k,1)}
 function weedMorning(first){/* first：ステージのはじめ（雑草100本・枝15本） *//* 毎朝：雑草30本（マップ全体。よみがえった土地は緑の草、荒れた土地は枯れた草）・きのこ（ときどき、木のそば）・枝（落とし物） */
@@ -2322,22 +2322,22 @@ function defeat(e,msg){sfx('defeat');if(EN[e.type].boss&&!S.flags.bossOutro&&!(S
 const DROPS=[['mat:wood',3],['mat:stone',3],['sand',1]];/* sand：やすらぎの砂（コワイノの落とし物だけで手に入る） */
 const DROPSEED={basic:'imo',fast:'tomato',thief:'mugi',brute:'imo',breaker:'mugi',trapper:'tomato',ash:'tomato',rockc:'imo',boss:'mugi',hino:'tomato',yama:'imo',boss2:'mugi'};/* コワイノの種類で、落とす種がちがう（まだ育てられない作物なら、いも） */
 const DROPF={basic:'mimamori',fast:'yomawari',breaker:'oyasumi',boss:'yonaka'};/* コワイノの種類ごとの、落とし物だけの家具 */
-function dropRolls(t){const sd=DROPSEED[t]&&cropOn(DROPSEED[t])?DROPSEED[t]:'imo',L=[['mat:wood',3,.2],['mat:stone',3,.2],['seed:'+sd,2,.2],['sand',1,.1]];if(DROPF[t])L.push([DROPF[t],1,.02]);if(KWR.some(id=>!(S.recipes||{})[id]))L.push(['recipe',1,.01]);return L}/* [物, 数, 落とす確率]：木材・石材・種20%、やすらぎの砂10%、家具2%、コワイノのレシピ1% */
+function dropRolls(t){const sd=DROPSEED[t]&&cropOn(DROPSEED[t])?DROPSEED[t]:'imo',L=[['mat:wood',3,.2],['mat:stone',3,.2],['seed:'+sd,2,.2],['sand',1,.1]];if(DROPF[t])L.push([DROPF[t],1,.005]);if(KWR.some(id=>!(S.recipes||{})[id]))L.push(['recipe',1,.001]);return L}/* [物, 数, 落とす確率]：木材・石材・種20%、やすらぎの砂10%、家具0.5%、コワイノのレシピ0.1% */
 function dropList(t){const sd=DROPSEED[t]&&cropOn(DROPSEED[t])?DROPSEED[t]:'imo',L=DROPS.concat([['seed:'+sd,2]]);if(DROPF[t])L.push([DROPF[t],1]);return L}
 function dropAt(x,y,want,nn,et){if(!S.drops)S.drops=[];const x0=x|0,y0=y|0;let j=-1;const r0=S.res.find(q=>!q.hidden),G=want?bfs(r0?r0.x|0:CX,r0?r0.y|0:CY):null,reach=q=>!G||G.dist[q]>=0;/* かけら・しずくは、せいれいが行ける場所に落とす */
   for(let rr2=0;rr2<=(want?8:3)&&j<0;rr2++)for(let dy=-rr2;dy<=rr2&&j<0;dy++)for(let dx=-rr2;dx<=rr2;dx++){const xx=x0+dx,yy=y0+dy;if(xx<0||yy<0||xx>=W||yy>=H)continue;const q=yy*W+xx;if(!S.obj[q]&&walk(q)&&reach(q)&&!S.drops.some(d=>d.y*W+d.x===q)){j=q;break}}
   if(j<0&&G){let bd=1e9;for(let q=0;q<W*H;q++){if(G.dist[q]<0||S.obj[q]||!walk(q)||S.drops.some(d=>d.y*W+d.x===q))continue;const d=Math.hypot(q%W-x0,((q/W)|0)-y0);if(d<bd){bd=d;j=q}}}
   if(j<0)return;const[id,n]=want?[want,nn||1]:pick(dropList(et));S.drops.push({x:j%W,y:(j/W)|0,id,n})}
 function takeDrop(d,r){let nm;
-  if(d.id==='recipe'){const L=KWR.filter(id=>!(S.recipes||{})[id]);if(!L.length){S.sand=(S.sand||0)+1;return}const id=pick(L);(S.recipes||(S.recipes={}))[id]=true;if(BL[id].kind==='block')(S.unlocked||(S.unlocked={}))[id]=true;kwrSync();sfx('level');toast((r?r.name+'が':'')+'コワイノのレシピをひろった：'+BL[id].name,'good');memo('📜',BL[id].name+'のレシピをひろった');renderPalette();return}/* コワイノのレシピ（まれ） */
-  if(d.id==='sand'){S.sand=(S.sand||0)+d.n;if(!(S.recipes||(S.recipes={})).toro){S.recipes.toro=true;memo('🏮','しずけさの石どうろうが作れるようになった')}sfx('seed');toast((r?r.name+'が':'')+'「やすらぎの砂」をひろった（'+S.sand+'）','good');return}/* コワイノの落とし物だけで手に入る、とくべつな素材 */
+  if(d.id==='recipe'){const L=KWR.filter(id=>!(S.recipes||{})[id]);if(!L.length){S.sand=(S.sand||0)+1;return}const id=pick(L);(S.recipes||(S.recipes={}))[id]=true;if(BL[id].kind==='block')(S.unlocked||(S.unlocked={}))[id]=true;kwrSync();sfx('level');queueItemGift({[id]:1},'あたらしいレシピ！',true);memo('📜',BL[id].name+'のレシピをひろった');renderPalette();return}/* コワイノのレシピ（まれ） */
+  if(d.id==='sand'){S.sand=(S.sand||0)+d.n;if(!(S.recipes||(S.recipes={})).toro){S.recipes.toro=true;memo('🏮','しずけさの石どうろうが作れるようになった');queueItemGift({toro:1},'あたらしいレシピ！',true)}/* やすらぎの砂をはじめてひろったら、石どうろうのレシピ（知らせを出す） */sfx('seed');toast((r?r.name+'が':'')+'「やすらぎの砂」をひろった（'+S.sand+'）','good');return}/* コワイノの落とし物だけで手に入る、とくべつな素材 */
   if(d.id==='mebuki'){S.mebuki=(S.mebuki||0)+1;sfx('level');toast((r?r.name+'が':'')+'「めぶきのしずく」をひろった！','good');logEv('めぶきのしずくをひろった');
     if(!S.flags.mebukiTold&&WD===0){const sp=S.res.find(q=>KEYRES.includes(q.name))||r;if(sp)talkOnce('mebukiTold',MEBUKIL[elemKey(sp)].map(t=>[sp.name,t]))}return}
   if(d.id==='shard'){S.flags.sh_boss=true;S.shards=Math.min(3,(S.shards||0)+1);memo('💎','ヌシのかけらをひろった（'+S.shards+'/3）');sfx('level');toast((r?r.name+'が':'')+'「ヌシのかけら」をひろった！（'+S.shards+'/3）','good');logEv('ヌシのかけらをひろった');checkQuest();return}
   if(r&&(d.id.startsWith('food:')||d.id.startsWith('mat:'))){const food=d.id.startsWith('food:'),k=d.id.slice(food?5:4),n=Math.min(d.n,roomN(r));if(n>0){if(food)addCarry(r,k,n);else addMat(r,k,n)}if(n<d.n)S.drops.push(Object.assign({},d,{n:d.n-n}));/* せいれいがひろった食べ物・素材は、頭の上につんで、箱へはこぶ。持ちきれない分は地面にのこす */if(n>0&&!d.lt)toast(r.name+'がおとしものをひろった：'+(food?FOODS[k].name:MATN[k])+'×'+n,'good');return}
   if(d.id.startsWith('food:')){const k=d.id.slice(5),add=Math.max(0,Math.min(d.n,foodCap()-S.food));if(add)addFood(k,add);if(add<d.n)S.drops.push(Object.assign({},d,{n:d.n-add}));/* 食料箱に入りきらない分は、そのまま地面にのこる */nm=FOODS[k].name+(add?'×'+add:'（食料箱がいっぱい）')}
   else if(d.id.startsWith('mat:')){const k=d.id.slice(4),add=Math.max(0,Math.min(d.n,matCap()-matTot()));S.mat[k]=(S.mat[k]||0)+add;if(!S.gotMat)S.gotMat={};S.gotMat[k]=(S.gotMat[k]||0)+add;nm=MATN[k]+(add?'×'+add:'（素材箱がいっぱい）');bambooIdea()}
-  else{giveItem(d.id,d.n);nm=(d.id.startsWith('seed:')?CROPS[d.id.slice(5)].name+'のたね':BL[d.id].item||BL[d.id].name)+'×'+d.n}
+  else{giveItem(d.id,d.n);nm=(d.id.startsWith('seed:')?CROPS[d.id.slice(5)].name+'のたね':BL[d.id].item||BL[d.id].name)+'×'+d.n;if(BL[d.id]&&BL[d.id].kind==='furn')queueItemGift({[d.id]:d.n},'めずらしい家具をひろった！')}/* 家具は、大きく知らせる */
   if(!d.lt)toast((r?r.name+'が':'')+'おとしものをひろった：'+nm,'good')}/* 守りの光で落とした素材は、だまってひろう */
 const watchUp=()=>Object.keys(S.hp).some(k=>k[0]==='L'&&S.hp[k]>=2&&S.obj[+k.slice(1)]==='watch');/* Lv2以上の見張り台がある */
 const WUP=[null,{pc:30,mat:{wood:30,stone:35}},{pc:100,mat:{wood:45,stone:75},sand:5}],YUP=[null,{pc:30,mat:{wood:30,stone:35}},{pc:60,mat:{wood:45,stone:75},sand:5}];/* sand：やすらぎの砂（Lv3への強化だけ） *//* 見張り台・ようがん台の強化 */const WATCH=[null,{dmg:1,range:6,cd:10},{dmg:2,range:6.5,cd:10},{dmg:3,range:7,cd:10}];/* cd：攻撃の間かく（分） */
@@ -3206,12 +3206,12 @@ function askYesNo(who,text,yes,no){const o=document.createElement('div');o.class
   const [bn,by]=o.querySelectorAll('button');by.onclick=()=>{sfx('next');o.remove();yes()};bn.onclick=()=>{sfx('tap');o.remove();no()};document.body.appendChild(o);sfx('next')}
 /* クエストのごほうび・解放。お話のあとに行う。続けてすることがあれば関数を返す */
 const ITEM_GIFTS=[];let GIFT_ACTIVE=false;
-function queueItemGift(items){const entries=Object.entries(items||{}).filter(([id,n])=>BL[id]&&n>0);if(entries.length)ITEM_GIFTS.push({state:S,items:entries})}
+function queueItemGift(items,title,rec){const entries=Object.entries(items||{}).filter(([id,n])=>BL[id]&&n>0);if(entries.length)ITEM_GIFTS.push({state:S,items:entries,title,rec})}/* title：見出し（なければ「うけとった！」）。rec：レシピをおぼえた知らせ */
 function showItemGift(){while(ITEM_GIFTS.length&&ITEM_GIFTS[0].state!==S)ITEM_GIFTS.shift();if(!ITEM_GIFTS.length||GIFT_ACTIVE)return;
-  const items=new Map();while(ITEM_GIFTS.length&&ITEM_GIFTS[0].state===S)for(const[id,n]of ITEM_GIFTS.shift().items)items.set(id,(items.get(id)||0)+n);
-  GIFT_ACTIVE=true;const overlay=el('<div class="idea-reveal gift-reveal" role="dialog" aria-modal="true" aria-label="うけとったもの"></div>'),card=el('<div class="idea-card"><div class="idea-symbol">🎁</div><h2>うけとった！</h2><div class="idea-items"></div></div>');
-  for(const[id,n]of items){const item=el('<div class="idea-item"></div>'),img=document.createElement('img'),name=document.createElement('span');img.src=iconURL(id);img.alt='';name.textContent=iname(id)+' ×'+n;item.append(img,name);card.querySelector('.idea-items').append(item)}
-  const button=el('<button class="btn pri" type="button">うけとる</button>');button.disabled=true;card.append(button);overlay.append(card);document.body.append(overlay);sfx('good');const prior=document.activeElement;
+  const items=new Map(),g0=ITEM_GIFTS[0],ttl=g0.title||'うけとった！',rec=!!g0.rec;while(ITEM_GIFTS.length&&ITEM_GIFTS[0].state===S&&(ITEM_GIFTS[0].title||'うけとった！')===ttl&&!!ITEM_GIFTS[0].rec===rec)for(const[id,n]of ITEM_GIFTS.shift().items)items.set(id,(items.get(id)||0)+n);/* 見出しがおなじものだけ、1まいにまとめる */
+  GIFT_ACTIVE=true;const overlay=el('<div class="idea-reveal gift-reveal" role="dialog" aria-modal="true" aria-label="うけとったもの"></div>'),card=el('<div class="idea-card"><div class="idea-symbol">'+(rec?'📜':'🎁')+'</div><h2></h2><div class="idea-items"></div></div>');
+  card.querySelector('h2').textContent=ttl;for(const[id,n]of items){const item=el('<div class="idea-item"></div>'),img=document.createElement('img'),name=document.createElement('span');img.src=iconURL(id);img.alt='';name.textContent=rec?BL[id].name:iname(id)+' ×'+n;item.append(img,name);card.querySelector('.idea-items').append(item)}
+  const button=el('<button class="btn pri" type="button">'+(rec?'OK':'うけとる')+'</button>');button.disabled=true;card.append(button);overlay.append(card);document.body.append(overlay);sfx('good');const prior=document.activeElement;
   setTimeout(()=>{if(overlay.isConnected){button.disabled=false;button.focus({preventScroll:true})}},650);button.onclick=()=>{if(button.disabled)return;overlay.remove();GIFT_ACTIVE=false;if(prior&&prior.isConnected)prior.focus({preventScroll:true})};
 }
 function questGives(q,g){g=g||q.gives||{};
@@ -6305,7 +6305,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='876';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='877';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
