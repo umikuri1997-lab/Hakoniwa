@@ -94,7 +94,7 @@ function drawConn(c,id,x,y,i,now){const C=window.CHIPS;if(!C)return false;const 
   if(id==='logfence'&&!ICON&&i!=null){/* 丸太の塀：おくゆきの順にかさねる。北からくる たての丸太は、横の塀・柱のうしろ。南へのびる たての丸太は、横の塀・柱の前（柱のてっぺんから） */
     const post=!((hm===3&&!vm)||(!hm&&vm===12)),VB=C['logfence:VUD'],P=C['logfence:H0'],band=(t,b,l=x-64,r=x+128)=>{c.save();c.beginPath();c.rect(l,t,r-l,b-t);c.clip();drawChip(c,VB,id,x,y,now,i);c.restore()};
     if(!post){if(hm)return drawChip(c,H,id,x,y,now,i);return drawChip(c,VB,id,x,y,now,i)}
-    if(VB&&vm&4)band(y-64,y-4);/* うしろの帯は、柱のよこに y-4 まで見える */if(hm&&!drawChip(c,H,id,x,y,now,i))return false;if(P)drawChip(c,P,id,x,y,now,i);if(VB&&vm&8){band(y-4,y+.6,x+11.5,x+21.5);band(y,y+64)}/* 手前の帯は、柱のてっぺんの丸い面の下（y-4）から。はじめの丸太1本ぶんは、よこの板がなく、柱の鉄の輪が見える */return true}
+    if(VB&&vm&4)band(y-64,y+1);/* うしろの帯は、柱のてっぺんの丸い面の下（y+1）まで（柱のうしろ） */if(hm&&!drawChip(c,H,id,x,y,now,i))return false;if(P)drawChip(c,P,id,x,y,now,i);if(VB&&vm&8)band(y+1,y+64);/* 手前の帯は、柱のてっぺんの丸い面の下（y+1）から */return true}
   if(!vm)return drawChip(c,H,id,x,y,now,i);if(hm&&C[id+':m'+m])return drawChip(c,K(id+':m'+m),id,x,y,now,i);/* 角・つなぎ目の絵があれば、部品を重ねずにそれを使う */if(!hm)return drawChip(c,V,id,x,y,now,i);const r=CONNR[id]||'HV';
   if(r==='VH'){if(!drawChip(c,V,id,x,y,now,i))return false;return drawChip(c,H,id,x,y,now,i)}
   if(!drawChip(c,H,id,x,y,now,i))return false;if(r==='Hclip'){c.save();c.beginPath();if(vm&4)c.rect(x-64,y-64,192,66);if(vm&8)c.rect(x-64,y+26,192,96);c.clip();drawChip(c,V,id,x,y,now,i);c.restore();return true}return drawChip(c,V,id,x,y,now,i)}

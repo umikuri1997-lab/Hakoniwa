@@ -179,8 +179,10 @@ function updEnemy(e,dt){
     if(nr){e.tg=nr.id;hitRes(e,nr,D);if(hsOf(D)>=2&&!e.dead){burstAt(nr.x,nr.y,'offer');for(const q of S.res){if(q===nr||q.hidden||onTower(q)||e.dead)continue;if(Math.hypot(q.x-nr.x,q.y-nr.y)<1.5&&!fenceBetween(e.x,e.y,q.x,q.y))hitRes(e,q,D)}}return}}/* 攻撃がとどく所にせいれいがいれば、柵ごしでも、柵や罠よりせいれいを先に攻撃する */
   let pre=null,twj=-1;if(!D.thief&&!D.trapper&&!e.ashG&&!e.flee){if(!EREACH.has(e))EREACH.set(e,bfs(e.x|0,e.y|0,2).dist);const RD=EREACH.get(e);let nd=1e9,fd=1e9,hd=1e9,fr=null,hr=null;
     for(const r of S.res){if(r.hidden||onTower(r))continue;const d=Math.hypot(r.x-e.x,r.y-e.y),rj=(r.y|0)*W+(r.x|0);if(RD&&RD[rj]>=0){if(d<nd){nd=d;pre=r}}else if(roomOf(rj)){if(d<hd){hd=d;hr=r}}else if(d<fd){fd=d;fr=r}}/* 歩いて行ける子 → （見張り台）→ 柵の中の子 → 家の中の子 */
-    if(!pre){let bd=1e9;for(const r of S.res){if(!onTower(r))continue;const d=Math.hypot(r.act.obj%W+1-e.x,((r.act.obj/W)|0)+1-e.y);if(d<bd){bd=d;twj=r.act.obj}}}/* 見張り台の上の子は、見張り台をこわさないと攻撃できない */
-    if(!pre&&twj<0)pre=fr||hr}
+    const twIn=j=>{for(let b=-1;b<=2;b++)for(let a=-1;a<=2;a++){if(a>=0&&a<=1&&b>=0&&b<=1)continue;const k=j+b*W+a;if(RD&&RD[k]>=0)return false}return true};/* 見張り台が柵・塀の中にある（まわりのマスに、こわさずに行けない） */
+    const tw=inn=>{let bd=1e9,bj=-1;for(const r of S.res){if(!onTower(r)||twIn(r.act.obj)!==inn)continue;const d=Math.hypot(r.act.obj%W+1-e.x,((r.act.obj/W)|0)+1-e.y);if(d<bd){bd=d;bj=r.act.obj}}return bj};/* 見張り台の上の子は、見張り台をこわさないと攻撃できない */
+    if(!pre)twj=tw(false);/* 柵の外の見張り台 → 柵の中の子 → 柵の中の見張り台 → 家の中の子 */
+    if(!pre&&twj<0&&fr)pre=fr;if(!pre&&twj<0)twj=tw(true);if(!pre&&twj<0)pre=hr}
   let dj=-1;if((D.trapper||twj>=0)&&!e.flee&&!pre){/* 見張り台や罠をこわしにいくのはワナクイだけ。ほかのコワイノは、せいれいが立っている見張り台だけこわしにいく */let bd=1e9;for(const j of(D.trapper?defList():[twj])){if(!DEFS.has(S.obj[j]))continue;const z=BL[S.obj[j]].sz||[1,1],x0=j%W,y0=(j/W)|0,d=Math.hypot(Math.max(x0-e.x,0,e.x-(x0+z[0])),Math.max(y0-e.y,0,e.y-(y0+z[1])))+.5;/* 大きい設備は、いちばん近い面まで */if(d<bd){bd=d;dj=j}}
     if(dj>=0){if(bd<1.15){e.busyT=S.t;e.hitT=S.t;/* 塀・建物をこうげき中（火の子がむかえうつ） */e.atk+=dt*lightMul(e.x,e.y);/* 光の中は、攻撃の速さ0.8倍 */if(e.atk>=D.atk){e.atk=0;const o=S.obj[dj];S.hp[dj]=(S.hp[dj]??defHp(o))-(D.boss?2:D.trapper?2:1)/steleF(dj);WALLHIT.set(dj,performance.now());sfxAt('bonk',dj%W+.5,(dj/W)|0);
         if(S.hp[dj]<=0){(S.broken||(S.broken=[])).push({j:dj,id:o,L:S.hp['L'+dj],rot:rotAt(dj)});sfxAt('wbreak',dj%W+.5,(dj/W)|0);if(S.ns)S.ns.broke++;{const hb=HOUSES.find(h=>h.set.has(dj));clearObj(dj);DEFC.t=0;recount();houseBreakFlee(hb)}dirty=true;toast(BL[o].name+'がこわされた！','warn')}}return}
