@@ -45,10 +45,10 @@ function showItemGift(){while(ITEM_GIFTS.length&&ITEM_GIFTS[0].state!==S)ITEM_GI
   const button=el('<button class="btn pri" type="button">'+(rec?'OK':'うけとる')+'</button>');button.disabled=true;card.append(button);overlay.append(card);document.body.append(overlay);sfx('good');const prior=document.activeElement;
   setTimeout(()=>{if(overlay.isConnected){button.disabled=false;button.focus({preventScroll:true})}},650);button.onclick=()=>{if(button.disabled)return;overlay.remove();GIFT_ACTIVE=false;if(prior&&prior.isConnected)prior.focus({preventScroll:true})};
 }
-const SPOT_POPS=[];/* はじめてできたスポットの説明 */
-function showSpotPop(){while(SPOT_POPS.length&&SPOT_POPS[0].state!==S)SPOT_POPS.shift();if(!SPOT_POPS.length||GIFT_ACTIVE)return;const sp=SPOT_POPS.shift().sp;
-  GIFT_ACTIVE=true;const overlay=el('<div class="idea-reveal gift-reveal" role="dialog" aria-modal="true" aria-label="スポット"></div>'),card=el('<div class="idea-card"><h2>スポットができた！</h2><div class="spotpop"><b></b><p></p><p></p></div></div>');
-  const q=card.querySelector('.spotpop');q.children[0].textContent=sp.n;q.children[1].textContent=sp.how+(sp.room?'を置く。':'を、まわり3マスに置く。');q.children[2].textContent=sp.eff;
+const SPOT_POPS=[],GUIDE_POPS=[];/* はじめてできたスポットの説明・会話のあとの案内 */
+function showSpotPop(){for(const Q of[GUIDE_POPS,SPOT_POPS])while(Q.length&&Q[0].state!==S)Q.shift();if(!(SPOT_POPS.length||GUIDE_POPS.length)||GIFT_ACTIVE)return;
+  GIFT_ACTIVE=true;const overlay=el('<div class="idea-reveal gift-reveal" role="dialog" aria-modal="true"></div>'),card=el('<div class="idea-card"><h2></h2><div class="spotpop"><b></b><p></p><p></p></div></div>');
+  const q=card.querySelector('.spotpop'),h=card.querySelector('h2');if(GUIDE_POPS.length){const g=GUIDE_POPS.shift();h.textContent='あんない';q.children[0].remove();q.children[1].remove();q.children[0].textContent=g.t}else{const sp=SPOT_POPS.shift().sp;h.textContent='スポットができた！';q.children[0].textContent=sp.n;q.children[1].textContent=sp.how+(sp.room?'を置く。':'を、まわり3マスに置く。');q.children[2].textContent=sp.eff}overlay.setAttribute('aria-label',h.textContent);
   const button=el('<button class="btn pri" type="button">OK</button>');button.disabled=true;card.append(button);overlay.append(card);document.body.append(overlay);sfx('good');const prior=document.activeElement;
   setTimeout(()=>{if(overlay.isConnected){button.disabled=false;button.focus({preventScroll:true})}},650);button.onclick=()=>{if(button.disabled)return;overlay.remove();GIFT_ACTIVE=false;if(prior&&prior.isConnected)prior.focus({preventScroll:true})}}
 function questGives(q,g){g=g||q.gives||{};

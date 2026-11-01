@@ -6,7 +6,7 @@ const {chromium}=require('playwright');const fs=require('fs');const [URL0,SAVE,O
 const OUT=OUT0.replace(/\/?$/,'/');
 (async()=>{const b=await chromium.launch();const p=await b.newPage({viewport:{width:900,height:900}});const errs=[];p.on('pageerror',e=>errs.push(e.message));
 await p.addInitScript(sv=>{for(const k in sv.saves)localStorage.setItem(k,typeof sv.saves[k]==='string'?sv.saves[k]:JSON.stringify(sv.saves[k]))},sv);
-await p.goto(URL0);await p.waitForTimeout(1500);await p.evaluate(()=>__game.ev('continueGame(loadStage(0))'));await p.waitForTimeout(6000);
+await p.goto(URL0);await p.waitForTimeout(1500);await p.evaluate(()=>__game.ev('continueGame(loadStage(0))'));await p.waitForTimeout(6000);await p.evaluate(()=>__game.ev('S.spotSeen=Object.fromEntries(SPOTS.map(s=>[s.k,1]));SPOT_POPS.length=0;GUIDE_POPS.length=0;document.querySelectorAll(".idea-reveal").forEach(e=>e.remove());GIFT_ACTIVE=false'));/* ポップアップを出さない */
 const ids=await p.evaluate(()=>__game.ev(`(()=>{const s=new Set();for(const k in CHIPS){const b=k.split(/[:#>@~.\\/]/)[0];if(BL[b]&&b!=='part'&&b!=='site')s.add(b)}return [...s]})()`));
 console.log(ids.length);
 await p.evaluate(()=>__game.ev(`(()=>{USERPAUSE=true;document.querySelectorAll('.hud,.dock,.quest,#qrow,.qrow,#skill,#toast').forEach(e=>e.style.visibility='hidden');S.res.forEach(r=>r.hidden=true);S.t=Math.floor(S.t/1440)*1440+12*60;S.hold=0})()`));
