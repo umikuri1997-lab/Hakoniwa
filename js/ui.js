@@ -113,6 +113,7 @@ function unhold(){if(NEWRES!=null){HOLD.delete(NEWRES);const r=S&&S.res.find(x=>
 function closeSheet(){if(S&&S.flags){if(sheet==='shop'&&S.flags.traded)S.flags.tradedSeen=1;if(sheet==='menu'&&S.flags.oracleSet)S.flags.oracleSeen=1}/* おつげをえらんだあと、メニューをとじたら（もどってからとじても） */sheet=null;unhold();$('#sheetWrap').hidden=true;if(LVQ){const q=LVQ;LVQ=null;setTimeout(()=>{if(sheet)LVQ=q;else lvShow(...q)},250)}if(S&&S.flags.tapPend&&!S.flags.tapped&&!(S.pendTalk&&S.pendTalk.tapped)){talkOnce('tapped',[[GOD,'#joy|うむ。フタバは、元気そうじゃのう。'],[GOD,'おなかをすかせとったり、しょんぼりしとったら、気にかけてやっておくれ。'],[POKO,'#joy|えへへ、見られちゃった。']],250);setTimeout(checkQuest,400)}}
 function el(html){const d=document.createElement('div');d.innerHTML=html.trim();return d.firstElementChild}
 /* たね：たね袋の絵＋作物の小さな絵 */
+const CROPIC={};function cropIcon(k){if(CROPIC[k])return CROPIC[k];const c=document.createElement('canvas');c.width=c.height=64;const g=c.getContext('2d');g.translate(32,30);g.scale(1.7,1.7);drawCrop(g,k,0,0,100,true);const u=c.toDataURL();c.width=c.height=0;return CROPIC[k]=u}/* 作物の絵だけのアイコン（図鑑） */
 function seedIcon(k){const c=document.createElement('canvas');c.width=c.height=64;const g=c.getContext('2d');const a=ART.bag;if(a&&a.ok){const h=56,w=h*a.w/a.h;g.drawImage(a.img,(64-w)/2-4,4,w,h)}g.save();g.translate(30,26);g.scale(1.1,1.1);drawCrop(g,k,0,0,100,true);g.restore();return c.toDataURL()}/* たねは、たねのふくろ（もらった絵）と、育つ作物の絵のセット */
 function cropIcon(k){const c=document.createElement('canvas');c.width=c.height=64;const g=c.getContext('2d');g.scale(2,2);drawCrop(g,k,0,0,100,true);return c.toDataURL()}
 /* 説明は❓をおしたときだけ出す */
@@ -521,7 +522,7 @@ function zukanBody(body){
       const c=row.querySelector('canvas').getContext('2d');c.scale(2,2);try{drawShade(c,k,36,64,(k==='boss'||k==='hino'||k==='yama'||k==='boss2'?.46:.56),1,{t:0,dot:1})}catch(_){}
       row.querySelector('b').textContent=D.name;row.querySelector('p').textContent=ZUKAN[k];row.querySelector('small').textContent='体力 '+D.hp+'・はやさ '+D.sp+'・追いはらった '+(K[k]||0)+'回';if(d.cleared&&ZURA[k]){const u=el('<p class="note"></p>');u.textContent='もとのすがた：'+ZURA[k];row.querySelector('.zt').appendChild(u)}rows.appendChild(row);list.push(null)}}
   else{const it=Object.assign({},d.seenIt||{});for(const k in d.mat||{})if(d.mat[k]>0)it['m:'+k]=1;for(const k in d.fs||{})if(d.fs[k]>0)it['f:'+k]=1;
-    for(const k in MATN)if(it['m:'+k])add(MATN[k],'素材',ICONS[k]||null);for(const k in FOODS)if(it['f:'+k])add(FOODS[k].name,FOODS[k].fx||'食べ物',ICONS[k]||null)}
+    for(const k in MATN)if(it['m:'+k])add(MATN[k],'素材',ICONS[k]||null);for(const k in FOODS)if(it['f:'+k])add(FOODS[k].name,FOODS[k].fx||'食べ物',ICONS[k]||icURL(FOODS[k].e)||(CROPS[k]?cropIcon(k):null))}
   body.appendChild(el('<p class="story">'+list.length+'こ</p>'));
   for(const q of list){if(!q)continue;rows.appendChild(rowEl(q[0],q[1],q[2]))}
   if(!list.length)body.appendChild(el('<p class="note">まだありません</p>'));body.appendChild(rows)}
