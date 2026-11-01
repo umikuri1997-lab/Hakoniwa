@@ -418,7 +418,7 @@ function renderSheet(){
     else body.appendChild(el('<p class="note">これ以上は強化できない</p>'));
   }else if(sheet==='menu'){
     T.textContent=WORLDS[WD].name;
-    const MI=[['oracle','🍃','おつげ'],['manual','📜','ひでんのしょ'],['goal','🎯','目標'],['record','📔','思い出帳'],['maps','🧭','マップ選択'],['zukan','👻','コワイノ図鑑'],['settings','⚙️','設定'],['support','☕','応援する']];
+    const MI=[['oracle','🍃','おつげ'],['manual','📜','ひでんのしょ'],['goal','🎯','目標'],['record','📔','思い出帳'],['maps','🧭','マップ選択'],['zukan','👻','図鑑'],['settings','⚙️','設定'],['support','☕','応援する']];
     const sub=MI.find(m=>m[0]===sheetArg);
     if(!sub){/* メニューはアイコンを並べるだけ。タップで中身を開く */
       body.appendChild(el(`<p class="story">みどりのマス <b>${GRASSN}</b>・村レベル ${S.lv}・せいれい ${S.res.length}人</p>`));
@@ -449,13 +449,7 @@ function renderSheet(){
       const b=el('<button class="btn pri" style="width:100%"></button>');b.textContent=S.trial?'今夜、試練の夜がくる':'今夜、試練をうける';b.disabled=!!S.trial||isNight();b.onclick=()=>{S.trial=true;sfx('night');toast('今夜は「コワイノの試練」','warn');renderSheet()};tr.appendChild(b);
       tr.appendChild(el('<p class="note">のりこえた試練：'+(S.trials||0)+'回</p>'));body.appendChild(tr);subSec(body);/* クリア後は、新しい目標を上に。サブクエストは下に */
     }else if(sheetArg==='goal'){subSec(body,true);
-    }else if(sheetArg==='zukan'){
-      const seen=S.seenEn||{},K=S.enKills||{},ks=Object.keys(EN).filter(k=>ZUKAN[k]);
-      body.appendChild(el(`<p class="story">会ったコワイノ ${ks.filter(k=>seen[k]).length} / ${ks.length}</p>`));
-      for(const k of ks){const D=EN[k],ok=seen[k],row=el('<div class="zk"><canvas width="144" height="144"></canvas><div class="zt"><b></b><p></p><small></small></div></div>');
-        const c=row.querySelector('canvas').getContext('2d');c.scale(2,2);if(!ok)c.globalAlpha=.18;try{drawShade(c,k,36,64,(k==='boss'||k==='hino'||k==='yama'||k==='boss2'?.46:.56),1,{t:0,dot:1})}catch(_){}
-        row.querySelector('b').textContent=ok?D.name:'？？？';row.querySelector('p').textContent=ok?ZUKAN[k]:'まだ会ったことがない';
-        row.querySelector('small').textContent=ok?'体力 '+D.hp+'・はやさ '+D.sp+'・追いはらった '+(K[k]||0)+'回':'';if(ok&&S.cleared&&ZURA[k]){const u=el('<p class="note"></p>');u.textContent='もとのすがた：'+ZURA[k];row.querySelector('.zt').appendChild(u)}/* クリア後は、もとの闇のせいれいのすがたが読める */body.appendChild(row)}
+    }else if(sheetArg==='zukan'){zukanBody(body)
     }else if(sheetArg==='record'){
       const st=el('<div class="sec"><h3>これまで</h3><div class="recs"></div></div>'),rw=st.querySelector('.recs');
       for(const[a,b]of[['すごした日',dayNo()+'日'],...(S.score?[['クリアスコア',S.score.rank+'（'+S.score.tot+'てん）']]:[]),['のりこえた夜',(S.nights||0)+'回'],['いまのせいれい',S.res.length+'人'],['よんだせいれい',(S.summons||0)+'人'],['消えてしまったせいれい',(S.deaths||0)+'人'],
@@ -508,3 +502,26 @@ function renderSheet(){
     }
   }
 }
+
+/* 図鑑：マップごとに、見つけた・おぼえた物だけ（スポット・家具・建物・レシピ・コワイノ・アイテム） */
+let ZKW=null,ZKT=0;const ZKTABS=['スポット','家具','建物','レシピ','コワイノ','アイテム'];
+function zukanBody(body){
+  const ws=[0,1,2,3,4,5].filter(w=>(w===WD&&!S.free)||savedStage(w));if(!ws.length){body.appendChild(el('<p class="note">まだありません</p>'));return}
+  if(ZKW==null||!ws.includes(ZKW))ZKW=ws.includes(WD)?WD:ws[0];
+  if(ws.length>1){const tb=el('<div class="ctabs"></div>');for(const w of ws){const t=el('<button class="ctab'+(w===ZKW?' on':'')+'"></button>');t.textContent=WORLDS[w].name;t.onclick=()=>{ZKW=w;sfx('next');renderSheet()};tb.appendChild(t)}body.appendChild(tb)}
+  {const tb=el('<div class="ctabs"></div>');ZKTABS.forEach((nm,i)=>{const t=el('<button class="ctab'+(i===ZKT?' on':'')+'"></button>');t.textContent=nm;t.onclick=()=>{ZKT=i;sfx('next');renderSheet()};tb.appendChild(t)});body.appendChild(tb)}
+  const d=ZKW===WD?S:savedStage(ZKW);if(!d)return;
+  const G=grecOf(),here=id=>G.get(id)===ZKW,placed=new Set((d.obj||[]).filter(o=>o&&BL[o])),has=id=>placed.has(id)||((d.inv||{})[id]||0)>0;
+  const rows=el('<div class="rows"></div>'),list=[];
+  const add=(nm,desc,img)=>list.push([nm,desc,img]);
+  if(ZKT===0){for(const sp of SPOTS)if((d.spotSeen||{})[sp.k])add(sp.n,sp.how+'：'+sp.eff,null)}
+  else if(ZKT===1||ZKT===2||ZKT===3){const kd=ZKT===1?'furn':ZKT===2?'build':null;
+    for(const id in BL){const b=BL[id];if(!b||!b.name||b.hidden)continue;if(kd?b.kind!==kd:(b.kind==='furn'||b.kind==='build'||b.kind==='nat'))continue;if(!(here(id)||(ZKT!==3&&has(id))))continue;add(b.name,b.desc||'',iconURL(id))}}
+  else if(ZKT===4){const seen=d.seenEn||{},K=d.enKills||{};for(const k of Object.keys(EN).filter(k=>ZUKAN[k]&&seen[k])){const D=EN[k],row=el('<div class="zk"><canvas width="144" height="144"></canvas><div class="zt"><b></b><p></p><small></small></div></div>');
+      const c=row.querySelector('canvas').getContext('2d');c.scale(2,2);try{drawShade(c,k,36,64,(k==='boss'||k==='hino'||k==='yama'||k==='boss2'?.46:.56),1,{t:0,dot:1})}catch(_){}
+      row.querySelector('b').textContent=D.name;row.querySelector('p').textContent=ZUKAN[k];row.querySelector('small').textContent='体力 '+D.hp+'・はやさ '+D.sp+'・追いはらった '+(K[k]||0)+'回';if(d.cleared&&ZURA[k]){const u=el('<p class="note"></p>');u.textContent='もとのすがた：'+ZURA[k];row.querySelector('.zt').appendChild(u)}rows.appendChild(row);list.push(null)}}
+  else{const it=Object.assign({},d.seenIt||{});for(const k in d.mat||{})if(d.mat[k]>0)it['m:'+k]=1;for(const k in d.fs||{})if(d.fs[k]>0)it['f:'+k]=1;
+    for(const k in MATN)if(it['m:'+k])add(MATN[k],'素材',ICONS[k]||null);for(const k in FOODS)if(it['f:'+k])add(FOODS[k].name,FOODS[k].fx||'食べ物',ICONS[k]||null)}
+  body.appendChild(el('<p class="story">'+list.length+'こ</p>'));
+  for(const q of list){if(!q)continue;rows.appendChild(rowEl(q[0],q[1],q[2]))}
+  if(!list.length)body.appendChild(el('<p class="note">まだありません</p>'));body.appendChild(rows)}
