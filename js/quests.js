@@ -267,9 +267,10 @@ function deathTalk(r){if(WD)return null;const F=S.flags,n=r.name,tell=k=>{const 
   if(n===keyName('fire')&&F.guard&&!F.lostH){F.lostH=1;return sevLines([['F','#think|……うそ。$が……。'],['F','さっきまで、ぼくの前で、あんなに強く戦ってたのに……。'],['F','#sigh|ぼく、守るって言ったのに……！'],['F','葉っぱのまもり、もっと早く使えてたら……。'],['N','フタバがいっしょに守ろうとしたことは、なくならないよぉ。',1],['G',GVOICE()+'フタバ。そやつの勇気は、ちゃんと皆に届いておるぞい。','!N'],['F','#scared|……ううん、泣いてばかりじゃだめだ。$は、ぼくたちを守ってくれたんだもん。'],['F','#think|……うん。帰ってきたら、ちゃんと「おかえり」って言うんだ。']],n).concat(tell())}
   if(isKey(n)&&n!==MINA&&n!==POKO&&!F['lostK'+r.elem]){F['lostK'+r.elem]=1;return sevLines([['F','#worry|……$！？ ……いなくなっちゃったの？'],['F','いっしょに、もっといろんなことしたかったのに……。'],['F','#joy|まだ、ありがとうも言えてないよ……。'],['N','$も、フタバのこと、大事に思ってたよぉ。',1],['G',GVOICE()+'フタバ。神殿の力で、$はまた帰ってこられる。それまでは、みんなで村を守るんじゃ。','!N'],['F','#danger|……うん。帰ってくるまで、村を守ってるからね。']],n).concat(tell())}
   if(!isKey(n)&&!F.lostA){F.lostA=1;const L=sevLines([['F','#worry|……え？ $が、いなくなっちゃった……？'],['F','さっきまで、いっしょにいたのに……。'],['F','ぼく、もっとちゃんと見ててあげればよかった……。',0,'dim']],n);
-    L.push(sevHere('N')?[MINA,'#think|……ふつうの子はねぇ、消えると、自然にかえるんだよぉ。同じ姿では、もう戻ってこられないんだぁ。']:[GOD,'#think|……ふつうのせいれいは、消えると自然にかえる。同じ姿では、もう戻ってこられんのじゃ。']);
-    L.push([POKO,'#think|……そっか。'],sevHere('N')?[MINA,'#surprise|かえった子は、この土地の風や土になって、ずっとそばにいてくれるよぉ。']:[GOD,'#cry|かえった子は、この土地の風や土になって、そばにおる。……さみしいのう。'],[POKO,'ぼく、'+n+'のこと、忘れないよ。']);
-    if(!F.death2Told){F.death2Told=true;L.push([GOD,GVOICE()+'オオカゲが落とす「めぶきのしずく」があれば、べつじゃがの。'])}
+    const NH=sevHere('N'),m2=!F.death2Told;F.death2Told=true;/* 話す子は、さいごまで同じ（とちゅうでカミサマがわりこまない） */
+    L.push(NH?[MINA,'#think|……ふつうの子はねぇ、消えると、自然にかえるんだよぉ。同じ姿では、もう戻ってこられないんだぁ。']:[GOD,(GVOICE()||'#think|')+'……ふつうのせいれいは、消えると自然にかえる。同じ姿では、もう戻ってこられんのじゃ。']);
+    L.push([POKO,'#think|……そっか。'],NH?[MINA,'#surprise|かえった子は、この土地の風や土になって、ずっとそばにいてくれるよぉ。']:[GOD,'#cry|かえった子は、この土地の風や土になって、そばにおる。……さみしいのう。'],[POKO,'ぼく、'+n+'のこと、忘れないよ。']);
+    if(m2)L.push(NH?[MINA,'#think|……あのねぇ。オオカゲが持ってる「めぶきのしずく」っていう、いのちの力があったら、またあえるかもしれないんだぁ。']:[GOD,'#think|……そうじゃ、フタバ。オオカゲがためこんだ「めぶきのしずく」があれば、もう一度あえるかもしれん。あきらめるのは、まだ早いぞい。'])
     L.push([POKO,'#think|……みんな、ちゃんとごはんを食べて、休もうね。']);return L}
   return null}
 function sevBack(n){if(WD||!S.flags)return;const Q=S.sevQ||(S.sevQ=[]),F=S.flags;if(n===POKO&&F.nushiWait&&!S.cleared){F.nushiWait=0;F.nushiDue=1;setTimeout(()=>{if(!S.cleared)nushiReturns()},7000)}/* フタバがもどってから、ヌシ様がくる */
