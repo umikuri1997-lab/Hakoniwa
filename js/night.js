@@ -237,14 +237,14 @@ function guardLight(e){PTW.q=true;if(LIGHTCD>0){toast('まもりの光は、あ�
   const D=EN[e.type];e.hp-=1;e.flash=8;/* ダメージは1だけ */e.stun=D.boss?1:2.5;e.path=[];e.repath=0;
   const cx=e.x*TS,cy=e.y*TS-18;fx.push({k:'ring',x:cx,y:cy,life:1});for(let n=0;n<18;n++){const a=Math.random()*7,v=rnd(50,120);fx.push({k:'p',x:cx,y:cy,vx:Math.cos(a)*v,vy:Math.sin(a)*v-40,life:1,col:pick(['#fffbe0','#fff','#ffe9a0']),r:rnd(1.5,3)})}sfxAt('shoot',e.x,e.y);
   if(e.hp<=0)return defeat(e,'守り神の光で'+D.name+'を追いはらった！')}
-let AREACD=0,AREAARM=false;/* ひかりのはどう：範囲2マスに0.5ダメージ・パワー3 */
+let AREACD=0,AREAARM=false;/* こもれびのまもり（フタバから受けついだ守り神の技）：タップした場所から2マスのせいれいに、葉のまもり40秒・パワー3 */
 function areaBlast(cx,cy){
-  const L=S.enemies.filter(e=>e.spawned&&!e.dead&&Math.hypot(e.x-cx,e.y-cy)<=2);
-  if(!L.length){toast('はんいに「コワイノ」がいません');return}
-  S.pt-=3;PTW.q=true;AREACD=5;const px=cx*TS,py=cy*TS;fx.push({k:'ring',x:px,y:py,life:1});
-  for(let n=0;n<28;n++){const a=n/28*Math.PI*2;fx.push({k:'p',x:px+Math.cos(a)*2*TS,y:py+Math.sin(a)*2*TS,vx:Math.cos(a)*30,vy:Math.sin(a)*30-10,life:1,col:pick(['#fffbe0','#fff','#ffe9a0']),r:rnd(1.5,3)})}
-  sfxAt('shoot',cx,cy);
-  for(const e of L){e.hp-=.5;e.flash=8;if(e.hp<=0)defeat(e,'ひかりのはどうで'+EN[e.type].name+'を追いはらった！')}}
+  const L=S.res.filter(r=>!r.hidden&&Math.hypot(r.x-cx,r.y-cy)<=2);
+  if(!L.length){toast('はんいに、せいれいがいません');return}
+  S.pt-=3;PTW.q=true;AREACD=5;const px=cx*TS,py=cy*TS;fx.push({k:'ring',x:px,y:py,life:1,col:'#c8f5a0'});
+  for(let n=0;n<28;n++){const a=n/28*Math.PI*2;fx.push({k:'p',x:px+Math.cos(a)*2*TS,y:py+Math.sin(a)*2*TS,vx:Math.cos(a)*30,vy:Math.sin(a)*30-10,life:1,col:pick(['#8fdc6a','#c8f5a0','#fffbe0']),r:rnd(1.5,3)})}
+  sfx('bush');
+  for(const r of L){r.shU=S.t+40;leafFX(r)}}
 function defeat(e,msg){sfx('defeat');if(EN[e.type].boss&&!S.flags.bossOutro&&!(S.bossKills>0)){S.flags.bossOutro=1;bossDefeatFX(e)}else if(e.type==='boss2'){bossDefeatFX(e);villageTimeout(finalWinCheer,5800)}/* 追いはらった演出（時間を止めて消えていく様子を見せる）は、はじめてボスを追いはらったときの1回だけ */
   if(!EVAP.some(it=>it.e===e))EVAP.push({e,t0:performance.now(),dur:1300,die:true});/* たおしたら、たおれるモーションをしてから消える */
   e.dead=true;S.kills++;const D=EN[e.type];{const K=S.enKills||(S.enKills={});K[e.type]=(K[e.type]||0)+1}if(S.ns){S.ns.kill++;if(D.boss)S.ns.boss=2;if(e.type==='boss2'){S.ns.b2=1;S.b2At={x:e.x,y:e.y}}}const n=D.pw||5;

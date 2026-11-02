@@ -97,7 +97,7 @@ function updHUD(){
 let started=false,titleDrift=0,STOCKSIG='';
 function showUI(on){$('#topUI').hidden=!on;$('#botUI').hidden=!on}
 /* 引き継ぎ：便利な道具（ひろびろハケ・かたどりスタンプ・つけかえトンカチ・ひっこしミトン）だけは、ほかの土地でもらっていれば使える */
-function syncTools(s){for(const L of LIVE)if(L&&L!==s){if(L.bulk)s.bulk=true;if(L.stamps)s.stamps=true;if(L.swap)s.swap=true;if(L.dig)s.dig=true;if(L.mover)s.mover=true;if(L.areaSkill||L.flags&&L.flags.areaSkill)(s.flags||(s.flags={})).areaSkill=true}}/* 「ひかりのはどう」も、草原でおぼえたら、ほかのステージで使える */
+function syncTools(s){for(const L of LIVE)if(L&&L!==s){if(L.bulk)s.bulk=true;if(L.stamps)s.stamps=true;if(L.swap)s.swap=true;if(L.dig)s.dig=true;if(L.mover)s.mover=true;if(L.areaSkill||L.flags&&L.flags.areaSkill)(s.flags||(s.flags={})).areaSkill=true}}/* 「こもれびのまもり」も、草原でおぼえたら、ほかのステージで使える */
 function villageTimeout(fn,delay){const owner=S,session=VILLAGE_SESSION;return setTimeout(()=>{if(S===owner&&session===VILLAGE_SESSION)fn()},delay)}
 function resetVillageTransient(){VILLAGE_SESSION++;endClap();NUSHI_RUN=false;resetQuestPrompts();DLGQ.length=0;DLGGAP=0;DLGCUR='';DLGTAP=-1e9;DLGN.clear();voiceStop();$('#dialog').hidden=true;$('#dlgBtns').replaceChildren();DLG_KEEP=false;NEWQ.length=0;NEWRES=null;HOLD.clear();RLVQ.length=0;LVQ=null;for(const id of['#lvup','#rlv'])$(id).hidden=true;document.querySelectorAll('.askyn').forEach(e=>e.remove());if(S)for(const r of S.res)QUEST_VISITS.delete(r)}/* もちこさない待ち状態だけを消す。途中の会話は pendTalk に残す */
 function newGame(w){w=w||0;if(sheet!=null)closeSheet();recSync();resetVillageTransient();setWorld(w);try{KV.removeItem(SAVE_KEYS[w])}catch(e){}resv.clear();BAN.clear();S=newState(w);LIVE[w]=S;syncTools(S);dirty=true;recount();kwrSync();recSync();weedMorning(true);/* はじめから雑草100本・枝15本がある */undoStack=[];renderQuest();applyFeats();setMode('look');$('#title').hidden=true;startPrologue()}
@@ -115,5 +115,5 @@ function arrive(){
   /* はじめての村へ降りるカメラズームは残す。タイトルの背景描画とは別の演出。 */
   camAnim={fz:cam.z,tz:homeZ(),fx:cam.x+VW/cam.z/2,fy:cam.y+VH/cam.z/2,tx:CX*TS,ty:(CY-3)*TS,t:0,dur:2.2,done:()=>{
     S.godShown=true;burst(Math.floor(godY())*W+Math.floor(godX()),'furn');sfx('poof');
-    setTimeout(()=>{started=true;showUI(true);const run=()=>dialog((WD===FREE?INTROFL():INTROS[WD]),()=>{S.introSeen=true;save()});/* さいごまで見てから「見た」に */if(WD===0){showUI(false);sceneShift('dream',dreamScene,()=>{showUI(true);run()})}else run()},500)}};/* 草原のはじめに、めざす村のすがた（夢）を見せる */
+    setTimeout(()=>{started=true;showUI(true);const run=()=>dialog((WD===FREE?INTROFL():INTROS[WD]),()=>{S.introSeen=true;save()});/* さいごまで見てから「見た」に */if(WD===0){showUI(false);sceneShift('mem',dreamScene,()=>{showUI(true);run()})}else run()},500)}};/* 草原のはじめに、めざす村のすがた（夢）を見せる */
 }
