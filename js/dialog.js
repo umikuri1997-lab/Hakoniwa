@@ -115,5 +115,5 @@ function arrive(){
   /* はじめての村へ降りるカメラズームは残す。タイトルの背景描画とは別の演出。 */
   camAnim={fz:cam.z,tz:homeZ(),fx:cam.x+VW/cam.z/2,fy:cam.y+VH/cam.z/2,tx:CX*TS,ty:(CY-3)*TS,t:0,dur:2.2,done:()=>{
     S.godShown=true;burst(Math.floor(godY())*W+Math.floor(godX()),'furn');sfx('poof');
-    setTimeout(()=>{started=true;showUI(true);const run=()=>dialog((WD===FREE?INTROFL():INTROS[WD]),()=>{S.introSeen=true;save()});/* さいごまで見てから「見た」に */run()},500)}};/* 草原のはじめに、めざす村のすがた（夢）を見せる */
+    setTimeout(()=>{started=true;showUI(true);const run=()=>dialog((WD===FREE?INTROFL():INTROS[WD]),()=>{S.introSeen=true;save()});/* さいごまで見てから「見た」に */if(WD===0){showUI(false);sceneShift('dream',dreamScene,()=>{showUI(true);run()})}else run()},500)}};/* 草原のはじめに、めざす村のすがた（夢）を見せる */
 }

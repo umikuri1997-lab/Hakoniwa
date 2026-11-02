@@ -113,7 +113,7 @@ function nushiReturns(){if(NUSHI_RUN||S.cleared)return;NUSHI_RUN=true;S.flags.nu
     // 光がひろがって、荒れた土地に花が咲いていく
     villageTimeout(()=>{let n=0;const L=[];for(let t=0;t<4000&&L.length<60;t++){const x=(Math.random()*W)|0,y=(Math.random()*H)|0,k=y*W+x;if(Math.max(Math.abs(x+.5-TX),Math.abs(y+.5-TY))>14||S.obj[k]||S.floor[k]||S.ground[k]===1||L.includes(k)||S.res.some(r=>(r.x|0)===x&&(r.y|0)===y))continue;L.push(k)}
       L.sort((a,b)=>Math.hypot(a%W-TX,(a/W|0)-TY)-Math.hypot(b%W-TX,(b/W|0)-TY));L.forEach((k,i)=>villageTimeout(()=>{if(S.obj[k])return;S.obj[k]='clover';burst(k,'plant');if(i%6===0)sfx('bush');if(i===L.length-1)recount();dirty=true},i*45))},t0+700);
-    villageTimeout(()=>{{/* 文字の説明はなし：光・花・風のあと、ヌシ様があらわれる */camAnim={fz:cam.z,tz:Math.max(cam.z,2),fx:cam.x+VW/cam.z/2,fy:cam.y+VH/cam.z/2,tx:TX*TS,ty:(TY-.4)*TS,t:0,dur:1.2};
+    villageTimeout(()=>{for(let k=0;k<8;k++)villageTimeout(()=>{leafFX({x:TX,y:TY});fx.push({k:'ring',x:TX*TS,y:TY*TS-k*14,life:1.2,col:'#e8ffe0'})},k*150);sfx('bush');},t0+3900);/* 葉のうず・光の柱 */villageTimeout(()=>{{/* 文字の説明はなし：光・花・風のあと、ヌシ様があらわれる */camAnim={fz:cam.z,tz:Math.max(cam.z,2),fx:cam.x+VW/cam.z/2,fy:cam.y+VH/cam.z/2,tx:TX*TS,ty:(TY-.4)*TS,t:0,dur:1.2};
       // ヌシ様が台座の上にあらわれる
       S.nushi={x:TX,y:TY+.95,t:6,app:0,dir:1,face:1,path:[]};/* あらわれたときは、守り神のほう（正面） */
       spawnFX(TX-.5,TY-.6,'#c8ffd0');sfx('arrive');flashScreen();
@@ -190,3 +190,20 @@ function updNushi(dt){const n=S.nushi;if(n.app==null)n.app=1;if(n.app<1){n.app=M
   if(!walk(j)&&d>1.2||d>.9&&HOUSES.some(h=>h.inside.has(j)||h.set.has(j))&&!HOUSES.some(h=>h.inside.has((n.y|0)*W+(n.x|0)))){n.path=[];return}/* とちゅうで家ができたら、入らずに止まる */
   if(d<=s){n.x=tx;n.y=ty;n.path.shift()}else{n.x+=dx/d*s;n.y+=dy/d*s}
   if(Math.abs(dx)>Math.abs(dy)*1.1){n.face=dx<0?-1:1;n.dir=0}else n.dir=dy<0?-1:1;n.mv=1}
+function sceneShift(kind,body,after){/* 場面転換：画面が白く（夢・光）か暗く（むかし）なって、色をかえた世界で動きを見せ、もとにもどる。そのあいだはセーブしない */
+  const S0=S,cv=$('#cv'),d=document.createElement('div'),ns=NOSAVE;d.style.cssText='position:absolute;inset:0;pointer-events:none;z-index:25;opacity:0;transition:opacity .7s ease;background:'+(kind==='mem'?'#0b0f0a':'#fffbe8');$('#app').appendChild(d);
+  const fade=(o,f)=>{requestAnimationFrame(()=>requestAnimationFrame(()=>{d.style.opacity=o}));setTimeout(f,800)};
+  fade('1',()=>{if(S!==S0){d.remove();return}NOSAVE=true;cv.style.filter=kind==='mem'?'sepia(.85) brightness(.8)':'saturate(1.5) brightness(1.1)';fade('0',()=>body(()=>fade('1',()=>{cv.style.filter='';NOSAVE=ns;fade('0',()=>{d.remove();after&&after()})})))})}
+function dreamScene(done){/* 草原のはじめの夢：花が咲きひろがり、白い大鹿が見守り、フタバがよろこぶ。おわったら、もとの荒れた村にもどす */
+  const cx=(cam.x+VW/cam.z/2)/TS,cy=(cam.y+VH/cam.z/2)/TS,L=[];for(let t=0;t<3000&&L.length<70;t++){const x=(cx+(Math.random()*2-1)*8)|0,y=(cy+(Math.random()*2-1)*6)|0,k=y*W+x;if(x<1||y<1||x>=W-1||y>=H-1||S.obj[k]||S.floor[k]||S.ground[k]===1||L.includes(k)||S.res.some(r=>(r.x|0)===x&&(r.y|0)===y))continue;L.push(k)}
+  L.sort((a,b)=>Math.hypot(a%W-cx,(a/W|0)-cy)-Math.hypot(b%W-cx,(b/W|0)-cy));L.forEach((k,i)=>setTimeout(()=>{if(S.obj[k])return;S.obj[k]='clover';if(i%5===0)spawnFX(k%W-.5,(k/W|0)-.3,'#c8ffd0');if(i%8===0)sfx('bush');dirty=true},i*35));
+  const had=S.nushi;if(!had)setTimeout(()=>{S.nushi={x:cx+.5,y:cy-2.5,t:6,app:0,dir:1,face:1,path:[],mv:0};spawnFX(cx,cy-3.1,'#c8ffd0');sfx('arrive')},1400);
+  const hn=performance.now();for(const r of S.res){RHOLD.set(r,hn+7000);[1800,2800,3800].forEach(t=>setTimeout(()=>{JUMP.set(r,performance.now());JOYU.set(r,performance.now()+1500)},t))}
+  setTimeout(()=>{for(const k of L)if(S.obj[k]==='clover')S.obj[k]='';if(!had)S.nushi=null;recount();dirty=true;done()},5600)}
+function memScene(done){/* むかしを思い出す：夜、影がせまり、フタバがふるえ、ほかの子が前に立つ。光がはじける */
+  const f=S.res.find(r=>r.name===POKO)||S.res[0];if(!f)return done();centerOn(f.x*TS,f.y*TS);const hn=performance.now();for(const r of S.res)RHOLD.set(r,hn+7000);STRAINU.set(f,hn+5500);
+  for(let n=0;n<26;n++)setTimeout(()=>{const a=Math.random()*Math.PI,R=5*TS;fx.push({k:'p',x:f.x*TS+Math.cos(a)*R*(Math.random()<.5?-1:1),y:f.y*TS+Math.sin(a)*R*.6+TS*2,vx:0,vy:-25,life:1.6,col:'#1a1420',r:5})},n*120);
+  S.res.filter(r=>r!==f).forEach((r,i)=>setTimeout(()=>{r.face=f.x>=r.x?-1:1;JUMP.set(r,performance.now());spawnFX(r.x-.5,r.y-.6,ELEM[r.elem].col)},1600+i*300));
+  [400,1400,2400].forEach(t=>setTimeout(()=>JUMP.set(f,performance.now()),t));
+  setTimeout(()=>{for(let k=0;k<3;k++)fx.push({k:'ring',x:f.x*TS,y:f.y*TS,life:1.4,col:'#fff6c8'});sfx('level');flashScreen()},4200);setTimeout(done,5600)}
+function lightFlow(TX,TY){/* 台座から、光のつぶが守り神（画面の手前）へ流れこむ */const bx=cam.x+VW/cam.z/2,by=cam.y+VH/cam.z*.95;for(let n=0;n<40;n++)setTimeout(()=>{const x=TX*TS+(Math.random()-.5)*20,y=TY*TS-10;fx.push({k:'p',x,y,vx:(bx-x)/1.2,vy:(by-y)/1.2,life:1.2,col:n%2?'#fff6c8':'#ffe27a',r:3})},n*60);for(const r of S.res)setTimeout(()=>leafFX(r),1500+Math.random()*800)}
