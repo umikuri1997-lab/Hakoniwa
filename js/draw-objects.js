@@ -72,7 +72,7 @@ const PARTMV={/* 動く部品の動き：rot＝回る角度、sx・sy＝のび�
   windmill:(i,now)=>({rot:ICON?0:(now||performance.now())/1000*.9}),
   vane:(i,now)=>({sx:ICON?1:Math.cos(Math.sin((now||performance.now())/1300+(i||0))*.6)})};
 function partImg(p,id){if(!p._im)p._im=atlasFrame(p.f[0],id);return p._im}
-function drawChip(c,ch,id,x,y,now,i){const src=ch.src||ch,g64=src.g===64,ims=chipImgs(src,id),n=ims.length,im=ims[n>1?Math.floor((now||performance.now())/(id==='yomawari'?900:180))%n:0];if(!im.ok)return false;const sm=c.imageSmoothingEnabled,sv=ch.flip||src.parts;c.imageSmoothingEnabled=false;if(sv)c.save();if(ch.flip){c.translate(2*x+ch.fw,0);c.scale(-1,1)}/* 反転は、マスのはばの中で */
+function drawChip(c,ch,id,x,y,now,i){const src=ch.src||ch,g64=src.g===64,ims=chipImgs(src,id),n=ims.length,im=ims[n>1?Math.floor((now||performance.now())/(id==='yomawari'?900:180))%n:0];if(!im.ok)return false;const sm=c.imageSmoothingEnabled,branch=id==='mat:eda'||id==='drop:eda',sv=ch.flip||src.parts||branch;c.imageSmoothingEnabled=false;if(sv)c.save();if(branch){c.translate(x+TS/2,y+TS/2);c.scale(.75,.75);c.translate(-x-TS/2,-y-TS/2)}if(ch.flip){c.translate(2*x+ch.fw,0);c.scale(-1,1)}/* 反転は、マスのはばの中で */
   if(g64)c.drawImage(im,x+src.ax/2,y+src.ay/2,src.w/2,src.h/2);else c.drawImage(im,x+src.ax,y+src.ay);/* 1マス64ドットの絵（g:64）は、半分の大きさでかく */
   if(src.parts){const mv=PARTMV[id]?PARTMV[id](i,now):{};for(const p of src.parts){const pm=partImg(p,id);if(!pm.ok)continue;const q=g64?.5:1,px=x+p.px*q,py=y+p.py*q;c.save();c.translate(px,py);if(mv.rot)c.rotate(mv.rot);if(mv.sx!=null||mv.sy!=null)c.scale(mv.sx??1,mv.sy??1);c.translate(-px,-py);c.drawImage(pm,x+p.ax*q,y+p.ay*q,p.w*q,p.h*q);c.restore()}}/* 動く部品は、支点のまわりで動かして重ねる */
   if(sv)c.restore();c.imageSmoothingEnabled=sm;return true}
