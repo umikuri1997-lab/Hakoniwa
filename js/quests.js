@@ -301,7 +301,7 @@ function giveSeed(r){if((S.mseed||0)<1)return;const T=r.sst||(r.sst={}),L=UPK.fi
   if(k==='pow'||k==='spd'||k==='sta')r.vr[k]=Math.round(((r.vr[k]||1)+.1*inc)*100)/100;
   RSC.delete(r);addFloat(r.x,r.y-1.6,nm+'+'+inc,'#9fe8ff');upFx(r,nm,'+'+inc,inc>1);if(!S.mseed)sheetArg=null;renderSheet()}
 /* 強化の演出：せいれいが喜んで、光とキラキラ */
-const JOYU=new WeakMap(),RHOLD=new WeakMap(),DLGN=new Set();/* HOLD：話している・喜んでいる間は作業を止める */
+const JOYU=new WeakMap(),STRAINU=new WeakMap(),RHOLD=new WeakMap(),DLGN=new Set();/* STRAINU：力をそそぐあいだの >< の顔 *//* HOLD：話している・喜んでいる間は作業を止める */
 const onHold=r=>(RHOLD.get(r)||0)>performance.now()||DLGN.has(r.name)&&!document.getElementById('dialog').hidden;/* 画面だけの時間（セーブしない） */
 
 /* 会話はせいれいの願い、図案はプレイヤーである守り神のひらめき。 */
