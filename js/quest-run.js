@@ -8,6 +8,7 @@ function checkQuest(){
   if(S.cleared){if(WD!==FREE)afterTick();return}
   if(S.quest>=QUESTS.length)return;
   const q=QUESTS[S.quest];
+  if(q.id==='guest'&&S.qTalked&&!S.flags.guestDone&&!GUESTRUN&&!isNight()&&$('#dialog').hidden&&S.qStory==null)guestScene();
   if(q.skip&&S.qStory==null){/* ステージ2：草原で説明したことは、お話なしでとばす（もらえる物はもらう） */for(const id of [...questRecipeIds(q),...questRecipeIds(q,'clear')])if(BL[id]&&(!S.free||BL[id].kind!=='furn'))S.recipes[id]=true;if(q.talk){for(const id of q.talk.learn||[])S.recipes[id]=true;questGives(q,Object.assign({},q.talk.gives||{},{watchNow:false}))}if(q.pre)questGives(q,q.pre);questGives(q,Object.assign({},q.gives||{},{watchNow:false}));S.quest++;S.qTalked=false;return checkQuest()}
   if(!$('#dialog').hidden)return;
   if(S.qStory!=null){TALKW=storyWho(QUESTS[S.qStory]);QUESTCLEARW=TALKW;renderQuest();return}/* クエストのあとのお話は、💬をタップしてから */
@@ -207,3 +208,15 @@ function memScene(done){/* むかしを思い出す：夜、影がせまり、�
   [400,1400,2400].forEach(t=>setTimeout(()=>JUMP.set(f,performance.now()),t));
   setTimeout(()=>{for(let k=0;k<3;k++)fx.push({k:'ring',x:f.x*TS,y:f.y*TS,life:1.4,col:'#fff6c8'});sfx('level');flashScreen()},4200);setTimeout(done,5600)}
 function lightFlow(TX,TY){/* 台座から、光のつぶが守り神（画面の手前）へ流れこむ */const bx=cam.x+VW/cam.z/2,by=cam.y+VH/cam.z*.95;for(let n=0;n<40;n++)setTimeout(()=>{const x=TX*TS+(Math.random()-.5)*20,y=TY*TS-10;fx.push({k:'p',x,y,vx:(bx-x)/1.2,vy:(by-y)/1.2,life:1.2,col:n%2?'#fff6c8':'#ffe27a',r:3})},n*60);for(const r of S.res)setTimeout(()=>leafFX(r),1500+Math.random()*800)}
+let GUEST=null,GUESTRUN=false;
+function guestScene(){/* 火山：草原のフタバが、温泉にあそびに来る。宿の前にあらわれ、温泉に入って、よろこんで帰る（場面だけ。セーブしない人） */
+  const hot=[];for(let j=0;j<W*H;j++)if(S.ground[j]===1&&nearHot(j,0))hot.push(j);const ins=HOUSES.find(h=>[...h.inside].filter(j=>BEDSET.has(S.obj[j])).length>=2&&[...h.inside].some(j=>nearHot(j,6)));
+  const tgt=hot.length?hot[(hot.length/2)|0]:STATUE>=0?STATUE+W:CY*W+CX;let st=-1;for(let r=1;r<6&&st<0;r++)for(let dy=-r;dy<=r&&st<0;dy++)for(let dx=-r;dx<=r;dx++){const k=tgt+dy*W+dx;if(k>0&&k<W*H&&walk(k)&&!S.obj[k]&&S.ground[k]!==1){st=k;break}}
+  if(st<0)return;GUESTRUN=true;const S0=S;const g=mkRes({nid:-900},POKO,'wood',st%W+.5,(st/W|0)+.6);g.id=-900;g.hidden=false;
+  centerOn(g.x*TS,g.y*TS);const hn=performance.now();for(const r of S.res)RHOLD.set(r,hn+40000);
+  sceneShift('light',d=>{GUEST=g;g.spawnT=performance.now();spawnFX(g.x-.5,g.y-.6,'#c8ffd0');sfx('arrive');setTimeout(d,1200)},()=>{if(S!==S0)return;
+    dialog([[POKO,'#joy|わぁ……！ ここが、火山のふもとの村？ ゆげが、もくもくしてる！','hop'],[HOMURA,'ようこそ、草原のお客さん。あたいはホムラさ。'],[SHIZUKU,'シズクです。どうぞ、ゆっくりしていってくださいね。'],[POKO,'ぼく、フタバ！ 温泉って、はじめてなんだ！']],()=>{
+      if(S!==S0)return;const w=tgt;g.bubble='♨️';const sx=g.x,sy=g.y,ex=w%W+.5,ey=(w/W|0)+.5,t0=performance.now();const step=()=>{if(S!==S0)return;const k=Math.min(1,(performance.now()-t0)/1500);g.x=sx+(ex-sx)*k*.7;g.y=sy+(ey-sy)*k*.7;if(k<1)requestAnimationFrame(step)};step();
+      setTimeout(()=>{if(S!==S0)return;sfx('wave');JOYU.set(g,performance.now()+4000);[0,900,1800].forEach(t=>setTimeout(()=>JUMP.set(g,performance.now()),t));for(let k=0;k<6;k++)setTimeout(()=>spawnFX(g.x-.5,g.y-.8,'#ffffff'),k*400)},1600);
+      setTimeout(()=>{if(S!==S0)return;dialog([[POKO,'#joy|はぁぁ……あったかい……。からだが、とろけちゃいそう……。'],[POKO,'こんどは、ノドカも連れてきていい？ みんなに、教えてあげたいな！','hop'],[HOMURA,'#joy|もちろんさ。いつでもおいで！','cheer']],()=>{
+        if(S!==S0)return;spawnFX(g.x-.5,g.y-.6,'#c8ffd0');sfx('arrive');setTimeout(()=>{GUEST=null;GUESTRUN=false;for(const r of S.res)RHOLD.set(r,0);S.flags.guestDone=1;checkQuest()},500)})},4200)})})}
