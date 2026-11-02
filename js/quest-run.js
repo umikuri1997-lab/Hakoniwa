@@ -105,6 +105,7 @@ function nushiReturns(){if(NUSHI_RUN||S.cleared)return;NUSHI_RUN=true;S.flags.nu
   const openF=L=>{const o=L.filter(l=>l[0]===GOD||S.res.some(r=>r.name===l[0]));return o.length?o:[[GOD,'朝じゃな。…さあ、台座に力をそそぐんじゃ。']]};
   const runOpen=()=>dialog(openF(T.open),()=>gatherAt(TX,TY,()=>{
     // せいれいたちが、台座のまわりに集まってから、ひとりずつ力をそそぐ
+    towerGlow(60000);/* 台座が光りはじめる */{const hn=performance.now();for(const r of S.res){RHOLD.set(r,hn+300000);STRAINU.set(r,hn+S.res.length*260+1200)}}/* 場面のあいだ、せいれいは歩かない。力をそそぐあいだは >< の顔 */
     S.res.forEach((r,i)=>villageTimeout(()=>{r.face=TX>=r.x?1:-1;JUMP.set(r,performance.now());spawnFX(r.x-.5,r.y-.6,ELEM[r.elem].col);sfx('furn')},i*260));
     const t0=S.res.length*260+500;
     villageTimeout(()=>{spawnFX(TX-.5,TY-.2,'#fff3a0');for(let k=0;k<3;k++)villageTimeout(()=>fx.push({k:'ring',x:TX*TS,y:TY*TS,life:1.4,col:'#fff6c8'}),k*300);sfx('level');flashScreen()},t0);
@@ -118,7 +119,7 @@ function nushiReturns(){if(NUSHI_RUN||S.cleared)return;NUSHI_RUN=true;S.flags.nu
       villageTimeout(()=>dialog(T.nushi,()=>{
         startClap();for(const r of S.res)r.bubble='👏';for(let k=0;k<8;k++)villageTimeout(()=>{const r=pick(S.res);if(r)spawnFX(r.x-.5,r.y-.6,pick(['#ffd84a','#ff9cc0','#9ff0ff','#b8ff9a']))},k*350);villageTimeout(endClap,3200);/* みんなで拍手 */
         dialog((T.world&&sevLines(T.world)||[]).concat(T.reu&&sevLines(T.reu)||[],T.next&&sevLines(T.next)||[],T.after),()=>{
-          S.cleared=true;delete S.flags.nushiDue;NUSHI_RUN=false;renderQuest();toast(T.toast,'good');
+          S.cleared=true;delete S.flags.nushiDue;NUSHI_RUN=false;TOWERGLOW=0;for(const r of S.res)RHOLD.set(r,0);renderQuest();toast(T.toast,'good');
           S.clearDay=dayNo();S.score=calcScore();villageTimeout(()=>dialog(['#think|……この土地も、もとにもどったのう'],()=>openSheet('score'),T.last,GOD),1200);
         });
       },null,T.name||'ヌシ様'),3200);
