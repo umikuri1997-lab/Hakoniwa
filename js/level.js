@@ -79,7 +79,7 @@ const DAYLEN=1.5;/* 1日の長さ：せいれいが動く時間の1.5倍で、�
 function stepWorld(dt){if((SUBT+=dt)>1){SUBT=0;checkSub();checkSev();guardTick();cmpTick()}
   st2Tick();fireTick(dt/DAYLEN);
   const prevH=hour(),t0=S.t;let nt=S.t+dt/DAYLEN;// 時計：夜も昼と同じ速さ（1日は1.5倍の長さ）
-  if(!S.enemyOn){const c=clk(),cap=Math.floor(c/1440)*1440+18*60,nc=c+(nt-S.t);if(nc>cap)S.hold=(S.hold||0)+Math.min(nt-S.t,nc-cap)}/* チュートリアルで夜がはじまるまで、時計（朝・昼・夜）は18時で止めておく。せいれいの動きにつかう時間（S.t）は進める */S.t=nt;const h=hour();
+  if(!S.enemyOn){const c=clk(),cap=Math.floor(c/1440)*1440+(WD===0?20:18)*60,nc=c+(nt-S.t);if(nc>cap)S.hold=(S.hold||0)+Math.min(nt-S.t,nc-cap)}/* チュートリアルで夜がはじまるまで、時計（朝・昼・夜）は18時（草原は20時）で止めておく。せいれいの動きにつかう時間（S.t）は進める */S.t=nt;const h=hour();
   for(const k in S.dyn){const o=S.obj[k],d=S.dyn[k];if(!o)continue;
     if(o==='farm'){if(S.rain&&d.g<100)d.wet=100}}/* 雨：たねをまく前の畑も、ぬれる */if(S.rain)for(const j of JARS){const d=S.dyn[j]||(S.dyn[j]={});d.w=10}/* 雨の日は、みずがめに水がたまる（畑10マスぶん） *//* ベリー・りんごの実は、朝6時に1日ぶんずつ育つ（morning） */
   for(const r of S.res.slice())updRes(r,dt);
