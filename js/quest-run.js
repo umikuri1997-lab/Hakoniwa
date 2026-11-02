@@ -72,6 +72,7 @@ function storyWho(q){if(q.story&&spkOK(q.story[0]&&q.story[0][0]))return q.story
 function startTalk(){if(!$('#dialog').hidden)return;
   if(S.qStory!=null){const sq=QUESTS[S.qStory];TALKW=null;QUESTCLEARW=null;S.flags.talked1=true;
     if(sq.pre&&!S.flags['pre'+WD+'_'+S.qStory]){S.flags['pre'+WD+'_'+S.qStory]=true;questGives(sq,sq.pre);if(sheet==='food')renderSheet()}/* お礼の会話がはじまったら、すぐわたす（ベリーなど） */
+    stageMotion('cheer');/* クエストをクリアしたお礼：みんながとびはねて、よろこぶ */
     let once=0;return dialog(ideaDialogue(sq,sq.story,'clear'),()=>{if(once++||S.qStory!==QUESTS.indexOf(sq))return;/* 2回よばれても1回だけ */if(QUEST_CLEAR_WAIT&&QUEST_CLEAR_WAIT.quest===S.qStory)QUEST_CLEAR_WAIT=null;if(S.quest<=S.qStory)S.quest=S.qStory+1;/* 設置クエストは、お礼を聞き終えてから次の目標へ */S.qStory=null;const after=questGives(sq);inspireQuest(sq,'clear');{const rw=sq.reward??5;if(rw){S.pt+=rw;S.totalPt+=rw;toast('ごほうび：パワー+'+rw,'good')}}renderQuest();renderPalette();if(after)after();else checkQuest()},null)}
   const q=QUESTS[S.quest];if(!q||!q.talk)return;TALKW=null;QUESTCLEARW=null;S.flags.talked1=true;
   let once=0;dialog(ideaDialogue(q,q.talk.lines),()=>{if(once++||QUESTS[S.quest]!==q)return;/* 2回よばれても1回だけ */S.qTalked=true;if(!WD&&q.id==='nushi')acceptFinalDefense();recount();
