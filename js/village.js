@@ -31,6 +31,7 @@ function hYield(j,def){const o=S.obj[j],d=S.dyn[j];const cr=o==='farm'?CROPS[(d&
 // STORAGE: placed shelves share the village stock; wall attachments count only on standing walls.
 const STORAGE={stor:{food:30},mbox:{mat:50},taru:{food:30},kabebukuro:{food:20},asabukuro:{mat:30},makidana:{mat:30},crate:{food:30,mat:30},shelf1:{mat:50},shelf2:{mat:50},wshelf:{mat:50},cabinet:{food:30}};/* しまえる数（食料・素材） */
 function storageAt(j,type){const id=S.obj[anc(j)],wall=HOME_WALLS.has(id)&&(S.win||{})[j],b=STORAGE[wall]||STORAGE[id];return !!(b&&b[type])}
+function storeAdj(j,type){/* マス j のとなりに、しまえる箱があるか（かべかけの物は、壁の正面＝すぐ下のマスからだけ） */return adjOf(j,k=>storageAt(k,type)&&(!(HOME_WALLS.has(S.obj[anc(k)])&&(S.win||{})[k])||k===j-W))}
 function storageCapacity(type){let n=0,add=0;{const got=new Set();for(const I of SPOTI||[])if(I.sp.cap&&I.sp.cap[type]&&!got.has(I.sp.k)){got.add(I.sp.k);add+=I.sp.cap[type]}}/* しまうスポット：おなじスポットは1こ分、ちがうスポットはたし算 */for(const id in STORAGE){const c=STORAGE[id][type];if(c)n+=cnt(id)*c}for(const j in S.win||{}){const c=(STORAGE[S.win[j]]||{})[type];if(HOME_WALLS.has(S.obj[j])&&c)n+=c}return Math.floor(n*(1+add))}
 const foodCap=()=>storageCapacity('food'),matCap=()=>storageCapacity('mat'),matTot=()=>Object.keys(MATN).reduce((a,k)=>a+(S.mat[k]||0),0);
 let OTAKI_SEL={};/* そうこで、おたきあげにえらんでいる数 */
