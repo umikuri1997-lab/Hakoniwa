@@ -27,10 +27,14 @@ const carryN=r=>!r.carry?0:typeof r.carry==='number'?r.carry:Object.values(r.car
 const capOf=r=>rStat(r,rLv(r)).cap,matN=r=>r.cmat?Object.values(r.cmat).reduce((a,b)=>a+b,0):0,heldN=r=>carryN(r)+matN(r),roomN=r=>r.coffin?0:Math.max(0,capOf(r)-heldN(r));// 持てる数はレベルと同じ（Lv1は1こ）
 function addCarry(r,k,n){if(typeof r.carry==='number')r.carry={mugi:r.carry};n=Math.min(n,roomN(r));if(n<=0)return;r.carry=r.carry||{};r.carry[k]=(r.carry[k]||0)+n;r.carryLast=k}/* アイコンは、最後に持ったもの */
 function addMat(r,k,n){n=Math.min(n,roomN(r));if(n<=0)return;r.cmat=r.cmat||{};r.cmat[k]=(r.cmat[k]||0)+n}
-function hYield(j,def){const o=S.obj[j],d=S.dyn[j];const cr=o==='farm'?CROPS[(d&&d.crop)||'mugi']:null;return (cr?cr.yield:def)+(NEARMILL.has(j)?1:0)}
+function hYield(j,def){const o=S.obj[j],d=S.dyn[j];const cr=o==='farm'?CROPS[(d&&d.crop)||'mugi']:null;return (cr?cr.yield:def)+(NEARMILL.has(j)?1:0)+(cr&&d?d.fb||0:0)}
 // STORAGE: placed shelves share the village stock; wall attachments count only on standing walls.
 const STORAGE={stor:{food:30},mbox:{mat:50},taru:{food:30},kabebukuro:{food:20},asabukuro:{mat:30},makidana:{mat:30},crate:{food:30,mat:30},shelf1:{mat:50},shelf2:{mat:50},wshelf:{mat:50},cabinet:{food:30}};/* しまえる数（食料・素材） */
 function storageAt(j,type){const id=S.obj[anc(j)],wall=HOME_WALLS.has(id)&&(S.win||{})[j],b=STORAGE[wall]||STORAGE[id];return !!(b&&b[type])}
+const GRASSK=['shina','kasa','kuru','chiri','funba'];/* 草の素材 */
+const cmpOf=j=>S.dyn[j]||(S.dyn[j]={b:[],c:0}),cmpIn=j=>{const d=S.dyn[j];return d?(d.b||[]).reduce((a,x)=>a+x[1],0):0},cmpWait=j=>{const Q=(S.cmpQ||{})[j];let n=0;if(Q)for(const k in Q)n+=Q[k];for(const r of S.res)if(r.cpk&&r.cpk.j===j)for(const k in r.cpk.m)n+=r.cpk.m[k];return n};/* コンポスター：b＝入れた草（[入れた時刻, 数]）、c＝できた肥料 */
+function cmpRefund(m){for(const k in m||{})S.mat[k]=(S.mat[k]||0)+m[k]}/* コンポスターがなくなったら、運ぶまえの草は素材箱へもどす */
+function cmpTick(){if(S.cmpQ)for(const k in S.cmpQ)if(S.obj[k]!=='composter'){cmpRefund(S.cmpQ[k]);delete S.cmpQ[k]}if(!COMPS.length)return;for(const j of COMPS){const d=S.dyn[j];if(!d||!d.b||!d.b.length)continue;const keep=[];for(const x of d.b){if(S.t-x[0]>=1440&&x[0]<=S.t)d.c=(d.c||0)+x[1];else keep.push(x)}d.b=keep}}/* 草を入れて1日たつと、肥料になる */
 function waterSrc(j){/* マス j のとなりの、水をくめる所（池・川の水、井戸、水のたまったみずがめ）。なければ -1 */return adjOf(j,k=>S.ground[k]===1||S.obj[anc(k)]==='well'||(S.obj[anc(k)]==='jar'&&((S.dyn[anc(k)]||{}).w||0)>0))}
 function storeAdj(j,type){/* マス j のとなりに、しまえる箱があるか（かべかけの物は、壁の正面＝すぐ下のマスからだけ） */return adjOf(j,k=>storageAt(k,type)&&(!(HOME_WALLS.has(S.obj[anc(k)])&&(S.win||{})[k])||k===j-W))}
 function storageCapacity(type){let n=0,add=0;{const got=new Set();for(const I of SPOTI||[])if(I.sp.cap&&I.sp.cap[type]&&!got.has(I.sp.k)){got.add(I.sp.k);add+=I.sp.cap[type]}}/* しまうスポット：おなじスポットは1こ分、ちがうスポットはたし算 */for(const id in STORAGE){const c=STORAGE[id][type];if(c)n+=cnt(id)*c}for(const j in S.win||{}){const c=(STORAGE[S.win[j]]||{})[type];if(HOME_WALLS.has(S.obj[j])&&c)n+=c}return Math.floor(n*(1+add))}
@@ -143,7 +147,7 @@ function attrTxt(id){const b=BL[id];if(!b||!b.attr||b.kind==='block')return'';co
 const withAttr=(id,t)=>{const a=attrTxt(id);return a?(t?t+'　':'')+'【'+a+'】':t||''};
 function recount(){if(S.broken)S.broken=S.broken.filter(b=>!S.obj[b.j]);calcSpots();/* こわれた物の場所に、なにか置いたら、こわれた物のリストからはずす */
   for(const key in S.win||{}){const j=+key,wall=k=>HOME_WALLS.has(S.obj[k])||HOME_DOORS.has(S.obj[k]);if(S.win[j]==='wreath'&&HOME_DOORS.has(S.obj[j])&&(wall(j-W)||wall(j+W))&&!(wall(j-1)||wall(j+1))){S.inv.wreath=(S.inv.wreath||0)+1;delete S.win[j];toast('たてのドアのリースを、持ち物にもどしました')}}/* たてのドアにはリースをかけられない。まわりの壁が変わってたてになったら、知らせてもどす */
-  STATUE=-1;OBOX=-1;BOARD=-1;counts={};LIGHTS=[];JARS=[];LITP=[];STELES=[];TOWERS=[];NEARMILL=new Set();NEARVANE=new Set();NEARCART=new Set();NEARTOOL=new Set();NEARJORO=new Set();NEARSIGN=new Set();NEARPARA=new Set();NEARTREE=new Set();RUGC=new Map();for(const k in S.rug||{})for(const c of rugCells(+k))RUGC.set(c,+k);RFC=new Map();for(const k in S.roof||{})for(const c of rugCells(+k))RFC.set(c,+k);/* 屋根の下のマス→屋根の左上 *//* ラグがしいてあるマス→ラグの左上 */ENVG=new Float32Array(W*H);ENVE={};REV=new Set();ATTR={};ELEM_KEYS.forEach(k=>ATTR[k]=0);
+  STATUE=-1;OBOX=-1;BOARD=-1;counts={};LIGHTS=[];JARS=[];COMPS=[];LITP=[];STELES=[];TOWERS=[];NEARMILL=new Set();NEARVANE=new Set();NEARCART=new Set();NEARTOOL=new Set();NEARJORO=new Set();NEARSIGN=new Set();NEARPARA=new Set();NEARTREE=new Set();RUGC=new Map();for(const k in S.rug||{})for(const c of rugCells(+k))RUGC.set(c,+k);RFC=new Map();for(const k in S.roof||{})for(const c of rugCells(+k))RFC.set(c,+k);/* 屋根の下のマス→屋根の左上 *//* ラグがしいてあるマス→ラグの左上 */ENVG=new Float32Array(W*H);ENVE={};REV=new Set();ATTR={};ELEM_KEYS.forEach(k=>ATTR[k]=0);
   const around=(j,r,set)=>{const x=j%W,y=(j/W)|0,h=set===REV?hiAt(j):-1;for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){if(dx*dx+dy*dy>r*r+1)continue;const nx=x+dx,ny=y+dy;if(nx>=0&&ny>=0&&nx<W&&ny<H&&!(h>=0&&hiAt(ny*W+nx)!==h))set.add(ny*W+nx)}};/* 緑の広がり（REV）は、段差をこえない */
   const addA=a=>{if(a)for(const k in a)ATTR[k]+=a[k]};
   let baseN=0,revN=0;
@@ -161,6 +165,7 @@ function recount(){if(S.broken)S.broken=S.broken.filter(b=>!S.obj[b.j]);calcSpot
     if(o==='watch'||o==='yogan'||o==='tower')TOWERS.push(j);
     if(FLOWERS.has(o)&&!isBud(j)){const el=Object.keys(BL[o].attr||{})[0],E=el&&(ENVE[el]||(ENVE[el]=new Float32Array(W*H)));for(let dy=-3;dy<=3;dy++)for(let dx=-3;dx<=3;dx++){const nx=x+dx,ny=y+dy;if(nx<0||ny<0||nx>=W||ny>=H)continue;const q=ny*W+nx;ENVG[q]+=.56;if(E)E[q]+=1.11}}/* 花：まわり3マスで、たのしさ+0.2／1時間、同じ属性のせいれいは+0.6／1時間 */
     if(o==='jar')JARS.push(j);
+    if(o==='composter')COMPS.push(j);
     if(o==='windmill')around(j,5,NEARMILL);
 if(o==='vane')around(j,3,NEARVANE);if(o==='niguruma')around(j,3,NEARCART);if(o==='kabedougu')around(j,3,NEARTOOL);if(o==='joro')around(j,3,NEARJORO);/* ブリキのじょうろ：まわり3マスの畑は、水やりが速い *//* にぐるま：まわり3マスの箱は、しまうのが速い */if(o==='signpost')around(j,3,NEARSIGN);/* 風見鶏：まわり3マスは足が速い */
     const tbud=(o==='tree'||o==='fruit')&&isBud(j);/* 木も花と同じ。芽のあいだは、効果なし */

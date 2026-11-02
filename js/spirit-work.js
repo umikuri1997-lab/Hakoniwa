@@ -29,6 +29,10 @@ function tryJob(r,G,k){
   case'offer':{if(OBOX<0||isNight()||r.fun<99||r.offDay===dayNo())return false;/* おそなえは1人1日1回まで *//* たのしさが満タンになったら、おそなえする */j=nearTile(G,OBOX);if(j>=0){startAct(r,G,'offer',j);return true}return false}
   case'gather':{if(S.food>=(r.elem==='earth'?25:12)||isNight()||roomN(r)<1)return false;const bb=ripeAdj(['berry','takenoko']);j=nearest(G,j=>bb(j)>=0);if(j>=0){const q=bb(j);startAct(r,G,'gather',j,{key:'o'+q,obj:q});return true}return false}
   case'drop':if(!(S.drops&&S.drops.length)||isNight())return false;const noF=!S.res.some(x=>x.name===POKO&&!x.hidden);j=nearest(G,j=>S.drops.some(q=>q.y*W+q.x===j&&(q.id==='shard'||q.lt||q.tap||Math.hypot(q.x+.5-r.x,q.y+.5-r.y)<=(r.elem==='wind'?10:5))/* 落ちている物は、まわり5マス（風の子は10マス）に来て見つけたときにひろう（ヌシのかけらと、守り神の光でこわした物はべつ：どこでも、木を切る・石をほるより先にひろいに行く） */&&(q.id!=='shard'||r.name===POKO||noF)&&!(q.id.startsWith('food:')&&foodCap()-S.food<=0)&&!(q.id.startsWith('mat:')&&matCap()-matTot()<=0)&&!((q.id.startsWith('food:')||q.id.startsWith('mat:'))&&roomN(r)<1))&&free('d'+j,1),S.drops.some(q=>q.tap||q.lt)?9999:90);/* 食料箱がいっぱいのときは、食料のおとしものはひろわない */if(j>=0){startAct(r,G,'pickdrop',j,{key:'d'+j,obj:j});return true}return false;
+  case'cfill':{if(isNight())return false;if(r.cpk){const cj=r.cpk.j;if(S.obj[cj]!=='composter'){cmpRefund(r.cpk.m);r.cpk=null;return false}j=nearest(G,q=>adjOf(q,k=>k===cj)>=0,200);if(j>=0){startAct(r,G,'cput',j,{obj:cj});return true}return false}
+    const Q=S.cmpQ||{},cj=Object.keys(Q).map(Number).find(c=>!S.res.some(q=>q!==r&&q.act&&q.act.type==='cpick'&&q.act.cj===c));if(cj==null)return false;j=nearest(G,j=>storeAdj(j,'mat')>=0,200);if(j>=0){startAct(r,G,'cpick',j,{cj});return true}return false}/* コンポスター：たのまれた草を、素材箱からコンポスターへ */
+  case'fert':{if(isNight()||!COMPS.length)return false;const need=q=>S.obj[q]==='farm'&&S.dyn[q]&&S.dyn[q].sown!==false&&S.dyn[q].g<100&&S.dyn[q].fdD!==dayNo()&&free('f'+q,1);if((r.fert||0)>0){j=nearest(G,need,120);if(j>=0){startAct(r,G,'fert',j,{key:'f'+j,obj:j});return true}return false}
+    if(!S.obj.some((o,q)=>o==='farm'&&need(q)))return false;const cj=COMPS.find(c=>(S.dyn[c]||{}).c>0);if(cj==null)return false;j=nearest(G,q=>adjOf(q,k=>k===cj)>=0,200);if(j>=0){startAct(r,G,'cget',j,{obj:cj});return true}return false}/* 肥料やり：コンポスターから肥料をもっていって、畑にまく（1日1回） */
   case'otaki':{if(isNight()||STATUE<0)return false;if(r.otaki){j=nearest(G,j=>adjOf(j,k=>k===STATUE||k===STATUE+W)>=0,300);if(j>=0){startAct(r,G,'otaki',j,{});return true}return false}
     if(!S.otakiQ||!Object.keys(S.otakiQ).length||S.res.some(q=>q!==r&&q.act&&q.act.type==='otakiget'))return false;j=nearest(G,j=>storeAdj(j,'mat')>=0,200);if(j>=0){startAct(r,G,'otakiget',j,{});return true}return false}/* おたきあげ：素材箱から素材をとって、神殿へ */
   case'weed':{if(isNight()||matTot()+matN(r)>=matCap()||roomN(r)<1)return false;{const RQ=wreqList();j=RQ.length?nearest(G,j=>RQ.includes(j)&&free('o'+j,1),9999):-1}if(j<0)j=nearest(G,j=>WEEDS.has(S.obj[j])&&free('o'+j,1),WEEDNEAR||(r.elem==='wind'?120:60));/* 「みる」でタップした草は、遠くてもさきに */if(j>=0){startAct(r,G,'weed',j,{key:'o'+j,obj:j});return true}return false}
@@ -57,6 +61,8 @@ function hasUrgent(r){/* 建てる場所か、だれも受けていない依頼�
   return S.orders.some(q=>(!q.worker||!S.res.some(x=>x.id===q.worker))&&craftOK(r,q))}
 function hasWork(r){
   if(!isNight()&&STATUE>=0&&(r.otaki||S.otakiQ&&Object.keys(S.otakiQ).length))return true;
+  if(!isNight()&&(r.cpk||S.cmpQ&&Object.keys(S.cmpQ).length))return true;
+  if(!isNight()&&r.elem==='wood'&&COMPS.some(c=>(S.dyn[c]||{}).c>0||r.fert>0)&&S.obj.some((o,q)=>o==='farm'&&S.dyn[q]&&S.dyn[q].sown!==false&&S.dyn[q].g<100&&S.dyn[q].fdD!==dayNo()))return true;
   if(!isNight()&&S.drops&&S.drops.length&&S.drops.some(q=>(q.id==='shard'||Math.hypot(q.x+.5-r.x,q.y+.5-r.y)<=(r.elem==='wind'?10:5))&&(q.id!=='shard'||r.name===POKO||!S.res.some(x=>x.name===POKO&&!x.hidden))&&walk(q.y*W+q.x)&&free('d'+(q.y*W+q.x),1)))return true;
   if(canJob(r,'build')&&S.obj.some((o,j)=>o==='site'&&free('o'+j,2)))return true;
   if(S.orders.some(q=>(!q.worker||!S.res.some(x=>x.id===q.worker))&&craftOK(r,q)))return true;
@@ -71,6 +77,7 @@ const oracleOK=k=>!ORACLE[k].water||!!(S&&S.flags&&S.flags.oracleWater);/* は�
 function goWork(r,G,nw){
   // 木材と石材は、少ないほうから集める（どちらかが得意なら両方やる）
   const mo=(S.mat.stone||0)<=(S.mat.wood||0)?['mine','chop']:['chop','mine'];let gd=false;
+  if(r.cpk&&tryJob(r,G,'cfill'))return true;if(r.fert>0&&tryJob(r,G,'fert'))return true;/* 運んでいる草・肥料は、先におわらせる */
   // おつげがあれば、それを先にする
   if(S.oracle==='play'&&r.fun<98&&goPlay(r,G,true))return true;
   // 食料がゼロなら、まず食べ物を集める
@@ -78,6 +85,7 @@ function goWork(r,G,nw){
   // 花や木の苗は、空腹などの急ぎの用事を除いて、ほかの仕事より先に植える
   if(tryJob(r,G,'plant'))return true;
   if(tryJob(r,G,'otaki'))return true;
+  if(tryJob(r,G,'cfill'))return true;
   if((S.drops||[]).some(q=>q.lt||q.tap)||wreqList().length){for(const k of FARMJ)if(tryJob(r,G,k))return true;if(tryJob(r,G,'drop'))return true;if(wreqList().length&&tryJob(r,G,'weed'))return true}/* 「みる」でタップした草・きのこ・落とし物も、ここでとりにいく *//* 守り神の光でこわした物（落ちた木材・石材）は、おつげ・木を切る・石をほるより先にひろう。畑の世話よりはあと */
   if(S.oracle&&ORACLE[S.oracle])for(const k of ORACLE[S.oracle].jobs)if(tryJob(r,G,k))return true;
   // 建てる・家具づくりがいちばん先。そのつぎに得意な仕事をする
@@ -128,7 +136,7 @@ function moveR(r,dt){
   if(!r.path.length&&r.act)beginDo(r);
 }
 const NIGHT_OK=['watchpost','phew','step','sleep','stay','shiver','eat','fetch','store','smat','flee','patrol','faint','forage','questjoy','pray','reunion']/* お墓へはこぶ（pray）は夜もつづける：やめると毎コマやりなおしになって動けない */;
-const WORKT=new Set(['till','sow','plant','build','craft','water','tend','repair','harvest','gather','chop','mine','cook']);
+const WORKT=new Set(['fert','till','sow','plant','build','craft','water','tend','repair','harvest','gather','chop','mine','cook']);
 function rescueStuck(r){if(r.hidden)return;const cj=(r.y|0)*W+(r.x|0),o=S.obj[cj];if(!(HOME_WALLS.has(o)||(FENCE_IDS.has(o)&&!GATE_IDS.has(o))||S.ground[cj]===1&&!(r.act&&(r.act.type==='bathe'||r.act.type==='plant'&&r.act.wade))))return;/* 水浴び・池のまんなかのハス植えは、水に入ってよい */if(r.act&&r.act.type==='step'||(r.stepT||0)>S.t)return;r.stepT=S.t+5;/* 壁や柵・水の中にいたら、いちばん近い歩ける場所へ歩いて出る（5分ごとにさがす） */const G=bfs(cj%W,(cj/W)|0),k=nearest(G,j=>j!==cj&&walk(j)&&!S.obj[j],12);if(k>=0){endAct(r);startAct(r,G,'step',k,{run:true})}}
 function updRes(r,dt){rescueStuck(r);if((RHOLD.get(r)||0)>performance.now())return;/* 喜んでいる・話したあとの少しの間は、手をとめる */if(r._pe!=null&&r.energy>r._pe+1e-6)r.eUp=S.t;r._pe=r.energy;/* 元気が回復しているか */
   if(HOLD.has(r.id)){if(r.act)endAct(r);r.act=null;return}
@@ -188,7 +196,7 @@ function goBurial(r,G){/* 消えてしまった子のお墓へ行き、棺を神
   const ok=j=>{if(S.obj[j]!=='grave')return false;const d=S.dyn[j];if(!d||d.buried||!free('bury'+j,1))return false;if(d.mate&&d.mate!==r.name&&S.res.some(q=>q.name===d.mate&&!q.hidden)&&S.t-(d.t0||0)<240)return false;return true};
   const gs=[];for(let j=0;j<W*H;j++)if(S.obj[j]==='grave'&&ok(j))gs.push(j);if(!gs.length)return false;
   const st=nearest(G,k=>adjOf(k,q=>gs.includes(q))>=0,200);if(st<0)return false;const g=adjOf(st,q=>gs.includes(q));startAct(r,G,'bury',st,{key:'bury'+g,obj:g});return true}
-function die(r){if(r.otaki){const Q=S.otakiQ||(S.otakiQ={});for(const k in r.otaki)Q[k]=(Q[k]||0)+r.otaki[k];r.otaki=null}/* 持っていたおたきあげの素材は、まちにもどす */
+function die(r){if(r.cpk){cmpRefund(r.cpk.m);r.cpk=null}/* 運んでいた草は、素材箱へもどす */if(r.otaki){const Q=S.otakiQ||(S.otakiQ={});for(const k in r.otaki)Q[k]=(Q[k]||0)+r.otaki[k];r.otaki=null}/* 持っていたおたきあげの素材は、まちにもどす */
   endAct(r);const dm=bestMate(r),dmN=dm?dm.name:null;{const t0=(r.y|0)*W+(r.x|0);let gj=-1;for(let rad=0;rad<4&&gj<0;rad++)for(let dy=-rad;dy<=rad&&gj<0;dy++)for(let dx=-rad;dx<=rad;dx++){const k=t0+dy*W+dx;if(k>=0&&k<W*H&&!S.obj[k]&&S.ground[k]!==1){gj=k;break}}
     if(gj>=0){S.obj[gj]='grave';S.dyn[gj]={name:r.name,buried:false,mate:dmN,t0:S.t};recount()}}S.res=S.res.filter(q=>q!==r);S.deaths++;for(const q of S.res)if(Math.hypot(q.x-r.x,q.y-r.y)<14)q.cryU=S.t+90;/* 近くのせいれいは、しばらく泣く */logEv(r.name+'が消えてしまった');
   if(!S.buried)S.buried=[];if(isKey(r.name)&&r.elem==='fire'&&!S.flags.guard&&S.ns&&S.ns.boss&&isNight())S.flags.hDied=1;/* こもれびのまもりをおぼえる前に、オオカゲの夜に火の子がいなくなった */if(isKey(r.name))S.buried.push({name:r.name,elem:r.elem,vr:r.vr,xp:r.xp||0,xpf:r.xpf||0,like:r.like,came:r.came,made:r.made,beat:r.beat,bst:r.bst,sst:r.sst,boost:r.boost,mate:dmN,unb:true});else{if(!S.lost)S.lost=[];S.lost.push({name:r.name,elem:r.elem,vr:r.vr,xp:r.xp||0,xpf:r.xpf||0,like:r.like,came:r.came,made:r.made,beat:r.beat,bst:r.bst,sst:r.sst,boost:r.boost,mate:dmN,unb:true})}/* 埋葬されるまでは、よみがえらせない（unb） *//* キーキャラは特性「きずな」でレベルそのまま。ふつうのせいれいは「めぶきのしずく」がないともどらない *//* もどってくるのはキーキャラだけ *//* 次の朝の召喚で、いちばんにもどってくる */

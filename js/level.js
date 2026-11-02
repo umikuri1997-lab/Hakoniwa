@@ -73,7 +73,7 @@ function sepRes(dt){// 移動中は重なってOK、止まって作業してい�
       mv(r,sx*k,sy*k)};
     side(p,-dx,-dy,m*wp/(wp+wq));side(q,dx,dy,m*wq/(wp+wq))}}
 const DAYLEN=1.5;/* 1日の長さ：せいれいが動く時間の1.5倍で、時計が1分すすむ */
-function stepWorld(dt){if((SUBT+=dt)>1){SUBT=0;checkSub();checkSev();guardTick()}
+function stepWorld(dt){if((SUBT+=dt)>1){SUBT=0;checkSub();checkSev();guardTick();cmpTick()}
   st2Tick();fireTick(dt/DAYLEN);
   const prevH=hour(),t0=S.t;let nt=S.t+dt/DAYLEN;// 時計：夜も昼と同じ速さ（1日は1.5倍の長さ）
   if(!S.enemyOn){const c=clk(),cap=Math.floor(c/1440)*1440+18*60,nc=c+(nt-S.t);if(nc>cap)S.hold=(S.hold||0)+Math.min(nt-S.t,nc-cap)}/* チュートリアルで夜がはじまるまで、時計（朝・昼・夜）は18時で止めておく。せいれいの動きにつかう時間（S.t）は進める */S.t=nt;const h=hour();
