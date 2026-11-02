@@ -3,6 +3,7 @@
 
   python3 tools/chips.py unpack chips_src.json   # chips.js とアトラス → id ごとの絵（data URI）の JSON
   python3 tools/chips.py pack chips_src.json     # JSON → アトラスの絵（ロスレス WebP）と chips.js
+  python3 tools/chips.py replace replace.json    # マップチップ工房の「さしかえた絵」の JSON を入れて、作りなおす
 
 chips.js は、絵の場所だけを持つ：window.CHIPA=[アトラスのファイル]、window.CHIPS={id:{ax,ay,w,h,...,f:[[ページ,x,y,w,h],...]}}。
 絵をかえるときは、unpack → JSON を直す → pack。pack は、作った絵が元の絵とドットまで同じかたしかめる。
@@ -80,5 +81,20 @@ def pack(srcf):
     open(os.path.join(ROOT, 'chips.js'), 'w', encoding='utf8').write(js)
     print('pages', len(pages), 'frames', len(frames), 'chips.js', len(js))
 
+def replace(repf):
+    """工房で書き出した replace.json（{replace:{id:{"j,i":{u,w,h}}}}、j=-1 は本体、それ以外は部品の番号）を入れる。絵の大きさがかわったら w・h もかえる（ax・ay はそのまま）"""
+    R = json.load(open(repf, encoding='utf8'))['replace']
+    tmp = os.path.join(ROOT, '.chips_tmp.json'); unpack(tmp)
+    d = json.load(open(tmp, encoding='utf8')); C = d['chips']; n = 0
+    for k, m in R.items():
+        if k not in C: print('ないチップ:', k); continue
+        for s, v in m.items():
+            j, i = map(int, s.split(','))
+            t = C[k] if j < 0 else (C[k].get('parts') or [])[j]
+            im = from_uri(v['u']); t['f'][i] = to_uri(im)
+            if (i == 0 or j >= 0) and (t.get('w'), t.get('h')) != im.size: print(k, s, '大きさ', (t.get('w'), t.get('h')), '→', im.size); t['w'], t['h'] = im.size
+            n += 1
+    json.dump(d, open(tmp, 'w', encoding='utf8'), ensure_ascii=False); pack(tmp); os.remove(tmp); print('さしかえ', n)
+
 if __name__ == '__main__':
-    {'unpack': unpack, 'pack': pack}[sys.argv[1]](sys.argv[2])
+    {'unpack': unpack, 'pack': pack, 'replace': replace}[sys.argv[1]](sys.argv[2])
