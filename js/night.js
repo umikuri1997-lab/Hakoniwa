@@ -39,7 +39,7 @@ function doSummon(){
     r=mkRes(S,name,sm.elem,sp[0]+.5,sp[1]+.5);toast(ELEM[sm.elem].name+'のせいれい「'+name+'」がやってきた！','good')
     if(sm.elem==='fire'&&S.crops&&!S.crops.mugi){S.crops.mugi=S.crops.tomato=true}}/* 火のせいれいが来たら、パン・スープの作物がふえる */
   if(STATUE>=0&&S.obj[STATUE+W]==='altar'){r.x=STATUE%W+.5;r.y=((STATUE/W)|0)+1.12;sp=[STATUE%W,((STATUE/W)|0)+1]}/* 神殿のまんなか（台座の上）からあらわれる */
-  r.hunger=75;r.spawnT=performance.now();if(!r.came)r.came=dayNo();if(!r.back){S.lastCame=dayNo();S.summonDay=dayNo()}S.res.push(r);S.summons=(S.summons||0)+1;memo(r.back?'🌱':'🌟',r.back?r.name+'がもどってきた':r.name+'（'+ELEM[r.elem].name+'のせいれい）が村にやってきた');logEv(r.back?r.name+'がもどってきた':r.name+'（'+ELEM[r.elem].name+'のせいれい）がやってきた');NEWQ.push({id:r.id,t:performance.now()+1300});HOLD.add(r.id);/* ステータスをとじるまで、わーいのポーズで止まる */
+  r.hunger=75;r.spawnT=performance.now();if(!r.came)r.came=dayNo();if(!r.back){S.lastCame=dayNo();S.summonDay=dayNo()}S.res.push(r);S.summons=(S.summons||0)+1;memo(r.back?'🌱':'🌟',r.back?r.name+'がもどってきた':r.name+'（'+ELEM[r.elem].name+'のせいれい）が村にやってきた');logEv(r.back?r.name+'がもどってきた':r.name+'（'+ELEM[r.elem].name+'のせいれい）がやってきた');const welcome={id:r.id,t:Infinity};NEWQ.push(welcome);HOLD.add(r.id);WELCOME_RUN=true;gatherAt(r.x,r.y,()=>{stageMotion('cheer');startClap();for(const q of S.res)if(!q.hidden)q.bubble='👏';villageTimeout(()=>{endClap();WELCOME_RUN=false;for(const q of S.res)if(q.act&&q.act.type==='nmeet')endAct(q);welcome.t=performance.now()},3000)},r.id);/* ステータスをとじるまで、わーいのポーズで止まる */
   spawnFX(sp[0],sp[1],ELEM[r.elem].col);centerOn((sp[0]+.5)*TS,(sp[1]+.5)*TS);sfx('arrive');recount();
 }
 
@@ -114,7 +114,7 @@ function litNear(h,x,y){for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++)if(h.s
 function lightMul(x,y){for(const j of LIGHTS)if(S.obj[j]==='toro'&&(j%W+.5-x)**2+(((j/W)|0)+.5-y)**2<12.25)return .75;return lightAt(x,y)?.8:1}/* 灯りの中のコワイノの速さ：石どうろう0.75倍・ふつうの灯り0.8倍 */
 function lightAt(x,y){for(const j of LIGHTS){const o=S.obj[j];const lx=j%W+(o==='lighthouse'?1:.5),ly=((j/W)|0)+(o==='lighthouse'?1:.5);if(INDL.has(o)){const h=roomOf(j);if(h?litNear(h,x|0,y|0):(lx-x)**2+(ly-y)**2<2.25)return true;continue}if((lx-x)**2+(ly-y)**2<(o==='tower'?49:o==='lighthouse'?64:12.25))return true}/* 灯りの範囲（石灯籠2.5・ふつう3.5・台座7マス） */return false}
 const EREACH=new WeakMap();
-const ZUKAN={basic:'いちばんよく見るコワイノ。夜になると、せいれいをねらってやってくる。あたたかいものに、よってくるみたい。',fast:'足がとても速い。体は小さくて、すぐ追いはらえる。いつも、なにかをいそいで追いかけている。',thief:'畑の実った作物をぬすみにくる。見つかると、すぐにげる。じぶんでは、なにも育てられないらしい。',brute:'体がかたくて力も強い。なかなか追いはらえない。いくつもの夜をこえて、かたまったといわれる。',breaker:'壁をこわすのが大好き。まわり道をしないで、まっすぐこわしてくる。しめだされるのが、きらいなのかもしれない。',trapper:'罠や見張り台を見つけると、こわしにくる。まもるために作った物が、ごちそうらしい。',boss:'大きなコワイノ。まわりのせいれいも巻きこんで攻撃する。よく見ると、体の中で、小さなかげがいくつもうごいている。',ash:'灰をまきちらして、施設をしばらく使えなくする。もえつきた火の、のこりのような色をしている。',rockc:'岩みたいにかたい。動きはおそい。岩かげから、はなれたがらない。',yama:'火の山からおりてくる大きなコワイノ。温泉の熱をうばって、冷やしてしまう。体は、いつもつめたい。',hino:'火山からやってくる大きなコワイノ。熱の切りかえ装置をこわそうとする。熱をうばっても、すこしもあたたまらないらしい。',boss2:'夜の力をたくわえた、いちばん大きなコワイノ。この土地じゅうの夜が、ひとつにあつまったようなすがた。'};
+const ZUKAN={basic:'いちばんよく見るコワイノ。夜になると、せいれいをねらってやってくる。あたたかいものに、よってくるみたい。',fast:'足がとても速い。体は小さくて、すぐ追いはらえる。いつも、なにかをいそいで追いかけている。',thief:'畑の作物や収納の中身をぬすみにくる。10分かけて1こずつ、10こまでぬすむとにげる。じぶんでは、なにも育てられないらしい。',brute:'体がかたくて力も強い。なかなか追いはらえない。いくつもの夜をこえて、かたまったといわれる。',breaker:'壁をこわすのが大好き。まわり道をしないで、まっすぐこわしてくる。しめだされるのが、きらいなのかもしれない。',trapper:'罠や見張り台を見つけると、こわしにくる。まもるために作った物が、ごちそうらしい。',boss:'大きなコワイノ。まわりのせいれいも巻きこんで攻撃する。よく見ると、体の中で、小さなかげがいくつもうごいている。',ash:'灰をまきちらして、施設をしばらく使えなくする。もえつきた火の、のこりのような色をしている。',rockc:'岩みたいにかたい。動きはおそい。岩かげから、はなれたがらない。',yama:'火の山からおりてくる大きなコワイノ。温泉の熱をうばって、冷やしてしまう。体は、いつもつめたい。',hino:'火山からやってくる大きなコワイノ。熱の切りかえ装置をこわそうとする。熱をうばっても、すこしもあたたまらないらしい。',boss2:'夜の力をたくわえた、いちばん大きなコワイノ。この土地じゅうの夜が、ひとつにあつまったようなすがた。'};
 const ZURA={/* クリア後に図鑑で読める「もとのすがた」（STORY.md「もとの闇のせいれいたち」）。おそうのは、もとのやさしさの裏返し */
   basic:'ねむる子のそばで、そっと見守っていた、小さな闇のせいれい。いまも、そばにいてあげたくて、よりそってくる。でも、影の体はつめたくて、ふれた子をひやしてしまう。',
   fast:'夜のあいだ土地をかけまわり、朝の前に夜をたたんで帰る「夜まわり」の子。みんなを早く休ませたくて、かけよってくる。いそぎすぎて、ぶつかってしまう。',
@@ -162,12 +162,20 @@ function updEnemy(e,dt){
     else if(to==='gust'&&rdy){cd[tj]=S.t+150;let dx=e.x-CX,dy=e.y-CY;const l=Math.hypot(dx,dy)||1;dx/=l;dy/=l;{let bx=null,by=null;for(let k=1;k<=6;k++){const nx=e.x+dx*k,ny=e.y+dy*k,q=(ny|0)*W+(nx|0);if(!(nx>1&&ny>1&&nx<W-1&&ny<H-1)||!walk(q)||HOME_DOORS.has(typeAt(q))||GATE_IDS.has(typeAt(q)))break;bx=nx;by=ny}if(bx!=null){e.x=bx;e.y=by}}/* 壁・ドア・門の手前までしか、ふきとばさない */e.path=[];e.repath=0;e.stun=2;sfxAt('bush',e.x,e.y);return}}}
   let goal=-1,tgt=null;
   if(e.flee){e.fleeT=(e.fleeT||0)+dt;if(e.fleeT>40&&!e.path.length){e.dead=true;return}/* にげる道がどこにもないときだけ消える */if(e.x<.6||e.y<.6||e.x>W-.6||e.y>H-.6||(D.thief&&e.fleeT>12&&!VILL[(e.y|0)*W+(e.x|0)])){e.dead=true;return}}/* カゲドロボウは、にげたらすぐ消える */
-  else if(D.thief){let bd=1e9,box=-1;for(const k in S.dyn){if(S.obj[k]!=='farm'||S.dyn[k].g<50)continue;const fx2=k%W+.5,fy=((k/W)|0)+.5,d=Math.hypot(fx2-e.x,fy-e.y);if(d<bd){bd=d;goal=+k;box=-1}}
+  else if(D.thief){let bd=1e9,box=-1;for(const k in S.dyn){if(S.obj[k]!=='farm'||S.dyn[k].sown===false||S.dyn[k].g<100)continue;const fx2=k%W+.5,fy=((k/W)|0)+.5,d=Math.hypot(fx2-e.x,fy-e.y);if(d<bd){bd=d;goal=+k;box=-1}}
     if(S.food>0)for(let k=0;k<W*H;k++){if(!storageAt(k,'food'))continue;const d=Math.hypot(k%W+.5-e.x,((k/W)|0)+.5-e.y)-.7;if(d<bd){const n=[k-1,k+1,k-W,k+W].find(q=>walk(q));if(n!=null){bd=d;goal=n;box=k}}}
     if(matTot()>0)for(let k=0;k<W*H;k++){if(!storageAt(k,'mat'))continue;const d=Math.hypot(k%W+.5-e.x,((k/W)|0)+.5-e.y)-.7;if(d<bd){const n=[k-1,k+1,k-W,k+W].find(q=>walk(q));if(n!=null){bd=d;goal=n;box=-2-k}}}
-    if(goal>=0&&box<=-2&&bd<.6){let n=5,got=[];for(const m of ['wood','stone','bamboo'].sort((a,b)=>(S.mat[b]||0)-(S.mat[a]||0))){const t=Math.min(n,S.mat[m]||0);if(t){S.mat[m]-=t;n-=t;got.push(MATN[m]+t)}}S.nightHurt++;if(S.ns&&got.length)S.ns.lost.push(got.join('・'));toast('カゲドロボウに素材の収納をあらされた！（'+got.join('・')+'）','warn');sfxAt('thief',e.x,e.y);e.flee=true;e.path=[];e.repath=0}
-    else if(goal>=0&&box>=0&&bd<.6){const st=takeFood(5,'any').length;S.nightHurt++;if(S.ns&&st)S.ns.lost.push('食料'+st);toast('カゲドロボウに食料の収納をあらされた！（食料-'+st+'）','warn');sfxAt('thief',e.x,e.y);e.flee=true;e.path=[];e.repath=0}
-    else if(goal>=0&&box<0&&bd<.6){S.dyn[goal].g=0;S.nightHurt++;if(S.ns)S.ns.lost.push('畑の作物');toast('カゲドロボウに畑をあらされた！','warn');sfxAt('thief',e.x,e.y);e.flee=true;e.path=[];e.repath=0}}
+    if((e.stolen||0)>=10){e.flee=true;e.path=[];e.repath=0}
+    else if(goal>=0&&bd<.6){const key=box===-1?'farm:'+goal:'box:'+box;if(e.stealKey!==key){e.stealKey=key;e.stealT=0}e.busyT=S.t;e.stealT=(e.stealT||0)+dt/DAYLEN;e.path=[];
+      if(e.stealT>=10){e.stealT-=10;let got='';
+        if(box<=-2){const m=Object.keys(S.mat).filter(k=>S.mat[k]>0).sort((a,b)=>S.mat[b]-S.mat[a])[0];if(m){S.mat[m]--;got=(MATN[m]||m)+'1'}}
+        else if(box>=0){if(takeFood(1,'any').length)got='食料1'}
+        else{const d=S.dyn[goal],fk=cropK(d),n=(CROPS[fk]||{yield:1}).yield;d.stolen=(d.stolen||0)+1;got='畑の作物1';if(d.stolen>=n){d.g=0;d.sown=false;d.crop=null;delete d.stolen}}
+        if(got){e.stolen=(e.stolen||0)+1;S.nightHurt++;if(S.ns)S.ns.lost.push(got);toast('カゲドロボウに'+got+'こぬすまれた！','warn');sfxAt('thief',e.x,e.y)}
+        if(e.stolen>=10){e.flee=true;e.path=[];e.repath=0}}
+      return
+    }else{e.stealKey=null;e.stealT=0}}
+
   if(D.thief&&goal<0&&!e.flee){e.flee=true;e.path=[];e.repath=0}/* カゲドロボウは、盗むものがなければ帰る */
   if((D.ash||D.dev)&&WD===1&&S.st2&&!e.flee&&(e.ign||0)<(D.dev?3:1)){const ex=e.x|0,ey=e.y|0;let hit=-1;for(let dy=-1;dy<=1&&hit<0;dy++)for(let dx=-1;dx<=1&&hit<0;dx++){const k=(ey+dy)*W+ex+dx;if(k<0||k>=W*H)continue;const a=anc(k);if(a!=null&&FLAM.has(S.obj[a])&&!fireAt(a)&&Math.hypot(k%W+.5-e.x,((k/W)|0)+.5-e.y)<1.05)hit=a}if(hit>=0){ignite(hit);e.ign=(e.ign||0)+1}}/* ハイカゲ（1つ）・ヒノオオカゲ（3つ）は、ふれた木の物に火をつける */
   e.ashG=false;if((D.ash||D.dev)&&!e.flee&&WD===1&&S.st2&&!(D.ash&&S.st2.cool)){const t=S.st2;let bd=1e9,bt=-1;/* ハイカゲは設備、ヒノオオカゲは熱の装置をねらう */
