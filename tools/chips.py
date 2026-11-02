@@ -3,7 +3,7 @@
 
   python3 tools/chips.py unpack chips_src.json   # chips.js とアトラス → id ごとの絵（data URI）の JSON
   python3 tools/chips.py pack chips_src.json     # JSON → アトラスの絵（ロスレス WebP）と chips.js
-  python3 tools/chips.py replace replace.json    # マップチップ工房の「さしかえた絵」の JSON を入れて、作りなおす
+  python3 tools/chips.py replace replace.json    # マップチップ工房の「さしかえた絵」（絵・位置・大きさ）の JSON を入れて、作りなおす
 
 chips.js は、絵の場所だけを持つ：window.CHIPA=[アトラスのファイル]、window.CHIPS={id:{ax,ay,w,h,...,f:[[ページ,x,y,w,h],...]}}。
 絵をかえるときは、unpack → JSON を直す → pack。pack は、作った絵が元の絵とドットまで同じかたしかめる。
@@ -88,12 +88,28 @@ def replace(repf):
     d = json.load(open(tmp, encoding='utf8')); C = d['chips']; n = 0
     for k, m in R.items():
         if k not in C: print('ないチップ:', k); continue
+        meta = m.get('meta')
         for s, v in m.items():
+            if s == 'meta': continue
             j, i = map(int, s.split(','))
             t = C[k] if j < 0 else (C[k].get('parts') or [])[j]
             im = from_uri(v['u']); t['f'][i] = to_uri(im)
             if (i == 0 or j >= 0) and (t.get('w'), t.get('h')) != im.size: print(k, s, '大きさ', (t.get('w'), t.get('h')), '→', im.size); t['w'], t['h'] = im.size
             n += 1
+        if meta:
+            c = C[k]; W0, H0 = c['w'], c['h']; W1, H1 = int(meta['w']), int(meta['h'])
+            if (W1, H1) != (W0, H0):
+                # 大きさをかえる：元の絵から、その大きさで作りなおす（BOX でちぢめる・のばす）。部品も同じ割合で
+                rx, ry = W1 / W0, H1 / H0
+                c['f'] = [to_uri(from_uri(u).resize((W1, H1), Image.BOX)) for u in c['f']]
+                for p in c.get('parts') or []:
+                    pw, ph = max(1, round(p['w'] * rx)), max(1, round(p['h'] * ry))
+                    p['f'] = [to_uri(from_uri(u).resize((pw, ph), Image.BOX)) for u in p['f']]
+                    p['ax'] = meta['ax'] + (p['ax'] - c['ax']) * rx; p['ay'] = meta['ay'] + (p['ay'] - c['ay']) * ry; p['w'], p['h'] = pw, ph
+                c['w'], c['h'] = W1, H1
+            else:
+                for p in c.get('parts') or []: p['ax'] += meta['ax'] - c['ax']; p['ay'] += meta['ay'] - c['ay']
+            c['ax'], c['ay'] = meta['ax'], meta['ay']; print(k, '置き方', meta); n += 1
     json.dump(d, open(tmp, 'w', encoding='utf8'), ensure_ascii=False); pack(tmp); os.remove(tmp); print('さしかえ', n)
 
 if __name__ == '__main__':
