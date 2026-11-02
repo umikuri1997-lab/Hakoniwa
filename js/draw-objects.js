@@ -67,7 +67,7 @@ const CHA={};function chipPage(n){/* マップチップのアトラス（大き�
 function atlasFrame(r,id){/* アトラスの (x,y,w,h) を、1まいの絵（キャンバス）に切り出す。読みこむまでは ok=0 */const[n,x,y,w,h]=r,c=document.createElement('canvas');c.width=w;c.height=h;c.ok=0;const a=chipPage(n),done=()=>{c.getContext('2d').drawImage(a.im,x,y,w,h,0,0,w,h);c.ok=1;try{delete iconCache[id]}catch(e){}};if(a.ok)done();else a.q.push(done);return c}
 function chipImgs(ch,id){if(!ch._im)ch._im=ch.f.map(r=>atlasFrame(r,id));return ch._im}
 const PARTMV={/* 動く部品の動き：rot＝回る角度、sx・sy＝のびちぢみ（どれも支点のまわり） */
-  swing:(i,now)=>{if(ICON)return{sx:1,sy:.5};/* アイコンでは、つなを短くして座面を見やすく */const d=i!=null&&S&&toyUsers(i).length?swAng(i,now):0;return{sx:1+d*.12,sy:1+d*.3}},
+  swing:(i,now)=>{if(ICON)return{};/* アイコンは、マップと同じ形 */const d=i!=null&&S&&toyUsers(i).length?swAng(i,now):0;return{sx:1+d*.12,sy:1+d*.3}},
   seesaw:(i,now)=>({rot:!ICON&&i!=null&&S?ssAng(i,now||0):0}),
   windmill:(i,now)=>({rot:ICON?0:(now||performance.now())/1000*.9}),
   vane:(i,now)=>({sx:ICON?1:Math.cos(Math.sin((now||performance.now())/1300+(i||0))*.6)})};
@@ -116,7 +116,7 @@ function drawFarmChip(c,x,y,i,g,now){const C=window.CHIPS;if(!C)return false;if(
     else{const tw=Math.sin((now||0)/300+i)*.5+.5;c.fillStyle='rgba(255,245,170,'+(.5+tw*.5)+')';const sx=x+TS-6,sy=y+5,r=2+tw*1.5;c.fillRect(sx-r,sy-.6,r*2,1.2);c.fillRect(sx-.6,sy-r,1.2,r*2)}}/* 育つまでのバーと、とれごろのきらきら */
   return true}
 let BELLRING=-1e9;/* 村の鐘が鳴りはじめた時（4秒ゆれる） */
-const DOORCH=new Set(['door','yozoradoor','gate','archedgate','stonegate','logdoor','loggate','sdoor']);/* ドア・門は、開きぐあいで絵をえらぶ */
+const DOORCH=new Set(['door','yozoradoor','gate','stonegate','logdoor','loggate','sdoor']);/* ドア・門は、開きぐあいで絵をえらぶ */
 function drawDoorChip(c,id,x,y,i,now){const C=window.CHIPS;if(!C)return false;
   if(ICON||i==null||!S){const ch=C[id];return !!ch&&drawChip(c,ch,id,x,y,now,i)}
   const pick=(o,op)=>C[id+'#'+o+Math.min(3,Math.round(op*3))],ok=o=>{const ch=C[id+'#'+o+'0'];return !!ch&&chipImgs(ch,id)[0].ok};
@@ -238,9 +238,9 @@ function drawObj(c,id,x,y,i,g,now){
     let op=0;if(!ICON)op=doorOp(i,x,y,ver?2.1:.9,ver?.9:2.1);if(ver&&!ICON){const an=op*Math.PI*.45;c.save();c.translate(x+16,y);c.rotate(an);c.fillStyle='rgba(0,0,0,.18)';c.fillRect(-1,1,5,TS);c.fillStyle='#8a5a33';c.fillRect(-2,0,4,TS);c.fillStyle='#b88550';c.fillRect(-2,0,1.3,TS);c.restore();break}/* たて置きは、家のドアと同じ一本線 */shadow(c,x+16,y+29,16,3);const stc='#c3bfb6',sto='#9a978f';
     if(!ver){c.fillStyle=sto;rr(c,x,y+3,7,26,2);rr(c,x+25,y+3,7,26,2);c.fillStyle=stc;rr(c,x+1,y+4,5,24,2);rr(c,x+26,y+4,5,24,2);const pw=18*(1-op*.82);c.fillStyle='#9a6a40';c.fillRect(x+7,y+8,pw,20);c.fillStyle='#b9824f';for(let k=0;k<3;k++)c.fillRect(x+7+k*pw/3+.5,y+8,pw/3-1,20);c.fillStyle='#6e4c32';c.fillRect(x+7,y+13,pw,1.5);c.fillRect(x+7,y+22,pw,1.5)}
     else{c.fillStyle=sto;rr(c,x+2,y-2,28,8,2);rr(c,x+2,y+25,28,7,2);const ph=18*(1-op*.82);c.fillStyle='#9a6a40';c.fillRect(x+9,y+6,14,ph);c.fillStyle='#6e4c32';c.fillRect(x+9,y+6+ph/2,14,1.5)}break}
-  case'gate':case'archedgate':case'stonegate':case'logdoor':case'loggate':{const isF=k=>{const t=typeAt(k);return FENCE_IDS.has(t)&&!GATE_IDS.has(t)||t==='wall'};/* 柵・石の塀どうしはつながる。家の壁とはつながらない */const L=!ICON&&isF(i-1),R=!ICON&&isF(i+1),U=!ICON&&isF(i-W),D=!ICON&&isF(i+W);const ver=!(L||R)&&(U||D);
+  case'gate':case'stonegate':case'logdoor':case'loggate':{const isF=k=>{const t=typeAt(k);return FENCE_IDS.has(t)&&!GATE_IDS.has(t)||t==='wall'};/* 柵・石の塀どうしはつながる。家の壁とはつながらない */const L=!ICON&&isF(i-1),R=!ICON&&isF(i+1),U=!ICON&&isF(i-W),D=!ICON&&isF(i+W);const ver=!(L||R)&&(U||D);
     let op=0;if(!ICON)op=doorOp(i,x,y,ver?2.1:.9,ver?.9:2.1);
-    if(id==='stonegate'&&drawMossGate(c,x,y,i,ver,op))break;shadow(c,x+16,y+28,12,3);const P=id==='stonegate'?'#77756f':id==='archedgate'?'#704b32':'#a0703f',PC=id==='stonegate'?'#c3bfb6':id==='archedgate'?'#d8b275':'#d6a874',RL=id==='stonegate'?'#9a978f':id==='archedgate'?'#9b7049':'#c08a55',SL=id==='stonegate'?'#c3bfb6':id==='archedgate'?'#c99153':'#cf9c66';
+    if(id==='stonegate'&&drawMossGate(c,x,y,i,ver,op))break;shadow(c,x+16,y+28,12,3);const P=id==='stonegate'?'#77756f':'#a0703f',PC=id==='stonegate'?'#c3bfb6':'#d6a874',RL=id==='stonegate'?'#9a978f':'#c08a55',SL=id==='stonegate'?'#c3bfb6':'#cf9c66';
     if(!ver){const pw=18*(1-op*.82);c.fillStyle=RL;c.fillRect(x+7,y+12,pw,4);c.fillRect(x+7,y+20,pw,4);c.fillStyle=SL;for(let k=0;k<3;k++)c.fillRect(x+7+pw*(k+.5)/3-1.5,y+10,3,16);
       c.fillStyle=P;c.fillRect(x+1,y+7,6,21);c.fillRect(x+25,y+7,6,21);c.fillStyle=PC;c.fillRect(x+1,y+7,6,3);c.fillRect(x+25,y+7,6,3)}
     else{const ph=18*(1-op*.82);c.fillStyle=RL;c.fillRect(x+12,y+7,3,ph);c.fillRect(x+17,y+7,3,ph);c.fillStyle=SL;for(let k=0;k<3;k++)c.fillRect(x+11,y+7+ph*(k+.5)/3-1.5,10,3);
