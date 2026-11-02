@@ -94,7 +94,7 @@ const QUESTS2=[
    talk:{who:HOMURA,when:()=>true,lines:[
     [HOMURA,'火山のふもとに、熱の流れを切りかえる装置があるんだ。'],
     [HOMURA,'左にむければ、西の温泉に熱がとどくはずさ。']]},
-   story:[[HOMURA,'西の温泉にも、湯気が上がった！'],[SHIZUKU,'すばらしいです。…残るは、奥の温泉ですね。'],[SHIZUKU,'#joy|ありがとうございます、守り神さま。']]},
+   story:[[HOMURA,'西の温泉にも、湯気が上がった！'],[SHIZUKU,'すばらしいです。…残るは、奥の温泉ですね。'],[HOMURA,'#think|そうそう。熱の道のそばの畑は、土があったまって、作物がよく育つんだよ。'],[SHIZUKU,'#joy|ありがとうございます、守り神さま。']]},
   {id:'fire3',text:'火のせいれいを3人にしよう',check:()=>elemCount('fire')>=3&&NEWRES==null,how:'ようがん台で火の力をためて、なかまを呼ぶ',prog:()=>'火のせいれい '+Math.min(3,elemCount('fire'))+'/3・火の力 '+Math.floor(ATTR.fire)+'/'+needFor('fire'),
    talk:{who:HOMURA,when:()=>nextOK(),lines:[
     [HOMURA,'#think|……なあ、守り神。むかし、この村には、火のせいれいがたくさんいたんだ。'],
