@@ -125,7 +125,7 @@ function drawDoorChip(c,id,x,y,i,now){const C=window.CHIPS;if(!C)return false;
     if(c._doorBack){if(!hasH)return true;const m=(L?1:0)|(R?2:0)|(U?4:0)|(D?8:0),ch=(wt&&C[wt+'.'+id+':'+m])||C[id+':'+m];return !!ch&&drawChip(c,ch,id,x,y,now,i)}/* ドアの上の断面（静的な層） */
     const o=hasH?'h':'v';if(!ok(o))return false;const op=hasH?doorOp(i,x,y,.9,2.1):doorOp(i,x,y,2.1,.9),n=Math.min(3,Math.round(op*3));const sx=o==='h'&&HOUSES.some(h=>h.inside.has(i+W))?'~in':'';return drawChip(c,(wt&&(C[wt+'.'+id+'#'+o+n+sx]||C[wt+'.'+id+'#'+o+n]))||C[id+'#'+o+n+sx]||pick(o,op),id,x,y,now,i)}/* ドアの枠（よこ置き）・たて置きの断面も、となりの壁ごとの絵 */
   if(id==='stonegate'||id==='loggate'){const wide=S.obj[i]!==id||(S.obj[i+1]==='part'&&S.ref[i+1]===i);if(!wide||!ok('h'))return false;return drawChip(c,pick('h',doorOp(i,x+16,y,1.8,2.1)),id,x,y,now,i)}/* 大門は2マスはば */
-  const isF=k=>{const t=typeAt(k);return FENCE_IDS.has(t)||t==='wall'||t==='sdoor'},ver=!(isF(i-1)||isF(i+1))&&(isF(i-W)||isF(i+W)),o=ver?'v':'h';if(!ok(o))return false;
+  const isF=k=>{const t=typeAt(k);return FENCE_IDS.has(t)&&!GATE_IDS.has(t)||t==='wall'},/* 柵・塀のドアの向きは、となりの柵・塀だけで決める（ドアどうしはつながらない） */ver=!(isF(i-1)||isF(i+1))&&(isF(i-W)||isF(i+W)),o=ver?'v':'h';if(!ok(o))return false;
   return drawChip(c,pick(o,doorOp(i,x,y,ver?2.1:.9,ver?.9:2.1)),id,x,y,now,i)}
 function drawRoofItem(c,id,x,y){/* ガゼボ・東屋：2×2マス（左上が x,y）。絵（チップ）があれば、それを使う（うしろの柱 <id>:back は、べつの段でかく） */const ch=window.CHIPS&&CHIPS[id];if(ch&&drawChip(c,ch,id,x,y,0))return;
   const gz=id==='gazebo',P=gz?['#f4efe6','#d9d0c2']:['#8a5e3c','#6b4528'],R=gz?['#9cc7a3','#7fae88','#c9e3cc']:['#7d8590','#646b75','#a3abb5'];
@@ -234,11 +234,11 @@ function drawObj(c,id,x,y,i,g,now){
     else if(hasH){if(!D){if(L&&R&&!U)front(x,x+TS);else{side(x+5,x+27);if(L)front(x,x+5);if(R)front(x+27,x+TS)}}else{if(L)front(x,x+5);if(R)front(x+27,x+TS)}}
     else if(!D)side(x+5,x+27);
     top();if(ICON)c.restore();break}
-  case'sdoor':{const isF=k=>{const t=typeAt(k);return t==='wall'||t==='sdoor'||FENCE_IDS.has(t)};/* 木の柵・大門のとなりでも、たて置きは一本線（家の壁とはつながらない） */const L=!ICON&&isF(i-1),R=!ICON&&isF(i+1),U=!ICON&&isF(i-W),D=!ICON&&isF(i+W);const ver=!(L||R)&&(U||D);
+  case'sdoor':{const isF=k=>{const t=typeAt(k);return t==='wall'||FENCE_IDS.has(t)&&!GATE_IDS.has(t)};/* 木の柵・大門のとなりでも、たて置きは一本線（家の壁とはつながらない） */const L=!ICON&&isF(i-1),R=!ICON&&isF(i+1),U=!ICON&&isF(i-W),D=!ICON&&isF(i+W);const ver=!(L||R)&&(U||D);
     let op=0;if(!ICON)op=doorOp(i,x,y,ver?2.1:.9,ver?.9:2.1);if(ver&&!ICON){const an=op*Math.PI*.45;c.save();c.translate(x+16,y);c.rotate(an);c.fillStyle='rgba(0,0,0,.18)';c.fillRect(-1,1,5,TS);c.fillStyle='#8a5a33';c.fillRect(-2,0,4,TS);c.fillStyle='#b88550';c.fillRect(-2,0,1.3,TS);c.restore();break}/* たて置きは、家のドアと同じ一本線 */shadow(c,x+16,y+29,16,3);const stc='#c3bfb6',sto='#9a978f';
     if(!ver){c.fillStyle=sto;rr(c,x,y+3,7,26,2);rr(c,x+25,y+3,7,26,2);c.fillStyle=stc;rr(c,x+1,y+4,5,24,2);rr(c,x+26,y+4,5,24,2);const pw=18*(1-op*.82);c.fillStyle='#9a6a40';c.fillRect(x+7,y+8,pw,20);c.fillStyle='#b9824f';for(let k=0;k<3;k++)c.fillRect(x+7+k*pw/3+.5,y+8,pw/3-1,20);c.fillStyle='#6e4c32';c.fillRect(x+7,y+13,pw,1.5);c.fillRect(x+7,y+22,pw,1.5)}
     else{c.fillStyle=sto;rr(c,x+2,y-2,28,8,2);rr(c,x+2,y+25,28,7,2);const ph=18*(1-op*.82);c.fillStyle='#9a6a40';c.fillRect(x+9,y+6,14,ph);c.fillStyle='#6e4c32';c.fillRect(x+9,y+6+ph/2,14,1.5)}break}
-  case'gate':case'archedgate':case'stonegate':case'logdoor':case'loggate':{const isF=k=>{const t=typeAt(k);return FENCE_IDS.has(t)||t==='wall'||t==='sdoor'};/* 柵・石の塀どうしはつながる。家の壁とはつながらない */const L=!ICON&&isF(i-1),R=!ICON&&isF(i+1),U=!ICON&&isF(i-W),D=!ICON&&isF(i+W);const ver=!(L||R)&&(U||D);
+  case'gate':case'archedgate':case'stonegate':case'logdoor':case'loggate':{const isF=k=>{const t=typeAt(k);return FENCE_IDS.has(t)&&!GATE_IDS.has(t)||t==='wall'};/* 柵・石の塀どうしはつながる。家の壁とはつながらない */const L=!ICON&&isF(i-1),R=!ICON&&isF(i+1),U=!ICON&&isF(i-W),D=!ICON&&isF(i+W);const ver=!(L||R)&&(U||D);
     let op=0;if(!ICON)op=doorOp(i,x,y,ver?2.1:.9,ver?.9:2.1);
     if(id==='stonegate'&&drawMossGate(c,x,y,i,ver,op))break;shadow(c,x+16,y+28,12,3);const P=id==='stonegate'?'#77756f':id==='archedgate'?'#704b32':'#a0703f',PC=id==='stonegate'?'#c3bfb6':id==='archedgate'?'#d8b275':'#d6a874',RL=id==='stonegate'?'#9a978f':id==='archedgate'?'#9b7049':'#c08a55',SL=id==='stonegate'?'#c3bfb6':id==='archedgate'?'#c99153':'#cf9c66';
     if(!ver){const pw=18*(1-op*.82);c.fillStyle=RL;c.fillRect(x+7,y+12,pw,4);c.fillRect(x+7,y+20,pw,4);c.fillStyle=SL;for(let k=0;k<3;k++)c.fillRect(x+7+pw*(k+.5)/3-1.5,y+10,3,16);
