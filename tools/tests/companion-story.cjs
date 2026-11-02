@@ -1,7 +1,7 @@
 const fs=require('fs'),vm=require('vm'),assert=require('assert'),path=require('path');
 const root=path.resolve(__dirname,'../..');
 const c=vm.createContext({console,ACT:{},document:{querySelector(){return {hidden:true}}},performance:{now:()=>0},setTimeout(){},localStorage:{getItem(){return null}}});
-for(const f of ['core','data','story','world','village','quests','night'])vm.runInContext(fs.readFileSync(path.join(root,'js',f+'.js'),'utf8'),c,{filename:f});
+for(const f of ['core','data','story','world','village','quests','night','companion-story'])vm.runInContext(fs.readFileSync(path.join(root,'js',f+'.js'),'utf8'),c,{filename:f});
 const run=code=>vm.runInContext(code,c);
 const old=JSON.parse(run('JSON.stringify(QUESTS1.filter(q=>!COMPANION_QUESTS.has(q.id)).map(q=>q.id))'));
 for(let i=0;i<=old.length;i++){
@@ -12,6 +12,30 @@ for(let i=0;i<=old.length;i++){
 }
 for(const state of [{world:1},{world:0,free:true}]){run(`S=${JSON.stringify({...state,flags:{},quest:8,qStory:7})};migrateCompanionStory(S)`);assert.equal(run('S.quest'),8);assert.equal(run('S.qStory'),7);}
 console.log('Save migration: every original quest and pending completion, idempotence, other modes');
+const prior=JSON.parse(run('JSON.stringify(companionQuestList({world:0,flags:{companionStory:1}}).map(q=>q.id))'));
+for(let i=0;i<=prior.length;i++){
+  run(`S={world:0,flags:{companionStory:1},quest:${i},qStory:${i<prior.length?i:'null'},qTalked:true};migrateCompanionStory(S)`);
+  const expected=run(`COMPANION_REPLACEMENTS[${JSON.stringify(prior[i])||'null'}]||${JSON.stringify(prior[i])||'null'}`);
+  if(i<prior.length){assert.equal(run('QUESTS1[S.quest].id'),expected);assert.equal(run('QUESTS1[S.qStory].id'),expected);}
+  else assert.equal(run('S.quest'),run('QUESTS1.length'));
+}
+for(const id of ['fireSupplies','fireLights','waterFields','waterFlowers','windRoad','windGather']){
+  const i=prior.indexOf(id);run(`S={world:0,flags:{companionStory:1},quest:${i},qStory:null,qTalked:true};migrateCompanionStory(S)`);
+  assert.equal(run('S.qTalked'),false,'replacement must explain its new goal');
+}
+console.log('PR 1064 saves: every index and pending report preserved; active replacements explain the new goal');
+for(const id of ['earthListen','earthRoot','fireRoot','fireTrace','waterFilm','waterLeaf','windEcho','windVoices']){
+  run(`S={food:9999,mat:{wood:9999,stone:9999},flags:{},fieldStories:{}}`);
+  assert.equal(run(`QUESTS1.find(q=>q.id==='${id}').check()`),false);
+  run(`S.fieldStories['${id}']={step:FIELD_STORIES['${id}'].length-1}`);
+  assert.equal(run(`QUESTS1.find(q=>q.id==='${id}').check()`),false);
+  run(`S.fieldStories['${id}'].step++`);
+  assert.equal(run(`QUESTS1.find(q=>q.id==='${id}').check()`),true);
+  const state=run('JSON.stringify(S)');run(`S=JSON.parse(${JSON.stringify(state)})`);
+  assert.equal(run(`fieldStoryDone('${id}')`),true);
+}
+console.log('Eight goals require their own investigation progress; stock cannot complete them; save round-trip preserves progress');
+
 run(`setWorld(0);S={world:0,flags:{},res:[{elem:'wood'}],quest:0,qTalked:false,qStory:null};`);
 for(const [el,id]of [['earth','summon'],['fire','fire'],['water','water'],['wind','wind']]){
   run(`S.quest=QUESTS1.findIndex(q=>q.id==='${id}');S.qTalked=false`);assert.equal(run(`!!storySummonOK('${el}')`),false);
@@ -46,3 +70,11 @@ vm.runInContext(choose,job);
 const counts=JSON.parse(vm.runInContext(`(()=>{const counts={chop:0,mine:0,weed:0,drop:0};for(let i=0;i<12000;i++){goWork({elem:'wind'},null,true);counts[chosen]++}return JSON.stringify(counts)})()`,job));
 for(const n of Object.values(counts))assert(n>2600&&n<3400,JSON.stringify(counts));
 console.log('Available gathering jobs share priority:',counts);
+// A finished animation alone must not count as having read the scene.
+run(`let VILLAGE_SESSION=1;let completion;fieldStoryCurrent=()=>({id:'earthRoot'});fieldStorySpotOK=()=>true;fieldStoryFocus=()=>{};renderQuest=()=>{};checkQuest=()=>{};dialog=(lines,after)=>{completion=after};S={flags:{},res:[{name:MINA},{name:POKO}],fieldSites:{root:7},fieldStories:{earthRoot:{step:0}}};globalThis.action={fieldId:'earthRoot',phase:0,obj:7,t:10};ACT.fieldstory.end({},action)`);
+assert.equal(run('S.fieldStories.earthRoot.step'),0);
+run('completion()');assert.equal(run('S.fieldStories.earthRoot.step'),1);
+run('completion()');assert.equal(run('S.fieldStories.earthRoot.step'),1);
+run(`S={flags:{},res:[{name:MINA},{name:POKO}],fieldSites:{root:7},fieldStories:{earthRoot:{step:0}}};ACT.fieldstory.end({},action);globalThis.origin=S;S={fieldStories:{earthRoot:{step:0}}};completion()`);
+assert.equal(run('S.fieldStories.earthRoot.step'),0);assert.equal(run('origin.fieldStories.earthRoot.step'),0);
+console.log('Investigation scenes: finish reading before progress; duplicate and wrong-village callbacks cannot advance');

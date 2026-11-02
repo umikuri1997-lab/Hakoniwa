@@ -266,6 +266,7 @@ const GOD_SHOP=['いらっしゃ〜い。なにがほしいかの？','おっ、
 const GOD_IDLE=['草、生えてきたのう〜。','むかしはのう…はて、なんの話じゃったか。','パワー？ ためればなんとかなるわい！','ねむ…。','夜は「コワイノ」に気をつけるんじゃぞ。たぶん来るからの。','「コワイノ」は、ほんとうに悪いやつなんかのう…。','おやつ持っとらんか？','属性がたまるとせいれいが来るぞい。…たしか。'];
 function KS(L){const o=[];for(let[w,t]of L){let n=w;if(w.length===1){try{n=sevName(w)}catch(e){n=null}}if(n){if(t&&typeof t==='object'){const q=S&&S.res.find(x=>x.name===n);t=q&&elemKey(q)==='fireB'?t.B:t.A}o.push([n,t])}}return o}/* キーキャラの名前を入れたセリフ */
 function pathMade(){const n=S.floor.filter(f=>f==='path').length;if(S.flags.path0==null)S.flags.path0=n;return Math.max(0,n-S.flags.path0)}/* クエストを受けてから、しいたあぜ道の数 */
+function companionFieldQuest(id,text,how,elem,intro,outro){return {id,text,how,field:true,check:()=>fieldStoryDone(id),prog:()=>fieldStoryProgress(id),talk:{get who(){return elem==='earth'?MINA:keyName(elem)},when:()=>true,get lines(){return KS(intro)}},get story(){return KS(outro)}}}
 const QUESTS1=[
   {id:'statue',text:'神殿を建ててもらおう',how:"下の「おく」→「神殿」をえらび、空いた場所をタップ",check:()=>cnt('statue')>=1,by:GOD,story:[
     [POKO,'できたー！ りっぱな神殿！'],
@@ -395,6 +396,8 @@ const QUESTS1=[
     [MINA,'#surprise wave|ふわぁ…。はじめまして、ノドカだよぉ。よろしくねぇ。'],
     [POKO,'#wave|わーい、なかまだ！ よろしくね、ノドカ！'],
     [MINA,'畑を耕すのと、柵を直すのが得意なんだぁ。のんびりやるねぇ。'],[MINA,'#joy|呼んでくれて、ありがとうねぇ、守り神さま。']]},
+  companionFieldQuest("earthListen","土のひびきを聞き分けよう","「みる」で、光る地面の3か所を調べる。ノドカがその場所へ歩き、地中の音を確かめる","earth",[["N","ねぇ、フタバ。足の下から、こつん、こつんって音がするよぉ。"],["F","石ころが転がってるのかな？"],["N","ううん。音がする所と、しない所があるんだぁ。地面の中で、何かが途切れているみたい。"],["F","ぼくも聞きたい！ いっしょに調べようよ。"]],[["N","音がつながっている所は、やわらかい土。途切れる所には、固くなった黒い土があるねぇ。"],["F","あの、太い根っこが埋まってる所だ！"],["N","根のまわりだけ、土が冷たいんだよぉ。もう少し、近くで見てみようねぇ。"]]),
+  companionFieldQuest("earthRoot","埋もれた大きな根を掘り出そう","光る根の場所を調べ、ノドカに土を払ってもらう。続いてフタバに根の様子を確かめてもらう","earth",[["N","太い根を、傷つけないように掘ってみるよぉ。"],["F","ぼく、根っこが見えたら、声をかけるね。"],["N","うん。むかしから、この土地にあった根みたいなんだぁ。"]],[["F","この根……ヌシ様が寝ていた大きな木のほうへ、伸びてる。"],["N","生きてるよぉ。でも、黒い土に包まれた所は、冷えて縮こまってるねぇ。"],["F","切らなくてよかった。あっためる方法、ないかな……。"],["N","ぼくには、土をよけることしかできないねぇ。火のなかまが来てくれたら、力を借りようねぇ。"]]),
   {id:'farm6',text:'畑を6つにしよう',how:"「おく」→「畑」をえらび、合計6つにする。土のせいれいが耕すのを待とう",check:()=>cnt('farm')>=6,
    talk:{who:GOD,when:()=>true,lines:[
     [GOD,'ノドカが来てくれたから、畑が作れるのう。畑を、おそなえ箱に入れといたぞい。ノドカが、ふかふかに耕してくれるはずじゃ。']],gives:{items:{farm:2}}},
@@ -439,12 +442,8 @@ const QUESTS1=[
     [MINA,'#danger|火のせいれいなら、「コワイノ」とたたかえるらしいよぉ。'],
     [POKO,'火の力をためて、火のせいれいをむかえよう！']]},
    get story(){return KS([['H',{A:'#joy|おや、来てやったよ！ 今夜からは、あたいも村を守る。',B:'#joy|おう、来てやったぜ！ 今夜からは、おれも村を守る。'}],[POKO,'あったかいせいれいが来てくれた！'],['H',{A:'#alarm|「コワイノ」なんざ、あたいが追いはらってやるよ。',B:'#alarm|「コワイノ」なんざ、おれが追いはらってやるよ。'}],[MINA,'これで夜も、ちょっと心強いねぇ。']])}},
-  {id:'fireSupplies',text:'夜を守るなかまの食料を15こためよう',how:'食料箱に食べ物を15こためる',check:()=>FOODN()>=15,prog:()=>'食料 '+Math.min(15,FOODN())+'/15',
-   talk:{who:POKO,when:()=>true,get lines(){return KS([['H',{A:'夜の見まわりに出る前に、みんなの食べ物を確かめたいんだ。',B:'夜の見まわりに出る前に、みんなの食べ物を確かめたいんだ。'}],[POKO,'前の夜は、こわくて、ごはんのことまで考えられなかった……。'],[MINA,'こんどは、帰ってきた子に、あたたかく声をかけようねぇ。'],[POKO,'うん！ ぼくたちが、食べ物を集めておくよ。']])}},
-   get story(){return KS([[POKO,'みんなのぶん、ちゃんとあるよ！'],['H',{A:'ありがと。帰るところで待っててくれると、心強いね。',B:'ありがとな。帰るところで待っててくれると、心強いぜ。'}],[POKO,'守ってもらうだけじゃなくて、ぼくも力になれるんだね。']])}},
-  {id:'fireLights',text:'帰り道のあかりを3つ用意しよう',how:'依頼ボードであかりを作り、村に合計3つ置く',check:()=>CN(LIGHTQ)>=3,prog:()=>'あかり '+Math.min(3,CN(LIGHTQ))+'/3',
-   talk:{who:POKO,when:()=>true,learn:['torch'],get lines(){return KS([['H',{A:'村のはしから帰るとき、家の灯りが見えなくてね。',B:'村のはしから帰るとき、家の灯りが見えなくてな。'}],[POKO,'ぼくも、真っ暗だと、家がどこかわからなくなるよ。'],[MINA,'みんなが帰ってこられるように、あかりをともそうねぇ。']])}},
-   get story(){return KS([['H',{A:'#joy|あそこが、みんなの家だね。これなら、まよわず帰れる。',B:'#joy|あそこが、みんなの家だな。これなら、まよわず帰れる。'}],[POKO,'おかえり、って言う場所が、遠くからでも見えるね。'],[MINA,'このあかり、これから来るなかまにも見つけてもらえるといいねぇ。']])}},
+  companionFieldQuest("fireRoot","冷えきった根にぬくもりを戻そう","光る根を調べ、火のせいれいが小さな火で根を温めるのを見守る","fire",[["F","土の中で見つけた根が、ずっと冷たいままなんだ。"],["H",{"A":"生きた根を、燃やすわけにはいかないね。小さな火を、そばに置いてみようか。","B":"生きた根を、燃やすわけにはいかねえな。小さな火を、そばに置いてみるか。"}],["N","根が動いたら、ぼくが知らせるよぉ。"]],[["N","根の先が、すこぅし、ほどけたよぉ。"],["F","#joy|ほんとだ！ まだ、力が残ってたんだね。"],["H",{"A":"でも、表面の黒い膜は残ってる。これ、火で焦げた色とは違うね。","B":"でも、表面の黒い膜は残ってる。これ、火で焦げた色とは違うな。"}]]),
+  companionFieldQuest("fireTrace","黒い膜と焦げ跡を見比べよう","光る2か所で、根の黒い膜と古い落雷の焦げ跡を調べ、火のせいれいに比べてもらう","fire",[["H",{"A":"黒いからって、焦げてるとは限らないさ。古い落雷の跡と比べてみよう。","B":"黒いからって、焦げてるとは限らねえさ。古い落雷の跡と比べてみよう。"}],["F","焦げてないなら、どうして黒くなったんだろう？"],["H",{"A":"まずは確かめよう。強い火で焼き払ったら、根まで傷めちまう。","B":"まずは確かめよう。強い火で焼き払ったら、根まで傷めちまう。"}]],[["H",{"A":"落雷のほうは、乾いて、くずれる。根の膜は、湿って冷たいままだ。","B":"落雷のほうは、乾いて、くずれる。根の膜は、湿って冷たいままだ。"}],["N","土の中から、冷たいものがしみ出したみたいだねぇ。"],["F","じゃあ、燃やしちゃだめなんだね。水の子なら、何かわかるかな？"],["H",{"A":"ああ。火でできることと、できないことがある。次は、そっちの力を借りよう。","B":"ああ。火でできることと、できねえことがある。次は、そっちの力を借りよう。"}]]),
   {id:'lv3',text:'村レベルを3にしよう',check:()=>S.lv>=3,how:'せいれいが満足してパワーがたまると、村レベルが上がる',prog:()=>'いま 村レベル'+S.lv,
    talk:{who:POKO,when:()=>true,lines:[
     [POKO,'火のなかまが来て、夜も心強くなったね！ 村も、もっとにぎやかになるかな？'],
@@ -458,12 +457,8 @@ const QUESTS1=[
     [MINA,'水やりは、水のせいれいが得意なんだよぉ。'],
     [MINA,'水の力をためたら、水のせいれいが来てくれるかもねぇ。']]},
    get story(){return KS([['M','はじめまして。水やりや、水をくむ仕事なら、わたしにまかせてください。'],[POKO,'水のせいれいが来てくれた！ 畑がうるおうね！'],['M','畑の配置を見なおせば、より効率よく水を行きわたらせられそうです。'],[MINA,keyName('water')+'がいれば、畑の水やりも、もっとはかどるねぇ。']])},gives:{flag:'wellR'}},
-  {id:'waterFields',text:'水のなかまと畑を2つうるおそう',how:'水のせいれいが水をくみ、種をまいた畑を2つ水やりするのを待つ',check:()=>S.obj.filter((o,j)=>o==='farm'&&S.dyn[j]&&S.dyn[j].sown!==false&&S.dyn[j].wet>0).length>=2,prog:()=>'うるおった畑 '+Math.min(2,S.obj.filter((o,j)=>o==='farm'&&S.dyn[j]&&S.dyn[j].sown!==false&&S.dyn[j].wet>0).length)+'/2',
-   talk:{who:POKO,when:()=>true,get lines(){return KS([['M','畑の土が乾いています。まず、水をくんでまいります。'],[POKO,'ヌシ様がいなくなってから、このへん、すぐにかさかさになるんだ。'],['M','水が行きわたれば、根はまだ育てられます。あきらめるには、早いですよ。'],[POKO,'うん！ ノドカとぼくも、畑を見てくる！']])}},
-   get story(){return KS([['M','#joy|水が、根のところまでしみこみました。'],[MINA,'土の中が、ほっとしてるよぉ。'],[POKO,'みんなのごはんになるんだね。ひとりじゃできなかったことが、できてる！']])}},
-  {id:'waterFlowers',text:'水辺のなかまと花を10本咲かせよう',how:'花の種を植え、村全体で花が10本咲くのを待つ',check:()=>flowerN()>=10,prog:()=>'咲いた花 '+Math.min(10,flowerN())+'/10',
-   talk:{who:POKO,when:()=>true,get lines(){return KS([['M','水辺を調べていたら、緑の土地のそばだけ、水が明るく見えたんです。'],[MINA,'花や木が育つと、土地も元気になるんだよぉ。'],['M','では、花のある場所を増やしてみませんか。土地が元気になれば、ヌシ様の力を探す手がかりになるかもしれません。'],[POKO,'ぼくが植えるよ！ いっしょに、この土地を元気にしよう！']])}},
-   get story(){return KS([['M','花の下から、緑が広がっています。水の色も、少し澄んできました。'],[POKO,'ヌシ様を待ってるだけじゃなくて、ぼくたちから、おむかえの準備ができるんだ！'],['M','#joy|ええ。この変化を、覚えておきましょう。もっと広い土地をよみがえらせるときにも、役立つはずです。']])}},
+  companionFieldQuest("waterFilm","根を覆う冷たい膜を洗い分けよう","光る根を調べ、水のせいれいに黒い膜を少しずつ洗ってもらう。続いて流れ出た水を調べる","water",[["M","黒い膜を、少しだけ水でゆるめてみましょう。"],["H",{"A":"根のほうは、あたいが冷えないようにしておくよ。","B":"根のほうは、おれが冷えないようにしておくぜ。"}],["M","ありがとうございます。流れ出るものを見れば、根の傷みなのか、外からついたものなのか、わかるはずです。"]],[["M","根の中から出たものではありません。表面にまとわりついていた、冷たい泥です。"],["F","流したところ、元の色に戻ってる！"],["M","ですが、泥の中に、光る葉のかけらが残っています。流してしまう前に、すくい上げましょう。"]]),
+  companionFieldQuest("waterLeaf","水底の葉を破らずにすくい上げよう","光る水たまりを調べ、水のせいれいが流れを静めてから、フタバに葉をすくってもらう","water",[["M","薄い葉なので、流れたまま持ち上げると破れてしまいそうです。"],["F","水が静かになったら、ぼくがそっとすくうよ。"],["M","ええ。わたしが水を押さえているあいだに、お願いします。"]],[["F","取れた！ 葉っぱの筋が、うっすら光ってる……。"],["M","根にぬくもりを戻したときと、同じ光です。この土地の力が、ここにも残っていたのですね。"],["F","ヌシ様につながるものかもしれないね。なくさないようにしよう。"],["M","……葉が、風もないのに揺れています。かすかな音もします。風のなかまなら、聞き取れるでしょうか。"]]),
   {id:'baseUp',skip:1,text:'基地を広げよう',check:()=>true,how:'',prog:()=>'',/* 敷地はなくなった。古いセーブのクエスト番号がずれないよう、のこして、とばす */
    talk:{who:POKO,when:()=>true,lines:[
     [POKO,'守り神さま、ここ、なんだかせまくなってきたね。'],
@@ -542,12 +537,8 @@ const QUESTS1=[
     [MINA,'風の力をためれば、来てくれるはずだねぇ。'],
     [POKO,'#think|風に乗って、ふわっと浮かべたら、たのしそう！ 守り神さまなら、なにか思いつくかな？'],['@idea']]},
    get story(){return KS([['K','フッ…風に呼ばれて来てみれば、ずいぶん素朴な村だね。'],[POKO,'風のせいれいが来た！ これで5つの属性がそろったね！'],['K','いいさ。ぼくの風で、この村をもっと華やかにしてあげよう。'],[MINA,'にぎやかになったねぇ。']])}},
-  {id:'windRoad',text:'風のなかまと村の道を10マスにしよう',how:'あぜ道を村に合計10マスしく',check:()=>S.floor.filter(f=>f==='path').length>=10,prog:()=>'あぜ道 '+Math.min(10,S.floor.filter(f=>f==='path').length)+'/10',
-   talk:{who:POKO,when:()=>true,get lines(){return KS([['K','村をひと回りしてきたよ。物を運ぶ子たちが、草の中で行きちがっていた。'],['M','水を運ぶ途中に、遠回りしている場所もあります。'],['K','帰る家と、みんなの働く場所。道でつなげておこう。次にかげが来ても、立ち止まらずに帰れるようにね。'],[POKO,'ぼくも、みんながどこを歩くか見てくる！']])}},
-   get story(){return KS([['K','#joy|いいね。風といっしょに、足音が村を巡っている。'],['M','水をくみに行く道も、わかりやすくなりました。'],[POKO,'はやく走れる子だけじゃなくて、みんなの道になったね！']])}},
-  {id:'windGather',text:'なかまみんなのベッドを家に用意しよう',how:'家の中に、村のせいれいの人数ぶんのベッドを置く',check:()=>houseBedCount()>=S.res.length,prog:()=>'家のベッド '+Math.min(S.res.length,houseBedCount())+'/'+S.res.length,
-   talk:{who:POKO,when:()=>true,learn:['bed'],get lines(){return KS([['K','外から村を見てきた。家のあかりは見えたけれど、まだ寝床のない子がいるようだね。'],[POKO,'また、だれかがひとりで夜をすごすのは、いやだな……。'],['M','みなさんが安心して休める場所を整えましょう。'],['K','ヌシ様をむかえる前に、ここにいるなかまが、ちゃんと帰れる村にしよう。']])}},
-   get story(){return KS([[POKO,'みんなで、おやすみって言えるね。'],['K','ああ。夜の風が冷たくても、帰る場所がある。'],['M','#joy|安心して暮らす気持ちも、この村の力になっているのですね。'],[POKO,'ヌシ様にも、ぼくたちの村、見てもらいたいな！']])}},
+  companionFieldQuest("windEcho","葉から聞こえる声の続きを探そう","光る葉を調べ、風のせいれいが聞き取った音を追う。新しく光る場所へ順に進む","wind",[["K","この葉、風を通すと、遠くの音を返してくるね。"],["F","ぼくには、ざわざわって聞こえるだけだよ。"],["K","途切れた音の先を、探してみよう。誰かが話しているとは限らない。根を通って、響いているのかもしれないね。"]],[["K","音は、掘り出した根に戻ってきた。土の中で、行き場をなくしていたんだね。"],["N","根がふさがって、響きも止まっていたのかなぁ。"],["M","洗った部分からは、水が少しずつしみこんでいます。"],["F","土と、火と、水と、風がつながったんだ！"]]),
+  companionFieldQuest("windVoices","根の先へ、仲間みんなの声を届けよう","光る根を調べ、土・火・水・風・木の順で仲間の声を響かせる。最後の返事まで聞く","wind",[["K","道はつながった。でも、向こうから返ってくる音は、まだ弱い。"],["N","ぼくが土をゆるめておくねぇ。"],["M","水も、根の先まで届けましょう。"],["H",{"A":"冷えないように、あたいもついてるよ。","B":"冷えないように、おれもついてるぜ。"}],["K","ぼくが、みんなの声を運ぼう。フタバ。最後は、きみが呼んでみて。"]],[["F","……聞こえた？ いま、こつんって！"],["N","うん。はじめに聞いた音より、ずっと深いところからだよぉ。"],["K","返事かどうかは、まだわからない。でも、きみの声は、根の先まで届いた。"],["M","この土地には、まだ力が残っています。探す手がかりが、ひとつ増えましたね。"],["F","#joy|みんな、ありがとう。ぼく、もうひとりで探さなくていいんだね。"]]),
   {id:'lv5',text:'村レベルを5にしよう',check:()=>S.lv>=5,how:'せいれいが満足してパワーがたまると、村レベルが上がる',prog:()=>'いま 村レベル'+S.lv,
    talk:{who:POKO,when:()=>true,lines:[
     [POKO,'オオカゲを追いはらえて、風のなかまも来たね！ みんな、ここで楽しく暮らせるといいな。'],
@@ -594,9 +585,20 @@ const QUESTS1=[
    story:null},
 ];
 
-const COMPANION_QUESTS=new Set(['fireSupplies','fireLights','waterFields','waterFlowers','windRoad','windGather']);
+const COMPANION_QUESTS=new Set(['earthListen','earthRoot','fireRoot','fireTrace','waterFilm','waterLeaf','windEcho','windVoices']);
+const COMPANION_REPLACEMENTS={fireSupplies:'fireRoot',fireLights:'fireTrace',waterFields:'waterFilm',waterFlowers:'waterLeaf',windRoad:'windEcho',windGather:'windVoices'};
+function companionQuestList(state){
+  if((state.world||0)!==0||state.free||state.flags?.fieldStoryV2)return QUESTS1;
+  if(!state.flags?.companionStory)return QUESTS1.filter(q=>!COMPANION_QUESTS.has(q.id));
+  const prior=Object.fromEntries(Object.entries(COMPANION_REPLACEMENTS).map(([a,b])=>[b,a]));
+  return QUESTS1.filter(q=>!['earthListen','earthRoot'].includes(q.id)).map(q=>prior[q.id]?{...q,id:prior[q.id]}:q);
+}
 function migrateCompanionStory(state){
-  if(state.flags.companionStory)return;
-  if(!state.free&&(state.world||0)===0){const old=QUESTS1.filter(q=>!COMPANION_QUESTS.has(q.id)),map=i=>i>=old.length?QUESTS1.length:QUESTS1.findIndex(q=>q.id===old[i]?.id);state.quest=map(state.quest||0);if(state.qStory!=null)state.qStory=map(state.qStory)}
-  state.flags.companionStory=1;
+  if(state.flags.fieldStoryV2)return;
+  if(!state.free&&(state.world||0)===0){
+    const old=companionQuestList(state),map=i=>i>=old.length?QUESTS1.length:QUESTS1.findIndex(q=>q.id===(COMPANION_REPLACEMENTS[old[i]?.id]||old[i]?.id));
+    state.quest=map(state.quest||0);if(state.qStory!=null)state.qStory=map(state.qStory);
+    if(state.qStory==null&&COMPANION_QUESTS.has(QUESTS1[state.quest]?.id))state.qTalked=false;
+  }
+  state.flags.companionStory=1;state.flags.fieldStoryV2=1;
 }
