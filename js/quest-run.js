@@ -201,15 +201,17 @@ function dreamScene(done){/* 草原のはじめ：むかしの、花畑。フタ
   let cx=vx,cy=vy,best=1e9;for(const [R,wy0,wy1,wx] of [[24,-4,3,5],[60,-4,3,5],[60,-2,3,3]]){for(let y=OFF+5;y<H-OFF-4;y++)for(let x=OFF+8;x<W-OFF-8;x++){const d=Math.hypot(x-vx,y-vy);if(d>R||d>=best)continue;const h=hiAt(y*W+x);let ok=true;for(let yy=wy0;yy<=wy1&&ok;yy++)for(let xx=-wx;xx<=wx;xx++){const k=(y+yy)*W+x+xx;if(!okC(k)||S.floor[k]||S.ground[k]||!flat(k,h)||!walk(k)||S.ref[k]!=null||VILL[k]){ok=false;break}}if(ok){best=d;cx=x+.5;cy=y+.5}}if(best<1e9)break}/* 壁・物・水・段差・いまの村のない、ひらけた所 */
   const ox=cx|0,oy=cy|0,h0=hiAt(oy*W+ox),prev=new Map(),put=(dx,dy,id)=>{const k=(oy+dy)*W+ox+dx;if(!okC(k)||S.floor[k]||S.ground[k]||hiAt(k)!==h0||S.ref[k]!=null||VILL[k])return;/* 壁・物・水・段差には、おかない */if(!prev.has(k))prev.set(k,S.obj[k]);S.obj[k]=id};
   const clear=(dx,dy)=>Math.abs(dx)<=2&&dy>=-1&&dy<=2;/* きょうだいの立つ所は、あけておく */
+  const put0=(k,id)=>{if(!prev.has(k))prev.set(k,S.obj[k]);S.obj[k]=id;if(BL[id]&&BL[id].hp!=null)S.hp[k]=BL[id].hp};
   const FL=['clover','clover','bellf','salvia','lily'];
   for(let dy=-3;dy<=3;dy++)for(let dx=-4;dx<=4;dx++){if(clear(dx,dy))continue;const r=Math.abs(dx*31+dy*17)%10;if(r<5)put(dx,dy,FL[r%5])}/* 花 */
+  if(WD===0)for(let d=3;d<=5;d++){const k=(CY-2)*W+CX+(-d);if(S.obj[k]==='')put0(k,'hwall')}/* 思い出の中では、いまの家のこわれた壁は、なおっている（家の下がわのかべのあな） */
   MEMRUN=true;const ss=Object.assign({},S.spotSeen||{});recount();dirty=true;const z0=cam.z;cam.z=1.5;centerOn(cx*TS,(cy-.8)*TS);
   const real=S.res.filter(r=>!r.hidden),keep=real.map(r=>[r,r.hidden]);real.forEach(r=>r.hidden=true);/* いまの子は、思い出のあいだ見せない */
   const mk=(name,dx,dy)=>{const g=mkRes({nid:-910},name,'wood',cx+dx,cy+dy);g.vr=mkVar(POKO,'wood');g.id=-910-EXTRA.length;return g};
   const F=mk(POKO,0,.4);EXTRA=[F,mk('？',-1.3,-.2),mk('？',1.3,-.2),mk('？',-1.6,1.2),mk('？',1.6,1.2)];EXTRA.forEach(g=>{g.face=g.x<cx?1:-1});F.face=1;
   setTimeout(()=>dialog([['？','#joy|フタバ、こっちこっち！ 花のかんむり、できたよ！'],[POKO,'#joy|わあ……！ ぼくに、くれるの？'],['？','#joy|お日さまの下であんだから、ぽかぽかだぞ。'],['？','しーっ。池の音、きこえる？ ……ヌシ様も、見てるよ。'],['？','#joy|あしたも、みんなで、ここであそぼうな！'],[POKO,'#joy|うんっ！ ずっと、ずーっとね！']],()=>{
     EXTRA.forEach((g,i)=>setTimeout(()=>{JUMP.set(g,performance.now());JOYU.set(g,performance.now()+1500)},i*120));
-    setTimeout(()=>{for(const [k,v] of prev)S.obj[k]=v||'';EXTRA=[];cam.z=z0;centerOn(vx*TS,vy*TS);keep.forEach(([r,h])=>r.hidden=h);recount();S.spotSeen=ss;for(let n=SPOT_POPS.length-1;n>=0;n--)if(SPOT_POPS[n].state===S)SPOT_POPS.splice(n,1);MEMRUN=false;dirty=true;done()},1400)},null,''),600);
+    setTimeout(()=>{for(const [k,v] of prev){S.obj[k]=v||'';if(!v)delete S.hp[k]}EXTRA=[];cam.z=z0;centerOn(vx*TS,vy*TS);keep.forEach(([r,h])=>r.hidden=h);recount();S.spotSeen=ss;for(let n=SPOT_POPS.length-1;n>=0;n--)if(SPOT_POPS[n].state===S)SPOT_POPS.splice(n,1);MEMRUN=false;dirty=true;done()},1400)},null,''),600);
   const tk=setInterval(()=>{if(!EXTRA.length){clearInterval(tk);return}const w=DLGA.who,L2=EXTRA.filter(q=>q.name===w);if(L2.length&&Math.random()<.5)JUMP.set(pick(L2),performance.now())},1300)}
 function memScene(done){/* むかしを思い出す：夜、影がせまり、フタバがふるえ、ほかの子が前に立つ。光がはじける */
   const f=S.res.find(r=>r.name===POKO)||S.res[0];if(!f)return done();centerOn(f.x*TS,f.y*TS);const hn=performance.now();for(const r of S.res)RHOLD.set(r,hn+7000);STRAINU.set(f,hn+5500);
