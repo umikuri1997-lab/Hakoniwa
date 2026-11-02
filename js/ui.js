@@ -443,7 +443,7 @@ function renderSheet(){
       body.appendChild(el('<p class="note">この土地は守られた。ここからは、クエストや目標で村をそだてよう。たっせいすると、パワーがもらえます。</p>'));
       if(WD!==FREE){const a=AFTERQ[S.aq||0],qs=el('<div class="sec"><h3>クエスト</h3><div class="rows"></div></div>');
         if(!a)qs.querySelector('.rows').appendChild(rowEl('✓ ぜんぶたっせい','カミサマからのおねがいは、ぜんぶかなえた'));
-        else if(S.aqOn===(S.aq||0))qs.querySelector('.rows').appendChild(rowEl('・'+a.t,aqProg(a)+'　ごほうび パワー+'+a.rw+'。'+a.how));
+        else if(S.aqOn===(S.aq||0))qs.querySelector('.rows').appendChild(rowEl('・'+aqTitle(a),aqProg(a)+'　ごほうび パワー+'+a.rw+'。'+a.how));
         else qs.querySelector('.rows').appendChild(rowEl('・つぎのクエスト','昼になると、カミサマからおねがいがある'));
         body.appendChild(qs);
         const d=S.daily,ds=el('<div class="sec"><h3>きょうの目標</h3><div class="rows"></div></div>');

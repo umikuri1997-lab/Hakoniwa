@@ -24,8 +24,12 @@ function clearConds(){if(WD===1){const tm=TOWER_MAT(),n=springDone(),fac=['bench
   ['みどりのマス'+GRASS_GOAL+'（いま'+GRASSN+'）',GRASSN>=GRASS_GOAL],
   ['せいれいパワーを'+pw+'集める（いま'+Math.floor(S.totalPt)+'）',S.totalPt>=pw]]}
 const clearReady=()=>clearConds().every(c=>c[1]);
-function finalCheck(){if(WD||!S||S.cleared||S.finalNight||S.finalOn||!S.enemyOn||S.flags.finalWon)return;/* 勝ったあとは、もう来ない */if(S.finalLost!=null&&dayNo()-S.finalLost<3)return;if(S.res.length<5)return;if(!S.res.some(r=>r.name===POKO))return;/* フタバがいるときだけ *//* ヨルノオオカゲに負けたら3日あける。せいれいが5人以上になってから */if(cnt('tower')>=1&&clearReady()){
-  if(S.finalDay==null){if(isNight())return;S.finalDay=dayNo()+3;S.finalHint=3;memo('🌑','夜の空気が、すこし重くなってきた');talkOnce('finalAnn'+S.finalDay,sevLines([['F','#think|……ねえ。なんだか、夜の風がつめたくなってきた気がする。'],['N','台座の力に、なにかが気づいたのかもしれないねぇ……。',1]]),0);return}/* 予告：すぐには来ない。3日後の夜に来る */
+const nextGreenGoal=()=>GRASSN<375?375:GRASSN<1000?1000:GRASSN<1750?1750:2500;
+const greenProgress=()=>GRASSN>=2500?'みどり 2500/2500':('みどり '+GRASSN+'/'+nextGreenGoal());
+const finalDefenseBegun=()=>!!(S.finalOn||S.finalNight||(S.rushN||0)>0||S.finalLost!=null||S.flags.finalWon);
+function acceptFinalDefense(){if(WD||finalDefenseBegun()||S.flags.finalReadyDay!=null)return;S.flags.finalReadyDay=dayNo()+3;S.finalDay=null;S.finalHint=null}
+function finalCheck(){if(WD||!S||S.cleared||S.finalNight||S.finalOn||!S.enemyOn||S.flags.finalWon)return;/* 勝ったあとは、もう来ない */if(S.finalLost!=null&&dayNo()-S.finalLost<3)return;if(S.res.length<5)return;if(!S.res.some(r=>r.name===POKO))return;/* フタバがいるときだけ *//* ヨルノオオカゲに負けたら3日あける。せいれいが5人以上になってから */if(!finalDefenseBegun()){if(!qAt('nushi')||!S.qTalked){S.finalDay=null;S.finalHint=null;return}acceptFinalDefense()}if(cnt('tower')>=1&&clearReady()){
+  if(S.finalDay==null){if(isNight())return;S.finalDay=Math.max(dayNo(),S.flags.finalReadyDay??dayNo()+3);S.finalHint=3;memo('🌑','夜の空気が、すこし重くなってきた');talkOnce('finalAnn'+S.finalDay,sevLines([['F','#think|……ねえ。なんだか、夜の風がつめたくなってきた気がする。'],['N','台座の力に、なにかが気づいたのかもしれないねぇ……。',1]]),0);return}/* 予告：すぐには来ない。3日後の夜に来る */
   const left=S.finalDay-dayNo();if(left>0){if(left<S.finalHint&&!isNight()){S.finalHint=left;toast(left===2?'遠くの森が、いつもより静かだ……':'夜になると、影がざわめいている気がする……','warn')}return}/* 日ごとに、少しずつにおわせる */
   S.finalNight=true;const rn=S.rushN||0;if(!rn)memo('🌑','台座の力に、影たちがひきよせられてきた');setTimeout(()=>toast(rn===0?'台座にあつまった力に、影たちがひきよせられている……。今夜、群れがやってくる':rn===1?'影の群れは、まだあきらめていない……。今夜も来る':'今夜は、もっと大きな影の気配がする……','warn'),900)}}/* 予告から3日後の夜から：影の群れの夜が2回、3回目の夜にヨルノオオカゲ（負けたあとは、ヨルノオオカゲの夜だけ） */
 

@@ -74,12 +74,12 @@ function startTalk(){if(!$('#dialog').hidden)return;
     if(sq.pre&&!S.flags['pre'+WD+'_'+S.qStory]){S.flags['pre'+WD+'_'+S.qStory]=true;questGives(sq,sq.pre);if(sheet==='food')renderSheet()}/* お礼の会話がはじまったら、すぐわたす（ベリーなど） */
     let once=0;return dialog(ideaDialogue(sq,sq.story,'clear'),()=>{if(once++||S.qStory!==QUESTS.indexOf(sq))return;/* 2回よばれても1回だけ */if(QUEST_CLEAR_WAIT&&QUEST_CLEAR_WAIT.quest===S.qStory)QUEST_CLEAR_WAIT=null;if(S.quest<=S.qStory)S.quest=S.qStory+1;/* 設置クエストは、お礼を聞き終えてから次の目標へ */S.qStory=null;const after=questGives(sq);inspireQuest(sq,'clear');{const rw=sq.reward??5;if(rw){S.pt+=rw;S.totalPt+=rw;toast('ごほうび：パワー+'+rw,'good')}}renderQuest();renderPalette();if(after)after();else checkQuest()},null)}
   const q=QUESTS[S.quest];if(!q||!q.talk)return;TALKW=null;QUESTCLEARW=null;S.flags.talked1=true;
-  let once=0;dialog(ideaDialogue(q,q.talk.lines),()=>{if(once++||QUESTS[S.quest]!==q)return;/* 2回よばれても1回だけ */S.qTalked=true;recount();
+  let once=0;dialog(ideaDialogue(q,q.talk.lines),()=>{if(once++||QUESTS[S.quest]!==q)return;/* 2回よばれても1回だけ */S.qTalked=true;if(!WD&&q.id==='nushi')acceptFinalDefense();recount();
     for(const id of q.talk.learn||[])S.recipes[id]=true;
     const after=q.talk.gives?questGives(q,q.talk.gives):null;inspireQuest(q);/* クエストに使う物は、会話のあとでわたす */
     sfx('quest');renderQuest();renderPalette();if(after)after();else checkQuest()},null)}
 function renderQuest(){const q=QUESTS[Math.min(S.quest,QUESTS.length-1)];let pr='',t=S.cleared?(WD===FREE?'村づくりは、つづく…':'世界クリア！'):q.text;
-  if(S.cleared&&WD!==FREE){const a=AFTERQ[S.aq||0],dd=S.daily,dn=dd?dd.k.filter(k=>dd.done[k]).length:0;if(a&&S.aqOn===(S.aq||0)){t=a.t;pr=aqProg(a)}else t=dd?'きょうの目標 '+dn+'/'+dd.k.length:'世界クリア！'}/* クリア後は、新しいクエストか、きょうの目標を出す */
+  if(S.cleared&&WD!==FREE){const a=AFTERQ[S.aq||0],dd=S.daily,dn=dd?dd.k.filter(k=>dd.done[k]).length:0;if(a&&S.aqOn===(S.aq||0)){t=aqTitle(a);pr=aqProg(a)}else t=dd?'きょうの目標 '+dn+'/'+dd.k.length:'世界クリア！'}/* クリア後は、新しいクエストか、きょうの目標を出す */
   if(!S.cleared){const ms=qMissing(q);
     if(ms.length)t=ms.join('と')+'がもどるまで、お話は進まない';
     else if(S.qStory!=null||q.talk&&!S.qTalked)t=TALKW?TALKW+'が話したそうにしている':S.qStory==null&&q.talk.wait||'いまは、村をそだてよう';/* なにをすればいいか書く */
@@ -97,7 +97,7 @@ const NUSHI_T=[
 let NUSHI_RUN=false;
 function gatherAt(TX,TY,then){/* せいれいみんなが、台座のまわりへ歩いて集まる（瞬間移動はしない）。そろうか、10秒たったら、つぎへ */
   const spot={};const go=()=>{const used=new Set(Object.values(spot));for(const r of S.res){if(r.hidden||r.act&&r.act.type==='nmeet')continue;const G=bfs(r.x|0,r.y|0);let b=spot[r.id]??-1;if(b<0){let bd=1e9;for(let k=0;k<W*H;k++){if(G.dist[k]<0||used.has(k)||!walk(k)||S.obj[k]||roomOf(k))continue;const ky=(k/W)|0,d=Math.hypot(k%W+.5-TX,ky+.5-TY);if(d<1.6||d>5)continue;const sc=d+(ky<TY+1?3:0)+G.dist[k]*.02;/* 家の外の、台座の前がわ（見えるところ）に */if(sc<bd){bd=sc;b=k}}}if(b<0)continue;spot[r.id]=b;used.add(b);if(r.cing){const R=RECIPES.find(x=>x.out===r.cing.rec);if(R)for(const k in R.need)addFood(k,R.need[k]);r.cing=null}/* 料理のとちゅうなら、材料は箱にもどす */endAct(r);startAct(r,G,'nmeet',b,{run:true})}};
-  const t0=performance.now();let last=0;const chk=()=>{const n=performance.now();if(n-last>1500){last=n;go()}if(S.res.every(r=>r.hidden||r.act&&r.act.type==='nmeet'&&r.act.stage==='do')||n-t0>10000)return then();setTimeout(chk,250)};setTimeout(chk,300)}
+  const t0=performance.now();let last=0;const chk=()=>{const n=performance.now();if(n-last>1500){last=n;go()}if(S.res.every(r=>r.hidden||r.act&&r.act.type==='nmeet'&&r.act.stage==='do')||n-t0>10000)return then();villageTimeout(chk,250)};villageTimeout(chk,300)}
 function nushiReturns(){if(NUSHI_RUN||S.cleared)return;NUSHI_RUN=true;S.flags.nushiDue=1;/* ヌシ様が帰ってくる場面。「クリア」にするのは、場面を最後まで見てから（途中でとじたら、はじめから） */
   checkQuest();renderQuest();const T=NUSHI_T[WD];
   const tw=S.obj.indexOf('tower'),TX=tw>=0?tw%W+1:CX+.5,TY=tw>=0?((tw/W)|0)+1:CY;
@@ -105,21 +105,21 @@ function nushiReturns(){if(NUSHI_RUN||S.cleared)return;NUSHI_RUN=true;S.flags.nu
   const openF=L=>{const o=L.filter(l=>l[0]===GOD||S.res.some(r=>r.name===l[0]));return o.length?o:[[GOD,'朝じゃな。…さあ、台座に力をそそぐんじゃ。']]};
   const runOpen=()=>dialog(openF(T.open),()=>gatherAt(TX,TY,()=>{
     // せいれいたちが、台座のまわりに集まってから、ひとりずつ力をそそぐ
-    S.res.forEach((r,i)=>setTimeout(()=>{r.face=TX>=r.x?1:-1;JUMP.set(r,performance.now());spawnFX(r.x-.5,r.y-.6,ELEM[r.elem].col);sfx('furn')},i*260));
+    S.res.forEach((r,i)=>villageTimeout(()=>{r.face=TX>=r.x?1:-1;JUMP.set(r,performance.now());spawnFX(r.x-.5,r.y-.6,ELEM[r.elem].col);sfx('furn')},i*260));
     const t0=S.res.length*260+500;
-    setTimeout(()=>{spawnFX(TX-.5,TY-.2,'#fff3a0');for(let k=0;k<3;k++)setTimeout(()=>fx.push({k:'ring',x:TX*TS,y:TY*TS,life:1.4,col:'#fff6c8'}),k*300);sfx('level');flashScreen()},t0);
+    villageTimeout(()=>{spawnFX(TX-.5,TY-.2,'#fff3a0');for(let k=0;k<3;k++)villageTimeout(()=>fx.push({k:'ring',x:TX*TS,y:TY*TS,life:1.4,col:'#fff6c8'}),k*300);sfx('level');flashScreen()},t0);
     // 光がひろがって、荒れた土地に花が咲いていく
-    setTimeout(()=>{let n=0;const L=[];for(let t=0;t<4000&&L.length<60;t++){const x=(Math.random()*W)|0,y=(Math.random()*H)|0,k=y*W+x;if(Math.max(Math.abs(x+.5-TX),Math.abs(y+.5-TY))>14||S.obj[k]||S.floor[k]||S.ground[k]===1||L.includes(k)||S.res.some(r=>(r.x|0)===x&&(r.y|0)===y))continue;L.push(k)}
-      L.sort((a,b)=>Math.hypot(a%W-TX,(a/W|0)-TY)-Math.hypot(b%W-TX,(b/W|0)-TY));L.forEach((k,i)=>setTimeout(()=>{if(S.obj[k])return;S.obj[k]='clover';burst(k,'plant');if(i%6===0)sfx('bush');if(i===L.length-1)recount();dirty=true},i*45))},t0+700);
-    setTimeout(()=>dialog(T.scene,()=>{
+    villageTimeout(()=>{let n=0;const L=[];for(let t=0;t<4000&&L.length<60;t++){const x=(Math.random()*W)|0,y=(Math.random()*H)|0,k=y*W+x;if(Math.max(Math.abs(x+.5-TX),Math.abs(y+.5-TY))>14||S.obj[k]||S.floor[k]||S.ground[k]===1||L.includes(k)||S.res.some(r=>(r.x|0)===x&&(r.y|0)===y))continue;L.push(k)}
+      L.sort((a,b)=>Math.hypot(a%W-TX,(a/W|0)-TY)-Math.hypot(b%W-TX,(b/W|0)-TY));L.forEach((k,i)=>villageTimeout(()=>{if(S.obj[k])return;S.obj[k]='clover';burst(k,'plant');if(i%6===0)sfx('bush');if(i===L.length-1)recount();dirty=true},i*45))},t0+700);
+    villageTimeout(()=>dialog(T.scene,()=>{
       // ヌシ様が台座の上にあらわれる
       S.nushi={x:TX,y:TY+.95,t:6,app:0,dir:1,face:1,path:[]};
       spawnFX(TX-.5,TY-.6,'#c8ffd0');sfx('arrive');flashScreen();
-      setTimeout(()=>dialog(T.nushi,()=>{
-        startClap();for(const r of S.res)r.bubble='👏';for(let k=0;k<8;k++)setTimeout(()=>{const r=pick(S.res);if(r)spawnFX(r.x-.5,r.y-.6,pick(['#ffd84a','#ff9cc0','#9ff0ff','#b8ff9a']))},k*350);setTimeout(endClap,3200);/* みんなで拍手 */
+      villageTimeout(()=>dialog(T.nushi,()=>{
+        startClap();for(const r of S.res)r.bubble='👏';for(let k=0;k<8;k++)villageTimeout(()=>{const r=pick(S.res);if(r)spawnFX(r.x-.5,r.y-.6,pick(['#ffd84a','#ff9cc0','#9ff0ff','#b8ff9a']))},k*350);villageTimeout(endClap,3200);/* みんなで拍手 */
         dialog((T.world&&sevLines(T.world)||[]).concat(T.reu&&sevLines(T.reu)||[],T.next&&sevLines(T.next)||[],T.after),()=>{
           S.cleared=true;delete S.flags.nushiDue;NUSHI_RUN=false;renderQuest();toast(T.toast,'good');
-          S.clearDay=dayNo();S.score=calcScore();setTimeout(()=>dialog(['#think|……この土地も、元に戻ったのう'],()=>openSheet('score'),T.last,GOD),1200);
+          S.clearDay=dayNo();S.score=calcScore();villageTimeout(()=>dialog(['#think|……この土地も、元に戻ったのう'],()=>openSheet('score'),T.last,GOD),1200);
         });
       },null,T.name||'ヌシ様'),3200);
     },null,''),t0+3600);
