@@ -126,7 +126,7 @@ const TAGMAP={stool:'リビング,キッチン',chair:'リビング,キッチン
 tub:'キッチン,お風呂',sink:'キッチン',oven:'キッチン',bathtub:'お風呂',hotstone:'お風呂,ガーデン',crate:'収納',stor:'収納',mbox:'収納',shelf1:'収納,リビング',shelf2:'収納,かざり',cabinet:'収納,リビング',wshelf:'収納,かざり',
 monstera:'かざり,リビング',wreath:'かざり,リビング',curtain1:'かざり,リビング,寝室',curtain2:'かざり,リビング,寝室',paint1:'かざり,リビング',paint2:'かざり,リビング',paint3:'かざり,リビング',
 candle:'あかり,リビング',lantern:'あかり,リビング',flamp:'あかり,リビング',lamp:'あかり,ガーデン',torch:'あかり,ガーデン',
-signpost:'ガーデン',hedge:'ガーデン',birdbath:'ガーデン,かざり',arch:'ガーデン,かざり',parasol:'ガーデン,遊び',noren:'ガーデン,かざり',bench:'ガーデン,リビング',jar:'ガーデン,キッチン',kamizo:'ガーデン',rockart:'ガーデン,かざり',chochin:'かざり',furin:'かざり',ema:'かざり',komainu:'かざり,ガーデン',kadomatsu:'かざり,ガーデン',vane:'ガーデン,かざり',basin:'ガーデン',
+signpost:'ガーデン',hedge:'ガーデン',joro:'ガーデン',birdbath:'ガーデン,かざり',arch:'ガーデン,かざり',parasol:'ガーデン,遊び',noren:'ガーデン,かざり',bench:'ガーデン,リビング',jar:'ガーデン,キッチン',kamizo:'ガーデン',rockart:'ガーデン,かざり',chochin:'かざり',furin:'かざり',ema:'かざり',komainu:'かざり,ガーデン',kadomatsu:'かざり,ガーデン',vane:'ガーデン,かざり',basin:'ガーデン',
 slide:'遊び,ガーデン',sandbox:'遊び,ガーデン',seesaw:'遊び,ガーデン',swing:'遊び,ガーデン',campfire:'遊び,あかり',fountain:'遊び,ガーデン',
 spike:'ワナ',puddle:'ワナ',sticky:'ワナ',firetrap:'ワナ',gust:'ワナ',watch:'防衛',tower:'防衛',lighthouse:'あかり,防衛',stele:'防衛',well:'水まわり,ガーデン',windmill:'作業,ガーデン',lumber:'作業',quarry:'作業',statue:'神殿'};/* ジャンルのタグ（複数あるものは、すべて書く） */
 function tagsOf(id){const b=BL[id];if(!b)return[];if(TAGMAP[id])return TAGMAP[id].split(',');const t=[];if(CAT_TAG[b.cat])t.push(CAT_TAG[b.cat]);for(const[n,ids]of CRAFT_TABS)if(ids.includes(id)){const g=TAB_TAG[n]||n;if(!t.includes(g)&&!(g==='家具'&&t.length))t.push(g)}if(b.play&&!t.includes('遊び'))t.push('遊び');if(!t.length&&b.kind==='furn')t.push('家具');return t}/* 説明に出す、ジャンルのタグ */
