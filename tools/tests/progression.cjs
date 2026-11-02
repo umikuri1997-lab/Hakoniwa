@@ -12,3 +12,13 @@ run(`S={flags:{},pendTalk:{}};talkOnce('stale',[['test','same village, old sessi
 // Isolate finalCheck from rendering and animation to verify the actual gate and dates.
 run(`qAt=()=>false;cnt=()=>1;clearConds=()=>[["ready",true]];memo=()=>{};toast=()=>{};talkOnce=()=>{};sevLines=x=>x;S={flags:{},t:1440*9+720,res:Array.from({length:5},(_,i)=>({name:i===0?POKO:'r'+i})),enemyOn:true,finalDay:11};WD=0;finalCheck()`);assert.equal(run('S.finalDay'),null);run(`qAt=()=>true;S.qTalked=true;acceptFinalDefense();finalCheck()`);assert.equal(run('S.flags.finalReadyDay'),13);assert.equal(run('S.finalDay'),13);run('S.t+=1440*2;finalCheck()');assert(!run('S.finalNight'));run('S.t+=1440;finalCheck()');assert(run('S.finalNight'));console.log('Final defense: no pre-dialogue start; first wave due three days after acceptance');
 run(`S.finalNight=false;S.finalDay=null;S.rushN=1;S.qTalked=false;qAt=()=>false;finalCheck()`);assert.equal(run('S.finalDay'),13);console.log('Final defense: already-started campaign continues');
+
+// 村を切りかえると拍手も終わる。古い予約で、新しい村の拍手を止めない。
+const drawing=fs.readFileSync(root+'js/draw-spirits.js','utf8').split('\n');
+vm.runInContext(drawing.find(line=>line.startsWith('let CLAPT='))+'\n'+drawing.find(line=>line.startsWith('function endClap(')),c);
+run(`let NUSHI_RUN=true,DLGGAP=0,DLGCUR='',DLGTAP=0,DLG_KEEP=true,NEWQ=[],NEWRES=null;const DLGQ=[],HOLD=new Set(),RLVQ=[];function resetQuestPrompts(){}function voiceStop(){}document.querySelector=()=>({hidden:false,replaceChildren(){}});document.querySelectorAll=()=>[]`);
+const dialogue=fs.readFileSync(root+'js/dialog.js','utf8').split('\n');
+vm.runInContext(dialogue.find(line=>line.startsWith('function villageTimeout('))+'\n'+dialogue.find(line=>line.startsWith('function resetVillageTransient(')),c);
+run(`S={res:[{bubble:'👏'},{bubble:'🌱'}]};startClap();villageTimeout(endClap,100);resetVillageTransient()`);
+assert.equal(run('CLAPON'),false);assert.equal(run('CLAPT'),-1e9);assert.equal(run('S.res[0].bubble'),'');assert.equal(run('S.res[1].bubble'),'🌱');
+run(`S={res:[]};startClap()`);timers.pop()();assert.equal(run('CLAPON'),true);run('endClap()');console.log('Village clap: resets on switch; stale end does not interrupt the next village');
