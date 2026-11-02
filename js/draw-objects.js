@@ -149,6 +149,7 @@ function drawObj(c,id,x,y,i,g,now){
   if(id==='andon'&&!ICON&&!c._chip&&window.CHIPS&&CHIPS['andon#on']&&darkness()>.15){if(drawChip(c,CHIPS['andon#on'],id,x,y,now,i))return}/* 行燈：暗くなったら、あかりのついた絵 */
   if(id==='onsen'&&!ICON&&!c._chip&&window.CHIPS&&CHIPS['onsen#1']){const ch=Math.floor(performance.now()/900)%2?CHIPS['onsen#1']:CHIPS.onsen;if(drawChip(c,ch,id,x,y,now,i))return}/* 露天ぶろ：湯気がゆらぐ */
   if(id==='bell'&&!ICON&&!c._chip&&window.CHIPS&&CHIPS['bell#1']){const t=performance.now()-BELLRING,ch=t<4500&&Math.floor(t/260)%2?CHIPS['bell#1']:CHIPS.bell;if(drawChip(c,ch,id,x,y,now,i))return}/* 村の鐘：朝に鳴るあいだ、ゆれる */
+  if(id==='jar'&&!ICON&&i!=null&&!c._chip&&window.CHIPS&&CHIPS['jar~e']&&!(((S.dyn[i]||{}).w||0)>0)){if(drawChip(c,CHIPS['jar~e'],id,x,y,now,i))return}/* みずがめ：水がなくなったら、空の絵 */
   if(!c._chip&&!c._win&&!SEATS.includes(id)&&!PCH.has(id)&&!DOORCH.has(id)&&id!=='farm'){const ch=chipOf(id,i);if(ch&&drawChip(c,ch,id,x,y,now,i))return}/* ドット絵があれば、それを使う（いすは、つりざおをかいてから下で） */
   if(BL[id]&&BL[id].cs&&!ICON&&!c._cs){const k=BL[id].cs;c.save();c.translate(x+16,y+20);c.scale(k,k);c.translate(-x-16,-y-20);c._cs=1;drawObj(c,id,x,y,i,g,now);c._cs=0;c.restore();return}/* ラグは、絵だけ大きく（判定はそのまま） */
   if(!ICON&&i!=null&&S&&PLANTS.includes(id)&&isBud(i)){c.fillStyle='rgba(0,0,0,.18)';c.beginPath();c.ellipse(x+16,y+27,7,2.5,0,0,7);c.fill();c.fillStyle='#6fbf5a';c.fillRect(x+15,y+17,2,10);c.beginPath();c.ellipse(x+11,y+18,5,2.6,-.5,0,7);c.ellipse(x+21,y+18,5,2.6,.5,0,7);c.fill();return}/* 芽 */
