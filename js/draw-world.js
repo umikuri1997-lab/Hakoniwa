@@ -370,6 +370,7 @@ function render(now){RFN++;
     add(y+.001,-1,null,()=>{for(const R of vs)cliffRow(y,R,true)},-1)}}/* うしろが低い所だけ、上の面の上はしをもう1回描いて、うしろの物の足もとをかくす *//* 段差：行ごとに、その行の物より先（ひとつ上の行の物より後） */
   D.sort((a,b)=>a.k-b.k||a.t-b.t);
   for(const it of D)it.draw();
+  if(pending&&pending.kind==='one'&&TERRA.has(pending.id)){/* けずる・もる：えらんだマスの枠は、段差の絵（上の面）より手前に。かくれて見えないのをふせぐ */const px=pending.x*TS,py=pending.y*TS-hiAt(pending.y*W+pending.x)*LIFT;ctx.fillStyle=pending.ok?'rgba(255,220,90,.35)':'rgba(255,90,90,.4)';ctx.fillRect(px,py,TS,TS);ctx.strokeStyle=pending.ok?'rgba(255,240,140,1)':'rgba(255,110,110,1)';ctx.lineWidth=3;ctx.setLineDash([6,4]);ctx.strokeRect(px+1.5,py+1.5,TS-3,TS-3);ctx.setLineDash([])}
   // 置く前のプレビューは、家の壁や屋根より手前に描く
   if(pending&&pending.kind==='one'){const px=pending.x*TS,py=pending.y*TS-hiAt(pending.y*W+pending.x)*LIFT,TP=pending.id==='statue'?[[-1,0,'obox'],[0,0,'statue'],[1,0,'board'],[0,1,'altar']]:[[0,0,pending.id]];ctx.save();ctx.globalAlpha=.6+Math.sin(now/250)*.15;const rch=ROTS[pending.id]&&PLROTS[pending.id]&&chipOf(pending.id,null,PLROTS[pending.id]);if(rch)drawChip(ctx,rch,pending.id,px,py,now);/* 向きをかえられる物は、えらんだ向きの絵だけを見せる（元の向きの絵は出さない） */else for(const[dx,dy,id2]of TP)drawObj(ctx,id2,px+dx*TS,py+dy*TS,pending.y*W+pending.x+dx+dy*W,100,now);ctx.restore()}
   if(pending&&pending.kind==='one'&&FRONTS.has(pending.id)){/* すわる家具は、置くときに正面（すわった子が向く方）を矢印で出す */
