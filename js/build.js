@@ -234,7 +234,7 @@ const SWAPG=[['fence','logfence','bamboofence','wall'],['hwall','logwall','plast
 const swapT=(id,k)=>BL[id].floor?S.floor[k]:S.obj[k];
 function askSwap(id,x,y){const gi=SWAPG.findIndex(g=>g.includes(id)),G=SWAPG[gi],T=SWAPTHRU[gi],j0=y*W+x;
   if(!G.includes(swapT(id,j0)))return toast(SWAPNO[gi]);
-  const seen=new Set([j0]),q=[j0],cells=[];while(q.length){const j=q.pop();const tj=swapT(id,j);if(tj!==id&&G.includes(tj))cells.push(j);const x0=j%W;for(const k of [x0>0?j-1:-1,x0<W-1?j+1:-1,j-W,j+W]){if(k<0||k>=W*H||seen.has(k))continue;const o=swapT(id,k);if(G.includes(o)||T.has(o)){seen.add(k);q.push(k)}}}
+  const seen=new Set([j0]),q=[j0],cells=[];while(q.length){const j=q.pop();const tj=swapT(id,j);if(tj!==id&&G.includes(tj))cells.push(j);const x0=j%W;for(const k of [x0>0?j-1:-1,x0<W-1?j+1:-1,j-W,j+W]){if(k<0||k>=W*H||seen.has(k))continue;const o=swapT(id,k);if(G.includes(o)||T.has(o)&&!T.has(tj)){seen.add(k);q.push(k)}}}/* ドア・門はとおりぬけるが、ドアどうしはつながらない */
   if(!cells.length)return toast('もう'+BL[id].name+'です');
   if(inv(id)<cells.length)return toast(BL[id].name+'が足りません（'+cells.length+'こいる）','warn');
   pending={kind:'swap',id,cells};$('#confirmTxt').textContent='つながっている'+cells.length+'マスを'+BL[id].name+'にかえる';$('#cYes').disabled=false;($('#cRot').hidden=true,$('#confirm').hidden=false)}
