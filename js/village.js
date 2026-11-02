@@ -100,7 +100,9 @@ const SPOTS=[
   {k:'ishikiri',n:'いしきり小屋',main:o=>o==='quarry',need:[[o=>o==='crate',1]],how:'採石場と、木箱',eff:'まわり3マスの岩をほる速さ+10%'},
   {k:'takeyabu',n:'竹やぶの小道',main:o=>o==='takeakari',need:[[o=>o==='bamboo',3]],how:'竹あかりと、竹3本',eff:'まわり3マスの竹を切る速さ+10%'},
   {k:'shosai',n:'しょさい',room:1,main:o=>o==='achair',need:[[o=>o==='shelf1',1],[o=>o==='flamp',1]],how:'家の中に、ひじかけいすと、本棚と、フロアランプ',eff:'その家の住み心地+5%'},
-  {k:'living',n:'リビング',room:1,main:o=>o==='sofa1',need:[[o=>o==='ltable',1],[o=>o==='monstera',1]],how:'家の中に、ひとりがけソファと、ローテーブルと、かんようしょくぶつ',eff:'その家の住み心地+5%'}];
+  {k:'living',n:'リビング',room:1,main:o=>o==='sofa1',need:[[o=>o==='ltable',1],[o=>o==='monstera',1]],how:'家の中に、ひとりがけソファと、ローテーブルと、かんようしょくぶつ',eff:'その家の住み心地+5%'},
+  {k:'dining',n:'ダイニング',room:1,main:o=>o==='table',need:[[o=>o==='chair'||o==='stool',2]],how:'家の中に、食卓と、いすかスツール2つ',eff:'その家の住み心地+5%'},
+  {k:'daidokoro',n:'だいどころ',room:1,main:o=>o==='oven',need:[[o=>o==='tub',1],[o=>o==='taru',1]],how:'家の中に、かまどと、水おけと、たる',eff:'その家の住み心地+5%'}];
 const spotNear=(j,k)=>{if(j==null||j<0)return false;const x0=j%W,y0=(j/W)|0;for(let y=Math.max(0,y0-3);y<=Math.min(H-1,y0+3);y++)for(let x=Math.max(0,x0-3);x<=Math.min(W-1,x0+3);x++){const t=SPOTM.get(y*W+x);if(t&&t.has(k))return true}return false};/* そのマスのまわり3マスに、スポットのもとの物（伐採場・井戸・道しるべなど）があるか */
 const spotN=(j,...ks)=>ks.reduce((n,k)=>n+(spotHas(j,k)?1:0),0);/* おなじスポットは重ならない（いくつできても1こ分）。ちがうスポットは、たし算で重なる */
 const spotHas=(j,k)=>{const t=SPOTJ.get(anc(j));return !!t&&t.has(k)};
