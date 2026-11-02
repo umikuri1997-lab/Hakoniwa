@@ -68,7 +68,7 @@ const canSkip=()=>!SKIP&&isNight()&&S.enemyOn&&(!S.res.length||S.nightHad&&!S.en
 function updHUD(){
   if(S){const was=S.res4Since,tell=S.bossWarn!=null&&!S.cleared&&!S.bossKills;/* オオカゲを追いはらったあとは、言わない *//* オオカゲの来る時期を、せいれいが減ったとき・もどったときに伝える */
     const hasFire=S.res.some(q=>q.elem==='fire');/* 火の子が1人もいないときも、オオカゲは来ない */
-    if(S.res.length<4||!hasFire){S.res4Since=null;if(was!=null&&tell&&S.enemyOn&&$('#dialog').hidden)dialog(S.res.length<4?[[GOD,'なかまが減ってしもうたのう…。'],[GOD,'もう少しなかまが増えて、村がおちつくまでは、オオカゲも来ぬはずじゃ。それまでに、なかまを集めて備えるのじゃぞ。']]:[[GOD,'火のせいれいが、いなくなってしもうたのう…。'],[GOD,'オオカゲとたたかえる火のせいれいがもどるまでは、オオカゲも来ぬはずじゃ。火のせいれいをむかえて、備えるのじゃぞ。']])}/* 火の子だけがいなくなったときは、なかまが減ったとは言わない */
+    if(S.res.length<4||!hasFire){S.res4Since=null;if(was!=null&&tell&&S.enemyOn&&$('#dialog').hidden)dialog(S.res.length<4?[[GOD,'なかまが減ってしもうたのう…。'],[GOD,'もう少しなかまが増えて、村がおちつくまでは、オオカゲも来んはずじゃ。それまでに、なかまを集めて備えるのじゃぞ。']]:[[GOD,'火のせいれいが、いなくなってしもうたのう…。'],[GOD,'オオカゲとたたかえる火のせいれいがもどるまでは、オオカゲも来んはずじゃ。火のせいれいをむかえて、備えるのじゃぞ。']])}/* 火の子だけがいなくなったときは、なかまが減ったとは言わない */
     else if(was==null){S.res4Since=dayNo();if(tell&&S.enemyOn&&S.lastRes4!=null&&$('#dialog').hidden)dialog([[GOD,'なかまが、また増えてきたのう。'],[GOD,'村がおちついてきたころ、オオカゲがまた来るかもしれん。みんなを守る備えを、しっかり整えておくんじゃ。']])}
     S.lastRes4=S.res.length>=4&&hasFire?1:S.lastRes4}
   {const sb=$('#skipBtn'),v=canSkip();if(sb.hidden===v)sb.hidden=!v}
