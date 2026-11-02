@@ -102,6 +102,7 @@ function villageTimeout(fn,delay){const owner=S,session=VILLAGE_SESSION;return s
 function resetVillageTransient(){VILLAGE_SESSION++;endClap();NUSHI_RUN=false;resetQuestPrompts();DLGQ.length=0;DLGGAP=0;DLGCUR='';DLGTAP=-1e9;DLGN.clear();voiceStop();$('#dialog').hidden=true;$('#dlgBtns').replaceChildren();DLG_KEEP=false;NEWQ.length=0;NEWRES=null;HOLD.clear();RLVQ.length=0;LVQ=null;for(const id of['#lvup','#rlv'])$(id).hidden=true;document.querySelectorAll('.askyn').forEach(e=>e.remove());if(S)for(const r of S.res)QUEST_VISITS.delete(r)}/* もちこさない待ち状態だけを消す。途中の会話は pendTalk に残す */
 function newGame(w){w=w||0;if(sheet!=null)closeSheet();recSync();if(w!==FREE)grecForget(w);/* はじめから：このステージでおぼえたレシピはわすれる（会話でまた思いつく） */resetVillageTransient();setWorld(w);try{KV.removeItem(SAVE_KEYS[w])}catch(e){}resv.clear();BAN.clear();S=newState(w);LIVE[w]=S;syncTools(S);dirty=true;recount();kwrSync();recSync();weedMorning(true);/* はじめから雑草100本・枝15本がある */undoStack=[];renderQuest();applyFeats();setMode('look');$('#title').hidden=true;startPrologue()}
 function startPrologue(){
+  {const ov=document.getElementById('deptLd');if(ov)ov.remove()}/* 出発の画面を、まっくらなプロローグにつなぐ */
   showUI(false);started=false;let i=0;const pro=$('#pro');pro.style.transition='none';pro.hidden=false;pro.style.opacity='1';void pro.offsetWidth;pro.style.transition='';/* フェードせずに、すぐまっくらにする（前のデータの画面が一瞬見えないように） */
   cam.z=minZ();centerOn(CX*TS,CY*TS);
   const show=()=>{const p=$('#proText');const PR=PROS[WD];const tx=lineLook(PR[i][1]).text;/* 「#wave|」などの印は出さない */$('#proWho').textContent=PR[i][0];p.textContent=tx;p.style.animation='none';void p.offsetWidth;p.style.animation='';voiceStart(PR[i][0],tx.length/30+.1)};
@@ -109,11 +110,10 @@ function startPrologue(){
   pro.onclick=e=>{if(e.target.id==='proSkip')return;i++;if(i<PROS[WD].length)show();else end()};
   $('#proSkip').onclick=end;show();
 }
-function recipeTalk(){const L=[[GOD,'そうそう。思いついた形は、その土地のせいれいに伝えるものなんじゃ。'],[GOD,'ここの子らは、べつのヌシ様の子じゃから、前の土地で伝えた形は知らん。思いついた形を、また描いて教えてやっておくれ。']];if(KWR.some(id=>(S.recipes||{})[id]))L.push([GOD,'#think|じゃが、コワイノが落としていった形は、夜の形じゃ。夜は、どの土地の上にもひとつきり。じゃから、ここの夜の子らにも、もう伝わっておるぞい。']);return L}/* 新しい土地では、レシピをおぼえなおす。そのわけ（コワイノのレシピは、夜の形なので、どの土地でもおぼえたまま） */
 function arrive(){
   stageMusic();
   /* はじめての村へ降りるカメラズームは残す。タイトルの背景描画とは別の演出。 */
   camAnim={fz:cam.z,tz:homeZ(),fx:cam.x+VW/cam.z/2,fy:cam.y+VH/cam.z/2,tx:CX*TS,ty:(CY-3)*TS,t:0,dur:2.2,done:()=>{
     S.godShown=true;burst(Math.floor(godY())*W+Math.floor(godX()),'furn');sfx('poof');
-    setTimeout(()=>{started=true;showUI(true);dialog((WD===FREE?INTROFL():INTROS[WD]).concat(WD===1?recipeTalk():[]),()=>{S.introSeen=true;save()})/* さいごまで見てから「見た」に */},500)}};
+    setTimeout(()=>{started=true;showUI(true);dialog((WD===FREE?INTROFL():INTROS[WD]),()=>{S.introSeen=true;save()})/* さいごまで見てから「見た」に */},500)}};
 }
