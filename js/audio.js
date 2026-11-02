@@ -16,6 +16,13 @@ const SONGS={
   night:{bpm:66,lead:'sine',chords:[[45,[57,60,64]],[41,[53,57,60]],[48,[55,60,64]],[43,[55,59,62]]],
     mel:[[69,4],[72,2],[76,2],[74,6],[0,2],[72,2],[74,2],[76,4],[74,4],[71,4],
          [69,2],[72,2],[76,2],[81,2],[79,4],[76,4],[74,4],[71,4],[69,6],[0,2]]},
+  /* 火山のふもと：短調で、すこしひくく、ゆったり（昼）。夜はさらにゆっくり */
+  dayV:{bpm:80,lead:'triangle',chords:[[45,[57,60,64]],[41,[53,57,60]],[48,[55,60,64]],[43,[55,59,62]]],
+    mel:[[69,4],[72,2],[76,2],[74,4],[72,2],[69,2],[67,4],[69,2],[72,2],[74,4],[72,4],
+         [76,4],[74,2],[72,2],[69,4],[72,2],[74,2],[72,2],[69,2],[67,2],[64,2],[69,6],[0,2]]},
+  nightV:{bpm:58,lead:'sine',chords:[[38,[53,57,62]],[34,[50,53,58]],[41,[53,57,60]],[36,[52,55,60]]],
+    mel:[[62,4],[65,2],[69,2],[67,6],[0,2],[65,4],[62,4],[64,4],[60,4],
+         [62,2],[65,2],[69,2],[74,2],[72,4],[69,4],[67,4],[65,4],[62,6],[0,2]]},
 };
 for(const k in SONGS){const g=SONGS[k];g.at=new Array(64).fill(null);let p=0;for(const[m,l]of g.mel){if(m)g.at[p%64]=[m,l];p+=l}}
 const SAMPLES={"bell":["assets/g/cb9ff20140.mp3"],"pat":["assets/g/e2b825e14e.mp3"],"voice":["assets/g/fc5ad15d4b.mp3"],"paper":["assets/g/b7b70de2d3.mp3"],"night":["assets/g/b8fa05062a.mp3"],"chop":["assets/g/1d86cabda1.mp3","assets/g/676cf2fa6d.mp3","assets/g/a8dd704564.mp3"],"dig":["assets/g/56f3308409.mp3"],"splash":["assets/g/05adadaa1c.mp3"],"cast":["assets/g/93da972520.mp3"],"nail":["assets/g/b121a3b6b8.mp3"],"bush":["assets/g/3c69ed59fd.mp3"],"bubble":["assets/g/3dae9cab95.mp3"],"catch":["assets/g/269701117d.mp3"],"box":["assets/g/8c8eeb8b61.mp3"],"fire":["assets/g/e8ad50e6e8.mp3"],"boil":["assets/g/55a7541497.mp3"],"rain":["assets/g/7178ec736f.mp3"],"birds":["assets/g/c0eec144c6.mp3"]};const SBUF={};
@@ -60,8 +67,9 @@ function tone(m,t,dur,type,vol,out,f2){
 }
 function noise(t,dur,vol,out,hp){const s=AC.createBufferSource(),g=AC.createGain(),fl=AC.createBiquadFilter();s.buffer=noiseBuf;fl.type='highpass';fl.frequency.value=hp||6000;
   g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(.0001,t+dur);s.connect(fl);fl.connect(g);g.connect(out);s.start(t);s.stop(t+dur+.02)}
+const stageSong=()=>(isDark()?'night':'day')+(typeof WD!=='undefined'&&WD===1?'V':'');/* ステージごとに曲をかえる（火山は dayV・nightV） */
 function stageMusic(){
-  curSong=wantSong=isDark()?'night':'day';step=0;bgmSw=0;
+  curSong=wantSong=stageSong();step=0;bgmSw=0;
   if(!AC)return;
   bgmG.disconnect();bgmG=AC.createGain();bgmG.gain.value=gainB();bgmG.connect(bgmF);
   bgmF.gain.cancelScheduledValues(AC.currentTime);bgmF.gain.setValueAtTime(1,AC.currentTime);
@@ -74,7 +82,7 @@ function sched(){
   {const now=AC.currentTime;if(wantSong!==curSong&&!bgmSw){bgmSw=now+2.4;bgmF.gain.cancelScheduledValues(now);bgmF.gain.setValueAtTime(bgmF.gain.value,now);bgmF.gain.linearRampToValueAtTime(0,now+2.2)}
    else if(bgmSw&&now>=bgmSw){bgmSw=0;curSong=wantSong;step=0;nextT=now+.05;bgmF.gain.cancelScheduledValues(now);bgmF.gain.setValueAtTime(0,now);bgmF.gain.linearRampToValueAtTime(1,now+3)}}
   while(nextT<AC.currentTime+.3){
-    const g=SONGS[curSong],e=60/g.bpm/2,t=nextT,bar=(step/8)|0,ch=g.chords[bar%4],night=curSong==='night',opening=curSong==='opening';
+    const g=SONGS[curSong],e=60/g.bpm/2,t=nextT,bar=(step/8)|0,ch=g.chords[bar%4],night=curSong==='night'||curSong==='nightV',opening=curSong==='opening';
     const n=g.at[step];if(n)tone(n[0],t,n[1]*e*.95,g.lead,opening?.08:night?.09:.075,bgmG);/* マップ画面の曲（opening）：サインだけだとスマホのスピーカーで聞こえないので、三角波でほかの曲と同じくらいの大きさに */
     if(step%8===0)tone(ch[0],t,e*(opening?6:night?7.5:3.6),'triangle',opening?.11:.13,bgmG);
     if(!night&&step%8===4)tone(ch[0]+7,t,e*3.4,'triangle',.1,bgmG);

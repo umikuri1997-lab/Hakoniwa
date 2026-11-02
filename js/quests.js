@@ -295,7 +295,7 @@ function depart(go){$('#maps').hidden=true;continueGame(LIVE[0]);const f=S.res.f
     ['N','ここは、ぼくたちにまかせてねぇ。',1],['H',{A:'安心して行ってきな。夜はあたいらが守るよ。',B:'安心して行ってこい。夜はおれたちが守るぜ。'},1],['M','次の村のせいれいたちも、元気になりますように。',1],['K','フッ……最初は、なんとも素朴な村だと思ったけれど。',1],['K','今では、世界でいちばん心地よい風が吹く場所かもしれないね。きみの旅路に、いい風が吹きますように。',1],['U','この草原は、わたしたちが見守ろう。']]);
   const A2=sevLines([['F','#think|……いっちゃったね。',0,'nfG'],['N','#worry|……さみしいねぇ。',1],['F','#think|……うん。すっごく。'],['F','#think|……でも、ぼく、ここをきれいにして待ってるんだ。'],['F','#surprise|帰ってきたら、びっくりさせちゃうんだから……！']]);
   const hold=v=>{const n=performance.now();for(const r of S.res)RHOLD.set(r,v?n+300000:0)};
-  const finish=()=>{GODOUT=false;hold(false);try{KV.setItem('hakoniwa-dep1','1')}catch(e){}S.flags.ret1=1;S.godVisit=gv;save();setTimeout(go,1600)};
+  const finish=()=>{GODOUT=false;hold(false);try{KV.setItem('hakoniwa-dep1','1')}catch(e){}S.flags.ret1=1;S.godVisit=gv;save();const ov=document.createElement('div');ov.id='deptLd';ov.style.cssText='position:fixed;inset:0;z-index:70;display:flex;align-items:center;justify-content:center;background:#1e1810;color:#fff3d6;font-size:16px;opacity:0;transition:opacity .8s';ov.textContent='火山のふもとの村へ…';document.body.appendChild(ov);requestAnimationFrame(()=>requestAnimationFrame(()=>{ov.style.opacity='1'}));setTimeout(()=>requestAnimationFrame(()=>setTimeout(go,50)),900)};/* 画面を暗くして「…へ」と出してから、つぎの土地を作る（作るあいだ、止まって見えないように） */
   const leave=()=>{/* 守り神とカミサマが、光になって空へのぼっていく：白く光って、光の柱が立ち、カミサマのすがたが消える。みんなは空を見あげる */
     dlgCue('flash');const gx=godX()*TS,gy=godY()*TS;sfx('level');for(let k=0;k<3;k++){fx.push({k:'pillar',x:gx,y:gy,vx:0,vy:0,life:2.2,col:'#fff6c8'});}
     for(let k=0;k<4;k++)setTimeout(()=>fx.push({k:'ring',x:gx,y:gy-40,life:1.4,col:'#fff6c8'}),k*350);
