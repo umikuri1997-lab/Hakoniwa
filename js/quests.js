@@ -290,10 +290,22 @@ function drawLeaf(r,now){const px=r.x*TS,py=r.y*TS;ctx.save();ctx.globalAlpha=.8
 function departOK(){if(LIVE[0]&&LIVE[0].summary&&LIVE[0].cleared)loadStage(0);let d=false;try{d=KV.getItem('hakoniwa-dep1')==='1'}catch(e){}return !d&&LIVE[0]&&LIVE[0].cleared&&LIVE[0].res.some(r=>r.name===POKO)}
 function depart(go){$('#maps').hidden=true;continueGame(LIVE[0]);const f=S.res.find(r=>r.name===POKO);if(f)centerOn(f.x*TS,f.y*TS);
   const gv=S.godVisit;S.godVisit=true;/* 見送りには、カミサマも村に来ている */
-  const A=sevLines([['G','さあ、次は火山のふもとの村じゃ。そろそろ行くぞい。'],['F','#think|……もう、行っちゃうんだね。'],['F','#think|……ほんとはね、行かないでって、言いたい。'],['F','#scared|あの夜、みんながぼくをかくしてくれたから、ぼくは生きてる。だから、だれかがいなくなるのが、こわくて……。'],['U','フタバ。守り神は、いなくなるのではない。ほかの土地を助けに行くのだ。'],['F','#think|……うん。あの夜のぼくみたいな子が、待ってるかもしれないんだ。'],['F','ぼく、もうかくれてるだけじゃないよ。みんなのことは、ぼくが守るから！'],['F','#think|……いってらっしゃい！ ちゃんと、ここで待ってるから！ でも、たまには帰ってきてね。ぜったいだよ？'],['G','#nod|うむ……。鼻の奥がつーんとしたわい。行ってくるぞい。'],
-    ['N','ここは、ぼくたちにまかせてねぇ。',1],['H',{A:'安心して行ってきな。夜はあたいらが守るよ。',B:'安心して行ってこい。夜はおれたちが守るぜ。'},1],['M','次の村のせいれいたちも、元気になりますように。',1],['K','フッ……最初は、なんとも素朴な村だと思ったけれど。',1],['K','今では、世界でいちばん心地よい風が吹く場所かもしれないね。きみの旅路に、いい風が吹きますように。',1],['U','この草原は、わたしたちが見守ろう。'],
-    ['F','#think|……いっちゃったね。'],['N','#worry|……さみしいねぇ。',1],['F','#think|……うん。すっごく。'],['F','#think|……でも、ぼく、ここをきれいにして待ってるんだ。'],['F','#surprise|帰ってきたら、びっくりさせちゃうんだから……！']]);
-  setTimeout(()=>dialog(A,()=>{try{KV.setItem('hakoniwa-dep1','1')}catch(e){}S.flags.ret1=1;S.godVisit=gv;save();setTimeout(go,1600)},'出発する'),700)}
+  const tw=S.obj.indexOf('tower'),TX=tw>=0?tw%W+1:CX+.5,TY=tw>=0?((tw/W)|0)+1:CY;
+  const A1=sevLines([['G','さあ、次は火山のふもとの村じゃ。そろそろ行くぞい。'],['F','#think|……もう、行っちゃうんだね。'],['F','#think|……ほんとはね、行かないでって、言いたい。'],['F','#scared|あの夜、みんながぼくをかくしてくれたから、ぼくは生きてる。だから、だれかがいなくなるのが、こわくて……。'],['U','フタバ。守り神は、いなくなるのではない。ほかの土地を助けに行くのだ。'],['F','#think|……うん。あの夜のぼくみたいな子が、待ってるかもしれないんだ。'],['F','ぼく、もうかくれてるだけじゃないよ。みんなのことは、ぼくが守るから！'],['F','#think|……いってらっしゃい！ ちゃんと、ここで待ってるから！ でも、たまには帰ってきてね。ぜったいだよ？'],['G','#nod|うむ……。鼻の奥がつーんとしたわい。行ってくるぞい。'],
+    ['N','ここは、ぼくたちにまかせてねぇ。',1],['H',{A:'安心して行ってきな。夜はあたいらが守るよ。',B:'安心して行ってこい。夜はおれたちが守るぜ。'},1],['M','次の村のせいれいたちも、元気になりますように。',1],['K','フッ……最初は、なんとも素朴な村だと思ったけれど。',1],['K','今では、世界でいちばん心地よい風が吹く場所かもしれないね。きみの旅路に、いい風が吹きますように。',1],['U','この草原は、わたしたちが見守ろう。']]);
+  const A2=sevLines([['F','#think|……いっちゃったね。',0,'nfG'],['N','#worry|……さみしいねぇ。',1],['F','#think|……うん。すっごく。'],['F','#think|……でも、ぼく、ここをきれいにして待ってるんだ。'],['F','#surprise|帰ってきたら、びっくりさせちゃうんだから……！']]);
+  const hold=v=>{const n=performance.now();for(const r of S.res)RHOLD.set(r,v?n+300000:0)};
+  const finish=()=>{GODOUT=false;hold(false);try{KV.setItem('hakoniwa-dep1','1')}catch(e){}S.flags.ret1=1;S.godVisit=gv;save();setTimeout(go,1600)};
+  const leave=()=>{/* 守り神とカミサマが、光になって空へのぼっていく：白く光って、光の柱が立ち、カミサマのすがたが消える。みんなは空を見あげる */
+    dlgCue('flash');const gx=godX()*TS,gy=godY()*TS;sfx('level');for(let k=0;k<3;k++){fx.push({k:'pillar',x:gx,y:gy,vx:0,vy:0,life:2.2,col:'#fff6c8'});}
+    for(let k=0;k<4;k++)setTimeout(()=>fx.push({k:'ring',x:gx,y:gy-40,life:1.4,col:'#fff6c8'}),k*350);
+    for(let n=0;n<28;n++)fx.push({k:'p',x:gx,y:gy-20,vx:(n%7-3)*14,vy:-90-(n%5)*30,life:2.2,col:n%2?'#fff3a0':'#c8ffd0',r:3});/* 光のつぶが、空へのぼる */
+    camAnim={fz:cam.z,tz:Math.max(1.2,cam.z*.8),fx:cam.x+VW/cam.z/2,fy:cam.y+VH/cam.z/2,tx:gx,ty:gy-70,t:0,dur:1.6};
+    for(const r of S.res)if(!r.hidden){r.face=r.x<godX()?1:-1;JUMP.set(r,performance.now()+Math.random()*300)}
+    setTimeout(()=>{GODOUT=true;S.godVisit=false;sfx('arrive')},1100);/* 光の柱のなかで、カミサマが消える */
+    setTimeout(()=>{dialog(A2,finish,'出発する');setTimeout(dlgNext,60)},3400)};
+  const nu=S.nushi;if(nu){nu.x=TX+1.7;nu.y=TY+.95;nu.mv=0;nu.path=[];nu.dir=1;nu.face=-1}/* ヌシ様も、台座のそばで見送る */
+  gatherAt(TX,TY,()=>{hold(true);setTimeout(()=>dialog(A1,leave,'つぎへ'),400)})}
 /* ふしぎな種：せいれいにあげると、能力のどれかが上がる（パワーの強化とは別） */
 const UPK=[['atk','攻撃力'],['pow','作業スピード'],['spd','移動速度'],['sta','スタミナ'],['cap','持てる数']];
 function giveSeed(r){if((S.mseed||0)<1)return;const T=r.sst||(r.sst={}),L=UPK.filter(([k])=>(T[k]||0)<6&&(k!=='atk'||r.elem==='fire'));/* 攻撃力は火の子だけ */if(!L.length)return toast(r.name+'は、これ以上ふしぎな種で強くならない');
