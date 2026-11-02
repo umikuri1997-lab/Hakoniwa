@@ -122,10 +122,11 @@ function startAct(r,G,type,stand,o){
 }
 function noPass(r){if(r.act){if(r.act.key)BAN.set(r.act.key,S.t+60);if(r.act.stand>=0){r.routeAvoid=r.routeAvoid||{};r.routeAvoid[r.act.stand]=S.t+60}}r.visitRetryAt=S.t+10;if((r.npT||0)>S.t)return;r.npT=S.t+90;addFloat(r.x,r.y-1.6,'通れないよ…','#ffd0c0')}
 const workOn=j=>j!=null&&!!S&&S.res.some(r=>r.act&&r.act.stage==='do'&&r.act.obj===j&&WORKP[r.act.type]&&WORKP[r.act.type](r,r.act)!=null);/* せいれいが作業中のマス：そのマスの育ちぐあいのバーは出さない（足もとの作業のバーと二重にしない） */
+const waterDur=(r,a)=>(r.elem==='water'?8:16)/(NEARJORO.has(a.obj)?1.1:1);/* 水やりの時間：ブリキのじょうろのそば+10% */
 const storeDur=(r,sp)=>{const j=(r.y|0)*W+(r.x|0),nb=f=>[-1,1,-W,W].some(o=>f(j+o));return STORET/((nb(k=>spotHas(k,sp))?1.1:1)+(nb(k=>NEARCART.has(k))?.2:0)+(nb(k=>NEARTOOL.has(k))?.2:0))};/* 箱にしまう時間：食料庫・ものおき+10%、にぐるま+20%、どうぐたて+20% */
 const WORKP={store:(r,a)=>a.t/storeDur(r,'shokuryo'),smat:(r,a)=>a.t/storeDur(r,'monooki'),/* 作業の進み具合（0〜1）。足もとの進捗バーに出す（建てる・直す・料理は、その場所のバーだけ出す） */
 chop:(r,a)=>a.camp?a.t/20:null,mine:(r,a)=>a.camp?a.t/20:null,/* 木・岩は、その木・岩の上の「のこり」のバーだけ（足もとのバーと二重にしない） */
-tend:(r,a)=>a.t/20,water:(r,a)=>a.t/(r.elem==='water'?8:16),sow:(r,a)=>a.t/10,harvest:(r,a)=>a.t/12,gather:(r,a)=>a.t/15,offer:(r,a)=>a.t/10,pickseed:(r,a)=>a.t/8,fish:(r,a)=>a.t/50,
+tend:(r,a)=>a.t/20,water:(r,a)=>a.t/waterDur(r,a),sow:(r,a)=>a.t/10,harvest:(r,a)=>a.t/12,gather:(r,a)=>a.t/15,offer:(r,a)=>a.t/10,pickseed:(r,a)=>a.t/8,fish:(r,a)=>a.t/50,
 till:(r,a)=>{const d=S.dyn[a.obj];return Math.max(a.t/45,d&&d.p!=null?d.p/30:0)},
 plant:(r,a)=>{const d=S.dyn[a.obj];return Math.max(a.t/40,d&&d.p!=null?d.p/20:0)}};
 const RESUME=new Set(['chop','mine','repair','water','tend','sow','harvest']);/* とちゅうでやめても、つぎは続きからする作業（建てる・家具づくり・耕す・植える・料理は、もとから続きから） */
@@ -173,7 +174,7 @@ const ACT={
   tag:{tick(r,a,dt){const ang=a.ph+a.t*.35,nx=a.cx+Math.cos(ang)*1.1,ny=a.cy+Math.sin(ang)*.8;r.face=nx>=r.x?1:-1;if(walk((ny|0)*W+(nx|0))){r.x=nx;r.y=ny}/* 通れないマスには入らない */r.fun=Math.min(100,r.fun+.6*dt)},
     done:(r,a)=>a.t>=30,end(r,a){addPt(.9,r,2)}},
   tend:{start(r,a){const d=S.dyn[a.obj];if(!d||S.obj[a.obj]!=='farm')return false;r.bubble='🌱';sfxAt('pour',r.x,r.y)},tick(r,a,dt){work(r,dt);a.h=(a.h||0)+dt;if(a.h>=8){a.h=0;sfxAt('pour',r.x,r.y)}},done:(r,a)=>a.t>=20,end(r,a){const d=S.dyn[a.obj];if(d&&S.obj[a.obj]==='farm'){d.wet=100}addSpiritXp(1,r)}},
-  water:{start(r,a){if(S.obj[a.obj]!=='farm')return false;r.bubble='💧';sfxAt('pour',r.x,r.y)},tick(r,a,dt){work(r,dt);a.h=(a.h||0)+dt;if(a.h>=8){a.h=0;sfxAt('pour',r.x,r.y)}},/* 水をあげている間もちょろちょろ */done:(r,a)=>a.t>=(r.elem==='water'?8:16),end(r,a){const d=S.dyn[a.obj];if(d&&S.obj[a.obj]==='farm'){d.wet=100}addSpiritXp(1,r)}},
+  water:{start(r,a){if(S.obj[a.obj]!=='farm')return false;r.bubble='💧';sfxAt('pour',r.x,r.y)},tick(r,a,dt){work(r,dt);a.h=(a.h||0)+dt;if(a.h>=8){a.h=0;sfxAt('pour',r.x,r.y)}},/* 水をあげている間もちょろちょろ */done:(r,a)=>a.t>=waterDur(r,a),end(r,a){const d=S.dyn[a.obj];if(d&&S.obj[a.obj]==='farm'){d.wet=100}addSpiritXp(1,r)}},
   till:{start(r,a){if(S.obj[a.obj]!=='plot')return false;r.bubble='⛏'},tick(r,a,dt){const d=S.dyn[a.obj];if(d)d.p+=dt*fast(r,'earth');work(r,dt)},
     done:(r,a)=>a.t>=45||S.obj[a.obj]!=='plot'||S.dyn[a.obj].p>=30,end(r,a){const d=S.dyn[a.obj];if(S.obj[a.obj]==='plot'&&d&&d.p>=30){S.obj[a.obj]='farm';S.dyn[a.obj]={g:0,wet:0,crop:null,sown:false}/* 耕しただけでは、たねは決まらない */;noteQuestPlacement('farm',a.obj);recount();burst(a.obj,'plant','till');addSpiritXp(2,r);checkQuest()}}},
   sow:{start(r,a){const d=S.dyn[a.obj];if(S.obj[a.obj]!=='farm'||!d||d.sown!==false||cseed(cropK(d))<1&&!d.paid)return false;r.bubble='🌰';sfxAt('bush',r.x,r.y)},tick(r,a,dt){work(r,dt);if(spotNear(a.obj,'hatake'))a.t+=dt*.1},/* はたけの水場：+10% */
@@ -327,7 +328,7 @@ function goMeal(r,G){
 function fishLoot(r,sb){/* つり：家具1%・空き缶30%・枝30%（つりスポットのぶんへらす）・のこりは魚（false をかえす） */const q=Math.random();sfxAt('catch',r.x,r.y);
   if(q<.01){const oo=FURN.filter(id=>BL[id]&&BL[id].offerOnly&&(!WIND_STAGE_TOYS.has(id)||WD===4));if(oo.length){const id=pick(oo);giveItem(id,1);r.bubble='✨';addFloat(r.x,r.y-1.8,'レア！');queueItemGift({[id]:1},'つりあげた！');return true}}
   if(q>=.61-(sb||0))return false;
-  const k=q<Math.min(.31,.61-(sb||0))?'can':'eda';r.bubble='chip:drop:'+k;/* 落ちているときと同じ絵 */if(roomN(r)>0)addMat(r,k,1);else dropAt(r.x,r.y,'mat:'+k,1);return true}
+  const k=q<Math.min(.31,.61-(sb||0))?'can':'eda';if(k==='can'&&!S.free&&!(S.guardianIdeas||{}).joro){(S.recipes||(S.recipes={})).joro=true;(S.guardianIdeas||(S.guardianIdeas={})).joro=true;sfx('level');queueItemGift({joro:1},'あたらしいレシピ！',true)}/* はじめて空き缶をつったら、ブリキのじょうろを思いつく */r.bubble='chip:drop:'+k;/* 落ちているときと同じ絵 */if(roomN(r)>0)addMat(r,k,1);else dropAt(r.x,r.y,'mat:'+k,1);return true}
 const AREAW=27,AREAN=4,areaOf=k=>((((k/W)|0)/AREAW)|0)*AREAN+((k%W)/AREAW|0);/* マップを4×4の16エリア（1エリア27×27マス）にわける */const STORET=18;/* 箱にしまう時間 */const WEEDDAY=3,WEEDMAX=20,FUNDAY=3,FUNMAX=20,KINODAY=1,KINOMAX=5,EDADAY=5,EDAMAX=10;/* 1エリアの雑草・きのこの最大 */
 function weedMorning(first){/* 毎朝、16エリアごとに：雑草3本（20本まで）・ふんばり草3本（よみがえった土地、20本まで）・きのこ1本（木のそば、5本まで）・枝5本（落とし物、20本まで） */
   const st=WD===1?1:0,ok=k=>S.ground[k]===0&&!S.obj[k]&&!S.floor[k]&&!RFC.has(k)&&!RUGC.has(k),NA=AREAN*AREAN;const WN=new Array(NA).fill(0),FN=new Array(NA).fill(0),KN=new Array(NA).fill(0),RV=Array.from({length:NA},()=>[]),KT=Array.from({length:NA},()=>[]);
