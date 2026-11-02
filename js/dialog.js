@@ -106,7 +106,7 @@ function startPrologue(){
   showUI(false);started=false;let i=0;const pro=$('#pro');pro.style.transition='none';pro.hidden=false;pro.style.opacity='1';void pro.offsetWidth;pro.style.transition='';/* フェードせずに、すぐまっくらにする（前のデータの画面が一瞬見えないように） */
   cam.z=minZ();centerOn(CX*TS,CY*TS);
   const show=()=>{const p=$('#proText');const PR=PROS[WD];const tx=lineLook(PR[i][1]).text;/* 「#wave|」などの印は出さない */$('#proWho').textContent=PR[i][0];p.textContent=tx;p.style.animation='none';void p.offsetWidth;p.style.animation='';voiceStart(PR[i][0],tx.length/30+.1)};
-  const end=()=>{voiceStop();pro.onclick=null;try{render(performance.now())}catch(e){}/* うすくなる前に、新しい村をかいておく（前のデータの画面が一瞬見えないように） */pro.style.opacity='0';setTimeout(()=>{pro.hidden=true;arrive()},800)};
+  const end=()=>{voiceStop();pro.onclick=null;const S0=S,go=()=>{if(S!==S0)return;if(!stageReady()){setTimeout(go,100);return}/* マップを作りおわるまで、まっくらなまま待つ（プロローグのあいだに作りはじめている。ムービーの途中で読みこみが出ないように） */try{render(performance.now())}catch(e){}/* うすくなる前に、新しい村をかいておく（前のデータの画面が一瞬見えないように） */pro.style.opacity='0';setTimeout(()=>{pro.hidden=true;arrive()},800)};go()};
   pro.onclick=e=>{if(e.target.id==='proSkip')return;i++;if(i<PROS[WD].length)show();else end()};
   $('#proSkip').onclick=end;show();
 }
