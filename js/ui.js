@@ -342,7 +342,7 @@ function renderSheet(){
   }else if(sheet==='farm'){const j=sheetArg,d=S.dyn[j];if(!d||S.obj[j]!=='farm'){closeSheet();return}
     const cr=CROPS[cropK(d)];T.textContent=cr?'畑：'+cr.name:'畑';
     body.appendChild(el('<p class="story">'+(!cr?'まだ、なにも植えていない':d.sown===false?(d.paid||cseed(cropK(d))>0?'種まきを待っている':'たねがなくて植えられない'):d.g>=100?'収穫できる':'収穫まであと'+Math.ceil((100-d.g)/(100/cr.days)-.01)+'日・きょうの水やり'+(d.wet>0?'ずみ':'まだ'))+'</p>'));
-    if(cr){const n=cr.yield+(NEARMILL.has(j)?1:0)+(NEARFLOWER.has(j)?1:0)+(S.today==='hosaku'?1:0);const yr=el('<div class="sec"><div class="stats"><div class="stat"><span>収穫できる数</span><b></b></div></div></div>');yr.querySelector('b').textContent=n+'こ';body.appendChild(yr)}/* いま収穫すると、いくつとれるか */
+    if(cr){const n=cr.yield+(NEARMILL.has(j)?1:0)+(S.today==='hosaku'?1:0);const yr=el('<div class="sec"><div class="stats"><div class="stat"><span>収穫できる数</span><b></b></div></div></div>');yr.querySelector('b').textContent=n+'こ';body.appendChild(yr)}/* いま収穫すると、いくつとれるか */
     if(!cr){const b2=el('<button class="btn pri">おそなえ箱からたねをえらぶ</button>');b2.onclick=()=>{sfx('tap');openSheet('inv',Object.keys(CROPS).filter(cropOn).map(k=>'seed:'+k).find(id=>inv(id)>0)||'seed:imo')};body.appendChild(b2)}
   }else if(sheet==='food'){T.textContent='食料箱';
     body.appendChild(el('<p class="story">'+S.food+'/'+foodCap()+'</p>'));

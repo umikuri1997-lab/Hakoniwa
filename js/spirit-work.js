@@ -13,8 +13,7 @@ function tryJob(r,G,k){
       if(w<0)continue;const p=[];for(let k=w;k>=0&&k!==q;k=prev[k])p.push(k);startAct(r,G,'plant',sh,{key:'o'+q,obj:q,wade:p});return true}
     return false}/* ハスは岸から植える */
   case'build':{const st=q=>{const a=anc(q);return S.obj[a]==='site'&&free('o'+a,2)};j=nearest(G,j=>adjOf(j,st)>=0);if(j>=0){const q=anc(adjOf(j,st));startAct(r,G,'build',j,{key:'o'+q,obj:q});return true}return false}
-  case'water':j=nearest(G,j=>S.obj[j]==='farm'&&S.dyn[j]&&S.dyn[j].sown!==false&&S.dyn[j].wet<=0&&S.dyn[j].g<100&&!NEARWELL.has(j)&&free('w'+j,1));if(j>=0){startAct(r,G,'water',j,{key:'w'+j,obj:j});return true}return false;
-  case'tend':j=nearest(G,j=>S.obj[j]==='farm'&&S.dyn[j]&&S.dyn[j].sown!==false&&S.dyn[j].g<100&&S.dyn[j].wet<=0&&!NEARWELL.has(j)&&free('w'+j,1));if(j>=0){startAct(r,G,'tend',j,{key:'w'+j,obj:j});return true}return false;
+  case'water':case'tend':j=nearest(G,j=>S.obj[j]==='farm'&&S.dyn[j]&&S.dyn[j].sown!==false&&S.dyn[j].wet<=0&&S.dyn[j].g<100&&free('w'+j,1));if(j<0)return false;if((r.wcan||0)>0){startAct(r,G,k,j,{key:'w'+j,obj:j});return true}{const s=nearest(G,q=>waterSrc(q)>=0,80);if(s>=0){startAct(r,G,'draw',s,{src:waterSrc(s)});return true}}return false;/* 水やりは、池・川・井戸・みずがめで水をくんでから（持てる数1ごとに、畑3マス） */
   case'craft':{const o=S.orders.find(q=>(!q.worker||!S.res.some(x=>x.id===q.worker))&&craftOK(r,q));if(!o)return false;o.worker=r.id;const sp=craftSpot(G);startAct(r,G,'craft',sp>=0?sp:nearTile(G,BOARD),sp>=0?{order:o.id,key:'cs'+sp}:{order:o.id});return true}
   case'chop':case'mine':{if(k==='mine'&&WD===1&&!isNight()){const bq=q=>S.obj[q]==='boulder'&&free('o'+q,1);const bj=nearest(G,j=>adjOf(j,bq)>=0,90);if(bj>=0){const q=adjOf(bj,bq);startAct(r,G,'mine',bj,{key:'o'+q,obj:q});return true}}/* 大岩を先にくだく */
     if(isNight()||!(matCap()>0)||roomN(r)<1||matTot()+matN(r)>=matCap())return false;/* 素材箱に1つでも空きがあれば集めにいく（ぴったり満杯までためられる） */const camp=k==='chop'?'lumber':'quarry',nat=k==='chop'?(WD===1?((S.mat.bamboo||0)<(S.mat.wood||0)?[['bamboo'],['ntree','deadtree']]:[['ntree','deadtree'],['bamboo']]):[['ntree','deadtree']]):[['rock']];/* 火山：木材と竹の、すくないほうを先に切る */
@@ -25,7 +24,7 @@ function tryJob(r,G,k){
     const ov=q=>S.obj[q]==='oven'&&ok(q)&&!ashed(q)&&free('o'+q,1)&&!S.res.some(x=>x.cing&&x.cing.ov===q);j=nearest(G,j=>adjOf(j,ov)>=0,80);if(j<0)return false;const q=adjOf(j,ov),R=RECIPES.find(x=>x.out===S.ovenSet[q]);
     const sj=nearestVia(G,bfs(j%W,(j/W)|0),j=>storeAdj(j,'food')>=0,80);if(sj<0)return false;/* 材料は、かまどまでの道のりがいちばん短くなる食料箱からとる */
     startAct(r,G,'cgrab',sj,{rec:R.out,ov:q});return true}
-  case'harvest':{if(!(foodCap()>0&&S.food<foodCap()))return false;const fRoom=foodCap()-S.food-carryN(r);j=nearest(G,j=>{if(S.obj[j]!=='farm'||!S.dyn[j]||S.dyn[j].g<100||!free('o'+j,1)||roomN(r)<1)return false;const c=CROPS[cropK(S.dyn[j])];return fRoom>=(c?c.yield:2)+(NEARMILL.has(j)?1:0)+(NEARFLOWER.has(j)?1:0)+(trt(r,'shukaku')?1:0)+(S.today==='hosaku'?1:0)+(r.elem==='wood'?1:0)});/* 食料箱に入りきらないときは収穫しない（持っている物を捨てない）。木の子は+1ぶんも見る */if(j>=0){startAct(r,G,'harvest',j,{key:'o'+j,obj:j,food:1});return true}
+  case'harvest':{if(!(foodCap()>0&&S.food<foodCap()))return false;const fRoom=foodCap()-S.food-carryN(r);j=nearest(G,j=>{if(S.obj[j]!=='farm'||!S.dyn[j]||S.dyn[j].g<100||!free('o'+j,1)||roomN(r)<1)return false;const c=CROPS[cropK(S.dyn[j])];return fRoom>=(c?c.yield:2)+(NEARMILL.has(j)?1:0)+(trt(r,'shukaku')?1:0)+(S.today==='hosaku'?1:0)+(r.elem==='wood'?1:0)});/* 食料箱に入りきらないときは収穫しない（持っている物を捨てない）。木の子は+1ぶんも見る */if(j>=0){startAct(r,G,'harvest',j,{key:'o'+j,obj:j,food:1});return true}
     const fr=ripeAdj(['fruit']);j=roomN(r)>=1&&fRoom>=2?nearest(G,j=>fr(j)>=0):-1;if(j>=0){const q=fr(j);startAct(r,G,'harvest',j,{key:'o'+q,obj:q,food:1});return true}return false}
   case'offer':{if(OBOX<0||isNight()||r.fun<99||r.offDay===dayNo())return false;/* おそなえは1人1日1回まで *//* たのしさが満タンになったら、おそなえする */j=nearTile(G,OBOX);if(j>=0){startAct(r,G,'offer',j);return true}return false}
   case'gather':{if(S.food>=(r.elem==='earth'?25:12)||isNight()||roomN(r)<1)return false;const bb=ripeAdj(['berry','takenoko']);j=nearest(G,j=>bb(j)>=0);if(j>=0){const q=bb(j);startAct(r,G,'gather',j,{key:'o'+q,obj:q});return true}return false}
@@ -62,7 +61,7 @@ function hasWork(r){
   if(canJob(r,'build')&&S.obj.some((o,j)=>o==='site'&&free('o'+j,2)))return true;
   if(S.orders.some(q=>(!q.worker||!S.res.some(x=>x.id===q.worker))&&craftOK(r,q)))return true;
   const room=foodCap()>0&&S.food<foodCap();
-  for(const k in S.dyn){const j=+k,o=S.obj[j],d=S.dyn[k];if(o==='farm'&&d){if(room&&d.g>=100&&free('o'+j,1))return true;if(d.sown===false&&(d.paid||cseed(cropK(d))>0)&&free('o'+j,1))return true;if(d.sown!==false&&d.wet<=0&&d.g<100&&!NEARWELL.has(j)&&free('w'+j,1)&&(canJob(r,'water')||canJob(r,'tend')))return true}
+  for(const k in S.dyn){const j=+k,o=S.obj[j],d=S.dyn[k];if(o==='farm'&&d){if(room&&d.g>=100&&free('o'+j,1))return true;if(d.sown===false&&(d.paid||cseed(cropK(d))>0)&&free('o'+j,1))return true;if(d.sown!==false&&d.wet<=0&&d.g<100&&free('w'+j,1)&&(canJob(r,'water')||canJob(r,'tend')))return true}
     if((o==='plot'&&canJob(r,'till')||o==='sprout'&&canJob(r,'plant'))&&free('o'+j,1))return true}
   return false}
 /* おつげ：守り神さまからの、きょういちにちの指示 */
@@ -137,8 +136,7 @@ function updRes(r,dt){rescueStuck(r);if((RHOLD.get(r)||0)>performance.now())retu
   const sleeping=r.act&&r.act.type==='sleep'&&r.act.stage==='do';
   const mv=r.act&&(r.act.stage==='walk'||r.act.type==='tag');const lazy=!r.act||r.act.type==='idle'||r.act.type==='wander'||r.act.type==='stay';const wk=r.act&&r.act.stage==='do'&&WORKT.has(r.act.type);/* おなかは、作業するとへる。つかれているほどへりやすい */r.hunger-=(sleeping?.003:wk?.3:mv?.04:.02)*(lazy?.5:1)*(r.energy<10?2:r.energy<30?1.5:1)*dt*(trt(r,'shoshoku')?.8:1)*(r.full>S.t?.6:1);
   if(!sleeping)r.fun-=.07*dt*(trt(r,'genki')?.6:1);
-  if(!sleeping&&NEARFLOWER.has((r.y|0)*W+(r.x|0)))r.fun=Math.min(100,r.fun+.05*dt);
-  {const ev=ENVG?Math.min(12,ENVG[(r.y|0)*W+(r.x|0)]):0;if(ev>0&&!sleeping){r.fun=Math.min(100,r.fun+ev*.006*dt);if(r.act&&r.act.stage==='do'&&(r.act.type==='idle'||r.act.type==='rest'))r.energy=Math.min(100,r.energy+ev*.006*recK(r)*dt)}}/* まわりの環境がいいと、休けい・たのしさが上がる */
+  {const jj=(r.y|0)*W+(r.x|0),ev=ENVG?Math.min(12,ENVG[jj]+(ENVE[r.elem]?ENVE[r.elem][jj]:0)):0;if(ev>0&&!sleeping){r.fun=Math.min(100,r.fun+ev*.006*dt);if(r.act&&r.act.stage==='do'&&(r.act.type==='idle'||r.act.type==='rest'))r.energy=Math.min(100,r.energy+ev*.006*recK(r)*dt)}}/* まわりの環境がいいと、休けい・たのしさが上がる */
   // 家の中で寝ている子は、壁が壊れて「コワイノ」が入ってこない限り起きない
   if(sleeping&&r.elem==='fire'&&r.energy>30&&S.enemies.some(e=>e.spawned&&Math.hypot(e.x-r.x,e.y-r.y)<8)){const out=insideSet(),me=(r.y|0)*W+(r.x|0);
     if(out[me]||S.enemies.some(e=>e.spawned&&!out[(e.y|0)*W+(e.x|0)])){endAct(r);r.bubble='🔥'}}
