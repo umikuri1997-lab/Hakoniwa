@@ -71,6 +71,7 @@ function onTap(sx,sy){DLGTAP=performance.now();/* タップで始める会話は
     {const j=anc(ty*W+tx);if(!isNight()&&godFix(S.obj[j]?j:ty*W+tx))return}/* こわれかけ・こわれた物は、守り神がパワーで直せる */
     {const hi=HOUSES.findIndex(h=>h.set.has(ty*W+tx));if(hi>=0){const hk=hKey(HOUSES[hi]);if(!OPENH.has(hk)){OPENH.add(hk);dirty=true;return}/* 1回目のタップで屋根を外す */const o0=S.obj[anc(ty*W+tx)];if(HOME_WALLS.has(o0)||HOME_DOORS.has(o0)){OPENH.delete(hk);dirty=true;return}/* 壁をタップすると屋根がもどる */if(!o0)return openSheet('house',hi)}}// 中が見えているときは、家具やせいれいもタップできる
     const j=anc(ty*W+tx),o=S.obj[j];
+    if(WD===0&&S.flags.kgMark!=null&&!S.bossKills&&Math.abs(tx-S.flags.kgMark%W)<=1&&Math.abs(ty-((S.flags.kgMark/W)|0))<=1){if(!S.flags.kgLook){S.flags.kgLook=true;checkQuest()}return toast('大きなかげのあと：草がしおれて、つめたい')}/* 大きなかげのあとを調べる */
     if(WD===1&&S.st2){const g=ty*W+tx;
       if(S.ground[g]===1&&!o){const k=sprMap()[g];if(k){if(!S.flags.sprLook){S.flags.sprLook=true;checkQuest()}return toast(SPN[k]+'：'+(springOn(k)?'あたたかい湯がわいている':S.st2.sp[k]?'装置がこわれて、湯が冷めている':'冷たい水…熱がとどいていない'))}}
       if(o==='volcano'){if(!S.flags.volLook){S.flags.volLook=true;checkQuest()}return toast('火山：ふもとから、熱の道が村へのびている')}
