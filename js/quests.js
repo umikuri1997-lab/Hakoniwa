@@ -133,7 +133,7 @@ function checkSub(){const D=S.subDone||(S.subDone={}),Sn=S.subSeen||(S.subSeen={
   for(const q of SL){if(D[q.k])continue;if(St[q.k]===1&&!subOfferReady(q))delete St[q.k];if(Sn[q.k]&&!St[q.k])St[q.k]=2;
     if(St[q.k]===3&&FLOWER_QUESTS.has(q.k)&&!q.ok()){St[q.k]=2;delete (S.subArrived||{})[q.k];delete SUB_CLEAR_WAIT[q.k]}
     if(St[q.k]===3&&!isNight()&&!(S.subArrived||{})[q.k]&&!SUB_CLEAR_WAIT[q.k]){const visit=queueQuestVisit(q,subWho(q));if(visit){St[q.k]=2;SUB_CLEAR_WAIT[q.k]=Object.assign({done:false},visit)}}/* 前からの人：もう受けている */
-    if(St[q.k]===2&&q.k==='oven'){const partKey=(S.world||0)+':sub:oven:placed';if((S.questPartSeen||{})[partKey]){if(q.ok()){St[q.k]=3;(S.subArrived||(S.subArrived={}))[q.k]=true;sfx('quest');toast('サブクエストたっせい：'+q.t,'good')}}else if(cnt('oven')&&!q.ok()&&!S.res.some(r=>r.act&&r.act.partKey===partKey||(QUEST_VISITS.get(r)||[]).some(v=>v.partKey===partKey)))queueQuestVisit(q,subWho(q),['oven'],partKey)}
+    if(St[q.k]===2&&q.k==='oven'){const partKey=(S.world||0)+':sub:oven:placed';if((S.questPartSeen||{})[partKey]){if(q.ok()&&!isNight()){St[q.k]=3;(S.subArrived||(S.subArrived={}))[q.k]=true;sfx('quest');toast('サブクエストたっせい：'+q.t,'good')}}else if(cnt('oven')&&!q.ok()&&!S.res.some(r=>r.act&&r.act.partKey===partKey||(QUEST_VISITS.get(r)||[]).some(v=>v.partKey===partKey)))queueQuestVisit(q,subWho(q),['oven'],partKey)}
     if(St[q.k]===2&&q.ok()&&!isNight()){let wait=SUB_CLEAR_WAIT[q.k];if(wait&&!wait.done&&(S.obj[wait.obj]!==wait.id||!S.res.includes(wait.r))){delete SUB_CLEAR_WAIT[q.k];wait=null}
       if(wait&&wait.done){delete SUB_CLEAR_WAIT[q.k];St[q.k]=3;sfx('quest');toast('サブクエストたっせい：'+q.t,'good')}
       else if(!wait){const visit=queueQuestVisit(q,subWho(q));if(visit)SUB_CLEAR_WAIT[q.k]=Object.assign({done:false},visit);else{St[q.k]=3;sfx('quest');toast('サブクエストたっせい：'+q.t,'good')}}}
@@ -150,7 +150,7 @@ function checkSub(){const D=S.subDone||(S.subDone={}),Sn=S.subSeen||(S.subSeen={
   for(const q of pending){const w=St[q.k]===3?questReplyWho(q):subWho(q);if(w&&spkOK(w)&&w!==TALKW){SUBW[w]=q.k;break}}}
 function subTalk(k){const q=SUBQ.find(q=>q.k===k),St=S.subSt,D=S.subDone;if(!q||!$('#dialog').hidden||St[k]===1&&!subOfferReady(q))return;S.subTalkAt=S.t;const w=subWho(q)||POKO,L=(St[k]===1?q.L:q.X)||[[w,q.t]];
   const rw=S.res.find(z=>z.name===w),FB2=q.g==='fire'&&rw&&elemKey(rw)==='fireB'&&FIREB[k];let once=0;dialog(ideaDialogue(q,(FB2?(St[k]===1?FB2.L:FB2.X):L).map(x=>[x[0]==='K'?w:x[0],x[1]&&typeof x[1]==='object'?(w===HOMURA?x[1].h:x[1].a):x[1]]),/* {h,a}：ホムラ（あたい）と、ほかの火の子（あたし） */St[k]===1?'accept':'clear'),()=>{if(once++)return;
-    if(St[k]===1){St[k]=2;Sn0(k);if(q.base)S.subB[k]=q.base();for(const id of q.learn||[])S.recipes[id]=true;inspireQuest(q);for(const x in q.give||{}){S.unlocked[x]=true;giveItem(x,q.give[x])}queueItemGift(q.give);sfx('quest');toast('サブクエスト：'+q.t,'good');renderPalette()}
+    if(St[k]===1){St[k]=2;Sn0(k);if(q.base)S.subB[k]=q.base();for(const id of q.learn||[])if(!(S.free&&BL[id]&&BL[id].kind==='furn'))S.recipes[id]=true;inspireQuest(q);for(const x in q.give||{}){S.unlocked[x]=true;giveItem(x,q.give[x])}queueItemGift(q.give);sfx('quest');toast('サブクエスト：'+q.t,'good');renderPalette()}
     else if(St[k]===3){St[k]=4;D[k]=1;inspireQuest(q,'clear');if(q.rw){S.pt+=q.rw;S.totalPt+=q.rw;toast('ごほうび：パワー+'+q.rw,'good')}memo('📌','サブクエスト「'+q.t+'」をたっせい');logEv('サブクエスト「'+q.t+'」をたっせい')}
     checkSub()},null)}
 function Sn0(k){(S.subSeen||(S.subSeen={}))[k]=1}
