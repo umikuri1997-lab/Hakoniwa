@@ -9,13 +9,14 @@ const AFTERQ=[/* クリア後の新しいクエスト：カミサマからのお
    L:[[GOD,'#joy|ヌシ様が帰ってきたお祝いを、まだしとらんかったのう。'],[GOD,'みんなで、にぎやかにおまつりをせんか？ わしも、たのしみにしとるぞい。']],X:[[GOD,'#joy|ほっほ、いいおまつりじゃったのう！ みんな、いい顔をしとったわい。']]},
   {k:'aq2',t:'家を、あと2けんふやそう',how:'家の壁とドアで、家をつくる',now:()=>HOUSES.length,d:2,rw:50,
    L:[[GOD,'なかまがふえても、みんなが安心してねむれるように、家をふやしてやらんか？']],X:[[GOD,'#nod|うむ。どの家からも、ねいきが聞こえてきそうじゃ。']]},
-  {k:'aq3',t:'せいれいを、あと3人ふやそう',how:'属性の力をため、朝に神殿の「！」からなかまを呼ぶ',now:()=>S.res.length,d:3,rw:50,
+  {k:'aq3',t:'せいれいを、あと3人ふやそう',how:'属性の力をため、朝に神殿の「！」からなかまを呼ぶ',now:()=>S.res.length,d:3,max:30,rw:50,
    L:[[GOD,'この土地が元気になったら、新しいせいれいも、きっと来たがるはずじゃ。'],[GOD,'力をためて、なかまを呼んでやるんじゃぞ。']],X:[[GOD,'#joy|にぎやかになったのう！ わしも、声をかけるのがたいへんじゃ。']]},
   {k:'aq4',t:'村レベルを、あと2上げよう',how:'せいれいが満足してパワーがたまると、村レベルが上がる',now:()=>S.lv,d:2,max:15,rw:60,
    L:[[GOD,'村が育つほど、せいれいたちも、のびのびくらせる。もっと、すみやすい村にしてみんか？']],X:[[GOD,'#joy|りっぱな村になったのう。ヌシ様も、きっとよろこんどるぞい。']]},
   {k:'aq5',t:'木材と石材を、合わせて200あつめよう',how:'せいれいが木を切り、石をほって、素材箱にためる',now:()=>((S.gotMat||{}).wood||0)+((S.gotMat||{}).stone||0),d:200,rw:40,
    L:[[GOD,'#think|……そうじゃ。いつか大きな物を作るとき、たくわえがあると心強いのう。']],X:[[GOD,'#nod|これだけあれば、なにを作るにもこまらんわい。']]}];
 const aqGoal=q=>q.max!=null?Math.min(q.max,(S.aqB??q.now())+q.d):(S.aqB??q.now())+q.d;/* うけたときの数＋d（いちばん上があれば、そこまで） */
+const aqTitle=q=>{if(q.k!=='aq3')return q.t;const b=S.aqOn===(S.aq||0)&&S.aqB!=null?S.aqB:q.now();return b>=30?'せいれいが30人そろった！':b===29?'せいれいを、あと1人ふやそう':b===28?'せいれいを、あと2人ふやそう':q.t};
 const aqProg=q=>'いま '+Math.max(0,q.now()-(S.aqB??q.now()))+' / '+Math.max(0,aqGoal(q)-(S.aqB??q.now()));
 const DAILYG=[/* クリア後の「きょうの目標」：毎朝2つ。b＝その朝からふえた数で数える。s＝いまの数で数える */
   {k:'pt',t:'パワーを40ためる',b:()=>S.totalPt||0,n:40,rw:15},{k:'wood',t:'木材を20あつめる',b:()=>(S.gotMat||{}).wood||0,n:20,rw:15},{k:'stone',t:'石材を15あつめる',b:()=>(S.gotMat||{}).stone||0,n:15,rw:15},
@@ -25,8 +26,8 @@ function dailyNow(g,d){return g.b?g.b()-(d.b0[g.k]||0):g.s()}
 function dailySet(){const day=dayNo(),i=(day*2)%DAILYG.length,L=[DAILYG[i],DAILYG[(i+1)%DAILYG.length]];S.daily={d:day,k:L.map(g=>g.k),b0:Object.fromEntries(L.filter(g=>g.b).map(g=>[g.k,g.b()])),done:{}}}/* 毎朝、きょうの目標を2つ出す */
 function dailyCheck(){const d=S.daily;if(!d)return;for(const k of d.k){const g=DAILYG.find(x=>x.k===k);if(g&&!d.done[k]&&dailyNow(g,d)>=g.n){d.done[k]=1;S.pt+=g.rw;S.totalPt+=g.rw;toast('きょうの目標たっせい：'+g.t+'（パワー+'+g.rw+'）','good')}}}
 function afterTick(){/* クリア後：新しいクエスト・きょうの目標・長い目標（昼だけ） */if(isNight()||!$('#dialog').hidden||NEWRES!=null)return;if(!S.daily||S.daily.d!==dayNo())dailySet();dailyCheck();checkFree();
-  const i=S.aq||0,q=AFTERQ[i];if(!q)return;if(q.w!=null&&q.w!==WD){S.aq=i+1;return}/* その土地のクエストではない */if(S.aqOn!==i){S.aqOn=-1;let once=0;dialog(q.L,()=>{if(once++)return;S.aqOn=i;S.aqB=q.now();sfx('quest');toast('クエスト：'+q.t,'good');renderQuest()});return}
-  if(S.aqB==null)S.aqB=q.now();/* 前のセーブ：いまから数える */if(q.now()>=aqGoal(q)){let once=0;dialog(q.X,()=>{if(once++)return;S.aq=i+1;S.aqB=null;S.pt+=q.rw;S.totalPt+=q.rw;toast('ごほうび：パワー+'+q.rw,'good');memo('🎯',q.t);renderQuest()})}}
+  const i=S.aq||0,q=AFTERQ[i];if(!q)return;if(q.w!=null&&q.w!==WD){S.aq=i+1;return}/* その土地のクエストではない */if(S.aqOn!==i){S.aqOn=-1;let once=0;dialog(q.L,()=>{if(once++)return;S.aqOn=i;S.aqB=q.now();sfx('quest');toast('クエスト：'+aqTitle(q),'good');renderQuest()});return}
+  if(S.aqB==null)S.aqB=q.now();/* 前のセーブ：いまから数える */if(q.now()>=aqGoal(q)){let once=0;dialog(q.X,()=>{if(once++)return;S.aq=i+1;S.aqB=null;S.pt+=q.rw;S.totalPt+=q.rw;toast('ごほうび：パワー+'+q.rw,'good');memo('🎯',aqTitle(q));renderQuest()})}}
 const TRAPS=['spike','sticky','puddle','firetrap','gust'],CN=a=>a.reduce((n,k)=>n+cnt(k),0),FOODN=()=>Object.values(S.fs||{}).reduce((n,v)=>n+v,0);
 const outCnt=ids=>{const ins=new Set(HOUSES.flatMap(h=>[...h.inside]));let n=0;S.obj.forEach((o,j)=>{if(ids.has(o)&&!ins.has(j))n++});return n};/* 家の外にある数 */
 function houseBedCount(){const cells=new Set(HOUSES.flatMap(h=>[...h.inside]));return [...cells].filter(j=>BEDSET.has(S.obj[j])).length}
@@ -405,7 +406,7 @@ function subSec(body,main){const D=S.subDone||{},St=S.subSt||{},L=subList().filt
   const md=main?QUESTS.slice(0,Math.min(S.quest,QUESTS.length)).map(q=>'メイン：'+q.text).reverse():[];
   if(md.length||dn.length){const rw=sec('達成済み');for(const t of [...dn.slice().reverse().map(q=>'サブ：'+q.t),...md]){const r=rowEl('✓ '+t,'');r.classList.add('done');rw.appendChild(r)}}}
 function checkFree(){if(!S.cleared)return;const D=S.freeDone||(S.freeDone={});for(const g of FREEG)if(!D[g.k]&&g.ok()){D[g.k]=1;S.pt+=g.rw;S.totalPt+=g.rw;toast('目標たっせい：'+g.t+'（パワー+'+g.rw+'）','good');memo('🎯',g.t)}}
-const DAYEV={hosaku:['🌾','豊作の日','収穫がひとつ多い'],oshaberi:['💬','おしゃべりの日','おしゃべりがはずむ。おしゃべり1回のパワー+0.9'],odayaka:['🌙','おだやかな夜','今夜の「コワイノ」が半分'],kaze:['🍃','風の強い日','ふしぎな種が2倍落ちてくる'],kami:['⛩️','カミサマの訪問日','カミサマが遊びにくる'],hoshi:['✨','星空の夜','3時に寝ている子のたのしさ+15'],mono:['🎁','ものひろいの日','村のあちこちに落とし物がある']};
+const DAYEV={hosaku:['🌾','豊作の日','収穫がひとつ多い'],oshaberi:['💬','おしゃべりの日','おしゃべりがはずむ。おしゃべり1回のパワー+0.9'],odayaka:['🌙','おだやかな夜','今夜の「コワイノ」が半分'],kaze:['🍃','風の強い日','ふしぎな種が3〜6こ落ちてくる'],kami:['⛩️','カミサマの訪問日','カミサマが遊びにくる'],hoshi:['✨','星空の夜','3時に寝ている子のたのしさ+15'],mono:['🎁','ものひろいの日','村のあちこちに落とし物がある']};
 function killsSince(){/* 「夜をこえて、つよくなろう」：クエストが出てから追いはらったコワイノの数 */if(S.flags.kb==null)S.flags.kb=S.kills||0;return (S.kills||0)-S.flags.kb}
 function kgPlace(){/* 大きなかげのあと：村の南のはしの、空いた地面（なるべく草地）に出す */for(const g of[1,0]){let best=-1,by=-1,bx=1e9;for(let j=0;j<W*H;j++){if(!VILL[j]||S.obj[j]||(S.floor&&S.floor[j])||S.ground[j]!==0||!walk(j)||g&&!REV.has(j))continue;const y=(j/W)|0,dx=Math.abs(j%W-CX);if(y>by||y===by&&dx<bx){by=y;bx=dx;best=j}}if(best>=0){S.flags.kgMark=best;return}}}
 function morning(){sfx('morning');if(S.cleared&&S.daily)dailyCheck();/* 夜のうちのたっせいも、朝にかぞえる */S.oracle=null;finalCheck();if(S.bud){let nb=0;for(const j in S.bud)if(S.bud[j]<=dayNo()){delete S.bud[j];nb++}if(nb){recount();dirty=true}}S.res.filter(r=>r.comfy===dayNo()).forEach(r=>addFloat(r.x,r.y-1.4,'ぐっすり！','#d8f5c0'));{const L=S.res.filter(r=>r.crowd===dayNo());if(L.length){L.forEach(r=>{r.bubble='😣';addFloat(r.x,r.y-1.4,'きゅうくつだった…','#ffd2cc')});toast('家がきゅうくつで、よく眠れなかったせいれいがいる','warn')}}
