@@ -88,11 +88,11 @@ function renderQuest(){const q=QUESTS[Math.min(S.quest,QUESTS.length-1)];let pr=
   const qt=$('#questTxt');if(qt.dataset.k!==t+'|'+pr){qt.dataset.k=t+'|'+pr;qt.textContent='';const m=document.createElement('span'),g=document.createElement('span');m.className='qm';g.className='qp';m.textContent=t;g.textContent=pr;qt.append(m,g)}/* 進み具合は2行目に */
   const h=$('#questHow');if(!h.hidden&&h.dataset.q==S.quest)return;h.dataset.q=S.quest;h.hidden=true;h.innerHTML='<b>やりかた</b>';h.appendChild(document.createTextNode(q.how||''))}
 const NUSHI_T=[
-  {pre:['台座に、3つのかけらがそろった。'],open:[[POKO,'#joy|やったぁ……！ みんなのおかげで、ここまで来たんだ……！','cheer'],[MINA,'みんなぁ、台座に力をそそいでねぇ。']],scene:['#shocked|あたたかい風がふいて、荒れていた土地に、花がいっせいに咲きはじめた。','草原の奥から、風がふきぬけた。','葉がうずをまき、光がさす。そのなかに、みどりのつのをいただく白い大鹿が立っていた。'],name:'草原のヌシ',
+  {open:[[POKO,'#joy|やったぁ……！ みんなのおかげで、ここまで来たんだ……！','cheer'],[MINA,'みんなぁ、台座に力をそそいでねぇ。']],name:'草原のヌシ',
    nushi:['#think|……ずいぶん長く、るすにしてしまったな。'],world:[['U','#joy|守り神よ、せいれいたちよ。かけらを取りもどしてくれて、ありがとう。',0,'nfG'],['U','#danger|わたしは草原のヌシ。木のせいれいたちを生み、この地を見守ってきた者だ。'],['U','#think|……むかしは、昼と夜にも、それを見守るヌシがいたのだがな。'],['U','#danger|……おまえが、わたしのかわりに、この地の子らを見守ってくれていたのだな。']],
    next:[['U','#think|……守り神よ。もう、その役目は返してもらおう。この地は、わたしが見守る。おまえは、ほかの土地へ行ってよいのだ。',0,'nfG'],['U','かけらにのこった記憶が教えてくれる。ほかの土地でも、ヌシは力を失い、自然の力がくずれたままだ。'],['U','まずは、火の山のふもと。地面の熱が冷えきって、温泉もこおりかけている。']],/* 次の土地の話は、フタバとの再会のあと */
    after:[[GOD,'#joy wave|おーい！ 遠くから見とったぞい〜。ようやったのう！'],[GOD,'#worry|……うむうむ！ わしは泣いとらんぞ。目に花びらが入っただけじゃ！'],[GOD,'ヌシ様の話、聞いたかの？ 次は「火山のふもとの村」じゃ。出発は、台座から。おヌシの好きなときでよいぞ。']],reu:[['F','ヌシ様……！ ヌシ様ぁっ！！',0,'hop+nfF'],['U','#think|……フタバ。待たせてしまったな。'],['F','#teary|ぼく、ずっと……ずっと待ってたんだよ……！'],['U','かけらを通して、おまえたちのがんばりは、ずっと感じていた。'],['U','あの夜、いちばん奥でふるえていたおまえが、今度はみんなを守ったのだな。'],['U','#worry|……おまえを、ひとりにしてしまった。すまなかった。'],['F','#think|……ううん。今は、ひとりじゃないよ！ 見て！ こんなに、なかまができたんだ！'],['F','#joy|……えへへ。おかえりなさいっ！',0,'cheer'],['U','#think|……この草原の花。おまえが、咲かせてくれたのだな。いちばんに見られて、うれしいぞ。'],['F','#worry|……ヌシ様。きょうだいたちは……？'],['U','#think|……わたしにも、まだわからない。すまないな。'],['F','めぶきのしずくでも、だめなの……？'],['U','しずくは、消えたばかりの子を呼びもどすもの。ずっとむかしの子には、とどかぬのだ。'],['U','#surprise|ただ……自然にかえった子らは、この土地の風や土になる。この土地の風や土は、いまもおまえたちを見守っておる。'],['U','それに、あの子たちは、おまえを守りたくて前に出た。……おまえが今を生きていることを、きっとよろこんでいる。'],['F','#worry|……うん。ぼく、もう泣かないよ。'],['F','#cry|きょうだいたちがくれた明日を、ここで、みんなといっしょに歩いていく！'],['N','よかったねぇ、フタバ。',1,'cheer'],['H',{A:'みんなで守りきったね。やるじゃないか。',B:'みんなで守りきったな。やるじゃねえか。'},1],['M','この土地に、力がもどってきましたね。',1],['K','#joy|フッ…風まで、うれしそうだ。',1]],toast:'ステージクリア！',last:'草原にもどる'},
-  {open:[[HOMURA,'夜をこえたよ…！','cheer'],[SHIZUKU,'みなさん、力をそそいでください。']],scene:['#shocked|あたたかい湯気が村をつつみ、冷えきっていた地面に、ぬくもりがもどってきた。','火の山のほうから、大きな赤いけものが、おりてきた。'],
+  {open:[[HOMURA,'夜をこえたよ…！','cheer'],[SHIZUKU,'みなさん、力をそそいでください。']],
    nushi:['#think|……ふう。ようやく、体があたたまってきた。','守り神よ、せいれいたちよ。この地の熱を取りもどしてくれて、礼を言う。','わたしは、火のせいれいたちを生み、この火の山の熱を見守る者。草原のヌシとは、むかしからの知り合いだ。','#think|……あの影たちは、わたしの熱をうばっても、すこしもあたたまれなかったようだ。','かけらの記憶によれば、次は霧につつまれた水べの村。水の流れが止まり、霧がはれないままだという。'],
    after:[[GOD,'おつかれさん〜！ 見とったぞい。'],[GOD,'次は「霧のみずべの村」じゃ。…まだ道が通じておらんのじゃ。準備ができたら知らせるぞい。'],[HOMURA,'あたいたちは、この村と温泉をまもるよ。また入りにおいで！','cheer'],[SHIZUKU,'お気をつけて。…ときどき、温泉にいらしてくださいね。']],toast:'ステージクリア！ 「霧のみずべの村」は、ただいま準備中',last:'村にもどる'}];
 let NUSHI_RUN=false;
@@ -113,7 +113,7 @@ function nushiReturns(){if(NUSHI_RUN||S.cleared)return;NUSHI_RUN=true;S.flags.nu
     // 光がひろがって、荒れた土地に花が咲いていく
     villageTimeout(()=>{let n=0;const L=[];for(let t=0;t<4000&&L.length<60;t++){const x=(Math.random()*W)|0,y=(Math.random()*H)|0,k=y*W+x;if(Math.max(Math.abs(x+.5-TX),Math.abs(y+.5-TY))>14||S.obj[k]||S.floor[k]||S.ground[k]===1||L.includes(k)||S.res.some(r=>(r.x|0)===x&&(r.y|0)===y))continue;L.push(k)}
       L.sort((a,b)=>Math.hypot(a%W-TX,(a/W|0)-TY)-Math.hypot(b%W-TX,(b/W|0)-TY));L.forEach((k,i)=>villageTimeout(()=>{if(S.obj[k])return;S.obj[k]='clover';burst(k,'plant');if(i%6===0)sfx('bush');if(i===L.length-1)recount();dirty=true},i*45))},t0+700);
-    villageTimeout(()=>dialog(T.scene,()=>{
+    villageTimeout(()=>{{/* 文字の説明はなし：光・花・風のあと、ヌシ様があらわれる */camAnim={fz:cam.z,tz:Math.max(cam.z,2),fx:cam.x+VW/cam.z/2,fy:cam.y+VH/cam.z/2,tx:TX*TS,ty:(TY-.4)*TS,t:0,dur:1.2};
       // ヌシ様が台座の上にあらわれる
       S.nushi={x:TX,y:TY+.95,t:6,app:0,dir:1,face:1,path:[]};/* あらわれたときは、守り神のほう（正面） */
       spawnFX(TX-.5,TY-.6,'#c8ffd0');sfx('arrive');flashScreen();
@@ -124,9 +124,9 @@ function nushiReturns(){if(NUSHI_RUN||S.cleared)return;NUSHI_RUN=true;S.flags.nu
           S.clearDay=dayNo();S.score=calcScore();villageTimeout(()=>dialog(['#think|……この土地も、もとにもどったのう'],()=>openSheet('score'),T.last,GOD),1200);
         });
       },null,T.name||'ヌシ様'),3200);
-    },null,''),t0+3600);
+    }},t0+5200);
   }));
-  T.pre?dialog(T.pre,runOpen,null,''):runOpen();
+  runOpen();
 }
 function calcScore(){const d=S.clearDay||dayNo(),parts=[['クリアした日',d+'日目',d<=26?4000:d<=30?3200:d<=34?2600:d<=39?2000:d<=44?1500:d<=54?1000:500],['せいれい',S.res.length+'人',S.res.length*100],['消えてしまったせいれい',(S.deaths||0)+'人',-Math.min(1000,(S.deaths||0)*50)]];
  const tot=Math.max(0,parts.reduce((a,p)=>a+p[2],0)),rank=tot>=5000?'S':tot>=4000?'A':tot>=2500?'B':'C'/* ふつうはB。はやく・消さずにクリアでS */;return{tot,rank,parts}}/* クリアスコア：早いほど・せいれいが多いほど・消えたせいれいが少ないほど高い。夜の数・パワーなど、長く遊ぶほどふえるものは入れない。クリアした日：26日目まで4000・30日目まで3200・34日目まで2600・39日目まで2000・44日目まで1500・54日目まで1000・それより後500。せいれい：1人100てん。消えたせいれい：1人50てん引く（引くのは1000まで）。S 5000・A 4000・B 2500 */
