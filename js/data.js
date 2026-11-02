@@ -185,7 +185,7 @@ function learnedIn(s,w){const out=[];for(const id in BL){const b=BL[id];if(GNORE
   if((s.recipes||{})[id]||(s.unlocked||{})[id])out.push(id);
   else if((b.kind==='block'||b.kind==='build'||b.kind==='plant')&&b.lv&&!QB.has(id)&&(s.lv||1)>=b.lv&&(b.w||0)<=w&&matHere(b,w)&&(STAGEONLY[id]==null?!b.offerOnly:STAGEONLY[id]===w))out.push(id)}/* 村レベルで使えるようになった物 */
   return out}
-function ownLearned(d,w){/* そのステージが、自分のクエスト・村レベル・持ち物でおぼえる物（ほかのステージからもらった物はふくめない） */const s2={world:w,free:false,quest:d.quest||0,qTalked:d.qTalked,qStory:d.qStory,subDone:d.subDone,subSt:d.subSt,subSeen:d.subSeen,lv:d.lv,inv:d.inv,obj:d.obj,orders:d.orders||[],win:d.win,recipes:{},guardianIdeas:{},unlocked:{}};try{syncQuestRecipes(s2)}catch(e){}return new Set(learnedIn(s2,w))}
+function ownLearned(d,w){/* そのステージが、自分のクエスト・村レベル・持ち物でおぼえる物（ほかのステージからもらった物はふくめない） */const s2={world:w,free:false,flags:d.flags,quest:d.quest||0,qTalked:d.qTalked,qStory:d.qStory,subDone:d.subDone,subSt:d.subSt,subSeen:d.subSeen,lv:d.lv,inv:d.inv,obj:d.obj,orders:d.orders||[],win:d.win,recipes:{},guardianIdeas:{},unlocked:{}};try{syncQuestRecipes(s2)}catch(e){}return new Set(learnedIn(s2,w))}
 function savedStage(w){let d=LIVE&&LIVE[w]&&!LIVE[w].summary?LIVE[w]:null;if(!d)try{const raw=KV.getItem(SAVE_KEYS[w]);if(raw)d=JSON.parse(raw)}catch(e){}return d&&!d.free?d:null}
 function grecOf(){if(!GREC){/* id → おぼえたステージ（どのステージでおぼえたか。「はじめから」で、そのステージの分だけわすれるため） */let g=null;try{g=JSON.parse(KV.getItem(GRECKEY2)||'null')}catch(e){}GREC=new Map(g&&typeof g==='object'&&!Array.isArray(g)?Object.entries(g):[]);
     if(!g){let a=null;try{a=JSON.parse(KV.getItem(GRECKEY)||'null')}catch(e){}const ids=new Set(Array.isArray(a)?a:[]),own=[0,1].map(w=>{const d=savedStage(w);if(d)learnedIn(d,w).forEach(id=>ids.add(id));return d?ownLearned(d,w):new Set()});
@@ -439,6 +439,12 @@ const QUESTS1=[
     [MINA,'#danger|火のせいれいなら、「コワイノ」とたたかえるらしいよぉ。'],
     [POKO,'火の力をためて、火のせいれいをむかえよう！']]},
    get story(){return KS([['H',{A:'#joy|おや、来てやったよ！ 今夜からは、あたいも村を守る。',B:'#joy|おう、来てやったぜ！ 今夜からは、おれも村を守る。'}],[POKO,'あったかいせいれいが来てくれた！'],['H',{A:'#alarm|「コワイノ」なんざ、あたいが追いはらってやるよ。',B:'#alarm|「コワイノ」なんざ、おれが追いはらってやるよ。'}],[MINA,'これで夜も、ちょっと心強いねぇ。']])}},
+  {id:'fireSupplies',text:'夜を守るなかまの食料を15こためよう',how:'食料箱に食べ物を15こためる',check:()=>FOODN()>=15,prog:()=>'食料 '+Math.min(15,FOODN())+'/15',
+   talk:{who:POKO,when:()=>true,get lines(){return KS([['H',{A:'夜の見まわりに出る前に、みんなの食べ物を確かめたいんだ。',B:'夜の見まわりに出る前に、みんなの食べ物を確かめたいんだ。'}],[POKO,'前の夜は、こわくて、ごはんのことまで考えられなかった……。'],[MINA,'こんどは、帰ってきた子に、あたたかく声をかけようねぇ。'],[POKO,'うん！ ぼくたちが、食べ物を集めておくよ。']])}},
+   get story(){return KS([[POKO,'みんなのぶん、ちゃんとあるよ！'],['H',{A:'ありがと。帰るところで待っててくれると、心強いね。',B:'ありがとな。帰るところで待っててくれると、心強いぜ。'}],[POKO,'守ってもらうだけじゃなくて、ぼくも力になれるんだね。']])}},
+  {id:'fireLights',text:'帰り道のあかりを3つ用意しよう',how:'依頼ボードであかりを作り、村に合計3つ置く',check:()=>CN(LIGHTQ)>=3,prog:()=>'あかり '+Math.min(3,CN(LIGHTQ))+'/3',
+   talk:{who:POKO,when:()=>true,learn:['torch'],get lines(){return KS([['H',{A:'村のはしから帰るとき、家の灯りが見えなくてね。',B:'村のはしから帰るとき、家の灯りが見えなくてな。'}],[POKO,'ぼくも、真っ暗だと、家がどこかわからなくなるよ。'],[MINA,'みんなが帰ってこられるように、あかりをともそうねぇ。']])}},
+   get story(){return KS([['H',{A:'#joy|あそこが、みんなの家だね。これなら、まよわず帰れる。',B:'#joy|あそこが、みんなの家だな。これなら、まよわず帰れる。'}],[POKO,'おかえり、って言う場所が、遠くからでも見えるね。'],[MINA,'このあかり、これから来るなかまにも見つけてもらえるといいねぇ。']])}},
   {id:'lv3',text:'村レベルを3にしよう',check:()=>S.lv>=3,how:'せいれいが満足してパワーがたまると、村レベルが上がる',prog:()=>'いま 村レベル'+S.lv,
    talk:{who:POKO,when:()=>true,lines:[
     [POKO,'火のなかまが来て、夜も心強くなったね！ 村も、もっとにぎやかになるかな？'],
@@ -452,6 +458,12 @@ const QUESTS1=[
     [MINA,'水やりは、水のせいれいが得意なんだよぉ。'],
     [MINA,'水の力をためたら、水のせいれいが来てくれるかもねぇ。']]},
    get story(){return KS([['M','はじめまして。水やりや、水をくむ仕事なら、わたしにまかせてください。'],[POKO,'水のせいれいが来てくれた！ 畑がうるおうね！'],['M','畑の配置を見なおせば、より効率よく水を行きわたらせられそうです。'],[MINA,keyName('water')+'がいれば、畑の水やりも、もっとはかどるねぇ。']])},gives:{flag:'wellR'}},
+  {id:'waterFields',text:'水のなかまと畑を2つうるおそう',how:'水のせいれいが水をくみ、種をまいた畑を2つ水やりするのを待つ',check:()=>S.obj.filter((o,j)=>o==='farm'&&S.dyn[j]&&S.dyn[j].sown!==false&&S.dyn[j].wet>0).length>=2,prog:()=>'うるおった畑 '+Math.min(2,S.obj.filter((o,j)=>o==='farm'&&S.dyn[j]&&S.dyn[j].sown!==false&&S.dyn[j].wet>0).length)+'/2',
+   talk:{who:POKO,when:()=>true,get lines(){return KS([['M','畑の土が乾いています。まず、水をくんでまいります。'],[POKO,'ヌシ様がいなくなってから、このへん、すぐにかさかさになるんだ。'],['M','水が行きわたれば、根はまだ育てられます。あきらめるには、早いですよ。'],[POKO,'うん！ ノドカとぼくも、畑を見てくる！']])}},
+   get story(){return KS([['M','#joy|水が、根のところまでしみこみました。'],[MINA,'土の中が、ほっとしてるよぉ。'],[POKO,'みんなのごはんになるんだね。ひとりじゃできなかったことが、できてる！']])}},
+  {id:'waterFlowers',text:'水辺のなかまと花を10本咲かせよう',how:'花の種を植え、村全体で花が10本咲くのを待つ',check:()=>flowerN()>=10,prog:()=>'咲いた花 '+Math.min(10,flowerN())+'/10',
+   talk:{who:POKO,when:()=>true,get lines(){return KS([['M','水辺を調べていたら、緑の土地のそばだけ、水が明るく見えたんです。'],[MINA,'花や木が育つと、土地も元気になるんだよぉ。'],['M','では、花のある場所を増やしてみませんか。土地が元気になれば、ヌシ様の力を探す手がかりになるかもしれません。'],[POKO,'ぼくが植えるよ！ いっしょに、この土地を元気にしよう！']])}},
+   get story(){return KS([['M','花の下から、緑が広がっています。水の色も、少し澄んできました。'],[POKO,'ヌシ様を待ってるだけじゃなくて、ぼくたちから、おむかえの準備ができるんだ！'],['M','#joy|ええ。この変化を、覚えておきましょう。もっと広い土地をよみがえらせるときにも、役立つはずです。']])}},
   {id:'baseUp',skip:1,text:'基地を広げよう',check:()=>true,how:'',prog:()=>'',/* 敷地はなくなった。古いセーブのクエスト番号がずれないよう、のこして、とばす */
    talk:{who:POKO,when:()=>true,lines:[
     [POKO,'守り神さま、ここ、なんだかせまくなってきたね。'],
@@ -530,6 +542,12 @@ const QUESTS1=[
     [MINA,'風の力をためれば、来てくれるはずだねぇ。'],
     [POKO,'#think|風に乗って、ふわっと浮かべたら、たのしそう！ 守り神さまなら、なにか思いつくかな？'],['@idea']]},
    get story(){return KS([['K','フッ…風に呼ばれて来てみれば、ずいぶん素朴な村だね。'],[POKO,'風のせいれいが来た！ これで5つの属性がそろったね！'],['K','いいさ。ぼくの風で、この村をもっと華やかにしてあげよう。'],[MINA,'にぎやかになったねぇ。']])}},
+  {id:'windRoad',text:'風のなかまと村の道を10マスにしよう',how:'あぜ道を村に合計10マスしく',check:()=>S.floor.filter(f=>f==='path').length>=10,prog:()=>'あぜ道 '+Math.min(10,S.floor.filter(f=>f==='path').length)+'/10',
+   talk:{who:POKO,when:()=>true,get lines(){return KS([['K','村をひと回りしてきたよ。物を運ぶ子たちが、草の中で行きちがっていた。'],['M','水を運ぶ途中に、遠回りしている場所もあります。'],['K','帰る家と、みんなの働く場所。道でつなげておこう。次にかげが来ても、立ち止まらずに帰れるようにね。'],[POKO,'ぼくも、みんながどこを歩くか見てくる！']])}},
+   get story(){return KS([['K','#joy|いいね。風といっしょに、足音が村を巡っている。'],['M','水をくみに行く道も、わかりやすくなりました。'],[POKO,'はやく走れる子だけじゃなくて、みんなの道になったね！']])}},
+  {id:'windGather',text:'なかまみんなのベッドを家に用意しよう',how:'家の中に、村のせいれいの人数ぶんのベッドを置く',check:()=>houseBedCount()>=S.res.length,prog:()=>'家のベッド '+Math.min(S.res.length,houseBedCount())+'/'+S.res.length,
+   talk:{who:POKO,when:()=>true,learn:['bed'],get lines(){return KS([['K','外から村を見てきた。家のあかりは見えたけれど、まだ寝床のない子がいるようだね。'],[POKO,'また、だれかがひとりで夜をすごすのは、いやだな……。'],['M','みなさんが安心して休める場所を整えましょう。'],['K','ヌシ様をむかえる前に、ここにいるなかまが、ちゃんと帰れる村にしよう。']])}},
+   get story(){return KS([[POKO,'みんなで、おやすみって言えるね。'],['K','ああ。夜の風が冷たくても、帰る場所がある。'],['M','#joy|安心して暮らす気持ちも、この村の力になっているのですね。'],[POKO,'ヌシ様にも、ぼくたちの村、見てもらいたいな！']])}},
   {id:'lv5',text:'村レベルを5にしよう',check:()=>S.lv>=5,how:'せいれいが満足してパワーがたまると、村レベルが上がる',prog:()=>'いま 村レベル'+S.lv,
    talk:{who:POKO,when:()=>true,lines:[
     [POKO,'オオカゲを追いはらえて、風のなかまも来たね！ みんな、ここで楽しく暮らせるといいな。'],
@@ -575,3 +593,10 @@ const QUESTS1=[
     [POKO,'よーし、みんなで守りぬこう！']]},
    story:null},
 ];
+
+const COMPANION_QUESTS=new Set(['fireSupplies','fireLights','waterFields','waterFlowers','windRoad','windGather']);
+function migrateCompanionStory(state){
+  if(state.flags.companionStory)return;
+  if(!state.free&&(state.world||0)===0){const old=QUESTS1.filter(q=>!COMPANION_QUESTS.has(q.id)),map=i=>i>=old.length?QUESTS1.length:QUESTS1.findIndex(q=>q.id===old[i]?.id);state.quest=map(state.quest||0);if(state.qStory!=null)state.qStory=map(state.qStory)}
+  state.flags.companionStory=1;
+}

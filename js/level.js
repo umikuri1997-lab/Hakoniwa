@@ -39,7 +39,7 @@ function lvShow(l,bonus,opens){
   if(opens.length){u.appendChild(el('<small>あたらしく使える</small>'));for(const id of [...new Set(opens)]){const b=el('<button class="lvic"><img alt=""><span></span></button>');b.querySelector('img').src=iconURL(id);b.querySelector('span').textContent=iname(id);b.onclick=e=>{e.stopPropagation();sfx('tap');u.querySelectorAll('.lvic').forEach(x=>x.classList.toggle('on',x===b));od.hidden=false;od.innerHTML='<b></b><p></p>';od.querySelector('b').textContent=iname(id);od.querySelector('p').textContent=withAttr(id,(BL[id]&&BL[id].desc)||'')};u.appendChild(b)}}/* 解放されたものはアイコン。タップで説明 */
   o.hidden=false;o.classList.remove('on');void o.offsetWidth;o.classList.add('on');
   
-  for(const r of S.res){if(r.hidden)continue;const t=performance.now();r.bubble='✨';r.shine=t;JOYU.set(r,t+3200);RHOLD.set(r,t+3200);JUMP.set(r,t);for(const d of[1000,2000])setTimeout(()=>{if(S.res.includes(r))JUMP.set(r,performance.now())},d);burst((r.y|0)*W+(r.x|0),'plant','none')}/* キラキラ・笑顔・こっちを向いて、何度かジャンプ */
+  for(const r of S.res){if(r.hidden)continue;r.bubble='';JUMP.delete(r);r.swing=r.swingT=0;burst((r.y|0)*W+(r.x|0),'plant','none')}
   startClap();/* タップするまで、こっちを向いて拍手 */
   if(STATUE>=0)for(let n=0;n<3;n++)setTimeout(()=>burst(STATUE,'furn','none'),n*260);
 }
