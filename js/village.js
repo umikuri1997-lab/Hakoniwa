@@ -71,7 +71,7 @@ const SPOTS=[
   {k:'tsuriba',n:'つり場',main:(o,j)=>SEATS.includes(o)&&spotW(j)>=0,need:[],how:'水べのいす',eff:'魚がつれる確率+25%'},/* 水べのいすは、それだけでスポット（魚+25% は fSpot でつりのときに入る） */
   {k:'fishspot',n:'つりスポット',main:(o,j)=>SEATS.includes(o)&&spotW(j)>=0,need:[[o=>o==='parasol',1]],how:'水べのいすと、パラソル',eff:'魚がつれる確率+5%'},
   {k:'park',n:'ちかばの公園',main:o=>o==='swing',need:[[o=>o==='sandbox',1]],how:'ブランコと、砂場',eff:'ここで遊ぶと、たのしさ+10%'},
-  {k:'park2',n:'たのしい公園',main:o=>o==='swing',need:[[o=>o==='sandbox',1],[o=>o==='seesaw',1]],how:'ブランコと、砂場と、シーソー',eff:'ここで遊ぶと、たのしさ+10%'},
+  {k:'park2',n:'たのしい公園',main:o=>o==='swing',need:[[o=>o==='sandbox',1],[o=>o==='seesaw',1]],how:'ブランコと、砂場と、シーソー',eff:'ここで遊ぶと、たのしさ+20%'},
   {k:'kitchen',n:'キッチン',main:o=>o==='oven',need:[[o=>o==='sink',1],[o=>o==='tub',1]],how:'かまどと、流し台と、水おけ',eff:'料理の速さ+10%'},
   {k:'yasumi',n:'やすみば',main:o=>BENCHES.has(o),need:[[o=>o==='parasol',1]],how:'ベンチと、パラソル',eff:'ベンチで休むと、つかれのとれ方+10%'},
   {k:'camp',n:'キャンプ場',main:o=>o==='campfire',need:[[o=>BENCHES.has(o),2]],how:'たき火と、ベンチ2つ',eff:'たき火で遊ぶと、たのしさ+10%'},
