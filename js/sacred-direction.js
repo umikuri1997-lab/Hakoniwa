@@ -23,6 +23,7 @@ function sacredShot(mode,cast=sacredCast(),seconds=1.1){
     if(S.obj.includes('tower'))points.push([x-80,y-170],[x+80,y+10]);
     if(mode==='group'&&S.nushi)points.push([S.nushi.x*TS-110,S.nushi.y*TS-160],[S.nushi.x*TS+100,S.nushi.y*TS+12]);
   }
+  if(mode==='battle')for(const e of S.enemies.filter(e=>e.spawned&&!e.dead&&e.type==='boss2'))points.push([e.x*TS-120,e.y*TS-240],[e.x*TS+120,e.y*TS+16]);
   const left=Math.min(...points.map(p=>p[0])),right=Math.max(...points.map(p=>p[0])),top=Math.min(...points.map(p=>p[1])),bottom=Math.max(...points.map(p=>p[1]));
   // 会話欄を避けた、上側の見える範囲に収める。縦長・横長どちらでも同じ構図を保つ。
   const side=VW>VH&&VH<500;$('#dialog').classList.toggle('sacred-side',side);

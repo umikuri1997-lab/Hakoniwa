@@ -572,7 +572,7 @@ const QUESTS1=[
     [POKO,'花を50こ、さかせたいな！'],
     [MINA,'#think|花が咲いたら、みんなで見に行こうねぇ。夜も花のそばであったかく過ごせたら、ゆっくり見ていられそうだよぉ。守り神さま、いい考えはないかなぁ。'],['@idea']]},
    story:[[POKO,'#surprise|わあ…花畑だ！ ありがとう、守り神さま！'],[POKO,'ヌシ様、見てくれるかな。……会いたいな。'],[MINA,'きっと見てくれるよぉ。フタバのきもち、花からも伝わってくるもんねぇ。']]},
-  {id:'nushi',get text(){return GRASSN<2500?'みどりのマスを'+nextGreenGoal()+'にしよう':'ヌシ様をむかえよう'},check:()=>!!S.cleared,prog:()=>greenProgress()+'・かけら '+Math.min(3,S.setSh||0)+'/3・じょうけん '+clearConds().filter(c=>c[1]).length+'/'+clearConds().length,how:'みどりのマスを2500まで広げよう。御神木をタップすると、足りないものが見られる',
+  {id:'nushi',get text(){return grassEndingGoal().text},check:()=>!!S.cleared,prog:()=>grassEndingGoal().progress,get how(){return grassEndingGoal().how},
    talk:{who:POKO,when:()=>true,lines:[
     [POKO,'かけらも、あと少しだね。ヌシ様をむかえる準備、もうすぐかな。'],
     [MINA,'#think|御神木にヌシ様の力があつまってくるとねぇ、影たちは、その力にひきよせられて、やってくるんだってぇ。'],

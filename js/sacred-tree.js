@@ -92,8 +92,5 @@ function drawSacredRoot(now){if(!S||WD!==0||S.free||S.sacredRoot==null||S.obj.in
 const SACRED_QUIET=[
   ['F','……きょうだいたちのことも、聞きたかったんだ。'],['U','うむ。'],['F','どこかで、元気にしてるかな。'],['U','……。'],['U','わたしにも、まだわからぬ。'],['F','……そっか。'],['U','ただ、あの子らがおまえを守ったことは、覚えている。'],['F','……うん。'],['U','こうして生きているおまえを見たら、きっと、喜ぶだろう。'],['F','#teary|……。'],['N','……となり、座るねぇ。',1,'stree:sit'],['F','……今日は、ここにいてもいい？'],['U','もちろんだ。']
 ];
-function sacredQuietScene(){
-  const owner=S,session=VILLAGE_SESSION,tw=S.obj.indexOf('tower');if(tw<0)return;
-  sacredShot('care',S.res.filter(r=>Math.hypot(r.x-storyTreeX(tw),r.y-storyTreeY(tw))<6));gatherAt(storyTreeX(tw),storyTreeY(tw)+1,()=>{if(S!==owner||session!==VILLAGE_SESSION)return;dialog(sevLines(SACRED_QUIET),()=>{S.flags.sacredQuietSeen=true;dirty=true;sacredEndDirection();toast('御神木の葉が、静かに鳴っている');});});
-}
+function sacredQuietScene(){return startSacredQuiet();}
 function drawSacredQuiet(now){if(WD===0&&S.nushi&&S.flags.sacredReunion&&!S.flags.sacredQuietSeen&&$('#dialog').hidden){talkBub(S.nushi.x*TS,S.nushi.y*TS-42,now,'#b7ddba');}}

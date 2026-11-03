@@ -100,7 +100,18 @@ function onTap(sx,sy){DLGTAP=performance.now();/* タップで始める会話は
     if(o==='composter')return cmpPop(j);
     if(o==='obox')return S.feat.inv?openSheet('inv'):toast('おそなえ箱');
     if(o==='grave'){const d=S.dyn[j]||{};if(!d.buried)return toast((d.name||'せいれい')+'のお墓。なかまが神殿へはこんで、おみおくりしてくれる');/* 守り神は埋葬できない */return toast((d.name||'せいれい')+'のお墓')}
-    if(o==='tower'&&!WD&&!S.cleared){const av=(S.shards||0)-(S.setSh||0);if(av>0&&(S.setSh||0)>=2){const NM=['木のせいれい','御神木','ヌシのかけら','みどりのマス','せいれいパワー'],miss=clearConds().findIndex(c=>!c[1]);if(miss>=0)return toast(NM[miss]+'が足りません','warn')}/* 3つ目をはめるときも、5つの条件がそろっているか見る */if(av>0){S.setSh=(S.setSh||0)+1;sfx('shard');burst(j,'furn','none');toast('御神木に、ヌシのかけらの光を届けた（'+S.setSh+'/3）','good');logEv('かけらの光を御神木へ届けた');dirty=true;if(S.setSh>=3)villageTimeout(shards3,900);checkQuest();return}return openSheet('clear')}
+    if(o==='tower'&&!WD&&!S.cleared){
+      const av=(S.shards||0)-(S.setSh||0);
+      if(av>0&&(S.setSh||0)>=2){
+        if(isNight())return toast('最後の光を届けるのは、朝になってから');
+        if(!S.flags.finalWon)return toast('まず、御神木に集まる影を追いはらおう');
+        if(!S.sev?.e16g||!S.sev?.e09)return toast(!S.sev?.e16g?'先に、フタバの力を受け継ぐお話を聞こう':'先に、最後のかけらを迎えるお話を聞こう');
+        const NM=['木のせいれい','御神木','ヌシのかけら','みどりのマス','せいれいパワー'],miss=clearConds().findIndex(c=>!c[1]);if(miss>=0)return toast(NM[miss]+'が足りません','warn');
+      }
+      if(av>0){S.setSh=(S.setSh||0)+1;sfx('shard');burst(j,'furn','none');toast('御神木に、ヌシのかけらの光を届けた（'+S.setSh+'/3）','good');logEv('かけらの光を御神木へ届けた');dirty=true;if(S.setSh>=3)scheduleGrassReunion();checkQuest();return;}
+      if((S.setSh||0)>=3){const reason=grassReunionBlockReason();if(reason)return toast(reason);scheduleGrassReunion();return;}
+      return openSheet('clear');
+    }
     if(o==='board')return S.feat.craft?openSheet('craft'):toast('依頼ボード。もう少ししたら使えるようになる');
     if(o==='statue')return toast('女神像。守り神の居場所');
     if(o==='altar')return toast('カミサマの台座。カミサマはここに現れる');

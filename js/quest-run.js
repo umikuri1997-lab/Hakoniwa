@@ -2,6 +2,8 @@
 function kurashi(key,mt){if(!S)return;const K=S.kb||(S.kb={done:{}});if(K.done[key])return;K.done[key]=1;if(mt)memo(mt[0],mt[1]);}/* 暮らしボーナスはなし（思い出帳のメモだけ） */
 function logEv(t){if(!S.log)S.log=[];S.log.push([dayNo(),t]);if(S.log.length>300)S.log.shift()}
 function checkQuest(){
+  if(sacredQuietActive())return;
+  if(WD===0&&!S.cleared&&(S.setSh||0)>=3&&!NUSHI_RUN&&sheet==null&&$('#dialog').hidden&&!DLGQ.length)scheduleGrassReunion();
   if(QUEST_CLEAR_WAIT&&QUEST_CLEAR_WAIT.quest!==S.quest)QUEST_CLEAR_WAIT=null;
   TALKW=null;if(S.qStory==null)QUESTCLEARW=null;finalCheck();
   if(NEWRES!=null||NEWQ.length)return;
@@ -89,7 +91,7 @@ function renderQuest(){const q=QUESTS[Math.min(S.quest,QUESTS.length-1)];let pr=
     else if(S.qStory!=null||q.talk&&!S.qTalked)t=storyWaitStatusText()||(TALKW?mainStoryPromptText(TALKW):S.qStory==null&&q.talk.wait||'いまは、村をそだてよう');/* なにをすればいいか書く */
     else if(q.prog)pr=q.prog()}
   const qt=$('#questTxt');if(qt.dataset.k!==t+'|'+pr){qt.dataset.k=t+'|'+pr;qt.textContent='';const m=document.createElement('span'),g=document.createElement('span');m.className='qm';g.className='qp';m.textContent=t;g.textContent=pr;qt.append(m,g)}/* 進み具合は2行目に */
-  const h=$('#questHow');if(!h.hidden&&h.dataset.q==S.quest)return;h.dataset.q=S.quest;h.hidden=true;h.innerHTML='<b>やりかた</b>';h.appendChild(document.createTextNode(q.how||''))}
+  const h=$('#questHow'),how=q.how||'';if(!h.hidden&&h.dataset.q==S.quest&&h.dataset.text===how)return;h.dataset.q=S.quest;h.dataset.text=how;h.hidden=true;h.innerHTML='<b>やりかた</b>';h.appendChild(document.createTextNode(how))}
 const NUSHI_T=[
   {"open":[["フタバ","みんな、一緒に。あの木の下へ帰ろう。"],["ノドカ","ゆっくりで、だいじょうぶだよぉ。"]],"name":"草原のヌシ","nushi":["……大きくなったな。"],"world":[],"reu":[["U","木も。おまえも。",0,"nfF"],["F","……あのとき。"],["F","よかった、って言ったの……ヌシ様だったんだね。"],["U","ああ。"],["F","……遅いよ。",0,"stree:hug"],["U","待たせてしまった。"],["F","……。"],["F","みんなが、手伝ってくれたんだ。",0,"stree:group"],["F","ぼく、ひとりじゃ、何もわからなかった。"],["N","ぼくも、ひとりじゃ土をよけただけだったよぉ。",1],["H",{"A":"あたいは、石を温めただけだね。","B":"おれは、石を温めただけだな。"},1],["M","その後に、水を通せました。",1],["K","そして、ようやく声が届いた。",1],["U","……よい仲間に会えたな。"],["F","うん。"],["F","#teary|おかえりなさい。"],["U","……ただいま。",0,"stree:group"]],"next":[],"after":[],"toast":"ステージクリア！","last":"草原にもどる"},
   {open:[[HOMURA,'夜をこえたよ…！','cheer'],[SHIZUKU,'みなさん、力をそそいでください。']],
@@ -99,7 +101,7 @@ let NUSHI_RUN=false,WELCOME_RUN=false;
 function gatherAt(TX,TY,then,skipId){/* せいれいみんなが、台座のまわりへ歩いて集まる（瞬間移動はしない）。そろうか、10秒たったら、つぎへ */
   const spot={};const go=()=>{const used=new Set(Object.values(spot));for(const r of S.res){if(r.hidden||r.id===skipId||r.act&&r.act.type==='nmeet')continue;const G=bfs(r.x|0,r.y|0);let b=spot[r.id]??-1;if(b<0){let bd=1e9;for(let k=0;k<W*H;k++){if(G.dist[k]<0||used.has(k)||!walk(k)||S.obj[k]||roomOf(k))continue;const ky=(k/W)|0,d=Math.hypot(k%W+.5-TX,ky+.5-TY);if(d<1.6||d>5)continue;const sc=d+(ky<TY+1?3:0)+G.dist[k]*.02;/* 家の外の、台座の前がわ（見えるところ）に */if(sc<bd){bd=sc;b=k}}}if(b<0)continue;spot[r.id]=b;used.add(b);if(r.cing){const R=RECIPES.find(x=>x.out===r.cing.rec);if(R)for(const k in R.need)addFood(k,R.need[k]);r.cing=null}/* 料理のとちゅうなら、材料は箱にもどす */endAct(r);startAct(r,G,'nmeet',b,{run:true})}};
   const t0=performance.now();let last=0;const chk=()=>{const n=performance.now();if(n-last>1500){last=n;go()}if(S.res.every(r=>r.hidden||r.id===skipId||r.act&&r.act.type==='nmeet'&&r.act.stage==='do')||n-t0>10000)return then();villageTimeout(chk,250)};villageTimeout(chk,300)}
-function nushiReturns(){if(NUSHI_RUN||S.cleared)return;NUSHI_RUN=true;S.flags.nushiDue=1;/* ヌシ様が帰ってくる場面。「クリア」にするのは、場面を最後まで見てから（途中でとじたら、はじめから） */
+function nushiReturns(){if(NUSHI_RUN||S.cleared||WD===0&&grassReunionBlockReason())return;NUSHI_RUN=true;S.flags.nushiDue=1;/* ヌシ様が帰ってくる場面。「クリア」にするのは、場面を最後まで見てから（途中でとじたら、はじめから） */
   checkQuest();renderQuest();const T=NUSHI_T[WD];
   const tw=S.obj.indexOf('tower'),TX=tw>=0?storyTreeX(tw):CX+.5,TY=tw>=0?storyTreeY(tw):CY;
   if(WD===0)sacredShot('care',S.res.filter(r=>Math.hypot(r.x-TX,r.y-TY)<6));else centerOn(TX*TS,(TY-1)*TS);
