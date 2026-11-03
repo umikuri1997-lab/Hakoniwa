@@ -299,7 +299,7 @@ function decide0(r){
   if(r.afterBath>S.t&&!isNight()&&(r.restCD||0)<=S.t){r.afterBath=0;const isB=j=>(BENCHES.has(S.obj[j])||(S.obj[j]==='part'&&BENCHES.has(S.obj[S.ref[j]])))&&!ashed(anc(j));const bj=nearest(G,j=>isB(j)&&free('o'+j,1),40);if(bj>=0)return startAct(r,G,'rest',bj,{key:'o'+bj,obj:anc(bj),seat:bj})}/* 湯上がりは、ベンチでひと休み *//* 水浴びは18時。せいれいごとに少しずつずれる */
   if(r.elem==='water'&&r.hunger>=25&&!isNight()&&goDouse(r,G))return;/* 水の子は、燃えている物があれば、まず消しにいく */
    if(heldN(r)>0&&r.elem==='earth'&&r.hunger>=55&&!isNight()&&tryJob(r,G,'repair'))return;/* 土のせいれいは、ついでの収穫・木切りより修理が先 */
-  if(heldN(r)>0){if(heldN(r)<capOf(r)&&!isNight()&&r.hunger>=30&&!r.highFirst){const cm=r.cmat||{},gm=(cm.stone||0)>0?['mine']:(cm.wood||0)>0||(cm.bamboo||0)>0?['chop']:[];for(const k of['drop','harvest',...gm,'gather'])if(tryJob(r,G,k))return}/* 落ちている素材・食べ物も、持てる数までまとめてひろってから運ぶ */
+  if(heldN(r)>0){if(heldN(r)<capOf(r)&&!isNight()&&r.hunger>=30&&!r.highFirst){const cm=r.cmat||{},gm=[...WEEDS].some(id=>(cm[BL[id].weed]||0)>0)?['weed']:(cm.stone||0)>0?['mine']:(cm.wood||0)>0||(cm.bamboo||0)>0?['chop']:[];for(const k of['drop','harvest',...gm,'gather'])if(tryJob(r,G,k))return}/* 草むしり・落ちている素材・食べ物も、持てる数までまとめて集めてから運ぶ */
     if(carryN(r)>0&&foodCap()>0)return goStore(r,G)}
   if(r.cmat&&matCap()>0)return goStoreMat(r,G);
   else if(isNight()&&isWatch(r)){// 火のせいれい（と、まもりをおぼえたフタバ）は寝ないで見回り
