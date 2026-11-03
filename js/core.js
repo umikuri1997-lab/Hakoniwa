@@ -1,12 +1,13 @@
 'use strict';
+const IS_STORY_REPLAY=typeof location!=='undefined'&&new URLSearchParams(location.search).has('storyReplay');
 /* Web版：同じ端末・ブラウザに保存。書き込み失敗を利用者に伝える。 */
 const KV=(()=>{
   const memory=Object.create(null);let available=false,lastSaved=0;
-  try{localStorage.setItem('__hakoniwa_test','1');localStorage.removeItem('__hakoniwa_test');available=true}catch(e){}
+  if(IS_STORY_REPLAY)available=true;else try{localStorage.setItem('__hakoniwa_test','1');localStorage.removeItem('__hakoniwa_test');available=true}catch(e){}
   return {
-    getItem(k){if(Object.hasOwn(memory,k))return memory[k];try{return localStorage.getItem(k)}catch(e){return null}},
-    setItem(k,v){v=String(v);memory[k]=v;try{localStorage.setItem(k,v);available=true;if(/^hakoniwa-(w\d|free-v)/.test(k))lastSaved=Date.now();return true}catch(e){available=false;return false}},
-    removeItem(k){delete memory[k];try{localStorage.removeItem(k);return true}catch(e){available=false;return false}},
+    getItem(k){if(Object.hasOwn(memory,k))return memory[k];if(IS_STORY_REPLAY)return null;try{return localStorage.getItem(k)}catch(e){return null}},
+    setItem(k,v){v=String(v);memory[k]=v;if(IS_STORY_REPLAY)return true;try{localStorage.setItem(k,v);available=true;if(/^hakoniwa-(w\d|free-v)/.test(k))lastSaved=Date.now();return true}catch(e){available=false;return false}},
+    removeItem(k){delete memory[k];if(IS_STORY_REPLAY)return;try{localStorage.removeItem(k);return true}catch(e){available=false;return false}},
     push(){},onCloud(){},ready:()=>true,status:()=>({available,lastSaved})
   };
 })();
@@ -17,7 +18,7 @@ const MIN_PER_SEC=2.5;         // 1倍速: 1秒 = ゲーム内2.5分
 const FREE=6;/* フリーモードのステージ番号 */
 const SAVE_KEYS=['hakoniwa-w1-v8','hakoniwa-w2-v1'];SAVE_KEYS[FREE]='hakoniwa-free-v1';/* ステージごとに別のセーブ */
 let WD=0;/* いまのステージ */
-const DIRS=[[1,0],[-1,0],[0,1],[0,-1]];let TESTM=(()=>{try{return localStorage.getItem('hk-test')==='1'}catch(_){return false}})();
+const DIRS=[[1,0],[-1,0],[0,1],[0,-1]];let TESTM=(()=>{try{return KV.getItem('hk-test')==='1'}catch(_){return false}})();
 const $=s=>document.querySelector(s);
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const rnd=(a,b)=>a+Math.random()*(b-a);

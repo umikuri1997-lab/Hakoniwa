@@ -25,14 +25,15 @@ function sacredShot(mode,cast=sacredCast(),seconds=1.1){
   }
   const left=Math.min(...points.map(p=>p[0])),right=Math.max(...points.map(p=>p[0])),top=Math.min(...points.map(p=>p[1])),bottom=Math.max(...points.map(p=>p[1]));
   // 会話欄を避けた、上側の見える範囲に収める。縦長・横長どちらでも同じ構図を保つ。
-  const panel=$('#dialog .dlg'),rect=panel?.getBoundingClientRect(),panelH=rect?.height||200,safeTop=76,dialogueTop=!$('#dialog').hidden&&rect?.height?rect.top:VH-Math.max(200,panelH)-90,safeBottom=Math.min(VH-56,Math.max(safeTop+100,dialogueTop-110)),height=safeBottom-safeTop;
-  const z=Math.max(minZ(),Math.min(limit,(VW-56)/(right-left+36),height/(bottom-top+28)));
-  const tx=(left+right)/2,ty=(top+bottom)/2+(VH/2-(safeTop+safeBottom)/2)/z;
+  const side=VW>VH&&VH<500;$('#dialog').classList.toggle('sacred-side',side);
+  const panel=$('#dialog .dlg'),rect=panel?.getBoundingClientRect(),panelH=rect?.height||200,safeTop=side?(IS_STORY_REPLAY?16:76):76,dialogueTop=!$('#dialog').hidden&&rect?.height?rect.top:VH-Math.max(200,panelH)-90,safeBottom=side?VH-60:Math.min(VH-56,Math.max(safeTop+100,dialogueTop-110)),height=safeBottom-safeTop,safeLeft=side?16:28,safeRight=side?VW*.54-12:VW-28;
+  const z=Math.max(minZ(),Math.min(limit,(safeRight-safeLeft)/(right-left+36),height/(bottom-top+28)));
+  const tx=(left+right)/2+(VW/2-(safeLeft+safeRight)/2)/z,ty=(top+bottom)/2+(VH/2-(safeTop+safeBottom)/2)/z;
   camAnim={fz:cam.z,tz:z,fx:cam.x+VW/cam.z/2,fy:cam.y+VH/cam.z/2,tx,ty,t:0,dur:seconds,sacred:true};
   sacredDirection().shot={mode,cast,left,right,top,bottom,z,safeTop,safeBottom};
 }
 function sacredEndDirection(restore=true){
-  const d=sacredDirection();if(!d)return;
+  $('#dialog').classList.remove('sacred-side');const d=sacredDirection();if(!d)return;
   for(const r of S.res)SACRED_POSES.delete(r);
   SACRED_DIRECTION.delete(S);SACRED_PREVIEW.delete(S);
   if(restore){const h=d.home;camAnim={fz:cam.z,tz:h.z,fx:cam.x+VW/cam.z/2,fy:cam.y+VH/cam.z/2,tx:h.x,ty:h.y,t:0,dur:1.1,sacred:true};}

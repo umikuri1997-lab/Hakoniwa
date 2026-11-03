@@ -34,7 +34,7 @@ function sacredReserved(j){return !!S&&WD===0&&!S.free&&S.sacredRoot!=null&&sacr
 function sacredCompleted(id){const i=QUESTS1.findIndex(q=>q.id===id);return fieldStoryDone(id)||i>=0&&S.quest>i&&S.qStory!==i;}
 function sacredRevealed(id){const i=QUESTS1.findIndex(q=>q.id===id);return i>=0&&S.quest>i&&S.qStory!==i;}
 function sacredStage(){
-  if(!S)return 4;
+  if(!S)return 4;if(IS_STORY_REPLAY&&S.replayMature)return 4;
   if(S.obj.includes('tower'))return S.cleared||(S.setSh||0)>=2&&GRASSN>=1750?4:3;
   if(sacredRevealed('waterLeaf'))return 2;
   if(sacredRevealed('fireTrace'))return 1;

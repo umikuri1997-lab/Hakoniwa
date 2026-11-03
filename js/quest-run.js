@@ -86,7 +86,7 @@ function renderQuest(){const q=QUESTS[Math.min(S.quest,QUESTS.length-1)];let pr=
   if(!S.cleared){const ms=qMissing(q);
     if(ms.length)t=ms.join('と')+'がもどるまで、お話は進まない';
     else if(isNight()&&(S.qStory!=null||q.talk&&!S.qTalked))t='お話は、朝になってから';
-    else if(S.qStory!=null||q.talk&&!S.qTalked)t=TALKW?mainStoryPromptText(TALKW):S.qStory==null&&q.talk.wait||'いまは、村をそだてよう';/* なにをすればいいか書く */
+    else if(S.qStory!=null||q.talk&&!S.qTalked)t=storyWaitStatusText()||(TALKW?mainStoryPromptText(TALKW):S.qStory==null&&q.talk.wait||'いまは、村をそだてよう');/* なにをすればいいか書く */
     else if(q.prog)pr=q.prog()}
   const qt=$('#questTxt');if(qt.dataset.k!==t+'|'+pr){qt.dataset.k=t+'|'+pr;qt.textContent='';const m=document.createElement('span'),g=document.createElement('span');m.className='qm';g.className='qp';m.textContent=t;g.textContent=pr;qt.append(m,g)}/* 進み具合は2行目に */
   const h=$('#questHow');if(!h.hidden&&h.dataset.q==S.quest)return;h.dataset.q=S.quest;h.hidden=true;h.innerHTML='<b>やりかた</b>';h.appendChild(document.createTextNode(q.how||''))}
