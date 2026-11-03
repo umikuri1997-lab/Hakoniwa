@@ -174,7 +174,7 @@ const BL={
 };
 const BLOCKS=['path','gravel','woodpath','stone','brick','floor','brickfloor','stonefloor','herrfloor','carpet','farm','fence','logfence','bamboofence','bedge','gate','stonegate','logdoor','loggate','hwall','logwall','plasterwall','brickwall','yozorawall','door','yozoradoor','wall','sdoor','window'];const GATE_IDS=new Set(['gate','stonegate','logdoor','loggate']),FENCE_IDS=new Set(['fence','logfence','bamboofence','gate','stonegate','logdoor','loggate']),HOME_WALLS=new Set(['hwall','logwall','plasterwall','brickwall','yozorawall','wall']),HOME_DOORS=new Set(['door','yozoradoor','sdoor']);
 const TOWER_STONE={...BL.tower};
-const TOWER_TREE={...BL.tower,name:'御神木',pc:0,mat:{},maker:'wood',desc:'みんなで育てた木。土地に散らばったヌシ様の力を結び、葉の光で村を守る。まわり7マスを照らす'};
+const TOWER_TREE={...BL.tower,sz:[3,3],name:'御神木',pc:0,mat:{},maker:'wood',desc:'みんなで育てた木。土地に散らばったヌシ様の力を結び、葉の光で村を守る。まわり7マスを照らす'};
 const PLANTS=['clover','bellf','salvia','lily','lotus','tree','fruit'],FLOWERS=new Set(['clover','bellf','salvia','lily','lotus']),ATTRFL=new Set(['clover','bellf','salvia','lily','lotus']),plantOK=id=>!ATTRFL.has(id)||!!S.unlocked[id]/* 属性の花はクエストで解放 */,isBud=j=>!!(S&&S.bud&&S.bud[j]>dayNo())/* 植えた日の次の朝まで、花と木は芽 */,flowerN=()=>S.obj.reduce((a,o,j)=>a+(FLOWERS.has(o)&&!isBud(j)?1:0),0),BREQ={windmill:'wind',fountain:'water',well:'water',lighthouse:'fire',stele:'earth'}/* 属性の子がいないと建てられない */;
 const bloomCount=id=>S.obj.reduce((n,o,j)=>n+(o===id&&!isBud(j)?1:0),0);
 const FLOWER_QUESTS=new Set(['salvia3','lotus3','lily5','clover3']);

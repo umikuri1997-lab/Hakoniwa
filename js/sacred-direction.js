@@ -11,10 +11,10 @@ function sacredDirection(create=false){
 }
 function sacredEffect(k){const e=sacredDirection()?.effects.get(k);return e&&performance.now()<e.at+e.ms?e:null;}
 function sacredStartEffect(k,ms,extra={}){const d=sacredDirection(true);if(!d)return null;const e={at:performance.now(),ms,...extra};d.effects.set(k,e);return e;}
-function sacredCast(){return S.res.filter(r=>!r.hidden&&r.act&&['fieldintro','fieldstory','fieldassist','fieldwait','nmeet'].includes(r.act.type));}
+function sacredCast(){return S.res.filter(r=>!r.hidden&&r.act&&['fieldintro','fieldstory','fieldassist','fieldwait','storywait','nmeet'].includes(r.act.type));}
 function sacredShot(mode,cast=sacredCast(),seconds=1.1){
   if(!S||WD!==0||S.sacredRoot==null)return;
-  sacredDirection(true);const j=S.sacredRoot,x=(j%W+1)*TS,y=((j/W|0)+1)*TS-hiAt(j)*LIFT;
+  sacredDirection(true);const j=S.sacredRoot,x=storyTreeX(j)*TS,y=storyTreeY(j)*TS-hiAt(j)*LIFT;
   let points=[[x-38,y-55],[x+38,y+20]],limit=mode==='detail'?3:2.5;
   if(mode==='face'){const f=S.res.find(r=>r.name===POKO);if(f)points=[[f.x*TS-24,f.y*TS-55-uLift(f)],[f.x*TS+24,f.y*TS+8-uLift(f)]];limit=3;}
   else if(mode==='reunion'&&S.nushi){const f=S.res.find(r=>r.name===POKO),n=S.nushi;points=[[n.x*TS-110,n.y*TS-160],[n.x*TS+100,n.y*TS+12]];if(f)points.push([f.x*TS-25,f.y*TS-48],[f.x*TS+25,f.y*TS+8]);limit=2.4;}
@@ -87,7 +87,7 @@ function sacredTreeMotion(now){
 }
 function sacredStone(c,x,y,warm=0){const art=window.CHIPS?.['story:stone'];if(art&&drawChip(c,art,'story:stone',Math.round(x),Math.round(y),performance.now()))return;c.fillStyle=warm?'#cbb69b':'#b9b6aa';c.fillRect(Math.round(x-4),Math.round(y-2),8,4);c.fillStyle=warm?'#e5cdb0':'#d7d3c6';c.fillRect(Math.round(x-3),Math.round(y-3),6,2);}
 function drawSacredCare(now){
-  if(!S||WD!==0||S.sacredRoot==null)return;const j=S.sacredRoot,x=(j%W+1)*TS,y=((j/W|0)+1.5)*TS-hiAt(j)*LIFT;
+  if(!S||WD!==0||S.sacredRoot==null)return;const j=S.sacredRoot,x=storyTreeX(j)*TS,y=(storyTreeY(j)+.5)*TS-hiAt(j)*LIFT;
   const d=sacredDirection();if(!d)return;ctx.save();ctx.lineCap='round';
   for(const [kind,e]of d.effects){const p=Math.max(0,Math.min(1,(now-e.at)/e.ms));if(p>=1)continue;const a=e.actor,sx=a?a.x*TS:x,sy=a?a.y*TS-(kind==='stone'?8:16)-uLift(a):y;
     if(kind==='stone'){if(e.warming&&p<.3){ctx.fillStyle='#edbd8b';ctx.beginPath();ctx.moveTo(sx+8,sy+4);ctx.quadraticCurveTo(sx+6,sy-3,sx+12,sy-7);ctx.quadraticCurveTo(sx+11,sy-1,sx+15,sy+4);ctx.fill();}const q=sacredEase((p-.3)/.6);sacredStone(ctx,sx+(x+17-sx)*q,sy+(y+4-sy)*q-Math.sin(Math.PI*q)*7,1);}

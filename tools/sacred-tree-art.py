@@ -12,14 +12,14 @@ ROOT = Path(__file__).resolve().parents[1]
 spec = importlib.util.spec_from_file_location('chips', ROOT / 'tools/chips.py')
 chips = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(chips)
-# key, source, canvas size at g64, ax, ay. 根の中心を(64,116)にそろえる。
+# key, source, canvas size at g64, ax, ay. 根の中心を(96,180)にそろえる。
 ART = [
-    ('story:stump', 'stump', 128, 1, 11),
-    ('story:bud', 'bud', 128, 1, 11),
-    ('story:leaf', 'leaf', 128, 1, 11),
-    ('story:sapling', 'sapling', 128, 6, -5),
-    ('story:tree-young', 'tree', 224, -43, -97),
-    ('story:tree', 'tree', 288, -73, -158),
+    ('story:stump', 'stump', 128, 33, 75),
+    ('story:bud', 'bud', 128, 33, 75),
+    ('story:leaf', 'leaf', 128, 33, 75),
+    ('story:sapling', 'sapling', 128, 38, 59),
+    ('story:tree-young', 'tree', 224, -11, -33),
+    ('story:tree', 'tree', 288, -41, -94),
     ('story:stone', 'stone', 24, -12, -12),
 ]
 with tempfile.TemporaryDirectory() as tmp:

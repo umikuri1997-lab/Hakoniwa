@@ -2,7 +2,34 @@
 /* 草原の物語の木。tower は既存セーブの建物IDとして保ち、火山の台座とは表示・育て方を分ける。 */
 const storyTreeName=()=>WD===0?'御神木':'守護の台座';
 const SACRED_PREVIEW=new WeakMap(),SACRED_POSES=new WeakMap();
-const sacredCells=j=>[j,j+1,j+W,j+W+1];
+const sacredSpan=()=>S?.sacredLegacy2?2:3;
+const sacredCells=(j,n=sacredSpan())=>Array.from({length:n*n},(_,i)=>j+(i/n|0)*W+i%n);
+const storyTreeX=j=>j%W+(WD===0?sacredSpan():2)/2;
+const storyTreeY=j=>(j/W|0)+(WD===0?sacredSpan()-1:1);
+function migrateSacredFootprint3(state){
+  if(state.free||(state.world||0)!==0||state.flags.sacredFootprint3&&!state.sacredLegacy2)return;
+  const old=state.obj.indexOf('tower'),pending=state.obj.findIndex((o,j)=>o==='site'&&state.dyn[j]?.build==='tower'),origin=old>=0?old:pending>=0?pending:state.sacredRoot;
+  if(origin==null){state.flags.sacredFootprint3=1;return;}
+  const own=new Set(old>=0||pending>=0?[origin]:[]);for(let k=0;k<state.obj.length;k++)if(state.obj[k]==='part'&&state.ref[k]===origin)own.add(k);
+  const fits=j=>j>=0&&j%W<=W-3&&(j/W|0)<=H-3&&sacredCells(j,3).every(k=>(!state.obj[k]||own.has(k))&&(own.has(k)||!state.floor[k])&&state.ground[k]!==1&&state.ground[k]!==2&&(state.hi?.[k]||0)===(state.hi?.[origin]||0)&&!state.res?.some(r=>!r.hidden&&(r.y|0)*W+(r.x|0)===k)&&!Object.keys(state.rug||{}).some(a=>sacredCells(+a,2).includes(k))&&!Object.keys(state.roof||{}).some(a=>sacredCells(+a,2).includes(k)));
+  let target=fits(origin)?origin:-1,best=Infinity;
+  if(target<0)for(let j=0;j<state.obj.length;j++){const d=Math.abs(j%W-origin%W)+Math.abs((j/W|0)-(origin/W|0));if(d<best&&fits(j)){best=d;target=j;}}
+  if(target<0){state.sacredLegacy2=true;return;} // 空きがない古い村の家具は消さない。次回読み込みで再確認する。
+  const type=old>=0?'tower':pending>=0?'site':null,dy=state.dyn[origin],hp=state.hp?.[origin],lv=state.hp?.['L'+origin];
+  for(const k of own){if(k===origin&&type||k!==origin){state.obj[k]='';delete state.ref[k];}}if(type){delete state.dyn[origin];if(state.hp){delete state.hp[origin];delete state.hp['L'+origin];}}
+  state.sacredRoot=target;(state.fieldSites||(state.fieldSites={})).root=target;delete state.sacredLegacy2;
+  if(type){state.obj[target]=type;for(const k of sacredCells(target,3).slice(1)){state.obj[k]='part';state.ref[k]=target;}if(dy)state.dyn[target]=dy;if(hp!=null)state.hp[target]=hp;if(lv!=null)state.hp['L'+target]=lv;}
+  for(const b of state.broken||[])if(b.id==='tower'&&b.j===origin)b.j=target;
+  for(const r of state.res||[])if(r.act?.obj===origin&&['fieldintro','fieldstory','fieldassist','fieldwait','storywait','build','repair'].includes(r.act.type)){r.act=null;r.path=[];}
+  if(target!==origin)(state.log||(state.log=[])).push([Math.floor((state.t||0)/1440)+1,'御神木のため、空いた3×3の場所を整えた']);
+  state.flags.sacredFootprint3=1;
+}
+function tryExpandSacredLegacy(state){
+  if(!state.sacredLegacy2||state.sacredRoot==null)return;
+  const j=state.sacredRoot,cells=sacredCells(j,3);if(j%W>W-3||(j/W|0)>H-3)return;
+  if(cells.some(k=>state.obj[k]&&k!==j&&!(state.obj[k]==='part'&&state.ref[k]===j)||state.res?.some(r=>!r.hidden&&(r.y|0)*W+(r.x|0)===k)))return;
+  migrateSacredFootprint3(state);
+}
 function sacredReserved(j){return !!S&&WD===0&&!S.free&&S.sacredRoot!=null&&sacredCells(S.sacredRoot).includes(j);}
 function sacredCompleted(id){const i=QUESTS1.findIndex(q=>q.id===id);return fieldStoryDone(id)||i>=0&&S.quest>i&&S.qStory!==i;}
 function sacredRevealed(id){const i=QUESTS1.findIndex(q=>q.id===id);return i>=0&&S.quest>i&&S.qStory!==i;}
@@ -13,7 +40,7 @@ function sacredStage(){
   if(sacredRevealed('fireTrace'))return 1;
   return 0;
 }
-function sacredRootFits(j){return j>=0&&j%W<W-1&&(j/W|0)<H-1&&sacredCells(j).every(k=>walk(k)&&!S.obj[k]&&!S.floor[k]&&!roomOf(k)&&!RUGC.has(k)&&hiAt(k)===hiAt(j));}
+function sacredRootFits(j){return j>=0&&j%W<=W-sacredSpan()&&(j/W|0)<=H-sacredSpan()&&sacredCells(j).every(k=>walk(k)&&!S.obj[k]&&!S.floor[k]&&!roomOf(k)&&!RUGC.has(k)&&hiAt(k)===hiAt(j));}
 function migrateSacredStory(state){
   if(state.flags.sacredStoryV1)return;
   if(!state.free&&(state.world||0)===0){
@@ -40,18 +67,19 @@ function sacredSceneWalk(r,x,y,pose,arrived){
   endAct(r);startAct(r,G,'nmeet',stand,{});let last=performance.now();const tick=now=>{if(S!==owner||VILLAGE_SESSION!==session||sacredDirection()!==direction||!S.res.includes(r)||r.act?.type!=='nmeet')return;const dt=Math.min(.1,(now-last)/1000);last=now;if(r.act.stage==='walk'){moveR(r,dt*4);requestAnimationFrame(tick);}else{if(pose.anim)sacredSetPose(r,pose);if(arrived)arrived();}};requestAnimationFrame(tick);return true;
 }
 function drawStoryTree(c,x,y,j,now,full=false){
+  x+=(sacredSpan()-3)*TS/2;y+=(sacredSpan()-3)*TS;
   const motion=sacredTreeMotion(now),g=motion.growth,p=motion.progress;
-  c.save();c.translate(x+32,y+58);c.rotate(motion.sway);c.translate(-x-32,-y-58);
+  c.save();c.translate(x+48,y+90);c.rotate(motion.sway);c.translate(-x-48,-y-90);
   if(g&&p<1){c.save();c.globalAlpha=1-p;drawStoryTreeFrame(c,x,y,j,now,g.from,1);c.restore();c.save();c.globalAlpha=p;drawStoryTreeFrame(c,x,y,j,now,g.to,p);c.restore();}
   else drawStoryTreeFrame(c,x,y,j,now,full?4:null,1);
   c.restore();
-  if(sacredCompleted('fireRoot')||(fieldStoryState('fireRoot')?.step||0)>=1){const moving=sacredEffect('stone');for(const [dx,dy]of[[-20,1],[19,4],[10,14]]){if(moving&&dx===19&&(now-moving.at)/moving.ms<.9)continue;sacredStone(c,x+32+dx,y+48+dy,1);}}
+  if(sacredCompleted('fireRoot')||(fieldStoryState('fireRoot')?.step||0)>=1){const moving=sacredEffect('stone');for(const [dx,dy]of[[-20,1],[19,4],[10,14]]){if(moving&&dx===19&&(now-moving.at)/moving.ms<.9)continue;sacredStone(c,x+48+dx,y+80+dy,1);}}
 }
 function drawStoryTreeFrame(c,x,y,j,now,forced=null,unfold=1){
   let stage=forced??sacredStage();const preview=S&&SACRED_PREVIEW.get(S);if(forced==null&&preview?.session===VILLAGE_SESSION&&performance.now()<preview.until)stage=Math.max(stage,preview.stage);
   const key=['story:stump','story:bud','story:leaf',(S.setSh||0)>=1?'story:tree-young':'story:sapling','story:tree'][stage],art=window.CHIPS?.[key];
   if(art&&drawChip(c,art,key,x,y,now,j))return;
-  const cx=x+32,cy=y+48;c.save();c.imageSmoothingEnabled=false;
+  const cx=x+48,cy=y+80;c.save();c.imageSmoothingEnabled=false;
   c.fillStyle='rgba(66,53,28,.17)';c.beginPath();c.ellipse(cx,cy+9,23,7,0,0,7);c.fill();
   c.strokeStyle='#ab855e';c.lineWidth=7;c.lineCap='round';for(const [dx,dy]of[[-23,10],[24,8],[-14,17],[13,18]]){c.beginPath();c.moveTo(cx,cy+2);c.quadraticCurveTo(cx+dx*.5,cy+dy*.7,cx+dx,cy+dy);c.stroke();}
   c.fillStyle='#b78c61';c.fillRect(cx-14,cy-17,28,24);c.fillStyle='#d2ad7c';c.beginPath();c.ellipse(cx,cy-17,14,6,0,0,7);c.fill();
@@ -66,6 +94,6 @@ const SACRED_QUIET=[
 ];
 function sacredQuietScene(){
   const owner=S,session=VILLAGE_SESSION,tw=S.obj.indexOf('tower');if(tw<0)return;
-  sacredShot('care',S.res.filter(r=>Math.hypot(r.x-(tw%W+1),r.y-(tw/W|0)-1)<6));gatherAt(tw%W+1,(tw/W|0)+2,()=>{if(S!==owner||session!==VILLAGE_SESSION)return;dialog(sevLines(SACRED_QUIET),()=>{S.flags.sacredQuietSeen=true;dirty=true;sacredEndDirection();toast('御神木の葉が、静かに鳴っている');});});
+  sacredShot('care',S.res.filter(r=>Math.hypot(r.x-storyTreeX(tw),r.y-storyTreeY(tw))<6));gatherAt(storyTreeX(tw),storyTreeY(tw)+1,()=>{if(S!==owner||session!==VILLAGE_SESSION)return;dialog(sevLines(SACRED_QUIET),()=>{S.flags.sacredQuietSeen=true;dirty=true;sacredEndDirection();toast('御神木の葉が、静かに鳴っている');});});
 }
 function drawSacredQuiet(now){if(WD===0&&S.nushi&&S.flags.sacredReunion&&!S.flags.sacredQuietSeen&&$('#dialog').hidden){talkBub(S.nushi.x*TS,S.nushi.y*TS-42,now,'#b7ddba');}}
