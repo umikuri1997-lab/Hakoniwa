@@ -6,7 +6,7 @@ const natDone=a=>(S.hp['lp'+a.obj]||0)>=(NATG[S.obj[a.obj]]||30);
 function natLight(j){PTW.q=true;const o=S.obj[j],k=LIGHTNAT[o];if(LIGHTCD>0){toast('まもりの光は、あと'+Math.ceil(LIGHTCD/(S.speed||1))+'秒');return}if(S.pt<1){toast('パワーが足りません');return}S.pt-=1;LIGHTCD=LIGHTCDL[S.lv]||10;/* 1回パワー1。コワイノと同じ待ち時間 */
   const x=j%W,y=(j/W)|0,n=(S.hp['lp'+j]||0)+LIGHTHIT[o],cx=x*TS+16,cy=y*TS+8;delete S.hp['lt'+j];fxSpr('lighthit',cx,cy);sfxAt('shoot',x,y);
   NATHIT.set(j,performance.now());if(n<NATG[o]){S.hp['lp'+j]=n;return}/* ゲージがなくなると、木材・石材が1こ落ちる。のこりは、たいきゅうバーで見せる */
-  delete S.hp['lp'+j];useNat(j);S.flags.lightBroke=1;/* サブクエスト「守り神の光で木や岩をこわそう」 */const n0=(S.drops||[]).length;dropAt(x,y,'mat:'+k,1);if(S.drops&&S.drops.length>n0){sfxAt('matDrop',x,y);const d=S.drops[S.drops.length-1];d.lt=1;DROPFX.set(d,{sx:x*TS+16,sy:y*TS+4,t0:performance.now()})}}/* 何も言わずに、木材・石材のアイコンを落とす *//* 落ちた物は、せいれいがひろう。木や岩は、せいれいが切ったときと同じようにへる */
+  delete S.hp['lp'+j];fxSpr(o==='rock'?'rockbreak':'treefall',cx,y*TS+26);useNat(j);S.flags.lightBroke=1;/* サブクエスト「守り神の光で木や岩をこわそう」 */const n0=(S.drops||[]).length;dropAt(x,y,'mat:'+k,1);if(S.drops&&S.drops.length>n0){sfxAt('matDrop',x,y);const d=S.drops[S.drops.length-1];d.lt=1;DROPFX.set(d,{sx:x*TS+16,sy:y*TS+4,t0:performance.now()})}}/* 何も言わずに、木材・石材のアイコンを落とす *//* 落ちた物は、せいれいがひろう。木や岩は、せいれいが切ったときと同じようにへる */
 /* 守り神の光は、はじめから木や岩にも使える。フタバの「やってみて」は、はじめての夜のあとのサブクエスト（lighttry） */
 function spawnSeed(){
   for(let t=0;t<40;t++){const x=OFF+((Math.random()*OW)|0),y=OFF+((Math.random()*OW)|0),j=y*W+x;/* 前からの土地の中に落ちる */
