@@ -387,8 +387,8 @@ function goSleep(r,G,run){
 function mate(a,b){const A=a.mates||(a.mates={}),B=b.mates||(b.mates={});A[b.id]=(A[b.id]||0)+1;B[a.id]=(B[a.id]||0)+1;if(A[b.id]===6){for(const x of[a,b])addFloat(x.x,x.y-1.4,'なかよし！');/* なかよしになったら、頭の上に「なかよし！」だけ */memo('🤝',a.name+'と'+b.name+'がなかよしになった');logEv(a.name+'と'+b.name+'がなかよしになった')}}/* いっしょに遊んだり食べたりした回数 */
 const mateK=(r,ty)=>S.res.some(q=>q!==r&&((r.mates||{})[q.id]||0)>=6&&q.act&&q.act.type===ty&&q.act.stage==='do'&&Math.abs(q.x-r.x)+Math.abs(q.y-r.y)<5)?1.2:1;/* なかよしといっしょに寝る・休むと回復1.2倍 */
 const bestMate=r=>{let b=null,n=5;for(const k in r.mates||{}){const q=S.res.find(x=>x.id===+k);if(q&&r.mates[k]>n){n=r.mates[k];b=q}}return b};
-function socialBest(r,G){let best=null,bs=-1e9;
-  for(const o of S.res){if(o===r||o.hidden)continue;const oj=(o.y|0)*W+(o.x|0),dd=G.dist[oj];
+function socialBest(r,G){let best=null,bs=-1e9;if(storyCalled(r))return null;/* お話によばれている子は、おしゃべりしない */
+  for(const o of S.res){if(o===r||o.hidden||storyCalled(o))continue;const oj=(o.y|0)*W+(o.x|0),dd=G.dist[oj];
     if((r.chatCD||0)<S.t&&(o.chatCD||0)<S.t&&dd>=0&&dd<=16&&(!o.act||o.act.type==='wander'||o.act.type==='idle'||(o.act.stage==='walk'&&['chop','mine','play','fish'].includes(o.act.type)))&&o.hunger>35&&o.energy>25&&!o.carry&&!o.cmat&&!o.meal){
       const st=nearest(G,j=>[1,-1,W,-W].includes(j-oj)&&walk(j),14);if(st<0)continue;
       const tag=!isNight()&&r.energy>50&&o.energy>50&&Math.random()<.45;

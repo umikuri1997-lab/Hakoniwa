@@ -61,9 +61,11 @@ function sacredBeat(c){
     const anim={soil:'storySoil',touch:'storyTouch',cover:'storyCover',stone:'storyStone',water:'storyPour',runoff:'storyPour',wind:'storyWind'}[c];
     sacredScenePose(actor,anim,ms,{side:true,target:j});sacredStartEffect(c,ms,{actor,warming:c==='stone'&&QUESTS[S.quest]?.id==='fireRoot'});sacredShot('care',cast);
   }
-  if(c==='bump'&&f&&n){d.waitUntil=performance.now()+6000;
+  if(c==='bump'&&f&&n){
     sacredShot('care',[f,n]);const owner=S,session=VILLAGE_SESSION;
-    sacredSceneWalk(f,n.x,n.y,{adjacentSide:true},()=>{if(S!==owner||session!==VILLAGE_SESSION)return;f.face=f.x<n.x?1:-1;n.face=-f.face;for(const r of[f,n])sacredScenePose(r,'storyBump',1800,{side:true,face:r.face});sacredStartEffect('bump',1800,{actor:f,other:n});d.waitUntil=performance.now()+1800;});
+    const bump=()=>{if(S!==owner||session!==VILLAGE_SESSION)return;f.face=f.x<n.x?1:-1;n.face=-f.face;for(const r of[f,n])sacredScenePose(r,'storyBump',1800,{side:true,face:r.face});sacredStartEffect('bump',1800,{actor:f,other:n});d.waitUntil=performance.now()+1800;};
+    if(Math.abs(f.y-n.y)<.6&&Math.abs(f.x-n.x)<1.6)bump();/* もうとなりにいれば、その場で */
+    else{d.waitUntil=performance.now()+4000;if(!sacredSceneWalk(f,n.x,n.y,{adjacentSide:true},bump))bump();}/* となりへ行けないときも、止まらずに、その場で */
   }
   if(c==='sit'||c==='quiet'){for(const r of cast)sacredScenePose(r,'storyListen',600000,{sit:true,side:true,target:j});sacredShot('care',cast,1.4);}
   if(c==='bud'||c==='leaf'||c==='grow'){
