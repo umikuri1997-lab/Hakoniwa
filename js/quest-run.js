@@ -59,7 +59,7 @@ function showSpotPop(){if(MEMRUN)return;while(SPOT_POPS.length&&SPOT_POPS[0].sta
 function questGives(q,g){g=g||q.gives||{};
     (g.feat||[]).forEach(f=>S.feat[f]=true);for(const k in (g.food||{}))addFood(k,g.food[k]);for(const k in (g.mat||{}))S.mat[k]=(S.mat[k]||0)+g.mat[k];for(const k in (g.items||{})){S.unlocked[k]=true;giveItem(k,g.items[k])}queueItemGift(g.items);
     if(g.flags)g.flags.forEach(f=>S.flags[f]=true);if(g.recipes)g.recipes.forEach(id=>S.recipes[id]=true);if(g.shard)giveShard(g.shard);if(g.enemy)S.enemyOn=true;if(g.shrine)S.flags.shrine=true;if(g.flag){S.flags[g.flag]=true;if(g.flag==='onsen')dirty=true}
-    if(g.godLeave){S.godGone=true;const GX=godX(),GY=godY();fx.push({k:'ring',x:GX*TS,y:GY*TS,life:1});for(let n=0;n<20;n++){const a=Math.random()*7;fx.push({k:'p',x:GX*TS,y:GY*TS,vx:Math.cos(a)*90,vy:Math.sin(a)*90-40,life:1,col:'#fff',r:3})}sfx('poof')}
+    if(g.godLeave){S.godGone=true;const GX=godX(),GY=godY();fxSpr('poof',GX*TS,GY*TS);sfx('poof')}
     if(g.fest)freeFest();if(g.msg)toast(g.msg,'good');applyFeats();
     const hadW=g.watchNow&&(cnt('watch')>0||S.obj.some((o,j)=>o==='site'&&S.dyn[j]&&S.dyn[j].build==='watch'));// 先に建てていたら、その分のパワーを返す（おごり）
     const after=g.watchNow?(hadW?()=>{S.pt+=BL.watch.pc;for(const k in BL.watch.mat)S.mat[k]=(S.mat[k]||0)+BL.watch.mat[k];toast('見張り台の分のパワーと素材をカミサマが返してくれた','good');checkQuest()}:()=>{setMode('build');sel='watch';renderPalette();toast('見張り台を置く場所をタップ')}):null;

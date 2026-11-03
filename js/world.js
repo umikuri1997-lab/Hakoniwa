@@ -143,7 +143,7 @@ function ignite(j){if(WD!==1||!S.st2)return;const o=S.obj[j];if(!FLAM.has(o))ret
 function fireTick(dt){if(WD!==1||!S.st2||!S.st2.fire)return;const F=S.st2.fire;for(const k in F){const j=+k,o=S.obj[j];if(!FLAM.has(o)){delete F[k];continue}S.hp[j]=(S.hp[j]??burnHp(o))-dt/15;/* 燃えているあいだ、15分ごとにじょうぶさが1へる */
   if(S.hp[j]<=0){(S.broken||(S.broken=[])).push({j,id:o,L:S.hp['L'+j],rot:rotAt(j)});delete F[k];sfxAt('wbreak',j%W+.5,(j/W)|0);clearObj(j);recount();dirty=true;toast(BL[o].name+'が燃えてこわれた','warn')}}}
 function sparkTick(){if(WD!==1||!S.st2||isNight()||elemCount('water')<1||Math.random()>=.05)return;/* 火の粉：昼のあいだ、1時間に5%（水の子が来てから） */const L=[];for(let j=0;j<W*H;j++){const o=S.obj[j];if(FLAM.has(o)&&!fireAt(j)&&VILL[j]&&!HOUSES.some(h=>h.inside.has(j)))L.push(j)}if(!L.length)return;const j=L[(Math.random()*L.length)|0];
-  for(let n=0;n<10;n++)fx.push({k:'p',x:(j%W+.5)*TS+rnd(-6,6),y:((j/W)|0)*TS-40-n*6,vx:rnd(-15,15),vy:rnd(60,110),life:.6,col:pick(['#ffb02e','#ff7a3d','#fff1a8']),r:rnd(1.5,2.5)});ignite(j)}/* 家の中の物には、火の粉はとどかない */
+  fxSpr('cinder',(j%W+.5)*TS,((j/W)|0)*TS+24);ignite(j)}/* 家の中の物には、火の粉はとどかない */
 function goDouse(r,G){if(WD!==1||!S.st2||!S.st2.fire||isNight())return false;const ks=Object.keys(S.st2.fire).map(Number).filter(j=>free('fire'+j,1));if(!ks.length)return false;const hit=k=>ks.includes(anc(k));const j=nearest(G,q=>adjOf(q,hit)>=0,150);if(j<0)return false;const t=anc(adjOf(j,hit));startAct(r,G,'douse',j,{key:'fire'+t,obj:t,run:true});return true}/* 水の子は、昼のあいだ、燃えている物を消しにいく */
 function drawFire1(j,now){{const o=S.obj[j];if(!o)return;const z=szAt(o,j)||[1,1],x=(j%W)*TS,y=((j/W)|0)*TS,n=z[0]*2,b=y+TS*z[1]-8;
   for(let m=0;m<n;m++){const fx=Math.round(x+6+m*(TS*z[0]-12)/Math.max(1,n-1)),h=Math.round(9+Math.sin(now/110+m*1.7+j)*3+(m%2?2:0));ctx.fillStyle='#d8431c';ctx.fillRect(fx-3,b-h,6,h);ctx.fillStyle='#ff9a2e';ctx.fillRect(fx-2,b-h+3,4,h-3);ctx.fillStyle='#fff1a8';ctx.fillRect(fx-1,b-Math.round(h*.45),2,Math.round(h*.45))}
@@ -177,7 +177,7 @@ function st2Place(s){
   c.sort((a,b)=>a[0]-b[0]);const bw=c.slice(0,3).map(q=>q[1]);bw.forEach(j=>{s.obj[j]='boulder';delete s.dyn[j]});/* 西の温泉の水路をふさぐ大岩 */
   s.st2={sp:{a:0,b:0,c:0},d1:1,d2:1,d2fix:0,hvb:{},ash:{},ashKills:0,bw}}
 function springFX(k){const[cx,cy]=HSPC[k];sfx('level');toast(SPN[k]+'に、あたたかい湯がもどった！','good');logEv(SPN[k]+'がよみがえった');memo('♨️',SPN[k]+'がよみがえった');
-  fx.push({k:'ring',x:cx*TS,y:cy*TS,life:1});for(let n=0;n<24;n++){const a=Math.random()*7,v=rnd(40,110);fx.push({k:'p',x:cx*TS,y:cy*TS,vx:Math.cos(a)*v,vy:Math.sin(a)*v-50,life:1,col:pick(['#fff','#bff3ec','#ffe9a0']),r:rnd(2,3.5)})}}
+  fxSpr('spring',cx*TS,cy*TS);}
 function st2Tick(){if(WD!==1||!S.st2)return;const t=S.st2;
   if(!t.sp.b&&t.d1===0&&t.bw.every(j=>S.obj[j]!=='boulder')&&!t.hvb[D1]){t.sp.b=1;dirty=true;springFX('b');checkQuest()}
   if(!t.sp.c&&t.d1===1&&t.d2fix&&t.d2===0&&CRACKS.every(j=>S.obj[j]!=='crack')&&!t.hvb[D1]&&!t.hvb[D2]){t.sp.c=1;dirty=true;springFX('c');checkQuest()}
