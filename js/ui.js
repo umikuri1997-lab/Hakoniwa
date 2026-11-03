@@ -288,7 +288,7 @@ function renderSheet(){
       row.querySelector('b').textContent=r.name+'  Lv'+rLv(r);row.querySelector('small').textContent=ELEM[r.elem].name+'のせいれい・'+(r.act?ACT_LBL[r.act.type]||'':'考え中')+'・好きな家具：'+BL[likeF(r)].name+(hasLikeF(h,r)?' ♥あり'+(COMFY[likeF(r)]?'（その家具のポイント2倍）':''):'');
       row.querySelector('.tx').insertAdjacentHTML('beforeend',gaugeHTML(r));row.onclick=()=>openSheet('res',r.id);rows.appendChild(row)}
     body.appendChild(rows);
-  }else if(sheet==='clear'){T.textContent='守護の台座';
+  }else if(sheet==='clear'){T.textContent=storyTreeName();
     const rows=el('<div class="rows"></div>');for(const[t,ok]of(WD||cnt('tower')>=1?clearConds():towerConds())){const r=el('<div class="row"><div class="tx"><b></b></div></div>');r.querySelector('b').textContent=(ok?'✓ ':'・')+t;if(ok)r.classList.add('done');rows.appendChild(r)}body.appendChild(rows);
   }else if(sheet==='bed'){const j=sheetArg;if(!BEDSET.has(S.obj[j]))return closeSheet();/* よぞらのベッドも */
     const o=bedOwner(j);T.textContent='ベッド';
@@ -370,7 +370,7 @@ function renderSheet(){
   }else if(sheet==='manual'){
     T.textContent='ひでんのしょ';
     {const bk=el('<button class="btn back">‹ メニュー</button>');bk.onclick=()=>{sfx('tap');openSheet('menu')};body.appendChild(bk)}
-    body.appendChild(el(`<div class="sec"><h3>あそびかた</h3><p class="story">あなたはこの土地の新しい<b>守り神</b>。せいれいをふやして土地をよみがえらせ、<b>守護の台座</b>を建てて<b>ヌシ様</b>をむかえましょう。<br>せいれいが食べたり眠ったり遊んだりすると<b>せいれいパワー</b>がたまります。<br>せいれいのおそなえは<b>おそなえ箱</b>に入ります。家具は<b>依頼ボード</b>でたのみます。カミサマが来たら<b>交換</b>ができます。<br>夜は<b>「コワイノ」</b>に気をつけて。<br>1本指でドラッグ：移動／2本指：ズーム。</p></div>`));/* あそびかたも、ひでんのしょにまとめる */
+    body.appendChild(el(`<div class="sec"><h3>あそびかた</h3><p class="story">あなたはこの土地の新しい<b>守り神</b>。せいれいをふやして土地をよみがえらせ、<b>${WD===0?'御神木':'守護の台座'}</b>を${WD===0?'育てて':'建てて'}<b>ヌシ様</b>をむかえましょう。<br>せいれいが食べたり眠ったり遊んだりすると<b>せいれいパワー</b>がたまります。<br>せいれいのおそなえは<b>おそなえ箱</b>に入ります。家具は<b>依頼ボード</b>でたのみます。カミサマが来たら<b>交換</b>ができます。<br>夜は<b>「コワイノ」</b>に気をつけて。<br>1本指でドラッグ：移動／2本指：ズーム。</p></div>`));/* あそびかたも、ひでんのしょにまとめる */
     {const CAT=[['あそびかた',[]],['せいれい',['せいれいのようす','ステータス','属性と得意なこと']],['くらし・家具',['家具の種類','くらし']],['守り神',['守り神のちから']],['夜と戦い',['夜と「コワイノ」']]];
       if(!CAT.some(c=>c[0]===MANC))MANC='あそびかた';
       const bar=el('<div class="mtabs" style="display:flex;flex-wrap:wrap;gap:6px;margin:8px 0"></div>');for(const c of CAT){const b=el('<button class="btn"></button>');b.textContent=c[0];if(c[0]===MANC)b.classList.add('pri');b.onclick=()=>{sfx('tap');MANC=c[0];openSheet('manual')};bar.appendChild(b)}
@@ -415,8 +415,8 @@ function renderSheet(){
       else if(it[0]==='m'){const nm=MATN[it[1]],room=matCap()-matTot();add(nm+'×10','素材箱に入る（いま'+(S.mat[it[1]]||0)+'）',null,room<10?'素材箱がいっぱい':SP(c),room<10||S.pt<c,()=>{S.pt-=c;S.mat[it[1]]=(S.mat[it[1]]||0)+10;S.gotMat&&(S.gotMat[it[1]]=(S.gotMat[it[1]]||0)+10);toast(nm+'を10こもらった','good')})}
       else if(it[0]==='mebuki'){if(!((S.bossKills||0)>=1||S.flags.hinoDown))continue;add('めぶきのしずく','消えてしまったせいれいを、よみがえらせる（所持：'+(S.mebuki||0)+'）',null,SP(c),S.pt<c,()=>{S.pt-=c;S.mebuki=(S.mebuki||0)+1;toast('めぶきのしずくをもらった','good')})}
       else if(it[0]==='chochin')add(BL.chochin.name,BL.chochin.desc+'（持っている数：'+(inv('chochin')||0)+'）',iconURL('chochin'),SP(c),S.pt<c,()=>{S.pt-=c;giveItem('chochin',1);toast(BL.chochin.name+'をもらった','good')})}
-  }else if(sheet==='travel'){T.textContent='守護の台座';
-    const nx=WORLDS[WD+1];body.appendChild(el('<p class="story"></p>')).textContent='台座から、ほかの土地へ行ける。'+(nx?'つぎは「'+nx.name+'」。':'');
+  }else if(sheet==='travel'){T.textContent=storyTreeName();
+    const nx=WORLDS[WD+1];body.appendChild(el('<p class="story"></p>')).textContent=(WD===0?'御神木から、ほかの土地へ行ける。':'台座から、ほかの土地へ行ける。')+(nx?'つぎは「'+nx.name+'」。':'');
     const b=el('<button class="btn pri">マップをひらく</button>');b.onclick=()=>{sfx('tap');save();closeSheet();showMaps()};body.appendChild(b);
     const c=el('<button class="btn">やめる</button>');c.onclick=()=>{sfx('tap');closeSheet()};body.appendChild(c);
   }else if(sheet==='watch'){

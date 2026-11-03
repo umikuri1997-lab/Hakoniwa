@@ -1,12 +1,11 @@
 'use strict';
-function setWorld(w){WD=w||0;QUESTS=QL[WD];KEYRES=KEYS[WD];soupFilter()}
+function setWorld(w){WD=w||0;QUESTS=QL[WD];KEYRES=KEYS[WD];BL.tower=WD===0?TOWER_TREE:TOWER_STONE;BL.shinboku.name=WD===0?'大樹':'ご神木';if(typeof iconCache!=='undefined')delete iconCache.tower;soupFilter()}
 function soupFilter(){RECIPES=WD===0?ALLRECIPES.filter(R=>R.out!=='soup'):ALLRECIPES}/* キャベツスープはステージ2から（ステージごとに、使うレシピのリストをえらぶ） */
 // 守護の台座を建てるための条件
-const TOWER_MAT=()=>WD===1?{wood:150,stone:75}:{wood:100,stone:50};/* 台座を建てるときに使う木材・石材 */
-function towerConds(){if(WD===1)return clearConds();const tm=TOWER_MAT();return [
+const TOWER_MAT=()=>WD===1?{wood:150,stone:75}:{};
+function towerConds(){if(WD===1)return clearConds();return [
   ['5つの属性のせいれいがそろう（いま'+ELEM_KEYS.filter(k=>elemCount(k)>=1).length+'/5）',ELEM_KEYS.every(k=>elemCount(k)>=1)],
-  ['素材箱に'+(tm.wood+tm.stone)+'こ入る（いま'+matCap()+'こ）',matCap()>=tm.wood+tm.stone],/* 素材箱が小さいと、台座の素材がためられない */
-  ['木材'+tm.wood+'・石材'+tm.stone+'（いま'+(S.mat.wood||0)+'・'+(S.mat.stone||0)+'）',(S.mat.wood||0)>=tm.wood&&(S.mat.stone||0)>=tm.stone]]}
+  ['切り株に声を届け、ヌシ様の返事を聞く',!!S.flags.nushiAlive]];}
 const shLeft=()=>Math.max(0,(S.shards||0)-(S.usedSh||0));/* 火山のふもと：まだ使っていないかけらの数（装置と台座にはめると減る） */
 const towerReady=()=>towerConds().every(c=>c[1]);
 function clearConds(){if(WD===1){const tm=TOWER_MAT(),n=springDone(),fac=['bench','tub','noren'].filter(nearSp).length;return [
@@ -19,8 +18,8 @@ function clearConds(){if(WD===1){const tm=TOWER_MAT(),n=springDone(),fac=['bench
   ['木材'+tm.wood+'・石材'+tm.stone+'（いま'+(S.mat.wood||0)+'・'+(S.mat.stone||0)+'）',(S.mat.wood||0)>=tm.wood&&(S.mat.stone||0)>=tm.stone]]}
   const tm=TOWER_MAT(),[el,need,pw]=WD===1?['fire',6,750]:['wood',6,3000],nm=ELEM[el].name;return [
   [nm+'のせいれい'+need+'人（いま'+elemCount(el)+'人）',elemCount(el)>=need],
-  ['守護の台座を建てる',cnt('tower')>=1],
-  ['台座にヌシのかけらを2つはめる（いま'+Math.min(2,S.setSh||0)+'つ）',(S.setSh||0)>=2],
+  ['御神木を育てる',cnt('tower')>=1],
+  ['御神木にヌシのかけらを2つ届ける（いま'+Math.min(2,S.setSh||0)+'つ）',(S.setSh||0)>=2],
   ['みどりのマス'+GRASS_GOAL+'（いま'+GRASSN+'）',GRASSN>=GRASS_GOAL],
   ['せいれいパワーを'+pw+'集める（いま'+Math.floor(S.totalPt)+'）',S.totalPt>=pw]]}
 const clearReady=()=>clearConds().every(c=>c[1]);
@@ -29,16 +28,16 @@ const greenProgress=()=>GRASSN>=2500?'みどり 2500/2500':('みどり '+GRASSN+
 const finalDefenseBegun=()=>!!(S.finalOn||S.finalNight||(S.rushN||0)>0||S.finalLost!=null||S.flags.finalWon);
 function acceptFinalDefense(){if(WD||finalDefenseBegun()||S.flags.finalReadyDay!=null)return;S.flags.finalReadyDay=dayNo()+3;S.finalDay=null;S.finalHint=null}
 function finalCheck(){if(WD||!S||S.cleared||S.finalNight||S.finalOn||!S.enemyOn||S.flags.finalWon)return;/* 勝ったあとは、もう来ない */if(S.finalLost!=null&&dayNo()-S.finalLost<3)return;if(S.res.length<5)return;if(!S.res.some(r=>r.name===POKO))return;/* フタバがいるときだけ *//* ヨルノオオカゲに負けたら3日あける。せいれいが5人以上になってから */if(!finalDefenseBegun()){if(!qAt('nushi')||!S.qTalked){S.finalDay=null;S.finalHint=null;return}acceptFinalDefense()}if(cnt('tower')>=1&&clearReady()){
-  if(S.finalDay==null){if(isNight())return;S.finalDay=Math.max(dayNo(),S.flags.finalReadyDay??dayNo()+3);S.finalHint=3;memo('🌑','夜の空気が、すこし重くなってきた');talkOnce('finalAnn'+S.finalDay,sevLines([['F','#think|……ねえ。なんだか、夜の風がつめたくなってきた気がする。'],['N','台座の力に、なにかが気づいたのかもしれないねぇ……。',1]]),0);return}/* 予告：すぐには来ない。3日後の夜に来る */
+  if(S.finalDay==null){if(isNight())return;S.finalDay=Math.max(dayNo(),S.flags.finalReadyDay??dayNo()+3);S.finalHint=3;memo('🌑','夜の空気が、すこし重くなってきた');talkOnce('finalAnn'+S.finalDay,sevLines([['F','#think|……ねえ。なんだか、夜の風がつめたくなってきた気がする。'],['N','御神木の力に、なにかが気づいたのかもしれないねぇ……。',1]]),0);return}/* 予告：すぐには来ない。3日後の夜に来る */
   const left=S.finalDay-dayNo();if(left>0){if(left<S.finalHint&&!isNight()){S.finalHint=left;toast(left===2?'遠くの森が、いつもより静かだ……':'夜になると、影がざわめいている気がする……','warn')}return}/* 日ごとに、少しずつにおわせる */
-  S.finalNight=true;const rn=S.rushN||0;if(!rn)memo('🌑','台座の力に、影たちがひきよせられてきた');setTimeout(()=>toast(rn===0?'台座にあつまった力に、影たちがひきよせられている……。今夜、群れがやってくる':rn===1?'影の群れは、まだあきらめていない……。今夜も来る':'今夜は、もっと大きな影の気配がする……','warn'),900)}}/* 予告から3日後の夜から：影の群れの夜が2回、3回目の夜にヨルノオオカゲ（負けたあとは、ヨルノオオカゲの夜だけ） */
+  S.finalNight=true;const rn=S.rushN||0;if(!rn)memo('🌑','御神木の力に、影たちがひきよせられてきた');setTimeout(()=>toast(rn===0?'御神木にあつまった力に、影たちがひきよせられている……。今夜、群れがやってくる':rn===1?'影の群れは、まだあきらめていない……。今夜も来る':'今夜は、もっと大きな影の気配がする……','warn'),900)}}/* 予告から3日後の夜から：影の群れの夜が2回、3回目の夜にヨルノオオカゲ（負けたあとは、ヨルノオオカゲの夜だけ） */
 
 /* ---------- 状態 ---------- */
 let S=null;
 const resv=new Map();
 let STATUE=-1,OBOX=-1,BOARD=-1,counts={},LIGHTS=[],JARS=[],COMPS=[],LITP=[],STELES=[],TOWERS=[],ENVE={},NEARMILL=new Set(),NEARVANE=new Set(),NEARCART=new Set(),NEARTOOL=new Set(),NEARJORO=new Set(),NEARSIGN=new Set(),NEARTREE=new Set(),NEARPARA=new Set(),SPOTJ=new Map(),SPOTM=new Map(),SPOTI=[],RUGC=new Map(),RFC=new Map(),ENVG=null,REV=new Set(),ATTR={},BASEPCT=0,GRASSN=0;const GRASS_GOAL=2500;
 function newState(w){w=w||0;
-  const s={v:8,mig:9,flags:{berryHalf:1,berryHalf2:1,land2:1,land3:1,land4:1,arrow0:1,q3ins:1,companionStory:1,fieldStoryV2:1,xp12:1},placed:{},feat:{build:true},inv:{},orders:[],enemyOn:false,nights:0,godGone:false,godShown:false,nushi:null,
+  const s={v:8,mig:9,flags:{berryHalf:1,berryHalf2:1,land2:1,land3:1,land4:1,arrow0:1,q3ins:1,companionStory:1,fieldStoryV2:1,sacredStoryV1:1,xp12:1},placed:{},feat:{build:true},inv:{},orders:[],enemyOn:false,nights:0,godGone:false,godShown:false,nushi:null,
     lv:1,bossKills:0,nightHurt:0,nightHad:false,wave:null,lastWarn:0,
     ref:{},ground:new Array(W*H).fill(0),floor:new Array(W*H).fill(''),obj:new Array(W*H).fill(''),dyn:{},hp:{},
     res:[],enemies:[],pt:25,totalPt:0,food:0,fs:{},cseed:{imo:4},crops:{imo:true},mat:{wood:0,stone:0},regrow:[],t:w===0?15*60:12*60,/* 草原は15時からはじまる */speed:1,

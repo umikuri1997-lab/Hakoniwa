@@ -1,6 +1,6 @@
 const fs=require('fs'),vm=require('vm'),assert=require('assert'),path=require('path');
 const root=path.resolve(__dirname,'../..');
-const c=vm.createContext({console,ACT:{},document:{querySelector(){return {hidden:true}}},performance:{now:()=>0},setTimeout(){},localStorage:{getItem(){return null}}});
+const c=vm.createContext({console,ACT:{},dirty:false,document:{querySelector(){return {hidden:true}}},performance:{now:()=>0},setTimeout(){},localStorage:{getItem(){return null}}});
 for(const f of ['core','data','story','world','village','quests','night','companion-story'])vm.runInContext(fs.readFileSync(path.join(root,'js',f+'.js'),'utf8'),c,{filename:f});
 const run=code=>vm.runInContext(code,c);
 const old=JSON.parse(run('JSON.stringify(QUESTS1.filter(q=>!COMPANION_QUESTS.has(q.id)).map(q=>q.id))'));

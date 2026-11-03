@@ -24,7 +24,7 @@ function checkQuest(){
     if(wait&&wait.quest!==S.quest){QUEST_CLEAR_WAIT=wait=null}
     if(wait&&!wait.done){if(!qvHas(wait.obj,wait.id)||!S.res.includes(wait.r))QUEST_CLEAR_WAIT=wait=null;else{renderQuest();return}}/* 見にくる子が消えたら、べつの子で見にくるのを入れなおす */
     if(wait&&wait.done)QUEST_CLEAR_WAIT=null;
-    if(!wait){const visit=queueQuestVisit(q,storyWho(q));if(visit){QUEST_CLEAR_WAIT=Object.assign({quest:S.quest,done:false},visit);renderQuest();return}}
+    if(!wait&&!q.field){const visit=queueQuestVisit(q,storyWho(q));if(visit){QUEST_CLEAR_WAIT=Object.assign({quest:S.quest,done:false},visit);renderQuest();return}}
     PAYOK=false;
     if(q.pay)for(const k in q.pay)S.mat[k]=Math.max(0,(S.mat[k]||0)-q.pay[k]);/* 材料を使うクエスト */
     S.quest++;S.qTalked=false;sfx('quest');logEv('目標「'+q.text+'」をたっせい');
@@ -74,7 +74,7 @@ function storyWho(q){if(q.story&&spkOK(q.story[0]&&q.story[0][0]))return q.story
 function startTalk(){if(!$('#dialog').hidden)return;
   if(S.qStory!=null){const sq=QUESTS[S.qStory];TALKW=null;QUESTCLEARW=null;S.flags.talked1=true;
     if(sq.pre&&!S.flags['pre'+WD+'_'+S.qStory]){S.flags['pre'+WD+'_'+S.qStory]=true;questGives(sq,sq.pre);if(sheet==='food')renderSheet()}/* お礼の会話がはじまったら、すぐわたす（ベリーなど） */
-    stageMotion('cheer');/* クエストをクリアしたお礼：みんながとびはねて、よろこぶ */
+    if(!sq.field)stageMotion('cheer');/* クエストをクリアしたお礼：みんながとびはねて、よろこぶ */
     let once=0;return dialog(ideaDialogue(sq,sq.story,'clear'),()=>{if(once++||S.qStory!==QUESTS.indexOf(sq))return;/* 2回よばれても1回だけ */if(QUEST_CLEAR_WAIT&&QUEST_CLEAR_WAIT.quest===S.qStory)QUEST_CLEAR_WAIT=null;if(S.quest<=S.qStory)S.quest=S.qStory+1;/* 設置クエストは、お礼を聞き終えてから次の目標へ */S.qStory=null;const after=questGives(sq);inspireQuest(sq,'clear');{const rw=sq.reward??5;if(rw){S.pt+=rw;S.totalPt+=rw;toast('ごほうび：パワー+'+rw,'good')}}renderQuest();renderPalette();if(after)after();else checkQuest()},null)}
   const q=QUESTS[S.quest];if(!q||!q.talk)return;if(earthIntroQuest(q)&&!earthIntroSpeaker(q))return checkQuest();TALKW=null;QUESTCLEARW=null;S.flags.talked1=true;
   let once=0;dialog(ideaDialogue(q,q.talk.lines),()=>{if(once++||QUESTS[S.quest]!==q)return;/* 2回よばれても1回だけ */S.qTalked=true;if(q.field)fieldStoryFocus(q.id);if(!WD&&q.id==='nushi')acceptFinalDefense();recount();
@@ -90,10 +90,7 @@ function renderQuest(){const q=QUESTS[Math.min(S.quest,QUESTS.length-1)];let pr=
   const qt=$('#questTxt');if(qt.dataset.k!==t+'|'+pr){qt.dataset.k=t+'|'+pr;qt.textContent='';const m=document.createElement('span'),g=document.createElement('span');m.className='qm';g.className='qp';m.textContent=t;g.textContent=pr;qt.append(m,g)}/* 進み具合は2行目に */
   const h=$('#questHow');if(!h.hidden&&h.dataset.q==S.quest)return;h.dataset.q=S.quest;h.hidden=true;h.innerHTML='<b>やりかた</b>';h.appendChild(document.createTextNode(q.how||''))}
 const NUSHI_T=[
-  {open:[[POKO,'#joy|やったぁ……！ みんなのおかげで、ここまで来たんだ……！','cheer'],[MINA,'みんなぁ、台座に力をそそいでねぇ。']],name:'草原のヌシ',
-   nushi:['#think|……ずいぶん長く、るすにしてしまったな。'],world:[['U','#joy|守り神よ、せいれいたちよ。かけらを取りもどしてくれて、ありがとう。',0,'nfG'],['U','#danger|わたしは草原のヌシ。木のせいれいたちを生み、この地を見守ってきた者だ。'],['U','#think|……むかしは、昼と夜にも、それを見守るヌシがいたのだがな。'],['U','#danger|……おまえが、わたしのかわりに、この地の子らを見守ってくれていたのだな。']],
-   next:[['U','#think|……守り神よ。もう、その役目は返してもらおう。この地は、わたしが見守る。おまえは、ほかの土地へ行ってよいのだ。',0,'nfG'],['U','かけらにのこった記憶が教えてくれる。ほかの土地でも、ヌシは力を失い、自然の力がくずれたままだ。'],['U','まずは、火の山のふもと。地面の熱が冷えきって、温泉もこおりかけている。']],/* 次の土地の話は、フタバとの再会のあと */
-   after:[[GOD,'#joy wave|おーい！ 遠くから見とったぞい〜。ようやったのう！'],[GOD,'#worry|……うむうむ！ わしは泣いとらんぞ。目に花びらが入っただけじゃ！'],[GOD,'ヌシ様の話、聞いたかの？ 次は「火山のふもとの村」じゃ。出発は、台座から。おヌシの好きなときでよいぞ。']],reu:[['F','ヌシ様……！ ヌシ様ぁっ！！',0,'hop+nfF'],['U','#think|……フタバ。待たせてしまったな。'],['F','#teary|ぼく、ずっと……ずっと待ってたんだよ……！'],['U','姿を失っても、わたしは消えてはいなかった。かけらを通して、おまえたちのがんばりは、ずっと感じていた。'],['U','呼ぶ声も、聞こえていたぞ。おまえたちが力を結んでくれたおかげで、こうして、また会えたのだ。'],['U','あの夜、いちばん奥でふるえていたおまえが、今度はみんなを守ったのだな。'],['U','#worry|……おまえを、ひとりにしてしまった。すまなかった。'],['F','#think|……ううん。今は、ひとりじゃないよ！ 見て！ こんなに、なかまができたんだ！'],['F','#joy|……えへへ。おかえりなさいっ！',0,'cheer'],['U','#think|……この草原の花。おまえが、咲かせてくれたのだな。いちばんに見られて、うれしいぞ。'],['F','#worry|……ヌシ様。きょうだいたちは……？'],['U','#think|……わたしにも、まだわからない。すまないな。'],['F','めぶきのしずくでも、だめなの……？'],['U','しずくは、消えたばかりの子を呼びもどすもの。ずっとむかしの子には、とどかぬのだ。'],['U','#surprise|ただ……自然にかえった子らは、この土地の風や土になる。この土地の風や土は、いまもおまえたちを見守っておる。'],['U','それに、あの子たちは、おまえを守りたくて前に出た。……おまえが今を生きていることを、きっとよろこんでいる。'],['F','#worry|……うん。ぼく、もう泣かないよ。'],['F','#cry|きょうだいたちがくれた明日を、ここで、みんなといっしょに歩いていく！'],['N','よかったねぇ、フタバ。',1,'cheer'],['H',{A:'みんなで守りきったね。やるじゃないか。',B:'みんなで守りきったな。やるじゃねえか。'},1],['M','この土地に、力がもどってきましたね。',1],['K','#joy|フッ…風まで、うれしそうだ。',1]],toast:'ステージクリア！',last:'草原にもどる'},
+  {"open":[["フタバ","みんな、一緒に。あの木の下へ帰ろう。"],["ノドカ","ゆっくりで、だいじょうぶだよぉ。"]],"name":"草原のヌシ","nushi":["……大きくなったな。"],"world":[],"reu":[["U","木も。おまえも。",0,"nfF"],["F","……あのとき。"],["F","よかった、って言ったの……ヌシ様だったんだね。"],["U","ああ。"],["F","……遅いよ。",0,"stree:hug"],["U","待たせてしまった。"],["F","……。"],["F","みんなが、手伝ってくれたんだ。"],["F","ぼく、ひとりじゃ、何もわからなかった。"],["N","ぼくも、ひとりじゃ土をよけただけだったよぉ。",1],["H",{"A":"あたいは、石を温めただけだね。","B":"おれは、石を温めただけだな。"},1],["M","その後に、水を通せました。",1],["K","そして、ようやく声が届いた。",1],["U","……よい仲間に会えたな。"],["F","うん。"],["F","#teary|おかえりなさい。"],["U","……ただいま。"]],"next":[],"after":[],"toast":"ステージクリア！","last":"草原にもどる"},
   {open:[[HOMURA,'夜をこえたよ…！','cheer'],[SHIZUKU,'みなさん、力をそそいでください。']],
    nushi:['#think|……ふう。ようやく、体があたたまってきた。','守り神よ、せいれいたちよ。この地の熱を取りもどしてくれて、礼を言う。','わたしは、火のせいれいたちを生み、この火の山の熱を見守る者。草原のヌシとは、むかしからの知り合いだ。','#think|……あの影たちは、わたしの熱をうばっても、すこしもあたたまれなかったようだ。','かけらの記憶によれば、次は霧につつまれた水べの村。水の流れが止まり、霧がはれないままだという。'],
    after:[[GOD,'おつかれさん〜！ 見とったぞい。'],[GOD,'次は「霧のみずべの村」じゃ。…まだ道が通じておらんのじゃ。準備ができたら知らせるぞい。'],[HOMURA,'あたいたちは、この村と温泉をまもるよ。また入りにおいで！','cheer'],[SHIZUKU,'お気をつけて。…ときどき、温泉にいらしてくださいね。']],toast:'ステージクリア！ 「霧のみずべの村」は、ただいま準備中',last:'村にもどる'}];
@@ -108,22 +105,22 @@ function nushiReturns(){if(NUSHI_RUN||S.cleared)return;NUSHI_RUN=true;S.flags.nu
   const openF=L=>{const o=L.filter(l=>l[0]===GOD||S.res.some(r=>r.name===l[0]));return o.length?o:[[GOD,'朝じゃな。…さあ、台座に力をそそぐんじゃ。']]};
   const runOpen=()=>dialog(openF(T.open),()=>gatherAt(TX,TY,()=>{
     // せいれいたちが、台座のまわりに集まってから、ひとりずつ力をそそぐ
-    towerGlow(60000);/* 台座が光りはじめる */{const hn=performance.now();for(const r of S.res){RHOLD.set(r,hn+300000);STRAINU.set(r,hn+S.res.length*260+1200)}}/* 場面のあいだ、せいれいは歩かない。力をそそぐあいだは >< の顔 */
+    towerGlow(60000);/* 台座が光りはじめる */{const hn=performance.now();for(const r of S.res){RHOLD.set(r,hn+300000);if(WD!==0)STRAINU.set(r,hn+S.res.length*260+1200)}}/* 場面のあいだ、せいれいは歩かない。力をそそぐあいだは >< の顔 */
     S.res.forEach((r,i)=>villageTimeout(()=>{r.face=TX>=r.x?1:-1;JUMP.set(r,performance.now());spawnFX(r.x-.5,r.y-.6,ELEM[r.elem].col);sfx('furn')},i*260));
     const t0=S.res.length*260+500;
-    villageTimeout(()=>{spawnFX(TX-.5,TY-.2,'#fff3a0');for(let k=0;k<3;k++)villageTimeout(()=>fx.push({k:'ring',x:TX*TS,y:TY*TS,life:1.4,col:'#fff6c8'}),k*300);sfx('level');flashScreen()},t0);
+    villageTimeout(()=>{spawnFX(TX-.5,TY-.2,WD===0?'#e5f5ba':'#fff3a0');for(let k=0;k<3;k++)villageTimeout(()=>fx.push({k:'ring',x:TX*TS,y:TY*TS,life:1.4,col:'#fff6c8'}),k*300);sfx('bush');if(WD!==0)flashScreen()},t0);
     // 光がひろがって、荒れた土地に花が咲いていく
     villageTimeout(()=>{let n=0;const L=[];for(let t=0;t<4000&&L.length<60;t++){const x=(Math.random()*W)|0,y=(Math.random()*H)|0,k=y*W+x;if(Math.max(Math.abs(x+.5-TX),Math.abs(y+.5-TY))>14||S.obj[k]||S.floor[k]||S.ground[k]===1||L.includes(k)||S.res.some(r=>(r.x|0)===x&&(r.y|0)===y))continue;L.push(k)}
       L.sort((a,b)=>Math.hypot(a%W-TX,(a/W|0)-TY)-Math.hypot(b%W-TX,(b/W|0)-TY));L.forEach((k,i)=>villageTimeout(()=>{if(S.obj[k])return;S.obj[k]='clover';burst(k,'plant');if(i%6===0)sfx('bush');if(i===L.length-1)recount();dirty=true},i*45))},t0+700);
     villageTimeout(()=>{for(let k=0;k<8;k++)villageTimeout(()=>{leafFX({x:TX,y:TY});fx.push({k:'ring',x:TX*TS,y:TY*TS-k*14,life:1.2,col:'#e8ffe0'})},k*150);sfx('bush');},t0+3900);/* 葉のうず・光の柱 */villageTimeout(()=>{{/* 文字の説明はなし：光・花・風のあと、ヌシ様があらわれる */camAnim={fz:cam.z,tz:Math.max(cam.z,2),fx:cam.x+VW/cam.z/2,fy:cam.y+VH/cam.z/2,tx:TX*TS,ty:(TY-.4)*TS,t:0,dur:1.2};
       // ヌシ様が台座の上にあらわれる
-      S.nushi={x:TX,y:TY+.95,t:6,app:0,dir:1,face:1,path:[]};/* あらわれたときは、守り神のほう（正面） */
-      spawnFX(TX-.5,TY-.6,'#c8ffd0');sfx('arrive');flashScreen();
+      S.nushi={x:WD===0?TX+2.2:TX,y:TY+.95,t:6,app:0,dir:1,face:1,path:[]};const owner=S,session=VILLAGE_SESSION,lord=S.nushi,appearAt=performance.now();const reveal=now=>{if(S!==owner||VILLAGE_SESSION!==session||S.nushi!==lord)return;lord.app=Math.min(1,(now-appearAt)/1500);if(lord.app<1)requestAnimationFrame(reveal)};requestAnimationFrame(reveal);/* あらわれたときは、守り神のほう（正面） */
+      spawnFX(TX-.5,TY-.6,'#c8ffd0');sfx('arrive');if(WD!==0)flashScreen();
       villageTimeout(()=>dialog(T.nushi,()=>{
-        startClap();for(const r of S.res)r.bubble='👏';for(let k=0;k<8;k++)villageTimeout(()=>{const r=pick(S.res);if(r)spawnFX(r.x-.5,r.y-.6,pick(['#ffd84a','#ff9cc0','#9ff0ff','#b8ff9a']))},k*350);villageTimeout(endClap,3200);/* みんなで拍手 */
+        if(WD!==0){startClap();for(const r of S.res)r.bubble='👏';}for(let k=0;k<8;k++)villageTimeout(()=>{const r=pick(S.res);if(r)spawnFX(r.x-.5,r.y-.6,pick(['#ffd84a','#ff9cc0','#9ff0ff','#b8ff9a']))},k*350);villageTimeout(endClap,3200);/* みんなで拍手 */
         dialog((T.world&&sevLines(T.world)||[]).concat(T.reu&&sevLines(T.reu)||[],T.next&&sevLines(T.next)||[],T.after),()=>{
-          S.cleared=true;delete S.flags.nushiDue;NUSHI_RUN=false;TOWERGLOW=0;for(const r of S.res)RHOLD.set(r,0);renderQuest();toast(T.toast,'good');
-          S.clearDay=dayNo();S.score=calcScore();villageTimeout(()=>dialog(['#think|……この土地も、もとにもどったのう'],()=>openSheet('score'),T.last,GOD),1200);
+          S.cleared=true;if(WD===0){S.flags.sacredReunion=true;S.flags.sacredQuietSeen=false;endClap();dirty=true;}delete S.flags.nushiDue;NUSHI_RUN=false;TOWERGLOW=0;for(const r of S.res)RHOLD.set(r,0);renderQuest();toast(T.toast,'good');
+          S.clearDay=dayNo();S.score=calcScore();villageTimeout(()=>WD===0?openSheet('score'):dialog(['#think|……この土地も、もとにもどったのう'],()=>openSheet('score'),T.last,GOD),1200);
         });
       },null,T.name||'ヌシ様'),3200);
     }},t0+5200);
@@ -146,7 +143,7 @@ const NTALK=[[/* 草原のヌシ：守り神に話す（ひとつずつ、順番
   '#think|昼と夜は、ふたつでひとつ。どちらかが欠けると、もう一方も、すこしずつ弱っていく。',
   '雨の日は、葉がよろこぶ。わたしも、すこしだけ、背がのびた気がする。',
   '守り神よ。おまえは、つかれないのか。……ふむ。神というのも、たいへんだな。',
-  '#think|この台座には、子らの「守りたい」が、たくさんしみこんでいる。……あたたかいな。',
+  '#think|この御神木には、子らの「守りたい」が、たくさんしみこんでいる。……あたたかいな。',
   'ほかの土地のヌシたちも、きっと、だれかを待っている。……守り神よ、急ぐことはない。'],[/* 火のヌシ */
   '#think|……ふう。湯気のにおいがすると、落ちつく。',
   '火は、あたためもすれば、焼きもする。……ホムラは、それをよく知っている子だ。',
@@ -174,7 +171,7 @@ const NPLAY=[[/* 草原：遊びにきた子と、ヌシ様の会話（0：遊�
   [[0,'ヌシ様、いっしょに火の粉を見よう！'],['U','うむ。ぱちぱちと、よく笑う火だ。']],
   [[0,'ヌシ様が帰ってきて、村があったかくなったね。'],['U','わたしではない。……おまえたちが、あたためてくれたのだ。']],
   [[0,'ヌシ様、おまつりの屋台、いっしょにまわろう！'],['U','#think|わたしが行くと、屋台がこげてしまうかもしれん。……遠くから見ているよ。']]]];
-function nushiTalk(){const n=S.nushi,nm=WD===1?'火のヌシ':NUSHI1,k=WD===1?1:0;
+function nushiTalk(){if(WD===0&&S.flags.sacredReunion&&!S.flags.sacredQuietSeen)return sacredQuietScene();const n=S.nushi,nm=WD===1?'火のヌシ':NUSHI1,k=WD===1?1:0;
   const r=n.pl&&S.res.find(q=>q.id===n.pl.id);if(r&&r.act&&r.act.type==='npl'&&r.act.stage==='do'){const P=NPLAY[k],L=P[(S.npc=(S.npc||0)+1)%P.length];return dialog(L.map(([w,t])=>w==='U'?[nm,t]:[r.name,chatTone(t,r)]))}/* 遊びにきた子がいれば、その子とヌシ様の会話 */
   if(isNight())return dialog([[nm,pick(NTALKN)]]);
   const T=NTALK[k];dialog([[nm,T[(S.ntk=(S.ntk||0)+1)%T.length]]])}/* 守り神に、ひとことずつ話す（順番にまわる） */

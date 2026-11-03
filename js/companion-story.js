@@ -1,104 +1,67 @@
 'use strict';
 /* 仲間の力で現地を調べる、草原だけの物語。設置数・所持数では進まない。 */
-const FIELD_STORIES={
-  earthListen:[
-    {site:'soilSoft',who:'N',label:'やわらかい土',kind:'soil',anim:'pray',dur:6,lines:[['N','ここは、こつん……こつん。奥まで音が返ってくるねぇ。'],['F','耳をつけたら、ぼくにも聞こえた！']]},
-    {site:'soilCold',who:'N',label:'音の途切れる土',kind:'soil',anim:'pray',dur:6,lines:[['N','ここだけ、音が返ってこないねぇ。地面も冷たいよぉ。'],['F','すぐ隣なのに、どうしてだろう。']]},
-    {site:'root',who:'N',label:'根のそばの土',kind:'root',anim:'pray',dur:6,lines:[['N','根に耳をすませると、向こうから、かすかに響いてくるよぉ。'],['F','この下に、続きがあるんだね。']]}
-  ],
-  earthRoot:[
-    {site:'root',who:'N',label:'埋もれた大きな根',kind:'root',anim:'weed',dur:10,lines:[['N','石じゃなかったねぇ。曲がった根が、ずっと先まで続いてる。'],['F','ありがとう、ノドカ！ ぼく、葉っぱのつけ根を見てみるよ。']]},
-    {site:'root',who:'F',label:'掘り出した根',kind:'root',anim:'pluck',dur:6,lines:[['F','切り口はないよ。でも、ここだけ、きゅうっと縮んでる……。'],['N','傷じゃなくて、冷えて動けないみたいだねぇ。']]}
-  ],
-  fireRoot:[
-    {site:'root',who:'H',label:'冷えきった根',kind:'ember',anim:'pray',dur:16,lines:[['H',{A:'ほら、小さな火だ。ゆっくりでいい。燃えなくていいんだよ。',B:'ほら、小さな火だ。ゆっくりでいい。燃えなくていいんだぜ。'}],['N','……あ。根の先が動いたねぇ。']]}
-  ],
-  fireTrace:[
-    {site:'root',who:'H',label:'根の黒い膜',kind:'root',anim:'talkthink',dur:6,lines:[['H',{A:'これは、温めても、焦げた匂いがしない。黒い膜の下には、生きた根があるね。',B:'これは、温めても、焦げた匂いがしねえ。黒い膜の下には、生きた根があるな。'}]]},
-    {site:'scorch',who:'H',label:'古い落雷の跡',kind:'scorch',anim:'talkthink',dur:6,lines:[['H',{A:'こっちは、炭になってる。触ると、ぱらぱら崩れるだろう？',B:'こっちは、炭になってる。触ると、ぱらぱら崩れるだろ？'}],['F','根の黒いところとは、ぜんぜん違うね。']]}
-  ],
-  waterFilm:[
-    {site:'root',who:'M',label:'根を覆う冷たい膜',kind:'water',anim:'draw',dur:10,lines:[['M','根をこすらずに、水だけを通します。……黒いものが、浮いてきました。'],['F','葉っぱの筋みたいな模様が、見えてきたよ！']]},
-    {site:'pool',who:'M',label:'根から流れ出た水',kind:'pool',anim:'talkthink',dur:6,lines:[['M','水を静めると、黒い泥と、薄い葉が分かれました。'],['F','泥の中に、隠れてたんだね。']]}
-  ],
-  waterLeaf:[
-    {site:'pool',who:'M',label:'葉の沈んだ水たまり',kind:'pool',anim:'pray',dur:8,lines:[['M','波を止めました。フタバさん、今なら、葉を破らずに持ち上げられます。']]},
-    {site:'pool',who:'F',label:'水底の光る葉',kind:'leaf',anim:'pluck',dur:6,lines:[['F','そっと……そっと……。取れた！'],['M','#joy|葉の形が残っています。上手にすくえましたね。']]}
-  ],
-  windEcho:[
-    {site:'pool',who:'K',label:'風に鳴る葉',kind:'leaf',anim:'talkthink',dur:5,lines:[['K','ここからは、細い笛のような音。風下に、続きを聞きにいこう。']]},
-    {site:'echo',who:'K',label:'声の跳ね返る場所',kind:'wind',anim:'talkthink',dur:5,lines:[['K','音が、ここで折り返している。聞こえてくるのは、根のほうだ。'],['F','遠くから呼んでるんじゃなかったんだね。']]},
-    {site:'root',who:'K',label:'響きの戻る根',kind:'root',anim:'pray',dur:6,lines:[['K','……ここだ。根を通った音が、葉から返ってきていたんだね。']]}
-  ],
-  windVoices:[
-    {site:'root',who:'N',label:'土の響きを通す',kind:'root',anim:'pray',dur:5,lines:[['N','固い土を、もう少しゆるめるねぇ。……うん。奥まで響くよぉ。']]},
-    {site:'root',who:'H',label:'根のぬくもりを保つ',kind:'ember',anim:'pray',dur:5,lines:[['H',{A:'あったかさは、ここで保ってる。みんな、安心して続けな。',B:'あったかさは、ここで保ってる。みんな、安心して続けろよ。'}]]},
-    {site:'root',who:'M',label:'根の先まで水を届ける',kind:'water',anim:'draw',dur:5,lines:[['M','水が、根の先へしみこんでいきます。もう、冷たい膜に止められていません。']]},
-    {site:'root',who:'K',label:'仲間の声を風にのせる',kind:'wind',anim:'wave',dur:5,lines:[['K','道は開いた。風を、根の奥へ通そう。フタバ。きみの声を聞かせて。']]},
-    {site:'root',who:'F',label:'フタバの声を届ける',kind:'root',anim:'talk',dur:6,lines:[['F','ヌシ様。どこにいるのか、まだわからないけど……。ぼく、いまは、みんなといっしょだよ。'],['F','ずっと探すから。……聞こえたら、返事して！'],['N','……こつん。……いま、根の奥から、声がしたねぇ。'],['F','……フタバ、って。ぼくの名前……呼んでくれたの？'],['K','ああ。ぼくたちが黙ったあとに、きみの名前が返ってきた。さっきの、ただの響きとは違う。']]}
-  ]
-};
+const FIELD_STORIES={"earthListen":[{"site":"root","who":"N","label":"切り株の根元を確かめる","kind":"root","anim":"pray","dur":7,"lines":[["N","ここに、細い根があるよぉ。"],["F","……まだ、やわらかい。"]],"cast":["F","N"]}],"earthRoot":[{"site":"root","who":"N","label":"根を傷つけずに土をよける","kind":"root","anim":"weed","dur":9,"lines":[["F","あっ、そこ！　そこにある！"],["N","はいはい。……ほんとだねぇ。"]],"cast":["F","N"]},{"site":"root","who":"F","label":"掘り出した根にそっと触れる","kind":"root","anim":"pluck","dur":6,"lines":[["N","そっとなら、だいじょうぶだよぉ。"],["F","……つめたい。"],["N","ずいぶん長いあいだ、日に当たってなかったんだねぇ。"]],"cast":["F","N"]}],"fireRoot":[{"site":"root","who":"H","label":"根から離して小さな火を使う","kind":"ember","anim":"pray","dur":10,"lines":[["H",{"A":"……うん。これくらいの温かさなら、だいじょうぶだ。","B":"……うん。これくらいの温かさなら、だいじょうぶだ。"}],["N","土にも、ゆっくり伝わってるよぉ。"]],"cast":["F","N","H"]},{"site":"root","who":"F","label":"温まった土に手を重ねる","kind":"root","anim":"pray","dur":5,"lines":[["N","あらら。手がぶつかったねぇ。"],["F","#joy|えへへ……。"]],"cast":["F","N","H"]}],"fireTrace":[{"site":"root","who":"N","label":"温かさが逃げる隙間を整える","kind":"root","anim":"weed","dur":7,"lines":[["N","この土を、石のまわりへ寄せておくねぇ。"]],"cast":["F","N","H"]},{"site":"root","who":"H","label":"温め直した石を根の周りに置く","kind":"ember","anim":"pray","dur":7,"lines":[["H",{"A":"火は消したよ。あとは、この石が温めてくれる。","B":"火は消したぞ。あとは、この石が温めてくれる。"}]],"cast":["F","N","H"]},{"site":"root","who":"F","label":"乾いた草を石の周りにかぶせる","kind":"root","anim":"pluck","dur":5,"lines":[["F","これで、いい？"],["H",{"A":"ああ。根は、押さえつけないようにね。","B":"ああ。根は、押さえつけないようにな。"}]],"cast":["F","N","H"]}],"waterFilm":[{"site":"root","who":"M","label":"少しの水で流れを確かめる","kind":"water","anim":"draw","dur":7,"lines":[["M","ここで、水が横へ流れてしまっていますね。"]],"cast":["F","N","M"]},{"site":"root","who":"N","label":"石の間の固い土をほぐす","kind":"root","anim":"weed","dur":7,"lines":[["N","ここを、ほんの少しだけ……。"],["M","はい。そのまま、水を通します。"]],"cast":["F","N","M"]},{"site":"root","who":"M","label":"根まで水を届ける","kind":"water","anim":"draw","dur":6,"lines":[["F","……土に、しみこんでる。"]],"cast":["F","N","M"]}],"waterLeaf":[{"site":"root","who":"M","label":"芽に触れず、根元に水を届ける","kind":"water","anim":"draw","dur":6,"lines":[["M","あとは、木の準備を待ちましょう。"]],"cast":["F","M"]},{"site":"root","who":"F","label":"水の子と並んで芽を見守る","kind":"root","anim":"talkthink","dur":9,"lines":[["F","……。"],["M","……。"]],"cast":["F","M"],"pose":"sit"}],"windEcho":[{"site":"root","who":"K","label":"葉を落とさない風を通す","kind":"wind","anim":"wave","dur":7,"lines":[["K","少しずつ、通すよ。"]],"cast":["F","N","M","K"]},{"site":"root","who":"N","label":"根元の土に空気を通す","kind":"root","anim":"weed","dur":5,"lines":[["N","水の通り道は、そのままにしておくよぉ。"]],"cast":["F","N","M","K"]},{"site":"root","who":"K","label":"若葉の音を聞く","kind":"wind","anim":"talkthink","dur":7,"lines":[["K","……聞こえた。とても、細い音だ。"]],"cast":["F","N","M","K"]}],"windVoices":[{"site":"root","who":"N","label":"いつものように土をゆるめる","kind":"root","anim":"weed","dur":5,"lines":[["N","今日は、土がやわらかいねぇ。"]],"cast":["F","N","H","M","K"]},{"site":"root","who":"H","label":"石の温かさを確かめる","kind":"ember","anim":"pray","dur":5,"lines":[["H",{"A":"……うん。まだ温かい。","B":"……うん。まだ温かい。"}]],"cast":["F","N","H","M","K"]},{"site":"root","who":"M","label":"細く、水を通す","kind":"water","anim":"draw","dur":5,"lines":[["M","根の先まで、届いています。"]],"cast":["F","N","H","M","K"]},{"site":"root","who":"K","label":"葉が揺れるほどの風を起こす","kind":"wind","anim":"wave","dur":5,"lines":[["K","……どうぞ。ぼくたちも、聞いているよ。"]],"cast":["F","N","H","M","K"]},{"site":"root","who":"F","label":"フタバの声を届ける","kind":"root","anim":"talk","dur":7,"lines":[["F","ヌシ様。"],["F","ぼく、ここにいるよ。",0,"stree:quiet"],["F","……前は、ひとりだったけど。今は、ノドカも、みんなもいるんだ。"],["F","だから……もし、困ってるなら。今度は、ぼくたちが……。"],["……","……フタバ。",0,"stree:reply"],["F","……うん。"],["……","……そうか。……よかった。",0,"stree:quiet"]],"cast":["F","N","H","M","K"]}],"tower":[{"site":"root","who":"F","label":"みんなと、木に力を届ける","kind":"root","anim":"pray","dur":12,"lines":[["F","ぼくたち、これからもお世話するよ。"],["G","……よいか。根を通して、土地の力を、ゆっくり結ぶのじゃ。",0,"stree:grow"]],"cast":["F","N","H","M","K"]}]};
 const FIELD_SCENES=new WeakMap();
 const FIELD_SITE_OFFSETS={soilSoft:[-4,1],soilCold:[-7,0],root:[-8,-3],scorch:[-3,-7],pool:[-6,-5],echo:[-11,1]};
 const fieldStoryState=id=>S.fieldStories?.[id];
 const fieldStoryDone=id=>(fieldStoryState(id)?.step||0)>=(FIELD_STORIES[id]?.length||Infinity);
 function fieldStoryProgress(id){const n=fieldStoryState(id)?.step||0,L=FIELD_STORIES[id];return L&&n<L.length?L[n].label+'　'+n+'/'+L.length:'調査を終えた';}
-function fieldStoryCurrent(){if(!S||WD!==0||S.free||S.cleared||S.qStory!=null||!S.qTalked)return null;const q=QUESTS[S.quest];return q?.field&&!fieldStoryDone(q.id)?q:null;}
+function fieldStoryCurrent(){if(!S||WD!==0||S.free||S.cleared||S.qStory!=null||!S.qTalked)return null;const q=QUESTS[S.quest];return q?.field&&!(q.id==='tower'&&S.obj.includes('tower'))&&!fieldStoryDone(q.id)?q:null;}
 function fieldStoryActor(step){const name=sevName(step.who);return S.res.find(r=>r.name===name);}
-function fieldStorySpotOK(j){
-  if(j<0||j>=W*H||!walk(j)||S.obj[j]||S.floor[j]||roomOf(j)||RUGC.has(j)||(S.drops||[]).some(d=>d.y*W+d.x===j))return false;
-  // 木の葉や建物に調査場所が隠れない、ひらけた所を使う。
-  for(let dy=0;dy<=3;dy++)for(let dx=-1;dx<=1;dx++){const x=j%W+dx,y=(j/W|0)+dy;if(x>=0&&x<W&&y<H&&solidOf(y*W+x))return false;}
-  return true;
-}
+function fieldStorySpotOK(j){return j===S.sacredRoot?sacredRootFits(j):sacredRootFits(j);}
 function fieldStoryEnsure(id){
   const L=FIELD_STORIES[id];if(!L)return null;
   S.fieldStories||(S.fieldStories={});const state=S.fieldStories[id]||(S.fieldStories[id]={step:0});
   const step=L[state.step];if(!step)return state;
-  S.fieldSites||(S.fieldSites={});let j=S.fieldSites[step.site];const r=fieldStoryActor(step);if(!r)return state;
-  const G=bfs(r.x|0,r.y|0);
-  if(j!=null&&fieldStorySpotOK(j)&&G.dist[j]>=0)return state;
-  const offset=FIELD_SITE_OFFSETS[step.site],x=CX+offset[0],y=CY+offset[1];let best=-1,score=Infinity;
-  for(let k=0;k<W*H;k++){const d=G.dist[k];if(d<0||d>80)continue;const sc=Math.hypot(k%W-x,(k/W|0)-y)+d*.03+(step.site==='pool'&&adjOf(k,q=>S.ground[q]===1)<0?12:0);if(sc>=score||!fieldStorySpotOK(k)||Object.entries(S.fieldSites).some(([key,v])=>key!==step.site&&Math.hypot(k%W-v%W,(k/W|0)-(v/W|0))<2))continue;best=k;score=sc;}
-  if(best>=0)S.fieldSites[step.site]=best;
+  S.fieldSites||(S.fieldSites={});const r=fieldStoryActor(step);if(!r)return state;
+  if(S.sacredRoot!=null){S.fieldSites.root=S.sacredRoot;return state;}
+  const G=bfs(r.x|0,r.y|0),old=S.fieldSites.root,x=old!=null?old%W:CX-8,y=old!=null?(old/W|0):CY-3;let best=-1,score=Infinity;
+  for(let j=0;j<W*H;j++){const d=G.dist[j];if(d<0||d>100)continue;const sc=Math.hypot(j%W-x,(j/W|0)-y)+d*.03;if(sc>=score||!sacredRootFits(j))continue;best=j;score=sc;}
+  if(best>=0){S.sacredRoot=best;S.fieldSites.root=best;dirty=true;}
   return state;
 }
-// 土の調査の声かけは、ノドカが最初の調査場所へ歩いて着いてから。
-const earthIntroQuest=q=>!!q&&q.field&&['earthListen','earthRoot'].includes(q.id);
-function earthIntroCurrent(){const q=S&&QUESTS[S.quest];return WD===0&&!S.free&&!S.cleared&&S.qStory==null&&!S.qTalked&&earthIntroQuest(q)&&q.talk.when()&&!qMissing(q).length?q:null}
-function earthIntroValid(r,a){const q=earthIntroCurrent(),step=q&&FIELD_STORIES[q.id][0];return !!step&&q.id===a.fieldId&&fieldStoryActor(step)===r&&S.fieldSites?.[step.site]===a.obj&&fieldStorySpotOK(a.obj)}
-function earthIntroSpeaker(q){if(earthIntroCurrent()!==q||isNight())return null;fieldStoryEnsure(q.id);const r=fieldStoryActor(FIELD_STORIES[q.id][0]),a=r?.act;return a?.type==='fieldintro'&&a.stage==='do'&&earthIntroValid(r,a)&&questVisitReached(r,a.obj)&&questVisitSafe(r,a.obj)&&!r.hidden&&!hungry(r)?r.name:null}
-function tryEarthIntro(r){const q=earthIntroCurrent();if(!q||isNight()||fieldStoryActor(FIELD_STORIES[q.id][0])!==r)return false;
-  fieldStoryEnsure(q.id);if(r.act?.type==='fieldintro'){if(earthIntroValid(r,r.act))return false;endAct(r)}
-  if(r.hidden||r.coffin||onHold(r)||HOLD.has(r.id)||hungry(r)||r.hunger<40||r.energy<20||r.cing||r.meal||heldN(r)||['eat','fetch','forage','flee','faint','sleep','pray','bury','reunion'].includes(r.act?.type)||hostileNow(r))return false;
-  const j=S.fieldSites?.[FIELD_STORIES[q.id][0].site];if(j==null||!questVisitSafe(r,j))return false;
-  const G=bfs(r.x|0,r.y|0),occupied=occTiles(r),stand=nearest(G,k=>walk(k)&&!occupied.has(k)&&Math.abs(k%W-j%W)+Math.abs((k/W|0)-(j/W|0))===1&&free('field'+k,1),100);if(stand<0)return false;
-  endAct(r);startAct(r,G,'fieldintro',stand,{key:'field'+stand,fieldId:q.id,obj:j});return true;
+const fieldDistance=(k,j)=>Math.max(j%W-k%W,0,k%W-(j%W+1))+Math.max((j/W|0)-(k/W|0),0,(k/W|0)-(j/W|0)-1);
+const fieldCast=step=>(step.cast||[step.who]).map(w=>S.res.find(r=>r.name===sevName(w))).filter(Boolean);
+const fieldActorReady=r=>!r.hidden&&!r.coffin&&!HOLD.has(r.id)&&!hungry(r)&&r.energy>=20&&!r.cing&&!r.meal&&!carryN(r)&&!matN(r)&&!['eat','fetch','forage','flee','faint','sleep','pray','bury'].includes(r.act?.type)&&!hostileNow(r);
+// 会話の前から、その場にいる登場人物へ歩いて集まる。古い関数名は呼び出し元との互換のため保つ。
+const earthIntroQuest=q=>!!q&&q.field&&!(q.id==='tower'&&(cnt('tower')||statueSite('tower')));
+function earthIntroCurrent(){const q=S&&QUESTS[S.quest];return WD===0&&!S.free&&!S.cleared&&S.qStory==null&&!S.qTalked&&earthIntroQuest(q)&&q.talk.when()&&!qMissing(q).length?q:null;}
+function earthIntroValid(r,a){const q=earthIntroCurrent(),step=q&&FIELD_STORIES[q.id][0];return !!step&&q.id===a.fieldId&&fieldCast(step).includes(r)&&S.sacredRoot===a.obj&&fieldStorySpotOK(a.obj);}
+function earthIntroSpeaker(q){
+  if(earthIntroCurrent()!==q||isNight())return null;fieldStoryEnsure(q.id);const step=FIELD_STORIES[q.id][0],group=fieldCast(step),lead=fieldStoryActor(step);
+  if(group.length!==(step.cast||[step.who]).length||!lead)return null;
+  return group.every(r=>r.act?.type==='fieldintro'&&r.act.stage==='do'&&earthIntroValid(r,r.act)&&fieldDistance((r.y|0)*W+(r.x|0),r.act.obj)<=3&&!r.hidden&&!hungry(r))?lead.name:null;
 }
-ACT.fieldintro={start(r,a){if(!earthIntroValid(r,a)||!questVisitReached(r,a.obj))return false;faceTo(r,a.obj);r.bubble='';checkQuest()},done:(r,a)=>!earthIntroValid(r,a)||isNight()||hungry(r)||r.energy<10||!questVisitReached(r,a.obj)||!questVisitSafe(r,a.obj)};
-function fieldStoryFocus(id){const state=fieldStoryEnsure(id),step=FIELD_STORIES[id]?.[state?.step],j=step&&S.fieldSites?.[step.site];if(j!=null)panTo((j%W+.5)*TS,((j/W|0)+.5)*TS);}
+function tryEarthIntro(r){
+  const q=earthIntroCurrent();if(!q||isNight())return false;const step=FIELD_STORIES[q.id][0];if(!fieldCast(step).includes(r))return false;
+  fieldStoryEnsure(q.id);if(r.act?.type==='fieldintro'){if(earthIntroValid(r,r.act))return false;endAct(r);}
+  if(!fieldActorReady(r)||onHold(r))return false;const j=S.sacredRoot;if(j==null||!questVisitSafe(r,j))return false;
+  const G=bfs(r.x|0,r.y|0),occupied=occTiles(r),stand=nearest(G,k=>walk(k)&&!sacredReserved(k)&&!occupied.has(k)&&fieldDistance(k,j)>=1&&fieldDistance(k,j)<=3&&free('field'+k,1),100);
+  if(stand<0)return false;endAct(r);startAct(r,G,'fieldintro',stand,{key:'field'+stand,fieldId:q.id,obj:j});return true;
+}
+ACT.fieldintro={start(r,a){if(!earthIntroValid(r,a))return false;faceTo(r,a.obj);r.bubble='';checkQuest();},done:(r,a)=>!earthIntroValid(r,a)||isNight()||hungry(r)||r.energy<10||!questVisitSafe(r,a.obj)};
+function fieldStoryFocus(id){const state=fieldStoryEnsure(id),step=FIELD_STORIES[id]?.[state?.step],j=step&&S.fieldSites?.[step.site];if(j!=null)panTo((j%W+1)*TS,((j/W|0)+.6)*TS);}
 function fieldStoryTap(tx,ty){
   const q=fieldStoryCurrent();if(!q)return false;const state=fieldStoryEnsure(q.id),step=FIELD_STORIES[q.id][state.step],j=S.fieldSites?.[step.site];
-  if(j==null||Math.abs(tx-j%W)>1||ty<(j/W|0)-1||ty>(j/W|0))return false;
+  if(j==null||tx<j%W||tx>j%W+1||ty<(j/W|0)-1||ty>(j/W|0)+1)return false;
   if(isNight()){toast('調べるのは、明るくなってから');return true;}
   if(FIELD_SCENES.get(S)?.session===VILLAGE_SESSION||S.res.some(r=>r.act?.type==='fieldstory')){toast('なかまが調べにむかっている');return true;}
-  const r=fieldStoryActor(step);
-  if(!r||r.hidden||r.coffin||HOLD.has(r.id)||hungry(r)||r.energy<20||r.cing||r.meal||carryN(r)||matN(r)||['eat','fetch','forage','flee','faint','sleep'].includes(r.act?.type)||hostileNow(r)){
-    toast((r?.name||'なかま')+'が、食事や休けい・用事を終えてから調べよう');return true;
-  }
-  const G=bfs(r.x|0,r.y|0),occupied=occTiles(r),stand=nearest(G,k=>{const d=Math.abs(k%W-j%W)+Math.abs((k/W|0)-(j/W|0));return walk(k)&&!occupied.has(k)&&d>=1&&d<=(q.id==='windVoices'?2:1)&&free('field'+k,1)},100);
-  if(stand<0){toast('調べる場所までの道をあけよう');return true;}
-  endAct(r);startAct(r,G,'fieldstory',stand,{key:'field'+stand,fieldId:q.id,phase:state.step,obj:j});
+  const r=fieldStoryActor(step),group=fieldCast(step);
+  if(!r||group.length!==(step.cast||[step.who]).length||group.some(p=>!fieldActorReady(p))){toast('なかまの食事や休けい・用事が終わってから、一緒に世話をしよう');return true;}
+  const selected=new Set(),occupied=occTiles(r);for(const p of group)occupied.delete((p.y|0)*W+(p.x|0));const plans=[];
+  for(const p of [r,...group.filter(p=>p!==r)]){const G=bfs(p.x|0,p.y|0),stand=nearest(G,k=>walk(k)&&!sacredReserved(k)&&!occupied.has(k)&&!selected.has(k)&&fieldDistance(k,j)>=1&&fieldDistance(k,j)<=3&&free('field'+k,1),100);if(stand<0){toast('木の周りに、なかまが集まれる道をあけよう');return true;}selected.add(stand);plans.push({p,G,stand});}
+  for(const {p,G,stand}of plans){endAct(p);startAct(p,G,p===r?'fieldstory':'fieldassist',stand,{key:'field'+stand,fieldId:q.id,phase:state.step,obj:j});}
   toast(r.name+'が「'+step.label+'」を調べにいく');return true;
 }
 function fieldStoryValid(a){const q=fieldStoryCurrent(),step=FIELD_STORIES[a.fieldId]?.[a.phase];return q?.id===a.fieldId&&fieldStoryState(a.fieldId)?.step===a.phase&&step&&S.fieldSites?.[step.site]===a.obj&&fieldStorySpotOK(a.obj);}
 function fieldStoryResult(r,a){
-  const step=FIELD_STORIES[a.fieldId]?.[a.phase];if(!step||a.t<step.dur||!fieldStoryValid(a))return;
+  const step=FIELD_STORIES[a.fieldId]?.[a.phase];if(!step||a.cancel||a.t<step.dur||!fieldStoryValid(a))return;
   const owner=S,token={session:VILLAGE_SESSION,id:a.fieldId,phase:a.phase};if(FIELD_SCENES.get(owner)?.session===VILLAGE_SESSION)return;FIELD_SCENES.set(owner,token);dialog(KS(step.lines),()=>{
     if(FIELD_SCENES.get(owner)===token)FIELD_SCENES.delete(owner);
-    if(S!==owner||!fieldStoryValid(a))return;
-    fieldStoryState(a.fieldId).step++;r.bubble='';
-    if(a.fieldId==='windVoices'&&!fieldStoryDone(a.fieldId)&&S.res.includes(r)&&!hungry(r)&&!isNight()){
+    if(S!==owner||VILLAGE_SESSION!==token.session||!fieldStoryValid(a))return;
+    if(a.fieldId==='tower'&&!growStoryTree())return;
+    fieldStoryState(a.fieldId).step++;r.bubble='';dirty=true;
+    if(!fieldStoryDone(a.fieldId)&&S.res.includes(r)&&!hungry(r)&&!isNight()){
       endAct(r);startAct(r,null,'fieldwait',-1,{fieldId:a.fieldId});
     }
     renderQuest();checkQuest();if(!fieldStoryDone(a.fieldId))fieldStoryFocus(a.fieldId);
@@ -106,22 +69,22 @@ function fieldStoryResult(r,a){
 }
 ACT.fieldstory={
   start(r,a){if(!fieldStoryValid(a))return false;faceTo(r,a.obj);r.bubble='';},
-  tick(r,a,dt){if(!fieldStoryValid(a))return;const step=FIELD_STORIES[a.fieldId][a.phase];if(step.kind==='ember'&&(a.spark=(a.spark||0)+dt)>2){a.spark=0;burst(a.obj,'plant','none');}},
-  done:(r,a)=>!fieldStoryValid(a)||a.t>=FIELD_STORIES[a.fieldId][a.phase].dur,
+  tick(r,a,dt){
+    if(!fieldStoryValid(a))return;const step=FIELD_STORIES[a.fieldId][a.phase],others=fieldCast(step).filter(p=>p!==r);
+    if(others.some(p=>p.act?.type!=='fieldassist'||p.act.phase!==a.phase)){a.cancel=true;return;}
+    if(others.some(p=>p.act.stage!=='do')){a.t=0;return;}
+    if(step.pose==='sit')for(const p of fieldCast(step))sacredSetPose(p,{anim:'talkthink',sit:true});
+    if(step.kind==='ember'&&(a.spark=(a.spark||0)+dt)>3){a.spark=0;leafFX({x:a.obj%W+1,y:(a.obj/W|0)+1});}
+  },
+  done:(r,a)=>a.cancel||!fieldStoryValid(a)||a.t>=FIELD_STORIES[a.fieldId][a.phase].dur,
   end:fieldStoryResult
 };
-ACT.fieldwait={start(r){r.bubble='♪';},done:(r,a)=>fieldStoryCurrent()?.id!==a.fieldId||isNight()||hungry(r)};
-function fieldStoryAnim(r){return r.act?.type==='fieldstory'?FIELD_STORIES[r.act.fieldId]?.[r.act.phase]?.anim||'talk':r.act?.type==='fieldwait'?'talk':r.act?.type;}
+ACT.fieldassist={start(r,a){faceTo(r,a.obj);r.bubble='';},done:(r,a)=>!fieldStoryValid(a)||isNight()||hungry(r)||!S.res.some(p=>p.act?.type==='fieldstory'&&p.act.fieldId===a.fieldId&&p.act.phase===a.phase)};
+ACT.fieldwait={start(r){r.bubble='';},done:(r,a)=>fieldStoryCurrent()?.id!==a.fieldId||isNight()||hungry(r)};
+function fieldStoryAnim(r){const pose=sacredPose(r);if(pose)return pose.anim;return r.act?.type==='fieldstory'?FIELD_STORIES[r.act.fieldId]?.[r.act.phase]?.anim||'talk':['fieldwait','fieldintro','fieldassist'].includes(r.act?.type)?'talkthink':r.act?.type;}
 function drawFieldStory(now,labelsOnly=false){
   const q=fieldStoryCurrent();if(!q)return;const state=fieldStoryState(q.id),step=FIELD_STORIES[q.id][state?.step||0],j=S.fieldSites?.[step.site];if(j==null)return;
-  const x=(j%W+.5)*TS,y=((j/W|0)+.5)*TS-hiAt(j)*LIFT,t=now/600;
+  const x=(j%W+1)*TS,y=((j/W|0)+1.55)*TS-hiAt(j)*LIFT,t=now/600;
   ctx.save();if(labelsOnly){ctx.font='bold 11px "PixelMplus10",sans-serif';ctx.textAlign='center';ctx.fillStyle='#fff5d4';ctx.strokeStyle='#695438';ctx.lineWidth=3;const label='！ '+step.label;ctx.strokeText(label,x,y-17);ctx.fillText(label,x,y-17);ctx.restore();return;}
-  ctx.strokeStyle='#f9d77b';ctx.fillStyle='rgba(255,231,153,.22)';ctx.lineWidth=1.5;ctx.beginPath();ctx.ellipse(x,y+5,15+Math.sin(t),8,0,0,7);ctx.fill();ctx.stroke();
-  if(['pool','water','leaf'].includes(step.kind)){ctx.fillStyle='#8ac9ca';ctx.beginPath();ctx.ellipse(x,y,12,6,0,0,7);ctx.fill();ctx.strokeStyle='#d8f5ef';ctx.beginPath();ctx.ellipse(x,y,8,3,0,0,7);ctx.stroke();}
-  if(['root','ember','water'].includes(step.kind)){ctx.strokeStyle='#ab8559';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(x-12,y+3);ctx.quadraticCurveTo(x,y-6,x+12,y+2);ctx.stroke();ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+4,y+7);ctx.stroke();}
-  if(step.kind==='soil'||step.kind==='scorch'){ctx.fillStyle=step.kind==='scorch'?'#8b7868':'#ba9972';for(let i=0;i<3;i++){ctx.beginPath();ctx.ellipse(x-7+i*7,y+(i%2)*3,4,2,0,0,7);ctx.fill();}}
-  if(step.kind==='leaf'){ctx.fillStyle='#b9e6a1';ctx.beginPath();ctx.ellipse(x,y-1,8,3.5,-.5,0,7);ctx.fill();ctx.strokeStyle='#effbd5';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(x-6,y+2);ctx.lineTo(x+6,y-4);ctx.stroke();}
-  if(step.kind==='wind'){ctx.strokeStyle='#d5f5df';ctx.lineWidth=2;for(let n=0;n<3;n++){ctx.beginPath();ctx.moveTo(x-10,y-5+n*5);ctx.quadraticCurveTo(x+15,y-9+n*5,x+9,y+n*5);ctx.stroke();}}
-  if(step.kind==='ember'){ctx.fillStyle='#ffd28d';ctx.beginPath();ctx.arc(x+6,y-4,3+Math.sin(t)*.5,0,7);ctx.fill();}
-  ctx.restore();
+  ctx.strokeStyle='#f9d77b';ctx.lineWidth=1.4;ctx.beginPath();ctx.ellipse(x,y+5,19+Math.sin(t),9,0,0,7);ctx.stroke();ctx.restore();
 }
