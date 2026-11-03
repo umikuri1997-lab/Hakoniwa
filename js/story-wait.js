@@ -109,3 +109,10 @@ function storyWaitStatusText(){
   const pending=p.cast.find(r=>p.intro?!(r.act?.type==='fieldintro'&&r.act.stage==='do'&&earthIntroValid(r,r.act)):!(r.act?.type==='storywait'&&r.act.stage==='do'&&r.act.storyKey===p.key&&r.act.obj===p.obj));
   return pending?storyWaitReason(pending,p.obj):(p.who||'なかま')+'が話したそうにしている';
 }
+
+/* 現地で待つ子のポーズと表情：その場面で、その子がはじめに話すセリフの印（#think| など）から決める（考える・おどろく・しょんぼり・よろこぶ）。印がなければ、ふつうに立って待つ */
+const SWLOOK=new WeakMap();
+function storyWaitLook(r){const p=mainStoryWaitInfo();if(!p)return null;const c=SWLOOK.get(r);if(c&&c.key===p.key)return c.v;
+  const L=(p.report?p.q.story:p.q.talk&&p.q.talk.lines)||[],ln=L.find(l=>Array.isArray(l)&&l[0]===r.name&&typeof l[1]==='string');let v=null;
+  if(ln){const o=lineLook(ln[1]);v={face:o.face==='smile'&&o.motion==='shock'?'shock':o.face,anim:{think:'talkthink',shock:'talkshock',sad:'talksad',nod:'talk'}[o.motion]||(o.motion==='joy'||o.wave?'wave':'')}}
+  SWLOOK.set(r,{key:p.key,v});return v}
