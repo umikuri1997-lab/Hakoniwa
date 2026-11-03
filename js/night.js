@@ -167,10 +167,10 @@ function updEnemy(e,dt){
     if((e.stolen||0)>=10){e.flee=true;e.path=[];e.repath=0}
     else if(goal>=0&&bd<.6){const key=box===-1?'farm:'+goal:'box:'+box;if(e.stealKey!==key){e.stealKey=key;e.stealT=0}e.busyT=S.t;e.stealT=(e.stealT||0)+dt/DAYLEN;e.path=[];
       if(e.stealT>=10){e.stealT-=10;let got='';
-        if(box<=-2){const m=Object.keys(S.mat).filter(k=>S.mat[k]>0).sort((a,b)=>S.mat[b]-S.mat[a])[0];if(m){S.mat[m]--;got=(MATN[m]||m)+'1'}}
-        else if(box>=0){if(takeFood(1,'any').length)got='食料1'}
-        else{const d=S.dyn[goal],fk=cropK(d),n=(CROPS[fk]||{yield:1}).yield;d.stolen=(d.stolen||0)+1;got='畑の作物1';if(d.stolen>=n){d.g=0;d.sown=false;d.crop=null;delete d.stolen}}
-        if(got){e.stolen=(e.stolen||0)+1;S.nightHurt++;if(S.ns)S.ns.lost.push(got);toast('カゲドロボウに'+got+'こぬすまれた！','warn');sfxAt('thief',e.x,e.y)}
+        if(box<=-2){const m=Object.keys(S.mat).filter(k=>S.mat[k]>0).sort((a,b)=>S.mat[b]-S.mat[a])[0];if(m){S.mat[m]--;got=MATN[m]||m}}
+        else if(box>=0){if(takeFood(1,'any').length)got='食料'}
+        else{const d=S.dyn[goal],fk=cropK(d),n=(CROPS[fk]||{yield:1}).yield;d.stolen=(d.stolen||0)+1;got='畑の作物';if(d.stolen>=n){d.g=0;d.sown=false;d.crop=null;delete d.stolen}}
+        if(got){e.stolen=(e.stolen||0)+1;S.nightHurt++;if(S.ns)S.ns.lost.push(got);toast('カゲドロボウに'+got+'をぬすまれた！','warn');sfxAt('thief',e.x,e.y)}
         if(e.stolen>=10){e.flee=true;e.path=[];e.repath=0}}
       return
     }else{e.stealKey=null;e.stealT=0}}
