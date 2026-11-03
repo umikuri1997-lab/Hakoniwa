@@ -55,7 +55,7 @@ function hasHighWork(r){
     if(o==='sprout'&&canJob(r,'plant')&&free('o'+j,1))return true}
   return false}
 const ROUTINE=['chop','mine','gather'];
-const URGNO=['fieldstory','fieldwait','phew','sevreact','questjoy','nmeet','step','shiver','reunion','bury','pray','build','craft','repair','eat','sleep','flee','faint','cook','store','smat','fetch','cgrab','chat','chatwait','npl','tag','offer','pickdrop','pickseed','bathe','rest'];/* 水浴びやベンチの休けいは、とちゅうでやめない */
+const URGNO=['fieldintro','fieldstory','fieldwait','phew','sevreact','questjoy','nmeet','step','shiver','reunion','bury','pray','build','craft','repair','eat','sleep','flee','faint','cook','store','smat','fetch','cgrab','chat','chatwait','npl','tag','offer','pickdrop','pickseed','bathe','rest'];/* 水浴びやベンチの休けいは、とちゅうでやめない */
 function hasUrgent(r){/* 建てる場所か、だれも受けていない依頼があるか */
   if(canJob(r,'build')&&S.obj.some((o,j)=>o==='site'&&free('o'+j,2)))return true;
   return S.orders.some(q=>(!q.worker||!S.res.some(x=>x.id===q.worker))&&craftOK(r,q))}
@@ -179,6 +179,7 @@ function updRes(r,dt){rescueStuck(r);if((RHOLD.get(r)||0)>performance.now())retu
   if(r.act&&isNight()&&!NIGHT_OK.includes(r.act.type))endAct(r)
   if(r.act&&r.act.type==='sevreact'&&(r.hunger<30||hungry(r)||r.energy<10||!SEV_ENCOUNTERS.get(S)||!sevEncounterSafe(SEV_ENCOUNTERS.get(S))))endAct(r);
   if(r.act&&r.act.type==='questjoy'&&(r.hunger<30||hungry(r)||!questVisitSafe(r,r.act.obj)))endAct(r);
+  if(tryEarthIntro(r))return;
   if(tryQuestVisit(r))return;
   if(!r.act){decide(r);return}
   const a=r.act;

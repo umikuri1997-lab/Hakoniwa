@@ -13,7 +13,7 @@ function checkQuest(){
   if(!$('#dialog').hidden)return;
   if(S.qStory!=null){TALKW=storyWho(QUESTS[S.qStory]);QUESTCLEARW=TALKW;renderQuest();return}/* クエストのあとのお話は、💬をタップしてから */
   if(qMissing(q).length){renderQuest();return}
-  if(q.talk&&!S.qTalked){if(q.talk.when()&&!isNight())TALKW=firstSpk(q.talk.lines,q.talk.who);renderQuest();return}/* 新しいクエストの声かけは、昼だけ */
+  if(q.talk&&!S.qTalked){if(q.talk.when()&&!isNight())TALKW=earthIntroQuest(q)?earthIntroSpeaker(q):firstSpk(q.talk.lines,q.talk.who);renderQuest();return}/* 新しいクエストの声かけは、昼だけ */
   if(q.field)fieldStoryEnsure(q.id);
   const complete=q.check();if(!complete)checkQuestParts(q);
   if(complete){
@@ -76,7 +76,7 @@ function startTalk(){if(!$('#dialog').hidden)return;
     if(sq.pre&&!S.flags['pre'+WD+'_'+S.qStory]){S.flags['pre'+WD+'_'+S.qStory]=true;questGives(sq,sq.pre);if(sheet==='food')renderSheet()}/* お礼の会話がはじまったら、すぐわたす（ベリーなど） */
     stageMotion('cheer');/* クエストをクリアしたお礼：みんながとびはねて、よろこぶ */
     let once=0;return dialog(ideaDialogue(sq,sq.story,'clear'),()=>{if(once++||S.qStory!==QUESTS.indexOf(sq))return;/* 2回よばれても1回だけ */if(QUEST_CLEAR_WAIT&&QUEST_CLEAR_WAIT.quest===S.qStory)QUEST_CLEAR_WAIT=null;if(S.quest<=S.qStory)S.quest=S.qStory+1;/* 設置クエストは、お礼を聞き終えてから次の目標へ */S.qStory=null;const after=questGives(sq);inspireQuest(sq,'clear');{const rw=sq.reward??5;if(rw){S.pt+=rw;S.totalPt+=rw;toast('ごほうび：パワー+'+rw,'good')}}renderQuest();renderPalette();if(after)after();else checkQuest()},null)}
-  const q=QUESTS[S.quest];if(!q||!q.talk)return;TALKW=null;QUESTCLEARW=null;S.flags.talked1=true;
+  const q=QUESTS[S.quest];if(!q||!q.talk)return;if(earthIntroQuest(q)&&!earthIntroSpeaker(q))return checkQuest();TALKW=null;QUESTCLEARW=null;S.flags.talked1=true;
   let once=0;dialog(ideaDialogue(q,q.talk.lines),()=>{if(once++||QUESTS[S.quest]!==q)return;/* 2回よばれても1回だけ */S.qTalked=true;if(q.field)fieldStoryFocus(q.id);if(!WD&&q.id==='nushi')acceptFinalDefense();recount();
     for(const id of q.talk.learn||[])S.recipes[id]=true;
     const after=q.talk.gives?questGives(q,q.talk.gives):null;inspireQuest(q);/* クエストに使う物は、会話のあとでわたす */

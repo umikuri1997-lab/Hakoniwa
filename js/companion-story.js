@@ -63,6 +63,19 @@ function fieldStoryEnsure(id){
   if(best>=0)S.fieldSites[step.site]=best;
   return state;
 }
+// 土の調査の声かけは、ノドカが最初の調査場所へ歩いて着いてから。
+const earthIntroQuest=q=>!!q&&q.field&&['earthListen','earthRoot'].includes(q.id);
+function earthIntroCurrent(){const q=S&&QUESTS[S.quest];return WD===0&&!S.free&&!S.cleared&&S.qStory==null&&!S.qTalked&&earthIntroQuest(q)&&q.talk.when()&&!qMissing(q).length?q:null}
+function earthIntroValid(r,a){const q=earthIntroCurrent(),step=q&&FIELD_STORIES[q.id][0];return !!step&&q.id===a.fieldId&&fieldStoryActor(step)===r&&S.fieldSites?.[step.site]===a.obj&&fieldStorySpotOK(a.obj)}
+function earthIntroSpeaker(q){if(earthIntroCurrent()!==q||isNight())return null;fieldStoryEnsure(q.id);const r=fieldStoryActor(FIELD_STORIES[q.id][0]),a=r?.act;return a?.type==='fieldintro'&&a.stage==='do'&&earthIntroValid(r,a)&&questVisitReached(r,a.obj)&&questVisitSafe(r,a.obj)&&!r.hidden&&!hungry(r)?r.name:null}
+function tryEarthIntro(r){const q=earthIntroCurrent();if(!q||isNight()||fieldStoryActor(FIELD_STORIES[q.id][0])!==r)return false;
+  fieldStoryEnsure(q.id);if(r.act?.type==='fieldintro'){if(earthIntroValid(r,r.act))return false;endAct(r)}
+  if(r.hidden||r.coffin||onHold(r)||HOLD.has(r.id)||hungry(r)||r.hunger<40||r.energy<20||r.cing||r.meal||heldN(r)||['eat','fetch','forage','flee','faint','sleep','pray','bury','reunion'].includes(r.act?.type)||hostileNow(r))return false;
+  const j=S.fieldSites?.[FIELD_STORIES[q.id][0].site];if(j==null||!questVisitSafe(r,j))return false;
+  const G=bfs(r.x|0,r.y|0),occupied=occTiles(r),stand=nearest(G,k=>walk(k)&&!occupied.has(k)&&Math.abs(k%W-j%W)+Math.abs((k/W|0)-(j/W|0))===1&&free('field'+k,1),100);if(stand<0)return false;
+  endAct(r);startAct(r,G,'fieldintro',stand,{key:'field'+stand,fieldId:q.id,obj:j});return true;
+}
+ACT.fieldintro={start(r,a){if(!earthIntroValid(r,a)||!questVisitReached(r,a.obj))return false;faceTo(r,a.obj);r.bubble='';checkQuest()},done:(r,a)=>!earthIntroValid(r,a)||isNight()||hungry(r)||r.energy<10||!questVisitReached(r,a.obj)||!questVisitSafe(r,a.obj)};
 function fieldStoryFocus(id){const state=fieldStoryEnsure(id),step=FIELD_STORIES[id]?.[state?.step],j=step&&S.fieldSites?.[step.site];if(j!=null)panTo((j%W+.5)*TS,((j/W|0)+.5)*TS);}
 function fieldStoryTap(tx,ty){
   const q=fieldStoryCurrent();if(!q)return false;const state=fieldStoryEnsure(q.id),step=FIELD_STORIES[q.id][state.step],j=S.fieldSites?.[step.site];
