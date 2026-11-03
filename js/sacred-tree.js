@@ -49,9 +49,8 @@ function drawStoryTree(c,x,y,j,now,full=false){
 }
 function drawStoryTreeFrame(c,x,y,j,now,forced=null,unfold=1){
   let stage=forced??sacredStage();const preview=S&&SACRED_PREVIEW.get(S);if(forced==null&&preview?.session===VILLAGE_SESSION&&performance.now()<preview.until)stage=Math.max(stage,preview.stage);
-  const art=window.CHIPS?.[['story:stump','story:bud','story:leaf','story:sapling','shinboku'][stage]];
-  if(art&&stage<4){drawChip(c,art,'story:tree',x,y,now,j);return;}
-  if(stage>=3&&window.CHIPS?.shinboku){const sc=stage===4?1:(S.setSh||0)>=1?.78:.55,ax=x+32,ay=y+59;c.save();c.translate(ax,ay);c.scale(sc*(.25+.75*unfold),sc*(.25+.75*unfold));c.translate(-ax,-ay);drawChip(c,CHIPS.shinboku,'shinboku',x-6,y-30,now,j);c.restore();return;}
+  const key=['story:stump','story:bud','story:leaf',(S.setSh||0)>=1?'story:tree-young':'story:sapling','story:tree'][stage],art=window.CHIPS?.[key];
+  if(art&&drawChip(c,art,key,x,y,now,j))return;
   const cx=x+32,cy=y+48;c.save();c.imageSmoothingEnabled=false;
   c.fillStyle='rgba(66,53,28,.17)';c.beginPath();c.ellipse(cx,cy+9,23,7,0,0,7);c.fill();
   c.strokeStyle='#ab855e';c.lineWidth=7;c.lineCap='round';for(const [dx,dy]of[[-23,10],[24,8],[-14,17],[13,18]]){c.beginPath();c.moveTo(cx,cy+2);c.quadraticCurveTo(cx+dx*.5,cy+dy*.7,cx+dx,cy+dy);c.stroke();}
