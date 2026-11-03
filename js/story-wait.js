@@ -119,7 +119,7 @@ function storyWaitReason(r,obj){
   if(b?.owner===S&&b.session===VILLAGE_SESSION&&b.obj===obj&&b.until>=S.t)return n+(b.reason==='crowded'?'の立つ場所を空けよう':'が通れない。道をあけよう');
   return n+(['fieldintro','storywait'].includes(r.act?.type)?'がお話の場所へ向かっている':'が向かう準備をしている');
 }
-function storyCalled(r){const p=mainStoryWaitInfo();if(p&&p.cast.includes(r))return true;const q=typeof earthIntroCurrent==='function'&&earthIntroCurrent();return !!q&&fieldCast(FIELD_STORIES[q.id][0]).includes(r)}/* メインのお話によばれている */
+function storyCalled(r){const p=mainStoryWaitInfo();if(p&&p.cast.includes(r))return true;{const fq=typeof fieldStoryCurrent==='function'&&fieldStoryCurrent();if(fq){const st=FIELD_STORIES[fq.id][fieldStoryState(fq.id)?.step||0];if(st&&fieldCast(st).includes(r))return true}}const q=typeof earthIntroCurrent==='function'&&earthIntroCurrent();return !!q&&fieldCast(FIELD_STORIES[q.id][0]).includes(r)}/* メインのお話によばれている */
 function storyWaitStatusText(){
   if(!S||S.free||S.cleared||isNight())return null;
   let p=mainStoryWaitInfo();if(!p){const q=earthIntroCurrent();if(!q)return null;fieldStoryEnsure(q.id);const step=FIELD_STORIES[q.id][0];p={cast:fieldCast(step),obj:S.sacredRoot,who:fieldStoryActor(step)?.name,field:true,intro:true};}
