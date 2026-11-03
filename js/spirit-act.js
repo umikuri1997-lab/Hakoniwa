@@ -58,14 +58,11 @@ function addPt(pw,r,xp){if(!pw&&!xp)return;/* pw：もらえるパワー、xp：
   S.pt+=n;S.totalPt+=n;if(r)addFloat(r.x,r.y-1,'+'+n,'#ecdcbc')}
 function burst(j,kind,snd){
   const cx=(j%W)*TS+16,cy=((j/W)|0)*TS+18;
-  const cols=kind==='block'?['#e2cd98','#b4925e','#fff6dc']:kind==='plant'?['#8fe07a','#ffd35c','#ff9cc0','#fff']:['#ffe27a','#fff','#9ff0ff','#ffb35c'];
-  fx.push({k:'ring',x:cx,y:cy,life:1});
-  for(let n=0;n<16;n++){const a=Math.random()*Math.PI*2,s=rnd(40,110);fx.push({k:'p',x:cx,y:cy,vx:Math.cos(a)*s,vy:Math.sin(a)*s-60,life:1,col:pick(cols),r:rnd(1.5,3)})}
-  if(kind!=='block')for(let n=0;n<6;n++){const a=Math.random()*Math.PI*2,s=rnd(20,60);fx.push({k:'star',x:cx,y:cy-8,vx:Math.cos(a)*s,vy:Math.sin(a)*s-30,life:1.2,col:'#fff7c0'})}
+  fxSpr(kind==='block'?'dust':kind==='plant'?'petals':'burst',cx,cy);
   pops.set(j,performance.now());sfxAt(snd||kind,(j%W)+.5,(j/W)|0);
 }
 function plantMound(c,x,y,i){const k=i==null?0:hash(i*13+5);const w=7.5+k*2,h=2.8+k*.8;c.fillStyle='rgba(54,38,24,.22)';c.beginPath();c.ellipse(x+16,y+29,w+1,h*.72,0,0,7);c.fill();c.fillStyle='#a9784f';c.beginPath();c.ellipse(x+16,y+27.5,w,h,0,Math.PI,0);c.ellipse(x+16,y+27.5,w,h*.48,0,0,Math.PI);c.fill();c.fillStyle='rgba(225,177,125,.5)';c.beginPath();c.ellipse(x+15,y+26.3,w*.58,h*.38,-.08,Math.PI,0);c.fill()}
-function plantSparkle(j,id){const FK={clover:'fl_clover',bellf:'fl_bell',salvia:'fl_salvia',lily:'fl_lily',lotus:'fl_lotus'},key=FK[id]||'tree',a=ART[key],w=FLOWERS.has(id)?26:30,h=a&&a.ok?w*a.h/a.w:w,cx=(j%W)*TS+16,cy=((j/W)|0)*TS+30-h*.65;for(let n=0;n<3;n++)fx.push({k:'star',x:cx+(n-1)*8,y:cy+(n%2?3:-2),vx:(n-1)*3,vy:-rnd(5,10),life:rnd(.55,.75),col:n===1?'#fff9d8':'#dfffba'});sfxAt('sow',(j%W)+.5,(j/W)|0)}
+function plantSparkle(j,id){const FK={clover:'fl_clover',bellf:'fl_bell',salvia:'fl_salvia',lily:'fl_lily',lotus:'fl_lotus'},key=FK[id]||'tree',a=ART[key],w=FLOWERS.has(id)?26:30,h=a&&a.ok?w*a.h/a.w:w,cx=(j%W)*TS+16,cy=((j/W)|0)*TS+30-h*.65;fxSpr('twinkle',cx,cy);sfxAt('sow',(j%W)+.5,(j/W)|0)}
 /* ---------- 効果範囲の表示 ---------- */
 // おく画面ではまわりに効く物の範囲を出す。みる画面ではタップした物の範囲をしばらく出す
 const RANGE_COL={flower:'255,150,190',well:'90,170,240',windmill:'90,210,180',light:'255,190,90',watch:'255,110,110',env:'150,205,110',vane:'150,170,255',sign:'255,170,120'};
@@ -94,11 +91,7 @@ function drawRanges(now){
     if(pending&&pending.kind==='plant'&&FLOWERS.has(pending.id))for(const c of pending.cells)drawRangeOne(pending.id,null,c[0],c[1],true)}
   else if(SHOWR){if(now>SHOWR.until||S.obj[SHOWR.j]!==SHOWR.o)SHOWR=null;else drawRangeOne(SHOWR.o,SHOWR.j,SHOWR.j%W,(SHOWR.j/W)|0,true)}}
 function burstAt(x,y,kind){burst((y|0)*W+(x|0),kind)}
-function spawnFX(x,y,col){const cx=x*TS+16,cy=y*TS+20;
-  fx.push({k:'pillar',x:cx,y:cy,vx:0,vy:0,life:1.6,col});
-  for(let n=0;n<3;n++)fx.push({k:'ring',x:cx,y:cy,life:1+n*.35,col});
-  for(let n=0;n<40;n++){const a=Math.random()*Math.PI*2,s=rnd(50,170);fx.push({k:'p',x:cx,y:cy,vx:Math.cos(a)*s,vy:Math.sin(a)*s-140,life:1.3,col:pick([col,col,'#fff','#fff7c0']),r:rnd(2,4)})}
-  for(let n=0;n<14;n++){const a=Math.random()*Math.PI*2,s=rnd(30,90);fx.push({k:'star',x:cx,y:cy-20,vx:Math.cos(a)*s,vy:Math.sin(a)*s-60,life:1.6,col:pick(['#fff7c0',col,'#fff'])})}
+function spawnFX(x,y,col){fxSpr('appear',x*TS+16,y*TS+20,col);
   dirty=true}
 
 /* ---------- せいれいの行動 ---------- */
@@ -146,7 +139,7 @@ const ACT={
   bury:{start(r,a){const d=S.dyn[a.obj];if(S.obj[a.obj]!=='grave'||!d||d.buried||r.coffin||heldN(r))return false},done:(r,a)=>a.t>=2,end(r,a){const d=S.dyn[a.obj];if(S.obj[a.obj]==='grave'&&d&&!d.buried){r.coffin={name:d.name};S.obj[a.obj]='';delete S.dyn[a.obj];recount()}}},/* お墓から棺を持ちあげる（ほかのものは持たない） */
   reunion:{start(r,a){r.bubble='💕';JOYU.set(r,performance.now()+4000);const q=S.res.find(x=>x.id===a.who);if(q){r.face=q.x>=r.x?1:-1;if(!(q.act&&q.act.type==='reunion')&&!q.coffin&&!q.hidden){endAct(q);startAct(q,null,'reunion',-1,{who:r.id})}/* よみがえった子も、その場で止まって、いっしょによろこぶ */q.bubble='💕';JOYU.set(q,performance.now()+4000)}addFloat(r.x,r.y-1.2,'💕','#fff')},done:(r,a)=>a.t>=6},/* もどってきたなかよしに会えてよろこぶ */
   otakiget:{start(r){if(!S.otakiQ||!Object.keys(S.otakiQ).length)return false;r.bubble='📦';sfxAt('box',r.x,r.y)},done:(r,a)=>a.t>=4,end(r){r.otaki=S.otakiQ;S.otakiQ={};r.bubble='🔥'}},/* おたきあげ：素材箱から、たのまれた素材をとる */
-  otaki:{start(r){if(!r.otaki||STATUE<0)return false;r.bubble='🔥';sfxAt('cookfire',r.x,r.y)},tick(r,a,dt){a.h=(a.h||0)+dt;if(a.h>=2.5){a.h=0;const x=STATUE%W+.5,y=((STATUE/W)|0)+.2;for(let n=0;n<6;n++){const an=Math.random()*7,v=rnd(20,50);fx.push({k:'p',x:x*TS,y:y*TS,vx:Math.cos(an)*v*.4,vy:-v,life:1,col:pick(['#ffd38a','#ff9f5a','#fff3c4']),r:rnd(1.5,3)})}}},done:(r,a)=>a.t>=10,end(r){let p=0;for(const k in r.otaki||{})p+=Math.floor(r.otaki[k]/(MATTRADE[k]||5));r.otaki=null;S.pt+=p;S.totalPt=(S.totalPt||0)+p;burst(STATUE,'furn');sfx('level');toast('おたきあげ：パワー+'+p,'good');addSpiritXp(1,r)}},/* 神殿で、おたきあげ */
+  otaki:{start(r){if(!r.otaki||STATUE<0)return false;r.bubble='🔥';sfxAt('cookfire',r.x,r.y)},tick(r,a,dt){a.h=(a.h||0)+dt;if(a.h>=2.5){a.h=0;fxSpr('embers',(STATUE%W+.5)*TS,(((STATUE/W)|0)+.2)*TS)}},done:(r,a)=>a.t>=10,end(r){let p=0;for(const k in r.otaki||{})p+=Math.floor(r.otaki[k]/(MATTRADE[k]||5));r.otaki=null;S.pt+=p;S.totalPt=(S.totalPt||0)+p;burst(STATUE,'furn');sfx('level');toast('おたきあげ：パワー+'+p,'good');addSpiritXp(1,r)}},/* 神殿で、おたきあげ */
   pray:{start(r){if(!r.coffin)return false},done:(r,a)=>a.t>=12,end(r){finishBurial(r)}},/* 神殿でおいのりして、埋葬する */
   rest:{start(r,a){if(!BENCHES.has(S.obj[a.obj]))return false;r.bubble='☕'},tick(r,a,dt){if(a.partner!=null&&!S.res.some(x=>x.id===a.partner&&x.act&&x.act.type==='rest'&&x.act.obj===a.obj)){a.topic=null;a.partner=null;a.sub=0;a.ended=1;r.bubble='☕'}/* 片方が休けいを終えたら、おしゃべりもおわり */r.energy=Math.min(100,r.energy+dt/3*mateK(r,'rest')*recK(r)*(1+.1*spotN(a.obj,'yasumi','wa','terrace')));/* やすみば・和の庭：+10% */r.fun=Math.min(100,r.fun+.08*dt*(1+.1*spotN(a.obj,'hana','chaya','kotori')));/* 花のベンチ・茶屋：+10% */
     if(a.topic==null){const q=a.ended||(r.chatCD||0)>S.t?null:S.res.find(x=>x!==r&&(x.chatCD||0)<=S.t&&x.act&&x.act.type==='rest'&&x.act.stage==='do'&&x.act.obj===a.obj&&x.act.topic==null);if(q){const t=chatTopic(r,q);a.topic=t;a.partner=q.id;q.act.topic=t;q.act.partner=r.id;q.act.sub=1;r.bubble=q.bubble='💬';mate(r,q);for(const x of[r,q])addPt(.45+(x.like==='chat'?.9:0)+(S.today==='oshaberi'?.9:0),x,1+(x.like==='chat'?2:0)+(S.today==='oshaberi'?2:0))}}/* ベンチに2人すわったら、おしゃべり */
@@ -177,7 +170,7 @@ const ACT={
   cput:{start(r,a){if(!r.cpk)return false;r.bubble='';faceTo(r,a.obj)},done:(r,a)=>a.t>=4,end(r,a){const p=r.cpk;r.cpk=null;if(!p)return;if(S.obj[p.j]!=='composter'){cmpRefund(p.m);return}let n=0;for(const k in p.m)n+=p.m[k];if(n>0)cmpOf(p.j).b.push([S.t,n]);sfxAt('bush',r.x,r.y)}},/* 草をコンポスターに入れる */
   cget:{start(r,a){const d=S.dyn[a.obj];if(S.obj[a.obj]!=='composter'||!d||!(d.c>0))return false;r.bubble='';faceTo(r,a.obj)},done:(r,a)=>a.t>=4,end(r,a){const d=S.dyn[a.obj];if(!d||!(d.c>0))return;const n=Math.min(d.c,capOf(r));d.c-=n;r.fert=(r.fert||0)+n}},/* コンポスターから肥料をとる */
   fert:{start(r,a){const d=S.dyn[a.obj];if(S.obj[a.obj]!=='farm'||!d||d.g>=100||d.fdD===dayNo()||!(r.fert>0))return false;r.bubble='ic:hiryo';sfxAt('pour',r.x,r.y)},tick(r,a,dt){work(r,dt)},done:(r,a)=>a.t>=8,end(r,a){const d=S.dyn[a.obj];if(!d||S.obj[a.obj]!=='farm')return;d.fb=(d.fb||0)+1;d.fdD=dayNo();r.fert=Math.max(0,(r.fert||0)-1);addFloat(a.obj%W+.5,((a.obj/W)|0)-.4,'収穫+1','#d8f5c0');addSpiritXp(1,r)}},/* 肥料やり：その畑の収穫+1（1日1回） */
-  draw:{start(r,a){if(a.src==null||a.src<0)return false;r.bubble='';faceTo(r,a.src);sfxAt('pour',r.x,r.y)},tick(r,a,dt){work(r,dt);a.h=(a.h||0)+dt;if(a.h>=1.5){a.h=0;sfxAt('pour',r.x,r.y);const x=(a.src%W+.5)*TS,y=((a.src/W|0)+.5)*TS;for(let n=0;n<7;n++){const an=Math.random()*7,v=rnd(14,34);fx.push({k:'p',x,y,vx:Math.cos(an)*v*.5,vy:-v,life:.9,col:pick(['#9fd0ea','#bfe3f5','#7fb8dc']),r:rnd(1.2,2.4)})}}},/* 水をくむあいだ、水しぶきが上がる */done:(r,a)=>a.t>=6,end(r,a){let n=3;const k=anc(a.src);if(S.obj[k]==='jar'){const d=S.dyn[k]||(S.dyn[k]={});n=Math.min(n,d.w||0);d.w=(d.w||0)-n}r.wcan=n}},/* 水をくむ：畑3マスぶん。みずがめは、たまった分だけ */
+  draw:{start(r,a){if(a.src==null||a.src<0)return false;r.bubble='';faceTo(r,a.src);sfxAt('pour',r.x,r.y)},tick(r,a,dt){work(r,dt);a.h=(a.h||0)+dt;if(a.h>=1.5){a.h=0;sfxAt('pour',r.x,r.y);fxSpr('splash',(a.src%W+.5)*TS,((a.src/W|0)+.5)*TS)}},/* 水をくむあいだ、水しぶきが上がる */done:(r,a)=>a.t>=6,end(r,a){let n=3;const k=anc(a.src);if(S.obj[k]==='jar'){const d=S.dyn[k]||(S.dyn[k]={});n=Math.min(n,d.w||0);d.w=(d.w||0)-n}r.wcan=n}},/* 水をくむ：畑3マスぶん。みずがめは、たまった分だけ */
   tend:{start(r,a){const d=S.dyn[a.obj];if(!d||S.obj[a.obj]!=='farm'||!(r.wcan>0))return false;r.bubble='🌱';sfxAt('pour',r.x,r.y)},tick(r,a,dt){work(r,dt);a.h=(a.h||0)+dt;if(a.h>=8){a.h=0;sfxAt('pour',r.x,r.y)}},done:(r,a)=>a.t>=20,end(r,a){const d=S.dyn[a.obj];if(d&&S.obj[a.obj]==='farm'&&r.wcan>0){d.wet=100;r.wcan=Math.max(0,(r.wcan||0)-1)}addSpiritXp(1,r)}},
   water:{start(r,a){if(S.obj[a.obj]!=='farm'||!(r.wcan>0))return false;r.bubble='💧';sfxAt('pour',r.x,r.y)},tick(r,a,dt){work(r,dt);a.h=(a.h||0)+dt;if(a.h>=8){a.h=0;sfxAt('pour',r.x,r.y)}},/* 水をあげている間もちょろちょろ */done:(r,a)=>a.t>=waterDur(r,a),end(r,a){const d=S.dyn[a.obj];if(d&&S.obj[a.obj]==='farm'&&r.wcan>0){d.wet=100;r.wcan=Math.max(0,(r.wcan||0)-1)}addSpiritXp(1,r)}},
   till:{start(r,a){if(S.obj[a.obj]!=='plot')return false;r.bubble='⛏'},tick(r,a,dt){const d=S.dyn[a.obj];if(d)d.p+=dt*fast(r,'earth');work(r,dt)},

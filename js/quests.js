@@ -284,8 +284,8 @@ function deathTalk(r){if(WD)return null;const F=S.flags,n=r.name,tell=k=>{const 
 function sevBack(n){if(WD||!S.flags)return;const Q=S.sevQ||(S.sevQ=[]),F=S.flags;if(n===POKO&&F.nushiWait&&!S.cleared){F.nushiWait=0;F.nushiDue=1;villageTimeout(()=>{if(!S.cleared)nushiReturns()},7000)}/* フタバがもどってから、ヌシ様がくる */
   if(n===MINA&&F.lostN&&!F.backN){F.backN=1;Q.push('b_N')}else if(n===POKO&&F.lostF&&!F.backF){F.backF=1;Q.push('b_F')}else if(n===keyName('fire')&&F.lostH&&!F.backH){F.backH=1;Q.push('b_H')}}
 /* フタバの「こもれびのまもり」：近くで「コワイノ」にねらわれている火の子を、葉っぱで守る（受けるダメージ半分） */
-function atkFX(r,en){fx.push({k:'slash',x:en.x*TS,y:en.y*TS-6,d:en.x>=r.x?1:-1,life:1});for(let n=0;n<8;n++){const a=Math.random()*6.28;fx.push({k:'p',x:en.x*TS,y:en.y*TS-6,vx:Math.cos(a)*70,vy:Math.sin(a)*70-20,life:.7,col:n%2?'#fff3a0':'#ffb347',r:3})}}/* 攻撃：弧をえがく斬撃と火花 */
-function leafFX(t){for(let n=0;n<14;n++){const a=n/14*6.28;fx.push({k:'p',x:t.x*TS+Math.cos(a)*10,y:t.y*TS+Math.sin(a)*5,vx:Math.cos(a)*40,vy:Math.sin(a)*20-30,life:1,col:n%2?'#8fdc6a':'#c8f5a0',r:2.6})}}
+function atkFX(r,en){fxSpr('slash',en.x*TS,en.y*TS-6,null,en.x>=r.x?1:-1)}/* 攻撃：弧をえがく斬撃と火花 */
+function leafFX(t){fxSpr('leafguard',t.x*TS,t.y*TS)}
 const faceTo2=(f,t)=>{f.face=t.x>=f.x?1:-1};
 function guardTick(){const fin=!WD&&!!(S.ns&&S.ns.final)&&isNight();if(WD||!(S.flags.guard||fin)||!S.enemies.length)return;const f=S.res.find(r=>r.name===POKO);if(!f||(f.act&&f.act.type==='faint')||f.hunger<25)return;
   if(f.gw){if(S.t<f.gw.t)return;const t=f.gw.tg;f.gw=null;if(S.res.includes(t)&&!t.hidden&&Math.hypot(t.x-f.x,t.y-f.y)<=(fin?3.6:2.6)&&(t.shU||0)<=S.t){t.shU=S.t+40;if(fin)f.shU=S.t+40;f.gcd=S.t+75;leafFX(t);leafFX(f);/* ふだんは、守るのは火の子1人だけ */if(fin)for(const u of S.res){if(u===t||u===f||u.hidden||Math.hypot(u.x-f.x,u.y-f.y)>3)continue;u.shU=S.t+40;leafFX(u)}/* 最後の夜：フタバのまわり3マスの子をまとめて守る */addFloat(f.x,f.y-1,'こもれびのまもり！','#5fbf3f');sfx('bush');if(fin&&!S.flags.finF){S.flags.finF=1;S.flags.guard=true;}/* セリフは、ヨルノオオカゲが来たときのお話（e15）で言う */}return}/* 近くまで来て、ひとふりしてから発動 */
@@ -305,9 +305,8 @@ function depart(go){$('#maps').hidden=true;continueGame(LIVE[0]);const f=S.res.f
   const hold=v=>{const n=performance.now();for(const r of S.res)RHOLD.set(r,v?n+300000:0)};
   const finish=()=>{GODOUT=false;hold(false);try{KV.setItem('hakoniwa-dep1','1')}catch(e){}S.flags.ret1=1;S.godVisit=gv;save();const ov=document.createElement('div');ov.id='deptLd';ov.style.cssText='position:fixed;inset:0;z-index:70;display:flex;align-items:center;justify-content:center;background:#1e1810;color:#fff3d6;font-size:16px;opacity:0;transition:opacity .8s';ov.textContent='火山のふもとの村へ…';document.body.appendChild(ov);requestAnimationFrame(()=>requestAnimationFrame(()=>{ov.style.opacity='1'}));setTimeout(()=>requestAnimationFrame(()=>setTimeout(go,50)),900)};/* 画面を暗くして「…へ」と出してから、つぎの土地を作る（作るあいだ、止まって見えないように） */
   const leave=()=>{/* 守り神とカミサマが、光になって空へのぼっていく：白く光って、光の柱が立ち、カミサマのすがたが消える。みんなは空を見あげる */
-    dlgCue('flash');const gx=godX()*TS,gy=godY()*TS;sfx('level');for(let k=0;k<3;k++){fx.push({k:'pillar',x:gx,y:gy,vx:0,vy:0,life:2.2,col:'#fff6c8'});}
+    dlgCue('flash');const gx=godX()*TS,gy=godY()*TS;sfx('level');for(let k=0;k<3;k++)setTimeout(()=>fxSpr('appear',gx,gy,'#fff6c8'),k*500);
     for(let k=0;k<4;k++)setTimeout(()=>fx.push({k:'ring',x:gx,y:gy-40,life:1.4,col:'#fff6c8'}),k*350);
-    for(let n=0;n<28;n++)fx.push({k:'p',x:gx,y:gy-20,vx:(n%7-3)*14,vy:-90-(n%5)*30,life:2.2,col:n%2?'#fff3a0':'#c8ffd0',r:3});/* 光のつぶが、空へのぼる */
     camAnim={fz:cam.z,tz:Math.max(1.2,cam.z*.8),fx:cam.x+VW/cam.z/2,fy:cam.y+VH/cam.z/2,tx:gx,ty:gy-70,t:0,dur:1.6};
     for(const r of S.res)if(!r.hidden){r.face=r.x<godX()?1:-1;JUMP.set(r,performance.now()+Math.random()*300)}
     setTimeout(()=>{GODOUT=true;S.godVisit=false;sfx('arrive')},1100);/* 光の柱のなかで、カミサマが消える */
@@ -407,7 +406,7 @@ ACT.questjoy={start(r,a){if(!qvHas(a.obj,a.targetId)||!questVisitReached(r,a.obj
   done:(r,a)=>!qvHas(a.obj,a.targetId)||performance.now()>=a.joyUntil,
   end(r,a){if(JOYU.get(r)===a.joyUntil)JOYU.delete(r)}};
 function upFx(r,nm,txt,big){const now=performance.now();JOYU.set(r,now+2600);RHOLD.set(r,now+2600);r.bubble='😆';r.shine=now;JUMP.set(r,now);setTimeout(()=>{if(S.res.includes(r))JUMP.set(r,performance.now())},900);
-  fx.push({k:'ring',x:r.x*TS,y:(r.y-.5)*TS,life:1});for(let n=0;n<(big?36:22);n++){const a=Math.random()*7;fx.push({k:'p',x:r.x*TS,y:(r.y-.6)*TS,vx:Math.cos(a)*(60+Math.random()*60),vy:Math.sin(a)*70-60,life:1,col:pick(['#fff3a0','#9fe8ff','#ffc6ec','#fff']),r:2.5})}
+  fxSpr('levelup',r.x*TS,(r.y-.5)*TS);
   sfx('level');if(big)setTimeout(()=>sfx('good'),350);
   const o=$('#upfx');o.querySelector('.upt').style.backgroundImage='url('+spiritPort(r.elem,120,r.vr)+')';o.querySelector('.utt').textContent=r.name+'の'+nm;const u=o.querySelector('.unn');u.textContent=txt+(big?'！！':'！');u.classList.toggle('big',!!big);
   o.querySelectorAll('i').forEach(e=>e.remove());for(let n=0;n<(big?18:12);n++){const e=document.createElement('i'),a=n/(big?18:12)*6.28,d=110+Math.random()*60;e.textContent=pick(['✨','⭐','💫','✨']);e.style.setProperty('--dx',Math.cos(a)*d+'px');e.style.setProperty('--dy',Math.sin(a)*d+'px');e.style.animationDelay=(Math.random()*.25)+'s';o.appendChild(e)}

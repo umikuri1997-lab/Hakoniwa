@@ -180,7 +180,7 @@ function frame(now){
   if(!paused()){if(S.speed>1&&!TESTSPD&&!TESTM){S.glassT=Math.max(0,(S.glassT||0)-rdt);if(S.glassT<=0)S.speed=1}glassUI();LIGHTCD=Math.max(0,LIGHTCD-rdt*S.speed*(SKIP?40:1));AREACD=Math.max(0,AREACD-rdt*S.speed*(SKIP?40:1));let g=rdt*MIN_PER_SEC*S.speed*(SKIP?40:1);while(g>0){const s=Math.min(g,2);try{stepWorld(s)}catch(e){frameErr('step',e);break}g-=s;if(performance.now()<BOSSHOLD)break}/* オオカゲの登場・撃破で止めたら、残りは進めない */}
   for(const f of floats)f.life-=prdt*.7;while(floats.length&&floats[0].life<=0)floats.shift();
   for(const s of shots)s.life-=prdt*1.4;while(shots.length&&shots[0].life<=0)shots.shift();
-  for(const f of fx){f.life-=prdt*(f.k==='ring'?(f.col?1.3:2.2):f.k==='pillar'?.9:f.k==='slash'?3:1.4);if(f.k!=='ring'&&f.k!=='pillar'&&!PZ){f.x+=f.vx*rdt;f.y+=f.vy*rdt;f.vy+=(f.k==='p'?260:40)*rdt;f.vx*=.96}}
+  for(const f of fx){f.life-=prdt*(f.k==='spr'?1/f.dur:f.k==='ring'?(f.col?1.3:2.2):1.4);if(f.k!=='ring'&&f.k!=='spr'&&!PZ){f.x+=f.vx*rdt;f.y+=f.vy*rdt;f.vy+=(f.k==='p'?260:40)*rdt;f.vx*=.96}}
   for(let i=fx.length-1;i>=0;i--)if(fx[i].life<=0)fx.splice(i,1);
   for(const m of motes){m.y-=prdt*.012*m.s;m.x+=Math.sin(now/2000+m.p)*prdt*.004;if(m.y<0){m.y=1;m.x=Math.random()}}
   if(S.rain)for(const d of rain){d.y+=prdt*1.2*d.s;if(d.y>1){d.y=0;d.x=Math.random()}}
