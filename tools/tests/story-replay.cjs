@@ -14,6 +14,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict');
    assert(await child.evaluate(()=>sacredEval(`IS_STORY_REPLAY&&NOSAVE&&save()===false`)));
    await child.evaluate(()=>sacredEval(`KV.setItem(SAVE_KEYS[0],'child cannot overwrite');KV.removeItem(SAVE_KEYS[0]);`));
    await child.locator('.replay-start button').click();
+   if(key==='event:e15')assert(await child.evaluate(()=>sacredEval("S.ns?.final&&S.enemies.some(e=>e.type==='boss2'&&e.spawned&&!e.dead)&&!!sacredDirection()?.shot")),'missing battle context');
    // Skip reading time only. Authored movement and holds still finish before advancing.
    await child.evaluate(()=>sacredEval(`window.replayTestReader=setInterval(()=>{if(!document.querySelector('#dialog').hidden){DLGA.n=DLGA.full.length;DLGA.readReady=0;const b=document.querySelector('#dlgBtns button');if(performance.now()>=DLGA.holdUntil&&!sacredMotionPending()&&b&&!b.disabled)b.click();}},40);`));
    try{await child.waitForSelector('.replay-end',{timeout:120000});}catch(e){console.log(key,await child.evaluate(()=>sacredEval(`JSON.stringify({run:STORY_REPLAY_RUN,quest:S.quest,qStory:S.qStory,talked:S.qTalked,step:S.fieldStories,TALKW,dlg:DLGA.full,acts:S.res.map(r=>({name:r.name,x:r.x,y:r.y,act:r.act})),sev:S.sev,enc:SEV_ENCOUNTERS.get(S)})`)));throw e;}

@@ -64,6 +64,7 @@ function mainStoryPromptText(w){if(w===GOD&&!mainStoryBubbleReady())return '„Å™„
 function mainStoryFocusTarget(){
   if(!S||S.free||S.cleared||isNight()||!$('#dialog').hidden)return null;
   const report=S.qStory!=null,q=QUESTS[report?S.qStory:S.quest];if(!q)return null;
+  if(q.id==='nushi'&&S.qTalked){const target=grassEndingFocusTarget();if(target)return target;}
   if(TALKW===GOD&&godHere()&&mainStoryBubbleReady())return{x:godX(),y:godY()-.8,w:3,h:3};
   if(q.field){
     if(!report&&(!S.qTalked&&!earthIntroCurrent()||S.qTalked&&!fieldStoryCurrent()))return null;

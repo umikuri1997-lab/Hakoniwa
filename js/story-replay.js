@@ -56,6 +56,10 @@ function prepareStoryReplay(run,payload){
   S.quest=QUESTS1.findIndex(q=>q.id===(e.kind==='quest'?e.id:'nushi'));S.qStory=null;S.qTalked=e.kind!=='quest';S.flags.nushiAlive=e.kind!=='quest'||at>=8;
   S.sev=Object.fromEntries(SEV1.map(v=>[v.k,1]));S.sevP=[];S.sevQ=[];S.spotSeen=Object.fromEntries(SPOTS.map(v=>[v.k,1]));
   recount();if(e.kind!=='quest'){growStoryTree();S.setSh=e.kind==='reunion'||e.kind==='quiet'?3:2;S.shards=3;S.replayMature=true;S.flags.finalWon=e.id!=='e16'&&e.id!=='e15';S.flags.areaSkill=e.id!=='e16g';S.flags.sh_boss=true;}
+  if(e.id==='e15'){
+    const positions=[[.5,5.5],[-1.5,5.5],[3,6],[.5,7.5],[-1.5,7.5]];S.res.forEach((r,i)=>{r.x=x+positions[i][0];r.y=y+positions[i][1];r.face=1;});
+    const d=EN.boss2,enemy={id:S.nid++,type:'boss2',x:x+8.5,y:y+9.5,hp:d.hp,max:d.hp,spawned:true,path:[],repath:0,atk:0,stun:0,flash:0,flee:false};S.enemies=[enemy];S.ns={final:true,n:1,kill:0};EV.set(enemy,{x:enemy.x,y:enemy.y,back:false,f:-1,mv:0});
+  }
   if(e.kind==='quiet'){S.cleared=true;S.flags.sacredReunion=true;S.flags.sacredQuietSeen=false;S.nushi={x:storyTreeX(S.sacredRoot)+2.2,y:storyTreeY(S.sacredRoot)+.95,t:6,app:1,dir:0,face:-1,path:[]};}
   USERPAUSE=true;NOSAVE=true;started=true;window.__noIdle=true;
   for(const id of ['#title','#maps','#pro','#dialog','#lvup','#rlv'])$(id).hidden=true;showUI(true);cam.z=homeZ();centerOn(storyTreeX(S.sacredRoot)*TS,storyTreeY(S.sacredRoot)*TS);
@@ -69,7 +73,7 @@ async function playStoryReplay(run){
   const e=run.episode;let last=performance.now();run.running=true;
   run.tick=setInterval(()=>{
     if(STORY_REPLAY_RUN!==run||run.cancelled)return;const now=performance.now(),dt=Math.min(.1,(now-last)/1000);last=now;
-    if($('#dialog').hidden){for(const r of S.res){if(!r.act){tryMainStoryWait(r);if(!r.act)tryEarthIntro(r);}if(r.act&&['fieldintro','fieldstory','fieldassist','fieldwait','storywait','storyreturn','nmeet','sevreact'].includes(r.act.type))updRes(r,dt*MIN_PER_SEC);}checkQuest();}
+    if($('#dialog').hidden&&!sacredQuietActive()){for(const r of S.res){if(!r.act){tryMainStoryWait(r);if(!r.act)tryEarthIntro(r);}if(r.act&&['fieldintro','fieldstory','fieldassist','fieldwait','storywait','storyreturn','nmeet','sevreact'].includes(r.act.type))updRes(r,dt*MIN_PER_SEC);}checkQuest();}
     else if(run.auto&&DLGA.n>=DLGA.full.length&&now>=DLGA.holdUntil&&now>=DLGA.readReady&&!sacredMotionPending()&&now-DLGA.lineT>=Math.max(1700,DLGA.full.length*85+800)){const b=$('#dlgBtns button');if(b&&!b.disabled)b.click();}
   },33);
   try{
