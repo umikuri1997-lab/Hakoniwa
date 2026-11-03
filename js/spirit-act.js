@@ -47,7 +47,7 @@ function faceTo(r,j){if(j==null||j<0)return;const ox=j%W+.5,oy=((j/W)|0)+.5;if(M
 const floats=[],shots=[],fx=[],pops=new Map(),RLVQ=[];
 function addFloat(x,y,text,color){if(floats.length>40)floats.shift();floats.push({x,y,text,color:color||'#ecdcbc',life:1})}
 /* 作業：経験値だけ（パワーは、遊ぶ・食べる・たのしいときだけ）。成長を少しゆっくりにし、端数は保存する */
-function addSpiritXp(n,r){if(!n||!r||r.xp==null)return;const before=rLv(r),scaled=(n+XPBL[before])*.8+(r.xpf||0),whole=Math.floor(scaled+1e-9);r.xpf=Math.round((scaled-whole)*1000)/1000;r.xp+=whole;const after=rLv(r);if(after>before){addFloat(r.x,r.y-1.8,'Lv'+after+'!','#9ff0ff');RLVQ.push({id:r.id,from:before,to:after})}}
+function addSpiritXp(n,r){if(!n||!r||r.xp==null)return;const before=rLv(r),scaled=spiritXpGain(n,before)+(r.xpf||0),whole=Math.floor(scaled+1e-9);r.xpf=Math.round((scaled-whole)*1000)/1000;r.xp+=whole;const after=rLv(r);if(after>before){addFloat(r.x,r.y-1.8,'Lv'+after+'!','#9ff0ff');RLVQ.push({id:r.id,from:before,to:after})}}
 
 const DINEPT=[1,1,2,2,3,3,4];/* 家の中の食卓で食べたときの経験値：ダイニング家具の数（0〜6）ごと */
 const HOUSEPW=[.45,.45,.9,.9,1.35,1.35,1.8];/* 家の中の食卓で食べたときのパワー（[ダイニング家具の数]） */
