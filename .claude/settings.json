@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx @typeonce/ritmo-tools:*)",
+      "Bash(npx -y @typeonce/ritmo-tools:*)",
+      "Bash(npx --yes @typeonce/ritmo-tools:*)"
+    ]
+  }
+}
