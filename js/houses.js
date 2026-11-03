@@ -150,7 +150,7 @@ function drawRoofs(c,now,hs,eo){if(!HOUSES.length)return;c.save();
     c.fillStyle='#9c9c9c';c.fillRect(cx-8.5,cy-14,17,5);c.fillStyle='#3a3a3a';c.fillRect(cx-5,cy-13,10,2.5);
     {const t=now/1000;for(let k=0;k<3;k++){const p=(t*.4+k/3)%1;c.fillStyle='rgba(240,240,240,'+(.5*(1-p)*A)+')';c.beginPath();c.arc(cx+Math.sin(p*6+k)*3,cy-16-p*18,3+p*4,0,7);c.fill()}}}
   c.restore()}
-const GCH=['tex:grass','tex:dry','ground#0','groundr#0','gedge:0#0','gedger:0#0','gcorner','gcornerr'];
+const GCH=['tex:grass','tex:dry',...Array.from({length:8},(_,i)=>'ground#'+i),...Array.from({length:8},(_,i)=>'groundr#'+i),...['U','D','L','R','c0','c1','c2','c3'].map(k=>'fringeg:'+k)];
 const WCH=[];for(const k of['water','waterr','waterh'])for(let b=1;b<16;b++)WCH.push(k+':'+b);for(let i=0;i<4;i++)WCH.push('wave#'+i);for(let b=1;b<16;b++)WCH.push('waterm:'+b);WCH.push('tex:water');
 function waterChipsOK(){const C=window.CHIPS;return !!C&&WCH.every(k=>C[k]&&chipImgs(C[k],'water')[0].ok)}/* 水のドット絵が読みこめたら使う */
 function groundChipsOK(){const C=window.CHIPS;return !!C&&GCH.every(k=>C[k]&&chipImgs(C[k],'ground')[0].ok)}/* 地面のドット絵が読みこめたら使う */

@@ -1,0 +1,16 @@
+const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm'),assert=require('node:assert/strict');
+const root=path.resolve(__dirname,'../..'),context=vm.createContext({window:{}});
+vm.runInContext(fs.readFileSync(path.join(root,'chips.js'),'utf8'),context);
+const chips=context.window.CHIPS,manifest=JSON.parse(fs.readFileSync(path.join(root,'tools/art/unused-chips.json'),'utf8'));
+const removed=manifest.removed.flatMap(group=>group.ids);
+assert.equal(new Set(removed).size,removed.length);
+for(const id of removed)assert(!Object.hasOwn(chips,id),'Unused chip returned: '+id);
+const houses=fs.readFileSync(path.join(root,'js/houses.js'),'utf8');
+vm.runInContext(houses.split('\n').find(line=>line.startsWith('const GCH=')),context);
+for(const id of vm.runInContext('GCH',context))assert(Object.hasOwn(chips,id),'Ground loading requires missing chip: '+id);
+for(let n=0;n<8;n++)for(const base of ['ground','groundr'])assert(chips[base+'#'+n],'Free/volcanic ground variant removed');
+for(const id of ['bedge:HLR','bedge:VUD','story:stump','story:bud','story:leaf','story:sapling','story:tree-young','story:tree','story:stone'])assert(chips[id],'Required edge/story chip removed: '+id);
+const objects=fs.readFileSync(path.join(root,'js/draw-objects.js'),'utf8');
+vm.runInContext(objects.split('\n').find(line=>line.startsWith('function connMask(')),context);
+context.ICON=true;assert.equal(vm.runInContext("connMask('bedge',null)",context),3,'Edge icon no longer selects HLR');
+console.log(removed.length+' obsolete chips absent; loading checks, free/volcanic variants, edge icon and story stages preserved.');
