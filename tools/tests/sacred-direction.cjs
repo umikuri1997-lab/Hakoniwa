@@ -15,14 +15,16 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict');
   const frame=async name=>{if(process.env.SCREENSHOT_DIR)await page.screenshot({path:process.env.SCREENSHOT_DIR+'/'+name+'.png'});};
   for(const cue of ['soil','stone','bump','water','wind','leaf','hug']){
     await begin(cue);await close();assert(await page.locator('#dialog').isVisible(),cue+' must have time to play');
-    await page.waitForTimeout(cue==='hug'?2600:1200);await frame('direction-'+cue);
-    const animation=await run(`S.res.map(r=>sacredPose(r)?.anim).filter(Boolean)`);assert(animation.length||cue==='leaf',cue+' has no cast motion');
+    if(cue==='bump'||cue==='hug')await page.waitForFunction(cue=>sacredEval(cue==='hug'?`!!sacredEffect('embrace')`:`S.res.some(r=>sacredPose(r)?.anim==='storyBump')`),cue,{timeout:7000});
+    else if(cue!=='leaf'){const animation=await run(`S.res.map(r=>sacredPose(r)?.anim).filter(Boolean)`);assert(animation.length,cue+' has no cast motion');}
+    await page.waitForTimeout(cue==='leaf'?1200:250);
     if(cue==='bump')assert(await run(`Math.abs(S.res[0].x-S.res[1].x)+Math.abs(S.res[0].y-S.res[1].y)<2`),'hands must be near each other');
     if(cue==='leaf'){
       const p=await run('sacredTreeMotion(performance.now()).progress');assert(p>0&&p<1,'leaf must unfold over time');
       const before=await run('sacredStage()');assert.equal(before,0,'preview must not complete quest');
     }
     if(cue==='hug')assert(await run(`!!sacredEffect('embrace')`),'must reach the lord during dialogue');
+    await frame('direction-'+cue);
     while(await run('sacredMotionPending()'))await page.waitForTimeout(150);await page.waitForTimeout(Math.max(0,await run(`sacredLineHold('stree:${cue}')-(performance.now()-DLGA.lineT)`))+150);await close();assert.equal(await page.locator('#dialog').isVisible(),false,cue+' must allow continue');
   }
   for(const size of [{width:1200,height:900},{width:390,height:844}]){
