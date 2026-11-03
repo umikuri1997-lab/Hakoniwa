@@ -1,0 +1,53 @@
+{
+  "removed": [
+    {
+      "reason": "草とあれ地の境界は fringeg の辺・角で描くため、旧 gedge/gedger と gcorner/gcornerr は描画されない。旧 GCH の読み込み確認からも外す。",
+      "ids": [
+        "gedge:0#0",
+        "gedge:0#1",
+        "gedge:0#2",
+        "gedge:0#3",
+        "gedge:1#0",
+        "gedge:1#1",
+        "gedge:1#2",
+        "gedge:1#3",
+        "gedge:2#0",
+        "gedge:2#1",
+        "gedge:2#2",
+        "gedge:2#3",
+        "gedge:3#0",
+        "gedge:3#1",
+        "gedge:3#2",
+        "gedge:3#3",
+        "gedger:0#0",
+        "gedger:0#1",
+        "gedger:0#2",
+        "gedger:0#3",
+        "gedger:1#0",
+        "gedger:1#1",
+        "gedger:1#2",
+        "gedger:1#3",
+        "gedger:2#0",
+        "gedger:2#1",
+        "gedger:2#2",
+        "gedger:2#3",
+        "gedger:3#0",
+        "gedger:3#1",
+        "gedger:3#2",
+        "gedger:3#3",
+        "gcorner",
+        "gcornerr"
+      ]
+    },
+    {
+      "reason": "花壇のふちは S.edge の drawBedge が HLR と VUD を使用し、アイコンも接続マスク3の HLR を使用する。旧 S.obj のふちは読み込み時に S.edge に移す。",
+      "ids": [
+        "bedge:H0",
+        "bedge:HL",
+        "bedge:HR",
+        "bedge:VU",
+        "bedge:VD"
+      ]
+    }
+  ]
+}
