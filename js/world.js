@@ -200,7 +200,7 @@ function drawHeat(now){if(WD!==1||!S.st2)return;const c=ctx;c.save();for(const j
 const clk=()=>S.t-(S.hold||0);/* 時計の時刻 */
 const hour=()=>(clk()/60)%24;
 const dayNo=()=>Math.floor(clk()/1440)+1;
-const nextOK=()=>dayNo()>=(S.lastCame??Math.max(0,...S.res.map(r=>r.came||0)))+2;/* つぎのなかまをむかえるクエストは、前の子が来た日の、2日後から */
+
 const nightLock=()=>S&&S.enemyOn&&isNight();/* 夜（コワイノの時間）は、建てることも解体もできない */
 const isNight=()=>{const h=hour();return h>=23||h<6},isDark=()=>{const h=hour();return h>=21||h<6};/* せいれいが寝るのは23時 */
 function foeAt(e,r){/* コワイノ e が、せいれい r の3マス以内か、r のいる家の中にいる */if(r.hidden||r.coffin)return false;if(Math.max(Math.abs(e.x-r.x),Math.abs(e.y-r.y))<=3)return true;const h=roomOf((r.y|0)*W+(r.x|0));return !!h&&h.set.has((e.y|0)*W+(e.x|0))}

@@ -51,7 +51,7 @@ const QUESTS2=[
     [GOD,'#joy|ほっほ、ホムラにも、やっと笑顔がもどったのう。わしもうれしいわい。'],[GOD,'では、わしはほかの土地を見まわってくるぞい。ときどき遊びに来るからの。ではな〜！']],
    gives:{flag:'onsen',feat:['summon','shop'],shard:'land',godLeave:true}},
   {id:'summon',text:'なかまをむかえよう',check:()=>!!S.flags.minaCame&&NEWRES==null&&!NEWQ.length,how:'朝、神殿の上に「！」が出たら、「みる」で神殿をタップ',
-   talk:{who:HOMURA,when:()=>nextOK(),lines:[
+   talk:{who:HOMURA,when:()=>true,lines:[
     [HOMURA,'お湯から、水の力が満ちてきたね。だれか来てくれるかもしれないよ。'],
     [HOMURA,'なかまか…。にぎやかになるのは、悪くないね。']],gives:{flag:'sumTold'}},
    by:SHIZUKU,story:[
@@ -96,7 +96,7 @@ const QUESTS2=[
     [HOMURA,'左にむければ、西の温泉に熱がとどくはずさ。']]},
    story:[[HOMURA,'西の温泉にも、湯気が上がった！'],[SHIZUKU,'すばらしいです。…残るは、奥の温泉ですね。'],[HOMURA,'#think|そうそう。熱の道のそばの畑は、土があったまって、作物がよく育つんだよ。'],[SHIZUKU,'#joy|ありがとうございます、守り神さま。']]},
   {id:'fire3',text:'火のせいれいを3人にしよう',check:()=>elemCount('fire')>=3&&NEWRES==null,how:'ようがん台で火の力をためて、なかまを呼ぶ',prog:()=>'火のせいれい '+Math.min(3,elemCount('fire'))+'/3・火の力 '+Math.floor(ATTR.fire)+'/'+needFor('fire'),
-   talk:{who:HOMURA,when:()=>nextOK(),lines:[
+   talk:{who:HOMURA,when:()=>true,lines:[
     [HOMURA,'#think|……なあ、守り神。むかし、この村には、火のせいれいがたくさんいたんだ。'],
     [HOMURA,'#danger|温泉が冷えて、コワイノのうろつく寒い夜がつづいてさ……でも、あたいら火のせいれいは、からだが強いからね。消えずに、ちりぢりに逃げのびたんだ。'],
     [HOMURA,'あたいだけは、この村をはなれられなくて、ひとりでのこったのさ。'],

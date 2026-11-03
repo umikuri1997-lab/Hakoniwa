@@ -391,7 +391,7 @@ const QUESTS1=[
     [POKO,'ききょう、きれいだね！ 土の力が満ちたみたい！'],
     [GOD,'#nod|うむ、これで土のせいれいが来てくれるぞい。'],[POKO,'なかま、どんな子かなあ。どきどきする！']]},
   {id:'summon',text:'朝になったら、神殿の「！」でなかまを呼ぼう',how:"朝、神殿の上に「！」が出たら、「みる」で神殿をタップ",check:()=>!!S.flags.minaCame&&NEWRES==null&&!NEWQ.length,
-   talk:{who:GOD,when:()=>nextOK(),lines:[
+   talk:{who:GOD,when:()=>true,lines:[
     [GOD,'力が満ちたら、また、なかまが増えるのう。楽しみじゃ。'],
     [POKO,'あしたの朝がたのしみ！']],gives:{flag:'sumTold'}},
    by:MINA,story:[
@@ -439,7 +439,7 @@ const QUESTS1=[
     [MINA,'おつげは、あくまでお願いだよぉ。みんなの得意なことや、体の調子もあるからねぇ。'],
     [POKO,'足りないものがあるときに使うと、よさそうだね！']]},
   {id:'fire',text:'火のせいれいをむかえよう',check:()=>elemCount('fire')>=1&&NEWRES==null,how:'見張り台やサルビアを置いて火の力をためる。満ちた次の朝、神殿の「！」からなかまを呼ぶ',prog:()=>'火の力 '+Math.floor(ATTR.fire)+'/'+needFor('fire'),
-   talk:{who:POKO,when:()=>nextOK(),lines:[
+   talk:{who:POKO,when:()=>true,lines:[
     [POKO,'#alarm|ねえノドカ、「コワイノ」に立ち向かえるせいれいがいたら、心強いよね。'],
     [MINA,'#danger|火のせいれいなら、「コワイノ」とたたかえるらしいよぉ。'],
     [POKO,'火の力をためて、火のせいれいをむかえよう！']]},
@@ -454,7 +454,7 @@ const QUESTS1=[
     [POKO,'3になった！ ぼく、はじめのころより、ずいぶん楽しく暮らせてる気がするよ。'],
     ['H',{A:'へぇ、悪くない村になってきたじゃないか。夜の見はりも、まかせときな。',B:'へぇ、悪くない村になってきたじゃねえか。夜の見はりも、まかせときな。'}]])}},
   {id:'water',text:'水のせいれいをむかえよう',how:"ハスを植えて水の力をため、朝に神殿の「！」から呼ぶ",check:()=>elemCount('water')>=1&&NEWRES==null,prog:()=>'水の力 '+Math.floor(ATTR.water)+'/'+needFor('water'),
-   talk:{who:POKO,when:()=>nextOK(),lines:[
+   talk:{who:POKO,when:()=>true,lines:[
     [POKO,'畑がふえて、水やりがたいへんになってきたね…。'],
     [MINA,'水やりは、水のせいれいが得意なんだよぉ。'],
     [MINA,'水の力をためたら、水のせいれいが来てくれるかもねぇ。']]},
@@ -532,7 +532,7 @@ const QUESTS1=[
     [POKO,'じゃあ、かけらを集めたら、ヌシ様がもどってくるかも！'],
     [MINA,'かけらの力を御神木で結びなおせたら、ヌシ様は、もう一度姿を取り戻せるかもしれないねぇ。'],[POKO,'かけらは、どこにあるのかな……。'],[MINA,'わからないねぇ。でも、きっとどこかで待ってるよぉ。'],[MINA,'5つの属性のなかまがそろったら、この木を御神木に育てようねぇ。']]},
   {id:'wind',text:'風のせいれいをむかえよう',how:"「おく」→「ゆりの種」を植えたり、ブランコを置いたりして風の力をため、朝に神殿の「！」から呼ぶ",check:()=>elemCount('wind')>=1&&NEWRES==null,prog:()=>'風の力 '+Math.floor(ATTR.wind)+'/'+needFor('wind'),
-   talk:{who:POKO,when:()=>nextOK(),learn:['swing'],lines:[
+   talk:{who:POKO,when:()=>true,learn:['swing'],lines:[
     [POKO,'オオカゲを追いはらえて、ほっとしたよ。'],
     [MINA,'つぎは風のせいれいかなぁ。風みたいに、ぴゅーっと村をかけまわる子たちなんだよぉ。'],
     [MINA,'遊ぶのが大好きでねぇ。遠くに落ちてるふしぎな種も、見つけてひろってきてくれるんだぁ。'],
