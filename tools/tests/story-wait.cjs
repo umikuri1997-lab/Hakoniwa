@@ -14,19 +14,32 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict');
     S.quest=QUESTS1.findIndex(q=>q.id==='mbox');S.qStory=null;S.qTalked=false;const r=S.res[0],home=(r.y|0)*W+(r.x|0),j=home+8;S.obj[j]='mbox';recount();checkQuest();
     for(let i=0;i<400&&!(r.act?.type==='storywait'&&r.act.stage==='do');i++)updRes(r,.5);
     if(!mainStoryBubbleReady(r)||r.act?.type!=='storywait'||r.act.stage!=='do'||!questVisitReached(r,j))throw Error('not waiting at box '+JSON.stringify(r.act));
-    const hunger=r.hunger;for(let i=0;i<720;i++)updRes(r,.5);if(r.hunger!==hunger)throw Error('waiting consumed food');
+    const hunger=r.hunger,fun=r.fun;for(let i=0;i<720;i++)updRes(r,.5);if(r.hunger!==hunger)throw Error('waiting consumed food');if(r.fun<fun)throw Error('waiting reduced fun');
     S.qTalked=true;updRes(r,.5);if(r.act?.type!=='storyreturn')throw Error('no return after accepting');for(let i=0;i<400&&r.act?.type==='storyreturn';i++)updRes(r,.5);
     if(Math.abs((r.y|0)-(home/W|0))+Math.abs((r.x|0)-home%W)>1)throw Error('return did not reach home');return 'walk to box, no hunger for long wait, walk back after conversation';
+  })()`));
+  console.log('waiting reasons',await run(`(()=>{
+    S.t=720;S.qTalked=false;S.qStory=null;S.quest=QUESTS1.findIndex(q=>q.id==='mbox');const r=S.res[0],obj=mainStoryWaitInfo().obj;endAct(r);r.hunger=0;
+    if(!storyWaitStatusText().includes('食事'))throw Error('missing food reason');r.hunger=hMax(r);r.energy=0;
+    if(!storyWaitStatusText().includes('休んで'))throw Error('missing rest reason');r.energy=100;r.cing={rec:'test'};
+    if(!storyWaitStatusText().includes('料理'))throw Error('missing cook reason');r.cing=null;
+    noteStoryWaitBlock(r,obj,'path');if(!storyWaitStatusText().includes('道をあけよう'))throw Error('missing path reason');
+    noteStoryWaitBlock(r,obj,'crowded');if(!storyWaitStatusText().includes('立つ場所'))throw Error('missing crowding reason');
+    tryMainStoryWait(r);if(STORY_WAIT_BLOCKS.has(r))throw Error('stale path reason after successful route');
+    r.hidden=true;if(!storyWaitReason(r,obj).includes('もどる'))throw Error('hidden reason');r.hidden=false;
+    S.enemies=[{spawned:true,dead:false,flee:false,x:r.x,y:r.y}];if(!storyWaitReason(r,obj).includes('安全'))throw Error('danger reason');S.enemies=[];
+    return 'food, rest, cooking, blocked path, crowding, return, danger and cleared-route warnings';
   })()`));
   console.log('field waiting',await run(`(()=>{
     for(const r of S.res){endAct(r);delete r.storyWaitHome;RHOLD.delete(r);r.hunger=hMax(r);r.energy=100;r.carry=null;r.cmat=null;r.meal=null;}
     S.quest=QUESTS1.findIndex(q=>q.id==='earthRoot');S.qStory=null;S.qTalked=false;fieldStoryEnsure('earthRoot');
     for(let i=0;i<1600&&!earthIntroSpeaker(QUESTS[S.quest]);i++){for(const r of S.res)updRes(r,.5);checkQuest();}
-    if(!earthIntroSpeaker(QUESTS[S.quest]))throw Error('field group not gathered');const group=fieldCast(FIELD_STORIES.earthRoot[0]),hunger=group.map(r=>r.hunger);
-    for(let i=0;i<600;i++)for(const r of group)updRes(r,.5);if(group.some((r,i)=>r.hunger!==hunger[i]))throw Error('field waiting hunger');
+    if(!earthIntroSpeaker(QUESTS[S.quest]))throw Error('field group not gathered');const group=fieldCast(FIELD_STORIES.earthRoot[0]),hunger=group.map(r=>r.hunger),fun=group.map(r=>r.fun);
+    for(let i=0;i<600;i++)for(const r of group)updRes(r,.5);if(group.some((r,i)=>r.hunger!==hunger[i]))throw Error('field waiting hunger');if(group.some((r,i)=>r.fun<fun[i]))throw Error('field waiting fun');
     S.qStory=S.quest;S.quest++;S.qTalked=false;checkQuest();for(let i=0;i<1600&&!group.every(r=>r.act?.type==='storywait'&&r.act.stage==='do');i++)for(const r of S.res)updRes(r,.5);
     if(!group.every(r=>r.act?.type==='storywait'&&r.act.stage==='do'))throw Error('report group not waiting '+JSON.stringify(group.map(r=>r.act)));
-    const h=group.map(r=>r.hunger);for(let i=0;i<200;i++)for(const r of group)updRes(r,.5);if(group.some((r,i)=>r.hunger!==h[i]))throw Error('report hunger');
+    const absent=group[1];S.res=S.res.filter(p=>p!==absent);if(mainStoryBubbleReady(group[0])||!storyWaitStatusText().includes(absent.name+'がもどる'))throw Error('missing cast allowed report');S.res.push(absent);
+    const h=group.map(r=>r.hunger),f=group.map(r=>r.fun);for(let i=0;i<200;i++)for(const r of group)updRes(r,.5);if(group.some((r,i)=>r.hunger!==h[i]))throw Error('report hunger');if(group.some((r,i)=>r.fun<f[i]))throw Error('report fun');
     S=JSON.parse(JSON.stringify(S));for(const r of S.res.filter(r=>r.act?.type==='storywait'))if(!storyWaitProtected(r))throw Error('save reload lost waiting');
     const r=S.res.find(r=>r.act?.type==='storywait');S.enemies=[{spawned:true,dead:false,flee:false,x:r.x+1,y:r.y}];if(storyWaitProtected(r)||!ACT.storywait.done(r,r.act))throw Error('unsafe wait');S.enemies=[];
     S.t=1440;const before=r.hunger;updRes(r,.5);if(['storywait','fieldintro'].includes(r.act?.type)||r.hunger>=before)throw Error('night must release and restore hunger');

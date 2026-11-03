@@ -254,6 +254,11 @@ button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .dlg{position:relative}
 #dlgPort{position:absolute;left:4px;bottom:calc(100% - 14px);width:120px;height:120px;pointer-events:none}
 #dlgPort[hidden]{display:none}
+/* 横画面の物語では、左に動き、右に会話を置く。 */
+#dialog.sacred-side{justify-content:flex-end;padding-bottom:60px}
+#dialog.sacred-side .dlg{width:44%;max-height:calc(100% - 76px);gap:6px;padding:10px 14px;overflow:auto}
+#dialog.sacred-side .dlg p{font-size:14px;line-height:1.6}
+#dialog.sacred-side #dlgPort{display:none}
 
 .title{position:absolute;z-index:40;inset:0;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse at 50% 28%,#a8cb83 0%,#7fa66b 48%,#55775a 100%);padding-left:var(--gut-l);padding-right:var(--gut-r)}
 .tbox{display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center}
@@ -470,7 +475,7 @@ svg.pxi{fill:currentColor!important;stroke:none!important;shape-rendering:crispE
 </div>
 
 <script>/* ゲームのデータ（chips.js と js/ のプログラム）を読みこむ。読みこむあいだに「はじめる」をおしたら、何パーセント読みこめたかを出す。読みこめたら、そのまま進む */
-(function(){var U=["chips.js?v=dev","js/core.js?v=dev","js/data.js?v=dev","js/story.js?v=dev","js/world.js?v=dev","js/village.js?v=dev","js/spirit-act.js?v=dev","js/spirit-life.js?v=dev","js/spirit-work.js?v=dev","js/night.js?v=dev","js/level.js?v=dev","js/quests.js?v=dev","js/build.js?v=dev","js/quest-run.js?v=dev","js/companion-story.js?v=dev","js/sacred-tree.js?v=dev","js/sacred-direction.js?v=dev","js/story-wait.js?v=dev","js/save.js?v=dev","js/draw-ground.js?v=dev","js/draw-objects.js?v=dev","js/houses.js?v=dev","js/draw-spirits.js?v=dev","js/draw-world.js?v=dev","js/input.js?v=dev","js/audio.js?v=dev","js/ui.js?v=dev","js/dialog.js?v=dev","js/main.js?v=dev"],E=[93340,2910,101109,30283,48099,38002,92656,62529,40813,66041,19239,140741,51907,40950,14715,10074,9708,4972,3516,65469,97677,46134,98673,91041,15827,19165,97475,26488,47117],N=U.length,L=[],T=[],X=[],ran=0,want=0,b=document.getElementById('tStart'),m=document.getElementById('tLoad');for(var k=0;k<N;k++){L[k]=0;T[k]=0;X[k]=null}
+(function(){var U=["chips.js?v=dev","js/core.js?v=dev","js/data.js?v=dev","js/story.js?v=dev","js/world.js?v=dev","js/village.js?v=dev","js/spirit-act.js?v=dev","js/spirit-life.js?v=dev","js/spirit-work.js?v=dev","js/night.js?v=dev","js/level.js?v=dev","js/quests.js?v=dev","js/build.js?v=dev","js/quest-run.js?v=dev","js/companion-story.js?v=dev","js/sacred-tree.js?v=dev","js/sacred-direction.js?v=dev","js/story-wait.js?v=dev","js/story-replay.js?v=dev","js/save.js?v=dev","js/draw-ground.js?v=dev","js/draw-objects.js?v=dev","js/houses.js?v=dev","js/draw-spirits.js?v=dev","js/draw-world.js?v=dev","js/input.js?v=dev","js/audio.js?v=dev","js/ui.js?v=dev","js/dialog.js?v=dev","js/main.js?v=dev"],E=[93340,3137,101184,30283,48099,38002,92656,62529,40854,66041,19239,140815,51907,40975,15094,10118,9967,9430,12808,3596,65469,97677,46134,98673,91041,15827,19165,97662,26622,47245],N=U.length,L=[],T=[],X=[],ran=0,want=0,b=document.getElementById('tStart'),m=document.getElementById('tLoad');for(var k=0;k<N;k++){L[k]=0;T[k]=0;X[k]=null}
 function pct(){var l=0,t=0;for(var i=0;i<N;i++){var tt=T[i]||E[i];t+=tt;l+=Math.min(L[i],tt)}return Math.min(99,Math.floor(l*100/t))}
 function show(){if(!want||window.__ldDone)return;m.hidden=false;m.textContent='ゲームのデータを読みこみ中… '+pct()+'%'}
 b.onclick=function(){if(want)return;want=1;show();window.__ldT=setInterval(show,300)};

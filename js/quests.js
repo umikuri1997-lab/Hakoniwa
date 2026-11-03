@@ -179,7 +179,7 @@ const SEV1=[
   go:()=>{S.flags.guard=true;memo('🍃','フタバが「こもれびのまもり」をおぼえた');skillPop('🍃','フタバが「こもれびのまもり」をおぼえた！',['夜、コワイノにねらわれている火のせいれいのそばへ行って、葉っぱで1人を守る。','守られた子は、40分のあいだ、コワイノから受けるダメージが小さくなる。','つかったあとは、75分たつと、また守れる。'])}},
  {k:'e07',at:()=>sevHere('M'),L:[['F','ねえねえ、@M！ 畑、見てくれた？'],['M','#joy|はい、見ましたよ。よくそだっていますね。'],['M','#think|ただ……この村には、水が必要な場所が、まだたくさんありますね。'],['F','ぼくね、いっぺんに水を運ぼうとして、ぜんぶこぼしたことがあるんだ！'],['N','#surprise|あれは、びっくりしたねぇ。',1],['M','#think|……一度に運ぶ量を、半分にしてみましょう。そのほうが、結果的に早いですよ。'],['F','#joy|えへへ……今日はこぼさないよ！']]},
  {k:'e08',night:1,at:()=>{const f=S.res.find(r=>r.name===POKO);return !!f&&S.enemies.some(e=>!e.dead&&((e.type==='boss'||e.type==='boss2'))&&Math.hypot(e.x-f.x,e.y-f.y)<12)&&!(S.ns&&S.ns.final)},L:[['F','#think|……あの感じ。まえの夜と、おんなじ……！',0,'dim'],['F','あれが、オオカゲ……。'],['F','#ponder|あの夜も、あの影がいた……。'],['F','#scared|あの夜……きょうだいたちは、ぼくを守ってくれたのに……！'],['F','#scared|もう、だれにもこわい思いをさせないで！'],['F','#danger|……こわい。でも、ここは、ぼくたちの草原なんだ。'],['F','#worry|守り神さま、みんなを……おねがい！']]},
- {k:'e09',at:()=>!!S.flags.finalWon&&!!S.flags.sh_boss&&!!S.flags.areaSkill&&S.qStory==null,L:[["F","……最後の、かけら。"],["N","みんなで、守り抜いたんだねぇ。",1],["H",{"A":"何してるんだい。持っていけばいいだろう。","B":"……何してんだ。持っていけばいいだろ。"},1],["F","みんなで、持っていきたかったんだ。"],["M","では、一緒に。",1],["K","木の下へ、帰ろう。",1]]},
+ {k:'e09',at:()=>!!S.flags.finalWon&&!!S.flags.sh_boss&&!!S.flags.areaSkill&&S.qStory==null,L:[["F","……最後の、かけら。"],["N","みんなで、守り抜いたんだねぇ。",1],["H",{"A":"さあ。そのかけらも、木に届けてやろう。","B":"さあ。そのかけらも、木に届けてやろう。"},1],["F","みんなで、持ってきたかったんだ。"],["M","では、一緒に。",1],["K","この木なら、きっと受けとめてくれる。",1]]},
  {k:'e17',at:()=>elemCount('wood')>=6&&S.qStory==null,L:[['F','なかまが、こんなにふえた！'],['F','みんなでくっついてた、あのころみたい……。'],['F','#cry|むかしのきょうだいとは、ちがう子たちだけど……ここにも、きょうだいができたみたいで、うれしいな。'],['N','#cry|フタバのきょうだいが、ふえたねぇ。',1],['F','#cry|えへへ。……むかしのきょうだいたちも、きっとよろこんでくれるよね。']]},
  {k:'e18',at:()=>sevHere('M')&&!!(S.sev||{}).e07&&cnt('farm')>=6,L:[['M','畑がふえてきたので、水まきの順番を計算してみました。……ですが、どう回っても、ぜんぶの畑に水が行きわたりません。'],['F','えー！ それなら、ぼくも手伝うよ！ いっしょに水くばろ！'],['M','#think|……計算より、人の手のほうが確実なこともあるのですね。'],['F','そうそう！ みんなでやれば、へっちゃらだよ！'],['M','#joy|はい。……ありがとうございます。']]},
  {k:'e20',at:()=>cnt('tree')+cnt('fruit')>=1&&S.qStory==null&&sevHere('F'),L:[['F','見て見て！ 木が植わってる！ まだちっちゃいね。'],['N','大きくなるまで、時間がかかるよぉ。',1],['F','#cry|むかし、きょうだいと大きな木の下で遊んだんだ。かくれんぼして、ぼくはいつもすぐ見つかっちゃって。'],['F','#think|……この木も、あの木みたいに、おっきくなるといいな。']]},
@@ -214,11 +214,18 @@ const SEV1=[
 ];
 function sevBusy(){return !started||!$('#dialog').hidden||sheet!=null||NEWRES!=null||NEWQ.length||!$('#lvup').hidden||!$('#rlv').hidden||ASKING}
 const SEVRUN=new Set();/* いま再生中の会話（セーブしない） */
+function playDirectStoryEvent(e,L){
+  SEVRUN.add(e.k);const owner=S,session=VILLAGE_SESSION,f=S.res.find(r=>r.name===POKO);
+  if(f)centerOn(f.x*TS,f.y*TS);
+  const run=()=>dialog(L,()=>{if(S!==owner||VILLAGE_SESSION!==session)return;(S.sev||(S.sev={}))[e.k]=1;SEVRUN.delete(e.k);if(e.go)e.go();});
+  if(e.k==='e16g'&&f){run();return villageTimeout(()=>{leafFX(f);lightFlow(f.x,f.y-.3);},2600);}
+  return e.vis?visionFX(e.vis,run):run();
+}
 function checkSev(){if(WD||!S){SEVW={};return}if(!sevBusy())sevBub();if(S.cleared&&!(S.sevQ||[]).length)return;const D=S.sev||(S.sev={});if(sevBusy()||(S.sevQuietUntil||0)>S.t)return;
   const Q=S.sevQ||(S.sevQ=[]);while(Q.length){const k=Q[0],e=SEV1.find(x=>x.k===k);const L=e&&sevLines(e.L);if(!L){Q.shift();continue}return dialog(L,()=>{D[k]=1;const i=Q.indexOf(k);if(i>=0)Q.splice(i,1);if(/^b_/.test(k))S.flags.kizunaTold=1})}/* 会話を最後まで見てから「見た」にする（途中でゲームをとじたら、はじめから） */
   const h=hour(),day=h>=6&&h<21;
   for(const e of SEV1){if(e.q||D[e.k]||(S.sevMiss||{})[e.k]||SEVRUN.has(e.k)||(S.sevP||[]).includes(e.k))continue;if(!e.night&&!day)continue;if(!e.at())continue;const L=sevLines(e.L);if(!L)continue;
-    if(e.k==='e08'||e.k==='e15'||e.k==='e09'||e.k==='e16g'){SEVRUN.add(e.k);const f=S.res.find(r=>r.name===POKO);const tw=e.k==='e16g'&&f?1:-1;if(f)centerOn(f.x*TS,f.y*TS);/* ひかりのはどうをおぼえる場面は、台座を見せて、光の輪をひろげる */const run=()=>dialog(L,()=>{D[e.k]=1;SEVRUN.delete(e.k);if(e.go)e.go()});if(tw>=0){run();return villageTimeout(()=>{leafFX(f);lightFlow(f.x,f.y-.3)},2600)}return e.vis?visionFX(e.vis,run):run()}/* ムービー・会話は、最後まで見てから「見た」にする（途中でゲームをとじたら、はじめから） */
+    if(['e08','e15','e16g'].includes(e.k))return playDirectStoryEvent(e,L);/* ムービー・会話は、最後まで見てから「見た」にする（途中でゲームをとじたら、はじめから） */
     if(!sevAllHere(e))continue;(S.sevP||(S.sevP=[])).push(e.k)}/* ふつうの条件会話は、吹き出しをタップしてから。「見た」にするのは、最後まで見てから */
   sevBub()}
 /* 話したそうな子：S.sevP にたまった条件会話を、先頭のセリフの子の吹き出しにする */
@@ -273,7 +280,7 @@ function deathTalk(r){if(WD)return null;const F=S.flags,n=r.name,tell=k=>{const 
     if(m2)L.push(NH?[MINA,'#think|……あのねぇ。オオカゲが持ってる「めぶきのしずく」っていう、いのちの力があったら、またあえるかもしれないんだぁ。']:[GOD,'#think|……そうじゃ、フタバ。オオカゲがためこんだ「めぶきのしずく」があれば、もう一度あえるかもしれん。あきらめるのは、まだ早いぞい。'])
     L.push([POKO,'#think|……みんな、ちゃんとごはんを食べて、休もうね。']);return L}
   return null}
-function sevBack(n){if(WD||!S.flags)return;const Q=S.sevQ||(S.sevQ=[]),F=S.flags;if(n===POKO&&F.nushiWait&&!S.cleared){F.nushiWait=0;F.nushiDue=1;setTimeout(()=>{if(!S.cleared)nushiReturns()},7000)}/* フタバがもどってから、ヌシ様がくる */
+function sevBack(n){if(WD||!S.flags)return;const Q=S.sevQ||(S.sevQ=[]),F=S.flags;if(n===POKO&&F.nushiWait&&!S.cleared){F.nushiWait=0;F.nushiDue=1;villageTimeout(()=>{if(!S.cleared)nushiReturns()},7000)}/* フタバがもどってから、ヌシ様がくる */
   if(n===MINA&&F.lostN&&!F.backN){F.backN=1;Q.push('b_N')}else if(n===POKO&&F.lostF&&!F.backF){F.backF=1;Q.push('b_F')}else if(n===keyName('fire')&&F.lostH&&!F.backH){F.backH=1;Q.push('b_H')}}
 /* フタバの「こもれびのまもり」：近くで「コワイノ」にねらわれている火の子を、葉っぱで守る（受けるダメージ半分） */
 function atkFX(r,en){fx.push({k:'slash',x:en.x*TS,y:en.y*TS-6,d:en.x>=r.x?1:-1,life:1});for(let n=0;n<8;n++){const a=Math.random()*6.28;fx.push({k:'p',x:en.x*TS,y:en.y*TS-6,vx:Math.cos(a)*70,vy:Math.sin(a)*70-20,life:.7,col:n%2?'#fff3a0':'#ffb347',r:3})}}/* 攻撃：弧をえがく斬撃と火花 */
