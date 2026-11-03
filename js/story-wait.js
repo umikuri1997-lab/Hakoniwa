@@ -12,16 +12,18 @@ function mainStoryWaitInfo(){
   const who=report?storyWho(q):firstSpk(q.talk.lines,q.talk.who);
   const lead=S.res.find(r=>r.name===who&&!r.hidden);if(!lead&&!(q.field&&report))return null;
   const last=q.field&&FIELD_STORIES[q.id]?.at(-1),cast=last?fieldCast(last):[lead,...storyLineCast(report?q.story:q.talk.lines).filter(r=>r!==lead)];if(!cast.length)return null;/* 会話でしゃべる子は、みんな集まってから話す（いない子は、その行だけはぶく） */
-  let obj=q.field?S.sacredRoot:null,id=null;
+  let obj=q.field?S.sacredRoot:null,id=null,free=false;
   if(obj==null){
     const ids=QUEST_VISIT_MAIN[q.id]||(q.id==='nushi'?['tower']:null),recent=QUEST_PLACEMENTS.get(S);let best=-Infinity;
     if(ids)for(let j=0;j<S.obj.length;j++){if(!questVisitTarget(q,ids,j))continue;const placed=recent?.get(j),score=(placed&&qvHas(j,placed.id)?placed.n*100000:0)-Math.hypot(j%W+.5-lead.x,(j/W|0)+.5-lead.y);if(score>best){best=score;obj=j;}}
     if(obj!=null)id=S.obj[obj]||S.floor[obj];
-    else if(STATUE>=0){obj=STATUE;id=S.obj[STATUE];}
-    else obj=(lead.y|0)*W+(lead.x|0);
+    else{/* どこで話してもよい会話：ひとりなら、そのまま暮らしながら話しかけられる。みんなで話すときは、近くの空いた場所に集まる */
+      if(cast.length<2||!lead)return null;
+      obj=storyOpenSpot(lead,cast.length);free=true;
+    }
   }
   if(obj==null)return null;
-  p={key,session:VILLAGE_SESSION,index,report,q,who,cast,obj,id,field:!!q.field};STORY_WAIT_PLANS.set(S,p);return p;
+  p={key,session:VILLAGE_SESSION,index,report,q,who,cast,obj,id,field:!!q.field,free};STORY_WAIT_PLANS.set(S,p);return p;
 }
 function storyLineCast(L){return [...new Set((L||[]).map(l=>l&&l[0]).filter(n=>typeof n==='string'))].map(n=>S.res.find(r=>r.name===sevName(n)&&!r.hidden)).filter(Boolean)}
 function rememberStoryHome(r,key){if(!r.storyWaitHome||r.storyWaitHome.world!==WD)r.storyWaitHome={j:(r.y|0)*W+(r.x|0),key,world:WD};else r.storyWaitHome.key=key;}
@@ -31,10 +33,24 @@ function storyWaitProtected(r){
   if(a.type!=='storywait')return false;const p=mainStoryWaitInfo();return !!p&&p.key===a.storyKey&&p.obj===a.obj&&p.cast.includes(r)&&questVisitSafe(r,p.obj);
 }
 function storyWaitStand(r,G,p){
-  const occupied=occTiles(r);if(p.field)return nearest(G,j=>walk(j)&&!sacredReserved(j)&&!occupied.has(j)&&fieldDistance(j,p.obj)>=1&&fieldDistance(j,p.obj)<=3&&free('storywait'+j,1),150);
-  if(p.id!=null)return questVisitStand(r,G,p.obj);
-  return nearest(G,j=>walk(j)&&!occupied.has(j)&&Math.abs(j%W-p.obj%W)+Math.abs((j/W|0)-(p.obj/W|0))<=1&&free('storywait'+j,1),150);
+  if(!p.slots)p.slots=storySlots(p.cast,p.field?{stump:p.obj}:p.free?{center:p.obj}:{obj:p.obj});
+  const k=p.slots.get(r);if(k!=null&&G.dist[k]>=0&&free('storywait'+k,1))return k;
+  const occupied=occTiles(r);return p.id!=null?questVisitStand(r,G,p.obj):-1;
 }
+/* 集まる場所：ひとりずつ、ずらした定位置を決める（となりどうし1マスあける・手前の列を先に） */
+function storySlotFocus(t){if(t.stump!=null)return[storyTreeX(t.stump),(fieldStump(t.stump)/W|0)+.5];if(t.center!=null)return[t.center%W+.5,(t.center/W|0)+.5];const b=BL[S.obj[t.obj]],z=b&&szAt(S.obj[t.obj],t.obj)||[1,1];return[t.obj%W+z[0]/2,(t.obj/W|0)+z[1]/2];}
+function storySlotCells(t){const[fx,fy]=storySlotFocus(t),L=[];const R=t.stump!=null?2.6:t.center!=null?1.6:2.4;
+  for(let y=Math.floor(fy-R);y<=Math.ceil(fy+R);y++)for(let x=Math.floor(fx-R);x<=Math.ceil(fx+R);x++){if(x<0||y<0||x>=W||y>=H)continue;const k=y*W+x,d=Math.hypot(x+.5-fx,y+.5-fy);if(d>R||d<.6||!walk(k)||S.obj[k]&&!WEEDS.has(S.obj[k]))continue;
+    if(t.stump!=null&&(k===fieldStump(t.stump)||y<(fieldStump(t.stump)/W|0)))continue;/* 切り株のうしろ（上の列）には立たない */if(t.obj!=null&&!questVisitReachedTile(t.obj,k))continue;L.push({k,d:d+(y+.5<fy-.4?.5:0)})}
+  return L.sort((a,b)=>a.d-b.d);}
+function questVisitReachedTile(j,k){const b=BL[S.obj[j]],z=b&&szAt(S.obj[j],j)||[1,1],x=j%W,y=(j/W)|0,kx=k%W+.5,ky=(k/W|0)+.5,dx=Math.max(x-kx,0,kx-(x+z[0])),dy=Math.max(y-ky,0,ky-(y+z[1]));return dx+dy>0&&Math.hypot(dx,dy)<=1.6}
+function storySlots(cast,t,first){const L=storySlotCells(t),m=new Map(),used=[];
+  for(const r of cast){if(first!=null&&r===cast[0]){m.set(r,first);used.push(first);continue}
+    const G=bfs(r.x|0,r.y|0);let best=null,bs=Infinity;for(const c of L){if(G.dist[c.k]<0||used.includes(c.k))continue;const near=used.some(u=>Math.abs(u%W-c.k%W)+Math.abs((u/W|0)-(c.k/W|0))===1);const s=c.d+(near?.8:0);/* となりあうマスは、少しさける */if(s<bs){bs=s;best=c.k}}
+    if(best!=null){m.set(r,best);used.push(best)}}
+  return m}
+/* みんなで話す場所：話す子の近くで、まわりが空いているマス */
+function storyOpenSpot(lead,n){const G=bfs(lead.x|0,lead.y|0);return nearest(G,j=>{if(!walk(j)||S.obj[j]||roomOf(j))return false;let c=0;const x=j%W,y=j/W|0;for(let yy=y-1;yy<=y+1;yy++)for(let xx=x-2;xx<=x+2;xx++){const k=yy*W+xx;if(k!==j&&xx>=0&&xx<W&&yy>=0&&yy<H&&walk(k)&&!S.obj[k]&&!roomOf(k))c++}return c>=n+4},40);}
 function tryMainStoryWait(r){
   const p=mainStoryWaitInfo(),home=r.storyWaitHome,a=r.act;
   if(a?.type==='storyreturn')return false;
@@ -47,20 +63,22 @@ function tryMainStoryWait(r){
     if(goal>=0&&goal!==((r.y|0)*W+(r.x|0))&&questVisitSafe(r,goal)){endAct(r);startAct(r,G,'storyreturn',goal,{});return true;}
   }
   if(!p||!p.cast.includes(r)||a?.type==='storywait'&&a.storyKey===p.key&&a.obj===p.obj)return false;
+  if((carryN(r)||matN(r))&&!r.hidden&&!hungry(r)&&!['store','smat','eat','fetch','flee','faint','sleep','pray','bury'].includes(r.act?.type)&&!hostileNow(r)){const G=bfs(r.x|0,r.y|0);endAct(r);if(matN(r))goStoreMat(r,G);else goStore(r,G);return true}/* お話によばれたら、荷物をしまって、すぐ向かう */
   if(!fieldActorReady(r)||onHold(r)||['fieldstory','fieldassist','questjoy','nmeet','sevreact'].includes(r.act?.type)||!questVisitSafe(r,p.obj))return false;
   const G=bfs(r.x|0,r.y|0),stand=storyWaitStand(r,G,p);if(stand<0){const open=p.field?nearest(G,j=>walk(j)&&!sacredReserved(j)&&fieldDistance(j,p.obj)>=1&&fieldDistance(j,p.obj)<=3,150)>=0:questVisitOpen(G,p.obj);noteStoryWaitBlock(r,p.obj,open?'crowded':'path');return false;}clearStoryWaitBlock(r);
   rememberStoryHome(r,p.key);endAct(r);startAct(r,G,'storywait',stand,{key:'storywait'+stand,storyKey:p.key,obj:p.obj});return true;
 }
-ACT.storywait={start(r,a){faceTo(r,a.obj);r.bubble='';},done(r,a){const p=mainStoryWaitInfo();return !p||p.key!==a.storyKey||p.obj!==a.obj||!p.cast.includes(r)||!questVisitSafe(r,a.obj);}};
+ACT.storywait={start(r,a){faceTo(r,mainStoryWaitInfo()?.field?fieldStump(a.obj):a.obj);r.bubble='';},done(r,a){const p=mainStoryWaitInfo();return !p||p.key!==a.storyKey||p.obj!==a.obj||!p.cast.includes(r)||!questVisitSafe(r,a.obj);}};
 ACT.storyreturn={done:()=>true};
 function mainStoryBubbleReady(r){
   if(isNight())return false;
   const pendingQ=QUESTS[S.qStory??S.quest];if(pendingQ?.field){const step=FIELD_STORIES[pendingQ.id][S.qStory!=null?FIELD_STORIES[pendingQ.id].length-1:0];if(fieldCast(step).length!==(step.cast||[step.who]).length)return false;}
   if(r?.act?.type==='fieldintro')return earthIntroSpeaker(QUESTS[S.quest])===r.name;
   const p=mainStoryWaitInfo();if(!r)return !p||p.who!==GOD||p.cast.every(x=>x.act?.type==='storywait'&&x.act.stage==='do'&&x.act.storyKey===p.key&&x.act.obj===p.obj);
+  if(!p)return !!r&&!r.hidden&&TALKW===r.name;/* どこで話してもよいひとりの会話 */
   return !!p&&p.cast.includes(r)&&p.cast.every(x=>x.act?.type==='storywait'&&x.act.stage==='do'&&x.act.storyKey===p.key&&x.act.obj===p.obj)&&storyWaitProtected(r);
 }
-function mainStoryPromptText(w){if(w===GOD&&!mainStoryBubbleReady())return 'なかまが、お話の場所に集まっている';const r=S.res.find(r=>r.name===w);return r&&!mainStoryBubbleReady(r)?w+'が、お話の場所に集まっている':w+'が話したそうにしている';}
+function mainStoryPromptText(w){if(w===GOD&&!mainStoryBubbleReady())return 'なかまが、お話の場所に集まっている';const r=S.res.find(r=>r.name===w),p=mainStoryWaitInfo();return r&&!mainStoryBubbleReady(r)?(p&&p.cast.length>1?'みんな':w)+'が、お話の場所に集まっている':w+'が話したそうにしている';}
 /* 上の目標から、未読の会話・現在の調査の場所を探せる。夜は一覧を使う。 */
 function mainStoryFocusTarget(){
   if(!S||S.free||S.cleared||isNight()||!$('#dialog').hidden)return null;
@@ -101,6 +119,7 @@ function storyWaitReason(r,obj){
   if(b?.owner===S&&b.session===VILLAGE_SESSION&&b.obj===obj&&b.until>=S.t)return n+(b.reason==='crowded'?'の立つ場所を空けよう':'が通れない。道をあけよう');
   return n+(['fieldintro','storywait'].includes(r.act?.type)?'がお話の場所へ向かっている':'が向かう準備をしている');
 }
+function storyCalled(r){const p=mainStoryWaitInfo();if(p&&p.cast.includes(r))return true;const q=typeof earthIntroCurrent==='function'&&earthIntroCurrent();return !!q&&fieldCast(FIELD_STORIES[q.id][0]).includes(r)}/* メインのお話によばれている */
 function storyWaitStatusText(){
   if(!S||S.free||S.cleared||isNight())return null;
   let p=mainStoryWaitInfo();if(!p){const q=earthIntroCurrent();if(!q)return null;fieldStoryEnsure(q.id);const step=FIELD_STORIES[q.id][0];p={cast:fieldCast(step),obj:S.sacredRoot,who:fieldStoryActor(step)?.name,field:true,intro:true};}
@@ -108,7 +127,8 @@ function storyWaitStatusText(){
   if(p.obj==null)return 'お話の場所を探している';
   if(p.field&&!S.obj.includes('tower')&&!sacredRootFits(p.obj))return '木のまわりにある物を、先に片づけよう';
   const pending=p.cast.find(r=>p.intro?!(r.act?.type==='fieldintro'&&r.act.stage==='do'&&earthIntroValid(r,r.act)):!(r.act?.type==='storywait'&&r.act.stage==='do'&&r.act.storyKey===p.key&&r.act.obj===p.obj));
-  return pending?storyWaitReason(pending,p.obj):(p.who||'なかま')+'が話したそうにしている';
+  if(pending){const t=storyWaitReason(pending,p.obj);return p.cast.length>1&&/(お話の場所へ向かっている|向かう準備をしている)$/.test(t)?'みんなが、お話の場所へ向かっている':t}
+  return (p.who||'なかま')+'が話したそうにしている';
 }
 
 /* 現地で待つ子のポーズと表情：その場面で、その子がはじめに話すセリフの印（#think| など）から決める（考える・おどろく・しょんぼり・よろこぶ）。印がなければ、ふつうに立って待つ */

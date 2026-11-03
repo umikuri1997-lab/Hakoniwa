@@ -34,14 +34,15 @@ function earthIntroSpeaker(q){
   if(group.length!==(step.cast||[step.who]).length||!lead)return null;
   return group.every(r=>r.act?.type==='fieldintro'&&r.act.stage==='do'&&earthIntroValid(r,r.act)&&fieldDistance((r.y|0)*W+(r.x|0),r.act.obj)<=3&&!r.hidden&&!hungry(r))?lead.name:null;
 }
+const INTRO_SLOTS=new WeakMap();function introSlots(id,cast,j){const key=id+':'+j+':'+cast.map(r=>r.id).join(',');let c=INTRO_SLOTS.get(S);if(!c||c.key!==key||c.session!==VILLAGE_SESSION){c={key,session:VILLAGE_SESSION,m:storySlots(cast,{stump:j})};INTRO_SLOTS.set(S,c)}return c.m}
 function tryEarthIntro(r){
   const q=earthIntroCurrent();if(!q||isNight())return false;const step=FIELD_STORIES[q.id][0];if(!fieldCast(step).includes(r))return false;
   fieldStoryEnsure(q.id);if(r.act?.type==='fieldintro'){if(earthIntroValid(r,r.act))return false;endAct(r);}
   if(!fieldActorReady(r)||onHold(r))return false;const j=S.sacredRoot;if(j==null||!questVisitSafe(r,j))return false;
-  const G=bfs(r.x|0,r.y|0),occupied=occTiles(r),stand=nearest(G,k=>walk(k)&&!sacredReserved(k)&&!occupied.has(k)&&fieldDistance(k,j)>=1&&fieldDistance(k,j)<=3&&free('field'+k,1),100);
+  const G=bfs(r.x|0,r.y|0),slots=introSlots(q.id,fieldCast(step),j),s0=slots.get(r),stand=s0!=null&&G.dist[s0]>=0&&free('field'+s0,1)?s0:-1;
   if(stand<0){const open=nearest(G,k=>walk(k)&&!sacredReserved(k)&&fieldDistance(k,j)>=1&&fieldDistance(k,j)<=3,100)>=0;noteStoryWaitBlock(r,j,open?'crowded':'path');return false;}clearStoryWaitBlock(r);rememberStoryHome(r,WD+':'+S.quest+':intro');endAct(r);startAct(r,G,'fieldintro',stand,{key:'field'+stand,fieldId:q.id,obj:j});return true;
 }
-ACT.fieldintro={start(r,a){if(!earthIntroValid(r,a))return false;faceTo(r,a.obj);r.bubble='';checkQuest();},done:(r,a)=>!earthIntroValid(r,a)||isNight()||hungry(r)||r.energy<10||!questVisitSafe(r,a.obj)};
+ACT.fieldintro={start(r,a){if(!earthIntroValid(r,a))return false;faceTo(r,fieldStump(a.obj));r.bubble='';checkQuest();},done:(r,a)=>!earthIntroValid(r,a)||isNight()||hungry(r)||r.energy<10||!questVisitSafe(r,a.obj)};
 function fieldStoryFocus(id){const state=fieldStoryEnsure(id),step=FIELD_STORIES[id]?.[state?.step],j=step&&S.fieldSites?.[step.site];if(j!=null)panTo((j%W+sacredSpan()/2)*TS,((j/W|0)+sacredSpan()-1.4)*TS);}
 function fieldStoryTap(tx,ty){
   const q=fieldStoryCurrent();if(!q)return false;const state=fieldStoryEnsure(q.id),step=FIELD_STORIES[q.id][state.step],j=S.fieldSites?.[step.site];
@@ -51,7 +52,8 @@ function fieldStoryTap(tx,ty){
   const r=fieldStoryActor(step),group=fieldCast(step);
   if(!r||group.length!==(step.cast||[step.who]).length||group.some(p=>!fieldActorReady(p))){const missing=(step.cast||[step.who]).map(sevName).find(n=>!S.res.some(p=>p.name===n)),waiting=group.find(p=>!fieldActorReady(p));toast(missing?missing+'がもどってから、一緒に世話をしよう':waiting?storyWaitReason(waiting,j):'なかまがそろったら、一緒に世話をしよう');return true;}
   const selected=new Set(),occupied=occTiles(r);for(const p of group)occupied.delete((p.y|0)*W+(p.x|0));const plans=[];
-  for(const p of [r,...group.filter(p=>p!==r)]){const G=bfs(p.x|0,p.y|0),stand=p===r?fieldLeadStand(G,j,k=>!occupied.has(k)&&!selected.has(k)&&free('field'+k,1)):nearest(G,k=>walk(k)&&!sacredReserved(k)&&!occupied.has(k)&&!selected.has(k)&&fieldDistance(k,j)>=1&&fieldDistance(k,j)<=(p===r?1:3)&&free('field'+k,1),100);if(stand<0){toast('木の周りに、なかまが集まれる道をあけよう');return true;}selected.add(stand);plans.push({p,G,stand});}
+  const leadG=bfs(r.x|0,r.y|0),lead0=fieldLeadStand(leadG,j,k=>!occupied.has(k)&&free('field'+k,1)),slots=storySlots([r,...group.filter(p=>p!==r)],{stump:j},lead0>=0?lead0:null);
+  for(const p of [r,...group.filter(p=>p!==r)]){const G=bfs(p.x|0,p.y|0),sl=slots.get(p),stand=sl!=null&&G.dist[sl]>=0&&!selected.has(sl)?sl:p===r?fieldLeadStand(G,j,k=>!occupied.has(k)&&!selected.has(k)&&free('field'+k,1)):nearest(G,k=>walk(k)&&!sacredReserved(k)&&!occupied.has(k)&&!selected.has(k)&&fieldDistance(k,j)>=1&&fieldDistance(k,j)<=(p===r?1:3)&&free('field'+k,1),100);if(stand<0){toast('木の周りに、なかまが集まれる道をあけよう');return true;}selected.add(stand);plans.push({p,G,stand});}
   for(const {p,G,stand}of plans){delete p.storyWaitHome;endAct(p);startAct(p,G,p===r?'fieldstory':'fieldassist',stand,{key:'field'+stand,fieldId:q.id,phase:state.step,obj:j});}
   toast(r.name+'が「'+step.label+'」を調べにいく');return true;
 }

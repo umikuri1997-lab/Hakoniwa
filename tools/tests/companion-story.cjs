@@ -65,11 +65,14 @@ console.log('Morning growth: exactly half over two days, normal and restored lan
 const work=fs.readFileSync(path.join(root,'js/spirit-work.js'),'utf8');
 const choose=work.slice(work.indexOf('function goWork('),work.indexOf('/* 依頼ボードの作業場所'));
 const job=vm.createContext({console});
-vm.runInContext(`const S={mat:{wood:0,stone:0},food:100,drops:[]},SPEC={wind:['seed']},FARMJ=[],JOBCAT=[['build','repair'],['craft'],['harvest'],['cook','chop','mine','drop','weed']],ORACLE={};const foodLow=()=>0,foodCap=()=>100,wreqList=()=>[];let chosen='';function tryJob(r,G,k){if(['chop','mine','weed','drop'].includes(k)){chosen=k;return true}return false}`,job);
+vm.runInContext(`const S={mat:{wood:0,stone:0},food:100,drops:[]},SPEC={wind:['seed']},FARMJ=[],JOBCAT=[['build','repair'],['craft'],['harvest'],['cook','chop','mine','drop','weed']],ORACLE={};const foodLow=()=>0,foodCap=()=>100,wreqList=()=>[];let chosen='';var tryJob=function(r,G,k){if(['chop','mine','weed','drop'].includes(k)){chosen=k;return true}return false}`,job);
 vm.runInContext(choose,job);
 const counts=JSON.parse(vm.runInContext(`(()=>{const counts={chop:0,mine:0,weed:0,drop:0};for(let i=0;i<12000;i++){goWork({elem:'wind'},null,true);counts[chosen]++}return JSON.stringify(counts)})()`,job));
-for(const n of Object.values(counts))assert(n>2600&&n<3400,JSON.stringify(counts));
-console.log('Available gathering jobs share priority:',counts);
+assert.equal(counts.weed,12000,JSON.stringify(counts));/* 近くの雑草は、木・石より先 */
+vm.runInContext(`tryJob=(r,G,k)=>{if(['chop','mine','drop'].includes(k)){chosen=k;return true}return false}`,job);
+const rest=JSON.parse(vm.runInContext(`(()=>{const counts={chop:0,mine:0,drop:0};for(let i=0;i<12000;i++){goWork({elem:'wind'},null,true);counts[chosen]++}return JSON.stringify(counts)})()`,job));
+for(const n of Object.values(rest))assert(n>3400&&n<4600,JSON.stringify(rest));
+console.log('Nearby weeds first; other gathering jobs share priority:',rest);
 // A finished animation alone must not count as having read the scene.
 run(`let VILLAGE_SESSION=1;let completion;fieldStoryCurrent=()=>({id:'earthRoot'});fieldStorySpotOK=()=>true;fieldStoryFocus=()=>{};renderQuest=()=>{};checkQuest=()=>{};dialog=(lines,after)=>{completion=after};S={flags:{},res:[{name:MINA},{name:POKO}],fieldSites:{root:7},fieldStories:{earthRoot:{step:0}}};globalThis.action={fieldId:'earthRoot',phase:0,obj:7,t:10};ACT.fieldstory.end({},action)`);
 assert.equal(run('S.fieldStories.earthRoot.step'),0);
