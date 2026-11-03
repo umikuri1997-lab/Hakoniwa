@@ -8,7 +8,7 @@ function clampCam(){
   cam.x=vw>=W*TS?(W*TS-vw)/2:clamp(cam.x,-40,W*TS-vw+40);
   cam.y=vh>=H*TS?(H*TS-vh)/2:clamp(cam.y,-80,H*TS-vh+(performance.now()<(window.BOSSCAM||0)?vh/2+120:120));/* オオカゲの登場のあいだは、南のはしのオオカゲも画面のまん中に */
 }
-function resize(){dpr=Math.min(window.devicePixelRatio||1,1.25);/* 発熱対策で解像度をおさえる */VW=innerWidth;VH=innerHeight;cv.width=VW*dpr|0;cv.height=VH*dpr|0;cv.style.width=VW+'px';cv.style.height=VH+'px';clampCam()}
+function resize(){dpr=Math.min(window.devicePixelRatio||1,1.25);/* 発熱対策で解像度をおさえる */VW=innerWidth;VH=innerHeight;cv.width=VW*dpr|0;cv.height=VH*dpr|0;cv.style.width=VW+'px';cv.style.height=VH+'px';clampCam();sacredResizeShot()}
 function panTo(wx,wy){camAnim={fz:cam.z,tz:cam.z,fx:cam.x+VW/cam.z/2,fy:cam.y+VH/cam.z/2,tx:wx,ty:wy,t:0,dur:.6}}/* 話しかけた子を、画面の中央へ */
 function centerOn(wx,wy){cam.x=wx-VW/cam.z/2;cam.y=wy-VH/cam.z/2;clampCam()}
 const homeZ=()=>Math.max(minZ(),Math.min(2.2,VW/(13*TS)));

@@ -56,7 +56,7 @@ function fieldStoryTap(tx,ty){
 function fieldStoryValid(a){const q=fieldStoryCurrent(),step=FIELD_STORIES[a.fieldId]?.[a.phase];return q?.id===a.fieldId&&fieldStoryState(a.fieldId)?.step===a.phase&&step&&S.fieldSites?.[step.site]===a.obj&&fieldStorySpotOK(a.obj);}
 function fieldStoryResult(r,a){
   const step=FIELD_STORIES[a.fieldId]?.[a.phase];if(!step||a.cancel||a.t<step.dur||!fieldStoryValid(a))return;
-  const owner=S,token={session:VILLAGE_SESSION,id:a.fieldId,phase:a.phase};if(FIELD_SCENES.get(owner)?.session===VILLAGE_SESSION)return;FIELD_SCENES.set(owner,token);dialog(KS(step.lines),()=>{
+  const owner=S,token={session:VILLAGE_SESSION,id:a.fieldId,phase:a.phase};if(FIELD_SCENES.get(owner)?.session===VILLAGE_SESSION)return;FIELD_SCENES.set(owner,token);dialog(KS(typeof sacredDirectedLines==='function'?sacredDirectedLines(step,a):step.lines),()=>{
     if(FIELD_SCENES.get(owner)===token)FIELD_SCENES.delete(owner);
     if(S!==owner||VILLAGE_SESSION!==token.session||!fieldStoryValid(a))return;
     if(a.fieldId==='tower'&&!growStoryTree())return;
@@ -64,7 +64,7 @@ function fieldStoryResult(r,a){
     if(!fieldStoryDone(a.fieldId)&&S.res.includes(r)&&!hungry(r)&&!isNight()){
       endAct(r);startAct(r,null,'fieldwait',-1,{fieldId:a.fieldId});
     }
-    renderQuest();checkQuest();if(!fieldStoryDone(a.fieldId))fieldStoryFocus(a.fieldId);
+    if(typeof sacredEndDirection==='function')sacredEndDirection();renderQuest();checkQuest();
   });
 }
 ACT.fieldstory={
@@ -74,7 +74,7 @@ ACT.fieldstory={
     if(others.some(p=>p.act?.type!=='fieldassist'||p.act.phase!==a.phase)){a.cancel=true;return;}
     if(others.some(p=>p.act.stage!=='do')){a.t=0;return;}
     if(step.pose==='sit')for(const p of fieldCast(step))sacredSetPose(p,{anim:'talkthink',sit:true});
-    if(step.kind==='ember'&&(a.spark=(a.spark||0)+dt)>3){a.spark=0;leafFX({x:a.obj%W+1,y:(a.obj/W|0)+1});}
+
   },
   done:(r,a)=>a.cancel||!fieldStoryValid(a)||a.t>=FIELD_STORIES[a.fieldId][a.phase].dur,
   end:fieldStoryResult
@@ -83,7 +83,7 @@ ACT.fieldassist={start(r,a){faceTo(r,a.obj);r.bubble='';},done:(r,a)=>!fieldStor
 ACT.fieldwait={start(r){r.bubble='';},done:(r,a)=>fieldStoryCurrent()?.id!==a.fieldId||isNight()||hungry(r)};
 function fieldStoryAnim(r){const pose=sacredPose(r);if(pose)return pose.anim;return r.act?.type==='fieldstory'?FIELD_STORIES[r.act.fieldId]?.[r.act.phase]?.anim||'talk':['fieldwait','fieldintro','fieldassist'].includes(r.act?.type)?'talkthink':r.act?.type;}
 function drawFieldStory(now,labelsOnly=false){
-  const q=fieldStoryCurrent();if(!q)return;const state=fieldStoryState(q.id),step=FIELD_STORIES[q.id][state?.step||0],j=S.fieldSites?.[step.site];if(j==null)return;
+  if(!$('#dialog').hidden)return;const q=fieldStoryCurrent();if(!q)return;const state=fieldStoryState(q.id),step=FIELD_STORIES[q.id][state?.step||0],j=S.fieldSites?.[step.site];if(j==null)return;
   const x=(j%W+1)*TS,y=((j/W|0)+1.55)*TS-hiAt(j)*LIFT,t=now/600;
   ctx.save();if(labelsOnly){ctx.font='bold 11px "PixelMplus10",sans-serif';ctx.textAlign='center';ctx.fillStyle='#fff5d4';ctx.strokeStyle='#695438';ctx.lineWidth=3;const label='！ '+step.label;ctx.strokeText(label,x,y-17);ctx.fillText(label,x,y-17);ctx.restore();return;}
   ctx.strokeStyle='#f9d77b';ctx.lineWidth=1.4;ctx.beginPath();ctx.ellipse(x,y+5,19+Math.sin(t),9,0,0,7);ctx.stroke();ctx.restore();
