@@ -37,7 +37,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict');
   assert.equal(await run('S.nushi.app'),1,'lord must appear even while world paused');assert(await run('S.cleared'),'revival did not complete');assert(await run('S.flags.sacredReunion'));assert.equal(await run('S.flags.sacredQuietSeen'),false);
   await page.waitForTimeout(1500);await run("if(sheet)closeSheet();DLGGAP=0;DLGTAP=performance.now();nushiTalk()");
   const quietDeadline=Date.now()+15000;while(!await page.locator('#dialog').isVisible()&&Date.now()<quietDeadline){await run(`S.res.forEach(r=>{if(r.act?.stage==='walk')moveR(r,1)});`);await page.waitForTimeout(100);}
-  assert.equal(await run('S.flags.sacredQuietSeen'),false);await read();assert(await run('S.flags.sacredQuietSeen'));
+  assert.equal(await run('S.flags.sacredQuietSeen'),false);const finishQuiet=Date.now()+20000;while(!await run('S.flags.sacredQuietSeen')&&Date.now()<finishQuiet){if(await page.locator('#dialog').isVisible())await read();else await run(`S.res.forEach(r=>{if(r.act?.stage==='walk')moveR(r,1)});`);await page.waitForTimeout(100);}assert(await run('S.flags.sacredQuietSeen'));
   console.log('Revival and separate quiet reunion complete; unfinished scene is not marked read.');
   assert.deepEqual(errors,[]);console.log('Browser errors:',errors);await browser.close();
 })().catch(e=>{console.error(e);process.exit(1)});
