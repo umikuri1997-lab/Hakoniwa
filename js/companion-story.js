@@ -20,6 +20,8 @@ function fieldStoryEnsure(id){
   if(best>=0){S.sacredRoot=best;S.fieldSites.root=best;dirty=true;}
   return state;
 }
+const fieldStump=j=>j+(sacredSpan()-1)*W+(sacredSpan()>>1);/* 切り株（木）の根元のマス */
+function fieldLeadStand(G,j,ok){/* 調べる子は、切り株のすぐよこ・すぐ前に立つ（近い順） */const s=fieldStump(j),sx=storyTreeX(j),sy=(s/W|0)+.5;let best=-1,bd=Infinity;for(let y=(s/W|0);y<=(s/W|0)+1;y++)for(let x=Math.floor(sx-1.5);x<=Math.ceil(sx+.5);x++){const k=y*W+x;if(k===s||x<0||x>=W||y>=H||G.dist[k]<0||!walk(k)||!ok(k))continue;const d=Math.hypot(x+.5-sx,y+.5-sy);if(Math.abs(x+.5-sx)>1.5||d>=bd)continue;bd=d;best=k}return best}
 const fieldDistance=(k,j)=>Math.max(j%W-k%W,0,k%W-(j%W+sacredSpan()-1))+Math.max((j/W|0)-(k/W|0),0,(k/W|0)-(j/W|0)-sacredSpan()+1);
 const fieldCast=step=>(step.cast||[step.who]).map(w=>S.res.find(r=>r.name===sevName(w))).filter(Boolean);
 const fieldActorReady=r=>!r.hidden&&!r.coffin&&!HOLD.has(r.id)&&!hungry(r)&&r.energy>=20&&!r.cing&&!r.meal&&!carryN(r)&&!matN(r)&&!['eat','fetch','forage','flee','faint','sleep','pray','bury'].includes(r.act?.type)&&!hostileNow(r);
@@ -49,7 +51,7 @@ function fieldStoryTap(tx,ty){
   const r=fieldStoryActor(step),group=fieldCast(step);
   if(!r||group.length!==(step.cast||[step.who]).length||group.some(p=>!fieldActorReady(p))){const missing=(step.cast||[step.who]).map(sevName).find(n=>!S.res.some(p=>p.name===n)),waiting=group.find(p=>!fieldActorReady(p));toast(missing?missing+'がもどってから、一緒に世話をしよう':waiting?storyWaitReason(waiting,j):'なかまがそろったら、一緒に世話をしよう');return true;}
   const selected=new Set(),occupied=occTiles(r);for(const p of group)occupied.delete((p.y|0)*W+(p.x|0));const plans=[];
-  for(const p of [r,...group.filter(p=>p!==r)]){const G=bfs(p.x|0,p.y|0),stand=nearest(G,k=>walk(k)&&!sacredReserved(k)&&!occupied.has(k)&&!selected.has(k)&&fieldDistance(k,j)>=1&&fieldDistance(k,j)<=(p===r?1:3)&&free('field'+k,1),100);if(stand<0){toast('木の周りに、なかまが集まれる道をあけよう');return true;}selected.add(stand);plans.push({p,G,stand});}
+  for(const p of [r,...group.filter(p=>p!==r)]){const G=bfs(p.x|0,p.y|0),stand=p===r?fieldLeadStand(G,j,k=>!occupied.has(k)&&!selected.has(k)&&free('field'+k,1)):nearest(G,k=>walk(k)&&!sacredReserved(k)&&!occupied.has(k)&&!selected.has(k)&&fieldDistance(k,j)>=1&&fieldDistance(k,j)<=(p===r?1:3)&&free('field'+k,1),100);if(stand<0){toast('木の周りに、なかまが集まれる道をあけよう');return true;}selected.add(stand);plans.push({p,G,stand});}
   for(const {p,G,stand}of plans){delete p.storyWaitHome;endAct(p);startAct(p,G,p===r?'fieldstory':'fieldassist',stand,{key:'field'+stand,fieldId:q.id,phase:state.step,obj:j});}
   toast(r.name+'が「'+step.label+'」を調べにいく');return true;
 }
@@ -68,7 +70,7 @@ function fieldStoryResult(r,a){
   });
 }
 ACT.fieldstory={
-  start(r,a){if(!fieldStoryValid(a))return false;faceTo(r,a.obj);r.bubble='';},
+  start(r,a){if(!fieldStoryValid(a))return false;faceTo(r,fieldStump(a.obj));r.bubble='';},
   tick(r,a,dt){
     if(!fieldStoryValid(a))return;const step=FIELD_STORIES[a.fieldId][a.phase],others=fieldCast(step).filter(p=>p!==r);
     if(others.some(p=>p.act?.type!=='fieldassist'||p.act.phase!==a.phase)){a.cancel=true;return;}
@@ -79,7 +81,7 @@ ACT.fieldstory={
   done:(r,a)=>a.cancel||!fieldStoryValid(a)||a.t>=FIELD_STORIES[a.fieldId][a.phase].dur,
   end:fieldStoryResult
 };
-ACT.fieldassist={start(r,a){faceTo(r,a.obj);r.bubble='';},done:(r,a)=>!fieldStoryValid(a)||isNight()||hungry(r)||!S.res.some(p=>p.act?.type==='fieldstory'&&p.act.fieldId===a.fieldId&&p.act.phase===a.phase)};
+ACT.fieldassist={start(r,a){faceTo(r,fieldStump(a.obj));r.bubble='';},done:(r,a)=>!fieldStoryValid(a)||isNight()||hungry(r)||!S.res.some(p=>p.act?.type==='fieldstory'&&p.act.fieldId===a.fieldId&&p.act.phase===a.phase)};
 ACT.fieldwait={start(r){r.bubble='';},done:(r,a)=>fieldStoryCurrent()?.id!==a.fieldId||isNight()||hungry(r)};
 function fieldStoryAnim(r){const pose=sacredPose(r);if(pose)return pose.anim;return r.act?.type==='storywait'?'storyListen':r.act?.type==='fieldstory'?FIELD_STORIES[r.act.fieldId]?.[r.act.phase]?.anim||'talk':['fieldwait','fieldintro','fieldassist'].includes(r.act?.type)?'talkthink':r.act?.type;}
 function drawFieldStory(now,labelsOnly=false){
