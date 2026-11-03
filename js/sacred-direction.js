@@ -57,7 +57,7 @@ function sacredBeat(c){
   if(['soil','touch','cover','stone','water','runoff','wind'].includes(c)){
     const actor=c==='soil'?n:c==='stone'?h:c==='water'||c==='runoff'?m:c==='wind'?k:lead;
     const anim={soil:'storySoil',touch:'storyTouch',cover:'storyCover',stone:'storyStone',water:'storyPour',runoff:'storyPour',wind:'storyWind'}[c];
-    sacredScenePose(actor,anim,ms,{side:true,target:j});sacredStartEffect(c,ms,{actor});sacredShot('care',cast);
+    sacredScenePose(actor,anim,ms,{side:true,target:j});sacredStartEffect(c,ms,{actor,warming:c==='stone'&&QUESTS[S.quest]?.id==='fireRoot'});sacredShot('care',cast);
   }
   if(c==='bump'&&f&&n){d.waitUntil=performance.now()+6000;
     sacredShot('care',[f,n]);const owner=S,session=VILLAGE_SESSION;
@@ -90,7 +90,7 @@ function drawSacredCare(now){
   if(!S||WD!==0||S.sacredRoot==null)return;const j=S.sacredRoot,x=(j%W+1)*TS,y=((j/W|0)+1.5)*TS-hiAt(j)*LIFT;
   const d=sacredDirection();if(!d)return;ctx.save();ctx.lineCap='round';
   for(const [kind,e]of d.effects){const p=Math.max(0,Math.min(1,(now-e.at)/e.ms));if(p>=1)continue;const a=e.actor,sx=a?a.x*TS:x,sy=a?a.y*TS-16-uLift(a):y;
-    if(kind==='stone'){const q=sacredEase((p-.3)/.6);sacredStone(ctx,sx+(x+17-sx)*q,sy+(y+4-sy)*q-Math.sin(Math.PI*q)*7,1);}
+    if(kind==='stone'){if(e.warming&&p<.3){ctx.fillStyle='#edbd8b';ctx.beginPath();ctx.moveTo(sx+8,sy+4);ctx.quadraticCurveTo(sx+6,sy-3,sx+12,sy-7);ctx.quadraticCurveTo(sx+11,sy-1,sx+15,sy+4);ctx.fill();}const q=sacredEase((p-.3)/.6);sacredStone(ctx,sx+(x+17-sx)*q,sy+(y+4-sy)*q-Math.sin(Math.PI*q)*7,1);}
     if(kind==='soil'||kind==='cover'){for(let i=0;i<4;i++){const q=(p+i*.16)%1;ctx.fillStyle=kind==='soil'?'#c5aa82':'#d7c891';ctx.fillRect(x-17+i*9+q*3,y+7-q*5,kind==='soil'?3:5,2);}}
     if(kind==='water'||kind==='runoff'){
       const targetX=kind==='runoff'?x-24:x+3,targetY=kind==='runoff'?y+15:y+3,q=sacredEase(p/.65);
