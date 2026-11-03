@@ -58,7 +58,7 @@ function fieldStoryResult(r,a){
   const step=FIELD_STORIES[a.fieldId]?.[a.phase];if(!step||a.cancel||a.t<step.dur||!fieldStoryValid(a))return;
   const owner=S,token={session:VILLAGE_SESSION,id:a.fieldId,phase:a.phase};if(FIELD_SCENES.get(owner)?.session===VILLAGE_SESSION)return;FIELD_SCENES.set(owner,token);dialog(KS(step.lines),()=>{
     if(FIELD_SCENES.get(owner)===token)FIELD_SCENES.delete(owner);
-    if(S!==owner||!fieldStoryValid(a))return;
+    if(S!==owner||VILLAGE_SESSION!==token.session||!fieldStoryValid(a))return;
     if(a.fieldId==='tower'&&!growStoryTree())return;
     fieldStoryState(a.fieldId).step++;r.bubble='';dirty=true;
     if(!fieldStoryDone(a.fieldId)&&S.res.includes(r)&&!hungry(r)&&!isNight()){
