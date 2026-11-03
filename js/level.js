@@ -29,7 +29,6 @@ function rStat(r,lv){const V=r.vr||{},fire=r.elem==='fire';return{
   cap:Math.min(10,lv)+(trt(r,'chikara')?2:0)+((r.bst&&r.bst.cap)||0)+((r.sst&&r.sst.cap)||0),
   bonus:XPBL[lv]}}
 // 獲得量は端数も保存。表示と実際の加算で同じ計算を使う。
-const SPIRIT_DEFEAT_XP=5;/* 撃破1体の基本経験値。Lv1・2では実際に4貯まる */
 const spiritXpGain=(base,lv)=>(base+XPBL[lv])*.8;
 const xpText=n=>String(Math.round(n*1000)/1000);
 function spiritXpProgress(r){const lv=rLv(r),total=Math.round(((r.xp||0)+(r.xpf||0))*1000)/1000,next=LVXP[lv+1];return{lv,total,next,remaining:next==null?0:Math.max(0,Math.round((next-total)*1000)/1000)}}

@@ -45,18 +45,18 @@ function doSummon(){
 
 /* ---------- 敵（「コワイノ」） ---------- */
 const EN={
-  basic:{pw:4,name:'コカゲ',hp:10,sp:.80,atk:25,hit:20,hitF:10,hitN:12,hitFS:5,hitNS:6,col:'#2a1d46',eye:'#ff6b8a',size:1},
-  fast:{pw:3,name:'ハヤカゲ',hp:5,sp:1.6,atk:16.7,/* コカゲの足2倍・攻撃1.5倍の速さ */hit:14,hitF:7,hitN:8,hitFS:4,hitNS:4,col:'#1d3446',eye:'#7ff0ff',size:.8},
-  thief:{pw:2,name:'カゲドロボウ',hp:3,sp:.88,atk:25,hit:10,hitF:5,hitN:6,hitFS:3,hitNS:3,col:'#3b2a14',eye:'#ffd35c',size:.9,thief:1},
-  brute:{pw:6,rng:1.2,name:'カタカゲ',hp:10,sp:.76,atk:9,hit:28,hitF:14,hitN:17,hitFS:7,hitNS:8,col:'#3a1a1a',eye:'#ff8a3d',size:1.25,hs:1}/* 当たり判定は1マス */,
-  breaker:{pw:5,name:'カベクダキ',hp:9,sp:.8,atk:6,hit:18,hitF:9,hitN:11,hitFS:5,hitNS:5,col:'#3a2a1a',eye:'#ffa04a',size:1.1,wall:3},/* 壁や柵をこわすのが得意（こわす力3倍・速い）。よけずにまっすぐこわしにくる */
-  trapper:{pw:5,name:'ワナクイ',hp:8,sp:.9,atk:12,hit:16,hitF:8,hitN:10,hitFS:4,hitNS:5,col:'#2b3a1e',eye:'#c6ff6b',size:.95,trapper:1},/* 罠・見張り台を先にこわしにくる */
-  boss:{pw:20,rng:2.1,name:'オオカゲ',hp:40,sp:.84,atk:7,hit:14,hitF:7,hitN:8,hitFS:4,hitNS:4,col:'#120a24',eye:'#ff3b6b',size:1.8,boss:1},
-  ash:{pw:3,name:'ハイカゲ',hp:6,sp:.9,atk:20,hit:12,hitF:6,hitN:7,hitFS:3,hitNS:4,col:'#6d6a66',eye:'#ffb36b',size:.9,ash:1},/* かまど・ベンチなどを灰でよごして止める */
-  rockc:{pw:8,name:'イワカゲ',hp:22,sp:.5,atk:30,hit:30,hitF:15,hitN:18,hitFS:8,hitNS:9,col:'#5a4636',eye:'#ffcf6b',size:1.3},/* おそいけど、かたい */
-  hino:{pw:25,rng:2.3,name:'ヒノオオカゲ',hp:60,sp:.7,atk:6,hit:40,hitF:20,hitN:24,hitFS:10,hitNS:12,col:'#3a0c08',eye:'#ffb02e',size:2.1,boss:1,dev:1},/* 火山から下りてきて、熱の装置をねらう */
-  yama:{pw:30,rng:2.4,name:'ヤマノオオカゲ',hp:60,sp:.75,atk:6,hit:20,hitF:10,hitN:12,hitFS:5,hitNS:6,col:'#2a0904',eye:'#ff6a2e',size:2.4,boss:1,vol:1},/* 火山のふもとの最後の夜に、火の山からおりてきて、温泉の熱をうばう */
-  boss2:{pw:30,rng:3.4,hx:2.6,hy:.8,name:'ヨルノオオカゲ',hp:90,sp:.9,atk:4.5,hit:30,hitF:15,hitN:18,hitFS:8,hitNS:9,col:'#05030c',eye:'#ffd84a',size:4.6,boss:1},/* ヌシ様をむかえる準備ができたあとに来る */
+  basic:{xp:5,pw:4,name:'コカゲ',hp:10,sp:.80,atk:25,hit:20,hitF:10,hitN:12,hitFS:5,hitNS:6,col:'#2a1d46',eye:'#ff6b8a',size:1},
+  fast:{xp:4,pw:3,name:'ハヤカゲ',hp:5,sp:1.6,atk:16.7,/* コカゲの足2倍・攻撃1.5倍の速さ */hit:14,hitF:7,hitN:8,hitFS:4,hitNS:4,col:'#1d3446',eye:'#7ff0ff',size:.8},
+  thief:{xp:2,pw:2,name:'カゲドロボウ',hp:3,sp:.88,atk:25,hit:10,hitF:5,hitN:6,hitFS:3,hitNS:3,col:'#3b2a14',eye:'#ffd35c',size:.9,thief:1},
+  brute:{xp:8,pw:6,rng:1.2,name:'カタカゲ',hp:10,sp:.76,atk:9,hit:28,hitF:14,hitN:17,hitFS:7,hitNS:8,col:'#3a1a1a',eye:'#ff8a3d',size:1.25,hs:1}/* 当たり判定は1マス */,
+  breaker:{xp:7,pw:5,name:'カベクダキ',hp:9,sp:.8,atk:6,hit:18,hitF:9,hitN:11,hitFS:5,hitNS:5,col:'#3a2a1a',eye:'#ffa04a',size:1.1,wall:3},/* 壁や柵をこわすのが得意（こわす力3倍・速い）。よけずにまっすぐこわしにくる */
+  trapper:{xp:6,pw:5,name:'ワナクイ',hp:8,sp:.9,atk:12,hit:16,hitF:8,hitN:10,hitFS:4,hitNS:5,col:'#2b3a1e',eye:'#c6ff6b',size:.95,trapper:1},/* 罠・見張り台を先にこわしにくる */
+  boss:{xp:25,pw:20,rng:2.1,name:'オオカゲ',hp:40,sp:.84,atk:7,hit:14,hitF:7,hitN:8,hitFS:4,hitNS:4,col:'#120a24',eye:'#ff3b6b',size:1.8,boss:1},
+  ash:{xp:4,pw:3,name:'ハイカゲ',hp:6,sp:.9,atk:20,hit:12,hitF:6,hitN:7,hitFS:3,hitNS:4,col:'#6d6a66',eye:'#ffb36b',size:.9,ash:1},/* かまど・ベンチなどを灰でよごして止める */
+  rockc:{xp:12,pw:8,name:'イワカゲ',hp:22,sp:.5,atk:30,hit:30,hitF:15,hitN:18,hitFS:8,hitNS:9,col:'#5a4636',eye:'#ffcf6b',size:1.3},/* おそいけど、かたい */
+  hino:{xp:35,pw:25,rng:2.3,name:'ヒノオオカゲ',hp:60,sp:.7,atk:6,hit:40,hitF:20,hitN:24,hitFS:10,hitNS:12,col:'#3a0c08',eye:'#ffb02e',size:2.1,boss:1,dev:1},/* 火山から下りてきて、熱の装置をねらう */
+  yama:{xp:40,pw:30,rng:2.4,name:'ヤマノオオカゲ',hp:60,sp:.75,atk:6,hit:20,hitF:10,hitN:12,hitFS:5,hitNS:6,col:'#2a0904',eye:'#ff6a2e',size:2.4,boss:1,vol:1},/* 火山のふもとの最後の夜に、火の山からおりてきて、温泉の熱をうばう */
+  boss2:{xp:50,pw:30,rng:3.4,hx:2.6,hy:.8,name:'ヨルノオオカゲ',hp:90,sp:.9,atk:4.5,hit:30,hitF:15,hitN:18,hitFS:8,hitNS:9,col:'#05030c',eye:'#ffd84a',size:4.6,boss:1},/* ヌシ様をむかえる準備ができたあとに来る */
 };
 function bossDays(){const w=S.bossWarn;if(w==null)return '';const t=dayNo();if(!(S.res.length>=4&&S.res.some(q=>q.elem==='fire')&&KEYS[WD].every(n=>S.res.some(r=>r.name===n))))return 'オオカゲ：なかまが4人そろうまで来ない';let d=t;if(S.res4Since!=null)d=Math.max(d,S.res4Since+3);while(!bossNight(d))d++;return d===t?'オオカゲが来るまで：今夜':'オオカゲが来るまで：あと'+(d-t)+'日'}/* クエストの進みぐあいに、オオカゲが来る日を出す */
 const bossNight=d=>{const w=S&&S.bossWarn,k=S&&(S.ookDay||(S.enKills||{}).boss&&S.bossDay);if(k)return d-k>=5&&(d-k)%5===0;/* オオカゲをはじめて追いはらったあとは、5日ごと（S.ookDay：その日。前のセーブは、オオカゲをたおしていれば S.bossDay） */return w==null?d>=5&&(d-5)%3===0:d-w>=3&&(d-w-3)%3===0}/* オオカゲは「来るかも」と聞いた3日後、追いはらえなかったら3日ごと（火山のふもとは5日目、そのあと3日ごと）。はじめて追いはらったら、そのあとは5日ごと */;
@@ -254,7 +254,7 @@ function areaBlast(cx,cy){
   for(let n=0;n<28;n++){const a=n/28*Math.PI*2;fx.push({k:'p',x:px+Math.cos(a)*2*TS,y:py+Math.sin(a)*2*TS,vx:Math.cos(a)*30,vy:Math.sin(a)*30-10,life:1,col:pick(['#8fdc6a','#c8f5a0','#fffbe0']),r:rnd(1.5,3)})}
   sfx('bush');
   for(const r of L){r.shU=S.t+40;leafFX(r)}}
-function defeat(e,msg,r){if(e.dead)return;/* 同じ敵の撃破報酬は1回だけ */if(r){r.beat=(r.beat||0)+1;addSpiritXp(SPIRIT_DEFEAT_XP,r)}sfx('defeat');if(EN[e.type].boss&&!S.flags.bossOutro&&!(S.bossKills>0)){S.flags.bossOutro=1;bossDefeatFX(e)}else if(e.type==='boss2'){bossDefeatFX(e);villageTimeout(finalWinCheer,5800)}/* 追いはらった演出（時間を止めて消えていく様子を見せる）は、はじめてボスを追いはらったときの1回だけ */
+function defeat(e,msg,r){if(e.dead)return;/* 同じ敵の撃破報酬は1回だけ */if(r){r.beat=(r.beat||0)+1;addSpiritXp(EN[e.type].xp,r)}sfx('defeat');if(EN[e.type].boss&&!S.flags.bossOutro&&!(S.bossKills>0)){S.flags.bossOutro=1;bossDefeatFX(e)}else if(e.type==='boss2'){bossDefeatFX(e);villageTimeout(finalWinCheer,5800)}/* 追いはらった演出（時間を止めて消えていく様子を見せる）は、はじめてボスを追いはらったときの1回だけ */
   if(!EVAP.some(it=>it.e===e))EVAP.push({e,t0:performance.now(),dur:1300,die:true});/* たおしたら、たおれるモーションをしてから消える */
   e.dead=true;S.kills++;const D=EN[e.type];{const K=S.enKills||(S.enKills={});K[e.type]=(K[e.type]||0)+1}if(S.ns){S.ns.kill++;if(D.boss)S.ns.boss=2;if(e.type==='boss2'){S.ns.b2=1;S.b2At={x:e.x,y:e.y}}}const n=D.pw||5;
   if(e.type==='hino')S.flags.hinoDown=true;if(D.ash&&WD===1)st2().ashKills=(st2().ashKills||0)+1;
