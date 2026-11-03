@@ -81,6 +81,7 @@ function gaugeHTML(r){
   const g=(l,v,c)=>`<span>${l}</span><div class="bar"><i style="width:${clamp(v,0,100)|0}%;background:${c}"></i></div>`;
   return `<div class="gauges">${g('おなか '+Math.round(r.hunger)+'/'+hMax(r),r.hunger/hMax(r)*100,r.hunger<25?'var(--danger)':'#ffb35c')}${g('たのしさ',r.fun,'var(--pink)')}${g(S.t-(r.eUp||-9)<3?'つかれ（回復中）':'つかれ',100-r.energy,S.t-(r.eUp||-9)<3?'#7ed99a':r.energy<25?'var(--danger)':'#c9a7ff')}</div>`;
 }
+function spiritXpGaugeHTML(r){const xp=spiritXpProgress(r),max=xp.next==null,base=LVXP[xp.lv],need=max?0:xp.next-base,current=max?0:Math.max(0,Math.round((xp.total-base)*1000)/1000),pct=max?100:clamp(current/need*100,0,100);return `<div class="spiritXp" style="margin-top:8px"><div style="display:flex;justify-content:space-between;gap:8px;font-size:11px"><span>${max?'経験値 MAX':'経験値 '+xpText(current)+' / '+xpText(need)}</span><span>${max?'Lv'+xp.lv:'次のLvまで '+xpText(xp.remaining)}</span></div><div class="bar" role="progressbar" aria-label="経験値" aria-valuemin="0" aria-valuemax="${max?100:need}" aria-valuenow="${max?100:current}" style="margin-top:4px"><i style="width:${pct}%;background:#78b7cb"></i></div></div>`}
 let sheet=null,sheetArg=null;
 function attrPop(k){
   const src={};const add=(name,v)=>{const r=src[name]||(src[name]={n:0,v:0});r.n++;r.v+=v};
@@ -306,7 +307,7 @@ function renderSheet(){
     box.querySelector('.dot').style.cssText='background:#f6f1e6 url('+spiritPort(r.elem,96,r.vr)+') center/86% no-repeat;box-shadow:inset 0 0 0 2px '+ELEM[r.elem].col;
     box.querySelector('b').textContent=ELEM[r.elem].name+'のせいれい・'+(r.act?ACT_LBL[r.act.type]||'':'考え中');
     box.querySelector('small').textContent=r.hunger<20?'おなか：危険！':r.hunger<50?'おなか：少なめ':'';
-    box.querySelector('.tx').insertAdjacentHTML('beforeend',gaugeHTML(r));body.appendChild(box);
+    box.querySelector('.tx').insertAdjacentHTML('beforeend',gaugeHTML(r)+spiritXpGaugeHTML(r));body.appendChild(box);
     if(!isNew){const sy=el('<p class="story" style="margin:6px 0 2px"></p>');sy.textContent='「'+sayLine(r)+'」';body.appendChild(sy)}
     {const lv=rLv(r);
      const tb=el('<div class="ctabs"></div>');['ステータス','プロフィール','強化'].forEach((nm,i)=>{const t=el('<button class="ctab'+(i===resTab?' on':'')+'"></button>');t.textContent=nm;t.onclick=()=>{resTab=i;sfx('next');renderSheet()};tb.appendChild(t)});body.appendChild(tb);/* ステータスと、得意・好きなものは別のタブ */
@@ -326,10 +327,6 @@ function renderSheet(){
      else{
      const st=el('<div class="sec"><div class="stats"></div></div>'),g=st.querySelector('.stats');
      for(const tk of[(r.vr||{}).tr,isKey(r.name)?'kizuna':null]){const T2=TRAITS[tk];if(T2){const d=el('<div class="stat" style="display:block"><span style="display:block">特性</span><b style="display:block;text-align:left;margin-top:2px"></b><small style="display:block;color:var(--sub,#888);margin-top:2px"></small></div>');d.querySelector('b').textContent=T2[0];d.querySelector('small').textContent=T2[1];g.appendChild(d)}}/* キーキャラは「きずな」も持つ */
-     {const xp=spiritXpProgress(r),sec=el('<div class="stat"><span>経験値（累計）</span><b></b></div>');sec.querySelector('b').textContent=xpText(xp.total)+(xp.next==null?'（最大レベル）':' / '+xp.next);g.appendChild(sec);
-      const note=el('<p class="note"></p>');note.textContent=xp.next==null?'最大レベルに到達しています。':'次のLv'+(lv+1)+'まで、あと'+xpText(xp.remaining)+'。小数の経験値も貯まります。';g.appendChild(note);
-      const guide=el('<div class="stat" style="display:block"><span>経験値の貯め方（いまのレベル・1回あたり）</span><small style="display:block;margin-top:4px;line-height:1.7"></small></div>');guide.querySelector('small').textContent=[['木こり・採掘・収穫・水やり・料理・草むしり',1],['耕す・花や木を植え終える・おいかけっこ',2],['家具を作り終える・釣り',3],['建物を建て終える',4]].map(([label,base])=>label+'：+'+xpText(spiritXpGain(base,lv))).join('。')+'。好きな釣りは+'+xpText(spiritXpGain(5,lv))+'。食事・遊び・おしゃべりでも貯まります。寝る・歩くだけでは増えません。';g.appendChild(guide);
-      const combat=el('<div class="stat" style="display:block"><span>撃破経験値（倒した本人・いまのレベル）</span><div class="stats" style="margin-top:4px"></div></div>');for(const enemy of Object.values(EN)){const row=el('<div class="stat"><span></span><b></b></div>');row.querySelector('span').textContent=enemy.name;row.querySelector('b').textContent='+'+xpText(spiritXpGain(enemy.xp,lv));combat.querySelector('.stats').appendChild(row)}g.appendChild(combat)}
      const Z=rStat(r,lv);for(const[k,v]of[['攻撃力',Z.atk?String(Z.atk):'なし'],['作業スピード',String(Math.floor(Z.work))],['移動速度',String(Math.floor(Z.move))],['スタミナ',String(Math.floor(Z.sta))],['持てる数',heldN(r)+' / '+Z.cap]])g.appendChild(el('<div class="stat"><span>'+k+'</span><b>'+v+'</b></div>'));
      body.appendChild(st)}}
     if(isNew){const nb=el('<button class="btn pri">つぎへ</button>');nb.onclick=()=>{sfx('next');closeSheet();dialog([[r.name,helloLine(r)]],()=>checkQuest())};/* 来た子が、ひとことあいさつ */body.appendChild(nb);return}
@@ -532,7 +529,7 @@ function zukanBody(body){
     for(const id in BL){const b=BL[id];if(!b||!b.name||b.hidden)continue;if(kd?b.kind!==kd:(b.kind==='furn'||b.kind==='build'||b.kind==='nat'))continue;if(!(here(id)||(ZKT!==3&&has(id))))continue;add(b.name,b.desc||'',iconURL(id))}}
   else if(ZKT===4){const seen=d.seenEn||{},K=d.enKills||{};for(const k of Object.keys(EN).filter(k=>ZUKAN[k]&&seen[k])){const D=EN[k],row=el('<div class="zk"><canvas width="144" height="144"></canvas><div class="zt"><b></b><p></p><small></small></div></div>');
       const c=row.querySelector('canvas').getContext('2d');c.scale(2,2);try{drawShade(c,k,36,64,(k==='boss'||k==='hino'||k==='yama'||k==='boss2'?.46:.56),1,{t:0,dot:1})}catch(_){}
-      row.querySelector('b').textContent=D.name;row.querySelector('p').textContent=ZUKAN[k];row.querySelector('small').textContent='体力 '+D.hp+'・はやさ '+D.sp+'・追いはらった '+(K[k]||0)+'回';if(d.cleared&&ZURA[k]){const u=el('<p class="note"></p>');u.textContent='もとのすがた：'+ZURA[k];row.querySelector('.zt').appendChild(u)}rows.appendChild(row);list.push(null)}}
+      row.querySelector('b').textContent=D.name;row.querySelector('p').textContent=ZUKAN[k];row.querySelector('small').textContent='体力 '+D.hp+'・はやさ '+D.sp+'・追いはらった '+(K[k]||0)+'回・撃破経験値 +'+xpText(spiritXpGain(D.xp,1))+'（Lv1・2）';if(d.cleared&&ZURA[k]){const u=el('<p class="note"></p>');u.textContent='もとのすがた：'+ZURA[k];row.querySelector('.zt').appendChild(u)}rows.appendChild(row);list.push(null)}}
   else{const it=Object.assign({},d.seenIt||{});for(const k in d.mat||{})if(d.mat[k]>0)it['m:'+k]=1;for(const k in d.fs||{})if(d.fs[k]>0)it['f:'+k]=1;
     for(const k in MATN)if(it['m:'+k])add(MATN[k],'素材',ICONS[k]||null);for(const k in FOODS)if(it['f:'+k])add(FOODS[k].name,FOODS[k].fx||'食べ物',ICONS[k]||icURL(FOODS[k].e)||(CROPS[k]?cropIcon(k):null))}
   body.appendChild(el('<p class="story">'+list.length+'こ</p>'));
