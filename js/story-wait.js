@@ -11,7 +11,7 @@ function mainStoryWaitInfo(){
   if(p?.key===key&&p.session===VILLAGE_SESSION&&p.cast.every(r=>S.res.includes(r)&&!r.hidden)&&(!q.field||p.cast.length===(FIELD_STORIES[q.id].at(-1).cast||[]).length)&&(p.id==null||qvHas(p.obj,p.id)))return p;
   const who=report?storyWho(q):firstSpk(q.talk.lines,q.talk.who);
   const lead=S.res.find(r=>r.name===who&&!r.hidden);if(!lead&&!(q.field&&report))return null;
-  const last=q.field&&FIELD_STORIES[q.id]?.at(-1),cast=last?fieldCast(last):[lead];if(!cast.length)return null;
+  const last=q.field&&FIELD_STORIES[q.id]?.at(-1),cast=last?fieldCast(last):[lead,...storyLineCast(report?q.story:q.talk.lines).filter(r=>r!==lead)];if(!cast.length)return null;/* 会話でしゃべる子は、みんな集まってから話す（いない子は、その行だけはぶく） */
   let obj=q.field?S.sacredRoot:null,id=null;
   if(obj==null){
     const ids=QUEST_VISIT_MAIN[q.id]||(q.id==='nushi'?['tower']:null),recent=QUEST_PLACEMENTS.get(S);let best=-Infinity;
@@ -23,6 +23,7 @@ function mainStoryWaitInfo(){
   if(obj==null)return null;
   p={key,session:VILLAGE_SESSION,index,report,q,who,cast,obj,id,field:!!q.field};STORY_WAIT_PLANS.set(S,p);return p;
 }
+function storyLineCast(L){return [...new Set((L||[]).map(l=>l&&l[0]).filter(n=>typeof n==='string'))].map(n=>S.res.find(r=>r.name===sevName(n)&&!r.hidden)).filter(Boolean)}
 function rememberStoryHome(r,key){if(!r.storyWaitHome||r.storyWaitHome.world!==WD)r.storyWaitHome={j:(r.y|0)*W+(r.x|0),key,world:WD};else r.storyWaitHome.key=key;}
 function storyWaitProtected(r){
   const a=r.act;if(!a||a.stage!=='do'||isNight())return false;

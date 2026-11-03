@@ -255,10 +255,13 @@ ACT.sevreact={start(r,a){const enc=SEV_ENCOUNTERS.get(S);if(!enc||enc.k!==a.sevK
 
 /* 掛け合い会話は、話す子たちが近くにいるときだけ吹き出しを出す */
 function sevNear(L){const ps=[...new Set(L.map(l=>l[0]).filter(n=>n&&n!==GOD&&n!==NUSHI1))].map(n=>S.res.find(r=>r.name===n)).filter(Boolean);for(let i=0;i<ps.length;i++)for(let j=i+1;j<ps.length;j++)if(Math.hypot(ps[i].x-ps[j].x,ps[i].y-ps[j].y)>6)return false;return true}
+const MAINGO=new Set(['storywait','fieldintro','fieldstory','fieldassist','fieldwait','nmeet']);
+function mainGathering(){return S.res.some(r=>!r.hidden&&r.act&&MAINGO.has(r.act.type))}
 function sevQuestBusy(){return !!QUEST_CLEAR_WAIT||Object.values(SUB_CLEAR_WAIT).some(w=>w&&!w.done)||Object.values(SUBW).some(k=>S.subSt&&S.subSt[k]===3)}
 function sevBub(){SEVW={};if(!S)return;const P=S.sevP||[];for(let i=P.length-1;i>=0;i--)if(!SEV1.some(e=>e.k===P[i]))P.splice(i,1);
   {const D=S.sev||(S.sev={});for(let i=P.length-1;i>=0;i--){const k=P[i],e=SEV1.find(x=>x.k===k);let ok=true;try{ok=!e.at||!!e.at()}catch(_){}if(ok)continue;/* きっかけの条件（畑にいる・近くにいる など）がなくなったら、ピンクを引っこめる。またそろったら、出しなおす */const enc=SEV_ENCOUNTERS.get(S);if(enc&&enc.k===k)sevCancel(enc,null,false);P.splice(i,1);delete D[k]}}
   const ending=grassEndingEvent();let enc=SEV_ENCOUNTERS.get(S);if(enc&&ending&&enc.k!==ending.k){sevCancel(enc,null,false);enc=null;}if(enc&&(!P.includes(enc.k)||!sevTargetAlive(enc.target))){sevCancel(enc);enc=null}
+  if(!ending&&mainGathering()){if(enc)sevCancel(enc,null,false);return}/* メインの会話・調べに向かっているあいだは、ピンクの会話を出さない */
   if(sevBusy()||!ending&&sevQuestBusy()||S.qStory!=null||isNight()||!ending&&S.sevTalkAt!=null&&S.t-S.sevTalkAt<180)return;
   if(enc){if(!sevEncounterSafe(enc)){sevCancel(enc);return}if(enc.ready){if(sevNear(enc.L)&&enc.actors.every(r=>sevClose(r,enc.target)))SEVW[enc.speaker.name]=enc.k;else sevCancel(enc)}return}
   const retry=SEV_RETRY.get(S)||{};for(const k of P){if(ending&&k!==ending.k)continue;if(retry[k]>S.t)continue;const e=SEV1.find(x=>x.k===k),L=sevLines(e.L);if(!L||!sevAllHere(e))continue;if(sevBegin(e,L))return;retry[k]=S.t+5}SEV_RETRY.set(S,retry)}
