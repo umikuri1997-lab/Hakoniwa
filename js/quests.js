@@ -290,7 +290,7 @@ function drawLeaf(r,now){const px=r.x*TS,py=r.y*TS;ctx.save();ctx.globalAlpha=.8
 function departOK(){if(LIVE[0]&&LIVE[0].summary&&LIVE[0].cleared)loadStage(0);let d=false;try{d=KV.getItem('hakoniwa-dep1')==='1'}catch(e){}return !d&&LIVE[0]&&LIVE[0].cleared&&LIVE[0].res.some(r=>r.name===POKO)}
 function depart(go){$('#maps').hidden=true;continueGame(LIVE[0]);const f=S.res.find(r=>r.name===POKO);if(f)centerOn(f.x*TS,f.y*TS);
   const gv=S.godVisit;S.godVisit=true;/* 見送りには、カミサマも村に来ている */
-  const tw=S.obj.indexOf('tower'),TX=tw>=0?tw%W+1:CX+.5,TY=tw>=0?((tw/W)|0)+1:CY;
+  const tw=S.obj.indexOf('tower'),TX=tw>=0?storyTreeX(tw):CX+.5,TY=tw>=0?storyTreeY(tw):CY;
   const A1=sevLines([['G','さあ、次は火山のふもとの村じゃ。そろそろ行くぞい。'],['F','#think|……もう、行っちゃうんだね。'],['F','#think|……ほんとはね、行かないでって、言いたい。'],['F','#scared|あの夜、みんながぼくをかくしてくれたから、ぼくは生きてる。だから、だれかがいなくなるのが、こわくて……。'],['U','フタバ。守り神は、いなくなるのではない。ほかの土地を助けに行くのだ。'],['F','#think|……うん。あの夜のぼくみたいな子が、待ってるかもしれないんだ。'],['F','ぼく、もうかくれてるだけじゃないよ。みんなのことは、ぼくが守るから！'],['F','#think|……いってらっしゃい！ ちゃんと、ここで待ってるから！ でも、たまには帰ってきてね。ぜったいだよ？'],['G','#nod|うむ……。鼻の奥がつーんとしたわい。行ってくるぞい。'],
     ['N','ここは、ぼくたちにまかせてねぇ。',1],['H',{A:'安心して行ってきな。夜はあたいらが守るよ。',B:'安心して行ってこい。夜はおれたちが守るぜ。'},1],['M','次の村のせいれいたちも、元気になりますように。',1],['K','フッ……最初は、なんとも素朴な村だと思ったけれど。',1],['K','今では、世界でいちばん心地よい風が吹く場所かもしれないね。きみの旅路に、いい風が吹きますように。',1],['U','この草原は、わたしたちが見守ろう。']]);
   const A2=sevLines([['F','#think|……いっちゃったね。',0,'nfG'],['N','#worry|……さみしいねぇ。',1],['F','#think|……うん。すっごく。'],['F','#think|……でも、ぼく、ここをきれいにして待ってるんだ。'],['F','#surprise|帰ってきたら、びっくりさせちゃうんだから……！']]);

@@ -55,7 +55,7 @@ function hasHighWork(r){
     if(o==='sprout'&&canJob(r,'plant')&&free('o'+j,1))return true}
   return false}
 const ROUTINE=['chop','mine','gather'];
-const URGNO=['fieldassist','fieldintro','fieldstory','fieldwait','phew','sevreact','questjoy','nmeet','step','shiver','reunion','bury','pray','build','craft','repair','eat','sleep','flee','faint','cook','store','smat','fetch','cgrab','chat','chatwait','npl','tag','offer','pickdrop','pickseed','bathe','rest'];/* 水浴びやベンチの休けいは、とちゅうでやめない */
+const URGNO=['storywait','storyreturn','fieldassist','fieldintro','fieldstory','fieldwait','phew','sevreact','questjoy','nmeet','step','shiver','reunion','bury','pray','build','craft','repair','eat','sleep','flee','faint','cook','store','smat','fetch','cgrab','chat','chatwait','npl','tag','offer','pickdrop','pickseed','bathe','rest'];/* 水浴びやベンチの休けいは、とちゅうでやめない */
 function hasUrgent(r){/* 建てる場所か、だれも受けていない依頼があるか */
   if(canJob(r,'build')&&S.obj.some((o,j)=>o==='site'&&free('o'+j,2)))return true;
   return S.orders.some(q=>(!q.worker||!S.res.some(x=>x.id===q.worker))&&craftOK(r,q))}
@@ -142,7 +142,7 @@ function updRes(r,dt){rescueStuck(r);if((RHOLD.get(r)||0)>performance.now())retu
   if(HOLD.has(r.id)){if(r.act)endAct(r);r.act=null;return}
   if(r.hidden||r.act&&r.act.stage==='do'||Math.hypot(r.x-(r.stX??r.x),r.y-(r.stY??r.y))>.3){r.stX=r.x;r.stY=r.y;r.stT=S.t}else if(S.t-(r.stT??S.t)>=10&&!(r.act&&r.act.type==='nmeet')){if(r.act&&r.act.stand>=0){r.avoidJ=r.act.stand;r.avoidU=S.t+120}r.stX=r.x;r.stY=r.y;r.stT=S.t;if(r.act)endAct(r)}/* 動いてもいない・作業もしていないまま10分たったら、いまの行動をやめて、べつの行動をえらぶ */
   const sleeping=r.act&&r.act.type==='sleep'&&r.act.stage==='do';
-  const mv=r.act&&(r.act.stage==='walk'||r.act.type==='tag');const lazy=!r.act||r.act.type==='idle'||r.act.type==='wander'||r.act.type==='stay';const wk=r.act&&r.act.stage==='do'&&WORKT.has(r.act.type);/* おなかは、作業するとへる。つかれているほどへりやすい */r.hunger-=(sleeping?.003:wk?.3:mv?.04:.02)*(lazy?.5:1)*(r.energy<10?2:r.energy<30?1.5:1)*dt*(trt(r,'shoshoku')?.8:1)*(r.full>S.t?.6:1);
+  const mv=r.act&&(r.act.stage==='walk'||r.act.type==='tag');const lazy=!r.act||r.act.type==='idle'||r.act.type==='wander'||r.act.type==='stay';const wk=r.act&&r.act.stage==='do'&&WORKT.has(r.act.type);/* おなかは、作業するとへる。つかれているほどへりやすい */if(!storyWaitProtected(r))r.hunger-=(sleeping?.003:wk?.3:mv?.04:.02)*(lazy?.5:1)*(r.energy<10?2:r.energy<30?1.5:1)*dt*(trt(r,'shoshoku')?.8:1)*(r.full>S.t?.6:1);
   if(!sleeping)r.fun-=.07*dt*(trt(r,'genki')?.6:1)*SUTEKI_FUN[suteki().st];
   {const jj=(r.y|0)*W+(r.x|0),ev=ENVG?Math.min(12,ENVG[jj]+(ENVE[r.elem]?ENVE[r.elem][jj]:0)):0;if(ev>0&&!sleeping){r.fun=Math.min(100,r.fun+ev*.004*dt);if(r.act&&r.act.stage==='do'&&(r.act.type==='idle'||r.act.type==='rest'))r.energy=Math.min(100,r.energy+ev*.004*recK(r)*dt)}}/* まわりの環境がいいと、休けい・たのしさが上がる */
   // 家の中で寝ている子は、壁が壊れて「コワイノ」が入ってこない限り起きない
@@ -179,6 +179,7 @@ function updRes(r,dt){rescueStuck(r);if((RHOLD.get(r)||0)>performance.now())retu
   if(r.act&&isNight()&&!NIGHT_OK.includes(r.act.type))endAct(r)
   if(r.act&&r.act.type==='sevreact'&&(r.hunger<30||hungry(r)||r.energy<10||!SEV_ENCOUNTERS.get(S)||!sevEncounterSafe(SEV_ENCOUNTERS.get(S))))endAct(r);
   if(r.act&&r.act.type==='questjoy'&&(r.hunger<30||hungry(r)||!questVisitSafe(r,r.act.obj)))endAct(r);
+  if(tryMainStoryWait(r))return;
   if(tryEarthIntro(r))return;
   if(tryQuestVisit(r))return;
   if(!r.act){decide(r);return}

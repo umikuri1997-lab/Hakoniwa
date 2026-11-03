@@ -71,7 +71,7 @@ function storyWho(q){if(q.story&&spkOK(q.story[0]&&q.story[0][0]))return q.story
   for(const[w]of q.story||[]){if(w===GOD){if(godHere())return GOD;continue}if(S.res.some(r=>r.name===w&&!r.hidden))return w}
   if(godHere())return GOD;const r=S.res.find(r=>!r.hidden);return r?r.name:null}
 /* 水色の吹き出しのせいれいをタップ → 会話 → クエストがはじまる（会話の中でレシピを思いつくことも） */
-function startTalk(){if(!$('#dialog').hidden)return;
+function startTalk(){if(!$('#dialog').hidden)return;if(isNight())return toast('お話は、朝になってから');
   if(S.qStory!=null){const sq=QUESTS[S.qStory];TALKW=null;QUESTCLEARW=null;S.flags.talked1=true;
     if(sq.pre&&!S.flags['pre'+WD+'_'+S.qStory]){S.flags['pre'+WD+'_'+S.qStory]=true;questGives(sq,sq.pre);if(sheet==='food')renderSheet()}/* お礼の会話がはじまったら、すぐわたす（ベリーなど） */
     if(sq.field)sacredShot('care');else stageMotion('cheer');/* クエストをクリアしたお礼：みんながとびはねて、よろこぶ */
@@ -85,7 +85,8 @@ function renderQuest(){const q=QUESTS[Math.min(S.quest,QUESTS.length-1)];let pr=
   if(S.cleared&&WD!==FREE){const a=AFTERQ[S.aq||0],dd=S.daily,dn=dd?dd.k.filter(k=>dd.done[k]).length:0;if(a&&S.aqOn===(S.aq||0)){t=aqTitle(a);pr=aqProg(a)}else t=dd?'きょうの目標 '+dn+'/'+dd.k.length:'世界クリア！'}/* クリア後は、新しいクエストか、きょうの目標を出す */
   if(!S.cleared){const ms=qMissing(q);
     if(ms.length)t=ms.join('と')+'がもどるまで、お話は進まない';
-    else if(S.qStory!=null||q.talk&&!S.qTalked)t=TALKW?TALKW+'が話したそうにしている':S.qStory==null&&q.talk.wait||'いまは、村をそだてよう';/* なにをすればいいか書く */
+    else if(isNight()&&(S.qStory!=null||q.talk&&!S.qTalked))t='お話は、朝になってから';
+    else if(S.qStory!=null||q.talk&&!S.qTalked)t=TALKW?mainStoryPromptText(TALKW):S.qStory==null&&q.talk.wait||'いまは、村をそだてよう';/* なにをすればいいか書く */
     else if(q.prog)pr=q.prog()}
   const qt=$('#questTxt');if(qt.dataset.k!==t+'|'+pr){qt.dataset.k=t+'|'+pr;qt.textContent='';const m=document.createElement('span'),g=document.createElement('span');m.className='qm';g.className='qp';m.textContent=t;g.textContent=pr;qt.append(m,g)}/* 進み具合は2行目に */
   const h=$('#questHow');if(!h.hidden&&h.dataset.q==S.quest)return;h.dataset.q=S.quest;h.hidden=true;h.innerHTML='<b>やりかた</b>';h.appendChild(document.createTextNode(q.how||''))}
@@ -100,7 +101,7 @@ function gatherAt(TX,TY,then,skipId){/* せいれいみんなが、台座のま�
   const t0=performance.now();let last=0;const chk=()=>{const n=performance.now();if(n-last>1500){last=n;go()}if(S.res.every(r=>r.hidden||r.id===skipId||r.act&&r.act.type==='nmeet'&&r.act.stage==='do')||n-t0>10000)return then();villageTimeout(chk,250)};villageTimeout(chk,300)}
 function nushiReturns(){if(NUSHI_RUN||S.cleared)return;NUSHI_RUN=true;S.flags.nushiDue=1;/* ヌシ様が帰ってくる場面。「クリア」にするのは、場面を最後まで見てから（途中でとじたら、はじめから） */
   checkQuest();renderQuest();const T=NUSHI_T[WD];
-  const tw=S.obj.indexOf('tower'),TX=tw>=0?tw%W+1:CX+.5,TY=tw>=0?((tw/W)|0)+1:CY;
+  const tw=S.obj.indexOf('tower'),TX=tw>=0?storyTreeX(tw):CX+.5,TY=tw>=0?storyTreeY(tw):CY;
   if(WD===0)sacredShot('care',S.res.filter(r=>Math.hypot(r.x-TX,r.y-TY)<6));else centerOn(TX*TS,(TY-1)*TS);
   const openF=L=>{const o=L.filter(l=>l[0]===GOD||S.res.some(r=>r.name===l[0]));return o.length?o:[[GOD,'朝じゃな。…さあ、台座に力をそそぐんじゃ。']]};
   const runOpen=()=>dialog(openF(T.open),()=>gatherAt(TX,TY,()=>{

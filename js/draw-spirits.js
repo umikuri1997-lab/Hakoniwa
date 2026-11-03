@@ -107,6 +107,7 @@ function spPose(o,t,tr,back){/* せいれいの動きの計算：腕の角度・
   if(o.banzai){aN=aF=-1+Math.sin(t*4)*.07;frontArm=bothF=true}/* わーい */
   if(o.carry&&!back){frontArm=bothF=true}
   if(tr>.5)bothF=false;
+  if(back){frontArm=false;bothF=false;}/* 後ろ向きは、どの動作でも腕を頭より先に描く。頭巾の上へ手を重ねない */
   return {br,st,arm,A,aN,aF,prop,lean2,sq,frontArm,bothF}}
 function spProp(c,prop,sx,a,t,o){/* せいれいが手に持つ道具 */c.save();c.translate(sx*15,0);if(prop!=='food'&&prop!=='splash'){const g=sx*(.35+a);c.translate(Math.sin(g)*6,Math.cos(g)*6)}/* 道具は、手より下（画面の下へ6）で持つ */if(prop!=='food')c.scale(1.5,1.5);
     if(prop==='splash'){for(let k=0;k<5;k++){const ph=(t*1.2+k*.2)%1,dx=sx*(-4+k*2.2)+Math.sin(k*2.1)*2,dy=-8-ph*16+ph*ph*30;c.globalAlpha=Math.max(0,1-ph);c.fillStyle=k%2?'#d6f2ff':'#6fc0ff';c.beginPath();c.arc(dx*1.4,dy,2.6-ph,0,7);c.fill()}c.globalAlpha=1;c.restore();return}/* 水しぶき */
@@ -345,9 +346,9 @@ function drawRes0(r,now){
   if(!SPV.has(r))SPV.set(r,{x:r.x,y:r.y,back:false,turn:0,bl:now+2000+Math.random()*3000});const v=SPV.get(r),dx=r.x-v.x,dy=r.y-v.y;
   if(!walking){v.back=false;v.turn=r.act&&r.act.stage==='do'&&(r.act.type==='chop'||r.act.type==='mine')&&!objBelow(r)||benchV?1:0}/* 木・岩は横向きで、そちらを向いて切る */else if(Math.abs(dx)+Math.abs(dy)>.002){const ax=Math.abs(dx),ay=Math.abs(dy);v.turn=ax>ay*1.2?1:0;v.back=!v.turn&&dy<0}{const cj=(r.y|0)*W+(r.x|0),n=r.path&&r.path.length?r.path[0]:-1;if(n>=0&&n===cj-W&&(jumpEdge(cj,n)&&hiAt(n)>hiAt(cj)||ladderLink(n,cj))||LADDERS.has(S.obj[cj])&&ladderDir(cj)===0&&n>=0){v.back=true;v.turn=0}}/* 正面のがけをよじのぼるときは、うしろ向き */v.x=r.x;v.y=r.y;
   v.side=false;if(r.nap){v.back=false;v.turn=0;v.side=false;r.face=1}/* はじめの場面：正面を向いて眠る */{const sj=(r.y|0)*W+(r.x|0),so=S.obj[sj];if(!walking&&r.act&&r.act.stage==='do'&&so&&ROTS[so]===4&&SEATS.includes(so)){const ro=rotAt(sj);v.back=ro===2;v.turn=ro===1||ro===3?1:0;if(v.turn)r.face=ro===1?1:-1;v.side=!!v.turn}if(!walking&&benchJ>=0)v.back=benchR===2}/* ベンチで「後ろ」向きなら、せなかが見える *//* いすにすわっている子は、いすの向きにすわる（うしろ向きのいすなら、うしろ向き） */
-  if(!walking&&r.act&&r.act.stage==='do'){const a=r.act,j=(r.y|0)*W+(r.x|0);if(a.type==='eat'&&a.tdir!=null){v.back=a.tdir===-W;v.turn=Math.abs(a.tdir)===1?1:0;v.side=!!v.turn;px=(j%W+.5)*TS;py=((j/W|0)+.5)*TS+1;if(v.turn)r.face=a.tdir}else if((a.type==='store'||a.type==='smat'||['fieldstory','fieldassist','fieldintro'].includes(a.type))&&(a.box??a.obj)>=0){const target=a.box??a.obj,dx=target%W-j%W,dy=(target/W|0)-(j/W|0);v.back=dy<0;v.turn=dy===0?1:0;if(v.turn)r.face=dx<0?-1:1}}
-  if(!walking&&sacredPose(r)?.sit){v.turn=1;v.back=false;r.face=S.sacredRoot!=null&&r.x>S.sacredRoot%W+1?-1:1;}
-  const storyPose=sacredPose(r);if(storyPose?.side){v.turn=1;v.back=false;if(storyPose.face)r.face=storyPose.face;else if(storyPose.target!=null)r.face=r.x>storyPose.target%W+1?-1:1;}
+  if(!walking&&r.act&&r.act.stage==='do'){const a=r.act,j=(r.y|0)*W+(r.x|0);if(a.type==='eat'&&a.tdir!=null){v.back=a.tdir===-W;v.turn=Math.abs(a.tdir)===1?1:0;v.side=!!v.turn;px=(j%W+.5)*TS;py=((j/W|0)+.5)*TS+1;if(v.turn)r.face=a.tdir}else if((a.type==='store'||a.type==='smat'||['fieldstory','fieldassist','fieldintro','storywait'].includes(a.type))&&(a.box??a.obj)>=0){const target=a.box??a.obj,dx=target%W-j%W,dy=(target/W|0)-(j/W|0);v.back=dy<0;v.turn=dy===0?1:0;if(v.turn)r.face=dx<0?-1:1}}
+  if(!walking&&sacredPose(r)?.sit){v.turn=1;v.back=false;r.face=S.sacredRoot!=null&&r.x>storyTreeX(S.sacredRoot)?-1:1;}
+  const storyPose=sacredPose(r);if(storyPose?.side){v.turn=1;v.back=false;if(storyPose.face)r.face=storyPose.face;else if(storyPose.target!=null)r.face=r.x>storyTreeX(storyPose.target)?-1:1;}
   const at=r.act&&r.act.type,ad=r.act&&r.act.stage==='do',jt=JUMP.get(r),held=HOLD.has(r.id),jumping=held||jt!=null&&now-jt<1000;
   const reacting=(at==='sevreact'||at==='phew')&&ad&&r.act.reactAt!=null,rm=reacting?r.act.reactMotion:'',rp=reacting?dialoguePose(rm,now-r.act.reactAt):null;if(rp){const k=rm==='phew'?1:.4;px+=rp.x*k;py+=rp.y*k}
   const brave=now-(BRAVET.get(r)||-1e9)<1500;/* 勇ましい顔は、行動の切りかわりや、たたかれた時に、ちらちら消えないよう、1.5秒つづける */
@@ -387,9 +388,9 @@ function drawRes0(r,now){
   if(r.act&&r.act.type==='cook'&&r.act.stage==='do'&&r.act.obj!=null&&r.cing){const a=r.act,tot=cookTime(r,a.obj),p=Math.min(1,(a.t||0)/Math.max(1,tot)),gx=(a.obj%W)*TS+2,gy=((a.obj/W)|0)*TS-12,g=()=>{ctx.fillStyle='rgba(0,0,0,.5)';rr(ctx,gx,gy,28,6,3);ctx.fillStyle='#ffd38a';rr(ctx,gx+1,gy+1,26*p,4,2)};if(BUBQ)BUBQ.push(g);else g()}/* 料理の進みぐあい */
   {const a=r.act;if(a&&a.stage==='do'&&a.obj!=null&&(a.type==='repair'||a.type==='cook'&&r.cing)){const gx=(a.obj%W)*TS+2,gy=((a.obj/W)|0)*TS-(a.type==='cook'?12:8);if(Math.abs(px-(gx+14))<34&&by-45<gy+6&&by-15>gy)by=gy+13}}/* 修理・料理のバーとふきだしが重なるときは、ふきだしをバーの上へ */
   const zzz=r.act&&r.act.type==='sleep';/* 寝ているあいだは、話しかけの吹き出しを出さない */
-  if(!zzz&&QUESTCLEARW===r.name&&!isNight()){r.bubX=px;r.bubY=by-34;talkBub(px,by,now,'#ffd56b');return}
+  if(!zzz&&QUESTCLEARW===r.name&&mainStoryBubbleReady(r)){r.bubX=px;r.bubY=by-34;talkBub(px,by,now,'#ffd56b');return}
   if(r.act&&(r.act.type==='eat'||r.act.type==='forage')&&r.act.stage==='do'&&!zzz){const p=Math.max(0,Math.min(1,r.hunger/hMax(r))),gx=px-12,gy=py+11,g=()=>{ctx.fillStyle='rgba(0,0,0,.5)';rr(ctx,gx,gy,24,6,3);ctx.fillStyle=p>=.999?'#8fd36a':'#ffc766';rr(ctx,gx+1,gy+1,Math.max(2,22*p),4,2)};if(BUBQ)BUBQ.push(g);else g()}/* ごはん中の、お腹ゲージの回復 */
-  if(!zzz&&TALKW===r.name){r.bubX=px;r.bubY=by-34;talkBub(px,by,now);return}
+  if(!zzz&&TALKW===r.name&&mainStoryBubbleReady(r)){r.bubX=px;r.bubY=by-34;talkBub(px,by,now);return}
   if(!zzz&&SEVW[r.name]){r.bubX=px;r.bubY=by-34;talkBub(px,by,now,'#ffb3d1');return}
   if(!zzz&&SUBW[r.name]){r.bubX=px;r.bubY=by-34;talkBub(px,by,now,'#ffd56b');return}/* サブクエスト：黄色の吹き出し *//* 話したそうにしている：水色の吹き出し */
   if(CLAPON)return;/* 拍手中は吹き出しを出さない */
@@ -422,8 +423,8 @@ function drawYatai(px,py,front,now,st){const f=FESTA.F['st_'+st.el];if(!FESTA.ok
 function drawGod(now){
   if(!godHere())return;const GX=godX(),GY=godY(),px=GX*TS,py=GY*TS+Math.sin(now/700)*3;
   shadow(ctx,px,GY*TS+16,14,4);
-  if(QUESTCLEARW===GOD){const f=()=>talkBub(px,py-28,now,'#ffd56b');if(BUBQ)BUBQ.push(f);else f()}
-  else if(TALKW===GOD){const f=()=>talkBub(px,py-28,now);if(BUBQ)BUBQ.push(f);else f()}
+  if(QUESTCLEARW===GOD&&mainStoryBubbleReady()){const f=()=>talkBub(px,py-28,now,'#ffd56b');if(BUBQ)BUBQ.push(f);else f()}
+  else if(TALKW===GOD&&mainStoryBubbleReady()){const f=()=>talkBub(px,py-28,now);if(BUBQ)BUBQ.push(f);else f()}
   else if(S.feat.shop){ctx.fillStyle='rgba(31,59,58,.9)';rr(ctx,px-17,py-58,34,13,6);ctx.fillStyle='#ecdcbc';ctx.font='9px \"PixelMplus10\",\"Hikomi\",\"Hiragino Maru Gothic ProN\",sans-serif';ctx.textAlign='center';ctx.fillText('こうかん',px,py-48.5);ctx.textAlign='start'}
   const g=ctx.createRadialGradient(px,py-12,4,px,py-12,36);g.addColorStop(0,'rgba(255,250,210,.4)');g.addColorStop(1,'rgba(255,250,210,0)');ctx.fillStyle=g;ctx.fillRect(px-36,py-48,72,72);
   const G2=SPR.god,GC=window.CHIPS&&CHIPS.god,GI=GC&&chipImgs(GC,'god')[0];if(GI&&GI.ok){const sm=ctx.imageSmoothingEnabled;ctx.imageSmoothingEnabled=false;ctx.drawImage(GI,Math.round(px*2)/2+GC.ax/2,Math.round((py+16)*2)/2+GC.ay/2,GC.w/2,GC.h/2);ctx.imageSmoothingEnabled=sm}/* ドット絵（1ドットを2×2に分けた細かさ） */else if(G2.ok){const h=58,w=h*G2.w/G2.h;ctx.drawImage(G2.img,px-w/2,py+16-h,w,h)}else{
