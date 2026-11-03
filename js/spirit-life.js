@@ -278,7 +278,7 @@ function trySocial(r,G){const sb=socialBest(r,G);if(!sb)return false;const best=
 const NIGATE={fire:{fountain:30},wood:{campfire:17},water:{campfire:17},earth:{swing:27},wind:{sandbox:20}};/* 属性ごとの、すこしにがてなおもちゃ：ほかより少しえらばれにくい。数字は、遊んだときのたのしさ（ふつうは BL の play.fun） */
 const FAVTOY={earth:['sandbox'],wood:['swing'],water:['fountain'],fire:['campfire'],wind:['slide','seesaw']};/* 属性ごとに、よく遊ぶおもちゃ（ほかの子より選ばれやすい） */
 function goPlay(r,G,strict){
-  const allowFishing=Math.random()<.5;let best=null,bs=-1e9;
+  const allowFishing=Math.random()<.25;let best=null,bs=-1e9;
   for(let j=0;j<W*H;j++){const d=G.dist[j];if(d<0||d>45)continue;const o=S.obj[j];
     if(o==='swing'&&free('o'+j,BL[o].play.cap)&&!toyTired(r,j)){/* 花では遊ばない */const p=BL[o].play;const ng=(NIGATE[r.elem]||{})[o],s=p.pt*3+(r.like===o?6:0)+((FAVTOY[r.elem]||[]).includes(o)?7:0)+spotN(j,'park','park2')*4-(ng!=null?6:0)-d*.3+Math.random()*2;if(s>bs){bs=s;best={type:'play',stand:j,o:{key:'o'+j,obj:j,what:o,fun:ng!=null?ng:p.fun,dur:p.dur,pt:p.pt,pw:p.pw,nig:ng!=null}}}}
     const fk0=adjOf(j,k=>{const t=typeAt(k),p=t&&BL[t]&&BL[t].play;return !!(p&&p.adj&&free('o'+anc(k),p.cap)&&!toyTired(r,anc(k)))}),fk=fk0>=0?anc(fk0):-1;
