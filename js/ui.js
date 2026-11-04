@@ -328,7 +328,7 @@ function renderSheet(){
      else{
      const st=el('<div class="sec"><div class="stats"></div></div>'),g=st.querySelector('.stats');
      for(const tk of[(r.vr||{}).tr,isKey(r.name)?'kizuna':null]){const T2=TRAITS[tk];if(T2){const d=el('<div class="stat" style="display:block"><span style="display:block">特性</span><b style="display:block;text-align:left;margin-top:2px"></b><small style="display:block;color:var(--sub,#888);margin-top:2px"></small></div>');d.querySelector('b').textContent=T2[0];d.querySelector('small').textContent=T2[1];g.appendChild(d)}}/* キーキャラは「きずな」も持つ */
-     const Z=rStat(r,lv);for(const[k,v]of[['攻撃力',Z.atk?String(Z.atk):'なし'],['作業スピード',String(Math.floor(Z.work))],['移動速度',String(Math.floor(Z.move))],['スタミナ',String(Math.floor(Z.sta))],['持てる数',heldN(r)+' / '+Z.cap]])g.appendChild(el('<div class="stat"><span>'+k+'</span><b>'+v+'</b></div>'));
+     const Z=rStat(r,lv);for(const[k,v]of[['攻撃力',Z.atk?String(Math.floor(Z.atk+1e-9)):'なし'],['作業スピード',String(Math.floor(Z.work))],['移動速度',String(Math.floor(Z.move))],['スタミナ',String(Math.floor(Z.sta))],['持てる数',heldN(r)+' / '+Z.cap]])g.appendChild(el('<div class="stat"><span>'+k+'</span><b>'+v+'</b></div>'));
      body.appendChild(st)}}
     if(isNew){const nb=el('<button class="btn pri">つぎへ</button>');nb.onclick=()=>{sfx('next');closeSheet();dialog([[r.name,helloLine(r)]],()=>checkQuest())};/* 来た子が、ひとことあいさつ */body.appendChild(nb);return}
     const b=el('<button class="btn pri">おやつをあげる（食料1）</button>');b.disabled=S.food<1;b.onclick=()=>{const it=takeFood(1,'raw')[0];endAct(r);r.meal={u:.3*fullN(r),pt:1,e:FOODS[it]?FOODS[it].e:'🍙',items:[it]};startAct(r,null,'eat',-1,{snack:1});addFloat(r.x,r.y-1.6,'わーい！','#ffd38a');sfx('eat');closeSheet()}/* おやつ：よろこんで、その場で食べる */;body.appendChild(b);
