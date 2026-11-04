@@ -20,7 +20,7 @@ function tryJob(r,G,k){
     const cp=q=>typeAt(q)===camp&&free('o'+anc(q),2);j=nearest(G,j=>adjOf(j,cp)>=0,60);if(j>=0){const q=anc(adjOf(j,cp));startAct(r,G,k,j,{key:'o'+q,obj:q,camp:true});return true}
     for(const ns of nat){const nt=q=>ns.includes(S.obj[q])&&free('o'+q,1);j=nearest(G,j=>adjOf(j,nt)>=0,40);if(j>=0){const q=adjOf(j,nt);startAct(r,G,k,j,{key:'o'+q,obj:q});return true}}return false}
   case'cookS':case'cook':{const sp=k==='cookS';if(!cnt('oven')&&!cnt('cooktable')||!(foodCap()>0)||isNight())return false;const rs=RECIPES.filter(R=>Object.keys(R.need).every(k=>(S.fs[k]||0)>=R.need[k]));if(!rs.length)return false;
-    if(!S.ovenSet)S.ovenSet={};const ok=q=>{const R=rs.find(R=>R.out===S.ovenSet[q]);return !!R&&dishSt(R)===S.obj[q]&&(r.elem===R.el||!sp&&!specFree(R.el,r))};/* 守り神さまがえらんだ料理だけ作る。とくいな子が手あきなら、その子にまかせる（cookS は、とくいな料理だけ） */
+    if(!S.ovenSet)S.ovenSet={};const ok=q=>{const R=rs.find(R=>R.out===S.ovenSet[q]);return !!R&&dishSt(R)===S.obj[q]&&r.elem===R.el};/* 守り神さまがえらんだ料理だけ作る。料理は、その料理の属性のせいれいだけが作る */
     const ov=q=>COOKST.has(S.obj[q])&&ok(q)&&!ashed(q)&&free('o'+q,1)&&!S.res.some(x=>x.cing&&x.cing.ov===q);j=nearest(G,j=>adjOf(j,ov)>=0,80);if(j<0)return false;const q=adjOf(j,ov),R=RECIPES.find(x=>x.out===S.ovenSet[q]);
     const sj=nearestVia(G,bfs(j%W,(j/W)|0),j=>storeAdj(j,'food')>=0,80);if(sj<0)return false;/* 材料は、料理の家具までの道のりがいちばん短くなる食料箱からとる */
     startAct(r,G,'cgrab',sj,{rec:R.out,ov:q});return true}
