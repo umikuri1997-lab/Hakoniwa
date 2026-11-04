@@ -86,7 +86,7 @@ function onTap(sx,sy){DLGTAP=performance.now();/* タップで始める会話は
     if(o==='farm')return openSheet('farm',j);
     if(BEDSET.has(o))return openSheet('bed',j);
     if(o==='stor')return openSheet('food');
-    if(o==='oven')return openSheet('oven',j);
+    if(o==='oven'||o==='cooktable')return openSheet('oven',j);
     if(o==='plot')return toast('耕す前の畑：せいれいが耕しにくる');
     if(o==='sprout')return toast(BL[S.dyn[j].plant].name+'を植える場所：せいれいが植えにくる');
     if(o==='site'){const d=S.dyn[j];return toast(BL[d.build].name+'を建設中：'+Math.floor(d.p/d.need*100)+'%')}
@@ -94,7 +94,7 @@ function onTap(sx,sy){DLGTAP=performance.now();/* タップで始める会話は
     const fw=o&&(FENCE_IDS.has(o)||HOME_WALLS.has(o)||HOME_DOORS.has(o));/* 柵・塀・家の壁・ドア・門は、短い知らせのまま */
     if(fw&&breakable(o)&&BL[o].brk)return toast(BL[o].name+'：'+withAttr(o,BL[o].desc||'')+'（じょうぶさ '+Math.floor(S.hp[j]??BL[o].hp)+'/'+BL[o].hp+'）');
     if(fw&&breakable(o))return toast(BL[o].name+'：じょうぶさ '+Math.floor(S.hp[j]??BL[o].hp)+'/'+BL[o].hp);
-    if(o==='rock'||o==='deadtree'||o==='ntree'||o==='bamboo')return toast(BL[o].name+'：のこり '+Math.max(0,10-(S.hp['n'+j]||0))+'/10');
+    if(o==='rock'||VEINS[o]||o==='deadtree'||o==='ntree'||o==='bamboo')return toast(BL[o].name+'：のこり '+Math.max(0,10-(S.hp['n'+j]||0))+'/10');
     if(o==='takenoko')return toast('たけのこ：あと '+Math.max(1,3-((S.dyn[j]||{}).age||0))+'日で竹になる');
     if(o==='watch'||o==='yogan')return openSheet('watch',j);
     if(o==='composter')return cmpPop(j);
