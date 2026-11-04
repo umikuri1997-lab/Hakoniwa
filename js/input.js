@@ -94,7 +94,7 @@ function onTap(sx,sy){DLGTAP=performance.now();/* タップで始める会話は
     const fw=o&&(FENCE_IDS.has(o)||HOME_WALLS.has(o)||HOME_DOORS.has(o));/* 柵・塀・家の壁・ドア・門は、短い知らせのまま */
     if(fw&&breakable(o)&&BL[o].brk)return toast(BL[o].name+'：'+withAttr(o,BL[o].desc||'')+'（じょうぶさ '+Math.floor(S.hp[j]??BL[o].hp)+'/'+BL[o].hp+'）');
     if(fw&&breakable(o))return toast(BL[o].name+'：じょうぶさ '+Math.floor(S.hp[j]??BL[o].hp)+'/'+BL[o].hp);
-    if(o==='rock'||o==='deadtree'||o==='ntree'||o==='bamboo')return toast(BL[o].name+'：のこり '+Math.max(0,10-(S.hp['n'+j]||0))+'/10');
+    if(o==='rock'||VEINS[o]||o==='deadtree'||o==='ntree'||o==='bamboo')return toast(BL[o].name+'：のこり '+Math.max(0,10-(S.hp['n'+j]||0))+'/10');
     if(o==='takenoko')return toast('たけのこ：あと '+Math.max(1,3-((S.dyn[j]||{}).age||0))+'日で竹になる');
     if(o==='watch'||o==='yogan')return openSheet('watch',j);
     if(o==='composter')return cmpPop(j);
@@ -105,7 +105,7 @@ function onTap(sx,sy){DLGTAP=performance.now();/* タップで始める会話は
       if(av>0&&(S.setSh||0)>=2){
         if(isNight())return toast('最後の光を届けるのは、朝になってから');
         if(!S.flags.finalWon)return toast('まず、御神木に集まる影を追いはらおう');
-        if(!S.sev?.e16g||!S.sev?.e09)return toast(!S.sev?.e16g?'先に、フタバの力を受け継ぐお話を聞こう':'先に、最後のかけらを迎えるお話を聞こう');
+        if(!S.sev?.e09)return toast('先に、最後のかけらを迎えるお話を聞こう');
         const NM=['木のせいれい','御神木','ヌシのかけら','みどりのマス','せいれいパワー'],miss=clearConds().findIndex(c=>!c[1]);if(miss>=0)return toast(NM[miss]+'が足りません','warn');
       }
       if(av>0)return sacredOfferShard(j,()=>{S.setSh=(S.setSh||0)+1;sfx('shard');burst(j,'furn','none');toast('御神木に、ヌシのかけらの光を届けた（'+S.setSh+'/3）','good');logEv('かけらの光を御神木へ届けた');dirty=true;if(S.setSh>=3)scheduleGrassReunion();checkQuest();});/* かけらは、フタバが御神木へ歩いていって、ささげる */

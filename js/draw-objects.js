@@ -144,6 +144,7 @@ function drawRoofItem(c,id,x,y){/* ガゼボ・東屋：2×2マス（左上が x
   if(gz){c.fillStyle='#efe7da';c.fillRect(x+30,y-38,4,9);c.beginPath();c.arc(x+32,y-39,3,0,7);c.fill()}else{c.fillStyle=R[1];c.fillRect(x+22,y-33,20,4)}}
 const DOKU_PX=['..................rrrr....','................rrwrrdr...','...............rrrrrwrdd..','...............ddrrrrddd..','..................ss......','.....aaaaaaaaa....st......','...aabbbbbbbbbaa..st.aa...','..abbhhbbbbbbbbbaaststbba.','.abbhbbbbbbhhbbbbbtttbbba.','.abbbbbbbbbhbbbbbbbbbhbba.','.abbbbhhbbbbbbbbbbbbbbbba.','..abbbbbbbbbbbbhhbbbbbba..','...aabbbbbbbbbbbbbbbbaa...','.....aaaaaaaaaaaaaaaaa....'];/* どくの罠の絵（24×14） */
 function drawObj(c,id,x,y,i,g,now){
+  if(VEINS[id]){drawVein(c,id,x,y,i);return}/* 鉱脈 */
   if(id==='tower'&&WD===0){drawStoryTree(c,x,y,i,now,ICON);return;}
   if(STAIRS.has(id)){if(ICON||i==null)drawStair(c,id,x,y,0,y+3,y+29);else drawStairObj(c,i,id);return}/* 階段は、段差といっしょに cliffStrip で描く（ここはアイコンだけ） */
   if(CANOPY.has(id)){if(ICON||i==null){const ch=window.CHIPS&&CHIPS[id],bk=window.CHIPS&&CHIPS[id+':back'];if(bk)drawChip(c,bk,id,x,y,0,i);if(ch&&drawChip(c,ch,id,x,y,0,i))return;c.save();c.translate(x+3,y+11);c.scale(.4,.4);drawRoofItem(c,id,0,0);c.restore()}else drawRoofItem(c,id,x,y);return}/* ガゼボ・東屋（アイコンは小さく） */

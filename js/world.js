@@ -37,7 +37,7 @@ let S=null;
 const resv=new Map();
 let STATUE=-1,OBOX=-1,BOARD=-1,counts={},LIGHTS=[],JARS=[],COMPS=[],LITP=[],STELES=[],TOWERS=[],ENVE={},NEARMILL=new Set(),STUMPB=new Set(),NEARVANE=new Set(),NEARCART=new Set(),NEARTOOL=new Set(),NEARJORO=new Set(),NEARSIGN=new Set(),NEARTREE=new Set(),NEARPARA=new Set(),SPOTJ=new Map(),SPOTM=new Map(),SPOTI=[],RUGC=new Map(),RFC=new Map(),ENVG=null,REV=new Set(),ATTR={},BASEPCT=0,GRASSN=0;const GRASS_GOAL=2000;
 function newState(w){w=w||0;
-  const s={v:8,mig:9,flags:{berryHalf:1,berryHalf2:1,land2:1,land3:1,land4:1,arrow0:1,q3ins:1,qmerge1:1,companionStory:1,fieldStoryV2:1,sacredStoryV1:1,sacredFootprint3:1,sacredFootprint4:1,trfit1:1,cookfit1:1,watch5:1,xp12:1},placed:{},feat:{build:true},inv:{},orders:[],enemyOn:false,nights:0,godGone:false,godShown:false,nushi:null,
+  const s={v:8,mig:9,flags:{berryHalf:1,berryHalf2:1,land2:1,land3:1,land4:1,arrow0:1,q3ins:1,qmerge1:1,companionStory:1,fieldStoryV2:1,sacredStoryV1:1,sacredFootprint3:1,sacredFootprint4:1,trfit1:1,cookfit1:1,watch5:1,xp12:1,veins1:1},placed:{},feat:{build:true},inv:{},orders:[],enemyOn:false,nights:0,godGone:false,godShown:false,nushi:null,
     lv:1,bossKills:0,nightHurt:0,nightHad:false,wave:null,lastWarn:0,
     ref:{},ground:new Array(W*H).fill(0),floor:new Array(W*H).fill(''),obj:new Array(W*H).fill(''),dyn:{},hp:{},
     res:[],enemies:[],pt:25,totalPt:0,food:0,fs:{},cseed:{imo:4},crops:{imo:true},mat:{wood:0,stone:0},regrow:[],t:w===0?15*60:12*60,/* 草原は15時からはじまる */speed:1,
@@ -57,7 +57,7 @@ function ensureStor(s){for(const id in BL){const b=BL[id];if(b&&(b.offerOnly||b.
 /* 特性：ひとりにひとつ。キーキャラは決まっている */
 const TRK=el=>Object.keys(TRAITS).filter(k=>k!=='kizuna'&&k!=='tane'&&k!=='nebari'&&(k!=='shukaku'||el==='wood'));/* しゅうかく上手は木の子だけ（収穫をするのは木の子） *//* たねはこびは風の子だけ（mkRes）。料理じょうずは、どの属性にも出る（料理はだれでもする） */const TRAITS={hayaashi:['はやあし','歩く速さ1.25倍'],hataraki:['はたらきもの','作業の速さ1.25倍'],shukaku:['しゅうかく上手','畑や木の実の収穫+1'],kikori:['木こり','木を切ると、木材+1'],ishiku:['石工','石をほると、石材+1'],chikara:['力もち','持てる数+2'],shoshoku:['小食','おなかのへる速さ0.8倍'],tafu:['タフ','つかれる速さ0.75倍'],nebari:['ねばりづよい','つかれる速さ0.75倍・つかれのとれる速さ2倍'],kizuna:['めぐり','消えても、次の朝にもどってくる'],/* ねばりづよい・めぐりは、キーキャラだけ（TRK でのぞく）。ねばりづよいは、章のはじめからいる子 */genki:['元気いっぱい','たのしさのへる速さ0.6倍'],ryouri:['料理じょうず','料理にかかる時間0.7倍'],tane:['たねはこび','外のふしぎな種を拾いに行く']};
 const EL_WORK={water:1.3,earth:.75},EL_STA={water:.7,earth:1.45};/* 属性ごとの作業スピード・スタミナ */
-const trt=(r,k)=>!!(r&&r.vr&&r.vr.tr===k),recK=r=>(trt(r,'nebari')?2:1)*(NEARTREE.has((r.y|0)*W+(r.x|0))?1.3:1);/* ご神木のまわり5マス：つかれのとれる速さ+30% *//* recK：つかれのとれる速さ（ねばりづよい子は2倍） */
+const trt=(r,k)=>!!(r&&r.vr&&r.vr.tr===k),recK=r=>(trt(r,'nebari')?2:1)*gearStat(r).rec*(NEARTREE.has((r.y|0)*W+(r.x|0))?1.3:1);/* ご神木のまわり5マス：つかれのとれる速さ+30% *//* recK：つかれのとれる速さ（ねばりづよい子は2倍） */
 /* せいれいごとのばらつき：色(h色相・l明るさ)、まつ毛・ほっぺ、足の速さ・食べる量・力 */
 const KEYVR={'フタバ':{key:true,tr:'nebari',h:0,l:0,lash:false,cheek:true,spd:1,eat:1,pow:1,sta:1,vo:1.18},'ノドカ':{key:true,tr:'tafu',h:0,l:0,lash:false,cheek:true,spd:1,eat:1,pow:1,sta:1,vo:1.02},'ホムラ':{key:true,tr:'nebari',pk:'fireA',h:0,l:0,lash:false,cheek:true,spd:1,eat:1,pow:1,sta:1,vo:1.08},'シズク':{key:true,tr:'hataraki',h:0,l:0,lash:false,cheek:true,spd:1,eat:1,pow:1,sta:1,vo:1.12},'ホノ':{key:true,tr:'',pk:'fireB',h:-6,l:.04,lash:false,cheek:false,spd:1,eat:1,pow:1,sta:1,vo:.95},'アオ':{key:true,tr:'shoshoku',h:8,l:0,lash:true,cheek:false,spd:1,eat:1,pow:1,sta:1,vo:1.12},'フウ':{key:true,tr:'hayaashi',pk:'wind',h:0,l:-.03,lash:true,cheek:true,spd:1,eat:1,pow:1,sta:1,vo:1.05}};
 function mkVar(name,el){if(KEYVR[name])return Object.assign({},KEYVR[name]);const R=()=>Math.random()*2-1;const sg=Math.random()<.5?-1:1;return{h:Math.round(sg*(12+Math.random()*33)),l:Math.round(R()*14)/100,lash:Math.random()<.4,cheek:Math.random()<.5,spd:Math.round((1+R()*.2)*100)/100,eat:Math.round((1+R()*.2)*100)/100,pow:Math.round((1+R()*.25)*100)/100,sta:Math.round((1+R()*.2)*100)/100,vo:Math.round((1.12+R()*.16)*100)/100,tr:pick(TRK(el))}}
@@ -100,14 +100,14 @@ function genWorld(s,w){
   for(let d=1;d<=4;d++){const j=(CY-4)*W+hx(d);s.obj[j]='farm';s.floor[j]='';s.dyn[j]={g:50,wet:0,crop:'imo'}}/* 最初の畑は4つ。家の道をはさんだ向かいに横1列。作物は、はじめはいもだけ */
   }
   if(V){const put=id=>{let best=-1,bd=1e9;for(let y=CY-7;y<CY;y++)for(let x=CX-6;x<CX;x++){const j=y*W+x;if(s.ground[j]===1||s.obj[j]||s.floor[j])continue;if([j-1,j+1,j-W,j+W,j-W-1,j-W+1,j+W-1,j+W+1].some(k=>s.ground[k]===1||s.obj[k]==='stor'||s.obj[k]==='mbox'))continue;const d=Math.hypot(x+.5-(CX-3),y+.5-(CY-3.5));if(d<bd){bd=d;best=j}}if(best>=0)s.obj[best]=id};{const j=(CY+4)*W+CX-8;s.obj[j]='stor';s.floor[j]='floor'}put('mbox');for(let y=CY-13;y<CY-8;y++){const j=y*W+CX;if(!s.obj[j]&&s.ground[j]!==1)s.floor[j]='path'}st2Place(s)}/* 火山のふもと：食料箱は古い家の中、素材箱は村の北西に（コワイノは南から来るので） */
-  genLand(s,w)/* 川と段差（いちばん最後：ほかの物をおいたあと） */
+  genLand(s,w)/* 川と段差（いちばん最後：ほかの物をおいたあと） */;if(V)placeVeins(s)/* 火山の鉱脈 */
 }
 
 /* ---------- 火山のふもと（ステージ2）：温泉3か所・火山・熱の道 ---------- */
 const HSPC={a:[CX+4.8,CY+4.8],b:[CX-8.5,CY-8],c:[CX+.5,CY-15]},SPN={a:'入口の温泉',b:'西の温泉',c:'奥の温泉'};
 const VOLJ=(OFF+1)*W+(CX-1),D1=(OFF+9)*W+(CX-4),D2=(CY-18)*W+(CX+5),CRACKS=[-2,-1,0,1,2].map(d=>(OFF+9)*W+CX+d),BVOL=[D2-1,D2+1,D2-W,D2+W];
 const ASHT=new Set(['oven','bench','takebench','tub','sink','campfire','hotstone']);
-const NATK=['rock','deadtree','ntree','berry','bamboo','takenoko'];
+const NATK=['rock','vcopper','viron','vobsid','vsilver','vgold','deadtree','ntree','berry','bamboo','takenoko'];
 const festOn=()=>!!S&&WD===1&&S.festDay!=null&&(S.festDay===dayNo()||S.festDay===dayNo()-1&&hour()<6);/* おまつり：その日の朝6時まで */
 function festStart(){S.festN=(S.festN||0)+1;/* おまつりをひらいた回数 */const L=WD===1?[[HOMURA,'おまつりかい！ ちょうちんの火、いい色だねえ。'],[SHIZUKU,'みなさんで、おどりましょう。ごちそうもありますよ。'],[HOMURA,'たまには、こういう日もいいもんさ。']]:[[POKO,'#surprise|わあ、おまつりだ！ ちょうちんが、いっぱい！'],[MINA,'みんなで、おどろうねぇ。ごちそうもあるよぉ。'],[POKO,'ヌシ様にも、この景色を見せてあげたいな。']];talkOnce('fest1',L.filter(l=>S.res.some(r=>r.name===l[0])))}/* はじめてのおまつりの会話 */
 function festBegin(){S.festAtQ=QUESTS[S.quest]&&QUESTS[S.quest].id;/* どのクエストのときにひらいたか（前にひらいたおまつりは、クエストの数に入れない） */for(const r of S.res){r.fun=100;r.energy=100;spawnFX(r.x-.5,r.y-.6,'#ffd84a')}sfx('level');toast('おまつりがはじまった！ 屋台がならんでいる','good');festStart()}/* おまつりの朝：せいれいの半分が、屋台の店番をする */
@@ -203,7 +203,7 @@ const dayNo=()=>Math.floor(clk()/1440)+1;
 
 const nightLock=()=>S&&S.enemyOn&&isNight();/* 夜（コワイノの時間）は、建てることも解体もできない */
 const isNight=()=>{const h=hour();return h>=23||h<6},isDark=()=>{const h=hour();return h>=21||h<6};/* せいれいが寝るのは23時 */
-function foeAt(e,r){/* コワイノ e が、せいれい r の3マス以内か、r のいる家の中にいる */if(r.hidden||r.coffin)return false;if(Math.max(Math.abs(e.x-r.x),Math.abs(e.y-r.y))<=3)return true;const h=roomOf((r.y|0)*W+(r.x|0));return !!h&&h.set.has((e.y|0)*W+(e.x|0))}
+function foeAt(e,r){/* コワイノ e が、せいれい r の3マス以内か、r のいる家の中にいる */if(r.hidden||r.coffin)return false;if(Math.max(Math.abs(e.x-r.x),Math.abs(e.y-r.y))<=(r.gear&&gearStat(r).fear?2:3))return true;/* そうび：こわがるきょり2マス */const h=roomOf((r.y|0)*W+(r.x|0));return !!h&&h.set.has((e.y|0)*W+(e.x|0))}
 function nearRes(e){return e.hitT!=null&&S.t-e.hitT<5||S.res.some(r=>foeAt(e,r))}/* だれかの3マス以内・だれかのいる家に来たコワイノと、塀・壁・建物をこうげきしているコワイノ（火の子がむかえうつ） */
 const anc=j=>{if(S.obj[j]==='part'||(S.obj[j]==='site2'&&S.ref[j]!=null))return S.ref[j];if(S.obj[j]==='site2')for(const k of[j-1,j+1,j-W])if(S.obj[k]==='site')return k;return j};/* 古いセーブの神殿の足場にも対応 */
 const typeAt=j=>S.obj[anc(j)];
@@ -240,7 +240,7 @@ function ladderLink(a,b){/* b がハシゴで、a がその上のマス */if(!LA
 const onLadder=(a,b)=>ladderLink(b,a)||ladderLink(a,b);/* ハシゴで上り下りする1歩（ハシゴと、その上のマスのあいだ）。ハシゴのマスに横から入るのは、ふつうに歩く */
 function jumpEdge(a,b){return hiAt(a)!==hiAt(b)&&!stairLink(a,b)&&!stairLink(b,a)&&!ladderLink(a,b)&&!ladderLink(b,a)}/* 段差を飛ぶ所（階段で上り下りする所はちがう） */
 function zAt(x,y){/* その場所の高さ（ドット）。階段の上は、高いほうのはしから低いほうへ少しずつ下がる */const c=(y|0)*W+(x|0);if(S&&LADDERS.has(S.obj[c])){const d=ladderDir(c),ax=c%W,ay=(c/W)|0,t=d===0?y-ay:d===1?x-ax:ax+1-x;return hiAt(c)*LIFT+(d<0?0:LIFT*Math.max(0,Math.min(1,1-t)))}/* ハシゴの上：うしろの高いマスへ近いほど高い */const a=stairOf(c);if(a<0)return hiAt(c)*LIFT;const d=stairDir(a);if(d<0)return hiAt(c)*LIFT;const ax=a%W,ay=(a/W)|0,t=d===0?2*(y-ay):d===1?x-ax:d===2?ay+1-y:ax+1-x;return LIFT*hiAt(a)+LIFT*Math.max(0,Math.min(1,1-t/2))}/* 2マスで下がる（手前向きは1マス） */
-const HI_OK=new Set(['deadtree','rock','berry','bamboo','tree','ntree','fruit']);/* 段差を作ってよい物（自然の物） */
+const HI_OK=new Set(['deadtree','rock','vcopper','viron','vobsid','vsilver','vgold','berry','bamboo','tree','ntree','fruit']);/* 段差を作ってよい物（自然の物） */
 const LANDSEED=w=>w===1?20261102:w===FREE?20261022:20261018;
 function landMade(s,j){const o=s.obj[j];return !!s.floor[j]||o==='part'||!!o&&!!BL[o]&&!BL[o].natural&&!WEEDS.has(o)}/* 人の作った物（床・道・家具・建物）がある */
 function genRiver(s,w,o){/* 川：草原（とフリー）は北のはしから南のはしへ、火山は西のはしから東のはしへ（南がわを横切る）。村のまん中から26〜30マスはなれて、くねくね流れる。支流が1本。浅瀬（ground 2）は、本流に3か所・支流に1か所。o.ns：火山でも南北（前の川のマスをしらべるとき）。o.dry：マスをしらべるだけ */

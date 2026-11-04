@@ -196,8 +196,9 @@ function renderSheet(){
       sec('素材（'+matTot()+'/'+matCap()+'）',Object.keys(MATN).filter(k=>(S.mat[k]||0)>0).map(k=>[mic(k),MEMO[k]||'🌿',MATN[k],S.mat[k],()=>otakiPop(k)]),'素材は、ありません');/* 素材をタップすると、おたきあげのメニュー */
       {const q=S.otakiQ||{},L=[];const add=o=>{for(const k in o)if(o[k])L.push(MATN[k]+o[k])};add(q);S.res.forEach(r=>r.otaki&&add(r.otaki));if(L.length){const p=el('<p class="note"></p>');p.textContent='おたきあげまち：'+L.join('・');body.appendChild(p)}}
       sec('食べ物（'+S.food+'/'+foodCap()+'）',Object.keys(FOODS).filter(k=>(S.fs[k]||0)>0).map(k=>[ICONS[k]||null,FOODS[k].e,FOODS[k].name,S.fs[k]]),'食べ物は、ありません')}
+    gearInv(body);/* そうび */
     const grid=el('<div class="grid"></div>');grid.appendChild(Object.assign(el('<b style="grid-column:1/-1;margin-top:10px"></b>'),{textContent:'おそなえ箱'}));
-    const groups=[['ブロック',BLOCKS.filter(id=>inv(id)>0)],['うえる',PLANTS.filter(id=>inv(id)>0)],...furnitureGroups(FURN.filter(id=>inv(id)>0)),['まもり',['arrow','arrow2'].filter(id=>inv(id)>0)]];
+    const groups=[['ブロック',BLOCKS.filter(id=>inv(id)>0)],['うえる',PLANTS.filter(id=>inv(id)>0)],...furnitureGroups(FURN.filter(id=>inv(id)>0)),['まもり',AMMO.filter(id=>inv(id)>0)]];
     const ids=groups.flatMap(([,items])=>items);
     for(const [name,ids]of groups){if(!ids.length)continue;const heading=el('<b style="grid-column:1/-1;margin-top:8px"></b>');heading.textContent=name;grid.appendChild(heading);for(const id of ids){
       const b=el('<button class="slot"><span class="ct"></span><img alt=""><span class="nm"></span></button>');
@@ -221,15 +222,17 @@ function renderSheet(){
       const bi=p.querySelector('.bar i');bi.style.width=Math.min(100,o.prog/o.need*100)+'%';bi.style.background='#e0a43a';bd.appendChild(p)}
     body.appendChild(bd);
     const s2=el('<div class="sec"><h3>依頼を書く</h3><div class="ctabs"></div><div class="rows"></div></div>');
-    CRAFT_TABS.forEach(([nm],i)=>{const t=el('<button class="ctab'+(i===craftTab?' on':'')+'"></button>');t.textContent=nm;t.onclick=()=>{craftTab=i;renderSheet()};s2.querySelector('.ctabs').appendChild(t)});
-    for(const id of CRAFT_TABS[craftTab][1]){const b=BL[id];
-      if(!recipeKnown(id)||!lvOK(id)&&!S.recipes[id])continue;/* 思いついていない・レベル不足は出さない */
+    const gTab=i=>CRAFT_TABS[i][0]==='そうび';if(gTab(craftTab)&&WD!==1&&!GEAR_IDS.some(id=>S.recipes&&S.recipes[id]))craftTab=0;
+    CRAFT_TABS.forEach(([nm],i)=>{if(gTab(i)&&WD!==1&&!GEAR_IDS.some(id=>S.recipes&&S.recipes[id]))return;/* そうびの欄は火山から */const t=el('<button class="ctab'+(i===craftTab?' on':'')+'"></button>');t.textContent=nm;t.onclick=()=>{craftTab=i;renderSheet()};s2.querySelector('.ctabs').appendChild(t)});
+    let gPrev=null;for(const id of CRAFT_TABS[craftTab][1]){const b=BL[id];
+      if(!recipeKnown(id)||!lvOK(id)&&!S.recipes[id])continue;{const h=gearBoardHead(id,gPrev);gPrev=id;if(h)s2.querySelector('.rows').appendChild(h)}/* そうび：わくごとの見出し *//* 思いついていない・レベル不足は出さない */
       /* レシピをまだ知らない */
       const r=helpify(rowEl(b.name+(b.qty?'×'+b.qty:'')+'　所持：'+inv(id),'',iconURL(id),b.mat?matNeedHTML(b.mat)+(b.sand?'<span class="mneed" style="margin-right:6px;'+((S.sand||0)>=b.sand?'':'color:#c0392b;font-weight:700')+'">やすらぎの砂（'+(S.sand||0)+'/'+b.sand+'）</span>':'')+Object.keys(b.food||{}).map(k=>'<span class="mneed" style="margin-right:6px;'+((S.fs[k]||0)>=b.food[k]?'':'color:#c0392b;font-weight:700')+'">'+FOODS[k].name+'（'+(S.fs[k]||0)+'/'+b.food[k]+'）</span>').join('')+' ':''),withAttr(id,b.desc));
       if(makerOf(id)){const has=elemCount(b.maker)>0,mk=el('<span class="pxpill" style="display:inline-flex;align-items:center;vertical-align:middle;margin-right:4px;border-radius:9px;padding:0 5px 0 1px;font-size:10px;line-height:16px;color:#fff"><img alt="" style="width:16px;height:16px;margin:0"><b style="font-weight:700"></b></span>');mk.classList.add(has?'pm-'+b.maker:'pm-none');/* 色は、わくの絵（index.html の .pxpill.pm-〇〇） */mk.querySelector('img').src=spiritPort(b.maker,48);if(!has)mk.querySelector('img').style.filter='grayscale(1) opacity(.7)';mk.querySelector('b').textContent=ELEM[b.maker].name+(has?'':'・いない');r.querySelector('small').prepend(mk)}/* 作るせいれいの属性：アイコンで短く */
       const bt=el('<button class="btn pri"></button>');
       if(!lvOK(id)){bt.textContent='村Lv'+b.lv;bt.disabled=true;r.classList.add('done')}else{bt.textContent='はる　'+SP(b.pc);bt.disabled=S.pt<b.pc||S.orders.length>=boardMax()||!matOK(b.mat)||!!(orderLock()&&orderLock()!==id);bt.onclick=()=>orderFurn(id)}
       r.appendChild(bt);s2.querySelector('.rows').appendChild(r)}
+    if(gTab(craftTab))gearBoardUp(s2.querySelector('.rows'));/* そうびの強化 */
     if(!s2.querySelector('.rows').children.length)s2.querySelector('.rows').appendChild(el('<div class="empty" style="padding:8px;opacity:.7">まだ作れるものがない</div>'));
     body.appendChild(s2);
     if(S.feat.inv){const ib=el('<button class="btn">もちものを見る</button>');ib.onclick=()=>openSheet('inv');body.appendChild(ib)}
@@ -323,8 +326,9 @@ function renderSheet(){
     box.querySelector('.tx').insertAdjacentHTML('beforeend',gaugeHTML(r)+spiritXpGaugeHTML(r));body.appendChild(box);
     if(!isNew){const sy=el('<p class="story" style="margin:6px 0 2px"></p>');sy.textContent='「'+sayLine(r)+'」';body.appendChild(sy)}
     {const lv=rLv(r);
-     const tb=el('<div class="ctabs"></div>');['ステータス','プロフィール','強化'].forEach((nm,i)=>{const t=el('<button class="ctab'+(i===resTab?' on':'')+'"></button>');t.textContent=nm;t.onclick=()=>{resTab=i;sfx('next');renderSheet()};tb.appendChild(t)});body.appendChild(tb);/* ステータスと、得意・好きなものは別のタブ */
-     if(resTab===2){const sec=el('<div class="sec"></div>'),cost=15+10*(r.boost||0),B=r.bst||(r.bst={}),ST=[['atk','攻撃力'],['pow','作業スピード'],['spd','移動速度'],['sta','スタミナ'],['cap','持てる数']].filter(([k])=>k!=='atk'||r.elem==='fire');/* 攻撃力は火の子だけ */
+     const gOn=WD===1||!!(r.gear&&GSLOTK.some(k=>r.gear[k]))||gearList().length>0;if(!gOn&&resTab===3)resTab=0;/* そうびは火山から */const tb=el('<div class="ctabs"></div>');['ステータス','プロフィール','強化',...(gOn?['そうび']:[])].forEach((nm,i)=>{const t=el('<button class="ctab'+(i===resTab?' on':'')+'"></button>');t.textContent=nm;t.onclick=()=>{resTab=i;sfx('next');renderSheet()};tb.appendChild(t)});body.appendChild(tb);/* ステータスと、得意・好きなものは別のタブ */
+     if(resTab===3)gearSheet(body,r);
+     else if(resTab===2){const sec=el('<div class="sec"></div>'),cost=15+10*(r.boost||0),B=r.bst||(r.bst={}),ST=[['atk','攻撃力'],['pow','作業スピード'],['spd','移動速度'],['sta','スタミナ'],['cap','持てる数']].filter(([k])=>k!=='atk'||r.elem==='fire');/* 攻撃力は火の子だけ */
        for(const[k,nm]of ST){const n=B[k]||0;const row=el('<div class="row" style="align-items:center"><div class="tx"><b></b><small></small></div></div>');row.querySelector('b').textContent=nm+'  +'+n;sec.appendChild(row)}
        const bw=el('<div class="row" style="justify-content:center"><button class="btn pri"></button></div>'),b=bw.querySelector('button');
        b.textContent='パワーをそそぐ（'+SP(cost)+'）';b.disabled=S.pt<cost;/* 強化に上限はない */

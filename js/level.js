@@ -16,16 +16,16 @@ const rLv=r=>{const x=r.xp||0;let l=1;while(l+1<LVXP.length&&x>=LVXP[l+1])l++;re
 const lvF=(lv,k)=>1+k*(Math.min(lv,10)-1);
 /* 10がふつう。レベルアップでふえる量は、せいれいとレベルごとにばらつく（0〜2） */
 function lvGain(r,k,lv){let n=0;for(let l=2;l<=lv;l++){const h=hash(((r.id||0)*131+l*17+(k==='work'?7:3))>>>0);n+=h<.05?2:h<.3?1:0}return n}/* レベルが上がるたびに、5%で+2・25%で+1 */
-const RSC=new WeakMap();function rMul(r,k){const lv=rLv(r);let c=RSC.get(r);if(!c||c.lv!==lv||c.vr!==r.vr||c.b!==r.boost){c={lv,vr:r.vr,b:r.boost,s:rStat(r,lv)};RSC.set(r,c)}return c.s[k]/10*(k==='work'&&r.wkB>S.t?(r.wkM||1.15):k==='move'&&r.mvT>S.t?(r.mvM||1.15):1)}
+const RSC=new WeakMap();function rMul(r,k){const lv=rLv(r);let c=RSC.get(r);if(!c||c.lv!==lv||c.vr!==r.vr||c.b!==r.boost||c.g!==(r.gv||0)){c={lv,vr:r.vr,b:r.boost,g:r.gv||0,s:rStat(r,lv)};RSC.set(r,c)}return c.s[k]/10*(k==='work'&&r.wkB>S.t?(r.wkM||1.15):k==='move'&&r.mvT>S.t?(r.mvM||1.15):1)}
 function ovenMul(j){if(j==null)return 1;const x0=j%W,y0=(j/W)|0;const kinds=new Set();for(let y=y0-3;y<=y0+3;y++)for(let x=x0-3;x<=x0+3;x++){if(x<0||y<0||x>=W||y>=H)continue;const o=S.obj[y*W+x];if(o&&o!==S.obj[j]&&BL[o]&&BL[o].cat==='cook')kinds.add(o)}return OVENM[Math.min(kinds.size,OVENM.length-1)]}/* 調理の家具がそばにあると、料理が早い（同じ家具は1つ分だけ。下限はなし） */
 const fAtk=lv=>FATKL[lv];/* 火のせいれい：Lv1=1・Lv4=2・Lv7=3・Lv10=4 */
-function rStat(r,lv){const V=r.vr||{},fire=r.elem==='fire';return{
-  atk:fire?fAtk(lv)+((r.bst&&r.bst.atk)||0)+((r.sst&&r.sst.atk)||0):0,/* 攻撃できるのは火の子だけ */
-  work:10*(V.pow||1)*(EL_WORK[r.elem]||1)*(trt(r,'hataraki')?1.25:1)+lvGain(r,'work',lv),
-  move:10*(V.spd||1)*(trt(r,'hayaashi')?1.25:1)*(r.elem==='wind'?1.45:1)+lvGain(r,'move',lv),
+function rStat(r,lv){const V=r.vr||{},fire=r.elem==='fire',G=gearStat(r);/* G：そうび */return{
+  atk:fire?fAtk(lv)+((r.bst&&r.bst.atk)||0)+((r.sst&&r.sst.atk)||0)+G.atk:0,/* 攻撃できるのは火の子だけ */
+  work:10*(V.pow||1)*(EL_WORK[r.elem]||1)*(trt(r,'hataraki')?1.25:1)*G.work+lvGain(r,'work',lv),
+  move:10*(V.spd||1)*(trt(r,'hayaashi')?1.25:1)*(r.elem==='wind'?1.45:1)*G.mv+lvGain(r,'move',lv),
   eat:Math.round(10*(V.eat||1)*(trt(r,'shoshoku')?.8:1)),
   sta:Math.round(10*(V.sta||1)*(EL_STA[r.elem]||1)*(trt(r,'tafu')||trt(r,'nebari')?1.33:1)),
-  cap:Math.min(10,lv)+(trt(r,'chikara')?2:0)+((r.bst&&r.bst.cap)||0)+((r.sst&&r.sst.cap)||0),
+  cap:Math.min(10,lv)+(trt(r,'chikara')?2:0)+((r.bst&&r.bst.cap)||0)+((r.sst&&r.sst.cap)||0)+G.cap,
   bonus:XPBL[lv]}}
 // 獲得量は端数も保存。表示と実際の加算で同じ計算を使う。
 const spiritXpGain=(base,lv)=>(base+XPBL[lv])*.8;

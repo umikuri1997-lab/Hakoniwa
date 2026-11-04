@@ -6,13 +6,13 @@
 <title>はこにわ暮らし</title>
 
 <meta name="claude:viewport-fit-sides" content="cover">
-<link rel="preload" href="assets/f/52c0addfae.woff2" as="font" type="font/woff2" crossorigin><link rel="preload" href="assets/f/b499e6e29b.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/f/2414a3458a.woff2" as="font" type="font/woff2" crossorigin><link rel="preload" href="assets/f/b499e6e29b.woff2" as="font" type="font/woff2" crossorigin>
 <div id="boot" style="position:fixed;inset:0;z-index:99;background:radial-gradient(ellipse at 50% 28%,#a8cb83 0%,#7fa66b 48%,#55775a 100%)"></div><!-- 読みこみのはじめから、タイトルと同じ色を出す（タイトルが出たら、かくす） -->
 <style>
 /* 起動中はゲーム画面を出さず、最初からタイトルを表示する。 */
 #app:not(.ready) #cv{visibility:hidden}
 
-/* 文字：PixelMplus10（10ドットのドットフォント。M+ FONT LICENSE で自由に使える。ゲームで使う字だけにしぼった woff2） */@font-face{font-family:'PixelMplus10';src:url(assets/f/52c0addfae.woff2) format('woff2');font-display:block}
+/* 文字：PixelMplus10（10ドットのドットフォント。M+ FONT LICENSE で自由に使える。ゲームで使う字だけにしぼった woff2） */@font-face{font-family:'PixelMplus10';src:url(assets/f/2414a3458a.woff2) format('woff2');font-display:block}
 @font-face{font-family:'Hikomi';src:url(assets/f/b499e6e29b.woff2) format('woff2');font-display:block}
 /* Layout: full-screen world canvas; HUD floats at the top, hotbar + dock at the bottom, sheets slide up over the world */
 :root{
@@ -480,7 +480,7 @@ svg.pxi{fill:currentColor!important;stroke:none!important;shape-rendering:crispE
 </div>
 
 <script>/* ゲームのデータ（chips.js と js/ のプログラム）を読みこむ。読みこむあいだに「はじめる」をおしたら、何パーセント読みこめたかを出す。読みこめたら、そのまま進む */
-(function(){var U=["chips.js?v=dev","js/core.js?v=dev","js/data.js?v=dev","js/story.js?v=dev","js/world.js?v=dev","js/village.js?v=dev","js/spirit-act.js?v=dev","js/spirit-life.js?v=dev","js/spirit-work.js?v=dev","js/night.js?v=dev","js/level.js?v=dev","js/quests.js?v=dev","js/build.js?v=dev","js/quest-run.js?v=dev","js/companion-story.js?v=dev","js/sacred-tree.js?v=dev","js/sacred-direction.js?v=dev","js/story-wait.js?v=dev","js/story-ending.js?v=dev","js/story-replay.js?v=dev","js/save.js?v=dev","js/draw-ground.js?v=dev","js/draw-objects.js?v=dev","js/houses.js?v=dev","js/draw-spirits.js?v=dev","js/draw-world.js?v=dev","js/input.js?v=dev","js/sacred-play.js?v=dev","js/audio.js?v=dev","js/ui.js?v=dev","js/dialog.js?v=dev","js/main.js?v=dev"],E=[90449,3248,94999,30302,47844,38782,95395,106779,42966,70561,19480,147597,53038,41908,22331,14463,13006,15597,8735,13459,3596,65469,98878,46230,99740,95580,16520,16583,20527,100209,29515,48833],N=U.length,L=[],T=[],X=[],ran=0,want=0,b=document.getElementById('tStart'),m=document.getElementById('tLoad');for(var k=0;k<N;k++){L[k]=0;T[k]=0;X[k]=null}
+(function(){var U=["chips.js?v=dev","js/core.js?v=dev","js/data.js?v=dev","js/gear-data.js?v=dev","js/story.js?v=dev","js/world.js?v=dev","js/village.js?v=dev","js/spirit-act.js?v=dev","js/spirit-life.js?v=dev","js/spirit-work.js?v=dev","js/night.js?v=dev","js/level.js?v=dev","js/quests.js?v=dev","js/build.js?v=dev","js/quest-run.js?v=dev","js/companion-story.js?v=dev","js/sacred-tree.js?v=dev","js/sacred-direction.js?v=dev","js/story-wait.js?v=dev","js/story-ending.js?v=dev","js/story-replay.js?v=dev","js/save.js?v=dev","js/draw-ground.js?v=dev","js/draw-objects.js?v=dev","js/houses.js?v=dev","js/draw-spirits.js?v=dev","js/draw-world.js?v=dev","js/input.js?v=dev","js/sacred-play.js?v=dev","js/audio.js?v=dev","js/ui.js?v=dev","js/gear.js?v=dev","js/dialog.js?v=dev","js/main.js?v=dev"],E=[90449,4430,96306,25190,30302,48084,39033,96117,107994,43402,71538,19582,147968,54126,41908,22331,14463,13006,15597,8426,13459,3596,65469,99322,48348,99740,95622,16443,16583,20527,100906,16917,29515,48968],N=U.length,L=[],T=[],X=[],ran=0,want=0,b=document.getElementById('tStart'),m=document.getElementById('tLoad');for(var k=0;k<N;k++){L[k]=0;T[k]=0;X[k]=null}
 function pct(){var l=0,t=0;for(var i=0;i<N;i++){var tt=T[i]||E[i];t+=tt;l+=Math.min(L[i],tt)}return Math.min(99,Math.floor(l*100/t))}
 function show(){if(!want||window.__ldDone)return;m.hidden=false;m.textContent='ゲームのデータを読みこみ中… '+pct()+'%'}
 b.onclick=function(){if(want)return;want=1;show();window.__ldT=setInterval(show,300)};

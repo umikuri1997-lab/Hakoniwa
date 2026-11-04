@@ -2,7 +2,6 @@
 /* 終盤の順番は、操作・自動再開・目標表示で同じ条件を使う。既読は会話の完了時だけ保存する。 */
 function grassEndingEvent(){
   if(!S||WD!==0||S.free||S.cleared||!S.flags.finalWon||isNight()||S.qStory!=null)return null;
-  if(!S.sev?.e16g)return SEV1.find(e=>e.k==='e16g');
   if(!S.sev?.e09&&((S.shards||0)>=3||(S.setSh||0)>=3))return SEV1.find(e=>e.k==='e09');
   return null;
 }
@@ -11,7 +10,7 @@ function grassReunionBlockReason(){
   if(isNight())return 'ヌシ様を迎えるのは、朝になってから';
   if(!S.flags.finalWon)return 'まず、御神木に集まる影を追いはらおう';
   if(!S.res.some(r=>r.name===POKO&&!r.hidden))return 'フタバがもどってから、一緒にヌシ様を迎えよう';
-  if(S.qStory!=null||!S.sev?.e16g)return '先に、フタバの力を受け継ぐお話を聞こう';
+  if(S.qStory!=null)return '先に、いまのお話を聞こう';
   if(!S.sev?.e09)return '先に、最後のかけらを迎えるお話を聞こう';
   if((S.setSh||0)<3)return '最後のかけらの光を、御神木へ届けよう';
   return '';
@@ -28,7 +27,6 @@ function grassEndingGoal(){
   const conditions=clearConds(),progress=greenProgress()+'・かけら '+Math.min(3,S.setSh||0)+'/3・じょうけん '+conditions.filter(c=>c[1]).length+'/'+conditions.length;
   if(S.flags.finalWon){
     if(!S.res.some(r=>r.name===POKO&&!r.hidden))return {text:'フタバの帰りを待とう',progress:'もどったら、御神木のそばで話そう',how:'フタバが帰ってきたら、終わっていない話の続きから進めよう'};
-    if(!S.sev?.e16g)return {text:'フタバの力を受け継ごう',progress:isNight()?'お話は、朝になってから':'フタバの話を聞こう',how:'朝、フタバの話を最後まで聞こう'};
     if((S.shards||0)<3&&(S.setSh||0)<3)return {text:'最後のかけらを迎えよう',progress:'影が消えた場所に、光が残っている',how:'ヨルノオオカゲが消えた場所のかけらを、なかまが拾うのを待とう'};
     if(!S.sev?.e09)return {text:'最後のかけらを、みんなで',progress:isNight()?'お話は、朝になってから':'御神木のそばで、フタバの話を聞こう',how:'御神木のそばに集まった、フタバたちの話を聞こう'};
     if((S.setSh||0)<3)return {text:'最後の光を御神木へ',progress:isNight()?'光を届けるのは、朝になってから':'御神木へ、かけらを3つ届けよう',how:'朝、御神木をタップして、最後のかけらの光を届けよう'};
@@ -42,7 +40,7 @@ function grassEndingGoal(){
 }
 function grassEndingFocusTarget(){
   if(WD!==0||!S.flags.finalWon)return null;
-  const drop=S.sev?.e16g&&(S.shards||0)<3&&S.drops?.find(d=>d.id==='shard');
+  const drop=(S.shards||0)<3&&S.drops?.find(d=>d.id==='shard');
   if(drop)return {x:drop.x+.5,y:drop.y+.5,w:1,h:1};
   const j=S.obj.indexOf('tower');return j<0?null:{x:storyTreeX(j),y:storyTreeY(j)-.3,w:sacredSpan(),h:sacredSpan()};
 }
