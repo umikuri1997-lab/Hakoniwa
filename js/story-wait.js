@@ -12,7 +12,7 @@ function mainStoryWaitInfo(){
   const who=report?storyWho(q):firstSpk(q.talk.lines,q.talk.who);
   const lead=S.res.find(r=>r.name===who&&!r.hidden);if(!lead&&!(q.field&&report))return null;
   const last=q.field&&FIELD_STORIES[q.id]?.at(-1),cast=last?fieldCast(last):[lead,...storyLineCast(report?q.story:q.talk.lines).filter(r=>r!==lead)];if(!cast.length)return null;/* 会話でしゃべる子は、みんな集まってから話す（いない子は、その行だけはぶく） */
-  let obj=q.field?S.sacredRoot:null,id=null,free=false;
+  let obj=q.field?S.sacredRoot:null,id=null,free=false,tree=false;
   if(obj==null){
     const ids=QUEST_VISIT_MAIN[q.id]||(q.id==='nushi'?['tower']:null),recent=QUEST_PLACEMENTS.get(S);let best=-Infinity;
     if(ids)for(let j=0;j<S.obj.length;j++){if(!questVisitTarget(q,ids,j))continue;const placed=recent?.get(j),score=(placed&&qvHas(j,placed.id)?placed.n*100000:0)-Math.hypot(j%W+.5-lead.x,(j/W|0)+.5-lead.y);if(score>best){best=score;obj=j;}}
@@ -20,11 +20,12 @@ function mainStoryWaitInfo(){
     else if(q.id==='kagemark'&&S.flags.kgMark!=null){obj=S.flags.kgMark;free=true;}/* 大きなかげのあと：そのまわりへ駆け寄って話す */
     else{/* どこで話してもよい会話：ひとりなら、そのまま暮らしながら話しかけられる。みんなで話すときは、近くの空いた場所に集まる */
       if(cast.length<2||!lead)return null;
-      obj=storyOpenSpot(lead,cast.length);free=true;
+      if(WD===0&&S.sacredRoot!=null){obj=S.sacredRoot;tree=true}/* 草原：御神木のまわりは、いつも空いているので、みんなで話すときは御神木のまわりに集まる */
+      else{obj=storyOpenSpot(lead,cast.length);free=true;}
     }
   }
   if(obj==null)return null;
-  p={key,session:VILLAGE_SESSION,index,report,q,who,cast,obj,id,field:!!q.field,free};STORY_WAIT_PLANS.set(S,p);return p;
+  p={key,session:VILLAGE_SESSION,index,report,q,who,cast,obj,id,field:!!q.field,free,tree};STORY_WAIT_PLANS.set(S,p);return p;
 }
 function storyLineCast(L){return [...new Set((L||[]).map(l=>l&&l[0]).filter(n=>typeof n==='string'))].map(n=>S.res.find(r=>r.name===sevName(n)&&!r.hidden)).filter(Boolean)}
 function rememberStoryHome(r,key){if(!r.storyWaitHome||r.storyWaitHome.world!==WD)r.storyWaitHome={j:(r.y|0)*W+(r.x|0),key,world:WD};else r.storyWaitHome.key=key;}
@@ -34,7 +35,7 @@ function storyWaitProtected(r){
   if(a.type!=='storywait')return false;const p=mainStoryWaitInfo();return !!p&&p.key===a.storyKey&&p.obj===a.obj&&p.cast.includes(r)&&questVisitSafe(r,p.obj);
 }
 function storyWaitStand(r,G,p){
-  if(!p.slots)p.slots=storySlots(p.cast,p.field?{stump:p.obj}:p.free?{center:p.obj}:{obj:p.obj});
+  if(!p.slots)p.slots=storySlots(p.cast,p.field||p.tree?{stump:p.obj}:p.free?{center:p.obj}:{obj:p.obj});
   const k=p.slots.get(r);if(k!=null&&G.dist[k]>=0&&free('storywait'+k,1))return k;
   const occupied=occTiles(r);return p.id!=null?questVisitStand(r,G,p.obj):-1;
 }
