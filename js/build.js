@@ -42,7 +42,7 @@ function canRoof(x,y,quiet){const no=t=>{if(!quiet)toast(t);return false};if(x<0
 const rugsIn=set=>{const L=[];for(const k in S.rug||{})if(rugCells(+k).some(c=>set.has(c)))L.push(S.rug[k]);return L};/* 家の中（どこか1マスでも）にあるラグ */
 function canRug(x,y,quiet){const no=t=>{if(!quiet)toast(t);return false};if(x<0||y<0||x+1>=W||y+1>=H)return false;
   if(x<0||y<0||x>=W-1||y>=H-1)return no('ここには置けません');for(const c of rugCells(y*W+x)){if(sacredNoBuild(c))return no('みんなで世話をしている木の場所です');if(S.ground[c]===1)return no('水の上には置けません');if(RUGC.has(c))return no('ここにはもうラグがあります');const o=S.obj[c],a=o==='part'?S.obj[S.ref[c]]:o;if(a&&!WEEDS.has(a)&&!(BL[a]&&BL[a].kind==='furn'&&!BL[a].trap&&!WALLD.has(a)))return no('ここにはもう何かあります')}return true}/* 家具の下にもしける */
-function canPlace(id,x,y,quiet){{const h=fl2Target(x,y);if(h)return fl2CanPlace(h,id,x,y,quiet)}/* 2階を見せている家は、2階に置く */if(WD===0&&id!=='tower'&&S.sacredRoot!=null){const z=szR(id,PLROTS[id]||0)||[1,1];for(let b=0;b<z[1];b++)for(let a=0;a<z[0];a++)if(sacredNoBuild((y+b)*W+x+a)){if(!quiet)toast('みんなで世話をしている木の場所です','warn');return false;}}if(id==='shinboku'&&(cnt('shinboku')>0||S.obj.some((o,k)=>o==='site'&&S.dyn[k]&&S.dyn[k].build==='shinboku'))){if(!quiet)toast('ご神木は、1本だけです','warn');return false}/* ご神木は村に1本 */
+function canPlace(id,x,y,quiet){if(WD===0&&id!=='tower'&&S.sacredRoot!=null){const z=szR(id,PLROTS[id]||0)||[1,1];for(let b=0;b<z[1];b++)for(let a=0;a<z[0];a++)if(sacredNoBuild((y+b)*W+x+a)){if(!quiet)toast('みんなで世話をしている木の場所です','warn');return false;}}if(id==='shinboku'&&(cnt('shinboku')>0||S.obj.some((o,k)=>o==='site'&&S.dyn[k]&&S.dyn[k].build==='shinboku'))){if(!quiet)toast('ご神木は、1本だけです','warn');return false}/* ご神木は村に1本 */
   if(EDGES.has(id))return canEdge(x,y,quiet);
   if(RUGS.has(id))return canRug(x,y,quiet);
   if(CANOPY.has(id))return canRoof(x,y,quiet);
@@ -60,7 +60,6 @@ function canPlace1(id,x,y,quiet){
   if(TERRA.has(id)){const k=id==='dig';if(k?!hiAt(j):hiAt(j)>=HMAX){if(!quiet)toast(k?'高いマスだけ、けずれます':'これより高くは、もれません');return false}if(S.obj[j]&&!WEEDS.has(S.obj[j])||S.floor[j]){if(!quiet)toast('なにもない所だけです');return false}if([j-1,j+1,j-W,j+W].some(n=>STAIRS.has(S.obj[n])&&stairTop(n,stairDir(n))===j)){if(!quiet)toast(k?'階段のうしろは、けずれません':'階段のうしろは、もれません');return false}return true}/* だんさスコップ：けずる・もる */
   if(LADDERS.has(id)){if(ladderDir(j)<0){if(!quiet)toast('ハシゴは、がけの下の、うしろか左右が1だん高い所に置けます');return false}if(S.obj[j]&&!WEEDS.has(S.obj[j])){if(!quiet)toast('ここにはもう何かあります');return false}return true}
   if(STAIRS.has(id)){const d=SROT[stairRot(id,j)];if(!stairOK(j,d)){if(!quiet)toast('その向きには置けません');return false}if(d){const o=stairOut(j,d);if(S.obj[o]&&!WEEDS.has(S.obj[o])||o<0||o>=W*H){if(!quiet)toast('階段は2マスいります');return false}}}/* 階段は、段差の下の低い地面に1×2 */
-  if(id==='stairs2f'&&!fl2CanStairs(j,quiet))return false;/* 2階への階段は、家の中に1つ */
   if(BL[id].floor)return S.floor[j]!==id&&!(S.obj[j]&&BL[S.obj[j]].job);
   if(S.obj[j]&&!WEEDS.has(S.obj[j])){if(!quiet)toast('ここにはもう何かあります');return false}/* 雑草の上には、そのまま置ける（置いた物が上書きする） */
   if(RFC.has(j)&&!LOWROOF.has(id)){if(!quiet)toast('屋根の下には、ひくい物だけ置けます');return false}
@@ -81,7 +80,7 @@ function swingWide(){/* ブランコが2マスはばになった：前のセー�
   for(let j=0;j<S.obj.length;j++){if(S.obj[j]!=='swing')continue;const x=j%W;if(x<W-1&&ok(j+1)){S.obj[j+1]='part';S.ref[j+1]=j}else if(x>0&&ok(j-1)){S.obj[j-1]='swing';S.obj[j]='part';S.ref[j]=j-1;if(S.rot&&S.rot[j]!=null){S.rot[j-1]=S.rot[j];delete S.rot[j]}}else{clearObj(j);giveItem('swing',1);back++}}
   if(back)setTimeout(()=>toast('ブランコが2マスはばになったので、ひろげられないブランコを'+back+'つ、おそなえ箱にもどしました'),1500)}
 function setParts(id,j,kind){const x=j%W,y=(j/W)|0;for(const[a,b]of fp(id,x,y)){const k=b*W+a;if(k===j)continue;S.obj[k]=kind;S.ref[k]=j}}
-function place(id,x,y){{const h=fl2Target(x,y);if(h)return fl2Place(h,id,x,y)}
+function place(id,x,y){
   const b=BL[id];
   if(WALLD.has(id)){if(!usable(id)||inv(id)<=0)return toast(BL[id].name+'が足りません','warn');if(!canPlace(id,x,y))return;const j=y*W+x;S.inv[id]--;/* カーテンは、上がわの壁の窓にかける。窓はそのまま（S.win がカーテンなら、その下に窓がある） */(S.win||(S.win={}))[j]=id==='window'?1:id;noteQuestPlacement(HOME_DOORS.has(S.obj[j])?'door':'hwall',j);burst(j,'furn');recount();dirty=true;renderPalette();return}
   if(b.kind==='seed'){const k=id.slice(5),j=y*W+x,d=S.dyn[j];if(S.obj[j]!=='farm'||!d)return toast('たねは、畑にしかまけません');
@@ -184,7 +183,7 @@ function moveTap(tx,ty){const j=ty*W+tx;
     for(const b of S.broken||[])if(b.j===a)b.j=j;
     writeObj(id,j,v)}
   MOVESRC=null;recount();dirty=true;burst(j,'furn','furnPlace');renderPalette();checkQuest()}
-function removeAt(x,y){const tx0=x,ty0=y;{const h=fl2Target(x,y);if(h)return fl2Remove(h,x,y)}if(S.obj[anc(y*W+x)]==='stairs2f'&&fl2Busy(anc(y*W+x)))return toast('2階に物があるので、こわせません');
+function removeAt(x,y){const tx0=x,ty0=y;
   const j=anc(y*W+x),o=S.obj[j];x=j%W;y=(j/W)|0;
   if(S.win&&S.win[j]){const id=S.win[j]===1?'window':S.win[j];if(id==='curtain1'||id==='curtain2')S.win[j]=1;else delete S.win[j];giveItem(id,1);/* カーテンをはずすと、窓がのこる */toast(BL[id].name+'をおそなえ箱にもどした');burst(j,'furn','rm');recount();renderPalette();return}
   if(o){const b=BL[o];if(o==='tower')return toast(storyTreeName()+'はこわせません');if(o==='volcano'||o==='heatv'||o==='crack'||o==='boulder')return toast(b.name+'はこわせません');if(o==='statue'||o==='obox'||o==='board'||o==='altar'||o==='site2')return toast('神殿はこわせません');if((o==='stor'||o==='mbox')&&cnt(o)<=1)return toast(BL[o].name+'は1つ以上必要です');

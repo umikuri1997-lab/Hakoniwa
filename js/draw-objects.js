@@ -144,7 +144,6 @@ function drawRoofItem(c,id,x,y){/* ガゼボ・東屋：2×2マス（左上が x
   if(gz){c.fillStyle='#efe7da';c.fillRect(x+30,y-38,4,9);c.beginPath();c.arc(x+32,y-39,3,0,7);c.fill()}else{c.fillStyle=R[1];c.fillRect(x+22,y-33,20,4)}}
 const DOKU_PX=['..................rrrr....','................rrwrrdr...','...............rrrrrwrdd..','...............ddrrrrddd..','..................ss......','.....aaaaaaaaa....st......','...aabbbbbbbbbaa..st.aa...','..abbhhbbbbbbbbbaaststbba.','.abbhbbbbbbhhbbbbbtttbbba.','.abbbbbbbbbhbbbbbbbbbhbba.','.abbbbhhbbbbbbbbbbbbbbbba.','..abbbbbbbbbbbbhhbbbbbba..','...aabbbbbbbbbbbbbbbbaa...','.....aaaaaaaaaaaaaaaaa....'];/* どくの罠の絵（24×14） */
 function drawObj(c,id,x,y,i,g,now){
-  if(id==='stairs2f'){drawStairs2f(c,x,y,i,false);return}/* 2階への階段（コードの絵） */
   if(VEINS[id]){drawVein(c,id,x,y,i);return}/* 鉱脈 */
   if(id==='tower'&&WD===0){drawStoryTree(c,x,y,i,now,ICON);return;}
   if(STAIRS.has(id)){if(ICON||i==null)drawStair(c,id,x,y,0,y+3,y+29);else drawStairObj(c,i,id);return}/* 階段は、段差といっしょに cliffStrip で描く（ここはアイコンだけ） */
