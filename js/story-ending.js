@@ -5,6 +5,11 @@ function grassEndingEvent(){
   if(!S.sev?.e09&&((S.shards||0)>=3||(S.setSh||0)>=3))return SEV1.find(e=>e.k==='e09');
   return null;
 }
+/* 最後のかけらの話（e09）はメインの会話：ピンクの会話の集まりは使わず、メインの集合（storywait）で話す。フタバは必須、ほかの子は、いれば話す */
+function grassEndingTalk(){const e=grassEndingEvent();return e&&e.k!=='e16g'&&S.res.some(r=>r.name===POKO&&!r.hidden)?e:null}
+function grassEndingTalkLines(e){return e&&sevLines(e.L)}
+function startGrassEndingTalk(e){const L=grassEndingTalkLines(e);if(!L)return;TALKW=null;QUESTCLEARW=null;const owner=S,session=VILLAGE_SESSION;let once=0;
+  dialog(L,()=>{if(once++||S!==owner||VILLAGE_SESSION!==session||(S.sev||{})[e.k])return;(S.sev||(S.sev={}))[e.k]=1;const P=S.sevP||[],i=P.indexOf(e.k);if(i>=0)P.splice(i,1);if(e.go)e.go();checkQuest()},null)}/* 最後まで見てから「見た」にする */
 function grassReunionBlockReason(){
   if(WD!==0)return '';
   if(isNight())return 'ヌシ様を迎えるのは、朝になってから';
