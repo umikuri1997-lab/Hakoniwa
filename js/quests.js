@@ -27,7 +27,7 @@ function dailySet(){const day=dayNo(),i=(day*2)%DAILYG.length,L=[DAILYG[i],DAILY
 function dailyCheck(){const d=S.daily;if(!d)return;for(const k of d.k){const g=DAILYG.find(x=>x.k===k);if(g&&!d.done[k]&&dailyNow(g,d)>=g.n){d.done[k]=1;S.pt+=g.rw;S.totalPt+=g.rw;toast('きょうの目標たっせい：'+g.t+'（パワー+'+g.rw+'）','good')}}}
 function afterTick(){/* クリア後：新しいクエスト・きょうの目標・長い目標（昼だけ） */if(isNight()||!$('#dialog').hidden||NEWRES!=null)return;if(WD===0&&S.flags.sacredReunion&&!S.flags.sacredQuietSeen)return;/* 草原：再会のあとの木陰の話を見てから */if(!S.daily||S.daily.d!==dayNo())dailySet();dailyCheck();checkFree();
   const i=S.aq||0,q=AFTERQ[i];if(!q)return;if(q.w!=null&&q.w!==WD){S.aq=i+1;return}/* その土地のクエストではない */if(S.aqOn!==i){S.aqOn=-1;let once=0;dialog(q.L,()=>{if(once++)return;S.aqOn=i;S.aqB=q.now();sfx('quest');toast('クエスト：'+aqTitle(q),'good');renderQuest()});return}
-  if(S.aqB==null)S.aqB=q.now();/* 前のセーブ：いまから数える */if(q.now()>=aqGoal(q)){let once=0;dialog(q.X,()=>{if(once++)return;S.aq=i+1;S.aqB=null;S.pt+=q.rw;S.totalPt+=q.rw;toast('ごほうび：パワー+'+q.rw,'good');memo('🎯',aqTitle(q));renderQuest()})}}
+  if(S.aqB==null)S.aqB=q.now();/* 前のセーブ：いまから数える */if(q.now()>=aqGoal(q)){let once=0;dialog(q.X,()=>{if(once++)return;S.aq=i+1;S.aqB=null;rewardPower(q.rw);memo('🎯',aqTitle(q));renderQuest()})}}
 const TRAPS=['spike','sticky','puddle','firetrap','gust'],CN=a=>a.reduce((n,k)=>n+cnt(k),0),FOODN=()=>Object.values(S.fs||{}).reduce((n,v)=>n+v,0);
 const outCnt=ids=>{const ins=new Set(HOUSES.flatMap(h=>[...h.inside]));let n=0;S.obj.forEach((o,j)=>{if(ids.has(o)&&!ins.has(j))n++});return n};/* 家の外にある数 */
 function houseBedCount(){const cells=new Set(HOUSES.flatMap(h=>[...h.inside]));return [...cells].filter(j=>BEDSET.has(S.obj[j])).length}
@@ -155,7 +155,7 @@ function checkSub(){const D=S.subDone||(S.subDone={}),Sn=S.subSeen||(S.subSeen={
 function subTalk(k){const q=SUBQ.find(q=>q.k===k),St=S.subSt,D=S.subDone;if(!q||!$('#dialog').hidden||St[k]===1&&!subOfferReady(q))return;S.subTalkAt=S.t;const w=subWho(q)||POKO,L=(St[k]===1?q.L:q.X)||[[w,q.t]];
   const rw=S.res.find(z=>z.name===w),FB2=q.g==='fire'&&rw&&elemKey(rw)==='fireB'&&FIREB[k];let once=0;dialog(ideaDialogue(q,(FB2?(St[k]===1?FB2.L:FB2.X):L).map(x=>[x[0]==='K'?w:x[0],x[1]&&typeof x[1]==='object'?(w===HOMURA?x[1].h:x[1].a):x[1]]),/* {h,a}：ホムラ（あたい）と、ほかの火の子（あたし） */St[k]===1?'accept':'clear'),()=>{if(once++)return;
     if(St[k]===1){St[k]=2;Sn0(k);if(q.base)S.subB[k]=q.base();for(const id of q.learn||[])if(!(S.free&&BL[id]&&BL[id].kind==='furn'))S.recipes[id]=true;inspireQuest(q);for(const x in q.give||{}){S.unlocked[x]=true;giveItem(x,q.give[x])}queueItemGift(q.give);sfx('quest');toast('サブクエスト：'+q.t,'good');renderPalette()}
-    else if(St[k]===3){St[k]=4;D[k]=1;inspireQuest(q,'clear');if(q.rw){S.pt+=q.rw;S.totalPt+=q.rw;toast('ごほうび：パワー+'+q.rw,'good')}memo('📌','サブクエスト「'+q.t+'」をたっせい');logEv('サブクエスト「'+q.t+'」をたっせい')}
+    else if(St[k]===3){St[k]=4;D[k]=1;inspireQuest(q,'clear');if(q.rw){rewardPower(q.rw)}memo('📌','サブクエスト「'+q.t+'」をたっせい');logEv('サブクエスト「'+q.t+'」をたっせい')}
     checkSub()},null)}
 function Sn0(k){(S.subSeen||(S.subSeen={}))[k]=1}
 /* ---------- ステージ1の物語イベント（フタバと5属性のキーキャラ） ----------

@@ -1,7 +1,19 @@
 'use strict';
 
 /* ---------- UI ---------- */
-function toast(msg,kind){if(kind==='good')sfx('good');else if(kind==='warn')sfx('warn');const t=document.createElement('div');t.className='toast'+(kind?' '+kind:'');t.textContent=msg;const box=$('#toasts');box.appendChild(t);while(box.children.length>3)box.firstChild.remove();setTimeout(()=>t.remove(),2800)}
+/* クエストのごほうびのパワー：どのクエストも、この1つの形（大きな知らせ＋神殿の上に数字）でわたす */
+function rewardPower(n){if(!n)return;S.pt+=n;S.totalPt+=n;toast('ごほうび：パワー+'+n,'good');if(typeof STATUE!=='undefined'&&STATUE>=0)addFloat(STATUE%W+.5,(STATUE/W|0)-1,'+'+n,'#ecdcbc')}
+/* 知らせ：同じ文はまとめて（数をつける）、出すのは2つまで、のこりは順番にまつ（TOASTQ）。大事な物（good・warn）は大きく長く、ほかは短く */
+const TOASTQ=[],TOASTMAX=2,TOASTMS={good:3200,warn:3200,'':2000};
+function toastShow(it){const box=$('#toasts'),t=document.createElement('div');t.className='toast'+(it.kind?' '+it.kind:'');t._msg=it.msg;t._n=it.n;t.textContent=it.n>1?it.msg+'（'+it.n+'）':it.msg;box.appendChild(t);toastTimer(t,it.kind)}
+function toastTimer(t,kind){clearTimeout(t._tm);t._tm=setTimeout(()=>{t.classList.add('out');setTimeout(()=>{t.remove();toastNext()},180)},TOASTMS[kind||'']||2000)}
+function toastNext(){const box=$('#toasts');while(TOASTQ.length&&box.querySelectorAll('.toast:not(.out):not(#playHint)').length<TOASTMAX)toastShow(TOASTQ.shift())}
+function toast(msg,kind){kind=kind||'';const box=$('#toasts');
+  for(const t of box.querySelectorAll('.toast:not(.out):not(#playHint)'))if(t._msg===msg){t._n++;t.textContent=msg+'（'+t._n+'）';t.classList.remove('bump');void t.offsetWidth;t.classList.add('bump');toastTimer(t,kind);return}
+  const q=TOASTQ.find(it=>it.msg===msg);if(q){q.n++;return}
+  if(kind==='good')sfx('good');else if(kind==='warn')sfx('warn');
+  if(TOASTQ.length>=4)TOASTQ.splice(TOASTQ.findIndex(it=>!it.kind)>=0?TOASTQ.findIndex(it=>!it.kind):0,1);/* まちが長くなりすぎたら、小さい知らせからすてる */
+  TOASTQ.push({msg,kind,n:1});toastNext()}
 const FEATS={inv:'#dockInv',build:'[data-mode="build"]',remove:'[data-mode="remove"]',craft:'[data-sheet="craft"]',people:'[data-sheet="people"]'};
 function applyFeats(){
   if(S.glassT==null&&glassUnlocked())S.glassT=600;/* はじめの10分は無料 */$('#speedBtn').hidden=!(glassUnlocked()||TESTSPD||TESTM);if(!(hasGlass()||TESTM))S.speed=1;if(!TESTM&&S.speed>2)S.speed=1;glassUI();

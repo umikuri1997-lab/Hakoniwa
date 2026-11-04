@@ -44,7 +44,11 @@ function nearestVia(G,G2,pred,maxD=60){let best=-1,bd=1e9;for(let j=0;j<W*H;j++)
 /* ---------- 演出 ---------- */
 /* 作業する物の方を向く（木・岩） */
 function faceTo(r,j){if(j==null||j<0)return;const ox=j%W+.5,oy=((j/W)|0)+.5;if(Math.abs(ox-r.x)>.15)r.face=ox>=r.x?1:-1;r.faceObj=j}
-const floats=[],shots=[],fx=[],pops=new Map(),RLVQ=[];
+const floats=[],shots=[],fx=[],pops=new Map(),RLVQ=[],LANDFX=new Map();/* LANDFX：置いたばかりの家具が、ぽんと着地する（マス→時刻、DROPT ミリ秒） */
+const DROPT=380;
+/* 木と花は、風でゆれる（雨の日は大きく）。根もと（マスの下）を軸に、よこにかたむける */
+function swayK(id,j,now){if(!S||!(TREES.has(id)||PLANTS.includes(id)))return 0;const a=S.rain?.035:.012;return Math.sin(now/(S.rain?520:900)+(j%W)*.7+((j/W)|0)*.45)*a*(TREES.has(id)?.6:1)}
+function dropIn(c,j,x,y,now,fn,id){const k=id?swayK(id,j,now):0;if(k){const by=y+31;c.save();c.transform(1,0,k,1,-k*by,0);try{dropIn(c,j,x,y,now,fn)}finally{c.restore()}return}const t0=LANDFX.get(j);if(t0==null){fn();return}const u=(now-t0)/DROPT;if(u>=1||u<0){LANDFX.delete(j);fn();return}/* 上から6ドット落ちて、着地でちょっとつぶれて、もどる */const fall=u<.45?-6*(1-u/.45)*(1-u/.45):0,sq=u<.45?0:Math.sin((u-.45)/.55*Math.PI)*.08*(1-u),bx=x+16,by=y+31;c.save();c.translate(bx,by+fall);c.scale(1+sq,1-sq);c.translate(-bx,-by);try{fn()}finally{c.restore()}}
 function addFloat(x,y,text,color){if(floats.length>40)floats.shift();floats.push({x,y,text,color:color||'#ecdcbc',life:1})}
 /* 作業：経験値だけ（パワーは、遊ぶ・食べる・たのしいときだけ）。成長を少しゆっくりにし、端数は保存する */
 function addSpiritXp(n,r){if(!n||!r||r.xp==null)return;const before=rLv(r),scaled=spiritXpGain(n,before)+(r.xpf||0),whole=Math.floor(scaled+1e-9);r.xpf=Math.round((scaled-whole)*1000)/1000;r.xp+=whole;const after=rLv(r);if(after>before){addFloat(r.x,r.y-1.8,'Lv'+after+'!','#9ff0ff');RLVQ.push({id:r.id,from:before,to:after})}}
@@ -59,7 +63,7 @@ function addPt(pw,r,xp){if(!pw&&!xp)return;/* pw：もらえるパワー、xp：
 function burst(j,kind,snd){
   const cx=(j%W)*TS+16,cy=((j/W)|0)*TS+18;
   fxSpr(kind==='block'?'dust':kind==='plant'?'petals':'burst',cx,cy);
-  pops.set(j,performance.now());sfxAt(snd||kind,(j%W)+.5,(j/W)|0);
+  pops.set(j,performance.now());if(kind==='furn')LANDFX.set(j,performance.now());sfxAt(snd||kind,(j%W)+.5,(j/W)|0);
 }
 function plantMound(c,x,y,i){const k=i==null?0:hash(i*13+5);const w=7.5+k*2,h=2.8+k*.8;c.fillStyle='rgba(54,38,24,.22)';c.beginPath();c.ellipse(x+16,y+29,w+1,h*.72,0,0,7);c.fill();c.fillStyle='#a9784f';c.beginPath();c.ellipse(x+16,y+27.5,w,h,0,Math.PI,0);c.ellipse(x+16,y+27.5,w,h*.48,0,0,Math.PI);c.fill();c.fillStyle='rgba(225,177,125,.5)';c.beginPath();c.ellipse(x+15,y+26.3,w*.58,h*.38,-.08,Math.PI,0);c.fill()}
 function plantSparkle(j,id){const FK={clover:'fl_clover',bellf:'fl_bell',salvia:'fl_salvia',lily:'fl_lily',lotus:'fl_lotus'},key=FK[id]||'tree',a=ART[key],w=FLOWERS.has(id)?26:30,h=a&&a.ok?w*a.h/a.w:w,cx=(j%W)*TS+16,cy=((j/W)|0)*TS+30-h*.65;fxSpr('twinkle',cx,cy);sfxAt('sow',(j%W)+.5,(j/W)|0)}
@@ -372,6 +376,11 @@ function goEat(r,G){if(r.cmat&&matCap()>0&&matTot()<matCap()&&!hostileNow(r)&&!f
 const fireMul=r=>(r.energy<10?.5:r.energy<25?.7:1)*(r.fun<20?.8:1);/* 火のせいれいは、つかれても楽しさが減ってもたたかう。そのぶん、こうげきが弱くなる（つかれ×0.7・楽しさ低下×0.8） */
 const nightClear=()=>!!S.nightHad&&!S.nushi&&S.enemies.every(e=>e.dead);/* 今夜のコワイノを倒し切った */
 const isWatch=r=>(r.elem==='fire'||r.name===POKO&&!WD&&!!S.flags.guard)&&!nightClear()/* コワイノをぜんぶ倒したら、火の子もフタバも寝る */;/* 夜の見回りをする子（フタバは、こもれびのまもりをおぼえたら） */
+/* すれちがいのあいさつ：昼、歩いている子どうしが1.5マスまで近づいたら、ときどき手をふる（1秒に1回だけ調べる。夜・コワイノがいるときはしない） */
+let GREETT=0;
+function passGreet(dt){GREETT+=dt;if(GREETT<1)return;GREETT=0;if(isDark()||enemyLive())return;const L=S.res.filter(r=>!r.hidden&&r.act&&r.act.stage==='walk'&&r.path&&r.path.length>0&&!(r.greetT>S.t));
+  for(let a=0;a<L.length;a++)for(let b=a+1;b<L.length;b++){const p=L[a],q=L[b];if(p.greetT>S.t||q.greetT>S.t)continue;if(Math.abs(p.x-q.x)+Math.abs(p.y-q.y)>1.5)continue;
+    p.greetT=q.greetT=S.t+90;if(Math.random()<.4){p.waveU=q.waveU=S.t+2.5;p.face=q.x<p.x?-1:1;q.face=p.x<q.x?-1:1}}}
 const hostileNow=r=>S.enemies.some(e=>e.spawned&&!e.dead&&!e.flee&&foeAt(e,r));/* コワイノが、自分の3マス以内か、自分のいる家に来たときだけ、こわがる */
 function goShiver(r,G){/* 家の中（なければ、いまの場所）で、ふるえる */let k=-1;if(HOUSES.length){const hs=new Set();for(const h of HOUSES)for(const q of h.inside)hs.add(q);k=nearest(G,j=>hs.has(j)&&walk(j)&&!HOME_DOORS.has(S.obj[j]),200)}if(k<0)return withFlee(r,fleeAlarm,G);/* 家がなければ、逃げつづける */startAct(r,G,'shiver',k,{run:true});return true}
 function goSleep(r,G,run){

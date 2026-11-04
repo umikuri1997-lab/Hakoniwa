@@ -92,9 +92,17 @@ function sched(){
     nextT+=e;step=(step+1)%64;
   }
 }
+/* 大きな場面の前の「間」：曲と環境音をしずかにして（ms ミリ秒）、少しまってから音 k を鳴らす */
+let DUCKT=0;
+function musicDuck(ms){if(!AC||AC.state!=='running')return;const t=AC.currentTime,end=t+ms/1000;DUCKT=Math.max(DUCKT,end);for(const g of[bgmG,ambG])if(g){const v=g===ambG?.12:gainB();g.gain.cancelScheduledValues(t);g.gain.setValueAtTime(g.gain.value,t);g.gain.linearRampToValueAtTime(v*.2,t+.35);g.gain.setValueAtTime(v*.2,DUCKT);g.gain.linearRampToValueAtTime(v,DUCKT+1.2)}}
+function quietBeat(ms,k){musicDuck(ms);if(k)setTimeout(()=>sfx(k),380)}
 let ambG=null;const AMB={};
+/* 夕方の虫の声：短い高い音を2回ずつ（のこした音の素材はつかわず、その場でつくる）。夕方（17.5〜20時）だけ、ときどき */
+let AMBNEXT=0;
+function ambAccent(on,h){if(!on||!ambG||!(h>=17.5&&h<20))return;const t=AC.currentTime;if(t<AMBNEXT||DUCKT>t)return;AMBNEXT=t+2.5+Math.random()*4;const f=3800+Math.random()*900;for(let i=0;i<2+(Math.random()*2|0);i++){tone(f,t+i*.11,.06,'sine',.05,ambG,f*.97)}}
 function ambTick(){if(!AC||AC.state!=='running')return;if(!ambG){ambG=AC.createGain();ambG.gain.value=.12;ambG.connect(AC.destination)}
-  const want={birds:0,rain:0,night:0};if(S&&started&&SND.sfx&&$('#title').hidden&&$('#maps').hidden){const h=hour();if(S.rain)want.rain=.45;else if(h>=5.5&&h<18)want.birds=1;else if(h>=19||h<5)want.night=1}
+  const want={birds:0,rain:0,night:0};let h=12,on=false;if(S&&started&&SND.sfx&&$('#title').hidden&&$('#maps').hidden){on=true;h=hour();if(S.rain)want.rain=.45;else{/* 朝と夕方は、ゆっくり入れかわる（夜あけは鳥が少しにぎやか） */const cl=v=>Math.max(0,Math.min(1,v));want.birds=h<5||h>=18.5?0:h<6.5?cl((h-5)/1.5)*1.3:h<7.5?1.3-(h-6.5)*.3:h<17?1:cl((18.5-h)/1.5);want.night=h>=17.5?cl((h-17.5)/1.5):h<5.5?cl((5.5-h)/1):0}}
+  ambAccent(on&&!S.rain&&!(typeof paused!=='undefined'&&paused),h);
   for(const k in want){let a=AMB[k];if(!a){if(!want[k])continue;const b=(SBUF[k]||[])[0];if(!b)continue;const src=AC.createBufferSource(),g=AC.createGain();src.buffer=b;src.loop=true;src.loopStart=.06;src.loopEnd=b.duration-.06;g.gain.value=0;src.connect(g);g.connect(ambG);src.start();a=AMB[k]={src,g}}a.g.gain.setTargetAtTime(want[k],AC.currentTime,.8)}}
 const lastSfx={};
 let SFXV=1;

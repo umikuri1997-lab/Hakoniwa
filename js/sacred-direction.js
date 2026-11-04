@@ -101,6 +101,7 @@ function sacredOfferShard(j,done){
   setTimeout(()=>{if(!begun&&S===owner&&VILLAGE_SESSION===session)act();else if(!begun)finish();},15000);/* 歩くのをじゃまされても、止まったままにしない */
 }
 function sacredGrowSparks(j,ms,stage){/* 育つあいだ、根もとから光と葉がまいあがり、のびきったときに、ふわっと広がる */
+  musicDuck(ms+600);
   const owner=S,session=VILLAGE_SESSION,cx=storyTreeX(j)*TS,cy=(storyTreeY(j)+.5)*TS-hiAt(j)*LIFT,n=10+stage*6;
   for(let i=0;i<n;i++)setTimeout(()=>{if(S!==owner||VILLAGE_SESSION!==session)return;const a=Math.random()*Math.PI*2,r=6+Math.random()*16;fx.push({k:'p',x:cx+Math.cos(a)*r,y:cy+2,vx:Math.cos(a)*10,vy:-130-Math.random()*90,life:1.4,col:i%3?'#fff6c8':'#c8f5a0',r:2+(i%2)})},ms*.15+i*(ms*.55/n));
   setTimeout(()=>{if(S!==owner||VILLAGE_SESSION!==session)return;for(let i=0;i<18+stage*4;i++){const a=Math.random()*Math.PI*2,v=30+Math.random()*50;fx.push({k:'p',x:cx,y:cy-20-stage*12,vx:Math.cos(a)*v,vy:Math.sin(a)*v-90,life:1.3,col:i%2?'#c8f5a0':'#fff6c8',r:2})}fx.push({k:'ring',x:cx,y:cy-4,life:1,col:'rgba(255,248,200,.85)'});sfx('bush')},ms*.8);
