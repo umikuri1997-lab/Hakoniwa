@@ -77,6 +77,8 @@ function drawRangeOne(o,j,x,y,strong){const R=rangeOf(o,j);if(!R)return;const co
     ctx.strokeStyle='rgba('+col+','+(strong?.95:.6)+')';ctx.lineWidth=strong?2:1.5;ctx.beginPath();
     for(const k of set){const dx=((k/32)|0)-8,dy=k%32-8,px=(x+dx)*TS,py=(y+dy)*TS,has=(a,b)=>set.has((dx+a+8)*32+(dy+b+8));
       if(!has(0,-1)){ctx.moveTo(px,py);ctx.lineTo(px+TS,py)}if(!has(0,1)){ctx.moveTo(px,py+TS);ctx.lineTo(px+TS,py+TS)}if(!has(-1,0)){ctx.moveTo(px,py);ctx.lineTo(px,py+TS)}if(!has(1,0)){ctx.moveTo(px+TS,py);ctx.lineTo(px+TS,py+TS)}}ctx.stroke()}
+  else if(R.k==='light'){/* 明かり：黄色のもやをかぶせず、地面そのものを明るくする（光をたし算でかさねる。まん中からはしまで同じくらい明るく、ふちだけやわらかく） */const rr=R.r*TS,g=ctx.createRadialGradient(cx,cy,0,cx,cy,rr),a=strong?.26:.16;g.addColorStop(0,'rgba(255,236,190,'+a+')');g.addColorStop(.85,'rgba(255,236,190,'+a*.85+')');g.addColorStop(1,'rgba(255,236,190,0)');
+    ctx.globalCompositeOperation='lighter';ctx.fillStyle=g;ctx.beginPath();ctx.arc(cx,cy,rr,0,7);ctx.fill();ctx.globalCompositeOperation='source-over';ctx.strokeStyle='rgba(255,255,255,'+(strong?.7:.4)+')';ctx.lineWidth=strong?1.5:1;ctx.setLineDash([6,5]);ctx.stroke();ctx.setLineDash([])}
   else{ctx.fillStyle='rgba('+col+','+(strong?.22:.1)+')';ctx.beginPath();ctx.arc(cx,cy,R.r*TS,0,7);ctx.fill();ctx.strokeStyle='rgba('+col+','+(strong?.95:.55)+')';ctx.lineWidth=strong?2:1.5;ctx.setLineDash([6,5]);ctx.stroke();ctx.setLineDash([])}
   ctx.restore()}
 function drawRanges(now){
