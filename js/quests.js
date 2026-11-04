@@ -114,8 +114,9 @@ const FIREB={/* 火のキーキャラが、あにきのとき */
   fence20:{L:[['K','村が大きくなったぶん、守る場所もふえたな。'],['K','まわりは、まだがら空きじゃねえか。'],['K','#alarm|柵をずらっと並べて、「コワイノ」の足を止めてやろうぜ。']],X:[['K','いいじゃねえか、これならそう簡単には入ってこれねえぜ！'],['K','ありがとよ、守り神。']]}};/* ホノ（あにき）は、いつも「おれ」。あたいは、ホムラ（あねご）だけ */
 function inHouseFurn(){const k=new Set();for(let j=0;j<S.obj.length;j++){const o=S.obj[j];if(!o||!BL[o]||BL[o].kind!=='furn'||BL[o].trap)continue;if(HOUSES.some(h=>h.set&&h.set.has(j)))k.add(o)}for(const h of HOUSES)if(h.set)for(const o of rugsIn(h.set))k.add(o);return k.size}/* 家の中にある家具・かざりの種類の数 */
 /* クエストの番号。まとめた目標は、中の小さな目標の名前（parts）でもさがせる */
-function questIndexOf(id){return QUESTS.findIndex(q=>q.id===id||!!q.parts&&q.parts.includes(id))}
-function qNow(id){const q=S&&QUESTS[S.quest];return !!q&&!S.cleared&&S.qTalked&&S.qStory==null&&(q.id===id||!!q.parts&&q.parts.includes(id))}/* いま受けている目標に、その小さな目標がある */
+const qHas=(q,id)=>q.id===id||!!q.parts&&q.parts.includes(id)||!!q.fieldParts&&q.fieldParts.includes(id);
+function questIndexOf(id){return QUESTS.findIndex(q=>qHas(q,id))}
+function qNow(id){const q=S&&QUESTS[S.quest];return !!q&&!S.cleared&&S.qTalked&&S.qStory==null&&qHas(q,id)}/* いま受けている目標に、その小さな目標がある */
 function qAt(id){const qi=questIndexOf(id);if(qi<0)return false;return (S.quest>qi||S.quest===qi&&!!S.qTalked)}/* そのメインクエストを受けたあと */
 function qDone(id){const index=questIndexOf(id);if(index<0)return false;if(S.qStory===index)return false;return S.quest>index}
 const SUB_MAIN_AFTER={chair2:'table',farm10:'farm6',light3:'fire',oven:'fire'};
@@ -415,7 +416,7 @@ ACT.questjoy={start(r,a){if(!qvHas(a.obj,a.targetId)||!questVisitReached(r,a.obj
   for(const k in SUB_CLEAR_WAIT){const w=SUB_CLEAR_WAIT[k];if(!w||w.r!==r||w.obj!==a.obj||w.prompted)continue;const q=SUBQ.find(x=>x.k===k);if(!q)continue;w.prompted=true;(S.subArrived||(S.subArrived={}))[k]=true;S.subSt[k]=3;const reply=questReplyWho(q);if(reply)SUBW[reply]=k}
 },
   tick(r,a){if(!a.secondHop&&performance.now()-a.joyAt>=900){a.secondHop=true;JUMP.set(r,performance.now())}},
-  done:(r,a)=>!qvHas(a.obj,a.targetId)||performance.now()>=a.joyUntil,
+  done:(r,a)=>!qvHas(a.obj,a.targetId)||performance.now()>=a.joyUntil||!!a.partKey&&!a.partKey.startsWith((S.world||0)+':'+(QUESTS[S.quest]?.text)+':'),/* 小さな目標を見にいくのは、その目標のあいだだけ */
   end(r,a){if(JOYU.get(r)===a.joyUntil)JOYU.delete(r)}};
 function upFx(r,nm,txt,big){const now=performance.now();JOYU.set(r,now+2600);RHOLD.set(r,now+2600);r.bubble='😆';r.shine=now;JUMP.set(r,now);setTimeout(()=>{if(S.res.includes(r))JUMP.set(r,performance.now())},900);
   fxSpr('levelup',r.x*TS,(r.y-.5)*TS);

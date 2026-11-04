@@ -24,6 +24,29 @@ for(const id of ['fireSupplies','fireLights','waterFields','waterFlowers','windR
   assert.equal(run('S.qTalked'),false,'replacement must explain its new goal');
 }
 console.log('PR 1064 saves: every index and pending report preserved; active replacements explain the new goal');
+/* 小さな目標をまとめた目標（qmerge1）：古い番号を、名前でまとめた目標へ。2回読みこんでもずれない */
+const V1=JSON.parse(run('JSON.stringify(QUESTS1_V1)')),GROUP=JSON.parse(run('JSON.stringify(QM_GROUP)'));
+for(let i=0;i<=V1.length;i++)for(const talked of [false,true])for(const pending of [false,true]){
+  if(pending&&i===0)continue;
+  run(`S={world:0,flags:{fieldStoryV2:1},mat:{},inv:{},quest:${i},qStory:${pending?i-1:'null'},qTalked:${talked}};migrateQuestMerge(S)`);
+  const id=V1[i],want=id==null?null:id==='lv5'?'tower':GROUP[id]||id;
+  if(id==null)assert.equal(run('S.quest'),run('QUESTS1.length'));
+  else if(!pending||run('S.qStory')==null)assert.equal(run('QUESTS1[S.quest].id'),want,'old '+id);
+  if(pending){const sid=V1[i-1],lastOf=!V1.slice(i).some(v=>(GROUP[v]||v)===(GROUP[sid]||sid));
+    if(lastOf){assert.equal(run('QUESTS1[S.qStory].id'),GROUP[sid]||sid,'pending '+sid);assert(run('S.quest>S.qStory'));}
+    else assert.equal(run('S.qStory'),null,'mid-group story '+sid);}
+  if(id!=null&&!pending&&(GROUP[id]&&GROUP[id]!==id)){const owner=run(`QM_OWNER[${JSON.stringify(GROUP[id])}]`)||GROUP[id],members=V1.filter(v=>(GROUP[v]||v)===GROUP[id]);
+    if(members.indexOf(id)>members.indexOf(owner))assert.equal(run('S.qTalked'),true,'heard merged talk '+id);}
+  const snap=run('JSON.stringify([S.quest,S.qStory,S.qTalked,S.inv,S.mat])');run('migrateQuestMerge(S)');assert.equal(run('JSON.stringify([S.quest,S.qStory,S.qTalked,S.inv,S.mat])'),snap,'idempotent '+id);
+}
+run(`S={world:0,flags:{fieldStoryV2:1},mat:{},inv:{},quest:${V1.indexOf('path')},qStory:null,qTalked:false};migrateQuestMerge(S)`);
+assert.equal(run('S.inv.path'),5,'unheard part talk items are given');assert.equal(run('S.inv.bed'),undefined);
+run(`S={world:0,flags:{fieldStoryV2:1},mat:{},inv:{},quest:${V1.indexOf('wall')},qStory:null,qTalked:true};migrateQuestMerge(S)`);
+assert.equal(run('S.inv.bed'),1);assert.equal(run('S.inv.path'),5);
+run(`S={world:0,flags:{fieldStoryV2:1},mat:{},inv:{},quest:${V1.indexOf('table')},qStory:null,qTalked:true};migrateQuestMerge(S)`);
+assert.equal(run('!!S.flags.qmMbox'),true,'materials from the old storage-box reward are not given twice');
+for(const state of [{world:1},{world:0,free:true}]){run(`S=${JSON.stringify({...state,flags:{},quest:8,qStory:7})};migrateQuestMerge(S)`);assert.equal(run('S.quest'),8);assert.equal(run('S.qStory'),7);}
+console.log('Merged goals: every old index, pending thanks, heard talk, missing talk items, idempotence, other modes');
 for(const [qid,parts] of [['earthListen',['earthListen','earthRoot']],['fireRoot',['fireRoot','fireTrace']],['waterFilm',['waterFilm','waterLeaf']],['windEcho',['windEcho','windVoices']]]){
   run(`S={food:9999,mat:{wood:9999,stone:9999},flags:{},fieldStories:{}}`);
   assert.deepEqual(JSON.parse(run(`JSON.stringify(QUESTS1.find(q=>q.id==='${qid}').fieldParts)`)),parts);
