@@ -7,14 +7,13 @@ const COMFR={rockart:1,jar:1,torch:1,clover:1,bellf:1,salvia:1,lily:1,lotus:1,la
 const COMFY={cooktable:4,joro:3,taru:3,asabukuro:3,makidana:3,kabebukuro:3,takebench:5,takeakari:5,andon:5,shishiodoshi:6,hoshirug:5,mimamori:6,yomawari:6,oyasumi:8,yonaka:10,toro:6,stool:2,stable:4,pouf:3,achair:5,ltable:5,rug1:5,sofa1:6,rug2:6,tub:3,sink:4,crate:3,monstera:10,shelf1:12,wreath:10,curtain1:10,cabinet:12,paint2:10,shelf2:13,curtain2:10,paint3:10,wshelf:12,paint1:14,bathtub:16,candle:3,lantern:5,flamp:6,window:5,bed:10,table:8,chair:4,oven:6,lamp:6,torch:4,bench:5,jar:5,rockart:5,chochin:6,furin:8,ema:8,komainu:10,kadomatsu:10,vane:4,clover:4,bellf:4,salvia:4,lily:4,lotus:4,stor:3,mbox:3};
 function houseComfort(h){let bed=0,furn=0,fl=0,n=0;const seen=new Set();
   const kc={};for(const j of h.inside){n++;if(S.floor[j])fl++;const o=S.obj[j];if(!o)continue;if(BEDSET.has(o)){bed++;continue}/* ベッド（よぞらのベッドも）は数だけ */if(!COMFY[o])continue;{kc[o]=(kc[o]||0)+1;furn+=COMFY[o]*(kc[o]>2?.5:1);seen.add(o)}}/* 同じ家具は2つまで。3つ目からは半分 */
-  if(h.fl2)for(const j of h.fl2.inside){n++;fl++;const o=S.fl2.obj[j];if(!o||o==='part')continue;if(BEDSET.has(o)){bed++;continue}if(!COMFY[o])continue;kc[o]=(kc[o]||0)+1;furn+=COMFY[o]*(kc[o]>2?.5:1);seen.add(o)}/* 2階：床はいつもある */
   for(const o of rugsIn(h.inside)){if(!COMFY[o])continue;kc[o]=(kc[o]||0)+1;furn+=COMFY[o]*(kc[o]>2?.5:1);seen.add(o)}/* ラグ（家の中に1マスでもかかっていれば） */
   {const M=2;for(let y=h.y0-M;y<=h.y1+M;y++)for(let x=h.x0-M;x<=h.x1+M;x++){if(x<0||y<0||x>=W||y>=H)continue;const j=y*W+x;if(h.set.has(j))continue;const o=S.obj[j],rg=COMFR[o];if(!rg||!COMFY[o])continue;const d=Math.max(h.x0-x,x-h.x1,h.y0-y,y-h.y1,0);if(d>rg)continue;kc[o]=(kc[o]||0)+1;furn+=COMFY[o]*(kc[o]>2?.5:1);seen.add(o)}}/* かざりは、家のそば（ものごとの範囲）にあっても住み心地に入る */
-  {let wn=0;for(const j of h.set)if(S.win&&(S.win[j]===1||S.win[j]==='curtain1'||S.win[j]==='curtain2'))wn++;if(h.fl2)for(const w of fl2Wins(h))if(w===1||w==='curtain1'||w==='curtain2')wn++;/* カーテンの下にも窓がある */if(wn){furn+=COMFY.window*Math.min(wn,2)+COMFY.window*.5*Math.max(0,wn-2);seen.add('window')}}/* 窓 */
-  for(const p of [...h.set].map(j=>S.win&&S.win[j]).concat(h.fl2?fl2Wins(h):[])){if(p&&p!==1&&COMFY[p]){kc[p]=(kc[p]||0)+1;furn+=COMFY[p]*(kc[p]>2?.5:1);seen.add(p)}}/* 壁にかけた絵（2階も） */
+  {let wn=0;for(const j of h.set)if(S.win&&(S.win[j]===1||S.win[j]==='curtain1'||S.win[j]==='curtain2'))wn++;/* カーテンの下にも窓がある */if(wn){furn+=COMFY.window*Math.min(wn,2)+COMFY.window*.5*Math.max(0,wn-2);seen.add('window')}}/* 窓 */
+  for(const j of h.set){const p=S.win&&S.win[j];if(p&&p!==1&&COMFY[p]){kc[p]=(kc[p]||0)+1;furn+=COMFY[p]*(kc[p]>2?.5:1);seen.add(p)}}/* 壁にかけた絵 */
   const cap=houseCap(h),over=Math.max(0,bed-cap);/* きゅうくつかどうかは、ベッドの数で決まる */
-  let lit=false;for(let y=h.y0-1;y<=h.y1+1&&!lit;y++)for(let x=h.x0-1;x<=h.x1+1;x++){if(x<0||y<0||x>=W||y>=H)continue;if(LIGHTF.has(S.obj[y*W+x])){lit=true;break}}if(!lit&&h.fl2&&fl2Objs(h).some(o=>LIGHTF.has(o)))lit=true;/* 家の中か、すぐそばに灯り */
-  let rs=0;for(const k of['shosai','living','dining','daidokoro'])if(SPOTI.some(t=>t.sp.k===k&&h.inside.has(t.j)&&t.sp.need.every((nd,i)=>t.found[i].filter(q=>h.inside.has(q)).length>=nd[1]))||h.fl2&&fl2Room(h,k))rs++;/* そろった物が、ぜんぶその家の中にあるときだけ *//* しょさい・リビング：住み心地+5% */
+  let lit=false;for(let y=h.y0-1;y<=h.y1+1&&!lit;y++)for(let x=h.x0-1;x<=h.x1+1;x++){if(x<0||y<0||x>=W||y>=H)continue;if(LIGHTF.has(S.obj[y*W+x])){lit=true;break}}/* 家の中か、すぐそばに灯り */
+  let rs=0;for(const k of['shosai','living','dining','daidokoro'])if(SPOTI.some(t=>t.sp.k===k&&h.inside.has(t.j)&&t.sp.need.every((nd,i)=>t.found[i].filter(q=>h.inside.has(q)).length>=nd[1])))rs++;/* そろった物が、ぜんぶその家の中にあるときだけ *//* しょさい・リビング：住み心地+5% */
   const v=Math.round(Math.max(0,Math.min(COMFMAX,(15+Math.min(210,furn)+(n?fl/n:0)*45-over*105-(lit?0:60))*(1+.05*rs))));/* 上限は300 */
   return{v,bed,cap,lit,kinds:seen.size,floorPct:n?Math.round(fl/n*100):0,over}}
 
@@ -73,13 +72,13 @@ function sayLine(r){const L=[],fav=FOODS[favDish(r)],m=bestMate(r);
 function helloLine(r){const k=elemKey(r);
   if(r.back)return pick(BACKL[k]);if(KEYHELLO[r.name])return KEYHELLO[r.name];return pick(HELLO[k]).replace('$',r.name)}
 const likeF=r=>{if(r.lf&&BL[r.lf])return r.lf;let h=2166136261;for(const ch of r.name+(r.id||0))h=Math.imul(h^ch.charCodeAt(0),16777619)>>>0;h^=h>>>13;h=Math.imul(h,2246822507)>>>0;h^=h>>>16;r.lf=LIKEF[(h>>>0)%LIKEF.length];return r.lf};/* 好きな家具：ひとりずつちらばる（一度決まったら変わらない） */
-const hasLikeF=(h,r)=>{const f=likeF(r);if(h.fl2&&fl2Count(h,f))return true;for(const j of h.inside)if(S.obj[j]===f)return true;if(S.win)for(const j of h.set)if(S.win[j]===f)return true;/* 壁にかける物（絵・カーテン） */return RUGS.has(f)&&rugsIn(h.inside).includes(f)};
-const likeExtra=(h,r)=>{const f=likeF(r),pt=COMFY[f]||0;if(!pt)return 0;let n=0,t=0;for(const j of h.inside)if(S.obj[j]===f){n++;t+=pt*(n>2?.5:1)}if(RUGS.has(f))for(const o of rugsIn(h.inside))if(o===f){n++;t+=pt*(n>2?.5:1)}if(S.win)for(const j of h.set)if(S.win[j]===f){n++;t+=pt*(n>2?.5:1)}/* 壁にかけた絵・カーテン */if(h.fl2)for(let c=fl2Count(h,f);c>0;c--){n++;t+=pt*(n>2?.5:1)}return t};/* 好きな家具は、その家具のぶんの住み心地ポイントが2倍 */
+const hasLikeF=(h,r)=>{const f=likeF(r);for(const j of h.inside)if(S.obj[j]===f)return true;if(S.win)for(const j of h.set)if(S.win[j]===f)return true;/* 壁にかける物（絵・カーテン） */return RUGS.has(f)&&rugsIn(h.inside).includes(f)};
+const likeExtra=(h,r)=>{const f=likeF(r),pt=COMFY[f]||0;if(!pt)return 0;let n=0,t=0;for(const j of h.inside)if(S.obj[j]===f){n++;t+=pt*(n>2?.5:1)}if(RUGS.has(f))for(const o of rugsIn(h.inside))if(o===f){n++;t+=pt*(n>2?.5:1)}if(S.win)for(const j of h.set)if(S.win[j]===f){n++;t+=pt*(n>2?.5:1)}/* 壁にかけた絵・カーテン */return t};/* 好きな家具は、その家具のぶんの住み心地ポイントが2倍 */
 const comfyFor=(h,r,C)=>Math.min(COMFMAX,(C||houseComfort(h)).v+likeExtra(h,r));
 const comfyStars=v=>'★'.repeat(Math.min(5,Math.max(1,Math.ceil(v/(60)))))+'☆'.repeat(5-Math.min(5,Math.max(1,Math.ceil(v/(60)))));
 /* 家の広さで、ちょうどいい人数が決まる（中のマス4つで1人） */
 const bedOwner=j=>{const id=(S.bedOwn||{})[j];return id!=null&&BEDSET.has(S.obj[j])?S.res.find(q=>q.id===id)||null:null},myBed=r=>{const B=S.bedOwn||{};for(const k in B)if(B[k]===r.id&&BEDSET.has(S.obj[k]))return +k;return -1},bedFor=(j,r)=>{const o=bedOwner(j);return !o||o===r};/* ベッドの持ち主（いない子のは、だれでも使える） */
-const houseCap=h=>Math.max(1,Math.floor(h.inside.size/4))+(h.fl2?Math.floor(h.fl2.inside.size/4):0)/* 2階の床のぶんもふえる *//* 床のマス数の1/4（壁はふくめない）。はじめの家で3人 */,roomOf=j=>HOUSES.find(h=>h.set.has(j)),roomSleepN=h=>S.res.filter(x=>x.act&&(x.act.type==='sleep'||x.act.type==='stay')&&x.act.stand>=0&&h.set.has(x.act.obj!=null?x.act.obj:x.act.stand)).length;
+const houseCap=h=>Math.max(1,Math.floor(h.inside.size/4))/* 床のマス数の1/4（壁はふくめない）。はじめの家で3人 */,roomOf=j=>HOUSES.find(h=>h.set.has(j)),roomSleepN=h=>S.res.filter(x=>x.act&&(x.act.type==='sleep'||x.act.type==='stay')&&x.act.stand>=0&&h.set.has(x.act.obj!=null?x.act.obj:x.act.stand)).length;
 // 屋根がすけて中をのぞいているときは、家の中のせいれいも外と同じに見せる
 const peekH=r=>HOUSES.some(h=>h.set.has((r.y|0)*W+(r.x|0))&&roofAOf(h)<.5);
 // 木の壁・石垣・ドアだけで囲まれ、ドアがついた場所を家とみなす
@@ -108,7 +107,7 @@ function findHouses(){const isB=j=>HOME_WALLS.has(typeAt(j))||HOME_DOORS.has(typ
       let x0=W,y0=H,x1=0,y1=0;for(const j of set){const x=j%W,y=(j/W)|0;x0=Math.min(x0,x);y0=Math.min(y0,y);x1=Math.max(x1,x);y1=Math.max(y1,y)}
       let ib=0;for(const j of cells)ib=Math.max(ib,(j/W)|0);/* ib：家の中のいちばん下の行 */
       out.push({set,inside:new Set(cells),x0,y0,x1,y1,ib})}}
-  HOUSES=out;if(typeof fl2Houses==='function')fl2Houses()}/* 2階への階段と2階の部屋 */
+  HOUSES=out}
 // 屋根：上から見た切妻屋根。いちばん下の列は正面の壁（窓つき）。拡大すると消えて中が見える
 /* 屋根は、ズームでは変えない。「みる」では屋根あり、置く・こわすときだけ外して中を見せる */
 /* 屋根は家ごと。家をタップすると屋根が消えて中が見える。家の外をタップすると、もどる */
