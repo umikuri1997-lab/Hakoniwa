@@ -104,7 +104,7 @@ function focusMainStoryPlace(){
   const ty=target.y*TS+(VH/2-(top+bottom)/2)/z;
   camAnim={fz:cam.z,tz:z,fx:cam.x+VW/cam.z/2,fy:cam.y+VH/cam.z/2,tx:target.x*TS,ty,t:0,dur:.8,storyGoal:true};return true;
 }
-function openCurrentGoal(){if(!focusMainStoryPlace())openSheet('menu','goal');}
+function openCurrentGoal(){sfx('tap');openSheet('menu','goal');}/* 目標の欄をタップすると、いつも目標の一覧。場所へ行くのは、一覧の中の「お話・調査の場所へ」 */
 const STORY_WAIT_BLOCKS=new WeakMap();
 function noteStoryWaitBlock(r,obj,reason){STORY_WAIT_BLOCKS.set(r,{owner:S,session:VILLAGE_SESSION,obj,until:S.t+3,reason});}
 function clearStoryWaitBlock(r){STORY_WAIT_BLOCKS.delete(r);}
