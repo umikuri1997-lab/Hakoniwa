@@ -162,9 +162,9 @@ function updEnemy(e,dt){
     else if(to==='gust'&&rdy){cd[tj]=S.t+150;let dx=e.x-CX,dy=e.y-CY;const l=Math.hypot(dx,dy)||1;dx/=l;dy/=l;{let bx=null,by=null;for(let k=1;k<=6;k++){const nx=e.x+dx*k,ny=e.y+dy*k,q=(ny|0)*W+(nx|0);if(!(nx>1&&ny>1&&nx<W-1&&ny<H-1)||!walk(q)||HOME_DOORS.has(typeAt(q))||GATE_IDS.has(typeAt(q)))break;bx=nx;by=ny}if(bx!=null){e.x=bx;e.y=by}}/* 壁・ドア・門の手前までしか、ふきとばさない */e.path=[];e.repath=0;e.stun=2;sfxAt('bush',e.x,e.y);return}}}
   let goal=-1,tgt=null;
   if(e.flee){e.fleeT=(e.fleeT||0)+dt;if(e.fleeT>40&&!e.path.length){e.dead=true;return}/* にげる道がどこにもないときだけ消える */if(e.x<.6||e.y<.6||e.x>W-.6||e.y>H-.6||(D.thief&&e.fleeT>12&&!VILL[(e.y|0)*W+(e.x|0)])){e.dead=true;return}}/* カゲドロボウは、にげたらすぐ消える */
-  else if(D.thief){let bd=1e9,box=-1;for(const k in S.dyn){if(S.obj[k]!=='farm'||S.dyn[k].sown===false||S.dyn[k].g<100)continue;const fx2=k%W+.5,fy=((k/W)|0)+.5,d=Math.hypot(fx2-e.x,fy-e.y);if(d<bd){bd=d;goal=+k;box=-1}}
-    if(S.food>0)for(let k=0;k<W*H;k++){if(!storageAt(k,'food'))continue;const d=Math.hypot(k%W+.5-e.x,((k/W)|0)+.5-e.y)-.7;if(d<bd){const n=[k-1,k+1,k-W,k+W].find(q=>walk(q));if(n!=null){bd=d;goal=n;box=k}}}
-    if(matTot()>0)for(let k=0;k<W*H;k++){if(!storageAt(k,'mat'))continue;const d=Math.hypot(k%W+.5-e.x,((k/W)|0)+.5-e.y)-.7;if(d<bd){const n=[k-1,k+1,k-W,k+W].find(q=>walk(q));if(n!=null){bd=d;goal=n;box=-2-k}}}
+  else if(D.thief){let bd=1e9,box=-1;if(!EREACH.has(e))EREACH.set(e,bfs(e.x|0,e.y|0,2).dist);const RD=EREACH.get(e),ok=q=>q>=0&&q<W*H&&RD[q]>=0;/* 歩いて行ける所からだけ盗む（壁のうらからは盗めない） */for(const k in S.dyn){if(S.obj[k]!=='farm'||S.dyn[k].sown===false||S.dyn[k].g<100||!ok(+k))continue;const fx2=k%W+.5,fy=((k/W)|0)+.5,d=Math.hypot(fx2-e.x,fy-e.y);if(d<bd){bd=d;goal=+k;box=-1}}
+    if(S.food>0)for(let k=0;k<W*H;k++){if(!storageAt(k,'food'))continue;for(const n of[k-1,k+1,k-W,k+W]){if(!walk(n)||!ok(n)||storeAdj(n,'food')<0)continue;const d=Math.hypot(n%W+.5-e.x,((n/W)|0)+.5-e.y);if(d<bd){bd=d;goal=n;box=k}}}
+    if(matTot()>0)for(let k=0;k<W*H;k++){if(!storageAt(k,'mat'))continue;for(const n of[k-1,k+1,k-W,k+W]){if(!walk(n)||!ok(n)||storeAdj(n,'mat')<0)continue;const d=Math.hypot(n%W+.5-e.x,((n/W)|0)+.5-e.y);if(d<bd){bd=d;goal=n;box=-2-k}}}
     if((e.stolen||0)>=10){e.flee=true;e.path=[];e.repath=0}
     else if(goal>=0&&bd<.6){const key=box===-1?'farm:'+goal:'box:'+box;if(e.stealKey!==key){e.stealKey=key;e.stealT=0}e.busyT=S.t;e.stealT=(e.stealT||0)+dt/DAYLEN;e.path=[];
       if(e.stealT>=10){e.stealT-=10;let got='';
