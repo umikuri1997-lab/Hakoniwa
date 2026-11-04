@@ -66,7 +66,7 @@ function questGives(q,g){g=g||q.gives||{};
     const after=g.watchNow?(hadW?()=>{S.pt+=BL.watch.pc;for(const k in BL.watch.mat)S.mat[k]=(S.mat[k]||0)+BL.watch.mat[k];toast('見張り台の分のパワーと素材をカミサマが返してくれた','good');checkQuest()}:()=>{setMode('build');sel='watch';renderPalette();toast('見張り台を置く場所をタップ')}):null;
     return after}
 /* 草原のかけら：村の想い・土地の復興・最後の防衛。それぞれ、もとから土地に残っていた力が応える */
-function giveShard(src){if(S.flags['sh_'+src])return;S.flags['sh_'+src]=true;S.shards=Math.min(3,(S.shards||0)+1);sfx('level');toast('「ヌシのかけら」を手に入れた！（'+S.shards+'/3）','good');logEv('ヌシのかけらを手に入れた');memo('💎','ヌシのかけらを手に入れた（'+S.shards+'/3）')}
+function giveShard(src){if(S.flags['sh_'+src])return;S.flags['sh_'+src]=true;S.shards=Math.min(3,(S.shards||0)+1);sfx('level');const nm=SHN(),c=WD===1?'':'（'+S.shards+'/3）';toast('「'+nm+'」を手に入れた！'+c,'good');logEv(nm+'を手に入れた');memo('💎',nm+'を手に入れた'+c)}
 /* 吹き出しは、最初に話す人から出す */
 function spkOK(w){return w===GOD?godHere():!!w&&S.res.some(r=>r.name===w&&!r.hidden)}
 function firstSpk(lines,fb){const w=lines&&lines[0]&&lines[0][0];return spkOK(w)?w:fb}
@@ -100,18 +100,27 @@ function renderQuest(){const q=QUESTS[Math.min(S.quest,QUESTS.length-1)];let pr=
 const NUSHI_T=[
   {"open":[["フタバ","みんな、一緒に。あの木の下へ帰ろう。"],["ノドカ","ゆっくりで、だいじょうぶだよぉ。"]],"name":"草原のヌシ","nushi":["……大きくなったな。"],"world":[],"reu":[["U","木も。おまえも。",0,"nfF"],["F","……あのとき。"],["F","よかった、って言ったの……ヌシ様だったんだね。"],["U","ああ。"],["F","……遅いよ。",0,"stree:hug"],["U","待たせてしまった。"],["F","……。"],["F","みんなが、手伝ってくれたんだ。",0,"stree:group"],["F","ぼく、ひとりじゃ、何もわからなかった。"],["N","ぼくも、ひとりじゃ土をよけただけだったよぉ。",1],["H",{"A":"あたいは、石を温めただけだね。","B":"おれは、石を温めただけだな。"},1],["M","その後に、水を通せました。",1],["K","そして、ようやく声が届いた。",1],["U","……よい仲間に会えたな。"],["F","うん。"],["F","#teary|おかえりなさい。"],["U","……ただいま。",0,"stree:group"]],"next":[],"after":[],"toast":"ステージクリア！","last":"草原にもどる"},
   {open:[[HOMURA,'夜をこえたよ…！','cheer'],[SHIZUKU,'みなさん、力をそそいでください。']],
-   nushi:['#think|……ふう。ようやく、体があたたまってきた。','守り神よ、せいれいたちよ。この地の熱を取りもどしてくれて、礼を言う。','わたしは、火のせいれいたちを生み、この火の山の熱を見守る者。草原のヌシとは、むかしからの知り合いだ。','#think|……あの影たちは、わたしの熱をうばっても、すこしもあたたまれなかったようだ。','かけらの記憶によれば、次は霧につつまれた水べの村。水の流れが止まり、霧がはれないままだという。'],
+   nushi:['#think|……ふう。ようやく、体があたたまってきた。','守り神よ、せいれいたちよ。この地の熱を取りもどしてくれて、礼を言う。','わたしは、火のせいれいたちを生み、この火の山の熱を見守る者。草原のヌシとは、むかしからの知り合いだ。','#think|……あの影たちは、わたしの熱をうばっても、すこしもあたたまれなかったようだ。','もどった熱をたどると、次は霧につつまれた水べの村が見える。水の流れが止まり、霧がはれないままだという。'],
    after:[[GOD,'おつかれさん〜！ 見とったぞい。'],[GOD,'次は「霧のみずべの村」じゃ。…まだ道が通じておらんのじゃ。準備ができたら知らせるぞい。'],[HOMURA,'あたいたちは、この村と温泉をまもるよ。また入りにおいで！','cheer'],[SHIZUKU,'お気をつけて。…ときどき、温泉にいらしてくださいね。']],toast:'ステージクリア！ 「霧のみずべの村」は、ただいま準備中',last:'村にもどる'}];
 let NUSHI_RUN=false,WELCOME_RUN=false;
-function gatherAt(TX,TY,then,skipId,wait){/* せいれいみんなが、台座のまわりへ歩いて集まる（瞬間移動はしない）。そろうか、10秒たったら、つぎへ */
-  const spot={};const go=()=>{const used=new Set(Object.values(spot));for(const r of S.res){if(r.hidden||r.id===skipId||r.act&&r.act.type==='nmeet')continue;const G=bfs(r.x|0,r.y|0);let b=spot[r.id]??-1;if(b<0){let bd=1e9;for(let k=0;k<W*H;k++){if(G.dist[k]<0||used.has(k)||!walk(k)||S.obj[k]||roomOf(k))continue;const ky=(k/W)|0,d=Math.hypot(k%W+.5-TX,ky+.5-TY);if(d<1.6||d>5)continue;const sc=d+(ky<TY+1?3:0)+G.dist[k]*.02;/* 家の外の、台座の前がわ（見えるところ）に */if(sc<bd){bd=sc;b=k}}}if(b<0)continue;spot[r.id]=b;used.add(b);if(r.cing){const R=RECIPES.find(x=>x.out===r.cing.rec);if(R)for(const k in R.need)addFood(k,R.need[k]);r.cing=null}/* 料理のとちゅうなら、材料は箱にもどす */endAct(r);startAct(r,G,'nmeet',b,{run:true})}};
-  const t0=performance.now();let last=0;const chk=()=>{const n=performance.now();if(n-last>1500){last=n;go()}if(S.res.every(r=>r.hidden||r.id===skipId||r.act&&r.act.type==='nmeet'&&r.act.stage==='do')||n-t0>(wait||10000))return then();villageTimeout(chk,250)};villageTimeout(chk,300)}
-function nushiReturns(){if(NUSHI_RUN||S.cleared||WD===0&&grassReunionBlockReason())return;NUSHI_RUN=true;S.flags.nushiDue=1;/* ヌシ様が帰ってくる場面。「クリア」にするのは、場面を最後まで見てから（途中でとじたら、はじめから） */
+let DEPART_RUN=false,GATHER_HOLD=false;/* お見送りで集まっているあいだ（集まった子を、その場で待たせる） */
+function gatherAt(TX,TY,then,skipId,abort){/* せいれいみんなが、台座のまわりへ歩いて集まる（瞬間移動はしない）。みんながそろってから、つぎへ。いなくなった子・通れない子がいたら、やめて知らせる */
+  const owner=S,session=VILLAGE_SESSION,cast=S.res.filter(r=>!r.hidden&&r.id!==skipId),spot={},miss={},here=r=>r.act&&r.act.type==='nmeet'&&r.act.stage==='do';
+  const go=()=>{const used=new Set(Object.values(spot));for(const r of cast){if(r.act&&r.act.type==='nmeet')continue;const G=bfs(r.x|0,r.y|0);let b=spot[r.id]??-1;if(b>=0&&G.dist[b]<0)b=-1;if(b<0){let bd=1e9;for(let k=0;k<W*H;k++){if(G.dist[k]<0||used.has(k)||!walk(k)||S.obj[k]||roomOf(k))continue;const ky=(k/W)|0,d=Math.hypot(k%W+.5-TX,ky+.5-TY);if(d<1.6||d>5)continue;const sc=d+(ky<TY+1?3:0)+G.dist[k]*.02;/* 家の外の、台座の前がわ（見えるところ）に */if(sc<bd){bd=sc;b=k}}}if(b<0){miss[r.id]=(miss[r.id]||0)+1;continue}miss[r.id]=0;spot[r.id]=b;used.add(b);if(r.cing){const R=RECIPES.find(x=>x.out===r.cing.rec);if(R)for(const k in R.need)addFood(k,R.need[k]);r.cing=null}/* 料理のとちゅうなら、材料は箱にもどす */endAct(r);startAct(r,G,'nmeet',b,{run:true})}};
+  GATHER_HOLD=true;const stop=msg=>{GATHER_HOLD=false;for(const r of cast)if(S.res.includes(r)&&r.act&&r.act.type==='nmeet')endAct(r);if(msg)toast(msg,'warn');if(abort)abort(msg)};
+  const t0=performance.now();let last=0;const chk=()=>{if(S!==owner||session!==VILLAGE_SESSION){GATHER_HOLD=false;return}const n=performance.now();
+    const gone=cast.find(r=>!S.res.includes(r)||r.hidden);if(gone)return stop(gone.name+'がもどるまで、お話は進まない');
+    if(n-last>1500){last=n;go()}
+    const stuck=cast.find(r=>(miss[r.id]||0)>=3);if(stuck)return stop(stuck.name+'が通れない。道をあけよう');
+    if(cast.every(here)){GATHER_HOLD=false;return then()}
+    if(n-t0>90000){const p=cast.find(r=>!here(r));return stop(p?p.name+'が、集まれなかった':'')}/* 時間切れでも、遠くのまま話しはじめない */
+    villageTimeout(chk,250)};villageTimeout(chk,300)}
+function nushiReturns(resume){if(NUSHI_RUN||S.cleared||WD===0&&grassReunionBlockReason())return;NUSHI_RUN=true;S.flags.nushiDue=1;/* ヌシ様が帰ってくる場面。「クリア」にするのは、場面を最後まで見てから（途中でとじたら、はじめから） */
   checkQuest();renderQuest();const T=NUSHI_T[WD];
   const tw=S.obj.indexOf('tower'),TX=tw>=0?storyTreeX(tw):CX+.5,TY=tw>=0?storyTreeY(tw):CY;
   if(WD===0)sacredShot('care',S.res.filter(r=>Math.hypot(r.x-TX,r.y-TY)<6));else centerOn(TX*TS,(TY-1)*TS);
   const openF=L=>{const o=L.filter(l=>l[0]===GOD||S.res.some(r=>r.name===l[0]));return o.length?o:[[GOD,'朝じゃな。…さあ、台座に力をそそぐんじゃ。']]};
-  const runOpen=()=>dialog(openF(T.open),()=>gatherAt(TX,TY,()=>{
+  const gathered=()=>gatherAt(TX,TY,()=>{
     // せいれいたちが、台座のまわりに集まってから、ひとりずつ力をそそぐ
     if(WD===0)sacredShot('group',S.res,1.5);towerGlow(60000);/* 台座が光りはじめる */{const hn=performance.now();for(const r of S.res){RHOLD.set(r,hn+300000);if(WD!==0)STRAINU.set(r,hn+S.res.length*260+1200)}}/* 場面のあいだ、せいれいは歩かない。力をそそぐあいだは >< の顔 */
     S.res.forEach((r,i)=>villageTimeout(()=>{r.face=TX>=r.x?1:-1;if(WD!==0)JUMP.set(r,performance.now());else sacredScenePose(r,'storyTouch',2200,{side:true,target:tw});spawnFX(r.x-.5,r.y-.6,ELEM[r.elem].col);sfx('furn')},i*260));
@@ -132,9 +141,21 @@ function nushiReturns(){if(NUSHI_RUN||S.cleared||WD===0&&grassReunionBlockReason
         });
       },null,T.name||'ヌシ様'),3200);
     }},t0+5200);
-  }));
-  runOpen();
+  },null,()=>{NUSHI_RUN=false;TOWERGLOW=0;villageTimeout(()=>{if(!S.cleared&&S.flags.nushiDue)nushiReturns(true)},20000)});/* 集まれなかったら、しばらくして、集まるところから */
+  if(resume)gathered();else dialog(openF(T.open),gathered);
 }
+/* 火山の装置：話す子が装置へ歩いていき、手をあてる → 温泉に湯気がのぼって音 → みんながよろこぶ（実時間。終わるまで、つぎのセリフへ送らない） */
+function heatScene(k){if(WD!==1||!S||!HSPC[k])return;const who=k==='b'?HOMURA:SHIZUKU,r=S.res.find(q=>q.name===who&&!q.hidden),dj=k==='b'?D1:D2,owner=S,session=VILLAGE_SESSION,alive=()=>S===owner&&VILLAGE_SESSION===session;
+  const dx=dj%W+.5,dy=(dj/W|0)+.5,[sx,sy]=HSPC[k],pan=(x,y,z)=>{camAnim={fz:cam.z,tz:Math.max(cam.z,z),fx:cam.x+VW/cam.z/2,fy:cam.y+VH/cam.z/2,tx:x*TS,ty:y*TS,t:0,dur:1}};
+  STAGEWAIT=performance.now()+15000;pan(dx,dy,1.6);
+  const gesture=()=>{if(!alive())return;if(r){r.face=dx>=r.x?1:-1;sacredScenePose(r,'storyTouch',1800,{side:true,face:r.face})}sfx('furn');STAGEWAIT=performance.now()+3600;
+    villageTimeout(()=>{pan(sx,sy-.5,1.6);sfx('wave');fxSpr('spring',sx*TS,sy*TS);for(let i=0;i<22;i++)villageTimeout(()=>fx.push({k:'p',x:sx*TS+(Math.random()-.5)*TS*1.6,y:sy*TS,vx:(Math.random()-.5)*14,vy:-45-Math.random()*35,life:1.8,col:'rgba(255,255,255,.75)',r:4}),i*55)},900);
+    villageTimeout(()=>{for(const q of S.res)if(!q.hidden&&(q.name===HOMURA||q.name===SHIZUKU)){JUMP.set(q,performance.now());JOYU.set(q,performance.now()+1800)}sfx('good')},2500)};
+  if(!r||Math.hypot(r.x-dx,r.y-dy)>10||!sacredSceneWalk(r,dx,dy+1,{},gesture))gesture()}/* 遠すぎるときは、その場で手をあてる */
+/* 会話の中の手の動き：give＝フタバがノドカに花のかんむりをわたす／push＝ノドカがフタバの背中を押す */
+function stageHands(c){if(!S)return;const f=S.res.find(q=>q.name===POKO&&!q.hidden),n=S.res.find(q=>q.name===MINA&&!q.hidden);if(!f||!n)return;const now=performance.now();
+  if(c==='give'){f.face=n.x>=f.x?1:-1;n.face=-f.face;sacredScenePose(f,'storyOffer',1500,{side:true,face:f.face});for(let i=0;i<10;i++)villageTimeout(()=>{const q=i/10,hx=f.x*TS+f.face*6,hy=f.y*TS-30;fx.push({k:'p',x:hx+(n.x*TS-hx)*q,y:hy+(n.y*TS-44-hy)*q,vx:0,vy:-8,life:.7,col:i%2?'#ffd1e8':'#fff3a0',r:3})},500+i*50);villageTimeout(()=>{JOYU.set(n,performance.now()+1400);JUMP.set(n,performance.now());sfx('bush')},1100);STAGEWAIT=now+1500}
+  else{n.face=f.x>=n.x?1:-1;f.face=n.face;sacredScenePose(n,'storyTouch',1300,{side:true,face:n.face});villageTimeout(()=>{JUMP.set(f,performance.now());JOYU.set(f,performance.now()+1500);sfx('wave')},450);STAGEWAIT=now+1300}}
 function calcScore(){const d=S.clearDay||dayNo(),parts=[['クリアした日',d+'日目',d<=26?4000:d<=30?3200:d<=34?2600:d<=39?2000:d<=44?1500:d<=54?1000:500],['せいれい',S.res.length+'人',S.res.length*100],['消えてしまったせいれい',(S.deaths||0)+'人',-Math.min(1000,(S.deaths||0)*50)]];
  const tot=Math.max(0,parts.reduce((a,p)=>a+p[2],0)),rank=tot>=5000?'S':tot>=4000?'A':tot>=2500?'B':'C'/* ふつうはB。はやく・消さずにクリアでS */;return{tot,rank,parts}}/* クリアスコア：早いほど・せいれいが多いほど・消えたせいれいが少ないほど高い。夜の数・パワーなど、長く遊ぶほどふえるものは入れない。クリアした日：26日目まで4000・30日目まで3200・34日目まで2600・39日目まで2000・44日目まで1500・54日目まで1000・それより後500。せいれい：1人100てん。消えたせいれい：1人50てん引く（引くのは1000まで）。S 5000・A 4000・B 2500 */
 function visionFX(lines,after){const d=document.createElement('div');d.style.cssText='position:absolute;inset:0;background:#0b0f0a;opacity:0;pointer-events:none;z-index:25;transition:opacity .9s ease';$('#app').appendChild(d);requestAnimationFrame(()=>requestAnimationFrame(()=>{d.style.opacity='.55'}));setTimeout(()=>dialog(lines,()=>{d.style.opacity='0';setTimeout(()=>{d.remove();after&&after()},900)},null,''),1000)}/* かけらにふれたとき、画面が暗くなって記憶がうかぶ（会話の枠は暗くしない・暗さは控えめ） */
@@ -148,6 +169,7 @@ const NTALK=[[/* 草原のヌシ：守り神に話す（ひとつずつ、順番
   '花が咲くたび、この地のどこかで、新しい命がめざめる。……おまえのおかげだ。',
   'むかし、ここには、もっと多くの子らがいた。……いまも、風のなかに、その声がまざっている気がする。',
   '#joy|子らは、わたしの足あとに、花の種をうえてまわっている。……ありがたいが、少しくすぐったい。',
+  '#think|むかしは、昼と夜にも、それを見守るヌシがいたのだがな。',
   '#think|昼と夜は、ふたつでひとつ。どちらかが欠けると、もう一方も、すこしずつ弱っていく。',
   '雨の日は、葉がよろこぶ。わたしも、すこしだけ、背がのびた気がする。',
   '守り神よ。おまえは、つかれないのか。……ふむ。神というのも、たいへんだな。',
