@@ -16,6 +16,7 @@ function checkQuest(){
   if(S.qStory!=null){TALKW=storyWho(QUESTS[S.qStory]);QUESTCLEARW=TALKW;renderQuest();return}/* クエストのあとのお話は、💬をタップしてから */
   if(qMissing(q).length){renderQuest();return}
   if(q.talk&&!S.qTalked){if(q.talk.when()&&!isNight())TALKW=earthIntroQuest(q)?earthIntroSpeaker(q):firstSpk(q.talk.lines,q.talk.who);renderQuest();return}/* 新しいクエストの声かけは、昼だけ */
+  if(q.id==='nushi'&&S.qTalked&&!S.flags.greenTold&&!S.flags.finalWon&&GRASSN<2500&&!isNight())talkOnce('greenTold',[...greenTalk(),[POKO,'#joy|うん！　みんなで、草原をみどりにしよう！']]);/* 前のセーブで、この話を聞かずに目標が出ていたとき */
   if(q.field)fieldStoryEnsure(fieldActiveId(q));
   const complete=q.check();if(!complete)checkQuestParts(q);
   if(complete){
