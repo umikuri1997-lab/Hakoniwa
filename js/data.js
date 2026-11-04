@@ -116,7 +116,7 @@ const BL={
   swing:{name:'ブランコ',sz:[2,1],kind:'furn',pc:9,time:160,maker:'wood',lv:4,play:{pt:4,pw:1.8,fun:40,dur:50,cap:1},attr:{wind:3},mat:{wood:12,shina:4},mat1:{bamboo:8,wood:4,kuru:4},desc:'1人で遊べる。たのしさ +40（50分）。遊ぶと10%の確率で、移動速度+1'},
   torch:{hp:5,brk:1,fix:1,fixm:{eda:2},name:'たいまつ',kind:'furn',lv:3,pc:1,time:100,maker:'fire',solid:1,anim:1,attr:{fire:2},mat:{eda:3},mat1:{bamboo:3},desc:'まわり3.5マスを照らす。住み心地+4'},
   composter:{hp:5,brk:1,fix:2,fixm:{wood:3},name:'コンポスター',kind:'furn',cat:'other',f2:1,pc:3,time:80,maker:'wood',solid:1,attr:{wood:1},mat:{wood:10},desc:'草を入れると、1日で肥料になる。草1こで肥料1こ'},
-  joro:{hp:5,brk:1,fix:2,fixm:{can:1},name:'ブリキのじょうろ',kind:'furn',cat:'other',f2:1,pc:3,time:80,maker:'water',solid:1,attr:{water:1},mat:{can:2,eda:1},desc:'空き缶でつくったじょうろ。まわり3マスの畑の水やりの速さ+10%（重複なし）。住み心地+3'},
+  joro:{hp:5,brk:1,fix:2,fixm:{can:1},name:'ブリキのじょうろ',kind:'furn',cat:'other',f2:1,pc:3,time:80,maker:'water',solid:1,attr:{water:1},mat:{can:2,eda:1},desc:'空き缶でつくったじょうろ。まわり5マスの畑の水やりの速さ+10%（重複なし）。住み心地+3'},
   jar:{hp:5,brk:1,fix:2,fixm:{stone:3},name:'みずがめ',kind:'furn',lv:3,pc:3,time:120,maker:'water',solid:1,attr:{water:3},mat:{stone:5},desc:'水をためたかめ。雨の日に水がたまり、畑10マスぶんの水をくめる。住み心地+5'},
   basin:{hp:5,brk:1,fix:4,fixm:{stone:3},name:'水鉢',kind:'furn',pc:7,time:160,maker:'water',solid:1,anim:1,attr:{water:4,wood:.5},mat:{stone:5},desc:''},/* もう作れない（古いセーブ用） */
   kamizo:{hp:5,brk:1,fix:5,fixm:{stone:13},name:'カミサマの像',kind:'furn',lv:5,pc:10,time:160,maker:'earth',solid:1,attr:{earth:2},mat:{stone:25},desc:'カミサマが遊びにくる確率50%'},
