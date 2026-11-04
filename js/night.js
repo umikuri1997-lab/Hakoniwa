@@ -113,7 +113,7 @@ const LIGHTP={/* 夜の明かり：光のまん中（マスの左上から dx・
 function steleF(j){const o=S.obj[j],b=o&&BL[o]&&BL[o].hp;if(!b||!STELES.length)return 1;const x=j%W,y=(j/W)|0;for(const q of STELES)if(Math.hypot(q%W-x,((q/W)|0)-y)<=5)return (BL[o].hpS||b)/b;return 1}/* 石碑：まわり5マスの壁は、じょうぶさが BL の hpS（実数で書いてある）になる */
 function litNear(h,x,y){for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++)if(h.set.has((y+dy)*W+x+dx))return true;return false}/* 家の中の灯り：家ぜんたいと、そこから1マス */
 function lightMul(x,y){for(const j of LIGHTS)if(S.obj[j]==='toro'&&(j%W+.5-x)**2+(((j/W)|0)+.5-y)**2<12.25)return .75;return lightAt(x,y)?.8:1}/* 灯りの中のコワイノの速さ：石どうろう0.75倍・ふつうの灯り0.8倍 */
-function lightAt(x,y){for(const j of LIGHTS){const o=S.obj[j];const offset=o==='tower'&&WD===0?sacredSpan()/2:o==='lighthouse'?1:.5,lx=j%W+offset,ly=((j/W)|0)+offset;if(INDL.has(o)){const h=roomOf(j);if(h?litNear(h,x|0,y|0):(lx-x)**2+(ly-y)**2<2.25)return true;continue}if((lx-x)**2+(ly-y)**2<(o==='tower'?49:o==='lighthouse'?64:12.25))return true}/* 灯りの範囲（石灯籠2.5・ふつう3.5・台座7マス） */return false}
+function lightAt(x,y){for(const j of LIGHTS){const o=S.obj[j];const offset=o==='tower'&&WD===0?sacredSpan()/2:o==='lighthouse'?1:.5,lx=j%W+offset,ly=((j/W)|0)+offset;if(INDL.has(o)){const h=roomOf(j);if(h?litNear(h,x|0,y|0):(lx-x)**2+(ly-y)**2<2.25)return true;continue}if((lx-x)**2+(ly-y)**2<(o==='tower'?49:o==='lighthouse'?64:12.25))return true}/* 灯りの範囲（石灯籠2.5・ふつう3.5・台座7マス） */return gearLightAt(x,y)}
 const EREACH=new WeakMap();
 const ZUKAN={basic:'いちばんよく見るコワイノ。夜になると、せいれいをねらってやってくる。あたたかいものに、よってくるみたい。',fast:'足がとても速い。体は小さくて、すぐ追いはらえる。いつも、なにかをいそいで追いかけている。',thief:'畑の作物や収納の中身をぬすみにくる。10分かけて1こずつ、10こまでぬすむとにげる。じぶんでは、なにも育てられないらしい。',brute:'体がかたくて力も強い。なかなか追いはらえない。いくつもの夜をこえて、かたまったといわれる。',breaker:'壁をこわすのが大好き。まわり道をしないで、まっすぐこわしてくる。しめだされるのが、きらいなのかもしれない。',trapper:'罠や見張り台を見つけると、こわしにくる。まもるために作った物が、ごちそうらしい。',boss:'大きなコワイノ。まわりのせいれいも巻きこんで攻撃する。よく見ると、体の中で、小さなかげがいくつもうごいている。',ash:'灰をまきちらして、施設をしばらく使えなくする。もえつきた火の、のこりのような色をしている。',rockc:'岩みたいにかたい。動きはおそい。岩かげから、はなれたがらない。',yama:'火の山からおりてくる大きなコワイノ。温泉の熱をうばって、冷やしてしまう。体は、いつもつめたい。',hino:'火山からやってくる大きなコワイノ。熱の切りかえ装置をこわそうとする。熱をうばっても、すこしもあたたまらないらしい。',boss2:'夜の力をたくわえた、いちばん大きなコワイノ。この土地じゅうの夜が、ひとつにあつまったようなすがた。'};
 const ZURA={/* クリア後に図鑑で読める「もとのすがた」（STORY.md「もとの闇のせいれいたち」）。おそうのは、もとのやさしさの裏返し */
@@ -151,10 +151,11 @@ function updEnemy(e,dt){
   const D=EN[e.type];
   if(!e.spawned){e.delay-=dt;if(e.delay<=0){[e.x,e.y]=(D.dev||D.vol)&&WD===1?volSpot():spawnSpot();e.spawned=true;(S.seenEn||(S.seenEn={}))[e.type]=1;if(e.type==='boss2'||e.type==='boss'&&!S.flags.bossIntro){if(e.type==='boss')S.flags.bossIntro=1;bossEntrance(e)}}return}/* オオカゲの登場演出は最初の1回、ヨルノオオカゲは毎回 */
   if(e.flash>0)e.flash-=dt;
+  if(gearEnemyTick(e,dt))return;/* やけど */
   if(e.stun>0||e.rest>0||S.t-(e.busyT??-1e9)<5){e.wd=0;e.wx=null}/* 罠で足止め・壁や設備をたたいているあいだは、来なおさない */
   else if(!e.flee&&!VILL[(e.y|0)*W+(e.x|0)]){e.wd=(e.wd||0)+dt;if(e.wd>=30){if(e.wx!=null&&Math.hypot(e.x-e.wx,e.y-e.wy)<3){enemyFallback(e,D);e.repath=8;EREACH.delete(e)}e.wd=0;e.wx=e.x;e.wy=e.y}}else{e.wd=0;e.wx=null}/* 村の外で30分ほとんど進めていなかったら、べつの場所から来なおす（森でうろうろ対策） */
   if(e.stun>0){e.stun-=dt;return}if(e.rest>0){e.rest-=dt;return}
-  e.slow=1;{const tj=(e.y|0)*W+(e.x|0),to=S.obj[tj];if(to&&BL[to]&&BL[to].trap){e.busyT=S.t;const cd=S.trapCd||(S.trapCd={}),rdy=!(cd[tj]>S.t);
+  e.slow=e.slowU>S.t?.5:1;/* おそくする（そうび） */{const tj=(e.y|0)*W+(e.x|0),to=S.obj[tj];if(to&&BL[to]&&BL[to].trap){e.busyT=S.t;const cd=S.trapCd||(S.trapCd={}),rdy=!(cd[tj]>S.t);
     if(to==='spike'){e.spk=(e.spk||0)+dt;if(e.spk>=15){e.spk-=15;e.hp-=.5;e.flash=4}/* とげの罠：15分ごとに0.5ダメージ */if(e.hp<=0)return defeat(e,EN[e.type].name+'をとげの罠で追いはらった！')}
     else if(to==='sticky')e.slow=.35;
     else if(to==='puddle'&&rdy){cd[tj]=S.t+120;e.stun=D.boss?3:8;e.path=[];sfxAt('bonk',e.x,e.y);return}
@@ -231,15 +232,15 @@ function fenceBetween(ax,ay,bx,by){/* 家の壁をはさんでいたら、離れ
 const hsOf=D=>D.size>=1.5?2:1,reachOf=D=>D.rng||.75*hsOf(D);/* 攻撃がとどく距離：大きいコワイノ（オオカゲ・カタカゲ）は、すこし離れたところから攻撃する *//* 当たり判定は見た目ぴったりではなく、1マスか2マス */
 function houseBreakFlee(h){/* 家の壁・ドアがこわされた瞬間、その家の中にいた子は、起きてすぐ逃げる（こわれた家は、もう家ではない） */if(!h)return;findHouses();for(const r of S.res){const k=(r.y|0)*W+(r.x|0);if(!h.inside.has(k)&&!h.set.has(k))continue;if(r.act&&r.act.type==='faint')continue;if(r.act)endAct(r);r.hidden=false;r.alarm=S.t;if(r.elem==='fire'&&r.hunger>=50)continue;/* 戦える火の子は、そのままたたかう */r.fleeT=S.t;const G=bfs(r.x|0,r.y|0);if(!withFlee(r,fleeHit,G)){r.fleeNow=true;r.fleeHouse=true}r.bubble='💦'}}
 const onTower=r=>!!(r.act&&r.act.type==='watchpost'&&r.act.stage==='do'&&(r.act.cl||0)>=.5&&S.obj[r.act.obj]==='watch');/* 見張り台の上に立っている子（見張り台がこわれるまで攻撃されない） */
-function hitRes(e,r,D){if(onTower(r))return;if(BOSSFX[e.type]){shakeScreen();fxSpr('shock',r.x*TS,r.y*TS,BOSSFX[e.type].col);sfxAt('bonk',r.x,r.y)}/* オオカゲの一撃は、画面がゆれて衝撃がひろがる */if(!WD&&r.elem==='fire'&&r.hunger<60&&r.name===keyName('fire')&&S.flags.guard)S.flags.fHurtG=1;/* こもれびのまもりをおぼえたあとに、火の子がたくさんたたかれた */const sh=(r.shU||0)>S.t;/* フタバの葉っぱのまもり：EN の hitFS・hitNS（まもりありの数） */if((r.faintGrace||0)>S.t||r.act&&r.act.type==='faint'){e.rest=1;return}/* 気絶している子は攻撃しない */const h0=r.hunger;sfx('hit');e.swing=performance.now();
+function hitRes(e,r,D){if(onTower(r))return;if(BOSSFX[e.type]){shakeScreen();fxSpr('shock',r.x*TS,r.y*TS,BOSSFX[e.type].col);sfxAt('bonk',r.x,r.y)}/* オオカゲの一撃は、画面がゆれて衝撃がひろがる */if(!WD&&r.elem==='fire'&&r.hunger<60&&r.name===keyName('fire')&&S.flags.guard)S.flags.fHurtG=1;/* こもれびのまもりをおぼえたあとに、火の子がたくさんたたかれた */const sh=(r.shU||0)>S.t;/* フタバの葉っぱのまもり：EN の hitFS・hitNS（まもりありの数） */if((r.faintGrace||0)>S.t||r.act&&r.act.type==='faint'){e.rest=1;return}/* 気絶している子は攻撃しない */const h0=r.hunger,G=gearStat(r),gk=gearGlowNear(e)?.8:1,hu=v=>Math.max(0,(v-G.hun)*gk);/* そうび：へるおなか−・光る */sfx('hit');e.swing=performance.now();
   const lv=rLv(r);S.nightHurt++;if(S.ns)S.ns.hurt++;const fire=r.elem==='fire';
   if(r.act&&['sleep','stay','rest','idle'].includes(r.act.type)&&r.act.stage==='do')endAct(r);/* 攻撃されたら、寝ていても起きる */
   const adj=Math.hypot(e.x-r.x,e.y-r.y)<=Math.max(1.1,reachOf(D)+.05);/* せいれいの攻撃は、となりにいる相手だけ（遠くから攻撃してくる大きいコワイノには、その距離でもやり返せる） */if(fire&&adj){/* 戦えるのは火の子だけ *//* やり返しはしない（攻撃されたときの受けるダメージの軽さだけ、戦える子は今までどおり） */
-    r.hunger=Math.max(0,r.hunger-(sh?D.hitFS:D.hitF));r.hurt=40;if(r.hunger<50)r.fleeNow=true;/* 体力（おなか）がへったら逃げる（オオカゲが相手でも同じ） */}
-  else{r.hunger=Math.max(0,r.hunger-(sh?D.hitNS:D.hitN));r.fun=Math.max(0,r.fun-20);r.hurt=40;r.fleeNow=true;/* 戦えない子は、オオカゲが相手でも逃げる */
-    if(D.boss&&Math.random()<.25){endAct(r);r.act={type:'faint',stage:'do',t:0};r.bubble='😵'}/* ボスの攻撃で気絶するのは、4回に1回くらい */}r.alarm=S.t;
+    r.hunger=Math.max(0,r.hunger-hu(sh?D.hitFS:D.hitF));r.hurt=40;if(r.hunger<50)r.fleeNow=true;/* 体力（おなか）がへったら逃げる（オオカゲが相手でも同じ） */}
+  else{r.hunger=Math.max(0,r.hunger-hu(sh?D.hitNS:D.hitN));r.fun=Math.max(0,r.fun-20);r.hurt=40;r.fleeNow=true;/* 戦えない子は、オオカゲが相手でも逃げる */
+    if(D.boss&&Math.random()<.25*G.ns){endAct(r);r.act={type:'faint',stage:'do',t:0};r.bubble='😵'}/* ボスの攻撃で気絶するのは、4回に1回くらい */}r.alarm=S.t;
   if(h0>=12&&r.hunger<3)r.hunger=3;/* 一撃では消えない */
-  {const L=lightAt(e.x,e.y);e.rest=fire?(D.boss?(L?2:1.5):(L?2.667:2)):(D.boss?(L?4:3):(L?5.333:4))}/* たたいたあと、コワイノがひと休みする時間（明かりの中は長い）。やられて止まる stun とはちがい、うすくならない */e.path=[];e.repath=0;
+  {const L=lightAt(e.x,e.y);e.rest=fire?(D.boss?(L?2:1.5):(L?2.667:2)):(D.boss?(L?4:3):(L?5.333:4))}/* たたいたあと、コワイノがひと休みする時間（明かりの中は長い）。やられて止まる stun とはちがい、うすくならない */e.path=[];e.repath=0;gearHurt(e,r);/* はね返し */
 }
 const LIGHTCDL=[10,10,9.5,9,8.5,8,7.5,7,6.5,6,5.5,5,4.5,4,3.5,3];/* 守りの光のチャージ時間（秒）。村レベル1で10秒、レベルが1上がるごとに0.5秒みじかい */let LIGHTCD=0,LIGHTARM=false;/* 守りの光：アイコンをタップしてから、コワイノ・木・岩をタップする *//* のこり秒（倍速なら早くもどる） */
 function guardLight(e){PTW.q=true;if(LIGHTCD>0){toast('まもりの光は、あと'+Math.ceil(LIGHTCD/(S.speed||1))+'秒');return}if(S.pt<1){toast('パワーが足りません');return}S.pt-=1;LIGHTCD=LIGHTCDL[S.lv]||10;
@@ -268,7 +269,7 @@ function defeat(e,msg,r){if(e.dead)return;/* 同じ敵の撃破報酬は1回だ�
 const DROPS=[['mat:wood',3],['mat:stone',3],['sand',1]];/* sand：やすらぎの砂（コワイノの落とし物だけで手に入る） */
 const DROPSEED={basic:'imo',fast:'tomato',thief:'mugi',brute:'imo',breaker:'mugi',trapper:'tomato',ash:'tomato',rockc:'imo',boss:'mugi',hino:'tomato',yama:'imo',boss2:'mugi'};/* コワイノの種類で、落とす種がちがう（まだ育てられない作物なら、いも） */
 const DROPF={basic:'mimamori',fast:'yomawari',breaker:'oyasumi',boss:'yonaka'};/* コワイノの種類ごとの、落とし物だけの家具 */
-function dropRolls(t){const sd=DROPSEED[t]&&cropOn(DROPSEED[t])?DROPSEED[t]:'imo',L=[['mat:wood',3,.2],['mat:stone',3,.2],['seed:'+sd,2,.2],['sand',1,.1]];if(DROPF[t])L.push([DROPF[t],1,.005]);if(KWR.some(id=>!(S.recipes||{})[id]))L.push(['recipe',1,.001]);return L}/* [物, 数, 落とす確率]：木材・石材・種20%、やすらぎの砂10%、家具0.5%、コワイノのレシピ0.1% */
+function dropRolls(t){const sd=DROPSEED[t]&&cropOn(DROPSEED[t])?DROPSEED[t]:'imo',L=[['mat:wood',3,.2],['mat:stone',3,.2],['seed:'+sd,2,.2],['sand',1,.1]];if(DROPF[t])L.push([DROPF[t],1,.005]);if(KWR.some(id=>!(S.recipes||{})[id]))L.push(['recipe',1,.001]);if(WD===1&&!S.free){L.push(['gear',1,.005]);if(t==='rockc')L.push(['mat:iron',1,.2]);if(t==='hino'||t==='yama')L.push(['mat:obsidian',2,.5])}/* 火山：そうび0.5%・鉄・黒曜石 */return L}/* [物, 数, 落とす確率]：木材・石材・種20%、やすらぎの砂10%、家具0.5%、コワイノのレシピ0.1% */
 function dropList(t){const sd=DROPSEED[t]&&cropOn(DROPSEED[t])?DROPSEED[t]:'imo',L=DROPS.concat([['seed:'+sd,2]]);if(DROPF[t])L.push([DROPF[t],1]);return L}
 function monoDrops(n){/* ものひろいの日：村の中の、せいれいが歩いて行ける空いた所に落とす */if(!S.drops)S.drops=[];const r0=S.res.find(q=>!q.hidden),G=bfs(r0?r0.x|0:CX,r0?r0.y|0:CY),C=[];
   for(let q=0;q<W*H;q++)if(VILL[q]&&!S.obj[q]&&walk(q)&&G.dist[q]>=0&&!S.drops.some(d=>d.y*W+d.x===q))C.push(q);
@@ -278,6 +279,7 @@ function dropAt(x,y,want,nn,et){if(!S.drops)S.drops=[];const x0=x|0,y0=y|0;let j
   if(j<0&&G){let bd=1e9;for(let q=0;q<W*H;q++){if(G.dist[q]<0||S.obj[q]||!walk(q)||S.drops.some(d=>d.y*W+d.x===q))continue;const d=Math.hypot(q%W-x0,((q/W)|0)-y0);if(d<bd){bd=d;j=q}}}
   if(j<0)return;const[id,n]=want?[want,nn||1]:pick(dropList(et));S.drops.push({x:j%W,y:(j/W)|0,id,n})}
 function takeDrop(d,r){let nm;
+  if(d.id==='gear'){gearFind(r,'ひろった！');return}/* そうび */
   if(d.id==='recipe'){const L=KWR.filter(id=>!(S.recipes||{})[id]);if(!L.length){S.sand=(S.sand||0)+1;return}const id=pick(L);(S.recipes||(S.recipes={}))[id]=true;if(BL[id].kind==='block')(S.unlocked||(S.unlocked={}))[id]=true;kwrSync();sfx('level');queueItemGift({[id]:1},'あたらしいレシピ！',true);memo('📜',BL[id].name+'のレシピをひろった');renderPalette();return}/* コワイノのレシピ（まれ） */
   if(d.id==='sand'){S.sand=(S.sand||0)+d.n;if(!(S.recipes||(S.recipes={})).toro){S.recipes.toro=true;memo('🏮','しずけさの石どうろうが作れるようになった');queueItemGift({toro:1},'あたらしいレシピ！',true)}/* やすらぎの砂をはじめてひろったら、石どうろうのレシピ（知らせを出す） */sfx('seed');toast((r?r.name+'が':'')+'「やすらぎの砂」をひろった（'+S.sand+'）','good');return}/* コワイノの落とし物だけで手に入る、とくべつな素材 */
   if(d.id==='mebuki'){S.mebuki=(S.mebuki||0)+1;sfx('level');toast((r?r.name+'が':'')+'「めぶきのしずく」をひろった！','good');logEv('めぶきのしずくをひろった');
@@ -297,10 +299,11 @@ function updTowers(dt){
   if(!S.enemies.length)return;
   for(const j of TOWERS){const o=S.obj[j];if(o!=='watch'&&o!=='yogan'&&o!=='tower'||o==='tower'&&WD===0)continue;/* 草原の御神木は矢をうたない */
     S.hp['w'+j]=(S.hp['w'+j]||0)-dt;if(S.hp['w'+j]>0)continue;
-    const st=o==='tower'?{dmg:1,range:10,cd:10}:(o==='yogan'?YOGAN:WATCH)[S.hp['L'+j]||1];if(o==='watch'&&!watchGuard(j)){S.hp['w'+j]=1;if(S.ns&&!S.ns.noGuard&&S.enemies.some(e=>e.spawned&&!e.dead)&&!S.res.some(q=>q.act&&q.act.type==='watchpost'&&q.act.obj===j)){S.ns.noGuard=1;toast('見張り台に木のせいれいがいません','warn')}continue}/* 見張り台は、木のせいれいが立っているときだけうつ */if(o==='watch'&&inv('arrow')<1&&inv('arrow2')<1){S.hp['w'+j]=1;if(!S.flags.noArrow&&S.enemies.some(e=>e.spawned&&!e.dead)){S.flags.noArrow=1;toast('見張り台の木の矢がありません','warn')}continue}/* 見張り台は、木の矢がないとうてない */
+    const st=o==='tower'?{dmg:1,range:10,cd:10}:(o==='yogan'?YOGAN:WATCH)[S.hp['L'+j]||1];if(o==='watch'&&!watchGuard(j)){S.hp['w'+j]=1;if(S.ns&&!S.ns.noGuard&&S.enemies.some(e=>e.spawned&&!e.dead)&&!S.res.some(q=>q.act&&q.act.type==='watchpost'&&q.act.obj===j)){S.ns.noGuard=1;toast('見張り台に木のせいれいがいません','warn')}continue}/* 見張り台は、木のせいれいが立っているときだけうつ */if(o==='watch'&&ammoTotal()<1){S.hp['w'+j]=1;if(!S.flags.noArrow&&S.enemies.some(e=>e.spawned&&!e.dead)){S.flags.noArrow=1;toast('見張り台の木の矢がありません','warn')}continue}/* 見張り台は、木の矢がないとうてない */
     const z0=szAt(o,j)||[1,1],x=j%W+z0[0]/2,y=((j/W)|0)+z0[1]/2;
-    let tg=null,bd=st.range;for(const e of S.enemies){if(!e.spawned||e.dead)continue;const d=Math.hypot(e.x-x,e.y-y);if(d<bd){bd=d;tg=e}}
-    let a2=0;if(tg){if(o==='watch'){if(inv('arrow2')>0){S.inv.arrow2--;a2=1}else S.inv.arrow=inv('arrow')-1;/* かなものの矢があれば、先に使う（威力+1） */S.flags.noArrow=0;const g=S.res.find(q=>q.act&&q.act.type==='watchpost'&&q.act.stage==='do'&&q.act.obj===j);if(g){g.bowT=performance.now();g.face=tg.x<g.x?-1:1}S.hp['w'+j]=g?st.cd/rMul(g,'work'):st.cd}else S.hp['w'+j]=st.cd;/* 見張り台の子が弓をうつ（うつ間かくは、その子の作業速度で短くなる） */tg.hp-=st.dmg+a2;tg.flash=6;sfxAt('shoot',x,y);shots.push({x1:x,y1:y-(o==='tower'?1.4:o==='watch'?1.9:.6),/* 見張り台は、上に立つ子の手から */x2:tg.x,y2:tg.y-.3,life:1,fire:o==='yogan',wood:o==='watch'});
+    let tg=null,bd=st.range+(o==='watch'?6:0);/* 見張り台は、矢の射程ぶん遠くまで見る（あたるかは矢ごと） */for(const e of S.enemies){if(!e.spawned||e.dead)continue;const d=Math.hypot(e.x-x,e.y-y);if(d<bd){bd=d;tg=e}}
+    if(o==='watch'){const g=S.res.find(q=>q.act&&q.act.type==='watchpost'&&q.act.stage==='do'&&q.act.obj===j),iv=towerVolley(j,x,y,st,g,shots);/* 矢は威力の大きい順。本数・つらぬき・射程は矢ごと */if(!iv){S.hp['w'+j]=1;continue}S.flags.noArrow=0;if(g){g.bowT=performance.now();g.face=tg&&tg.x<g.x?-1:1}S.hp['w'+j]=(g?st.cd/rMul(g,'work'):st.cd)*iv;sfxAt('shoot',x,y);continue}
+    let a2=0;if(tg){S.hp['w'+j]=st.cd;/* 見張り台の子が弓をうつ（うつ間かくは、その子の作業速度で短くなる） */tg.hp-=st.dmg+a2;tg.flash=6;sfxAt('shoot',x,y);shots.push({x1:x,y1:y-(o==='tower'?1.4:o==='watch'?1.9:.6),/* 見張り台は、上に立つ子の手から */x2:tg.x,y2:tg.y-.3,life:1,fire:o==='yogan',wood:o==='watch'});
       if(st.splash)for(const e of S.enemies){if(e===tg||!e.spawned||e.dead)continue;if(Math.hypot(e.x-tg.x,e.y-tg.y)<st.splash){e.hp-=st.sdmg;e.flash=6;if(e.hp<=0)defeat(e)}}/* 火の玉は、まわりにもダメージ */
       if(tg.hp<=0&&!tg.dead)defeat(tg)}}
   S.enemies=S.enemies.filter(e=>!e.dead);

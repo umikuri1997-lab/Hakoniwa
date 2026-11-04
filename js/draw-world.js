@@ -300,10 +300,10 @@ function cliffRow(y,R,top){/* 1つのかたまり（行・段）の段差を描�
   part('a');
   {let k=R.x0;while(k<=R.x1){if(!ok(k)){k++;continue}let e=k;while(e+1<=R.x1&&ok(e+1))e++;const w=(e-k+1)*TS;{const a=SX(k*TS),b=SY(y*TS-lv*LIFT);gblit(ctx,k*TS,y*TS,w,top?LIFT:TS,a,b,SX(k*TS+w)-a,SY(y*TS-lv*LIFT+(top?LIFT:TS))-b,GLOD)}{ctx.fillStyle='rgba(255,250,225,.10)';const a=SX(k*TS),b=SY(y*TS-lv*LIFT);ctx.fillRect(a,b,SX(k*TS+w)-a,SY(y*TS-lv*LIFT+(top?LIFT:TS))-b)}k=e+1}}/* 上の面の地面：地面の下絵を、そのまま上へずらす。高い所は少し明るく */
   part('b')}
-const natBarY=j=>((j/W)|0)*TS-(S.obj[j]==='rock'?7:30)-hiAt(j)*LIFT;/* 木・岩の上の、のこりのバーの上はし */
+const natBarY=j=>((j/W)|0)*TS-(S.obj[j]==='rock'||VEINS[S.obj[j]]?7:30)-hiAt(j)*LIFT;/* 木・岩の上の、のこりのバーの上はし */
 function drawArrowTags(x0,y0,x1,y1){/* 見張り台の上の、木の矢の本数（夜の暗さより上にかく） */
   for(const j of TOWERS){if(S.obj[j]!=='watch')continue;const tx=(j%W)*TS,ty=((j/W)|0)*TS-hiAt(j+W)*LIFT;if(j%W<x0-2||j%W>x1+1||((j/W)|0)<y0-2||((j/W)|0)>y1+3)continue;/* 見張り台の上の、木の矢の本数（せいれいが立つ所より上） */
-    const n=(S.inv.arrow||0)+(S.inv.arrow2||0),L=S.hp['L'+j]||1,cx=tx+32,cy=ty-58-(L>1?16:0),t=String(n);ctx.font='9px "PixelMplus10","Hikomi","Hiragino Maru Gothic ProN",sans-serif';const tw=ctx.measureText(t).width,w=tw+19,lx=cx-w/2;
+    const n=ammoTotal(),L=S.hp['L'+j]||1,cx=tx+32,cy=ty-58-(L>1?16:0),t=String(n);ctx.font='9px "PixelMplus10","Hikomi","Hiragino Maru Gothic ProN",sans-serif';const tw=ctx.measureText(t).width,w=tw+19,lx=cx-w/2;
     ctx.fillStyle='rgba(122,86,52,.82)';ctx.fillRect(lx,cy-6,w,12);ctx.fillRect(lx+1,cy-7,w-2,14);ctx.fillStyle='rgba(244,233,210,.9)';ctx.fillRect(lx+1,cy-5,w-2,10);ctx.fillRect(lx+2,cy-6,w-4,12);ctx.fillStyle='#8a5a33';ctx.fillRect(lx+3,cy-.5,9,1.4);ctx.fillStyle='#6b7480';ctx.beginPath();ctx.moveTo(lx+14,cy+.2);ctx.lineTo(lx+10.5,cy-2.6);ctx.lineTo(lx+10.5,cy+3);ctx.closePath();ctx.fill();ctx.fillStyle='#c0503a';ctx.fillRect(lx+2.5,cy-2,1.2,1.4);ctx.fillRect(lx+2.5,cy+1,1.2,1.4);/* 木の矢の絵 */
     ctx.fillStyle=n>0?'#3b2a1a':'#c0392b';ctx.textAlign='left';ctx.textBaseline='middle';ctx.fillText(t,lx+16,cy+.5);ctx.textAlign='start';ctx.textBaseline='alphabetic'}}
 function render(now){RFN++;
@@ -425,6 +425,7 @@ function render(now){RFN++;
     dmx.setTransform(k,0,0,k,-cam.x*k,-cam.y*k);dmx.globalCompositeOperation='destination-out';
     for(const j of LITP){const o=S.obj[j],L=LIGHTP[o];if(!L)continue;const x=j%W,y=(j/W)|0;if(x<x0-5||x>=x1+5||y<y0-5||y>=y1+5)continue;/* 画面の外5マスの明かりも、光がとどくので描く */if(INDL.has(o)&&roomOf(j))continue;/* 家の中の灯りは、灯りそのものは光らせず、家ぜんたいを光らせる（下） */
       const R=L.R;dmx.drawImage(lightSpr(R),x*TS+L.dx-R,y*TS+L.dy-R,R*2,R*2)}
+    gearLights(dmx);/* そうびの明かり */
     const litH=new Set();for(const j of LIGHTS){if(INDL.has(S.obj[j])){const h=roomOf(j);if(h)litH.add(h)}}/* 灯りのある家 */
     {dmx.imageSmoothingEnabled=true;dmx.globalAlpha=.75;for(const h of litH)dmx.drawImage(houseGlow(h),h.x0*TS-GLOWM,h.y0*TS-GLOWM);dmx.globalAlpha=1}/* 灯りのある家は、家ぜんたいを同じ明るさで照らす（ふちはぼかす） */
     ctx.setTransform(1,0,0,1,0,0);ctx.drawImage(DMK,0,0);/* けずったところは重なっても、暗さがなくなるだけ（明るくなりすぎない） */

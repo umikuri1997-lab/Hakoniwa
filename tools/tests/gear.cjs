@@ -1,0 +1,48 @@
+const {chromium}=require('playwright'),assert=require('node:assert/strict'),fs=require('node:fs');
+/* 火山のそうび：鉱脈・作る・つける・へる・攻撃・矢・強化・セーブ・草原 */
+(async()=>{const browser=await chromium.launch({executablePath:process.env.CHROME_PATH||(fs.existsSync('/usr/bin/chromium')?'/usr/bin/chromium':undefined),args:['--no-sandbox']});const page=await browser.newPage({viewport:{width:430,height:900}});const errors=[];page.on('pageerror',e=>errors.push(e.message));
+await page.route('**/js/main.js*',async route=>{const r=await route.fetch();await route.fulfill({response:r,body:(await r.text())+'\nwindow.gearEval=s=>eval(s);'})});
+await page.goto(process.env.GAME_URL||'http://127.0.0.1:8000');await page.waitForFunction(()=>!!window.gearEval);
+const out=await page.evaluate(()=>gearEval(`(()=>{const o={};S=newState(1);setWorld(1);recount();USERPAUSE=true;S.introSeen=true;
+o.veins={};for(const v of VEIN_IDS)o.veins[v]=S.obj.filter(x=>x===v).length;
+const R=S.res,fire=R.find(r=>r.elem==='fire')||R[0];const mk=el=>{const r=mkRes(S,'t'+el,el,CX+.5,CY+.5,'chat');S.res.push(r);return r};const earth=mk('earth');
+/* 鉱脈をほる */const vj=S.obj.findIndex(x=>x==='vcopper');fire.cmat=null;ACT.mine.end(fire,{obj:vj,tgt:'vcopper'});o.oreMined=(fire.cmat||{}).copper||0;o.stoneFromVein=(fire.cmat||{}).stone||0;fire.cmat=null;
+const rj=S.obj.findIndex((x,j)=>x==='rock'&&oreNear(j));const rnd=Math.random;Math.random=()=>.05;ACT.mine.end(fire,{obj:rj,tgt:'rock'});Math.random=rnd;o.sulfur=(fire.cmat||{}).sulfur||0;fire.cmat=null;
+/* レシピ */S.gotMat={copper:1,iron:1};gearIdea();o.learnCopper=!!S.recipes.gw03;o.noSilver=!S.recipes.gw14;o.noSpecial=!S.recipes.gw11;
+/* 作る */for(const k of['copper','iron','bamboo','wood','eda','kuru'])S.mat[k]=60;S.pt=500;S.orders=[];BOARD=1;
+const made=id=>{S.orders=[];orderFurn(id);const od=S.orders[0];if(!od)throw new Error('order '+id+' known='+recipeKnown(id)+' lv='+lvOK(id)+' lock='+orderLock()+' max='+boardMax()+' board='+BOARD);finishCraft(od,fire)};for(const id of['gw03','gw02','ga03','gar02','gc01','gt04','gt07'])made(id);
+o.gearInv=gearList().map(q=>q.id);o.arrows=S.inv.gar02;
+/* つける */const iw=()=>gearList().findIndex(q=>q.id==='gw03');o.earthWeapon=gearEquip(earth,iw());o.fireWeapon=gearEquip(fire,iw());const it=id=>gearList().findIndex(q=>q.id===id);o.fireTool=gearEquip(fire,it('gt04'));o.earthTool=gearEquip(earth,it('gt04'));o.mineJob=gJob(earth,'mine');
+/* へる */const en={type:'basic',x:fire.x+.5,y:fire.y,spawned:true,hp:10};earth.hunger=80;earth.x=fire.x;earth.y=fire.y;hitRes(en,earth,EN.basic);o.lossNo=80-earth.hunger;earth.fleeNow=false;gearEquip(earth,it('ga03'));earth.hunger=80;earth.faintGrace=0;earth.act=null;hitRes(en,earth,EN.basic);o.lossArmor=80-earth.hunger;
+/* 武器：回数・とどくきょり */S.enemies=[];const e2={type:'basic',x:fire.x+1.9,y:fire.y,spawned:true,hp:50,atk:0};S.enemies.push(e2);fire.act=null;fire.hidden=false;fire.fatk=0;fire.hunger=200;updRes(fire,0);o.hitShort=50-e2.hp;
+e2.hp=50;e2.x=fire.x+1.2;fire.fatk=0;fire.act=null;updRes(fire,0);o.hitFist=50-e2.hp;o.fAtk=fAtk(rLv(fire));o.fireMul=fireMul(fire);
+gearOff(fire,'w');gearEquip(fire,it('gw02'));e2.hp=50;e2.x=fire.x+2.2;fire.fatk=0;fire.act=null;updRes(fire,0);o.hitSpear=50-e2.hp;
+/* 矢：強い順・本数・つらぬき */S.inv={arrow:5,arrow2:5,gar02:10,gar04:10,gar19:10,gar13:10};o.pick1=ammoPick();const st={dmg:1,range:6,cd:10},sh=[];const E=(x,y)=>({type:'basic',x,y,spawned:true,hp:20});
+S.enemies=[E(50,50),E(51,50),E(52,50)];S.inv.gar04=0;S.inv.gar19=1;o.pick2=ammoPick();towerVolley(0,47,50,st,null,sh);o.pierce=S.enemies.map(e=>20-e.hp);
+S.enemies=[E(50,50),E(51,51),E(49,52)];S.inv.gar19=0;S.inv.gar13=1;S.inv.gar02=0;S.inv.arrow=0;S.inv.arrow2=0;o.pick3=ammoPick();towerVolley(0,47,50,st,null,sh);o.multi=S.enemies.map(e=>20-e.hp);o.ammoLeft=ammoTotal();
+/* 強化 */const q=fire.gear.w;S.mat.bamboo=6;S.pt=60;o.up=[gearUp(q),gearUp(q),gearUp(q),gearUp(q)];o.upLv=q.lv;o.upMat=S.mat.bamboo;o.upPt=S.pt;o.atkStat=gearStat(fire).atk;
+/* 鉄の鉱脈はほると鉄 */
+/* セーブ */save();const d=JSON.parse(KV.getItem(SAVE_KEYS[1]));o.saveGear=d.gear.length;o.saveWorn=d.res.find(r=>r.name===fire.name).gear.w.lv;
+/* いなくなったら、もどる */const before=gearList().length;gearDropAll(earth);o.returned=gearList().length-before;
+/* 草原 */const G=newState(0);o.grassVeins=G.obj.filter(x=>VEINS[x]).length;o.grassGear=(G.gear||[]).length;
+return o})()`));
+console.log(JSON.stringify(out));
+for(const v in out.veins)assert(out.veins[v]>0,'vein '+v);
+assert.equal(out.oreMined,1);assert.equal(out.stoneFromVein,0);assert.equal(out.sulfur,1);
+assert(out.learnCopper&&out.noSilver&&out.noSpecial);
+for(const id of['gw03','gw02','ga03','gc01','gt04','gt07'])assert(out.gearInv.includes(id),'made '+id);assert.equal(out.arrows,10);
+assert.equal(out.earthWeapon,false);assert.equal(out.fireWeapon,true);assert.equal(out.fireTool,false);assert.equal(out.earthTool,true);assert.equal(out.mineJob,1.3);
+assert.equal(out.lossNo-out.lossArmor,2);
+assert.equal(out.hitShort,0,'out of reach without reach gear');
+assert(Math.abs(out.hitFist-(out.fAtk+1)*out.fireMul*2)<1e-6,'fist hits twice');
+assert(out.hitSpear>0,'spear reaches 2.2');
+assert.equal(out.pick1,'gar04');assert.equal(out.pick2,'gar19');assert.deepEqual(out.pierce.map(v=>v>0),[true,true,false]);
+assert.equal(out.pick3,'gar13');assert(out.multi.every(v=>v>0),'3 arrows');
+assert.deepEqual(out.up,[true,true,true,false]);assert.equal(out.upLv,3);assert.equal(out.upMat,0);assert.equal(out.upPt,10);assert.equal(out.atkStat,4);
+assert(out.saveGear>0);assert.equal(out.saveWorn,3);assert(out.returned>=2);
+assert.equal(out.grassVeins,0);assert.equal(out.grassGear,0);
+/* 画面：そうびタブ・依頼ボード */
+await page.evaluate(()=>gearEval(`(()=>{document.getElementById('title').hidden=true;document.getElementById('title').style.display='none';const r=S.res.find(r=>r.elem==='fire');resTab=3;openSheet('res',r.id)})()`));await page.waitForTimeout(400);await page.screenshot({path:process.env.SHOT_DIR?process.env.SHOT_DIR+'/gear-tab.png':'/tmp/gear-tab.png'});
+const rad=await page.evaluate(()=>[...document.querySelectorAll('#sheet *')].filter(n=>parseFloat(getComputedStyle(n).borderRadius)>0&&n.offsetParent).map(n=>n.className).slice(0,5));
+await page.evaluate(()=>gearEval(`(()=>{closeSheet();craftTab=CRAFT_TABS.findIndex(t=>t[0]==='そうび');openSheet('craft')})()`));await page.waitForTimeout(400);await page.screenshot({path:process.env.SHOT_DIR?process.env.SHOT_DIR+'/gear-board.png':'/tmp/gear-board.png'});
+console.log('radius',rad);assert.deepEqual(errors,[]);console.log('gear: ok');await browser.close()})().catch(e=>{console.error(e);process.exit(1)});
