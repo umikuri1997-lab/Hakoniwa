@@ -40,7 +40,7 @@ function sacredStage(){
   if(sacredRevealed('fireTrace'))return 1;
   return 0;
 }
-function sacredRootFits(j){return j>=0&&j%W<=W-sacredSpan()&&(j/W|0)<=H-sacredSpan()&&sacredCells(j).every(k=>walk(k)&&!S.obj[k]&&!S.floor[k]&&!roomOf(k)&&!RUGC.has(k)&&hiAt(k)===hiAt(j));}
+function sacredRootFits(j){return j>=0&&j%W<=W-sacredSpan()&&(j/W|0)<=H-sacredSpan()&&sacredCells(j).every(k=>(walk(k)||STUMPB.has(k))&&!S.obj[k]&&!S.floor[k]&&!roomOf(k)&&!RUGC.has(k)&&hiAt(k)===hiAt(j));}
 function migrateSacredStory(state){
   if(state.flags.sacredStoryV1)return;
   if(!state.free&&(state.world||0)===0){
