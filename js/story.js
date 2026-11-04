@@ -79,7 +79,7 @@ const QUESTS2=[
     [HOMURA,'よし、決まりだ。温泉のそばに、かまどと食卓をたのむよ！','hop']]},
    story:[[HOMURA,'#joy|ほら、できたての温泉たまごだよ！ みんな、食べな！','cheer'],[SHIZUKU,'あったかくて、おいしいです…。'],[HOMURA,'ありがとよ、守り神。これで、湯けむりの村らしくなってきた！']]},
 
-  {id:'haikage3',text:'ハイカゲを3体追いはらおう',check:()=>(st2().ashKills||0)>=3,prog:()=>'ハイカゲ '+Math.min(3,st2().ashKills||0)+'/3',how:'夜に来るハイカゲを3体追いはらう。灰をかぶった物は、しばらくすると、また使える',
+  {id:'haikage3',text:'ハイカゲを3体追いはらおう',check:()=>(st2().ashKills||0)>=3,prog:()=>'ハイカゲ '+Math.min(3,st2().ashKills||0)+'/3',how:'夜に来るハイカゲを3体追いはらう',
    talk:{who:HOMURA,when:()=>true,lines:[
     [HOMURA,'…守り神。これから夜になると、火山のほうから「ハイカゲ」ってやつも来るよ。'],
     [SHIZUKU,'灰をまきちらして、かまどやベンチを使えなくしてしまうのです。'],
@@ -91,7 +91,7 @@ const QUESTS2=[
     [SHIZUKU,'村の北の地面に、ひびわれがあります。そこから熱がもれているようです。'],
     [HOMURA,'石でふさいじまえばいいんだね。']]},
    story:[[HOMURA,'よし、ふさがった！ 熱の道が、つながったよ。'],[SHIZUKU,'あとは、熱をどこへ流すか、ですね。'],[HOMURA,'直してくれて、ありがとよ！']]},
-  {id:'springB',text:'熱の装置を左にむけて、西の温泉をよみがえらせよう',check:()=>!!st2().sp.b,how:'火山のふもとの「熱の装置」をタップして、向きを左にかえる。熱の道のそばの畑は、作物がよく育つ',
+  {id:'springB',text:'熱の装置を左にむけて、西の温泉をよみがえらせよう',check:()=>!!st2().sp.b,how:'火山のふもとの「熱の装置」をタップして、向きを左にかえる',
    talk:{who:HOMURA,when:()=>true,lines:[
     [HOMURA,'火山のふもとに、熱の流れを切りかえる装置があるんだ。'],
     [HOMURA,'左にむければ、西の温泉に熱がとどくはずさ。']]},
@@ -134,7 +134,7 @@ const QUESTS2=[
    story:[[SHIZUKU,'#think|……装置に、そっと手をあててみますね。',0,'heat:c'],[SHIZUKU,'火だねが、装置に熱を通してくれました……！'],[HOMURA,'#surprise|…奥の温泉にも、湯気だ！ 3つ、ぜんぶよみがえったよ！'],[SHIZUKU,'#joy|温泉が3つ、よみがえりました……！ 夢みたいです。'],[SHIZUKU,'…守り神さま。空が、灰色にくもってきました。'],[HOMURA,'今夜は、ハイカゲがわんさか来そうだね…！']],gives:{flag:'ashNight'}},
   {id:'ashNight',text:'灰の降る夜をのりこえよう',check:()=>{const t=st2();return !!t.ashNightAt&&S.nights>=t.ashNightAt&&!isNight()},how:'灰の降る夜を、みんなでのりこえる',
    story:[[HOMURA,'…ふう、なんとかのりこえたね。'],[SHIZUKU,'#joy|守ってくださって、ありがとうございます。'],[SHIZUKU,'灰は、火山からふってきていました。山の上に、なにかがいるのです。'],[HOMURA,'次の夜、きっとそいつが下りてくる。むかえうってやろうじゃないか！']],gives:{flag:'hinoNight'}},
-  {id:'hinoookage',text:'ヒノオオカゲを追いはらおう',check:()=>!!S.flags.hinoDown,how:'火山から下りてくるヒノオオカゲを追いはらう。落とした火だねは、朝にせいれいがひろう',
+  {id:'hinoookage',text:'ヒノオオカゲを追いはらおう',check:()=>!!S.flags.hinoDown,how:'火山から下りてくるヒノオオカゲを追いはらう',
    story:[[HOMURA,'#joy|やった…！ 火山の上の、いやな気配が消えたよ。'],[HOMURA,'ありがとよ、守り神！ あんたのおかげさ。'],[SHIZUKU,'ヒノオオカゲが、ヌシ様の熱をうばっていたのですね。'],[SHIZUKU,'ヌシ様の熱が、すこしだけ、もどってくる気がします。'],[HOMURA,'#nod|よし。ヌシ様のために、あとひとふんばりだね！']]},
   {id:'inn',text:'温泉宿をつくろう',check:()=>HOUSES.some(h=>[...h.inside].filter(j=>BEDSET.has(S.obj[j])).length>=2&&[...h.inside].some(j=>nearHot(j,6))),how:'あたたかい温泉のそばに、ベッド2つの家をつくる',
    talk:{who:HOMURA,when:()=>true,lines:[

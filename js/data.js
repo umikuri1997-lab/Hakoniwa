@@ -413,7 +413,7 @@ const QUESTS1=[
   stepQuest({id:'ookage',text:'オオカゲから村を守ろう',
    steps:[{id:'lv4',t:'村レベルを4にする',check:()=>S.lv>=4,prog:()=>'いま 村レベル'+S.lv,how:'せいれいが満足してパワーがたまると、村レベルが上がる'},
     {id:'yoru10',t:'コワイノを10体追いはらう',check:()=>killsSince()>=10,prog:()=>'コワイノ '+Math.min(10,killsSince())+'/10',how:'夜に来るコワイノを、あわせて10体追いはらう'},
-    {id:'ookage',t:'オオカゲを追いはらう',check:()=>(S.bossKills||0)>=1,prog:()=>bossDays(),how:'柵・見張り台・罠を整え、夜に来るオオカゲを追いはらう。家の中にいれば、おそわれない'}],
+    {id:'ookage',t:'オオカゲを追いはらう',check:()=>(S.bossKills||0)>=1,prog:()=>bossDays(),how:'柵・見張り台・罠を整え、夜に来るオオカゲを追いはらう'}],
    talk:{who:POKO,when:()=>true,lines:[
     [POKO,'#alarm|守り神さま、夜のコワイノを見てたらね…森の奥に、ひときわ大きな黒い影がいたんだ。あの足あとの、かげだよ。きっと。'],
     [MINA,'#alarm|それは「オオカゲ」だねぇ。コワイノたちの親玉って、むかしから言われてるよぉ。'],
