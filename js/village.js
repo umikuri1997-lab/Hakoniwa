@@ -172,7 +172,7 @@ function recount(){if(S.sacredLegacy2)tryExpandSacredLegacy(S);if(S.broken)S.bro
     if(o==='jar')JARS.push(j);
     if(o==='composter')COMPS.push(j);
     if(o==='windmill')around(j,5,NEARMILL);
-if(o==='vane')around(j,3,NEARVANE);if(o==='niguruma')around(j,3,NEARCART);if(o==='kabedougu')around(j,3,NEARTOOL);if(o==='joro')around(j,3,NEARJORO);/* ブリキのじょうろ：まわり3マスの畑は、水やりが速い *//* にぐるま：まわり3マスの箱は、しまうのが速い */if(o==='signpost')around(j,3,NEARSIGN);/* 風見鶏：まわり3マスは足が速い */
+if(o==='vane')around(j,3,NEARVANE);if(o==='niguruma')around(j,3,NEARCART);if(o==='kabedougu')around(j,3,NEARTOOL);if(o==='joro')around(j,5,NEARJORO);/* ブリキのじょうろ：まわり5マスの畑は、水やりが速い *//* にぐるま：まわり3マスの箱は、しまうのが速い */if(o==='signpost')around(j,3,NEARSIGN);/* 風見鶏：まわり3マスは足が速い */
     const tbud=(o==='tree'||o==='fruit')&&isBud(j);/* 木も花と同じ。芽のあいだは、効果なし */
     if(o==='parasol')around(j,1,NEARPARA);/* パラソル：まわり1マス・かさならない */else if(!tbud&&BL[o]&&BL[o].env){const er=BL[o].er||3;for(let dy=-er;dy<=er;dy++)for(let dx=-er;dx<=er;dx++){const nx=x+dx,ny=y+dy;if(nx>=0&&ny>=0&&nx<W&&ny<H)ENVG[ny*W+nx]+=BL[o].env}}/* にわの家具：まわりの環境 */
     if(BL[o]&&BL[o].kind!=='block'&&(!FLOWERS.has(o)||!isBud(j))&&!tbud)addA(BL[o].attr);
