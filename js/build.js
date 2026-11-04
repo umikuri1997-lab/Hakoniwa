@@ -21,7 +21,7 @@ const cseed=k=>(S.cseed||(S.cseed={}))[k]||0;
 function sowFarm(d){if(d.sown!==false)return true;if(d.paid){d.paid=false;d.sown=true;d.g=0;dirty=true;return true}const k=cropK(d);if(cseed(k)>0){S.cseed[k]--;d.sown=true;d.g=0;dirty=true;return true}return false}
 function giveItem(id,n){if(id.startsWith('seed:')){const k=id.slice(5);S.cseed[k]=cseed(k)+n;return}S.inv[id]=inv(id)+n}
 const WIND_STAGE_TOYS=new Set(['slide','seesaw']);
-function usable(id){const b=BL[id];if(WIND_STAGE_TOYS.has(id)&&WD!==4)return false;
+function usable(id){const b=BL[id];if(WIND_STAGE_TOYS.has(id)&&WD!==4&&inv(id)<=0)return false;/* もらって持っている物は、どのステージでも置ける */
   if(b.kind==='block')return !!S.unlocked[id]||inv(id)>0;
   if(b.kind==='furn')return inv(id)>0;
   if(b.kind==='plant')return !!S.feat.plant;
