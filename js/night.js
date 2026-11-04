@@ -46,18 +46,18 @@ function doSummon(){
 
 /* ---------- 敵（「コワイノ」） ---------- */
 const EN={
-  basic:{xp:5,pw:4,name:'コカゲ',hp:10,sp:.80,atk:25,hit:20,hitF:4,hitN:5,hitFS:2,hitNS:3,hitF1:5,hitN1:6,hitFS1:3,hitNS1:3,col:'#2a1d46',eye:'#ff6b8a',size:1},
-  fast:{xp:4,pw:3,name:'ハヤカゲ',hp:5,sp:1.6,atk:16.7,/* コカゲの足2倍・攻撃1.5倍の速さ */hit:14,hitF:3,hitN:4,hitFS:2,hitNS:2,hitF1:4,hitN1:5,hitFS1:2,hitNS1:3,col:'#1d3446',eye:'#7ff0ff',size:.8},
-  thief:{xp:2,pw:2,name:'カゲドロボウ',hp:3,sp:.88,atk:25,hit:10,hitF:2,hitN:2,hitFS:1,hitNS:1,hitF1:3,hitN1:4,hitFS1:2,hitNS1:2,col:'#3b2a14',eye:'#ffd35c',size:.9,thief:1},
-  brute:{xp:8,pw:6,rng:1.2,name:'カタカゲ',hp:10,sp:.76,atk:9,hit:28,hitF:5,hitN:6,hitFS:3,hitNS:3,col:'#3a1a1a',eye:'#ff8a3d',size:1.25,hs:1}/* 当たり判定は1マス */,
-  breaker:{xp:7,pw:5,name:'カベクダキ',hp:9,sp:.8,atk:6,hit:18,hitF:4,hitN:5,hitFS:2,hitNS:3,hitF1:5,hitN1:6,hitFS1:3,hitNS1:3,col:'#3a2a1a',eye:'#ffa04a',size:1.1,wall:3},/* 壁や柵をこわすのが得意（こわす力3倍・速い）。よけずにまっすぐこわしにくる */
-  trapper:{xp:6,pw:5,name:'ワナクイ',hp:8,sp:.9,atk:12,hit:16,hitF:4,hitN:5,hitFS:2,hitNS:3,hitF1:5,hitN1:6,hitFS1:3,hitNS1:3,col:'#2b3a1e',eye:'#c6ff6b',size:.95,trapper:1},/* 罠・見張り台を先にこわしにくる */
-  boss:{xp:25,pw:20,rng:2.1,name:'オオカゲ',hp:40,sp:.84,atk:7,hit:14,hitF:6,hitN:7,hitFS:3,hitNS:4,hitF1:8,hitN1:10,hitFS1:4,hitNS1:5,col:'#120a24',eye:'#ff3b6b',size:1.8,boss:1},
-  ash:{xp:4,pw:3,name:'ハイカゲ',hp:6,sp:.9,atk:20,hit:12,hitF:3,hitN:4,hitFS:2,hitNS:2,hitF1:4,hitN1:5,hitFS1:2,hitNS1:3,col:'#6d6a66',eye:'#ffb36b',size:.9,ash:1},/* かまど・ベンチなどを灰でよごして止める */
-  rockc:{xp:12,pw:8,name:'イワカゲ',hp:22,sp:.5,atk:30,hit:30,hitF:7,hitN:8,hitFS:4,hitNS:4,col:'#5a4636',eye:'#ffcf6b',size:1.3},/* おそいけど、かたい */
-  hino:{xp:35,pw:25,rng:2.3,name:'ヒノオオカゲ',hp:60,sp:.7,atk:6,hit:40,hitF:14,hitN:17,hitFS:7,hitNS:8,col:'#3a0c08',eye:'#ffb02e',size:2.1,boss:1,dev:1},/* 火山から下りてきて、熱の装置をねらう */
-  yama:{xp:40,pw:30,rng:2.4,name:'ヤマノオオカゲ',hp:60,sp:.75,atk:6,hit:20,hitF:9,hitN:11,hitFS:5,hitNS:5,col:'#2a0904',eye:'#ff6a2e',size:2.4,boss:1,vol:1},/* 火山のふもとの最後の夜に、火の山からおりてきて、温泉の熱をうばう */
-  boss2:{xp:50,pw:30,rng:3.4,hx:2.6,hy:.8,name:'ヨルノオオカゲ',hp:90,sp:.9,atk:4.5,hit:30,hitF:10,hitN:12,hitFS:5,hitNS:6,col:'#05030c',eye:'#ffd84a',size:4.6,boss:1},/* ヌシ様をむかえる準備ができたあとに来る */
+  basic:{xp:5,pw:4,name:'コカゲ',hp:10,sp:.80,atk:25,hit:20,hitF:10,hitN:12,hitFS:5,hitNS:6,col:'#2a1d46',eye:'#ff6b8a',size:1},
+  fast:{xp:4,pw:3,name:'ハヤカゲ',hp:5,sp:1.6,atk:16.7,/* コカゲの足2倍・攻撃1.5倍の速さ */hit:14,hitF:7,hitN:8,hitFS:4,hitNS:4,col:'#1d3446',eye:'#7ff0ff',size:.8},
+  thief:{xp:2,pw:2,name:'カゲドロボウ',hp:3,sp:.88,atk:25,hit:10,hitF:5,hitN:6,hitFS:3,hitNS:3,col:'#3b2a14',eye:'#ffd35c',size:.9,thief:1},
+  brute:{xp:8,pw:6,rng:1.2,name:'カタカゲ',hp:10,sp:.76,atk:9,hit:28,hitF:14,hitN:17,hitFS:7,hitNS:8,col:'#3a1a1a',eye:'#ff8a3d',size:1.25,hs:1}/* 当たり判定は1マス */,
+  breaker:{xp:7,pw:5,name:'カベクダキ',hp:9,sp:.8,atk:6,hit:18,hitF:9,hitN:11,hitFS:5,hitNS:5,col:'#3a2a1a',eye:'#ffa04a',size:1.1,wall:3},/* 壁や柵をこわすのが得意（こわす力3倍・速い）。よけずにまっすぐこわしにくる */
+  trapper:{xp:6,pw:5,name:'ワナクイ',hp:8,sp:.9,atk:12,hit:16,hitF:8,hitN:10,hitFS:4,hitNS:5,col:'#2b3a1e',eye:'#c6ff6b',size:.95,trapper:1},/* 罠・見張り台を先にこわしにくる */
+  boss:{xp:25,pw:20,rng:2.1,name:'オオカゲ',hp:40,sp:.84,atk:7,hit:14,hitF:7,hitN:8,hitFS:4,hitNS:4,col:'#120a24',eye:'#ff3b6b',size:1.8,boss:1},
+  ash:{xp:4,pw:3,name:'ハイカゲ',hp:6,sp:.9,atk:20,hit:12,hitF:6,hitN:7,hitFS:3,hitNS:4,col:'#6d6a66',eye:'#ffb36b',size:.9,ash:1},/* かまど・ベンチなどを灰でよごして止める */
+  rockc:{xp:12,pw:8,name:'イワカゲ',hp:22,sp:.5,atk:30,hit:30,hitF:15,hitN:18,hitFS:8,hitNS:9,col:'#5a4636',eye:'#ffcf6b',size:1.3},/* おそいけど、かたい */
+  hino:{xp:35,pw:25,rng:2.3,name:'ヒノオオカゲ',hp:60,sp:.7,atk:6,hit:40,hitF:20,hitN:24,hitFS:10,hitNS:12,col:'#3a0c08',eye:'#ffb02e',size:2.1,boss:1,dev:1},/* 火山から下りてきて、熱の装置をねらう */
+  yama:{xp:40,pw:30,rng:2.4,name:'ヤマノオオカゲ',hp:60,sp:.75,atk:6,hit:20,hitF:10,hitN:12,hitFS:5,hitNS:6,col:'#2a0904',eye:'#ff6a2e',size:2.4,boss:1,vol:1},/* 火山のふもとの最後の夜に、火の山からおりてきて、温泉の熱をうばう */
+  boss2:{xp:50,pw:30,rng:3.4,hx:2.6,hy:.8,name:'ヨルノオオカゲ',hp:90,sp:.9,atk:12,hit:30,hitF:15,hitN:18,hitFS:8,hitNS:9,col:'#05030c',eye:'#ffd84a',size:4.6,boss:1},/* ヌシ様をむかえる準備ができたあとに来る */
 };
 function bossDays(){const w=S.bossWarn;if(w==null)return '';const t=dayNo();if(!(S.res.length>=4&&S.res.some(q=>q.elem==='fire')&&KEYS[WD].every(n=>S.res.some(r=>r.name===n))))return 'オオカゲ：なかまが4人そろうまで来ない';let d=t;if(S.res4Since!=null)d=Math.max(d,S.res4Since+3);while(!bossNight(d))d++;return d===t?'オオカゲが来るまで：今夜':'オオカゲが来るまで：あと'+(d-t)+'日'}/* クエストの進みぐあいに、オオカゲが来る日を出す */
 const bossNight=d=>{const w=S&&S.bossWarn,k=S&&(S.ookDay||(S.enKills||{}).boss&&S.bossDay);if(k)return d-k>=5&&(d-k)%5===0;/* オオカゲをはじめて追いはらったあとは、5日ごと（S.ookDay：その日。前のセーブは、オオカゲをたおしていれば S.bossDay） */return w==null?d>=5&&(d-5)%3===0:d-w>=3&&(d-w-3)%3===0}/* オオカゲは「来るかも」と聞いた3日後、追いはらえなかったら3日ごと（火山のふもとは5日目、そのあと3日ごと）。はじめて追いはらったら、そのあとは5日ごと */;
@@ -235,8 +235,8 @@ function hitRes(e,r,D){if(onTower(r))return;if(BOSSFX[e.type]){shakeScreen();fxS
   const lv=rLv(r);S.nightHurt++;if(S.ns)S.ns.hurt++;const fire=r.elem==='fire';
   if(r.act&&['sleep','stay','rest','idle'].includes(r.act.type)&&r.act.stage==='do')endAct(r);/* 攻撃されたら、寝ていても起きる */
   const adj=Math.hypot(e.x-r.x,e.y-r.y)<=Math.max(1.1,reachOf(D)+.05);/* せいれいの攻撃は、となりにいる相手だけ（遠くから攻撃してくる大きいコワイノには、その距離でもやり返せる） */if(fire&&adj){/* 戦えるのは火の子だけ *//* やり返しはしない（攻撃されたときの受けるダメージの軽さだけ、戦える子は今までどおり） */
-    const V1=WD===1&&D.hitF1!=null;/* 火山（火のステージ）では、草原より強い数（hitF1…）を使う */r.hunger=Math.max(0,r.hunger-(sh?(V1?D.hitFS1:D.hitFS):(V1?D.hitF1:D.hitF)));r.hurt=40;if(r.hunger<50)r.fleeNow=true;/* 体力（おなか）がへったら逃げる（オオカゲが相手でも同じ） */}
-  else{const V1=WD===1&&D.hitN1!=null;r.hunger=Math.max(0,r.hunger-(sh?(V1?D.hitNS1:D.hitNS):(V1?D.hitN1:D.hitN)));r.fun=Math.max(0,r.fun-20);r.hurt=40;r.fleeNow=true;/* 戦えない子は、オオカゲが相手でも逃げる */
+    r.hunger=Math.max(0,r.hunger-(sh?D.hitFS:D.hitF));r.hurt=40;if(r.hunger<50)r.fleeNow=true;/* 体力（おなか）がへったら逃げる（オオカゲが相手でも同じ） */}
+  else{r.hunger=Math.max(0,r.hunger-(sh?D.hitNS:D.hitN));r.fun=Math.max(0,r.fun-20);r.hurt=40;r.fleeNow=true;/* 戦えない子は、オオカゲが相手でも逃げる */
     if(D.boss&&Math.random()<.25){endAct(r);r.act={type:'faint',stage:'do',t:0};r.bubble='😵'}/* ボスの攻撃で気絶するのは、4回に1回くらい */}r.alarm=S.t;
   if(h0>=12&&r.hunger<3)r.hunger=3;/* 一撃では消えない */
   {const L=lightAt(e.x,e.y);e.rest=fire?(D.boss?(L?2:1.5):(L?2.667:2)):(D.boss?(L?4:3):(L?5.333:4))}/* たたいたあと、コワイノがひと休みする時間（明かりの中は長い）。やられて止まる stun とはちがい、うすくならない */e.path=[];e.repath=0;
