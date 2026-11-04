@@ -30,7 +30,7 @@ function addCarry(r,k,n){if(typeof r.carry==='number')r.carry={mugi:r.carry};n=M
 function addMat(r,k,n){n=Math.min(n,roomN(r));if(n<=0)return;r.cmat=r.cmat||{};r.cmat[k]=(r.cmat[k]||0)+n}
 function hYield(j,def){const o=S.obj[j],d=S.dyn[j];const cr=o==='farm'?CROPS[(d&&d.crop)||'mugi']:null;return (cr?cr.yield:def)+(NEARMILL.has(j)?1:0)+(cr&&d?d.fb||0:0)}
 // STORAGE: placed shelves share the village stock; wall attachments count only on standing walls.
-const STORAGE={stor:{food:50},mbox:{mat:80},taru:{food:60},kabebukuro:{food:55},asabukuro:{mat:65},makidana:{mat:80},crate:{food:30,mat:30},shelf1:{mat:160},shelf2:{mat:50},wshelf:{mat:160},cabinet:{food:90}};/* しまえる数（食料・素材） */
+const STORAGE={stor:{food:50},mbox:{mat:80},taru:{food:60},kabebukuro:{food:55},asabukuro:{mat:65},makidana:{mat:130},crate:{food:30,mat:30},shelf1:{mat:160},shelf2:{mat:200},wshelf:{mat:200},cabinet:{food:90}};/* しまえる数（食料・素材） */
 function storageAt(j,type){const id=S.obj[anc(j)],wall=HOME_WALLS.has(id)&&(S.win||{})[j],b=STORAGE[wall]||STORAGE[id];return !!(b&&b[type])}
 const GRASSK=['shina','kasa','kuru','chiri','funba'];/* 草の素材 */
 const cmpOf=j=>S.dyn[j]||(S.dyn[j]={b:[],c:0}),cmpIn=j=>{const d=S.dyn[j];return d?(d.b||[]).reduce((a,x)=>a+x[1],0):0},cmpWait=j=>{const Q=(S.cmpQ||{})[j];let n=0;if(Q)for(const k in Q)n+=Q[k];for(const r of S.res)if(r.cpk&&r.cpk.j===j)for(const k in r.cpk.m)n+=r.cpk.m[k];return n};/* コンポスター：b＝入れた草（[入れた時刻, 数]）、c＝できた肥料 */
@@ -166,7 +166,7 @@ function recount(){if(S.sacredLegacy2||S.sacredLegacy3)tryExpandSacredLegacy(S);
     if(o==='statue')STATUE=j;if(o==='obox')OBOX=j;if(o==='board')BOARD=j;
     if(o==='stele')STELES.push(j);
     if(o==='lamp'||o==='lighthouse'||o==='tower'||o==='campfire'||o==='statue'||o==='torch'||o==='candle'||o==='lantern'||o==='flamp'||o==='yomawari'||o==='toro'||o==='takeakari'||o==='andon')LIGHTS.push(j);
-    if(o==='shinboku'){const x0=j%W,y0=(j/W)|0;for(let b=-3;b<=5;b++)for(let a=-3;a<=5;a++){const nx=x0+a,ny=y0+b;if(nx>=0&&ny>=0&&nx<W&&ny<H)NEARTREE.add(ny*W+nx)}}/* ご神木のまわり3マス */
+    if(o==='shinboku'){const x0=j%W,y0=(j/W)|0;for(let b=-5;b<=7;b++)for(let a=-5;a<=7;a++){const nx=x0+a,ny=y0+b;if(nx>=0&&ny>=0&&nx<W&&ny<H)NEARTREE.add(ny*W+nx)}}/* ご神木のまわり5マス */
     if(LIGHTP[o])LITP.push(j);/* 夜に光をかく明かりの一覧 */
     if(o==='watch'||o==='yogan'||o==='tower')TOWERS.push(j);
     if(FLOWERS.has(o)&&!isBud(j)){const el=Object.keys(BL[o].attr||{})[0],E=el&&(ENVE[el]||(ENVE[el]=new Float32Array(W*H)));for(let dy=-3;dy<=3;dy++)for(let dx=-3;dx<=3;dx++){const nx=x+dx,ny=y+dy;if(nx<0||ny<0||nx>=W||ny>=H)continue;const q=ny*W+nx;ENVG[q]+=.56;if(E)E[q]+=1.11}}/* 花：まわり3マスで、たのしさ+0.2／1時間、同じ属性のせいれいは+0.6／1時間 */

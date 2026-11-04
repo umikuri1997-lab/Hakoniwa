@@ -322,7 +322,7 @@ function decide0(r){
   return goPlay(r,G);
 }
 const ripeAdj=types=>j=>adjOf(j,k=>types.includes(S.obj[k])&&S.dyn[k]&&S.dyn[k].g>=100&&free('o'+k,1));
-const SEATPT={stool:1,chair:2,pouf:3,achair:5},SEATPW={stool:.45,chair:.9,pouf:1.35,achair:2.25};/* SEATPT：経験値、SEATPW：パワー *//* いすの効果：スツール＜椅子＜クッション＜クッションチェア＜ひじかけいす（×0.45がパワー） */
+const SEATPT={stool:1,chair:2,pouf:3,achair:5},SEATPW={stool:.45,chair:.9,pouf:.9,achair:2.25};/* SEATPT：経験値、SEATPW：パワー *//* いすの効果：スツール＜椅子＜クッション＜クッションチェア＜ひじかけいす（×0.45がパワー） */
 function goMeal(r,G){
   if(r.hunger<15||isNight())return startAct(r,G,'eat',-1,{pt:0,pw:0});
   let best=-1,bs=1e9,tdir=0;
