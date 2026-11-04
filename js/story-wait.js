@@ -56,7 +56,7 @@ function storyOpenSpot(lead,n){const G=bfs(lead.x|0,lead.y|0);return nearest(G,j
 function tryMainStoryWait(r){
   const p=mainStoryWaitInfo(),home=r.storyWaitHome,a=r.act;
   if(a?.type==='storyreturn')return false;
-  if(home&&(!p||p.key!==home.key)&&a?.type!=='fieldintro'){
+  if(home&&(!p||p.key!==home.key)&&a?.type!=='fieldintro'&&!(p?p.cast.includes(r):storyContinues(r))){/* つぎのお話にも出る・お話がまだつづくときは、もどらない */
     if(['fieldstory','fieldassist','fieldwait','nmeet','sevreact','questjoy'].includes(a?.type)){delete r.storyWaitHome;return false;}
     if(a?.type==='storywait')endAct(r);
     delete r.storyWaitHome;
@@ -65,12 +65,12 @@ function tryMainStoryWait(r){
     if(goal>=0&&goal!==((r.y|0)*W+(r.x|0))&&questVisitSafe(r,goal)){endAct(r);startAct(r,G,'storyreturn',goal,{});return true;}
   }
   if(!p||!p.cast.includes(r)||a?.type==='storywait'&&a.storyKey===p.key&&a.obj===p.obj)return false;
-  if((carryN(r)||matN(r))&&!r.hidden&&!hungry(r)&&!['store','smat','eat','fetch','flee','faint','sleep','pray','bury'].includes(r.act?.type)&&!hostileNow(r)){const G=bfs(r.x|0,r.y|0);endAct(r);if(matN(r))goStoreMat(r,G);else goStore(r,G);return true}/* お話によばれたら、荷物をしまって、すぐ向かう */
   if(!fieldActorReady(r)||onHold(r)||['fieldstory','fieldassist','questjoy','nmeet','sevreact'].includes(r.act?.type)||!questVisitSafe(r,p.obj))return false;
   const G=bfs(r.x|0,r.y|0),stand=storyWaitStand(r,G,p);if(stand<0){const open=p.field?nearest(G,j=>walk(j)&&!sacredReserved(j)&&fieldDistance(j,p.obj)>=1&&fieldDistance(j,p.obj)<=3,150)>=0:questVisitOpen(G,p.obj);noteStoryWaitBlock(r,p.obj,open?'crowded':'path');return false;}clearStoryWaitBlock(r);
   rememberStoryHome(r,p.key);endAct(r);startAct(r,G,'storywait',stand,{key:'storywait'+stand,storyKey:p.key,obj:p.obj});return true;
 }
-ACT.storywait={start(r,a){const p=mainStoryWaitInfo();a.front=!!(p&&p.free&&!S.obj[a.obj]&&a.obj!==S.flags.kgMark);/* 場所に物がなければ、正面（手前）を向いて待つ。物があれば、そちらを向く */if(!a.front)faceTo(r,p?.field||p?.tree?fieldStump(a.obj):a.obj);r.bubble='';},done(r,a){const p=mainStoryWaitInfo();return !p||p.key!==a.storyKey||p.obj!==a.obj||!p.cast.includes(r)||!questVisitSafe(r,a.obj);}};
+ACT.storywait={start(r,a){const p=mainStoryWaitInfo();a.front=!!(p&&p.free&&!S.obj[a.obj]&&a.obj!==S.flags.kgMark);/* 場所に物がなければ、正面（手前）を向いて待つ。物があれば、そちらを向く */if(!a.front)faceTo(r,p?.field||p?.tree?fieldStump(a.obj):a.obj);r.bubble='';},done(r,a){const p=mainStoryWaitInfo();if(!p&&storyContinues(r)){if(a.cu==null)a.cu=S.t+60;if(S.t<a.cu)return false}/* ゲームの1時間まで *//* つぎのお話がすぐつづくときは、解散せずにその場で待つ */return !p||p.key!==a.storyKey||p.obj!==a.obj||!p.cast.includes(r)||!questVisitSafe(r,a.obj);}};
+function storyContinues(r){/* メインのお話・御神木の調べが、まだつづく（つぎの会話・つぎの段階が待っている）。夜・コワイノが来たら、つづけない */if(!S||S.free||S.cleared||isNight()||hostileNow(r)||hungry(r))return false;if(S.qStory!=null)return true;const q=QUESTS[S.quest];if(!q)return false;if(q.talk&&!S.qTalked)return true;const f=typeof fieldStoryCurrent==='function'&&fieldStoryCurrent();return !!(f&&fieldStoryState(f.id)?.auto);}
 ACT.storyreturn={done:()=>true};
 function mainStoryBubbleReady(r){
   if(isNight())return false;

@@ -17,7 +17,7 @@ const FIELD_PLAY={
   waterFilm:{phase:2,type:'trace',hint:'水の通り道を、指でなぞる'},
   waterLeaf:{phase:1,type:'wait',hint:'芽にふれずに、見守る'},
   windEcho:{phase:0,type:'swipe',hint:'やさしい風を、スワイプで送る'},
-  windVoices:{phase:4,type:'hands',hint:'光る手を、じゅんにタップ'}
+  windVoices:{phase:4,type:'gather',hint:'切り株を長おしして、みんなの力をあつめる'}
 };
 let SPLAY=null;
 const sacredPlayActive=()=>!!SPLAY&&SPLAY.owner===S&&SPLAY.session===VILLAGE_SESSION;
@@ -34,7 +34,7 @@ function startSacredPlay(id,j,cast,done){
   if(P.type==='trace'){P.path=[];for(let i=0;i<=24;i++){const u=i/24;P.path.push({x:cx-74+u*66,y:cy+16-Math.sin(u*Math.PI)*14+u*-6})}P.reach=0}
   if(P.type==='wait'){P.ms=6000;P.since=now;P.shrink=0}
   if(P.type==='swipe'){P.need=3}
-  if(P.type==='hands'){P.order=[...cast.filter(r=>r.name!==POKO),...cast.filter(r=>r.name===POKO)];P.need=P.order.length}
+  if(P.type==='gather'){P.order=[...cast.filter(r=>r.name!==POKO),...cast.filter(r=>r.name===POKO)];P.need=P.order.length;P.prog=0;P.holding=false}/* 切り株を長おし：みんなが、じゅんに切り株へ力をおくる（フタバはさいご） */
   if(P.type==='brush'){P.area={x:cx-34,y:cy-10,w:68,h:20}}
   SPLAY=P;camAnim={fz:cam.z,tz:Math.max(cam.z,2.4),fx:cam.x+VW/cam.z/2,fy:cam.y+VH/cam.z/2,tx:cx,ty:cy-10,t:0,dur:.6};
   sacredPlayHint(P.hint+sacredPlayCount());sfx('tap');
@@ -50,7 +50,7 @@ function sacredPlayDown(w,now){const P=SPLAY;P.down={x:w.x,y:w.y,t:now,last:{x:w
   else if(P.type==='cover'){P.spots.forEach((s,i)=>{if(!sacredPlayNear(w,s,10)||P.covered.has(i))return;if(P.cold.has(i)){P.covered.add(i);P.got=P.covered.size;sfx('bush');sacredPlayHint(P.hint+sacredPlayCount());if(P.got>=P.need)setTimeout(sacredPlayWin,500)}else sacredPlayMsg('ここは、あたたかい')})}
   else if(P.type==='hold'){if(sacredPlayNear(w,P.stone,14)){P.holding=true;P.heat=0}}
   else if(P.type==='wait'){P.since=now;P.shrink=now;sacredPlayMsg('そっと……')}
-  else if(P.type==='hands'){const r=P.order[P.got];if(r&&Math.hypot(w.x-r.x*TS,w.y-(r.y*TS-12))<16){P.got++;sfx('tap');fxSpr('twinkle',r.x*TS,r.y*TS-14);sacredPlayHint(P.hint+sacredPlayCount());if(P.got>=P.need)setTimeout(sacredPlayWin,500)}}
+  else if(P.type==='gather'){if(sacredPlayNear(w,{x:P.cx,y:P.cy-6},26))P.holding=true}
   else if(P.type==='trace'){P.tracing=sacredPlayNear(w,P.path[0],12);P.reach=0}
 }
 function sacredPlayMove(w,now){const P=SPLAY,d=P.down;if(!d)return;const l=d.last,dt=Math.max(1,now-l.t)/1000,dist=Math.hypot(w.x-l.x,w.y-l.y),v=dist/dt;d.last={x:w.x,y:w.y,t:now};
@@ -61,6 +61,7 @@ function sacredPlayUp(w,now){const P=SPLAY,d=P.down;P.down=null;
   if(P.type==='hold'&&P.holding){P.holding=false;if(P.heat>=.6&&P.heat<=.82){sfx('bush');sacredPlayWin()}else sacredPlayMsg(P.heat<.6?'まだ、つめたい':'あつすぎる')}
   else if(P.type==='swipe'&&d){const len=Math.hypot(w.x-d.x,w.y-d.y),ms=now-d.t;if(len<18)return;if(len>110||ms<140){sacredPlayMsg('つよすぎる。やさしく');P.gust=now;return}P.got++;P.sway=now;sfx('bush');sacredPlayHint(P.hint+sacredPlayCount());if(P.got>=P.need)setTimeout(sacredPlayWin,600)}
   else if(P.type==='trace')P.tracing=false;
+  else if(P.type==='gather'&&P.holding){P.holding=false;if(P.got<P.need)sacredPlayMsg('はなさずに……')}
 }
 /* 出番のあいだは、地図の操作より先に指をうけとる */
 for(const [ev,fn] of [['pointerdown',sacredPlayDown],['pointermove',sacredPlayMove],['pointerup',sacredPlayUp]])cv.addEventListener(ev,e=>{if(!sacredPlayActive()||!$('#dialog').hidden)return;e.stopImmediatePropagation();e.preventDefault();if(ev==='pointerdown')cv.setPointerCapture(e.pointerId);fn({x:cam.x+e.clientX/cam.z,y:cam.y+e.clientY/cam.z},performance.now())},{capture:true});
@@ -75,11 +76,14 @@ function drawSacredPlay(now){const P=SPLAY;if(!sacredPlayActive())return;ctx.sav
   if(P.type==='trace'){ctx.fillStyle='rgba(255,255,255,.7)';P.path.forEach((p,i)=>{if(i%2===0)ctx.fillRect(p.x-1,p.y-1,2,2)});ctx.strokeStyle='#7fc4ec';ctx.lineWidth=3;ctx.beginPath();for(let i=0;i<=P.reach;i++){const p=P.path[i];i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y)}ctx.stroke();glow(P.path[0].x,P.path[0].y,10,.5,'150,210,255')}
   if(P.type==='wait'){const p=Math.min(1,(now-P.since)/P.ms),sh=Math.max(0,1-(now-P.shrink)/800);ctx.strokeStyle='#c8ffd0';ctx.lineWidth=2;ctx.beginPath();ctx.arc(P.cx,P.cy-18,12,-Math.PI/2,-Math.PI/2+p*Math.PI*2);ctx.stroke();ctx.fillStyle='#8fdc6a';const s=1-sh*.5;ctx.fillRect(P.cx-3*s,P.cy-20,6*s,4*s);if(p>=1)sacredPlayWin()}
   if(P.type==='swipe'){const sw=P.sway&&now-P.sway<900?Math.sin((now-P.sway)/90)*(1-(now-P.sway)/900)*4:0,gu=P.gust&&now-P.gust<600?Math.sin((now-P.gust)/30)*3:0;ctx.fillStyle='#8fdc6a';ctx.save();ctx.translate(P.cx,P.cy-20);ctx.rotate((sw+gu)*.08);ctx.beginPath();ctx.ellipse(0,-4,3,6,0,0,7);ctx.fill();ctx.restore();const d=P.down;if(d){ctx.strokeStyle='rgba(255,255,255,.6)';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(d.x,d.y);ctx.lineTo(d.last.x,d.last.y);ctx.stroke()}}
-  if(P.type==='hands'){const r=P.order[P.got];if(r)glow(r.x*TS,r.y*TS-12,14,.55+.2*Math.sin(t*5));}
+  if(P.type==='gather'){const dt=Math.min(.1,(now-(P.lt||now))/1000);P.lt=now;if(P.holding&&P.got<P.need){P.prog+=dt*1.25;if(P.prog>=P.got+1){const r=P.order[P.got];P.got++;if(r){faceTo(r,(Math.floor(P.cy/TS))*W+Math.floor(P.cx/TS));JUMP.set(r,now);fxSpr('twinkle',r.x*TS,r.y*TS-14)}sfx('tap');sacredPlayHint(P.hint+sacredPlayCount());if(P.got>=P.need){P.holding=false;setTimeout(sacredPlayWin,700)}}}
+    ctx.strokeStyle='rgba(255,246,200,.75)';ctx.lineWidth=2;for(let i=0;i<P.got;i++){const r=P.order[i];if(!r)continue;ctx.beginPath();ctx.moveTo(r.x*TS,r.y*TS-12);ctx.lineTo(P.cx,P.cy-6);ctx.stroke();glow(r.x*TS,r.y*TS-12,10,.45)}/* 力をおくった子から、切り株へ光の線 */
+    glow(P.cx,P.cy-6,18+P.got*4,.25+.1*Math.sin(t*4)+P.got*.06);if(!P.holding&&P.got<P.need){ctx.strokeStyle='rgba(255,246,200,'+(.5+.3*Math.sin(t*4))+')';ctx.lineWidth=2;ctx.beginPath();ctx.arc(P.cx,P.cy-6,20+2*Math.sin(t*4),0,7);ctx.stroke()}/* 長おしする所に、光の輪 */
+    if(P.holding){const f=P.prog-P.got;ctx.strokeStyle='#fff6c8';ctx.lineWidth=3;ctx.beginPath();ctx.arc(P.cx,P.cy-6,20,-Math.PI/2,-Math.PI/2+f*Math.PI*2);ctx.stroke()}}
   if(P.msg&&now-P.msgT<1400){ctx.font='bold 10px "PixelMplus10",sans-serif';ctx.textAlign='center';ctx.lineWidth=3;ctx.strokeStyle='#695438';ctx.fillStyle='#fff5d4';ctx.strokeText(P.msg,P.cx,P.cy-36);ctx.fillText(P.msg,P.cx,P.cy-36)}
   ctx.restore()}
 /* 調べを1回はじめたら、その話の最後まで自動で続ける（会話のあと3秒あける） */
 function tryFieldAuto(r){const q=fieldStoryCurrent();if(!q||isNight()||!$('#dialog').hidden||sacredPlayActive())return false;const st=fieldStoryState(q.id);if(!st?.auto||fieldStoryDone(q.id))return false;
-  const step=FIELD_STORIES[q.id][st.step];if(!step||fieldStoryActor(step)!==r)return false;if(r.act&&['eat','fetch','forage','flee','faint','sleep','pray','bury','store','smat','fieldstory','fieldassist','build','repair'].includes(r.act.type))return false;/* 遊び・散歩などは、やめて調べへ */
+  const step=FIELD_STORIES[q.id][st.step];if(!step||fieldStoryActor(step)!==r)return false;if(r.act&&['eat','fetch','flee','faint','pray','bury','fieldstory','fieldassist'].includes(r.act.type))return false;/* 遊び・散歩などは、やめて調べへ */
   if(performance.now()<(FIELD_AUTO_AT.get(S)||0))return false;FIELD_AUTO_AT.set(S,performance.now()+2000);return fieldStoryStart(q,true)}
 const FIELD_AUTO_AT=new WeakMap();
