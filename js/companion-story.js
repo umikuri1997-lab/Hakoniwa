@@ -56,7 +56,8 @@ function fieldStoryStart(q,quiet){
   {const prep=typeof fieldPrepNeed==='function'&&fieldPrepNeed(q.id);if(prep)return say(prep.label);}
   if(FIELD_SCENES.get(S)?.session===VILLAGE_SESSION||S.res.some(r=>r.act?.type==='fieldstory'))return say('なかまが調べにむかっている');
   const r=fieldStoryActor(step),group=fieldCast(step);
-  if(!r||group.length!==(step.cast||[step.who]).length||group.some(p=>!fieldActorReady(p))){const missing=(step.cast||[step.who]).map(sevName).find(n=>!S.res.some(p=>p.name===n)),waiting=group.find(p=>!fieldActorReady(p));return say(missing?missing+'がもどってから、一緒に世話をしよう':waiting?storyWaitReason(waiting,j):'なかまがそろったら、一緒に世話をしよう');}
+  if(!r||group.length!==(step.cast||[step.who]).length){const missing=(step.cast||[step.who]).map(sevName).find(n=>!S.res.some(p=>p.name===n));return say(missing?missing+'がもどってから、一緒に世話をしよう':'なかまがそろったら、一緒に世話をしよう');}
+  if(group.some(p=>!fieldActorReady(p)||p.act?.type==='fieldgather'&&p.act.stage!=='do')){state.auto=true;/* 予定のある子がいても、とりやめない。予定がおわった子から、じゅんに木のそばへ集まる（tryFieldGather） */if(!quiet){const w=group.find(p=>!fieldActorReady(p));toast(w?storyWaitReason(w,j):'みんなが木のそばへ集まっている')}return !quiet;}
   const selected=new Set(),occupied=occTiles(r);for(const p of group)occupied.delete((p.y|0)*W+(p.x|0));const plans=[];
   const leadG=bfs(r.x|0,r.y|0),lead0=fieldLeadStand(leadG,j,k=>!occupied.has(k)&&free('field'+k,1)),slots=storySlots([r,...group.filter(p=>p!==r)],{stump:j},lead0>=0?lead0:null);
   for(const p of [r,...group.filter(p=>p!==r)]){const G=bfs(p.x|0,p.y|0),sl=slots.get(p),stand=sl!=null&&G.dist[sl]>=0&&!selected.has(sl)?sl:p===r?fieldLeadStand(G,j,k=>!occupied.has(k)&&!selected.has(k)&&free('field'+k,1)):nearest(G,k=>walk(k)&&!sacredReserved(k)&&!occupied.has(k)&&!selected.has(k)&&fieldDistance(k,j)>=1&&fieldDistance(k,j)<=(p===r?1:3)&&free('field'+k,1),100);if(stand<0)return say('木の周りに、なかまが集まれる道をあけよう');selected.add(stand);plans.push({p,G,stand});}
@@ -93,10 +94,20 @@ ACT.fieldstory={
 };
 ACT.fieldassist={start(r,a){faceTo(r,fieldStump(a.obj));r.bubble='';},done:(r,a)=>!fieldStoryValid(a)||isNight()||hungry(r)||!S.res.some(p=>p.act?.type==='fieldstory'&&p.act.fieldId===a.fieldId&&p.act.phase===a.phase)};
 ACT.fieldwait={start(r){r.bubble='';},done:(r,a)=>fieldStoryCurrent()?.id!==a.fieldId||isNight()||hungry(r)};
-function fieldStoryAnim(r){const pose=sacredPose(r);if(pose)return pose.anim;return r.act?.type==='storywait'?'storyListen':r.act?.type==='fieldstory'?FIELD_STORIES[r.act.fieldId]?.[r.act.phase]?.anim||'talk':['fieldwait','fieldintro','fieldassist'].includes(r.act?.type)?'talkthink':r.act?.type;}
+function fieldStoryAnim(r){const pose=sacredPose(r);if(pose)return pose.anim;return r.act?.type==='storywait'?'storyListen':r.act?.type==='fieldstory'?FIELD_STORIES[r.act.fieldId]?.[r.act.phase]?.anim||'talk':['fieldwait','fieldintro','fieldassist','fieldgather'].includes(r.act?.type)?'talkthink':r.act?.type;}
 function drawFieldStory(now,labelsOnly=false){
   if(!$('#dialog').hidden)return;const q=fieldStoryCurrent();if(!q)return;const state=fieldStoryState(q.id),step=FIELD_STORIES[q.id][state?.step||0],j=S.fieldSites?.[step.site];if(j==null)return;
   const x=(j%W+sacredSpan()/2)*TS,y=((j/W|0)+sacredSpan()-.45)*TS-hiAt(j)*LIFT,t=now/600;
   ctx.save();if(labelsOnly){ctx.font='bold 11px "PixelMplus10",sans-serif';ctx.textAlign='center';ctx.fillStyle='#fff5d4';ctx.strokeStyle='#695438';ctx.lineWidth=3;const label='！ '+step.label;ctx.strokeText(label,x,y-17);ctx.fillText(label,x,y-17);ctx.restore();return;}
   ctx.strokeStyle='#f9d77b';ctx.lineWidth=1.4;ctx.beginPath();ctx.ellipse(x,y+5,19+Math.sin(t),9,0,0,7);ctx.stroke();ctx.restore();
 }
+
+/* 調べの集まり：はじめた調べ（auto）は、予定がおわった子から、じゅんに木のそばへ来て待つ。ほかの予定には移らない。みんながそろったら、tryFieldAuto ではじまる */
+function fieldGatherWant(){const q=fieldStoryCurrent();if(!q||isNight())return null;const st=fieldStoryState(q.id);if(!st?.auto||fieldStoryDone(q.id))return null;if(FIELD_SCENES.get(S)?.session===VILLAGE_SESSION||S.res.some(p=>p.act?.type==='fieldstory'||p.act?.type==='fieldassist')||(typeof sacredPlayActive==='function'&&sacredPlayActive()))return null;const step=FIELD_STORIES[q.id][st.step],j=step&&S.fieldSites?.[step.site];if(j==null)return null;if(typeof fieldPrepNeed==='function'&&fieldPrepNeed(q.id))return null;return {q,st,step,j,group:fieldCast(step)};}
+function tryFieldGather(r){const w=fieldGatherWant();if(!w||!w.group.includes(r))return false;
+  if(r.act?.type==='fieldgather'&&r.act.fieldId===w.q.id&&r.act.phase===w.st.step)return false;
+  if(!fieldActorReady(r)||onHold(r)||!questVisitSafe(r,w.j))return false;
+  const G=bfs(r.x|0,r.y|0),slots=introSlots(w.q.id+'#'+w.st.step,w.group,w.j),s0=slots.get(r);let stand=s0!=null&&G.dist[s0]>=0&&free('field'+s0,1)?s0:-1;
+  if(stand<0)stand=nearest(G,k=>walk(k)&&!sacredReserved(k)&&fieldDistance(k,w.j)>=1&&fieldDistance(k,w.j)<=3&&free('field'+k,1),100);
+  if(stand<0){noteStoryWaitBlock(r,w.j,'path');return false;}clearStoryWaitBlock(r);endAct(r);startAct(r,G,'fieldgather',stand,{key:'field'+stand,fieldId:w.q.id,phase:w.st.step,obj:w.j});return true;}
+ACT.fieldgather={start(r,a){faceTo(r,fieldStump(a.obj));r.bubble='';},done:(r,a)=>{const w=fieldGatherWant();return !w||w.q.id!==a.fieldId||w.st.step!==a.phase||hungry(r)||hostileNow(r);}};

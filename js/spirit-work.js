@@ -55,7 +55,7 @@ function hasHighWork(r){
     if(o==='sprout'&&canJob(r,'plant')&&free('o'+j,1))return true}
   return false}
 const ROUTINE=['chop','mine','gather'];
-const URGNO=['storywait','storyreturn','fieldassist','fieldintro','fieldstory','fieldwait','phew','sevreact','questjoy','nmeet','step','shiver','reunion','bury','pray','build','craft','repair','eat','sleep','flee','faint','cook','store','smat','fetch','cgrab','chat','chatwait','npl','tag','offer','pickdrop','pickseed','bathe','rest'];/* 水浴びやベンチの休けいは、とちゅうでやめない */
+const URGNO=['storywait','storyreturn','fieldassist','fieldgather','fieldintro','fieldstory','fieldwait','phew','sevreact','questjoy','nmeet','step','shiver','reunion','bury','pray','build','craft','repair','eat','sleep','flee','faint','cook','store','smat','fetch','cgrab','chat','chatwait','npl','tag','offer','pickdrop','pickseed','bathe','rest'];/* 水浴びやベンチの休けいは、とちゅうでやめない */
 function hasUrgent(r){/* 建てる場所か、だれも受けていない依頼があるか */
   if(canJob(r,'build')&&S.obj.some((o,j)=>o==='site'&&free('o'+j,2)))return true;
   return S.orders.some(q=>(!q.worker||!S.res.some(x=>x.id===q.worker))&&craftOK(r,q))}
@@ -114,7 +114,7 @@ function goWander(r,G){
   startAct(r,G,'wander',pick(c));
 }
 function moveR(r,dt){
-  let step=.36*dt*rMul(r,'move')*(r.act&&['questjoy','sevreact','reunion'].includes(r.act.type)&&r.act.stage==='walk'?2:1)/* クエストで駆け寄る間は、2倍 */*(r.act&&['storywait','fieldintro','fieldstory','fieldassist','fieldwait'].includes(r.act.type)&&r.act.stage==='walk'?2:1)/* メインのお話の場所へ向かうときは、2倍 */*Math.max(NEARVANE.has((r.y|0)*W+(r.x|0))?1.2:1,NEARSIGN.has((r.y|0)*W+(r.x|0))&&r.act&&r.act.type==='flee'?1.4:1)*/* 風見鶏と道しるべは重ならない（大きいほう） */(r.energy<5?.5:1)*(r.act&&(r.act.type==='flee'||r.act.run)?1.9:1)*(r.hunger<20&&r.act&&(r.act.type==='eat'||r.act.type==='fetch'||r.act.type==='forage')?1.6:1)/* おなかがへりすぎたら、急いで食べに行く */*(FSPD[S.floor[(r.y|0)*W+(r.x|0)]]||1);r.walkT=(r.walkT||0)+dt;
+  let step=.36*dt*rMul(r,'move')*(r.act&&['questjoy','sevreact','reunion'].includes(r.act.type)&&r.act.stage==='walk'?2:1)/* クエストで駆け寄る間は、2倍 */*(r.act&&['storywait','fieldintro','fieldstory','fieldassist','fieldgather','fieldwait'].includes(r.act.type)&&r.act.stage==='walk'?2:1)/* メインのお話の場所へ向かうときは、2倍 */*Math.max(NEARVANE.has((r.y|0)*W+(r.x|0))?1.2:1,NEARSIGN.has((r.y|0)*W+(r.x|0))&&r.act&&r.act.type==='flee'?1.4:1)*/* 風見鶏と道しるべは重ならない（大きいほう） */(r.energy<5?.5:1)*(r.act&&(r.act.type==='flee'||r.act.run)?1.9:1)*(r.hunger<20&&r.act&&(r.act.type==='eat'||r.act.type==='fetch'||r.act.type==='forage')?1.6:1)/* おなかがへりすぎたら、急いで食べに行く */*(FSPD[S.floor[(r.y|0)*W+(r.x|0)]]||1);r.walkT=(r.walkT||0)+dt;
   if(r.path.length>1&&r.path[0]!==r.reroute){const n0=r.path[0];if(S.res.some(q=>q!==r&&!q.hidden&&(q.y|0)*W+(q.x|0)===n0&&!(q.act&&q.act.stage==='walk'&&q.path&&q.path.length))){r.reroute=n0;const g=r.path[r.path.length-1],G0=roadSearch(r.x|0,r.y|0),np=avoidPath(r,G0,g);if(np.length&&np.length<=r.path.length+4)r.path=np}}/* 遠まわりになるなら、よけずにそのまま進む（進んでは戻るのを防ぐ。進めなければ下の「つまり」で処理） */
   if(r.path.length){const cj=(r.y|0)*W+(r.x|0),n0=r.path[0];if(n0!==cj&&Math.abs(n0%W-cj%W)+Math.abs(((n0/W)|0)-((cj/W)|0))>1){/* 次のマスがとなりでない（古い道・押されてずれた）ときは、いまの場所から道を引きなおす。壁をすりぬけない */
     const g=r.path[r.path.length-1],G0=roadSearch(r.x|0,r.y|0);r.path=G0.dist[g]>=0?avoidPath(r,G0,g):[];if(!r.path.length&&g!==cj){noPass(r);endAct(r);return}}}
@@ -180,6 +180,7 @@ function updRes(r,dt){rescueStuck(r);if((RHOLD.get(r)||0)>performance.now())retu
   if(r.act&&r.act.type==='sevreact'&&(r.hunger<30||hungry(r)||r.energy<10||!SEV_ENCOUNTERS.get(S)||!sevEncounterSafe(SEV_ENCOUNTERS.get(S))))endAct(r);
   if(r.act&&r.act.type==='questjoy'&&(r.hunger<30||hungry(r)||!questVisitSafe(r,r.act.obj)))endAct(r);
   if(typeof tryFieldAuto==='function'&&tryFieldAuto(r))return;
+  if(typeof tryFieldGather==='function'&&tryFieldGather(r))return;
   if(tryMainStoryWait(r))return;
   if(tryEarthIntro(r))return;
   if(tryQuestVisit(r))return;

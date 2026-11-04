@@ -73,7 +73,7 @@ async function playStoryReplay(run){
   const e=run.episode;let last=performance.now();run.running=true;
   run.tick=setInterval(()=>{
     if(STORY_REPLAY_RUN!==run||run.cancelled)return;const now=performance.now(),dt=Math.min(.1,(now-last)/1000);last=now;
-    if($('#dialog').hidden&&!sacredQuietActive()){for(const r of S.res){if(!r.act){tryMainStoryWait(r);if(!r.act)tryEarthIntro(r);}if(r.act&&['fieldintro','fieldstory','fieldassist','fieldwait','storywait','storyreturn','nmeet','sevreact'].includes(r.act.type))updRes(r,dt*MIN_PER_SEC);}checkQuest();}
+    if($('#dialog').hidden&&!sacredQuietActive()){for(const r of S.res){if(!r.act){tryMainStoryWait(r);if(!r.act)tryEarthIntro(r);}if(r.act&&['fieldintro','fieldstory','fieldassist','fieldgather','fieldwait','storywait','storyreturn','nmeet','sevreact'].includes(r.act.type))updRes(r,dt*MIN_PER_SEC);}checkQuest();}
     else if(run.auto&&DLGA.n>=DLGA.full.length&&now>=DLGA.holdUntil&&now>=DLGA.readReady&&!sacredMotionPending()&&now-DLGA.lineT>=Math.max(1700,DLGA.full.length*85+800)){const b=$('#dlgBtns button');if(b&&!b.disabled)b.click();}
   },33);
   try{

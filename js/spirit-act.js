@@ -103,7 +103,7 @@ let FLEEBL=null;/* 逃げるとき、「コワイノ」のそばを通らない�
 function avoidPath(r,G,goal){const bl=occTiles(r);if(FLEEBL)for(const k of FLEEBL)bl.add(k);bl.delete(goal);bl.delete((r.y|0)*W+(r.x|0));if(!bl.size)return pathTo(G,goal);
   const G2=roadSearch(r.x|0,r.y|0,bl);return G2.dist[goal]>=0?pathTo(G2,goal):pathTo(G,goal)}
 const benchSpot=G=>nearest(G,j=>(BENCHES.has(S.obj[j])||(S.obj[j]==='part'&&BENCHES.has(S.obj[S.ref[j]])))&&!ashed(anc(j))&&free('o'+j,1),40);
-const KEEPC=new Set(['storywait','storyreturn','fieldintro','fieldassist','fieldstory','fieldwait','store','smat','eat','fetch','flee','faint','shiver','step','chatwait','questjoy','pickdrop','pickseed']),FOODJOB=new Set(['harvest','gather','fish']),MATJOB=new Set(['chop','mine','weed']);/* 持ったままでいい行動・食べ物をあつめる作業・素材をあつめる作業 */
+const KEEPC=new Set(['storywait','storyreturn','fieldintro','fieldassist','fieldgather','fieldstory','fieldwait','store','smat','eat','fetch','flee','faint','shiver','step','chatwait','questjoy','pickdrop','pickseed']),FOODJOB=new Set(['harvest','gather','fish']),MATJOB=new Set(['chop','mine','weed']);/* 持ったままでいい行動・食べ物をあつめる作業・素材をあつめる作業 */
 function startAct(r,G,type,stand,o){
   if(stand>=0&&stand===r.avoidJ&&S.t<r.avoidU&&type!=='idle')return startAct(r,G,'idle',-1,{dur:15});/* 10分止まったままだった行き先は、しばらくえらばない */
   if(!KEEPC.has(type)&&G&&!(o&&(o.run||o.hunt!=null))&&!r.coffin){let k=-1;if(matN(r)>0&&!MATJOB.has(type)&&matTot()<matCap()){k=nearest(G,j=>storeAdj(j,'mat')>=0,200);if(k>=0){type='smat';stand=k;o=null}}if(k<0&&carryN(r)>0&&!FOODJOB.has(type)&&S.food<foodCap()){k=nearest(G,j=>storeAdj(j,'food')>=0,200);if(k>=0){type='store';stand=k;o=null}}}/* べつの行動にうつる前に、持っている物を箱へしまう（同じ物をあつめる作業のつづきと、にげる・たたかう・食べるときはそのまま） */

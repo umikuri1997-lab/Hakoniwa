@@ -255,7 +255,7 @@ ACT.sevreact={start(r,a){const enc=SEV_ENCOUNTERS.get(S);if(!enc||enc.k!==a.sevK
 
 /* 掛け合い会話は、話す子たちが近くにいるときだけ吹き出しを出す */
 function sevNear(L){const ps=[...new Set(L.map(l=>l[0]).filter(n=>n&&n!==GOD&&n!==NUSHI1))].map(n=>S.res.find(r=>r.name===n)).filter(Boolean);for(let i=0;i<ps.length;i++)for(let j=i+1;j<ps.length;j++)if(Math.hypot(ps[i].x-ps[j].x,ps[i].y-ps[j].y)>6)return false;return true}
-const MAINGO=new Set(['storywait','fieldintro','fieldstory','fieldassist','fieldwait','nmeet']);
+const MAINGO=new Set(['storywait','fieldintro','fieldstory','fieldassist','fieldgather','fieldwait','nmeet']);
 function mainGathering(){return S.res.some(r=>!r.hidden&&r.act&&MAINGO.has(r.act.type))}
 function sevQuestBusy(){return !!QUEST_CLEAR_WAIT||Object.values(SUB_CLEAR_WAIT).some(w=>w&&!w.done)||Object.values(SUBW).some(k=>S.subSt&&S.subSt[k]===3)}
 function sevBub(){SEVW={};if(!S)return;const P=S.sevP||[];for(let i=P.length-1;i>=0;i--)if(!SEV1.some(e=>e.k===P[i]))P.splice(i,1);

@@ -32,6 +32,7 @@ function rememberStoryHome(r,key){if(!r.storyWaitHome||r.storyWaitHome.world!==W
 function storyWaitProtected(r){
   const a=r.act;if(!a||a.stage!=='do'||isNight())return false;
   if(a.type==='fieldintro')return earthIntroValid(r,a)&&questVisitSafe(r,a.obj);
+  if(a.type==='fieldgather')return !isNight();/* 調べの集まりで待っているあいだも、おなか・たのしさ・つかれをへらさない */
   if(a.type!=='storywait')return false;const p=mainStoryWaitInfo();return !!p&&p.key===a.storyKey&&p.obj===a.obj&&p.cast.includes(r)&&questVisitSafe(r,p.obj);
 }
 function storyWaitStand(r,G,p){
@@ -57,7 +58,7 @@ function tryMainStoryWait(r){
   const p=mainStoryWaitInfo(),home=r.storyWaitHome,a=r.act;
   if(a?.type==='storyreturn')return false;
   if(home&&(!p||p.key!==home.key)&&a?.type!=='fieldintro'&&!(p?p.cast.includes(r):storyContinues(r))){/* つぎのお話にも出る・お話がまだつづくときは、もどらない */
-    if(['fieldstory','fieldassist','fieldwait','nmeet','sevreact','questjoy'].includes(a?.type)){delete r.storyWaitHome;return false;}
+    if(['fieldstory','fieldassist','fieldgather','fieldwait','nmeet','sevreact','questjoy'].includes(a?.type)){delete r.storyWaitHome;return false;}
     if(a?.type==='storywait')endAct(r);
     delete r.storyWaitHome;
     if(isNight()||home.world!==WD||hostileNow(r)||r.meal||r.cing||carryN(r)||matN(r)||['eat','fetch','flee','faint','sleep','bury','pray'].includes(r.act?.type))return false;
@@ -65,7 +66,7 @@ function tryMainStoryWait(r){
     if(goal>=0&&goal!==((r.y|0)*W+(r.x|0))&&questVisitSafe(r,goal)){endAct(r);startAct(r,G,'storyreturn',goal,{});return true;}
   }
   if(!p||!p.cast.includes(r)||a?.type==='storywait'&&a.storyKey===p.key&&a.obj===p.obj)return false;
-  if(!fieldActorReady(r)||onHold(r)||['fieldstory','fieldassist','questjoy','nmeet','sevreact'].includes(r.act?.type)||!questVisitSafe(r,p.obj))return false;
+  if(!fieldActorReady(r)||onHold(r)||['fieldstory','fieldassist','fieldgather','questjoy','nmeet','sevreact'].includes(r.act?.type)||!questVisitSafe(r,p.obj))return false;
   const G=bfs(r.x|0,r.y|0),stand=storyWaitStand(r,G,p);if(stand<0){const open=p.field?nearest(G,j=>walk(j)&&!sacredReserved(j)&&fieldDistance(j,p.obj)>=1&&fieldDistance(j,p.obj)<=3,150)>=0:questVisitOpen(G,p.obj);noteStoryWaitBlock(r,p.obj,open?'crowded':'path');return false;}clearStoryWaitBlock(r);
   rememberStoryHome(r,p.key);endAct(r);startAct(r,G,'storywait',stand,{key:'storywait'+stand,storyKey:p.key,obj:p.obj});return true;
 }
