@@ -103,7 +103,7 @@ const NUSHI_T=[
   {"open":[["フタバ","みんな、一緒に。あの木の下へ帰ろう。"],["ノドカ","ゆっくりで、だいじょうぶだよぉ。"]],"name":"草原のヌシ","nushi":["……大きくなったな。"],"world":[],"reu":[["U","木も。おまえも。",0,"nfF"],["F","……あのとき。"],["F","よかった、って言ったの……ヌシ様だったんだね。"],["U","ああ。"],["F","……遅いよ。",0,"stree:hug"],["U","待たせてしまった。"],["F","……。"],["F","みんなが、手伝ってくれたんだ。",0,"stree:group"],["F","ぼく、ひとりじゃ、何もわからなかった。"],["N","ぼくも、ひとりじゃ土をよけただけだったよぉ。",1],["H",{"A":"あたいは、石を温めただけだね。","B":"おれは、石を温めただけだな。"},1],["M","その後に、水を通せました。",1],["K","そして、ようやく声が届いた。",1],["U","……よい仲間に会えたな。"],["F","うん。"],["F","#teary|おかえりなさい。"],["U","……ただいま。",0,"stree:group"]],"next":[],"after":[],"toast":"ステージクリア！","last":"草原にもどる"},
   {open:[[HOMURA,'夜をこえたよ…！','cheer'],[SHIZUKU,'みなさん、力をそそいでください。']],
    nushi:['#think|……ふう。ようやく、体があたたまってきた。','守り神よ、せいれいたちよ。この地の熱を取りもどしてくれて、礼を言う。','わたしは、火のせいれいたちを生み、この火の山の熱を見守る者。草原のヌシとは、むかしからの知り合いだ。','#think|……あの影たちは、わたしの熱をうばっても、すこしもあたたまれなかったようだ。','……のこって、この地の火を守ってくれた子がいたな。礼を言う。','もどった熱をたどると、次は霧につつまれた水べの村が見える。水の流れが止まり、霧がはれないままだという。'],
-   after:[[HOMURA,'#think hush|……ヌシ様。あたい、村のみんなを守れなかった。'],[HOMURA,'#nod|でも、守り神とシズクたちが来てくれた。……本当に、ありがとう。'],[SHIZUKU,'#teary|……はじめて、ちゃんと言いましたね。'],[HOMURA,'#joy|うるさいよ。'],[GOD,'おつかれさん〜！ 見とったぞい。'],[GOD,'次は「霧のみずべの村」じゃ。…まだ道が通じておらんのじゃ。準備ができたら知らせるぞい。'],[HOMURA,'あたいたちは、この村と温泉をまもるよ。また入りにおいで！','cheer'],[SHIZUKU,'お気をつけて。…ときどき、温泉にいらしてくださいね。']],toast:'ステージクリア！ 「霧のみずべの村」は、ただいま準備中',last:'村にもどる'}];
+   after:[[HOMURA,'#think hush|……ヌシ様。あたい、村のみんなを守れなかった。','vol:kneelNushi'],[HOMURA,'#nod|でも、守り神とシズクたちが来てくれた。……本当に、ありがとう。'],[SHIZUKU,'#teary|……はじめて、ちゃんと言いましたね。','vol:bump'],[HOMURA,'#joy|うるさいよ。'],[GOD,'おつかれさん〜！ 見とったぞい。'],[GOD,'次は「霧のみずべの村」じゃ。…まだ道が通じておらんのじゃ。準備ができたら知らせるぞい。'],[HOMURA,'あたいたちは、この村と温泉をまもるよ。また入りにおいで！','cheer'],[SHIZUKU,'お気をつけて。…ときどき、温泉にいらしてくださいね。']],toast:'ステージクリア！ 「霧のみずべの村」は、ただいま準備中',last:'村にもどる'}];
 let NUSHI_RUN=false,WELCOME_RUN=false;
 let DEPART_RUN=false,GATHER_HOLD=false;/* お見送りで集まっているあいだ（集まった子を、その場で待たせる） */
 function gatherAt(TX,TY,then,skipId,abort){/* せいれいみんなが、台座のまわりへ歩いて集まる（瞬間移動はしない）。みんながそろってから、つぎへ。いなくなった子・通れない子がいたら、やめて知らせる */
@@ -125,13 +125,15 @@ function nushiReturns(resume){if(NUSHI_RUN||S.cleared||WD===0&&grassReunionBlock
   const gathered=()=>gatherAt(TX,TY,()=>{
     // せいれいたちが、台座のまわりに集まってから、ひとりずつ力をそそぐ
     if(WD===0)sacredShot('group',S.res,1.5);towerGlow(60000);/* 台座が光りはじめる */{const hn=performance.now();for(const r of S.res){RHOLD.set(r,hn+300000);if(WD!==0)STRAINU.set(r,hn+S.res.length*260+1200)}}/* 場面のあいだ、せいれいは歩かない。力をそそぐあいだは >< の顔 */
-    S.res.forEach((r,i)=>villageTimeout(()=>{r.face=TX>=r.x?1:-1;if(WD!==0)JUMP.set(r,performance.now());else sacredScenePose(r,'storyTouch',2200,{side:true,target:tw});spawnFX(r.x-.5,r.y-.6,ELEM[r.elem].col);sfx('furn')},i*260));
-    const t0=S.res.length*260+500;
-    villageTimeout(()=>{spawnFX(TX-.5,TY-.2,WD===0?'#e5f5ba':'#fff3a0');if(WD!==0)for(let k=0;k<3;k++)villageTimeout(()=>fx.push({k:'ring',x:TX*TS,y:TY*TS,life:1.4,col:'#fff6c8'}),k*300);sfx('bush');if(WD!==0)flashScreen()},t0);
+    const pour=WD===0?S.res:[...S.res].sort((a,b)=>(a.name===HOMURA)-(b.name===HOMURA)),gap=WD===0?260:900;/* 火山：ひとりずつ手をあてて力をそそぎ、さいごにホムラが火だねをささげる */
+    if(WD!==0)volShot([[TX,TY-1]],S.res,2,1.4);
+    pour.forEach((r,i)=>villageTimeout(()=>{r.face=TX>=r.x?1:-1;if(WD!==0&&r.name===HOMURA){sacredScenePose(r,'storyOffer',2600,{side:true,face:r.face});volFx('hidane',2600,{x:TX,y:TY-.6,actor:r,fly:1800,to:true});}else sacredScenePose(r,'storyTouch',2200,{side:true,face:r.face,target:WD===0?tw:undefined});spawnFX(r.x-.5,r.y-.6,ELEM[r.elem].col);sfx('furn')},i*gap));
+    const t0=pour.length*gap+(WD===0?500:1600);
+    villageTimeout(()=>{spawnFX(TX-.5,TY-.2,WD===0?'#e5f5ba':'#fff3a0');if(WD!==0){volFx('heatPillar',4800,{x:TX,y:TY});volShot([[TX,TY-4],[TX,TY]],[],2,1.2);}if(WD!==0)for(let k=0;k<3;k++)villageTimeout(()=>fx.push({k:'ring',x:TX*TS,y:TY*TS,life:1.4,col:'#fff6c8'}),k*300);sfx('bush');if(WD!==0)flashScreen()},t0);
     // 光がひろがって、荒れた土地に花が咲いていく
     villageTimeout(()=>{let n=0;const L=[];for(let t=0;t<4000&&L.length<60;t++){const x=(Math.random()*W)|0,y=(Math.random()*H)|0,k=y*W+x;if(Math.max(Math.abs(x+.5-TX),Math.abs(y+.5-TY))>14||S.obj[k]||S.floor[k]||S.ground[k]===1||L.includes(k)||S.res.some(r=>(r.x|0)===x&&(r.y|0)===y))continue;L.push(k)}
       L.sort((a,b)=>Math.hypot(a%W-TX,(a/W|0)-TY)-Math.hypot(b%W-TX,(b/W|0)-TY));L.forEach((k,i)=>villageTimeout(()=>{if(S.obj[k])return;S.obj[k]='clover';burst(k,'plant');if(i%6===0)sfx('bush');if(i===L.length-1)recount();dirty=true},i*45))},t0+700);
-    villageTimeout(()=>{for(let k=0;k<(WD===0?3:8);k++)villageTimeout(()=>{leafFX({x:TX,y:TY});if(WD!==0)fx.push({k:'ring',x:TX*TS,y:TY*TS-k*14,life:1.2,col:'#e8ffe0'})},k*150);sfx('bush');},t0+3900);/* 葉のうず・光の柱 */villageTimeout(()=>{{/* 文字の説明はなし：光・花・風のあと、ヌシ様があらわれる */if(WD===0)sacredShot('group',S.res,1.8);else camAnim={fz:cam.z,tz:Math.max(cam.z,2),fx:cam.x+VW/cam.z/2,fy:cam.y+VH/cam.z/2,tx:TX*TS,ty:(TY-.4)*TS,t:0,dur:1.2};
+    villageTimeout(()=>{for(let k=0;k<(WD===0?3:8);k++)villageTimeout(()=>{leafFX({x:TX,y:TY});if(WD!==0)fx.push({k:'ring',x:TX*TS,y:TY*TS-k*14,life:1.2,col:'#e8ffe0'})},k*150);sfx('bush');},t0+3900);/* 葉のうず・光の柱 */villageTimeout(()=>{{/* 文字の説明はなし：光・花・風のあと、ヌシ様があらわれる */if(WD===0)sacredShot('group',S.res,1.8);else volShot([[TX,TY-2],[TX,TY+1]],S.res,2.2,1.2);
       // ヌシ様が台座の上にあらわれる
       S.nushi={x:WD===0?TX+2.2:TX,y:TY+.95,t:6,app:0,dir:1,face:1,path:[]};const owner=S,session=VILLAGE_SESSION,lord=S.nushi,appearAt=performance.now();const reveal=now=>{if(S!==owner||VILLAGE_SESSION!==session||S.nushi!==lord)return;lord.app=Math.min(1,(now-appearAt)/1500);if(lord.app<1)requestAnimationFrame(reveal)};requestAnimationFrame(reveal);if(WD===0)sacredShot('reunion',S.res,1.7);/* あらわれたときは、守り神のほう（正面） */
       spawnFX(TX-.5,TY-.6,'#c8ffd0');sfx('arrive');if(WD!==0)flashScreen();
@@ -147,13 +149,16 @@ function nushiReturns(resume){if(NUSHI_RUN||S.cleared||WD===0&&grassReunionBlock
   if(resume)gathered();else dialog(openF(T.open),gathered);
 }
 /* 火山の装置：話す子が装置へ歩いていき、手をあてる → 温泉に湯気がのぼって音 → みんながよろこぶ（実時間。終わるまで、つぎのセリフへ送らない） */
-function heatScene(k){if(WD!==1||!S||!HSPC[k])return;const who=k==='b'?HOMURA:SHIZUKU,r=S.res.find(q=>q.name===who&&!q.hidden),dj=k==='b'?D1:D2,owner=S,session=VILLAGE_SESSION,alive=()=>S===owner&&VILLAGE_SESSION===session;
-  const dx=dj%W+.5,dy=(dj/W|0)+.5,[sx,sy]=HSPC[k],pan=(x,y,z)=>{camAnim={fz:cam.z,tz:Math.max(cam.z,z),fx:cam.x+VW/cam.z/2,fy:cam.y+VH/cam.z/2,tx:x*TS,ty:y*TS,t:0,dur:1}};
-  STAGEWAIT=performance.now()+15000;pan(dx,dy,1.6);
-  const gesture=()=>{if(!alive())return;if(r){r.face=dx>=r.x?1:-1;sacredScenePose(r,'storyTouch',1800,{side:true,face:r.face})}sfx('furn');STAGEWAIT=performance.now()+3600;
-    villageTimeout(()=>{pan(sx,sy-.5,1.6);sfx('wave');fxSpr('spring',sx*TS,sy*TS);for(let i=0;i<22;i++)villageTimeout(()=>fx.push({k:'p',x:sx*TS+(Math.random()-.5)*TS*1.6,y:sy*TS,vx:(Math.random()-.5)*14,vy:-45-Math.random()*35,life:1.8,col:'rgba(255,255,255,.75)',r:4}),i*55)},900);
-    villageTimeout(()=>{for(const q of S.res)if(!q.hidden&&(q.name===HOMURA||q.name===SHIZUKU)){JUMP.set(q,performance.now());JOYU.set(q,performance.now()+1800)}sfx('good')},2500)};
-  if(!r||Math.hypot(r.x-dx,r.y-dy)>10||!sacredSceneWalk(r,dx,dy+1,{},gesture))gesture()}/* 遠すぎるときは、その場で手をあてる */
+function heatScene(k){if(WD!==1||!S||!HSPC[k])return;const who=k==='b'?HOMURA:SHIZUKU,r=S.res.find(q=>q.name===who&&!q.hidden),h=S.res.find(q=>q.name===HOMURA&&!q.hidden),dj=k==='b'?D1:D2,owner=S,session=VILLAGE_SESSION,alive=()=>S===owner&&VILLAGE_SESSION===session;
+  const d=volDir();if(!d)return;const done=volTask(d,20000),dx=dj%W+.5,dy=(dj/W|0)+.5,[sx,sy]=HSPC[k];volShot([[dx,dy]],[r],2.2);
+  const steam=(key,then)=>{const[x,y]=HSPC[key];volShot([[x,y]],[],2.2,1);sfx('wave');volFx('springWarm',2600,{x,y});volFx('steam',600000,{x,y});villageTimeout(then,1500);};
+  const joy=()=>{for(const q of S.res)if(!q.hidden&&(q.name===HOMURA||q.name===SHIZUKU)){SACRED_POSES.delete(q);JUMP.set(q,performance.now());JOYU.set(q,performance.now()+1800)}sfx('good');volShot([[dx,dy]],[r,h].filter(Boolean),2.2,1);done(1200);};
+  const touch=()=>{if(!alive())return;if(r){r.face=dx>=r.x?1:-1;volPose(r,'storyTouch',1800,{})}sfx('furn');
+    if(k==='b'){volFx('deviceTurn',2400,{x:dx,y:dy});villageTimeout(()=>steam('b',joy),1100);}
+    else villageTimeout(()=>steam('a',()=>steam('b',()=>steam('c',joy))),900);};/* 奥の装置：入口・西・奥の温泉に、じゅんに湯気 */
+  const brave=()=>{if(!alive())return;if(k!=='c'||!r||!h||h===r)return touch();r.face=dx>=r.x?1:-1;volPose(r,'tremble',600000,{});/* 装置の前で、ふるえる */
+    volWalk(h,r.x,r.y,{side:true},()=>{if(!alive())return;h.face=r.x>=h.x?1:-1;volPose(h,'storyTouch',1500,{});volShot([[dx,dy]],[r,h],2.4,1);villageTimeout(touch,1300);});};/* ホムラが背中に手をそえる */
+  if(!r||Math.hypot(r.x-dx,r.y-dy)>10)brave();else volWalk(r,dx,dy+1,{},brave)}/* 遠すぎるときは、その場で */
 /* 会話の中の手の動き：give＝フタバがノドカに花のかんむりをわたす／push＝ノドカがフタバの背中を押す */
 function stageHands(c){if(!S)return;const f=S.res.find(q=>q.name===POKO&&!q.hidden),n=S.res.find(q=>q.name===MINA&&!q.hidden);if(!f||!n)return;const now=performance.now();
   if(c==='give'){f.face=n.x>=f.x?1:-1;n.face=-f.face;sacredScenePose(f,'storyOffer',1500,{side:true,face:f.face});for(let i=0;i<10;i++)villageTimeout(()=>{const q=i/10,hx=f.x*TS+f.face*6,hy=f.y*TS-30;fx.push({k:'p',x:hx+(n.x*TS-hx)*q,y:hy+(n.y*TS-44-hy)*q,vx:0,vy:-8,life:.7,col:i%2?'#ffd1e8':'#fff3a0',r:3})},500+i*50);villageTimeout(()=>{JOYU.set(n,performance.now()+1400);JUMP.set(n,performance.now());sfx('bush')},1100);STAGEWAIT=now+1500}
@@ -251,14 +256,19 @@ function memScene(done){/* むかしを思い出す：夜、影がせまり、�
   setTimeout(()=>{for(let k=0;k<3;k++)fx.push({k:'ring',x:f.x*TS,y:f.y*TS,life:1.4,col:'#fff6c8'});sfx('level');flashScreen()},4200);setTimeout(done,5600)}
 function lightFlow(TX,TY){/* フタバから、光と葉のつぶが守り神（画面の手前）へ流れこむ */const bx=cam.x+VW/cam.z/2,by=cam.y+VH/cam.z*.95;for(let n=0;n<40;n++)setTimeout(()=>{const x=TX*TS+(Math.random()-.5)*20,y=TY*TS-10;fx.push({k:'p',x,y,vx:(bx-x)/1.2,vy:(by-y)/1.2,life:1.2,col:n%2?'#c8f5a0':'#fff6c8',r:3})},n*60);for(const r of S.res)setTimeout(()=>leafFX(r),1500+Math.random()*800)}
 let GUEST=null,GUESTRUN=false;
-function guestScene(){/* 火山：草原のフタバが、温泉にあそびに来る。宿の前にあらわれ、温泉に入って、よろこんで帰る（場面だけ。セーブしない人） */
+function guestScene(){/* 火山：草原のフタバが、温泉にあそびに来る。宿の前にあらわれ、歩いて露天ぶろへ行き、つかって、手をふって帰る（場面だけ。セーブしない人） */
   const hot=[];for(let j=0;j<W*H;j++)if(S.ground[j]===1&&nearHot(j,0))hot.push(j);const inn=innHouse();/* 温泉宿の露天ぶろに入る（なければ、温泉） */
   const tgt=inn?inn.onsen+W+1:hot.length?hot[(hot.length/2)|0]:STATUE>=0?STATUE+W:CY*W+CX;let st=-1;for(let r=1;r<6&&st<0;r++)for(let dy=-r;dy<=r&&st<0;dy++)for(let dx=-r;dx<=r;dx++){const k=tgt+dy*W+dx;if(k>0&&k<W*H&&walk(k)&&!S.obj[k]&&S.ground[k]!==1){st=k;break}}
-  if(st<0)return;GUESTRUN=true;const S0=S;const g=mkRes({nid:-900},POKO,'wood',st%W+.5,(st/W|0)+.6);g.id=-900;g.hidden=false;
-  centerOn(g.x*TS,g.y*TS);const hn=performance.now();for(const r of S.res)RHOLD.set(r,hn+40000);
-  sceneShift('light',d=>{GUEST=g;g.spawnT=performance.now();spawnFX(g.x-.5,g.y-.6,'#c8ffd0');sfx('arrive');setTimeout(d,1200)},()=>{if(S!==S0)return;
+  if(st<0)return;GUESTRUN=true;const S0=S,session=VILLAGE_SESSION,ok=()=>S===S0&&VILLAGE_SESSION===session;let door=-1;if(inn){const dj=[...inn.h.set].find(j=>HOME_DOORS.has(S.obj[j]));if(dj!=null&&walk(dj+W))door=dj+W;}const from=door>=0?door:st;
+  const g=mkRes({nid:-900},POKO,'wood',from%W+.5,(from/W|0)+.6);g.id=-900;g.hidden=false;
+  centerOn(g.x*TS,g.y*TS);const hn=performance.now();for(const r of S.res)RHOLD.set(r,hn+60000);
+  const finish=()=>{GUEST=null;GUESTRUN=false;for(const r of S.res)RHOLD.set(r,0);};
+  const [ex,ey]=[tgt%W+.5,(tgt/W|0)+.5];
+  const leave=()=>{if(!ok())return finish();SACRED_POSES.delete(g);volHop(g,st%W+.5,(st/W|0)+.6,420,()=>{if(!ok())return finish();g.face=1;sacredScenePose(g,'wave',1400,{keep:true});/* 手をふって */
+    villageTimeout(()=>{spawnFX(g.x-.5,g.y-.6,'#c8ffd0');sfx('arrive');villageTimeout(()=>{finish();sacredEndDirection(true);S.flags.guestDone=1;checkQuest()},500)},1400)});};
+  const soak=()=>{if(!ok())return finish();volHop(g,ex,ey,420,()=>{if(!ok())return finish();sacredScenePose(g,inn||S.ground[tgt]===1?'soak':'storyListen',600000,inn||S.ground[tgt]===1?{}:{sit:true,side:true,face:1});/* 湯船がないときは、そばにすわる */sfx('wave');JOYU.set(g,performance.now()+4000);JUMP.set(g,performance.now());volFx('steam',600000,{x:ex,y:ey-.2});volFx('ripple',2400,{x:ex,y:ey+.3});volShot([[ex,ey]],[g],2.4,1);/* 着いてつかってから、つぎの会話 */
+    dialog([[POKO,'#joy|はぁぁ……あったかい……。からだが、とろけちゃいそう……。'],[POKO,'こんどは、ノドカも連れてきていい？ みんなに、教えてあげたいな！','hop'],[HOMURA,'#joy|もちろんさ。いつでもおいで！','cheer']],leave)});};
+  sceneShift('light',fin=>{GUEST=g;g.spawnT=performance.now();spawnFX(g.x-.5,g.y-.6,'#c8ffd0');sfx('arrive');villageTimeout(fin,1200)},()=>{if(!ok())return finish();
     dialog([[POKO,'#joy|わぁ……！ ここが、火山のふもとの村？ ゆげが、もくもくしてる！','hop'],[HOMURA,'ようこそ、草原のお客さん。あたいはホムラさ。'],[SHIZUKU,'シズクです。どうぞ、ゆっくりしていってくださいね。'],[POKO,'ぼく、フタバ！ 温泉って、はじめてなんだ！']],()=>{
-      if(S!==S0)return;const w=tgt;g.bubble='♨️';const sx=g.x,sy=g.y,ex=w%W+.5,ey=(w/W|0)+.5,t0=performance.now();const step=()=>{if(S!==S0)return;const k=Math.min(1,(performance.now()-t0)/1500);g.x=sx+(ex-sx)*k*.7;g.y=sy+(ey-sy)*k*.7;if(k<1)requestAnimationFrame(step)};step();
-      setTimeout(()=>{if(S!==S0)return;sfx('wave');JOYU.set(g,performance.now()+4000);[0,900,1800].forEach(t=>setTimeout(()=>JUMP.set(g,performance.now()),t));for(let k=0;k<6;k++)setTimeout(()=>spawnFX(g.x-.5,g.y-.8,'#ffffff'),k*400)},1600);
-      setTimeout(()=>{if(S!==S0)return;dialog([[POKO,'#joy|はぁぁ……あったかい……。からだが、とろけちゃいそう……。'],[POKO,'こんどは、ノドカも連れてきていい？ みんなに、教えてあげたいな！','hop'],[HOMURA,'#joy|もちろんさ。いつでもおいで！','cheer']],()=>{
-        if(S!==S0)return;spawnFX(g.x-.5,g.y-.6,'#c8ffd0');sfx('arrive');setTimeout(()=>{GUEST=null;GUESTRUN=false;for(const r of S.res)RHOLD.set(r,0);S.flags.guestDone=1;checkQuest()},500)})},4200)})})}
+      if(!ok())return finish();g.bubble='♨️';sacredDirection(true);volShot([[ex,ey]],[g],2.2,1.4);let gone=false;const go=()=>{if(gone)return;gone=true;g.bubble='';soak();};
+      if(!sacredSceneWalk(g,ex,ey,{},go))go();else villageTimeout(go,12000);/* 歩いて行く。じゃまされても止まらない */})})}
