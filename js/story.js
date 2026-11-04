@@ -34,11 +34,12 @@ const QUESTS2=[
     [HOMURA,'…やっぱり冷たいね。地面の熱が、ぜんぜんとどいてない。'],
     [HOMURA,'この村には、温泉が3つあったんだ。入口の温泉、西の温泉、それと村の奥の温泉さ。'],
     [GOD,'3つとも、よみがえらせたいのう。'],[HOMURA,'いっしょに調べてくれて、ありがとよ。']]},
-  {id:'food3',text:'ホムラのおねがい：食料を3つためよう',check:()=>S.food>=3,prog:()=>'食料 '+Math.min(3,S.food)+'/3',how:'食料箱に、食べ物を3つためる',
+  {id:'food3',text:'ホムラのおねがい：たけのこをとってこよう',check:()=>tkGot()>=2,prog:()=>'たけのこ '+Math.min(2,tkGot())+'/2',how:'竹のそばに生えた、たけのこを、せいれいに2こ、とってきてもらう',
    talk:{who:HOMURA,when:()=>true,lines:[
     [HOMURA,'温泉をなおすのは、ひと仕事だよ。その前に、腹ごしらえだね。'],
-    [HOMURA,'まずは、腹いっぱい食べられるようにしたいね。']]},
-   story:[[HOMURA,'よし、これで村の準備はばっちりだね。助かったよ。']],gives:{flag:'hReq'}},
+    [HOMURA,'#think|ほら、竹やぶのそばを見てごらん。土から、とんがった頭がのぞいてるだろ。'],
+    [HOMURA,'#joy|あれは、たけのこさ。この村の、春のごちそうなんだ。いくつか、とってきておくれよ。']],gives:{run:()=>takenokoStart()}},
+   story:[[HOMURA,'#joy|うん、いいたけのこだ。やわらかくて、あまいよ。'],[HOMURA,'よし、これで村の準備はばっちりだね。助かったよ。']],gives:{flag:'hReq'}},
   {id:'springA',text:'温泉をよみがえらせよう',check:()=>S.obj.some((o,j)=>o==='hotstone'&&adjOf(j,k=>S.ground[k]===1&&sprMap()[k]==='a')>=0),how:'「おく」→「ほのお石」をえらんで、村の南東の温泉の水べに置く',
    talk:{who:HOMURA,when:()=>true,lines:[
     [HOMURA,'まずは、いちばん近い入口の温泉からだね。'],
@@ -79,35 +80,32 @@ const QUESTS2=[
     [HOMURA,'よし、決まりだ。温泉のそばに、かまどと食卓をたのむよ！','hop']]},
    story:[[HOMURA,'#joy|ほら、できたての温泉たまごだよ！ みんな、食べな！','cheer'],[SHIZUKU,'あったかくて、おいしいです…。'],[HOMURA,'ありがとよ、守り神。これで、湯けむりの村らしくなってきた！']]},
 
-  {id:'haikage3',text:'ハイカゲを3体追いはらおう',check:()=>(st2().ashKills||0)>=3,prog:()=>'ハイカゲ '+Math.min(3,st2().ashKills||0)+'/3',how:'夜に来るハイカゲを3体追いはらう',
-   talk:{who:HOMURA,when:()=>true,lines:[
-    [HOMURA,'…守り神。これから夜になると、火山のほうから「ハイカゲ」ってやつも来るよ。'],
-    [SHIZUKU,'灰をまきちらして、かまどやベンチを使えなくしてしまうのです。'],
-    [HOMURA,'来たら、みんなで追いはらってやろうじゃないか。']],gives:{flag:'ashOn'}},
-   story:[[HOMURA,'ふん、これでしばらくは、おとなしくなるだろ。'],[SHIZUKU,'灰も、いつか風がはらってくれます。'],[HOMURA,'あんたがいてくれて、心強かったよ。']]},
-  {id:'heatPath',text:'ひびわれた熱の道を直そう',check:()=>CRACKS.every(j=>S.obj[j]!=='crack'),prog:()=>'ひびわれ '+CRACKS.filter(j=>S.obj[j]!=='crack').length+'/5',how:'村の北のひびわれを、「みる」でタップして直す',
+  {id:'haikage3',text:'ハイカゲの灰で、ひびわれをうめよう',check:()=>CRACKS.every(j=>S.obj[j]!=='crack'),prog:()=>'ひびわれ '+CRACKS.filter(j=>S.obj[j]!=='crack').length+'/'+CRACKS.length+'・灰 '+(st2().hai||0),how:'夜に来るハイカゲを追いはらうと、灰を落とす。せいれいがひろった灰で、村の北のひびわれを「みる」でタップしてうめる',
    talk:{who:SHIZUKU,when:()=>true,lines:[
     [SHIZUKU,'守り神さま。温泉の熱は、火山から地面の下の「熱の道」を通って、とどいていたのです。'],
     [SHIZUKU,'村の北の地面に、ひびわれがあります。そこから熱がもれているようです。'],
-    [HOMURA,'石でふさいじまえばいいんだね。']]},
-   story:[[HOMURA,'よし、ふさがった！ 熱の道が、つながったよ。'],[SHIZUKU,'あとは、熱をどこへ流すか、ですね。'],[HOMURA,'直してくれて、ありがとよ！']]},
+    [HOMURA,'#think|……それとさ、これから夜になると、火山のほうから「ハイカゲ」ってやつが来るよ。'],
+    [SHIZUKU,'火を朝までのこそうとして、灰をかぶせていく子です。灰は、熱をとじこめてしまうのです。'],
+    [HOMURA,'熱をとじこめる灰か……。だったら、そいつで、ひびわれをうめちまえばいいじゃないか。'],
+    [HOMURA,'#joy|よし。ハイカゲが来たら、追いはらって、灰をいただこうじゃないか。']],gives:{flag:'ashOn'}},
+   story:[[HOMURA,'よし、ふさがった！ 熱の道が、つながったよ。'],[SHIZUKU,'ハイカゲの灰が、熱をしっかりとじこめてくれましたね。'],[SHIZUKU,'あとは、熱をどこへ流すか、ですね。'],[HOMURA,'あんたがいてくれて、心強かったよ。']]},
   {id:'springB',text:'熱の装置を左にむけて、西の温泉をよみがえらせよう',check:()=>!!st2().sp.b,how:'火山のふもとの「熱の装置」をタップして、向きを左にかえる',
    talk:{who:HOMURA,when:()=>true,lines:[
     [HOMURA,'火山のふもとに、熱の流れを切りかえる装置があるんだ。'],
     [HOMURA,'左にむければ、西の温泉に熱がとどくはずさ。']]},
    story:[[HOMURA,'#think|……熱が、ちゃんと流れてるか、たしかめてみるよ。',0,'heat:b'],[HOMURA,'#joy|西の温泉にも、湯気が上がった！'],[SHIZUKU,'すばらしいです。…残るは、奥の温泉ですね。'],[HOMURA,'#think|熱の道のそばの土も、ぽかぽかしてきたね。'],[SHIZUKU,'#joy|守り神さまのおかげです。']]},
-  {id:'fire3',text:'火のせいれいを3人にしよう',check:()=>elemCount('fire')>=3&&NEWRES==null,how:'ようがん台で火の力をためて、なかまを呼ぶ',prog:()=>'火のせいれい '+Math.min(3,elemCount('fire'))+'/3・火の力 '+Math.floor(ATTR.fire)+'/'+needFor('fire'),
+  {id:'fire3',text:'ようがん台で、火山の熱を村へひこう',check:()=>yoganHeatN()>=2,prog:()=>'熱の道のそばのようがん台 '+Math.min(2,yoganHeatN())+'/2',how:'熱が流れている熱の道のそばに、ようがん台を2つ建ててもらう',
    talk:{who:HOMURA,when:()=>true,lines:[
     [HOMURA,'#think hush|……なあ、守り神。むかし、この村には、火のせいれいがたくさんいたんだ。'],
-    [HOMURA,'#danger|温泉が冷えて、コワイノのうろつく寒い夜がつづいてさ……でも、あたいら火のせいれいは、からだが強いからね。消えずに、ちりぢりに逃げのびたんだ。'],
-    [HOMURA,'あたいだけは、この村をはなれられなくて、ひとりでのこったのさ。'],
-    [SHIZUKU,'では、みなさん、どこかで元気にしているのですね。西の温泉にも、湯気がもどりました。ぬくもりが伝われば、きっと帰ってきます。'],
-    [HOMURA,'#think|……そうだね。火の力をためて、なかまをむかえようじゃないか。']]},
-   story:[[HOMURA,'#think hush|……おかえり。待ってたよ。'],[HOMURA,'ほらね。みんな、ちゃんと生きてたんだ。温泉がもどれば、帰ってくるのさ。'],[SHIZUKU,'にぎやかになりましたね。'],[HOMURA,'あんたのおかげさ、守り神。']]},
+    [HOMURA,'#danger|温泉が冷えて、コワイノのうろつく寒い夜がつづいてさ……みんな、ちりぢりに逃げのびたんだ。'],
+    [SHIZUKU,'西の温泉にも、湯気がもどりました。でも、村の中は、まだ冷えたままですね。'],
+    [HOMURA,'#think|熱の道のそばに、ようがん台を建てたらどうだい。火山の熱を、ようがん台がすいあげて、村まであたためてくれるはずさ。'],
+    [HOMURA,'村があったかくなれば、なかまも、帰り道を見つけやすくなるからね。']]},
+   story:[[HOMURA,'#joy|見なよ。ようがん台が、熱の道の熱をすって、まっ赤にかがやいてる！'],[SHIZUKU,'村の土まで、ぽかぽかしてきました。'],[HOMURA,'#think hush|……この熱が、遠くまでとどけばいい。ちりぢりになったなかまにもさ。'],[HOMURA,'ありがとよ、守り神。']]},
   {id:'fest',text:'おまつりをひらこう',check:()=>S.festAtQ==='fest'&&festOn(),prog:()=>S.festDay!=null&&S.festDay>dayNo()?'あしたはおまつり':'',how:'カミサマとの「とくべつな交換」で、おまつりをえらぶ',
    talk:{who:HOMURA,when:()=>true,lines:[
-    [HOMURA,'#joy|なかまが帰ってきて、村もにぎやかになったねえ。'],
-    [HOMURA,'#think|むかしはね、なかまがそろうと、みんなで屋台を出して、おまつりをしたもんさ。'],
+    [HOMURA,'#joy|温泉も、熱の道もよみがえって、村がずいぶんあったかくなったねえ。'],
+    [HOMURA,'#think|むかしはね、湯けむりの夜に、みんなで屋台を出して、おまつりをしたもんさ。'],
     [SHIZUKU,'おまつり……すてきですね。温泉のまわりに、ちょうちんをともして。'],
     [HOMURA,'#joy|守り神、みんなで、おまつりをひらこうじゃないか！']]},
    story:[[HOMURA,'#joy|これこれ！ やっぱり、おまつりはいいねえ！'],[SHIZUKU,'#joy|みなさん、いいお顔をしています。'],[HOMURA,'ありがとよ、守り神。また、いつでもひらこうじゃないか。']]},
@@ -136,15 +134,16 @@ const QUESTS2=[
    story:[[HOMURA,'…ふう、なんとかのりこえたね。'],[SHIZUKU,'#joy|守ってくださって、ありがとうございます。'],[SHIZUKU,'灰は、火山からふってきていました。山の上に、なにかがいるのです。'],[HOMURA,'次の夜、きっとそいつが下りてくる。むかえうってやろうじゃないか！']],gives:{flag:'hinoNight'}},
   {id:'hinoookage',text:'ヒノオオカゲを追いはらおう',check:()=>!!S.flags.hinoDown,how:'火山から下りてくるヒノオオカゲを追いはらう',
    story:[[HOMURA,'#joy|やった…！ 火山の上の、いやな気配が消えたよ。'],[HOMURA,'ありがとよ、守り神！ あんたのおかげさ。'],[SHIZUKU,'ヒノオオカゲが、ヌシ様の熱をうばっていたのですね。'],[SHIZUKU,'ヌシ様の熱が、すこしだけ、もどってくる気がします。'],[HOMURA,'#nod|よし。ヌシ様のために、あとひとふんばりだね！']]},
-  {id:'inn',text:'温泉宿をつくろう',check:()=>HOUSES.some(h=>[...h.inside].filter(j=>BEDSET.has(S.obj[j])).length>=2&&[...h.inside].some(j=>nearHot(j,6))),how:'あたたかい温泉のそばに、ベッド2つの家をつくる',
-   talk:{who:HOMURA,when:()=>true,lines:[
+  {id:'inn',text:'温泉宿に、露天ぶろをつくろう',check:()=>!!innHouse(),prog:()=>'温泉のそばの家 '+(HOUSES.some(h=>[...h.inside].some(j=>nearHot(j,6)))?1:0)+'/1・宿のそばの露天ぶろ '+(innHouse()?1:0)+'/1',how:'あたたかい温泉のそばに家をつくり、その家のそばに露天ぶろを建ててもらう',
+   talk:{who:HOMURA,when:()=>true,learn:['onsen'],lines:[
     [HOMURA,'ヒノオオカゲもいなくなって、やっと落ちついたね。'],
-    [SHIZUKU,'#joy|湯上がりに、そのままゆっくり泊まれる場所があると、うれしいですね。'],
-    [HOMURA,'壁でかこって、ふかふかのベッドをおこうじゃないか。']]},
-   story:[[HOMURA,'温泉宿のできあがりだ！'],[SHIZUKU,'湯上がりに、ここでぐっすり休めますね。'],[HOMURA,'ありがとよ、守り神。今夜は、あたいも泊まってみようかな。']]},
-  {id:'guest',text:'草原からのお客さんを、温泉でもてなそう',check:()=>!!S.flags.guestDone,how:'温泉宿とあし湯で、お客さんをもてなす',
+    [SHIZUKU,'#joy|湯上がりに、そのままゆっくり休める宿があると、うれしいですね。'],
+    [HOMURA,'#think|宿のすぐそばに、岩でかこんだ湯船もほしいね。空を見ながら、のんびりつかれるやつさ。'],
+    [SHIZUKU,'守り神さま、なにか、よい形はありませんか。'],['@idea']],gives:{flags:['lv_onsen']}},
+   story:[[HOMURA,'温泉宿のできあがりだ！ 宿を出たら、すぐ露天ぶろさ。'],[SHIZUKU,'星を見ながらお湯につかって、宿でぐっすり休めますね。'],[HOMURA,'ありがとよ、守り神。今夜は、あたいも泊まってみようかな。']]},
+  {id:'guest',text:'草原からのお客さんを、露天ぶろでもてなそう',check:()=>!!S.flags.guestDone,how:'温泉宿の露天ぶろで、お客さんをもてなす',
    talk:{who:SHIZUKU,when:()=>true,lines:[
-    [SHIZUKU,'温泉宿も、あし湯もできて、湯けむりの村らしくなってきましたね。'],
+    [SHIZUKU,'温泉宿も、露天ぶろもできて、湯けむりの村らしくなってきましたね。'],
     [HOMURA,'こうなったら、だれかに入ってもらいたいねえ。'],
     [GOD,'#joy|ほっほ。それなら、草原から、ひとり連れてこようかの。']]},
    story:[[HOMURA,'#joy|お客さん、よろこんでくれたね！','cheer'],[SHIZUKU,'温泉郷として、ひとり立ちできた気がします。'],[HOMURA,'あとは、ヌシ様をむかえるだけさ。']]},
@@ -159,6 +158,7 @@ const QUESTS2=[
     [HOMURA,'よし、仕上げだよ！'],['@idea']],learn:['noren'],gives:{shrine:true}},
    story:null},
 ];;
+const QUESTS2_V1=['statue','coldSpring','food3','springA','summon','rockCanal','shizukuRest','yatai','haikage3','heatPath','springB','fire3','fest','ashiyu','volcano','rockDeep','springC','ashNight','hinoookage','inn','guest','tower'];/* 火山のクエストをかえる前のならび（古いセーブの読みかえ用） */
 const QL=[QUESTS1,QUESTS2],PROS=[PROLOGUE,PROLOGUE2],INTROS=[INTRO,INTRO2];
 /* ---------- フリーモード（ステージ1クリアで解放）：自然の力が弱く、せいれいはゆっくり増える。災いはほとんどない ---------- */
 const FA=()=>(S&&S.fk||[])[0]||GOD,FB=()=>(S&&S.fk||[])[1]||GOD;

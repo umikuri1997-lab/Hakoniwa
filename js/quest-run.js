@@ -61,7 +61,7 @@ function showSpotPop(){if(MEMRUN)return;while(SPOT_POPS.length&&SPOT_POPS[0].sta
 function questGives(q,g){g=g||q.gives||{};
     (g.feat||[]).forEach(f=>S.feat[f]=true);for(const k in (g.food||{}))addFood(k,g.food[k]);for(const k in (g.mat||{}))S.mat[k]=(S.mat[k]||0)+g.mat[k];for(const k in (g.items||{})){S.unlocked[k]=true;giveItem(k,g.items[k])}queueItemGift(g.items);
     if(g.flags)g.flags.forEach(f=>S.flags[f]=true);if(g.recipes)g.recipes.forEach(id=>S.recipes[id]=true);if(g.shard)giveShard(g.shard);for(const s of g.shards||[])giveShard(s);if(g.enemy)S.enemyOn=true;if(g.shrine)S.flags.shrine=true;if(g.flag){S.flags[g.flag]=true;if(g.flag==='onsen')dirty=true}
-    if(g.godLeave){S.godGone=true;const GX=godX(),GY=godY();fxSpr('poof',GX*TS,GY*TS);sfx('poof')}
+    if(typeof g.run==='function')g.run();/* そのクエストだけの準備（たけのこを生やす など） */if(g.godLeave){S.godGone=true;const GX=godX(),GY=godY();fxSpr('poof',GX*TS,GY*TS);sfx('poof')}
     if(g.fest)freeFest();if(g.msg)toast(g.msg,'good');applyFeats();
     const hadW=g.watchNow&&(cnt('watch')>0||S.obj.some((o,j)=>o==='site'&&S.dyn[j]&&S.dyn[j].build==='watch'));// 先に建てていたら、その分のパワーを返す（おごり）
     const after=g.watchNow?(hadW?()=>{S.pt+=BL.watch.pc;for(const k in BL.watch.mat)S.mat[k]=(S.mat[k]||0)+BL.watch.mat[k];toast('見張り台の分のパワーと素材をカミサマが返してくれた','good');checkQuest()}:()=>{setMode('build');sel='watch';renderPalette();toast('見張り台を置く場所をタップ')}):null;
@@ -252,8 +252,8 @@ function memScene(done){/* むかしを思い出す：夜、影がせまり、�
 function lightFlow(TX,TY){/* フタバから、光と葉のつぶが守り神（画面の手前）へ流れこむ */const bx=cam.x+VW/cam.z/2,by=cam.y+VH/cam.z*.95;for(let n=0;n<40;n++)setTimeout(()=>{const x=TX*TS+(Math.random()-.5)*20,y=TY*TS-10;fx.push({k:'p',x,y,vx:(bx-x)/1.2,vy:(by-y)/1.2,life:1.2,col:n%2?'#c8f5a0':'#fff6c8',r:3})},n*60);for(const r of S.res)setTimeout(()=>leafFX(r),1500+Math.random()*800)}
 let GUEST=null,GUESTRUN=false;
 function guestScene(){/* 火山：草原のフタバが、温泉にあそびに来る。宿の前にあらわれ、温泉に入って、よろこんで帰る（場面だけ。セーブしない人） */
-  const hot=[];for(let j=0;j<W*H;j++)if(S.ground[j]===1&&nearHot(j,0))hot.push(j);const ins=HOUSES.find(h=>[...h.inside].filter(j=>BEDSET.has(S.obj[j])).length>=2&&[...h.inside].some(j=>nearHot(j,6)));
-  const tgt=hot.length?hot[(hot.length/2)|0]:STATUE>=0?STATUE+W:CY*W+CX;let st=-1;for(let r=1;r<6&&st<0;r++)for(let dy=-r;dy<=r&&st<0;dy++)for(let dx=-r;dx<=r;dx++){const k=tgt+dy*W+dx;if(k>0&&k<W*H&&walk(k)&&!S.obj[k]&&S.ground[k]!==1){st=k;break}}
+  const hot=[];for(let j=0;j<W*H;j++)if(S.ground[j]===1&&nearHot(j,0))hot.push(j);const inn=innHouse();/* 温泉宿の露天ぶろに入る（なければ、温泉） */
+  const tgt=inn?inn.onsen+W+1:hot.length?hot[(hot.length/2)|0]:STATUE>=0?STATUE+W:CY*W+CX;let st=-1;for(let r=1;r<6&&st<0;r++)for(let dy=-r;dy<=r&&st<0;dy++)for(let dx=-r;dx<=r;dx++){const k=tgt+dy*W+dx;if(k>0&&k<W*H&&walk(k)&&!S.obj[k]&&S.ground[k]!==1){st=k;break}}
   if(st<0)return;GUESTRUN=true;const S0=S;const g=mkRes({nid:-900},POKO,'wood',st%W+.5,(st/W|0)+.6);g.id=-900;g.hidden=false;
   centerOn(g.x*TS,g.y*TS);const hn=performance.now();for(const r of S.res)RHOLD.set(r,hn+40000);
   sceneShift('light',d=>{GUEST=g;g.spawnT=performance.now();spawnFX(g.x-.5,g.y-.6,'#c8ffd0');sfx('arrive');setTimeout(d,1200)},()=>{if(S!==S0)return;
