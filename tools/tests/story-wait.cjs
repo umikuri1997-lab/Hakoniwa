@@ -50,15 +50,15 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict');
   console.log('three by three tree',await run(`(()=>{
     for(const r of S.res){endAct(r);delete r.storyWaitHome;r.x=CX+12+r.id%4;r.y=CY+12;}
     const j=(CY-3)*W+CX-8;S.sacredRoot=j;S.fieldSites={root:j};for(const k of sacredCells(j)){S.obj[k]='';delete S.ref[k];S.floor[k]='';S.hi[k]=0;S.ground[k]=0;}
-    if(BL.tower.sz.join()!=='3,3'||sacredCells(j).length!==9)throw Error('wrong size');if(!growStoryTree()||S.obj[j]!=='tower'||sacredCells(j).slice(1).some(k=>S.obj[k]!=='part'||S.ref[k]!==j))throw Error('wrong parts');
+    if(BL.tower.sz.join()!=='4,4'||sacredCells(j).length!==16)throw Error('wrong size');if(!growStoryTree()||S.obj[j]!=='tower'||sacredCells(j).slice(1).some(k=>S.obj[k]!=='part'||S.ref[k]!==j))throw Error('wrong parts');
     for(const k of sacredCells(j))if(canPlace('floor',k%W,k/W|0,true))throw Error('tree footprint not protected');
     const make=()=>({world:0,flags:{sacredStoryV1:1},obj:Array(W*H).fill(''),ground:Array(W*H).fill(0),floor:Array(W*H).fill(''),hi:Array(W*H).fill(0),ref:{},dyn:{},hp:{},res:[],fieldSites:{root:j},sacredRoot:j});
     const old=make();old.obj[j]='tower';old.hp[j]=43;old.hp['L'+j]=2;for(const k of sacredCells(j,2).slice(1)){old.obj[k]='part';old.ref[k]=j;}
     migrateSacredFootprint3(old);if(old.sacredRoot!==j||sacredCells(j).some(k=>k!==j&&old.ref[k]!==j)||old.hp[j]!==43||old.hp['L'+j]!==2)throw Error('old tree expansion');const snap=JSON.stringify(old);migrateSacredFootprint3(old);if(JSON.stringify(old)!==snap)throw Error('migration not idempotent');
     const blocked=make();blocked.obj[j]='tower';blocked.hp[j]=51;for(const k of sacredCells(j,2).slice(1)){blocked.obj[k]='part';blocked.ref[k]=j;}blocked.obj[j+2]='table';migrateSacredFootprint3(blocked);if(blocked.obj[j+2]!=='table'||blocked.obj[blocked.sacredRoot]!=='tower'||blocked.hp[blocked.sacredRoot]!==51)throw Error('blocked migration damaged furniture');
     const full=make();full.obj.fill('rock');full.obj[j]='tower';for(const k of sacredCells(j,2).slice(1)){full.obj[k]='part';full.ref[k]=j;}migrateSacredFootprint3(full);if(!full.sacredLegacy2||full.obj.filter(o=>o==='rock').length!==W*H-4)throw Error('full village destroyed objects');
-    for(const k of sacredCells(j,3))if(full.obj[k]==='rock')full.obj[k]='';tryExpandSacredLegacy(full);if(full.sacredLegacy2||sacredCells(j,3).slice(1).some(k=>full.ref[k]!==j))throw Error('clear space did not expand legacy tree');
-    setWorld(1);if(BL.tower.sz.join()!=='2,2')throw Error('volcano footprint changed');setWorld(0);return '9 protected cells, 2x2 old tree grows safely, HP/level kept, furniture safe, dense village safe, volcano unchanged';
+    for(const k of sacredCells(j,4))if(full.obj[k]==='rock')full.obj[k]='';tryExpandSacredLegacy(full);if(full.sacredLegacy2||sacredCells(j,4).slice(1).some(k=>full.ref[k]!==j))throw Error('clear space did not expand legacy tree');
+    setWorld(1);if(BL.tower.sz.join()!=='2,2')throw Error('volcano footprint changed');setWorld(0);return '16 protected cells, 2x2 old tree grows safely, HP/level kept, furniture safe, dense village safe, volcano unchanged';
   })()`));
   const motions=['','walk','climb','punch','pray','pluck','hold','eat','chop','mine','till','build','repair','craft','draw','water','cook','talk','talkjoy','talkshock','talkthink','talksad','wave','clap','weed','plant','store','storySoil','storyTouch','storyStone','storyBump','storyHug'];
   console.log('back-facing arms',await run(`(()=>{
