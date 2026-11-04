@@ -354,6 +354,7 @@ function drawRes0(r,now){
   const reacting=(at==='sevreact'||at==='phew')&&ad&&r.act.reactAt!=null,rm=reacting?r.act.reactMotion:'',rp=reacting?dialoguePose(rm,now-r.act.reactAt):null;if(rp){const k=rm==='phew'?1:.4;px+=rp.x*k;py+=rp.y*k}
   const brave=now-(BRAVET.get(r)||-1e9)<1500;/* 勇ましい顔は、行動の切りかわりや、たたかれた時に、ちらちら消えないよう、1.5秒つづける */
   const sw0=at==='storywait'&&ad?storyWaitLook(r):null,mood=sw0?sw0.face:reacting?({joy:'joy',shock:'shock',sad:'teary',think:'sad',nod:'smile',phew:'smile'}[rm]||'smile'):at==='watchpost'&&ad?(hostileNow(r)?'shock':bowNow(r,now)?'brave':'')/* 見張り台の上：コワイノが来るとこわがる（泣かない） */:((r.cryU||0)>S.t&&at!=='sleep'||r.coffin||at==='bury'||at==='pray'||at==='shiver')?'teary':/* 棺をはこぶ・埋葬するときは、うるうる顔 */r.hunger<20?'sad':(STRAINU.get(r)||0)>now?'strain':(JOYU.get(r)||0)>now?'joy':(ad&&['chop','mine','till','build','repair','weed'].includes(at))?'strain'/* 雑草をぬくときも >< の顔 */:jumping?'joy':at==='flee'?'strain':brave?'brave'/* たたかいに行く・たたいているときは、勇ましい顔 */:r.hurt>25?'strain':(at==='eat'&&ad)?'eat':(ad&&['play','chat','chatwait','npl','fish','tag','rest','bathe','bon','yatai','fwalk','hanabi','dance','shopkeep'].includes(at))||at==='tag'?'smile':'';
+  if(S.rain&&!walking&&!(r.act&&r.act.type==='sleep')&&!roomOf((r.y|0)*W+(r.x|0)))px+=Math.sin(now/45+r.id)*.4;/* 雨の日、外でじっとしている子は、少しふるえる */
   const bob=(walking?Math.abs(Math.sin(now/110+r.id))*2.5:0)+(()=>{const jt=JUMP.get(r),d=jt==null?-1:now-jt;return d>=0&&d<1000?Math.abs(Math.sin(d/130))*9*(1-d/1000):0})();
   {const sw=Math.max(r.swing||0,r.swingT||0),sd=now-sw;if(sw&&sd>=0&&sd<280)px+=(r.face<0?-1:1)*Math.sin(sd/280*Math.PI)*8}/* 攻撃のとき、前にとびだす */
   if(at==='shiver'&&ad)px+=Math.sin(now/26+r.id*3)*1.4;/* ふるえる */
@@ -388,6 +389,7 @@ function drawRes0(r,now){
   if(r.act&&r.act.type==='repair'&&r.act.stage==='do'&&r.act.obj!=null){const a=r.act,p=Math.min(1,(a.t||0)/repairTime(a)),gx=(a.obj%W)*TS+2,gy=((a.obj/W)|0)*TS-8,g=()=>{ctx.fillStyle='rgba(0,0,0,.5)';rr(ctx,gx,gy,28,6,3);ctx.fillStyle='#ecdcbc';rr(ctx,gx+1,gy+1,26*p,4,2)};if(BUBQ)BUBQ.push(g);else g()}/* 修理の進みぐあい *//* 話したそうな吹き出しが出ていても、修理・料理のバーは出す（その場所のバーなので） */
   if(r.act&&r.act.type==='cook'&&r.act.stage==='do'&&r.act.obj!=null&&r.cing){const a=r.act,tot=cookTime(r,a.obj),p=Math.min(1,(a.t||0)/Math.max(1,tot)),gx=(a.obj%W)*TS+2,gy=((a.obj/W)|0)*TS-12,g=()=>{ctx.fillStyle='rgba(0,0,0,.5)';rr(ctx,gx,gy,28,6,3);ctx.fillStyle='#ffd38a';rr(ctx,gx+1,gy+1,26*p,4,2)};if(BUBQ)BUBQ.push(g);else g()}/* 料理の進みぐあい */
   {const a=r.act;if(a&&a.stage==='do'&&a.obj!=null&&(a.type==='repair'||a.type==='cook'&&r.cing)){const gx=(a.obj%W)*TS+2,gy=((a.obj/W)|0)*TS-(a.type==='cook'?12:8);if(Math.abs(px-(gx+14))<34&&by-45<gy+6&&by-15>gy)by=gy+13}}/* 修理・料理のバーとふきだしが重なるときは、ふきだしをバーの上へ */
+  by=bubLift(px,by,now);/* となりの子のふきだしと重なるときは、上へずらす */
   const zzz=r.act&&r.act.type==='sleep';/* 寝ているあいだは、話しかけの吹き出しを出さない */
   if(!zzz&&QUESTCLEARW===r.name&&mainStoryBubbleReady(r)){r.bubX=px;r.bubY=by-34;talkBub(px,by,now,'#ffd56b');return}
   if(r.act&&(r.act.type==='eat'||r.act.type==='forage')&&r.act.stage==='do'&&!zzz){const p=Math.max(0,Math.min(1,r.hunger/hMax(r))),gx=px-12,gy=py+11,g=()=>{ctx.fillStyle='rgba(0,0,0,.5)';rr(ctx,gx,gy,24,6,3);ctx.fillStyle=p>=.999?'#8fd36a':'#ffc766';rr(ctx,gx+1,gy+1,Math.max(2,22*p),4,2)};if(BUBQ)BUBQ.push(g);else g()}/* ごはん中の、お腹ゲージの回復 */
@@ -407,7 +409,10 @@ function drawRes0(r,now){
 let GODP=[-.82,-.6];const godX=()=>STATUE>=0?STATUE%W+.5+GODP[0]:CX+.5,godY=()=>STATUE>=0?((STATUE/W)|0)+(S.obj[STATUE+W]==='altar'?GODP[1]:1.9):CY-6.4;/* カミサマは神殿の左の柱の前（おそなえ箱のうしろ）に立つ */
 let GODOUT=false;/* お見送りのあと、カミサマが光になって消える */
 const godHere=()=>S.godShown&&(!S.godGone||S.godVisit)&&!GODOUT;
-function talkBub(px,by,now,col){const bw=30,bb=by-Math.abs(Math.sin(now/260))*3;ctx.fillStyle=col||'#9fdcff';rr(ctx,px-bw/2,bb-48,bw,27,10);ctx.beginPath();ctx.moveTo(px-5,bb-21.5);ctx.lineTo(px,bb-14);ctx.lineTo(px+5,bb-21.5);ctx.fill();ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.beginPath();ctx.roundRect?ctx.roundRect(px-bw/2,bb-48,bw,27,10):ctx.rect(px-bw/2,bb-48,bw,27);ctx.stroke();
+/* その画面（コマ）で描いたふきだしの場所。となりの子のふきだしと重ならないように、あとの子のぶんを上へずらす */
+const BUBR=[];let BUBF=-1;
+function bubLift(px,by,now){if(BUBF!==now){BUBF=now;BUBR.length=0}for(let k=0;k<3;k++){const hit=BUBR.some(b=>Math.abs(b[0]-px)<32&&Math.abs(b[1]-by)<28);if(!hit)break;by-=30}return by}
+function talkBub(px,by,now,col){if(BUBF!==now){BUBF=now;BUBR.length=0}BUBR.push([px,by]);const bw=30,bb=by-Math.abs(Math.sin(now/260))*3;ctx.fillStyle=col||'#9fdcff';rr(ctx,px-bw/2,bb-48,bw,27,10);ctx.beginPath();ctx.moveTo(px-5,bb-21.5);ctx.lineTo(px,bb-14);ctx.lineTo(px+5,bb-21.5);ctx.fill();ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.beginPath();ctx.roundRect?ctx.roundRect(px-bw/2,bb-48,bw,27,10):ctx.rect(px-bw/2,bb-48,bw,27);ctx.stroke();
     for(let d=-1;d<=1;d++)circ(ctx,px+d*7,bb-34.5,2.6,'#1f5f86');}
 const HB={t:0,rk:[],ps:[],fl:[]};
 function drawHanabi(now){const dt=Math.min(.05,Math.max(0,(now-(HB.t||now))/1000));HB.t=now;const h=hour();
