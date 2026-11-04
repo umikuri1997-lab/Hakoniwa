@@ -47,7 +47,7 @@ function thumb(cv2,k,open,hide){
   else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
   if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
 }
-const APP_VER='1164';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER='1170';/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
@@ -67,9 +67,9 @@ function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
     card.querySelector('p').textContent=info;
     const bt=card.querySelector('.wbtns');
     if(k<=1&&open){
-      if(L&&L.introSeen){const c=el('<button class="btn pri">つづきから</button>');c.onclick=()=>{sfx('tap');const go=()=>{$('#maps').hidden=true;continueGame(L)};if(k===1&&departOK())depart(go);else go()};bt.appendChild(c);
+      if(L&&L.introSeen){const c=el('<button class="btn pri">つづきから</button>');c.onclick=()=>{sfx('tap');$('#maps').hidden=true;continueGame(L)};bt.appendChild(c);
         const n=el('<button class="btn">はじめから</button>');n.onclick=()=>{if(n.dataset.ok){$('#maps').hidden=true;newGame(k)}else{n.dataset.ok=1;n.textContent='データを消してはじめる（もう一度タップ）';n.style.borderColor='var(--danger)'}};bt.appendChild(n)}
-      else{const n=el('<button class="btn pri">あそぶ</button>');n.onclick=()=>{sfx('tap');const go=()=>{$('#maps').hidden=true;newGame(k)};if(k===1&&departOK())depart(go);else go()};bt.appendChild(n)}
+      else{const n=el('<button class="btn pri">あそぶ</button>');n.onclick=()=>{sfx('tap');$('#maps').hidden=true;newGame(k)};bt.appendChild(n)}
     }
     if(k===1&&!open){let n=0;card.onclick=()=>{if(++n>=5){try{KV.setItem('hakoniwa-w2open','1')}catch(e){}sfx('arrive');showMaps()}}}/* 確認用：とじたWORLD 2を5回タップでひらく */
     list.appendChild(card);thumb(card.querySelector('canvas'),k,open,hide);

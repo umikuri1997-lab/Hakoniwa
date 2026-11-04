@@ -86,7 +86,8 @@ async function playStoryReplay(run){
     else if(e.kind==='quiet'){DLGTAP=performance.now();nushiTalk();await waitStoryReplay(run,()=>S.flags.sacredQuietSeen);}
     else{
       const event=SEV1.find(v=>v.k===e.id);S.sev[e.id]=0;S.t=e.id==='e15'?1440:e.id==='e16'?1320:480;
-      if(['e16','e09'].includes(e.id)){S.sevP=[e.id];if(!sevBegin(event,sevLines(event.L)))throw Error('集合できませんでした');await waitStoryReplay(run,()=>!!SEV_ENCOUNTERS.get(S)?.ready);const enc=SEV_ENCOUNTERS.get(S);SEVW[enc.speaker.name]=e.id;DLGTAP=performance.now();sevTalk(e.id);}
+      if(e.id==='e09'&&grassEndingTalk()){checkQuest();await waitStoryReplay(run,()=>TALKW===POKO&&mainStoryBubbleReady(S.res.find(r=>r.name===POKO)));DLGTAP=performance.now();startTalk();}
+      else if(['e16','e09'].includes(e.id)){S.sevP=[e.id];if(!sevBegin(event,sevLines(event.L)))throw Error('集合できませんでした');await waitStoryReplay(run,()=>!!SEV_ENCOUNTERS.get(S)?.ready);const enc=SEV_ENCOUNTERS.get(S);SEVW[enc.speaker.name]=e.id;DLGTAP=performance.now();sevTalk(e.id);}
       else{DLGTAP=performance.now();playDirectStoryEvent(event,sevLines(event.L));}
       await waitStoryReplay(run,()=>S.sev[e.id]===1);
     }
