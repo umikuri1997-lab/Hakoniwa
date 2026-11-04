@@ -16,7 +16,7 @@ const rLv=r=>{const x=r.xp||0;let l=1;while(l+1<LVXP.length&&x>=LVXP[l+1])l++;re
 const lvF=(lv,k)=>1+k*(Math.min(lv,10)-1);
 /* 10がふつう。レベルアップでふえる量は、せいれいとレベルごとにばらつく（0〜2） */
 function lvGain(r,k,lv){let n=0;for(let l=2;l<=lv;l++){const h=hash(((r.id||0)*131+l*17+(k==='work'?7:3))>>>0);n+=h<.05?2:h<.3?1:0}return n}/* レベルが上がるたびに、5%で+2・25%で+1 */
-const RSC=new WeakMap();function rMul(r,k){const lv=rLv(r);let c=RSC.get(r);if(!c||c.lv!==lv||c.vr!==r.vr||c.b!==r.boost){c={lv,vr:r.vr,b:r.boost,s:rStat(r,lv)};RSC.set(r,c)}return c.s[k]/10*(k==='work'&&r.wkB>S.t?1.15:k==='move'&&r.mvT>S.t?1.15:1)}
+const RSC=new WeakMap();function rMul(r,k){const lv=rLv(r);let c=RSC.get(r);if(!c||c.lv!==lv||c.vr!==r.vr||c.b!==r.boost){c={lv,vr:r.vr,b:r.boost,s:rStat(r,lv)};RSC.set(r,c)}return c.s[k]/10*(k==='work'&&r.wkB>S.t?(r.wkM||1.15):k==='move'&&r.mvT>S.t?(r.mvM||1.15):1)}
 function ovenMul(j){if(j==null)return 1;const x0=j%W,y0=(j/W)|0;const kinds=new Set();for(let y=y0-3;y<=y0+3;y++)for(let x=x0-3;x<=x0+3;x++){if(x<0||y<0||x>=W||y>=H)continue;const o=S.obj[y*W+x];if(o&&o!==S.obj[j]&&BL[o]&&BL[o].cat==='cook')kinds.add(o)}return OVENM[Math.min(kinds.size,OVENM.length-1)]}/* 調理の家具がそばにあると、料理が早い（同じ家具は1つ分だけ。下限はなし） */
 const fAtk=lv=>FATKL[lv];/* 火のせいれい：Lv1=1・Lv4=2・Lv7=3・Lv10=4 */
 function rStat(r,lv){const V=r.vr||{},fire=r.elem==='fire';return{
