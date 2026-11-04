@@ -45,17 +45,30 @@ cv.addEventListener('wheel',e=>{e.preventDefault();if(!started)return;const w=to
 const bubHit=(r,w)=>r.bubX!=null&&Math.abs(r.bubX-w.x)<22&&Math.abs(r.bubY-w.y)<22;/* 描いた吹き出しをタップ（遊具の上で遊ぶ子は、描く場所がr.x,r.yとずれる） */
 const tapY=r=>r.y-(r.act&&r.act.type==='watchpost'&&r.act.stage==='do'?WPLIFT*Math.min(1,r.act.cl||0)/TS:0);/* 見張り台の上の子は、上に描いた所でタップする（見張り台の足もとをタップしても、子をえらばない） */
 function tapLv(wx,wy){if(!S||!S.hi)return 0;const tx=Math.floor(wx/TS);if(tx<0||tx>=W)return 0;for(let lv=HMAX;lv>=1;lv--){const ty=Math.floor((wy+lv*LIFT)/TS);if(ty>=0&&ty<H&&hiAt(ty*W+tx)===lv)return lv}return 0}/* タップした所に見えている、いちばん手前の高い段 */
+const ENBOX={};/* コワイノの絵のはば（向き・形ごとに1回はかって、数字だけとっておく） */
+function enemyBox(e){const D=EN[e.type],z=D.size*2,v=EV.get(e)||{f:1,back:false},key=e.type+(v.back?'b':'f')+v.f+z;let b=ENBOX[key];
+  if(!b){const R=36*z,ww=Math.ceil(R*2),hh=Math.ceil(R*2.2),c=document.createElement('canvas');c.width=ww;c.height=hh;const g=c.getContext('2d');/* 描くときと同じ場所（px=R, py+8=R*1.7） */
+    drawShade(g,e.type,R,R*1.7,.27*z,v.f,{dot:1,t:0,back:v.back,walk:false,flash:false,hurt:null,atk:0});
+    const d=g.getImageData(0,0,ww,hh).data;let x0=ww,y0=hh,x1=-1,y1=-1;for(let y=0;y<hh;y++)for(let x=0;x<ww;x++)if(d[(y*ww+x)*4+3]>16){if(x<x0)x0=x;if(x>x1)x1=x;if(y<y0)y0=y;if(y>y1)y1=y}
+    c.width=c.height=0;b=x1<0?{l:-R*.6,r:R*.6,t:-R*1.5,b:R*.3,ok:0}:{l:x0-R,r:x1+1-R,t:y0-R*1.7,b:y1+1-R*1.7,ok:1};if(b.ok&&Object.values(KGS).every(g=>g.ok))ENBOX[key]=b}/* 絵がまだ読みこみ中なら、とっておかない */
+  return b}
+function enemyAtTap(wx,wy){/* 守りの光：コワイノの絵が描いてある所ぜんぶ（＋指のぶん）をあたりにする。重なったら手前（下）の子、同じならタップに近い子 */
+  const M=6/Math.min(1,cam.z)+2;let best=null,bs=-1e9;
+  for(const e of S.enemies){if(!e.spawned||e.dead)continue;const b=enemyBox(e),px=e.x*TS,py=e.y*TS+8-uLift(e);
+    if(wx<px+b.l-M||wx>px+b.r+M||wy<py+b.t-M||wy>py+b.b+M)continue;
+    const sc=e.y*1000-Math.hypot(wx-px,wy-(py+(b.t+b.b)/2))*.01;if(sc>bs){bs=sc;best=e}}
+  return best}
 function onTap(sx,sy){DLGTAP=performance.now();/* タップで始める会話は、またずにすぐ出す */
-  let w=toWorld(sx,sy);const tx=Math.floor(w.x/TS);{const tl=tapLv(w.x,w.y);if(tl)w={x:w.x,y:w.y+tl*LIFT}}const ty=Math.floor(w.y/TS);/* 高い段のマス・物・せいれい・コワイノは上にずらして描くので、タップの場所も高さの分だけ下へもどす */
+  let w=toWorld(sx,sy);const w0=w,tx=Math.floor(w.x/TS);{const tl=tapLv(w.x,w.y);if(tl)w={x:w.x,y:w.y+tl*LIFT}}const ty=Math.floor(w.y/TS);/* 高い段のマス・物・せいれい・コワイノは上にずらして描くので、タップの場所も高さの分だけ下へもどす */
   if(AREAARM){AREAARM=false;return areaBlast(w.x/TS,w.y/TS)}/* こもれびのまもり：タップした場所のまわり */
-  if(LIGHTARM){LIGHTARM=false;const en=S.enemies.find(e=>e.spawned&&Math.hypot(e.x-w.x/TS,e.y-w.y/TS)<.8);if(en)return guardLight(en);const tj=ty*W+tx;if(tx>=0&&ty>=0&&tx<W&&ty<H&&LIGHTNAT[S.obj[tj]]&&!isBud(tj))return natLight(tj)}/* 守りの光：アイコンのあとにタップした「コワイノ」・木・岩にあてる */
+  if(LIGHTARM){LIGHTARM=false;const en=enemyAtTap(w0.x,w0.y);if(en)return guardLight(en);const tj=ty*W+tx;if(tx>=0&&ty>=0&&tx<W&&ty<H&&LIGHTNAT[S.obj[tj]]&&!isBud(tj))return natLight(tj)}/* 守りの光：アイコンのあとにタップした「コワイノ」・木・岩にあてる */
   const si=S.seeds.findIndex(s=>s.x===tx&&s.y===ty);
   if(tx>=0&&ty>=0&&tx<W&&ty<H){const hh=HOUSES.find(h=>h.set.has(ty*W+tx));/* 開けた屋根は、壁をタップするまでそのまま */
     if(hh&&mode!=='look'&&!OPENH.has(hKey(hh))){OPENH.add(hKey(hh));dirty=true;return}}/* 置く・こわすときも、まず家をタップして中を見る */
   if(si>=0){sfx('seed');S.seeds.splice(si,1);S.mseed=(S.mseed||0)+1;S.mseedGot=(S.mseedGot||0)+1;addFloat(tx+.5,ty,'ふしぎな種+1','#d8f5c0');burstAt(tx,ty,'plant');toast('ふしぎな種をひろった','good');return}
   if(mode==='look'){
     if(fieldStoryTap(tx,ty))return;
-    const en=S.enemies.find(e=>e.spawned&&Math.hypot(e.x-w.x/TS,e.y-w.y/TS)<.8);
+    const en=enemyAtTap(w0.x,w0.y);
     if(en)return;/* 「コワイノ」に守りの光をあてるのは、アイコンをえらんでから */
     {const st=festStalls().find(t=>Math.abs(w.x/TS-(t.x+.5))<1.3&&w.y/TS>t.y-2.6&&w.y/TS<t.y+1);if(st){sfx('tap');openSheet('stall',st.x);return}}/* 屋台をタップすると、その屋台の品物 */
     if(godHere()&&Math.hypot(w.x/TS-godX(),w.y/TS-godY())<1.1){if(TALKW===GOD&&mainStoryBubbleReady())return startTalk();if(S.feat.shop){const ln=pick(S.pt<2?GOD_POOR:GOD_SHOP);return dialog([[GOD,ln]],()=>{openSheet('shop');shopSay=ln;renderSheet()},'交換する')}toast('カミサマ「'+pick(GOD_IDLE)+'」');return}
