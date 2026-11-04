@@ -57,16 +57,16 @@ const QUESTS2=[
     [HOMURA,'お湯から、水の力が満ちてきたね。だれか来てくれるかもしれないよ。'],
     [HOMURA,'なかまか…。にぎやかになるのは、悪くないね。']],gives:{flag:'sumTold'}},
    by:SHIZUKU,story:[
-    [SHIZUKU,'はじめまして。水のせいれい、シズクと申します。'],
-    [HOMURA,'#wave|へえ、水のせいれいかい。あたいはホムラ。よろしく頼むよ。'],
-    [SHIZUKU,'さっそくですが、この温泉の湯は、地面の下の熱と、わき水の量と、それから……'],[HOMURA,'つまり？'],[SHIZUKU,'#nod|……のこりの温泉も、よみがえらせられます。'],[HOMURA,'#joy|はは、それを先に言っとくれよ。'],[SHIZUKU,'#think|……あの、ここのお湯、少しあつくありませんか。'],[HOMURA,'あつい？ ぬるいくらいさ。'],[SHIZUKU,'#joy|……にぎやかな村に、なりそうですね。']]},
+    [SHIZUKU,'はじめまして。水のせいれい、シズクと申します。','vol:summonRing'],
+    [HOMURA,'#wave|へえ、水のせいれいかい。あたいはホムラ。よろしく頼むよ。','vol:meet'],
+    [SHIZUKU,'さっそくですが、この温泉の湯は、地面の下の熱と、わき水の量と、それから……'],[HOMURA,'つまり？'],[SHIZUKU,'#nod|……のこりの温泉も、よみがえらせられます。'],[HOMURA,'#joy|はは、それを先に言っとくれよ。'],[SHIZUKU,'#think|……あの、ここのお湯、少しあつくありませんか。','vol:fanS'],[HOMURA,'あつい？ ぬるいくらいさ。'],[SHIZUKU,'#joy|……にぎやかな村に、なりそうですね。','vol:jumpBoth']]},
   {id:'rockCanal',text:'水路をふさぐ大岩をどかそう',check:()=>st2().bw.every(j=>S.obj[j]!=='boulder'),prog:()=>'大岩 '+st2().bw.filter(j=>S.obj[j]!=='boulder').length+'/'+st2().bw.length,how:'せいれいに、大岩をくだいてもらう',
    talk:{who:SHIZUKU,when:()=>true,lines:[
     [SHIZUKU,'守り神さま。西の温泉を調べてきました。'],
-    [SHIZUKU,'温泉に水をはこぶ水路が、大きな岩でふさがれています。くだく前に、岩のすじを調べて……'],
+    [SHIZUKU,'温泉に水をはこぶ水路が、大きな岩でふさがれています。くだく前に、岩のすじを調べて……','vol:traceRock'],
     [HOMURA,'#joy|調べてるあいだに、くだけちまうよ。岩なら、まかせときな。'],
     [SHIZUKU,'#think|……すじにそって、くだいてくださいね。']]},
-   story:[[SHIZUKU,'水路に、水がもどりました。'],[HOMURA,'#joy|な、くだけば早いだろ。'],[SHIZUKU,'すじにそったから、水路がこわれなかったのです。'],[SHIZUKU,'#think|……でも、まだ冷たいままですね。熱が、とどいていません。']]},
+   story:[[SHIZUKU,'水路に、水がもどりました。','vol:canal'],[HOMURA,'#joy|な、くだけば早いだろ。'],[SHIZUKU,'すじにそったから、水路がこわれなかったのです。'],[SHIZUKU,'#think|……でも、まだ冷たいままですね。熱が、とどいていません。']]},
   {id:'shizukuRest',text:'シズクのおねがい：温泉のそばに休憩所を作ろう',check:()=>nearSp('bench')&&nearSp('tub'),prog:()=>'ベンチ '+(nearSp('bench')?1:0)+'/1・水おけ '+(nearSp('tub')?1:0)+'/1',how:'あたたかい温泉のそばに、ベンチと水おけを置く',
    talk:{who:SHIZUKU,when:()=>true,learn:['bench','tub'],lines:[
     [SHIZUKU,'わたしからも、ひとつおねがいがあります。'],
@@ -81,7 +81,7 @@ const QUESTS2=[
     [HOMURA,'たまごは、かたゆでにかぎるよ。'],
     [SHIZUKU,'半熟がいちばんです。'],
     [HOMURA,'よし、決まりだ。温泉のそばに、かまどと食卓をたのむよ！','hop']]},
-   story:[[HOMURA,'#joy|ほら、できたての温泉たまごだよ！ みんな、食べな！','cheer'],[SHIZUKU,'……かたいです。'],[HOMURA,'半熟なんて、ぐにゃっとして……'],[SHIZUKU,'#joy|でも、おいしいです。'],[HOMURA,'#joy|だろ？ これで、湯けむりの村らしくなってきた！']]},
+   story:[[HOMURA,'#joy|ほら、できたての温泉たまごだよ！ みんな、食べな！','cheer+vol:egg'],[SHIZUKU,'……かたいです。','vol:eatS'],[HOMURA,'半熟なんて、ぐにゃっとして……'],[SHIZUKU,'#joy|でも、おいしいです。'],[HOMURA,'#joy|だろ？ これで、湯けむりの村らしくなってきた！']]},
 
   {id:'haikage3',text:'ハイカゲの灰で、ひびわれをうめよう',check:()=>CRACKS.every(j=>S.obj[j]!=='crack'),prog:()=>'ひびわれ '+CRACKS.filter(j=>S.obj[j]!=='crack').length+'/'+CRACKS.length+'・灰 '+(st2().hai||0),how:'夜に来るハイカゲを追いはらうと、灰を落とす。せいれいがひろった灰で、村の北のひびわれを「みる」でタップしてうめる',
    talk:{who:SHIZUKU,when:()=>true,lines:[
@@ -98,7 +98,7 @@ const QUESTS2=[
    talk:{who:HOMURA,when:()=>true,lines:[
     [HOMURA,'火山のふもとに、熱の流れを切りかえる装置があるんだ。'],
     [HOMURA,'左にむければ、西の温泉に熱がとどくはずさ。']]},
-   story:[[HOMURA,'#think|……熱が、ちゃんと流れてるか、たしかめてみるよ。',0,'heat:b'],[HOMURA,'#joy|西の温泉にも、湯気が上がった！'],[SHIZUKU,'すばらしいです。…残るは、奥の温泉ですね。'],[HOMURA,'#think|熱の道のそばの土も、ぽかぽかしてきたね。'],[HOMURA,'#nod|……あんた、けっこう役に立つじゃないか。'],[SHIZUKU,'#surprise|……いま、ほめられましたか？']]},
+   story:[[HOMURA,'#think|……熱が、ちゃんと流れてるか、たしかめてみるよ。',0,'heat:b'],[HOMURA,'#joy|西の温泉にも、湯気が上がった！'],[SHIZUKU,'すばらしいです。…残るは、奥の温泉ですね。'],[HOMURA,'#think|熱の道のそばの土も、ぽかぽかしてきたね。'],[HOMURA,'#nod|……あんた、けっこう役に立つじゃないか。'],[SHIZUKU,'#surprise|……いま、ほめられましたか？','vol:lookbackS']]},
   {id:'fire3',text:'ようがん台で、火山の熱を村へひこう',check:()=>yoganHeatN()>=2,prog:()=>'熱の道のそばのようがん台 '+Math.min(2,yoganHeatN())+'/2',how:'熱が流れている熱の道のそばに、ようがん台を2つ建ててもらう',
    talk:{who:HOMURA,when:()=>true,lines:[
     [HOMURA,'#think hush|……なあ、守り神。むかし、この村には、火のせいれいがたくさんいたんだ。','vol:yoganSide'],
@@ -119,7 +119,7 @@ const QUESTS2=[
     [SHIZUKU,'おまつりは、半熟と決まっています。'],
     [HOMURA,'#joy|だれが決めたのさ。'],
     [HOMURA,'#joy|守り神、みんなで、おまつりをひらこうじゃないか！']]},
-   story:[[HOMURA,'#joy|これこれ！ やっぱり、おまつりはいいねえ！'],[SHIZUKU,'#joy|たまごは、両方ならべてみました。'],[HOMURA,'……どっちも、売り切れだね。'],[HOMURA,'#joy|また、いつでもひらこうじゃないか。']]},
+   story:[[HOMURA,'#joy|これこれ！ やっぱり、おまつりはいいねえ！','vol:lanterns'],[SHIZUKU,'#joy|たまごは、両方ならべてみました。','vol:eggsUp'],[HOMURA,'……どっちも、売り切れだね。'],[HOMURA,'#joy|また、いつでもひらこうじゃないか。','vol:cheer']]},
   {id:'ashiyu',text:'西の温泉に、あし湯をつくろう',check:()=>spNear(['bench','takebench'],'b')>=2&&spNear(FLOWERS2,'b')>=3,prog:()=>'ベンチ '+Math.min(2,spNear(['bench','takebench'],'b'))+'/2・花 '+Math.min(3,spNear(FLOWERS2,'b'))+'/3',how:'西の温泉のそばに、ベンチ2つと花3つ',
    talk:{who:SHIZUKU,when:()=>true,lines:[
     [SHIZUKU,'守り神さま。西の温泉は、湯がやわらかくて、足をつけるのにちょうどよいのです。'],
