@@ -32,8 +32,9 @@ function tryExpandSacredLegacy(state){
 }
 function sacredNoBuild(j){if(sacredReserved(j))return true;if(!S||WD!==0||S.free||S.sacredRoot==null)return false;const s=fieldStump(S.sacredRoot);return Math.abs(j%W-s%W)<=1&&Math.abs((j/W|0)-(s/W|0))<=1}/* 切り株のまわり1マスにも、物を置かない */
 function sacredReserved(j){return !!S&&WD===0&&!S.free&&S.sacredRoot!=null&&sacredCells(S.sacredRoot).includes(j);}
-function sacredCompleted(id){const i=QUESTS1.findIndex(q=>q.id===id);return fieldStoryDone(id)||i>=0&&S.quest>i&&S.qStory!==i;}
-function sacredRevealed(id){const i=QUESTS1.findIndex(q=>q.id===id);return i>=0&&S.quest>i&&S.qStory!==i;}
+const sacredQuestIndex=id=>QUESTS1.findIndex(q=>q.id===id||!!q.fieldParts&&q.fieldParts.includes(id));
+function sacredCompleted(id){const i=sacredQuestIndex(id);return fieldStoryDone(id)||i>=0&&S.quest>i&&S.qStory!==i;}
+function sacredRevealed(id){const i=sacredQuestIndex(id);return i>=0&&S.quest>i&&S.qStory!==i;}
 function sacredStage(){
   if(!S)return 4;if(IS_STORY_REPLAY&&S.replayMature)return 4;
   if(S.obj.includes('tower'))return S.cleared||(S.setSh||0)>=2&&GRASSN>=1750?4:3;
@@ -47,7 +48,7 @@ function migrateSacredStory(state){
   if(!state.free&&(state.world||0)===0){
     const old={earthListen:3,earthRoot:2,fireRoot:1,fireTrace:2,waterFilm:2,waterLeaf:2,windEcho:3,windVoices:5};
     for(const [id,n]of Object.entries(old)){const d=state.fieldStories?.[id];if(d)d.step=d.step>=n?FIELD_STORIES[id].length:0;}
-    const q=QUESTS1[state.quest];if(state.qStory==null&&q?.field&&!((q.id==='tower')&&state.obj.includes('tower')))state.qTalked=false;
+    const id=QUESTS1_V1[state.quest];if(state.qStory==null&&(COMPANION_QUESTS.has(id)||id==='tower')&&!(id==='tower'&&state.obj.includes('tower')))state.qTalked=false;/* まだ目標をまとめる前（QUESTS1_V1）の番号 */
     const j=state.obj.indexOf('tower'),pending=state.obj.findIndex((o,k)=>o==='site'&&state.dyn[k]?.build==='tower');
     if(j>=0||pending>=0){state.sacredRoot=j>=0?j:pending;(state.fieldSites||(state.fieldSites={})).root=state.sacredRoot;}
   }

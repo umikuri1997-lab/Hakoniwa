@@ -3,11 +3,11 @@ const root=path.resolve(__dirname,'../..');
 const c=vm.createContext({console,ACT:{},dirty:false,document:{querySelector(){return {hidden:true}}},performance:{now:()=>0},setTimeout(){},localStorage:{getItem(){return null}}});
 for(const f of ['core','data','story','world','village','quests','night','companion-story','story-ending'])vm.runInContext(fs.readFileSync(path.join(root,'js',f+'.js'),'utf8'),c,{filename:f});
 const run=code=>vm.runInContext(code,c);
-const old=JSON.parse(run('JSON.stringify(QUESTS1.filter(q=>!COMPANION_QUESTS.has(q.id)).map(q=>q.id))'));
+const old=JSON.parse(run('JSON.stringify(QUESTS1_V1.filter(id=>!COMPANION_QUESTS.has(id)))'));
 for(let i=0;i<=old.length;i++){
   run(`S={world:0,flags:{},quest:${i},qStory:${i<old.length?i:'null'}};migrateCompanionStory(S)`);
-  if(i<old.length){assert.equal(run('QUESTS1[S.quest].id'),old[i]);assert.equal(run('QUESTS1[S.qStory].id'),old[i]);}
-  else assert.equal(run('S.quest'),run('QUESTS1.length'));
+  if(i<old.length){assert.equal(run('QUESTS1_V1[S.quest]'),old[i]);assert.equal(run('QUESTS1_V1[S.qStory]'),old[i]);}
+  else assert.equal(run('S.quest'),run('QUESTS1_V1.length'));
   const mapped=run('S.quest');run('migrateCompanionStory(S)');assert.equal(run('S.quest'),mapped);
 }
 for(const state of [{world:1},{world:0,free:true}]){run(`S=${JSON.stringify({...state,flags:{},quest:8,qStory:7})};migrateCompanionStory(S)`);assert.equal(run('S.quest'),8);assert.equal(run('S.qStory'),7);}
@@ -16,29 +16,32 @@ const prior=JSON.parse(run('JSON.stringify(companionQuestList({world:0,flags:{co
 for(let i=0;i<=prior.length;i++){
   run(`S={world:0,flags:{companionStory:1},quest:${i},qStory:${i<prior.length?i:'null'},qTalked:true};migrateCompanionStory(S)`);
   const expected=run(`COMPANION_REPLACEMENTS[${JSON.stringify(prior[i])||'null'}]||${JSON.stringify(prior[i])||'null'}`);
-  if(i<prior.length){assert.equal(run('QUESTS1[S.quest].id'),expected);assert.equal(run('QUESTS1[S.qStory].id'),expected);}
-  else assert.equal(run('S.quest'),run('QUESTS1.length'));
+  if(i<prior.length){assert.equal(run('QUESTS1_V1[S.quest]'),expected);assert.equal(run('QUESTS1_V1[S.qStory]'),expected);}
+  else assert.equal(run('S.quest'),run('QUESTS1_V1.length'));
 }
 for(const id of ['fireSupplies','fireLights','waterFields','waterFlowers','windRoad','windGather']){
   const i=prior.indexOf(id);run(`S={world:0,flags:{companionStory:1},quest:${i},qStory:null,qTalked:true};migrateCompanionStory(S)`);
   assert.equal(run('S.qTalked'),false,'replacement must explain its new goal');
 }
 console.log('PR 1064 saves: every index and pending report preserved; active replacements explain the new goal');
-for(const id of ['earthListen','earthRoot','fireRoot','fireTrace','waterFilm','waterLeaf','windEcho','windVoices']){
+for(const [qid,parts] of [['earthListen',['earthListen','earthRoot']],['fireRoot',['fireRoot','fireTrace']],['waterFilm',['waterFilm','waterLeaf']],['windEcho',['windEcho','windVoices']]]){
   run(`S={food:9999,mat:{wood:9999,stone:9999},flags:{},fieldStories:{}}`);
-  assert.equal(run(`QUESTS1.find(q=>q.id==='${id}').check()`),false);
-  run(`S.fieldStories['${id}']={step:FIELD_STORIES['${id}'].length-1}`);
-  assert.equal(run(`QUESTS1.find(q=>q.id==='${id}').check()`),false);
-  run(`S.fieldStories['${id}'].step++`);
-  assert.equal(run(`QUESTS1.find(q=>q.id==='${id}').check()`),true);
-  const state=run('JSON.stringify(S)');run(`S=JSON.parse(${JSON.stringify(state)})`);
-  assert.equal(run(`fieldStoryDone('${id}')`),true);
+  assert.deepEqual(JSON.parse(run(`JSON.stringify(QUESTS1.find(q=>q.id==='${qid}').fieldParts)`)),parts);
+  assert.equal(run(`QUESTS1.find(q=>q.id==='${qid}').check()`),false);
+  for(const [k,id] of parts.entries()){
+    run(`S.fieldStories['${id}']={step:FIELD_STORIES['${id}'].length-1}`);
+    assert.equal(run(`QUESTS1.find(q=>q.id==='${qid}').check()`),false);
+    run(`S.fieldStories['${id}'].step++`);
+    assert.equal(run(`QUESTS1.find(q=>q.id==='${qid}').check()`),k===parts.length-1,'every investigation of the goal is needed');
+    const state=run('JSON.stringify(S)');run(`S=JSON.parse(${JSON.stringify(state)})`);
+    assert.equal(run(`fieldStoryDone('${id}')`),true);
+  }
 }
-console.log('Eight goals require their own investigation progress; stock cannot complete them; save round-trip preserves progress');
+console.log('Four investigation goals (eight investigations) require their own progress; stock cannot complete them; save round-trip preserves progress');
 
 run(`setWorld(0);S={world:0,flags:{},res:[{elem:'wood'}],quest:0,qTalked:false,qStory:null};`);
 for(const [el,id]of [['earth','summon'],['fire','fire'],['water','water'],['wind','wind']]){
-  run(`S.quest=QUESTS1.findIndex(q=>q.id==='${id}');S.qTalked=false`);assert.equal(run(`!!storySummonOK('${el}')`),false);
+  run(`S.quest=questIndexOf('${id}');S.qTalked=false`);assert.equal(run(`!!storySummonOK('${el}')`),false);
   run('S.qTalked=true');assert.equal(run(`!!storySummonOK('${el}')`),true);
   run('S.qStory=S.quest-1');assert.equal(run(`!!storySummonOK('${el}')`),false);
   run('S.qStory=null;S.quest--;');assert.equal(run(`!!storySummonOK('${el}')`),false);
@@ -46,7 +49,8 @@ for(const [el,id]of [['earth','summon'],['fire','fire'],['water','water'],['wind
   run('S.res.pop()');
 }
 for(const [from,to]of [['summon','fire'],['fire','water'],['water','wind']]){
-  const gap=run(`QUESTS1.slice(QUESTS1.findIndex(q=>q.id==='${from}')+1,QUESTS1.findIndex(q=>q.id==='${to}')).filter(q=>!q.skip).length`);assert(gap>=2,from+' to '+to);
+  /* あいだの目標の数：あいだのメインの目標と、むかえる目標の中で、むかえるより前にある小さな目標 */
+  const gap=run(`(()=>{const a=questIndexOf('${from}'),b=questIndexOf('${to}'),q=QUESTS1[b];return QUESTS1.slice(a+1,b).filter(q=>!q.skip).length+(q.steps?q.steps.findIndex(s=>s.id==='${to}'):0)})()`);assert(gap>=2,from+' to '+to);
 }
 console.log('First attribute summons: story gate, pending dialogue, repeat residents; at least two main quests between introductions');
 // Exercise the real morning spawner on an empty, fully usable map for two days.

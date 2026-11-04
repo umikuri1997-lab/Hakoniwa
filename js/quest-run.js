@@ -16,7 +16,7 @@ function checkQuest(){
   if(S.qStory!=null){TALKW=storyWho(QUESTS[S.qStory]);QUESTCLEARW=TALKW;renderQuest();return}/* クエストのあとのお話は、💬をタップしてから */
   if(qMissing(q).length){renderQuest();return}
   if(q.talk&&!S.qTalked){if(q.talk.when()&&!isNight())TALKW=earthIntroQuest(q)?earthIntroSpeaker(q):firstSpk(q.talk.lines,q.talk.who);renderQuest();return}/* 新しいクエストの声かけは、昼だけ */
-  if(q.field)fieldStoryEnsure(q.id);
+  if(q.field)fieldStoryEnsure(fieldActiveId(q));
   const complete=q.check();if(!complete)checkQuestParts(q);
   if(complete){
     if(isNight()){renderQuest();return}/* クリアの話・お礼は、昼だけ */
@@ -58,7 +58,7 @@ function showSpotPop(){if(MEMRUN)return;while(SPOT_POPS.length&&SPOT_POPS[0].sta
   setTimeout(()=>{if(overlay.isConnected){button.disabled=false;button.focus({preventScroll:true})}},650);button.onclick=()=>{if(button.disabled)return;overlay.remove();GIFT_ACTIVE=false;if(prior&&prior.isConnected)prior.focus({preventScroll:true})}}
 function questGives(q,g){g=g||q.gives||{};
     (g.feat||[]).forEach(f=>S.feat[f]=true);for(const k in (g.food||{}))addFood(k,g.food[k]);for(const k in (g.mat||{}))S.mat[k]=(S.mat[k]||0)+g.mat[k];for(const k in (g.items||{})){S.unlocked[k]=true;giveItem(k,g.items[k])}queueItemGift(g.items);
-    if(g.flags)g.flags.forEach(f=>S.flags[f]=true);if(g.recipes)g.recipes.forEach(id=>S.recipes[id]=true);if(g.shard)giveShard(g.shard);if(g.enemy)S.enemyOn=true;if(g.shrine)S.flags.shrine=true;if(g.flag){S.flags[g.flag]=true;if(g.flag==='onsen')dirty=true}
+    if(g.flags)g.flags.forEach(f=>S.flags[f]=true);if(g.recipes)g.recipes.forEach(id=>S.recipes[id]=true);if(g.shard)giveShard(g.shard);for(const s of g.shards||[])giveShard(s);if(g.enemy)S.enemyOn=true;if(g.shrine)S.flags.shrine=true;if(g.flag){S.flags[g.flag]=true;if(g.flag==='onsen')dirty=true}
     if(g.godLeave){S.godGone=true;const GX=godX(),GY=godY();fxSpr('poof',GX*TS,GY*TS);sfx('poof')}
     if(g.fest)freeFest();if(g.msg)toast(g.msg,'good');applyFeats();
     const hadW=g.watchNow&&(cnt('watch')>0||S.obj.some((o,j)=>o==='site'&&S.dyn[j]&&S.dyn[j].build==='watch'));// 先に建てていたら、その分のパワーを返す（おごり）

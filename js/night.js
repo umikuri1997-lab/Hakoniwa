@@ -5,9 +5,9 @@
    埋葬されたせいれいがいれば、そちらの復活が先（物語のせいれいが最優先） */
 let KEYRES=KEYS[0];
 const isKey=n=>KEYRES.includes(n)||KEYS.flat().includes(n)||Object.values(FIXK0).includes(n)||Object.values((S&&S.keyN)||{}).includes(n);/* キーキャラ（5属性の子もふくむ）は「きずな」で朝にもどる */
-const SECOND=[{elem:'earth',name:MINA,ok:()=>bloomCount('bellf')>=2&&qDone('kikyo')},/* ききょうのお礼の話がすんでから */{elem:'water',name:SHIZUKU,ok:()=>!!S.flags.onsen}];/* 2人目のキーキャラが来るきっかけ */
+const SECOND=[{elem:'earth',name:MINA,ok:()=>bloomCount('bellf')>=2&&qAt('kikyo')},/* ききょうの話を聞いてから */{elem:'water',name:SHIZUKU,ok:()=>!!S.flags.onsen}];/* 2人目のキーキャラが来るきっかけ */
 const MAINEL=['wood','fire'];MAINEL[FREE]='wood';SECOND[FREE]={elem:'earth',name:'',ok:()=>false};
-function storySummonOK(el){if(WD!==0||S.free||S.cleared||elemCount(el)>0)return true;const id={earth:'summon',fire:'fire',water:'water',wind:'wind'}[el];if(!id)return true;const qi=QUESTS.findIndex(q=>q.id===id);return S.quest>qi||S.quest===qi&&S.qTalked&&S.qStory==null}
+function storySummonOK(el){if(WD!==0||S.free||S.cleared||elemCount(el)>0)return true;const id={earth:'summon',fire:'fire',water:'water',wind:'wind'}[el];if(!id)return true;const qi=questIndexOf(id);return S.quest>qi||S.quest===qi&&S.qTalked&&S.qStory==null}
 function sumElem(){
   if(S.res.length>=30)return null;let best=null,bs=0;
   for(const el of ELEM_KEYS){if(!storySummonOK(el))continue;if(!S.flags.minaCame){const sc=SECOND[WD];if(el===sc.elem&&sc.ok()){best=el;break}continue}/* 2人目のキーキャラが先（草原：ききょう2つで土の子、火山：温泉で水のせいれい） */if(elemCount(el)>=(WD===FREE?(el==='wood'?6:3):el===MAINEL[WD]?10:5))continue;/* よべる数は、えらぶ画面（sumCands）と同じ */const n=needFor(el),v=ATTR[el];if(v>=n&&v/n>bs){bs=v/n;best=el}}

@@ -1,6 +1,7 @@
 'use strict';
 /* 思い出は別フレームで再現する。元の村の状態・予約・会話待ちに触れず、子画面は保存しない。 */
-const STORY_REPLAY_QUESTS=['earthListen','earthRoot','fireRoot','fireTrace','waterFilm','waterLeaf','windEcho','windVoices','tower'];
+const STORY_REPLAY_QUESTS=['earthListen','fireRoot','waterFilm','windEcho','tower'];/* 御神木の調べの依頼（中の調べは fieldParts） */
+const replayParts=id=>QUESTS1.find(q=>q.id===id)?.fieldParts||[id];
 const STORY_REPLAY_EVENTS=[...STORY_REPLAY_QUESTS.map(id=>({key:'quest:'+id,id,kind:'quest'})),
   {key:'event:e16',id:'e16',kind:'event',title:'御神木を守る仲間たち'},
   {key:'event:e15',id:'e15',kind:'event',title:'フタバが仲間を守る'},
@@ -46,14 +47,14 @@ function replayControls(run){
 }
 function prepareStoryReplay(run,payload){
   if(payload.sound)Object.assign(SND,{bgm:payload.sound.bgm!==false,sfx:payload.sound.sfx!==false});
-  const e=run.episode,at=STORY_REPLAY_QUESTS.indexOf(e.id),count=e.kind!=='quest'?5:at<2?2:at<4?3:at<6?4:5;
+  const e=run.episode,at=STORY_REPLAY_QUESTS.indexOf(e.id),count=e.kind!=='quest'?5:[2,3,4,5,5][at];
   setWorld(0);S=newState(0);LIVE[0]=S;S.introSeen=true;S.flags.minaCame=true;S.enemyOn=false;S.t=720;S.hold=0;S.speed=1;S.food=100;S.godShown=true;S.godGone=false;
   S.feat={build:true,plant:true,craft:true,summon:true,people:true};S.sacredRoot=(CY-3)*W+CX-2;S.fieldSites={root:S.sacredRoot};const x=S.sacredRoot%W,y=S.sacredRoot/W|0;
   for(let yy=y-9;yy<=y+10;yy++)for(let xx=x-9;xx<=x+10;xx++){const j=yy*W+xx;S.obj[j]='';S.floor[j]='';S.ground[j]=0;S.hi[j]=0;delete S.ref[j];delete S.dyn[j];}
   const names=[POKO,MINA,FIXK0.fire,FIXK0.water,FIXK0.wind],elems=['wood','earth','fire','water','wind'],spots=[[-2.5,3.5],[4.5,3.5],[-2.5,5.5],[.5,6.5],[3.5,5.5]];
   S.res=names.slice(0,count).map((name,i)=>{const r=mkRes(S,name,elems[i],x+spots[i][0],y+spots[i][1]);const original=payload.actors?.find(a=>a.name===name&&a.elem===r.elem);if(original?.vr)r.vr=JSON.parse(JSON.stringify(original.vr));r.energy=100;r.hunger=hMax(r);r.fun=90;return r;});
-  S.fieldStories={};for(const id of STORY_REPLAY_QUESTS.slice(0,e.kind==='quest'?at:9))S.fieldStories[id]={step:FIELD_STORIES[id].length};
-  S.quest=QUESTS1.findIndex(q=>q.id===(e.kind==='quest'?e.id:'nushi'));S.qStory=null;S.qTalked=e.kind!=='quest';S.flags.nushiAlive=e.kind!=='quest'||at>=8;
+  S.fieldStories={};for(const id of STORY_REPLAY_QUESTS.slice(0,e.kind==='quest'?at:STORY_REPLAY_QUESTS.length).flatMap(replayParts))S.fieldStories[id]={step:FIELD_STORIES[id].length};
+  S.quest=QUESTS1.findIndex(q=>q.id===(e.kind==='quest'?e.id:'nushi'));S.qStory=null;S.qTalked=e.kind!=='quest';S.flags.nushiAlive=e.kind!=='quest'||at>=STORY_REPLAY_QUESTS.indexOf('tower');
   S.sev=Object.fromEntries(SEV1.map(v=>[v.k,1]));S.sevP=[];S.sevQ=[];S.spotSeen=Object.fromEntries(SPOTS.map(v=>[v.k,1]));
   recount();if(e.kind!=='quest'){growStoryTree();S.setSh=e.kind==='reunion'||e.kind==='quiet'?3:2;S.shards=3;S.replayMature=true;S.flags.finalWon=e.id!=='e16'&&e.id!=='e15';S.flags.areaSkill=e.id!=='e16g';S.flags.sh_boss=true;}
   if(e.id==='e15'){
@@ -79,7 +80,7 @@ async function playStoryReplay(run){
   try{
     if(e.kind==='quest'){
       checkQuest();await waitStoryReplay(run,()=>!!earthIntroSpeaker(QUESTS[S.quest]));DLGTAP=performance.now();startTalk();await waitStoryReplay(run,()=>S.qTalked);
-      for(let phase=0;phase<FIELD_STORIES[e.id].length;phase++){replayReadyActors();DLGTAP=performance.now();const j=S.sacredRoot;fieldStoryTap(j%W,j/W|0);await waitStoryReplay(run,()=>fieldStoryState(e.id).step>phase);}
+      for(const pid of replayParts(e.id))for(let phase=0;phase<FIELD_STORIES[pid].length;phase++){replayReadyActors();DLGTAP=performance.now();const j=S.sacredRoot;fieldStoryTap(j%W,j/W|0);await waitStoryReplay(run,()=>fieldStoryState(pid).step>phase);}
       await waitStoryReplay(run,()=>S.qStory!=null);await waitStoryReplay(run,()=>TALKW===GOD?mainStoryBubbleReady():!!TALKW&&mainStoryBubbleReady(S.res.find(r=>r.name===TALKW)));DLGTAP=performance.now();startTalk();await waitStoryReplay(run,()=>S.qStory==null);
     }else if(e.kind==='reunion'){DLGTAP=performance.now();nushiReturns();await waitStoryReplay(run,()=>S.cleared);}
     else if(e.kind==='quiet'){DLGTAP=performance.now();nushiTalk();await waitStoryReplay(run,()=>S.flags.sacredQuietSeen);}
