@@ -289,7 +289,7 @@ function takeDrop(d,r){let nm;
   else{giveItem(d.id,d.n);nm=(d.id.startsWith('seed:')?CROPS[d.id.slice(5)].name+'のたね':BL[d.id].item||BL[d.id].name)+'×'+d.n;if(BL[d.id]&&BL[d.id].kind==='furn')queueItemGift({[d.id]:d.n},'ひろった！')}/* 家具は、大きく知らせる */
   if(!d.lt)toast((r?r.name+'が':'')+'おとしものをひろった：'+nm,'good')}/* 守りの光で落とした素材は、だまってひろう */
 const watchUp=()=>Object.keys(S.hp).some(k=>k[0]==='L'&&S.hp[k]>=2&&S.obj[+k.slice(1)]==='watch');/* Lv2以上の見張り台がある */
-const WUP=[null,{pc:30,mat:{wood:30,stone:35}},{pc:100,mat:{wood:45,stone:75},sand:5}],YUP=[null,{pc:30,mat:{wood:30,stone:35}},{pc:60,mat:{wood:45,stone:75},sand:5}];/* sand：やすらぎの砂（Lv3への強化だけ） *//* 見張り台・ようがん台の強化 */const WATCH=[null,{dmg:1,range:6,cd:10},{dmg:2,range:6.5,cd:10},{dmg:3,range:7,cd:10}];/* cd：攻撃の間かく（分） */
+const WUP=[null,{pc:30,mat:{wood:25,stone:30}},{pc:50,mat:{wood:35,stone:45}},{pc:80,mat:{wood:45,stone:60}},{pc:120,mat:{wood:55,stone:75},sand:5}],YUP=[null,{pc:30,mat:{wood:30,stone:35}},{pc:60,mat:{wood:45,stone:75},sand:5}];/* sand：やすらぎの砂（Lv3への強化だけ） *//* 見張り台・ようがん台の強化 */const WATCH=[null,{dmg:1,range:6,cd:10},{dmg:1.5,range:6.25,cd:10},{dmg:2,range:6.5,cd:10},{dmg:2.5,range:6.75,cd:10},{dmg:3,range:7,cd:10}];/* 見張り台は5段階。ゆるやかに強くなる */const watchArt=L=>L>=5?3:L>=3?2:1;/* 絵は3しゅるい：Lv1〜2・Lv3〜4・Lv5 *//* cd：攻撃の間かく（分） */
 const YOGAN=[null,{dmg:1,range:5,cd:8,splash:1.5,sdmg:.5},{dmg:2,range:5.5,cd:8,splash:1.5,sdmg:1},{dmg:3,range:6,cd:8,splash:1.5,sdmg:1.5}];/* ようがん台（火山のふもと）：火の玉。当たったまわりにもダメージ */
 const enemyLive=()=>!!S&&S.enemies.some(e=>e.spawned&&!e.dead);
 const watchGuard=j=>S.res.some(q=>!q.hidden&&q.act&&q.act.type==='watchpost'&&q.act.stage==='do'&&(q.act.cl||0)>=1&&q.act.obj===j);/* 見張り台に木のせいれいが立っているか */
