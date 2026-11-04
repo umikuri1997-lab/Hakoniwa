@@ -557,15 +557,15 @@ function goPlay(r,G,strict){
     if(fk>=0){const w=S.obj[fk],p=BL[w].play;const ng=(NIGATE[r.elem]||{})[w],s=p.pt*3+(r.like===w?6:0)+((FAVTOY[r.elem]||[]).includes(w)?7:0)+spotN(fk,'park','park2')*4-(ng!=null?6:0)-d*.3+Math.random()*2;if(s>bs){bs=s;best={type:'play',stand:j,o:{key:'o'+fk,obj:fk,what:w,fun:ng!=null?ng:p.fun,dur:p.dur,pt:p.pt,pw:p.pw,nig:ng!=null}}}}
     if(allowFishing&&canJob(r,'fish')&&roomN(r)>0&&S.ground[j]!==1&&fishW(j)>=0&&free('f'+j,1)){const sp=fSpot(j),s=10+(sp?12:0)+(r.like==='fish'?6:0)+(r.elem==='water'?9:0)-d*.3+Math.random()*2;if(s>bs){bs=s;best={type:'fish',stand:j,o:{key:'f'+j,spot:sp}}}}
   }
+  {const u=fl2PlayBest(r,G,bs);if(u){bs=u.s;best=u.b}}/* 2階の遊び家具 */
   {const sb=socialBest(r,G);if(sb&&sb.s>bs){bs=sb.s;best=sb.b}}
   if(!best)return strict?false:goWander(r,G);
   if(best.type==='chat'){const o=S.res.find(q=>q.id===best.o.partner);if(o){endAct(o);o.act={type:'chatwait',stage:'do',t:0,partner:r.id};o.bubble='👋'}}
   startAct(r,G,best.type,best.stand,best.o);return true
 }
-const SPEC={wood:['plant','tend','fert','cookS'],water:['water','cookS'],fire:['cookS'],earth:['repair','till'],wind:['seed']};/* cookS：その子がとくいな料理だけ *//* 草・きのこ・枝は、どの属性も木・石と同じ優先度でひろう *//* 属性ごとの得意な仕事：建てる・家具づくりのつぎに、ほかの仕事より先にする */
+const SPEC={wood:['plant','tend','fert','cookS'],water:['water','cookS'],fire:['cookS'],earth:['repair','till','cookS'],wind:['seed']};/* cookS：その属性の料理 *//* 草・きのこ・枝は、どの属性も木・石と同じ優先度でひろう *//* 属性ごとの得意な仕事：建てる・家具づくりのつぎに、ほかの仕事より先にする */
 /* 得意な仕事は、その属性の子だけ。建てるのはみんなできる */
 const OWN={plant:'wood',tend:'wood',water:'water',till:'earth',repair:'earth',seed:'wind'};/* 料理は、だれでもできる */
-const specFree=(el,me)=>S.res.some(q=>q!==me&&!q.hidden&&!q.coffin&&q.elem===el&&!q.cing&&q.hunger>=50&&!isNight()&&(!q.act||IDLE_ACTS.includes(q.act.type)||q.act.type==='chat'||q.act.type==='chatwait'));/* とくいな子が、手あき（遊び・おさんぽ・おしゃべり）でいる */
 function ownOK(r,el){return !el||r.elem===el}
 function canJob(r,k){if(k==='seed')return r.elem==='wind';if(k==='fert')return r.elem==='wood';if(k==='harvest'&&r.elem!=='wood'&&S.res.some(q=>q.elem==='wood'))return false;/* 収穫は、木のせいれいがいれば木のせいれい */if(k==='tend'&&S.res.some(q=>q.elem==='water'))return false;/* 水やりは、水のせいれいがいれば水のせいれい（木の子の世話の水やりはしない） *//* 外にふしぎな種があれば、風の子はみんな拾いに行く */return ownOK(r,OWN[k])}
 const makerOf=id=>WD===1&&(id==='bench'||id==='noren')||id==='stor'||id==='mbox'?null:BL[id].maker;/* 箱は、だれでも作れる *//* 火山のふもと：温泉のクエストに使うベンチ・のれんは、だれでも作れる */

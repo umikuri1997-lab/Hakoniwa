@@ -28,10 +28,10 @@ function mulberry(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a
 
 /* ---------- 属性 ---------- */
 const ELEM={
-  wood:{name:'木',col:'#5fbf4f',body:'#8fdc7a',can:'畑の収穫+1・畑の世話・花や木を植える・サラダの料理・木の家具づくり'},
-  water:{name:'水',col:'#3f9ee8',body:'#7cc7ff',can:'作業の速さ1.3倍・スタミナ0.7倍・水やり・スープの料理・水の家具づくり'},
-  fire:{name:'火',col:'#ff6a3d',body:'#ff9f5a',can:'「コワイノ」とたたかう・夜の見回り・パン・ベイクドポテト・焼き魚・焼いたくだものの料理・火の家具づくり'},
-  earth:{name:'土',col:'#b8863b',body:'#e6c07a',can:'作業の速さ0.75倍・スタミナ1.45倍・畑を耕す・柵を直す・土の家具づくり'},
+  wood:{name:'木',col:'#5fbf4f',body:'#8fdc7a',can:'畑の収穫+1・畑の世話・花や木を植える・サラダを作る・木の家具づくり'},
+  water:{name:'水',col:'#3f9ee8',body:'#7cc7ff',can:'作業の速さ1.3倍・スタミナ0.7倍・水やり・スープ・ジュースを作る・水の家具づくり'},
+  fire:{name:'火',col:'#ff6a3d',body:'#ff9f5a',can:'「コワイノ」とたたかう・夜の見回り・ベイクドポテト・焼き魚を作る・火の家具づくり'},
+  earth:{name:'土',col:'#b8863b',body:'#e6c07a',can:'作業の速さ0.75倍・スタミナ1.45倍・畑を耕す・柵を直す・パンを作る・土の家具づくり'},
   wind:{name:'風',col:'#3fc0a0',body:'#c9f2e6',can:'歩く速さ1.45倍・たのしさ60より下で遊びに行く・ふしぎな種を拾う・風の家具づくり'},
 };
 const ELEM_KEYS=Object.keys(ELEM);

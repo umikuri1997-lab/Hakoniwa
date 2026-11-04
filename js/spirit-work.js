@@ -20,7 +20,7 @@ function tryJob(r,G,k){
     const cp=q=>typeAt(q)===camp&&free('o'+anc(q),2);j=nearest(G,j=>adjOf(j,cp)>=0,60);if(j>=0){const q=anc(adjOf(j,cp));startAct(r,G,k,j,{key:'o'+q,obj:q,camp:true});return true}
     for(const ns of nat){const nt=q=>ns.includes(S.obj[q])&&free('o'+q,1);j=nearest(G,j=>adjOf(j,nt)>=0,40);if(j>=0){const q=adjOf(j,nt);startAct(r,G,k,j,{key:'o'+q,obj:q});return true}}return false}
   case'cookS':case'cook':{const sp=k==='cookS';if(!cnt('oven')&&!cnt('cooktable')||!(foodCap()>0)||isNight())return false;const rs=RECIPES.filter(R=>Object.keys(R.need).every(k=>(S.fs[k]||0)>=R.need[k]));if(!rs.length)return false;
-    if(!S.ovenSet)S.ovenSet={};const ok=q=>{const R=rs.find(R=>R.out===S.ovenSet[q]);return !!R&&dishSt(R)===S.obj[q]&&(r.elem===R.el||!sp&&!specFree(R.el,r))};/* 守り神さまがえらんだ料理だけ作る。とくいな子が手あきなら、その子にまかせる（cookS は、とくいな料理だけ） */
+    if(!S.ovenSet)S.ovenSet={};const ok=q=>{const R=rs.find(R=>R.out===S.ovenSet[q]);return !!R&&dishSt(R)===S.obj[q]&&r.elem===R.el};/* 守り神さまがえらんだ料理だけ作る。料理は、その料理の属性のせいれいだけが作る */
     const ov=q=>COOKST.has(S.obj[q])&&ok(q)&&!ashed(q)&&free('o'+q,1)&&!S.res.some(x=>x.cing&&x.cing.ov===q);j=nearest(G,j=>adjOf(j,ov)>=0,80);if(j<0)return false;const q=adjOf(j,ov),R=RECIPES.find(x=>x.out===S.ovenSet[q]);
     const sj=nearestVia(G,bfs(j%W,(j/W)|0),j=>storeAdj(j,'food')>=0,80);if(sj<0)return false;/* 材料は、料理の家具までの道のりがいちばん短くなる食料箱からとる */
     startAct(r,G,'cgrab',sj,{rec:R.out,ov:q});return true}
@@ -139,7 +139,7 @@ function moveR(r,dt){
 const NIGHT_OK=['nmeet','watchpost','phew','step','sleep','stay','shiver','eat','fetch','store','smat','flee','patrol','follow','faint','forage','questjoy','pray','reunion']/* お墓へはこぶ（pray）は夜もつづける：やめると毎コマやりなおしになって動けない */;
 const WORKT=new Set(['fert','till','sow','plant','build','craft','water','tend','repair','harvest','gather','chop','mine','cook']);
 function rescueStuck(r){if(r.hidden)return;const cj=(r.y|0)*W+(r.x|0),o=S.obj[cj];if(!(HOME_WALLS.has(o)||(FENCE_IDS.has(o)&&!GATE_IDS.has(o))||S.ground[cj]===1&&!(r.act&&(r.act.type==='bathe'||r.act.type==='plant'&&r.act.wade))))return;/* 水浴び・池のまんなかのハス植えは、水に入ってよい */if(r.act&&r.act.type==='step'||(r.stepT||0)>S.t)return;r.stepT=S.t+5;/* 壁や柵・水の中にいたら、いちばん近い歩ける場所へ歩いて出る（5分ごとにさがす） */const G=bfs(cj%W,(cj/W)|0),k=nearest(G,j=>j!==cj&&walk(j)&&!S.obj[j],12);if(k>=0){endAct(r);startAct(r,G,'step',k,{run:true})}}
-function updRes(r,dt){rescueStuck(r);if((RHOLD.get(r)||0)>performance.now())return;/* 喜んでいる・話したあとの少しの間は、手をとめる */if(r._pe!=null&&r.energy>r._pe+1e-6)r.eUp=S.t;r._pe=r.energy;/* 元気が回復しているか */
+function updRes(r,dt){if(r.fl===1&&!(r.act&&r.act.up!=null))fl2Down(r);/* 2階で行動がなくなったら1階へ */rescueStuck(r);if((RHOLD.get(r)||0)>performance.now())return;/* 喜んでいる・話したあとの少しの間は、手をとめる */if(r._pe!=null&&r.energy>r._pe+1e-6)r.eUp=S.t;r._pe=r.energy;/* 元気が回復しているか */
   if(HOLD.has(r.id)){if(r.act)endAct(r);r.act=null;return}
   if(r.hidden||r.act&&r.act.stage==='do'||Math.hypot(r.x-(r.stX??r.x),r.y-(r.stY??r.y))>.3){r.stX=r.x;r.stY=r.y;r.stT=S.t}else if(S.t-(r.stT??S.t)>=10&&!(r.act&&r.act.type==='nmeet')){if(r.act&&r.act.stand>=0){r.avoidJ=r.act.stand;r.avoidU=S.t+120}r.stX=r.x;r.stY=r.y;r.stT=S.t;if(r.act)endAct(r)}/* 動いてもいない・作業もしていないまま10分たったら、いまの行動をやめて、べつの行動をえらぶ */
   const sleeping=r.act&&r.act.type==='sleep'&&r.act.stage==='do',storyWaiting=storyWaitProtected(r);

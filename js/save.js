@@ -2,7 +2,7 @@
 
 /* ---------- 保存 ---------- */
 let NOSAVE=false;/* 読みこみ直後は、いまの状態で上書きしない */
-function save(){if(IS_STORY_REPLAY||(typeof STORY_REPLAY_SHELL!=='undefined'&&STORY_REPLAY_SHELL)||NOSAVE||!S||!S.introSeen)return false;recSync();try{const d=Object.assign({},S,{savedAt:Date.now(),res:S.res.map(r=>{const c=Object.assign({},r);if(r.act&&r.act.type==='watchpost'&&r.act.sx!=null){c.x=r.act.sx;c.y=r.act.sy}/* 見張り台の上の子は、のぼる前の場所でしまう */c.act=null;c.path=[];c.hidden=false;return c}),orders:S.orders.map(o=>Object.assign({},o,{worker:null}))});return KV.setItem(SAVE_KEYS[S.world||0],JSON.stringify(d))}catch(e){return false}}
+function save(){if(IS_STORY_REPLAY||(typeof STORY_REPLAY_SHELL!=='undefined'&&STORY_REPLAY_SHELL)||NOSAVE||!S||!S.introSeen)return false;recSync();try{const d=Object.assign({},S,{savedAt:Date.now(),res:S.res.map(r=>{const c=Object.assign({},r);if(r.act&&r.act.type==='watchpost'&&r.act.sx!=null){c.x=r.act.sx;c.y=r.act.sy}if(r.fl===1&&r.fl2s!=null){c.x=r.fl2s%W+.5;c.y=((r.fl2s/W)|0)+.5}/* 2階の子は、階段のところでしまう */delete c.fl;/* 見張り台の上の子は、のぼる前の場所でしまう */c.act=null;c.path=[];c.hidden=false;return c}),orders:S.orders.map(o=>Object.assign({},o,{worker:null}))});return KV.setItem(SAVE_KEYS[S.world||0],JSON.stringify(d))}catch(e){return false}}
 /* 72×72マスのセーブを、108×108マスに広げる（いまの村は、まん中にそのままのこす。外がわは、新しい土地） */
 function expandMap(d){const O=OFF,mi=j=>(((j/OW)|0)+O)*W+(j%OW)+O,inner=j=>{const x=j%W,y=(j/W)|0;return x>=O&&x<O+OW&&y>=O&&y<O+OW};
   const t={ground:new Array(W*H).fill(0),floor:new Array(W*H).fill(''),obj:new Array(W*H).fill(''),dyn:{},ref:{},hp:{},rot:{},regrow:[],flags:{},res:[],world:d.world||0};genWorld(t,d.world||0);
@@ -15,6 +15,7 @@ function expandMap(d){const O=OFF,mi=j=>(((j/OW)|0)+O)*W+(j%OW)+O,inner=j=>{cons
   const rf=mk(d.ref);for(const k in rf)rf[k]=mi(rf[k]);d.ref=Object.assign(Rf,rf);
   for(const f of['hp','rot','win','rug','rugRot','edge','roof','bud','ovenSet','bedOwn','freeB','trapCd','wreq'])if(d[f])d[f]=mk(d[f]);
   if(d.st2)for(const f of['fire','frz','ash','hvb'])if(d.st2[f])d.st2[f]=mk(d.st2[f]);if(d.st2&&Array.isArray(d.st2.bw))d.st2.bw=d.st2.bw.map(mi);
+  if(d.fl2){for(const f of['obj','floor','dyn','hp','rot','win'])d.fl2[f]=mk(d.fl2[f]);const r2=mk(d.fl2.ref);for(const k in r2)r2[k]=mi(r2[k]);d.fl2.ref=r2}/* 2階の層 */
   if(d.imoSeedQuestPlots)d.imoSeedQuestPlots=d.imoSeedQuestPlots.map(mi);
   for(const L of[d.regrow,d.broken])for(const q of L||[])q.j=mi(q.j);
   for(const L of[d.drops,d.seeds,d.finds])for(const q of L||[]){q.x+=O;q.y+=O}

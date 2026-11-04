@@ -1,14 +1,14 @@
 'use strict';
 const cnt=id=>counts[id]||0;
 const FOODS={mugi:{name:'こむぎ',v:1,e:'🌾'},imo:{name:'いも',v:1,e:'🥔'},tomato:{name:'キャベツ',v:1,e:'🥬'},berry:{name:'ベリー',v:1,e:'🫐',fx:'たのしさ+8'},apple:{name:'りんご',v:1,e:'🍎',fx:'たのしさ+8'},fish:{name:'さかな',v:1,e:'🐟'},takenoko:{name:'たけのこ',v:1,e:'🎍'},kinoko:{name:'きのこ',v:1,e:'🍄'},
-  bread:{name:'パン',v:2,pt:3,pw:1.35,dish:1,e:'🍞',fx:'18時間、作業スピード×1.2'},soup:{name:'キャベツスープ',v:2,pt:3,pw:1.35,dish:1,e:'🍲',fx:'つかれ−50・10時間、作業スピード×1.2'},yakiimo:{name:'ベイクドポテト',v:1,pt:2,pw:.9,dish:1,e:'🍠',fx:'5時間、作業スピード×1.3'},yakizakana:{name:'焼き魚',v:1,pt:4,pw:1.8,dish:1,e:'🐠',fx:'たのしさ+60'},yakiberry:{name:'焼きベリー',v:2,pt:2,pw:.9,dish:1,e:'🍮',fx:'たのしさ+60'},yakiapple:{name:'焼きりんご',v:1,pt:2,pw:.9,dish:1,e:'🥧',fx:'12時間、移動速度×1.3'},salad:{name:'コールスローサラダ',v:2,pt:2,pw:.9,dish:1,e:'🥗',fx:'つかれ−30・たのしさ+40'},
+  bread:{name:'パン',v:2,pt:3,pw:1.35,dish:1,e:'🍞',fx:'18時間、作業スピード×1.2'},soup:{name:'キャベツスープ',v:2,pt:3,pw:1.35,dish:1,e:'🍲',fx:'つかれ−50・10時間、作業スピード×1.2'},yakiimo:{name:'ベイクドポテト',v:1,pt:2,pw:.9,dish:1,e:'🍠',fx:'5時間、作業スピード×1.3'},yakizakana:{name:'焼き魚',v:1,pt:4,pw:1.8,dish:1,e:'🐠',fx:'たのしさ+60'},berryjuice:{name:'ベリージュース',v:2,pt:2,pw:.9,dish:1,e:'🥤',fx:'たのしさ+60'},applejuice:{name:'りんごジュース',v:1,pt:2,pw:.9,dish:1,e:'🧃',fx:'12時間、移動速度×1.3'},salad:{name:'コールスローサラダ',v:2,pt:2,pw:.9,dish:1,e:'🥗',fx:'つかれ−30・たのしさ+40'},
   yakisoba:{name:'焼きそば',v:2,pt:3,pw:1.35,dish:1,fest:1,e:'🍝',fx:'つかれ−20・たのしさ+10'},takoyaki:{name:'たこ焼き',v:2,pt:3,pw:1.35,dish:1,fest:1,e:'🐙',fx:'たのしさ+25'},ringoame:{name:'りんごあめ',v:1,pt:2,pw:.9,dish:1,fest:1,e:'🍭',fx:'たのしさ+20'},kakigori:{name:'かき氷',v:1,pt:2,pw:.9,dish:1,fest:1,e:'🍧',fx:'つかれ−15・たのしさ+10'},wataame:{name:'わたあめ',v:1,pt:2,pw:.9,dish:1,fest:1,e:'🍬',fx:'たのしさ+25'}};/* fest：おまつりの日だけ、お店で交換できる（料理では作れない） */
 
 const RAWFL={mugi:'ぷっくり実ったこむぎ。',imo:'ころんとしたおいも。',tomato:'みずみずしいキャベツ。',berry:'あまずっぱいベリー。',apple:'まっかなりんご。',fish:'とれたてのさかな。'};
 const RAWD=k=>{const f=FOODS[k];return (RAWFL[k]||f.name+'。')+'/効果:お腹'+f.v+(f.pw?'、パワー+'+f.pw:'')+(f.fx?'、'+f.fx.replace(/、/g,''):'')};/* 料理していない食べ物の説明（料理の説明と同じ形） */
-const DISHFL={yakisoba:'ソースのにおいの焼きそば。',takoyaki:'まるくてあつあつのたこ焼き。',ringoame:'つやつやのりんごあめ。',kakigori:'しゃりしゃりのかき氷。',wataame:'ふわふわのわたあめ。',yakiimo:'ほくほくのおいも。',bread:'こんがり焼けたパン。',soup:'からだがあたたまるスープ。',yakizakana:'こうばしい焼き魚。',yakiberry:'あまずっぱい焼きベリー。',yakiapple:'とろっと甘い焼きりんご。',salad:'しゃきしゃきのコールスローサラダ。'};
+const DISHFL={yakisoba:'ソースのにおいの焼きそば。',takoyaki:'まるくてあつあつのたこ焼き。',ringoame:'つやつやのりんごあめ。',kakigori:'しゃりしゃりのかき氷。',wataame:'ふわふわのわたあめ。',yakiimo:'ほくほくのおいも。',bread:'こんがり焼けたパン。',soup:'からだがあたたまるスープ。',yakizakana:'こうばしい焼き魚。',berryjuice:'あまずっぱいベリージュース。',applejuice:'すっきり甘いりんごジュース。',salad:'しゃきしゃきのコールスローサラダ。'};
 const needTxt=R=>Object.keys(R.need).map(k=>FOODS[k].name+(R.need[k]>1?'×'+R.need[k]:'')).join('・');/* 材料は1つなら数をつけない */
-const DISHD=R=>{const F=FOODS[R.out];return (DISHFL[R.out]||F.name+'。')+'/材料:'+needTxt(R)+'/作る所:'+BL[dishSt(R)].name+'/とくい:'+ELEM[R.el].name+'のせいれい/時間:'+R.time+'分/効果:お腹'+F.v+'、パワー+'+F.pw+(F.fx?'、'+F.fx.replace(/、/g,''):'')};/* ハテナに出す料理の説明 */
+const DISHD=R=>{const F=FOODS[R.out];return (DISHFL[R.out]||F.name+'。')+'/材料:'+needTxt(R)+'/作る所:'+BL[dishSt(R)].name+'/作る:'+ELEM[R.el].name+'/時間:'+R.time+'分/効果:お腹'+F.v+'、パワー+'+F.pw+(F.fx?'、'+F.fx.replace(/、/g,''):'')};/* ハテナに出す料理の説明 */
 const DISHES=['bread','soup','yakiimo','yakizakana'],favDish=r=>{const ds=WD===0?DISHES.filter(d=>d!=='soup'):DISHES;return ds[[...r.name].reduce((a,c)=>a+c.charCodeAt(0),0)%ds.length]};/* すきな料理は名前できまる */
 function imoSeedQuestPlots(){if(!S.imoSeedQuestPlots){S.imoSeedQuestPlots=[];for(let j=0;j<S.obj.length;j++){const d=S.dyn[j];if(S.obj[j]==='farm'&&d&&d.crop==='imo'&&(d.paid||d.sown===true))S.imoSeedQuestPlots.push(j)}}return S.imoSeedQuestPlots}
 const farmsBare=()=>{let n=0;for(let j=0;j<S.obj.length;j++)if(S.obj[j]==='farm'&&S.dyn[j]&&S.dyn[j].crop===null)n++;return n};/* たねをえらんでいない畑の数 */
@@ -16,10 +16,10 @@ const cropK=d=>d.crop===undefined?'mugi':d.crop;/* 作物。null はまだえら
 const cropOn=k=>!!S.crops[k];/* 使える作物 */
 const CROPS={mugi:{name:'こむぎ',days:2,yield:1,desc:'2日で育つ。食料+1。パンの材料'},tomato:{name:'キャベツ',days:2,yield:1,desc:'2日で育つ。食料+1'},imo:{name:'いも',days:3,yield:2,desc:'3日で育つ。食料+2'}};
 /* たねは、おそなえ箱からえらんで畑にまく */
-const ALLRECIPES=[{out:'soup',need:{tomato:1,imo:1},time:153,timeR:107.1,el:'water'},{out:'bread',need:{mugi:2},time:120,timeR:84,el:'fire'},{out:'yakizakana',need:{fish:1},time:60,timeR:42,el:'fire'},{out:'yakiimo',need:{imo:1},time:50,timeR:35,el:'fire'},{out:'yakiberry',need:{berry:2},time:60,timeR:42,el:'fire'},{out:'yakiapple',need:{apple:1},time:60,timeR:42,el:'fire'},{out:'salad',need:{tomato:2},time:90,timeR:63,el:'wood',st:'cooktable'}];/* time：料理にかかる時間（分）。timeR：料理がとくいな子の時間。el：その料理がとくいな属性（だれでも作れる）。st：作る家具（なければかまど） */
-const COOKST=new Set(['oven','cooktable']),dishSt=R=>R.st||'oven',cookFast=(r,R)=>!!R&&(trt(r,'ryouri')||r.elem===R.el);/* 料理をする家具。とくいな属性の子か、料理じょうずの子は timeR */
+const ALLRECIPES=[{out:'soup',need:{tomato:1,imo:1},time:107.1,el:'water'},{out:'bread',need:{mugi:2},time:84,el:'earth'},{out:'yakizakana',need:{fish:1},time:42,el:'fire'},{out:'yakiimo',need:{imo:1},time:35,el:'fire'},{out:'berryjuice',need:{berry:2},time:42,el:'water',st:'cooktable'},{out:'applejuice',need:{apple:1},time:42,el:'water',st:'cooktable'},{out:'salad',need:{tomato:2},time:63,el:'wood',st:'cooktable'}];/* time：料理にかかる時間（分）。el：その料理を作る属性（その属性のせいれいだけが作る）。st：作る家具（なければかまど） */
+const COOKST=new Set(['oven','cooktable']),dishSt=R=>R.st||'oven';/* 料理をする家具 */
 const repairTime=a=>a.re?30:20;/* 修理にかかる時間（分）：建て直しは30、ふつうの修理は20（ゲームの処理と、ゲージの表示で同じものを使う） */
-function cookTime(r,ov){const R=RECIPES.find(x=>x.out===(r.cing&&r.cing.rec))||{time:30,timeR:21};return (cookFast(r,R)?R.timeR:R.time)*ovenMul(ov)/(ov!=null?1+.1*spotN(ov,'kitchen','pan'):1)}/* キッチン：料理の速さ+10% *//* 料理にかかる時間（ゲームの処理と、ゲージの表示で同じものを使う） *//* 料理でふくれるおなか（v）は、FOODS に実数で書く（使った材料の合計と同じ） */let RECIPES=ALLRECIPES;soupFilter();/* time：料理にかかる時間（レシピごと） */
+function cookTime(r,ov){const R=RECIPES.find(x=>x.out===(r.cing&&r.cing.rec))||{time:21};return R.time*ovenMul(ov)/(ov!=null?1+.1*spotN(ov,'kitchen','pan'):1)}/* キッチン：料理の速さ+10% *//* 料理にかかる時間（ゲームの処理と、ゲージの表示で同じものを使う） *//* 料理でふくれるおなか（v）は、FOODS に実数で書く（使った材料の合計と同じ） */let RECIPES=ALLRECIPES;soupFilter();/* time：料理にかかる時間（レシピごと） */
 function syncFood(){let n=0;for(const k in S.fs)n+=S.fs[k]||0;S.food=n}
 function addFood(k,n){S.fs[k]=(S.fs[k]||0)+n;syncFood()}
 function takeFood(n,pref){let got=[];const keys=Object.keys(S.fs).filter(k=>S.fs[k]>0);if(pref==='raw')keys.sort((a,b)=>(FOODS[a].v-FOODS[b].v));else keys.sort((a,b)=>FOODS[b].v-FOODS[a].v||Math.random()-.5);
@@ -117,6 +117,7 @@ function calcSpots(){findHouses();/* 部屋のスポットのために、家を�
   for(let j=0;j<W*H;j++){const o=S.obj[j];if(!o||o==='part')continue;for(const sp of SPOTS){if(!sp.main(o,j))continue;const hin=sp.room?HOUSES.find(h=>h.inside.has(j)):null;if(sp.room&&!hin)continue;/* 部屋のスポット：家の中にあるときだけ。いる物も、同じ家の中 */const x0=j%W,y0=(j/W)|0,found=sp.need.map(()=>[]);
     for(let y=Math.max(0,y0-3);y<=Math.min(H-1,y0+3);y++)for(let x=Math.max(0,x0-3);x<=Math.min(W-1,x0+3);x++){const q=y*W+x,t=S.obj[q],wv=S.win&&typeof S.win[q]==='string'?S.win[q]:null;if(wv&&q!==j&&(!hin||hin.set.has(q)))sp.need.forEach((nd,i)=>{if(nd[0](wv,q))found[i].push(q)});/* 壁にかけた物も数える */if(q===j||!t||t==='part'||hin&&!hin.inside.has(q))continue;sp.need.forEach((nd,i)=>{if(nd[0](t,q))found[i].push(q)})}
     if(sp.need.every((nd,i)=>found[i].length>=nd[1])){add(j,sp.k);for(const L of found)for(const q of L)add(q,sp.k);{let t=SPOTM.get(j);if(!t)SPOTM.set(j,t=new Set());t.add(sp.k)}SPOTI.push({sp,j,found})}/* SPOTM：スポットのもとの物（まわり3マスで効くスポットは、ここからはかる）。SPOTI：できたスポットの一覧 */}}
+  if(typeof fl2Spots==='function')fl2Spots();/* 2階の部屋 */
   {const cur=new Set(SPOTI.map(I=>I.sp.k+':'+I.j));if(SPOTPREV&&SPOTPREV.s===S)for(const I of SPOTI)if(!SPOTPREV.k.has(I.sp.k+':'+I.j))spotFx(I);SPOTPREV={s:S,k:cur}}/* 新しくできたスポットは、点線でかこんでキラキラ（読みこんだときはしない） */
   const seen=S.spotSeen||(S.spotSeen={});for(const sp of SPOTS){if(seen[sp.k])continue;let on=false;for(const t of SPOTJ.values())if(t.has(sp.k)){on=true;break}if(on){seen[sp.k]=1;SPOT_POPS.push({state:S,sp})}}}/* はじめてできたときだけ、ポップアップで説明する（showSpotPop） */
 const TOYS=new Set(['swing','seesaw','sandbox','slide']);/* 平らな物のうち、毎コマかく物（ラグ・罠など）は、BL に anim:1 と書く */
@@ -159,6 +160,7 @@ function recount(){if(S.sacredLegacy2||S.sacredLegacy3)tryExpandSacredLegacy(S);
   for(const k in S.edge||{}){const o=S.edge[k];counts[o]=(counts[o]||0)+1;if(BL[o])addA(BL[o].attr)}/* 花壇のふち */
   for(const k in S.rug||{}){const o=S.rug[k];counts[o]=(counts[o]||0)+1;if(BL[o])addA(BL[o].attr)}/* ラグ（床の上の層）も数える */
   for(const k in S.roof||{}){const o=S.roof[k];counts[o]=(counts[o]||0)+1;if(BL[o])addA(BL[o].attr)}/* ガゼボ・東屋（屋根の層）も数える */
+  for(const k in (S.fl2&&S.fl2.obj)||{}){const o=S.fl2.obj[k];if(!o||o==='part'||!BL[o])continue;counts[o]=(counts[o]||0)+1;if(BL[o].kind!=='block')addA(BL[o].attr)}/* 2階の物も数える */
   for(let j=0;j<W*H;j++){const o=S.obj[j],f=S.floor[j],x=j%W,y=(j/W)|0;
     if(f){around(j,1,REV)}/* 床・道・壁などのブロックは、属性の力をためない */
     
