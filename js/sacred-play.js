@@ -7,7 +7,7 @@ const FIELD_PREP={
   waterFilm:{label:'切り株のそばに、井戸かみずがめを置こう',ok:j=>fieldNear(j,3,o=>o==='well'||o==='jar'),learn:['jar']},
   windEcho:{label:'切り株のそばに、ゆりを植えよう',ok:j=>fieldNear(j,3,o=>o==='lily')}
 };
-function fieldPrepNeed(id){const st=fieldStoryState(id),p=FIELD_PREP[id],j=S.sacredRoot;if(IS_STORY_REPLAY||!p||j==null||(st?.step||0)>0||p.ok(j))return null;for(const k of p.learn||[])if(!S.recipes[k]){S.recipes[k]=true;dirty=true}/* 古いセーブでも、準備に使う物を作れるように */return p}
+function fieldPrepNeed(id){const st=fieldStoryState(id),p=FIELD_PREP[id],j=S.sacredRoot;if(IS_STORY_REPLAY||!p||j==null||(st?.step||0)>0||p.ok(j))return null;{const nw=(p.learn||[]).filter(k=>!S.recipes[k]);recipeNotice(nw);for(const k of nw){S.recipes[k]=true;dirty=true}}/* 古いセーブでも、準備に使う物を作れるように */return p}
 /* 守り神の出番：その話の、どの段階で、どんな操作か */
 const FIELD_PLAY={
   earthListen:{phase:0,type:'find',hint:'しんとしている所を、さがしてタップ'},
