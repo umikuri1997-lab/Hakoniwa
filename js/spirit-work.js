@@ -78,6 +78,7 @@ function goWork(r,G,nw){
   // 木材と石材は、少ないほうから集める（どちらかが得意なら両方やる）
   const mo=(S.mat.stone||0)<=(S.mat.wood||0)?['mine','chop']:['chop','mine'];let gd=false;
   if(r.cpk&&tryJob(r,G,'cfill'))return true;if(r.fert>0&&tryJob(r,G,'fert'))return true;/* 運んでいる草・肥料は、先におわらせる */
+  if(r.elem==='earth'&&tryJob(r,G,'repair'))return true;/* 土のせいれいは、修理がいちばん先（木・石・雑草・畑の世話より先） */
   // おつげがあれば、それを先にする
   if(S.oracle==='play'&&r.fun<98&&goPlay(r,G,true))return true;
   // 食料がゼロなら、まず食べ物を集める
