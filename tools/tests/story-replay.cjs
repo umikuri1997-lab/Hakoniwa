@@ -6,7 +6,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict');
  await page.goto(process.env.GAME_URL||'http://127.0.0.1:8000');await page.waitForFunction(()=>window.sacredEval);
  const run=s=>page.evaluate(s=>sacredEval(s),s);
  await run(`(()=>{setWorld(0);S=newState(0);LIVE[0]=S;started=true;USERPAUSE=false;S.introSeen=true;S.flags.minaCame=true;S.enemyOn=false;S.t=720;S.hold=0;S.food=100;S.res=[mkRes(S,POKO,'wood',CX+.5,CY+.5)];for(const id of ['#title','#maps','#pro','#dialog'])document.querySelector(id).hidden=true;showUI(true);updTut=()=>{};showItemGift=()=>{};showSpotPop=()=>{};finalCheck=()=>{};checkQuest=()=>{};checkLevel=()=>{};openSheet('menu','record');if(availableStoryReplays().length||openStoryReplay('quest:earthListen'))throw Error('locked replay');S.cleared=true;S.sev=Object.fromEntries(SEV1.map(e=>[e.k,1]));S.flags.sacredQuietSeen=true;closeSheet();openSheet('menu','record');KV.setItem(SAVE_KEYS[0],'parent save sentinel');})()`);
- let before;const keys=await run('availableStoryReplays().map(e=>e.key)');assert.equal(keys.length,15);
+ let before;const keys=await run('availableStoryReplays().map(e=>e.key)');assert.equal(keys.length,11);
  for(const key of (process.env.REPLAY_KEYS?process.env.REPLAY_KEYS.split(','):keys)){
    before=await run(`(()=>{KV.setItem(SAVE_KEYS[0],'parent save sentinel');const before=JSON.stringify(S);if(!openStoryReplay(${JSON.stringify(key)}))throw Error('open failed');if(JSON.stringify(S)!==before)throw Error('opening changed village');return before;})()`);
    const frame=await page.waitForSelector('iframe');const child=await frame.contentFrame();
@@ -25,7 +25,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict');
    assert.equal(await run('JSON.stringify(S)'),before,'parent changed after '+key);console.log('Replay passed:',key);
  }
  // Closing in mid-scene destroys pending callbacks and returns to the untouched village.
- before=await run("(()=>{SND.bgm=false;SND.sfx=false;openStoryReplay('quest:waterLeaf');return JSON.stringify(S);})()");
+ before=await run("(()=>{SND.bgm=false;SND.sfx=false;openStoryReplay('quest:waterFilm');return JSON.stringify(S);})()");
  let child=await (await page.waitForSelector('iframe')).contentFrame();await child.waitForSelector('.replay-start');
  assert(await child.evaluate(()=>sacredEval('!SND.bgm&&!SND.sfx')),'sound settings not inherited');
  await child.locator('.replay-start button').click();await child.waitForSelector('#dialog:not([hidden])');

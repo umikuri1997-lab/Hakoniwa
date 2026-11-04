@@ -11,7 +11,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict');
 
   console.log('ordinary main prompt',await run(`(()=>{
     updTut=()=>{};finalCheck=()=>{};showItemGift=()=>{};showSpotPop=()=>{};S.enemyOn=true;S.t=720;S.hold=0;
-    S.quest=QUESTS1.findIndex(q=>q.id==='mbox');S.qStory=null;S.qTalked=false;const r=S.res[0],home=(r.y|0)*W+(r.x|0),j=home+8;S.obj[j]='mbox';recount();checkQuest();
+    S.quest=questIndexOf('mbox');S.qStory=null;S.qTalked=false;const r=S.res[0],home=(r.y|0)*W+(r.x|0),j=home+8;S.obj[j]='mbox';recount();checkQuest();
     for(let i=0;i<400&&!(r.act?.type==='storywait'&&r.act.stage==='do');i++)updRes(r,.5);
     if(!mainStoryBubbleReady(r)||r.act?.type!=='storywait'||r.act.stage!=='do'||!questVisitReached(r,j))throw Error('not waiting at box '+JSON.stringify(r.act));
     const hunger=r.hunger,fun=r.fun;for(let i=0;i<720;i++)updRes(r,.5);if(r.hunger!==hunger)throw Error('waiting consumed food');if(r.fun<fun)throw Error('waiting reduced fun');
@@ -19,7 +19,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict');
     if(Math.abs((r.y|0)-(home/W|0))+Math.abs((r.x|0)-home%W)>1)throw Error('return did not reach home');return 'walk to box, no hunger for long wait, walk back after conversation';
   })()`));
   console.log('waiting reasons',await run(`(()=>{
-    S.t=720;S.qTalked=false;S.qStory=null;S.quest=QUESTS1.findIndex(q=>q.id==='mbox');const r=S.res[0],obj=mainStoryWaitInfo().obj;endAct(r);r.hunger=0;
+    S.t=720;S.qTalked=false;S.qStory=null;S.quest=questIndexOf('mbox');const r=S.res[0],obj=mainStoryWaitInfo().obj;endAct(r);r.hunger=0;
     if(!storyWaitStatusText().includes('食事'))throw Error('missing food reason');r.hunger=hMax(r);r.energy=0;
     if(!storyWaitStatusText().includes('休んで'))throw Error('missing rest reason');r.energy=100;r.cing={rec:'test'};
     if(!storyWaitStatusText().includes('料理'))throw Error('missing cook reason');r.cing=null;
@@ -32,7 +32,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict');
   })()`));
   console.log('field waiting',await run(`(()=>{
     for(const r of S.res){endAct(r);delete r.storyWaitHome;RHOLD.delete(r);r.hunger=hMax(r);r.energy=100;r.carry=null;r.cmat=null;r.meal=null;}
-    S.quest=QUESTS1.findIndex(q=>q.id==='earthRoot');S.qStory=null;S.qTalked=false;fieldStoryEnsure('earthRoot');
+    S.quest=questIndexOf('earthRoot');S.fieldStories={...(S.fieldStories||{}),earthListen:{step:FIELD_STORIES.earthListen.length}};S.qStory=null;S.qTalked=false;fieldStoryEnsure('earthRoot');
     for(let i=0;i<1600&&!earthIntroSpeaker(QUESTS[S.quest]);i++){for(const r of S.res)updRes(r,.5);checkQuest();}
     if(!earthIntroSpeaker(QUESTS[S.quest]))throw Error('field group not gathered');const group=fieldCast(FIELD_STORIES.earthRoot[0]),hunger=group.map(r=>r.hunger),fun=group.map(r=>r.fun);
     for(let i=0;i<600;i++)for(const r of group)updRes(r,.5);if(group.some((r,i)=>r.hunger!==hunger[i]))throw Error('field waiting hunger');if(group.some((r,i)=>r.fun<fun[i]))throw Error('field waiting fun');
@@ -50,15 +50,15 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict');
   console.log('three by three tree',await run(`(()=>{
     for(const r of S.res){endAct(r);delete r.storyWaitHome;r.x=CX+12+r.id%4;r.y=CY+12;}
     const j=(CY-3)*W+CX-8;S.sacredRoot=j;S.fieldSites={root:j};for(const k of sacredCells(j)){S.obj[k]='';delete S.ref[k];S.floor[k]='';S.hi[k]=0;S.ground[k]=0;}
-    if(BL.tower.sz.join()!=='3,3'||sacredCells(j).length!==9)throw Error('wrong size');if(!growStoryTree()||S.obj[j]!=='tower'||sacredCells(j).slice(1).some(k=>S.obj[k]!=='part'||S.ref[k]!==j))throw Error('wrong parts');
+    if(BL.tower.sz.join()!=='4,4'||sacredCells(j).length!==16)throw Error('wrong size');if(!growStoryTree()||S.obj[j]!=='tower'||sacredCells(j).slice(1).some(k=>S.obj[k]!=='part'||S.ref[k]!==j))throw Error('wrong parts');
     for(const k of sacredCells(j))if(canPlace('floor',k%W,k/W|0,true))throw Error('tree footprint not protected');
     const make=()=>({world:0,flags:{sacredStoryV1:1},obj:Array(W*H).fill(''),ground:Array(W*H).fill(0),floor:Array(W*H).fill(''),hi:Array(W*H).fill(0),ref:{},dyn:{},hp:{},res:[],fieldSites:{root:j},sacredRoot:j});
     const old=make();old.obj[j]='tower';old.hp[j]=43;old.hp['L'+j]=2;for(const k of sacredCells(j,2).slice(1)){old.obj[k]='part';old.ref[k]=j;}
     migrateSacredFootprint3(old);if(old.sacredRoot!==j||sacredCells(j).some(k=>k!==j&&old.ref[k]!==j)||old.hp[j]!==43||old.hp['L'+j]!==2)throw Error('old tree expansion');const snap=JSON.stringify(old);migrateSacredFootprint3(old);if(JSON.stringify(old)!==snap)throw Error('migration not idempotent');
     const blocked=make();blocked.obj[j]='tower';blocked.hp[j]=51;for(const k of sacredCells(j,2).slice(1)){blocked.obj[k]='part';blocked.ref[k]=j;}blocked.obj[j+2]='table';migrateSacredFootprint3(blocked);if(blocked.obj[j+2]!=='table'||blocked.obj[blocked.sacredRoot]!=='tower'||blocked.hp[blocked.sacredRoot]!==51)throw Error('blocked migration damaged furniture');
     const full=make();full.obj.fill('rock');full.obj[j]='tower';for(const k of sacredCells(j,2).slice(1)){full.obj[k]='part';full.ref[k]=j;}migrateSacredFootprint3(full);if(!full.sacredLegacy2||full.obj.filter(o=>o==='rock').length!==W*H-4)throw Error('full village destroyed objects');
-    for(const k of sacredCells(j,3))if(full.obj[k]==='rock')full.obj[k]='';tryExpandSacredLegacy(full);if(full.sacredLegacy2||sacredCells(j,3).slice(1).some(k=>full.ref[k]!==j))throw Error('clear space did not expand legacy tree');
-    setWorld(1);if(BL.tower.sz.join()!=='2,2')throw Error('volcano footprint changed');setWorld(0);return '9 protected cells, 2x2 old tree grows safely, HP/level kept, furniture safe, dense village safe, volcano unchanged';
+    for(const k of sacredCells(j,4))if(full.obj[k]==='rock')full.obj[k]='';tryExpandSacredLegacy(full);if(full.sacredLegacy2||sacredCells(j,4).slice(1).some(k=>full.ref[k]!==j))throw Error('clear space did not expand legacy tree');
+    setWorld(1);if(BL.tower.sz.join()!=='2,2')throw Error('volcano footprint changed');setWorld(0);return '16 protected cells, 2x2 old tree grows safely, HP/level kept, furniture safe, dense village safe, volcano unchanged';
   })()`));
   const motions=['','walk','climb','punch','pray','pluck','hold','eat','chop','mine','till','build','repair','craft','draw','water','cook','talk','talkjoy','talkshock','talkthink','talksad','wave','clap','weed','plant','store','storySoil','storyTouch','storyStone','storyBump','storyHug'];
   console.log('back-facing arms',await run(`(()=>{
@@ -72,7 +72,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict');
     return count+' rendered poses keep arms below the back of the head';
   })()`));
   if(process.env.SCREENSHOT_DIR){
-    await run(`(()=>{for(const r of S.res){endAct(r);delete r.storyWaitHome;RHOLD.delete(r);r.hunger=hMax(r);r.energy=100;r.carry=null;r.cmat=null;r.meal=null;r.cing=null;}const j=S.sacredRoot;S.res.forEach((r,i)=>{r.x=j%W-1.5+i*1.5;r.y=(j/W|0)+3.5;});S.qStory=QUESTS1.findIndex(q=>q.id==='windVoices');S.quest=S.qStory+1;S.qTalked=false;S.setSh=2;GRASSN=3000;checkQuest();for(let i=0;i<1200&&!S.res.every(r=>r.act?.type==='storywait'&&r.act.stage==='do');i++)for(const r of S.res)updRes(r,.5);cam.z=2;centerOn(storyTreeX(j)*TS,(storyTreeY(j)+.5)*TS);})()`);
+    await run(`(()=>{for(const r of S.res){endAct(r);delete r.storyWaitHome;RHOLD.delete(r);r.hunger=hMax(r);r.energy=100;r.carry=null;r.cmat=null;r.meal=null;r.cing=null;}const j=S.sacredRoot;S.res.forEach((r,i)=>{r.x=j%W-1.5+i*1.5;r.y=(j/W|0)+3.5;});S.qStory=questIndexOf('windVoices');S.quest=S.qStory+1;S.qTalked=false;S.setSh=2;GRASSN=3000;checkQuest();for(let i=0;i<1200&&!S.res.every(r=>r.act?.type==='storywait'&&r.act.stage==='do');i++)for(const r of S.res)updRes(r,.5);cam.z=2;centerOn(storyTreeX(j)*TS,(storyTreeY(j)+.5)*TS);})()`);
     await page.waitForFunction(()=>sacredEval('stageReady()'),null,{timeout:60000});await run('GRASSN=3000');await page.waitForTimeout(200);await page.screenshot({path:process.env.SCREENSHOT_DIR+'/story-wait-tree.png'});
     await page.evaluate(motions=>sacredEval(`(()=>{const cv=document.createElement('canvas');cv.width=960;cv.height=760;cv.style.cssText='position:fixed;inset:0;z-index:999;background:#f6f0df';document.body.append(cv);const c=cv.getContext('2d');const motions=${JSON.stringify(motions)};motions.forEach((anim,i)=>{const x=(i%8)*120,y=(i/8|0)*190;c.fillStyle='#77684d';c.font='12px sans-serif';c.fillText(anim||'idle',x+8,y+18);drawSpirit(c,'wood',x+60,y+172,1.1,1,{dot:1,t:.35,anim,back:true,walk:anim==='walk',sceneP:.35,sceneT:.35});});})()`),motions);
     await page.screenshot({path:process.env.SCREENSHOT_DIR+'/back-arm-motions.png'});

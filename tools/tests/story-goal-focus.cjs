@@ -10,7 +10,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict');
   await page.waitForFunction(()=>sacredEval('stageReady()'),{},{timeout:60000});
 
   const target=await run(`(()=>{
-    updTut=()=>{};showItemGift=()=>{};showSpotPop=()=>{};finalCheck=()=>{};S.t=720;S.hold=0;S.quest=QUESTS1.findIndex(q=>q.id==='mbox');S.qStory=null;S.qTalked=false;
+    updTut=()=>{};showItemGift=()=>{};showSpotPop=()=>{};finalCheck=()=>{};S.t=720;S.hold=0;S.quest=questIndexOf('mbox');S.qStory=null;S.qTalked=false;
     const j=(CY+4)*W+CX+5;S.obj[j]='mbox';recount();checkQuest();cam.z=.4;centerOn(100,100);const target=mainStoryFocusTarget();camAnim=null;document.querySelector('#questChip').click();if(sheet!=='menu'||sheetArg!=='goal'||camAnim)throw Error('goal chip should open the goal list');focusMainStoryPlace();
     if(sheet!==null||!camAnim?.storyGoal||mode!=='look'||!document.querySelector('#dialog').hidden||S.qTalked)throw Error('goal did not focus without starting talk');
     return target;
@@ -19,7 +19,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict');
   const visible=await run(`(()=>{const x=(${target.x}*TS-cam.x)*cam.z,y=(${target.y}*TS-cam.y)*cam.z;return x>24&&x<VW-24&&y>76&&y<VH-100;})()`);assert(visible,'ordinary destination outside visible area');
   for(const size of [{width:1200,height:900},{width:390,height:844},{width:844,height:390}]){
     await page.setViewportSize(size);await page.waitForTimeout(150);
-    await run(`(()=>{S.quest=QUESTS1.findIndex(q=>q.id==='earthRoot');S.qStory=null;S.qTalked=false;fieldStoryEnsure('earthRoot');cam.z=.4;centerOn(100,100);checkQuest();camAnim=null;document.querySelector('#questChip').click();if(sheet!=='menu'||sheetArg!=='goal'||camAnim)throw Error('goal chip should open the goal list');focusMainStoryPlace();if(sheet!==null||!camAnim?.storyGoal)throw Error('field intro focus');})()`);
+    await run(`(()=>{S.quest=questIndexOf('earthRoot');S.fieldStories={...(S.fieldStories||{}),earthListen:{step:FIELD_STORIES.earthListen.length}};S.qStory=null;S.qTalked=false;fieldStoryEnsure('earthRoot');cam.z=.4;centerOn(100,100);checkQuest();camAnim=null;document.querySelector('#questChip').click();if(sheet!=='menu'||sheetArg!=='goal'||camAnim)throw Error('goal chip should open the goal list');focusMainStoryPlace();if(sheet!==null||!camAnim?.storyGoal)throw Error('field intro focus');})()`);
     await page.waitForTimeout(1000);assert(await run(`(()=>{const p=mainStoryFocusTarget(),x=(p.x*TS-cam.x)*cam.z,y=(p.y*TS-cam.y)*cam.z;return x>28&&x<VW-28&&y>76&&y<VH-100;})()`),'field point outside viewport');
     await run(`(()=>{S.qTalked=true;camAnim=null;document.querySelector('#questChip').click();if(sheet!=='menu'||sheetArg!=='goal'||camAnim)throw Error('goal chip should open the goal list');focusMainStoryPlace();if(!camAnim?.storyGoal||S.qStory!=null)throw Error('accepted investigation focus');})()`);await page.waitForTimeout(1000);
     if(process.env.SCREENSHOT_DIR)await page.screenshot({path:process.env.SCREENSHOT_DIR+'/story-goal-'+size.width+'.png'});
@@ -27,6 +27,6 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict');
     await page.getByRole('button',{name:'お話・調査の場所へ'}).click();assert(await run("sheet===null&&!!camAnim?.storyGoal"),'menu focus button');
     await run(`(()=>{resetVillageTransient();if(camAnim)throw Error('old goal camera survived village reset');})()`);
   }
-  await run(`(()=>{S.quest=QUESTS1.findIndex(q=>q.id==='mbox');S.qTalked=true;S.qStory=null;TALKW=null;camAnim=null;document.querySelector('#questChip').click();if(sheet!=='menu'||sheetArg!=='goal')throw Error('ordinary non-story goal lost menu');})()`);
+  await run(`(()=>{S.quest=questIndexOf('mbox');S.qTalked=true;S.qStory=null;TALKW=null;camAnim=null;document.querySelector('#questChip').click();if(sheet!=='menu'||sheetArg!=='goal')throw Error('ordinary non-story goal lost menu');})()`);
   assert.deepEqual(errors,[]);console.log('Goal tap opens the goal list; its place button focuses pending conversation and investigation without starting dialogue; desktop/phone framing, menu link, night/normal goal fallback, and village reset passed.');await browser.close();
 })().catch(e=>{console.error(e);process.exit(1)});

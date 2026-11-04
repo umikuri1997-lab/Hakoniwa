@@ -59,7 +59,7 @@ function sacredBeat(c){
   if(['soil','touch','cover','stone','water','runoff','wind'].includes(c)){
     const actor=c==='soil'?n:c==='stone'?h:c==='water'||c==='runoff'?m:c==='wind'?k:lead;
     const anim={soil:'storySoil',touch:'storyTouch',cover:'storyCover',stone:'storyStone',water:'storyPour',runoff:'storyPour',wind:'storyWind'}[c];
-    sacredScenePose(actor,anim,ms,{side:true,target:j});sacredStartEffect(c,ms,{actor,warming:c==='stone'&&QUESTS[S.quest]?.id==='fireRoot'});sacredShot('care',cast);
+    sacredScenePose(actor,anim,ms,{side:true,target:j});sacredStartEffect(c,ms,{actor,warming:c==='stone'&&fieldStoryCurrent()?.id==='fireRoot'});sacredShot('care',cast);
   }
   if(c==='bump'&&f&&n){
     sacredShot('care',[f,n]);const owner=S,session=VILLAGE_SESSION;
