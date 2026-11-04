@@ -7,7 +7,6 @@ const BL={
   bridge:{name:'木の橋',kind:'build',lv:5,pc:2,time:40,maker:'wood',mat:{wood:4},desc:'川や池にかける木の橋。歩いてわたれる'},
   ladder_wood:{name:'オークのハシゴ',kind:'build',lv:3,pc:8,time:30,maker:'wood',mat:{wood:8},desc:'段差のがけに立てかけるハシゴ。上り下りの速さ×0.5'},
   ladder_bamboo:{name:'竹のハシゴ',kind:'build',lv:3,w:1,pc:8,time:30,maker:'wood',mat:{bamboo:8},desc:'段差のがけに立てかけるハシゴ。上り下りの速さ×0.5'},
-  stairs2f:{name:'2階への階段',kind:'build',lv:9,pc:30,time:120,maker:'wood',mat:{wood:30},attr:{wood:.3},desc:'2階へ上り下りできる'},
   stairs_wood:{name:'木の階段',kind:'build',lv:8,pc:25,time:50,maker:'wood',mat:{wood:25},attr:{wood:.3},desc:'段差を上り下りできる'},
   stairs_brick:{name:'レンガの階段',kind:'build',lv:6,w:1,pc:35,time:60,maker:'fire',mat:{stone:35},attr:{fire:.5},desc:'段差を上り下りできる'},
   stairs_stone:{name:'石の階段',kind:'build',lv:4,w:1,pc:30,time:60,maker:'earth',mat:{stone:30},attr:{earth:.5},desc:'段差を上り下りできる'},
@@ -192,7 +191,7 @@ function learnedIn(s,w){const out=[];for(const id in BL){const b=BL[id];if(GNORE
   return out}
 function ownLearned(d,w){/* そのステージが、自分のクエスト・村レベル・持ち物でおぼえる物（ほかのステージからもらった物はふくめない） */const s2={world:w,free:false,flags:d.flags,quest:d.quest||0,qTalked:d.qTalked,qStory:d.qStory,subDone:d.subDone,subSt:d.subSt,subSeen:d.subSeen,lv:d.lv,inv:d.inv,obj:d.obj,orders:d.orders||[],win:d.win,recipes:{},guardianIdeas:{},unlocked:{}};try{syncQuestRecipes(s2)}catch(e){}return new Set(learnedIn(s2,w))}
 function savedStage(w){let d=LIVE&&LIVE[w]&&!LIVE[w].summary?LIVE[w]:null;if(!d)try{const raw=KV.getItem(SAVE_KEYS[w]);if(raw)d=JSON.parse(raw)}catch(e){}return d&&!d.free?d:null}
-function grecOf(){if(!GREC){/* id → おぼえたステージ（どのステージでおぼえたか。「はじめから」で、そのステージの分だけわすれるため） */let g=null;try{g=JSON.parse(KV.getItem(GRECKEY2)||'null')}catch(e){}GREC=new Map(g&&typeof g==='object'&&!Array.isArray(g)?Object.entries(g):[]);
+function grecOf(){if(!GREC){/* id → おぼえたステージ（どのステージでおぼえたか。「はじめから」で、そのステージの分だけわすれるため） */let g=null;try{g=JSON.parse(KV.getItem(GRECKEY2)||'null')}catch(e){}GREC=new Map(g&&typeof g==='object'&&!Array.isArray(g)?Object.entries(g):[]);if(GREC.delete('stairs2f'))grecSave();/* 2階への階段はなくした */
     if(!g){let a=null;try{a=JSON.parse(KV.getItem(GRECKEY)||'null')}catch(e){}const ids=new Set(Array.isArray(a)?a:[]),own=[0,1].map(w=>{const d=savedStage(w);if(d)learnedIn(d,w).forEach(id=>ids.add(id));return d?ownLearned(d,w):new Set()});
       for(const id of ids){if(!BL[id])continue;GREC.set(id,own[0].has(id)?0:own[1].has(id)?1:STAGEONLY[id]!=null?STAGEONLY[id]:(BL[id].w||0))}/* 前の形のしまい方からうつす：自分のクエスト・村レベルでおぼえるステージ、わからなければその物のステージ */
       grecSave()}
@@ -213,7 +212,7 @@ function furnitureGroups(ids){const wanted=new Set(ids);return CRAFT_TABS.map(([
 const FURN=['composter','cooktable','joro','kabedougu','kabebukuro','niguruma','taru','asabukuro','makidana','hoshirug','yorubed','toro','table','chair','stor','mbox','oven','bed','bench','takebench','takeakari','andon','shishiodoshi','campfire','swing','torch','jar','rockart','vane','spike','puddle','sticky','stool','stable','pouf','achair','ltable','rug1','sofa1','rug2','tub','sink','crate','monstera','shelf1','wreath','curtain1','cabinet','paint2','shelf2','curtain2','paint3','wshelf','paint1','bathtub','candle','lantern','flamp','signpost','hedge','birdbath','parasol','arch','slide','sandbox','seesaw','kamizo','noren','gazebo','azumaya'];// 属性の罠（sticky/firetrap/gust）は次のステージから
 
 const TERRA=new Set(['dig','mound']);/* だんさスコップの工事 */
-const BUILDS=['statue','watch','bridge','ladder_wood','ladder_bamboo','slope_earth','stairs_wood','stairs_stone','stairs_brick','stairs2f','yogan','lumber','well','quarry','windmill','fountain','lighthouse','bell','shinboku','onsen','signw','signs','stele','tower'];
+const BUILDS=['statue','watch','bridge','ladder_wood','ladder_bamboo','slope_earth','stairs_wood','stairs_stone','stairs_brick','yogan','lumber','well','quarry','windmill','fountain','lighthouse','bell','shinboku','onsen','signw','signs','stele','tower'];
 const STAMPS={
   fields:{name:'畑セット',cells:[[0,0,'farm'],[1,0,'farm'],[2,0,'farm'],[0,1,'farm'],[1,1,'farm'],[2,1,'farm']]},
   ring:{name:'柵の囲い',cells:(()=>{const c=[];for(let y=0;y<5;y++)for(let x=0;x<5;x++)if(x===0||y===0||x===4||y===4)c.push([x,y,'fence']);return c})()},
