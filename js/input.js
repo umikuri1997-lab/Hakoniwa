@@ -86,7 +86,7 @@ function onTap(sx,sy){DLGTAP=performance.now();/* タップで始める会話は
     if(o==='farm')return openSheet('farm',j);
     if(BEDSET.has(o))return openSheet('bed',j);
     if(o==='stor')return openSheet('food');
-    if(o==='oven')return openSheet('oven',j);
+    if(o==='oven'||o==='cooktable')return openSheet('oven',j);
     if(o==='plot')return toast('耕す前の畑：せいれいが耕しにくる');
     if(o==='sprout')return toast(BL[S.dyn[j].plant].name+'を植える場所：せいれいが植えにくる');
     if(o==='site'){const d=S.dyn[j];return toast(BL[d.build].name+'を建設中：'+Math.floor(d.p/d.need*100)+'%')}

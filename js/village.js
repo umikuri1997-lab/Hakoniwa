@@ -8,7 +8,7 @@ const RAWFL={mugi:'ぷっくり実ったこむぎ。',imo:'ころんとしたお
 const RAWD=k=>{const f=FOODS[k];return (RAWFL[k]||f.name+'。')+'/効果:お腹'+f.v+(f.pw?'、パワー+'+f.pw:'')+(f.fx?'、'+f.fx.replace(/、/g,''):'')};/* 料理していない食べ物の説明（料理の説明と同じ形） */
 const DISHFL={yakisoba:'ソースのにおいの焼きそば。',takoyaki:'まるくてあつあつのたこ焼き。',ringoame:'つやつやのりんごあめ。',kakigori:'しゃりしゃりのかき氷。',wataame:'ふわふわのわたあめ。',yakiimo:'ほくほくのおいも。',bread:'こんがり焼けたパン。',soup:'からだがあたたまるスープ。',yakizakana:'こうばしい焼き魚。',yakiberry:'あまずっぱい焼きベリー。',yakiapple:'とろっと甘い焼きりんご。',salad:'しゃきしゃきのコールスローサラダ。'};
 const needTxt=R=>Object.keys(R.need).map(k=>FOODS[k].name+(R.need[k]>1?'×'+R.need[k]:'')).join('・');/* 材料は1つなら数をつけない */
-const DISHD=R=>{const F=FOODS[R.out];return (DISHFL[R.out]||F.name+'。')+'/材料:'+needTxt(R)+'/時間:'+R.time+'分/効果:お腹'+F.v+'、パワー+'+F.pw+(F.fx?'、'+F.fx.replace(/、/g,''):'')};/* ハテナに出す料理の説明 */
+const DISHD=R=>{const F=FOODS[R.out];return (DISHFL[R.out]||F.name+'。')+'/材料:'+needTxt(R)+'/作る所:'+BL[dishSt(R)].name+'/とくい:'+ELEM[R.el].name+'のせいれい/時間:'+R.time+'分/効果:お腹'+F.v+'、パワー+'+F.pw+(F.fx?'、'+F.fx.replace(/、/g,''):'')};/* ハテナに出す料理の説明 */
 const DISHES=['bread','soup','yakiimo','yakizakana'],favDish=r=>{const ds=WD===0?DISHES.filter(d=>d!=='soup'):DISHES;return ds[[...r.name].reduce((a,c)=>a+c.charCodeAt(0),0)%ds.length]};/* すきな料理は名前できまる */
 function imoSeedQuestPlots(){if(!S.imoSeedQuestPlots){S.imoSeedQuestPlots=[];for(let j=0;j<S.obj.length;j++){const d=S.dyn[j];if(S.obj[j]==='farm'&&d&&d.crop==='imo'&&(d.paid||d.sown===true))S.imoSeedQuestPlots.push(j)}}return S.imoSeedQuestPlots}
 const farmsBare=()=>{let n=0;for(let j=0;j<S.obj.length;j++)if(S.obj[j]==='farm'&&S.dyn[j]&&S.dyn[j].crop===null)n++;return n};/* たねをえらんでいない畑の数 */
@@ -16,9 +16,10 @@ const cropK=d=>d.crop===undefined?'mugi':d.crop;/* 作物。null はまだえら
 const cropOn=k=>!!S.crops[k];/* 使える作物 */
 const CROPS={mugi:{name:'こむぎ',days:2,yield:1,desc:'2日で育つ。食料+1。パンの材料'},tomato:{name:'キャベツ',days:2,yield:1,desc:'2日で育つ。食料+1'},imo:{name:'いも',days:3,yield:2,desc:'3日で育つ。食料+2'}};
 /* たねは、おそなえ箱からえらんで畑にまく */
-const ALLRECIPES=[{out:'soup',need:{tomato:1,imo:1},time:153,timeR:107.1},{out:'bread',need:{mugi:2},time:120,timeR:84},{out:'yakizakana',need:{fish:1},time:60,timeR:42},{out:'yakiimo',need:{imo:1},time:50,timeR:35},{out:'yakiberry',need:{berry:2},time:60,timeR:42},{out:'yakiapple',need:{apple:1},time:60,timeR:42},{out:'salad',need:{tomato:2},time:90,timeR:63}];/* time：料理にかかる時間（分）。timeR：料理がとくいな子の時間 */
+const ALLRECIPES=[{out:'soup',need:{tomato:1,imo:1},time:153,timeR:107.1,el:'water'},{out:'bread',need:{mugi:2},time:120,timeR:84,el:'fire'},{out:'yakizakana',need:{fish:1},time:60,timeR:42,el:'water'},{out:'yakiimo',need:{imo:1},time:50,timeR:35,el:'fire'},{out:'yakiberry',need:{berry:2},time:60,timeR:42,el:'wood'},{out:'yakiapple',need:{apple:1},time:60,timeR:42,el:'wood'},{out:'salad',need:{tomato:2},time:90,timeR:63,el:'wood',st:'cooktable'}];/* time：料理にかかる時間（分）。timeR：料理がとくいな子の時間。el：その料理がとくいな属性（だれでも作れる）。st：作る家具（なければかまど） */
+const COOKST=new Set(['oven','cooktable']),dishSt=R=>R.st||'oven',cookFast=(r,R)=>!!R&&(trt(r,'ryouri')||r.elem===R.el);/* 料理をする家具。とくいな属性の子か、料理じょうずの子は timeR */
 const repairTime=a=>a.re?30:20;/* 修理にかかる時間（分）：建て直しは30、ふつうの修理は20（ゲームの処理と、ゲージの表示で同じものを使う） */
-function cookTime(r,ov){const R=RECIPES.find(x=>x.out===(r.cing&&r.cing.rec))||{time:30,timeR:21};return (trt(r,'ryouri')?R.timeR:R.time)*ovenMul(ov)/(ov!=null?1+.1*spotN(ov,'kitchen','pan'):1)}/* キッチン：料理の速さ+10% *//* 料理にかかる時間（ゲームの処理と、ゲージの表示で同じものを使う） *//* 料理でふくれるおなか（v）は、FOODS に実数で書く（使った材料の合計と同じ） */let RECIPES=ALLRECIPES;soupFilter();/* time：料理にかかる時間（レシピごと） */
+function cookTime(r,ov){const R=RECIPES.find(x=>x.out===(r.cing&&r.cing.rec))||{time:30,timeR:21};return (cookFast(r,R)?R.timeR:R.time)*ovenMul(ov)/(ov!=null?1+.1*spotN(ov,'kitchen','pan'):1)}/* キッチン：料理の速さ+10% *//* 料理にかかる時間（ゲームの処理と、ゲージの表示で同じものを使う） *//* 料理でふくれるおなか（v）は、FOODS に実数で書く（使った材料の合計と同じ） */let RECIPES=ALLRECIPES;soupFilter();/* time：料理にかかる時間（レシピごと） */
 function syncFood(){let n=0;for(const k in S.fs)n+=S.fs[k]||0;S.food=n}
 function addFood(k,n){S.fs[k]=(S.fs[k]||0)+n;syncFood()}
 function takeFood(n,pref){let got=[];const keys=Object.keys(S.fs).filter(k=>S.fs[k]>0);if(pref==='raw')keys.sort((a,b)=>(FOODS[a].v-FOODS[b].v));else keys.sort((a,b)=>FOODS[b].v-FOODS[a].v||Math.random()-.5);

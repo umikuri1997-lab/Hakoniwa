@@ -289,6 +289,15 @@ function drawObj(c,id,x,y,i,g,now){
       const p=Math.min(1,d.p/d.need),bw=Math.min(Wd-8,64),bx=L+(Wd-bw)/2,by=B-Hd-10;c.fillStyle='rgba(0,0,0,.5)';rr(c,bx-1,by,bw+2,6,3);c.fillStyle='#ecdcbc';rr(c,bx,by+1,bw*p,4,2);break}
     if(SPR.site.ok){shadow(c,x+16,y+29,14,3);{const si=ICON?null:siteImg(34,30,i||0);if(si)c.drawImage(si,x-1,y+1);else c.drawImage(SPR.site.img,x-1,y+1,34,30)}if(d){const p=Math.min(1,d.p/d.need);c.fillStyle='rgba(0,0,0,.5)';rr(c,x+2,y-8,28,6,3);c.fillStyle='#ecdcbc';rr(c,x+3,y-7,26*p,4,2)}break}shadow(c,x+16,y+29,14,3);c.fillStyle='#c9a46a';c.fillRect(x+3,y+20,26,8);c.strokeStyle='#8a5a33';c.lineWidth=2.5;c.beginPath();c.moveTo(x+5,y+28);c.lineTo(x+5,y);c.moveTo(x+27,y+28);c.lineTo(x+27,y);c.moveTo(x+5,y+4);c.lineTo(x+27,y+4);c.moveTo(x+5,y+14);c.lineTo(x+27,y+14);c.moveTo(x+5,y+4);c.lineTo(x+27,y+14);c.stroke();
     if(d){const p=Math.min(1,d.p/d.need);c.fillStyle='rgba(0,0,0,.5)';rr(c,x+2,y-8,28,6,3);c.fillStyle='#ecdcbc';rr(c,x+3,y-7,26*p,4,2)}break}
+  case'cooktable':{const P=(col,px,py,w,h)=>{c.fillStyle=col;c.fillRect(x+px,y+py,w,h)};/* 調理台：ドット絵（1マス32ドット、整数の四角だけ。りんかくは少しこい色） */
+    P('rgba(120,80,40,.18)',3,28,26,2);
+    for(const lx of[4,25]){P('#b07a46',lx,17,3,11);P('#c4905a',lx,17,1,11)}
+    P('#b07a46',3,15,26,4);P('#c99560',3,15,26,1);P('#bb8350',4,18,24,1);
+    P('#b57d4b',2,8,28,8);P('#dba872',3,9,26,6);P('#e6b984',3,9,26,1);P('#cf9561',3,13,26,2);
+    P('#d6bf96',6,9,13,5);P('#f1e2c2',7,10,11,3);P('#fbf1db',7,10,11,1);
+    P('#8cba68',9,10,4,3);P('#a6cf86',10,10,2,1);P('#ec8a76',14,11,2,2);P('#f4ab9a',14,11,1,1);
+    P('#c8c8c0',21,10,5,1);P('#ecece6',21,9,5,1);P('#a8743f',26,9,3,2);
+    P('#cf9561',20,12,8,2);P('#e6b984',21,12,6,1);break}
   case'table':shadow(c,x+16,y+27,14,3.5);c.fillStyle='#a8703f';for(const lx of[6,23.5])rr(c,x+lx,y+16,3,12,1.5);c.fillStyle='#8f5f35';for(const lx of[10,19.5])rr(c,x+lx,y+16,2.6,9,1.3);
     c.fillStyle='#b57d4b';rr(c,x+2,y+12,28,6,3);c.fillStyle='#cf9561';rr(c,x+2,y+8,28,7,3.5);c.fillStyle='#dba872';c.fillRect(x+6,y+10,9,1);c.fillRect(x+17,y+12,8,1);break;
   case'stor':{shadow(c,x+16,y+29,14,3);circ(c,x+10,y+11,5,'#7ab35a');circ(c,x+22,y+9,5,'#8cc26a');circ(c,x+16,y+8,4,'#7ab35a');
