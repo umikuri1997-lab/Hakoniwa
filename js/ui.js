@@ -197,7 +197,7 @@ function renderSheet(){
       {const q=S.otakiQ||{},L=[];const add=o=>{for(const k in o)if(o[k])L.push(MATN[k]+o[k])};add(q);S.res.forEach(r=>r.otaki&&add(r.otaki));if(L.length){const p=el('<p class="note"></p>');p.textContent='おたきあげまち：'+L.join('・');body.appendChild(p)}}
       sec('食べ物（'+S.food+'/'+foodCap()+'）',Object.keys(FOODS).filter(k=>(S.fs[k]||0)>0).map(k=>[ICONS[k]||null,FOODS[k].e,FOODS[k].name,S.fs[k]]),'食べ物は、ありません')}
     const grid=el('<div class="grid"></div>');grid.appendChild(Object.assign(el('<b style="grid-column:1/-1;margin-top:10px"></b>'),{textContent:'おそなえ箱'}));
-    const groups=[['ブロック',BLOCKS.filter(id=>inv(id)>0)],['うえる',PLANTS.filter(id=>inv(id)>0)],...furnitureGroups(FURN.filter(id=>inv(id)>0)),['まもり',['arrow'].filter(id=>inv(id)>0)]];
+    const groups=[['ブロック',BLOCKS.filter(id=>inv(id)>0)],['うえる',PLANTS.filter(id=>inv(id)>0)],...furnitureGroups(FURN.filter(id=>inv(id)>0)),['まもり',['arrow','arrow2'].filter(id=>inv(id)>0)]];
     const ids=groups.flatMap(([,items])=>items);
     for(const [name,ids]of groups){if(!ids.length)continue;const heading=el('<b style="grid-column:1/-1;margin-top:8px"></b>');heading.textContent=name;grid.appendChild(heading);for(const id of ids){
       const b=el('<button class="slot"><span class="ct"></span><img alt=""><span class="nm"></span></button>');
