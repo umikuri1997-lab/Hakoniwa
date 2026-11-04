@@ -16,8 +16,8 @@ const rLv=r=>{const x=r.xp||0;let l=1;while(l+1<LVXP.length&&x>=LVXP[l+1])l++;re
 const lvF=(lv,k)=>1+k*(Math.min(lv,10)-1);
 /* 10がふつう。レベルアップでふえる量は、せいれいとレベルごとにばらつく（0〜2） */
 function lvGain(r,k,lv){let n=0;for(let l=2;l<=lv;l++){const h=hash(((r.id||0)*131+l*17+(k==='work'?7:3))>>>0);n+=h<.05?2:h<.3?1:0}return n}/* レベルが上がるたびに、5%で+2・25%で+1 */
-const RSC=new WeakMap();function rMul(r,k){const lv=rLv(r);let c=RSC.get(r);if(!c||c.lv!==lv||c.vr!==r.vr||c.b!==r.boost||c.g!==(r.gv||0)){c={lv,vr:r.vr,b:r.boost,g:r.gv||0,s:rStat(r,lv)};RSC.set(r,c)}return c.s[k]/10*(k==='work'&&r.wkB>S.t?1.15:k==='move'&&r.mvT>S.t?1.15:1)}
-function ovenMul(j){if(j==null)return 1;const x0=j%W,y0=(j/W)|0;const kinds=new Set();for(let y=y0-3;y<=y0+3;y++)for(let x=x0-3;x<=x0+3;x++){if(x<0||y<0||x>=W||y>=H)continue;const o=S.obj[y*W+x];if(o&&BL[o]&&BL[o].cat==='cook')kinds.add(o)}return OVENM[Math.min(kinds.size,OVENM.length-1)]}/* 調理の家具がそばにあると、料理が早い（同じ家具は1つ分だけ。下限はなし） */
+const RSC=new WeakMap();function rMul(r,k){const lv=rLv(r);let c=RSC.get(r);if(!c||c.lv!==lv||c.vr!==r.vr||c.b!==r.boost||c.g!==(r.gv||0)){c={lv,vr:r.vr,b:r.boost,g:r.gv||0,s:rStat(r,lv)};RSC.set(r,c)}return c.s[k]/10*(k==='work'&&r.wkB>S.t?(r.wkM||1.15):k==='move'&&r.mvT>S.t?(r.mvM||1.15):1)}
+function ovenMul(j){if(j==null)return 1;const x0=j%W,y0=(j/W)|0;const kinds=new Set();for(let y=y0-3;y<=y0+3;y++)for(let x=x0-3;x<=x0+3;x++){if(x<0||y<0||x>=W||y>=H)continue;const o=S.obj[y*W+x];if(o&&o!==S.obj[j]&&BL[o]&&BL[o].cat==='cook')kinds.add(o)}return OVENM[Math.min(kinds.size,OVENM.length-1)]}/* 調理の家具がそばにあると、料理が早い（同じ家具は1つ分だけ。下限はなし） */
 const fAtk=lv=>FATKL[lv];/* 火のせいれい：Lv1=1・Lv4=2・Lv7=3・Lv10=4 */
 function rStat(r,lv){const V=r.vr||{},fire=r.elem==='fire',G=gearStat(r);/* G：そうび */return{
   atk:fire?fAtk(lv)+((r.bst&&r.bst.atk)||0)+((r.sst&&r.sst.atk)||0)+G.atk:0,/* 攻撃できるのは火の子だけ */
@@ -46,7 +46,7 @@ function lvShow(l,bonus,opens){
   startClap();/* タップするまで、こっちを向いて拍手 */
   if(STATUE>=0)for(let n=0;n<3;n++)setTimeout(()=>burst(STATUE,'furn','none'),n*260);
 }
-const LEVELUP_ITEMS=new Set(['bridge','path','woodpath','ladder_wood','ladder_bamboo','slope_earth','stairs_wood','stairs_stone','stairs_brick','gate','hwall','door','logfence','bamboofence','floor','brickfloor','stonefloor','window','plasterwall','gravel','wall','sdoor','logwall','brick','brickwall','carpet','curtain1','stone','stonegate','logdoor','loggate','kamizo','bell','bedge','onsen','signw','signs','shinboku','andon']);
+const LEVELUP_ITEMS=new Set(['bridge','path','woodpath','ladder_wood','ladder_bamboo','slope_earth','stairs_wood','stairs_stone','stairs_brick','gate','hwall','door','logfence','bamboofence','floor','brickfloor','stonefloor','window','plasterwall','gravel','wall','sdoor','logwall','brick','brickwall','carpet','curtain1','stone','stonegate','logdoor','loggate','kamizo','bell','bedge','onsen','signw','signs','shinboku','andon','cooktable']);
 const levelUpItemsAt=n=>Object.keys(BL).filter(id=>LEVELUP_ITEMS.has(id)&&BL[id].lv===n&&!BL[id].offerOnly&&(BL[id].w||0)<=WD);
 const visibleLevelRewardsAt=n=>levelUpItemsAt(n).filter(id=>BL[id].kind!=='furn'||!S.free);/* フリーモードは、家具のレシピを村レベルでおぼえない */
 function checkLevel(){

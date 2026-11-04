@@ -154,10 +154,11 @@ function updEnemy(e,dt){
   if(gearEnemyTick(e,dt))return;/* やけど */
   if(e.stun>0||e.rest>0||S.t-(e.busyT??-1e9)<5){e.wd=0;e.wx=null}/* 罠で足止め・壁や設備をたたいているあいだは、来なおさない */
   else if(!e.flee&&!VILL[(e.y|0)*W+(e.x|0)]){e.wd=(e.wd||0)+dt;if(e.wd>=30){if(e.wx!=null&&Math.hypot(e.x-e.wx,e.y-e.wy)<3){enemyFallback(e,D);e.repath=8;EREACH.delete(e)}e.wd=0;e.wx=e.x;e.wy=e.y}}else{e.wd=0;e.wx=null}/* 村の外で30分ほとんど進めていなかったら、べつの場所から来なおす（森でうろうろ対策） */
+  if(e.poi>0){e.poT=(e.poT||0)+dt;if(e.poT>=15){e.poT-=15;e.poi--;e.hp-=.5;e.flash=4;if(e.hp<=0)return defeat(e,EN[e.type].name+'をどくの罠で追いはらった！')}}/* どくの罠：ふんでから10分（15）ごとに0.5ダメージを6回（1時間） */
   if(e.stun>0){e.stun-=dt;return}if(e.rest>0){e.rest-=dt;return}
   e.slow=e.slowU>S.t?.5:1;/* おそくする（そうび） */{const tj=(e.y|0)*W+(e.x|0),to=S.obj[tj];if(to&&BL[to]&&BL[to].trap){e.busyT=S.t;const cd=S.trapCd||(S.trapCd={}),rdy=!(cd[tj]>S.t);
     if(to==='spike'){e.spk=(e.spk||0)+dt;if(e.spk>=15){e.spk-=15;e.hp-=.5;e.flash=4}/* とげの罠：15分ごとに0.5ダメージ */if(e.hp<=0)return defeat(e,EN[e.type].name+'をとげの罠で追いはらった！')}
-    else if(to==='sticky')e.slow=.35;
+    else if(to==='sticky'){if(!(e.poi>0)){e.poi=6;e.poT=0;e.flash=4;sfxAt('bonk',e.x,e.y)}}
     else if(to==='puddle'&&rdy){cd[tj]=S.t+120;e.stun=D.boss?3:8;e.path=[];sfxAt('bonk',e.x,e.y);return}
     else if(to==='firetrap'&&rdy){cd[tj]=S.t+180;e.hp-=4;e.flash=8;burstAt(e.x,e.y,'furn');sfxAt('cookfire',e.x,e.y);if(e.hp<=0)return defeat(e,EN[e.type].name+'をほのおの罠で追いはらった！')}
     else if(to==='gust'&&rdy){cd[tj]=S.t+150;let dx=e.x-CX,dy=e.y-CY;const l=Math.hypot(dx,dy)||1;dx/=l;dy/=l;{let bx=null,by=null;for(let k=1;k<=6;k++){const nx=e.x+dx*k,ny=e.y+dy*k,q=(ny|0)*W+(nx|0);if(!(nx>1&&ny>1&&nx<W-1&&ny<H-1)||!walk(q)||HOME_DOORS.has(typeAt(q))||GATE_IDS.has(typeAt(q)))break;bx=nx;by=ny}if(bx!=null){e.x=bx;e.y=by}}/* 壁・ドア・門の手前までしか、ふきとばさない */e.path=[];e.repath=0;e.stun=2;sfxAt('bush',e.x,e.y);return}}}

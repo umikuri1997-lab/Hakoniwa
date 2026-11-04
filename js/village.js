@@ -1,14 +1,14 @@
 'use strict';
 const cnt=id=>counts[id]||0;
 const FOODS={mugi:{name:'こむぎ',v:1,e:'🌾'},imo:{name:'いも',v:1,e:'🥔'},tomato:{name:'キャベツ',v:1,e:'🥬'},berry:{name:'ベリー',v:1,e:'🫐',fx:'たのしさ+8'},apple:{name:'りんご',v:1,e:'🍎',fx:'たのしさ+8'},fish:{name:'さかな',v:1,e:'🐟'},takenoko:{name:'たけのこ',v:1,e:'🎍'},kinoko:{name:'きのこ',v:1,e:'🍄'},
-  bread:{name:'パン',v:2,pt:3,pw:1.35,dish:1,e:'🍞',fx:'おなかのへる速さ×0.6'},soup:{name:'キャベツスープ',v:2,pt:3,pw:1.35,dish:1,e:'🍲',fx:'つかれ−25'},yakiimo:{name:'ベイクドポテト',v:1,pt:2,pw:.9,dish:1,e:'🍠',fx:'3時間、作業スピード×1.15'},yakizakana:{name:'焼き魚',v:1,pt:4,pw:1.8,dish:1,e:'🐠',fx:''},yakiberry:{name:'焼きベリー',v:2,pt:2,pw:.9,dish:1,e:'🍮',fx:'たのしさ+15'},yakiapple:{name:'焼きりんご',v:1,pt:2,pw:.9,dish:1,e:'🥧',fx:'3時間、移動速度×1.15'},salad:{name:'コールスローサラダ',v:2,pt:2,pw:.9,dish:1,e:'🥗',fx:'つかれ−10・たのしさ+10'},
+  bread:{name:'パン',v:2,pt:3,pw:1.35,dish:1,e:'🍞',fx:'18時間、作業スピード×1.2'},soup:{name:'キャベツスープ',v:2,pt:3,pw:1.35,dish:1,e:'🍲',fx:'つかれ−50・10時間、作業スピード×1.2'},yakiimo:{name:'ベイクドポテト',v:1,pt:2,pw:.9,dish:1,e:'🍠',fx:'5時間、作業スピード×1.3'},yakizakana:{name:'焼き魚',v:1,pt:4,pw:1.8,dish:1,e:'🐠',fx:'たのしさ+60'},yakiberry:{name:'焼きベリー',v:2,pt:2,pw:.9,dish:1,e:'🍮',fx:'たのしさ+60'},yakiapple:{name:'焼きりんご',v:1,pt:2,pw:.9,dish:1,e:'🥧',fx:'12時間、移動速度×1.3'},salad:{name:'コールスローサラダ',v:2,pt:2,pw:.9,dish:1,e:'🥗',fx:'つかれ−30・たのしさ+40'},
   yakisoba:{name:'焼きそば',v:2,pt:3,pw:1.35,dish:1,fest:1,e:'🍝',fx:'つかれ−20・たのしさ+10'},takoyaki:{name:'たこ焼き',v:2,pt:3,pw:1.35,dish:1,fest:1,e:'🐙',fx:'たのしさ+25'},ringoame:{name:'りんごあめ',v:1,pt:2,pw:.9,dish:1,fest:1,e:'🍭',fx:'たのしさ+20'},kakigori:{name:'かき氷',v:1,pt:2,pw:.9,dish:1,fest:1,e:'🍧',fx:'つかれ−15・たのしさ+10'},wataame:{name:'わたあめ',v:1,pt:2,pw:.9,dish:1,fest:1,e:'🍬',fx:'たのしさ+25'}};/* fest：おまつりの日だけ、お店で交換できる（料理では作れない） */
 
 const RAWFL={mugi:'ぷっくり実ったこむぎ。',imo:'ころんとしたおいも。',tomato:'みずみずしいキャベツ。',berry:'あまずっぱいベリー。',apple:'まっかなりんご。',fish:'とれたてのさかな。'};
 const RAWD=k=>{const f=FOODS[k];return (RAWFL[k]||f.name+'。')+'/効果:お腹'+f.v+(f.pw?'、パワー+'+f.pw:'')+(f.fx?'、'+f.fx.replace(/、/g,''):'')};/* 料理していない食べ物の説明（料理の説明と同じ形） */
 const DISHFL={yakisoba:'ソースのにおいの焼きそば。',takoyaki:'まるくてあつあつのたこ焼き。',ringoame:'つやつやのりんごあめ。',kakigori:'しゃりしゃりのかき氷。',wataame:'ふわふわのわたあめ。',yakiimo:'ほくほくのおいも。',bread:'こんがり焼けたパン。',soup:'からだがあたたまるスープ。',yakizakana:'こうばしい焼き魚。',yakiberry:'あまずっぱい焼きベリー。',yakiapple:'とろっと甘い焼きりんご。',salad:'しゃきしゃきのコールスローサラダ。'};
 const needTxt=R=>Object.keys(R.need).map(k=>FOODS[k].name+(R.need[k]>1?'×'+R.need[k]:'')).join('・');/* 材料は1つなら数をつけない */
-const DISHD=R=>{const F=FOODS[R.out];return (DISHFL[R.out]||F.name+'。')+'/材料:'+needTxt(R)+'/時間:'+R.time+'分/効果:お腹'+F.v+'、パワー+'+F.pw+(F.fx?'、'+F.fx.replace(/、/g,''):'')};/* ハテナに出す料理の説明 */
+const DISHD=R=>{const F=FOODS[R.out];return (DISHFL[R.out]||F.name+'。')+'/材料:'+needTxt(R)+'/作る所:'+BL[dishSt(R)].name+'/とくい:'+ELEM[R.el].name+'のせいれい/時間:'+R.time+'分/効果:お腹'+F.v+'、パワー+'+F.pw+(F.fx?'、'+F.fx.replace(/、/g,''):'')};/* ハテナに出す料理の説明 */
 const DISHES=['bread','soup','yakiimo','yakizakana'],favDish=r=>{const ds=WD===0?DISHES.filter(d=>d!=='soup'):DISHES;return ds[[...r.name].reduce((a,c)=>a+c.charCodeAt(0),0)%ds.length]};/* すきな料理は名前できまる */
 function imoSeedQuestPlots(){if(!S.imoSeedQuestPlots){S.imoSeedQuestPlots=[];for(let j=0;j<S.obj.length;j++){const d=S.dyn[j];if(S.obj[j]==='farm'&&d&&d.crop==='imo'&&(d.paid||d.sown===true))S.imoSeedQuestPlots.push(j)}}return S.imoSeedQuestPlots}
 const farmsBare=()=>{let n=0;for(let j=0;j<S.obj.length;j++)if(S.obj[j]==='farm'&&S.dyn[j]&&S.dyn[j].crop===null)n++;return n};/* たねをえらんでいない畑の数 */
@@ -16,9 +16,10 @@ const cropK=d=>d.crop===undefined?'mugi':d.crop;/* 作物。null はまだえら
 const cropOn=k=>!!S.crops[k];/* 使える作物 */
 const CROPS={mugi:{name:'こむぎ',days:2,yield:1,desc:'2日で育つ。食料+1。パンの材料'},tomato:{name:'キャベツ',days:2,yield:1,desc:'2日で育つ。食料+1'},imo:{name:'いも',days:3,yield:2,desc:'3日で育つ。食料+2'}};
 /* たねは、おそなえ箱からえらんで畑にまく */
-const ALLRECIPES=[{out:'soup',need:{tomato:1,imo:1},time:153,timeR:107.1},{out:'bread',need:{mugi:2},time:120,timeR:84},{out:'yakizakana',need:{fish:1},time:60,timeR:42},{out:'yakiimo',need:{imo:1},time:50,timeR:35},{out:'yakiberry',need:{berry:2},time:60,timeR:42},{out:'yakiapple',need:{apple:1},time:60,timeR:42},{out:'salad',need:{tomato:2},time:90,timeR:63}];/* time：料理にかかる時間（分）。timeR：料理がとくいな子の時間 */
+const ALLRECIPES=[{out:'soup',need:{tomato:1,imo:1},time:153,timeR:107.1,el:'water'},{out:'bread',need:{mugi:2},time:120,timeR:84,el:'fire'},{out:'yakizakana',need:{fish:1},time:60,timeR:42,el:'fire'},{out:'yakiimo',need:{imo:1},time:50,timeR:35,el:'fire'},{out:'yakiberry',need:{berry:2},time:60,timeR:42,el:'fire'},{out:'yakiapple',need:{apple:1},time:60,timeR:42,el:'fire'},{out:'salad',need:{tomato:2},time:90,timeR:63,el:'wood',st:'cooktable'}];/* time：料理にかかる時間（分）。timeR：料理がとくいな子の時間。el：その料理がとくいな属性（だれでも作れる）。st：作る家具（なければかまど） */
+const COOKST=new Set(['oven','cooktable']),dishSt=R=>R.st||'oven',cookFast=(r,R)=>!!R&&(trt(r,'ryouri')||r.elem===R.el);/* 料理をする家具。とくいな属性の子か、料理じょうずの子は timeR */
 const repairTime=a=>a.re?30:20;/* 修理にかかる時間（分）：建て直しは30、ふつうの修理は20（ゲームの処理と、ゲージの表示で同じものを使う） */
-function cookTime(r,ov){const R=RECIPES.find(x=>x.out===(r.cing&&r.cing.rec))||{time:30,timeR:21};return (trt(r,'ryouri')?R.timeR:R.time)*ovenMul(ov)/(ov!=null?1+.1*spotN(ov,'kitchen','pan'):1)}/* キッチン：料理の速さ+10% *//* 料理にかかる時間（ゲームの処理と、ゲージの表示で同じものを使う） *//* 料理でふくれるおなか（v）は、FOODS に実数で書く（使った材料の合計と同じ） */let RECIPES=ALLRECIPES;soupFilter();/* time：料理にかかる時間（レシピごと） */
+function cookTime(r,ov){const R=RECIPES.find(x=>x.out===(r.cing&&r.cing.rec))||{time:30,timeR:21};return (cookFast(r,R)?R.timeR:R.time)*ovenMul(ov)/(ov!=null?1+.1*spotN(ov,'kitchen','pan'):1)}/* キッチン：料理の速さ+10% *//* 料理にかかる時間（ゲームの処理と、ゲージの表示で同じものを使う） *//* 料理でふくれるおなか（v）は、FOODS に実数で書く（使った材料の合計と同じ） */let RECIPES=ALLRECIPES;soupFilter();/* time：料理にかかる時間（レシピごと） */
 function syncFood(){let n=0;for(const k in S.fs)n+=S.fs[k]||0;S.food=n}
 function addFood(k,n){S.fs[k]=(S.fs[k]||0)+n;syncFood()}
 function takeFood(n,pref){let got=[];const keys=Object.keys(S.fs).filter(k=>S.fs[k]>0);if(pref==='raw')keys.sort((a,b)=>(FOODS[a].v-FOODS[b].v));else keys.sort((a,b)=>FOODS[b].v-FOODS[a].v||Math.random()-.5);
@@ -29,7 +30,7 @@ function addCarry(r,k,n){if(typeof r.carry==='number')r.carry={mugi:r.carry};n=M
 function addMat(r,k,n){n=Math.min(n,roomN(r));if(n<=0)return;r.cmat=r.cmat||{};r.cmat[k]=(r.cmat[k]||0)+n}
 function hYield(j,def){const o=S.obj[j],d=S.dyn[j];const cr=o==='farm'?CROPS[(d&&d.crop)||'mugi']:null;return (cr?cr.yield:def)+(NEARMILL.has(j)?1:0)+(cr&&d?d.fb||0:0)}
 // STORAGE: placed shelves share the village stock; wall attachments count only on standing walls.
-const STORAGE={stor:{food:50},mbox:{mat:80},taru:{food:60},kabebukuro:{food:55},asabukuro:{mat:65},makidana:{mat:80},crate:{food:30,mat:30},shelf1:{mat:160},shelf2:{mat:50},wshelf:{mat:160},cabinet:{food:90}};/* しまえる数（食料・素材） */
+const STORAGE={stor:{food:50},mbox:{mat:80},taru:{food:60},kabebukuro:{food:55},asabukuro:{mat:65},makidana:{mat:130},crate:{food:30,mat:30},shelf1:{mat:160},shelf2:{mat:200},wshelf:{mat:200},cabinet:{food:90}};/* しまえる数（食料・素材） */
 function storageAt(j,type){const id=S.obj[anc(j)],wall=HOME_WALLS.has(id)&&(S.win||{})[j],b=STORAGE[wall]||STORAGE[id];return !!(b&&b[type])}
 const GRASSK=['shina','kasa','kuru','chiri','funba'];/* 草の素材 */
 const cmpOf=j=>S.dyn[j]||(S.dyn[j]={b:[],c:0}),cmpIn=j=>{const d=S.dyn[j];return d?(d.b||[]).reduce((a,x)=>a+x[1],0):0},cmpWait=j=>{const Q=(S.cmpQ||{})[j];let n=0;if(Q)for(const k in Q)n+=Q[k];for(const r of S.res)if(r.cpk&&r.cpk.j===j)for(const k in r.cpk.m)n+=r.cpk.m[k];return n};/* コンポスター：b＝入れた草（[入れた時刻, 数]）、c＝できた肥料 */
@@ -165,7 +166,7 @@ function recount(){if(S.sacredLegacy2||S.sacredLegacy3)tryExpandSacredLegacy(S);
     if(o==='statue')STATUE=j;if(o==='obox')OBOX=j;if(o==='board')BOARD=j;
     if(o==='stele')STELES.push(j);
     if(o==='lamp'||o==='lighthouse'||o==='tower'||o==='campfire'||o==='statue'||o==='torch'||o==='candle'||o==='lantern'||o==='flamp'||o==='yomawari'||o==='toro'||o==='takeakari'||o==='andon')LIGHTS.push(j);
-    if(o==='shinboku'){const x0=j%W,y0=(j/W)|0;for(let b=-3;b<=5;b++)for(let a=-3;a<=5;a++){const nx=x0+a,ny=y0+b;if(nx>=0&&ny>=0&&nx<W&&ny<H)NEARTREE.add(ny*W+nx)}}/* ご神木のまわり3マス */
+    if(o==='shinboku'){const x0=j%W,y0=(j/W)|0;for(let b=-5;b<=7;b++)for(let a=-5;a<=7;a++){const nx=x0+a,ny=y0+b;if(nx>=0&&ny>=0&&nx<W&&ny<H)NEARTREE.add(ny*W+nx)}}/* ご神木のまわり5マス */
     if(LIGHTP[o])LITP.push(j);/* 夜に光をかく明かりの一覧 */
     if(o==='watch'||o==='yogan'||o==='tower')TOWERS.push(j);
     if(FLOWERS.has(o)&&!isBud(j)){const el=Object.keys(BL[o].attr||{})[0],E=el&&(ENVE[el]||(ENVE[el]=new Float32Array(W*H)));for(let dy=-3;dy<=3;dy++)for(let dx=-3;dx<=3;dx++){const nx=x+dx,ny=y+dy;if(nx<0||ny<0||nx>=W||ny>=H)continue;const q=ny*W+nx;ENVG[q]+=.56;if(E)E[q]+=1.11}}/* 花：まわり3マスで、たのしさ+0.2／1時間、同じ属性のせいれいは+0.6／1時間 */

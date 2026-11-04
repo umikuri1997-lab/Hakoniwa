@@ -85,7 +85,7 @@ function spPose(o,t,tr,back){/* せいれいの動きの計算：腕の角度・
   else if(A==='hold'){aN=aF=-.85+Math.sin(t*3)*.03;frontArm=bothF=true}/* 手に持つ */
   else if(A==='eat'){aN=aF=(tr?EATSIDE:-2.45)+Math.sin(t*7)*.06;frontArm=bothF=true}/* 横向きは、両手を前にのばして、食べ物を持つ */
   else if(A==='chop'||A==='mine'||A==='till'){const p=cyc(1.4),v=p<.72?-2.3*(p/.72):-2.3+2.9*((p-.72)/.28);aN=v;aF=v;prop=A==='chop'?'axe':A==='mine'?'pick':'hoe';lean2=p<.72?-.06*(p/.72):-.06+.2*((p-.72)/.28);frontArm=true}
-  else if(A==='build'||A==='repair'||A==='craft'){const p=cyc(2.6),v=p<.6?-1.3*(p/.6):-1.3+1.7*((p-.6)/.4);aN=v;aF=.2;prop='hammer';lean2=p>.6?.06:0;frontArm=true}
+  else if(A==='build'||A==='repair'||A==='craft'||A==='cookcut'){const p=cyc(2.6),v=p<.6?-1.3*(p/.6):-1.3+1.7*((p-.6)/.4);aN=v;aF=.2;prop=A==='cookcut'?'':'hammer';lean2=p>.6?.06:0;frontArm=true}
   else if(A==='draw'){const p=cyc(1.5),v=p<.45?.95-.3*(p/.45):p<.8?.65-3.0*((p-.45)/.35):-2.35+.0;sq=p<.45?.08:.02;aN=aF=v;lean2=p<.45?.12:.02;prop='can';frontArm=bothF=true}/* 水をくむ：かがんで、水の入れ物をおろし、両手でひき上げる */
   else if(A==='water'||A==='tend'){aN=-.55+Math.sin(t*2)*.08;aF=.25;prop='can';lean2=.05;frontArm=true}
   else if(A==='cook'){aN=-.5+Math.sin(t*5)*.22;aF=.15;prop='ladle';frontArm=true}
