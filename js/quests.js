@@ -404,8 +404,9 @@ function questVisitStand(r,G,j){const b=BL[S.obj[j]],z=b&&szAt(S.obj[j],j)||[1,1
 }
 function questVisitReached(r,j){const b=BL[S.obj[j]],z=b&&szAt(S.obj[j],j)||[1,1],x=j%W,y=(j/W)|0,dx=Math.max(x-r.x,0,r.x-(x+z[0])),dy=Math.max(y-r.y,0,r.y-(y+z[1]));return Math.hypot(dx,dy)<=1.05}
 function questVisitOpen(G,j){const b=BL[S.obj[j]],z=b&&szAt(S.obj[j],j)||[1,1],x=j%W,y=(j/W)|0;for(let yy=Math.max(0,y-1);yy<=Math.min(H-1,y+z[1]);yy++)for(let xx=Math.max(0,x-1);xx<=Math.min(W-1,x+z[0]);xx++){const k=yy*W+xx;if(G.dist[k]>=0&&walk(k))return true}return false}/* まわりに、歩いて行けるマスがあるか */
+const partVisitStale=v=>!!v.partKey&&!v.partKey.startsWith((S.world||0)+':'+(QUESTS[S.quest]?.text)+':');/* 目標がかわったら、前の目標の物は見にいかない */
 function tryQuestVisit(r){const list=QUEST_VISITS.get(r);if(!list||!list.length||r.act&&r.act.type==='questjoy')return false;
-  const v=list[0];if(!qvHas(v.obj,v.id)){list.shift();return false}
+  const v=list[0];if(!qvHas(v.obj,v.id)||partVisitStale(v)){list.shift();return false}
   if(r.hunger<30||hungry(r)||(r.visitRetryAt||0)>S.t||onHold(r)||HOLD.has(r.id)||!questVisitSafe(r,v.obj))return false;
   if(r.act&&['eat','fetch','flee','faint'].includes(r.act.type))return false;/* おなかがすいているとき以外は、ねむくても、すぐ見にいく */
   const G=bfs(r.x|0,r.y|0),stand=questVisitStand(r,G,v.obj);if(stand<0){if(!questVisitOpen(G,v.obj)){r.visitRetryAt=S.t+10;if(!v.told){v.told=1;toast(r.name+'が'+(BL[v.id]?BL[v.id].name:'')+'まで行けません','warn')}}return false}list.shift();/* 見にいけないときは、見たことにせず、知らせて、行けるようになるまで待つ */
@@ -416,7 +417,7 @@ ACT.questjoy={start(r,a){if(!qvHas(a.obj,a.targetId)||!questVisitReached(r,a.obj
   for(const k in SUB_CLEAR_WAIT){const w=SUB_CLEAR_WAIT[k];if(!w||w.r!==r||w.obj!==a.obj||w.prompted)continue;const q=SUBQ.find(x=>x.k===k);if(!q)continue;w.prompted=true;(S.subArrived||(S.subArrived={}))[k]=true;S.subSt[k]=3;const reply=questReplyWho(q);if(reply)SUBW[reply]=k}
 },
   tick(r,a){if(!a.secondHop&&performance.now()-a.joyAt>=900){a.secondHop=true;JUMP.set(r,performance.now())}},
-  done:(r,a)=>!qvHas(a.obj,a.targetId)||performance.now()>=a.joyUntil||!!a.partKey&&!a.partKey.startsWith((S.world||0)+':'+(QUESTS[S.quest]?.text)+':'),/* 小さな目標を見にいくのは、その目標のあいだだけ */
+  done:(r,a)=>!qvHas(a.obj,a.targetId)||performance.now()>=a.joyUntil||partVisitStale(a),/* 小さな目標を見にいくのは、その目標のあいだだけ */
   end(r,a){if(JOYU.get(r)===a.joyUntil)JOYU.delete(r)}};
 function upFx(r,nm,txt,big){const now=performance.now();JOYU.set(r,now+2600);RHOLD.set(r,now+2600);r.bubble='😆';r.shine=now;JUMP.set(r,now);setTimeout(()=>{if(S.res.includes(r))JUMP.set(r,performance.now())},900);
   fxSpr('levelup',r.x*TS,(r.y-.5)*TS);
