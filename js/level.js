@@ -29,7 +29,7 @@ function rStat(r,lv){const V=r.vr||{},fire=r.elem==='fire';return{
   bonus:XPBL[lv]}}
 // 獲得量は端数も保存。表示と実際の加算で同じ計算を使う。
 const spiritXpGain=(base,lv)=>(base+XPBL[lv])*.8;
-const xpText=n=>String(Math.round(n*1000)/1000);
+const xpText=n=>String(Math.floor(n+1e-9));/* 画面には小数点を出さない（中の計算は丸めない） */
 function spiritXpProgress(r){const lv=rLv(r),total=Math.round(((r.xp||0)+(r.xpf||0))*1000)/1000,next=LVXP[lv+1];return{lv,total,next,remaining:next==null?0:Math.max(0,Math.round((next-total)*1000)/1000)}}
 const RSTN=[['work','作業スピード'],['move','移動速度'],['cap','持てる数'],['atk','攻撃力']];
 // 満腹に必要な食料の数：Lv1〜4で1つ、4レベルごとに+1、火のせいれいは+1
