@@ -159,8 +159,8 @@
 - 絵と音は、JS の中に文字（base64）で入れない。ファイルにする：マップチップは、アトラス（`assets/chips/*.webp`、2048×2048）にまとめ、chips.js には場所だけ（`tools/chips.py`：`unpack` でほどいて JSON を直し、`pack` で作りなおす。pack は元の絵とドットまで同じかたしかめる）。プログラムの絵と音は `assets/g`、フォントは `assets/f`。ファイル名は中身から作る（かえたら名前もかわるので、古いファイルが使われない）。絵は、画質を落とさない WebP（ロスレス、透明な所の色も保つ `exact`）。
 - `index.html` は、はじめにタイトルと同じ色の `#boot` を出し、タイトルのすぐあとで `#boot` をかくす（大きなスタイルの読みこみのあいだ、真っ白にしない）。開発用のメモのコメントは、ファイルのいちばん下。
 - ブラウザでたしかめるときは、サーバーをとおして開く（file:// で開くと、絵がよそのものあつかいになり、toDataURL がつかえない）。
-- マップチップの絵をかえたPRでは、マップチップ工房（https://claude.ai/artifact/TSGpjyVzS5fJvYkatcNaKv）の `chips.json` も同じ中身に作りなおして公開する（`tools/chips.py unpack` で、絵を data URI にした JSON が作れる。ページは外のサイトを読めないので、自分では新しくならない）。
-- マップチップ工房の「さしかえ」でもらった `replace.json` は、`python3 tools/chips.py replace replace.json` で入れる（絵の大きさがかわると w・h もかわる。ax・ay はそのまま。工房で位置・大きさを調整した物（`meta`）は、ax・ay をかえ、大きさは元の絵から BOX で作りなおす）。
+- マップチップの絵をかえたPRでは、マップチップ工房（https://claude.ai/artifact/TSGpjyVzS5fJvYkatcNaKv）も新しくする。工房は `index.json` と `g/<ジャンル>.json` だけを読む。Artifact の read で `index.json` と、かわったチップのある `g/*.json` をおとし、`python3 tools/chips.py kobo <そのフォルダ> [id...]`（id がなければ、さいごの replace でかえた物）で、かわったチップだけを書きかえて、出てきたファイルだけを公開しなおす（ぜんぶの unpack はしない。とても時間がかかる）。
+- マップチップ工房の「さしかえ」でもらった `replace.json` は、`python3 tools/chips.py replace replace.json` で入れる（数秒。アトラスの WebP は method 2。method 6 は1ページ25秒かかり、小さくもならない）（絵の大きさがかわると w・h もかわる。ax・ay はそのまま。工房で位置・大きさを調整した物（`meta`）は、ax・ay をかえ、大きさは元の絵から BOX で作りなおす）。
 - マップチップ工房の「ゲームの中で」の見本（`gv/<id>.webp`）は、ゲームそのもので置いて写した絵（`tools/gameview.js` で写し、`tools/gameview_grid.py` でマス目と置くマスのわくをつける）。チップの絵・大きさ・置き方をかえたら、写しなおして工房も公開しなおす。
 - 図鑑（メニューの「図鑑」、`zukanBody`）：マップごとに、スポット・家具・建物・レシピ・コワイノ・アイテムのタブ。見つけた・おぼえた物だけ出す（レシピ・家具・建物は、そのマップでおぼえた物 `GREC` と、そのマップに置いた・持っている物。アイテムは一度でも持った素材・食べ物 `S.seenIt`）。
 - 「おく」の「建てる」の欄は、素材を「持っている数/いる数」で出す（足りない素材は赤。素材ごとに1行）。
