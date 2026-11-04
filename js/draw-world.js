@@ -24,7 +24,7 @@ function drawSand(it,now,e,D,z,px,py,v){/* 砂になって消える：ひびが�
   const m=Math.min(1,Math.max(0,(p-.2)/.6)),fade=p<1?1:Math.max(0,1-(raw-1)/.15);if(m>0&&fade>0){ctx.save();ctx.globalAlpha=fade;ctx.fillStyle='#c9a35f';ctx.beginPath();ctx.ellipse(px,py+10,Ww*1.2*m,Hh*.1*m+2,0,0,7);ctx.fill();ctx.fillStyle='#e0c487';ctx.beginPath();ctx.ellipse(px,py+7,Ww*.8*m,Hh*.06*m+1,0,0,7);ctx.fill();ctx.restore()}/* 足もとの砂山 */
   ctx.globalAlpha=1}
 const PAUSE_FX=()=>started&&sheet!=null;
-const GLW=document.createElement('canvas'),glx=GLW.getContext('2d');let GLWN=0;
+const GLW=document.createElement('canvas'),glx=GLW.getContext('2d');let GLWN=0;const DMK=document.createElement('canvas'),dmx=DMK.getContext('2d');/* 夜の暗さの絵（画面と同じ大きさ） */
 const EOC=document.createElement('canvas'),EOS=document.createElement('canvas'),eox=EOC.getContext('2d'),eos=EOS.getContext('2d');
 function enemyHidden(e,x0,y0,x1,y1){const ex=e.x|0,ey=e.y|0;
   for(let dy=0;dy<=4;dy++)for(let dx=-3;dx<=3;dx++){const x=ex+dx,y=ey+dy;if(x<0||y<0||x>=W||y>=H)continue;const a=anc(y*W+x),o=S.obj[a];if(!o||o==='part'||FLAT.has(o)||!BL[o])continue;
@@ -420,12 +420,15 @@ function render(now){RFN++;
   const dk=darkness();
   ctx.setTransform(dpr,0,0,dpr,0,0);
   if(BOSSEVE){const h=hour(),a=Math.min(1,Math.max(0,(h-15)/2))*.16;if(a>0){ctx.fillStyle='rgba(110,30,70,'+a+')';ctx.fillRect(0,0,VW,VH)}}/* オオカゲが来る日の夕方：空があやしい色に */
-  if(dk>0){ctx.fillStyle=(BOSSEVE||!WD&&S.ns&&(S.ns.final||S.ns.rush)&&!S.cleared?'rgba(46,10,52,':'rgba(14,20,58,')+dk+')';ctx.fillRect(0,0,VW,VH);
-    ctx.setTransform(k,0,0,k,-cam.x*k,-cam.y*k);ctx.globalCompositeOperation='lighten';/* 光が重なっても、いちばん明るい光より明るくならない */
-    ctx.globalAlpha=dk;for(const j of LITP){const o=S.obj[j],L=LIGHTP[o];if(!L)continue;const x=j%W,y=(j/W)|0;if(x<x0-5||x>=x1+5||y<y0-5||y>=y1+5)continue;/* 画面の外5マスの明かりも、光がとどくので描く */if(INDL.has(o)&&roomOf(j))continue;/* 家の中の灯りは、灯りそのものは光らせず、家ぜんたいを光らせる（下） *//* 明かりの出る物は、夜にまわりを明るく：光の絵（半径ごとに1まい作っておく）をおく */
-      const R=L.R;ctx.drawImage(lightSpr(R),x*TS+L.dx-R,y*TS+L.dy-R,R*2,R*2)}ctx.globalAlpha=1;
+  if(dk>0){/* 夜の明かり：暗さを別の絵（DMK）にぬり、明かりの所の暗さをけずる（光の色をかぶせず、地面そのものが明るく見える） */const cv=ctx.canvas;if(DMK.width!==cv.width||DMK.height!==cv.height){DMK.width=cv.width;DMK.height=cv.height}
+    dmx.globalCompositeOperation='source-over';dmx.globalAlpha=1;dmx.setTransform(1,0,0,1,0,0);dmx.clearRect(0,0,DMK.width,DMK.height);dmx.setTransform(dpr,0,0,dpr,0,0);dmx.fillStyle=(BOSSEVE||!WD&&S.ns&&(S.ns.final||S.ns.rush)&&!S.cleared?'rgba(46,10,52,':'rgba(14,20,58,')+dk+')';dmx.fillRect(0,0,VW,VH);
+    dmx.setTransform(k,0,0,k,-cam.x*k,-cam.y*k);dmx.globalCompositeOperation='destination-out';
+    for(const j of LITP){const o=S.obj[j],L=LIGHTP[o];if(!L)continue;const x=j%W,y=(j/W)|0;if(x<x0-5||x>=x1+5||y<y0-5||y>=y1+5)continue;/* 画面の外5マスの明かりも、光がとどくので描く */if(INDL.has(o)&&roomOf(j))continue;/* 家の中の灯りは、灯りそのものは光らせず、家ぜんたいを光らせる（下） */
+      const R=L.R;dmx.drawImage(lightSpr(R),x*TS+L.dx-R,y*TS+L.dy-R,R*2,R*2)}
     const litH=new Set();for(const j of LIGHTS){if(INDL.has(S.obj[j])){const h=roomOf(j);if(h)litH.add(h)}}/* 灯りのある家 */
-    {const sm=ctx.imageSmoothingEnabled;ctx.imageSmoothingEnabled=true;ctx.globalAlpha=dk*.75;for(const h of litH)ctx.drawImage(houseGlow(h),h.x0*TS-GLOWM,h.y0*TS-GLOWM);ctx.globalAlpha=1;ctx.imageSmoothingEnabled=sm}/* 灯りのある家は、家ぜんたいを同じ明るさで照らす（ふちはぼかす） */
+    {dmx.imageSmoothingEnabled=true;dmx.globalAlpha=.75;for(const h of litH)dmx.drawImage(houseGlow(h),h.x0*TS-GLOWM,h.y0*TS-GLOWM);dmx.globalAlpha=1}/* 灯りのある家は、家ぜんたいを同じ明るさで照らす（ふちはぼかす） */
+    ctx.setTransform(1,0,0,1,0,0);ctx.drawImage(DMK,0,0);/* けずったところは重なっても、暗さがなくなるだけ（明るくなりすぎない） */
+    ctx.setTransform(k,0,0,k,-cam.x*k,-cam.y*k);ctx.globalCompositeOperation='lighter';ctx.globalAlpha=dk*.18;for(const j of LITP){const o=S.obj[j],L=LIGHTP[o];if(!L)continue;const x=j%W,y=(j/W)|0;if(x<x0-5||x>=x1+5||y<y0-5||y>=y1+5)continue;if(INDL.has(o)&&roomOf(j))continue;const R=L.R;ctx.drawImage(lightSpr(R),x*TS+L.dx-R,y*TS+L.dy-R,R*2,R*2)}ctx.globalAlpha=1;/* 火のあたたかさを、ほんの少しだけ */
     ctx.globalCompositeOperation='source-over';
     {const wl=HOUSEART['wall-window-lit'];if(wl&&wl.complete&&wl.naturalWidth&&isDark()){ctx.globalAlpha=1;for(const h of litH)for(const q of h.set){if(((q/W)|0)===h.y0)continue;/* 上がわの壁の窓は、昼も夜も同じ色 */if(!S.win||S.win[q]!==1||!(HOME_WALLS.has(S.obj[q])||S.obj[q]==='window'))continue;const qx=q%W,qy=(q/W)|0;if(qx<x0-1||qx>x1||qy<y0-1||qy>y1)continue;if(winCovered(qx,qy))continue;/* 手前に背の高い物があれば、窓の光はかさねない */{const lk='window:lit',lc=window.CHIPS&&CHIPS[lk];if(!(lc&&drawChip(ctx,lc,lk,qx*TS,qy*TS-1.5,0,q)))ctx.drawImage(wl,qx*TS+3.625,qy*TS+1.5,24.75,21.7125)}}/* 明かりの絵もチップの大きさのまま */ctx.globalAlpha=1}}/* 夜（21時〜6時）だけ、灯りのある家の窓ガラスは中が明るい色に（暗さの上にかく） */
     ctx.setTransform(dpr,0,0,dpr,0,0)}
