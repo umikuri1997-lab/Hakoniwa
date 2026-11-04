@@ -209,7 +209,7 @@ const SEV1=[
  {k:'e16',at:()=>(S.finalNight||S.finalOn)&&!S.cleared,L:[["F","木の葉が、暗くなってきた……。"],["N","影が、根のそばへ来てるねぇ。",1],["H",{"A":"ここは、あたいが行く。","B":"ここは、おれが行く。"},1],["F","……でも。"],["H",{"A":"あんたまで、前に出なくていい。その代わり、頼むよ。あたいたちが帰ってくる所。","B":"おまえまで、前に出なくていい。その代わり、頼むぞ。おれたちが帰ってくる所。"},1],["F","……うん。この木も、村も、守ってる。"]]},
  {k:'e15',night:1,at:()=>!!(S.ns&&S.ns.final)&&S.enemies.some(e=>e.type==='boss2'&&e.spawned&&!e.dead)&&sevHere('F'),L:[["F","#think|……来た。あの、大きな影……！",0,"shake"],["F","あの夜も、みんなが前に出て……。"],["H",{"A":"フタバ、後ろを頼むよ！","B":"フタバ、後ろを頼むぞ！"},1],["F","……うん。ここにいるよ。"],["F","ちゃんと、帰ってきてね。ぼくも、みんなを守るから！",0,"guarddemo"],["N","葉っぱが、みんなのそばへ届いてるよぉ。",1]],
   go:()=>{S.flags.finF=1;S.flags.guard=true;toast('フタバが、近くのみんなを葉っぱで守る！','good')}},
- {k:'e16g',at:()=>!WD&&!!S.flags.finalWon&&!isNight()&&S.qStory==null&&!S.cleared&&!S.sev?.e16g,L:[['F','ねえ、守り神さま。ぼくの力、受けとってくれる？'],['F','#joy|ぼくが守ってもらったみたいに、こんどは守り神さまが、みんなを守れるように！',0,'guarddemo+flash+hop'],['N','フタバの葉っぱが、守り神さまのまわりで光ってるよぉ。',1],['H',{A:'へえ……あったかい光だね。',B:'へえ……あったけえ光だな。'},1],['G','#joy|……ありがとうの、フタバ。この力、大事に使わせてもらうぞい。']],
+ {k:'e16g',at:()=>!WD&&!!S.flags.finalWon&&!isNight()&&S.qStory==null&&!S.cleared&&!S.sev?.e16g,L:[['F','#think|……ゆうべ、葉っぱのまもりが、みんなをつつんでくれたね。'],['N','うん。フタバのそばにいると、ちっともこわくなかったよぉ。',1],['F','#worry|でも……ぼくから遠くにいた子は、まもれなかった。'],['F','#think|守り神さまの光なら、村のどこにだって、とどくよね。'],['F','ねえ、守り神さま。ぼくの力、受けとってくれる？'],['F','#joy|ぼくが守ってもらったみたいに、こんどは守り神さまが、みんなを守れるように！',0,'guarddemo+flash+hop'],['N','フタバの葉っぱが、守り神さまのまわりで光ってるよぉ。',1],['H',{A:'へえ……あったかい光だね。',B:'へえ……あったけえ光だな。'},1],['G','#joy|……ありがとうの、フタバ。この力、大事に使わせてもらうぞい。']],
   go:()=>{S.flags.areaSkill=true;toast('守り神が「こもれびのまもり」を受けついだ！','good');memo('✨','守り神が「こもれびのまもり」を受けついだ')}},/* 草原：ヨルノオオカゲをたおした朝に、守り神が目ざめる */
  /* 消えた子がもどったとき（S.sevQ に入る） */
  {k:'b_N',q:1,L:[['N','#surprise|ふわぁ……ただいまぁ。'],['F','ノドカ！！'],['F','#think|……もう！ すっごく、心配したんだから！'],['N','#joy|ごめんねぇ。待っててくれて、ありがとう。'],['F','#think hush|……ほんとに、帰ってきた。'],['F','むかしは、ヌシ様の姿まで見えなくなって……ぼくの呼ぶ声も、届かないと思ってたんだ。','1st'],['F','#joy|おかえり！ こんどは、いっしょにごはん食べようね！']]},
@@ -221,7 +221,7 @@ function sevBusy(){return !started||!$('#dialog').hidden||sheet!=null||NEWRES!=n
 const SEVRUN=new Set();/* いま再生中の会話（セーブしない） */
 let SCENEHOLD=0;/* 演出のあいだ、村の時間を止める（実時間でうごく） */
 function guardInherit(e,L,f,owner,session){/* フタバの力（こもれびのまもり）を受けつぐ場面：はじめの一言 → 会話をとじて、時間を止めたまま、フタバが祈り、葉と光が守り神へながれこみ、まもりの光がひろがる → のこりの会話 */
-  const first=L.slice(0,1),rest=L.slice(1).map(l=>{const c=typeof l[2]==='string'?2:3;if(!/guarddemo/.test(l[c]||''))return l;const m=l.slice();m[c]='hop';return m});
+  const kd=Math.max(1,L.findIndex(l=>/guarddemo/.test(l[typeof l[2]==='string'?2:3]||''))),first=L.slice(0,kd),rest=L.slice(kd).map(l=>{const c=typeof l[2]==='string'?2:3;if(!/guarddemo/.test(l[c]||''))return l;const m=l.slice();m[c]='hop';return m});
   const alive=()=>S===owner&&VILLAGE_SESSION===session&&S.res.includes(f);
   const finish=()=>{(S.sev||(S.sev={}))[e.k]=1;SEVRUN.delete(e.k);if(e.go)e.go();};
   const at=(ms,fn)=>setTimeout(()=>{if(alive())fn()},ms);
