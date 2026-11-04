@@ -218,11 +218,26 @@ const SEV1=[
 ];
 function sevBusy(){return !started||!$('#dialog').hidden||sheet!=null||NEWRES!=null||NEWQ.length||!$('#lvup').hidden||!$('#rlv').hidden||ASKING}
 const SEVRUN=new Set();/* いま再生中の会話（セーブしない） */
+let SCENEHOLD=0;/* 演出のあいだ、村の時間を止める（実時間でうごく） */
+function guardInherit(e,L,f,owner,session){/* フタバの力（こもれびのまもり）を受けつぐ場面：はじめの一言 → 会話をとじて、時間を止めたまま、フタバが祈り、葉と光が守り神へながれこみ、まもりの光がひろがる → のこりの会話 */
+  const first=L.slice(0,1),rest=L.slice(1).map(l=>l[3]&&/guarddemo/.test(l[3])?[l[0],l[1],l[2],'hop']:l);
+  const alive=()=>S===owner&&VILLAGE_SESSION===session&&S.res.includes(f);
+  const finish=()=>{(S.sev||(S.sev={}))[e.k]=1;SEVRUN.delete(e.k);if(e.go)e.go();};
+  const at=(ms,fn)=>setTimeout(()=>{if(alive())fn()},ms);
+  dialog(first,()=>{if(!alive())return;const T=performance.now();SCENEHOLD=T+6200;
+    camAnim={fz:cam.z,tz:Math.min(3,Math.max(2,cam.z*1.4)),fx:cam.x+VW/cam.z/2,fy:cam.y+VH/cam.z/2,tx:f.x*TS,ty:f.y*TS-14,t:0,dur:.9};
+    f.face=1;sacredScenePose(f,'pray',5600);
+    at(700,()=>{leafFX(f);sfx('bush')});
+    at(1500,()=>{lightFlow(f.x,f.y-.3);sfx('shard')});
+    at(3600,()=>{f.shDemo=performance.now()+2600;leafFX(f);for(const r of S.res)if(r!==f&&!r.hidden&&Math.hypot(r.x-f.x,r.y-f.y)<=4){leafFX(r);r.shDemo=f.shDemo}addFloat(f.x,f.y-1,'こもれびのまもり！','#5fbf3f');dlgCue('flash');sfx('level')});
+    at(6200,()=>{SCENEHOLD=0;dialog(rest,()=>{if(alive())finish()})});
+  });
+}
 function playDirectStoryEvent(e,L){
   SEVRUN.add(e.k);const owner=S,session=VILLAGE_SESSION,f=S.res.find(r=>r.name===POKO);
   if(f)centerOn(f.x*TS,f.y*TS);
   const run=()=>dialog(L,()=>{if(S!==owner||VILLAGE_SESSION!==session)return;(S.sev||(S.sev={}))[e.k]=1;SEVRUN.delete(e.k);if(e.go)e.go();});
-  if(e.k==='e16g'&&f){run();return villageTimeout(()=>{leafFX(f);lightFlow(f.x,f.y-.3);},2600);}
+  if(e.k==='e16g'&&f)return guardInherit(e,L,f,owner,session);
   const result=e.vis?visionFX(e.vis,run):run();if(IS_STORY_REPLAY&&e.k==='e15')sacredShot('battle',S.res);return result;
 }
 function checkSev(){if(WD||!S){SEVW={};return}if(!sevBusy())sevBub();if(S.cleared&&!(S.sevQ||[]).length)return;const D=S.sev||(S.sev={}),ending=grassEndingEvent();if(sevBusy()||!ending&&(S.sevQuietUntil||0)>S.t)return;
