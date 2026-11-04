@@ -375,8 +375,8 @@ function questVisitTarget(q,ids,j){if(ids.includes(S.floor[j]))return true;const
 }
 function queueQuestVisit(q,who,partIds,partKey){const ids=partIds||(q.k?QUEST_VISIT_SUB[q.k]:QUEST_VISIT_MAIN[q.id]);if(!ids)return null;
   const r=S.res.find(r=>r.name===who)||S.res.find(r=>r.name===(q.talk&&q.talk.who))||S.res.find(r=>(q.story||[]).some(line=>line[0]===r.name))||S.res.find(r=>!r.hidden)||S.res[0];if(!r)return;
-  const recent=QUEST_PLACEMENTS.get(S);let target=-1,best=-Infinity;
-  for(let j=0;j<S.obj.length;j++){if(!questVisitTarget(q,ids,j))continue;const last=recent&&recent.get(j),score=(last&&qvHas(j,last.id)?last.n*100000:0)-Math.hypot(j%W+.5-r.x,(j/W|0)+.5-r.y);if(score>best){best=score;target=j}}
+  const recent=QUEST_PLACEMENTS.get(S),RG=bfs(r.x|0,r.y|0);let target=-1,best=-Infinity;
+  for(let j=0;j<S.obj.length;j++){if(!questVisitTarget(q,ids,j)||questVisitStand(r,RG,j)<0)continue;/* そばに立てる物だけ見にいく（ベッドがかこまれていると、行けない） */const last=recent&&recent.get(j),score=(last&&qvHas(j,last.id)?last.n*100000:0)-Math.hypot(j%W+.5-r.x,(j/W|0)+.5-r.y);if(score>best){best=score;target=j}}
   if(target<0)return null;
   // メインの訪問は、未完了のサブの訪問より先に行う。中断したサブは後で再開する。
   if(!q.k&&!partKey&&r.act&&r.act.type==='questjoy'&&r.act.obj!==target)endAct(r);
