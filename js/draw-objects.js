@@ -142,6 +142,7 @@ function drawRoofItem(c,id,x,y){/* ガゼボ・東屋：2×2マス（左上が x
   c.fillStyle=R[0];c.beginPath();c.moveTo(x+12,y-14);c.lineTo(x+52,y-14);c.lineTo(x+40,y-30);c.lineTo(x+24,y-30);c.closePath();c.fill();/* 屋根（上の面） */
   c.fillStyle=R[2];c.fillRect(x-2,y+8,68,2);c.fillRect(x+12,y-15,40,1.5);
   if(gz){c.fillStyle='#efe7da';c.fillRect(x+30,y-38,4,9);c.beginPath();c.arc(x+32,y-39,3,0,7);c.fill()}else{c.fillStyle=R[1];c.fillRect(x+22,y-33,20,4)}}
+const DOKU_PX=['..................rrrr....','................rrwrrdr...','...............rrrrrwrdd..','...............ddrrrrddd..','..................ss......','.....aaaaaaaaa....st......','...aabbbbbbbbbaa..st.aa...','..abbhhbbbbbbbbbaaststbba.','.abbhbbbbbbhhbbbbbtttbbba.','.abbbbbbbbbhbbbbbbbbbhbba.','.abbbbhhbbbbbbbbbbbbbbbba.','..abbbbbbbbbbbbhhbbbbbba..','...aabbbbbbbbbbbbbbbbaa...','.....aaaaaaaaaaaaaaaaa....'];/* どくの罠の絵（24×14） */
 function drawObj(c,id,x,y,i,g,now){
   if(id==='tower'&&WD===0){drawStoryTree(c,x,y,i,now,ICON);return;}
   if(STAIRS.has(id)){if(ICON||i==null)drawStair(c,id,x,y,0,y+3,y+29);else drawStairObj(c,i,id);return}/* 階段は、段差といっしょに cliffStrip で描く（ここはアイコンだけ） */
@@ -410,8 +411,7 @@ function drawObj(c,id,x,y,i,g,now){
   case'arrow':c.save();c.translate(x+16,y+16);c.rotate(-.8);c.fillStyle='#a8743f';c.fillRect(-11,-1.5,20,3);c.fillStyle='#cfd3d8';c.beginPath();c.moveTo(14,0);c.lineTo(8,-4.5);c.lineTo(8,4.5);c.fill();c.fillStyle='#d9785b';c.fillRect(-13,-4.5,7,3);c.fillRect(-13,1.5,7,3);c.restore();break;
   case'spike':shadow(c,x+16,y+26,12,2);c.fillStyle='#7a6a55';rr(c,x+4,y+20,24,7,2);c.fillStyle='#cfd3d8';for(let k=0;k<4;k++){const sx=x+6+k*6;c.beginPath();c.moveTo(sx,y+21);c.lineTo(sx+2.5,y+12);c.lineTo(sx+5,y+21);c.closePath();c.fill()}
     c.fillStyle='rgba(0,0,0,.15)';for(let k=0;k<4;k++)c.fillRect(x+8.5+k*6,y+13,1,8);break;
-  case'sticky':for(const[dx,dy,r]of[[-6,4,6],[5,2,7],[0,8,6]]){c.fillStyle='rgba(120,190,70,.75)';c.beginPath();c.ellipse(x+16+dx,y+18+dy,r,r*.55,0,0,7);c.fill()}
-    c.strokeStyle='#4f8a39';c.lineWidth=1.5;for(const dx of[-7,0,7]){c.beginPath();c.moveTo(x+16+dx,y+24);c.quadraticCurveTo(x+16+dx-3,y+14,x+16+dx+1,y+9);c.stroke()}c.fillStyle='rgba(255,255,255,.5)';circ(c,x+12,y+19,1.3,'rgba(255,255,255,.6)');circ(c,x+20,y+23,1,'rgba(255,255,255,.6)');break;
+  case'sticky':{/* どくの罠：むらさきの水たまりと、どくきのこ（ドット絵、1ドット＝1） */const P={a:'#9a7bb8',b:'#b89ad0',h:'#e4d6f0',r:'#d98aa8',d:'#b86a8a',w:'#fff8f0',s:'#f2e8d8',t:'#d8c8b0'},M=DOKU_PX;for(let yy=0;yy<M.length;yy++)for(let xx=0;xx<M[yy].length;xx++){const k=M[yy][xx];if(k!=='.'){c.fillStyle=P[k];c.fillRect(x+4+xx,y+10+yy,1,1)}}break}
   case'puddle':{const T=now||0,rd=!(S.trapCd&&S.trapCd[i]>S.t)||ICON;c.fillStyle=rd?'rgba(90,170,235,.8)':'rgba(90,170,235,.35)';c.beginPath();c.ellipse(x+16,y+20,13,7,0,0,7);c.fill();
     c.strokeStyle='rgba(255,255,255,.55)';c.lineWidth=1;const r2=(T/700+i*.3)%1;c.beginPath();c.ellipse(x+16,y+20,3+r2*9,1.5+r2*4.5,0,0,7);c.stroke();c.fillStyle='rgba(255,255,255,.6)';c.fillRect(x+9,y+17,5,1.3);break}
   case'firetrap':{const T=now||0,rd=!(S.trapCd&&S.trapCd[i]>S.t)||ICON;shadow(c,x+16,y+26,12,2);c.fillStyle='#6b6f78';rr(c,x+4,y+16,24,11,3);c.fillStyle='#3a3f48';for(let k=0;k<3;k++)rr(c,x+7+k*7,y+19,5,5,1.5);
