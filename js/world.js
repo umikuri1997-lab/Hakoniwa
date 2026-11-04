@@ -37,7 +37,7 @@ let S=null;
 const resv=new Map();
 let STATUE=-1,OBOX=-1,BOARD=-1,counts={},LIGHTS=[],JARS=[],COMPS=[],LITP=[],STELES=[],TOWERS=[],ENVE={},NEARMILL=new Set(),STUMPB=new Set(),NEARVANE=new Set(),NEARCART=new Set(),NEARTOOL=new Set(),NEARJORO=new Set(),NEARSIGN=new Set(),NEARTREE=new Set(),NEARPARA=new Set(),SPOTJ=new Map(),SPOTM=new Map(),SPOTI=[],RUGC=new Map(),RFC=new Map(),ENVG=null,REV=new Set(),ATTR={},BASEPCT=0,GRASSN=0;const GRASS_GOAL=2500;
 function newState(w){w=w||0;
-  const s={v:8,mig:9,flags:{berryHalf:1,berryHalf2:1,land2:1,land3:1,land4:1,arrow0:1,q3ins:1,qmerge1:1,companionStory:1,fieldStoryV2:1,sacredStoryV1:1,sacredFootprint3:1,xp12:1},placed:{},feat:{build:true},inv:{},orders:[],enemyOn:false,nights:0,godGone:false,godShown:false,nushi:null,
+  const s={v:8,mig:9,flags:{berryHalf:1,berryHalf2:1,land2:1,land3:1,land4:1,arrow0:1,q3ins:1,qmerge1:1,companionStory:1,fieldStoryV2:1,sacredStoryV1:1,sacredFootprint3:1,sacredFootprint4:1,xp12:1},placed:{},feat:{build:true},inv:{},orders:[],enemyOn:false,nights:0,godGone:false,godShown:false,nushi:null,
     lv:1,bossKills:0,nightHurt:0,nightHad:false,wave:null,lastWarn:0,
     ref:{},ground:new Array(W*H).fill(0),floor:new Array(W*H).fill(''),obj:new Array(W*H).fill(''),dyn:{},hp:{},
     res:[],enemies:[],pt:25,totalPt:0,food:0,fs:{},cseed:{imo:4},crops:{imo:true},mat:{wood:0,stone:0},regrow:[],t:w===0?15*60:12*60,/* 草原は15時からはじまる */speed:1,
@@ -214,7 +214,7 @@ const BEDHX=26,BEDHY=-1,BEDVY=8.5,BEDHS=.85;/* 横のベッド：寝る子の足
 const ROTN=id=>ROTS[id]===5?5:ROTS[id]===4?4:ROTS[id]?2:1,ROTL={5:['じどう','手前へ','右へ','左へ','奥へ'],4:['前','右','後ろ','左'],2:['横','縦'],1:['そのまま','反転']};/* 5：階段の下りる向き（S.rot は 1手前 2右 3左 4奥、0は自動） */
 let PLROTS={};/* 置くときにえらんでいる向き（家具ごと） */
 const rotAt=j=>(S&&S.rot&&S.rot[j])||0;
-const szR=(id,rot)=>{const z=id==='tower'&&WD===0&&S?.sacredLegacy2?[2,2]:BL[id]&&BL[id].sz;if(!z)return null;return (ROTS[id]===2&&rot===1||ROTS[id]===4&&rot%2===1)?[z[1],z[0]]:z};/* 向きをかえると、たて・よこが入れかわる */
+const szR=(id,rot)=>{const z=id==='tower'&&WD===0&&S?.sacredLegacy2?[2,2]:id==='tower'&&WD===0&&S?.sacredLegacy3?[3,3]:BL[id]&&BL[id].sz;if(!z)return null;return (ROTS[id]===2&&rot===1||ROTS[id]===4&&rot%2===1)?[z[1],z[0]]:z};/* 向きをかえると、たて・よこが入れかわる */
 const szAt=(id,j)=>szR(id,j==null?0:(S.obj[j]===id||S.obj[j]==='site'?rotAt(j):(PLROTS[id]||0)));
 const fp=(id,x,y,rot)=>{const z=rot!=null?szR(id,rot):szAt(id,y*W+x);if(!z)return [[x,y]];const c=[];for(let b=0;b<z[1];b++)for(let a=0;a<z[0];a++)c.push([x+a,y+b]);return c};
 function walk(j){if(j<0||j>=W*H||S.ground[j]===1&&S.obj[j]!=='bridge'||STUMPB.has(j))return false;/* 切り株の上は歩かない */return !solidOf(j)}/* 橋の上は歩ける。浅瀬（ground 2）は歩ける（ゆっくり） */

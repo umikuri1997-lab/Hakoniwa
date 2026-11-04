@@ -78,6 +78,7 @@ function spPose(o,t,tr,back){/* せいれいの動きの計算：腕の角度・
   else if(A==='storyWind'){aN=-.6-Math.sin((o.sceneP||0)*Math.PI)*.6;aF=.1;lean2=-.02;frontArm=true}
   else if(A==='storyListen'){aN=.35;aF=.35;lean2=.025;frontArm=true}
   else if(A==='storyBump'){const p=o.sceneP||0,v=p<.5?sacredEase(p*2):1-sacredEase((p-.5)*2);aN=.4-v*1.6;aF=.2;lean2=v*.1;frontArm=true}
+  else if(A==='storyOffer'){const p=o.sceneP||0,v=sacredEase(Math.min(1,p/.35));aN=aF=-.4-2.3*v;lean2=-.05*v;frontArm=bothF=true}/* かけらを両手でささげる：手を前から上へもち上げる */
   else if(A==='storyHug'){const v=sacredEase(Math.min(1,(o.sceneT||0)/.8));aN=-1.6*v;aF=-1.35*v;lean2=.2*v;frontArm=bothF=true}
   else if(A==='pray'){aN=aF=-2.4+Math.sin(t*1.4)*.03;lean2=.07+Math.sin(t*1.4)*.015;frontArm=bothF=true}/* おいのり：胸の前で手を合わせて、少しうつむく */
   else if(A==='pluck'){aN=-1.95+Math.sin(t*9)*.28;aF=.15;lean2=.03;frontArm=true}/* ベリーをむしる：片手を上げて、ひっぱる */

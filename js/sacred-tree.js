@@ -2,31 +2,31 @@
 /* 草原の物語の木。tower は既存セーブの建物IDとして保ち、火山の台座とは表示・育て方を分ける。 */
 const storyTreeName=()=>WD===0?'御神木':'守護の台座';
 const SACRED_PREVIEW=new WeakMap(),SACRED_POSES=new WeakMap();
-const sacredSpan=()=>S?.sacredLegacy2?2:3;
+const sacredSpan=()=>S?.sacredLegacy2?2:S?.sacredLegacy3?3:4;
 const sacredCells=(j,n=sacredSpan())=>Array.from({length:n*n},(_,i)=>j+(i/n|0)*W+i%n);
 const storyTreeX=j=>j%W+(WD===0?sacredSpan():2)/2;
 const storyTreeY=j=>(j/W|0)+(WD===0?sacredSpan()-1:1);
-function migrateSacredFootprint3(state){
-  if(state.free||(state.world||0)!==0||state.flags.sacredFootprint3&&!state.sacredLegacy2)return;
+function migrateSacredFootprint3(state){/* 御神木を4×4へ（前は2×2・3×3）。空きがなければ、いまの大きさのまま、あとで空いたら広げる */
+  if(state.free||(state.world||0)!==0||state.flags.sacredFootprint4&&!state.sacredLegacy2&&!state.sacredLegacy3)return;const N=4,cur=state.sacredLegacy2?2:state.sacredLegacy3||!state.flags.sacredFootprint4&&state.flags.sacredFootprint3?3:2;
   const old=state.obj.indexOf('tower'),pending=state.obj.findIndex((o,j)=>o==='site'&&state.dyn[j]?.build==='tower'),origin=old>=0?old:pending>=0?pending:state.sacredRoot;
-  if(origin==null){state.flags.sacredFootprint3=1;return;}
+  if(origin==null){state.flags.sacredFootprint3=state.flags.sacredFootprint4=1;delete state.sacredLegacy2;delete state.sacredLegacy3;return;}
   const own=new Set(old>=0||pending>=0?[origin]:[]);for(let k=0;k<state.obj.length;k++)if(state.obj[k]==='part'&&state.ref[k]===origin)own.add(k);
-  const fits=j=>j>=0&&j%W<=W-3&&(j/W|0)<=H-3&&sacredCells(j,3).every(k=>(!state.obj[k]||own.has(k))&&(own.has(k)||!state.floor[k])&&state.ground[k]!==1&&state.ground[k]!==2&&(state.hi?.[k]||0)===(state.hi?.[origin]||0)&&!state.res?.some(r=>!r.hidden&&(r.y|0)*W+(r.x|0)===k)&&!Object.keys(state.rug||{}).some(a=>sacredCells(+a,2).includes(k))&&!Object.keys(state.roof||{}).some(a=>sacredCells(+a,2).includes(k)));
+  const fits=j=>j>=0&&j%W<=W-N&&(j/W|0)<=H-N&&sacredCells(j,N).every(k=>(!state.obj[k]||own.has(k))&&(own.has(k)||!state.floor[k])&&state.ground[k]!==1&&state.ground[k]!==2&&(state.hi?.[k]||0)===(state.hi?.[origin]||0)&&!state.res?.some(r=>!r.hidden&&(r.y|0)*W+(r.x|0)===k)&&!Object.keys(state.rug||{}).some(a=>sacredCells(+a,2).includes(k))&&!Object.keys(state.roof||{}).some(a=>sacredCells(+a,2).includes(k)));
   let target=fits(origin)?origin:-1,best=Infinity;
   if(target<0)for(let j=0;j<state.obj.length;j++){const d=Math.abs(j%W-origin%W)+Math.abs((j/W|0)-(origin/W|0));if(d<best&&fits(j)){best=d;target=j;}}
-  if(target<0){state.sacredLegacy2=true;return;} // 空きがない古い村の家具は消さない。次回読み込みで再確認する。
+  if(target<0){if(cur===3){state.sacredLegacy3=true;delete state.sacredLegacy2;}else state.sacredLegacy2=true;state.flags.sacredFootprint3=state.flags.sacredFootprint4=1;return;} // 空きがない古い村の家具は消さない。次回読み込みで再確認する。
   const type=old>=0?'tower':pending>=0?'site':null,dy=state.dyn[origin],hp=state.hp?.[origin],lv=state.hp?.['L'+origin];
   for(const k of own){if(k===origin&&type||k!==origin){state.obj[k]='';delete state.ref[k];}}if(type){delete state.dyn[origin];if(state.hp){delete state.hp[origin];delete state.hp['L'+origin];}}
-  state.sacredRoot=target;(state.fieldSites||(state.fieldSites={})).root=target;delete state.sacredLegacy2;
-  if(type){state.obj[target]=type;for(const k of sacredCells(target,3).slice(1)){state.obj[k]='part';state.ref[k]=target;}if(dy)state.dyn[target]=dy;if(hp!=null)state.hp[target]=hp;if(lv!=null)state.hp['L'+target]=lv;}
+  state.sacredRoot=target;(state.fieldSites||(state.fieldSites={})).root=target;delete state.sacredLegacy2;delete state.sacredLegacy3;
+  if(type){state.obj[target]=type;for(const k of sacredCells(target,N).slice(1)){state.obj[k]='part';state.ref[k]=target;}if(dy)state.dyn[target]=dy;if(hp!=null)state.hp[target]=hp;if(lv!=null)state.hp['L'+target]=lv;}
   for(const b of state.broken||[])if(b.id==='tower'&&b.j===origin)b.j=target;
   for(const r of state.res||[])if(r.act?.obj===origin&&['fieldintro','fieldstory','fieldassist','fieldgather','fieldwait','storywait','build','repair'].includes(r.act.type)){r.act=null;r.path=[];}
-  if(target!==origin)(state.log||(state.log=[])).push([Math.floor((state.t||0)/1440)+1,'御神木のため、空いた3×3の場所を整えた']);
-  state.flags.sacredFootprint3=1;
+  if(target!==origin)(state.log||(state.log=[])).push([Math.floor((state.t||0)/1440)+1,'御神木のため、空いた4×4の場所を整えた']);
+  state.flags.sacredFootprint3=state.flags.sacredFootprint4=1;
 }
 function tryExpandSacredLegacy(state){
-  if(!state.sacredLegacy2||state.sacredRoot==null)return;
-  const j=state.sacredRoot,cells=sacredCells(j,3);if(j%W>W-3||(j/W|0)>H-3)return;
+  if(!state.sacredLegacy2&&!state.sacredLegacy3||state.sacredRoot==null)return;
+  const j=state.sacredRoot,cells=sacredCells(j,4);if(j%W>W-4||(j/W|0)>H-4)return;
   if(cells.some(k=>state.obj[k]&&k!==j&&!(state.obj[k]==='part'&&state.ref[k]===j)||state.res?.some(r=>!r.hidden&&(r.y|0)*W+(r.x|0)===k)))return;
   migrateSacredFootprint3(state);
 }
@@ -68,20 +68,34 @@ function sacredSceneWalk(r,x,y,pose,arrived){
   if(stand<0)return false;
   endAct(r);startAct(r,G,'nmeet',stand,{});let last=performance.now();const tick=now=>{if(S!==owner||VILLAGE_SESSION!==session||sacredDirection()!==direction||!S.res.includes(r)||r.act?.type!=='nmeet')return;const dt=Math.min(.1,(now-last)/1000);last=now;if(r.act.stage==='walk'){moveR(r,dt*4);requestAnimationFrame(tick);}else{if(pose.anim)sacredSetPose(r,pose);if(arrived)arrived();}};requestAnimationFrame(tick);return true;
 }
+function sacredGrowWatch(j){/* 物語の場面の外で木が育ったとき（かけら・みどりのマス）：その場で育つ演出をして、みんながよろこぶ */
+  if(!S||WD!==0||S.free||IS_STORY_REPLAY)return;const st=sacredStage()+(sacredStage()===3&&(S.setSh||0)>=1?.5:0);if(S.treeSeen==null||st<S.treeSeen){S.treeSeen=st;return;}
+  if(st===S.treeSeen||sacredDirection()||!$('#dialog').hidden||isNight())return;
+  const from=S.treeSeen;S.treeSeen=st;const ms=3200;sacredStartEffect('growth',ms,{from,to:st});const d=sacredDirection();if(d)d.watch=true;villageTimeout(()=>{const e=sacredDirection();if(e&&e.watch)sacredEndDirection(false);},ms+100);sacredGrowSparks(j,ms,Math.ceil(st));
+  const cx=storyTreeX(j),cy=storyTreeY(j),now=performance.now();
+  for(const r of S.res){if(r.hidden||Math.hypot(r.x-cx,r.y-cy)>10)continue;r.face=r.x<cx?1:-1;r.bubble='✨';JOYU.set(r,now+2600);}
+  const f=S.res.find(r=>r.name===POKO&&!r.hidden);if(f)villageTimeout(()=>{if($('#dialog').hidden)dialog([[POKO,st>=4?'#surprise|わあ……！　木が、こんなに大きく……！':'#joy|あっ……！　木が、ぐんって、のびた！']],()=>{},null,'');},ms+400);
+}
 function drawStoryTree(c,x,y,j,now,full=false){
-  x+=(sacredSpan()-3)*TS/2;y+=(sacredSpan()-3)*TS;
+  if(!full)sacredGrowWatch(j);
+  x+=(sacredSpan()-4)*TS/2;y+=(sacredSpan()-4)*TS;
   const motion=sacredTreeMotion(now),g=motion.growth,p=motion.progress;
-  c.save();c.translate(x+48,y+90);c.rotate(motion.sway);c.translate(-x-48,-y-90);
-  if(g&&p<1){c.save();c.globalAlpha=1-p;drawStoryTreeFrame(c,x,y,j,now,g.from,1);c.restore();c.save();c.globalAlpha=p;drawStoryTreeFrame(c,x,y,j,now,g.to,p);c.restore();}
+  c.save();c.translate(x+64,y+122);c.rotate(motion.sway);c.translate(-x-64,-y-122);
+  if(g&&p<1){/* 育つ：根もとに光がたまり、前の姿がうすれ、新しい姿が根もとから、のびあがる（少しのびすぎて、もどる） */
+    const t=Math.min(1,(now-g.at)/g.ms),bx=x+64,by=y+122,glow=Math.sin(Math.PI*Math.min(1,t*1.25));
+    if(glow>0){c.save();const rg=c.createRadialGradient(bx,by-6,2,bx,by-6,46+30*t);rg.addColorStop(0,'rgba(255,248,200,'+(.55*glow)+')');rg.addColorStop(1,'rgba(255,248,200,0)');c.fillStyle=rg;c.fillRect(bx-80,by-122,160,120);c.restore();}
+    const fade=Math.max(0,1-t/.45);if(fade>0){c.save();c.globalAlpha=fade;drawStoryTreeFrame(c,x,y,j,now,g.from,1);c.restore();}
+    const u=Math.max(0,(t-.2)/.8),back=u<1?1+2.2*Math.pow(u-1,3)+1.2*Math.pow(u-1,2):1,sy=.12+.88*back,sx=.55+.45*Math.min(1,back);
+    if(u>0){c.save();c.globalAlpha=Math.min(1,u*2.5);c.translate(bx,by);c.scale(sx,sy);c.translate(-bx,-by);drawStoryTreeFrame(c,x,y,j,now,g.to,Math.min(1,u*1.4));c.restore();}}
   else drawStoryTreeFrame(c,x,y,j,now,full?4:null,1);
   c.restore();
-  if(sacredCompleted('fireRoot')||(fieldStoryState('fireRoot')?.step||0)>=1){const moving=sacredEffect('stone');for(const [dx,dy]of[[-20,1],[19,4],[10,14]]){if(moving&&dx===19&&(now-moving.at)/moving.ms<.9)continue;sacredStone(c,x+48+dx,y+80+dy,1);}}
+  if(sacredCompleted('fireRoot')||(fieldStoryState('fireRoot')?.step||0)>=1){const moving=sacredEffect('stone');for(const [dx,dy]of[[-20,1],[19,4],[10,14]]){if(moving&&dx===19&&(now-moving.at)/moving.ms<.9)continue;sacredStone(c,x+64+dx,y+112+dy,1);}}
 }
 function drawStoryTreeFrame(c,x,y,j,now,forced=null,unfold=1){
   let stage=forced??sacredStage();const preview=S&&SACRED_PREVIEW.get(S);if(forced==null&&preview?.session===VILLAGE_SESSION&&performance.now()<preview.until)stage=Math.max(stage,preview.stage);
-  const key=['story:stump','story:bud','story:leaf',(S.setSh||0)>=1?'story:tree-young':'story:sapling','story:tree'][stage],art=window.CHIPS?.[key];
+  const young=stage===3.5||stage===3&&forced==null&&(S.setSh||0)>=1;stage=Math.floor(stage);const key=['story:stump','story:bud','story:leaf',young?'story:tree-young':'story:sapling','story:tree'][stage],art=window.CHIPS?.[key];
   if(art&&drawChip(c,art,key,x,y,now,j))return;
-  const cx=x+48,cy=y+80;c.save();c.imageSmoothingEnabled=false;
+  const cx=x+64,cy=y+112;c.save();c.imageSmoothingEnabled=false;
   c.fillStyle='rgba(66,53,28,.17)';c.beginPath();c.ellipse(cx,cy+9,23,7,0,0,7);c.fill();
   c.strokeStyle='#ab855e';c.lineWidth=7;c.lineCap='round';for(const [dx,dy]of[[-23,10],[24,8],[-14,17],[13,18]]){c.beginPath();c.moveTo(cx,cy+2);c.quadraticCurveTo(cx+dx*.5,cy+dy*.7,cx+dx,cy+dy);c.stroke();}
   c.fillStyle='#b78c61';c.fillRect(cx-14,cy-17,28,24);c.fillStyle='#d2ad7c';c.beginPath();c.ellipse(cx,cy-17,14,6,0,0,7);c.fill();

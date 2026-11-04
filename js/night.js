@@ -21,10 +21,11 @@ function summonMorning(){
   else if(S.summonNext){S.summon={elem:S.summonNext};S.summonNext=null}
   else if(S&&S.feat.summon){const el=sumElem();if(el)S.summon={elem:el}}/* 呼べるかは、その朝にたまっている力だけで決まる（日中にためた分は次の朝） */
   if(S.summon){sfx('arrive');toast('神殿に「！」が出ている','good')}}
-const sumHit=(wx,wy)=>S.summon&&STATUE>=0&&Math.hypot(wx-(STATUE%W+.5),wy-(((STATUE/W)|0)-.6))<1.6;
+const sumHit=(wx,wy)=>S.summon&&!calledToday()&&STATUE>=0&&Math.hypot(wx-(STATUE%W+.5),wy-(((STATUE/W)|0)-.6))<1.6;
+const calledToday=()=>S.summonDay===dayNo()||S.mebukiDay===dayNo();/* きょう、もう呼んだか（神殿で呼ぶ・よみがえらせる・めぶきのしずく、どれも1回） */
 function doSummon(){
   const sm=S.summon;if(!sm)return;if(!sm.rev&&!storySummonOK(sm.elem)){S.summon=null;return}
-  if(!sm.rev&&S.mebukiDay===dayNo())return toast('きょうは、めぶきのしずくをつかったので、呼べません','warn');/* めぶきのしずくをつかった日は、なかまを呼べない（呼んだ日は、めぶきのしずくをつかえない） */
+  if(!sm.mebuki&&calledToday())return toast(S.mebukiDay===dayNo()?'きょうは、めぶきのしずくをつかったので、呼べません':'なかまを呼べるのは、1日に1回です','warn');/* 1日に呼べるのは1回だけ（めぶきのしずくでよみがえらせた1回もふくめる） *//* めぶきのしずくをつかった日は、なかまを呼べない（呼んだ日は、めぶきのしずくをつかえない） */
   if(!sm.rev&&!sm.pick&&S.flags.minaCame&&(sumCands().filter(c=>c.ok).length>1||S.mebuki>0&&(S.lost||[]).some(q=>!q.unb))){openSheet('summon');return}/* 力が届いた属性がいくつかあるか、めぶきのしずくでよみがえらせられる子がいれば、えらぶ */
   S.summon=null;let r;
   const sx0=STATUE>=0?STATUE%W:CX,sy0=STATUE>=0?((STATUE/W)|0)+3:CY;let sp=null;
@@ -39,7 +40,7 @@ function doSummon(){
     r=mkRes(S,name,sm.elem,sp[0]+.5,sp[1]+.5);toast(ELEM[sm.elem].name+'のせいれい「'+name+'」がやってきた！','good')
     if(sm.elem==='fire'&&S.crops&&!S.crops.mugi){S.crops.mugi=S.crops.tomato=true}}/* 火のせいれいが来たら、パン・スープの作物がふえる */
   if(STATUE>=0&&S.obj[STATUE+W]==='altar'){r.x=STATUE%W+.5;r.y=((STATUE/W)|0)+1.12;sp=[STATUE%W,((STATUE/W)|0)+1]}/* 神殿のまんなか（台座の上）からあらわれる */
-  r.hunger=75;r.spawnT=performance.now();if(!r.came)r.came=dayNo();if(!r.back){S.lastCame=dayNo();S.summonDay=dayNo()}S.res.push(r);S.summons=(S.summons||0)+1;memo(r.back?'🌱':'🌟',r.back?r.name+'がもどってきた':r.name+'（'+ELEM[r.elem].name+'のせいれい）が村にやってきた');logEv(r.back?r.name+'がもどってきた':r.name+'（'+ELEM[r.elem].name+'のせいれい）がやってきた');const welcome={id:r.id,t:Infinity};NEWQ.push(welcome);HOLD.add(r.id);WELCOME_RUN=true;gatherAt(r.x,r.y,()=>{stageMotion('cheer');startClap();for(const q of S.res)if(!q.hidden)q.bubble='👏';villageTimeout(()=>{endClap();WELCOME_RUN=false;for(const q of S.res)if(q.act&&q.act.type==='nmeet')endAct(q);welcome.t=performance.now()},1500)},r.id,4000);/* なかまの紹介は、集まるのを4秒まで待つ *//* ステータスをとじるまで、わーいのポーズで止まる */
+  r.hunger=75;r.spawnT=performance.now();if(!r.came)r.came=dayNo();if(!r.back)S.lastCame=dayNo();if(!sm.mebuki)S.summonDay=dayNo();S.res.push(r);S.summons=(S.summons||0)+1;memo(r.back?'🌱':'🌟',r.back?r.name+'がもどってきた':r.name+'（'+ELEM[r.elem].name+'のせいれい）が村にやってきた');logEv(r.back?r.name+'がもどってきた':r.name+'（'+ELEM[r.elem].name+'のせいれい）がやってきた');const welcome={id:r.id,t:Infinity};NEWQ.push(welcome);HOLD.add(r.id);WELCOME_RUN=true;gatherAt(r.x,r.y,()=>{stageMotion('cheer');startClap();for(const q of S.res)if(!q.hidden)q.bubble='👏';villageTimeout(()=>{endClap();WELCOME_RUN=false;for(const q of S.res)if(q.act&&q.act.type==='nmeet')endAct(q);welcome.t=performance.now()},1500)},r.id,4000);/* なかまの紹介は、集まるのを4秒まで待つ *//* ステータスをとじるまで、わーいのポーズで止まる */
   spawnFX(sp[0],sp[1],ELEM[r.elem].col);centerOn((sp[0]+.5)*TS,(sp[1]+.5)*TS);sfx('arrive');recount();
 }
 
@@ -294,7 +295,7 @@ const enemyLive=()=>!!S&&S.enemies.some(e=>e.spawned&&!e.dead);
 const watchGuard=j=>S.res.some(q=>!q.hidden&&q.act&&q.act.type==='watchpost'&&q.act.stage==='do'&&(q.act.cl||0)>=1&&q.act.obj===j);/* 見張り台に木のせいれいが立っているか */
 function updTowers(dt){
   if(!S.enemies.length)return;
-  for(const j of TOWERS){const o=S.obj[j];if(o!=='watch'&&o!=='yogan'&&o!=='tower')continue;
+  for(const j of TOWERS){const o=S.obj[j];if(o!=='watch'&&o!=='yogan'&&o!=='tower'||o==='tower'&&WD===0)continue;/* 草原の御神木は矢をうたない */
     S.hp['w'+j]=(S.hp['w'+j]||0)-dt;if(S.hp['w'+j]>0)continue;
     const st=o==='tower'?{dmg:1,range:10,cd:10}:(o==='yogan'?YOGAN:WATCH)[S.hp['L'+j]||1];if(o==='watch'&&!watchGuard(j)){S.hp['w'+j]=1;if(S.ns&&!S.ns.noGuard&&S.enemies.some(e=>e.spawned&&!e.dead)&&!S.res.some(q=>q.act&&q.act.type==='watchpost'&&q.act.obj===j)){S.ns.noGuard=1;toast('見張り台に木のせいれいがいません','warn')}continue}/* 見張り台は、木のせいれいが立っているときだけうつ */if(o==='watch'&&inv('arrow')<1){S.hp['w'+j]=1;if(!S.flags.noArrow&&S.enemies.some(e=>e.spawned&&!e.dead)){S.flags.noArrow=1;toast('見張り台の木の矢がありません','warn')}continue}/* 見張り台は、木の矢がないとうてない */
     const z0=szAt(o,j)||[1,1],x=j%W+z0[0]/2,y=((j/W)|0)+z0[1]/2;

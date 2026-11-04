@@ -85,7 +85,7 @@ function startTalk(){if(!$('#dialog').hidden)return;if(isNight())return toast('�
     sfx('quest');renderQuest();renderPalette();if(after)after();else checkQuest()},null)}
 const SUMMON_EL={fire:'fire',water:'water',wind:'wind'};
 function questWaitNote(q){/* 条件はそろったのに、朝にならないと進まないとき */if(!q||S.cleared)return '';const el=SUMMON_EL[q.id];
-  if(el&&elemCount(el)<1){if(S.summon&&S.summon.elem===el)return '神殿の「！」から呼ぼう';if((ATTR[el]||0)>=needFor(el))return '力がたまった。朝を待とう'}
+  if(el&&elemCount(el)<1){if(S.summon&&S.summon.elem===el)return calledToday()?'朝を待とう':'神殿の「！」から呼ぼう';if((ATTR[el]||0)>=needFor(el))return '力がたまった。朝を待とう'}
   let ok=false;try{ok=!!q.check()}catch(e){}return ok&&isNight()?'朝を待とう':''}
 function renderQuest(){const q=QUESTS[Math.min(S.quest,QUESTS.length-1)];let pr='',t=S.cleared?(WD===FREE?'村づくりは、つづく…':'世界クリア！'):q.text;
   if(S.cleared&&WD!==FREE){const a=AFTERQ[S.aq||0],dd=S.daily,dn=dd?dd.k.filter(k=>dd.done[k]).length:0;if(a&&S.aqOn===(S.aq||0)){t=aqTitle(a);pr=aqProg(a)}else t=dd?'きょうの目標 '+dn+'/'+dd.k.length:'世界クリア！'}/* クリア後は、新しいクエストか、きょうの目標を出す */
