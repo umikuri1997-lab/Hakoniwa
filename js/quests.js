@@ -184,7 +184,7 @@ const SEV1=[
   go:()=>{S.flags.guard=true;memo('🍃','フタバが「こもれびのまもり」をおぼえた');skillPop('🍃','フタバが「こもれびのまもり」をおぼえた！',['夜、コワイノにねらわれている火のせいれいのそばへ行って、葉っぱで1人を守る。','守られた子は、40分のあいだ、コワイノから受けるダメージが小さくなる。','つかったあとは、75分たつと、また守れる。'])}},
  {k:'e07',at:()=>sevHere('M'),L:[['F','ねえねえ、@M！ 畑、見てくれた？'],['M','#joy|はい、見ましたよ。よくそだっていますね。'],['M','#think|ただ……この村には、水が必要な場所が、まだたくさんありますね。'],['F','ぼくね、いっぺんに水を運ぼうとして、ぜんぶこぼしたことがあるんだ！'],['N','#surprise|あれは、びっくりしたねぇ。',1],['M','#think|……一度に運ぶ量を、半分にしてみましょう。そのほうが、結果的に早いですよ。'],['F','#joy|えへへ……今日はこぼさないよ！']]},
  {k:'e08',night:1,at:()=>{const f=S.res.find(r=>r.name===POKO);return !!f&&S.enemies.some(e=>!e.dead&&((e.type==='boss'||e.type==='boss2'))&&Math.hypot(e.x-f.x,e.y-f.y)<12)&&!(S.ns&&S.ns.final)},L:[['F','#think|……あの感じ。まえの夜と、おんなじ……！',0,'dim'],['F','あれが、オオカゲ……。'],['F','#ponder|あの夜も、あの影がいた……。'],['F','#scared|あの夜……きょうだいたちは、ぼくを守ってくれたのに……！'],['F','#scared|もう、だれにもこわい思いをさせないで！'],['F','#danger|……こわい。でも、ここは、ぼくたちの草原なんだ。'],['F','#worry|守り神さま、みんなを……おねがい！']]},
- {k:'e09',at:()=>!!S.flags.finalWon&&((S.shards||0)>=3||(S.setSh||0)>=3)&&!!S.sev?.e16g&&S.qStory==null,L:[["F","……最後の、かけら。"],["N","みんなで、守り抜いたんだねぇ。",1],["H",{"A":"さあ。そのかけらも、木に届けてやろう。","B":"さあ。そのかけらも、木に届けてやろう。"},1],["F","みんなで、持ってきたかったんだ。"],["M","では、一緒に。",1],["K","この木なら、きっと受けとめてくれる。",1]],go:()=>renderQuest()},
+ {k:'e09',at:()=>!!S.flags.finalWon&&((S.shards||0)>=3||(S.setSh||0)>=3)&&S.qStory==null,L:[["F","……最後の、かけら。"],["N","みんなで、守り抜いたんだねぇ。",1],["H",{"A":"さあ。そのかけらも、木に届けてやろう。","B":"さあ。そのかけらも、木に届けてやろう。"},1],["F","みんなで、持ってきたかったんだ。"],["M","では、一緒に。",1],["K","この木なら、きっと受けとめてくれる。",1]],go:()=>renderQuest()},
  {k:'e17',at:()=>elemCount('wood')>=6&&S.qStory==null,L:[['F','なかまが、こんなにふえた！'],['F','みんなでくっついてた、あのころみたい……。'],['F','#cry|むかしのきょうだいとは、ちがう子たちだけど……ここにも、きょうだいができたみたいで、うれしいな。'],['N','#cry|フタバのきょうだいが、ふえたねぇ。',1],['F','#cry|えへへ。……むかしのきょうだいたちも、きっとよろこんでくれるよね。']]},
  {k:'e18',at:()=>sevHere('M')&&!!(S.sev||{}).e07&&cnt('farm')>=6,L:[['M','畑がふえてきたので、水まきの順番を計算してみました。……ですが、どう回っても、ぜんぶの畑に水が行きわたりません。'],['F','えー！ それなら、ぼくも手伝うよ！ いっしょに水くばろ！'],['M','#think|……計算より、人の手のほうが確実なこともあるのですね。'],['F','そうそう！ みんなでやれば、へっちゃらだよ！'],['M','#joy|はい。……ありがとうございます。']]},
  {k:'e20',at:()=>cnt('tree')+cnt('fruit')>=1&&S.qStory==null&&sevHere('F'),L:[['F','見て見て！ 木が植わってる！ まだちっちゃいね。'],['N','大きくなるまで、時間がかかるよぉ。',1],['F','#cry|むかし、きょうだいと大きな木の下で遊んだんだ。かくれんぼして、ぼくはいつもすぐ見つかっちゃって。'],['F','#think|……この木も、あの木みたいに、おっきくなるといいな。']]},
@@ -209,7 +209,7 @@ const SEV1=[
  {k:'e16',at:()=>(S.finalNight||S.finalOn)&&!S.cleared,L:[["F","木の葉が、暗くなってきた……。"],["N","影が、根のそばへ来てるねぇ。",1],["H",{"A":"ここは、あたいが行く。","B":"ここは、おれが行く。"},1],["F","……でも。"],["H",{"A":"あんたまで、前に出なくていい。その代わり、頼むよ。あたいたちが帰ってくる所。","B":"おまえまで、前に出なくていい。その代わり、頼むぞ。おれたちが帰ってくる所。"},1],["F","……うん。この木も、村も、守ってる。"]]},
  {k:'e15',night:1,at:()=>!!(S.ns&&S.ns.final)&&S.enemies.some(e=>e.type==='boss2'&&e.spawned&&!e.dead)&&sevHere('F'),L:[["F","#think|……来た。あの、大きな影……！",0,"shake"],["F","あの夜も、みんなが前に出て……。"],["H",{"A":"フタバ、後ろを頼むよ！","B":"フタバ、後ろを頼むぞ！"},1],["F","……うん。ここにいるよ。"],["F","ちゃんと、帰ってきてね。ぼくも、みんなを守るから！",0,"guarddemo"],["N","葉っぱが、みんなのそばへ届いてるよぉ。",1]],
   go:()=>{S.flags.finF=1;S.flags.guard=true;toast('フタバが、近くのみんなを葉っぱで守る！','good')}},
- {k:'e16g',at:()=>!WD&&!!S.flags.finalWon&&!isNight()&&S.qStory==null&&!S.cleared&&!S.sev?.e16g,L:[['F','ねえ、守り神さま。ぼくの力、受けとってくれる？'],['F','#joy|ぼくが守ってもらったみたいに、こんどは守り神さまが、みんなを守れるように！',0,'guarddemo+flash+hop'],['N','フタバの葉っぱが、守り神さまのまわりで光ってるよぉ。',1],['H',{A:'へえ……あったかい光だね。',B:'へえ……あったけえ光だな。'},1],['G','#joy|……ありがとうの、フタバ。この力、大事に使わせてもらうぞい。']],
+ {k:'e16g',at:()=>false,/* 力を受けつぐのは、お見送り（depart）の中で（守り神がつぎの土地へ行くとわかってから） */L:[['F','#think|……だから、守り神さま。ぼくの力、もっていって。'],['F','ほかの土地の子たちも、葉っぱのまもりで、守ってあげて！',0,'guarddemo'],['G','#joy|……ありがとうの、フタバ。この力、大事に使わせてもらうぞい。']],
   go:()=>{S.flags.areaSkill=true;toast('守り神が「こもれびのまもり」を受けついだ！','good');memo('✨','守り神が「こもれびのまもり」を受けついだ')}},/* 草原：ヨルノオオカゲをたおした朝に、守り神が目ざめる */
  /* 消えた子がもどったとき（S.sevQ に入る） */
  {k:'b_N',q:1,L:[['N','#surprise|ふわぁ……ただいまぁ。'],['F','ノドカ！！'],['F','#think|……もう！ すっごく、心配したんだから！'],['N','#joy|ごめんねぇ。待っててくれて、ありがとう。'],['F','#think hush|……ほんとに、帰ってきた。'],['F','むかしは、ヌシ様の姿まで見えなくなって……ぼくの呼ぶ声も、届かないと思ってたんだ。','1st'],['F','#joy|おかえり！ こんどは、いっしょにごはん食べようね！']]},
@@ -220,10 +220,10 @@ const SEV1=[
 function sevBusy(){return !started||!$('#dialog').hidden||sheet!=null||NEWRES!=null||NEWQ.length||!$('#lvup').hidden||!$('#rlv').hidden||ASKING}
 const SEVRUN=new Set();/* いま再生中の会話（セーブしない） */
 let SCENEHOLD=0;/* 演出のあいだ、村の時間を止める（実時間でうごく） */
-function guardInherit(e,L,f,owner,session){/* フタバの力（こもれびのまもり）を受けつぐ場面：はじめの一言 → 会話をとじて、時間を止めたまま、フタバが祈り、葉と光が守り神へながれこみ、まもりの光がひろがる → のこりの会話 */
-  const first=L.slice(0,1),rest=L.slice(1).map(l=>{const c=typeof l[2]==='string'?2:3;if(!/guarddemo/.test(l[c]||''))return l;const m=l.slice();m[c]='hop';return m});
+function guardInherit(e,L,f,owner,session,after){/* フタバの力（こもれびのまもり）を受けつぐ場面：はじめの一言 → 会話をとじて、時間を止めたまま、フタバが祈り、葉と光が守り神へながれこみ、まもりの光がひろがる → のこりの会話 */
+  const kd=Math.max(1,L.findIndex(l=>/guarddemo/.test(l[typeof l[2]==='string'?2:3]||''))),first=L.slice(0,kd),rest=L.slice(kd).map(l=>{const c=typeof l[2]==='string'?2:3;if(!/guarddemo/.test(l[c]||''))return l;const m=l.slice();m[c]='hop';return m});
   const alive=()=>S===owner&&VILLAGE_SESSION===session&&S.res.includes(f);
-  const finish=()=>{(S.sev||(S.sev={}))[e.k]=1;SEVRUN.delete(e.k);if(e.go)e.go();};
+  const finish=()=>{(S.sev||(S.sev={}))[e.k]=1;SEVRUN.delete(e.k);if(e.go)e.go();if(after)after();};
   const at=(ms,fn)=>setTimeout(()=>{if(alive())fn()},ms);
   dialog(first,()=>{if(!alive())return;const T=performance.now();SCENEHOLD=T+6200;
     camAnim={fz:cam.z,tz:Math.min(3,Math.max(2,cam.z*1.4)),fx:cam.x+VW/cam.z/2,fy:cam.y+VH/cam.z/2,tx:f.x*TS,ty:f.y*TS-14,t:0,dur:.9};
@@ -338,7 +338,7 @@ function departOK(){if(LIVE[0]&&LIVE[0].summary&&LIVE[0].cleared)loadStage(0);le
 function depart(go){$('#maps').hidden=true;continueGame(LIVE[0]);const f=S.res.find(r=>r.name===POKO);if(f)centerOn(f.x*TS,f.y*TS);
   const gv=S.godVisit;S.godVisit=true;/* 見送りには、カミサマも村に来ている */
   const tw=S.obj.indexOf('tower'),TX=tw>=0?storyTreeX(tw):CX+.5,TY=tw>=0?storyTreeY(tw):CY;
-  const A1=sevLines([['G','さあ、次は火山のふもとの村じゃ。そろそろ行くぞい。'],['F','#think hush|……もう、行っちゃうんだね。'],['F','#think|……ほんとはね、行かないでって、言いたい。'],['F','#scared|あの夜、みんながぼくをかくしてくれたから、ぼくは生きてる。だから、だれかがいなくなるのが、こわくて……。'],['U','フタバ。守り神は、いなくなるのではない。ほかの土地を助けに行くのだ。'],['F','#think|……うん。あの夜のぼくみたいな子が、待ってるかもしれないんだ。'],['F','ぼく、もうかくれてるだけじゃないよ。みんなのことは、ぼくが守るから！'],['F','#think|……いってらっしゃい！ ちゃんと、ここで待ってるから！ でも、たまには帰ってきてね。ぜったいだよ？'],['G','#nod|うむ……。鼻の奥がつーんとしたわい。行ってくるぞい。'],
+  const A1=sevLines([['G','さあ、次は火山のふもとの村じゃ。そろそろ行くぞい。'],['F','#think hush|……もう、行っちゃうんだね。'],['F','#think|……ほんとはね、行かないでって、言いたい。'],['F','#scared|あの夜、みんながぼくをかくしてくれたから、ぼくは生きてる。だから、だれかがいなくなるのが、こわくて……。'],['U','フタバ。守り神は、いなくなるのではない。ほかの土地を助けに行くのだ。'],['F','#think|……うん。あの夜のぼくみたいな子が、待ってるかもしれないんだ。'],['F','ぼく、もうかくれてるだけじゃないよ。みんなのことは、ぼくが守るから！'],]),A1B=sevLines([['F','#think|……いってらっしゃい！ ちゃんと、ここで待ってるから！ でも、たまには帰ってきてね。ぜったいだよ？'],['G','#nod|うむ……。鼻の奥がつーんとしたわい。行ってくるぞい。'],
     ['N','ここは、ぼくたちにまかせてねぇ。',1],['H',{A:'安心して行ってきな。夜はあたいらが守るよ。',B:'安心して行ってこい。夜はおれたちが守るぜ。'},1],['M','次の村のせいれいたちも、元気になりますように。',1],['K','フッ……最初は、なんとも素朴な村だと思ったけれど。',1],['K','今では、世界でいちばん心地よい風が吹く場所かもしれないね。きみの旅路に、いい風が吹きますように。',1],['U','この草原は、わたしたちが見守ろう。']]);
   const A2=sevLines([['F','#think hush|……いっちゃったね。',0,'nfG'],['N','#worry|……さみしいねぇ。',1],['F','#think|……うん。すっごく。'],['F','#think|……でも、ぼく、ここをきれいにして待ってるんだ。'],['F','#surprise|帰ってきたら、びっくりさせちゃうんだから……！']]);
   const hold=v=>{const n=performance.now();for(const r of S.res)RHOLD.set(r,v?n+300000:0)};
@@ -351,7 +351,11 @@ function depart(go){$('#maps').hidden=true;continueGame(LIVE[0]);const f=S.res.f
     setTimeout(()=>{GODOUT=true;S.godVisit=false;sfx('arrive')},1100);/* 光の柱のなかで、カミサマが消える */
     setTimeout(()=>{dialog(A2,finish,'出発する');setTimeout(dlgNext,60)},3400)};
   const nu=S.nushi;if(nu){nu.x=TX+1.7;nu.y=TY+.95;nu.mv=0;nu.path=[];nu.dir=1;nu.face=-1}/* ヌシ様も、台座のそばで見送る */
-  gatherAt(TX,TY,()=>{hold(true);setTimeout(()=>dialog(A1,leave,'つぎへ'),400)})}
+  const A1a=A1,A1b=A1B||[];
+  const giveLines=sevLines(SEV1.find(e=>e.k==='e16g').L);
+  const rest=()=>dialog(A1b,leave,'つぎへ');
+  const inherit=()=>{if(S.flags.areaSkill||!f||!giveLines)return rest();guardInherit(SEV1.find(e=>e.k==='e16g'),giveLines,f,S,VILLAGE_SESSION,rest)};/* つぎの土地へ行くとわかってから、フタバが力をわたす */
+  gatherAt(TX,TY,()=>{hold(true);setTimeout(()=>dialog(A1a,inherit,'つぎへ'),400)})}
 /* ふしぎな種：せいれいにあげると、能力のどれかが上がる（パワーの強化とは別） */
 const UPK=[['atk','攻撃力'],['pow','作業スピード'],['spd','移動速度'],['sta','スタミナ'],['cap','持てる数']];
 function giveSeed(r){if((S.mseed||0)<1)return;const T=r.sst||(r.sst={}),L=UPK.filter(([k])=>(T[k]||0)<6&&(k!=='atk'||r.elem==='fire'));/* 攻撃力は火の子だけ */if(!L.length)return toast(r.name+'は、これ以上ふしぎな種で強くならない');
