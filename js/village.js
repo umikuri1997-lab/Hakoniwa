@@ -29,7 +29,7 @@ function addCarry(r,k,n){if(typeof r.carry==='number')r.carry={mugi:r.carry};n=M
 function addMat(r,k,n){n=Math.min(n,roomN(r));if(n<=0)return;r.cmat=r.cmat||{};r.cmat[k]=(r.cmat[k]||0)+n}
 function hYield(j,def){const o=S.obj[j],d=S.dyn[j];const cr=o==='farm'?CROPS[(d&&d.crop)||'mugi']:null;return (cr?cr.yield:def)+(NEARMILL.has(j)?1:0)+(cr&&d?d.fb||0:0)}
 // STORAGE: placed shelves share the village stock; wall attachments count only on standing walls.
-const STORAGE={stor:{food:50},mbox:{mat:80},taru:{food:60},kabebukuro:{food:20},asabukuro:{mat:40},makidana:{mat:30},crate:{food:50,mat:50},shelf1:{mat:50},shelf2:{mat:50},wshelf:{mat:50},cabinet:{food:90}};/* しまえる数（食料・素材） */
+const STORAGE={stor:{food:50},mbox:{mat:80},taru:{food:60},kabebukuro:{food:55},asabukuro:{mat:65},makidana:{mat:80},crate:{food:30,mat:30},shelf1:{mat:160},shelf2:{mat:50},wshelf:{mat:160},cabinet:{food:90}};/* しまえる数（食料・素材） */
 function storageAt(j,type){const id=S.obj[anc(j)],wall=HOME_WALLS.has(id)&&(S.win||{})[j],b=STORAGE[wall]||STORAGE[id];return !!(b&&b[type])}
 const GRASSK=['shina','kasa','kuru','chiri','funba'];/* 草の素材 */
 const cmpOf=j=>S.dyn[j]||(S.dyn[j]={b:[],c:0}),cmpIn=j=>{const d=S.dyn[j];return d?(d.b||[]).reduce((a,x)=>a+x[1],0):0},cmpWait=j=>{const Q=(S.cmpQ||{})[j];let n=0;if(Q)for(const k in Q)n+=Q[k];for(const r of S.res)if(r.cpk&&r.cpk.j===j)for(const k in r.cpk.m)n+=r.cpk.m[k];return n};/* コンポスター：b＝入れた草（[入れた時刻, 数]）、c＝できた肥料 */
