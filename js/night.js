@@ -21,7 +21,7 @@ function summonMorning(){
   else if(S.summonNext){S.summon={elem:S.summonNext};S.summonNext=null}
   else if(S&&S.feat.summon){const el=sumElem();if(el)S.summon={elem:el}}/* 呼べるかは、その朝にたまっている力だけで決まる（日中にためた分は次の朝） */
   if(S.summon){sfx('arrive');toast('神殿に「！」が出ている','good')}}
-const sumHit=(wx,wy)=>S.summon&&STATUE>=0&&Math.hypot(wx-(STATUE%W+.5),wy-(((STATUE/W)|0)-.6))<1.6;
+const sumHit=(wx,wy)=>S.summon&&!calledToday()&&STATUE>=0&&Math.hypot(wx-(STATUE%W+.5),wy-(((STATUE/W)|0)-.6))<1.6;
 const calledToday=()=>S.summonDay===dayNo()||S.mebukiDay===dayNo();/* きょう、もう呼んだか（神殿で呼ぶ・よみがえらせる・めぶきのしずく、どれも1回） */
 function doSummon(){
   const sm=S.summon;if(!sm)return;if(!sm.rev&&!storySummonOK(sm.elem)){S.summon=null;return}
