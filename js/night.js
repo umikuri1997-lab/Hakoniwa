@@ -311,7 +311,18 @@ function bossTonight(){return !!(S&&S.enemyOn&&!S.cleared&&!S.free&&!S.finalNigh
 function evePair(){const F=S.res.find(r=>r.name===keyName('fire')&&!r.hidden);if(!F)return null;const A=S.res.find(r=>r!==F&&!r.hidden&&KEYS[WD].includes(r.name))||S.res.find(r=>r!==F&&!r.hidden);return A?[A.name,F.name]:null}
 function bossEveTick(h){BOSSEVE=h>=15&&h<23&&bossTonight()?1:0;
   if(BOSSEVE&&h>=17&&S.flags.eveD!==dayNo()&&$('#dialog').hidden&&!sheet){const p=evePair();if(!p)return;S.flags.eveD=dayNo();const[A,F]=p,again=(S.bossKills||0)>0;
-    dialog(again?[[A,'#worry hush|……空の色、へんだね。'],[F,'#think|ああ。またあいつが来るな。'],[A,'#nod|うん。でも、前も追いはらえたもん。'],[F,'#joy|ああ。今夜も、みんなで守ろう。']]
+    dialog(again?pickFresh('eveAgain',[
+        [[A,'#worry hush|……空の色、へんだね。'],[F,'#think|ああ。またあいつが来るな。'],[A,'#nod|うん。でも、前も追いはらえたもん。'],[F,'#joy|ああ。今夜も、みんなで守ろう。']],
+        [[A,'#worry hush|……鳥が、みんな、どこかへ行っちゃった。'],[F,'#think|ああ。今夜は、あいつだ。'],[A,'#nod|柵、ちゃんと見ておくね。'],[F,'#joy|たのむ。前は、まかせておけ。']],
+        [[A,'#think hush|夕やけが、いつもより赤いね。'],[F,'#nod|ああ。……来るぞ。'],[A,'#joy|こわいけど、ひとりじゃないもんね。'],[F,'#joy|そうだ。みんなで、朝をむかえよう。']],
+        [[A,'#worry hush|……草が、ざわざわしてる。'],[F,'#think|あいつの気配だな。'],[A,'#nod|ごはん、先に食べておこうか。'],[F,'#joy|いい考えだ。力をためておこう。']]])
       :[[A,'#worry hush|……風が、つめたくなってきた。'],[F,'#think|ああ。今夜は、あいつが来る。'],[A,'#scared|……こわいね。'],[F,'#nod|だいじょうぶ。みんなで守るんだ。']])}
   if(S.flags.winMorn!=null&&h>=7&&h<12&&$('#dialog').hidden&&!sheet){const d=S.flags.winMorn;delete S.flags.winMorn;if(dayNo()-d>1)return;const p=evePair();if(!p)return;const[A,F]=p;
-    dialog([[A,'#joy|朝だ……！ ゆうべも、村を守れたね！','cheer'],[F,'#joy|ああ。みんな、よくがんばったな。'],[A,'#nod|おひさま、あったかいね。']])}}
+    dialog(pickFresh('winMorn',[
+      [[A,'#joy|朝だ……！ ゆうべも、村を守れたね！','cheer'],[F,'#joy|ああ。みんな、よくがんばったな。'],[A,'#nod|おひさま、あったかいね。']],
+      [[A,'#joy|守れた……！ みんな、ぶじだよ！','cheer'],[F,'#joy|ああ。柵も、よく持ちこたえた。'],[A,'#nod|直すの、手伝うね。']],
+      [[A,'#joy|朝ごはんが、こんなにおいしいなんて！','cheer'],[F,'#joy|はは。ひと晩、がんばったからな。'],[A,'#joy|おかわり、してもいいかな？']],
+      [[A,'#joy|見て、空があんなに青いよ！','cheer'],[F,'#nod|ああ。あいつの影も、もうない。'],[A,'#joy|つぎも、きっとだいじょうぶだね。']],
+      [[A,'#joy|ふわぁ……ねむいけど、うれしいな！','cheer'],[F,'#joy|今日は、ゆっくり休もう。'],[A,'#nod|うん。でも、ちょっとだけ遊びたいな。']]]))}}
+/* 同じ会話をつづけて出さない：まだ出していない物からえらぶ（ぜんぶ出したら、さいごに出した物いがいからまた） */
+function pickFresh(key,list){const U=S.flags.fresh||(S.flags.fresh={});let used=U[key]||[];if(used.length>=list.length)used=used.slice(-1);const left=list.map((_,i)=>i).filter(i=>!used.includes(i));const i=left[(Math.random()*left.length)|0];U[key]=[...used,i];return list[i]}
