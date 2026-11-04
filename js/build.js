@@ -210,7 +210,7 @@ function finishBuild(j,r){
   if(id==='tower'&&!S.cleared){if(WD===1){if(shLeft()>=1)S.usedSh=(S.usedSh||0)+1;/* かけらを台座にはめる */S.finalNight=true;memo('🌑','守護の台座が建った。最後の夜がくる');setTimeout(()=>toast('守護の台座が光りはじめた…！ 今夜、オオカゲたちがおしよせてくる','warn'),900)}else{memo('🌳','御神木が育った');setTimeout(()=>toast('御神木が育った','good'),900)}finalCheck()}/* ヌシ様の前に、きびしい最後の夜 */
 }
 function finishCraft(o,r){
-  S.orders=S.orders.filter(q=>q!==o);if(o.type==='board'){S.flags.board5=true;delete S.recipes.board;addSpiritXp(3,r);burst(BOARD,'furn');toast('依頼ボードが広がった！','good');checkSub();if(sheet==='craft')renderSheet();return}S.unlocked[o.type]=true;giveItem(o.type,BL[o.type].qty||1);addSpiritXp(3,r);if(r)r.made=(r.made||0)+1;kurashi('f:'+o.type,['🪑','はじめて'+BL[o.type].name+'を作った']);burstAt(r.x,r.y,'furn');
+  S.orders=S.orders.filter(q=>q!==o);if(o.type==='board'){S.flags.board5=true;delete S.recipes.board;addSpiritXp(3,r);burst(BOARD,'furn');toast('依頼ボードが広がった！','good');checkSub();if(sheet==='craft')renderSheet();return}S.unlocked[o.type]=true;giveItem(o.type,BL[o.type].qty||1);if(o.type==='arrow2')S.flags.a2made=(S.flags.a2made||0)+BL.arrow2.qty;addSpiritXp(3,r);if(r)r.made=(r.made||0)+1;kurashi('f:'+o.type,['🪑','はじめて'+BL[o.type].name+'を作った']);burstAt(r.x,r.y,'furn');
   toast(r.name+'が'+BL[o.type].name+'を作って、おそなえ箱に入れた！','good');renderPalette();if(sheet==='craft')renderSheet();
 }
 function rectCells(a,b){const x0=Math.min(a.x,b.x),x1=Math.max(a.x,b.x),y0=Math.min(a.y,b.y),y1=Math.max(a.y,b.y);const c=[];for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++)c.push([x,y]);return c}
