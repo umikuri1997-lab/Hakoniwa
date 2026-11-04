@@ -121,7 +121,7 @@ function place(id,x,y){
   }
   if(undoStack.length>30)undoStack.shift();
   S.placed[id]=(S.placed[id]||0)+1;recount();if(S.obj[j]===id||S.floor[j]===id||RUGS.has(id)&&S.rug&&S.rug[j]===id||EDGES.has(id)&&S.edge&&S.edge[j]===id||CANOPY.has(id)&&S.roof&&S.roof[j]===id)noteQuestPlacement(id,j);burst(j,b.kind==='block'?'block':b.kind==='plant'?'plant':'furn',b.kind==='furn'?'furnPlace':b.kind==='plant'?'pat':null);if(SEATS.includes(id)&&spotW(j)>=0)addFloat(j%W+.5,(j/W|0)-.3,'つりスポット！');renderPalette();checkQuest();
-  if(id==='door'||id==='yozoradoor'){const w=houseWhy(j);if(w)setTimeout(()=>toast(w,'warn'),400);else if(HOUSES.some(h=>h.set.has(j)))setTimeout(()=>toast('家ができた！','good'),400)}/* ドアを置いたら、家になったかを知らせる */
+  if(id==='door'||id==='yozoradoor'){const w=houseWhy(j);if(w)setTimeout(()=>toast(w,'warn'),400);else if(HOUSES.some(h=>h.set.has(j))){omo('house');setTimeout(()=>toast('家ができた！','good'),400)}}/* ドアを置いたら、家になったかを知らせる */
 }
 function undo(){
   const u=undoStack.pop();if(!u)return toast('もどせるものがありません');
@@ -291,4 +291,6 @@ let TALKW=null,QUESTCLEARW=null;/* 話したそうにしているせいれい／
 function resetQuestPrompts(){if(S)sevCancel(SEV_ENCOUNTERS.get(S),null,false);SEVW={};TALKW=null;QUESTCLEARW=null;SUBW={};QUEST_CLEAR_WAIT=null;SUB_CLEAR_WAIT={};PAYOK=false;ASKING=false}
 function focusQuestSpeaker(w){if(!w||VW<100||VH<100)return;const r=S.res.find(q=>q.name===w&&!q.hidden);if(!r)return;const x=r.x*TS,y=(r.y-1.3)*TS,vw=VW/cam.z,vh=VH/cam.z;if(x<cam.x+48||x>cam.x+vw-48||y<cam.y+80||y>cam.y+vh-120)centerOn(r.x*TS,(r.y-1)*TS)}
 /* きろく：できごとを日づけつきで残す */
+function omo(k,who){/* いっしょにした「はじめて」を、その場にいた子といっしょにおぼえる（あとで、せいれいどうしの思い出話になる） */if(!S)return;const O=S.omo||(S.omo={});if(O[k])return;O[k]={d:dayNo(),w:who?[who]:S.res.filter(r=>!r.hidden).map(r=>r.name)}}
+const omoWe=(k,r,p,days=2)=>{const o=S.omo&&S.omo[k];return !!(o&&r&&p&&dayNo()-o.d>=days&&o.w.includes(r.name)&&(o.w.length===1||o.w.includes(p.name)))}/* 思い出の話：その場にいた子が話す（2日たってから） */
 function memo(e,t){if(!S)return;(S.memo||(S.memo=[])).push([dayNo(),e,t]);if(S.memo.length>200)S.memo.shift()}/* 思い出帳 */

@@ -127,7 +127,7 @@ function nushiReturns(){if(NUSHI_RUN||S.cleared||WD===0&&grassReunionBlockReason
         if(WD!==0){startClap();for(const r of S.res)r.bubble='👏';}if(WD!==0)for(let k=0;k<8;k++)villageTimeout(()=>{const r=pick(S.res);if(r)spawnFX(r.x-.5,r.y-.6,pick(['#ffd84a','#ff9cc0','#9ff0ff','#b8ff9a']))},k*350);villageTimeout(endClap,3200);/* みんなで拍手 */
         dialog((T.world&&sevLines(T.world)||[]).concat(T.reu&&sevLines(T.reu)||[],T.next&&sevLines(T.next)||[],T.after),()=>{
           S.cleared=true;if(WD===0){S.flags.sacredReunion=true;S.flags.sacredQuietSeen=false;endClap();sacredEndDirection();dirty=true;}delete S.flags.nushiDue;NUSHI_RUN=false;TOWERGLOW=0;for(const r of S.res)RHOLD.set(r,0);renderQuest();toast(T.toast,'good');
-          S.clearDay=dayNo();S.score=calcScore();villageTimeout(()=>WD===0?openSheet('score'):dialog(['#think|……この土地も、もとにもどったのう'],()=>openSheet('score'),T.last,GOD),1200);
+          S.clearDay=dayNo();S.score=calcScore();villageTimeout(()=>WD===0?openSheet('score'):dialog(['#think hush|……この土地も、もとにもどったのう'],()=>openSheet('score'),T.last,GOD),1200);
         });
       },null,T.name||'ヌシ様'),3200);
     }},t0+5200);
