@@ -20,7 +20,7 @@ function migrateSacredFootprint3(state){
   state.sacredRoot=target;(state.fieldSites||(state.fieldSites={})).root=target;delete state.sacredLegacy2;
   if(type){state.obj[target]=type;for(const k of sacredCells(target,3).slice(1)){state.obj[k]='part';state.ref[k]=target;}if(dy)state.dyn[target]=dy;if(hp!=null)state.hp[target]=hp;if(lv!=null)state.hp['L'+target]=lv;}
   for(const b of state.broken||[])if(b.id==='tower'&&b.j===origin)b.j=target;
-  for(const r of state.res||[])if(r.act?.obj===origin&&['fieldintro','fieldstory','fieldassist','fieldwait','storywait','build','repair'].includes(r.act.type)){r.act=null;r.path=[];}
+  for(const r of state.res||[])if(r.act?.obj===origin&&['fieldintro','fieldstory','fieldassist','fieldgather','fieldwait','storywait','build','repair'].includes(r.act.type)){r.act=null;r.path=[];}
   if(target!==origin)(state.log||(state.log=[])).push([Math.floor((state.t||0)/1440)+1,'御神木のため、空いた3×3の場所を整えた']);
   state.flags.sacredFootprint3=1;
 }

@@ -103,7 +103,7 @@ let FLEEBL=null;/* 逃げるとき、「コワイノ」のそばを通らない�
 function avoidPath(r,G,goal){const bl=occTiles(r);if(FLEEBL)for(const k of FLEEBL)bl.add(k);bl.delete(goal);bl.delete((r.y|0)*W+(r.x|0));if(!bl.size)return pathTo(G,goal);
   const G2=roadSearch(r.x|0,r.y|0,bl);return G2.dist[goal]>=0?pathTo(G2,goal):pathTo(G,goal)}
 const benchSpot=G=>nearest(G,j=>(BENCHES.has(S.obj[j])||(S.obj[j]==='part'&&BENCHES.has(S.obj[S.ref[j]])))&&!ashed(anc(j))&&free('o'+j,1),40);
-const KEEPC=new Set(['storywait','storyreturn','fieldintro','fieldassist','fieldstory','fieldwait','store','smat','eat','fetch','flee','faint','shiver','step','chatwait','questjoy','pickdrop','pickseed']),FOODJOB=new Set(['harvest','gather','fish']),MATJOB=new Set(['chop','mine','weed']);/* 持ったままでいい行動・食べ物をあつめる作業・素材をあつめる作業 */
+const KEEPC=new Set(['storywait','storyreturn','fieldintro','fieldassist','fieldgather','fieldstory','fieldwait','store','smat','eat','fetch','flee','faint','shiver','step','chatwait','questjoy','pickdrop','pickseed']),FOODJOB=new Set(['harvest','gather','fish']),MATJOB=new Set(['chop','mine','weed']);/* 持ったままでいい行動・食べ物をあつめる作業・素材をあつめる作業 */
 function startAct(r,G,type,stand,o){
   if(stand>=0&&stand===r.avoidJ&&S.t<r.avoidU&&type!=='idle')return startAct(r,G,'idle',-1,{dur:15});/* 10分止まったままだった行き先は、しばらくえらばない */
   if(!KEEPC.has(type)&&G&&!(o&&(o.run||o.hunt!=null))&&!r.coffin){let k=-1;if(matN(r)>0&&!MATJOB.has(type)&&matTot()<matCap()){k=nearest(G,j=>storeAdj(j,'mat')>=0,200);if(k>=0){type='smat';stand=k;o=null}}if(k<0&&carryN(r)>0&&!FOODJOB.has(type)&&S.food<foodCap()){k=nearest(G,j=>storeAdj(j,'food')>=0,200);if(k>=0){type='store';stand=k;o=null}}}/* べつの行動にうつる前に、持っている物を箱へしまう（同じ物をあつめる作業のつづきと、にげる・たたかう・食べるときはそのまま） */
@@ -357,7 +357,7 @@ function useNat(j){const o=S.obj[j];if(!o)return;const n=(S.hp['n'+j]||0)+1;if(n
 function ovenStand(G,q){let b=-1,bd=1e9;for(const[k,pen]of[[q-1,0],[q+1,0],[q+W,2],[q-W,40]]){const d=G.dist[k];if(d<0||!walk(k))continue;if(d+pen<bd){bd=d+pen;b=k}}return b}
 function goStoreMat(r,G){const j=nearest(G,j=>storeAdj(j,'mat')>=0,200);if(j>=0)return startAct(r,G,'smat',j);return startAct(r,G,'idle',-1,{dur:15})}
 function goStore(r,G){const j=nearest(G,j=>storeAdj(j,'food')>=0,90);if(j>=0)return startAct(r,G,'store',j);return startAct(r,G,'idle',-1,{dur:15})}
-function goEatSafe(r,any){/* コワイノのすぐそばを通らずに行けて、家の中・柵や壁でかこまれた所（コワイノが中にいない）・コワイノから4マス以上はなれた所の食料箱へ、走って食べにいく */if(!(S.food>0))return false;const Gf=fleeGraph(r),fo=fenceOut(),al=S.enemies.filter(e=>e.spawned&&!e.dead),encl=al.every(e=>fo[(e.y|0)*W+(e.x|0)]),safe=j=>!!roomOf(j)||(encl&&!fo[j])||!al.some(e=>Math.hypot(e.x-(j%W+.5),e.y-(((j/W)|0)+.5))<4);
+function goEatSafe(r,any){/* コワイノのすぐそばを通らずに行けて、家の中・柵や壁でかこまれた所（コワイノが中にいない）・コワイノから4マス以上はなれた所の食料箱へ、走って食べにいく */if(!(S.food>0))return false;const Gf=fleeGraph(r),fo=fenceOut(),al=S.enemies.filter(e=>e.spawned&&!e.dead),encl=al.every(e=>fo[(e.y|0)*W+(e.x|0)]),safe=j=>!!roomOf(j)||(encl&&!fo[j])||!al.some(e=>Math.hypot(e.x-(j%W+.5),e.y-(((j/W)|0)+.5))<(encl?4:8));/* 柵がやぶられて中にコワイノがいるときは、8マスはなれた所だけ */
   const j=nearest(Gf,j=>(any||safe(j))&&storeAdj(j,'food')>=0,200);if(j<0)return false;r.refill=S.t+60;startAct(r,Gf,'fetch',j,{run:true});return !!r.act}
 const hungry=r=>r.hunger<50&&S.food>0&&!(r.noEatU>S.t);/* おなかが50より少なく、食べにいける（どんなときも、食べにいく） */
 function goEat(r,G){if(r.cmat&&matCap()>0&&matTot()<matCap()&&!hostileNow(r)&&!foeNear(r)){const j=nearest(G,j=>storeAdj(j,'mat')>=0,200);if(j>=0)return startAct(r,G,'smat',j)}/* ごはんに行く前に、持っている素材をしまう（そばにコワイノがいるときは、そのまま食べにいく） */

@@ -11,7 +11,7 @@ function sacredDirection(create=false){
 }
 function sacredEffect(k){const e=sacredDirection()?.effects.get(k);return e&&performance.now()<e.at+e.ms?e:null;}
 function sacredStartEffect(k,ms,extra={}){const d=sacredDirection(true);if(!d)return null;const e={at:performance.now(),ms,...extra};d.effects.set(k,e);return e;}
-function sacredCast(){return S.res.filter(r=>!r.hidden&&r.act&&['fieldintro','fieldstory','fieldassist','fieldwait','storywait','nmeet'].includes(r.act.type));}
+function sacredCast(){return S.res.filter(r=>!r.hidden&&r.act&&['fieldintro','fieldstory','fieldassist','fieldgather','fieldwait','storywait','nmeet'].includes(r.act.type));}
 function sacredShot(mode,cast=sacredCast(),seconds=1.1){
   if(!S||WD!==0||S.sacredRoot==null)return;
   sacredDirection(true);const j=S.sacredRoot,x=storyTreeX(j)*TS,y=storyTreeY(j)*TS-hiAt(j)*LIFT;

@@ -16,7 +16,7 @@ run(`S.finalNight=false;S.finalDay=null;S.rushN=1;S.qTalked=false;qAt=()=>false;
 // 村を切りかえると拍手も終わる。古い予約で、新しい村の拍手を止めない。
 const drawing=fs.readFileSync(root+'js/draw-spirits.js','utf8').split('\n');
 vm.runInContext(drawing.find(line=>line.startsWith('let CLAPT='))+'\n'+drawing.find(line=>line.startsWith('function endClap(')),c);
-run(`let NUSHI_RUN=true,DLGGAP=0,DLGCUR='',DLGTAP=0,DLG_KEEP=true,NEWQ=[],NEWRES=null;const DLGQ=[],HOLD=new Set(),RLVQ=[];function resetQuestPrompts(){}function voiceStop(){}document.querySelector=()=>({hidden:false,replaceChildren(){}});document.querySelectorAll=()=>[]`);
+run(`let NUSHI_RUN=true,DLGGAP=0,DLGCUR='',DLGTAP=0,DLG_KEEP=true,NEWQ=[],NEWRES=null;const DLGQ=[],HOLD=new Set(),RLVQ=[];function resetQuestPrompts(){}function voiceStop(){}function dlgHush(){}document.querySelector=()=>({hidden:false,replaceChildren(){}});document.querySelectorAll=()=>[]`);
 const dialogue=fs.readFileSync(root+'js/dialog.js','utf8').split('\n');
 vm.runInContext(dialogue.find(line=>line.startsWith('function villageTimeout('))+'\n'+dialogue.find(line=>line.startsWith('function resetVillageTransient(')),c);
 run(`S={res:[{bubble:'👏'},{bubble:'🌱'}]};startClap();villageTimeout(endClap,100);resetVillageTransient()`);
