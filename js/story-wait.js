@@ -17,6 +17,7 @@ function mainStoryWaitInfo(){
     const ids=QUEST_VISIT_MAIN[q.id]||(q.id==='nushi'?['tower']:null),recent=QUEST_PLACEMENTS.get(S);let best=-Infinity;
     if(ids)for(let j=0;j<S.obj.length;j++){if(!questVisitTarget(q,ids,j))continue;const placed=recent?.get(j),score=(placed&&qvHas(j,placed.id)?placed.n*100000:0)-Math.hypot(j%W+.5-lead.x,(j/W|0)+.5-lead.y);if(score>best){best=score;obj=j;}}
     if(obj!=null)id=S.obj[obj]||S.floor[obj];
+    else if(q.id==='kagemark'&&S.flags.kgMark!=null){obj=S.flags.kgMark;free=true;}/* 大きなかげのあと：そのまわりへ駆け寄って話す */
     else{/* どこで話してもよい会話：ひとりなら、そのまま暮らしながら話しかけられる。みんなで話すときは、近くの空いた場所に集まる */
       if(cast.length<2||!lead)return null;
       obj=storyOpenSpot(lead,cast.length);free=true;
