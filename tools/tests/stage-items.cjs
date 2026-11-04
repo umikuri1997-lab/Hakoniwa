@@ -19,3 +19,19 @@ for(const WD of [0,1,2,3,4]){run(`WD=${WD};S={t:0,res:[],flags:{},recipes:{},unl
   assert(got.length>0,'pools are not empty');console.log(`WD=${WD}: offering/fishing furniture ok (${got.length} kinds)`)}
 // 落とし物の表に、ステージだけの物を入れない
 for(const t of Object.keys(run('DROPF')))assert(run(`STAGEONLY['${run('DROPF')[t]}']`)==null);console.log('Enemy drops: no stage-only furniture');
+// レシピでおぼえる家具（コワイノのレシピ・クエスト・思いつき）は、おぼえるまで、おそなえ・つりで出ない
+for(const WD of [0,1]){run(`WD=${WD};S={t:0,res:[],flags:{},recipes:{},unlocked:{},inv:{},free:false};GOT=[]`);
+  for(const el of ['wood','fire','water','earth','wind'])for(let i=0;i<400;i++)run(`(()=>{const R=Math.random;let k=0;const seq=[.99,.0,${i}/400,.0,${i}/400];Math.random=()=>seq[k++%seq.length];try{ACT2.offer.end({name:'x',elem:'${el}'},{})}finally{Math.random=R}})()`);
+  for(let i=0;i<400;i++)run(`(()=>{const R=Math.random;let k=0;const seq=[.001,${i}/400];Math.random=()=>seq[k++%seq.length];try{fishLoot({x:0,y:0,elem:'water',name:'x'})}catch(e){}finally{Math.random=R}})()`);
+  const got=new Set(run('GOT'));for(const id of ['yorubed','hoshirug','composter','joro','pouf','toro','taru','kabebukuro','makidana','swing','bench','bed'])assert(!got.has(id),`WD=${WD}: recipe furniture ${id} before learning`);
+  run(`S.recipes={yorubed:true,composter:true}`);assert(!run('recipeGated("yorubed")')&&!run('recipeGated("composter")')&&run('recipeGated("hoshirug")'))}
+console.log('Offering/fishing: recipe furniture only after learning');
+// 毎日のおそなえ：火山の石の塀は、草原では、交換でもらっていても出ない
+{const L=act.split('\n');vm.runInContext(fs.readFileSync(root+'js/spirit-work.js','utf8').split('\n').filter(l=>l.startsWith('const OFFER=')||l.startsWith('function offerFor(')).join('\n'),c);
+  run(`cnt=()=>0`);
+  for(const WD of [0,1]){run(`WD=${WD};S={t:0,res:[],flags:{},recipes:{},unlocked:{wall:true,path:true,stone:true,brick:true},feat:{},inv:{},free:false}`);let wall=0;
+    for(let i=0;i<300;i++){const g=run(`(()=>{const R=Math.random;let k=0;Math.random=()=>((${i}*7+k++*13)%100)/100;try{return offerFor({xp:1e9,elem:${i%2?"'earth'":"'fire'"}})}finally{Math.random=R}})()`);if(g&&g[0]==='wall')wall++}
+    if(WD===0)assert.equal(wall,0,'grassland daily offering gave stone wall');else assert(wall>0,'volcano daily offering keeps stone wall')}
+  console.log('Daily offering: stone wall only in the volcano')}
+// かどまつ：カミサマのかざりの交換は火山だけ
+{const src=fs.readFileSync(root+'js/ui.js','utf8'),m=src.match(/const DECO=(\[[\s\S]*?\]\.filter\([^;]*?\))\/\*/);assert(m,'DECO list');for(const WD of [0,1,2,3,4]){run('WD='+WD);const ids=run(m[1]).map(x=>x[0]);assert.equal(ids.includes('kadomatsu'),WD===1,'kadomatsu WD='+WD)}console.log('Kadomatsu: volcano trade only')}

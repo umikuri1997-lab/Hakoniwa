@@ -32,6 +32,7 @@
 - 作業の中で、こうすればうまくいく・こうするとこわれる、という決まり（法則）を見つけたら、すぐこのファイルにメモする。
 - もらった絵を使ってみて、うまく使えなかったときは、なにがだめだったかと、新しいプロンプトを作って報告する（毎回）。
 - 絵をたのむためのプロンプトは、1つにまとめて書く。分けるときは、どのプロンプトにも共通の事項（絵のかき方・背景・向きなど）をそれぞれに書いて、1つだけで使えるようにする。
+- 絵をたのむときは、お手本のキューブ（`tools/art/ref/view-cube.png`）をいっしょにわたし、`tools/art/ref/view-cube-prompt.md` の文を入れて、見おろしの角度と高さの比（1マスの高さ＝正面0.8マス）をそろえる。
 - ななめになってはいけない物（灯籠・ランプ・柱・家具など）は、プロンプトに「まっすぐ立てる・かたむけない」をはっきり書く（upright, perfectly vertical, not tilted など）。
 - 絵のプロンプトには、どれにもかならず「輪郭線はうすく・細く」を書く。何も書かないと、濃い輪郭線の絵ができる（毎回おきる）。書き方の例：no thick or dark outlines; if an outline is used, it is a thin 1-pixel line only slightly darker than the color next to it, never black or near-black。
 - 色も、ゲームのほかの絵に合わせて、明るくやわらかい色にするよう書く。とくに窓ガラスなどは濃くなりやすいので、うすい色をはっきり書く（pale, light, soft colors; no dark or heavily saturated colors など）。
