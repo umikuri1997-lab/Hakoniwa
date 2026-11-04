@@ -313,10 +313,10 @@ function renderSheet(){
     {const lv=rLv(r);
      const tb=el('<div class="ctabs"></div>');['ステータス','プロフィール','強化'].forEach((nm,i)=>{const t=el('<button class="ctab'+(i===resTab?' on':'')+'"></button>');t.textContent=nm;t.onclick=()=>{resTab=i;sfx('next');renderSheet()};tb.appendChild(t)});body.appendChild(tb);/* ステータスと、得意・好きなものは別のタブ */
      if(resTab===2){const sec=el('<div class="sec"></div>'),cost=15+10*(r.boost||0),B=r.bst||(r.bst={}),ST=[['atk','攻撃力'],['pow','作業スピード'],['spd','移動速度'],['sta','スタミナ'],['cap','持てる数']].filter(([k])=>k!=='atk'||r.elem==='fire');/* 攻撃力は火の子だけ */
-       for(const[k,nm]of ST){const n=B[k]||0;const row=el('<div class="row" style="align-items:center"><div class="tx"><b></b><small></small></div></div>');row.querySelector('b').textContent=nm+'  +'+n+(n>=6?'（最大）':'');sec.appendChild(row)}
-       const left=ST.filter(([k])=>(B[k]||0)<6),bw=el('<div class="row" style="justify-content:center"><button class="btn pri"></button></div>'),b=bw.querySelector('button');
-       b.textContent=left.length?'パワーをそそぐ（'+SP(cost)+'）':'ぜんぶ最大';b.disabled=!left.length||S.pt<cost;
-       b.onclick=()=>{if(S.pt<cost)return toast('パワーが足りません（'+SP(cost)+'）');const L=ST.filter(([k])=>(B[k]||0)<6);if(!L.length)return;S.pt-=cost;const[k,nm]=L[(Math.random()*L.length)|0],n=B[k]||0,inc=Math.min(Math.random()<.75?1:2,6-n);B[k]=n+inc;/* どこが上がるかはランダム */
+       for(const[k,nm]of ST){const n=B[k]||0;const row=el('<div class="row" style="align-items:center"><div class="tx"><b></b><small></small></div></div>');row.querySelector('b').textContent=nm+'  +'+n;sec.appendChild(row)}
+       const bw=el('<div class="row" style="justify-content:center"><button class="btn pri"></button></div>'),b=bw.querySelector('button');
+       b.textContent='パワーをそそぐ（'+SP(cost)+'）';b.disabled=S.pt<cost;/* 強化に上限はない */
+       b.onclick=()=>{if(S.pt<cost)return toast('パワーが足りません（'+SP(cost)+'）');const L=ST;S.pt-=cost;const[k,nm]=L[(Math.random()*L.length)|0],n=B[k]||0,inc=Math.random()<.75?1:2;B[k]=n+inc;/* どこが上がるかはランダム */
          if(k==='pow'||k==='spd'||k==='sta')r.vr[k]=Math.round(((r.vr[k]||1)+.1*inc)*100)/100;
          r.boost=(r.boost||0)+1;RSC.delete(r);addFloat(r.x,r.y-1.6,nm+'+'+inc,'#9fe8ff');upFx(r,nm,'+'+inc,inc>1);renderSheet()};
        bw.style.gap='8px';bw.style.flexWrap='wrap';sec.appendChild(bw);
