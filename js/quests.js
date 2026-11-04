@@ -3,7 +3,7 @@ const FREEG=[{k:'g900',t:'みどりのマスを900に',now:()=>GRASSN,ok:()=>GRA
   {k:'h3',t:'家を3けん',now:()=>HOUSES.length,ok:()=>HOUSES.length>=3,rw:30},{k:'m3',t:'なかよしを3組',now:()=>{let n=0;for(const r of S.res)if(bestMate(r))n++;return Math.floor(n/2)},ok:()=>{let n=0;for(const r of S.res)if(bestMate(r))n++;return n>=6},rw:30},
   {k:'b5',t:'オオカゲを5回追いはらう',now:()=>S.bossKills||0,ok:()=>(S.bossKills||0)>=5,rw:50},{k:'lv5',t:'Lv5のせいれいを5人',now:()=>S.res.filter(r=>rLv(r)>=5).length,ok:()=>S.res.filter(r=>rLv(r)>=5).length>=5,rw:40},
   {k:'vlv15',t:'村レベルを15に',now:()=>S.lv,ok:()=>S.lv>=15,rw:100},{k:'h5',t:'家を5けん',now:()=>HOUSES.length,ok:()=>HOUSES.length>=5,rw:60},{k:'fl80',t:'花を80こさかせる',now:()=>flowerN(),ok:()=>flowerN()>=80,rw:60},
-  {k:'k300',t:'コワイノを300体追いはらう',now:()=>S.kills||0,ok:()=>(S.kills||0)>=300,rw:80},{k:'tr3',t:'「コワイノ」の試練を3回のりこえる',now:()=>S.trials||0,ok:()=>(S.trials||0)>=3,rw:60},{k:'p20k',t:'パワーを合計20000ためる',now:()=>S.totalPt||0,ok:()=>(S.totalPt||0)>=20000,rw:150}];/* クリア後のじゆうな目標（長い目標） */
+  {k:'k300',t:'コワイノを300体追いはらう',now:()=>S.kills||0,ok:()=>(S.kills||0)>=300,rw:80},{k:'tr3',t:'「コワイノ」の試練を3回のりこえる',now:()=>S.trials||0,ok:()=>(S.trials||0)>=3,rw:60},{k:'p20k',t:'パワーを合計20000ためる',now:()=>S.totalPt||0,ok:()=>(S.totalPt||0)>=20000,rw:150}];/* クリア後のじゆうな目標（やりこみ） */
 const AFTERQ=[/* クリア後の新しいクエスト：カミサマからのおねがい。ひとつずつ出る。数は、うけたときからふえた分（d）。w：その土地だけ */
   {k:'aq1',w:1,t:'お祝いのおまつりをひらこう',how:'カミサマとの「とくべつな交換」で「おまつり」をえらぶ。このクエストをうけたあとに、ひらいた回数で数える',now:()=>S.festN||0,d:1,rw:30,
    L:[[GOD,'#joy|ヌシ様が帰ってきたお祝いを、まだしとらんかったのう。'],[GOD,'みんなで、にぎやかにおまつりをせんか？ わしも、たのしみにしとるぞい。']],X:[[GOD,'#joy|ほっほ、いいおまつりじゃったのう！ みんな、いい顔をしとったわい。']]},
@@ -25,7 +25,7 @@ const DAILYG=[/* クリア後の「きょうの目標」：毎朝2つ。b＝そ�
 function dailyNow(g,d){return g.b?g.b()-(d.b0[g.k]||0):g.s()}
 function dailySet(){const day=dayNo(),i=(day*2)%DAILYG.length,L=[DAILYG[i],DAILYG[(i+1)%DAILYG.length]];S.daily={d:day,k:L.map(g=>g.k),b0:Object.fromEntries(L.filter(g=>g.b).map(g=>[g.k,g.b()])),done:{}}}/* 毎朝、きょうの目標を2つ出す */
 function dailyCheck(){const d=S.daily;if(!d)return;for(const k of d.k){const g=DAILYG.find(x=>x.k===k);if(g&&!d.done[k]&&dailyNow(g,d)>=g.n){d.done[k]=1;S.pt+=g.rw;S.totalPt+=g.rw;toast('きょうの目標たっせい：'+g.t+'（パワー+'+g.rw+'）','good')}}}
-function afterTick(){/* クリア後：新しいクエスト・きょうの目標・長い目標（昼だけ） */if(isNight()||!$('#dialog').hidden||NEWRES!=null)return;if(WD===0&&S.flags.sacredReunion&&!S.flags.sacredQuietSeen)return;/* 草原：再会のあとの木陰の話を見てから */if(!S.daily||S.daily.d!==dayNo())dailySet();dailyCheck();checkFree();
+function afterTick(){/* クリア後：新しいクエスト・きょうの目標・やりこみ（昼だけ。クリアした日のつぎの朝から） */if(isNight()||!$('#dialog').hidden||NEWRES!=null)return;if(WD===0&&S.flags.sacredReunion&&!S.flags.sacredQuietSeen)return;/* 草原：再会のあとの木陰の話を見てから */if(departTick())return;/* 草原：出発の場面を見おわってから */if(S.clearDay==null)S.clearDay=0;/* クリアした日をしまっていない古いセーブは、すぐ */if(dayNo()<=S.clearDay)return;if(!S.daily||S.daily.d!==dayNo())dailySet();dailyCheck();checkFree();
   const i=S.aq||0,q=AFTERQ[i];if(!q)return;if(q.w!=null&&q.w!==WD){S.aq=i+1;return}/* その土地のクエストではない */if(S.aqOn!==i){S.aqOn=-1;let once=0;dialog(q.L,()=>{if(once++)return;S.aqOn=i;S.aqB=q.now();sfx('quest');toast('クエスト：'+aqTitle(q),'good');renderQuest()});return}
   if(S.aqB==null)S.aqB=q.now();/* 前のセーブ：いまから数える */if(q.now()>=aqGoal(q)){let once=0;dialog(q.X,()=>{if(once++)return;S.aq=i+1;S.aqB=null;rewardPower(q.rw);memo('🎯',aqTitle(q));renderQuest()})}}
 const TRAPS=['spike','sticky','puddle','firetrap','gust'],CN=a=>a.reduce((n,k)=>n+cnt(k),0),FOODN=()=>Object.values(S.fs||{}).reduce((n,v)=>n+v,0);
@@ -334,28 +334,39 @@ function guardTick(){const fin=!WD&&!!(S.ns&&S.ns.final)&&isNight();if(WD||!(S.f
 function drawLeaf(r,now){const px=r.x*TS,py=r.y*TS;ctx.save();ctx.globalAlpha=.85;ctx.strokeStyle='rgba(130,215,100,.6)';ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(px,py+6,14,6,0,0,7);ctx.stroke();
   for(let i=0;i<5;i++){const a=now/450+i*1.2566,lx=px+Math.cos(a)*15,ly=py-4+Math.sin(a)*7;ctx.fillStyle=i%2?'#7ccf5a':'#a8e67f';ctx.beginPath();ctx.ellipse(lx,ly,3.6,1.9,a,0,7);ctx.fill()}ctx.restore()}
 /* 次のステージへ、はじめて出発するとき：フタバとのお見送り */
-function departOK(){if(LIVE[0]&&LIVE[0].summary&&LIVE[0].cleared)loadStage(0);let d=false;try{d=KV.getItem('hakoniwa-dep1')==='1'}catch(e){}return !d&&LIVE[0]&&LIVE[0].cleared&&LIVE[0].res.some(r=>r.name===POKO)}
-function depart(go){$('#maps').hidden=true;continueGame(LIVE[0]);const f=S.res.find(r=>r.name===POKO);if(f)centerOn(f.x*TS,f.y*TS);
+/* クリアのあと（再会・木陰の話のあと）の、草原の村での出発：a) ヌシ様が守り神に話す → b) カミサマ「次は火山」 → c) フタバの力を受けつぐ → d) お見送り → e) 火山へ。
+   どこまで見たかは S.flags.depStep（1:ヌシ様 2:カミサマ 3:受けつぎ）。おわりまで見たら hakoniwa-dep1。とちゅうでとじたら、見おわっていない所から（昼だけ） */
+const DEPART_NUSHI=[['U','守り神よ。少し、いいか。'],['U','かけらの中で眠っていたあいだも、声は、根をつたって届いていた。'],['U','土をよける音。石のぬくもり。根までしみる水。葉をゆらす風。'],['U','#think|……そして、わたしを呼ぶ、フタバの声。'],['U','そのそばには、いつも、おまえの光があった。'],['U','夜が来るたびに、この子らのそばに立ってくれたのだな。'],['U','ありがとう、守り神。この草原は、もう一度、息をしている。']];
+let DEPART_RETRY=0;
+function departDone(){try{return KV.getItem('hakoniwa-dep1')==='1'}catch(e){return false}}
+function departDue(){if(WD!==0||!S||S.free||!S.cleared||isNight()||departDone())return false;if(S.flags.sacredReunion&&!S.flags.sacredQuietSeen)return false;
+  if(LIVE[1]&&LIVE[1].introSeen){try{KV.setItem('hakoniwa-dep1','1')}catch(e){}return false}/* もう火山へ行っているセーブ：くりかえさない */
+  return S.res.some(r=>r.name===POKO&&!r.hidden)}
+function departTick(){if(!departDue())return false;if(DEPART_RUN||NUSHI_RUN||performance.now()<DEPART_RETRY||!$('#dialog').hidden)return true;departScene();return true}/* 出発の場面がのこっているあいだは、クリア後のクエストを出さない */
+function departToVolcano(){const ov=document.getElementById('deptLd');const L=loadStage(1);if(L&&L.introSeen){continueGame(L);if(ov){ov.style.opacity='0';setTimeout(()=>ov.remove(),900)}}else newGame(1)}
+function departScene(){const owner=S,session=VILLAGE_SESSION,alive=()=>S===owner&&VILLAGE_SESSION===session,f=S.res.find(r=>r.name===POKO&&!r.hidden);if(!f)return;
   const gv=S.godVisit;S.godVisit=true;/* 見送りには、カミサマも村に来ている */
   const tw=S.obj.indexOf('tower'),TX=tw>=0?storyTreeX(tw):CX+.5,TY=tw>=0?storyTreeY(tw):CY;
   const A1=sevLines([['G','さあ、次は火山のふもとの村じゃ。そろそろ行くぞい。'],['F','#think hush|……もう、行っちゃうんだね。'],['F','#think|……ほんとはね、行かないでって、言いたい。'],['F','#scared|あの夜、みんながぼくの前に立ってくれたから、ぼくは生きてる。だから、だれかがいなくなるのが、こわくて……。'],['U','フタバ。守り神は、いなくなるのではない。ほかの土地を助けに行くのだ。'],['F','#think|……うん。あの夜のぼくみたいな子が、待ってるかもしれないんだ。'],['F','ぼく、もうかくれてるだけじゃないよ。みんなのことは、ぼくが守るから！'],]),A1B=sevLines([['F','#think|……いってらっしゃい！ ちゃんと、ここで待ってるから！ でも、たまには帰ってきてね。ぜったいだよ？'],['G','#nod|うむ……。鼻の奥がつーんとしたわい。行ってくるぞい。'],
     ['N','ここは、ぼくたちにまかせてねぇ。',1],['H',{A:'安心して行ってきな。夜はあたいらが守るよ。',B:'安心して行ってこい。夜はおれたちが守るぜ。'},1],['M','次の村のせいれいたちも、元気になりますように。',1],['K','フッ……最初は、なんとも素朴な村だと思ったけれど。',1],['K','今では、世界でいちばん心地よい風が吹く場所かもしれないね。きみの旅路に、いい風が吹きますように。',1],['K','……火の山の風、きっとあたためてきておくれ。',1],['U','この草原は、わたしたちが見守ろう。']]);
   const A2=sevLines([['F','#think hush|……いっちゃったね。',0,'nfG'],['N','#worry|……さみしいねぇ。',1],['F','#think|……うん。すっごく。'],['F','#think|……でも、ぼく、ここをきれいにして待ってるんだ。'],['F','#surprise|帰ってきたら、びっくりさせちゃうんだから……！']]);
   const hold=v=>{const n=performance.now();for(const r of S.res)RHOLD.set(r,v?n+300000:0)};
-  const finish=()=>{DEPART_RUN=false;GODOUT=false;hold(false);try{KV.setItem('hakoniwa-dep1','1')}catch(e){}S.flags.ret1=1;S.godVisit=gv;save();const ov=document.createElement('div');ov.id='deptLd';ov.style.cssText='position:fixed;inset:0;z-index:70;display:flex;align-items:center;justify-content:center;background:#1e1810;color:#fff3d6;font-size:16px;opacity:0;transition:opacity .8s';ov.textContent='火山のふもとの村へ…';document.body.appendChild(ov);requestAnimationFrame(()=>requestAnimationFrame(()=>{ov.style.opacity='1'}));villageTimeout(()=>requestAnimationFrame(()=>setTimeout(go,50)),900)};/* 画面を暗くして「…へ」と出してから、つぎの土地を作る（作るあいだ、止まって見えないように） */
-  const leave=()=>{/* 守り神とカミサマが、光になって空へのぼっていく：白く光って、光の柱が立ち、カミサマのすがたが消える。みんなは空を見あげる */
+  const step=n=>{if(!alive())return false;S.flags.depStep=n;dirty=true;save();return true};/* その部分を見おわってから、1回だけ「見た」にする */
+  const stop=()=>{DEPART_RUN=false;GODOUT=false;if(alive()){hold(false);S.godVisit=gv}};
+  const finish=()=>{if(!alive())return;DEPART_RUN=false;GODOUT=false;hold(false);try{KV.setItem('hakoniwa-dep1','1')}catch(e){}delete S.flags.depStep;S.flags.ret1=1;S.godVisit=gv;save();const ov=document.createElement('div');ov.id='deptLd';ov.style.cssText='position:fixed;inset:0;z-index:70;display:flex;align-items:center;justify-content:center;background:#1e1810;color:#fff3d6;font-size:16px;opacity:0;transition:opacity .8s';ov.textContent='火山のふもとの村へ…';document.body.appendChild(ov);requestAnimationFrame(()=>requestAnimationFrame(()=>{ov.style.opacity='1'}));villageTimeout(()=>requestAnimationFrame(()=>setTimeout(departToVolcano,50)),900)};/* 画面を暗くして「…へ」と出してから、つぎの土地を作る */
+  const leave=()=>{if(!alive())return;/* 守り神とカミサマが、光になって空へのぼっていく */
     dlgCue('flash');const gx=godX()*TS,gy=godY()*TS;sfx('level');for(let k=0;k<3;k++)villageTimeout(()=>fxSpr('appear',gx,gy,'#fff6c8'),k*500);
     for(let k=0;k<4;k++)villageTimeout(()=>fx.push({k:'ring',x:gx,y:gy-40,life:1.4,col:'#fff6c8'}),k*350);
     camAnim={fz:cam.z,tz:Math.max(1.2,cam.z*.8),fx:cam.x+VW/cam.z/2,fy:cam.y+VH/cam.z/2,tx:gx,ty:gy-70,t:0,dur:1.6};
     for(const r of S.res)if(!r.hidden){r.face=r.x<godX()?1:-1;JUMP.set(r,performance.now()+Math.random()*300)}
-    villageTimeout(()=>{GODOUT=true;S.godVisit=false;sfx('arrive')},1100);/* 光の柱のなかで、カミサマが消える */
+    villageTimeout(()=>{GODOUT=true;S.godVisit=false;sfx('arrive')},1100);
     villageTimeout(()=>{dialog(A2,finish,'出発する');villageTimeout(dlgNext,60)},3400)};
-  const nu=S.nushi;if(nu){nu.x=TX+1.7;nu.y=TY+.95;nu.mv=0;nu.path=[];nu.dir=1;nu.face=-1}/* ヌシ様も、台座のそばで見送る */
-  const A1a=A1,A1b=A1B||[];
-  const giveLines=sevLines(SEV1.find(e=>e.k==='e16g').L);
-  const rest=()=>dialog(A1b,leave,'つぎへ');
-  const inherit=()=>{if(S.flags.areaSkill||!f||!giveLines)return rest();guardInherit(SEV1.find(e=>e.k==='e16g'),giveLines,f,S,VILLAGE_SESSION,rest)};/* つぎの土地へ行くとわかってから、フタバが力をわたす */
-  DEPART_RUN=true;gatherAt(TX,TY,()=>{hold(true);villageTimeout(()=>dialog(A1a,inherit,'つぎへ'),400)},null,()=>{DEPART_RUN=false;S.godVisit=gv})}/* 集まれなかったら、お見送りはやめて、草原の村にのこる（もう一度、出発をえらべる） */
+  const nu=S.nushi;if(nu){nu.x=TX+1.7;nu.y=TY+.95;nu.mv=0;nu.path=[];nu.dir=1;nu.face=-1}/* ヌシ様も、木のそばにいる */
+  const farewell=()=>{if(alive())dialog(A1B,leave,'つぎへ')};
+  const inherit=()=>{if(!alive())return;if(S.flags.areaSkill||(S.sev||{}).e16g||!S.res.includes(f)){step(3);return farewell()}const e=SEV1.find(x=>x.k==='e16g'),L=sevLines(e.L);if(!L){step(3);return farewell()}guardInherit(e,L,f,owner,session,()=>{if(step(3))farewell()})};
+  const kami=()=>{if(!alive())return;if((S.flags.depStep||0)>=2)return inherit();dialog(A1,()=>{if(step(2))inherit()},'つぎへ')};
+  const talk=()=>{if(!alive())return;if((S.flags.depStep||0)>=1)return kami();if(nu)centerOn(nu.x*TS,nu.y*TS);dialog(sevLines(DEPART_NUSHI),()=>{if(step(1))kami()},'つぎへ',NUSHI1)};
+  DEPART_RUN=true;centerOn(TX*TS,TY*TS);gatherAt(TX,TY,()=>{if(!alive())return;if(isNight()){stop();DEPART_RETRY=performance.now()+5000;return}hold(true);villageTimeout(talk,400)},null,()=>{stop();DEPART_RETRY=performance.now()+20000})}/* 集まれなかったら、しばらくして集まるところから */
 /* ふしぎな種：せいれいにあげると、能力のどれかが上がる（パワーの強化とは別） */
 const UPK=[['atk','攻撃力'],['pow','作業スピード'],['spd','移動速度'],['sta','スタミナ'],['cap','持てる数']];
 function giveSeed(r){if((S.mseed||0)<1)return;const T=r.sst||(r.sst={}),L=UPK.filter(([k])=>(T[k]||0)<6&&(k!=='atk'||r.elem==='fire'));/* 攻撃力は火の子だけ */if(!L.length)return toast(r.name+'は、これ以上ふしぎな種で強くならない');
