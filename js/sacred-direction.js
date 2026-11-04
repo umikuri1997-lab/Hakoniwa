@@ -71,7 +71,7 @@ function sacredBeat(c){
   if(c==='bud'||c==='leaf'||c==='grow'){
     const from=sacredStage(),stage=c==='bud'?1:c==='leaf'?2:3;
     sacredStartEffect('growth',ms,{from:Math.min(from,stage-1),to:stage});SACRED_PREVIEW.set(S,{session:VILLAGE_SESSION,stage,until:Infinity});
-    sacredShot(c==='grow'?'group':'detail',cast,1.4);sfx('bush');
+    sacredShot(c==='grow'?'group':'detail',cast,1.4);sfx('bush');sacredGrowSparks(j,ms,stage);
   }
   if(c==='reply'){sacredStartEffect('reply',ms);sacredShot('face',cast,1.2);sfx('bush');for(const r of cast)sacredScenePose(r,'storyListen',600000,{side:true,target:j});}
   if(c==='face')sacredShot('face',cast);
@@ -84,6 +84,26 @@ function sacredBeat(c){
     });
   }
   d.beat=c;
+}
+let SHARD_OFFER=null;/* かけらをささげているところ（かさねてタップしても1回） */
+function sacredOfferShard(j,done){
+  if(SHARD_OFFER&&SHARD_OFFER.state===S&&SHARD_OFFER.session===VILLAGE_SESSION)return;
+  if(isNight())return toast('かけらをささげるのは、朝になってから');
+  const f=S.res.find(r=>r.name===POKO&&!r.hidden);if(!f)return toast('フタバがいません');
+  const owner=S,session=VILLAGE_SESSION,span=sacredSpan(),by=(j/W|0)+span-1+.5,offer={state:S,session};SHARD_OFFER=offer;
+  const alive=()=>S===owner&&VILLAGE_SESSION===session&&S.res.includes(f)&&S.obj[j]==='tower';
+  const finish=()=>{if(SHARD_OFFER===offer)SHARD_OFFER=null};
+  let begun=false;const act=()=>{if(begun)return;begun=true;if(!alive())return finish();endAct(f);f.path=[];f.act={type:'idle',stage:'do',t:0,dur:999};const hold=f.act;const face=f.x<storyTreeX(j)?1:-1;f.face=face;sacredScenePose(f,'storyOffer',3200,{side:true,face});
+    const cx=storyTreeX(j)*TS,cy=(storyTreeY(j)+.2)*TS-hiAt(j)*LIFT;
+    for(let i=0;i<24;i++)setTimeout(()=>{if(!alive())return;const hx=f.x*TS+face*6,hy=f.y*TS-30-uLift(f),q=i/24;fx.push({k:'p',x:hx+(cx-hx)*q,y:hy+(cy-40-hy)*q,vx:(cx-hx)*.6,vy:-150,life:1,col:i%2?'#fff6c8':'#bfe8ff',r:3})},900+i*60);
+    sfx('shard');setTimeout(()=>{finish();if(!alive())return;if(f.act===hold)endAct(f);done();},2800);};
+  if(!sacredSceneWalk(f,(j%W)+.5,by,{adjacentSide:true},act)&&!sacredSceneWalk(f,(j%W)+span-.5,by,{adjacentSide:true},act))act();
+  setTimeout(()=>{if(!begun&&S===owner&&VILLAGE_SESSION===session)act();else if(!begun)finish();},15000);/* 歩くのをじゃまされても、止まったままにしない */
+}
+function sacredGrowSparks(j,ms,stage){/* 育つあいだ、根もとから光と葉がまいあがり、のびきったときに、ふわっと広がる */
+  const owner=S,session=VILLAGE_SESSION,cx=storyTreeX(j)*TS,cy=(storyTreeY(j)+.5)*TS-hiAt(j)*LIFT,n=10+stage*6;
+  for(let i=0;i<n;i++)setTimeout(()=>{if(S!==owner||VILLAGE_SESSION!==session)return;const a=Math.random()*Math.PI*2,r=6+Math.random()*16;fx.push({k:'p',x:cx+Math.cos(a)*r,y:cy+2,vx:Math.cos(a)*10,vy:-130-Math.random()*90,life:1.4,col:i%3?'#fff6c8':'#c8f5a0',r:2+(i%2)})},ms*.15+i*(ms*.55/n));
+  setTimeout(()=>{if(S!==owner||VILLAGE_SESSION!==session)return;for(let i=0;i<18+stage*4;i++){const a=Math.random()*Math.PI*2,v=30+Math.random()*50;fx.push({k:'p',x:cx,y:cy-20-stage*12,vx:Math.cos(a)*v,vy:Math.sin(a)*v-90,life:1.3,col:i%2?'#c8f5a0':'#fff6c8',r:2})}fx.push({k:'ring',x:cx,y:cy-4,life:1,col:'rgba(255,248,200,.85)'});sfx('bush')},ms*.8);
 }
 function sacredTreeMotion(now){
   const growth=sacredEffect('growth');const wind=sacredEffect('wind')||sacredEffect('reply');
