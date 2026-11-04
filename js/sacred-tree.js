@@ -74,7 +74,14 @@ function sacredGrowWatch(j){/* 物語の場面の外で木が育ったとき（�
   const from=S.treeSeen;S.treeSeen=st;const ms=3200;sacredStartEffect('growth',ms,{from,to:st});const d=sacredDirection();if(d)d.watch=true;villageTimeout(()=>{const e=sacredDirection();if(e&&e.watch)sacredEndDirection(false);},ms+100);sacredGrowSparks(j,ms,Math.ceil(st));
   const cx=storyTreeX(j),cy=storyTreeY(j),now=performance.now();
   for(const r of S.res){if(r.hidden||Math.hypot(r.x-cx,r.y-cy)>10)continue;r.face=r.x<cx?1:-1;r.bubble='✨';JOYU.set(r,now+2600);}
-  const f=S.res.find(r=>r.name===POKO&&!r.hidden);if(f)villageTimeout(()=>{if($('#dialog').hidden)dialog([[POKO,st>=4?'#surprise|わあ……！　木が、こんなに大きく……！':'#joy|あっ……！　木が、ぐんって、のびた！']],()=>{},null,'');},ms+400);
+  panTo(cx*TS,(cy-1)*TS);/* 育つところを見せる */
+  const lines=sacredGrowLines(st);if(!lines.length)return;let tries=0;const say=()=>{if($('#dialog').hidden&&!sacredDirection())dialog(lines,()=>{},null,'');else if(tries++<40)villageTimeout(say,1500);};villageTimeout(say,ms+400);/* ほかの会話中なら、おわってから */
+}
+function sacredGrowLines(st){/* 木が育ったときの、みんなの会話（いる子の行だけ） */
+  const N=keyName('earth'),H=keyName('fire'),M=keyName('water'),K=keyName('wind');
+  const L=st>=4?[[POKO,'#surprise|わあ……！　木が、こんなに大きく……！'],[N,'見てぇ。根っこが、土の中で、ずうっと先までのびてるよぉ。'],[H,'#joy|みんなで世話した木だ。……葉っぱまで、あったかい。'],[M,'しずくが、葉の先で光っています。……きれいですね。'],[K,'#think|……葉ずれの音が、ずっと大きくなった。だれかが、こたえてるみたいだ。'],[GOD,'#joy|……ほんに、りっぱになったのう。おヌシらの手が、この木をここまで育てたんじゃ。'],[POKO,'#think|……ヌシ様に、もうすこしで、会えるのかな。'],[GOD,'#nod|うむ。のこりのかけらがそろえば、きっとのう。']]
+    :[[POKO,'#joy|あっ……！　木が、ぐんって、のびた！'],[N,'かけらの光が、根っこまで、しみこんでいったねぇ。'],[GOD,'#nod|うむ。ヌシ様の力が、この木にやどりはじめたんじゃ。'],[POKO,'#joy|……もっと、大きくなってね。']];
+  let g=0;return L.filter(l=>l[0]&&(l[0]===GOD||spkOK(l[0]))).map(l=>{if(l[0]!==GOD||g++)return l;const m=/^(#[a-z]+\|)?(.*)$/.exec(l[1]);return [GOD,(m[1]||'')+GVOICE()+m[2]]});/* カミサマが遠くにいるときは、はじめの行だけ「聞こえるかの？」 */
 }
 function drawStoryTree(c,x,y,j,now,full=false){
   if(!full)sacredGrowWatch(j);
