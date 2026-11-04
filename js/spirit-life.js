@@ -508,6 +508,13 @@ CHATS.push(...[
  [[0,'みずうみの水を、すくってみたの。'],[1,'どうだった？'],[0,'手のひらに、お日さまがうつってた。']],
  [[0,'#think|ゆめって、どこでつくってるのかな。'],[1,'まくらの中じゃない？'],[0,'じゃあ、まくら、だいじにしよう。']]
 ]);
+/* 思い出の話：いっしょにした「はじめて」を、その場にいた子が、2日たってから思い出して話す（omo）。うしろに足すだけ */
+CHATS.push(
+ Object.assign([[0,'はじめて家ができた日のこと、おぼえてる？'],[1,'#joy|おぼえてる！ 壁でかこんだら、急に「おうち」になったんだよね。'],[0,'あの夜、屋根の下でねむれて、ほっとしたなあ。']],{ok:(r,p)=>omoWe('house',r,p)}),
+ Object.assign([[0,'#joy|ねえ、はじめて魚がつれたときのこと、話したっけ？'],[1,'ううん、聞かせて。'],[0,'ぐいって引っぱられて、びっくりして、しりもちついちゃったの。'],[1,'#joy|あはは！ でも、つれたんだ？'],[0,'#joy|うん！ あのときの魚、すっごくおいしかった。']],{ok:(r,p)=>omoWe('fish',r,p)}),
+ Object.assign([[0,'はじめて朝まで村を守れた日、おぼえてる？'],[1,'#nod|うん。朝日がのぼったとき、みんなで顔を見あわせたよね。'],[0,'#joy|あのときの朝日、いちばんきれいだった気がする。']],{ok:(r,p)=>omoWe('night',r,p)}),
+ Object.assign([[0,'#think|オオカゲを、はじめて追いはらった夜のこと……。'],[1,'#scared|こわかったね。'],[0,'うん。でも、みんながいたから、にげなかった。'],[1,'#joy|つぎも、きっとだいじょうぶだよ。']],{ok:(r,p)=>omoWe('boss',r,p)}),
+ Object.assign([[0,'#joy|お祭りの日、たのしかったね。'],[1,'#joy|うん！ またやりたいなあ。'],[0,'こんどは、なにをかざろうか。']],{ok:(r,p)=>omoWe('fest',r,p)}));
 
 /* せいれい同士のおしゃべり：話す子の属性に合わせて、口調をととのえる（話の中身は変えない） */
 function chatTone(tx,r,i){if(!r)return tx;const k=elemKey(r),pr=r.elem==='fire'?(k==='fireB'?'おれ':r.name===HOMURA?'あたい':'あたし'):r.elem==='water'?'わたし':'ぼく';
@@ -527,7 +534,7 @@ function chatTone(tx,r,i){if(!r)return tx;const k=elemKey(r),pr=r.elem==='fire'?
 const CHATSEENKEY='hakoniwa-chat-v1';let CHATSEEN=null;/* 出た雑談は、ステージをこえておぼえる（ほかのステージで出た話は出にくい） */
 function chatSeen(){if(!CHATSEEN){try{CHATSEEN=new Set(JSON.parse(KV.getItem(CHATSEENKEY)||'[]'))}catch(e){CHATSEEN=new Set()}}return CHATSEEN}
 function chatMark(i){const C=chatSeen();if(C.has(i))return;C.add(i);try{KV.setItem(CHATSEENKEY,JSON.stringify([...C]))}catch(e){}}
-function chatTopic(r,p){const L=[],mt=((r.mates||{})[p.id]||0)>=6;CHATS.forEach((c,i)=>{if((c.st==null||c.st===WD)&&(!c.el||c.el===r.elem)&&(!c.ok||c.ok())&&(!c.key||isKey(r.name)&&isKey(p.name))&&(!c.mate||mt)&&(!c.kc||kcOK(c,r,p)))L.push(i)});/* なかよし同士だと、なかよしの話もまざる *//* 話しかけた子の属性のお話もまざる */
+function chatTopic(r,p){const L=[],mt=((r.mates||{})[p.id]||0)>=6;CHATS.forEach((c,i)=>{if((c.st==null||c.st===WD)&&(!c.el||c.el===r.elem)&&(!c.ok||c.ok(r,p))&&(!c.key||isKey(r.name)&&isKey(p.name))&&(!c.mate||mt)&&(!c.kc||kcOK(c,r,p)))L.push(i)});/* なかよし同士だと、なかよしの話もまざる *//* 話しかけた子の属性のお話もまざる */
   if(festOn()){const F=L.filter(i=>CHATS[i].fest);if(F.length)L.splice(0,L.length,...F)}/* おまつりの日は、おまつりの話だけ */
   const R=S.chatRec||(S.chatRec=[]),G=chatSeen(),last=i=>{const k=R.lastIndexOf(i);return k>=0?k:G.has(i)?-.5:-1}/* まだどこでも出ていない話 → ほかのステージで出た話 → このステージで前に出た話 */,lo=Math.min(...L.map(last));let C=L.filter(i=>last(i)===lo);/* だれとだれの会話でも、まだしていない話（なければ、いちばん前にした話）からえらぶ。ひととおりするまで、同じ話はしない */
   if(C.some(i=>CHATS[i].kc)&&Math.random()<.4)C=C.filter(i=>CHATS[i].kc);/* キーキャラの話は、まだしていなければ4割で選ばれる */

@@ -327,7 +327,7 @@ function goMeal(r,G){
 }
 function fishLoot(r,sb){/* つり：家具1%・空き缶30%・枝30%（つりスポットのぶんへらす）・のこりは魚（false をかえす） */const q=Math.random();sfxAt('catch',r.x,r.y);
   if(q<.01){const oo=FURN.filter(id=>BL[id]&&BL[id].offerOnly&&(!WIND_STAGE_TOYS.has(id)||WD===4));if(oo.length){const id=pick(oo);giveItem(id,1);r.bubble='✨';addFloat(r.x,r.y-1.8,'レア！');queueItemGift({[id]:1},'つりあげた！');return true}}
-  if(q>=.61-(sb||0))return false;
+  if(q>=.61-(sb||0)){omo('fish',r.name);return false}
   const k=q<Math.min(.31,.61-(sb||0))?'can':'eda';if(k==='can'&&!S.free&&!(S.guardianIdeas||{}).joro){(S.recipes||(S.recipes={})).joro=true;(S.guardianIdeas||(S.guardianIdeas={})).joro=true;sfx('level');queueItemGift({joro:1},'あたらしいレシピ！',true)}/* はじめて空き缶をつったら、ブリキのじょうろを思いつく */r.bubble='chip:drop:'+k;/* 落ちているときと同じ絵 */if(roomN(r)>0)addMat(r,k,1);else dropAt(r.x,r.y,'mat:'+k,1);return true}
 const AREAW=27,AREAN=4,areaOf=k=>((((k/W)|0)/AREAW)|0)*AREAN+((k%W)/AREAW|0);/* マップを4×4の16エリア（1エリア27×27マス）にわける */const STORET=18;/* 箱にしまう時間 */const WEEDDAY=[1,2],WEEDMAX=20,FUNDAY=[1,2],FUNMAX=20,KINODAY=1,KINOMAX=5,EDADAY=5,EDAMAX=10;/* 1エリアの雑草・きのこの最大 */
 function weedMorning(first){/* 毎朝、16エリアごとに：雑草1〜2本（2日で3本、20本まで）・ふんばり草1〜2本（2日で3本）（よみがえった土地、20本まで）・きのこ1本（木のそば、5本まで）・枝5本（落とし物、20本まで） */

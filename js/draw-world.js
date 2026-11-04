@@ -419,7 +419,8 @@ function render(now){RFN++;
   ctx.globalAlpha=1;ctx.textAlign='start';
   const dk=darkness();
   ctx.setTransform(dpr,0,0,dpr,0,0);
-  if(dk>0){ctx.fillStyle=(!WD&&S.ns&&(S.ns.final||S.ns.rush)&&!S.cleared?'rgba(46,10,52,':'rgba(14,20,58,')+dk+')';ctx.fillRect(0,0,VW,VH);
+  if(BOSSEVE){const h=hour(),a=Math.min(1,Math.max(0,(h-15)/2))*.16;if(a>0){ctx.fillStyle='rgba(110,30,70,'+a+')';ctx.fillRect(0,0,VW,VH)}}/* オオカゲが来る日の夕方：空があやしい色に */
+  if(dk>0){ctx.fillStyle=(BOSSEVE||!WD&&S.ns&&(S.ns.final||S.ns.rush)&&!S.cleared?'rgba(46,10,52,':'rgba(14,20,58,')+dk+')';ctx.fillRect(0,0,VW,VH);
     ctx.setTransform(k,0,0,k,-cam.x*k,-cam.y*k);ctx.globalCompositeOperation='lighten';/* 光が重なっても、いちばん明るい光より明るくならない */
     ctx.globalAlpha=dk;for(const j of LITP){const o=S.obj[j],L=LIGHTP[o];if(!L)continue;const x=j%W,y=(j/W)|0;if(x<x0-5||x>=x1+5||y<y0-5||y>=y1+5)continue;/* 画面の外5マスの明かりも、光がとどくので描く */if(INDL.has(o)&&roomOf(j))continue;/* 家の中の灯りは、灯りそのものは光らせず、家ぜんたいを光らせる（下） *//* 明かりの出る物は、夜にまわりを明るく：光の絵（半径ごとに1まい作っておく）をおく */
       const R=L.R;ctx.drawImage(lightSpr(R),x*TS+L.dx-R,y*TS+L.dy-R,R*2,R*2)}ctx.globalAlpha=1;

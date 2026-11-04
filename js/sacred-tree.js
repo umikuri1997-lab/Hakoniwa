@@ -91,7 +91,7 @@ function drawStoryTreeFrame(c,x,y,j,now,forced=null,unfold=1){
 }
 function drawSacredRoot(now){if(!S||WD!==0||S.free||S.sacredRoot==null||S.obj.includes('tower'))return;const j=S.sacredRoot;if(S.obj[j]==='site')return;drawStoryTree(ctx,(j%W)*TS,(j/W|0)*TS-hiAt(j)*LIFT,j,now);}
 const SACRED_QUIET=[
-  ['F','……きょうだいたちのことも、聞きたかったんだ。'],['U','うむ。'],['F','どこかで、元気にしてるかな。'],['U','……。'],['U','わたしにも、まだわからぬ。'],['F','……そっか。'],['U','ただ、あの子らがおまえを守ったことは、覚えている。'],['F','……うん。'],['U','こうして生きているおまえを見たら、きっと、喜ぶだろう。'],['F','#teary|……。'],['N','……となり、座るねぇ。',1,'stree:sit'],['F','……今日は、ここにいてもいい？'],['U','もちろんだ。']
+  ['F','……きょうだいたちのことも、聞きたかったんだ。'],['U','うむ。'],['F','どこかで、元気にしてるかな。'],['U','……。'],['U','わたしにも、まだわからぬ。'],['F','……そっか。'],['U','ただ、あの子らがおまえを守ったことは、覚えている。'],['F','……うん。'],['U','こうして生きているおまえを見たら、きっと、喜ぶだろう。'],['F','#teary|……。'],['N','#hush|……となり、座るねぇ。',1,'stree:sit'],['F','#hush|……今日は、ここにいてもいい？'],['U','もちろんだ。']
 ];
 function sacredQuietScene(){return startSacredQuiet();}
 function drawSacredQuiet(now){if(WD===0&&S.nushi&&S.flags.sacredReunion&&!S.flags.sacredQuietSeen&&$('#dialog').hidden){talkBub(S.nushi.x*TS,S.nushi.y*TS-42,now,'#b7ddba');}}

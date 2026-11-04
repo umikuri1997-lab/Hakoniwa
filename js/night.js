@@ -256,7 +256,7 @@ function defeat(e,msg,r){if(e.dead)return;/* 同じ敵の撃破報酬は1回だ�
   if(!EVAP.some(it=>it.e===e))EVAP.push({e,t0:performance.now(),dur:1300,die:true});/* たおしたら、たおれるモーションをしてから消える */
   e.dead=true;S.kills++;const D=EN[e.type];{const K=S.enKills||(S.enKills={});K[e.type]=(K[e.type]||0)+1}if(S.ns){S.ns.kill++;if(D.boss)S.ns.boss=2;if(e.type==='boss2'){S.ns.b2=1;S.b2At={x:e.x,y:e.y}}}const n=D.pw||5;
   if(e.type==='hino')S.flags.hinoDown=true;if(D.ash&&WD===1)st2().ashKills=(st2().ashKills||0)+1;
-  if(D.boss){S.bossKills=(S.bossKills||0)+1;if(!S.bossDay)S.bossDay=dayNo();if(e.type==='boss'&&!S.ookDay)S.ookDay=dayNo();logEv('オオカゲを追いはらった');memo('⚔️','オオカゲを追いはらった')}
+  if(D.boss){S.bossKills=(S.bossKills||0)+1;if(!S.bossDay)S.bossDay=dayNo();if(e.type==='boss'&&!S.ookDay)S.ookDay=dayNo();if(S.bossKills>=2&&e.type==='boss')S.flags.winMorn=dayNo();/* 2回めからは、つぎの朝にみんなでよろこぶ（はじめての夜は、その場の会話） */logEv('オオカゲを追いはらった');omo('boss');memo('⚔️','オオカゲを追いはらった')}
   if(D.boss&&!S.flags.sh_boss&&!S.flags.bossShake&&!WD&&S.res.some(r=>r.name===POKO)){S.flags.bossShake=1;{const go=()=>performance.now()<BOSSHOLD?setTimeout(go,300):dialog([[POKO,'#joy|……やった！ オオカゲを、追いはらったよ！','cheer'],[POKO,'#surprise|……あれ？ 手が、まだふるえてる……。'],...(S.res.some(r=>r.name===MINA)?[[MINA,'#joy|フタバ、すごかったねぇ。みんなで、村を守れたよぉ。'],[MINA,'ふるえるのは、それだけがんばったからだよぉ。こわかったのに、にげなかったもんねぇ。'],[POKO,'#cry|……うん。ノドカがいてくれたから、がんばれたんだ。'],[MINA,'#joy|今夜は、みんなでゆっくり休もうねぇ。'],[POKO,'#joy|うん！ みんな、ありがとう！']]:[[GOD,(GVOICE()||'#nod|')+'……ようやったのう、フタバ。ちゃんと見とったぞい。'],[GOD,'ふるえるのは、こわいのをこらえて、さいごまでふんばったしるしじゃ。'],[POKO,'#cry|……うん。こわかったけど、にげなかったよ。'],[GOD,'#joy|えらいぞ。今夜は、ゆっくり休むんじゃ。']])]);setTimeout(go,1200)}}/* 戦闘のあと：フタバのふるえ（かけらの話とは別）。追いはらいの演出で「進む」をおしてから */
   if(D.boss&&WD&&!S.flags.sh_boss&&!S.drops.some(d=>d.id==='shard'))dropAt(e.x,e.y,'shard');/* 草原では、最後のバトルに勝ったときだけかけらが出る *//* オオカゲが落とすかけらは1つだけ */
   if(D.boss&&Math.random()<.5)dropAt(e.x,e.y,'mebuki');/* 半分の確率で「めぶきのしずく」 */
@@ -304,3 +304,13 @@ function updTowers(dt){
       if(tg.hp<=0&&!tg.dead)defeat(tg)}}
   S.enemies=S.enemies.filter(e=>!e.dead);
 }
+/* オオカゲの夜の前ぶれ：来る日の夕方は、空があやしい色になり、せいれいが不安そうに話す。追いはらった朝は、みんなでよろこぶ */
+let BOSSEVE=0;/* 前ぶれの空のこさ（0〜1） */
+function bossTonight(){return !!(S&&S.enemyOn&&!S.cleared&&!S.free&&!S.finalNight&&bossDays()==='オオカゲが来るまで：今夜')}
+function evePair(){const F=S.res.find(r=>r.name===keyName('fire')&&!r.hidden);if(!F)return null;const A=S.res.find(r=>r!==F&&!r.hidden&&KEYS[WD].includes(r.name))||S.res.find(r=>r!==F&&!r.hidden);return A?[A.name,F.name]:null}
+function bossEveTick(h){BOSSEVE=h>=15&&h<23&&bossTonight()?1:0;
+  if(BOSSEVE&&h>=17&&S.flags.eveD!==dayNo()&&$('#dialog').hidden&&!sheet){const p=evePair();if(!p)return;S.flags.eveD=dayNo();const[A,F]=p,again=(S.bossKills||0)>0;
+    dialog(again?[[A,'#worry hush|……空の色、へんだね。'],[F,'#think|ああ。またあいつが来るな。'],[A,'#nod|うん。でも、前も追いはらえたもん。'],[F,'#joy|ああ。今夜も、みんなで守ろう。']]
+      :[[A,'#worry hush|……風が、つめたくなってきた。'],[F,'#think|ああ。今夜は、あいつが来る。'],[A,'#scared|……こわいね。'],[F,'#nod|だいじょうぶ。みんなで守るんだ。']])}
+  if(S.flags.winMorn!=null&&h>=7&&h<12&&$('#dialog').hidden&&!sheet){const d=S.flags.winMorn;delete S.flags.winMorn;if(dayNo()-d>1)return;const p=evePair();if(!p)return;const[A,F]=p;
+    dialog([[A,'#joy|朝だ……！ ゆうべも、村を守れたね！','cheer'],[F,'#joy|ああ。みんな、よくがんばったな。'],[A,'#nod|おひさま、あったかいね。']])}}
