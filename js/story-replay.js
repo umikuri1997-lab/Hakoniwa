@@ -8,18 +8,23 @@ const STORY_REPLAY_EVENTS=[...STORY_REPLAY_QUESTS.map(id=>({key:'quest:'+id,id,k
   {key:'event:e16g',id:'e16g',kind:'event',title:'守り神へ受け継ぐ力'},
   {key:'event:e09',id:'e09',kind:'event',title:'最後のかけらを、みんなで'},
   {key:'reunion',kind:'reunion',title:'ヌシ様との再会'},
-  {key:'quiet',kind:'quiet',title:'再会のあと、木陰で'}];
-function storyReplayTitle(e){return e.title||QUESTS1.find(q=>q.id===e.id)?.text||'物語の思い出';}
+  {key:'quiet',kind:'quiet',title:'再会のあと、木陰で'},
+  /* 火山：本編と同じ会話・動きを、一時データの村で見返す */
+  {key:'vol:intro',id:'intro',kind:'vol',title:'火山のふもとの村へ'},
+  ...['springA','summon','rockCanal','shizukuRest','yatai','haikage3','springB','fire3','fest','ashiyu','volcano','rockDeep','springC','ashNight','hinoookage','inn','guest','tower'].map(id=>({key:'vol:'+id,id,kind:'vol'}))];
+function storyReplayTitle(e){return e.title||(e.kind==='vol'?QUESTS2:QUESTS1).find(q=>q.id===e.id)?.text||'物語の思い出';}
 function availableStoryReplays(state=S){
-  if(!state||state.free||(state.world||0)!==0)return [];
-  return STORY_REPLAY_EVENTS.filter(e=>{
+  if(!state||state.free)return [];
+  if(state.world===1)return STORY_REPLAY_EVENTS.filter(e=>{if(e.kind!=='vol')return false;if(e.id==='intro')return !!state.introSeen;if(e.id==='tower')return !!state.cleared;const i=QUESTS2.findIndex(q=>q.id===e.id);return i>=0&&(state.cleared||state.quest>i)&&state.qStory!==i;});
+  if((state.world||0)!==0)return [];
+  return STORY_REPLAY_EVENTS.filter(e=>{if(e.kind==='vol')return false;
     if(e.kind==='quest'){const i=QUESTS1.findIndex(q=>q.id===e.id);return i>=0&&(state.cleared||state.quest>i)&&state.qStory!==i;}
     if(e.kind==='event')return !!state.sev?.[e.id];
     return e.kind==='reunion'?!!state.cleared:!!state.flags?.sacredQuietSeen;
   });
 }
 function appendStoryReplays(body){
-  if(!S||S.free||WD!==0)return;
+  if(!S||S.free||WD>1)return;
   const sec=el('<div class="sec"><h3>物語を見返す</h3><p class="note">動きやカメラも見返せます。村の時間・進行・報酬は変わりません。</p><div class="rows"></div></div>'),list=sec.querySelector('.rows'),episodes=availableStoryReplays();
   if(!episodes.length)list.appendChild(el('<p class="note">物語を進めると、ここで見返せます。</p>'));
   for(const e of episodes){const b=el('<button class="btn" style="width:100%;text-align:left"></button>');b.textContent='▶ '+storyReplayTitle(e);b.dataset.storyReplay=e.key;b.onclick=()=>openStoryReplay(e.key);list.appendChild(b);}
@@ -47,6 +52,7 @@ function replayControls(run){
 }
 function prepareStoryReplay(run,payload){
   if(payload.sound)Object.assign(SND,{bgm:payload.sound.bgm!==false,sfx:payload.sound.sfx!==false});
+  if(run.episode.kind==='vol')return prepareVolReplay(run,payload);
   const e=run.episode,at=STORY_REPLAY_QUESTS.indexOf(e.id),count=e.kind!=='quest'?5:[2,3,4,5,5][at];
   setWorld(0);S=newState(0);LIVE[0]=S;S.introSeen=true;S.flags.minaCame=true;S.enemyOn=false;S.t=720;S.hold=0;S.speed=1;S.food=100;S.godShown=true;S.godGone=false;
   S.feat={build:true,plant:true,craft:true,summon:true,people:true};S.sacredRoot=(CY-3)*W+CX-2;S.fieldSites={root:S.sacredRoot};const x=S.sacredRoot%W,y=S.sacredRoot/W|0;
@@ -68,6 +74,38 @@ function prepareStoryReplay(run,payload){
   const nativeCheckQuest=checkQuest;checkQuest=()=>{if(run.running)nativeCheckQuest();};checkLevel=()=>{};checkSev=()=>{};finalCheck=()=>{};updTut=()=>{};showItemGift=()=>{};showSpotPop=()=>{};openSheet=()=>{};
   replayControls(run);
 }
+function replayLockUI(run){
+  USERPAUSE=true;NOSAVE=true;started=true;window.__noIdle=true;
+  for(const id of ['#title','#maps','#pro','#dialog','#lvup','#rlv'])$(id).hidden=true;showUI(true);
+  const style=document.createElement('style');style.textContent='#topUI,#botUI,#helpPop,#hand,#idle{display:none!important}#cv{pointer-events:none}';document.head.appendChild(style);
+  const nativeCheckQuest=checkQuest;checkQuest=()=>{if(run.running&&run.episode.kind!=='vol')nativeCheckQuest();};checkLevel=()=>{};checkSev=()=>{};finalCheck=()=>{};updTut=()=>{};showItemGift=()=>{};showSpotPop=()=>{};openSheet=()=>{};
+  replayControls(run);
+}
+/* 火山の場面の村：一時データだけ。場面に要る物（ようがん台・ベンチ・かまど・食卓・ほのお石・台座）と、ホムラ・シズクをおく */
+const VOL_REPLAY_AT={intro:'c',springA:'a',summon:'a',rockCanal:'b',shizukuRest:'a',yatai:'a',haikage3:'k',springB:'d1',fire3:'y',fest:'m',ashiyu:'b',volcano:'m',rockDeep:'d2',springC:'d2',ashNight:'m',hinoookage:'v',inn:'a',guest:'a',tower:'m'};
+function prepareVolReplay(run,payload){
+  const id=run.episode.id;setWorld(1);S=newState(1);LIVE[1]=S;S.introSeen=true;S.enemyOn=false;S.t=720;S.hold=0;S.speed=1;S.food=100;S.godShown=true;S.godGone=id!=='intro'&&id!=='springA';
+  S.feat={build:true,plant:true,craft:true,summon:true,people:true};
+  const put=(o,x,y)=>{for(let r=0;r<7;r++)for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){const j=((y|0)+dy)*W+(x|0)+dx;if(walk(j)&&!S.obj[j]&&S.ground[j]!==1&&!S.floor[j]&&walk(j+W)&&walk(j-1)&&walk(j+1)){S.obj[j]=o;if(BL[o]?.hp)S.hp[j]=BL[o].hp;return j}}return -1};
+  const[ax,ay]=HSPC.a;put('hotstone',ax+1,ay);if(['shizukuRest','ashiyu'].includes(id)){put('bench',ax+2,ay+2);put('bench',HSPC.b[0]+2,HSPC.b[1]+2);put('bench',HSPC.b[0]-2,HSPC.b[1]+2);}
+  if(id==='yatai'){put('oven',ax-3,ay+3);put('table',ax-1,ay+3);}if(id==='fire3')put('yogan',D1%W+3,(D1/W|0)+3);
+  for(const k of['a','b','c'])if(['springC','ashNight','hinoookage','inn','guest','tower','fest','ashiyu','volcano','rockDeep'].includes(id)||k==='a'&&id!=='springA'||k==='b'&&['fire3','haikage3'].includes(id))st2().sp[k]=1;
+  if(!['intro','springA'].includes(id))S.flags.onsen=true;
+  if(['haikage3','springB'].includes(id))for(const j of CRACKS)S.obj[j]=id==='haikage3'?'':S.obj[j];
+  let TX=CX,TY=CY;if(id==='tower'){const j=put('tower',CX,CY+2);if(j>=0){TX=j%W+1;TY=(j/W|0)+1;for(const k of[j+1,j+W,j+W+1]){S.obj[k]='part';S.ref[k]=j;}S.hp[j]=BL.tower.hp;}}
+  const at=VOL_REPLAY_AT[id],p=at==='a'?[ax-2,ay+3]:at==='b'?[HSPC.b[0]-1,HSPC.b[1]+3]:at==='c'?[CX,CY+2]:at==='k'?[CRACKS[2]%W,(CRACKS[2]/W|0)+3]:at==='d1'?[D1%W,(D1/W|0)+3]:at==='d2'?[D2%W,(D2/W|0)+3]:at==='y'?[D1%W+3,(D1/W|0)+6]:at==='v'?[VOLJ%W,OFF+9]:[TX,TY+3];
+  const names=id==='intro'||id==='springA'?[HOMURA]:[HOMURA,SHIZUKU],elems=['fire','water'],free=j=>walk(j)&&!S.obj[j]&&S.ground[j]!==1;let b=-1,bd=1e9;for(let y=(p[1]|0)-6;y<=(p[1]|0)+6;y++)for(let x=(p[0]|0)-6;x<=(p[0]|0)+6;x++){const j=y*W+x,d=Math.hypot(x-p[0],y-p[1]);if(d<bd&&free(j)&&free(j+1)){bd=d;b=j}}
+  S.res=names.map((name,i)=>{const r=mkRes(S,name,elems[i],b%W+.5+i,(b/W|0)+.5);const original=payload.actors?.find(a=>a.name===name&&a.elem===r.elem);if(original?.vr)r.vr=JSON.parse(JSON.stringify(original.vr));r.energy=100;r.hunger=hMax(r);r.fun=90;return r;});
+  S.quest=Math.max(0,QUESTS2.findIndex(q=>q.id===id));S.qStory=null;S.qTalked=true;S.spotSeen=Object.fromEntries(SPOTS.map(v=>[v.k,1]));recount();
+  cam.z=homeZ();centerOn(S.res[0].x*TS,S.res[0].y*TS);replayLockUI(run);
+}
+async function playVolReplay(run){
+  const id=run.episode.id,q=QUESTS2.find(x=>x.id===id),say=lines=>new Promise(ok=>{DLGTAP=performance.now();DLGGAP=0;dialog(lines,ok);});
+  if(id==='intro')await say(INTRO2);
+  else if(id==='guest'){guestScene();await waitStoryReplay(run,()=>!!S.flags.guestDone);await waitStoryReplay(run,()=>$('#dialog').hidden);await say(q.story);}
+  else if(id==='tower'){nushiReturns(true);await waitStoryReplay(run,()=>S.cleared);}
+  else{if(q.talk&&/vol:/.test(JSON.stringify(q.talk.lines)))await say(q.talk.lines.filter(l=>l[0]!=='@idea'));await say(q.story);}
+}
 function replayReadyActors(){for(const r of S.res){endAct(r);delete r.storyWaitHome;RHOLD.delete(r);r.hunger=hMax(r);r.energy=100;r.carry=null;r.cmat=null;r.meal=null;r.cing=null;}}
 async function waitStoryReplay(run,condition){while(STORY_REPLAY_RUN===run&&!run.cancelled){if(condition())return;await new Promise(r=>setTimeout(r,80));}throw Error('replay cancelled');}
 async function playStoryReplay(run){
@@ -78,7 +116,8 @@ async function playStoryReplay(run){
     else if(run.auto&&DLGA.n>=DLGA.full.length&&now>=DLGA.holdUntil&&now>=DLGA.readReady&&!sacredMotionPending()&&now-DLGA.lineT>=Math.max(1700,DLGA.full.length*85+800)){const b=$('#dlgBtns button');if(b&&!b.disabled)b.click();}
   },33);
   try{
-    if(e.kind==='quest'){
+    if(e.kind==='vol')await playVolReplay(run);
+    else if(e.kind==='quest'){
       checkQuest();await waitStoryReplay(run,()=>!!earthIntroSpeaker(QUESTS[S.quest]));DLGTAP=performance.now();startTalk();await waitStoryReplay(run,()=>S.qTalked);
       for(const pid of replayParts(e.id))for(let phase=0;phase<FIELD_STORIES[pid].length;phase++){replayReadyActors();DLGTAP=performance.now();const j=S.sacredRoot;fieldStoryTap(j%W,j/W|0);await waitStoryReplay(run,()=>fieldStoryState(pid).step>phase);}
       await waitStoryReplay(run,()=>S.qStory!=null);await waitStoryReplay(run,()=>TALKW===GOD?mainStoryBubbleReady():!!TALKW&&mainStoryBubbleReady(S.res.find(r=>r.name===TALKW)));DLGTAP=performance.now();startTalk();await waitStoryReplay(run,()=>S.qStory==null);

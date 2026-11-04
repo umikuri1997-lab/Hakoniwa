@@ -72,7 +72,7 @@ const QUESTS2=[
     [SHIZUKU,'わたしからも、ひとつおねがいがあります。'],
     [SHIZUKU,'温泉から上がると、足を休めたくなります。それに、からだに残ったお湯を、もう少し流せたら……。守り神さま、何かよい方法はありませんか。'],
     [HOMURA,'#think|湯上がりに、ぼんやり？ あたいは、すぐ次の仕事だけどね。……ま、守り神なら、面白いことを考えてくれそうだ。'],['@idea']],gives:{flags:['lv_tub','lv_bench']}},
-   story:[[SHIZUKU,'#joy|ここで、ゆっくり足を休められます。'],[HOMURA,'#think|……ま、たまには悪くないね。']],gives:{flag:'sReq'}},
+   story:[[SHIZUKU,'#joy|ここで、ゆっくり足を休められます。','vol:benchSit'],[HOMURA,'#think|……ま、たまには悪くないね。','vol:armsCross']],gives:{flag:'sReq'}},
   {id:'yatai',text:'ホムラのおねがい：温泉のそばに屋台をひらこう',check:()=>nearSp('oven')&&nearSp('table'),prog:()=>'かまど '+(nearSp('oven')?1:0)+'/1・食卓 '+(nearSp('table')?1:0)+'/1',how:'あたたかい温泉のそばに、かまどと食卓を置く',
    talk:{who:HOMURA,when:()=>true,lines:[
     [HOMURA,'#joy|温泉がひとつもどっただけで、村の空気がちがうね。'],
@@ -93,7 +93,7 @@ const QUESTS2=[
     [SHIZUKU,'#nod|灰は、熱をとじこめます。'],
     [HOMURA,'熱をとじこめる灰か……。だったら、そいつで、ひびわれをうめちまえばいいじゃないか。'],
     [HOMURA,'#joy|よし。ハイカゲが来たら、追いはらって、灰をいただこうじゃないか。']],gives:{flag:'ashOn'}},
-   story:[[HOMURA,'よし、ふさがった！ 熱の道が、つながったよ。'],[SHIZUKU,'ハイカゲの灰が、熱をしっかりとじこめてくれましたね。'],[SHIZUKU,'わたしの知っていたことと……'],[HOMURA,'#joy|あたいの思いつきだ。'],[SHIZUKU,'#joy|……はい。あとは、熱をどこへ流すか、ですね。']]},
+   story:[[HOMURA,'よし、ふさがった！ 熱の道が、つながったよ。','vol:crackSeal'],[SHIZUKU,'ハイカゲの灰が、熱をしっかりとじこめてくれましたね。'],[SHIZUKU,'わたしの知っていたことと……'],[HOMURA,'#joy|あたいの思いつきだ。'],[SHIZUKU,'#joy|……はい。あとは、熱をどこへ流すか、ですね。']]},
   {id:'springB',text:'熱の装置を左にむけて、西の温泉をよみがえらせよう',check:()=>!!st2().sp.b,how:'火山のふもとの「熱の装置」をタップして、向きを左にかえる',
    talk:{who:HOMURA,when:()=>true,lines:[
     [HOMURA,'火山のふもとに、熱の流れを切りかえる装置があるんだ。'],
@@ -126,15 +126,15 @@ const QUESTS2=[
     [HOMURA,'足だけつかって、のんびりおしゃべり……いいね。すわる所と、花でもあれば最高さ。'],
     [SHIZUKU,'あし湯ができたら、みなさんも、きっと遊びに来ますね。'],
     [GOD,'花のたねを、とどけておいたぞい。']],gives:{items:{clover:3}}},
-   story:[[SHIZUKU,'あし湯ができました……！ 足だけでも、ぽかぽかします。'],[SHIZUKU,'足だけなら、あつくありません。'],[HOMURA,'#joy|あんた、やっぱりお湯が苦手なんだろ。'],[SHIZUKU,'……水のせいれいですから。'],[HOMURA,'花を見ながら、のんびりおしゃべり。いいもんだね。']]},
+   story:[[SHIZUKU,'あし湯ができました……！ 足だけでも、ぽかぽかします。','vol:ashiyu'],[SHIZUKU,'足だけなら、あつくありません。','vol:ripple'],[HOMURA,'#joy|あんた、やっぱりお湯が苦手なんだろ。'],[SHIZUKU,'……水のせいれいですから。'],[HOMURA,'花を見ながら、のんびりおしゃべり。いいもんだね。']]},
   {id:'volcano',text:'火山を調べよう',check:()=>!!S.flags.volLook,how:'「みる」で、北の火山をタップする',
    talk:{who:SHIZUKU,when:()=>true,lines:[
     [SHIZUKU,'奥の温泉に熱をとどけるには、奥の装置を使うはずです。'],
     [SHIZUKU,'その前に、火山を調べてみませんか。熱の流れが、どうなっているか…。']]},
-   story:[[HOMURA,'火山の熱は、ちゃんと生きてるね。'],[SHIZUKU,'#scared|でも……山の上から、いやな気配がします。わたし、これ以上は……'],[HOMURA,'#nod|……いいよ。あんたの足が動くまで、待つさ。'],[SHIZUKU,'#surprise|ホムラさんが、待つんですか。'],[HOMURA,'たまにはね。それと、奥の装置のまわり、大岩だらけだったよ。']]},
+   story:[[HOMURA,'火山の熱は、ちゃんと生きてるね。'],[SHIZUKU,'#scared|でも……山の上から、いやな気配がします。わたし、これ以上は……','vol:scaredS'],[HOMURA,'#nod|……いいよ。あんたの足が動くまで、待つさ。'],[SHIZUKU,'#surprise|ホムラさんが、待つんですか。'],[HOMURA,'たまにはね。それと、奥の装置のまわり、大岩だらけだったよ。']]},
   {id:'rockDeep',text:'奥の装置のまわりの大岩をどかそう',check:()=>BVOL.every(j=>S.obj[j]!=='boulder'),prog:()=>'大岩 '+BVOL.filter(j=>S.obj[j]!=='boulder').length+'/4',how:'せいれいに、大岩をくだいてもらう',
    talk:{who:HOMURA,when:()=>true,lines:[[HOMURA,'奥の装置にたどりつくには、まわりの大岩をどかさないとね。'],[HOMURA,'みんな、たのんだよ！']]},
-   story:[[HOMURA,'よし、道がひらけた！'],[SHIZUKU,'#scared|…装置が、こわれていますね。'],[SHIZUKU,'#nod|……直し方は、わかります。こんどは、わたしがやります。']]},
+   story:[[HOMURA,'よし、道がひらけた！'],[SHIZUKU,'#scared|…装置が、こわれていますね。','vol:pointDevice'],[SHIZUKU,'#nod|……直し方は、わかります。こんどは、わたしがやります。']]},
   {id:'springC',text:'奥の装置を直して、奥の温泉に熱をとどけよう',check:()=>!!st2().sp.c,how:'奥の装置を直して、熱を奥の温泉へむける',
    talk:{who:SHIZUKU,when:()=>true,lines:[
     [SHIZUKU,'奥の装置を直すには、石材と木材、それに…ヌシ様の火だねの力がいります。'],
@@ -151,7 +151,7 @@ const QUESTS2=[
     [SHIZUKU,'#joy|湯上がりに、そのままゆっくり休める宿があると、うれしいですね。'],
     [HOMURA,'#think|宿のすぐそばに、岩でかこんだ湯船もほしいね。空を見ながら、のんびりつかれるやつさ。'],
     [SHIZUKU,'守り神さま、なにか、よい形はありませんか。'],['@idea']],gives:{flags:['lv_onsen']}},
-   story:[[HOMURA,'温泉宿のできあがりだ！ 宿を出たら、すぐ露天ぶろさ。'],[SHIZUKU,'露天ぶろは、岩のかげのほうが少しぬるいです。'],[HOMURA,'あたいは、わき口のそばだね。'],[SHIZUKU,'#joy|……同じお湯に、ちがう場所で入れますね。'],[HOMURA,'#joy|今夜は、あたいも泊まってみようかな。']]},
+   story:[[HOMURA,'温泉宿のできあがりだ！ 宿を出たら、すぐ露天ぶろさ。','vol:innFront'],[SHIZUKU,'露天ぶろは、岩のかげのほうが少しぬるいです。'],[HOMURA,'あたいは、わき口のそばだね。','vol:soakBoth'],[SHIZUKU,'#joy|……同じお湯に、ちがう場所で入れますね。'],[HOMURA,'#joy|今夜は、あたいも泊まってみようかな。']]},
   {id:'guest',text:'草原からのお客さんを、露天ぶろでもてなそう',check:()=>!!S.flags.guestDone,how:'温泉宿の露天ぶろで、お客さんをもてなす',
    talk:{who:SHIZUKU,when:()=>true,lines:[
     [SHIZUKU,'温泉宿も、露天ぶろもできて、湯けむりの村らしくなってきましたね。'],
