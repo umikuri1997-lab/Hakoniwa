@@ -268,7 +268,7 @@ const GOD_SHOP=['いらっしゃ〜い。なにがほしいかの？','おっ、
 const GOD_IDLE=['草、生えてきたのう〜。','むかしはのう…はて、なんの話じゃったか。','パワー？ ためればなんとかなるわい！','ねむ…。','夜は「コワイノ」に気をつけるんじゃぞ。たぶん来るからの。','「コワイノ」は、ほんとうに悪いやつなんかのう…。','おやつ持っとらんか？','属性がたまるとせいれいが来るぞい。…たしか。'];
 function KS(L){const o=[];for(let[w,t,...rest]of L){let n=w;if(w.length===1){try{n=sevName(w)}catch(e){n=null}}if(n){if(t&&typeof t==='object'){const q=S&&S.res.find(x=>x.name===n);t=q&&elemKey(q)==='fireB'?t.B:t.A}o.push([n,t,...rest])}}return o}/* キーキャラの名前を入れたセリフ */
 function pathMade(){const n=S.floor.filter(f=>f==='path').length;if(S.flags.path0==null)S.flags.path0=n;return Math.max(0,n-S.flags.path0)}/* クエストを受けてから、しいたあぜ道の数 */
-function companionFieldQuest(id,text,how,elem,intro,outro){return {id,text,how,field:true,check:()=>fieldStoryDone(id),prog:()=>fieldStoryProgress(id),talk:{get who(){return elem==='earth'?MINA:keyName(elem)},when:()=>true,get lines(){return KS(intro)}},get story(){return KS(outro)},...(id==='windVoices'?{gives:{flag:'nushiAlive'}}:{})}}
+function companionFieldQuest(id,text,how,elem,intro,outro){return {id,text,how,field:true,check:()=>fieldStoryDone(id),prog:()=>fieldStoryProgress(id),talk:{get who(){return elem==='earth'?MINA:keyName(elem)},when:()=>true,get learn(){return typeof FIELD_PREP!=='undefined'&&FIELD_PREP[id]?.learn||[]},get lines(){return KS(intro)}},get story(){return KS(outro)},...(id==='windVoices'?{gives:{flag:'nushiAlive'}}:{})}}
 const QUESTS1=[
   {id:'statue',text:'神殿を建ててもらおう',how:"下の「おく」→「神殿」をえらび、空いた場所をタップ",check:()=>cnt('statue')>=1,by:GOD,story:[
     [POKO,'できたー！ りっぱな神殿！'],
