@@ -38,7 +38,7 @@ function grassEndingGoal(){
   if(active)return {text:wave===3?'ヨルノオオカゲを追いはらおう':'御神木を守ろう',progress:'御神木の防衛 '+wave+'/3夜目',how:wave===3?'村と御神木を守り、ヨルノオオカゲを追いはらおう':'村と御神木を、朝まで守ろう'};
   if(S.finalNight||S.finalOn||S.rushOn)return {text:'今夜、御神木を守ろう',progress:'次は、防衛 '+wave+'/3夜目',how:'柵や罠を整え、食事と休息を済ませて、今夜の影に備えよう'};
   if(clearReady()&&S.finalDay!=null){const left=Math.max(0,S.finalDay-dayNo());return {text:'御神木を守る準備をしよう',progress:left?'影が来るまで、あと'+left+'日':'今夜、影がやってくる',how:'御神木を守れるように、柵や罠・食事と休息の準備を整えよう'};}
-  return {text:GRASSN<2500?'みどりのマスを'+nextGreenGoal()+'にしよう':'ヌシ様を迎える準備をしよう',progress,how:'御神木をタップして、足りないものを確かめよう。人数・かけら・みどり・せいれいパワーをそろえよう'};
+  return {text:GRASSN<2000?'みどりのマスを'+nextGreenGoal()+'にしよう':'ヌシ様を迎える準備をしよう',progress,how:'御神木をタップして、足りないものを確かめよう。人数・かけら・みどり・せいれいパワーをそろえよう'};
 }
 function grassEndingFocusTarget(){
   if(WD!==0||!S.flags.finalWon)return null;
