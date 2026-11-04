@@ -117,6 +117,7 @@ function calcSpots(){findHouses();/* 部屋のスポットのために、家を�
   for(let j=0;j<W*H;j++){const o=S.obj[j];if(!o||o==='part')continue;for(const sp of SPOTS){if(!sp.main(o,j))continue;const hin=sp.room?HOUSES.find(h=>h.inside.has(j)):null;if(sp.room&&!hin)continue;/* 部屋のスポット：家の中にあるときだけ。いる物も、同じ家の中 */const x0=j%W,y0=(j/W)|0,found=sp.need.map(()=>[]);
     for(let y=Math.max(0,y0-3);y<=Math.min(H-1,y0+3);y++)for(let x=Math.max(0,x0-3);x<=Math.min(W-1,x0+3);x++){const q=y*W+x,t=S.obj[q],wv=S.win&&typeof S.win[q]==='string'?S.win[q]:null;if(wv&&q!==j&&(!hin||hin.set.has(q)))sp.need.forEach((nd,i)=>{if(nd[0](wv,q))found[i].push(q)});/* 壁にかけた物も数える */if(q===j||!t||t==='part'||hin&&!hin.inside.has(q))continue;sp.need.forEach((nd,i)=>{if(nd[0](t,q))found[i].push(q)})}
     if(sp.need.every((nd,i)=>found[i].length>=nd[1])){add(j,sp.k);for(const L of found)for(const q of L)add(q,sp.k);{let t=SPOTM.get(j);if(!t)SPOTM.set(j,t=new Set());t.add(sp.k)}SPOTI.push({sp,j,found})}/* SPOTM：スポットのもとの物（まわり3マスで効くスポットは、ここからはかる）。SPOTI：できたスポットの一覧 */}}
+  if(typeof fl2Spots==='function')fl2Spots();/* 2階の部屋 */
   {const cur=new Set(SPOTI.map(I=>I.sp.k+':'+I.j));if(SPOTPREV&&SPOTPREV.s===S)for(const I of SPOTI)if(!SPOTPREV.k.has(I.sp.k+':'+I.j))spotFx(I);SPOTPREV={s:S,k:cur}}/* 新しくできたスポットは、点線でかこんでキラキラ（読みこんだときはしない） */
   const seen=S.spotSeen||(S.spotSeen={});for(const sp of SPOTS){if(seen[sp.k])continue;let on=false;for(const t of SPOTJ.values())if(t.has(sp.k)){on=true;break}if(on){seen[sp.k]=1;SPOT_POPS.push({state:S,sp})}}}/* はじめてできたときだけ、ポップアップで説明する（showSpotPop） */
 const TOYS=new Set(['swing','seesaw','sandbox','slide']);/* 平らな物のうち、毎コマかく物（ラグ・罠など）は、BL に anim:1 と書く */
@@ -159,6 +160,7 @@ function recount(){if(S.sacredLegacy2||S.sacredLegacy3)tryExpandSacredLegacy(S);
   for(const k in S.edge||{}){const o=S.edge[k];counts[o]=(counts[o]||0)+1;if(BL[o])addA(BL[o].attr)}/* 花壇のふち */
   for(const k in S.rug||{}){const o=S.rug[k];counts[o]=(counts[o]||0)+1;if(BL[o])addA(BL[o].attr)}/* ラグ（床の上の層）も数える */
   for(const k in S.roof||{}){const o=S.roof[k];counts[o]=(counts[o]||0)+1;if(BL[o])addA(BL[o].attr)}/* ガゼボ・東屋（屋根の層）も数える */
+  for(const k in (S.fl2&&S.fl2.obj)||{}){const o=S.fl2.obj[k];if(!o||o==='part'||!BL[o])continue;counts[o]=(counts[o]||0)+1;if(BL[o].kind!=='block')addA(BL[o].attr)}/* 2階の物も数える */
   for(let j=0;j<W*H;j++){const o=S.obj[j],f=S.floor[j],x=j%W,y=(j/W)|0;
     if(f){around(j,1,REV)}/* 床・道・壁などのブロックは、属性の力をためない */
     

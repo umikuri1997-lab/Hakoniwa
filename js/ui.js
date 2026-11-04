@@ -289,7 +289,7 @@ function renderSheet(){
     {const cap=houseCap(h),C=houseComfort(h);T.textContent='おうち';
      const cs=el('<div class="sec"><h3>住み心地</h3><p class="comfy"><span class="stars"></span><b></b></p><div class="recs"></div><p class="note" style="margin-top:8px"></p></div>');
      cs.querySelector('.stars').textContent=comfyStars(C.v);cs.querySelector('b').textContent=C.v+' / '+COMFMAX;
-     const RN=[...new Set(SPOTI.filter(t=>t.sp.room&&h.inside.has(t.j)&&t.sp.need.every((nd,i)=>t.found[i].filter(q=>h.inside.has(q)).length>=nd[1])).map(t=>t.sp.n))];/* この家にそろった部屋 */
+     const RN=[...new Set(SPOTI.filter(t=>t.sp.room&&h.inside.has(t.j)&&t.sp.need.every((nd,i)=>t.found[i].filter(q=>h.inside.has(q)).length>=nd[1])).map(t=>t.sp.n).concat(fl2RoomNames(h).map(n=>'2階の'+n)))];/* この家にそろった部屋（2階も） */
      for(const[a,b]of[['部屋',RN.length?RN.join('・'):'なし'],['ベッド',C.bed+' / '+cap+'こ'],['家具・かざり',C.kinds+'しゅるい'],['床',C.floorPct+'%'],['いまの人数',L.length+'人']]){const d=el('<div class="st"><span></span><b></b></div>');d.firstChild.textContent=a;d.lastChild.textContent=b;cs.querySelector('.recs').appendChild(d)}
      cs.querySelector('.note').textContent=C.over?'ベッドが多すぎて、きゅうくつ！ 住み心地が大きく下がる':'つかれのとれる速さ・起きたときのパワー：'+(.6+C.v/100*.9).toFixed(1)+'倍'+(C.v>=180?'・ぐっすり眠れて、朝にたのしさ+10':C.v<90?'・たのしさ-5':'');/* 効果は数字で */
      body.appendChild(cs)}

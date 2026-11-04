@@ -51,7 +51,7 @@ function onTap(sx,sy){DLGTAP=performance.now();/* タップで始める会話は
   if(LIGHTARM){LIGHTARM=false;const en=S.enemies.find(e=>e.spawned&&Math.hypot(e.x-w.x/TS,e.y-w.y/TS)<.8);if(en)return guardLight(en);const tj=ty*W+tx;if(tx>=0&&ty>=0&&tx<W&&ty<H&&LIGHTNAT[S.obj[tj]]&&!isBud(tj))return natLight(tj)}/* 守りの光：アイコンのあとにタップした「コワイノ」・木・岩にあてる */
   const si=S.seeds.findIndex(s=>s.x===tx&&s.y===ty);
   if(tx>=0&&ty>=0&&tx<W&&ty<H){const hh=HOUSES.find(h=>h.set.has(ty*W+tx));/* 開けた屋根は、壁をタップするまでそのまま */
-    if(hh&&mode!=='look'&&!OPENH.has(hKey(hh))){OPENH.add(hKey(hh));dirty=true;return}}/* 置く・こわすときも、まず家をタップして中を見る */
+    if(hh&&mode!=='look'&&!OPENH.has(hKey(hh))){OPENH.add(hKey(hh));if(hh.st>=0)FL2V.set(hKey(hh),1);/* 2階建ては、2階から */dirty=true;return}}/* 置く・こわすときも、まず家をタップして中を見る */
   if(si>=0){sfx('seed');S.seeds.splice(si,1);S.mseed=(S.mseed||0)+1;S.mseedGot=(S.mseedGot||0)+1;addFloat(tx+.5,ty,'ふしぎな種+1','#d8f5c0');burstAt(tx,ty,'plant');toast('ふしぎな種をひろった','good');return}
   if(mode==='look'){
     if(fieldStoryTap(tx,ty))return;
@@ -66,12 +66,12 @@ function onTap(sx,sy){DLGTAP=performance.now();/* タップで始める会話は
     if(TALKW){const tr=S.res.find(r=>r.name===TALKW&&!r.hidden&&!(r.act&&r.act.type==='sleep'));if(tr&&mainStoryBubbleReady(tr)&&(Math.hypot(tr.x-w.x/TS,(tapY(tr)-1)-w.y/TS)<1.4||bubHit(tr,w))){panTo(tr.x*TS,(tr.y-.7)*TS);return startTalk()}}
     {const tr=S.res.find(r=>SEVW[r.name]&&!r.hidden&&!(r.act&&r.act.type==='sleep')&&(Math.hypot(r.x-w.x/TS,(tapY(r)-1)-w.y/TS)<1.4||bubHit(r,w)));if(tr)return sevTalk(SEVW[tr.name])}
     {const tr=S.res.find(r=>SUBW[r.name]&&!r.hidden&&!(r.act&&r.act.type==='sleep')&&(Math.hypot(r.x-w.x/TS,(tapY(r)-1)-w.y/TS)<1.4||bubHit(r,w)));if(tr){panTo(tr.x*TS,(tr.y-.7)*TS);return subTalk(SUBW[tr.name])}}
-    let best=null,bd=1.1;for(const r of S.res){if(r.hidden&&!peekH(r))continue;const d=Math.hypot(r.x-w.x/TS,(tapY(r)-.5)-w.y/TS);if(d<bd){bd=d;best=r}}
+    let best=null,bd=1.1;for(const r of S.res){if(r.hidden&&!peekH(r))continue;if(r.fl===1?!fl2Shown(r):fl2Hid(r))continue;/* 見えていない階の子は、えらばない */const d=Math.hypot(r.x-w.x/TS,(tapY(r)-.5)-w.y/TS);if(d<bd){bd=d;best=r}}
     if(best&&best.act&&(best.act.type==='chat'||best.act.type==='rest')&&best.act.stage==='do'&&best.act.topic!=null&&best.act.seen!==best.act.topic){const p=S.res.find(q=>q.id===best.act.partner);if(p){const A=best.act.sub?p:best,B=best.act.sub?best:p;const C=CHATS[best.act.topic];for(const q of [A,B])if(q.act&&q.act.topic===best.act.topic)q.act.seen=best.act.topic;/* 一度見たおしゃべりは、もう一度タップしても出さない（ようすを出す） */return dialog(C.map((l,i)=>{const sp=l[0]?B:A;return [sp.name,((C.el&&!l[0])?l[1]:chatTone(l[1],sp,i)).replace(/@([HMK])/g,(m,c)=>sevName(c))]}),C.wave?()=>{A.waveU=B.waveU=S.t+4}:null)}}/* おしゃべり中の子をタップすると、会話が見られる */
     if(best){if(!S.flags.tapped&&S.flags.tapAsk){S.flags.tapPend=true}voiceHmm(best);return openSheet('res',best.id)}// ステータスを見て閉じたら、会話に進む
     if(tx<0||ty<0||tx>=W||ty>=H)return;
     {const j=anc(ty*W+tx);if(!isNight()&&godFix(S.obj[j]?j:ty*W+tx))return}/* こわれかけ・こわれた物は、守り神がパワーで直せる */
-    {const hi=HOUSES.findIndex(h=>h.set.has(ty*W+tx));if(hi>=0){const hk=hKey(HOUSES[hi]);if(!OPENH.has(hk)){OPENH.add(hk);dirty=true;return}/* 1回目のタップで屋根を外す */const o0=S.obj[anc(ty*W+tx)];if(HOME_WALLS.has(o0)||HOME_DOORS.has(o0)){OPENH.delete(hk);dirty=true;return}/* 壁をタップすると屋根がもどる */if(!o0)return openSheet('house',hi)}}// 中が見えているときは、家具やせいれいもタップできる
+    {const hi=HOUSES.findIndex(h=>h.set.has(ty*W+tx));if(hi>=0&&fl2Tap(HOUSES[hi],ty*W+tx))return;/* 2階建て：屋根→2階→1階→屋根 */if(hi>=0){const hk=hKey(HOUSES[hi]);if(!OPENH.has(hk)){OPENH.add(hk);dirty=true;return}/* 1回目のタップで屋根を外す */const o0=S.obj[anc(ty*W+tx)];if(HOME_WALLS.has(o0)||HOME_DOORS.has(o0)){OPENH.delete(hk);dirty=true;return}/* 壁をタップすると屋根がもどる */if(!o0)return openSheet('house',hi)}}// 中が見えているときは、家具やせいれいもタップできる
     const j=anc(ty*W+tx),o=S.obj[j];
     if(WD===0&&S.flags.kgMark!=null&&!S.bossKills&&!S.flags.kgLook&&Math.abs(tx-S.flags.kgMark%W)<=1&&Math.abs(ty-((S.flags.kgMark/W)|0))<=1){S.flags.kgLook=true;checkQuest();return toast('大きなかげのあと：草がしおれて、つめたい')}/* 大きなかげのあとを調べる */
     if(WD===1&&S.st2){const g=ty*W+tx;
