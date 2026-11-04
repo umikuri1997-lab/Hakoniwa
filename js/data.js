@@ -268,7 +268,7 @@ function adPrompt(){if($('#adBox'))return;const d=document.createElement('div');
   $('#adGo').onclick=()=>{$('#adGo').disabled=true;$('#adNo').disabled=true;let n=5;const m=$('#adMsg');m.textContent='広告 '+n;const iv=setInterval(()=>{n--;if(n>0){m.textContent='広告 '+n;return}clearInterval(iv);S.glassT=Math.min(1800,(S.glassT||0)+600);sfx('level');toast('スピードアップが10分使えるようになった','good');close();applyFeats()},1000)}}/* 広告を見たらスピードアップ10分（いまは広告のかわりの5秒の画面） */
 const GOD_SHOP=['いらっしゃ〜い。なにがほしいかの？','おっ、来たのう。今日はなにと交換する？','パワーたまっとるか？ ゆっくり見ていくがよい。','どれも自慢の品じゃよ。たぶん。','ほれ、えらべえらべ。まけんがの。'],GOD_BUY=['まいど〜！ だいじに使うんじゃぞ。','いい買い物をしたのう〜。','それをえらぶか？ わかっとるのう。','ありがとさん〜。パワーはだいじにあずかっとくぞい。','また来るんじゃよ。…おっと、来とるのはわしのほうか。'],GOD_POOR=['パワーが足りんのう〜。せいれいたちにがんばってもらうんじゃ。','ツケはなしじゃぞ〜。'];let shopSay='';
 const GOD_IDLE=['草、生えてきたのう〜。','むかしはのう…はて、なんの話じゃったか。','パワー？ ためればなんとかなるわい！','ねむ…。','夜は「コワイノ」に気をつけるんじゃぞ。たぶん来るからの。','「コワイノ」は、ほんとうに悪いやつなんかのう…。','おやつ持っとらんか？','属性がたまるとせいれいが来るぞい。…たしか。'];
-function KS(L){const o=[];for(let[w,t,...rest]of L){if(w[0]==='@'){o.push([w,t,...rest]);continue}let n=w;if(w.length===1){try{n=sevName(w)}catch(e){n=null}}if(n){if(t&&typeof t==='object'){const q=S&&S.res.find(x=>x.name===n);t=q&&elemKey(q)==='fireB'?t.B:t.A}o.push([n,t,...rest])}}return o}/* キーキャラの名前を入れたセリフ */
+function KS(L){const o=[];let gv=false;for(let[w,t,...rest]of L){if(w[0]==='@'){o.push([w,t,...rest]);continue}let n=w;if(w.length===1){try{n=sevName(w)}catch(e){n=null}}if(n){if(t&&typeof t==='object'){const q=S&&S.res.find(x=>x.name===n);t=q&&elemKey(q)==='fireB'?t.B:t.A}if(n===GOD&&!gv&&typeof t==='string'){gv=true;if(!t.includes('聞こえるかの？')){const m=/^(#[^|]*\|)?([\s\S]*)$/.exec(t);t=(m[1]||'')+GVOICE()+m[2]}}/* カミサマが遠くにいるときは、はじめの行だけ「聞こえるかの？」 */o.push([n,t,...rest])}}return o}/* キーキャラの名前を入れたセリフ */
 function pathMade(){const n=S.floor.filter(f=>f==='path').length;if(S.flags.path0==null)S.flags.path0=n;return Math.max(0,n-S.flags.path0)}/* クエストを受けてから、しいたあぜ道の数 */
 /* 御神木の調べ。parts：その話でつづけて調べる段階（FIELD_STORIES のキー）。1つの依頼の中で、じゅんに最後まで調べる */
 function companionFieldQuest(id,text,how,elem,intro,outro,parts=[id]){return {id,text,how,field:true,fieldParts:parts,check:()=>parts.every(fieldStoryDone),prog:()=>fieldQuestProgress(parts),talk:{get who(){return elem==='earth'?MINA:keyName(elem)},when:()=>true,get learn(){return typeof FIELD_PREP!=='undefined'?parts.flatMap(p=>FIELD_PREP[p]?.learn||[]):[]},get lines(){return KS(intro)}},get story(){return KS(outro)},...(parts.includes('windVoices')?{gives:{flag:'nushiAlive'}}:{})}}
@@ -284,7 +284,7 @@ function choiceGuide(){const W=keyName('water'),opt=(t,v,L)=>({t,v,lines:KS([...
 const QUESTS1=[
   {id:'statue',text:'神殿を建ててもらおう',how:"下の「おく」→「神殿」をえらび、空いた場所をタップ",check:()=>cnt('statue')>=1,by:GOD,story:[
     [POKO,'できたー！ りっぱな神殿！'],
-    [GOD,'真ん中が女神像、左がおそなえ箱、右が依頼ボードじゃよ。'],
+    [GOD,'#joy|りっぱな神殿じゃのう。ここが、おヌシとわしの、いばしょじゃ。'],
     [POKO,'ぼく、ときどきおそなえ箱におそなえものを入れるね。守り神さま、自由に使ってね！'],
     [GOD,'#joy|ありがとうのう。それから、せいれいのようすも、ときどき見てやっておくれ。'],[GOD,'#worry|おなかがすききってしまうと、消えてしまうこともある。……そうならんよう、見守ってやっておくれ。']],gives:{feat:['inv'],flag:'tapAsk'}},
   stepQuest({id:'kurashi',text:'くらしのはじまり',
@@ -315,8 +315,9 @@ const QUESTS1=[
     ['@idea'],[GOD,'#think|そうか……。安心して休める寝床もいるのう。ふかふかの寝床を「ベッド」と呼ぼうかの。'],
     [GOD,'オークの壁とベッド、それに家と神殿をつなぐあぜ道も、おそなえ箱に入れといたぞい。フタバの家を守ってやっておくれ。']],gives:{feat:['people'],items:{hwall:3,bed:1,path:5}}},
    story:[
-    [POKO,'#surprise|わあ、草の上よりふかふか！ 壁にすきまもないし、道も、すいすい歩けるよ！'],
-    [GOD,'#alarm|それで…今夜も「コワイノ」が来るぞ。夜がふけると現れて、朝には消えるんじゃ。今夜は、たぶんひとつだけじゃ。'],
+    [POKO,'#surprise|わあ、草の上よりふかふか！ 壁にすきまもないよ！'],
+    [GOD,'#alarm|それで…今夜も「コワイノ」が来るぞ。夜がふけると現れて、朝には消えるんじゃ。'],
+    [GOD,'#think|今夜は、まだ小さな影じゃろう。'],
     [GOD,'#alarm|おヌシも手伝えるぞ。守り神の光をあてれば、「コワイノ」をおどかせるんじゃ。光は、おヌシのだいじな力じゃ。だいじにのう。'],
     [POKO,'#scared|……夜は、やっぱりこわいな。でも、この家と守り神さまの光があるなら、少し安心かも。']],gives:{enemy:true}}),
   stepQuest({id:'mamori',text:'村を守ろう',
@@ -331,7 +332,7 @@ const QUESTS1=[
     [GOD,'#alarm|柵と、とげの罠と、木の矢も入れといたぞい。みなが暮らしを楽しむほど、村も育つ。守りながら、育ててやっておくれ。'],['@idea']],gives:{watchNow:true,items:{fence:10,spike:10,arrow:20},flags:['watchLearned']}},
    story:[
     [GOD,'#nod|うむ。これで夜も、ずいぶん心強くなったのう。村も、ひとまわり育ったぞい。'],
-    [POKO,'#danger|守ってくれて、ありがとう、守り神さま！']]}),
+    [POKO,'#joy|守ってくれて、ありがとう、守り神さま！']]}),
   stepQuest({id:'kikyo',text:'土のなかまをむかえよう',
    steps:[{id:'kikyo',t:'ききょうを2つ咲かせる',check:()=>bloomCount('bellf')>=2,prog:()=>'咲いたききょう '+Math.min(2,bloomCount('bellf'))+'/2',how:'「おく」→「ききょうの種」を植える。土の力が満ちると、次の朝になかまを呼べる'},
     {id:'summon',t:'朝、神殿の「！」からなかまを呼ぶ',check:()=>!!S.flags.minaCame&&NEWRES==null&&!NEWQ.length,how:'朝、神殿の上に「！」が出たら、「みる」で神殿をタップ'}],
@@ -361,14 +362,14 @@ const QUESTS1=[
    talk:{who:GOD,when:()=>true,lines:[
     [GOD,'これから、いろいろ必要なものが出てくるじゃろ。ほしい物があったら、いつでもわしに声をかけておくれ〜。'],
     [POKO,'ねえ、守り神さま。みんな、言われなくても自分で動いてくれるけど……「今日は、これをやってほしいな」って、お願いもできるんだよ。'],
-    [MINA,'それを「おつげ」って言うんだよぉ。その日、みんながどう動くかを、守り神さまがきめてあげられるんだぁ。'],
+    [MINA,'みんな、守り神さまのおねがいなら、よろこんで聞くよぉ。'],
     [POKO,'やってみよう！ 守り神さま、きょうは、みんなに何をお願いする？']],gives:{feat:['shop']}},
    story:[
     [POKO,'#surprise|わあ、みんなの動きが変わった！'],
     [GOD,'まいど〜！ ほっほっ。さて、教えることはだいたい教えたかの！ わしは、ほかの土地も見まわらねばならんのじゃ。'],
     [POKO,'#surprise|えっ、もう行っちゃうの？ ……ぼくたちだけでも、だいじょうぶ……だよね？'],
     [GOD,'#worry|ほっほ。フタバには、もう守り神もノドカもおるじゃろ。……さみしくなったら、空を見上げるんじゃ。わしは、いつでも見とるからの。'],
-    [GOD,'わからんことは「ひでんのしょ」に書いておいたぞい。ときどき遊びに来るぞい。ではな〜！'],
+    [GOD,'ときどき、ようすを見に来るぞい。ではな〜！'],
     [POKO,'#joy|いろいろ教えてくれて、ありがとう、カミサマ！ またね！']],gives:{godLeave:true}}),
   /* どのクエストも：吹き出し→会話でクエストを受ける→たっせい→吹き出し→お礼とごほうび */
   {id:'fire',text:'火のせいれいをむかえよう',check:()=>elemCount('fire')>=1&&NEWRES==null,how:'見張り台やサルビアを置いて火の力をためる。満ちた次の朝、神殿の「！」からなかまを呼ぶ',prog:()=>'火の力 '+Math.floor(ATTR.fire)+'/'+needFor('fire'),
@@ -416,8 +417,8 @@ const QUESTS1=[
    talk:{who:POKO,when:()=>true,lines:[
     [POKO,'#alarm|守り神さま、夜のコワイノを見てたらね…森の奥に、ひときわ大きな黒い影がいたんだ。あの足あとの、かげだよ。きっと。'],
     [MINA,'#alarm|それは「オオカゲ」だねぇ。コワイノたちの親玉って、むかしから言われてるよぉ。'],
-    [MINA,'#alarm|土の音を聞くとねぇ……3日くらいあとの夜に、来そうだよぉ。それまで、夜のコワイノを、みんなで追いはらってなれておこうねぇ。'],
-    [MINA,'#danger|村を整えて、柵をかさねて、見張り台をきたえておこうねぇ。家の中にいれば、攻撃されないよぉ。']]},
+    [MINA,'#alarm|土の音を聞くとねぇ……もうすぐ、来そうだよぉ。'],
+    [MINA,'#nod|みんなで、そなえておこうねぇ。']]},
    get story(){return [
     [POKO,S.flags.choice?.futabaBrave==='strong'?'#joy|追いはらえた……！ ぼく、ちょっとだけ、つよくなれたかな。':S.flags.choice?.futabaBrave==='together'?'#joy|追いはらえた……！ みんないっしょだったから、こわくなかったよ。':'追いはらえた……！ みんなで、ちゃんと夜をこえられたね！'],
     [MINA,'おつかれさまだねぇ。オオカゲは、ヌシ様がいなくなったことと、なにか関係があるのかもしれないねぇ。'],
@@ -441,7 +442,7 @@ const QUESTS1=[
    talk:{who:POKO,when:()=>true,get lines(){return [
     [POKO,S.flags.nushiAlive?'ヌシ様は、生きてた。ぼくたちの声を聞いてくれたんだ。今度は、ぼくたちがヌシ様の力を取り戻したい！':'ヌシ様の力は、かけらの中に残ってるんだね。ぼくたちで、もう一度つなぎたい！'],
     [GOD,'#nod|うむ。みなが安心して暮らす想いも、ヌシの力を結ぶ助けになる。わしも、いっしょに見守るぞい。'],
-    [MINA,'御神木もできたねぇ。あとは、ヌシのかけらを3つそなえたら、ヌシ様をおむかえできるらしいよぉ。'],
+    [MINA,'御神木もできたねぇ。……土がねぇ、かけらが3つそろうのを、まってるみたいなんだぁ。'],
     [MINA,'ヌシ様がもどってこられるように、土地をもっと緑にしないとねぇ。']]}},
    story:[
     [POKO,'ついに、ここまで村が育ったんだね……！ 緑もいっぱいで、歩くだけで気持ちいいね！'],
@@ -452,9 +453,9 @@ const QUESTS1=[
    steps:[{id:'wood6',t:'木のせいれいを6人にする',check:()=>elemCount('wood')>=6&&NEWRES==null,prog:()=>'木のせいれい '+Math.min(6,elemCount('wood'))+'/6',how:'花や木を植えて木の力をため、朝に神殿の「！」から呼ぶ。合計6人をむかえる'},
     {id:'flower50',t:'花を50こさかせる',check:()=>flowerN()>=50,prog:()=>'花 '+Math.min(50,flowerN())+'/50',how:'「おく」で花の種を置いて、花を50こにする'}],
    talk:{who:MINA,when:()=>true,learn:['campfire'],lines:[
-    [MINA,'御神木、大きくなってきたねぇ。ヌシ様は、木のせいれいを生んだんだってぇ。木のなかまが6人いたら、御神木のお世話も、みんなでたっぷりできるねぇ。'],
+    [MINA,'御神木、大きくなってきたねぇ。ヌシ様は、木のせいれいを生んだんだってぇ。木のなかまがふえたら、御神木のお世話も、みんなでたっぷりできるねぇ。'],
     [POKO,'守り神さま、ひとつ、おねがいしてもいい？ ヌシ様がいたころ、この草原は花でいっぱいだったんだ。ヌシ様が帰ってきたとき、さいしょに見てほしいんだ。'],
-    [POKO,'木や花を植えて、木のなかまをむかえて、花を50こ、さかせたいな！'],
+    [POKO,'木のなかまと、花でいっぱいの草原で、ヌシ様をむかえたいな！'],
     ['@choice',{key:'nushiFlower',who:POKO,q:'#think|ヌシ様に、さいしょに見てほしい花……どれがいいかな？',pick:v=>{const it={[v]:5};for(const[id,n]of Object.entries(it))giveItem(id,n);queueItemGift(it)},opts:[
      {t:'ききょう',v:'bellf',lines:[[POKO,'#joy|ききょう！ ノドカを呼んでくれた花だね！']]},
      {t:'ゆり',v:'lily',lines:[[POKO,'#joy|ゆり！ 白くて、ヌシ様の毛なみみたいだね！']]},
@@ -466,7 +467,7 @@ const QUESTS1=[
     [POKO,'かけらも、あと少しだね。ヌシ様をむかえる準備、もうすぐかな。'],
     ...greenTalk().slice(0,3),
     [MINA,'#think|御神木にヌシ様の力があつまってくるとねぇ、影たちは、その力にひきよせられて、やってくるんだってぇ。'],
-    [MINA,'さいごまで守りぬいたら、3つめのかけらがあらわれるはずだよぉ。御神木に光を届けて、ヌシ様をむかえようねぇ。'],
+    [MINA,'さいごまで守りぬいたら……ヌシ様の力が、こたえてくれる気がするよぉ。'],
     [POKO,'#joy|よーし、草原をみどりにして、みんなで守りぬこう！']]}},
    story:null},
 ];

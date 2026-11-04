@@ -44,7 +44,7 @@ function sacredBody(r,now){
   const p=sacredPose(r);if(!p)return null;const t=Math.max(0,(now-(p.at??now))/1000),q=Math.min(1,t/((p.duration||2400)/1000));
   return {...p,p:q,t,dx:p.anim==='storyBump'?(r.face||1)*3*Math.sin(Math.PI*q):0,dy:0};
 }
-const SACRED_BEAT_MS={soil:1800,touch:1700,stone:2400,bump:2600,cover:1900,water:2600,runoff:2400,wind:2200,bud:2000,leaf:3000,grow:3300,reply:2200,hug:4800,group:1300,sit:1500,quiet:1400,face:1000};
+const SACRED_BEAT_MS={soil:1800,touch:1700,stone:2400,bump:2600,cover:1900,water:2600,runoff:2400,wind:2200,bud:2000,leaf:3000,grow:3300,reply:2200,hug:4800,group:1300,sit:1500,quiet:1400,face:1000,lookup:1500};
 function sacredLineHold(cue){return String(cue||'').split('+').reduce((ms,c)=>Math.max(ms,c.startsWith('stree:')?(SACRED_BEAT_MS[c.slice(6)]||0):0),0);}
 function sacredDirectedLines(step,a){
   const beats={earthListen:['touch'],earthRoot:['soil','touch'],fireRoot:['stone','bump'],fireTrace:['soil','stone','cover'],waterFilm:['runoff','soil','water'],waterLeaf:['water','sit'],windEcho:['wind','soil','wind'],windVoices:['soil','touch','water','wind','quiet'],tower:['group']};
@@ -74,6 +74,7 @@ function sacredBeat(c){
     sacredShot(c==='grow'?'group':'detail',cast,1.4);sfx('bush');sacredGrowSparks(j,ms,stage);
   }
   if(c==='reply'){sacredStartEffect('reply',ms);sacredShot('face',cast,1.2);sfx('bush');for(const r of cast)sacredScenePose(r,'storyListen',600000,{side:true,target:j});}
+  if(c==='lookup'){/* フタバが木を見あげて、葉がゆれる（ひと呼吸） */sacredStartEffect('sway',ms);if(f){f.face=storyTreeX(j)>=f.x?1:-1;sacredScenePose(f,'storyListen',600000,{sit:true,side:true,target:j})}for(let i=0;i<3;i++)villageTimeout(()=>leafFX({x:storyTreeX(j)+(i-1)*.8,y:storyTreeY(j)-1.2}),i*350);sfx('bush');d.waitUntil=performance.now()+ms;}
   if(c==='face')sacredShot('face',cast);
   if(c==='group'){d.effects.delete('hug');d.effects.delete('embrace');for(const r of cast)SACRED_POSES.delete(r);sacredShot('group',cast,1.7);}
   if(c==='hug'&&f&&S.nushi){d.waitUntil=performance.now()+8000;
@@ -107,7 +108,7 @@ function sacredGrowSparks(j,ms,stage){/* 育つあいだ、根もとから光と
   setTimeout(()=>{if(S!==owner||VILLAGE_SESSION!==session)return;for(let i=0;i<18+stage*4;i++){const a=Math.random()*Math.PI*2,v=30+Math.random()*50;fx.push({k:'p',x:cx,y:cy-20-stage*12,vx:Math.cos(a)*v,vy:Math.sin(a)*v-90,life:1.3,col:i%2?'#c8f5a0':'#fff6c8',r:2})}fx.push({k:'ring',x:cx,y:cy-4,life:1,col:'rgba(255,248,200,.85)'});sfx('bush')},ms*.8);
 }
 function sacredTreeMotion(now){
-  const growth=sacredEffect('growth');const wind=sacredEffect('wind')||sacredEffect('reply');
+  const growth=sacredEffect('growth');const wind=sacredEffect('wind')||sacredEffect('reply')||sacredEffect('sway');
   return {growth,progress:growth?sacredEase((now-growth.at)/growth.ms):1,sway:wind?Math.sin((now-wind.at)/350)*.025*Math.sin(Math.PI*Math.min(1,(now-wind.at)/wind.ms)):0};
 }
 function sacredStone(c,x,y,warm=0){const art=window.CHIPS?.['story:stone'];if(art&&drawChip(c,art,'story:stone',Math.round(x),Math.round(y),performance.now()))return;c.fillStyle=warm?'#cbb69b':'#b9b6aa';c.fillRect(Math.round(x-4),Math.round(y-2),8,4);c.fillStyle=warm?'#e5cdb0':'#d7d3c6';c.fillRect(Math.round(x-3),Math.round(y-3),6,2);}
@@ -122,10 +123,10 @@ function drawSacredCare(now){
       ctx.strokeStyle='#b3dce0';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(sx+(a?.face||1)*8,sy+2);ctx.quadraticCurveTo((sx+targetX)/2,sy+12,sx+(targetX-sx)*q,sy+(targetY-sy)*q);ctx.stroke();
       if(p>.35){ctx.globalAlpha=Math.sin(Math.PI*(p-.35)/.65)*.6;ctx.fillStyle=kind==='runoff'?'#b7d5d4':'#a3b9a2';ctx.beginPath();ctx.ellipse(targetX,targetY,kind==='runoff'?12:8,4,0,0,7);ctx.fill();ctx.globalAlpha=1;}
     }
-    if(kind==='wind'||kind==='reply'){ctx.globalAlpha=Math.sin(Math.PI*p)*.7;ctx.strokeStyle='#cde6c0';ctx.lineWidth=1;for(let i=0;i<3;i++){ctx.beginPath();ctx.moveTo(x-30+p*25,y-25-i*7);ctx.quadraticCurveTo(x,y-30-i*7,x+25+p*12,y-24-i*7);ctx.stroke();}ctx.globalAlpha=1;}
+    if(kind==='wind'||kind==='reply'||kind==='sway'){ctx.globalAlpha=Math.sin(Math.PI*p)*.7;ctx.strokeStyle='#cde6c0';ctx.lineWidth=1;for(let i=0;i<3;i++){ctx.beginPath();ctx.moveTo(x-30+p*25,y-25-i*7);ctx.quadraticCurveTo(x,y-30-i*7,x+25+p*12,y-24-i*7);ctx.stroke();}ctx.globalAlpha=1;}
   }
   ctx.restore();
 }
 
-function sacredMotionPending(){const d=sacredDirection();return !!d&&performance.now()<(d.waitUntil||0);}
+function sacredMotionPending(){if(performance.now()<STAGEWAIT)return true;const d=sacredDirection();return !!d&&performance.now()<(d.waitUntil||0);}
 function sacredResizeShot(){const q=sacredDirection()?.shot;if(q)sacredShot(q.mode,q.cast,.6);}

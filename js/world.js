@@ -6,6 +6,7 @@ const TOWER_MAT=()=>WD===1?{wood:150,stone:75}:{};
 function towerConds(){if(WD===1)return clearConds();return [
   ['5つの属性のせいれいがそろう（いま'+ELEM_KEYS.filter(k=>elemCount(k)>=1).length+'/5）',ELEM_KEYS.every(k=>elemCount(k)>=1)],
   ['切り株に声を届け、ヌシ様の返事を聞く',!!S.flags.nushiAlive]];}
+const SHN=()=>WD===1?'ヌシ様の火だね':'ヌシのかけら';/* 火山のヌシ様は熱をうばわれたので、かけらではなく火だね */
 const shLeft=()=>Math.max(0,(S.shards||0)-(S.usedSh||0));/* 火山のふもと：まだ使っていないかけらの数（装置と台座にはめると減る） */
 const towerReady=()=>towerConds().every(c=>c[1]);
 function clearConds(){if(WD===1){const tm=TOWER_MAT(),n=springDone(),fac=['bench','tub','noren'].filter(nearSp).length;return [
@@ -13,7 +14,7 @@ function clearConds(){if(WD===1){const tm=TOWER_MAT(),n=springDone(),fac=['bench
   ['ヒノオオカゲを追いはらい、奥の装置を直す',!!S.flags.hinoDown&&!!(S.st2&&S.st2.d2fix)],
   ['温泉のそばに、ベンチ・水おけ・のれん（いま'+fac+'/3）',fac>=3],
   ['ホムラとシズクのおねがい',!!S.flags.hReq&&!!S.flags.sReq],
-  ['台座にはめるヌシのかけら（いま'+shLeft()+'つ）',shLeft()>=1],
+  ['台座にはめるヌシ様の火だね（いま'+shLeft()+'つ）',shLeft()>=1],
   ['素材箱に'+(tm.wood+tm.stone)+'こ入る（いま'+matCap()+'こ）',matCap()>=tm.wood+tm.stone],/* 素材箱が小さいと、台座の素材がためられない */
   ['木材'+tm.wood+'・石材'+tm.stone+'（いま'+(S.mat.wood||0)+'・'+(S.mat.stone||0)+'）',(S.mat.wood||0)>=tm.wood&&(S.mat.stone||0)>=tm.stone]]}
   const tm=TOWER_MAT(),[el,need,pw]=WD===1?['fire',6,750]:['wood',6,3000],nm=ELEM[el].name;return [
