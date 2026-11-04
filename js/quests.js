@@ -259,7 +259,7 @@ function playDirectStoryEvent(e,L){
 }
 function checkSev(){if(WD||!S){SEVW={};return}if(!sevBusy())sevBub();if(S.cleared&&!(S.sevQ||[]).length)return;const D=S.sev||(S.sev={}),ending=grassEndingEvent();if(sevBusy()||!ending&&(S.sevQuietUntil||0)>S.t)return;
   const Q=S.sevQ||(S.sevQ=[]);while(Q.length){const k=Q[0],e=SEV1.find(x=>x.k===k);const L=e&&sevLines(e.L);if(!L){Q.shift();continue}return dialog(L,()=>{D[k]=1;const i=Q.indexOf(k);if(i>=0)Q.splice(i,1);if(/^b_/.test(k))S.flags.kizunaTold=1})}/* 会話を最後まで見てから「見た」にする（途中でゲームをとじたら、はじめから） */
-  if(ending){const lines=sevLines(ending.L);if(!lines)return;if(ending.k==='e16g')return playDirectStoryEvent(ending,lines);const P=S.sevP||(S.sevP=[]);if(!P.includes(ending.k))P.unshift(ending.k);return sevBub();}
+  if(ending){const lines=sevLines(ending.L);if(!lines)return;if(ending.k==='e16g')return playDirectStoryEvent(ending,lines);return;}/* 最後のかけらの話は、メインの会話（checkQuest・storywait）で出す */
   const h=hour(),day=h>=6&&h<21;
   for(const e of SEV1){if(e.q||D[e.k]||(S.sevMiss||{})[e.k]||SEVRUN.has(e.k)||(S.sevP||[]).includes(e.k))continue;if(!e.night&&!day)continue;if(!e.at())continue;const L=sevLines(e.L);if(!L)continue;
     if(['e08','e15','e16g'].includes(e.k))return playDirectStoryEvent(e,L);/* ムービー・会話は、最後まで見てから「見た」にする（途中でゲームをとじたら、はじめから） */
@@ -296,7 +296,7 @@ function mainGathering(){return S.res.some(r=>!r.hidden&&r.act&&MAINGO.has(r.act
 function sevQuestBusy(){return !!QUEST_CLEAR_WAIT||Object.values(SUB_CLEAR_WAIT).some(w=>w&&!w.done)||Object.values(SUBW).some(k=>S.subSt&&S.subSt[k]===3)}
 function sevBub(){SEVW={};if(!S)return;const P=S.sevP||[];for(let i=P.length-1;i>=0;i--)if(!SEV1.some(e=>e.k===P[i]))P.splice(i,1);
   {const D=S.sev||(S.sev={});for(let i=P.length-1;i>=0;i--){const k=P[i],e=SEV1.find(x=>x.k===k);let ok=true;try{ok=!e.at||!!e.at()}catch(_){}if(ok)continue;/* きっかけの条件（畑にいる・近くにいる など）がなくなったら、ピンクを引っこめる。またそろったら、出しなおす */const enc=SEV_ENCOUNTERS.get(S);if(enc&&enc.k===k)sevCancel(enc,null,false);P.splice(i,1);delete D[k]}}
-  const ending=grassEndingEvent();let enc=SEV_ENCOUNTERS.get(S);if(enc&&ending&&enc.k!==ending.k){sevCancel(enc,null,false);enc=null;}if(enc&&(!P.includes(enc.k)||!sevTargetAlive(enc.target))){sevCancel(enc);enc=null}
+  const ending=grassEndingEvent();let enc=SEV_ENCOUNTERS.get(S);{const m=typeof grassEndingTalk==='function'&&grassEndingTalk();if(m){const i=P.indexOf(m.k);if(i>=0)P.splice(i,1);if(enc&&enc.k===m.k){sevCancel(enc,null,false);enc=null}}}/* 古いセーブのピンク待ち（sevP の e09）は消す */if(enc&&ending&&enc.k!==ending.k){sevCancel(enc,null,false);enc=null;}if(enc&&(!P.includes(enc.k)||!sevTargetAlive(enc.target))){sevCancel(enc);enc=null}
   if(!ending&&mainGathering()){if(enc)sevCancel(enc,null,false);return}/* メインの会話・調べに向かっているあいだは、ピンクの会話を出さない */
   if(sevBusy()||!ending&&sevQuestBusy()||S.qStory!=null||isNight()||!ending&&S.sevTalkAt!=null&&S.t-S.sevTalkAt<180)return;
   if(enc){if(!sevEncounterSafe(enc)){sevCancel(enc);return}if(enc.ready){if(sevNear(enc.L)&&enc.actors.every(r=>sevClose(r,enc.target)))SEVW[enc.speaker.name]=enc.k;else sevCancel(enc)}return}

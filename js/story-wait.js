@@ -3,6 +3,12 @@
 const STORY_WAIT_PLANS=new WeakMap();
 function mainStoryWaitInfo(){
   if(!S||S.free||S.cleared||isNight())return null;
+  {const e=S.qStory==null&&grassEndingTalk();if(e){const key=WD+':end:'+e.k,lines=grassEndingTalkLines(e),lead=S.res.find(r=>r.name===POKO&&!r.hidden);if(!lines||!lead)return null;
+    let p=STORY_WAIT_PLANS.get(S);const cast=[lead,...storyLineCast(lines).filter(r=>r!==lead)];
+    if(p?.key===key&&p.session===VILLAGE_SESSION&&p.cast.length===cast.length&&p.cast.every(r=>cast.includes(r)))return p;
+    if(cast.length<2)return null;/* ひとりなら、集めずに話しかけられる */
+    let obj=S.sacredRoot,tree=obj!=null,free=false;if(obj==null){obj=storyOpenSpot(lead,cast.length);free=true;}if(obj==null||obj<0)return null;
+    p={key,session:VILLAGE_SESSION,index:-1,report:false,q:null,lines,ending:e.k,who:lead.name,cast,obj,id:null,field:false,free,tree};STORY_WAIT_PLANS.set(S,p);return p;}}
   const report=S.qStory!=null,index=report?S.qStory:S.quest,q=QUESTS[index];
   if(!q||!report&&(!q.talk||S.qTalked||!q.talk.when()||qMissing(q).length))return null;
   // 調査の前は既存の全員集合を使う。調査後の報告は、同じ木のそばで待つ。
@@ -75,7 +81,7 @@ function storyContinues(r){/* メインのお話・御神木の調べが、ま�
 ACT.storyreturn={done:()=>true};
 function mainStoryBubbleReady(r){
   if(isNight())return false;
-  const pendingQ=QUESTS[S.qStory??S.quest];if(pendingQ?.field){const step=FIELD_STORIES[pendingQ.id][S.qStory!=null?FIELD_STORIES[pendingQ.id].length-1:0];if(fieldCast(step).length!==(step.cast||[step.who]).length)return false;}
+  const pendingQ=QUESTS[S.qStory??S.quest];if(pendingQ?.field&&!(S.qStory==null&&grassEndingTalk())){const step=FIELD_STORIES[pendingQ.id][S.qStory!=null?FIELD_STORIES[pendingQ.id].length-1:0];if(fieldCast(step).length!==(step.cast||[step.who]).length)return false;}
   if(r?.act?.type==='fieldintro')return earthIntroSpeaker(QUESTS[S.quest])===r.name;
   const p=mainStoryWaitInfo();if(!r)return !p||p.who!==GOD||p.cast.every(x=>x.act?.type==='storywait'&&x.act.stage==='do'&&x.act.storyKey===p.key&&x.act.obj===p.obj);
   if(!p)return !!r&&!r.hidden&&TALKW===r.name;/* どこで話してもよいひとりの会話 */
@@ -137,6 +143,6 @@ function storyWaitStatusText(){
 /* 現地で待つ子のポーズと表情：その場面で、その子がはじめに話すセリフの印（#think| など）から決める（考える・おどろく・しょんぼり・よろこぶ）。印がなければ、ふつうに立って待つ */
 const SWLOOK=new WeakMap();
 function storyWaitLook(r){const p=mainStoryWaitInfo();if(!p)return null;const c=SWLOOK.get(r);if(c&&c.key===p.key)return c.v;
-  const L=(p.report?p.q.story:p.q.talk&&p.q.talk.lines)||[],ln=L.find(l=>Array.isArray(l)&&l[0]===r.name&&typeof l[1]==='string');let v=null;
+  const L=p.lines||(p.report?p.q.story:p.q.talk&&p.q.talk.lines)||[],ln=L.find(l=>Array.isArray(l)&&l[0]===r.name&&typeof l[1]==='string');let v=null;
   if(ln){const o=lineLook(ln[1]);v={face:o.face==='smile'&&o.motion==='shock'?'shock':o.face,anim:{think:'talkthink',shock:'talkshock',sad:'talksad',nod:'talk'}[o.motion]||(o.motion==='joy'||o.wave?'wave':'')}}
   SWLOOK.set(r,{key:p.key,v});return v}
