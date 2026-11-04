@@ -418,8 +418,8 @@ function howBtn(r,how){if(!how)return;const b=el('<button class="btn" style="min
 function subSec(body,main){const D=S.subDone||{},St=S.subSt||{},L=subList().filter(q=>St[q.k]>=2),on=L.filter(q=>!D[q.k]).sort((a,b)=>(St[b.k]===3)-(St[a.k]===3)),dn=L.filter(q=>D[q.k]);
   const sec=(h)=>{const f=el('<div class="sec"><h3></h3><div class="rows"></div></div>');f.querySelector('h3').textContent=h;body.appendChild(f);return f.querySelector('.rows')};
   {const rw=sec('進行中');let n=0;
-    if(main&&!S.cleared&&S.quest<QUESTS.length){const q=QUESTS[S.quest];if(S.qStory==null&&!(q.talk&&!S.qTalked)){const r=rowEl('メイン：'+q.text,q.prog?q.prog():'');howBtn(r,q.how);rw.appendChild(r);n++}}/* 受けるまでは見せない */
-    for(const q of on){const r=rowEl('サブ：'+q.t,St[q.k]===3?'たっせい！ '+subWho(q)+'に話しかけよう':(q.n?'いま '+Math.min(q.n,q.now())+' / '+q.n:'')+(q.rw?(q.n?' / ':'')+'ごほうび パワー+'+q.rw:''));howBtn(r,q.how);
+    if(main&&!S.cleared&&S.quest<QUESTS.length){const q=QUESTS[S.quest];if(S.qStory==null&&!(q.talk&&!S.qTalked)){const wn=questWaitNote(q),r=rowEl('メイン：'+q.text,(q.prog?q.prog():'')+(wn?'　'+wn:''));howBtn(r,q.how);rw.appendChild(r);n++}}/* 受けるまでは見せない */
+    for(const q of on){const r=rowEl('サブ：'+q.t,St[q.k]===3?'たっせい！ '+subWho(q)+'に話しかけよう':St[q.k]===2&&isNight()&&(()=>{try{return q.ok()}catch(e){return false}})()?'たっせい！ 朝を待とう':(q.n?'いま '+Math.min(q.n,q.now())+' / '+q.n:'')+(q.rw?(q.n?' / ':'')+'ごほうび パワー+'+q.rw:''));howBtn(r,q.how);
       if(q.pay){const b=el('<button class="btn pri" style="flex:none;padding:6px 12px">わたす</button>'),en=St[q.k]===2&&!q.ok()&&Object.keys(q.pay).every(k=>(S.mat[k]||0)>=q.pay[k]);const nt=Object.keys(q.pay).map(k=>MATN[k]+' '+Math.min(S.mat[k]||0,999)+'/'+q.pay[k]).join('　');const sm=r.querySelector('small');if(sm)sm.textContent=(sm.textContent?sm.textContent+'　':'')+'いまの素材：'+nt;b.disabled=!en;b.onclick=()=>{if(St[q.k]!==2||q.ok()||!Object.keys(q.pay).every(k=>(S.mat[k]||0)>=q.pay[k]))return;for(const k in q.pay)S.mat[k]-=q.pay[k];S.flags.board5=true;checkSub();renderSheet()};r.appendChild(b)}
       rw.appendChild(r);n++}
     if(!n)rw.appendChild(rowEl('いまは、なし',''))}
