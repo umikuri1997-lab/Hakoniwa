@@ -159,7 +159,7 @@ function updEnemy(e,dt){
   e.slow=e.slowU>S.t?.5:1;/* おそくする（そうび） */{const tj=(e.y|0)*W+(e.x|0),to=S.obj[tj];if(to&&BL[to]&&BL[to].trap){e.busyT=S.t;const cd=S.trapCd||(S.trapCd={}),rdy=!(cd[tj]>S.t);
     if(to==='spike'){e.spk=(e.spk||0)+dt;if(e.spk>=15){e.spk-=15;e.hp-=.5;e.flash=4}/* とげの罠：15分ごとに0.5ダメージ */if(e.hp<=0)return defeat(e,EN[e.type].name+'をとげの罠で追いはらった！')}
     else if(to==='sticky'){if(!(e.poi>0)){e.poi=6;e.poT=0;e.flash=4;sfxAt('bonk',e.x,e.y)}}
-    else if(to==='puddle'&&rdy){cd[tj]=S.t+120;e.stun=D.boss?3:8;e.path=[];sfxAt('bonk',e.x,e.y);return}
+    else if(to==='puddle'&&rdy){cd[tj]=S.t+120;e.stun=D.boss?3:10;e.path=[];sfxAt('bonk',e.x,e.y);return}
     else if(to==='firetrap'&&rdy){cd[tj]=S.t+180;e.hp-=4;e.flash=8;burstAt(e.x,e.y,'furn');sfxAt('cookfire',e.x,e.y);if(e.hp<=0)return defeat(e,EN[e.type].name+'をほのおの罠で追いはらった！')}
     else if(to==='gust'&&rdy){cd[tj]=S.t+150;let dx=e.x-CX,dy=e.y-CY;const l=Math.hypot(dx,dy)||1;dx/=l;dy/=l;{let bx=null,by=null;for(let k=1;k<=6;k++){const nx=e.x+dx*k,ny=e.y+dy*k,q=(ny|0)*W+(nx|0);if(!(nx>1&&ny>1&&nx<W-1&&ny<H-1)||!walk(q)||HOME_DOORS.has(typeAt(q))||GATE_IDS.has(typeAt(q)))break;bx=nx;by=ny}if(bx!=null){e.x=bx;e.y=by}}/* 壁・ドア・門の手前までしか、ふきとばさない */e.path=[];e.repath=0;e.stun=2;sfxAt('bush',e.x,e.y);return}}}
   let goal=-1,tgt=null;
