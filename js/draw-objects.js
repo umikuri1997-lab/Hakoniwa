@@ -59,7 +59,7 @@ function drawSection(c,ox,oy,rs){/* 断面（壁・柱のてっぺん）：形�
     put('#7f5c3d',false);put('#a77f5a',true);SEC.cache.set(key,sp)}
   c.drawImage(sp,X,Y)}
 /* ドット絵（chips.js）：ある物は、プログラムの絵のかわりにこれを使う。1ドット＝ゲームの1（ぼかさない） */
-function chipOf(id,i,rot,sf=''){const C=window.CHIPS;if(!C)return null;if(id==='tower'&&WD===0&&C['story:tree'])return {...C['story:tree'],ax:C['story:tree'].ax+(sacredSpan()-4)*TS,ay:C['story:tree'].ay+(sacredSpan()-4)*TS*2};const L=(id==='watch'||id==='yogan')&&i!=null&&S&&S.hp?(S.hp['L'+i]||1):1;let ch=C[(L>1?id+'@'+L:id)+sf]||C[id+sf]||null;
+function chipOf(id,i,rot,sf=''){const C=window.CHIPS;if(!C)return null;if(id==='tower'&&WD===0&&C['story:tree'])return {...C['story:tree'],ax:C['story:tree'].ax+(sacredSpan()-4)*TS,ay:C['story:tree'].ay+(sacredSpan()-4)*TS*2};const L0=(id==='watch'||id==='yogan')&&i!=null&&S&&S.hp?(S.hp['L'+i]||1):1,L=id==='watch'?watchArt(L0):L0;let ch=C[(L>1?id+'@'+L:id)+sf]||C[id+sf]||null;
   const t=ROTS[id];if(!t||t===5)return ch;const r=rot!=null?rot:i==null||!S?0:RUGS.has(id)&&S.rug&&S.rug[i]===id&&S.obj[i]!==id?((S.rugRot||{})[i]||0):S.obj[i]===id?rotAt(i):0;if(!r)return ch;
   let fl=false;if(t===1)fl=true;else if(C[id+'>'+r+sf])ch=C[id+'>'+r+sf];else if(t===4&&r===3&&C[id+'>1'+sf]){ch=C[id+'>1'+sf];fl=true}else if(sf)return null;/* sf='.front'：せいれいの手前に重ねる絵 */
   if(!ch||!fl)return ch;const fw=((szR(id,r)||[1,1])[0])*32;return ch._fl&&ch._fl.fw===fw?ch._fl:(ch._fl={src:ch,ax:ch.ax,ay:ch.ay,w:ch.w,h:ch.h,f:ch.f,flip:1,fw})}/* 向きのある家具は「id>向き」の絵。左向きは右向きの反転。左右反転だけの物は、もとの絵を反転 */
