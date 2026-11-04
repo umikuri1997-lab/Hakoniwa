@@ -3,7 +3,7 @@
 const SACRED_DIRECTION=new WeakMap();
 const sacredEase=p=>{p=Math.max(0,Math.min(1,p));return p*p*(3-2*p)};
 function sacredDirection(create=false){
-  if(!S||WD!==0||S.free)return null;
+  if(!S||S.free)return null;/* どの章の物語でも使う（実時間の演出の入れ物） */
   let d=SACRED_DIRECTION.get(S);
   if(d?.session!==VILLAGE_SESSION)d=null;
   if(!d&&create){d={session:VILLAGE_SESSION,effects:new Map(),home:{x:cam.x+VW/cam.z/2,y:cam.y+VH/cam.z/2,z:cam.z}};SACRED_DIRECTION.set(S,d);}
@@ -24,6 +24,11 @@ function sacredShot(mode,cast=sacredCast(),seconds=1.1){
     if(mode==='group'&&S.nushi)points.push([S.nushi.x*TS-110,S.nushi.y*TS-160],[S.nushi.x*TS+100,S.nushi.y*TS+12]);
   }
   if(mode==='battle')for(const e of S.enemies.filter(e=>e.spawned&&!e.dead&&e.type==='boss2'))points.push([e.x*TS-120,e.y*TS-240],[e.x*TS+120,e.y*TS+16]);
+  storyShot(points,{limit,seconds,mode,cast});
+}
+/* 章に関係なく使えるカメラ：points（世界の座標）が、会話欄と立ち絵を避けた上の見える範囲に入るよう、ゆっくり寄る */
+function storyShot(points,o={}){
+  if(!S||!points.length)return null;const d=sacredDirection(true);if(!d)return null;const limit=o.limit||2.5,seconds=o.seconds||1.1;
   const left=Math.min(...points.map(p=>p[0])),right=Math.max(...points.map(p=>p[0])),top=Math.min(...points.map(p=>p[1])),bottom=Math.max(...points.map(p=>p[1]));
   // 会話欄を避けた、上側の見える範囲に収める。縦長・横長どちらでも同じ構図を保つ。
   const side=VW>VH&&VH<500;$('#dialog').classList.toggle('sacred-side',side);
@@ -31,7 +36,7 @@ function sacredShot(mode,cast=sacredCast(),seconds=1.1){
   const z=Math.max(minZ(),Math.min(limit,(safeRight-safeLeft)/(right-left+36),height/(bottom-top+28)));
   const tx=(left+right)/2+(VW/2-(safeLeft+safeRight)/2)/z,ty=(top+bottom)/2+(VH/2-(safeTop+safeBottom)/2)/z;
   camAnim={fz:cam.z,tz:z,fx:cam.x+VW/cam.z/2,fy:cam.y+VH/cam.z/2,tx,ty,t:0,dur:seconds,sacred:true};
-  sacredDirection().shot={mode,cast,left,right,top,bottom,z,safeTop,safeBottom};
+  d.shot={mode:o.mode||'points',cast:o.cast||[],points:points.map(p=>p.slice()),limit,left,right,top,bottom,z,safeTop,safeBottom};return d.shot;
 }
 function sacredEndDirection(restore=true){
   $('#dialog').classList.remove('sacred-side');const d=sacredDirection();if(!d)return;
@@ -42,10 +47,11 @@ function sacredEndDirection(restore=true){
 function sacredScenePose(r,anim,ms=2400,extra={}){if(r)sacredSetPose(r,{anim,at:performance.now(),duration:ms,...extra});}
 function sacredBody(r,now){
   const p=sacredPose(r);if(!p)return null;const t=Math.max(0,(now-(p.at??now))/1000),q=Math.min(1,t/((p.duration||2400)/1000));
-  return {...p,p:q,t,dx:p.anim==='storyBump'?(r.face||1)*3*Math.sin(Math.PI*q):0,dy:0};
+  const f=r.face||1,dx=p.anim==='storyBump'?f*3*Math.sin(Math.PI*q):p.anim==='stepBack'?-f*7*sacredEase(Math.min(1,t/.6)):p.anim==='grabSleeve'?f*3*sacredEase(Math.min(1,t/.45)):p.anim==='tremble'?Math.round(Math.sin(now/28)*1.2):0,dy=/^kneel/.test(p.anim||'')?3:0;
+  return {...p,p:q,t,dx,dy};
 }
 const SACRED_BEAT_MS={soil:1800,touch:1700,stone:2400,bump:2600,cover:1900,water:2600,runoff:2400,wind:2200,bud:2000,leaf:3000,grow:3300,reply:2200,hug:4800,group:1300,sit:1500,quiet:1400,face:1000,lookup:1500};
-function sacredLineHold(cue){return String(cue||'').split('+').reduce((ms,c)=>Math.max(ms,c.startsWith('stree:')?(SACRED_BEAT_MS[c.slice(6)]||0):0),0);}
+function sacredLineHold(cue){return String(cue||'').split('+').reduce((ms,c)=>Math.max(ms,c.startsWith('stree:')?(SACRED_BEAT_MS[c.slice(6)]||0):c.startsWith('vol:')&&typeof VOL_BEAT_MS!=='undefined'?(VOL_BEAT_MS[c.slice(4)]||0):0),0);}
 function sacredDirectedLines(step,a){
   const beats={earthListen:['touch'],earthRoot:['soil','touch'],fireRoot:['stone','bump'],fireTrace:['soil','stone','cover'],waterFilm:['runoff','soil','water'],waterLeaf:['water','sit'],windEcho:['wind','soil','wind'],windVoices:['soil','touch','water','wind','quiet'],tower:['group']};
   const k=beats[a.fieldId]?.[a.phase];if(!k)return step.lines;
@@ -129,4 +135,4 @@ function drawSacredCare(now){
 }
 
 function sacredMotionPending(){if(performance.now()<STAGEWAIT)return true;const d=sacredDirection();return !!d&&performance.now()<(d.waitUntil||0);}
-function sacredResizeShot(){const q=sacredDirection()?.shot;if(q)sacredShot(q.mode,q.cast,.6);}
+function sacredResizeShot(){const q=sacredDirection()?.shot;if(!q)return;if(q.mode==='points')storyShot(q.points,{limit:q.limit,seconds:.6});else sacredShot(q.mode,q.cast,.6);}
