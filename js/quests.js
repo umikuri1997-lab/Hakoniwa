@@ -221,7 +221,7 @@ function sevBusy(){return !started||!$('#dialog').hidden||sheet!=null||NEWRES!=n
 const SEVRUN=new Set();/* いま再生中の会話（セーブしない） */
 let SCENEHOLD=0;/* 演出のあいだ、村の時間を止める（実時間でうごく） */
 function guardInherit(e,L,f,owner,session){/* フタバの力（こもれびのまもり）を受けつぐ場面：はじめの一言 → 会話をとじて、時間を止めたまま、フタバが祈り、葉と光が守り神へながれこみ、まもりの光がひろがる → のこりの会話 */
-  const first=L.slice(0,1),rest=L.slice(1).map(l=>l[3]&&/guarddemo/.test(l[3])?[l[0],l[1],l[2],'hop']:l);
+  const first=L.slice(0,1),rest=L.slice(1).map(l=>{const c=typeof l[2]==='string'?2:3;if(!/guarddemo/.test(l[c]||''))return l;const m=l.slice();m[c]='hop';return m});
   const alive=()=>S===owner&&VILLAGE_SESSION===session&&S.res.includes(f);
   const finish=()=>{(S.sev||(S.sev={}))[e.k]=1;SEVRUN.delete(e.k);if(e.go)e.go();};
   const at=(ms,fn)=>setTimeout(()=>{if(alive())fn()},ms);
@@ -234,11 +234,27 @@ function guardInherit(e,L,f,owner,session){/* フタバの力（こもれびの�
     at(6200,()=>{SCENEHOLD=0;dialog(rest,()=>{if(alive())finish()})});
   });
 }
+function guardPowerUp(e,L,f,owner,session){/* ヨルノオオカゲが来た夜：フタバのこもれびのまもりが強くなる場面。「みんなを守るから！」のあと会話をとじ、時間を止めて、フタバが光り、葉の輪が大きくひろがって、そばのみんなに葉のまもりがかかる → のこりの会話 */
+  const cueOf=l=>typeof l[2]==='string'?2:3,k=L.findIndex(l=>/guarddemo/.test(l[cueOf(l)]||''));/* 会話の行は [話す人, セリフ, 合図] か [話す人, セリフ, 0, 合図] */if(k<0){const run=()=>dialog(L,()=>{if(S!==owner||VILLAGE_SESSION!==session)return;(S.sev||(S.sev={}))[e.k]=1;SEVRUN.delete(e.k);if(e.go)e.go()});return run()}
+  const first=L.slice(0,k+1).map((l,i)=>{if(i!==k)return l;const c=cueOf(l),m=l.slice();m[c]=(l[c]||'').split('+').filter(x=>x!=='guarddemo').join('+')||0;return m}),rest=L.slice(k+1);
+  const alive=()=>S===owner&&VILLAGE_SESSION===session&&S.res.includes(f);
+  const finish=()=>{(S.sev||(S.sev={}))[e.k]=1;SEVRUN.delete(e.k);if(e.go)e.go();};
+  const at=(ms,fn)=>setTimeout(()=>{if(alive())fn()},ms);
+  dialog(first,()=>{if(!alive())return;const T=performance.now();SCENEHOLD=T+5600;
+    camAnim={fz:cam.z,tz:Math.min(3,Math.max(2,cam.z*1.3)),fx:cam.x+VW/cam.z/2,fy:cam.y+VH/cam.z/2,tx:f.x*TS,ty:f.y*TS-14,t:0,dur:.8};
+    sacredScenePose(f,'pray',5000);
+    at(500,()=>{leafFX(f);sfx('bush')});
+    at(1300,()=>{const cx=f.x*TS,cy=f.y*TS-10;for(let i=0;i<3;i++)setTimeout(()=>{if(alive())fx.push({k:'ring',x:cx,y:cy,life:1,col:'rgba(150,230,120,.9)'})},i*420);for(let i=0;i<36;i++){const a=i/36*Math.PI*2;fx.push({k:'p',x:cx+Math.cos(a)*8,y:cy+Math.sin(a)*4,vx:Math.cos(a)*90,vy:Math.sin(a)*45-60,life:1.3,col:i%2?'#c8f5a0':'#fff6c8',r:3})}sfx('shard')});
+    at(3000,()=>{const t=performance.now()+3000;f.shDemo=t;leafFX(f);for(const r of S.res)if(r!==f&&!r.hidden&&Math.hypot(r.x-f.x,r.y-f.y)<=3.6){leafFX(r);r.shDemo=t}addFloat(f.x,f.y-1.2,'こもれびのまもりが、強くなった！','#5fbf3f');dlgCue('flash');sfx('level')});
+    at(5600,()=>{SCENEHOLD=0;if(rest.length)dialog(rest,()=>{if(alive())finish()});else finish()});
+  });
+}
 function playDirectStoryEvent(e,L){
   SEVRUN.add(e.k);const owner=S,session=VILLAGE_SESSION,f=S.res.find(r=>r.name===POKO);
   if(f)centerOn(f.x*TS,f.y*TS);
   const run=()=>dialog(L,()=>{if(S!==owner||VILLAGE_SESSION!==session)return;(S.sev||(S.sev={}))[e.k]=1;SEVRUN.delete(e.k);if(e.go)e.go();});
   if(e.k==='e16g'&&f)return guardInherit(e,L,f,owner,session);
+  if(e.k==='e15'&&f&&!IS_STORY_REPLAY)return guardPowerUp(e,L,f,owner,session);
   const result=e.vis?visionFX(e.vis,run):run();if(IS_STORY_REPLAY&&e.k==='e15')sacredShot('battle',S.res);return result;
 }
 function checkSev(){if(WD||!S){SEVW={};return}if(!sevBusy())sevBub();if(S.cleared&&!(S.sevQ||[]).length)return;const D=S.sev||(S.sev={}),ending=grassEndingEvent();if(sevBusy()||!ending&&(S.sevQuietUntil||0)>S.t)return;
