@@ -67,7 +67,7 @@ function gearLights(dmx){for(const r of S.res){if(r.hidden||!r.gear)continue;con
 function gearGive(id,n){if(BL[id].kind==='ammo'){S.inv[id]=(S.inv[id]||0)+(n||1)*(BL[id].qty||10);return}for(let i=0;i<(n||1);i++)gearList().push({id,lv:0})}
 function gearRand(fish){const L=GEAR_IDS.filter(id=>!(fish&&BL[id].g.nf));return pick(L)}
 function gearFind(r,title){const id=gearRand(title==='つりあげた！');gearGive(id,1);if(r){r.bubble='✨';addFloat(r.x,r.y-1.8,BL[id].name)}queueItemGift({[id]:1},title);return id}
-function gearOffer(r){const L=GEAR_IDS.filter(id=>BL[id].g.sp);const id=pick(L);gearGive(id,1);addFloat(r.x,r.y-1.8,'レア！');toast(r.name+'が「'+BL[id].name+'」をおそなえした！','good');queueItemGift({[id]:1},'うけとった！');return true}
+function gearOffer(r){const L=GEAR_IDS.filter(id=>BL[id].g.sp);const id=pick(L);gearGive(id,1);toast(r.name+'が「'+BL[id].name+'」をおそなえした！','good');queueItemGift({[id]:1},'うけとった！');return true}
 /* 鉱脈・岩をほったときの鉱石（火山） */
 function oreNear(j){const x=j%W,y=(j/W)|0;return CRACKS.some(c=>Math.hypot(c%W-x,((c/W)|0)-y)<=10)}
 function mineOre(r,j,tgt){if(VEINS[tgt]){addMat(r,VEINS[tgt],1);return true}if(WD!==1||tgt!=='rock'||!oreNear(j))return false;const q=Math.random();if(q<.03)addMat(r,'crystal',1);else if(q<.13)addMat(r,'sulfur',1);return false}/* ひびわれのそば：硫黄10%・赤い水晶3% */
