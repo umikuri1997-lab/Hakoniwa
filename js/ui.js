@@ -389,7 +389,7 @@ function renderSheet(){
     {const t=SPOTJ.get(j);if(t){for(const I of SPOTI)if(t.has(I.sp.k)&&spotCells(I).includes(j))spotFx(I)}/* 家具をタップしたときも、そのスポットを点線でかこむ */if(t)for(const sp of SPOTS){if(!t.has(sp.k))continue;body.appendChild(el('<div class="rows"></div>')).appendChild(rowEl('スポット：'+sp.n,sp.eff))}}/* スポット */
     if(o==='table'){const h=roomOf(j);let n=0;if(h)for(const q of h.inside){const oo=S.obj[q];if(oo&&BL[oo]&&BL[oo].cat==='living')n+=BL[oo].dw||1}if(h)for(const oo of rugsIn(h.inside))n+=BL[oo].dw||1;const bon=h?DINEPT[Math.min(6,n)]:0;
       body.appendChild(el('<div class="rows"></div>')).appendChild(rowEl('ここで食べたときのパワー（いま）',h?'+'+bon+'（家の中の食卓 +1・ダイニング家具で +'+(DINEPT[Math.min(6,n)]-1)+(n/2<3?'。ダイニング家具をふやすと、まだふえる':'。いちばん多い')+'）':'家の外なので、ふえない'))}/* 食卓：いまのパワーのボーナス */
-    if(BENCHES.has(o)){const ev=ENVG?Math.min(12,Math.max(ENVG[j]||0,ENVG[j+1]||0)):0;/* ベンチ：まわりのかざりで上がった回復 */
+    if(BENCHES.has(o)){const ev=ENVG?Math.max(ENVG[j]||0,ENVG[j+1]||0):0;/* ベンチ：まわりのかざりで上がった回復 */
       body.appendChild(el('<div class="rows"></div>')).appendChild(rowEl('すわって休むと（1時間あたり）','つかれ −'+(Math.round((20+ev*.36)*10)/10)+' / たのしさ +'+(Math.round((4.8+ev*.36)*10)/10)+(ev>0?'':'')))}
 
   }else if(sheet==='score'){const sc=S.score||calcScore();T.textContent='クリアスコア';
