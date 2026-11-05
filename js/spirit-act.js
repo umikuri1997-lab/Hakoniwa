@@ -51,7 +51,7 @@ function swayK(id,j,now){if(!S||!(TREES.has(id)||PLANTS.includes(id)))return 0;c
 function dropIn(c,j,x,y,now,fn,id){const k=id?swayK(id,j,now):0;if(k){const by=y+31;c.save();c.transform(1,0,k,1,-k*by,0);try{dropIn(c,j,x,y,now,fn)}finally{c.restore()}return}const t0=LANDFX.get(j);if(t0==null){fn();return}const u=(now-t0)/DROPT;if(u>=1||u<0){LANDFX.delete(j);fn();return}/* 上から6ドット落ちて、着地でちょっとつぶれて、もどる */const fall=u<.45?-6*(1-u/.45)*(1-u/.45):0,sq=u<.45?0:Math.sin((u-.45)/.55*Math.PI)*.08*(1-u),bx=x+16,by=y+31;c.save();c.translate(bx,by+fall);c.scale(1+sq,1-sq);c.translate(-bx,-by);try{fn()}finally{c.restore()}}
 function addFloat(x,y,text,color){if(floats.length>40)floats.shift();floats.push({x,y,text,color:color||'#ecdcbc',life:1})}
 /* 作業：経験値だけ（パワーは、遊ぶ・食べる・たのしいときだけ）。成長を少しゆっくりにし、端数は保存する */
-function addSpiritXp(n,r){if(!n||!r||r.xp==null)return;const before=rLv(r),scaled=spiritXpGain(n,before)*gearStat(r).xp+(r.xpf||0),whole=Math.floor(scaled+1e-9);r.xpf=Math.round((scaled-whole)*1000)/1000;r.xp+=whole;const after=rLv(r);if(after>before){addFloat(r.x,r.y-1.8,'Lv'+after+'!','#9ff0ff');RLVQ.push({id:r.id,from:before,to:after})}}
+function addSpiritXp(n,r){if(!n||!r||r.xp==null)return;const before=rLv(r),scaled=spiritXpGain(n,before,r)*gearStat(r).xp+(r.xpf||0),whole=Math.floor(scaled+1e-9);r.xpf=Math.round((scaled-whole)*1000)/1000;r.xp+=whole;const after=rLv(r);if(after>before){addFloat(r.x,r.y-1.8,'Lv'+after+'!','#9ff0ff');RLVQ.push({id:r.id,from:before,to:after})}}
 
 const DINEPT=[1,1,2,2,3,3,4];/* 家の中の食卓で食べたときの経験値：ダイニング家具の数（0〜6）ごと */
 const HOUSEPW=[.45,.45,.9,.9,1.35,1.35,1.8];/* 家の中の食卓で食べたときのパワー（[ダイニング家具の数]） */
