@@ -4,6 +4,7 @@ function logEv(t){if(!S.log)S.log=[];S.log.push([dayNo(),t]);if(S.log.length>300
 function checkQuest(){
   if(sacredQuietActive())return;
   if(S.flags.qsplitPend||S.flags.qsplitStory)questSplitResolve();
+  storySummonNow();
   if(WD===0&&!S.cleared&&(S.setSh||0)>=3&&!NUSHI_RUN&&sheet==null&&$('#dialog').hidden&&!DLGQ.length)scheduleGrassReunion();
   if(QUEST_CLEAR_WAIT&&QUEST_CLEAR_WAIT.quest!==S.quest)QUEST_CLEAR_WAIT=null;
   TALKW=null;if(S.qStory==null)QUESTCLEARW=null;finalCheck();
