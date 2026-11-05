@@ -11,7 +11,7 @@ const fieldLastId=q=>q.fieldParts?q.fieldParts[q.fieldParts.length-1]:q.id;
 const fieldPartsDone=q=>(q.fieldParts||[q.id]).every(fieldStoryDone);
 const FIELD_VIEWS=new WeakMap();
 function fieldView(q){/* いまの調べの名前を id に持つ、その依頼の見かた（同じ調べなら同じ物） */const id=fieldActiveId(q);if(id===q.id)return q;let m=FIELD_VIEWS.get(q);if(!m){m=new Map();FIELD_VIEWS.set(q,m)}let v=m.get(id);if(!v){v=Object.create(q,{id:{value:id}});m.set(id,v)}return v}
-function fieldQuestProgress(parts){const id=parts.find(p=>!fieldStoryDone(p));if(!id)return '調査を終えた';const prep=typeof fieldPrepNeed==='function'&&fieldPrepNeed(id);if(prep)return prep.label;let n=0,all=0;for(const p of parts){const L=FIELD_STORIES[p]||[];all+=L.length;n+=Math.min(L.length,fieldStoryState(p)?.step||0)}return FIELD_STORIES[id][fieldStoryState(id)?.step||0].label+'　'+n+'/'+all}
+function fieldQuestProgress(parts){const id=parts.find(p=>!fieldStoryDone(p));if(!id)return '調査を終えた';const prep=typeof fieldPrepNeed==='function'&&fieldPrepNeed(id);if(prep)return prep.label;let n=0,all=0;for(const p of parts){const L=FIELD_STORIES[p]||[];all+=L.length;n+=Math.min(L.length,fieldStoryState(p)?.step||0)}const st=FIELD_STORIES[id][fieldStoryState(id)?.step||0],miss=S.qTalked&&(st.cast||[st.who]).map(sevName).find(m=>!S.res.some(r=>r.name===m&&!r.hidden));return st.label+'　'+n+'/'+all+(miss?'　'+miss+'がもどるのを待とう':S.qTalked&&isNight()?'　朝を待とう':'')}/* 調べは昼だけ・そろってから */
 function fieldStoryProgress(id){const n=fieldStoryState(id)?.step||0,L=FIELD_STORIES[id],prep=typeof fieldPrepNeed==='function'&&fieldPrepNeed(id);if(prep)return prep.label;return L&&n<L.length?L[n].label+'　'+n+'/'+L.length:'調査を終えた';}
 function fieldStoryCurrent(){if(!S||WD!==0||S.free||S.cleared||S.qStory!=null||!S.qTalked)return null;const q=QUESTS[S.quest];return q?.field&&!(q.id==='tower'&&S.obj.includes('tower'))&&!fieldPartsDone(q)?fieldView(q):null;}
 function fieldStoryActor(step){const name=sevName(step.who);return S.res.find(r=>r.name===name);}
@@ -21,11 +21,17 @@ function fieldStoryEnsure(id){
   S.fieldStories||(S.fieldStories={});const state=S.fieldStories[id]||(S.fieldStories[id]={step:0});
   const step=L[state.step];if(!step)return state;
   S.fieldSites||(S.fieldSites={});const r=fieldStoryActor(step);if(!r)return state;
-  if(S.sacredRoot!=null){S.fieldSites.root=S.sacredRoot;return state;}
-  const G=bfs(r.x|0,r.y|0),old=S.fieldSites.root,x=old!=null?old%W:CX-4,y=old!=null?(old/W|0):CY;if(old==null){const tj=y*W+x,cs=sacredCells(tj),nat=o=>!o||WEEDS.has(o)||o==='ntree'||o==='deadtree'||o==='rock'||o==='bush';if(cs.every(k=>nat(S.obj[k])&&!S.floor[k]&&!roomOf(k)&&S.ground[k]!==1&&S.ground[k]!==2&&hiAt(k)===hiAt(tj))){let ch=false;for(const k of cs)if(S.obj[k]){S.obj[k]='';ch=true}if(ch)recount()}}/* 切り株の場所の、自然の木・岩・草は片づける */let best=-1,score=Infinity;
+  sacredRootEnsure(r);return state;
+}
+/* 御神木の切り株の場所：草原のはじめから置いておく（新しいゲーム・切り株のない古いセーブ）。神殿の西どなりの、歩いて行ける空いた所 */
+function sacredRootEnsure(r){
+  if(!S||WD!==0||S.free)return S&&S.sacredRoot;S.fieldSites||(S.fieldSites={});
+  if(S.sacredRoot!=null){S.fieldSites.root=S.sacredRoot;return S.sacredRoot;}
+  if(S.obj.includes('tower'))return null;
+  const G=r?bfs(r.x|0,r.y|0):bfs(CX,CY+2),old=S.fieldSites.root,x=old!=null?old%W:CX-4,y=old!=null?(old/W|0):CY;if(old==null){const tj=y*W+x,cs=sacredCells(tj),nat=o=>!o||WEEDS.has(o)||o==='ntree'||o==='deadtree'||o==='rock'||o==='bush';if(cs.every(k=>nat(S.obj[k])&&!S.floor[k]&&!roomOf(k)&&S.ground[k]!==1&&S.ground[k]!==2&&hiAt(k)===hiAt(tj))){let ch=false;for(const k of cs)if(S.obj[k]){S.obj[k]='';ch=true}if(ch)recount()}}/* 切り株の場所の、自然の木・岩・草は片づける */let best=-1,score=Infinity;
   for(let j=0;j<W*H;j++){const d=G.dist[j];if(d<0||d>100)continue;const sc=Math.hypot(j%W-x,(j/W|0)-y)+d*.03;if(sc>=score||!sacredRootFits(j))continue;best=j;score=sc;}
   if(best>=0){S.sacredRoot=best;S.fieldSites.root=best;dirty=true;}
-  return state;
+  return S.sacredRoot;
 }
 const fieldStump=j=>j+(sacredSpan()-1)*W+(sacredSpan()>>1);/* 切り株（木）の根元のマス */
 function fieldLeadStand(G,j,ok){/* 調べる子は、切り株のすぐよこ・すぐ前に立つ（近い順） */const s=fieldStump(j),sx=storyTreeX(j),sy=(s/W|0)+.5;let best=-1,bd=Infinity;for(let y=(s/W|0);y<=(s/W|0)+1;y++)for(let x=Math.floor(sx-1.5);x<=Math.ceil(sx+.5);x++){const k=y*W+x;if(k===s||x<0||x>=W||y>=H||G.dist[k]<0||!walk(k)||!ok(k))continue;const d=Math.hypot(x+.5-sx,y+.5-sy);if(Math.abs(x+.5-sx)>1.5||d>=bd)continue;bd=d;best=k}return best}

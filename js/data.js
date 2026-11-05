@@ -21,15 +21,15 @@ const BL={
   carpet:{name:'じゅうたん',kind:'block',floor:1,lv:9,cost:2,pc:3,time:35,maker:'wind',qty:10,mat:{wood:2},attr:{wind:.5},desc:'やわらかな織り模様の床。歩く速さ×1'},
   stone:{name:'石畳',kind:'block',floor:1,cost:2,pc:4,time:40,maker:'earth',qty:10,lv:4,w:1,mat:{stone:6},attr:{earth:.75},desc:'しっかりした石の床。歩く速さ×1.55'},
   farm:{name:'畑',kind:'block',cost:4,dyn:1,attr:{},desc:'置くとせいれいが耕して種をまく。水やりすると育つ。こむぎ・キャベツは2日で食料+1、いもは3日で食料+2'},
-  fence:{name:'柵',fix:2,fixm:{wood:1,funba:1},kind:'block',cost:2,pc:4,time:60,maker:'wood',qty:10,solid:1,hp:20,hpS:23,attr:{},mat:{wood:2,eda:2},desc:'「コワイノ」の足止め。じょうぶさ20'},
-  logfence:{name:'丸太の塀',fix:3,fixm:{wood:2},kind:'block',cost:3,pc:6,time:70,maker:'wood',qty:10,lv:6,offerOnly:1,solid:1,brk:1,hp:36,hpS:41.4,attr:{},mat:{wood:4},desc:'太い丸太をすきまなくならべた塀。じょうぶさ36'},
+  fence:{name:'柵',fix:2,fixm:{wood:1,funba:1},kind:'block',cost:2,pc:4,time:60,maker:'wood',qty:10,solid:1,hp:20,hpS:30,attr:{},mat:{wood:2,eda:2},desc:'「コワイノ」の足止め。じょうぶさ20'},
+  logfence:{name:'丸太の塀',fix:3,fixm:{wood:2},kind:'block',cost:3,pc:6,time:70,maker:'wood',qty:10,lv:6,offerOnly:1,solid:1,brk:1,hp:36,hpS:54.4,attr:{},mat:{wood:4},desc:'太い丸太をすきまなくならべた塀。じょうぶさ36'},
   bedge:{name:'花壇のふち',kind:'block',cost:1,pc:2,time:20,maker:'wood',qty:10,lv:8,attr:{},mat:{wood:1},desc:'花壇をかこむ、低い丸太のふち'},
-  bamboofence:{name:'竹の柵',fix:3,fixm:{bamboo:3},kind:'block',cost:3,pc:7,time:75,maker:'wood',qty:10,lv:4,offerOnly:1,solid:1,brk:1,hp:32,hpS:36.8,attr:{},mat:{bamboo:5},desc:'竹を組んだ柵。じょうぶさ32'},
-  hwall:{name:'オークの壁',fix:3,fixm:{wood:2},kind:'block',cost:2,pc:6,time:60,maker:'wood',qty:10,lv:3,solid:1,hp:30,hpS:34.5,attr:{},mat:{wood:3},desc:'かこってドアをつけると家になる。じょうぶさ30'},
-  logwall:{name:'丸太の壁',fix:4,fixm:{wood:5},kind:'block',cost:3,pc:9,time:80,maker:'wood',qty:10,lv:7,solid:1,hp:50,hpS:57.5,brk:1,attr:{},mat:{wood:9},desc:'丸太を組んだ家の壁。じょうぶさ50'},
-  plasterwall:{name:'しっくいの壁',fix:5,fixm:{wood:3,stone:2},kind:'block',cost:4,pc:11,time:90,maker:'earth',qty:10,lv:5,solid:1,hp:48,hpS:55.2,brk:1,attr:{},mat:{wood:6,stone:3},desc:'明るいしっくい仕上げの家の壁。じょうぶさ48'},
-  brickwall:{name:'レンガの壁',fix:6,fixm:{stone:7},kind:'block',cost:5,pc:13,time:100,maker:'fire',qty:10,lv:6,w:1,solid:1,hp:55,hpS:63.25,brk:1,attr:{},mat:{stone:14},desc:'レンガを積んだ家の壁。じょうぶさ55'},
-  wall:{name:'石の塀',fix:6,fixm:{stone:5},kind:'block',cost:5,pc:12,time:100,maker:'earth',qty:10,lv:8,w:1,solid:1,hp:60,hpS:69,attr:{},mat:{stone:9},desc:'石を積んだ塀。じょうぶさ60'},
+  bamboofence:{name:'竹の柵',fix:3,fixm:{bamboo:3},kind:'block',cost:3,pc:7,time:75,maker:'wood',qty:10,lv:4,offerOnly:1,solid:1,brk:1,hp:32,hpS:48.8,attr:{},mat:{bamboo:5},desc:'竹を組んだ柵。じょうぶさ32'},
+  hwall:{name:'オークの壁',fix:3,fixm:{wood:2},kind:'block',cost:2,pc:6,time:60,maker:'wood',qty:10,lv:3,solid:1,hp:30,hpS:45.5,attr:{},mat:{wood:3},desc:'かこってドアをつけると家になる。じょうぶさ30'},
+  logwall:{name:'丸太の壁',fix:4,fixm:{wood:5},kind:'block',cost:3,pc:9,time:80,maker:'wood',qty:10,lv:7,solid:1,hp:50,hpS:75.5,brk:1,attr:{},mat:{wood:9},desc:'丸太を組んだ家の壁。じょうぶさ50'},
+  plasterwall:{name:'しっくいの壁',fix:5,fixm:{wood:3,stone:2},kind:'block',cost:4,pc:11,time:90,maker:'earth',qty:10,lv:5,solid:1,hp:48,hpS:72.2,brk:1,attr:{},mat:{wood:6,stone:3},desc:'明るいしっくい仕上げの家の壁。じょうぶさ48'},
+  brickwall:{name:'レンガの壁',fix:6,fixm:{stone:7},kind:'block',cost:5,pc:13,time:100,maker:'fire',qty:10,lv:6,w:1,solid:1,hp:55,hpS:82.25,brk:1,attr:{},mat:{stone:14},desc:'レンガを積んだ家の壁。じょうぶさ55'},
+  wall:{name:'石の塀',fix:6,fixm:{stone:5},kind:'block',cost:5,pc:12,time:100,maker:'earth',qty:10,lv:8,w:1,solid:1,hp:60,hpS:90,attr:{},mat:{stone:9},desc:'石を積んだ塀。じょうぶさ60'},
   clover:{sp:9,name:'シロツメクサ',item:'シロツメクサの種',kind:'plant',cost:3,attr:{wood:1},desc:'まわり3マスで、たのしさ+0.2／1時間、木のせいれいは+0.6／1時間'},
   bellf:{sp:9,name:'ききょう',item:'ききょうの種',kind:'plant',cost:3,attr:{earth:1},desc:'まわり3マスで、たのしさ+0.2／1時間、土のせいれいは+0.6／1時間'},
   salvia:{sp:9,name:'サルビア',item:'サルビアの種',kind:'plant',cost:3,attr:{fire:1},desc:'まわり3マスで、たのしさ+0.2／1時間、火のせいれいは+0.6／1時間'},
@@ -89,7 +89,7 @@ const BL={
   sandbox:{name:'砂場',sz:[2,1],nosc:1,kind:'furn',cat:'toy',f2:1,lv:5,pc:9,time:140,maker:'earth',attr:{earth:1},mat:{wood:11,stone:11},play:{pt:3,pw:1.35,fun:40,dur:40,cap:2,adj:1},solid:1,desc:'2人まで遊べる。たのしさ +40（40分）。遊ぶと10%の確率で、スタミナ+1'},
   seesaw:{hp:5,brk:1,fix:6,fixm:{wood:13},name:'シーソー',kind:'furn',cat:'toy',f2:1,anim:1,dsc:2,lv:7,pc:11,time:160,maker:'wind',attr:{wind:1},mat:{wood:25},play:{pt:4,pw:1.8,fun:40,dur:40,cap:2,adj:1},solid:1,desc:'2人で遊べる。たのしさ +40（40分）。遊ぶと10%の確率で、作業スピード+1'},
   window:{name:'窓',kind:'block',cat:'other',lv:4,pc:3,time:50,maker:'wood',attr:{wood:1},mat:{wood:2},desc:'家の壁にはめる窓。住み心地+5'},
-  sdoor:{name:'石の塀のドア',fix:4,fixm:{stone:3},kind:'block',anim:1,hp:60,hpS:69,cost:4,pc:8,time:60,maker:'earth',qty:1,lv:8,w:1,attr:{},mat:{stone:6},desc:'石の塀の出入り口。せいれいだけ通れる。じょうぶさ60'},
+  sdoor:{name:'石の塀のドア',fix:4,fixm:{stone:3},kind:'block',anim:1,hp:60,hpS:90,cost:4,pc:8,time:60,maker:'earth',qty:1,lv:8,w:1,attr:{},mat:{stone:6},desc:'石の塀の出入り口。せいれいだけ通れる。じょうぶさ60'},
   table:{hp:5,brk:1,fix:4,fixm:{wood:4},name:'食卓',kind:'furn',pc:7,time:90,maker:'wood',solid:1,eat:{cap:2,pt:2,pw:.9},attr:{wood:2},mat:{wood:8},desc:'2人まで食べられる。食べるたびにパワー+0.9。住み心地+8'},
   stor:{hp:5,brk:1,fix:2,fixm:{wood:3},name:'食料箱',kind:'furn',pc:3,time:120,maker:'earth',solid:1,attr:{earth:1},mat:{wood:5},desc:'食料を50までしまえる。ここから食べる。住み心地+3'},
   mbox:{hp:5,brk:1,fix:2,fixm:{wood:2,stone:2},name:'素材箱',kind:'furn',pc:3,time:120,maker:'earth',solid:1,attr:{earth:1},mat:{wood:3,stone:3},desc:'素材を80までしまえる。住み心地+3'},
@@ -97,12 +97,12 @@ const BL={
   quarry:{hp:5,brk:1,fix:10,fixm:{wood:8,stone:13},name:'採石場',kind:'build',mat:{wood:15,stone:25},pc:20,time:140,maker:'earth',lv:6,solid:1,attr:{earth:2},desc:'せいれいがここで働くと、13.3分ごとに石材+1'},
   oven:{hp:5,brk:1,fix:3,fixm:{wood:2,stone:4},name:'かまど',kind:'furn',anim:1,pc:5,time:160,maker:'fire',solid:1,attr:{fire:2,earth:1},mat:{wood:3,stone:8},desc:'せいれいが材料から料理を作る。住み心地+6'},
   grave:{name:'お墓',kind:'deco',attr:{},desc:''},
-  gate:{name:'柵のドア',fix:2,fixm:{wood:1,funba:1},kind:'block',anim:1,hp:20,hpS:23.95,cost:2,pc:4,time:40,maker:'wood',qty:1,lv:2,attr:{},mat:{wood:2},desc:'柵の出入り口。せいれいだけ通れる。じょうぶさ20'},
-  logdoor:{name:'丸太の塀のドア',fix:3,fixm:{wood:2},kind:'block',anim:1,brk:1,hp:36,hpS:41.2,cost:3,pc:6,time:60,maker:'wood',qty:1,lv:6,attr:{},mat:{wood:5},desc:'丸太の塀の出入り口。じょうぶさ36'},
-  loggate:{sz:[2,1],name:'丸太の大門',fix:4,fixm:{wood:3},kind:'block',anim:1,brk:1,hp:36,hpS:41.8,cost:4,pc:12,time:90,maker:'wood',qty:1,lv:9,attr:{},mat:{wood:10},desc:'丸太の塀の大きな出入り口。じょうぶさ36'},
-  stonegate:{sz:[2,1],name:'石の大門',fix:5,fixm:{stone:3},kind:'block',anim:1,brk:1,hp:60,hpS:69.75,cost:5,pc:10,time:90,maker:'earth',qty:1,lv:10,w:1,attr:{},mat:{stone:10},desc:'石柱で支える大きな柵の出入り口。じょうぶさ60'},
+  gate:{name:'柵のドア',fix:2,fixm:{wood:1,funba:1},kind:'block',anim:1,hp:20,hpS:30.95,cost:2,pc:4,time:40,maker:'wood',qty:1,lv:2,attr:{},mat:{wood:2},desc:'柵の出入り口。せいれいだけ通れる。じょうぶさ20'},
+  logdoor:{name:'丸太の塀のドア',fix:3,fixm:{wood:2},kind:'block',anim:1,brk:1,hp:36,hpS:54.2,cost:3,pc:6,time:60,maker:'wood',qty:1,lv:6,attr:{},mat:{wood:5},desc:'丸太の塀の出入り口。じょうぶさ36'},
+  loggate:{sz:[2,1],name:'丸太の大門',fix:4,fixm:{wood:3},kind:'block',anim:1,brk:1,hp:36,hpS:54.8,cost:4,pc:12,time:90,maker:'wood',qty:1,lv:9,attr:{},mat:{wood:10},desc:'丸太の塀の大きな出入り口。じょうぶさ36'},
+  stonegate:{sz:[2,1],name:'石の大門',fix:5,fixm:{stone:3},kind:'block',anim:1,brk:1,hp:60,hpS:90.75,cost:5,pc:10,time:90,maker:'earth',qty:1,lv:10,w:1,attr:{},mat:{stone:10},desc:'石柱で支える大きな柵の出入り口。じょうぶさ60'},
   yozoradoor:{name:'よぞらのドア',fix:2,fixm:{wood:1},kind:'block',anim:1,hp:20,hpS:23,cost:2,pc:5,time:40,maker:'wood',qty:1,lv:1,attr:{},mat:{wood:3},kwr:1,desc:'窓のついたダークチェリーのドア。じょうぶさ20'},/* コワイノのレシピ */
-  door:{name:'ドア',fix:2,fixm:{wood:1},kind:'block',anim:1,hp:20,hpS:23,cost:2,pc:5,time:40,maker:'wood',qty:1,lv:3,attr:{},mat:{wood:2},desc:'壁にはめる出入り口。じょうぶさ20'},
+  door:{name:'ドア',fix:2,fixm:{wood:1},kind:'block',anim:1,hp:20,hpS:30,cost:2,pc:5,time:40,maker:'wood',qty:1,lv:3,attr:{},mat:{wood:2},desc:'壁にはめる出入り口。じょうぶさ20'},
   chair:{name:'いす',kind:'furn',lv:3,pc:3,time:60,maker:'wood',attr:{wood:1},mat:{wood:3},mat1:{bamboo:3},desc:'食卓のとなりで食べると、パワー+0.9。住み心地+4'},
   takebench:{name:'竹のベンチ',sz:[2,1],kind:'furn',lv:3,pc:3,time:100,maker:'wood',attr:{wood:1},mat:{bamboo:6},desc:'2人すわれる。昼につかれたら、ここで休む。つかれ −30／1時間。住み心地+5'},
   andon:{hp:5,brk:1,fix:2,fixm:{wood:1},name:'行燈',kind:'furn',cat:'light',lv:7,w:1,pc:6,time:80,maker:'fire',solid:1,anim:1,attr:{fire:1},mat:{wood:3,kasa:2},mat1:{wood:3,chiri:2},desc:'紙をはった木のあかり。まわり3.5マスを照らす。住み心地+5'},
@@ -111,7 +111,7 @@ const BL={
   bench:{name:'ベンチ',sz:[2,1],kind:'furn',pc:3,time:100,maker:'wood',attr:{wood:1},mat:{wood:5},desc:'2人すわれる。昼につかれたら、ここで休む。つかれ −30／1時間。住み心地+5'},
   bed:{name:'ベッド',kind:'furn',pc:10,time:200,maker:'wood',sleep:{cap:1,pt:5,rate:.1},attr:{wood:2},mat:{wood:6,kasa:4},mat1:{wood:6,chiri:4},desc:'1人眠れる。つかれ −9／1時間'},
   yorubed:{name:'よぞらのベッド',kind:'furn',pc:10,time:200,maker:'wood',sleep:{cap:1,pt:5,rate:.1},attr:{wood:2},mat:{wood:8},kwr:1,desc:'夜空の色のふとんのベッド。1人眠れる。つかれ −9／1時間'},/* コワイノのレシピ（落とし物でまれに手に入る）。ふつうのベッドと同じはたらき */
-  yozorawall:{name:'よぞらの壁',fix:5,fixm:{wood:3,stone:2},kind:'block',cost:4,pc:11,time:90,maker:'earth',qty:10,lv:1,solid:1,hp:48,hpS:55.2,brk:1,attr:{},mat:{wood:6,stone:3},kwr:1,desc:'夜空の色の家の壁。じょうぶさ48'},
+  yozorawall:{name:'よぞらの壁',fix:5,fixm:{wood:3,stone:2},kind:'block',cost:4,pc:11,time:90,maker:'earth',qty:10,lv:1,solid:1,hp:48,hpS:72.2,brk:1,attr:{},mat:{wood:6,stone:3},kwr:1,desc:'夜空の色の家の壁。じょうぶさ48'},
   lamp:{hp:5,brk:1,fix:3,fixm:{eda:2,stone:2},name:'かがり火',kind:'furn',pc:5,time:160,maker:'fire',solid:1,anim:1,attr:{fire:3},mat:{eda:3,stone:3},desc:'まわり3.5マスを照らす。住み心地+6'},
   campfire:{hp:5,brk:1,fix:4,fixm:{wood:2,eda:4,stone:4},name:'たき火',kind:'furn',pc:7,time:160,maker:'fire',lv:6,solid:1,anim:1,attr:{fire:4},play:{pt:3,pw:1.35,fun:25,dur:40,cap:3,adj:1},mat:{wood:3,eda:8,stone:8},desc:'3人まで遊べる。たのしさ +25（40分）。まわり3.5マスを照らす'},
   swing:{name:'ブランコ',sz:[2,1],kind:'furn',pc:9,time:160,maker:'wood',lv:4,play:{pt:4,pw:1.8,fun:40,dur:50,cap:1},attr:{wind:3},mat:{wood:12,shina:4},mat1:{bamboo:8,wood:4,kuru:4},desc:'1人で遊べる。たのしさ +40（50分）。遊ぶと10%の確率で、移動速度+1'},
@@ -147,7 +147,7 @@ const BL={
   signs:{name:'村の石の看板',sz:[2,1],kind:'build',mat:{stone:30},pc:80,time:160,maker:'earth',lv:11,w:1,solid:1,attr:{},desc:'村の入り口の看板。属性の力+10%（重複なし）'},
   shinboku:{name:'ご神木',sz:[3,3],kind:'build',mat:{wood:40},pc:160,time:300,maker:'wood',lv:14,solid:1,attr:{wood:3},desc:'村の守りの大きな木。まわり5マスで、つかれのとれる速さ+30%'},
   lighthouse:{name:'灯台',sz:[2,2],kind:'build',mat:{wood:25,stone:35},pc:35,time:180,maker:'fire',lv:7,solid:1,anim:1,attr:{fire:4},desc:'まわり8マスを照らす'},
-  stele:{hp:5,brk:1,fix:18,fixm:{wood:6,stone:25},name:'石碑',kind:'build',mat:{wood:12,stone:50},pc:35,time:180,maker:'earth',lv:6,solid:1,attr:{earth:4},desc:'まわり5マスの壁が、1.15倍じょうぶになる（重複なし）'},
+  stele:{hp:5,brk:1,fix:18,fixm:{wood:6,stone:25},name:'石碑',kind:'build',mat:{wood:12,stone:50},pc:35,time:180,maker:'earth',lv:6,solid:1,attr:{earth:4},desc:'まわり7マスの壁・柵・塀が、1.5倍じょうぶになる（重複なし）'},
   fountain:{name:'噴水',sz:[2,2],kind:'build',mat:{wood:15,stone:60},pc:45,time:200,maker:'water',lv:6,solid:1,anim:1,play:{pt:6,pw:2.7,fun:45,dur:50,cap:3,adj:1},attr:{water:6},desc:'3人まで遊べる。たのしさ +45（50分）。遊ぶと10%の確率で、スタミナ+1'},
   statue:{name:'神殿',kind:'build',anim:1,pc:0,time:50,maker:null,solid:1,attr:{wood:1,water:1,fire:1,earth:1,wind:1},desc:'守り神の居場所'},
   obox:{name:'おそなえ箱',solid:1,anim:1},
@@ -155,7 +155,7 @@ const BL={
   altar:{name:'カミサマの台座',solid:1,anim:1},
   site2:{name:'建てている場所',solid:1,job:1},
   part:{name:''},
-  tower:{hp:100,hpS:115,brk:1,fix:20,fixm:{wood:20,stone:10},name:'守護の台座',sz:[2,2],kind:'build',pc:95,time:300,maker:null,solid:1,anim:1,attr:{wood:3,water:3,fire:3,earth:3,wind:3},desc:'守護の力をとりもどす台座。ヌシ様が帰ってくる。光の矢：ダメージ1／10分ごと／範囲10マス。まわり7マスを照らす'},
+  tower:{hp:100,hpS:150,brk:1,fix:20,fixm:{wood:20,stone:10},name:'守護の台座',sz:[2,2],kind:'build',pc:95,time:300,maker:null,solid:1,anim:1,attr:{wood:3,water:3,fire:3,earth:3,wind:3},desc:'守護の力をとりもどす台座。ヌシ様が帰ってくる。光の矢：ダメージ1／10分ごと／範囲10マス。まわり7マスを照らす'},
   rock:{name:'岩',solid:1,natural:1},vcopper:{name:'銅の鉱脈',solid:1,natural:1},viron:{name:'鉄の鉱脈',solid:1,natural:1},vobsid:{name:'黒曜石の鉱脈',solid:1,natural:1},vsilver:{name:'銀の鉱脈',solid:1,natural:1},vgold:{name:'金の鉱脈',solid:1,natural:1},/* 火山の鉱脈：ほると鉱石 */
   hotstone:{hp:5,brk:1,fix:1,fixm:{},name:'ほのお石',kind:'furn',pc:0,time:20,solid:1,anim:1,attr:{fire:3,water:1},desc:'水べに置くと、水があたたまって温泉になる'},
   volcano:{name:'火山',sz:[3,3],solid:1,anim:1},boulder:{name:'大岩',solid:1,natural:1},heatv:{name:'熱の切りかえ装置',solid:1,anim:1},crack:{name:'ひびわれ',anim:1},/* 火山のふもと */
@@ -288,90 +288,154 @@ const QUESTS1=[
     [GOD,'#joy|りっぱな神殿じゃのう。ここが、おヌシとわしの、いばしょじゃ。'],
     [POKO,'ぼく、ときどきおそなえ箱におそなえものを入れるね。守り神さま、自由に使ってね！'],
     [GOD,'#joy|ありがとうのう。それから、せいれいのようすも、ときどき見てやっておくれ。'],[GOD,'#worry|おなかがすききってしまうと、消えてしまうこともある。……そうならんよう、見守ってやっておくれ。']],gives:{feat:['inv'],flag:'tapAsk'}},
-  stepQuest({id:'kurashi',text:'くらしのはじまり',
-   steps:[{id:'stor',t:'食料箱を置く',check:()=>cnt('stor')>=1,how:'「おく」→「食料箱」をえらんで置く'},
-    {id:'mbox',t:'素材箱を置く',check:()=>cnt('mbox')>=1,how:'「おく」→「素材箱」をえらんで置く'},
-    {id:'table',t:'食卓をたのんで置く',check:()=>cnt('table')>=1,how:'神殿の依頼ボードをタップ →「家具」→「食卓」をはる。できたら「おく」で置く'}],
+  {id:'stor',text:'食料箱を置こう',how:'「おく」→「食料箱」をえらんで置く',check:()=>cnt('stor')>=1,
    talk:{who:POKO,when:()=>!S.flags.tapAsk||!!S.flags.tapped,wait:'せいれいをタップして、ようすを見てみよう',/* ステータスを見てから、次のお話 */lines:[
     [POKO,'守り神さま、見て見て！ ベリーいっぱい集めたよ！ すごいでしょ！'],
     [POKO,'#surprise|……あれ？ あっ！ 虫さん！ たべちゃったの！？'],
-    [POKO,'#think|くるんってした枝や、すべすべの石も拾ってるんだけど、しまうとこがなくて……。ベリーを置くと、土もついちゃうし。'],
-    ['@idea'],[GOD,'#think|ほっほ、おヌシ、いろいろ思いついたようじゃな。食べ物をしまう「食料箱」、木や石をしまう「素材箱」、食べ物をのせる台の「食卓」じゃ。'],
-    [GOD,'箱は、おそなえ箱に入れておいたぞい。食卓は、せいれいたちの手で形にしてもらうんじゃ。作るのに使う木材は、わしが渡しておくぞい。'],
-    [POKO,'#joy|その上なら、土がつかないの？ わあ、やってみたい！']],gives:{feat:['craft'],items:{stor:1,mbox:1},mat:{wood:8}}},
+    [POKO,'#think|こんどは、どこかにしまっておかなきゃ……。'],
+    ['@idea'],[GOD,'#think|ほっほ、おヌシ。食べ物をしまう箱を思いついたんじゃな。'],
+    [GOD,'その形どおりの「食料箱」を、おそなえ箱に入れておいたぞい。これで、フタバのベリーも虫さんにとられんのう。']],gives:{items:{stor:1}}},
    story:[
-    [POKO,'#joy|ありがとう、守り神さま！ つんでおいたベリー、食料箱に入れておくね！'],
-    [POKO,'集めてた木と石も、素材箱に入れとくね。…あ、くるんってした枝は、ぼくのたからものだから、入れないけどね。'],
-    [POKO,'#joy|食卓の上なら、ベリーに土がつかないね。えへへ、おいしい！'],
-    [GOD,'せいれいたちは、困っていることや、やってみたいことを話してくれる。どんな形でかなえるかは、おヌシのひらめき次第じゃ。']],pre:{food:{berry:10}},
-   get gives(){return S&&S.flags.qmMbox?{feat:['remove','plant']}:{feat:['remove','plant'],mat:{wood:10,stone:10},msg:'フタバが集めていた木材10・石材10を素材箱に入れた'}}}),/* qmMbox：古いセーブで、素材箱の分をもうもらっている */
-  stepQuest({id:'ie',text:'家をととのえよう',
-   steps:[{id:'wall',t:'家の壁のすきまをふさぐ',check:()=>HOUSES.length>=1,how:'「おく」→「オークの壁」をえらんで、家の壁のすきまをふさぐ'},
-    {id:'bed',t:'家の中にベッドを置く',check:()=>houseBedCount()>=1,how:'「おく」→「ベッド」をえらんで、壁で囲まれた家の中に置く'},
-    {id:'path',t:'家と神殿のあいだに、あぜ道を5マスしく',check:()=>pathMade()>=5,prog:()=>'あぜ道 '+Math.min(5,pathMade())+'/5',how:'「おく」→「あぜ道」をえらんで、家と神殿のあいだに5マスしく'}],
+    [POKO,'#joy|ありがとう、守り神さま！ つんでおいたベリー、入れておくね！'],
+    [POKO,'おなかがすいたら、ここから出して食べるね。'],
+    [GOD,'#nod|うむ、いい場所に置けたのう。']],pre:{food:{berry:10}},gives:{feat:['remove','plant']}},
+  {id:'mbox',text:'素材箱を置こう',how:'「おく」→「素材箱」をえらんで置く',check:()=>cnt('mbox')>=1,
+   talk:{who:POKO,when:()=>true,lines:[
+    [POKO,'守り神さま、見て見て！ この木の枝、くるんってなってるの。'],
+    [GOD,'ほほう。いい形じゃのう。'],
+    [POKO,'#joy|えへへ。こういうの見つけると、つい拾っちゃうんだ。石も、まるいのとか、すべすべのとか。'],
+    [POKO,'#think|…でも、しまうとこがなくて。そこらに置いとくと、どれがどれだか、わかんなくなっちゃう。'],
+    ['@idea'],[GOD,'#nod|なるほどのう……木や石をまとめてしまえる箱があれば、散らからずにすむのう。「素材箱」と呼ぶのがよさそうじゃ。'],
+    [GOD,'その形で用意して、おそなえ箱に入れておいたぞい。']],gives:{items:{mbox:1}}},
+   story:[
+    [POKO,'#surprise|わあ、ぴったり！ 集めてた木と石、ぜんぶ入れとくね。'],
+    [POKO,'#nod|…あ、くるんってした枝は、ぼくのたからものだから、入れないけどね。'],
+    [GOD,'せいれいたちは、困っていることや、やってみたいことを話してくれる。どんな形でかなえるかは、おヌシのひらめき次第じゃ。']],
+   get gives(){return S&&S.flags.qmMbox?{}:{mat:{wood:10,stone:10},msg:'フタバが集めていた木材10・石材10を素材箱に入れた'}}},/* qmMbox：古いセーブで、もうもらっている */
+  {id:'table',text:'食卓をたのもう',how:'神殿の依頼ボードをタップ →「家具」→「食卓」をはる。できたら「おく」で置く',check:()=>cnt('table')>=1,
+   talk:{who:POKO,when:()=>true,lines:[
+    [POKO,'守り神さま、ベリーを置くと、土がついちゃうんだ。食べるたびに、ふうってするの、たいへんで……。'],
+    [POKO,'#think|大きな葉っぱにのせたら、土はつかないかな。でも、風で飛んじゃいそう……。'],
+    ['@idea'],[GOD,'#think|……ふむ。食べ物をのせる台か。「食卓」と呼ぼうかの。'],
+    [GOD,'食卓は、せいれいたちの手で形にしてもらうんじゃ。作るのに使う木材は、わしが渡しておくぞい。'],
+    [POKO,'#joy|その上なら、土がつかないの？ わあ、やってみたい！']],gives:{feat:['craft'],mat:{wood:8}}},
+   story:[
+    [POKO,'#joy|これが、食卓なんだ！ ベリーに土がつかないね。えへへ、おいしい！'],
+    [GOD,'#think|うむ。おヌシの思いつきが、ちゃんと形になったのう。']]},
+  {id:'wall',text:'家の壁を直そう',how:'「おく」→「オークの壁」をえらんで、家の壁のすきまをふさぐ',check:()=>HOUSES.length>=1,
    talk:{who:GOD,when:()=>true,lines:[
     [GOD,'しまう場所もできたのう。…そろそろ、夜のことも話しておかんとな。'],
     [GOD,'#alarm|この土地には、夜になると「コワイノ」が来るんじゃ。家の中にいればおそわれん。じゃが、壁にすきまがあると、こわして入ろうとするんじゃ。'],
-    [POKO,'#scared|コワイノ……。夜は、あの穴のあいた家にかくれてたんだ。草の上はごつごつするし、ゆっくり休めなくて……。'],
-    ['@idea'],[GOD,'#think|そうか……。安心して休める寝床もいるのう。ふかふかの寝床を「ベッド」と呼ぼうかの。'],
-    [GOD,'オークの壁とベッド、それに家と神殿をつなぐあぜ道も、おそなえ箱に入れといたぞい。フタバの家を守ってやっておくれ。']],gives:{feat:['people'],items:{hwall:3,bed:1,path:5}}},
+    [POKO,'#scared|コワイノ……。夜は、あの穴のあいた家にかくれてたんだ。'],
+    [GOD,'#worry|あの家、壁がこわれたままなんじゃ。あれでは、夜が心配じゃのう。'],
+    [GOD,'オークの壁を、おそなえ箱に入れといたぞい。すきまをふさいで、フタバの家を守ってやっておくれ。']],gives:{feat:['people'],items:{hwall:3}}},
    story:[
-    [POKO,'#surprise|わあ、草の上よりふかふか！ 壁にすきまもないよ！'],
+    [POKO,'#scared|前に、夜に壁をこわされたことがあったんだ。'],[POKO,'#joy|でも、もうすきまはないね。壁があると、なんだかほっとする！']]},
+  {id:'bed',text:'家にベッドを置こう',how:'「おく」→「ベッド」をえらんで、壁で囲まれた家の中に置く',check:()=>houseBedCount()>=1,
+   talk:{who:POKO,when:()=>true,lines:[
+    [POKO,'#think|草の上はごつごつするし、ゆっくり休めなくて……。休める場所があったらいいな。'],
+    ['@idea'],[GOD,'#think|そうか……。安心して休める寝床もいるのう。ふかふかの寝床を「ベッド」と呼ぼうかの。'],
+    [GOD,'おそなえ箱に入れといたぞい。家の中にあれば、ぐっすり眠れるじゃろう。']],gives:{items:{bed:1}}},
+   story:[
+    [POKO,'#surprise|わあ、草の上よりふかふか！ これがベッドなんだね。'],
     [GOD,'#alarm|それで…今夜も「コワイノ」が来るぞ。夜がふけると現れて、朝には消えるんじゃ。'],
     [GOD,'#think|今夜は、まだ小さな影じゃろう。'],
     [GOD,'#alarm|おヌシも手伝えるぞ。守り神の光をあてれば、「コワイノ」をおどかせるんじゃ。光は、おヌシのだいじな力じゃ。だいじにのう。'],
-    [POKO,'#scared|……夜は、やっぱりこわいな。でも、この家と守り神さまの光があるなら、少し安心かも。']],gives:{enemy:true}}),
-  stepQuest({id:'mamori',text:'村を守ろう',
-   steps:[{id:'lv2',t:'村レベルを2にする',check:()=>S.lv>=2,prog:()=>'いま 村レベル'+S.lv,how:'せいれいが満足してパワーがたまると、村レベルが上がる。夜は、守りの光のアイコンをタップしてから「コワイノ」をタップすると、パワー1で光をあてておどかせる'},
-    {id:'fence4',t:'柵を4つ置く',check:()=>['fence','logfence','bamboofence'].reduce((n,id)=>n+cnt(id),0)>=4,prog:()=>'柵 '+Math.min(4,['fence','logfence','bamboofence'].reduce((n,id)=>n+cnt(id),0))+'/4',how:'「おく」→「柵」をえらんで4つ置く'},
-    {id:'watch1',t:'見張り台を1つと、とげの罠を2つ置く',check:()=>cnt('watch')>=1&&cnt('spike')>=2,prog:()=>'見張り台 '+Math.min(1,cnt('watch'))+'/1・とげの罠 '+Math.min(2,cnt('spike'))+'/2',how:'「おく」→「見張り台」を1つと「とげの罠」を2つ置く'}],
-   talk:{who:POKO,when:()=>(S.nights||0)>=1&&S.lastMorning>S.lastNight,wait:'夜をこして、朝をむかえよう',lines:[
-    [POKO,'#sigh alarm|……ねえ、コワイノが壁をがりがりってひっかく音、まだ耳に残ってるの。'],
-    [POKO,'#alarm|家の壁で家を守れたみたいに、コワイノの通り道もふさげたらいいのかな……。'],
-    [GOD,'#alarm|「コワイノ」は、まっすぐ歩いて近づいてくるんじゃ。道をふさげば、遠まわりさせられるぞい。じゃが、柵は足止めにしかならん。'],
-    [GOD,'そこで見張り台じゃ。高いところから早めに見つけて、木の矢で追いはらえる。夜、木のせいれいに上ってもらうんじゃ。今回はわしのおごりじゃ。'],
-    [GOD,'#alarm|柵と、とげの罠と、木の矢も入れといたぞい。みなが暮らしを楽しむほど、村も育つ。守りながら、育ててやっておくれ。'],['@idea']],gives:{watchNow:true,items:{fence:10,spike:10,arrow:20},flags:['watchLearned']}},
+    [POKO,'#scared|……夜は、やっぱりこわいな。でも、この家と守り神さまの光があるなら、少し安心かも。']],gives:{enemy:true}},
+  {id:'path',text:'道をつくろう',how:'「おく」→「あぜ道」をえらんで、家と神殿のあいだに5マスしく',check:()=>pathMade()>=5,prog:()=>'あぜ道 '+Math.min(5,pathMade())+'/5',
+   talk:{who:POKO,when:()=>true,lines:[
+    [POKO,'守り神さま、家と神殿のあいだ、草がぼうぼうで歩きにくいんだ。'],
+    [GOD,'ふむ。道があれば、みなも行き来しやすくなるのう。'],
+    [GOD,'あぜ道を、おそなえ箱に入れといたぞい。']],gives:{items:{path:5}}},
    story:[
-    [GOD,'#nod|うむ。これで夜も、ずいぶん心強くなったのう。村も、ひとまわり育ったぞい。'],
-    [POKO,'#joy|守ってくれて、ありがとう、守り神さま！']]}),
-  stepQuest({id:'kikyo',text:'土のなかまをむかえよう',
-   steps:[{id:'kikyo',t:'ききょうを2つ咲かせる',check:()=>bloomCount('bellf')>=2,prog:()=>'咲いたききょう '+Math.min(2,bloomCount('bellf'))+'/2',how:'「おく」→「ききょうの種」を植える。土の力が満ちると、次の朝になかまを呼べる'},
-    {id:'summon',t:'朝、神殿の「！」からなかまを呼ぶ',check:()=>!!S.flags.minaCame&&NEWRES==null&&!NEWQ.length,how:'朝、神殿の上に「！」が出たら、「みる」で神殿をタップ'}],
+    [POKO,'#surprise|わあ、歩きやすい！ 足が、すいすい進むよ。'],
+    [POKO,'#joy|神殿まで、走っていきたくなっちゃう！']]},
+  {id:'lv2',text:'村レベルを2にしよう',check:()=>S.lv>=2,how:'せいれいが満足してパワーがたまると、村レベルが上がる。夜は、守りの光のアイコンをタップしてから「コワイノ」をタップすると、パワー1で光をあてておどかせる',prog:()=>'いま 村レベル'+S.lv,
+   talk:{who:POKO,when:()=>true,lines:[
+    [POKO,'守り神さま、ここで楽しく暮らすと、村も育っていくんだって！'],
+    [GOD,'#nod|うむ。せいれいたちがしあわせに暮らすほど、おヌシのパワーがたまって、村も育っていくんじゃ。'],
+    [GOD,'村が育つと、道や家づくりに使えるものも少しずつ増えていくぞい。']]},
+   story:[
+    [POKO,'#joy|やったー！ 村が、ひとまわり育ったみたい！ 最初の一歩、って感じがするね。'],
+    [GOD,'#nod|うむうむ。新しく使える物もふえたぞい。'],
+    [POKO,'#joy|ほんと？ どんな物だろう。わくわくするね！']]},
+  {id:'fence4',text:'柵を4つ置こう',how:"「おく」→「柵」をえらんで4つ置く",check:()=>['fence','logfence','bamboofence'].reduce((n,id)=>n+cnt(id),0)>=4,prog:()=>'柵 '+Math.min(4,['fence','logfence','bamboofence'].reduce((n,id)=>n+cnt(id),0))+'/4',
+   talk:{who:POKO,when:()=>(S.nights||0)>=1&&S.lastMorning>S.lastNight,wait:'夜をこして、朝をむかえよう',lines:[
+    [POKO,'#sigh alarm|……ねえ、コワイノが来たときの音、まだ耳に残ってるの。'],[POKO,'壁をがりがりってひっかく音……。聞こえるたび、胸がどきどきしたよ。'],
+    [POKO,'前なら、音がするたび隠れてた。でも今日は、守り神さまがいる。'],
+    [POKO,'ぼくもがんばる！ でも、どうしたらいいのかな……。'],[POKO,'#alarm|家の壁で家を守れたみたいに、コワイノの通り道もふさげたらいいのかな……。'],[GOD,'#alarm|「コワイノ」は、まっすぐ歩いて近づいてくるんじゃ。道をふさげば、遠まわりさせられるぞい。'],[POKO,'#alarm|そっか、通り道をふさぐんだね！ ぜんぶ囲まないで、コワイノが来る道に柵をおけばいいんだね！'],
+    [GOD,'#alarm|柵を入れといたぞい。みんなを、しっかり守ってやるんじゃぞ。']],gives:{items:{fence:10}}},
+   story:[
+    [GOD,'よしよし、いい感じじゃ。'],
+    [POKO,'これで、ちょっと安心だね！']]},
+  {id:'watch1',text:'見張り台ととげの罠を置こう',how:"「おく」→「見張り台」を1つと「とげの罠」を2つ置く",check:()=>cnt('watch')>=1&&cnt('spike')>=2,prog:()=>'見張り台 '+Math.min(1,cnt('watch'))+'/1・とげの罠 '+Math.min(2,cnt('spike'))+'/2',
+    talk:{who:GOD,when:()=>true,lines:[
+    [POKO,'#alarm|守り神さま、柵を置いたけど……「コワイノ」は、柵があってもあきらめないんじゃないかな。'],
+    [POKO,'入れなくて困っても、そのまま帰ってくれる気がしないんだ。'],
+    [GOD,'#nod|うむ。柵は足止めにはなるが、追いはらえるわけではないんじゃ。時間をかせぐだけじゃからのう。'],
+    [POKO,'じゃあ、足止めしてるあいだに、なんとかしないとだめだね。'],
+    [GOD,'そこで見張り台じゃ。高いところから早めに見つけて、木の矢で追いはらえる。今回はわしのおごりじゃ。'],
+    [GOD,'見張り台には、夜、木のせいれいに上ってもらうんじゃ。上に立った子が、木の矢を放つぞい。'],
+    [GOD,'#alarm|とげの罠と木の矢も入れといたぞい。「コワイノ」には、たまらんはずじゃ。'],
+    [POKO,'柵で足止めして、罠と見張り台で追いはらうんだね！ やってみる！'],['@idea']],gives:{watchNow:true,items:{spike:10,arrow:20},flags:['watchLearned']}},
+   story:[
+    [GOD,'#nod|うむ。これで夜も、ずいぶん心強くなったのう。'],
+    [GOD,'見張り台から木の矢で追いはらい、とげの罠で足をとめる。みなで守る村じゃな。'],
+    [POKO,'これで、少しは安心できるね。'],[POKO,'#danger|守ってくれて、ありがとう、守り神さま！']]},
+  {id:'kikyo',text:'ききょうを植えて、土の力をためよう',how:"「おく」→「ききょうの種」を植える。土の力が満ちると、次の朝になかまを呼べる",check:()=>bloomCount('bellf')>=2,prog:()=>'咲いたききょう '+Math.min(2,bloomCount('bellf'))+'/2',
    talk:{who:POKO,when:()=>true,lines:[
     [POKO,'#cry|ねえカミサマ…ぼく、ひとりだとちょっとさみしいな。'],
     [GOD,'#worry|……そうじゃのう。ずっとひとりで、よう待っとったものな。'],
-    [GOD,'せいれいはな、その属性の力がたまった土地にやってくるんじゃ。つぎに来てもらうなら、土のせいれいがよかろう。畑を耕したり柵を直したりは、土のせいれいにしかできんのじゃ。'],
-    [GOD,'土の力をためる「ききょう」の種を入れといたぞい。きれいに咲けば、土のせいれいも気づいてくれるはずじゃ。']],gives:{feat:['summon'],items:{bellf:5},flag:'sumTold'}},
+    [GOD,'せいれいはな、その属性の力がたまった土地にやってくるんじゃ。'],
+    [GOD,'つぎに来てもらうなら、土のせいれいがよかろう。畑を耕したり柵を直したりは、土のせいれいにしかできんのじゃ。'],
+    [GOD,'土の力をためる「ききょう」の種を入れといたぞい。きれいに咲けば、土のせいれいも気づいてくれるはずじゃ。']],gives:{feat:['summon'],items:{bellf:5}}},
+   story:[
+    [POKO,'ききょう、きれいだね！ 土の力が満ちたみたい！'],
+    [GOD,'#nod|うむ、これで土のせいれいが来てくれるぞい。'],[POKO,'なかま、どんな子かなあ。どきどきする！']]},
+  {id:'summon',text:'朝になったら、神殿の「！」でなかまを呼ぼう',how:"朝、神殿の上に「！」が出たら、「みる」で神殿をタップ",check:()=>!!S.flags.minaCame&&NEWRES==null&&!NEWQ.length,
+   talk:{who:GOD,when:()=>true,lines:[
+    [GOD,'力が満ちたら、また、なかまが増えるのう。楽しみじゃ。'],
+    [POKO,'あしたの朝がたのしみ！']],gives:{flag:'sumTold'}},
    by:MINA,story:[
     [MINA,'#surprise wave|ふわぁ…。はじめまして、ノドカだよぉ。よろしくねぇ。'],
-    [POKO,'#wave|わーい、なかまだ！ ききょうに気づいてくれたんだね！ よろしくね、ノドカ！'],
-    [MINA,'畑を耕すのと、柵を直すのが得意なんだぁ。のんびりやるねぇ。'],[MINA,'#joy|呼んでくれて、ありがとうねぇ、守り神さま。']]}),
-  companionFieldQuest("earthListen","切り株の下で","古い切り株のそばで、ノドカと根元の土を確かめる。根をふまないように切り株のそばにあぜ道を3マスしいて、根の様子を見よう","earth",[["F","ノドカ？　どうしたの？"],["N","……ここだけ、土の中がしんとしてるんだぁ。"],["N","うん。まわりの草の根は、水をすってる。でも、この下は……ずっと、動いてないみたい。"],["N","知ってる木なのぉ？"],["F","#think|……大きな木だったんだ。"]],[["F","これ、ヌシ様の角のあとだ。"],["N","……この傷かぁ。"],["F","ここに頭をくっつけて、お昼寝してたんだ。ぼくが上に乗っても、ぜんぜん起きなくって。"],["F","#think|……また、葉っぱ、生えるかな。"],["N","根は、まだ残ってるよぉ。"],["N","冷えないように、土を戻しておこうねぇ。",0,"stree:cover"],["F","うん。ぼくも、手伝う。"]],['earthListen','earthRoot']),
-  stepQuest({id:'hatake',text:'畑をつくろう',
-   steps:[{id:'farm6',t:'畑を6つにする',check:()=>cnt('farm')>=6,prog:()=>'畑 '+Math.min(6,cnt('farm'))+'/6',how:'「おく」→「畑」をえらび、合計6つにする。土のせいれいが耕すのを待とう'},
-    {id:'imoseed',t:'畑にいものたねを2こまく',check:()=>imoSeedQuestPlots().length>=2,prog:()=>'いものたね '+Math.min(2,imoSeedQuestPlots().length)+'/2',how:'「おく」でいものたねをえらび、たねがない別々の畑に2こまく'}],
+    [POKO,'#wave|わーい、なかまだ！ よろしくね、ノドカ！'],
+    [MINA,'畑を耕すのと、柵を直すのが得意なんだぁ。のんびりやるねぇ。'],[MINA,'#joy|呼んでくれて、ありがとうねぇ、守り神さま。']]},
+  companionFieldQuest("earthListen","切り株の下で","古い切り株のそばで、ノドカと根元の土を確かめよう","earth",[["F","ノドカ？　どうしたの？"],["N","……ここだけ、土の中がしんとしてるんだぁ。"],["F","しんとしてる？"],["N","うん。まわりの草の根は、水をすってる。でも、この下は……ずっと、動いてないみたい。"],["N","知ってる木なのぉ？"],["F","#think|……大きな木だったんだ。"]],[["N","こっちは、まだやわらかいねぇ。"],["F","枯れちゃったんじゃ、ないの？"],["N","上から見ただけじゃ、わからないこともあるよぉ。"],["F","……ぼくも、見ていい？"],["N","もちろんだよぉ。"]]),
+  companionFieldQuest("earthRoot","傷つけないように","根をふまないように、切り株のそばにあぜ道を3マスしく。同じ切り株で、ノドカに土をよけてもらい、フタバと根の様子を確かめよう","earth",[["N","もう来てたんだねぇ。"],["F","下の根っこ、見てみたくて。でも、どこを掘ったらいいか、わからなくって。"],["N","じゃあ、ぼくが土をよけるよぉ。根が見えたら、教えてねぇ。"]],[["F","これ、ヌシ様の角のあとだ。"],["N","……この傷かぁ。"],["F","ここに頭をくっつけて、お昼寝してたんだ。ぼくが上に乗っても、ぜんぜん起きなくって。"],["F","#think|……また、葉っぱ、生えるかな。"],["N","根は、まだ残ってるよぉ。"],["N","冷えないように、土を戻しておこうねぇ。",0,"stree:cover"],["F","うん。ぼくも、手伝う。"]]),
+  {id:'farm6',text:'畑を6つにしよう',how:"「おく」→「畑」をえらび、合計6つにする。土のせいれいが耕すのを待とう",check:()=>cnt('farm')>=6,prog:()=>'畑 '+Math.min(6,cnt('farm'))+'/6',
    talk:{who:GOD,when:()=>true,lines:[
-    [GOD,'ノドカが来てくれたから、畑が作れるのう。畑を、おそなえ箱に入れといたぞい。'],
-    [MINA,'耕すのは、ぼくにまかせてねぇ。でも畑はねぇ、耕しただけじゃ、なにも育たないんだよぉ。'],
-    [POKO,'いものたねも、もらったよ！ いもは、いっぺんにたくさんとれるんだよ！']],gives:{items:{farm:2,'seed:imo':2}}},
+    [GOD,'ノドカが来てくれたから、畑が作れるのう。畑を、おそなえ箱に入れといたぞい。ノドカが、ふかふかに耕してくれるはずじゃ。']],gives:{items:{farm:2}}},
    story:[
-    [POKO,'#joy|ふかふかの畑に、たねもまけたね！ 水やりと世話は、ぼくにまかせて！'],
-    [MINA,'大きくなるの、たのしみだねぇ。']]}),
-  stepQuest({id:'trade',text:'カミサマと交換して、おつげを出そう',
-   steps:[{id:'trade',t:'カミサマと交換する',check:()=>!!S.flags.tradedSeen,how:'カミサマをタップし、何かと交換してから「交換をおわる」をタップ'},/* 交換して、お店をとじたら（closeSheet） */
-    {id:'oracle',t:'おつげを出す',check:()=>!!S.flags.oracleSeen,how:'メニューの「おつげ」で、きょういちにちの方針をえらぶ。わからないことは、メニューの「ひでんのしょ」で見られる'}],/* おつげを出して、画面をとじたら（closeSheet） */
+    [POKO,'ふかふかの畑だ！'],
+    [MINA,'耕すのは、ぼくにまかせてねぇ。'],
+    [GOD,'いい畑になったのう〜。']]},
+  {id:'imoseed',text:'畑にたねをまこう',how:"「おく」でいものたねをえらび、たねがない別々の畑に2こまく",check:()=>imoSeedQuestPlots().length>=2,prog:()=>'いものたね '+Math.min(2,imoSeedQuestPlots().length)+'/2',
+   talk:{who:POKO,when:()=>true,lines:[
+    [POKO,'ノドカが耕してくれた畑、まだなにも植わってないね。'],
+    [MINA,'畑はねぇ、耕しただけじゃ、なにも育たないんだよぉ。'],
+    [MINA,'おいもが育つの、楽しみだねぇ。'],
+    [POKO,'いもは、いっぺんにたくさんとれるんだよ！']],gives:{items:{'seed:imo':2}}},
+   story:[
+    [POKO,'#joy|たねをまいてくれて、ありがとう！ 水やりと世話は、ぼくにまかせて！'],
+    [MINA,'大きくなるの、たのしみだねぇ。']]},
+  {id:'trade',text:'カミサマと交換してみよう',how:"カミサマをタップし、何かと交換してから「交換をおわる」をタップ",check:()=>!!S.flags.tradedSeen,/* 交換して、お店をとじたら（closeSheet） */
    talk:{who:GOD,when:()=>true,lines:[
-    [GOD,'これから、いろいろ必要なものが出てくるじゃろ。ほしい物があったら、いつでもわしに声をかけておくれ〜。'],
-    [POKO,'ねえ、守り神さま。みんな、言われなくても自分で動いてくれるけど……「今日は、これをやってほしいな」って、お願いもできるんだよ。'],
+    [GOD,'これから、いろいろ必要なものが出てくるじゃろ。'],[GOD,'困ったことがあったら、いつでも言うんじゃぞ。わしが力になってやろう。'],
+    [GOD,'ほしい物があったら、いつでもわしに声をかけておくれ〜。']],gives:{feat:['shop']}},
+   story:[
+    [GOD,'まいど〜！ ほっほっ。'],
+    [GOD,'さて、教えることはだいたい教えたかの！ わしは、ほかの土地も見まわらねばならんのじゃ。'],
+    [POKO,'#surprise|えっ、もう行っちゃうの？'],[POKO,'#think|……あ、ううん。ぼくたちだけでも、だいじょうぶ……だよね？'],[GOD,'#nod|ほっほ。フタバには、もう守り神もノドカもおるじゃろ。'],[GOD,'#worry|……さみしくなったら、空を見上げるんじゃ。わしは、いつでも見とるからの。'],[MINA,'だいじょうぶだよぉ、フタバ。'],[POKO,'#think|……うん。そうだよね！'],
+    [GOD,'ときどき、ようすを見に来るぞい。ではな〜！'],[POKO,'#joy|いろいろ教えてくれて、ありがとう、カミサマ！ またね！']],gives:{godLeave:true}},
+  {id:'oracle',text:'おつげを出してみよう',check:()=>!!S.flags.oracleSeen,/* おつげを出して、画面をとじたら（closeSheet） */how:'メニューの「おつげ」で、きょういちにちの方針をえらぶ。わからないことは、メニューの「ひでんのしょ」で見られる',
+   talk:{who:POKO,when:()=>true,lines:[
+    [POKO,'ねえ、守り神さま。みんな、言われなくても自分で動いてくれるけど……'],
+    [POKO,'「今日は、これをやってほしいな」って、お願いもできるんだよ。'],
     [MINA,'みんな、守り神さまのおねがいなら、よろこんで聞くよぉ。'],
-    [POKO,'やってみよう！ 守り神さま、きょうは、みんなに何をお願いする？']],gives:{feat:['shop']}},
+    [POKO,'やってみよう！ 守り神さま、きょうは、みんなに何をお願いする？']]},
    story:[
     [POKO,'#surprise|わあ、みんなの動きが変わった！'],
-    [GOD,'まいど〜！ ほっほっ。さて、教えることはだいたい教えたかの！ わしは、ほかの土地も見まわらねばならんのじゃ。'],
-    [POKO,'#surprise|えっ、もう行っちゃうの？ ……ぼくたちだけでも、だいじょうぶ……だよね？'],
-    [GOD,'#worry|ほっほ。フタバには、もう守り神もノドカもおるじゃろ。……さみしくなったら、空を見上げるんじゃ。わしは、いつでも見とるからの。'],
-    [GOD,'ときどき、ようすを見に来るぞい。ではな〜！'],
-    [POKO,'#joy|いろいろ教えてくれて、ありがとう、カミサマ！ またね！']],gives:{godLeave:true}}),
+    [POKO,'#joy|みんな、守り神さまのおねがいを聞いてくれたね！']]},
   /* どのクエストも：吹き出し→会話でクエストを受ける→たっせい→吹き出し→お礼とごほうび */
   {id:'fire',text:'火のせいれいをむかえよう',check:()=>elemCount('fire')>=1&&NEWRES==null,how:'見張り台やサルビアを置いて火の力をためる。満ちた次の朝、神殿の「！」からなかまを呼ぶ',prog:()=>'火の力 '+Math.floor(ATTR.fire)+'/'+needFor('fire'),
    talk:{who:POKO,when:()=>true,lines:[
@@ -498,15 +562,14 @@ function migrateCompanionStory(state){
   state.flags.companionStory=1;state.flags.fieldStoryV2=1;
 }
 /* 小さな目標をまとめた（qmerge1）：古いセーブの番号（QUESTS1_V1）を、まとめた目標の番号へ。とちゅうの小さな目標は、まとめた目標の中の「できた」になる */
-const QM_GROUP={stor:'kurashi',mbox:'kurashi',table:'kurashi',wall:'ie',bed:'ie',path:'ie',lv2:'mamori',fence4:'mamori',watch1:'mamori',summon:'kikyo',earthRoot:'earthListen',farm6:'hatake',imoseed:'hatake',oracle:'trade',fireTrace:'fireRoot',lv3:'water',waterLeaf:'waterFilm',baseUp:'kagemark',tale:'kagemark',lv4:'ookage',yoru10:'ookage',windVoices:'windEcho',green375:'lv5',flower50:'wood6'};
-const QM_OWNER={kurashi:'stor',ie:'wall',mamori:'fence4',hatake:'farm6',water:'water',kagemark:'kagemark',ookage:'ookage',lv5:'lv5',wood6:'wood6'};/* まとめた目標の会話は、もとのどの目標の会話か（そこより前の目標にいたら、会話を聞きなおす） */
-const QM_TALK={mbox:{items:{mbox:1}},table:{feat:['craft'],mat:{wood:8}},bed:{items:{bed:1}},path:{items:{path:5}},watch1:{items:{spike:10,arrow:20},flags:['watchLearned']},summon:{flag:'sumTold'},imoseed:{items:{'seed:imo':2}},flower50:{recipes:['campfire']}};/* 会話を聞かずに進む小さな目標で、もとの会話でもらえた物 */
+const QM_GROUP={fireTrace:'fireRoot',lv3:'water',waterLeaf:'waterFilm',baseUp:'kagemark',tale:'kagemark',lv4:'ookage',yoru10:'ookage',windVoices:'windEcho',green375:'lv5',flower50:'wood6'};
+const QM_OWNER={water:'water',kagemark:'kagemark',ookage:'ookage',lv5:'lv5',wood6:'wood6'};/* まとめた目標の会話は、もとのどの目標の会話か（そこより前の目標にいたら、会話を聞きなおす） */
+const QM_TALK={flower50:{recipes:['campfire']}};/* 会話を聞かずに進む小さな目標で、もとの会話でもらえた物 */
 function migrateQuestMerge(state){
   if(state.flags.qmerge1)return;
   if(!state.free&&(state.world||0)===0){
     const V=QUESTS1_V1,ni=id=>QUESTS1.findIndex(q=>q.id===(QM_GROUP[id]||id)),last=id=>{const g=QM_GROUP[id]||id;return !V.some((v,k)=>k>V.indexOf(id)&&(QM_GROUP[v]||v)===g)};
     const oq=state.quest||0,os=state.qStory,id=V[oq],give=g=>{for(const k in g.items||{}){(state.unlocked||(state.unlocked={}))[k]=true;const inv=state.inv||(state.inv={});if(k.startsWith('seed:')){const c=k.slice(5);(state.cseed||(state.cseed={}))[c]=(state.cseed[c]||0)+g.items[k]}else inv[k]=(inv[k]||0)+g.items[k]}for(const f of g.feat||[])(state.feat||(state.feat={}))[f]=true;for(const k in g.mat||{})state.mat[k]=(state.mat[k]||0)+g.mat[k];for(const f of g.flags||[])state.flags[f]=true;if(g.flag)state.flags[g.flag]=true;for(const r of g.recipes||[])(state.recipes||(state.recipes={}))[r]=true};
-    if(V.indexOf('mbox')<oq&&os!==V.indexOf('mbox'))state.flags.qmMbox=1;/* 素材箱のお礼の木材・石材は、もうもらった */
     if(id==null)state.quest=QUESTS1.length;
     else{
       const g=QM_GROUP[id]||id,owner=QM_OWNER[g]||g,members=V.filter(v=>(QM_GROUP[v]||v)===g),at=members.indexOf(id),oi=members.indexOf(owner);
@@ -518,5 +581,32 @@ function migrateQuestMerge(state){
     }
     if(os!=null){const sid=V[os];state.qStory=sid!=null&&last(sid)?ni(sid):null;if(state.qStory!=null&&state.quest<=state.qStory)state.quest=state.qStory+1;}/* まとめた目標のとちゅうのお礼の話は、まとめた目標のお礼にふくめる */
   }
-  state.flags.qmerge1=1;
+  state.flags.qmerge1=1;state.flags.qsplit1=1;/* はじめの目標は、もとの1つずつのならびへ、そのまま読みかえた */
+}
+/* はじめ（カミサマが旅立つまで）の目標を、また1つずつにもどした（qsplit1）。まとめていた目標の名前と、中の目標 */
+const QS_SPLIT={kurashi:['stor','mbox','table'],ie:['wall','bed','path'],mamori:['lv2','fence4','watch1'],kikyo:['kikyo','summon'],earthListen:['earthListen','earthRoot'],hatake:['farm6','imoseed'],trade:['trade','oracle']};
+function questsV2(){/* まとめていたころの草原の目標のならび */const o=[];for(const q of QUESTS1){const g=Object.keys(QS_SPLIT).find(k=>QS_SPLIT[k].includes(q.id));if(!g)o.push(q.id);else if(QS_SPLIT[g][0]===q.id)o.push(g)}return o}
+const qsIx=id=>QUESTS1.findIndex(q=>q.id===id);
+function migrateQuestSplit(state){
+  if(state.flags.qsplit1)return;state.flags.qsplit1=1;
+  if(state.free||(state.world||0)!==0)return;
+  const V=questsV2(),id=V[state.quest||0],sid=state.qStory!=null?V[state.qStory]:null;
+  if(state.qStory!=null){const m=QS_SPLIT[sid];if(m){state.flags.qsplitStory=sid;state.qStory=qsIx(m[m.length-1])}else state.qStory=sid!=null?qsIx(sid):null}/* まとめた目標のお礼を待っていた：中の目標のお礼へ（読みこんだあと questSplitResolve でわたす） */
+  if(id==null)state.quest=QUESTS1.length;
+  else{const m=QS_SPLIT[id];state.quest=qsIx(m?m[0]:id);if(m&&state.qTalked)state.flags.qsplitPend=id}/* まとめた会話を聞いた：中の目標の会話はとばし、できている目標は、とばす */
+}
+/* まとめた目標のとちゅうから読みこんだとき：できている目標をとばして、はじめのできていない目標へ。まとめた会話でもらった物は、もう一度わたさない */
+function questSplitResolve(){
+  const F=S.flags;if(WD!==0||S.free)return;
+  const pv=i=>{const q=QUESTS1[i];if(q.pre&&!F['pre0_'+i]){F['pre0_'+i]=true;questGives(q,q.pre)}const g=q.gives||{};questGives(q,Object.assign({},g,{msg:null}));inspireQuest(q,'clear')};
+  const gl=i=>!!(QUESTS1[i].gives||{}).godLeave;
+  if(F.qsplitStory){const m=QS_SPLIT[F.qsplitStory].map(qsIx);delete F.qsplitStory;const t=m.find(gl)??m[m.length-1];for(const i of m)if(i!==t)pv(i);S.qStory=t}
+  if(F.qsplitPend){const m=QS_SPLIT[F.qsplitPend].map(qsIx);
+    while(m.includes(S.quest)){
+      S.qTalked=true;const i=S.quest,q=QUESTS1[i];let ok=false;try{ok=!!q.check()}catch(e){}
+      if(!ok||i===m[m.length-1]||S.qStory!=null)break;
+      S.quest++;if(gl(i)){S.qStory=i;S.qTalked=true;break}pv(i);
+    }
+    if(!m.includes(S.quest))delete F.qsplitPend;else S.qTalked=true;
+  }
 }
