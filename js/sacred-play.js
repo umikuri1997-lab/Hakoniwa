@@ -1,13 +1,29 @@
 'use strict';
 /* 御神木の調べ：村での準備と、守り神の出番（指でする操作）。調べは1回タップすると、その話の最後まで自動で続く。 */
 const fieldNear=(j,R,f)=>{const s=fieldStump(j),sx=s%W,sy=s/W|0;for(let y=sy-R;y<=sy+R;y++)for(let x=sx-R;x<=sx+R;x++){if(x<0||y<0||x>=W||y>=H)continue;const k=y*W+x,o=S.obj[k]==='part'?S.obj[S.ref[k]]:S.obj[k];if(o&&f(o,k))return true}return false};
+/* 調べの前に、その調べのために作る物（作る・建てる → 切り株のそばに置く）。依頼を受けてから、この調べのために置いた物だけを数える（前からある物では進まない） */
 const FIELD_PREP={
-  earthRoot:{label:'切り株のまわりの雑草をなくそう',ok:j=>!fieldNear(j,2,o=>WEEDS.has(o))},
-  fireRoot:{label:'切り株のそばに、たき火を置こう',ok:j=>fieldNear(j,3,o=>o==='campfire'),learn:['campfire']},
-  waterFilm:{label:'切り株のそばに、井戸かみずがめを置こう',ok:j=>fieldNear(j,3,o=>o==='well'||o==='jar'),learn:['jar']},
-  windEcho:{label:'切り株のそばに、ゆりを植えよう',ok:j=>fieldNear(j,3,o=>o==='lily')}
+  earthRoot:{label:'切り株のそばに、あぜ道を3マスしこう',build:{ids:['path'],n:3},legacy:j=>!fieldNear(j,2,o=>WEEDS.has(o))},
+  fireRoot:{label:'切り株のそばに、たき火を置こう',build:{ids:['campfire']},learn:['campfire'],legacy:j=>fieldNear(j,3,o=>o==='campfire')},
+  waterFilm:{label:'切り株のそばに、みずがめを置こう',build:{ids:['jar']},learn:['jar'],legacy:j=>fieldNear(j,3,o=>o==='well'||o==='jar')},
+  windEcho:{label:'切り株のそばに、風車を建てよう',wait:'風車ができあがるのを待とう',build:{ids:['windmill']},learn:['windmill'],legacy:j=>fieldNear(j,3,o=>o==='lily')},
+  tower:{label:'切り株のそばに、ベンチを置こう',build:{ids:['bench']},learn:['bench'],legacy:()=>false}
 };
-function fieldPrepNeed(id){const st=fieldStoryState(id),p=FIELD_PREP[id],j=S.sacredRoot;if(IS_STORY_REPLAY||!p||j==null||(st?.step||0)>0||p.ok(j))return null;{const nw=(p.learn||[]).filter(k=>!S.recipes[k]);recipeNotice(nw);for(const k of nw){S.recipes[k]=true;dirty=true}}/* 古いセーブでも、準備に使う物を作れるように */return p}
+const FIELD_NEAR_R=3;
+const fieldBuildHas=(k,ids)=>ids.includes(S.obj[k])||ids.includes(S.floor[k]);
+function fieldBuildCount(id){const p=FIELD_PREP[id],b=fieldStoryState(id)?.built;if(!p||!b)return 0;if(b.legacy)return p.build.n||1;return (b.cells||[]).filter(k=>fieldBuildHas(k,p.build.ids)).length}
+const fieldBuildOK=id=>fieldBuildCount(id)>=(FIELD_PREP[id]?.build?.n||1);
+/* 作った物のマス（なかまが見にいく所）。古いセーブで前の準備のまま進めたときは、なし */
+function fieldBuiltCell(id){const p=FIELD_PREP[id],b=fieldStoryState(id)?.built;if(!p||!b||b.legacy)return null;const k=(b.cells||[]).find(k=>fieldBuildHas(k,p.build.ids));return k==null?null:k}
+/* 置いたとき（place）：いまの調べが作る物を待っていて、切り株のそばなら、この調べの物として記録する */
+function fieldBuildNote(id,j){if(IS_STORY_REPLAY)return;const q=fieldStoryCurrent();if(!q)return;const fid=q.id,p=FIELD_PREP[fid];if(!p||!p.build.ids.includes(id)||S.sacredRoot==null||fieldDistance(j,S.sacredRoot)>FIELD_NEAR_R)return;
+  const st=fieldStoryEnsure(fid);if(!st||(st.step||0)>0||fieldBuildOK(fid))return;const b=st.built||(st.built={cells:[]});if(b.legacy)return;if(!b.cells.includes(j))b.cells.push(j);dirty=true;renderQuest();}
+function fieldPrepNeed(id){const st=fieldStoryState(id),p=FIELD_PREP[id],j=S.sacredRoot;if(IS_STORY_REPLAY||!p||j==null||(st?.step||0)>0||fieldBuildOK(id))return null;{const nw=(p.learn||[]).filter(k=>!S.recipes[k]);recipeNotice(nw);for(const k of nw){S.recipes[k]=true;dirty=true}}/* 古いセーブでも、準備に使う物を作れるように */
+  const n=p.build.n||1,b=st?.built;if(n>1)return {...p,label:p.label+'（'+fieldBuildCount(id)+'/'+n+'）'};
+  if(p.wait&&b&&!b.legacy&&(b.cells||[]).some(k=>S.obj[k]==='site'&&S.dyn[k]?.build===p.build.ids[0]))return {...p,label:p.wait};return p}
+/* 古いセーブ：いまの依頼で、前の準備（その時の決まり）がもうそろっていた調べは、そのまま進める（1回だけ） */
+function migrateFieldBuild(state){if(!state.flags||state.flags.fieldBuild1)return;state.flags.fieldBuild1=1;if(state.free||(state.world||0)!==0||state.sacredRoot==null||!state.qTalked||state.qStory!=null)return;
+  const q=QUESTS1[state.quest];if(!q?.fieldParts)return;const S0=S;S=state;try{{const id=q.fieldParts.find(p=>((state.fieldStories?.[p]?.step)||0)<(FIELD_STORIES[p]?.length||0)),p=id&&FIELD_PREP[id],st=state.fieldStories?.[id];if(p&&!((st?.step||0)>0)&&!st?.built)if(p.legacy(state.sacredRoot)){state.fieldStories||(state.fieldStories={});(state.fieldStories[id]||(state.fieldStories[id]={step:0})).built={legacy:1};}}}finally{S=S0}}
 /* 守り神の出番：その話の、どの段階で、どんな操作か */
 const FIELD_PLAY={
   earthListen:{phase:0,type:'find',hint:'しんとしている所を、さがしてタップ'},
