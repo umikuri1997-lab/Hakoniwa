@@ -44,14 +44,14 @@ function startSacredPlay(id,j,cast,done){
   sacredPlayHint(P.hint+sacredPlayCount());sfx('tap');
   if(IS_STORY_REPLAY)setTimeout(()=>{if(SPLAY===P)sacredPlayWin()},1600);/* 思い出帳では、守り神の手は見せるだけ */
 }
-function sacredPlayWin(){const P=SPLAY;if(!P)return;SPLAY=null;sacredPlayHint('');if(P.owner!==S||P.session!==VILLAGE_SESSION)return;fxSpr('lighthit',P.cx,P.cy);sfx('good');sacredPlayBonus(P);P.done()}
+function sacredPlayWin(){const P=SPLAY;if(!P)return;SPLAY=null;sacredPlayHint('');pxTextFree();pxLayerFree();if(P.owner!==S||P.session!==VILLAGE_SESSION)return;fxSpr('lighthit',P.cx,P.cy);sfx('good');sacredPlayBonus(P);P.done()}
 /* うまくできたときのごほうび（その出番で1回だけ。思い出帳ではなし） */
 function sacredPlayBonus(P){const b=FIELD_PLAY[P.id]?.bonus;if(!b||IS_STORY_REPLAY)return;const F=S.flags.playWon||(S.flags.playWon={});if(F[P.id])return;F[P.id]=true;dirty=true;
   if(b.items){for(const[id,n]of Object.entries(b.items))giveItem(id,n);queueItemGift(b.items,'うまくできた！')}
   if(b.fun)for(const r of P.cast||[]){r.fun=Math.min(100,r.fun+b.fun);addFloat(r.x,r.y-1.4,'たのしさ+'+b.fun)}}
 /* しっぱい：数えて、3回でおわり（お話は進む） */
-function sacredPlayMiss(t){const P=SPLAY;if(!P)return;P.fails=(P.fails||0)+1;sacredPlayMsg(t);if(P.fails<PLAY_MISS){sacredPlayHint(P.hint+sacredPlayCount());return}SPLAY=null;sacredPlayHint('');if(P.owner!==S||P.session!==VILLAGE_SESSION)return;sfx('tap');P.done()}
-function cancelSacredPlay(){SPLAY=null;sacredPlayHint('')}
+function sacredPlayMiss(t){const P=SPLAY;if(!P)return;P.fails=(P.fails||0)+1;sacredPlayMsg(t);if(P.fails<PLAY_MISS){sacredPlayHint(P.hint+sacredPlayCount());return}SPLAY=null;sacredPlayHint('');pxTextFree();pxLayerFree();if(P.owner!==S||P.session!==VILLAGE_SESSION)return;sfx('tap');P.done()}
+function cancelSacredPlay(){SPLAY=null;sacredPlayHint('');pxTextFree();pxLayerFree()}
 function sacredPlayMsg(t){const P=SPLAY;if(!P)return;P.msg=t;P.msgT=performance.now()}
 function sacredPlayNear(w,p,r){return Math.hypot(w.x-p.x,w.y-p.y)<=r}
 /* 指の動き（世界の座標） */
@@ -78,25 +78,44 @@ function sacredPlayUp(w,now){const P=SPLAY,d=P.down;P.down=null;
 }
 /* 出番のあいだは、地図の操作より先に指をうけとる */
 for(const [ev,fn] of [['pointerdown',sacredPlayDown],['pointermove',sacredPlayMove],['pointerup',sacredPlayUp]])cv.addEventListener(ev,e=>{if(!sacredPlayActive()||!$('#dialog').hidden)return;e.stopImmediatePropagation();e.preventDefault();if(ev==='pointerdown')cv.setPointerCapture(e.pointerId);fn({x:cam.x+e.clientX/cam.z,y:cam.y+e.clientY/cam.z},performance.now())},{capture:true});
-function drawSacredPlay(now){const P=SPLAY;if(!sacredPlayActive())return;ctx.save();const t=(now-P.t0)/1000;
-  const glow=(x,y,r,a,col='255,246,200')=>{const g=ctx.createRadialGradient(x,y,0,x,y,r);g.addColorStop(0,`rgba(${col},${a})`);g.addColorStop(1,`rgba(${col},0)`);ctx.fillStyle=g;ctx.fillRect(x-r,y-r,r*2,r*2)};
-  if(P.type==='find'){P.spots.forEach((s,i)=>{const w=P.wrong.get(i),bad=w&&now-w<500;if(i===P.target){glow(s.x,s.y,7,.35+.1*Math.sin(t*1.2))}else{for(let k=0;k<3;k++){const a=t*6+i*2+k*2.1;ctx.fillStyle=bad?'#e8a0a0':'#fff6c8';ctx.fillRect(s.x+Math.cos(a)*4-1,s.y+Math.sin(a*1.3)*3-1,2,2)}glow(s.x,s.y,7,.25)}})}
-  if(P.type==='cover'){P.spots.forEach((s,i)=>{if(P.covered.has(i)){ctx.fillStyle='#c9b46a';for(let k=-2;k<=2;k++)ctx.fillRect(s.x+k*2,s.y-3+Math.abs(k),1,4)}else if(P.cold.has(i))glow(s.x,s.y,8,.45+.15*Math.sin(t*3+i),'170,215,255');else glow(s.x,s.y,7,.3,'255,214,150')})}
+/* 出番の絵は、ぜんぶドット絵：世界の1を1ドットにして、整数の四角（fillRect）だけでかく（線・円・グラデーションのなめらかな絵は使わない） */
+const PXR=Math.round,PX={c:null,g:null,w:0,h:0};let PXG=null;/* g：出番の絵をかく小さいキャンバス（世界の1＝1ドット）。かいたあと、ぼかさずに画面へのばす */
+function pxLayerFree(){if(PX.c){PX.c.width=PX.c.height=0;PX.c=PX.g=null}}
+function pxDisk(x,y,rx,ry=rx){x=PXR(x);y=PXR(y);rx=PXR(rx);ry=PXR(ry);for(let dy=-ry;dy<=ry;dy++){const h=PXR(rx*Math.sqrt(Math.max(0,1-(dy/(ry+.5))**2)));PXG.fillRect(x-h,y+dy,h*2+1,1)}}
+/* 光：まるい段々を3まい、うすく重ねる */
+function pxGlow(x,y,r,a,col='255,246,200'){a=Math.max(0,Math.min(1,a));for(const k of [1,.66,.33]){PXG.fillStyle=`rgba(${col},${(a/3).toFixed(3)})`;pxDisk(x,y,Math.max(1,r*k))}}
+/* 輪：f（0〜1）は上から右回りにどこまでかくか。th は太さ（ドット） */
+function pxRing(x,y,r,th,f=1){x=PXR(x);y=PXR(y);const R=PXR(r)+th;for(let dy=-R;dy<=R;dy++)for(let dx=-R;dx<=R;dx++){const d=Math.hypot(dx,dy);if(d>r+th/2||d<r-th/2)continue;if(f<1){let an=Math.atan2(dx,-dy);if(an<0)an+=Math.PI*2;if(an>f*Math.PI*2)continue}PXG.fillRect(x+dx,y+dy,1,1)}}
+/* 線：1マスずつ、th ドットの四角をならべる */
+function pxLine(x0,y0,x1,y1,th){x0=PXR(x0);y0=PXR(y0);x1=PXR(x1);y1=PXR(y1);const n=Math.max(Math.abs(x1-x0),Math.abs(y1-y0),1),o=th>>1;for(let i=0;i<=n;i++)PXG.fillRect(PXR(x0+(x1-x0)*i/n)-o,PXR(y0+(y1-y0)*i/n)-o,th,th)}
+function pxPath(pa,n,th){for(let i=1;i<=n;i++)pxLine(pa[i-1].x,pa[i-1].y,pa[i].x,pa[i].y,th)}
+/* 葉っぱ：ゆれは、行ごとに横へずらす（まわさない） */
+function pxLeaf(x,y,sw,col,vein){x=PXR(x);y=PXR(y);for(let dy=-7;dy<=7;dy++){const h=PXR(4*Math.sqrt(Math.max(0,1-(dy/7.5)**2))),sx=PXR(sw*(7-dy)*.5);PXG.fillStyle=col;PXG.fillRect(x-h+sx,y+dy,h*2+1,1);if(dy>-7&&dy<7){PXG.fillStyle=vein;PXG.fillRect(x+sx,y+dy,1,1)}}}
+/* 文字：ドットのフォントを1倍の小さい絵にかいて、ぼかさずにのばす（ふちどりは、まわり8方向に1ドット） */
+const PXTXT={t:'',c:null};
+function pxText(t,x,y){if(PXTXT.t!==t||!PXTXT.c){const c=PXTXT.c||document.createElement('canvas'),tg=c.getContext('2d');tg.font='10px "PixelMplus10",sans-serif';const w=Math.ceil(tg.measureText(t).width)+2;c.width=w;c.height=13;tg.font='10px "PixelMplus10",sans-serif';tg.textBaseline='top';tg.fillStyle='#695438';for(const[dx,dy]of[[-1,-1],[0,-1],[1,-1],[-1,0],[1,0],[-1,1],[0,1],[1,1]])tg.fillText(t,1+dx,1+dy);tg.fillStyle='#fff5d4';tg.fillText(t,1,1);
+  /* ふちのにじみをけす：うすさを、あり・なしの2つに */const im=tg.getImageData(0,0,c.width,c.height),d=im.data;for(let i=3;i<d.length;i+=4)d[i]=d[i]<96?0:255;tg.putImageData(im,0,0);PXTXT.t=t;PXTXT.c=c}
+  const c=PXTXT.c;PXG.drawImage(c,PXR(x-c.width/2),PXR(y-10))}
+function pxTextFree(){if(PXTXT.c){PXTXT.c.width=PXTXT.c.height=0;PXTXT.c=null;PXTXT.t=''}}
+function drawSacredPlay(now){const P=SPLAY;if(!sacredPlayActive())return;const lw=Math.ceil(VW/cam.z)+2,lh=Math.ceil(VH/cam.z)+2+LIFT*3;if(!PX.c){PX.c=document.createElement('canvas');PX.g=PX.c.getContext('2d')}if(PX.c.width!==lw||PX.c.height!==lh){PX.c.width=PX.w=lw;PX.c.height=PX.h=lh}PXG=PX.g;const ox=Math.floor(cam.x),oy=Math.floor(cam.y);/* 見えている所ぜんぶ（段差の高さのぶん下も） */PXG.setTransform(1,0,0,1,0,0);PXG.clearRect(0,0,PX.w,PX.h);PXG.save();PXG.translate(-ox,-oy);const t=(now-P.t0)/1000;
+  const glow=pxGlow;
+  if(P.type==='find'){P.spots.forEach((s,i)=>{const w=P.wrong.get(i),bad=w&&now-w<500;if(i===P.target){glow(s.x,s.y,7,.35+.1*Math.sin(t*1.2))}else{for(let k=0;k<3;k++){const a=t*6+i*2+k*2.1;PXG.fillStyle=bad?'#e8a0a0':'#fff6c8';PXG.fillRect(PXR(s.x+Math.cos(a)*4)-1,PXR(s.y+Math.sin(a*1.3)*3)-1,2,2)}glow(s.x,s.y,7,.25)}})}
+  if(P.type==='cover'){P.spots.forEach((s,i)=>{if(P.covered.has(i)){PXG.fillStyle='#c9b46a';for(let k=-2;k<=2;k++)PXG.fillRect(PXR(s.x)+k*2,PXR(s.y)-3+Math.abs(k),1,4)}else if(P.cold.has(i))glow(s.x,s.y,8,.45+.15*Math.sin(t*3+i),'170,215,255');else glow(s.x,s.y,7,.3,'255,214,150')})}
   if(P.type==='hold'){const s=P.stone;{const dt=Math.min(.1,(now-(P.lt||now))/1000);P.lt=now;if(P.holding)P.heat=Math.min(1.05,P.heat+dt*.55)}if(P.heat>1){P.holding=false;P.heat=0;P.scorch=now;sacredPlayMiss('こげちゃった')}
-    ctx.fillStyle=`rgb(${120+P.heat*120|0},${110+P.heat*40|0},${105-P.heat*40|0})`;ctx.beginPath();ctx.ellipse(s.x,s.y,6,4,0,0,7);ctx.fill();glow(s.x,s.y,10+P.heat*8,.2+P.heat*.4,'255,170,90');
-    const bx=s.x-16,by=s.y-18;ctx.fillStyle='rgba(60,40,30,.6)';ctx.fillRect(bx,by,32,4);ctx.fillStyle='#8fdc6a';ctx.fillRect(bx+32*.58,by,32*.26,4);ctx.fillStyle='#ffb347';ctx.fillRect(bx,by+1,32*Math.min(1,P.heat),2)}
-  if(P.type==='brush'){const a=P.area;ctx.globalAlpha=.7*(1-P.prog);ctx.fillStyle='#9c7a52';ctx.beginPath();ctx.ellipse(a.x+a.w/2,a.y+a.h/2,a.w/2,a.h/2,0,0,7);ctx.fill();ctx.globalAlpha=P.prog;ctx.strokeStyle='#d9b98a';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(a.x+6,a.y+12);ctx.quadraticCurveTo(a.x+a.w/2,a.y+2,a.x+a.w-6,a.y+14);ctx.stroke();ctx.globalAlpha=1}
-  if(P.type==='root'){const pa=P.path,sn=P.snap&&now-P.snap<500;ctx.fillStyle='rgba(120,88,52,.75)';ctx.beginPath();ctx.ellipse(P.cx,P.cy+18,40,14,0,0,7);ctx.fill();/* 根の上の土 */ctx.fillStyle=sn?'rgba(232,120,110,.8)':'rgba(255,246,200,.55)';pa.forEach((p,i)=>{if(i>P.reach&&i%2===0)ctx.fillRect(p.x-1,p.y-1,2,2)});ctx.strokeStyle='#d9b98a';ctx.lineWidth=3;ctx.beginPath();for(let i=0;i<=P.reach;i++){const p=pa[i];i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y)}ctx.stroke();const tp=pa[P.reach];glow(tp.x,tp.y,10,.45+.15*Math.sin(t*5),'255,236,170')}
-  if(P.type==='rhythm'){if(!P.beat||now-P.beat.t>700){if(now>=P.nextBeat){P.beat={t:now,leaf:(hash(now|0)*3)|0,hit:false};P.nextBeat=now+900+hash((now|0)+3)*700}}const b=P.beat;P.leaves.forEach((l,i)=>{const on=b&&b.leaf===i&&now-b.t<520,sw=on?Math.sin((now-b.t)/50)*.5:0;if(on&&!b.hit)glow(l.x,l.y,12,.55);ctx.save();ctx.translate(l.x,l.y);ctx.rotate(sw);ctx.fillStyle=b&&b.leaf===i&&b.hit?'#bfe89a':'#8fdc6a';ctx.beginPath();ctx.ellipse(0,0,4,7,0,0,7);ctx.fill();ctx.fillStyle='#5f9e3f';ctx.fillRect(-.5,-6,1,12);ctx.restore()})}
-  if(P.type==='trace'){ctx.fillStyle='rgba(255,255,255,.7)';P.path.forEach((p,i)=>{if(i%2===0)ctx.fillRect(p.x-1,p.y-1,2,2)});ctx.strokeStyle='#7fc4ec';ctx.lineWidth=3;ctx.beginPath();for(let i=0;i<=P.reach;i++){const p=P.path[i];i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y)}ctx.stroke();glow(P.path[0].x,P.path[0].y,10,.5,'150,210,255')}
-  if(P.type==='wait'){const p=Math.min(1,(now-P.since)/P.ms),sh=Math.max(0,1-(now-P.shrink)/800);ctx.strokeStyle='#c8ffd0';ctx.lineWidth=2;ctx.beginPath();ctx.arc(P.cx,P.cy-18,12,-Math.PI/2,-Math.PI/2+p*Math.PI*2);ctx.stroke();ctx.fillStyle='#8fdc6a';const s=1-sh*.5;ctx.fillRect(P.cx-3*s,P.cy-20,6*s,4*s);if(p>=1)sacredPlayWin()}
-  if(P.type==='swipe'){const sw=P.sway&&now-P.sway<900?Math.sin((now-P.sway)/90)*(1-(now-P.sway)/900)*4:0,gu=P.gust&&now-P.gust<600?Math.sin((now-P.gust)/30)*3:0;ctx.fillStyle='#8fdc6a';ctx.save();ctx.translate(P.cx,P.cy-20);ctx.rotate((sw+gu)*.08);ctx.beginPath();ctx.ellipse(0,-4,3,6,0,0,7);ctx.fill();ctx.restore();const d=P.down;if(d){ctx.strokeStyle='rgba(255,255,255,.6)';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(d.x,d.y);ctx.lineTo(d.last.x,d.last.y);ctx.stroke()}}
+    const hc=k=>`rgb(${Math.min(255,(120+P.heat*120)*k)|0},${Math.min(255,(110+P.heat*40)*k)|0},${Math.min(255,(105-P.heat*40)*k)|0})`;PXG.fillStyle=hc(.75);pxDisk(s.x,s.y+1,6,4);PXG.fillStyle=hc(1);pxDisk(s.x,s.y,6,4);PXG.fillStyle=hc(1.25);PXG.fillRect(PXR(s.x)-3,PXR(s.y)-3,3,1);glow(s.x,s.y,10+P.heat*8,.2+P.heat*.4,'255,170,90');
+    const bx=PXR(s.x)-16,by=PXR(s.y)-18;PXG.fillStyle='#4a3424';PXG.fillRect(bx-1,by-1,34,6);PXG.fillStyle='#7a6048';PXG.fillRect(bx,by,32,4);PXG.fillStyle='#8fdc6a';PXG.fillRect(bx+19,by,8,4);PXG.fillStyle='#ffb347';PXG.fillRect(bx,by+1,PXR(32*Math.min(1,P.heat)),2)}
+  if(P.type==='brush'){const a=P.area;PXG.globalAlpha=.7*(1-P.prog);PXG.fillStyle='#9c7a52';pxDisk(a.x+a.w/2,a.y+a.h/2,a.w/2,a.h/2);PXG.globalAlpha=P.prog;PXG.fillStyle='#d9b98a';{let q=null;for(let i=0;i<=16;i++){const u=i/16,x=(1-u)**2*(a.x+6)+2*u*(1-u)*(a.x+a.w/2)+u*u*(a.x+a.w-6),y=(1-u)**2*(a.y+12)+2*u*(1-u)*(a.y+2)+u*u*(a.y+14);if(q)pxLine(q.x,q.y,x,y,1);q={x,y}}}PXG.globalAlpha=1}
+  if(P.type==='root'){const pa=P.path,sn=P.snap&&now-P.snap<500;PXG.fillStyle='rgba(120,88,52,.75)';pxDisk(P.cx,P.cy+18,40,14);/* 根の上の土 */PXG.fillStyle=sn?'rgba(232,120,110,.8)':'rgba(255,246,200,.55)';pa.forEach((p,i)=>{if(i>P.reach&&i%2===0)PXG.fillRect(PXR(p.x)-1,PXR(p.y)-1,2,2)});PXG.fillStyle='#9c7a52';pxPath(pa.map(p=>({x:p.x,y:p.y+1})),P.reach,3);PXG.fillStyle='#d9b98a';pxPath(pa,P.reach,3);const tp=pa[P.reach];glow(tp.x,tp.y,10,.45+.15*Math.sin(t*5),'255,236,170')}
+  if(P.type==='rhythm'){if(!P.beat||now-P.beat.t>700){if(now>=P.nextBeat){P.beat={t:now,leaf:(hash(now|0)*3)|0,hit:false};P.nextBeat=now+900+hash((now|0)+3)*700}}const b=P.beat;P.leaves.forEach((l,i)=>{const on=b&&b.leaf===i&&now-b.t<520,sw=on?Math.sin((now-b.t)/50)*.5:0;if(on&&!b.hit)glow(l.x,l.y,12,.55);pxLeaf(l.x,l.y,sw,b&&b.leaf===i&&b.hit?'#bfe89a':'#8fdc6a','#5f9e3f')})}
+  if(P.type==='trace'){PXG.fillStyle='rgba(255,255,255,.7)';P.path.forEach((p,i)=>{if(i%2===0)PXG.fillRect(PXR(p.x)-1,PXR(p.y)-1,2,2)});PXG.fillStyle='#4f93c0';pxPath(P.path.map(p=>({x:p.x,y:p.y+1})),P.reach,3);PXG.fillStyle='#7fc4ec';pxPath(P.path,P.reach,3);glow(P.path[0].x,P.path[0].y,10,.5,'150,210,255')}
+  if(P.type==='wait'){const p=Math.min(1,(now-P.since)/P.ms),sh=Math.max(0,1-(now-P.shrink)/800);PXG.fillStyle='#c8ffd0';pxRing(P.cx,P.cy-18,12,2,p);PXG.fillStyle='#8fdc6a';const s=1-sh*.5,w=Math.max(2,PXR(6*s));PXG.fillRect(PXR(P.cx)-(w>>1),PXR(P.cy)-20,w,Math.max(2,PXR(4*s)));if(p>=1)sacredPlayWin()}
+  if(P.type==='swipe'){const sw=P.sway&&now-P.sway<900?Math.sin((now-P.sway)/90)*(1-(now-P.sway)/900)*4:0,gu=P.gust&&now-P.gust<600?Math.sin((now-P.gust)/30)*3:0;pxLeaf(P.cx,P.cy-24,(sw+gu)*.08,'#8fdc6a','#5f9e3f');const d=P.down;if(d){PXG.fillStyle='rgba(255,255,255,.6)';pxLine(d.x,d.y,d.last.x,d.last.y,2)}}
   if(P.type==='gather'){const dt=Math.min(.1,(now-(P.lt||now))/1000);P.lt=now;if(P.holding&&P.got<P.need){P.prog+=dt*1.25;if(P.prog>=P.got+1){const r=P.order[P.got];P.got++;if(r){faceTo(r,(Math.floor(P.cy/TS))*W+Math.floor(P.cx/TS));JUMP.set(r,now);fxSpr('twinkle',r.x*TS,r.y*TS-14)}sfx('tap');sacredPlayHint(P.hint+sacredPlayCount());if(P.got>=P.need){P.holding=false;setTimeout(sacredPlayWin,700)}}}
-    ctx.strokeStyle='rgba(255,246,200,.75)';ctx.lineWidth=2;for(let i=0;i<P.got;i++){const r=P.order[i];if(!r)continue;ctx.beginPath();ctx.moveTo(r.x*TS,r.y*TS-12);ctx.lineTo(P.cx,P.cy-6);ctx.stroke();glow(r.x*TS,r.y*TS-12,10,.45)}/* 力をおくった子から、切り株へ光の線 */
-    glow(P.cx,P.cy-6,18+P.got*4,.25+.1*Math.sin(t*4)+P.got*.06);if(!P.holding&&P.got<P.need){ctx.strokeStyle='rgba(255,246,200,'+(.5+.3*Math.sin(t*4))+')';ctx.lineWidth=2;ctx.beginPath();ctx.arc(P.cx,P.cy-6,20+2*Math.sin(t*4),0,7);ctx.stroke()}/* 長おしする所に、光の輪 */
-    if(P.holding){const f=P.prog-P.got;ctx.strokeStyle='#fff6c8';ctx.lineWidth=3;ctx.beginPath();ctx.arc(P.cx,P.cy-6,20,-Math.PI/2,-Math.PI/2+f*Math.PI*2);ctx.stroke()}}
-  if(P.msg&&now-P.msgT<1400){ctx.font='bold 10px "PixelMplus10",sans-serif';ctx.textAlign='center';ctx.lineWidth=3;ctx.strokeStyle='#695438';ctx.fillStyle='#fff5d4';ctx.strokeText(P.msg,P.cx,P.cy-36);ctx.fillText(P.msg,P.cx,P.cy-36)}
-  ctx.restore()}
+    PXG.fillStyle='rgba(255,246,200,.75)';for(let i=0;i<P.got;i++){const r=P.order[i];if(!r)continue;pxLine(r.x*TS,r.y*TS-12,P.cx,P.cy-6,2);glow(r.x*TS,r.y*TS-12,10,.45)}/* 力をおくった子から、切り株へ光の線 */
+    glow(P.cx,P.cy-6,18+P.got*4,.25+.1*Math.sin(t*4)+P.got*.06);if(!P.holding&&P.got<P.need){PXG.fillStyle='rgba(255,246,200,'+(.5+.3*Math.sin(t*4))+')';pxRing(P.cx,P.cy-6,PXR(20+2*Math.sin(t*4)),2)}/* 長おしする所に、光の輪 */
+    if(P.holding){const f=P.prog-P.got;PXG.fillStyle='#fff6c8';pxRing(P.cx,P.cy-6,20,3,f)}}
+  if(P.msg&&now-P.msgT<1400)pxText(P.msg,P.cx,P.cy-36);else if(PXTXT.c&&!P.msg)pxTextFree();
+  PXG.restore();if(PX.c){ctx.save();ctx.imageSmoothingEnabled=false;ctx.drawImage(PX.c,ox,oy);ctx.restore()}}/* とちゅうで出番がおわったら（PX.c をすてたあと）、かかない */
 /* 調べを1回はじめたら、その話の最後まで自動で続ける（会話のあと3秒あける） */
 function tryFieldAuto(r){const q=fieldStoryCurrent();if(!q||isNight()||!$('#dialog').hidden||sacredPlayActive())return false;const st=fieldStoryState(q.id);if(!st?.auto||fieldStoryDone(q.id))return false;
   const step=FIELD_STORIES[q.id][st.step];if(!step||fieldStoryActor(step)!==r)return false;if(r.act&&['eat','fetch','flee','faint','pray','bury','fieldstory','fieldassist'].includes(r.act.type))return false;/* 遊び・散歩などは、やめて調べへ */

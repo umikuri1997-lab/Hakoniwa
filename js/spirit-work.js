@@ -12,9 +12,9 @@ function tryJob(r,G,k){
       for(let h=0;h<Q.length&&w<0;h++){const i=Q[h],x=i%W,y=(i/W)|0;for(const[dx,dy]of DIRS){const nx=x+dx,ny=y+dy;if(nx<0||ny<0||nx>=W||ny>=H)continue;const k=ny*W+nx;if(S.ground[k]!==1&&walk(k)&&G.dist[k]>=0&&i!==q){w=i;sh=k;break}if(S.ground[k]===1&&!solidOf(k)&&prev[k]===-2){prev[k]=i;Q.push(k)}}}
       if(w<0)continue;const p=[];for(let k=w;k>=0&&k!==q;k=prev[k])p.push(k);startAct(r,G,'plant',sh,{key:'o'+q,obj:q,wade:p});return true}
     return false}/* ハスは岸から植える */
-  case'build':{const st=q=>{const a=anc(q);return S.obj[a]==='site'&&free('o'+a,2)};j=nearest(G,j=>adjOf(j,st)>=0);if(j>=0){const q=anc(adjOf(j,st));startAct(r,G,'build',j,{key:'o'+q,obj:q});return true}return false}
+  case'build':{const st=q=>{const a=anc(q);return S.obj[a]==='site'&&free('o'+a,2)};j=nearest(G,j=>adjOf(j,st)>=0,9999);/* 建てる場所は、どんなに遠くても行ける所なら行く */if(j>=0){const q=anc(adjOf(j,st));startAct(r,G,'build',j,{key:'o'+q,obj:q});return true}return false}
   case'water':case'tend':j=nearest(G,j=>S.obj[j]==='farm'&&S.dyn[j]&&S.dyn[j].sown!==false&&S.dyn[j].wet<=0&&S.dyn[j].g<100&&free('w'+j,1));if(j<0)return false;if((r.wcan||0)>0){startAct(r,G,k,j,{key:'w'+j,obj:j});return true}{const s=nearest(G,q=>waterSrc(q)>=0,80);if(s>=0){startAct(r,G,'draw',s,{src:waterSrc(s)});return true}}return false;/* 水やりは、池・川・井戸・みずがめで水をくんでから（1回で畑3マス） */
-  case'craft':{const o=S.orders.find(q=>(!q.worker||!S.res.some(x=>x.id===q.worker))&&craftOK(r,q));if(!o)return false;o.worker=r.id;const sp=craftSpot(G);startAct(r,G,'craft',sp>=0?sp:nearTile(G,BOARD),sp>=0?{order:o.id,key:'cs'+sp}:{order:o.id});return true}
+  case'craft':{const o=S.orders.find(q=>(!q.worker||!S.res.some(x=>x.id===q.worker))&&craftOK(r,q));if(!o)return false;const sp=craftSpot(G),st=sp>=0?sp:BOARD<0?-1:nearest(G,j=>adjOf(j,k=>k===BOARD)>=0,9999);/* 依頼ボードも、遠くても行ける所なら行く */if(st<0)return false;o.worker=r.id;startAct(r,G,'craft',st,sp>=0?{order:o.id,key:'cs'+sp}:{order:o.id});return true}
   case'chop':case'mine':{if(k==='mine'&&WD===1&&!isNight()){const bq=q=>S.obj[q]==='boulder'&&free('o'+q,1);const bj=nearest(G,j=>adjOf(j,bq)>=0,90);if(bj>=0){const q=adjOf(bj,bq);startAct(r,G,'mine',bj,{key:'o'+q,obj:q});return true}}/* 大岩を先にくだく */
     if(isNight()||!(matCap()>0)||roomN(r)<1||matTot()+matN(r)>=matCap())return false;/* 素材箱に1つでも空きがあれば集めにいく（ぴったり満杯までためられる） */const camp=k==='chop'?'lumber':'quarry',nat=k==='chop'?(WD===1?((S.mat.bamboo||0)<(S.mat.wood||0)?[['bamboo'],['ntree','deadtree']]:[['ntree','deadtree'],['bamboo']]):[['ntree','deadtree']]):[['rock',...VEIN_IDS]];/* 火山：木材と竹の、すくないほうを先に切る */
     const cp=q=>typeAt(q)===camp&&free('o'+anc(q),2);j=nearest(G,j=>adjOf(j,cp)>=0,60);if(j>=0){const q=anc(adjOf(j,cp));startAct(r,G,k,j,{key:'o'+q,obj:q,camp:true});return true}
@@ -79,10 +79,11 @@ function goWork(r,G,nw){
   const mo=(S.mat.stone||0)<=(S.mat.wood||0)?['mine','chop']:['chop','mine'];let gd=false;
   if(r.cpk&&tryJob(r,G,'cfill'))return true;if(r.fert>0&&tryJob(r,G,'fert'))return true;/* 運んでいる草・肥料は、先におわらせる */
   if(r.elem==='earth'&&tryJob(r,G,'repair'))return true;/* 土のせいれいは、修理がいちばん先（木・石・雑草・畑の世話より先） */
-  // おつげがあれば、それを先にする
-  if(S.oracle==='play'&&r.fun<98&&goPlay(r,G,true))return true;
   // 食料がゼロなら、まず食べ物を集める
   if(S.food<foodLow()&&foodCap()>0)for(const k of['harvest','gather'])if(tryJob(r,G,k))return true;/* 食料が人数×2より少なくなったら、ほかの仕事より先に食べ物をあつめる */
+  for(const k of['build','craft'])if(tryJob(r,G,k))return true;/* 建てる・依頼のものづくりは、遠くても、ふだんの仕事（植える・ひろう・畑・木・石・草）より先 */
+  // おつげがあれば、それを先にする
+  if(S.oracle==='play'&&r.fun<98&&goPlay(r,G,true))return true;
   // 花や木の苗は、空腹などの急ぎの用事を除いて、ほかの仕事より先に植える
   if(tryJob(r,G,'plant'))return true;
   if(tryJob(r,G,'otaki'))return true;
@@ -90,7 +91,7 @@ function goWork(r,G,nw){
   if((S.drops||[]).some(q=>q.lt||q.tap)||wreqList().length){for(const k of FARMJ)if(tryJob(r,G,k))return true;if(tryJob(r,G,'drop'))return true;if(wreqList().length&&tryJob(r,G,'weed'))return true}/* 「みる」でタップした草・きのこ・落とし物も、ここでとりにいく *//* 守り神の光でこわした物（落ちた木材・石材）は、おつげ・木を切る・石をほるより先にひろう。畑の世話よりはあと */
   if(S.oracle&&ORACLE[S.oracle])for(const k of ORACLE[S.oracle].jobs)if(tryJob(r,G,k))return true;
   // 建てる・家具づくりがいちばん先。そのつぎに得意な仕事をする
-  for(const k of['build','craft',...(SPEC[r.elem]||[])])if(tryJob(r,G,k))return true;
+  for(const k of[...(SPEC[r.elem]||[])])if(tryJob(r,G,k))return true;
   for(const cat of JOBCAT)for(const k of cat){
     if(['chop','mine','drop','weed'].includes(k)){if(gd)continue;gd=true;if(tryJob(r,G,'weed'))return true;/* まわり5マスの雑草・きのこは、木・石より先にむしる */const jobs=[...mo,'drop'];for(let i=jobs.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[jobs[i],jobs[j]]=[jobs[j],jobs[i]]}for(const m of jobs)if(tryJob(r,G,m))return true;continue}/* 木・石・近くの草やきのこ・枝は、同じ優先度でえらぶ */
     if(tryJob(r,G,k))return true}
@@ -213,3 +214,11 @@ function die(r){if(r.cpk){cmpRefund(r.cpk.m);r.cpk=null}/* 運んでいた草は
   if(!S.res.length){S.wipe=true;S.wipeGift=WD===0?(lvOK('logfence')?'logfence':'fence'):(lvOK('wall')?'wall':'fence');giveItem(S.wipeGift,10);/* おくりものは、先にわたしておく（会話のとちゅうでとじても、なくならない） */for(const L of[S.buried||[],S.lost||[]])for(const q of L)delete q.unb}/* 全滅：埋葬する子がいないので、埋葬の前でも、次の朝から呼びもどせるようにする（お墓はそのまま） */
   if(!S.res.length)setTimeout(()=>STATUE<0?gameOver():dialog([[GOD,'#cry|みんな、消えてしもうた……。おヌシ、ひとりでよう耐えたのう。'],[GOD,'じゃが、だいじょうぶじゃ。朝になれば、この土地に深くなじんだ子から、また会えるぞい。'],[GOD,'#alarm|人数が少ないうちは、「コワイノ」も少なめじゃ。オオカゲも、なかまがそろうまでは来んはずじゃ。'],[GOD,'それと…これを使うがよい。'+BL[S.wipeGift||'fence'].name+'を10こ、やろう。']],()=>toast(BL[S.wipeGift||'fence'].name+'を10こもらった','good')),800);/* 石の塀を覚えていたら、石の塀 */
 }
+/* 建てる場所・依頼ボードへ行けないとき：5秒ごとにBFS1回でしらべ、行けなくなったときだけ知らせる。道があいたら消す */
+let JOBBLK={S:null,set:new Set(),t:0};
+function jobReach(){const rs=S.res.filter(q=>!q.hidden);if(!rs.length)return new Set();const sites=[];for(const k in S.dyn)if(S.obj[+k]==='site')sites.push(+k);const ord=S.orders.some(o=>!o.worker||!S.res.some(x=>x.id===o.worker))&&BOARD>=0;if(!sites.length&&!ord)return new Set();
+  const r=rs[0],G=bfs(r.x|0,r.y|0),ok=new Set();for(let j=0;j<W*H;j++){if(G.dist[j]<0)continue;for(const[dx,dy]of DIRS){const k=j+dy*W+dx;if(k<0||k>=W*H||Math.abs((k%W)-(j%W))>1)continue;ok.add(anc(k))}}
+  const out=new Set();for(const j of sites)if(!ok.has(j))out.add(j);if(ord&&!ok.has(BOARD))out.add('board');return out}
+function jobReachTick(){if(!S||isNight())return;if(JOBBLK.S!==S)JOBBLK={S,set:new Set(),t:0};if(S.t-JOBBLK.t<5&&S.t>=JOBBLK.t)return;JOBBLK.t=S.t;const now=jobReach();
+  for(const k of now)if(!JOBBLK.set.has(k))toast(k==='board'?'依頼ボードへ行けません':'建てる所へ行けません','warn');JOBBLK.set=now}
+const jobBlocked=k=>JOBBLK.S===S&&JOBBLK.set.has(k);

@@ -3,6 +3,7 @@ function kurashi(key,mt){if(!S)return;const K=S.kb||(S.kb={done:{}});if(K.done[k
 function logEv(t){if(!S.log)S.log=[];S.log.push([dayNo(),t]);if(S.log.length>300)S.log.shift()}
 function checkQuest(){
   if(sacredQuietActive())return;
+  if(S.flags.qsplitPend||S.flags.qsplitStory)questSplitResolve();
   if(WD===0&&!S.cleared&&(S.setSh||0)>=3&&!NUSHI_RUN&&sheet==null&&$('#dialog').hidden&&!DLGQ.length)scheduleGrassReunion();
   if(QUEST_CLEAR_WAIT&&QUEST_CLEAR_WAIT.quest!==S.quest)QUEST_CLEAR_WAIT=null;
   TALKW=null;if(S.qStory==null)QUESTCLEARW=null;finalCheck();
@@ -86,16 +87,17 @@ function startTalk(){if(!$('#dialog').hidden)return;if(isNight())return toast('�
     for(const id of q.talk.learn||[])S.recipes[id]=true;
     const after=q.talk.gives?questGives(q,q.talk.gives):null;inspireQuest(q);/* クエストに使う物は、会話のあとでわたす */
     sfx('quest');renderQuest();renderPalette();if(after)after();else checkQuest()},null)}
-const SUMMON_EL={fire:'fire',water:'water',wind:'wind'};
+const SUMMON_EL={summon:'earth',fire:'fire',water:'water',wind:'wind'};
 function questWaitNote(q){/* 条件はそろったのに、朝にならないと進まないとき */if(!q||S.cleared)return '';const el=SUMMON_EL[q.id];
   if(el&&elemCount(el)<1){if(S.summon&&S.summon.elem===el)return calledToday()?'朝を待とう':'神殿の「！」から呼ぼう';if((ATTR[el]||0)>=needFor(el))return '力がたまった。朝を待とう'}
   let ok=false;try{ok=!!q.check()}catch(e){}return ok&&isNight()?'朝を待とう':''}
+function mainTalkWaitText(q){/* メインの会話・お礼を待っているときの、ほんとうに止まっている理由 */const ms=qMissing(q);if(ms.length)return ms.join('と')+'がもどるまで、お話は進まない';
+  if(!(S.qStory!=null||q.talk&&!S.qTalked))return '';if(isNight())return 'お話は、朝になってから';
+  return storyWaitStatusText()||(TALKW?mainStoryPromptText(TALKW):S.qStory==null&&q.talk.wait||'いまは、村をそだてよう')}
 function renderQuest(){const q=QUESTS[Math.min(S.quest,QUESTS.length-1)];let pr='',t=S.cleared?(WD===FREE?'村づくりは、つづく…':'世界クリア！'):q.text;
   if(S.cleared&&WD!==FREE){const a=AFTERQ[S.aq||0],dd=S.daily,dn=dd?dd.k.filter(k=>dd.done[k]).length:0;if(a&&S.aqOn===(S.aq||0)){t=aqTitle(a);pr=aqProg(a)}else t=dd?'きょうの目標 '+dn+'/'+dd.k.length:'世界クリア！'}/* クリア後は、新しいクエストか、きょうの目標を出す */
-  if(!S.cleared){const ms=qMissing(q);
-    if(ms.length)t=ms.join('と')+'がもどるまで、お話は進まない';
-    else if(isNight()&&(S.qStory!=null||q.talk&&!S.qTalked))t='お話は、朝になってから';
-    else if(S.qStory!=null||q.talk&&!S.qTalked)t=storyWaitStatusText()||(TALKW?mainStoryPromptText(TALKW):S.qStory==null&&q.talk.wait||'いまは、村をそだてよう');/* なにをすればいいか書く */
+  if(!S.cleared){const wt=mainTalkWaitText(q);
+    if(wt)t=wt;
     else{if(q.prog)pr=q.prog();const wn=questWaitNote(q);if(wn)pr=pr?pr+'　'+wn:wn}}
   const qt=$('#questTxt');if(qt.dataset.k!==t+'|'+pr){qt.dataset.k=t+'|'+pr;qt.textContent='';const m=document.createElement('span'),g=document.createElement('span');m.className='qm';g.className='qp';m.textContent=t;g.textContent=pr;qt.append(m,g)}/* 進み具合は2行目に */
   const h=$('#questHow'),how=q.how||'';if(!h.hidden&&h.dataset.q==S.quest&&h.dataset.text===how)return;h.dataset.q=S.quest;h.dataset.text=how;h.hidden=true;h.innerHTML='<b>やりかた</b>';h.appendChild(document.createTextNode(how))}
