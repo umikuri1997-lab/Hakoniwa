@@ -101,7 +101,7 @@ let ambG=null;const AMB={};
 let AMBNEXT=0;
 function ambAccent(on,h){if(!on||!ambG||!(h>=17.5&&h<20))return;const t=AC.currentTime;if(t<AMBNEXT||DUCKT>t)return;AMBNEXT=t+2.5+Math.random()*4;const f=3800+Math.random()*900;for(let i=0;i<2+(Math.random()*2|0);i++){tone(f,t+i*.11,.06,'sine',.05,ambG,f*.97)}}
 function ambTick(){if(!AC||AC.state!=='running')return;if(!ambG){ambG=AC.createGain();ambG.gain.value=.12;ambG.connect(AC.destination)}
-  const want={birds:0,rain:0,night:0};let h=12,on=false;if(S&&started&&SND.sfx&&$('#title').hidden&&$('#maps').hidden){on=true;h=hour();if(S.rain)want.rain=.45;else{/* 朝と夕方は、ゆっくり入れかわる（夜あけは鳥が少しにぎやか） */const cl=v=>Math.max(0,Math.min(1,v));want.birds=h<5||h>=18.5?0:h<6.5?cl((h-5)/1.5)*1.3:h<7.5?1.3-(h-6.5)*.3:h<17?1:cl((18.5-h)/1.5);want.night=h>=17.5?cl((h-17.5)/1.5):h<5.5?cl((5.5-h)/1):0}}
+  const want={birds:0,rain:0,night:0};let h=12,on=false;if(S&&started&&SND.sfx&&$('#title').hidden&&$('#maps').hidden){on=true;h=hour();if(S.rain)want.rain=.45;else{/* 朝と夕方は、ゆっくり入れかわる（夜あけは鳥が少しにぎやか） */const cl=v=>Math.max(0,Math.min(1,v));want.birds=h<5||h>=18.5?0:h<6.5?cl((h-5)/1.5)*1.3:h<7.5?1.3-(h-6.5)*.3:h<17?1:cl((18.5-h)/1.5);want.night=h>=17.5?cl((h-17.5)/1.5)*6:h<5.5?cl((5.5-h)/1)*6:0/* 夜の環境音（もらった音）：大きさ6 */}}
   ambAccent(on&&!S.rain&&!(typeof paused!=='undefined'&&paused),h);
   for(const k in want){let a=AMB[k];if(!a){if(!want[k])continue;const b=(SBUF[k]||[])[0];if(!b)continue;const src=AC.createBufferSource(),g=AC.createGain();src.buffer=b;src.loop=true;src.loopStart=.06;src.loopEnd=b.duration-.06;g.gain.value=0;src.connect(g);g.connect(ambG);src.start();a=AMB[k]={src,g}}a.g.gain.setTargetAtTime(want[k],AC.currentTime,.8)}}
 const lastSfx={};
@@ -171,5 +171,5 @@ case'bossKO':noise(t,.5,.3,o,200);tone(70,t,1.4,'sine',.2,o,30);tone(900,t,.35,'
 // 画面の中心から遠いほど小さく鳴らす
 const SFXGAP={chop:1.3,pour:2.5,crack:1.3},SFXLAST={};/* 同じ音が重ならないように */
 function sfxAt(k,x,y,m=1){if(!S)return;if(SFXGAP[k]){const n=performance.now()/1000;if(n-(SFXLAST[k]||0)<SFXGAP[k])return;SFXLAST[k]=n}const vw=VW/cam.z,vh=VH/cam.z,d=Math.hypot(x*TS-(cam.x+vw/2),y*TS-(cam.y+vh/2)),R=Math.max(vw,vh)*.8,v=Math.pow(Math.max(0,1-d/R),1.5);if(v<.04)return;SFXV=v*m;try{sfx(k)}finally{SFXV=1}}
-const gainB=()=>SND.bgm?.55*(SND.bv??1):0,gainS=()=>SND.sfx?.15*(SND.sv??1):0;/* 音楽・効果音の音量（0〜1） */
+const gainB=()=>SND.bgm?.385*(SND.bv??1):0,gainS=()=>SND.sfx?.15*(SND.sv??1):0;/* 音楽・効果音の音量（0〜1） */
 function setSnd(k,v){SND[k]=v;saveSnd();if(AC){bgmG.gain.setTargetAtTime(gainB(),AC.currentTime,.1);sfxG.gain.setTargetAtTime(gainS(),AC.currentTime,.1)}}

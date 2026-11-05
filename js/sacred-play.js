@@ -18,7 +18,7 @@ function fieldBuiltCell(id){const p=FIELD_PREP[id],b=fieldStoryState(id)?.built;
 /* 置いたとき（place）：いまの調べが作る物を待っていて、切り株のそばなら、この調べの物として記録する */
 function fieldBuildNote(id,j){if(IS_STORY_REPLAY)return;const q=fieldStoryCurrent();if(!q)return;const fid=q.id,p=FIELD_PREP[fid];if(!p||!p.build.ids.includes(id)||S.sacredRoot==null||fieldDistance(j,S.sacredRoot)>FIELD_NEAR_R)return;
   const st=fieldStoryEnsure(fid);if(!st||(st.step||0)>0||fieldBuildOK(fid))return;const b=st.built||(st.built={cells:[]});if(b.legacy)return;if(!b.cells.includes(j))b.cells.push(j);dirty=true;renderQuest();}
-function fieldPrepNeed(id){const st=fieldStoryState(id),p=FIELD_PREP[id],j=S.sacredRoot;if(IS_STORY_REPLAY||!p||j==null||(st?.step||0)>0||fieldBuildOK(id))return null;for(const k of p.learn||[])if(!S.recipes[k]){S.recipes[k]=true;dirty=true}/* 古いセーブでも、準備に使う物を作れるように */
+function fieldPrepNeed(id){const st=fieldStoryState(id),p=FIELD_PREP[id],j=S.sacredRoot;if(IS_STORY_REPLAY||!p||j==null||(st?.step||0)>0||fieldBuildOK(id))return null;{const nw=(p.learn||[]).filter(k=>!S.recipes[k]);recipeNotice(nw);for(const k of nw){S.recipes[k]=true;dirty=true}}/* 古いセーブでも、準備に使う物を作れるように */
   const n=p.build.n||1,b=st?.built;if(n>1)return {...p,label:p.label+'（'+fieldBuildCount(id)+'/'+n+'）'};
   if(p.wait&&b&&!b.legacy&&(b.cells||[]).some(k=>S.obj[k]==='site'&&S.dyn[k]?.build===p.build.ids[0]))return {...p,label:p.wait};return p}
 /* 古いセーブ：いまの依頼で、前の準備（その時の決まり）がもうそろっていた調べは、そのまま進める（1回だけ） */

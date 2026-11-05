@@ -1,7 +1,7 @@
 'use strict';
 /* 草原の物語の木。tower は既存セーブの建物IDとして保ち、火山の台座とは表示・育て方を分ける。 */
 const storyTreeName=()=>WD===0?'御神木':'守護の台座';
-const SACRED_PREVIEW=new WeakMap(),SACRED_POSES=new WeakMap();
+const SACRED_PREVIEW=new WeakMap(),SACRED_SHOWN=new WeakMap(),SACRED_POSES=new WeakMap();
 const sacredSpan=()=>S?.sacredLegacy2?2:S?.sacredLegacy3?3:4;
 const sacredCells=(j,n=sacredSpan())=>Array.from({length:n*n},(_,i)=>j+(i/n|0)*W+i%n);
 const storyTreeX=j=>j%W+(WD===0?sacredSpan():2)/2;
@@ -69,7 +69,7 @@ function sacredSceneWalk(r,x,y,pose,arrived){
   endAct(r);startAct(r,G,'nmeet',stand,{});let last=performance.now();const tick=now=>{if(S!==owner||VILLAGE_SESSION!==session||sacredDirection()!==direction||!(S.res.includes(r)||r===GUEST)||r.act?.type!=='nmeet')return;const dt=Math.min(.1,(now-last)/1000);last=now;if(r.act.stage==='walk'){moveR(r,dt*4);requestAnimationFrame(tick);}else{if(pose.anim)sacredSetPose(r,pose);if(arrived)arrived();}};requestAnimationFrame(tick);return true;
 }
 function sacredGrowWatch(j){/* 物語の場面の外で木が育ったとき（かけら・みどりのマス）：その場で育つ演出をして、みんながよろこぶ */
-  if(!S||WD!==0||S.free||IS_STORY_REPLAY)return;const st=sacredStage()+(sacredStage()===3&&(S.setSh||0)>=1?.5:0);if(S.treeSeen==null||st<S.treeSeen){S.treeSeen=st;return;}
+  if(!S||WD!==0||S.free||IS_STORY_REPLAY)return;const st=sacredStage()+(sacredStage()===3&&(S.setSh||0)>=1?.5:0);if(S.treeSeen==null||st<S.treeSeen){S.treeSeen=st;return;}{const sh=SACRED_SHOWN.get(S);if(sh&&sh.session===VILLAGE_SESSION&&sh.stage>=st){S.treeSeen=st;return;}}/* お話の場面で育つところを見せたときは、場面の外の育つ会話を出さない */
   if(st===S.treeSeen||sacredDirection()||!$('#dialog').hidden||isNight())return;
   const from=S.treeSeen;S.treeSeen=st;const ms=3200;sacredStartEffect('growth',ms,{from,to:st});const d=sacredDirection();if(d)d.watch=true;villageTimeout(()=>{const e=sacredDirection();if(e&&e.watch)sacredEndDirection(false);},ms+100);sacredGrowSparks(j,ms,Math.ceil(st));
   const cx=storyTreeX(j),cy=storyTreeY(j),now=performance.now();
