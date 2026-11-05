@@ -10,7 +10,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict');
   await page.waitForFunction(()=>sacredEval('stageReady()'),{},{timeout:60000});
   const read=()=>run(`(()=>{DLGGAP=0;dlgNext();let n=0;while(!document.querySelector('#dialog').hidden&&n++<160){DLGA.n=DLGA.full.length;DLGA.readReady=0;DLGA.holdUntil=0;if(sacredDirection())sacredDirection().waitUntil=0;const button=document.querySelector('#dlgBtns button');button.disabled=false;button.click();}return n;})()`);
   let root;
-  for(const [id,parts] of [['earthListen',['earthListen','earthRoot']],['fireRoot',['fireRoot','fireTrace']],['waterFilm',['waterFilm','waterLeaf']],['windEcho',['windEcho','windVoices']],['tower',['tower']]]){
+  for(const [id,parts] of [['earthListen',['earthListen']],['earthRoot',['earthRoot']],['fireRoot',['fireRoot','fireTrace']],['waterFilm',['waterFilm','waterLeaf']],['windEcho',['windEcho','windVoices']],['tower',['tower']]]){
     await run(`(()=>{for(const r of S.res){endAct(r);RHOLD.delete(r);SACRED_POSES.delete(r);r.hunger=hMax(r);r.energy=100;r.carry=null;r.cmat=null;r.meal=null;}S.quest=questIndexOf('${id}');S.qStory=null;S.qTalked=false;DLGGAP=0;checkQuest();let n=0;while(!earthIntroSpeaker(QUESTS[S.quest])&&n++<1200){for(const r of S.res)updRes(r,.5);checkQuest();}if(!earthIntroSpeaker(QUESTS[S.quest]))throw Error('intro not gathered ${id}: '+JSON.stringify(S.res.map(r=>[r.name,r.act?.type,r.act?.stage,r.x,r.y])));DLGTAP=performance.now();startTalk();})()`);
     await read();assert(await run('S.qTalked'),id+' not accepted');
     const current=await run('S.sacredRoot');if(root==null)root=current;else assert.equal(current,root,'tree must not move');
