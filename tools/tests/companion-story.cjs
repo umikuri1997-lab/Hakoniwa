@@ -39,15 +39,29 @@ for(let i=0;i<=V1.length;i++)for(const talked of [false,true])for(const pending 
     if(members.indexOf(id)>members.indexOf(owner))assert.equal(run('S.qTalked'),true,'heard merged talk '+id);}
   const snap=run('JSON.stringify([S.quest,S.qStory,S.qTalked,S.inv,S.mat])');run('migrateQuestMerge(S)');assert.equal(run('JSON.stringify([S.quest,S.qStory,S.qTalked,S.inv,S.mat])'),snap,'idempotent '+id);
 }
-run(`S={world:0,flags:{fieldStoryV2:1},mat:{},inv:{},quest:${V1.indexOf('path')},qStory:null,qTalked:false};migrateQuestMerge(S)`);
-assert.equal(run('S.inv.path'),5,'unheard part talk items are given');assert.equal(run('S.inv.bed'),undefined);
-run(`S={world:0,flags:{fieldStoryV2:1},mat:{},inv:{},quest:${V1.indexOf('wall')},qStory:null,qTalked:true};migrateQuestMerge(S)`);
-assert.equal(run('S.inv.bed'),1);assert.equal(run('S.inv.path'),5);
-run(`S={world:0,flags:{fieldStoryV2:1},mat:{},inv:{},quest:${V1.indexOf('table')},qStory:null,qTalked:true};migrateQuestMerge(S)`);
-assert.equal(run('!!S.flags.qmMbox'),true,'materials from the old storage-box reward are not given twice');
+/* はじめの目標（カミサマが旅立つまで）は、もとの1つずつのまま読みかえる */
+for(const id of V1.slice(0,V1.indexOf('fire'))){run(`S={world:0,flags:{fieldStoryV2:1},mat:{},inv:{},quest:${V1.indexOf(id)},qStory:null,qTalked:true};migrateQuestMerge(S)`);
+  assert.equal(run('QUESTS1[S.quest].id'),id,'V1 early '+id);assert.equal(run('S.qTalked'),true);assert.equal(run('JSON.stringify(S.inv)'),'{}','no extra items '+id);assert.equal(run('!!S.flags.qsplit1'),true);}
 for(const state of [{world:1},{world:0,free:true}]){run(`S=${JSON.stringify({...state,flags:{},quest:8,qStory:7})};migrateQuestMerge(S)`);assert.equal(run('S.quest'),8);assert.equal(run('S.qStory'),7);}
+/* まとめた目標（qmerge1）から、1つずつの目標（qsplit1）へ。名前で読みかえ、2回読みこんでもずれない */
+const V2=JSON.parse(run('JSON.stringify(questsV2())')),SPLIT=JSON.parse(run('JSON.stringify(QS_SPLIT)'));
+assert.deepEqual(V2.slice(0,9),['statue','kurashi','ie','mamori','kikyo','earthListen','hatake','trade','fire']);
+for(let i=0;i<=V2.length;i++)for(const talked of [false,true])for(const pending of [false,true]){
+  if(pending&&i===0)continue;
+  run(`S={world:0,flags:{qmerge1:1},mat:{},inv:{},quest:${i},qStory:${pending?i-1:'null'},qTalked:${talked}};migrateQuestSplit(S)`);
+  const id=V2[i];
+  if(id==null)assert.equal(run('S.quest'),run('QUESTS1.length'));else assert.equal(run('QUESTS1[S.quest].id'),(SPLIT[id]||[id])[0],'v2 '+id);
+  assert.equal(run('S.flags.qsplitPend||null'),id&&SPLIT[id]&&talked?id:null);
+  if(pending){const sid=V2[i-1],m=SPLIT[sid];assert.equal(run('QUESTS1[S.qStory].id'),m?m[m.length-1]:sid);assert(run('S.quest>S.qStory'));}
+  assert.equal(run('S.qTalked'),talked);assert.equal(run('JSON.stringify([S.inv,S.mat])'),'[{},{}]');
+  const snap=run('JSON.stringify(S)');run('migrateQuestSplit(S)');assert.equal(run('JSON.stringify(S)'),snap,'idempotent v2 '+id);
+}
+for(const state of [{world:1},{world:0,free:true}]){run(`S=${JSON.stringify({...state,flags:{qmerge1:1},quest:8,qStory:7})};migrateQuestSplit(S)`);assert.equal(run('S.quest'),8);assert.equal(run('S.qStory'),7);}
+assert.deepEqual(JSON.parse(run('JSON.stringify(QUESTS1.slice(0,QUESTS1.findIndex(q=>q.id==="fire")).map(q=>q.id))')),V1.slice(0,V1.indexOf('fire')),'early quests are one at a time, in the old order');
+assert(run('QUESTS1.slice(0,QUESTS1.findIndex(q=>q.id==="fire")).every(q=>!q.steps)'));
+console.log('Split goals: every merged index, heard talk, pending thanks, idempotence, other modes');
 console.log('Merged goals: every old index, pending thanks, heard talk, missing talk items, idempotence, other modes');
-for(const [qid,parts] of [['earthListen',['earthListen','earthRoot']],['fireRoot',['fireRoot','fireTrace']],['waterFilm',['waterFilm','waterLeaf']],['windEcho',['windEcho','windVoices']]]){
+for(const [qid,parts] of [['earthListen',['earthListen']],['earthRoot',['earthRoot']],['fireRoot',['fireRoot','fireTrace']],['waterFilm',['waterFilm','waterLeaf']],['windEcho',['windEcho','windVoices']]]){
   run(`S={food:9999,mat:{wood:9999,stone:9999},flags:{},fieldStories:{}}`);
   assert.deepEqual(JSON.parse(run(`JSON.stringify(QUESTS1.find(q=>q.id==='${qid}').fieldParts)`)),parts);
   assert.equal(run(`QUESTS1.find(q=>q.id==='${qid}').check()`),false);
