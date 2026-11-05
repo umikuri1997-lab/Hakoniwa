@@ -34,7 +34,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict');
   /* 熱の装置の場面（springB・springC） */
   for(const k of process.env.ONLY_GUEST?[]:['b','c']){await place(sp[k==='b'?2:3][0]+.5|0,(sp[k==='b'?2:3][1]+4|0)+.5);await run(`(()=>{document.querySelector('#dialog').hidden=true;DLGGAP=0;DLGQ.length=0;dialog([[SHIZUKU,'……。',0,'heat:${k}'],[HOMURA,'……。']],()=>{});})()`);
     assert.equal(await click(),'シズク','heat '+k+' must hold');const t0=Date.now();while(await run('sacredMotionPending()')){assert(Date.now()-t0<25000,'heat '+k+' never completes');if(Date.now()-t0>1800&&Date.now()-t0<2000)await shot('heat-'+k);await page.waitForTimeout(100);}
-    await shot('heat-'+k+'-end');assert.equal(await click(),'ホムラ');await click();}
+    while(await run("!!document.querySelector('#dlgBtns button')?.disabled")){assert(Date.now()-t0<25000,'heat '+k+' button never enabled');await page.waitForTimeout(50);}/* うごきがおわったあと、つぎへのボタンは次のコマで押せるようになる */await shot('heat-'+k+'-end');assert.equal(await click(),'ホムラ');await click();}
   /* 夜：動きを省く */
   await place(sp[0][0]|0,(sp[0][1]+3|0)+.5);await run('S.t=23.5*60');await begin('springWalk');assert.equal(await run('!!sacredDirection()&&sacredMotionPending()'),false,'night aborts staging');await click();await click();await run('S.t=720');
   /* いない子：その子の動きだけ省く */

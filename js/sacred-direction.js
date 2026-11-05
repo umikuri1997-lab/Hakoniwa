@@ -76,7 +76,7 @@ function sacredBeat(c){
   if(c==='sit'||c==='quiet'){for(const r of cast)sacredScenePose(r,'storyListen',600000,{sit:true,side:true,target:j});sacredShot('care',cast,1.4);}
   if(c==='bud'||c==='leaf'||c==='grow'){
     const from=sacredStage(),stage=c==='bud'?1:c==='leaf'?2:3;
-    sacredStartEffect('growth',ms,{from:Math.min(from,stage-1),to:stage});SACRED_PREVIEW.set(S,{session:VILLAGE_SESSION,stage,until:Infinity});
+    sacredStartEffect('growth',ms,{from:Math.min(from,stage-1),to:stage});SACRED_PREVIEW.set(S,{session:VILLAGE_SESSION,stage,until:Infinity});SACRED_SHOWN.set(S,{session:VILLAGE_SESSION,stage});/* お話の中で育つところを見せた（あとで、もう一度育つ会話を出さない） */
     sacredShot(c==='grow'?'group':'detail',cast,1.4);sfx('bush');sacredGrowSparks(j,ms,stage);
   }
   if(c==='reply'){sacredStartEffect('reply',ms);sacredShot('face',cast,1.2);sfx('bush');for(const r of cast)sacredScenePose(r,'storyListen',600000,{side:true,target:j});}
