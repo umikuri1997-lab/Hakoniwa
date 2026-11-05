@@ -382,7 +382,7 @@ const QUESTS1=[
     [GOD,'#nod|うむ。これで夜も、ずいぶん心強くなったのう。'],
     [GOD,'見張り台から木の矢で追いはらい、とげの罠で足をとめる。みなで守る村じゃな。'],
     [POKO,'これで、少しは安心できるね。'],[POKO,'#danger|守ってくれて、ありがとう、守り神さま！']]},
-  {id:'kikyo',text:'ききょうを植えて、土の力をためよう',how:"「おく」→「ききょうの種」を植える。土の力が満ちると、次の朝になかまを呼べる",check:()=>bloomCount('bellf')>=2,prog:()=>'咲いたききょう '+Math.min(2,bloomCount('bellf'))+'/2',
+  {id:'kikyo',text:'ききょうを植えて、土の力をためよう',how:"「おく」→「ききょうの種」を植える。ききょうが咲くと、なかまを呼べる",check:()=>bloomCount('bellf')>=2,prog:()=>'咲いたききょう '+Math.min(2,bloomCount('bellf'))+'/2',
    talk:{who:POKO,when:()=>true,lines:[
     [POKO,'#cry|ねえカミサマ…ぼく、ひとりだとちょっとさみしいな。'],
     [GOD,'#worry|……そうじゃのう。ずっとひとりで、よう待っとったものな。'],
@@ -392,10 +392,10 @@ const QUESTS1=[
    story:[
     [POKO,'ききょう、きれいだね！ 土の力が満ちたみたい！'],
     [GOD,'#nod|うむ、これで土のせいれいが来てくれるぞい。'],[POKO,'なかま、どんな子かなあ。どきどきする！']]},
-  {id:'summon',text:'朝になったら、神殿の「！」でなかまを呼ぼう',how:"朝、神殿の上に「！」が出たら、「みる」で神殿をタップ",check:()=>!!S.flags.minaCame&&NEWRES==null&&!NEWQ.length,
+  {id:'summon',text:'神殿の「！」でなかまを呼ぼう',how:"神殿の上に「！」が出たら、「みる」で神殿をタップ",check:()=>!!S.flags.minaCame&&NEWRES==null&&!NEWQ.length,
    talk:{who:GOD,when:()=>true,lines:[
     [GOD,'力が満ちたら、また、なかまが増えるのう。楽しみじゃ。'],
-    [POKO,'あしたの朝がたのしみ！']],gives:{flag:'sumTold'}},
+    [POKO,'どんな子が来るのかな。たのしみ！']],gives:{flag:'sumTold'}},
    by:MINA,story:[
     [MINA,'#surprise wave|ふわぁ…。はじめまして、ノドカだよぉ。よろしくねぇ。'],
     [POKO,'#wave|わーい、なかまだ！ よろしくね、ノドカ！'],

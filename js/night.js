@@ -15,6 +15,8 @@ function sumElem(){
 function sumCands(){return ELEM_KEYS.map(el=>{const cap=elemCount(el)>=(WD===FREE?(el==='wood'?6:3):el===MAINEL[WD]?10:5),n=needFor(el),v=ATTR[el];return {el,v,n,cap,ok:!cap&&v>=n&&storySummonOK(el)}})}/* 呼べる属性の候補（いまの力と目もり） */
 function checkSummon(){
   if(!S||!S.feat.summon||S.summonNext||S.summon)return;const el=sumElem();if(!el)return;S.summonNext=el}
+function storySummonNow(){/* 草原の2人目（土のせいれい）は、ききょうが咲いて呼ぶ話を聞いたら、朝を待たずに昼のうちに呼べる（1日1回はそのまま） */
+  if(!S||WD!==0||S.free||S.summon||S.summonNext||!S.feat.summon||S.flags.minaCame||isNight()||calledToday())return false;const el=sumElem();if(el!==SECOND[WD].elem||!SECOND[WD].ok())return false;S.summon={elem:el};sfx('arrive');toast('神殿に「！」が出ている','good');return true}
 function summonMorning(){
   if(S.summon)return;
   if(S.buried&&S.buried.some(q=>!q.unb))S.summon={rev:1};
