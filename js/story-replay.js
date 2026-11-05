@@ -1,6 +1,6 @@
 'use strict';
 /* 思い出は別フレームで再現する。元の村の状態・予約・会話待ちに触れず、子画面は保存しない。 */
-const STORY_REPLAY_QUESTS=['earthListen','earthRoot','fireRoot','waterFilm','windEcho','tower'];/* 御神木の調べの依頼（中の調べは fieldParts） */
+const STORY_REPLAY_QUESTS=['earthListen','fireRoot','waterFilm','windEcho','tower'];/* 御神木の調べの依頼（中の調べは fieldParts） */
 const replayParts=id=>QUESTS1.find(q=>q.id===id)?.fieldParts||[id];
 const STORY_REPLAY_EVENTS=[...STORY_REPLAY_QUESTS.map(id=>({key:'quest:'+id,id,kind:'quest'})),
   {key:'event:e16',id:'e16',kind:'event',title:'御神木を守る仲間たち'},
@@ -53,7 +53,7 @@ function replayControls(run){
 function prepareStoryReplay(run,payload){
   if(payload.sound)Object.assign(SND,{bgm:payload.sound.bgm!==false,sfx:payload.sound.sfx!==false});
   if(run.episode.kind==='vol')return prepareVolReplay(run,payload);
-  const e=run.episode,at=STORY_REPLAY_QUESTS.indexOf(e.id),count=e.kind!=='quest'?5:[2,2,3,4,5,5][at];
+  const e=run.episode,at=STORY_REPLAY_QUESTS.indexOf(e.id),count=e.kind!=='quest'?5:[2,3,4,5,5][at];
   setWorld(0);S=newState(0);LIVE[0]=S;S.introSeen=true;S.flags.minaCame=true;S.enemyOn=false;S.t=720;S.hold=0;S.speed=1;S.food=100;S.godShown=true;S.godGone=false;
   S.feat={build:true,plant:true,craft:true,summon:true,people:true};S.sacredRoot=(CY-3)*W+CX-2;S.fieldSites={root:S.sacredRoot};const x=S.sacredRoot%W,y=S.sacredRoot/W|0;
   for(let yy=y-9;yy<=y+10;yy++)for(let xx=x-9;xx<=x+10;xx++){const j=yy*W+xx;S.obj[j]='';S.floor[j]='';S.ground[j]=0;S.hi[j]=0;delete S.ref[j];delete S.dyn[j];}

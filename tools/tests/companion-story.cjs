@@ -41,7 +41,7 @@ for(let i=0;i<=V1.length;i++)for(const talked of [false,true])for(const pending 
 }
 /* はじめの目標（カミサマが旅立つまで）は、もとの1つずつのまま読みかえる */
 for(const id of V1.slice(0,V1.indexOf('fire'))){run(`S={world:0,flags:{fieldStoryV2:1},mat:{},inv:{},quest:${V1.indexOf(id)},qStory:null,qTalked:true};migrateQuestMerge(S)`);
-  assert.equal(run('QUESTS1[S.quest].id'),id,'V1 early '+id);assert.equal(run('S.qTalked'),true);assert.equal(run('JSON.stringify(S.inv)'),'{}','no extra items '+id);assert.equal(run('!!S.flags.qsplit1'),true);}
+  assert.equal(run('QUESTS1[S.quest].id'),id==='earthRoot'?'earthListen':id,'V1 early '+id);assert.equal(run('S.qTalked'),true);assert.equal(run('JSON.stringify(S.inv)'),'{}','no extra items '+id);assert.equal(run('!!S.flags.qsplit1'),true);}
 for(const state of [{world:1},{world:0,free:true}]){run(`S=${JSON.stringify({...state,flags:{},quest:8,qStory:7})};migrateQuestMerge(S)`);assert.equal(run('S.quest'),8);assert.equal(run('S.qStory'),7);}
 /* まとめた目標（qmerge1）から、1つずつの目標（qsplit1）へ。名前で読みかえ、2回読みこんでもずれない */
 const V2=JSON.parse(run('JSON.stringify(questsV2())')),SPLIT=JSON.parse(run('JSON.stringify(QS_SPLIT)'));
@@ -57,11 +57,26 @@ for(let i=0;i<=V2.length;i++)for(const talked of [false,true])for(const pending 
   const snap=run('JSON.stringify(S)');run('migrateQuestSplit(S)');assert.equal(run('JSON.stringify(S)'),snap,'idempotent v2 '+id);
 }
 for(const state of [{world:1},{world:0,free:true}]){run(`S=${JSON.stringify({...state,flags:{qmerge1:1},quest:8,qStory:7})};migrateQuestSplit(S)`);assert.equal(run('S.quest'),8);assert.equal(run('S.qStory'),7);}
-assert.deepEqual(JSON.parse(run('JSON.stringify(QUESTS1.slice(0,QUESTS1.findIndex(q=>q.id==="fire")).map(q=>q.id))')),V1.slice(0,V1.indexOf('fire')),'early quests are one at a time, in the old order');
+assert.deepEqual(JSON.parse(run('JSON.stringify(QUESTS1.slice(0,QUESTS1.findIndex(q=>q.id==="fire")).map(q=>q.id))')),V1.slice(0,V1.indexOf('fire')).filter(id=>id!=='earthRoot'),'early quests are one at a time, in the old order (the stump investigations are one goal)');
 assert(run('QUESTS1.slice(0,QUESTS1.findIndex(q=>q.id==="fire")).every(q=>!q.steps)'));
 console.log('Split goals: every merged index, heard talk, pending thanks, idempotence, other modes');
+/* 切り株の下で・傷つけないようにを分けていたころ（qsplit1）から、1つの依頼へ（earthMerge1）。名前で読みかえ、2回読みこんでもずれない */
+{const V3=JSON.parse(run(`JSON.stringify(QUESTS1.flatMap(q=>q.id==='earthListen'?['earthListen','earthRoot']:[q.id]))`)),want=id=>id==='earthRoot'?'earthListen':id;
+for(let i=0;i<=V3.length;i++)for(const talked of [false,true])for(const pending of [false,true]){
+  if(pending&&i===0)continue;
+  run(`S={world:0,flags:{qmerge1:1,qsplit1:1},mat:{},inv:{},fieldStories:{earthListen:{step:1}},quest:${i},qStory:${pending?i-1:'null'},qTalked:${talked}};migrateEarthMerge(S)`);
+  const id=V3[i],sid=pending?V3[i-1]:null;
+  if(sid==='earthListen'){assert.equal(run('QUESTS1[S.quest].id'),'earthListen','earthListen thanks folded into the goal');assert.equal(run('S.qStory'),null);assert.equal(run('S.qTalked'),true);}
+  else{if(id==null)assert.equal(run('S.quest'),run('QUESTS1.length'));else assert.equal(run('QUESTS1[S.quest].id'),want(id),'v3 '+id);
+    if(pending)assert.equal(run('QUESTS1[S.qStory].id'),want(sid));else assert.equal(run('S.qStory'),null);
+    assert.equal(run('S.qTalked'),id==='earthRoot'?true:talked);}
+  assert.equal(run('JSON.stringify([S.inv,S.mat,S.fieldStories])'),'[{},{},{"earthListen":{"step":1}}]','no rewards, investigation progress kept');
+  const snap=run('JSON.stringify(S)');run('migrateEarthMerge(S)');assert.equal(run('JSON.stringify(S)'),snap,'idempotent v3 '+id);
+}
+assert(/earthMerge1:1/.test(require('fs').readFileSync(__dirname+'/../../js/world.js','utf8')),'new games start merged');}
+console.log('Stump goal merge: every split index, heard talk, pending thanks, idempotence, new games already merged');
 console.log('Merged goals: every old index, pending thanks, heard talk, missing talk items, idempotence, other modes');
-for(const [qid,parts] of [['earthListen',['earthListen']],['earthRoot',['earthRoot']],['fireRoot',['fireRoot','fireTrace']],['waterFilm',['waterFilm','waterLeaf']],['windEcho',['windEcho','windVoices']]]){
+for(const [qid,parts] of [['earthListen',['earthListen','earthRoot']],['fireRoot',['fireRoot','fireTrace']],['waterFilm',['waterFilm','waterLeaf']],['windEcho',['windEcho','windVoices']]]){
   run(`S={food:9999,mat:{wood:9999,stone:9999},flags:{},fieldStories:{}}`);
   assert.deepEqual(JSON.parse(run(`JSON.stringify(QUESTS1.find(q=>q.id==='${qid}').fieldParts)`)),parts);
   assert.equal(run(`QUESTS1.find(q=>q.id==='${qid}').check()`),false);
