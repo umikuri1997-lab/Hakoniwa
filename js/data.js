@@ -400,8 +400,7 @@ const QUESTS1=[
     [MINA,'#surprise wave|ふわぁ…。はじめまして、ノドカだよぉ。よろしくねぇ。'],
     [POKO,'#wave|わーい、なかまだ！ よろしくね、ノドカ！'],
     [MINA,'畑を耕すのと、柵を直すのが得意なんだぁ。のんびりやるねぇ。'],[MINA,'#joy|呼んでくれて、ありがとうねぇ、守り神さま。']]},
-  companionFieldQuest("earthListen","切り株の下で","古い切り株のそばで、ノドカと根元の土を確かめよう","earth",[["F","ノドカ？　どうしたの？"],["N","……ここだけ、土の中がしんとしてるんだぁ。"],["F","しんとしてる？"],["N","うん。まわりの草の根は、水をすってる。でも、この下は……ずっと、動いてないみたい。"],["N","知ってる木なのぉ？"],["F","#think|……大きな木だったんだ。"]],[["N","こっちは、まだやわらかいねぇ。"],["F","枯れちゃったんじゃ、ないの？"],["N","上から見ただけじゃ、わからないこともあるよぉ。"],["F","……ぼくも、見ていい？"],["N","もちろんだよぉ。"]]),
-  companionFieldQuest("earthRoot","傷つけないように","根をふまないように、切り株のそばにあぜ道を3マスしく。同じ切り株で、ノドカに土をよけてもらい、フタバと根の様子を確かめよう","earth",[["N","もう来てたんだねぇ。"],["F","下の根っこ、見てみたくて。でも、どこを掘ったらいいか、わからなくって。"],["N","じゃあ、ぼくが土をよけるよぉ。根が見えたら、教えてねぇ。"]],[["F","これ、ヌシ様の角のあとだ。"],["N","……この傷かぁ。"],["F","ここに頭をくっつけて、お昼寝してたんだ。ぼくが上に乗っても、ぜんぜん起きなくって。"],["F","#think|……また、葉っぱ、生えるかな。"],["N","根は、まだ残ってるよぉ。"],["N","冷えないように、土を戻しておこうねぇ。",0,"stree:cover"],["F","うん。ぼくも、手伝う。"]]),
+  companionFieldQuest("earthListen","切り株の下で","古い切り株のそばで、ノドカと根元の土を確かめる。根をふまないように切り株のそばにあぜ道を3マスしき、ノドカに土をよけてもらって、フタバと根の様子を確かめよう","earth",[["F","ノドカ？　どうしたの？"],["N","……ここだけ、土の中がしんとしてるんだぁ。"],["F","しんとしてる？"],["N","うん。まわりの草の根は、水をすってる。でも、この下は……ずっと、動いてないみたい。"],["N","知ってる木なのぉ？"],["F","#think|……大きな木だったんだ。"]],[["F","これ、ヌシ様の角のあとだ。"],["N","……この傷かぁ。"],["F","ここに頭をくっつけて、お昼寝してたんだ。ぼくが上に乗っても、ぜんぜん起きなくって。"],["F","#think|……また、葉っぱ、生えるかな。"],["N","根は、まだ残ってるよぉ。"],["N","冷えないように、土を戻しておこうねぇ。",0,"stree:cover"],["F","うん。ぼくも、手伝う。"]],['earthListen','earthRoot']),
   {id:'farm6',text:'畑を6つにしよう',how:"「おく」→「畑」をえらび、合計6つにする。土のせいれいが耕すのを待とう",check:()=>cnt('farm')>=6,prog:()=>'畑 '+Math.min(6,cnt('farm'))+'/6',
    talk:{who:GOD,when:()=>true,lines:[
     [GOD,'ノドカが来てくれたから、畑が作れるのう。畑を、おそなえ箱に入れといたぞい。ノドカが、ふかふかに耕してくれるはずじゃ。']],gives:{items:{farm:2}}},
@@ -562,7 +561,7 @@ function migrateCompanionStory(state){
   state.flags.companionStory=1;state.flags.fieldStoryV2=1;
 }
 /* 小さな目標をまとめた（qmerge1）：古いセーブの番号（QUESTS1_V1）を、まとめた目標の番号へ。とちゅうの小さな目標は、まとめた目標の中の「できた」になる */
-const QM_GROUP={fireTrace:'fireRoot',lv3:'water',waterLeaf:'waterFilm',baseUp:'kagemark',tale:'kagemark',lv4:'ookage',yoru10:'ookage',windVoices:'windEcho',green375:'lv5',flower50:'wood6'};
+const QM_GROUP={earthRoot:'earthListen',fireTrace:'fireRoot',lv3:'water',waterLeaf:'waterFilm',baseUp:'kagemark',tale:'kagemark',lv4:'ookage',yoru10:'ookage',windVoices:'windEcho',green375:'lv5',flower50:'wood6'};
 const QM_OWNER={water:'water',kagemark:'kagemark',ookage:'ookage',lv5:'lv5',wood6:'wood6'};/* まとめた目標の会話は、もとのどの目標の会話か（そこより前の目標にいたら、会話を聞きなおす） */
 const QM_TALK={flower50:{recipes:['campfire']}};/* 会話を聞かずに進む小さな目標で、もとの会話でもらえた物 */
 function migrateQuestMerge(state){
@@ -581,19 +580,30 @@ function migrateQuestMerge(state){
     }
     if(os!=null){const sid=V[os];state.qStory=sid!=null&&last(sid)?ni(sid):null;if(state.qStory!=null&&state.quest<=state.qStory)state.quest=state.qStory+1;}/* まとめた目標のとちゅうのお礼の話は、まとめた目標のお礼にふくめる */
   }
-  state.flags.qmerge1=1;state.flags.qsplit1=1;/* はじめの目標は、もとの1つずつのならびへ、そのまま読みかえた */
+  state.flags.qmerge1=1;state.flags.qsplit1=1;state.flags.earthMerge1=1;/* はじめの目標は、もとの1つずつのならびへ、そのまま読みかえた */
 }
 /* はじめ（カミサマが旅立つまで）の目標を、また1つずつにもどした（qsplit1）。まとめていた目標の名前と、中の目標 */
-const QS_SPLIT={kurashi:['stor','mbox','table'],ie:['wall','bed','path'],mamori:['lv2','fence4','watch1'],kikyo:['kikyo','summon'],earthListen:['earthListen','earthRoot'],hatake:['farm6','imoseed'],trade:['trade','oracle']};
+const QS_SPLIT={kurashi:['stor','mbox','table'],ie:['wall','bed','path'],mamori:['lv2','fence4','watch1'],kikyo:['kikyo','summon'],hatake:['farm6','imoseed'],trade:['trade','oracle']};
 function questsV2(){/* まとめていたころの草原の目標のならび */const o=[];for(const q of QUESTS1){const g=Object.keys(QS_SPLIT).find(k=>QS_SPLIT[k].includes(q.id));if(!g)o.push(q.id);else if(QS_SPLIT[g][0]===q.id)o.push(g)}return o}
 const qsIx=id=>QUESTS1.findIndex(q=>q.id===id);
 function migrateQuestSplit(state){
-  if(state.flags.qsplit1)return;state.flags.qsplit1=1;
+  if(state.flags.qsplit1)return;state.flags.qsplit1=1;state.flags.earthMerge1=1;
   if(state.free||(state.world||0)!==0)return;
   const V=questsV2(),id=V[state.quest||0],sid=state.qStory!=null?V[state.qStory]:null;
   if(state.qStory!=null){const m=QS_SPLIT[sid];if(m){state.flags.qsplitStory=sid;state.qStory=qsIx(m[m.length-1])}else state.qStory=sid!=null?qsIx(sid):null}/* まとめた目標のお礼を待っていた：中の目標のお礼へ（読みこんだあと questSplitResolve でわたす） */
   if(id==null)state.quest=QUESTS1.length;
   else{const m=QS_SPLIT[id];state.quest=qsIx(m?m[0]:id);if(m&&state.qTalked)state.flags.qsplitPend=id}/* まとめた会話を聞いた：中の目標の会話はとばし、できている目標は、とばす */
+}
+/* 切り株の下で（earthListen）と傷つけないように（earthRoot）を、1つの依頼にまとめた（earthMerge1）。分けていたころの番号を、名前で読みかえる（1回だけ） */
+function migrateEarthMerge(state){
+  if(state.flags.earthMerge1)return;state.flags.earthMerge1=1;
+  if(state.free||(state.world||0)!==0)return;
+  const V=QUESTS1.flatMap(q=>q.id==='earthListen'?['earthListen','earthRoot']:[q.id]),ix=id=>qsIx(id==='earthRoot'?'earthListen':id),e=qsIx('earthListen');
+  const id=V[state.quest||0],sid=state.qStory!=null?V[state.qStory]:null;
+  state.quest=id==null?QUESTS1.length:ix(id);if(id==='earthRoot')state.qTalked=true;/* あとの調べの依頼の会話は、まとめた依頼の会話（もう聞いた）にふくめる */
+  if(sid==='earthListen'){state.qStory=null;state.quest=e;state.qTalked=true}/* まえの調べのお礼の会話はなくした：まとめた依頼のつづき（あとの調べ）へ */
+  else if(sid!=null)state.qStory=ix(sid);
+  if(state.flags.qsplitPend==='earthListen')delete state.flags.qsplitPend;if(state.flags.qsplitStory==='earthListen')delete state.flags.qsplitStory;
 }
 /* まとめた目標のとちゅうから読みこんだとき：できている目標をとばして、はじめのできていない目標へ。まとめた会話でもらった物は、もう一度わたさない */
 function questSplitResolve(){
