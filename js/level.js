@@ -13,7 +13,7 @@ const rLv=r=>{const x=r.xp||0;let l=1;while(l+1<LVXP.length&&x>=LVXP[l+1])l++;re
 /* せいれいの能力。100がふつう。レベルが上がると、作業スピード・移動速度・持てる数などがふえる */
 const lvF=(lv,k)=>1+k*(Math.min(lv,10)-1);
 /* 10がふつう。レベルアップでふえる量は、せいれいとレベルごとにばらつく（0〜2） */
-function lvGain(r,k,lv){let n=0;for(let l=2;l<=lv;l++){const h=hash(((r.id||0)*131+l*17+({work:7,move:3,cap:11,atk:13,eat:17,xp:19}[k]||3))>>>0);n+=h<.05?2:h<.3?1:0}return n}/* レベルが上がるたびに、5%で+2・25%で+1（作業・移動・持てる数・攻撃力・食べる量・経験値のボーナス） */
+function lvGain(r,k,lv){let n=0;for(let l=2;l<=lv;l++){const h=hash(((r.id||0)*131+l*17+({work:7,move:3,cap:11,atk:13,eat:17,xp:19}[k]||3))>>>0);n+=h<.05?2:h<.3?1:0}return n}/* レベルが上がるたびに、5%で+2・25%で+1（作業・移動・持てる数・攻撃力） */
 const RSC=new WeakMap();function rMul(r,k){const lv=rLv(r);let c=RSC.get(r);if(!c||c.lv!==lv||c.vr!==r.vr||c.b!==r.boost||c.g!==(r.gv||0)){c={lv,vr:r.vr,b:r.boost,g:r.gv||0,s:rStat(r,lv)};RSC.set(r,c)}return c.s[k]/10*(k==='work'&&r.wkB>S.t?(r.wkM||1.15):k==='move'&&r.mvT>S.t?(r.mvM||1.15):1)}
 function ovenMul(j){if(j==null)return 1;const x0=j%W,y0=(j/W)|0;const kinds=new Set();for(let y=y0-3;y<=y0+3;y++)for(let x=x0-3;x<=x0+3;x++){if(x<0||y<0||x>=W||y>=H)continue;const o=S.obj[y*W+x];if(o&&o!==S.obj[j]&&BL[o]&&BL[o].cat==='cook')kinds.add(o)}return OVENM[Math.min(kinds.size,OVENM.length-1)]}/* 調理の家具がそばにあると、料理が早い（同じ家具は1つ分だけ。下限はなし） */
 const fAtk=(r,lv)=>1+lvGain(r,'atk',lv);/* 火のせいれいの攻撃力：Lv1で1、上がるたびに5%で+2・25%で+1 */
@@ -24,14 +24,14 @@ function rStat(r,lv){const V=r.vr||{},fire=r.elem==='fire',G=gearStat(r);/* G：
   eat:Math.round(10*(V.eat||1)*(trt(r,'shoshoku')?.8:1)),
   sta:Math.round(10*(V.sta||1)*(EL_STA[r.elem]||1)*(trt(r,'tafu')||trt(r,'nebari')?1.33:1)),
   cap:1+lvGain(r,'cap',lv)+(trt(r,'chikara')?2:0)+((r.bst&&r.bst.cap)||0)+((r.sst&&r.sst.cap)||0)+G.cap,
-  bonus:lvGain(r,'xp',lv)}}
+  bonus:0}}
 // 獲得量は端数も保存。表示と実際の加算で同じ計算を使う。
-const spiritXpGain=(base,lv,r)=>(base+lvGain(r||{},'xp',lv))*.8;
+const spiritXpGain=(base,lv,r)=>base*.8;
 const xpText=n=>String(Math.floor(n+1e-9));/* 画面には小数点を出さない（中の計算は丸めない） */
 function spiritXpProgress(r){const lv=rLv(r),total=Math.round(((r.xp||0)+(r.xpf||0))*1000)/1000,next=LVXP[lv+1];return{lv,total,next,remaining:next==null?0:Math.max(0,Math.round((next-total)*1000)/1000)}}
 const RSTN=[['work','作業スピード'],['move','移動速度'],['cap','持てる数'],['atk','攻撃力']];
 // 満腹に必要な食料の数：Lv1〜4で1つ、4レベルごとに+1、火のせいれいは+1
-const fullN=r=>1+lvGain(r,'eat',rLv(r))+(r.elem==='fire'?1:0);/* 食べる量：Lv1で1（火は2）、上がるたびに5%で+2・25%で+1 */
+const fullN=r=>1+(r.elem==='fire'?1:0);/* 食べる量：1（火は2）。レベルではかわらない */
 let LVQ=null;
 function lvShow(l,bonus,opens){
   const o=$('#lvup');o.querySelector('.n').textContent=l;{const pw=o.querySelector('.pw'),a=LIGHTCDL[l-1]||10,b=LIGHTCDL[l]||10;pw.hidden=!(b<a);pw.textContent='まもりの光のチャージ '+a+'秒 → '+b+'秒'}/* 村レベルで、まもりの光のチャージがみじかくなったら書く */
