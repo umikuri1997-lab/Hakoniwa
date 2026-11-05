@@ -39,6 +39,7 @@ function storyWaitProtected(r){
   const a=r.act;if(!a||a.stage!=='do'||isNight())return false;
   if(a.type==='fieldintro')return earthIntroValid(r,a)&&questVisitSafe(r,a.obj);
   if(a.type==='fieldgather')return !isNight();/* 調べの集まりで待っているあいだも、おなか・たのしさ・つかれをへらさない */
+  if(a.type==='fieldwait'||a.type==='fieldassist')return a.obj!=null&&questVisitSafe(r,a.obj);/* 調べのあいまに木のそばで待つあいだも、へらさない */
   if(a.type!=='storywait')return false;const p=mainStoryWaitInfo();return !!p&&p.key===a.storyKey&&p.obj===a.obj&&p.cast.includes(r)&&questVisitSafe(r,p.obj);
 }
 function storyWaitStand(r,G,p){
@@ -73,11 +74,11 @@ function tryMainStoryWait(r){
   }
   if(!p||!p.cast.includes(r)||a?.type==='storywait'&&a.storyKey===p.key&&a.obj===p.obj)return false;
   if(!fieldActorReady(r)||onHold(r)||['fieldstory','fieldassist','fieldgather','questjoy','nmeet','sevreact'].includes(r.act?.type)||!questVisitSafe(r,p.obj))return false;
-  const G=bfs(r.x|0,r.y|0),stand=storyWaitStand(r,G,p);if(stand<0){const open=p.field?nearest(G,j=>walk(j)&&!sacredReserved(j)&&fieldDistance(j,p.obj)>=1&&fieldDistance(j,p.obj)<=3,150)>=0:questVisitOpen(G,p.obj);noteStoryWaitBlock(r,p.obj,open?'crowded':'path');return false;}clearStoryWaitBlock(r);
+  const G=bfs(r.x|0,r.y|0),cur=(r.y|0)*W+(r.x|0),stand=a?.type==='fieldwait'&&a.stage==='do'&&p.field&&a.obj===p.obj&&cur!==fieldStump(p.obj)&&fieldDistance(cur,p.obj)<=3?cur:storyWaitStand(r,G,p);/* 調べのあと、木のそばで待っていた子は、その場でお礼の会話を待つ */if(stand<0){const open=p.field?nearest(G,j=>walk(j)&&!sacredReserved(j)&&fieldDistance(j,p.obj)>=1&&fieldDistance(j,p.obj)<=3,150)>=0:questVisitOpen(G,p.obj);noteStoryWaitBlock(r,p.obj,open?'crowded':'path');return false;}clearStoryWaitBlock(r);
   rememberStoryHome(r,p.key);endAct(r);startAct(r,G,'storywait',stand,{key:'storywait'+stand,storyKey:p.key,obj:p.obj});return true;
 }
 ACT.storywait={start(r,a){const p=mainStoryWaitInfo();a.front=!!(p&&p.free&&!S.obj[a.obj]&&a.obj!==S.flags.kgMark);/* 場所に物がなければ、正面（手前）を向いて待つ。物があれば、そちらを向く */if(!a.front)faceTo(r,p?.field||p?.tree?fieldStump(a.obj):a.obj);r.bubble='';},done(r,a){const p=mainStoryWaitInfo();if(!p&&storyContinues(r)){if(a.cu==null)a.cu=S.t+60;if(S.t<a.cu)return false}/* ゲームの1時間まで *//* つぎのお話がすぐつづくときは、解散せずにその場で待つ */return !p||p.key!==a.storyKey||p.obj!==a.obj||!p.cast.includes(r)||!questVisitSafe(r,a.obj);}};
-function storyContinues(r){/* メインのお話・御神木の調べが、まだつづく（つぎの会話・つぎの段階が待っている）。夜・コワイノが来たら、つづけない */if(!S||S.free||S.cleared||isNight()||hostileNow(r)||hungry(r))return false;if(S.qStory!=null)return true;const q=QUESTS[S.quest];if(!q)return false;if(q.talk&&!S.qTalked)return true;const f=typeof fieldStoryCurrent==='function'&&fieldStoryCurrent();return !!(f&&fieldStoryState(f.id)?.auto);}
+function storyContinues(r){/* メインのお話・御神木の調べが、まだつづく（つぎの会話・つぎの段階が待っている）。夜・コワイノが来たら、つづけない */if(!S||S.free||S.cleared||isNight()||hostileNow(r)||hungry(r))return false;if(S.qStory!=null)return true;const q=QUESTS[S.quest];if(!q)return false;if(q.talk&&!S.qTalked)return true;const f=typeof fieldStoryCurrent==='function'&&fieldStoryCurrent();return !!(f&&fieldStoryState(f.id)?.auto&&!(typeof fieldPrepNeed==='function'&&fieldPrepNeed(f.id)));}/* 村での準備がいるときは、解散 */
 ACT.storyreturn={done:()=>true};
 function mainStoryBubbleReady(r){
   if(isNight())return false;

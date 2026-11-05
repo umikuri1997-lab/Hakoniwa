@@ -120,6 +120,7 @@ function place(id,x,y){
     else setBlock(id,j)
   }
   if(undoStack.length>30)undoStack.shift();
+  if(typeof fieldBuildNote==='function')fieldBuildNote(id,j);/* 御神木の調べのために作った物 */
   S.placed[id]=(S.placed[id]||0)+1;recount();if(S.obj[j]===id||S.floor[j]===id||RUGS.has(id)&&S.rug&&S.rug[j]===id||EDGES.has(id)&&S.edge&&S.edge[j]===id||CANOPY.has(id)&&S.roof&&S.roof[j]===id)noteQuestPlacement(id,j);burst(j,b.kind==='block'?'block':b.kind==='plant'?'plant':'furn',b.kind==='furn'?'furnPlace':b.kind==='plant'?'pat':null);if(SEATS.includes(id)&&spotW(j)>=0)addFloat(j%W+.5,(j/W|0)-.3,'つりスポット！');renderPalette();checkQuest();
   if(id==='door'||id==='yozoradoor'){const w=houseWhy(j);if(w)setTimeout(()=>toast(w,'warn'),400);else if(HOUSES.some(h=>h.set.has(j))){omo('house');setTimeout(()=>toast('家ができた！','good'),400)}}/* ドアを置いたら、家になったかを知らせる */
 }
