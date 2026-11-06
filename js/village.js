@@ -61,7 +61,7 @@ const brokenRot=q=>{const b=brokenAt(q);return b&&b.rot||0},setRot=(j,v)=>{if(v)
 const repairFree=a=>fp(a.re,a.obj%W,(a.obj/W)|0,brokenRot(a.obj)).every(([cx,cy])=>{const k=cy*W+cx;return !S.obj[k]&&!S.res.some(q=>(q.y|0)*W+(q.x|0)===k)&&!S.enemies.some(e=>e.spawned&&!e.dead&&(e.y|0)*W+(e.x|0)===k)});
 const brokenCover=q=>(S.broken||[]).find(b=>!S.obj[b.j]&&fp(b.id,b.j%W,(b.j/W)|0,b.rot||0).some(([x,y])=>y*W+x===q));/* 大きい物は、4マスのどこでも、こわれたあとの場所として扱う */
 const canRebuild=q=>{const b=brokenAt(q);if(!b||!free('o'+q,1))return false;return fp(b.id,q%W,(q/W)|0,b.rot||0).every(([x,y])=>{const k=y*W+x;return !S.obj[k]&&!S.res.some(r=>(r.y|0)*W+(r.x|0)===k)&&!S.enemies.some(e=>e.spawned&&(e.y|0)*W+(e.x|0)===k)})};
-const BAN=new Map(),free=(k,cap)=>(resv.get(k)||0)<cap&&!(BAN.get(k)>(S?S.t:0));/* 行きつけない目的地は、しばらく選ばない */
+const BAN=new Map(),free=(k,cap)=>(resv.get(k)||0)<cap&&!(BAN.get(k)>(S?S.t:0))&&!(S&&S.fog&&/^[a-z][0-9]+$/.test(k)&&fogAt(+k.slice(1)));/* 霧の中の物は、えらばない *//* 行きつけない目的地は、しばらく選ばない */
 const reserve=k=>resv.set(k,(resv.get(k)||0)+1);
 const release=k=>{const v=(resv.get(k)||0)-1;if(v<=0)resv.delete(k);else resv.set(k,v)};
 function nearLotus(r){const x0=r.x|0,y0=r.y|0;for(let y=y0-2;y<=y0+2;y++)for(let x=x0-2;x<=x0+2;x++){if(x<0||y<0||x>=W||y>=H)continue;if(S.obj[y*W+x]==='lotus')return true}return false}
@@ -189,6 +189,6 @@ if(o==='vane')around(j,3,NEARVANE);if(o==='niguruma')around(j,3,NEARCART);if(o==
   {const st=WD===1?1:0,g='weed'+st+'g',k='weed'+st+'k';for(let j=0;j<W*H;j++){const o=S.obj[j];if(o===k&&REV.has(j))S.obj[j]=g;else if((o===g||o==='weedc')&&!REV.has(j))S.obj[j]=k}}/* 雑草は土地に合わせる：よみがえった土地（緑）は緑の草、荒れた土地は枯れた草（あとから緑になった所の枯れた草も、緑の草に） */
   for(let j=0;j<W*H;j++){if(S.ground[j]===1)continue;baseN++;if(REV.has(j))revN++}
   /* 属性値は、せいれいの依頼が出る前から基地にある対象物も含めて数える。依頼開始時の基準化・差し引きはしない。 */
-  BASEPCT=Math.round(revN/Math.max(1,baseN)*100);GRASSN=revN;// マップぜんぶの、みどりのマス
+  BASEPCT=Math.round(revN/Math.max(1,baseN)*100);GRASSN=revN;if(typeof fogAfterRecount==='function')fogAfterRecount();/* 霧が晴れるか */// マップぜんぶの、みどりのマス
   dirty=true;
 }

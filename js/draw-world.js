@@ -419,6 +419,7 @@ function render(now){RFN++;
   ctx.font='11px "PixelMplus10","Hikomi",sans-serif';ctx.textAlign='center';
   for(const f of floats){ctx.globalAlpha=Math.min(1,f.life*2);const yy=(f.y-(1-f.life)*1.2)*TS;ctx.lineJoin='round';ctx.lineWidth=3;ctx.strokeStyle='rgba(176,138,100,.9)';{const fi=emoImg(f.text);if(fi){const ih=20,iw=ih*fi.width/fi.height;ctx.drawImage(fi,f.x*TS-iw/2,yy-ih+4,iw,ih)}else{ctx.strokeText(f.text,f.x*TS,yy);ctx.fillStyle='#fff3d6';ctx.fillText(f.text,f.x*TS,yy)}}}/* 文字はぜんぶクリーム色 *//* 文字のふちどりはうすい茶色 */
   ctx.globalAlpha=1;ctx.textAlign='start';
+  drawFog(ctx,x0,y0,x1,y1,now);/* 霧（夜の暗さより下） */
   const dk=darkness();
   ctx.setTransform(dpr,0,0,dpr,0,0);
   if(BOSSEVE){const h=hour(),a=Math.min(1,Math.max(0,(h-15)/2))*.16;if(a>0){ctx.fillStyle='rgba(110,30,70,'+a+')';ctx.fillRect(0,0,VW,VH)}}/* オオカゲが来る日の夕方：空があやしい色に */
