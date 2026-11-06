@@ -1,0 +1,26 @@
+const {chromium}=require('playwright'),assert=require('node:assert/strict'),fs=require('node:fs');
+/* よびごえの角笛：草原のコワイノの落とし物3%・17〜20時だけ・1日1回・今夜のコワイノ1.5倍・とくべつな夜はふけない・読みこみなおし */
+(async()=>{const browser=await chromium.launch({executablePath:process.env.CHROME_PATH||(fs.existsSync('/usr/bin/chromium')?'/usr/bin/chromium':undefined),args:['--no-sandbox']});const page=await browser.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));await page.route('**/js/main.js*',async route=>{const r=await route.fetch();await route.fulfill({response:r,body:(await r.text())+'\nwindow.hnEval=s=>eval(s);'});});await page.goto(process.env.GAME_URL||'http://127.0.0.1:8000');await page.waitForFunction(()=>!!window.hnEval);
+await page.waitForFunction(()=>hnEval('Object.values(KGS).every(g=>g.ok)'),null,{timeout:30000});
+const o=await page.evaluate(()=>hnEval(`(()=>{const o={};S=newState(0);setWorld(0);recount();toast=()=>{};
+ const pr=t=>{const h=dropRolls(t).find(x=>x[0]==='horn');return h?h[2]:0};o.basic=pr('basic');o.fast=pr('fast');o.boss=pr('boss');o.boss2=pr('boss2');
+ setWorld(1);o.vol=pr('basic');setWorld(0);
+ takeDrop({id:'horn',n:1,x:1,y:1},null);o.got=S.horn;o.seen=!!S.seenIt['x:horn'];
+ S.enemyOn=true;S.nights=6;S.res=[1,2,3].map(()=>({elem:'earth',name:'x'}));S.res4Since=null;S.horn=2;S.lastWarn=null;
+ const at=h=>{S.t=((5-1)*24+h)*60+24*60;};
+ at(16.5);o.h16=hornOK();at(17.2);o.h17=hornOK();at(20.1);o.h20=hornOK();
+ at(18);S.today='odayaka';o.oda=hornOK();S.today=null;S.finalNight=true;o.fin=hornOK();S.finalNight=false;
+ S.cleared=true;S.bossWarn=dayNo()-3;S.res4Since=0;S.res.push({elem:'fire',name:'y'});const k0=KEYS[0];KEYS[0]=[];o.bwd=bossNight(dayNo());o.bossN=hornOK();o.keepWarn=S.bossWarn===dayNo()-3&&!S.bossOwed;KEYS[0]=k0;S.res.pop();S.res4Since=null;S.bossOwed=false;S.bossWarn=null;S.cleared=false;
+ at(18);o.ok=hornOK();hornBlow();o.left=S.horn;o.d=S.hornD===dayNo();o.again=hornOK();hornBlow();o.left2=S.horn;o.now=hornNow();
+ const sv=JSON.parse(JSON.stringify({horn:S.horn,hornD:S.hornD}));S.horn=0;S.hornD=null;Object.assign(S,sv);o.reloadOK=!hornOK()&&S.horn===1&&hornNow();
+ S.wave=['basic','basic'];S.nightVar=null;const mr=Math.random;Math.random=()=>.05;nightVarPick();Math.random=mr;o.noVar=S.nightVar.k;
+ o.w=hornWave(['boss','basic','basic','fast','thief']).length;o.w3=hornWave(['basic','basic','basic']).length;
+ S.wave=['boss','basic'];S.nightVar=null;nightVarPick();o.refund=S.horn===2&&S.hornD==null;
+ return o})()`));
+console.log(JSON.stringify(o));
+assert.equal(o.basic,.03);assert.equal(o.fast,.03);assert.equal(o.boss,0);assert.equal(o.boss2,0);assert.equal(o.vol,0);
+assert.equal(o.got,1);assert.ok(o.seen);
+assert.equal(o.h16,false);assert.equal(o.h17,true);assert.equal(o.h20,false);assert.equal(o.oda,false);assert.equal(o.fin,false);assert.ok(o.bwd);assert.equal(o.bossN,false,'オオカゲの夜はふけない');assert.ok(o.keepWarn,'先に見ても、オオカゲの日はかわらない');
+assert.ok(o.ok);assert.equal(o.left,1);assert.ok(o.d);assert.equal(o.again,false);assert.equal(o.left2,1,'1日1回');assert.ok(o.now);assert.ok(o.reloadOK);
+assert.equal(o.noVar,null,'角笛の夜は霧・群れにしない');assert.equal(o.w,7,'ふつうの4体が6体');assert.equal(o.w3,4);assert.ok(o.refund,'オオカゲの夜になったら角笛をかえす');
+assert.equal(errors.length,0,errors.join('\n'));console.log('Horn OK. Browser errors: none');await browser.close()})().catch(e=>{console.error(e);process.exit(1)});

@@ -82,9 +82,16 @@ function waveFor(day){
 }
 const NIGHTVAR={kiri:'霧の夜',mure:'群れの夜'};/* 防衛の夜の変化：霧の夜（見張り台のとどく所が半分）・群れの夜（コワイノがみんな同じ所から来る） */
 function nightVarPick(){/* 夕方、今夜の波が決まったあとに1回だけ（S.nightVar に日ごとにしまうので、読みこみなおしてもかわらない） */const d=dayNo();if(S.nightVar&&S.nightVar.d===d)return;S.nightVar={d,k:null};
-  const w=S.wave||[];if(!w.length||w.some(t=>EN[t].boss)||(S.nights||0)<4||d<5||S.today==='odayaka'||S.rushOn||S.finalOn||S.trialOn)return;
+  const w=S.wave||[];if(S.hornD===d){if(!w.length||w.some(t=>EN[t].boss)||S.today==='odayaka'||S.rushOn||S.finalOn||S.trialOn){S.hornD=null;S.horn=(S.horn||0)+1}return}/* 角笛をふいた夜は、霧・群れにしない。とくべつな夜になったら、角笛をかえす */if(!w.length||w.some(t=>EN[t].boss)||(S.nights||0)<4||d<5||S.today==='odayaka'||S.rushOn||S.finalOn||S.trialOn)return;
   const p=Math.random(),k=p<.15?'kiri':p<.25?'mure':null;if(!k)return;S.nightVar.k=k;toast(k==='kiri'?'今夜は霧が出そう':'今夜は、コワイノがむれで来そう','warn')}
 const nightVarNow=()=>{const v=S&&S.nightVar;if(!v||!v.k)return null;const h=hour(),d=dayNo();return v.d===d&&h>=20||v.d===d-1&&h<6?v.k:null};/* 今夜の変化（夕方20時から朝6時まで） */
+const HORNDESC='コワイノのおとしもの。ふくと、今夜のコワイノが1.5倍になる。';
+const hornNow=()=>{if(!S||S.hornD==null)return false;const h=hour(),d=dayNo();return S.hornD===d&&h>=17||S.hornD===d-1&&h<6};/* 角笛の夜（ふいてから朝6時まで） */
+function hornOK(){/* 角笛をふけるのは、草原の17時から20時（今夜のコワイノが決まる前）、1日に1回、とくべつな夜でないとき */if(WD!==0||!S.enemyOn||!(S.horn>0))return false;const h=hour(),d=dayNo();if(h<17||h>=20||S.lastWarn===d||S.hornD===d)return false;
+  if(S.finalNight||S.trial||S.today==='odayaka'||S.rushOn||S.finalOn||S.trialOn)return false;
+  const keep={bossWarn:S.bossWarn,bossOwed:S.bossOwed,lateWave:S.lateWave,bossDay:S.bossDay},w=waveFor(d+1);Object.assign(S,keep);/* 今夜のコワイノを先に見る（見るだけで、もとにもどす） */return w.length>0&&!w.some(t=>EN[t].boss)}
+function hornBlow(){if(!hornOK())return toast('いまは、ふけない','warn');S.horn--;S.hornD=dayNo();sfx('night');toast('今夜は、コワイノがふえる','warn');if(sheet==='inv')renderSheet()}
+function hornWave(w){/* 角笛の夜：ふつうのコワイノを1.5倍（小数点以下切りすて） */const nb=w.filter(t=>!EN[t].boss),m=Math.floor(nb.length*1.5)-nb.length;for(let i=0;i<m;i++)w.push(nb[i%nb.length]);return w}
 function mureSpot(){/* 群れの夜：南のはしの1か所（ステージをまたがない）のまわり3マスから出る */const v=S.nightVar;if(v.x==null||v.s!==S.nights){const p=spawnSpot();v.x=p[0]|0;v.s=S.nights}const R=spawnReach();for(let t=0;t<40;t++){const x=v.x+((Math.random()*7)|0)-3,j=(H-1)*W+x;if(x<0||x>=W||S.ground[j]===1||solidOf(j)||R[j]<0)continue;return [x+.5,H-.5]}return [v.x+.5,H-.5]}
 function waveText(list){const c={};list.forEach(t=>c[t]=(c[t]||0)+1);return Object.keys(c).map(t=>EN[t].name+(c[t]>1?'×'+c[t]:'')).join('、')}
 function waveArrivalDelay(index,total,hasBoss,late=0){const spacing=Math.min(late>0?Math.max(12,35-late*2):35,(hasBoss?180:220)/Math.max(1,total-1));return index*spacing}/* 夜0時ごろから4時までに全員が到着。ボスの登場演出ぶんも見込む */
@@ -278,7 +285,7 @@ function defeat(e,msg,r){if(e.dead)return;/* 同じ敵の撃破報酬は1回だ�
 const DROPS=[['mat:wood',3],['mat:stone',3],['sand',1]];/* sand：やすらぎの砂（コワイノの落とし物だけで手に入る） */
 const DROPSEED={basic:'imo',fast:'tomato',thief:'mugi',brute:'imo',breaker:'mugi',trapper:'tomato',ash:'tomato',rockc:'imo',boss:'mugi',hino:'tomato',yama:'imo',boss2:'mugi'};/* コワイノの種類で、落とす種がちがう（まだ育てられない作物なら、いも） */
 const DROPF={basic:'mimamori',fast:'yomawari',breaker:'oyasumi',boss:'yonaka'};/* コワイノの種類ごとの、落とし物だけの家具 */
-function dropRolls(t){const sd=DROPSEED[t]&&cropOn(DROPSEED[t])?DROPSEED[t]:'imo',L=[['mat:wood',3,.2],['mat:stone',3,.2],['seed:'+sd,2,.2],['sand',1,.1]];if(DROPF[t])L.push([DROPF[t],1,.005]);if(KWR.some(id=>!(S.recipes||{})[id]))L.push(['recipe',1,.001]);if(WD===1&&!S.free){L.push(['gear',1,.005]);if(t==='rockc')L.push(['mat:iron',1,.2]);if(t==='hino'||t==='yama')L.push(['mat:obsidian',2,.5])}/* 火山：そうび0.5%・鉄・黒曜石 */return L}/* [物, 数, 落とす確率]：木材・石材・種20%、やすらぎの砂10%、家具0.5%、コワイノのレシピ0.1% */
+function dropRolls(t){const sd=DROPSEED[t]&&cropOn(DROPSEED[t])?DROPSEED[t]:'imo',L=[['mat:wood',3,.2],['mat:stone',3,.2],['seed:'+sd,2,.2],['sand',1,.1]];if(DROPF[t])L.push([DROPF[t],1,.005]);if(KWR.some(id=>!(S.recipes||{})[id]))L.push(['recipe',1,.001]);if(WD===0&&!EN[t].boss)L.push(['horn',1,.03]);/* 草原：よびごえの角笛3% */if(WD===1&&!S.free){L.push(['gear',1,.005]);if(t==='rockc')L.push(['mat:iron',1,.2]);if(t==='hino'||t==='yama')L.push(['mat:obsidian',2,.5])}/* 火山：そうび0.5%・鉄・黒曜石 */return L}/* [物, 数, 落とす確率]：木材・石材・種20%、やすらぎの砂10%、家具0.5%、コワイノのレシピ0.1% */
 function dropList(t){const sd=DROPSEED[t]&&cropOn(DROPSEED[t])?DROPSEED[t]:'imo',L=DROPS.concat([['seed:'+sd,2]]);if(DROPF[t])L.push([DROPF[t],1]);return L}
 function monoDrops(n){/* ものひろいの日：村の中の、せいれいが歩いて行ける空いた所に落とす */if(!S.drops)S.drops=[];const r0=S.res.find(q=>!q.hidden),G=bfs(r0?r0.x|0:CX,r0?r0.y|0:CY),C=[];
   for(let q=0;q<W*H;q++)if(VILL[q]&&!S.obj[q]&&walk(q)&&G.dist[q]>=0&&!S.drops.some(d=>d.y*W+d.x===q))C.push(q);
@@ -291,6 +298,7 @@ function takeDrop(d,r){let nm;
   if(d.id==='gear'){gearFind(r,'ひろった！');return}/* そうび */
   if(d.id==='recipe'){const L=KWR.filter(id=>!(S.recipes||{})[id]);if(!L.length){S.sand=(S.sand||0)+1;return}const id=pick(L);(S.recipes||(S.recipes={}))[id]=true;if(BL[id].kind==='block')(S.unlocked||(S.unlocked={}))[id]=true;kwrSync();sfx('level');queueItemGift({[id]:1},'あたらしいレシピ！',true);memo('📜',BL[id].name+'のレシピをひろった');renderPalette();return}/* コワイノのレシピ（まれ） */
   if(d.id==='sand'){S.sand=(S.sand||0)+d.n;if(!(S.recipes||(S.recipes={})).toro){S.recipes.toro=true;memo('🏮','しずけさの石どうろうが作れるようになった');queueItemGift({toro:1},'あたらしいレシピ！',true)}/* やすらぎの砂をはじめてひろったら、石どうろうのレシピ（知らせを出す） */sfx('seed');toast((r?r.name+'が':'')+'「やすらぎの砂」をひろった（'+S.sand+'）','good');return}/* コワイノの落とし物だけで手に入る、とくべつな素材 */
+  if(d.id==='horn'){S.horn=(S.horn||0)+1;(S.seenIt||(S.seenIt={}))['x:horn']=1;sfx('seed');toast((r?r.name+'が':'')+'「よびごえの角笛」をひろった','good');return}
   if(d.id==='hai'){const t=st2();t.hai=(t.hai||0)+d.n;sfx('seed');toast((r?r.name+'が':'')+'「ハイカゲの灰」をひろった（'+t.hai+'）','good');checkQuest();return}/* ひびわれをうめる灰 */
   if(d.id==='mebuki'){S.mebuki=(S.mebuki||0)+1;sfx('level');toast((r?r.name+'が':'')+'「めぶきのしずく」をひろった！','good');logEv('めぶきのしずくをひろった');
     if(!S.flags.mebukiTold&&WD===0){const sp=S.res.find(q=>KEYRES.includes(q.name))||r;if(sp)talkOnce('mebukiTold',MEBUKIL[elemKey(sp)].map(t=>[sp.name,t]))}return}
