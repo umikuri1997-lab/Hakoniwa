@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""ふきだしの絵（30こ）を、32×32 のドット絵として描いて、1まいの WebP（6列×5行、192×160）にする。
+"""ふきだしの絵（30こ）を、32×32 のドット絵として描いて、1まいの WebP（6列×6行、192×192。6行めは顔5こ）にする。
 もらった絵（sheet.png）は見本。ちぢめた絵はでこぼこ・にじみ・2ドットの輪郭が出るので、ここで形（円・だ円・多角形・線）から
 ドットをきめて描く（ドットのまん中が形の中なら、ぬる）。
 - 輪郭は1ドット：形の外がわのドットと、うしろの部品とのさかいのドットを、その部品の輪郭の色（ぬり色より少し暗い色）に。
@@ -154,9 +154,13 @@ def render(parts):
     return out
 
 def main():
-    out = Image.new('RGBA', (192, 160), (0, 0, 0, 0))
+    out = Image.new('RGBA', (192, 192), (0, 0, 0, 0))
     for i, nm in enumerate(NAMES):
         out.alpha_composite(Image.fromarray(render(ART[nm]), 'RGBA'), (i % 6 * 32, i // 6 * 32))
+    # 6行め：顔（もらった絵からとりだしたドット。tools/art/faces/build.py）
+    sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'faces'))
+    import build as faces
+    for i, t in enumerate(faces.tiles()): out.alpha_composite(Image.fromarray(t, 'RGBA'), (i * 32, 160))
     d = sys.argv[1] if len(sys.argv) > 1 else '.'; os.makedirs(d, exist_ok=True)
     out.save(os.path.join(d, 'bubble.png'))
     out.save(os.path.join(d, 'bubble.webp'), lossless=True, exact=True, method=4)
