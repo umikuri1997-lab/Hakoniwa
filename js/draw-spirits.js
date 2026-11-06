@@ -164,8 +164,8 @@ function spDot(key,el,vr){/* 絵の色を、その子の色にかえる（もと
   g.putImageData(d,0,0);return SPDOT[k]=cv}
 function spDotReady(el){if(SPDOK[el])return true;if(!window.CHIPS)return false;
   for(const k in CHIPS)if((k.startsWith('sp:')||k.startsWith('sp_'+el+':'))&&!chipImgs(CHIPS[k],k)[0].ok)return false;return SPDOK[el]=true}
-const SOLE=['...ooo.ooo.....','..offfofffoo...','..offfofffffo..','..ooooooooffo..','.osssssssssoo..','osssssssssssso.','osssssssssssso.','osssssssssssso.','osssssssssssso.','.ossssssssssso.','.ossssssssssso.','..osssssssssso.','..ossssssssso..','..offfffffffo..','..offfffffffo..','...offfffffo...','....ooooooo....'],SOLEC={};
-function soleImg(el,vr){/* 足のうら（正面にすわって足をこちらへのばしたとき）：足の絵の色（ふち・体の色）から作るドット絵。まん中は少し色のついたうら */
+const SOLE=['....ooooooo....','..oofffffffoo..','.offfffffffffo.','.offsssssssffo.','offsssssssssffo','ofsssssssssssfo','ofsssssssssssfo','ofsssssssssssfo','ofsssssssssssfo','ofsssssssssssfo','ofsssssssssssfo','offsssssssssffo','.offsssssssffo.','.offfffffffffo.','..oofffffffoo..','....ooooooo....'],SOLEC={};
+function soleImg(el,vr){/* 足のうら（正面にすわって足をこちらへのばしたとき）：足の絵の色（ふち・体の色）から作るドット絵。丸い形で、指はない。まん中は少し色のついたうら */
   const k=el+'|'+(vr&&vr.h||0)+'_'+(vr&&vr.l||0);if(SOLEC[k])return SOLEC[k];const ft=spDot('sp:footL',el,vr);if(!ft)return null;
   const g0=document.createElement('canvas');g0.width=16;g0.height=15;const a=g0.getContext('2d');a.drawImage(ft,0,0);const px=(x,y)=>a.getImageData(x,y,1,1).data;
   const F=px(7,3),O=px(1,3),M=[0,1,2].map(i=>Math.round(F[i]*.3+O[i]*.7)),O2=[0,1,2].map(i=>Math.round(O[i]*.72)),col={o:O2,f:F,s:M};g0.width=g0.height=0;
@@ -221,7 +221,7 @@ function drawSpiritDot(c,el,x,y,s,f,o){
     if(vr&&vr.lash&&fm!=='strain')spr('sp:lash'+S+'#'+fm,0,fy)}/* まつげは、表情ごとの目に合わせた絵 */
   c.restore();
   if(bothF)armD(farA,aA(farA));if(frontArm)armD(-farA,aA(-farA));
-  if(sitF){const si=soleImg(el,vr);if(si)for(const sx of[-1,1]){c.save();c.translate(sx*9*D,(-SITF-12)*D);c.scale(-sx,1);c.drawImage(si,-7*D,0,15*D,17*D);c.restore()}}/* 足のうら：左右で鏡うつし（つまさきが外がわ） */
+  if(sitF){const si=soleImg(el,vr);if(si)for(const sx of[-1,1]){c.save();c.translate(sx*9*D,(-SITF-12)*D);c.scale(-sx,1);c.drawImage(si,-7*D,0,15*D,16*D);c.restore()}}/* 足のうら：左右で鏡うつし（つまさきが外がわ） */
   if((A==='eat'||A==='hold')&&o.food&&!back){const ei=emoImg(o.food),yy=A==='hold'?-17:-27+Math.sin(t*7)*.8,xx=tr?25:0;/* 横向きのときは、食べ物を顔の前に（体の大きさ0.435で、およそ11ドット前） */if(ei){const ih=40,iw=ih*ei.width/ei.height;c.drawImage(ei,xx-iw/2,yy-ih/2,iw,ih)}else{c.font='40px sans-serif';c.textAlign='center';c.textBaseline='middle';c.fillStyle='#000';c.fillText(o.food,xx,yy);c.textAlign='start';c.textBaseline='alphabetic'}}
   if(A==='eat'&&tr&&o.food&&!back)armD(-farA,aA(-farA));/* 横向きで食べるときは、手前の手を食べ物の上にかさねて、持っている形に */
   c.imageSmoothingEnabled=sm;c.restore();return true}
