@@ -3,7 +3,7 @@
 const fieldNear=(j,R,f)=>{const s=fieldStump(j),sx=s%W,sy=s/W|0;for(let y=sy-R;y<=sy+R;y++)for(let x=sx-R;x<=sx+R;x++){if(x<0||y<0||x>=W||y>=H)continue;const k=y*W+x,o=S.obj[k]==='part'?S.obj[S.ref[k]]:S.obj[k];if(o&&f(o,k))return true}return false};
 /* 調べの前に、その調べのために作る物（作る・建てる → 切り株のそばに置く）。依頼を受けてから、この調べのために置いた物だけを数える（前からある物では進まない） */
 const FIELD_PREP={
-  earthRoot:{label:'切り株のそばに、あぜ道を3マスしこう',build:{ids:['path'],n:3},legacy:j=>!fieldNear(j,2,o=>WEEDS.has(o))},
+  earthListen:{label:'切り株のそばに、あさぶくろを置こう',build:{ids:['asabukuro']},learn:['asabukuro'],legacy:j=>fieldNear(j,3,o=>o==='asabukuro')},
   fireRoot:{label:'切り株のそばに、たき火を置こう',build:{ids:['campfire']},learn:['campfire'],legacy:j=>fieldNear(j,3,o=>o==='campfire')},
   waterFilm:{label:'切り株のそばに、みずがめを置こう',build:{ids:['jar']},learn:['jar'],legacy:j=>fieldNear(j,3,o=>o==='well'||o==='jar')},
   windEcho:{label:'切り株のそばに、風車を建てよう',wait:'風車ができあがるのを待とう',build:{ids:['windmill']},learn:['windmill'],legacy:j=>fieldNear(j,3,o=>o==='lily')},
