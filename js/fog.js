@@ -42,7 +42,7 @@ function fogAfterRecount(){/* recount のあと：となりの晴れたエリア
   const G=new Array(AREAN*AREAN).fill(0);for(const k of REV)if(S.ground[k]!==1)G[areaOf(k)]++;const clr=[];
   for(let a=0;a<AREAN*AREAN;a++){if(!S.fog[a])continue;const x=a%AREAN,y=(a/AREAN)|0;if([[1,0],[-1,0],[0,1],[0,-1]].some(([dx,dy])=>{const nx=x+dx,ny=y+dy;if(nx<0||ny<0||nx>=AREAN||ny>=AREAN)return false;const b=ny*AREAN+nx;return !S.fog[b]&&G[b]>FOG_GREEN}))clr.push(a)}
   for(const a of clr)fogClear(a,quiet);
-  for(const f of S.fogF||[]){if(f.t!=='ruin'||!f.set||f.done)continue;const c=f.j+W+2;if(fogRing(f.j).every(k=>HOME_WALLS.has(S.obj[k])||HOME_DOORS.has(S.obj[k]))&&HOUSES.some(h=>h.inside.has(c))){f.done=1;const L=FURN.filter(id=>giftPoolOK(id));if(L.length){const id=pick(L);giveItem(id,1);queueItemGift({[id]:1})}toast('古い家が、よみがえった','good')}}}
+  for(const f of S.fogF||[]){if(f.t!=='ruin'||!f.set||f.done)continue;const c=f.j+W+2;if(fogRing(f.j).every(k=>HOME_WALLS.has(S.obj[k])||HOME_DOORS.has(S.obj[k]))&&HOUSES.some(h=>h.inside.has(c))){f.done=1;f.find=1;/* 中のわすれ物は、せいれいが見つける（ruinFindTick） */toast('古い家が、よみがえった','good')}}}
 function fogRing(j){/* 古い家のあと：5×4マスのまわり（下のまん中がドア） */const x=j%W,y=(j/W)|0,L=[];for(let b=0;b<4;b++)for(let a=0;a<5;a++)if(a===0||a===4||b===0||b===3)L.push((y+b)*W+x+a);return L}
 /* お屋敷：霧のエリアの1つに、そのまま住める大きな家（よこ12×たて9。部屋は3つ）。晴れたときに建つ。場所は、はじめに1回だけきめる */
 const MANSION_W=12,MANSION_H=9,MANSION_DOORS=[[3,8],[6,6],[8,4]],MANSION_WIN=[[2,0],[4,0],[8,0],[10,0]],

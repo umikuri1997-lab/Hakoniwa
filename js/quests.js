@@ -52,7 +52,7 @@ const SUBQ=[/* サブクエスト：メインと別に、いつでもできる�
   {k:'seedwait_food',w:0,g:'wood',t:'朝のごはんを10こ用意しよう',how:'フタバがベリーの茂みから実を集め、食料箱へ運ぶのを手伝おう。食料箱の食べ物を10こ以上にする',L:[['K','なかまが来てくれたら……いっしょにごはん、食べたいな。'],['K','食料箱に、少し多めに入れておこうよ。ぼく、ベリーを集めてくる！']],X:[['K','これだけあれば、新しい子のぶんもあるね。'],['K','#joy|どんな子かなあ。……えへへ、たのしみ！']],at:()=>waitingBellflowers(),ok:()=>FOODN()>=10,n:10,now:()=>Math.min(10,FOODN()),rw:5},
 
   /* カミサマとの交換・おつげの出し方（もとはメインの目標）。いものたねをまいたあとに出る */
-  {k:'trade',w:0,g:'wood',t:'カミサマと交換してみよう',how:"カミサマをタップし、何かと交換してから「交換をおわる」をタップ",L:[['K','#joy|守り神さま、カミサマがよんでるよ！'],[GOD,'これから、いろいろ必要なものが出てくるじゃろ。'],[GOD,'困ったことがあったら、言うんじゃぞ。わしが力になってやろう。'],
+  {k:'trade',w:0,g:'wood',t:'カミサマと交換してみよう',how:"カミサマをタップし、何かと交換してから「交換をおわる」をタップ",who:GOD,L:[[GOD,'これから、いろいろ必要なものが出てくるじゃろ。'],[GOD,'困ったことがあったら、言うんじゃぞ。わしが力になってやろう。'],
     [GOD,'ほしい物があったら、わしに声をかけておくれ〜。']],get X(){return [[GOD,'まいど〜！ ほっほっ。'],...GOD_FAREWELL()]},at:()=>qDone('imoseed')&&!qDone('fire')&&!S.godGone&&godHere(),ok:()=>!!S.flags.tradedSeen,feat:['shop'],godLeave:1},
   {k:'oracle',w:0,g:'wood',t:'おつげを出してみよう',how:'メニューの「おつげ」で、きょういちにちの方針をえらぶ。わからないことは、メニューの「ひでんのしょ」で見られる',L:[[POKO,'ねえ、守り神さま。みんな、言われなくても自分で動いてくれるけど……'],
     [POKO,'「今日は、これをやってほしいな」って、お願いもできるんだよ。'],
@@ -154,7 +154,7 @@ function keyName(el){const N=S.keyN||(S.keyN={});/* 5属性のキーキャラ：
   let nm=null;if(!WD&&(KEYEL0[el]||FIXK0[el]))nm=KEYEL0[el]||FIXK0[el];else{for(const k in KEYEL)if(KEYEL[k]===el&&KEYS[WD]&&KEYS[WD].includes(k))nm=k}
   if(!nm){const r=S.res.filter(r=>r.elem===el).sort((a,b)=>a.id-b.id)[0];nm=r?r.name:null}
   if(nm&&S.res.some(r=>r.name===nm))N[el]=nm;return nm}
-function subWho(q){return keyName(q.g)}
+function subWho(q){return q.who||keyName(q.g)}/* who：話す人がきまっている（交換はカミサマ） */
 function checkSub(){const D=S.subDone||(S.subDone={}),Sn=S.subSeen||(S.subSeen={}),St=S.subSt||(S.subSt={});S.subB||(S.subB={});SUBW={};const SL=subList();/* 1回だけ作って使いまわす */
   const busy={};
   for(const q of SL){if(D[q.k])continue;if(St[q.k]===1&&!subOfferReady(q))delete St[q.k];if(Sn[q.k]&&!St[q.k])St[q.k]=2;
