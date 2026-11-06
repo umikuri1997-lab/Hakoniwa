@@ -71,11 +71,12 @@ function onTap(sx,sy){DLGTAP=performance.now();/* タップで始める会話は
     const en=enemyAtTap(w0.x,w0.y);
     if(en)return;/* 「コワイノ」に守りの光をあてるのは、アイコンをえらんでから */
     {const st=festStalls().find(t=>Math.abs(w.x/TS-(t.x+.5))<1.3&&w.y/TS>t.y-2.6&&w.y/TS<t.y+1);if(st){sfx('tap');openSheet('stall',st.x);return}}/* 屋台をタップすると、その屋台の品物 */
-    if(godHere()&&Math.hypot(w.x/TS-godX(),w.y/TS-godY())<1.1){if(TALKW===GOD&&mainStoryBubbleReady())return startTalk();if(S.feat.shop){const ln=pick(S.pt<2?GOD_POOR:GOD_SHOP);return dialog([[GOD,ln]],()=>{openSheet('shop');shopSay=ln;renderSheet()},'交換する')}toast('カミサマ「'+pick(GOD_IDLE)+'」');return}
+    if(godHere()&&Math.hypot(w.x/TS-godX(),w.y/TS-godY())<1.1){if(TALKW===GOD&&mainStoryBubbleReady())return startTalk();if(SUBW[GOD])return subTalk(SUBW[GOD]);if(S.feat.shop){const ln=pick(S.pt<2?GOD_POOR:GOD_SHOP);return dialog([[GOD,ln]],()=>{openSheet('shop');shopSay=ln;renderSheet()},'交換する')}toast('カミサマ「'+pick(GOD_IDLE)+'」');return}
     if(S.nushi&&Math.hypot(w.x/TS-S.nushi.x,w.y/TS-(S.nushi.y-.6))<1.4){sfx('tap');return nushiTalk()}/* ヌシ様と話す */
     if(S.cleared){const tw=S.obj.indexOf('tower');if(tw>=0&&Math.hypot(w.x/TS-storyTreeX(tw),w.y/TS-(storyTreeY(tw)-.4))<1.4)return openSheet('travel')}/* クリア後は、台座から次の土地へ */
     if(sumHit(w.x/TS,w.y/TS))return doSummon();
     if(TALKW===GOD&&mainStoryBubbleReady()&&godHere()&&Math.hypot(w.x/TS-godX(),w.y/TS-(godY()-1.6))<1.2)return startTalk();
+    if(SUBW[GOD]&&godHere()&&Math.hypot(w.x/TS-godX(),w.y/TS-(godY()-1.6))<1.2)return subTalk(SUBW[GOD]);
     if(TALKW){const tr=S.res.find(r=>r.name===TALKW&&!r.hidden&&!(r.act&&r.act.type==='sleep'));if(tr&&mainStoryBubbleReady(tr)&&(Math.hypot(tr.x-w.x/TS,(tapY(tr)-1)-w.y/TS)<1.4||bubHit(tr,w))){panTo(tr.x*TS,(tr.y-.7)*TS);return startTalk()}}
     {const tr=S.res.find(r=>SEVW[r.name]&&!r.hidden&&!(r.act&&r.act.type==='sleep')&&(Math.hypot(r.x-w.x/TS,(tapY(r)-1)-w.y/TS)<1.4||bubHit(r,w)));if(tr)return sevTalk(SEVW[tr.name])}
     {const tr=S.res.find(r=>SUBW[r.name]&&!r.hidden&&!(r.act&&r.act.type==='sleep')&&(Math.hypot(r.x-w.x/TS,(tapY(r)-1)-w.y/TS)<1.4||bubHit(r,w)));if(tr){panTo(tr.x*TS,(tr.y-.7)*TS);return subTalk(SUBW[tr.name])}}

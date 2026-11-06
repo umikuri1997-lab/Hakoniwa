@@ -46,7 +46,7 @@ function thumb(cv2,k,open,hide){
   PXSCENE(c,190,70,1,k===1?'volcano':k===2?'water':k===FREE?'free':'meadow',k*7+3);
   if(!open){c.fillStyle='rgba(0,0,0,.4)';c.fillRect(0,0,190,70);PXSCENE(c,190,70,1,'lockover',0)}
 }
-const APP_VER=1237;/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER=1238;/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
@@ -117,7 +117,8 @@ function updTut(){
       if(el){const pr=$('#palItems').getBoundingClientRect(),cr=el.getBoundingClientRect();if(cr.top<pr.top-2||cr.bottom>pr.bottom+2)el.scrollIntoView({block:'nearest'})}return}
     const sp=tutSpot(id);if(sp){const z=BL[id].sz||[1,1];wp=[(sp[0]+z[0]/2)*TS,(sp[1]+z[1]/2)*TS];const hh=HOUSES.find(h=>h.set.has(sp[1]*W+sp[0]));lbl=hh&&!OPENH.has(hKey(hh))?'家をタップして中を見る':'置きたい場所をタップ'}};
   const lookAt=(p,l)=>{if(mode!=='look'){el=document.querySelector('#dock [data-mode="look"]');lbl='「みる」をタップ'}else{wp=p;lbl=l}};
-  if(WD===0&&TALKW&&(!S.flags.talked1||!S.godGone)&&!questGuideAccepted()&&!sheet){if(TALKW===GOD&&godHere())lookAt([godX()*TS,(godY()-2)*TS],'タップして話を聞こう');else{const r=S.res.find(q=>q.name===TALKW&&!q.hidden);if(r)lookAt([r.x*TS,(r.y-1.3)*TS],'タップして話を聞こう')}}
+  if(WD===0&&TALKW&&!isNight()&&(!S.flags.talked1||!S.godGone)&&!questGuideAccepted()&&!sheet){if(TALKW===GOD&&godHere())lookAt([godX()*TS,(godY()-2)*TS],'タップして話を聞こう');else{const r=S.res.find(q=>q.name===TALKW&&!q.hidden);if(r)lookAt([r.x*TS,(r.y-1.3)*TS],'タップして話を聞こう')}}
+  else if(WD===0&&SUBW[GOD]&&godHere()&&!isNight()&&!sheet&&$('#dialog').hidden)lookAt([godX()*TS,(godY()-2)*TS],'タップして話を聞こう');/* 交換のサブクエスト：カミサマが話す */
   else if(S.qStory!=null){}/* お話を聞く前は、クエストの案内を出さない */
   else if(WD===0&&S.summon&&STATUE>=0&&!sheet&&(S.summons||0)<2)lookAt([(STATUE%W+.5)*TS,((STATUE/W)|0)*TS-58],'「！」をタップ');
   else if(S.flags.tapAsk&&!S.flags.tapped&&$('#dialog').hidden){if(sheet==='res'){el=$('#sheetX');lbl='見たら、とじる'}else if(!sheet){if(mode!=='look'){el=document.querySelector('#dock [data-mode="look"]');lbl='「みる」をタップ'}else{const r=S.res.find(q=>!q.hidden);if(r){wp=[r.x*TS,(r.y-.5)*TS];lbl='せいれいをタップ'}}}}/* 神殿のあと：せいれいをタップしてステータスを見る */

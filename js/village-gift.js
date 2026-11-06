@@ -40,7 +40,7 @@ function godFarewellTick(){if(GODBYE&&$('#dialog').hidden&&!DLGQ.length&&perform
   const owner=S,session=VILLAGE_SESSION;GODBYE=performance.now();let once=0;
   dialog(GOD_FAREWELL(),()=>{if(once++)return;GODBYE=0;if(S!==owner||session!==VILLAGE_SESSION||S.godGone)return;
     const St=S.subSt||(S.subSt={}),D=S.subDone||(S.subDone={});if(!D.trade){St.trade=4;D.trade=1;delete (S.subArrived||{}).trade}S.feat.shop=true;questGives(null,{godLeave:true});checkSub()});}
-function villageGiftTick(){godFarewellTick();if(!vgOn())return;vgScan();const P=S.vgift||[];
+function villageGiftTick(){godFarewellTick();if(!vgOn())return;ruinFindTick();vgScan();const P=S.vgift||[];
   const unsafe=isNight()||S.enemies.some(e=>!e.dead)||sacredQuietActive()||mainGathering();
   for(const r of S.res)if(r.act&&r.act.type==='vgift'&&r.act.stage==='walk'&&unsafe)endAct(r);/* 夜・コワイノで、やめる（つぎの昼に、もう一度） */
   if(!P.length||unsafe||!$('#dialog').hidden||S.res.some(r=>r.act&&r.act.type==='vgift'))return;
@@ -52,3 +52,18 @@ ACT.vgift={start(r,a){const g=VGIFT.find(v=>v.k===a.gk);if(!g||!vgOn())return fa
     a.t0=performance.now();a.placed=cells;r.face=cells[0]%W+.5>=r.x?1:-1;recount();checkQuest()},
   tick(r,a){if(!a.said&&performance.now()-a.t0>=1500){a.said=true;a.t1=performance.now();JUMP.set(r,a.t1);const g=VGIFT.find(v=>v.k===a.gk);let s=g.line;if(typeof s==='object')s=elemKey(r)==='fireB'?s.B:s.A;talkOnce('vg_'+g.k,[[r.name,s]],300)}},
   done:(r,a)=>!!a.said&&performance.now()-a.t1>=1200};
+
+/* 古い家のあとが家にもどったら：近くのせいれいが中へ歩いて行き、おくで、むかしのだれかのわすれ物を見つける（S.fogF の f.find。わたしたら消す） */
+const RUINFIND=[['K','あれ？ おくのすみに、なにかあるよ。'],['K','#joy|むかしの、だれかのわすれ物かな……。だいじに、つかわせてもらおうね。']];
+function ruinStand(f){const x=f.j%W,y=(f.j/W)|0;return [[2,1],[1,1],[3,1],[2,2],[1,2],[3,2]].map(([a,b])=>(y+b)*W+x+a)}
+function ruinFindTick(){if(!S.fogF)return;const unsafe=isNight()||S.enemies.some(e=>!e.dead)||sacredQuietActive()||mainGathering();
+  for(const r of S.res)if(r.act&&r.act.type==='ruinfind'&&r.act.stage==='walk'&&unsafe)endAct(r);
+  if(unsafe||!$('#dialog').hidden||DLGQ.length||sheet!=null||S.res.some(r=>r.act&&(r.act.type==='ruinfind'||r.act.type==='vgift')))return;
+  const f=S.fogF.find(f=>f.t==='ruin'&&f.find);if(!f)return;const C=ruinStand(f);let best=null;
+  for(const r of S.res){if(vgBusy(r))continue;const G=bfs(r.x|0,r.y|0);for(const j of C){if(G.dist[j]<0||S.obj[j]&&!WEEDS.has(S.obj[j]))continue;if(!best||G.dist[j]<best.d)best={r,G,j,d:G.dist[j]};break}}
+  if(!best)return;/* 行ける子がいない：あとで、もう一度 */endAct(best.r);startAct(best.r,best.G,'ruinfind',best.j,{fj:f.j})}
+ACT.ruinfind={start(r,a){const f=(S.fogF||[]).find(f=>f.j===a.fj&&f.find);if(!f||!vgOn())return false;a.t0=performance.now();a.owner=S;a.session=VILLAGE_SESSION;faceTo(r,(r.y|0)*W+(r.x|0)-W)},
+  tick(r,a){if(a.said||performance.now()-a.t0<1200)return;a.said=performance.now();JUMP.set(r,performance.now());let once=0;
+    dialog(RUINFIND.map(([w,t])=>[w==='K'?r.name:w,t]),()=>{if(once++||S!==a.owner||a.session!==VILLAGE_SESSION)return;const f=(S.fogF||[]).find(f=>f.j===a.fj&&f.find);if(!f)return;delete f.find;
+      const L=FURN.filter(id=>giftPoolOK(id));if(L.length){const id=pick(L);giveItem(id,1);queueItemGift({[id]:1})}a.end=performance.now()})},
+  done:(r,a)=>!!a.end&&performance.now()-a.end>=600||!!a.said&&!a.end&&$('#dialog').hidden&&!DLGQ.length&&performance.now()-a.said>4000};/* とちゅうでとじた：あとで、もう一度 */
