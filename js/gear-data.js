@@ -100,7 +100,7 @@ const GEARBL={
   gc09:{"name":"銅のゆびわ","kind":"gear","pc":5,"time":90,"maker":"fire","mat":{"copper":1},"g":{"s":"c","work":1.05},"desc":"作業の速さ1.05倍"},
   gc10:{"name":"鉄のくさり(おまもり)","kind":"gear","pc":8,"time":90,"maker":"fire","mat":{"iron":1},"g":{"s":"c","cap":1},"desc":"持てる数+1"},
   gc11:{"name":"黒曜石のおまもり","kind":"gear","pc":12,"time":90,"maker":"fire","mat":{"obsidian":1},"g":{"s":"c","hun":2.0},"desc":"たたかれたときのおなかのへり-2"},
-  gc12:{"name":"銀のかみかざり","kind":"gear","pc":10,"time":90,"maker":"fire","mat":{"silver":1},"g":{"s":"c","xp":1.1},"desc":"経験値1.1倍"},
+  gc12:{"name":"銀のかみかざり","kind":"gear","pc":10,"time":90,"maker":"fire","mat":{"silver":1},"g":{"s":"c","xp":1.1},"desc":"けいけん1.1倍"},
   gc13:{"name":"金のメダル","kind":"gear","pc":15,"time":90,"maker":"fire","mat":{"gold":1},"g":{"s":"c","pw":1},"desc":"1日に1回パワー+1"},
   gc14:{"name":"ヌシの羽根","kind":"gear","time":90,"maker":"fire","g":{"s":"c","ns":0,"mv":1.2,"rec":1.2,"sp":1},"desc":"気絶しない・歩く速さ1.2倍・つかれのとれる速さ1.2倍"},
   gt01:{"name":"竹のかま","kind":"gear","pc":5,"time":90,"maker":"fire","mat":{"bamboo":2,"copper":1},"g":{"s":"t","el":"wood","job":{"harvest":1.2}},"desc":"収穫の速さ1.2倍"},
