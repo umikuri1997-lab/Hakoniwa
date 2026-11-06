@@ -56,3 +56,9 @@ Transparent background, no ground shadow, no text, no frame. <何こならべる
 ```
 - つながる物（床・壁・塀・柵・道）は「1まいのタイル」ではなく、CLAUDE.md の「くりかえして使う絵」の書き方にする。
 - 草原の物は洋風（和風の物を入れない）。
+
+## 気をつけること（やってみてわかったこと）
+- `FIX` の座標は、できあがりの絵のドット。大きさをかえたら、直す所の座標も書きなおす。
+- ゲームで写すときは、`assetsOK&&stageReady()` をまってから。霧の中の物は `fogClear` してから。`centerOn` には世界のドット（マス×32）をわたす。
+- 後かたづけ：`tools/__pycache__` のほか、`tools/art/__pycache__`・`tools/art/<set>/__pycache__` もけす。
+- チップをかえたら、マップチップ工房も新しくする（CLAUDE.md の工房の決まり）。
