@@ -86,8 +86,8 @@ function nightVarPick(){/* 夕方、今夜の波が決まったあとに1回だ�
   const p=Math.random(),k=p<.15?'kiri':p<.25?'mure':null;if(!k)return;S.nightVar.k=k;toast(k==='kiri'?'今夜は霧が出そう':'今夜は、コワイノがむれで来そう','warn')}
 const nightVarNow=()=>{const v=S&&S.nightVar;if(!v||!v.k)return null;const h=hour(),d=dayNo();return v.d===d&&h>=20||v.d===d-1&&h<6?v.k:null};/* 今夜の変化（夕方20時から朝6時まで） */
 const HORNDESC='コワイノのおとしもの。ふくと、今夜のコワイノが1.5倍になる。';
-const hornNow=()=>{if(!S||S.hornD==null)return false;const h=hour(),d=dayNo();return S.hornD===d&&h>=17||S.hornD===d-1&&h<6};/* 角笛の夜（ふいてから朝6時まで） */
-function hornOK(){/* 角笛をふけるのは、草原の17時から20時（今夜のコワイノが決まる前）、1日に1回、とくべつな夜でないとき */if(WD!==0||!S.enemyOn||!(S.horn>0))return false;const h=hour(),d=dayNo();if(h<17||h>=20||S.lastWarn===d||S.hornD===d)return false;
+const hornNow=()=>{if(!S||S.hornD==null)return false;const h=hour(),d=dayNo();return S.hornD===d&&h>=6||S.hornD===d-1&&h<6};/* 角笛の夜（ふいてから朝6時まで） */
+function hornOK(){/* 角笛をふけるのは、草原の昼（6時から20時、今夜のコワイノが決まる前）、1日に1回、とくべつな夜でないとき */if(WD!==0||!S.enemyOn||!(S.horn>0))return false;const h=hour(),d=dayNo();if(h<6||h>=20||S.lastWarn===d||S.hornD===d)return false;
   if(S.finalNight||S.trial||S.today==='odayaka'||S.rushOn||S.finalOn||S.trialOn)return false;
   const keep={bossWarn:S.bossWarn,bossOwed:S.bossOwed,lateWave:S.lateWave,bossDay:S.bossDay},w=waveFor(d+1);Object.assign(S,keep);/* 今夜のコワイノを先に見る（見るだけで、もとにもどす） */return w.length>0&&!w.some(t=>EN[t].boss)}
 function hornBlow(){if(!hornOK())return toast('いまは、ふけない','warn');S.horn--;S.hornD=dayNo();sfx('night');toast('今夜は、コワイノがふえる','warn');if(sheet==='inv')renderSheet()}
