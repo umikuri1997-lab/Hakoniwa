@@ -173,7 +173,7 @@ function renderSheet(){
     T.textContent='カミサマと交換';
     {const sb=el('<div class="godSay"><b>カミサマ</b><span></span></div>');sb.querySelector('span').textContent='「'+shopSay+'」';body.appendChild(sb)}
     body.appendChild(el('<p class="note">カミサマの持ち物と、パワーを交換します。</p>'));
-    if(S.flags.traded&&qNow('trade')){const eb=el('<button class="btn" id="shopEnd" style="width:100%;margin-bottom:8px">交換をおわる</button>');eb.onclick=()=>{sfx('next');closeSheet();checkQuest()};body.appendChild(eb)}// チュートリアル：買いおわったら帰る
+    if(S.flags.traded&&(S.subSt||{}).trade===2){const eb=el('<button class="btn" id="shopEnd" style="width:100%;margin-bottom:8px">交換をおわる</button>');eb.onclick=()=>{sfx('next');closeSheet();checkQuest()};body.appendChild(eb)}// チュートリアル：買いおわったら帰る
     const sec=(t)=>{const d=el('<div class="sec"><h3></h3><div class="rows"></div></div>');d.querySelector('h3').textContent=t;body.appendChild(d);return d.querySelector('.rows')};
     const trade=()=>{shopSay=pick(GOD_BUY);S.flags.traded=true;sfx('furn');checkQuest();renderSheet();renderPalette()};
     const row=(rows,title,desc,img,done)=>{const r=rowEl(title,desc,img);if(done)r.classList.add('done');const bx=el('<div style="display:flex;flex-direction:column;gap:4px;flex:none"></div>');r.appendChild(bx);rows.appendChild(r);return bx};
