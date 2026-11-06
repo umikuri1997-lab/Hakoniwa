@@ -382,7 +382,7 @@ function departScene(){const owner=S,session=VILLAGE_SESSION,alive=()=>S===owner
   const talk=()=>{if(!alive())return;if((S.flags.depStep||0)>=1)return kami();if(nu)centerOn(nu.x*TS,nu.y*TS);dialog(sevLines(DEPART_NUSHI),()=>{if(step(1))kami()},'つぎへ',NUSHI1)};
   DEPART_RUN=true;centerOn(TX*TS,TY*TS);gatherAt(TX,TY,()=>{if(!alive())return;if(isNight()){stop();DEPART_RETRY=performance.now()+5000;return}hold(true);villageTimeout(talk,400)},null,()=>{stop();DEPART_RETRY=performance.now()+20000})}/* 集まれなかったら、しばらくして集まるところから */
 /* ふしぎな種：せいれいにあげると、能力のどれかが上がる（パワーの強化とは別） */
-const UPK=[['atk','攻撃力'],['pow','作業スピード'],['spd','移動速度'],['sta','スタミナ'],['cap','持てる数']];
+const UPK=[['atk','攻撃力'],['pow','はたらく速さ'],['spd','移動速度'],['sta','スタミナ'],['cap','持てる数']];
 function giveSeed(r){if((S.mseed||0)<1)return;const T=r.sst||(r.sst={}),L=UPK.filter(([k])=>(T[k]||0)<6&&(k!=='atk'||r.elem==='fire'));/* 攻撃力は火の子だけ */if(!L.length)return toast(r.name+'は、これ以上ふしぎな種で強くならない');
   S.mseed--;const[k,nm]=pick(L),n=T[k]||0,inc=Math.min(Math.random()<.75?1:2,6-n);T[k]=n+inc;
   if(k==='pow'||k==='spd'||k==='sta')r.vr[k]=Math.round(((r.vr[k]||1)+.1*inc)*100)/100;
@@ -487,7 +487,7 @@ function upFx(r,nm,txt,big){const now=performance.now();JOYU.set(r,now+2600);RHO
 function howBtn(r,how){if(!how)return;const b=el('<button class="btn" style="min-width:34px;padding:4px 0;border-radius:50%">？</button>');b.onclick=()=>{const o=el('<div style="position:absolute;inset:0;z-index:40;display:flex;align-items:center;justify-content:center;background:rgba(30,24,16,.45);padding:24px"><div class="pxcard" style="background:var(--panel);border:2px solid var(--line);border-radius:16px;padding:16px 18px;max-width:340px;width:100%;animation:sup .18s ease-out"><b style="display:block;margin-bottom:8px"></b><p style="margin:0 0 14px;white-space:pre-line;line-height:1.7;font-size:14px"></p><button class="btn" style="width:100%">とじる</button></div></div>');o.querySelector('b').textContent='やりかた';o.querySelector('p').textContent=how;o.onclick=e=>{if(e.target===o||e.target.tagName==='BUTTON')o.remove()};$('#upfx').parentNode.appendChild(o);sfx('tap')};r.appendChild(b)}/* やりかたは「？」でポップアップ */
 function subSec(body,main){const D=S.subDone||{},St=S.subSt||{},L=subList().filter(q=>St[q.k]>=2),on=L.filter(q=>!D[q.k]).sort((a,b)=>(St[b.k]===3)-(St[a.k]===3)),dn=L.filter(q=>D[q.k]);
   const sec=(h)=>{const f=el('<div class="sec"><h3></h3><div class="rows"></div></div>');f.querySelector('h3').textContent=h;body.appendChild(f);return f.querySelector('.rows')};
-  {const rw=sec('進行中');let n=0;
+  {const rw=sec('すすめているもの');let n=0;
     if(main&&!S.cleared&&S.quest<QUESTS.length){const q=QUESTS[S.quest];{const wt=(S.qStory!=null||q.talk&&!S.qTalked)&&mainTalkWaitText(q);if(wt){const sq=S.qStory!=null?QUESTS[S.qStory]:q;rw.appendChild(rowEl('メイン：'+sq.text,wt));n++}}/* 会話・お礼を待っているときも、止まっている理由を出す */
     if(S.qStory==null&&!(q.talk&&!S.qTalked)){const wn=questWaitNote(q),r=rowEl('メイン：'+q.text,(q.prog?q.prog():'')+(wn?'　'+wn:''));howBtn(r,q.how);rw.appendChild(r);n++;
       for(const st of q.steps||[]){const ok=!!st.check(),sr=rowEl((ok?'✓ ':'・')+st.t,ok?'':st.prog?st.prog():'');if(ok)sr.classList.add('done');else howBtn(sr,st.how);sr.style.marginLeft='14px';rw.appendChild(sr)}}}/* 受けるまでは見せない。まとめた目標は、小さな目標ごとに、できた・まだを出す */
