@@ -449,6 +449,12 @@ function drawObj(c,id,x,y,i,g,now){
   case'lighthouse':{const T=now||0;shadow(c,x+16,y+29,12,3);c.fillStyle='#eadfc8';c.beginPath();c.moveTo(x+8,y+29);c.lineTo(x+12,y+2);c.lineTo(x+20,y+2);c.lineTo(x+24,y+29);c.fill();c.fillStyle='#c4523f';c.beginPath();c.moveTo(x+9.4,y+20);c.lineTo(x+10.6,y+13);c.lineTo(x+21.4,y+13);c.lineTo(x+22.6,y+20);c.fill();c.fillStyle='#8a5a33';rr(c,x+13,y+22,6,7,2);
     c.fillStyle='#3a3f4a';c.fillRect(x+10,y-3,12,6);const f=.65+.35*Math.sin(T/260);c.fillStyle='rgba(255,215,110,'+f+')';c.fillRect(x+12,y-2,8,4);c.fillStyle='#c4523f';c.beginPath();c.moveTo(x+9,y-3);c.lineTo(x+16,y-11);c.lineTo(x+23,y-3);c.fill();
     c.fillStyle='rgba(255,225,140,'+(.18*f)+')';circ(c,x+16,y,9,c.fillStyle);break}
+  case'lurestatue':{/* おびきよせの石像（仮の絵）：まっすぐ立つ、せいれいの形の石の像。ドット風の四角だけで描く */shadow(c,x+16,y+30,13,3);const R=(cx,cy,w,h,col)=>{c.fillStyle=col;c.fillRect(x+cx,y+cy,w,h)};
+    R(6,24,20,7,'#8a8d94');R(7,24,18,2,'#a7aab1');R(6,30,20,1,'#73767d');/* 台 */
+    R(10,10,12,14,'#9a9da5');R(11,10,4,14,'#b3b6bd');R(20,10,2,14,'#83868d');/* からだ */
+    R(7,13,3,7,'#9a9da5');R(22,13,3,7,'#8d9098');/* うで */
+    R(9,-4,14,14,'#a3a6ae');R(10,-4,5,13,'#babdc4');R(21,-3,2,12,'#888b92');R(11,-7,10,3,'#a3a6ae');R(12,-7,4,2,'#c2c5cc');/* 頭と頭巾 */
+    R(13,2,2,2,'#5d6068');R(18,2,2,2,'#5d6068');/* 目 */break}
   case'stele':{shadow(c,x+16,y+30,15,3);c.fillStyle='#8d9098';c.beginPath();c.moveTo(x,y+31);c.lineTo(x+1,y-4);c.quadraticCurveTo(x+16,y-16,x+31,y-4);c.lineTo(x+32,y+31);c.fill();c.fillStyle='#a8abb3';c.beginPath();c.moveTo(x+4,y+29);c.lineTo(x+5,y-2);c.quadraticCurveTo(x+10,y-9,x+17,y-10);c.lineTo(x+12,y+29);c.fill();
     c.strokeStyle='#5d616b';c.lineWidth=1.8;c.beginPath();c.moveTo(x+16,y+1);c.lineTo(x+16,y+18);c.moveTo(x+9,y+7);c.lineTo(x+23,y+7);c.moveTo(x+11,y+13);c.lineTo(x+21,y+13);c.stroke();
     c.fillStyle='#6ea84e';rr(c,x,y+25,9,6,3);rr(c,x+22,y+27,10,4,2);tuft(c,x+14,y+31,.6,'#7ab35a');break}

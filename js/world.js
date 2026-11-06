@@ -36,7 +36,7 @@ function finalCheck(){if(WD||!S||S.cleared||S.finalNight||S.finalOn||!S.enemyOn|
 /* ---------- 状態 ---------- */
 let S=null;
 const resv=new Map();
-let STATUE=-1,OBOX=-1,BOARD=-1,counts={},LIGHTS=[],JARS=[],COMPS=[],LITP=[],STELES=[],TOWERS=[],ENVE={},NEARMILL=new Set(),STUMPB=new Set(),NEARVANE=new Set(),NEARCART=new Set(),NEARTOOL=new Set(),NEARJORO=new Set(),NEARSIGN=new Set(),NEARTREE=new Set(),NEARPARA=new Set(),SPOTJ=new Map(),SPOTM=new Map(),SPOTI=[],RUGC=new Map(),RFC=new Map(),ENVG=null,REV=new Set(),ATTR={},BASEPCT=0,GRASSN=0;const GRASS_GOAL=2000;
+let STATUE=-1,OBOX=-1,BOARD=-1,counts={},LIGHTS=[],JARS=[],COMPS=[],LITP=[],STELES=[],LURES=[],TOWERS=[],ENVE={},NEARMILL=new Set(),STUMPB=new Set(),NEARVANE=new Set(),NEARCART=new Set(),NEARTOOL=new Set(),NEARJORO=new Set(),NEARSIGN=new Set(),NEARTREE=new Set(),NEARPARA=new Set(),SPOTJ=new Map(),SPOTM=new Map(),SPOTI=[],RUGC=new Map(),RFC=new Map(),ENVG=null,REV=new Set(),ATTR={},BASEPCT=0,GRASSN=0;const GRASS_GOAL=2000;
 function newState(w){w=w||0;
   const s={v:8,mig:10,flags:{spring2:1,juice1:1,berryHalf:1,berryHalf2:1,land2:1,land3:1,land4:1,arrow0:1,q3ins:1,qmerge1:1,qsplit1:1,earthMerge1:1,companionStory:1,fieldStoryV2:1,sacredStoryV1:1,sacredFootprint3:1,sacredFootprint4:1,fieldBuild1:1,trfit1:1,cookfit1:1,watch5:1,xp12:1,veins1:1,fl2v1:1,no2f1:1,vq1:1,fog1:1},placed:{},feat:{build:true},inv:{},orders:[],enemyOn:false,nights:0,godGone:false,godShown:false,nushi:null,
     lv:1,bossKills:0,nightHurt:0,nightHad:false,wave:null,lastWarn:0,
