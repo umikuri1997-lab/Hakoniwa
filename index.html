@@ -151,13 +151,12 @@ button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 #tutHand.swipe.rev .fing{animation-direction:reverse}
 #tutHand.swipe .ring{display:none}
 @keyframes tswipe{0%{transform:translateX(34px);opacity:0}15%{opacity:1}85%{opacity:1}100%{transform:translateX(-34px);opacity:0}}
-#tutHand{--hand-size:clamp(40px,11vw,56px);position:absolute;left:0;top:0;z-index:27;pointer-events:none;width:0;height:0}
+#tutHand{--s:2;--hand-size:calc(var(--s) * 33px);position:absolute;left:0;top:0;z-index:27;pointer-events:none;width:0;height:0}
 #tutHand .ring{position:absolute;left:-30px;top:-30px;width:60px;height:60px;border-radius:50%;border:3px solid #ecdcbc;box-shadow:0 0 12px #ecdcbc;animation:tring 1.1s ease-out infinite}
-#tutHand .fing{position:absolute;left:calc(var(--hand-size) * -.52);top:40px;width:var(--hand-size);line-height:1;filter:drop-shadow(0 2px 2px rgba(0,0,0,.5));animation:tfing .9s ease-in-out infinite}
+#tutHand .fing{position:absolute;left:0;top:40px;width:0;height:0;animation:tfing .9s ease-in-out infinite}
 #tutHand .lbl{position:absolute;left:50%;transform:translateX(-50%);top:-54px;white-space:nowrap;background:#ecdcbc;color:#1b1408;font-weight:800;font-size:13px;padding:4px 10px;border-radius:999px;box-shadow:0 2px 0 rgba(0,0,0,.25)}
-#tutHand .fing img{width:100%;height:auto;display:block}
 #tutHand.up .lbl{top:calc(var(--hand-size) * 2 + 56px);bottom:auto}
-#tutHand.down .fing{top:auto;bottom:40px}#tutHand.down .fing img{transform:scaleY(-1)}#tutHand.down .lbl{top:auto;bottom:calc(var(--hand-size) * 2 + 56px)}
+#tutHand.down .fing{top:-40px}#tutHand.down .lbl{top:auto;bottom:calc(var(--hand-size) * 2 + 56px)}
 @keyframes tring{0%{transform:scale(.6);opacity:1}100%{transform:scale(1.3);opacity:0}}
 @keyframes tfing{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
 .ctabs{display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 10px}.ctab{border:none;border-radius:999px;padding:6px 12px;font:inherit;font-size:13px;font-weight:800;background:var(--panel2);color:inherit;cursor:pointer}.ctab.on{background:#f1e4cc;color:#4a3a22}
@@ -447,8 +446,16 @@ svg.pxpow{width:18px;height:18px;flex:none;display:block;color:#d99a2b}
 .lvb .xp{width:48px;height:8px;overflow:visible;flex:none}.lvb .xp em{position:absolute;left:100%;top:50%;transform:translateY(-50%);margin-left:5px;inset:auto auto auto 100%;font:10px/1 var(--f-body)!important;color:var(--ink)!important;text-shadow:none!important;white-space:nowrap;text-align:left}
 .lvb{padding-right:var(--xpw,70px)}
 /* タップの案内の指（ドットの絵） */
-#tutHand .fing svg{width:100%;height:auto;display:block;filter:drop-shadow(0 2px 0 rgba(90,60,30,.35))}#tutHand.down .fing svg{transform:scaleY(-1)}
-#tutHand.elt .ring{display:none}#tutHand.elt.down .fing{bottom:0}#tutHand.elt.down .lbl{bottom:calc(var(--hand-size) + 6px);top:auto}#tutHand.elt.up .fing{top:0}#tutHand.side .fing{left:0;top:calc(var(--hand-size) * -.5)}#tutHand.side .fing svg{transform:rotate(-90deg)}#tutHand.side .lbl{left:calc(var(--hand-size) + 6px);top:-12px;transform:none}#tutHand.elt.up .lbl{top:calc(var(--hand-size) + 6px);bottom:auto}
+#tutHand .fing i{display:none;position:absolute;background-repeat:no-repeat;background-size:100% 100%;image-rendering:pixelated}
+#tutHand .fing .fu{display:block!important;width:calc(var(--s) * 24px);height:calc(var(--s) * 33px);left:calc(var(--s) * -8px);top:0;background-image:url(assets/g/f557a31f11.webp);animation:tpu .9s steps(1) infinite}
+#tutHand .fing .fd{width:calc(var(--s) * 24px);height:calc(var(--s) * 39px);left:calc(var(--s) * -8px);top:calc(var(--s) * -32px);background-image:url(assets/g/06bfa2b24a.webp);background-size:200% 100%;animation:tpd .9s steps(1) infinite}
+#tutHand .fing .fl{width:calc(var(--s) * 34px);height:calc(var(--s) * 24px);left:0;top:calc(var(--s) * -8px);background-image:url(assets/g/07f0470bd4.webp);animation:tpl .9s steps(1) infinite}
+#tutHand.down .fing .fu,#tutHand.side .fing .fu{display:none!important}#tutHand.down .fing .fd,#tutHand.side .fing .fl{display:block}
+@keyframes tpu{0%,55%{transform:none}55.1%,100%{transform:translateY(calc(var(--s) * -2px))}}
+@keyframes tpd{0%,55%{background-position:0 0}55.1%,100%{background-position:100% 0}}
+@keyframes tpl{0%,55%{transform:none}55.1%,100%{transform:translateX(calc(var(--s) * -2px))}}
+@media(min-width:700px) and (min-height:700px){#tutHand{--s:3}}
+#tutHand.elt .ring{display:none}#tutHand.elt.down .fing{top:0}#tutHand.elt.down .lbl{bottom:calc(var(--hand-size) + 6px);top:auto}#tutHand.elt.up .fing{top:0}#tutHand.side .fing{left:0;top:0}#tutHand.side .lbl{left:calc(var(--hand-size) + 6px);top:-12px;transform:none}#tutHand.elt.up .lbl{top:calc(var(--hand-size) + 6px);bottom:auto}
 /* メニューのアイコン（下のバーと同じドットの線・色） */
 .mtile .mi svg.pxi{width:32px;height:32px;display:block;margin:0 auto;color:#86715a}
 .mtags{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 6px}.mtag{--pp:1.5px;display:inline-flex;align-items:center;gap:4px;padding:3px 8px;font-size:12px;border:var(--pp) solid transparent;border-image:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2211%22%20height%3D%2211%22%20viewBox%3D%220%200%2011%2011%22%20shape-rendering%3D%22crispEdges%22%3E%3Cpath%20d%3D%22M4%201h3v1h-3zM2%202h7v1h-7zM2%203h7v1h-7zM1%204h9v1h-9zM1%205h9v1h-9zM1%206h9v1h-9zM2%207h7v1h-7zM2%208h7v1h-7zM4%209h3v1h-3z%22%20fill%3D%22%23e8d9b9%22%2F%3E%3Cpath%20d%3D%22M4%200h3v1h-3zM2%201h2v1h-2zM7%201h2v1h-2zM1%202h1v1h-1zM9%202h1v1h-1zM1%203h1v1h-1zM9%203h1v1h-1zM0%204h1v1h-1zM10%204h1v1h-1zM0%205h1v1h-1zM10%205h1v1h-1zM0%206h1v1h-1zM10%206h1v1h-1zM1%207h1v1h-1zM9%207h1v1h-1zM1%208h1v1h-1zM9%208h1v1h-1zM2%209h2v1h-2zM7%209h2v1h-2zM4%2010h3v1h-3z%22%20fill%3D%22%23e8d9b9%22%2F%3E%3C%2Fsvg%3E") 5 fill / calc(var(--pp)*5) stretch}.mtag svg.pxi{width:16px;height:16px;color:#86715a}.mtag b{font-size:14px}
@@ -557,7 +564,7 @@ svg.pxi.ck{width:14px;height:12px;display:inline-block;vertical-align:-1px;margi
     <div id="alert" class="alert" hidden></div>
   </div>
   <div id="toasts"></div>
-  <div id="tutHand" hidden><div class="ring"></div><div class="fing"><svg class="pxhand" viewBox="0 0 32 32" aria-hidden="true" shape-rendering="crispEdges"><path d="M14 3h3v1h-3zM14 4h3v1h-3zM14 5h3v1h-3zM14 6h3v1h-3zM14 7h3v1h-3zM14 8h3v1h-3zM14 9h3v1h-3zM14 10h3v1h-3zM14 11h3v1h-3zM14 12h4v1h-4zM14 13h5v1h-5zM13 14h8v1h-8zM9 15h10v1h-10zM21 15h3v1h-3zM9 16h10v1h-10zM21 16h2v1h-2zM9 17h10v1h-10zM21 17h2v1h-2zM9 18h10v1h-10zM21 18h2v1h-2zM9 19h10v1h-10zM21 19h2v1h-2zM9 20h15v1h-15zM9 21h15v1h-15zM9 22h15v1h-15zM9 23h15v1h-15zM10 24h13v1h-13zM11 25h11v1h-11zM11 26h11v1h-11zM11 27h11v1h-11z" fill="#fff6e4"/><path d="M15 0h1v1h-1zM13 1h5v1h-5zM12 2h7v1h-7zM12 3h2v1h-2zM17 3h2v1h-2zM12 4h2v1h-2zM17 4h2v1h-2zM12 5h2v1h-2zM17 5h2v1h-2zM12 6h2v1h-2zM17 6h2v1h-2zM12 7h2v1h-2zM17 7h2v1h-2zM12 8h2v1h-2zM17 8h2v1h-2zM12 9h2v1h-2zM17 9h2v1h-2zM12 10h2v1h-2zM17 10h2v1h-2zM12 11h2v1h-2zM17 11h3v1h-3zM9 12h1v1h-1zM12 12h2v1h-2zM18 12h4v1h-4zM23 12h1v1h-1zM7 13h7v1h-7zM19 13h7v1h-7zM7 14h6v1h-6zM21 14h5v1h-5zM7 15h2v1h-2zM19 15h2v1h-2zM24 15h2v1h-2zM7 16h2v1h-2zM19 16h2v1h-2zM23 16h3v1h-3zM7 17h2v1h-2zM19 17h2v1h-2zM23 17h3v1h-3zM7 18h2v1h-2zM19 18h2v1h-2zM23 18h3v1h-3zM7 19h2v1h-2zM19 19h2v1h-2zM23 19h3v1h-3zM7 20h2v1h-2zM24 20h2v1h-2zM7 21h2v1h-2zM24 21h2v1h-2zM7 22h2v1h-2zM24 22h2v1h-2zM7 23h2v1h-2zM24 23h2v1h-2zM7 24h3v1h-3zM23 24h3v1h-3zM7 25h4v1h-4zM22 25h4v1h-4zM9 26h2v1h-2zM22 26h2v1h-2zM9 27h2v1h-2zM22 27h2v1h-2zM9 28h15v1h-15zM9 29h15v1h-15z" fill="#7a4f2b"/></svg></div><span class="lbl"></span></div>
+  <div id="tutHand" hidden><div class="ring"></div><div class="fing"><i class="fu"></i><i class="fd"></i><i class="fl"></i></div><span class="lbl"></span></div>
   <div id="idle" hidden><div class="card"><b>ひと休み中</b><small>しばらくさわっていなかったので、時間を止めています</small><span>タップでつづける</span></div></div>
   <div id="upfx" hidden><div class="rays"></div><div class="uc"><div class="upt"></div><div class="utt"></div><div class="unn"></div></div></div>
   <div id="rlv" hidden><div class="rcard"><div class="rpt"></div><div class="rtt"></div><div class="rrows"></div><button class="btn pri" id="rlvOk">OK</button></div></div>
