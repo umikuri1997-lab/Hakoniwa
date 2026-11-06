@@ -103,7 +103,7 @@ function spawnWave(list){SKIP=false;/* コワイノが来たら、早送りを�
   else if(list.includes('hino'))dialog(['火山のほうから、熱い風がふいてくる…！','「ヒノオオカゲ」が来るよ！ 熱の装置をねらってる！ みんなで追いはらって！'],null,null,LEAD());
   else if(list.filter(t=>t==='ash').length>=6)dialog(['空から、灰がふってきた…！','ハイカゲがたくさん来るよ！ かまどやベンチをまもって！'],null,null,LEAD());
   else if(list.includes('boss2'))dialog(WD===1?[[HOMURA,'守り神！ 山の上にのこってた影が、おりてくるよ…！'],[HOMURA,'今夜は「ヤマノオオカゲ」さ。みんな、気をつけな！']]:['守り神さま…！ いつもより、ずっと空気が重い…！','あれ……オオカゲより、ずっと大きい……！ みんな、家の中にかくれて！'],null,null,LEAD());
-  else if(list.includes('boss')&&!WD&&!S.flags.bossTold&&S.res.some(r=>r.name===POKO)){S.flags.bossTold=1;dialog([[POKO,'守り神さま…！ ……この感じ。空気が、ずっしり重い。'],[POKO,'#alarm|「オオカゲ」……コワイノたちの親玉が、来るんだ。'],[POKO,'思い出すと、今でも足がすくむけど……'],[POKO,'今夜は「オオカゲ」が来る！ 柵をかさねて、家の中にかくれて！']],null,null,LEAD())}
+  else if(list.includes('boss')&&!WD&&!S.flags.bossTold&&S.res.some(r=>r.name===POKO)){S.flags.bossTold=1;dialog([[POKO,'守り神さま…！ ……この感じ。空気が、ずっしり重い。'],[POKO,'#alarm|「オオカゲ」……コワイノがあつまった大きな影が、来るんだ。'],[POKO,'思い出すと、今でも足がすくむけど……'],[POKO,'今夜は「オオカゲ」が来る！ 柵をかさねて、家の中にかくれて！']],null,null,LEAD())}
   /* 火山では、オオカゲが来ることは知らせない（草原で話したので、くりかえさない） *//* 草原は、はじめての夜のフタバの知らせだけ。2回目からは知らせない */
 }
 // 出現場所：マップの南のはし（いちばん下の行）から。水・障害物・明かりの中はさける
@@ -145,7 +145,7 @@ const ZURA={/* クリア後に図鑑で読める「もとのすがた」（STORY
   yama:'火山のふもとで、火が夜にねむるのを見守っていた子たちの、もうひとつのすがた。温泉をねむらせてあげようとして、冷やしてしまう。',
   boss2:'闇のせいれいみんなと、闇のヌシ様がいた「夜」そのものの、なごり。この土地を、もう一度、ちゃんと休める夜にしたくて、明かりや守りを消そうとする。'};
 function shakeScreen(){const v=$('#cv');v.classList.remove('shk');void v.offsetWidth;v.classList.add('shk');setTimeout(()=>v.classList.remove('shk'),600)}
-const BOSSFX={boss:{col:'#ff3b6b',sub:'コワイノたちの親玉が、すがたをあらわした'},yama:{col:'#ff6a2e',sub:'火の山の熱をうばう、大きなコワイノ'},boss2:{col:'#ffd84a',sub:'夜の力をたくわえた、いちばん大きなコワイノ'}};
+const BOSSFX={boss:{col:'#ff3b6b',sub:'コワイノがあつまった、大きな影が、すがたをあらわした'},yama:{col:'#ff6a2e',sub:'火の山の熱をうばう、大きなコワイノ'},boss2:{col:'#ffd84a',sub:'夜の力をたくわえた、いちばん大きなコワイノ'}};
 let TOWERGLOW=0;/* 守護の台座が光る時刻（画面の時計） */
 function towerGlow(ms){TOWERGLOW=performance.now()+ms}
 function camTour(z0,c0){/* フタバ・ノドカなどのキーキャラと、火のせいれいを、1人ずつ約3秒、カメラでうつして（最大4人）、そのあと、はじめの場所へもどる */const S0=S,L=S.res.filter(r=>(KEYS[WD].includes(r.name)||r.elem==='fire')&&!r.hidden).sort((p,q)=>KEYS[WD].includes(q.name)-KEYS[WD].includes(p.name)).slice(0,4);let i=0;const step=()=>{if(S!==S0)return;const cx=cam.x+VW/cam.z/2,cy=cam.y+VH/cam.z/2;if(i>=L.length){camAnim={fz:cam.z,tz:z0,fx:cx,fy:cy,tx:c0.x,ty:c0.y,t:0,dur:1.2};return}const r=L[i++];camAnim={fz:cam.z,tz:Math.max(z0,2),fx:cx,fy:cy,tx:r.x*TS,ty:(r.y-.7)*TS-hiAt((r.y|0)*W+(r.x|0))*LIFT,t:0,dur:.9};setTimeout(step,2800)};step()}
