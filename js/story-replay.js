@@ -106,7 +106,7 @@ async function playVolReplay(run){
   else if(id==='tower'){nushiReturns(true);await waitStoryReplay(run,()=>S.cleared);}
   else{if(q.talk&&/vol:/.test(JSON.stringify(q.talk.lines)))await say(q.talk.lines.filter(l=>l[0]!=='@idea'));await say(q.story);}
 }
-function replayReadyActors(){for(const r of S.res){endAct(r);delete r.storyWaitHome;RHOLD.delete(r);r.hunger=hMax(r);r.energy=100;r.carry=null;r.cmat=null;r.meal=null;r.cing=null;}}
+function replayReadyActors(){for(const r of S.res){endAct(r);delete r.storyWaitHome;RHOLD.delete(r);r.hunger=hMax(r);r.energy=100;r.carry=null;r.cmat=null;r.citem=null;r.meal=null;r.cing=null;}}
 async function waitStoryReplay(run,condition){while(STORY_REPLAY_RUN===run&&!run.cancelled){if(condition())return;await new Promise(r=>setTimeout(r,80));}throw Error('replay cancelled');}
 async function playStoryReplay(run){
   const e=run.episode;let last=performance.now();run.running=true;

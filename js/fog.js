@@ -24,7 +24,7 @@ function fogGen(s,areas){/* 霧のエリアに、見つける物を1つずつ置
   const K=fogShuffle(FOG_KINDS.filter(t=>t!=='ruin').concat(Array(3-ruins).fill('box')));
   rest.forEach((a,n)=>{const t=K[n%K.length],R=fogArea(a);for(let tr=0;tr<400;tr++){const x=R.x0+4+((Math.random()*(AREAW-8))|0),y=R.y0+4+((Math.random()*(AREAW-8))|0),j=y*W+x;const n=t==='spring'?2:1;let ok=true;for(let b=0;b<=n&&ok;b++)for(let c=0;c<n&&ok;c++)if(!fogSpotOK(s,j+b*W+c,s.hi?s.hi[j]||0:0)&&(b<n||t!=='print'))ok=false;if(!ok)continue;/* 泉は2×2。前に1マスあけて、せいれいが近よれるように */
     s.obj[j]=t==='box'?'fogbox':t==='print'?'nushiprint':'fogspring';if(n>1)fogParts(s,j);out.push({t,a,j});return}});
-  s.fogF=out}
+  s.fogF=out;fogMansionAdd(s,areas)}
 function fogParts(s,j){for(const k of [j+1,j+W,j+W+1]){s.obj[k]='part';s.ref[k]=j}}
 function fogSpring2(s){/* 前のセーブの1×1の泉を2×2へ（そのマスをふくむ4とおりのどれかで、3マスが空いていれば）。空いていなければ、そのまま、あとの recount でまたためす */
   if(s.flags.spring2||!s.fogF)return;let left=0;
@@ -44,8 +44,29 @@ function fogAfterRecount(){/* recount のあと：となりの晴れたエリア
   for(const a of clr)fogClear(a,quiet);
   for(const f of S.fogF||[]){if(f.t!=='ruin'||!f.set||f.done)continue;const c=f.j+W+2;if(fogRing(f.j).every(k=>HOME_WALLS.has(S.obj[k])||HOME_DOORS.has(S.obj[k]))&&HOUSES.some(h=>h.inside.has(c))){f.done=1;const L=FURN.filter(id=>giftPoolOK(id));if(L.length){const id=pick(L);giveItem(id,1);queueItemGift({[id]:1})}toast('古い家が、よみがえった','good')}}}
 function fogRing(j){/* 古い家のあと：5×4マスのまわり（下のまん中がドア） */const x=j%W,y=(j/W)|0,L=[];for(let b=0;b<4;b++)for(let a=0;a<5;a++)if(a===0||a===4||b===0||b===3)L.push((y+b)*W+x+a);return L}
+/* お屋敷：霧のエリアの1つに、そのまま住める大きな家（よこ12×たて9。部屋は3つ）。晴れたときに建つ。場所は、はじめに1回だけきめる */
+const MANSION_W=12,MANSION_H=9,MANSION_DOORS=[[3,8],[6,6],[8,4]],MANSION_WIN=[[2,0],[4,0],[8,0],[10,0]],
+  MANSION_FURN=[['shelf1',1,1],['monstera',5,1],['table',3,3],['chair',2,3],['chair',4,3],['lantern',5,4],['stool',1,7],/* 居間 */
+    ['bed',7,2],['bed',10,2],['lantern',9,1],/* 寝室 */['cooktable',7,5],['sink',9,5],['taru',10,5],['crate',10,7],['stool',8,7]],/* 台所 */
+  MANSION_RUG=[['rug1',1,5]];
+function mansionWall(a,b){return a===0||a===MANSION_W-1||b===0||b===MANSION_H-1||a===6||b===4&&a>6}
+function fogMansionAt(s,R,busy){/* 平らで、水も見つける物もない所（ドアの前の1行も）。左上から順にさがす */
+  for(let y=R.y0+2;y+MANSION_H+1<=R.y1-1;y++)for(let x=R.x0+2;x+MANSION_W<=R.x1-2;x++){const hi=s.hi?s.hi[y*W+x]||0:0;let ok=true;
+    for(let b=0;b<=MANSION_H&&ok;b++)for(let a=0;a<MANSION_W&&ok;a++){const k=(y+b)*W+x+a,o=s.obj[k];if(s.ground[k]!==0||s.floor[k]||(s.hi?s.hi[k]||0:0)!==hi||busy.has(k)||o&&!(WEEDS.has(o)||BL[o]&&BL[o].natural&&!BL[o].sz&&o!=='fogbox'&&o!=='nushiprint'&&o!=='fogspring'))ok=false}
+    if(ok)return y*W+x}return -1}
+function fogMansionAdd(s,areas){/* 新しい草原と、前のセーブ（いちどだけ）：まだ霧のエリアに、お屋敷の場所をきめる */if(s.flags.mansion1||!s.fogF)return;s.flags.mansion1=1;if((s.world||0)!==0||s.free||s.fogF.some(f=>f.t==='mansion'))return;
+  const busy=new Set();for(const f of s.fogF){const x=f.j%W,y=(f.j/W)|0;for(let b=-2;b<7;b++)for(let a=-2;a<7;a++)busy.add((y+b)*W+x+a)}
+  for(const a of (areas||s.fog.map((v,a)=>v?a:-1).filter(a=>a>=0)).slice().sort((p,q)=>p-q)){if(!s.fog[a])continue;const j=fogMansionAt(s,fogArea(a),busy);if(j>=0){s.fogF.push({t:'mansion',a,j});return}}}
+function fogMansionBuild(f){/* 晴れたとき：壁・ドア・窓・床・家具をそのまま置く */const x=f.j%W,y=(f.j/W)|0;
+  for(let b=0;b<=MANSION_H;b++)for(let a=0;a<MANSION_W;a++){const k=(y+b)*W+x+a;if(S.obj[k]&&S.obj[k]!=='part'&&!(BL[S.obj[k]]&&BL[S.obj[k]].natural||WEEDS.has(S.obj[k])))continue;S.obj[k]='';delete S.dyn[k];delete S.hp[k];delete S.hp['lp'+k];delete S.ref[k]}
+  S.drops=(S.drops||[]).filter(d=>!(d.x>=x&&d.x<x+MANSION_W&&d.y>=y&&d.y<=y+MANSION_H));
+  for(let b=0;b<MANSION_H;b++)for(let a=0;a<MANSION_W;a++){const k=(y+b)*W+x+a;if(mansionWall(a,b))setBlock(MANSION_DOORS.some(([da,db])=>da===a&&db===b)?'door':'hwall',k);else S.floor[k]='floor'}
+  for(const[a,b]of MANSION_WIN)(S.win||(S.win={}))[(y+b)*W+x+a]=1;
+  for(const[id,a,b]of MANSION_FURN)setBlock(id,(y+b)*W+x+a);for(const[id,a,b]of MANSION_RUG)(S.rug||(S.rug={}))[(y+b)*W+x+a]=id;
+  f.set=1;f.done=1}
 function fogClear(a,quiet){if(!S.fog[a])return;S.fog[a]=0;S.fogV=(S.fogV||0)+1;if(!quiet)FOGA.set(a,performance.now());if(typeof SPRC!=='undefined')SPRC.n=-1;/* コワイノの来る所を作りなおす */
   if(!quiet){toast('霧が晴れた','good');sfx('level')}
+  for(const f of S.fogF||[])if(f.a===a&&f.t==='mansion'&&!f.set){fogMansionBuild(f);if(!quiet)toast('霧の中から、お屋敷が見つかった','good');villageTimeout(()=>recount(),30)}
   for(const f of S.fogF||[])if(f.a===a&&f.t==='ruin'&&!f.set){f.set=1;const x=f.j%W,y=(f.j/W)|0,keep=new Set([0,4,5,8,9,13]);/* のこっている壁（角と、いくつか）。ほかは、こわれたあと */fogRing(f.j).forEach((k,i)=>{const o=S.obj[k];if(o&&!(BL[o]&&BL[o].natural||WEEDS.has(o)))return;if(o)S.obj[k]='';S.drops=(S.drops||[]).filter(d=>d.y*W+d.x!==k);const door=k===(y+3)*W+x+2;if(keep.has(i)&&!door)S.obj[k]='hwall';else(S.broken||(S.broken=[])).push({j:k,id:door?'door':'hwall',rot:0})});villageTimeout(()=>recount(),30)}
   dirty=true}
 function fogTap(tx,ty){/* 「みる」のタップ：霧の所・見つける物 */if(!fogOn())return false;let j=ty*W+tx;if(fogAt(j)){toast('霧で見えない');return true}j=anc(j);
@@ -59,7 +80,7 @@ function fogReqFor(r){/* この子が行ける、たのまれた物 */if(!fogOn(
 function fogWant(r){return fogFree(r)&&fogReqFor(r)>=0}
 function fogJob(r,G){const j=fogReqFor(r);if(j<0)return false;const o=S.obj[j],ad=k=>k===j&&o==='nushiprint'||[1,-1,W,-W].some(d=>k+d===j&&Math.abs(k%W-j%W)<=1),st=nearest(G,k=>ad(k)&&walk(k),9999);if(st<0)return false;startAct(r,G,o==='fogbox'?'fogopen':'foglook',st,{key:'o'+j,obj:j});return true}
 const fogDone=j=>{S.fogReq=(S.fogReq||[]).filter(k=>k!==j)};
-ACT.fogopen={start(r,a){if(S.obj[a.obj]!=='fogbox')return false;r.bubble='';r.face=(a.obj%W+.5)<r.x?-1:1},done:(r,a)=>a.t>=3,end(r,a){fogDone(a.obj);if(S.obj[a.obj]!=='fogbox')return;const f=fogFind(a.obj);if(f)f.done=1;clearObj(a.obj);burst(a.obj,'furn','furnPlace');const L=FURN.filter(id=>giftPoolOK(id));if(L.length){const id=pick(L);giveItem(id,1);queueItemGift({[id]:1},'みつけた！');addFloat(r.x,r.y-1.8,BL[id].name)}addSpiritXp(1,r);recount();dirty=true}};
+ACT.fogopen={start(r,a){if(S.obj[a.obj]!=='fogbox')return false;r.bubble='';r.face=(a.obj%W+.5)<r.x?-1:1},done:(r,a)=>a.t>=3,end(r,a){fogDone(a.obj);if(S.obj[a.obj]!=='fogbox')return;const f=fogFind(a.obj);if(f)f.done=1;clearObj(a.obj);burst(a.obj,'furn','furnPlace');const L=FURN.filter(id=>giftPoolOK(id));if(L.length){const id=pick(L);sfx('seed');toast(r.name+'が宝箱から「'+BL[id].name+'」をみつけた','good');addFloat(r.x,r.y-1.8,BL[id].name);if(!(itemBoxOK()&&addItem(r,id,1)))dropAt(r.x,r.y,id,1)}/* 箱へはこんでから、もちものに入る */addSpiritXp(1,r);recount();dirty=true}};
 ACT.foglook={start(r,a){if(S.obj[a.obj]!=='nushiprint')return false;r.bubble=''},done:(r,a)=>a.t>=2,end(r,a){fogDone(a.obj);const f=fogFind(a.obj);if(!f||f.done)return;const n=(S.fogF||[]).filter(q=>q.t==='print').indexOf(f);dialog(FOG_PRINT_LINES[Math.max(0,n)%FOG_PRINT_LINES.length],()=>{f.done=1})}};
 ACT_LBL.fogopen='宝箱をあけている';ACT_LBL.foglook='ヌシ様のあしあとを見ている';
 function drawFogObj(c,id,x,y,i,now){/* 見つける物の絵（マップチップ。読みこみ前はコードでかく） */const ch=chipOf(id);

@@ -9,7 +9,7 @@ const FIELD_PREP={
   windEcho:{label:'切り株のそばに、風車を建てよう',wait:'風車ができあがるのを待とう',build:{ids:['windmill']},learn:['windmill'],legacy:j=>fieldNear(j,3,o=>o==='lily')},
   tower:{label:'切り株のそばに、ベンチを置こう',build:{ids:['bench']},learn:['bench'],legacy:()=>false}
 };
-const FIELD_NEAR_R=3;
+const FIELD_NEAR_R=6;/* 「切り株のそば」：木のマスから6マスまで */
 const fieldBuildHas=(k,ids)=>ids.includes(S.obj[k])||ids.includes(S.floor[k]);
 function fieldBuildCount(id){const p=FIELD_PREP[id],b=fieldStoryState(id)?.built;if(!p||!b)return 0;if(b.legacy)return p.build.n||1;return (b.cells||[]).filter(k=>fieldBuildHas(k,p.build.ids)).length}
 const fieldBuildOK=id=>fieldBuildCount(id)>=(FIELD_PREP[id]?.build?.n||1);
@@ -26,12 +26,12 @@ function migrateFieldBuild(state){if(!state.flags||state.flags.fieldBuild1)retur
   const q=QUESTS1[state.quest];if(!q?.fieldParts)return;const S0=S;S=state;try{{const id=q.fieldParts.find(p=>((state.fieldStories?.[p]?.step)||0)<(FIELD_STORIES[p]?.length||0)),p=id&&FIELD_PREP[id],st=state.fieldStories?.[id];if(p&&!((st?.step||0)>0)&&!st?.built)if(p.legacy(state.sacredRoot)){state.fieldStories||(state.fieldStories={});(state.fieldStories[id]||(state.fieldStories[id]={step:0})).built={legacy:1};}}}finally{S=S0}}
 /* 守り神の出番：その話の、どの段階で、どんな操作か。pop：地図を見なくてよい出番は、ポップアップの中で（その見出し） */
 const FIELD_PLAY={
-  earthRoot:{phase:0,type:'root',hint:'光る根の先から、根を指でなぞって土から出す。はずれると根が切れて、はじめから',bonus:{items:{bellf:2}}},
-  fireRoot:{phase:0,type:'hold',pop:'石をあたためる',hint:'石を長おしして、ゲージが緑のときにはなす',bonus:{fun:10}},
+  earthRoot:{phase:0,type:'root',hint:'光る根の先から、根を指でなぞって土から出す。はずれると根が切れて、はじめから',bonus:{fun:10,word:'根がほっとした'}},
+  fireRoot:{phase:0,type:'hold',pop:'石をあたためる',hint:'石を長おしして、ゲージが緑のときにはなす',bonus:{fun:10,word:'石がぽかぽか'}},
   fireTrace:{phase:2,type:'cover',pop:'草をかぶせる',hint:'草を指で運んで、青く光るつめたい所にのせる'},
-  waterFilm:{phase:2,type:'trace',hint:'光る所から、水の通り道を指でなぞって根までつなぐ',bonus:{items:{lotus:2}}},
+  waterFilm:{phase:2,type:'trace',hint:'光る所から、水の通り道を指でなぞって根までつなぐ',bonus:{fun:10,word:'水がしみわたった'}},
   waterLeaf:{phase:1,type:'drip',pop:'しずくをはこぶ',hint:'しずくを指で動かして、葉の上を通って芽まではこぶ'},
-  windEcho:{phase:0,type:'rhythm',pop:'葉の音を聞く',hint:'葉がゆれた順に、指で風をおくって葉をなぞる',bonus:{items:{lily:2}}},
+  windEcho:{phase:0,type:'rhythm',pop:'葉の音を聞く',hint:'葉がゆれた順に、指で風をおくって葉をなぞる',bonus:{fun:10,word:'葉がうたった'}},
   windVoices:{phase:4,type:'gather',hint:'切り株を長おしして、みんなの力をあつめる'}
 };
 let SPLAY=null;
@@ -61,8 +61,8 @@ function startSacredPlay(id,j,cast,done){
 function sacredPlayWin(){const P=SPLAY;if(!P)return;sacredPlayClose();if(P.owner!==S||P.session!==VILLAGE_SESSION)return;fxSpr('lighthit',P.cx,P.cy);sfx('good');sacredPlayBonus(P);P.done()}
 /* うまくできたときのごほうび（その出番で1回だけ。思い出帳ではなし） */
 function sacredPlayBonus(P){const b=FIELD_PLAY[P.id]?.bonus;if(!b||IS_STORY_REPLAY)return;const F=S.flags.playWon||(S.flags.playWon={});if(F[P.id])return;F[P.id]=true;dirty=true;
-  if(b.items){for(const[id,n]of Object.entries(b.items))giveItem(id,n);queueItemGift(b.items,'うまくできた！')}
-  if(b.fun)for(const r of P.cast||[]){r.fun=Math.min(100,r.fun+b.fun);addFloat(r.x,r.y-1.4,'たのしさ+'+b.fun)}}
+  if(b.word)addFloat(P.cx/TS,P.cy/TS-1.6,b.word,'#fff3c4');/* 木のようすが、うれしそうにかわる（物はもらわない） */
+  if(b.fun)for(const r of S.res){if(r.hidden||r.coffin)continue;r.fun=Math.min(100,r.fun+b.fun);addFloat(r.x,r.y-1.4,'たのしさ+'+b.fun)}}/* 村のみんなが、うれしくなる */
 /* しっぱい：数えて、3回でおわり（お話は進む） */
 function sacredPlayMiss(t){const P=SPLAY;if(!P)return;P.fails=(P.fails||0)+1;sacredPlayMsg(t);if(P.fails<PLAY_MISS){sacredPlayHint(P.hint+sacredPlayCount());return}sacredPlayClose();if(P.owner!==S||P.session!==VILLAGE_SESSION)return;sfx('tap');P.done()}
 function sacredPlayClose(){SPLAY=null;sacredPlayHint('');pxTextFree();pxLayerFree();sacredPlayPopFree()}
