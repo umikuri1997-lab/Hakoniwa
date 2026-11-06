@@ -59,8 +59,8 @@ function bubRuns(id){/* 色ごとの横の連なり（ふち付き、13×13）�
   for(const[x,y,c]of ol)g[y][x]=c;
   const runs=[];for(let y=0;y<N;y++){let x=0;while(x<N){const c=g[y][x];if(!c){x++;continue}let e=x+1;while(e<N&&g[y][e]===c)e++;runs.push([x,y,e-x,c]);x=e}}
   return BUBRUN[id]=runs}
-function bubIcon(c,key,cx,cy,k){/* (cx,cy) を中心に描く。1ドット k（ふつう1.5）。48×48の絵を、ふきだしの中（はば30）に入る大きさで描く。大きくするときはぼかさず、ちぢめるときはなめらかに */
+function bubIcon(c,key,cx,cy,k,B){/* (cx,cy) を中心に描く。1ドット k（ふつう1.5）。48×48の絵を描く。B（pxBub がかえす、ふきだしの中のまん中と大きさ。画面のピクセル）があれば、ふきだしの中のまん中に入れる。大きくするときはぼかさず、ちぢめるときはなめらかに */
   k=k||1.5;const id=BUBI[bubKey(key)]||'unk',x0=cx-6.5*k,y0=cy-6.5*k,sp=BUBSPR[id];
   if(sp&&BUBS.ok){
-    const T=c.getTransform(),W=T.a*30*k/1.5,n=Math.round(W),q=W>=48?1:0;c.save();c.setTransform(1,0,0,1,0,0);c.imageSmoothingEnabled=q<1;c.imageSmoothingQuality='high';c.drawImage(BUBS.img,sp[0]*48,sp[1]*48,48,48,Math.round(T.a*cx+T.e-n/2),Math.round(T.d*cy+T.f-n/2),n,n);c.restore();return}
+    const T=c.getTransform(),n=B?B.s:Math.round(T.a*30*k/1.5),X=B?B.x:T.a*cx+T.e,Y=B?B.y:T.d*cy+T.f;c.save();c.setTransform(1,0,0,1,0,0);c.imageSmoothingEnabled=n<48;c.imageSmoothingQuality='high';c.drawImage(BUBS.img,sp[0]*48,sp[1]*48,48,48,Math.round(X-n/2),Math.round(Y-n/2),n,n);c.restore();return}
   for(const[x,y,n,col]of bubRuns(id)){c.fillStyle=col;c.fillRect(x0+x*k,y0+y*k,n*k,k)}}
