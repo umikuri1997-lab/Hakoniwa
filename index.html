@@ -622,25 +622,66 @@ window.PXSCENE=function(c,gw,gh,P,kind,t){
  if(!TL&&(kind==='meadow'||kind==='free')){/* せいれい */var ks=['wood','earth','fire'],bx2=Math.round(gw/2-17);for(var m=0;m<3;m++){var hop=(Math.floor(t*2+m*.7)%4===0)?1:0;spr(SPR[ks[m]],bx2+m*12,gy+((gh-gy)*0.35|0)-hop,{h:SC[ks[m]].h,a:SC[ks[m]].a,w:'#fffaf0',k:'#3a2a20',p:'#f4a9a0'});R(bx2+m*12+2,gy+((gh-gy)*0.35|0)+11,6,1,'rgba(40,60,30,.25)')}}
 };
 })();</script>
-  <div id="title" class="title"><canvas id="tScene" aria-hidden="true"></canvas><canvas id="tSpr" aria-hidden="true"></canvas><div class="tbox"><p class="tsub">守り神とせいれいのものがたり</p><h1>はこにわ暮らし</h1><p class="tline">荒れた土地に、もう一度いのちを。</p><div class="tbtns"><button class="btn pri" id="tStart">はじめる</button></div><p class="tline" id="tLoad" hidden></p></div></div><script>/* タイトルの絵：うしろ（空・丘・草）は小さなキャンバス（1ドット＝P px）に描いて、pixelated で大きくする。木とせいれいは、ゲームと同じ絵（マップの木のチップ・せいれいのドット絵）を、ゲームのデータが読みこめてから、上のキャンバスに整数倍で描く（なめらかにしない）。フタバは寝ている。つぎのステージのセーブがあれば、そのステージのはじめの子とキーキャラ（会えた子だけ）も。1秒に8回だけ描きなおし、タイトルが見えないときは描かない */
-(function(){var cv=document.getElementById('tScene'),cs=document.getElementById('tSpr'),T=document.getElementById('title');if(!cv||!cv.getContext)return;var c=cv.getContext('2d'),q=cs&&cs.getContext('2d'),P=4,gw=0,gh=0,cw=0,ch=0,dpr=1,t0=performance.now(),cast=null;
+  <div id="title" class="title"><canvas id="tScene" aria-hidden="true"></canvas><canvas id="tSpr" aria-hidden="true"></canvas><div class="tbox"><p class="tsub">守り神とせいれいのものがたり</p><h1>はこにわ暮らし</h1><p class="tline">荒れた土地に、もう一度いのちを。</p><div class="tbtns"><button class="btn pri" id="tStart">はじめる</button></div><p class="tline" id="tLoad" hidden></p></div></div><script>/* タイトルの絵：ゲームのデータが読みこめるまでは、コードのドット絵（PXSCENE）。読みこめたら、ゲームの絵（地面・木・花・家具・せいれい）だけで、1マス64ドットの小さな場面（SCN）に描いて、整数倍で上のキャンバス（#tSpr）にうつす。動かない物は、せいれいの行ごとの層（LAY）に1回だけ描いておき、毎回はせいれいと「z」だけを描く。1秒に8回だけ、タイトルが見えないときは描かない。ステージをすすめるほど物がふえる（TART：ステージごとに、来たとき・クリアしたときに足す物） */
+(function(){var cv=document.getElementById('tScene'),cs=document.getElementById('tSpr'),T=document.getElementById('title');if(!cv||!cv.getContext)return;var c=cv.getContext('2d'),q=cs&&cs.getContext('2d'),P=4,gw=0,gh=0,cw=0,ch=0,dpr=1,K=1,t0=performance.now(),SC=null,BB={},rb=0;
+/* ステージごとの物：o＝ゲームの物（drawObj）、c＝チップ、r＝行（0：地平線〜3：手前）、x＝よこの好きな場所（0〜1）、g＝育ちぐあい */
+var TART=[
+ {reach:[{o:'deadtree',r:0,x:.06,dry:1},{o:'rock',r:1,x:.92},{o:'weedc',r:2,x:.3},{o:'deadtree',r:0,x:.8,dry:1},{o:'weed0g',r:3,x:.7},{o:'rock',r:3,x:.12},{o:'kinoko',r:2,x:.62},{o:'weedc',r:3,x:.9,dry:1},{o:'bud',r:2,x:.45,dry:1}],/* dry：クリアしたら消す（あれた土地の物） */
+  clear:[{o:'ntree',r:0,x:.94},{o:'ntree',r:0,x:.22},{o:'swing',r:1,x:.75},{o:'bellf',r:2,x:.2,g:100},{o:'salvia',r:3,x:.35,g:100},{o:'lily',r:2,x:.82,g:100},{o:'clover',r:3,x:.55,g:100},{o:'berry',r:1,x:.98,g:100},{p:[['c','fence:HR',0],['c','fence:HLR',32],['c','fence:HL',64]],r:2,x:.05},{o:'lantern',r:1,x:.6},{o:'bellf',r:3,x:.85,g:100},{o:'salvia',r:2,x:.62,g:100},{o:'clover',r:3,x:.08,g:100},{o:'signw',r:0,x:.5}]},
+ {reach:[{o:'volcano',r:0,x:.97},{o:'bamboo',r:0,x:.03},{o:'bamboo',r:0,x:.12},{o:'takeakari',r:2,x:.4},{o:'takenoko',r:3,x:.25},{o:'hotstone',r:3,x:.75},{o:'takebench',r:1,x:.88}],
+  clear:[{o:'onsen',r:1,x:.9},{c:'andon#on',r:2,x:.15},{o:'toro',r:1,x:.3},{o:'campfire',r:3,x:.48},{o:'torch',r:1,x:.7},{c:'andon#on',r:3,x:.92}]}];
+var ACTS=[{anim:'wave'},{banzai:1},{anim:'play',hop:1},{anim:'clap'},{anim:'talkjoy'},{hop:1}];/* ほかの子のポーズ（ゲームの動き） */
 function size(){var w=T.clientWidth||innerWidth,h=T.clientHeight||innerHeight;P=Math.max(4,Math.round(Math.min(w,h)/80));var ngw=Math.ceil(w/P),ngh=Math.ceil(h/P);if(ngw!==gw||ngh!==gh){gw=ngw;gh=ngh;cv.width=gw;cv.height=gh;cv.style.width=gw*P+'px';cv.style.height=gh*P+'px'}
- dpr=window.devicePixelRatio||1;var nw=Math.round(w*dpr),nh=Math.round(h*dpr);if(cs&&(nw!==cw||nh!==ch)){cw=nw;ch=nh;cs.width=cw;cs.height=ch;cs.style.width=w+'px';cs.style.height=h+'px'}}
-function ready(){try{return typeof drawSpiritDot==='function'&&typeof KEYS!=='undefined'&&window.CHIPS&&CHIPS.tree&&chipImgs(CHIPS.tree,'tree')[0].ok&&spDotReady('wood')}catch(e){return false}}
-function getCast(){/* つぎのステージから：そのステージのセーブがあれば、はじめの子と、会えたキーキャラ */var L=[];for(var w=1;w<KEYS.length;w++){if(w===FREE||!KEYS[w]||!KEYS[w].length)continue;var d=null;try{var raw=KV.getItem(SAVE_KEYS[w]);if(raw)d=JSON.parse(raw)}catch(e){}if(!d||d.free)continue;
-  KEYS[w].forEach(function(n,i){if(i===0||(d.res||[]).some(function(r){return r.name===n}))L.push(n)})}return L}
-function sprites(t){q.setTransform(1,0,0,1,0,0);q.clearRect(0,0,cw,ch);if(!ready())return;if(!cast)cast=getCast();
- var Z=Math.max(2,2*Math.round(P*dpr/6)),gy=Math.round(gh*(gh>gw*1.2?0.7:0.62)),by=Math.round((gy+(gh-gy)*0.3)*P*dpr),/* 木の根もとの高さ（画面のドット） */
-  tx=Math.round(Math.min(cw*0.3,Math.max(cw*0.14,40*Z))/Z)*Z,X=function(v){return Math.round(v/Z)*Z},Y=X(by);
- q.imageSmoothingEnabled=false;
- /* 木：ゲームのチップ（1ドット＝Z）。マスの左上を (ox,oy)：根もとはマスの (16,30) */var tc=CHIPS.tree,im=chipImgs(tc,'tree')[0],ox=tx-16*Z,oy=Y-30*Z;
- q.fillStyle='rgba(40,60,30,.22)';q.fillRect(ox+4*Z,oy+28*Z,24*Z,3*Z);q.drawImage(im,ox+tc.ax*Z,oy+tc.ay*Z,tc.w*Z,tc.h*Z);
- var s=.435*Z,one=function(n,x,o){var el=KEYEL[n]||'wood';if(!spDotReady(el))return;o.dot=1;o.vr=KEYVR[n];q.fillStyle='rgba(40,60,30,.22)';q.fillRect(x-8*Z,Y+3*Z,16*Z,2*Z);drawSpiritDot(q,el,x,Y+4*Z,s,o.f||1,o)};
- /* フタバ：木の右で寝ている（ゲームの寝ている絵：目をとじて、ゆっくりゆれる）。上に小さな「z」 */var fx=X(tx+26*Z);one(POKO,fx,{t:t,sleep:true,lean:Math.sin(t*.8)*.06});
- var zc='#fffaf0';for(var k=0;k<2;k++){var ph=(t*.6+k*.5)%1,zx=fx+X((12+k*7+ph*4)*Z),zy=Y-X((50+k*9+ph*8)*Z),u=k?Z:Math.round(Z*1.5);q.globalAlpha=Math.min(1,(1-ph)*2);q.fillStyle=zc;q.fillRect(zx,zy,4*u,u);q.fillRect(zx+2*u,zy+u,u,u);q.fillRect(zx+u,zy+2*u,u,u);q.fillRect(zx,zy+3*u,4*u,u);q.globalAlpha=1}
- /* つぎのステージの子：フタバのそばに、起きて立っている */for(var i=0;i<cast.length;i++){var x=X(fx+(34+i*32)*Z);if(x>cw-10*Z)break;one(cast[i],x,{t:t+i*1.7,f:-1,blink:(t*1000+i*900)%3600<150})}}
-function draw(){if(T.hidden||document.hidden)return;size();var t=(performance.now()-t0)/1000;PXSCENE(c,gw,gh,1,'title',t);if(q)sprites(t)}
-draw();setInterval(draw,125);addEventListener('resize',draw)})();</script><style>#boot{display:none}html{background:var(--ground)!important}</style>
+ dpr=window.devicePixelRatio||1;K=Math.max(1,Math.round(Math.min(w,h,520)/420*dpr));var nw=Math.round(w*dpr),nh=Math.round(h*dpr);if(cs&&(nw!==cw||nh!==ch)){cw=nw;ch=nh;cs.width=cw;cs.height=ch;cs.style.width=w+'px';cs.style.height=h+'px';SC=null}}
+var PG=null;function ready(){try{if(typeof drawObj!=='function'||typeof drawSpiritDot!=='function'||typeof KEYS==='undefined'||!window.CHIPS)return false;
+ if(!PG){PG={};for(var id in CHIPS){var f=CHIPS[id].f;if(f&&f[0]&&PG[f[0][0]]==null)PG[f[0][0]]=id}}for(var p in PG)if(!chipImgs(CHIPS[PG[p]],PG[p])[0].ok)return false;return spDotReady('wood')}catch(e){return false}}
+function prog(){var L=[];for(var w=0;w<KEYS.length;w++){if(w===FREE||!KEYS[w])continue;var d=null;try{var raw=KV.getItem(SAVE_KEYS[w]);if(raw)d=JSON.parse(raw)}catch(e){}if(d&&d.free)d=null;
+  L[w]={reach:w===0||!!d,clear:!!(d&&d.cleared),names:d&&d.res?d.res.map(function(r){return r.name}):[]}}return L}
+function parts(it){return it.p||[[it.c?'c':'o',it.c||it.o,0,0,it.g||0]]}
+function paint(g,it,ax,ay){/* ゲームの絵をそのまま：1マス＝32（ゲームの座標）を、場面では64ドットに */g.setTransform(2,0,0,2,0,0);ICON=true;try{parts(it).forEach(function(p){var x=ax/2+(p[2]||0),y=ay/2+(p[3]||0);if(p[0]==='c'){var C=CHIPS[p[1]];if(C)drawChip(g,C,p[1].split(/[#:]/)[0],x,y,0)}else drawObj(g,p[1],x,y,7,p[4]||0,0)})}catch(e){}finally{ICON=false}g.setTransform(1,0,0,1,0,0)}
+var MC=null;function bbox(it){/* 絵のある範囲（マスの左上から、場面のドット） */var key=JSON.stringify(parts(it));if(BB[key])return BB[key];var N=640,o=200;if(!MC)MC=document.createElement('canvas');MC.width=MC.height=N;var g=MC.getContext('2d');g.clearRect(0,0,N,N);paint(g,it,o,o+120);var b={x0:0,y0:-60,x1:64,y1:64};
+ try{var d=g.getImageData(0,0,N,N).data,x0=N,y0=N,x1=-1,y1=-1;for(var y=0;y<N;y++)for(var x=0;x<N;x++)if(d[(y*N+x)*4+3]>20){if(x<x0)x0=x;if(x>x1)x1=x;if(y<y0)y0=y;if(y>y1)y1=y}if(x1>=0)b={x0:x0-o,y0:y0-o-120,x1:x1+1-o,y1:y1+1-o-120}}catch(e){}MC.width=MC.height=0;return BB[key]=b}
+function hit(a,b){return a.x0<b.x1&&a.x1>b.x0&&a.y0<b.y1&&a.y1>b.y0}
+function build(){var tb=T.querySelector('.tbox'),tr=T.getBoundingClientRect(),br=tb?tb.getBoundingClientRect():null,f=dpr/K,SW=Math.ceil(cw/K),SH=Math.ceil(ch/K),pt=SH>SW*1.2;
+ var box={x0:1e9,y0:1e9,x1:-1e9,y1:-1e9};if(tb)[].forEach.call(tb.children,function(e){var r=e.getBoundingClientRect();if(e.hidden||!r.width||!r.height)return;box.x0=Math.min(box.x0,(r.left-tr.left)*f-6);box.y0=Math.min(box.y0,(r.top-tr.top)*f-6);box.x1=Math.max(box.x1,(r.right-tr.left)*f+6);box.y1=Math.max(box.y1,(r.bottom-tr.top)*f+6)});/* 見えている文字とボタンの所はあける */
+ var gy=Math.round(SH*(pt?.6:.58));if(pt&&box.y1>gy-40&&box.y1<SH-160)gy=Math.round(box.y1+20);var RY=[0,1,2,3].map(function(i){return Math.round(gy+14+i*(SH-gy-26)/3)});
+ var P0=prog(),grass=P0[0]&&P0[0].clear,items=[],held=[],placed=[],pl=[];
+ P0.forEach(function(s,w){var A=TART[w];if(!s||!A)return;if(s.reach)items=items.concat(A.reach);if(s.clear)items=items.concat(A.clear)});if(grass)items=items.filter(function(it){return !it.dry});
+ /* 1. ベンチ（フタバが正面を向いてすわって寝ている）と、そのよこの木 */var G={o:'bench',r:1},GB=JSON.parse(JSON.stringify(bbox(G)));GB.y0=Math.min(GB.y0,-70);
+ function put(it,px,row,keep,b){b=b||bbox(it);var B=RY[Math.min(3,row)];if(B>SH-6)return null;var ay=B-b.y1,best=null;for(var s=0;s<=SW;s+=8){for(var sg=-1;sg<=1;sg+=2){var X=Math.round(px*SW)+s*sg,ax=Math.round((X-(b.x0+b.x1)/2)/2)*2,r={x0:ax+b.x0,y0:ay+b.y0,x1:ax+b.x1,y1:ay+b.y1};
+   if(r.x0<-4||r.x1>SW+4)continue;if(hit(r,box))continue;if(held.some(function(h){return hit(r,h)}))continue;if(pl.some(function(h){return h.row===row&&hit(r,h.r)}))continue;best={ax:ax,ay:ay,r:r,row:row};break}if(best)break}
+  if(best&&keep)held.push(best.r);return best}
+ var gp=null;for(var rr=1;rr<=3&&!gp;rr++)gp=put(G,pt?.55:.2,rr,1,GB);var TR={o:'tree',r:1};if(gp){var tb2=bbox(TR),tp=put(TR,(gp.r.x0-(tb2.x1-tb2.x0)/2+6)/SW,gp.row,1,tb2)||put(TR,(gp.r.x1+(tb2.x1-tb2.x0)/2-6)/SW,gp.row,1,tb2);if(tp)pl.push({it:TR,ax:tp.ax,ay:tp.ay,row:tp.row,r:tp.r,B:RY[tp.row]-1})}
+ var sp=[];if(gp){pl.push({it:G,ax:gp.ax,ay:gp.ay,row:gp.row,r:gp.r,B:RY[gp.row]});sp.push({n:POKO,x:gp.ax/2+16,y:gp.ay/2+17,row:gp.row,sleep:1})}
+ /* 2. ほかの子：会えた子だけ。フタバのそば */var cast=[];if(P0[0]&&(P0[0].clear||P0[0].names.indexOf(MINA)>=0))cast.push(MINA);
+ P0.forEach(function(s,w){if(w===0||!s||!s.reach)return;KEYS[w].forEach(function(n,i){if(i===0||s.names.indexOf(n)>=0)cast.push(n)})});
+ var cb={x0:-24,y0:-96,x1:24,y1:6};cast.forEach(function(n,i){if(!gp)return;var cx=(gp.r.x1+30+i*52)/SW,b=null;for(var k2=0;k2<4&&!b;k2++){var row=1+(gp.row-1+(i%2)+k2)%3;b=put({c:'x'},Math.min(.97,cx),row,1,cb)||put({c:'x'},Math.max(.03,(gp.r.x0-30-i*52)/SW),row,1,cb)}
+  if(b)sp.push({n:n,x:(b.ax)/2,y:RY[b.row]/2-2,row:b.row,i:i})});
+ /* 3. 物 */items.forEach(function(it){var b=put(it,it.x,it.r,0);if(b)pl.push({it:it,ax:b.ax,ay:b.ay,row:b.row,r:b.r,B:RY[b.row]})});
+ /* 層：せいれいのいる行ごとに分ける */var rows=[];sp.forEach(function(s){if(rows.indexOf(s.row)<0)rows.push(s.row)});rows.sort();
+ var LAY=[];for(var li=0;li<=rows.length;li++){var L=document.createElement('canvas');L.width=SW;L.height=SH;LAY.push(L)}
+ var g0=LAY[0].getContext('2d');g0.imageSmoothingEnabled=false;
+ /* 空（コードのドット：2ドットずつ） */var sky=['#a9d8ea','#b5ddec','#c1e3ee','#cde8f0','#d8eef1','#e3f3f0'];for(var b=0;b<6;b++){g0.fillStyle=sky[b];g0.fillRect(0,(b*gy/6)&~1,SW,Math.ceil(gy/6)+2)}
+ for(var k=0;k<4;k++){var h=function(i){var x=Math.sin(i*127.1+311.7)*43758.5453;return x-Math.floor(x)},cx2=(h(k)*SW)&~1,cy=(8+h(k+7)*gy*.3)&~1,cw2=(24+h(k+3)*30)&~1;g0.fillStyle='#f4fbfd';g0.fillRect(cx2,cy,cw2,6);g0.fillRect(cx2+6,cy-4,cw2-14,4);g0.fillRect(cx2+12,cy-6,8,2)}
+ /* 地面：ゲームの地面の絵（クリア前はあれた地面） */var tx=grass?'tex:grass':'tex:dry',TC=CHIPS[tx];g0.save();g0.beginPath();g0.rect(0,gy,SW,SH-gy);g0.clip();g0.setTransform(2,0,0,2,0,0);if(TC)for(var yy=gy/2;yy<SH/2;yy+=TC.h)for(var xx=0;xx<SW/2;xx+=TC.w)drawChip(g0,TC,tx,xx,yy,0);g0.restore();g0.setTransform(1,0,0,1,0,0);
+ if(!grass&&CHIPS['tex:grass']){/* ところどころに草が残る */g0.save();var TG=CHIPS['tex:grass'];for(var m=0;m<5;m++){var mx=Math.round(Math.sin(m*91.7)*.5*SW+SW/2)&~1,my=Math.round(gy+((m*37)%100)/100*(SH-gy));g0.beginPath();g0.rect(0,gy,SW,SH-gy);g0.clip();g0.beginPath();g0.rect(mx-40,my-14,80,28);g0.rect(mx-28,my-20,56,40);g0.clip();g0.setTransform(2,0,0,2,0,0);drawChip(g0,TG,'tex:grass',(mx-60)/2,(my-30)/2,0);g0.restore();g0.save()}g0.restore()}
+ g0.fillStyle='rgba(60,80,40,.18)';g0.fillRect(0,gy,SW,2);
+ pl.sort(function(a,b){return a.B-b.B||a.r.x0-b.r.x0});pl.forEach(function(p){var li=0;while(li<rows.length&&p.B>RY[rows[li]])li++;paint(LAY[li].getContext('2d'),p.it,p.ax,p.ay)});
+ sp.sort(function(a,b){return a.row-b.row||a.x-b.x});var SCN=document.createElement('canvas');SCN.width=SW;SCN.height=SH;
+ return {SW:SW,SH:SH,LAY:LAY,rows:rows,sp:sp,SCN:SCN,fx:sp.length?sp[0].x:0}}
+function one(g,s,t){var n=s.n,el=KEYEL[n]||'wood';if(!spDotReady(el))return;var o={dot:1,t:t+(s.i||0)*1.7,vr:KEYVR[n]},y=s.y,f=1;
+ if(s.sleep){o.sleep=true;o.lean=Math.sin(t*.8)*.06}else{var a=ACTS[(Math.floor((t+s.i*2.3)/4)+s.i)%ACTS.length];o.anim=a.anim||'';o.banzai=!!a.banzai;o.mood=a.anim==='clap'||a.hop?'joy':'smile';o.blink=(t*1000+s.i*900)%3600<150;f=s.x<SC.fx?1:-1;
+  if(a.hop)y-=Math.round(Math.abs(Math.sin(t*5))*5);g.fillStyle='rgba(40,60,30,.22)';g.fillRect(Math.round(s.x*2)-14,Math.round(s.y*2)+2,28,4)}
+ g.setTransform(2,0,0,2,0,0);drawSpiritDot(g,el,s.x,y,.435,f,o);g.setTransform(1,0,0,1,0,0)}
+function frame(t){var S2=SC,g=S2.SCN.getContext('2d');g.imageSmoothingEnabled=false;g.drawImage(S2.LAY[0],0,0);
+ for(var li=0;li<S2.rows.length;li++){S2.sp.forEach(function(s){if(s.row===S2.rows[li])one(g,s,t)});
+  if(li===0&&S2.sp[0]&&S2.sp[0].sleep){/* 寝ている「z」 */var s=S2.sp[0];for(var k=0;k<2;k++){var ph=(t*.6+k*.5)%1,u=k?2:3,zx=Math.round(s.x*2+20+k*12+ph*8),zy=Math.round(s.y*2-96-k*18-ph*14);g.globalAlpha=Math.min(1,(1-ph)*2);g.fillStyle='#fffaf0';g.fillRect(zx,zy,4*u,u);g.fillRect(zx+2*u,zy+u,u,u);g.fillRect(zx+u,zy+2*u,u,u);g.fillRect(zx,zy+3*u,4*u,u);g.globalAlpha=1}}
+  g.drawImage(S2.LAY[li+1],0,0)}
+ q.setTransform(1,0,0,1,0,0);q.imageSmoothingEnabled=false;q.drawImage(S2.SCN,0,0,S2.SW*K,S2.SH*K)}
+function draw(){if(T.hidden||document.hidden)return;size();var t=(performance.now()-t0)/1000;
+ if(q&&ready()){if(!SC||(rb<2&&t>(rb?4:1.5)+SC.t)){if(SC)rb++;SC=build();SC.t=t}cv.style.visibility='hidden';frame(t);return}
+ PXSCENE(c,gw,gh,1,'title',t)}
+draw();setInterval(draw,125);addEventListener('resize',function(){SC=null;draw()})})();</script><style>#boot{display:none}html{background:var(--ground)!important}</style>
   <div id="maps" class="maps" hidden><div class="mwrap"><div class="mhead"><h2>マップをえらぶ</h2><div class="mright"><button class="btn" id="mSnd"></button><div class="mver" id="mVer"></div></div></div><div class="route" id="mList"></div><button class="btn" id="mBack">タイトルへ</button></div></div>
   <div id="pro" class="pro" hidden><div class="proWho" id="proWho"></div><p id="proText"></p><div class="hint">タップで進む</div><button id="proSkip" class="btn">スキップ</button></div>
 </div>
