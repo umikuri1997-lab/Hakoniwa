@@ -19,14 +19,14 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict');
       if(q.field){for(const p of q.fieldParts)S.fieldStories[p]={step:FIELD_STORIES[p].length}}const c=q.check;q.check=()=>true;try{checkQuest()}finally{q.check=c}
       if(S.qStory===i)startTalk();if(S.quest===i)throw Error('stuck at '+q.id);inv.push(q.id+':'+(S.inv.bed||0)+'/'+(S.inv.path||0))}
     dialog=realDialog;return JSON.stringify({ids,inv,godGone:!!S.godGone,mat:S.mat})})()`));
-  assert.deepEqual(seq.ids,['statue','stor','mbox','table','wall','bed','path','lv2','fence4','watch1','kikyo','summon','earthListen','farm6','imoseed','trade','oracle']);
-  assert.equal(seq.godGone,true);
+  assert.deepEqual(seq.ids,['statue','stor','mbox','table','wall','bed','path','lv2','fence4','watch1','kikyo','summon','earthListen','farm6','imoseed']);
+  assert.equal(seq.godGone,false,'the farewell is now in the trade sub quest');
   /* まとめた目標のとちゅう（会話は聞いた・食料箱はもう置いた）から：はじめのできていない目標へ。もらった物をかさねない */
   const mig=JSON.parse(await run(`(()=>{const s=JSON.parse(JSON.stringify(S));s.flags.qsplit1=0;s.quest=1;s.qStory=null;s.qTalked=true;s.inv={};s.mat.wood=0;s.mat.stone=0;s.obj=s.obj.map(o=>o==='stor'||o==='mbox'||o==='table'?'':o);
     const j=(CY+4)*W+CX+6;s.obj[j]='stor';migrateQuestSplit(s);migrateQuestSplit(s);S=s;LIVE[0]=S;recount();checkQuest();checkQuest();return JSON.stringify({q:QUESTS[S.quest].id,qs:S.qStory,qt:S.qTalked,inv:S.inv,wood:S.mat.wood,pend:S.flags.qsplitPend||null,plant:!!S.feat.plant})})()`));
   assert.equal(mig.q,'mbox');assert.equal(mig.qt,true,'merged talk was heard: no part talk again');assert.deepEqual(mig.inv,{});assert.equal(mig.wood,0,'storage box materials come with its own clear');assert.equal(mig.plant,true,'skipped clear rewards are given');assert.equal(mig.pend,'kurashi');
-  const mig2=JSON.parse(await run(`(()=>{const s=JSON.parse(JSON.stringify(S));s.flags.qsplit1=0;s.flags.qsplitPend=0;s.quest=7;s.qStory=null;s.qTalked=true;s.godGone=false;s.flags.tradedSeen=true;s.flags.oracleSeen=false;migrateQuestSplit(s);S=s;LIVE[0]=S;recount();checkQuest();return JSON.stringify({q:QUESTS[S.quest].id,qs:S.qStory!=null?QUESTS[S.qStory].id:null,god:!!S.godGone})})()`));
-  assert.deepEqual(mig2,{q:'oracle',qs:'trade',god:false},'farewell talk is kept');
+  const mig2=JSON.parse(await run(`(()=>{const s=JSON.parse(JSON.stringify(S));s.flags.qsplit1=0;s.flags.tutSub1=0;s.flags.qsplitPend=0;s.quest=7;s.qStory=null;s.qTalked=true;s.godGone=false;s.flags.tradedSeen=true;s.flags.oracleSeen=false;migrateQuestSplit(s);migrateTutSub(s);S=s;LIVE[0]=S;recount();checkQuest();return JSON.stringify({q:QUESTS[S.quest].id,qs:S.qStory!=null?QUESTS[S.qStory].id:null,god:!!S.godGone,trade:S.subSt.trade,oracle:S.subSt.oracle})})()`));
+  assert.deepEqual(mig2,{q:'fire',qs:null,god:false,trade:2,oracle:2},'merged trade talk heard: both continue as sub quests, farewell kept');
   /* 夜にあぜ道をしいた：目標は朝を待つと書く。朝には、お礼の会話がはじまる */
   const night=JSON.parse(await run(`(()=>{newGame(0);for(const id of ['#title','#maps','#pro','#dialog'])document.querySelector(id).hidden=true;showUI(true);started=true;updTut=()=>{};showItemGift=()=>{};showSpotPop=()=>{};finalCheck=()=>{};S.introSeen=true;S.quest=questIndexOf('path');S.qTalked=true;S.qStory=null;S.flags.path0=0;S.t=1440*2+23*60+20;
     let n=0;for(let x=CX-8;n<5;x++){const j=(CY+3)*W+x;if(!S.obj[j]&&!S.floor[j]){S.floor[j]='path';n++}}recount();checkQuest();renderQuest();openSheet('menu','goal');const goal=document.querySelector('#sheetBody').innerText;closeSheet();
