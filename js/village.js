@@ -61,7 +61,7 @@ const brokenRot=q=>{const b=brokenAt(q);return b&&b.rot||0},setRot=(j,v)=>{if(v)
 const repairFree=a=>fp(a.re,a.obj%W,(a.obj/W)|0,brokenRot(a.obj)).every(([cx,cy])=>{const k=cy*W+cx;return !S.obj[k]&&!S.res.some(q=>(q.y|0)*W+(q.x|0)===k)&&!S.enemies.some(e=>e.spawned&&!e.dead&&(e.y|0)*W+(e.x|0)===k)});
 const brokenCover=q=>(S.broken||[]).find(b=>!S.obj[b.j]&&fp(b.id,b.j%W,(b.j/W)|0,b.rot||0).some(([x,y])=>y*W+x===q));/* 大きい物は、4マスのどこでも、こわれたあとの場所として扱う */
 const canRebuild=q=>{const b=brokenAt(q);if(!b||!free('o'+q,1))return false;return fp(b.id,q%W,(q/W)|0,b.rot||0).every(([x,y])=>{const k=y*W+x;return !S.obj[k]&&!S.res.some(r=>(r.y|0)*W+(r.x|0)===k)&&!S.enemies.some(e=>e.spawned&&(e.y|0)*W+(e.x|0)===k)})};
-const BAN=new Map(),free=(k,cap)=>(resv.get(k)||0)<cap&&!(BAN.get(k)>(S?S.t:0));/* 行きつけない目的地は、しばらく選ばない */
+const BAN=new Map(),free=(k,cap)=>(resv.get(k)||0)<cap&&!(BAN.get(k)>(S?S.t:0))&&!(S&&S.fog&&/^[a-z][0-9]+$/.test(k)&&fogAt(+k.slice(1)));/* 霧の中の物は、えらばない *//* 行きつけない目的地は、しばらく選ばない */
 const reserve=k=>resv.set(k,(resv.get(k)||0)+1);
 const release=k=>{const v=(resv.get(k)||0)-1;if(v<=0)resv.delete(k);else resv.set(k,v)};
 function nearLotus(r){const x0=r.x|0,y0=r.y|0;for(let y=y0-2;y<=y0+2;y++)for(let x=x0-2;x<=x0+2;x++){if(x<0||y<0||x>=W||y>=H)continue;if(S.obj[y*W+x]==='lotus')return true}return false}

@@ -5,7 +5,7 @@ await page.waitForFunction(()=>ltEval('Object.values(KGS).every(g=>g.ok)'),null,
 const out=JSON.parse(await page.evaluate(()=>ltEval(`(()=>{const o={};newGame(0);for(const id of ['#title','#maps','#pro','#dialog'])document.querySelector(id).hidden=true;showUI(true);started=true;USERPAUSE=true;showItemGift=()=>{};
  o.fog0=S.fog.join('');o.kinds=S.fogF.map(f=>f.t).sort().join(',');o.nF=S.fogF.length;
  const fj=10*W+10,cj=40*W+40;o.walkFog=walk(fj);o.walkMid=walk(cj);o.placeFog=canPlace('fence',10,10,true);o.placeMid=canPlace('fence',40,40,true)||S.obj[cj]!=='';
- o.tapFog=fogTap(10,10);
+ o.tapFog=fogTap(10,10);o.digFog=canPlace('dig',10,10,true);o.freeFog=free('o'+fj,1);o.freeMid=free('o'+cj,1);
  /* コワイノは、晴れた所の南のはしから */const ys=new Set();for(let i=0;i<200;i++){const [x,y]=spawnSpot();ys.add((y|0)===fogSouth(x|0)&&!fogAt((y|0)*W+(x|0)))}o.spawnOK=[...ys].join();o.south=fogSouth(40);
  /* みどりのマスで晴れる：エリア5（左上のまん中）に木を植える */for(const [x,y] of [[30,30],[40,30],[30,40],[40,40],[48,34]]){const j=y*W+x;S.obj[j]='tree';delete S.bud}recount();o.fog1=S.fog.join('');
  /* 宝箱：霧を晴らして、せいれいがあける */const bx=S.fogF.find(f=>f.t==='box');fogClear(bx.a);const r=S.res[0];r.act=null;const st=[bx.j+W,bx.j-1,bx.j+1,bx.j-W].find(k=>walk(k));r.x=st%W+.5;r.y=((st/W)|0)+.5;
@@ -20,7 +20,7 @@ const out=JSON.parse(await page.evaluate(()=>ltEval(`(()=>{const o={};newGame(0)
  return JSON.stringify(o)})()`)));
 console.log(JSON.stringify(out));
 assert.equal(out.fog0,'1111100110011111');assert.equal(out.nF,12);assert.equal(out.kinds.split(',').filter(k=>k==='ruin').length+out.kinds.split(',').filter(k=>k==='box').length,7);
-assert.equal(out.walkFog,false);assert.equal(out.placeFog,false);assert.equal(out.placeMid,true);assert.equal(out.tapFog,true);
+assert.equal(out.walkFog,false);assert.equal(out.placeFog,false);assert.equal(out.placeMid,true);assert.equal(out.tapFog,true);assert.equal(out.digFog,false);assert.equal(out.freeFog,false);assert.equal(out.freeMid,true);
 assert.equal(out.spawnOK,'true');assert.equal(out.south,80);
 assert.equal(out.fog1[1],'0');assert.equal(out.fog1[4],'0');assert.equal(out.fog1[15],'1');
 assert.equal(out.tapBox,true);assert.equal(out.req,true);assert.equal(out.job,true);assert.equal(out.act,'fogopen');assert.equal(out.boxGone,true);assert.equal(out.gift,1);assert.equal(out.invChanged,true);assert.equal(out.boxDone,true);assert.equal(out.reqLeft,0);
