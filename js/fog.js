@@ -24,7 +24,7 @@ function fogGen(s,areas){/* 霧のエリアに、見つける物を1つずつ置
   const K=fogShuffle(FOG_KINDS.filter(t=>t!=='ruin').concat(Array(3-ruins).fill('box')));
   rest.forEach((a,n)=>{const t=K[n%K.length],R=fogArea(a);for(let tr=0;tr<400;tr++){const x=R.x0+4+((Math.random()*(AREAW-8))|0),y=R.y0+4+((Math.random()*(AREAW-8))|0),j=y*W+x;const n=t==='spring'?2:1;let ok=true;for(let b=0;b<=n&&ok;b++)for(let c=0;c<n&&ok;c++)if(!fogSpotOK(s,j+b*W+c,s.hi?s.hi[j]||0:0)&&(b<n||t!=='print'))ok=false;if(!ok)continue;/* 泉は2×2。前に1マスあけて、せいれいが近よれるように */
     s.obj[j]=t==='box'?'fogbox':t==='print'?'nushiprint':'fogspring';if(n>1)fogParts(s,j);out.push({t,a,j});return}});
-  s.fogF=out;fogMansionAdd(s,areas)}
+  s.fogF=out;fogMansionAdd(s)}
 function fogParts(s,j){for(const k of [j+1,j+W,j+W+1]){s.obj[k]='part';s.ref[k]=j}}
 function fogSpring2(s){/* 前のセーブの1×1の泉を2×2へ（そのマスをふくむ4とおりのどれかで、3マスが空いていれば）。空いていなければ、そのまま、あとの recount でまたためす */
   if(s.flags.spring2||!s.fogF)return;let left=0;
@@ -50,19 +50,38 @@ const MANSION_W=12,MANSION_H=9,MANSION_DOORS=[[3,8],[6,6],[8,4]],MANSION_WIN=[[2
     ['bed',7,2],['bed',10,2],['lantern',9,1],/* 寝室 */['cooktable',7,5],['sink',9,5],['taru',10,5],['crate',10,7],['stool',8,7]],/* 台所 */
   MANSION_RUG=[['rug1',1,5]];
 function mansionWall(a,b){return a===0||a===MANSION_W-1||b===0||b===MANSION_H-1||a===6||b===4&&a>6}
-function fogMansionAt(s,R,busy){/* 平らで、水も見つける物もない所（ドアの前の1行も）。左上から順にさがす */
-  for(let y=R.y0+2;y+MANSION_H+1<=R.y1-1;y++)for(let x=R.x0+2;x+MANSION_W<=R.x1-2;x++){const hi=s.hi?s.hi[y*W+x]||0:0;let ok=true;
-    for(let b=0;b<=MANSION_H&&ok;b++)for(let a=0;a<MANSION_W&&ok;a++){const k=(y+b)*W+x+a,o=s.obj[k];if(s.ground[k]!==0||s.floor[k]||(s.hi?s.hi[k]||0:0)!==hi||busy.has(k)||o&&!(WEEDS.has(o)||BL[o]&&BL[o].natural&&!BL[o].sz&&o!=='fogbox'&&o!=='nushiprint'&&o!=='fogspring'))ok=false}
-    if(ok)return y*W+x}return -1}
-function fogMansionAdd(s,areas){/* 新しい草原と、前のセーブ（いちどだけ）：まだ霧のエリアに、お屋敷の場所をきめる */if(s.flags.mansion1||!s.fogF)return;s.flags.mansion1=1;if((s.world||0)!==0||s.free||s.fogF.some(f=>f.t==='mansion'))return;
-  const busy=new Set();for(const f of s.fogF){const x=f.j%W,y=(f.j/W)|0;for(let b=-2;b<7;b++)for(let a=-2;a<7;a++)busy.add((y+b)*W+x+a)}
-  for(const a of (areas||s.fog.map((v,a)=>v?a:-1).filter(a=>a>=0)).slice().sort((p,q)=>p-q)){if(!s.fog[a])continue;const j=fogMansionAt(s,fogArea(a),busy);if(j>=0){s.fogF.push({t:'mansion',a,j});return}}}
-function fogMansionBuild(f){/* 晴れたとき：壁・ドア・窓・床・家具をそのまま置く */const x=f.j%W,y=(f.j/W)|0;
+const fogHi=(s,k)=>s.hi?s.hi[k]||0:0;
+function fogMansionAt(s,R,busy,move){/* 水も見つける物もない所（ドアの前の1行も）。段差がいちばん少ない所。move：ずらせる見つける物（あれば、そのマスも使ってよい） */let best=-1,bs=1e9;
+  for(let y=R.y0+2;y+MANSION_H+1<=R.y1-1;y++)for(let x=R.x0+2;x+MANSION_W<=R.x1-2;x++){let ok=true,t=9;
+    for(let b=-1;b<=MANSION_H+1&&ok;b++)for(let a=-1;a<=MANSION_W&&ok;a++){const k=(y+b)*W+x+a;if(s.ground[k]!==0)ok=false;else t=Math.min(t,fogHi(s,k))}
+    let sc=0;for(let b=0;b<=MANSION_H&&ok;b++)for(let a=0;a<MANSION_W&&ok;a++){const k=(y+b)*W+x+a,o=s.obj[k];if(s.floor[k]||busy.has(k)&&!(move&&move.has(k))||o&&!(WEEDS.has(o)||BL[o]&&BL[o].natural&&!BL[o].sz||move&&move.has(k)))ok=false;else sc+=fogHi(s,k)-t}
+    if(ok&&sc<bs){bs=sc;best=y*W+x}}return best}
+function fogFlatten(s,j){/* お屋敷の所（まわり1マスも）を、いちばん低い高さにそろえ、まわりの段差は、2マス以内の差が1だんまでになるよう低くする */if(!s.hi)return;const x=j%W,y=(j/W)|0;let t=9;const box=[];for(let b=-1;b<=MANSION_H+1;b++)for(let a=-1;a<=MANSION_W;a++){const k=(y+b)*W+x+a;box.push(k);t=Math.min(t,fogHi(s,k))}
+  const lock=new Set(box);for(const k of box)s.hi[k]=t;let ch=true;for(let n=0;ch&&n<20;n++){ch=false;for(let b=-8;b<=MANSION_H+9;b++)for(let a=-8;a<=MANSION_W+8;a++){const X=x+a,Y=y+b;if(X<0||Y<0||X>=W||Y>=H)continue;const k=Y*W+X;if(lock.has(k))continue;let m=9;for(let q=-2;q<=2;q++)for(let p=-2;p<=2;p++){const U=X+p,V=Y+q;if(U<0||V<0||U>=W||V>=H)continue;m=Math.min(m,fogHi(s,V*W+U))}if(fogHi(s,k)>m+1){s.hi[k]=m+1;ch=true}}}}
+const MANSION_AREA=AREAN-1;/* お屋敷は、いつもマップの右上のエリア */
+function fogMansionAdd(s){/* 新しい草原と、前のセーブ（いちどだけ）：右上のエリアが霧なら、お屋敷の場所をそこにきめる。前のセーブで、ほかのエリアにきめてあって、まだ建っていない物は、右上へうつす（右上が晴れているか、置ける所がなければ、そのまま） */
+  if(s.flags.mansion2||!s.fogF)return;s.flags.mansion1=s.flags.mansion2=1;if((s.world||0)!==0||s.free)return;
+  const a=MANSION_AREA,old=s.fogF.find(f=>f.t==='mansion');if(old&&(old.set||old.a===a)||!s.fog[a])return;
+  const busy=new Set(),own=new Map();for(const f of s.fogF){if(f===old)continue;const x=f.j%W,y=(f.j/W)|0,n=f.t==='ruin'?5:f.t==='spring'?2:1;for(let b=-1;b<=n+1;b++)for(let c=-1;c<=n;c++){busy.add((y+b)*W+x+c);if(f.t!=='ruin'&&f.a===a)own.set((y+b)*W+x+c,f)}}
+  let j=fogMansionAt(s,fogArea(a),busy);if(j<0){j=fogMansionAt(s,fogArea(a),busy,new Set(own.keys()));if(j<0)return;/* 見つける物が、じゃまなら、同じエリアの空いた所へずらす */
+    const R=fogArea(a),mx=j%W,my=(j/W)|0,inM=k=>{const X=k%W,Y=(k/W)|0;return X>=mx-1&&X<=mx+MANSION_W&&Y>=my-1&&Y<=my+MANSION_H+1};
+    for(const f of new Set(own.values())){const n=f.t==='spring'?2:1;let nj=-1;for(let tr=0;tr<2000&&nj<0;tr++){const x=R.x0+2+((Math.random()*(AREAW-5))|0),y=R.y0+2+((Math.random()*(AREAW-5))|0),k=y*W+x;let ok=true;for(let b=0;b<=n&&ok;b++)for(let c=0;c<n&&ok;c++){const q=k+b*W+c;if(inM(q)||!fogSpotOK(s,q,fogHi(s,k)))ok=false}if(ok)nj=k}
+      if(nj<0)return;const o=s.obj[f.j];for(const q of [f.j,f.j+1,f.j+W,f.j+W+1])if(q===f.j||s.obj[q]==='part'&&s.ref[q]===f.j){s.obj[q]='';delete s.ref[q]}s.obj[nj]=o;if(n>1)fogParts(s,nj);f.j=nj}}
+  fogFlatten(s,j);if(old){old.a=a;old.j=j}else s.fogF.push({t:'mansion',a,j})}
+const MANSION_WEB=[[2,1,0],[4,1,1],[7,1,0],[10,1,1],[8,5,0]];/* クモの巣（部屋の上の角。0：左の角・1：右の角） */
+function fogRand(seed){let v=seed>>>0||1;return ()=>{v^=v<<13;v>>>=0;v^=v>>>17;v^=v<<5;v>>>=0;return v/4294967296}}
+function fogMansionBuild(f){/* 晴れたとき：古くてボロボロのお屋敷。朽ちた壁・こわれた壁・こわれた家具・クモの巣 */const x=f.j%W,y=(f.j/W)|0,rnd=fogRand(f.j*2654435761+7);
   for(let b=0;b<=MANSION_H;b++)for(let a=0;a<MANSION_W;a++){const k=(y+b)*W+x+a;if(S.obj[k]&&S.obj[k]!=='part'&&!(BL[S.obj[k]]&&BL[S.obj[k]].natural||WEEDS.has(S.obj[k])))continue;S.obj[k]='';delete S.dyn[k];delete S.hp[k];delete S.hp['lp'+k];delete S.ref[k]}
-  S.drops=(S.drops||[]).filter(d=>!(d.x>=x&&d.x<x+MANSION_W&&d.y>=y&&d.y<=y+MANSION_H));
-  for(let b=0;b<MANSION_H;b++)for(let a=0;a<MANSION_W;a++){const k=(y+b)*W+x+a;if(mansionWall(a,b))setBlock(MANSION_DOORS.some(([da,db])=>da===a&&db===b)?'door':'hwall',k);else S.floor[k]='floor'}
+  S.drops=(S.drops||[]).filter(d=>!(d.x>=x&&d.x<x+MANSION_W&&d.y>=y&&d.y<=y+MANSION_H));const brk=(id,k)=>(S.broken||(S.broken=[])).push({j:k,id,rot:0});
+  for(let b=0;b<MANSION_H;b++)for(let a=0;a<MANSION_W;a++){const k=(y+b)*W+x+a;if(!mansionWall(a,b)){S.floor[k]='floor';continue}
+    if(MANSION_DOORS.some(([da,db])=>da===a&&db===b)){setBlock('door',k);continue}
+    const corner=(a===0||a===MANSION_W-1)&&(b===0||b===MANSION_H-1),win=MANSION_WIN.some(([wa,wb])=>wa===a&&wb===b),r=rnd();
+    if(!corner&&!win&&r<.14){brk('hwall',k);continue}/* こわれて、なくなった壁 */
+    setBlock('hwall',k);if(r<.62)S.hp[k]=Math.max(1,Math.floor(BL.hwall.hp*(.15+rnd()*.3)))}/* 朽ちた壁（じょうぶさ半分以下） */
   for(const[a,b]of MANSION_WIN)(S.win||(S.win={}))[(y+b)*W+x+a]=1;
-  for(const[id,a,b]of MANSION_FURN)setBlock(id,(y+b)*W+x+a);for(const[id,a,b]of MANSION_RUG)(S.rug||(S.rug={}))[(y+b)*W+x+a]=id;
+  let beds=0;for(const[id,a,b]of MANSION_FURN){const k=(y+b)*W+x+a,r=rnd(),keep=id==='bed'&&!beds;if(id==='bed')beds++;if(!keep&&r<.18)continue;/* なくなった家具 */if(!keep&&r<.42&&BL[id].brk){brk(id,k);continue}/* こわれた家具 */setBlock(id,k);if(BL[id].brk&&BL[id].hp&&rnd()<.4)S.hp[k]=Math.max(1,Math.floor(BL[id].hp/2))}/* いたんだ家具 */
+  for(const[id,a,b]of MANSION_RUG)(S.rug||(S.rug={}))[(y+b)*W+x+a]=id;
+  for(const[a,b,v]of MANSION_WEB){const k=(y+b)*W+x+a;if(S.floor[k]&&!S.obj[k])(S.web||(S.web={}))[k]=v}
   f.set=1;f.done=1}
 function fogClear(a,quiet){if(!S.fog[a])return;S.fog[a]=0;S.fogV=(S.fogV||0)+1;if(!quiet)FOGA.set(a,performance.now());if(typeof SPRC!=='undefined')SPRC.n=-1;/* コワイノの来る所を作りなおす */
   if(!quiet){toast('霧が晴れた','good');sfx('level')}
@@ -83,6 +102,26 @@ const fogDone=j=>{S.fogReq=(S.fogReq||[]).filter(k=>k!==j)};
 ACT.fogopen={start(r,a){if(S.obj[a.obj]!=='fogbox')return false;r.bubble='';r.face=(a.obj%W+.5)<r.x?-1:1},done:(r,a)=>a.t>=3,end(r,a){fogDone(a.obj);if(S.obj[a.obj]!=='fogbox')return;const f=fogFind(a.obj);if(f)f.done=1;clearObj(a.obj);burst(a.obj,'furn','furnPlace');const L=FURN.filter(id=>giftPoolOK(id));if(L.length){const id=pick(L);sfx('seed');toast(r.name+'が宝箱から「'+BL[id].name+'」をみつけた','good');addFloat(r.x,r.y-1.8,BL[id].name);if(!(itemBoxOK()&&addItem(r,id,1)))dropAt(r.x,r.y,id,1)}/* 箱へはこんでから、もちものに入る */addSpiritXp(1,r);recount();dirty=true}};
 ACT.foglook={start(r,a){if(S.obj[a.obj]!=='nushiprint')return false;r.bubble=''},done:(r,a)=>a.t>=2,end(r,a){fogDone(a.obj);const f=fogFind(a.obj);if(!f||f.done)return;const n=(S.fogF||[]).filter(q=>q.t==='print').indexOf(f);dialog(FOG_PRINT_LINES[Math.max(0,n)%FOG_PRINT_LINES.length],()=>{f.done=1})}};
 ACT_LBL.fogopen='宝箱をあけている';ACT_LBL.foglook='ヌシ様のあしあとを見ている';
+/* クモの巣（S.web：マス→0 左の角・1 右の角）：お屋敷の中だけ。プレイヤーはこわせない。「みる」でタップすると、せいれいがそうじする（S.webq）。家の中の1つで住み心地-5（houseComfort） */
+function webTap(tx,ty){if(!S.web)return false;let j=ty*W+tx;if(S.web[j]==null&&S.web[j+W]!=null&&(HOME_WALLS.has(S.obj[j])||HOME_DOORS.has(S.obj[j])))j+=W;/* 壁の上にかかった所をタップしても */if(S.web[j]==null)return false;if(isNight()){toast('夜のあいだは、そうじできません');return true}(S.webq||(S.webq={}))[j]=1;sfx('tap');toast('クモの巣：せいれいがそうじにいく');return true}
+function webReqFor(r){if(isNight()||!S.webq||!S.web)return -1;for(const k in S.webq){const j=+k;if(S.web[j]==null){delete S.webq[k];continue}if(free('b'+j,1))return j}return -1}
+const webWant=r=>fogFree(r)&&webReqFor(r)>=0;
+function webJob(r,G){const j=webReqFor(r);if(j<0)return false;const st=walk(j)&&!S.obj[j]&&G.dist[j]>=0?j:nearest(G,k=>[1,-1,W].some(d=>k===j+d)&&walk(k)&&!S.obj[k],9999);/* クモの巣の下に立つ（ふさがっていれば、となり） */if(st<0)return false;startAct(r,G,'sweep',st,{key:'b'+j,obj:j});return true}
+ACT.sweep={start(r,a){if(!S.web||S.web[a.obj]==null)return false;r.bubble='';if((r.x|0)!==a.obj%W)r.face=(a.obj%W+.5)<r.x?-1:1},done:(r,a)=>a.t>=2,end(r,a){if(S.webq)delete S.webq[a.obj];if(!S.web||S.web[a.obj]==null)return;delete S.web[a.obj];burst(a.obj,'block');sfxAt('tap',r.x,r.y);addFloat(r.x,r.y-1.6,'ぴかぴか');addSpiritXp(1,r);dirty=true}};
+ACT_LBL.sweep='クモの巣をそうじしている';
+const WEBDAY=.1,WEBMAX=3;/* 毎朝、家ごとに10%で、クモの巣が1つふえる（1つの家に3つまで） */
+function webMorning(){if(typeof MEMRUN!=='undefined'&&MEMRUN||typeof NOSAVE!=='undefined'&&NOSAVE)return;findHouses();for(const h of HOUSES){let n=0;for(const j of h.inside)if(S.web&&S.web[j]!=null)n++;if(n>=WEBMAX||Math.random()>=WEBDAY)continue;
+  const L=[...h.inside].filter(j=>!S.obj[j]&&(!S.web||S.web[j]==null)&&h.set.has(j-W)&&!h.inside.has(j-W));/* 上が壁の、空いた床（壁の角） */if(!L.length)continue;const j=pick(L),v=h.inside.has(j-1)&&!h.inside.has(j+1)?1:h.inside.has(j+1)&&!h.inside.has(j-1)?0:(Math.random()<.5?0:1);(S.web||(S.web={}))[j]=v}}
+const WEBC=[];function webArt(v){/* クモの巣の仮の絵（コードのドット絵、64×64 を1マスに）。あとで、マップチップ web#0・web#1 に差しかえられる */if(WEBC[v])return WEBC[v];const cv=document.createElement('canvas');cv.width=cv.height=64;const c=cv.getContext('2d'),P=(x,y,a)=>{c.fillStyle='rgba(246,244,238,'+a+')';c.fillRect(x|0,y|0,1,1)};
+  const ox=v?63:0,sx=v?-1:1;/* 角（左上か右上）から、放射の糸と、まわりの糸 */const R=[[1,0],[.92,.38],[.7,.7],[.38,.92],[0,1]];for(const[dx,dy]of R)for(let t=0;t<46;t++)P(ox+sx*dx*t,dy*t,.8-t/120);
+  for(const rad of[9,17,26,36])for(let n=0;n<R.length-1;n++){const[a1,b1]=R[n],[a2,b2]=R[n+1];for(let t=0;t<=1;t+=1/(rad*.9)){const k=Math.sin(t*Math.PI)*.18*rad;/* 糸は少したるむ */const px=a1*rad+(a2*rad-a1*rad)*t-k*(a1+a2)/2,py=b1*rad+(b2*rad-b1*rad)*t-k*(b1+b2)/2;P(ox+sx*px,py,.62-rad/110)}}
+  return WEBC[v]=cv}
+function drawWebs(add,vis){/* 床のマスの上の角に、壁の正面にかかるように描く（そのマスの物より奥・壁より手前） */if(!S.web)return;for(const k in S.web){const j=+k,x=j%W,y=(j/W)|0;if(!vis({x:x+.5,y:y+.5}))continue;const v=S.web[k]?1:0;add(y+.015,0,null,()=>{const X=x*TS,Y=y*TS-hiAt(j)*LIFT-22,ch=window.CHIPS&&CHIPS['web#'+v];if(ch&&drawChip(ctx,ch,'web#'+v,X,Y+22,0,j))return;ctx.drawImage(webArt(v),X,Y,32,32)},j)}}
+const CRACKC={};function crackArt(v,vert){/* 朽ちた壁のひびの仮の絵（64×64 を1マスに。マスの上はしが壁の正面の上はし）。あとで、マップチップ crack#0〜2（たての壁は crack:v#0〜2）に差しかえられる */const key=(vert?'v':'h')+v;if(CRACKC[key])return CRACKC[key];const cv=document.createElement('canvas');cv.width=cv.height=64;const c=cv.getContext('2d'),rnd=fogRand(v*9973+(vert?77:3));
+  const line=(x,y,n,dx)=>{for(let t=0;t<n;t++){c.fillStyle='rgba(74,52,36,.62)';c.fillRect(x|0,y|0,1,1);c.fillStyle='rgba(255,246,226,.38)';c.fillRect(x|0,(y|0)+1,1,1);y+=1;x+=dx+(rnd()<.45?(rnd()<.5?-1:1):0);if(x<(vert?12:2)||x>(vert?52:61))break;if(rnd()<.08){line(x,y,(n-t)*.5,-dx||(rnd()<.5?1:-1));}}};
+  if(vert){line(24+v*6,6,26,0);line(38-v*4,30,22,0)}else{const S0=[[10,4,30,.6],[44,8,22,-.5],[28,20,26,.3]];S0.forEach(([x,y,n,dx],q)=>{if(q<=v+1)line(x+v*5,y,n,dx)})}
+  return CRACKC[key]=cv}
+function drawCrack(c,id,x,y,i){/* 朽ちた壁：ふつうの壁の上に、ひびの絵をかさねる */const m=connMask(id,i),vert=!(m&3)&&!!(m&12),v=i%3,k=(vert?'crack:v#':'crack#')+v,ch=window.CHIPS&&CHIPS[k];if(ch&&drawChip(c,ch,k,x,y,0,i))return;c.drawImage(crackArt(v,vert),x,vert?y-10:y,32,32)}
 function drawFogObj(c,id,x,y,i,now){/* 見つける物の絵（マップチップ。読みこみ前はコードでかく） */const ch=chipOf(id);
   if(ch){if(id==='fogbox')shadow(c,x+16,y+(id==='fogbox'?28:29),id==='fogbox'?16:14,id==='fogbox'?3:4);if(drawChip(c,ch,id,x,y,now,i))return}
   if(id==='fogbox'){shadow(c,x+16,y+28,12,3);c.fillStyle='#8a5a33';c.fillRect(x+5,y+14,22,13);c.fillStyle='#a8743f';c.fillRect(x+5,y+9,22,6);c.fillStyle='#c08a52';c.fillRect(x+6,y+9,20,1);c.fillStyle='#6e4527';c.fillRect(x+5,y+15,22,1);c.fillStyle='#d9b35a';c.fillRect(x+9,y+9,2,18);c.fillRect(x+21,y+9,2,18);c.fillRect(x+14,y+14,4,4);c.fillStyle='#f3dc8a';c.fillRect(x+15,y+15,2,1);return}

@@ -5,6 +5,9 @@ const COMFMAX=300;// 住み心地の上限
 // 住み心地（0〜300）：ベッド・家具・床・人数で決まる。高いとよく眠れて、低いとたのしさが下がる
 const COMFR={rockart:1,jar:1,torch:1,clover:1,bellf:1,salvia:1,lily:1,lotus:1,lamp:2,vane:2};/* 家の外でも住み心地に入る範囲（マス） */
 const COMFY={cooktable:4,joro:3,taru:3,asabukuro:3,makidana:3,kabebukuro:3,takebench:5,takeakari:5,andon:5,shishiodoshi:6,hoshirug:5,mimamori:6,yomawari:6,oyasumi:8,yonaka:10,toro:6,stool:2,stable:4,pouf:3,achair:5,ltable:5,rug1:5,sofa1:6,rug2:6,tub:3,sink:4,crate:3,monstera:10,shelf1:12,wreath:10,curtain1:10,cabinet:12,paint2:10,shelf2:13,curtain2:10,paint3:10,wshelf:12,paint1:14,bathtub:16,candle:3,lantern:5,flamp:6,window:5,bed:10,table:8,chair:4,oven:6,lamp:6,torch:4,bench:5,jar:5,rockart:5,chochin:6,furin:8,ema:8,komainu:10,kadomatsu:10,vane:4,clover:4,bellf:4,salvia:4,lily:4,lotus:4,stor:3,mbox:3};
+const DECAYW=new Set(['hwall','logwall','plasterwall','brickwall','yozorawall']),WEBCOMF=5;/* 朽ちた壁になる家の壁（石の塀はならない）。クモの巣1つで住み心地-5 */
+const decayed=j=>{const o=S.obj[j];return DECAYW.has(o)&&S.hp[j]!=null&&S.hp[j]<=BL[o].hp/2};/* 朽ちた壁：じょうぶさが半分以下の家の壁（家の壁にならない） */
+function decayCheck(j){/* コワイノにたたかれて朽ちたら、その家は家でなくなる */if(!(S.hp[j]>0)||!decayed(j))return;const hb=HOUSES.find(h=>h.set.has(j));if(hb){recount();if(typeof houseBreakFlee==='function')houseBreakFlee(hb)}}
 function houseComfort(h){let bed=0,furn=0,fl=0,n=0;const seen=new Set();
   const kc={};for(const j of h.inside){n++;if(S.floor[j])fl++;const o=S.obj[j];if(!o)continue;if(BEDSET.has(o)){bed++;continue}/* ベッド（よぞらのベッドも）は数だけ */if(!COMFY[o])continue;{kc[o]=(kc[o]||0)+1;furn+=COMFY[o]*(kc[o]>2?.5:1);seen.add(o)}}/* 同じ家具は2つまで。3つ目からは半分 */
   for(const o of rugsIn(h.inside)){if(!COMFY[o])continue;kc[o]=(kc[o]||0)+1;furn+=COMFY[o]*(kc[o]>2?.5:1);seen.add(o)}/* ラグ（家の中に1マスでもかかっていれば） */
@@ -14,8 +17,9 @@ function houseComfort(h){let bed=0,furn=0,fl=0,n=0;const seen=new Set();
   const cap=houseCap(h),over=Math.max(0,bed-cap);/* きゅうくつかどうかは、ベッドの数で決まる */
   let lit=false;for(let y=h.y0-1;y<=h.y1+1&&!lit;y++)for(let x=h.x0-1;x<=h.x1+1;x++){if(x<0||y<0||x>=W||y>=H)continue;if(LIGHTF.has(S.obj[y*W+x])){lit=true;break}}/* 家の中か、すぐそばに灯り */
   let rs=0;for(const k of['shosai','living','dining','daidokoro'])if(SPOTI.some(t=>t.sp.k===k&&h.inside.has(t.j)&&t.sp.need.every((nd,i)=>t.found[i].filter(q=>h.inside.has(q)).length>=nd[1])))rs++;/* そろった物が、ぜんぶその家の中にあるときだけ *//* しょさい・リビング：住み心地+5% */
-  const v=Math.round(Math.max(0,Math.min(COMFMAX,(15+Math.min(210,furn)+(n?fl/n:0)*45-over*105-(lit?0:60))*(1+.05*rs))));/* 上限は300 */
-  return{v,bed,cap,lit,kinds:seen.size,floorPct:n?Math.round(fl/n*100):0,over}}
+  let webs=0;if(S.web)for(const j of h.inside)if(S.web[j]!=null)webs++;/* クモの巣 */
+  const v=Math.round(Math.max(0,Math.min(COMFMAX,(15+Math.min(210,furn)+(n?fl/n:0)*45-over*105-(lit?0:60))*(1+.05*rs)-webs*WEBCOMF)));/* 上限は300 */
+  return{v,bed,cap,lit,kinds:seen.size,floorPct:n?Math.round(fl/n*100):0,over,webs}}
 
 
 
@@ -85,6 +89,7 @@ const peekH=r=>HOUSES.some(h=>h.set.has((r.y|0)*W+(r.x|0))&&roofAOf(h)<.5);
 let HOUSES=[];
 function houseWhy(j0){const isB=j=>{const t=typeAt(j);return t!=='wall'&&t!=='sdoor'&&(HOME_WALLS.has(t)||HOME_DOORS.has(t))};if(!isB(j0))return null;/* 石の塀・石の塀のドアは、家の壁ではない */findHouses();if(HOUSES.some(h=>h.set.has(j0)))return null;
   const comp=new Set([j0]),q=[j0];while(q.length&&comp.size<600){const j=q.pop(),x=j%W,y=(j/W)|0;for(let b=-1;b<=1;b++)for(let a=-1;a<=1;a++){const k=(y+b)*W+x+a;if(k>=0&&k<W*H&&!comp.has(k)&&isB(k)){comp.add(k);q.push(k)}}}
+  if([...comp].some(j=>decayed(j)))return 'まだ家になっていません。朽ちた壁があります';
   if(![...comp].some(j=>HOME_DOORS.has(S.obj[j])))return 'まだ家になっていません。ドアがありません';
   if([...comp].some(j=>{const x=j%W,y=(j/W)|0;for(let b=-1;b<=1;b++)for(let a=-1;a<=1;a++){const t=typeAt((y+b)*W+x+a);if(t==='wall'||t==='sdoor'||FENCE_IDS.has(t))return true}return false}))return 'まだ家になっていません。かべにすきまがあるか、石の塀や柵がまざっています';
   return 'まだ家になっていません。かべにすきまがあるか、中が広すぎます'}/* 家にならない理由 */
@@ -93,7 +98,7 @@ function houseGlow(h){const key=[...h.set].join(',');let g=GLOWC.get(key);if(g)r
   const w=(h.x1-h.x0+1)*TS+GLOWM*2,hh=(h.y1-h.y0+1)*TS+GLOWM*2,D=w+hh;g=document.createElement('canvas');g.width=w;g.height=hh;const c=g.getContext('2d');
   c.beginPath();for(const q of h.set)c.rect((q%W-h.x0)*TS+GLOWM-D,(((q/W)|0)-h.y0)*TS+GLOWM,TS,TS);c.fillStyle='#000';c.shadowColor='rgb(255,205,110)';c.shadowBlur=36;c.shadowOffsetX=D;c.fill();/* canvas には「ぼかす」命令がないので、形は絵の外にかいて、ぼけた影だけを絵の中に出す */
   GLOWC.set(key,g);return g}
-function findHouses(){const isB=j=>HOME_WALLS.has(typeAt(j))||HOME_DOORS.has(typeAt(j));const seen=new Uint8Array(W*H),out=[],brk=new Set();for(const b of S.broken||[])if(!S.obj[b.j]&&(HOME_WALLS.has(b.id)||HOME_DOORS.has(b.id)))brk.add(b.j);
+function findHouses(){const isB=j=>HOME_WALLS.has(typeAt(j))&&!decayed(j)||HOME_DOORS.has(typeAt(j));const seen=new Uint8Array(W*H),out=[],brk=new Set();for(const b of S.broken||[])if(!S.obj[b.j]&&(HOME_WALLS.has(b.id)||HOME_DOORS.has(b.id)))brk.add(b.j);for(const k in S.hp){const j=+k;if(String(j)===k&&decayed(j))brk.add(j)}/* 朽ちた壁も、こわれた壁と同じ（となりの部屋は家にならない） */
   for(let d=0;d<W*H;d++){if(!HOME_DOORS.has(S.obj[d]))continue;const dx0=d%W,dy0=(d/W)|0;
     for(const[ox,oy]of DIRS){const sx=dx0+ox,sy=dy0+oy;if(sx<0||sy<0||sx>=W||sy>=H)continue;const s=sy*W+sx;if(seen[s]||isB(s))continue;
       const cells=[],q=[s];let ok=true;seen[s]=1;
