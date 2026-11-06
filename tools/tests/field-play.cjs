@@ -38,17 +38,17 @@ const OUT=process.env.SCREENSHOT_DIR;
   // replay of a win does not give twice
   await start('earthRoot');await drag(await P('path'));res.push(['earth win again',await state()]);
   const R=Object.fromEntries(res);
-  for(const [k,id,b] of [['earth','earthRoot','bellf'],['water','waterFilm','lotus'],['wind','windEcho','lily']]){assert.equal(R[k+' win'].done,1,k+' win');assert(JSON.parse(R[k+' win'].won)[id],k+' bonus flag');assert.equal(R[k+' win'].inv[b],2,k+' bonus item');assert.equal(R[k+' lose'].done,1,k+' lose continues');assert.equal(R[k+' lose'].active,false);}
+  for(const [k,id,b] of [['earth','earthRoot','bellf'],['water','waterFilm','lotus'],['wind','windEcho','lily']]){assert.equal(R[k+' win'].done,1,k+' win');assert(JSON.parse(R[k+' win'].won)[id],k+' bonus flag');assert.equal(R[k+' win'].inv[b],0,k+' no item bonus');assert(R[k+' win'].fun.every(f=>f>=59),k+' everyone happier');assert.equal(R[k+' lose'].done,1,k+' lose continues');assert.equal(R[k+' lose'].active,false);}
   assert.equal(R['fire win'].done,1);assert(JSON.parse(R['fire win'].won).fireRoot);assert.equal(R['fire lose'].done,1);
   for(const k of ['cover win','wait win','fire win','wind win'])assert.equal(R[k].pop,false,k+' popup closed');assert.equal(R['cover win'].done,1);assert.equal(R['wait win'].done,1);
   assert.equal(await run("typeof FIELD_PLAY.earthListen"),'undefined','earthListen has no tap game');assert.equal(await run("QUESTS1.filter(q=>q.id==='earthRoot').length"),0);assert.deepEqual(await run("QUESTS1.find(q=>q.id==='earthListen').fieldParts"),['earthListen','earthRoot']);
-  assert.equal(R['earth win again'].inv.bellf,2,'bonus only once');
+  assert.equal(R['earth win again'].inv.bellf,0,'no item bonus');assert(R['earth win again'].fun.every((f,i)=>f<=R['wind lose'].fun[i]+1),'bonus only once');
   console.log('Field mini-games: earth root trace, fire heat release, water path, wind rhythm; win bonus once, three misses continue the story');
   // choices
   const dlg=async(key,sel)=>{await closeGift();await run(`(()=>{DLGGAP=0;DLGTAP=performance.now();dialog(${sel})})()`);let picked=false;for(let n=0;n<40;n++){if(await run(`document.querySelector('#dialog').hidden`))break;const btns=await run(`[...document.querySelectorAll('#dlgBtns button')].map(b=>b.textContent)`);if(btns.length>1&&!picked){await shot('choice-'+key);await run(`(()=>{DLGA.n=DLGA.full.length;})()`);await page.locator('#dlgBtns button').nth(1).click();picked=true;await page.waitForTimeout(200);await shot('choice-'+key+'-after');await closeGift();continue}await run(`(()=>{DLGA.n=DLGA.full.length;DLGA.readReady=0;DLGA.holdUntil=0;const b=document.querySelector('#dlgBtns button');b.disabled=false;b.click()})()`);await page.waitForTimeout(30);}return run(`JSON.stringify(S.flags.choice)`)};
   await dlg('guide',`QUESTS[questIndexOf('water')].story`);assert.equal(await run(`S.flags.choice.guide`),await run('MINA'));assert(await run(`bondOf(S.res.find(r=>r.name===MINA),S.res.find(r=>r.name===keyName('water')))>=BOND_TALK`),'guide becomes friend');
   await dlg('brave',`QUESTS[questIndexOf('kagemark')].story`);assert.match(await run(`QUESTS[questIndexOf('ookage')].story[0][1]`),/こわくなかった/);
-  await dlg('flower',`QUESTS[questIndexOf('wood6')].talk.lines.filter(l=>l[0]!=='@idea')`);assert.equal(await run(`inv('lily')`),7);assert.match(await run(`QUESTS[questIndexOf('wood6')].story[0][1]`),/ゆり/);
+  await dlg('flower',`QUESTS[questIndexOf('wood6')].talk.lines.filter(l=>l[0]!=='@idea')`);assert.equal(await run(`inv('lily')`),5);assert.match(await run(`QUESTS[questIndexOf('wood6')].story[0][1]`),/ゆり/);
   console.log('Choices: guide friendship, later Futaba line, chosen flower seeds and line');
   assert.deepEqual(errors,[]);console.log('Browser errors: none');await browser.close();
 })().catch(e=>{console.error(e);process.exit(1)});

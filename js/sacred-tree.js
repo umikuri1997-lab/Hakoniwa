@@ -41,7 +41,8 @@ function tryExpandSacredLegacy(state){
   if(cells.some(k=>state.obj[k]&&k!==j&&!(state.obj[k]==='part'&&state.ref[k]===j)||state.res?.some(r=>!r.hidden&&(r.y|0)*W+(r.x|0)===k)))return;
   migrateSacredFootprint3(state);
 }
-function sacredNoBuild(j){if(sacredReserved(j))return true;if(!S||WD!==0||S.free||S.sacredRoot==null)return false;const s=fieldStump(S.sacredRoot);return Math.abs(j%W-s%W)<=1&&Math.abs((j/W|0)-(s/W|0))<=1}/* 切り株のまわり1マスにも、物を置かない */
+function sacredNoBuild(j,id){if(!S||WD!==0||S.free||S.sacredRoot==null)return false;const s=fieldStump(S.sacredRoot);if(id&&BL[id]&&BL[id].floor&&BL[id].kind==='block')return SACREDBASE.some(d=>s+d===j);/* 道・床は、木の根もとのマスだけことわる（木が育っても、上の絵が道にかかるだけ） */if(sacredReserved(j))return true;return Math.abs(j%W-s%W)<=1&&Math.abs((j/W|0)-(s/W|0))<=1}/* 切り株のまわり1マスにも、物を置かない */
+const SACREDBASE=[0,-1];/* 切り株・木の根もと（fieldStump からのずれ） */
 function sacredReserved(j){return !!S&&WD===0&&!S.free&&S.sacredRoot!=null&&sacredCells(S.sacredRoot).includes(j);}
 const sacredQuestIndex=id=>QUESTS1.findIndex(q=>q.id===id||!!q.fieldParts&&q.fieldParts.includes(id));
 function sacredCompleted(id){const i=sacredQuestIndex(id);return fieldStoryDone(id)||i>=0&&S.quest>i&&S.qStory!==i;}

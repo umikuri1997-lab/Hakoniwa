@@ -287,7 +287,7 @@ function renderSheet(){
     box('食料箱',S.food,foodCap(),[...raw.map(fi),...dish.map(fi)],'食べ物は、ありません');
     const mk=Object.keys(S.mat).filter(k=>(S.mat[k]||0)>0&&MATN[k]);box('素材箱',matTot(),matCap(),mk.map(k=>[ICONS[k]||null,'',MATN[k],S.mat[k]]),'素材は、ありません');
     if(S.sand){const p=el('<p class="note"></p>');p.textContent='やすらぎの砂：'+S.sand;body.appendChild(p)}
-    const hold=S.res.filter(r=>heldN(r)>0);if(hold.length){const p=el('<p class="note"></p>');p.textContent='せいれいが運んでいるとちゅう：'+hold.map(r=>r.name+'（'+[...Object.entries(r.carry&&typeof r.carry==='object'?r.carry:{}).map(([k,n])=>FOODS[k].name+n),...Object.entries(r.cmat||{}).map(([k,n])=>MATN[k]+n)].join('・')+'）').join('、');body.appendChild(p)}
+    const hold=S.res.filter(r=>heldN(r)>0);if(hold.length){const p=el('<p class="note"></p>');p.textContent='せいれいが運んでいるとちゅう：'+hold.map(r=>r.name+'（'+[...Object.entries(r.carry&&typeof r.carry==='object'?r.carry:{}).map(([k,n])=>FOODS[k].name+n),...Object.entries(r.cmat||{}).map(([k,n])=>MATN[k]+n),...Object.entries(r.citem||{}).map(([k,n])=>itemName(k)+n)].join('・')+'）').join('、');body.appendChild(p)}
   }else if(sheet==='people'){
     T.textContent='せいれい '+S.res.length+'人';
     const a=el('<div class="sec"><h3>この土地の属性</h3><div class="attr"></div></div>');const g=a.querySelector('.attr');
