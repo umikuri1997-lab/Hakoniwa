@@ -17,7 +17,9 @@ const OUT=process.env.SCREENSHOT_DIR;
   const res=[];const shot=async n=>{if(!OUT)return;await page.waitForTimeout(120);await page.screenshot({path:OUT+'/'+n+'.png'});};
   const state=()=>run(`({pop:!!document.querySelector('#playPop'),active:sacredPlayActive(),done:window.PDONE,won:JSON.stringify(S.flags.playWon||{}),fails:SPLAY&&SPLAY.fails||0,inv:{bellf:inv('bellf'),lotus:inv('lotus'),lily:inv('lily')},fun:S.res.map(r=>Math.round(r.fun))})`);
   // earth: success
-  await start('earthRoot');await shot('earth0');const path=await P('path');
+  const sizeShot=async(id,n)=>{if(!OUT)return;for(const [w,h] of [[390,844],[844,390]]){await page.setViewportSize({width:w,height:h});await start(id);const p=await P('path');const a=await scr(p[0]);await page.mouse.move(a.x,a.y);await page.mouse.down();for(const q of p.slice(1,14)){const b=await scr(q);await page.mouse.move(b.x,b.y,{steps:3})}const fit=await run(`(()=>{const r=document.querySelector('#playPop .pxcard').getBoundingClientRect();return r.top>=0&&r.bottom<=innerHeight&&r.left>=0&&r.right<=innerWidth})()`);assert(fit,id+' popup fits '+w+'x'+h);await page.screenshot({path:OUT+'/rootpop-'+n+'-'+w+'x'+h+'.png'});await page.mouse.up();await run('cancelSacredPlay()');}await page.setViewportSize({width:900,height:700});};
+  await sizeShot('earthRoot','earth');await sizeShot('waterFilm','water');
+  await start('earthRoot');assert(await run('!!document.querySelector("#playPop")'),'earthRoot in popup');await shot('earth0');const path=await P('path');
   await drag(path.slice(0,12));await shot('earth-half');await drag(path.slice(11));res.push(['earth win',await state()]);
   // earth: fail 3 times (jump off path)
   await start('earthRoot');for(let k=0;k<3;k++){const p=await P('path');if(!p)break;await drag([p[0],p[2],{x:p[2].x,y:p[2].y-40}]);}res.push(['earth lose',await state()]);
@@ -29,7 +31,7 @@ const OUT=process.env.SCREENSHOT_DIR;
   // water: watch the bud without touching (popup)
   await start('waterLeaf');assert(await run('!!document.querySelector("#playPop")'),'waterLeaf in popup');await shot('stump2-waterLeaf');{let p=await P('path');await drag([p[0],p[3],{x:p[3].x,y:p[3].y+30}]);assert.equal(await run('SPLAY.fails'),1,'drop falls off leaf');p=await P('path');await drag(p.slice(0,12));await shot('drag-water');await drag(p.slice(11));await page.waitForTimeout(1200);}res.push(['wait win',await state()]);
   // water
-  await start('waterFilm');await shot('water0');await drag(await P('path'));res.push(['water win',await state()]);
+  await start('waterFilm');assert(await run('!!document.querySelector("#playPop")'),'waterFilm in popup');await shot('water0');await drag(await P('path'));res.push(['water win',await state()]);
   await start('waterFilm');for(let k=0;k<3;k++){const p=await P('path');if(!p)break;await drag([p[0],p[3],{x:p[3].x,y:p[3].y+40}]);}res.push(['water lose',await state()]);
   // wind: watch the order, then swipe over the leaves in the same order
   const showDone=()=>page.waitForFunction(()=>sacredEval('!SPLAY||performance.now()>SPLAY.showEnd()+50'),{},{timeout:10000});
