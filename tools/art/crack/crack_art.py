@@ -1,71 +1,64 @@
-# 朽ちた壁のひび（crack#0〜5・crack:v#0〜5、g64）
-# もとは tools/art/crack/crack.png の3つの形（たてに走る1本・Vの字にわれる・ななめの長いひび）。
-# もらった絵は色がうすく、線もとぎれるので、その形をなぞった折れ線（PATHS）から、とぎれない1ドットの線で作りなおす。
-# 色：まん中はこい茶（すきま）、左上がわに1ドットのかげ、右下がわに1ドットの明るいふち（へこみに見える）。半透明なので、壁の色にあわせて見える。
-# 3つの形 × 左右反転 = 6しゅるい（drawCrack が、となりと同じにならないようにえらぶ）。
-#   python3 tools/art/crack/crack_art.py [出力フォルダ]   → チップに入れる（出力フォルダがあれば、8倍のためしの絵も書く）
-import sys, os
+# 朽ちた壁のひび（crack#0〜9・crack:v#0〜9、g64）
+# もとは tools/art/crack/crack2.png（持ち主の絵。64ドットごとに5つの形、1ドット＝1ドット）。
+# 形ごとに、かたむき（角度）と左右反転をかえた10しゅるいを作る（drawCrack が、となりと同じ形にならないようにえらぶ）。
+# まわし方：8倍にして（ならべるだけ）まわし、8×8ごとに「線がかかる割合」でドットにもどす（ぼかさない・線がとぎれにくい）。
+# 白いしっくいの上でも見えるよう、色は少しこくする（DARK）。ほぼ透明なごみのドットはすてる。
+#   python3 tools/art/crack/crack_art.py [出力フォルダ]
+import sys, os, math
 import numpy as np
 from PIL import Image
-CORE = (92, 60, 40, 235); DEEP = (70, 44, 30, 245)   # すきま（はじまりの所は2ドット）
-SHAD = (88, 62, 44, 95)                              # 左上がわのかげ
-HIL = (255, 250, 236, 150)                           # 右下がわの明るいふち
-# 折れ線：(点の列, 2=はじまりが太い)。座標はマスの中のドット（64×64、y=0 が壁の正面の上はし）
-PATHS = {  # 正面の板（y 0〜56）の上から下まで。はば x 6〜58（ずらしても はみ出さない）
-    'h': [
-        [([(22, 2), (25, 9), (23, 17), (29, 24), (27, 32), (34, 39), (35, 47), (40, 54)], 2), ([(27, 32), (19, 36), (13, 43), (8, 46)], 1), ([(34, 39), (43, 41), (50, 47), (55, 49)], 1), ([(23, 17), (17, 20), (14, 26)], 1), ([(19, 36), (20, 44), (17, 51)], 1)],
-        [([(34, 2), (36, 10), (32, 18), (35, 25)], 2), ([(35, 25), (27, 31), (22, 40), (14, 45), (9, 53)], 1), ([(35, 25), (42, 33), (45, 41), (52, 47), (56, 54)], 1), ([(22, 40), (25, 48), (23, 54)], 1), ([(45, 41), (50, 36)], 1)],
-        [([(7, 5), (14, 11), (20, 19), (28, 24), (35, 33), (44, 39), (51, 47), (57, 54)], 2), ([(20, 19), (18, 29), (22, 37), (20, 45)], 1), ([(44, 39), (48, 30), (55, 25)], 1), ([(35, 33), (33, 42), (36, 50)], 1)],
-    ],
-    'v': [  # たての壁は、上から見た細い帯（x 12〜52）。ひびは帯にそってたてに
-        [([(30, -10), (31, 0), (28, 9), (32, 18), (30, 28), (34, 37), (32, 46)], 2), ([(32, 18), (38, 23), (41, 31)], 1), ([(30, 28), (24, 34), (23, 41)], 1)],
-        [([(34, -8), (31, 3), (35, 12), (32, 22)], 2), ([(32, 22), (26, 30), (25, 39), (22, 47)], 1), ([(32, 22), (39, 29), (40, 38), (43, 45)], 1)],
-        [([(26, -10), (29, -1), (34, 7), (32, 17), (37, 26), (35, 36), (38, 46)], 2), ([(29, -1), (23, 6), (21, 13)], 1), ([(37, 26), (42, 31)], 1)],
-    ],
-}
-VOFF = 12  # たての絵は、マスの上はしより12ドット上から
+SRC = os.path.join(os.path.dirname(__file__), 'crack2.png')
+DARK = .72          # 色のこさ（RGB×）
+U = 8               # まわすときの細かさ
+COV = .34           # この割合より線がかかれば、そのドットを描く
+# 10しゅるい：(形, 角度, 左右反転)
+VAR = [(0, 0, 0), (1, 15, 0), (2, -12, 0), (3, 25, 0), (4, -25, 0), (0, -20, 1), (1, -8, 1), (2, 18, 1), (3, -28, 1), (4, 10, 1)]
+FIT = {'h': (52, 54), 'v': (34, 54)}   # おさめる大きさ（正面の板・たての帯）
+OFF = {'h': (32, 28), 'v': (32, 16)}   # おさめる所のまん中（マスの中、g64）
 
-def line(a, b):
-    (x0, y0), (x1, y1) = a, b; n = max(abs(x1-x0), abs(y1-y0))
-    return [(round(x0+(x1-x0)*t/n), round(y0+(y1-y0)*t/n)) for t in range(n+1)]
+def shapes():
+    a = np.array(Image.open(SRC).convert('RGBA')).astype(np.float32)
+    a[a[..., 3] < 24] = 0
+    out = []
+    for s in range(5):
+        c = a[:, s*64:(s+1)*64]; ys, xs = np.where(c[..., 3] > 0)
+        out.append(c[ys.min():ys.max()+1, xs.min():xs.max()+1])
+    return out
 
-def render(paths, oy=0):
-    core = {}
-    for pts, w in paths:
-        seg = []
-        for a, b in zip(pts, pts[1:]): seg += line(a, b)
-        L = len(seg)
-        for k, (x, y) in enumerate(seg):
-            thick = w == 2 and k < L*.45
-            core[(x, y+oy)] = max(core.get((x, y+oy), 0), 2 if thick else 1)
-            if thick: core[(x+1, y+oy)] = 2   # はじまりは太く（右へ1ドット）
-    o = np.zeros((64, 64, 4), np.uint8); ok = lambda p: 0 <= p[0] < 64 and 0 <= p[1] < 64
-    for (x, y) in core:   # かげ：左・上
-        for p in ((x-1, y), (x, y-1)):
-            if p not in core and ok(p): o[p[1], p[0]] = SHAD
-    for (x, y) in core:   # 明るいふち：右・下
-        for p in ((x+1, y), (x, y+1)):
-            if p not in core and ok(p): o[p[1], p[0]] = HIL
-    for (x, y), t in core.items():
-        if ok((x, y)): o[y, x] = DEEP if t == 2 else CORE
+def rot(c, deg, flip, fw, fh):
+    if flip: c = c[:, ::-1]
+    big = np.repeat(np.repeat(c, U, 0), U, 1)
+    im = Image.fromarray(big.astype(np.uint8)).rotate(deg, Image.NEAREST, expand=True)
+    b = np.array(im).astype(np.float32); ys, xs = np.where(b[..., 3] > 0); b = b[ys.min():ys.max()+1, xs.min():xs.max()+1]
+    sc = min(1., fw*U/b.shape[1], fh*U/b.shape[0]); st = U/sc   # 1ドットになる大きさ（もとのドットで）
+    W, H = max(1, round(b.shape[1]/st)), max(1, round(b.shape[0]/st)); o = np.zeros((H, W, 4), np.uint8)
+    for y in range(H):
+        for x in range(W):
+            blk = b[int(y*st):max(int(y*st)+1, int((y+1)*st)), int(x*st):max(int(x*st)+1, int((x+1)*st))]
+            m = blk[..., 3] > 0; f = m.mean()
+            if f >= COV:
+                p = blk[m]; w = p[:, 3:4]; rgb = (p[:, :3]*w).sum(0)/w.sum()
+                o[y, x, :3] = np.clip(rgb*DARK, 0, 255); o[y, x, 3] = min(255, p[:, 3].max())
     return Image.fromarray(o)
 
-def flip(paths):
-    return [([(63-x, y) for x, y in pts], w) for pts, w in paths]
-
 def build():
-    out = {}
-    for kind, pre, oy in (('h', 'crack#', 0), ('v', 'crack:v#', VOFF)):
-        for s, p in enumerate(PATHS[kind]):
-            for f in (0, 1):
-                im = render(flip(p) if f else p, oy); bb = im.getbbox()
-                out[pre+str(s*2+f)] = (im.crop(bb), bb[0], bb[1]-oy)
+    S = shapes(); out = {}
+    for kind, pre in (('h', 'crack#'), ('v', 'crack:v#')):
+        fw, fh = FIT[kind]; cx, cy = OFF[kind]
+        for k, (s, d, f) in enumerate(VAR):
+            im = rot(S[s], d, f, fw, fh); bb = im.getbbox(); im = im.crop(bb)
+            out[pre+str(k)] = (im, cx-im.width//2, cy-im.height//2)
     return out
 
 if __name__ == '__main__':
     sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..')); import chips
     h, C = chips.load_imgs(); B = build()
+    for k in [k for k in C if k.startswith('crack#') or k.startswith('crack:v#')]: del C[k]
     for k, (im, ax, ay) in B.items():
         C[k] = {'g': 64, 'ax': ax, 'ay': ay, 'w': im.width, 'h': im.height, 'f': [im]}
-        if len(sys.argv) > 1: im.resize((im.width*8, im.height*8), Image.NEAREST).save(os.path.join(sys.argv[1], k.replace(':', '_').replace('#', '_')+'.png'))
+    if len(sys.argv) > 1:
+        sh = Image.new('RGBA', (64*10, 128), (236, 230, 216, 255))
+        for k, (im, ax, ay) in B.items():
+            n = int(k.split('#')[1]); sh.alpha_composite(im, (n*64+ax, (64 if ':v' in k else 0)+max(0, ay)))
+        sh.resize((sh.width*4, sh.height*4), Image.NEAREST).save(os.path.join(sys.argv[1], 'crack4-sheet.png'))
     chips.pack_imgs(h, C); print(sorted(B))
