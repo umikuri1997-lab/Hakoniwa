@@ -145,7 +145,7 @@ function updRes(r,dt){rescueStuck(r);if((RHOLD.get(r)||0)>performance.now())retu
   if(r.hidden||r.act&&r.act.stage==='do'||Math.hypot(r.x-(r.stX??r.x),r.y-(r.stY??r.y))>.3){r.stX=r.x;r.stY=r.y;r.stT=S.t}else if(S.t-(r.stT??S.t)>=10&&!(r.act&&r.act.type==='nmeet')){if(r.act&&r.act.stand>=0){r.avoidJ=r.act.stand;r.avoidU=S.t+120}r.stX=r.x;r.stY=r.y;r.stT=S.t;if(r.act)endAct(r)}/* 動いてもいない・作業もしていないまま10分たったら、いまの行動をやめて、べつの行動をえらぶ */
   const sleeping=r.act&&r.act.type==='sleep'&&r.act.stage==='do',storyWaiting=storyWaitProtected(r);
   const mv=r.act&&(r.act.stage==='walk'||r.act.type==='tag');const lazy=!r.act||r.act.type==='idle'||r.act.type==='wander'||r.act.type==='stay';const wk=r.act&&r.act.stage==='do'&&WORKT.has(r.act.type);/* おなかは、作業するとへる。つかれているほどへりやすい */if(!storyWaiting)r.hunger-=(sleeping?.003:wk?.3:mv?.04:.02)*(lazy?.5:1)*(r.energy<10?2:r.energy<30?1.5:1)*dt*(trt(r,'shoshoku')?.8:1)*(r.full>S.t?.6:1);
-  if(!sleeping&&!storyWaiting)r.fun-=.07*dt*(trt(r,'genki')?.6:1)*SUTEKI_FUN[suteki().st]*gearStat(r).fun*(S.rain&&gearStat(r).rain?0:1);
+  if(!sleeping&&!storyWaiting)r.fun-=.07*dt*(trt(r,'genki')?.6:1)*SUTEKI_FUN[suteki().st]*gearStat(r).fun*(S.rain&&gearStat(r).rain?0:1)*(rainbowToday()?RB_FUN:1);
   {const jj=(r.y|0)*W+(r.x|0),ev=ENVG?ENVG[jj]+(ENVE[r.elem]?ENVE[r.elem][jj]:0):0;if(ev>0&&!sleeping){r.fun=Math.min(100,r.fun+ev*.004*dt);if(r.act&&r.act.stage==='do'&&(r.act.type==='idle'||r.act.type==='rest'))r.energy=Math.min(100,r.energy+ev*.004*recK(r)*dt)}}/* まわりの環境がいいと、休けい・たのしさが上がる */
   // 家の中で寝ている子は、壁が壊れて「コワイノ」が入ってこない限り起きない
   if(sleeping&&r.elem==='fire'&&r.energy>30&&S.enemies.some(e=>e.spawned&&Math.hypot(e.x-r.x,e.y-r.y)<8)){const out=insideSet(),me=(r.y|0)*W+(r.x|0);

@@ -494,6 +494,7 @@ function subSec(body,main){const D=S.subDone||{},St=S.subSt||{},L=subList().filt
     for(const q of on){const r=rowEl('サブ：'+q.t,St[q.k]===3?'たっせい！ '+subWho(q)+'に話しかけよう':St[q.k]===2&&isNight()&&(()=>{try{return q.ok()}catch(e){return false}})()?'たっせい！ 朝を待とう':(q.n?'いま '+Math.min(q.n,q.now())+' / '+q.n:'')+(q.rw?(q.n?' / ':'')+'ごほうび パワー+'+q.rw:''));howBtn(r,q.how);
       if(q.pay){const b=el('<button class="btn pri" style="flex:none;padding:6px 12px">わたす</button>'),en=St[q.k]===2&&!q.ok()&&Object.keys(q.pay).every(k=>(S.mat[k]||0)>=q.pay[k]);const nt=Object.keys(q.pay).map(k=>MATN[k]+' '+Math.min(S.mat[k]||0,999)+'/'+q.pay[k]).join('　');const sm=r.querySelector('small');if(sm)sm.textContent=(sm.textContent?sm.textContent+'　':'')+'いまの素材：'+nt;b.disabled=!en;b.onclick=()=>{if(St[q.k]!==2||q.ok()||!Object.keys(q.pay).every(k=>(S.mat[k]||0)>=q.pay[k]))return;for(const k in q.pay)S.mat[k]-=q.pay[k];S.flags.board5=true;checkSub();renderSheet()};r.appendChild(b)}
       rw.appendChild(r);n++}
+    if(main)n+=matsuriRows(rw);/* 村まつりのお題 */
     if(!n)rw.appendChild(rowEl('いまは、なし',''))}
   const md=main?QUESTS.slice(0,Math.min(S.quest,QUESTS.length)).map(q=>'メイン：'+q.text).reverse():[];
   if(md.length||dn.length){const rw=sec('達成済み');for(const t of [...dn.slice().reverse().map(q=>'サブ：'+q.t),...md]){const r=rowEl('✓ '+t,'');r.classList.add('done');rw.appendChild(r)}}}
@@ -519,7 +520,7 @@ function morning(){sfx('morning');if(S.cleared&&S.daily)dailyCheck();/* 夜の�
   for(const k in S.dyn){const o=S.obj[k],d=S.dyn[k];if((o==='berry'||o==='fruit')&&d&&d.g<100){d.g=Math.min(100,d.g+25);continue}/* ベリー・りんごは4日（朝ごとに25） */if(o!=='farm')continue;if(d.sown===false){d.wet=0;continue}if(d.wet>0&&d.g<100)d.g=Math.min(100,d.g+100/((CROPS[d.crop]||CROPS.mugi).days)*(warmSet().has(+k)?1.5:1)*(d.gw||1));/* あたたかい畑：育つ速さ+50% */delete d.gw;d.wet=0}
   if(WD===1){takenokoMorning();eruptMorning();gearMorning()}weedMorning();
   if(cnt('bell')>0){BELLRING=performance.now();{const j=S.obj.indexOf('bell');if(j>=0)bellRing(j%W+1,((j/W)|0)+1)}for(const r of S.res)if(!r.hidden)r.fun=Math.min(100,r.fun+15)}/* 村の鐘：朝に鳴って、たのしさ+15（いくつあっても1回） */
-  S.rain=Math.random()<.22;
+  {const wr=S.rain;S.rain=Math.random()<.22;weatherMorning(wr)}/* 雨のつぎの朝は、虹が出ることがある・村まつり */
   S.today=null;if(S.enemyOn&&dayNo()>=3&&Math.random()<.4){const ks=Object.keys(DAYEV).filter(k=>k!=='kami');const k=pick(ks),E=DAYEV[k];S.today=k;/* 日替わりのできごと */
     setTimeout(()=>toast('きょうは「'+E[1]+'」：'+E[2],'good'),1200);memo(E[0],'きょうは「'+E[1]+'」');
     if(k==='kami'){S.godVisit=true;S.godNextVisitDay=dayNo()+2;}
