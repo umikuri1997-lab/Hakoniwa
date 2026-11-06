@@ -38,14 +38,14 @@ function fogMigrate(s){/* 前からのセーブ（いちどだけ）：村のマ
   for(let j=0;j<W*H;j++){const o=s.obj[j];if(s.floor[j]||o&&(o==='part'||BL[o]&&!BL[o].natural&&!WEEDS.has(o)))mark(j)}for(const k in s.rug||{})mark(+k);for(const k in s.roof||{})mark(+k);
   for(const r of s.res||[])open.add(areaOf(((r.y|0)*W)+(r.x|0)));if(s.sacredRoot!=null)mark(s.sacredRoot);
   s.fog=Array.from({length:AREAN*AREAN},(_,a)=>open.has(a)?0:1);s.fogV=0;s.fogReq=[];const fa=s.fog.map((v,a)=>v?a:-1).filter(a=>a>=0);if(!fa.length){delete s.fog;return}fogGen(s,fa)}
-function fogAfterRecount(){/* recount のあと：となりの晴れたエリアのみどりのマスが200をこえたら、霧が晴れる。古い家のあとが家になったら、ごほうび */if(!fogOn())return;
+function fogAfterRecount(){/* recount のあと：となりの晴れたエリアのみどりのマスが200をこえたら、霧が晴れる。古い家のあとが家になったら、ごほうび */if(!fogOn()||MEMRUN||NOSAVE)return;/* 思い出の場面（一時の花など）では、晴らさない */const quiet=!stageReady();/* マップを作っているあいだ（はじめ・読みこみ）は、知らせを出さない */
   const G=new Array(AREAN*AREAN).fill(0);for(const k of REV)if(S.ground[k]!==1)G[areaOf(k)]++;const clr=[];
   for(let a=0;a<AREAN*AREAN;a++){if(!S.fog[a])continue;const x=a%AREAN,y=(a/AREAN)|0;if([[1,0],[-1,0],[0,1],[0,-1]].some(([dx,dy])=>{const nx=x+dx,ny=y+dy;if(nx<0||ny<0||nx>=AREAN||ny>=AREAN)return false;const b=ny*AREAN+nx;return !S.fog[b]&&G[b]>FOG_GREEN}))clr.push(a)}
-  for(const a of clr)fogClear(a);
+  for(const a of clr)fogClear(a,quiet);
   for(const f of S.fogF||[]){if(f.t!=='ruin'||!f.set||f.done)continue;const c=f.j+W+2;if(fogRing(f.j).every(k=>HOME_WALLS.has(S.obj[k])||HOME_DOORS.has(S.obj[k]))&&HOUSES.some(h=>h.inside.has(c))){f.done=1;const L=FURN.filter(id=>giftPoolOK(id));if(L.length){const id=pick(L);giveItem(id,1);queueItemGift({[id]:1})}toast('古い家が、よみがえった','good')}}}
 function fogRing(j){/* 古い家のあと：5×4マスのまわり（下のまん中がドア） */const x=j%W,y=(j/W)|0,L=[];for(let b=0;b<4;b++)for(let a=0;a<5;a++)if(a===0||a===4||b===0||b===3)L.push((y+b)*W+x+a);return L}
-function fogClear(a){if(!S.fog[a])return;S.fog[a]=0;S.fogV=(S.fogV||0)+1;FOGA.set(a,performance.now());if(typeof SPRC!=='undefined')SPRC.n=-1;/* コワイノの来る所を作りなおす */
-  toast('霧が晴れた','good');sfx('level');
+function fogClear(a,quiet){if(!S.fog[a])return;S.fog[a]=0;S.fogV=(S.fogV||0)+1;if(!quiet)FOGA.set(a,performance.now());if(typeof SPRC!=='undefined')SPRC.n=-1;/* コワイノの来る所を作りなおす */
+  if(!quiet){toast('霧が晴れた','good');sfx('level')}
   for(const f of S.fogF||[])if(f.a===a&&f.t==='ruin'&&!f.set){f.set=1;const x=f.j%W,y=(f.j/W)|0,keep=new Set([0,4,5,8,9,13]);/* のこっている壁（角と、いくつか）。ほかは、こわれたあと */fogRing(f.j).forEach((k,i)=>{const o=S.obj[k];if(o&&!(BL[o]&&BL[o].natural||WEEDS.has(o)))return;if(o)S.obj[k]='';S.drops=(S.drops||[]).filter(d=>d.y*W+d.x!==k);const door=k===(y+3)*W+x+2;if(keep.has(i)&&!door)S.obj[k]='hwall';else(S.broken||(S.broken=[])).push({j:k,id:door?'door':'hwall',rot:0})});villageTimeout(()=>recount(),30)}
   dirty=true}
 function fogTap(tx,ty){/* 「みる」のタップ：霧の所・見つける物 */if(!fogOn())return false;let j=ty*W+tx;if(fogAt(j)){toast('霧で見えない');return true}j=anc(j);

@@ -6,7 +6,8 @@ function nodata(k,t){return el('<div class="nodata">'+pxi(k)+'<span>'+t+'</span>
 /* 入る数がわかるときだけ「持っている数/入る数」。箱がないときは数だけ */
 function capTxt(n,c){return c>0?'（'+n+'/'+c+'）':n>0?'（'+n+'）':''}
 /* できた印（✓）は、ドットのチェックにする */
-function ckSet(b,t){if(t.startsWith('✓ ')){b.innerHTML=pxi('check','ck');b.appendChild(document.createTextNode(t.slice(2)))}else b.textContent=t}
+const CKD='M6 0h1v1h-1zM5 1h1v1h-1zM6 1h1v1h-1zM0 2h1v1h-1zM4 2h1v1h-1zM5 2h1v1h-1zM0 3h1v1h-1zM1 3h1v1h-1zM3 3h1v1h-1zM4 3h1v1h-1zM1 4h1v1h-1zM2 4h1v1h-1zM3 4h1v1h-1zM2 5h1v1h-1z';/* 7×6ドットのチェック（1ドット＝2px。32のマス目をちぢめると、ドットがにじむ） */
+function ckSet(b,t){if(t.startsWith('✓ ')){b.innerHTML='<svg class="pxi ck" viewBox="0 0 7 6" aria-hidden="true"><path d="'+CKD+'"/></svg>';b.appendChild(document.createTextNode(t.slice(2)))}else b.textContent=t}
 function pxi(k,c){return '<svg class="pxi'+(c?' '+c:'')+'" viewBox="0 0 32 32" aria-hidden="true"><path d="'+(PXI[k]||'')+'"/></svg>'}
 
 /* ---------- UI ---------- */
@@ -359,7 +360,7 @@ function renderSheet(){
        {const sb=el('<button class="btn"></button>'),sn=S.mseed||0;sb.textContent='ふしぎな種をあげる（'+sn+'こ）';sb.disabled=sn<1;sb.onclick=()=>giveSeed(r);bw.appendChild(sb)}/* ふしぎな種も、パワーのとなりからあげられる */
        body.appendChild(sec)}/* パワーで、せいれいを強化 */
      else if(resTab===1){const pf=el('<div class="sec"><div class="stats"></div></div>'),pg=pf.querySelector('.stats');
-       for(const[k,v]of[['得意なこと',ELEM[r.elem].can],['好きな遊び',LIKES[r.like]],['にがてな遊び',Object.keys(NIGATE[r.elem]||{}).map(k=>BL[k].name).join('・')||'とくにない'],['好きな家具',BL[likeF(r)].name],['好きな料理',FOODS[favDish(r)].name],['なかよし',(b=>b?b.q.name+'（'+b.v+'）':'まだいない')(bondBest(r))],['村に来た日',r.came?r.came+'日目':'はじめから'],['作ったもの',(r.made||0)+'こ'],['追いはらった「コワイノ」',(r.beat||0)+'体'],['ベッド',myBed(r)>=0?'じぶんのベッドがある':'きまっていない']]){const d=el('<div class="stat" style="display:block"><span style="display:block"></span><b style="display:block;text-align:left;margin-top:2px"></b></div>');d.firstChild.textContent=k;d.lastChild.textContent=v;pg.appendChild(d)}
+       for(const[k,v]of[['好きな遊び',LIKES[r.like]],['にがてな遊び',Object.keys(NIGATE[r.elem]||{}).map(k=>BL[k].name).join('・')||'とくにない'],['好きな家具',BL[likeF(r)].name],['好きな料理',FOODS[favDish(r)].name],['なかよし',(b=>b?b.q.name+'（'+b.v+'）':'まだいない')(bondBest(r))],['村に来た日',r.came?r.came+'日目':'はじめから'],['作ったもの',(r.made||0)+'こ'],['追いはらった「コワイノ」',(r.beat||0)+'体'],['ベッド',myBed(r)>=0?'じぶんのベッドがある':'きまっていない']]){const d=el('<div class="stat" style="display:block"><span style="display:block"></span><b style="display:block;text-align:left;margin-top:2px"></b></div>');d.firstChild.textContent=k;d.lastChild.textContent=v;pg.appendChild(d)}
        body.appendChild(pf)}
      else{
      const st=el('<div class="sec"><div class="stats sgrid"></div></div>'),g=st.querySelector('.stats');

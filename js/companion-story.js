@@ -28,7 +28,7 @@ function sacredRootEnsure(r){
   if(!S||WD!==0||S.free)return S&&S.sacredRoot;S.fieldSites||(S.fieldSites={});
   if(S.sacredRoot!=null){S.fieldSites.root=S.sacredRoot;return S.sacredRoot;}
   if(S.obj.includes('tower'))return null;
-  const G=r?bfs(r.x|0,r.y|0):bfs(CX,CY+2),old=S.fieldSites.root,x=old!=null?old%W:CX-4,y=old!=null?(old/W|0):CY;if(old==null){const tj=y*W+x,cs=sacredCells(tj),nat=o=>!o||WEEDS.has(o)||o==='ntree'||o==='deadtree'||o==='rock'||o==='bush';if(cs.every(k=>nat(S.obj[k])&&!S.floor[k]&&!roomOf(k)&&S.ground[k]!==1&&S.ground[k]!==2&&hiAt(k)===hiAt(tj))){let ch=false;for(const k of cs)if(S.obj[k]){S.obj[k]='';ch=true}if(ch)recount()}}/* 切り株の場所の、自然の木・岩・草は片づける */let best=-1,score=Infinity;
+  const G=r?bfs(r.x|0,r.y|0):bfs(CX,CY+2),old=S.fieldSites.root,x=old!=null?old%W:CX-5,y=old!=null?(old/W|0):CY;if(old==null){const tj=y*W+x,cs=sacredCells(tj),nat=o=>!o||WEEDS.has(o)||o==='ntree'||o==='deadtree'||o==='rock'||o==='bush';if(cs.every(k=>nat(S.obj[k])&&!S.floor[k]&&!roomOf(k)&&S.ground[k]!==1&&S.ground[k]!==2&&hiAt(k)===hiAt(tj))){let ch=false;for(const k of cs)if(S.obj[k]){S.obj[k]='';ch=true}if(ch)recount()}}/* 切り株の場所の、自然の木・岩・草は片づける */let best=-1,score=Infinity;
   for(let j=0;j<W*H;j++){const d=G.dist[j];if(d<0||d>100)continue;const sc=Math.hypot(j%W-x,(j/W|0)-y)+d*.03;if(sc>=score||!sacredRootFits(j))continue;best=j;score=sc;}
   if(best>=0){S.sacredRoot=best;S.fieldSites.root=best;dirty=true;}
   return S.sacredRoot;

@@ -351,6 +351,7 @@ function carryIcons(r){/* 持っているものを、そのまま1つずつ並�
   return out}
 const NOFACE={'😊':'🎵','😌':'🎵','😆':'✨','😋':'🍴','😣':'💦','😩':'💤','😴':'💤','😭':'💧','😢':'💧','😨':'💦','😱':'❗','😵':'💫','😠':'💢','😤':'💢'};/* 吹き出しに顔の絵文字は出さない（かわりの絵） */
 let BUBQ=null;
+function objAbove(r){const j=r.faceObj;if(j==null||j<0)return false;return ((j/W)|0)+.5<r.y-.3&&Math.abs(j%W+.5-r.x)<.6}
 function objBelow(r){const j=r.faceObj;if(j==null||j<0)return false;return ((j/W)|0)+.5>r.y+.3&&Math.abs(j%W+.5-r.x)<.6}/* 下にある木・岩は正面のまま */
 function drawRes(r,now){
   if(r.spawnT){const e=now-r.spawnT;if(e<450)return;if(e<1300){const k=e<900?(e-450)/450:1,sq=e<900?1:1+Math.sin((e-900)/400*Math.PI)*.18,px=r.x*TS,py=r.y*TS+9,rise=(1-k)*14;
@@ -374,7 +375,7 @@ function drawRes0(r,now){
   const bedH=bedJ>=0&&rotAt(bedJ)===1;/* 横に置いたベッド */const benchR=benchJ>=0?rotAt(r.act.obj):0,benchV=benchJ>=0&&benchR%2===1,benchD=benchR===3?-1:1;/* ベンチは、置いたときの向き（前・右・後ろ・左）にすわる */let sj=bedJ>=0?bedJ:benchJ,px=bedH?(bedJ%W)*TS+BEDHX:sj>=0?(sj%W+.5)*TS:r.x*TS,py=bedH?((bedJ/W)|0)*TS+BEDHY:bedJ>=0?((bedJ/W)|0)*TS+BEDVY:benchJ>=0?(((benchJ/W)|0)+.5)*TS+1:r.y*TS;const talking=CLAPON||DLGA.who===r.name&&!(DLGEL||(DLGEL=$('#dialog'))).hidden,walking=!talking&&r.act&&(r.act.stage==='walk'&&r.path.length>0||r.act.type==='tag');/* 話しているときはこっちを向く */
   const working=!onHold(r)&&r.act&&r.act.stage==='do'&&['till','sow','plant','build','craft','water','tend','draw','repair','harvest','gather','chop','mine','cook'].includes(r.act.type);
   if(!SPV.has(r))SPV.set(r,{x:r.x,y:r.y,back:false,turn:0,bl:now+2000+Math.random()*3000});const v=SPV.get(r),dx=r.x-v.x,dy=r.y-v.y;
-  if(!walking){v.back=false;v.turn=r.act&&r.act.stage==='do'&&(r.act.type==='chop'||r.act.type==='mine')&&!objBelow(r)||benchV?1:0}/* 木・岩は横向きで、そちらを向いて切る */else if(Math.abs(dx)+Math.abs(dy)>.002){const ax=Math.abs(dx),ay=Math.abs(dy);v.turn=ax>ay*1.2?1:0;v.back=!v.turn&&dy<0}{const cj=(r.y|0)*W+(r.x|0),n=r.path&&r.path.length?r.path[0]:-1;if(n>=0&&n===cj-W&&(jumpEdge(cj,n)&&hiAt(n)>hiAt(cj)||ladderLink(n,cj))||LADDERS.has(S.obj[cj])&&ladderDir(cj)===0&&n>=0){v.back=true;v.turn=0}}/* 正面のがけをよじのぼるときは、うしろ向き */v.x=r.x;v.y=r.y;
+  if(!walking){v.back=false;v.turn=r.act&&r.act.stage==='do'&&(r.act.type==='chop'||r.act.type==='mine')&&!objBelow(r)&&!objAbove(r)||benchV?1:0;if(!benchV&&r.act&&r.act.stage==='do'&&WORKFACE.has(r.act.type)&&objAbove(r)){v.back=true;v.turn=0}}/* 上（北）の物の作業は、うしろ向き *//* 木・岩は横向きで、そちらを向いて切る */else if(Math.abs(dx)+Math.abs(dy)>.002){const ax=Math.abs(dx),ay=Math.abs(dy);v.turn=ax>ay*1.2?1:0;v.back=!v.turn&&dy<0}{const cj=(r.y|0)*W+(r.x|0),n=r.path&&r.path.length?r.path[0]:-1;if(n>=0&&n===cj-W&&(jumpEdge(cj,n)&&hiAt(n)>hiAt(cj)||ladderLink(n,cj))||LADDERS.has(S.obj[cj])&&ladderDir(cj)===0&&n>=0){v.back=true;v.turn=0}}/* 正面のがけをよじのぼるときは、うしろ向き */v.x=r.x;v.y=r.y;
   v.side=false;if(r.nap){v.back=false;v.turn=0;v.side=false;r.face=1}/* はじめの場面：正面を向いて眠る */{const sj=(r.y|0)*W+(r.x|0),so=S.obj[sj];if(!walking&&r.act&&r.act.stage==='do'&&so&&ROTS[so]===4&&SEATS.includes(so)){const ro=rotAt(sj);v.back=ro===2;v.turn=ro===1||ro===3?1:0;if(v.turn)r.face=ro===1?1:-1;v.side=!!v.turn}if(!walking&&benchJ>=0)v.back=benchR===2}/* ベンチで「後ろ」向きなら、せなかが見える *//* いすにすわっている子は、いすの向きにすわる（うしろ向きのいすなら、うしろ向き） */
   if(!walking&&r.act&&r.act.stage==='do'){const a=r.act,j=(r.y|0)*W+(r.x|0);if(a.type==='eat'&&a.tdir!=null){v.back=a.tdir===-W;v.turn=Math.abs(a.tdir)===1?1:0;v.side=!!v.turn;px=(j%W+.5)*TS;py=((j/W|0)+.5)*TS+1;if(v.turn)r.face=a.tdir}else if((a.type==='store'||a.type==='smat'||['fieldstory','fieldassist','fieldgather','fieldintro','storywait'].includes(a.type))&&(a.box??a.obj)>=0&&!a.front){const target=a.box??a.obj,dx=target%W-j%W,dy=(target/W|0)-(j/W|0);v.back=dy<0;v.turn=dy===0?1:0;if(v.turn)r.face=dx<0?-1:1}}
   if(!walking&&sacredPose(r)?.sit){v.turn=1;v.back=false;r.face=sacredPose(r).face||(S.sacredRoot!=null&&r.x>storyTreeX(S.sacredRoot)?-1:1);}
@@ -431,8 +432,8 @@ function drawRes0(r,now){
   if(!ci&&(r.bubble||warn)){const t=NOFACE[warn&&!r.bubble?'🍙':r.bubble]||(warn&&!r.bubble?'🍙':r.bubble);/* 顔の絵文字は使わない */
     {const a=r.act;if(a&&a.stage==='do'&&(a.type==='mine'||a.type==='chop')&&NATHIT.has(a.obj)&&Math.abs((a.obj%W+.5)*TS-px)<TS+20){const yb=natBarY(a.obj);if(by-45<yb+7&&by-15>yb-2)by=yb+12}}/* 木・岩ののこりのバーと重なるときは、ふきだしをバーの上へ */
     ctx.font='16px sans-serif';const pic=/^(obj|ic|chip):/.test(String(t)),bw=pic?27:Math.max(27,Math.ceil(ctx.measureText(t).width)+9);/* 絵のアイコンは、絵文字と同じはば *//* 吹き出しは1.5倍 */
-    ctx.fillStyle=warn?'#ffd2cc':'#fff';rr(ctx,px-bw/2,by-45,bw,24,9);ctx.beginPath();ctx.moveTo(px-4.5,by-21.5);ctx.lineTo(px,by-15);ctx.lineTo(px+4.5,by-21.5);ctx.fill();
-    if(t==='💬'){for(let d=-1;d<=1;d++)circ(ctx,px+d*6.5,by-33,2.3,'#7a7064')}/* おしゃべりは点々だけ */
+    pxBub(ctx,px,by-45,bw,24,warn?'#ffd2cc':'#fff',warn?'#c98a80':'#b8a587');/* ドットのふきだし */
+    if(t==='💬'){ctx.fillStyle='#7a7064';const cx=Math.round(px/1.5)*1.5;for(let d=-1;d<=1;d++)ctx.fillRect(cx+d*6-1.5,by-34.5,3,3)}/* おしゃべりは点々だけ */
     else if(t==='🪓'&&PSPR.axe&&PSPR.axe.ok){const g=PSPR.axe.img,ih=17,iw=ih*g.width/g.height;ctx.save();ctx.translate(px,by-33);ctx.rotate(-Math.PI/4);ctx.drawImage(g,-iw/2,-ih/2,iw,ih);ctx.restore()}else{const ei=emoImg(t);if(ei){const ih=19.5,iw=ih*ei.width/ei.height;ctx.drawImage(ei,px-iw/2,by-33-ih/2,iw,ih)}else{ctx.font='16px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle='#000';if(!pic)ctx.fillText(t,px,by-33);ctx.textAlign='start';ctx.textBaseline='alphabetic'}}}};
   if(BUBQ){const T=ctx.getTransform();BUBQ.push(()=>{ctx.save();ctx.setTransform(T);over();ctx.restore()})}else over();/* あとで描くふきだしも、見張り台・段差の上の高さのまま */
 }
@@ -442,8 +443,13 @@ const godHere=()=>S.godShown&&(!S.godGone||S.godVisit)&&!GODOUT;
 /* その画面（コマ）で描いたふきだしの場所。となりの子のふきだしと重ならないように、あとの子のぶんを上へずらす */
 const BUBR=[];let BUBF=-1;
 function bubLift(px,by,now){if(BUBF!==now){BUBF=now;BUBR.length=0}for(let k=0;k<3;k++){const hit=BUBR.some(b=>Math.abs(b[0]-px)<32&&Math.abs(b[1]-by)<28);if(!hit)break;by-=30}return by}
-function talkBub(px,by,now,col){if(BUBF!==now){BUBF=now;BUBR.length=0}BUBR.push([px,by]);const bw=30,bb=by-Math.abs(Math.sin(now/260))*3;ctx.fillStyle=col||'#9fdcff';rr(ctx,px-bw/2,bb-48,bw,27,10);ctx.beginPath();ctx.moveTo(px-5,bb-21.5);ctx.lineTo(px,bb-14);ctx.lineTo(px+5,bb-21.5);ctx.fill();ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.beginPath();ctx.roundRect?ctx.roundRect(px-bw/2,bb-48,bw,27,10):ctx.rect(px-bw/2,bb-48,bw,27);ctx.stroke();
-    for(let d=-1;d<=1;d++)circ(ctx,px+d*7,bb-34.5,2.6,'#1f5f86');}
+function pxStep(c,x,y,w,h,ins,col,d){/* 段々の角の四角 */const k=ins.length;c.fillStyle=col;c.fillRect(x,y+k*d,w,h-2*k*d);for(let i=0;i<k;i++){const a=ins[i]*d;c.fillRect(x+a,y+i*d,w-2*a,d);c.fillRect(x+a,y+h-(i+1)*d,w-2*a,d)}}
+function pxBub(c,cx,top,w,h,fill,line){/* ドットのふきだし：段々の角（4・2・1・1ドット）と、段々のしっぽ。cx は、しっぽのまん中。画面のドットにそろえて描く（1ドット＝1.5、画面の整数ピクセル） */
+  const T=c.getTransform(),d=Math.max(1,Math.round(1.5*T.a)),n=Math.round(w/1.5/2),m=Math.round(h/1.5),tx=Math.round(T.a*cx+T.e),y=Math.round(T.d*top+T.f),x=tx-n*d;w=(2*n+1)*d;h=m*d;
+  c.save();c.setTransform(1,0,0,1,0,0);pxStep(c,x,y,w,h,[4,2,1,1],line,d);pxStep(c,x+d,y+d,w-2*d,h-2*d,[3,1,1],fill,d);
+  c.fillStyle=line;c.fillRect(tx-2*d,y+h,5*d,d);c.fillRect(tx-d,y+h+d,3*d,d);c.fillRect(tx,y+h+2*d,d,d);c.fillStyle=fill;c.fillRect(tx-d,y+h-d,3*d,2*d);c.fillRect(tx,y+h+d,d,d);c.restore()}
+function talkBub(px,by,now,col){if(BUBF!==now){BUBF=now;BUBR.length=0}BUBR.push([px,by]);const bw=30,bb=Math.round((by-Math.abs(Math.sin(now/260))*3)/1.5)*1.5;pxBub(ctx,px,bb-48,bw,27,col||'#9fdcff','#fff');
+    ctx.fillStyle='#1f5f86';const cx=Math.round(px/1.5)*1.5;for(let d=-1;d<=1;d++)ctx.fillRect(cx+d*7.5-1.5,bb-36,4.5,4.5);}/* 点々も、四角いドット */
 const HB={t:0,rk:[],ps:[],fl:[]};
 function drawHanabi(now){const dt=Math.min(.05,Math.max(0,(now-(HB.t||now))/1000));HB.t=now;const h=hour();
   if(festOn()&&h>=20&&h<21&&!sheet&&Math.random()<dt*1.1){const C=['#ff6b6b','#ffd84a','#7fe8ff','#9cff7a','#ff8cc0','#c9a2ff'];HB.rk.push({x:VW*(.15+Math.random()*.7),y:VH*.62,ty:VH*(.2+Math.random()*.2),col:pick(C),col2:pick(C)})}/* 夜8時から9時は、空に花火 */
