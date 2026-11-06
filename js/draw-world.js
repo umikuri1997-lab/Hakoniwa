@@ -24,7 +24,7 @@ function drawSand(it,now,e,D,z,px,py,v){/* 砂になって消える：ひびが�
   const m=Math.min(1,Math.max(0,(p-.2)/.6)),fade=p<1?1:Math.max(0,1-(raw-1)/.15);if(m>0&&fade>0){ctx.save();ctx.globalAlpha=fade;ctx.fillStyle='#c9a35f';ctx.beginPath();ctx.ellipse(px,py+10,Ww*1.2*m,Hh*.1*m+2,0,0,7);ctx.fill();ctx.fillStyle='#e0c487';ctx.beginPath();ctx.ellipse(px,py+7,Ww*.8*m,Hh*.06*m+1,0,0,7);ctx.fill();ctx.restore()}/* 足もとの砂山 */
   ctx.globalAlpha=1}
 const PAUSE_FX=()=>started&&sheet!=null;
-const GLW=document.createElement('canvas'),glx=GLW.getContext('2d');let GLWN=0;const DMK=document.createElement('canvas'),dmx=DMK.getContext('2d');/* 夜の暗さの絵（画面と同じ大きさ） */
+const GLW=document.createElement('canvas'),glx=GLW.getContext('2d');let GLWN=0;let FOGP=null;function fogPat(g){/* 霧の絵：256×256のつながる絵を1まいだけ作る */if(FOGP)return FOGP;const c=document.createElement('canvas');c.width=c.height=256;const x=c.getContext('2d');x.fillStyle='rgba(205,212,225,.22)';x.fillRect(0,0,256,256);let sd=7;const rn=()=>(sd=(sd*16807)%2147483647)/2147483647;for(let i=0;i<14;i++){const px=rn()*256,py=rn()*256,r=40+rn()*50;for(const dx of[-256,0,256])for(const dy of[-256,0,256]){const gr=x.createRadialGradient(px+dx,py+dy,0,px+dx,py+dy,r);gr.addColorStop(0,'rgba(225,230,240,.28)');gr.addColorStop(1,'rgba(225,230,240,0)');x.fillStyle=gr;x.fillRect(px+dx-r,py+dy-r,r*2,r*2)}}FOGP=g.createPattern(c,'repeat');c.width=c.height=0;return FOGP}const DMK=document.createElement('canvas'),dmx=DMK.getContext('2d');/* 夜の暗さの絵（画面と同じ大きさ） */
 const EOC=document.createElement('canvas'),EOS=document.createElement('canvas'),eox=EOC.getContext('2d'),eos=EOS.getContext('2d');
 function enemyHidden(e,x0,y0,x1,y1){const ex=e.x|0,ey=e.y|0;
   for(let dy=0;dy<=4;dy++)for(let dx=-3;dx<=3;dx++){const x=ex+dx,y=ey+dy;if(x<0||y<0||x>=W||y>=H)continue;const a=anc(y*W+x),o=S.obj[a];if(!o||o==='part'||FLAT.has(o)||!BL[o])continue;
@@ -431,7 +431,7 @@ function render(now){RFN++;
     gearLights(dmx);/* そうびの明かり */
     const litH=new Set();for(const j of LIGHTS){if(INDL.has(S.obj[j])){const h=roomOf(j);if(h)litH.add(h)}}/* 灯りのある家 */
     {dmx.imageSmoothingEnabled=true;dmx.globalAlpha=.75;for(const h of litH)dmx.drawImage(houseGlow(h),h.x0*TS-GLOWM,h.y0*TS-GLOWM);dmx.globalAlpha=1}/* 灯りのある家は、家ぜんたいを同じ明るさで照らす（ふちはぼかす） */
-    ctx.setTransform(1,0,0,1,0,0);ctx.drawImage(DMK,0,0);/* けずったところは重なっても、暗さがなくなるだけ（明るくなりすぎない） */
+    ctx.setTransform(1,0,0,1,0,0);ctx.drawImage(DMK,0,0);if(nightVarNow()==='kiri'){ctx.globalAlpha=Math.min(1,dk*1.6);ctx.fillStyle=fogPat(ctx);const ox=-(cam.x*k*.6+performance.now()*.006)%256,oy=-(cam.y*k*.6)%256;ctx.translate(ox,oy);ctx.fillRect(-ox,-oy,ctx.canvas.width,ctx.canvas.height);ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=1}/* 霧の夜：うすい霧（1回作った絵をならべて、ゆっくり流す） *//* けずったところは重なっても、暗さがなくなるだけ（明るくなりすぎない） */
     ctx.setTransform(k,0,0,k,-cam.x*k,-cam.y*k);ctx.globalCompositeOperation='lighter';ctx.globalAlpha=dk*.18;for(const j of LITP){const o=S.obj[j],L=LIGHTP[o];if(!L)continue;const x=j%W,y=(j/W)|0;if(x<x0-5||x>=x1+5||y<y0-5||y>=y1+5)continue;if(INDL.has(o)&&roomOf(j))continue;const R=L.R;ctx.drawImage(lightSpr(R),x*TS+L.dx-R,y*TS+L.dy-R,R*2,R*2)}ctx.globalAlpha=1;/* 火のあたたかさを、ほんの少しだけ */
     ctx.globalCompositeOperation='source-over';
     {const wl=HOUSEART['wall-window-lit'];if(wl&&wl.complete&&wl.naturalWidth&&isDark()){ctx.globalAlpha=1;for(const h of litH)for(const q of h.set){if(((q/W)|0)===h.y0)continue;/* 上がわの壁の窓は、昼も夜も同じ色 */if(!S.win||S.win[q]!==1||!(HOME_WALLS.has(S.obj[q])||S.obj[q]==='window'))continue;const qx=q%W,qy=(q/W)|0;if(qx<x0-1||qx>x1||qy<y0-1||qy>y1)continue;if(winCovered(qx,qy))continue;/* 手前に背の高い物があれば、窓の光はかさねない */{const lk='window:lit',lc=window.CHIPS&&CHIPS[lk];if(!(lc&&drawChip(ctx,lc,lk,qx*TS,qy*TS-1.5,0,q)))ctx.drawImage(wl,qx*TS+3.625,qy*TS+1.5,24.75,21.7125)}}/* 明かりの絵もチップの大きさのまま */ctx.globalAlpha=1}}/* 夜（21時〜6時）だけ、灯りのある家の窓ガラスは中が明るい色に（暗さの上にかく） */
@@ -441,6 +441,7 @@ function render(now){RFN++;
   // 空気の粒（昼は花粉、夜はホタル）
   for(const m of motes){const x=m.x*VW,y=m.y*VH;if(dk>.3){const a=(Math.sin(now/400+m.p)*.5+.5)*.8;ctx.globalCompositeOperation='lighter';circ(ctx,x,y,2.2*m.s,'rgba(200,255,140,'+a+')');circ(ctx,x,y,6*m.s,'rgba(200,255,140,'+a*.15+')');ctx.globalCompositeOperation='source-over'}else{circ(ctx,x,y,1.4*m.s,'rgba(255,250,220,'+(.35+.2*Math.sin(now/600+m.p))+')')}}
   drawHanabi(now);
+  drawRainbow(now);
   if(S.rain){ctx.strokeStyle='rgba(200,225,255,.45)';ctx.lineWidth=1;ctx.beginPath();for(const d of rain){const x=d.x*VW,y=d.y*VH;ctx.moveTo(x,y);ctx.lineTo(x-3,y+10*d.s)}ctx.stroke()}
   if(!VIG||VIG.w!==VW||VIG.h!==VH){const c2=document.createElement('canvas');c2.width=VW;c2.height=VH;const g2=c2.getContext('2d');const vg=g2.createRadialGradient(VW/2,VH/2,Math.min(VW,VH)*.45,VW/2,VH/2,Math.max(VW,VH)*.75);vg.addColorStop(0,'rgba(0,0,0,0)');vg.addColorStop(1,'rgba(10,20,15,.28)');g2.fillStyle=vg;g2.fillRect(0,0,VW,VH);VIG={c:c2,w:VW,h:VH}}
   ctx.drawImage(VIG.c,0,0);

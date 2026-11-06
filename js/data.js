@@ -281,7 +281,7 @@ function stepQuest(o){const st=o.steps;o.parts=[...(o.alias||[]),...st.map(s=>s.
 const questStep=q=>q&&q.steps?(q.steps.find(s=>!s.check())||q.steps[q.steps.length-1]).id:q&&q.id;/* いまの小さな目標（案内の指など） */
 /* えらぶ場面：水のせいれいを村へあんないする子（えらんだ子と、なかよしになる） */
 function choiceGuide(){const W=keyName('water'),opt=(t,v,L)=>({t,v,lines:KS([...L,['M','#joy|よろしくおねがいします。']])});return {key:'guide',who:POKO,q:'ねえ、'+W+'に村をあんないするの、だれがいいかな？',
-  pick:v=>{const w=S.res.find(r=>r.name===W),g=S.res.find(r=>r.name===v);if(!w||!g)return;const m=g.mates||(g.mates={});if((m[w.id]||0)<5)m[w.id]=(w.mates||(w.mates={}))[g.id]=5;mate(g,w)},
+  pick:v=>{const w=S.res.find(r=>r.name===W),g=S.res.find(r=>r.name===v);if(!w||!g)return;bondSet(g,w,BOND_TALK)},
   opts:[opt(POKO,POKO,[[POKO,'#joy|まかせて！ 池の音がよく聞こえる所、おしえてあげる！']]),opt(MINA,MINA,[[MINA,'ぼくでいいのぉ？ ゆっくり歩こうねぇ。']]),opt(keyName('fire'),keyName('fire'),[['H',{A:'しょうがないね。ついてきな。',B:'しょうがねえな。ついてきな。'}]])]}}
 const QUESTS1=[
   {id:'statue',text:'神殿を建ててもらおう',how:"下の「おく」→「神殿」をえらび、空いた場所をタップ",check:()=>cnt('statue')>=1,by:GOD,story:[

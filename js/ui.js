@@ -248,7 +248,7 @@ function renderSheet(){
     const tile=(icon,lb,v,sub,br)=>'<div class="vlT"><div class="hd">'+icon+'<span>'+lb+'</span></div><div class="v">'+v+'</div>'+(br||'')+(sub?'<small>'+sub+'</small>':'')+'</div>';
     const fc=foodCap(),mc=matCap();
     V.appendChild(el('<div class="vlGrid">'+tile(ic('.stk[title="食料"] svg'),'食料',S.food+'<small> / '+fc+'</small>','',bar(fc?S.food/fc:0,'#f3d27a'))+tile('','素材',(()=>{const im=[...document.querySelectorAll('.hud .stk[title="素材"] .ic')].map(n=>{const c=n.cloneNode(true);c.classList.add('vlMi');return c.outerHTML});return (im[0]||'')+(S.mat.wood||0)+'<span style="display:inline-block;width:10px"></span>'+(im[1]||'')+(S.mat.stone||0)+(bambooOn()?'<span style="display:inline-block;width:10px"></span>'+(im[2]||'')+(S.mat.bamboo||0):'')})(),'素材箱 '+matTot()+' / '+mc,bar(mc?matTot()/mc:0,'#c9a27a'))+tile(ic('.stat[title="パワー"] img'),'パワー',S.pt,'ためた合計 '+Math.floor(S.totalPt))+tile(ic('.stat[title="せいれい"] svg'),'せいれい',S.res.length+'<small> 人</small>','')+'</div>'));
-    V.appendChild(el('<div class="vlDay"><span>きょう</span><b>'+(S.today?DAYEV[S.today][0]+' '+DAYEV[S.today][1]:(S.rain?'☔ 雨':'ふつうの日'))+'</b></div>'));
+    V.appendChild(el('<div class="vlDay"><span>きょう</span><b>'+(S.today?DAYEV[S.today][0]+' '+DAYEV[S.today][1]:(S.rain?'☔ 雨':rainbowToday()?'虹':'ふつうの日'))+'</b></div>'));
     body.appendChild(V);
   }else if(sheet==='attrdetail'){
     T.textContent='属性の内訳';
@@ -339,7 +339,7 @@ function renderSheet(){
        {const sb=el('<button class="btn"></button>'),sn=S.mseed||0;sb.textContent='ふしぎな種をあげる（'+sn+'こ）';sb.disabled=sn<1;sb.onclick=()=>giveSeed(r);bw.appendChild(sb)}/* ふしぎな種も、パワーのとなりからあげられる */
        body.appendChild(sec)}/* パワーで、せいれいを強化 */
      else if(resTab===1){const pf=el('<div class="sec"><div class="stats"></div></div>'),pg=pf.querySelector('.stats');
-       for(const[k,v]of[['得意なこと',ELEM[r.elem].can],['好きな遊び',LIKES[r.like]],['にがてな遊び',Object.keys(NIGATE[r.elem]||{}).map(k=>BL[k].name).join('・')||'とくにない'],['好きな家具',BL[likeF(r)].name],['好きな料理',FOODS[favDish(r)].name],['なかよし',(bestMate(r)||{}).name||'まだいない'],['村に来た日',r.came?r.came+'日目':'はじめから'],['作ったもの',(r.made||0)+'こ'],['追いはらった「コワイノ」',(r.beat||0)+'体'],['ベッド',myBed(r)>=0?'じぶんのベッドがある':'きまっていない']]){const d=el('<div class="stat" style="display:block"><span style="display:block"></span><b style="display:block;text-align:left;margin-top:2px"></b></div>');d.firstChild.textContent=k;d.lastChild.textContent=v;pg.appendChild(d)}
+       for(const[k,v]of[['得意なこと',ELEM[r.elem].can],['好きな遊び',LIKES[r.like]],['にがてな遊び',Object.keys(NIGATE[r.elem]||{}).map(k=>BL[k].name).join('・')||'とくにない'],['好きな家具',BL[likeF(r)].name],['好きな料理',FOODS[favDish(r)].name],['なかよし',(b=>b?b.q.name+'（'+b.v+'）':'まだいない')(bondBest(r))],['村に来た日',r.came?r.came+'日目':'はじめから'],['作ったもの',(r.made||0)+'こ'],['追いはらった「コワイノ」',(r.beat||0)+'体'],['ベッド',myBed(r)>=0?'じぶんのベッドがある':'きまっていない']]){const d=el('<div class="stat" style="display:block"><span style="display:block"></span><b style="display:block;text-align:left;margin-top:2px"></b></div>');d.firstChild.textContent=k;d.lastChild.textContent=v;pg.appendChild(d)}
        body.appendChild(pf)}
      else{
      const st=el('<div class="sec"><div class="stats"></div></div>'),g=st.querySelector('.stats');

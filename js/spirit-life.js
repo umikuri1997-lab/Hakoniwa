@@ -539,7 +539,7 @@ function chatTone(tx,r,i){if(!r)return tx;const k=elemKey(r),pr=r.elem==='fire'?
 const CHATSEENKEY='hakoniwa-chat-v1';let CHATSEEN=null;/* 出た雑談は、ステージをこえておぼえる（ほかのステージで出た話は出にくい） */
 function chatSeen(){if(!CHATSEEN){try{CHATSEEN=new Set(JSON.parse(KV.getItem(CHATSEENKEY)||'[]'))}catch(e){CHATSEEN=new Set()}}return CHATSEEN}
 function chatMark(i){const C=chatSeen();if(C.has(i))return;C.add(i);try{KV.setItem(CHATSEENKEY,JSON.stringify([...C]))}catch(e){}}
-function chatTopic(r,p){const L=[],mt=((r.mates||{})[p.id]||0)>=6;CHATS.forEach((c,i)=>{if((c.st==null||c.st===WD)&&(!c.el||c.el===r.elem)&&(!c.pk||c.pk===elemKey(r))&&(!c.ok||c.ok(r,p))&&(!c.key||isKey(r.name)&&isKey(p.name))&&(!c.mate||mt)&&(!c.kc||kcOK(c,r,p)))L.push(i)});/* なかよし同士だと、なかよしの話もまざる *//* 話しかけた子の属性のお話もまざる */
+function chatTopic(r,p){const L=[],mt=bondOf(r,p)>=BOND_TALK;CHATS.forEach((c,i)=>{if((c.st==null||c.st===WD)&&(!c.el||c.el===r.elem)&&(!c.pk||c.pk===elemKey(r))&&(!c.ok||c.ok(r,p))&&(!c.key||isKey(r.name)&&isKey(p.name))&&(!c.mate||mt)&&(!c.kc||kcOK(c,r,p)))L.push(i)});/* なかよし同士だと、なかよしの話もまざる *//* 話しかけた子の属性のお話もまざる */
   if(festOn()){const F=L.filter(i=>CHATS[i].fest);if(F.length)L.splice(0,L.length,...F)}/* おまつりの日は、おまつりの話だけ */
   const R=S.chatRec||(S.chatRec=[]),G=chatSeen(),last=i=>{const k=R.lastIndexOf(i);return k>=0?k:G.has(i)?-.5:-1}/* まだどこでも出ていない話 → ほかのステージで出た話 → このステージで前に出た話 */,lo=Math.min(...L.map(last));let C=L.filter(i=>last(i)===lo);/* だれとだれの会話でも、まだしていない話（なければ、いちばん前にした話）からえらぶ。ひととおりするまで、同じ話はしない */
   if(C.some(i=>CHATS[i].kc)&&Math.random()<.4)C=C.filter(i=>CHATS[i].kc);/* キーキャラの話は、まだしていなければ4割で選ばれる */
@@ -560,7 +560,7 @@ function goPlay(r,G,strict){
   {const sb=socialBest(r,G);if(sb&&sb.s>bs){bs=sb.s;best=sb.b}}
   if(!best)return strict?false:goWander(r,G);
   if(best.type==='chat'){const o=S.res.find(q=>q.id===best.o.partner);if(o){endAct(o);o.act={type:'chatwait',stage:'do',t:0,partner:r.id};o.bubble='👋'}}
-  startAct(r,G,best.type,best.stand,best.o);return true
+  startAct(r,G,best.type,best.stand,best.o);if(best.type==='play')bondInvite(r,best.o);return true
 }
 const SPEC={wood:['plant','tend','fert','cookS'],water:['water','cookS'],fire:['cookS'],earth:['repair','till','cookS'],wind:['seed']};/* cookS：その属性の料理 *//* 草・きのこ・枝は、どの属性も木・石と同じ優先度でひろう *//* 属性ごとの得意な仕事：建てる・家具づくりのつぎに、ほかの仕事より先にする */
 /* 得意な仕事は、その属性の子だけ。建てるのはみんなできる */
