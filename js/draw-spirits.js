@@ -162,6 +162,14 @@ function spDot(key,el,vr){/* 絵の色を、その子の色にかえる（もと
   g.putImageData(d,0,0);return SPDOT[k]=cv}
 function spDotReady(el){if(SPDOK[el])return true;if(!window.CHIPS)return false;
   for(const k in CHIPS)if((k.startsWith('sp:')||k.startsWith('sp_'+el+':'))&&!chipImgs(CHIPS[k],k)[0].ok)return false;return SPDOK[el]=true}
+const SOLE=['...ooo.ooo.....','..offfofffoo...','..offfofffffo..','..ooooooooffo..','.osssssssssoo..','osssssssssssso.','osssssssssssso.','osssssssssssso.','osssssssssssso.','.ossssssssssso.','.ossssssssssso.','..osssssssssso.','..ossssssssso..','..offfffffffo..','..offfffffffo..','...offfffffo...','....ooooooo....'],SOLEC={};
+function soleImg(el,vr){/* 足のうら（正面にすわって足をこちらへのばしたとき）：足の絵の色（ふち・体の色）から作るドット絵。まん中は少し色のついたうら */
+  const k=el+'|'+(vr&&vr.h||0)+'_'+(vr&&vr.l||0);if(SOLEC[k])return SOLEC[k];const ft=spDot('sp:footL',el,vr);if(!ft)return null;
+  const g0=document.createElement('canvas');g0.width=16;g0.height=15;const a=g0.getContext('2d');a.drawImage(ft,0,0);const px=(x,y)=>a.getImageData(x,y,1,1).data;
+  const F=px(7,3),O=px(1,3),M=[0,1,2].map(i=>Math.round(F[i]*.3+O[i]*.7)),O2=[0,1,2].map(i=>Math.round(O[i]*.72)),col={o:O2,f:F,s:M};g0.width=g0.height=0;
+  const cv=document.createElement('canvas');cv.width=15;cv.height=SOLE.length;const g=cv.getContext('2d');
+  SOLE.forEach((r,y)=>[...r].forEach((ch,x)=>{const c=col[ch];if(!c)return;g.fillStyle='rgb('+c[0]+','+c[1]+','+c[2]+')';g.fillRect(x,y,1,1)}));return SOLEC[k]=cv}
+const SITF=6;/* 正面にすわる（sitF）：体を下げる量（ドット） */
 const bowNow=(r,now)=>!!r.bowT&&now>=r.bowT&&now-r.bowT<700;/* 弓をうった直後か（セーブに残った前の時刻は、いまより先になることがあるので見ない） */
 function drawSpiritDot(c,el,x,y,s,f,o){
   if(!spDotReady(el))return false;
@@ -173,6 +181,7 @@ function drawSpiritDot(c,el,x,y,s,f,o){
   const L=(o.lean||0)+lean2,hDy=-Math.round((br-sq)*44)*D,aDy=-Math.round((br-sq)*20)*D,hDx=Math.round(L*52)*D,aDx=Math.round(L*22)*D;
   c.save();c.translate(x,y);c.scale(s*f,s);
   const sm=c.imageSmoothingEnabled;c.imageSmoothingEnabled=false;
+  const sitF=!!o.sitF&&!tr&&!back;if(sitF)c.translate(0,SITF*D);/* 正面にすわって、足をこちらへのばす：体を下げて、足のかわりに足のうらを2つ前に描く */
   const tail=(tx,ty,rot)=>{c.save();c.translate(tx,ty);c.rotate((rot||0)+Math.sin(t*3)*.18);spr(E0+'tail');c.restore()};
   const wings=bk=>{if(o.bed)return;const fl=Math.sin(t*(o.walk?10:3.2))*.12,W=[[-16,-60,44,-2.5-fl],[16,-60,44,-.64+fl],[-18,-40,38,2.75+fl],[18,-40,38,.39-fl]];
     const lf=(w,k)=>{c.save();c.translate(w[0],w[1]);c.rotate(w[3]);if(w[2]!==44)c.scale(w[2]/44,w[2]/44);spr(E0+k);c.restore()};
@@ -186,7 +195,7 @@ function drawSpiritDot(c,el,x,y,s,f,o){
   {const ws=o.walk?st:0,up=v=>-Math.max(0,v)*3*D;/* 足：もとの体の下の部分を切り分けた絵。体より先にかいて、上のはしは体の下にもぐらせる（つけねに線を出さない）。止まっているときは、もとの形と同じ。歩くときは交互に上げる（横向きは前後にもふる） */
     if(tr){if(o.sit){spr('sp:rumpS');c.save();c.translate(4*D,-6*D);c.rotate(-Math.PI/2);c.scale(.8,1.3);c.translate(.5*D,8*D);spr('sp:footS');c.restore()}/* 横向きにすわる：まるいおしり（sp:rumpS）をかいて、足をつけねを中心に90度回して前へのばす */
       else{spr('sp:footS',-ws*3*D,up(ws));spr('sp:footS',ws*3*D,up(-ws))}}
-    else{spr('sp:footL',0,up(ws));spr('sp:footR',0,up(-ws))}}
+    else if(!sitF){spr('sp:footL',0,up(ws));spr('sp:footR',0,up(-ws))}}
   spr('sp:body'+S+'0');
   if(tr&&!frontArm)armD(-farA,aA(-farA));
   if(back&&el!=='wind')tail(-tr*12,-17);
@@ -210,6 +219,7 @@ function drawSpiritDot(c,el,x,y,s,f,o){
     if(vr&&vr.lash&&fm!=='strain')spr('sp:lash'+S+'#'+fm,0,fy)}/* まつげは、表情ごとの目に合わせた絵 */
   c.restore();
   if(bothF)armD(farA,aA(farA));if(frontArm)armD(-farA,aA(-farA));
+  if(sitF){const si=soleImg(el,vr);if(si)for(const sx of[-1,1]){c.save();c.translate(sx*9*D,(-SITF-12)*D);c.scale(-sx,1);c.drawImage(si,-7*D,0,15*D,17*D);c.restore()}}/* 足のうら：左右で鏡うつし（つまさきが外がわ） */
   if((A==='eat'||A==='hold')&&o.food&&!back){const ei=emoImg(o.food),yy=A==='hold'?-17:-27+Math.sin(t*7)*.8,xx=tr?25:0;/* 横向きのときは、食べ物を顔の前に（体の大きさ0.435で、およそ11ドット前） */if(ei){const ih=40,iw=ih*ei.width/ei.height;c.drawImage(ei,xx-iw/2,yy-ih/2,iw,ih)}else{c.font='40px sans-serif';c.textAlign='center';c.textBaseline='middle';c.fillStyle='#000';c.fillText(o.food,xx,yy);c.textAlign='start';c.textBaseline='alphabetic'}}
   if(A==='eat'&&tr&&o.food&&!back)armD(-farA,aA(-farA));/* 横向きで食べるときは、手前の手を食べ物の上にかさねて、持っている形に */
   c.imageSmoothingEnabled=sm;c.restore();return true}
@@ -390,7 +400,7 @@ function drawRes0(r,now){
   if(bedH){ctx.translate(px,fy);ctx.rotate(-Math.PI/2);ctx.scale(BEDHS,1);ctx.translate(-px,-fy)}/* 横のベッドでは、頭をまくら（左）にして横になる */
   if(wade){ctx.beginPath();ctx.rect(px-40,fy-90,80,tubB?Math.max(0,fy+(((r.act.tub/W)|0)*TS+17-fy)*wade-(fy-90)):90-wade*11);ctx.clip()}
   const wpA=r.act&&r.act.type==='watchpost'&&r.act.stage==='do'?r.act:null,onWP=wpA&&(wpA.cl||0)>=1;if(wpA&&!onWP)v.back=true;{const sw=Math.max(r.swing||0,r.swingT||0);if(sw&&now>=sw&&now-sw<700)v.back=!!r.fback}/* たたくときは、敵のほうを向く（うしろの敵には、うしろ向き） *//* 見張り台のハシゴは、うしろ向きでよじのぼる。上では弓をかまえる */
-  const ci0=carryIcon(r),an=sacredPose(r)?.anim||(r.act&&r.act.stage==='do'&&!sleeping&&!onHold(r)?(r.act.type==='bathe'&&r.act.tub!=null?'tubbath':fieldStoryAnim(r)):'');const joy=(JOYU.get(r)||0)>now&&!sleeping,clap=(CLAPON||now-CLAPT<3200||joy)&&!sleeping,wv=!clap&&!sleeping&&(r.waveU||0)>S.t,facePlayer=!$('#dialog').hidden&&DLGN.has(r.name)&&!clap&&!sleeping&&!sacredPose(r)?.side&&!sacredPose(r)?.back&&!sacredPose(r)?.keep;/* 会話中は話し手がこちらを向く */const pk=(()=>{const sw=Math.max(r.swing||0,r.swingT||0),sd=now-sw;return sw&&sd>=0&&sd<420&&!clap&&!sleeping?sd/420:null})();drawSpirit(ctx,r.elem,px,fy,.435,clap?1:benchV&&!facePlayer?benchD:r.face<0?-1:1,{dot:1,t:tt,sceneP:sacredBody(r,now)?.p,sceneT:sacredBody(r,now)?.t,vr:r.vr,banzai:held,pp:onWP?(bowNow(r,now)?(now-r.bowT)/700:1):pk,anim:clap?'clap':CLIMB.has(r)?'climb':sw0&&sw0.anim?sw0.anim:onWP?(bowNow(r,now)?'bow':'bowidle'):pk!=null?'punch':clap?'clap':wv?'wave':reacting?({shock:'talkshock',think:'talkthink',sad:'talksad',nod:'talk'}[rm]||(an==='forage'?forageAnim(r):an)):(an==='forage'?forageAnim(r):an),food:(an==='eat'||an==='forage'&&r.act.t>=2)&&!clap?(sacredPose(r)?.anim==='eat'?(sacredPose(r).food||''):(r.act?.e||'🍙')):'',/* ベリーを直接とって食べるときも、手に持って食べる */carry:!!ci0&&!clap&&an!=='pray',back:clap||wv||facePlayer?false:v.back,turn:clap||wv||facePlayer?0:v.turn,mood:clap?'joy':mood,walk:walking&&!clap,work:working&&!clap,sleep:sleeping,bed:bedJ>=0,sit:(sacredPose(r)?.sit||benchV||v.side)&&!facePlayer&&!clap/* 横に置いたいす・ベンチは、横向きにすわる */,blink:now>v.bl,lean:sacredPose(r)?.lean??(rp?rp.angle:sleeping?Math.sin(tt*.8)*.06:0)});ctx.restore();{const sj2=(r.y|0)*W+(r.x|0),o2=S.obj[sj2];if(o2&&SEATS.includes(o2)&&r.act&&r.act.stage==='do'&&!walking){const f=chipOf(o2,sj2,null,'.front');if(f)drawChip(ctx,f,o2,(sj2%W)*TS,((sj2/W)|0)*TS,now,sj2)}}/* いすにすわる子の手前に、いすの「.front」（後ろ向きのいすの背もたれなど）を重ねる */
+  const gSl=sleeping&&bedJ<0&&!!(r.act?.ground||r.nap&&!(r.act&&r.act.obj>=0));if(gSl){v.back=false;v.turn=0}/* 外で寝るときは、正面を向いて地面にすわり、足のうらをこちらへ */const ci0=carryIcon(r),an=sacredPose(r)?.anim||(r.act&&r.act.stage==='do'&&!sleeping&&!onHold(r)?(r.act.type==='bathe'&&r.act.tub!=null?'tubbath':fieldStoryAnim(r)):'');const joy=(JOYU.get(r)||0)>now&&!sleeping,clap=(CLAPON||now-CLAPT<3200||joy)&&!sleeping,wv=!clap&&!sleeping&&(r.waveU||0)>S.t,facePlayer=!$('#dialog').hidden&&DLGN.has(r.name)&&!clap&&!sleeping&&!sacredPose(r)?.side&&!sacredPose(r)?.back&&!sacredPose(r)?.keep;/* 会話中は話し手がこちらを向く */const pk=(()=>{const sw=Math.max(r.swing||0,r.swingT||0),sd=now-sw;return sw&&sd>=0&&sd<420&&!clap&&!sleeping?sd/420:null})();drawSpirit(ctx,r.elem,px,fy,.435,clap?1:benchV&&!facePlayer?benchD:r.face<0?-1:1,{dot:1,t:tt,sceneP:sacredBody(r,now)?.p,sceneT:sacredBody(r,now)?.t,vr:r.vr,banzai:held,pp:onWP?(bowNow(r,now)?(now-r.bowT)/700:1):pk,anim:clap?'clap':CLIMB.has(r)?'climb':sw0&&sw0.anim?sw0.anim:onWP?(bowNow(r,now)?'bow':'bowidle'):pk!=null?'punch':clap?'clap':wv?'wave':reacting?({shock:'talkshock',think:'talkthink',sad:'talksad',nod:'talk'}[rm]||(an==='forage'?forageAnim(r):an)):(an==='forage'?forageAnim(r):an),food:(an==='eat'||an==='forage'&&r.act.t>=2)&&!clap?(sacredPose(r)?.anim==='eat'?(sacredPose(r).food||''):(r.act?.e||'🍙')):'',/* ベリーを直接とって食べるときも、手に持って食べる */carry:!!ci0&&!clap&&an!=='pray',back:clap||wv||facePlayer?false:v.back,turn:clap||wv||facePlayer?0:v.turn,mood:clap?'joy':mood,walk:walking&&!clap,work:working&&!clap,sleep:sleeping,sitF:gSl,bed:bedJ>=0,sit:(sacredPose(r)?.sit||benchV||v.side)&&!facePlayer&&!clap/* 横に置いたいす・ベンチは、横向きにすわる */,blink:now>v.bl,lean:sacredPose(r)?.lean??(rp?rp.angle:sleeping?Math.sin(tt*.8)*.06:0)});ctx.restore();{const sj2=(r.y|0)*W+(r.x|0),o2=S.obj[sj2];if(o2&&SEATS.includes(o2)&&r.act&&r.act.stage==='do'&&!walking){const f=chipOf(o2,sj2,null,'.front');if(f)drawChip(ctx,f,o2,(sj2%W)*TS,((sj2/W)|0)*TS,now,sj2)}}/* いすにすわる子の手前に、いすの「.front」（後ろ向きのいすの背もたれなど）を重ねる */
   if(lvR>=5&&!sleeping&&!wade){const n=Math.min(6,Math.floor(lvR/5));for(let i=0;i<n;i++){const SL=LVSLOT[i],bx=px+SL[0]+Math.cos(now/900+i*2.1+r.id)*1.5,by=fy+SL[1]+Math.sin(now/700+i*1.7+r.id)*2.6;lvCharm(ctx,r.elem,bx,by,now/1000+i+r.id)}}/* Lv5ごとに1つ、属性の小物がまわりにふわふわ浮かぶ（顔や体にはかさねない） */
   if(r.shine&&now>=r.shine&&now-r.shine<3500&&!wade){const e=(now-r.shine)/3500;for(let i=0;i<6;i++){const SP=SHINE[i],tw=Math.sin(now/160+i*1.9),k=Math.max(0,(.55+.45*tw)*(e>.75?(1-e)/.25:1));if(k>0)star4(ctx,px+SP[0],fy+SP[1]-e*8,SP[2]*k)}}/* 水浴びのあと：キラキラ */
   if(tubB){const wl=((r.act.tub/W)|0)*TS+17;ctx.fillStyle='rgba(255,255,255,.85)';for(let k=0;k<5;k++){const bx=px-9+k*4.5+Math.sin(now/700+k*1.7)*1.2,ph=(now/1400+k*.23+r.id)%1;ctx.globalAlpha=.55+.4*Math.sin(now/500+k);ctx.beginPath();ctx.arc(bx,wl+.5-Math.sin(ph*Math.PI)*.8,1.7+((k*7)%3)*.45,0,7);ctx.fill()}ctx.globalAlpha=1}/* 湯ぶねのあわ */
