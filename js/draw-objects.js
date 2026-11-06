@@ -425,17 +425,19 @@ function drawObj(c,id,x,y,i,g,now){
     for(const[dx,dy,r,col]of[[-8,1,7.5,'#5a9441'],[8,1,7.5,'#5a9441'],[-5,-7,8,'#6ea84e'],[5,-7,8,'#6ea84e'],[0,-11,8,'#86bf63'],[0,-1,9,'#78b257'],[-3,-10,3.5,'#9fd07c']])circ(c,x+16+dx,y+13+dy,r,col);
     tuft(c,x+7,y+30,.6,'#7ab35a');tuft(c,x+25,y+30,.6,'#7ab35a');
     if(g>=100)for(const[dx,dy]of[[-6,-1],[5,-6],[7,3]]){const fx2=x+16+dx,fy=y+13+dy;circ(c,fx2,fy,3.6,'#e8604f');c.fillStyle='#7a4a2a';c.fillRect(fx2-.5,fy-5,1.1,2.4);circ(c,fx2-1.2,fy-1.2,1,'rgba(255,255,255,.4)')}break}
-  case'ladder_wood':case'ladder_bamboo':{/* ハシゴ（コードの絵）：オークは木の色、竹はうすい緑で節つき。正面は、がけに立てかけて、上のマスのふちまで。横向きは、ななめに */const bb=id==='ladder_bamboo',RC=bb?'#b8c26a':'#c08f58',RD=bb?'#8e9c44':'#8a5f35',RL=bb?'#dde39a':'#dcae72',d=i!=null&&S&&!ICON?ladderDir(i):0;
+  case'ladder_wood':case'ladder_bamboo':{/* ハシゴ：オークは木の色、竹はうすい緑で節つき。正面は、がけに立てかけて、上のマスのふちまで。横向きは、ななめに */const bb=id==='ladder_bamboo',RC=bb?'#b8c26a':'#c08f58',RD=bb?'#8e9c44':'#8a5f35',RL=bb?'#dde39a':'#dcae72',d=i!=null&&S&&!ICON?ladderDir(i):0;
     const rail=(x1,y1,x2,y2)=>{c.lineCap='round';c.strokeStyle=RD;c.lineWidth=3.2;c.beginPath();c.moveTo(x1,y1);c.lineTo(x2,y2);c.stroke();c.strokeStyle=RC;c.lineWidth=2.2;c.beginPath();c.moveTo(x1,y1);c.lineTo(x2,y2);c.stroke();c.strokeStyle=RL;c.lineWidth=.7;c.beginPath();c.moveTo(x1-.5,y1);c.lineTo(x2-.5,y2);c.stroke()};
     const rung=(x1,y1,x2,y2)=>{c.strokeStyle=RD;c.lineWidth=2;c.beginPath();c.moveTo(x1,y1);c.lineTo(x2,y2);c.stroke();c.strokeStyle=bb?'#cfd683':'#cf9f66';c.lineWidth=1.1;c.beginPath();c.moveTo(x1,y1-.3);c.lineTo(x2,y2-.3);c.stroke()};
     const lad=(x1,x2,top,bot)=>{for(let yy=bot-4;yy>top+2;yy-=5)rung(x1+.5,yy,x2-.5,yy);rail(x1,top,x1,bot);rail(x2,top,x2,bot);if(bb)for(const xx of[x1,x2])for(let yy=bot-7;yy>top+1;yy-=10){c.fillStyle=RD;c.fillRect(xx-1.6,yy,3.2,1)}};/* まっすぐ立てたハシゴ（竹は節つき） */
+    {const ch=chipOf(id+(d===1&&!ICON?':sideL':d===3&&!ICON?':sideR':':front'));if(ch){if(d<=0&&!ICON){c.fillStyle='rgba(40,30,20,.16)';c.fillRect(x+10,y-LIFT+1,15,LIFT)}/* がけにおちるかげ */if(ICON){c.save();c.translate(0,28)}const ok=drawChip(c,ch,id,x,y,now,i);if(ICON)c.restore();if(ok)break}}/* もらった絵：正面（がけの正面だけ）・よこ（がけのふちにそった細い線）。アイコンは正面を1マスに *//* 絵を読みこむまでは、コードの絵 */
     if(d<=0||ICON){const top=ICON?y+2:y-LIFT-1,bot=ICON?y+TS-3:y+2;if(!ICON){c.fillStyle='rgba(40,30,20,.16)';c.fillRect(x+10,top+2,15,bot-top-2)}/* がけにおちるかげ */lad(x+9,x+23,top,bot)}/* 正面：がけの正面だけ（下のマスにはみ出さない） */
     else{const x0=d===1?x+.5:x+TS-4.5,ya=y+8,yb=y+24;/* 横向き：がけのよこに立てかけたハシゴを真上から見た形。ほぼ一本の線（はばの向きに、がけのふちにそって）。両はしがレールの頭 */
       c.fillStyle='rgba(40,30,20,.18)';c.fillRect(d===1?x0+4:x0-1.5,ya+1,1.5,yb-ya);/* かげ */
       c.fillStyle=RD;c.fillRect(x0,ya,4,yb-ya);c.fillStyle=RC;c.fillRect(x0+.6,ya+.6,2.8,yb-ya-1.2);c.fillStyle=RL;c.fillRect(x0+.6,ya+.6,1,yb-ya-1.2);/* いちばん上の段（上から見ると、この線だけ見える） */
       for(const yy of[ya,yb-4]){c.fillStyle=RD;c.fillRect(x0-.5,yy,5,4);c.fillStyle=RC;c.fillRect(x0+.2,yy+.6,3.6,2.8);c.fillStyle=RL;c.fillRect(x0+.2,yy+.6,3.6,.8)}}/* レールの頭 */
     break}
-  case'bridge':{/* 木の橋（仮の絵）：わたる向きに板をならべ、両がわに手すり */const wt=k=>k>=0&&k<W*H&&S.ground[k]===1&&S.obj[k]!=='bridge',hz=i==null||!S?true:(wt(i-W)||wt(i+W))&&!(wt(i-1)&&wt(i+1))||!(wt(i-W)||wt(i+W))&&!(wt(i-1)||wt(i+1));const D='#8a5f35',M='#b98a55',L='#d2a46c';
+  case'bridge':{/* 木の橋：わたる向きに板をならべ、両がわに手すり */const wt=k=>k>=0&&k<W*H&&S.ground[k]===1&&S.obj[k]!=='bridge',hz=i==null||!S?true:(wt(i-W)||wt(i+W))&&!(wt(i-1)&&wt(i+1))||!(wt(i-W)||wt(i+W))&&!(wt(i-1)||wt(i+1));const D='#8a5f35',M='#b98a55',L='#d2a46c';
+    {const B=k=>!ICON&&i!=null&&S&&k>=0&&k<W*H&&S.obj[k]==='bridge',a=B(hz?i-1:i-W),b=B(hz?i+1:i+W),ch=chipOf('bridge:'+(hz?'h':'v')+(a&&b?'M':b?'S':a?'E':'1'));if(ch&&drawChip(c,ch,id,x,y,now,i))break}/* もらった絵：はし（S・E）・まん中（M）・1マスの橋（1） */
     c.fillStyle='rgba(20,40,60,.22)';if(hz)c.fillRect(x,y+24,TS,4);else c.fillRect(x+24,y,4,TS);
     if(hz){c.fillStyle=M;c.fillRect(x,y+7,TS,17);c.fillStyle=D;for(let k=0;k<=TS;k+=5)c.fillRect(x+k,y+7,.8,17);c.fillStyle=L;c.fillRect(x,y+7,TS,1.2);c.fillStyle=D;c.fillRect(x,y+4,TS,2.4);c.fillRect(x,y+23,TS,2.4)}
     else{c.fillStyle=M;c.fillRect(x+7,y,17,TS);c.fillStyle=D;for(let k=0;k<=TS;k+=5)c.fillRect(x+7,y+k,17,.8);c.fillStyle=L;c.fillRect(x+7,y,1.2,TS);c.fillStyle=D;c.fillRect(x+4,y,2.4,TS);c.fillRect(x+23,y,2.4,TS)}
