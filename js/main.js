@@ -38,16 +38,15 @@ const WORLDS=[
   {name:'忘れられた神々の庭',sub:'WORLD 6',el:null,desc:'5つの力が生まれた場所。'},
 ];WORLDS[FREE]={name:'フリーモード',sub:'FREE',el:null,desc:''};
 function thumb(cv2,k,open,hide){
-  const c=cv2.getContext('2d');const w=cv2.width,h=cv2.height;
-  if(hide){c.fillStyle='#1c1c26';c.fillRect(0,0,w,h);const li=emoImg('🔒');if(li){const ih=64,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}return}/* まだひらいていないステージは、絵も見せない */
-  if(S&&k===(S.world||0)&&(LIVE[k]===S||!LIVE[k])){if(dirty)rebuildStatic(STATICFULL);const r=20,sw=r*2*TS,sh=sw*h/w;gblit(c,(CX-r)*TS,CY*TS-sh/2,sw,sh,0,0,w,h,true);return}
-  const g=c.createLinearGradient(0,0,0,h);const GC={6:['#8cc46e','#2f5a2a'],2:['#4f7d8f','#1e3440'],3:['#7a5a3f','#2f2117'],4:['#9ec3e0','#3d5a78'],5:['#3a2a4a','#16101f']};if(k===1){g.addColorStop(0,'#8a4a35');g.addColorStop(1,'#3a201a')}else{const q=GC[k]||['#2a2a3a','#16161f'];g.addColorStop(0,q[0]);g.addColorStop(1,q[1])}
-  c.fillStyle=g;c.fillRect(0,0,w,h);
-  if(k===1){c.fillStyle='#5a3328';c.beginPath();c.moveTo(w*.18,h*.62);c.lineTo(w*.42,h*.16);c.lineTo(w*.58,h*.16);c.lineTo(w*.82,h*.62);c.closePath();c.fill();c.fillStyle='#ff7a3d';c.fillRect(w*.44,h*.16,w*.12,6);c.fillStyle='#7fd0e0';for(let i=0;i<3;i++){c.beginPath();c.ellipse(w*(.22+i*.28),h*(.78+(i%2)*.08),60,18,0,0,7);c.fill()}c.fillStyle='rgba(255,255,255,.35)';for(let i=0;i<9;i++){c.beginPath();c.arc(w*(.18+(i%3)*.28)+(i>>2)*6,h*(.7-(i/3|0)*.08),10+(i%3)*3,0,7);c.fill()}}
-  else{c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<30;i++)c.fillRect((i*97)%w,(i*53)%h,2,2)}
-  if(open)return;c.fillStyle='rgba(0,0,0,.35)';c.fillRect(0,0,w,h);{const li=emoImg('🔒');if(li){const ih=48,iw=ih*li.width/li.height;c.drawImage(li,w/2-iw/2,h/2-ih/2,iw,ih)}}
+  if(S&&!hide&&k===(S.world||0)&&(LIVE[k]===S||!LIVE[k])){const c=cv2.getContext('2d'),w=cv2.width,h=cv2.height;if(dirty)rebuildStatic(STATICFULL);const r=20,sw=r*2*TS,sh=sw*h/w;gblit(c,(CX-r)*TS,CY*TS-sh/2,sw,sh,0,0,w,h,true);return}/* いまの村があれば、その村を写す */
+  /* ステージごとの、コードで描くドット絵（190×70 ドット。画面では pixelated で大きくする） */
+  cv2.width=190;cv2.height=70;cv2.classList.add('px');const c=cv2.getContext('2d');
+  if(typeof PXSCENE!=='function'){c.fillStyle='#2a3a36';c.fillRect(0,0,190,70);return}
+  if(hide)return PXSCENE(c,190,70,1,'lock',0);
+  PXSCENE(c,190,70,1,k===1?'volcano':k===2?'water':k===FREE?'free':'meadow',k*7+3);
+  if(!open){c.fillStyle='rgba(0,0,0,.4)';c.fillRect(0,0,190,70);PXSCENE(c,190,70,1,'lockover',0)}
 }
-const APP_VER=1208;/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER=1209;/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
@@ -58,7 +57,7 @@ function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
     const L=LIVE[k]||null,open=k===0||(k===1&&!!((LIVE[0]&&LIVE[0].cleared)||L||w2o));
     const card=el(`<div class="wcard${open?' open':' lock'}"><canvas width="760" height="280"></canvas><div class="wb"><span class="wn"></span><h3></h3><p></p><div class="wbtns"></div></div></div>`);
     const hide=!open&&!(k===2&&LIVE[1]&&LIVE[1].cleared);/* まだひらいていないステージは、名前も絵も見せない */
-    card.querySelector('.wn').textContent=hide?'🔒 WORLD '+(k+1):wd.sub;card.querySelector('h3').textContent=hide?'？？？':wd.name;
+    if(hide)card.querySelector('.wn').innerHTML=pxi('lock','wlk')+'WORLD '+(k+1);else card.querySelector('.wn').textContent=wd.sub;card.querySelector('h3').textContent=hide?'？？？':wd.name;
     let info=wd.desc;
     if(k<=1&&L&&L.introSeen)info=(L.summary?'':'せいれい '+L.res.length+'人・')+'村レベル '+L.lv+(L.cleared?'・ヌシ様が帰ってきた！':'');
     else if(k===1&&!open)info='はじまりの草原でヌシ様をむかえると、ひらきます。';
