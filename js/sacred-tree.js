@@ -24,6 +24,17 @@ function migrateSacredFootprint3(state){/* 御神木を4×4へ（前は2×2・3�
   if(target!==origin)(state.log||(state.log=[])).push([Math.floor((state.t||0)/1440)+1,'御神木のため、空いた4×4の場所を整えた']);
   state.flags.sacredFootprint3=state.flags.sacredFootprint4=1;
 }
+function migrateSacredLeft(state){/* 御神木は1マス左へうつした（前のセーブも1回だけ）。左の1列が空いていなければ、そのまま、つぎの読みこみでまたためす */
+  if(state.free||(state.world||0)!==0||state.flags.sacredLeft1)return;if(state.sacredRoot==null||state.sacredLegacy2||state.sacredLegacy3){if(state.sacredRoot==null&&state.obj.indexOf('tower')<0)state.flags.sacredLeft1=1;return}
+  const N=4,o=state.sacredRoot;if(o%W<1)return void(state.flags.sacredLeft1=1);const t=o-1,h=state.hi?.[o]||0,inUse=k=>Object.keys(state.rug||{}).some(a=>sacredCells(+a,2).includes(k))||Object.keys(state.roof||{}).some(a=>sacredCells(+a,2).includes(k));
+  for(let b=0;b<N;b++){const k=t+b*W;if(state.obj[k]&&!WEEDS.has(state.obj[k])||state.floor[k]||state.ground[k]===1||state.ground[k]===2||(state.hi?.[k]||0)!==h||inUse(k)||state.res?.some(r=>!r.hidden&&(r.y|0)*W+(r.x|0)===k))return}
+  for(let b=0;b<N;b++){const k=t+b*W;if(state.obj[k]){state.obj[k]='';delete state.dyn[k]}state.drops=(state.drops||[]).filter(d=>d.y*W+d.x!==k)}
+  const type=state.obj[o]==='tower'||state.obj[o]==='site'&&state.dyn[o]?.build==='tower'?state.obj[o]:null;
+  if(type){const dy=state.dyn[o],hp=state.hp?.[o],lv=state.hp?.['L'+o];for(const k of sacredCells(o,N)){state.obj[k]='';delete state.ref[k]}delete state.dyn[o];if(state.hp){delete state.hp[o];delete state.hp['L'+o]}
+    state.obj[t]=type;for(const k of sacredCells(t,N).slice(1)){state.obj[k]='part';state.ref[k]=t}if(dy)state.dyn[t]=dy;if(hp!=null)state.hp[t]=hp;if(lv!=null)state.hp['L'+t]=lv}
+  state.sacredRoot=t;(state.fieldSites||(state.fieldSites={})).root=t;for(const b of state.broken||[])if(b.id==='tower'&&b.j===o)b.j=t;
+  for(const r of state.res||[])if(r.act?.obj===o){r.act=null;r.path=[]}
+  state.flags.sacredLeft1=1}
 function tryExpandSacredLegacy(state){
   if(!state.sacredLegacy2&&!state.sacredLegacy3||state.sacredRoot==null)return;
   const j=state.sacredRoot,cells=sacredCells(j,4);if(j%W>W-4||(j/W|0)>H-4)return;
