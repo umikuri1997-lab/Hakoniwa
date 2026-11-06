@@ -437,9 +437,9 @@ function drawRes0(r,now){
   if(!ci&&(r.bubble||warn)){const t0=warn&&!r.bubble?'🍙':r.bubble,t=(BUBFACE[t0]?null:NOFACE[t0])||t0;/* 顔の絵文字は使わない */
     {const a=r.act;if(a&&a.stage==='do'&&(a.type==='mine'||a.type==='chop')&&NATHIT.has(a.obj)&&Math.abs((a.obj%W+.5)*TS-px)<TS+20){const yb=natBarY(a.obj);if(by-54<yb+7&&by-15>yb-2)by=yb+12}}/* 木・岩ののこりのバーと重なるときは、ふきだしをバーの上へ */
     const pic=/^(obj|ic|chip):/.test(String(t)),bw=36;/* 絵のアイコンは、絵文字と同じはば *//* 吹き出しは1.5倍 */
-    pxBub(ctx,px,by-56,bw,34,warn?'#ffd2cc':'#fff',warn?'#c98a80':'#b8a587');/* ドットのふきだし */
+    const BB=pxBub(ctx,px,by-56,bw,34,warn?'#ffd2cc':'#fff',warn?'#c98a80':'#b8a587');/* ドットのふきだし */
     if(t==='💬'){ctx.fillStyle='#7a7064';const cx=Math.round(px/1.5)*1.5;for(let d=-1;d<=1;d++)ctx.fillRect(cx+d*6-1.5,by-39,3,3)}/* おしゃべりは点々だけ */
-    else if(t==='🪓'&&!BUBS.ok&&PSPR.axe&&PSPR.axe.ok){const g=PSPR.axe.img,ih=17,iw=ih*g.width/g.height;ctx.save();ctx.translate(px,by-39);ctx.rotate(-Math.PI/4);ctx.drawImage(g,-iw/2,-ih/2,iw,ih);ctx.restore()}else if(!pic&&BUBI[bubKey(t)])bubIcon(ctx,t,Math.round(px/1.5)*1.5,by-39,1.5);/* 絵文字は、ドットの絵（BUBI）で描く */else{const ei=emoImg(t);if(ei){const ih=19.5,iw=ih*ei.width/ei.height;ctx.drawImage(ei,px-iw/2,by-39-ih/2,iw,ih)}else if(!pic&&!emoSrc(t))bubIcon(ctx,'?',Math.round(px/1.5)*1.5,by-39,1.5)}}};
+    else if(t==='🪓'&&!BUBS.ok&&PSPR.axe&&PSPR.axe.ok){const g=PSPR.axe.img,ih=17,iw=ih*g.width/g.height;ctx.save();ctx.translate(px,by-39);ctx.rotate(-Math.PI/4);ctx.drawImage(g,-iw/2,-ih/2,iw,ih);ctx.restore()}else if(!pic&&BUBI[bubKey(t)])bubIcon(ctx,t,Math.round(px/1.5)*1.5,by-39,1.5,BB);/* 絵文字は、ドットの絵（BUBI）で描く */else{const ei=emoImg(t);if(ei){const ih=19.5,iw=ih*ei.width/ei.height;ctx.drawImage(ei,px-iw/2,by-39-ih/2,iw,ih)}else if(!pic&&!emoSrc(t))bubIcon(ctx,'?',Math.round(px/1.5)*1.5,by-39,1.5,BB)}}};
   if(BUBQ){const T=ctx.getTransform();BUBQ.push(()=>{ctx.save();ctx.setTransform(T);over();ctx.restore()})}else over();/* あとで描くふきだしも、見張り台・段差の上の高さのまま */
 }
 let GODP=[-.82,-.6];const godX=()=>STATUE>=0?STATUE%W+.5+GODP[0]:CX+.5,godY=()=>STATUE>=0?((STATUE/W)|0)+(S.obj[STATUE+W]==='altar'?GODP[1]:1.9):CY-6.4;/* カミサマは神殿の左の柱の前（おそなえ箱のうしろ）に立つ */
@@ -452,7 +452,7 @@ function pxStep(c,x,y,w,h,ins,col,d){/* 段々の角の四角 */const k=ins.leng
 function pxBub(c,cx,top,w,h,fill,line){/* ドットのふきだし：段々の角（4・2・1・1ドット）と、段々のしっぽ。cx は、しっぽのまん中。画面のドットにそろえて描く（1ドット＝1.5、画面の整数ピクセル） */
   const T=c.getTransform(),d=Math.max(1,Math.round(1.5*T.a)),n=Math.round(w/1.5/2),m=Math.round(h/1.5),tx=Math.round(T.a*cx+T.e),y=Math.round(T.d*top+T.f),x=tx-n*d;w=(2*n+1)*d;h=m*d;
   c.save();c.setTransform(1,0,0,1,0,0);pxStep(c,x,y,w,h,[4,2,1,1],line,d);pxStep(c,x+d,y+d,w-2*d,h-2*d,[3,1,1],fill,d);
-  c.fillStyle=line;c.fillRect(tx-2*d,y+h,5*d,d);c.fillRect(tx-d,y+h+d,3*d,d);c.fillRect(tx,y+h+2*d,d,d);c.fillStyle=fill;c.fillRect(tx-d,y+h-d,3*d,2*d);c.fillRect(tx,y+h+d,d,d);c.restore()}
+  c.fillStyle=line;c.fillRect(tx-2*d,y+h,5*d,d);c.fillRect(tx-d,y+h+d,3*d,d);c.fillRect(tx,y+h+2*d,d,d);c.fillStyle=fill;c.fillRect(tx-d,y+h-d,3*d,2*d);c.fillRect(tx,y+h+d,d,d);c.restore();return {x:tx+d/2,y:y+h/2,s:(Math.min(2*n+1,m)-5)*d}}/* 中のまん中と、アイコンの大きさ（わくから2ドットあける） */
 function talkBub(px,by,now,col){if(BUBF!==now){BUBF=now;BUBR.length=0}BUBR.push([px,by]);const bw=30,bb=Math.round((by-Math.abs(Math.sin(now/260))*3)/1.5)*1.5;pxBub(ctx,px,bb-48,bw,27,col||'#9fdcff','#fff');
     ctx.fillStyle='#1f5f86';const cx=Math.round(px/1.5)*1.5;for(let d=-1;d<=1;d++)ctx.fillRect(cx+d*7.5-1.5,bb-36,4.5,4.5);}/* 点々も、四角いドット */
 const HB={t:0,rk:[],ps:[],fl:[]};
