@@ -44,7 +44,9 @@ q:["...BBBBB...","..BBBBBBB..","..BB...BBB.",".......BBB.","......BBB..",".....B
 dots:["...........","...........","...........","...........","...........","..dd.dd.dd.","..dd.dd.dd.","...........","...........","...........","..........."],
 unk:["...BBBBB...","..BBBBBBB..","..BB...BBB.",".......BBB.","......BBB..",".....BBB...",".....BB....","...........",".....BB....",".....BB....","..........."]
 };
-const BUBI={'✨':'spark','🌟':'spark','⭐':'spark','📦':'box','😆':'laugh','😋':'laugh','😊':'smile','😌':'smile','😣':'hurt','😩':'hurt','😨':'scared','😱':'scared','🔥':'fire','💦':'sweat','💧':'drop','😭':'drop','😢':'drop','☕':'coffee','🧺':'basket','🔨':'hammer','💕':'heart','💗':'heart','💖':'heart','💚':'gheart','👏':'clap','👋':'wave','🎵':'note','♪':'note','🎶':'notes','🌱':'sprout','⛏':'pick','♨':'spring','😵':'dizzy','💫':'dizzy','💤':'zzz','😴':'zzz','🐟':'fish','🏮':'lantern','🎆':'firework','🎇':'firework','🎁':'gift','🍳':'pan','🌰':'chestnut','🏠':'house','🏡':'house','🍙':'rice','🍄':'mush','🌿':'leaf','🌼':'flower','🎯':'target','🍡':'dango','🍴':'fork','💢':'anger','😠':'anger','😤':'anger','❗':'bang','‼':'bang','！':'bang','❓':'q','💭':'dots','💬':'dots'};
+const BUBI={'🪓':'axe','✨':'spark','🌟':'spark','⭐':'spark','📦':'box','😆':'laugh','😋':'laugh','😊':'smile','😌':'smile','😣':'hurt','😩':'hurt','😨':'scared','😱':'scared','🔥':'fire','💦':'sweat','💧':'drop','😭':'drop','😢':'drop','☕':'coffee','🧺':'basket','🔨':'hammer','💕':'heart','💗':'heart','💖':'heart','💚':'gheart','👏':'clap','👋':'wave','🎵':'note','♪':'note','🎶':'notes','🌱':'sprout','⛏':'pick','♨':'spring','😵':'dizzy','💫':'dizzy','💤':'zzz','😴':'zzz','🐟':'fish','🏮':'lantern','🎆':'firework','🎇':'firework','🎁':'gift','🍳':'pan','🌰':'chestnut','🏠':'house','🏡':'house','🍙':'rice','🍄':'mush','🌿':'leaf','🌼':'flower','🎯':'target','🍡':'dango','🍴':'fork','💢':'anger','😠':'anger','😤':'anger','❗':'bang','‼':'bang','！':'bang','❓':'q','💭':'dots','💬':'dots'};
+const BUBSPR={"spark":[0,0],"box":[1,0],"fire":[2,0],"sweat":[3,0],"coffee":[4,0],"basket":[5,0],"hammer":[0,1],"drop":[1,1],"heart":[2,1],"clap":[3,1],"wave":[4,1],"note":[5,1],"sprout":[0,2],"pick":[1,2],"spring":[2,2],"axe":[3,2],"dizzy":[4,2],"zzz":[5,2],"gheart":[0,3],"fish":[1,3],"lantern":[2,3],"firework":[3,3],"gift":[4,3],"pan":[5,3],"chestnut":[0,4],"notes":[1,4],"house":[2,4],"rice":[3,4],"dots":[4,4],"q":[5,4],"unk":[5,4]};/* 32×32のドット絵（6列×5行の1まい）。読みこむまでは、下の11×11の絵 */
+const BUBS={img:null,ok:false};try{BUBS.img=new Image();BUBS.img.onload=()=>{BUBS.ok=true};BUBS.img.src='assets/g/69177afb71.webp'}catch(e){}
 const bubKey=t=>String(t).replace(/️/g,'');
 const BUBRUN={};
 function bubRuns(id){/* 色ごとの横の連なり（ふち付き、13×13）。fillRect だけで描く */
@@ -56,6 +58,7 @@ function bubRuns(id){/* 色ごとの横の連なり（ふち付き、13×13）�
   for(const[x,y,c]of ol)g[y][x]=c;
   const runs=[];for(let y=0;y<N;y++){let x=0;while(x<N){const c=g[y][x];if(!c){x++;continue}let e=x+1;while(e<N&&g[y][e]===c)e++;runs.push([x,y,e-x,c]);x=e}}
   return BUBRUN[id]=runs}
-function bubIcon(c,key,cx,cy,k){/* (cx,cy) を中心に描く。1ドット k（ふつう1.5） */
-  k=k||1.5;const id=BUBI[bubKey(key)]||'unk',x0=cx-6.5*k,y0=cy-6.5*k;
+function bubIcon(c,key,cx,cy,k){/* (cx,cy) を中心に描く。1ドット k（ふつう1.5）。32×32の絵は、はば16k（24）で、画面の整数ピクセルにそろえる */
+  k=k||1.5;const id=BUBI[bubKey(key)]||'unk',x0=cx-6.5*k,y0=cy-6.5*k,sp=BUBSPR[id];
+  if(sp&&BUBS.ok){const T=c.getTransform(),n=Math.max(1,Math.round(16*k*T.a));c.save();c.setTransform(1,0,0,1,0,0);c.imageSmoothingEnabled=true;c.imageSmoothingQuality='high';c.drawImage(BUBS.img,sp[0]*32,sp[1]*32,32,32,Math.round(T.a*cx+T.e-n/2),Math.round(T.d*cy+T.f-n/2),n,n);c.restore();return}
   for(const[x,y,n,col]of bubRuns(id)){c.fillStyle=col;c.fillRect(x0+x*k,y0+y*k,n*k,k)}}
