@@ -106,6 +106,7 @@ function spPose(o,t,tr,back){/* せいれいの動きの計算：腕の角度・
   else if(A==='chop'||A==='mine'||A==='till'){const p=cyc(1.4),v=p<.72?-2.3*(p/.72):-2.3+2.9*((p-.72)/.28);aN=v;aF=v;prop=A==='chop'?'axe':A==='mine'?'pick':'hoe';lean2=p<.72?-.06*(p/.72):-.06+.2*((p-.72)/.28);frontArm=true}
   else if(A==='build'||A==='repair'||A==='craft'||A==='cookcut'){const p=cyc(2.6),v=p<.6?-1.3*(p/.6):-1.3+1.7*((p-.6)/.4);aN=v;aF=.2;prop=A==='cookcut'?'':'hammer';lean2=p>.6?.06:0;frontArm=true}
   else if(A==='draw'){const p=cyc(1.5),v=p<.45?.95-.3*(p/.45):p<.8?.65-3.0*((p-.45)/.35):-2.35+.0;sq=p<.45?.08:.02;aN=aF=v;lean2=p<.45?.12:.02;prop='can';frontArm=bothF=true}/* 水をくむ：かがんで、水の入れ物をおろし、両手でひき上げる */
+  else if(A==='sweep'){aN=-2.05+Math.sin(t*7)*.38;aF=.15;prop='duster';lean2=-.03+Math.sin(t*7)*.02;frontArm=true}/* クモの巣のそうじ：はたきを上へのばして、左右にはらう */
   else if(A==='water'||A==='tend'){aN=-.55+Math.sin(t*2)*.08;aF=.25;prop='can';lean2=.05;frontArm=true}
   else if(A==='cook'){aN=-.5+Math.sin(t*5)*.22;aF=.15;prop='ladle';frontArm=true}
   else if(A==='talk'){aN=-.6+Math.sin(t*4.7)*.4;aF=-.15+Math.sin(t*3.3)*.2;lean2=Math.sin(t*2.4)*.025;frontArm=true}
@@ -147,6 +148,7 @@ function spProp(c,prop,sx,a,t,o){/* せいれいが手に持つ道具 */c.save()
       else if(prop==='can'){c.fillStyle='#8fb4c8';rr(c,-9,-8,18,14,4);c.fillStyle='#a9c8d9';rr(c,-9,-8,18,4,2);c.strokeStyle='#8fb4c8';c.lineWidth=3.5;c.beginPath();c.moveTo(8,-2);c.lineTo(20,-10);c.stroke();
         for(let k=0;k<3;k++){const ph=(t*1.8+k/3)%1;c.fillStyle='rgba(120,190,255,'+(1-ph)+')';c.beginPath();c.ellipse(21+ph*3,-8+ph*26,1.8,2.6,0,0,7);c.fill()}}
       else if(prop==='bow'){const pl=o.bowPull||0;c.strokeStyle='#5e3a1f';c.lineWidth=4.4;c.beginPath();c.arc(-4,-6,13,-1.2,1.2);c.stroke();c.strokeStyle='#b5764a';c.lineWidth=2.4;c.beginPath();c.arc(-4,-6,13,-1.2,1.2);c.stroke();const ex=-4+13*Math.cos(1.2),ey=13*Math.sin(1.2);c.strokeStyle='rgba(245,236,214,.95)';c.lineWidth=1;c.beginPath();c.moveTo(ex,-6-ey);c.lineTo(ex-7*pl,-6);c.lineTo(ex,-6+ey);c.stroke();if(pl>0){c.strokeStyle='#c9a06a';c.lineWidth=1.6;c.beginPath();c.moveTo(ex-7*pl,-6);c.lineTo(ex-7*pl+18,-6);c.stroke();c.fillStyle='#cfd6de';c.beginPath();c.moveTo(ex-7*pl+21,-6);c.lineTo(ex-7*pl+17,-8.5);c.lineTo(ex-7*pl+17,-3.5);c.closePath();c.fill()}}/* 弓（引いているあいだは矢をつがえる） */
+      else if(prop==='duster'){c.strokeStyle='#9a6a48';c.lineWidth=2.6;c.beginPath();c.moveTo(0,4);c.lineTo(5,-26);c.stroke();for(let k=0;k<5;k++){const sw=Math.sin(t*14+k)*2;c.strokeStyle=k%2?'#f2ead8':'#d9cdb2';c.lineWidth=2.2;c.beginPath();c.moveTo(5,-25);c.lineTo(5+(k-2)*3+sw,-37+Math.abs(k-2));c.stroke()}}
       else if(prop==='ladle'){c.strokeStyle='#9a6a48';c.lineWidth=3;c.beginPath();c.moveTo(0,-6);c.lineTo(6,14);c.stroke();c.fillStyle='#8f949b';c.beginPath();c.ellipse(7,16,5,3,0,0,7);c.fill()}
       else if(prop==='rod'){c.strokeStyle='#9a6a48';c.lineWidth=3;c.beginPath();c.moveTo(-4,4);c.lineTo(30,-34);c.stroke();const bb=Math.sin(t*3)*3;c.strokeStyle='rgba(255,255,255,.8)';c.lineWidth=1.2;c.beginPath();c.moveTo(30,-34);c.lineTo(38,14+bb);c.stroke();c.fillStyle='#e8604f';c.beginPath();c.arc(38,14+bb,3,0,7);c.fill()}}
     c.restore()}

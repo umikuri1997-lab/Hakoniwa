@@ -45,7 +45,7 @@ const ALLJOB=['harvest','sow','offer','gather'],FARMJ=['harvest','water','tend',
 const IDLE_ACTS=['fish','play','wander','idle'];
 // 種まき・植える・依頼・建築があるか（いつもの作業を中断してでも向かう仕事）
 function hasHighWork(r){
-  if(!isNight()&&typeof fogWant==='function'&&fogWant(r))return true;/* たのまれた宝箱・あしあと */
+  if(!isNight()&&typeof fogWant==='function'&&fogWant(r))return true;if(!isNight()&&webWant(r))return true;/* たのまれたクモの巣 *//* たのまれた宝箱・あしあと */
   if(!isNight()&&!(r.act&&(r.act.type==='pickdrop'||FARMJ.includes(r.act.type)))&&((S.drops||[]).some(q=>(q.lt||q.tap)&&free('d'+(q.y*W+q.x),1))||!(r.act&&r.act.type==='weed')&&wreqList().some(k=>free('o'+k,1)))&&matCap()-matTot()>0)return true;/* 「みる」でタップした草・落とし物も同じ *//* 守り神がこわした物があれば、いまの作業をやめてひろいに行く（畑の世話をしているときは、やめない） */
   if(S.food<foodLow()&&foodCap()>0&&!(r.act&&(r.act.type==='gather'||r.act.type==='harvest'))){const bb=ripeAdj(['berry']);if(S.obj.some((o,j)=>(o==='farm'&&S.dyn[j]&&S.dyn[j].g>=100&&free('o'+j,1))||((o==='berry'||o==='takenoko')&&S.dyn[j]&&S.dyn[j].g>=100&&free('o'+j,1))))return true}
   if(canJob(r,'build')&&S.obj.some((o,j)=>o==='site'&&free('o'+j,2)))return true;
@@ -89,7 +89,7 @@ function goWork(r,G,nw){
   if(tryJob(r,G,'plant'))return true;
   if(tryJob(r,G,'otaki'))return true;
   if(tryJob(r,G,'cfill'))return true;
-  if(typeof fogJob==='function'&&fogJob(r,G))return true;/* 霧の中で見つけた宝箱・あしあと */
+  if(typeof fogJob==='function'&&fogJob(r,G))return true;if(webJob(r,G))return true;/* クモの巣のそうじ *//* 霧の中で見つけた宝箱・あしあと */
   if((S.drops||[]).some(q=>q.lt||q.tap)||wreqList().length){for(const k of FARMJ)if(tryJob(r,G,k))return true;if(tryJob(r,G,'drop'))return true;if(wreqList().length&&tryJob(r,G,'weed'))return true}/* 「みる」でタップした草・きのこ・落とし物も、ここでとりにいく *//* 守り神の光でこわした物（落ちた木材・石材）は、おつげ・木を切る・石をほるより先にひろう。畑の世話よりはあと */
   if(S.oracle&&ORACLE[S.oracle])for(const k of ORACLE[S.oracle].jobs)if(tryJob(r,G,k))return true;
   // 建てる・家具づくりがいちばん先。そのつぎに得意な仕事をする
