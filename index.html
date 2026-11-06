@@ -484,7 +484,7 @@ svg.pxi.ck{width:14px;height:14px;display:inline-block;vertical-align:-2px;margi
 
 /* タイトル：うしろにドット絵の草原（#tScene）。「はじめる」はゆっくり光る */
 .title{overflow:hidden;background:#b0dce8!important}
-#tScene{position:absolute;left:0;top:0;image-rendering:pixelated;image-rendering:crisp-edges;pointer-events:none}
+#tScene,#tSpr{position:absolute;left:0;top:0;image-rendering:pixelated;image-rendering:crisp-edges;pointer-events:none}
 .title .tbox{position:relative;z-index:1;padding:14px 18px 16px;margin-top:-18vh}
 .title h1{text-shadow:0 3px 0 #3c5a2c,0 -2px 0 #3c5a2c,2px 0 0 #3c5a2c,-2px 0 0 #3c5a2c!important;color:#fff7d6}
 .title .tsub,.title .tline{color:#fff;text-shadow:0 1px 0 #3c5a2c,1px 0 0 #3c5a2c,-1px 0 0 #3c5a2c,0 -1px 0 #3c5a2c}
@@ -597,6 +597,7 @@ window.PXSCENE=function(c,gw,gh,P,kind,t){
  c.imageSmoothingEnabled=false;
  if(kind==='lockover'){spr(LOCK,(gw-10)/2|0,(gh-11)/2|0,{'#':'#e0c288'});return}
  if(kind==='lock'){R(0,0,gw,gh,'#1e2230');for(var s=0;s<40;s++)R(hsh(s)*gw|0,hsh(s+99)*gh|0,1,1,s%3?'#4a5068':'#8a90a8');spr(LOCK,(gw-10)/2|0,(gh-11)/2|0,{'#':'#c9a46a'});return}
+ var TL=kind==='title';if(TL)kind='meadow';/* タイトル：木とせいれいは、ゲームの絵で上に描く */
  var V=kind==='volcano',W=kind==='water';
  var sky=V?['#e48a66','#ea9670','#efa274','#f3b17e','#f6c08a','#f8cf9c']:W?['#a6d6ec','#b2dcef','#bfe2f2','#cbe8f4','#d6edf5','#e0f2f6']:['#a9d8ea','#b5ddec','#c1e3ee','#cde8f0','#d8eef1','#e3f3f0'];
  var gy=Math.round(gh*(gh>gw*1.2?0.7:0.62));
@@ -612,19 +613,33 @@ window.PXSCENE=function(c,gw,gh,P,kind,t){
  if(V){var ry=gy+Math.round((gh-gy)*0.55);for(var x3=0;x3<gw;x3++){var o=Math.round(Math.sin(x3*.08)*1.5);R(x3,ry+o,1,4,'#7fc6d8');if((x3+((t*3)|0))%7===0)R(x3,ry+o+1,1,1,'#d4f0f6')}
   for(var q=0;q<5;q++){var bx=gw-6-q*4,bh=gy-14+(q%2)*4;R(bx,bh,1,gy-bh+2,'#8fb45a');for(var n=bh+2;n<gy;n+=4)R(bx,n,1,1,'#5f8a3a');R(bx+1+Math.round(Math.sin(t*2+q)),bh+1,2,1,'#a8cc6a')}}
  else if(W){var ly=gy+2;for(var y4=0;y4<(gh-gy)*0.6;y4++){var lw=gw*0.7-y4*2;R(gw/2-lw/2,ly+y4,lw,1,y4%3?'#8fd0e4':'#a6dcec')}}
- if(!V){/* 木：葉がゆれる */var tx=gw<120?3:Math.round(gw*0.12),ty=gy-16;R(tx+5,ty+8,3,10,'#7a5a3a');R(tx+4,gy+1,5,1,'#5e4630');
-  var sw=Math.round(Math.sin(t*1.6));R(tx+sw,ty+2,13,7,'#5f9e4f');R(tx+2+sw,ty,9,2,'#5f9e4f');R(tx+1+sw,ty+1,6,3,'#78b85e');R(tx+8+sw,ty+4,3,2,'#78b85e');R(tx+1+sw,ty+8,11,1,'#4f8a43');
+ if(!V){/* 木：葉がゆれる */if(!TL){var tx=gw<120?3:Math.round(gw*0.12),ty=gy-16;R(tx+5,ty+8,3,10,'#7a5a3a');R(tx+4,gy+1,5,1,'#5e4630');
+  var sw=Math.round(Math.sin(t*1.6));R(tx+sw,ty+2,13,7,'#5f9e4f');R(tx+2+sw,ty,9,2,'#5f9e4f');R(tx+1+sw,ty+1,6,3,'#78b85e');R(tx+8+sw,ty+4,3,2,'#78b85e');R(tx+1+sw,ty+8,11,1,'#4f8a43')}
   /* 花 */var fc=['#fff6e4','#ffd85a','#ff9cc0'];for(var f=0;f<Math.max(8,gw/8);f++){var fx=hsh(f+40)*gw|0,fy=gy+3+(hsh(f+80)*(gh-gy-5)|0);R(fx,fy,1,1,fc[f%3]);R(fx,fy+1,1,1,'#5f9e4f')}
   /* 舞う葉 */for(var l=0;l<Math.max(5,gw/12|0);l++){var lx=((hsh(l)*gw+t*(3+hsh(l+5)*3))%(gw+8))-4,lyy=((hsh(l+9)*gh+t*(4+hsh(l+2)*3))%(gh+6))-3;lx+=Math.round(Math.sin(t*2+l)*2);R(lx,lyy,2,1,l%2?'#78b85e':'#a6d77f');R(lx+(Math.sin(t*3+l)>0?1:0),lyy-1,1,1,'#5f9e4f')}}
  /* 草のさき（ゆれる） */
  for(var x5=1;x5<gw;x5+=5){var s5=Math.sin(t*2+x5*.4)>0.3?1:0;R(x5+s5,gy-1,1,1,V?'#8a6a50':'#6fa457')}
- if(kind==='meadow'||kind==='free'){/* せいれい */var ks=['wood','earth','fire'],bx2=Math.round(gw/2-17);for(var m=0;m<3;m++){var hop=(Math.floor(t*2+m*.7)%4===0)?1:0;spr(SPR[ks[m]],bx2+m*12,gy+((gh-gy)*0.35|0)-hop,{h:SC[ks[m]].h,a:SC[ks[m]].a,w:'#fffaf0',k:'#3a2a20',p:'#f4a9a0'});R(bx2+m*12+2,gy+((gh-gy)*0.35|0)+11,6,1,'rgba(40,60,30,.25)')}}
+ if(!TL&&(kind==='meadow'||kind==='free')){/* せいれい */var ks=['wood','earth','fire'],bx2=Math.round(gw/2-17);for(var m=0;m<3;m++){var hop=(Math.floor(t*2+m*.7)%4===0)?1:0;spr(SPR[ks[m]],bx2+m*12,gy+((gh-gy)*0.35|0)-hop,{h:SC[ks[m]].h,a:SC[ks[m]].a,w:'#fffaf0',k:'#3a2a20',p:'#f4a9a0'});R(bx2+m*12+2,gy+((gh-gy)*0.35|0)+11,6,1,'rgba(40,60,30,.25)')}}
 };
 })();</script>
-  <div id="title" class="title"><canvas id="tScene" aria-hidden="true"></canvas><div class="tbox"><p class="tsub">守り神とせいれいのものがたり</p><h1>はこにわ暮らし</h1><p class="tline">荒れた土地に、もう一度いのちを。</p><div class="tbtns"><button class="btn pri" id="tStart">はじめる</button></div><p class="tline" id="tLoad" hidden></p></div></div><script>/* タイトルの絵：小さなキャンバス（1ドット＝4px）に描いて、pixelated で大きくする。1秒に8回だけ描きなおす。タイトルが見えないときは描かない */
-(function(){var cv=document.getElementById('tScene'),T=document.getElementById('title');if(!cv||!cv.getContext)return;var c=cv.getContext('2d'),P=4,gw=0,gh=0,t0=performance.now();
-function size(){var w=T.clientWidth||innerWidth,h=T.clientHeight||innerHeight;P=Math.max(4,Math.round(Math.min(w,h)/80));var ngw=Math.ceil(w/P),ngh=Math.ceil(h/P);if(ngw!==gw||ngh!==gh){gw=ngw;gh=ngh;cv.width=gw;cv.height=gh;cv.style.width=gw*P+'px';cv.style.height=gh*P+'px'}}
-function draw(){if(T.hidden||document.hidden)return;size();PXSCENE(c,gw,gh,1,'meadow',(performance.now()-t0)/1000)}
+  <div id="title" class="title"><canvas id="tScene" aria-hidden="true"></canvas><canvas id="tSpr" aria-hidden="true"></canvas><div class="tbox"><p class="tsub">守り神とせいれいのものがたり</p><h1>はこにわ暮らし</h1><p class="tline">荒れた土地に、もう一度いのちを。</p><div class="tbtns"><button class="btn pri" id="tStart">はじめる</button></div><p class="tline" id="tLoad" hidden></p></div></div><script>/* タイトルの絵：うしろ（空・丘・草）は小さなキャンバス（1ドット＝P px）に描いて、pixelated で大きくする。木とせいれいは、ゲームと同じ絵（マップの木のチップ・せいれいのドット絵）を、ゲームのデータが読みこめてから、上のキャンバスに整数倍で描く（なめらかにしない）。フタバは寝ている。つぎのステージのセーブがあれば、そのステージのはじめの子とキーキャラ（会えた子だけ）も。1秒に8回だけ描きなおし、タイトルが見えないときは描かない */
+(function(){var cv=document.getElementById('tScene'),cs=document.getElementById('tSpr'),T=document.getElementById('title');if(!cv||!cv.getContext)return;var c=cv.getContext('2d'),q=cs&&cs.getContext('2d'),P=4,gw=0,gh=0,cw=0,ch=0,dpr=1,t0=performance.now(),cast=null;
+function size(){var w=T.clientWidth||innerWidth,h=T.clientHeight||innerHeight;P=Math.max(4,Math.round(Math.min(w,h)/80));var ngw=Math.ceil(w/P),ngh=Math.ceil(h/P);if(ngw!==gw||ngh!==gh){gw=ngw;gh=ngh;cv.width=gw;cv.height=gh;cv.style.width=gw*P+'px';cv.style.height=gh*P+'px'}
+ dpr=window.devicePixelRatio||1;var nw=Math.round(w*dpr),nh=Math.round(h*dpr);if(cs&&(nw!==cw||nh!==ch)){cw=nw;ch=nh;cs.width=cw;cs.height=ch;cs.style.width=w+'px';cs.style.height=h+'px'}}
+function ready(){try{return typeof drawSpiritDot==='function'&&typeof KEYS!=='undefined'&&window.CHIPS&&CHIPS.tree&&chipImgs(CHIPS.tree,'tree')[0].ok&&spDotReady('wood')}catch(e){return false}}
+function getCast(){/* つぎのステージから：そのステージのセーブがあれば、はじめの子と、会えたキーキャラ */var L=[];for(var w=1;w<KEYS.length;w++){if(w===FREE||!KEYS[w]||!KEYS[w].length)continue;var d=null;try{var raw=KV.getItem(SAVE_KEYS[w]);if(raw)d=JSON.parse(raw)}catch(e){}if(!d||d.free)continue;
+  KEYS[w].forEach(function(n,i){if(i===0||(d.res||[]).some(function(r){return r.name===n}))L.push(n)})}return L}
+function sprites(t){q.setTransform(1,0,0,1,0,0);q.clearRect(0,0,cw,ch);if(!ready())return;if(!cast)cast=getCast();
+ var Z=Math.max(2,2*Math.round(P*dpr/6)),gy=Math.round(gh*(gh>gw*1.2?0.7:0.62)),by=Math.round((gy+(gh-gy)*0.3)*P*dpr),/* 木の根もとの高さ（画面のドット） */
+  tx=Math.round(Math.min(cw*0.3,Math.max(cw*0.14,40*Z))/Z)*Z,X=function(v){return Math.round(v/Z)*Z},Y=X(by);
+ q.imageSmoothingEnabled=false;
+ /* 木：ゲームのチップ（1ドット＝Z）。マスの左上を (ox,oy)：根もとはマスの (16,30) */var tc=CHIPS.tree,im=chipImgs(tc,'tree')[0],ox=tx-16*Z,oy=Y-30*Z;
+ q.fillStyle='rgba(40,60,30,.22)';q.fillRect(ox+4*Z,oy+28*Z,24*Z,3*Z);q.drawImage(im,ox+tc.ax*Z,oy+tc.ay*Z,tc.w*Z,tc.h*Z);
+ var s=.435*Z,one=function(n,x,o){var el=KEYEL[n]||'wood';if(!spDotReady(el))return;o.dot=1;o.vr=KEYVR[n];q.fillStyle='rgba(40,60,30,.22)';q.fillRect(x-8*Z,Y+3*Z,16*Z,2*Z);drawSpiritDot(q,el,x,Y+4*Z,s,o.f||1,o)};
+ /* フタバ：木の右で寝ている（ゲームの寝ている絵：目をとじて、ゆっくりゆれる）。上に小さな「z」 */var fx=X(tx+26*Z);one(POKO,fx,{t:t,sleep:true,lean:Math.sin(t*.8)*.06});
+ var zc='#fffaf0';for(var k=0;k<2;k++){var ph=(t*.6+k*.5)%1,zx=fx+X((12+k*7+ph*4)*Z),zy=Y-X((50+k*9+ph*8)*Z),u=k?Z:Math.round(Z*1.5);q.globalAlpha=Math.min(1,(1-ph)*2);q.fillStyle=zc;q.fillRect(zx,zy,4*u,u);q.fillRect(zx+2*u,zy+u,u,u);q.fillRect(zx+u,zy+2*u,u,u);q.fillRect(zx,zy+3*u,4*u,u);q.globalAlpha=1}
+ /* つぎのステージの子：フタバのそばに、起きて立っている */for(var i=0;i<cast.length;i++){var x=X(fx+(34+i*32)*Z);if(x>cw-10*Z)break;one(cast[i],x,{t:t+i*1.7,f:-1,blink:(t*1000+i*900)%3600<150})}}
+function draw(){if(T.hidden||document.hidden)return;size();var t=(performance.now()-t0)/1000;PXSCENE(c,gw,gh,1,'title',t);if(q)sprites(t)}
 draw();setInterval(draw,125);addEventListener('resize',draw)})();</script><style>#boot{display:none}html{background:var(--ground)!important}</style>
   <div id="maps" class="maps" hidden><div class="mwrap"><div class="mhead"><h2>マップをえらぶ</h2><div class="mright"><button class="btn" id="mSnd"></button><div class="mver" id="mVer"></div></div></div><div class="route" id="mList"></div><button class="btn" id="mBack">タイトルへ</button></div></div>
   <div id="pro" class="pro" hidden><div class="proWho" id="proWho"></div><p id="proText"></p><div class="hint">タップで進む</div><button id="proSkip" class="btn">スキップ</button></div>
