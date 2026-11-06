@@ -72,11 +72,11 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict');
   for(let i=0;i<9;i++)S.obj[(CY+22)*W+CX-5+i]='wall';recount();o.push(q('wall10').ok());S.obj[(CY+22)*W+CX+4]='wall';recount();o.push(q('wall10').ok());
   S.gotMat={copper:3};S.subB={ore10:q('ore10').base()};S.gotMat.iron=9;o.push(q('ore10').ok());S.gotMat.gold=1;o.push(q('ore10').ok());
   o.push(q('shishi1').ok());S.obj[(CY+24)*W+CX]='shishiodoshi';recount();o.push(q('shishi1').ok());
-  o.push(q('takeakari1').ok());S.obj[(CY+24)*W+CX+3]='takeakari';recount();o.push(q('takeakari1').ok());
+  {const tj=(CY+24)*W+CX+3;for(let dy=-3;dy<=3;dy++)for(let dx=-3;dx<=3;dx++)if(S.obj[tj+dy*W+dx]==='bamboo')S.obj[tj+dy*W+dx]='';recount();o.push(q('takeakari1').ok());S.obj[tj]='takeakari';recount();o.push(q('takeakari1').ok());for(const d of [2,W*2,-2])S.obj[tj+d]='bamboo';recount();o.push(q('takeakari1').ok())}
   S.mat.wood=150;S.mat.bamboo=49;o.push(q('twmat1').ok());S.mat.bamboo=50;o.push(q('twmat1').ok());
   o.push(q('benchwood').at());S.recipes.takebench=true;S.quest=questIndexOf('ashiyu');S.qTalked=true;recount();const at=q('benchwood').at();o.push(at);
   o.push(q('wall10').at()===(S.lv>=8));return o})()`);
- assert.deepEqual(sq,[false,true,false,false,true,false,true,false,true,false,true,false,true,false,true,true]);
+ assert.deepEqual(sq,[false,true,false,false,true,false,true,false,true,false,false,true,false,true,false,true,true]);
  console.log('火山のサブクエストの条件が、文面と合う');
 
  /* 7. 古いセーブの読みかえ */
