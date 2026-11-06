@@ -51,7 +51,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict');
     for(const r of S.res){endAct(r);delete r.storyWaitHome;r.x=CX+12+r.id%4;r.y=CY+12;}
     const j=(CY-3)*W+CX-8;S.sacredRoot=j;S.fieldSites={root:j};for(const k of sacredCells(j)){S.obj[k]='';delete S.ref[k];S.floor[k]='';S.hi[k]=0;S.ground[k]=0;}
     if(BL.tower.sz.join()!=='4,4'||sacredCells(j).length!==16)throw Error('wrong size');if(!growStoryTree()||S.obj[j]!=='tower'||sacredCells(j).slice(1).some(k=>S.obj[k]!=='part'||S.ref[k]!==j))throw Error('wrong parts');
-    for(const k of sacredCells(j))if(canPlace('floor',k%W,k/W|0,true))throw Error('tree footprint not protected');
+    const base=SACREDBASE.map(d=>fieldStump(j)+d);for(const k of sacredCells(j)){const refused=!canPlace('floor',k%W,k/W|0,true);if(base.includes(k)!==refused)throw Error('tree footprint not protected');}/* 道・床は根もとの2マスだけ置けない。ほかのマスには置ける */
     const make=()=>({world:0,flags:{sacredStoryV1:1},obj:Array(W*H).fill(''),ground:Array(W*H).fill(0),floor:Array(W*H).fill(''),hi:Array(W*H).fill(0),ref:{},dyn:{},hp:{},res:[],fieldSites:{root:j},sacredRoot:j});
     const old=make();old.obj[j]='tower';old.hp[j]=43;old.hp['L'+j]=2;for(const k of sacredCells(j,2).slice(1)){old.obj[k]='part';old.ref[k]=j;}
     migrateSacredFootprint3(old);if(old.sacredRoot!==j||sacredCells(j).some(k=>k!==j&&old.ref[k]!==j)||old.hp[j]!==43||old.hp['L'+j]!==2)throw Error('old tree expansion');const snap=JSON.stringify(old);migrateSacredFootprint3(old);if(JSON.stringify(old)!==snap)throw Error('migration not idempotent');
