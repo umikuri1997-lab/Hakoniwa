@@ -418,24 +418,6 @@ const QUESTS1=[
    story:[
     [POKO,'#joy|たねをまいてくれて、ありがとう！ 水やりと世話は、ぼくにまかせて！'],
     [MINA,'大きくなるの、たのしみだねぇ。']]},
-  {id:'trade',text:'カミサマと交換してみよう',how:"カミサマをタップし、何かと交換してから「交換をおわる」をタップ",check:()=>!!S.flags.tradedSeen,/* 交換して、お店をとじたら（closeSheet） */
-   talk:{who:GOD,when:()=>true,lines:[
-    [GOD,'これから、いろいろ必要なものが出てくるじゃろ。'],[GOD,'困ったことがあったら、言うんじゃぞ。わしが力になってやろう。'],
-    [GOD,'ほしい物があったら、わしに声をかけておくれ〜。']],gives:{feat:['shop']}},
-   story:[
-    [GOD,'まいど〜！ ほっほっ。'],
-    [GOD,'さて、教えることはだいたい教えたかの！ わしは、ほかの土地も見まわらねばならんのじゃ。ほかの土地にも、こまっとる子らがおるでな。'],
-    [POKO,'#surprise|えっ、もう行っちゃうの？'],[POKO,'#think|……あ、ううん。ぼくたちだけでも、だいじょうぶ……だよね？'],[GOD,'#nod|ほっほ。フタバには、もう守り神もノドカもおるじゃろ。'],[GOD,'#worry|……さみしくなったら、空を見上げるんじゃ。わしは、いつでも見とるからの。'],[MINA,'だいじょうぶだよぉ、フタバ。'],[POKO,'#think|……うん。そうだよね！'],
-    [GOD,'#think|……それにな、この草原には、まだヌシの気配が、かすかに残っとる。この土地を、だいじにしてやっておくれ。'],[GOD,'ときどき、ようすを見に来るぞい。ではな〜！'],[POKO,'#joy|いろいろ教えてくれて、ありがとう、カミサマ！ またね！']],gives:{godLeave:true}},
-  {id:'oracle',text:'おつげを出してみよう',check:()=>!!S.flags.oracleSeen,/* おつげを出して、画面をとじたら（closeSheet） */how:'メニューの「おつげ」で、きょういちにちの方針をえらぶ。わからないことは、メニューの「ひでんのしょ」で見られる',
-   talk:{who:POKO,when:()=>true,lines:[
-    [POKO,'ねえ、守り神さま。みんな、言われなくても自分で動いてくれるけど……'],
-    [POKO,'「今日は、これをやってほしいな」って、お願いもできるんだよ。'],
-    [MINA,'守り神さまのお願いなら、みんな、はりきるよぉ。'],
-    [POKO,'やってみよう！ 守り神さま、きょうは、みんなに何をお願いする？']]},
-   story:[
-    [POKO,'#surprise|わあ、みんなの動きが変わった！'],
-    [POKO,'#joy|みんな、守り神さまのおねがいを聞いてくれたね！']]},
   /* どのクエストも：吹き出し→会話でクエストを受ける→たっせい→吹き出し→お礼とごほうび */
   {id:'fire',text:'火のせいれいをむかえよう',check:()=>elemCount('fire')>=1&&NEWRES==null,how:'見張り台やサルビアを置いて火の力をためる。満ちた次の朝、神殿の「！」からなかまを呼ぶ',prog:()=>'火の力 '+Math.floor(ATTR.fire)+'/'+needFor('fire'),
    talk:{who:POKO,when:()=>true,lines:[
@@ -543,11 +525,17 @@ function greenTalk(){/* ヌシ様をむかえるには、草原がもっと元�
 }
 /* まとめる前（PR 1100ごろまで）の草原の目標の名前とならび。古いセーブの番号を読みかえるときだけ使う */
 const QUESTS1_V1=['statue','stor','mbox','table','wall','bed','path','lv2','fence4','watch1','kikyo','summon','earthListen','earthRoot','farm6','imoseed','trade','oracle','fire','fireRoot','fireTrace','lv3','water','waterFilm','waterLeaf','baseUp','lv4','kagemark','tale','yoru10','ookage','wind','windEcho','windVoices','lv5','tower','green375','wood6','flower50','nushi'];
+/* 交換・おつげの目標をサブクエストへうつす前（tutSub1）の草原の目標のならび。古いセーブの番号を読みかえるときだけ使う */
+let QV3=null;const QUESTS1_V3=()=>QV3||(QV3=QUESTS1.flatMap(q=>q.id==='imoseed'?['imoseed','trade','oracle']:[q.id])),v3Ix=id=>QUESTS1_V3().indexOf(id);
+/* カミサマの旅立ちの会話。交換のサブクエストのお礼か、火のせいれいをむかえたあと（godFarewellTick）の、どちらか1回 */
+const GOD_FAREWELL=()=>[[GOD,'さて、教えることはだいたい教えたかの！ わしは、ほかの土地も見まわらねばならんのじゃ。ほかの土地にも、こまっとる子らがおるでな。'],
+    [POKO,'#surprise|えっ、もう行っちゃうの？'],[POKO,'#think|……あ、ううん。ぼくたちだけでも、だいじょうぶ……だよね？'],[GOD,'#nod|ほっほ。フタバには、もう守り神もノドカもおるじゃろ。'],[GOD,'#worry|……さみしくなったら、空を見上げるんじゃ。わしは、いつでも見とるからの。'],[MINA,'だいじょうぶだよぉ、フタバ。'],[POKO,'#think|……うん。そうだよね！'],
+    [GOD,'#think|……それにな、この草原には、まだヌシの気配が、かすかに残っとる。この土地を、だいじにしてやっておくれ。'],[GOD,'ときどき、ようすを見に来るぞい。ではな〜！'],[POKO,'#joy|いろいろ教えてくれて、ありがとう、カミサマ！ またね！']];
 const COMPANION_QUESTS=new Set(['earthListen','earthRoot','fireRoot','fireTrace','waterFilm','waterLeaf','windEcho','windVoices']);
 const COMPANION_REPLACEMENTS={fireSupplies:'fireRoot',fireLights:'fireTrace',waterFields:'waterFilm',waterFlowers:'waterLeaf',windRoad:'windEcho',windGather:'windVoices'};
 const V1_LEARN={wind:['swing'],flower50:['campfire']};
 function companionQuestList(state){/* そのセーブの番号がさす、目標のならび（古いセーブは、名前だけのならび） */
-  if((state.world||0)!==0||state.free||state.flags?.qmerge1)return QUESTS1;
+  if((state.world||0)!==0||state.free)return QUESTS1;if(state.flags?.qmerge1)return state.flags.tutSub1?QUESTS1:QUESTS1_V3().map(id=>QUESTS1.find(q=>q.id===id)||{id,talk:{learn:[]}});
   let ids=QUESTS1_V1;
   if(!state.flags?.fieldStoryV2){if(!state.flags?.companionStory)ids=ids.filter(id=>!COMPANION_QUESTS.has(id));else{const prior=Object.fromEntries(Object.entries(COMPANION_REPLACEMENTS).map(([a,b])=>[b,a]));ids=ids.filter(id=>!['earthListen','earthRoot'].includes(id)).map(id=>prior[id]||id)}}
   return ids.map(id=>({id,talk:{learn:V1_LEARN[id]||[]}}));
@@ -568,12 +556,12 @@ const QM_TALK={flower50:{recipes:['campfire']}};/* 会話を聞かずに進む�
 function migrateQuestMerge(state){
   if(state.flags.qmerge1)return;
   if(!state.free&&(state.world||0)===0){
-    const V=QUESTS1_V1,ni=id=>QUESTS1.findIndex(q=>q.id===(QM_GROUP[id]||id)),last=id=>{const g=QM_GROUP[id]||id;return !V.some((v,k)=>k>V.indexOf(id)&&(QM_GROUP[v]||v)===g)};
+    const V=QUESTS1_V1,ni=id=>v3Ix(QM_GROUP[id]||id),last=id=>{const g=QM_GROUP[id]||id;return !V.some((v,k)=>k>V.indexOf(id)&&(QM_GROUP[v]||v)===g)};
     const oq=state.quest||0,os=state.qStory,id=V[oq],give=g=>{for(const k in g.items||{}){(state.unlocked||(state.unlocked={}))[k]=true;const inv=state.inv||(state.inv={});if(k.startsWith('seed:')){const c=k.slice(5);(state.cseed||(state.cseed={}))[c]=(state.cseed[c]||0)+g.items[k]}else inv[k]=(inv[k]||0)+g.items[k]}for(const f of g.feat||[])(state.feat||(state.feat={}))[f]=true;for(const k in g.mat||{})state.mat[k]=(state.mat[k]||0)+g.mat[k];for(const f of g.flags||[])state.flags[f]=true;if(g.flag)state.flags[g.flag]=true;for(const r of g.recipes||[])(state.recipes||(state.recipes={}))[r]=true};
-    if(id==null)state.quest=QUESTS1.length;
+    if(id==null)state.quest=QUESTS1_V3().length;
     else{
       const g=QM_GROUP[id]||id,owner=QM_OWNER[g]||g,members=V.filter(v=>(QM_GROUP[v]||v)===g),at=members.indexOf(id),oi=members.indexOf(owner);
-      state.quest=id==='lv5'?QUESTS1.findIndex(q=>q.id==='tower'):ni(id);/* 御神木の話を、かけらさがしの前にした */
+      state.quest=id==='lv5'?v3Ix('tower'):ni(id);/* 御神木の話を、かけらさがしの前にした */
       if(id!=='lv5'&&(at>oi||at===oi&&state.qTalked)){/* まとめた会話は、もう聞いた。聞いていない小さな目標の会話でもらえた物をわたす */
         for(const m of members.slice(at>oi&&!state.qTalked?at:at+1))if(QM_TALK[m])give(QM_TALK[m]);
         state.qTalked=true;
@@ -585,26 +573,43 @@ function migrateQuestMerge(state){
 }
 /* はじめ（カミサマが旅立つまで）の目標を、また1つずつにもどした（qsplit1）。まとめていた目標の名前と、中の目標 */
 const QS_SPLIT={kurashi:['stor','mbox','table'],ie:['wall','bed','path'],mamori:['lv2','fence4','watch1'],kikyo:['kikyo','summon'],hatake:['farm6','imoseed'],trade:['trade','oracle']};
-function questsV2(){/* まとめていたころの草原の目標のならび */const o=[];for(const q of QUESTS1){const g=Object.keys(QS_SPLIT).find(k=>QS_SPLIT[k].includes(q.id));if(!g)o.push(q.id);else if(QS_SPLIT[g][0]===q.id)o.push(g)}return o}
+function questsV2(){/* まとめていたころの草原の目標のならび */const o=[];for(const id of QUESTS1_V3()){const g=Object.keys(QS_SPLIT).find(k=>QS_SPLIT[k].includes(id));if(!g)o.push(id);else if(QS_SPLIT[g][0]===id)o.push(g)}return o}
 const qsIx=id=>QUESTS1.findIndex(q=>q.id===id);
 function migrateQuestSplit(state){
   if(state.flags.qsplit1)return;state.flags.qsplit1=1;state.flags.earthMerge1=1;
   if(state.free||(state.world||0)!==0)return;
   const V=questsV2(),id=V[state.quest||0],sid=state.qStory!=null?V[state.qStory]:null;
-  if(state.qStory!=null){const m=QS_SPLIT[sid];if(m){state.flags.qsplitStory=sid;state.qStory=qsIx(m[m.length-1])}else state.qStory=sid!=null?qsIx(sid):null}/* まとめた目標のお礼を待っていた：中の目標のお礼へ（読みこんだあと questSplitResolve でわたす） */
-  if(id==null)state.quest=QUESTS1.length;
-  else{const m=QS_SPLIT[id];state.quest=qsIx(m?m[0]:id);if(m&&state.qTalked)state.flags.qsplitPend=id}/* まとめた会話を聞いた：中の目標の会話はとばし、できている目標は、とばす */
+  if(state.qStory!=null){const m=QS_SPLIT[sid];if(m){state.flags.qsplitStory=sid;state.qStory=v3Ix(m[m.length-1])}else state.qStory=sid!=null?v3Ix(sid):null}/* まとめた目標のお礼を待っていた：中の目標のお礼へ（読みこんだあと questSplitResolve でわたす） */
+  if(id==null)state.quest=QUESTS1_V3().length;
+  else{const m=QS_SPLIT[id];state.quest=v3Ix(m?m[0]:id);if(m&&state.qTalked)state.flags.qsplitPend=id}/* まとめた会話を聞いた：中の目標の会話はとばし、できている目標は、とばす */
 }
 /* 切り株の下で（earthListen）と傷つけないように（earthRoot）を、1つの依頼にまとめた（earthMerge1）。分けていたころの番号を、名前で読みかえる（1回だけ） */
 function migrateEarthMerge(state){
   if(state.flags.earthMerge1)return;state.flags.earthMerge1=1;
   if(state.free||(state.world||0)!==0)return;
-  const V=QUESTS1.flatMap(q=>q.id==='earthListen'?['earthListen','earthRoot']:[q.id]),ix=id=>qsIx(id==='earthRoot'?'earthListen':id),e=qsIx('earthListen');
+  const V=QUESTS1_V3().flatMap(id=>id==='earthListen'?['earthListen','earthRoot']:[id]),ix=id=>v3Ix(id==='earthRoot'?'earthListen':id),e=v3Ix('earthListen');
   const id=V[state.quest||0],sid=state.qStory!=null?V[state.qStory]:null;
-  state.quest=id==null?QUESTS1.length:ix(id);if(id==='earthRoot')state.qTalked=true;/* あとの調べの依頼の会話は、まとめた依頼の会話（もう聞いた）にふくめる */
+  state.quest=id==null?QUESTS1_V3().length:ix(id);if(id==='earthRoot')state.qTalked=true;/* あとの調べの依頼の会話は、まとめた依頼の会話（もう聞いた）にふくめる */
   if(sid==='earthListen'){state.qStory=null;state.quest=e;state.qTalked=true}/* まえの調べのお礼の会話はなくした：まとめた依頼のつづき（あとの調べ）へ */
   else if(sid!=null)state.qStory=ix(sid);
   if(state.flags.qsplitPend==='earthListen')delete state.flags.qsplitPend;if(state.flags.qsplitStory==='earthListen')delete state.flags.qsplitStory;
+}
+/* 交換・おつげの目標を、メインからサブクエストへうつした（tutSub1）。古いセーブの番号（QUESTS1_V3）を名前で読みかえ、とちゅうなら、サブクエストのつづきにする（1回だけ） */
+function migrateTutSub(state){
+  if(state.flags.tutSub1)return;state.flags.tutSub1=1;
+  if(state.free||(state.world||0)!==0)return;
+  const V=QUESTS1_V3(),F=state.flags,St=state.subSt||(state.subSt={}),D=state.subDone||(state.subDone={}),Sn=state.subSeen||(state.subSeen={}),ix=id=>QUESTS1.findIndex(q=>q.id===id);
+  const id=V[state.quest||0],sid=state.qStory!=null?V[state.qStory]:null,tutor=['trade','oracle'];
+  const set=(k,v)=>{St[k]=v;Sn[k]=1;if(v===3)(state.subArrived||(state.subArrived={}))[k]=true;if(v===4)D[k]=1};
+  for(const k of tutor){const i=V.indexOf(k);if((state.quest||0)>i&&sid!==k)set(k,4)}/* もうおわった：二度と出さない */
+  if(F.qsplitStory==='trade'){delete F.qsplitStory;set('trade',3);set('oracle',3)}/* まとめていたころのお礼を待っていた */
+  else if(sid==='trade'||sid==='oracle')set(sid,3);/* お礼の会話を待っていた：サブクエストの報告待ち */
+  if(F.qsplitPend==='trade'){delete F.qsplitPend;if(id==='trade')set('trade',2);set('oracle',2)}/* まとめた会話は聞いた */
+  else if((id==='trade'||id==='oracle')&&state.qTalked)set(id,2);/* 受けたところ：サブクエストのつづき */
+  if(id==null)state.quest=QUESTS1.length;
+  else if(tutor.includes(id)){state.quest=ix('fire');state.qTalked=false}
+  else state.quest=ix(id);
+  state.qStory=sid==null||tutor.includes(sid)?null:ix(sid);
 }
 /* まとめた目標のとちゅうから読みこんだとき：できている目標をとばして、はじめのできていない目標へ。まとめた会話でもらった物は、もう一度わたさない */
 function questSplitResolve(){

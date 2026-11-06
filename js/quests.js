@@ -51,6 +51,14 @@ const SUBQ=[/* サブクエスト：メインと別に、いつでもできる�
   {k:'seedwait_gate',w:0,g:'wood',t:'柵に出入り口をつくろう',how:'柵の途中を「こわす」で1マス戻し、依頼ボードの「道・囲い」で柵のドアをはる。できたら空いた場所に置く',L:[['K','ききょうがさくまで、もうすこしかかりそう。そのあいだに、村をひと回りしてこようっと。'],['K','#think|……あれ？ この柵、ぐるっと遠回りしないと、むこうに出られないや。'],['K','通るときだけ開くところがあったら、すぐ行き来できるのにな。']],X:[['K','ぱたん、って開いた！ こっちからも出られるね。'],['K','#joy|守り神さま、ありがとう！']],at:()=>waitingBellflowers(),ok:()=>cnt('gate')>=1,n:1,now:()=>cnt('gate'),rw:5},
   {k:'seedwait_food',w:0,g:'wood',t:'朝のごはんを10こ用意しよう',how:'フタバがベリーの茂みから実を集め、食料箱へ運ぶのを手伝おう。食料箱の食べ物を10こ以上にする',L:[['K','なかまが来てくれたら……いっしょにごはん、食べたいな。'],['K','食料箱に、少し多めに入れておこうよ。ぼく、ベリーを集めてくる！']],X:[['K','これだけあれば、新しい子のぶんもあるね。'],['K','#joy|どんな子かなあ。……えへへ、たのしみ！']],at:()=>waitingBellflowers(),ok:()=>FOODN()>=10,n:10,now:()=>Math.min(10,FOODN()),rw:5},
 
+  /* カミサマとの交換・おつげの出し方（もとはメインの目標）。いものたねをまいたあとに出る */
+  {k:'trade',w:0,g:'wood',t:'カミサマと交換してみよう',how:"カミサマをタップし、何かと交換してから「交換をおわる」をタップ",L:[['K','#joy|守り神さま、カミサマがよんでるよ！'],[GOD,'これから、いろいろ必要なものが出てくるじゃろ。'],[GOD,'困ったことがあったら、言うんじゃぞ。わしが力になってやろう。'],
+    [GOD,'ほしい物があったら、わしに声をかけておくれ〜。']],get X(){return [[GOD,'まいど〜！ ほっほっ。'],...GOD_FAREWELL()]},at:()=>qDone('imoseed')&&!qDone('fire')&&!S.godGone&&godHere(),ok:()=>!!S.flags.tradedSeen,feat:['shop'],godLeave:1},
+  {k:'oracle',w:0,g:'wood',t:'おつげを出してみよう',how:'メニューの「おつげ」で、きょういちにちの方針をえらぶ。わからないことは、メニューの「ひでんのしょ」で見られる',L:[[POKO,'ねえ、守り神さま。みんな、言われなくても自分で動いてくれるけど……'],
+    [POKO,'「今日は、これをやってほしいな」って、お願いもできるんだよ。'],
+    [MINA,'守り神さまのお願いなら、みんな、はりきるよぉ。'],
+    [POKO,'やってみよう！ 守り神さま、きょうは、みんなに何をお願いする？']],X:[[POKO,'#surprise|わあ、みんなの動きが変わった！'],
+    [POKO,'#joy|みんな、守り神さまのおねがいを聞いてくれたね！']],at:()=>qDone('imoseed'),ok:()=>!!S.flags.oracleSeen},
   {k:'lighttry',w:0,g:'wood',t:'守り神の光で木や岩をこわそう',how:'守りの光のボタンをおしてから、木か岩をタップ。何回かあてると、木材・石材が1こ落ちる。1回パワー1',L:[['K','#think|ねえ、守り神さま。木材や石材、もっとたくさんあったらいいのにね。'],['K','#surprise|……そうだ！ 守り神さまの光、木や岩にもあてられないかな？'],['K','#joy|光があたったら、木ぎれや石ころが、ころんって落ちてくるかも。そしたら、ぼくたちがひろって、箱にしまうよ！']],X:[['K','#surprise|ほんとに、ころんって落ちてきた！'],['K','#joy|ひろって、箱にしまっておくね。守り神さま、ありがとう！']],at:()=>(S.nights||0)>=1&&!isNight(),ok:()=>!!S.flags.lightBroke,rw:5},/* はじめての夜をこえたら、フタバが守りの光を木や岩にあててみてとたのむ */
   {k:'benchbreak',w:0,g:'wood',t:'外にベンチを置こう',how:'依頼ボードの「庭」でベンチをはり、できたら外に置く',L:[['K','歩きまわってたら、足がくたくたになっちゃった。'],['K','外でも、ちょこんと座ってひと休みできたらいいな。'],['@idea']],X:[['K','ここなら、足をのばして休めるね。ふう……。'],['K','#joy|守り神さま、ありがとう！']],learn:['bench'],at:()=>qAt('lv2')||qAt('wall')&&!isNight()&&(hour()>=18||S.res.some(r=>r.name===POKO&&r.energy<50)),/* フタバのつかれがたまったら（げんき50より下）、おそくても夕方18時に出てくる（1日目は、ベッドの前に18時で時計が止まる） */ok:()=>outCnt(BENCHES)>=1,n:1,now:()=>outCnt(BENCHES),rw:5},
   {k:'salvia3',how:'「おく」→「サルビアの種」を置く。せいれいに植えてもらい、花が咲くのを待とう',g:'earth',L:[['K','火の力をためるなら、赤いサルビアがいいよぉ。'],['K','種、あげるねぇ。5本植えたら、きっとぽかぽかだよぉ。']],X:[['K','まっかなサルビアが5本も増えたねぇ。火の力、たまってきたよぉ。'],['K','#joy|サルビアを咲かせてくれて、ありがとうねぇ。火のなかまも、きっとよろこぶよぉ。']],w:0,t:'サルビアを5本植えよう',ln:'赤いサルビアは、火の力をためてくれるよぉ。種、あげるねぇ',at:()=>qAt('fire'),give:{salvia:5},base:()=>cnt('salvia'),ok:()=>bloomCount('salvia')-((S.subB||{}).salvia3||0)>=5,n:5,now:()=>Math.max(0,bloomCount('salvia')-((S.subB||{}).salvia3||0)),rw:10},
@@ -167,10 +175,10 @@ function checkSub(){const D=S.subDone||(S.subDone={}),Sn=S.subSeen||(S.subSeen={
   const requests=visiting?[]:SL.filter(q=>St[q.k]===1&&!isNight()&&(spaced||summonHelp&&q.k===summonHelp));
   const pending=requests.filter(q=>supportKeys.includes(q.k)).concat(SL.filter(q=>St[q.k]===3),requests.filter(q=>!supportKeys.includes(q.k)));
   for(const q of pending){const w=St[q.k]===3?questReplyWho(q):subWho(q);if(w&&spkOK(w)&&w!==TALKW){SUBW[w]=q.k;break}}}
-function subTalk(k){const q=SUBQ.find(q=>q.k===k),St=S.subSt,D=S.subDone;if(!q||!$('#dialog').hidden||St[k]===1&&!subOfferReady(q))return;S.subTalkAt=S.t;const w=subWho(q)||POKO,L=(St[k]===1?q.L:q.X)||[[w,q.t]];
+function subTalk(k){const q=SUBQ.find(q=>q.k===k),St=S.subSt,D=S.subDone;if(!q||!$('#dialog').hidden||St[k]===1&&!subOfferReady(q))return;S.subTalkAt=S.t;const w=subWho(q)||POKO,L=(St[k]===1?q.L:typeof q.X==='function'?q.X():q.X)||[[w,q.t]];
   const rw=S.res.find(z=>z.name===w),FB2=q.g==='fire'&&rw&&elemKey(rw)==='fireB'&&FIREB[k];let once=0;dialog(ideaDialogue(q,(FB2?(St[k]===1?FB2.L:FB2.X):L).map(x=>[x[0]==='K'?w:x[0],x[1]&&typeof x[1]==='object'?(w===HOMURA?x[1].h:x[1].a):x[1]]),/* {h,a}：ホムラ（あたい）と、ほかの火の子（あたし） */St[k]===1?'accept':'clear'),()=>{if(once++)return;
-    if(St[k]===1){St[k]=2;Sn0(k);if(q.base)S.subB[k]=q.base();for(const id of q.learn||[])if(!(S.free&&BL[id]&&BL[id].kind==='furn'))S.recipes[id]=true;inspireQuest(q);for(const x in q.give||{}){S.unlocked[x]=true;giveItem(x,q.give[x])}queueItemGift(q.give);sfx('quest');toast('サブクエスト：'+q.t,'good');renderPalette()}
-    else if(St[k]===3){St[k]=4;D[k]=1;inspireQuest(q,'clear');if(q.rw){rewardPower(q.rw)}memo('📌','サブクエスト「'+q.t+'」をたっせい');logEv('サブクエスト「'+q.t+'」をたっせい')}
+    if(St[k]===1){St[k]=2;Sn0(k);if(q.base)S.subB[k]=q.base();for(const id of q.learn||[])if(!(S.free&&BL[id]&&BL[id].kind==='furn'))S.recipes[id]=true;inspireQuest(q);for(const x in q.give||{}){S.unlocked[x]=true;giveItem(x,q.give[x])}queueItemGift(q.give);if(q.feat)questGives(q,{feat:q.feat});sfx('quest');toast('サブクエスト：'+q.t,'good');renderPalette()}
+    else if(St[k]===3){St[k]=4;D[k]=1;inspireQuest(q,'clear');if(q.godLeave&&!S.godGone)questGives(q,{godLeave:true});if(q.rw){rewardPower(q.rw)}memo('📌','サブクエスト「'+q.t+'」をたっせい');logEv('サブクエスト「'+q.t+'」をたっせい')}
     checkSub()},null)}
 function Sn0(k){(S.subSeen||(S.subSeen={}))[k]=1}
 /* ---------- ステージ1の物語イベント（フタバと5属性のキーキャラ） ----------
