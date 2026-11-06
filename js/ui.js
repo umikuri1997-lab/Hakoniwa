@@ -111,6 +111,7 @@ function itemPop(id){/* もちもの：おそなえ箱の物・たね・ふし�
   o.querySelector('.x').onclick=()=>{sfx('tap');close()};o.onclick=e=>{if(e.target===o)close()};
   if(id==='mseed'){o.querySelector('img').src=seedIco();o.querySelector('.t').textContent='ふしぎな種 '+(S.mseed||0)+'こ';o.querySelector('.n').textContent='せいれいにあげると、能力のどれかが+1上がる。25%で+2。';
     for(const r of S.res){const row=rowEl(r.name,ELEM[r.elem].name+'のせいれい'),b=el('<button class="btn pri">あげる</button>');row.appendChild(b);b.onclick=()=>{giveSeed(r);if((S.mseed||0)<1)close();else o.querySelector('.t').textContent='ふしぎな種 '+(S.mseed||0)+'こ';if(sheet==='inv')renderSheet()};o.querySelector('.rows').appendChild(row)}}
+  else if(id==='horn'){o.querySelector('img').src=hornIco();o.querySelector('.t').textContent='よびごえの角笛 '+(S.horn||0)+'こ';o.querySelector('.n').textContent=HORNDESC;add('ふく',hornBlow,!(S.horn>0))}
   else if(id.startsWith('seed:')){const k=id.slice(5),c=CROPS[k];o.querySelector('img').src=seedIcon(k);o.querySelector('.t').textContent=c.name+'のたね '+cseed(k)+'こ';o.querySelector('.n').textContent=c.desc;add('畑にまく',()=>placeFromInv(id),cseed(k)<1)}
   else{const b=BL[id];o.querySelector('img').src=iconURL(id);o.querySelector('.t').textContent=iname(id)+' '+inv(id)+(b.kind==='ammo'?'本':'こ');o.querySelector('.n').textContent=b.desc||'';if(b.kind!=='ammo')add('これを置く',()=>placeFromInv(id),!inv(id))}
   document.body.appendChild(o)}
@@ -134,6 +135,13 @@ function closeSheet(){const hello=sheet==='res'&&NEWRES!=null&&sheetArg===NEWRES
 function el(html){const d=document.createElement('div');d.innerHTML=html.trim();return d.firstElementChild}
 /* たね：たね袋の絵＋作物の小さな絵 */
 const CROPIC={};function cropIcon(k){if(CROPIC[k])return CROPIC[k];const c=document.createElement('canvas');c.width=c.height=64;const g=c.getContext('2d');g.translate(32,30);g.scale(1.7,1.7);drawCrop(g,k,0,0,100,true);const u=c.toDataURL();c.width=c.height=0;return CROPIC[k]=u}/* 作物の絵だけのアイコン（図鑑） */
+let HORNICO=null;function hornIco(){/* よびごえの角笛のアイコン：32×32のマス目の四角だけで描く（2倍の細かさ） */if(HORNICO)return HORNICO;const N=32,M=new Int8Array(N*N),B=new Int8Array(N*N);
+  for(let i=0;i<=200;i++){const t=i/200,x=5+t*20+Math.sin(t*Math.PI)*-1,y=26-t*16-Math.sin(t*Math.PI)*6,r=1.2+t*t*4.3;for(let yy=0;yy<N;yy++)for(let xx=0;xx<N;xx++)if(Math.hypot(xx+.5-x,yy+.5-y)<=r){const q=yy*N+xx;M[q]=1;if(Math.abs(t-.45)<.035||Math.abs(t-.75)<.03)B[q]=1}}
+  const c=document.createElement('canvas');c.width=c.height=64;const g=c.getContext('2d'),at=(x,y)=>x>=0&&y>=0&&x<N&&y<N&&M[y*N+x];
+  for(let y=0;y<N;y++)for(let x=0;x<N;x++){if(!at(x,y))continue;const q=y*N+x,edge=!at(x-1,y)||!at(x+1,y)||!at(x,y-1)||!at(x,y+1),lo=!at(x+1,y+1)||!at(x,y+1);g.fillStyle=B[q]?(edge?'#9a6a3c':'#b98552'):edge?(lo?'#c2a477':'#d4bb8e'):lo?'#e2cba0':'#f3e6c6';g.fillRect(x*2,y*2,2,2)}
+  g.fillStyle='#8a5a32';for(const[x,y]of[[4,26],[5,26],[4,27],[5,27]])g.fillRect(x*2,y*2,2,2);/* 口をあてる所 */
+  g.fillStyle='#fff8e6';for(const[x,y]of[[12,17],[13,16],[19,12],[20,11]])g.fillRect(x*2,y*2,2,2);/* 光 */
+  return HORNICO=c.toDataURL()}
 function seedIcon(k){const c=document.createElement('canvas');c.width=c.height=64;const g=c.getContext('2d');const a=ART.bag;if(a&&a.ok){const h=56,w=h*a.w/a.h;g.drawImage(a.img,(64-w)/2-4,4,w,h)}g.save();g.translate(30,26);g.scale(1.1,1.1);drawCrop(g,k,0,0,100,true);g.restore();return c.toDataURL()}/* たねは、たねのふくろ（もらった絵）と、育つ作物の絵のセット */
 function cropIcon(k){const c=document.createElement('canvas');c.width=c.height=64;const g=c.getContext('2d');g.scale(2,2);drawCrop(g,k,0,0,100,true);return c.toDataURL()}
 /* 説明は❓をおしたときだけ出す */
@@ -208,6 +216,7 @@ function renderSheet(){
     for(const k of Object.keys(CROPS).filter(k=>cropOn(k)&&cseed(k)>0)){const sid='seed:'+k,b=el('<button class="slot"><span class="ct"></span><img alt=""><span class="nm"></span></button>');/* たねも、ほかのアイテムと同じくアイコンで */
       b.querySelector('img').src=seedIcon(k);b.querySelector('.nm').textContent=CROPS[k].name+'のたね';b.querySelector('.ct').textContent=cseed(k);if(!cseed(k))b.classList.add('zero');b.onclick=()=>{sfx('tap');itemPop(sid)};grid.appendChild(b)}
     if((S.mseed||0)>0){const b=el('<button class="slot"><span class="ct"></span><img src="'+seedIco()+'" style="width:40px;height:40px;display:block;margin:0 auto"><span class="nm">ふしぎな種</span></button>');b.querySelector('.ct').textContent=S.mseed;b.onclick=()=>{sfx('tap');itemPop('mseed')};grid.appendChild(b)}
+    if((S.horn||0)>0){const b=el('<button class="slot"><span class="ct"></span><img alt=""><span class="nm">よびごえの角笛</span></button>');b.querySelector('img').src=hornIco();b.querySelector('.ct').textContent=S.horn;b.onclick=()=>{sfx('tap');itemPop('horn')};grid.appendChild(b)}
     body.appendChild(grid);
     if(typeof sheetArg==='string'&&(sheetArg==='mseed'?(S.mseed||0)>0:sheetArg.startsWith('seed:')?!!CROPS[sheetArg.slice(5)]:ids.includes(sheetArg))){const a=sheetArg;sheetArg=null;itemPop(a)}/* ほかの画面から、物をえらんで開いたときは、そのメニューも出す */
   }else if(sheet==='craft'){
@@ -548,7 +557,7 @@ function zukanBody(body){
       const c=row.querySelector('canvas').getContext('2d');c.scale(2,2);try{drawShade(c,k,36,64,(k==='boss'||k==='hino'||k==='yama'||k==='boss2'?.46:.56),1,{t:0,dot:1})}catch(_){}
       row.querySelector('b').textContent=D.name;row.querySelector('p').textContent=ZUKAN[k];row.querySelector('small').textContent='体力 '+D.hp+'・はやさ '+D.sp+'・追いはらった '+(K[k]||0)+'回・撃破経験値 +'+xpText(spiritXpGain(D.xp,1))+'（Lv1・2）';if(d.cleared&&ZURA[k]){const u=el('<p class="note"></p>');u.textContent='もとのすがた：'+ZURA[k];row.querySelector('.zt').appendChild(u)}rows.appendChild(row);list.push(null)}}
   else{const it=Object.assign({},d.seenIt||{});for(const k in d.mat||{})if(d.mat[k]>0)it['m:'+k]=1;for(const k in d.fs||{})if(d.fs[k]>0)it['f:'+k]=1;
-    for(const k in MATN)if(it['m:'+k])add(MATN[k],'素材',ICONS[k]||null);for(const k in FOODS)if(it['f:'+k])add(FOODS[k].name,FOODS[k].fx||'食べ物',ICONS[k]||icURL(FOODS[k].e)||(CROPS[k]?cropIcon(k):null))}
+    for(const k in MATN)if(it['m:'+k])add(MATN[k],'素材',ICONS[k]||null);for(const k in FOODS)if(it['f:'+k])add(FOODS[k].name,FOODS[k].fx||'食べ物',ICONS[k]||icURL(FOODS[k].e)||(CROPS[k]?cropIcon(k):null));if(it['x:horn'])add('よびごえの角笛',HORNDESC,hornIco())}
   body.appendChild(el('<p class="story">'+list.length+'こ</p>'));
   for(const q of list){if(!q)continue;rows.appendChild(rowEl(q[0],q[1],q[2]))}
   if(!list.length)body.appendChild(el('<p class="note">まだありません</p>'));body.appendChild(rows)}
