@@ -62,3 +62,6 @@ Transparent background, no ground shadow, no text, no frame. <何こならべる
 - ゲームで写すときは、`assetsOK&&stageReady()` をまってから。霧の中の物は `fogClear` してから。`centerOn` には世界のドット（マス×32）をわたす。
 - 後かたづけ：`tools/__pycache__` のほか、`tools/art/__pycache__`・`tools/art/<set>/__pycache__` もけす。
 - チップをかえたら、マップチップ工房も新しくする（CLAUDE.md の工房の決まり）。
+- うしろが透明でない絵（市松もよう・灰色のかげがやきついている）は、あざやかさ（最大−最小が45以上）で物をとり、物にかこまれた小さい穴・暗い穴（くぎ・刃）だけうめる（例 `tools/art/tlb/tlb_art.py` の `clean`）。白い区切り線は、その行・列をとばしてつなぐ。
+- つなぐ部品（橋のはし・まん中）は、`pixdown.make` のままだと、切った辺が外の輪郭になって、つなぎ目に線が出る。切った辺は輪郭にしない・かこみで切りとらない（同じ原点のまま）。3つならべて見る。
+- 工房の `kobo` は `id.` で始まる物しかひろわないので、`id:部品` の物は id をぜんぶ書く。
