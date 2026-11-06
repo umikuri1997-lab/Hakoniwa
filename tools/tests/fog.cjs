@@ -14,7 +14,11 @@ const out=JSON.parse(await page.evaluate(()=>ltEval(`(()=>{const o={};newGame(0)
  /* 古い家のあと：晴れると壁とこわれたあと。直して家になると、家具1つ */const ru=S.fogF.find(f=>f.t==='ruin');fogClear(ru.a);o.ruinSet=!!ru.set;o.walls=fogRing(ru.j).filter(k=>S.obj[k]==='hwall').length;o.brk=(S.broken||[]).filter(b=>fogRing(ru.j).includes(b.j)).length;
  const n1=ITEM_GIFTS.length;for(const b of [...S.broken])if(fogRing(ru.j).includes(b.j)){S.obj[b.j]=b.id}recount();o.ruinDone=!!ru.done;o.ruinGift=ITEM_GIFTS.length-n1;
  /* あしあと：フタバが見ると、思い出の会話 */const pr=S.fogF.find(f=>f.t==='print');fogClear(pr.a);let lines=null;const d0=dialog;dialog=(L,after)=>{lines=L;after&&after()};r.act={type:'foglook',obj:pr.j,stage:'do',t:2};ACT.foglook.end(r,r.act);dialog=d0;o.printLines=lines&&lines.length;o.printWho=lines&&lines.every(l=>l[0]===POKO);o.printDone=!!pr.done;
- /* 泉：まわり3マスのたのしさ */const sp=S.fogF.find(f=>f.t==='spring');o.springEnv=ENVG[sp.j+2]>1.39;
+ /* 泉：まわり3マスのたのしさ */const sp=S.fogF.find(f=>f.t==='spring');o.springEnv=ENVG[sp.j+2]>1.39;o.spring2=S.obj[sp.j]==='fogspring'&&[sp.j+1,sp.j+W,sp.j+W+1].every(k=>S.obj[k]==='part'&&S.ref[k]===sp.j);o.springEnvFar=ENVG[sp.j+4*W+4]>1.39;o.springFront=fogSpotOK(S,sp.j+2*W)||walk(sp.j+2*W);
+ fogClear(sp.a);o.tapPart=fogTap((sp.j+W+1)%W,((sp.j+W+1)/W)|0);
+ /* 前のセーブの1×1の泉は2×2へ。まわりがふさがっていれば、そのまま、あとでまた */const j0=sp.j+W+1;for(const k of [sp.j,sp.j+1,sp.j+W])S.obj[k]='';S.obj[j0]='fogspring';sp.j=j0;delete S.flags.spring2;const nb=[];for(let b=-1;b<=1;b++)for(let a=-1;a<=1;a++){const k=j0+b*W+a;if(k!==j0&&!S.obj[k]){S.obj[k]='rock';nb.push(k)}}recount();o.migBlocked=S.obj[j0]==='fogspring'&&S.obj[j0+1]==='rock'&&!S.flags.spring2;
+ for(const k of nb)S.obj[k]='';recount();o.migSpring=!!S.flags.spring2&&S.obj[sp.j]==='fogspring'&&[sp.j+1,sp.j+W,sp.j+W+1].every(k=>S.obj[k]==='part'&&S.ref[k]===sp.j)&&[sp.j,sp.j+1,sp.j+W,sp.j+W+1].includes(j0);
+
  /* 古いセーブ：置いた物があるエリアは晴れたまま（いちどだけ） */S=newState(0);LIVE[0]=S;o.noFogNewState=!S.fog;delete S.flags.fog1;S.obj[5*W+5]='fence';fogMigrate(S);o.mig0=S.fog[0];o.mig15=S.fog[15];o.migMid=FOG_MID.every(a=>!S.fog[a]);o.migF=S.fogF.length===S.fog.filter(v=>v).length;const before=S.fog.join('');S.fog[1]=1;fogMigrate(S);o.migOnce=S.fog[1]===1;
  /* 火山には霧がない */newGame(1);o.volcano=!S.fog&&walk(10*W+10)!==null;
  return JSON.stringify(o)})()`)));
@@ -25,6 +29,6 @@ assert.equal(out.spawnOK,'true');assert.equal(out.south,80);
 assert.equal(out.fog1[1],'0');assert.equal(out.fog1[4],'0');assert.equal(out.fog1[15],'1');
 assert.equal(out.tapBox,true);assert.equal(out.req,true);assert.equal(out.job,true);assert.equal(out.act,'fogopen');assert.equal(out.boxGone,true);assert.equal(out.gift,1);assert.equal(out.invChanged,true);assert.equal(out.boxDone,true);assert.equal(out.reqLeft,0);
 assert.equal(out.ruinSet,true);assert.ok(out.walls>=5);assert.ok(out.brk>=5);assert.equal(out.ruinDone,true);assert.equal(out.ruinGift,1);
-assert.equal(out.printLines,3);assert.equal(out.printWho,true);assert.equal(out.printDone,true);assert.equal(out.springEnv,true);
+assert.equal(out.printLines,3);assert.equal(out.printWho,true);assert.equal(out.printDone,true);assert.equal(out.springEnv,true);assert.equal(out.spring2,true);assert.equal(out.springEnvFar,true);assert.equal(out.springFront,true);assert.equal(out.tapPart,true);assert.equal(out.migBlocked,true);assert.equal(out.migSpring,true);
 assert.equal(out.noFogNewState,true);assert.equal(out.mig0,0);assert.equal(out.mig15,1);assert.equal(out.migMid,true);assert.equal(out.migF,true);assert.equal(out.migOnce,true);assert.equal(out.volcano,true);
 assert.deepEqual(errors,[]);console.log('Fog: start, clearing, placement, spawn, chest, ruin, footprint, spring, old save, volcano OK');await browser.close()})().catch(e=>{console.error(e);process.exit(1)});

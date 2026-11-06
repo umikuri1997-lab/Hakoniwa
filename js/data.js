@@ -159,7 +159,7 @@ const BL={
   rock:{name:'岩',solid:1,natural:1},vcopper:{name:'銅の鉱脈',solid:1,natural:1},viron:{name:'鉄の鉱脈',solid:1,natural:1},vobsid:{name:'黒曜石の鉱脈',solid:1,natural:1},vsilver:{name:'銀の鉱脈',solid:1,natural:1},vgold:{name:'金の鉱脈',solid:1,natural:1},/* 火山の鉱脈：ほると鉱石 */
   hotstone:{hp:5,brk:1,fix:1,fixm:{},name:'ほのお石',kind:'furn',pc:0,time:20,solid:1,anim:1,attr:{fire:3,water:1},desc:'水べに置くと、水があたたまって温泉になる'},
   volcano:{name:'火山',sz:[3,3],solid:1,anim:1},boulder:{name:'大岩',solid:1,natural:1},heatv:{name:'熱の切りかえ装置',solid:1,anim:1},crack:{name:'ひびわれ',anim:1},/* 火山のふもと */
-  fogbox:{name:'古い宝箱',solid:1,natural:1,anim:1},nushiprint:{name:'ヌシ様のあしあと',natural:1,anim:1},fogspring:{name:'きれいな泉',solid:1,natural:1,anim:1,env:1.4,desc:'まわり3マスで、たのしさ+0.5／1時間'},/* 霧の中で見つける物（草原） */
+  fogbox:{name:'古い宝箱',solid:1,natural:1,anim:1},nushiprint:{name:'ヌシ様のあしあと',natural:1,anim:1},fogspring:{name:'きれいな泉',sz:[2,2],solid:1,natural:1,anim:1,env:1.4,desc:'まわり3マスで、たのしさ+0.5／1時間'},/* 霧の中で見つける物（草原） */
   deadtree:{name:'枯れ木',solid:1,natural:1},
   ntree:{name:'森の木',solid:1,natural:1},
   berry:{name:'ベリーの茂み',solid:1,natural:1,dyn:1},

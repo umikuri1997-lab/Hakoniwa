@@ -22,8 +22,16 @@ function fogRuinAt(s,R){/* 古い家のあと：5×4と、ドアの前の1行が
 function fogGen(s,areas){/* 霧のエリアに、見つける物を1つずつ置く（作るのはいちど。セーブにのこる）。古い家のあとは、置ける所のあるエリアから先にえらぶ */const out=[],rest=[];let ruins=0;
   for(const a of fogShuffle(areas.slice())){const j=ruins<3?fogRuinAt(s,fogArea(a)):-1;if(j>=0){out.push({t:'ruin',a,j});ruins++}else rest.push(a)}
   const K=fogShuffle(FOG_KINDS.filter(t=>t!=='ruin').concat(Array(3-ruins).fill('box')));
-  rest.forEach((a,n)=>{const t=K[n%K.length],R=fogArea(a);for(let tr=0;tr<400;tr++){const x=R.x0+4+((Math.random()*(AREAW-8))|0),y=R.y0+4+((Math.random()*(AREAW-8))|0),j=y*W+x;if(!fogSpotOK(s,j))continue;if(t!=='print'&&!fogSpotOK(s,j+W))continue;/* 前に1マスあけて、せいれいが近よれるように */s.obj[j]=t==='box'?'fogbox':t==='print'?'nushiprint':'fogspring';out.push({t,a,j});return}});
+  rest.forEach((a,n)=>{const t=K[n%K.length],R=fogArea(a);for(let tr=0;tr<400;tr++){const x=R.x0+4+((Math.random()*(AREAW-8))|0),y=R.y0+4+((Math.random()*(AREAW-8))|0),j=y*W+x;const n=t==='spring'?2:1;let ok=true;for(let b=0;b<=n&&ok;b++)for(let c=0;c<n&&ok;c++)if(!fogSpotOK(s,j+b*W+c,s.hi?s.hi[j]||0:0)&&(b<n||t!=='print'))ok=false;if(!ok)continue;/* 泉は2×2。前に1マスあけて、せいれいが近よれるように */
+    s.obj[j]=t==='box'?'fogbox':t==='print'?'nushiprint':'fogspring';if(n>1)fogParts(s,j);out.push({t,a,j});return}});
   s.fogF=out}
+function fogParts(s,j){for(const k of [j+1,j+W,j+W+1]){s.obj[k]='part';s.ref[k]=j}}
+function fogSpring2(s){/* 前のセーブの1×1の泉を2×2へ（そのマスをふくむ4とおりのどれかで、3マスが空いていれば）。空いていなければ、そのまま、あとの recount でまたためす */
+  if(s.flags.spring2||!s.fogF)return;let left=0;
+  for(const f of s.fogF){if(f.t!=='spring'||s.obj[f.j]!=='fogspring'||s.obj[f.j+1]==='part'&&s.ref[f.j+1]===f.j)continue;const x=f.j%W,y=(f.j/W)|0,hi=s.hi?s.hi[f.j]||0:0;
+    const a=[[0,0],[-1,0],[0,-1],[-1,-1]].map(([dx,dy])=>[x+dx,y+dy]).find(([ax,ay])=>ax>=0&&ay>=0&&ax<W-1&&ay<H-1&&[0,1,W,W+1].every(d=>{const k=ay*W+ax+d;return k===f.j||fogSpotOK(s,k,hi)&&!(s.res||[]).some(r=>!r.hidden&&(r.y|0)*W+(r.x|0)===k)}));
+    if(!a){left++;continue}const j=a[1]*W+a[0];s.obj[f.j]='';s.obj[j]='fogspring';fogParts(s,j);f.j=j}
+  if(!left)s.flags.spring2=1}
 function fogInit(s){/* あたらしい草原：まん中の4エリアだけ晴れている */s.fog=Array.from({length:AREAN*AREAN},(_,a)=>FOG_MID.includes(a)?0:1);s.fogV=0;s.fogReq=[];s.flags.fog1=1;fogGen(s,s.fog.map((v,a)=>v?a:-1).filter(a=>a>=0))}
 function fogMigrate(s){/* 前からのセーブ（いちどだけ）：村のマス・置いた物があるエリアは、晴れたまま */if(s.flags.fog1)return;s.flags.fog1=1;if((s.world||0)!==0||s.free)return;
   const open=new Set(FOG_MID),mark=j=>{const x=j%W,y=(j/W)|0;for(let b=-3;b<=3;b++)for(let a=-3;a<=3;a++){const nx=x+a,ny=y+b;if(nx>=0&&ny>=0&&nx<W&&ny<H)open.add(areaOf(ny*W+nx))}};/* 村は、置いた物のまわり3マス */
@@ -40,7 +48,7 @@ function fogClear(a){if(!S.fog[a])return;S.fog[a]=0;S.fogV=(S.fogV||0)+1;FOGA.se
   toast('霧が晴れた','good');sfx('level');
   for(const f of S.fogF||[])if(f.a===a&&f.t==='ruin'&&!f.set){f.set=1;const x=f.j%W,y=(f.j/W)|0,keep=new Set([0,4,5,8,9,13]);/* のこっている壁（角と、いくつか）。ほかは、こわれたあと */fogRing(f.j).forEach((k,i)=>{const o=S.obj[k];if(o&&!(BL[o]&&BL[o].natural||WEEDS.has(o)))return;if(o)S.obj[k]='';S.drops=(S.drops||[]).filter(d=>d.y*W+d.x!==k);const door=k===(y+3)*W+x+2;if(keep.has(i)&&!door)S.obj[k]='hwall';else(S.broken||(S.broken=[])).push({j:k,id:door?'door':'hwall',rot:0})});villageTimeout(()=>recount(),30)}
   dirty=true}
-function fogTap(tx,ty){/* 「みる」のタップ：霧の所・見つける物 */if(!fogOn())return false;const j=ty*W+tx;if(fogAt(j)){toast('霧で見えない');return true}
+function fogTap(tx,ty){/* 「みる」のタップ：霧の所・見つける物 */if(!fogOn())return false;let j=ty*W+tx;if(fogAt(j)){toast('霧で見えない');return true}j=anc(j);
   const o=S.obj[j],f=fogFind(j);if(!f)return false;
   if(o==='fogbox'){if(!S.fogReq.includes(j))S.fogReq.push(j);sfx('tap');toast('古い宝箱：せいれいがあけにいく');return true}
   if(o==='nushiprint'){if(f.done){toast(BL.nushiprint.name);return true}if(!S.res.some(r=>r.name===POKO&&!r.hidden)){toast('フタバがいません');return true}if(!S.fogReq.includes(j))S.fogReq.push(j);sfx('tap');toast('ヌシ様のあしあと：フタバが見にいく');return true}
@@ -55,10 +63,10 @@ ACT.fogopen={start(r,a){if(S.obj[a.obj]!=='fogbox')return false;r.bubble='';r.fa
 ACT.foglook={start(r,a){if(S.obj[a.obj]!=='nushiprint')return false;r.bubble=''},done:(r,a)=>a.t>=2,end(r,a){fogDone(a.obj);const f=fogFind(a.obj);if(!f||f.done)return;const n=(S.fogF||[]).filter(q=>q.t==='print').indexOf(f);dialog(FOG_PRINT_LINES[Math.max(0,n)%FOG_PRINT_LINES.length],()=>{f.done=1})}};
 ACT_LBL.fogopen='宝箱をあけている';ACT_LBL.foglook='ヌシ様のあしあとを見ている';
 function drawFogObj(c,id,x,y,i,now){/* 見つける物の絵（マップチップ。読みこみ前はコードでかく） */const ch=chipOf(id);
-  if(ch){if(id!=='nushiprint')shadow(c,x+16,y+(id==='fogbox'?28:29),id==='fogbox'?12:14,id==='fogbox'?3:4);if(drawChip(c,ch,id,x,y,now,i))return}
+  if(ch){if(id==='fogbox')shadow(c,x+16,y+(id==='fogbox'?28:29),id==='fogbox'?12:14,id==='fogbox'?3:4);if(drawChip(c,ch,id,x,y,now,i))return}
   if(id==='fogbox'){shadow(c,x+16,y+28,12,3);c.fillStyle='#8a5a33';c.fillRect(x+5,y+14,22,13);c.fillStyle='#a8743f';c.fillRect(x+5,y+9,22,6);c.fillStyle='#c08a52';c.fillRect(x+6,y+9,20,1);c.fillStyle='#6e4527';c.fillRect(x+5,y+15,22,1);c.fillStyle='#d9b35a';c.fillRect(x+9,y+9,2,18);c.fillRect(x+21,y+9,2,18);c.fillRect(x+14,y+14,4,4);c.fillStyle='#f3dc8a';c.fillRect(x+15,y+15,2,1);return}
   if(id==='nushiprint'){const g=.35+.15*Math.sin((now||0)/700+(i||0));c.fillStyle='rgba(120,190,110,'+g+')';c.beginPath();c.ellipse(x+16,y+18,13,8,0,0,7);c.fill();c.fillStyle='rgba(92,74,52,.55)';for(const[px,py]of[[9,12],[21,20]]){c.beginPath();c.ellipse(x+px-1.6,y+py,1.6,3,-.15,0,7);c.fill();c.beginPath();c.ellipse(x+px+1.6,y+py,1.6,3,.15,0,7);c.fill()}return}
-  if(id==='fogspring'){shadow(c,x+16,y+24,14,5);c.fillStyle='#b9b2a3';c.beginPath();c.ellipse(x+16,y+20,14,8,0,0,7);c.fill();c.fillStyle='#9fd6ee';c.beginPath();c.ellipse(x+16,y+20,11,6,0,0,7);c.fill();const t=((now||0)/900+(i||0))%1;c.strokeStyle='rgba(255,255,255,'+(.6*(1-t))+')';c.lineWidth=1;c.beginPath();c.ellipse(x+16,y+20,2+t*8,1+t*4,0,0,7);c.stroke();c.fillStyle='#d8eef7';c.fillRect(x+10,y+17,4,1);return}}
+  if(id==='fogspring'){c.fillStyle='#b9b2a3';c.beginPath();c.ellipse(x+32,y+36,28,18,0,0,7);c.fill();c.fillStyle='#9fd6ee';c.beginPath();c.ellipse(x+32,y+36,23,14,0,0,7);c.fill();const t=((now||0)/900+(i||0))%1;c.strokeStyle='rgba(255,255,255,'+(.6*(1-t))+')';c.lineWidth=1;c.beginPath();c.ellipse(x+32,y+36,3+t*16,2+t*9,0,0,7);c.stroke();return}}
 /* 霧の絵：マップ全体を、1マス4×4ドットの小さな絵（432×432、約0.75MB）に1回だけ作る。晴れるときだけ、そのエリアのまわりを作りなおす */
 const FOGC=document.createElement('canvas');let FOGX=null,FOGN=null,FOGPV=-1,FOGPS=null;
 function fogNoise(){if(FOGN)return FOGN;const n=W*FOG_CELL,N=new Float32Array(n*n),h=(a,b)=>{const v=Math.imul(a*374761393+b*668265263,1274126177)>>>0;return (v%1000)/1000},sm=t=>t*t*(3-2*t);
