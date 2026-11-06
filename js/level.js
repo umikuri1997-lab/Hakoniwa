@@ -14,7 +14,7 @@ const rLv=r=>{const x=r.xp||0;let l=1;while(l+1<LVXP.length&&x>=LVXP[l+1])l++;re
 const lvF=(lv,k)=>1+k*(Math.min(lv,10)-1);
 /* 10がふつう。レベルアップでふえる量は、せいれいとレベルごとにばらつく（0〜2） */
 function lvGain(r,k,lv){let n=0;for(let l=2;l<=lv;l++){const h=hash(((r.id||0)*131+l*17+({work:7,move:3,cap:11,atk:13,eat:17,xp:19}[k]||3))>>>0);n+=h<.05?2:h<.3?1:0}return n}/* レベルが上がるたびに、5%で+2・25%で+1（作業・移動・持てる数・攻撃力） */
-const RSC=new WeakMap();function rMul(r,k){const lv=rLv(r);let c=RSC.get(r);if(!c||c.lv!==lv||c.vr!==r.vr||c.b!==r.boost||c.g!==(r.gv||0)){c={lv,vr:r.vr,b:r.boost,g:r.gv||0,s:rStat(r,lv)};RSC.set(r,c)}return c.s[k]/10*(k==='work'&&r.wkB>S.t?(r.wkM||1.15):k==='move'&&r.mvT>S.t?(r.mvM||1.15):1)}
+const RSC=new WeakMap();function rMul(r,k){const lv=rLv(r);let c=RSC.get(r);if(!c||c.lv!==lv||c.vr!==r.vr||c.b!==r.boost||c.g!==(r.gv||0)){c={lv,vr:r.vr,b:r.boost,g:r.gv||0,s:rStat(r,lv)};RSC.set(r,c)}return c.s[k]/10*(k==='work'&&r.wkB>S.t?(r.wkM||1.15):k==='move'&&r.mvT>S.t?(r.mvM||1.15):1)*(k==='work'&&BOND5.has(r)?1.05:1)}/* なかよし100が3マス以内：作業スピード+5% */
 function ovenMul(j){if(j==null)return 1;const x0=j%W,y0=(j/W)|0;const kinds=new Set();for(let y=y0-3;y<=y0+3;y++)for(let x=x0-3;x<=x0+3;x++){if(x<0||y<0||x>=W||y>=H)continue;const o=S.obj[y*W+x];if(o&&o!==S.obj[j]&&BL[o]&&BL[o].cat==='cook')kinds.add(o)}return OVENM[Math.min(kinds.size,OVENM.length-1)]}/* 調理の家具がそばにあると、料理が早い（同じ家具は1つ分だけ。下限はなし） */
 const fAtk=(r,lv)=>1+lvGain(r,'atk',lv);/* 火のせいれいの攻撃力：Lv1で1、上がるたびに5%で+2・25%で+1 */
 function rStat(r,lv){const V=r.vr||{},fire=r.elem==='fire',G=gearStat(r);/* G：そうび */return{
@@ -77,7 +77,7 @@ const SEED_COUNTS={normal:[0,1,2,3],kaze:[3,4,5,6]};
 function dailySeedCount(){const p=Math.random(),i=p<.25?0:p<.75?1:p<.95?2:3;return SEED_COUNTS[S.today==='kaze'?'kaze':'normal'][i]}
 function planSeeds(){S.seedDay=dayNo();const n=dailySeedCount(),b=S.t-clk()%1440,from=Math.max(S.t,b+360),to=Math.max(from,b+1080);S.seeds=[];S.seedPlan=Array.from({length:n},()=>from+Math.random()*(to-from)).sort((a,b)=>a-b)}/* その日の昼に落ちる。時計を止めたチュートリアルの時間も考える */
 const DAYLEN=1.5;/* 1日の長さ：せいれいが動く時間の1.5倍で、時計が1分すすむ */
-function stepWorld(dt){if((SUBT+=dt)>1){SUBT=0;checkSub();checkSev();guardTick();cmpTick();jobReachTick()}
+function stepWorld(dt){if((SUBT+=dt)>1){SUBT=0;checkSub();checkSev();bondTick();guardTick();cmpTick();jobReachTick()}
   st2Tick();fireTick(dt/DAYLEN);
   const prevH=hour(),t0=S.t;let nt=S.t+dt/DAYLEN;// 時計：夜も昼と同じ速さ（1日は1.5倍の長さ）
   if(!S.enemyOn){const c=clk(),cap=Math.floor(c/1440)*1440+(WD===0?20:18)*60,nc=c+(nt-S.t);if(nc>cap)S.hold=(S.hold||0)+Math.min(nt-S.t,nc-cap)}/* チュートリアルで夜がはじまるまで、時計（朝・昼・夜）は18時（草原は20時）で止めておく。せいれいの動きにつかう時間（S.t）は進める */S.t=nt;const h=hour();
