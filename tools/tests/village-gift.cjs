@@ -10,7 +10,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict');
   await run(`(()=>{newGame(0);for(const id of ['#title','#maps','#pro','#dialog'])document.querySelector(id).hidden=true;showUI(true);started=true;USERPAUSE=true;})()`);
   await page.waitForFunction(()=>sacredEval('stageReady()'),{},{timeout:60000});
   await run(`(()=>{updTut=()=>{};showItemGift=()=>{};showSpotPop=()=>{};finalCheck=()=>{};scheduleGrassReunion=()=>{};window.SAID=[];talkOnce=(k,L)=>{SAID.push([k,L[0][0],L[0][1]]);S.flags[k]=1};
-    S.introSeen=true;S.t=1440+10*60;S.enemies=[];const add=(n,el,dx)=>{if(!S.res.some(r=>r.name===n)){const r=mkRes(S,n,el,CX+dx,CY+4);S.res.push(r)}};add(MINA,'earth',1);add(FIXK0.fire,'fire',2);add(FIXK0.water,'water',3);add(FIXK0.wind,'wind',-2);
+    S.introSeen=true;S.godGone=true;S.t=1440+10*60;S.enemies=[];const add=(n,el,dx)=>{if(!S.res.some(r=>r.name===n)){const r=mkRes(S,n,el,CX+dx,CY+4);S.res.push(r)}};add(MINA,'earth',1);add(FIXK0.fire,'fire',2);add(FIXK0.water,'water',3);add(FIXK0.wind,'wind',-2);
     for(const r of S.res){r.hunger=hMax(r);r.energy=100;r.fun=90;r.act=null}recount();})()`);
   /* 前からのセーブ：もうおわったできごとは置かない */
   const old=JSON.parse(await run(`(()=>{S.flags.vgift1=0;S.vgSeen={};S.vgift=[];S.quest=questIndexOf('wind');S.qStory=null;S.qTalked=true;vgScan();vgScan();return JSON.stringify({p:S.vgift,seen:Object.keys(S.vgSeen).sort()})})()`));

@@ -31,6 +31,11 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict');
     S.subSt.oracle=1;subTalk('oracle');S.flags.oracleSeen=1;checkSub();subTalk('oracle');
     return JSON.stringify({b,a,acc,rep,trade:S.subDone.trade,oracle:S.subDone.oracle,god:!!S.godGone,main:QUESTS[S.quest].id})})()`));
   assert.deepEqual(flow,{b:[false,false],a:[true,true],acc:[2,true],rep:3,trade:1,oracle:1,god:true,main:'fire'});
+  /* 交換をしないまま火のせいれいをむかえた：カミサマは旅立ちの会話を1回して旅立つ。交換のサブクエストはとりやめ */
+  const bye=JSON.parse(await run(`(()=>{let n=0,last=null;dialog=(L,after)=>{n++;last=L;if(after)after()};S.godGone=false;S.godShown=true;S.subSt.trade=2;delete S.subDone.trade;S.feat.shop=false;S.t=1440*5+10*60;S.quest=questIndexOf('fire');S.qStory=null;S.qTalked=true;GODBYE=0;
+    godFarewellTick();const before=n;S.quest++;S.qTalked=false;godFarewellTick();godFarewellTick();
+    return JSON.stringify({before,n,god:!!S.godGone,st:S.subSt.trade,done:S.subDone.trade,shop:!!S.feat.shop,first:last&&last[0][0],at:SUBQ.find(q=>q.k==='trade').at(),hint:last.some(l=>/ヌシの気配/.test(l[1]))})})()`));
+  assert.deepEqual(bye,{before:0,n:1,god:true,st:4,done:1,shop:true,first:await run('GOD'),at:false,hint:true});
   assert.deepEqual(errors,[]);
   console.log('Trade/oracle are sub quests: old save migration by name, new game flow, other modes unaffected');
   await browser.close();

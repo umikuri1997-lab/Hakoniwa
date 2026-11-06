@@ -10,7 +10,7 @@ const VGIFT=[
   {k:'fireRoot',el:'fire',id:'salvia',n:2,at:'stump',line:{A:'あかい花のそばなら、根っこも、もうすこしぬくもるだろ。',B:'あかい花のそばなら、根っこも、もうすこしぬくもるだろ。'}},
   {k:'water',el:'water',id:'jar',n:1,at:'vill',line:'雨の水を、ここにためておきましょう。畑の水やりに使えます。'},
   {k:'waterFilm',el:'water',id:'lotus',n:2,at:'water',line:'水の上にも、花をうかべておきました。'},
-  {k:'ookage',el:'wood',id:'signw',n:1,at:'vill',line:'#joy|ここは、ぼくたちの村だって、だれが見てもわかるようにしたかったんだ。'},
+  {k:'ookage',el:'wood',id:'hedge',n:1,at:'vill',line:'#joy|オオカゲがいなくなったから、みどりの生垣をうえたんだ。ここは、ぼくたちの村だもん。'},
   {k:'wind',el:'wind',id:'parasol',n:1,at:'vill',line:'日ざしの強い日でも、ここなら風がすずしいはずさ。'},
   {k:'windEcho',el:'wind',id:'lily',n:2,at:'stump',line:'木のそばにも、いい風がとどくようにしておいたよ。'}
 ];
@@ -33,7 +33,14 @@ function vgPick(g,r){/* 置くマス（左上）。見つからなければ null
   const out=[L[0][0]];for(const[j]of L.slice(1)){if(out.length>=g.n)break;if(out.some(k=>Math.abs(k%W-j%W)<=2&&Math.abs(((k/W)|0)-((j/W)|0))<=2&&k!==j))out.push(j)}/* 花は、かたまって咲かせる */
   const stand=vgStand(G,out,g.id);return stand<0?null:{cells:out,stand,G}}
 function vgBusy(r){const a=r.act;return r.hidden||r.hunger<50||hungry(r)||onHold(r)||HOLD.has(r.id)||!!a&&(a.type==='sleep'||URGNO.includes(a.type)||KEEPC.has(a.type)||MAINGO.has(a.type))}
-function villageGiftTick(){if(!vgOn())return;vgScan();const P=S.vgift||[];
+/* 火のせいれいをむかえたら、交換のサブクエストがすんでいなくても、カミサマは旅立つ。旅立ちの会話は1回、最後まで見てから（とちゅうでとじたら、またはじめから）。
+   交換のサブクエストは、とりやめにする（交換は、カミサマが遊びにきたときにできる） */
+let GODBYE=0;
+function godFarewellTick(){if(GODBYE&&$('#dialog').hidden&&!DLGQ.length&&performance.now()-GODBYE>4000)GODBYE=0;/* とちゅうでとじた：またはじめから */if(!vgOn()||S.godGone||GODBYE||!qDone('fire')||isNight()||!godHere()||!$('#dialog').hidden||DLGQ.length||NEWRES!=null||sheet!=null)return;
+  const owner=S,session=VILLAGE_SESSION;GODBYE=performance.now();let once=0;
+  dialog(GOD_FAREWELL(),()=>{if(once++)return;GODBYE=0;if(S!==owner||session!==VILLAGE_SESSION||S.godGone)return;
+    const St=S.subSt||(S.subSt={}),D=S.subDone||(S.subDone={});if(!D.trade){St.trade=4;D.trade=1;delete (S.subArrived||{}).trade}S.feat.shop=true;questGives(null,{godLeave:true});checkSub()});}
+function villageGiftTick(){godFarewellTick();if(!vgOn())return;vgScan();const P=S.vgift||[];
   const unsafe=isNight()||S.enemies.some(e=>!e.dead)||sacredQuietActive()||mainGathering();
   for(const r of S.res)if(r.act&&r.act.type==='vgift'&&r.act.stage==='walk'&&unsafe)endAct(r);/* 夜・コワイノで、やめる（つぎの昼に、もう一度） */
   if(!P.length||unsafe||!$('#dialog').hidden||S.res.some(r=>r.act&&r.act.type==='vgift'))return;
