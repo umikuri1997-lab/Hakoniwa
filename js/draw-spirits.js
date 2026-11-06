@@ -436,8 +436,8 @@ function drawRes0(r,now){
   const warn=r.hunger<20;
   if(!ci&&(r.bubble||warn)){const t0=warn&&!r.bubble?'🍙':r.bubble,t=(BUBFACE[t0]?null:NOFACE[t0])||t0;/* 顔の絵文字は使わない */
     {const a=r.act;if(a&&a.stage==='do'&&(a.type==='mine'||a.type==='chop')&&NATHIT.has(a.obj)&&Math.abs((a.obj%W+.5)*TS-px)<TS+20){const yb=natBarY(a.obj);if(by-54<yb+7&&by-15>yb-2)by=yb+12}}/* 木・岩ののこりのバーと重なるときは、ふきだしをバーの上へ */
-    const pic=/^(obj|ic|chip):/.test(String(t)),bw=33;/* 絵のアイコンは、絵文字と同じはば *//* 吹き出しは1.5倍 */
-    pxBub(ctx,px,by-54,bw,30,warn?'#ffd2cc':'#fff',warn?'#c98a80':'#b8a587');/* ドットのふきだし */
+    const pic=/^(obj|ic|chip):/.test(String(t)),bw=36;/* 絵のアイコンは、絵文字と同じはば *//* 吹き出しは1.5倍 */
+    pxBub(ctx,px,by-56,bw,34,warn?'#ffd2cc':'#fff',warn?'#c98a80':'#b8a587');/* ドットのふきだし */
     if(t==='💬'){ctx.fillStyle='#7a7064';const cx=Math.round(px/1.5)*1.5;for(let d=-1;d<=1;d++)ctx.fillRect(cx+d*6-1.5,by-39,3,3)}/* おしゃべりは点々だけ */
     else if(t==='🪓'&&!BUBS.ok&&PSPR.axe&&PSPR.axe.ok){const g=PSPR.axe.img,ih=17,iw=ih*g.width/g.height;ctx.save();ctx.translate(px,by-39);ctx.rotate(-Math.PI/4);ctx.drawImage(g,-iw/2,-ih/2,iw,ih);ctx.restore()}else if(!pic&&BUBI[bubKey(t)])bubIcon(ctx,t,Math.round(px/1.5)*1.5,by-39,1.5);/* 絵文字は、ドットの絵（BUBI）で描く */else{const ei=emoImg(t);if(ei){const ih=19.5,iw=ih*ei.width/ei.height;ctx.drawImage(ei,px-iw/2,by-39-ih/2,iw,ih)}else if(!pic&&!emoSrc(t))bubIcon(ctx,'?',Math.round(px/1.5)*1.5,by-39,1.5)}}};
   if(BUBQ){const T=ctx.getTransform();BUBQ.push(()=>{ctx.save();ctx.setTransform(T);over();ctx.restore()})}else over();/* あとで描くふきだしも、見張り台・段差の上の高さのまま */

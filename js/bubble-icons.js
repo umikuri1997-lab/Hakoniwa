@@ -47,7 +47,7 @@ unk:["...BBBBB...","..BBBBBBB..","..BB...BBB.",".......BBB.","......BBB..","....
 const BUBI={'🪓':'axe','✨':'spark','🌟':'spark','⭐':'spark','📦':'box','😆':'laugh','😄':'laugh','😋':'laugh','😊':'smile','😌':'smile','😣':'hurt','😩':'hurt','😨':'scared','😱':'scared','🔥':'fire','💦':'sweat','💧':'drop','😭':'drop','😢':'drop','☕':'coffee','🧺':'basket','🔨':'hammer','💕':'heart','💗':'heart','💖':'heart','💚':'gheart','👏':'clap','👋':'wave','🎵':'note','♪':'note','🎶':'notes','🌱':'sprout','⛏':'pick','♨':'spring','😵':'dizzyface','💫':'dizzy','💤':'zzz','😴':'zzz','🐟':'fish','🏮':'lantern','🎆':'firework','🎇':'firework','🎁':'gift','🍳':'pan','🏠':'house','🏡':'house','🍙':'rice','🍄':'mush','🌿':'leaf','🌼':'flower','🎯':'target','🍡':'dango','🍴':'fork','💢':'anger','😠':'anger','😤':'anger','❗':'bang','‼':'bang','！':'bang','❓':'q','💭':'dots','💬':'dots'};
 const BUBSPR={"spark":[0,0],"box":[1,0],"fire":[2,0],"sweat":[3,0],"coffee":[4,0],"basket":[5,0],"hammer":[0,1],"drop":[1,1],"heart":[2,1],"clap":[3,1],"wave":[4,1],"note":[5,1],"sprout":[0,2],"pick":[1,2],"spring":[2,2],"axe":[3,2],"dizzy":[4,2],"zzz":[5,2],"gheart":[0,3],"fish":[1,3],"lantern":[2,3],"firework":[3,3],"gift":[4,3],"pan":[5,3],"chestnut":[0,4],"notes":[1,4],"house":[2,4],"rice":[3,4],"dots":[4,4],"q":[5,4],"unk":[5,4],"laugh":[0,5],"smile":[1,5],"hurt":[2,5],"scared":[3,5],"dizzyface":[4,5]};/* 32×32のドット絵（6列×6行の1まい。6行めは顔）。読みこむまでは、下の11×11の絵 */
 const BUBFACE={};/* 顔の絵文字を、そのまま顔の絵で出すもの（例：{"😊":true}）。ないものは NOFACE のかわりの絵 */
-const BUBS={img:null,ok:false};try{BUBS.img=new Image();BUBS.img.onload=()=>{BUBS.ok=true};BUBS.img.src='assets/g/00e478f75f.webp'}catch(e){}
+const BUBS={img:null,ok:false};try{BUBS.img=new Image();BUBS.img.onload=()=>{BUBS.ok=true};BUBS.img.src='assets/g/5e5deac9ff.webp'}catch(e){}
 const bubKey=t=>String(t).replace(/️/g,'');
 const BUBRUN={};
 function bubRuns(id){/* 色ごとの横の連なり（ふち付き、13×13）。fillRect だけで描く */
@@ -59,8 +59,8 @@ function bubRuns(id){/* 色ごとの横の連なり（ふち付き、13×13）�
   for(const[x,y,c]of ol)g[y][x]=c;
   const runs=[];for(let y=0;y<N;y++){let x=0;while(x<N){const c=g[y][x];if(!c){x++;continue}let e=x+1;while(e<N&&g[y][e]===c)e++;runs.push([x,y,e-x,c]);x=e}}
   return BUBRUN[id]=runs}
-function bubIcon(c,key,cx,cy,k){/* (cx,cy) を中心に描く。1ドット k（ふつう1.5）。32×32の絵は、1ドットを画面の整数ピクセルで描く */
+function bubIcon(c,key,cx,cy,k){/* (cx,cy) を中心に描く。1ドット k（ふつう1.5）。48×48の絵を、ふきだしの中（はば30）に入る大きさで描く。大きくするときはぼかさず、ちぢめるときはなめらかに */
   k=k||1.5;const id=BUBI[bubKey(key)]||'unk',x0=cx-6.5*k,y0=cy-6.5*k,sp=BUBSPR[id];
-  if(sp&&BUBS.ok){/* 1ドットを画面の整数ピクセル（1か2…）で、ぼかさずに描く。ふきだしの中（はば約29k/1.5）からはみ出さない大きさ */
-    const T=c.getTransform(),q=Math.max(1,Math.min(Math.round(T.a*.7),Math.floor(T.a*29*k/1.5/30))),n=32*q;c.save();c.setTransform(1,0,0,1,0,0);c.imageSmoothingEnabled=false;c.drawImage(BUBS.img,sp[0]*32,sp[1]*32,32,32,Math.round(T.a*cx+T.e-n/2),Math.round(T.d*cy+T.f-n/2),n,n);c.restore();return}
+  if(sp&&BUBS.ok){
+    const T=c.getTransform(),W=T.a*30*k/1.5,n=Math.round(W),q=W>=48?1:0;c.save();c.setTransform(1,0,0,1,0,0);c.imageSmoothingEnabled=q<1;c.imageSmoothingQuality='high';c.drawImage(BUBS.img,sp[0]*48,sp[1]*48,48,48,Math.round(T.a*cx+T.e-n/2),Math.round(T.d*cy+T.f-n/2),n,n);c.restore();return}
   for(const[x,y,n,col]of bubRuns(id)){c.fillStyle=col;c.fillRect(x0+x*k,y0+y*k,n*k,k)}}
