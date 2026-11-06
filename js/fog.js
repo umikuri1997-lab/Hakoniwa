@@ -112,7 +112,7 @@ ACT_LBL.sweep='クモの巣をそうじしている';
 const WEBDAY=.1,WEBMAX=3;/* 毎朝、家ごとに10%で、クモの巣が1つふえる（1つの家に3つまで） */
 function webMorning(){if(typeof MEMRUN!=='undefined'&&MEMRUN||typeof NOSAVE!=='undefined'&&NOSAVE)return;findHouses();for(const h of HOUSES){let n=0;for(const j of h.inside)if(S.web&&S.web[j]!=null)n++;if(n>=WEBMAX||Math.random()>=WEBDAY)continue;
   const L=[...h.inside].filter(j=>!S.obj[j]&&(!S.web||S.web[j]==null)&&h.set.has(j-W)&&!h.inside.has(j-W));/* 上が壁の、空いた床（壁の角） */if(!L.length)continue;const j=pick(L),v=h.inside.has(j-1)&&!h.inside.has(j+1)?1:h.inside.has(j+1)&&!h.inside.has(j-1)?0:(Math.random()<.5?0:1);(S.web||(S.web={}))[j]=v}}
-const WEBC=[];function webArt(v){/* クモの巣の仮の絵（コードのドット絵、64×64 を1マスに）。あとで、マップチップ web#0・web#1 に差しかえられる */if(WEBC[v])return WEBC[v];const cv=document.createElement('canvas');cv.width=cv.height=64;const c=cv.getContext('2d'),P=(x,y,a)=>{c.fillStyle='rgba(246,244,238,'+a+')';c.fillRect(x|0,y|0,1,1)};
+const WEBC=[];function webArt(v){/* クモの巣の、チップ（web#0・web#1）を読みこむ前の絵（64×64 を1マスに） */if(WEBC[v])return WEBC[v];const cv=document.createElement('canvas');cv.width=cv.height=64;const c=cv.getContext('2d'),P=(x,y,a)=>{c.fillStyle='rgba(246,244,238,'+a+')';c.fillRect(x|0,y|0,1,1)};
   const ox=v?63:0,sx=v?-1:1;/* 角（左上か右上）から、放射の糸と、まわりの糸 */const R=[[1,0],[.92,.38],[.7,.7],[.38,.92],[0,1]];for(const[dx,dy]of R)for(let t=0;t<46;t++)P(ox+sx*dx*t,dy*t,.8-t/120);
   for(const rad of[9,17,26,36])for(let n=0;n<R.length-1;n++){const[a1,b1]=R[n],[a2,b2]=R[n+1];for(let t=0;t<=1;t+=1/(rad*.9)){const k=Math.sin(t*Math.PI)*.18*rad;/* 糸は少したるむ */const px=a1*rad+(a2*rad-a1*rad)*t-k*(a1+a2)/2,py=b1*rad+(b2*rad-b1*rad)*t-k*(b1+b2)/2;P(ox+sx*px,py,.62-rad/110)}}
   return WEBC[v]=cv}
