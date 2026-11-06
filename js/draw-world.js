@@ -446,3 +446,10 @@ function render(now){RFN++;
   if(!VIG||VIG.w!==VW||VIG.h!==VH){const c2=document.createElement('canvas');c2.width=VW;c2.height=VH;const g2=c2.getContext('2d');const vg=g2.createRadialGradient(VW/2,VH/2,Math.min(VW,VH)*.45,VW/2,VH/2,Math.max(VW,VH)*.75);vg.addColorStop(0,'rgba(0,0,0,0)');vg.addColorStop(1,'rgba(10,20,15,.28)');g2.fillStyle=vg;g2.fillRect(0,0,VW,VH);VIG={c:c2,w:VW,h:VH}}
   ctx.drawImage(VIG.c,0,0);
 }
+
+/* 虹（ドット） */
+const RBC={c:null,w:0};
+function drawRainbow(now){if(!rainbowToday())return;const h=hour();if(h<6||h>=17)return;const a=Math.min(1,(h-6)/1)*Math.min(1,(17-h)/1.5)*.55;if(a<=0)return;
+  const P=3,w=Math.max(60,Math.round(Math.min(VW*.55,420)/P)),cw=w*P;if(RBC.w!==cw){if(RBC.c){RBC.c.width=RBC.c.height=0}const hh=Math.round(w*.42),c=document.createElement('canvas');c.width=cw;c.height=hh*P;const g=c.getContext('2d'),col=['#f2a7a2','#f5c79a','#f3e3a0','#b8deaa','#a8cdea','#c2b2e4'],R=w*.48,bw=Math.max(2,Math.round(w*.022));
+    for(let y=0;y<hh;y++)for(let x=0;x<w;x++){const d=Math.hypot(x+.5-w/2,y+.5-(hh+w*.12)),k=Math.floor((R-d)/bw);if(k<0||k>=col.length)continue;g.globalAlpha=Math.min(1,(hh-y)/(hh*.35));g.fillStyle=col[k];g.fillRect(x*P,y*P,P,P)}RBC.c=c;RBC.w=cw}/* ドットの虹（3pxのマス目） */
+  ctx.save();ctx.globalAlpha=a;ctx.drawImage(RBC.c,Math.round(VW-cw-VW*.04),Math.round(VH*.09));ctx.restore()}
