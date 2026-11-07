@@ -416,8 +416,8 @@ function renderSheet(){
       body.insertBefore(bar,body.children[1]);
       const how=body.querySelector('.story').parentNode;how.hidden=MANC!=='あそびかた';
       const cur=CAT.find(c=>c[0]===MANC);
-      for(const[t,items]of MANUAL){if(!cur[1].includes(t))continue;const sec=el('<div class="sec"><h3></h3><div class="rows"></div></div>');sec.querySelector('h3').textContent=t;for(const[a,b]of items)sec.querySelector('.rows').appendChild(rowEl(a,b));body.appendChild(sec)}
-      if(cur[0]==='くらし・家具'){const sec=el('<div class="sec"><h3>スポット</h3><div class="rows"></div></div>');const on=new Set();for(const t of SPOTJ.values())for(const k of t)on.add(k);for(const sp of SPOTS)sec.querySelector('.rows').appendChild(rowEl(sp.n+(on.has(sp.k)?'（村にある）':''),sp.how+'を、まわり3マスに置く。'+sp.eff));body.appendChild(sec)}}/* スポットの一覧 */
+      for(const[t,items]of MANUAL){if(!cur[1].includes(t))continue;const sec=el('<div class="sec"><h3></h3><div class="rows"></div></div>');sec.querySelector('h3').textContent=t;for(const[a,b]of items){const ok=manMet(a);sec.querySelector('.rows').appendChild(rowEl(ok?a:'？？？',ok?b:'？？？'))}/* まだ出会っていないことは「？？？」 */body.appendChild(sec)}
+      if(cur[0]==='くらし・家具'){const sec=el('<div class="sec"><h3>スポット</h3><div class="rows"></div></div>');const on=new Set();for(const t of SPOTJ.values())for(const k of t)on.add(k);const seen=S.spotSeen||{},done=new Set();for(const sp of SPOTS){if(done.has(sp.k)&&!seen[sp.k])continue;done.add(sp.k);sec.querySelector('.rows').appendChild(seen[sp.k]||S.free?rowEl(sp.n+(on.has(sp.k)?'（村にある）':''),sp.how+'を、まわり3マスに置く。'+sp.eff):rowEl('？？？','？？？'))}/* 作ったことのないスポットは、名前も組み合わせも「？？？」 */body.appendChild(sec)}}/* スポットの一覧 */
     {const b=el('<button class="btn">もどる</button>');b.onclick=()=>{sfx('tap');openSheet('menu')};body.appendChild(b)}
   }else if(sheet==='furn'){const j=sheetArg,o=S.obj[j]||(S.rug||{})[j];if(!o||!BL[o])return closeSheet();T.textContent=BL[o].name;{const te=tagsEl(o);if(te)body.appendChild(te)}
     body.appendChild(rowEl(BL[o].name,withAttr(o,BL[o].desc||''),iconURL(o)));

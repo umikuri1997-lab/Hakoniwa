@@ -318,6 +318,7 @@ const watchUp=()=>Object.keys(S.hp).some(k=>k[0]==='L'&&S.hp[k]>=2&&S.obj[+k.sli
 const WUP=[null,{pc:30,mat:{wood:25,stone:30}},{pc:50,mat:{wood:35,stone:45}},{pc:80,mat:{wood:45,stone:60}},{pc:120,mat:{wood:55,stone:75},sand:5}],YUP=[null,{pc:30,mat:{wood:30,stone:35}},{pc:60,mat:{wood:45,stone:75},sand:5}];/* sand：やすらぎの砂（Lv3への強化だけ） *//* 見張り台・ようがん台の強化 */const WATCH=[null,{dmg:1,range:6,cd:10},{dmg:1.5,range:6.25,cd:10},{dmg:2,range:6.5,cd:10},{dmg:2.5,range:6.75,cd:10},{dmg:3,range:7,cd:10}];/* 見張り台は5段階。ゆるやかに強くなる */const watchArt=L=>L>=5?3:L>=3?2:1;/* 絵は3しゅるい：Lv1〜2・Lv3〜4・Lv5 *//* cd：攻撃の間かく（分） */
 const YOGAN=[null,{dmg:1,range:5,cd:8,splash:1.5,sdmg:.5},{dmg:2,range:5.5,cd:8,splash:1.5,sdmg:1},{dmg:3,range:6,cd:8,splash:1.5,sdmg:1.5}];/* ようがん台（火山のふもと）：火の玉。当たったまわりにもダメージ */
 const enemyLive=()=>!!S&&S.enemies.some(e=>e.spawned&&!e.dead);
+const wpTired=r=>r.energy<10?.5:r.energy<25?.7:1;/* 見張り台の子は、つかれるとうつ速さがおちる（火のせいれいのこうげきと同じ） */
 const watchGuard=j=>S.res.some(q=>!q.hidden&&q.act&&q.act.type==='watchpost'&&q.act.stage==='do'&&(q.act.cl||0)>=1&&q.act.obj===j);/* 見張り台に木のせいれいが立っているか */
 function updTowers(dt){
   if(!S.enemies.length)return;
@@ -326,7 +327,7 @@ function updTowers(dt){
     let st=o==='tower'?{dmg:1,range:10,cd:10}:(o==='yogan'?YOGAN:WATCH)[S.hp['L'+j]||1];if(nightVarNow()==='kiri')st=Object.assign({},st,{range:st.range/2});/* 霧の夜：とどく所が半分 */if(o==='watch'&&!watchGuard(j)){S.hp['w'+j]=1;if(S.ns&&!S.ns.noGuard&&S.enemies.some(e=>e.spawned&&!e.dead)&&!S.res.some(q=>q.act&&q.act.type==='watchpost'&&q.act.obj===j)){S.ns.noGuard=1;toast('見張り台に木のせいれいがいません','warn')}continue}/* 見張り台は、木のせいれいが立っているときだけうつ */if(o==='watch'&&ammoTotal()<1){S.hp['w'+j]=1;if(!S.flags.noArrow&&S.enemies.some(e=>e.spawned&&!e.dead)){S.flags.noArrow=1;toast('見張り台の木の矢がありません','warn')}continue}/* 見張り台は、木の矢がないとうてない */
     const z0=szAt(o,j)||[1,1],x=j%W+z0[0]/2,y=((j/W)|0)+z0[1]/2;
     let tg=null,bd=st.range+(o==='watch'?(nightVarNow()==='kiri'?3:6):0);/* 見張り台は、矢の射程ぶん遠くまで見る（あたるかは矢ごと） */for(const e of S.enemies){if(!e.spawned||e.dead)continue;const d=Math.hypot(e.x-x,e.y-y);if(d<bd){bd=d;tg=e}}
-    if(o==='watch'){const g=S.res.find(q=>q.act&&q.act.type==='watchpost'&&q.act.stage==='do'&&q.act.obj===j),iv=towerVolley(j,x,y,st,g,shots);/* 矢は威力の大きい順。本数・つらぬき・射程は矢ごと */if(!iv){S.hp['w'+j]=1;continue}S.flags.noArrow=0;if(g){g.bowT=performance.now();g.face=tg&&tg.x<g.x?-1:1}S.hp['w'+j]=(g?st.cd/rMul(g,'work'):st.cd)*iv;sfxAt('shoot',x,y);continue}
+    if(o==='watch'){const g=S.res.find(q=>q.act&&q.act.type==='watchpost'&&q.act.stage==='do'&&q.act.obj===j),iv=towerVolley(j,x,y,st,g,shots);/* 矢は威力の大きい順。本数・つらぬき・射程は矢ごと */if(!iv){S.hp['w'+j]=1;continue}S.flags.noArrow=0;if(g){g.bowT=performance.now();g.face=tg&&tg.x<g.x?-1:1}S.hp['w'+j]=(g?st.cd/(rMul(g,'work')*wpTired(g)):st.cd)*iv;sfxAt('shoot',x,y);continue}
     let a2=0;if(tg){S.hp['w'+j]=st.cd;/* 見張り台の子が弓をうつ（うつ間かくは、その子の作業速度で短くなる） */tg.hp-=st.dmg+a2;tg.flash=6;sfxAt('shoot',x,y);shots.push({x1:x,y1:y-(o==='tower'?1.4:o==='watch'?1.9:.6),/* 見張り台は、上に立つ子の手から */x2:tg.x,y2:tg.y-.3,life:1,fire:o==='yogan',wood:o==='watch'});
       if(st.splash)for(const e of S.enemies){if(e===tg||!e.spawned||e.dead)continue;if(Math.hypot(e.x-tg.x,e.y-tg.y)<st.splash){e.hp-=st.sdmg;e.flash=6;if(e.hp<=0)defeat(e)}}/* 火の玉は、まわりにもダメージ */
       if(tg.hp<=0&&!tg.dead)defeat(tg)}}
