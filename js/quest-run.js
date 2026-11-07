@@ -110,17 +110,21 @@ const NUSHI_T=[
    after:[[HOMURA,'#think hush|……ヌシ様。あたい、村のみんなを守れなかった。','vol:kneelNushi'],[HOMURA,'#nod|でも、守り神とシズクたちが来てくれた。……本当に、ありがとう。'],[SHIZUKU,'#teary|……はじめて、ちゃんと言いましたね。','vol:bump'],[HOMURA,'#joy|うるさいよ。'],[GOD,'おつかれさん〜！ 見とったぞい。'],[GOD,'次は「霧のみずべの村」じゃ。…まだ道が通じておらんのじゃ。道が通じたら知らせるぞい。'],[HOMURA,'あたいたちは、この村と温泉をまもるよ。また入りにおいで！','cheer'],[SHIZUKU,'お気をつけて。…ときどき、温泉にいらしてくださいね。']],toast:'ステージクリア！ 「霧のみずべの村」は、ただいま準備中',last:'村にもどる'}];
 let NUSHI_RUN=false,WELCOME_RUN=false;
 let DEPART_RUN=false,GATHER_HOLD=false;/* お見送りで集まっているあいだ（集まった子を、その場で待たせる） */
-function gatherAt(TX,TY,then,skipId,abort){/* せいれいみんなが、台座のまわりへ歩いて集まる（瞬間移動はしない）。みんながそろってから、つぎへ。いなくなった子・通れない子がいたら、やめて知らせる */
-  const owner=S,session=VILLAGE_SESSION,cast=S.res.filter(r=>!r.hidden&&r.id!==skipId),spot={},miss={},here=r=>r.act&&r.act.type==='nmeet'&&r.act.stage==='do';
-  const go=()=>{const used=new Set(Object.values(spot));for(const r of cast){if(r.act&&r.act.type==='nmeet')continue;const G=bfs(r.x|0,r.y|0);let b=spot[r.id]??-1;if(b>=0&&G.dist[b]<0)b=-1;if(b<0){let bd=1e9;for(let k=0;k<W*H;k++){if(G.dist[k]<0||used.has(k)||!walk(k)||S.obj[k]||roomOf(k))continue;const ky=(k/W)|0,d=Math.hypot(k%W+.5-TX,ky+.5-TY);if(d<1.6||d>5)continue;const sc=d+(ky<TY+1?3:0)+G.dist[k]*.02;/* 家の外の、台座の前がわ（見えるところ）に */if(sc<bd){bd=sc;b=k}}}if(b<0){miss[r.id]=(miss[r.id]||0)+1;continue}miss[r.id]=0;spot[r.id]=b;used.add(b);if(r.cing){const R=RECIPES.find(x=>x.out===r.cing.rec);if(R)for(const k in R.need)addFood(k,R.need[k]);r.cing=null}/* 料理のとちゅうなら、材料は箱にもどす */endAct(r);startAct(r,G,'nmeet',b,{run:true})}};
-  GATHER_HOLD=true;const stop=msg=>{GATHER_HOLD=false;for(const r of cast)if(S.res.includes(r)&&r.act&&r.act.type==='nmeet')endAct(r);if(msg)toast(msg,'warn');if(abort)abort(msg)};
+function gatherAt(TX,TY,then,skipId,abort,opt){/* せいれいみんなが、台座のまわりへ歩いて集まる（瞬間移動はしない。なかまのお迎えの opt.warp だけ、遠い子・行きにくい子をワープ）。みんながそろってから、つぎへ。いなくなった子・通れない子がいたら、やめて知らせる */
+  const owner=S,session=VILLAGE_SESSION,cast=S.res.filter(r=>!r.hidden&&r.id!==skipId),spot={},miss={},far={},warp=!!(opt&&opt.warp),here=r=>r.act&&r.act.type==='nmeet'&&r.act.stage==='do';
+  const go=()=>{const used=new Set(Object.values(spot));for(const r of cast){if(r.act&&r.act.type==='nmeet')continue;const G=bfs(r.x|0,r.y|0);let b=spot[r.id]??-1;if(b>=0&&G.dist[b]<0)b=-1;if(b<0){let bd=1e9;for(let k=0;k<W*H;k++){if(G.dist[k]<0||used.has(k)||!walk(k)||S.obj[k]||roomOf(k))continue;const ky=(k/W)|0,d=Math.hypot(k%W+.5-TX,ky+.5-TY);if(d<1.6||d>5)continue;const sc=d+(ky<TY+1?3:0)+G.dist[k]*.02;/* 家の外の、台座の前がわ（見えるところ）に */if(sc<bd){bd=sc;b=k}}}if(b<0){miss[r.id]=(miss[r.id]||0)+1;continue}miss[r.id]=0;spot[r.id]=b;used.add(b);far[r.id]=G.dist[b];if(r.cing){const R=RECIPES.find(x=>x.out===r.cing.rec);if(R)for(const k in R.need)addFood(k,R.need[k]);r.cing=null}/* 料理のとちゅうなら、材料は箱にもどす */endAct(r);startAct(r,G,'nmeet',b,{run:true})}};
+  GATHER_HOLD=true;const stop=msg=>{GATHER_HOLD=false;for(const r of cast)if(S.res.includes(r)&&r.act&&r.act.type==='nmeet')endAct(r);if(msg)toast(msg,'warn');if(typeof abort==='function')abort(msg)};
   const t0=performance.now();let last=0;const chk=()=>{if(S!==owner||session!==VILLAGE_SESSION){GATHER_HOLD=false;return}const n=performance.now();
     const gone=cast.find(r=>!S.res.includes(r)||r.hidden);if(gone)return stop(gone.name+'がもどるまで、お話は進まない');
     if(n-last>1500){last=n;go()}
+    if(warp)for(const r of cast){if(here(r))continue;if((miss[r.id]||0)>=1||(far[r.id]||0)>GATHER_FAR||n-t0>GATHER_WARPT)gatherWarp(r,TX,TY,spot,miss)}/* 遠い・行きにくい・なかなか着かない子は、近くへワープ */
     const stuck=cast.find(r=>(miss[r.id]||0)>=3);if(stuck)return stop(stuck.name+'が通れない。道をあけよう');
     if(cast.every(here)){GATHER_HOLD=false;return then()}
     if(n-t0>90000){const p=cast.find(r=>!here(r));return stop(p?p.name+'が、集まれなかった':'')}/* 時間切れでも、遠くのまま話しはじめない */
     villageTimeout(chk,250)};villageTimeout(chk,300)}
+const GATHER_FAR=20,GATHER_WARPT=6000;/* 道のりが20マスより遠いか、6秒で着かないとき */
+function gatherWarp(r,TX,TY,spot,miss){const used=new Set(Object.entries(spot).filter(([id])=>id!=r.id).map(e=>e[1]));for(const q of S.res)if(q!==r)used.add((q.y|0)*W+(q.x|0));const G=bfs(TX|0,TY|0);let b=-1,bd=1e9;for(let k=0;k<W*H;k++){if(G.dist[k]<0||used.has(k)||!walk(k)||S.obj[k]||roomOf(k))continue;const ky=(k/W)|0,d=Math.hypot(k%W+.5-TX,ky+.5-TY);if(d<1.6||d>5)continue;const sc=d+(ky<TY+1?3:0);if(sc<bd){bd=sc;b=k}}if(b<0)return;
+  if(r.cing){const R=RECIPES.find(x=>x.out===r.cing.rec);if(R)for(const k in R.need)addFood(k,R.need[k]);r.cing=null}spawnFX(r.x-.5,r.y-.6,ELEM[r.elem].col);endAct(r);r.x=b%W+.5;r.y=((b/W)|0)+.5;spot[r.id]=b;miss[r.id]=0;spawnFX(r.x-.5,r.y-.6,ELEM[r.elem].col);sfx('next');startAct(r,bfs(b%W,(b/W)|0),'nmeet',b,{run:true})}/* なかまのお迎えだけ：その場から消えて、集まる所の近くにあらわれる */
 function nushiReturns(resume){if(NUSHI_RUN||S.cleared||WD===0&&grassReunionBlockReason())return;NUSHI_RUN=true;S.flags.nushiDue=1;/* ヌシ様が帰ってくる場面。「クリア」にするのは、場面を最後まで見てから（途中でとじたら、はじめから） */
   checkQuest();renderQuest();const T=NUSHI_T[WD];
   const tw=S.obj.indexOf('tower'),TX=tw>=0?storyTreeX(tw):CX+.5,TY=tw>=0?storyTreeY(tw):CY;
