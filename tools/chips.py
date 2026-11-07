@@ -154,11 +154,11 @@ def kobo(dirp, *keys):
     json.dump(idx, open(os.path.join(dirp, 'index.json'), 'w', encoding='utf8'), ensure_ascii=False, separators=(',', ':'))
     print('公開しなおすファイル: index.json', ' '.join(changed))
 
-EXTRA_GENRES = {'nushi': 'ヌシ様', 'items': 'アイテム', 'codeart': 'コードで描く物', 'progart': 'プログラムの絵'}
+EXTRA_GENRES = {'nushi': 'ヌシ様', 'items': 'アイテム', 'codeart': 'コードで描く物', 'progart': 'プログラムの絵', 'bubble': 'ふきだしのアイコン'}
 
 EXTRA_GROUPS = {'nushi': '草原のヌシ様', 'nushi2': '火のヌシ様', 'nushi_old': '草原のヌシ様（前の絵）', 'mat': '素材', 'food': '食べ物', 'gear': 'そうび', 'ammo': '矢', 'seed': 'たね',
     'tool': 'カミサマの道具・UI', 'code': '家具・建物（コードの絵）', 'pspr': '建物・道具', 'art': '花・木・岩', 'crop': '作物', 'spr': 'カミサマ・ベッド', 'kgs': 'コワイノ',
-    'festa': 'おまつり', 'fx': 'エフェクト', 'emo': 'ふきだし', 'ui': 'UIのアイコン'}
+    'festa': 'おまつり', 'fx': 'エフェクト', 'emo': 'ふきだし', 'ui': 'UIのアイコン', 'bubart': 'ふきだしのアイコン（もらった絵）'}
 
 def kobo_extra(dirp, extf):
     """tools/kobo_extra.js で書き出した、チップでない絵を、工房のジャンル（EXTRA_GENRES）として g/<ジャンル>.json に書き、index.json に足す（同じジャンルは書きかえ）。
