@@ -122,6 +122,7 @@ function itemPop(id){/* もちもの：おそなえ箱の物・たね・ふし�
   o.querySelector('.x').onclick=()=>{sfx('tap');close()};o.onclick=e=>{if(e.target===o)close()};
   if(id==='mseed'){o.querySelector('img').src=seedIco();o.querySelector('.t').textContent='ふしぎな種 '+(S.mseed||0)+'こ';o.querySelector('.n').textContent='せいれいにあげると、能力のどれかが+1上がる。25%で+2。';
     for(const r of S.res){const row=rowEl(r.name,ELEM[r.elem].name+'のせいれい'),b=el('<button class="btn pri">あげる</button>');row.appendChild(b);b.onclick=()=>{giveSeed(r);if((S.mseed||0)<1)close();else o.querySelector('.t').textContent='ふしぎな種 '+(S.mseed||0)+'こ';if(sheet==='inv')renderSheet()};o.querySelector('.rows').appendChild(row)}}
+  else if(id==='herb'){o.querySelector('img').src=herbIco();o.querySelector('.t').textContent='まよけのハーブ '+(S.herb||0)+'こ';o.querySelector('.n').textContent=HERBDESC;add('つかう',herbUse,!(S.herb>0))}
   else if(id==='horn'){o.querySelector('img').src=hornIco();o.querySelector('.t').textContent='よびごえの角笛 '+(S.horn||0)+'こ';o.querySelector('.n').textContent=HORNDESC;add('ふく',hornBlow,!(S.horn>0))}
   else if(id.startsWith('seed:')){const k=id.slice(5),c=CROPS[k];o.querySelector('img').src=seedIcon(k);o.querySelector('.t').textContent=c.name+'のたね '+cseed(k)+'こ';o.querySelector('.n').textContent=c.desc;add('畑にまく',()=>placeFromInv(id),cseed(k)<1)}
   else{const b=BL[id];o.querySelector('img').src=iconURL(id);o.querySelector('.t').textContent=iname(id)+' '+inv(id)+(b.kind==='ammo'?'本':'こ');o.querySelector('.n').textContent=b.desc||'';if(b.kind!=='ammo')add('これを置く',()=>placeFromInv(id),!inv(id))}
@@ -147,6 +148,15 @@ function el(html){const d=document.createElement('div');d.innerHTML=html.trim();
 /* たね：たね袋の絵＋作物の小さな絵 */
 const foodIc=k=>ICONS[k]||icURL(FOODS[k].e)||(CROPS[k]?cropIcon(k):null);/* 食べ物のアイコン：もらった絵（いもは potato の絵）→ なければ作物の絵 */
 const CROPIC={};function cropIcon(k){if(CROPIC[k])return CROPIC[k];const c=document.createElement('canvas');c.width=c.height=64;const g=c.getContext('2d');g.translate(32,30);g.scale(1.7,1.7);drawCrop(g,k,0,0,100,true);const u=c.toDataURL();c.width=c.height=0;return CROPIC[k]=u}/* 作物の絵だけのアイコン（図鑑） */
+let HERBICO=null;function herbIco(){/* まよけのハーブ：葉のついた枝を3本、ひもでたばねた形。32×32のマス目の四角だけで描く（2倍の細かさ）。ふちは形から作る */if(HERBICO)return HERBICO;const N=32,M=new Int8Array(N*N),K=new Int8Array(N*N);/* M:形 K:1茎 2葉 3ひも */
+  const put=(x,y,k)=>{x|=0;y|=0;if(x>=0&&y>=0&&x<N&&y<N){M[y*N+x]=1;K[y*N+x]=k}};
+  const stems=[[16,28,9,7],[16,28,16,5],[16,28,23,7]];for(const[x0,y0,x1,y1]of stems)for(let i=0;i<=40;i++){const t=i/40;put(x0+(x1-x0)*t,y0+(y1-y0)*t,1);put(x0+(x1-x0)*t+1,y0+(y1-y0)*t,1)}
+  for(const[x0,y0,x1,y1]of stems)for(const t of[.35,.55,.75,.92]){const cx=x0+(x1-x0)*t,cy=y0+(y1-y0)*t;for(const s of[-1,1])for(let dy=-2;dy<=1;dy++)for(let dx=0;dx<4;dx++){if(Math.abs(dy+.5)+dx*.5>2.6)continue;put(cx+s*(dx+1)+(s<0?0:1),cy+dy-dx*.5,2)}}
+  for(let x=13;x<=19;x++)for(let y=21;y<=22;y++)put(x,y,3);
+  const c=document.createElement('canvas');c.width=c.height=64;const g=c.getContext('2d'),at=(x,y)=>x>=0&&y>=0&&x<N&&y<N&&M[y*N+x];
+  const COL={1:['#8d7a4a','#a99862'],2:['#5f9a52','#86bf6e'],3:['#9a6a3c','#c99a62']};
+  for(let y=0;y<N;y++)for(let x=0;x<N;x++){if(!at(x,y))continue;const k=K[y*N+x],edge=!at(x-1,y)||!at(x+1,y)||!at(x,y-1)||!at(x,y+1);g.fillStyle=COL[k][edge?0:1];g.fillRect(x*2,y*2,2,2)}
+  return HERBICO=c.toDataURL()}
 let HORNICO=null;function hornIco(){/* よびごえの角笛のアイコン：32×32のマス目の四角だけで描く（2倍の細かさ） */if(HORNICO)return HORNICO;const N=32,M=new Int8Array(N*N),B=new Int8Array(N*N);
   for(let i=0;i<=200;i++){const t=i/200,x=5+t*20+Math.sin(t*Math.PI)*-1,y=26-t*16-Math.sin(t*Math.PI)*6,r=1.2+t*t*4.3;for(let yy=0;yy<N;yy++)for(let xx=0;xx<N;xx++)if(Math.hypot(xx+.5-x,yy+.5-y)<=r){const q=yy*N+xx;M[q]=1;if(Math.abs(t-.45)<.035||Math.abs(t-.75)<.03)B[q]=1}}
   const c=document.createElement('canvas');c.width=c.height=64;const g=c.getContext('2d'),at=(x,y)=>x>=0&&y>=0&&x<N&&y<N&&M[y*N+x];
@@ -204,6 +214,7 @@ function renderSheet(){
     {const TL=WD===0?[['mover','ひっこしミトン','家具・建物をタップして、うつしたい所をタップすると、すぐそこへうつる','mover']]:WD===1?[['bulk','ひろびろハケ','指でなぞった範囲を、ブロックでまとめてぬれる。種もまとめて植えてもらえる','hake'],['swap','つけかえトンカチ','つながっている柵・塀・家の壁・道・床を、まとめてべつの種類にかえる。はずした物は、おそなえ箱にもどる','swap']]:[];/* 道具は土地ごと（草原：ひっこしミトン・だんさスコップ、火山：ひろびろハケ・つけかえトンカチ）。もらった道具は、ほかの土地でも使える */
       if(TL.length){const r3=sec('道具');for(const T of TL){const bx=row(r3,T[1],T[2],toolIcon(T[3]),S[T[0]]);if(S[T[0]])btn(bx,'もらった',true);else btn(bx,SP(3000),S.pt<3000,()=>{S.pt-=3000;S[T[0]]=true;applyFeats();toast(T[1]+'をもらった！「どうぐ」から使える','good');trade()},1)}
         if(WD===0){const b2=row(r3,'だんさスコップ','段差をけずる・もる工事を、せいれいにたのめる。1マスでパワー50',toolIcon('scoop'),S.dig);if(S.dig)btn(b2,'もらった',true);else btn(b2,SP(1000),S.pt<1000,()=>{S.pt-=1000;S.dig=true;applyFeats();toast('だんさスコップをもらった！','good');trade()},1)}}}/* だんさスコップは草原のカミサマから（ほかの土地でも使える） */
+    if(S.enemyOn||S.nights>0){const r7=sec('まもりの品'),bx=row(r7,'まよけのハーブ',HERBDESC+'（所持：'+(S.herb||0)+'）',herbIco());btn(bx,SP(200),S.pt<200,()=>{S.pt-=200;S.herb=(S.herb||0)+1;(S.seenIt||(S.seenIt={}))['x:herb']=1;toast('まよけのハーブをもらった','good');trade()},1)}
     if(WD===0&&(S.bossKills||0)>=1){const r5=sec('とくべつな交換'),bx=row(r5,'めぶきのしずく','消えてしまったせいれいを、よみがえらせる（所持：'+(S.mebuki||0)+'）',null);btn(bx,SP(400),S.pt<400,()=>{S.pt-=400;S.mebuki=(S.mebuki||0)+1;toast('めぶきのしずくをもらった','good');trade()},1)}/* 草原には、おまつりがない。しずくはカミサマから */
     if(WD===1&&(qAt('fest')||S.cleared)){const r5=sec('とくべつな交換');/* 火山のふもと：「おまつりをひらこう」のあとから、いつでもおまつり。めぶきのしずく・ごちそうは、おまつりの日に、せいれいの屋台で */
       {const done=S.festDay!=null&&S.festDay>=dayNo(),bx=row(r5,'おまつり','つぎの日が、おまつりになる',null,done);btn(bx,done?(S.festDay>dayNo()?'あしたはおまつり':'きょうはおまつり'):SP(200),done||S.pt<200,()=>{S.pt-=200;S.festDay=dayNo()+1;sfx('good');toast('あしたは、おまつり！','good');trade()},1)}/* たのんだつぎの日の朝7時に、おまつりがはじまる */
@@ -231,6 +242,7 @@ function renderSheet(){
       b.querySelector('img').src=seedIcon(k);b.querySelector('.nm').textContent=CROPS[k].name+'のたね';b.querySelector('.ct').textContent=cseed(k);if(!cseed(k))b.classList.add('zero');b.onclick=()=>{sfx('tap');itemPop(sid)};grid.appendChild(b)}
     if((S.mseed||0)>0){const b=el('<button class="slot"><span class="ct"></span><img src="'+seedIco()+'" style="width:40px;height:40px;display:block;margin:0 auto"><span class="nm">ふしぎな種</span></button>');b.querySelector('.ct').textContent=S.mseed;b.onclick=()=>{sfx('tap');itemPop('mseed')};grid.appendChild(b)}
     if((S.horn||0)>0){const b=el('<button class="slot"><span class="ct"></span><img alt=""><span class="nm">よびごえの角笛</span></button>');b.querySelector('img').src=hornIco();b.querySelector('.ct').textContent=S.horn;b.onclick=()=>{sfx('tap');itemPop('horn')};grid.appendChild(b)}
+    if((S.herb||0)>0){const b=el('<button class="slot"><span class="ct"></span><img alt=""><span class="nm">まよけのハーブ</span></button>');b.querySelector('img').src=herbIco();b.querySelector('.ct').textContent=S.herb;b.onclick=()=>{sfx('tap');itemPop('herb')};grid.appendChild(b)}
     body.appendChild(grid);
     if(typeof sheetArg==='string'&&(sheetArg==='mseed'?(S.mseed||0)>0:sheetArg.startsWith('seed:')?!!CROPS[sheetArg.slice(5)]:ids.includes(sheetArg))){const a=sheetArg;sheetArg=null;itemPop(a)}/* ほかの画面から、物をえらんで開いたときは、そのメニューも出す */
   }else if(sheet==='craft'){
@@ -574,7 +586,7 @@ function zukanBody(body){
       const c=row.querySelector('canvas').getContext('2d');c.scale(2,2);try{drawShade(c,k,36,64,(k==='boss'||k==='hino'||k==='yama'||k==='boss2'?.46:.56),1,{t:0,dot:1})}catch(_){}
       row.querySelector('b').textContent=D.name;row.querySelector('p').textContent=ZUKAN[k];row.querySelector('small').textContent='体力 '+D.hp+'・はやさ '+D.sp+'・追いはらった '+(K[k]||0)+'回・たおしたときのけいけん +'+xpText(spiritXpGain(D.xp,1))+'（Lv1・2）';if(d.cleared&&ZURA[k]){const u=el('<p class="note"></p>');u.textContent='もとのすがた：'+ZURA[k];row.querySelector('.zt').appendChild(u)}rows.appendChild(row);list.push(null)}}
   else{const it=Object.assign({},d.seenIt||{});for(const k in d.mat||{})if(d.mat[k]>0)it['m:'+k]=1;for(const k in d.fs||{})if(d.fs[k]>0)it['f:'+k]=1;
-    for(const k in MATN)if(it['m:'+k])add(MATN[k],'素材',ICONS[k]||null);for(const k in FOODS)if(it['f:'+k])add(FOODS[k].name,FOODS[k].fx||'食べ物',foodIc(k));if(it['x:horn'])add('よびごえの角笛',HORNDESC,hornIco())}
+    for(const k in MATN)if(it['m:'+k])add(MATN[k],'素材',ICONS[k]||null);for(const k in FOODS)if(it['f:'+k])add(FOODS[k].name,FOODS[k].fx||'食べ物',foodIc(k));if(it['x:horn'])add('よびごえの角笛',HORNDESC,hornIco());if(it['x:herb'])add('まよけのハーブ',HERBDESC,herbIco())}
   body.appendChild(el('<p class="story">'+list.length+'こ</p>'));
   for(const q of list){if(!q)continue;rows.appendChild(rowEl(q[0],q[1],q[2]))}
   if(!list.length)body.appendChild(nodata('zukan','まだ見つけていないよ'));body.appendChild(rows)}
