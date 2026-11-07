@@ -46,7 +46,7 @@ function thumb(cv2,k,open,hide){
   PXSCENE(c,190,70,1,k===1?'volcano':k===2?'water':k===FREE?'free':'meadow',k*7+3);
   if(!open){c.fillStyle='rgba(0,0,0,.4)';c.fillRect(0,0,190,70);PXSCENE(c,190,70,1,'lockover',0)}
 }
-const APP_VER=1251;/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER=1252;/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
@@ -125,7 +125,7 @@ function updTut(){
   else if(q.talk&&!S.qTalked){}/* 会話の前は、クエストの案内を出さない */
   else if(qt==='statue'){if(WD===0&&STATUE<0&&!S.obj.includes('site'))placeHint('statue')}/* 操作の案内は1章だけ */
   else if(qt==='springA'){if(inv('hotstone')>0)placeHint('hotstone')}
-  else if(qt==='table'){const g=orderTut('table');if(g&&g.kind==='place')placeHint('table');else if(g&&g.kind==='close'){el=$('#sheetX');lbl='依頼ボードをとじる'}else if(g&&g.kind==='look'){el=document.querySelector('#dock [data-mode="look"]');lbl='「みる」をタップ'}else if(g&&g.kind==='board'){wp=[(BOARD%W+.5)*TS,((BOARD/W)|0)*TS+8];lbl='依頼ボードをタップ'}else if(g&&g.kind==='tab'){el=document.querySelectorAll('.ctab')[g.tab];lbl='「家具」をタップ'}else if(g&&g.kind==='row'){const row=[...document.querySelectorAll('#sheetBody .row')].find(r=>r.textContent.includes(BL.table.name));el=row&&row.querySelector('button');lbl=el&&el.disabled?'パワーや素材が集まるまで待とう':'食卓の「はる」をタップ'}}
+  else if(qt==='table'){const g=orderTut('table');if(g&&g.kind==='place')placeHint('table');else if(g&&g.kind==='close'){el=$('#sheetX');lbl='依頼ボードをとじる'}else if(g&&g.kind==='look'){el=document.querySelector('#dock [data-mode="look"]');lbl='「みる」をタップ'}else if(g&&g.kind==='board'){wp=[(BOARD%W+.5)*TS,((BOARD/W)|0)*TS+8];lbl='依頼ボードをタップ'}else if(g&&g.kind==='tab'){el=document.querySelectorAll('.ctab')[g.tab];lbl='「家具」をタップ'}else if(g&&g.kind==='row'){const row=[...document.querySelectorAll('#sheetBody .row')].find(r=>r.textContent.includes(BL.table.name));el=row&&([...row.querySelectorAll('button')].find(b=>b.textContent.includes('はる'))||[...row.querySelectorAll('button')].pop());lbl=el&&el.disabled?'パワーや素材が集まるまで待とう':'食卓の「はる」をタップ'}}
   else if((qt==='stor'||qt==='mbox')&&sheet==='craft'&&S.orders.some(o=>o.type===(qt==='stor'?'stor':'mbox'))&&inv(qt==='stor'?'stor':'mbox')<=0){el=$('#sheetX');lbl='とじる'}/* はったあと：画面をとじて、できあがりを待つ */
   else if(qt==='farm6'){if(inv('farm')>0)placeHint('farm')}
   else if(qt==='imoseed'){if(imoSeedQuestPlots().length>=2)return hide();if(sheet){el=$('#sheetX');lbl='とじる'}else if(mode!=='build'){el=document.querySelector('#dock [data-mode="build"]');lbl='「おく」をタップ'}
@@ -142,7 +142,7 @@ function updTut(){
   else if(qt==='stor'||qt==='mbox'){const bid=qt==='stor'?'stor':'mbox',tb=craftTabFor(bid),tn=CRAFT_TABS[tb][0],bn=BL[bid].name;
     if(inv(bid)>0)placeHint(bid);
     else if(!S.orders.some(o=>o.type===bid)){
-      if(sheet==='craft'){if(craftTab!==tb){el=document.querySelectorAll('.ctab')[tb];lbl='「'+tn+'」をタップ'}else{const row=[...document.querySelectorAll('#sheetBody .row')].find(r=>r.textContent.includes(bn));el=row&&row.querySelector('button');lbl=el&&el.disabled?'木材が集まるまで待とう':'「はる」をタップ'}}
+      if(sheet==='craft'){if(craftTab!==tb){el=document.querySelectorAll('.ctab')[tb];lbl='「'+tn+'」をタップ'}else{const row=[...document.querySelectorAll('#sheetBody .row')].find(r=>r.textContent.includes(bn));el=row&&([...row.querySelectorAll('button')].find(b=>b.textContent.includes('はる'))||[...row.querySelectorAll('button')].pop());lbl=el&&el.disabled?'木材が集まるまで待とう':'「はる」をタップ'}}
       else if(!sheet){if(mode!=='look'){el=document.querySelector('#dock [data-mode="look"]');lbl='「みる」をタップ'}else if(BOARD>=0){wp=[(BOARD%W+.5)*TS,((BOARD/W)|0)*TS+8];lbl='依頼ボードをタップ'}}}}
   else if(qt==='fence4'){if(inv('fence')>0)placeHint('fence')}
   else if(qt==='wall'){if(inv('hwall')>0)placeHint('hwall')}
