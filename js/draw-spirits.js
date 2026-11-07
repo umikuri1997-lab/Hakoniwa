@@ -435,9 +435,9 @@ function drawRes0(r,now){
   if(CLAPON)return;/* 拍手中は吹き出しを出さない */
   const warn=r.hunger<20;
   if(!ci&&(r.bubble||warn)){const t0=warn&&!r.bubble?'🍙':r.bubble,t=(BUBFACE[t0]?null:NOFACE[t0])||t0;/* 顔の絵文字は使わない */
-    {const a=r.act;if(a&&a.stage==='do'&&(a.type==='mine'||a.type==='chop')&&NATHIT.has(a.obj)&&Math.abs((a.obj%W+.5)*TS-px)<TS+20){const yb=natBarY(a.obj);if(by-54<yb+7&&by-15>yb-2)by=yb+12}}/* 木・岩ののこりのバーと重なるときは、ふきだしをバーの上へ */
-    const pic=/^(obj|ic|chip):/.test(String(t)),bw=36;/* 絵のアイコンは、絵文字と同じはば *//* 吹き出しは1.5倍 */
-    const BB=pxBub(ctx,px,by-56,bw,34,warn?'#ffd2cc':'#fff',warn?'#c98a80':'#b8a587');/* ドットのふきだし */
+    {const a=r.act;if(a&&a.stage==='do'&&(a.type==='mine'||a.type==='chop')&&NATHIT.has(a.obj)&&Math.abs((a.obj%W+.5)*TS-px)<TS+20){const yb=natBarY(a.obj);if(by-46<yb+7&&by-15>yb-2)by=yb+12}}/* 木・岩ののこりのバーと重なるときは、ふきだしをバーの上へ */
+    const pic=/^(obj|ic|chip):/.test(String(t)),bw=27;/* 絵のアイコンは、絵文字と同じはば *//* 吹き出しは1.5倍 */
+    const BB=pxBub(ctx,px,by-47.5,bw,25.5,warn?'#ffd2cc':'#fff',warn?'#c98a80':'#b8a587');/* ドットのふきだし */
     if(t==='💬'){ctx.save();ctx.setTransform(1,0,0,1,0,0);ctx.fillStyle='#7a7064';const q=Math.max(2,Math.round(BB.s/9));for(let d=-1;d<=1;d++)ctx.fillRect(Math.round(BB.x-q/2)+d*q*2,Math.round(BB.y-q/2),q,q);ctx.restore()}/* おしゃべりは点々だけ */
     else if(t==='🪓'&&!BUBS.ok&&PSPR.axe&&PSPR.axe.ok){const g=PSPR.axe.img,ih=17,iw=ih*g.width/g.height;ctx.save();ctx.translate(px,by-39);ctx.rotate(-Math.PI/4);ctx.drawImage(g,-iw/2,-ih/2,iw,ih);ctx.restore()}else if(!pic&&BUBI[bubKey(t)])bubIcon(ctx,t,Math.round(px/1.5)*1.5,by-39,1.5,BB);/* 絵文字は、ドットの絵（BUBI）で描く */else{const ei=emoImg(t);if(ei){const k=BB.s*.85/Math.max(ei.width,ei.height),iw=Math.round(ei.width*k),ih=Math.round(ei.height*k);ctx.save();ctx.setTransform(1,0,0,1,0,0);ctx.drawImage(ei,Math.round(BB.x-iw/2),Math.round(BB.y-ih/2),iw,ih);ctx.restore()}/* 絵のアイコンも、ふきだしの中のまん中（画面のピクセル）に */else if(!pic&&!emoSrc(t))bubIcon(ctx,'?',Math.round(px/1.5)*1.5,by-39,1.5,BB)}}};
   if(BUBQ){const T=ctx.getTransform();BUBQ.push(()=>{ctx.save();ctx.setTransform(T);over();ctx.restore()})}else over();/* あとで描くふきだしも、見張り台・段差の上の高さのまま */
@@ -447,14 +447,14 @@ let GODOUT=false;/* お見送りのあと、カミサマが光になって消え
 const godHere=()=>S.godShown&&(!S.godGone||S.godVisit)&&!GODOUT;
 /* その画面（コマ）で描いたふきだしの場所。となりの子のふきだしと重ならないように、あとの子のぶんを上へずらす */
 const BUBR=[];let BUBF=-1;
-function bubLift(px,by,now){if(BUBF!==now){BUBF=now;BUBR.length=0}for(let k=0;k<3;k++){const hit=BUBR.some(b=>Math.abs(b[0]-px)<32&&Math.abs(b[1]-by)<28);if(!hit)break;by-=30}return by}
+function bubLift(px,by,now){if(BUBF!==now){BUBF=now;BUBR.length=0}for(let k=0;k<3;k++){const hit=BUBR.some(b=>Math.abs(b[0]-px)<24&&Math.abs(b[1]-by)<21);if(!hit)break;by-=22.5}return by}
 function pxStep(c,x,y,w,h,ins,col,d){/* 段々の角の四角 */const k=ins.length;c.fillStyle=col;c.fillRect(x,y+k*d,w,h-2*k*d);for(let i=0;i<k;i++){const a=ins[i]*d;c.fillRect(x+a,y+i*d,w-2*a,d);c.fillRect(x+a,y+h-(i+1)*d,w-2*a,d)}}
 function pxBub(c,cx,top,w,h,fill,line){/* ドットのふきだし：段々の角（4・2・1・1ドット）と、段々のしっぽ。cx は、しっぽのまん中。画面のドットにそろえて描く（1ドット＝1.5、画面の整数ピクセル） */
   const T=c.getTransform(),d=Math.max(1,Math.round(1.5*T.a)),n=Math.round(w/1.5/2),m=Math.round(h/1.5),tx=Math.round(T.a*cx+T.e),y=Math.round(T.d*top+T.f),x=tx-n*d;w=(2*n+1)*d;h=m*d;
   c.save();c.setTransform(1,0,0,1,0,0);pxStep(c,x,y,w,h,[4,2,1,1],line,d);pxStep(c,x+d,y+d,w-2*d,h-2*d,[3,1,1],fill,d);
   c.fillStyle=line;c.fillRect(tx-2*d,y+h,5*d,d);c.fillRect(tx-d,y+h+d,3*d,d);c.fillRect(tx,y+h+2*d,d,d);c.fillStyle=fill;c.fillRect(tx-d,y+h-d,3*d,2*d);c.fillRect(tx,y+h+d,d,d);c.restore();return {x:tx+d/2,y:y+h/2,s:(Math.min(2*n+1,m)-5)*d}}/* 中のまん中と、アイコンの大きさ（わくから2ドットあける） */
-function talkBub(px,by,now,col){if(BUBF!==now){BUBF=now;BUBR.length=0}BUBR.push([px,by]);const bw=30,bb=Math.round((by-Math.abs(Math.sin(now/260))*3)/1.5)*1.5;pxBub(ctx,px,bb-48,bw,27,col||'#9fdcff','#fff');
-    ctx.fillStyle='#1f5f86';const cx=Math.round(px/1.5)*1.5;for(let d=-1;d<=1;d++)ctx.fillRect(cx+d*7.5-1.5,bb-36,4.5,4.5);}/* 点々も、四角いドット */
+function talkBub(px,by,now,col){if(BUBF!==now){BUBF=now;BUBR.length=0}BUBR.push([px,by]);const bw=22.5,bb=Math.round((by-Math.abs(Math.sin(now/260))*3)/1.5)*1.5,B=pxBub(ctx,px,bb-42,bw,21,col||'#9fdcff','#fff');
+    ctx.save();ctx.setTransform(1,0,0,1,0,0);ctx.fillStyle='#1f5f86';const q=Math.max(2,Math.round(B.s/6));for(let d=-1;d<=1;d++)ctx.fillRect(Math.round(B.x-q/2)+d*q*2,Math.round(B.y-q/2),q,q);ctx.restore()}/* 点々も、四角いドット */
 const HB={t:0,rk:[],ps:[],fl:[]};
 function drawHanabi(now){const dt=Math.min(.05,Math.max(0,(now-(HB.t||now))/1000));HB.t=now;const h=hour();
   if(festOn()&&h>=20&&h<21&&!sheet&&Math.random()<dt*1.1){const C=['#ff6b6b','#ffd84a','#7fe8ff','#9cff7a','#ff8cc0','#c9a2ff'];HB.rk.push({x:VW*(.15+Math.random()*.7),y:VH*.62,ty:VH*(.2+Math.random()*.2),col:pick(C),col2:pick(C)})}/* 夜8時から9時は、空に花火 */
