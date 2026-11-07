@@ -21,7 +21,7 @@ const INTRO2=[
 ];
 const QUESTS2=[
   {id:'statue',text:'神殿を建ててもらおう',check:()=>cnt('statue')>=1,by:GOD,how:'下の「おく」→「神殿」をえらび、空いた場所をタップ',story:[
-    [HOMURA,'神殿？ あたいひとりで十分さ。……ま、あってもいいけど。'],[HOMURA,'へえ、なかなかいい神殿じゃないか。'],
+    [HOMURA,'#surprise|ほんとに建っちまった。'],[HOMURA,'へえ、なかなかいい神殿じゃないか。'],
     [GOD,'じゃろ〜。ここが、おヌシとわしの居場所じゃ。'],
     [GOD,'#joy|くらしの道具は、とどけておいたぞい。'],[HOMURA,'……ま、助かるよ。']],
    gives:{feat:['inv','remove','plant','craft','people'],flag:'lv_oven',recipes:['oven','bed','stor','mbox'],flags:['yoganLearned'],items:{oven:1,bed:1,hwall:3,fence:10,spike:10},mat:{wood:10,stone:10},enemy:true}},
@@ -158,16 +158,16 @@ const QUESTS2=[
     [SHIZUKU,'温泉宿も、露天ぶろもできて、村じゅうに湯けむりがただようようになりましたね。'],
     [HOMURA,'こうなったら、だれかに入ってもらいたいねえ。'],
     [GOD,'#joy|ほっほ。それなら、草原から、ひとり連れてこようかの。']]},
-   story:[[HOMURA,'#joy|お客さん、よろこんでくれたね！','cheer'],[SHIZUKU,'半熟のたまご、おいしいと言ってくれました。'],[HOMURA,'かたゆでも、食べてたよ。'],[HOMURA,'……あとは、ヌシ様をむかえるだけさ。']]},
+   story:[[HOMURA,'#joy|お客さん、よろこんでくれたね！','cheer'],[SHIZUKU,'#joy|とろけちゃいそう、と言ってくれました。'],[HOMURA,'かたゆでも、食べてたよ。'],[HOMURA,'……あとは、ヌシ様をむかえるだけさ。']]},
 
   {id:'tower',text:'守護の台座を建ててもらおう',check:()=>cnt('tower')>=1,prog:()=>'じょうけん '+clearConds().filter(c=>c[1]).length+'/'+clearConds().length,how:'「おく」→「守護の台座」を建ててもらう。ヌシ様の火だねを、台座にはめる',
    talk:{who:HOMURA,when:()=>true,lines:[
-    [SHIZUKU,'守り神さま。温泉の入り口に、のれんをかけたいですね。お客さんが、ほっとひと息つけるように。'],['@idea'],
-    [HOMURA,'湯けむりの村も、だいぶ元にもどってきたね。'],
+    [HOMURA,'湯けむりの村も、だいぶ元にもどってきたね。あとは、ヌシ様の火だねをはめる『守護の台座』だ。'],
     [SHIZUKU,'台座を建てるのに、なにが足りないか、いっしょに確かめましょう。'],
     [SHIZUKU,'#think|……ただ、台座が光ると、山の上にのこった影が気づくかもしれません。'],
     [HOMURA,'そのときは、みんなでむかえうつまでさ。……今度は、みんなでね。'],
-    [HOMURA,'よし、仕上げだよ！']],learn:['noren'],gives:{shrine:true}},
+    [HOMURA,'よし、仕上げだよ！'],
+    [SHIZUKU,'守り神さま。温泉の入り口に、のれんをかけたいですね。お客さんが、ほっとひと息つけるように。'],['@idea']],learn:['noren'],gives:{shrine:true}},
    story:null},
 ];;
 const QUESTS2_V1=['statue','coldSpring','food3','springA','summon','rockCanal','shizukuRest','yatai','haikage3','heatPath','springB','fire3','fest','ashiyu','volcano','rockDeep','springC','ashNight','hinoookage','inn','guest','tower'];/* 火山のクエストをかえる前のならび（古いセーブの読みかえ用） */
