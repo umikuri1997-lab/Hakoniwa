@@ -8,7 +8,7 @@ HERE = os.path.dirname(os.path.abspath(__file__)); ROOT = os.path.dirname(os.pat
 sys.path.insert(0, os.path.join(ROOT, 'tools')); import chips
 from PIL import Image
 KINDS = {  # armIn：横の腕を内がわへ。legDy：足だけを上へずらす（足もとは地面のまま、体が下がる）
-         'basic': {'foot': (25, 78), 'split': 25, 'legDy': -2, 'armIn': 3}, 'brute': {'foot': (33, 69), 'split': 33}}   # 足もとの点・左右に分けるx（もとの絵のドット）
+         'basic': {'foot': (25, 78), 'split': 25, 'legDy': -2, 'armIn': 3, 'downDy': 3}, 'brute': {'foot': (33, 69), 'split': 33}}   # 足もとの点・左右に分けるx（もとの絵のドット）
 
 def build():
     h0, C = chips.load_imgs()
@@ -48,7 +48,7 @@ def build():
                 im, ox, oy = tilt(side, k); bb = im.getbbox(); c = im.crop(bb)
                 C['kgp_%s:arm%s%s' % (kind, side, sfx)] = {'ax': ox + bb[0] - fx, 'ay': bb[1] + oy - fy, 'w': c.width, 'h': c.height, 'f': [c]}
         for n, (im, x, y) in down.items():
-            C['kgp_%s:%s' % (kind, n)] = {'ax': x - fx, 'ay': y - fy, 'w': im.width, 'h': im.height, 'f': [im]}
+            C['kgp_%s:%s' % (kind, n)] = {'ax': x - fx, 'ay': y - fy + cfg.get('downDy', 0), 'w': im.width, 'h': im.height, 'f': [im]}  # downDy：下ろした腕を下へ（ドット）
         for n, (im, ox) in parts.items():
             bb = im.getbbox()
             if not bb: continue
