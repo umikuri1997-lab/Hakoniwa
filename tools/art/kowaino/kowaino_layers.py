@@ -19,7 +19,7 @@ def build():
         for f in sorted(os.listdir(d)):
             if not f.endswith('.png'): continue
             im = Image.open(os.path.join(d, f)).convert('RGBA'); n = f[:-4]
-            if n == 'armsDown': continue
+            if n in ('armsDown', 'armsDownRef'): continue
             if n in ('arms', 'legs'):
                 ai = cfg.get('armIn', 0) if n == 'arms' else 0   # armIn：横に上げた腕を、体のほうへよせる（ドット）
                 parts[n[:-1] + 'L'] = im.crop((0, 0, sx, im.height)).copy(), ai
@@ -30,6 +30,14 @@ def build():
         tb = parts['torso'][0].getbbox(); A = Image.open(os.path.join(d, 'arms.png')).convert('RGBA'); ab = A.getbbox()
         L = A.crop((ab[0], ab[1], tb[0], ab[3])).rotate(90, expand=True); R = A.crop((tb[2], ab[1], ab[2], ab[3])).rotate(-90, expand=True)
         down = {'armLd': (L, tb[0] - L.width, ab[1]), 'armRd': (R, tb[2], ab[1])}
+        ref = os.path.join(d, 'armsDownRef.png')
+        if os.path.exists(ref):  # 腕を下ろした参考図（組み立てた絵）があれば、ほかの部品（頭・体・足・とげ・目）にない所を、下ろした腕にする
+            R0 = Image.open(ref).convert('RGBA'); out = Image.new('RGBA', R0.size); pr = R0.load(); po = out.load()
+            masks = [Image.open(os.path.join(d, f)).convert('RGBA').load() for f in os.listdir(d) if f.endswith('.png') and f[:-4] in ('head', 'torso', 'legs', 'spikes', 'eyeN', 'eyeA', 'eyeS')]
+            for yy in range(R0.height):
+                for xx in range(R0.width):
+                    if pr[xx, yy][3] > 128 and not any(m[xx, yy][3] > 0 for m in masks): po[xx, yy] = pr[xx, yy]
+            out.save(os.path.join(d, 'armsDown.png'))
         if os.path.exists(os.path.join(d, 'armsDown.png')):  # 下ろした腕の絵があれば、それを使う（肩を出さない形）
             Dn = Image.open(os.path.join(d, 'armsDown.png')).convert('RGBA'); db = Dn.getbbox()
             down = {'armLd': (Dn.crop((db[0], db[1], sx, db[3])), db[0], db[1]), 'armRd': (Dn.crop((sx, db[1], db[2], db[3])), sx, db[1])}
