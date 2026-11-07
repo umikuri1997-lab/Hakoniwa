@@ -33,6 +33,20 @@ def build():
         if os.path.exists(os.path.join(d, 'armsDown.png')):  # 下ろした腕の絵があれば、それを使う（肩を出さない形）
             Dn = Image.open(os.path.join(d, 'armsDown.png')).convert('RGBA'); db = Dn.getbbox()
             down = {'armLd': (Dn.crop((db[0], db[1], sx, db[3])), db[0], db[1]), 'armRd': (Dn.crop((sx, db[1], db[2], db[3])), sx, db[1])}
+        # 上げた腕：肩（体のはし）は動かさず、外へいくほど上（k>0）・下（k<0）へずらす（ななめに上げる・下げる）
+        def tilt(side, k, pad=14):
+            im, ox = parts['arm' + side]; sh = tb[0] if side == 'L' else tb[2] - 1
+            out = Image.new('RGBA', (im.width, im.height + 2 * pad)); px = im.load(); po = out.load()
+            for yy in range(im.height):
+                for xx in range(im.width):
+                    if px[xx, yy][3] == 0: continue
+                    dist = max(0, sh - (xx + ox)) if side == 'L' else max(0, (xx + ox) - sh)
+                    po[xx, yy + pad - round(dist * k)] = px[xx, yy]
+            return out, ox, -pad
+        for side in 'LR':
+            for sfx, k in (('u', .8), ('w', -.4)):
+                im, ox, oy = tilt(side, k); bb = im.getbbox(); c = im.crop(bb)
+                C['kgp_%s:arm%s%s' % (kind, side, sfx)] = {'ax': ox + bb[0] - fx, 'ay': bb[1] + oy - fy, 'w': c.width, 'h': c.height, 'f': [c]}
         for n, (im, x, y) in down.items():
             C['kgp_%s:%s' % (kind, n)] = {'ax': x - fx, 'ay': y - fy, 'w': im.width, 'h': im.height, 'f': [im]}
         for n, (im, ox) in parts.items():
