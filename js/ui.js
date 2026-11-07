@@ -423,6 +423,7 @@ function renderSheet(){
   }else if(sheet==='furn'){const j=sheetArg,o=S.obj[j]||(S.rug||{})[j];if(!o||!BL[o])return closeSheet();T.textContent=BL[o].name;{const te=tagsEl(o);if(te)body.appendChild(te)}
     body.appendChild(rowEl(BL[o].name,withAttr(o,BL[o].desc||''),iconURL(o)));
     if(BL[o].hp&&S.obj[j]===o)body.appendChild(el('<div class="rows"></div>')).appendChild(rowEl('じょうぶさ',Math.floor(S.hp[j]??BL[o].hp)+' / '+BL[o].hp));/* 建物などのじょうぶさ */
+    {const rc=RFC.get(j);if(rc!=null&&S.roof&&S.roof[rc]){const b=el('<button class="btn"></button>');b.textContent=BL[S.roof[rc]].name+'を見る';b.onclick=()=>{sfx('tap');openSheet('roof',rc)};body.appendChild(b)}}/* 屋根の下の物：屋根の説明へ */
     {const R=rangeOf(o,j);if(R&&!BL[o].env&&!BENCHES.has(o))body.appendChild(el('<div class="rows"></div>')).appendChild(rowEl('効果のはんい','まわり'+(R.cells||R.r)+'マス'))}
 
     {const t=SPOTJ.get(j);if(t){for(const I of SPOTI)if(t.has(I.sp.k)&&spotCells(I).includes(j))spotFx(I)}/* 家具をタップしたときも、そのスポットを点線でかこむ */if(t)for(const sp of SPOTS){if(!t.has(sp.k))continue;body.appendChild(el('<div class="rows"></div>')).appendChild(rowEl('スポット：'+sp.n,sp.eff))}}/* スポット */
@@ -431,6 +432,8 @@ function renderSheet(){
     if(BENCHES.has(o)){const ev=ENVG?Math.max(ENVG[j]||0,ENVG[j+1]||0):0;/* ベンチ：まわりのかざりで上がった回復 */
       body.appendChild(el('<div class="rows"></div>')).appendChild(rowEl('すわって休むと（1時間あたり）','つかれ −'+(Math.round((20+ev*.36)*10)/10)+' / たのしさ +'+(Math.round((4.8+ev*.36)*10)/10)+(ev>0?'':'')))}
 
+  }else if(sheet==='roof'){const j=sheetArg,o=(S.roof||{})[j];if(!o||!BL[o])return closeSheet();T.textContent=BL[o].name;{const te=tagsEl(o);if(te)body.appendChild(te)}
+    body.appendChild(rowEl(BL[o].name,withAttr(o,BL[o].desc||''),iconURL(o)));/* ガゼボ・東屋（屋根の層）の説明 */
   }else if(sheet==='score'){const sc=S.score||calcScore();T.textContent='クリアスコア';
     body.appendChild(el('<div style="text-align:center;margin:6px 0 10px"><div style="font-size:44px;font-weight:900;color:#e0a43a;line-height:1">'+sc.rank+'</div><div style="font-size:24px;font-weight:800;margin-top:4px">'+sc.tot+' てん</div></div>'));
     const g=el('<div class="rows"></div>');for(const[a,b,c]of sc.parts)g.appendChild(rowEl(a+'：'+b,(c>=0?'+':'')+c+' てん'));body.appendChild(g);
