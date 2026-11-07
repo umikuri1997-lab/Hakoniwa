@@ -410,7 +410,7 @@ function renderSheet(){
     T.textContent='ひでんのしょ';
     sheetBack();
     body.appendChild(el(`<div class="sec"><h3>あそびかた</h3><p class="story">あなたはこの土地の新しい<b>守り神</b>。せいれいをふやして土地をよみがえらせ、<b>${WD===0?'御神木':'守護の台座'}</b>を${WD===0?'育てて':'建てて'}<b>ヌシ様</b>をむかえましょう。<br>せいれいが食べたり眠ったり遊んだりすると<b>せいれいパワー</b>がたまります。<br>せいれいのおそなえは<b>おそなえ箱</b>に入ります。家具は<b>依頼ボード</b>でたのみます。カミサマが来たら<b>交換</b>ができます。<br>夜は<b>「コワイノ」</b>に気をつけて。<br>1本指でドラッグ：移動／2本指：ズーム。</p></div>`));/* あそびかたも、ひでんのしょにまとめる */
-    {const CAT=[['あそびかた',[]],['せいれい',['せいれいのようす','ステータス','属性と得意なこと']],['くらし・家具',['家具の種類','くらし']],['守り神',['守り神のちから']],['夜と戦い',['夜と「コワイノ」']]];
+    {const CAT=[['あそびかた',[]],['せいれい',['せいれいのようす','ステータス','属性と得意なこと']],['くらし・家具',['家具の種類','くらし']],['守り神',['守り神のちから']],['夜と戦い',['夜と「コワイノ」','夜の種類']]];
       if(!CAT.some(c=>c[0]===MANC))MANC='あそびかた';
       const bar=el('<div class="mtabs" style="display:flex;flex-wrap:wrap;gap:6px;margin:8px 0"></div>');for(const c of CAT){const b=el('<button class="btn"></button>');b.textContent=c[0];if(c[0]===MANC)b.classList.add('pri');b.onclick=()=>{sfx('tap');MANC=c[0];openSheet('manual')};bar.appendChild(b)}
       body.insertBefore(bar,body.children[1]);
