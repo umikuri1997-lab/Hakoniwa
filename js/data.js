@@ -404,7 +404,6 @@ const QUESTS1=[
     [MINA,'#surprise wave|ふわぁ…。はじめまして、ノドカだよぉ。よろしくねぇ。'],
     [POKO,'#wave|わーい、なかまだ！ よろしくね、ノドカ！'],
     [MINA,'畑を耕すのと、柵を直すのが得意なんだぁ。のんびりやるねぇ。'],[MINA,'#joy|呼んでくれて、ありがとうねぇ、守り神さま。']]},
-  companionFieldQuest("earthListen","切り株の下で","古い切り株のそばにあさぶくろを置き、ノドカと根元の土を確かめる。よけた土をふくろに入れながら、フタバと根の様子を確かめよう","earth",[["F","ノドカ？　どうしたの？"],["N","……ここだけ、土の中に、ほんの少しだけぬくもりが残ってるんだぁ。"],["F","ぬくもり？"],["N","うん。まわりの土は、みんな冷えてるのに。"],["F","#think|……この木……"],["N","知ってる木なのぉ？"],["F","#think|……大きな木だったんだ。"],["N","土の下、見てみようかぁ。よけた土を入れておく、ふくろがあるといいねぇ。あとで、ちゃんと戻せるように。"]],[["F","#think|……あれ？　この傷、ヌシ様の角のあとだ。"],["N","……この傷かぁ。"],["F","ここに頭をくっつけて、お昼寝してたんだ。ぼくが上に乗っても、ぜんぜん起きなくって。"],["F","#think|……また、葉っぱ、生えるかな。"],["N","根は、まだ残ってるよぉ。"],["N","冷えないように、土を戻しておこうねぇ。",0,"stree:cover"],["F","うん。ぼくも、手伝う。"]],['earthListen']),
   {id:'farm6',text:'畑を6つにしよう',how:"「おく」→「畑」をえらび、合計6つにする。土のせいれいが耕すのを待とう",check:()=>cnt('farm')>=6,prog:()=>'畑 '+Math.min(6,cnt('farm'))+'/6',
    talk:{who:GOD,when:()=>true,lines:[
     [GOD,'ノドカが来てくれて、にぎやかになったのう。畑を、おそなえ箱に用意しておいたぞい。ノドカの手で、ふかふかの土にしてもらうとよい。']],gives:{items:{farm:2}}},
@@ -421,6 +420,7 @@ const QUESTS1=[
    story:[
     [POKO,'#joy|たねをまいてくれて、ありがとう！ 水やりと世話は、ぼくにまかせて！'],
     [MINA,'大きくなるの、たのしみだねぇ。']]},
+  companionFieldQuest("earthListen","切り株の下で","古い切り株のそばにあさぶくろを置き、ノドカと根元の土を確かめる。よけた土をふくろに入れながら、フタバと根の様子を確かめよう","earth",[["F","ノドカ？　どうしたの？"],["N","毎日、畑の土をさわってたらねぇ……ここだけ、土の中に、ほんの少しだけぬくもりが残ってるのに気づいたんだぁ。"],["F","ぬくもり？"],["N","うん。まわりの土は、みんな冷えてるのに。"],["F","#think|……この木……"],["N","知ってる木なのぉ？"],["F","#think|……大きな木だったんだ。"],["N","土の下、見てみようかぁ。よけた土を入れておく、ふくろがあるといいねぇ。あとで、ちゃんと戻せるように。"]],[["F","#think|……あれ？　この傷、ヌシ様の角のあとだ。"],["N","……この傷かぁ。"],["F","ここに頭をくっつけて、お昼寝してたんだ。ぼくが上に乗っても、ぜんぜん起きなくって。"],["F","#think|……また、葉っぱ、生えるかな。"],["N","根は、まだ残ってるよぉ。"],["N","冷えないように、土を戻しておこうねぇ。",0,"stree:cover"],["F","うん。ぼくも、手伝う。"]],['earthListen']),
   /* どのクエストも：吹き出し→会話でクエストを受ける→たっせい→吹き出し→お礼とごほうび */
   {id:'fire',text:'火のせいれいをむかえよう',check:()=>elemCount('fire')>=1&&NEWRES==null,how:'見張り台やサルビアを置いて火の力をためる。満ちた次の朝、神殿の「！」からなかまを呼ぶ',prog:()=>'火の力 '+Math.floor(ATTR.fire)+'/'+needFor('fire'),
    talk:{who:POKO,when:()=>true,lines:[
@@ -529,7 +529,9 @@ function greenTalk(){/* ヌシ様をむかえるには、草原がもっと元�
 /* まとめる前（PR 1100ごろまで）の草原の目標の名前とならび。古いセーブの番号を読みかえるときだけ使う */
 const QUESTS1_V1=['statue','stor','mbox','table','wall','bed','path','lv2','fence4','watch1','kikyo','summon','earthListen','earthRoot','farm6','imoseed','trade','oracle','fire','fireRoot','fireTrace','lv3','water','waterFilm','waterLeaf','baseUp','lv4','kagemark','tale','yoru10','ookage','wind','windEcho','windVoices','lv5','tower','green375','wood6','flower50','nushi'];
 /* 交換・おつげの目標をサブクエストへうつす前（tutSub1）の草原の目標のならび。古いセーブの番号を読みかえるときだけ使う */
-let QV3=null;const QUESTS1_V3=()=>QV3||(QV3=QUESTS1.flatMap(q=>q.id==='imoseed'?['imoseed','trade','oracle']:[q.id])),v3Ix=id=>QUESTS1_V3().indexOf(id);
+/* 畑の目標を、切り株の下で（earthListen）より先にした（farmFirst1）前の草原の目標のならび。古いセーブの番号を読みかえるときだけ使う */
+const QUESTS1_V4=["statue","stor","mbox","table","wall","bed","path","lv2","fence4","watch1","kikyo","summon","earthListen","farm6","imoseed","fire","fireRoot","water","waterFilm","kagemark","ookage","wind","windEcho","tower","lv5","wood6","nushi"];
+let QV3=null;const QUESTS1_V3=()=>QV3||(QV3=QUESTS1_V4.flatMap(id=>id==='imoseed'?['imoseed','trade','oracle']:[id])),v3Ix=id=>QUESTS1_V3().indexOf(id);
 /* カミサマの旅立ちの会話。交換のサブクエストのお礼か、火のせいれいをむかえたあと（godFarewellTick）の、どちらか1回 */
 const GOD_FAREWELL=()=>[[GOD,'さて、教えることはだいたい教えたかの！ わしは、ほかの土地も見まわらねばならんのじゃ。ほかの土地にも、こまっとる子らがおるでな。'],
     [POKO,'#surprise|えっ、もう行っちゃうの？'],[POKO,'#think|……あ、ううん。ぼくたちだけでも、だいじょうぶ……だよね？'],[GOD,'#nod|ほっほ。フタバには、もう守り神も、なかまもおるじゃろ。'],[GOD,'#worry|……さみしくなったら、空を見上げるんじゃ。わしは、いつでも見とるからの。'],[MINA,'だいじょうぶだよぉ、フタバ。'],[POKO,'#think|……うん。そうだよね！'],
@@ -601,7 +603,7 @@ function migrateEarthMerge(state){
 function migrateTutSub(state){
   if(state.flags.tutSub1)return;state.flags.tutSub1=1;
   if(state.free||(state.world||0)!==0)return;
-  const V=QUESTS1_V3(),F=state.flags,St=state.subSt||(state.subSt={}),D=state.subDone||(state.subDone={}),Sn=state.subSeen||(state.subSeen={}),ix=id=>QUESTS1.findIndex(q=>q.id===id);
+  const V=QUESTS1_V3(),F=state.flags,St=state.subSt||(state.subSt={}),D=state.subDone||(state.subDone={}),Sn=state.subSeen||(state.subSeen={}),ix=id=>QUESTS1_V4.indexOf(id);/* 畑を先にする前のならび（このあと migrateFarmFirst で読みかえる） */
   const id=V[state.quest||0],sid=state.qStory!=null?V[state.qStory]:null,tutor=['trade','oracle'];
   const set=(k,v)=>{St[k]=v;Sn[k]=1;if(v===3)(state.subArrived||(state.subArrived={}))[k]=true;if(v===4)D[k]=1};
   for(const k of tutor){const i=V.indexOf(k);if((state.quest||0)>i&&sid!==k)set(k,4)}/* もうおわった：二度と出さない */
@@ -609,10 +611,24 @@ function migrateTutSub(state){
   else if(sid==='trade'||sid==='oracle')set(sid,3);/* お礼の会話を待っていた：サブクエストの報告待ち */
   if(F.qsplitPend==='trade'){delete F.qsplitPend;if(id==='trade')set('trade',2);set('oracle',2)}/* まとめた会話は聞いた */
   else if((id==='trade'||id==='oracle')&&state.qTalked)set(id,2);/* 受けたところ：サブクエストのつづき */
-  if(id==null)state.quest=QUESTS1.length;
+  if(id==null)state.quest=QUESTS1_V4.length;
   else if(tutor.includes(id)){state.quest=ix('fire');state.qTalked=false}
   else state.quest=ix(id);
   state.qStory=sid==null||tutor.includes(sid)?null:ix(sid);
+}
+/* 畑の目標（farm6・imoseed）を、切り株の下で（earthListen）より先にした（farmFirst1）。古いセーブの番号（QUESTS1_V4）を名前で読みかえる（1回だけ） */
+function migrateFarmFirst(state){
+  if(state.flags.farmFirst1)return;state.flags.farmFirst1=1;
+  if(state.free||(state.world||0)!==0)return;
+  const V=QUESTS1_V4,ix=id=>QUESTS1.findIndex(q=>q.id===id),id=V[state.quest||0],sid=state.qStory!=null?V[state.qStory]:null;
+  state.quest=id==null?QUESTS1.length:ix(id);state.qStory=sid==null?null:ix(sid);
+  if(id==='earthListen'){
+    if(!state.qTalked)state.quest=ix('farm6');/* まだ受けていない：先に畑の目標から */
+    else{/* 調べのとちゅう：そのままつづける。とばした畑の目標の会話でもらえた物をわたす */
+      const inv=state.inv||(state.inv={}),un=state.unlocked||(state.unlocked={}),cs=state.cseed||(state.cseed={});
+      for(const q of ['farm6','imoseed'].map(k=>QUESTS1[ix(k)])){const g=(q.talk&&q.talk.gives&&q.talk.gives.items)||{};for(const k in g){un[k]=true;if(k.startsWith('seed:')){const c=k.slice(5);cs[c]=(cs[c]||0)+g[k]}else inv[k]=(inv[k]||0)+g[k]}}
+    }
+  }else if(id==='farm6'||id==='imoseed')(state.flags.qPassed||(state.flags.qPassed={})).earthListen=1;/* 切り株の下では、もうした：そこへ来たら、とばす */
 }
 /* まとめた目標のとちゅうから読みこんだとき：できている目標をとばして、はじめのできていない目標へ。まとめた会話でもらった物は、もう一度わたさない */
 function questSplitResolve(){
