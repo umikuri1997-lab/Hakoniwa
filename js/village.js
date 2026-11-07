@@ -162,7 +162,7 @@ function recount(){if(S.fogF&&!S.flags.spring2)fogSpring2(S);if(S.fogF&&!S.flags
   let baseN=0,revN=0;
   for(const k in S.edge||{}){const o=S.edge[k];counts[o]=(counts[o]||0)+1;if(BL[o])addA(BL[o].attr)}/* 花壇のふち */
   for(const k in S.rug||{}){const o=S.rug[k];counts[o]=(counts[o]||0)+1;if(BL[o])addA(BL[o].attr)}/* ラグ（床の上の層）も数える */
-  for(const k in S.roof||{}){const o=S.roof[k];counts[o]=(counts[o]||0)+1;if(BL[o])addA(BL[o].attr)}/* ガゼボ・東屋（屋根の層）も数える */
+  for(const k in S.roof||{}){const o=S.roof[k];counts[o]=(counts[o]||0)+1;if(BL[o]){addA(BL[o].attr);const e=BL[o].env;if(e){const j=+k,x=j%W,y=(j/W)|0,er=BL[o].er||3,z=BL[o].sz||[1,1];for(let dy=-er;dy<er+z[1];dy++)for(let dx=-er;dx<er+z[0];dx++){const nx=x+dx,ny=y+dy;if(nx>=0&&ny>=0&&nx<W&&ny<H)ENVG[ny*W+nx]+=e}}}}/* ガゼボ・東屋（屋根の層）も数える。まわり3マスのたのしさも */
   for(let j=0;j<W*H;j++){const o=S.obj[j],f=S.floor[j],x=j%W,y=(j/W)|0;
     if(f){around(j,1,REV)}/* 床・道・壁などのブロックは、属性の力をためない */
     

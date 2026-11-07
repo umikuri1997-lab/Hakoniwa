@@ -36,9 +36,10 @@ const RUGS=new Set(['rug1','rug2','hoshirug']);/* ラグは、床の上の層（
 const EDGES=new Set(['bedge']);/* 花壇のふちは、床の上の層（S.edge：マス→id）。花・雑草が生えていても置け、つながる */
 function canEdge(x,y,quiet){const no=t=>{if(!quiet)toast(t);return false};if(x<0||y<0||x>=W||y>=H)return false;const j=y*W+x;if(sacredNoBuild(j))return no('みんなで世話をしている木の場所です');if(S.ground[j]===1)return no('水の上には置けません');if(S.ground[j]===2)return no('浅瀬には置けません');if(S.edge&&S.edge[j])return no('ここにはもうふちがあります');const o=S.obj[j];if(o&&!WEEDS.has(o)&&!FLOWERS.has(o))return no('ここにはもう何かあります');return true}
 const rugCells=a=>[a,a+1,a+W,a+W+1];
+const lowRoof=id=>{if(LOWROOF.has(id))return true;const b=BL[id];if(!b||CANOPY.has(id)||b.kind!=='furn'&&b.kind!=='plant')return false;const c=CHIPS[id]||CHIPS[id+'#0'];return !!c&&-(c.ay||0)*64/(c.g||32)<=24};/* 屋根の下に置ける、高さ1マスの物：絵がマスの上へ24ドット（g64）までしかはみ出さない物 */
 const CANOPY=new Set(['gazebo','azumaya']),LOWROOF=new Set(['chair','stool','achair','pouf','sofa1','bench','takebench','table','stable','ltable','clover','bellf','salvia','lily']);/* ガゼボ・東屋は、物の上にかぶせる層（S.roof：左上のマス→id）。たて2・よこ2マス。下に置けるのは、ひくい物だけ（ラグはべつの層なので、いつでも） */
 function canRoof(x,y,quiet){const no=t=>{if(!quiet)toast(t);return false};if(x<0||y<0||x+1>=W||y+1>=H)return false;{const h0=hiAt(y*W+x);if(hiAt(y*W+x+1)!==h0||hiAt(y*W+W+x)!==h0||hiAt(y*W+W+x+1)!==h0)return no('段差をまたいでは置けません')}
-  if(x<0||y<0||x>=W-1||y>=H-1)return no('ここには置けません');for(const c of rugCells(y*W+x)){if(sacredNoBuild(c))return no('みんなで世話をしている木の場所です');if(S.ground[c]===1)return no('水の上には置けません');if(RFC.has(c))return no('ここにはもう屋根があります');const o=S.obj[c],a=o==='part'?S.obj[S.ref[c]]:o;if(a&&!LOWROOF.has(a)&&!WEEDS.has(a))return no('下には、ひくい物だけ置けます')}return true}
+  if(x<0||y<0||x>=W-1||y>=H-1)return no('ここには置けません');for(const c of rugCells(y*W+x)){if(sacredNoBuild(c))return no('みんなで世話をしている木の場所です');if(S.ground[c]===1)return no('水の上には置けません');if(RFC.has(c))return no('ここにはもう屋根があります');const o=S.obj[c],a=o==='part'?S.obj[S.ref[c]]:o;if(a&&!lowRoof(a)&&!WEEDS.has(a))return no('下には、ひくい物だけ置けます')}return true}
 const rugsIn=set=>{const L=[];for(const k in S.rug||{})if(rugCells(+k).some(c=>set.has(c)))L.push(S.rug[k]);return L};/* 家の中（どこか1マスでも）にあるラグ */
 function canRug(x,y,quiet){const no=t=>{if(!quiet)toast(t);return false};if(x<0||y<0||x+1>=W||y+1>=H)return false;
   if(x<0||y<0||x>=W-1||y>=H-1)return no('ここには置けません');for(const c of rugCells(y*W+x)){if(sacredNoBuild(c))return no('みんなで世話をしている木の場所です');if(S.ground[c]===1)return no('水の上には置けません');if(RUGC.has(c))return no('ここにはもうラグがあります');const o=S.obj[c],a=o==='part'?S.obj[S.ref[c]]:o;if(a&&!WEEDS.has(a)&&!(BL[a]&&BL[a].kind==='furn'&&!BL[a].trap&&!WALLD.has(a)))return no('ここにはもう何かあります')}return true}/* 家具の下にもしける */
@@ -62,7 +63,7 @@ function canPlace1(id,x,y,quiet){
   if(STAIRS.has(id)){const d=SROT[stairRot(id,j)];if(!stairOK(j,d)){if(!quiet)toast('その向きには置けません');return false}if(d){const o=stairOut(j,d);if(S.obj[o]&&!WEEDS.has(S.obj[o])||o<0||o>=W*H){if(!quiet)toast('階段は2マスいります');return false}}}/* 階段は、段差の下の低い地面に1×2 */
   if(BL[id].floor)return S.floor[j]!==id&&!(S.obj[j]&&BL[S.obj[j]].job);
   if(S.obj[j]&&!WEEDS.has(S.obj[j])){if(!quiet)toast('ここにはもう何かあります');return false}/* 雑草の上には、そのまま置ける（置いた物が上書きする） */
-  if(RFC.has(j)&&!LOWROOF.has(id)){if(!quiet)toast('屋根の下には、ひくい物だけ置けます');return false}
+  if(RFC.has(j)&&!lowRoof(id)){if(!quiet)toast('屋根の下には、ひくい物だけ置けます');return false}
   if(RUGC.has(j)&&BL[id].kind!=='furn'){if(!quiet)toast('ラグの上には、家具だけ置けます');return false}/* ラグの上には家具を置ける */
   {const b=BL[id];if(b&&(b.solid||HOME_WALLS.has(id)||(FENCE_IDS.has(id)&&!GATE_IDS.has(id)))&&(S.res.some(r=>!r.hidden&&(r.y|0)*W+(r.x|0)===j)||S.enemies.some(e=>e.spawned&&!e.dead&&(e.y|0)*W+(e.x|0)===j))){if(!quiet)toast('せいれいか「コワイノ」がいるので、置けません');return false}}/* 立っている子がいる場所には、通れなくなる物は置けない */
   return true;
