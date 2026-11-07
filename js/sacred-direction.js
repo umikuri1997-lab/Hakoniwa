@@ -50,10 +50,10 @@ function sacredBody(r,now){
   const f=r.face||1,dx=p.anim==='storyBump'?f*3*Math.sin(Math.PI*q):p.anim==='stepBack'?-f*7*sacredEase(Math.min(1,t/.6)):p.anim==='grabSleeve'?f*3*sacredEase(Math.min(1,t/.45)):p.anim==='tremble'?Math.round(Math.sin(now/28)*1.2):0,dy=/^kneel/.test(p.anim||'')?3:0;
   return {...p,p:q,t,dx,dy};
 }
-const SACRED_BEAT_MS={soil:1800,touch:1700,stone:2400,bump:2600,cover:1900,water:2600,runoff:2400,wind:2200,bud:2000,leaf:3000,grow:3300,reply:2200,hug:4800,group:1300,sit:1500,quiet:1400,face:1000,lookup:1500};
+const SACRED_BEAT_MS={soil:1800,touch:1700,stone:2400,bump:2600,cover:1900,water:2600,runoff:2400,wind:2200,bud:2000,leaf:3000,grow:3300,reply:2200,hug:4800,glow:2600,group:1300,sit:1500,quiet:1400,face:1000,lookup:1500};
 function sacredLineHold(cue){return String(cue||'').split('+').reduce((ms,c)=>Math.max(ms,c.startsWith('stree:')?(SACRED_BEAT_MS[c.slice(6)]||0):c.startsWith('vol:')&&typeof VOL_BEAT_MS!=='undefined'?(VOL_BEAT_MS[c.slice(4)]||0):0),0);}
 function sacredDirectedLines(step,a){
-  const beats={earthListen:['touch'],earthRoot:['soil','touch'],fireRoot:['stone','bump'],fireTrace:['soil','stone','cover'],waterFilm:['runoff','soil','water'],waterLeaf:['water','sit'],windEcho:['wind','soil','wind'],windVoices:['soil','touch','water','wind','quiet'],tower:['group']};
+  const beats={tower:['group']};/* なかまの調べは、セリフの行に合図を書く */
   const k=beats[a.fieldId]?.[a.phase];if(!k)return step.lines;
   return step.lines.map((ln,i)=>i?ln:[ln[0],ln[1],ln[2]||0,[ln[3],`stree:${k}`].filter(Boolean).join('+')]);
 }
@@ -79,6 +79,7 @@ function sacredBeat(c){
     sacredStartEffect('growth',ms,{from:Math.min(from,stage-1),to:stage});SACRED_PREVIEW.set(S,{session:VILLAGE_SESSION,stage,until:Infinity});SACRED_SHOWN.set(S,{session:VILLAGE_SESSION,stage});/* お話の中で育つところを見せた（あとで、もう一度育つ会話を出さない） */
     sacredShot(c==='grow'?'group':'detail',cast,1.4);sfx('bush');sacredGrowSparks(j,ms,stage);
   }
+  if(c==='glow'){/* 姿はかわらないが、根もとに光がたまって葉がゆれる */sacredStartEffect('sway',ms);sacredShot('detail',cast,1.4);sfx('bush');sacredGrowSparks(j,ms,Math.max(1,sacredStage()));}
   if(c==='reply'){sacredStartEffect('reply',ms);sacredShot('face',cast,1.2);sfx('bush');for(const r of cast)sacredScenePose(r,'storyListen',600000,{side:true,target:j});}
   if(c==='lookup'){/* フタバが木を見あげて、葉がゆれる（ひと呼吸） */sacredStartEffect('sway',ms);if(f){f.face=storyTreeX(j)>=f.x?1:-1;sacredScenePose(f,'storyListen',600000,{sit:true,side:true,target:j})}for(let i=0;i<3;i++)villageTimeout(()=>leafFX({x:storyTreeX(j)+(i-1)*.8,y:storyTreeY(j)-1.2}),i*350);sfx('bush');d.waitUntil=performance.now()+ms;}
   if(c==='face')sacredShot('face',cast);
