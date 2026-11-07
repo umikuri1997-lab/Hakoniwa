@@ -14,11 +14,11 @@ const out=await page.evaluate(()=>nvEval(`(()=>{const out={};S=newState(0);setWo
  /* 霧の夜：見張り台の射程 */
  const st={dmg:1,range:6,cd:5};S.nightVar={d:dayNo(),k:'kiri'};const nowK=nightVarNow;
  out.nowK=nightVarNow();S.nightVar.k='mure';out.nowM=nightVarNow();
- /* 群れ：出る場所 */S.nights=7;const xs=[];for(let i=0;i<30;i++)xs.push(mureSpot()[0]);out.spread=Math.max(...xs)-Math.min(...xs);
+ /* 群れ：出る場所 */S.nights=7;const xs=[];let reach=0;const fog0=S.fog;S.fog=Array.from({length:AREAN*AREAN},(_,a)=>FOG_MID.includes(a)?0:1);S.nightVar.x=null;SPRC.n=-1;for(let i=0;i<30;i++){const m=mureSpot();xs.push(m[0]);const j=(m[1]|0)*W+(m[0]|0);if(walk(j)&&spawnReach()[j]>=0)reach++}out.spread=Math.max(...xs)-Math.min(...xs);out.mureReach=reach;S.fog=fog0;S.nightVar.x=null;SPRC.n=-1;/* 霧のある草原でも、村まで歩いて行ける所から出る */
  const ys=[];for(let i=0;i<30;i++)ys.push(spawnSpot()[0]);out.normal=Math.max(...ys)-Math.min(...ys);
  return out})()`));
 console.log(JSON.stringify(out));
-assert.equal(out.kiri,'kiri');assert.equal(out.mure,'mure');assert.equal(out.none,null);assert.equal(out.boss,null);assert.equal(out.early,null);assert.equal(out.oda,null);assert.equal(out.keep,'kiri');
+assert.equal(out.mureReach,30,'群れのコワイノは、村まで歩いて行ける所から出る');assert.equal(out.kiri,'kiri');assert.equal(out.mure,'mure');assert.equal(out.none,null);assert.equal(out.boss,null);assert.equal(out.early,null);assert.equal(out.oda,null);assert.equal(out.keep,'kiri');
 assert.ok(out.spread<=6,'群れは7マスの中');assert.ok(out.normal>20);
 /* 射程：見張り台の上に木のせいれい、コワイノを4.5マス先において、ふつうはうつ・霧ではうたない */
 const shoot=await page.evaluate(()=>nvEval(`(()=>{const r={};for(const k of[null,'kiri']){S=newState(0);setWorld(0);S.obj.fill('');S.hi.fill(0);const j=50*W+50;S.obj[j]='watch';S.hp['L'+j]=1;recount();S.inv.arrow=10;
