@@ -1,7 +1,7 @@
 const {chromium}=require('playwright'),assert=require('node:assert/strict'),fs=require('node:fs');
 /* 防衛の夜の変化：霧の夜は見張り台のとどく所が半分、群れの夜は1か所から来る、出ない夜の決まり、日ごとにしまう */
 (async()=>{const browser=await chromium.launch({executablePath:process.env.CHROME_PATH||(fs.existsSync('/usr/bin/chromium')?'/usr/bin/chromium':undefined),args:['--no-sandbox']});const page=await browser.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));await page.route('**/js/main.js*',async route=>{const r=await route.fetch();await route.fulfill({response:r,body:(await r.text())+'\nwindow.nvEval=s=>eval(s);'});});await page.goto(process.env.GAME_URL||'http://127.0.0.1:8000');await page.waitForFunction(()=>!!window.nvEval);
-await page.waitForFunction(()=>nvEval('!!window.CHIPS&&!!CHIPS["kgp_basic:head"]'),null,{timeout:30000});
+await page.waitForFunction(()=>nvEval('!!window.CHIPS&&!!CHIPS["kgp_basic:head"]&&!!CHIPS["kgp_brute:head"]'),null,{timeout:30000});
 const out=await page.evaluate(()=>nvEval(`(()=>{const out={};S=newState(0);setWorld(0);recount();
  const setH=(d,h)=>{S.t=((d-1)*24+h)*60;};const realClk=clk;
  const pickAt=(opt,rv)=>{const mr=Math.random;Math.random=()=>rv;S.nightVar=null;Object.assign(S,opt);nightVarPick();Math.random=mr;return S.nightVar.k};
