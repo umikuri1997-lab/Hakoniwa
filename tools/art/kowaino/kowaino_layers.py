@@ -8,7 +8,7 @@ HERE = os.path.dirname(os.path.abspath(__file__)); ROOT = os.path.dirname(os.pat
 sys.path.insert(0, os.path.join(ROOT, 'tools')); import chips
 from PIL import Image
 KINDS = {  # armIn：横の腕を内がわへ。legDy：足だけを上へずらす（足もとは地面のまま、体が下がる）
-         'basic': {'foot': (25, 74), 'split': 25, 'downDy': 3}, 'brute': {'foot': (33, 69), 'split': 33}}   # 足もとの点・左右に分けるx（もとの絵のドット）
+         'basic': {'foot': (25, 74), 'split': 25, 'downDy': 3}, 'brute': {'foot': (33, 69), 'split': 33}, 'fast': {'foot': (43, 74), 'split': 43}}   # 足もとの点・左右に分けるx（もとの絵のドット）
 
 def build():
     h0, C = chips.load_imgs()
@@ -33,7 +33,7 @@ def build():
         ref = os.path.join(d, 'armsDownRef.png')
         if os.path.exists(ref):  # 腕を下ろした参考図（組み立てた絵）があれば、ほかの部品（頭・体・足・とげ・目）にない所を、下ろした腕にする
             R0 = Image.open(ref).convert('RGBA'); out = Image.new('RGBA', R0.size); pr = R0.load(); po = out.load()
-            masks = [Image.open(os.path.join(d, f)).convert('RGBA').load() for f in os.listdir(d) if f.endswith('.png') and f[:-4] in ('head', 'torso', 'legs', 'spikes', 'eyeN', 'eyeA', 'eyeS')]
+            masks = [Image.open(os.path.join(d, f)).convert('RGBA').load() for f in os.listdir(d) if f.endswith('.png') and f[:-4] in ('head', 'torso', 'legs', 'spikes', 'wings', 'eyeN', 'eyeA', 'eyeS')]
             for yy in range(R0.height):
                 for xx in range(R0.width):
                     if pr[xx, yy][3] > 128 and not any(m[xx, yy][3] > 0 for m in masks): po[xx, yy] = pr[xx, yy]

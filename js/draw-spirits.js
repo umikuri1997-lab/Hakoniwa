@@ -585,6 +585,7 @@ function drawShadeParts(c,ty,x,y,s,f,o){/* レイヤーの部品をつないだ�
   const sm=c.imageSmoothingEnabled;c.imageSmoothingEnabled=sc<.9;
   c.save();c.translate(x,y);c.scale(sc*f,sc);
   if(o.hurt!=null&&o.die==null)c.translate(R(Math.sin(t*40)),0);/* こうげきをうけると、ふるえる */
+  /* つばさ（あれば）：体のうしろで、ぱたぱた（歩くと速く） */if(CHIPS[K+'wings'])d('wings',0,bob-(Math.floor(t*(o.walk?12:4))%2));
   /* 足：歩くと交互に上がる */d('legL',0,w>0?-2:0);d('legR',0,w<0?-2:0);
   d('torso',0,bob);d('head',0,bob);d('spikes',0,bob);/* とげ（あれば） */
   /* 腕：ふだんは下ろしたまま（歩いても上下させない） */if(p>=.84){const fl=Math.floor(t*14)%2;d(fl?'armLu':'armLw',0,bob);d(fl?'armRw':'armRu',0,bob)}/* こうげき：肩はそのままで、腕を交互にななめ上・ななめ下へバタバタ（ポカポカ） */else{d('armLd',0,bob);d('armRd',0,bob)}
