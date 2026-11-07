@@ -239,7 +239,7 @@ function updEnemy(e,dt){
     e.hitT=S.t;e.atk+=dt*lightMul(e.x,e.y);/* 光の中は、攻撃の速さ0.8倍 */if(e.atk>=D.atk){e.atk=0;S.hp[j]=(S.hp[j]??BL[S.obj[j]].hp)-(D.wall||(D.boss?2:1))/steleF(j);/* オオカゲは壁をこわす力1.5倍 */if(hsOf(D)>=2)for(const[ax,ay]of DIRS){const k=j+ay*W+ax,ko=S.obj[k];if(k===j||!breakable(ko)||Math.hypot(k%W+.5-e.x,((k/W)|0)+.5-e.y)>2.2)continue;S.hp[k]=(S.hp[k]??BL[ko].hp)-1/steleF(k);WALLHIT.set(k,performance.now());decayCheck(k);if(S.hp[k]<=0){(S.broken||(S.broken=[])).push({j:k,id:ko,L:S.hp['L'+k],rot:rotAt(k)});sfxAt('wbreak',k%W+.5,(k/W)|0);if(S.ns)S.ns.broke++;{const hb=HOUSES.find(h=>h.set.has(k));clearObj(k);recount();houseBreakFlee(hb)}toast(BL[ko].name+'がこわされた！','warn')}/* まわりの壁がこわれたときも、家の中の子はにげる */}/* 大きいコワイノは、となりの壁にもダメージ（範囲攻撃） */WALLHIT.set(j,performance.now());sfxAt('bonk',j%W+.5,(j/W)|0);decayCheck(j);
       if(S.hp[j]<=0){const nm=BL[S.obj[j]].name;(S.broken||(S.broken=[])).push({j,id:S.obj[j],L:S.hp['L'+j],rot:rotAt(j)});sfxAt('wbreak',j%W+.5,(j/W)|0);if(S.ns)S.ns.broke++;{const hb=HOUSES.find(h=>h.set.has(j));clearObj(j);recount();houseBreakFlee(hb)}toast(nm+'がこわされた！','warn')}}
     return}}
-  if(!walk(j)){e.path=[];return}
+  if(!walk(j)){e.path=[];e.stk=(e.stk||0)+dt;if(e.stk>20&&!e.flee){e.stk=0;enemyFallback(e,D);e.repath=8;EREACH.delete(e)}return}/* 道の先が歩けないマスのまま止まっていたら、行ける所へ歩く */
   let sp=D.sp*dt*e.slow*(e.flee&&D.thief?1.8:1);if(!e.flee)sp*=lightMul(e.x,e.y);/* 光の中は、移動の速さ0.8倍 */if(jumpEdge((e.y|0)*W+(e.x|0),j))sp/=5;if(S.ground[j]===2)sp/=2;/* 浅瀬は2倍ゆっくり *//* 段差を飛ぶ間は5倍ゆっくり */
   const tx=j%W+.5,ty=((j/W)|0)+.5,dx=tx-e.x,dy=ty-e.y,d=Math.hypot(dx,dy);
   if(d<=sp){e.x=tx;e.y=ty;e.path.shift()}else{e.x+=dx/d*sp;e.y+=dy/d*sp}e.stk=0
