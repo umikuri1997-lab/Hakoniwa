@@ -7,7 +7,7 @@ const out=await page.evaluate(()=>nvEval(`(()=>{const out={};S=newState(0);setWo
  const pickAt=(opt,rv)=>{const mr=Math.random;Math.random=()=>rv;S.nightVar=null;Object.assign(S,opt);nightVarPick();Math.random=mr;return S.nightVar.k};
  const base={nights:6,wave:['basic','basic'],today:null,rushOn:false,finalOn:false,trialOn:false};
  S.t=(5*24+20.5)*60;const d=dayNo();
- out.kiri=pickAt(base,.1);out.mure=pickAt(base,.2);out.none=pickAt(base,.5);
+ out.kiri=pickAt(base,.1);out.mure=pickAt(base,.17);out.mureNo=pickAt(base,.2);out.mureCool=pickAt(base,.17);S.mureDay=d-8;out.mureAgain=pickAt(base,.17);/* 8日たてば、また出る *//* つづけて出さない：さっきの群れの夜から7日以内 */out.none=pickAt(base,.5);
  out.boss=pickAt({...base,wave:['boss','basic']},.1);out.early=pickAt({...base,nights:2},.1);out.oda=pickAt({...base,today:'odayaka'},.1);
  pickAt(base,.1);const mr=Math.random;Math.random=()=>.2;nightVarPick();Math.random=mr;out.keep=S.nightVar.k;/* 同じ日は引きなおさない */
  out.day=d;
@@ -18,7 +18,7 @@ const out=await page.evaluate(()=>nvEval(`(()=>{const out={};S=newState(0);setWo
  const ys=[];for(let i=0;i<30;i++)ys.push(spawnSpot()[0]);out.normal=Math.max(...ys)-Math.min(...ys);
  return out})()`));
 console.log(JSON.stringify(out));
-assert.equal(out.mureReach,30,'群れのコワイノは、村まで歩いて行ける所から出る');assert.equal(out.kiri,'kiri');assert.equal(out.mure,'mure');assert.equal(out.none,null);assert.equal(out.boss,null);assert.equal(out.early,null);assert.equal(out.oda,null);assert.equal(out.keep,'kiri');
+assert.equal(out.mureReach,30,'群れのコワイノは、村まで歩いて行ける所から出る');assert.equal(out.kiri,'kiri');assert.equal(out.mure,'mure');assert.equal(out.mureNo,null,'群れの夜は5%');assert.equal(out.mureCool,null,'群れの夜のあと7日は群れにしない');assert.equal(out.mureAgain,'mure');assert.equal(out.none,null);assert.equal(out.boss,null);assert.equal(out.early,null);assert.equal(out.oda,null);assert.equal(out.keep,'kiri');
 assert.ok(out.spread<=6,'群れは7マスの中');assert.ok(out.normal>20);
 /* 射程：見張り台の上に木のせいれい、コワイノを4.5マス先において、ふつうはうつ・霧ではうたない */
 const shoot=await page.evaluate(()=>nvEval(`(()=>{const r={};for(const k of[null,'kiri']){S=newState(0);setWorld(0);S.obj.fill('');S.hi.fill(0);const j=50*W+50;S.obj[j]='watch';S.hp['L'+j]=1;recount();S.inv.arrow=10;
