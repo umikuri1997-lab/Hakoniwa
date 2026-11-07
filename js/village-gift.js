@@ -45,7 +45,7 @@ ACT.vgift={start(r,a){const g=VGIFT.find(v=>v.k===a.gk);if(!g||!vgOn())return fa
 
 /* 古い家のあとが家にもどったら：近くのせいれいが中へ歩いて行き、おくで、むかしのだれかのわすれ物を見つける（S.fogF の f.find。わたしたら消す） */
 const RUINFIND=[['K','あれ？ おくのすみに、なにかあるよ。'],['K','#joy|むかしの、だれかのわすれ物かな……。だいじに、つかわせてもらおうね。']];
-function ruinStand(f){const x=f.j%W,y=(f.j/W)|0;return [[2,1],[1,1],[3,1],[2,2],[1,2],[3,2]].map(([a,b])=>(y+b)*W+x+a)}
+function ruinStand(f){/* 小屋の中の、空いているマス（おくから） */const x=f.j%W,y=(f.j/W)|0,[w,h]=ruinWH(f),L=[];for(let b=1;b<h-1;b++)for(let a=1;a<w-1;a++)L.push((y+b)*W+x+a);return L}
 function ruinFindTick(){if(!S.fogF)return;const unsafe=isNight()||S.enemies.some(e=>!e.dead)||sacredQuietActive()||mainGathering();
   for(const r of S.res)if(r.act&&r.act.type==='ruinfind'&&r.act.stage==='walk'&&unsafe)endAct(r);
   if(unsafe||!$('#dialog').hidden||DLGQ.length||sheet!=null||S.res.some(r=>r.act&&(r.act.type==='ruinfind'||r.act.type==='vgift')))return;
