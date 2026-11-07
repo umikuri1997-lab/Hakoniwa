@@ -521,14 +521,14 @@ CHATS.push(
  Object.assign([[0,'#joy|お祭りの日、たのしかったね。'],[1,'#joy|うん！ またやりたいなあ。'],[0,'こんどは、なにをかざろうか。']],{ok:(r,p)=>omoWe('fest',r,p)}));
 
 /* スポットのヒント（まだできていないスポットだけ。たまに出る：chatTopic）。あとに足すときは、このならびのうしろへ */
-function spotHintOK(k,id){return !S.free&&!(S.spotSeen||{})[k]&&SPOTS.some(sp=>sp.k===k&&(sp.st==null||sp.st===WD))&&!(['tsuriba','fishspot','yoruzuri'].includes(k)&&!S.ground.includes(1))&&!!((S.recipes||{})[id]||cnt(id)>0||((S.inv||{})[id]||0)>0)}
+function spotHintOK(k,id){return !S.free&&!(S.spotSeen||{})[k]&&SPOTS.some(sp=>sp.k===k&&(sp.st==null||sp.st===WD))&&!(['tsuriba','fishspot','yoruzuri'].includes(k)&&!S.ground.includes(1))&&[].concat(id).some(id=>!!((S.recipes||{})[id]||cnt(id)>0||((S.inv||{})[id]||0)>0))}
 CHATS.push(
  Object.assign([[0,"食卓って、いすがならんでると、みんなで食べられていいよね。"],[1,"うん。いすがふたつあったら、もっとたのしそう。"]],{hint:'dining',ok:()=>spotHintOK('dining','table')}),
  Object.assign([[0,"池のすぐそばに、すわれる所があったらなあ。"],[1,"わかる。のんびり、さかなを待てそうだね。"]],{hint:'tsuriba',ok:()=>spotHintOK('tsuriba','chair')}),
  Object.assign([[0,"水べですわってると、おひさまがまぶしいんだよね。"],[1,"日かげがあったら、ずっとつりをしていられるのに。"]],{hint:'fishspot',ok:()=>spotHintOK('fishspot','parasol')}),
  Object.assign([[0,"ブランコのとなりに、お山をつくれる所があったらなあ。"],[1,"#joy|いいね！ のって、あそんで、またのって。"]],{hint:'park',ok:()=>spotHintOK('park','swing')}),
  Object.assign([[0,"ブランコと砂場のそばに、ふたりであそぶものもあったら……"],[1,"#joy|ぎったん、ばったん、ってやつ？ たのしそう！"]],{hint:'park2',ok:()=>spotHintOK('park2','seesaw')}),
- Object.assign([[0,"かまどのそばで、すぐ手をあらえたら、べんりだよね。"],[1,"お水も、くんでおけたら、もっといいな。"]],{hint:'kitchen',ok:()=>spotHintOK('kitchen','oven')}),
+ Object.assign([[0,"かまどや調理台のそばで、すぐ手をあらえたら、べんりだよね。"],[1,"お水も、くんでおけたら、もっといいな。"]],{hint:'kitchen',ok:()=>spotHintOK('kitchen',['oven','cooktable'])}),
  Object.assign([[0,"ベンチって、日かげにあると、もっとやすめるよね。"],[1,"わかる。おひるねしちゃいそう。"]],{hint:'yasumi',ok:()=>spotHintOK('yasumi','bench')}),
  Object.assign([[0,"たき火のまわりに、すわる所がいくつかあったらなあ。"],[1,"みんなで火をかこんで、おはなしできるね。"]],{hint:'camp',ok:()=>spotHintOK('camp','campfire')}),
  Object.assign([[0,"噴水を見ながら、すわって休めたら、すてきだよね。"],[1,"お花もそばに咲いてたら、もっといいなあ。"]],{hint:'funsui',ok:()=>spotHintOK('funsui','fountain')}),
@@ -557,7 +557,7 @@ CHATS.push(
  Object.assign([[0,"竹がしげってる所に、竹のあかりをおいたら、きれいだろうなあ。"],[1,"夜の竹やぶ、さんぽしてみたい。"]],{hint:'takeyabu',ok:()=>spotHintOK('takeyabu','takeakari')}),
  Object.assign([[0,"家の中で、すわって本をよめる、しずかな所がほしいな。"],[1,"あかりもあったら、夜でもよめるね。"]],{hint:'shosai',ok:()=>spotHintOK('shosai','achair')}),
  Object.assign([[0,"家の中に、ゆったりすわって、くつろげる所があったらなあ。"],[1,"テーブルと、みどりの鉢もあったら、もっといいね。"]],{hint:'living',ok:()=>spotHintOK('living','sofa1')}),
- Object.assign([[0,"家の中で、ごはんを作れたらいいのにね。"],[1,"お水と、たるもそばにあったら、べんりそう。"]],{hint:'daidokoro',ok:()=>spotHintOK('daidokoro','oven')}));
+ Object.assign([[0,"家の中で、ごはんを作れたらいいのにね。"],[1,"お水と、たるもそばにあったら、べんりそう。"]],{hint:'daidokoro',ok:()=>spotHintOK('daidokoro',['oven','cooktable'])}));
 
 /* せいれい同士のおしゃべり：話す子の属性に合わせて、口調をととのえる（話の中身は変えない） */
 function chatTone(tx,r,i){if(!r)return tx;const k=elemKey(r),pr=r.elem==='fire'?(k==='fireB'?'おれ':r.name===HOMURA?'あたい':'あたし'):r.elem==='water'?'わたし':'ぼく';

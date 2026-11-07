@@ -76,7 +76,7 @@ const SPOTS=[
   {k:'fishspot',n:'つりスポット',main:(o,j)=>SEATS.includes(o)&&spotW(j)>=0,need:[[o=>o==='parasol',1]],how:'水べのいすと、パラソル',eff:'魚がつれる確率+5%'},
   {k:'park',n:'ちかばの公園',main:o=>o==='swing',need:[[o=>o==='sandbox',1]],how:'ブランコと、砂場',eff:'ここで遊ぶと、たのしさ+10%'},
   {k:'park2',n:'たのしい公園',main:o=>o==='swing',need:[[o=>o==='sandbox',1],[o=>o==='seesaw',1]],how:'ブランコと、砂場と、シーソー',eff:'ここで遊ぶと、たのしさ+20%'},
-  {k:'kitchen',n:'キッチン',main:o=>o==='oven',need:[[o=>o==='sink',1],[o=>o==='tub',1]],how:'かまどと、流し台と、水おけ',eff:'料理の速さ+10%'},
+  {k:'kitchen',n:'キッチン',main:o=>o==='oven'||o==='cooktable',need:[[o=>o==='sink',1],[o=>o==='tub',1]],how:'かまどか調理台と、流し台と、水おけ',eff:'料理の速さ+10%'},
   {k:'yasumi',n:'やすみば',main:o=>BENCHES.has(o),need:[[o=>o==='parasol',1]],how:'ベンチと、パラソル',eff:'ベンチで休むと、つかれのとれ方+10%'},
   {k:'camp',n:'キャンプ場',main:o=>o==='campfire',need:[[o=>BENCHES.has(o),2]],how:'たき火と、ベンチ2つ',eff:'たき火で遊ぶと、たのしさ+10%'},
   {k:'funsui',n:'ふんすいひろば',main:o=>o==='fountain',need:[[o=>BENCHES.has(o),1],[(o,q)=>FLOWERS.has(o)&&!isBud(q),2]],how:'噴水と、ベンチと、花2つ',eff:'噴水で遊ぶと、たのしさ+10%'},
@@ -106,7 +106,7 @@ const SPOTS=[
   {k:'shosai',n:'しょさい',room:1,main:o=>o==='achair',need:[[o=>o==='shelf1',1],[o=>o==='flamp',1]],how:'家の中に、ひじかけいすと、本棚と、フロアランプ',eff:'その家の住み心地+5%'},
   {k:'living',n:'リビング',room:1,main:o=>o==='sofa1',need:[[o=>o==='ltable',1],[o=>o==='monstera',1]],how:'家の中に、ひとりがけソファと、ローテーブルと、かんようしょくぶつ',eff:'その家の住み心地+5%'},
   {k:'dining',n:'ダイニング',room:1,main:o=>o==='table',need:[[o=>o==='chair'||o==='stool',2]],how:'家の中に、食卓と、いすかスツール2つ',eff:'その家の住み心地+5%'},
-  {k:'daidokoro',n:'だいどころ',room:1,main:o=>o==='oven',need:[[o=>o==='tub',1],[o=>o==='taru',1]],how:'家の中に、かまどと、水おけと、たる',eff:'その家の住み心地+5%'}];
+  {k:'daidokoro',n:'だいどころ',room:1,main:o=>o==='oven'||o==='cooktable',need:[[o=>o==='tub',1],[o=>o==='taru',1]],how:'家の中に、かまどか調理台と、水おけと、たる',eff:'その家の住み心地+5%'}];
 const spotNear=(j,k)=>{if(j==null||j<0)return false;const x0=j%W,y0=(j/W)|0;for(let y=Math.max(0,y0-3);y<=Math.min(H-1,y0+3);y++)for(let x=Math.max(0,x0-3);x<=Math.min(W-1,x0+3);x++){const t=SPOTM.get(y*W+x);if(t&&t.has(k))return true}return false};/* そのマスのまわり3マスに、スポットのもとの物（伐採場・井戸・道しるべなど）があるか */
 const spotN=(j,...ks)=>ks.reduce((n,k)=>n+(spotHas(j,k)?1:0),0);/* おなじスポットは重ならない（いくつできても1こ分）。ちがうスポットは、たし算で重なる */
 const spotHas=(j,k)=>{const t=SPOTJ.get(anc(j));return !!t&&t.has(k)};
