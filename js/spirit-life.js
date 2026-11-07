@@ -521,7 +521,7 @@ CHATS.push(
  Object.assign([[0,'#joy|お祭りの日、たのしかったね。'],[1,'#joy|うん！ またやりたいなあ。'],[0,'こんどは、なにをかざろうか。']],{ok:(r,p)=>omoWe('fest',r,p)}));
 
 /* スポットのヒント（まだできていないスポットだけ。たまに出る：chatTopic）。あとに足すときは、このならびのうしろへ */
-function spotHintOK(k,id){const sp=SPOTS.find(s=>s.k===k&&(s.st==null||s.st===WD));if(S.free||(S.spotSeen||{})[k]||!sp)return false;if(['tsuriba','fishspot','yoruzuri'].includes(k)&&!S.ground.includes(1))return false;const placed=o=>(counts[o]||0)>0&&!(BL[o]&&BL[o].natural);return [].concat(id).some(placed)||Object.keys(counts).some(o=>placed(o)&&sp.need.some(n=>n[0](o)))}/* そのスポットの物が1つでも置いてあるときだけ（自然の物はのぞく） */
+function spotHintOK(k,id){const sp=SPOTS.find(s=>s.k===k&&(s.st==null||s.st===WD));if(S.free||(S.spotSeen||{})[k]||!sp)return false;for(const t of SPOTJ.values())if(t.has(k))return false;/* いま村にあるスポットは出さない */if(['tsuriba','fishspot','yoruzuri'].includes(k)&&!S.ground.includes(1))return false;const placed=o=>(counts[o]||0)>0&&!(BL[o]&&BL[o].natural);return [].concat(id).some(placed)||Object.keys(counts).some(o=>placed(o)&&sp.need.some(n=>n[0](o)))}/* そのスポットの物が1つでも置いてあるときだけ（自然の物はのぞく） */
 CHATS.push(
  Object.assign([[0,"食卓って、いすがならんでると、みんなで食べられていいよね。"],[1,"うん。いすがふたつあったら、もっとたのしそう。"]],{hint:'dining',ok:()=>spotHintOK('dining','table')}),
  Object.assign([[0,"池のすぐそばに、すわれる所があったらなあ。"],[1,"わかる。のんびり、さかなを待てそうだね。"]],{hint:'tsuriba',ok:()=>spotHintOK('tsuriba','chair')}),
