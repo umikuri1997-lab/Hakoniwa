@@ -87,7 +87,8 @@ function renderPalette(){
   if(mode==='bulk'&&STATUE>=0&&inv('spike')>0)blocks.push('spike');/* とげの罠も、なぞってまとめて置ける */
   if(blocks.length){lbl(box,'ブロック');for(const id of blocks){const n=inv(id);box.appendChild(chip(iconURL(id),BL[id].name,'×'+n,(n?'':'zero')+(sel===id&&!selStamp?' sel':''),pickItem(id)))}}
   if(mode==='build'){
-    for(const [name,ids]of furnitureGroups(FURN.filter(id=>inv(id)>0))){lbl(box,name);for(const id of ids)box.appendChild(chip(iconURL(id),BL[id].name,'×'+inv(id),sel===id?'sel':'',pickItem(id)))}
+    for(const [name,ids]of furnitureGroups(Object.keys(BL).filter(id=>BL[id].kind==='furn'&&inv(id)>0))){lbl(box,name);for(const id of ids)box.appendChild(chip(iconURL(id),BL[id].name,'×'+inv(id),sel===id?'sel':'',pickItem(id)))}
+    {const inTab=new Set(CRAFT_TABS.flatMap(([,ids])=>ids)),g=Object.keys(BL).filter(id=>BL[id].kind==='furn'&&inv(id)>0&&!inTab.has(id)&&!GIFTF.includes(id));if(g.length){lbl(box,'そのほか');for(const id of g)box.appendChild(chip(iconURL(id),BL[id].name,'×'+inv(id),sel===id?'sel':'',pickItem(id)))}}/* 依頼ボードで作らない家具（おそなえのガゼボ・東屋、もらったほのお石など）も、持っていれば置ける */
     {const g=GIFTF.filter(id=>inv(id)>0);if(g.length){lbl(box,'かざり・おみやげ');for(const id of g)box.appendChild(chip(iconURL(id),BL[id].name,'×'+inv(id),sel===id?'sel':'',pickItem(id)))}}/* カミサマのかざり・おまつりのちょうちん（依頼ボードでは作らない物） */
   }
   const plants=S.feat.plant?PLANTS.filter(id=>inv(id)>0):[];
