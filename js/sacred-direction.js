@@ -50,7 +50,7 @@ function sacredBody(r,now){
   const f=r.face||1,dx=p.anim==='storyBump'?f*3*Math.sin(Math.PI*q):p.anim==='stepBack'?-f*7*sacredEase(Math.min(1,t/.6)):p.anim==='grabSleeve'?f*3*sacredEase(Math.min(1,t/.45)):p.anim==='tremble'?Math.round(Math.sin(now/28)*1.2):0,dy=/^kneel/.test(p.anim||'')?3:0;
   return {...p,p:q,t,dx,dy};
 }
-const SACRED_BEAT_MS={soil:1800,touch:1700,stone:2400,bump:2600,cover:1900,water:2600,runoff:2400,wind:2200,bud:2000,leaf:3000,grow:3300,reply:2200,hug:4800,glow:2600,group:1300,sit:1500,quiet:1400,face:1000,lookup:1500};
+const SACRED_BEAT_MS={soil:1800,touch:1700,stone:2400,bump:2600,cover:1900,water:2600,runoff:2400,wind:2200,bud:2000,leaf:3000,grow:3300,reply:2200,hug:4800,glow:2600,group:1300,sit:1500,quiet:1400,face:1000,lookup:1500,gaze:3800};
 function sacredLineHold(cue){return String(cue||'').split('+').reduce((ms,c)=>Math.max(ms,c.startsWith('stree:')?(SACRED_BEAT_MS[c.slice(6)]||0):c.startsWith('vol:')&&typeof VOL_BEAT_MS!=='undefined'?(VOL_BEAT_MS[c.slice(4)]||0):0),0);}
 function sacredDirectedLines(step,a){
   const beats={tower:['group']};/* なかまの調べは、セリフの行に合図を書く */
@@ -82,6 +82,7 @@ function sacredBeat(c){
   if(c==='glow'){/* 姿はかわらないが、根もとに光がたまって葉がゆれる */sacredStartEffect('sway',ms);sacredShot('detail',cast,1.4);sfx('bush');sacredGrowSparks(j,ms,Math.max(1,sacredStage()));}
   if(c==='reply'){sacredStartEffect('reply',ms);sacredShot('face',cast,1.2);sfx('bush');for(const r of cast)sacredScenePose(r,'storyListen',600000,{side:true,target:j});}
   if(c==='lookup'){/* フタバが木を見あげて、葉がゆれる（ひと呼吸） */sacredStartEffect('sway',ms);if(f){f.face=storyTreeX(j)>=f.x?1:-1;sacredScenePose(f,'storyListen',600000,{sit:true,side:true,target:j})}for(let i=0;i<3;i++)villageTimeout(()=>leafFX({x:storyTreeX(j)+(i-1)*.8,y:storyTreeY(j)-1.2}),i*350);sfx('bush');d.waitUntil=performance.now()+ms;}
+  if(c==='gaze'&&f){/* フタバが芽によろこんではねてから、ひざをついて、じっと見る（ひと呼吸まつ） */const now=performance.now();JUMP.set(f,now);JOYU.set(f,now+900);f.face=storyTreeX(j)>=f.x?1:-1;sacredScenePose(f,'kneel',600000,{side:true,face:f.face,target:j});sacredShot('care',[f],1.4);d.waitUntil=performance.now()+ms;}
   if(c==='face')sacredShot('face',cast);
   if(c==='group'){d.effects.delete('hug');d.effects.delete('embrace');for(const r of cast)SACRED_POSES.delete(r);sacredShot('group',cast,1.7);}
   if(c==='hug'&&f&&S.nushi){d.waitUntil=performance.now()+8000;
