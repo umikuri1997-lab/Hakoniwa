@@ -83,7 +83,7 @@ function waveFor(day){
 const NIGHTVAR={kiri:'霧の夜',mure:'群れの夜'};/* 防衛の夜の変化：霧の夜（見張り台のとどく所が半分）・群れの夜（コワイノがみんな同じ所から来る） */
 function nightVarPick(){/* 夕方、今夜の波が決まったあとに1回だけ（S.nightVar に日ごとにしまうので、読みこみなおしてもかわらない） */const d=dayNo();if(S.nightVar&&S.nightVar.d===d)return;S.nightVar={d,k:null};
   const w=S.wave||[];if(S.hornD===d){if(!w.length||w.some(t=>EN[t].boss)||S.today==='odayaka'||S.rushOn||S.finalOn||S.trialOn){S.hornD=null;S.horn=(S.horn||0)+1}return}/* 角笛をふいた夜は、霧・群れにしない。とくべつな夜になったら、角笛をかえす */if(!w.length||w.some(t=>EN[t].boss)||(S.nights||0)<4||d<5||S.today==='odayaka'||S.rushOn||S.finalOn||S.trialOn)return;
-  const p=Math.random(),k=p<.15?'kiri':p<.25?'mure':null;if(!k)return;S.nightVar.k=k;toast(k==='kiri'?'今夜は霧が出そう':'今夜は、コワイノがむれで来そう','warn')}
+  const p=Math.random(),k=p<.15?'kiri':p<.20&&!(S.mureDay!=null&&d-S.mureDay<=7)?'mure':null;if(!k)return;S.nightVar.k=k;if(k==='mure')S.mureDay=d;/* 群れの夜は5%、群れの夜のあと7日は群れにしない（S.mureDay） */toast(k==='kiri'?'今夜は霧が出そう':'今夜は、コワイノがむれで来そう','warn')}
 const nightVarNow=()=>{const v=S&&S.nightVar;if(!v||!v.k)return null;const h=hour(),d=dayNo();return v.d===d&&h>=20||v.d===d-1&&h<6?v.k:null};/* 今夜の変化（夕方20時から朝6時まで） */
 const HORNDESC='コワイノのおとしもの。ふくと、今夜のコワイノが1.5倍になる。';
 const hornNow=()=>{if(!S||S.hornD==null)return false;const h=hour(),d=dayNo();return S.hornD===d&&h>=6||S.hornD===d-1&&h<6};/* 角笛の夜（ふいてから朝6時まで） */
