@@ -82,7 +82,7 @@ function waveFor(day){
 }
 const NIGHTVAR={kiri:'霧の夜',mure:'群れの夜'};/* 防衛の夜の変化：霧の夜（見張り台のとどく所が半分）・群れの夜（コワイノがみんな同じ所から来る） */
 function nightVarPick(){/* 夕方、今夜の波が決まったあとに1回だけ（S.nightVar に日ごとにしまうので、読みこみなおしてもかわらない） */const d=dayNo();if(S.nightVar&&S.nightVar.d===d)return;S.nightVar={d,k:null};
-  const w=S.wave||[];if(S.hornD===d){if(!w.length||w.some(t=>EN[t].boss)||S.today==='odayaka'||S.rushOn||S.finalOn||S.trialOn){S.hornD=null;S.horn=(S.horn||0)+1}return}/* 角笛をふいた夜は、霧・群れにしない。とくべつな夜になったら、角笛をかえす */if(!w.length||w.some(t=>EN[t].boss)||(S.nights||0)<4||d<5||S.today==='odayaka'||S.rushOn||S.finalOn||S.trialOn)return;
+  const w=S.wave||[];if(S.herbD===d&&(!w.length||!w.some(t=>!EN[t].boss)||S.today==='odayaka'||S.rushOn||S.finalOn||S.trialOn)){S.herbD=null;S.herb=(S.herb||0)+1}/* とくべつな夜になったら、まよけのハーブをかえす */if(S.hornD===d){if(!w.length||w.some(t=>EN[t].boss)||S.today==='odayaka'||S.rushOn||S.finalOn||S.trialOn){S.hornD=null;S.horn=(S.horn||0)+1}return}/* 角笛をふいた夜は、霧・群れにしない。とくべつな夜になったら、角笛をかえす */if(!w.length||w.some(t=>EN[t].boss)||(S.nights||0)<4||d<5||S.today==='odayaka'||S.rushOn||S.finalOn||S.trialOn)return;
   const p=Math.random(),k=p<.15?'kiri':p<.20&&!(S.mureDay!=null&&d-S.mureDay<=7)?'mure':null;if(!k)return;S.nightVar.k=k;if(k==='mure')S.mureDay=d;/* 群れの夜は5%、群れの夜のあと7日は群れにしない（S.mureDay） */toast(k==='kiri'?'今夜は霧が出そう':'今夜は、コワイノがむれで来そう','warn')}
 const nightVarNow=()=>{const v=S&&S.nightVar;if(!v||!v.k)return null;const h=hour(),d=dayNo();return v.d===d&&h>=20||v.d===d-1&&h<6?v.k:null};/* 今夜の変化（夕方20時から朝6時まで） */
 const HORNDESC='コワイノのおとしもの。ふくと、今夜のコワイノが1.5倍になる。';
@@ -91,6 +91,13 @@ function hornOK(){/* 角笛をふけるのは、草原の昼（6時から20時�
   if(S.finalNight||S.trial||S.today==='odayaka'||S.rushOn||S.finalOn||S.trialOn)return false;
   const keep={bossWarn:S.bossWarn,bossOwed:S.bossOwed,lateWave:S.lateWave,bossDay:S.bossDay},w=waveFor(d+1);Object.assign(S,keep);/* 今夜のコワイノを先に見る（見るだけで、もとにもどす） */return w.length>0&&!w.some(t=>EN[t].boss)}
 function hornBlow(){if(!hornOK())return toast('いまは、ふけない','warn');S.horn--;S.hornD=dayNo();sfx('night');toast('今夜は、コワイノがふえる','warn');if(sheet==='inv')renderSheet()}
+const HERBDESC='つかうと、今夜のふつうの「コワイノ」が半分になる。';
+const herbNow=()=>{if(!S||S.herbD==null)return false;const h=hour(),d=dayNo();return S.herbD===d&&h>=6||S.herbD===d-1&&h<6};/* まよけの夜（つかってから朝6時まで） */
+function herbOK(){/* まよけのハーブをつかえるのは、昼（6時から20時、今夜のコワイノが決まる前）、1日に1回、角笛の夜・とくべつな夜でないとき。オオカゲの夜でもつかえる（オオカゲはへらない） */if(!S.enemyOn||!(S.herb>0))return false;const h=hour(),d=dayNo();if(h<6||h>=20||S.lastWarn===d||S.herbD===d||S.hornD===d)return false;
+  if(S.finalNight||S.trial||S.today==='odayaka'||S.rushOn||S.finalOn||S.trialOn)return false;
+  const keep={bossWarn:S.bossWarn,bossOwed:S.bossOwed,lateWave:S.lateWave,bossDay:S.bossDay},w=waveFor(d+1);Object.assign(S,keep);return w.some(t=>!EN[t].boss)}
+function herbUse(){if(!herbOK())return toast('いまは、つかえない','warn');S.herb--;S.herbD=dayNo();sfx('good');toast('今夜は、コワイノがへる','good');if(sheet==='inv')renderSheet()}
+function herbWave(w){/* まよけの夜：ふつうのコワイノを半分（小数点以下切りすて）。オオカゲなどはそのまま */const bs=w.filter(t=>EN[t].boss),nb=w.filter(t=>!EN[t].boss);return bs.concat(nb.slice(0,Math.floor(nb.length/2)))}
 function hornWave(w){/* 角笛の夜：ふつうのコワイノを1.5倍（小数点以下切りすて） */const nb=w.filter(t=>!EN[t].boss),m=Math.floor(nb.length*1.5)-nb.length;for(let i=0;i<m;i++)w.push(nb[i%nb.length]);return w}
 function mureSpot(){/* 群れの夜：南のはし（晴れている所の南のはし fogSouth）の1か所のまわり3マスから出る */const v=S.nightVar;if(v.x==null||v.y==null||v.s!==S.nights){const p=spawnSpot();v.x=p[0]|0;v.y=p[1]|0;v.s=S.nights}const R=spawnReach();for(let t=0;t<40;t++){const x=v.x+((Math.random()*7)|0)-3,y=x>=0&&x<W?fogSouth(x):-1,j=y*W+x;if(y<0||S.ground[j]===1||solidOf(j)||R[j]<0)continue;return [x+.5,y+.5]}return [v.x+.5,v.y+.5]}/* 見つからなければ、えらんだ1か所（spawnSpot は、歩いて村へ来られる所） */
 function waveText(list){const c={};list.forEach(t=>c[t]=(c[t]||0)+1);return Object.keys(c).map(t=>EN[t].name+(c[t]>1?'×'+c[t]:'')).join('、')}
@@ -175,7 +182,7 @@ function updEnemy(e,dt){
     if(to==='spike'){e.spk=(e.spk||0)+dt;if(e.spk>=15){e.spk-=15;e.hp-=.5;e.flash=4}/* とげの罠：15分ごとに0.5ダメージ */if(e.hp<=0)return defeat(e,EN[e.type].name+'をとげの罠で追いはらった！')}
     else if(to==='sticky'){if(!(e.poi>0)){e.poi=6;e.poT=0;e.flash=4;sfxAt('bonk',e.x,e.y);fxSpr('poison',e.x*TS,e.y*TS)}}/* どく：みどりのあわ（tools/fx-trap.py） */
     else if(to==='puddle'&&rdy){cd[tj]=S.t+120;e.stun=D.boss?3:20;e.path=[];sfxAt('bonk',e.x,e.y);fxSpr('slip',e.x*TS,e.y*TS);return}/* すべる：水しぶきと星（tools/fx-trap.py） */
-    else if(to==='firetrap'&&rdy){cd[tj]=S.t+180;e.hp-=4;e.flash=8;burstAt(e.x,e.y,'furn');sfxAt('cookfire',e.x,e.y);if(e.hp<=0)return defeat(e,EN[e.type].name+'をほのおの罠で追いはらった！')}
+    else if(to==='firetrap'&&rdy){cd[tj]=S.t+180;const fx0=tj%W,fy0=(tj/W)|0;for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++)burstAt(fx0+dx+.5,fy0+dy+.5,'furn');sfxAt('cookfire',e.x,e.y);for(const o of S.enemies||[]){if(o===e||o.dead||!o.spawned||Math.abs((o.x|0)-fx0)>1||Math.abs((o.y|0)-fy0)>1)continue;o.hp-=4;o.flash=8;if(o.hp<=0)defeat(o,EN[o.type].name+'をほのおの罠で追いはらった！')}/* まわり1マスのコワイノにも */e.hp-=4;e.flash=8;if(e.hp<=0)return defeat(e,EN[e.type].name+'をほのおの罠で追いはらった！')}
     else if(to==='gust'&&rdy){cd[tj]=S.t+150;let dx=e.x-CX,dy=e.y-CY;const l=Math.hypot(dx,dy)||1;dx/=l;dy/=l;{let bx=null,by=null;for(let k=1;k<=6;k++){const nx=e.x+dx*k,ny=e.y+dy*k,q=(ny|0)*W+(nx|0);if(!(nx>1&&ny>1&&nx<W-1&&ny<H-1)||!walk(q)||HOME_DOORS.has(typeAt(q))||GATE_IDS.has(typeAt(q)))break;bx=nx;by=ny}if(bx!=null){e.x=bx;e.y=by}}/* 壁・ドア・門の手前までしか、ふきとばさない */e.path=[];e.repath=0;e.stun=2;sfxAt('bush',e.x,e.y);return}}}
   let goal=-1,tgt=null;
   if(e.flee){e.fleeT=(e.fleeT||0)+dt;if(e.fleeT>40&&!e.path.length){e.dead=true;return}/* にげる道がどこにもないときだけ消える */if(e.x<.6||e.y<.6||e.x>W-.6||e.y>H-.6||(D.thief&&e.fleeT>12&&!VILL[(e.y|0)*W+(e.x|0)])){e.dead=true;return}}/* カゲドロボウは、にげたらすぐ消える */
@@ -305,11 +312,12 @@ function takeDrop(d,r){let nm;
   if(d.id.startsWith('food:')){const k=d.id.slice(5),add=Math.max(0,Math.min(d.n,foodCap()-S.food));if(add)addFood(k,add);if(add<d.n)S.drops.push(Object.assign({},d,{n:d.n-add}));/* 食料箱に入りきらない分は、そのまま地面にのこる */nm=FOODS[k].name+(add?'×'+add:'（食料箱がいっぱい）')}
   else if(d.id.startsWith('mat:')){const k=d.id.slice(4),add=Math.max(0,Math.min(d.n,matCap()-matTot()));S.mat[k]=(S.mat[k]||0)+add;if(!S.gotMat)S.gotMat={};S.gotMat[k]=(S.gotMat[k]||0)+add;nm=MATN[k]+(add?'×'+add:'（素材箱がいっぱい）');bambooIdea();matIdea()}
   if(!d.lt)toast((r?r.name+'が':'')+'おとしものをひろった：'+nm,'good')}/* 守りの光で落とした素材は、だまってひろう */
-function itemName(id){return id==='sand'?'やすらぎの砂':id==='horn'?'よびごえの角笛':id==='mebuki'?'めぶきのしずく':id==='hai'?'ハイカゲの灰':id==='gear'||id==='gearf'?'そうび':id.startsWith('seed:')?CROPS[id.slice(5)].name+'のたね':BL[id]?(BL[id].item||BL[id].name):id}
+function itemName(id){return id==='sand'?'やすらぎの砂':id==='horn'?'よびごえの角笛':id==='herb'?'まよけのハーブ':id==='mebuki'?'めぶきのしずく':id==='hai'?'ハイカゲの灰':id==='gear'||id==='gearf'?'そうび':id.startsWith('seed:')?CROPS[id.slice(5)].name+'のたね':BL[id]?(BL[id].item||BL[id].name):id}
 function stowItem(id,n,r){/* はこんだ物を、箱にしまったとき（もちものに入る）。知らせもここで出す */
   if(id==='gear'||id==='gearf'){for(let i=0;i<n;i++)gearFind(r,id==='gearf'?'つりあげた！':'ひろった！');return}
   if(id==='sand'){S.sand=(S.sand||0)+n;if(!(S.recipes||(S.recipes={})).toro){S.recipes.toro=true;memo('🏮','しずけさの石どうろうが作れるようになった');queueItemGift({toro:1},'あたらしいレシピ！',true)}/* やすらぎの砂をはじめてしまったら、石どうろうのレシピ */return}
   if(id==='horn'){S.horn=(S.horn||0)+n;(S.seenIt||(S.seenIt={}))['x:horn']=1;return}
+  if(id==='herb'){S.herb=(S.herb||0)+n;(S.seenIt||(S.seenIt={}))['x:herb']=1;return}
   if(id==='hai'){const t=st2();t.hai=(t.hai||0)+n;checkQuest();return}/* ひびわれをうめる灰 */
   if(id==='mebuki'){S.mebuki=(S.mebuki||0)+n;sfx('level');toast('「めぶきのしずく」をしまった','good');logEv('めぶきのしずくをひろった');
     if(!S.flags.mebukiTold&&WD===0){const sp=S.res.find(q=>KEYRES.includes(q.name))||r;if(sp)talkOnce('mebukiTold',MEBUKIL[elemKey(sp)].map(t=>[sp.name,t]))}return}
