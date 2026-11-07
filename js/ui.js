@@ -108,7 +108,7 @@ function spiritXpGaugeHTML(r){const xp=spiritXpProgress(r),max=xp.next==null,bas
 let sheet=null,sheetArg=null;
 function attrPop(k){
   const src={};const add=(name,v)=>{const r=src[name]||(src[name]={n:0,v:0});r.n++;r.v+=v};
-  for(let j=0;j<W*H;j++){if(k==='water'&&S.ground[j]===1&&(fogOn()?!fogAt(j):VILL[j]))add('池・水べ（1マス0.1）',.1);const id=S.obj[j],b=BL[id];if(!b||b.kind==='block'||(FLOWERS.has(id)||id==='tree'||id==='fruit')&&isBud(j))continue;if((b.attr||{})[k]>0)add(b.name,b.attr[k])}
+  for(let j=0;j<W*H;j++){const id=S.obj[j],b=BL[id];if(!b||b.kind==='block'||(FLOWERS.has(id)||id==='tree'||id==='fruit')&&isBud(j))continue;if((b.attr||{})[k]>0)add(b.name,b.attr[k])}
   const ov=el('<div style="position:absolute;inset:0;z-index:30;background:rgba(0,0,0,.45);display:grid;place-items:center;padding:24px"></div>');
   const card=el('<div class="sec pxcard" style="background:var(--panel);border:2px solid var(--line);border-radius:16px;padding:14px;width:100%;max-width:340px;max-height:70%;overflow:auto"></div>');
   const h=document.createElement('h3');h.textContent=ELEM[k].name+'の力：'+Number(ATTR[k].toFixed(1))+' / '+needFor(k);card.appendChild(h);
@@ -277,7 +277,7 @@ function renderSheet(){
     T.textContent='属性の内訳';
     const sources={};for(const k of ELEM_KEYS)sources[k]={};
     const add=(k,name,v)=>{const a=sources[k];if(!a)return;const r=a[name]||(a[name]={n:0,v:0});r.n++;r.v+=v};
-    for(let j=0;j<W*H;j++){if(S.ground[j]===1&&(fogOn()?!fogAt(j):VILL[j]))add('water','池・水べ（1マス0.1）',.1);const id=S.obj[j],b=BL[id];if(!b||b.kind==='block'||FLOWERS.has(id)&&isBud(j))continue;for(const k in b.attr||{})if(b.attr[k]>0)add(k,b.name,b.attr[k])}
+    for(let j=0;j<W*H;j++){const id=S.obj[j],b=BL[id];if(!b||b.kind==='block'||FLOWERS.has(id)&&isBud(j))continue;for(const k in b.attr||{})if(b.attr[k]>0)add(k,b.name,b.attr[k])}
     body.appendChild(el('<p class="note">マップにあるものを集計。花は咲いてから加算されます。</p>'));
     for(const k of ELEM_KEYS){const sec=el('<div class="sec"></div>');const h=document.createElement('h3');h.textContent=ELEM[k].name+'の力：'+Number(ATTR[k].toFixed(1));sec.appendChild(h);for(const [name,r]of Object.entries(sources[k]))sec.appendChild(rowEl(name+' ×'+r.n,'+'+Number(r.v.toFixed(1))));if(!Object.keys(sources[k]).length)sec.appendChild(el('<p class="note">まだありません</p>'));body.appendChild(sec)}
   }else if(sheet==='stock'){/* そうこ：いま、なにがいくつあるか */
