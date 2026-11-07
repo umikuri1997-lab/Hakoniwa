@@ -146,7 +146,7 @@ function fishW(j){return fSpot(j)?spotW(j):sideW(j)}/* 釣るときに見る水�
 function sideW(j){const x=j%W;if(x+1<W&&S.ground[j+1]===1)return j+1;if(x>0&&S.ground[j-1]===1)return j-1;return -1}/* 左右どちらかが水 */
 function adjOf(j,fn){const x=j%W,y=(j/W)|0;for(const[dx,dy]of DIRS){const nx=x+dx,ny=y+dy;if(nx<0||ny<0||nx>=W||ny>=H)continue;const k=ny*W+nx;if(fn(k))return k}return -1}
 const elemCount=el=>S.res.filter(r=>r.elem===el).length;
-const NEEDT=[8,20,36,56,80,108,140,176,216,260,308],NEEDF=[13,32,58,90,128,173,224,282,346,416,493],needFor=el=>{const T=WD===FREE?NEEDF:NEEDT;return T[Math.min(T.length-1,elemCount(el))]};/* なかまを呼ぶのに必要な力（いる人数ごと）。フリーモードは自然の力が弱いので多め */
+const NEEDT=[8,20,36,56,80,108,140,176,216,260,308],NEEDF=[13,32,58,90,128,173,224,282,346,416,493],needFor=el=>{const T=WD===FREE?NEEDF:NEEDT,dk=[...(S.buried||[]),...(S.lost||[])].filter(q=>q.elem===el&&isKey(q.name)).length;return T[Math.min(T.length-1,elemCount(el)+dk)]};/* いなくなったキーキャラも数に入れる（ひとり分の力で2人呼べないように） *//* なかまを呼ぶのに必要な力（いる人数ごと）。フリーモードは自然の力が弱いので多め */
 function revRadius(o){/* 緑が広がるのは、木や草を生やしたときだけ（家具・建物・道・畑では広がらない） */const b=BL[o];if(!b)return 0;if(o==='tower')return 7;if(o==='tree'||o==='fruit')return 5;if(b.kind==='plant')return 3;/* 植えた木はまわり5マス、花はまわり3マス */if(o==='ntree'||o==='berry'||o==='bamboo'||o==='takenoko')return 1;return 0}
 /* 属性の力の表示（例：属性 木+1・土+2） */
 function attrTxt(id){const b=BL[id];if(!b||!b.attr||b.kind==='block')return'';const a=Object.entries(b.attr).filter(e=>e[1]>0);return a.length?'属性 '+a.map(([k,v])=>ELEM[k].name+'+'+(+v.toFixed(2))).join('・'):''}
