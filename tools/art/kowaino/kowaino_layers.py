@@ -7,8 +7,8 @@ import sys, os
 HERE = os.path.dirname(os.path.abspath(__file__)); ROOT = os.path.dirname(os.path.dirname(os.path.dirname(HERE)))
 sys.path.insert(0, os.path.join(ROOT, 'tools')); import chips
 from PIL import Image
-KINDS = {  # legDy：足だけを上へずらす（足もとは地面のまま、体が下がる）
-         'basic': {'foot': (25, 78), 'split': 25, 'legDy': -2}, 'brute': {'foot': (33, 69), 'split': 33}}   # 足もとの点・左右に分けるx（もとの絵のドット）
+KINDS = {  # armIn：横の腕を内がわへ。legDy：足だけを上へずらす（足もとは地面のまま、体が下がる）
+         'basic': {'foot': (25, 78), 'split': 25, 'legDy': -2, 'armIn': 3}, 'brute': {'foot': (33, 69), 'split': 33}}   # 足もとの点・左右に分けるx（もとの絵のドット）
 
 def build():
     h0, C = chips.load_imgs()
@@ -21,8 +21,9 @@ def build():
             im = Image.open(os.path.join(d, f)).convert('RGBA'); n = f[:-4]
             if n == 'armsDown': continue
             if n in ('arms', 'legs'):
-                parts[n[:-1] + 'L'] = im.crop((0, 0, sx, im.height)).copy(), 0
-                parts[n[:-1] + 'R'] = im.crop((sx, 0, im.width, im.height)).copy(), sx
+                ai = cfg.get('armIn', 0) if n == 'arms' else 0   # armIn：横に上げた腕を、体のほうへよせる（ドット）
+                parts[n[:-1] + 'L'] = im.crop((0, 0, sx, im.height)).copy(), ai
+                parts[n[:-1] + 'R'] = im.crop((sx, 0, im.width, im.height)).copy(), sx - ai
             else:
                 parts[n] = im, 0
         # 下ろした腕：体（torso）の外に出ている所だけを、肩を上にして90度まわし、体の横にたらす

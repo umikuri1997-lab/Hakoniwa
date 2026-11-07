@@ -581,14 +581,13 @@ function drawShadeParts(c,ty,x,y,s,f,o){/* レイヤーの部品をつないだ�
   const K='kgp_'+ty+':';if(!KGDOK[K]){for(const k in CHIPS)if(k.startsWith(K)&&!chipImgs(CHIPS[k],k)[0].ok)return false;KGDOK[K]=1}
   const t=o.t||0,p=o.atk||0,sc=s/(.27*EN[ty].size*2),R=Math.round;
   const w=o.walk?Math.sin(t*10):0,bob=o.walk?(Math.abs(w)>.5?-1:0):(Math.sin(t*3)>.3?-1:0);
-  const wind=p>=.84&&p<.95,strike=p>=.95;
   const d=(k,dx,dy)=>{const ch=CHIPS[K+k];if(ch)c.drawImage(kgDot(K+k,!!o.flash),ch.ax+R(dx),ch.ay+R(dy))};
   const sm=c.imageSmoothingEnabled;c.imageSmoothingEnabled=sc<.9;
   c.save();c.translate(x,y);c.scale(sc*f,sc);
   if(o.hurt!=null&&o.die==null)c.translate(R(Math.sin(t*40)),0);/* こうげきをうけると、ふるえる */
   /* 足：歩くと交互に上がる */d('legL',0,w>0?-2:0);d('legR',0,w<0?-2:0);
   d('torso',0,bob);d('head',0,bob);d('spikes',0,bob);/* とげ（あれば） */
-  /* 腕：ふだんは下ろして、歩くと少しふる。こうげきのときだけ、横に上げてからふりおろす */if(wind||strike){const ay=wind?-7:2;d('armL',strike?2:0,ay+bob);d('armR',strike?-2:0,ay+bob)}else{const sw=o.walk?R(w):0;d('armLd',0,bob+sw);d('armRd',0,bob-sw)}
+  /* 腕：ふだんは下ろして、歩くと少しふる */if(p>=.84){const fl=Math.floor(t*14)%2;d('armL',0,(fl?-4:2)+bob);d('armR',0,(fl?2:-4)+bob)}/* こうげき：腕を横に上げて、交互にバタバタ（ポカポカ） */else{const sw=o.walk?R(w):0;d('armLd',0,bob+sw);d('armRd',0,bob-sw)}
   if(!o.back){const e=o.die!=null||o.hurt!=null?'eyeS':p>=.84?'eyeA':'eyeN';d(CHIPS[K+e]?e:'eyeN',0,bob)}/* その目の絵がなければ、ふつうの目 */
   c.restore();c.imageSmoothingEnabled=sm;return true}
 function drawShade(c,ty,x,y,s,f,o){if(drawShadeDot(c,ty,x,y,s,f,o))return;}/* コワイノはドット絵だけ（絵の読みこみ前は描かない） */
