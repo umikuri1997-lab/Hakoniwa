@@ -1,7 +1,7 @@
 const {chromium}=require('playwright'),assert=require('node:assert/strict'),fs=require('node:fs');
 /* よびごえの角笛：草原のコワイノの落とし物3%・昼（6〜20時）だけ・1日1回・今夜のコワイノ1.5倍・とくべつな夜はふけない・読みこみなおし */
 (async()=>{const browser=await chromium.launch({executablePath:process.env.CHROME_PATH||(fs.existsSync('/usr/bin/chromium')?'/usr/bin/chromium':undefined),args:['--no-sandbox']});const page=await browser.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));await page.route('**/js/main.js*',async route=>{const r=await route.fetch();await route.fulfill({response:r,body:(await r.text())+'\nwindow.hnEval=s=>eval(s);'});});await page.goto(process.env.GAME_URL||'http://127.0.0.1:8000');await page.waitForFunction(()=>!!window.hnEval);
-await page.waitForFunction(()=>hnEval('!!window.CHIPS&&!!CHIPS["kgp_basic:head"]&&!!CHIPS["kgp_brute:head"]'),null,{timeout:30000});
+await page.waitForFunction(()=>hnEval('!!window.CHIPS&&!!CHIPS["kgp_basic:head"]&&!!CHIPS["kgp_brute:head"]&&!!CHIPS["kgp_fast:head"]'),null,{timeout:30000});
 const o=await page.evaluate(()=>hnEval(`(()=>{const o={};S=newState(0);setWorld(0);recount();toast=()=>{};
  const pr=t=>{const h=dropRolls(t).find(x=>x[0]==='horn');return h?h[2]:0};o.basic=pr('basic');o.fast=pr('fast');o.boss=pr('boss');o.boss2=pr('boss2');
  setWorld(1);o.vol=pr('basic');setWorld(0);

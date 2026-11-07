@@ -1,7 +1,7 @@
 const {chromium}=require('playwright'),assert=require('node:assert/strict'),fs=require('node:fs');
 /* ひろった物（やすらぎの砂・角笛・家具）は、せいれいが箱へはこんでから、もちものに入る。レシピはすぐおぼえる。御神木のまわりに道が置ける */
 (async()=>{const browser=await chromium.launch({executablePath:process.env.CHROME_PATH||(fs.existsSync('/usr/bin/chromium')?'/usr/bin/chromium':undefined),args:['--no-sandbox']});const page=await browser.newPage({viewport:{width:900,height:700}});const errors=[];page.on('pageerror',e=>errors.push(e.message));await page.route('**/js/main.js*',async route=>{const r=await route.fetch();await route.fulfill({response:r,body:(await r.text())+'\nwindow.ltEval=s=>eval(s);'});});await page.goto(process.env.GAME_URL||'http://127.0.0.1:8000');await page.waitForFunction(()=>!!window.ltEval);
-await page.waitForFunction(()=>ltEval('!!window.CHIPS&&!!CHIPS["kgp_basic:head"]&&!!CHIPS["kgp_brute:head"]'),null,{timeout:30000});
+await page.waitForFunction(()=>ltEval('!!window.CHIPS&&!!CHIPS["kgp_basic:head"]&&!!CHIPS["kgp_brute:head"]&&!!CHIPS["kgp_fast:head"]'),null,{timeout:30000});
 const out=JSON.parse(await page.evaluate(()=>ltEval(`(()=>{const o={};newGame(0);for(const id of ['#title','#maps','#pro','#dialog'])document.querySelector(id).hidden=true;showUI(true);started=true;USERPAUSE=true;showItemGift=()=>{};showSpotPop=()=>{};S.enemyOn=false;S.t=12*60;
  const r=S.res[0],x=r.x|0,y=r.y|0;for(let b=-6;b<=6;b++)for(let a=-6;a<=6;a++){const k=(y+b)*W+x+a;if(!sacredReserved(k)&&!sacredNoBuild(k)&&(S.obj[k]==='tree'||S.obj[k]==='rock'||WEEDS.has(S.obj[k])))S.obj[k]=''}
  const free=[];for(let b=-5;b<=5;b++)for(let a=-5;a<=5;a++){const k=(y+b)*W+x+a;if(!S.obj[k]&&walk(k)&&!sacredNoBuild(k)&&(a||b))free.push(k)}
