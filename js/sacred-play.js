@@ -26,13 +26,10 @@ function migrateFieldBuild(state){if(!state.flags||state.flags.fieldBuild1)retur
   const q=QUESTS1[state.quest];if(!q?.fieldParts)return;const S0=S;S=state;try{{const id=q.fieldParts.find(p=>((state.fieldStories?.[p]?.step)||0)<(FIELD_STORIES[p]?.length||0)),p=id&&FIELD_PREP[id],st=state.fieldStories?.[id];if(p&&!((st?.step||0)>0)&&!st?.built)if(p.legacy(state.sacredRoot)){state.fieldStories||(state.fieldStories={});(state.fieldStories[id]||(state.fieldStories[id]={step:0})).built={legacy:1};}}}finally{S=S0}}
 /* 守り神の出番：その話の、どの段階で、どんな操作か。pop：地図を見なくてよい出番は、ポップアップの中で（その見出し） */
 const FIELD_PLAY={
-  earthRoot:{phase:0,type:'root',pop:'根をほりだす',hint:'光る根の先から、根を指でなぞる。はずれると根が切れて、はじめから',bonus:{fun:10,word:'根がほっとした'}},
+  earthListen:{phase:0,type:'root',pop:'根をほりだす',hint:'光る根の先から、根を指でなぞる。はずれると根が切れて、はじめから',bonus:{fun:10,word:'根がほっとした'}},
   fireRoot:{phase:0,type:'hold',pop:'石をあたためる',hint:'石を長おしして、ゲージが緑のときにはなす',bonus:{fun:10,word:'石がぽかぽか'}},
-  fireTrace:{phase:2,type:'cover',pop:'草をかぶせる',hint:'草を指で運んで、青く光るつめたい所にのせる'},
-  waterFilm:{phase:2,type:'trace',pop:'水の通り道をつなぐ',hint:'光る所から、指でなぞって根まで水をとどける',bonus:{fun:10,word:'水がしみわたった'}},
-  waterLeaf:{phase:1,type:'drip',pop:'しずくをはこぶ',hint:'しずくを指で動かして、葉の上を通って芽まではこぶ'},
+  waterFilm:{phase:0,type:'trace',pop:'水の通り道をつなぐ',hint:'光る所から、指でなぞって根まで水をとどける',bonus:{fun:10,word:'水がしみわたった'}},
   windEcho:{phase:0,type:'rhythm',pop:'葉の音を聞く',hint:'葉がゆれた順に、指で風をおくって葉をなぞる',bonus:{fun:10,word:'葉がうたった'}},
-  windVoices:{phase:4,type:'gather',hint:'切り株を長おしして、みんなの力をあつめる'}
 };
 const MGSPR={src:"assets/g/b942f0109a.webp",r:{"stone0":[83,26,19,16],"stone1":[103,26,19,16],"stone2":[71,0,19,24],"grass":[39,26,15,21],"cold":[123,26,17,15],"drop":[244,26,9,8],"leafL":[0,0,50,25],"tip":[172,26,11,12],"bud0":[236,26,7,11],"bud1":[184,26,8,12],"bud2":[159,26,12,13],"bud3":[141,26,17,14],"wind0":[193,26,17,12],"wind1":[55,26,27,18],"wind2":[91,0,30,24],"spark0":[0,49,7,6],"spark1":[211,26,12,12],"spark2":[0,26,18,22],"spark3":[224,26,11,12],"leaf0":[159,0,19,23],"leaf0s":[122,0,20,24],"leaf1":[19,26,19,22],"leaf1s":[179,0,19,23],"leaf2":[199,0,19,23],"leaf2s":[219,0,21,23],"leaf3":[143,0,15,24],"leaf3s":[51,0,19,25]}};
 /* 出番の絵（もらった絵から作ったドット絵、tools/art/minigame）。1ドット＝世界の1。読みこむ前は、コードの絵 */

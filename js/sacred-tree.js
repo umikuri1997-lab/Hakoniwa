@@ -50,8 +50,8 @@ function sacredRevealed(id){const i=sacredQuestIndex(id);return i>=0&&S.quest>i&
 function sacredStage(){
   if(!S)return 4;if(IS_STORY_REPLAY&&S.replayMature)return 4;
   if(S.obj.includes('tower'))return S.cleared||(S.setSh||0)>=2&&GRASSN>=1750?4:3;
-  if(sacredRevealed('waterLeaf'))return 2;
-  if(sacredRevealed('fireTrace'))return 1;
+  if(sacredRevealed('waterFilm'))return 2;
+  if(sacredRevealed('fireRoot'))return 1;
   return 0;
 }
 function sacredRootFits(j){return j>=0&&j%W<=W-sacredSpan()&&(j/W|0)<=H-sacredSpan()&&sacredCells(j).every(k=>(walk(k)||STUMPB.has(k))&&!S.obj[k]&&!S.floor[k]&&!roomOf(k)&&!RUGC.has(k)&&hiAt(k)===hiAt(j));}
@@ -59,7 +59,7 @@ function migrateSacredStory(state){
   if(state.flags.sacredStoryV1)return;
   if(!state.free&&(state.world||0)===0){
     const old={earthListen:3,earthRoot:2,fireRoot:1,fireTrace:2,waterFilm:2,waterLeaf:2,windEcho:3,windVoices:5};
-    for(const [id,n]of Object.entries(old)){const d=state.fieldStories?.[id];if(d)d.step=d.step>=n?FIELD_STORIES[id].length:0;}
+    for(const [id,n]of Object.entries(old)){const d=state.fieldStories?.[id];if(d)d.step=d.step>=n?FIELD_V1_LEN[id]:0;}
     const id=QUESTS1_V1[state.quest];if(state.qStory==null&&(COMPANION_QUESTS.has(id)||id==='tower')&&!(id==='tower'&&state.obj.includes('tower')))state.qTalked=false;/* まだ目標をまとめる前（QUESTS1_V1）の番号 */
     const j=state.obj.indexOf('tower'),pending=state.obj.findIndex((o,k)=>o==='site'&&state.dyn[k]?.build==='tower');
     if(j>=0||pending>=0){state.sacredRoot=j>=0?j:pending;(state.fieldSites||(state.fieldSites={})).root=state.sacredRoot;}
