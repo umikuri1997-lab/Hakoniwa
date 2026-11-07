@@ -1,7 +1,7 @@
 const {chromium}=require('playwright'),assert=require('node:assert/strict'),fs=require('node:fs');
 /* おびきよせの石像：まわり7マスのコワイノは、先に像をこわしにくる。こわれたら消えて、直せる。火のせいれいがむかえうつ。オオカゲはひっかからない。水のステージでおぼえる */
 (async()=>{const browser=await chromium.launch({executablePath:process.env.CHROME_PATH||(fs.existsSync('/usr/bin/chromium')?'/usr/bin/chromium':undefined),args:['--no-sandbox']});const page=await browser.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));await page.route('**/js/main.js*',async route=>{const r=await route.fetch();await route.fulfill({response:r,body:(await r.text())+'\nwindow.luEval=s=>eval(s);'});});await page.goto(process.env.GAME_URL||'http://127.0.0.1:8000');await page.waitForFunction(()=>!!window.luEval);
-await page.waitForFunction(()=>luEval('!!window.CHIPS&&!!CHIPS["kg_basic:idle"]'),null,{timeout:30000});
+await page.waitForFunction(()=>luEval('!!window.CHIPS&&!!CHIPS["kgp_basic:head"]'),null,{timeout:30000});
 const out=await page.evaluate(()=>luEval(`(()=>{const o={};S=newState(0);setWorld(0);S.obj.fill('');S.hi.fill(0);if(S.fog)S.fog.fill(0);
  const w0=WD;o.lvGrass=levelUpItemsAt(6).includes('lurestatue');WD=2;o.lvWater=levelUpItemsAt(6).includes('lurestatue');WD=w0;
  grecOf().set('lurestatue',2);S.recipes=S.recipes||{};S.recipes.lurestatue=1;/* 水のステージでおぼえたことにする */
