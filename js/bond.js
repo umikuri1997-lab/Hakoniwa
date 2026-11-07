@@ -74,3 +74,28 @@ function bondInvite(r,o){if(!S||isNight()||!o||o.obj==null||(r.bdInv||0)>S.t)ret
   const G=bfs(f.x|0,f.y|0),mine=r.act&&r.act.stand;let st=-1;if(o.what==='swing'){if(G.dist[o.obj]>=0)st=o.obj}else st=nearest(G,k=>k!==mine&&walk(k)&&adjOf(k,t=>anc(t)===o.obj)>=0,45);if(st<0)return false;
   const ng=(NIGATE[f.elem]||{})[o.what];r.bdInv=S.t+120;endAct(f);startAct(f,G,'play',st,Object.assign({},o,{fun:ng!=null?ng:p.fun,nig:ng!=null,inv:r.id}));
   addFloat(r.x,r.y-1.4,'いっしょにあそぼう！');f.bubble='♪';return true}
+
+/* ---------- 村をあんないする（えらぶ場面 guide でえらばれた子が、新しい子をつれて村をまわる） ----------
+   S.tour={g:あんないする子のid,w:ついていく子のid,i:いまの場所,at:はじめた時刻}。場所は 畑・食料箱・池・家・切り株・神殿 のうち、ある物だけ。
+   あんないする子は、つぎの場所へ歩いて、着いたらその物のほうを向いて手をふる（ついていく子が来るまで待つ）。ついていく子は、あとをついて歩く。
+   夜・コワイノ・どちらかがいない・ながく進まないときは、やめる。 */
+const TOUR_KINDS=['farm','stor','water','house','stump','statue'],TOUR_STOP=12,TOUR_LIMIT=500;
+function tourStart(g,w){if(!S||IS_STORY_REPLAY||!g||!w||g===w)return;S.tour={g:g.id,w:w.id,i:0,at:S.t};for(const r of[g,w])if(r.act&&!URGNO.includes(r.act.type))endAct(r)}
+function tourPair(){const T=S&&S.tour;if(!T)return null;const g=S.res.find(r=>r.id===T.g&&!r.hidden),w=S.res.find(r=>r.id===T.w&&!r.hidden);if(!g||!w||isNight()||S.t-T.at>TOUR_LIMIT||S.enemies.some(e=>e.spawned&&!e.dead)){delete S.tour;return null}return {T,g,w}}
+function tourTarget(k){const isO=id=>q=>S.obj[q]===id||S.obj[q]==='part'&&S.obj[S.ref[q]]===id;
+  if(k==='farm')return {pred:j=>adjOf(j,isO('farm'))>=0,look:j=>adjOf(j,isO('farm'))};
+  if(k==='water')return {pred:j=>VILL[j]&&adjOf(j,q=>S.ground[q]===1)>=0,look:j=>adjOf(j,q=>S.ground[q]===1)};
+  if(k==='stor')return {pred:j=>adjOf(j,isO('stor'))>=0,look:j=>adjOf(j,isO('stor'))};
+  if(k==='house'){const out=insideSet();return {pred:j=>out[j]&&adjOf(j,q=>HOME_DOORS.has(S.obj[q]))>=0,look:j=>adjOf(j,q=>HOME_DOORS.has(S.obj[q]))}}
+  if(k==='statue')return {pred:j=>adjOf(j,isO('statue'))>=0,look:j=>adjOf(j,isO('statue'))};
+  if(k==='stump'&&S.sacredRoot!=null){const tx=storyTreeX(S.sacredRoot),ty=storyTreeY(S.sacredRoot);return {pred:j=>{const d=Math.hypot(j%W+.5-tx,((j/W)|0)+.5-ty);return d>2.4&&d<3.4},look:()=>Math.floor(ty)*W+Math.floor(tx)}}
+  return null}
+/* せいれいの行動をきめるときによぶ。あんないをしたら true */
+function tourTick(r,G){const P=tourPair();if(!P||r.hunger<40)return false;const {T,g,w}=P;
+  if(r===g){while(T.i<TOUR_KINDS.length){const tg=tourTarget(TOUR_KINDS[T.i]);const j=tg?nearest(G,j=>walk(j)&&tg.pred(j)&&Math.hypot(j%W+.5-r.x,((j/W)|0)+.5-r.y)>=3,80):-1;if(j>=0){const lk=tg.look(j);startAct(r,G,'tourgo',j,{dur:TOUR_STOP,look:lk});return true}T.i++}
+    delete S.tour;JUMP.set(g,performance.now());JOYU.set(g,performance.now()+1500);if(Math.hypot(w.x-g.x,w.y-g.y)<4){JUMP.set(w,performance.now());JOYU.set(w,performance.now()+1500)}bondAdd(g,w,3);return false}/* さいごまで見せたら、ふたりでよろこぶ */
+  if(r===w){const here=(r.y|0)*W+(r.x|0);if(Math.hypot(g.x-r.x,g.y-r.y)<=1.8){startAct(r,G,'tourf',here,{tg:g.id});return true}
+    let q=-1,bd=1e9;for(let k=0;k<W*H;k++){const d=G.dist[k];if(d<0||d>60||!walk(k))continue;const h=Math.hypot(k%W+.5-g.x,((k/W)|0)+.5-g.y);if(h<.9||h>1.8)continue;if(d<bd){bd=d;q=k}}
+    if(q>=0){startAct(r,G,'tourf',q,{tg:g.id});return true}}
+  return false}
+function tourFace(r,j){if(j!=null&&j>=0)r.face=j%W+.5>=r.x?1:-1}
