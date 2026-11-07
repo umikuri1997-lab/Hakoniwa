@@ -3,17 +3,7 @@
    できごとの会話がおわってから1回だけ（S.vgSeen）、やることを S.vgift にためる（ロードしても残る）。
    昼・コワイノがいない・会話がないときに、その子が空いた所へ歩いていき、しゃがんで置いて、ひとこと話す。
    置ける所がなければ、なにもしない。思い出帳の再生ではしない */
-const VGIFT=[
-  {k:'summon',el:'earth',id:'bellf',n:3,at:'shrine',line:'ここ、ずっと土がさみしそうだったからねぇ。お花、咲かせておいたよぉ。'},
-  {k:'earthListen',el:'earth',id:'bellf',n:2,at:'stump',line:'木のまわりも、にぎやかなほうが、うれしいよねぇ。'},
-  {k:'fire',el:'fire',id:'campfire',n:1,at:'vill',line:{A:'夜は冷えるからね。ここで、みんなであったまりな。',B:'夜は冷えるからな。ここで、みんなであったまれ。'}},
-  {k:'fireRoot',el:'fire',id:'salvia',n:2,at:'stump',line:{A:'あかい花のそばなら、根っこも、もうすこしぬくもるだろ。',B:'あかい花のそばなら、根っこも、もうすこしぬくもるだろ。'}},
-  {k:'water',el:'water',id:'jar',n:1,at:'vill',line:'雨の水を、ここにためておきましょう。畑の水やりに使えます。'},
-  {k:'waterFilm',el:'water',id:'lotus',n:2,at:'water',line:'水の上にも、花をうかべておきました。'},
-  {k:'ookage',el:'wood',id:'hedge',n:1,at:'vill',line:'#joy|オオカゲがいなくなったから、みどりの生垣をうえたんだ。ここは、ぼくたちの村だもん。'},
-  {k:'wind',el:'wind',id:'parasol',n:1,at:'vill',line:'日ざしの強い日でも、ここなら風がすずしいはずさ。'},
-  {k:'windEcho',el:'wind',id:'lily',n:2,at:'stump',line:'木のそばにも、いい風がとどくようにしておいたよ。'}
-];
+const VGIFT=[];/* なかまが物を置くしくみはなくした（持ち主の指示）。古いセーブの待ちは villageGiftTick でけす */
 const vgOn=()=>!!S&&WD===0&&!S.free&&!MEMRUN&&!STORY_REPLAY_RUN&&!STORY_REPLAY_SHELL&&!S.cleared;
 const vgWho=g=>g.el==='wood'?POKO:keyName(g.el);
 function vgScan(){/* 会話までおわったできごとを、やることにためる（何もないときは、セーブの中身をかえない） */const add=VGIFT.filter(g=>!(S.vgSeen||{})[g.k]&&qDone(g.k));if(!add.length&&S.flags.vgift1)return;const seen=S.vgSeen||(S.vgSeen={}),P=S.vgift||(S.vgift=[]);
@@ -40,7 +30,7 @@ function godFarewellTick(){if(GODBYE&&$('#dialog').hidden&&!DLGQ.length&&perform
   const owner=S,session=VILLAGE_SESSION;GODBYE=performance.now();let once=0;
   dialog(GOD_FAREWELL(),()=>{if(once++)return;GODBYE=0;if(S!==owner||session!==VILLAGE_SESSION||S.godGone)return;
     const St=S.subSt||(S.subSt={}),D=S.subDone||(S.subDone={});if(!D.trade){St.trade=4;D.trade=1;delete (S.subArrived||{}).trade}S.feat.shop=true;questGives(null,{godLeave:true});checkSub()});}
-function villageGiftTick(){godFarewellTick();if(!vgOn())return;ruinFindTick();vgScan();const P=S.vgift||[];
+function villageGiftTick(){godFarewellTick();if(!vgOn())return;ruinFindTick();if(S.vgift&&S.vgift.length)S.vgift.length=0;for(const r of S.res)if(r.act&&r.act.type==='vgift')endAct(r);const P=S.vgift||[];
   const unsafe=isNight()||S.enemies.some(e=>!e.dead)||sacredQuietActive()||mainGathering();
   for(const r of S.res)if(r.act&&r.act.type==='vgift'&&r.act.stage==='walk'&&unsafe)endAct(r);/* 夜・コワイノで、やめる（つぎの昼に、もう一度） */
   if(!P.length||unsafe||!$('#dialog').hidden||S.res.some(r=>r.act&&r.act.type==='vgift'))return;
