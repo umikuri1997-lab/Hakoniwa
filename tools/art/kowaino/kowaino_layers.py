@@ -23,6 +23,12 @@ def build():
                 parts[n[:-1] + 'R'] = im.crop((sx, 0, im.width, im.height)).copy(), sx
             else:
                 parts[n] = im, 0
+        # 下ろした腕：体（torso）の外に出ている所だけを、肩を上にして90度まわし、体の横にたらす
+        tb = parts['torso'][0].getbbox(); A = Image.open(os.path.join(d, 'arms.png')).convert('RGBA'); ab = A.getbbox()
+        L = A.crop((ab[0], ab[1], tb[0], ab[3])).rotate(90, expand=True); R = A.crop((tb[2], ab[1], ab[2], ab[3])).rotate(-90, expand=True)
+        down = {'armLd': (L, tb[0] - L.width, ab[1]), 'armRd': (R, tb[2], ab[1])}
+        for n, (im, x, y) in down.items():
+            C['kgp_%s:%s' % (kind, n)] = {'ax': x - fx, 'ay': y - fy, 'w': im.width, 'h': im.height, 'f': [im]}
         for n, (im, ox) in parts.items():
             bb = im.getbbox()
             if not bb: continue

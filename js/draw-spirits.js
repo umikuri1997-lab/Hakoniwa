@@ -588,7 +588,7 @@ function drawShadeParts(c,ty,x,y,s,f,o){/* レイヤーの部品をつないだ�
   if(o.hurt!=null&&o.die==null)c.translate(R(Math.sin(t*40)),0);/* こうげきをうけると、ふるえる */
   /* 足：歩くと交互に上がる */d('legL',0,w>0?-2:0);d('legR',0,w<0?-2:0);
   d('torso',0,bob);d('head',0,bob);
-  /* 腕：歩くとふる。ふりかぶると上へ、ふりおろすと下へ */const ay=wind?-7:strike?2:0,sw=o.walk?R(w*2):0;d('armL',strike?2:0,ay+bob+sw);d('armR',strike?-2:0,ay+bob-sw);
+  /* 腕：ふだんは下ろして、歩くと少しふる。こうげきのときだけ、横に上げてからふりおろす */if(wind||strike){const ay=wind?-7:2;d('armL',strike?2:0,ay+bob);d('armR',strike?-2:0,ay+bob)}else{const sw=o.walk?R(w):0;d('armLd',0,bob+sw);d('armRd',0,bob-sw)}
   if(!o.back){const e=o.die!=null||o.hurt!=null?'eyeS':p>=.84?'eyeA':'eyeN';d(e,0,bob)}
   c.restore();c.imageSmoothingEnabled=sm;return true}
 function drawShade(c,ty,x,y,s,f,o){if(drawShadeDot(c,ty,x,y,s,f,o))return;}/* コワイノはドット絵だけ（絵の読みこみ前は描かない） */
