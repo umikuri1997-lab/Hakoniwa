@@ -26,8 +26,7 @@ function mainStoryWaitInfo(){
     else if(q.id==='kagemark'&&S.flags.kgMark!=null){obj=S.flags.kgMark;free=true;}/* 大きなかげのあと：そのまわりへ駆け寄って話す */
     else{/* どこで話してもよい会話：ひとりなら、そのまま暮らしながら話しかけられる。みんなで話すときは、近くの空いた場所に集まる */
       if(cast.length<2||!lead)return null;
-      if(WD===0&&S.sacredRoot!=null&&Object.keys(S.fieldStories||{}).length){obj=S.sacredRoot;tree=true}/* 草原：御神木のまわりは、いつも空いているので、みんなで話すときは御神木のまわりに集まる */
-      else{obj=storyOpenSpot(lead,cast.length);free=true;}
+      obj=storyOpenSpot(lead,cast.length);free=true;/* 切り株に集まるのは、御神木の調べ（q.field）だけ */
     }
   }
   if(obj==null)return null;
