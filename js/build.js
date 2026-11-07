@@ -297,7 +297,7 @@ function orderFurn(id){if(!recipeKnown(id))return;if(!lvOK(id))return toast('村
 /* ---------- 目標 ---------- */
 /* 物語のせいれい（フタバ・ノドカ）がいないあいだは、そのクエストは進まない */
 function qNeed(q){const n=new Set();if(q.talk){n.add(q.talk.who);q.talk.lines.forEach(l=>KEYRES.includes(l[0])&&n.add(l[0]))}(q.story||[]).forEach(l=>KEYRES.includes(l[0])&&n.add(l[0]));return[...n].filter(x=>KEYRES.includes(x))}
-const qMissing=q=>qNeed(q).filter(n=>!S.res.some(r=>r.name===n)&&(S.buried||[]).some(b=>b.name===n));
+const qMissing=q=>qNeed(q).filter(n=>!S.res.some(r=>r.name===n)&&((S.buried||[]).some(b=>b.name===n)||(S.lost||[]).some(b=>b.name===n))).concat(typeof fieldMissNames==='function'?fieldMissNames(q).filter(n=>!qNeed(q).includes(n)):[]);/* お話にいる子が、お墓・旅に出ていて村にいない */
 let TALKW=null,QUESTCLEARW=null;/* 話したそうにしているせいれい／クエスト達成後のお礼 */
 function resetQuestPrompts(){if(S)sevCancel(SEV_ENCOUNTERS.get(S),null,false);SEVW={};TALKW=null;QUESTCLEARW=null;SUBW={};QUEST_CLEAR_WAIT=null;SUB_CLEAR_WAIT={};PAYOK=false;ASKING=false}
 function focusQuestSpeaker(w){if(!w||VW<100||VH<100)return;const r=S.res.find(q=>q.name===w&&!q.hidden);if(!r)return;const x=r.x*TS,y=(r.y-1.3)*TS,vw=VW/cam.z,vh=VH/cam.z;if(x<cam.x+48||x>cam.x+vw-48||y<cam.y+80||y>cam.y+vh-120)centerOn(r.x*TS,(r.y-1)*TS)}

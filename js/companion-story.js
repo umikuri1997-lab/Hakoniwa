@@ -42,6 +42,8 @@ const fieldStump=j=>j+(sacredSpan()-1)*W+(sacredSpan()>>1);/* 切り株（木）
 function fieldLeadStand(G,j,ok){/* 調べる子は、切り株のすぐよこ・すぐ前に立つ（近い順） */const s=fieldStump(j),sx=storyTreeX(j),sy=(s/W|0)+.5;let best=-1,bd=Infinity;for(let y=(s/W|0);y<=(s/W|0)+1;y++)for(let x=Math.floor(sx-1.5);x<=Math.ceil(sx+.5);x++){const k=y*W+x;if(k===s||x<0||x>=W||y>=H||G.dist[k]<0||!walk(k)||!ok(k))continue;const d=Math.hypot(x+.5-sx,y+.5-sy);if(Math.abs(x+.5-sx)>1.5||d>=bd)continue;bd=d;best=k}return best}
 const fieldDistance=(k,j)=>Math.max(j%W-k%W,0,k%W-(j%W+sacredSpan()-1))+Math.max((j/W|0)-(k/W|0),0,(k/W|0)-(j/W|0)-sacredSpan()+1);
 const fieldCast=step=>(step.cast||[step.who]).map(w=>S.res.find(r=>r.name===sevName(w))).filter(Boolean);
+const fieldCastFull=step=>!!step&&fieldCast(step).length===(step.cast||[step.who]).length;/* 調べにいる子が、みんな村にいる */
+function fieldMissNames(q){if(!q||!q.field||!FIELD_STORIES[q.id])return [];const L=FIELD_STORIES[q.id],st=S.qStory!=null?L.at(-1):L[fieldStoryState?.(q.id)?.step||0];return st?(st.cast||[st.who]).map(sevName).filter(n=>!S.res.some(r=>r.name===n)&&((S.buried||[]).some(b=>b.name===n)||(S.lost||[]).some(b=>b.name===n))):[]}/* 調べ・お礼にいる子で、村にいない子 */
 const fieldActorReady=r=>!r.hidden&&!r.coffin&&!HOLD.has(r.id)&&!hungry(r)&&!r.meal&&!['eat','fetch','flee','faint','pray','bury'].includes(r.act?.type)&&!(r.act?.type==='sleep'&&isNight())&&!hostileNow(r);/* お話によばれたら、仕事・遊び・荷物はそのままで、すぐ向かう（おなかがすいた・ごはんを持っている子は、先に食べる） */
 // 会話の前から、その場にいる登場人物へ歩いて集まる。古い関数名は呼び出し元との互換のため保つ。
 const earthIntroQuest=q=>!!q&&q.field&&!(q.id==='tower'&&(cnt('tower')||statueSite('tower')));
@@ -54,7 +56,7 @@ function earthIntroSpeaker(q){
 }
 const INTRO_SLOTS=new WeakMap();function introSlots(id,cast,j){const key=id+':'+j+':'+cast.map(r=>r.id).join(',');let c=INTRO_SLOTS.get(S);if(!c||c.key!==key||c.session!==VILLAGE_SESSION){c={key,session:VILLAGE_SESSION,m:storySlots(cast,{stump:j})};INTRO_SLOTS.set(S,c)}return c.m}
 function tryEarthIntro(r){
-  const q=earthIntroCurrent();if(!q||isNight())return false;const step=FIELD_STORIES[q.id][0];if(!fieldCast(step).includes(r))return false;
+  const q=earthIntroCurrent();if(!q||isNight())return false;const step=FIELD_STORIES[q.id][0];if(!fieldCastFull(step)||!fieldCast(step).includes(r))return false;
   fieldStoryEnsure(q.id);if(r.act?.type==='fieldintro'){if(earthIntroValid(r,r.act))return false;endAct(r);}
   if(!fieldActorReady(r)||onHold(r))return false;const j=S.sacredRoot;if(j==null||!questVisitSafe(r,j))return false;
   const G=bfs(r.x|0,r.y|0),slots=introSlots(q.id,fieldCast(step),j),s0=slots.get(r),stand=s0!=null&&G.dist[s0]>=0&&free('field'+s0,1)?s0:-1;
@@ -139,7 +141,7 @@ function drawFieldStory(now,labelsOnly=false){
 }
 
 /* 調べの集まり：はじめた調べ（auto）は、予定がおわった子から、じゅんに木のそばへ来て待つ。ほかの予定には移らない。みんながそろったら、tryFieldAuto ではじまる */
-function fieldGatherWant(){const q=fieldStoryCurrent();if(!q||isNight())return null;const st=fieldStoryState(q.id);if(!st?.auto||fieldStoryDone(q.id))return null;if(FIELD_SCENES.get(S)?.session===VILLAGE_SESSION||S.res.some(p=>p.act?.type==='fieldstory'||p.act?.type==='fieldassist')||(typeof sacredPlayActive==='function'&&sacredPlayActive()))return null;const step=FIELD_STORIES[q.id][st.step],j=step&&S.fieldSites?.[step.site];if(j==null)return null;if(typeof fieldPrepNeed==='function'&&fieldPrepNeed(q.id))return null;return {q,st,step,j,group:fieldCast(step)};}
+function fieldGatherWant(){const q=fieldStoryCurrent();if(!q||isNight())return null;const st=fieldStoryState(q.id);if(!st?.auto||fieldStoryDone(q.id))return null;if(FIELD_SCENES.get(S)?.session===VILLAGE_SESSION||S.res.some(p=>p.act?.type==='fieldstory'||p.act?.type==='fieldassist')||(typeof sacredPlayActive==='function'&&sacredPlayActive()))return null;const step=FIELD_STORIES[q.id][st.step],j=step&&S.fieldSites?.[step.site];if(j==null)return null;if(typeof fieldPrepNeed==='function'&&fieldPrepNeed(q.id))return null;if(!fieldCastFull(step))return null;/* 調べにいる子がそろっていなければ、だれも集まらない */return {q,st,step,j,group:fieldCast(step)};}
 function tryFieldGather(r){const w=fieldGatherWant();if(!w||!w.group.includes(r))return false;
   if(r.act?.type==='fieldgather'&&r.act.fieldId===w.q.id&&r.act.phase===w.st.step)return false;
   if(r.act?.type==='fieldwait'&&r.act.obj===w.j)return false;/* もう木のそばで待っている */
