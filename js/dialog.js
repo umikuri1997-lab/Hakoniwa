@@ -112,7 +112,8 @@ function showUI(on){$('#topUI').hidden=!on;$('#botUI').hidden=!on}
 function syncTools(s){for(const L of LIVE)if(L&&L!==s){if(L.bulk)s.bulk=true;if(L.stamps)s.stamps=true;if(L.swap)s.swap=true;if(L.dig)s.dig=true;if(L.mover)s.mover=true;if((s.world||0)!==0&&(L.areaSkill||L.flags&&L.flags.areaSkill))(s.flags||(s.flags={})).areaSkill=true}}/* 「こもれびのまもり」も、草原でおぼえたら、ほかのステージで使える（草原は、はじめからやりなおしても、自分でおぼえなおす） */
 function villageTimeout(fn,delay){const owner=S,session=VILLAGE_SESSION;const run=()=>{if(S!==owner||session!==VILLAGE_SESSION)return;if(typeof STORY_REPLAY_SHELL!=='undefined'&&STORY_REPLAY_SHELL){setTimeout(run,150);return;}fn();};return setTimeout(run,delay)}
 function resetVillageTransient(){if(typeof cancelSacredPlay==='function')cancelSacredPlay();cancelSacredQuiet(false);sacredEndDirection(false);VILLAGE_SESSION++;if(typeof LANDFX!=='undefined')LANDFX.clear();if(camAnim?.sacred||camAnim?.storyGoal)camAnim=null;endClap();NUSHI_RUN=false;DEPART_RUN=false;GATHER_HOLD=false;STAGEWAIT=0;WELCOME_RUN=false;GUEST=null;GUESTRUN=false;resetQuestPrompts();DLGQ.length=0;DLGGAP=0;DLGCUR='';DLGTAP=-1e9;DLGN.clear();voiceStop();dlgHush(false);$('#dialog').hidden=true;$('#dlgBtns').replaceChildren();DLG_KEEP=false;NEWQ.length=0;NEWRES=null;HOLD.clear();RLVQ.length=0;LVQ=null;for(const id of['#lvup','#rlv'])$(id).hidden=true;document.querySelectorAll('.askyn').forEach(e=>e.remove());if(S)for(const r of S.res)QUEST_VISITS.delete(r)}/* もちこさない待ち状態だけを消す。途中の会話は pendTalk に残す */
-function newGame(w){w=w||0;if(sheet!=null)closeSheet();recSync();resetVillageTransient();setWorld(w);try{KV.removeItem(SAVE_KEYS[w])}catch(e){}resv.clear();BAN.clear();S=newState(w);if(w===0)fogInit(S);/* 草原は、まん中のほかは霧 */LIVE[w]=S;syncTools(S);dirty=true;recount();kwrSync();recSync();if(sacredRootEnsure(S.res.find(r=>!r.hidden))!=null)recount();/* 御神木の切り株は、はじめからある */weedMorning(true);/* はじめから雑草100本・枝15本がある */undoStack=[];renderQuest();applyFeats();setMode('look');$('#title').hidden=true;startPrologue()}
+function introAtStump(){/* 草原のはじめ：フタバは切り株の前で寝ている */const f=S.res.find(r=>r.name===POKO);if(!f||S.sacredRoot==null)return;const s=fieldStump(S.sacredRoot);for(const k of [s+W,s+W-1,s+W+1,s+2*W]){if(walk(k)&&!S.obj[k]){f.x=k%W+.5;f.y=(k/W|0)+.5;return}}}
+function newGame(w){w=w||0;if(sheet!=null)closeSheet();recSync();resetVillageTransient();setWorld(w);try{KV.removeItem(SAVE_KEYS[w])}catch(e){}resv.clear();BAN.clear();S=newState(w);if(w===0)fogInit(S);/* 草原は、まん中のほかは霧 */LIVE[w]=S;syncTools(S);dirty=true;recount();kwrSync();recSync();if(sacredRootEnsure(S.res.find(r=>!r.hidden))!=null){recount();introAtStump()}/* 御神木の切り株は、はじめからある */weedMorning(true);/* はじめから雑草100本・枝15本がある */undoStack=[];renderQuest();applyFeats();setMode('look');$('#title').hidden=true;startPrologue()}
 function startPrologue(){
   {const ov=document.getElementById('deptLd');if(ov)ov.remove()}/* 出発の画面を、まっくらなプロローグにつなぐ */
   showUI(false);started=false;let i=0;const pro=$('#pro');pro.style.transition='none';pro.hidden=false;pro.style.opacity='1';void pro.offsetWidth;pro.style.transition='';/* フェードせずに、すぐまっくらにする（前のデータの画面が一瞬見えないように） */
@@ -122,10 +123,11 @@ function startPrologue(){
   pro.onclick=e=>{if(e.target.id==='proSkip')return;i++;if(i<PROS[WD].length)show();else end()};
   $('#proSkip').onclick=end;show();
 }
+const arriveF=()=>WD===0&&S.sacredRoot!=null&&S.res.find(r=>r.name===POKO);/* 草原のはじめは、カミサマと、切り株の前のフタバが入るように */
 function arrive(){
   stageMusic();
   /* はじめての村へ降りるカメラズームは残す。タイトルの背景描画とは別の演出。 */
-  camAnim={fz:cam.z,tz:homeZ(),fx:cam.x+VW/cam.z/2,fy:cam.y+VH/cam.z/2,tx:CX*TS,ty:(CY-3)*TS,t:0,dur:2.2,done:()=>{
+  camAnim={fz:cam.z,tz:homeZ(),fx:cam.x+VW/cam.z/2,fy:cam.y+VH/cam.z/2,tx:arriveF()?(CX+arriveF().x)/2*TS:CX*TS,ty:arriveF()?(CY-3+arriveF().y-1)/2*TS:(CY-3)*TS,t:0,dur:2.2,done:()=>{
     S.godShown=true;burst(Math.floor(godY())*W+Math.floor(godX()),'furn');sfx('poof');
     setTimeout(()=>{started=true;showUI(true);{const f=WD===0&&S.res.find(r=>r.name===POKO);if(f){f.nap=true;RHOLD.set(f,performance.now()+6e5)}}/* 草原のはじめ：フタバは、すわってうとうと */const run=()=>dialog((WD===FREE?INTROFL():INTROS[WD]),()=>{for(const r of S.res)if(r.nap){r.nap=false;RHOLD.set(r,0)}S.introSeen=true;save()});/* さいごまで見てから「見た」に */if(WD===0){showUI(false);sceneShift('mem',dreamScene,()=>{showUI(true);run()})}else run()},500)}};/* 草原のはじめに、めざす村のすがた（夢）を見せる */
 }
