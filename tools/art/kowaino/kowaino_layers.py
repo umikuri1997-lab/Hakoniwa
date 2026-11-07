@@ -7,7 +7,7 @@ import sys, os
 HERE = os.path.dirname(os.path.abspath(__file__)); ROOT = os.path.dirname(os.path.dirname(os.path.dirname(HERE)))
 sys.path.insert(0, os.path.join(ROOT, 'tools')); import chips
 from PIL import Image
-KINDS = {'basic': {'foot': (25, 80), 'split': 25}}   # 足もとの点・左右に分けるx（もとの絵のドット）
+KINDS = {'basic': {'foot': (25, 80), 'split': 25}, 'brute': {'foot': (33, 69), 'split': 33}}   # 足もとの点・左右に分けるx（もとの絵のドット）
 
 def build():
     h0, C = chips.load_imgs()
