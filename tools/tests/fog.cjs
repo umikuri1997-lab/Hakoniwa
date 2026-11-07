@@ -1,7 +1,7 @@
 const {chromium}=require('playwright'),assert=require('node:assert/strict'),fs=require('node:fs');
 /* 霧の中の土地：はじめはまん中の4エリアだけ晴れ。みどりのマスで晴れる・霧の中に置けない・コワイノは晴れた所の南から・宝箱・古い家のあと・あしあと・古いセーブ */
 (async()=>{const browser=await chromium.launch({executablePath:process.env.CHROME_PATH||(fs.existsSync('/usr/bin/chromium')?'/usr/bin/chromium':undefined),args:['--no-sandbox']});const page=await browser.newPage({viewport:{width:900,height:700}});const errors=[];page.on('pageerror',e=>errors.push(e.message));await page.route('**/js/main.js*',async route=>{const r=await route.fetch();await route.fulfill({response:r,body:(await r.text())+'\nwindow.ltEval=s=>eval(s);'});});await page.goto(process.env.GAME_URL||'http://127.0.0.1:8000');await page.waitForFunction(()=>!!window.ltEval);
-await page.waitForFunction(()=>ltEval('!!window.CHIPS&&!!CHIPS["kgp_basic:head"]&&!!CHIPS["kgp_brute:head"]&&!!CHIPS["kgp_fast:head"]'),null,{timeout:30000});
+await page.waitForFunction(()=>ltEval('!!window.CHIPS&&!!CHIPS["kg_basic:idle"]'),null,{timeout:30000});
 const out=JSON.parse(await page.evaluate(()=>ltEval(`(()=>{const o={};newGame(0);for(const id of ['#title','#maps','#pro','#dialog'])document.querySelector(id).hidden=true;showUI(true);started=true;USERPAUSE=true;showItemGift=()=>{};
  o.fog0=S.fog.join('');o.kinds=S.fogF.filter(f=>f.t!=='mansion').map(f=>f.t).sort().join(',');o.nF=S.fogF.filter(f=>f.t!=='mansion').length;o.mansions=S.fogF.filter(f=>f.t==='mansion').length;{const m=S.fogF.find(f=>f.t==='mansion');o.msHidden=!!m&&S.fog[m.a]===1&&S.obj[m.j]!=='hwall'}
  const fj=10*W+10,cj=40*W+40;o.walkFog=walk(fj);o.walkMid=walk(cj);o.placeFog=canPlace('fence',10,10,true);o.placeMid=canPlace('fence',40,40,true)||S.obj[cj]!=='';

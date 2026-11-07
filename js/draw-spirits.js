@@ -561,7 +561,6 @@ const KGDOT={},KGDOK={};
 function kgDot(key,white){const ch=CHIPS[key],im=chipImgs(ch,key)[0];if(!white)return im;const k=key+'|w';if(KGDOT[k])return KGDOT[k];
   const cv=document.createElement('canvas');cv.width=im.width;cv.height=im.height;const g=cv.getContext('2d');g.drawImage(im,0,0);g.globalCompositeOperation='source-in';g.fillStyle='#f4eefa';g.fillRect(0,0,cv.width,cv.height);return KGDOT[k]=cv}/* ひかったときは白いかげ */
 function drawShadeDot(c,ty,x,y,s,f,o){
-  if(window.CHIPS&&CHIPS['kgp_'+ty+':head'])return drawShadeParts(c,ty,x,y,s,f,o);
   const K='kg_'+ty+':';if(!window.CHIPS||!CHIPS[K+'idle'])return false;
   if(!KGDOK[ty]){for(const k in CHIPS)if(k.startsWith(K)&&!chipImgs(CHIPS[k],k)[0].ok)return false;KGDOK[ty]=1}
   const t=o.t||0,B=o.back?'B':'',p=o.atk||0,sc=s/(.27*EN[ty].size*2);
@@ -577,18 +576,4 @@ function drawShadeDot(c,ty,x,y,s,f,o){
 const BEDSPR={w:160,h:163,src:'assets/g/88c626b7df.webp'};BEDSPR.img=new Image();BEDSPR.img.onload=()=>{BEDSPR.ok=1;if(typeof iconCache!=='undefined')delete iconCache.bed;if(typeof rebuildStatic==='function'&&S)rebuildStatic(true)};BEDSPR.img.src=BEDSPR.src;
 const SPR={god:{w:72,h:150,src:'assets/g/c48b773300.webp'},site:{w:104,h:91,src:'assets/g/e757fabc49.webp'}};
 for(const k in SPR){const g=SPR[k];g.img=new Image();g.img.onload=()=>{g.ok=1;if(k==='site')artLoaded()};g.img.src=g.src}
-function drawShadeParts(c,ty,x,y,s,f,o){/* レイヤーの部品をつないだコワイノ：足・体・腕・目を、コードで動かす（歩く・こうげき・やられ） */
-  const K='kgp_'+ty+':';if(!KGDOK[K]){for(const k in CHIPS)if(k.startsWith(K)&&!chipImgs(CHIPS[k],k)[0].ok)return false;KGDOK[K]=1}
-  const t=o.t||0,p=o.atk||0,sc=s/(.27*EN[ty].size*2),R=Math.round;
-  const w=o.walk?Math.sin(t*10):0,bob=o.walk?(Math.abs(w)>.5?-1:0):(Math.sin(t*3)>.3?-1:0);
-  const d=(k,dx,dy)=>{const ch=CHIPS[K+k];if(ch)c.drawImage(kgDot(K+k,!!o.flash),ch.ax+R(dx),ch.ay+R(dy))};
-  const sm=c.imageSmoothingEnabled;c.imageSmoothingEnabled=sc<.9;
-  c.save();c.translate(x,y);c.scale(sc*f,sc);
-  if(o.hurt!=null&&o.die==null)c.translate(R(Math.sin(t*40)),0);/* こうげきをうけると、ふるえる */
-  /* つばさ（あれば）：体のうしろで、ぱたぱた（歩くと速く） */if(CHIPS[K+'wings'])d('wings',0,bob-(Math.floor(t*(o.walk?12:4))%2));
-  /* 足：歩くと交互に上がる */d('legL',0,w>0?-2:0);d('legR',0,w<0?-2:0);
-  d('torso',0,bob);d('head',0,bob);d('spikes',0,bob);/* とげ（あれば） */
-  /* 腕：ふだんは下ろしたまま（歩いても上下させない） */if(p>=.84){const fl=Math.floor(t*14)%2;d(fl?'armLu':'armLw',0,bob);d(fl?'armRw':'armRu',0,bob)}/* こうげき：肩はそのままで、腕を交互にななめ上・ななめ下へバタバタ（ポカポカ） */else{d('armLd',0,bob);d('armRd',0,bob)}
-  if(!o.back){const e=o.die!=null||o.hurt!=null?'eyeS':p>=.84?'eyeA':'eyeN';d(CHIPS[K+e]?e:'eyeN',0,bob)}/* その目の絵がなければ、ふつうの目 */
-  c.restore();c.imageSmoothingEnabled=sm;return true}
 function drawShade(c,ty,x,y,s,f,o){if(drawShadeDot(c,ty,x,y,s,f,o))return;}/* コワイノはドット絵だけ（絵の読みこみ前は描かない） */
