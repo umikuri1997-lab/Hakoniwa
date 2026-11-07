@@ -553,25 +553,9 @@ function drawNushiOld(now){
 }
 /* ---------- 「コワイノ」の絵 ---------- */
 // 足元(0,0)基準・高さ約100単位。o:{t,back,walk,flash}
-const KGS={basic_f:{w:100,h:167,arms:[[-1, 30.0, 119.8, 13], [1, 68.0, 120.5, 14]],src:'assets/g/eb6bcf47cf.webp'},
-basic_b:{w:99,h:168,arms:[[-1, 28.0, 120.5, 14], [1, 68.0, 120.5, 14]],src:'assets/g/aedd528ff2.webp'},
-fast_f:{w:139,h:169,arms:[],src:'assets/g/b4bf6cc5ec.webp'},
-fast_b:{w:137,h:168,arms:[],src:'assets/g/3efce8d30c.webp'},
-thief_f:{w:144,h:166,arms:[[-1, 35.0, 114.2, 17]],src:'assets/g/a26c29eafd.webp'},
-thief_b:{w:117,h:165,arms:[[-1, 32.0, 115.0, 18]],src:'assets/g/611848f979.webp'},
-brute_f:{w:139,h:161,arms:[[-1, 48.0, 114.8, 13], [1, 86.0, 115.2, 13]],src:'assets/g/4a39f03f83.webp'},
-brute_b:{w:138,h:159,arms:[[-1, 47.0, 112.5, 12], [1, 87.0, 113.0, 12]],src:'assets/g/a312cdf470.webp'},
-boss_f:{w:266,h:201,arms:[],src:'assets/g/1c122dcb9e.webp'},
-boss_b:{w:220,h:200,arms:[],src:'assets/g/9ed430b84b.webp'}};
-// イラストを切り抜いた絵。腕だけ消してあり、下ろした腕をコードで描いて動かす
-const BEDSPR={w:160,h:163,src:'assets/g/88c626b7df.webp'};BEDSPR.img=new Image();BEDSPR.img.onload=()=>{BEDSPR.ok=1;if(typeof iconCache!=='undefined')delete iconCache.bed;if(typeof rebuildStatic==='function'&&S)rebuildStatic(true)};BEDSPR.img.src=BEDSPR.src;
-const SPR={god:{w:72,h:150,src:'assets/g/c48b773300.webp'},site:{w:104,h:91,src:'assets/g/e757fabc49.webp'}};
-for(const k in SPR){const g=SPR[k];g.img=new Image();g.img.onload=()=>{g.ok=1;if(k==='site')artLoaded()};g.img.src=g.src}
-for(const k in KGS){const g=KGS[k];g.img=new Image();g.img.onload=()=>{const cv=document.createElement('canvas');cv.width=g.w;cv.height=g.h;const x=cv.getContext('2d');x.drawImage(g.img,0,0);x.globalCompositeOperation='source-atop';x.fillStyle='#f4eefa';x.fillRect(0,0,g.w,g.h);g.white=cv;g.ok=1};g.img.src=g.src}
 // 攻撃：ためは短く、最後にすばやくふりかぶって叩きつける
 function atkLift(p){if(p<=0)return 0;if(p<.84)return Math.sin(p*40)*.04;if(p<.95)return (p-.84)/.11*2.7;if(p<.985)return 2.7-(p-.95)/.035*3.1;return -.4}
 function atkLean(p){return p>=.95&&p<1?.12:p>.84?-.08*(p-.84)/.11:0}
-const KGH={basic:100,fast:100,thief:100,brute:100,boss:118};
 // コワイノのドット絵：モーション（待機・歩き・攻撃・やられ）ごとのコマを切りかえる。コマはたてにならべた1まいの絵（n＝コマ数）。大きさは種類ごとの絵（どれも1ドット＝1）
 const KGDOT={},KGDOK={};
 function kgDot(key,white){const ch=CHIPS[key],im=chipImgs(ch,key)[0];if(!white)return im;const k=key+'|w';if(KGDOT[k])return KGDOT[k];
@@ -589,86 +573,4 @@ function drawShadeDot(c,ty,x,y,s,f,o){
   const sm=c.imageSmoothingEnabled;c.imageSmoothingEnabled=sc<.9;/* 図鑑などで小さく描くときだけ、なめらかに縮める */
   c.save();c.translate(x,y);c.scale(sc*f,sc);c.drawImage(kgDot(key,!!o.flash),0,fi*ch.h,ch.w,ch.h,ch.ax,ch.ay,ch.w,ch.h);c.restore();
   c.imageSmoothingEnabled=sm;return true}
-function drawShade(c,ty,x,y,s,f,o){const ty0=ty;
-  if(o.dot&&drawShadeDot(c,ty,x,y,s,f,o))return;
-  if(ty==='trapper'||ty==='rockc')ty='brute';else if(ty==='ash'||ty==='breaker')ty='basic';else if(ty==='hino'||ty==='yama')ty='boss';/* ワナクイは、カタカゲに似たとげとげの形（小さめ） */
-  const g=KGS[ty+(o.back?'_b':'_f')];if(!g||!g.ok)return drawShadeV(c,ty,x,y,s,f,o);
-  const t=o.t||0,BD=o.flash?'#f4eefa':'#3e383e',u=(KGH[ty]||100)/g.h;
-  const st=o.walk?Math.sin(t*10):0,bob=o.walk?Math.abs(st)*3:Math.sin(t*3)*1.5,sq=o.walk?Math.abs(st)*.04:Math.sin(t*3)*.015;
-  const p=o.atk||0,lift=atkLift(p);
-  c.save();c.translate(x,y);c.scale(s*f,s);c.lineCap='round';
-  c.rotate(o.walk?st*.06:atkLean(p));c.scale(1+sq,1-sq);c.translate(0,-bob);
-  for(const[side,rx,ry,th]of g.arms){
-    const ang=o.flash?-.25:1.0+(o.walk?side*st*.45:Math.sin(t*2.2+side)*.08)-lift,T=Math.max(2.6,th*u*.5),L=20;
-    c.save();c.translate((rx-g.w/2)*u,(ry-g.h)*u);c.scale(side,1);c.rotate(ang);
-    c.strokeStyle=BD;c.lineWidth=T*2;c.beginPath();c.moveTo(-2,0);c.lineTo(L*.75,0);c.stroke();
-    c.fillStyle=BD;c.beginPath();c.ellipse(L*.8,0,T*1.45,T*1.2,0,0,7);c.fill();c.restore()}
-  // 腕は体のうしろから出す
-  c.drawImage(o.flash?g.white:g.img,-g.w/2*u,-g.h*u,g.w*u,g.h*u);
-  if((ty0==='breaker'||ty0==='trapper')&&!o.flash){/* 見た目で区別：カベクダキはハンマー、ワナクイは罠のあご */
-    const hx=g.w*u*.5,hy=-g.h*u*.8;c.save();c.translate(hx,hy);c.rotate(-.5+Math.sin(t*3)*.08);c.scale(1.7,1.7);
-    if(ty0==='breaker'){c.fillStyle='#8a5a34';c.fillRect(-2.5,-4,5,30);c.fillStyle='#9aa0a8';c.fillRect(-11,-14,22,12);c.fillStyle='#c9ced4';c.fillRect(-11,-14,22,3.5);c.strokeStyle='#3e383e';c.lineWidth=2;c.strokeRect(-11,-14,22,12)}
-    else{c.fillStyle='#b9b3ad';c.strokeStyle='#3e383e';c.lineWidth=2;c.beginPath();c.arc(0,0,12,Math.PI,0);c.closePath();c.fill();c.stroke();c.fillStyle='#fff';for(let k=-2;k<=2;k++){c.beginPath();c.moveTo(k*4.4-2,0);c.lineTo(k*4.4,-5);c.lineTo(k*4.4+2,0);c.fill()}c.fillStyle='#d94a4a';c.beginPath();c.arc(0,-13,3,0,7);c.fill()}
-    c.restore()}
-  c.restore();
-}
-function drawShadeV(c,ty,x,y,s,f,o){
-  const t=o.t||0,back=!!o.back,BD=o.flash?'#f4eefa':'#3f3842',EY='#b7a3d8',CR='#a993c6',SK='#d8b48a';
-  const st=o.walk?Math.sin(t*10):0,bob=o.walk?Math.abs(Math.sin(t*10))*2:Math.sin(t*3)*1.5,fl=Math.sin(t*(ty==='fast'?16:6))*.25;
-  const p=o.atk||0,lift=atkLift(p);
-  c.save();c.translate(x,y);c.scale(s*f,s);c.lineJoin='round';c.lineCap='round';
-  const E=(cx,cy,rx,ry,rot,col)=>{c.fillStyle=col;c.beginPath();c.ellipse(cx,cy,rx,ry,rot||0,0,7);c.fill()};
-  const P=(pts,col)=>{c.fillStyle=col;c.beginPath();pts.forEach((q,i)=>i?c.lineTo(q[0],q[1]):c.moveTo(q[0],q[1]));c.closePath();c.fill()};
-  const legs=(w,ry)=>{const l1=Math.max(0,st)*4,l2=Math.max(0,-st)*4;E(-w,-6-l1,5.5,ry||7,0,BD);E(w,-6-l2,5.5,ry||7,0,BD)};
-  const torso=(w,top)=>{c.fillStyle=BD;c.beginPath();c.moveTo(-w+3,top);c.quadraticCurveTo(-w-2,top+12,-w+1,-8);c.quadraticCurveTo(0,-1,w-1,-8);c.quadraticCurveTo(w+2,top+12,w-3,top);c.closePath();c.fill()};
-  // 腕：ふだんは下ろして、歩くと前後にふる。攻撃のときはふりあげて叩きつける
-  const armAng=sx=>o.flash?-.25:1.15+(o.walk?sx*Math.sin(t*10)*.45:Math.sin(t*2.2+sx)*.08)-lift;
-  const arm=(sx,y0,x0,len,th,fix)=>{c.save();c.translate(sx*x0,y0);c.scale(sx,1);c.rotate(fix??armAng(sx));c.strokeStyle=BD;c.lineWidth=th*2;c.beginPath();c.moveTo(0,0);c.lineTo(len*.75,0);c.stroke();E(len*.8,0,th*1.5,th*1.25,0,BD);c.restore()};
-  const arms=(y0,x0,len,th)=>{arm(-1,y0,x0,len,th);arm(1,y0,x0,len,th)};
-  const eyes=(ex,ey,rx,ry,angry)=>{if(back)return;if(angry){for(const sx of[-1,1]){c.fillStyle=EY;c.beginPath();c.moveTo(sx*(ex-rx),ey-ry*.2);c.quadraticCurveTo(sx*ex,ey+ry*1.1,sx*(ex+rx),ey-ry*.9);c.quadraticCurveTo(sx*ex,ey-ry*.2,sx*(ex-rx),ey-ry*.2);c.fill()}}else{E(-ex,ey,rx,ry,0,EY);E(ex,ey,rx,ry,0,EY)}};
-  const wing=(sx,wx,wy,sz)=>{c.save();c.translate(sx*wx,wy);c.scale(sx*sz,sz);c.rotate(-fl);c.fillStyle=BD;c.beginPath();c.moveTo(0,-6);c.quadraticCurveTo(14,-14,24,-10);c.quadraticCurveTo(22,-2,26,4);c.quadraticCurveTo(19,1,16,8);c.quadraticCurveTo(11,3,6,8);c.quadraticCurveTo(4,2,0,4);c.closePath();c.fill();c.restore()};
-  c.translate(0,-bob);
-  if(ty==='basic'){
-    legs(6);torso(10,-30);arms(-27,8,18,3.2);
-    c.fillStyle=BD;c.beginPath();c.moveTo(-25,-50);c.quadraticCurveTo(-26,-72,-8,-78);c.quadraticCurveTo(0,-81,2,-86);c.quadraticCurveTo(8,-80,12,-77);c.quadraticCurveTo(27,-70,25,-48);c.quadraticCurveTo(23,-29,0,-28);c.quadraticCurveTo(-23,-29,-25,-50);c.fill();
-    const cw=Math.sin(t*2.5)*.2;c.save();c.translate(2,-86);c.rotate(cw);c.strokeStyle=BD;c.lineWidth=5;c.beginPath();c.moveTo(0,0);c.quadraticCurveTo(-3,-8,2,-12);c.arc(6,-12,4,Math.PI,Math.PI*2.6);c.stroke();c.restore();
-    eyes(10.5,-41,2.6,5.6,false);
-  }else if(ty==='fast'){
-    legs(6);wing(-1,8,-20,.9);wing(1,8,-20,.9);torso(10,-30);arms(-28,9,19,3.1);
-    E(0,-52,23,22,0,BD);
-    for(const sx of[-1,1]){c.fillStyle=BD;c.beginPath();c.moveTo(sx*7,-70);c.quadraticCurveTo(sx*24,-74,sx*15,-97);c.quadraticCurveTo(sx*33,-84,sx*22,-62);c.closePath();c.fill()}
-    eyes(8.5,-44,2.4,5,false);
-  }else if(ty==='thief'){
-    legs(6);torso(11,-30);
-    const sk=()=>{c.save();c.translate(back?-21:23,-20+(o.walk?Math.abs(st)*-2:0));c.rotate(Math.sin(t*4)*.08);E(0,0,14,13,0,SK);c.fillStyle='#c49a6c';c.beginPath();c.ellipse(-3,-12,6,3,-.3,0,7);c.fill();c.restore()};
-    if(back){sk();arm(-1,-27,8,17,3.2,.55);arm(1,-27,8,17,3.2)}else{arm(-1,-27,8,17,3.2)}
-    c.fillStyle=BD;c.beginPath();c.moveTo(-24,-34);c.quadraticCurveTo(-30,-64,-6,-82);c.quadraticCurveTo(8,-92,18,-88);c.quadraticCurveTo(11,-83,15,-76);c.quadraticCurveTo(28,-60,24,-34);c.quadraticCurveTo(0,-26,-24,-34);c.fill();
-    if(!back){E(0,-50,17,13,0,'#2c262f');eyes(8,-50,5.5,4,true);c.strokeStyle='#5c4a3a';c.lineWidth=2;c.beginPath();c.moveTo(-10,-34);c.quadraticCurveTo(0,-30,10,-34);c.stroke();sk();arm(1,-27,8,17,3.2,.55)}
-  }else if(ty==='brute'){
-    legs(8);torso(14,-30);arms(-30,18,18,3.8);
-    const N=11,pts=[];for(let k=0;k<N*2;k++){const a=-Math.PI/2+k/(N*2)*Math.PI*2,r=k%2?26:34+(k===0?6:0);pts.push([Math.cos(a)*r,-54+Math.sin(a)*r*.95])}P(pts,BD);
-    for(const[cx,cy,rot,h]of[[-24,-74,-.5,14],[22,-78,.45,16],[-34,-56,-1.1,10],[32,-58,1.1,11]]){c.save();c.translate(cx,cy);c.rotate(rot);P([[-4,4],[-3,-h*.6],[0,-h],[3,-h*.6],[4,4]],CR);c.restore()}
-    eyes(11,-37,2.7,5.2,false);
-  }else if(ty==='boss'){
-    legs(14,8);
-    wing(-1,28,-44,1.5);wing(1,28,-44,1.5);
-    arms(-30,30,18,5);
-    E(0,-46,40,36,0,BD);
-    for(const sx of[-1,1]){c.fillStyle=BD;c.beginPath();c.moveTo(sx*18,-76);c.quadraticCurveTo(sx*30,-88,sx*24,-100);c.quadraticCurveTo(sx*38,-94,sx*30,-74);c.closePath();c.fill();
-      c.fillStyle=CR;c.globalAlpha=.7;c.beginPath();c.moveTo(sx*34,-82);c.quadraticCurveTo(sx*42,-92,sx*38,-100);c.quadraticCurveTo(sx*46,-90,sx*38,-78);c.closePath();c.fill();c.globalAlpha=1}
-    P([[-12,-80],[-10,-90],[-5,-84],[0,-96],[5,-84],[10,-90],[12,-80]],BD);
-    if(!back){const op=.75+Math.sin(t*1.3)*.25;c.fillStyle=EY;c.beginPath();c.moveTo(0,-77);c.quadraticCurveTo(10,-62,0,-47);c.quadraticCurveTo(-10,-62,0,-77);c.fill();E(0,-62,2.4*op,8*op,0,BD);
-      eyes(17.5,-39,6.5,5,true)}
-  }else if(ty==='boss2'){/* ヨルノオオカゲ：この土地の夜が、ひとつにあつまったもの。体の中に星がまたたき、ひたいに三日月 */
-    const NB=o.flash?BD:'#272143',NI=o.flash?BD:'#342c58',MO='#ffe08a';
-    for(const sx of[-1,1]){c.save();c.translate(sx*30,-26);c.scale(sx,1);c.rotate(armAng(sx));c.strokeStyle=NB;c.lineWidth=9.2;c.beginPath();c.moveTo(0,0);c.lineTo(16.5,0);c.stroke();E(17.6,0,6.9,5.8,0,NB);c.restore()}
-    c.fillStyle=NB;c.beginPath();c.moveTo(-34,-4);c.quadraticCurveTo(-40,-34,-28,-52);c.quadraticCurveTo(-14,-68,0,-68);c.quadraticCurveTo(14,-68,28,-52);c.quadraticCurveTo(40,-34,34,-4);
-    for(let k=0;k<4;k++){const x0=34-k*17,w=Math.sin(t*2+k*1.3)*1.5;c.quadraticCurveTo(x0-8.5+w,6,x0-17,-4)}/* すそは、夜の霧のようにゆれる */c.closePath();c.fill();
-    for(const sx of[-1,1]){c.fillStyle=NB;c.beginPath();c.moveTo(sx*14,-64);c.quadraticCurveTo(sx*30,-80,sx*22,-92);c.quadraticCurveTo(sx*38,-82,sx*28,-58);c.closePath();c.fill()}/* 三日月のような角 */
-    c.fillStyle=NI;c.beginPath();c.ellipse(0,-30,24,22,0,0,7);c.fill();/* 夜空の奥 */
-    if(!o.flash)for(const[sx2,sy2,r]of[[-16,-44,2.2],[14,-48,1.6],[-24,-22,1.6],[20,-20,2.2],[-6,-14,1.4],[8,-36,1.2],[0,-54,1.4]]){const tw=.4+.6*Math.abs(Math.sin(t*1.7+sx2*.3+sy2*.11));c.globalAlpha=tw;c.fillStyle=MO;c.beginPath();c.moveTo(sx2,sy2-r*2);c.lineTo(sx2+r*.6,sy2-r*.6);c.lineTo(sx2+r*2,sy2);c.lineTo(sx2+r*.6,sy2+r*.6);c.lineTo(sx2,sy2+r*2);c.lineTo(sx2-r*.6,sy2+r*.6);c.lineTo(sx2-r*2,sy2);c.lineTo(sx2-r*.6,sy2-r*.6);c.closePath();c.fill()}c.globalAlpha=1;/* またたく星 */
-    if(!back){if(!o.flash){c.fillStyle=MO;c.beginPath();c.arc(0,-56,7,0,7);c.fill();c.fillStyle=NB;c.beginPath();c.arc(3.5,-58,6,0,7);c.fill()}/* ひたいの三日月 */
-      eyes(12,-32,6.5,5.5,true)}
-  }else{E(0,-40,24,22,0,BD);eyes(8,-42,3.6,6,false)}
-  c.restore();
-}
+function drawShade(c,ty,x,y,s,f,o){if(drawShadeDot(c,ty,x,y,s,f,o))return;}/* コワイノはドット絵だけ（絵の読みこみ前は描かない） */
