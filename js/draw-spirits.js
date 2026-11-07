@@ -561,7 +561,6 @@ const KGDOT={},KGDOK={};
 function kgDot(key,white){const ch=CHIPS[key],im=chipImgs(ch,key)[0];if(!white)return im;const k=key+'|w';if(KGDOT[k])return KGDOT[k];
   const cv=document.createElement('canvas');cv.width=im.width;cv.height=im.height;const g=cv.getContext('2d');g.drawImage(im,0,0);g.globalCompositeOperation='source-in';g.fillStyle='#f4eefa';g.fillRect(0,0,cv.width,cv.height);return KGDOT[k]=cv}/* ひかったときは白いかげ */
 function drawShadeDot(c,ty,x,y,s,f,o){
-  if(window.CHIPS&&CHIPS['kgp_'+ty+':body'])return drawShadeParts(c,ty,x,y,s,f,o);
   const K='kg_'+ty+':';if(!window.CHIPS||!CHIPS[K+'idle'])return false;
   if(!KGDOK[ty]){for(const k in CHIPS)if(k.startsWith(K)&&!chipImgs(CHIPS[k],k)[0].ok)return false;KGDOK[ty]=1}
   const t=o.t||0,B=o.back?'B':'',p=o.atk||0,sc=s/(.27*EN[ty].size*2);
@@ -577,24 +576,4 @@ function drawShadeDot(c,ty,x,y,s,f,o){
 const BEDSPR={w:160,h:163,src:'assets/g/88c626b7df.webp'};BEDSPR.img=new Image();BEDSPR.img.onload=()=>{BEDSPR.ok=1;if(typeof iconCache!=='undefined')delete iconCache.bed;if(typeof rebuildStatic==='function'&&S)rebuildStatic(true)};BEDSPR.img.src=BEDSPR.src;
 const SPR={god:{w:72,h:150,src:'assets/g/c48b773300.webp'},site:{w:104,h:91,src:'assets/g/e757fabc49.webp'}};
 for(const k in SPR){const g=SPR[k];g.img=new Image();g.img.onload=()=>{g.ok=1;if(k==='site')artLoaded()};g.img.src=g.src}
-function drawShadeParts(c,ty,x,y,s,f,o){/* 部品をつないだコワイノ：体・腕・足・目・頭のくるんを、コードで動かす（歩く・こうげき・やられ） */
-  const K='kgp_'+ty+':';if(!KGDOK[K]){for(const k in CHIPS)if(k.startsWith(K)&&!chipImgs(CHIPS[k],k)[0].ok)return false;KGDOK[K]=1}
-  const t=o.t||0,p=o.atk||0,back=!!o.back,sc=s/(.27*EN[ty].size*2),R=Math.round;
-  const w=o.walk?Math.sin(t*10):0,bob=o.walk?(Math.abs(w)>.5?-1:0):(Math.sin(t*3)>.3?-1:0);
-  const wind=p>=.84&&p<.95,strike=p>=.95,hurt=o.die!=null||o.hurt!=null;
-  const d=(k,cx,by,fl)=>{const ch=CHIPS[K+k];if(!ch)return;const im=kgDot(K+k,!!o.flash);if(fl){c.save();c.translate(R(cx),0);c.scale(-1,1);c.drawImage(im,-R(ch.w/2),R(by)-ch.h);c.restore()}else c.drawImage(im,R(cx)-R(ch.w/2),R(by)-ch.h)};
-  const sm=c.imageSmoothingEnabled;c.imageSmoothingEnabled=sc<.9;
-  c.save();c.translate(x,y);c.scale(sc*f,sc);
-  if(o.die!=null)c.globalAlpha*=Math.max(.2,1-o.die*.3);/* たおれるときは、うすくなる */
-  const sh=hurt&&!o.die?R(Math.sin(t*40)*1):0;c.translate(sh,0);
-  const top=-3-(CHIPS[K+'body'].h)+bob;/* 体のてっぺん */
-  /* 足（体のうしろ） */d('foot',-9,w>0?-2:0);d('foot',9,w<0?-2:0);
-  /* 頭のくるん（体のうしろ・ゆれる） */d('tip',4+R(Math.sin(t*2.5)),top+5,false);
-  /* 腕：ふだんは体のうしろ。ふりかぶると上へ、ふりおろすと前へ */
-  const ay=wind?-38:strike?-8:-14,sw=o.walk?R(w*2):0,ax=strike?16:20;
-  if(!strike){d('arm',ax,ay+bob+sw,false);d('arm',-ax,ay+bob-sw,true)}
-  d(back?'bodyB':'body',0,-3+bob);
-  if(!back){const e=o.die!=null?'eyeS':o.hurt!=null?'eyeO':p>=.84?'eyeA':'eyeN';d(e,0,-24+bob)}
-  if(strike){d('arm',ax,ay+bob,false);d('arm',-ax,ay+bob,true)}
-  c.restore();c.imageSmoothingEnabled=sm;return true}
 function drawShade(c,ty,x,y,s,f,o){if(drawShadeDot(c,ty,x,y,s,f,o))return;}/* コワイノはドット絵だけ（絵の読みこみ前は描かない） */
