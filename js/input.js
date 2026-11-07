@@ -50,7 +50,7 @@ function enemyBox(e){const D=EN[e.type],z=D.size*2,v=EV.get(e)||{f:1,back:false}
   if(!b){const R=36*z,ww=Math.ceil(R*2),hh=Math.ceil(R*2.2),c=document.createElement('canvas');c.width=ww;c.height=hh;const g=c.getContext('2d');/* 描くときと同じ場所（px=R, py+8=R*1.7） */
     drawShade(g,e.type,R,R*1.7,.27*z,v.f,{dot:1,t:0,back:v.back,walk:false,flash:false,hurt:null,atk:0});
     const d=g.getImageData(0,0,ww,hh).data;let x0=ww,y0=hh,x1=-1,y1=-1;for(let y=0;y<hh;y++)for(let x=0;x<ww;x++)if(d[(y*ww+x)*4+3]>16){if(x<x0)x0=x;if(x>x1)x1=x;if(y<y0)y0=y;if(y>y1)y1=y}
-    c.width=c.height=0;b=x1<0?{l:-R*.6,r:R*.6,t:-R*1.5,b:R*.3,ok:0}:{l:x0-R,r:x1+1-R,t:y0-R*1.7,b:y1+1-R*1.7,ok:1};if(b.ok&&Object.values(KGS).every(g=>g.ok))ENBOX[key]=b}/* 絵がまだ読みこみ中なら、とっておかない */
+    c.width=c.height=0;b=x1<0?{l:-R*.6,r:R*.6,t:-R*1.5,b:R*.3,ok:0}:{l:x0-R,r:x1+1-R,t:y0-R*1.7,b:y1+1-R*1.7,ok:1};if(b.ok)ENBOX[key]=b}/* 絵がまだ読みこみ中なら、とっておかない */
   return b}
 function enemyAtTap(wx,wy){/* 守りの光：コワイノの絵が描いてある所ぜんぶ（＋指のぶん）をあたりにする。重なったら手前（下）の子、同じならタップに近い子 */
   const M=6/Math.min(1,cam.z)+2;let best=null,bs=-1e9;
