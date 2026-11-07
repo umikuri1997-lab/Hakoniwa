@@ -46,7 +46,7 @@ function thumb(cv2,k,open,hide){
   PXSCENE(c,190,70,1,k===1?'volcano':k===2?'water':k===FREE?'free':'meadow',k*7+3);
   if(!open){c.fillStyle='rgba(0,0,0,.4)';c.fillRect(0,0,190,70);PXSCENE(c,190,70,1,'lockover',0)}
 }
-const APP_VER=1284;/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER=1285;/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
@@ -210,7 +210,7 @@ function rlvShow(q){const r=S.res.find(x=>x.id===q.id);if(!r)return;RLVR=r;const
   o.querySelector('.rtt').innerHTML='';o.querySelector('.rtt').append(r.name+' が ',Object.assign(document.createElement('b'),{textContent:'Lv'+q.to}),' になった！');
   const g=o.querySelector('.rrows');g.innerHTML='';for(const[k,n]of RSTN){const f=v=>k==='bonus'?'+'+v:k==='atk'&&!v?'なし':String(Math.floor(v+1e-9));/* 画面には小数点を出さない */const up=f(b[k])!==f(a[k]);const x=document.createElement('span'),y=document.createElement('span');x.textContent=n;y.textContent=up?f(a[k])+' → '+f(b[k]):f(b[k]);if(up)y.className='up';g.append(x,y)}
   if(q.to===3||q.to===5||q.to===10)memo('⬆️',r.name+'がLv'+q.to+'になった');o.hidden=false;sfx('quest')}
-$('#rlvOk').addEventListener('click',e=>{e.stopPropagation();sfx('tap');$('#rlv').hidden=true;const r=RLVR;RLVR=null;if(r&&S.res.includes(r)){const t=performance.now();JOYU.set(r,t+2600);RHOLD.set(r,t+2600);JUMP.set(r,t);r.bubble='😆'}});/* レベルアップしたら、手をとめて喜ぶ */
+$('#rlvOk').addEventListener('click',e=>{e.stopPropagation();sfx('tap');$('#rlv').hidden=true;const r=RLVR;RLVR=null;if(r&&S.res.includes(r)&&!inBattle(r)){const t=performance.now();JOYU.set(r,t+2600);RHOLD.set(r,t+2600);JUMP.set(r,t);r.bubble='😆'}});/* レベルアップしたら、手をとめて喜ぶ（たたかっている子は、そのままたたかう） */
 for(const id of['#foodStk','#matStk']){const e=$(id);const go=ev=>{if(ev)ev.stopPropagation();if(!started||!S)return;sfx('tap');openSheet('inv')};e.addEventListener('click',go);e.addEventListener('keydown',k=>{if(k.key==='Enter'||k.key===' ')go()})}/* 食料・素材の数をタップすると、そうこが見られる */
 $('#lvOk').addEventListener('click',e=>{e.stopPropagation();sfx('tap');$('#lvup').hidden=true;endClap()});
 
