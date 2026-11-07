@@ -187,7 +187,7 @@ if(o==='vane')around(j,3,NEARVANE);if(o==='niguruma')around(j,3,NEARCART);if(o==
   {/* 村：家・置いた物（自然の物・雑草・きのこはのぞく）・ラグ・屋根のまわり3マス */const m=new Uint8Array(W*H),v=new Uint8Array(W*H);for(let j=0;j<W*H;j++){const o=S.obj[j];if(o&&(o==='part'||BL[o]&&!BL[o].natural&&!WEEDS.has(o)))m[j]=1}for(const k in S.rug||{})m[+k]=1;for(const k in S.roof||{})m[+k]=1;
     const t=new Uint8Array(W*H);for(let y=0;y<H;y++)for(let x=0;x<W;x++){let f=0;for(let d=-3;d<=3&&!f;d++){const q=x+d;if(q>=0&&q<W&&m[y*W+q])f=1}t[y*W+x]=f}
     for(let y=0;y<H;y++)for(let x=0;x<W;x++){let f=0;for(let d=-3;d<=3&&!f;d++){const q=y+d;if(q>=0&&q<H&&t[q*W+x])f=1}v[y*W+x]=f}VILL=v;
-    {const fo=fogOn();for(let j=0;j<W*H;j++)if(S.ground[j]===1&&(fo?!fogAt(j):v[j]))ATTR.water+=.1}}/* 水の力は、池・川1マス0.1。草原の本編は霧が晴れた所ぜんぶ、霧のない所（火山・フリー）は村の中だけ */
+  }/* 池・川では、水の力はふえない */
   if(counts.signw||counts.signs)for(const k in ATTR)ATTR[k]*=1.1;/* 村の看板：属性の力+10%（いくつあっても1回） */
   for(const k of NEARPARA)ENVG[k]+=7;/* パラソルがいくつ重なっても、1つぶん（BL.parasol.env） */
   if(WD===FREE)for(let j=0;j<W*H;j++)REV.add(j);/* フリーモードの土地は荒れていない */
