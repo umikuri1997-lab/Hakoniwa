@@ -449,10 +449,10 @@ const godHere=()=>S.godShown&&(!S.godGone||S.godVisit)&&!GODOUT;
 const BUBR=[];let BUBF=-1;
 function bubLift(px,by,now){if(BUBF!==now){BUBF=now;BUBR.length=0}for(let k=0;k<3;k++){const hit=BUBR.some(b=>Math.abs(b[0]-px)<24&&Math.abs(b[1]-by)<21);if(!hit)break;by-=22.5}return by}
 function pxStep(c,x,y,w,h,ins,col,d){/* 段々の角の四角 */const k=ins.length;c.fillStyle=col;c.fillRect(x,y+k*d,w,h-2*k*d);for(let i=0;i<k;i++){const a=ins[i]*d;c.fillRect(x+a,y+i*d,w-2*a,d);c.fillRect(x+a,y+h-(i+1)*d,w-2*a,d)}}
-function pxBub(c,cx,top,w,h,fill,line){/* ドットのふきだし：段々の角（4・2・1・1ドット）と、段々のしっぽ。cx は、しっぽのまん中。画面のドットにそろえて描く（1ドット＝1.5、画面の整数ピクセル） */
-  const T=c.getTransform(),d=Math.max(1,Math.round(1.5*T.a)),n=Math.round(w/1.5/2),m=Math.round(h/1.5),tx=Math.round(T.a*cx+T.e),y=Math.round(T.d*top+T.f),x=tx-n*d;w=(2*n+1)*d;h=m*d;
+function pxBub(c,cx,top,w,h,fill,line){/* ドットのふきだし：段々の角（4・2・1・1ドット）と、段々のしっぽ。cx は、しっぽのまん中。画面のドットにそろえて描く（1ドット＝1、画面の整数ピクセル） */
+  const T=c.getTransform(),d=Math.max(1,Math.round(T.a)),n=Math.round(w/2),m=Math.round(h),tx=Math.round(T.a*cx+T.e),y=Math.round(T.d*top+T.f),x=tx-n*d;w=(2*n+1)*d;h=m*d;const t=Math.max(1,Math.round(1.5*T.a));/* しっぽは前と同じ大きさ */
   c.save();c.setTransform(1,0,0,1,0,0);pxStep(c,x,y,w,h,[4,2,1,1],line,d);pxStep(c,x+d,y+d,w-2*d,h-2*d,[3,1,1],fill,d);
-  c.fillStyle=line;c.fillRect(tx-2*d,y+h,5*d,d);c.fillRect(tx-d,y+h+d,3*d,d);c.fillRect(tx,y+h+2*d,d,d);c.fillStyle=fill;c.fillRect(tx-d,y+h-d,3*d,2*d);c.fillRect(tx,y+h+d,d,d);c.restore();return {x:tx+d/2,y:y+h/2,s:(Math.min(2*n+1,m)-5)*d}}/* 中のまん中と、アイコンの大きさ（わくから2ドットあける） */
+  const cxp=tx+d/2,R=(a,yy,ww,hh)=>c.fillRect(Math.round(cxp-ww/2),yy,ww,hh);c.fillStyle=line;R(0,y+h,5*t,t);R(0,y+h+t,3*t,t);R(0,y+h+2*t,t,t);c.fillStyle=fill;R(0,y+h-d,3*t,d+t);R(0,y+h+t,t,t);c.restore();return {x:cxp,y:y+h/2,s:(Math.min(2*n+1,m)-7)*d}}/* 中のまん中と、アイコンの大きさ（わくから2ドットあける） */
 function talkBub(px,by,now,col){if(BUBF!==now){BUBF=now;BUBR.length=0}BUBR.push([px,by]);const bw=22.5,bb=Math.round((by-Math.abs(Math.sin(now/260))*3)/1.5)*1.5,B=pxBub(ctx,px,bb-42,bw,21,col||'#9fdcff','#fff');
     ctx.save();ctx.setTransform(1,0,0,1,0,0);ctx.fillStyle='#1f5f86';const q=Math.max(2,Math.round(B.s/6));for(let d=-1;d<=1;d++)ctx.fillRect(Math.round(B.x-q/2)+d*q*2,Math.round(B.y-q/2),q,q);ctx.restore()}/* 点々も、四角いドット */
 const HB={t:0,rk:[],ps:[],fl:[]};
