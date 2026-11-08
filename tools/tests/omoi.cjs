@@ -17,7 +17,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict');
  /* かけらさがし：村レベルの目標はない。みどりのマスだけ */
  assert.deepEqual(await run(`QUESTS[S.quest].parts`),['green375']);
  await read();assert(await run('S.qTalked'));
- await run('S.lv=1;GRASSN=400');assert(await run('QUESTS[S.quest].check()'),'lv5 should clear with green only (village level 1)');
+ await run('S.lv=1;GRASSN=3600');assert(await run('QUESTS[S.quest].check()'),'lv5 should clear with green only (village level 1)');
  await clear('lv5');await read();
  assert.equal(await run('S.shards'),1);assert(await run('S.flags.sh_land&&!S.flags.sh_key'),'land shard only');
  assert.equal(await run('QUESTS[S.quest].id'),'omoi');

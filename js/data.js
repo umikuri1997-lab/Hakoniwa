@@ -486,7 +486,7 @@ const QUESTS1=[
     ['G','……よう、声を届けたのう。'],['F','でも、すぐ聞こえなくなっちゃった。'],['G','声を返すだけでも、力が要ったのじゃろう。'],['F','どうしたら、戻ってこられる？'],['G','ヌシの力は、3つのかけらになって、この土地に散らばっておる。それを、もう一度つないでやるのじゃ。この木は、土地の奥まで根を伸ばしておる。'],['G','じゃが、この木はまだ細い。ヌシの力を受け止めるには、この木も、土地も、育たねばならん。'],['G','おヌシらが育てるなら、わしも手を貸そう。'],['F','じゃあ、木のそばにベンチを置こうよ。みんなで、木を見ていられるように。']
   ],[['F','枝が、伸びた……！'],['N','根の先も、さっきより遠くへ届いてるよぉ。'],['M','水の流れも、木のほうへ向いています。'],['F','大きくなったら、みんなで休もうね。']]),{check:()=>cnt('tower')>=1,gives:{shrine:true}}),
   stepQuest({id:'lv5',text:'ヌシ様のかけらをさがそう',
-   steps:[{id:'green375',t:'みどりのマスを375にする',check:()=>GRASSN>=375,prog:()=>'みどりのマス '+Math.min(375,GRASSN)+'/375',how:'花や木を植え、いろいろ置いて、荒れた土地を緑にする'}],
+   steps:[{id:'green375',t:'みどりのマスを3500にする',check:()=>GRASSN>=3500,prog:()=>'みどりのマス '+Math.min(3500,GRASSN)+'/3500',how:'花や木を植え、いろいろ置いて、荒れた土地を緑にする'}],
    talk:{who:POKO,when:()=>true,get lines(){return [
     [POKO,S.flags.nushiAlive?'ヌシ様は、生きてた。ぼくたちの声を聞いてくれたんだ。今度は、ぼくたちがヌシ様の力を取り戻したい！':'ヌシ様の力は、かけらの中に残ってるんだね。ぼくたちで、もう一度つなぎたい！'],
     [GOD,'#nod|うむ。土地が元気になれば、ヌシの力も、この草原にとどまりやすくなる。わしも、いっしょに見守るぞい。'],
@@ -528,19 +528,13 @@ const QUESTS1=[
     [MINA,'#think|花が咲いたら、みんなで見に行こうねぇ。夜も花のそばであったかく過ごせたら、ゆっくり見ていられそうだよぉ。守り神さま、いい考えはないかなぁ。'],['@idea']]},
    get story(){return [[POKO,'#surprise|わあ…花畑だ！ 木のなかまも、こんなにふえたね！ ありがとう、守り神さま！'+({bellf:' ききょうも、ちゃんと咲いたよ。',lily:' ゆりも、ちゃんと咲いたよ。',clover:' クローバーも、いっぱいだよ。'}[S.flags.choice?.nushiFlower]||'')],[MINA,'にぎやかだねぇ。これで、御神木のお世話も、たっぷりできるねぇ。'],...KS([['M','#joy|花のあいだを、水がすうっと流れていきます。'],['K','フッ…花のかおりが、風にのって村じゅうに広がっているよ。'],['H','夜は、おれが花畑も見まわっとくぜ。']]).filter(l=>S.res.some(r=>r.name===l[0])),[POKO,'ヌシ様、見てくれるかな。……会いたいな。']]}}),
   {id:'nushi',get text(){return grassEndingGoal().text},check:()=>!!S.cleared,prog:()=>grassEndingGoal().progress,get how(){return grassEndingGoal().how},
-   talk:{who:POKO,when:()=>true,gives:{flags:['greenTold']},get lines(){return [
+   talk:{who:POKO,when:()=>true,get lines(){return [
     [POKO,'かけらも、あと少しだね。ヌシ様をむかえる準備、もうすぐかな。'],
-    ...greenTalk().slice(0,3),
     [MINA,'#think|御神木にヌシ様の力があつまってくるとねぇ、影たちは、その力にひきよせられて、やってくるんだってぇ。'],
     [MINA,'さいごまで守りぬいたら……ヌシ様の力が、こたえてくれる気がするよぉ。'],
-    [POKO,'#joy|よーし、草原をみどりにして、みんなで守りぬこう！']]}},
+    [POKO,'#joy|よーし、みんなで守りぬこう！']]}},
    story:null},
 ];
-function greenTalk(){/* ヌシ様をむかえるには、草原がもっと元気（みどり）にならないといけない、という話 */
-  return [[GOD,'#think|'+GVOICE()+'うむ。じゃが、ヌシ様の力をささえるには、この草原が、もっと元気をとりもどさんとのう。'],
-    [POKO,'#surprise|草原が……？'],
-    [GOD,'#nod|草や花が、このあたりいっぱいに広がれば、ヌシ様の力も、この土地にとどまれるんじゃ。']];
-}
 /* まとめる前（PR 1100ごろまで）の草原の目標の名前とならび。古いセーブの番号を読みかえるときだけ使う */
 const QUESTS1_V1=['statue','stor','mbox','table','wall','bed','path','lv2','fence4','watch1','kikyo','summon','earthListen','earthRoot','farm6','imoseed','trade','oracle','fire','fireRoot','fireTrace','lv3','water','waterFilm','waterLeaf','baseUp','lv4','kagemark','tale','yoru10','ookage','wind','windEcho','windVoices','lv5','tower','green375','wood6','flower50','nushi'];
 /* 交換・おつげの目標をサブクエストへうつす前（tutSub1）の草原の目標のならび。古いセーブの番号を読みかえるときだけ使う */
