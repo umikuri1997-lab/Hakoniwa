@@ -36,6 +36,15 @@ class Scene:
                 p = lambda t, a: (cx+r*math.sin(t)*math.cos(a), cy+r*math.sin(t)*math.sin(a), zc+r*zs*math.cos(t))
                 self.quad(p(t0, a0), p(t1, a0), p(t1, a1), p(t0, a1), col)
 
+    def box(self, x0, y0, z0, x1, y1, z1, col):
+        """四角い箱（6つの面）"""
+        P = lambda x, y, z: (x, y, z)
+        self.quad(P(x0,y0,z1),P(x1,y0,z1),P(x1,y1,z1),P(x0,y1,z1),col); self.quad(P(x0,y0,z0),P(x1,y0,z0),P(x1,y1,z0),P(x0,y1,z0),col)
+        self.quad(P(x0,y1,z0),P(x1,y1,z0),P(x1,y1,z1),P(x0,y1,z1),col); self.quad(P(x0,y0,z0),P(x1,y0,z0),P(x1,y0,z1),P(x0,y0,z1),col)
+        self.quad(P(x0,y0,z0),P(x0,y1,z0),P(x0,y1,z1),P(x0,y0,z1),col); self.quad(P(x1,y0,z0),P(x1,y1,z0),P(x1,y1,z1),P(x1,y0,z1),col)
+    def beam(self, a, b, r, col):
+        """2点をつなぐ四角い棒（すじかいなど）"""
+        self.tube([a, b], r, col, n=4)
     def revolve(self, cx, cy, prof, colf, n=36):
         """まわりをまわした面。prof は [(半径, 高さ), ...]（上から下へ）"""
         for k in range(len(prof)-1):
