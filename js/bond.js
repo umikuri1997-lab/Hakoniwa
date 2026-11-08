@@ -8,8 +8,16 @@ const BOND5=new Set();/* なかよし100の子が3マス以内にいる子（毎
 function bondKey(a,b){return a.id<b.id?a.id+'_'+b.id:b.id+'_'+a.id}
 function bondOf(a,b){return a&&b&&a!==b&&S&&S.bond?S.bond[bondKey(a,b)]||0:0}
 function bondAdd(a,b,n){if(!S||!a||!b||a===b||IS_STORY_REPLAY)return;const B=S.bond||(S.bond={}),k=bondKey(a,b),v0=B[k]||0,v=Math.min(BOND_MAX,v0+n);if(v===v0)return;B[k]=v;
-  if(v0<BOND_TALK&&v>=BOND_TALK){for(const x of[a,b])addFloat(x.x,x.y-1.4,'なかよし！');memo('🤝',a.name+'と'+b.name+'がなかよしになった');logEv(a.name+'と'+b.name+'がなかよしになった')}}
+  if(v0<BOND_TALK&&v>=BOND_TALK){for(const x of[a,b])addFloat(x.x,x.y-1.4,'なかよし！');memo('🤝',a.name+'と'+b.name+'がなかよしになった');logEv(a.name+'と'+b.name+'がなかよしになった');omoiNote(a,b,false)}
+  else if(v0<BOND_PLAY&&v>=BOND_PLAY)omoiNote(a,b,true)}
 function bondSet(a,b,n){if(bondOf(a,b)<n)bondAdd(a,b,n-bondOf(a,b))}
+/* 草原のメイン「なかよしの想い」（omoi）：依頼を受けたあとに、あたらしく「なかよし」になった組だけを数える（S.flags.omoiP）。
+   村の子どうしが、もうぜんぶなかよしのときだけ、なかよし60になった組も数える（進めなくならないように） */
+function omoiOn(){return !!S&&WD===0&&!S.free&&!IS_STORY_REPLAY&&typeof QUESTS!=='undefined'&&QUESTS[S.quest]?.id==='omoi'&&S.qTalked&&S.qStory==null}
+function omoiN(){return (S&&S.flags.omoiP||[]).length}
+function omoiAllBonded(){const R=S.res.filter(r=>!r.hidden);for(let i=0;i<R.length;i++)for(let k=i+1;k<R.length;k++)if(bondOf(R[i],R[k])<BOND_TALK)return false;return true}
+function omoiNote(a,b,deep){if(!omoiOn())return;const L=S.flags.omoiP||(S.flags.omoiP=[]),k=bondKey(a,b);if(L.length>=3||L.includes(k)||deep&&!omoiAllBonded())return;
+  L.push(k);towerGlow(2600);sfx('bush');toast('御神木が、ぽうっと光った（'+L.length+'/3）','good');dirty=true}
 /* いちばんなかよしの子（村にいる子だけ）。{q,v} */
 function bondBest(r){let q=null,v=0;if(!S||!S.bond)return null;for(const o of S.res){if(o===r)continue;const b=S.bond[bondKey(r,o)]||0;if(b>v){v=b;q=o}}return q?{q,v}:null}
 function bondPair(pk){const [a,b]=pk.split('_').map(Number),A=S.res.find(r=>r.id===a),B=S.res.find(r=>r.id===b);return A&&B?[A,B]:null}
