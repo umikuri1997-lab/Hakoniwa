@@ -1,6 +1,7 @@
 """3Dの下絵を、ゲームと同じ見え方で写すための小さな道具（パラソル・噴水などの絵をたのむ用）。
 x=東, y=南, z=上（単位はマス）。ゲームの見え方は 画面=(x, y-0.8z)、見る向きは (0,0.8,1)。
-三角形をならべ、光のかげをつけ、zバッファで手前の面だけ写す。2倍の細かさで描いて BOX でちぢめる。"""
+三角形をならべ、zバッファで手前の面だけ写す。かげはトゥーンシェーダー（光のあたり方を3だんの色にわける）。
+形のふち・前後の物のさかいには、まわりより少しこい色の線（黒にしない）。2倍の細かさで描いて BOX でちぢめる。"""
 import math
 import numpy as np
 from PIL import Image, ImageDraw
@@ -68,8 +69,8 @@ def render(sc, proj, ext, depth):
         if ln < 1e-12: continue
         n /= ln
         if np.dot(n, depth) < 0: n = -n
-        sh = 0.68+0.32*max(0.0, float(np.dot(n, LIGHT)))
-        cc = np.clip(col*sh+(255-col)*0.08, 0, 255)
+        d = float(np.dot(n, LIGHT)); sh = 1.0 if d > 0.55 else 0.87 if d > 0.1 else 0.76   # トゥーン：3だん
+        cc = np.clip(col*sh, 0, 255)
         P = [((proj(p)[0]-x0)*S*SS, (proj(p)[1]-y0)*S*SS) for p in (a, b, c)]
         D = [float(np.dot(p, depth)) for p in (a, b, c)]
         xs = [p[0] for p in P]; ys = [p[1] for p in P]
@@ -86,6 +87,14 @@ def render(sc, proj, ext, depth):
         z = w0*D[0]+w1*D[1]+w2*D[2]
         szb = zb[by0:by1+1, bx0:bx1+1]; sub = img[by0:by1+1, bx0:bx1+1]
         vis = m & (z > szb); szb[vis] = z[vis]; sub[vis, :3] = cc; sub[vis, 3] = 255
+    # ふちの線：透明とのさかい（形のふち）と、奥行きが大きくとぶ所（前後の物のさかい）。線の色は、手前がわの色を少しこくした色
+    a = img[..., 3] > 0; edge = np.zeros_like(a); T = 0.06
+    for dy, dx in ((0, 1), (1, 0), (0, -1), (-1, 0)):
+        sa = np.roll(a, (dy, dx), (0, 1)); sz = np.roll(zb, (dy, dx), (0, 1))
+        edge |= a & (~sa | (sz - zb > T))      # となりが透明か、となりがずっと手前（自分が奥）→ 自分のがわに線
+    for k in range(1, SS):                     # 線のはばは、できあがりで1ドット
+        edge |= np.roll(edge, k, 0) & a | np.roll(edge, k, 1) & a
+    img[edge, :3] = img[edge, :3]*0.72
     return Image.fromarray(img.astype(np.uint8), 'RGBA').resize((Wp//SS, Hp//SS), Image.BOX)
 
 def grid_bg(ext, foot=None):
