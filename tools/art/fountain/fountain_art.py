@@ -62,10 +62,33 @@ def build():
     al=np.zeros((h,w),bool)
     for f in out:al|=f[...,3]>0
     ys,xs=np.where(al);cut=(ys.min(),ys.max()+1,xs.min(),xs.max()+1)
-    return [Image.fromarray(f[cut[0]:cut[1],cut[2]:cut[3]].round().astype(np.uint8),'RGBA') for f in out],F
+    return [Image.fromarray(f[cut[0]:cut[1],cut[2]:cut[3]].round().astype(np.uint8),'RGBA') for f in out],F,base[cut[0]:cut[1],cut[2]:cut[3]]
+JETS=[None,'jet2.png','jet3.png']   # 持ち主が描いた水（1マス64ドットの細かさ）。2・3コマめはこの水にする
+def build64():
+    """g64 の3コマ：水ばち・台・池は1コマめ（水をとった絵）を2倍に。1コマめの水はもとの絵を2倍、2・3コマめは JETS の絵（1ドットのまま）。
+    水のいちばん下のまん中を、台の水の出口（1コマめの水のいちばん下のまん中）に合わせる"""
+    ims,F,base=build();b=np.repeat(np.repeat(base,2,0),2,1);f0=np.repeat(np.repeat(np.asarray(ims[0]).astype(float),2,0),2,1)
+    J0=jet(np.asarray(ims[0]).astype(float));ys,xs=np.where(J0);by=ys.max();bx=(xs[ys==by].min()+xs[ys==by].max()+1)/2
+    oy,ox=by*2+1,bx*2                                  # 水の出口（g64 のドット）
+    PAD=24;out=[]
+    for k,jp in enumerate(JETS):
+        if jp is None:f=f0.copy()
+        else:
+            f=b.copy();a=np.asarray(Image.open(os.path.join(os.path.dirname(__file__),jp)).convert('RGBA')).astype(float)
+            m=a[...,3]>100;yy,xx=np.where(m);jy=yy.max();jx=(xx[yy==jy].min()+xx[yy==jy].max()+1)/2
+            dy=int(round(oy-jy));dx=int(round(ox-jx))
+            for y,x in zip(yy,xx):f[y+dy,x+dx,:3]=a[y,x,:3];f[y+dy,x+dx,3]=255
+        out.append(f)
+    return [Image.fromarray(f.round().astype(np.uint8),'RGBA') for f in out]
+if __name__=='__main__' and len(sys.argv)>2 and sys.argv[2]=='g64':
+    dst=sys.argv[1];os.makedirs(dst,exist_ok=True);ims=build64()
+    for i,im in enumerate(ims):im.save(f'{dst}/fountain{i}.png')
+    W,H=ims[0].size;sheet=Image.new('RGBA',(W*3+20,H),(90,140,80,255))
+    for i,im in enumerate(ims):sheet.alpha_composite(im,(i*(W+10),0))
+    sheet.resize((sheet.width*4,sheet.height*4),Image.NEAREST).save(f'{dst}/sheet.png');print(W,H);sys.exit()
 if __name__=='__main__':
     dst=sys.argv[1];os.makedirs(dst,exist_ok=True)
-    ims,F=build()
+    ims,F,_=build()
     for i,im in enumerate(ims):im.save(f'{dst}/fountain{i}.png')
     for i,o in enumerate(F):Image.fromarray(o.round().astype(np.uint8),'RGBA').save(f'{dst}/raw{i}.png')
     W,H=ims[0].size;sheet=Image.new('RGBA',(W*3+20,H),(90,140,80,255))
