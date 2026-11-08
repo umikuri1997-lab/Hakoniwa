@@ -21,7 +21,7 @@ def frame(src,a,b,ph):
 def lum(o):return o[...,:3]@(.3,.59,.11)
 def jet(o):
     """動く水：とても明るい青白いドット（ふき上げる水・しぶき）。いちばん大きなかたまり（ふき上げる水）は、
-    すきまをうめ、行ごとに左はしから右はしまでを水にする（水のまん中の、池と同じような色の所もふくめる）"""
+    すきまをうめ、ふちの線でかこまれた中も水にする（水のまん中の、池と同じような色の所もふくめる）"""
     from scipy import ndimage
     r,g,b=o[...,0],o[...,1],o[...,2]
     L=(o[...,3]>0)&(lum(o)>200)&(b>=r+8)
@@ -31,8 +31,7 @@ def jet(o):
     lab,n=ndimage.label(C)
     if not n:return L
     k=1+int(np.argmax(ndimage.sum(C,lab,range(1,n+1))));body=lab==k
-    for y in np.where(body.any(1))[0]:              # 水のふち（少しこい青の線）のあいだは、ぜんぶ水（すけて見える池の色もふくめて、もらった絵のまま）
-        xs=np.where(body[y])[0];body[y,xs.min():xs.max()+1]=True
+    body=ndimage.binary_fill_holes(body)             # 水のふちの線でかこまれた中を、水にする
     return (body|L)&(o[...,3]>0)
 def ped(o):
     """台：池の中の、クリーム色のドット（台の上の面とよこ）。その下のはしと、よこのまん中"""
@@ -42,7 +41,7 @@ def ped(o):
     return ys.max(),(xs.min()+xs.max())/2
 def build():
     src=Image.open(SRC).convert('RGBA')
-    F=[frame(src,*f) for f in FR]
+    F=[np.pad(frame(src,*f),((12,12),(12,12),(0,0))) for f in FR]   # まわりに余白（合わせてずらしたとき、水のてっぺん・つぶが切れないように）
     base=F[0].copy();J0=jet(base);h,w=J0.shape
     # 1コマめの水をとりのぞく：よこのいちばん近い、水でないドットの色でうめる
     for y in range(h):
@@ -54,9 +53,10 @@ def build():
     for o in F:
         J=jet(o);by,bx=ped(o);dy=int(round(by0-by));dx=int(round(bx0-bx))
         f=base.copy()
-        for y,x in zip(*np.where(J)):
+        for y,x in zip(*np.where(o[...,3]>0)):
             yy,xx=y+dy,x+dx
-            if 0<=yy<h and 0<=xx<w:f[yy,xx]=o[y,x]
+            if not(0<=yy<h and 0<=xx<w):continue
+            if J[y,x] or (base[yy,xx,3]==0 and not F[0][yy,xx,3] and o[y,x,2]>o[y,x,0]+30):f[yy,xx]=o[y,x]   # 水と、水ばちの外にはみ出した水・つぶ（青い所だけ。石のふちはとらない）
         out.append(f)
     # 3コマを同じ大きさで、ぜんぶの絵が入るように切る
     al=np.zeros((h,w),bool)
