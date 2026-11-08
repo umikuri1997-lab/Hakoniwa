@@ -35,5 +35,9 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict');
   console.log('panel',await run(`(()=>{const [f,n]=S.res;S.bond={};bondAdd(f,n,63);const b=bondBest(f);return b.q.name+'（'+b.v+'）'})()`));
   console.log('volcano',await run(`(()=>{setWorld(1);S=newState(1);LIVE[1]=S;started=true;S.t=720;S.hold=0;S.sevQuietUntil=0;const [a,b]=S.res.length>=2?S.res:[S.res[0],(S.res.push(mkRes(S,SHIZUKU,'water',S.res[0].x+1,S.res[0].y)),S.res[1])];for(const r of S.res){r.hunger=hMax(r);r.energy=100}
     bondAdd(a,b,30);bondTick();const key='bd_'+bondKey(a,b);if(!(S.sevP||[]).includes(key))throw Error('volcano not queued '+JSON.stringify(S.sevP));return a.name+'・'+b.name+'：'+sevLines(SEV1.find(e=>e.k===key).L).map(l=>l[1]).join(' / ')})()`));
+  /* なかよしになったら、ポップアップで知らせる（どの2人でも） */
+  console.log('popup',await run(`(()=>{setWorld(0);S=newState(0);LIVE[0]=S;S.res=[mkRes(S,POKO,'wood',CX+.5,CY+.5),mkRes(S,'木の子a','wood',CX+1.5,CY+.5),mkRes(S,'木の子b','wood',CX+2.5,CY+.5)];SPOT_POPS.length=0;GIFT_ACTIVE=false;document.querySelectorAll('.gift-reveal').forEach(e=>e.remove());
+    const [f,a,b]=S.res;bondAdd(a,b,29);if(SPOT_POPS.length)throw Error('popup before 30');bondAdd(a,b,1);if(SPOT_POPS.length!==1)throw Error('no popup at 30');bondAdd(a,b,40);if(SPOT_POPS.length!==1)throw Error('popup again');bondSet(f,a,30);if(SPOT_POPS.length!==2)throw Error('second pair');
+    showSpotPop();const c=document.querySelector('.gift-reveal');if(!c)throw Error('not shown');const t=c.textContent;if(!/なかよし！/.test(t)||!t.includes('木の子aと木の子b')||!t.includes('なかよしになった'))throw Error('text '+t);c.remove();GIFT_ACTIVE=false;showSpotPop();const t2=document.querySelector('.gift-reveal').textContent;document.querySelector('.gift-reveal').remove();GIFT_ACTIVE=false;return t+' / '+t2})()`));
   assert.deepEqual(errors,[]);await browser.close();console.log('ok');
 })().catch(e=>{console.error(e);process.exit(1)});
