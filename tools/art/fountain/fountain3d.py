@@ -8,8 +8,8 @@ RO,RI=0.92,0.74       # 水ばちの外・内の半径
 HW=0.36               # 水ばちのかべの高さ（石2だん）
 WZ=0.27               # 水の面の高さ
 PR,PH=0.17,0.42       # まん中の台の半径・高さ
-JR,JH=0.05,1.05       # ふき上げる水の太さ・てっぺんの高さ
-BR=0.46               # 水の落ちる所の半径
+JR,JH=0.05,0.95       # ふき上げる水の太さ・てっぺんの高さ
+AR,AZ=0.56,0.66       # 弧の水の落ちる所の半径・弧のてっぺんの高さ
 STONE=[(236,232,224),(222,218,210),(230,226,218)]
 WATER=(150,206,240);JET=(214,238,252)
 def stone(row):
@@ -24,14 +24,17 @@ def build(sc):
     sc.ring_wall(CX,CY,PR,WZ,PH,lambda i,a0,a1:STONE[i%2],n=24)  # まん中の台
     sc.annulus(CX,CY,0,PR,PH,lambda *a:STONE[0],n=24)
     sc.ring_wall(CX,CY,JR,PH,JH,lambda *a:JET,n=20)    # まん中からまっすぐふき上げる水
-    for k in range(8):                                   # てっぺんから8本の水が、弧をえがいて外へ落ちる
-        a=2*math.pi*k/8+math.pi/8
-        pts=[(CX+BR*t*math.cos(a),CY+BR*t*math.sin(a),JH-(JH-WZ)*t*t) for t in [i/14 for i in range(15)]]
-        sc.tube(pts,0.03,JET)
-    sc.sphere(CX,CY,JH,0.07,JET)                         # ふき上げたてっぺんの水
-    for k in range(8):                                   # 水の落ちる所の小さな波の輪
-        a=2*math.pi*k/8+math.pi/8;x=CX+BR*math.cos(a);y=CY+BR*math.sin(a)
-        sc.annulus(x,y,0.04,0.08,WZ+0.004,lambda *q:(196,230,250),n=16)
+    sc.sphere(CX,CY,JH,JR*1.3,JET,zs=0.8)               # そのてっぺん
+    for k in range(6):                                   # てっぺんのしぶき（小さな水のつぶ）
+        a=2*math.pi*k/6;sc.sphere(CX+0.11*math.cos(a),CY+0.11*math.sin(a),JH-0.06,0.03,JET)
+    for k in range(6):                                   # 台のふちから6本の水が、弧をえがいて上がり、水面へ落ちる（なげた物と同じ放物線）
+        a=2*math.pi*k/6;r0,r1=PR*0.8,AR;zt=AZ  # まっすぐ手前に向く弧はつくらない
+        pts=[]
+        for i in range(21):
+            u=i/20;r=r0+(r1-r0)*u;z=PH+4*(zt-PH)*u*(1-u)+(WZ-PH)*u   # 0と1でふちと水面、まん中でいちばん高い
+            pts.append((CX+r*math.cos(a),CY+r*math.sin(a),z))
+        sc.tube(pts,0.032,JET)
+        sc.annulus(CX+r1*math.cos(a),CY+r1*math.sin(a),0.035,0.075,WZ+0.004,lambda *q:(204,234,251),n=16)  # 落ちる所の波の輪
 sc=Scene();build(sc)
 out=sys.argv[1] if len(sys.argv)>1 else os.path.dirname(__file__)
 ext=(-1.0,3.0,-2.0,3.0)

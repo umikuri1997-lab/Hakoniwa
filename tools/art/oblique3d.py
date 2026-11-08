@@ -88,7 +88,7 @@ def render(sc, proj, ext, depth):
         szb = zb[by0:by1+1, bx0:bx1+1]; sub = img[by0:by1+1, bx0:bx1+1]
         vis = m & (z > szb); szb[vis] = z[vis]; sub[vis, :3] = cc; sub[vis, 3] = 255
     # ふちの線：透明とのさかい（形のふち）と、奥行きが大きくとぶ所（前後の物のさかい）。線の色は、手前がわの色を少しこくした色
-    a = img[..., 3] > 0; edge = np.zeros_like(a); T = 0.06
+    a = img[..., 3] > 0; edge = np.zeros_like(a); T = 0.15
     for dy, dx in ((0, 1), (1, 0), (0, -1), (-1, 0)):
         sa = np.roll(a, (dy, dx), (0, 1)); sz = np.roll(zb, (dy, dx), (0, 1))
         edge |= a & (~sa | (sz - zb > T))      # となりが透明か、となりがずっと手前（自分が奥）→ 自分のがわに線
