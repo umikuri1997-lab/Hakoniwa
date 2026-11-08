@@ -80,6 +80,41 @@ def build64():
             for y,x in zip(yy,xx):f[y+dy,x+dx,:3]=a[y,x,:3];f[y+dy,x+dx,3]=255
         out.append(f)
     return [Image.fromarray(f.round().astype(np.uint8),'RGBA') for f in out]
+def build_user(width=None):
+    """持ち主の3まい（jet1：水ばちと1コマめの水、jet2・jet3：2・3コマめの水。どれも同じ128×128のわくの中で、位置がそろっている）。
+    2・3コマめは、jet1 から水をとりのぞいた水ばちに、jet2・jet3 の水をそのままの位置でかさねる（水ばち・台・池は3コマとも同じ）。
+    そのあと、水ばちのはばが width になるように、BOX でちぢめる（2×2マスいっぱい：g32 で 64）"""
+    d=os.path.dirname(__file__)
+    ld=lambda f:np.asarray(Image.open(os.path.join(d,f)).convert('RGBA')).astype(float)
+    def clean(a):a=a.copy();m=a[...,3]>100;a[~m]=0;a[m,3]=255;return a   # うすい点（透明に近いにじみ）はけし、ほかは不透明に
+    f1=clean(ld('jet1.png'));f1[21:23,61:76]=0   # もらった絵のなおし：水ばちのふちの上に2行だけはみ出した灰色の線をけす（ほかのふちは1行）
+    base=f1.copy();J0=jet(f1);h,w=J0.shape
+    for y in range(h):
+        for x in np.where(J0[y])[0]:
+            L=[xx for xx in range(x-1,-1,-1) if not J0[y,xx]];R=[xx for xx in range(x+1,w) if not J0[y,xx]]
+            c=[(abs(x-L[0]),base[y,L[0]])] if L and base[y,L[0],3]>0 else [];c+=[(abs(R[0]-x),base[y,R[0]])] if R and base[y,R[0],3]>0 else []
+            base[y,x]=min(c,key=lambda q:q[0])[1] if c else 0
+    out=[f1]
+    for jf in ('jet2.png','jet3.png'):
+        a=clean(ld(jf));f=base.copy();m=a[...,3]>0;f[m]=a[m];out.append(f)
+    al=np.zeros((h,w),bool)
+    for f in out:al|=f[...,3]>0
+    ys,xs=np.where(al);y0,y1,x0,x1=ys.min(),ys.max()+1,xs.min(),xs.max()+1
+    bw=(lambda q:q.max()-q.min()+1)(np.where((base[...,3]>0).any(0))[0])      # 水ばちのはば
+    k=(width or bw)/bw;W2,H2=round((x1-x0)*k),round((y1-y0)*k)
+    ims=[]
+    for f in out:
+        im=Image.fromarray(f[y0:y1,x0:x1].round().astype(np.uint8),'RGBA')
+        o=np.asarray(im.resize((W2,H2),Image.BOX)).astype(float)   # PIL の RGBA のちぢめは、うすさをかけて平均する（ふちに黒・白がまざらない）
+        o[...,3]=np.where(o[...,3]>=128,255,0);o[o[...,3]==0]=0                              # ドットの絵なので、半分より多ければ不透明
+        ims.append(Image.fromarray(o.clip(0,255).round().astype(np.uint8),'RGBA'))
+    return ims
+if __name__=='__main__' and len(sys.argv)>2 and sys.argv[2]=='user':
+    dst=sys.argv[1];os.makedirs(dst,exist_ok=True);ims=build_user(64)
+    for i,im in enumerate(ims):im.save(f'{dst}/fountain{i}.png')
+    W,H=ims[0].size;sheet=Image.new('RGBA',(W*3+20,H),(90,140,80,255))
+    for i,im in enumerate(ims):sheet.alpha_composite(im,(i*(W+10),0))
+    sheet.resize((sheet.width*6,sheet.height*6),Image.NEAREST).save(f'{dst}/sheet.png');print(W,H);sys.exit()
 if __name__=='__main__' and len(sys.argv)>2 and sys.argv[2]=='g64':
     dst=sys.argv[1];os.makedirs(dst,exist_ok=True);ims=build64()
     for i,im in enumerate(ims):im.save(f'{dst}/fountain{i}.png')
