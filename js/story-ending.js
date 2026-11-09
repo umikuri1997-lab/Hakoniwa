@@ -23,6 +23,7 @@ function grassReunionBlockReason(){
 const GRASS_REUNION_PENDING=new WeakMap();
 function scheduleGrassReunion(){
   if(WD!==0||S.cleared||(S.setSh||0)<3||NUSHI_RUN||grassReunionBlockReason())return false;
+  if(GIFT_ACTIVE||SPOT_POPS.some(e=>e.shard&&e.state===S))return false;/* かけらの知らせをとじてから */
   const old=GRASS_REUNION_PENDING.get(S);if(old?.session===VILLAGE_SESSION)return true;
   const owner=S,token={session:VILLAGE_SESSION};GRASS_REUNION_PENDING.set(owner,token);
   villageTimeout(()=>{if(GRASS_REUNION_PENDING.get(owner)!==token)return;GRASS_REUNION_PENDING.delete(owner);shards3();},900);return true;
