@@ -2,7 +2,7 @@
 """火山の温泉まわりと御簾垣のチップを、もらった絵から作って chips.js に入れる。
   python3 tools/art/onsenrim/onsen_art.py
 - 湯のわき岩（hotstone）：tools/art/volcano2/yuwaki2.png（石組みになじむ形）を BOX で はば60 に。湯気（hotstone:steam#0〜3）は前のまま、出る所だけ合わせる。
-- 温泉の石組み（rim:T・rim:B・rim:V・rim:c0〜3）：tools/art/onsenrim/rim.png（1マス64ドット、64でくりかえす）をそのまま切る。もらった絵のはしの列（15）は、くりかえしとちがうので、17から切る（つなぎ目に線が出ない）。
+- 温泉の石組みの石（rim:c0〜3）：tools/art/onsenrim/rim.png の、2つ1組の石4しゅるいをそのまま切る。ゲームで、丸めた水のふちに1こずつならべる（drawOnsenRim）。
 - 御簾垣（misugaki）：tools/art/misugaki/misugaki.png（1マス64ドット）。横の帯（64でくりかえす）・柱・たての帯から、柵の部品（H0〜HLR・VU・VD・VUD）を組む。
   柵のドア（misugaki.gate#h0〜3）は、もらった戸の絵の、柱のあいだの戸だけを、ちょうつがい（左）へよこにちぢめて開くコマにする（柱はどのコマも同じ）。"""
 import sys, os
@@ -24,10 +24,8 @@ def main():
     for i in range(4): C['hotstone:steam#%d' % i]['ay'] = 60 - im.height + 20 - 68  # 湯気は、わき出る所（岩の上から20）から
     # 温泉の石組み
     r = load(os.path.join(HERE, 'rim.png'))
-    put('rim:T', r[15:39, 17:81].copy(), 0, -12)      # 上（おく）のふち：ふちの線をまん中に
-    put('rim:B', r[55:83, 17:81].copy(), 0, -14)      # 下（手前）のふち
-    put('rim:V', r[17:81, 361:385].copy(), -12, 0)    # 左右のふち
-    for i, x0 in enumerate((16, 63, 112, 159)): put('rim:c%d' % i, r[105:137, x0:x0 + 31].copy(), -15, -16)  # 角（左上・右上・左下・右下）
+    for k in ('rim:T', 'rim:B', 'rim:V'): C.pop(k, None)  # 帯は使わない（石を1こずつ、丸めたふちにならべる drawOnsenRim）
+    for i, x0 in enumerate((16, 63, 112, 159)): put('rim:c%d' % i, r[105:137, x0:x0 + 31].copy(), -15, -16)  # 石（2つ1組、4しゅるい。まん中が置く所）
     # 御簾垣
     m = load(os.path.join(ART, 'misugaki', 'misugaki.png'))
     HS = m[15:69, 7:71]                      # 横の帯 54×64（上の面6・正面）
