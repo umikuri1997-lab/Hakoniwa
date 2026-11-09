@@ -515,7 +515,7 @@ const QUESTS1=[
     [POKO,'#joy|ぼくたち、もっとなかよしになれたんだね！'],
     ...KS([['H','#joy|へへっ、なんだか、てれくさいな。'],['M','のこりは、あとひとつですね。'],['K','フッ…想いの光か。悪くないね。']]).filter(l=>S.res.some(r=>r.name===l[0]))];},gives:{shard:'key'}}),
   stepQuest({id:'wood6',text:'木のなかまと花畑',
-   steps:[{id:'wood6',t:'木のせいれいを6人にする',check:()=>elemCount('wood')>=6&&NEWRES==null,prog:()=>'木のせいれい '+Math.min(6,elemCount('wood'))+'/6',how:'花や木を植えて木の力をため、朝に神殿の「！」から呼ぶ。合計6人をむかえる'},
+   steps:[{id:'wood6',t:'木のせいれいを5人にする',check:()=>elemCount('wood')>=5&&NEWRES==null,prog:()=>'木のせいれい '+Math.min(5,elemCount('wood'))+'/5',how:'花や木を植えて木の力をため、朝に神殿の「！」から呼ぶ。合計5人をむかえる'},
     {id:'flower50',t:'花を50こさかせる',check:()=>flowerN()>=50,prog:()=>'花 '+Math.min(50,flowerN())+'/50',how:'「おく」で花の種を置いて、花を50こにする'}],
    talk:{who:MINA,when:()=>true,learn:['campfire'],lines:[
     [MINA,'御神木、大きくなってきたねぇ。ヌシ様は、この草原のせいれいを生んだんだってぇ。木のなかまがふえたら、御神木のお世話も、みんなでたっぷりできるねぇ。'],
