@@ -12,6 +12,7 @@ PW=0.28               # 柱のふとさ
 IN=0.06               # 柱の、置くマスのふちからの内がわ
 RB=0.13               # さくの横木・小さな柱のふとさ
 RT=0.09               # さくの横木のあつさ
+RBS=0.18              # 左右の横木のはば：横の面は見えないので、うしろ・前（上の面0.11＋手前の面0.09×0.8）と同じくらいに見えるはば
 RH=0.42               # さくの高さ
 def build(sc,lv):
     F=2-IN                                                                   # 柱の外がわ（前・右）
@@ -34,8 +35,8 @@ def build(sc,lv):
     for z in (DZ+RH,DZ+RH*0.45):                                             # さくの横木2本：柱と柱のあいだに。前は、ハシゴの柱まで
         if lv>=3:sc.box(IN+PW,IN+0.02,z-RT,1.0-PP/2,IN+RB,z,RAIL);sc.box(1.0+PP/2,IN+0.02,z-RT,F-PW,IN+RB,z,RAIL)   # うしろ：旗の柱の所で切る
         else:sc.box(IN+PW,IN+0.02,z-RT,F-PW,IN+RB,z,RAIL)                     # うしろ
-        sc.box(IN+0.02,IN+PW,z-RT,IN+RB,F-PW,z,RAIL);sc.box(F-RB,IN+PW,z-RT,F-0.02,F-PW,z,RAIL)   # 左・右
-        sc.box(IN+PW,LY0+0.01,z-RT,HX0-EPW,F-0.02,z,RAIL);sc.box(HX1+EPW,LY0+0.01,z-RT,F-PW,F-0.02,z,RAIL)   # 前（さくのはしの太い柱まで）
+        sc.box(IN+0.02,IN+PW,z-RT,IN+0.02+RBS,F-PW,z,RAIL);sc.box(F-0.02-RBS,IN+PW,z-RT,F-0.02,F-PW,z,RAIL)   # 左・右（絵の上でうしろ・前と同じ太さに見えるはば RBS）
+        sc.box(IN+PW,F-RB,z-RT,HX0-EPW,F-0.02,z,RAIL);sc.box(HX1+EPW,F-RB,z-RT,F-PW,F-0.02,z,RAIL)   # 前（さくのはしの太い柱まで）
     for t in (0.5,1.5):                                                      # さくの小さな柱（うしろ・左・右）。まん中のうしろは旗の柱
         sc.box(t-RB/2,IN+0.03,DZ,t+RB/2,IN+RB-0.01,DZ+RH-0.01,RAIL)
     if lv<3:sc.box(1.0-RB/2,IN+0.03,DZ,1.0+RB/2,IN+RB-0.01,DZ+RH-0.01,RAIL)   # うしろのまん中の小さな柱（旗のときは旗の柱）
