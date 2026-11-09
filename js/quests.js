@@ -353,12 +353,11 @@ function drawLeaf(r,now){const px=r.x*TS,py=r.y*TS;ctx.save();ctx.globalAlpha=.8
   for(let i=0;i<5;i++){const a=now/450+i*1.2566,lx=px+Math.cos(a)*15,ly=py-4+Math.sin(a)*7;ctx.fillStyle=i%2?'#7ccf5a':'#a8e67f';ctx.beginPath();ctx.ellipse(lx,ly,3.6,1.9,a,0,7);ctx.fill()}ctx.restore()}
 /* 次のステージへ、はじめて出発するとき：フタバとのお見送り */
 /* クリアのあと（再会・木陰の話のあと）の、草原の村での出発：a) ヌシ様が守り神に話す → b) カミサマ「次は火山」 → c) フタバの力を受けつぐ → d) お見送り → e) 火山へ。
-   どこまで見たかは S.flags.depStep（1:ヌシ様 2:カミサマ 3:受けつぎ）。おわりまで見たら hakoniwa-dep1。とちゅうでとじたら、見おわっていない所から（昼だけ） */
+   どこまで見たかは S.flags.depStep（1:ヌシ様 2:カミサマ 3:受けつぎ）。おわりまで見たら S.flags.ret1（セーブごと）。とちゅうでとじたら、見おわっていない所から（昼だけ） */
 const DEPART_NUSHI=[['U','守り神よ。少し、いいか。'],['U','かけらの中で眠っていたあいだも、声は、根をつたって届いていた。'],['U','土をよける音。石のぬくもり。根までしみる水。葉をゆらす風。'],['U','#think|……そして、わたしを呼ぶ、フタバの声。'],['U','そのそばには、いつも、おまえの光があった。'],['U','夜が来るたびに、この子らのそばに立ってくれたのだな。'],['U','ありがとう、守り神。この草原は、もう一度、息をしている。']];
 let DEPART_RETRY=0;
-function departDone(){try{return KV.getItem('hakoniwa-dep1')==='1'}catch(e){return false}}
+function departDone(){return !!(S&&S.flags&&S.flags.ret1)}/* お見送りを見おわったか（セーブごと。前はブラウザ全体で1つだったので、草原をはじめからやりなおすと、お見送りと力の受けつぎがとばされていた） */
 function departDue(){if(WD!==0||!S||S.free||!S.cleared||isNight()||departDone())return false;if(S.flags.sacredReunion&&!S.flags.sacredQuietSeen)return false;
-  if(LIVE[1]&&LIVE[1].introSeen){try{KV.setItem('hakoniwa-dep1','1')}catch(e){}return false}/* もう火山へ行っているセーブ：くりかえさない */
   return S.res.some(r=>r.name===POKO&&!r.hidden)}
 function departTick(){if(!departDue())return false;if(DEPART_RUN||NUSHI_RUN||performance.now()<DEPART_RETRY||!$('#dialog').hidden)return true;departScene();return true}/* 出発の場面がのこっているあいだは、クリア後のクエストを出さない */
 function departToVolcano(){const ov=document.getElementById('deptLd');const L=loadStage(1);if(L&&L.introSeen){continueGame(L);if(ov){ov.style.opacity='0';setTimeout(()=>ov.remove(),900)}}else newGame(1)}
@@ -371,7 +370,7 @@ function departScene(){const owner=S,session=VILLAGE_SESSION,alive=()=>S===owner
   const hold=v=>{const n=performance.now();for(const r of S.res)RHOLD.set(r,v?n+300000:0)};
   const step=n=>{if(!alive())return false;S.flags.depStep=n;dirty=true;save();return true};/* その部分を見おわってから、1回だけ「見た」にする */
   const stop=()=>{DEPART_RUN=false;GODOUT=false;if(alive()){hold(false);S.godVisit=gv}};
-  const finish=()=>{if(!alive())return;DEPART_RUN=false;GODOUT=false;hold(false);try{KV.setItem('hakoniwa-dep1','1')}catch(e){}delete S.flags.depStep;S.flags.ret1=1;S.godVisit=gv;save();const ov=document.createElement('div');ov.id='deptLd';ov.style.cssText='position:fixed;inset:0;z-index:70;display:flex;align-items:center;justify-content:center;background:#1e1810;color:#fff3d6;font-size:16px;opacity:0;transition:opacity .8s';ov.textContent='火山のふもとの村へ…';document.body.appendChild(ov);requestAnimationFrame(()=>requestAnimationFrame(()=>{ov.style.opacity='1'}));villageTimeout(()=>requestAnimationFrame(()=>setTimeout(departToVolcano,50)),900)};/* 画面を暗くして「…へ」と出してから、つぎの土地を作る */
+  const finish=()=>{if(!alive())return;DEPART_RUN=false;GODOUT=false;hold(false);delete S.flags.depStep;S.flags.ret1=1;S.godVisit=gv;save();const ov=document.createElement('div');ov.id='deptLd';ov.style.cssText='position:fixed;inset:0;z-index:70;display:flex;align-items:center;justify-content:center;background:#1e1810;color:#fff3d6;font-size:16px;opacity:0;transition:opacity .8s';ov.textContent='火山のふもとの村へ…';document.body.appendChild(ov);requestAnimationFrame(()=>requestAnimationFrame(()=>{ov.style.opacity='1'}));villageTimeout(()=>requestAnimationFrame(()=>setTimeout(departToVolcano,50)),900)};/* 画面を暗くして「…へ」と出してから、つぎの土地を作る */
   const leave=()=>{if(!alive())return;/* 守り神とカミサマが、光になって空へのぼっていく */
     dlgCue('flash');const gx=godX()*TS,gy=godY()*TS;sfx('level');for(let k=0;k<3;k++)villageTimeout(()=>fxSpr('appear',gx,gy,'#fff6c8'),k*500);
     for(let k=0;k<4;k++)villageTimeout(()=>fx.push({k:'ring',x:gx,y:gy-40,life:1.4,col:'#fff6c8'}),k*350);
