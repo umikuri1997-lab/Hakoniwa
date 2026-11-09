@@ -33,13 +33,12 @@ def build(sc,lv):
     sc.box(D0+0.02,D0+0.02,DZ-DT-0.06,D1-0.02,LY0-0.04,DZ-DT+0.02,WOODD,bevel=0)   # 床をささえる下の板（穴の所はあける）
     sc.box(D0+0.02,LY0-0.04,DZ-DT-0.06,HX0,D1-0.02,DZ-DT+0.02,WOODD,bevel=0);sc.box(HX1,LY0-0.04,DZ-DT-0.06,D1-0.02,D1-0.02,DZ-DT+0.02,WOODD,bevel=0)
     for z in (DZ+RH,DZ+RH*0.45):                                             # さくの横木2本：柱と柱のあいだに。前は、ハシゴの柱まで
-        if lv>=3:sc.box(IN+PW,IN+0.02,z-RT,1.0-PP/2,IN+RB,z,RAIL);sc.box(1.0+PP/2,IN+0.02,z-RT,F-PW,IN+RB,z,RAIL)   # うしろ：旗の柱の所で切る
-        else:sc.box(IN+PW,IN+0.02,z-RT,F-PW,IN+RB,z,RAIL)                     # うしろ
+        sc.box(IN+PW,IN+0.02,z-RT,F-PW,IN+RB,z,RAIL)                          # うしろ
         sc.box(IN+0.02,IN+PW,z-RT,IN+0.02+RBS,F-PW,z,RAIL);sc.box(F-0.02-RBS,IN+PW,z-RT,F-0.02,F-PW,z,RAIL)   # 左・右（絵の上でうしろ・前と同じ太さに見えるはば RBS）
         sc.box(IN+PW,F-RB,z-RT,HX0-EPW,F-0.02,z,RAIL);sc.box(HX1+EPW,F-RB,z-RT,F-PW,F-0.02,z,RAIL)   # 前（さくのはしの太い柱まで）
     for t in (0.5,1.5):                                                      # さくの小さな柱（うしろ・左・右）。まん中のうしろは旗の柱
         sc.box(t-RB/2,IN+0.03,DZ,t+RB/2,IN+RB-0.01,DZ+RH-0.01,RAIL)
-    if lv<3:sc.box(1.0-RB/2,IN+0.03,DZ,1.0+RB/2,IN+RB-0.01,DZ+RH-0.01,RAIL)   # うしろのまん中の小さな柱（旗のときは旗の柱）
+    sc.box(1.0-RB/2,IN+0.03,DZ,1.0+RB/2,IN+RB-0.01,DZ+RH-0.01,RAIL)
     for t in (0.6,1.0,1.4):
         sc.box(IN+0.03,t-RB/2,DZ,IN+RB-0.01,t+RB/2,DZ+RH-0.01,RAIL);sc.box(F-RB+0.01,t-RB/2,DZ,F-0.03,t+RB/2,DZ+RH-0.01,RAIL)
     # すじかい：左右とうしろは、柱と柱のあいだにX。前は、柱と床の角に短い方づえ（ハシゴのじゃまをしない）
@@ -55,10 +54,14 @@ def build(sc,lv):
         sc.box(x0,LY0-0.03,DZ-DT,x1,LY1,DZ+RH+0.06,WOODD)
         sc.box(x0-0.03,LY0-0.06,DZ+RH+0.06,x1+0.03,LY1+0.03,DZ+RH+0.14,RAIL)   # 柱の頭
     for i in range(1,9):z=i*(DZ-DT)/9;sc.box(HX0,LY0+0.02,z-0.06,HX1,LY1-0.03,z+0.06,LADDER,bevel=0.015)   # 段は柱のあいだだけ、床の下まで
-    if lv>=3:                                                                  # 旗（Lv3〜4）・星（Lv5）：うしろのまん中に床から立てた柱。さくの横木は、この柱にとりつく
-        top=DZ+RH+0.80;py0,py1=IN+0.02,IN+RB;pc=(py0+py1)/2
-        sc.box(1.0-PP/2,py0,DZ-DT,1.0+PP/2,py1,top,WOODD,bevel=0.015)
+    if lv>=3:                                                                  # 旗（Lv3〜4）・星（Lv5）：うしろのさくの外がわに立てた柱を、なわでくくりつける（なにもつらぬかない）
+        top=DZ+RH+0.80;py1=D0-0.008;py0=py1-PP;pc=(py0+py1)/2;bot=DZ-DT-0.22
+        sc.box(1.0-PP/2,py0,bot,1.0+PP/2,py1,top,WOODD,bevel=0.015)            # 柱（床のうしろのはしの外。下は床より少し下まで）
         sc.box(1.0-PP/2-0.025,py0-0.025,top,1.0+PP/2+0.025,py1+0.025,top+0.05,RAIL,bevel=0.012)   # 柱のてっぺんの玉ぶち
+        ROPE=(236,220,176)
+        for zc in (DZ+RH-RT/2,DZ+RH*0.45-RT/2):                                 # なわ：柱と、さくの横木をいっしょにまく
+            sc.box(1.0-PP/2-0.018,py0-0.018,zc-0.035,1.0+PP/2+0.018,IN+RB+0.012,zc+0.035,ROPE,bevel=0.01)
+        sc.box(1.0-PP/2-0.018,py0-0.018,DZ-DT/2-0.035,1.0+PP/2+0.018,D0+0.04,DZ-DT/2+0.035,ROPE,bevel=0.01)   # なわ：柱と、床のはし
         if lv<5:                                                               # 旗：柱の右がわにつける（柱の面から）
             sc.part();sc.tri((1.0+PP/2,pc,top-0.04),(1.0+PP/2,pc,top-0.36),(1.50,pc,top-0.20),(110,170,230))
         else:                                                                  # 星：柱のてっぺんにのせる（いちばん下のへこみが柱の上）
