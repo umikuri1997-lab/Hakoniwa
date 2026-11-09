@@ -38,7 +38,7 @@ function doSummon(){
     toast(r.name+'がもどってきた！','good');sevBack(r.name);reunite(r,sp)}
   else{let name;if(sm.elem===SECOND[WD].elem&&!S.flags.minaCame){name=SECOND[WD].name;S.flags.minaCame=true;S.flags.mnN=S.nights||0}/* 来た夜の数をおぼえておく（e04b） */
     else if(!WD&&FIXK0[sm.elem]&&!S.res.some(q=>q.elem===sm.elem)&&!(S.buried||[]).some(q=>q.elem===sm.elem&&isKey(q.name))&&!(S.lost||[]).some(q=>q.elem===sm.elem&&isKey(q.name)))name=FIXK0[sm.elem];/* その属性のキーキャラは、決まった子 */
-    else{const used=new Set(S.res.map(q=>q.name).concat((S.buried||[]).map(q=>q.name)));do{name=NAMES[S.nameIdx%NAMES.length]+(S.nameIdx>=NAMES.length?'2':'');S.nameIdx++}while(used.has(name)||KEYS.flat().includes(name)||Object.values(FIXK0).includes(name))}
+    else{const used=new Set([...S.res,...(S.buried||[]),...(S.lost||[])].map(q=>q.name)),keyN=new Set([...KEYS.flat(),...Object.values(FIXK0)]);for(;;){const base=NAMES[S.nameIdx%NAMES.length],lap=Math.floor(S.nameIdx/NAMES.length);name=base+(lap?String(lap+1):'');S.nameIdx++;if(!keyN.has(base)&&!used.has(name))break}}/* 名前の候補を使いきったら、うしろに数をつける。キーキャラの名前（フタバ2など）は使わない */
     r=mkRes(S,name,sm.elem,sp[0]+.5,sp[1]+.5);toast(ELEM[sm.elem].name+'のせいれい「'+name+'」がやってきた！','good')
     if(sm.elem==='fire'&&S.crops&&!S.crops.mugi){S.crops.mugi=S.crops.tomato=true}}/* 火のせいれいが来たら、パン・スープの作物がふえる */
   if(STATUE>=0&&S.obj[STATUE+W]==='altar'){r.x=STATUE%W+.5;r.y=((STATUE/W)|0)+1.12;sp=[STATUE%W,((STATUE/W)|0)+1]}/* 神殿のまんなか（台座の上）からあらわれる */
@@ -61,7 +61,7 @@ const EN={
   yama:{xp:40,pw:30,rng:2.4,name:'ヤマノオオカゲ',hp:60,sp:.75,atk:6,hit:20,hitF:10,hitN:12,hitFS:5,hitNS:6,col:'#2a0904',eye:'#ff6a2e',size:2.4,boss:1,vol:1},/* 火山のふもとの最後の夜に、火の山からおりてきて、温泉の熱をうばう */
   boss2:{xp:50,pw:30,rng:3.4,hx:2.6,hy:.8,name:'ヨルノオオカゲ',hp:90,sp:.9,atk:12,hit:30,hitF:15,hitN:18,hitFS:8,hitNS:9,col:'#05030c',eye:'#ffd84a',size:4.6,boss:1},/* ヌシ様をむかえる準備ができたあとに来る */
 };
-function bossDays(){const w=S.bossWarn;if(w==null)return '';const t=dayNo();if(!(S.res.length>=4&&S.res.some(q=>q.elem==='fire')&&KEYS[WD].every(n=>S.res.some(r=>r.name===n))))return 'オオカゲ：なかまが4人そろうまで来ない';let d=t;if(S.res4Since!=null)d=Math.max(d,S.res4Since+3);while(!bossNight(d))d++;return d===t?'オオカゲが来るまで：今夜':'オオカゲが来るまで：あと'+(d-t)+'日'}/* クエストの進みぐあいに、オオカゲが来る日を出す */
+function bossDays(){const w=S.bossWarn;if(w==null)return '';const t=dayNo(),need=S.wipe?5:4;/* 全滅のあとは、5人そろうまで来ない（level.js の S.wipe） */if(!(S.res.length>=need&&S.res.some(q=>q.elem==='fire')&&KEYS[WD].every(n=>S.res.some(r=>r.name===n))))return 'オオカゲ：なかまが'+need+'人そろうまで来ない';let d=t;if(S.res4Since!=null)d=Math.max(d,S.res4Since+3);while(!bossNight(d))d++;return d===t?'オオカゲが来るまで：今夜':'オオカゲが来るまで：あと'+(d-t)+'日'}/* クエストの進みぐあいに、オオカゲが来る日を出す */
 const bossNight=d=>{const w=S&&S.bossWarn,k=S&&(S.ookDay||(S.enKills||{}).boss&&S.bossDay);if(k)return d-k>=5&&(d-k)%5===0;/* オオカゲをはじめて追いはらったあとは、5日ごと（S.ookDay：その日。前のセーブは、オオカゲをたおしていれば S.bossDay） */return w==null?d>=5&&(d-5)%3===0:d-w>=3&&(d-w-3)%3===0}/* オオカゲは「来るかも」と聞いた3日後、追いはらえなかったら3日ごと（火山のふもとは5日目、そのあと3日ごと）。はじめて追いはらったら、そのあとは5日ごと */;
 const NIGHTHP=[0,0,2,4,6,8,10];/* 草原：オオカゲを追いはらったあと、夜10回ごとに、コワイノ（オオカゲはのぞく）の体力に足す数 */
 function waveFor(day){
@@ -331,7 +331,7 @@ function updTowers(dt){
   if(!S.enemies.length)return;
   for(const j of TOWERS){const o=S.obj[j];if(o!=='watch'&&o!=='yogan'&&o!=='tower'||o==='tower'&&WD===0)continue;/* 草原の御神木は矢をうたない */
     S.hp['w'+j]=(S.hp['w'+j]||0)-dt;if(S.hp['w'+j]>0)continue;
-    let st=o==='tower'?{dmg:1,range:10,cd:10}:(o==='yogan'?YOGAN:WATCH)[S.hp['L'+j]||1];if(nightVarNow()==='kiri')st=Object.assign({},st,{range:st.range/2});/* 霧の夜：とどく所が半分 */if(o==='watch'&&!watchGuard(j)){S.hp['w'+j]=1;if(S.ns&&!S.ns.noGuard&&S.enemies.some(e=>e.spawned&&!e.dead)&&!S.res.some(q=>q.act&&q.act.type==='watchpost'&&q.act.obj===j)){S.ns.noGuard=1;toast('見張り台に木のせいれいがいません','warn')}continue}/* 見張り台は、木のせいれいが立っているときだけうつ */if(o==='watch'&&ammoTotal()<1){S.hp['w'+j]=1;if(!S.flags.noArrow&&S.enemies.some(e=>e.spawned&&!e.dead)){S.flags.noArrow=1;toast('見張り台の木の矢がありません','warn')}continue}/* 見張り台は、木の矢がないとうてない */
+    let st=o==='tower'?{dmg:1,range:10,cd:10}:(o==='yogan'?YOGAN:WATCH)[S.hp['L'+j]||1];if(nightVarNow()==='kiri')st=Object.assign({},st,{range:st.range/2});/* 霧の夜：とどく所が半分 */if(o==='watch'&&!watchGuard(j)){S.hp['w'+j]=1;if(S.ns&&!S.ns.noGuard&&isNight()&&S.enemies.some(e=>e.spawned&&!e.dead)&&!S.res.some(q=>q.act&&q.act.type==='watchpost')){S.ns.noGuard=1;toast('見張り台に木のせいれいがいません','warn')}continue}/* 知らせるのは、夜のあいだ、どの見張り台にもだれも向かっていないときだけ（見張り台がいくつかあって、木のせいれいが1人のときは知らせない。朝におりたあとも知らせない） *//* 見張り台は、木のせいれいが立っているときだけうつ */if(o==='watch'&&ammoTotal()<1){S.hp['w'+j]=1;if(!S.flags.noArrow&&S.enemies.some(e=>e.spawned&&!e.dead)){S.flags.noArrow=1;toast('見張り台の木の矢がありません','warn')}continue}/* 見張り台は、木の矢がないとうてない */
     const z0=szAt(o,j)||[1,1],x=j%W+z0[0]/2,y=((j/W)|0)+z0[1]/2;
     let tg=null,bd=st.range+(o==='watch'?(nightVarNow()==='kiri'?3:6):0);/* 見張り台は、矢の射程ぶん遠くまで見る（あたるかは矢ごと） */for(const e of S.enemies){if(!e.spawned||e.dead)continue;const d=Math.hypot(e.x-x,e.y-y);if(d<bd){bd=d;tg=e}}
     if(o==='watch'){const g=S.res.find(q=>q.act&&q.act.type==='watchpost'&&q.act.stage==='do'&&q.act.obj===j),iv=towerVolley(j,x,y,st,g,shots);/* 矢は威力の大きい順。本数・つらぬき・射程は矢ごと */if(!iv){S.hp['w'+j]=1;continue}S.flags.noArrow=0;if(g){g.bowT=performance.now();g.face=tg&&tg.x<g.x?-1:1}S.hp['w'+j]=(g?st.cd/rMul(g,'work'):st.cd)*iv;sfxAt('shoot',x,y);continue}

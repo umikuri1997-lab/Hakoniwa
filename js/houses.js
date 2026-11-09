@@ -50,13 +50,16 @@ const MEBUKIL={wood:['それ、「めぶきのしずく」だ！ オオカゲが
  water:['それは「めぶきのしずく」です。オオカゲがためこんでいた、いのちの力ですね。','これを使えば、消えたせいれいがもどってきてくれます。'],
  wind:['フッ…それは「めぶきのしずく」。オオカゲがためこんでいた、いのちの力さ。','これを使えば、消えたせいれいが、もどってくるよ。'],
  windF:['それ、「めぶきのしずく」だよ。オオカゲがためこんでた、いのちの力なんだって。','これを使えば、消えたせいれいが、もどってくるんだ。なくさないでね。']};
-const DEATHL={wood:n=>[n+'が…！','…でも、だいじょうぶ。','次の朝、'+n+'は、きっともどってくるんだ。','新しいなかまより先に、'+n+'がもどってくるからね。'],
- earth:n=>[n+'#teary|が…消えちゃったねぇ…。','…でも、だいじょうぶだよぉ。','次の朝、'+n+'は、きっともどってくるんだぁ。','新しいなかまより先に、'+n+'がもどってくるよぉ。'],
- fireA:n=>[n+'#danger|！ …ちくしょう、やられちまったか。','しょげてる場合じゃないよ。','次の朝、'+n+'は、きっともどってくるよ。','新しいなかまより先に、'+n+'がもどってくる。待ってな。'],
- fireB:n=>[n+'#danger|！ …くそっ、やられちまったか。','しょげてる場合じゃねえ。','次の朝、'+n+'は、きっともどってくるぜ。','新しいなかまより先に、'+n+'がもどってくる。待ってろよ。'],
- water:n=>[n+'が…消えてしまいました。','落ち着いてください。','次の朝、'+n+'は、きっともどってきます。','新しいなかまより先に、'+n+'がもどってくるはずです。'],
- wind:n=>[n+'が…風に消えてしまいました。','どうか、お気をおとさずに。','次の朝、'+n+'は、きっともどってきますよ。','新しいなかまより先に、'+n+'がもどってまいります。'],
- windF:n=>[n+'#teary|が…風といっしょに、いなくなっちゃった。','でも、だいじょうぶ。','次の朝、'+n+'は、きっともどってくるよ。','新しいなかまより先に、'+n+'がもどってくるんだ。']};
+/* 消えたキーキャラは、神殿から1日に1人ずつ、先に消えた子から呼びもどせる。先に待っている子がいれば「次の朝」とは言わない */
+function backFirst(n){const B=(S.buried||[]).filter(q=>isKey(q.name)),i=B.findIndex(q=>q.name===n);return i<=0}
+const backWhen=n=>backFirst(n)?'次の朝、':'何日かしたら、';
+const DEATHL={wood:n=>[n+'が…！','…でも、だいじょうぶ。',backWhen(n)+n+'は、きっともどってくるんだ。','新しいなかまより先に、'+n+'がもどってくるからね。'],
+ earth:n=>[n+'#teary|が…消えちゃったねぇ…。','…でも、だいじょうぶだよぉ。',backWhen(n)+n+'は、きっともどってくるんだぁ。','新しいなかまより先に、'+n+'がもどってくるよぉ。'],
+ fireA:n=>[n+'#danger|！ …ちくしょう、やられちまったか。','しょげてる場合じゃないよ。',backWhen(n)+n+'は、きっともどってくるよ。','新しいなかまより先に、'+n+'がもどってくる。待ってな。'],
+ fireB:n=>[n+'#danger|！ …くそっ、やられちまったか。','しょげてる場合じゃねえ。',backWhen(n)+n+'は、きっともどってくるぜ。','新しいなかまより先に、'+n+'がもどってくる。待ってろよ。'],
+ water:n=>[n+'が…消えてしまいました。','落ち着いてください。',backWhen(n)+n+'は、きっともどってきます。','新しいなかまより先に、'+n+'がもどってくるはずです。'],
+ wind:n=>[n+'が…風に消えてしまいました。','どうか、お気をおとさずに。',backWhen(n)+n+'は、きっともどってきますよ。','新しいなかまより先に、'+n+'がもどってまいります。'],
+ windF:n=>[n+'#teary|が…風といっしょに、いなくなっちゃった。','でも、だいじょうぶ。',backWhen(n)+n+'は、きっともどってくるよ。','新しいなかまより先に、'+n+'がもどってくるんだ。']};
 function elemKey(r){if(KEYVR[r.name]&&KEYVR[r.name].pk)return KEYVR[r.name].pk;let h=0;for(const ch of r.name)h=(h*17+ch.charCodeAt(0))>>>0;return r.elem==='fire'?(WD===0?'fireB':h%2?'fireA':'fireB'):r.elem==='wind'?(h%2?'windF':'wind'):r.elem}/* 火のせいれいは名前で、あねご／あにき。風のせいれいは名前で、キザ／自由人 */
 function sayLine(r){const L=[],fav=FOODS[favDish(r)],m=bestMate(r);
   if(r.coffin||r.act&&(r.act.type==='bury'||r.act.type==='pray'))return 'さみしいなぁ…';/* お墓へ向かう・埋葬するあいだ、タップしたときのひとこと */
@@ -74,7 +77,7 @@ function sayLine(r){const L=[],fav=FOODS[favDish(r)],m=bestMate(r);
   L.push(LIKES[r.like]+'がすき！');
   return L[(Math.floor(S.t/30)+r.id)%L.length]}/* 村のようすで、ひとことが変わる */
 function helloLine(r){const k=elemKey(r);
-  if(r.back)return pick(BACKL[k]);if(KEYHELLO[r.name])return KEYHELLO[r.name];return pick(HELLO[k]).replace('$',r.name)}
+  if(r.back)return pickFresh('back:'+r.name,BACKL[k]);/* もどったときのひとことは、ぜんぶ出しおわるまで同じ物を出さない */if(KEYHELLO[r.name])return KEYHELLO[r.name];return pick(HELLO[k]).replace('$',r.name)}
 const likeF=r=>{if(r.lf&&BL[r.lf])return r.lf;let h=2166136261;for(const ch of r.name+(r.id||0))h=Math.imul(h^ch.charCodeAt(0),16777619)>>>0;h^=h>>>13;h=Math.imul(h,2246822507)>>>0;h^=h>>>16;r.lf=LIKEF[(h>>>0)%LIKEF.length];return r.lf};/* 好きな家具：ひとりずつちらばる（一度決まったら変わらない） */
 const hasLikeF=(h,r)=>{const f=likeF(r);for(const j of h.inside)if(S.obj[j]===f)return true;if(S.win)for(const j of h.set)if(S.win[j]===f)return true;/* 壁にかける物（絵・カーテン） */return RUGS.has(f)&&rugsIn(h.inside).includes(f)};
 const likeExtra=(h,r)=>{const f=likeF(r),pt=COMFY[f]||0;if(!pt)return 0;let n=0,t=0;for(const j of h.inside)if(S.obj[j]===f){n++;t+=pt*(n>2?.5:1)}if(RUGS.has(f))for(const o of rugsIn(h.inside))if(o===f){n++;t+=pt*(n>2?.5:1)}if(S.win)for(const j of h.set)if(S.win[j]===f){n++;t+=pt*(n>2?.5:1)}/* 壁にかけた絵・カーテン */return t};/* 好きな家具は、その家具のぶんの住み心地ポイントが2倍 */
