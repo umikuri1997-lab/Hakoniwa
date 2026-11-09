@@ -107,13 +107,16 @@ function questWaitNote(q){/* 条件はそろったのに、朝にならないと
 function mainTalkWaitText(q){/* メインの会話・お礼を待っているときの、ほんとうに止まっている理由 */const ms=qMissing(q);if(ms.length)return ms.join('と')+'がもどるまで、お話は進まない';
   if(!(S.qStory!=null||q.talk&&!S.qTalked))return '';if(isNight())return 'お話は、朝になってから';
   return storyWaitStatusText()||(TALKW?mainStoryPromptText(TALKW):S.qStory==null&&q.talk.wait||'いまは、村をそだてよう')}
+function nextStageGoal(){/* 草原をクリアして、まだ火山のふもとへ旅立っていないとき */if(!S||WD!==0||S.free||!S.cleared||typeof departDone!=='function'||departDone())return null;
+  const f=S.res.some(r=>r.name===POKO&&!r.hidden);return {t:'つぎの土地へ旅立とう',pr:isNight()?'お見送りは、朝になってから':!f?'フタバが帰ってきたら、お見送り':'みんなが、お見送りのしたくをしている',how:'昼になると、フタバたちが、つぎの土地へのお見送りをしてくれる。お見送りのあと、火山のふもとの村へ行く'}}
 function renderQuest(){const q=QUESTS[Math.min(S.quest,QUESTS.length-1)];let pr='',t=S.cleared?(WD===FREE?'村づくりは、つづく…':'世界クリア！'):q.text;
   if(S.cleared&&WD!==FREE){const a=AFTERQ[S.aq||0],dd=S.daily,dn=dd?dd.k.filter(k=>dd.done[k]).length:0;if(a&&S.aqOn===(S.aq||0)){t=aqTitle(a);pr=aqProg(a)}else t=dd?'きょうの目標 '+dn+'/'+dd.k.length:'世界クリア！'}/* クリア後は、新しいクエストか、きょうの目標を出す */
+  const ng=nextStageGoal();if(ng){t=ng.t;pr=ng.pr}/* 草原をクリアして、まだ旅立っていない：つぎの土地へ */
   if(!S.cleared){const wt=mainTalkWaitText(q);
     if(wt)t=wt;
     else{if(q.prog)pr=q.prog();const wn=questWaitNote(q);if(wn)pr=pr?pr+'　'+wn:wn}}
   const qt=$('#questTxt');if(qt.dataset.k!==t+'|'+pr){if(qt.dataset.t&&qt.dataset.t!==t){const c=$('#questChip');if(c){c.classList.remove('qbump');void c.offsetWidth;c.classList.add('qbump')}}/* 目標がかわったら、札をはねさせる */qt.dataset.t=t;qt.dataset.k=t+'|'+pr;qt.textContent='';const m=document.createElement('span'),g=document.createElement('span');m.className='qm';g.className='qp';m.textContent=t;g.textContent=pr;qt.append(m,g)}/* 進み具合は2行目に */
-  const h=$('#questHow'),how=q.how||'';if(!h.hidden&&h.dataset.q==S.quest&&h.dataset.text===how)return;h.dataset.q=S.quest;h.dataset.text=how;h.hidden=true;h.innerHTML='<b>やりかた</b>';h.appendChild(document.createTextNode(how))}
+  const h=$('#questHow'),how=ng?ng.how:q.how||'';if(!h.hidden&&h.dataset.q==S.quest&&h.dataset.text===how)return;h.dataset.q=S.quest;h.dataset.text=how;h.hidden=true;h.innerHTML='<b>やりかた</b>';h.appendChild(document.createTextNode(how))}
 const NUSHI_T=[
   {"open":[["フタバ","みんな、一緒に。あの木の下へ帰ろう。"],["ノドカ","ゆっくりで、だいじょうぶだよぉ。"]],"name":"草原のヌシ","nushi":["……大きくなったな。"],"world":[],"reu":[["U","木も。おまえも。",0,"nfF"],["F","……あのとき。"],["F","よかった、って言ったの……ヌシ様だったんだね。"],["U","ああ。"],["F","……遅いよ。",0,"stree:hug"],["U","待たせてしまった。"],["F","……。"],["F","みんなが、手伝ってくれたんだ。",0,"stree:group"],["F","ぼく、ひとりじゃ、何もわからなかった。"],["N","ぼくも、ひとりじゃ土をよけただけだったよぉ。",1],["H","おれは、石を温めただけだな。",1],["M","その後に、水を通せました。",1],["K","そして、ようやく声が届いた。",1],["U","……よい仲間に会えたな。"],["F","うん。"],["F","#teary|おかえりなさい。"],["U","……ただいま。",0,"stree:group"]],"next":[],get after(){return [[GOD,'#joy|'+GVOICE()+'ほっほ……おかえり、じゃのう。']]},"toast":"ステージクリア！","last":"草原にもどる"},
   {open:[[HOMURA,'夜をこえたよ…！','cheer'],[SHIZUKU,'みなさん、力をそそいでください。']],
