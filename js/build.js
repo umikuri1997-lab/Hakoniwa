@@ -52,8 +52,10 @@ function canPlace(id,x,y,quiet){if(typeof fogBlock==='function'&&fogBlock(id,x,y
   if(BL[id].sz){const F=fp(id,x,y);for(const[a,b]of F)if(!canPlace1(id,a,b,quiet))return false;if(F.some(([a,b])=>hiAt(b*W+a)!==hiAt(F[0][1]*W+F[0][0]))){if(!quiet)toast('段差をまたいでは置けません');return false}return true}
   return canPlace1(id,x,y,quiet);
 }
+function starterGap(j){if(WD!==0||!S||S.free||S.obj[j]||qDone('wall'))return false;const y=(j/W)|0,x=j%W;return y===CY-2&&x>=CX-5&&x<=CX-3}/* 草原のはじめの家の、壁のすきま（壁のクエストで直す所） */
 function canPlace1(id,x,y,quiet){
   if(x<0||y<0||x>=W||y>=H)return false;
+  if(starterGap(y*W+x)&&!HOME_WALLS.has(id)&&!HOME_DOORS.has(id)){if(!quiet)toast('ここは家の壁のすきまです','warn');return false}/* 箱や神殿を置くと、こわせずに家が直せなくなる */
   if(WALLD.has(id)){const j=y*W+x,iw=k=>HOME_WALLS.has(typeAt(k))||HOME_DOORS.has(typeAt(k)),wreath=id==='wreath',target=HOME_WALLS.has(S.obj[j])&&S.obj[j]!=='wall'||wreath&&HOME_DOORS.has(S.obj[j]);/* 石の塀にはかけられない */if(!target||wreath&&HOME_DOORS.has(S.obj[j])&&(iw(j-W)||iw(j+W))&&!(iw(j-1)||iw(j+1))||!wreath&&(iw(j-W)||iw(j+W))||(S.win&&S.win[j]&&!((id==='curtain1'||id==='curtain2')&&S.win[j]===1))||((id==='curtain1'||id==='curtain2')&&!(S.win&&S.win[j]===1&&HOUSES.some(h=>h.set.has(j)&&h.inside.has(j+W)&&!h.inside.has(j-W))))){if(!quiet)toast((id==='curtain1'||id==='curtain2')?'カーテンは、家の上がわの窓にだけかけられます':wreath?'リースは、壁か横向きのドアにだけかけられます':BL[id].name+'は、横向きの家の壁にだけかけられます');return false}return true}/* 窓は壁にはめる */
   const j=y*W+x;if(id==='lotus'){if(S.ground[j]!==1){if(!quiet)toast('ハスは池の上にだけ植えられます');return false}if(S.obj[j]){if(!quiet)toast('ここにはもう何かあります');return false}return true}
   if(id==='bridge'){if(S.ground[j]!==1){if(!quiet)toast('橋は水の上にだけかけられます');return false}if(S.obj[j]){if(!quiet)toast('ここにはもう何かあります');return false}return true}
@@ -189,7 +191,7 @@ function moveTap(tx,ty){const j=ty*W+tx;
 function removeAt(x,y){const tx0=x,ty0=y;
   const j=anc(y*W+x),o=S.obj[j];x=j%W;y=(j/W)|0;
   if(S.win&&S.win[j]){const id=S.win[j]===1?'window':S.win[j];if(id==='curtain1'||id==='curtain2')S.win[j]=1;else delete S.win[j];giveItem(id,1);/* カーテンをはずすと、窓がのこる */toast(BL[id].name+'をおそなえ箱にもどした');burst(j,'furn','rm');recount();renderPalette();return}
-  if(o){const b=BL[o];if(o==='tower')return toast(storyTreeName()+'はこわせません');if(o==='volcano'||o==='heatv'||o==='crack'||o==='boulder'||o==='fogbox'||o==='nushiprint'||o==='fogspring')return toast(b.name+'はこわせません');if(o==='statue'||o==='obox'||o==='board'||o==='altar'||o==='site2')return toast('神殿はこわせません');if((o==='stor'||o==='mbox')&&cnt(o)<=1)return toast(BL[o].name+'は1つ以上必要です');
+  if(o){const b=BL[o];if(o==='tower')return toast(storyTreeName()+'はこわせません');if(o==='volcano'||o==='heatv'||o==='crack'||o==='boulder'||o==='fogbox'||o==='nushiprint'||o==='fogspring')return toast(b.name+'はこわせません');if(o==='statue'||o==='obox'||o==='board'||o==='altar'||o==='site2')return toast('神殿はこわせません');if((o==='stor'||o==='mbox')&&cnt(o)<=1&&!(WD===0&&!S.free&&!qDone('wall')&&y===CY-2&&x>=CX-5&&x<=CX-3))return toast(BL[o].name+'は1つ以上必要です');
     if(o==='site'){const d=S.dyn[j];if(d.build==='statue')return toast('神殿はこわせません');const bm=d.mat||{};clearObj(j);for(const k in bm)S.mat[k]=(S.mat[k]||0)+bm[k];toast('建てるのをやめた')}/* 素材はもどる・パワーはもどらない */
     else if(o==='sprout'){const d=S.dyn[j];clearObj(j);giveItem(d.plant,1);toast('植えるのをやめた')}
     else{clearObj(j);
