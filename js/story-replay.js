@@ -81,7 +81,7 @@ function replayLockUI(run){
   const nativeCheckQuest=checkQuest;checkQuest=()=>{if(run.running&&run.episode.kind!=='vol')nativeCheckQuest();};checkLevel=()=>{};checkSev=()=>{};finalCheck=()=>{};updTut=()=>{};showItemGift=()=>{};showSpotPop=()=>{};openSheet=()=>{};
   replayControls(run);
 }
-/* 火山の場面の村：一時データだけ。場面に要る物（ようがん台・ベンチ・かまど・食卓・ほのお石・台座）と、ホムラ・シズクをおく */
+/* 火山の場面の村：一時データだけ。場面に要る物（ようがん台・ベンチ・かまど・食卓・湯のわき岩・台座）と、ホムラ・シズクをおく */
 const VOL_REPLAY_AT={intro:'c',springA:'a',summon:'a',rockCanal:'b',shizukuRest:'a',yatai:'a',haikage3:'k',springB:'d1',fire3:'y',fest:'m',ashiyu:'b',volcano:'m',rockDeep:'d2',springC:'d2',ashNight:'m',hinoookage:'v',inn:'a',guest:'a',tower:'m'};
 function prepareVolReplay(run,payload){
   const id=run.episode.id;setWorld(1);S=newState(1);LIVE[1]=S;S.introSeen=true;S.enemyOn=false;S.t=720;S.hold=0;S.speed=1;S.food=100;S.godShown=true;S.godGone=id!=='intro'&&id!=='springA';

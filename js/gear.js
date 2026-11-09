@@ -7,7 +7,7 @@ const GSLOT={w:'武器',a:'防具',c:'おまもり',t:'専用品'},GSLOTK=['w','
 const ORE_COL={copper:'#e0a07a',iron:'#bcc4cc',obsidian:'#8f86a8',silver:'#e4eaf0',gold:'#f2d47a',crystal:'#f3a6ac',sulfur:'#ecdf86',bamboo:'#b3d48a',kuru:'#a8d494',chiri:'#d4bf8c',wood:'#d4a878',eda:'#c8a27c',sp:'#f4b06a'};
 const GEAR_ORES=['copper','iron','obsidian','silver','gold','sulfur','crystal'];
 const isGear=id=>!!(BL[id]&&BL[id].g);
-const gearMain=id=>{const b=BL[id];if(b.g.sp)return 'obsidian';return Object.keys(b.mat||{})[0]||'iron'};/* 強化に使う素材（特の物は黒曜石） */
+const gearMain=id=>{const b=BL[id];if(b.g.sp)return 'obsidian';return Object.keys(b.mat||{})[0]||'iiron'};/* 強化に使う素材（特の物は黒曜石） */
 const gearCanUp=id=>{const s=BL[id].g.s;return s==='w'||s==='a'};
 const GUPN=[1,2,3];/* 強化 +1・+2・+3 にいる素材の数 */const GUPPC=50;/* +3 のパワー */
 function gearList(){return S.gear||(S.gear=[])}
@@ -115,7 +115,7 @@ function veinMorning(){if(!S||WD!==1||S.free)return;if(IS_STORY_REPLAY||typeof M
 function vreqList(){const q=S.vreq;if(!q)return [];const L=[];for(const k in q){if(VEINS[S.obj[+k]])L.push(+k);else delete q[k]}return L}
 /* はじめての鉱石で、そうびのレシピを思いつく（火山だけ） */
 function gearIdea(){if(!S||S.free||WD!==1)return;const got=k=>(S.gotMat&&S.gotMat[k]>0)||(S.mat[k]||0)>0;if(!GEAR_ORES.some(got))return;S.recipes||(S.recipes={});S.guardianIdeas||(S.guardianIdeas={});const nw={};
-  for(const id of GEAR_IDS){const b=BL[id];if(b.g.sp||S.recipes[id])continue;if(Object.keys(b.mat).every(k=>!GEAR_ORES.includes(k)||got(k))){S.recipes[id]=true;S.guardianIdeas[id]=true;nw[id]=1}}
+  for(const id of GEAR_IDS){const b=BL[id];if(b.g.sp||S.recipes[id])continue;if(Object.keys(b.mat).map(k=>ORE_OF[k]||k).every(k=>!GEAR_ORES.includes(k)||got(k))){/* 延べ棒の物は、その鉱石を手に入れたら思いつく */S.recipes[id]=true;S.guardianIdeas[id]=true;nw[id]=1}}
   const ks=Object.keys(nw);if(ks.length){sfx('level');queueItemGift(nw,'あたらしいレシピ！',true);memo('💡','そうびのレシピ：'+ks.length+'こ')}}
 /* 毎朝：金のメダル */
 function gearMorning(){for(const r of S.res)if(r.gear&&gearStat(r).pw){S.pt+=1;S.totalPt=(S.totalPt||0)+1}}
@@ -126,16 +126,18 @@ const GPIX={
  a:['................','..ooo......ooo..','.ohhmo....ohmmo.','.ohmmmooooommmo.','..ommhhhhhhmmo..','..omhmmmmmmmmo..','..omhmmmmmmmmo..','..omhmmmmmmmdo..','..ommmmmmmmmdo..','..ommmmmmmmmdo..','..ommmmmmmmddo..','...ommmmmmmdo...','...ommmmmmddo...','....oddddddo....','.....oooooo.....','................'],
  c:['......oooo......','.....o....o.....','....o......o....','....o......o....','.....o....o.....','......oooo......','.....ohhmmo.....','....ohhmmmmo....','....ohmmmmmo....','....ommmmmdo....','....ommmmddo....','.....odddo......','......ooo.......','................','................','................'],
  t:['................','.....oooooo.....','....ohhhmmmo....','....ohmmmmmo....','.....oommoo.....','.......om.......','......owwo......','......owwo......','......owwo......','......owwo......','......owwo......','......owwo......','......owwo......','.......oo.......','................','................'],
+ ingot:['................','................','................','................','................','......oooooo....','.....ohhhhhmo...','....ohhmmmmmmo..','...ohmmmmmmmdo..','..ommmmmmmmddo..','..ommmmmmmdddo..','..ommmmmmddddo..','..oddddddddddo..','...oooooooooo...','................','................'],
  ore:['................','................','................','......oooo......','....oohhmmoo....','...ohhmmmmmmo...','..ohmmmmmmmmmo..','..ommmmhmmmmdo..','..ommmmmmmmddo..','...ommmmmmddo...','....oodddddo....','......oooo......','................','................','................','................']};
 function shade(h,k){const n=parseInt(h.slice(1),16);let r=n>>16,g=n>>8&255,b=n&255;const f=v=>Math.max(0,Math.min(255,Math.round(k>1?v+(255-v)*(k-1):v*k)));return 'rgb('+f(r)+','+f(g)+','+f(b)+')'}
 function pixDraw(c,rows,col,x,y,u){const P={o:shade(col,.72),m:col,h:shade(col,1.45),d:shade(col,.86),w:'#c99a68'};for(let j=0;j<rows.length;j++)for(let i=0;i<rows[j].length;i++){const ch=rows[j][i];if(ch==='.')continue;c.fillStyle=ch==='w'&&col===ORE_COL.wood?'#a97c50':P[ch];c.fillRect(x+i*u,y+j*u,u,u)}}
 const GICON={};
-function gearColor(id){const b=BL[id];if(b.g.sp)return ORE_COL.sp;const k=Object.keys(b.mat).find(k=>GEAR_ORES.includes(k))||Object.keys(b.mat)[0];return ORE_COL[k]||ORE_COL.iron}
+function gearColor(id){const b=BL[id];if(b.g.sp)return ORE_COL.sp;const k=Object.keys(b.mat).map(k=>ORE_OF[k]||k).find(k=>GEAR_ORES.includes(k))||Object.keys(b.mat)[0];return ORE_COL[k]||ORE_COL.iron}
 function pixURL(key,rows,col){if(GICON[key])return GICON[key];const c=document.createElement('canvas');c.width=c.height=144;const g=c.getContext('2d');g.imageSmoothingEnabled=false;pixDraw(g,rows,col,0,0,9);const u=c.toDataURL();c.width=c.height=0;return GICON[key]=u}
 const gearIcon=id=>pixURL(id,GPIX[BL[id].g.s],gearColor(id));
 /* 鉱脈の絵：岩に、鉱石の色の粒（ドット） */
 const VSPK=[[9,14],[16,12],[13,19],[20,18],[7,21],[17,23]];
 function drawVein(c,id,x,y,i){drawObj(c,'rock',x,y,i);const col=ORE_COL[VEINS[id]],X=Math.round(x),Y=Math.round(y);for(const[a,b]of VSPK){c.fillStyle=shade(col,.72);c.fillRect(X+a-1,Y+b-1,4,4);c.fillStyle=col;c.fillRect(X+a,Y+b,2,2)}}
+for(const k of['icopper','iiron','isilver','igold']){ICONS[k]=pixURL('ingot:'+k,GPIX.ingot,ORE_COL[k.slice(1)]);const im=new Image();im.onload=()=>{im.ok=1};im.src=ICONS[k];ICI[k]=im}/* 延べ棒の素材アイコン */
 for(const k of GEAR_ORES){ICONS[k]=pixURL('ore:'+k,GPIX.ore,ORE_COL[k]);const im=new Image();im.onload=()=>{im.ok=1};im.src=ICONS[k];ICI[k]=im}/* 鉱石の素材アイコン */
 
 /* ---------- 画面：せいれいの「そうび」タブ ---------- */
@@ -153,3 +155,33 @@ function gearBoardHead(id,prev){const s=BL[id].g&&BL[id].g.s;if(!s||s==='ar'||(p
 function gearBoardUp(box){const L=[];for(const q of gearList())if(gearCanUp(q.id))L.push([q,'']);for(const r of S.res)for(const k of['w','a'])if(r.gear&&r.gear[k])L.push([r.gear[k],r.name]);if(!L.length)return;const h=el('<b style="display:block;margin:8px 0 2px"></b>');h.textContent='強化';box.appendChild(h);for(const[q,who]of L){const row=gearRow(q,who?who+'がつけている':BL[q.id].desc);row.appendChild(gearUpBtn(q,renderSheet));box.appendChild(row)}}
 /* もちもの：そうび */
 function gearInv(body){const L=gearList();if(!L.length)return;const g=el('<div class="grid"></div>'),hd=el('<b style="grid-column:1/-1;margin-top:8px"></b>');hd.textContent='そうび';g.appendChild(hd);for(const q of L){const b=el('<div class="slot"><span class="ct"></span><img alt=""><span class="nm"></span></div>');b.querySelector('img').src=gearIcon(q.id);b.querySelector('.nm').textContent=gearName(q);b.querySelector('.ct').textContent=GSLOT[BL[q.id].g.s];g.appendChild(b)}body.appendChild(g)}
+/* ---------- 炉（smelter、2×2の建物）：鉱石2こで延べ棒1こ ----------
+   S.smQ[j]：たのまれて素材箱から運ぶのを待つ鉱石（たのんだときに素材箱からへらす）。r.spk：運んでいる鉱石 {j,m}。
+   S.smIn[j]：炉に入った鉱石。火のせいれいが、2こずつ延べ棒にして、持って素材箱へしまう */
+const INGOT={copper:'icopper',iron:'iiron',silver:'isilver',gold:'igold'},ORE_OF={icopper:'copper',iiron:'iron',isilver:'silver',igold:'gold'};
+const SMELT_ORE=2,SMELT_T=20,SMELT_CAP=10;/* 鉱石2こで延べ棒1こ。1こ精錬する時間は20。炉にたのめるのは延べ棒10こぶんまで */
+for(const k in ORE_OF)ORE_COL[k]=ORE_COL[ORE_OF[k]];
+const smInOf=j=>(S.smIn||(S.smIn={}))[j]||(S.smIn[j]={});
+function smCount(j){let n=0;const a=(S.smIn||{})[j],q=(S.smQ||{})[j];for(const m of[a,q])if(m)for(const k in m)n+=m[k];for(const r of S.res)if(r.spk&&r.spk.j===j)for(const k in r.spk.m)n+=r.spk.m[k];return n}/* 炉に入った・運ぶのを待つ鉱石 */
+function smRefund(m){for(const k in m||{})if(m[k]>0)S.mat[k]=(S.mat[k]||0)+m[k]}
+function smTick(){for(const f of['smQ','smIn']){const Q=S[f];if(!Q)continue;for(const k in Q)if(S.obj[k]!=='smelter'){smRefund(Q[k]);delete Q[k]}}}/* 炉がなくなったら、運ぶまえ・入れた鉱石は素材箱へもどす */
+function smLit(j){return S.res.some(r=>r.act&&r.act.type==='smelt'&&r.act.obj===j&&r.act.stage==='do')}
+function smeltWant(r){if(isNight())return false;if(r.spk||S.smQ&&Object.keys(S.smQ).length)return true;return r.elem==='fire'&&!!S.smIn&&Object.keys(S.smIn).some(j=>S.obj[j]==='smelter'&&Object.values(S.smIn[j]).some(n=>n>=SMELT_ORE))}
+function smeltJob(r,G){if(isNight())return false;let j;
+  if(r.spk){const sj=r.spk.j;if(S.obj[sj]!=='smelter'){smRefund(r.spk.m);r.spk=null;return false}j=nearest(G,q=>adjOf(q,k=>anc(k)===sj)>=0,200);if(j>=0){startAct(r,G,'sput',j,{obj:sj});return true}return false}
+  if(r.elem==='fire'&&S.smIn){for(const sj of Object.keys(S.smIn).map(Number)){if(S.obj[sj]!=='smelter'||!Object.values(S.smIn[sj]).some(n=>n>=SMELT_ORE)||!free('sm'+sj,1))continue;j=nearest(G,q=>adjOf(q,k=>anc(k)===sj)>=0,200);if(j>=0){startAct(r,G,'smelt',j,{key:'sm'+sj,obj:sj});return true}}}/* 火のせいれいが精錬する */
+  const Q=S.smQ||{},sj=Object.keys(Q).map(Number).find(c=>!S.res.some(q=>q!==r&&q.act&&q.act.type==='spick'&&q.act.sj===c));if(sj==null)return false;j=nearest(G,q=>storeAdj(q,'mat')>=0,200);if(j>=0){startAct(r,G,'spick',j,{sj});return true}return false}
+Object.assign(ACT,{
+  spick:{start(r,a){if(!S.smQ||!S.smQ[a.sj])return false;r.bubble='';sfxAt('box',r.x,r.y)},done:(r,a)=>a.t>=4,end(r,a){const Q=S.smQ&&S.smQ[a.sj];if(!Q)return;delete S.smQ[a.sj];r.spk={j:a.sj,m:Q}}},/* 炉に入れる鉱石を、素材箱からとる */
+  sput:{start(r,a){if(!r.spk)return false;r.bubble='';faceTo(r,a.obj)},done:(r,a)=>a.t>=4,end(r,a){const p=r.spk;r.spk=null;if(!p)return;if(S.obj[p.j]!=='smelter'){smRefund(p.m);return}const d=smInOf(p.j);for(const k in p.m)d[k]=(d[k]||0)+p.m[k];sfxAt('box',r.x,r.y)}},/* 鉱石を炉に入れる */
+  smelt:{start(r,a){const d=(S.smIn||{})[a.obj];if(S.obj[a.obj]!=='smelter'||!d)return false;a.k=Object.keys(d).find(k=>d[k]>=SMELT_ORE);if(!a.k)return false;r.bubble='🔥';faceTo(r,a.obj)},tick(r,a,dt){work(r,dt);a.p=(a.p||0)+dt*rMul(r,'work');a.h=(a.h||0)+dt;if(a.h>=2.5){a.h=0;sfxAt('cookfire',r.x,r.y);spawnFX(a.obj%W+.5,((a.obj/W)|0)+1.2,'#ffb070')}},done:(r,a)=>a.p>=SMELT_T||S.obj[a.obj]!=='smelter',
+    end(r,a){if(S.obj[a.obj]!=='smelter'||(a.p||0)<SMELT_T)return;const d=(S.smIn||{})[a.obj];if(!d||(d[a.k]||0)<SMELT_ORE)return;d[a.k]-=SMELT_ORE;if(!d[a.k])delete d[a.k];if(!Object.keys(d).length)delete S.smIn[a.obj];const ig=INGOT[a.k];r.cmat=r.cmat||{};r.cmat[ig]=(r.cmat[ig]||0)+1;S.gotMat=S.gotMat||{};addFloat(r.x,r.y-1.6,MATN[ig]+'+1','#ffd9a0');sfxAt('good',r.x,r.y);addSpiritXp(1,r)}}});/* 火のせいれいが、鉱石2こを延べ棒1こにする（延べ棒は持って素材箱へ） */
+function smPop(j){/* 炉：延べ棒にする鉱石の種類ごとに数をえらぶと、せいれいが素材箱から運んで、火のせいれいが精錬する */const V={},ores=Object.keys(INGOT);
+  const o=el('<div style="position:fixed;inset:0;z-index:45;display:flex;align-items:center;justify-content:center;background:rgba(30,24,16,.45);padding:24px"><div class="pxcard" style="background:var(--panel);padding:16px 18px;max-width:340px;width:100%;color:var(--ink)"><b class="t" style="display:block;font-size:16px;margin-bottom:4px"></b><p class="note n" style="margin:0 0 10px"></p><div class="ks"></div><div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px"><button class="btn x">とじる</button><button class="btn pri go"></button></div></div></div>');
+  const room=()=>Math.max(0,SMELT_CAP-Math.floor(smCount(j)/SMELT_ORE)),sum=()=>ores.reduce((a,k)=>a+(V[k]||0),0),can=k=>Math.floor((S.mat[k]||0)/SMELT_ORE);
+  const rows=ores.filter(k=>can(k)>0).map(k=>{const r=el('<div style="display:flex;gap:8px;align-items:center;justify-content:space-between;margin-bottom:6px"><span class="nm" style="flex:1"></span><button class="btn m">−</button><b class="v" style="min-width:2.4em;text-align:center"></b><button class="btn p">＋</button></div>');r.querySelector('.m').onclick=()=>{sfx('tap');V[k]=Math.max(0,(V[k]||0)-1);upd()};r.querySelector('.p').onclick=()=>{sfx('tap');if(sum()<room()&&(V[k]||0)<can(k))V[k]=(V[k]||0)+1;upd()};o.querySelector('.ks').appendChild(r);return[k,r]});
+  const upd=()=>{o.querySelector('.t').textContent=BL.smelter.name;o.querySelector('.n').textContent='延べ棒にする（'+Math.floor(smCount(j)/SMELT_ORE)+'/'+SMELT_CAP+'）';for(const[k,r]of rows){r.querySelector('.nm').textContent=MATN[INGOT[k]]+'（'+MATN[k]+(V[k]||0)*SMELT_ORE+'/'+(S.mat[k]||0)+'）';r.querySelector('.v').textContent=V[k]||0;r.querySelector('.m').disabled=!(V[k]>0);r.querySelector('.p').disabled=sum()>=room()||(V[k]||0)>=can(k)}const g=o.querySelector('.go');g.textContent='精錬する';g.disabled=!sum()};
+  o.querySelector('.x').onclick=()=>{sfx('tap');o.remove()};o.onclick=e=>{if(e.target===o)o.remove()};
+  o.querySelector('.go').onclick=()=>{if(!sum())return;const Q=(S.smQ||(S.smQ={}))[j]||(S.smQ[j]={});for(const k of ores){const t=Math.min((V[k]||0)*SMELT_ORE,S.mat[k]||0);if(t>0){S.mat[k]-=t;Q[k]=(Q[k]||0)+t}}sfx('quest');toast('精錬をたのんだ','good');o.remove()};
+  if(!rows.length)o.querySelector('.ks').appendChild(el('<p class="note">鉱石が足りません</p>'));
+  upd();document.body.appendChild(o)}

@@ -40,10 +40,10 @@ const QUESTS2=[
     [HOMURA,'#think|ほら、竹やぶのそばを見てごらん。土から、とんがった頭がのぞいてるだろ。'],
     [HOMURA,'#joy|あれは、たけのこさ。この村の、春のごちそうなんだ。いくつか、とってきておくれよ。']],gives:{run:()=>takenokoStart()}},
    story:[[HOMURA,'#joy|うん、いいたけのこだ。やわらかくて、あまいよ。'],[HOMURA,'よし、これで村の準備はばっちりだね。助かったよ。']],gives:{flag:'hReq'}},
-  {id:'springA',text:'温泉をよみがえらせよう',check:()=>S.obj.some((o,j)=>o==='hotstone'&&adjOf(j,k=>S.ground[k]===1&&sprMap()[k]==='a')>=0),how:'「おく」→「ほのお石」をえらんで、村の南東の温泉の水べに置く',
+  {id:'springA',text:'温泉をよみがえらせよう',check:()=>S.obj.some((o,j)=>o==='hotstone'&&adjOf(j,k=>S.ground[k]===1&&sprMap()[k]==='a')>=0),how:'「おく」→「湯のわき岩」をえらんで、村の南東の温泉の水べに置く',
    talk:{who:HOMURA,when:()=>true,lines:[
     [HOMURA,'まずは、いちばん近い入口の温泉からだね。'],
-    [GOD,'ほのお石を入れといたぞい。ホムラの火の力が、きっと温泉をあたためてくれるじゃろう。'],
+    [GOD,'湯のわき岩を入れといたぞい。ホムラの火の力をこめれば、きっと、あたたかいお湯がわいてくるじゃろう。'],
     [HOMURA,'よし、やってみようじゃないか。']],gives:{items:{hotstone:1}}},
    story:[
     [HOMURA,'…湯気だ！ あったかい湯気が、のぼってきたよ！','vol:springWalk'],[HOMURA,'#joy|……ま、助かったよ。……ほんとに。'],

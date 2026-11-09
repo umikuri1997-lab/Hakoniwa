@@ -9,7 +9,7 @@ const R=S.res,fire=R.find(r=>r.elem==='fire')||R[0];const mk=el=>{const r=mkRes(
 /* 鉱脈をほる */const vj=S.obj.findIndex(x=>x==='vcopper');fire.cmat=null;ACT.mine.end(fire,{obj:vj,tgt:'vcopper'});o.oreMined=(fire.cmat||{}).copper||0;o.stoneFromVein=(fire.cmat||{}).stone||0;fire.cmat=null;
 const rj=S.obj.findIndex((x,j)=>x==='rock'&&oreNear(j));const rnd=Math.random;Math.random=()=>.05;ACT.mine.end(fire,{obj:rj,tgt:'rock'});Math.random=rnd;o.sulfur=(fire.cmat||{}).sulfur||0;fire.cmat=null;
 /* レシピ */S.gotMat={copper:1,iron:1};gearIdea();o.learnCopper=!!S.recipes.gw03;o.noSilver=!S.recipes.gw14;o.noSpecial=!S.recipes.gw11;
-/* 作る */for(const k of['copper','iron','bamboo','wood','eda','kuru'])S.mat[k]=60;S.pt=500;S.orders=[];BOARD=1;
+/* 作る */for(const k of['copper','iron','icopper','iiron','bamboo','wood','eda','kuru'])S.mat[k]=60;S.pt=500;S.orders=[];BOARD=1;
 const made=id=>{S.orders=[];orderFurn(id);const od=S.orders[0];if(!od)throw new Error('order '+id+' known='+recipeKnown(id)+' lv='+lvOK(id)+' lock='+orderLock()+' max='+boardMax()+' board='+BOARD);finishCraft(od,fire)};for(const id of['gw03','gw02','ga03','gar02','gc01','gt04','gt07'])made(id);
 o.gearInv=gearList().map(q=>q.id);o.arrows=S.inv.gar02;
 /* つける */const iw=()=>gearList().findIndex(q=>q.id==='gw03');o.earthWeapon=gearEquip(earth,iw());o.fireWeapon=gearEquip(fire,iw());const it=id=>gearList().findIndex(q=>q.id===id);o.fireTool=gearEquip(fire,it('gt04'));o.earthTool=gearEquip(earth,it('gt04'));o.mineJob=gJob(earth,'mine');
