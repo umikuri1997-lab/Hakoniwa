@@ -500,6 +500,7 @@ function renderSheet(){
        body.appendChild(sec)}
     }else if(sheetArg==='goal'&&S.cleared){
       body.appendChild(el('<p class="note">この土地は守られた。ここからは、クエストや目標で村をそだてよう。たっせいすると、パワーがもらえます。</p>'));
+      if(WD===0&&!S.free){const ng=nextStageGoal(),sec=el('<div class="sec"><h3>つぎの土地</h3><div class="rows"></div></div>');sec.querySelector('.rows').appendChild(ng?rowEl('・'+ng.t,ng.pr+'。'+ng.how):rowEl('火山のふもとの村','御神木をタップすると、火山のふもとの村へ行ける'));body.appendChild(sec)}/* つぎのステージへの行き方 */
       if(WD!==FREE){const a=AFTERQ[S.aq||0],qs=el('<div class="sec"><h3>クエスト</h3><div class="rows"></div></div>');
         if(!a)qs.querySelector('.rows').appendChild(rowEl('✓ ぜんぶたっせい','カミサマからのおねがいは、ぜんぶかなえた'));
         else if(S.aqOn===(S.aq||0))qs.querySelector('.rows').appendChild(rowEl('・'+aqTitle(a),aqProg(a)+'　ごほうび パワー+'+a.rw+'。'+a.how));
