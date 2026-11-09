@@ -108,6 +108,7 @@ const PCH=new Set(['tree','ntree','fruit','deadtree','berry','clover','bellf','s
 function plantChip(id,i,g){const C=window.CHIPS;if(!C)return null;if(!ICON&&i!=null&&S&&PLANTS.includes(id)&&isBud(i))return (id==='lotus'&&C['bud~w'])||C.bud||null;/* 芽（ハスは水の上なので、土のない芽） */
   if(id==='fruit'&&g>=100)return C[id+'#mi']||null;/* 実った絵（ベリーは、茂みの上に、運ぶときと同じベリーをのせる） */
   if(id==='hedge'){if(ICON||i==null||!S)return C.hedge||null;const t=k=>typeAt(k)==='hedge',hl=i%W>0&&t(i-1),hr=i%W<W-1&&t(i+1),m=(hl?1:0)|(hr?2:0)|(t(i-W)?4:0)|(t(i+W)?8:0);return C['hedge:'+m]||null}/* 生け垣は、となりとのつながりの形で（tools/art/hedge/hedge_art.py） */
+  if(WD===1&&(id==='deadtree'||id==='tree')&&C[id+'~v'])return C[id+'~v'];/* 火山：自然の木は山の杉、植えた木は若い杉（tools/art/cedar） */
   return C[id]||null}
 function drawFarmChip(c,x,y,i,g,now){const C=window.CHIPS;if(!C)return false;if(ICON||i==null||!S){const ch=C.farm;return !!ch&&drawChip(c,ch,'farm',x,y,now,i)}
   const n=k=>S.obj[k]==='farm',gx=i%W,gy=(i/W)|0,m=(gx>0&&n(i-1)?1:0)|(gx<W-1&&n(i+1)?2:0)|(gy>0&&n(i-W)?4:0)|(gy<H-1&&n(i+W)?8:0),d=S.dyn[i],wet=!!d&&d.wet>0,base=C[(wet?'farmw:':'farm:')+m];

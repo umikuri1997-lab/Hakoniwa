@@ -195,9 +195,9 @@ function renderSheet(){
   if(!sheet)return;const body=$('#sheetBody');body.innerHTML='';for(const b of document.querySelectorAll('#sheetWrap header .back'))b.parentNode.removeChild(b);const T=$('#sheetTitle');
   if(sheet==='vshop'){
     if(!visitHere())return closeSheet();const p=VISITORS[S.st2.visit.who];T.textContent=p[0]+'のお店';
-    body.appendChild(el('<p class="note">草原の花のたね・苗と、パワーを交換します。</p>'));
-    const d=el('<div class="sec"><h3>花のたね・苗</h3><div class="rows"></div></div>'),rows=d.querySelector('.rows');body.appendChild(d);
-    for(const id of PLANTS){const b=BL[id],r=rowEl(iname(id),'所持：'+inv(id),iconURL(id));helpify(r,withAttr(id,b.desc||''));const bx=el('<div style="display:flex;flex-direction:column;gap:4px;flex:none"></div>');r.appendChild(bx);rows.appendChild(r);
+    body.appendChild(el('<p class="note">草原の花のたね・果物の苗と、パワーを交換します。</p>'));
+    const d=el('<div class="sec"><h3>花のたね・果物の苗</h3><div class="rows"></div></div>'),rows=d.querySelector('.rows');body.appendChild(d);
+    for(const id of PLANTS.filter(id=>id!=='tree')){const b=BL[id],r=rowEl(iname(id),'所持：'+inv(id),iconURL(id));helpify(r,withAttr(id,b.desc||''));const bx=el('<div style="display:flex;flex-direction:column;gap:4px;flex:none"></div>');r.appendChild(bx);rows.appendChild(r);
       for(const k of [1,5]){const c=shopPrice(id,k),bt=el('<button class="btn'+(k===1?' pri':'')+'"></button>');bt.textContent='×'+k+'　'+SP(c);bt.disabled=S.pt<c;bt.onclick=()=>{if(S.pt<c)return;S.pt-=c;if(id==='fruit')S.fruitBuy=(S.fruitBuy||0)+k;S.unlocked[id]=true;giveItem(id,k);sfx('power');renderSheet();renderPalette()};bx.appendChild(bt)}}
     return}
   if(sheet==='shop'){
@@ -210,7 +210,7 @@ function renderSheet(){
     const row=(rows,title,desc,img,done)=>{const r=rowEl(title,desc,img);if(done)r.classList.add('done');const bx=el('<div style="display:flex;flex-direction:column;gap:4px;flex:none"></div>');r.appendChild(bx);rows.appendChild(r);return bx};
     const btn=(bx,label,dis,fn,pri)=>{const b=el('<button class="btn'+(pri?' pri':'')+'"></button>');b.textContent=label;b.disabled=!!dis;if(fn)b.onclick=fn;bx.appendChild(b)};
     const r1=sec('ブロック・種・苗');
-    for(const id of BLOCKS.filter(i=>S.unlocked[i]&&!BL[i].qty&&i!=='window').concat(S.feat.plant&&(WD===0||S.free)?PLANTS.filter(id=>lvOK(id)&&plantOK(id)):[])/* 花・果物の木・木の苗は草原だけ（火山では、温泉宿のお客さんが売る） */){const b=BL[id];
+    for(const id of BLOCKS.filter(i=>S.unlocked[i]&&!BL[i].qty&&i!=='window').concat(S.feat.plant?PLANTS.filter(id=>lvOK(id)&&plantOK(id)&&(WD===0||S.free||id==='tree')):[])/* 花・果物の苗は草原だけ（火山では、温泉宿のお客さんが売る）。木の苗は、火山では杉の苗 *//* 花・果物の木・木の苗は草原だけ（火山では、温泉宿のお客さんが売る） */){const b=BL[id];
       const bx=row(r1,iname(id),'所持：'+inv(id),iconURL(id));helpify(bx.parentNode,withAttr(id,b.desc||''));
       for(const k of [1,5]){const c=shopPrice(id,k);btn(bx,'×'+k+'　'+SP(c),S.pt<c,()=>{S.pt-=c;if(id==='farm')S.farmBuy=(S.farmBuy||0)+k;if(id==='fruit')S.fruitBuy=(S.fruitBuy||0)+k;giveItem(id,k);trade()},k===1)}}
     if(cnt('farm')||inv('farm')){const rs=sec('作物のたね');for(const k in CROPS){if(!cropOn(k))continue;const c=CROPS[k];const bx=row(rs,c.name+'のたね','所持：'+cseed(k)+'・'+c.desc,seedIcon(k));for(const n of [1,5]){const cst=2*n;btn(bx,'×'+n+'　'+SP(cst),S.pt<cst,()=>{S.pt-=cst;giveItem('seed:'+k,n);trade()},n===1)}}}
