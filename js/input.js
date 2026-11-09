@@ -66,7 +66,7 @@ function sacredTreeTap(j){/* 御神木をタップ：かけらの光をとどけ
     if(!S.sev?.e09)return toast('先に、最後のかけらを迎えるお話を聞こう');
     if(!clearReady())return toast('ヌシのかけらが足りません','warn');
   }
-  if(av>0)return sacredOfferShard(j,()=>{S.setSh=(S.setSh||0)+1;sfx('shard');burst(j,'furn','none');toast('御神木に、ヌシのかけらの光を届けた（'+S.setSh+'/3）','good');logEv('かけらの光を御神木へ届けた');dirty=true;if(S.setSh>=3)scheduleGrassReunion();checkQuest();});/* かけらは、フタバが御神木へ歩いていって、ささげる */
+  if(av>0)return sacredOfferShard(j,()=>{S.setSh=(S.setSh||0)+1;sfx('shard');burst(j,'furn','none');SPOT_POPS.push({state:S,shard:S.setSh,after:S.setSh>=3?()=>scheduleGrassReunion():null});/* 大きな知らせ。最後のかけらは、知らせをとじてから再会へ */logEv('かけらの光を御神木へ届けた');dirty=true;checkQuest();});/* かけらは、フタバが御神木へ歩いていって、ささげる */
   if((S.setSh||0)>=3){const reason=grassReunionBlockReason();if(reason)return toast(reason);scheduleGrassReunion();return;}
   return openSheet('clear');
 }
