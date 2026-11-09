@@ -55,6 +55,21 @@
         "gazebo:back",
         "azumaya:back"
       ]
+    },
+    {
+      "reason": "生垣を新しい絵（tools/art/hedge/hedge_art.py）にしたので、ななめのとなりで絵をかえる部品（/16・/17・/18）はいらなくなった。chipOf は hedge:<つなぎ方> だけを使う。",
+      "ids": [
+        "hedge:1/17",
+        "hedge:2/16",
+        "hedge:3/16",
+        "hedge:3/17",
+        "hedge:3/18",
+        "hedge:5/17",
+        "hedge:6/16",
+        "hedge:7/16",
+        "hedge:7/17",
+        "hedge:7/18"
+      ]
     }
   ]
 }
