@@ -588,7 +588,7 @@ function chatTopic(r,p){const L=[],mt=bondOf(r,p)>=BOND_TALK;CHATS.forEach((c,i)
 function trySocial(r,G){const sb=socialBest(r,G);if(!sb)return false;const best=sb.b;const o=S.res.find(q=>q.id===best.o.partner);if(!o)return false;endAct(o);o.act={type:'chatwait',stage:'do',t:0,partner:r.id};o.bubble='👋';startAct(r,G,'chat',best.stand,best.o);return true}
 const NIGATE={fire:{fountain:30},wood:{campfire:17},water:{campfire:17},earth:{swing:27},wind:{sandbox:20}};/* 属性ごとの、すこしにがてなおもちゃ：ほかより少しえらばれにくい。数字は、遊んだときのたのしさ（ふつうは BL の play.fun） */
 const FAVTOY={earth:['sandbox'],wood:['swing'],water:['fountain'],fire:['campfire'],wind:['slide','seesaw']};/* 属性ごとに、よく遊ぶおもちゃ（ほかの子より選ばれやすい） */
-const FISHP=.125,FISHPS=.25,FISHPA=.025;/* つりに行く確率：ふつうの水べ12.5%、つり場（水べのいす）25%、つりスポット・よるづり場は1つで+2.5% */
+const FISHP=.125,FISHPS=.2,FISHPA=.1;/* つりに行く確率：ふつうの水べ12.5%、つり場（水べのいす）20%、つりスポット・よるづり場は1つで+10% */
 function goPlay(r,G,strict){
   const fq=Math.random()/((r.elem==='water'?2:1)*(r.like==='fish'?1.5:1)),allowFishing=fq<FISHPS+FISHPA*2;/* つりの割合：ふつうの子は1日1回くらい、水のせいれいは2回くらい（えらぶ点数が高い）、つり好きはもっと。つり場では、行く確率が上がる */let best=null,bs=-1e9;
   for(let j=0;j<W*H;j++){const d=G.dist[j];if(d<0||d>45)continue;const o=S.obj[j];
