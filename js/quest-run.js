@@ -278,6 +278,15 @@ function memScene(done){/* むかしを思い出す：夜、影がせまり、�
   setTimeout(()=>{for(let k=0;k<3;k++)fx.push({k:'ring',x:f.x*TS,y:f.y*TS,life:1.4,col:'#fff6c8'});sfx('level');flashScreen()},4200);setTimeout(done,5600)}
 function lightFlow(TX,TY){/* フタバから、光と葉のつぶが守り神（画面の手前）へ流れこむ */const bx=cam.x+VW/cam.z/2,by=cam.y+VH/cam.z*.95;for(let n=0;n<40;n++)setTimeout(()=>{const x=TX*TS+(Math.random()-.5)*20,y=TY*TS-10;fx.push({k:'p',x,y,vx:(bx-x)/1.2,vy:(by-y)/1.2,life:1.2,col:n%2?'#c8f5a0':'#fff6c8',r:3})},n*60);for(const r of S.res)setTimeout(()=>leafFX(r),1500+Math.random()*800)}
 let GUEST=null,GUESTRUN=false;
+/* ---------- 温泉宿のお客さん（火山）：草原のなかまが3日に1回とまりに来て、草原の花のたね・苗を売る。朝に来て、つぎの朝に帰る（夜は宿の中） ---------- */
+const VISITORS=[[POKO,'wood','#joy|温泉に入りに来たよ！ 草原の花のたねと苗、もってきたんだ。ほしいのある？'],[MINA,'earth','のんびりしに来たよぉ。草原の苗、いるかねぇ？']],VISIT_EVERY=3;
+let VISITOR=null;
+const visitOn=()=>WD===1&&!S.free&&!!S.st2&&S.st2.visit!=null&&S.st2.visit.day===dayNo();
+const visitHere=()=>visitOn()&&!isNight()&&!GUESTRUN&&!!visitor();
+function visitMorning(){if(WD!==1||S.free||!(S.flags.guestDone||S.cleared))return;const t=st2();if(t.visit&&dayNo()-t.visit.day<VISIT_EVERY)return;const n=t.visitN||0;t.visitN=n+1;t.visit={day:dayNo(),who:n%VISITORS.length};VISITOR=null;toast(VISITORS[t.visit.who][0]+'が、温泉宿にとまりに来た','good')}
+function visitSpot(){const inn=innHouse();let base=-1;if(inn){const dj=[...inn.h.set].find(j=>HOME_DOORS.has(S.obj[j]));if(dj!=null)base=dj+W}if(base<0)base=STATUE>=0?STATUE+2*W:CY*W+CX;for(let r=0;r<6;r++)for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){const k=base+dy*W+dx+1;if(k>0&&k<W*H&&walk(k)&&!S.obj[k]&&S.ground[k]!==1)return k}return base}
+function visitor(){if(!visitOn())return null;const v=S.st2.visit;if(VISITOR&&VISITOR.vs===v&&VISITOR.st===S)return VISITOR;const p=VISITORS[v.who],k=visitSpot();const g=mkRes({nid:-901},p[0],p[1],k%W+.5,(k/W|0)+.6);g.id=-901;g.hidden=false;g.face=1;g.vs=v;g.st=S;VISITOR=g;return g}
+function visitTap(wx,wy){if(!visitHere())return false;const g=visitor();if(Math.hypot(wx-g.x,wy-(g.y-.5))>1.1)return false;sfx('tap');const p=VISITORS[S.st2.visit.who];dialog([[p[0],p[2]]],()=>openSheet('vshop'));return true}
 function guestScene(){/* 火山：草原のフタバが、温泉にあそびに来る。宿の前にあらわれ、歩いて露天ぶろへ行き、つかって、手をふって帰る（場面だけ。セーブしない人） */
   const hot=[];for(let j=0;j<W*H;j++)if(S.ground[j]===1&&nearHot(j,0))hot.push(j);const inn=innHouse();/* 温泉宿の露天ぶろに入る（なければ、温泉） */
   const tgt=inn?inn.onsen+W+1:hot.length?hot[(hot.length/2)|0]:STATUE>=0?STATUE+W:CY*W+CX;let st=-1;for(let r=1;r<6&&st<0;r++)for(let dy=-r;dy<=r&&st<0;dy++)for(let dx=-r;dx<=r;dx++){const k=tgt+dy*W+dx;if(k>0&&k<W*H&&walk(k)&&!S.obj[k]&&S.ground[k]!==1){st=k;break}}
