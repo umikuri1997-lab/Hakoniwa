@@ -17,11 +17,7 @@ function clearConds(){if(WD===1){const tm=TOWER_MAT(),n=springDone(),fac=['bench
   ['台座にはめるヌシ様の火だね（いま'+shLeft()+'つ）',shLeft()>=1],
   ['素材箱に'+(tm.wood+tm.stone)+'こ入る（いま'+matCap()+'こ）',matCap()>=tm.wood+tm.stone],/* 素材箱が小さいと、台座の素材がためられない */
   ['木材'+tm.wood+'・石材'+tm.stone+'（いま'+(S.mat.wood||0)+'・'+(S.mat.stone||0)+'）',(S.mat.wood||0)>=tm.wood&&(S.mat.stone||0)>=tm.stone]]}
-  const tm=TOWER_MAT(),[el,need,pw]=WD===1?['fire',6,750]:['wood',5,3000],nm=ELEM[el].name;return [
-  [nm+'のせいれい'+need+'人（いま'+elemCount(el)+'人）',elemCount(el)>=need],
-  ['御神木を育てる',cnt('tower')>=1],
-  ['御神木にヌシのかけらを2つ届ける（いま'+Math.min(2,S.setSh||0)+'つ）',(S.setSh||0)>=2],
-  ['せいれいパワーを'+pw+'集める（いま'+Math.floor(S.totalPt)+'）',S.totalPt>=pw]]}
+  return [['御神木にヌシのかけらを2つ届ける（いま'+Math.min(2,S.setSh||0)+'つ）',(S.setSh||0)>=2]]}/* 草原：かけらがそろえば、さいごの防衛へ */
 const clearReady=()=>clearConds().every(c=>c[1]);
 const finalDefenseBegun=()=>!!(S.finalOn||S.finalNight||(S.rushN||0)>0||S.finalLost!=null||S.flags.finalWon);
 function acceptFinalDefense(){if(WD||finalDefenseBegun()||S.flags.finalReadyDay!=null)return;S.flags.finalReadyDay=dayNo()+3;S.finalDay=null;S.finalHint=null}
