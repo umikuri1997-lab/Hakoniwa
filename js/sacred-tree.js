@@ -54,7 +54,7 @@ function sacredStage(){
   if(sacredRevealed('fireRoot'))return 1;
   return 0;
 }
-function sacredRootFits(j){return j>=0&&j%W<=W-sacredSpan()&&(j/W|0)<=H-sacredSpan()&&sacredCells(j).every(k=>(walk(k)||STUMPB.has(k))&&!S.obj[k]&&!S.floor[k]&&!roomOf(k)&&!RUGC.has(k)&&hiAt(k)===hiAt(j));}
+function sacredRootFits(j){const base=SACREDBASE.map(d=>fieldStump(j)+d);return j>=0&&j%W<=W-sacredSpan()&&(j/W|0)<=H-sacredSpan()&&sacredCells(j).every(k=>(walk(k)||STUMPB.has(k))&&!S.obj[k]&&!(S.floor[k]&&base.includes(k))&&!roomOf(k)&&!RUGC.has(k)&&hiAt(k)===hiAt(j));}/* 道・床は、根もとのマスだけことわる（sacredNoBuild と同じ） */
 function migrateSacredStory(state){
   if(state.flags.sacredStoryV1)return;
   if(!state.free&&(state.world||0)===0){
