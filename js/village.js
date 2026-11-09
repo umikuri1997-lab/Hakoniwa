@@ -72,8 +72,8 @@ const SEATS=['chair','stool','achair','bench','takebench','pouf','sofa1'],BENCHE
 /* スポット：組み合わせて置くと、効果が少し上がる（物どうしがまわり3マス以内）。main のまわりに need がそろうとできる */
 const SPOTS=[
   {k:'dining',n:'ダイニング',main:o=>o==='table',need:[[o=>SEATS.includes(o),2]],how:'食卓と、いす2つ',eff:'ここで食べたときのパワー+10%'},
-  {k:'tsuriba',n:'つり場',main:(o,j)=>SEATS.includes(o)&&spotW(j)>=0,need:[],how:'水べのいす',eff:'魚がつれる確率+25%'},/* 水べのいすは、それだけでスポット（魚+25% は fSpot でつりのときに入る） */
-  {k:'fishspot',n:'つりスポット',main:(o,j)=>SEATS.includes(o)&&spotW(j)>=0,need:[[o=>o==='parasol',1]],how:'水べのいすと、パラソル',eff:'魚がつれる確率+5%'},
+  {k:'tsuriba',n:'つり場',main:(o,j)=>SEATS.includes(o)&&spotW(j)>=0,need:[],how:'水べのいす',eff:'つりをする確率2倍'},/* 水べのいすは、それだけでスポット（FISHPS） */
+  {k:'fishspot',n:'つりスポット',main:(o,j)=>SEATS.includes(o)&&spotW(j)>=0,need:[[o=>o==='parasol',1]],how:'水べのいすと、パラソル',eff:'つりをする確率+20%'},
   {k:'park',n:'ちかばの公園',main:o=>o==='swing',need:[[o=>o==='sandbox',1]],how:'ブランコと、砂場',eff:'ここで遊ぶと、たのしさ+10%'},
   {k:'park2',n:'たのしい公園',main:o=>o==='swing',need:[[o=>o==='sandbox',1],[o=>o==='seesaw',1]],how:'ブランコと、砂場と、シーソー',eff:'ここで遊ぶと、たのしさ+20%'},
   {k:'kitchen',n:'キッチン',main:o=>o==='oven'||o==='cooktable',need:[[o=>o==='sink',1],[o=>o==='tub',1]],how:'かまどか調理台と、流し台と、水おけ',eff:'料理の速さ+10%'},
@@ -95,7 +95,7 @@ const SPOTS=[
   {k:'shokuryo',n:'食料庫',main:o=>o==='stor',need:[[o=>o==='crate',1]],how:'食料箱と、木箱',eff:'食料をしまう速さ+10%'},
   {k:'pan',n:'パンやさん',main:o=>o==='oven',need:[[o=>o==='stor',1],[o=>o==='stable',1]],how:'かまどと、食料箱と、まるいサイドテーブル',eff:'料理の速さ+10%'},
   {k:'party',n:'ガーデンパーティー',main:o=>o==='table',need:[[o=>SEATS.includes(o),1],[o=>o==='parasol',1]],how:'食卓と、いすと、パラソル',eff:'ここで食べたときのパワー+10%'},
-  {k:'yoruzuri',n:'よるづり場',main:(o,j)=>SEATS.includes(o)&&spotW(j)>=0,need:[[o=>o==='toro',1]],how:'水べのいすと、石どうろう',eff:'魚がつれる確率+5%'},
+  {k:'yoruzuri',n:'よるづり場',main:(o,j)=>SEATS.includes(o)&&spotW(j)>=0,need:[[o=>o==='toro',1]],how:'水べのいすと、石どうろう',eff:'つりをする確率+20%'},
   {k:'kotori',n:'小鳥の庭',main:o=>BENCHES.has(o),need:[[o=>o==='birdbath',1],[o=>o==='hedge',1]],how:'ベンチと、水飲み鳥と、生垣',eff:'ベンチで休むと、たのしさ+10%'},
   {k:'terrace',n:'よるのテラス',main:o=>BENCHES.has(o),need:[[o=>o==='lantern',1],[o=>o==='lamp',1]],how:'ベンチと、ランタンと、かがり火',eff:'ベンチで休むと、つかれのとれ方+10%'},
   {k:'oshaberi',n:'おしゃべりひろば',main:o=>o==='signpost',need:[[o=>BENCHES.has(o),2]],how:'道しるべと、ベンチ2つ',eff:'まわり3マスでおしゃべりすると、たのしさ+10%'},
