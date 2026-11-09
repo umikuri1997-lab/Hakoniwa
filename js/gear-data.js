@@ -1,5 +1,5 @@
 'use strict';
-/* 火山のそうび（武器 gw・矢 gar・防具 ga・おまもり gc・専用品 gt）。数はそのままの実数。g：s=わく・atk=攻撃・rch=とどくきょり・hit=回数・iv=攻撃の間かく・dmg=矢の威力・rng=射程・n=本数・hun=たたかれたときのおなかのへり（マイナス）・sp=特（作れない）・nf=つりで出ない */
+/* 火山のそうび（武器 gw・矢 gar・防具 ga・おまもり gc・専用品 gt）。数はそのままの実数。g：s=わく・atk=攻撃・rch=とどくきょり・hit=回数・iv=攻撃の間かく・dmg=矢の威力・rng=射程・n=本数・hun=たたかれたときのおなかのへり（マイナス）・sp=特（作れない）・nf=つりで出ない・ore=鉱脈をほったときの鉱石の数（たす） */
 const GEARBL={
   gw01:{"name":"竹のぼう","kind":"gear","pc":3,"time":90,"maker":"fire","mat":{"bamboo":3},"g":{"s":"w","atk":1.0,"rch":0.5},"desc":"攻撃+1・とどくきょり+0.5マス"},
   gw02:{"name":"竹やり","kind":"gear","pc":3,"time":90,"maker":"fire","mat":{"bamboo":4},"g":{"s":"w","atk":1.0,"rch":1.0},"desc":"攻撃+1・とどくきょり+1マス"},
@@ -107,6 +107,8 @@ const GEARBL={
   gt02:{"name":"銀のじょうろ","kind":"gear","pc":10,"time":90,"maker":"fire","mat":{"silver":1,"copper":1},"g":{"s":"t","el":"wood","job":{"plant":1.2,"sow":1.2,"tend":1.2,"fert":1.2}},"desc":"植える・世話の速さ1.2倍"},
   gt03:{"name":"芽吹きのはさみ","kind":"gear","time":90,"maker":"fire","g":{"s":"t","el":"wood","crop":1,"sp":1},"desc":"収穫+1"},
   gt04:{"name":"銅のつるはし","kind":"gear","pc":5,"time":90,"maker":"fire","mat":{"copper":2,"wood":1},"g":{"s":"t","el":"earth","job":{"mine":1.3}},"desc":"石をほる速さ1.3倍"},
+  gt16:{"name":"鉄のつるはし","kind":"gear","pc":8,"time":90,"maker":"fire","mat":{"iron":2,"wood":2},"g":{"s":"t","el":"earth","job":{"mine":1.6}},"desc":"石をほる速さ1.6倍"},
+  gt17:{"name":"銀のつるはし","kind":"gear","pc":10,"time":90,"maker":"fire","mat":{"silver":2,"iron":1},"g":{"s":"t","el":"earth","job":{"mine":1.6},"ore":1},"desc":"石をほる速さ1.6倍・鉱脈をほると鉱石+1"},
   gt05:{"name":"鉄のかなづち","kind":"gear","pc":8,"time":90,"maker":"fire","mat":{"iron":2,"wood":1},"g":{"s":"t","el":"earth","job":{"repair":1.3}},"desc":"修理の速さ1.3倍"},
   gt06:{"name":"大地のスコップ","kind":"gear","time":90,"maker":"fire","g":{"s":"t","el":"earth","job":{"till":1.5},"stone":1,"sp":1},"desc":"畑を作る速さ1.5倍・石をほると石材+1"},
   gt07:{"name":"鉄のなべ","kind":"gear","pc":8,"time":90,"maker":"fire","mat":{"iron":2},"g":{"s":"t","el":"fire","job":{"cook":1.3}},"desc":"料理の速さ1.3倍"},
