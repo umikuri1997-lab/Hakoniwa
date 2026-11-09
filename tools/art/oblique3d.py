@@ -1,7 +1,8 @@
 """3Dの下絵を、ゲームと同じ見え方で写すための小さな道具（パラソル・噴水などの絵をたのむ用）。
 x=東, y=南, z=上（単位はマス）。ゲームの見え方は 画面=(x, y-0.8z)、見る向きは (0,0.8,1)。
 三角形をならべ、zバッファで手前の面だけ写す。かげはトゥーンシェーダー（光のあたり方を3だんの色にわける）。
-輪郭線は裏面法：部品（箱・管・かべなど1つずつ）を外へ OUT ぶんふくらませた形の、うら向きの面だけを、その部品の色をこくした色でかく（黒にしない）。
+輪郭線は、OUT を0より大きくしたときだけ、裏面法（部品をふくらませた形の、うら向きの面だけを、その部品の色をこくした色で）。ふだんは0（輪郭線なし）。
+箱の角は、すこし面取り（ベベル BEVEL）する。
 2倍の細かさで描いて BOX でちぢめる。"""
 import math
 import numpy as np
@@ -12,7 +13,8 @@ LIGHT = np.array([-0.35, 0.25, 1.0]); LIGHT = LIGHT / np.linalg.norm(LIGHT)
 VIEW = np.array([0, 0.8, 1.0]); VIEW = VIEW / np.linalg.norm(VIEW)
 SIDE = np.array([0, 1.0, 0])
 
-OUT = 0.035      # 輪郭線のふとさ（マス）
+OUT = 0.0        # 輪郭線のふとさ（マス）。0は輪郭線なし
+BEVEL = 0.022    # 箱の角の面取り（マス）
 class Scene:
     def __init__(self): self.t = []; self.pid = 0
     def part(self): self.pid += 1   # つぎの三角形から、べつの部品（輪郭線は部品ごとにふくらませる）
@@ -42,13 +44,27 @@ class Scene:
                 p = lambda t, a: (cx+r*math.sin(t)*math.cos(a), cy+r*math.sin(t)*math.sin(a), zc+r*zs*math.cos(t))
                 self.quad(p(t0, a0), p(t1, a0), p(t1, a1), p(t0, a1), col)
 
-    def box(self, x0, y0, z0, x1, y1, z1, col):
-        """四角い箱（6つの面）"""
+    def box(self, x0, y0, z0, x1, y1, z1, col, bevel=None):
+        """四角い箱。角はすこし面取りする（bevel：面取りのはば。0で角ばった箱）"""
         self.part()
-        P = lambda x, y, z: (x, y, z)
-        self.quad(P(x0,y0,z1),P(x1,y0,z1),P(x1,y1,z1),P(x0,y1,z1),col); self.quad(P(x0,y0,z0),P(x1,y0,z0),P(x1,y1,z0),P(x0,y1,z0),col)
-        self.quad(P(x0,y1,z0),P(x1,y1,z0),P(x1,y1,z1),P(x0,y1,z1),col); self.quad(P(x0,y0,z0),P(x1,y0,z0),P(x1,y0,z1),P(x0,y0,z1),col)
-        self.quad(P(x0,y0,z0),P(x0,y1,z0),P(x0,y1,z1),P(x0,y0,z1),col); self.quad(P(x1,y0,z0),P(x1,y1,z0),P(x1,y1,z1),P(x1,y0,z1),col)
+        hx, hy, hz = (x1-x0)/2, (y1-y0)/2, (z1-z0)/2; cx, cy, cz = (x0+x1)/2, (y0+y1)/2, (z0+z1)/2
+        b = BEVEL if bevel is None else bevel; b = min(b, hx*0.4, hy*0.4, hz*0.4)
+        def P(sx, sy, sz, k):   # 角 (sx,sy,sz) の、k の面（0:x・1:y・2:z）がわの点
+            return (cx+sx*(hx-(0 if k == 0 else b)), cy+sy*(hy-(0 if k == 1 else b)), cz+sz*(hz-(0 if k == 2 else b)))
+        S2 = (-1, 1)
+        for s in S2:   # 6つの面
+            self.quad(P(s,-1,-1,0), P(s,1,-1,0), P(s,1,1,0), P(s,-1,1,0), col)
+            self.quad(P(-1,s,-1,1), P(1,s,-1,1), P(1,s,1,1), P(-1,s,1,1), col)
+            self.quad(P(-1,-1,s,2), P(1,-1,s,2), P(1,1,s,2), P(-1,1,s,2), col)
+        if b <= 0: return
+        for sx in S2:   # 12の辺の面取り
+            for sy in S2: self.quad(P(sx,sy,-1,0), P(sx,sy,-1,1), P(sx,sy,1,1), P(sx,sy,1,0), col)
+            for sz in S2: self.quad(P(sx,-1,sz,0), P(sx,-1,sz,2), P(sx,1,sz,2), P(sx,1,sz,0), col)
+        for sy in S2:
+            for sz in S2: self.quad(P(-1,sy,sz,1), P(-1,sy,sz,2), P(1,sy,sz,2), P(1,sy,sz,1), col)
+        for sx in S2:   # 8つの角の三角
+            for sy in S2:
+                for sz in S2: self.tri(P(sx,sy,sz,0), P(sx,sy,sz,1), P(sx,sy,sz,2), col)
     def beam(self, a, b, r, col):
         """2点をつなぐ四角い棒（すじかいなど）"""
         self.tube([a, b], r, col, n=4)
