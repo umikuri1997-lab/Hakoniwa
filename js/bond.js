@@ -8,7 +8,7 @@ const BOND5=new Set();/* なかよし100の子が3マス以内にいる子（毎
 function bondKey(a,b){return a.id<b.id?a.id+'_'+b.id:b.id+'_'+a.id}
 function bondOf(a,b){return a&&b&&a!==b&&S&&S.bond?S.bond[bondKey(a,b)]||0:0}
 function bondAdd(a,b,n){if(!S||!a||!b||a===b||IS_STORY_REPLAY)return;const B=S.bond||(S.bond={}),k=bondKey(a,b),v0=B[k]||0,v=Math.min(BOND_MAX,v0+n);if(v===v0)return;B[k]=v;
-  if(v0<BOND_TALK&&v>=BOND_TALK){for(const x of[a,b])addFloat(x.x,x.y-1.4,'なかよし！');memo('🤝',a.name+'と'+b.name+'がなかよしになった');logEv(a.name+'と'+b.name+'がなかよしになった');SPOT_POPS.push({bond:[a.name,b.name],state:S});omoiNote(a,b,false)}
+  if(v0<BOND_TALK&&v>=BOND_TALK){for(const x of[a,b])addFloat(x.x,x.y-1.4,'なかよし！');memo('🤝',a.name+'と'+b.name+'がなかよしになった');logEv(a.name+'と'+b.name+'がなかよしになった');SPOT_POPS.push({bond:[a.name,b.name],pair:[a,b].map(r=>({el:r.elem,vr:r.vr})),state:S});omoiNote(a,b,false)}
   else if(v0<BOND_PLAY&&v>=BOND_PLAY)omoiNote(a,b,true)}
 function bondSet(a,b,n){if(bondOf(a,b)<n)bondAdd(a,b,n-bondOf(a,b))}
 /* 草原のメイン「なかよしの想い」（omoi）：依頼を受けたあとに、あたらしく「なかよし」になった組だけを数える（S.flags.omoiP）。

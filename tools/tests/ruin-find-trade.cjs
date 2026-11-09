@@ -14,7 +14,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict');
   await run(`(()=>{updTut=()=>{};showSpotPop=()=>{};finalCheck=()=>{};scheduleGrassReunion=()=>{};window.GIFTS=[];const q0=queueItemGift;queueItemGift=g=>{GIFTS.push(g)};
     S.introSeen=true;S.godGone=true;S.t=1440+10*60;S.enemies=[];for(const r of S.res){r.hunger=hMax(r);r.energy=100;r.fun=90;r.act=null}recount();})()`);
   /* 家にもどす */
-  const a=JSON.parse(await run(`(()=>{const ru=S.fogF.find(f=>f.t==='ruin');fogClear(ru.a);for(const b of [...S.broken])if(fogRing(ru.j).includes(b.j))S.obj[b.j]=b.id;for(const k of fogRing(ru.j))if(S.hp[k]!=null)delete S.hp[k];recount();
+  const a=JSON.parse(await run(`(()=>{const ru=S.fogF.find(f=>f.t==='ruin');fogClear(ru.a);const RG=fogRing(ru.j,...ruinWH(ru));for(const b of [...S.broken])if(RG.includes(b.j))S.obj[b.j]=b.id;for(const k of RG)if(S.hp[k]!=null)delete S.hp[k];recount();if(ru.done)throw Error('repair alone made a house');for(const k of RG)if(!S.obj[k])S.obj[k]='hwall';recount();
     const r=S.res[0];const st=ruinStand(ru)[0];r.x=st%W+.5;r.y=((st/W)|0)+4.5;r.act=null;return JSON.stringify({done:!!ru.done,find:!!ru.find,gifts:GIFTS.length})})()`));
   assert.deepEqual(a,{done:true,find:true,gifts:0},'no instant gift');
   /* 夜はまつ */
