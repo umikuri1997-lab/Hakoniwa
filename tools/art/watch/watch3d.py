@@ -34,7 +34,7 @@ def build(sc,lv):
                   ((IN+PW,2-IN-PW/2,DZ-0.70),(0.70,2-IN-PW/2,DZ-DT)),((2-IN-PW,2-IN-PW/2,DZ-0.70),(1.30,2-IN-PW/2,DZ-DT))):
         sc.beam(a,b,0.065,WOODD)
     for x in (0.70,1.30):sc.box(x-0.07,yb-0.04,0,x+0.07,yb+0.10,DZ+0.06,LADDER)    # ハシゴ：まっすぐ立てる。前のまん中
-    for i in range(1,8):z=i*DZ/8;sc.box(0.70,yb-0.02,z-0.07,1.30,yb+0.08,z+0.07,LADDER)
+    for i in range(1,8):z=i*DZ/8;sc.box(0.77,yb-0.02,z-0.07,1.23,yb+0.06,z+0.07,LADDER)   # 段は柱のあいだだけ（柱をつきぬけない）
     if lv>=3:                                                                  # 旗（Lv3〜4）・星（Lv5）は、うしろのまん中の柱の上に
         sc.box(0.95,IN+0.01,DZ+RH,1.05,IN+0.11,DZ+RH+0.75,WOODD)
         top=DZ+RH+0.75

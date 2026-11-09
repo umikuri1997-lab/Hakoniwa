@@ -113,7 +113,7 @@ def render(sc, proj, ext, depth, out=None):
         for a, b, c, col, pid in sc.t: parts.setdefault(pid, []).append((a, b, c, col))
         for L in parts.values():
             cen = np.mean([v for q in L for v in q[:3]], 0)
-            vn = {}; info = []
+            vn = {}; info = []; off = {}
             flat = True
             for a, b, c, col in L:
                 n = np.cross(b-a, c-a); ln = np.linalg.norm(n)
@@ -122,17 +122,20 @@ def render(sc, proj, ext, depth, out=None):
                 if np.dot(n, (a+b+c)/3-cen) < 0: n = -n
                 if abs(np.dot(n, (a+b+c)/3-cen)) > 1e-4: flat = False
                 info.append((a, b, c, col, n))
-                for v in (a, b, c): k = tuple(np.round(v, 4)); vn[k] = vn.get(k, 0)+n
+                for v in (a, b, c): vn.setdefault(tuple(np.round(v, 4)), {})[tuple(np.round(n, 3))] = n
             for a, b, c, col, n in info:
                 if flat:   # 平らな部品（旗・星・水面など）：面の中で外へひろげ、少しうしろへ
                     back = -depth*0.002
                     off = [((v-cen)-np.dot(v-cen, n)*n) for v in (a, b, c)]
                     vs = [v+t*o/(np.linalg.norm(o) or 1)+back for v, o in zip((a, b, c), off)]
                 else:
-                    if np.dot(n, depth) >= 0: continue   # おもて向きの面はかかない
+                    if np.dot(n, depth) > 1e-6: continue   # おもて向きの面はかかない（ちょうど横を向く面は、かく。左右のふちの線になる）
                     vs = []
                     for v in (a, b, c):
-                        m = vn[tuple(np.round(v, 4))]; m = m/(np.linalg.norm(m) or 1); vs.append(v+t*m)
+                        k = tuple(np.round(v, 4))
+                        if k not in off:   # その頂点にあつまる面が、どれもちょうど t だけ外へ出るずらし方（角は各面を t ずつ。なめらかな面はほぼ法線の向き）
+                            N = np.array(list(vn[k].values())); off[k] = np.linalg.lstsq(N, np.full(len(N), t), rcond=None)[0]
+                        vs.append(v+off[k])
                 raster(vs[0], vs[1], vs[2], np.clip(col*0.5, 0, 255), bias=0.02)   # 輪郭線は少し奥に（かさなった面とあらそってざらざらにならない）
     return Image.fromarray(img.astype(np.uint8), 'RGBA').resize((Wp//SS, Hp//SS), Image.BOX)
 
