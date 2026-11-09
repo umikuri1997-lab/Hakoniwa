@@ -123,6 +123,7 @@ function onTap(sx,sy){DLGTAP=performance.now();/* タップで始める会話は
     const fw=o&&(FENCE_IDS.has(o)||HOME_WALLS.has(o)||HOME_DOORS.has(o));/* 柵・塀・家の壁・ドア・門は、短い知らせのまま */
     if(fw&&breakable(o)&&BL[o].brk)return toast(BL[o].name+'：'+withAttr(o,BL[o].desc||'')+'（じょうぶさ '+Math.floor(S.hp[j]??BL[o].hp)+'/'+BL[o].hp+'）');
     if(fw&&breakable(o))return toast(BL[o].name+'：じょうぶさ '+Math.floor(S.hp[j]??BL[o].hp)+'/'+BL[o].hp);
+    if(VEINS[o]&&WD===1){if(matCap()-matTot()<=0)return toast('素材箱に入りません');(S.vreq||(S.vreq={}))[j]=1;sfx('tap');return toast(BL[o].name+'：せいれいがほりにいく')}/* 鉱脈は、タップすると、せいれいがほりにいく */
     if(o==='rock'||VEINS[o]||o==='deadtree'||o==='ntree'||o==='bamboo')return toast(BL[o].name+'：のこり '+Math.max(0,10-(S.hp['n'+j]||0))+'/10');
     if(o==='takenoko')return toast('たけのこ：あと '+Math.max(1,3-((S.dyn[j]||{}).age||0))+'日で竹になる');
     if(o==='watch'||o==='yogan')return openSheet('watch',j);

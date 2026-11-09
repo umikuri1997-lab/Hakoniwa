@@ -17,7 +17,7 @@ const GSC=new WeakMap();
 function gearStat(r){if(!r||!r.gear)return GNONE;let c=GSC.get(r);if(c&&c.v===(r.gv||0))return c.s;const s=Object.assign({},GNONE,{job:{}});
   for(const k of GSLOTK){const q=r.gear[k];if(!q||!BL[q.id]||!BL[q.id].g)continue;const g=BL[q.id].g,lv=q.lv||0;
     s.atk+=(g.atk||0)+(g.s==='w'?lv:0);s.rch+=g.rch||0;if(g.hit)s.hit=Math.max(s.hit,g.hit);if(g.iv)s.iv*=g.iv;s.hun+=(g.hun||0)+(g.s==='a'?lv:0);
-    for(const m of['mv','flee','rec','fun','work','xp','grow'])if(g[m])s[m]*=g[m];if(g.ns!=null)s.ns=Math.min(s.ns,g.ns);s.cap+=g.cap||0;s.light=Math.max(s.light,g.light||0);s.refl+=g.refl||0;s.wcan+=g.wcan||0;s.prng+=g.prng||0;
+    for(const m of['mv','flee','rec','fun','work','xp','grow'])if(g[m])s[m]*=g[m];if(g.ns!=null)s.ns=Math.min(s.ns,g.ns);s.cap+=g.cap||0;s.light=Math.max(s.light,g.light||0);s.refl+=g.refl||0;s.wcan+=g.wcan||0;s.ore+=g.ore||0;s.prng+=g.prng||0;
     for(const m of['fear','rain','tburn','fburn','nob','glow','burn','kb','slow','stun','steal','aoe','side','crop','stone','dish','pw'])if(g[m])s[m]=1;
     for(const j in g.job||{})s.job[j]=(s.job[j]||1)*g.job[j]}
   if(s.fburn)s.burn=1;GSC.set(r,{v:r.gv||0,s});return s}
@@ -70,9 +70,49 @@ function gearFind(r,title){const id=gearRand(title==='つりあげた！');gearG
 function gearOffer(r){const L=GEAR_IDS.filter(id=>BL[id].g.sp);const id=pick(L);gearGive(id,1);toast(r.name+'が「'+BL[id].name+'」をおそなえした！','good');queueItemGift({[id]:1},'うけとった！');return true}
 /* 鉱脈・岩をほったときの鉱石（火山） */
 function oreNear(j){const x=j%W,y=(j/W)|0;return CRACKS.some(c=>Math.hypot(c%W-x,((c/W)|0)-y)<=10)}
-function mineOre(r,j,tgt){if(VEINS[tgt]){addMat(r,VEINS[tgt],1);return true}if(WD!==1||tgt!=='rock'||!oreNear(j))return false;const q=Math.random();if(q<.03)addMat(r,'crystal',1);else if(q<.13)addMat(r,'sulfur',1);return false}/* ひびわれのそば：硫黄10%・赤い水晶3% */
-/* 火山の岩の一部を、鉱脈にする（マスで決まる） */
-function placeVeins(s){for(let j=0;j<W*H;j++){if(s.obj[j]!=='rock')continue;const x=j%W,y=(j/W)|0;if(Math.abs(x+.5-CX)<7&&Math.abs(y+.5-CY)<7)continue;const h=hash(j*131+57);s.obj[j]=h<.10?'vcopper':h<.16?'viron':h<.20?'vobsid':h<.23?'vsilver':h<.24?'vgold':'rock'}}
+function mineOre(r,j,tgt){if(VEINS[tgt]){const k=VEINS[tgt],n=oreHit()+gearStat(r).ore;r.cmat=r.cmat||{};r.cmat[k]=(r.cmat[k]||0)+n;return true}/* 鉱脈：1回で oreHit こ（持てる数をこえても、すてない） */if(WD!==1||tgt!=='rock'||!oreOn('sulfur')||!oreNear(j))return false;const q=Math.random();if(q<.03)addMat(r,'crystal',1);else if(q<.13)addMat(r,'sulfur',1);return false}/* ひびわれのそば：硫黄10%・赤い水晶3%（ひびわれをうめたあと） */
+/* 鉱脈のしゅるいは、マスで決まる（まん中の7マスはのぞく）。目をさますまでは、ふつうの岩 */
+function veinKindAt(j){const x=j%W,y=(j/W)|0;if(Math.abs(x+.5-CX)<7&&Math.abs(y+.5-CY)<7)return '';const h=hash(j*131+57);return h<.10?'vcopper':h<.16?'viron':h<.20?'vobsid':h<.23?'vsilver':h<.24?'vgold':''}
+/* 火山の岩のうち、ores の鉱石の鉱脈になるマスを、鉱脈にする（生えなおしをまっている岩も）。かえたマスをかえす */
+function placeVeins(s,ores){const on=v=>!ores||ores.includes(VEINS[v]),L=[];for(let j=0;j<W*H;j++){if(s.obj[j]!=='rock')continue;const v=veinKindAt(j);if(v&&on(v)){s.obj[j]=v;L.push(j)}}for(const g of s.regrow||[])if(g.id==='rock'){const v=veinKindAt(g.j);if(v&&on(v))g.id=v}return L}
+/* ---------- 鉱脈が目をさます：火山のお話が進んで熱がもどると、眠っていた鉱脈が目をさます ----------
+   q：そのメインクエストのお話がおわったら。ore：見つかるようになる鉱石。day：毎朝ふえる鉱脈の本数。hit：鉱脈を1回ほって出る鉱石の数 */
+const OREWAKE=[
+  {q:'springA',ore:['copper'],day:1,hit:1,txt:'銅の鉱脈が、見つかるようになった',say:[[HOMURA,'#surprise|……岩に、赤いつぶがうかんでる。あったまって、目をさましたのかね。']]},
+  {q:'rockCanal',ore:['iron'],day:2,hit:1,txt:'鉄の鉱脈が、見つかるようになった',say:[[SHIZUKU,'#think|岩のすじに、灰色のつぶが見えます。……鉄ですね。'],[HOMURA,'鉄なら、じょうぶな道具がつくれそうだね。']]},
+  {q:'haikage3',ore:['sulfur','crystal'],day:2,hit:1,txt:'ひびわれのそばの岩から、硫黄と赤い水晶がとれるようになった',say:[[HOMURA,'#think|ひびわれのまわりの岩、黄色くなってる。いおうのにおいだ。'],[SHIZUKU,'熱がとじこめられて、岩の中で、赤い水晶もそだっています。']]},
+  {q:'fire3',ore:['obsidian'],day:3,hit:2,txt:'黒曜石の鉱脈が、見つかるようになった。鉱脈から、鉱石が2こずつとれる',say:[[SHIZUKU,'熱がもどって、岩の中の黒い石が、つやを取りもどしました。'],[HOMURA,'#joy|鉱脈も、あったまって、ほりやすくなったよ。']]},
+  {q:'rockDeep',ore:['silver'],day:3,hit:2,txt:'銀の鉱脈が、見つかるようになった',say:[[HOMURA,'#surprise|奥の岩、きらきらしてる……。銀だよ、これ！']]},
+  {q:'hinoookage',ore:['gold'],day:4,hit:2,txt:'金の鉱脈が、見つかるようになった',say:[[SHIZUKU,'#joy|ヌシ様の熱が、山の奥まで……。金色のつぶが、うかんでいます。']]}];
+const VEIN_W={vcopper:10,viron:6,vobsid:4,vsilver:3,vgold:1},VEIN_GROW_MAX=40;/* 毎朝ふえる鉱脈のしゅるいの出やすさ。毎朝ふえた鉱脈は、マップに40本まで */
+const oreStage=()=>(S&&S.st2&&S.st2.ore)||0;/* 目をさました段階（0〜6） */
+function oreStageNow(){if(!S||WD!==1||S.free)return 0;let k=0;while(k<OREWAKE.length&&qDone(OREWAKE[k].q))k++;return k}/* お話の進みで、目をさましていてよい段階 */
+function oreOn(ore){const k=oreStage();for(let i=0;i<k;i++)if(OREWAKE[i].ore.includes(ore))return true;return false}
+function oreHit(){const k=oreStage();return k?OREWAKE[k-1].hit:1}
+function oreAwaken(k){const t=S.st2||(S.st2={});const w=OREWAKE[k-1];t.ore=k;const L=placeVeins(S,w.ore);if(L.length)recount();dirty=true;return L}
+/* 古いセーブ：お話の進みに合わせて、まだ目をさましていない鉱脈は岩にもどす（知らせは出さない） */
+function oreMigrate(s){const t=s.st2||(s.st2={});const k=oreStageNow();t.ore=k;const ores=OREWAKE.slice(0,k).flatMap(w=>w.ore),on=v=>ores.includes(VEINS[v]);for(let j=0;j<W*H;j++){const v=s.obj[j];if(VEINS[v]&&!on(v))s.obj[j]='rock'}for(const g of s.regrow||[])if(VEINS[g.id]&&!on(g.id))g.id='rock';if(k)placeVeins(s,ores)}
+/* 目をさましたときの演出：村の時間を止め、カメラが鉱脈へ行き、鉱脈が光って、大きな知らせ。もとの所へもどってから、ひとこと */
+let OREWAKEON=false;
+function oreWakeTick(){if(OREWAKEON||!S||WD!==1||S.free||GIFT_ACTIVE||camAnim||!stageReady())return;if(IS_STORY_REPLAY||typeof MEMRUN!=='undefined'&&MEMRUN||typeof NOSAVE!=='undefined'&&NOSAVE)return;if(oreStage()>=oreStageNow())return;
+  const k=oreStage()+1,w=OREWAKE[k-1],L=oreAwaken(k),owner=S,session=VILLAGE_SESSION,ok=()=>S===owner&&session===VILLAGE_SESSION;
+  const dc=a=>Math.hypot(a%W-CX,((a/W)|0)-CY),tj=w.ore.includes('sulfur')?CRACKS[2]:L.slice().sort((a,b)=>dc(a)-dc(b))[0];
+  OREWAKEON=true;GIFT_ACTIVE=true;const back={z:cam.z,x:cam.x+VW/cam.z/2,y:cam.y+VH/cam.z/2};
+  const finish=()=>{if(!OREWAKEON)return;OREWAKEON=false;GIFT_ACTIVE=false;if(!ok())return;const say=w.say.filter(l=>S.res.some(r=>r.name===l[0]&&!r.hidden));if(!say.length||say[0][0]!==w.say[0][0])return;/* はじめに話す子がいなければ、ひとことはなし */let tries=0;const go=()=>{if(!ok())return;if($('#dialog').hidden&&!GIFT_ACTIVE)dialog(say,()=>{},null,'');else if(tries++<40)villageTimeout(go,1500)};villageTimeout(go,DLGWAIT)};
+  const show=()=>{if(!ok())return finish();const cx=tj!=null?tj%W:0,cy=tj!=null?(tj/W)|0:0;for(const q of(w.ore.includes('sulfur')?CRACKS:L)){if(Math.abs(q%W-cx)>9||Math.abs(((q/W)|0)-cy)>7)continue;spawnFX(q%W-.5,(q/W|0)-.6,ORE_COL[w.ore[0]])}sfx('level');dirty=true;
+    setTimeout(()=>{if(!ok())return finish();const overlay=el('<div class="idea-reveal gift-reveal" role="dialog" aria-modal="true" aria-label="鉱脈が目をさました"></div>'),card=el('<div class="idea-card"><h2>鉱脈が目をさました！</h2><div class="spotpop"><p></p></div></div>');card.querySelector('p').textContent=w.txt;
+      const button=el('<button class="btn pri" type="button">OK</button>');button.disabled=true;card.append(button);overlay.append(card);document.body.append(overlay);sfx('good');setTimeout(()=>{if(overlay.isConnected)button.disabled=false},650);
+      button.onclick=()=>{if(button.disabled)return;overlay.remove();if(!ok())return finish();camAnim={fz:cam.z,tz:back.z,fx:cam.x+VW/cam.z/2,fy:cam.y+VH/cam.z/2,tx:back.x,ty:back.y,t:0,dur:1.2,done:finish}}},900)};
+  musicDuck(2600);if(tj==null){show();return}camAnim={fz:cam.z,tz:Math.min(cam.z,1.6),fx:back.x,fy:back.y,tx:(tj%W+.5)*TS,ty:(((tj/W)|0)+.5)*TS,t:0,dur:1.6,done:show}}
+function oreWakeReset(){if(OREWAKEON){OREWAKEON=false;GIFT_ACTIVE=false;document.querySelectorAll('.idea-reveal[aria-label="鉱脈が目をさました"]').forEach(e=>e.remove())}}/* 村を切りかえたとき */
+/* 毎朝：目をさました鉱石の鉱脈が、岩のそばの空いた地面にふえる（村の中はのぞく） */
+function veinMorning(){if(!S||WD!==1||S.free)return;if(IS_STORY_REPLAY||typeof MEMRUN!=='undefined'&&MEMRUN||typeof NOSAVE!=='undefined'&&NOSAVE)return;const k=oreStage();if(!k)return;const kinds=VEIN_IDS.filter(v=>oreOn(VEINS[v]));if(!kinds.length)return;
+  let have=0;for(let j=0;j<W*H;j++)if(VEINS[S.obj[j]]&&S.dyn[j]&&S.dyn[j].vg)have++;let n=Math.min(OREWAKE[k-1].day,VEIN_GROW_MAX-have);if(n<=0)return;
+  const okC=j=>{const x=j%W,y=(j/W)|0;return x>0&&y>0&&x<W-1&&y<H-1&&!S.obj[j]&&!S.floor[j]&&S.ground[j]===0&&!VILL[j]&&walk(j)&&!(Math.abs(x+.5-CX)<7&&Math.abs(y+.5-CY)<7)&&!S.res.some(r=>(r.x|0)===x&&(r.y|0)===y)};
+  const rk=q=>S.obj[q]==='rock'||!!VEINS[S.obj[q]];let C=[];for(let j=0;j<W*H;j++)if(okC(j)&&[j-1,j+1,j-W,j+W].some(rk))C.push(j);if(!C.length)for(let j=0;j<W*H;j+=7)if(okC(j))C.push(j);
+  const tot=kinds.reduce((a,v)=>a+VEIN_W[v],0);let put=0;while(n-->0&&C.length){const i=(Math.random()*C.length)|0,j=C[i];C.splice(i,1);let q=Math.random()*tot,v=kinds[0];for(const o of kinds){q-=VEIN_W[o];if(q<0){v=o;break}}S.obj[j]=v;S.dyn[j]={vg:1};delete S.hp['n'+j];put++}if(put){recount();dirty=true}}
+/* 「みる」でタップした鉱脈（のこっている物だけ） */
+function vreqList(){const q=S.vreq;if(!q)return [];const L=[];for(const k in q){if(VEINS[S.obj[+k]])L.push(+k);else delete q[k]}return L}
 /* はじめての鉱石で、そうびのレシピを思いつく（火山だけ） */
 function gearIdea(){if(!S||S.free||WD!==1)return;const got=k=>(S.gotMat&&S.gotMat[k]>0)||(S.mat[k]||0)>0;if(!GEAR_ORES.some(got))return;S.recipes||(S.recipes={});S.guardianIdeas||(S.guardianIdeas={});const nw={};
   for(const id of GEAR_IDS){const b=BL[id];if(b.g.sp||S.recipes[id])continue;if(Object.keys(b.mat).every(k=>!GEAR_ORES.includes(k)||got(k))){S.recipes[id]=true;S.guardianIdeas[id]=true;nw[id]=1}}

@@ -3,7 +3,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict'),fs=r
 (async()=>{const browser=await chromium.launch({executablePath:process.env.CHROME_PATH||(fs.existsSync('/usr/bin/chromium')?'/usr/bin/chromium':undefined),args:['--no-sandbox']});const page=await browser.newPage({viewport:{width:430,height:900}});const errors=[];page.on('pageerror',e=>errors.push(e.message));
 await page.route('**/js/main.js*',async route=>{const r=await route.fetch();await route.fulfill({response:r,body:(await r.text())+'\nwindow.gearEval=s=>eval(s);'})});
 await page.goto(process.env.GAME_URL||'http://127.0.0.1:8000');await page.waitForFunction(()=>!!window.gearEval);
-const out=await page.evaluate(()=>gearEval(`(()=>{const o={};S=newState(1);setWorld(1);recount();USERPAUSE=true;S.introSeen=true;
+const out=await page.evaluate(()=>gearEval(`(()=>{const o={};S=newState(1);setWorld(1);o.veins0=S.obj.filter(x=>VEINS[x]).length;placeVeins(S);S.st2.ore=3;recount();/* 鉱脈は、お話が進むと目をさます：ここではぜんぶ目をさまし、ひびわれのあとの段階（1回1こ） */USERPAUSE=true;S.introSeen=true;
 o.veins={};for(const v of VEIN_IDS)o.veins[v]=S.obj.filter(x=>x===v).length;
 const R=S.res,fire=R.find(r=>r.elem==='fire')||R[0];const mk=el=>{const r=mkRes(S,'t'+el,el,CX+.5,CY+.5,'chat');S.res.push(r);return r};const earth=mk('earth');
 /* 鉱脈をほる */const vj=S.obj.findIndex(x=>x==='vcopper');fire.cmat=null;ACT.mine.end(fire,{obj:vj,tgt:'vcopper'});o.oreMined=(fire.cmat||{}).copper||0;o.stoneFromVein=(fire.cmat||{}).stone||0;fire.cmat=null;
@@ -27,7 +27,7 @@ S.enemies=[E(50,50),E(51,51),E(49,52)];S.inv.gar19=0;S.inv.gar13=1;S.inv.gar02=0
 /* 草原 */const G=newState(0);o.grassVeins=G.obj.filter(x=>VEINS[x]).length;o.grassGear=(G.gear||[]).length;
 return o})()`));
 console.log(JSON.stringify(out));
-for(const v in out.veins)assert(out.veins[v]>0,'vein '+v);
+assert.equal(out.veins0,0,'はじめは鉱脈なし');for(const v in out.veins)assert(out.veins[v]>0,'vein '+v);
 assert.equal(out.oreMined,1);assert.equal(out.stoneFromVein,0);assert.equal(out.sulfur,1);
 assert(out.learnCopper&&out.noSilver&&out.noSpecial);
 for(const id of['gw03','gw02','ga03','gc01','gt04','gt07'])assert(out.gearInv.includes(id),'made '+id);assert.equal(out.arrows,10);
