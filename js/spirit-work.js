@@ -219,7 +219,7 @@ function die(r){if(r.cpk){cmpRefund(r.cpk.m);r.cpk=null}if(r.spk){smRefund(r.spk
   toast(r.name+'が消えてしまった…','warn');
   {const DT=S.res.length?deathTalk(r):null;if(DT&&DT.length)talkOnce('dt'+Math.round(S.t*60),DT);/* とちゅうでとじたら、つづきからでもう一度 */else{const key=isKey(r.name),fk=key?'deathTold':'death2Told';if(!S.flags[fk]&&S.res.length){const sp=S.res.find(q=>KEYRES.includes(q.name))||S.res[0],n=r.name;
     talkOnce(fk,(key?DEATHL:DEATHL2)[elemKey(sp)](n).map(t=>[sp.name,t]))}}}/* 話す子の性格で説明する */
-  if(!S.res.length){S.wipe=true;S.wipeGift=WD===0?(lvOK('logfence')?'logfence':'fence'):(lvOK('wall')?'wall':'fence');giveItem(S.wipeGift,10);S.herb=(S.herb||0)+1;(S.seenIt||(S.seenIt={}))['x:herb']=1;/* まよけのハーブも1つ *//* おくりものは、先にわたしておく（会話のとちゅうでとじても、なくならない） */for(const L of[S.buried||[],S.lost||[]])for(const q of L)delete q.unb}/* 全滅：埋葬する子がいないので、埋葬の前でも、次の朝から呼びもどせるようにする（お墓はそのまま） */
+  if(!S.res.length){S.wipe=true;S.wipeGift=WD===0?(lvOK('logfence')?'logfence':'fence'):(lvOK('wall')?'wall':'misugaki');giveItem(S.wipeGift,10);S.herb=(S.herb||0)+1;(S.seenIt||(S.seenIt={}))['x:herb']=1;/* まよけのハーブも1つ *//* おくりものは、先にわたしておく（会話のとちゅうでとじても、なくならない） */for(const L of[S.buried||[],S.lost||[]])for(const q of L)delete q.unb}/* 全滅：埋葬する子がいないので、埋葬の前でも、次の朝から呼びもどせるようにする（お墓はそのまま） */
   if(!S.res.length)setTimeout(()=>STATUE<0?gameOver():dialog([[GOD,'#cry|みんな、消えてしもうた……。おヌシ、ひとりでよう耐えたのう。'],[GOD,'じゃが、だいじょうぶじゃ。朝になれば、この土地に深くなじんだ子から、また会えるぞい。'],[GOD,'#alarm|人数が少ないうちは、「コワイノ」も少なめじゃ。オオカゲも、なかまがそろうまでは来んはずじゃ。'],[GOD,'それと…これを使うがよい。'+BL[S.wipeGift||'fence'].name+'と、まよけのハーブじゃ。']],()=>{toast(BL[S.wipeGift||'fence'].name+'を10こもらった','good');toast('まよけのハーブを1つもらった','good')}),800);/* 石の塀を覚えていたら、石の塀 */
 }
 /* 建てる場所・依頼ボードへ行けないとき：5秒ごとにBFS1回でしらべ、行けなくなったときだけ知らせる。道があいたら消す */
