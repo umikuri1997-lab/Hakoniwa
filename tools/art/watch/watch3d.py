@@ -18,6 +18,7 @@ def build(sc,lv):
     LX=(0.70,1.30);LW=0.13                                                   # ハシゴの柱のまん中・ふとさ
     HX0,HX1=LX[0]+LW/2,LX[1]-LW/2                                            # ハシゴの柱の内がわ（床の穴のはば）
     LY0,LY1=F-RB,F                                                           # ハシゴの柱の前後（前のさくと同じ線）
+    EPW=0.20                                                                 # さくのはしの柱のふとさ
     for (x,y) in ((IN,IN),(F-PW,IN),(IN,F-PW),(F-PW,F-PW)):                  # 4本の柱：地面から床をつらぬいて、さくの上まで
         sc.box(x,y,0,x+PW,y+PW,DZ+RH+0.06,WOODD)
         sc.box(x-0.035,y-0.035,DZ+RH+0.06,x+PW+0.035,y+PW+0.035,DZ+RH+0.15,RAIL)   # 柱の頭（柱の上にのせる）
@@ -31,7 +32,7 @@ def build(sc,lv):
     for z in (DZ+RH,DZ+RH*0.45):                                             # さくの横木2本：柱と柱のあいだに。前は、ハシゴの柱まで
         sc.box(IN+PW,IN+0.02,z-RT,F-PW,IN+RB,z,RAIL)                          # うしろ
         sc.box(IN+0.02,IN+PW,z-RT,IN+RB,F-PW,z,RAIL);sc.box(F-RB,IN+PW,z-RT,F-0.02,F-PW,z,RAIL)   # 左・右
-        sc.box(IN+PW,LY0+0.01,z-RT,LX[0]-LW/2,F-0.02,z,RAIL);sc.box(LX[1]+LW/2,LY0+0.01,z-RT,F-PW,F-0.02,z,RAIL)   # 前
+        sc.box(IN+PW,LY0+0.01,z-RT,HX0-EPW,F-0.02,z,RAIL);sc.box(HX1+EPW,LY0+0.01,z-RT,F-PW,F-0.02,z,RAIL)   # 前（さくのはしの太い柱まで）
     for t in (0.5,1.5):                                                      # さくの小さな柱（うしろ・左・右）。まん中のうしろは旗の柱
         sc.box(t-RB/2,IN+0.03,DZ,t+RB/2,IN+RB-0.01,DZ+RH-0.01,RAIL)
     sc.box(1.0-RB/2,IN+0.03,DZ,1.0+RB/2,IN+RB-0.01,DZ+RH-0.01,RAIL)
@@ -44,7 +45,10 @@ def build(sc,lv):
                   ((F-PW/2,IN+PW,zl),(F-PW/2,F-PW,zh)),((F-PW/2,F-PW,zl),(F-PW/2,IN+PW,zh)),
                   ((IN+PW,F-PW/2,DZ-0.55),(IN+PW+0.30,F-PW/2,zh)),((F-PW,F-PW/2,DZ-0.55),(F-PW-0.30,F-PW/2,zh))):
         sc.beam(a,b,0.06,WOODD)
-    for x in LX:sc.box(x-LW/2,LY0,0,x+LW/2,LY1,DZ+RH+0.04,LADDER)            # ハシゴ：まっすぐ立てる。柱は床をつらぬいて、そのまま前のさくのはしの柱に
+    for x in LX:sc.box(x-LW/2,LY0,0,x+LW/2,LY1,DZ-0.01,LADDER)               # ハシゴ：まっすぐ立てる。床の上の面まで
+    for (x0,x1) in ((HX0-EPW,HX0),(HX1,HX1+EPW)):                             # さくのはしの太い柱：ハシゴの柱の上に、床から立てて、前のさくの横木を受ける（内がわは穴のふちにそろえる）
+        sc.box(x0,LY0-0.03,DZ-DT,x1,LY1,DZ+RH+0.06,WOODD)
+        sc.box(x0-0.03,LY0-0.06,DZ+RH+0.06,x1+0.03,LY1+0.03,DZ+RH+0.14,RAIL)   # 柱の頭
     for i in range(1,9):z=i*(DZ-DT)/9;sc.box(HX0,LY0+0.02,z-0.06,HX1,LY1-0.03,z+0.06,LADDER,bevel=0.015)   # 段は柱のあいだだけ、床の下まで
     if lv>=3:                                                                  # 旗（Lv3〜4）・星（Lv5）：うしろのまん中、床から立てた柱の上
         top=DZ+RH+0.80
