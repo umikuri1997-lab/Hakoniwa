@@ -58,6 +58,18 @@ function enemyAtTap(wx,wy){/* 守りの光：コワイノの絵が描いてあ�
     if(wx<px+b.l-M||wx>px+b.r+M||wy<py+b.t-M||wy>py+b.b+M)continue;
     const sc=e.y*1000-Math.hypot(wx-px,wy-(py+(b.t+b.b)/2))*.01;if(sc>bs){bs=sc;best=e}}
   return best}
+function sacredTreeTap(j){/* 御神木をタップ：かけらの光をとどける・目標のじょうけんを見る */
+  const av=(S.shards||0)-(S.setSh||0);
+  if(av>0&&(S.setSh||0)>=2){
+    if(isNight())return toast('最後の光を届けるのは、朝になってから');
+    if(!S.flags.finalWon)return toast('まず、御神木に集まる影を追いはらおう');
+    if(!S.sev?.e09)return toast('先に、最後のかけらを迎えるお話を聞こう');
+    const NM=['木のせいれい','御神木','ヌシのかけら','せいれいパワー'],miss=clearConds().findIndex(c=>!c[1]);if(miss>=0)return toast(NM[miss]+'が足りません','warn');
+  }
+  if(av>0)return sacredOfferShard(j,()=>{S.setSh=(S.setSh||0)+1;sfx('shard');burst(j,'furn','none');toast('御神木に、ヌシのかけらの光を届けた（'+S.setSh+'/3）','good');logEv('かけらの光を御神木へ届けた');dirty=true;if(S.setSh>=3)scheduleGrassReunion();checkQuest();});/* かけらは、フタバが御神木へ歩いていって、ささげる */
+  if((S.setSh||0)>=3){const reason=grassReunionBlockReason();if(reason)return toast(reason);scheduleGrassReunion();return;}
+  return openSheet('clear');
+}
 function onTap(sx,sy){DLGTAP=performance.now();/* タップで始める会話は、またずにすぐ出す */
   let w=toWorld(sx,sy);const w0=w,tx=Math.floor(w.x/TS);{const tl=tapLv(w.x,w.y);if(tl)w={x:w.x,y:w.y+tl*LIFT}}const ty=Math.floor(w.y/TS);/* 高い段のマス・物・せいれい・コワイノは上にずらして描くので、タップの場所も高さの分だけ下へもどす */
   if(AREAARM){AREAARM=false;return areaBlast(w.x/TS,w.y/TS)}/* こもれびのまもり：タップした場所のまわり */
@@ -88,6 +100,7 @@ function onTap(sx,sy){DLGTAP=performance.now();/* タップで始める会話は
     {const hw=HOUSES.find(h=>h.set.has(ty*W+tx));if((!hw||OPENH.has(hKey(hw)))&&webTap(tx,ty))return}/* クモの巣：せいれいがそうじする（屋根のある家は、屋根を外してから） */
     {const j=anc(ty*W+tx);if(!isNight()&&godFix(S.obj[j]?j:ty*W+tx))return}/* こわれかけ・こわれた物は、守り神がパワーで直せる */
     {const hi=HOUSES.findIndex(h=>h.set.has(ty*W+tx));if(hi>=0){const hk=hKey(HOUSES[hi]);if(!OPENH.has(hk)){OPENH.add(hk);dirty=true;return}/* 1回目のタップで屋根を外す */const o0=S.obj[anc(ty*W+tx)];if(HOME_WALLS.has(o0)||HOME_DOORS.has(o0)){OPENH.delete(hk);dirty=true;return}/* 壁をタップすると屋根がもどる */if(!o0)return openSheet('house',hi)}}// 中が見えているときは、家具やせいれいもタップできる
+    if(WD===0&&!S.free&&!S.cleared){const rt=S.obj.indexOf('tower'),b=rt>=0?rt:S.sacredRoot;if(b!=null){const bx=b%W,by=b/W|0,n=sacredSpan(),px=w.x/TS,py=w.y/TS;if(px>=bx-.5&&px<bx+n+.5&&py>=by-(rt>=0?2:0)&&py<by+n)return rt>=0?sacredTreeTap(rt):openSheet('clear')}}/* 御神木・切り株：絵の上（育った木は上へはみ出す葉の所も）をタップすると、じょうけんを見る */
     const j=anc(ty*W+tx),o=S.obj[j];
     if(WD===0&&S.flags.kgMark!=null&&!S.bossKills&&!S.flags.kgLook&&Math.abs(tx-S.flags.kgMark%W)<=1&&Math.abs(ty-((S.flags.kgMark/W)|0))<=1){S.flags.kgLook=true;checkQuest();toast('大きなかげのあと：草がしおれて、つめたい');if(S.res.some(r=>r.name===POKO))dialog([[POKO,'#sigh|……このつめたさ、知ってる気がする。守り神さま、夕方になったら、ちょっとだけ、ぼくの話を聞いてくれる？']]);return}/* 大きなかげのあとを調べる */
     if(WD===1&&S.st2){const g=ty*W+tx;
@@ -116,18 +129,7 @@ function onTap(sx,sy){DLGTAP=performance.now();/* タップで始める会話は
     if(o==='composter')return cmpPop(j);
     if(o==='obox')return S.feat.inv?openSheet('inv'):toast('おそなえ箱');
     if(o==='grave'){const d=S.dyn[j]||{};if(!d.buried)return toast((d.name||'せいれい')+'のお墓。なかまが神殿へはこんで、おみおくりしてくれる');/* 守り神は埋葬できない */return toast((d.name||'せいれい')+'のお墓')}
-    if(o==='tower'&&!WD&&!S.cleared){
-      const av=(S.shards||0)-(S.setSh||0);
-      if(av>0&&(S.setSh||0)>=2){
-        if(isNight())return toast('最後の光を届けるのは、朝になってから');
-        if(!S.flags.finalWon)return toast('まず、御神木に集まる影を追いはらおう');
-        if(!S.sev?.e09)return toast('先に、最後のかけらを迎えるお話を聞こう');
-        const NM=['木のせいれい','御神木','ヌシのかけら','せいれいパワー'],miss=clearConds().findIndex(c=>!c[1]);if(miss>=0)return toast(NM[miss]+'が足りません','warn');
-      }
-      if(av>0)return sacredOfferShard(j,()=>{S.setSh=(S.setSh||0)+1;sfx('shard');burst(j,'furn','none');toast('御神木に、ヌシのかけらの光を届けた（'+S.setSh+'/3）','good');logEv('かけらの光を御神木へ届けた');dirty=true;if(S.setSh>=3)scheduleGrassReunion();checkQuest();});/* かけらは、フタバが御神木へ歩いていって、ささげる */
-      if((S.setSh||0)>=3){const reason=grassReunionBlockReason();if(reason)return toast(reason);scheduleGrassReunion();return;}
-      return openSheet('clear');
-    }
+    if(o==='tower'&&!WD&&!S.cleared)return sacredTreeTap(j);
     if(o==='board')return S.feat.craft?openSheet('craft'):toast('依頼ボード。もう少ししたら使えるようになる');
     if(o==='statue')return toast('女神像。守り神の居場所');
     if(o==='altar')return toast('カミサマの台座。カミサマはここに現れる');
