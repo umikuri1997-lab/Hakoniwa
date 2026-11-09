@@ -95,8 +95,8 @@ function renderPalette(){
   if(plants.length){lbl(box,'うえる');for(const id of plants)box.appendChild(chip(iconURL(id),iname(id),'×'+inv(id),(inv(id)?'':'zero')+(sel===id&&!selStamp?' sel':''),pickItem(id)))}
   if(mode==='build'&&cnt('farm')){const sd=Object.keys(CROPS).filter(k=>cropOn(k)&&cseed(k)>0);if(sd.length){lbl(box,'たね');for(const k of sd){const id='seed:'+k,n=cseed(k);box.appendChild(chip(iconURL(id),iname(id),'×'+n,(n?'':'zero')+(sel===id?' sel':''),pickItem(id)))}}}
   if(mode==='build'){
-    const bLock=id=>STATUE>=0&&BREQ[id]&&lvOK(id)&&!elemCount(BREQ[id]),builds=BUILDS.filter(id=>usable(id)||bLock(id));/* 属性の子がいなくても、ならべて見せる */
-    if(builds.length){lbl(box,'建てる');for(const id of builds)box.appendChild(chip(iconURL(id),BL[id].name,id==='statue'||(id==='watch'&&watchQ())?'むりょう':SP(BL[id].pc),(sel===id?'sel':'')+(bLock(id)?' zero':''),bLock(id)?()=>toast(ELEM[BREQ[id]].name+'のせいれいがいると建てられます'):pickItem(id),id==='tower'?TOWER_MAT():(id==='watch'&&watchQ())?null:BL[id].mat))}
+    const bLock=id=>STATUE>=0&&BREQ[id]&&lvOK(id)&&!elemCount(BREQ[id]),builds0=BUILDS.filter(id=>usable(id)||bLock(id)),builds=builds0.filter(recShown);/* 属性の子がいなくても、ならべて見せる */
+    if(builds0.length){lbl(box,'建てる');recToggle(box,builds0);for(const id of builds)box.appendChild(chip(iconURL(id),BL[id].name,id==='statue'||(id==='watch'&&watchQ())?'むりょう':SP(BL[id].pc),(sel===id?'sel':'')+(bLock(id)?' zero':''),bLock(id)?()=>toast(ELEM[BREQ[id]].name+'のせいれいがいると建てられます'):pickItem(id),id==='tower'?TOWER_MAT():(id==='watch'&&watchQ())?null:BL[id].mat))}
     if(S.dig){lbl(box,'だんさ');for(const id of['dig','mound'])box.appendChild(chip(toolIcon(id),BL[id].name,SP(BL[id].pc),sel===id?'sel':'',pickItem(id)))}/* だんさスコップ：けずる・もるを、せいれいにたのむ（建てるのと同じ） */
   }
 }
@@ -193,6 +193,13 @@ function shopPrice(id,k){let t=0;for(let i=0;i<k;i++){if(id==='farm')t+=4+Math.f
 function sheetBack(){const bk=el('<button class="btn back" aria-label="メニューにもどる">'+pxi('next','prev')+'もどる</button>');bk.onclick=()=>{sfx('tap');openSheet('menu')};$('#sheetTitle').before(bk)}
 function renderSheet(){
   if(!sheet)return;const body=$('#sheetBody');body.innerHTML='';for(const b of document.querySelectorAll('#sheetWrap header .back'))b.parentNode.removeChild(b);const T=$('#sheetTitle');
+  if(sheet==='vshop'){
+    if(!visitHere())return closeSheet();const p=VISITORS[S.st2.visit.who];T.textContent=p[0]+'のお店';
+    body.appendChild(el('<p class="note">草原の花のたね・苗と、パワーを交換します。</p>'));
+    const d=el('<div class="sec"><h3>花のたね・苗</h3><div class="rows"></div></div>'),rows=d.querySelector('.rows');body.appendChild(d);
+    for(const id of PLANTS){const b=BL[id],r=rowEl(iname(id),'所持：'+inv(id),iconURL(id));helpify(r,withAttr(id,b.desc||''));const bx=el('<div style="display:flex;flex-direction:column;gap:4px;flex:none"></div>');r.appendChild(bx);rows.appendChild(r);
+      for(const k of [1,5]){const c=shopPrice(id,k),bt=el('<button class="btn'+(k===1?' pri':'')+'"></button>');bt.textContent='×'+k+'　'+SP(c);bt.disabled=S.pt<c;bt.onclick=()=>{if(S.pt<c)return;S.pt-=c;if(id==='fruit')S.fruitBuy=(S.fruitBuy||0)+k;S.unlocked[id]=true;giveItem(id,k);sfx('power');renderSheet();renderPalette()};bx.appendChild(bt)}}
+    return}
   if(sheet==='shop'){
     T.textContent='カミサマと交換';
     {const sb=el('<div class="godSay"><b>カミサマ</b><span></span></div>');sb.querySelector('span').textContent='「'+shopSay+'」';body.appendChild(sb)}
@@ -203,7 +210,7 @@ function renderSheet(){
     const row=(rows,title,desc,img,done)=>{const r=rowEl(title,desc,img);if(done)r.classList.add('done');const bx=el('<div style="display:flex;flex-direction:column;gap:4px;flex:none"></div>');r.appendChild(bx);rows.appendChild(r);return bx};
     const btn=(bx,label,dis,fn,pri)=>{const b=el('<button class="btn'+(pri?' pri':'')+'"></button>');b.textContent=label;b.disabled=!!dis;if(fn)b.onclick=fn;bx.appendChild(b)};
     const r1=sec('ブロック・種・苗');
-    for(const id of BLOCKS.filter(i=>S.unlocked[i]&&!BL[i].qty&&i!=='window').concat(S.feat.plant?PLANTS.filter(id=>lvOK(id)&&plantOK(id)):[])){const b=BL[id];
+    for(const id of BLOCKS.filter(i=>S.unlocked[i]&&!BL[i].qty&&i!=='window').concat(S.feat.plant&&(WD===0||S.free)?PLANTS.filter(id=>lvOK(id)&&plantOK(id)):[])/* 花・果物の木・木の苗は草原だけ（火山では、温泉宿のお客さんが売る） */){const b=BL[id];
       const bx=row(r1,iname(id),'所持：'+inv(id),iconURL(id));helpify(bx.parentNode,withAttr(id,b.desc||''));
       for(const k of [1,5]){const c=shopPrice(id,k);btn(bx,'×'+k+'　'+SP(c),S.pt<c,()=>{S.pt-=c;if(id==='farm')S.farmBuy=(S.farmBuy||0)+k;if(id==='fruit')S.fruitBuy=(S.fruitBuy||0)+k;giveItem(id,k);trade()},k===1)}}
     if(cnt('farm')||inv('farm')){const rs=sec('作物のたね');for(const k in CROPS){if(!cropOn(k))continue;const c=CROPS[k];const bx=row(rs,c.name+'のたね','所持：'+cseed(k)+'・'+c.desc,seedIcon(k));for(const n of [1,5]){const cst=2*n;btn(bx,'×'+n+'　'+SP(cst),S.pt<cst,()=>{S.pt-=cst;giveItem('seed:'+k,n);trade()},n===1)}}}
@@ -259,8 +266,9 @@ function renderSheet(){
     const s2=el('<div class="sec"><h3>依頼を書く</h3><div class="ctabs"></div><div class="rows"></div></div>');
     const gTab=i=>CRAFT_TABS[i][0]==='そうび';if(gTab(craftTab)&&WD!==1&&!GEAR_IDS.some(id=>S.recipes&&S.recipes[id]))craftTab=0;
     CRAFT_TABS.forEach(([nm],i)=>{if(gTab(i)&&WD!==1&&!GEAR_IDS.some(id=>S.recipes&&S.recipes[id]))return;/* そうびの欄は火山から */const t=el('<button class="ctab'+(i===craftTab?' on':'')+'"></button>');t.textContent=nm;t.onclick=()=>{craftTab=i;renderSheet()};s2.querySelector('.ctabs').appendChild(t)});
+    recToggle(s2,CRAFT_TABS.flatMap(([,ids])=>ids).filter(id=>recipeKnown(id)&&(lvOK(id)||S.recipes[id])));s2.querySelector('.rows').before(s2.querySelector('.recsw')||document.createTextNode(''));
     let gPrev=null;for(const id of CRAFT_TABS[craftTab][1]){const b=BL[id];
-      if(!recipeKnown(id)||!lvOK(id)&&!S.recipes[id])continue;{const h=gearBoardHead(id,gPrev);gPrev=id;if(h)s2.querySelector('.rows').appendChild(h)}/* そうび：わくごとの見出し *//* 思いついていない・レベル不足は出さない */
+      if(!recipeKnown(id)||!lvOK(id)&&!S.recipes[id]||!recShown(id))continue;{const h=gearBoardHead(id,gPrev);gPrev=id;if(h)s2.querySelector('.rows').appendChild(h)}/* そうび：わくごとの見出し *//* 思いついていない・レベル不足は出さない */
       /* レシピをまだ知らない */
       const r=helpify(rowEl(b.name+(b.qty?'×'+b.qty:'')+'　所持：'+inv(id),'',iconURL(id),b.mat?matNeedHTML(b.mat)+(b.sand?'<span class="mneed" style="margin-right:6px;'+((S.sand||0)>=b.sand?'':'color:#c0392b;font-weight:700')+'">やすらぎの砂（'+(S.sand||0)+'/'+b.sand+'）</span>':'')+Object.keys(b.food||{}).map(k=>'<span class="mneed" style="margin-right:6px;'+((S.fs[k]||0)>=b.food[k]?'':'color:#c0392b;font-weight:700')+'">'+FOODS[k].name+'（'+(S.fs[k]||0)+'/'+b.food[k]+'）</span>').join('')+' ':''),withAttr(id,b.desc));
       if(makerOf(id)){const has=elemCount(b.maker)>0,mk=el('<span class="pxpill" style="display:inline-flex;align-items:center;vertical-align:middle;margin-right:4px;border-radius:9px;padding:0 5px 0 1px;font-size:10px;line-height:16px;color:#fff"><img alt="" style="width:16px;height:16px;margin:0"><b style="font-weight:700"></b></span>');mk.classList.add(has?'pm-'+b.maker:'pm-none');/* 色は、わくの絵（index.html の .pxpill.pm-〇〇） */mk.querySelector('img').src=spiritPort(b.maker,48);if(!has)mk.querySelector('img').style.filter='grayscale(1) opacity(.7)';mk.querySelector('b').textContent=ELEM[b.maker].name+(has?'':'・いない');r.querySelector('small').prepend(mk)}/* 作るせいれいの属性：アイコンで短く */

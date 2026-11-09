@@ -24,7 +24,7 @@ const QUESTS2=[
     [HOMURA,'#surprise|ほんとに建っちまった。'],[HOMURA,'へえ、なかなかいい神殿じゃないか。'],
     [GOD,'じゃろ〜。ここが、おヌシとわしの居場所じゃ。'],
     [GOD,'#joy|くらしの道具は、とどけておいたぞい。'],[HOMURA,'……ま、助かるよ。']],
-   gives:{feat:['inv','remove','plant','craft','people'],flag:'lv_oven',recipes:['oven','bed','stor','mbox'],flags:['yoganLearned'],items:{oven:1,bed:1,hwall:3,fence:10,spike:10},mat:{wood:10,stone:10},enemy:true}},
+   gives:{feat:['inv','remove','plant','craft','people'],flag:'lv_oven',recipes:['oven','bed','stor','mbox'],items:{oven:1,bed:1,hwall:3,fence:10,spike:10},mat:{wood:10,stone:10},enemy:true}},
   {id:'coldSpring',text:'冷たい温泉を調べよう',check:()=>!!S.flags.sprLook,how:'「みる」で、村の水たまりをタップする',
    talk:{who:HOMURA,when:()=>true,lines:[
     [HOMURA,'…なあ守り神。この村、むかしは湯気がもくもく上がってたんだよ。'],
@@ -101,7 +101,7 @@ const QUESTS2=[
     [HOMURA,'西へむければ、西の温泉に熱がとどくはずさ。']]},
    story:[[HOMURA,'#think|……熱が、ちゃんと流れてるか、たしかめてみるよ。',0,'heat:b'],[HOMURA,'#joy|西の温泉にも、湯気が上がった！'],[SHIZUKU,'すばらしいです。…残るは、奥の温泉ですね。'],[HOMURA,'#think|熱の道のそばの土も、ぽかぽかしてきたね。'],[HOMURA,'#nod|……あんた、けっこう役に立つじゃないか。'],[SHIZUKU,'#surprise|……いま、ほめられましたか？','vol:lookbackS']]},
   {id:'fire3',text:'ようがん台で、火山の熱を村へひこう',check:()=>yoganHeatN()>=2,prog:()=>'熱の道のそばのようがん台 '+Math.min(2,yoganHeatN())+'/2',how:'熱が流れている熱の道のそばに、ようがん台を2つ建ててもらう',
-   talk:{who:HOMURA,when:()=>true,lines:[
+   talk:{who:HOMURA,when:()=>true,learn:['yogan'],lines:[
     [HOMURA,'#think hush|……なあ、守り神。むかし、この村には、火のせいれいがたくさんいたんだ。','vol:yoganSide'],
     [HOMURA,'#danger|温泉が冷えて、コワイノのうろつく寒い夜がつづいてさ。みんな、ちりぢりに逃げのびた。……あたいが、逃がしたんだ。','vol:fist'],
     [HOMURA,'#sigh|守れなかったんだよ。あたいは、のこっただけさ。'],
