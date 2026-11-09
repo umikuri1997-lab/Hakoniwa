@@ -66,8 +66,17 @@ class Scene:
             for sy in S2:
                 for sz in S2: self.tri(P(sx,sy,sz,0), P(sx,sy,sz,1), P(sx,sy,sz,2), col)
     def beam(self, a, b, r, col):
-        """2点をつなぐ四角い棒（すじかいなど）"""
-        self.tube([a, b], r, col, n=4)
+        """2点をつなぐ四角い材（すじかいなど）。切り口は、はば2rの四角で、面は材の向きに合わせてまっすぐ（ひし形にしない）。
+        1つの面は地面と同じ向き（よこ）、もう1つは、それと直角"""
+        self.part()
+        a, b = np.array(a, float), np.array(b, float); d = (b-a)/np.linalg.norm(b-a)
+        u = np.cross(d, [0, 0, 1.0])
+        if np.linalg.norm(u) < 1e-6: u = np.array([1.0, 0, 0])
+        u /= np.linalg.norm(u); v = np.cross(d, u); v /= np.linalg.norm(v)
+        cs = [r*(su*u+sv*v) for su, sv in ((-1,-1),(1,-1),(1,1),(-1,1))]
+        for i in range(4):
+            o0, o1 = cs[i], cs[(i+1) % 4]; self.quad(a+o0, b+o0, b+o1, a+o1, col)
+        self.quad(*[a+o for o in cs], col); self.quad(*[b+o for o in cs], col)
     def revolve(self, cx, cy, prof, colf, n=36):
         """まわりをまわした面。prof は [(半径, 高さ), ...]（上から下へ）"""
         self.part()
