@@ -1,10 +1,10 @@
 'use strict';
-/* せいれいどうしのなかよし：S.bond（2人の id を小さい順に「a_b」）→ 0〜200。
+/* せいれいどうしのなかよし：S.bond（2人の id を小さい順に「a_b」）→ 0〜100。
    ふえる：同じ遊び家具でいっしょに遊ぶ+1・おしゃべり+1.5・同じ食卓でいっしょに食べる+1・同じ夜にいっしょに守る+2.5（1晩1回）。
-   60：なかよし（2人のピンクの会話が1回）。120：遊ぶときに、なかよしをさそう。200：3マス以内にいるとはたらく速さ+5%（重複なし）。
+   30：なかよし（2人のピンクの会話が1回）。60：遊ぶときに、なかよしをさそう。100：3マス以内にいるとはたらく速さ+5%（重複なし）。
    思い出帳の再生（IS_STORY_REPLAY）では、ふやさない。 */
-const BOND_TALK=60,BOND_PLAY=120,BOND_MAX=200;
-const BOND5=new Set();/* なかよし200の子が3マス以内にいる子（毎秒つくりなおす） */
+const BOND_TALK=30,BOND_PLAY=60,BOND_MAX=100;
+const BOND5=new Set();/* なかよし100の子が3マス以内にいる子（毎秒つくりなおす） */
 function bondKey(a,b){return a.id<b.id?a.id+'_'+b.id:b.id+'_'+a.id}
 function bondOf(a,b){return a&&b&&a!==b&&S&&S.bond?S.bond[bondKey(a,b)]||0:0}
 function bondAdd(a,b,n){if(!S||!a||!b||a===b||IS_STORY_REPLAY)return;const B=S.bond||(S.bond={}),k=bondKey(a,b),v0=B[k]||0,v=Math.min(BOND_MAX,v0+n);if(v===v0)return;B[k]=v;
@@ -12,7 +12,7 @@ function bondAdd(a,b,n){if(!S||!a||!b||a===b||IS_STORY_REPLAY)return;const B=S.b
   else if(v0<BOND_PLAY&&v>=BOND_PLAY)omoiNote(a,b,true)}
 function bondSet(a,b,n){if(bondOf(a,b)<n)bondAdd(a,b,n-bondOf(a,b))}
 /* 草原のメイン「なかよしの想い」（omoi）：依頼を受けたあとに、あたらしく「なかよし」になった組だけを数える（S.flags.omoiP）。
-   村の子どうしが、もうぜんぶなかよしのときだけ、なかよし120になった組も数える（進めなくならないように） */
+   村の子どうしが、もうぜんぶなかよしのときだけ、なかよし60になった組も数える（進めなくならないように） */
 function omoiOn(){return !!S&&WD===0&&!S.free&&!IS_STORY_REPLAY&&typeof QUESTS!=='undefined'&&QUESTS[S.quest]?.id==='omoi'&&S.qTalked&&S.qStory==null}
 function omoiN(){return (S&&S.flags.omoiP||[]).length}
 function omoiAllBonded(){const R=S.res.filter(r=>!r.hidden);for(let i=0;i<R.length;i++)for(let k=i+1;k<R.length;k++)if(bondOf(R[i],R[k])<BOND_TALK)return false;return true}
@@ -22,7 +22,7 @@ function omoiNote(a,b,deep){if(!omoiOn())return;const L=S.flags.omoiP||(S.flags.
 function bondBest(r){let q=null,v=0;if(!S||!S.bond)return null;for(const o of S.res){if(o===r)continue;const b=S.bond[bondKey(r,o)]||0;if(b>v){v=b;q=o}}return q?{q,v}:null}
 function bondPair(pk){const [a,b]=pk.split('_').map(Number),A=S.res.find(r=>r.id===a),B=S.res.find(r=>r.id===b);return A&&B?[A,B]:null}
 
-/* ---------- なかよし60の会話（2人のピンクの会話。1組に1回） ---------- */
+/* ---------- なかよし30の会話（2人のピンクの会話。1組に1回） ---------- */
 /* 名前のある組：セリフは、その子の言いかたのまま */
 const BOND_TALKS={
  'フタバ|ノドカ':[['フタバ','ノドカ、きょうも畑、いっしょに見てまわろうよ！'],['ノドカ','いいよぉ。フタバといると、時間があっというまだねぇ。'],['フタバ','#joy|えへへ。ぼくもね、ノドカのとなりだと、なんだか安心するんだ。'],['ノドカ','#joy|ふふ。じゃあ、これからも、となりにいようねぇ。']],
@@ -58,7 +58,7 @@ const BOND_GEN={
 function bondLines(pk){const p=bondPair(pk);if(!p)return [];const [a,b]=p,nk=BOND_TALKS[a.name+'|'+b.name]||BOND_TALKS[b.name+'|'+a.name];if(nk)return nk.map(l=>[l[0],l[1]]);
   const o=ELEM_KEYS.indexOf(a.elem)<=ELEM_KEYS.indexOf(b.elem)?[a,b]:[b,a],G=BOND_GEN[o[0].elem+'|'+o[1].elem];if(!G)return [];
   return G.map((l,i)=>{const sp=o[l[0]];return [sp.name,chatTone(l[1].replace(/@0/g,o[0].name).replace(/@1/g,o[1].name),sp,i)]})}
-/* ピンクの会話（SEV1）に、なかよし60になった組の会話を足す。キーは「bd_a_b」 */
+/* ピンクの会話（SEV1）に、なかよし30になった組の会話を足す。キーは「bd_a_b」 */
 function bondSevEntry(pk){const k='bd_'+pk;if(SEV1.some(e=>e.k===k))return;SEV1.push({k,bd:pk,at(){const p=bondPair(this.bd);return !!p&&bondOf(p[0],p[1])>=BOND_TALK&&!p[0].hidden&&!p[1].hidden&&S.qStory==null},get L(){return bondLines(this.bd)}})}
 function bondTalkTick(){if(!S||!S.bond)return;const D=S.sev||{};for(const pk in S.bond)if(S.bond[pk]>=BOND_TALK&&!D['bd_'+pk])bondSevEntry(pk);
   if(!WD||sevBusy()||isNight()||(S.sevQuietUntil||0)>S.t)return;/* 草原は checkSev が出す。ほかの土地は、なかよしの会話だけここで出す */
@@ -69,14 +69,14 @@ function bondTalkTick(){if(!S||!S.bond)return;const D=S.sev||{};for(const pk in 
 const BOND_DEF=new Set(['watchpost','patrol','follow']);
 function bondNightTick(){if(!isNight()||!S.enemyOn)return;const n=dayNo()-(hour()<12?1:0),D=S.bondDef&&S.bondDef.n===n?S.bondDef:(S.bondDef={n,ids:[]});
   for(const r of S.res){if(r.hidden||!r.act||!BOND_DEF.has(r.act.type)||D.ids.includes(r.id))continue;for(const id of D.ids){const q=S.res.find(x=>x.id===id);if(q)bondAdd(r,q,2.5)}D.ids.push(r.id)}}
-/* ---------- なかよし200：3マス以内ではたらく速さ+5% ---------- */
+/* ---------- なかよし100：3マス以内ではたらく速さ+5% ---------- */
 function bondNearTick(){BOND5.clear();if(!S.bond)return;for(const pk in S.bond){if(S.bond[pk]<BOND_MAX)continue;const p=bondPair(pk);if(!p||p[0].hidden||p[1].hidden)continue;if(Math.hypot(p[0].x-p[1].x,p[0].y-p[1].y)<=3){BOND5.add(p[0]);BOND5.add(p[1])}}}
 function bondTick(){if(!S||IS_STORY_REPLAY)return;bondNightTick();bondNearTick();bondTalkTick()}
 
 /* ---------- いっしょに遊ぶ ---------- */
 /* 同じ遊び家具で遊びはじめたら、先に遊んでいる子と+2（1回の遊びで1回） */
 function bondPlayStart(r,a){if(a.bd||a.obj==null)return;a.bd=1;for(const q of S.res)if(q!==r&&q.act&&q.act.type==='play'&&q.act.stage==='do'&&q.act.obj===a.obj)bondAdd(r,q,1)}
-/* なかよし120：遊びに行くとき、ひまにしているなかよしをさそう */
+/* なかよし60：遊びに行くとき、ひまにしているなかよしをさそう */
 function bondInvite(r,o){if(!S||isNight()||!o||o.obj==null||(r.bdInv||0)>S.t)return false;const bb=bondBest(r);if(!bb||bb.v<BOND_PLAY)return false;const f=bb.q,p=BL[o.what]&&BL[o.what].play;
   if(!p||!free(o.key,p.cap)||f.hidden||!f.act||!['idle','wander'].includes(f.act.type)||f.fun>=100||f.hunger<50||hungry(f)||f.energy<25||onHold(f)||HOLD.has(f.id)||storyCalled(f)||carryN(f)>0||f.meal||toyTired(f,o.obj))return false;
   const G=bfs(f.x|0,f.y|0),mine=r.act&&r.act.stand;let st=-1;if(o.what==='swing'){if(G.dist[o.obj]>=0)st=o.obj}else st=nearest(G,k=>k!==mine&&walk(k)&&adjOf(k,t=>anc(t)===o.obj)>=0,45);if(st<0)return false;
