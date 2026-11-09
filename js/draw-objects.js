@@ -106,8 +106,7 @@ function berryOn(c,x,y){const bi=emoImg('🫐');if(!bi)return;for(const[cx,cy]of
 const PCH=new Set(['tree','ntree','fruit','deadtree','berry','clover','bellf','salvia','lily','lotus','statue','volcano','hedge']);/* 植物などは、ようすで絵をえらぶ */
 function plantChip(id,i,g){const C=window.CHIPS;if(!C)return null;if(!ICON&&i!=null&&S&&PLANTS.includes(id)&&isBud(i))return (id==='lotus'&&C['bud~w'])||C.bud||null;/* 芽（ハスは水の上なので、土のない芽） */
   if(id==='fruit'&&g>=100)return C[id+'#mi']||null;/* 実った絵（ベリーは、茂みの上に、運ぶときと同じベリーをのせる） */
-  if(id==='hedge'){if(ICON||i==null||!S)return C.hedge||null;const t=k=>typeAt(k)==='hedge',hl=i%W>0&&t(i-1),hr=i%W<W-1&&t(i+1),m=(hl?1:0)|(hr?2:0)|(t(i-W)?4:0)|(t(i+W)?8:0);if(m&8)return C['hedge:'+m]||null;
-    const rD=hr&&t(i+1+W),lD=hl&&t(i-1+W),fi=rD&&lD?18:rD?16:lD?17:m;return C['hedge:'+m+(fi!==m?'/'+fi:'')]||null}/* 生け垣は、となりとのつながりの形で */
+  if(id==='hedge'){if(ICON||i==null||!S)return C.hedge||null;const t=k=>typeAt(k)==='hedge',hl=i%W>0&&t(i-1),hr=i%W<W-1&&t(i+1),m=(hl?1:0)|(hr?2:0)|(t(i-W)?4:0)|(t(i+W)?8:0);return C['hedge:'+m]||null}/* 生け垣は、となりとのつながりの形で（tools/art/hedge/hedge_art.py） */
   return C[id]||null}
 function drawFarmChip(c,x,y,i,g,now){const C=window.CHIPS;if(!C)return false;if(ICON||i==null||!S){const ch=C.farm;return !!ch&&drawChip(c,ch,'farm',x,y,now,i)}
   const n=k=>S.obj[k]==='farm',gx=i%W,gy=(i/W)|0,m=(gx>0&&n(i-1)?1:0)|(gx<W-1&&n(i+1)?2:0)|(gy>0&&n(i-W)?4:0)|(gy<H-1&&n(i+W)?8:0),d=S.dyn[i],wet=!!d&&d.wet>0,base=C[(wet?'farmw:':'farm:')+m];
