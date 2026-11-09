@@ -98,6 +98,8 @@ function genWorld(s,w){
 }
 
 /* ---------- 火山のふもと（ステージ2）：温泉3か所・火山・熱の道 ---------- */
+const SPR_EFF={a:.3,b:.7,c:.8};/* 温泉の効き目：入口はつかれ−0.3/秒、西はたのしさ+0.7/秒、奥は出たあと、その日のおなかのへりかた0.8倍 */
+const SPR_TXT={a:'入っているあいだ、つかれ−27／1時間',b:'入っているあいだ、たのしさ+63／1時間',c:'出たあと、その日のおなかのへりかた0.8倍'};
 const HSPC={a:[CX+4.8,CY+4.8],b:[CX-8.5,CY-8],c:[CX+.5,CY-15]},SPN={a:'入口の温泉',b:'西の温泉',c:'奥の温泉'};
 const VOLJ=(OFF+1)*W+(CX-1),D1=(OFF+9)*W+(CX-4),D2=(CY-18)*W+(CX+5),CRACKS=[-2,-1,0,1,2].map(d=>(OFF+9)*W+CX+d),BVOL=[D2-1,D2+1,D2-W,D2+W];
 const ASHT=new Set(['oven','bench','takebench','tub','sink','campfire','hotstone']);
@@ -189,6 +191,8 @@ function heatLines(){const t=S.st2,ok=k=>!t.hvb[k],L=[],h1=ok(D1),cr=CRACKS.ever
   L.push({p:[[CX+5.5,CY-17.5],[CX+1.5,CY-17.5],[CX+1.5,HSPC.c[1]-1.4]],on:h2&&t.d2===0});
   L.push({p:[[CX+5.5,CY-17.5],[CX+8.5,CY-17.5]],on:h2&&t.d2===1,smoke:1});return L}
 let WARMK='',WARM=new Set();function warmSet(){/* 熱の道（熱が流れている線）から3マス以内の畑は、あたたかい畑 */if(WD!==1||!S.st2)return WARM;const t=S.st2,k=[t.d1,t.d2,t.d2fix,JSON.stringify(t.hvb),CRACKS.map(j=>S.obj[j]==='crack'?1:0).join(''),counts.farm||0,S===WARM.s].join('|');if(k===WARMK)return WARM;WARMK=k;WARM=new Set();WARM.s=S;const L=heatLines().filter(l=>l.on);for(let j=0;j<W*H;j++){if(S.obj[j]!=='farm')continue;const x=j%W+.5,y=((j/W)|0)+.5;const sd=(a,b)=>Math.max(Math.max(Math.min(a[0],b[0])-x,0,x-Math.max(a[0],b[0])),Math.max(Math.min(a[1],b[1])-y,0,y-Math.max(a[1],b[1])));if(L.some(l=>l.p.some((q,i)=>i&&sd(l.p[i-1],q)<=3)))WARM.add(j)}return WARM}
+let HGK='',HGP=[];function heatPts(){/* 熱が流れている熱の道の上に、1マスごとの点（夜の光） */const t=S.st2,k=[S===HGP.s,t.d1,t.d2,t.d2fix,JSON.stringify(t.hvb),CRACKS.map(j=>S.obj[j]==='crack'?1:0).join(''),S.flags.onsen?1:0].join('|');if(k===HGK)return HGP;HGK=k;HGP=[];HGP.s=S;for(const l of heatLines()){if(!l.on)continue;for(let i=1;i<l.p.length;i++){const a=l.p[i-1],b=l.p[i],n=Math.max(1,Math.round(Math.hypot(b[0]-a[0],b[1]-a[1])));for(let s=i===1?0:1;s<=n;s++)HGP.push([a[0]+(b[0]-a[0])*s/n,a[1]+(b[1]-a[1])*s/n])}}return HGP}
+function heatGlow(c,x0,x1,y0,y1,cut){/* cut：暗さをけずる。0：あたたかい色をほんの少し */if(WD!==1||!S.st2)return;const R=cut?30:22;c.save();if(cut)c.globalAlpha=.5;else c.globalAlpha*=.8;for(const[x,y]of heatPts()){if(x<x0-2||x>x1+2||y<y0-2||y>y1+2)continue;c.drawImage(lightSpr(R),x*TS-R,y*TS-R,R*2,R*2)}c.restore()}
 function drawHeat(now){if(WD!==1||!S.st2)return;const c=ctx;c.save();for(const j of warmSet()){const x=(j%W)*TS,y=((j/W)|0)*TS,ph=((now/1600+j*.13)%1);c.fillStyle='rgba(255,170,90,'+(.35*(1-ph))+')';c.fillRect(Math.round(x+8+((j*7)%16)),Math.round(y+22-ph*16),3,3)}/* あたたかい畑：ゆらゆらと熱がのぼる */c.lineCap='round';c.lineJoin='round';
   for(const l of heatLines()){c.beginPath();l.p.forEach((q,i)=>i?c.lineTo(q[0]*TS,q[1]*TS):c.moveTo(q[0]*TS,q[1]*TS));c.setLineDash([]);c.strokeStyle='rgba(60,45,38,.35)';c.lineWidth=9;c.stroke();c.strokeStyle='#8f7b6c';c.lineWidth=5;c.stroke();
     if(l.on){c.strokeStyle='rgba(255,140,60,.95)';c.lineWidth=3.2;c.setLineDash([7,9]);c.lineDashOffset=-now/40;c.stroke();c.setLineDash([]);
