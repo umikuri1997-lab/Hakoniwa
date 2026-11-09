@@ -5,7 +5,7 @@ const COMFMAX=300;// 住み心地の上限
 // 住み心地（0〜300）：ベッド・家具・床・人数で決まる。高いとよく眠れて、低いとたのしさが下がる
 const COMFR={rockart:1,jar:1,torch:1,clover:1,bellf:1,salvia:1,lily:1,lotus:1,lamp:2,vane:2};/* 家の外でも住み心地に入る範囲（マス） */
 const COMFY={cooktable:4,joro:3,taru:3,asabukuro:3,makidana:3,kabebukuro:3,takebench:5,takeakari:5,andon:5,shishiodoshi:6,hoshirug:5,mimamori:6,yomawari:6,oyasumi:8,yonaka:10,toro:6,stool:2,stable:4,pouf:3,achair:5,ltable:5,rug1:5,sofa1:6,rug2:6,tub:3,sink:4,crate:3,monstera:10,shelf1:12,wreath:10,curtain1:10,cabinet:12,paint2:10,shelf2:13,curtain2:10,paint3:10,wshelf:12,paint1:14,bathtub:16,candle:3,lantern:5,flamp:6,window:5,bed:10,table:8,chair:4,oven:6,lamp:6,torch:4,bench:5,jar:5,rockart:5,chochin:6,furin:8,ema:8,komainu:10,kadomatsu:10,vane:4,clover:4,bellf:4,salvia:4,lily:4,lotus:4,stor:3,mbox:3};
-const DECAYW=new Set(['hwall','logwall','plasterwall','brickwall','yozorawall']),WEBCOMF=5;/* 朽ちた壁になる家の壁（石の塀はならない）。クモの巣1つで住み心地-5 */
+const DECAYW=new Set(['hwall','bamboowall','logwall','plasterwall','brickwall','yozorawall']),WEBCOMF=5;/* 朽ちた壁になる家の壁（石の塀はならない）。クモの巣1つで住み心地-5 */
 const decayed=j=>{const o=S.obj[j];return DECAYW.has(o)&&S.hp[j]!=null&&S.hp[j]<=BL[o].hp/2};/* 朽ちた壁：じょうぶさが半分以下の家の壁（家の壁にならない） */
 function decayCheck(j){/* コワイノにたたかれて朽ちたら、その家は家でなくなる */if(!(S.hp[j]>0)||!decayed(j))return;const hb=HOUSES.find(h=>h.set.has(j));if(hb){recount();if(typeof houseBreakFlee==='function')houseBreakFlee(hb)}}
 function houseComfort(h){let bed=0,furn=0,fl=0,n=0;const seen=new Set();

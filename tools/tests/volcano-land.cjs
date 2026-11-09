@@ -40,4 +40,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict'),fs=r
  /* 火山の杉 */
  const cd=await run(`[plantChip('deadtree',0)===CHIPS['deadtree~v'],plantChip('tree',0)===CHIPS['tree~v'],iname('tree'),iname('deadtree')]`);assert.deepEqual(cd,[true,true,'杉の苗','山の杉']);
  const gr=await run(`(()=>{const w=WD;WD=0;const r=[plantChip('deadtree',0)===CHIPS.deadtree,iname('tree')];WD=w;return r})()`);assert.deepEqual(gr,[true,'木の苗']);
+ /* 竹の壁 */
+ const bw=await run(`(()=>{const s=newState(1);return [s.obj.filter(o=>o==='bamboowall').length>5,s.obj.includes('hwall'),!!s.unlocked.bamboowall,!!QUESTS2[0].gives.items.bamboowall,stageItemOK('hwall'),stageItemOK('bamboowall'),HOME_WALLS.has('bamboowall'),!!CHIPS['bamboowall:HLR'],!!CHIPS['bamboowall.door#h0'],!CHIPS.bamboowall]})()`);
+ assert.deepEqual(bw,[true,false,true,true,false,true,true,true,true,true],'竹の壁');
  assert.deepEqual(errors,[]);console.log('volcano-land: ok');await browser.close()})().catch(e=>{console.error(e);process.exit(1)});
