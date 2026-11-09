@@ -588,14 +588,14 @@ function chatTopic(r,p){const L=[],mt=bondOf(r,p)>=BOND_TALK;CHATS.forEach((c,i)
 function trySocial(r,G){const sb=socialBest(r,G);if(!sb)return false;const best=sb.b;const o=S.res.find(q=>q.id===best.o.partner);if(!o)return false;endAct(o);o.act={type:'chatwait',stage:'do',t:0,partner:r.id};o.bubble='👋';startAct(r,G,'chat',best.stand,best.o);return true}
 const NIGATE={fire:{fountain:30},wood:{campfire:17},water:{campfire:17},earth:{swing:27},wind:{sandbox:20}};/* 属性ごとの、すこしにがてなおもちゃ：ほかより少しえらばれにくい。数字は、遊んだときのたのしさ（ふつうは BL の play.fun） */
 const FAVTOY={earth:['sandbox'],wood:['swing'],water:['fountain'],fire:['campfire'],wind:['slide','seesaw']};/* 属性ごとに、よく遊ぶおもちゃ（ほかの子より選ばれやすい） */
-const FISHP=.125;
+const FISHP=.125,FISHPS=.25,FISHPA=.025;/* つりに行く確率：ふつうの水べ12.5%、つり場（水べのいす）25%、つりスポット・よるづり場は1つで+2.5% */
 function goPlay(r,G,strict){
-  const allowFishing=Math.random()<FISHP*(r.elem==='water'?2:1)*(r.like==='fish'?1.5:1);/* つりの割合：ふつうの子は1日1回くらい、水のせいれいは2回くらい（えらぶ点数が高い）、つり好きはもっと */let best=null,bs=-1e9;
+  const fq=Math.random()/((r.elem==='water'?2:1)*(r.like==='fish'?1.5:1)),allowFishing=fq<FISHPS+FISHPA*2;/* つりの割合：ふつうの子は1日1回くらい、水のせいれいは2回くらい（えらぶ点数が高い）、つり好きはもっと。つり場では、行く確率が上がる */let best=null,bs=-1e9;
   for(let j=0;j<W*H;j++){const d=G.dist[j];if(d<0||d>45)continue;const o=S.obj[j];
     if(o==='swing'&&free('o'+j,BL[o].play.cap)&&!toyTired(r,j)){/* 花では遊ばない */const p=BL[o].play;const ng=(NIGATE[r.elem]||{})[o],s=p.pt*3+(r.like===o?6:0)+((FAVTOY[r.elem]||[]).includes(o)?7:0)+spotN(j,'park','park2')*4-(ng!=null?6:0)-d*.3+Math.random()*2;if(s>bs){bs=s;best={type:'play',stand:j,o:{key:'o'+j,obj:j,what:o,fun:ng!=null?ng:p.fun,dur:p.dur,pt:p.pt,pw:p.pw,nig:ng!=null}}}}
     const fk0=adjOf(j,k=>{const t=typeAt(k),p=t&&BL[t]&&BL[t].play;return !!(p&&p.adj&&free('o'+anc(k),p.cap)&&!toyTired(r,anc(k)))}),fk=fk0>=0?anc(fk0):-1;
     if(fk>=0){const w=S.obj[fk],p=BL[w].play;const ng=(NIGATE[r.elem]||{})[w],s=p.pt*3+(r.like===w?6:0)+((FAVTOY[r.elem]||[]).includes(w)?7:0)+spotN(fk,'park','park2')*4-(ng!=null?6:0)-d*.3+Math.random()*2;if(s>bs){bs=s;best={type:'play',stand:j,o:{key:'o'+fk,obj:fk,what:w,fun:ng!=null?ng:p.fun,dur:p.dur,pt:p.pt,pw:p.pw,nig:ng!=null}}}}
-    if(allowFishing&&canJob(r,'fish')&&roomN(r)>0&&S.ground[j]!==1&&fishW(j)>=0&&free('f'+j,1)){const sp=fSpot(j),s=10+(sp?12:0)+(r.like==='fish'?6:0)+(r.elem==='water'?9:0)-d*.3+Math.random()*2;if(s>bs){bs=s;best={type:'fish',stand:j,o:{key:'f'+j,spot:sp}}}}
+    if(allowFishing&&canJob(r,'fish')&&roomN(r)>0&&S.ground[j]!==1&&fishW(j)>=0&&free('f'+j,1)&&fq<(fSpot(j)?FISHPS+FISHPA*spotN(j,'fishspot','yoruzuri'):FISHP)){const sp=fSpot(j),s=10+(sp?12:0)+(r.like==='fish'?6:0)+(r.elem==='water'?9:0)-d*.3+Math.random()*2;if(s>bs){bs=s;best={type:'fish',stand:j,o:{key:'f'+j,spot:sp}}}}
   }
   {const sb=socialBest(r,G);if(sb&&sb.s>bs){bs=sb.s;best=sb.b}}
   if(!best)return strict?false:goWander(r,G);
