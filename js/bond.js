@@ -1,6 +1,6 @@
 'use strict';
 /* せいれいどうしのなかよし：S.bond（2人の id を小さい順に「a_b」）→ 0〜100。
-   ふえる：同じ遊び家具でいっしょに遊ぶ+2・おしゃべり+3・同じ食卓でいっしょに食べる+2・同じ夜にいっしょに守る+5（1晩1回）。
+   ふえる：同じ遊び家具でいっしょに遊ぶ+1・おしゃべり+1.5・同じ食卓でいっしょに食べる+1・同じ夜にいっしょに守る+2.5（1晩1回）。
    30：なかよし（2人のピンクの会話が1回）。60：遊ぶときに、なかよしをさそう。100：3マス以内にいるとはたらく速さ+5%（重複なし）。
    思い出帳の再生（IS_STORY_REPLAY）では、ふやさない。 */
 const BOND_TALK=30,BOND_PLAY=60,BOND_MAX=100;
@@ -39,7 +39,7 @@ const BOND_TALKS={
 };
 /* どの組でも：属性の組ごと。0・1 は ELEM_KEYS の順で前・うしろの子。@0・@1 は名前。言いかたは chatTone で属性に合わせる */
 const BOND_GEN={
- 'wood|wood':[[0,'@1、いっしょにいると、なんだか日なたにいるみたいだね。'],[1,'わかる！ ぽかぽかするよね。'],[0,'これからも、いっしょに村をそだてようね！']],
+ 'wood|wood':[[0,'@1、いっしょにいると、なんだか日なたにいるみたいだね。'],[1,'うん、ぽかぽかするよね。'],[0,'これからも、いっしょに村をそだてようね！']],
  'wood|earth':[[0,'@1、きのう植えた芽、もう顔を出してたよ！'],[1,'ほんと？ いい土になってきたんだね。'],[0,'@1がたがやしてくれたおかげだよ。ありがとう！']],
  'wood|fire':[[1,'@0、ゆうべは、ちゃんと家にいたよね？'],[0,'うん。@1が守ってくれるから、安心してねむれるよ。'],[1,'えへへ、まかせといて！']],
  'wood|water':[[0,'@1、畑の花が、きょうはとっても元気なんだ。'],[1,'水をたっぷりあげたからかな。'],[0,'いっしょに世話すると、花もうれしそうだね！']],
@@ -68,14 +68,14 @@ function bondTalkTick(){if(!S||!S.bond)return;const D=S.sev||{};for(const pk in 
 /* ---------- 同じ夜にいっしょに守る（見張り台・夜の見まわり・こもれびのまもりについて行く） ---------- */
 const BOND_DEF=new Set(['watchpost','patrol','follow']);
 function bondNightTick(){if(!isNight()||!S.enemyOn)return;const n=dayNo()-(hour()<12?1:0),D=S.bondDef&&S.bondDef.n===n?S.bondDef:(S.bondDef={n,ids:[]});
-  for(const r of S.res){if(r.hidden||!r.act||!BOND_DEF.has(r.act.type)||D.ids.includes(r.id))continue;for(const id of D.ids){const q=S.res.find(x=>x.id===id);if(q)bondAdd(r,q,5)}D.ids.push(r.id)}}
+  for(const r of S.res){if(r.hidden||!r.act||!BOND_DEF.has(r.act.type)||D.ids.includes(r.id))continue;for(const id of D.ids){const q=S.res.find(x=>x.id===id);if(q)bondAdd(r,q,2.5)}D.ids.push(r.id)}}
 /* ---------- なかよし100：3マス以内ではたらく速さ+5% ---------- */
 function bondNearTick(){BOND5.clear();if(!S.bond)return;for(const pk in S.bond){if(S.bond[pk]<BOND_MAX)continue;const p=bondPair(pk);if(!p||p[0].hidden||p[1].hidden)continue;if(Math.hypot(p[0].x-p[1].x,p[0].y-p[1].y)<=3){BOND5.add(p[0]);BOND5.add(p[1])}}}
 function bondTick(){if(!S||IS_STORY_REPLAY)return;bondNightTick();bondNearTick();bondTalkTick()}
 
 /* ---------- いっしょに遊ぶ ---------- */
 /* 同じ遊び家具で遊びはじめたら、先に遊んでいる子と+2（1回の遊びで1回） */
-function bondPlayStart(r,a){if(a.bd||a.obj==null)return;a.bd=1;for(const q of S.res)if(q!==r&&q.act&&q.act.type==='play'&&q.act.stage==='do'&&q.act.obj===a.obj)bondAdd(r,q,2)}
+function bondPlayStart(r,a){if(a.bd||a.obj==null)return;a.bd=1;for(const q of S.res)if(q!==r&&q.act&&q.act.type==='play'&&q.act.stage==='do'&&q.act.obj===a.obj)bondAdd(r,q,1)}
 /* なかよし60：遊びに行くとき、ひまにしているなかよしをさそう */
 function bondInvite(r,o){if(!S||isNight()||!o||o.obj==null||(r.bdInv||0)>S.t)return false;const bb=bondBest(r);if(!bb||bb.v<BOND_PLAY)return false;const f=bb.q,p=BL[o.what]&&BL[o.what].play;
   if(!p||!free(o.key,p.cap)||f.hidden||!f.act||!['idle','wander'].includes(f.act.type)||f.fun>=100||f.hunger<50||hungry(f)||f.energy<25||onHold(f)||HOLD.has(f.id)||storyCalled(f)||carryN(f)>0||f.meal||toyTired(f,o.obj))return false;
@@ -101,7 +101,7 @@ function tourTarget(k){const isO=id=>q=>S.obj[q]===id||S.obj[q]==='part'&&S.obj[
 /* せいれいの行動をきめるときによぶ。あんないをしたら true */
 function tourTick(r,G){const P=tourPair();if(!P||r.hunger<40)return false;const {T,g,w}=P;
   if(r===g){while(T.i<TOUR_KINDS.length){const tg=tourTarget(TOUR_KINDS[T.i]);const j=tg?nearest(G,j=>walk(j)&&tg.pred(j)&&Math.hypot(j%W+.5-r.x,((j/W)|0)+.5-r.y)>=3,80):-1;if(j>=0){const lk=tg.look(j);startAct(r,G,'tourgo',j,{dur:TOUR_STOP,look:lk});return true}T.i++}
-    delete S.tour;JUMP.set(g,performance.now());JOYU.set(g,performance.now()+1500);if(Math.hypot(w.x-g.x,w.y-g.y)<4){JUMP.set(w,performance.now());JOYU.set(w,performance.now()+1500)}bondAdd(g,w,3);return false}/* さいごまで見せたら、ふたりでよろこぶ */
+    delete S.tour;JUMP.set(g,performance.now());JOYU.set(g,performance.now()+1500);if(Math.hypot(w.x-g.x,w.y-g.y)<4){JUMP.set(w,performance.now());JOYU.set(w,performance.now()+1500)}bondAdd(g,w,1.5);return false}/* さいごまで見せたら、ふたりでよろこぶ */
   if(r===w){const here=(r.y|0)*W+(r.x|0);if(Math.hypot(g.x-r.x,g.y-r.y)<=1.8){startAct(r,G,'tourf',here,{tg:g.id});return true}
     let q=-1,bd=1e9;for(let k=0;k<W*H;k++){const d=G.dist[k];if(d<0||d>60||!walk(k))continue;const h=Math.hypot(k%W+.5-g.x,((k/W)|0)+.5-g.y);if(h<.9||h>1.8)continue;if(d<bd){bd=d;q=k}}
     if(q>=0){startAct(r,G,'tourf',q,{tg:g.id});return true}}
