@@ -46,7 +46,7 @@ function thumb(cv2,k,open,hide){
   PXSCENE(c,190,70,1,k===1?'volcano':k===2?'water':k===FREE?'free':'meadow',k*7+3);
   if(!open){c.fillStyle='rgba(0,0,0,.4)';c.fillRect(0,0,190,70);PXSCENE(c,190,70,1,'lockover',0)}
 }
-const APP_VER=1371;/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER=1372;/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
@@ -216,7 +216,7 @@ $('#lvOk').addEventListener('click',e=>{e.stopPropagation();sfx('tap');$('#lvup'
 
 document.querySelector('.hud').addEventListener('click',()=>{if(!S)return;sfx('tap');openSheet('vill')});/* HUD をタップすると村のようす */
 $('#dock').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;sfx('tap');if(b.dataset.mode)setMode(b.dataset.mode);else if(b.dataset.sheet)openSheet(b.dataset.sheet)});
-$('#sheetX').onclick=closeSheet;$('#scrim').onclick=closeSheet;
+$('#sheetX').onclick=closeSheet;{let down=false;const sc=$('#scrim');sc.onpointerdown=()=>{down=true};sc.onclick=()=>{if(down)closeSheet();down=false}}/* うしろの暗い所は、そこで指をおろしたときだけとじる（マップをタップして開いたとき、同じタップの click がここに当たってすぐとじないように。Android） */
 $('#questChip').onclick=openCurrentGoal;/* 会話・調査の場所へ。対象がなければ目標の一覧をひらく */
 $('#pauseBtn').onclick=()=>{sfx('tap');USERPAUSE=!USERPAUSE;$('#pauseIc').style.display=USERPAUSE?'none':'';$('#playIc').style.display=USERPAUSE?'':'none';$('#pauseBtn').setAttribute('aria-label',USERPAUSE?'うごかす':'とめる');$('#pauseBtn').classList.toggle('on',USERPAUSE)};
 $('#speedBtn').onclick=()=>{if(!(hasGlass()||TESTM)){if(glassUnlocked())adPrompt();return}sfx('tap');S.speed=S.speed===1?2:S.speed===2&&TESTM?3:S.speed===3&&TESTM?5:1;/* 広告でできるのは2倍まで */glassUI()};
