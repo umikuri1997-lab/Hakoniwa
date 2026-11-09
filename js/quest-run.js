@@ -55,10 +55,20 @@ function showItemGift(){while(ITEM_GIFTS.length&&ITEM_GIFTS[0].state!==S)ITEM_GI
   setTimeout(()=>{if(overlay.isConnected){button.disabled=false;button.focus({preventScroll:true})}},650);button.onclick=()=>{if(button.disabled)return;overlay.remove();GIFT_ACTIVE=false;if(prior&&prior.isConnected)prior.focus({preventScroll:true})};
 }
 const spotCond=sp=>(sp.room?'家の中に、':'')+sp.how.replace(/^家の中に、/,'').split('と、').map(t=>t.replace(/([0-9]+)(つ|本)$/,'×$1')).join('・');/* 「井戸と、畑3つ」→「井戸・畑×3」 */
+/* なかよしのポップアップの絵：2人が向かい合って、かわりばんこにはねる。あいだにドットのハート（ポップアップをとじるまで動く） */
+const BONDHEART=['.oo.oo.','offoffo','offfffo','.offfo.','..ofo..','...o...'];
+function bondPic(pair,card){const K=2,CW=150,CH=74,cv=document.createElement('canvas');cv.width=CW*K;cv.height=CH*K;cv.className='bondpic';const c=cv.getContext('2d');
+  const draw=now=>{if(!cv.isConnected&&now>0)return;const t=now/1000;c.setTransform(1,0,0,1,0,0);c.clearRect(0,0,cv.width,cv.height);c.imageSmoothingEnabled=false;
+    pair.forEach((p,i)=>{const x=i?93:57,f=i?-1:1,ph=(t*1.6+i*.5)%1,hop=ph<.35?Math.round(Math.sin(ph/.35*Math.PI)*6):0;
+      c.setTransform(K,0,0,K,0,0);c.fillStyle='rgba(90,70,40,.18)';c.fillRect(x-10,66,20,3);
+      drawSpirit(c,p.el,x,66-hop,.435,f,{dot:1,t:t+i*1.3,vr:p.vr,mood:'joy',blink:(t*1000+i*1300)%3400<140})});
+    c.setTransform(K,0,0,K,0,0);const u=2,hy=Math.round(6+Math.sin(t*2.2)*2),hx=68;BONDHEART.forEach((row,y)=>[...row].forEach((ch,x)=>{if(ch==='.')return;c.fillStyle=ch==='o'?'#d77f94':'#f4a3b4';c.fillRect(hx+x*u,hy+y*u,u,u)}));c.fillStyle='#fde3ea';c.fillRect(hx+2,hy+2,2,2);
+    requestAnimationFrame(draw)};
+  draw(0);return cv}
 const SPOT_POPS=[];/* はじめてできたスポットの説明・なかよしになった2人（{bond:[名前,名前]}） */
 function showSpotPop(){if(MEMRUN)return;while(SPOT_POPS.length&&SPOT_POPS[0].state!==S)SPOT_POPS.shift();if(!SPOT_POPS.length||GIFT_ACTIVE)return;
   GIFT_ACTIVE=true;const overlay=el('<div class="idea-reveal gift-reveal" role="dialog" aria-modal="true"></div>'),card=el('<div class="idea-card"><h2></h2><div class="spotpop"><b></b><p></p><p></p></div></div>');
-  const q=card.querySelector('.spotpop'),h=card.querySelector('h2');{const e=SPOT_POPS.shift(),sp=e.sp;if(e.bond){h.textContent='なかよし！';q.children[0].textContent=e.bond[0]+'と'+e.bond[1];q.children[1].textContent='なかよしになった';q.children[2].remove()}else{h.textContent='スポットができた！';q.children[0].textContent=sp.n;q.children[1].textContent='条件：'+spotCond(sp);q.children[2].textContent=sp.eff}}overlay.setAttribute('aria-label',h.textContent);
+  const q=card.querySelector('.spotpop'),h=card.querySelector('h2');{const e=SPOT_POPS.shift(),sp=e.sp;if(e.bond){h.textContent='なかよし！';if(e.pair)q.before(bondPic(e.pair,card));q.children[0].textContent=e.bond[0]+'と'+e.bond[1];q.children[1].textContent='なかよしになった';q.children[2].remove()}else{h.textContent='スポットができた！';q.children[0].textContent=sp.n;q.children[1].textContent='条件：'+spotCond(sp);q.children[2].textContent=sp.eff}}overlay.setAttribute('aria-label',h.textContent);
   const button=el('<button class="btn pri" type="button">OK</button>');button.disabled=true;card.append(button);overlay.append(card);document.body.append(overlay);sfx('good');const prior=document.activeElement;
   setTimeout(()=>{if(overlay.isConnected){button.disabled=false;button.focus({preventScroll:true})}},650);button.onclick=()=>{if(button.disabled)return;overlay.remove();GIFT_ACTIVE=false;if(prior&&prior.isConnected)prior.focus({preventScroll:true})}}
 function questGives(q,g){g=g||q.gives||{};

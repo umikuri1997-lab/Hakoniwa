@@ -49,6 +49,11 @@ function fogAfterRecount(){/* recount のあと：となりの晴れたエリア
   for(const a of clr)fogClear(a,quiet);
   for(const f of S.fogF||[]){if(f.t!=='ruin'||!f.set||f.done)continue;const c=ruinDoor(f)-W,[rw,rh]=ruinWH(f);if(fogRing(f.j,rw,rh).every(k=>HOME_WALLS.has(S.obj[k])||HOME_DOORS.has(S.obj[k]))&&HOUSES.some(h=>h.inside.has(c))){f.done=1;f.find=1;/* 中のわすれ物は、せいれいが見つける（ruinFindTick） */toast((RUIN_KINDS[f.k]?RUIN_KINDS[f.k].n.replace('のあと',''):'古い家')+'が、よみがえった','good')}}}
 function fogRing(j,w,h){/* 古い家のあと：w×h マスのまわり（下のまん中がドア） */w=w||5;h=h||4;const x=j%W,y=(j/W)|0,L=[];for(let b=0;b<h;b++)for(let a=0;a<w;a++)if(a===0||a===w-1||b===0||b===h-1)L.push((y+b)*W+x+a);return L}
+function ruinGap(f,rnd){/* 古い家のあとの、角でもドアでもない壁のマスを1つ、なにもない所にする（こわれたあとの印もけす）。もうなにもない所があれば、そのまま */
+  const [rw,rh]=ruinWH(f),x=f.j%W,y=(f.j/W)|0,door=ruinDoor(f),B=S.broken||(S.broken=[]),L=fogRing(f.j,rw,rh).filter(k=>{const a0=k%W-x,b0=((k/W)|0)-y;return k!==door&&!((a0===0||a0===rw-1)&&(b0===0||b0===rh-1))});
+  if(L.some(k=>!S.obj[k]&&!B.some(b=>b.j===k)))return;const C=L.filter(k=>S.obj[k]==='hwall'||!S.obj[k]&&B.some(b=>b.j===k&&b.id==='hwall'));if(!C.length)return;
+  const k=C[Math.min(C.length-1,(rnd()*C.length)|0)];if(S.obj[k]==='hwall'){S.obj[k]='';if(S.hp)delete S.hp[k]}S.broken=B.filter(b=>b.j!==k)}
+function ruinGapMigrate(){/* 前のセーブ（いちどだけ）：晴れていて、まだ家にもどっていない古い家のあとにも、なくなった壁を1つ */if(S.flags.ruinGap1)return;S.flags.ruinGap1=1;for(const f of S.fogF||[])if(f.t==='ruin'&&f.set&&!f.done){const r=fogRand(f.j*2246822519+7);ruinGap(f,r)}}
 const ruinDoor=(f)=>{const [w,h]=ruinWH(f);return f.j+(h-1)*W+(w>>1)};
 /* お屋敷：霧のエリアの1つに、そのまま住める大きな家（よこ12×たて9。部屋は3つ）。晴れたときに建つ。場所は、はじめに1回だけきめる */
 const MANSION_W=12,MANSION_H=9,MANSION_DOORS=[[3,8],[6,6],[8,4]],MANSION_WIN=[[2,0],[4,0],[8,0],[10,0]],
@@ -95,6 +100,7 @@ function fogClear(a,quiet){if(!S.fog[a])return;S.fog[a]=0;S.fogV=(S.fogV||0)+1;i
   for(const f of S.fogF||[])if(f.a===a&&f.t==='ruin'&&!f.set){if(!f.k){for(const k of RUIN_ORDER){const K=RUIN_KINDS[k];if(!(S.fogF||[]).some(g=>g!==f&&g.k===k)&&ruinFits(S,f.j,K.w,K.h)){f.k=k;break}}if(!f.k&&ruinFits(S,f.j,5,4))f.k='kitchen'}/* 前のセーブの小屋：入るしゅるいをえらぶ */
     f.set=1;const [rw,rh]=ruinWH(f),x=f.j%W,y=(f.j/W)|0,door=ruinDoor(f),rnd=fogRand(f.j*2246822519+3),brk=(id,k)=>(S.broken||(S.broken=[])).push({j:k,id,rot:0});
     fogRing(f.j,rw,rh).forEach(k=>{const o=S.obj[k];if(o&&!(BL[o]&&BL[o].natural||WEEDS.has(o)))return;if(o)S.obj[k]='';S.drops=(S.drops||[]).filter(d=>d.y*W+d.x!==k);const a0=k%W-x,b0=((k/W)|0)-y,corner=(a0===0||a0===rw-1)&&(b0===0||b0===rh-1);if(k!==door&&(corner||rnd()<.4))S.obj[k]='hwall';else brk(k===door?'door':'hwall',k)});/* のこっている壁（角と、いくつか）。ほかは、こわれたあと */
+    ruinGap(f,rnd);/* 壁が1つは、こわれたあとものこらずに、なくなっている（直すだけでは家にならない） */
     for(const[id,a0,b0]of (RUIN_KINDS[f.k]||{furn:[]}).furn){const k=(y+b0)*W+x+a0,o=S.obj[k];if(o&&!(BL[o]&&BL[o].natural||WEEDS.has(o)))continue;if(o)S.obj[k]='';brk(id,k)}/* むかしの使いみちがわかる家具（こわれている。直すと使える） */
     villageTimeout(()=>recount(),30)}
   dirty=true}
