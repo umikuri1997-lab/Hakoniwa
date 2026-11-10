@@ -548,12 +548,12 @@ function weatherMorning(wasRain){/* morning() の雨を決めたあと */
   if(!IS_STORY_REPLAY&&wasRain&&Math.random()<.5){S.rain=false;S.rbDay=dayNo();setTimeout(()=>toast('雨あがりの空に、虹が出ている','good'),900)}}
 /* 草原のメイン「木のなかまと花畑」（wood6）：えらんだ「ヌシ様に見せたい花」（S.flags.choice.nushiFlower）を、御神木のそば（FIELD_NEAR_R）に5本咲かせる。
    咲いたら、木のせいれいが1人ずつ世話をしにいく（S.flags.flTend：世話をした子の id。この依頼のあいだにした世話だけ）。5人が世話をおえたら、花畑が満開になる */
-const WFL_N=5,WFL_TEND=5,WFL_NAME={bellf:'ききょう',lily:'ゆり',clover:'シロツメクサ'};
+const WFL_N=5,WFL_TEND=5,WFL_AT=3,WFL_NAME={bellf:'ききょう',lily:'ゆり',clover:'シロツメクサ'};
 const wflKind=()=>S&&S.flags.choice&&S.flags.choice.nushiFlower||'bellf',wflName=()=>WFL_NAME[wflKind()]||BL[wflKind()].name;
 function wflOn(){return !!S&&WD===0&&!S.free&&!IS_STORY_REPLAY&&QUESTS[S.quest]?.id==='wood6'&&S.qTalked&&S.qStory==null}
 function wflCells(){/* 御神木のそばで咲いている、えらんだ花 */const j=S.sacredRoot;if(j==null)return [];const id=wflKind(),R=FIELD_NEAR_R,n=sacredSpan()+R*2,x0=j%W-R,y0=(j/W|0)-R,L=[];
   for(let b=0;b<n;b++)for(let a=0;a<n;a++){const x=x0+a,y=y0+b;if(x<0||y<0||x>=W||y>=H)continue;const k=y*W+x;if(S.obj[k]===id&&!isBud(k))L.push(k)}return L}
 const wflN=()=>Math.min(WFL_N,wflCells().length),wflT=()=>S&&S.flags.flTend||[],wflTN=()=>Math.min(WFL_TEND,wflT().length);
-function wflWant(r){if(!wflOn()||isNight()||r.elem!=='wood'||r.hidden)return false;const T=wflT();return T.length<WFL_TEND&&!T.includes(r.id)&&!(S.res.some(q=>q!==r&&q.act&&q.act.type==='fltend'))&&wflCells().length>=WFL_N}/* 1人ずつ */
-function wflJob(r,G){if(!wflWant(r))return false;if(!S.unlocked[wflKind()])S.unlocked[wflKind()]=true;/* えらんだ花は、カミサマのお店でも買える */const C=wflCells(),ad=(k,c)=>Math.abs(k%W-c%W)+Math.abs((k/W|0)-(c/W|0))===1;
-  const st=nearest(G,k=>walk(k)&&!S.obj[k]&&C.some(c=>ad(k,c)),9999);if(st<0)return false;const c=C.find(c=>ad(st,c));startAct(r,G,'fltend',st,{obj:c});return true}
+function wflWant(r){if(!wflOn()||isNight()||r.elem!=='wood'||r.hidden)return false;const T=wflT();return T.length<WFL_TEND&&!T.includes(r.id)&&S.res.filter(q=>q!==r&&q.act&&q.act.type==='fltend').length<WFL_AT&&wflCells().length>=WFL_N}/* 3人まで同時に */
+function wflJob(r,G){if(!wflWant(r))return false;if(!S.unlocked[wflKind()])S.unlocked[wflKind()]=true;/* えらんだ花は、カミサマのお店でも買える */const C=wflCells().filter(c=>free('fl'+c,1)),ad=(k,c)=>Math.abs(k%W-c%W)+Math.abs((k/W|0)-(c/W|0))===1;
+  const st=nearest(G,k=>walk(k)&&!S.obj[k]&&C.some(c=>ad(k,c)),9999);if(st<0)return false;const c=C.find(c=>ad(st,c));startAct(r,G,'fltend',st,{key:'fl'+c,obj:c});return true}/* 同じ花には1人ずつ */

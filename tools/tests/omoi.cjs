@@ -27,6 +27,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict');
  }
  assert(await run('QUESTS[S.quest].check()'),'lv5 clears after three footprints');
  await clear('lv5');await read();
+ await run(`(()=>{const r=S.res.find(r=>r.name===POKO),x=S.sacredRoot%W,y=S.sacredRoot/W|0;endAct(r);r.x=x-2.5;r.y=y+5.5})()`);/* 足あとから、木のそばへもどす */
  assert.equal(await run('S.shards'),1);assert(await run('S.flags.sh_land&&!S.flags.sh_key'),'land shard only');
  assert.equal(await run('QUESTS[S.quest].id'),'omoi');
  /* 受ける前のなかよしは数えない */
