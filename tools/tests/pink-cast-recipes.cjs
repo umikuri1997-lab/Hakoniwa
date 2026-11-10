@@ -25,8 +25,8 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict');
   assert.equal(pink.withN.e21,true);assert.equal(pink.withN.e21len,5,'all ノドカ lines are spoken');
   assert.deepEqual(pink.noH,{e16:false,e15:false},'e16 needs the fire spirit; reply only when present');assert.deepEqual(pink.withH,{e16:true,e15:true});assert.equal(pink.e06,false,'ノドカ is mentioned only when present');
   /* 2. とげの罠の目標（watch1）で、すべる水たまり・どくの罠をおぼえる。古いセーブも読みこみで */
-  const rec=JSON.parse(await run(`(()=>{const ids=questRecipeIds(QUESTS[questIndexOf('watch1')]);const notes=[];const rn=recipeNotice;recipeNotice=L=>{notes.push(...L)};
-    S.guardianIdeas={};delete S.recipes.puddle;delete S.recipes.sticky;inspireQuest(QUESTS[questIndexOf('watch1')]);recipeNotice=rn;
+  const rec=JSON.parse(await run(`(()=>{const ids=[...questRecipeIds(QUESTS[questIndexOf('watch1')]),...questRecipeIds(QUESTS[questIndexOf('watch1')],'clear')];/* 水たまり・どくの罠は、お礼の会話でおぼえる */const notes=[];const rn=recipeNotice;recipeNotice=L=>{notes.push(...L)};
+    S.guardianIdeas={};delete S.recipes.puddle;delete S.recipes.sticky;inspireQuest(QUESTS[questIndexOf('watch1')]);inspireQuest(QUESTS[questIndexOf('watch1')],'clear');recipeNotice=rn;
     const s=JSON.parse(JSON.stringify(S));delete s.recipes.puddle;delete s.recipes.sticky;s.quest=questIndexOf('kikyo');s.qStory=null;syncQuestRecipes(s);
     return JSON.stringify({ids,notes,now:!!S.recipes.puddle&&!!S.recipes.sticky,old:!!s.recipes.puddle&&!!s.recipes.sticky})})()`));
   assert.ok(rec.ids.includes('puddle')&&rec.ids.includes('sticky'));assert.ok(rec.notes.includes('puddle')&&rec.notes.includes('sticky'),'recipe notice');assert.equal(rec.now,true);assert.equal(rec.old,true,'old save learns on load');

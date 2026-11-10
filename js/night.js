@@ -48,13 +48,13 @@ function doSummon(){
 
 /* ---------- 敵（「コワイノ」） ---------- */
 const EN={
-  basic:{xp:5,pw:4,name:'コカゲ',hp:10,sp:.80,atk:25,hit:20,hitF:10,hitN:12,hitFS:5,hitNS:6,col:'#2a1d46',eye:'#ff6b8a',size:1},
-  fast:{xp:4,pw:3,name:'ハヤカゲ',hp:5,sp:1.6,atk:16.7,/* コカゲの足2倍・攻撃1.5倍の速さ */hit:14,hitF:7,hitN:8,hitFS:4,hitNS:4,col:'#1d3446',eye:'#7ff0ff',size:.8},
-  thief:{xp:2,pw:2,name:'カゲドロボウ',hp:3,sp:.88,atk:25,hit:10,hitF:5,hitN:6,hitFS:3,hitNS:3,col:'#3b2a14',eye:'#ffd35c',size:.9,thief:1},
-  brute:{xp:8,pw:6,rng:1.2,name:'カタカゲ',hp:10,sp:.76,atk:9,hit:28,hitF:14,hitN:17,hitFS:7,hitNS:8,col:'#3a1a1a',eye:'#ff8a3d',size:1.25,hs:1}/* 当たり判定は1マス */,
-  breaker:{xp:7,pw:5,name:'カベクダキ',hp:9,sp:.8,atk:6,hit:18,hitF:9,hitN:11,hitFS:5,hitNS:5,col:'#3a2a1a',eye:'#ffa04a',size:1.1,wall:3},/* 壁や柵をこわすのが得意（こわす力3倍・速い）。よけずにまっすぐこわしにくる */
-  trapper:{xp:6,pw:5,name:'ワナクイ',hp:8,sp:.9,atk:12,hit:16,hitF:8,hitN:10,hitFS:4,hitNS:5,col:'#2b3a1e',eye:'#c6ff6b',size:.95,trapper:1},/* 罠・見張り台を先にこわしにくる */
-  boss:{xp:25,pw:20,rng:2.1,name:'オオカゲ',hp:40,sp:.84,atk:7,hit:14,hitF:7,hitN:8,hitFS:4,hitNS:4,col:'#120a24',eye:'#ff3b6b',size:1.8,boss:1},
+  basic:{xp:5,pw:4,name:'コカゲ',hp:10,sp:.80,atk:25,hit:20,hitF:5,hitN:12,hitFS:3,hitNS:6,col:'#2a1d46',eye:'#ff6b8a',size:1},
+  fast:{xp:4,pw:3,name:'ハヤカゲ',hp:5,sp:1.6,atk:16.7,/* コカゲの足2倍・攻撃1.5倍の速さ */hit:14,hitF:4,hitN:8,hitFS:2,hitNS:4,col:'#1d3446',eye:'#7ff0ff',size:.8},
+  thief:{xp:2,pw:2,name:'カゲドロボウ',hp:3,sp:.88,atk:25,hit:10,hitF:3,hitN:6,hitFS:2,hitNS:3,col:'#3b2a14',eye:'#ffd35c',size:.9,thief:1},
+  brute:{xp:8,pw:6,rng:1.2,name:'カタカゲ',hp:10,sp:.76,atk:9,hit:28,hitF:7,hitN:17,hitFS:4,hitNS:8,col:'#3a1a1a',eye:'#ff8a3d',size:1.25,hs:1}/* 当たり判定は1マス */,
+  breaker:{xp:7,pw:5,name:'カベクダキ',hp:9,sp:.8,atk:6,hit:18,hitF:5,hitN:11,hitFS:3,hitNS:5,col:'#3a2a1a',eye:'#ffa04a',size:1.1,wall:3},/* 壁や柵をこわすのが得意（こわす力3倍・速い）。よけずにまっすぐこわしにくる */
+  trapper:{xp:6,pw:5,name:'ワナクイ',hp:8,sp:.9,atk:12,hit:16,hitF:4,hitN:10,hitFS:2,hitNS:5,col:'#2b3a1e',eye:'#c6ff6b',size:.95,trapper:1},/* 罠・見張り台を先にこわしにくる */
+  boss:{xp:25,pw:20,rng:2.1,name:'オオカゲ',hp:40,sp:.84,atk:7,hit:14,hitF:4,hitN:8,hitFS:2,hitNS:4,col:'#120a24',eye:'#ff3b6b',size:1.8,boss:1},
   ash:{xp:4,pw:3,name:'ハイカゲ',hp:6,sp:.9,atk:20,hit:12,hitF:6,hitN:7,hitFS:3,hitNS:4,col:'#6d6a66',eye:'#ffb36b',size:.9,ash:1},/* かまど・ベンチなどを灰でよごして止める */
   rockc:{xp:12,pw:8,name:'イワカゲ',hp:22,sp:.5,atk:30,hit:30,hitF:15,hitN:18,hitFS:8,hitNS:9,col:'#5a4636',eye:'#ffcf6b',size:1.3},/* おそいけど、かたい */
   hino:{xp:35,pw:25,rng:2.3,name:'ヒノオオカゲ',hp:60,sp:.7,atk:6,hit:40,hitF:20,hitN:24,hitFS:10,hitNS:12,col:'#3a0c08',eye:'#ffb02e',size:2.1,boss:1,dev:1},/* 火山から下りてきて、熱の装置をねらう */

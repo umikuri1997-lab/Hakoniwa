@@ -9,7 +9,7 @@ function clampCam(){
   cam.y=vh>=H*TS?(H*TS-vh)/2:clamp(cam.y,-80,H*TS-vh+(performance.now()<(window.BOSSCAM||0)?vh/2+120:120));/* オオカゲの登場のあいだは、南のはしのオオカゲも画面のまん中に */
 }
 function resize(){dpr=Math.min(window.devicePixelRatio||1,1.25);/* 発熱対策で解像度をおさえる */VW=innerWidth;VH=innerHeight;cv.width=VW*dpr|0;cv.height=VH*dpr|0;cv.style.width=VW+'px';cv.style.height=VH+'px';clampCam();sacredResizeShot()}
-function panTo(wx,wy){camAnim={fz:cam.z,tz:cam.z,fx:cam.x+VW/cam.z/2,fy:cam.y+VH/cam.z/2,tx:wx,ty:wy,t:0,dur:.6}}/* 話しかけた子を、画面の中央へ */
+function panTo(wx,wy){if(camAnim&&camAnim.done)return;/* 演出のカメラ（おわりの処理つき）は、上書きしない */camAnim={fz:cam.z,tz:cam.z,fx:cam.x+VW/cam.z/2,fy:cam.y+VH/cam.z/2,tx:wx,ty:wy,t:0,dur:.6}}/* 話しかけた子を、画面の中央へ */
 function centerOn(wx,wy){cam.x=wx-VW/cam.z/2;cam.y=wy-VH/cam.z/2;clampCam()}
 const homeZ=()=>Math.max(minZ(),Math.min(2.2,VW/(13*TS)));
 const toWorld=(sx,sy)=>({x:cam.x+sx/cam.z,y:cam.y+sy/cam.z});
@@ -17,7 +17,7 @@ const toWorld=(sx,sy)=>({x:cam.x+sx/cam.z,y:cam.y+sy/cam.z});
 let mode='look',sel='farm',selStamp=null;
 const ptrs=new Map();let gest=null;
 cv.addEventListener('pointerdown',e=>{
-  if(!started)return;camAnim=null;
+  if(!started)return;if(!(camAnim&&camAnim.done))camAnim=null;/* 演出のカメラ（おわりの処理つき）は、さわっても止めない（止めると、おわりの処理がよばれず、ゲームが止まったままになる） */
   cv.setPointerCapture(e.pointerId);ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
   if(ptrs.size===1)gest={type:'maybe',sx:e.clientX,sy:e.clientY,cx:cam.x,cy:cam.y};
   else if(ptrs.size===2){const[p,q]=[...ptrs.values()];gest={type:'pinch',d:Math.hypot(p.x-q.x,p.y-q.y),z:cam.z,mid:toWorld((p.x+q.x)/2,(p.y+q.y)/2)};if(selRect&&!pending)selRect=null}

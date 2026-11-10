@@ -29,7 +29,7 @@ const V1=JSON.parse(run('JSON.stringify(QUESTS1_V1)')),GROUP=JSON.parse(run('JSO
 for(let i=0;i<=V1.length;i++)for(const talked of [false,true])for(const pending of [false,true]){
   if(pending&&i===0)continue;
   run(`S={world:0,flags:{fieldStoryV2:1},mat:{},inv:{},quest:${i},qStory:${pending?i-1:'null'},qTalked:${talked}};migrateQuestMerge(S)`);
-  const id=V1[i],want=id==null?null:id==='lv5'?'tower':GROUP[id]||id;
+  const id=V1[i],want=id==null?null:id==='lv5'?'tower':id==='lv4'?'kagemark':GROUP[id]||id;/* 古い「村レベル4」は、かげのあとより前：かげのあとの話から */
   if(id==null)assert.equal(run('S.quest'),run('QUESTS1_V3().length'));
   else if(!pending||run('S.qStory')==null)assert.equal(run('QUESTS1_V3()[S.quest]'),want,'old '+id);
   if(pending){const sid=V1[i-1],lastOf=!V1.slice(i).some(v=>(GROUP[v]||v)===(GROUP[sid]||sid));
@@ -57,7 +57,7 @@ for(let i=0;i<=V2.length;i++)for(const talked of [false,true])for(const pending 
   const snap=run('JSON.stringify(S)');run('migrateQuestSplit(S)');assert.equal(run('JSON.stringify(S)'),snap,'idempotent v2 '+id);
 }
 for(const state of [{world:1},{world:0,free:true}]){run(`S=${JSON.stringify({...state,flags:{qmerge1:1},quest:8,qStory:7})};migrateQuestSplit(S)`);assert.equal(run('S.quest'),8);assert.equal(run('S.qStory'),7);}
-assert.deepEqual(JSON.parse(run('JSON.stringify(QUESTS1.slice(0,QUESTS1.findIndex(q=>q.id==="fire")).map(q=>q.id))')),V1.slice(0,V1.indexOf('fire')).filter(id=>!['earthRoot','trade','oracle'].includes(id)),'early quests are one at a time, in the old order (the stump investigations are one goal)');
+assert.deepEqual(JSON.parse(run('JSON.stringify(QUESTS1.slice(0,QUESTS1.findIndex(q=>q.id==="fire")).map(q=>q.id))')),(L=>{L.splice(L.indexOf('earthListen'),1);L.push('earthListen');return L})(V1.slice(0,V1.indexOf('fire')).filter(id=>!['earthRoot','trade','oracle'].includes(id))),'early quests are one at a time; the farm goals come before the stump (farmFirst1)');
 assert(run('QUESTS1.slice(0,QUESTS1.findIndex(q=>q.id==="fire")).every(q=>!q.steps)'));
 console.log('Split goals: every merged index, heard talk, pending thanks, idempotence, other modes');
 /* 切り株の下で・傷つけないようにを分けていたころ（qsplit1）から、1つの依頼へ（earthMerge1）。名前で読みかえ、2回読みこんでもずれない */
@@ -76,7 +76,7 @@ for(let i=0;i<=V3.length;i++)for(const talked of [false,true])for(const pending 
 assert(/earthMerge1:1/.test(require('fs').readFileSync(__dirname+'/../../js/world.js','utf8')),'new games start merged');}
 console.log('Stump goal merge: every split index, heard talk, pending thanks, idempotence, new games already merged');
 console.log('Merged goals: every old index, pending thanks, heard talk, missing talk items, idempotence, other modes');
-for(const [qid,parts] of [['earthListen',['earthListen','earthRoot']],['fireRoot',['fireRoot','fireTrace']],['waterFilm',['waterFilm','waterLeaf']],['windEcho',['windEcho','windVoices']]]){
+for(const [qid,parts] of [['earthListen',['earthListen']],['fireRoot',['fireRoot']],['waterFilm',['waterFilm']],['windEcho',['windEcho']]]/* 1つの依頼に調べは1つ（fieldMerge1） */){
   run(`S={food:9999,mat:{wood:9999,stone:9999},flags:{},fieldStories:{}}`);
   assert.deepEqual(JSON.parse(run(`JSON.stringify(QUESTS1.find(q=>q.id==='${qid}').fieldParts)`)),parts);
   assert.equal(run(`QUESTS1.find(q=>q.id==='${qid}').check()`),false);
@@ -121,19 +121,19 @@ console.log('Morning growth: exactly half over two days, normal and restored lan
 const work=fs.readFileSync(path.join(root,'js/spirit-work.js'),'utf8');
 const choose=work.slice(work.indexOf('function goWork('),work.indexOf('/* 依頼ボードの作業場所'));
 const job=vm.createContext({console});
-vm.runInContext(`const S={mat:{wood:0,stone:0},food:100,drops:[]},SPEC={wind:['seed']},FARMJ=[],JOBCAT=[['build','repair'],['craft'],['harvest'],['cook','chop','mine','drop','weed']],ORACLE={};const foodLow=()=>0,foodCap=()=>100,wreqList=()=>[];let chosen='';var tryJob=function(r,G,k){if(['chop','mine','weed','drop'].includes(k)){chosen=k;return true}return false}`,job);
+vm.runInContext(`const S={mat:{wood:0,stone:0},food:100,drops:[]},SPEC={wind:['seed']},FARMJ=[],JOBCAT=[['build','repair'],['craft'],['harvest'],['cook','chop','mine','drop','weed']],ORACLE={};const foodLow=()=>0,foodCap=()=>100,wreqList=()=>[],smeltJob=()=>false,webJob=()=>false,vreqList=()=>[];let chosen='';var tryJob=function(r,G,k){if(['chop','mine','weed','drop'].includes(k)){chosen=k;return true}return false}`,job);
 vm.runInContext(choose,job);
 const counts=JSON.parse(vm.runInContext(`(()=>{const counts={chop:0,mine:0,weed:0,drop:0};for(let i=0;i<12000;i++){goWork({elem:'wind'},null,true);counts[chosen]++}return JSON.stringify(counts)})()`,job));
-assert.equal(counts.weed,12000,JSON.stringify(counts));/* 近くの雑草は、木・石より先 */
-vm.runInContext(`tryJob=(r,G,k)=>{if(['chop','mine','drop'].includes(k)){chosen=k;return true}return false}`,job);
-const rest=JSON.parse(vm.runInContext(`(()=>{const counts={chop:0,mine:0,drop:0};for(let i=0;i<12000;i++){goWork({elem:'wind'},null,true);counts[chosen]++}return JSON.stringify(counts)})()`,job));
-for(const n of Object.values(rest))assert(n>3400&&n<4600,JSON.stringify(rest));
+assert.equal(counts.drop,12000,JSON.stringify(counts));/* 風のせいれいは、落ちている物を、木・石より先にひろう（落とし物 → ふしぎな種 → 雑草） */
+vm.runInContext(`tryJob=(r,G,k)=>{if(['chop','mine'].includes(k)){chosen=k;return true}return false}`,job);
+const rest=JSON.parse(vm.runInContext(`(()=>{const counts={chop:0,mine:0};for(let i=0;i<12000;i++){goWork({elem:'wind'},null,true);counts[chosen]++}return JSON.stringify(counts)})()`,job));
+for(const n of Object.values(rest))assert(n>5400&&n<6600,JSON.stringify(rest));/* 落ちている物がなければ、木と石は同じ順位 */
 console.log('Nearby weeds first; other gathering jobs share priority:',rest);
 // A finished animation alone must not count as having read the scene.
-run(`let VILLAGE_SESSION=1;let completion;fieldStoryCurrent=()=>({id:'earthRoot'});fieldStorySpotOK=()=>true;fieldStoryFocus=()=>{};renderQuest=()=>{};checkQuest=()=>{};dialog=(lines,after)=>{completion=after};S={flags:{},res:[{name:MINA},{name:POKO}],fieldSites:{root:7},fieldStories:{earthRoot:{step:0}}};globalThis.action={fieldId:'earthRoot',phase:0,obj:7,t:10};ACT.fieldstory.end({},action)`);
-assert.equal(run('S.fieldStories.earthRoot.step'),0);
-run('completion()');assert.equal(run('S.fieldStories.earthRoot.step'),1);
-run('completion()');assert.equal(run('S.fieldStories.earthRoot.step'),1);
-run(`S={flags:{},res:[{name:MINA},{name:POKO}],fieldSites:{root:7},fieldStories:{earthRoot:{step:0}}};ACT.fieldstory.end({},action);globalThis.origin=S;S={fieldStories:{earthRoot:{step:0}}};completion()`);
-assert.equal(run('S.fieldStories.earthRoot.step'),0);assert.equal(run('origin.fieldStories.earthRoot.step'),0);
+run(`let VILLAGE_SESSION=1;let completion;fieldStoryCurrent=()=>({id:'earthListen'});fieldStorySpotOK=()=>true;fieldStoryFocus=()=>{};renderQuest=()=>{};checkQuest=()=>{};dialog=(lines,after)=>{completion=after};S={flags:{},res:[{name:MINA},{name:POKO}],fieldSites:{root:7},fieldStories:{earthListen:{step:0}}};globalThis.action={fieldId:'earthListen',phase:0,obj:7,t:10};ACT.fieldstory.end({},action)`);
+assert.equal(run('S.fieldStories.earthListen.step'),0);
+run('completion()');assert.equal(run('S.fieldStories.earthListen.step'),1);
+run('completion()');assert.equal(run('S.fieldStories.earthListen.step'),1);
+run(`S={flags:{},res:[{name:MINA},{name:POKO}],fieldSites:{root:7},fieldStories:{earthListen:{step:0}}};ACT.fieldstory.end({},action);globalThis.origin=S;S={fieldStories:{earthListen:{step:0}}};completion()`);
+assert.equal(run('S.fieldStories.earthListen.step'),0);assert.equal(run('origin.fieldStories.earthListen.step'),0);
 console.log('Investigation scenes: finish reading before progress; duplicate and wrong-village callbacks cannot advance');

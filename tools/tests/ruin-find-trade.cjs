@@ -20,7 +20,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict');
   /* 夜はまつ */
   assert.equal(await run(`(()=>{const t=S.t;S.t=1440+23*60+30;ruinFindTick();const x=S.res.some(r=>r.act&&r.act.type==='ruinfind');S.t=t;return x})()`),false);
   await run(`(()=>{ruinFindTick();const r=S.res.find(r=>r.act&&r.act.type==='ruinfind');panTo(r.x*TS,r.y*TS);USERPAUSE=false})()`);
-  await page.waitForFunction(()=>sacredEval(`!document.querySelector('#dialog').hidden`),{},{timeout:60000});
+  await page.waitForFunction(()=>sacredEval(`(()=>{const b=[...document.querySelectorAll('.idea-reveal button')].find(b=>!b.disabled);if(b)b.click();return !document.querySelector('#dialog').hidden})()`),{},{timeout:60000});/* とちゅうで出る知らせ（うけとった・霧が晴れた）は、とじて進む */
   await run('USERPAUSE=true');await page.waitForTimeout(1500);
   if(SHOT)await page.screenshot({path:SHOT+'/ruin-find.png'});
   const mid=JSON.parse(await run(`(()=>{const r=S.res.find(r=>r.act&&r.act.type==='ruinfind');const ru=S.fogF.find(f=>f.t==='ruin');const h=HOUSES.find(h=>h.inside.has((r.y|0)*W+(r.x|0)));return JSON.stringify({inside:!!h,gifts:GIFTS.length,txt:DLGA.full})})()`));
