@@ -28,11 +28,14 @@ function scheduleGrassReunion(){
   const owner=S,token={session:VILLAGE_SESSION};GRASS_REUNION_PENDING.set(owner,token);
   villageTimeout(()=>{if(GRASS_REUNION_PENDING.get(owner)!==token)return;GRASS_REUNION_PENDING.delete(owner);shards3();},900);return true;
 }
+/* 落ちているヌシのかけらへ、フタバが歩いて行けない（柵などでかこまれている）。30分に1回だけ調べる */
+let SHBLK={S:null,t:-1e9,v:false};
+function shardBlocked(){if(SHBLK.S===S&&S.t-SHBLK.t<30&&S.t>=SHBLK.t)return SHBLK.v;let v=false;const d=(S.drops||[]).find(q=>q.id==='shard'),f=S.res.find(r=>r.name===POKO&&!r.hidden);if(d&&f){const G=bfs(f.x|0,f.y|0),j=d.y*W+d.x;v=!(G.dist[j]>=0)&&![1,-1,W,-W].some(k=>G.dist[j+k]>=0)}SHBLK={S,t:S.t,v};return v}
 function grassEndingGoal(){
   if(!S)return {text:'ヌシ様を迎えよう',progress:'',how:'御神木のそばで、なかまとヌシ様を迎えよう'};
   if(S.flags.finalWon){
     if(!S.res.some(r=>r.name===POKO&&!r.hidden))return {text:'フタバの帰りを待とう',progress:'もどったら、御神木のそばで話そう',how:'フタバが帰ってきたら、終わっていない話の続きから進めよう'};
-    if((S.shards||0)<3&&(S.setSh||0)<3)return {text:'最後のかけらを迎えよう',progress:'影が消えた場所に、光が残っている',how:'ヨルノオオカゲが消えた場所のかけらを、なかまが拾うのを待とう'};
+    if((S.shards||0)<3&&(S.setSh||0)<3)return {text:'最後のかけらを迎えよう',progress:shardBlocked()?'かけらの所へ行ける道をあけよう':'影が消えた場所に、光が残っている',how:'ヨルノオオカゲが消えた場所のかけらを、なかまが拾うのを待とう'};
     if(!S.sev?.e09)return {text:'最後のかけらを、みんなで',progress:isNight()?'お話は、朝になってから':'御神木のそばで、フタバの話を聞こう',how:'御神木のそばに集まった、フタバたちの話を聞こう'};
     if((S.setSh||0)<3)return {text:'最後の光を御神木へ',progress:isNight()?'光を届けるのは、朝になってから':'御神木へ、かけらを3つ届けよう',how:'朝、御神木をタップして、最後のかけらの光を届けよう'};
     return {text:'ヌシ様を迎えよう',progress:isNight()?'再会は、朝になってから':'みんなと、御神木の下へ',how:'朝、フタバと一緒に、御神木の下でヌシ様を迎えよう'};
