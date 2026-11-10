@@ -12,7 +12,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict');
   let root;const STAY=[];
   /* 調べの前に作る物：前からある物では進まない。依頼を受けてから、ふつうに置く（place）と進む */
   await run(`window.buildFor=pid=>{const p=FIELD_PREP[pid];if(!p||!fieldPrepNeed(pid))return;const id=p.build.ids[0],b=BL[id],j=S.sacredRoot;
-    {const k0=[...Array(W*H).keys()].find(k=>fieldDistance(k,j)===2&&canPlace(b.kind==='block'?'path':id,k%W,k/W|0,true));if(b.kind==='block')S.floor[k0]=id;else S.obj[k0]=id;recount();if(!fieldPrepNeed(pid))throw Error('old item counted '+pid);S.obj[k0]='';S.floor[k0]='';recount();}
+    {const k0=[...Array(W*H).keys()].find(k=>fieldDistance(k,j)===2&&canPlace(b.kind==='block'?'path':id,k%W,k/W|0,true));if(b.kind==='block')S.floor[k0]=id;else S.obj[k0]=id;recount();if(fieldPrepNeed(pid))throw Error('an item already near the stump must count '+pid);/* 依頼の前から切り株のそばにある物も、数に入れる（fieldBuildAdopt） */S.obj[k0]='';S.floor[k0]='';fieldStoryState(pid).built.cells=[];recount();if(!fieldPrepNeed(pid))throw Error('removed item still counted '+pid);}
     let tries=0;while(fieldPrepNeed(pid)&&tries++<400){const k=[...Array(W*H).keys()].find(k=>fieldDistance(k,j)>=2&&fieldDistance(k,j)<=3&&!S.obj[k]&&!S.floor[k]&&canPlace(id,k%W,k/W|0,true));if(k==null)throw Error('no spot '+pid);
       if(b.kind==='build'){if(STATUE<0){S.obj[(CY+15)*W+CX+15]='statue';recount();}S.pt+=b.pc;for(const m in b.mat)S.mat[m]=(S.mat[m]||0)+b.mat[m];}else S.inv[id]=(S.inv[id]||0)+1;
       place(id,k%W,k/W|0);if(S.obj[k]==='site'){if(!fieldPrepNeed(pid))throw Error('site counted as built');finishBuild(k,null);}}

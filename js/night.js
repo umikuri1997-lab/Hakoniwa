@@ -344,7 +344,7 @@ function updTowers(dt){
 /* オオカゲの夜の前ぶれ：来る日の夕方は、空があやしい色になり、せいれいが不安そうに話す。追いはらった朝は、みんなでよろこぶ */
 let BOSSEVE=0;/* 前ぶれの空のこさ（0〜1） */
 function bossTonight(){return !!(S&&S.enemyOn&&!S.cleared&&!S.free&&!S.finalNight&&bossDays()==='オオカゲが来るまで：今夜')}
-function evePair(){const F=S.res.find(r=>r.name===keyName('fire')&&!r.hidden);if(!F)return null;const A=S.res.find(r=>r!==F&&!r.hidden&&KEYS[WD].includes(r.name))||S.res.find(r=>r!==F&&!r.hidden);return A?[A.name,F.name]:null}
+function evePair(){const F=S.res.find(r=>r.name===keyName('fire')&&!r.hidden);if(!F)return null;const A=WD===0?S.res.find(r=>r!==F&&!r.hidden&&r.name===POKO):S.res.find(r=>r!==F&&!r.hidden&&KEYS[WD].includes(r.name))||S.res.find(r=>r!==F&&!r.hidden);return A?[A.name,F.name]:null}/* 草原：相手はフタバ（セリフがフタバの口調）。フタバがいない日は、この会話は出さない */
 function bossEveTick(h){BOSSEVE=h>=15&&h<23&&bossTonight()?1:0;
   if(BOSSEVE&&h>=17&&S.flags.eveD!==dayNo()&&$('#dialog').hidden&&!sheet){const p=evePair();if(!p)return;S.flags.eveD=dayNo();const[A,F]=p,again=(S.bossKills||0)>0;
     dialog(again?pickFresh('eveAgain',[
