@@ -4,7 +4,7 @@
 # 出す絵：ref/sheet.png（絵をたのむときにわたす1まい。左上にお手本のキューブ、9つの物ごとに、左が3D・右がいまの絵。1マス64ドット、黄色いわくが置くマス）
 import math,sys,os
 from PIL import Image,ImageDraw,ImageFont
-sys.path.insert(0,os.path.join(os.path.dirname(__file__),'..'))
+sys.path.insert(0,os.path.join(os.path.dirname(__file__),'..'));sys.path.insert(0,os.path.dirname(os.path.abspath(__file__)))
 from oblique3d import *
 HERE=os.path.dirname(__file__);ROOT=os.path.join(HERE,'..','..','..')
 WOOD=(214,170,120);WOOD2=(190,146,100);STONE=(212,208,200);STONE2=(190,186,178);METAL=(150,156,170);LEAF=(150,200,110);FLOW=(250,236,220)
@@ -103,6 +103,10 @@ def composter(sc):
     for (x,y) in ((0.3,0.3),(0.6,0.35),(0.45,0.6),(0.7,0.7),(0.25,0.7)):sc.sphere(x,y,0.64,0.12,GREEN,zs=0.6)
 OBJS=[('井戸','well',(1,1),well),('シーソー','seesaw',(1,1),seesaw),('ガーデンアーチ','arch',(1,1),arch),('すべり台','slide',(2,2),slide),('ブランコ','swing',(2,1),swing),
       ('よまわりのランタン','yomawari',(1,1),yomawari),('石どうろう','toro',(1,1),toro),('にぐるま','niguruma',(2,1),niguruma),('コンポスター','composter',(1,1),composter)]
+# 3Dは、設計図の部品の表（set9_parts.py）から組む（上の手がきの組み方は、前のもの）
+import set9_parts as SP
+from blueprint import build as bp_build,blueprint as bp_draw
+OBJS=[(nm,id,foot,(lambda sc,pf=pf:bp_build(sc,pf()))) for nm,id,foot,pf,ext in SP.OBJS]
 EXT=(-1.0,3.0,-1.5,2.5)
 def panel3d(f,foot):
     sc=Scene();f(sc);bg=grid_bg(EXT,foot);bg.alpha_composite(render(sc,game,EXT,VIEW));return bg.resize((bg.width//2,bg.height//2),Image.BOX)
@@ -116,6 +120,10 @@ def panelold(id,foot,C):
 if __name__=='__main__':
     sys.path.insert(0,os.path.join(ROOT,'tools'));import chips
     h,C=chips.load_imgs()
+    outb=os.path.join(HERE,'ref');os.makedirs(outb,exist_ok=True)
+    for n,(nm,id,foot,pf,ext) in enumerate(SP.OBJS):   # 設計図
+        bad=bp_draw(os.path.join(outb,'bp_%d_%s.png'%(n+1,id)),'%d %s'%(n+1,nm),pf(),foot,ext)
+        if bad:print('ささえのまちがい',id,bad)
     out=os.path.join(HERE,'ref');os.makedirs(out,exist_ok=True)
     fnt=ImageFont.truetype('/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc',20) if os.path.exists('/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc') else ImageFont.load_default()
     PW,PH,G,TH=256,256,12,28;cube=Image.open(os.path.join(HERE,'..','ref','view-cube.png')).convert('RGBA')

@@ -3,6 +3,7 @@
 もくじ：1. 井戸・2. シーソー・3. ガーデンアーチ・4. すべり台・5. ブランコ・6. よまわりのランタン・7. 石どうろう・8. にぐるま・9. コンポスター
 
 9つを1まいでたのむと、デザインと角度がかわってしまったので、1つずつたのむ。どのプロンプトも、それだけで使える（共通の決まりも毎回書いてある）。
+設計図（部品・寸法・のる所）は `set9_parts.py`、その図は `ref/bp_<番号>_<id>.png`。3Dは設計図から組む。
 わたす絵は、それぞれ1まい：`ref/<番号>_<id>.png`（`python3 tools/art/set9/set9_3d.py` で作る）。左がお手本のキューブ、まん中が3D（角度・大きさ・置く場所）、右がいまの絵（デザイン。アーチだけは正面から見た3D）。どれも1マス＝128ドットにそろえてある。黄色いわくが置くマス。
 
 ## 1. 井戸（わたす絵 `ref/1_well.png`）
@@ -28,7 +29,7 @@ Camera and proportions (copy the view cube and the 3D block-out exactly; this ma
 
 Object: Well — a round stone well with a small gabled wooden roof on two wooden posts, a wooden crossbar, a rope and a small wooden bucket. Pale gray stones, light warm wood. The water inside is pale soft blue.
 
-Final size: about 64 x 104 pixels at 1 tile = 64 pixels (half the size of the reference panels). Pixel art drawn on an exact pixel grid at that final size, shown upscaled with nearest-neighbor so every pixel is a crisp square; no anti-aliasing, no half pixels.
+Final size: about 72 x 101 pixels at 1 tile = 64 pixels (half the size of the reference panels). Pixel art drawn on an exact pixel grid at that final size, shown upscaled with nearest-neighbor so every pixel is a crisp square; no anti-aliasing, no half pixels.
 
 Style: Pale, light, soft colors matching a gentle pastel game, as in the current artwork; no dark or heavily saturated colors; glass is pale and light. No thick or dark outlines; if an outline is used, it is a thin 1-pixel line only slightly darker than the color next to it, never black or near-black. Clean flat colors with soft shading; no noise, no grain, no speckles, no dithering, no gritty texture. Transparent background, no ground shadow, no grass under the object, no text, no frame. Draw only this object. Do not draw the grid, the yellow frame, the cube or the block-out.
 ```
@@ -113,7 +114,7 @@ Camera and proportions (copy the view cube and the 3D block-out exactly; this ma
 
 Object: Slide — a wooden slide: a small wooden platform with rails, wooden steps going down on the left, and a pale sandy-colored slide going down to the right.
 
-Final size: about 166 x 109 pixels at 1 tile = 64 pixels (half the size of the reference panels). Pixel art drawn on an exact pixel grid at that final size, shown upscaled with nearest-neighbor so every pixel is a crisp square; no anti-aliasing, no half pixels.
+Final size: about 131 x 107 pixels at 1 tile = 64 pixels (half the size of the reference panels). Pixel art drawn on an exact pixel grid at that final size, shown upscaled with nearest-neighbor so every pixel is a crisp square; no anti-aliasing, no half pixels.
 
 Style: Pale, light, soft colors matching a gentle pastel game, as in the current artwork; no dark or heavily saturated colors; glass is pale and light. No thick or dark outlines; if an outline is used, it is a thin 1-pixel line only slightly darker than the color next to it, never black or near-black. Clean flat colors with soft shading; no noise, no grain, no speckles, no dithering, no gritty texture. Transparent background, no ground shadow, no grass under the object, no text, no frame. Draw only this object. Do not draw the grid, the yellow frame, the cube or the block-out.
 ```
@@ -228,7 +229,7 @@ Camera and proportions (copy the view cube and the 3D block-out exactly; this ma
 
 Object: Cart — a wooden hand cart with low side boards, wooden wheels, a handle sticking out to the right, and a cloth sack in it.
 
-Final size: about 122 x 66 pixels at 1 tile = 64 pixels (half the size of the reference panels). Pixel art drawn on an exact pixel grid at that final size, shown upscaled with nearest-neighbor so every pixel is a crisp square; no anti-aliasing, no half pixels.
+Final size: about 122 x 69 pixels at 1 tile = 64 pixels (half the size of the reference panels). Pixel art drawn on an exact pixel grid at that final size, shown upscaled with nearest-neighbor so every pixel is a crisp square; no anti-aliasing, no half pixels.
 
 Style: Pale, light, soft colors matching a gentle pastel game, as in the current artwork; no dark or heavily saturated colors; glass is pale and light. No thick or dark outlines; if an outline is used, it is a thin 1-pixel line only slightly darker than the color next to it, never black or near-black. Clean flat colors with soft shading; no noise, no grain, no speckles, no dithering, no gritty texture. Transparent background, no ground shadow, no grass under the object, no text, no frame. Draw only this object. Do not draw the grid, the yellow frame, the cube or the block-out.
 ```
