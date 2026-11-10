@@ -6,7 +6,7 @@
 #   石の基礎 → 入口（基礎を切りこんだ2段の石段で上がる）→ 中はらせん階段（窓は階段にそって、ずれた高さ・向き）
 #   → 塔のてっぺんに持ち送り（石の腕木）→ その上に見はらし台の床（塔より外へ張り出す）と鉄の手すり
 #   → 当直室（見はらし台へ出る小さな戸）→ 灯室（下は石の腰、上はガラス。中にレンズ）→ 屋根 → 換気の玉 → 避雷針
-# 出す絵（tools/art/lighthouse/ref/）：plan.png（設計図）、3d_full.png（ゲームの見え方・マス目と置くマスのわく）、3d_full_nogrid.png、3d_side.png（まよこ）
+# 出す絵（tools/art/lighthouse/ref/）：plan.png（設計図）、3d_full.png（ゲームの見え方・マス目と置くマスのわく）、3d_full_nogrid.png、3d_side.png（まよこ）、sheet.png（絵をたのむときにわたす1まい）
 import math,sys,os
 from PIL import Image,ImageDraw,ImageFont
 sys.path.insert(0,os.path.join(os.path.dirname(__file__),'..'))
@@ -231,4 +231,9 @@ sc=Scene();build(sc)
 ext=(-1.0,3.0,-4.0,3.0)
 fg=render(sc,game,ext,VIEW);bg=grid_bg(ext,(2,2));bg.alpha_composite(fg);bg.save(f'{out}/3d_full.png');fg.save(f'{out}/3d_full_nogrid.png')
 sext=(-1.0,3.0,-6.0,0.5);sd=render(sc,side,sext,SIDE);bg=grid_bg(sext);bg.alpha_composite(sd);bg.save(f'{out}/3d_side.png')
+# 絵をたのむときにわたす1まい：左にお手本のキューブ、右にゲームの見え方の3D（1マス64ドット）
+cube=Image.open(os.path.join(os.path.dirname(__file__),'..','ref','view-cube.png')).convert('RGBA')
+g=Image.open(f'{out}/3d_full.png').convert('RGBA');g=g.resize((g.width//2,g.height//2),Image.BOX)
+sh=Image.new('RGBA',(cube.width+16+g.width,g.height),(255,255,255,255));sh.paste(cube,(0,g.height-cube.height));sh.paste(g,(cube.width+16,0))
+sh.convert('RGB').save(f'{out}/sheet.png')
 print('ok')
