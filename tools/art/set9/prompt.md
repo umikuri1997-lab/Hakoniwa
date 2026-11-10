@@ -3,7 +3,7 @@
 いまの絵のデザインのまま、見おろしの角度だけをゲームに合わせてかきなおしてもらう。
 わたす絵は1まい：`ref/sheet.png`（`python3 tools/art/set9/set9_3d.py` で作る）。左上がお手本のキューブ。9つの物ごとに、左が3D（角度・大きさ・置く場所のお手本）、右がいまの絵（デザインのお手本）。1マス＝64ドット、黄色いわくが置くマス。
 シーソーの板・ブランコの座席はゲームで動かすので、べつの部品でたのむ。石どうろう・よまわりのランタンは、あかりの消えた絵と、ついた絵の2つ。
-石どうろうは和風の物（火山の物）。ほかの8つは草原の洋風の物。
+石どうろうは和風の物（火山の物）。すべり台・シーソーは風のステージの遊具（`WIND_STAGE_TOYS`）。ほかは草原から使う洋風の物。
 
 ```
 Use the attached reference image as a strict guide. It is one sheet. Top left: a view cube. Below it are nine objects, numbered 1 to 9. For each object there are two panels on a tile grid: the LEFT panel is a 3D block-out that shows the correct camera angle, size and position; the RIGHT panel is the current artwork that shows the design. One faint grid square = one tile = 64 pixels. The yellow frame is the object's footprint.
