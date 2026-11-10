@@ -151,7 +151,7 @@ const BL={
   shinboku:{name:'ご神木',sz:[3,3],kind:'build',mat:{wood:40},pc:160,time:300,maker:'wood',lv:14,solid:1,attr:{wood:3},desc:'村の守りの大きな木。まわり5マスで、つかれのとれる速さ+30%'},
   lighthouse:{name:'灯台',sz:[2,2],kind:'build',mat:{wood:25,stone:35},pc:35,time:180,maker:'fire',lv:7,solid:1,anim:1,attr:{fire:4},desc:'まわり8マスを照らす'},
   lurestatue:{hp:60,brk:1,fix:6,fixm:{stone:8},name:'おびきよせの石像',kind:'build',mat:{wood:10,stone:40},pc:12,time:100,maker:'earth',lv:6,w:2,solid:1,attr:{},desc:'石の像。まわり7マスの「コワイノ」は、先にこの像をこわしにくる。じょうぶさ60'},
-  stele:{hp:5,brk:1,fix:18,fixm:{wood:6,stone:25},name:'石碑',kind:'build',mat:{wood:12,stone:50},pc:35,time:180,maker:'earth',lv:6,solid:1,attr:{earth:4},desc:'まわり7マスの壁・柵・塀が、1.5倍じょうぶになる（重複なし）'},
+  stele:{hp:5,brk:1,fix:18,fixm:{wood:6,stone:25},name:'ノームの石像',kind:'build',mat:{wood:12,stone:50},pc:35,time:180,maker:'earth',lv:6,solid:1,attr:{earth:4},desc:'まわり7マスの壁・柵・塀が、1.5倍じょうぶになる（重複なし）'},
   fountain:{name:'噴水',sz:[2,2],kind:'build',mat:{wood:15,stone:60},pc:45,time:200,maker:'water',lv:6,solid:1,anim:1,play:{pt:6,pw:2.7,fun:45,dur:50,cap:3,adj:1},attr:{water:6},desc:'3人まで遊べる。たのしさ +45（33.3分）。遊ぶと10%の確率で、スタミナ+1'},
   statue:{name:'神殿',kind:'build',anim:1,pc:0,time:50,maker:null,solid:1,attr:{wood:1,water:1,fire:1,earth:1,wind:1},desc:'守り神の居場所'},
   obox:{name:'おそなえ箱',solid:1,anim:1},
