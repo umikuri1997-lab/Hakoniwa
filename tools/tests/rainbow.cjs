@@ -4,7 +4,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict'),fs=r
 const out=await page.evaluate(()=>mtEval(`(()=>{const out={};const R0=Math.random;
 function setup(w,day,h){S=newState(w);setWorld(w);S.enemies=[];S.t=1440*(day-1)+h*60;USERPAUSE=true;recount();if(STATUE<0&&w===0){S.obj[CY*W+CX-10]="statue";recount()}}
 setup(0,4,6);S.rain=true;Math.random=()=>.1;morning();Math.random=R0;out.rb={day:S.rbDay===dayNo(),rain:S.rain,on:rainbowToday()};
-const r=S.res[0];r.hidden=false;const drop=()=>{r.fun=80;r.hunger=200;r.energy=100;r.act={type:'idle',stage:'do',t:0,dur:9999};const f=r.fun;stepWorld(1);return f-r.fun};const d1=drop();S.rbDay=-1;const d0=drop();out.ratio=Math.round(d1/d0*100)/100;
+const r=S.res[0];r.hidden=false;S.quest=questIndexOf('path');S.obj[CY*W+CX-12]='bed';recount();/* ベッドの目標のあとでないと、たのしさはへらない（preBedCalm） */const drop=()=>{r.fun=80;r.hunger=200;r.energy=100;r.act={type:'idle',stage:'do',t:0,dur:9999};const f=r.fun;stepWorld(1);return f-r.fun};const d1=drop();S.rbDay=-1;const d0=drop();out.ratio=Math.round(d1/d0*100)/100;
 out.gone=typeof matsuriTick==='undefined'&&typeof MATSURI_THEMES==='undefined'&&!('mdance' in ACT);return out})()`));
 console.log(out);
 assert.deepEqual(out.rb,{day:true,rain:false,on:true});assert.equal(out.gone,true);assert.ok(out.ratio>.45&&out.ratio<.55,'ratio '+out.ratio);
