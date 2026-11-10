@@ -51,7 +51,7 @@ function sacredBody(r,now){
   return {...p,p:q,t,dx,dy};
 }
 const SACRED_BEAT_MS={soil:1800,touch:1700,stone:2400,bump:2600,cover:1900,water:2600,runoff:2400,wind:2200,bud:2000,leaf:3000,grow:3300,reply:2200,hug:600,glow:2600,group:1300,sit:1500,quiet:1400,face:1000,lookup:1500,gaze:3800};
-function sacredLineHold(cue){return String(cue||'').split('+').reduce((ms,c)=>Math.max(ms,c.startsWith('stree:')?(SACRED_BEAT_MS[c.slice(6)]||0):c.startsWith('vol:')&&typeof VOL_BEAT_MS!=='undefined'?(VOL_BEAT_MS[c.slice(4)]||0):0),0);}
+function sacredLineHold(cue){return String(cue||'').split('+').reduce((ms,c)=>Math.max(ms,c.startsWith('stree:')?(SACRED_BEAT_MS[c.slice(6)]||0):c.startsWith('vol:')&&typeof VOL_BEAT_MS!=='undefined'?(VOL_BEAT_MS[c.slice(4)]||0):c.startsWith('print:')&&typeof PRINT_BEAT_MS!=='undefined'?(PRINT_BEAT_MS[c.slice(6)]||0):0),0);}
 function sacredDirectedLines(step,a){
   const beats={tower:['group']};/* なかまの調べは、セリフの行に合図を書く */
   const k=beats[a.fieldId]?.[a.phase];if(!k)return step.lines;

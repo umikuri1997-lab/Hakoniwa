@@ -92,7 +92,7 @@ function goWork(r,G,nw){
   if(tryJob(r,G,'otaki'))return true;
   if(tryJob(r,G,'cfill'))return true;
   if(smeltJob(r,G))return true;/* 炉：鉱石を運ぶ・火のせいれいが精錬する */
-  if(typeof fogJob==='function'&&fogJob(r,G))return true;if(webJob(r,G))return true;/* クモの巣のそうじ *//* 霧の中で見つけた宝箱・あしあと */
+  if(typeof fogJob==='function'&&fogJob(r,G))return true;if(wflJob(r,G))return true;/* 御神木のそばの花の世話（木のなかまと花畑） */if(webJob(r,G))return true;/* クモの巣のそうじ *//* 霧の中で見つけた宝箱・あしあと */
   if(r.elem==='wind')for(const k of['drop','seed','weed'])if(tryJob(r,G,k))return true;/* 風のせいれいは、落ちている物（落とし物・枝・ふしぎな種・雑草・きのこ）を、畑の世話・おつげ・木・石より先にひろう */
   if((S.drops||[]).some(q=>q.lt||q.tap)||wreqList().length){for(const k of FARMJ)if(tryJob(r,G,k))return true;if(tryJob(r,G,'drop'))return true;if(wreqList().length&&tryJob(r,G,'weed'))return true}if(vreqList().length&&tryJob(r,G,'mine'))return true;/* タップした鉱脈 *//* 「みる」でタップした草・きのこ・落とし物も、ここでとりにいく *//* 守り神の光でこわした物（落ちた木材・石材）は、おつげ・木を切る・石をほるより先にひろう。畑の世話よりはあと */
   if(S.oracle&&ORACLE[S.oracle])for(const k of ORACLE[S.oracle].jobs){if((k==='chop'||k==='mine')&&tryJob(r,G,'drop'))return true;if(tryJob(r,G,k))return true}/* 落とし物は、木を切る・石をほるより先にひろう */
@@ -230,3 +230,9 @@ function jobReach(){const rs=S.res.filter(q=>!q.hidden);if(!rs.length)return new
 function jobReachTick(){if(!S||isNight())return;if(JOBBLK.S!==S)JOBBLK={S,set:new Set(),t:0};if(S.t-JOBBLK.t<5&&S.t>=JOBBLK.t)return;JOBBLK.t=S.t;const now=jobReach();
   for(const k of now)if(!JOBBLK.set.has(k))toast(k==='board'?'依頼ボードへ行けません':'建てる所へ行けません','warn');JOBBLK.set=now}
 const jobBlocked=k=>JOBBLK.S===S&&JOBBLK.set.has(k);
+/* 御神木のそばの花の世話（草原のメイン「木のなかまと花畑」。仕事えらびは wflJob、数えるのは quests.js の wflCells など） */
+ACT.fltend={start(r,a){if(!wflOn()||S.obj[a.obj]!==wflKind())return false;r.bubble='';r.face=(a.obj%W+.5)<r.x?-1:(a.obj%W+.5)>r.x?1:r.face},done:(r,a)=>a.t>=4,
+  end(r,a){if(!wflOn()||wflT().includes(r.id))return;const T=S.flags.flTend=[...wflT(),r.id],x=a.obj%W+.5,y=(a.obj/W|0)+.5;sfxAt('bush',r.x,r.y);addFloat(r.x,r.y-1.6,'いいにおい');for(let i=0;i<6;i++)villageTimeout(()=>leafFX({x:x+(Math.random()-.5)*.6,y:y-.3}),i*120);addSpiritXp(1,r);
+    if(T.length>=WFL_TEND){const L=wflCells();L.forEach((k,i)=>villageTimeout(()=>{burst(k,'plant','none');leafFX({x:k%W+.5,y:(k/W|0)+.2})},i*160));sfx('bush');toast('御神木のそばの'+wflName()+'が、満開になった','good');logEv('御神木のそばの花畑が満開になった')}/* 5人の世話で、満開 */
+    else toast(r.name+'が'+wflName()+'の世話をした（'+T.length+'/'+WFL_TEND+'）');renderQuest();checkQuest();dirty=true}};
+ACT_LBL.fltend='花の世話をしている';WORKFACE.add('fltend');/* 花のほうを向く（北の花には、うしろ向き） */
