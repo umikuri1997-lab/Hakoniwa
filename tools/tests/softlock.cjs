@@ -18,6 +18,10 @@ const assert=require('node:assert/strict');
   const c=await J(`(()=>{S.buried=[{name:MINA,elem:'earth'}];S.summon={elem:'wood'};S.summonNext=null;summonMorning();return JSON.stringify({rev:!!S.summon.rev,next:S.summonNext})})()`);
   assert.deepEqual(c,{rev:true,next:'wood'},'a pending new-spirit summon must not block the key spirit');
   console.log('Pending "!" for a new spirit: the lost key spirit comes first, the new spirit next');
+  /* 3b. まわりに空きがなくて、お墓を置けなかった子も、呼びもどせる */
+  const c2=await J(`(()=>{S.buried=[];S.summon=null;S.summonNext=null;const r=mkRes(S,MINA,'earth',80,80);S.res.push(r);for(let b=-4;b<=4;b++)for(let a2=-4;a2<=4;a2++){const k=(80+b)*W+80+a2;if(!S.obj[k])S.obj[k]='clover'}recount();const g0=cnt('grave');die(r);const noGrave=cnt('grave')===g0,unb0=!!S.buried.find(q=>q.name===MINA).unb;summonMorning();return JSON.stringify({noGrave,unb0,rev:!!(S.summon&&S.summon.rev)})})()`);
+  assert.deepEqual(c2,{noGrave:true,unb0:true,rev:true},'a key spirit with no grave must still come back');
+  console.log('No room for a grave: the key spirit can still come back');
   /* 4. 切り株が家の中だと、御神木に育たない：理由が出る */
   const d=await J(`(()=>{S.quest=questIndexOf('tower');S.qTalked=true;fieldStoryEnsure('tower');const j=S.sacredRoot,x0=j%W-2,y0=(j/W|0)-2,x1=j%W+5,y1=(j/W|0)+5;const before=(fieldPrepNeed('tower')||{}).label;
     for(let x=x0;x<=x1;x++)for(const y of [y0,y1])S.obj[y*W+x]='hwall';for(let y=y0;y<=y1;y++)for(const x of [x0,x1])S.obj[y*W+x]='hwall';S.obj[y1*W+x0+3]='door';recount();
