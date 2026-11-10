@@ -48,5 +48,9 @@ const assert=require('node:assert/strict');
   const h=await J(`(()=>{const j=S.sacredRoot,L=storySlotCells({stump:j});for(const c of L)S.obj[c.k]='fence';recount();const r=S.res.find(q=>q.name===POKO),G=bfs(r.x|0,r.y|0),k=storyWaitStand(r,G,{tree:true,obj:j,cast:[r],key:'t'});for(const c of L)S.obj[c.k]='';recount();return JSON.stringify({n:L.length>0,ok:k>=0&&!L.some(c=>c.k===k)})})()`);
   assert.deepEqual(h,{n:true,ok:true},'main talk by the tree must find a place to stand when the near cells are full');
   console.log('Cells by the sacred tree are full: the cast still finds a place to stand');
+  /* 9. 御神木のまわりが花畑でも、立つ所が見つかる */
+  const m=await J(`(()=>{const j=S.sacredRoot,w=storySlotCells({stump:j},5.6),L=[];for(let y=(fieldStump(j)/W|0)-6;y<=(fieldStump(j)/W|0)+6;y++)for(let x=fieldStump(j)%W-6;x<=fieldStump(j)%W+6;x++){const k=y*W+x;if(walk(k)&&!S.obj[k]&&!sacredReserved(k)&&k!==fieldStump(j)){S.obj[k]='bellf';L.push(k)}}recount();const r=S.res.find(q=>q.name===POKO),G=bfs(r.x|0,r.y|0),k=storyWaitStand(r,G,{tree:true,obj:j,cast:[r],key:'t'});const ok=k>=0&&walk(k)&&storySlotCells({stump:j}).length<storySlotCells({stump:j},5.6).length&&storySlotCells({stump:j},5.6).length>=8;/* 花でうまる前は少ない・うまったあとは花の上にも立てる */for(const q of L)S.obj[q]='';recount();return JSON.stringify({n:L.length>20,ok})})()`);
+  assert.deepEqual(m,{n:true,ok:true},'main talk by the tree must find a place to stand when flowers cover the ground');
+  console.log('Flowers all around the sacred tree: the cast still finds a place to stand');
   assert.deepEqual(errors,[]);await browser.close();
 })().catch(e=>{console.error(e);process.exit(1)});
