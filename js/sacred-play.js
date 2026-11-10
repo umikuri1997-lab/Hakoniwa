@@ -30,9 +30,9 @@ function migrateFieldBuild(state){if(!state.flags||state.flags.fieldBuild1)retur
   const q=QUESTS1[state.quest];if(!q?.fieldParts)return;const S0=S;S=state;try{{const id=q.fieldParts.find(p=>((state.fieldStories?.[p]?.step)||0)<(FIELD_STORIES[p]?.length||0)),p=id&&FIELD_PREP[id],st=state.fieldStories?.[id];if(p&&!((st?.step||0)>0)&&!st?.built)if(p.legacy(state.sacredRoot)){state.fieldStories||(state.fieldStories={});(state.fieldStories[id]||(state.fieldStories[id]={step:0})).built={legacy:1};}}}finally{S=S0}}
 /* 守り神の出番：その話の、どの段階で、どんな操作か。pop：地図を見なくてよい出番は、ポップアップの中で（その見出し） */
 const FIELD_PLAY={
-  earthListen:{phase:0,type:'root',pop:'根をほりだす',hint:'光る根の先から、根を指でなぞる。はずれると根が切れて、はじめから',bonus:{fun:10,word:'根がほっとした'}},
+  earthListen:{phase:0,type:'dig',pop:'根をほりだす',hint:'指でそっとこすって、土をよける。つよくこすると、根がきずつく',bonus:{fun:10,word:'根がほっとした'}},
   fireRoot:{phase:0,type:'hold',pop:'石をあたためる',hint:'石を長おしして、ゲージが緑のときにはなす',bonus:{fun:10,word:'石がぽかぽか'}},
-  waterFilm:{phase:0,type:'trace',pop:'水の通り道をつなぐ',hint:'光る所から、指でなぞって根まで水をとどける',bonus:{fun:10,word:'水がしみわたった'}},
+  waterFilm:{phase:0,type:'pipe',pop:'水の通り道をつなぐ',hint:'石をタップして回し、かめから根まで、水の道をつなぐ。水は少しずつ流れてくる',bonus:{fun:10,word:'水がしみわたった'}},
   windEcho:{phase:0,type:'rhythm',pop:'葉の音を聞く',hint:'葉がゆれた順に、指で風をおくって葉をなぞる',bonus:{fun:10,word:'葉がうたった'}},
 };
 const MGSPR={src:"assets/g/b942f0109a.webp",r:{"stone0":[83,26,19,16],"stone1":[103,26,19,16],"stone2":[71,0,19,24],"grass":[39,26,15,21],"cold":[123,26,17,15],"drop":[244,26,9,8],"leafL":[0,0,50,25],"tip":[172,26,11,12],"bud0":[236,26,7,11],"bud1":[184,26,8,12],"bud2":[159,26,12,13],"bud3":[141,26,17,14],"wind0":[193,26,17,12],"wind1":[55,26,27,18],"wind2":[91,0,30,24],"spark0":[0,49,7,6],"spark1":[211,26,12,12],"spark2":[0,26,18,22],"spark3":[224,26,11,12],"leaf0":[159,0,19,23],"leaf0s":[122,0,20,24],"leaf1":[19,26,19,22],"leaf1s":[179,0,19,23],"leaf2":[199,0,19,23],"leaf2s":[219,0,21,23],"leaf3":[143,0,15,24],"leaf3s":[51,0,19,25]}};
@@ -55,9 +55,9 @@ function startSacredPlay(id,j,cast,done){
   const ring=(n,rx,ry,a0=0)=>Array.from({length:n},(_,i)=>{const a=a0+i/n*Math.PI*2;return{x:cx+Math.cos(a)*rx,y:cy+8+Math.sin(a)*ry}});
   if(P.type==='cover'){P.spots=ring(6,36,14,.2);const c=new Set();let k=0;while(c.size<3)c.add((hash((S.sacredRoot||0)*3+k++)*6)|0);P.cold=c;P.covered=new Set();P.need=3;P.pile={x:cx-50,y:cy-30};P.carry=null}/* 草の山から、草を1つずつ指で運ぶ */
   if(P.type==='hold'){P.stone={x:cx+20,y:cy+12};P.heat=0;P.holding=false}
-  if(P.type==='root'){P.path=[];for(let i=0;i<=28;i++){const u=i/28;P.path.push(pop?{x:cx+52-u*52-Math.sin(u*Math.PI)*42,y:cy+22-u*20+Math.sin(u*Math.PI*2)*4}:{x:cx+30-u*58,y:cy+26-u*20+Math.sin(u*Math.PI*3)*5})}P.reach=0;P.tip=0}/* 根の先（土の深い所）から、地面の上（切り株の根元）へ */
+  if(P.type==='dig')digInit(P,now);/* 土の下にうまった根：こすって土をよける */
   if(P.type==='rhythm'){P.leaves=[[-44,-46],[44,-46],[-44,-6],[44,-6]].map(([dx,dy])=>({x:cx+dx,y:cy+dy}));P.need=4;P.order=[];let k=0;while(P.order.length<P.need){const v=(hash((S.sacredRoot||0)*7+k++)*4)|0;if(v!==P.order[P.order.length-1])P.order.push(v)}P.sw=[0,0,0,0];P.trail=[];P.show=now+700;P.showEnd=()=>P.show+P.need*700}/* 4まいの葉が、じゅんにゆれて鳴る → 同じ順に、指で風をおくる（となりあう葉は、ほかの葉の上を通らない並び） */
-  if(P.type==='trace'){P.path=[];for(let i=0;i<=24;i++){const u=i/24;P.path.push(pop?{x:cx-54+u*48,y:cy+14+Math.sin(u*Math.PI*2)*9-u*10}:{x:cx-74+u*66,y:cy+16-Math.sin(u*Math.PI)*14+u*-6})}P.reach=0}
+  if(P.type==='pipe')pipeInit(P,now);/* 水路の石：回して、かめから根まで水の道をつなぐ */
   if(P.type==='drip'){P.path=[];for(let i=0;i<=24;i++){const u=i/24;P.path.push({x:cx-50+u*40,y:cy-51+u*13})}P.reach=0;P.hold=false;P.bud={x:cx-4,y:cy-20};P.leaf={x:cx-53,y:cy-57}}/* かたむいた葉の上を、しずくが芽まで */
   if(P.type==='swipe'){P.need=3}
   if(P.type==='gather'){P.order=[...cast.filter(r=>r.name!==POKO),...cast.filter(r=>r.name===POKO)];P.need=P.order.length;P.prog=0;P.holding=false}/* 切り株を長おし：みんなが、じゅんに切り株へ力をおくる（フタバはさいご） */
@@ -87,8 +87,8 @@ function sacredPlayDown(w,now){const P=SPLAY;P.down={x:w.x,y:w.y,t:now,last:{x:w
   else if(P.type==='cover'){if(sacredPlayNear(w,P.pile,12)&&P.got<P.need){P.carry={x:w.x,y:w.y};sfx('tap')}}
   else if(P.type==='drip'){if(!P.open&&sacredPlayNear(w,P.path[P.reach],9))P.hold=true}
   else if(P.type==='gather'){if(sacredPlayNear(w,{x:P.cx,y:P.cy-6},26))P.holding=true}
-  else if(P.type==='trace'){P.tracing=sacredPlayNear(w,P.path[0],P.pop?14:12);P.reach=0}
-  else if(P.type==='root'){P.tracing=sacredPlayNear(w,P.path[P.reach],P.pop?14:12)}/* 切れたら、根の先から（reach=0）。とちゅうではなしたら、そこからつづけられる */
+  else if(P.type==='dig'){P.trail=[{x:w.x,y:w.y,t:now}];P.lock=false}
+  else if(P.type==='pipe')pipeTap(P,w,now);
   else if(P.type==='rhythm'){P.last=-1;P.trail=[{x:w.x,y:w.y,t:now}];sacredPlayWind(P,w,now)}
 }
 function sacredPlayMove(w,now){const P=SPLAY,d=P.down;if(!d)return;const l=d.last,dt=Math.max(1,now-l.t)/1000,dist=Math.hypot(w.x-l.x,w.y-l.y),v=dist/dt;d.last={x:w.x,y:w.y,t:now};
@@ -96,13 +96,12 @@ function sacredPlayMove(w,now){const P=SPLAY,d=P.down;if(!d)return;const l=d.las
   else if(P.type==='cover'&&P.carry){P.carry.x=w.x;P.carry.y=w.y}
   else if(P.type==='rhythm'){P.trail.push({x:w.x,y:w.y,t:now});if(P.trail.length>12)P.trail.shift();sacredPlayWind(P,w,now)}
   else if(P.type==='drip'&&P.hold){let best=-1,bd=1e9;for(let i=Math.max(0,P.reach-2);i<=Math.min(P.path.length-1,P.reach+4);i++){const p=P.path[i],dd=Math.hypot(w.x-p.x,w.y-p.y);if(dd<bd){bd=dd;best=i}}if(bd>8){const p=P.path[P.reach];P.hold=false;P.fall={x:p.x,y:p.y,t:now};P.reach=0;sacredPlayMiss('しずくが、おちちゃった');return}if(best>P.reach)P.reach=best;if(P.reach>=P.path.length-1){P.hold=false;P.open=now;sfx('bush');setTimeout(()=>{if(SPLAY===P)sacredPlayWin()},900)}}
-  else if(P.type==='root'&&P.tracing){let best=-1,bd=1e9;for(let i=Math.max(0,P.reach-2);i<=Math.min(P.path.length-1,P.reach+4);i++){const p=P.path[i],dd=Math.hypot(w.x-p.x,w.y-p.y);if(dd<bd){bd=dd;best=i}}if(bd>(P.pop?13:10)){P.tracing=false;P.reach=0;P.snap=now;sfx('hit');sacredPlayMiss('根が切れちゃった');return}if(best>P.reach){P.reach=best;if(Math.random()<.4)fx.push({k:'p',x:w.x,y:w.y,vx:(Math.random()-.5)*30,vy:-30,life:.6,col:'#b4925e',r:2})}if(P.reach>=P.path.length-1)sacredPlayWin()}
-  else if(P.type==='trace'&&P.tracing){let best=-1,bd=1e9;P.path.forEach((p,i)=>{const dd=Math.hypot(w.x-p.x,w.y-p.y);if(dd<bd){bd=dd;best=i}});if(bd>(P.pop?14:12)){P.tracing=false;P.reach=0;sacredPlayMiss('こぼれちゃった');return}if(best>=P.reach&&best<=P.reach+3)P.reach=best;if(P.reach>=P.path.length-1)sacredPlayWin()}
+  else if(P.type==='dig')digRub(P,w,now,dist);
 }
 function sacredPlayUp(w,now){const P=SPLAY,d=P.down;P.down=null;
   if(P.type==='hold'&&P.holding){P.holding=false;if(P.heat>=.58&&P.heat<=.84){sfx('bush');sacredPlayWin()}else if(P.heat<.6)sacredPlayMsg('まだ、つめたい');else sacredPlayMiss('こげちゃった')}
   else if(P.type==='swipe'&&d){const len=Math.hypot(w.x-d.x,w.y-d.y),ms=now-d.t;if(len<18)return;if(len>110||ms<140){sacredPlayMsg('つよすぎる。やさしく');P.gust=now;return}P.got++;P.sway=now;sfx('bush');sacredPlayHint(P.hint+sacredPlayCount());if(P.got>=P.need)setTimeout(sacredPlayWin,600)}
-  else if(P.type==='trace'||P.type==='root')P.tracing=false;
+  else if(P.type==='dig'){P.lock=false;P.trail=null}
   else if(P.type==='drip')P.hold=false;
   else if(P.type==='rhythm')P.last=-1;
   else if(P.type==='cover'&&P.carry){const c=P.carry;P.carry=null;let hit=-1;P.spots.forEach((p,i)=>{if(!P.covered.has(i)&&sacredPlayNear(c,p,10))hit=i});if(hit>=0&&P.cold.has(hit)){P.covered.add(hit);P.got=P.covered.size;sfx('bush');sacredPlayHint(P.hint+sacredPlayCount());if(P.got>=P.need)setTimeout(()=>{if(SPLAY===P)sacredPlayWin()},500);return}if(hit>=0)sacredPlayMsg('ここは、あたたかい');P.back={x:c.x,y:c.y,t:now}}/* のせなかった草は、山へもどる */
@@ -142,12 +141,12 @@ function sacredPlayPaint(P,now){const t=(now-P.t0)/1000;
     const hc=k=>`rgb(${Math.min(255,(120+P.heat*120)*k)|0},${Math.min(255,(110+P.heat*40)*k)|0},${Math.min(255,(105-P.heat*40)*k)|0})`;glow(s.x,s.y,10+P.heat*8,.2+P.heat*.4,'255,170,90');if(!mgs(P.heat<.3?'stone0':P.heat<.58?'stone1':'stone2',s.x,s.y+7,'b')){PXG.fillStyle=hc(.75);pxDisk(s.x,s.y+1,6,4);PXG.fillStyle=hc(1);pxDisk(s.x,s.y,6,4);PXG.fillStyle=hc(1.25);PXG.fillRect(PXR(s.x)-3,PXR(s.y)-3,3,1)}
     const bx=PXR(s.x)-16,by=PXR(s.y)-26;PXG.fillStyle='#4a3424';PXG.fillRect(bx-1,by-1,34,6);PXG.fillStyle='#7a6048';PXG.fillRect(bx,by,32,4);PXG.fillStyle='#8fdc6a';PXG.fillRect(bx+19,by,8,4);PXG.fillStyle='#ffb347';PXG.fillRect(bx,by+1,PXR(32*Math.min(1,P.heat)),2)}
   if(P.type==='brush'){const a=P.area;PXG.globalAlpha=.7*(1-P.prog);PXG.fillStyle='#9c7a52';pxDisk(a.x+a.w/2,a.y+a.h/2,a.w/2,a.h/2);PXG.globalAlpha=P.prog;PXG.fillStyle='#d9b98a';{let q=null;for(let i=0;i<=16;i++){const u=i/16,x=(1-u)**2*(a.x+6)+2*u*(1-u)*(a.x+a.w/2)+u*u*(a.x+a.w-6),y=(1-u)**2*(a.y+12)+2*u*(1-u)*(a.y+2)+u*u*(a.y+14);if(q)pxLine(q.x,q.y,x,y,1);q={x,y}}}PXG.globalAlpha=1}
-  if(P.type==='root'){const pa=P.path,sn=P.snap&&now-P.snap<500,th=P.pop?4:3;PXG.fillStyle='rgba(120,88,52,.75)';if(P.pop)PXG.fillRect(0,PXR(P.cy-1),PLAYW,PLAYH);else pxDisk(P.cx,P.cy+18,40,14);/* 根の上の土 */PXG.fillStyle=sn?'rgba(232,120,110,.8)':'rgba(255,246,200,.55)';pa.forEach((p,i)=>{if(i>P.reach&&i%2===0)PXG.fillRect(PXR(p.x)-1,PXR(p.y)-1,2,2)});PXG.fillStyle='#9c7a52';pxPath(pa.map(p=>({x:p.x,y:p.y+1})),P.reach,th);PXG.fillStyle='#d9b98a';pxPath(pa,P.reach,th);const tp=pa[P.reach];glow(tp.x,tp.y,10,.45+.15*Math.sin(t*5),'255,236,170');mgs('tip',tp.x-2,tp.y-3)}
+  if(P.type==='dig')digPaint(P,now,t);
   if(P.type==='rhythm'){const k=Math.floor((now-P.show)/700),sh=now>=P.show&&k<P.need;if(sh&&P.rang!==P.show*10+k){P.rang=P.show*10+k;P.sw[P.order[k]]=now;sfx('bush')}/* お手本：順にゆれて鳴る */
     P.leaves.forEach((l,i)=>{const a=now-P.sw[i],on=P.sw[i]&&a<520,sw=on?Math.sin(a/50)*.5*(1-a/520):0;if(on)glow(l.x,l.y,12,.55*(1-a/520));if(!mgs('leaf'+i+(on?'s':''),l.x+PXR(sw*2),l.y+11,'b'))pxLeaf(l.x,l.y,sw,on?'#bfe89a':'#8fdc6a','#5f9e3f')});
     if(P.down&&P.trail.length>1){for(let i=1;i<P.trail.length;i++){const a=Math.max(0,1-(now-P.trail[i].t)/400);if(a<=0)continue;PXG.fillStyle='rgba(255,255,255,'+(a*.7).toFixed(2)+')';pxLine(P.trail[i-1].x,P.trail[i-1].y,P.trail[i].x,P.trail[i].y,1)}const q=P.trail[P.trail.length-1];mgs('wind'+mgFrame(3,110),q.x,q.y)}/* 指の風 */
     if(now>=P.showEnd()){PXG.fillStyle='#fff6c8';for(let i=0;i<P.need;i++)PXG.fillRect(PXR(P.cx)-P.need*3+i*6+1,90,4,i<P.got?3:1)}}
-  if(P.type==='trace'){if(P.pop){PXG.fillStyle='rgba(120,88,52,.55)';PXG.fillRect(0,PXR(P.cy),PLAYW,PLAYH)}PXG.fillStyle='rgba(255,255,255,.7)';P.path.forEach((p,i)=>{if(i%2===0)PXG.fillRect(PXR(p.x)-1,PXR(p.y)-1,2,2)});PXG.fillStyle='#4f93c0';pxPath(P.path.map(p=>({x:p.x,y:p.y+1})),P.reach,P.pop?4:3);PXG.fillStyle='#7fc4ec';pxPath(P.path,P.reach,P.pop?4:3);glow(P.path[0].x,P.path[0].y,10,.5,'150,210,255');{const d=P.path[P.reach];mgs('drop',d.x,d.y-2)}}
+  if(P.type==='pipe')pipePaint(P,now,t);
   if(P.type==='drip'){const pa=P.path,b=P.bud;if(!mgs('leafL',P.leaf.x+25,P.leaf.y+12.5,0,1)){PXG.fillStyle='#5f9e3f';pxPath(pa.map(p=>({x:p.x,y:p.y+2})),pa.length-1,7);PXG.fillStyle='#8fdc6a';pxPath(pa,pa.length-1,5);PXG.fillStyle='#bfe89a';pxPath(pa.map(p=>({x:p.x,y:p.y-1})),pa.length-1,1);PXG.fillStyle='#5f9e3f';PXG.fillRect(PXR(pa[0].x)-4,PXR(pa[0].y)-1,2,3)}/* かたむいた葉（葉のすじ・茎） */
     PXG.fillStyle='rgba(255,255,255,.6)';pa.forEach((p,i)=>{if(i>P.reach&&i%3===0)PXG.fillRect(PXR(p.x),PXR(p.y),1,1)});
     const op=P.open?Math.min(1,(now-P.open)/700):0,bx=PXR(b.x),by=PXR(b.y);if(mgOK()){if(op>0)glow(b.x,b.y-6,10,.5*(1-op*.5));mgs('bud'+Math.min(3,Math.floor(op*3.99)),b.x,b.y+3,'b')}else{PXG.fillStyle='#5f9e3f';PXG.fillRect(bx,by-2,1,4);PXG.fillStyle='#8fdc6a';if(op<=0)PXG.fillRect(bx-1,by-5,3,3);else{const n=1+PXR(op*3);PXG.fillRect(bx-n,by-3-PXR(op*2),n,2);PXG.fillRect(bx+1,by-3-PXR(op*2),n,2);PXG.fillStyle='#bfe89a';PXG.fillRect(bx,by-4-PXR(op*2),1,2);glow(b.x,b.y-3,10,.5*(1-op*.5))}}/* 芽：とどくと、ひらく */
@@ -159,6 +158,56 @@ function sacredPlayPaint(P,now){const t=(now-P.t0)/1000;
     glow(P.cx,P.cy-6,18+P.got*4,.25+.1*Math.sin(t*4)+P.got*.06);if(!P.holding&&P.got<P.need){PXG.fillStyle='rgba(255,246,200,'+(.5+.3*Math.sin(t*4))+')';pxRing(P.cx,P.cy-6,PXR(20+2*Math.sin(t*4)),2)}/* 長おしする所に、光の輪 */
     if(P.got)mgs('spark'+mgFrame(4,120),P.cx,P.cy-10);if(P.holding){const f=P.prog-P.got;PXG.fillStyle='#fff6c8';pxRing(P.cx,P.cy-6,20,3,f)}}
   if(P.msg&&now-P.msgT<1400)pxText(P.msg,P.cx,P.pop?14:P.cy-36);else if(PXTXT.c&&!P.msg)pxTextFree();}
+/* 土：土の下にうまった根。指でこすると、まわりの土がへる（DIGC ドットのます目）。根の上を、つよく（速く）こすると、きずがついて、しっぱい */
+const DIGC=2,DIGR=5,DIGFAST=180,DIGWIN=.9;
+function digInit(P,now){const x0=0,y0=PXR(P.cy-1),w=PLAYW,h=PLAYH-y0;P.dg={x0,y0,cw:Math.ceil(w/DIGC),ch:Math.ceil(h/DIGC)};P.dirt=new Float32Array(P.dg.cw*P.dg.ch).fill(1);
+  P.path=[];for(let i=0;i<=28;i++){const u=i/28;P.path.push({x:P.cx+52-u*52-Math.sin(u*Math.PI)*42,y:P.cy+22-u*20+Math.sin(u*Math.PI*2)*4})}/* 根の先（土の深い所）から、切り株の根もとへ */
+  const b=P.path[P.path.length-1];digClear(P,b.x,b.y+2,5,1)}/* 根もとだけ、はじめから少し見えている */
+function digCell(P,x,y){const g=P.dg,c=Math.floor((x-g.x0)/DIGC),r=Math.floor((y-g.y0)/DIGC);return c<0||r<0||c>=g.cw||r>=g.ch?-1:r*g.cw+c}
+function digClear(P,x,y,R,k){const g=P.dg;for(let r=0;r<g.ch;r++)for(let c=0;c<g.cw;c++){const px=g.x0+c*DIGC+DIGC/2,py=g.y0+r*DIGC+DIGC/2,d=Math.hypot(px-x,py-y);if(d>R)continue;const i=r*g.cw+c;P.dirt[i]=Math.max(0,P.dirt[i]-k*(1-d/(R+1)))}}
+const digOpen=P=>{let n=0;for(const p of P.path){const i=digCell(P,p.x,p.y);if(i<0||P.dirt[i]<.25)n++}return n/P.path.length};
+function digRub(P,w,now,dist){if(P.lock||P.won||!P.trail)return;P.trail.push({x:w.x,y:w.y,t:now});while(P.trail.length>2&&now-P.trail[0].t>150)P.trail.shift();/* 速さは、さいごの0.15秒の道のりで見る（1回の動きの時間がばらばらでも、同じに） */
+  if(w.y<P.dg.y0-3)return;let len=0;for(let i=1;i<P.trail.length;i++)len+=Math.hypot(P.trail[i].x-P.trail[i-1].x,P.trail[i].y-P.trail[i-1].y);const v=len/Math.max(.15,(now-P.trail[0].t)/1000);
+  const nearRoot=P.path.some(p=>Math.hypot(p.x-w.x,p.y-w.y)<5&&(()=>{const i=digCell(P,p.x,p.y);return i<0||P.dirt[i]<.6})());/* 見えてきた根の上 */
+  if(v>DIGFAST){if(nearRoot){P.lock=true;P.scar={x:w.x,y:w.y,t:now};sfx('hit');sacredPlayMiss('根にきずがついちゃった');return}sacredPlayMsg('そっと……');return}
+  digClear(P,w.x,w.y,DIGR,Math.min(.5,dist*.16));if(Math.random()<.25)fx.push({k:'p',x:w.x,y:w.y,vx:(Math.random()-.5)*30,vy:-30,life:.6,col:'#b4925e',r:2});
+  if(digOpen(P)>=DIGWIN){P.won=now;sfx('bush');setTimeout(()=>{if(SPLAY===P)sacredPlayWin()},700)}}
+function digPaint(P,now,t){const g=P.dg;PXG.fillStyle='#5e4630';PXG.fillRect(0,g.y0,PLAYW,PLAYH-g.y0);/* ほったあとの、しめった土 */
+  const pa=P.path,glw=P.won?Math.min(1,(now-P.won)/600):0;PXG.fillStyle='#9c7a52';pxPath(pa.map(p=>({x:p.x,y:p.y+1})),pa.length-1,4);PXG.fillStyle=glw?'#f0d6a2':'#d9b98a';pxPath(pa,pa.length-1,3);PXG.fillStyle='#c4a274';for(let i=2;i<pa.length;i+=5)PXG.fillRect(PXR(pa[i].x),PXR(pa[i].y)+1,2,1);/* 根 */
+  for(let r=0;r<g.ch;r++)for(let c=0;c<g.cw;c++){const d=P.dirt[r*g.cw+c];if(d<.25)continue;PXG.fillStyle=d<.6?'#a08259':((c*7+r*13)%11===0?'#7d6340':'#8b6f47');PXG.fillRect(g.x0+c*DIGC,g.y0+r*DIGC,DIGC,DIGC)}/* 上の土：うすくなると明るく */
+  if(glw)pxGlow(pa[0].x,pa[0].y,10+glw*6,.5*glw,'255,236,170');
+  if(P.scar&&now-P.scar.t<600){PXG.fillStyle='rgba(232,120,110,.85)';pxDisk(P.scar.x,P.scar.y,2)}}
+/* 水：水路の石（まっすぐ・まがり）をタップで回す。かめの水が、少しずつ石の道を流れてくる。つながっていない所へ流れると、こぼれて、しっぱい（回した石はそのまま） */
+const PIPEC=5,PIPER=2,PIPET=12,PIPESTEP=1200,PIPEWAIT=3000;/* ます：5×2、1つ12ドット。水は1.2秒で1つ進む。はじまるまで3秒 */
+const PDIR=[[0,-1],[1,0],[0,1],[-1,0]],pipeRot=m=>((m<<1)|(m>>3))&15;/* 1上・2右・4下・8左 */
+function pipeInit(P,now){P.gx=PXR(P.cx-56);P.gy=PXR(P.cy+2);const N=PIPEC*PIPER,idx=(c,r)=>r*PIPEC+c,paths=[];
+  const walk=(c,r,seen,L)=>{if(c===PIPEC-1&&r===0){if(L.length>=6)paths.push(L.slice());return}for(const[dx,dy]of PDIR){const nc=c+dx,nr=r+dy;if(nc<0||nr<0||nc>=PIPEC||nr>=PIPER||seen.has(idx(nc,nr)))continue;seen.add(idx(nc,nr));L.push([nc,nr]);walk(nc,nr,seen,L);L.pop();seen.delete(idx(nc,nr))}};
+  walk(0,0,new Set([0]),[[0,0]]);const h=k=>hash((S.sacredRoot||0)*13+k),path=paths[(h(1)*paths.length)|0];
+  const want=new Array(N).fill(0);path.forEach(([c,r],i)=>{const dirTo=(a,b)=>PDIR.findIndex(([dx,dy])=>a[0]+dx===b[0]&&a[1]+dy===b[1]);const inD=i===0?0:dirTo(path[i],path[i-1]),outD=i===path.length-1?0:dirTo(path[i],path[i+1]);want[idx(c,r)]=(1<<inD)|(1<<outD)});/* 入口は(0,0)の上、出口はさいごの石の上（根もと） */
+  P.tiles=[];for(let r=0;r<PIPER;r++)for(let c=0;c<PIPEC;c++){const k=idx(c,r);let m=want[k]||[5,3][(h(20+k)*2)|0];const turns=k===0?1+((h(40+k)*3)|0):(h(60+k)*4)|0;for(let i=0;i<turns;i++)m=pipeRot(m);while(k===0&&(m&1))m=pipeRot(m);P.tiles.push({c,r,m,want:want[k]||0})}/* ばらばらに回しておく（はじめの石は、かならず上がひらいていない） */
+  P.goal=idx(path[path.length-1][0],path[path.length-1][1]);P.flow=[];P.next=now+PIPEWAIT}
+function pipeAt(P,w){const c=Math.floor((w.x-P.gx)/PIPET),r=Math.floor((w.y-P.gy)/PIPET);return c<0||r<0||c>=PIPEC||r>=PIPER?-1:r*PIPEC+c}
+function pipeTap(P,w,now){if(P.won)return;const k=pipeAt(P,w);if(k<0)return;if(P.flow.some(f=>f.k===k))return sacredPlayMsg('水が入った石は、回せない');const T=P.tiles[k];T.m=pipeRot(T.m);T.spin=now;sfx('tap')}
+/* 水を1つ進める：いまの石の出口から、となりの石へ。つながっていなければ、こぼれる */
+function pipeStep(P,now){if(P.won)return;const last=P.flow[P.flow.length-1];let k,from;
+  if(!last){k=0;from=0}else{const T=P.tiles[last.k],out=[0,1,2,3].find(d=>(T.m>>d&1)&&d!==last.from);if(last.k===P.goal&&out===0){P.won=now;sfx('bush');setTimeout(()=>{if(SPLAY===P)sacredPlayWin()},900);return}
+    const[dx,dy]=PDIR[out],c=T.c+dx,r=T.r+dy;if(c<0||r<0||c>=PIPEC||r>=PIPER)return pipeSpill(P,now,T.c+dx*.5,T.r+dy*.5);k=r*PIPEC+c;from=(out+2)%4}
+  const N=P.tiles[k];if(!(N.m>>from&1)||P.flow.some(f=>f.k===k))return pipeSpill(P,now,N.c+PDIR[from][0]*.5,N.r+PDIR[from][1]*.5);
+  P.flow.push({k,from,t:now});P.next=now+PIPESTEP}
+function pipeSpill(P,now,c,r){P.spill={x:P.gx+(c+.5)*PIPET,y:P.gy+(r+.5)*PIPET,t:now};P.flow=[];P.next=now+PIPEWAIT;sfx('water');sacredPlayMiss('水が、こぼれちゃった')}
+function pipePaint(P,now,t){if(!P.won&&now>=P.next&&SPLAY===P)pipeStep(P,now);if(SPLAY!==P)return;
+  const gx=P.gx,gy=P.gy,T=PIPET,h=T>>1;PXG.fillStyle='#7a5f40';PXG.fillRect(0,PXR(P.cy-1),PLAYW,PLAYH);/* 土 */
+  const g=P.tiles[P.goal],rx=gx+g.c*T+h;PXG.fillStyle='#9c7a52';PXG.fillRect(rx-1,PXR(P.cy-6),3,gy-PXR(P.cy-6)+1);PXG.fillStyle='#d9b98a';PXG.fillRect(rx-1,PXR(P.cy-6),2,gy-PXR(P.cy-6));/* 根もとへつづく根 */
+  if(!P.won)pxGlow(rx,gy-1,7,.35+.15*Math.sin(t*4),'150,210,255');
+  for(const S0 of P.tiles){const x=gx+S0.c*T,y=gy+S0.r*T,sp=S0.spin&&now-S0.spin<120;PXG.fillStyle='#5e4630';PXG.fillRect(x,y,T,T);PXG.fillStyle='#968b7a';PXG.fillRect(x+1,y+1,T-2,T-2);PXG.fillStyle=sp?'#d8cfbc':'#bdb29e';PXG.fillRect(x+1,y+1,T-2,T-3);PXG.fillStyle='#d6ccb8';PXG.fillRect(x+2,y+1,T-4,1);/* 石：石どうしのあいだは土のすきま、下に少しかげ */
+    const gr=(c,o)=>{PXG.fillStyle=c;PXG.fillRect(x+h-2+o,y+h-2+o,4-o*2,4-o*2);for(let d=0;d<4;d++)if(S0.m>>d&1){const[dx,dy]=PDIR[d];PXG.fillRect(dx?(dx>0?x+h:x+1):x+h-2+o,dy?(dy>0?y+h:y+1):y+h-2+o,dx?h-1:4-o*2,dy?h-1:4-o*2)}};gr('#7f8f9a',0);gr('#a3b2bb',1)}/* みぞ：石を通る、うすい青ねずみ色の水路（石のはしまで） */
+  const fill=(k,from,f,to)=>{const S0=P.tiles[k],x=gx+S0.c*T+h,y=gy+S0.r*T+h;PXG.fillStyle='#7fc4ec';const seg=(d,a,b)=>{const[dx,dy]=PDIR[d];const x0=x+dx*h*a,y0=y+dy*h*a,x1=x+dx*h*b,y1=y+dy*h*b;PXG.fillRect(PXR(Math.min(x0,x1))-1,PXR(Math.min(y0,y1))-1,PXR(Math.abs(x1-x0))+2,PXR(Math.abs(y1-y0))+2)};
+    if(f<.5)seg(from,1,1-f*2);else{seg(from,1,0);if(to!=null)seg(to,0,(f-.5)*2)}};
+  P.flow.forEach((F,i)=>{const T0=P.tiles[F.k],to=[0,1,2,3].find(d=>(T0.m>>d&1)&&d!==F.from),f=i<P.flow.length-1||P.won?1:Math.min(1,(now-F.t)/PIPESTEP);fill(F.k,F.from,f,to)});
+  {const jx=gx+h,jb=PXR(P.cy);{const RW=[7,7,5,7,9,11,11,11,11,9,7],top=jb-RW.length;RW.forEach((w,i)=>{const x0=jx-(w>>1),y=top+i;PXG.fillStyle='#a8664a';PXG.fillRect(x0,y,w,1);if(w>2&&i!==0&&i!==2&&i<RW.length-1){PXG.fillStyle=i<2?'#b8775a':'#cf9370';PXG.fillRect(x0+1,y,w-2,1);if(i>3&&i<9){PXG.fillStyle='#e8b28c';PXG.fillRect(x0+2,y,1,1)}}});PXG.fillStyle='#7fc4ec';PXG.fillRect(jx-2,top+1,5,1);PXG.fillStyle='rgba(66,53,28,.2)';PXG.fillRect(jx-5,jb,11,1)}/* かめ */
+    if(P.flow.length||now>P.next-900){PXG.fillStyle='#7fc4ec';PXG.fillRect(jx,jb,1,gy-jb+1)}}/* かめから、水がおちる */
+  if(!P.flow.length&&!P.won&&now<P.next){const s=Math.ceil((P.next-now)/1000);if(s<=3){PXG.fillStyle='#fff6c8';for(let i=0;i<s;i++)PXG.fillRect(gx+h+9+i*3,PXR(P.cy)-8,2,2)}}/* 流れだすまでの合図（かめの横） */
+  if(P.spill&&now-P.spill.t<700){const u=(now-P.spill.t)/700;PXG.fillStyle='rgba(127,196,236,'+(1-u).toFixed(2)+')';for(let i=0;i<5;i++){const a=i/5*Math.PI*2;PXG.fillRect(PXR(P.spill.x+Math.cos(a)*u*8),PXR(P.spill.y+Math.sin(a)*u*5),2,2)}}}
 function drawSacredPlay(now){const P=SPLAY;if(!sacredPlayActive())return;if(P.pop)return drawSacredPlayPop(now);const lw=Math.ceil(VW/cam.z)+2,lh=Math.ceil(VH/cam.z)+2+LIFT*3;if(!PX.c){PX.c=document.createElement('canvas');PX.g=PX.c.getContext('2d')}if(PX.c.width!==lw||PX.c.height!==lh){PX.c.width=PX.w=lw;PX.c.height=PX.h=lh}PXG=PX.g;const ox=Math.floor(cam.x),oy=Math.floor(cam.y);/* 見えている所ぜんぶ（段差の高さのぶん下も） */PXG.setTransform(1,0,0,1,0,0);PXG.clearRect(0,0,PX.w,PX.h);PXG.save();PXG.translate(-ox,-oy);sacredPlayPaint(P,now);
   PXG.restore();if(PX.c){ctx.save();ctx.imageSmoothingEnabled=false;ctx.drawImage(PX.c,ox,oy);ctx.restore()}}/* とちゅうで出番がおわったら（PX.c をすてたあと）、かかない */
 /* ポップアップの出番：わくつきのパネルに、切り株とその出番だけをかく（世界の1を1ドット。切り株の絵は2倍の細かさ） */
