@@ -473,7 +473,7 @@ function questVisitStand(r,G,j){const b=BL[S.obj[j]],z=b&&szAt(S.obj[j],j)||[1,1
 function questVisitReached(r,j){const b=BL[S.obj[j]],z=b&&szAt(S.obj[j],j)||[1,1],x=j%W,y=(j/W)|0,dx=Math.max(x-r.x,0,r.x-(x+z[0])),dy=Math.max(y-r.y,0,r.y-(y+z[1]));return Math.hypot(dx,dy)<=1.05}
 function questVisitOpen(G,j){const b=BL[S.obj[j]],z=b&&szAt(S.obj[j],j)||[1,1],x=j%W,y=(j/W)|0;for(let yy=Math.max(0,y-1);yy<=Math.min(H-1,y+z[1]);yy++)for(let xx=Math.max(0,x-1);xx<=Math.min(W-1,x+z[0]);xx++){const k=yy*W+xx;if(G.dist[k]>=0&&walk(k))return true}return false}/* まわりに、歩いて行けるマスがあるか */
 const partVisitStale=v=>{if(!v.partKey)return false;const m=/^\d+:sub:([^:]+):/.exec(v.partKey);if(m)return (S.subSt||{})[m[1]]!==2;return !v.partKey.startsWith((S.world||0)+':'+(QUESTS[S.quest]?.text)+':')};/* 目標がかわったら、前の目標の物は見にいかない。サブクエストの物（かまど）は、そのサブクエストを受けているあいだだけ見にいく */
-function tryQuestVisit(r){const list=QUEST_VISITS.get(r);if(!list||!list.length||r.act&&r.act.type==='questjoy')return false;
+function tryQuestVisit(r){const list=QUEST_VISITS.get(r);if(!list||!list.length||r.act&&(r.act.type==='questjoy'||MAINGO.has(r.act.type))||GATHER_HOLD||WELCOME_RUN)return false;/* なかまのお迎え・お見送り・メインのお話で集まっているあいだは、見にいかない（終わってから見にいく） */
   const v=list[0];if(!qvHas(v.obj,v.id)||partVisitStale(v)){list.shift();return false}
   if(r.hunger<30||hungry(r)||(r.visitRetryAt||0)>S.t||onHold(r)||HOLD.has(r.id)||!questVisitSafe(r,v.obj))return false;
   if(r.act&&['eat','fetch','flee','faint'].includes(r.act.type))return false;/* おなかがすいているとき以外は、ねむくても、すぐ見にいく */
