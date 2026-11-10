@@ -106,7 +106,10 @@ H._all=()=>{all0();
   }
   /* 物語の進行だけを見るとき：みどり・花・なかよしは、時間をかけずにそろえる（その先のお話が進むかを見るため） */
   if(q&&(q.id==='lv5'||q.id==='wood6')&&S.qTalked){let n=0;for(let i=0;i<400&&n<8;i++){const x=20+((B.pc*37+i*53)%68),y=20+((B.pc*61+i*29)%68),j=y*W+x;if(!(S.fog&&fogAt(j))&&!REV.has(j)&&!S.obj[j]&&!S.floor[j]&&walk(j)&&S.ground[j]!==1){S.obj[j]='clover';n++}}if(n)recount()}
-  if(q&&q.id==='omoi'&&S.qTalked&&omoiN()<3){const R=S.res.filter(r=>!r.hidden);for(let i=0;i<R.length;i++)for(let k=i+1;k<R.length;k++)if(bondOf(R[i],R[k])<30){bondAdd(R[i],R[k],6);i=R.length;break}}
+  if(q&&q.id==='lv5'&&S.qTalked&&!isNight()&&q.check()===false){const f=printList().find(f=>!printTraced(f.j));if(f){if(S.fog&&S.fog[f.a])fogClear(f.a,true);if(!S.fogReq.includes(f.j)&&!S.res.some(r=>r.act&&r.act.type==='foglook'))S.fogReq.push(f.j)}}/* 足あと：霧を晴らして、フタバに見にいってもらう */
+  if(q&&q.id==='omoi'&&S.qTalked&&omoiWait()&&!OMOI_RUN&&!isNight()&&$('#dialog').hidden)sacredTreeTap(S.obj.indexOf('tower'));/* なかよしの2人を、御神木へ */
+  if(q&&q.id==='wood6'&&S.qTalked&&wflCells().length<WFL_N&&S.sacredRoot!=null){const j=S.sacredRoot,R=FIELD_NEAR_R;for(let b=-R;b<sacredSpan()+R&&wflCells().length<WFL_N;b++)for(let a=-R;a<sacredSpan()+R&&wflCells().length<WFL_N;a++){const k=j+b*W+a;if(k>=0&&k<W*H&&!S.obj[k]&&!S.floor[k]&&walk(k)&&S.ground[k]===0)S.obj[k]=wflKind()}recount()}/* えらんだ花を、御神木のそばに */
+  if(q&&q.id==='omoi'&&S.qTalked&&omoiN()+(S.flags.omoiW||[]).length<3){const R=S.res.filter(r=>!r.hidden);for(let i=0;i<R.length;i++)for(let k=i+1;k<R.length;k++)if(bondOf(R[i],R[k])<30){bondAdd(R[i],R[k],6);i=R.length;break}}
   for(const e of S.enemies)if(e.type==='boss2'&&e.hp>30)e.hp=30;
   }
   if(S.cleared&&!B.cl2){B.cl2=1;B.lg('CLEARED flags '+Object.keys(S.flags).filter(k=>/reun|final|sacred/i.test(k)).join(','))}
