@@ -17,7 +17,10 @@ function checkSummon(){
   if(!S||!S.feat.summon||S.summonNext||S.summon)return;const el=sumElem();if(!el)return;S.summonNext=el}
 function storySummonNow(){/* 草原の2人目（土のせいれい）は、ききょうが咲いて呼ぶ話を聞いたら、朝を待たずに昼のうちに呼べる（1日1回はそのまま） */
   if(!S||WD!==0||S.free||S.summon||S.summonNext||!S.feat.summon||S.flags.minaCame||isNight()||calledToday())return false;const el=sumElem();if(el!==SECOND[WD].elem||!SECOND[WD].ok())return false;S.summon={elem:el};sfx('arrive');toast('神殿に「！」が出ている','good');return true}
+/* おみおくりの前（unb）なのに、お墓も棺もない子は、おみおくりがすんだことにする（お墓を置く空きがなかった・お墓がなくなった、など。unb がのこると二度と呼びもどせない） */
+function unbFix(){for(const L of[S.buried||[],S.lost||[]])for(const q of L){if(!q.unb)continue;let has=S.res.some(r=>r.coffin&&r.coffin.name===q.name);if(!has)for(const k in S.dyn){const d=S.dyn[k];if(d&&d.name===q.name&&!d.buried&&S.obj[k]==='grave'){has=true;break}}if(!has)delete q.unb}}
 function summonMorning(){
+  unbFix();
   if(S.summon&&!S.summon.rev&&S.buried&&S.buried.some(q=>!q.unb)){if(S.summon.elem&&!S.summonNext)S.summonNext=S.summon.elem;S.summon={rev:1};return}/* 新しい子の「！」が出たままでも、消えたキーキャラの呼びもどしを先にする（新しい子は、そのつぎ） */
   if(S.summon)return;
   if(S.buried&&S.buried.some(q=>!q.unb))S.summon={rev:1};
