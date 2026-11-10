@@ -23,15 +23,21 @@ def seesaw(sc):
     sc.box(-0.45,0.4,0.36,1.45,0.6,0.42,WOOD)                                                             # 板（動く部品）
     for x in (-0.3,1.24):sc.box(x,0.46,0.42,x+0.06,0.54,0.6,WOOD2);sc.box(x-0.06,0.44,0.56,x+0.12,0.56,0.6,WOOD2)   # 持ち手
 def arch(sc):
-    for x in (-0.28,1.22):sc.box(x,0.42,0,x+0.06,0.58,1.0,WOOD2)
-    pts=[(0.5+0.78*math.cos(math.pi*i/16),0.5,1.0+0.6*math.sin(math.pi*i/16)) for i in range(17)]
-    sc.tube(pts,0.035,WOOD2)
-    for i in range(14):   # つると花
-        t=i/13;a=math.pi*t;p=(0.5+0.78*math.cos(a),0.5,1.0+0.6*math.sin(a))
-        sc.sphere(p[0],p[1]+0.05,p[2],0.09,LEAF);
-        if i%3==1:sc.sphere(p[0],p[1]+0.1,p[2]+0.03,0.05,FLOW)
-    for x in (-0.25,1.25):
-        for z in (0.2,0.5,0.8):sc.sphere(x,0.55,z,0.09,LEAF);sc.sphere(x+0.03,0.6,z+0.1,0.045,FLOW)
+    """木のパーゴラのアーチ：四すみの角柱、左右の側面ははしごのような格子、上は前後の桁に横木（垂木）をならべ、はしは切りかき。右がわと上につるバラ"""
+    X0,X1,Y0,Y1,H=-0.22,1.22,0.18,0.82,1.55;P=0.11
+    for x in (X0,X1-P):
+        for y in (Y0,Y1-P):sc.box(x,y,0,x+P,y+P,H,WOOD2)                                   # 角柱4本
+        for z in (0.35,0.75,1.15):sc.box(x+0.01,Y0+P,z,x+P-0.01,Y1-P,z+0.05,WOOD)          # 側面の横の桟
+        for y in (Y0+0.24,Y1-0.29):sc.box(x+0.015,y,0.3,x+P-0.015,y+0.04,1.2,WOOD)        # 側面のたての桟
+    for y in (Y0,Y1-P):sc.box(X0-0.16,y,H,X1+0.16,y+P,H+0.14,WOOD)                         # 前後の桁（はしが外へ出る）
+    for i in range(7):                                                                     # 上の横木（垂木）
+        x=X0-0.06+i*(X1-X0+0.05)/6;sc.box(x,Y0-0.14,H+0.14,x+0.07,Y1+0.14,H+0.22,WOOD2)
+    import random;rd=random.Random(3)
+    for k in range(26):   # つるバラ：右の側面と上に、葉のかたまりと白い花
+        if k<14:x=X1-0.04+rd.uniform(-0.06,0.06);y=rd.uniform(Y0,Y1);z=rd.uniform(0.15,H)
+        else:x=rd.uniform(0.4,X1+0.1);y=rd.uniform(Y0-0.05,Y1+0.05);z=H+0.25
+        sc.sphere(x,y,z,rd.uniform(0.07,0.11),LEAF)
+        if k%3==0:sc.sphere(x+0.02,y+0.06,z+0.04,0.045,FLOW)
 def slide(sc):
     sc0=sc
     class T:
@@ -58,8 +64,8 @@ def slide(sc):
         sc.quad((x0,0.72,z0),(x1,0.72,z1),(x1,1.18,z1),(x0,1.18,z0),SAND)
         for y,s in ((0.7,-1),(1.2,1)):sc.quad((x0,y,z0),(x1,y,z1),(x1,y,z1+0.1),(x0,y,z0+0.1),(222,196,150))
 def swing(sc):
-    for x in (0.08,1.82):sc.box(x-0.04,0.38,0,x+0.14,0.62,0.12,STONE,bevel=0.02);sc.box(x,0.42,0.12,x+0.1,0.58,1.7,WOOD2)
-    sc.box(0.0,0.43,1.62,2.0,0.57,1.74,WOOD)
+    for x in (0.34,1.56):sc.box(x-0.04,0.38,0,x+0.14,0.62,0.12,STONE,bevel=0.02);sc.box(x,0.42,0.12,x+0.1,0.58,1.7,WOOD2)   # 柱は少しつめた
+    sc.box(0.26,0.43,1.62,1.74,0.57,1.74,WOOD)
     for x in (0.72,1.28):sc.tube([(x,0.5,1.62),(x,0.5,0.42)],0.012,ROPE)   # 座席となわ（動く部品）
     sc.box(0.66,0.4,0.36,1.34,0.6,0.42,WOOD)
 def yomawari(sc):
@@ -118,5 +124,7 @@ if __name__=='__main__':
     for n,(nm,id,foot,f) in enumerate(OBJS):
         c,r=n%cols,n//cols;x=G+c*(cw+G*2);y=top+r*(PH+TH+G*2)
         d.text((x,y),'%d %s'%(n+1,nm),font=fnt,fill=(60,60,60))
-        sh.paste(panel3d(f,foot),(x,y+TH));sh.paste(panelold(id,foot,C),(x+PW+G,y+TH))
+        sh.paste(panel3d(f,foot),(x,y+TH))
+        if id=='arch':sc=Scene();f(sc);sd=grid_bg((-1.0,3.0,-3.5,0.5));sd.alpha_composite(render(sc,side,(-1.0,3.0,-3.5,0.5),SIDE));sh.paste(sd.resize((PW,PH),Image.BOX),(x+PW+G,y+TH))   # 新しいデザイン：右はまよこの3D
+        else:sh.paste(panelold(id,foot,C),(x+PW+G,y+TH))
     sh.convert('RGB').save(os.path.join(out,'sheet.png'));print('ok',sh.size)
