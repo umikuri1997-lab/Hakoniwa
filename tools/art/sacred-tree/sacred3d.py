@@ -1,7 +1,8 @@
 # 御神木（草原）の切り株・芽・若葉・若木と、育った御神木の3Dの下絵。4×4マスの物（置くマスは左上が(0,0)）。
 # 根のまん中は、いまのチップと同じ所（x=2.0、根のいちばん手前の下はし y=3.81）。
-# 出す絵：<名前>_full.png（ゲームの見え方・マス目と置くマスのわく）、<名前>_full_nogrid.png、<名前>_side.png（まよこ）
+# 出す絵：ref/sacred_sheet.png（お手本のキューブと5つの段階を1まいにならべた、ゲームの見え方の絵）
 import math,sys,os
+from PIL import Image
 sys.path.insert(0,os.path.join(os.path.dirname(__file__),'..'))
 from oblique3d import *
 CX,CY=2.0,3.0          # 幹のまん中
@@ -59,13 +60,21 @@ def tree(sc):
            (-2.15,0.5,2.85,0.75),(2.15,0.5,2.9,0.75),(-0.75,0.75,3.0,0.85),(0.8,0.75,3.05,0.85),(0,-0.3,4.85,0.8)]
     for k,(dx,dy,z,r) in enumerate(blobs): sc.sphere(CX+dx,CY+dy,z,r,LEAF[k%3],n=32,m=18,zs=0.85)
 
-out=sys.argv[1] if len(sys.argv)>1 else os.path.dirname(__file__)
-for name,f,ext,sext in (('stump',stump,(-1.0,5.0,-1.0,5.0),(-1.0,5.0,-1.5,0.5)),
-                        ('bud',bud,(-1.0,5.0,-1.0,5.0),(-1.0,5.0,-1.5,0.5)),
-                        ('leaf',leaf,(-1.0,5.0,-1.0,5.0),(-1.0,5.0,-1.5,0.5)),
-                        ('sapling',sapling,(-1.0,5.0,-1.0,5.0),(-1.0,5.0,-3.0,0.5)),
-                        ('tree',tree,(-2.0,6.0,-3.0,5.0),(-2.0,6.0,-6.0,0.5))):
-    sc=Scene();f(sc)
-    fg=render(sc,game,ext,VIEW);bg=grid_bg(ext,(4,4));bg.alpha_composite(fg);bg.save(f'{out}/{name}3d_full.png');fg.save(f'{out}/{name}3d_full_nogrid.png')
-    sd=render(sc,side,sext,SIDE);bg=grid_bg(sext);bg.alpha_composite(sd);bg.save(f'{out}/{name}3d_side.png')
-print('ok')
+out=sys.argv[1] if len(sys.argv)>1 else os.path.join(os.path.dirname(__file__),'ref')
+os.makedirs(out,exist_ok=True)
+# 1まいの絵：左にお手本のキューブ、そのみぎに 切り株・芽・若葉・若木・御神木 をならべる（1マス64ドット）。
+# どれも、置く4×4マス（黄色いわく）の同じ所に、同じ高さでならべる。
+Y0,Y1=-3.0,5.0
+STAGES=((stump,-1.0,5.0),(bud,-1.0,5.0),(leaf,-1.0,5.0),(sapling,-1.0,5.0),(tree,-2.0,6.0))
+GAP=16
+cube=Image.open(os.path.join(os.path.dirname(__file__),'..','ref','view-cube.png')).convert('RGBA')
+panels=[]
+for f,x0,x1 in STAGES:
+    sc=Scene();f(sc);ext=(x0,x1,Y0,Y1)
+    bg=grid_bg(ext,(4,4));bg.alpha_composite(render(sc,game,ext,VIEW))
+    panels.append(bg.resize((bg.width//2,bg.height//2),Image.BOX))
+Hh=panels[0].height;Ww=cube.width+sum(p.width for p in panels)+GAP*len(panels)
+sheet=Image.new('RGBA',(Ww,Hh),(255,255,255,255));sheet.paste(cube,(0,Hh-cube.height));x=cube.width+GAP
+for p in panels: sheet.paste(p,(x,0));x+=p.width+GAP
+sheet.convert('RGB').save(f'{out}/sacred_sheet.png')
+print('ok',sheet.size)
