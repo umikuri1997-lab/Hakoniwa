@@ -45,11 +45,12 @@ function storyWaitStand(r,G,p){
   if(!p.slots)p.slots=storySlots(p.cast,p.field||p.tree?{stump:p.obj}:p.free?{center:p.obj}:{obj:p.obj});
   const av=k=>k===r.avoidJ&&S.t<r.avoidU,k=p.slots.get(r);if(k!=null&&G.dist[k]>=0&&!av(k)&&free('storywait'+k,1))return k;/* しばらくえらばない行き先（startAct で、ひとやすみにかわる）はさける */
   if(p.id!=null){const q=questVisitStand(r,G,p.obj);if(!av(q))return q}
-  return p.field||p.tree?storySlotCells({stump:p.obj}).find(c=>G.dist[c.k]>=0&&!av(c.k)&&!sacredReserved(c.k)&&free('storywait'+c.k,1))?.k??-1:-1;/* 定位置がつかえないときは、切り株に近い空いた所 */
+  if(!(p.field||p.tree))return -1;const ok=c=>G.dist[c.k]>=0&&!av(c.k)&&!sacredReserved(c.k)&&free('storywait'+c.k,1);
+  return (storySlotCells({stump:p.obj}).find(ok)||storySlotCells({stump:p.obj},5.6).find(ok))?.k??-1;/* 定位置がつかえないときは、切り株に近い空いた所。そばが物でうまっていたら、もう少しはなれた所（立つ所がたりなくて、お話が止まらないように） */
 }
 /* 集まる場所：ひとりずつ、ずらした定位置を決める（となりどうし1マスあける・手前の列を先に） */
 function storySlotFocus(t){if(t.stump!=null)return[storyTreeX(t.stump),(fieldStump(t.stump)/W|0)+.5];if(t.center!=null)return[t.center%W+.5,(t.center/W|0)+.5];const b=BL[S.obj[t.obj]],z=b&&szAt(S.obj[t.obj],t.obj)||[1,1];return[t.obj%W+z[0]/2,(t.obj/W|0)+z[1]/2];}
-function storySlotCells(t){const[fx,fy]=storySlotFocus(t),L=[];const R=t.stump!=null?2.6:t.center!=null?1.6:2.4;
+function storySlotCells(t,wide){const[fx,fy]=storySlotFocus(t),L=[];const R=wide||(t.stump!=null?2.6:t.center!=null?1.6:2.4);/* wide：そばがふさがっているときの、広いさがし方 */
   for(let y=Math.floor(fy-R);y<=Math.ceil(fy+R);y++)for(let x=Math.floor(fx-R);x<=Math.ceil(fx+R);x++){if(x<0||y<0||x>=W||y>=H)continue;const k=y*W+x,d=Math.hypot(x+.5-fx,y+.5-fy);if(d>R||d<.6||!walk(k)||S.obj[k]&&!WEEDS.has(S.obj[k]))continue;
     if(t.stump!=null&&(k===fieldStump(t.stump)||y<(fieldStump(t.stump)/W|0)))continue;/* 切り株のうしろ（上の列）には立たない */if(t.obj!=null&&!questVisitReachedTile(t.obj,k))continue;L.push({k,d:d+(y+.5<fy-.4?.5:0)})}
   return L.sort((a,b)=>a.d-b.d);}
@@ -113,13 +114,14 @@ function focusMainStoryPlace(){
 }
 function openCurrentGoal(){sfx('tap');openSheet('menu','goal');}/* 目標の欄をタップすると、いつも目標の一覧。場所へ行くのは、一覧の中の「お話・調査の場所へ」 */
 const STORY_WAIT_BLOCKS=new WeakMap();
-function noteStoryWaitBlock(r,obj,reason){STORY_WAIT_BLOCKS.set(r,{owner:S,session:VILLAGE_SESSION,obj,until:S.t+3,reason});}
+function noteStoryWaitBlock(r,obj,reason){STORY_WAIT_BLOCKS.set(r,{owner:S,session:VILLAGE_SESSION,obj,until:S.t+20,reason});}
 function clearStoryWaitBlock(r){STORY_WAIT_BLOCKS.delete(r);}
 function storyWaitReason(r,obj){
   const n=r.name;
   if(r.hidden)return n+'がもどるのを待とう';
   if(r.coffin||['bury','pray'].includes(r.act?.type))return n+'がお見送りを終えてから向かう';
   if(!questVisitSafe(r,obj)||hostileNow(r))return '近くにコワイノがいる。安全になるのを待とう';
+  if(['fieldintro','storywait'].includes(r.act?.type))return n+'がお話の場所へ向かっている';/* もう向かっている子に、荷物・食事の理由を出さない */
   if(r.meal||hungry(r)||['eat','fetch','forage'].includes(r.act?.type))return n+'が食事を済ませてから向かう';
   if(['sleep','faint'].includes(r.act?.type)||r.energy<20)return n+'が休んでから向かう';
   if(r.cing||r.act?.type==='cook')return n+'が料理を終えてから向かう';

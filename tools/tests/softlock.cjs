@@ -1,5 +1,5 @@
 /* 進行不能にならないこと：おみおくりの前のお墓をこわす／棺をはこぶ子が消える／「！」が出たままキーキャラが消える／
-   切り株が家の中／かげのあとが家の中／クリアのあとの目標の文／最後のかけらへ行けないときの案内 */
+   切り株が家の中／かげのあとが家の中／クリアのあとの目標の文／最後のかけらへ行けないときの案内／御神木のそばがうまっているときの集まり */
 const assert=require('node:assert/strict');
 (async()=>{const {browser,page,run,errors}=await require('../sim/boot.cjs')();
   const J=async s=>JSON.parse(await run(s));
@@ -44,5 +44,9 @@ const assert=require('node:assert/strict');
     for(let b=-1;b<=1;b++)for(let a2=-1;a2<=1;a2++)if(a2||b)S.obj[(y+b)*W+x+a2]='fence';recount();SHBLK.t=-1e9;const shut=shardBlocked();S.drops=[];return JSON.stringify({open,shut})})()`);
   assert.deepEqual(g,{open:false,shut:true});
   console.log('Last shard fenced in: the goal asks to open a path');
+  /* 8. 御神木のそばの立つ所が物でうまっていても、メインの会話に集まれる */
+  const h=await J(`(()=>{const j=S.sacredRoot,L=storySlotCells({stump:j});for(const c of L)S.obj[c.k]='fence';recount();const r=S.res.find(q=>q.name===POKO),G=bfs(r.x|0,r.y|0),k=storyWaitStand(r,G,{tree:true,obj:j,cast:[r],key:'t'});for(const c of L)S.obj[c.k]='';recount();return JSON.stringify({n:L.length>0,ok:k>=0&&!L.some(c=>c.k===k)})})()`);
+  assert.deepEqual(h,{n:true,ok:true},'main talk by the tree must find a place to stand when the near cells are full');
+  console.log('Cells by the sacred tree are full: the cast still finds a place to stand');
   assert.deepEqual(errors,[]);await browser.close();
 })().catch(e=>{console.error(e);process.exit(1)});
