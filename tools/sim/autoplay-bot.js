@@ -20,7 +20,7 @@ B.ui=()=>{
   const b=[...document.querySelectorAll('.idea-reveal button')].find(b=>!b.disabled);if(b){b.click();return true}if(document.querySelector('.idea-reveal'))return true;
   for(const id of ['#lvup','#rlv']){const e=document.querySelector(id);if(e&&!e.hidden){const bs=[...e.querySelectorAll('button')].filter(b=>!b.classList.contains('lvic'));if(bs.length){bs[bs.length-1].click();return true}}}
   if(vis('#dialog')){const bs=[...document.querySelectorAll('#dlgBtns button')].filter(b=>b.offsetParent!==null);try{DLGA.n=DLGA.full.length;DLGA.readReady=0;DLGA.holdUntil=0}catch(e){}if(bs.length)bs[0].click();return true}
-  if(typeof sheet!=='undefined'&&sheet==='summon'){const b=[...document.querySelectorAll('#sheet button')].find(b=>b.id!=='sheetX'&&!b.disabled&&b.offsetParent!==null&&!/もどる|とじる|やめる/.test(b.textContent));if(b){b.click();return true}}/* 「だれを呼ぶ？」は、はじめの子をえらぶ（とじると、「！」が出たままになる） */
+  if(typeof sheet!=='undefined'&&sheet==='summon'){const b=[...document.querySelectorAll('#sheetBody button')].find(b=>b.id!=='sheetX'&&!b.disabled&&b.offsetParent!==null&&!/もどる|とじる|やめる/.test(b.textContent));if(b){b.click();return true}}/* 「だれを呼ぶ？」は、はじめの子をえらぶ（とじると、「！」が出たままになる） */
   if(typeof sheet!=='undefined'&&sheet!=null){closeSheet();return true}
   return false};
 B.talk=()=>{ if(isNight())return;
