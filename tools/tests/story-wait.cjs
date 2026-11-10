@@ -32,13 +32,13 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict');
   })()`));
   console.log('field waiting',await run(`(()=>{
     for(const r of S.res){endAct(r);delete r.storyWaitHome;RHOLD.delete(r);r.hunger=hMax(r);r.energy=100;r.carry=null;r.cmat=null;r.meal=null;}
-    S.quest=questIndexOf('earthRoot');S.fieldStories={...(S.fieldStories||{}),earthListen:{step:FIELD_STORIES.earthListen.length}};S.qStory=null;S.qTalked=false;fieldStoryEnsure('earthRoot');
+    S.quest=questIndexOf('earthListen');S.fieldStories={...(S.fieldStories||{})};delete S.fieldStories.earthListen;/* 1つの依頼に調べは1つ（fieldMerge1） */S.qStory=null;S.qTalked=false;fieldStoryEnsure('earthListen');
     for(let i=0;i<1600&&!earthIntroSpeaker(QUESTS[S.quest]);i++){for(const r of S.res)updRes(r,.5);checkQuest();}
-    if(!earthIntroSpeaker(QUESTS[S.quest]))throw Error('field group not gathered');const group=fieldCast(FIELD_STORIES.earthRoot[0]),hunger=group.map(r=>r.hunger),fun=group.map(r=>r.fun);
+    if(!earthIntroSpeaker(QUESTS[S.quest]))throw Error('field group not gathered');const group=fieldCast(FIELD_STORIES.earthListen[0]),hunger=group.map(r=>r.hunger),fun=group.map(r=>r.fun);
     for(let i=0;i<600;i++)for(const r of group)updRes(r,.5);if(group.some((r,i)=>r.hunger!==hunger[i]))throw Error('field waiting hunger');if(group.some((r,i)=>r.fun<fun[i]))throw Error('field waiting fun');
     S.qStory=S.quest;S.quest++;S.qTalked=false;checkQuest();for(let i=0;i<1600&&!group.every(r=>r.act?.type==='storywait'&&r.act.stage==='do');i++)for(const r of S.res)updRes(r,.5);
     if(!group.every(r=>r.act?.type==='storywait'&&r.act.stage==='do'))throw Error('report group not waiting '+JSON.stringify(group.map(r=>r.act)));
-    const absent=group[1];S.res=S.res.filter(p=>p!==absent);if(mainStoryBubbleReady(group[0])||!storyWaitStatusText().includes(absent.name+'がもどる'))throw Error('missing cast allowed report');S.res.push(absent);
+    const absent=group[1];S.res=S.res.filter(p=>p!==absent);S.buried=[{name:absent.name,elem:absent.elem}];/* いない子＝お墓にいる子 */if(mainStoryBubbleReady(group[0])||!(mainTalkWaitText(QUESTS[S.qStory])||storyWaitStatusText()||'').includes(absent.name+'がもどる')/* いない子の案内は、目標の欄と同じ文（mainTalkWaitText） */)throw Error('missing cast allowed report');S.res.push(absent);S.buried=[];
     const h=group.map(r=>r.hunger),f=group.map(r=>r.fun);for(let i=0;i<200;i++)for(const r of group)updRes(r,.5);if(group.some((r,i)=>r.hunger!==h[i]))throw Error('report hunger');if(group.some((r,i)=>r.fun<f[i]))throw Error('report fun');
     S=JSON.parse(JSON.stringify(S));for(const r of S.res.filter(r=>r.act?.type==='storywait'))if(!storyWaitProtected(r))throw Error('save reload lost waiting');
     const r=S.res.find(r=>r.act?.type==='storywait');S.enemies=[{spawned:true,dead:false,flee:false,x:r.x+1,y:r.y}];if(storyWaitProtected(r)||!ACT.storywait.done(r,r.act))throw Error('unsafe wait');S.enemies=[];

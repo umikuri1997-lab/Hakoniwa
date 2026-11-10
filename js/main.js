@@ -46,7 +46,7 @@ function thumb(cv2,k,open,hide){
   PXSCENE(c,190,70,1,k===1?'volcano':k===2?'water':k===FREE?'free':'meadow',k*7+3);
   if(!open){c.fillStyle='rgba(0,0,0,.4)';c.fillRect(0,0,190,70);PXSCENE(c,190,70,1,'lockover',0)}
 }
-const APP_VER=1383;/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER=1384;/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
@@ -164,6 +164,7 @@ function stepLooks(now,rdt){/* 見た目だけの動き（ドアの開け閉め�
     if(r.spawnT&&now-r.spawnT>=1300){r.spawnT=0;JUMP.set(r,now)}
     if(isWatch(r)&&(r.act&&r.act.type==='patrol'&&r.act.hunt!=null||now-(r.swing||-1e9)<900&&now>=(r.swing||0)))BRAVET.set(r,now);/* 勇ましい顔は、ちらちら消えないよう、1.5秒つづける */
     const v=SPV.get(r);if(v&&now>v.bl+140)v.bl=now+2500+Math.random()*3500}}
+let CAMW=null;/* おわりの処理つきのカメラ（上書きの見はり） */
 function frame(now){
   if(!running)return;requestAnimationFrame(frame);
   const menuOpen=!$('#title').hidden||!$('#maps').hidden;
@@ -174,7 +175,8 @@ function frame(now){
   if(now-tutT>120){tutT=now;try{palArrows();updTut()}catch(e){}}
   const rdt=Math.min(.25,(now-last)/1000);last=now;
   const PZ=started&&sheet!=null,prdt=PZ?0:rdt;/* メニューを開いているあいだは、アニメーションも止める */
-  if(camAnim){camAnim.t+=rdt;const p=Math.min(1,camAnim.t/camAnim.dur),e=p<.5?2*p*p:1-Math.pow(-2*p+2,2)/2;cam.z=camAnim.fz+(camAnim.tz-camAnim.fz)*e;centerOn(camAnim.fx+(camAnim.tx-camAnim.fx)*e,camAnim.fy+(camAnim.ty-camAnim.fy)*e);if(p>=1){const d=camAnim.done;camAnim=null;if(d)d()}}
+  if(CAMW&&CAMW!==camAnim){const w=CAMW;CAMW=null;if(!w.fin&&w.done){w.fin=1;try{w.done()}catch(e){frameErr('cam',e)}}}/* おわりの処理つきのカメラが、とちゅうでほかの動きに上書きされたら、おわりの処理だけはする（しないと、演出がおわらず、ゲームが止まったままになる） */if(camAnim&&camAnim.done)CAMW=camAnim;
+  if(camAnim){camAnim.t+=rdt;const p=Math.min(1,camAnim.t/camAnim.dur),e=p<.5?2*p*p:1-Math.pow(-2*p+2,2)/2;cam.z=camAnim.fz+(camAnim.tz-camAnim.fz)*e;centerOn(camAnim.fx+(camAnim.tx-camAnim.fx)*e,camAnim.fy+(camAnim.ty-camAnim.fy)*e);if(p>=1){const a=camAnim,d=a.done;camAnim=null;a.fin=1;if(d)d()}}
   if(started&&!window.__noIdle&&now-lastIn>120000&&$('#idle').hidden&&$('#title').hidden&&$('#maps').hidden){$('#idle').hidden=false;try{save()}catch(e){}}
   if(SKIP&&!(isNight()&&S.enemyOn))SKIP=false;/* 朝になったら、ふつうの速さにもどす */
   if(started&&!sacredQuietActive()&&!menuOpen&&$('#pro').hidden&&sheet==null&&NEWRES==null&&$('#dialog').hidden&&$('#lvup').hidden&&$('#rlv').hidden){showItemGift();showSpotPop();if(typeof fogRevealTick==='function')fogRevealTick();oreWakeTick()}

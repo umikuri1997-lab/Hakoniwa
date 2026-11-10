@@ -1,0 +1,4 @@
+/* リポジトリのルートを出す、小さなサーバー（127.0.0.1 の空いているポート）。serve() で始め、返ってきた物の .address().port がポート、.close() で止める。 */
+const http=require('http'),fs=require('fs'),path=require('path');
+const root=path.resolve(__dirname,'../..'),TYPES={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.json':'application/json','.webp':'image/webp','.png':'image/png','.woff2':'font/woff2','.mp3':'audio/mpeg','.ogg':'audio/ogg','.wav':'audio/wav','.svg':'image/svg+xml','.css':'text/css'};
+module.exports=function serve(){return new Promise(res=>{const s=http.createServer((q,r)=>{let p=decodeURIComponent(q.url.split('?')[0]);if(p==='/')p='/index.html';const f=path.join(root,p);if(!f.startsWith(root)||!fs.existsSync(f)||fs.statSync(f).isDirectory()){r.statusCode=404;return r.end()}r.setHeader('Content-Type',TYPES[path.extname(f)]||'application/octet-stream');fs.createReadStream(f).pipe(r)});s.listen(0,'127.0.0.1',()=>res(s))})}
