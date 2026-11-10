@@ -37,6 +37,7 @@ B.tick=()=>{ if(!B.on||!S)return; try{
   if(S.cleared&&!B.cl){B.cl=1;B.lg('CLEARED')}
   const d=dayNo();if(d!==B.d0&&hour()>=12&&hour()<13){B.d0=d;const n=S.res.length||1;B.days.push([d,S.lv,Math.floor(S.totalPt),Math.floor(S.pt),S.food,S.res.length,JSON.stringify(S.deaths||0).length>3?Object.values(S.deaths).reduce((a,b)=>a+(+b||0),0):(S.deaths||0),Math.round(S.res.reduce((a,r)=>a+r.fun,0)/n),Math.round(S.res.reduce((a,r)=>a+r.hunger/hMax(r)*100,0)/n),QUESTS[S.quest]?QUESTS[S.quest].id:'-',cnt('farm'),S.nights,B.lt||0,GRASSN])}
   if(S.ns&&S.ns!==B.ns0){B.ns0=S.ns;B.nights.push([d,JSON.stringify(S.ns)])}
+  if(B.opts.supply)for(const r of S.res){const m=hMax(r)*.6;if(r.hunger<m)r.hunger=m}
   B.light();B.talk();
   const now=performance.now();if(now-(B.ht||0)<1200)return;B.ht=now;
   const q=QUESTS[S.quest];if(q&&B.H[q.id])B.H[q.id](q);
@@ -90,7 +91,7 @@ const all0=H._all;
 H._all=()=>{all0();
   if(B.opts.supply){
   /* 補給（進行のたしかめ用）：パワー・食べ物・やられない */
-  if(S.pt<400)S.pt=400;if((S.fs.imo||0)<30){S.fs.imo=40;S.food=Object.values(S.fs).reduce((a,b)=>a+b,0)}
+  if(S.pt<400)S.pt=400;for(const k of ['wood','stone'])if((S.mat[k]||0)<60)S.mat[k]=60;for(const k of ['eda','kasa','shina','funba'])if((S.mat[k]||0)<12)S.mat[k]=12;if((S.fs.imo||0)<30){S.fs.imo=40;S.food=Object.values(S.fs).reduce((a,b)=>a+b,0)}
   for(const r of S.res){if(r.hunger<70)r.hunger=70}
   const q=QUESTS[S.quest];if(q&&q.steps&&q.steps.some(s=>/^lv\d/.test(s.id))&&S.lv<10){S.totalPt+=25}
   if(q&&q.id==='lv2')S.totalPt+=10;
