@@ -44,7 +44,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict');
  assert.equal(await run(`QUESTS2[S.quest].check()`),false);
  await run(`(()=>{const e={type:'ash',x:CX+.5,y:CY+2.5,hp:0};S.enemies.push(e);defeat(e);return true})()`);
  const hd=await run(`S.drops.filter(d=>d.id==='hai').length`);assert.equal(hd,1,'ハイカゲが灰を落とさない');
- await run(`(()=>{const i=S.drops.findIndex(d=>d.id==='hai');takeDrop(S.drops.splice(i,1)[0],S.res[0]);return true})()`);
+ await run(`(()=>{const i=S.drops.findIndex(d=>d.id==='hai');const r=S.res[0];r.carry=null;r.cmat=null;r.citem=null;r.coffin=null;r.meal=null;/* 手ぶらにしてから、ひろう */takeDrop(S.drops.splice(i,1)[0],r);if(r.citem&&r.citem.hai){stowItem('hai',r.citem.hai,r);delete r.citem.hai}/* ひろった灰は、はこんで箱にしまったときに入る */return true})()`);
  assert.equal(await run(`st2().hai`),1);
  await run(`(()=>{st2().hai=CRACKS.length;for(const j of CRACKS){st2().hai--;clearObj(j)}return true})()`);
  assert.equal(await run(`QUESTS2[S.quest].check()`),true);
