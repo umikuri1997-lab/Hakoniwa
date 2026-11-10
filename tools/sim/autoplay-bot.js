@@ -99,7 +99,8 @@ H._all=()=>{all0();
   if(q&&q.id==='lv2')S.totalPt+=10;
   if(S.quest>=questIndexOf('tower')||S.cleared){
     for(const id of ['clover','bellf','lily','salvia','tree'])if((S.inv[id]||0)<6){S.unlocked[id]=true;S.inv[id]=(S.inv[id]||0)+6}
-    B.pc=((B.pc||0)+1)%400;const cx=40+(B.pc*7)%30,cy=38+(B.pc*11)%34;
+    /* みどりをひろげる：晴れた所の、まだみどりでないマスをえらんで植える（みどりの中にばかり植えると、ひろがらない） */
+    B.pc=((B.pc||0)+1)%997;let cx=54,cy=54;for(let i=0;i<60;i++){const x=20+((B.pc*37+i*53)%68),y=20+((B.pc*61+i*29)%68),j=y*W+x;if(!(S.fog&&fogAt(j))&&!REV[j]&&!S.obj[j]){cx=x;cy=y;break}}
     for(const id of ['tree','clover','bellf','lily','salvia']){if(cnt('sprout')>=10)break;if(inv(id)>0)B.put(id,cx,cy,(x,y)=>!(S.fog&&fogAt(y*W+x)))}
   }
   for(const e of S.enemies)if(e.type==='boss2'&&e.hp>30)e.hp=30;
