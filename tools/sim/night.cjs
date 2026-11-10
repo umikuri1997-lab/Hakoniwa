@@ -1,8 +1,8 @@
 /* 1晩だけの実験：4人の村（フタバ・ノドカ・火のキーキャラLv1・水のせいれい）で、夜のようすを追う。
-   使い方：node tools/sim/night.cjs <守りの光 0か1> <回数> [n4（敵を4体に）]
+   使い方：node tools/sim/night.cjs <守りの光 0か1> <回数> [n4（敵を4体に）・fence（柵でかこんだ村）・fence2（柵＋見張り台2つ・5人）・""] [ためしたい書きかえのコード]
    出力：1晩ごとに、夜の結果（ns）・火のせいれいが生きのこったか（hono）・おなかの動き（時刻:おなか/敵の数）。
    村：見張り台1・とげの罠2・木の矢60・食料40・ベッド4・夜の回数16（カタカゲ・ワナクイが出るころ）。 */
-const useLight=+process.argv[2]||0,N=+process.argv[3]||3,VAR=process.argv[4]||'';
+const useLight=+process.argv[2]||0,N=+process.argv[3]||3,VAR=process.argv[4]||'';const PATCH=process.argv[5]||'';/* ためしたい書きかえ（ゲームの中で1回動かすコード）。例："waveArrivalDelay=(i)=>i*60" */
 (async()=>{const {browser,page,run,errors}=await require('./boot.cjs')();
 const out=[];
 for(let k=0;k<N;k++){
@@ -13,8 +13,14 @@ for(let k=0;k<N;k++){
   const put=(id,x,y)=>{S.obj[y*W+x]=id;if(BL[id].dyn)S.dyn[y*W+x]=S.dyn[y*W+x]||{}};
   put('statue',54,57);put('stor',50,55);put('mbox',52,55);put('table',49,50);for(const x of [48,49,50,51])put('bed',x,49);
   put('watch',56,62);put('spike',54,64);put('spike',53,64);S.inv.arrow=60;S.unlocked.watch=true;
+  if('${VAR}'==='fence'||'${VAR}'==='fence2'){/* 柵でかこんだ村：家・箱・神殿・見張り台を、柵の四角（44〜60,45〜66）でかこみ、南に柵のドア。罠を南の入り口の外に */
+    for(let x=44;x<=60;x++)for(const y of [45,66])if(!S.obj[y*W+x])S.obj[y*W+x]='fence';for(let y=45;y<=66;y++)for(const x of [44,60])if(!S.obj[y*W+x])S.obj[y*W+x]='fence';
+    S.obj[66*W+52]='gate';for(const [x,y] of [[51,68],[52,68],[53,68],[52,69]])S.obj[y*W+x]='spike';S.obj[64*W+54]='';S.obj[64*W+53]='';
+    for(let y=46;y<=65;y++)for(let x=45;x<=59;x++){const o=S.obj[y*W+x];if(o&&BL[o]&&BL[o].natural)S.obj[y*W+x]=''}/* 柵の中の木・岩はどける */
+    if('${VAR}'==='fence2'){put('watch',48,62);S.res.push(mkRes(S,'ハル','wood',50,54))}/* fence2：見張り台2つ・木のせいれい2人（5人の村） */
+  }
   S.fs={imo:40};S.food=40;recount();for(const q of S.res){q.hunger=hMax(q);q.energy=100;q.fun=70}
-  S.t=1440*20+19*60;S.lastWarn=null;S.bossWarn=dayNo()+5;TESTM=true;S.speed=8;window.TR=[];window.LT=0;window.CUT=0;USERPAUSE=false})()`);
+  S.t=1440*20+19*60;S.lastWarn=null;S.bossWarn=dayNo()+5;TESTM=true;S.speed=8;window.TR=[];window.LT=0;window.CUT=0;${PATCH?'if(!window.PATCHED){window.PATCHED=1;'+PATCH+'}':''}USERPAUSE=false})()`);
  await page.waitForFunction(()=>sacredEval('stageReady()'),{},{timeout:90000});
  for(let i=0;i<400;i++){await page.waitForTimeout(300);
   const s=await run(`(()=>{for(const sel of ['.idea-reveal button','#lvup button:last-child','#rlv button:last-child']){const b=document.querySelector(sel);if(b&&!b.disabled)b.click()}if(!document.querySelector('#dialog').hidden){try{DLGA.n=DLGA.full.length;DLGA.readReady=0;DLGA.holdUntil=0}catch(e){}const b=document.querySelector('#dlgBtns button');if(b)b.click()}if(sheet!=null)closeSheet();

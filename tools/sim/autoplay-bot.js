@@ -20,6 +20,7 @@ B.ui=()=>{
   const b=[...document.querySelectorAll('.idea-reveal button')].find(b=>!b.disabled);if(b){b.click();return true}if(document.querySelector('.idea-reveal'))return true;
   for(const id of ['#lvup','#rlv']){const e=document.querySelector(id);if(e&&!e.hidden){const bs=[...e.querySelectorAll('button')].filter(b=>!b.classList.contains('lvic'));if(bs.length){bs[bs.length-1].click();return true}}}
   if(vis('#dialog')){const bs=[...document.querySelectorAll('#dlgBtns button')].filter(b=>b.offsetParent!==null);try{DLGA.n=DLGA.full.length;DLGA.readReady=0;DLGA.holdUntil=0}catch(e){}if(bs.length)bs[0].click();return true}
+  if(typeof sheet!=='undefined'&&sheet==='summon'){const b=[...document.querySelectorAll('#sheetBody button')].find(b=>b.id!=='sheetX'&&!b.disabled&&b.offsetParent!==null&&!/もどる|とじる|やめる/.test(b.textContent));if(b){b.click();return true}}/* 「だれを呼ぶ？」は、はじめの子をえらぶ（とじると、「！」が出たままになる） */
   if(typeof sheet!=='undefined'&&sheet!=null){closeSheet();return true}
   return false};
 B.talk=()=>{ if(isNight())return;
@@ -50,16 +51,18 @@ H.statue=()=>B.ensure('statue',1,54,57);H.stor=()=>B.ensure('stor',1,50,55);H.mb
 H.table=()=>B.ensure('table',1,49,50,inHouse);
 H.wall=()=>{for(const [x,y] of [[49,52],[50,52],[51,52]])if(!S.obj[y*W+x])place('hwall',x,y)};
 H.bed=()=>B.ensure('bed',1,48,49,inHouse);
-H.path=()=>{if(pathMade()<5)B.put('path',54,60)};
-H.fence4=()=>B.ensure('fence',4,54,66);
-H.watch1=()=>{B.ensure('watch',1,56,62);B.ensure('spike',2,54,64)};
+H.path=()=>{if(pathMade()<5)B.put('path',58,60)};
+H.fence4=()=>B.ensure('fence',4,54,76);
+H.watch1=()=>{B.ensure('watch',1,56,70);B.ensure('spike',2,54,72)};/* 切り株のまわり（調べの物を置く所）は、あけておく */
 H.kikyo=()=>B.plantAll('bellf');H.farm6=()=>{B.ensure('farm',6,44,56)};H.imoseed=()=>B.sow('imo');
 const field=prep=>q=>{const [sx,sy]=SR(),st=B.st;
   if(typeof SPLAY!=='undefined'&&SPLAY){if(!st.pw||performance.now()-st.pw>4000){st.pw=performance.now();sacredPlayWin()}return}
-  if(B.have(prep)<1||inv(prep)>0)B.ensure(prep,1,sx+2,sy+6,(x,y)=>Math.abs(x-sx-2)<=5&&y>sy+3&&y<=sy+8);
+  /* 調べの準備の物：依頼のあとに、切り株のそばへ置いた物だけが数に入る（前からある物では進まない）。足りないあいだは、持っていれば置き、なければたのむ・建てる */
+  if(S.qTalked&&!fieldBuildOK(q.id)&&!B.sites(prep)){const near=(x,y)=>fieldDistance(y*W+x,S.sacredRoot)<=FIELD_NEAR_R-1,k=BL[prep].kind;
+    if(k==='build')B.put(prep,sx+2,sy+6,near);else if(inv(prep)>0)B.put(prep,sx+2,sy+6,near);else if(!B.ordered(prep)&&recipeKnown(prep))orderFurn(prep)}
   if(!isNight()&&S.qTalked){try{fieldStoryTap(sx+1,sy+1)}catch(e){B.lg('fieldTap err '+e.message)}}};
 H.earthListen=field('asabukuro');H.fireRoot=field('campfire');H.waterFilm=field('jar');H.windEcho=field('windmill');H.tower=field('bench');
-H.fire=()=>{if(elemCount('fire')<1&&B.have('watch')<2)B.ensure('watch',2,52,62)};
+H.fire=()=>{if(elemCount('fire')<1&&B.have('watch')<2)B.ensure('watch',2,52,70)};
 H.wind=()=>{B.ensure('swing',2,58,54)};
 H.kagemark=()=>{if(S.flags.kgMark!=null&&!S.flags.kgLook&&!isNight()){const j=S.flags.kgMark;if(typeof j==='number'){setMode('look');centerOn((j%W+.5)*TS,((j/W|0)+.5)*TS);onTap(VW/2,VH/2)}}};
 H.nushi=()=>{if(!isNight()&&S.qTalked&&(S.shards||[]).length&&!B.st.nt||performance.now()-(B.st.nt||0)>8000){B.st.nt=performance.now();const [sx,sy]=SR();setMode('look');centerOn((sx+1.5)*TS,(sy+1.5)*TS);try{onTap(VW/2,VH/2)}catch(e){}}};
@@ -72,12 +75,12 @@ H._all=()=>{
   if((S.mat.kasa||0)<8){let c=0;S.wreq=S.wreq||{};for(let j=0;j<S.obj.length;j++){if(S.obj[j]==='weed0k'&&!S.wreq[j]&&Math.hypot(j%W-54,(j/W|0)-54)<24&&!(S.fog&&fogAt(j))){S.wreq[j]=1;if(++c>=4)break}}}
   if(houseBedCount()+inv('bed')<n){if(!B.ordered('bed'))orderFurn('bed')}
   if(inv('bed')>0)(B.put('bed',48,49,inHouse)||B.put('bed',60,49));
-  if(S.quest>7){for(const [id,k] of [['chair',2],['bench',2],['swing',1],['campfire',1],['sandbox',1]])if(recipeKnown(id)&&lvOK(id)&&B.have(id)<k&&S.pt>50)B.ensure(id,k,56,52)}
+  if(S.quest>7){for(const [id,k] of [['chair',2],['bench',2],['swing',1],['campfire',1],['sandbox',1]])if(recipeKnown(id)&&lvOK(id)&&B.have(id)<k&&S.pt>50)B.ensure(id,k,60,50)}
   if(S.enemyOn&&S.quest>9){
     if((S.inv.arrow||0)<30&&!B.ordered('arrow')&&recipeKnown('arrow')&&(S.mat.eda||0)>=3)orderFurn('arrow');
-    const wn=Math.min(3,elemCount('wood'));if(B.have('watch')<wn&&S.pt>80)B.ensure('watch',wn,50+B.have('watch')*4,62);
-    for(const [id,k] of [['spike',4],['sticky',3],['puddle',3]])if(recipeKnown(id)&&lvOK(id)&&B.have(id)<k&&S.pt>60)B.ensure(id,k,48+((B.have(id)*3)%12),66);
-    if(S.pt>120&&B.have('fence')<16)B.ensure('fence',16,46+B.have('fence'),68,(x,y)=>y===68);
+    const wn=Math.min(3,elemCount('wood'));if(B.have('watch')<wn&&S.pt>80)B.ensure('watch',wn,50+B.have('watch')*4,70);
+    for(const [id,k] of [['spike',4],['sticky',3],['puddle',3]])if(recipeKnown(id)&&lvOK(id)&&B.have(id)<k&&S.pt>60)B.ensure(id,k,48+((B.have(id)*3)%12),74);
+    if(S.pt>120&&B.have('fence')<16)B.ensure('fence',16,46+B.have('fence'),76,(x,y)=>y===76);
   }
   if(S.feat.shop&&godHere()&&S.pt>80&&cnt('farm')+inv('farm')<Math.min(30,4+n*3)){const p=shopPrice('farm',1);S.pt-=p;S.farmBuy=(S.farmBuy||0)+1;S.unlocked.farm=true;S.inv.farm=(S.inv.farm||0)+1}
   if(inv('farm')>0)B.put('farm',44,56);
@@ -97,9 +100,13 @@ H._all=()=>{all0();
   if(q&&q.id==='lv2')S.totalPt+=10;
   if(S.quest>=questIndexOf('tower')||S.cleared){
     for(const id of ['clover','bellf','lily','salvia','tree'])if((S.inv[id]||0)<6){S.unlocked[id]=true;S.inv[id]=(S.inv[id]||0)+6}
-    B.pc=((B.pc||0)+1)%400;const cx=40+(B.pc*7)%30,cy=38+(B.pc*11)%34;
+    /* みどりをひろげる：晴れた所の、まだみどりでないマスをえらんで植える（みどりの中にばかり植えると、ひろがらない） */
+    B.pc=((B.pc||0)+1)%997;let cx=54,cy=54;for(let i=0;i<60;i++){const x=20+((B.pc*37+i*53)%68),y=20+((B.pc*61+i*29)%68),j=y*W+x;if(!(S.fog&&fogAt(j))&&!REV.has(j)&&!S.obj[j]){cx=x;cy=y;break}}
     for(const id of ['tree','clover','bellf','lily','salvia']){if(cnt('sprout')>=10)break;if(inv(id)>0)B.put(id,cx,cy,(x,y)=>!(S.fog&&fogAt(y*W+x)))}
   }
+  /* 物語の進行だけを見るとき：みどり・花・なかよしは、時間をかけずにそろえる（その先のお話が進むかを見るため） */
+  if(q&&(q.id==='lv5'||q.id==='wood6')&&S.qTalked){let n=0;for(let i=0;i<400&&n<8;i++){const x=20+((B.pc*37+i*53)%68),y=20+((B.pc*61+i*29)%68),j=y*W+x;if(!(S.fog&&fogAt(j))&&!REV.has(j)&&!S.obj[j]&&!S.floor[j]&&walk(j)&&S.ground[j]!==1){S.obj[j]='clover';n++}}if(n)recount()}
+  if(q&&q.id==='omoi'&&S.qTalked&&omoiN()<3){const R=S.res.filter(r=>!r.hidden);for(let i=0;i<R.length;i++)for(let k=i+1;k<R.length;k++)if(bondOf(R[i],R[k])<30){bondAdd(R[i],R[k],6);i=R.length;break}}
   for(const e of S.enemies)if(e.type==='boss2'&&e.hp>30)e.hp=30;
   }
   if(S.cleared&&!B.cl2){B.cl2=1;B.lg('CLEARED flags '+Object.keys(S.flags).filter(k=>/reun|final|sacred/i.test(k)).join(','))}

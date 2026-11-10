@@ -108,7 +108,7 @@ function mainTalkWaitText(q){/* メインの会話・お礼を待っていると
   if(!(S.qStory!=null||q.talk&&!S.qTalked))return '';if(isNight())return 'お話は、朝になってから';
   return storyWaitStatusText()||(TALKW?mainStoryPromptText(TALKW):S.qStory==null&&q.talk.wait||'いまは、村をそだてよう')}
 function nextStageGoal(){/* 草原をクリアして、まだ火山のふもとへ旅立っていないとき */if(!S||WD!==0||S.free||!S.cleared||typeof departDone!=='function'||departDone())return null;
-  const f=S.res.some(r=>r.name===POKO&&!r.hidden);return {t:'つぎの土地へ旅立とう',pr:isNight()?'お見送りは、朝になってから':!f?'フタバが帰ってきたら、お見送り':'みんなが、お見送りのしたくをしている',how:'昼になると、フタバたちが、つぎの土地へのお見送りをしてくれる。お見送りのあと、火山のふもとの村へ行く'}}
+  const f=S.res.some(r=>r.name===POKO&&!r.hidden);if(S.flags.sacredReunion&&!S.flags.sacredQuietSeen)return {t:'ヌシ様と話そう',pr:isNight()?'お話は、朝になってから':'御神木のそばで、ヌシ様が待っている',how:'「みる」でヌシ様をタップして、話を聞こう。そのあと、フタバたちが、つぎの土地へのお見送りをしてくれる'};/* お見送りは、ヌシ様の話のあと（departDue と同じ条件） */return {t:'つぎの土地へ旅立とう',pr:isNight()?'お見送りは、朝になってから':!f?'フタバが帰ってきたら、お見送り':'みんなが、お見送りのしたくをしている',how:'昼になると、フタバたちが、つぎの土地へのお見送りをしてくれる。お見送りのあと、火山のふもとの村へ行く'}}
 function renderQuest(){const q=QUESTS[Math.min(S.quest,QUESTS.length-1)];let pr='',t=S.cleared?(WD===FREE?'村づくりは、つづく…':'世界クリア！'):q.text;
   if(S.cleared&&WD!==FREE){const a=AFTERQ[S.aq||0],dd=S.daily,dn=dd?dd.k.filter(k=>dd.done[k]).length:0;if(a&&S.aqOn===(S.aq||0)){t=aqTitle(a);pr=aqProg(a)}else t=dd?'きょうの目標 '+dn+'/'+dd.k.length:'世界クリア！'}/* クリア後は、新しいクエストか、きょうの目標を出す */
   const ng=nextStageGoal();if(ng){t=ng.t;pr=ng.pr}/* 草原をクリアして、まだ旅立っていない：つぎの土地へ */

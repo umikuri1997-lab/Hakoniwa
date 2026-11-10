@@ -78,7 +78,7 @@ const BL={
   yomawari:{name:'よまわりのランタン',kind:'furn',cat:'light',f2:1,dropOnly:1,pc:0,solid:1,attr:{},desc:'まわり3.5マスを照らす。住み心地+6'},
   oyasumi:{name:'おやすみのベル',kind:'furn',cat:'other',f2:1,dropOnly:1,pc:0,solid:1,attr:{},desc:'ドアのとなりにかざるベル。住み心地+8'},
   yonaka:{name:'よなかのうたの絵',kind:'furn',cat:'other',f2:1,dropOnly:1,pc:0,solid:1,attr:{},desc:'夜の歌の絵。住み心地+10'},
-  toro:{hp:5,brk:1,fix:3,fixm:{stone:3},name:'しずけさの石どうろう',kind:'furn',cat:'light',f2:1,lv:1,pc:5,time:120,maker:'earth',solid:1,attr:{earth:1},mat:{stone:8},sand:3,desc:'まわり3.5マスを照らす。照らした中のコワイノは、攻撃と移動の速さ0.75倍（重複なし）。住み心地+6'},/* やすらぎの砂で作る */
+  toro:{hp:5,brk:1,fix:3,fixm:{stone:3},name:'しずけさの石どうろう',kind:'furn',cat:'light',f2:1,lv:1,pc:5,time:120,maker:'earth',solid:1,attr:{earth:1},mat:{stone:8},sand:3,desc:'まわり3.5マスを照らす。照らした中の「コワイノ」は、攻撃と移動の速さ0.75倍（重複なし）。住み心地+6'},/* やすらぎの砂で作る */
   signpost:{hp:5,brk:1,fix:1,fixm:{wood:5},name:'道しるべ',kind:'furn',cat:'env',f2:1,lv:5,pc:1,time:60,maker:'earth',attr:{earth:1},mat:{wood:6,eda:3},solid:1,desc:'まわり3マスで、せいれいがにげる速さ×1.4（重複なし）'},
   hedge:{hp:5,brk:1,fix:2,fixm:{funba:3},name:'生垣',kind:'furn',cat:'env',f2:1,lv:5,pc:3,time:80,maker:'wood',attr:{wood:1},mat:{wood:2,funba:3},solid:1,env:2,er:2,desc:'まわり2マスで、たのしさ+0.7／1時間'},
   birdbath:{hp:5,brk:1,fix:3,fixm:{stone:8},offerOnly:1,name:'水飲み鳥',kind:'furn',cat:'env',f2:1,lv:7,pc:5,time:100,maker:'water',attr:{water:1},mat:{stone:15},solid:1,env:3,desc:'まわり3マスで、たのしさ+1.1／1時間'},
@@ -150,7 +150,7 @@ const BL={
   signs:{name:'村の石の看板',sz:[2,1],kind:'build',mat:{stone:30},pc:80,time:160,maker:'earth',lv:11,w:1,solid:1,attr:{},desc:'村の入り口の看板。属性の力+10%（重複なし）'},
   shinboku:{name:'ご神木',sz:[3,3],kind:'build',mat:{wood:40},pc:160,time:300,maker:'wood',lv:14,solid:1,attr:{wood:3},desc:'村の守りの大きな木。まわり5マスで、つかれのとれる速さ+30%'},
   lighthouse:{name:'灯台',sz:[2,2],kind:'build',mat:{wood:25,stone:35},pc:35,time:180,maker:'fire',lv:7,solid:1,anim:1,attr:{fire:4},desc:'まわり8マスを照らす'},
-  lurestatue:{hp:60,brk:1,fix:6,fixm:{stone:8},name:'おびきよせの石像',kind:'build',mat:{wood:10,stone:40},pc:12,time:100,maker:'earth',lv:6,w:2,solid:1,attr:{},desc:'石の像。まわり7マスのコワイノは、先にこの像をこわしにくる。じょうぶさ60'},
+  lurestatue:{hp:60,brk:1,fix:6,fixm:{stone:8},name:'おびきよせの石像',kind:'build',mat:{wood:10,stone:40},pc:12,time:100,maker:'earth',lv:6,w:2,solid:1,attr:{},desc:'石の像。まわり7マスの「コワイノ」は、先にこの像をこわしにくる。じょうぶさ60'},
   stele:{hp:5,brk:1,fix:18,fixm:{wood:6,stone:25},name:'石碑',kind:'build',mat:{wood:12,stone:50},pc:35,time:180,maker:'earth',lv:6,solid:1,attr:{earth:4},desc:'まわり7マスの壁・柵・塀が、1.5倍じょうぶになる（重複なし）'},
   fountain:{name:'噴水',sz:[2,2],kind:'build',mat:{wood:15,stone:60},pc:45,time:200,maker:'water',lv:6,solid:1,anim:1,play:{pt:6,pw:2.7,fun:45,dur:50,cap:3,adj:1},attr:{water:6},desc:'3人まで遊べる。たのしさ +45（33.3分）。遊ぶと10%の確率で、スタミナ+1'},
   statue:{name:'神殿',kind:'build',anim:1,pc:0,time:50,maker:null,solid:1,attr:{wood:1,water:1,fire:1,earth:1,wind:1},desc:'守り神の居場所'},
@@ -332,7 +332,7 @@ const QUESTS1=[
    talk:{who:GOD,when:()=>true,lines:[
     [GOD,'しまう場所もできたのう。…そろそろ、夜のことも話しておかんとな。'],
     [GOD,'#alarm|この土地には、夜になると「コワイノ」が来るんじゃ。家の中にいればおそわれん。じゃが、壁にすきまがあると、こわして入ろうとするんじゃ。'],
-    [POKO,'#scared|コワイノ……。夜は、あの穴のあいた家にかくれてたんだ。'],
+    [POKO,'#scared|「コワイノ」……。夜は、あの穴のあいた家にかくれてたんだ。'],
     [GOD,'#worry|あの家、壁がこわれたままなんじゃ。あれでは、夜が心配じゃのう。'],
     [GOD,'じょうぶなオークの壁を、おそなえ箱に用意しておいたぞい。すきまをふさいで、フタバが安心して眠れる家にしてやっておくれ。']],gives:{feat:['people'],items:{hwall:3}}},
    story:[
@@ -344,9 +344,9 @@ const QUESTS1=[
     [GOD,'ほれ、ふかふかの寝床じゃ。おそなえ箱に入れておいたぞい。今夜は、草の上より、ずっとよう眠れるはずじゃ。']],gives:{items:{bed:1}}},
    story:[
     [POKO,'#surprise|わあ、草の上よりふかふか！ これがベッドなんだね。'],
-    [GOD,'#alarm|それで…今夜も「コワイノ」が来るぞ。'],
+    [GOD,'#alarm|それでのう…今夜も「コワイノ」が来るぞい。'],
     [GOD,'#think|今夜は、まだ小さな影じゃろう。'],
-    [GOD,'#alarm|コワイノは、おヌシの光がにがてなんじゃ。いざというときは、フタバを守ってやっておくれ。'],
+    [GOD,'#alarm|「コワイノ」は、おヌシの光がにがてなんじゃ。いざというときは、フタバを守ってやっておくれ。'],
     [POKO,'#scared|……夜は、やっぱりこわいな。でも、この家と守り神さまの光があるなら、少し安心かも。']],gives:{enemy:true}},
   {id:'path',text:'道をつくろう',how:'「おく」→「あぜ道」をえらんで、5マスしく',check:()=>pathMade()>=5,prog:()=>'あぜ道 '+Math.min(5,pathMade())+'/5',
    talk:{who:POKO,when:()=>true,lines:[
@@ -365,11 +365,11 @@ const QUESTS1=[
     [POKO,'#joy|やったー！ 村が、ひとまわり育ったみたい！ 最初の一歩、って感じがするね。'],
     [GOD,'#nod|うむうむ。みなの笑い声が、村を育てたんじゃのう。'],
     [POKO,'#joy|えへへ。村がもっと育ったら、夜も、こわくなくなるかなあ。']]},
-  {id:'fence4',text:'柵を4つ置こう',how:"「おく」→「柵」をえらんで4つ置く。コワイノは、まっすぐ歩いて近づいてくる。来る道をふさぐように置くと、遠まわりさせられる",check:()=>['fence','misugaki','logfence','bamboofence'].reduce((n,id)=>n+cnt(id),0)>=4,prog:()=>'柵 '+Math.min(4,['fence','misugaki','logfence','bamboofence'].reduce((n,id)=>n+cnt(id),0))+'/4',
+  {id:'fence4',text:'柵を4つ置こう',how:"「おく」→「柵」をえらんで4つ置く。「コワイノ」は、まっすぐ歩いて近づいてくる。来る道をふさぐように置くと、遠まわりさせられる",check:()=>['fence','misugaki','logfence','bamboofence'].reduce((n,id)=>n+cnt(id),0)>=4,prog:()=>'柵 '+Math.min(4,['fence','misugaki','logfence','bamboofence'].reduce((n,id)=>n+cnt(id),0))+'/4',
    talk:{who:POKO,when:()=>(S.nights||0)>=1&&S.lastMorning>S.lastNight,wait:'夜をこして、朝をむかえよう',lines:[
-    [POKO,'#sigh alarm|……ねえ、コワイノが来たときの音、まだ耳に残ってるの。'],[POKO,'壁をがりがりってひっかく音……。聞こえるたび、胸がどきどきしたよ。'],
+    [POKO,'#sigh alarm|……ねえ、「コワイノ」が来たときの音、まだ耳に残ってるの。'],[POKO,'壁をがりがりってひっかく音……。聞こえるたび、胸がどきどきしたよ。'],
     [POKO,'前なら、音がするたび隠れてた。でも今日は、守り神さまがいる。'],
-    [POKO,'ぼくもがんばる！ でも、どうしたらいいのかな……。'],[POKO,'#alarm|家の壁で家を守れたみたいに、コワイノの通り道もふさげたらいいのかな……。'],[GOD,'#nod|うむ。ちいさな柵でも、みなの前に立ってくれれば、心強いもんじゃ。'],[POKO,'#joy|そっか……！ ぼくのかわりに、柵が前に立ってくれるんだね。'],
+    [POKO,'ぼくもがんばる！ でも、どうしたらいいのかな……。'],[POKO,'#alarm|家の壁で家を守れたみたいに、「コワイノ」の通り道もふさげたらいいのかな……。'],[GOD,'#nod|うむ。ちいさな柵でも、みなの前に立ってくれれば、心強いもんじゃ。'],[POKO,'#joy|そっか……！ ぼくのかわりに、柵が前に立ってくれるんだね。'],
     [GOD,'#nod|柵を、おそなえ箱に用意しておいたぞい。フタバの「守りたい」って気もち、わしにも手伝わせておくれ。']],gives:{items:{fence:10}}},
    story:[
     [GOD,'よしよし、いい感じじゃ。'],
@@ -386,8 +386,8 @@ const QUESTS1=[
     [POKO,'柵で足止めして、罠と見張り台で追いはらうんだね！ やってみる！'],['@idea']],gives:{watchNow:true,items:{spike:10,arrow:20},flags:['watchLearned']}},
    story:[
     [GOD,'#nod|うむ。これで夜も、ずいぶん心強くなったのう。'],
-    [GOD,'見張り台から木の矢で追いはらい、とげの罠で足をとめる。みなで守る村じゃな。'],
-    [POKO,'#think|ねえ、とげのほかにも、足をとめるやり方ってないかな？　すべる水たまりとか……'],
+    [GOD,'見張り台の木の矢と、とげの罠で、少しずつ弱らせる。みなで守る村じゃな。'],
+    [POKO,'#think|ねえ、とげのほかにも、「コワイノ」をこまらせるやり方ってないかな？　すべる水たまりとか……'],
     [GOD,'#joy|ほう、よいところに気がついたのう。どくきのこの汁で、弱らせる手もあるぞい。'],['@idea'],
     [POKO,'これで、少しは安心できるね。'],[POKO,'#danger|守ってくれて、ありがとう、守り神さま！']]},
   {id:'kikyo',text:'ききょうを植えて、土の力をためよう',how:"「おく」→「ききょうの種」を植える。ききょうが咲いて土の力がたまると、なかまを呼べる",check:()=>bloomCount('bellf')>=2,prog:()=>'咲いたききょう '+Math.min(2,bloomCount('bellf'))+'/2',
@@ -452,7 +452,7 @@ const QUESTS1=[
     [MINA,'土も、なんだかそわそわしてるよぉ。なにかが、近くを歩きまわってるのかもねぇ。'],
     [POKO,'#alarm|明るくなったら、村のまわりを見てまわろうね。']]},
    story:[
-    [MINA,'あの足あと、大きかったねぇ。コワイノがとおったあとに、にてるけど、あんなに大きいのは、はじめて見たよぉ。'],
+    [MINA,'あの足あと、大きかったねぇ。「コワイノ」がとおったあとに、にてるけど、あんなに大きいのは、はじめて見たよぉ。'],
     [POKO,'#sigh|ぼく、あのつめたさ、知ってる気がするんだ。……ずっとむかし、ぼくがまだ、小さな芽だったころのお話。'],
     [POKO,'ここには、ぼくと同じ、草や木のせいれいがたくさんいたんだ。'],
     [POKO,'#sigh|ある夜、あの足あとみたいな、つめたくて大きなかげが来た。みんなが、ぼくの前に立って……それで、朝になったら、だれもいなかった。'],
@@ -464,11 +464,11 @@ const QUESTS1=[
      {t:'いっしょに守ろう',v:'together',lines:[[POKO,'#nod|……うん。いっしょなら、こわくない。']]}]}]]}),
   stepQuest({id:'ookage',text:'オオカゲから村を守ろう',
    steps:[{id:'lv4',t:'村レベルを4にする',check:()=>S.lv>=4,prog:()=>'いま 村レベル'+S.lv,how:'せいれいが満足してパワーがたまると、村レベルが上がる'},
-    {id:'yoru10',t:'コワイノを10体追いはらう',check:()=>killsSince()>=10,prog:()=>'コワイノ '+Math.min(10,killsSince())+'/10',how:'夜に来るコワイノを、あわせて10体追いはらう'},
+    {id:'yoru10',t:'「コワイノ」を10体追いはらう',check:()=>killsSince()>=10,prog:()=>'コワイノ '+Math.min(10,killsSince())+'/10',how:'夜に来る「コワイノ」を、あわせて10体追いはらう'},
     {id:'ookage',t:'オオカゲを追いはらう',check:()=>(S.bossKills||0)>=1,prog:()=>bossDays(),how:'柵・見張り台・罠を整え、夜に来るオオカゲを追いはらう'}],
    talk:{who:POKO,when:()=>true,lines:[
-    [POKO,'#alarm|守り神さま、夜のコワイノを見てたらね…森の奥に、ひときわ大きな黒い影がいたんだ。あの足あとの、かげだよ。きっと。'],
-    [MINA,'#alarm|それは「オオカゲ」だねぇ。コワイノが、たくさんあつまってできた影だって、言われてるよぉ。'],
+    [POKO,'#alarm|守り神さま、夜の「コワイノ」を見てたらね…森の奥に、ひときわ大きな黒い影がいたんだ。あの足あとの、かげだよ。きっと。'],
+    [MINA,'#alarm|それは「オオカゲ」だねぇ。「コワイノ」が、たくさんあつまってできた影だって、言われてるよぉ。'],
     [MINA,'#alarm|土の音を聞くとねぇ……もうすぐ、来そうだよぉ。'],
     [MINA,'#nod|みんなで、そなえておこうねぇ。']]},
    get story(){return [
@@ -493,7 +493,7 @@ const QUESTS1=[
    talk:{who:POKO,when:()=>true,get lines(){return [
     [POKO,S.flags.nushiAlive?'ヌシ様は、生きてた。ぼくたちの声を聞いてくれたんだ。今度は、ぼくたちがヌシ様の力を取り戻したい！':'ヌシ様の力は、かけらの中に残ってるんだね。ぼくたちで、もう一度つなぎたい！'],
     [GOD,'#nod|うむ。土地が元気になれば、ヌシの力も、この草原にとどまりやすくなる。わしも、いっしょに見守るぞい。'],
-    [MINA,'御神木もできたねぇ。……土がねぇ、かけらが3つそろうのを、まってるみたいなんだぁ。'],
+    [MINA,'あの木も、御神木に育ったねぇ。……土がねぇ、かけらが3つそろうのを、まってるみたいなんだぁ。'],
     [MINA,'ヌシ様がもどってこられるように、土地をもっと緑にしないとねぇ。']]}},
    get story(){return [
     [POKO,'ついに、ここまで緑がひろがったんだね……！ 歩くだけで気持ちいいね！'],

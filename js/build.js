@@ -92,7 +92,7 @@ function place(id,x,y){
   if(WALLD.has(id)){if(!usable(id)||inv(id)<=0)return toast(BL[id].name+'が足りません','warn');if(!canPlace(id,x,y))return;const j=y*W+x;S.inv[id]--;/* カーテンは、上がわの壁の窓にかける。窓はそのまま（S.win がカーテンなら、その下に窓がある） */(S.win||(S.win={}))[j]=id==='window'?1:id;noteQuestPlacement(HOME_DOORS.has(S.obj[j])?'door':'hwall',j);burst(j,'furn');recount();dirty=true;renderPalette();return}
   if(b.kind==='seed'){const k=id.slice(5),j=y*W+x,d=S.dyn[j];if(S.obj[j]!=='farm'||!d)return toast('たねは、畑にしかまけません');
     if(d.crop&&d.sown!==false)return toast('もう'+CROPS[d.crop].name+'が植えてある');if(cseed(k)<1)return toast('たねがありません');
-    if(d.paid&&d.crop)S.cseed[d.crop]=cseed(d.crop)+1;S.cseed[k]--;d.paid=true;/* たねは、えらんだときに減る */d.crop=k;d.sown=false;if(k==='imo'&&qNow('imoseed')){const plots=imoSeedQuestPlots();if(!plots.includes(j))plots.push(j)}noteQuestPlacement('farm',j);burst(j,'plant','pat');toast(CROPS[k].name+'のたねをまいた');checkQuest();renderPalette();return}/* せいれいが、たねをまく */
+    if(d.paid&&d.crop)S.cseed[d.crop]=cseed(d.crop)+1;S.cseed[k]--;d.paid=true;/* たねは、えらんだときに減る */d.crop=k;d.sown=false;if(k==='imo'&&WD===0&&!S.free&&!qDone('imoseed')){const plots=imoSeedQuestPlots();if(!plots.includes(j))plots.push(j)}/* 話を聞く前にまいた分も、数に入れる */noteQuestPlacement('farm',j);burst(j,'plant','pat');toast(CROPS[k].name+'のたねをまいた');checkQuest();renderPalette();return}/* せいれいが、たねをまく */
   if(id==='tower'&&!towerReady())return openSheet('clear');/* 条件がそろうまで、台座は建てられない */
   if(!usable(id)){if(b.kind==='furn'){toast(b.name+'が足りません','warn')}/* 足りないときは、知らせるだけ（画面は開かない） */else toast('まだつかえません');return}
   if(!canPlace(id,x,y))return;
@@ -195,7 +195,7 @@ function moveTap(tx,ty){const j=ty*W+tx;
 function removeAt(x,y){const tx0=x,ty0=y;
   const j=anc(y*W+x),o=S.obj[j];x=j%W;y=(j/W)|0;
   if(S.win&&S.win[j]){const id=S.win[j]===1?'window':S.win[j];if(id==='curtain1'||id==='curtain2')S.win[j]=1;else delete S.win[j];giveItem(id,1);/* カーテンをはずすと、窓がのこる */toast(BL[id].name+'をおそなえ箱にもどした');burst(j,'furn','rm');recount();renderPalette();return}
-  if(o){const b=BL[o];if(o==='tower')return toast(storyTreeName()+'はこわせません');if(o==='volcano'||o==='heatv'||o==='crack'||o==='boulder'||o==='fogbox'||o==='nushiprint'||o==='fogspring')return toast(b.name+'はこわせません');if(o==='statue'||o==='obox'||o==='board'||o==='altar'||o==='site2')return toast('神殿はこわせません');if((o==='stor'||o==='mbox')&&cnt(o)<=1&&!(WD===0&&!S.free&&!qDone('wall')&&y===CY-2&&x>=CX-5&&x<=CX-3))return toast(BL[o].name+'は1つ以上必要です');
+  if(o){const b=BL[o];if(o==='grave'){const d=S.dyn[j];if(d&&!d.buried&&d.name)for(const L of[S.buried||[],S.lost||[]])for(const q of L)if(q.name===d.name)delete q.unb}/* おみおくりの前のお墓をこわしたら、おみおくりがすんだことにする（unb がのこると、その子を二度と呼びもどせない） */if(o==='tower')return toast(storyTreeName()+'はこわせません');if(o==='volcano'||o==='heatv'||o==='crack'||o==='boulder'||o==='fogbox'||o==='nushiprint'||o==='fogspring')return toast(b.name+'はこわせません');if(o==='statue'||o==='obox'||o==='board'||o==='altar'||o==='site2')return toast('神殿はこわせません');if((o==='stor'||o==='mbox')&&cnt(o)<=1&&!(WD===0&&!S.free&&!qDone('wall')&&y===CY-2&&x>=CX-5&&x<=CX-3))return toast(BL[o].name+'は1つ以上必要です');
     if(o==='site'){const d=S.dyn[j];if(d.build==='statue')return toast('神殿はこわせません');const bm=d.mat||{};clearObj(j);for(const k in bm)S.mat[k]=(S.mat[k]||0)+bm[k];toast('建てるのをやめた')}/* 素材はもどる・パワーはもどらない */
     else if(o==='sprout'){const d=S.dyn[j];clearObj(j);giveItem(d.plant,1);toast('植えるのをやめた')}
     else{clearObj(j);
