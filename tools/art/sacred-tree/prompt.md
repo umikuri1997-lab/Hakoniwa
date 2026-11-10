@@ -1,6 +1,6 @@
 # 御神木（草原）の切り株・芽・若葉・若木・御神木の絵をたのむプロンプト
 
-いまの絵のデザインのまま、見おろしの角度をゲームに合わせ、切り株・根の形を自然にして、かきなおしてもらう。
+いまの絵のデザインのまま、見おろしの角度をゲームに合わせ、切り株・根は、いまの絵くらいの自然な形で、かきなおしてもらう。
 
 わたす絵は1まい：`ref/sacred_sheet.png`（`python3 tools/art/sacred-tree/sacred3d.py` で作る）。
 - 上の段：左はしがお手本のキューブ、そのみぎに 切り株・芽・若葉・若木・御神木 の3Dのお手本（角度・大きさ・置く場所のお手本）
@@ -12,12 +12,11 @@ Use the attached reference image as a strict guide. It is one sheet with two row
 - Top row: on the far left a view cube, then five 3D block-outs. They show the correct camera angle, size and position.
 - Bottom row: the current artwork of the same five objects, directly below each block-out, from left to right: 1 stump, 2 stump with a tiny sprout, 3 stump with a seedling, 4 stump with a young tree, 5 the fully grown sacred tree. They show the design.
 
-Task: redraw the five objects of the bottom row with the same design. Change only two things: the camera angle (match the top row) and a more natural shape of the stump and roots (see below). Keep everything else the same as the bottom row: the art style, pixel art look, colors, wood and bark texture, the sprout and leaves, the young tree's thin branches and leaf clusters, the big tree's trunk, branches, leaf clusters and the small golden light motes. Do not add or remove anything.
+Task: redraw the five objects of the bottom row with the same design. Change only two things: the camera angle (match the top row) and the stump and roots keep the natural, gently uneven look of the current artwork (see below). Keep everything else the same as the bottom row: the art style, pixel art look, colors, wood and bark texture, the sprout and leaves, the young tree's thin branches and leaf clusters, the big tree's trunk, branches, leaf clusters and the small golden light motes. Do not add or remove anything.
 
-Make it look natural, like a real old tree, not a symmetric icon:
-- The cut top has an irregular, slightly lumpy natural outline, not a perfect circle or oval. The cut is slightly slanted and uneven. The growth rings are irregular and off-center, following the lumpy outline, with a thin uneven rim of bark.
-- The roots are uneven and different from each other: different thickness, length and direction, some curving, one or two forking into a smaller root, thick buttresses at the base tapering into the ground. Not evenly spaced, not mirror-symmetric, not a star pattern.
-- The bark has gentle irregular grooves and slight bulges where the roots join.
+Natural shape, at the same level as the current artwork in the bottom row (do not exaggerate):
+- The cut top has a softly irregular outline like the current artwork, not a perfect geometric circle, but not lumpy or jagged either. The growth rings are gently uneven, as in the current artwork.
+- The roots are gently uneven like the current artwork: slightly different lengths and thickness, thick at the base and tapering into the ground. Not a perfectly even star pattern, but not wild or exaggerated either.
 
 Camera and proportions (copy the view cube and the block-outs exactly):
 - The view is a straight-on, front-facing top-down oblique view (classic top-down RPG angle). The camera looks from the south, tilted down; there is NO rotation and NO isometric angle.
