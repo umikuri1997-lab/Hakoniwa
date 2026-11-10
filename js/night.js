@@ -85,6 +85,10 @@ function waveFor(day){
   return list;
 }
 const NIGHTVAR={kiri:'霧の夜',mure:'群れの夜',wana:'ワナクイのうたげ',doro:'かげのどろぼう市',ushio:'かげのうしお'};/* 防衛の夜の変化：霧の夜（見張り台のとどく所が半分）・群れの夜（コワイノがみんな同じ所から来る）・ワナクイのうたげ（ふつうのコワイノがワナクイだけ、数は半分）・かげのどろぼう市（カゲドロボウだけ）・かげのうしお（コカゲだけ、来る間かくを半分に） */
+const MOON={full:['moonf','満月','wx-full'],new:['moonn','新月','wx-new']},MOONSP={full:.9,new:1.1},MOONDK={full:.46,new:.70};/* 満月と新月：8日ごとにめぐる（満月の4日あとに新月）。ほかの夜の変化とかさなる。コワイノの歩く速さ（満月0.9倍・新月1.1倍）と、夜の暗さ（ふだんは .58） */
+function moonOf(d){return d%8===0?'full':d%8===4?'new':null}
+function moonNow(){const h=hour(),d=dayNo();return h>=20?moonOf(d):h<6?moonOf(d-1):null}/* 今夜の月（夕方20時から朝6時まで） */
+function moonSp(){const k=moonNow();return k?MOONSP[k]:1}
 const NVONLY={wana:'trapper',doro:'thief',ushio:'basic'},NVSWAP=new Set(['basic','fast','thief','brute','breaker','trapper','rockc']);/* 1しゅるいだけの夜に、入れかえるコワイノ（灰をまくコワイノなど、お話のコワイノはそのまま） */
 function nightVarWave(w){/* 夜12時、上限でけずったあとの今夜のコワイノを、1しゅるいだけの夜に入れかえる */const k=nightVarNow(),t=k&&NVONLY[k];if(!t)return w;const sw=w.filter(x=>NVSWAP.has(x)),ot=w.filter(x=>!NVSWAP.has(x));if(!sw.length)return w;const n=k==='wana'?Math.max(1,Math.floor(sw.length/2)):sw.length;return ot.concat(Array(n).fill(t))}
 function nightVarPick(){/* 夕方、今夜の波が決まったあとに1回だけ（S.nightVar に日ごとにしまうので、読みこみなおしてもかわらない） */const d=dayNo();if(S.nightVar&&S.nightVar.d===d)return;S.nightVar={d,k:null};
@@ -236,7 +240,7 @@ function updEnemy(e,dt){
   if(dj<0&&(!(D.thief||e.ashG)||goal<0&&!e.flee)){let td=1e9,ts=1e9;if(!EREACH.has(e))EREACH.set(e,bfs(e.x|0,e.y|0,2).dist);const RD=EREACH.get(e);if(pre){tgt=pre;td=Math.hypot(pre.x-e.x,pre.y-e.y)}else for(const r of S.res){if(r.hidden||onTower(r)||(r.faintGrace||0)>S.t||r.act&&r.act.type==='faint')continue;const d=Math.hypot(r.x-e.x,r.y-e.y),sc=d+(RD&&RD[(r.y|0)*W+(r.x|0)]<0?60:0)-(r.id===e.tg?2:0);/* いまねらっている子を少し優先（ねらいがころころ変わってガタガタしない） */if(sc<ts){ts=sc;td=d;tgt=r}}
     if(!tgt&&!pre){let bd=1e9;for(const r of S.res){if(!(r.hidden&&r.act&&r.act.type==='sleep'))continue;const d=Math.hypot(r.x-e.x,r.y-e.y);if(d<bd){bd=d;td=d;tgt=r}}}/* ねらえる子がだれもいなければ、家で眠っている子をめざして、家の壁をこわしにいく（遠くでワープをくりかえさない） */
     if(tgt&&!tgt.hidden&&td<reachOf(D)&&!fenceBetween(e.x,e.y,tgt.x,tgt.y)){hitRes(e,tgt,D);if(hsOf(D)>=2&&!e.dead){const ar=1.5;burstAt(tgt.x,tgt.y,'offer');for(const q of S.res){if(q===tgt||q.hidden||onTower(q)||e.dead)continue;if(Math.hypot(q.x-tgt.x,q.y-tgt.y)<ar&&!fenceBetween(e.x,e.y,q.x,q.y))hitRes(e,q,D)}}/* 大きいコワイノは範囲攻撃：まわりの子も巻きこむ */return}
-    if(tgt&&!tgt.hidden&&td<1.6&&e.type!=='boss2'&&!e.flee&&!(e.dcb>S.t)){/* ヨルノオオカゲは、近づききらずに、とどく所から攻撃する */let sp=D.sp*dt*e.slow;if(lightAt(e.x,e.y))sp*=.8;/* 光の中は、移動の速さ0.8倍 */const dx=tgt.x-e.x,dy=tgt.y-e.y,st=Math.min(sp,td);let ok=true;for(let f=.25;f<=st+.001&&ok;f+=.25){const t=Math.min(f,st),nq=(((e.y+dy/td*t)|0)*W)+((e.x+dx/td*t)|0);ok=walk(nq)&&!HOME_DOORS.has(typeAt(nq))&&!GATE_IDS.has(typeAt(nq))}{const nq=(((e.y+dy/td*st)|0)*W)+((e.x+dx/td*st)|0);ok=ok&&walk(nq)&&!HOME_DOORS.has(typeAt(nq))&&!GATE_IDS.has(typeAt(nq))}/* とちゅうのマスも調べて、柵や壁をすりぬけない */if(ok){e.x+=dx/td*st;e.y+=dy/td*st;e.path=[];return}e.dcb=S.t+4;e.repath=0}/* まっすぐ行けないときは、しばらく道どおりに進む（行ったり来たりでガタガタしない） */
+    if(tgt&&!tgt.hidden&&td<1.6&&e.type!=='boss2'&&!e.flee&&!(e.dcb>S.t)){/* ヨルノオオカゲは、近づききらずに、とどく所から攻撃する */let sp=D.sp*dt*e.slow*moonSp();/* 満月・新月 */if(lightAt(e.x,e.y))sp*=.8;/* 光の中は、移動の速さ0.8倍 */const dx=tgt.x-e.x,dy=tgt.y-e.y,st=Math.min(sp,td);let ok=true;for(let f=.25;f<=st+.001&&ok;f+=.25){const t=Math.min(f,st),nq=(((e.y+dy/td*t)|0)*W)+((e.x+dx/td*t)|0);ok=walk(nq)&&!HOME_DOORS.has(typeAt(nq))&&!GATE_IDS.has(typeAt(nq))}{const nq=(((e.y+dy/td*st)|0)*W)+((e.x+dx/td*st)|0);ok=ok&&walk(nq)&&!HOME_DOORS.has(typeAt(nq))&&!GATE_IDS.has(typeAt(nq))}/* とちゅうのマスも調べて、柵や壁をすりぬけない */if(ok){e.x+=dx/td*st;e.y+=dy/td*st;e.path=[];return}e.dcb=S.t+4;e.repath=0}/* まっすぐ行けないときは、しばらく道どおりに進む（行ったり来たりでガタガタしない） */
     if(tgt){goal=(tgt.y|0)*W+(tgt.x|0);if(!walk(goal)){let bq=-1,bb=1e9;for(const[ax,ay]of[[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]]){const q=goal+ay*W+ax;if(!walk(q))continue;const dd=Math.hypot(q%W+.5-e.x,((q/W)|0)+.5-e.y);if(dd<bb){bb=dd;bq=q}}if(bq>=0)goal=bq}/* ベッドの上など、歩けないマスにいる子は、となりの歩けるマスをめざす */if(e.tg!==tgt.id){e.tg=tgt.id;e.repath=0}}}
   if(e.type==='boss2'&&S.ns&&S.ns.final&&!pre&&!e.flee){const tw=S.obj.indexOf('tower');if(tw>=0){goal=tw;if(e.tg!=='tw'){e.tg='tw';e.repath=0}}}/* 最後の夜のヨルノオオカゲは、守護の台座をこわしにくる（近くにせいれいがいれば、そちらが先） */
   e.repath-=dt;let force=false;{const bv=(S.broken||[]).length;if(e.bv!==bv){e.bv=bv;force=true}}/* どこかの壁がこわれたら、すぐ道を考えなおす（あいた穴から入る） */
@@ -253,7 +257,7 @@ function updEnemy(e,dt){
       if(S.hp[j]<=0){const nm=BL[S.obj[j]].name;(S.broken||(S.broken=[])).push({j,id:S.obj[j],L:S.hp['L'+j],rot:rotAt(j)});sfxAt('wbreak',j%W+.5,(j/W)|0);if(S.ns)S.ns.broke++;{const hb=HOUSES.find(h=>h.set.has(j));clearObj(j);recount();houseBreakFlee(hb)}toast(nm+'がこわされた！','warn')}}
     return}}
   if(!walk(j)){e.path=[];e.stk=(e.stk||0)+dt;if(e.stk>20&&!e.flee){e.stk=0;enemyFallback(e,D);e.repath=8;EREACH.delete(e)}return}/* 道の先が歩けないマスのまま止まっていたら、行ける所へ歩く */
-  let sp=D.sp*dt*e.slow*(e.flee&&D.thief?1.8:1);if(!e.flee)sp*=lightMul(e.x,e.y);/* 光の中は、移動の速さ0.8倍 */if(jumpEdge((e.y|0)*W+(e.x|0),j))sp/=5;if(S.ground[j]===2)sp/=2;/* 浅瀬は2倍ゆっくり *//* 段差を飛ぶ間は5倍ゆっくり */
+  let sp=D.sp*dt*e.slow*(e.flee&&D.thief?1.8:1)*moonSp();/* 満月・新月 */if(!e.flee)sp*=lightMul(e.x,e.y);/* 光の中は、移動の速さ0.8倍 */if(jumpEdge((e.y|0)*W+(e.x|0),j))sp/=5;if(S.ground[j]===2)sp/=2;/* 浅瀬は2倍ゆっくり *//* 段差を飛ぶ間は5倍ゆっくり */
   const tx=j%W+.5,ty=((j/W)|0)+.5,dx=tx-e.x,dy=ty-e.y,d=Math.hypot(dx,dy);
   if(d<=sp){e.x=tx;e.y=ty;e.path.shift()}else{e.x+=dx/d*sp;e.y+=dy/d*sp}e.stk=0
 }
