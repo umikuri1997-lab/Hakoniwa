@@ -134,7 +134,7 @@ const BL={
   arrow2:{name:'かなものの矢',kind:'ammo',pc:6,time:60,maker:'wood',qty:10,mat:{eda:1,stone:1,can:1},desc:'空き缶をたたいて矢じりにした矢。見張り台の威力+1。1発で1本使う'},
   spike:{name:'とげの罠',fix:1,fixm:{wood:1},kind:'furn',lv:1,pc:1,time:100,maker:'wood',qty:5,trap:1,attr:{earth:.5},mat:{wood:2,stone:2},desc:'上にいる「コワイノ」に、10分ごとに0.5ダメージ',anim:1},
   sticky:{name:'どくの罠',fix:1,fixm:{funba:1},kind:'furn',lv:2,pc:1,time:80,maker:'wood',qty:2,trap:1,attr:{wood:.5},mat:{funba:2},food:{kinoko:1},desc:'ふんだ「コワイノ」に、1時間、10分ごとに0.5ダメージ',anim:1},
-  puddle:{name:'すべる水たまり',fix:1,fixm:{stone:1},kind:'furn',lv:4,pc:1,time:80,maker:'water',qty:2,trap:1,anim:1,attr:{water:.5},mat:{stone:2},desc:'ふんだ「コワイノ」が13.3分止まる。つぎに使えるまで2時間',anim:1},
+  puddle:{name:'すべる水たまり',fix:1,fixm:{stone:1},kind:'furn',lv:4,pc:1,time:80,maker:'water',qty:2,trap:1,anim:1,attr:{water:.5},mat:{stone:2},desc:'ふんだ「コワイノ」が10分止まる',anim:1},
   firetrap:{name:'ほのおの罠',fix:2,fixm:{wood:1},kind:'furn',pc:3,time:120,maker:'fire',lv:4,qty:2,trap:1,anim:1,attr:{fire:.5},mat:{wood:1,can:2},desc:'ふんだ「コワイノ」と、まわり1マスの「コワイノ」に4ダメージ。つぎに使えるまで3時間',anim:1},
   gust:{name:'つむじ風の罠',fix:2,fixm:{eda:1},kind:'furn',pc:3,time:120,maker:'wind',lv:5,qty:2,trap:1,anim:1,attr:{wind:.5},mat:{eda:2},desc:'ふんだ「コワイノ」を6マスふきとばし、1.3分止める。つぎに使えるまで2時間30分',anim:1},
   dig:{name:'けずる',kind:'build',pc:50,time:40,maker:'earth',attr:{},desc:'高いマスを1だん低くする工事。パワー50'},
