@@ -40,7 +40,7 @@ function grassEndingGoal(){
   const night=isNight(),active=night&&(S.finalOn||S.rushOn||S.ns?.final||S.ns?.rush),wave=S.finalOn||S.ns?.final&&night?3:S.rushOn?S.rushN:S.ns?.rush&&night?S.ns.rush:Math.min(3,(S.rushN||0)+1);
   if(active)return {text:wave===3?'ヨルノオオカゲを追いはらおう':'御神木を守ろう',progress:'御神木の防衛 '+wave+'/3夜目',how:wave===3?'村と御神木を守り、ヨルノオオカゲを追いはらおう':'村と御神木を、朝まで守ろう'};
   if(S.finalNight||S.finalOn||S.rushOn)return {text:'今夜、御神木を守ろう',progress:'次は、防衛 '+wave+'/3夜目',how:'柵や罠を整え、食事と休息を済ませて、今夜の影に備えよう'};
-  if(clearReady()){const left=Math.max(0,(S.finalDay??S.flags.finalReadyDay??dayNo())-dayNo());return {text:'御神木を守る準備をしよう',progress:left?'影が来るまで、あと'+left+'日':'今夜、影がやってくる',how:'御神木を守れるように、柵や罠・食事と休息の準備を整えよう'};}
+  if(clearReady()){const left=Math.max(0,(S.finalDay??S.flags.finalReadyDay??dayNo())-dayNo()),why=S.res.length<5?'なかまが5人そろうまで、影は来ない':!S.res.some(r=>r.name===POKO)?'フタバがもどるまで、影は来ない':cnt('tower')<1?'御神木がこわれている':'';/* finalCheck が止まっている理由（同じ条件）を、進みぐあいに出す */return {text:'御神木を守る準備をしよう',progress:why||(left?'影が来るまで、あと'+left+'日':'今夜、影がやってくる'),how:'御神木を守れるように、柵や罠・食事と休息の準備を整えよう'};}
   return {text:'ヌシのかけらを御神木へ届けよう',progress:'かけら '+Math.min(2,S.setSh||0)+'/2',how:'御神木をタップして、ヌシのかけらを届けよう'};
 }
 function grassEndingFocusTarget(){

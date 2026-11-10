@@ -189,7 +189,7 @@ function moveTap(tx,ty){const j=ty*W+tx;
     const pr=PLROTS[id];PLROTS[id]=v.rot||0;let ok=false;try{ok=canPlace(id,tx,ty,false)}finally{if(pr==null)delete PLROTS[id];else PLROTS[id]=pr}
     if(!ok){writeObj(id,a,v);return}
     for(const r of S.res)if(r.act&&(r.act.obj===a||cells.includes(r.act.obj)))endAct(r);
-    for(const b of S.broken||[])if(b.j===a)b.j=j;
+    for(const b of S.broken||[])if(b.j===a)b.j=j;if(typeof fieldBuildMove==='function')fieldBuildMove(id,a,j);/* 調べのために置いた物をうつしたら、記録もうつす */
     writeObj(id,j,v)}
   MOVESRC=null;recount();dirty=true;burst(j,'furn','furnPlace');renderPalette();checkQuest()}
 function removeAt(x,y){const tx0=x,ty0=y;
