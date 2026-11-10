@@ -34,4 +34,5 @@ console.log('Offering/fishing: recipe furniture only after learning');
     if(WD===0)assert.equal(wall,0,'grassland daily offering gave stone wall');else assert(wall>0,'volcano daily offering keeps stone wall')}
   console.log('Daily offering: stone wall only in the volcano')}
 // かどまつ：カミサマのかざりの交換は火山だけ
-{const src=fs.readFileSync(root+'js/ui.js','utf8'),m=src.match(/const DECO=(\[[\s\S]*?\]\.filter\([^;]*?\))\/\*/);assert(m,'DECO list');for(const WD of [0,1,2,3,4]){run('WD='+WD);const ids=run(m[1]).map(x=>x[0]);assert.equal(ids.includes('kadomatsu'),WD===1,'kadomatsu WD='+WD)}console.log('Kadomatsu: volcano trade only')}
+{const src=fs.readFileSync(root+'js/ui.js','utf8'),m=src.match(/if\((WD===1&&[^{]*?)\)\{const r6=sec\('カミサマのかざり'\)/);assert(m,'DECO condition');for(const WD of [0,1,2,3,4]){run('WD='+WD+';S.lv=8');assert.equal(!!run(m[1]),WD===1,'Japanese deco WD='+WD)}
+ for(const id of ['toro','chochin','furin','ema','komainu','kadomatsu'])assert.equal(run('BL.'+id+'.w'),1,id+' from the volcano');console.log('Japanese deco: volcano only')}
