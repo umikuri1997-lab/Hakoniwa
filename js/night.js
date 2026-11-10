@@ -325,7 +325,7 @@ function takeDrop(d,r){let nm;
 function itemName(id){return id==='sand'?'やすらぎの砂':id==='horn'?'よびごえの角笛':id==='herb'?'まよけのハーブ':id==='mebuki'?'めぶきのしずく':id==='hai'?'ハイカゲの灰':id==='gear'||id==='gearf'?'そうび':id.startsWith('seed:')?CROPS[id.slice(5)].name+'のたね':BL[id]?(BL[id].item||BL[id].name):id}
 function stowItem(id,n,r){/* はこんだ物を、箱にしまったとき（もちものに入る）。知らせもここで出す */
   if(id==='gear'||id==='gearf'){for(let i=0;i<n;i++)gearFind(r,id==='gearf'?'つりあげた！':'ひろった！');return}
-  if(id==='sand'){S.sand=(S.sand||0)+n;if(!(S.recipes||(S.recipes={})).toro){S.recipes.toro=true;memo('🏮','しずけさの石どうろうが作れるようになった');queueItemGift({toro:1},'あたらしいレシピ！',true)}/* やすらぎの砂をはじめてしまったら、石どうろうのレシピ */return}
+  if(id==='sand'){S.sand=(S.sand||0)+n;if(WD>=1&&!(S.recipes||(S.recipes={})).toro){S.recipes.toro=true;memo('🏮','しずけさの石どうろうが作れるようになった');queueItemGift({toro:1},'あたらしいレシピ！',true)}/* 火山で、やすらぎの砂をはじめてしまったら、石どうろうのレシピ（和風の物は火山から） */return}
   if(id==='horn'){S.horn=(S.horn||0)+n;(S.seenIt||(S.seenIt={}))['x:horn']=1;return}
   if(id==='herb'){S.herb=(S.herb||0)+n;(S.seenIt||(S.seenIt={}))['x:herb']=1;return}
   if(id==='hai'){const t=st2();t.hai=(t.hai||0)+n;checkQuest();return}/* ひびわれをうめる灰 */
