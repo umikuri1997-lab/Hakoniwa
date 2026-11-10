@@ -103,6 +103,9 @@ H._all=()=>{all0();
     B.pc=((B.pc||0)+1)%997;let cx=54,cy=54;for(let i=0;i<60;i++){const x=20+((B.pc*37+i*53)%68),y=20+((B.pc*61+i*29)%68),j=y*W+x;if(!(S.fog&&fogAt(j))&&!REV.has(j)&&!S.obj[j]){cx=x;cy=y;break}}
     for(const id of ['tree','clover','bellf','lily','salvia']){if(cnt('sprout')>=10)break;if(inv(id)>0)B.put(id,cx,cy,(x,y)=>!(S.fog&&fogAt(y*W+x)))}
   }
+  /* 物語の進行だけを見るとき：みどり・花・なかよしは、時間をかけずにそろえる（その先のお話が進むかを見るため） */
+  if(q&&(q.id==='lv5'||q.id==='wood6')&&S.qTalked){let n=0;for(let i=0;i<400&&n<8;i++){const x=20+((B.pc*37+i*53)%68),y=20+((B.pc*61+i*29)%68),j=y*W+x;if(!(S.fog&&fogAt(j))&&!REV.has(j)&&!S.obj[j]&&!S.floor[j]&&walk(j)&&S.ground[j]!==1){S.obj[j]='clover';n++}}if(n)recount()}
+  if(q&&q.id==='omoi'&&S.qTalked&&omoiN()<3){const R=S.res.filter(r=>!r.hidden);for(let i=0;i<R.length;i++)for(let k=i+1;k<R.length;k++)if(bondOf(R[i],R[k])<30){bondAdd(R[i],R[k],6);i=R.length;break}}
   for(const e of S.enemies)if(e.type==='boss2'&&e.hp>30)e.hp=30;
   }
   if(S.cleared&&!B.cl2){B.cl2=1;B.lg('CLEARED flags '+Object.keys(S.flags).filter(k=>/reun|final|sacred/i.test(k)).join(','))}
