@@ -87,7 +87,7 @@ function updHUD(){
     S.lastRes4=S.res.length>=4&&hasFire?1:S.lastRes4}
   {const sb=$('#skipBtn'),v=canSkip();if(sb.hidden===v)sb.hidden=!v}
   const h=hour(),m=Math.floor(clk()%60);
-  $('#dayLbl').innerHTML=(S.rain?pxi('rain','wx wx-rain')+'雨':rainbowToday()?pxi('rainbow','wx wx-bow')+'虹':pxi('sun','wx wx-sun')+'晴れ')+(S.today?'・'+DAYEV[S.today][1]:'')+(nightVarNow()?'・'+NIGHTVAR[nightVarNow()]:'')+(hornNow()?'・角笛の夜':'')+(herbNow()?'・まよけの夜':'');/* 何日目は出さない（きろくで見る） */
+  $('#dayLbl').innerHTML=(moonNow()?pxi(MOON[moonNow()][0],'wx '+MOON[moonNow()][2])+MOON[moonNow()][1]:S.rain?pxi('rain','wx wx-rain')+'雨':rainbowToday()?pxi('rainbow','wx wx-bow')+'虹':pxi('sun','wx wx-sun')+'晴れ')+(S.today?'・'+DAYEV[S.today][1]:'')+(nightVarNow()?'・'+NIGHTVAR[nightVarNow()]:'')+(hornNow()?'・角笛の夜':'')+(herbNow()?'・まよけの夜':'');/* 何日目は出さない（きろくで見る） */
   {const tx=String(Math.floor(h)).padStart(2,'0')+':'+String(Math.floor(m/10)*10).padStart(2,'0'),el=$('#timeLbl');if(el.dataset.t!==tx){el.dataset.t=tx;el.innerHTML=[...tx].map(ch=>ch===':'?'<i class="c">:</i>':'<i>'+ch+'</i>').join('')}}/* 数字を1文字ずつ同じはばのわくに入れ、時刻で表示がずれないようにする */
   {const gs=$('#guardStatus'),night=true;/* 守りの光は、昼も夜も（昼は木や岩に） */gs.hidden=!night;if(LIGHTARM&&LIGHTCD<=0&&S.pt<1){LIGHTARM=false;dockSync()}gs.classList.toggle('armed',LIGHTARM);if(night){const gc=gs.querySelector('.gc');let p=1;if(LIGHTCD>0)p=1-LIGHTCD/(LIGHTCDL[S.lv]||10);else if(S.pt<1)p=0;gc.style.setProperty('--gp',(p*360)+'deg')}}
   {const ab=$('#areaBtn'),on=!!(S.flags&&S.flags.areaSkill)&&isNight();ab.hidden=!on;if(on){let p=1;if(AREACD>0)p=1-AREACD/5;else if(S.pt<3)p=0;if(AREAARM&&(AREACD>0||S.pt<3))AREAARM=false;ab.querySelector('.gc').style.setProperty('--gp',(p*360)+'deg');ab.classList.toggle('armed',AREAARM)}else AREAARM=false}

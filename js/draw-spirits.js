@@ -1,6 +1,6 @@
 'use strict';
 
-function darkness(){const h=hour();if(h>=7&&h<17)return 0;if(h>=17&&h<20.5)return (h-17)/3.5*.58;if(h>=20.5||h<4.5)return .58;return .58*(1-(h-4.5)/2.5)}
+function darkness(){const h=hour();if(h>=7&&h<17)return 0;const mk=typeof moonOf==='function'?moonOf(h>=17?dayNo():dayNo()-1):null,M=mk?MOONDK[mk]:.58;/* 夜の暗さ：ふだん .58・満月 .46・新月 .70 */if(h>=17&&h<20.5)return (h-17)/3.5*M;if(h>=20.5||h<4.5)return M;return M*(1-(h-4.5)/2.5)}
 const rain=Array.from({length:70},()=>({x:Math.random(),y:Math.random(),s:rnd(.6,1)}));
 const motes=Array.from({length:26},()=>({x:Math.random(),y:Math.random(),p:Math.random()*6,s:rnd(.4,1)}));
 let selRect=null;
