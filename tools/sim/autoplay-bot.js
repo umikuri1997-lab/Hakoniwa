@@ -56,7 +56,9 @@ H.watch1=()=>{B.ensure('watch',1,56,70);B.ensure('spike',2,54,72)};/* 切り株�
 H.kikyo=()=>B.plantAll('bellf');H.farm6=()=>{B.ensure('farm',6,44,56)};H.imoseed=()=>B.sow('imo');
 const field=prep=>q=>{const [sx,sy]=SR(),st=B.st;
   if(typeof SPLAY!=='undefined'&&SPLAY){if(!st.pw||performance.now()-st.pw>4000){st.pw=performance.now();sacredPlayWin()}return}
-  if(B.have(prep)<1||inv(prep)>0)B.ensure(prep,1,sx+2,sy+6,(x,y)=>fieldDistance(y*W+x,S.sacredRoot)<=FIELD_NEAR_R-1);/* 切り株のそば（どのがわでも） */
+  /* 調べの準備の物：依頼のあとに、切り株のそばへ置いた物だけが数に入る（前からある物では進まない）。足りないあいだは、持っていれば置き、なければたのむ・建てる */
+  if(S.qTalked&&!fieldBuildOK(q.id)&&!B.sites(prep)){const near=(x,y)=>fieldDistance(y*W+x,S.sacredRoot)<=FIELD_NEAR_R-1,k=BL[prep].kind;
+    if(k==='build')B.put(prep,sx+2,sy+6,near);else if(inv(prep)>0)B.put(prep,sx+2,sy+6,near);else if(!B.ordered(prep)&&recipeKnown(prep))orderFurn(prep)}
   if(!isNight()&&S.qTalked){try{fieldStoryTap(sx+1,sy+1)}catch(e){B.lg('fieldTap err '+e.message)}}};
 H.earthListen=field('asabukuro');H.fireRoot=field('campfire');H.waterFilm=field('jar');H.windEcho=field('windmill');H.tower=field('bench');
 H.fire=()=>{if(elemCount('fire')<1&&B.have('watch')<2)B.ensure('watch',2,52,70)};
