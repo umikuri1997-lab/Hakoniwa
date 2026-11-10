@@ -73,7 +73,7 @@ function sacredTreeTap(j){/* 御神木をタップ：かけらの光をとどけ
 function onTap(sx,sy){if(GIFT_ACTIVE&&camAnim&&camAnim.done)return;/* 霧が晴れる・鉱脈が目をさます演出のカメラ中は、タップをうけない */DLGTAP=performance.now();/* タップで始める会話は、またずにすぐ出す */
   let w=toWorld(sx,sy);const w0=w,tx=Math.floor(w.x/TS);{const tl=tapLv(w.x,w.y);if(tl)w={x:w.x,y:w.y+tl*LIFT}}const ty=Math.floor(w.y/TS);/* 高い段のマス・物・せいれい・コワイノは上にずらして描くので、タップの場所も高さの分だけ下へもどす */
   if(AREAARM){AREAARM=false;return areaBlast(w.x/TS,w.y/TS)}/* こもれびのまもり：タップした場所のまわり */
-  if(LIGHTARM){const en=enemyAtTap(w0.x,w0.y);if(en)return guardLight(en);const tj=ty*W+tx;if(tx>=0&&ty>=0&&tx<W&&ty<H&&LIGHTNAT[S.obj[tj]]&&!isBud(tj)&&!(S.fog&&fogAt(tj)))return natLight(tj)}/* 守りの光：えらんでいるあいだにタップした「コワイノ」・木・岩にあてる（えらんだまま）。ほかの所のタップは、ふつうの「みる」 */
+  if(LIGHTARM){const en=enemyAtTap(w0.x,w0.y);if(en)return guardLight(en);const tj=ty*W+tx;if(tx>=0&&ty>=0&&tx<W&&ty<H&&LIGHTNAT[S.obj[tj]]&&!isBud(tj)&&!(S.fog&&fogAt(tj)))return natLight(tj);return}/* 守りの光：えらんでいるあいだにタップした「コワイノ」・木・岩にあてる（えらんだまま）。ほかの所のタップでは、なにもしない（みる・おく・こわすと同時にはしない） */
   const si=S.seeds.findIndex(s=>s.x===tx&&s.y===ty);
   if(tx>=0&&ty>=0&&tx<W&&ty<H){const hh=HOUSES.find(h=>h.set.has(ty*W+tx));/* 開けた屋根は、壁をタップするまでそのまま */
     if(hh&&mode!=='look'&&!OPENH.has(hKey(hh))){OPENH.add(hKey(hh));dirty=true;return}}/* 置く・こわすときも、まず家をタップして中を見る */

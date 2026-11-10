@@ -203,7 +203,7 @@ addEventListener('resize',resize);
 for(const ev of ['pointerdown','touchend','click'])document.addEventListener(ev,()=>{if(AC&&AC.state!=='running'&&!document.hidden)AC.resume().catch(()=>{})},true);addEventListener('focus',()=>{if(AC&&AC.state!=='running')AC.resume().catch(()=>{})});
 
 $('#alert').addEventListener('click',()=>{const L=S.enemies.filter(e=>e.spawned&&!e.dead);if(!L.length)return;ALI=(ALI+1)%L.length;const e=L[ALI];centerOn(e.x*TS,e.y*TS);sfx('tap')});/* 「コワイノ ○体」をタップすると、その場所へ */
-$('#guardStatus').addEventListener('click',e=>{e.stopPropagation();if(!S||!started)return;if(!LIGHTARM&&S.pt<1)return toast('パワーが足りません');sfx('tap');LIGHTARM=!LIGHTARM;AREAARM=false;if(LIGHTARM)toast('光をあてる物をタップ')});/* 守りの光は、もう一度ボタンをおすまで、えらんだまま（チャージ中も） */
+$('#guardStatus').addEventListener('click',e=>{e.stopPropagation();if(!S||!started)return;if(!LIGHTARM&&S.pt<1)return toast('パワーが足りません');sfx('tap');const on=!LIGHTARM;setMode('look');LIGHTARM=on;AREAARM=false;dockSync();if(on)toast('光をあてる物をタップ')});/* 守りの光は、もう一度ボタンをおすか、みる・おく・こわすをえらぶまで、えらんだまま（チャージ中も）。えらんでいるあいだは、置く・こわす・みるはしない */
 $('#areaBtn').addEventListener('click',e=>{e.stopPropagation();if(AREACD>0)return toast('こもれびのまもりは、あと'+Math.ceil(AREACD/(S.speed||1))+'秒');if(S.pt<3)return toast('パワーが足りません');sfx('tap');AREAARM=!AREAARM;LIGHTARM=false;if(AREAARM)toast('光をはなつ場所をタップ')});
 $('#skipBtn').addEventListener('click',()=>{if(!canSkip())return;sfx('tap');SKIP=true;$('#skipBtn').hidden=true;toast('朝まで休もう…','good')});
 let RLVR=null;

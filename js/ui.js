@@ -33,10 +33,11 @@ function applyFeats(){
   $('#dock').style.gridTemplateColumns='repeat('+n+',1fr)';
 }
 let palOpen=false;/* 「おく」をおすと、アイテム欄が大きくひらく。えらぶと小さくなる */
+function dockSync(){document.querySelectorAll('#dock [data-mode]').forEach(b=>b.classList.toggle('on',!LIGHTARM&&b.dataset.mode===(mode==='bulk'?'build':mode)))}/* 道具を使っているあいだは「おく」を光らせる。守りの光をえらんでいるあいだは、どれも光らせない */
 function setMode(m){
   mode=m;palOpen=m==='build'||m==='bulk';pending=null;selRect=null;$('#confirm').hidden=true;
   if(S&&STATUE<0&&m==='build'&&usable('statue'))sel='statue';else if(sel==='statue'&&STATUE>=0)sel='farm';
-  document.querySelectorAll('#dock [data-mode]').forEach(b=>b.classList.toggle('on',b.dataset.mode===(m==='bulk'?'build':m)));/* 道具を使っているあいだは「おく」を光らせる */
+  LIGHTARM=false;dockSync();/* みる・おく・こわすをえらんだら、守りの光はやめる */
   $('#palette').hidden=!(m==='build'||m==='bulk');renderPalette();
 }
 function chip(img,name,cost,cls,onClick,mat){
