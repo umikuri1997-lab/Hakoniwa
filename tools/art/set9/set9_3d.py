@@ -136,5 +136,6 @@ if __name__=='__main__':
         cu=cube.resize((cube.width*2,cube.height*2),Image.NEAREST)
         one=Image.new('RGBA',(cu.width+a.width+b.width+4*G,max(cu.height,a.height,b.height)+TH+G),(255,255,255,255));d1=ImageDraw.Draw(one)
         one.paste(cu,(G,one.height-cu.height-G//2));one.paste(a,(cu.width+2*G,TH));one.paste(b,(cu.width+a.width+3*G,TH))
+        d1.text((G,4),'%d %s'%(n+1,nm),font=fnt,fill=(60,60,60))
         d1.text((cu.width+2*G,4),'3D（角度・大きさ）',font=fnt,fill=(60,60,60));d1.text((cu.width+a.width+3*G,4),'正面から見た3D（新しいデザイン）' if id=='arch' else 'いまの絵（デザイン）',font=fnt,fill=(60,60,60))
         one.convert('RGB').save(os.path.join(out,'%d_%s.png'%(n+1,id)))
