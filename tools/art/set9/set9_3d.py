@@ -128,3 +128,13 @@ if __name__=='__main__':
         if id=='arch':sc=Scene();f(sc);sd=grid_bg((-1.0,3.0,-3.5,0.5));sd.alpha_composite(render(sc,side,(-1.0,3.0,-3.5,0.5),SIDE));sh.paste(sd.resize((PW,PH),Image.BOX),(x+PW+G,y+TH))   # 新しいデザイン：右はまよこの3D
         else:sh.paste(panelold(id,foot,C),(x+PW+G,y+TH))
     sh.convert('RGB').save(os.path.join(out,'sheet.png'));print('ok',sh.size)
+    # 1つずつたのむための絵：左にお手本のキューブ、まん中に3D、右にいまの絵（どちらも1マス128ドット）。アーチは右も3D（正面）
+    for n,(nm,id,foot,f) in enumerate(OBJS):
+        sc=Scene();f(sc);a=grid_bg(EXT,foot);a.alpha_composite(render(sc,game,EXT,VIEW))
+        if id=='arch':b=grid_bg((-1.0,3.0,-3.5,0.5));b.alpha_composite(render(sc,side,(-1.0,3.0,-3.5,0.5),SIDE))
+        else:b=panelold(id,foot,C);b=b.resize((b.width*2,b.height*2),Image.NEAREST)
+        cu=cube.resize((cube.width*2,cube.height*2),Image.NEAREST)
+        one=Image.new('RGBA',(cu.width+a.width+b.width+4*G,max(cu.height,a.height,b.height)+TH+G),(255,255,255,255));d1=ImageDraw.Draw(one)
+        one.paste(cu,(G,one.height-cu.height-G//2));one.paste(a,(cu.width+2*G,TH));one.paste(b,(cu.width+a.width+3*G,TH))
+        d1.text((cu.width+2*G,4),'3D（角度・大きさ）',font=fnt,fill=(60,60,60));d1.text((cu.width+a.width+3*G,4),'正面から見た3D（新しいデザイン）' if id=='arch' else 'いまの絵（デザイン）',font=fnt,fill=(60,60,60))
+        one.convert('RGB').save(os.path.join(out,'%d_%s.png'%(n+1,id)))
