@@ -33,7 +33,7 @@ function appendStoryReplays(body){
 let STORY_REPLAY_SHELL=null;
 function openStoryReplay(key){
   const episode=availableStoryReplays().find(e=>e.key===key);if(!episode||STORY_REPLAY_SHELL)return false;
-  const owner=S,nonce=crypto.randomUUID(),oldFocus=document.activeElement,audio=AC?.state==='running';
+  const owner=S,nonce=(crypto.randomUUID?crypto.randomUUID():String(Date.now())+Math.random()),/* randomUUID は、古い iPhone にない */oldFocus=document.activeElement,audio=AC?.state==='running';
   const shell=el('<div role="dialog" aria-modal="true" aria-label="物語の再生" style="position:fixed;inset:0;z-index:100;background:#faf3e3;display:flex;flex-direction:column;overflow:clip"><div style="min-height:54px;flex-shrink:0;padding:8px 12px;display:flex;align-items:center;justify-content:space-between;gap:8px;box-sizing:border-box"><b></b><button class="btn">思い出帳へ戻る</button></div><iframe title="物語の再生" style="border:0;width:100%;flex:1;min-height:0" allow="autoplay"></iframe></div>');
   shell.querySelector('b').textContent=storyReplayTitle(episode);const frame=shell.querySelector('iframe'),actors=[...(S.res||[]),...(S.lost||[]),...(S.buried||[])].map(r=>({name:r.name,elem:r.elem,vr:r.vr}));
   const close=()=>{if(STORY_REPLAY_SHELL!==shell)return;window.removeEventListener('message',message);window.removeEventListener('keydown',escape);frame.src='about:blank';shell.remove();STORY_REPLAY_SHELL=null;if(audio&&AC&&!document.hidden)AC.resume().catch(()=>{});if(oldFocus?.isConnected)oldFocus.focus({preventScroll:true});};

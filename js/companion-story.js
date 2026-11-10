@@ -43,7 +43,7 @@ function fieldLeadStand(G,j,ok){/* 調べる子は、切り株のすぐよこ・
 const fieldDistance=(k,j)=>Math.max(j%W-k%W,0,k%W-(j%W+sacredSpan()-1))+Math.max((j/W|0)-(k/W|0),0,(k/W|0)-(j/W|0)-sacredSpan()+1);
 const fieldCast=step=>(step.cast||[step.who]).map(w=>S.res.find(r=>r.name===sevName(w))).filter(Boolean);
 const fieldCastFull=step=>!!step&&fieldCast(step).length===(step.cast||[step.who]).length;/* 調べにいる子が、みんな村にいる */
-function fieldMissNames(q){if(!q||!q.field||!FIELD_STORIES[q.id])return [];const L=FIELD_STORIES[q.id],st=S.qStory!=null?L.at(-1):L[fieldStoryState?.(q.id)?.step||0];return st?(st.cast||[st.who]).map(sevName).filter(n=>!S.res.some(r=>r.name===n)&&((S.buried||[]).some(b=>b.name===n)||(S.lost||[]).some(b=>b.name===n))):[]}/* 調べ・お礼にいる子で、村にいない子 */
+function fieldMissNames(q){if(!q||!q.field||!FIELD_STORIES[q.id])return [];const L=FIELD_STORIES[q.id],st=S.qStory!=null?L[L.length-1]:L[fieldStoryState?.(q.id)?.step||0];return st?(st.cast||[st.who]).map(sevName).filter(n=>!S.res.some(r=>r.name===n)&&((S.buried||[]).some(b=>b.name===n)||(S.lost||[]).some(b=>b.name===n))):[]}/* 調べ・お礼にいる子で、村にいない子 */
 const fieldActorReady=r=>!r.hidden&&!r.coffin&&!HOLD.has(r.id)&&!hungry(r)&&!r.meal&&!['eat','fetch','flee','faint','pray','bury'].includes(r.act?.type)&&!(r.act?.type==='sleep'&&isNight())&&!hostileNow(r);/* お話によばれたら、仕事・遊び・荷物はそのままで、すぐ向かう（おなかがすいた・ごはんを持っている子は、先に食べる） */
 // 会話の前から、その場にいる登場人物へ歩いて集まる。古い関数名は呼び出し元との互換のため保つ。
 const earthIntroQuest=q=>!!q&&q.field&&!(q.id==='tower'&&(cnt('tower')||statueSite('tower')));

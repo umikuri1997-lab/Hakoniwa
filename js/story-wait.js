@@ -14,10 +14,10 @@ function mainStoryWaitInfo(){
   // 調査の前は既存の全員集合を使う。調査後の報告は、同じ木のそばで待つ。
   if(!report&&q.field)return null;
   const key=WD+':'+index+':'+(report?'report':'intro');let p=STORY_WAIT_PLANS.get(S);
-  if(p?.key===key&&p.session===VILLAGE_SESSION&&p.cast.every(r=>S.res.includes(r)&&!r.hidden)&&(!q.field||p.cast.length===(FIELD_STORIES[fieldLastId(q)].at(-1).cast||[]).length)&&(p.id==null||qvHas(p.obj,p.id)))return p;
+  if(p?.key===key&&p.session===VILLAGE_SESSION&&p.cast.every(r=>S.res.includes(r)&&!r.hidden)&&(!q.field||p.cast.length===(lastOf(FIELD_STORIES[fieldLastId(q)]).cast||[]).length)&&(p.id==null||qvHas(p.obj,p.id)))return p;
   const who=report?storyWho(q):firstSpk(q.talk.lines,q.talk.who);
   const lead=S.res.find(r=>r.name===who&&!r.hidden);if(!lead&&!(q.field&&report))return null;
-  const last=q.field&&FIELD_STORIES[fieldLastId(q)]?.at(-1),cast=last?fieldCast(last):[lead,...storyLineCast(report?q.story:q.talk.lines).filter(r=>r!==lead)];if(!cast.length)return null;if(last&&!fieldCastFull(last)||qMissing(q).length)return null;/* お話にいる子がそろっていなければ、集まらない *//* 会話でしゃべる子は、みんな集まってから話す（いない子は、その行だけはぶく） */
+  const last=q.field&&lastOf(FIELD_STORIES[fieldLastId(q)]),cast=last?fieldCast(last):[lead,...storyLineCast(report?q.story:q.talk.lines).filter(r=>r!==lead)];if(!cast.length)return null;if(last&&!fieldCastFull(last)||qMissing(q).length)return null;/* お話にいる子がそろっていなければ、集まらない *//* 会話でしゃべる子は、みんな集まってから話す（いない子は、その行だけはぶく） */
   let obj=q.field?S.sacredRoot:null,id=null,free=false,tree=false;
   if(obj==null){
     const ids=QUEST_VISIT_MAIN[q.id]||(q.id==='nushi'?['tower']:null),recent=QUEST_PLACEMENTS.get(S);let best=-Infinity;
@@ -133,7 +133,7 @@ function storyCalled(r){const p=mainStoryWaitInfo();if(p&&p.cast.includes(r))ret
 function storyWaitStatusText(){
   if(!S||S.free||S.cleared||isNight())return null;
   let p=mainStoryWaitInfo();if(!p){const q=earthIntroCurrent();if(!q)return null;fieldStoryEnsure(q.id);const step=FIELD_STORIES[q.id][0];p={cast:fieldCast(step),obj:S.sacredRoot,who:fieldStoryActor(step)?.name,field:true,intro:true};}
-  if(p.field){const step=p.intro?FIELD_STORIES[earthIntroCurrent().id][0]:FIELD_STORIES[fieldLastId(p.q)].at(-1),missing=(step.cast||[step.who]).map(sevName).find(n=>!S.res.some(r=>r.name===n));if(missing)return missing+'がもどるまで、お話は進まない';}
+  if(p.field){const step=p.intro?FIELD_STORIES[earthIntroCurrent().id][0]:lastOf(FIELD_STORIES[fieldLastId(p.q)]),missing=(step.cast||[step.who]).map(sevName).find(n=>!S.res.some(r=>r.name===n));if(missing)return missing+'がもどるまで、お話は進まない';}
   if(p.obj==null)return 'お話の場所を探している';
   if(p.field&&!S.obj.includes('tower')&&!sacredRootFits(p.obj))return '木のまわりにある物を、先に片づけよう';
   const pending=p.cast.find(r=>p.intro?!(r.act?.type==='fieldintro'&&r.act.stage==='do'&&earthIntroValid(r,r.act)):!(r.act?.type==='storywait'&&r.act.stage==='do'&&r.act.storyKey===p.key&&r.act.obj===p.obj));

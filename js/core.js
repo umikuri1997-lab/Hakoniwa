@@ -1,11 +1,12 @@
 'use strict';
+const lastOf=a=>a&&a.length?a[a.length-1]:undefined;/* さいごの1つ（Array.prototype.at は、古い iPhone（iOS 15.3 まで）にない） */
 const IS_STORY_REPLAY=typeof location!=='undefined'&&new URLSearchParams(location.search).has('storyReplay');
 /* Web版：同じ端末・ブラウザに保存。書き込み失敗を利用者に伝える。 */
 const KV=(()=>{
   const memory=Object.create(null);let available=false,lastSaved=0;
   if(IS_STORY_REPLAY)available=true;else try{localStorage.setItem('__hakoniwa_test','1');localStorage.removeItem('__hakoniwa_test');available=true}catch(e){}
   return {
-    getItem(k){if(Object.hasOwn(memory,k))return memory[k];if(IS_STORY_REPLAY)return null;try{return localStorage.getItem(k)}catch(e){return null}},
+    getItem(k){if(Object.prototype.hasOwnProperty.call(memory,k))return memory[k];/* Object.hasOwn は、古い iPhone（iOS 15.3 まで）・古い Android にない */if(IS_STORY_REPLAY)return null;try{return localStorage.getItem(k)}catch(e){return null}},
     setItem(k,v){v=String(v);memory[k]=v;if(IS_STORY_REPLAY)return true;try{localStorage.setItem(k,v);available=true;if(/^hakoniwa-(w\d|free-v)/.test(k))lastSaved=Date.now();return true}catch(e){available=false;return false}},
     removeItem(k){delete memory[k];if(IS_STORY_REPLAY)return;try{localStorage.removeItem(k);return true}catch(e){available=false;return false}},
     push(){},onCloud(){},ready:()=>true,status:()=>({available,lastSaved})
