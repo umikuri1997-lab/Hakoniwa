@@ -1,8 +1,8 @@
 /* 1晩だけの実験：4人の村（フタバ・ノドカ・火のキーキャラLv1・水のせいれい）で、夜のようすを追う。
-   使い方：node tools/sim/night.cjs <守りの光 0か1> <回数> [n4（敵を4体に）]
+   使い方：node tools/sim/night.cjs <守りの光 0か1> <回数> [n4（敵を4体に）か ""] [ためしたい書きかえのコード]
    出力：1晩ごとに、夜の結果（ns）・火のせいれいが生きのこったか（hono）・おなかの動き（時刻:おなか/敵の数）。
    村：見張り台1・とげの罠2・木の矢60・食料40・ベッド4・夜の回数16（カタカゲ・ワナクイが出るころ）。 */
-const useLight=+process.argv[2]||0,N=+process.argv[3]||3,VAR=process.argv[4]||'';
+const useLight=+process.argv[2]||0,N=+process.argv[3]||3,VAR=process.argv[4]||'';const PATCH=process.argv[5]||'';/* ためしたい書きかえ（ゲームの中で1回動かすコード）。例："waveArrivalDelay=(i)=>i*60" */
 (async()=>{const {browser,page,run,errors}=await require('./boot.cjs')();
 const out=[];
 for(let k=0;k<N;k++){
@@ -14,7 +14,7 @@ for(let k=0;k<N;k++){
   put('statue',54,57);put('stor',50,55);put('mbox',52,55);put('table',49,50);for(const x of [48,49,50,51])put('bed',x,49);
   put('watch',56,62);put('spike',54,64);put('spike',53,64);S.inv.arrow=60;S.unlocked.watch=true;
   S.fs={imo:40};S.food=40;recount();for(const q of S.res){q.hunger=hMax(q);q.energy=100;q.fun=70}
-  S.t=1440*20+19*60;S.lastWarn=null;S.bossWarn=dayNo()+5;TESTM=true;S.speed=8;window.TR=[];window.LT=0;window.CUT=0;USERPAUSE=false})()`);
+  S.t=1440*20+19*60;S.lastWarn=null;S.bossWarn=dayNo()+5;TESTM=true;S.speed=8;window.TR=[];window.LT=0;window.CUT=0;${PATCH?'if(!window.PATCHED){window.PATCHED=1;'+PATCH+'}':''}USERPAUSE=false})()`);
  await page.waitForFunction(()=>sacredEval('stageReady()'),{},{timeout:90000});
  for(let i=0;i<400;i++){await page.waitForTimeout(300);
   const s=await run(`(()=>{for(const sel of ['.idea-reveal button','#lvup button:last-child','#rlv button:last-child']){const b=document.querySelector(sel);if(b&&!b.disabled)b.click()}if(!document.querySelector('#dialog').hidden){try{DLGA.n=DLGA.full.length;DLGA.readReady=0;DLGA.holdUntil=0}catch(e){}const b=document.querySelector('#dlgBtns button');if(b)b.click()}if(sheet!=null)closeSheet();
