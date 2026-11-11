@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """家具を、元の絵（1マス64ドットのチップ、src/）の形・デザインのまま、ドットを1つずつそのまま使って整える（形はかえない）。
-  1. 材料（木・金：色あいでわける）ごとに、元の絵の色から少ない色の表を作り、どのドットも、そのいちばん近い色に（元の明るさ・かげのまま）
-  2. ばらばらの1ドットだけ、まわりの色に（線・すじはのこす）
-  3. 元の輪郭（まわりの透明にふれる所）を、うすい線の色に：光のがわ（上・左）1ドット、かげのがわ（下・右）2ドット。元の絵の中のこい線（部品のさかい）も、同じ線の色に
+  1. 材料（木・金：色あいでわける）ごとに、元の絵の色を少ない色にわけ、いちばんこい色（輪郭と部品のさかいの線）を見つける
+  2. 輪郭線（いちばん外の1ドットと、さかいの線）だけを、うすい線の色にする。線のはばは元の絵のまま（かげのがわを太くしない）
+  3. 木目など、ほかのドットは、元の絵の色のまま（かえない）
   python3 tools/art/furn32/clean64.py <出力フォルダ> [id ...] / --put"""
 import os, sys, json, re
 import numpy as np
@@ -32,29 +32,18 @@ def clean(im, mats, ks):
         sel = m & (mat == M_)
         if not sel.any(): continue
         pals[M_] = kmeans(rgb[sel], ks[M_]); lab[sel] = ((rgb[sel][:, None] - pals[M_][None]) ** 2).sum(2).argmin(1)
-    # ばらばらの1ドット：まわり8つに同じ色がなく、5つ以上が同じ色なら、その色に（線・すじはのこる）
-    for _ in range(2):
-        r = lab.copy()
-        for y in range(H):
-            for x in range(W):
-                if not m[y, x]: continue
-                n = [lab[y + dy, x + dx] for dy in (-1, 0, 1) for dx in (-1, 0, 1) if (dy or dx) and 0 <= y + dy < H and 0 <= x + dx < W and m[y + dy, x + dx] and mat[y + dy, x + dx] == mat[y, x]]
-                if lab[y, x] in n or len(n) < 6: continue
-                v, c = np.unique(n, return_counts=True)
-                if c.max() >= 5: r[y, x] = v[c.argmax()]
-        lab = r
     from scipy.ndimage import binary_fill_holes
-    out_t = ~binary_fill_holes(m); p = np.pad(out_t, 1, constant_values=True); q = np.pad(out_t, 2, constant_values=True)
-    r1 = m & (p[:-2, 1:-1] | p[2:, 1:-1] | p[1:-1, :-2] | p[1:-1, 2:]); r2 = m & ~r1 & (q[4:, 2:-2] | q[2:-2, 4:])
+    out_t = ~binary_fill_holes(m); p = np.pad(out_t, 1, constant_values=True)
+    r1 = m & (p[:-2, 1:-1] | p[2:, 1:-1] | p[1:-1, :-2] | p[1:-1, 2:])   # いちばん外の1ドット
     o = np.zeros((H, W, 4), np.uint8)
     for y in range(H):
         for x in range(W):
             if not m[y, x]: continue
             P = pals[mat[y, x]]; j = lab[y, x]; k = len(P)
-            line = P[k - 2] * .5 + P[k - 1] * .5   # 線の色：元のいちばんこい色より、うすく（かげのつぎ）
-            # 輪郭（光のがわ1・かげのがわ2ドット）と、元のこい線（いちばんこい色）は、線の色
-            c = line if (r1[y, x] or r2[y, x] or j == k - 1) else P[j]
-            o[y, x, :3] = np.round(c); o[y, x, 3] = 255
+            # 輪郭線（外のふち・部品のさかい＝元のいちばんこい色の線）だけ、うすい線の色に。はばは元の絵のまま
+            if r1[y, x] or j == k - 1: o[y, x, :3] = np.round(P[k - 2] * .5 + P[k - 1] * .5)
+            else: o[y, x, :3] = np.round(rgb[y, x])   # 木目など、ほかのドットは元の絵の色のまま
+            o[y, x, 3] = 255
     return Image.fromarray(o, 'RGBA')
 
 def build(b):

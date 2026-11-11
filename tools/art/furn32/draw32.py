@@ -121,13 +121,13 @@ class Cv:
             X = x0 * K if c[1] == 'l' else (x1 + 1) * K - 1; Y = y0 * K if c[0] == 't' else (y1 + 1) * K - 1
             if s.ok(X, Y): s.m[Y, X] = ''
     def render(s):
-        """輪郭：まわりの透明にふれるドットは線（1ドット）。下と右（かげのがわ）は、もう1ドット太く（線のはばは1〜2ドット）"""
+        """輪郭：まわりの透明にふれるドットは線（1ドット）"""
         from scipy.ndimage import binary_fill_holes
         f = s.m != ''; out_t = ~binary_fill_holes(f)
         p = np.pad(out_t, 1, constant_values=True)
         r1 = f & (p[:-2, 1:-1] | p[2:, 1:-1] | p[1:-1, :-2] | p[1:-1, 2:])
         q = np.pad(out_t, 2, constant_values=True)
-        r2 = f & ~r1 & (q[4:, 2:-2] | q[2:-2, 4:])   # 2つ下・2つ右が外
+        r2 = np.zeros_like(r1)   # かげのがわを太くしない（持ち主の指摘）
         img = np.zeros((s.H, s.W, 4), np.uint8)
         for Y in range(s.H):
             for X in range(s.W):
