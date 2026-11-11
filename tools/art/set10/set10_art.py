@@ -35,4 +35,9 @@ put('stor',shrink(opaque(load('stor')),64),32,45)
 # キャビネット・本棚の右向き（id>1。左向きはゲームで反転）：もらった絵は1マス64ドットの大きさなので、そのまま。置く場所は右向きの3D（set10_rot.py）と同じ所
 for id,ax,ay in(('shelf1',19,-73),):
     im=load(id+'_r');C[id+'>1']={'g':64,'ax':round(ax),'ay':round(ay),'w':im.width,'h':im.height,'f':[im]};print(id+'>1',im.size,round(ax),round(ay))
+# 木の家具の輪郭線をそろえる：外のふちを1ドットにし、色は、すぐ内がわの色を0.62倍にこくした色（cleanup.py の outline_unify）。
+# 何回動かしても同じ絵になる。ここにない物（前からある絵）も、このならびに足してそろえる
+sys.path.insert(0,HERE);from cleanup import outline_unify
+for k in ('cabinet','cabinet>1','crate','stor','mbox','shelf2','shelf1','shelf1>1','bench'):
+    C[k]['f']=[outline_unify(f) for f in C[k]['f']]
 chips.pack_imgs(h,C)
