@@ -24,6 +24,8 @@ def stretch_row(src, x0, x1):
         t = (x - x0) / max(1, x1 - x0); out[x] = src[int(round(a + t * (b - a)))]
     return out
 
+GAPCLEAR = True   # さんのあいだを透明にして、すわった子が見える
+
 def back():
     """うしろ向きは、持ち主がかいたお手本（ref/chair_3e2.png）をそのまま使う。下のはしは正面と同じ。
     すわった子の手前に重ねる絵（chair>2.front）は、その絵の背もたれ・前のはばき（座面より上と、座面の手前の板）だけで、
@@ -34,7 +36,8 @@ def back():
     ys = [y for y in range(B.shape[0]) if m[y].sum() >= 30 and (L[y][m[y]] < 150).all()]   # 輪郭線だけの行（かさ木の下・さんの下）
     y0, y1 = max(zip(ys, ys[1:]), key=lambda q: q[1] - q[0])                  # いちばん広いあいだが、さんとすきま
     gap = np.zeros(B.shape[1], bool); gap[(L[(y0 + y1) // 2] >= 175) & m[(y0 + y1) // 2]] = True
-    F = B.copy(); F[y0 + 1:y1][:, gap] = 0
+    F = B.copy()
+    if GAPCLEAR: F[y0 + 1:y1][:, gap] = 0
     rail = [y for y in range(y1 + 1, B.shape[0]) if not m[y, B.shape[1] // 2]]   # 脚のあいだがあく行から下は、のぞく
     F[rail[0]:] = 0
     return B, F, ay

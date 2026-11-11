@@ -404,6 +404,7 @@ function drawRes0(r,now){
     ctx.fillStyle='#c9935f';rr(ctx,mx-12,my-9,24,4.5,1.5);ctx.fillStyle='#b9824f';rr(ctx,mx-11,my-13,20,4,1.5);ctx.fillStyle='rgba(255,255,255,.25)';ctx.fillRect(mx-10,my-12.6,17,1);
     if(o&&o.type&&BL[o.type].mat&&BL[o.type].mat.stone){circ(ctx,mx+9,my-10,3.4,'#a3a6ae');circ(ctx,mx+8,my-11,1.4,'#d4d5da')}}
   ctx.save();// 発熱対策：ぼかし影はなし
+  {const sj2=(r.y|0)*W+(r.x|0),o2=S.obj[sj2];if(o2&&SEATS.includes(o2)&&r.act&&r.act.stage==='do'&&!walking){const f=chipOf(o2,sj2,null,'.front');if(f){const fs=f.src||f,q=fs.g===64?.5:1;ctx.beginPath();ctx.rect(-1e6,-1e6,2e6,1e6+((sj2/W)|0)*TS+(fs.ay+fs.h)*q);ctx.clip()}}}/* うしろ向きのいすにすわる子は、いすの手前の絵（.front）の下のはしより下（足）をかかない */
   if(bedH){ctx.translate(px,fy);ctx.rotate(-Math.PI/2);ctx.scale(BEDHS,1);ctx.translate(-px,-fy)}/* 横のベッドでは、頭をまくら（左）にして横になる */
   if(wade){ctx.beginPath();ctx.rect(px-40,fy-90,80,tubB?Math.max(0,fy+(((r.act.tub/W)|0)*TS+17-fy)*wade-(fy-90)):90-wade*11);ctx.clip()}
   const wpA=r.act&&r.act.type==='watchpost'&&r.act.stage==='do'?r.act:null,onWP=wpA&&(wpA.cl||0)>=1;if(wpA&&!onWP)v.back=true;{const sw=Math.max(r.swing||0,r.swingT||0);if(sw&&now>=sw&&now-sw<700)v.back=!!r.fback}/* たたくときは、敵のほうを向く（うしろの敵には、うしろ向き） *//* 見張り台のハシゴは、うしろ向きでよじのぼる。上では弓をかまえる */
