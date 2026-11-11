@@ -1,5 +1,5 @@
 """持ち主がかいた正面のいすのお手本（ref/chair.png）の部品（背もたれ・座面・脚）を組みかえて、
-うしろ向き（chair>2・すわった子の手前に重ねる chair>2.front）と、よこ向き（chair>1）を作る。
+すわった子の手前に重ねる chair>2.front（うしろ向きのお手本から）と、よこ向き（chair>1）を作る。
 できた絵は ref/ に書き、clean64.py がそのまま使う（ref/meta.json に ax・ay）。
   python3 tools/art/furn32/chair_ref.py"""
 import os, json
@@ -25,18 +25,19 @@ def stretch_row(src, x0, x1):
     return out
 
 def back():
-    """うしろ向き：背もたれが手前。座面は正面と同じ所、背もたれは UP だけ下（座面の手前のふちに立つ）"""
-    B = np.zeros_like(A)
-    B[25:] = A[25:]                                   # 座面と脚（うしろの脚が手前に見える。形は同じ）
-    D = 44 - 25 - 1                                   # 背もたれを下げる行の数（ささえの線 25 行め → 43 行め）
-    BR = [A[y] for y in range(24)] + [A[23]]          # かさ木とさん（24行めの座面とのつなぎの点はとらず、23行めをくりかえす）
-    sp = op(A[23])                                    # さんの足もとに、正面の 25 行めと同じ輪郭線
-    F = np.zeros_like(A)                              # すわった子の手前に重ねる絵：背もたれだけ（すきまは透明）
-    for T in (B, F):
-        for y, r in enumerate(BR):                    # B は、すきまからうしろの座面が見える
-            m = op(r); T[y + D][m] = r[m]
-        T[43][sp] = A[25][sp]
-    return B[D:], F[D:44], AY + D
+    """うしろ向きは、持ち主がかいたお手本（ref/chair_3e2.png）をそのまま使う。下のはしは正面と同じ。
+    すわった子の手前に重ねる絵（chair>2.front）は、その絵の背もたれ・前のはばき（座面より上と、座面の手前の板）だけで、
+    さんのあいだ（うしろの座面が見える所）は透明にする"""
+    B = np.asarray(Image.open(os.path.join(REF, 'chair_3e2.png')).convert('RGBA')).copy()
+    ay = AY + H - B.shape[0]
+    L = B[..., :3] @ np.array([.3, .59, .11]); m = op(B)
+    ys = [y for y in range(B.shape[0]) if m[y].sum() >= 30 and (L[y][m[y]] < 150).all()]   # 輪郭線だけの行（かさ木の下・さんの下）
+    y0, y1 = max(zip(ys, ys[1:]), key=lambda q: q[1] - q[0])                  # いちばん広いあいだが、さんとすきま
+    gap = np.zeros(B.shape[1], bool); gap[(L[(y0 + y1) // 2] >= 175) & m[(y0 + y1) // 2]] = True
+    F = B.copy(); F[y0 + 1:y1][:, gap] = 0
+    rail = [y for y in range(y1 + 1, B.shape[0]) if not m[y, B.shape[1] // 2]]   # 脚のあいだがあく行から下は、のぞく
+    F[rail[0]:] = 0
+    return B, F, ay
 
 def side():
     """よこ向き（右を向く）：背もたれは左はし。かさ木の上の面・手前のはしの面と、よこから見たさん1本"""
@@ -48,13 +49,13 @@ def side():
     for y in range(26, 47):                           # 左右のふちは、どの行も同じならび（だい形の段のなごりをけす）
         S[y, 0] = OUT; S[y, 39] = OUT; S[y, 1] = A[40, 1]; S[y, 38] = A[40, 38]
     x0, x1 = 2, 8                                     # かさ木のはば（輪郭こみ）
-    top = A[3, 10]; lit = A[6, 15]                     # 上の面：かさ木の上のふちの明るい色
-    for y in range(0, 19):
-        S[y, x0:x1 + 1] = lit; S[y, x0 + 1] = top
+    HI, LI, MI, NI = A[2, 15], A[3, 10], A[6, 15], A[7, 10]   # 正面のかさ木の色：上のふちの光・明るい所・ふつう・少しこい所
+    for y in range(1, 30):                            # 上の面（1〜18行）と、手前のはしの面（19〜29行）
         S[y, x0] = OUT; S[y, x1] = OUT
-    S[0, x0:x1 + 1] = OUT; S[0, x0] = 0; S[0, x1] = 0; S[1, x0] = OUT; S[1, x1] = OUT
-    S[19:30, x0:x1 + 1] = A[[3, 3, 4, 5, 6, 7, 8, 9, 10, 11, 11], 3:3 + x1 - x0 + 1]  # 手前のはしの面：正面のかさ木の左はしと同じ色（上のまるい角の行はつかわない）
-    S[19:30, x1] = OUT
+        S[y, x0 + 1:x1] = LI if y < 19 else MI
+        S[y, x0 + 1] = HI if y < 19 else NI
+    S[19, x0 + 1:x1] = HI                             # 上の面と手前の面のかど（正面のかさ木の上のふちと同じ光）
+    S[0, x0 + 1:x1] = OUT
     S[30, x0:x1 + 1] = OUT
     S[31:43, x0 + 1:x0 + 7] = A[13:25, 5:11]          # さん（よこから見ると1本にかさなる）
     S[43, x0 + 1:x0 + 7] = OUT
@@ -70,6 +71,8 @@ if __name__ == '__main__':
     for k, a, ay0 in (('chair>2', b, ay), ('chair>2.front', f, ay), ('chair>1', s, ay1)):
         c, ax, y = crop(a, AX, ay0)
         n = k.replace('>', '_3e')
-        Image.fromarray(c, 'RGBA').save(os.path.join(REF, n + '.png')); meta[k] = {'ax': int(ax), 'ay': int(y)}
+        if k != 'chair>2': Image.fromarray(c, 'RGBA').save(os.path.join(REF, n + '.png'))   # うしろ向きは持ち主の絵のまま
+        else: c, ax, y = b, AX, ay
+        meta[k] = {'ax': int(ax), 'ay': int(y)}
         print(k, c.shape[1], c.shape[0], ax, y)
     json.dump(meta, open(os.path.join(REF, 'meta.json'), 'w'), ensure_ascii=False, indent=1)
