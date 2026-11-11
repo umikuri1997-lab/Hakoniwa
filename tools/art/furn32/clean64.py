@@ -438,6 +438,8 @@ def smooth_sil(im, ranges):
                     src = row[0] if x < row[0] else row[-1]; a[y, x] = a[y, src]
     return Image.fromarray(a, 'RGBA')
 
+REF = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'ref')   # 持ち主のお手本（等倍・はいけい透明）
+
 def build(b):
     meta = json.load(open(os.path.join(SRC, 'meta.json'))); out = {}
     for k in [k for k in meta if re.split(r'[#>:@~.]', k)[0] == b]:
@@ -453,6 +455,11 @@ def build(b):
         bb = r.getbbox(); fin = r.crop(bb)
         if k in HAND: fin = Image.fromarray(HAND[k](np.asarray(fin).copy()), 'RGBA')
         fin = Image.fromarray(unify_lines(np.asarray(fin).copy()), 'RGBA')
+        rp = os.path.join(REF, fname(k) + '.png')
+        if os.path.exists(rp):   # 持ち主がかいたお手本（できた絵と同じ大きさ）があれば、そのまま使う
+            ref = Image.open(rp).convert('RGBA')
+            if ref.size != fin.size: raise SystemExit(f'{rp}: 大きさが {fin.size} とちがう {ref.size}')
+            fin = ref
         out[k] = {'f': [fin], 'ax': round(meta[k]['ax']) + bb[0], 'ay': round(meta[k]['ay']) + bb[1]}
     return out
 
