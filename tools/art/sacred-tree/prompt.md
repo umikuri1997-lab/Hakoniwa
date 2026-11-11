@@ -25,7 +25,7 @@ Camera and proportions (copy the view cube and the block-outs exactly):
 - Height scale: one tile of real height appears 0.8 tiles tall on screen. All trunks stand upright, perfectly vertical, not tilted. No perspective, no vanishing point, no fisheye.
 - Size and position follow the top row: the roots sit in exactly the same place inside the footprint in all five, so the stages line up when swapped. The stump is the same size in stages 1 to 4.
 
-Final sizes (1 tile = 64 pixels): stages 1 to 3 about 145 x 140 pixels; stage 4 about 150 x 190 pixels; stage 5 about 370 x 395 pixels. Pixel art drawn on an exact pixel grid at these final sizes, shown upscaled with nearest-neighbor so every pixel is a crisp square; no anti-aliasing, no half pixels.
+Pixel art style with a clean, regular pixel grid and crisp square pixels; no anti-aliasing. Draw it large and detailed, filling most of the image; do NOT shrink it to a small pixel size (it will be resized later). Keep the proportions of the 3D block-out exactly.
 
 Output: the five objects side by side in one row in the same order, each separate with clear transparent space between them, all at the same scale.
 
