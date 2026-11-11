@@ -3,7 +3,7 @@
   1. 材料（木・金：色あいでわける）ごとに、元の絵の色を少ない色にわけ、いちばんこい色（輪郭と部品のさかいの線）を見つける
   2. 輪郭線（いちばん外の1ドットと、さかいの線）だけを、うすい線の色にする。線のはばは元の絵のまま（かげのがわを太くしない）
   3. 木目など、ほかのドットは、元の絵の色のまま（かえない）
-  4. 左右対称にできる物（SYM）は、左半分の形と線の位置を右へ写す（右の中の色は元の右の色＝かげ）。平行投影にする物（PARA）は、遠近のついた所をなおす
+  4. 左右対称にできる物（SYM）は、右がわを左がわの写しにして、元の絵の左右の明るさのちがい（光とかげ）だけをかける。平行投影にする物（PARA）は、遠近のついた所をなおす
   python3 tools/art/furn32/clean64.py <出力フォルダ> [id ...] / --put"""
 import os, sys, json, re
 import numpy as np
@@ -64,19 +64,23 @@ def para_table(im):
     return Image.fromarray(o, 'RGBA')
 
 def symmetric(img, L, src):
-    """左半分の形と線の位置を右へ写す。右がわの色は、元の絵の右がわの色（かげ）をそのまま使う（光とかげだけちがう）"""
-    o = np.asarray(img).copy(); a = o[..., 3] > 0; sr = np.asarray(src.convert('RGBA'))
+    """左右対称：右がわは、左がわをそのまま写す（形・木目・線）。そのうえで、元の絵の左右の明るさのちがい（光とかげ）だけを、
+    なめらかにかける（元の絵の明るさをぼかして、右と、写した左の比をかける）。線の色はかえない"""
+    from scipy.ndimage import gaussian_filter
+    o = np.asarray(img).astype(float); a = o[..., 3] > 0; sr = np.asarray(src.convert('RGBA')).astype(float)
     xs = np.where(a.any(0))[0]; S = xs[0] + xs[-1]   # x → S - x
+    Lm = sr[..., :3] @ np.array([.3, .59, .11]); w = (sr[..., 3] > 110).astype(float)
+    sm = gaussian_filter(Lm * w, 2.5) / np.maximum(gaussian_filter(w, 2.5), 1e-3)   # 元の絵の、なめらかな明るさ
     r = o.copy()
     for y in range(o.shape[0]):
         for x in range(o.shape[1]):
             X = S - x
             if 2 * x <= S or not (0 <= X < o.shape[1]): continue
             if not a[y, X]: r[y, x] = 0; continue
-            if L[y, X] or not a[y, x] or L[y, x]: r[y, x] = o[y, X]   # 線の位置・形は左から
-            else: r[y, x] = o[y, x]   # 中の色は、右の元の色（かげ）
-            r[y, x, 3] = 255
-    return Image.fromarray(r, 'RGBA')
+            r[y, x] = o[y, X]
+            if not L[y, X]:
+                k = np.clip(sm[y, x] / max(1, sm[y, X]), .8, 1.1); r[y, x, :3] = np.clip(o[y, X, :3] * k, 0, 255)
+    return Image.fromarray(r.round().astype(np.uint8), 'RGBA')
 
 def build(b):
     meta = json.load(open(os.path.join(SRC, 'meta.json'))); out = {}
