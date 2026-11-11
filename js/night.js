@@ -68,12 +68,13 @@ const EN={
 function bossDays(){const w=S.bossWarn;if(w==null)return '';const t=dayNo(),need=S.wipe?5:4;/* 全滅のあとは、5人そろうまで来ない（level.js の S.wipe） */if(!(S.res.length>=need&&S.res.some(q=>q.elem==='fire')&&KEYS[WD].every(n=>S.res.some(r=>r.name===n))))return 'オオカゲ：なかまが'+need+'人そろうまで来ない';let d=t;if(!S.bossOwed)while(!bossNight(d))d++;/* 来る日にそろっていなかった分（S.bossOwed）は、そろって3日たった夜に来る（waveFor と同じ） */if(S.res4Since!=null)d=Math.max(d,S.res4Since+3);return d===t?'オオカゲが来るまで：今夜':'オオカゲが来るまで：あと'+(d-t)+'日'}/* クエストの進みぐあいに、オオカゲが来る日を出す */
 const bossNight=d=>{const w=S&&S.bossWarn,k=S&&(S.ookDay||(S.enKills||{}).boss&&S.bossDay);if(k)return d-k>=5&&(d-k)%5===0;/* オオカゲをはじめて追いはらったあとは、5日ごと（S.ookDay：その日。前のセーブは、オオカゲをたおしていれば S.bossDay） */return w==null?d>=5&&(d-5)%3===0:d-w>=3&&(d-w-3)%3===0}/* オオカゲは「来るかも」と聞いた3日後、追いはらえなかったら3日ごと（火山のふもとは5日目、そのあと3日ごと）。はじめて追いはらったら、そのあとは5日ごと */;
 const NIGHTHP=[0,0,2,4,6,8,10];/* 草原：オオカゲを追いはらったあと、夜10回ごとに、コワイノ（オオカゲはのぞく）の体力に足す数 */
+const WVLV=[0,0,0,0,1,1,1,2,2,2,3];/* 村のせいれいの平均レベル（0〜10、10より上は10）ごとに、コワイノの数にたす数 */
 function waveFor(day){
   if(!S.nights)return WD===1?['basic','basic','basic']:['basic'];/* 最初の夜は1体だけ（火山のふもとは3体） */
   if(day<2)return [];
   const rn=S.res.length,story=Math.min(1,(S.quest||0)/Math.max(1,QUESTS.length)),prog=Math.pow(story,1.4)/* 進みはじめはゆっくり、後半で段階的に強くなる */,late=(S.bossDay||(S.bossKills?(S.bossDay=day):0))?1+Math.floor(prog*3):0/* オオカゲを倒したあとの追加数 */,
-    n=Math.floor(rn*1.5),list=[];/* コワイノの数は、せいれいの数の1.5倍（小数点以下切りすて） *//* せいれいの数と進行度に合わせて、敵の数をゆっくり増やす（火山のふもとは、草原より2体多い） */let ntr=1+Math.floor(prog*2);/* ワナクイは罠を置いたかどうかでなく、村の進行度に合わせて出す */S.lateWave=late;
-  for(let i=0;i<n;i++){let t='basic';if(prog>=.18&&i%3===1)t='thief';if(prog>=.3&&i%3===2)t='fast';if(prog>=.5&&i%4===3)t='brute';if(prog>=.42&&i%5===4&&ntr>0){t='trapper';ntr--}if(prog>=.68&&i%6===5)t='breaker';list.push(t)}/* 敵の種類も、進行に合わせて少しずつ増える */
+    alv=Math.floor(S.res.reduce((a,r)=>a+rLv(r),0)/Math.max(1,rn)),n=Math.floor(rn*1.5)+WVLV[Math.min(alv,WVLV.length-1)],list=[];/* 村のせいれいの平均レベルで、数をたす（WVLV） *//* コワイノの数は、せいれいの数の1.5倍（小数点以下切りすて） *//* せいれいの数と進行度に合わせて、敵の数をゆっくり増やす（火山のふもとは、草原より2体多い） */let ntr=alv>=10?3:alv>=7?2:1;/* ワナクイの数は、平均レベルで */S.lateWave=late;
+  for(let i=0;i<n;i++){let t='basic';if(alv>=2&&i%3===1)t='thief';if(alv>=3&&i%3===2)t='fast';if(alv>=5&&i%4===3)t='brute';if(alv>=4&&i%5===4&&ntr>0){t='trapper';ntr--}if(alv>=7&&i%6===5)t='breaker';list.push(t)}/* しゅるいは、平均レベルでまじる（カゲドロボウLv2・ハヤカゲLv3・ワナクイLv4・カタカゲLv5・カベクダキLv7） */
   if(WD===1){for(let i=0;i<list.length;i++)if(list[i]==='brute')list[i]='rockc';const st=st2();/* 火山のふもと：カタカゲのかわりにイワカゲ。ハイカゲ・ヒノオオカゲはお話しだいで */
     if(S.flags.ashOn){const big=S.flags.ashNight&&!st.ashNightAt,na=big?6:Math.min(3,1+(day>>2));for(let i=0;i<na;i++)list.unshift('ash');/* 前に入れる（人数が少ない夜の上限でけずられないように） */if(big)st.ashNightAt=(S.nights||0)+1}
     if(S.flags.hinoNight&&!S.flags.hinoDown)list.unshift('hino');
