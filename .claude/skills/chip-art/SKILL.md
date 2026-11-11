@@ -44,9 +44,10 @@ chips.pack_imgs(h, C)   # アトラスと chips.js を作りなおす（ドッ�
 - うまく使えなかった所（なにがだめだったか）と、新しいプロンプトを、毎回つける。
 
 ## プロンプトのひな形（1つで使えるように、毎回ぜんぶ書く）
+- できあがりのドット数（〇×〇 pixels）をたのまない。ちぢめさせると、ひどい絵になる。大きくかいてもらい、こちらで BOX でちぢめる。
 ```
 Pixel art game sprite of <物の説明>, for a cozy top-down farming/village game.
-Drawn on an exact pixel grid at its final in-game size (<はば>x<高さ> pixels, 1 tile = 64 pixels), then shown upscaled 8x with nearest-neighbor so every pixel is a crisp square; no anti-aliasing, no sub-pixel detail, no half pixels.
+Pixel art style with a clean, regular pixel grid and crisp square pixels; no anti-aliasing. Draw it large and detailed, filling most of the image; do NOT shrink it to a small pixel size (it will be resized later).
 Camera: 3/4 top-down view like a view cube seen from the front-top (front face and top face both visible, about 45 degrees), facing the viewer, centered, whole object visible.
 <まっすぐ立つ物なら> Upright, perfectly vertical, not tilted.
 Pale, light, soft colors matching a gentle pastel game; no dark or heavily saturated colors.
