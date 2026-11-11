@@ -58,20 +58,22 @@ def clean(im, mats, ks):
         if r1[y, x]: continue
         edge = any(0 <= y + dy < H and 0 <= x + dx < W and m[y + dy, x + dx] and not Lm[y + dy, x + dx] for dy, dx in ((0, 1), (0, -1), (1, 0), (-1, 0)))
         if not edge: Lm[y, x] = False
-    Lm = width3(m, Lm, r1)
+    LV = width3(m, Lm, r1); Lm = LV > 0
     o = np.zeros((H, W, 4), np.uint8)
     for y in range(H):
         for x in range(W):
             if not m[y, x]: continue
             P = pals[mat[y, x]]; k = len(P)
             # 輪郭線（外のふち・部品のさかい＝元のいちばんこい色の線）だけ、うすい線の色に。はばは元の絵のまま（3ドットまで）
-            if Lm[y, x]: o[y, x, :3] = np.round(P[k - 2] * .5 + P[k - 1] * .5)
+            if Lm[y, x]:   # 線：外がわ（まん中）がいちばんこく、内がわほど、その所の色（まわりの色）に近づける
+                a_ = LWMIX[LV[y, x] - 1]; F = qp[mat[y, x]][qi[y, x]]
+                o[y, x, :3] = np.round((P[k - 2] * .5 + P[k - 1] * .5) * a_ + F * (1 - a_))
             else: o[y, x, :3] = qp[mat[y, x]][qi[y, x]]   # 木目など、ほかのドットは、木目がのこるぐらいの色の数にまとめた色
             o[y, x, 3] = 255
     L = Lm
     return Image.fromarray(o, 'RGBA'), L
 
-FIXES = {'chair': [('holes',), ('diag', 25, 37)], 'chair>2': [('holes',)]}   # chair>2 の小さな穴は、いったんうめて、OPEN で3本そろえてあけなおす   # 形のくずれをなおす：すきまを四角に・小さな穴をうめる・ななめのふちを同じきざみの段に（左がわ。右は左右対称で写す）
+FIXES = {'chair': [('holes',), ('diag', 25, 37)], 'chair>2': [('holes',)]}   # 形のくずれをなおす：すきまを四角に・小さな穴をうめる・ななめのふちを同じきざみの段に（左がわ。右は左右対称で写す）
 
 def fix_shape(img, L, fixes):
     from scipy.ndimage import binary_fill_holes, label, find_objects
@@ -112,7 +114,7 @@ def fix_shape(img, L, fixes):
 
 KQ = {'wood': 20, 'barrel': 20, 'metal': 8, 'cloth': 6}   # 材料ごとの色の数（木目がのこるぐらい。白い布は少なく）
 
-OPEN = {'chair>2': (15, 16, 17)}   # うしろ向きのいす：すきまから見える座面（明るいすじ）の上に、穴（上の行・下の行・すじを見る行）。3本とも同じに
+OPEN = {}   # うしろ向きのいすの小さな穴は、うめる（持ち主の指摘：3ドットの線でかこむと、こいかたまりになる）
 
 def open_holes(img, y0, y1, ys):
     """うしろ向きのいすの、すきまの上の穴：明るいすじ（座面が見える所）の上の行を、3本とも同じはば（2ドット。元の絵の左右の穴と同じ）で透明に。
@@ -194,16 +196,19 @@ def symmetric(img, L, src):
             r[y, x, :3] = pal[((pal - c) ** 2).sum(1).argmin()]
     return Image.fromarray(r.round().astype(np.uint8), 'RGBA')
 
+LWMIX = (1.0, .55, .25)   # 3ドットの線の、線の色のこさ（外がわ・まん中 → 内がわ）
+
 LW = 3   # 輪郭線（外のふちと、さかいの線）のはば：どこもちょうど3ドット（持ち主がえらんだ）
 
 def width3(m, Lm, r1):
     """線のはばを、どこもちょうど LW ドットに：外のふちは、透明（中の穴もふくむ）から LW ドットぶん。
-    さかいの線は、いまの線のまん中から LW ドット（よこの線はたてに、たての線はよこに。偶数のはばは、かげのがわ＝下・右へ）"""
-    H, W = m.shape; N = np.zeros_like(m); cur = m.copy()
-    for _ in range(LW):   # 外のふち
+    さかいの線は、いまの線のまん中から LW ドット（よこの線はたてに、たての線はよこに）。
+    かえすのは、だん（1 いちばんこい＝外がわ・線のまん中、2・3 まわりの色に近い）。3つとも同じ色にしない（持ち主の指摘）"""
+    H, W = m.shape; N = np.zeros(m.shape, int); cur = m.copy()   # N：0 線でない・1 いちばんこい・2・3 まわりの色に近い
+    for i in range(LW):   # 外のふち（外がわから 1・2・3）
         p = np.pad(cur, 1, constant_values=False)   # ななめもふくめて数える（角でひし形にふくらまない。穴のまわりは四角いわく）
         ring = cur & ~(p[:-2, 1:-1] & p[2:, 1:-1] & p[1:-1, :-2] & p[1:-1, 2:] & p[:-2, :-2] & p[:-2, 2:] & p[2:, :-2] & p[2:, 2:])
-        N |= ring; cur &= ~ring
+        N[ring] = i + 1; cur &= ~ring
     I = Lm & ~r1   # さかいの線
     def runlen(y, x, dy, dx):
         n = 1; yy, xx = y + dy, x + dx
@@ -220,7 +225,7 @@ def width3(m, Lm, r1):
             n = y - y0; c = y0 + n // 2
             if n <= LW and runlen(c, x, 0, 1) > n:
                 for yy in range(c - (LW - 1) // 2, c - (LW - 1) // 2 + LW):
-                    if 0 <= yy < H and m[yy, x]: N[yy, x] = True
+                    if 0 <= yy < H and m[yy, x]: v = 1 if yy == c else 2; N[yy, x] = v if N[yy, x] == 0 else min(N[yy, x], v)
     for y in range(H):   # たての線：よこのつづき（はば）のまん中から3ドット
         x = 0
         while x < W:
@@ -230,7 +235,7 @@ def width3(m, Lm, r1):
             n = x - x0; c = x0 + n // 2
             if n <= LW and runlen(y, c, 1, 0) > n:
                 for xx in range(c - (LW - 1) // 2, c - (LW - 1) // 2 + LW):
-                    if 0 <= xx < W and m[y, xx]: N[y, xx] = True
+                    if 0 <= xx < W and m[y, xx]: v = 1 if xx == c else 2; N[y, xx] = v if N[y, xx] == 0 else min(N[y, xx], v)
     return N
 
 def build(b):
