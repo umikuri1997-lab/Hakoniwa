@@ -66,8 +66,10 @@ def clean(im, mats, ks):
             P = pals[mat[y, x]]; k = len(P)
             # 輪郭線（外のふち・部品のさかい＝元のいちばんこい色の線）だけ、うすい線の色に。はばは元の絵のまま（3ドットまで）
             if Lm[y, x]:   # 線：外がわ（まん中）がいちばんこく、内がわほど、その所の色（まわりの色）に近づける
-                a_ = LWMIX[LV[y, x] - 1]; F = qp[mat[y, x]][qi[y, x]]
-                o[y, x, :3] = np.round((P[k - 2] * .5 + P[k - 1] * .5) * a_ + F * (1 - a_))
+                a_ = LWMIX[LV[y, x] - 1]; F = qp[mat[y, x]][qi[y, x]]; Lc = np.round(P[k - 2] * .5 + P[k - 1] * .5)
+                if LV[y, x] == 1: o[y, x, :3] = Lc
+                else:   # 2・3ドットめ：まわりの色にまぜた色を、その材料の色の表のいちばん近い色に（色をふやさない）
+                    c = Lc * a_ + F * (1 - a_); Q = qp[mat[y, x]]; o[y, x, :3] = Q[((Q - c) ** 2).sum(1).argmin()]
             else: o[y, x, :3] = qp[mat[y, x]][qi[y, x]]   # 木目など、ほかのドットは、木目がのこるぐらいの色の数にまとめた色
             o[y, x, 3] = 255
     L = Lm
