@@ -10,7 +10,7 @@ import numpy as np
 from PIL import Image
 HERE = os.path.dirname(os.path.abspath(__file__)); sys.path.insert(0, HERE); sys.path.insert(0, os.path.join(HERE, '..', '..'))
 SRC = os.path.join(HERE, 'src')
-ITEMS = {'chair': (['wood'], {'wood': 8}), 'table': (['wood'], {'wood': 7}), 'taru': (['barrel', 'metal'], {'barrel': 8, 'metal': 5})}   # 材料と、材料ごとの色の数
+ITEMS = {'chair': (['wood'], {'wood': 8}), 'table': (['wood'], {'wood': 7}), 'bed': (['wood', 'cloth'], {'wood': 8, 'cloth': 6}), 'taru': (['barrel', 'metal'], {'barrel': 8, 'metal': 5})}   # 材料と、材料ごとの色の数
 def fname(k): return re.sub(r'[^0-9A-Za-z_.-]', lambda q: '_%02x' % ord(q.group()), k)
 
 def lum(c): return np.asarray(c) @ np.array([.3, .59, .11])
@@ -27,7 +27,7 @@ def clean(im, mats, ks):
     a = np.asarray(im.convert('RGBA')).astype(float); H, W = a.shape[:2]; m = a[..., 3] > 110
     rgb = a[..., :3]; sat = rgb.max(-1) - rgb.min(-1)
     mat = np.full((H, W), mats[0], object)
-    if len(mats) > 1: mat[(sat < 40) & m] = mats[1]   # 灰色は金
+    if len(mats) > 1: mat[(sat < 40) & m] = mats[1]   # 色あいのない所（灰色・白）は、2つめの材料（金・布）
     pals = {}; lab = np.full((H, W), -1)
     for M_ in mats:
         sel = m & (mat == M_)
@@ -48,7 +48,7 @@ def clean(im, mats, ks):
     L = m & ((lab == np.array([len(pals[mat[y, x]]) - 1 if m[y, x] else -9 for y in range(H) for x in range(W)]).reshape(H, W)) | r1)
     return Image.fromarray(o, 'RGBA'), L
 
-SYM = {'chair', 'chair>2', 'chair>2.front', 'table', 'taru'}   # 左右対称にする物（光とかげだけ左右でちがう）
+SYM = {'chair', 'chair>2', 'chair>2.front', 'table', 'bed', 'taru'}   # 左右対称にする物（光とかげだけ左右でちがう）
 PARA = {'table'}   # 平行投影にする物（天板の奥を、手前と同じはばに）
 
 def para_table(im):
