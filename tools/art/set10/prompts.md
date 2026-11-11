@@ -26,7 +26,7 @@ Camera and proportions (copy the view cube and the 3D block-out exactly; this ma
 
 Object: Bench — a simple wooden bench with no backrest: one thick wooden seat board with softly rounded edges, on four short legs. Warm light wood.
 
-Final size: about 124 x 57 pixels at 1 tile = 64 pixels (half the size of the reference panels). Pixel art drawn on an exact pixel grid at that final size, shown upscaled with nearest-neighbor so every pixel is a crisp square; no anti-aliasing, no half pixels.
+Pixel art style with a clean, regular pixel grid and crisp square pixels; no anti-aliasing. Draw it large and detailed, filling most of the image; do NOT shrink it to a small pixel size (it will be resized later). Keep the proportions of the 3D block-out exactly.
 
 Style: Pale, light, soft colors matching a gentle pastel game, as in the current artwork; no dark or heavily saturated colors; glass is pale and light. No thick or dark outlines; if an outline is used, it is a thin 1-pixel line only slightly darker than the color next to it, never black or near-black. Clean flat colors with soft shading; no noise, no grain, no speckles, no dithering, no gritty texture. Transparent background, no ground shadow, no grass under the object, no text, no frame. Draw only this object. Do not draw the grid, the yellow frame, the cube or the block-out.
 ```
@@ -54,7 +54,7 @@ Camera and proportions (copy the view cube and the 3D block-out exactly; this ma
 
 Object: Cabinet — a low wooden cabinet with two doors on the front, each door with a recessed panel, two small round knobs in the middle, a top board that sticks out a little all around, and four short feet.
 
-Final size: about 67 x 64 pixels at 1 tile = 64 pixels (half the size of the reference panels). Pixel art drawn on an exact pixel grid at that final size, shown upscaled with nearest-neighbor so every pixel is a crisp square; no anti-aliasing, no half pixels.
+Pixel art style with a clean, regular pixel grid and crisp square pixels; no anti-aliasing. Draw it large and detailed, filling most of the image; do NOT shrink it to a small pixel size (it will be resized later). Keep the proportions of the 3D block-out exactly.
 
 Style: Pale, light, soft colors matching a gentle pastel game, as in the current artwork; no dark or heavily saturated colors; glass is pale and light. No thick or dark outlines; if an outline is used, it is a thin 1-pixel line only slightly darker than the color next to it, never black or near-black. Clean flat colors with soft shading; no noise, no grain, no speckles, no dithering, no gritty texture. Transparent background, no ground shadow, no grass under the object, no text, no frame. Draw only this object. Do not draw the grid, the yellow frame, the cube or the block-out.
 ```
@@ -82,7 +82,7 @@ Camera and proportions (copy the view cube and the 3D block-out exactly; this ma
 
 Object: Display shelf — an open wooden shelf with four corner posts and four shelf boards, no back panel. On the shelves: a cream clay vase and a small potted green plant on top, a green plant and a pale blue bottle on the middle shelves, a small clay pot and a stack of books at the bottom.
 
-Final size: about 62 x 111 pixels at 1 tile = 64 pixels (half the size of the reference panels). Pixel art drawn on an exact pixel grid at that final size, shown upscaled with nearest-neighbor so every pixel is a crisp square; no anti-aliasing, no half pixels.
+Pixel art style with a clean, regular pixel grid and crisp square pixels; no anti-aliasing. Draw it large and detailed, filling most of the image; do NOT shrink it to a small pixel size (it will be resized later). Keep the proportions of the 3D block-out exactly.
 
 Style: Pale, light, soft colors matching a gentle pastel game, as in the current artwork; no dark or heavily saturated colors; glass is pale and light. No thick or dark outlines; if an outline is used, it is a thin 1-pixel line only slightly darker than the color next to it, never black or near-black. Clean flat colors with soft shading; no noise, no grain, no speckles, no dithering, no gritty texture. Transparent background, no ground shadow, no grass under the object, no text, no frame. Draw only this object. Do not draw the grid, the yellow frame, the cube or the block-out.
 ```
@@ -110,7 +110,7 @@ Camera and proportions (copy the view cube and the 3D block-out exactly; this ma
 
 Object: Bookshelf — a wooden bookcase with two side boards, a back panel, a top board that sticks out a little, two inner shelves and four short feet. Three rows of upright books in soft pastel colors (dusty blue, sage green, pale rose, cream).
 
-Final size: about 66 x 95 pixels at 1 tile = 64 pixels (half the size of the reference panels). Pixel art drawn on an exact pixel grid at that final size, shown upscaled with nearest-neighbor so every pixel is a crisp square; no anti-aliasing, no half pixels.
+Pixel art style with a clean, regular pixel grid and crisp square pixels; no anti-aliasing. Draw it large and detailed, filling most of the image; do NOT shrink it to a small pixel size (it will be resized later). Keep the proportions of the 3D block-out exactly.
 
 Style: Pale, light, soft colors matching a gentle pastel game, as in the current artwork; no dark or heavily saturated colors; glass is pale and light. No thick or dark outlines; if an outline is used, it is a thin 1-pixel line only slightly darker than the color next to it, never black or near-black. Clean flat colors with soft shading; no noise, no grain, no speckles, no dithering, no gritty texture. Transparent background, no ground shadow, no grass under the object, no text, no frame. Draw only this object. Do not draw the grid, the yellow frame, the cube or the block-out.
 ```
@@ -138,7 +138,7 @@ Camera and proportions (copy the view cube and the 3D block-out exactly; this ma
 
 Object: Wooden crate — a closed box of light wooden planks with a plank lid on top. The front has a frame with an X-shaped brace; thicker corner posts at the front corners.
 
-Final size: about 64 x 67 pixels at 1 tile = 64 pixels (half the size of the reference panels). Pixel art drawn on an exact pixel grid at that final size, shown upscaled with nearest-neighbor so every pixel is a crisp square; no anti-aliasing, no half pixels.
+Pixel art style with a clean, regular pixel grid and crisp square pixels; no anti-aliasing. Draw it large and detailed, filling most of the image; do NOT shrink it to a small pixel size (it will be resized later). Keep the proportions of the 3D block-out exactly.
 
 Style: Pale, light, soft colors matching a gentle pastel game, as in the current artwork; no dark or heavily saturated colors; glass is pale and light. No thick or dark outlines; if an outline is used, it is a thin 1-pixel line only slightly darker than the color next to it, never black or near-black. Clean flat colors with soft shading; no noise, no grain, no speckles, no dithering, no gritty texture. Transparent background, no ground shadow, no grass under the object, no text, no frame. Draw only this object. Do not draw the grid, the yellow frame, the cube or the block-out.
 ```
@@ -166,7 +166,7 @@ Camera and proportions (copy the view cube and the 3D block-out exactly; this ma
 
 Object: Food crate — the same wooden crate with an X-shaped brace on the front, but with no lid: it is open on top and heaped with vegetables and fruit (carrots with green leaves, a green cabbage, red apples).
 
-Final size: about 62 x 68 pixels at 1 tile = 64 pixels (half the size of the reference panels). Pixel art drawn on an exact pixel grid at that final size, shown upscaled with nearest-neighbor so every pixel is a crisp square; no anti-aliasing, no half pixels.
+Pixel art style with a clean, regular pixel grid and crisp square pixels; no anti-aliasing. Draw it large and detailed, filling most of the image; do NOT shrink it to a small pixel size (it will be resized later). Keep the proportions of the 3D block-out exactly.
 
 Style: Pale, light, soft colors matching a gentle pastel game, as in the current artwork; no dark or heavily saturated colors; glass is pale and light. No thick or dark outlines; if an outline is used, it is a thin 1-pixel line only slightly darker than the color next to it, never black or near-black. Clean flat colors with soft shading; no noise, no grain, no speckles, no dithering, no gritty texture. Transparent background, no ground shadow, no grass under the object, no text, no frame. Draw only this object. Do not draw the grid, the yellow frame, the cube or the block-out.
 ```
@@ -194,7 +194,7 @@ Camera and proportions (copy the view cube and the 3D block-out exactly; this ma
 
 Object: Material crate — the same wooden crate with an X-shaped brace on the front, with no lid: it is open on top and filled with building materials: a few short wooden logs with round cut ends showing their tree rings on the left, and pale gray stones on the right.
 
-Final size: about 64 x 64 pixels at 1 tile = 64 pixels (half the size of the reference panels). Pixel art drawn on an exact pixel grid at that final size, shown upscaled with nearest-neighbor so every pixel is a crisp square; no anti-aliasing, no half pixels.
+Pixel art style with a clean, regular pixel grid and crisp square pixels; no anti-aliasing. Draw it large and detailed, filling most of the image; do NOT shrink it to a small pixel size (it will be resized later). Keep the proportions of the 3D block-out exactly.
 
 Style: Pale, light, soft colors matching a gentle pastel game, as in the current artwork; no dark or heavily saturated colors; glass is pale and light. No thick or dark outlines; if an outline is used, it is a thin 1-pixel line only slightly darker than the color next to it, never black or near-black. Clean flat colors with soft shading; no noise, no grain, no speckles, no dithering, no gritty texture. Transparent background, no ground shadow, no grass under the object, no text, no frame. Draw only this object. Do not draw the grid, the yellow frame, the cube or the block-out.
 ```
@@ -222,7 +222,7 @@ Camera and proportions (copy the view cube and the 3D block-out exactly; this ma
 
 Object: Wall shelf — one small wooden shelf board fixed to the front of a house wall with two wooden brackets under it. On the shelf, a small potted plant whose ivy vines hang down over the front edge. IMPORTANT: the gray wall in the block-out is only a guide: do NOT draw the wall, draw only the shelf, brackets, pot and ivy.
 
-Final size: about 49 x 54 pixels at 1 tile = 64 pixels (half the size of the reference panels). Pixel art drawn on an exact pixel grid at that final size, shown upscaled with nearest-neighbor so every pixel is a crisp square; no anti-aliasing, no half pixels.
+Pixel art style with a clean, regular pixel grid and crisp square pixels; no anti-aliasing. Draw it large and detailed, filling most of the image; do NOT shrink it to a small pixel size (it will be resized later). Keep the proportions of the 3D block-out exactly.
 
 Style: Pale, light, soft colors matching a gentle pastel game, as in the current artwork; no dark or heavily saturated colors; glass is pale and light. No thick or dark outlines; if an outline is used, it is a thin 1-pixel line only slightly darker than the color next to it, never black or near-black. Clean flat colors with soft shading; no noise, no grain, no speckles, no dithering, no gritty texture. Transparent background, no ground shadow, no grass under the object, no text, no frame. Draw only this object. Do not draw the grid, the yellow frame, the cube or the block-out.
 ```
@@ -250,7 +250,7 @@ Camera and proportions (copy the view cube and the 3D block-out exactly; this ma
 
 Object: Spike trap — a low wooden base board on the ground with four sharpened wooden stakes standing in a row; the stake tips are pale, freshly cut wood. The stakes stand upright, perfectly vertical, not tilted.
 
-Final size: about 60 x 37 pixels at 1 tile = 64 pixels (half the size of the reference panels). Pixel art drawn on an exact pixel grid at that final size, shown upscaled with nearest-neighbor so every pixel is a crisp square; no anti-aliasing, no half pixels.
+Pixel art style with a clean, regular pixel grid and crisp square pixels; no anti-aliasing. Draw it large and detailed, filling most of the image; do NOT shrink it to a small pixel size (it will be resized later). Keep the proportions of the 3D block-out exactly.
 
 Style: Pale, light, soft colors matching a gentle pastel game, as in the current artwork; no dark or heavily saturated colors; glass is pale and light. No thick or dark outlines; if an outline is used, it is a thin 1-pixel line only slightly darker than the color next to it, never black or near-black. Clean flat colors with soft shading; no noise, no grain, no speckles, no dithering, no gritty texture. Transparent background, no ground shadow, no grass under the object, no text, no frame. Draw only this object. Do not draw the grid, the yellow frame, the cube or the block-out.
 ```

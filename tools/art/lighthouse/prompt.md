@@ -11,7 +11,7 @@ Camera and proportions (copy the view cube and the block-out exactly):
 - Top faces are seen fully from above with no shrinking toward the back: round floors and roofs look like full circles, not flattened ellipses.
 - Only the front (south) side of the building is visible below its top faces. Left, right and back sides are NOT visible.
 - Height scale: one tile of real height appears 0.8 tiles tall on screen. The tower stands upright, perfectly vertical, not tilted; every vertical line is perfectly vertical. No perspective, no vanishing point, no fisheye.
-- Size and position follow the block-out exactly: the round stone base fills the 2x2 footprint, and the whole lighthouse is 128 pixels wide and about 342 pixels tall.
+- Size and position follow the block-out exactly: the round stone base fills the 2x2 footprint.
 
 Draw: a charming European-style stone lighthouse for a cozy meadow village game (pixel art), built like a real lighthouse, part by part from the bottom up, exactly as in the block-out:
 1. Foundation: a low round plinth of pale gray stone blocks, 2 tiles across. In front of the door, two stone steps are cut into the plinth.
@@ -24,7 +24,7 @@ Draw: a charming European-style stone lighthouse for a cozy meadow village game 
 8. Lantern room: on the watch room, a low stone sill and then an octagonal glass lantern with red-orange frames (vertical mullions and one horizontal bar). The glass glows with warm pale yellow light, and a lens is softly visible inside.
 9. Roof: a red-orange, slightly domed cone roof over the lantern, with a small round ventilator ball on top and a thin lightning rod above it.
 
-Pixel art drawn on an exact pixel grid at the final size (128 x 342 pixels), shown upscaled with nearest-neighbor so every pixel is a crisp square; no anti-aliasing, no half pixels. No light beams, no rays, no glow outside the glass.
+Pixel art style with a clean, regular pixel grid and crisp square pixels; no anti-aliasing. Draw it large and detailed, filling most of the image; do NOT shrink it to a small pixel size (it will be resized later). Keep the proportions of the 3D block-out exactly. No light beams, no rays, no glow outside the glass.
 
 Style: Pale, light, soft colors matching a gentle pastel game: warm white plaster, pale gray stone, soft red-orange roof, light wood door, pale yellow glowing glass; no dark or heavily saturated colors. No thick or dark outlines; if an outline is used, it is a thin 1-pixel line only slightly darker than the color next to it, never black or near-black. Clean flat colors with soft shading; no noise, no grain, no speckles, no dithering, no gritty texture. Transparent background, no ground shadow, no grass, no water, no rocks, no text, no frame. Do not draw the grid, the yellow frame, or the cubes from the reference.
 ```
