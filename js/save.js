@@ -2,7 +2,7 @@
 
 /* ---------- 保存 ---------- */
 let NOSAVE=false;/* 読みこみ直後は、いまの状態で上書きしない */
-function save(){if(IS_STORY_REPLAY||(typeof STORY_REPLAY_SHELL!=='undefined'&&STORY_REPLAY_SHELL)||NOSAVE||!S||!S.introSeen)return false;recSync();try{const d=Object.assign({},S,{savedAt:Date.now(),res:S.res.map(r=>{const c=Object.assign({},r);if(r.act&&r.act.type==='watchpost'&&r.act.sx!=null){c.x=r.act.sx;c.y=r.act.sy}/* 見張り台の上の子は、のぼる前の場所でしまう */c.act=null;c.path=[];c.hidden=false;return c}),orders:S.orders.map(o=>Object.assign({},o,{worker:null}))});return KV.setItem(SAVE_KEYS[S.world||0],JSON.stringify(d))}catch(e){return false}}
+function save(){if(IS_STORY_REPLAY||(typeof STORY_REPLAY_SHELL!=='undefined'&&STORY_REPLAY_SHELL)||NOSAVE||!S||!S.introSeen)return false;recSync();try{const d=Object.assign({},S,{savedAt:Date.now(),res:S.res.map(r=>{const c=Object.assign({},r);if(r.act&&r.act.type==='watchpost'&&r.act.sx!=null){c.x=r.act.sx;c.y=r.act.sy}/* 見張り台の上の子は、のぼる前の場所でしまう */c.act=null;c.path=[];c.hidden=false;return c}),orders:S.orders.map(o=>Object.assign({},o,{worker:null}))});const ok=KV.setItem(SAVE_KEYS[S.world||0],JSON.stringify(d));coverNote(S);return ok}catch(e){return false}}
 /* 72×72マスのセーブを、108×108マスに広げる（いまの村は、まん中にそのままのこす。外がわは、新しい土地） */
 function expandMap(d){const O=OFF,mi=j=>(((j/OW)|0)+O)*W+(j%OW)+O,inner=j=>{const x=j%W,y=(j/W)|0;return x>=O&&x<O+OW&&y>=O&&y<O+OW};
   const t={ground:new Array(W*H).fill(0),floor:new Array(W*H).fill(''),obj:new Array(W*H).fill(''),dyn:{},ref:{},hp:{},rot:{},regrow:[],flags:{},res:[],world:d.world||0};genWorld(t,d.world||0);

@@ -287,7 +287,7 @@ button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .wcard p{margin:0;font-size:12px;color:var(--muted);line-height:1.6}
 .wcard .wbtns{display:flex;gap:8px;margin-top:6px;flex-wrap:wrap}
 .wcard.lock{filter:saturate(.55) brightness(.8)}
-.wlink{height:30px;margin:0 auto;border-left:3px dotted rgba(255,240,200,.45)}
+.wcard.wtop,.wcard[data-k="6"]{margin-bottom:14px}.wlink{height:30px;margin:0 auto;border-left:3px dotted rgba(255,240,200,.45)}
 .pro{position:absolute;z-index:40;inset:0;background:#0b1013;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;padding-left:var(--gut-l);padding-right:var(--gut-r);transition:opacity .8s}
 .pro p{max-width:26em;font-size:16px;line-height:2;color:#f2ead2;text-align:center;margin:0;animation:fade 1.2s ease-out;white-space:pre-line}
 .proWho{font-family:var(--f-display);color:var(--accent);font-size:16px;letter-spacing:.1em;min-height:1.2em;margin-bottom:-12px}
@@ -602,6 +602,7 @@ window.PXSCENE=function(c,gw,gh,P,kind,t){
  function R(x,y,w,h,col){c.fillStyle=col;c.fillRect(Math.round(x)*P,Math.round(y)*P,Math.max(1,Math.round(w))*P,Math.max(1,Math.round(h))*P)}
  function spr(rows,x,y,map){for(var j=0;j<rows.length;j++)for(var i=0;i<rows[j].length;i++){var ch=rows[j][i];if(ch!=='.')R(x+i,y+j,1,1,map[ch]||ch)}}
  c.imageSmoothingEnabled=false;
+ var NOSP=/-bg$/.test(kind);if(NOSP)kind=kind.slice(0,-3);/* -bg：ステージの表紙のうしろ（せいれいは上にゲームの絵で描く） */
  if(kind==='lockover'){spr(LOCK,(gw-10)/2|0,(gh-11)/2|0,{'#':'#e0c288'});return}
  if(kind==='lock'){R(0,0,gw,gh,'#1e2230');for(var s=0;s<40;s++)R(hsh(s)*gw|0,hsh(s+99)*gh|0,1,1,s%3?'#4a5068':'#8a90a8');spr(LOCK,(gw-10)/2|0,(gh-11)/2|0,{'#':'#c9a46a'});return}
  var TL=kind==='title';if(TL)kind='meadow';/* タイトル：木とせいれいは、ゲームの絵で上に描く */
@@ -626,7 +627,7 @@ window.PXSCENE=function(c,gw,gh,P,kind,t){
   /* 舞う葉 */for(var l=0;l<Math.max(5,gw/12|0);l++){var lx=((hsh(l)*gw+t*(3+hsh(l+5)*3))%(gw+8))-4,lyy=((hsh(l+9)*gh+t*(4+hsh(l+2)*3))%(gh+6))-3;lx+=Math.round(Math.sin(t*2+l)*2);R(lx,lyy,2,1,l%2?'#78b85e':'#a6d77f');R(lx+(Math.sin(t*3+l)>0?1:0),lyy-1,1,1,'#5f9e4f')}}
  /* 草のさき（ゆれる） */
  for(var x5=1;x5<gw;x5+=5){var s5=Math.sin(t*2+x5*.4)>0.3?1:0;R(x5+s5,gy-1,1,1,V?'#8a6a50':'#6fa457')}
- if(!TL&&(kind==='meadow'||kind==='free')){/* せいれい */var ks=['wood','earth','fire'],bx2=Math.round(gw/2-17);for(var m=0;m<3;m++){var hop=(Math.floor(t*2+m*.7)%4===0)?1:0;spr(SPR[ks[m]],bx2+m*12,gy+((gh-gy)*0.35|0)-hop,{h:SC[ks[m]].h,a:SC[ks[m]].a,w:'#fffaf0',k:'#3a2a20',p:'#f4a9a0'});R(bx2+m*12+2,gy+((gh-gy)*0.35|0)+11,6,1,'rgba(40,60,30,.25)')}}
+ if(!TL&&!NOSP&&(kind==='meadow'||kind==='free')){/* せいれい */var ks=['wood','earth','fire'],bx2=Math.round(gw/2-17);for(var m=0;m<3;m++){var hop=(Math.floor(t*2+m*.7)%4===0)?1:0;spr(SPR[ks[m]],bx2+m*12,gy+((gh-gy)*0.35|0)-hop,{h:SC[ks[m]].h,a:SC[ks[m]].a,w:'#fffaf0',k:'#3a2a20',p:'#f4a9a0'});R(bx2+m*12+2,gy+((gh-gy)*0.35|0)+11,6,1,'rgba(40,60,30,.25)')}}
 };
 })();</script>
   <div id="title" class="title"><canvas id="tScene" aria-hidden="true"></canvas><canvas id="tSpr" aria-hidden="true"></canvas><div class="tbox"><p class="tsub">守り神とせいれいのものがたり</p><h1>はこにわ暮らし</h1><p class="tline">荒れた土地に、もう一度いのちを。</p><div class="tbtns"><button class="btn pri" id="tStart">はじめる</button></div><p class="tline" id="tLoad" hidden></p></div></div><script>/* タイトルの絵：ゲームのデータが読みこめるまでは、コードのドット絵（PXSCENE）。読みこめたら、ゲームの絵（地面・木・花・家具・せいれい）だけで、1マス64ドットの小さな場面（SCN）に描いて、整数倍で上のキャンバス（#tSpr）にうつす。空・丘・地面は1回だけ描いておき（L0）、物とせいれいは足もとの順に毎回描く（火・湯気が動く）。1秒に8回だけ、タイトルが見えないときは描かない。ステージをすすめるほど物がふえる（ART の t：はじめ・草原クリア・火山に来た・火山クリア）。たて・よこで、べつの配置 */
