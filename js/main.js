@@ -13,8 +13,8 @@ function stageInfo(w){
   const raw=KV.getItem(SAVE_KEYS[w]);if(!raw)return null;
   // 旧セーブもマップ配列をJSON展開せず、選択画面に必要な項目だけ拾う。
   const flag=k=>new RegExp('"'+k+'"\\s*:\\s*true').test(raw);
-  const lv=raw.match(/"lv"\s*:\s*(\d+)/);
-  return {summary:true,world:w,introSeen:flag('introSeen'),cleared:flag('cleared'),bulk:flag('bulk'),stamps:flag('stamps'),swap:flag('swap'),dig:flag('dig'),areaSkill:flag('areaSkill'),lv:lv?+lv[1]:1,res:[]};
+  const lv=raw.match(/"lv"\s*:\s*(\d+)/);const sa=raw.match(/"savedAt"\s*:\s*(\d+)/);
+  return {summary:true,world:w,introSeen:flag('introSeen'),cleared:flag('cleared'),bulk:flag('bulk'),stamps:flag('stamps'),swap:flag('swap'),dig:flag('dig'),areaSkill:flag('areaSkill'),lv:lv?+lv[1]:1,savedAt:sa?+sa[1]:0,res:[]};
 }
 function juiceMig(d){/* 焼きりんご・焼きベリーは、りんごジュース・ベリージュース（調理台）にかわった：古いセーブの名前をおきかえる */if(!d||d.flags&&d.flags.juice1)return d;let t=JSON.stringify(d);if(/yakiapple|yakiberry/.test(t))d=JSON.parse(t.replace(/yakiapple/g,'applejuice').replace(/yakiberry/g,'berryjuice'));(d.flags||(d.flags={})).juice1=1;for(const q in d.ovenSet||{}){const R=ALLRECIPES.find(x=>x.out===d.ovenSet[q]);if(!R||dishSt(R)!==d.obj[q])delete d.ovenSet[q]}for(const r of d.res||[])if(r.cing){const R=ALLRECIPES.find(x=>x.out===r.cing.rec);if(R&&R.el!==r.elem){for(const k in R.need)d.fs[k]=(d.fs[k]||0)+R.need[k];r.cing=null}}return d}
 function loadStage(w){if(LIVE[w]&&!LIVE[w].summary)return LIVE[w];return LIVE[w]=load(w)}
@@ -69,7 +69,7 @@ function lastFirst(list){/* さいごにあそんだステージを、いちば�
   const card=list.querySelector('.wcard[data-k="'+top[0]+'"]');if(card===list.firstElementChild)return;
   const pv=card.previousElementSibling,nx=card.nextElementSibling;if(pv&&pv.classList.contains('wlink'))pv.remove();else if(nx&&nx.classList.contains('wlink'))nx.remove();/* 道の線は、となりのステージどうしでつなぎなおす */
   card.classList.add('wtop');list.insertBefore(card,list.firstElementChild)}
-const APP_VER=1438;/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER=1440;/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
