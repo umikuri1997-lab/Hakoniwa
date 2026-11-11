@@ -1,7 +1,7 @@
 # 8つの物の絵をたのむプロンプト（ベンチ・キャビネット・かざり棚・本棚・木箱・食料箱・かべ棚・とげの罠）
 
 いまの絵のデザインのまま、見おろしの角度だけをゲームに合わせてかきなおしてもらう。1つの物ごとに、わたす絵1まいと、下の英語の文1つでたのむ。
-わたす絵は `ref/<番号>_<id>.png`（`python3 tools/art/set10/set10_3d.py` で作る。左からお手本のキューブ・3D・いまの絵。1マス128ドット、黄色いわくが置くマス）。3Dは設計図（`ref/bp_<番号>_<id>.png`、部品の表は `set10_parts.py`）どおりに組んだ物。小物（はち植え・本・びん・やさい・くだもの）は、フリーの3Dモデル（Kenney、CC0。`tools/art/models/kenney`）を置いた。
+わたす絵は `ref/<番号>_<id>.png`（`python3 tools/art/set10/set10_3d.py` で作る。左からお手本のキューブ・3D・いまの絵。1マス128ドット、黄色いわくが置くマス）。3Dは設計図（`ref/bp_<番号>_<id>.png`、部品の表は `set10_parts.py`）どおりに組んだ物。小物は、フリーの3Dモデル（CC0。`tools/art/models`：観葉植物は Quaternius、本・びん・やさい・くだものは Kenney）を置いた。
 
 ## 1. ベンチ（わたす絵 `ref/1_bench.png`）
 
@@ -82,7 +82,7 @@ Camera and proportions (copy the view cube and the 3D block-out exactly; this ma
 
 Object: Display shelf — an open wooden shelf with four corner posts and four shelf boards, no back panel. On the shelves: a cream clay vase and a small potted green plant on top, a green plant and a pale blue bottle on the middle shelves, a small clay pot and a stack of books at the bottom.
 
-Final size: about 62 x 103 pixels at 1 tile = 64 pixels (half the size of the reference panels). Pixel art drawn on an exact pixel grid at that final size, shown upscaled with nearest-neighbor so every pixel is a crisp square; no anti-aliasing, no half pixels.
+Final size: about 62 x 111 pixels at 1 tile = 64 pixels (half the size of the reference panels). Pixel art drawn on an exact pixel grid at that final size, shown upscaled with nearest-neighbor so every pixel is a crisp square; no anti-aliasing, no half pixels.
 
 Style: Pale, light, soft colors matching a gentle pastel game, as in the current artwork; no dark or heavily saturated colors; glass is pale and light. No thick or dark outlines; if an outline is used, it is a thin 1-pixel line only slightly darker than the color next to it, never black or near-black. Clean flat colors with soft shading; no noise, no grain, no speckles, no dithering, no gritty texture. Transparent background, no ground shadow, no grass under the object, no text, no frame. Draw only this object. Do not draw the grid, the yellow frame, the cube or the block-out.
 ```
@@ -166,7 +166,7 @@ Camera and proportions (copy the view cube and the 3D block-out exactly; this ma
 
 Object: Food crate — the same wooden crate with an X-shaped brace on the front, but with no lid: it is open on top and heaped with vegetables and fruit (carrots with green leaves, a green cabbage, red apples).
 
-Final size: about 62 x 67 pixels at 1 tile = 64 pixels (half the size of the reference panels). Pixel art drawn on an exact pixel grid at that final size, shown upscaled with nearest-neighbor so every pixel is a crisp square; no anti-aliasing, no half pixels.
+Final size: about 62 x 68 pixels at 1 tile = 64 pixels (half the size of the reference panels). Pixel art drawn on an exact pixel grid at that final size, shown upscaled with nearest-neighbor so every pixel is a crisp square; no anti-aliasing, no half pixels.
 
 Style: Pale, light, soft colors matching a gentle pastel game, as in the current artwork; no dark or heavily saturated colors; glass is pale and light. No thick or dark outlines; if an outline is used, it is a thin 1-pixel line only slightly darker than the color next to it, never black or near-black. Clean flat colors with soft shading; no noise, no grain, no speckles, no dithering, no gritty texture. Transparent background, no ground shadow, no grass under the object, no text, no frame. Draw only this object. Do not draw the grid, the yellow frame, the cube or the block-out.
 ```
@@ -194,7 +194,7 @@ Camera and proportions (copy the view cube and the 3D block-out exactly; this ma
 
 Object: Wall shelf — one small wooden shelf board fixed to the front of a house wall with two wooden brackets under it. On the shelf, a small potted plant whose ivy vines hang down over the front edge. IMPORTANT: the gray wall in the block-out is only a guide: do NOT draw the wall, draw only the shelf, brackets, pot and ivy.
 
-Final size: about 49 x 46 pixels at 1 tile = 64 pixels (half the size of the reference panels). Pixel art drawn on an exact pixel grid at that final size, shown upscaled with nearest-neighbor so every pixel is a crisp square; no anti-aliasing, no half pixels.
+Final size: about 49 x 54 pixels at 1 tile = 64 pixels (half the size of the reference panels). Pixel art drawn on an exact pixel grid at that final size, shown upscaled with nearest-neighbor so every pixel is a crisp square; no anti-aliasing, no half pixels.
 
 Style: Pale, light, soft colors matching a gentle pastel game, as in the current artwork; no dark or heavily saturated colors; glass is pale and light. No thick or dark outlines; if an outline is used, it is a thin 1-pixel line only slightly darker than the color next to it, never black or near-black. Clean flat colors with soft shading; no noise, no grain, no speckles, no dithering, no gritty texture. Transparent background, no ground shadow, no grass under the object, no text, no frame. Draw only this object. Do not draw the grid, the yellow frame, the cube or the block-out.
 ```

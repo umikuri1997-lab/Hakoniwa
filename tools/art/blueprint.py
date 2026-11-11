@@ -14,7 +14,7 @@ x=東, y=南, z=上（マス）。置くマスの左上が(0,0)。
   wheel(cx,cy,cz,r,t)                車輪（正面を向いた円板、あつさ t）
   ball(cx,cy,cz,r)                   丸いかたまり（葉・花・荷物）
   rope(a,b,r)                        なわ
-  model(path,cx,cy,z0,size,rot)      フリーの3Dモデル（glTF の .glb。models/ にある CC0 の物）。size は高さ（マス）、rot は上から見てまわす角度（度）
+  model(path,cx,cy,z0,size,rot,tilt)      フリーの3Dモデル（glTF の .glb。models/ にある CC0 の物）。size はモデルの高さ（マス）、rot は上から見てまわす角度・tilt は東西へたおす角度（度）
   lathe(cx,cy,[(半径,高さ),...])     まわした形（つぼ）。上から下への形
   box は bevel=（面取りのはば）を部品ごとにかえられる
 """
@@ -99,16 +99,22 @@ def build(sc,parts):
 
 MODELS=os.path.join(os.path.dirname(os.path.abspath(__file__)),'models')
 _MC={};MODEL_SOFT=0.3   # モデルの色を白にまぜる分
-def model_tris(path,cx,cy,z0,size,rot=0):
+POTCOL=(226,196,166)   # 観葉植物のはち（モデルではこい灰色）を、ゲームに合わせたやきものの色に
+def model_tris(path,cx,cy,z0,size,rot=0,tilt=0):
     """glTF のモデルを読んで、ゲームの向き（x=東, y=南, z=上）の三角形にする。モデルの正面（+Z）を南（手前）へ。色はモデルの色（テクスチャの色をとる）"""
-    key=(path,cx,cy,z0,size,rot)
+    key=(path,cx,cy,z0,size,rot,tilt)
     if key in _MC:return _MC[key]
     import trimesh
     m=trimesh.load(os.path.join(MODELS,path),force='scene').to_geometry()
-    vc=m.visual.to_color().vertex_colors[:,:3].astype(float) if hasattr(m.visual,'to_color') else np.full((len(m.vertices),3),200.0);col=vc[np.array(m.faces)].mean(1)
+    if hasattr(m.visual,'to_color'):vc=m.visual.to_color().vertex_colors[:,:3].astype(float);col=vc[np.array(m.faces)].mean(1)
+    elif hasattr(m.visual,'face_colors'):col=m.visual.face_colors[:,:3].astype(float)
+    else:col=np.full((len(m.faces),3),200.0)
+    if 'Houseplant' in path:col[(col.mean(1)<90)&(col.max(1)-col.min(1)<18)]=POTCOL   # 灰色のはちだけ（葉の緑はそのまま）
     v=np.array(m.vertices,float);V=np.stack([v[:,0],v[:,2],v[:,1]],1)   # glTF（y上・z手前）→ x・y南・z上
+    k=size/(V[:,2].max()-V[:,2].min())   # size は、たおす前のモデルの高さ
+    t=math.radians(tilt);T=np.array([[math.cos(t),0,math.sin(t)],[0,1,0],[-math.sin(t),0,math.cos(t)]]);V=V@T.T   # よこにたおす（東西の向きに）
     a=math.radians(rot);R=np.array([[math.cos(a),-math.sin(a),0],[math.sin(a),math.cos(a),0],[0,0,1]]);V=V@R.T
-    k=size/(V[:,2].max()-V[:,2].min());V=(V-[(V[:,0].max()+V[:,0].min())/2,(V[:,1].max()+V[:,1].min())/2,V[:,2].min()])*k+[cx,cy,z0]
+    V=(V-[(V[:,0].max()+V[:,0].min())/2,(V[:,1].max()+V[:,1].min())/2,V[:,2].min()])*k+[cx,cy,z0]
     _MC[key]=(V,np.array(m.faces),col);return _MC[key]
 
 TOP=np.array([0,0,1.0]);EAST=np.array([1.0,0,0])
