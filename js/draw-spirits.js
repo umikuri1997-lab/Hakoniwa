@@ -398,6 +398,7 @@ function drawRes0(r,now){
   const tubB=at==='bathe'&&ad&&r.act.tub!=null&&r.act.in>0,wade=at==='bathe'&&ad&&r.act.in>0?r.act.in:sacredPose(r)?.anim==='soak'&&!walking?1:0;/* 水浴び：水の中では下半分がかくれる */
   {const tp=toyPose(r,now);if(tp){px=tp.x;py=tp.y-9}}/* 遊具の上で遊ぶ */if(sj<0&&!wade&&!toyR(r))shadow(ctx,px,py+8,12,3.6);
   const lvR=rLv(r);
+  {const sj=(r.y|0)*W+(r.x|0),o=SEATOFF[S.obj[sj]];if(o&&!walking&&r.act&&r.act.stage==='do'){const d=o[rotAt(sj)]||o[0];px=(sj%W+.5)*TS+d[0];py=((sj/W)|0)*TS+17+d[1]}}/* いすにすわるときの位置（SEATOFF：向きごと、マスの中から。かげはずらさない） */
   const tt=now/1000+r.id*1.7,fy=py+9-bob;
   if(at==='craft'&&ad&&!CLAPON){const o=S.orders.find(q=>q.id===r.act.order),mx=px+(r.face<0?-1:1)*15,my=py+11;/* 材料（板）を、せいれいの前に置く。のこぎりが板の上にくるよう、せいれいより先に描く */
     shadow(ctx,mx,my+1,12,2.6);ctx.fillStyle='#8a5a33';ctx.fillRect(mx-9,my-6,2.4,7);ctx.fillRect(mx+6.6,my-6,2.4,7);
