@@ -286,7 +286,7 @@ function decide0(r){
   if(r.refill&&r.hunger<hMax(r)-1&&S.food>0&&!r.meal&&goEat(r,G))return;/* マックスまで食べてから、たたかいにもどる */
   if(r.meal&&S.enemies.some(e=>e.spawned&&!e.dead))return startAct(r,G,'eat',-1,{pt:0,pw:0});/* コワイノがいるときは、とってきたごはんを、その場で食べる */
   if(r.elem!=='fire'&&r.hunger<hMax(r)*.5&&S.food>0&&!(r.eatTry>S.t)&&S.enemies.some(e=>e.spawned&&!e.dead)){if(goEatSafe(r))return;r.eatTry=S.t+10}/* コワイノがいても、おなかが半分より少なければ、ふるえたり逃げたりするより先に、安全に行ける食料箱へ食べにいく（行けなければ10分ごとにためす） */
-  if(isNight()&&r.elem==='wood'&&r.hunger>=50&&!r.coffin&&!r.meal&&!nightClear()&&!(r.name===POKO&&!WD&&S.flags.guard)){/* まもりをおぼえたフタバは、見張り台に立たない */for(const w of TOWERS)/* とってきたごはんは、食べてから見張り台へ */{if(S.obj[w]!=='watch'||!free('wp'+w,1)||S.res.some(q=>q!==r&&q.act&&q.act.type==='watchpost'&&q.act.obj===w))continue;const st=nearest(G,k=>walk(k)&&adjOf(k,q=>q===w||(S.obj[q]==='part'&&S.ref[q]===w))>=0,120);if(st>=0)return startAct(r,G,'watchpost',st,{key:'wp'+w,obj:w})}r.wpNo=S.t+60}/* 行ける見張り台がなければ、しばらく起こさない *//* 行けない見張り台はとばして、行ける台へ *//* 夜、コワイノがいるあいだ、木のせいれいが見張り台に立つ（1つに1人） */
+  if(isNight()&&r.elem==='wood'&&r.hunger>=50&&!r.coffin&&!r.meal&&!nightClear()){for(const w of TOWERS)/* とってきたごはんは、食べてから見張り台へ */{if(S.obj[w]!=='watch'||!free('wp'+w,1)||S.res.some(q=>q!==r&&q.act&&q.act.type==='watchpost'&&q.act.obj===w))continue;const st=nearest(G,k=>walk(k)&&adjOf(k,q=>q===w||(S.obj[q]==='part'&&S.ref[q]===w))>=0,120);if(st>=0)return startAct(r,G,'watchpost',st,{key:'wp'+w,obj:w})}r.wpNo=S.t+60}/* 行ける見張り台がなければ、しばらく起こさない *//* 行けない見張り台はとばして、行ける台へ *//* 夜、コワイノがいるあいだ、木のせいれいが見張り台に立つ（1つに1人） */
   if(!isWatch(r)&&hostileNow(r)&&r.hunger>=50&&!r.coffin&&goShiver(r,G))return;/* たたかえない子は、コワイノがいるあいだ、家でふるえる *//* 食べ物のところへ逃げてきたら、ちゃんと食べる */
   // 夜に家の中にいるせいれいは、おなかがすいても外へは出ない（見張り番の火のせいれいはべつ）
   if(isNight()&&!(isWatch(r)&&S.enemyOn&&r.hunger>=50)&&!(r.hunger<50&&S.food>0)&&!(r.hunger<hMax(r)*.5&&S.food>0)&&!HOME_DOORS.has(S.obj[here])){const out=insideSet();if(!out[here])for(let j=0;j<W*H;j++)if(out[j]||HOME_DOORS.has(S.obj[j]))G.dist[j]=-1}
@@ -313,10 +313,9 @@ function decide0(r){
   if(heldN(r)>0){if(heldN(r)<capOf(r)&&!isNight()&&r.hunger>=30&&!r.highFirst){const cm=r.cmat||{},gm=[...WEEDS].some(id=>(cm[BL[id].weed]||0)>0)?['weed']:(cm.stone||0)>0?['mine']:(cm.wood||0)>0||(cm.bamboo||0)>0?['chop']:[];for(const k of['drop','harvest',...gm,'gather'])if(tryJob(r,G,k))return}/* 草むしり・落ちている素材・食べ物も、持てる数までまとめて集めてから運ぶ */
     if(carryN(r)>0&&foodCap()>0)return goStore(r,G)}
   if(r.cmat&&matCap()>0)return goStoreMat(r,G);
-  else if(isNight()&&isWatch(r)){// 火のせいれい（と、まもりをおぼえたフタバ）は寝ないで見回り
+  else if(isNight()&&isWatch(r)){// 火のせいれいは寝ないで見回り
     if(r.elem==='fire'&&r.hunger<50&&hideIn(r,G))return;/* おなかが50より少ないときは、たたかわずに家へにげる */
     {const e=r.elem!=='fire'?null:pickFoe(r,foesNow());if(e){const t=huntSpot(G,e,60,r);/* 届かない所にいても、いちばん近くまで行く */if(t>=0)return startAct(r,G,'patrol',t,{hunt:S.t})}}/* 拠点にコワイノが入ったら、まっすぐたたかいに行く */
-    if(r.name===POKO){const hk=keyName('fire'),fs=S.res.filter(t=>t!==r&&!t.hidden&&t.elem==='fire'),tg=fs.find(t=>t.name===hk)||fs[0];if(tg){const tgGate=FENCE_IDS.has(typeAt((tg.y|0)*W+(tg.x|0))),same=k=>{const cx=k%W+.5,cy=((k/W)|0)+.5;return !FENCE_IDS.has(typeAt(k))&&!overFence(cx,cy,tg.x,tg.y)&&!fenceBetween(cx,cy,tg.x,tg.y)&&!(tgGate&&overFence(cx,cy,r.x,r.y))},/* 火のせいれいが柵のドアの上にいるときは、フタバのいるがわだけ */near=k=>Math.hypot(k%W+.5-tg.x,((k/W)|0)+.5-tg.y)<2.5&&walk(k)&&same(k);/* 柵・塀・壁をはさんだ、向こうがわのマスには行かない */if(Math.hypot(tg.x-r.x,tg.y-r.y)<=1.8)return startAct(r,G,'follow',(r.y|0)*W+(r.x|0),{tg:tg.id});/* 近くにいるあいだは、そばで待つ */let q=-1,bd=1e9;for(let k=0;k<W*H;k++){if(G.dist[k]<0||G.dist[k]>40||!walk(k))continue;const h=Math.hypot(k%W+.5-tg.x,((k/W)|0)+.5-tg.y);if(h<.9||h>1.6||!same(k))continue;if(G.dist[k]<bd){bd=G.dist[k];q=k}}/* 後をついて行く：火のせいれいから1マスくらいの、いちばん近い所 */if(q<0){bd=1e9;for(let k=0;k<W*H;k++){if(G.dist[k]<0||G.dist[k]>40||!walk(k))continue;const d=Math.hypot(k%W+.5-tg.x,((k/W)|0)+.5-tg.y)+G.dist[k]*.02;if(d<bd&&(d>4||same(k))){bd=d;q=k}}}if(q>=0)return startAct(r,G,'patrol',q)}}/* フタバは、火の子（キャラ優先）の後をついて行く */
     {const pm=patrolMask(),others=S.res.filter(t=>t!==r&&!t.hidden&&!t.dead),sx=STATUE%W,sy=(STATUE/W)|0;/* 見回る所：柵・塀でかこまれた所 → 家のまわり3マス → ほかの子のまわり3マス → 神殿のまわり3マス（家の中はのぞく） */
       const tiers=[j=>pm[j]===1,j=>pm[j]===2,others.length?j=>others.some(t=>Math.abs(j%W+.5-t.x)<3.5&&Math.abs(((j/W)|0)+.5-t.y)<3.5):null,STATUE>=0?j=>Math.abs(j%W-sx)<=3&&Math.abs(((j/W)|0)-sy)<=3:null];
       for(const f of tiers){if(!f)continue;const ok=j=>walk(j)&&pm[j]!==3&&f(j);let j=nearest(G,j=>ok(j)&&Math.random()<.04,8);if(j<0)j=nearest(G,ok,200);if(j>=0)return startAct(r,G,'patrol',j)}}
@@ -389,7 +388,7 @@ function goEat(r,G){if(r.cmat&&matCap()>0&&matTot()<matCap()&&!hostileNow(r)&&!f
 }
 const fireMul=r=>(r.energy<10?.5:r.energy<25?.7:1)*(r.fun<20?.8:1);/* 火のせいれいは、つかれても楽しさが減ってもたたかう。そのぶん、こうげきが弱くなる（つかれ×0.7・楽しさ低下×0.8） */
 const nightClear=()=>!!S.nightHad&&!S.nushi&&S.enemies.every(e=>e.dead);/* 今夜のコワイノを倒し切った */
-const isWatch=r=>(r.elem==='fire'||r.name===POKO&&!WD&&!!S.flags.guard)&&!nightClear()/* コワイノをぜんぶ倒したら、火の子もフタバも寝る */;/* 夜の見回りをする子（フタバは、こもれびのまもりをおぼえたら） */
+const isWatch=r=>r.elem==='fire'&&!nightClear()/* コワイノをぜんぶ倒したら、火の子も寝る */;/* 夜の見回りをする子 */
 /* すれちがいのあいさつ：昼、歩いている子どうしが1.5マスまで近づいたら、ときどき手をふる（1秒に1回だけ調べる。夜・コワイノがいるときはしない） */
 let GREETT=0;
 function passGreet(dt){GREETT+=dt;if(GREETT<1)return;GREETT=0;if(isDark()||enemyLive())return;const L=S.res.filter(r=>!r.hidden&&r.act&&r.act.stage==='walk'&&r.path&&r.path.length>0&&!(r.greetT>S.t));
