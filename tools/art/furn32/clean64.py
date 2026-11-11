@@ -23,6 +23,31 @@ def kmeans(X, k, it=25):
             if (l == j).any(): c[j] = X[l == j].mean(0)
     return c[np.argsort(lum(c))[::-1]]   # 明るい順
 
+SPECK = 2   # 同じ色が、この数のドットまでしかつながっていない小さな点は、ぶつぶつに見えるので、まわりの色にそろえる（木目のすじは3ドット以上つづくので、のこる）
+
+def despeckle(qi, m, mat):
+    from scipy.ndimage import label
+    H, W = qi.shape; q = qi.copy()
+    for _ in range(2):
+        changed = False
+        for M_ in set(mat[m]):
+            sel = m & (mat == M_)
+            for v in np.unique(q[sel]):
+                lab, n = label(sel & (q == v), structure=np.ones((3, 3)))
+                if not n: continue
+                sizes = np.bincount(lab.ravel())
+                for i in np.where(sizes[1:] <= SPECK)[0] + 1:
+                    ys, xs = np.where(lab == i); nb = []
+                    for y, x in zip(ys, xs):
+                        for dy in (-1, 0, 1):
+                            for dx in (-1, 0, 1):
+                                yy, xx = y + dy, x + dx
+                                if 0 <= yy < H and 0 <= xx < W and sel[yy, xx] and lab[yy, xx] != i: nb.append(q[yy, xx])
+                    if nb:
+                        vv, cc = np.unique(nb, return_counts=True); q[ys, xs] = vv[cc.argmax()]; changed = True
+        if not changed: break
+    return q
+
 def clean(im, mats, ks):
     a = np.asarray(im.convert('RGBA')).astype(float); H, W = a.shape[:2]; m = a[..., 3] > 110
     rgb = a[..., :3]; sat = rgb.max(-1) - rgb.min(-1)
@@ -38,6 +63,7 @@ def clean(im, mats, ks):
     for M_ in pals:
         sel = m & (mat == M_); qp[M_] = np.round(kmeans(rgb[sel], KQ.get(M_, 12)))
         qi[sel] = ((rgb[sel][:, None] - qp[M_][None]) ** 2).sum(2).argmin(1)
+    qi = despeckle(qi, m, mat)
     from scipy.ndimage import binary_fill_holes
     out_t = ~binary_fill_holes(m); p = np.pad(out_t, 1, constant_values=True)
     r1 = m & (p[:-2, 1:-1] | p[2:, 1:-1] | p[1:-1, :-2] | p[1:-1, 2:])   # いちばん外の1ドット
