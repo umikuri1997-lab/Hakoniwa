@@ -48,6 +48,45 @@ def clean(im, mats, ks):
     L = m & ((lab == np.array([len(pals[mat[y, x]]) - 1 if m[y, x] else -9 for y in range(H) for x in range(W)]).reshape(H, W)) | r1)
     return Image.fromarray(o, 'RGBA'), L
 
+FIXES = {'chair': [('holes',), ('diag', 25, 37)], 'chair>2': [('holes',)]}   # 形のくずれをなおす：すきまを四角に・小さな穴をうめる・ななめのふちを同じきざみの段に（左がわ。右は左右対称で写す）
+
+def fix_shape(img, L, fixes):
+    from scipy.ndimage import binary_fill_holes, label, find_objects
+    o = np.asarray(img).copy(); L = L.copy(); a = o[..., 3] > 0; H, W = a.shape
+    def line_col(y, x):
+        for dy, dx in ((0, -1), (0, 1), (-1, 0), (1, 0), (-1, -1), (1, 1)):
+            if 0 <= y + dy < H and 0 <= x + dx < W and L[y + dy, x + dx]: return o[y + dy, x + dx].copy()
+        return None
+    lc = o[L][0].copy() if L.any() else None
+    for f in fixes:
+        if f[0] == 'holes':   # 中の穴：大きい物は四角に、小さい物（8ドットより少ない）はまわりの色でうめる
+            holes = binary_fill_holes(a) & ~a; lab, n = label(holes)
+            for i, sl in enumerate(find_objects(lab)):
+                comp = lab[sl] == i + 1
+                if comp.sum() < 8:
+                    for y, x in zip(*np.where(lab == i + 1)):
+                        q = [o[y + dy, x + dx] for dy, dx in ((0, -1), (0, 1), (-1, 0), (1, 0)) if 0 <= y + dy < H and 0 <= x + dx < W and a[y + dy, x + dx]]
+                        o[y, x] = q[0]; o[y, x, 3] = 255
+                    continue
+                y0, y1, x0, x1 = sl[0].start, sl[0].stop - 1, sl[1].start, sl[1].stop - 1
+                o[y0:y1 + 1, x0:x1 + 1] = 0
+                for y in range(y0 - 1, y1 + 2):   # 四角のまわりは線
+                    for x in (x0 - 1, x1 + 1): o[y, x] = lc; L[y, x] = True
+                for x in range(x0 - 1, x1 + 2):
+                    for y in (y0 - 1, y1 + 1): o[y, x] = lc; L[y, x] = True
+            a = o[..., 3] > 0
+        if f[0] == 'diag':   # 左のふちのななめ：上と下の行のはしを結ぶ、同じきざみの段に
+            _, y0, y1 = f; left = {y: np.where(a[y])[0][0] for y in range(y0, y1 + 1)}
+            for y in range(y0, y1 + 1):
+                t = int(round(left[y0] + (left[y1] - left[y0]) * (y - y0) / (y1 - y0))); cur = left[y]
+                inner = o[y, cur + 2].copy()
+                if t > cur: o[y, cur:t] = 0
+                elif t < cur: o[y, t + 1:cur + 1] = inner
+                o[y, t] = lc; L[y, t] = True; L[y, t + 1:t + 3] = False
+                if t < cur: pass
+            a = o[..., 3] > 0
+    return Image.fromarray(o, 'RGBA'), L
+
 SYM = {'chair', 'chair>2', 'chair>2.front', 'table', 'bed', 'taru'}   # 左右対称にする物（光とかげだけ左右でちがう）
 PARA = {'table'}   # 平行投影にする物（天板の奥を、手前と同じはばに）
 
@@ -88,6 +127,7 @@ def build(b):
         im = Image.open(os.path.join(SRC, fname(k) + '.png'))
         if k in PARA: im = para_table(im)
         r, L = clean(im, *ITEMS[b])
+        if k in FIXES: r, L = fix_shape(r, L, FIXES[k])
         if k in SYM: r = symmetric(r, L, im)
         bb = r.getbbox()
         out[k] = {'f': [r.crop(bb)], 'ax': round(meta[k]['ax']) + bb[0], 'ay': round(meta[k]['ay']) + bb[1]}
