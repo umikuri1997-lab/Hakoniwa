@@ -38,3 +38,27 @@ def cleanup(im,out=None,athr=128,speck=46):
     rgb[edge]=out
     res=np.zeros((H,W,4),np.uint8);res[...,:3]=np.clip(np.round(rgb),0,255);res[...,3]=np.where(m,255,0)
     return Image.fromarray(res),out
+
+def outline_unify(im,k=0.62,athr=128):
+    """輪郭線をそろえる：外のふちを1ドットにし、その色は、すぐ内がわの色を k 倍にこくした色（木なら こい茶色、葉なら こい緑）。
+    内がわの2ドットめが、3ドットめよりずっとこい（前の太い輪郭のなごり）ときは、3ドットめの色にして、輪郭の太さを1ドットにそろえる"""
+    a=np.array(im.convert('RGBA')).astype(float);H,W=a.shape[:2];m=a[...,3]>=athr
+    def ring(mask):return mask&np.any([~n for n in _nb(mask)],0)
+    r1=ring(m);m2=m&~r1;r2=ring(m2);m3=m2&~r2
+    rgb=a[...,:3].copy();lum=lambda c:c@np.array([.3,.59,.11])
+    def inward(y,x,mask):
+        best=None
+        for dy,dx in((1,0),(-1,0),(0,1),(0,-1),(1,1),(1,-1),(-1,1),(-1,-1)):
+            yy,xx=y+dy,x+dx
+            if 0<=yy<H and 0<=xx<W and mask[yy,xx]:return (yy,xx)
+        return best
+    for y,x in zip(*np.nonzero(r2)):   # 2ドットめが太い輪郭のなごりなら、3ドットめの色に
+        q=inward(y,x,m3)
+        if q is not None and lum(rgb[y,x])<lum(rgb[q])-28:rgb[y,x]=rgb[q]
+    base=rgb.copy()
+    for y,x in zip(*np.nonzero(r1)):
+        q=inward(y,x,m2) or inward(y,x,m3)
+        c=base[q] if q is not None else base[y,x]
+        rgb[y,x]=c*k
+    res=np.zeros((H,W,4),np.uint8);res[...,:3]=np.clip(np.round(rgb),0,255);res[...,3]=np.where(m,255,0)
+    return Image.fromarray(res)
