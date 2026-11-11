@@ -439,6 +439,7 @@ def smooth_sil(im, ranges):
     return Image.fromarray(a, 'RGBA')
 
 REF = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'ref')   # 持ち主のお手本（等倍・はいけい透明）
+REFMETA = json.load(open(os.path.join(REF, 'meta.json'))) if os.path.exists(os.path.join(REF, 'meta.json')) else {}   # お手本から組んだ絵の ax・ay（chair_ref.py）
 
 def build(b):
     meta = json.load(open(os.path.join(SRC, 'meta.json'))); out = {}
@@ -457,7 +458,8 @@ def build(b):
         fin = Image.fromarray(unify_lines(np.asarray(fin).copy()), 'RGBA')
         rp = os.path.join(REF, fname(k) + '.png')
         if os.path.exists(rp):   # 持ち主がかいたお手本（できた絵と同じ大きさ）があれば、そのまま使う
-            ref = Image.open(rp).convert('RGBA')
+            ref = Image.open(rp).convert('RGBA'); rm = REFMETA.get(k)
+            if rm: out[k] = {'f': [ref], 'ax': rm['ax'], 'ay': rm['ay']}; continue   # お手本から組んだ絵（ref/meta.json に場所）
             if ref.size != fin.size: raise SystemExit(f'{rp}: 大きさが {fin.size} とちがう {ref.size}')
             fin = ref
         out[k] = {'f': [fin], 'ax': round(meta[k]['ax']) + bb[0], 'ay': round(meta[k]['ay']) + bb[1]}
