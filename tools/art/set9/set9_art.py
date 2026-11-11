@@ -1,5 +1,5 @@
 # もらった絵（src/）から、チップを作る：よまわりのランタン・ガーデンアーチ・石どうろう・にぐるま・ブランコ・コンポスター・すべり台・井戸・シーソー。
-# すべり台は、もらった絵が1マス64ドットの大きさなので、トリミングしてそのまま（ちぢめない）。
+# すべり台は、もらった絵を色の平均で半分にする。
 # 透過と色はそのまま、BOX でちぢめる。はばは3Dのお手本（set9_3d.py）のはば、下のはしと、よこのまん中は、いまのチップと同じ所にそろえる。
 # ランタン・石どうろうは3コマ（消えた・ついた・ついた）。動くのは灯りの所だけ（もらった2まいは灯りの所いがい同じ絵）。
 # ブランコは、わく（本体）と、なわつきの座席（部品 parts。上のはしのまん中を軸 px,py にゆれる）に分ける。
@@ -41,8 +41,8 @@ top=fy0+(beam_bot-fb_[1])*k-1                    # なわの上のはしを、�
 pax=round(cx-seat.width/2);pay=round(top)
 C['swing']['parts']=[{'ax':pax,'ay':pay,'w':seat.width,'h':seat.height,'px':cx,'py':top,'f':[seat]}]
 print('swing seat',seat.size,'ax',pax,'ay',pay,'px',cx,'py',round(top,1))
-# すべり台：トリミングしてそのまま
-im=load('slide');cx,bt=old('slide');put('slide',[im.crop(bb(im))],cx,bt)
+# すべり台：もらった絵は2ドットくらいのかたまりがずれていて、がたがたに見えるので、色の平均（BOX）で半分にちぢめる。まん中と下のはしは前と同じ（63・127）
+im=load('slide');im=im.crop(bb(im));put('slide',[im.resize((round(im.width/2),round(im.height/2)),Image.BOX)],63,127)
 # 井戸：石のふちのはばを3Dのお手本（0.84マス＝53.5ドット）に合わせる。まん中は1マスのまん中、下のはしは前の絵と同じ60。
 im=load('well');b=bb(im);a=np.array(im)[...,3]>20;c=np.nonzero(a[b[1]+round((b[3]-b[1])*.7)])[0];k=53.5/(c.max()-c.min())
 put('well',[shrink(im,b,round((b[2]-b[0])*k))],32.0,60)
