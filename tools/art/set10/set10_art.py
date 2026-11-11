@@ -1,4 +1,4 @@
-# もらった絵（src/）から、チップを作る：ベンチ・キャビネット・かざり棚・木箱・食料箱、キャビネット・本棚の右向き。
+# もらった絵（src/）から、チップを作る：ベンチ・キャビネット・かざり棚・木箱・キャビネット・本棚の右向き。食料箱は前の絵のまま。
 # 見えないほどうすい点（うすさ20まで）をけしてから、色の平均（BOX）でちぢめる。
 # 下のはしと、よこのまん中は、いまのチップと同じ所にそろえる（数は前のチップから読んだ実数）。
 import sys,os
@@ -31,7 +31,8 @@ put('shelf2',shrink(load('shelf2'),62),32,42)   # はば62（3Dのお手本）�
 put('crate',shrink(load('crate'),64),32,45)   # はば1マス（64）。1×1マス：まん中32・下のはし45（前の絵・たると同じ）
 # 食料箱：はば1マス（64）。まん中32・下のはし45（木箱・たると同じ）。もらった絵は、ほとんどの所のうすさが250〜254（少しすける）なので、245より上は255にする
 def opaque(im):a=np.array(im);a[...,3][a[...,3]>=245]=255;return Image.fromarray(a)
-put('stor',shrink(opaque(load('stor')),64),32,45)
+# 食料箱：前の絵（src/stor_old、もらった絵 src/stor.png にさしかえる前のチップ）にもどした。輪郭もそのまま（outline_unify をかけない）
+import json as _json;_M=_json.load(open(os.path.join(S,'stor_old','meta.json')));C['stor']=dict(_M,f=[Image.open(os.path.join(S,'stor_old','0.png')).convert('RGBA')])
 # キャビネット・本棚の右向き（id>1。左向きはゲームで反転）：もらった絵は1マス64ドットの大きさなので、そのまま。置く場所は右向きの3D（set10_rot.py）と同じ所
 # 本棚：もらった絵 src/shelf1_3.png（左から正面・右向き・左向き）。正面をはば1マス（64）にし、右向きも同じ倍率でちぢめる（左向きはゲームで右向きの反転）。
 # ちぢめたあと cleanup.py で、うすさを2だん・1ドットのぶつぶつをけす（輪郭は、さいごの outline_unify でそろえる）
@@ -42,6 +43,6 @@ put('shelf1>1',_bR,32,59)   # 右向き：まん中32・下のはし59（右向�
 # 木の家具の輪郭線をそろえる：外のふちを1ドットにし、色は、すぐ内がわの色を0.62倍にこくした色（cleanup.py の outline_unify）。
 # 何回動かしても同じ絵になる。ここにない物（前からある絵）も、このならびに足してそろえる
 sys.path.insert(0,HERE);from cleanup import outline_unify
-for k in ('cabinet','cabinet>1','crate','stor','mbox','shelf2','shelf1','shelf1>1','bench'):
+for k in ('cabinet','cabinet>1','crate','mbox','shelf2','shelf1','shelf1>1','bench'):
     C[k]['f']=[outline_unify(f) for f in C[k]['f']]
 chips.pack_imgs(h,C)
