@@ -59,6 +59,7 @@ def clean(im, mats, ks):
         edge = any(0 <= y + dy < H and 0 <= x + dx < W and m[y + dy, x + dx] and not Lm[y + dy, x + dx] for dy, dx in ((0, 1), (0, -1), (1, 0), (-1, 0)))
         if not edge: Lm[y, x] = False
     LV = width3(m, Lm, r1); Lm = LV > 0
+    base = {M_: np.median(qp[M_][qi[m & (mat == M_) & ~Lm]], 0) for M_ in pals}   # 材料ごとの、ふつうの色
     o = np.zeros((H, W, 4), np.uint8)
     for y in range(H):
         for x in range(W):
@@ -66,7 +67,7 @@ def clean(im, mats, ks):
             P = pals[mat[y, x]]; k = len(P)
             # 輪郭線（外のふち・部品のさかい＝元のいちばんこい色の線）だけ、うすい線の色に。はばは元の絵のまま（3ドットまで）
             if Lm[y, x]:   # 線：外がわ（まん中）がいちばんこく、内がわほど、その所の色（まわりの色）に近づける
-                a_ = LWMIX[LV[y, x] - 1]; F = qp[mat[y, x]][qi[y, x]]; Lc = np.round(P[k - 2] * .5 + P[k - 1] * .5)
+                a_ = LWMIX[LV[y, x] - 1]; F = base[mat[y, x]]; Lc = np.round(P[k - 2] * .5 + P[k - 1] * .5)   # まぜる色は、その材料のふつうの色（場所ごとの色にすると、線の色がばらついてガタガタに見える）
                 if LV[y, x] == 1: o[y, x, :3] = Lc
                 else:   # 2・3ドットめ：まわりの色にまぜた色を、その材料の色の表のいちばん近い色に（色をふやさない）
                     c = Lc * a_ + F * (1 - a_); Q = qp[mat[y, x]]; o[y, x, :3] = Q[((Q - c) ** 2).sum(1).argmin()]
@@ -198,9 +199,9 @@ def symmetric(img, L, src):
             r[y, x, :3] = pal[((pal - c) ** 2).sum(1).argmin()]
     return Image.fromarray(r.round().astype(np.uint8), 'RGBA')
 
-LWMIX = (1.0, .55, .25)   # 3ドットの線の、線の色のこさ（外がわ・まん中 → 内がわ）
+LWMIX = (1.0, .5)   # 2ドットの線の、線の色のこさ（外がわ・まん中 → 内がわ）
 
-LW = 3   # 輪郭線（外のふちと、さかいの線）のはば：どこもちょうど3ドット（持ち主がえらんだ）
+LW = 2   # 輪郭線（外のふちと、さかいの線）のはば：どこもちょうど2ドット（持ち主がえらんだ）
 
 def width3(m, Lm, r1):
     """線のはばを、どこもちょうど LW ドットに：外のふちは、透明（中の穴もふくむ）から LW ドットぶん。
@@ -240,13 +241,42 @@ def width3(m, Lm, r1):
                     if 0 <= xx < W and m[y, xx]: v = 1 if xx == c else 2; N[y, xx] = v if N[y, xx] == 0 else min(N[y, xx], v)
     return N
 
+WOODREF = {'bed': 'chair'}   # 木の色を、ほかの家具（いす）の木の色に合わせる物
+
+def recolor_wood(im, ref):
+    """木（色あいのある所）の色を、ref の木の色に合わせる：明るさの順位が同じ所の色に（木目はそのまま）"""
+    a = np.asarray(im.convert('RGBA')).astype(float); r = np.asarray(ref.convert('RGBA')).astype(float)
+    def wood(x): return (x[..., 3] > 110) & ((x[..., :3].max(-1) - x[..., :3].min(-1)) >= 40)
+    wa, wr = wood(a), wood(r); La = a[..., :3][wa] @ [.3, .59, .11]; Rc = r[..., :3][wr]; Rl = Rc @ [.3, .59, .11]
+    order = np.argsort(Rl); Rc, Rl = Rc[order], Rl[order]
+    q = np.searchsorted(np.sort(La), La) / max(1, len(La) - 1)   # その所の明るさの順位（0〜1）
+    o = a.copy(); o[..., :3][wa] = Rc[np.clip((q * (len(Rc) - 1)).round().astype(int), 0, len(Rc) - 1)]
+    return Image.fromarray(o.round().astype(np.uint8), 'RGBA')
+
+def flat_cloth_sides(img, L, w=5):
+    """白い布の、左右のふち（木・線のとなり）にある灰色のかげをなくす：ふちから w ドットの所の色を、その行の w ドット内がわの色に"""
+    o = np.asarray(img).copy(); H, W = o.shape[:2]; a = o[..., 3] > 0
+    cl = a & ~L & ((o[..., :3].max(-1).astype(int) - o[..., :3].min(-1)) < 40)
+    for y in range(H):
+        for x in range(W):
+            if not cl[y, x]: continue
+            for d in (1, -1):   # 左がわのふち（左に布でない物）・右がわのふち
+                if any(0 <= x - d * k < W and a[y, x - d * k] and not cl[y, x - d * k] for k in range(1, w + 1)):
+                    X = x + d * w
+                    while 0 <= X < W and cl[y, X] and any(0 <= X - d * k < W and a[y, X - d * k] and not cl[y, X - d * k] for k in range(1, w + 1)): X += d
+                    if 0 <= X < W and cl[y, X]: o[y, x] = o[y, X]
+                    break
+    return Image.fromarray(o, 'RGBA')
+
 def build(b):
     meta = json.load(open(os.path.join(SRC, 'meta.json'))); out = {}
     for k in [k for k in meta if re.split(r'[#>:@~.]', k)[0] == b]:
         im = Image.open(os.path.join(SRC, fname(k) + '.png'))
         if k in PARA: im = para_table(im)
+        if b in WOODREF: im = recolor_wood(im, Image.open(os.path.join(SRC, fname(WOODREF[b]) + '.png')))
         r, L = clean(im, *ITEMS[b])
         if k in FIXES: r, L = fix_shape(r, L, FIXES[k])
+        if b == 'bed': r = flat_cloth_sides(r, L)
         if k in SYM: r = symmetric(r, L, im)
         if k in OPEN: r = open_holes(r, *OPEN[k])
         bb = r.getbbox()
