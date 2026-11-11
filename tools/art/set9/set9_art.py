@@ -41,8 +41,8 @@ top=fy0+(beam_bot-fb_[1])*k-1                    # なわの上のはしを、�
 pax=round(cx-seat.width/2);pay=round(top)
 C['swing']['parts']=[{'ax':pax,'ay':pay,'w':seat.width,'h':seat.height,'px':cx,'py':top,'f':[seat]}]
 print('swing seat',seat.size,'ax',pax,'ay',pay,'px',cx,'py',round(top,1))
-# すべり台：色の平均（BOX）で、はば2マス（128）にちぢめる。まん中と下のはしは前と同じ（63・127）
-im=load('slide');im=im.crop(bb(im));put('slide',[im.resize((128,round(im.height*128/im.width)),Image.BOX)],63,127)
+# すべり台：色の平均（BOX）で、はば2マス（128）にちぢめる。置くマスは2×1。まん中は63、下のはしは1マスめの下（63）
+im=load('slide');im=im.crop(bb(im));put('slide',[im.resize((128,round(im.height*128/im.width)),Image.BOX)],63,63)
 # 石どうろう：前の絵（新しい絵にする前のチップ。src/toro_old）にもどす
 import json;M=json.load(open(os.path.join(S,'toro_old','meta.json')));C['toro']=dict(M,f=[Image.open(os.path.join(S,'toro_old','%d.png'%i)).convert('RGBA') for i in range(3)])
 # 井戸：石のふちのはばを3Dのお手本（0.84マス＝53.5ドット）に合わせる。まん中は1マスのまん中、下のはしは前の絵と同じ60。
