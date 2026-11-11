@@ -48,4 +48,8 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict'),fs=r
  await page.waitForFunction(()=>!document.querySelector('#dialog').hidden,null,{timeout:12000});
  const say=await page.textContent('#dlgText');console.log('ひとこと',say);
  assert.equal(await run(`oreStage()`),1);await run(`oreWakeTick();OREWAKEON`).then(x=>assert.equal(x,false,'二度出ない'));
+ /* 8. 演出のとちゅうで村を切りかえても、旧い村のカメラの動きがのこらない */
+ await fresh();
+ const sw=await run(`(()=>{GRD.pre=S;${done('springA')}S.res.forEach(r=>r.hidden=false);USERPAUSE=false;camAnim=null;oreWakeTick();const on=[OREWAKEON,GIFT_ACTIVE,!!camAnim];resetVillageTransient();return JSON.stringify({on,after:[OREWAKEON,GIFT_ACTIVE,!!camAnim]})})()`);
+ assert.deepEqual(JSON.parse(sw),{on:[true,true,true],after:[false,false,false]},'村を切りかえたら、演出も、そのカメラの動きも、かたづく');
  assert.deepEqual(errors,[]);console.log('ore-wake: ok');await browser.close()})().catch(e=>{console.error(e);process.exit(1)});
