@@ -1,5 +1,5 @@
 # もらった絵（src/）から、チップを作る：よまわりのランタン・ガーデンアーチ・石どうろう・にぐるま・ブランコ・コンポスター・すべり台・井戸・シーソー。
-# すべり台は、もらった絵を色の平均で半分にする。
+# すべり台は、もらった絵を色の平均で、はば2マスにする。石どうろうは前の絵のまま。
 # 透過と色はそのまま、BOX でちぢめる。はばは3Dのお手本（set9_3d.py）のはば、下のはしと、よこのまん中は、いまのチップと同じ所にそろえる。
 # ランタン・石どうろうは3コマ（消えた・ついた・ついた）。動くのは灯りの所だけ（もらった2まいは灯りの所いがい同じ絵）。
 # ブランコは、わく（本体）と、なわつきの座席（部品 parts。上のはしのまん中を軸 px,py にゆれる）に分ける。
@@ -20,7 +20,7 @@ def put(id,frames,cx,bottom,parts=None):
     C[id]=c;print(id,w,hh,'ax',c['ax'],'ay',c['ay'])
 def old(id):v=C[id];return v['ax']+v['w']/2,v['ay']+v['h']   # いまのチップの、よこのまん中と下のはし
 # 2コマ（消えた・ついた）の物
-for id,W in(('yomawari',22),('toro',39)):
+for id,W in(('yomawari',22),):
     a,b=load(id+'_off'),load(id+'_on');box=bb(a);cx,bt=old(id)
     fa,fb=shrink(a,box,W),shrink(b,box,W);put(id,[fa,fb,fb],cx,bt)
 for id,W in(('arch',113),('niguruma',122),('composter',55)):
@@ -41,8 +41,10 @@ top=fy0+(beam_bot-fb_[1])*k-1                    # なわの上のはしを、�
 pax=round(cx-seat.width/2);pay=round(top)
 C['swing']['parts']=[{'ax':pax,'ay':pay,'w':seat.width,'h':seat.height,'px':cx,'py':top,'f':[seat]}]
 print('swing seat',seat.size,'ax',pax,'ay',pay,'px',cx,'py',round(top,1))
-# すべり台：もらった絵は2ドットくらいのかたまりがずれていて、がたがたに見えるので、色の平均（BOX）で半分にちぢめる。まん中と下のはしは前と同じ（63・127）
-im=load('slide');im=im.crop(bb(im));put('slide',[im.resize((round(im.width/2),round(im.height/2)),Image.BOX)],63,127)
+# すべり台：色の平均（BOX）で、はば2マス（128）にちぢめる。まん中と下のはしは前と同じ（63・127）
+im=load('slide');im=im.crop(bb(im));put('slide',[im.resize((128,round(im.height*128/im.width)),Image.BOX)],63,127)
+# 石どうろう：前の絵（新しい絵にする前のチップ。src/toro_old）にもどす
+import json;M=json.load(open(os.path.join(S,'toro_old','meta.json')));C['toro']=dict(M,f=[Image.open(os.path.join(S,'toro_old','%d.png'%i)).convert('RGBA') for i in range(3)])
 # 井戸：石のふちのはばを3Dのお手本（0.84マス＝53.5ドット）に合わせる。まん中は1マスのまん中、下のはしは前の絵と同じ60。
 im=load('well');b=bb(im);a=np.array(im)[...,3]>20;c=np.nonzero(a[b[1]+round((b[3]-b[1])*.7)])[0];k=53.5/(c.max()-c.min())
 put('well',[shrink(im,b,round((b[2]-b[0])*k))],32.0,60)
