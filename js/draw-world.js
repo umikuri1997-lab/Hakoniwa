@@ -415,10 +415,12 @@ function render(now){RFN++;
   ctx.strokeStyle='#fff6b0';ctx.lineWidth=2;
   /* 見張り台の木の矢・守護の台座の光の矢：塔から敵へ飛ぶ */
   for(const s of shots){const p=1-s.life,h=Math.min(1,p*2.4),tl=Math.max(0,h-.35),X=v=>(s.x1+(s.x2-s.x1)*v)*TS,Y=v=>(s.y1+(s.y2-s.y1)*v)*TS-Math.sin(v*Math.PI)*14;
-    if(h>=1&&!s.hit){s.hit=1;fxSpr(s.fire?'firehit':s.wood?'arrowhit':'lighthit',X(1),Y(1))}/* 当たったところではじける */
+    if(h>=1&&!s.hit){s.hit=1;fxSpr(s.fire?'firehit':s.water?'slip':s.wood?'arrowhit':'lighthit',X(1),Y(1))}/* 当たったところではじける */
     ctx.save();ctx.lineCap='round';if(s.fire&&h<1){ctx.fillStyle='rgba(255,120,40,.5)';ctx.beginPath();ctx.arc(X(h),Y(h),7,0,7);ctx.fill();ctx.fillStyle='#ffcf6a';ctx.beginPath();ctx.arc(X(h),Y(h),4,0,7);ctx.fill()}/* ようがん台の火の玉 */
     else if(s.wood&&h<1){const ax=X(h),ay=Y(h),bx=X(Math.max(0,h-.04)),by=Y(Math.max(0,h-.04)),an=Math.atan2(ay-by,ax-bx);ctx.translate(ax,ay);ctx.rotate(an);ctx.fillStyle='#a8743f';ctx.fillRect(-12,-1,12,2);ctx.fillStyle='#cfd3d8';ctx.beginPath();ctx.moveTo(3,0);ctx.lineTo(-1,-2.5);ctx.lineTo(-1,2.5);ctx.fill();ctx.fillStyle='#d9785b';ctx.fillRect(-13,-2.5,3,1.5);ctx.fillRect(-13,1,3,1.5)}/* 見張り台の木の矢 */
     else if(s.wood){}/* 木の矢は、当たったら光らない */
+    else if(s.water&&h<1){const ax=Math.round(X(h)),ay=Math.round(Y(h));ctx.fillStyle='#7fbfe0';ctx.fillRect(ax-3,ay-2,6,4);ctx.fillRect(ax-2,ay-3,4,6);ctx.fillStyle='#d6eef8';ctx.fillRect(ax-1,ay-2,2,2)}/* 水のせいれいの水のつぶ（ドット） */
+    else if(s.water){}
     else if(h<1){ctx.strokeStyle='rgba(255,236,150,.55)';ctx.lineWidth=7;ctx.beginPath();ctx.moveTo(X(tl),Y(tl));ctx.lineTo(X(h),Y(h));ctx.stroke();ctx.strokeStyle='#fffbe0';ctx.lineWidth=3;ctx.stroke();ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(X(h),Y(h),4,0,7);ctx.fill()}
     else{const q=(p-1/2.4)/(1-1/2.4);ctx.globalAlpha=1-q;ctx.strokeStyle='#fff3b0';ctx.lineWidth=3;ctx.beginPath();ctx.arc(s.x2*TS,s.y2*TS,6+q*18,0,7);ctx.stroke();ctx.fillStyle='rgba(255,250,210,.7)';ctx.beginPath();ctx.arc(s.x2*TS,s.y2*TS,9*(1-q),0,7);ctx.fill()}ctx.restore()}ctx.globalAlpha=1;
   ctx.font='11px "PixelMplus10","Hikomi",sans-serif';ctx.textAlign='center';
