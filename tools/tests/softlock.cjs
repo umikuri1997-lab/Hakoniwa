@@ -52,5 +52,10 @@ const assert=require('node:assert/strict');
   const m=await J(`(()=>{const j=S.sacredRoot,w=storySlotCells({stump:j},5.6),L=[];for(let y=(fieldStump(j)/W|0)-6;y<=(fieldStump(j)/W|0)+6;y++)for(let x=fieldStump(j)%W-6;x<=fieldStump(j)%W+6;x++){const k=y*W+x;if(walk(k)&&!S.obj[k]&&!sacredReserved(k)&&k!==fieldStump(j)){S.obj[k]='bellf';L.push(k)}}recount();const r=S.res.find(q=>q.name===POKO),G=bfs(r.x|0,r.y|0),k=storyWaitStand(r,G,{tree:true,obj:j,cast:[r],key:'t'});const ok=k>=0&&walk(k)&&storySlotCells({stump:j}).length<storySlotCells({stump:j},5.6).length&&storySlotCells({stump:j},5.6).length>=8;/* 花でうまる前は少ない・うまったあとは花の上にも立てる */for(const q of L)S.obj[q]='';recount();return JSON.stringify({n:L.length>20,ok})})()`);
   assert.deepEqual(m,{n:true,ok:true},'main talk by the tree must find a place to stand when flowers cover the ground');
   console.log('Flowers all around the sacred tree: the cast still finds a place to stand');
+  /* 10. 御神木のまわりが花畑でも、ヌシ様を迎えるときの集まる所が見つかる */
+  const n10=await J(`(()=>{const TX=CX+.5,TY=CY,L=[];for(let k=0;k<W*H;k++){const d=Math.hypot(k%W+.5-TX,((k/W)|0)+.5-TY);if(d<=8.5&&walk(k)&&!S.obj[k]&&!roomOf(k)){S.obj[k]='bellf';L.push(k)}}recount();
+    const r=S.res.find(q=>q.name===POKO);r.x=TX+14;r.y=TY;r.act=null;gatherWarp(r,TX,TY,{},{});const d=Math.hypot(r.x-TX,r.y-TY),on=S.obj[(r.y|0)*W+(r.x|0)];for(const k of L)S.obj[k]='';recount();return JSON.stringify({many:L.length>40,near:d<=8.5,onFlower:on==='bellf'})})()`);
+  assert.deepEqual(n10,{many:true,near:true,onFlower:true},'the reunion gathering must find places to stand when flowers cover the ground');
+  console.log('Flowers all around the tree at the reunion: everyone still finds a place to gather');
   assert.deepEqual(errors,[]);await browser.close();
 })().catch(e=>{console.error(e);process.exit(1)});

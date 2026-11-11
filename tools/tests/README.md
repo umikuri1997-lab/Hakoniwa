@@ -28,7 +28,9 @@ CHROME_PATH=/opt/pw-browsers/chromium node tools/tests/fog.cjs
 ```
 node tools/sim/autoplay.cjs out.json 60            # 60分（実時間）動かす。ふつうに遊ぶ
 node tools/sim/autoplay.cjs out.json 120 --supply  # パワー・食べ物・花のたねを補給し、やられないようにして、物語の進行だけを見る
+node tools/sim/autoplay.cjs out2.json 60 --supply --from=out.save.json --won  # 書き出したセーブから続ける。--won は最後の防衛に勝った村にして、かけらの話から再会・クリアまでを見る
 ```
+- 最後の防衛は、自動プレイの村（火のせいれい1人・矢30本）ではほとんど勝てない（ゲームの不具合ではない）。そのあとを見るときは `--from` と `--won` をつかう。出力の `dbg` は、再会などが止まっているとき、じゃましている状態（知らせ・画面・会話の順番待ち・`NUSHI_RUN`）をしらべるため。
 - 20倍速で、1日が約30秒〜1分。2つ同時に動かすと、そのぶんおそくなる。
 - 出力の `days` は、1日ごとの `[日, 村Lv, 合計パワー, パワー, 食料, 人数, やられた数, たのしさ平均, おなか%平均, クエスト, 畑, 夜の回数, 光の回数, みどり]`。
 - 守り神の出番（ミニゲーム）は、成功あつかいで進める。
