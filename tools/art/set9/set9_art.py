@@ -1,4 +1,4 @@
-# もらった絵（src/）から、チップを作る：よまわりのランタン・ガーデンアーチ・石どうろう・にぐるま・ブランコ・コンポスター・すべり台。
+# もらった絵（src/）から、チップを作る：よまわりのランタン・ガーデンアーチ・石どうろう・にぐるま・ブランコ・コンポスター・すべり台・井戸・シーソー。
 # すべり台は、もらった絵が1マス64ドットの大きさなので、トリミングしてそのまま（ちぢめない）。
 # 透過と色はそのまま、BOX でちぢめる。はばは3Dのお手本（set9_3d.py）のはば、下のはしと、よこのまん中は、いまのチップと同じ所にそろえる。
 # ランタン・石どうろうは3コマ（消えた・ついた・ついた）。動くのは灯りの所だけ（もらった2まいは灯りの所いがい同じ絵）。
@@ -41,4 +41,20 @@ C['swing']['parts']=[{'ax':pax,'ay':pay,'w':seat.width,'h':seat.height,'px':cx,'
 print('swing seat',seat.size,'ax',pax,'ay',pay,'px',cx,'py',round(top,1))
 # すべり台：トリミングしてそのまま
 im=load('slide');cx,bt=old('slide');put('slide',[im.crop(bb(im))],cx,bt)
+# 井戸：石のふちのはばを3Dのお手本（0.84マス＝53.5ドット）に合わせる。まん中は1マスのまん中、下のはしは前の絵と同じ60。
+im=load('well');b=bb(im);a=np.array(im)[...,3]>20;c=np.nonzero(a[b[1]+round((b[3]-b[1])*.7)])[0];k=53.5/(c.max()-c.min())
+put('well',[shrink(im,b,round((b[2]-b[0])*k))],32.0,60)
+# シーソー：台（本体）と板（部品。板のまん中を軸に、ゲームでかたむける）。板のはばは122。
+# 板の下のはしが台の木のブロックの上にのる形に組み、板のまん中は3Dのお手本の高さ（マスの上から13）、台の下のはしはそこから組んだ所。
+im=load('seesaw');a=np.array(im)[...,3]>20;rows=np.nonzero(a.any(1))[0];gap=[rows[i] for i in range(len(rows)-1) if rows[i+1]-rows[i]>5][0]+1
+B=im.crop((0,0,im.width,gap));Bb=bb(B);k=122/(Bb[2]-Bb[0])
+body=[y for y in range(Bb[1],Bb[3]) if a[y].sum()>(Bb[2]-Bb[0])*.9];by0,by1=body[0],body[-1]+1   # 板（取っ手をのぞく）の上下
+T=im.crop((0,gap,im.width,im.height));Tb=bb(T);blk=np.nonzero(a[gap+Tb[1]])[0];top=gap+Tb[1]   # 台のいちばん上＝木のブロックの上
+board=B.crop(Bb);board=board.resize((round(board.width*k),round(board.height*k)),Image.BOX)
+base=T.crop(Tb);base=base.resize((round(base.width*k),round(base.height*k)),Image.BOX)
+pcy=13.0;bmid=(by0+by1)/2                      # 板のまん中（もとの絵）
+basebot=pcy+((Tb[3]+gap-top)+(by1-bmid))*k   # 板のまん中→板の下（＝ブロックの上）→台の下
+put('seesaw',[base],32.0,round(basebot))
+C['seesaw']['parts']=[{'ax':round(32-board.width/2),'ay':round(pcy-(bmid-Bb[1])*k),'w':board.width,'h':board.height,'px':32,'py':pcy,'f':[board]}]
+print('seesaw board',board.size,C['seesaw']['parts'][0]['ax'],C['seesaw']['parts'][0]['ay'])
 chips.pack_imgs(h,C)
