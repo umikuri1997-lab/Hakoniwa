@@ -1,4 +1,4 @@
-# もらった絵（src/）から、チップを作る：ベンチ・キャビネット・かざり棚。
+# もらった絵（src/）から、チップを作る：ベンチ・キャビネット・かざり棚・木箱・食料箱、キャビネット・本棚の右向き。
 # 見えないほどうすい点（うすさ20まで）をけしてから、色の平均（BOX）でちぢめる。
 # 下のはしと、よこのまん中は、いまのチップと同じ所にそろえる（数は前のチップから読んだ実数）。
 import sys,os
@@ -22,4 +22,11 @@ def narrow(im,full,w):
 put('bench',narrow(load('bench'),124,100),63.5,64)
 put('cabinet',shrink(load('cabinet'),67),32,39)   # はば67（3Dのお手本）。1×1マス：まん中32・下のはし39（前の絵と同じ）
 put('shelf2',shrink(load('shelf2'),62),32,42)   # はば62（3Dのお手本）。1×1マス：まん中32・下のはし42（前の絵と同じ）
+put('crate',shrink(load('crate'),64),32,45)   # はば1マス（64）。1×1マス：まん中32・下のはし45（前の絵・たると同じ）
+# 食料箱：はば1マス（64）。まん中32・下のはし45（木箱・たると同じ）。もらった絵は、ほとんどの所のうすさが250〜254（少しすける）なので、245より上は255にする
+def opaque(im):a=np.array(im);a[...,3][a[...,3]>=245]=255;return Image.fromarray(a)
+put('stor',shrink(opaque(load('stor')),64),32,45)
+# キャビネット・本棚の右向き（id>1。左向きはゲームで反転）：もらった絵は1マス64ドットの大きさなので、そのまま。置く場所は右向きの3D（set10_rot.py）と同じ所
+for id,ax,ay in(('cabinet',12.5,-39.5),('shelf1',19,-73)):
+    im=load(id+'_r');C[id+'>1']={'g':64,'ax':round(ax),'ay':round(ay),'w':im.width,'h':im.height,'f':[im]};print(id+'>1',im.size,round(ax),round(ay))
 chips.pack_imgs(h,C)
