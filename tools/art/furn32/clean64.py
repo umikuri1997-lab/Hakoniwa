@@ -25,6 +25,20 @@ def kmeans(X, k, it=25):
 
 SPECK = 2   # 同じ色が、この数のドットまでしかつながっていない小さな点は、ぶつぶつに見えるので、まわりの色にそろえる（木目のすじは3ドット以上つづくので、のこる）
 
+def rim_flatten(qi, m, mat, lab, pals):
+    """元の絵のこいふち（外から3〜5ドット）は、新しい2ドットの輪郭とならんで、たて線が何本もの二重のガタガタになる。
+    そこは、内がわ（外から遠い向きへ3ドット先）の面の色にする"""
+    from scipy.ndimage import distance_transform_cdt
+    H, W = qi.shape; dist = distance_transform_cdt(np.pad(m, 1), metric='chessboard')[1:-1, 1:-1]; q = qi.copy(); chg = np.zeros((H, W), bool)
+    for y, x in zip(*np.where((dist >= 3) & (dist <= 5))):
+        k = len(pals[mat[y, x]])
+        if lab[y, x] < k - 2: continue   # こい色（いちばんこい2つ）だけ
+        for dy, dx in ((0, 1), (0, -1), (1, 0), (-1, 0)):
+            yy, xx = y + 3 * dy, x + 3 * dx
+            if 0 <= yy < H and 0 <= xx < W and dist[yy, xx] >= dist[y, x] + 3 and mat[yy, xx] == mat[y, x] and lab[yy, xx] < k - 2:
+                q[y, x] = qi[yy, xx]; chg[y, x] = True; break
+    return q, chg
+
 def despeckle(qi, m, mat):
     from scipy.ndimage import label
     H, W = qi.shape; q = qi.copy()
@@ -63,6 +77,7 @@ def clean(im, mats, ks):
     for M_ in pals:
         sel = m & (mat == M_); qp[M_] = np.round(kmeans(rgb[sel], KQ.get(M_, 12)))
         qi[sel] = ((rgb[sel][:, None] - qp[M_][None]) ** 2).sum(2).argmin(1)
+    qi, chg = rim_flatten(qi, m, mat, lab, pals); lab = lab.copy(); lab[chg] = 0   # うめた所は、さかいの線にもしない
     qi = despeckle(qi, m, mat)
     from scipy.ndimage import binary_fill_holes
     out_t = ~binary_fill_holes(m); p = np.pad(out_t, 1, constant_values=True)
@@ -239,6 +254,13 @@ def width3(m, Lm, r1):
         ring = cur & ~(p[:-2, 1:-1] & p[2:, 1:-1] & p[1:-1, :-2] & p[1:-1, 2:] & p[:-2, :-2] & p[:-2, 2:] & p[2:, :-2] & p[2:, 2:])
         N[ring] = i + 1; cur &= ~ring
     I = Lm & ~r1   # さかいの線
+    # 外の輪郭のすぐ内がわ（3ドット以内）の線は、輪郭とならんで二重のガタガタになるので、線にしない。6ドットより短い線のかけらも、線にしない
+    from scipy.ndimage import distance_transform_cdt, label
+    dist = distance_transform_cdt(np.pad(m, 1), metric='chessboard')[1:-1, 1:-1]
+    I &= dist > 3
+    lab, n = label(I, structure=np.ones((3, 3)))
+    if n:
+        sz = np.bincount(lab.ravel()); I &= sz[lab] >= 6
     def runlen(y, x, dy, dx):
         n = 1; yy, xx = y + dy, x + dx
         while 0 <= yy < H and 0 <= xx < W and I[yy, xx]: n += 1; yy += dy; xx += dx
@@ -294,6 +316,69 @@ def flat_cloth_sides(img, L, w=5):
                     break
     return Image.fromarray(o, 'RGBA')
 
+# ---- 手でなおす所（12倍で見て、ドットごとに。座標は、できあがりの絵（切りとったあと）。左右対称の物は左右とも） ----
+def _row_copy(o, src_y, ys, x0, x1):
+    for y in ys: o[y, x0:x1 + 1] = o[src_y, x0:x1 + 1]
+
+def hand_table(o):
+    H, W = o.shape[:2]; L1 = o[0, W // 2].copy(); L2 = o[1, W // 2].copy()
+    for y in range(2, 30):   # 天板の左右のふち：外から 線・線のうちがわ・面（行の面の色）
+        o[y, 0] = L1; o[y, 1] = L2; o[y, 2:5] = o[y, 6]
+        o[y, W - 1] = L1; o[y, W - 2] = L2; o[y, W - 5:W - 2] = o[y, W - 7]
+    for y in range(30, 35):   # 天板の前の面の左右
+        o[y, 2:5] = o[y, 6]; o[y, W - 5:W - 2] = o[y, W - 7]
+    for x in (12, W - 13): o[1, x] = o[1, W // 2]   # 上のふちの小さな点
+    lx = [x for x in range(W // 2) if o[46, x, 3]]   # 脚：まん中あたりのきれいな行を、脚の上へ
+    if lx:
+        _row_copy(o, 46, range(36, 41), lx[0], lx[-1]); _row_copy(o, 46, range(36, 41), W - 1 - lx[-1], W - 1 - lx[0])
+    return o
+
+def _cols_from(o, src_y, ys, x0, x1):
+    """たての部材（背もたれの板・脚）：ys の行を、きれいな行 src_y の色にそろえる（まっすぐな板に見える。透明な所もそろう）"""
+    for y in ys: o[y, x0:x1 + 1] = o[src_y, x0:x1 + 1]
+
+def _band_rows(o, ys, xc):
+    """よこの帯（座面の前の板）：行ごとに、ふち（線）の内がわを、その行の xc の色に"""
+    for y in ys:
+        xs = np.where(o[y, :, 3] > 0)[0]
+        if len(xs) > 6: o[y, xs[0] + 2:xs[-1] - 1] = o[y, xc]
+
+def hand_chair(o):
+    H, W = o.shape[:2]
+    _cols_from(o, 56, range(50, 54), 0, W - 1)   # 脚の上
+    return o
+
+def hand_chair_side(o):
+    H, W = o.shape[:2]
+    _band_rows(o, range(44, 48), 24)   # 座面の前の板
+    _cols_from(o, 56, range(48, 53), 0, W - 1)   # 脚の上
+    return o
+
+def hand_chair_back(o):
+    H, W = o.shape[:2]
+    _cols_from(o, 24, range(15, 31), 2, W - 3)   # 背もたれの板：まっすぐな板に
+    return o
+
+def _band_rect(o, ys, x0, x1, xc):
+    """よこの板：ys の行の x0〜x1 を、行ごとに xc の色に（よこの木目のすじになる）"""
+    for y in ys: o[y, x0:x1 + 1] = o[y, xc]
+
+def hand_bed(o):
+    H, W = o.shape[:2]
+    for x0, x1 in ((1, 5), (W - 6, W - 2)): _cols_from(o, 30, range(6, 58), x0, x1)   # 柱（上）：木の所だけ
+    for x0, x1 in ((0, 7), (W - 8, W - 1)): _cols_from(o, 70, range(62, 79), x0, x1)   # 柱（下）
+    _band_rect(o, range(66, 76), 8, W - 9, W // 2)   # 足の板
+    _band_rect(o, range(1, 5), 6, W - 7, W // 2)   # 頭の板（まくらより上）
+    return o
+
+def hand_bed_side(o):
+    H, W = o.shape[:2]
+    for x0, x1 in ((0, 6), (W - 7, W - 1)): _cols_from(o, 30, range(3, H - 3), x0, x1)   # 柱
+    _band_rect(o, range(61, 67), 7, W - 8, W // 2)   # よこの板
+    return o
+
+HAND = {'bed': hand_bed, 'bed>1': hand_bed_side, 'table': hand_table, 'chair': hand_chair, 'chair>1': hand_chair_side, 'chair>2': hand_chair_back}
+
 def build(b):
     meta = json.load(open(os.path.join(SRC, 'meta.json'))); out = {}
     for k in [k for k in meta if re.split(r'[#>:@~.]', k)[0] == b]:
@@ -305,8 +390,9 @@ def build(b):
         if b == 'bed': r = flat_cloth_sides(r, L)
         if k in SYM: r = symmetric(r, L, im)
         if k in OPEN: r = open_holes(r, *OPEN[k])
-        bb = r.getbbox()
-        out[k] = {'f': [r.crop(bb)], 'ax': round(meta[k]['ax']) + bb[0], 'ay': round(meta[k]['ay']) + bb[1]}
+        bb = r.getbbox(); fin = r.crop(bb)
+        if k in HAND: fin = Image.fromarray(HAND[k](np.asarray(fin).copy()), 'RGBA')
+        out[k] = {'f': [fin], 'ax': round(meta[k]['ax']) + bb[0], 'ay': round(meta[k]['ay']) + bb[1]}
     return out
 
 if __name__ == '__main__':
