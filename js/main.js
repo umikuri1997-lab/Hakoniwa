@@ -65,7 +65,7 @@ function lastFirst(list){/* さいごにあそんだステージを、いちば�
   const card=list.querySelector('.wcard[data-k="'+top[0]+'"]');if(card===list.firstElementChild)return;
   const pv=card.previousElementSibling,nx=card.nextElementSibling;if(pv&&pv.classList.contains('wlink'))pv.remove();else if(nx&&nx.classList.contains('wlink'))nx.remove();/* 道の線は、となりのステージどうしでつなぎなおす */
   card.classList.add('wtop');list.insertBefore(card,list.firstElementChild)}
-const APP_VER=1456;/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER=1457;/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
@@ -99,6 +99,7 @@ const dayNoOf=s=>Math.floor((s.t-(s.hold||0))/1440)+1;
 $('#mSnd').onclick=()=>{const on=!(SND.bgm||SND.sfx);setSnd('bgm',on);setSnd('sfx',on);showMaps()};
 $('#mBack').onclick=()=>{$('#maps').hidden=true;$('#title').hidden=false};
 $('#tStart').onclick=()=>{audioInit();curSong=wantSong='opening';step=0;nextT=AC?AC.currentTime+.15:0;sfx('furn');const t0=Date.now(),go=()=>{if(KV.ready()||Date.now()-t0>5000)showMaps();else setTimeout(go,150)};if(!KV.ready())toast('セーブを読みこみ中…');go()};/* クラウドのセーブを待ってから、土地をえらぶ */
+$('#tSlot').onclick=()=>{sfx('tap');slotPop(false)};/* タイトル：セーブスロットからよみこむ */
 window.__ldDone=1;clearInterval(window.__ldT);$('#tLoad').hidden=true;if(window.__ldWant&&window.__ldWant())$('#tStart').onclick()/* 読みこみ中に「はじめる」をおしていたら、そのまま進む */
 
 /* ---------- ループ ---------- */

@@ -73,7 +73,7 @@ function waveFor(day){
   if(!S.nights)return WD===1?['basic','basic','basic']:['basic'];/* 最初の夜は1体だけ（火山のふもとは3体） */
   if(day<2)return [];
   const rn=S.res.length,story=Math.min(1,(S.quest||0)/Math.max(1,QUESTS.length)),prog=Math.pow(story,1.4)/* 進みはじめはゆっくり、後半で段階的に強くなる */,late=(S.bossDay||(S.bossKills?(S.bossDay=day):0))?1+Math.floor(prog*3):0/* オオカゲを倒したあとの追加数 */,
-    alv=Math.floor(S.res.reduce((a,r)=>a+rLv(r),0)/Math.max(1,rn)),n=Math.floor(rn*1.5)+WVLV[Math.min(alv,WVLV.length-1)],list=[];/* 村のせいれいの平均レベルで、数をたす（WVLV） *//* コワイノの数は、せいれいの数の1.5倍（小数点以下切りすて） *//* せいれいの数と進行度に合わせて、敵の数をゆっくり増やす（火山のふもとは、草原より2体多い） */let ntr=alv>=10?3:alv>=7?2:1;/* ワナクイの数は、平均レベルで */S.lateWave=late;
+    alv=Math.floor(S.res.reduce((a,r)=>a+rLv(r),0)/Math.max(1,rn)),n=rn+WVLV[Math.min(alv,WVLV.length-1)],list=[];/* コワイノの数：せいれいの人数に、村のせいれいの平均レベルで数をたす（WVLV） *//* コワイノの数は、せいれいの数の1.5倍（小数点以下切りすて） *//* せいれいの数と進行度に合わせて、敵の数をゆっくり増やす（火山のふもとは、草原より2体多い） */let ntr=alv>=10?3:alv>=7?2:1;/* ワナクイの数は、平均レベルで */S.lateWave=late;
   for(let i=0;i<n;i++){let t='basic';if(alv>=2&&i%3===1)t='thief';if(alv>=3&&i%3===2)t='fast';if(alv>=5&&i%4===3)t='brute';if(alv>=4&&i%5===4&&ntr>0){t='trapper';ntr--}if(alv>=7&&i%6===5)t='breaker';list.push(t)}/* しゅるいは、平均レベルでまじる（カゲドロボウLv2・ハヤカゲLv3・ワナクイLv4・カタカゲLv5・カベクダキLv7） */
   if(WD===1){for(let i=0;i<list.length;i++)if(list[i]==='brute')list[i]='rockc';const st=st2();/* 火山のふもと：カタカゲのかわりにイワカゲ。ハイカゲ・ヒノオオカゲはお話しだいで */
     if(S.flags.ashOn){const big=S.flags.ashNight&&!st.ashNightAt,na=big?6:Math.min(3,1+(day>>2));for(let i=0;i<na;i++)list.unshift('ash');/* 前に入れる（人数が少ない夜の上限でけずられないように） */if(big)st.ashNightAt=(S.nights||0)+1}
