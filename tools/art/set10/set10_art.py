@@ -1,5 +1,5 @@
 # もらった絵（src/）から、チップを作る：ベンチ。
-# 見えないほどうすい点（うすさ20まで）をけしてから、はばを3Dのお手本（set10_3d.py）のはばにして、色の平均（BOX）でちぢめる。
+# 見えないほどうすい点（うすさ20まで）をけしてから、色の平均（BOX）でちぢめる。
 # 下のはしと、よこのまん中は、いまのチップと同じ所にそろえる（数は前のチップから読んだ実数）。
 import sys,os
 sys.dont_write_bytecode=True
@@ -15,5 +15,9 @@ def shrink(im,w):im=im.crop(bb(im));return im.resize((w,round(im.height*w/im.wid
 h,C=chips.load_imgs()
 def put(id,im,cx,bottom):
     w,hh=im.size;C[id]={'g':64,'ax':round(cx-w/2),'ay':bottom-hh,'w':w,'h':hh,'f':[im]};print(id,w,hh,'ax',C[id]['ax'],'ay',C[id]['ay'])
-put('bench',shrink(load('bench'),124),63.5,64)   # 2×1マス：まん中63.5・下のはし64
+# ベンチ：はば100。もとの絵のはば124ぶんの大きさのまま、座板のまん中だけをぬいて（はしの丸み・脚の形はかえない）、はば100にする。2×1マス：まん中63.5・下のはし64
+def narrow(im,full,w):
+    im=im.crop(bb(im));k=full/im.width;cut=round((full-w)/k);m=im.width//2;a=np.array(im)
+    n=Image.fromarray(np.concatenate([a[:,:m-cut//2],a[:,m-cut//2+cut:]],1));return n.resize((w,round(im.height*k)),Image.BOX)
+put('bench',narrow(load('bench'),124,100),63.5,64)
 chips.pack_imgs(h,C)
