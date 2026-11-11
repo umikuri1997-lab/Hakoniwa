@@ -58,6 +58,7 @@ def clean(im, mats, ks):
         if r1[y, x]: continue
         edge = any(0 <= y + dy < H and 0 <= x + dx < W and m[y + dy, x + dx] and not Lm[y + dy, x + dx] for dy, dx in ((0, 1), (0, -1), (1, 0), (-1, 0)))
         if not edge: Lm[y, x] = False
+    Lm = width3(m, Lm, r1)
     o = np.zeros((H, W, 4), np.uint8)
     for y in range(H):
         for x in range(W):
@@ -192,6 +193,45 @@ def symmetric(img, L, src):
             k = np.clip(sm[y, x] / max(1, sm[y, X]), .92, 1.04); c = r[y, x, :3] * k
             r[y, x, :3] = pal[((pal - c) ** 2).sum(1).argmin()]
     return Image.fromarray(r.round().astype(np.uint8), 'RGBA')
+
+LW = 3   # 輪郭線（外のふちと、さかいの線）のはば：どこもちょうど3ドット（持ち主がえらんだ）
+
+def width3(m, Lm, r1):
+    """線のはばを、どこもちょうど LW ドットに：外のふちは、透明（中の穴もふくむ）から LW ドットぶん。
+    さかいの線は、いまの線のまん中から LW ドット（よこの線はたてに、たての線はよこに。偶数のはばは、かげのがわ＝下・右へ）"""
+    H, W = m.shape; N = np.zeros_like(m); cur = m.copy()
+    for _ in range(LW):   # 外のふち
+        p = np.pad(cur, 1, constant_values=False)   # ななめもふくめて数える（角でひし形にふくらまない。穴のまわりは四角いわく）
+        ring = cur & ~(p[:-2, 1:-1] & p[2:, 1:-1] & p[1:-1, :-2] & p[1:-1, 2:] & p[:-2, :-2] & p[:-2, 2:] & p[2:, :-2] & p[2:, 2:])
+        N |= ring; cur &= ~ring
+    I = Lm & ~r1   # さかいの線
+    def runlen(y, x, dy, dx):
+        n = 1; yy, xx = y + dy, x + dx
+        while 0 <= yy < H and 0 <= xx < W and I[yy, xx]: n += 1; yy += dy; xx += dx
+        yy, xx = y - dy, x - dx
+        while 0 <= yy < H and 0 <= xx < W and I[yy, xx]: n += 1; yy -= dy; xx -= dx
+        return n
+    for x in range(W):   # よこの線：たてのつづき（はば）のまん中から3ドット
+        y = 0
+        while y < H:
+            if not I[y, x]: y += 1; continue
+            y0 = y
+            while y < H and I[y, x]: y += 1
+            n = y - y0; c = y0 + n // 2
+            if n <= LW and runlen(c, x, 0, 1) > n:
+                for yy in range(c - (LW - 1) // 2, c - (LW - 1) // 2 + LW):
+                    if 0 <= yy < H and m[yy, x]: N[yy, x] = True
+    for y in range(H):   # たての線：よこのつづき（はば）のまん中から3ドット
+        x = 0
+        while x < W:
+            if not I[y, x]: x += 1; continue
+            x0 = x
+            while x < W and I[y, x]: x += 1
+            n = x - x0; c = x0 + n // 2
+            if n <= LW and runlen(y, c, 1, 0) > n:
+                for xx in range(c - (LW - 1) // 2, c - (LW - 1) // 2 + LW):
+                    if 0 <= xx < W and m[y, xx]: N[y, xx] = True
+    return N
 
 def build(b):
     meta = json.load(open(os.path.join(SRC, 'meta.json'))); out = {}
