@@ -39,7 +39,7 @@ def rim_flatten(qi, m, mat, lab, pals):
                 q[y, x] = qi[yy, xx]; chg[y, x] = True; break
     return q, chg
 
-def despeckle(qi, m, mat):
+def despeckle(qi, m, mat, keep=None):
     from scipy.ndimage import label
     H, W = qi.shape; q = qi.copy()
     for _ in range(2):
@@ -52,6 +52,7 @@ def despeckle(qi, m, mat):
                 sizes = np.bincount(lab.ravel())
                 for i in np.where(sizes[1:] <= SPECK)[0] + 1:
                     ys, xs = np.where(lab == i); nb = []
+                    if keep is not None and keep[ys, xs].all(): continue   # 細いこい線（ふたのだ円・板のすじ）はけさない
                     for y, x in zip(ys, xs):
                         for dy in (-1, 0, 1):
                             for dx in (-1, 0, 1):
@@ -61,6 +62,8 @@ def despeckle(qi, m, mat):
                         vv, cc = np.unique(nb, return_counts=True); q[ys, xs] = vv[cc.argmax()]; changed = True
         if not changed: break
     return q
+
+NORIM = {'barrel'}   # ふちの近くのこい線をうめない材料（たるのふたのだ円の線が消える）
 
 def clean(im, mats, ks):
     a = np.asarray(im.convert('RGBA')).astype(float); H, W = a.shape[:2]; m = a[..., 3] > 110
@@ -77,8 +80,10 @@ def clean(im, mats, ks):
     for M_ in pals:
         sel = m & (mat == M_); qp[M_] = np.round(kmeans(rgb[sel], KQ.get(M_, 12)))
         qi[sel] = ((rgb[sel][:, None] - qp[M_][None]) ** 2).sum(2).argmin(1)
-    qi, chg = rim_flatten(qi, m, mat, lab, pals); lab = lab.copy(); lab[chg] = 0   # うめた所は、さかいの線にもしない
-    qi = despeckle(qi, m, mat)
+    if not (set(mats) & NORIM): qi, chg = rim_flatten(qi, m, mat, lab, pals); lab = lab.copy(); lab[chg] = 0   # うめた所は、さかいの線にもしない
+    Lum = rgb @ np.array([.3, .59, .11]); P_ = np.pad(np.where(m, Lum, np.nan), 1, constant_values=np.nan)
+    nbm = np.nanmean(np.stack([P_[1 + dy:H + 1 + dy, 1 + dx:W + 1 + dx] for dy in (-1, 0, 1) for dx in (-1, 0, 1) if dy or dx]), 0)
+    qi = despeckle(qi, m, mat, keep=m & (Lum < nbm - 12))   # まわりより12こい細い線は、のこす
     from scipy.ndimage import binary_fill_holes
     out_t = ~binary_fill_holes(m); p = np.pad(out_t, 1, constant_values=True)
     r1 = m & (p[:-2, 1:-1] | p[2:, 1:-1] | p[1:-1, :-2] | p[1:-1, 2:])   # いちばん外の1ドット
@@ -179,7 +184,7 @@ def open_holes(img, y0, y1, ys):
         for X in (x0, S - x0 - 1): o[y0:y1 + 1, X:X + 2] = 0
     return Image.fromarray(o, 'RGBA')
 
-SYM = {'chair', 'chair>2', 'chair>2.front', 'table', 'bed', 'taru'}   # 左右対称にする物（光とかげだけ左右でちがう）
+SYM = {'chair', 'chair>2', 'chair>2.front', 'table', 'bed'}   # たるは入れない（丸い物は、写すと、元の絵の光とかげ・ふたのだ円がくずれる）   # 左右対称にする物（光とかげだけ左右でちがう）
 PARA = {'table'}   # 平行投影にする物（天板の奥を、手前と同じはばに）
 
 def para_table(im):
@@ -287,6 +292,7 @@ def width3(m, Lm, r1):
             if n <= LW and runlen(y, c, 1, 0) > n:
                 for xx in range(c - (LW - 1) // 2, c - (LW - 1) // 2 + LW):
                     if 0 <= xx < W and m[y, xx]: v = 1 if xx == c else 2; N[y, xx] = v if N[y, xx] == 0 else min(N[y, xx], v)
+    N[I & (N == 0)] = 1   # ななめ・丸い線（たるのふたのだ円など）は、元の線のドットをそのまま線に
     return N
 
 WOODREF = {'bed': 'chair'}   # 木の色を、ほかの家具（いす）の木の色に合わせる物
@@ -327,10 +333,9 @@ def hand_table(o):
         o[y, W - 1] = L1; o[y, W - 2] = L2; o[y, W - 5:W - 2] = o[y, W - 7]
     for y in range(30, 35):   # 天板の前の面の左右
         o[y, 2:5] = o[y, 6]; o[y, W - 5:W - 2] = o[y, W - 7]
-    for x in (12, W - 13): o[1, x] = o[1, W // 2]   # 上のふちの小さな点
-    lx = [x for x in range(W // 2) if o[46, x, 3]]   # 脚：まん中あたりのきれいな行を、脚の上へ
-    if lx:
-        _row_copy(o, 46, range(36, 41), lx[0], lx[-1]); _row_copy(o, 46, range(36, 41), W - 1 - lx[-1], W - 1 - lx[0])
+    _band_rows(o, range(1, 4), W // 2)   # 上のふちの小さな点：行ごとに同じ色
+    _legs(o, 46, 36)   # 脚：まっすぐな所を、同じ色の列で通す
+    _band_rows(o, range(30, 35), W // 2)   # 天板の前の面：行ごとに同じ色で、はしまで通す
     return o
 
 def _cols_from(o, src_y, ys, x0, x1):
@@ -343,20 +348,37 @@ def _band_rows(o, ys, xc):
         xs = np.where(o[y, :, 3] > 0)[0]
         if len(xs) > 6: o[y, xs[0] + 2:xs[-1] - 1] = o[y, xc]
 
+def _hole_frame(o):
+    """中の穴（いすの背のすきま）のまわりを、角もふくめて、ぐるりと同じ線の色に"""
+    from scipy.ndimage import binary_fill_holes, binary_dilation
+    a = o[..., 3] > 0; holes = binary_fill_holes(a) & ~a
+    if not holes.any(): return
+    ring = binary_dilation(holes, structure=np.ones((3, 3))) & a
+    cols = [tuple(c) for c in o[ring][:, :3]]; L1 = max(set(cols), key=cols.count)
+    o[ring, :3] = L1
+
+def _legs(o, src_y, y0):
+    """脚：まっすぐな所（y0〜下から3行目）を src_y の行の色にそろえ、下の2行は、その行のはしの線の色で"""
+    H = o.shape[0]
+    _cols_from(o, src_y, range(y0, H - 2), 0, o.shape[1] - 1)
+
 def hand_chair(o):
     H, W = o.shape[:2]
-    _cols_from(o, 56, range(50, 54), 0, W - 1)   # 脚の上
+    _legs(o, 56, 50)
+    _hole_frame(o)
     return o
 
 def hand_chair_side(o):
     H, W = o.shape[:2]
     _band_rows(o, range(44, 48), 24)   # 座面の前の板
-    _cols_from(o, 56, range(48, 53), 0, W - 1)   # 脚の上
+    _legs(o, 56, 48)
     return o
 
 def hand_chair_back(o):
     H, W = o.shape[:2]
     _cols_from(o, 24, range(15, 31), 2, W - 3)   # 背もたれの板：まっすぐな板に
+    _band_rows(o, range(2, 5), W // 2)   # 上の板の明るい帯
+    _legs(o, 50, 45)
     return o
 
 def _band_rect(o, ys, x0, x1, xc):
@@ -375,15 +397,53 @@ def hand_bed_side(o):
     H, W = o.shape[:2]
     for x0, x1 in ((0, 6), (W - 7, W - 1)): _cols_from(o, 30, range(3, H - 3), x0, x1)   # 柱
     _band_rect(o, range(61, 67), 7, W - 8, W // 2)   # よこの板
+    xs = [x for x in range(W) if o[30, x, 3] and abs(int(o[30, x, :3].astype(int).sum()) - int(o[30, W // 2, :3].astype(int).sum())) > 0]
+    _cols_from(o, 30, range(8, 56), 20, 28)   # 折り返したシーツ（たての帯）：まっすぐに
+    _band_rect(o, range(7, 13), 8, 19, 13)   # まくらの上
+    return o
+
+def unify_lines(o):
+    """輪郭線の色を、そろえる：いちばん外の1ドットに多い色（材料ごとの線の色）と、その内がわに多い色に、近い色（差18まで）は、その色にする"""
+    a = o[..., 3] > 0; p = np.pad(a, 1); r1 = a & ~(p[:-2, 1:-1] & p[2:, 1:-1] & p[1:-1, :-2] & p[1:-1, 2:])
+    q = np.pad(a & ~r1, 1); r2 = (a & ~r1) & ~(q[:-2, 1:-1] & q[2:, 1:-1] & q[1:-1, :-2] & q[1:-1, 2:])
+    keys = []
+    for R in (r1, r2):
+        cs, cn = np.unique(o[R][:, :3], axis=0, return_counts=True)
+        keys += [cs[i] for i in np.argsort(-cn)[:3] if cn[i] >= 8]
+    if not keys: return o
+    K = np.array(keys, float); rgb = o[..., :3].astype(float)
+    d = ((rgb[..., None, :] - K[None, None]) ** 2).sum(-1); j = d.argmin(-1); near = (d.min(-1) < 18 ** 2) & a & (d.min(-1) > 0)
+    o[near, :3] = K[j[near]].round().astype(np.uint8)
     return o
 
 HAND = {'bed': hand_bed, 'bed>1': hand_bed_side, 'table': hand_table, 'chair': hand_chair, 'chair>1': hand_chair_side, 'chair>2': hand_chair_back}
+
+SMOOTH = {'taru': ((0, 22), (44, 62))}   # りんかくを、だ円の形でなめらかにととのえる行（上のふた・下のはし）
+
+def smooth_sil(im, ranges):
+    """丸い物のりんかく：その行のはんぶんのはば w を、w^2 = A + B y + C y^2（だ円）にあてはめて、きれいな段にする。
+    はみ出した所はけし、たりない所は、すぐ内がわの色でうめる"""
+    a = np.asarray(im.convert('RGBA')).copy(); m = a[..., 3] > 110; H, W = m.shape
+    xs = np.where(m.any(0))[0]; cx = (xs[0] + xs[-1]) / 2
+    for y0, y1 in ranges:
+        ys = [y for y in range(y0, y1 + 1) if m[y].any()]
+        w = np.array([(np.where(m[y])[0][-1] - np.where(m[y])[0][0] + 1) / 2 for y in ys])
+        c = np.polyfit(ys, w ** 2, 2)
+        for y in ys:
+            hw = np.sqrt(max(0, np.polyval(c, y))); L = int(round(cx - hw + .5)); R = int(round(cx + hw - .5))
+            row = np.where(m[y])[0]
+            for x in range(W):
+                if x < L or x > R: a[y, x, 3] = 0
+                elif not m[y, x]:
+                    src = row[0] if x < row[0] else row[-1]; a[y, x] = a[y, src]
+    return Image.fromarray(a, 'RGBA')
 
 def build(b):
     meta = json.load(open(os.path.join(SRC, 'meta.json'))); out = {}
     for k in [k for k in meta if re.split(r'[#>:@~.]', k)[0] == b]:
         im = Image.open(os.path.join(SRC, fname(k) + '.png'))
         if k in PARA: im = para_table(im)
+        if k in SMOOTH: im = smooth_sil(im, SMOOTH[k])
         if b in WOODREF: im = recolor_wood(im, Image.open(os.path.join(SRC, fname(WOODREF[b]) + '.png')))
         r, L = clean(im, *ITEMS[b])
         if k in FIXES: r, L = fix_shape(r, L, FIXES[k])
@@ -392,6 +452,7 @@ def build(b):
         if k in OPEN: r = open_holes(r, *OPEN[k])
         bb = r.getbbox(); fin = r.crop(bb)
         if k in HAND: fin = Image.fromarray(HAND[k](np.asarray(fin).copy()), 'RGBA')
+        fin = Image.fromarray(unify_lines(np.asarray(fin).copy()), 'RGBA')
         out[k] = {'f': [fin], 'ax': round(meta[k]['ax']) + bb[0], 'ay': round(meta[k]['ay']) + bb[1]}
     return out
 
