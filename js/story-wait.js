@@ -51,7 +51,7 @@ function storyWaitStand(r,G,p){
 /* 集まる場所：ひとりずつ、ずらした定位置を決める（となりどうし1マスあける・手前の列を先に） */
 function storySlotFocus(t){if(t.stump!=null)return[storyTreeX(t.stump),(fieldStump(t.stump)/W|0)+.5];if(t.center!=null)return[t.center%W+.5,(t.center/W|0)+.5];const b=BL[S.obj[t.obj]],z=b&&szAt(S.obj[t.obj],t.obj)||[1,1];return[t.obj%W+z[0]/2,(t.obj/W|0)+z[1]/2];}
 function storySlotCells(t,wide){const[fx,fy]=storySlotFocus(t),L=[];const R=wide||(t.stump!=null?2.6:t.center!=null?1.6:2.4);/* wide：そばがふさがっているときの、広いさがし方 */
-  for(let y=Math.floor(fy-R);y<=Math.ceil(fy+R);y++)for(let x=Math.floor(fx-R);x<=Math.ceil(fx+R);x++){if(x<0||y<0||x>=W||y>=H)continue;const k=y*W+x,d=Math.hypot(x+.5-fx,y+.5-fy);if(d>R||d<.6||!walk(k)||S.obj[k]&&!WEEDS.has(S.obj[k]))continue;
+  for(let y=Math.floor(fy-R);y<=Math.ceil(fy+R);y++)for(let x=Math.floor(fx-R);x<=Math.ceil(fx+R);x++){if(x<0||y<0||x>=W||y>=H)continue;const k=y*W+x,d=Math.hypot(x+.5-fx,y+.5-fy);if(d>R||d<.6||!walk(k)||S.obj[k]&&!WEEDS.has(S.obj[k])&&!(wide&&BL[S.obj[k]]&&BL[S.obj[k]].kind==='plant'))continue;/* 広いさがし方では、歩ける花の上にも立つ（花畑にかこまれて、立つ所がなくならないように） */
     if(t.stump!=null&&(k===fieldStump(t.stump)||y<(fieldStump(t.stump)/W|0)))continue;/* 切り株のうしろ（上の列）には立たない */if(t.obj!=null&&!questVisitReachedTile(t.obj,k))continue;L.push({k,d:d+(y+.5<fy-.4?.5:0)})}
   return L.sort((a,b)=>a.d-b.d);}
 function questVisitReachedTile(j,k){const b=BL[S.obj[j]],z=b&&szAt(S.obj[j],j)||[1,1],x=j%W,y=(j/W)|0,kx=k%W+.5,ky=(k/W|0)+.5,dx=Math.max(x-kx,0,kx-(x+z[0])),dy=Math.max(y-ky,0,ky-(y+z[1]));return dx+dy>0&&Math.hypot(dx,dy)<=1.6}
