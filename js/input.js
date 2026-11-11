@@ -151,3 +151,9 @@ function onTap(sx,sy){if(GIFT_ACTIVE&&camAnim&&camAnim.done)return;/* 霧が晴�
   if(mode==='remove')return removeAt(tx,ty);
   if(mode==='bulk'){if(selStamp==='move')return moveTap(tx,ty);if(selStamp)return selStamp.startsWith('swap:')?askSwap(selStamp.slice(5),tx,ty):askStamp(selStamp,tx,ty);if(!S.bulk)return toast('下から道具をえらんでください');return toast('ハケで、なぞった範囲をぬれます')}
 }
+
+/* Android の「戻る」で、ゲームのページから出ないようにする：さわったときに、履歴にゲームの印を1つ足しておき、戻るでその印がきえたら、すぐ足しなおす（Chrome は、さわらずに足した履歴を戻るでとばすので、さわるたびにたしかめる） */
+let BACKTRAP=false;
+function backTrap(){if(BACKTRAP)return;try{history.pushState({hk:1},'');BACKTRAP=true}catch(e){}}
+document.addEventListener('pointerdown',backTrap,true);
+window.addEventListener('popstate',()=>{BACKTRAP=false;backTrap()});
