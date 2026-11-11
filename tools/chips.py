@@ -139,6 +139,12 @@ def kobo(dirp, *keys):
     idx = json.load(open(os.path.join(dirp, 'index.json'), encoding='utf8')); changed = []
     want = set(); 
     for k in keys: want |= {q for q in C if q == k or q.startswith(k + '.') }
+    have = {q for g in idx['genres'] for _, L in g['groups'] for q in L}
+    for q in sorted(want - have):   # 工房にまだない新しい絵（向きの絵 id>1 など）は、もとの id のグループに足す
+        b = re.split(r'[>:#@~.]', q)[0]
+        for g in idx['genres']:
+            grp = next((G for G in g['groups'] if G[0] == b), None)
+            if grp: grp[1].append(q); g['count'] = g.get('count', 0) + 1; break
     for g in idx['genres']:
         ks = [q for _, L in g['groups'] for q in L if q in want]
         if not ks: continue
