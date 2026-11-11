@@ -27,7 +27,7 @@ MAT = {
     'barrel': ['#f1b874', '#e7a865', '#d4965a', '#c0824d', '#a96f43'],
     'metal':  ['#c9ced4', '#b3b9c1', '#a0a7b1', '#8d939e', '#7b818c'],
 }
-LINE = {'wood': '#b07e4e', 'ywood': '#c0903f', 'cloth': '#bcc2cb', 'barrel': '#ad7446', 'metal': '#80868f'}
+LINE = {'wood': '#b98750', 'ywood': '#cb953f', 'cloth': '#c3c9d2', 'barrel': '#b97c4a', 'metal': '#888e99'}   # かげ（side）より少しだけこい（こいと「濃すぎる」と言われた）
 LN = 99   # 線（輪郭・さかい）
 def color(mat, t):
     if t == LN: return hx(LINE[mat])
@@ -72,6 +72,19 @@ class Cv:
                     for v in range(pos, min(A1 - 1, pos + ln)):
                         if (u - a) % 2 == 0 or rnd.random() < .15: s._set(d, u, v, t + (.5 if dark else -.5))
                     pos += ln + rnd.randrange(2, 6)
+    def wood_on(s, x0, y0, x1, y1, mat, t, d='h', seed=0):
+        """いまある形（rrect などで描いた所）をかえずに、木目のすじだけを入れる"""
+        import random
+        rnd = random.Random(seed); L0, L1 = (y0, y1) if d == 'h' else (x0, x1); A0, A1 = (x0, x1) if d == 'h' else (y0, y1)
+        for u in range(L0 + 1, L1):
+            pos = A0 + 1 + rnd.randrange(0, 4)
+            while pos < A1 - 1:
+                ln = rnd.randrange(3, 9); dark = rnd.random() < .8
+                for v in range(pos, min(A1 - 1, pos + ln)):
+                    if (u - L0) % 2 == 0 or rnd.random() < .15:
+                        x, y = (v, u) if d == 'h' else (u, v)
+                        if s.ok(x, y) and s.m[y, x] == mat and not s.fixed[y, x]: s.t[y, x] = s.t[y, x] + (.5 if dark else -.5)
+                pos += ln + rnd.randrange(2, 6)
     def _set(s, d, u, v, t):
         x, y = (v, u) if d == 'h' else (u, v)
         if s.ok(x, y) and s.m[y, x] and not s.fixed[y, x]: s.t[y, x] = t
@@ -94,6 +107,21 @@ class Cv:
             for x in range(x_from, x_to + 1):
                 X = xsum - x
                 if s.ok(X, y): s.m[y, X] = s.m[y, x]; s.t[y, X] = s.t[y, x]; s.fixed[y, X] = s.fixed[y, x]
+    def rrect(s, x0, y0, x1, y1, mat, t=2, r=4, border=False, corners='tl tr bl br', fixed=False):
+        """角の丸い四角（半径 r の円の形で角を切る。とがった45度の切りかたにしない）。border：ふちに線（中の部品のふち）"""
+        import math
+        cut = [max(0, round(r - math.sqrt(max(0, r * r - (r - i - .5) ** 2)))) for i in range(r)]
+        def inside(x, y):
+            if not (x0 <= x <= x1 and y0 <= y <= y1): return False
+            for c in corners.split():
+                cy = y - y0 if c[0] == 't' else y1 - y; cx = x - x0 if c[1] == 'l' else x1 - x
+                if cy < r and cx < cut[cy]: return False
+            return True
+        for y in range(y0, y1 + 1):
+            for x in range(x0, x1 + 1):
+                if not inside(x, y) or not s.ok(x, y): continue
+                edge = border and any(not inside(x + dx, y + dy) for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)))
+                s.m[y, x] = mat; s.t[y, x] = LN if edge else t; s.fixed[y, x] = edge or fixed
     def round(s, x0, y0, x1, y1, corners='tl tr bl br'):
         for c in corners.split(): s.clear(x0 if c[1] == 'l' else x1, y0 if c[0] == 't' else y1)
     def render(s):
@@ -116,77 +144,70 @@ def spans(c, rows, mat, t=2):
 def chair():
     W = 'wood'
     c = Cv(22, 33)   # 前：左右対称（まん中 x=10.5）
-    c.wood(5, 0, 16, 1, W, 1, 'h', 1); c.rect(3, 1, 18, 1, W, 1); c.wood(2, 2, 19, 5, W, 2, 'h', 2); c.tone(2, 2, 19, 2, 1); c.clear(2, 1); c.clear(19, 1)
+    c.rrect(2, 0, 19, 5, W, 2, 5, corners='tl tr'); c.wood_on(2, 0, 19, 5, W, 2, 'h', 2); c.tone(2, 0, 19, 1, 1)   # 背の上の板（角は丸い）
     c.line(3, 6, 18, 6, W)
     c.wood(3, 7, 6, 12, W, 2, 'v', 3); c.wood(8, 7, 9, 12, W, 2, 'v', 4)   # 柱・板（左）
     for y in range(7, 12): c.clear(7, y); c.clear(10, y)
     c.mirror(21, 3, 10)
     c.line(3, 13, 18, 13, W); c.rect(3, 12, 18, 12, W, 3)
-    c.wood(2, 14, 19, 16, W, 1, 'h', 5); c.wood(1, 17, 20, 22, W, 1, 'h', 6); c.rect(2, 14, 19, 14, W, 0)   # 座面の上
-    c.wood(1, 23, 20, 24, W, 2, 'h', 7); c.line(2, 25, 19, 25, W)   # 座面の前
-    c.wood(2, 26, 5, 31, W, 2, 'v', 8); c.mirror(21, 2, 5)   # 脚
+    c.rrect(1, 14, 20, 24, W, 1, 5); c.wood_on(1, 14, 20, 22, W, 1, 'h', 6); c.tone(2, 14, 19, 14, 0)   # 座面（角は丸い）
+    c.tone(1, 23, 20, 24, 2); c.line(3, 25, 18, 25, W)
+    c.rrect(2, 26, 5, 31, W, 2, 2, corners='bl br'); c.wood_on(2, 26, 5, 31, W, 2, 'v', 8); c.mirror(21, 2, 5)   # 脚
     for x0, x1 in ((3, 6), (15, 18)): c.shade(x0, 7, x1, 12, 'v')
     for x0, x1 in ((8, 9), (12, 13)): c.shade(x0, 7, x1, 11, 'v')
-    for x0, x1 in ((2, 5), (16, 19)): c.shade(x0, 26, x1, 31, 'v')
-    c.shade(1, 23, 20, 24, 'h')
+    for x0, x1 in ((2, 5), (16, 19)): c.shade(x0, 26, x1, 30, 'v')
     s = Cv(21, 34)   # よこ：うしろへかたむいた背もたれ
     spans(s, {1: (3, 6), 2: (3, 6), 3: (2, 6), 4: (2, 6), 5: (2, 6), 6: (1, 6), 7: (1, 6), 8: (1, 7), 9: (1, 7), 10: (1, 7), 11: (1, 7)}, W, 2)
+    s.clear(3, 1); s.clear(6, 1)
     for y in range(1, 12): x0 = 3 if y < 3 else 2 if y < 6 else 1; s.tone(x0, y, x0, y, 1)
     s.wood(2, 12, 6, 23, W, 2, 'v', 9)
-    for y in range(2, 11, 2): s.tone(4 if y < 6 else 3, y, 4 if y < 6 else 3, y + 1, 2.5)
-    s.wood(8, 13, 20, 21, W, 1, 'h', 10); s.rect(8, 13, 20, 13, W, 0); s.line(7, 13, 7, 23, W)   # 座面
-    s.wood(8, 22, 20, 23, W, 2, 'h', 11); s.line(3, 24, 20, 24, W)
-    s.wood(3, 25, 6, 32, W, 2, 'v', 12); s.wood(16, 25, 19, 32, W, 2, 'v', 12)
-    for x0, x1 in ((3, 6), (16, 19)): s.shade(x0, 25, x1, 32, 'v')
+    s.rrect(8, 13, 20, 23, W, 1, 4, corners='tr br'); s.wood_on(8, 13, 20, 21, W, 1, 'h', 10); s.tone(8, 13, 19, 13, 0); s.tone(8, 22, 20, 23, 2); s.line(7, 13, 7, 23, W)   # 座面
+    s.line(3, 24, 20, 24, W)
+    for x0 in (3, 16): s.rrect(x0, 25, x0 + 3, 32, W, 2, 2, corners='bl br'); s.wood_on(x0, 25, x0 + 3, 32, W, 2, 'v', 12); s.shade(x0, 25, x0 + 3, 31, 'v')
     b = Cv(21, 31)   # うしろ：左右対称（まん中 x=10）
-    b.wood(2, 1, 18, 1, W, 1, 'h', 13); b.wood(1, 2, 19, 6, W, 2, 'h', 14); b.tone(1, 2, 19, 2, 1); b.line(1, 7, 19, 7, W)
+    b.rrect(1, 1, 19, 6, W, 2, 5, corners='tl tr'); b.wood_on(1, 1, 19, 6, W, 2, 'h', 14); b.tone(1, 1, 19, 2, 1); b.line(1, 7, 19, 7, W)
     b.rect(1, 8, 19, 15, W, 3); b.wood(1, 8, 3, 15, W, 2, 'v', 15); b.line(4, 8, 4, 15, W); b.wood(5, 8, 7, 15, W, 2, 'v', 16); b.line(8, 8, 8, 15, W); b.wood(9, 8, 10, 15, W, 2, 'v', 17)
     b.mirror(20, 1, 10)
     b.line(1, 16, 19, 16, W); b.rect(1, 17, 19, 17, W, 1); b.rect(1, 18, 19, 20, W, 3); b.line(1, 21, 19, 21, W)
-    b.wood(1, 22, 4, 28, W, 2, 'v', 18); b.mirror(20, 1, 4)
+    b.rrect(1, 22, 4, 28, W, 2, 2, corners='bl br'); b.wood_on(1, 22, 4, 28, W, 2, 'v', 18); b.mirror(20, 1, 4)
     for x0, x1 in ((1, 3), (5, 7), (9, 11), (13, 15), (17, 19)): b.shade(x0, 8, x1, 15, 'v')
-    for x0, x1 in ((1, 4), (16, 19)): b.shade(x0, 22, x1, 28, 'v')
+    for x0, x1 in ((1, 4), (16, 19)): b.shade(x0, 22, x1, 27, 'v')
     return {'chair': (c, 5, -7), 'chair>1': (s, 5, -12), 'chair>2': (b, 5, -9)}
 
 def table():
     W = 'wood'
     c = Cv(35, 38)   # 左右対称（まん中 x=17）
-    c.wood(1, 11, 33, 25, W, 1, 'h', 20); c.clear(1, 11); c.clear(2, 11); c.clear(32, 11); c.clear(33, 11)
-    for y in range(12, 17): c.clear(1, y); c.clear(33, y)
-    c.rect(3, 12, 31, 12, W, 0)
-    c.wood(1, 26, 33, 28, W, 2, 'h', 21); c.line(2, 29, 32, 29, W)   # 天板の前・脚とのさかい
-    c.wood(3, 30, 8, 36, W, 2, 'v', 22); c.rect(5, 37, 6, 37, W, 2); c.mirror(34, 3, 8)   # 脚
+    c.rrect(1, 11, 33, 28, W, 1, 5); c.wood_on(1, 11, 33, 25, W, 1, 'h', 20); c.tone(2, 11, 32, 11, 0)   # 天板（角は丸い）
+    c.tone(1, 26, 33, 28, 2); c.wood_on(1, 26, 33, 28, W, 2, 'h', 21); c.line(4, 29, 30, 29, W)
+    c.rrect(3, 30, 8, 37, W, 2, 3, corners='bl br'); c.wood_on(3, 30, 8, 37, W, 2, 'v', 22); c.mirror(34, 3, 8)   # 脚
     for x0, x1 in ((3, 8), (26, 31)): c.shade(x0, 30, x1, 36, 'v')
-    c.shade(1, 26, 33, 28, 'h')
     return {'table': (c, -2, -11)}
 
 def bed():
     """持ち主の見本（tools/art/furn32/ref/bed.png）の形：頭の板・まくら・折り返した白いシーツ・ふちがたれたかけぶとん・短い脚。色は、黄色い木と白い布"""
     Y, L = 'ywood', 'cloth'
-    c = Cv(32, 41)   # たて：頭が上。左右対称（まん中 x=15.5）。左半分を描いて写す
-    c.wood(3, 0, 15, 8, Y, 2, 'v', 30); c.rect(4, 0, 15, 1, Y, 0); c.rect(3, 2, 15, 2, Y, 1); c.line(3, 2, 15, 2, Y); c.clear(3, 0); c.clear(4, 0); c.clear(3, 1)   # 頭の板（上の面・前の面）
-    c.rect(2, 8, 15, 14, L, 1)   # しきぶとんの上のシーツ
-    c.rect(8, 5, 15, 11, L, 0); c.rect(8, 10, 15, 11, L, 1); c.line(9, 5, 15, 5, L); c.line(7, 6, 7, 11, L); c.line(8, 12, 15, 12, L)   # まくら
-    c.rect(1, 15, 15, 17, L, 0); c.rect(1, 17, 15, 17, L, 1); c.line(2, 14, 15, 14, L); c.line(1, 18, 15, 18, L); c.px(1, 15, L, LN)   # 折り返したシーツ
-    c.rect(1, 19, 15, 33, L, 1); c.rect(2, 20, 15, 20, L, 0)   # かけぶとんの上
-    c.rect(1, 31, 15, 33, L, 1.5); c.rect(4, 32, 12, 32, L, 0)   # すそのつや（見本の明るいすじ）
-    c.rect(1, 34, 15, 37, L, 2.5); c.line(1, 34, 15, 34, L); c.rect(1, 37, 15, 37, L, 3); c.line(4, 35, 4, 37, L); c.clear(1, 37)   # たれたふち（前）と、角のしわ
-    c.wood(3, 38, 5, 40, Y, 2, 'v', 31)   # 脚
-    c.mirror(31, 0, 15)
+    c = Cv(32, 41)   # たて：頭が上。左右対称（まん中 x=15.5）
+    c.rrect(3, 0, 28, 8, Y, 2, 6, corners='tl tr'); c.wood_on(3, 0, 28, 8, Y, 2, 'v', 30); c.tone(3, 0, 28, 1, 0); c.tone(3, 2, 28, 2, 1)   # 頭の板（上の角は大きく丸い）
+    c.rrect(2, 7, 29, 14, L, 1, 3, corners='tl tr')   # しきぶとんの上のシーツ
+    c.rrect(7, 4, 24, 12, L, 0, 4, border=True); c.rect(8, 10, 23, 11, L, 1.5, True); c.rect(8, 13, 23, 13, L, 2)   # まくら（下にかげ）
+    c.rrect(1, 14, 30, 18, L, 0, 3, border=True); c.rect(2, 17, 29, 17, L, 1.5, True); c.rect(2, 19, 29, 19, L, 2)   # 折り返したシーツ（下にかげ）
+    c.rrect(1, 19, 30, 37, L, 1, 5, corners='bl br')   # かけぶとん
+    c.rect(1, 30, 30, 33, L, 1.5); c.rect(4, 32, 27, 32, L, 0)   # すそのつや（見本の明るいすじ）
+    c.line(1, 34, 30, 34, L); c.tone(1, 35, 30, 37, 2.5); c.line(4, 35, 4, 37, L); c.line(27, 35, 27, 37, L)   # たれたふち（前）と、角のしわ
+    c.rrect(3, 38, 5, 40, Y, 2, 2, corners='bl br'); c.rrect(26, 38, 28, 40, Y, 2, 2, corners='bl br')   # 脚
     c.tone(1, 19, 1, 30, 0.5); c.tone(30, 19, 30, 33, 2); c.tone(29, 19, 29, 30, 1.5); c.tone(16, 35, 30, 36, 3)   # ふとんの左は明るく、右はかげ
-    c.shade(3, 3, 28, 7, 'v'); c.tone(24, 6, 24, 11, 1.5)
-    for x0, x1 in ((3, 5), (26, 28)): c.shade(x0, 38, x1, 40, 'v')
+    c.shade(3, 3, 28, 7, 'v'); c.tone(23, 6, 23, 10, 1.5)
+    for x0, x1 in ((3, 5), (26, 28)): c.shade(x0, 38, x1, 39, 'v')
     s = Cv(39, 39)   # よこ：頭が左
-    s.wood(0, 0, 4, 31, Y, 2, 'v', 33); s.rect(0, 0, 4, 1, Y, 0); s.rect(0, 2, 1, 31, Y, 1); s.line(2, 2, 2, 31, Y); s.round(0, 0, 4, 31, 'tl tr')   # 頭の板（よこから：上の面と前の面）
-    s.rect(5, 4, 36, 24, L, 1)   # シーツ
-    s.rect(6, 6, 11, 20, L, 0); s.rect(10, 7, 11, 20, L, 1); s.line(6, 5, 11, 5, L); s.line(5, 6, 5, 20, L); s.line(12, 6, 12, 20, L); s.line(6, 21, 11, 21, L)   # まくら
-    s.rect(14, 3, 17, 25, L, 0); s.rect(17, 4, 17, 25, L, 1); s.line(13, 3, 13, 25, L); s.line(18, 3, 18, 25, L); s.line(14, 2, 17, 2, L)   # 折り返したシーツ
-    s.rect(19, 3, 37, 24, L, 1); s.rect(19, 4, 37, 4, L, 0); s.line(19, 3, 37, 3, L); s.rect(35, 5, 37, 24, L, 1.5); s.rect(21, 23, 32, 23, L, 0); s.clear(37, 3)   # かけぶとんの上
-    s.rect(13, 25, 37, 31, L, 2.5); s.line(13, 25, 37, 25, L); s.rect(13, 31, 37, 31, L, 3); s.line(16, 27, 16, 31, L); s.line(35, 27, 35, 31, L); s.clear(37, 31)   # たれたふち（前）と、しわ
+    s.rrect(0, 0, 4, 31, Y, 2, 3, corners='tl tr'); s.wood_on(0, 0, 4, 31, Y, 2, 'v', 33); s.tone(0, 0, 4, 1, 0); s.tone(0, 2, 1, 31, 1); s.line(2, 3, 2, 31, Y)   # 頭の板（よこから）
+    s.rrect(5, 4, 37, 29, L, 1, 3, corners='tr')   # シーツ・しきぶとん
+    s.rrect(5, 5, 12, 21, L, 0, 3, border=True); s.rect(10, 6, 11, 20, L, 1.5, True); s.rect(6, 22, 12, 22, L, 2)   # まくら
+    s.rrect(13, 2, 18, 25, L, 0, 3, border=True, corners='tl tr'); s.rect(17, 3, 17, 24, L, 1.5, True); s.rect(19, 4, 19, 24, L, 2)   # 折り返したシーツ
+    s.rrect(19, 3, 37, 31, L, 1, 4, corners='tr br'); s.rect(20, 4, 36, 4, L, 0); s.rect(35, 5, 37, 24, L, 1.5); s.rect(21, 23, 32, 23, L, 0)   # かけぶとんの上
+    s.rrect(13, 25, 37, 31, L, 2.5, 3, corners='br'); s.line(13, 25, 37, 25, L); s.rect(13, 31, 36, 31, L, 3); s.line(34, 27, 34, 31, L)   # たれたふち（前）と、しわ
     s.rect(5, 25, 12, 29, L, 2.5); s.line(5, 25, 12, 25, L)   # 頭のほうの、しきぶとんのよこ
-    s.wood(5, 30, 12, 31, Y, 3, 'h', 34)   # ベッドのわくのよこ
-    s.wood(1, 32, 3, 36, Y, 2, 'v', 35); s.wood(14, 32, 16, 36, Y, 2, 'v', 36); s.wood(33, 32, 35, 36, Y, 2, 'v', 37)   # 脚
-    for x0, x1 in ((1, 3), (14, 16), (33, 35)): s.shade(x0, 32, x1, 36, 'v')
+    s.wood(5, 30, 12, 31, Y, 3, 'h', 34)
+    for x0 in (1, 14, 33): s.rrect(x0, 32, x0 + 2, 36, Y, 2, 2, corners='bl br'); s.shade(x0, 32, x0 + 2, 35, 'v')   # 脚
     return {'bed': (c, 0, -9), 'bed>1': (s, -2, -7)}
 
 def taru():
