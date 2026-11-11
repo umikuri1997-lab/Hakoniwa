@@ -35,106 +35,105 @@ def color(mat, t):
     if f == 0 or i == 4: return hx(L[i])
     A, B = hx(L[i]), hx(L[i + 1]); return tuple(round(A[k] * (1 - f) + B[k] * f) for k in range(3))   # .5：木目・中間の色
 
+K = 2   # 1マス64ドットで描く（設計の座標は、元の絵を半分にした絵の座標。1つを K×K ドットにして、細かい所はドットで描く）
+
 class Cv:
-    """t は色のはしごの番号（.5 は中間の色）か LN（線）"""
-    def __init__(s, w, h): s.w, s.h = w, h; s.m = np.full((h, w), '', object); s.t = np.zeros((h, w)); s.fixed = np.zeros((h, w), bool)
-    def ok(s, x, y): return 0 <= x < s.w and 0 <= y < s.h
+    """t は色のはしごの番号（.5 は中間の色）か LN（線）。座標は半分の絵の座標（ドットは K 倍）"""
+    def __init__(s, w, h): s.W, s.H = w * K, h * K; s.m = np.full((s.H, s.W), '', object); s.t = np.zeros((s.H, s.W)); s.fixed = np.zeros((s.H, s.W), bool)
+    def ok(s, X, Y): return 0 <= X < s.W and 0 <= Y < s.H
+    def box(s, x0, y0, x1, y1): return range(y0 * K, (y1 + 1) * K), range(x0 * K, (x1 + 1) * K)
     def rect(s, x0, y0, x1, y1, mat, t=2, fixed=False):
-        for y in range(y0, y1 + 1):
-            for x in range(x0, x1 + 1):
-                if s.ok(x, y): s.m[y, x] = mat; s.t[y, x] = t; s.fixed[y, x] = fixed
-    def px(s, x, y, mat, t, fixed=True):
-        if s.ok(x, y): s.m[y, x] = mat; s.t[y, x] = t; s.fixed[y, x] = fixed
+        ys, xs = s.box(x0, y0, x1, y1)
+        for Y in ys:
+            for X in xs:
+                if s.ok(X, Y): s.m[Y, X] = mat; s.t[Y, X] = t; s.fixed[Y, X] = fixed
+    def px(s, x, y, mat, t, fixed=True): s.rect(x, y, x, y, mat, t, fixed)
+    def fpx(s, X, Y, mat, t, fixed=True):
+        if s.ok(X, Y): s.m[Y, X] = mat; s.t[Y, X] = t; s.fixed[Y, X] = fixed
     def clear(s, x, y):
-        if s.ok(x, y): s.m[y, x] = ''
+        ys, xs = s.box(x, y, x, y)
+        for Y in ys:
+            for X in xs:
+                if s.ok(X, Y): s.m[Y, X] = ''
     def tone(s, x0, y0, x1, y1, t):
-        for y in range(y0, y1 + 1):
-            for x in range(x0, x1 + 1):
-                if s.ok(x, y) and s.m[y, x] and not s.fixed[y, x]: s.t[y, x] = t
-    def line(s, x0, y0, x1, y1, mat):
-        """部品のさかいの線：輪郭と同じ色"""
-        s.rect(x0, y0, x1, y1, mat, LN, True)
+        ys, xs = s.box(x0, y0, x1, y1)
+        for Y in ys:
+            for X in xs:
+                if s.ok(X, Y) and s.m[Y, X] and not s.fixed[Y, X]: s.t[Y, X] = t
+    def line(s, x0, y0, x1, y1, mat, w=None):
+        """部品のさかいの線：輪郭と同じ色。はばは1ドット（よこの線は下がわ・たての線は右がわに寄せる。w=2 で2ドット）"""
+        ys, xs = s.box(x0, y0, x1, y1); horiz = (x1 - x0) >= (y1 - y0); w = w or 1
+        for Y in ys:
+            for X in xs:
+                inner = (Y % K) >= K - w if horiz else (X % K) >= K - w
+                if s.ok(X, Y) and inner: s.m[Y, X] = mat; s.t[Y, X] = LN; s.fixed[Y, X] = True
     def wood(s, x0, y0, x1, y1, mat, t, d='h', seed=0, planks=0):
-        """木の面（添付の木の絵の作り方）：板ごとに、上（左）のふちが明るく、下（右）のふちが暗い。板のさかいは線。
-        板の中に、木目のすじ（長さのちがう、こい色のすじと、少しのうすい色のすじ）"""
+        s.rect(x0, y0, x1, y1, mat, t); s.wood_on(x0, y0, x1, y1, mat, t, d, seed)
+    def wood_on(s, x0, y0, x1, y1, mat, t, d='h', seed=0):
+        """木目：部材の長いほうにそって、長さのちがうすじ（こい色が多く、うすい色が少し）。いまある形はかえない"""
         import random
         rnd = random.Random(seed)
-        s.rect(x0, y0, x1, y1, mat, t)
-        L0, L1 = (y0, y1) if d == 'h' else (x0, x1); A0, A1 = (x0, x1) if d == 'h' else (y0, y1)
-        n = planks or 1; size = (L1 - L0 + 1) / n; cuts = [L0 + round(i * size) for i in range(n)] + [L1 + 1]
-        for i in range(n):
-            a, b = cuts[i], cuts[i + 1] - 1
-            if i > 0: a += 1; s._set_line(d, cuts[i], A0, A1, mat)
-            for u in range(a + 1, b):   # すじ
-                pos = A0 + 1 + rnd.randrange(0, 4)
-                while pos < A1 - 1:
-                    ln = rnd.randrange(3, 9); dark = rnd.random() < .8
-                    for v in range(pos, min(A1 - 1, pos + ln)):
-                        if (u - a) % 2 == 0 or rnd.random() < .15: s._set(d, u, v, t + (.5 if dark else -.5))
-                    pos += ln + rnd.randrange(2, 6)
-    def wood_on(s, x0, y0, x1, y1, mat, t, d='h', seed=0):
-        """いまある形（rrect などで描いた所）をかえずに、木目のすじだけを入れる"""
-        import random
-        rnd = random.Random(seed); L0, L1 = (y0, y1) if d == 'h' else (x0, x1); A0, A1 = (x0, x1) if d == 'h' else (y0, y1)
-        for u in range(L0 + 1, L1):
-            pos = A0 + 1 + rnd.randrange(0, 4)
-            while pos < A1 - 1:
-                ln = rnd.randrange(3, 9); dark = rnd.random() < .8
-                for v in range(pos, min(A1 - 1, pos + ln)):
-                    if (u - L0) % 2 == 0 or rnd.random() < .15:
-                        x, y = (v, u) if d == 'h' else (u, v)
-                        if s.ok(x, y) and s.m[y, x] == mat and not s.fixed[y, x]: s.t[y, x] = s.t[y, x] + (.5 if dark else -.5)
-                pos += ln + rnd.randrange(2, 6)
-    def _set(s, d, u, v, t):
-        x, y = (v, u) if d == 'h' else (u, v)
-        if s.ok(x, y) and s.m[y, x] and not s.fixed[y, x]: s.t[y, x] = t
-    def _set_line(s, d, u, A0, A1, mat):
-        for v in range(A0, A1 + 1):
-            x, y = (v, u) if d == 'h' else (u, v)
-            if s.ok(x, y) and s.m[y, x]: s.px(x, y, mat, LN)
+        ys, xs = s.box(x0, y0, x1, y1); L0, L1 = (ys[0], ys[-1]) if d == 'h' else (xs[0], xs[-1]); A0, A1 = (xs[0], xs[-1]) if d == 'h' else (ys[0], ys[-1])
+        for u in range(L0 + 2, L1 - 1, 2):
+            pos = A0 + 2 + rnd.randrange(0, 6)
+            while pos < A1 - 2:
+                ln = rnd.randrange(5, 16); dark = rnd.random() < .78
+                for v in range(pos, min(A1 - 2, pos + ln)):
+                    X, Y = (v, u) if d == 'h' else (u, v)
+                    if s.ok(X, Y) and s.m[Y, X] == mat and not s.fixed[Y, X]: s.t[Y, X] = s.t[Y, X] + (.5 if dark else -.5)
+                pos += ln + rnd.randrange(3, 10)
     def shade(s, x0, y0, x1, y1, d='h'):
-        """光は左上から：上・左のふちを1つ明るく、下・右のふちを1つ暗く（形は左右対称のまま、光とかげだけかえる）"""
-        def add(x, y, k):
-            if s.ok(x, y) and s.m[y, x] and not s.fixed[y, x]: s.t[y, x] = max(0, min(4, round(s.t[y, x]) + k))
+        """光は左上から：上・左のふちを明るく、下・右のふちを暗く（形は左右対称のまま、光とかげだけかえる）"""
+        ys, xs = s.box(x0, y0, x1, y1)
+        def add(X, Y, k):
+            if s.ok(X, Y) and s.m[Y, X] and not s.fixed[Y, X]: s.t[Y, X] = max(0, min(4, round(s.t[Y, X]) + k))
         if d in ('h', 'hv'):
-            for x in range(x0, x1 + 1): add(x, y0, -1); add(x, y1, 1)
+            for X in xs: add(X, ys[0], -1); add(X, ys[-1], 1)
         if d in ('v', 'hv'):
-            for y in range(y0 + (d == 'hv'), y1 + 1 - (d == 'hv')): add(x0, y, -1); add(x1, y, 1)
+            for Y in ys: add(xs[0], Y, -1); add(xs[-1], Y, 1)
     def mirror(s, xsum, x_from=0, x_to=None):
-        """左半分を右へうつす（左右対称）：x → xsum - x"""
+        """左半分を右へうつす（左右対称）：半分の座標の x → xsum - x"""
         x_to = x_to if x_to is not None else (xsum - 1) // 2
-        for y in range(s.h):
-            for x in range(x_from, x_to + 1):
-                X = xsum - x
-                if s.ok(X, y): s.m[y, X] = s.m[y, x]; s.t[y, X] = s.t[y, x]; s.fixed[y, X] = s.fixed[y, x]
-    def rrect(s, x0, y0, x1, y1, mat, t=2, r=4, border=False, corners='tl tr bl br', fixed=False):
-        """角の丸い四角（半径 r の円の形で角を切る。とがった45度の切りかたにしない）。border：ふちに線（中の部品のふち）"""
+        S = (xsum + 1) * K - 1
+        for Y in range(s.H):
+            for X in range(x_from * K, (x_to + 1) * K):
+                X2 = S - X
+                if s.ok(X2, Y): s.m[Y, X2] = s.m[Y, X]; s.t[Y, X2] = s.t[Y, X]; s.fixed[Y, X2] = s.fixed[Y, X]
+    def rrect(s, x0, y0, x1, y1, mat, t=2, r=3, border=False, corners='tl tr bl br', fixed=False):
+        """角を少しだけ丸めた四角（r は、こまかいドットでの半径。丸めすぎない）。border：ふちに1ドットの線（中の部品のふち）"""
         import math
+        X0, Y0, X1, Y1 = x0 * K, y0 * K, (x1 + 1) * K - 1, (y1 + 1) * K - 1
         cut = [max(0, round(r - math.sqrt(max(0, r * r - (r - i - .5) ** 2)))) for i in range(r)]
-        def inside(x, y):
-            if not (x0 <= x <= x1 and y0 <= y <= y1): return False
+        def inside(X, Y):
+            if not (X0 <= X <= X1 and Y0 <= Y <= Y1): return False
             for c in corners.split():
-                cy = y - y0 if c[0] == 't' else y1 - y; cx = x - x0 if c[1] == 'l' else x1 - x
+                cy = Y - Y0 if c[0] == 't' else Y1 - Y; cx = X - X0 if c[1] == 'l' else X1 - X
                 if cy < r and cx < cut[cy]: return False
             return True
-        for y in range(y0, y1 + 1):
-            for x in range(x0, x1 + 1):
-                if not inside(x, y) or not s.ok(x, y): continue
-                edge = border and any(not inside(x + dx, y + dy) for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)))
-                s.m[y, x] = mat; s.t[y, x] = LN if edge else t; s.fixed[y, x] = edge or fixed
+        for Y in range(Y0, Y1 + 1):
+            for X in range(X0, X1 + 1):
+                if not inside(X, Y) or not s.ok(X, Y): continue
+                edge = border and any(not inside(X + dx, Y + dy) for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)))
+                s.m[Y, X] = mat; s.t[Y, X] = LN if edge else t; s.fixed[Y, X] = edge or fixed
     def round(s, x0, y0, x1, y1, corners='tl tr bl br'):
-        for c in corners.split(): s.clear(x0 if c[1] == 'l' else x1, y0 if c[0] == 't' else y1)
+        """角のドットを1つだけ落とす（こまかいドットで）"""
+        for c in corners.split():
+            X = x0 * K if c[1] == 'l' else (x1 + 1) * K - 1; Y = y0 * K if c[0] == 't' else (y1 + 1) * K - 1
+            if s.ok(X, Y): s.m[Y, X] = ''
     def render(s):
+        """輪郭：まわりの透明にふれるドットは線（1ドット）。下と右（かげのがわ）は、もう1ドット太く（線のはばは1〜2ドット）"""
         from scipy.ndimage import binary_fill_holes
-        f = s.m != ''; out_t = ~binary_fill_holes(f)   # 外（まわりの透明）。中の穴はふくめない
+        f = s.m != ''; out_t = ~binary_fill_holes(f)
         p = np.pad(out_t, 1, constant_values=True)
         r1 = f & (p[:-2, 1:-1] | p[2:, 1:-1] | p[1:-1, :-2] | p[1:-1, 2:])
-        img = np.zeros((s.h, s.w, 4), np.uint8)
-        for y in range(s.h):
-            for x in range(s.w):
-                if not f[y, x]: continue
-                t = LN if r1[y, x] and not s.fixed[y, x] else s.t[y, x]
-                img[y, x, :3] = color(s.m[y, x], t); img[y, x, 3] = 255
+        q = np.pad(out_t, 2, constant_values=True)
+        r2 = f & ~r1 & (q[4:, 2:-2] | q[2:-2, 4:])   # 2つ下・2つ右が外
+        img = np.zeros((s.H, s.W, 4), np.uint8)
+        for Y in range(s.H):
+            for X in range(s.W):
+                if not f[Y, X]: continue
+                t = LN if (r1[Y, X] or r2[Y, X]) and not s.fixed[Y, X] else s.t[Y, X]
+                img[Y, X, :3] = color(s.m[Y, X], t); img[Y, X, 3] = 255
         return Image.fromarray(img, 'RGBA')
 
 # ---- 座標は、元の絵を半分にした絵（tools/art/furn32/src の絵を、原点を偶数にそろえて BOX で半分）と同じ。原点（ox, oy）も、その原点 ----
@@ -216,10 +215,15 @@ def taru():
     rows = {0: (9, 14), 1: (6, 17), 2: (4, 19), 3: (3, 20), 4: (2, 21), 5: (2, 21), 6: (1, 22), 7: (1, 22), 8: (1, 22), 9: (1, 22)}
     rows.update({y: (0, 23) for y in range(10, 24)}); rows.update({24: (1, 22), 25: (1, 22), 26: (2, 21), 27: (2, 21), 28: (2, 21), 29: (3, 20), 30: (5, 18), 31: (8, 15)})
     spans(c, rows, B, 2)
-    for i, (x0, x1) in enumerate(((0, 7), (9, 11))): c.wood(x0, 9, x1, 31, B, 2, 'v', 40 + i)   # 胴の板（左半分）
-    for y, (x0, x1) in rows.items():
-        for x in range(24):
-            if not (x0 <= x <= x1): c.clear(x, y)
+    for i, (x0, x1) in enumerate(((0, 7), (9, 11))): c.wood_on(x0, 9, x1, 31, B, 2, 'v', 40 + i)   # 胴の板（左半分）
+    # 形：半分の絵の行のはばを、こまかいドットでなめらかにつなぐ（2ドットの段にしない）
+    hw = {y: (x1 - x0 + 1) * K / 2 for y, (x0, x1) in rows.items()}; cx = (c.W - 1) / 2
+    for Y in range(c.H):
+        u = (Y + .5) / K - .5; y0 = max(0, min(31, int(np.floor(u)))); y1 = min(31, y0 + 1); f = min(1, max(0, u - y0))
+        w = hw[y0] * (1 - f) + hw[y1] * f
+        for X in range(c.W):
+            if abs(X - cx) > w - .5: s_ = c.m[Y, X] = ''
+            elif not c.m[Y, X]: c.fpx(X, Y, B, 2, False)
     lid = {2: (4, 19), 3: (3, 20), 4: (3, 20), 5: (3, 20), 6: (3, 20), 7: (3, 20), 8: (4, 19), 9: (6, 17)}
     for y, (x0, x1) in lid.items(): c.rect(x0, y, x1, y, B, 3)   # ふたのふち
     inner = {3: (6, 17), 4: (4, 19), 5: (4, 19), 6: (4, 19), 7: (5, 18)}
@@ -228,39 +232,41 @@ def taru():
     c.rect(6, 4, 8, 6, B, 0); c.line(9, 3, 9, 7, B)
     c.line(8, 10, 8, 30, B)   # 胴の板のさかい
     c.mirror(23, 0, 11)
-    for y, (x0, x1) in rows.items():   # 丸みの光とかげ：左のはしは明るく、右がわはかげ
-        if y >= 10:
-            c.tone(x0 + 1, y, x0 + 1, y, 1)
-            for x in range(16, x1): 
-                if not c.fixed[y, x]: c.t[y, x] = min(4, c.t[y, x] + 1)
-    def band(y0):   # 金の帯：はば4、まん中ほど下がる。上と下のふちは線
-        for x in range(24):
-            d = abs(x - 11.5) / 12; dip = round(4 * (1 - d * d))
-            for k, t in enumerate((LN, 0 if x < 8 else 1 if x < 16 else 2, 2 if x < 16 else 3, LN)):
-                y = y0 + dip + k
-                if 0 <= y < 32 and c.m[y, x]: c.px(x, y, M, t, True)
+    for Y in range(18, c.H):   # 丸みの光とかげ：左のはしは明るく、右がわはかげ
+        xs = [X for X in range(c.W) if c.m[Y, X]]
+        if not xs: continue
+        for X in xs:
+            if c.fixed[Y, X]: continue
+            if X in (xs[0] + 2, xs[0] + 3): c.t[Y, X] = max(0, c.t[Y, X] - 1)
+            elif X >= 32: c.t[Y, X] = min(4, c.t[Y, X] + 1)
+    def band(y0):   # 金の帯：はば8ドット、まん中ほど下がる（こまかいドットで、なめらかに）。上と下のふちは線
+        for X in range(c.W):
+            d = abs(X - (c.W - 1) / 2) / (c.W / 2); dip = round(8 * (1 - d * d))
+            for k in range(8):
+                Y = y0 * K + dip + k
+                t = LN if k in (0, 7) else (0 if X < 16 else 1 if X < 32 else 2) if k < 4 else (2 if X < 32 else 3)
+                if c.ok(X, Y) and c.m[Y, X]: c.fpx(X, Y, M, t)
     band(10); band(21)
     return {'taru': (c, 4, -10)}
 
 DESIGNS = {'chair': chair, 'table': table, 'bed': bed, 'taru': taru}
 
 def front_from(parent_img, px0, py0, key):
-    """すわった子の前にかさねる部品：本体の絵から、元の部品の形の所を切りとる"""
+    """すわった子の前にかさねる部品：本体の絵から、元の部品の形の所を切りとる（どちらも1マス64ドット）"""
     meta = json.load(open(os.path.join(SRC, 'meta.json'))); m = meta[key]
     fn = re.sub(r'[^0-9A-Za-z_.-]', lambda q: '_%02x' % ord(q.group()), key)
     a = np.asarray(Image.open(os.path.join(SRC, fn + '.png')).convert('RGBA'))[..., 3] > 100
-    P = np.asarray(parent_img); out = np.zeros(P.shape, np.uint8)
-    ax, ay = round(m['ax']), round(m['ay']); x0, y0 = ax - ax % 2, ay - ay % 2   # 元の絵の原点を、半分にした絵と同じにそろえる
+    P = np.asarray(parent_img); out = np.zeros(P.shape, np.uint8); ax, ay = round(m['ax']), round(m['ay'])
     for y in range(P.shape[0]):
         for x in range(P.shape[1]):
-            sy, sx = (y + py0) * 2 - ay, (x + px0) * 2 - ax
-            if 0 <= sy < a.shape[0] and 0 <= sx < a.shape[1] and a[sy:sy + 2, sx:sx + 2].any(): out[y, x] = P[y, x]
+            sy, sx = y + py0 - ay, x + px0 - ax
+            if 0 <= sy < a.shape[0] and 0 <= sx < a.shape[1] and a[sy, sx]: out[y, x] = P[y, x]
     return Image.fromarray(out, 'RGBA')
 
 def build(b):
     res = {}
     for k, (cv, ax, ay) in DESIGNS[b]().items():
-        im = cv.render(); res[k] = (im, ax, ay)   # ax, ay：キャンバスの原点（g32）
+        res[k] = (cv.render(), ax * K, ay * K)   # 原点（1マス64ドット）
     if b == 'chair':
         im, ox, oy = res['chair>2']; res['chair>2.front'] = (front_from(im, ox, oy, 'chair>2.front'), ox, oy)
     out = {}
@@ -273,7 +279,7 @@ def compare(b, final, z=6):
     for k in sorted(final):
         fn = re.sub(r'[^0-9A-Za-z_.-]', lambda q: '_%02x' % ord(q.group()), k)
         s = Image.open(os.path.join(SRC, fn + '.png')).convert('RGBA'); n = final[k]['f'][0]
-        cells.append((s.resize((s.width * z // 2, s.height * z // 2), Image.NEAREST), n.resize((n.width * z, n.height * z), Image.NEAREST)))
+        cells.append((s.resize((s.width * z // 2, s.height * z // 2), Image.NEAREST), n.resize((n.width * z // 2, n.height * z // 2), Image.NEAREST)))
     W = sum(max(a.width, c.width) + 12 for a, c in cells); Ha = max(a.height for a, _ in cells); H = Ha + max(c.height for _, c in cells) + 20
     sh = Image.new('RGBA', (W, H), (200, 220, 180, 255)); x = 6
     for a, c in cells: sh.alpha_composite(a, (x, 6)); sh.alpha_composite(c, (x, 14 + Ha)); x += max(a.width, c.width) + 12
@@ -290,7 +296,7 @@ if __name__ == '__main__':
         final = build(b)
         for k, v in final.items():
             v['f'][0].save(os.path.join(d, re.sub(r'[^0-9A-Za-z_.-]', lambda q: '_%02x' % ord(q.group()), k) + '.png'))
-            if put: C[k] = {'ax': v['ax'], 'ay': v['ay'], 'w': v['f'][0].width, 'h': v['f'][0].height, 'f': v['f']}
+            if put: C[k] = {'ax': v['ax'], 'ay': v['ay'], 'w': v['f'][0].width, 'h': v['f'][0].height, 'g': 64, 'f': v['f']}
             print(k, v['f'][0].size, v['ax'], v['ay'])
         compare(b, final).save(os.path.join(d, 'cmp_' + b + '.png'))
     if put: chips.pack_imgs(h, C)
