@@ -139,7 +139,7 @@ const BL={
   gust:{name:'つむじ風の罠',fix:2,fixm:{eda:1},kind:'furn',pc:3,time:120,maker:'wind',lv:5,qty:2,trap:1,anim:1,attr:{wind:.5},mat:{eda:2},desc:'ふんだ「コワイノ」を6マスふきとばし、1.3分止める。つぎに使えるまで2時間30分',anim:1},
   dig:{name:'けずる',kind:'build',pc:50,time:40,maker:'earth',attr:{},desc:'高いマスを1だん低くする工事。パワー50'},
   mound:{name:'もる',kind:'build',pc:50,time:40,maker:'earth',attr:{},desc:'低いマスを1だん高くする工事。パワー50'},
-  watch:{name:'見張り台',fix:10,fixm:{wood:10,stone:10},kind:'build',sz:[2,2],mat:{wood:25,stone:20},pc:20,time:150,maker:'earth',lv:2,solid:1,attr:{fire:2,earth:2},desc:'夜、木のせいれいが上に立って、「コワイノ」に木の矢を放つ。ダメージ1／6.7分ごと／範囲6マス'},
+  watch:{name:'見張り台',fix:10,fixm:{wood:10,stone:10},kind:'build',sz:[2,2],mat:{wood:25,stone:20},pc:20,time:150,maker:'earth',lv:2,solid:1,attr:{fire:2,earth:2},desc:'夜、せいれいが上に立って、「コワイノ」に木の矢を放つ。ダメージ1／6.7分ごと／範囲6マス'},
   smelter:{name:'炉',fix:10,fixm:{stone:10},kind:'build',sz:[2,2],mat:{wood:10,stone:30},pc:20,time:150,maker:'fire',w:1,solid:1,attr:{fire:2},desc:'鉱石2こで、延べ棒1こを作る'},
   yogan:{name:'ようがん台',fix:10,fixm:{stone:15},kind:'build',sz:[2,2],mat:{wood:5,stone:40},pc:20,time:150,maker:'fire',lv:1,solid:1,attr:{fire:3},desc:'火山のふもとの守り。「コワイノ」に火の玉を飛ばす。ダメージ1（まわり0.5）／5.3分ごと／範囲5マス'},
   well:{hp:5,brk:1,fix:10,fixm:{wood:4,stone:15},name:'井戸',kind:'build',mat:{wood:8,stone:30},pc:20,time:140,maker:'water',lv:6,solid:1,attr:{water:4},desc:'いくらでも水をくめる井戸。'},
@@ -381,7 +381,7 @@ const QUESTS1=[
     [GOD,'#nod|うむ。柵は足止めにはなるが、追いはらえるわけではないんじゃ。時間をかせぐだけじゃからのう。'],
     [POKO,'じゃあ、足止めしてるあいだに、なんとかしないとだめだね。'],
     [GOD,'そこで見張り台じゃ。高いところから早めに見つけて、木の矢で追いはらえる。今回はわしのおごりじゃ。'],
-    [GOD,'見張り台は、木のせいれいの持ち場じゃ。夜になったら上にのぼって、木の矢を放ってくれるぞい。'],
+    [GOD,'見張り台は、夜の持ち場じゃ。火のせいれいのほかの子が上にのぼって、木の矢を放ってくれるぞい。'],
     [GOD,'#alarm|とげの罠と木の矢も、そろえておいたぞい。これで、フタバがふるえて夜をすごすことも、へるじゃろう。'],
     [POKO,'柵で足止めして、罠と見張り台で追いはらうんだね！ やってみる！'],['@idea']],gives:{watchNow:true,items:{spike:10,arrow:20},flags:['watchLearned']}},
    story:[
