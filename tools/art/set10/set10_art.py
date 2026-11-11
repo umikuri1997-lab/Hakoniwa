@@ -1,4 +1,4 @@
-# もらった絵（src/）から、チップを作る：ベンチ・キャビネット。
+# もらった絵（src/）から、チップを作る：ベンチ・キャビネット・かざり棚。
 # 見えないほどうすい点（うすさ20まで）をけしてから、色の平均（BOX）でちぢめる。
 # 下のはしと、よこのまん中は、いまのチップと同じ所にそろえる（数は前のチップから読んだ実数）。
 import sys,os
@@ -21,4 +21,5 @@ def narrow(im,full,w):
     n=Image.fromarray(np.concatenate([a[:,:m-cut//2],a[:,m-cut//2+cut:]],1));return n.resize((w,round(im.height*k)),Image.BOX)
 put('bench',narrow(load('bench'),124,100),63.5,64)
 put('cabinet',shrink(load('cabinet'),67),32,39)   # はば67（3Dのお手本）。1×1マス：まん中32・下のはし39（前の絵と同じ）
+put('shelf2',shrink(load('shelf2'),62),32,42)   # はば62（3Dのお手本）。1×1マス：まん中32・下のはし42（前の絵と同じ）
 chips.pack_imgs(h,C)
