@@ -13,8 +13,8 @@ function stageInfo(w){
   const raw=KV.getItem(SAVE_KEYS[w]);if(!raw)return null;
   // 旧セーブもマップ配列をJSON展開せず、選択画面に必要な項目だけ拾う。
   const flag=k=>new RegExp('"'+k+'"\\s*:\\s*true').test(raw);
-  const lv=raw.match(/"lv"\s*:\s*(\d+)/);
-  return {summary:true,world:w,introSeen:flag('introSeen'),cleared:flag('cleared'),bulk:flag('bulk'),stamps:flag('stamps'),swap:flag('swap'),dig:flag('dig'),areaSkill:flag('areaSkill'),lv:lv?+lv[1]:1,res:[]};
+  const lv=raw.match(/"lv"\s*:\s*(\d+)/);const sa=raw.match(/"savedAt"\s*:\s*(\d+)/);
+  return {summary:true,world:w,introSeen:flag('introSeen'),cleared:flag('cleared'),bulk:flag('bulk'),stamps:flag('stamps'),swap:flag('swap'),dig:flag('dig'),areaSkill:flag('areaSkill'),lv:lv?+lv[1]:1,savedAt:sa?+sa[1]:0,res:[]};
 }
 function juiceMig(d){/* 焼きりんご・焼きベリーは、りんごジュース・ベリージュース（調理台）にかわった：古いセーブの名前をおきかえる */if(!d||d.flags&&d.flags.juice1)return d;let t=JSON.stringify(d);if(/yakiapple|yakiberry/.test(t))d=JSON.parse(t.replace(/yakiapple/g,'applejuice').replace(/yakiberry/g,'berryjuice'));(d.flags||(d.flags={})).juice1=1;for(const q in d.ovenSet||{}){const R=ALLRECIPES.find(x=>x.out===d.ovenSet[q]);if(!R||dishSt(R)!==d.obj[q])delete d.ovenSet[q]}for(const r of d.res||[])if(r.cing){const R=ALLRECIPES.find(x=>x.out===r.cing.rec);if(R&&R.el!==r.elem){for(const k in R.need)d.fs[k]=(d.fs[k]||0)+R.need[k];r.cing=null}}return d}
 function loadStage(w){if(LIVE[w]&&!LIVE[w].summary)return LIVE[w];return LIVE[w]=load(w)}
@@ -28,7 +28,7 @@ function freeCard(list){if(!(LIVE[0]&&LIVE[0].cleared))return;let told=false;try
   if(L&&L.introSeen){const c=el('<button class="btn pri">つづきから</button>');c.onclick=()=>{sfx('tap');$('#maps').hidden=true;continueGame(L)};bt.appendChild(c);
     const n=el('<button class="btn">はじめから</button>');n.onclick=()=>{if(n.dataset.ok){$('#maps').hidden=true;newGame(k)}else{n.dataset.ok=1;n.textContent='データを消してはじめる（もう一度タップ）';n.style.borderColor='var(--danger)'}};bt.appendChild(n)}
   else{const n=el('<button class="btn pri">あそぶ</button>');n.onclick=()=>{sfx('tap');$('#maps').hidden=true;newGame(k)};bt.appendChild(n)}
-  list.appendChild(card);thumb(card.querySelector('canvas'),k,true)}
+  card.dataset.k=k;list.appendChild(card);thumb(card.querySelector('canvas'),k,true)}
 const WORLDS=[
   {name:'はじまりの草原',sub:'WORLD 1・木',el:'wood',desc:'自然の力がくずれて荒れた草原。せいれいたちと村をつくり、守護の力をとりもどそう。'},
   {name:'火山のふもとの村',sub:'WORLD 2・火',el:'fire',desc:'地面の熱が冷えきった、火の山のふもとの村。こおりかけた温泉に、ぬくもりをとりもどそう。'},
@@ -37,16 +37,39 @@ const WORLDS=[
   {name:'風のやんだ空の村',sub:'WORLD 5・風',el:'wind',desc:'風が止まり、しずみかけた浮き島の村。'},
   {name:'忘れられた神々の庭',sub:'WORLD 6',el:null,desc:'5つの力が生まれた場所。'},
 ];WORLDS[FREE]={name:'フリーモード',sub:'FREE',el:null,desc:''};
-function thumb(cv2,k,open,hide){
-  if(S&&!hide&&k===(S.world||0)&&(LIVE[k]===S||!LIVE[k])){const c=cv2.getContext('2d'),w=cv2.width,h=cv2.height;if(dirty)rebuildStatic(STATICFULL);const r=20,sw=r*2*TS,sh=sw*h/w;gblit(c,(CX-r)*TS,CY*TS-sh/2,sw,sh,0,0,w,h,true);return}/* いまの村があれば、その村を写す */
-  /* ステージごとの、コードで描くドット絵（190×70 ドット。画面では pixelated で大きくする） */
-  cv2.width=190;cv2.height=70;cv2.classList.add('px');const c=cv2.getContext('2d');
-  if(typeof PXSCENE!=='function'){c.fillStyle='#2a3a36';c.fillRect(0,0,190,70);return}
-  if(hide)return PXSCENE(c,190,70,1,'lock',0);
-  PXSCENE(c,190,70,1,k===1?'volcano':k===2?'water':k===FREE?'free':'meadow',k*7+3);
-  if(!open){c.fillStyle='rgba(0,0,0,.4)';c.fillRect(0,0,190,70);PXSCENE(c,190,70,1,'lockover',0)}
+/* ステージの表紙：そのステージのメインのせいれい（キーキャラ）を、ゲームのドット絵（drawSpiritDot）でならべる。会えた子だけ（はじめの子はいつも）。うしろはコードのドット絵の景色（PXSCENE）を3倍に */
+const COVER_KEY='hakoniwa-cover-v1',COVER_EL=[['wood','earth','fire','water','wind'],['fire','water','wood','earth','wind']];
+function coverCast(d,w){/* セーブのデータ（ぜんぶ読んだ物）から：[名前,属性,見た目] */const all=(d.res||[]).concat(d.buried||[],d.lost||[]),N=d.keyN||{},out=[];
+  for(const el of COVER_EL[w]||[]){let nm=N[el];if(!nm){if(w===0)nm=KEYEL0[el]||FIXK0[el];else for(const k of KEYS[w]||[])if(KEYEL[k]===el)nm=k}if(!nm)continue;
+    const r=all.find(x=>x&&x.name===nm);if(!r&&nm!==KEYS[w][0])continue;out.push([nm,(r&&r.elem)||KEYEL[nm]||el,(r&&r.vr)||KEYVR[nm]||null])}return out}
+function coverMeta(){try{return JSON.parse(KV.getItem(COVER_KEY)||'{}')||{}}catch(e){return {}}}
+function coverNote(d){/* save() のとき：表紙のせいれいと、あそんだ時刻を小さくしまう */if(!d)return;const w=d.world||0,M=coverMeta();M[w]={t:Date.now(),c:w===FREE?[]:coverCast(d,w)};try{KV.setItem(COVER_KEY,JSON.stringify(M))}catch(e){}}
+function coverLast(w){/* さいごにあそんだ時刻 */if(S&&S.introSeen&&(S.world||0)===w)return Infinity;const m=coverMeta()[w],L=LIVE[w];return Math.max(m&&m.t||0,L&&L.savedAt||0)}
+function coverOf(k){const L=LIVE[k];if(L&&!L.summary)return coverCast(L,k);const m=coverMeta()[k];if(m&&m.c&&m.c.length)return m.c;
+  /* しるしがない前のセーブ：名前の決まった子だけ、セーブの文字からさがす */let raw='';try{raw=KV.getItem(SAVE_KEYS[k])||''}catch(e){}const fx=k===0?['フタバ','ノドカ','ホノ','アオ','フウ']:KEYS[k]||[];
+  return fx.filter((n,i)=>!i||raw.indexOf('"name":"'+n+'"')>=0).map(n=>[n,KEYEL[n]||Object.keys(FIXK0).find(e=>FIXK0[e]===n)||'wood',KEYVR[n]||null])}
+function thumb(cv2,k,open,hide,tries){
+  const kind=k===1?'volcano':k===2?'water':k===FREE?'free':'meadow',cast=hide||!open||k===FREE?[]:coverOf(k);
+  if(!cast.length){/* せいれいのいない表紙は、いままでの小さな絵 */cv2.width=190;cv2.height=70;cv2.classList.add('px');const c=cv2.getContext('2d');
+    if(typeof PXSCENE!=='function'){c.fillStyle='#2a3a36';c.fillRect(0,0,190,70);return}
+    if(hide)return PXSCENE(c,190,70,1,'lock',0);
+    PXSCENE(c,190,70,1,kind,k*7+3);
+    if(!open){c.fillStyle='rgba(0,0,0,.4)';c.fillRect(0,0,190,70);PXSCENE(c,190,70,1,'lockover',0)}return}
+  /* 1ドット＝せいれいの絵の1ドット。景色は3倍 */const BW=190,BH=70,K=3,W2=BW*K,H2=BH*K;cv2.width=W2;cv2.height=H2;cv2.classList.add('px');const c=cv2.getContext('2d');c.imageSmoothingEnabled=false;
+  if(typeof PXSCENE==='function'){const b=document.createElement('canvas');b.width=BW;b.height=BH;PXSCENE(b.getContext('2d'),BW,BH,1,kind+'-bg',k*7+3);c.drawImage(b,0,0,W2,H2);b.width=b.height=0}
+  const ok=cast.every(p=>spDotReady(p[1]));
+  if(!ok){if((tries||0)<40)setTimeout(()=>{if(cv2.isConnected)thumb(cv2,k,open,hide,(tries||0)+1)},250);return}/* せいれいの絵がまだ読みこみ中 */
+  const n=cast.length,gap=Math.min(96,Math.floor((W2-40)/n)),x0=Math.round(W2/2-gap*(n-1)/2),fy=H2-14;
+  cast.forEach((p,i)=>{const x=x0+i*gap,f=x<W2/2-4?1:x>W2/2+4?-1:1;
+    c.fillStyle='rgba(40,60,30,.22)';c.fillRect(x-14,fy+2,28,4);/* かげ */
+    c.setTransform(2,0,0,2,0,0);try{drawSpiritDot(c,p[1],x/2,fy/2,.435,f,{dot:1,t:i*1.7,vr:p[2]||undefined,mood:'joy',anim:i===0?'wave':''})}catch(e){}c.setTransform(1,0,0,1,0,0)});
 }
-const APP_VER=1441;/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+function lastFirst(list){/* さいごにあそんだステージを、いちばん上に（のこりは、もとのならび） */
+  const top=[0,1,FREE].map(w=>[w,LIVE[w]&&LIVE[w].introSeen?coverLast(w):0]).filter(a=>a[1]>0&&list.querySelector('.wcard[data-k="'+a[0]+'"]')).sort((a,b)=>b[1]-a[1])[0];if(!top)return;
+  const card=list.querySelector('.wcard[data-k="'+top[0]+'"]');if(card===list.firstElementChild)return;
+  const pv=card.previousElementSibling,nx=card.nextElementSibling;if(pv&&pv.classList.contains('wlink'))pv.remove();else if(nx&&nx.classList.contains('wlink'))nx.remove();/* 道の線は、となりのステージどうしでつなぎなおす */
+  card.classList.add('wtop');list.insertBefore(card,list.firstElementChild)}
+const APP_VER=1440;/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
@@ -71,8 +94,9 @@ function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
       else{const n=el('<button class="btn pri">あそぶ</button>');n.onclick=()=>{sfx('tap');$('#maps').hidden=true;newGame(k)};bt.appendChild(n)}
     }
     if(k===1&&!open){let n=0;card.onclick=()=>{if(++n>=5){try{KV.setItem('hakoniwa-w2open','1')}catch(e){}sfx('arrive');showMaps()}}}/* 確認用：とじたWORLD 2を5回タップでひらく */
-    list.appendChild(card);thumb(card.querySelector('canvas'),k,open,hide);
+    card.dataset.k=k;list.appendChild(card);thumb(card.querySelector('canvas'),k,open,hide);
   });
+  lastFirst(list);
   $('#mSnd').textContent=SND.bgm||SND.sfx?'♪ おと オン':'♪ おと オフ';
 }
 const dayNoOf=s=>Math.floor((s.t-(s.hold||0))/1440)+1;
