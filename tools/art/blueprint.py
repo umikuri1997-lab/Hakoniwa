@@ -105,10 +105,23 @@ def model_tris(path,cx,cy,z0,size,rot=0,tilt=0):
     key=(path,cx,cy,z0,size,rot,tilt)
     if key in _MC:return _MC[key]
     import trimesh
-    m=trimesh.load(os.path.join(MODELS,path),force='scene').to_geometry()
-    if hasattr(m.visual,'to_color'):vc=m.visual.to_color().vertex_colors[:,:3].astype(float);col=vc[np.array(m.faces)].mean(1)
-    elif hasattr(m.visual,'face_colors'):col=m.visual.face_colors[:,:3].astype(float)
-    else:col=np.full((len(m.faces),3),200.0)
+    sc_=trimesh.load(os.path.join(MODELS,path),force='scene');VS,FS,CS=[],[],[];n=0
+    for node in sc_.graph.nodes_geometry:   # 部品ごとに色をとる（テクスチャの色か、材質の色）
+        T_,gname=sc_.graph[node];g=sc_.geometry[gname].copy();g.apply_transform(T_);vis=g.visual;col=None
+        try:
+            vc=np.asarray(vis.to_color().vertex_colors,float)
+            if vc.ndim==2 and len(vc)==len(g.vertices):col=vc[:,:3][np.array(g.faces)].mean(1)
+        except Exception:pass
+        if col is None:
+            mat=getattr(vis,'material',None);bc=None
+            for a in('baseColorFactor','main_color','diffuse'):
+                v=getattr(mat,a,None)
+                if v is not None:bc=np.asarray(v,float)[:3];break
+            if bc is not None and bc.max()<=1.0:bc=bc*255
+            col=np.tile(bc if bc is not None else [200.0,200,200],(len(g.faces),1))
+        VS.append(np.asarray(g.vertices,float));FS.append(np.asarray(g.faces)+n);CS.append(col);n+=len(g.vertices)
+    class _M:pass
+    m=_M();m.vertices=np.concatenate(VS);m.faces=np.concatenate(FS);col=np.concatenate(CS)
     if 'Houseplant' in path:col[(col.mean(1)<90)&(col.max(1)-col.min(1)<18)]=POTCOL   # 灰色のはちだけ（葉の緑はそのまま）
     v=np.array(m.vertices,float);V=np.stack([v[:,0],v[:,2],v[:,1]],1)   # glTF（y上・z手前）→ x・y南・z上
     k=size/(V[:,2].max()-V[:,2].min())   # size は、たおす前のモデルの高さ

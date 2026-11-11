@@ -8,3 +8,4 @@
 
 取ってきた所：GitHub にある Kenney のキットの写し（ネットの制限で kenney.nl から直接は取れなかった）。
 - `quaternius`：Quaternius「Ultimate House Interior Pack」（quaternius.com、CC0）の観葉植物（Houseplant_1〜8、OBJ と MTL）。はちの灰色は、3Dで読むときにやきものの色にかえる（`blueprint.py` の `POTCOL`）。
+- `kenney/nature` の丸太（log・log_large・log_stack）・石（stone_small・rock_small）も Nature Kit。モデルが材質の色だけを持つときは、その色を使う（`blueprint.py` の `model_tris`）。
