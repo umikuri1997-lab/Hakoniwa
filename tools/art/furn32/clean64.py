@@ -2,7 +2,7 @@
 """家具を、元の絵（1マス64ドットのチップ、src/）の形・デザインのまま、ドットを1つずつそのまま使って整える（形はかえない）。
   1. 材料（木・金：色あいでわける）ごとに、元の絵の色を少ない色にわけ、いちばんこい色（輪郭と部品のさかいの線）を見つける
   2. 輪郭線（いちばん外の1ドットと、さかいの線）だけを、うすい線の色にする。線のはばは元の絵のまま（かげのがわを太くしない）
-  3. 木目など、ほかのドットは、元の絵の色のまま（かえない）
+  3. 木目など、ほかのドットは、木目がのこるぐらいの色の数にまとめる（KQ：木20・金8・白い布6）
   4. 左右対称にできる物（SYM）は、右がわを左がわの写しにして、元の絵の左右の明るさのちがい（光とかげ）だけをかける。平行投影にする物（PARA）は、遠近のついた所をなおす
   python3 tools/art/furn32/clean64.py <出力フォルダ> [id ...] / --put"""
 import os, sys, json, re
@@ -33,6 +33,11 @@ def clean(im, mats, ks):
         sel = m & (mat == M_)
         if not sel.any(): continue
         pals[M_] = kmeans(rgb[sel], ks[M_]); lab[sel] = ((rgb[sel][:, None] - pals[M_][None]) ** 2).sum(2).argmin(1)
+    # 色の数：木目がのこるぐらいに（材料ごとに KQ 色）。色の表は、元の絵の色から作る（線の色はべつ）
+    qp = {}; qi = np.zeros((H, W), int)
+    for M_ in pals:
+        sel = m & (mat == M_); qp[M_] = np.round(kmeans(rgb[sel], KQ.get(M_, 12)))
+        qi[sel] = ((rgb[sel][:, None] - qp[M_][None]) ** 2).sum(2).argmin(1)
     from scipy.ndimage import binary_fill_holes
     out_t = ~binary_fill_holes(m); p = np.pad(out_t, 1, constant_values=True)
     r1 = m & (p[:-2, 1:-1] | p[2:, 1:-1] | p[1:-1, :-2] | p[1:-1, 2:])   # いちばん外の1ドット
@@ -43,7 +48,7 @@ def clean(im, mats, ks):
             P = pals[mat[y, x]]; j = lab[y, x]; k = len(P)
             # 輪郭線（外のふち・部品のさかい＝元のいちばんこい色の線）だけ、うすい線の色に。はばは元の絵のまま
             if r1[y, x] or j == k - 1: o[y, x, :3] = np.round(P[k - 2] * .5 + P[k - 1] * .5)
-            else: o[y, x, :3] = np.round(rgb[y, x])   # 木目など、ほかのドットは元の絵の色のまま
+            else: o[y, x, :3] = qp[mat[y, x]][qi[y, x]]   # 木目など、ほかのドットは、木目がのこるぐらいの色の数にまとめた色
             o[y, x, 3] = 255
     L = m & ((lab == np.array([len(pals[mat[y, x]]) - 1 if m[y, x] else -9 for y in range(H) for x in range(W)]).reshape(H, W)) | r1)
     return Image.fromarray(o, 'RGBA'), L
@@ -87,6 +92,8 @@ def fix_shape(img, L, fixes):
             a = o[..., 3] > 0
     return Image.fromarray(o, 'RGBA'), L
 
+KQ = {'wood': 20, 'barrel': 20, 'metal': 8, 'cloth': 6}   # 材料ごとの色の数（木目がのこるぐらい。白い布は少なく）
+
 SYM = {'chair', 'chair>2', 'chair>2.front', 'table', 'bed', 'taru'}   # 左右対称にする物（光とかげだけ左右でちがう）
 PARA = {'table'}   # 平行投影にする物（天板の奥を、手前と同じはばに）
 
@@ -110,7 +117,7 @@ def symmetric(img, L, src):
     xs = np.where(a.any(0))[0]; S = xs[0] + xs[-1]   # x → S - x
     Lm = sr[..., :3] @ np.array([.3, .59, .11]); w = (sr[..., 3] > 110).astype(float)
     sm = gaussian_filter(Lm * w, 2.5) / np.maximum(gaussian_filter(w, 2.5), 1e-3)   # 元の絵の、なめらかな明るさ
-    r = o.copy()
+    r = o.copy(); pal = np.unique(o[a & ~L][:, :3], axis=0)   # この絵の色の表（線いがい）
     for y in range(o.shape[0]):
         for x in range(o.shape[1]):
             X = S - x
@@ -118,7 +125,8 @@ def symmetric(img, L, src):
             if not a[y, X]: r[y, x] = 0; continue
             r[y, x] = o[y, X]
             if not L[y, X]:
-                k = np.clip(sm[y, x] / max(1, sm[y, X]), .8, 1.1); r[y, x, :3] = np.clip(o[y, X, :3] * k, 0, 255)
+                k = np.clip(sm[y, x] / max(1, sm[y, X]), .8, 1.1); c = o[y, X, :3] * k
+                r[y, x, :3] = pal[((pal - c) ** 2).sum(1).argmin()]   # 光とかげをかけた色を、色の表のいちばん近い色に（色をふやさない）
     return Image.fromarray(r.round().astype(np.uint8), 'RGBA')
 
 def build(b):
