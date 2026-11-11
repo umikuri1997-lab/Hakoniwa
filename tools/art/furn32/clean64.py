@@ -116,17 +116,43 @@ def symmetric(img, L, src):
     o = np.asarray(img).astype(float); a = o[..., 3] > 0; sr = np.asarray(src.convert('RGBA')).astype(float)
     xs = np.where(a.any(0))[0]; S = xs[0] + xs[-1]   # x → S - x
     Lm = sr[..., :3] @ np.array([.3, .59, .11]); w = (sr[..., 3] > 110).astype(float)
-    sm = gaussian_filter(Lm * w, 2.5) / np.maximum(gaussian_filter(w, 2.5), 1e-3)   # 元の絵の、なめらかな明るさ
+    sm = gaussian_filter(Lm * w, 6) / np.maximum(gaussian_filter(w, 6), 1e-3)   # 元の絵の、なめらかな明るさ
     r = o.copy(); pal = np.unique(o[a & ~L][:, :3], axis=0)   # この絵の色の表（線いがい）
     for y in range(o.shape[0]):
         for x in range(o.shape[1]):
             X = S - x
             if 2 * x <= S or not (0 <= X < o.shape[1]): continue
-            if not a[y, X]: r[y, x] = 0; continue
-            r[y, x] = o[y, X]
-            if not L[y, X]:
-                k = np.clip(sm[y, x] / max(1, sm[y, X]), .8, 1.1); c = o[y, X, :3] * k
-                r[y, x, :3] = pal[((pal - c) ** 2).sum(1).argmin()]   # 光とかげをかけた色を、色の表のいちばん近い色に（色をふやさない）
+            r[y, x] = o[y, X] if a[y, X] else 0
+    # 右がわの部材（線と線のあいだ。まん中をまたがない物）の中は、色のならびを左右もどす：
+    # 写しただけだと、左の部材のかげ（右のふち）が、右の部材の光のがわ（左のふち）にきて、こい線に見える
+    Lr = np.zeros_like(L)
+    for y in range(o.shape[0]):
+        for x in range(o.shape[1]):
+            X = S - x
+            if 2 * x > S and 0 <= X < o.shape[1]: Lr[y, x] = L[y, X]
+            elif 2 * x <= S: Lr[y, x] = L[y, x]
+    ar = r[..., 3] > 0; runs = {}
+    for y in range(o.shape[0]):
+        x = S // 2 + 1
+        while x < o.shape[1]:
+            if not ar[y, x] or Lr[y, x]: x += 1; continue
+            x0 = x
+            while x < o.shape[1] and ar[y, x] and not Lr[y, x]: x += 1
+            if 2 * x0 > S + 2: runs.setdefault((x0, x), []).append(y)   # まん中をまたぐ部材（頭の板・ふとん）はそのまま
+    for (x0, x1), ys in runs.items():   # 同じはばで6行よりながくつづく部材（柱・脚など、まっすぐな物）だけ
+        ys = sorted(ys); grp = [[ys[0]]]
+        for y in ys[1:]:
+            if y == grp[-1][-1] + 1: grp[-1].append(y)
+            else: grp.append([y])
+        for g in grp:
+            if len(g) >= 6:
+                for y in g: r[y, x0:x1] = r[y, x0:x1][::-1].copy()
+    for y in range(o.shape[0]):   # 元の絵の、ひろい光とかげ（ぼかした明るさの比）を、少しだけ
+        for x in range(o.shape[1]):
+            X = S - x
+            if 2 * x <= S or not (0 <= X < o.shape[1]) or not ar[y, x] or Lr[y, x]: continue
+            k = np.clip(sm[y, x] / max(1, sm[y, X]), .92, 1.04); c = r[y, x, :3] * k
+            r[y, x, :3] = pal[((pal - c) ** 2).sum(1).argmin()]
     return Image.fromarray(r.round().astype(np.uint8), 'RGBA')
 
 def build(b):
