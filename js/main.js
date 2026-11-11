@@ -99,6 +99,7 @@ const dayNoOf=s=>Math.floor((s.t-(s.hold||0))/1440)+1;
 $('#mSnd').onclick=()=>{const on=!(SND.bgm||SND.sfx);setSnd('bgm',on);setSnd('sfx',on);showMaps()};
 $('#mBack').onclick=()=>{$('#maps').hidden=true;$('#title').hidden=false};
 $('#tStart').onclick=()=>{audioInit();curSong=wantSong='opening';step=0;nextT=AC?AC.currentTime+.15:0;sfx('furn');const t0=Date.now(),go=()=>{if(KV.ready()||Date.now()-t0>5000)showMaps();else setTimeout(go,150)};if(!KV.ready())toast('セーブを読みこみ中…');go()};/* クラウドのセーブを待ってから、土地をえらぶ */
+$('#tSlot').onclick=()=>{sfx('tap');slotPop(false)};/* タイトル：セーブスロットからよみこむ */
 window.__ldDone=1;clearInterval(window.__ldT);$('#tLoad').hidden=true;if(window.__ldWant&&window.__ldWant())$('#tStart').onclick()/* 読みこみ中に「はじめる」をおしていたら、そのまま進む */
 
 /* ---------- ループ ---------- */
