@@ -20,13 +20,19 @@ def narrow(im,full,w):
     im=im.crop(bb(im));k=full/im.width;cut=round((full-w)/k);m=im.width//2;a=np.array(im)
     n=Image.fromarray(np.concatenate([a[:,:m-cut//2],a[:,m-cut//2+cut:]],1));return n.resize((w,round(im.height*k)),Image.BOX)
 put('bench',narrow(load('bench'),124,100),63.5,64)
-put('cabinet',shrink(load('cabinet'),67),32,39)   # はば67（3Dのお手本）。1×1マス：まん中32・下のはし39（前の絵と同じ）
+# キャビネット：もらった絵 src/cabinet2.png（左が正面・右が右向き）。正面をはば67（3Dのお手本）にし、右向きも同じ倍率でちぢめる。
+# ちぢめたあと cleanup.py で、うすさを2だんに・1ドットのぶつぶつをけす・外の輪郭を同じ色の1ドットの線にする（両方の向きで同じ輪郭の色）
+sys.path.insert(0,HERE);from cleanup import cleanup
+_c=load('cabinet2');_F=_c.crop((0,0,130,_c.height));_R=_c.crop((130,0,_c.width,_c.height));_F=_F.crop(bb(_F));_R=_R.crop(bb(_R));_k=67/_F.width
+_F,_oc=cleanup(_F.resize((67,round(_F.height*_k)),Image.BOX),athr=80);_R,_=cleanup(_R.resize((round(_R.width*_k),round(_R.height*_k)),Image.BOX),out=_oc,athr=80)
+put('cabinet',_F,32,39)   # 1×1マス：まん中32・下のはし39（前の絵と同じ）
+put('cabinet>1',_R,27,60)   # 右向き：まん中27・下のはし60（右向きの3Dと同じ）
 put('shelf2',shrink(load('shelf2'),62),32,42)   # はば62（3Dのお手本）。1×1マス：まん中32・下のはし42（前の絵と同じ）
 put('crate',shrink(load('crate'),64),32,45)   # はば1マス（64）。1×1マス：まん中32・下のはし45（前の絵・たると同じ）
 # 食料箱：はば1マス（64）。まん中32・下のはし45（木箱・たると同じ）。もらった絵は、ほとんどの所のうすさが250〜254（少しすける）なので、245より上は255にする
 def opaque(im):a=np.array(im);a[...,3][a[...,3]>=245]=255;return Image.fromarray(a)
 put('stor',shrink(opaque(load('stor')),64),32,45)
 # キャビネット・本棚の右向き（id>1。左向きはゲームで反転）：もらった絵は1マス64ドットの大きさなので、そのまま。置く場所は右向きの3D（set10_rot.py）と同じ所
-for id,ax,ay in(('cabinet',12.5,-39.5),('shelf1',19,-73)):
+for id,ax,ay in(('shelf1',19,-73),):
     im=load(id+'_r');C[id+'>1']={'g':64,'ax':round(ax),'ay':round(ay),'w':im.width,'h':im.height,'f':[im]};print(id+'>1',im.size,round(ax),round(ay))
 chips.pack_imgs(h,C)

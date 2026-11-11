@@ -198,14 +198,14 @@ function drawFog(ctx,x0,y0,x1,y1,now){/* 霧をかく（夜の暗さより下）
   ctx.imageSmoothingEnabled=false;ctx.drawImage(FOGC,X0*FOG_CELL,Y0*FOG_CELL,(X1-X0)*FOG_CELL,(Y1-Y0)*FOG_CELL,X0*TS,Y0*TS,(X1-X0)*TS,(Y1-Y0)*TS);ctx.imageSmoothingEnabled=true}
 
 /* 霧が晴れたときの演出：カメラが晴れたエリアへゆっくり行き、霧がうすれてから、大きな知らせを出し、もとの所へもどる（そのあいだは村の時間を止める GIFT_ACTIVE） */
-let FOGREV=[],FOGREVON=false;const FOG_FIND_N={box:'古い宝箱',print:'ヌシ様のあしあと',spring:'泉',mansion:'お屋敷'};
+let FOGREV=[],FOGREVON=false,FOGREVCAM=null;const FOG_FIND_N={box:'古い宝箱',print:'ヌシ様のあしあと',spring:'泉',mansion:'お屋敷'};
 function fogRevealTick(){while(FOGREV.length&&FOGREV[0].state!==S)FOGREV.shift();if(!FOGREV.length||GIFT_ACTIVE||camAnim||!stageReady())return;
   const it=FOGREV.shift(),a=it.a,R=fogArea(a),owner=S,session=VILLAGE_SESSION,ok=()=>S===owner&&session===VILLAGE_SESSION;GIFT_ACTIVE=true;FOGREVON=true;
   const back={z:cam.z,x:cam.x+VW/cam.z/2,y:cam.y+VH/cam.z/2},tz=Math.min(cam.z,1.2),tx=(R.x0+AREAW/2)*TS,ty=(R.y0+AREAW/2)*TS;
   const finish=()=>{if(!FOGREVON)return;FOGREVON=false;GIFT_ACTIVE=false;if(FOGA.get(a)===Infinity)FOGA.set(a,performance.now())};
-  musicDuck(2600);camAnim={fz:cam.z,tz,fx:back.x,fy:back.y,tx,ty,t:0,dur:1.6,done:()=>{if(!ok())return finish();FOGA.set(a,performance.now());sfx('level');dirty=true;
+  musicDuck(2600);camAnim=FOGREVCAM={fz:cam.z,tz,fx:back.x,fy:back.y,tx,ty,t:0,dur:1.6,done:()=>{if(!ok())return finish();FOGA.set(a,performance.now());sfx('level');dirty=true;
     setTimeout(()=>{if(!ok())return finish();const overlay=el('<div class="idea-reveal gift-reveal" role="dialog" aria-modal="true" aria-label="霧が晴れた"></div>'),card=el('<div class="idea-card"><h2>霧が晴れた！</h2><div class="spotpop"><p></p></div></div>');
       card.querySelector('p').textContent='あたらしい土地に行けるようになった';/* 見つけた物は書かない（行ってみてのおたのしみ） */
       const button=el('<button class="btn pri" type="button">OK</button>');button.disabled=true;card.append(button);overlay.append(card);document.body.append(overlay);sfx('good');setTimeout(()=>{if(overlay.isConnected)button.disabled=false},650);
-      button.onclick=()=>{if(button.disabled)return;overlay.remove();if(!ok())return finish();camAnim={fz:cam.z,tz:back.z,fx:cam.x+VW/cam.z/2,fy:cam.y+VH/cam.z/2,tx:back.x,ty:back.y,t:0,dur:1.2,done:finish}}},FOG_FADE+200)}}}
-function fogRevealReset(){FOGREV=[];if(FOGREVON){FOGREVON=false;GIFT_ACTIVE=false;document.querySelectorAll('.idea-reveal[aria-label="霧が晴れた"]').forEach(e=>e.remove())}}/* 村を切りかえたとき */
+      button.onclick=()=>{if(button.disabled)return;overlay.remove();if(!ok())return finish();camAnim=FOGREVCAM={fz:cam.z,tz:back.z,fx:cam.x+VW/cam.z/2,fy:cam.y+VH/cam.z/2,tx:back.x,ty:back.y,t:0,dur:1.2,done:finish}}},FOG_FADE+200)}}}
+function fogRevealReset(){FOGREV=[];if(FOGREVON){if(FOGREVCAM&&camAnim===FOGREVCAM)camAnim=null;FOGREVCAM=null;FOGREVON=false;GIFT_ACTIVE=false;document.querySelectorAll('.idea-reveal[aria-label="霧が晴れた"]').forEach(e=>e.remove())}}/* 村を切りかえたとき */

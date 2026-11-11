@@ -93,7 +93,7 @@ function oreAwaken(k){const t=S.st2||(S.st2={});const w=OREWAKE[k-1];t.ore=k;con
 /* 古いセーブ：お話の進みに合わせて、まだ目をさましていない鉱脈は岩にもどす（知らせは出さない） */
 function oreMigrate(s){const t=s.st2||(s.st2={});const k=oreStageNow();t.ore=k;const ores=OREWAKE.slice(0,k).flatMap(w=>w.ore),on=v=>ores.includes(VEINS[v]);for(let j=0;j<W*H;j++){const v=s.obj[j];if(VEINS[v]&&!on(v))s.obj[j]='rock'}for(const g of s.regrow||[])if(VEINS[g.id]&&!on(g.id))g.id='rock';if(k)placeVeins(s,ores)}
 /* 目をさましたときの演出：村の時間を止め、カメラが鉱脈へ行き、鉱脈が光って、大きな知らせ。もとの所へもどってから、ひとこと */
-let OREWAKEON=false;
+let OREWAKEON=false,OREWAKECAM=null;/* OREWAKECAM：演出のカメラの動き。村を切りかえたら、これもかたづける */
 function oreWakeTick(){if(OREWAKEON||!S||WD!==1||S.free||GIFT_ACTIVE||camAnim||!stageReady())return;if(IS_STORY_REPLAY||typeof MEMRUN!=='undefined'&&MEMRUN||typeof NOSAVE!=='undefined'&&NOSAVE)return;if(oreStage()>=oreStageNow())return;
   const k=oreStage()+1,w=OREWAKE[k-1],L=oreAwaken(k),owner=S,session=VILLAGE_SESSION,ok=()=>S===owner&&session===VILLAGE_SESSION;
   const dc=a=>Math.hypot(a%W-CX,((a/W)|0)-CY),tj=w.ore.includes('sulfur')?CRACKS[2]:L.slice().sort((a,b)=>dc(a)-dc(b))[0];
@@ -102,9 +102,9 @@ function oreWakeTick(){if(OREWAKEON||!S||WD!==1||S.free||GIFT_ACTIVE||camAnim||!
   const show=()=>{if(!ok())return finish();const cx=tj!=null?tj%W:0,cy=tj!=null?(tj/W)|0:0;for(const q of(w.ore.includes('sulfur')?CRACKS:L)){if(Math.abs(q%W-cx)>9||Math.abs(((q/W)|0)-cy)>7)continue;spawnFX(q%W-.5,(q/W|0)-.6,ORE_COL[w.ore[0]])}sfx('level');dirty=true;
     setTimeout(()=>{if(!ok())return finish();const overlay=el('<div class="idea-reveal gift-reveal" role="dialog" aria-modal="true" aria-label="鉱脈が目をさました"></div>'),card=el('<div class="idea-card"><h2>鉱脈が目をさました！</h2><div class="spotpop"><p></p></div></div>');card.querySelector('p').textContent=w.txt;
       const button=el('<button class="btn pri" type="button">OK</button>');button.disabled=true;card.append(button);overlay.append(card);document.body.append(overlay);sfx('good');setTimeout(()=>{if(overlay.isConnected)button.disabled=false},650);
-      button.onclick=()=>{if(button.disabled)return;overlay.remove();if(!ok())return finish();camAnim={fz:cam.z,tz:back.z,fx:cam.x+VW/cam.z/2,fy:cam.y+VH/cam.z/2,tx:back.x,ty:back.y,t:0,dur:1.2,done:finish}}},900)};
-  musicDuck(2600);if(tj==null){show();return}camAnim={fz:cam.z,tz:Math.min(cam.z,1.6),fx:back.x,fy:back.y,tx:(tj%W+.5)*TS,ty:(((tj/W)|0)+.5)*TS,t:0,dur:1.6,done:show}}
-function oreWakeReset(){if(OREWAKEON){OREWAKEON=false;GIFT_ACTIVE=false;document.querySelectorAll('.idea-reveal[aria-label="鉱脈が目をさました"]').forEach(e=>e.remove())}}/* 村を切りかえたとき */
+      button.onclick=()=>{if(button.disabled)return;overlay.remove();if(!ok())return finish();camAnim=OREWAKECAM={fz:cam.z,tz:back.z,fx:cam.x+VW/cam.z/2,fy:cam.y+VH/cam.z/2,tx:back.x,ty:back.y,t:0,dur:1.2,done:finish}}},900)};
+  musicDuck(2600);if(tj==null){show();return}camAnim=OREWAKECAM={fz:cam.z,tz:Math.min(cam.z,1.6),fx:back.x,fy:back.y,tx:(tj%W+.5)*TS,ty:(((tj/W)|0)+.5)*TS,t:0,dur:1.6,done:show}}
+function oreWakeReset(){if(OREWAKEON){if(OREWAKECAM&&camAnim===OREWAKECAM)camAnim=null;/* 旧い村のカメラの動きを、新しい村にもちこさない（おわりの処理は、ここでかたづけるので、よばなくてよい） */OREWAKECAM=null;OREWAKEON=false;GIFT_ACTIVE=false;document.querySelectorAll('.idea-reveal[aria-label="鉱脈が目をさました"]').forEach(e=>e.remove())}}/* 村を切りかえたとき */
 /* 毎朝：目をさました鉱石の鉱脈が、岩のそばの空いた地面にふえる（村の中はのぞく） */
 function veinMorning(){if(!S||WD!==1||S.free)return;if(IS_STORY_REPLAY||typeof MEMRUN!=='undefined'&&MEMRUN||typeof NOSAVE!=='undefined'&&NOSAVE)return;const k=oreStage();if(!k)return;const kinds=VEIN_IDS.filter(v=>oreOn(VEINS[v]));if(!kinds.length)return;
   let have=0;for(let j=0;j<W*H;j++)if(VEINS[S.obj[j]]&&S.dyn[j]&&S.dyn[j].vg)have++;let n=Math.min(OREWAKE[k-1].day,VEIN_GROW_MAX-have);if(n<=0)return;
