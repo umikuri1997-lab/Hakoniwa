@@ -14,6 +14,9 @@ x=東, y=南, z=上（マス）。置くマスの左上が(0,0)。
   wheel(cx,cy,cz,r,t)                車輪（正面を向いた円板、あつさ t）
   ball(cx,cy,cz,r)                   丸いかたまり（葉・花・荷物）
   rope(a,b,r)                        なわ
+  model(path,cx,cy,z0,size,rot,tilt)      フリーの3Dモデル（glTF の .glb。models/ にある CC0 の物）。size はモデルの高さ（マス）、rot は上から見てまわす角度・tilt は東西へたおす角度（度）
+  lathe(cx,cy,[(半径,高さ),...])     まわした形（つぼ）。上から下への形
+  box は bevel=（面取りのはば）を部品ごとにかえられる
 """
 import math,os
 import numpy as np
@@ -21,8 +24,8 @@ from PIL import Image,ImageDraw,ImageFont
 from oblique3d import Scene,render,game,side,VIEW,SIDE,grid_bg
 
 class Part:
-    def __init__(s,name,kind,dims,col,on=('ground',),note='',deco=False,detail=36):
-        s.name,s.kind,s.dims,s.col,s.on,s.note,s.deco,s.detail=name,kind,dims,col,tuple(on) if on else (),note,deco,detail
+    def __init__(s,name,kind,dims,col=(200,200,200),on=('ground',),note='',deco=False,detail=36,bevel=None):
+        s.name,s.kind,s.dims,s.col,s.on,s.note,s.deco,s.detail,s.bevel=name,kind,dims,col,tuple(on) if on else (),note,deco,detail,bevel
     def bbox(s):
         k,d=s.kind,s.dims
         if k=='box':return d
@@ -31,6 +34,8 @@ class Part:
         if k=='pyr':cx,cy,hw,hd,z0,z1=d;return(cx-hw,cy-hd,z0,cx+hw,cy+hd,z1)
         if k=='wheel':cx,cy,cz,r,t=d;return(cx-r,cy-t/2,cz-r,cx+r,cy+t/2,cz+r)
         if k=='ball':cx,cy,cz,r=d;return(cx-r,cy-r,cz-r,cx+r,cy+r,cz+r)
+        if k=='model':V,F,C=model_tris(*d);return(*V.min(0),*V.max(0))
+        if k=='lathe':cx,cy,pr=d;r=max(q[0] for q in pr);return(cx-r,cy-r,min(q[1] for q in pr),cx+r,cy+r,max(q[1] for q in pr))
         pts=s.corners();a=np.array(pts);return(*a.min(0),*a.max(0))
     def corners(s):
         k,d=s.kind,s.dims
@@ -64,7 +69,11 @@ def check(parts,tol=0.035):
 def build(sc,parts):
     for p in parts:
         k,d,c=p.kind,p.dims,np.array(p.col,float)
-        if k=='box':sc.box(*d,tuple(c))
+        if k=='box':sc.box(*d,tuple(c),bevel=p.bevel)
+        elif k=='lathe':cx,cy,pr=d;sc.revolve(cx,cy,pr,lambda k_,i:tuple(c),n=p.detail)
+        elif k=='model':
+            V,F,C=model_tris(*d);sc.part()
+            for f,cc in zip(F,C):sc.tri(V[f[0]],V[f[1]],V[f[2]],tuple(cc*(1-MODEL_SOFT)+255*MODEL_SOFT))   # モデルの色は、ゲームに合わせて少しうすく
         elif k=='cyl':cx,cy,r,z0,z1=d;sc.ring_wall(cx,cy,r,z0,z1,lambda *a:tuple(c),n=p.detail);sc.annulus(cx,cy,0,r,z1,lambda *a:tuple(c*1.04),n=p.detail)
         elif k=='ring':cx,cy,r0,r,z0,z1=d;sc.ring_wall(cx,cy,r,z0,z1,lambda i,a0,a1:tuple(c*(1 if i%2 else .95)),n=p.detail);sc.ring_wall(cx,cy,r0,z0,z1,lambda *a:tuple(c*.9),n=p.detail);sc.annulus(cx,cy,r0,r,z1,lambda *a:tuple(c*1.04),n=p.detail)
         elif k=='cone':cx,cy,r,z0,z1=d;sc.revolve(cx,cy,[(0.0,z1),(r,z0)],lambda k_,i:tuple(c),n=p.detail)
@@ -87,6 +96,26 @@ def build(sc,parts):
                 a0=2*math.pi*i/24;a1=2*math.pi*(i+1)/24;P_=lambda a,yy:(cx+r*math.cos(a),yy,cz+r*math.sin(a))
                 sc.quad(P_(a0,cy-t/2),P_(a1,cy-t/2),P_(a1,cy+t/2),P_(a0,cy+t/2),tuple(c*.9))
         elif k=='ball':cx,cy,cz,r=d;sc.sphere(cx,cy,cz,r,tuple(c),n=14,m=8)
+
+MODELS=os.path.join(os.path.dirname(os.path.abspath(__file__)),'models')
+_MC={};MODEL_SOFT=0.3   # モデルの色を白にまぜる分
+POTCOL=(226,196,166)   # 観葉植物のはち（モデルではこい灰色）を、ゲームに合わせたやきものの色に
+def model_tris(path,cx,cy,z0,size,rot=0,tilt=0):
+    """glTF のモデルを読んで、ゲームの向き（x=東, y=南, z=上）の三角形にする。モデルの正面（+Z）を南（手前）へ。色はモデルの色（テクスチャの色をとる）"""
+    key=(path,cx,cy,z0,size,rot,tilt)
+    if key in _MC:return _MC[key]
+    import trimesh
+    m=trimesh.load(os.path.join(MODELS,path),force='scene').to_geometry()
+    if hasattr(m.visual,'to_color'):vc=m.visual.to_color().vertex_colors[:,:3].astype(float);col=vc[np.array(m.faces)].mean(1)
+    elif hasattr(m.visual,'face_colors'):col=m.visual.face_colors[:,:3].astype(float)
+    else:col=np.full((len(m.faces),3),200.0)
+    if 'Houseplant' in path:col[(col.mean(1)<90)&(col.max(1)-col.min(1)<18)]=POTCOL   # 灰色のはちだけ（葉の緑はそのまま）
+    v=np.array(m.vertices,float);V=np.stack([v[:,0],v[:,2],v[:,1]],1)   # glTF（y上・z手前）→ x・y南・z上
+    k=size/(V[:,2].max()-V[:,2].min())   # size は、たおす前のモデルの高さ
+    t=math.radians(tilt);T=np.array([[math.cos(t),0,math.sin(t)],[0,1,0],[-math.sin(t),0,math.cos(t)]]);V=V@T.T   # よこにたおす（東西の向きに）
+    a=math.radians(rot);R=np.array([[math.cos(a),-math.sin(a),0],[math.sin(a),math.cos(a),0],[0,0,1]]);V=V@R.T
+    V=(V-[(V[:,0].max()+V[:,0].min())/2,(V[:,1].max()+V[:,1].min())/2,V[:,2].min()])*k+[cx,cy,z0]
+    _MC[key]=(V,np.array(m.faces),col);return _MC[key]
 
 TOP=np.array([0,0,1.0]);EAST=np.array([1.0,0,0])
 def topv(p):return(p[0],p[1])
