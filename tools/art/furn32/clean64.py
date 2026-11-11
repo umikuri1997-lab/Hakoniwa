@@ -41,19 +41,36 @@ def clean(im, mats, ks):
     from scipy.ndimage import binary_fill_holes
     out_t = ~binary_fill_holes(m); p = np.pad(out_t, 1, constant_values=True)
     r1 = m & (p[:-2, 1:-1] | p[2:, 1:-1] | p[1:-1, :-2] | p[1:-1, 2:])   # いちばん外の1ドット
+    Lm = np.zeros((H, W), bool)
+    for y in range(H):
+        for x in range(W):
+            if m[y, x]: Lm[y, x] = r1[y, x] or lab[y, x] == len(pals[mat[y, x]]) - 1
+    # 線のはばは3ドットまで：よこにもたてにも4ドット以上つづく所は、こいかげの面（線ではない）。ふちの1ドットだけ線にする
+    def run(y, x, dy, dx):
+        n = 0; yy, xx = y + dy, x + dx
+        while 0 <= yy < H and 0 <= xx < W and Lm[yy, xx]: n += 1; yy += dy; xx += dx
+        return n
+    thick = np.zeros((H, W), bool)
+    for y in range(H):
+        for x in range(W):
+            if Lm[y, x] and min(1 + run(y, x, 0, 1) + run(y, x, 0, -1), 1 + run(y, x, 1, 0) + run(y, x, -1, 0)) >= 4: thick[y, x] = True
+    for y, x in zip(*np.where(thick)):
+        if r1[y, x]: continue
+        edge = any(0 <= y + dy < H and 0 <= x + dx < W and m[y + dy, x + dx] and not Lm[y + dy, x + dx] for dy, dx in ((0, 1), (0, -1), (1, 0), (-1, 0)))
+        if not edge: Lm[y, x] = False
     o = np.zeros((H, W, 4), np.uint8)
     for y in range(H):
         for x in range(W):
             if not m[y, x]: continue
-            P = pals[mat[y, x]]; j = lab[y, x]; k = len(P)
-            # 輪郭線（外のふち・部品のさかい＝元のいちばんこい色の線）だけ、うすい線の色に。はばは元の絵のまま
-            if r1[y, x] or j == k - 1: o[y, x, :3] = np.round(P[k - 2] * .5 + P[k - 1] * .5)
+            P = pals[mat[y, x]]; k = len(P)
+            # 輪郭線（外のふち・部品のさかい＝元のいちばんこい色の線）だけ、うすい線の色に。はばは元の絵のまま（3ドットまで）
+            if Lm[y, x]: o[y, x, :3] = np.round(P[k - 2] * .5 + P[k - 1] * .5)
             else: o[y, x, :3] = qp[mat[y, x]][qi[y, x]]   # 木目など、ほかのドットは、木目がのこるぐらいの色の数にまとめた色
             o[y, x, 3] = 255
-    L = m & ((lab == np.array([len(pals[mat[y, x]]) - 1 if m[y, x] else -9 for y in range(H) for x in range(W)]).reshape(H, W)) | r1)
+    L = Lm
     return Image.fromarray(o, 'RGBA'), L
 
-FIXES = {'chair': [('holes',), ('diag', 25, 37)], 'chair>2': [('holes',)]}   # 形のくずれをなおす：すきまを四角に・小さな穴をうめる・ななめのふちを同じきざみの段に（左がわ。右は左右対称で写す）
+FIXES = {'chair': [('holes',), ('diag', 25, 37)], 'chair>2': [('holes',)]}   # chair>2 の小さな穴は、いったんうめて、OPEN で3本そろえてあけなおす   # 形のくずれをなおす：すきまを四角に・小さな穴をうめる・ななめのふちを同じきざみの段に（左がわ。右は左右対称で写す）
 
 def fix_shape(img, L, fixes):
     from scipy.ndimage import binary_fill_holes, label, find_objects
@@ -93,6 +110,27 @@ def fix_shape(img, L, fixes):
     return Image.fromarray(o, 'RGBA'), L
 
 KQ = {'wood': 20, 'barrel': 20, 'metal': 8, 'cloth': 6}   # 材料ごとの色の数（木目がのこるぐらい。白い布は少なく）
+
+OPEN = {'chair>2': (15, 16, 17)}   # うしろ向きのいす：すきまから見える座面（明るいすじ）の上に、穴（上の行・下の行・すじを見る行）。3本とも同じに
+
+def open_holes(img, y0, y1, ys):
+    """うしろ向きのいすの、すきまの上の穴：明るいすじ（座面が見える所）の上の行を、3本とも同じはば（2ドット。元の絵の左右の穴と同じ）で透明に。
+    すじのまん中にあける（まん中の穴は、左右対称のまん中にそろう）"""
+    o = np.asarray(img).copy(); Lm = o[..., :3] @ np.array([.3, .59, .11]); a = o[..., 3] > 0
+    row = Lm[ys]; xs = np.where(a[ys])[0]; th = np.percentile(row[xs], 75); S = xs[0] + xs[-1]
+    x = xs[0] + 4; cs = []
+    while x < xs[-1] - 4:
+        if row[x] >= th:
+            x0 = x
+            while x < xs[-1] - 4 and row[x] >= th: x += 1
+            cs.append((x0 + x - 1) / 2)
+        x += 1
+    for c in cs:   # 左のすじとまん中のすじにあけ、右は左を写す（ぴったり左右対称）
+        if 2 * c > S + 3: continue
+        if abs(2 * c - S) < 3: x0 = (S - 1) // 2   # まん中：左右対称のまん中の2ドット
+        else: x0 = int(round(c - .5))
+        for X in (x0, S - x0 - 1): o[y0:y1 + 1, X:X + 2] = 0
+    return Image.fromarray(o, 'RGBA')
 
 SYM = {'chair', 'chair>2', 'chair>2.front', 'table', 'bed', 'taru'}   # 左右対称にする物（光とかげだけ左右でちがう）
 PARA = {'table'}   # 平行投影にする物（天板の奥を、手前と同じはばに）
@@ -163,6 +201,7 @@ def build(b):
         r, L = clean(im, *ITEMS[b])
         if k in FIXES: r, L = fix_shape(r, L, FIXES[k])
         if k in SYM: r = symmetric(r, L, im)
+        if k in OPEN: r = open_holes(r, *OPEN[k])
         bb = r.getbbox()
         out[k] = {'f': [r.crop(bb)], 'ax': round(meta[k]['ax']) + bb[0], 'ay': round(meta[k]['ay']) + bb[1]}
     return out
