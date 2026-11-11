@@ -61,80 +61,88 @@ class Cv:
                 img[y, x, :3] = hx(M[t]); img[y, x, 3] = 255
         return Image.fromarray(img, 'RGBA')
 
-# ---- いす（前・よこ・うしろ） ----
+# ---- 元の絵の形のとおりに描く：座標は、元の絵を半分にした絵（tools/art/furn32/src の絵を BOX で半分）と同じ。原点（ox, oy）も、そのときの原点 ----
+def spans(c, rows, mat, tone='base'):
+    """rows：{y: (x0, x1)} の行ごとのはば（元の絵の形をそのまま写す）"""
+    for y, (x0, x1) in rows.items(): c.rect(x0, y, x1, y, mat, tone)
+
 def chair():
-    c = Cv(21, 33)   # 前（元 42×65 の半分）
-    c.rect(2, 0, 17, 6, 'wood', 'base'); c.tone(2, 0, 17, 1, 'top'); c.tone(2, 6, 17, 6, 'side'); c.round(2, 0, 17, 6, 'tl tr')
-    c.rect(2, 7, 4, 13, 'wood'); c.rect(15, 7, 17, 13, 'wood'); c.tone(4, 7, 4, 13, 'side'); c.tone(17, 7, 17, 13, 'side')
-    for x in (6, 9, 12): c.rect(x, 7, x + 1, 12, 'wood', 'base', True); c.tone(x + 1, 7, x + 1, 12, 'side')
-    c.rect(1, 13, 18, 24, 'wood', 'top'); c.tone(1, 13, 18, 14, 'hi'); c.tone(1, 23, 18, 24, 'side'); c.round(1, 13, 18, 24)
-    c.rect(2, 25, 5, 31, 'wood', 'base'); c.rect(14, 25, 17, 31, 'wood', 'base'); c.tone(2, 25, 17, 25, 'dark')
-    s = Cv(21, 34)   # よこ（元 41×67）
-    s.rect(2, 0, 6, 24, 'wood', 'base'); s.tone(2, 0, 3, 24, 'top'); s.round(2, 0, 6, 24, 'tl tr')
-    s.rect(4, 12, 19, 22, 'wood', 'top'); s.tone(4, 12, 19, 13, 'hi'); s.rect(4, 22, 19, 24, 'wood', 'side'); s.round(4, 12, 19, 24, 'tr br')
-    s.rect(3, 25, 6, 32, 'wood', 'base'); s.rect(15, 25, 18, 32, 'wood', 'base'); s.tone(3, 25, 18, 25, 'dark')
-    b = Cv(21, 30)   # うしろ（元 41×60）
-    b.rect(1, 0, 18, 6, 'wood', 'base'); b.tone(1, 0, 18, 1, 'top'); b.tone(1, 6, 18, 6, 'side'); b.round(1, 0, 18, 6, 'tl tr')
-    b.rect(1, 7, 18, 16, 'wood', 'side'); b.tone(1, 7, 4, 16, 'base'); b.tone(15, 7, 18, 16, 'base')
-    for x in (6, 9, 12): b.rect(x, 8, x + 1, 15, 'wood', 'top', True)
-    b.rect(1, 17, 18, 18, 'wood', 'top'); b.rect(1, 19, 18, 21, 'wood', 'dark'); b.round(1, 17, 18, 21, 'bl br')
-    b.rect(1, 22, 4, 29, 'wood', 'base'); b.rect(15, 22, 18, 29, 'wood', 'base')
-    return {'chair': (c, 11, -14), 'chair>1': (s, 11, -24), 'chair>2': (b, 11, -17)}
+    c = Cv(22, 33)   # 前
+    c.rect(5, 0, 16, 0, 'wood', 'top'); c.rect(3, 1, 18, 1, 'wood', 'top'); c.rect(2, 2, 19, 6, 'wood', 'base'); c.tone(2, 2, 19, 2, 'top'); c.tone(2, 6, 19, 6, 'side'); c.clear(2, 6)
+    c.rect(3, 7, 18, 13, 'wood', 'base')   # 背の下：柱・板・すきま
+    for x0, x1 in ((7, 7), (10, 11), (14, 14)):
+        for y in range(7, 12): c.clear(x0, y); c.clear(x1, y)
+    for x in (9, 13): c.tone(x, 7, x, 11, 'side')
+    c.tone(3, 12, 18, 13, 'side')
+    c.rect(2, 14, 19, 16, 'wood', 'top'); c.rect(1, 17, 20, 22, 'wood', 'top'); c.tone(2, 15, 19, 15, 'hi')   # 座面の上（いちばん奥に明るい線）
+    c.rect(1, 23, 20, 24, 'wood', 'base'); c.rect(2, 25, 19, 25, 'wood', 'side')   # 座面の前
+    c.rect(2, 26, 5, 31, 'wood', 'base'); c.rect(16, 26, 19, 31, 'wood', 'base'); c.tone(2, 26, 19, 26, 'dark')   # 脚
+    s = Cv(21, 34)   # よこ：うしろへかたむいた背もたれ
+    spans(s, {1: (3, 6), 2: (3, 6), 3: (2, 6), 4: (2, 6), 5: (2, 6), 6: (1, 6), 7: (1, 6), 8: (1, 7), 9: (1, 7), 10: (1, 7), 11: (1, 7)}, 'wood')
+    for y in range(1, 9): s.tone(3 if y < 3 else 2 if y < 6 else 1, y, (3 if y < 3 else 2 if y < 6 else 1) + 1, y, 'top')
+    s.rect(2, 12, 19, 12, 'wood', 'base'); s.rect(2, 13, 20, 23, 'wood', 'top'); s.tone(2, 13, 6, 23, 'base'); s.tone(7, 13, 19, 13, 'hi')
+    s.rect(3, 22, 20, 24, 'wood', 'base'); s.tone(3, 24, 20, 24, 'side')
+    s.rect(3, 25, 6, 32, 'wood', 'base'); s.rect(16, 25, 19, 32, 'wood', 'base'); s.tone(3, 25, 19, 25, 'dark')
+    b = Cv(21, 31)   # うしろ
+    b.rect(2, 1, 19, 1, 'wood', 'top'); b.rect(1, 2, 20, 7, 'wood', 'base'); b.tone(1, 2, 20, 2, 'top'); b.tone(1, 7, 20, 7, 'side')
+    b.rect(1, 8, 19, 15, 'wood', 'side'); b.tone(1, 8, 3, 15, 'base'); b.tone(17, 8, 19, 15, 'base')
+    for x in (5, 9, 13): b.rect(x, 9, x + 2, 15, 'wood', 'base', True); b.tone(x, 9, x, 15, 'top')
+    b.rect(1, 16, 19, 17, 'wood', 'top'); b.rect(1, 18, 19, 21, 'wood', 'dark')
+    b.rect(1, 22, 4, 28, 'wood', 'base'); b.rect(16, 22, 19, 28, 'wood', 'base')
+    return {'chair': (c, 5, -7), 'chair>1': (s, 5, -12), 'chair>2': (b, 5, -9)}
 
 def table():
-    c = Cv(34, 37)   # 元 68×74
-    c.rect(1, 11, 32, 25, 'wood', 'top'); c.tone(1, 11, 32, 12, 'hi'); c.round(1, 11, 32, 25, 'tl tr')
-    c.rect(1, 26, 32, 28, 'wood', 'side'); c.round(1, 26, 32, 28, 'bl br')
-    c.rect(3, 29, 7, 36, 'wood', 'base'); c.rect(26, 29, 30, 36, 'wood', 'base'); c.tone(3, 29, 30, 29, 'dark')
-    return {'table': (c, -2, -21)}
+    c = Cv(35, 38)
+    c.rect(3, 11, 31, 11, 'wood', 'top'); c.rect(2, 12, 32, 16, 'wood', 'top'); c.rect(1, 17, 33, 25, 'wood', 'top')   # 天板の上
+    c.rect(1, 26, 33, 28, 'wood', 'base'); c.rect(2, 29, 32, 29, 'wood', 'side')   # 天板の前
+    c.rect(3, 30, 8, 36, 'wood', 'base'); c.rect(26, 30, 31, 36, 'wood', 'base'); c.tone(3, 30, 31, 30, 'dark')   # 脚
+    c.rect(5, 37, 6, 37, 'wood', 'side'); c.rect(28, 37, 29, 37, 'wood', 'side')
+    return {'table': (c, -2, -11)}
 
 def bed():
-    c = Cv(32, 41)   # たて（元 63×81）
-    c.rect(4, 0, 27, 2, 'ywood', 'top'); c.rect(4, 3, 27, 5, 'ywood', 'side')
-    c.rect(3, 3, 28, 32, 'cloth', 'base')
-    c.rect(3, 3, 28, 3, 'cloth', 'side', True)   # 頭板の下のかげ
-    c.rect(6, 4, 25, 9, 'cloth', 'line2', True); c.rect(7, 5, 24, 8, 'cloth', 'hi', True); c.clear(6, 4); c.clear(25, 4); c.px(6, 4, 'cloth', 'side'); c.px(25, 4, 'cloth', 'side')   # まくら
-    c.rect(3, 10, 28, 12, 'cloth', 'hi', True); c.rect(3, 13, 28, 13, 'cloth', 'line2', True)   # 折り返したシーツ
-    c.rect(3, 14, 28, 30, 'cloth', 'top'); c.rect(3, 31, 28, 32, 'cloth', 'side', True)
-    for x in (3, 28): c.rect(x, 4, x, 32, 'cloth', 'side', True)   # わくのきわのかげ
-    c.rect(4, 33, 27, 37, 'ywood', 'top'); c.tone(4, 33, 27, 33, 'hi'); c.tone(4, 37, 27, 37, 'side')
-    for x0 in (0, 28):
-        c.rect(x0, 0, x0 + 3, 40, 'ywood', 'base'); c.tone(x0, 0, x0 + 3, 1, 'hi'); c.tone(x0, 30, x0 + 3, 31, 'hi'); c.round(x0, 0, x0 + 3, 40, 'tl tr')
-    s = Cv(39, 39)   # よこ（元 77×77）
-    s.rect(4, 3, 34, 29, 'cloth', 'base')
-    s.rect(5, 4, 10, 27, 'cloth', 'line2', True); s.rect(6, 5, 9, 26, 'cloth', 'hi', True)   # まくら
-    s.rect(11, 1, 14, 30, 'cloth', 'hi'); s.rect(11, 1, 11, 30, 'cloth', 'line2', True); s.rect(14, 1, 14, 30, 'cloth', 'line2', True); s.round(11, 1, 14, 30, 'tl tr')   # 折り返したシーツ
-    s.rect(15, 3, 34, 24, 'cloth', 'top'); s.rect(15, 25, 34, 29, 'cloth', 'side', True); s.round(15, 3, 34, 29, 'tr')
-    s.rect(4, 30, 34, 34, 'ywood', 'top'); s.tone(4, 30, 34, 30, 'hi'); s.tone(4, 34, 34, 34, 'side')
+    c = Cv(32, 41)   # たて
+    c.rect(3, 4, 28, 31, 'cloth', 'top')   # ふとん
+    c.rect(6, 1, 25, 1, 'ywood', 'side'); c.rect(4, 2, 27, 3, 'ywood', 'top')   # 頭の板
+    c.rect(6, 4, 25, 9, 'cloth', 'hi', True); c.rect(6, 4, 6, 9, 'cloth', 'line2', True); c.rect(25, 4, 25, 9, 'cloth', 'line2', True); c.rect(6, 9, 25, 9, 'cloth', 'line2', True)   # まくら
+    c.rect(4, 12, 27, 12, 'cloth', 'line2', True)   # シーツの折り目
+    c.rect(4, 29, 27, 31, 'cloth', 'side', True)   # ふとんのすそ
+    c.rect(3, 32, 28, 38, 'ywood', 'top'); c.tone(3, 33, 28, 33, 'side'); c.tone(3, 38, 28, 38, 'side')   # 足の板
+    for x0, x1 in ((0, 3), (28, 31)):
+        c.rect(x0, 0, x1, 40, 'ywood', 'base'); c.tone(x0, 0, x1, 2, 'top'); c.tone(x0, 29, x1, 31, 'top')   # 柱（上から下まで同じ太さ）
+    c.round(0, 0, 3, 40, 'tl'); c.round(28, 0, 31, 40, 'tr')
+    s = Cv(39, 39)   # よこ
+    s.rect(4, 3, 34, 29, 'cloth', 'top')
+    s.rect(4, 4, 10, 24, 'cloth', 'hi', True); s.rect(4, 22, 10, 22, 'cloth', 'line2', True)   # まくら
+    s.rect(11, 1, 14, 31, 'cloth', 'hi'); s.rect(11, 2, 11, 31, 'cloth', 'line2', True); s.rect(14, 2, 14, 31, 'cloth', 'line2', True); s.round(11, 1, 14, 31, 'tl tr')   # 折り返したシーツ
+    s.rect(15, 25, 34, 29, 'cloth', 'side', True)   # ふとんのすそ
+    s.rect(4, 30, 34, 34, 'ywood', 'top'); s.tone(4, 34, 34, 34, 'side')   # よこの板
     for x0 in (0, 35):
-        s.rect(x0, 0, x0 + 3, 38, 'ywood', 'base'); s.tone(x0, 0, x0 + 3, 1, 'hi'); s.round(x0, 0, x0 + 3, 38, 'tl tr')
-    return {'bed': (c, 0, -17), 'bed>1': (s, -3, -13)}
+        s.rect(x0, 0, x0 + 3, 38, 'ywood', 'top'); s.tone(x0, 6, x0 + 3, 6, 'side'); s.tone(x0, 20, x0 + 3, 20, 'side'); s.round(x0, 0, x0 + 3, 38, 'tl tr')
+    return {'bed': (c, 0, -9), 'bed>1': (s, -2, -7)}
 
 def taru():
-    c = Cv(24, 32)   # 元 48×63
-    half = [7, 9, 10, 11, 11, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 11, 11, 10, 9, 8, 6]   # 行ごとの半はば（まん中12）
-    for y, hw in enumerate(half): c.rect(12 - hw, y, 11 + hw, y, 'barrel', 'base')
-    lid = [5, 7, 8, 9, 9, 9, 8, 7, 5]   # ふた（上の面のだ円）
-    for i, hw in enumerate(lid): c.tone(12 - hw, 1 + i, 11 + hw, 1 + i, 'top')
-    for i, hw in enumerate(lid):   # ふたのふち（こい色の輪）
-        for x in (12 - hw, 11 + hw): c.px(x, 1 + i, 'barrel', 'dark')
-        if i in (0, len(lid) - 1):
-            for x in range(12 - hw, 12 + hw): c.px(x, 1 + i, 'barrel', 'dark')
-    for i, hw in enumerate(lid[2:-2]): c.tone(12 - hw + 2, 3 + i, 11 + hw - 2, 3 + i, 'hi')
-    for x in (7, 12, 17):   # 板のすじ（まっすぐ）
-        for y in range(11, 31): c.px(x, y, 'barrel', 'side')
-    def band(y0):
-        dip = [0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 2]   # まん中ほど下がる（すこし丸く）
+    c = Cv(24, 32)
+    rows = {0: (9, 14), 1: (6, 17), 2: (4, 19), 3: (3, 20), 4: (2, 21), 5: (2, 21), 6: (1, 22), 7: (1, 22), 8: (1, 22), 9: (1, 22)}
+    rows.update({y: (0, 23) for y in range(10, 24)}); rows.update({24: (1, 22), 25: (1, 22), 26: (2, 21), 27: (2, 21), 28: (2, 21), 29: (3, 20), 30: (5, 18), 31: (8, 15)})
+    spans(c, rows, 'barrel')
+    for y, (x0, x1) in rows.items():   # 右がわは、かげ
+        if y >= 9: c.tone(16, y, x1, y, 'side')
+    lid = {2: (4, 19), 3: (3, 20), 4: (3, 20), 5: (3, 20), 6: (3, 20), 7: (3, 20), 8: (4, 19), 9: (6, 17)}   # ふた（だ円）
+    for y, (x0, x1) in lid.items(): c.tone(x0, y, x1, y, 'side')
+    inner = {3: (6, 17), 4: (4, 19), 5: (4, 19), 6: (4, 19), 7: (5, 18)}
+    for y, (x0, x1) in inner.items(): c.tone(x0, y, x1, y, 'top')
+    for x in (9, 14):   # ふたの板のさかい
+        for y in range(3, 8): c.px(x, y, 'barrel', 'base')
+    for x in (8, 15):   # 胴の板のすじ（まっすぐ）
+        for y in range(10, 31): c.px(x, y, 'barrel', 'dark')
+    def band(y0):   # 金の帯：はば4、まん中ほど下がる
         for x in range(24):
-            d = dip[min(x, 23 - x)] if min(x, 23 - x) < 12 else 2
-            for k in range(3):
-                y = y0 + d + k
-                if 0 <= y < 32 and c.m[y, x]: c.px(x, y, 'metal', 'top' if k == 0 else 'base' if k == 1 else 'side', False)
-    band(10); band(22)
-    for x in range(24):
-        for y in range(32):
-            if c.m[y, x] == 'barrel' and c.t[y, x] in ('base',) and x > 15: c.t[y, x] = 'side' if c.t[y, x] == 'base' else c.t[y, x]
-    return {'taru': (c, 8, -19)}
+            d = abs(x - 11.5) / 12; dip = round(4 * (1 - d * d))
+            for k, t in enumerate(('top', 'base', 'base', 'side')):
+                y = y0 + dip + k
+                if 0 <= y < 32 and c.m[y, x]: c.px(x, y, 'metal', t, False)
+    band(10); band(21)
+    return {'taru': (c, 4, -10)}
 
 DESIGNS = {'chair': chair, 'table': table, 'bed': bed, 'taru': taru}
 
@@ -144,17 +152,17 @@ def front_from(parent_img, px0, py0, key):
     fn = re.sub(r'[^0-9A-Za-z_.-]', lambda q: '_%02x' % ord(q.group()), key)
     a = np.asarray(Image.open(os.path.join(SRC, fn + '.png')).convert('RGBA'))[..., 3] > 100
     P = np.asarray(parent_img); out = np.zeros(P.shape, np.uint8)
-    ox, oy = round(m['ax'] / 2) - px0, round(m['ay'] / 2) - py0
+    ax, ay = round(m['ax']), round(m['ay']); x0, y0 = ax - ax % 2, ay - ay % 2   # 元の絵の原点を、半分にした絵と同じにそろえる
     for y in range(P.shape[0]):
         for x in range(P.shape[1]):
-            sy, sx = (y - oy) * 2, (x - ox) * 2
+            sy, sx = (y + py0) * 2 - ay, (x + px0) * 2 - ax
             if 0 <= sy < a.shape[0] and 0 <= sx < a.shape[1] and a[sy:sy + 2, sx:sx + 2].any(): out[y, x] = P[y, x]
     return Image.fromarray(out, 'RGBA')
 
 def build(b):
     res = {}
     for k, (cv, ax, ay) in DESIGNS[b]().items():
-        im = cv.render(); ox, oy = round(ax / 2), round(ay / 2); res[k] = (im, ox, oy)
+        im = cv.render(); res[k] = (im, ax, ay)   # ax, ay：キャンバスの原点（g32）
     if b == 'chair':
         im, ox, oy = res['chair>2']; res['chair>2.front'] = (front_from(im, ox, oy, 'chair>2.front'), ox, oy)
     out = {}
