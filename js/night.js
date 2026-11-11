@@ -140,9 +140,9 @@ function edgeSpot(){const R=spawnReach();
 const INDL=new Set(['candle','lantern','flamp']);/* 室内の灯り：家の中なら家じゅう、外なら1マス */
 const LSPR=new Map();function lightSpr(R){/* 明かりの光の絵（半径 R、まん中の明るさ .9）。半径ごとに1まいだけ作っておく */let c=LSPR.get(R);if(c)return c;c=document.createElement('canvas');c.width=c.height=R*2;const g=c.getContext('2d'),gr=g.createRadialGradient(R,R,2,R,R,R);gr.addColorStop(0,'rgba(255,214,120,.9)');gr.addColorStop(1,'rgba(255,200,100,0)');g.fillStyle=gr;g.fillRect(0,0,R*2,R*2);LSPR.set(R,c);return c}
 const LIGHTP={/* 夜の明かり：光のまん中（マスの左上から dx・dy ドット）と、光の半径 R */
-  lamp:{dx:16,dy:3,R:100},tower:{dx:16,dy:6,R:150},yogan:{dx:32,dy:8,R:60},lighthouse:{dx:32,dy:-78,R:130},campfire:{dx:16,dy:14,R:110},
+  lamp:{dx:16,dy:3,R:100},tower:{dx:16,dy:6,R:150},yogan:{dx:32,dy:8,R:60},lighthouse:{dx:32,dy:-65,R:130},campfire:{dx:16,dy:14,R:110},
   statue:{dx:16,dy:-6,R:110},torch:{dx:16,dy:-22,R:105},candle:{dx:16,dy:10,R:45},lantern:{dx:16,dy:6,R:45},flamp:{dx:16,dy:-6,R:45},takeakari:{dx:16,dy:14,R:90},andon:{dx:16,dy:16,R:90},toro:{dx:16,dy:11,R:100},yomawari:{dx:15,dy:5,R:100}};/* 石どうろうは火袋、よまわりのランタンはガラスの所が光る（まわり3.5マス＝かがり火と同じ） */
-function steleF(j){const o=S.obj[j],b=o&&BL[o]&&BL[o].hp;if(!b||!STELES.length)return 1;const x=j%W,y=(j/W)|0;for(const q of STELES)if(Math.hypot(q%W-x,((q/W)|0)-y)<=7)return (BL[o].hpS||b)/b;return 1}/* 石碑：まわり7マスの壁・柵・塀は、じょうぶさが BL の hpS（実数で書いてある）になる */
+function steleF(j){const o=S.obj[j],b=o&&BL[o]&&BL[o].hp;if(!b||!STELES.length)return 1;const x=j%W,y=(j/W)|0;for(const q of STELES)if(Math.hypot(q%W-x,((q/W)|0)-y)<=7)return (BL[o].hpS||b)/b;return 1}/* ノームの石像（stele）：まわり7マスの壁・柵・塀は、じょうぶさが BL の hpS（実数で書いてある）になる */
 function litNear(h,x,y){for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++)if(h.set.has((y+dy)*W+x+dx))return true;return false}/* 家の中の灯り：家ぜんたいと、そこから1マス */
 function lightMul(x,y){for(const j of LIGHTS)if(S.obj[j]==='toro'&&(j%W+.5-x)**2+(((j/W)|0)+.5-y)**2<12.25)return .75;return lightAt(x,y)?.8:1}/* 灯りの中のコワイノの速さ：石どうろう0.75倍・ふつうの灯り0.8倍 */
 function lightAt(x,y){for(const j of LIGHTS){const o=S.obj[j];const offset=o==='tower'&&WD===0?sacredSpan()/2:o==='lighthouse'?1:.5,lx=j%W+offset,ly=((j/W)|0)+offset;if(INDL.has(o)){const h=roomOf(j);if(h?litNear(h,x|0,y|0):(lx-x)**2+(ly-y)**2<2.25)return true;continue}if((lx-x)**2+(ly-y)**2<(o==='tower'?49:o==='lighthouse'?64:12.25))return true}/* 灯りの範囲（石灯籠2.5・ふつう3.5・台座7マス） */return gearLightAt(x,y)}
@@ -325,7 +325,7 @@ function takeDrop(d,r){let nm;
 function itemName(id){return id==='sand'?'やすらぎの砂':id==='horn'?'よびごえの角笛':id==='herb'?'まよけのハーブ':id==='mebuki'?'めぶきのしずく':id==='hai'?'ハイカゲの灰':id==='gear'||id==='gearf'?'そうび':id.startsWith('seed:')?CROPS[id.slice(5)].name+'のたね':BL[id]?(BL[id].item||BL[id].name):id}
 function stowItem(id,n,r){/* はこんだ物を、箱にしまったとき（もちものに入る）。知らせもここで出す */
   if(id==='gear'||id==='gearf'){for(let i=0;i<n;i++)gearFind(r,id==='gearf'?'つりあげた！':'ひろった！');return}
-  if(id==='sand'){S.sand=(S.sand||0)+n;if(!(S.recipes||(S.recipes={})).toro){S.recipes.toro=true;memo('🏮','しずけさの石どうろうが作れるようになった');queueItemGift({toro:1},'あたらしいレシピ！',true)}/* やすらぎの砂をはじめてしまったら、石どうろうのレシピ */return}
+  if(id==='sand'){S.sand=(S.sand||0)+n;if(WD>=1&&!(S.recipes||(S.recipes={})).toro){S.recipes.toro=true;memo('🏮','しずけさの石どうろうが作れるようになった');queueItemGift({toro:1},'あたらしいレシピ！',true)}/* 火山で、やすらぎの砂をはじめてしまったら、石どうろうのレシピ（和風の物は火山から） */return}
   if(id==='horn'){S.horn=(S.horn||0)+n;(S.seenIt||(S.seenIt={}))['x:horn']=1;return}
   if(id==='herb'){S.herb=(S.herb||0)+n;(S.seenIt||(S.seenIt={}))['x:herb']=1;return}
   if(id==='hai'){const t=st2();t.hai=(t.hai||0)+n;checkQuest();return}/* ひびわれをうめる灰 */

@@ -107,7 +107,7 @@ function fogClear(a,quiet){if(!S.fog[a])return;S.fog[a]=0;S.fogV=(S.fogV||0)+1;i
 function fogTap(tx,ty){/* 「みる」のタップ：霧の所・見つける物 */if(!fogOn())return false;let j=ty*W+tx;if(fogAt(j)){toast('霧で見えない');return true}j=anc(j);
   const o=S.obj[j],f=fogFind(j);if(!f)return false;
   if(o==='fogbox'){if(!S.fogReq.includes(j))S.fogReq.push(j);sfx('tap');toast('古い宝箱：せいれいがあけにいく');return true}
-  if(o==='nushiprint'){if(f.done){toast(BL.nushiprint.name);return true}if(!S.res.some(r=>r.name===POKO&&!r.hidden)){toast('フタバがいません');return true}if(!S.fogReq.includes(j))S.fogReq.push(j);sfx('tap');toast('ヌシ様のあしあと：フタバが見にいく');return true}
+  if(o==='nushiprint'){if(f.done&&!(printOn()&&!printTraced(j))){toast(BL.nushiprint.name);return true}/* たどる依頼のあいだは、見たあしあとも、もう一度見にいく */if(!S.res.some(r=>r.name===POKO&&!r.hidden)){toast('フタバがいません');return true}if(!S.fogReq.includes(j))S.fogReq.push(j);sfx('tap');toast('ヌシ様のあしあと：フタバが見にいく');return true}
   if(o==='fogspring'){toast(BL.fogspring.name+'：'+BL.fogspring.desc);return true}return false}
 const FOGBUSY=new Set(['sleep','eat','flee','watchpost','patrol','bury','faint','shiver','reunion','nmeet','fogopen','foglook','bathe','cook','offer','otaki','otakiget']);
 function fogFree(r){return !r.hidden&&!r.coffin&&!(r.act&&(FOGBUSY.has(r.act.type)||/^(story|field)/.test(r.act.type)))}
@@ -116,7 +116,45 @@ function fogWant(r){return fogFree(r)&&fogReqFor(r)>=0}
 function fogJob(r,G){const j=fogReqFor(r);if(j<0)return false;const o=S.obj[j],ad=k=>k===j&&o==='nushiprint'||[1,-1,W,-W].some(d=>k+d===j&&Math.abs(k%W-j%W)<=1),st=nearest(G,k=>ad(k)&&walk(k),9999);if(st<0)return false;startAct(r,G,o==='fogbox'?'fogopen':'foglook',st,{key:'o'+j,obj:j});return true}
 const fogDone=j=>{S.fogReq=(S.fogReq||[]).filter(k=>k!==j)};
 ACT.fogopen={start(r,a){if(S.obj[a.obj]!=='fogbox')return false;r.bubble='';r.face=(a.obj%W+.5)<r.x?-1:1},done:(r,a)=>a.t>=3,end(r,a){fogDone(a.obj);if(S.obj[a.obj]!=='fogbox')return;const f=fogFind(a.obj);if(f)f.done=1;clearObj(a.obj);burst(a.obj,'furn','furnPlace');const L=FURN.filter(id=>giftPoolOK(id));if(L.length){const id=pick(L);sfx('seed');toast(r.name+'が宝箱から「'+BL[id].name+'」をみつけた','good');addFloat(r.x,r.y-1.8,BL[id].name);if(!(itemBoxOK()&&addItem(r,id,1)))dropAt(r.x,r.y,id,1)}/* 箱へはこんでから、もちものに入る */addSpiritXp(1,r);recount();dirty=true}};
-ACT.foglook={start(r,a){if(S.obj[a.obj]!=='nushiprint')return false;r.bubble=''},done:(r,a)=>a.t>=2,end(r,a){fogDone(a.obj);const f=fogFind(a.obj);if(!f||f.done)return;const n=(S.fogF||[]).filter(q=>q.t==='print').indexOf(f);dialog(FOG_PRINT_LINES[Math.max(0,n)%FOG_PRINT_LINES.length],()=>{f.done=1})}};
+ACT.foglook={start(r,a){if(S.obj[a.obj]!=='nushiprint')return false;r.bubble=''},done:(r,a)=>a.t>=2,end(r,a){fogDone(a.obj);const f=fogFind(a.obj);if(!f)return;const tr=printOn()&&!printTraced(a.obj);if(f.done&&!tr)return;const n=(S.fogF||[]).filter(q=>q.t==='print').indexOf(f),mem=f.done?[]:FOG_PRINT_LINES[Math.max(0,n)%FOG_PRINT_LINES.length];
+  if(tr)return printScene(r,f,mem);dialog(mem,()=>{f.done=1})}};
+/* 草原のメイン「ヌシ様のかけらをさがそう」（lv5）：霧の中のヌシ様のあしあと3つを、フタバとたどる。たどったあしあとは S.flags.printT（この依頼で見た物だけ。前に見たあしあとも、もう一度見にいく）。
+   1つめ・2つめ：フタバが、つぎのあしあとのほうを指さす（光の点々とカメラ）。3つめ：あしあとが光る。会話を最後まで聞いてから、たどったことにする。かけらは、お礼の会話でわたす */
+const PRINT_N=3,PRINT_BEAT_MS={point:1700,glow:2000,take:2600};
+const PRINT_TRACE=[
+ [[POKO,'#think|ヌシ様の足あと……。もういちど、よく見てみるね。'],[POKO,'……あっ。つま先が、あっちを向いてる。','print:point'],[POKO,'#joy|ヌシ様が歩いていったほうへ、ついていってみよう！']],
+ [[POKO,'ここにも、足あと。……さっきより、ふかいね。'],[POKO,'#think|つぎは、あっちだ。','print:point']],
+ [[POKO,'#think|ここで、足あとが止まってる……。'],[POKO,'#surprise|足あとの中が、ぽうっと光ってる……！','print:glow'],[POKO,'……あったかい。','print:take']]];
+function printOn(){return !!S&&WD===0&&!S.free&&!IS_STORY_REPLAY&&typeof QUESTS!=='undefined'&&QUESTS[S.quest]?.id==='lv5'&&S.qTalked&&S.qStory==null}
+const printT=()=>S&&S.flags.printT||[],printTraced=j=>printT().includes(j),printN=()=>Math.min(PRINT_N,printT().length);
+const printList=()=>(S.fogF||[]).filter(f=>f.t==='print'&&S.obj[f.j]==='nushiprint');
+function printWhy(){/* のこりのあしあとが、どれも霧の中なら、そう出す */const L=printList().filter(f=>!printTraced(f.j));return L.length&&L.every(f=>fogAt(f.j))?'のこりの足あとは霧の中':''}
+function printEnsure(){/* あしあとが3つないセーブ（霧がない・置けなかった）：霧でない所もふくめて、足りないぶんを置く（いちどだけ） */if(!printOn()||S.flags.print3)return;S.flags.print3=1;
+  if(!Array.isArray(S.fog)){S.fog=Array(AREAN*AREAN).fill(0);S.fogV=(S.fogV||0)+1;S.fogReq=S.fogReq||[];S.fogF=S.fogF||[]}
+  let need=PRINT_N-printList().length;if(need<=0)return;const has=new Set((S.fogF||[]).map(f=>f.a)),A=fogShuffle([...Array(AREAN*AREAN).keys()].filter(a=>!FOG_MID.includes(a)));
+  for(const a of [...A.filter(a=>!has.has(a)),...A.filter(a=>has.has(a))]){if(need<=0)break;const R=fogArea(a);for(let tr=0;tr<400;tr++){const x=R.x0+4+((Math.random()*(AREAW-8))|0),y=R.y0+4+((Math.random()*(AREAW-8))|0),j=y*W+x;if(!fogSpotOK(S,j,null)||VILL[j])continue;S.obj[j]='nushiprint';S.fogF.push({t:'print',a,j});need--;break}}
+  dirty=true}
+function printNext(j){/* つぎにたどる足あと：まだたどっていない、いちばん近い足あと */const x=j%W,y=(j/W)|0;let b=-1,bd=1e9;for(const f of printList()){if(f.j===j||printTraced(f.j))continue;const d=Math.hypot(f.j%W-x,((f.j/W)|0)-y);if(d<bd){bd=d;b=f.j}}return b}
+function drawPrintMarks(now){/* たどる依頼のあいだ、まだたどっていない足あと（晴れている所）の上で、ドットの星がまたたく */if(!printOn()||!$('#dialog').hidden)return;
+  for(const f of printList()){if(printTraced(f.j)||fogAt(f.j))continue;const x=f.j%W,y=(f.j/W)|0,q=(now/900+f.j*.37)%1,a=Math.sin(Math.PI*q);if(a<.08)continue;const cx=x*TS+16,cy=y*TS-6-hiAt(f.j)*LIFT-Math.round(q*4),n=a>.6?2:1;
+    ctx.save();ctx.globalAlpha=a;ctx.fillStyle='#fff6c8';ctx.fillRect(cx-1,cy-1,2,2);ctx.fillStyle='#ffe58a';for(let k=1;k<=n;k++){ctx.fillRect(cx-1,cy-1-k*2,2,2);ctx.fillRect(cx-1,cy-1+k*2,2,2);ctx.fillRect(cx-1-k*2,cy-1,2,2);ctx.fillRect(cx-1+k*2,cy-1,2,2)}ctx.restore()}}
+let PRINTSC=null;/* いま見ている足あとの場面（保存しない） */
+function printScene(r,f,mem){const k=Math.min(PRINT_TRACE.length-1,printT().length),owner=S,session=VILLAGE_SESSION;PRINTSC={state:S,session,r,j:f.j};
+  villageTimeout(()=>{if(S.res.includes(r)&&!r.act){r.path=[];r.act={type:'idle',stage:'do',t:0,dur:999,printHold:1}}},0);/* 会話のあいだ、足あとのそばで待つ */
+  const release=()=>{if(r.act&&r.act.printHold)endAct(r);SACRED_POSES.delete(r);if(PRINTSC&&PRINTSC.r===r)PRINTSC=null;if(sacredDirection())sacredEndDirection(true)};
+  dialog([...mem,...PRINT_TRACE[k]],()=>{if(S!==owner||VILLAGE_SESSION!==session)return;f.done=1;release();if(!printOn()||printTraced(f.j))return;S.flags.printT=[...printT(),f.j];logEv('ヌシ様の足あとをたどった（'+printN()+'/'+PRINT_N+'）');dirty=true;renderQuest();checkQuest()})}
+function printCue(c){const P=PRINTSC;if(!P||P.state!==S||P.session!==VILLAGE_SESSION||!S.res.includes(P.r))return;const r=P.r,d=sacredDirection(true);if(!d)return;const now=performance.now();
+  if(c==='point'){const nx=printNext(P.j);if(nx<0)return;const tx=nx%W+.5,ty=((nx/W)|0)+.5,dist=Math.hypot(tx-r.x,ty-r.y)||1,u=Math.min(dist,6)/dist,ex=r.x+(tx-r.x)*u,ey=r.y+(ty-r.y)*u;
+    r.face=tx>=r.x?1:-1;sacredScenePose(r,'point',600000,{side:true,face:r.face});sfx('tap');
+    for(let i=1;i<=12;i++)villageTimeout(()=>{const q=i/12,px=r.x+(ex-r.x)*q,py=r.y+(ey-r.y)*q;fx.push({k:'p',x:px*TS,y:py*TS-8-hiAt((py|0)*W+(px|0))*LIFT,vx:0,vy:-18,life:1,col:i%2?'#fff6c8':'#d8f3c0',r:2})},300+i*90);/* 光の点々が、つぎの足あとのほうへ */
+    storyShot([[r.x*TS-24,r.y*TS-55-uLift(r)],[r.x*TS+24,r.y*TS+10-uLift(r)],[ex*TS-22,ey*TS-34],[ex*TS+22,ey*TS+12]],{limit:2.2,seconds:1.3});d.waitUntil=Math.max(d.waitUntil||0,now+PRINT_BEAT_MS.point)}
+  if(c==='glow'){const x=P.j%W+.5,y=((P.j/W)|0)+.5,lift=hiAt(P.j)*LIFT;r.face=x>=r.x?1:-1;sacredScenePose(r,'kneel',600000,{side:true,face:r.face});sfx('shard');
+    for(let i=0;i<22;i++)villageTimeout(()=>fx.push({k:'p',x:(x+(Math.random()-.5)*.8)*TS,y:y*TS-lift,vx:(Math.random()-.5)*30,vy:-60-Math.random()*50,life:1,col:i%3?'#fff6c8':'#bfe8ff',r:2+(i%2)}),i*70);/* 足あとから、光がたちのぼる */
+    storyShot([[r.x*TS-24,r.y*TS-55-uLift(r)],[r.x*TS+24,r.y*TS+10-uLift(r)],[x*TS-22,y*TS-40-lift],[x*TS+22,y*TS+12-lift]],{limit:2.6,seconds:1.1});d.waitUntil=Math.max(d.waitUntil||0,now+PRINT_BEAT_MS.glow)}
+  if(c==='take'){/* 光が足あとからうきあがって、フタバの両手へ。とどいたら、手の中でふわっと光る */const x=P.j%W+.5,y=((P.j/W)|0)+.5,lift=hiAt(P.j)*LIFT;r.face=x>=r.x?1:-1;SACRED_POSES.delete(r);sacredScenePose(r,'storyOffer',600000,{side:true,face:r.face});
+    const hand=()=>[r.x*TS+r.face*7,r.y*TS-26-uLift(r)];for(let i=0;i<16;i++)villageTimeout(()=>{const [hx,hy]=hand(),q=i/16,sx=x*TS,sy=y*TS-6-lift;fx.push({k:'p',x:sx+(hx-sx)*q,y:sy+(hy-sy)*q-Math.sin(Math.PI*q)*14,vx:0,vy:-6,life:1,col:i%2?'#fff6c8':'#bfe8ff',r:2})},200+i*60);
+    villageTimeout(()=>{const [hx,hy]=hand();sfx('shard');for(let i=0;i<14;i++){const a=i/14*Math.PI*2;fx.push({k:'p',x:hx,y:hy,vx:Math.cos(a)*40,vy:Math.sin(a)*40-20,life:1,col:i%2?'#fff6c8':'#d8f3c0',r:2})}},1300);
+    d.waitUntil=Math.max(d.waitUntil||0,now+PRINT_BEAT_MS.take)}}
 ACT_LBL.fogopen='宝箱をあけている';ACT_LBL.foglook='ヌシ様のあしあとを見ている';
 /* クモの巣（S.web：マス→0 左の角・1 右の角）：お屋敷の中だけ。プレイヤーはこわせない。「みる」でタップすると、せいれいがそうじする（S.webq）。家の中の1つで住み心地-5（houseComfort） */
 function webTap(tx,ty){if(!S.web)return false;let j=ty*W+tx;if(S.web[j]==null&&S.web[j+W]!=null&&(HOME_WALLS.has(S.obj[j])||HOME_DOORS.has(S.obj[j])))j+=W;/* 壁の上にかかった所をタップしても */if(S.web[j]==null)return false;if(isNight()){toast('夜のあいだは、そうじできません');return true}(S.webq||(S.webq={}))[j]=1;sfx('tap');toast('クモの巣：せいれいがそうじにいく');return true}
