@@ -24,7 +24,9 @@ for id,W in(('yomawari',22),('toro',39)):
     a,b=load(id+'_off'),load(id+'_on');box=bb(a);cx,bt=old(id)
     fa,fb=shrink(a,box,W),shrink(b,box,W);put(id,[fa,fb,fb],cx,bt)
 for id,W in(('arch',113),('niguruma',122),('composter',55)):
-    im=load(id);cx,bt=old(id);put(id,[shrink(im,bb(im),W)],cx,bt)
+    im=load(id)
+    if id=='arch':a_=np.array(im);a_[a_[...,3]<=20]=0;im=Image.fromarray(a_)   # アーチの絵の、見えないほどうすい点（うすさ20まで）をけす
+    cx,bt=old(id);put(id,[shrink(im,bb(im),W)],cx,bt)
 # ブランコ：わくと座席
 sw=load('swing');a=np.array(sw)[...,3]>20;cols=np.nonzero(a.any(0))[0]
 cut=[cols[i] for i in range(len(cols)-1) if cols[i+1]-cols[i]>20][0]+1
