@@ -46,7 +46,7 @@ function thumb(cv2,k,open,hide){
   PXSCENE(c,190,70,1,k===1?'volcano':k===2?'water':k===FREE?'free':'meadow',k*7+3);
   if(!open){c.fillStyle='rgba(0,0,0,.4)';c.fillRect(0,0,190,70);PXSCENE(c,190,70,1,'lockover',0)}
 }
-const APP_VER=1421;/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER=1422;/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
@@ -170,7 +170,7 @@ function frame(now){
   const menuOpen=!$('#title').hidden||!$('#maps').hidden;
   if(!S||STORY_REPLAY_SHELL){last=now;return}
   if(now-frameT<(menuOpen?125:31))return;frameT=now;
-  if(!stageReady()&&(started||!$('#pro').hidden)){if(GRD.job&&GRD.job.s!==S)GRD.job=null;if(GRD.job)stageStep(now);else{if(GRD.wS!==S){GRD.wS=S;GRD.w0=now}if(assetsOK()||now-GRD.w0>20000)GRD.job=stageJob()}}/* ステージを開いたら、絵がぜんぶ読みこめてから、マップ全体を先に作る（ゲーム中に作らない） */
+  if(!stageReady()&&(started||!$('#pro').hidden)){if(GRD.job&&GRD.job.s!==S){GRD.job=null;tmpFree()}if(GRD.job)stageStep(now);else{if(GRD.wS!==S){GRD.wS=S;GRD.w0=now}if(assetsOK()||now-GRD.w0>20000)GRD.job=stageJob()}}/* ステージを開いたら、絵がぜんぶ読みこめてから、マップ全体を先に作る（ゲーム中に作らない） */
   {const ld=started&&!stageReady()&&!menuOpen&&$('#pro').hidden;if(ld||ld!==STLD){STLD=ld;stageLoading(ld)}}/* 作りおわるまで「マップを読みこみ中…」でマップをかくす *//* タイトルは静止画なので8コマ/秒。ゲーム中は30コマ/秒 */
   if(now-tutT>120){tutT=now;try{palArrows();updTut()}catch(e){}}
   const rdt=Math.min(.25,(now-last)/1000);last=now;
