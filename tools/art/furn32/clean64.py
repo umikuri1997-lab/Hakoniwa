@@ -3,6 +3,7 @@
   1. 材料（木・金：色あいでわける）ごとに、元の絵の色を少ない色にわけ、いちばんこい色（輪郭と部品のさかいの線）を見つける
   2. 輪郭線（いちばん外の1ドットと、さかいの線）だけを、うすい線の色にする。線のはばは元の絵のまま（かげのがわを太くしない）
   3. 木目など、ほかのドットは、元の絵の色のまま（かえない）
+  4. 左右対称にできる物（SYM）は、左半分の形と線の位置を右へ写す（右の中の色は元の右の色＝かげ）。平行投影にする物（PARA）は、遠近のついた所をなおす
   python3 tools/art/furn32/clean64.py <出力フォルダ> [id ...] / --put"""
 import os, sys, json, re
 import numpy as np
@@ -44,12 +45,47 @@ def clean(im, mats, ks):
             if r1[y, x] or j == k - 1: o[y, x, :3] = np.round(P[k - 2] * .5 + P[k - 1] * .5)
             else: o[y, x, :3] = np.round(rgb[y, x])   # 木目など、ほかのドットは元の絵の色のまま
             o[y, x, 3] = 255
+    L = m & ((lab == np.array([len(pals[mat[y, x]]) - 1 if m[y, x] else -9 for y in range(H) for x in range(W)]).reshape(H, W)) | r1)
+    return Image.fromarray(o, 'RGBA'), L
+
+SYM = {'chair', 'chair>2', 'chair>2.front', 'table', 'taru'}   # 左右対称にする物（光とかげだけ左右でちがう）
+PARA = {'table'}   # 平行投影にする物（天板の奥を、手前と同じはばに）
+
+def para_table(im):
+    """天板の奥の行（手前よりせまい＝遠近のついた台形）を、手前と同じはばにひきのばす（木目はそのまま）"""
+    a = np.asarray(im.convert('RGBA')); o = a.copy(); al = a[..., 3] > 110
+    full = {}   # 行 → (左, 右)
+    for y in range(21, 33):
+        xs = np.where(al[y])[0]
+        if not len(xs): continue
+        tx0, tx1 = (4, 63) if y == 21 else (3, 64) if y == 22 else (2, 65)
+        x0, x1 = xs[0], xs[-1]; o[y] = 0
+        for X in range(tx0, tx1 + 1): o[y, X] = a[y, int(round(x0 + (X - tx0) * (x1 - x0) / max(1, tx1 - tx0)))]
     return Image.fromarray(o, 'RGBA')
+
+def symmetric(img, L, src):
+    """左半分の形と線の位置を右へ写す。右がわの色は、元の絵の右がわの色（かげ）をそのまま使う（光とかげだけちがう）"""
+    o = np.asarray(img).copy(); a = o[..., 3] > 0; sr = np.asarray(src.convert('RGBA'))
+    xs = np.where(a.any(0))[0]; S = xs[0] + xs[-1]   # x → S - x
+    r = o.copy()
+    for y in range(o.shape[0]):
+        for x in range(o.shape[1]):
+            X = S - x
+            if 2 * x <= S or not (0 <= X < o.shape[1]): continue
+            if not a[y, X]: r[y, x] = 0; continue
+            if L[y, X] or not a[y, x] or L[y, x]: r[y, x] = o[y, X]   # 線の位置・形は左から
+            else: r[y, x] = o[y, x]   # 中の色は、右の元の色（かげ）
+            r[y, x, 3] = 255
+    return Image.fromarray(r, 'RGBA')
 
 def build(b):
     meta = json.load(open(os.path.join(SRC, 'meta.json'))); out = {}
     for k in [k for k in meta if re.split(r'[#>:@~.]', k)[0] == b]:
-        im = Image.open(os.path.join(SRC, fname(k) + '.png')); r = clean(im, *ITEMS[b]); bb = r.getbbox()
+        im = Image.open(os.path.join(SRC, fname(k) + '.png'))
+        if k in PARA: im = para_table(im)
+        r, L = clean(im, *ITEMS[b])
+        if k in SYM: r = symmetric(r, L, im)
+        bb = r.getbbox()
         out[k] = {'f': [r.crop(bb)], 'ax': round(meta[k]['ax']) + bb[0], 'ay': round(meta[k]['ay']) + bb[1]}
     return out
 
