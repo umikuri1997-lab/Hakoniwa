@@ -594,10 +594,13 @@ svg.pxi.ck{width:14px;height:12px;display:inline-block;vertical-align:-1px;margi
 var SPR={/* せいれい（10×12）：h=ずきん a=ずきんの明るい所 w=顔 k=目 p=ほお */
  wood:['....aa....','...ahha...','..ahhhhh..','.hhhhhhhh.','.hwwwwwwh.','hwwkwwkwwh','hwwwwwwwwh','.wwpwwpww.','.wwwwwwww.','..wwwwww..','..ww..ww..'],
  earth:['....a.....','...aa.a...','....aa....','..hhhhhh..','.hhhhhhhh.','hwwwwwwwwh','hwwkwwkwwh','.wwwwwwww.','.wwpwwpww.','..wwwwww..','..ww..ww..'],
- fire:['.....a....','....ha....','...hhha...','..hhhhhh..','.hhhhhhhh.','hwwwwwwwwh','hwwkwwkwwh','.wwwwwwww.','.wwpwwpww.','..wwwwww..','..ww..ww..']};
-var SC={wood:{h:'#6fb35a',a:'#a6d77f'},earth:{h:'#9a6a43',a:'#7fbf5a'},fire:{h:'#ef6a4f',a:'#ffc06a'}};
+ fire:['.....a....','....ha....','...hhha...','..hhhhhh..','.hhhhhhhh.','hwwwwwwwwh','hwwkwwkwwh','.wwwwwwww.','.wwpwwpww.','..wwwwww..','..ww..ww..'],
+ water:['....h.....','...hh.....','...hha....','..hhhah...','.hhhhhhhh.','hwwwwwwwwh','hwwkwwkwwh','.wwwwwwww.','.wwpwwpww.','..wwwwww..','..ww..ww..'],
+ wind:['.......aa...','......a.....','....hhha....','...hhhhhh...','..hhhhhhhh..','.hwwwwwwwwh.','ghwwkwwkwwhg','g.wwwwwwww.g','..wwpwwpww..','...wwwwww...','...ww..ww...']};
+var SC={wood:{h:'#6fb35a',a:'#a6d77f'},earth:{h:'#9a6a43',a:'#7fbf5a'},fire:{h:'#ef6a4f',a:'#ffc06a'},water:{h:'#5aa8e6',a:'#a6dcf6'},wind:{h:'#5ec9a8',a:'#c9f2e6'}};
 var LOCK=['...####...','..#....#..','.#......#.','.#......#.','##########','#........#','#...##...#','#...##...#','#....#...#','#........#','##########'];
 function hsh(i){var x=Math.sin(i*127.1+311.7)*43758.5453;return x-Math.floor(x)}
+window.PXSPIRIT=function(c,el,x,y,P){/* マップえらびの小さなせいれい（10×11）。x,y は左上（ドット） */var rows=SPR[el]||SPR.wood,col=SC[el]||SC.wood,map={h:col.h,a:col.a,g:col.a,w:'#fffaf0',k:'#3a2a20',p:'#f4a9a0'};c.imageSmoothingEnabled=false;for(var j=0;j<rows.length;j++)for(var i=0;i<rows[j].length;i++){var ch=rows[j][i];if(ch!=='.'){c.fillStyle=map[ch];c.fillRect((x+i)*P,(y+j)*P,P,P)}}};
 window.PXSCENE=function(c,gw,gh,P,kind,t){
  function R(x,y,w,h,col){c.fillStyle=col;c.fillRect(Math.round(x)*P,Math.round(y)*P,Math.max(1,Math.round(w))*P,Math.max(1,Math.round(h))*P)}
  function spr(rows,x,y,map){for(var j=0;j<rows.length;j++)for(var i=0;i<rows[j].length;i++){var ch=rows[j][i];if(ch!=='.')R(x+i,y+j,1,1,map[ch]||ch)}}

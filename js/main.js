@@ -48,21 +48,17 @@ function coverLast(w){/* さいごにあそんだ時刻 */if(S&&S.introSeen&&(S.
 function coverOf(k){const L=LIVE[k];if(L&&!L.summary)return coverCast(L,k);const m=coverMeta()[k];if(m&&m.c&&m.c.length)return m.c;
   /* しるしがない前のセーブ：名前の決まった子だけ、セーブの文字からさがす */let raw='';try{raw=KV.getItem(SAVE_KEYS[k])||''}catch(e){}const fx=k===0?['フタバ','ノドカ','ホノ','アオ','フウ']:KEYS[k]||[];
   return fx.filter((n,i)=>!i||raw.indexOf('"name":"'+n+'"')>=0).map(n=>[n,KEYEL[n]||Object.keys(FIXK0).find(e=>FIXK0[e]===n)||'wood',KEYVR[n]||null])}
-function thumb(cv2,k,open,hide,tries){
+function thumb(cv2,k,open,hide){
   const kind=k===1?'volcano':k===2?'water':k===FREE?'free':'meadow',cast=hide||!open||k===FREE?[]:coverOf(k);
-  if(!cast.length){/* せいれいのいない表紙は、いままでの小さな絵 */cv2.width=190;cv2.height=70;cv2.classList.add('px');const c=cv2.getContext('2d');
-    if(typeof PXSCENE!=='function'){c.fillStyle='#2a3a36';c.fillRect(0,0,190,70);return}
-    if(hide)return PXSCENE(c,190,70,1,'lock',0);
-    PXSCENE(c,190,70,1,kind,k*7+3);
+  cv2.width=190;cv2.height=70;cv2.classList.add('px');const c=cv2.getContext('2d');
+  if(typeof PXSCENE!=='function'){c.fillStyle='#2a3a36';c.fillRect(0,0,190,70);return}
+  if(hide)return PXSCENE(c,190,70,1,'lock',0);
+  if(!cast.length){/* せいれいのいない表紙は、いままでの小さな絵 */PXSCENE(c,190,70,1,kind,k*7+3);
     if(!open){c.fillStyle='rgba(0,0,0,.4)';c.fillRect(0,0,190,70);PXSCENE(c,190,70,1,'lockover',0)}return}
-  /* 1ドット＝せいれいの絵の1ドット。景色は3倍 */const BW=190,BH=70,K=3,W2=BW*K,H2=BH*K;cv2.width=W2;cv2.height=H2;cv2.classList.add('px');const c=cv2.getContext('2d');c.imageSmoothingEnabled=false;
-  if(typeof PXSCENE==='function'){const b=document.createElement('canvas');b.width=BW;b.height=BH;PXSCENE(b.getContext('2d'),BW,BH,1,kind+'-bg',k*7+3);c.drawImage(b,0,0,W2,H2);b.width=b.height=0}
-  const ok=cast.every(p=>spDotReady(p[1]));
-  if(!ok){if((tries||0)<40)setTimeout(()=>{if(cv2.isConnected)thumb(cv2,k,open,hide,(tries||0)+1)},250);return}/* せいれいの絵がまだ読みこみ中 */
-  const n=cast.length,gap=Math.min(96,Math.floor((W2-40)/n)),x0=Math.round(W2/2-gap*(n-1)/2),fy=H2-14;
-  cast.forEach((p,i)=>{const x=x0+i*gap,f=x<W2/2-4?1:x>W2/2+4?-1:1;
-    c.fillStyle='rgba(40,60,30,.22)';c.fillRect(x-14,fy+2,28,4);/* かげ */
-    c.setTransform(2,0,0,2,0,0);try{drawSpiritDot(c,p[1],x/2,fy/2,.435,f,{dot:1,t:i*1.7,vr:p[2]||undefined,mood:'joy',anim:i===0?'wave':''})}catch(e){}c.setTransform(1,0,0,1,0,0)});
+  /* フリーモードの表紙と同じ、小さなせいれいのドット絵（PXSPIRIT）を、ならべる */PXSCENE(c,190,70,1,kind+'-bg',k*7+3);
+  const t=k*7+3,gy=Math.round(70*.62),y=k===1?gy+3:gy+((70-gy)*.35|0),n=cast.length,x0=Math.round(190/2-(n*12-2)/2);
+  cast.forEach((p,i)=>{const x=x0+i*12,hop=(Math.floor(t*2+i*.7)%4===0)?1:0,el=p[1]==='wind'?1:0;
+    PXSPIRIT(c,p[1],x-el,y-hop,1);c.fillStyle='rgba(40,60,30,.25)';c.fillRect(x+2,y+11,6,1)});
 }
 function lastFirst(list){/* さいごにあそんだステージを、いちばん上に（のこりは、もとのならび） */
   const top=[0,1,FREE].map(w=>[w,LIVE[w]&&LIVE[w].introSeen?coverLast(w):0]).filter(a=>a[1]>0&&list.querySelector('.wcard[data-k="'+a[0]+'"]')).sort((a,b)=>b[1]-a[1])[0];if(!top)return;
