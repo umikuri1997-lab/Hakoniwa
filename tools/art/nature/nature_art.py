@@ -14,12 +14,12 @@ from PIL import Image
 HERE = os.path.dirname(os.path.abspath(__file__)); sys.path.insert(0, os.path.join(HERE, '..'))
 import pixdown as P
 G = os.path.join(HERE, '..', '..', '..', 'assets', 'g')
-OBJS = {  # 元の絵・はば（前のチップと同じ）・色の数
-    'tree': {'src': '88a858c5e3.webp', 'w': 68, 'k': 9},
+OBJS = {  # 元の絵・はば（前のチップと同じ）・色の数・round：丸い物の形をならすぼかし
+    'tree': {'src': '88a858c5e3.webp', 'w': 68, 'k': 9, 'round': .8},
     'deadtree': {'src': '8c9a3ef253.webp', 'w': 50, 'k': 6, 'thick': 1.8},   # 細い枝がとぎれないよう、うすい所も物に入れる
-    'rock': {'src': '9c4f9195d8.webp', 'w': 32, 'k': 6},
+    'rock': {'src': '9c4f9195d8.webp', 'w': 32, 'k': 6, 'round': 1.3},
 }
-OUTK = .8   # 輪郭の色：その色の明るさ×0.8
+OUTK = (.85, .93)   # 輪郭は2ドット：外がわはその色×0.85、内がわは×0.93（うすく・やわらかく）
 
 def kmeans(X, k, it=30):
     L = X @ (.3, .59, .11); c = X[np.argsort(L)[np.linspace(0, len(X) - 1, k).astype(int)]].astype(float)
@@ -65,19 +65,39 @@ def mode(lab, m, it=2):
         lab = r
     return lab
 
+def round_mask(b, ow, oh, sg):
+    """丸い物の形：もとの絵のうすさを面積の平均でちぢめ、少しぼかしてから半分で切る（角がとがらず、段がそろった丸になる）"""
+    from scipy.ndimage import gaussian_filter
+    a = np.asarray(Image.fromarray(b[..., 3].astype(np.uint8)).resize((ow, oh), Image.BOX)).astype(float) / 255
+    return gaussian_filter(a, sg) >= .5
+
+def unspike(m):
+    """丸い物：とがった1ドット（となりが1つだけ）と、ななめにとびだした角のドットをけす"""
+    for _ in range(2):
+        r = m.copy()
+        for y, x in zip(*np.where(m)):
+            n = [m[q] for q in nb(m, y, x, N4)]
+            if sum(n) <= 1: r[y, x] = False
+        m = r
+    return m
+
+def ring(m):
+    p = np.pad(m, 1); return m & ~(p[:-2, 1:-1] & p[2:, 1:-1] & p[1:-1, :-2] & p[1:-1, 2:])
+
 def make(k):
     c = OBJS[k]; src = Image.open(os.path.join(G, c['src'])).convert('RGBA'); b = np.asarray(src).astype(float)
     if c.get('thick'): b[..., 3] = np.minimum(255, b[..., 3] * c['thick'])
     H, W = b.shape[:2]; ow = c['w']; oh = round(H * ow / W)
     o = P.shrink(b, ow, oh); m = clean_shape(o[..., 3] > 0)
+    if c.get('round'): m = unspike(clean_shape(round_mask(b, ow, oh, c['round'])))
     # 透明からうまった所は、となりの色
     for y, x in zip(*np.where(m & (o[..., 3] == 0))):
         q = [o[p][:3] for p in nb(o, y, x, N8) if o[p][3] > 0]; o[y, x, :3] = np.mean(q, 0) if q else 128; o[y, x, 3] = 255
     pal, l = kmeans(o[m][:, :3], c['k']); lab = np.full(m.shape, -1); lab[m] = l
     lab = mode(clean_color(lab, m), m)
     r = np.zeros((oh, ow, 4), np.uint8); r[m, :3] = pal[lab[m]]; r[m, 3] = 255
-    e = m & ~np.pad(m, 1)[2:, 1:-1] | m & ~np.pad(m, 1)[:-2, 1:-1] | m & ~np.pad(m, 1)[1:-1, 2:] | m & ~np.pad(m, 1)[1:-1, :-2]
-    r[e, :3] = (pal[lab[e]] * OUTK).round()                    # 外の輪郭：少しだけ暗く
+    e1 = ring(m); e2 = ring(m & ~e1)                           # 外の輪郭（1ドットめ・2ドットめ）
+    r[e1, :3] = (pal[lab[e1]] * OUTK[0]).round(); r[e2, :3] = (pal[lab[e2]] * OUTK[1]).round()
     if k in FIX: FIX[k](r)
     im = Image.fromarray(r, 'RGBA'); return im.crop(im.getbbox()), src
 
