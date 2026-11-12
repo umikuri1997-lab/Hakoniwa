@@ -306,6 +306,7 @@ function cancelOrder(oid){const k=S.orders.findIndex(q=>q.id===oid);if(k<0)retur
   toast(b.name+'の依頼をやめた');sfx('post');renderSheet()}
 const ORDER_LOCK={'stor':'stor','mbox':'mbox'};
 const orderLock=()=>{const q=QUESTS[S.quest];return !S.cleared&&q&&ORDER_LOCK[q.id]||null};/* このクエストのあいだは、そのものしかたのめない（ほかをたのむと、材料がなくなって進めなくなる） */
+function canMakeNow(id){/* パワー・素材・村レベルがそろっていて、いま依頼をはれる物 */const b=BL[id];return lvOK(id)&&S.pt>=b.pc&&matOK(b.mat)&&(!b.sand||(S.sand||0)>=b.sand)&&Object.keys(b.food||{}).every(k=>(S.fs[k]||0)>=b.food[k])}
 function orderFurn(id){if(!recipeKnown(id))return;if(!lvOK(id))return toast('村Lv'+BL[id].lv+'から作れます');{const L=orderLock();if(L&&id!==L)return toast('いまは「'+BL[L].name+'」だけたのめます')}
   const b=BL[id];if(BOARD<0)return toast('神殿がありません');if(S.orders.length>=boardMax())return toast('依頼ボードがいっぱいです（'+boardMax()+'まい）');if(S.pt<b.pc)return toast('パワーが足りません');if(!matOK(b.mat))return toast('素材が足りません（'+matTxt(b.mat)+'）');if(b.sand&&(S.sand||0)<b.sand)return toast('やすらぎの砂が足りません（'+b.sand+'）');for(const k in b.food||{})if((S.fs[k]||0)<b.food[k])return toast(FOODS[k].name+'が足りません（'+b.food[k]+'）');
   S.pt-=b.pc;for(const k in b.mat||{})S.mat[k]-=b.mat[k];if(b.sand)S.sand-=b.sand;for(const k in b.food||{})addFood(k,-b.food[k]);/* 食料箱の物を使う（どくの罠のきのこ） */S.orders.push({id:S.nid++,type:id,prog:0,need:b.time,worker:null});toast(b.name+'の依頼をはった');sfx('post');renderSheet();
