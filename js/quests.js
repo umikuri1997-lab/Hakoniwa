@@ -396,7 +396,7 @@ function departScene(){const owner=S,session=VILLAGE_SESSION,alive=()=>S===owner
 const UPK=[['atk','攻撃力'],['pow','はたらく速さ'],['spd','移動速度'],['sta','スタミナ'],['cap','持てる数']];
 function giveSeed(r){if((S.mseed||0)<1)return;const T=r.sst||(r.sst={}),L=UPK.filter(([k])=>(T[k]||0)<6&&(k!=='atk'||r.elem==='fire'));/* 攻撃力は火の子だけ */if(!L.length)return toast(r.name+'は、これ以上ふしぎな種で強くならない');
   S.mseed--;const[k,nm]=pick(L),n=T[k]||0,inc=Math.min(Math.random()<.75?1:2,6-n);T[k]=n+inc;
-  if(k==='pow'||k==='spd'||k==='sta')r.vr[k]=Math.round(((r.vr[k]||1)+.1*inc)*100)/100;
+  if(k==='pow'||k==='spd'||k==='sta'){vrInt(r.vr);r.vr[k]=(r.vr[k]||0)+inc}
   RSC.delete(r);addFloat(r.x,r.y-1.6,nm+'+'+inc,'#9fe8ff');upFx(r,nm,'+'+inc,inc>1);if(!S.mseed)sheetArg=null;renderSheet()}
 /* 強化の演出：せいれいが喜んで、光とキラキラ */
 const JOYU=new WeakMap(),STRAINU=new WeakMap(),RHOLD=new WeakMap(),DLGN=new Set();/* STRAINU：力をそそぐあいだの >< の顔 *//* HOLD：話している・喜んでいる間は作業を止める */
