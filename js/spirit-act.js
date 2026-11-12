@@ -256,7 +256,7 @@ let PMASK=null,PMASKT=-1;function patrolMask(){/* 見回りの場所：1＝柵�
   while(q.length){const j=q.pop(),x=j%W,y=(j/W)|0;for(const[dx,dy]of DIRS){const nx=x+dx,ny=y+dy;if(nx<0||ny<0||nx>=W||ny>=H)continue;const k=ny*W+nx;if(!out[k]&&!bar(k)){out[k]=1;q.push(k)}}}
   for(const h of HOUSES)for(const j of h.set){const x=j%W,y=(j/W)|0;for(let dy=-3;dy<=3;dy++)for(let dx=-3;dx<=3;dx++){const nx=x+dx,ny=y+dy;if(nx>=0&&ny>=0&&nx<W&&ny<H)m[ny*W+nx]=2}}
   for(let j=0;j<W*H;j++)if(!out[j]&&!bar(j))m[j]=1;for(const h of HOUSES)for(const j of h.set)m[j]=3;
-  for(const q of LIGHTS){const qx=q%W,qy=(q/W)|0;for(let y=Math.max(0,qy-9);y<=Math.min(H-1,qy+9);y++)for(let x=Math.max(0,qx-9);x<=Math.min(W-1,qx+9);x++){const j=y*W+x;if(m[j]!==3&&lampAt(x+.5,y+.5))m[j]|=4}}/* 4：灯りの範囲 */
+  for(const q of LIGHTS){const lo=S.obj[q];if(lo==='statue'||lo==='tower'||roomOf(q))continue;/* 見回るのは、外に置いた灯り（神殿・御神木・家の中の灯りはのぞく） */const qx=q%W,qy=(q/W)|0;for(let y=Math.max(0,qy-9);y<=Math.min(H-1,qy+9);y++)for(let x=Math.max(0,qx-9);x<=Math.min(W-1,qx+9);x++){const j=y*W+x;if(m[j]!==3&&lampOne(q,x+.5,y+.5))m[j]|=4}}/* 4：灯りの範囲 */
   PMASK=m;PMASKT=t;return m}
 function graveCheck(){if(isNight()||STATUE<0||!cnt('grave')||S.graveDay===dayNo())return;const gs=[];for(let j=0;j<W*H;j++)if(S.obj[j]==='grave'&&S.dyn[j]&&!S.dyn[j].buried)gs.push(j);if(!gs.length)return;
   let G=null;for(const r of S.res){if(r.hidden)continue;const g=bfs(r.x|0,r.y|0);if(nearest(g,j=>adjOf(j,k=>k===STATUE||k===STATUE+W)>=0,300)>=0){G=g;break}}if(!G)return;/* 神殿まで行ける子から見て */
