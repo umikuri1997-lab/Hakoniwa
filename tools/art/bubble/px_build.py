@@ -57,12 +57,41 @@ def soften(a, inner=True):
             if ol[y, x] and (y, x) in src: a[y, x, :3] = (src[(y, x)] * K).round().astype(np.uint8)
     return a
 
+def outside(a):
+    """輪郭（こい色）の外にある物（まわりのキラキラ）をけす。はしから、こい色でないドットをたどって行ける所が外"""
+    a = a.copy(); H, W = a.shape[:2]; seen = set(); q = [(y, x) for y in range(H) for x in range(W) if y in (0, H - 1) or x in (0, W - 1)]
+    ok = lambda y, x: a[y, x, 3] == 0 or lum(a[y, x]) >= DARK
+    q = [p for p in q if ok(*p)]; seen.update(q)
+    while q:
+        y, x = q.pop()
+        for dy, dx in N4:
+            yy, xx = y + dy, x + dx
+            if 0 <= yy < H and 0 <= xx < W and (yy, xx) not in seen and ok(yy, xx): seen.add((yy, xx)); q.append((yy, xx))
+    for y, x in seen: a[y, x] = 0
+    return a
+
+# 絵ごとの手直し：色のおきかえ（もとの色 → 色）と、外のキラキラをけすか
+FIX = {'rice': {'out': True, 'col': {
+    (246, 205, 139): (239, 238, 237), (248, 193, 112): (225, 219, 205), (250, 221, 139): (239, 238, 237), (246, 212, 158): (239, 238, 237),
+    (230, 203, 164): (225, 219, 205), (234, 211, 181): (225, 219, 205), (218, 196, 177): (215, 208, 199),
+    (143, 156, 182): (205, 197, 184), (158, 159, 191): (205, 197, 184), (195, 194, 198): (205, 197, 184)}}}  # ごはんのオレンジの点・下の青むらさき
+
+def fix(k, a):
+    f = FIX.get(k)
+    if not f: return a
+    a = a.copy()
+    for y in range(a.shape[0]):
+        for x in range(a.shape[1]):
+            c = tuple(int(v) for v in a[y, x, :3])
+            if a[y, x, 3] and c in f['col']: a[y, x, :3] = f['col'][c]
+    return outside(a) if f.get('out') else a
+
 def main():
     d = sys.argv[1] if len(sys.argv) > 1 else '.'
     rows = (len(KEYS) + COLS - 1) // COLS; out = Image.new('RGBA', (COLS * 16, rows * 16)); tab = {}
     for i, k in enumerate(KEYS):
         a = np.array(Image.open(os.path.join(HERE, 'px', k + '.png')).convert('RGBA'))
-        out.paste(Image.fromarray(soften(a, k not in KEEPIN), 'RGBA'), ((i % COLS) * 16, (i // COLS) * 16)); tab[k] = [i % COLS, i // COLS]
+        out.paste(Image.fromarray(soften(fix(k, a), k not in KEEPIN), 'RGBA'), ((i % COLS) * 16, (i // COLS) * 16)); tab[k] = [i % COLS, i // COLS]
     out.resize((out.width * 8, out.height * 8), Image.NEAREST).save(os.path.join(d, 'bubpx.png'))
     out.save(os.path.join(d, 'bubpx.webp'), lossless=True, exact=True, method=4)
     print(hashlib.sha1(open(os.path.join(d, 'bubpx.webp'), 'rb').read()).hexdigest()[:10]); print(json.dumps(tab, separators=(',', ':')))
