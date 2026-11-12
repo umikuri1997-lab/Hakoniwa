@@ -17,7 +17,7 @@ const GSC=new WeakMap();
 function gearStat(r){if(!r||!r.gear)return GNONE;let c=GSC.get(r);if(c&&c.v===(r.gv||0))return c.s;const s=Object.assign({},GNONE,{job:{}});
   for(const k of GSLOTK){const q=r.gear[k];if(!q||!BL[q.id]||!BL[q.id].g)continue;const g=BL[q.id].g,lv=q.lv||0;
     s.atk+=(g.atk||0)+(g.s==='w'?lv:0);s.rch+=g.rch||0;if(g.hit)s.hit=Math.max(s.hit,g.hit);if(g.iv)s.iv*=g.iv;s.hun+=(g.hun||0)+(g.s==='a'?lv:0);
-    for(const m of['mv','flee','rec','fun','work','xp','grow'])if(g[m])s[m]*=g[m];if(g.ns!=null)s.ns=Math.min(s.ns,g.ns);s.cap+=g.cap||0;s.light=Math.max(s.light,g.light||0);s.refl+=g.refl||0;s.wcan+=g.wcan||0;s.ore+=g.ore||0;s.prng+=g.prng||0;
+    for(const m of['flee','rec','fun','xp','grow'])if(g[m])s[m]*=g[m];s.mv+=g.mv||0;s.work+=g.work||0;/* 移動速度・はたらく速さは、たす数 */if(g.ns!=null)s.ns=Math.min(s.ns,g.ns);s.cap+=g.cap||0;s.light=Math.max(s.light,g.light||0);s.refl+=g.refl||0;s.wcan+=g.wcan||0;s.ore+=g.ore||0;s.prng+=g.prng||0;
     for(const m of['fear','rain','tburn','fburn','nob','glow','burn','kb','slow','stun','steal','aoe','side','crop','stone','dish','pw'])if(g[m])s[m]=1;
     for(const j in g.job||{})s.job[j]=(s.job[j]||1)*g.job[j]}
   if(s.fburn)s.burn=1;GSC.set(r,{v:r.gv||0,s});return s}

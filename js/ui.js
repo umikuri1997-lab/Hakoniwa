@@ -389,7 +389,7 @@ function renderSheet(){
        const bw=el('<div class="row" style="justify-content:center"><button class="btn pri"></button></div>'),b=bw.querySelector('button');
        b.textContent='パワーをそそぐ（'+SP(cost)+'）';b.disabled=S.pt<cost;/* 強化に上限はない */
        b.onclick=()=>{if(S.pt<cost)return toast('パワーが足りません（'+SP(cost)+'）');const L=ST;S.pt-=cost;const[k,nm]=L[(Math.random()*L.length)|0],n=B[k]||0,inc=Math.random()<.75?1:2;B[k]=n+inc;/* どこが上がるかはランダム */
-         if(k==='pow'||k==='spd'||k==='sta')r.vr[k]=Math.round(((r.vr[k]||1)+.1*inc)*100)/100;
+         if(k==='pow'||k==='spd'||k==='sta'){vrInt(r.vr);r.vr[k]=(r.vr[k]||0)+inc}
          r.boost=(r.boost||0)+1;RSC.delete(r);addFloat(r.x,r.y-1.6,nm+'+'+inc,'#9fe8ff');upFx(r,nm,'+'+inc,inc>1);renderSheet()};
        bw.style.gap='8px';bw.style.flexWrap='wrap';sec.appendChild(bw);
        {const sb=el('<button class="btn"></button>'),sn=S.mseed||0;sb.textContent='ふしぎな種をあげる（'+sn+'こ）';sb.disabled=sn<1;sb.onclick=()=>giveSeed(r);bw.appendChild(sb)}/* ふしぎな種も、パワーのとなりからあげられる */
