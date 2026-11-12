@@ -7,10 +7,12 @@
 出す数字と、めやす（だめなら NG と出す）：
   色の数      16色まで（素材が1つなら12色まで）
   半透明      0（うすさは 0 か 255 だけ）
-  輪郭の太さ  外がわのこい色は1ドット（左・右・上・下のはしから、中の色より18%より暗いドットがつづく数）
+  輪郭        外がわのこい色は1ドット（はしから2ドットめにも、輪郭と同じこい色がつづく所の数。0 に。NG のときは、その点の x,y を出す）
   孤立ドット  0（上下左右のどれとも色がちがう1ドット。目・光など、わざと置く点は数えてよい）
   にた色      0組（色の差が10より小さい2色。まとめる）
-  形          行ごとの左はし・右はしを出す（とちゅうで急にかわる段・とびだしを、数字で見つける）"""
+  形          行ごとの左はし・右はしを出す（とちゅうで急にかわる段・とびだしを、数字で見つける）
+  色の一覧    多い順に12色（描きなおすときの色は、ここからとる）
+--cmp のとき：形の重なり（前とあとの形が、どれだけ同じか）95%より上"""
 import sys, os
 import numpy as np
 from PIL import Image
@@ -47,25 +49,30 @@ def check(im, name=''):
     else:
         print('  にた色 %d組%s' % (len(near), '  NG（まとめる）' if near else '')); ng += [bool(near)]
         for p, q in near[:6]: print('    #%02x%02x%02x と #%02x%02x%02x' % (p + q))
-    # 輪郭の太さ：はしから、中の色（その行・列のまん中の明るさ）より18%より暗いドットがつづく数
-    def edge(lines):
-        t = []
-        for ln in lines:
-            if len(ln) < 6: continue
-            mid = np.median(ln[len(ln) // 4:len(ln) * 3 // 4 + 1]); k = 0
-            while k < len(ln) // 2 and ln[k] < mid * .82: k += 1
-            t.append(k)
-        return (max(t), sum(t) / len(t)) if t else (0, 0)
-    rows = [L[y][m[y]] for y in range(a.shape[0]) if m[y].any()]; colsL = [L[:, x][m[:, x]] for x in range(a.shape[1]) if m[:, x].any()]
-    E = {'左': edge(rows), '右': edge([r[::-1] for r in rows]), '上': edge(colsL), '下': edge([c[::-1] for c in colsL])}
-    bad = [k for k in ('左', '右', '上') if E[k][0] > 1]   # 下は、脚・前の面のかげがつづくので、めやすから外す
-    print('  輪郭の太さ（いちばん太い所・平均） ' + '・'.join('%s %d／%.1f' % (k, E[k][0], E[k][1]) for k in E) + ('  NG（%s が2ドット以上）' % '・'.join(bad) if bad else '')); ng += [bool(bad)]
+    # 輪郭の太さ：はしから2ドットめ（ななめもふくめて、透明にふれていないドット）に、輪郭と同じくらい暗い色（まわりの中の色より18%より暗い）がつづいていたら、太い
+    Pm = np.pad(m, 1); touch = np.zeros_like(m)
+    for dy in (-1, 0, 1):
+        for dx in (-1, 0, 1): touch |= ~Pm[1 + dy:1 + dy + m.shape[0], 1 + dx:1 + dx + m.shape[1]]
+    d1 = m & touch; inner_ = m & ~d1; Pd = np.pad(d1, 1); d2 = np.zeros_like(m)
+    for dy, dx in ((0, 1), (0, -1), (1, 0), (-1, 0)): d2 |= Pd[1 + dy:1 + dy + m.shape[0], 1 + dx:1 + dx + m.shape[1]]
+    d2 &= inner_; deep = inner_ & ~d2; thick = []
+    for y, x in zip(*np.where(d2)):
+        w = deep[max(0, y - 4):y + 5, max(0, x - 4):x + 5]
+        if w.sum() < 4: continue   # 細い部品（脚など）は、中の色がないので数えない
+        mid = np.median(L[max(0, y - 4):y + 5, max(0, x - 4):x + 5][w])
+        nb = [L[y + dy, x + dx] for dy, dx in ((0, 1), (0, -1), (1, 0), (-1, 0)) if 0 <= y + dy < m.shape[0] and 0 <= x + dx < m.shape[1] and d1[y + dy, x + dx]]
+        if L[y, x] < mid * .82 and nb and min(nb) < mid * .82 and abs(L[y, x] - min(nb)) < mid * .06: thick.append((int(x), int(y)))
+    ts = set(thick); thick = [t for t in thick if any((t[0] + dx, t[1] + dy) in ts for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)))]   # 1点だけ（部品のつなぎ目）は数えない
+    print('  輪郭が2ドット以上の所 %d%s' % (len(thick), '  NG（外がわのこい色は1ドットに）：' + ' '.join('%d,%d' % t for t in thick[:12]) if thick else '')); ng += [bool(thick)]
     # 孤立ドット
     P = np.pad(a, ((1, 1), (1, 1), (0, 0))); orph = []
     for y, x in zip(ys, xs):
         nb = [P[y + 1 + dy, x + 1 + dx] for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1))]; nb = [q for q in nb if q[3] > 127]
         if len(nb) >= 3 and all(((q[:3] - a[y, x, :3]) ** 2).sum() >= 100 for q in nb): orph.append((x, y))
     print('  孤立ドット %d%s' % (len(orph), '  NG（けす・まとめる。わざと置いた点ならよい）：' + ' '.join('%d,%d' % o for o in orph[:12]) if orph else '')); ng += [bool(orph)]
+    if n > 16:
+        q = np.minimum((a[m][:, :3] // 12) * 12 + 6, 255); u, cnt = np.unique(q, axis=0, return_counts=True); o = np.argsort(-cnt)[:12]
+        print('  色の一覧（にた色をまとめて、多い順） ' + ' '.join('#%02x%02x%02x(%d%%)' % (tuple(u[i]) + (round(cnt[i] * 100 / m.sum()),)) for i in o))
     le = [int(np.where(m[y])[0].min()) for y in range(ys.min(), ys.max() + 1)]; re = [int(np.where(m[y])[0].max()) for y in range(ys.min(), ys.max() + 1)]
     print('  形（行ごとの左はし、上から） ' + runs(le)); print('  形（行ごとの右はし、上から） ' + runs(re))
     print('  → ' + ('NG がある' if any(ng) else 'めやすは、ぜんぶ通った（このあと、8倍とゲームの中の絵を目で見る）'))
@@ -76,6 +83,10 @@ def big(im, k):
 
 def cmp(old, new, out, ids):
     A, B = Image.open(old).convert('RGBA'), Image.open(new).convert('RGBA'); row = chip_imgs(ids) if ids else {}
+    if A.size == B.size:
+        ma, mb = np.asarray(A)[..., 3] > 127, np.asarray(B)[..., 3] > 127; iou = (ma & mb).sum() * 100 / max(1, (ma | mb).sum())
+        print('形の重なり %.1f%%%s' % (iou, '' if iou > 95 else '  NG（95%%より上に。前の絵と形がちがう：はみ出した所 %d ドット・足りない所 %d ドット）' % ((mb & ~ma).sum(), (ma & ~mb).sum())))
+    else: print('NG：大きさがちがう', A.size, B.size)
     rh = max([i.height * 2 for i in row.values()] + [0]); W = A.width * 8 + B.width * 8 + 16
     sheet = Image.new('RGBA', (max(W, sum(i.width * 2 + 8 for i in row.values()) + (A.width + B.width) * 2 + 16), max(A.height, B.height) * 8 + rh + 16), GRASS)
     sheet.alpha_composite(big(A, 8), (0, 0)); sheet.alpha_composite(big(B, 8), (A.width * 8 + 16, 0)); x = 0; y1 = sheet.height
