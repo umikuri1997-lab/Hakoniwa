@@ -65,7 +65,7 @@ function lastFirst(list){/* さいごにあそんだステージを、いちば�
   const card=list.querySelector('.wcard[data-k="'+top[0]+'"]');if(card===list.firstElementChild)return;
   const pv=card.previousElementSibling,nx=card.nextElementSibling;if(pv&&pv.classList.contains('wlink'))pv.remove();else if(nx&&nx.classList.contains('wlink'))nx.remove();/* 道の線は、となりのステージどうしでつなぎなおす */
   card.classList.add('wtop');list.insertBefore(card,list.firstElementChild)}
-const APP_VER=1471;/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER=1472;/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
@@ -127,7 +127,7 @@ function tutSpot(id){const sz=BL[id].sz||[1,1],V=tutView(),vc=[Math.floor((cam.x
 function palArrows(){const b=$('#palItems');if(!b)return;const m=b.scrollWidth-b.clientWidth;$('#palL').hidden=!(m>4&&b.scrollLeft>4);$('#palR').hidden=!(m>4&&b.scrollLeft<m-4)}
 function updTut(){
   const hand=$('#tutHand');const hide=()=>{hand.hidden=true};
-  if(!S||GIFT_ACTIVE||!$('#dialog').hidden||!$('#lvup').hidden||!$('#rlv').hidden||!$('#title').hidden||!$('#maps').hidden||!$('#pro').hidden||S.cleared||questGuideBlockedNow())return hide();
+  if(!S||GIFT_ACTIVE||!$('#dialog').hidden||!$('#lvup').hidden||!$('#rlv').hidden||!$('#title').hidden||!$('#maps').hidden||!$('#pro').hidden||!S.introSeen||S.cleared||questGuideBlockedNow())return hide();/* はじめのカミサマの話を聞きおえるまでは、案内を出さない */
   const q=QUESTS[S.quest];if(!q)return hide();let qt=q.steps&&S.qTalked?questStep(q):q.id;if(WD===0&&!S.free){const st=S.subSt||{};if(st.oracle===2&&!S.flags.oracleSeen&&(sheet==null||sheet==='menu'))qt='oracle';else if(st.trade===2&&!S.flags.tradedSeen&&(sheet==null||sheet==='shop'))qt='trade'}/* 交換・おつげのサブクエストを受けているあいだは、その手順を案内する *//* まとめた目標は、いまの小さな目標を案内する */
   let el=null,wp=null,lbl='ここをタップ',swipe=0;
   const placeHint=id=>{
