@@ -187,7 +187,7 @@ function drawObj(c,id,x,y,i,g,now){
   {const FK={clover:'fl_clover',bellf:'fl_bell',salvia:'fl_salvia',lily:'fl_lily',lotus:'fl_lotus'},key=FK[id]?FK[id]:id==='tree'||id==='ntree'||id==='fruit'?'tree':id==='deadtree'?'dead':id==='rock'?'rock':id==='berry'?'bush':null,a=key&&ART[key];
    if(a&&a.ok){const w=FLOWERS.has(id)?26:id==='rock'?27:id==='deadtree'?22.5:30,h=w*a.h/a.w;if(!FLOWERS.has(id))shadow(c,x+16,y+28.5,w*.4,w*.1);/* 花は影（鉢のように見える）なし */c.drawImage(a.img,x+16-w/2,y+30-h,w,h);
      if(id==='berry'&&g>=100){const bi=emoImg('🫐');for(const[dx,dy]of[[-6,-6],[6,-2]]){if(bi){const ih=11,iw=ih*bi.width/bi.height;c.drawImage(bi,x+16+dx-iw/2,y+24+dy-ih/2,iw,ih)}else{circ(c,x+16+dx,y+24+dy,2.6,'#5b6fd1')}}}/* 実ったら、ベリーのアイコンを2つ */
-     if(id==='fruit'&&g>=100){const ai=emoImg('🍎');for(const[dx,dy]of[[-6,9],[6,12],[0,3]]){if(ai){const ih=8,iw=ih*ai.width/ai.height;c.drawImage(ai,x+16+dx-iw/2,y+dy-ih/2,iw,ih)}else circ(c,x+16+dx,y+dy,2.4,'#e0453a')}}/* 果物の木：実がないときはふつうの木。実ったら、りんごのアイコン */
+     if(id==='fruit'&&g>=100){const ai=emoImg('🍎');for(const[dx,dy]of[[-6,9],[6,12],[0,3]]){if(ai){const ih=8,iw=ih*ai.width/ai.height;c.drawImage(ai,x+16+dx-iw/2,y+dy-ih/2,iw,ih)}else circ(c,x+16+dx,y+dy,2.4,'#e0453a')}}/* りんごの木：実がないときはふつうの木。実ったら、りんごのアイコン */
      return}}
   // 罠・伐採場・採石場は絵を使う（罠は使ったあと少しうすくなる）
   if(id==='windmill'&&PSPR.wmBody.ok&&PSPR.wmSail.ok){// 本体の上で羽がまわる（画像の座標系 → 1単位=k px）
