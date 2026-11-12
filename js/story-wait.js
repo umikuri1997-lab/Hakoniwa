@@ -10,7 +10,7 @@ function mainStoryWaitInfo(){
     let obj=S.sacredRoot,tree=obj!=null,free=false;if(obj==null){obj=storyOpenSpot(lead,cast.length);free=true;}if(obj==null||obj<0)return null;
     p={key,session:VILLAGE_SESSION,index:-1,report:false,q:null,lines,ending:e.k,who:lead.name,cast,obj,id:null,field:false,free,tree};STORY_WAIT_PLANS.set(S,p);return p;}}
   const report=S.qStory!=null,index=report?S.qStory:S.quest,q=QUESTS[index];
-  if(!q||!report&&(!q.talk||S.qTalked||!q.talk.when()||qMissing(q).length))return null;
+  if(!q||!report&&(!q.talk||S.qTalked||!q.talk.when()||S.tour||qMissing(q).length))return null;
   // 調査の前は既存の全員集合を使う。調査後の報告は、同じ木のそばで待つ。
   if(!report&&q.field)return null;
   const key=WD+':'+index+':'+(report?'report':'intro');let p=STORY_WAIT_PLANS.get(S);
