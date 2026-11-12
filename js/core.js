@@ -29,14 +29,14 @@ function mulberry(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a
 
 /* ---------- 属性 ---------- */
 const ELEM={
-  wood:{name:'木',col:'#5fbf4f',body:'#8fdc7a',can:'畑の収穫+1・畑の世話・花や木を植える・サラダを作る・木の家具づくり'},
-  water:{name:'水',col:'#3f9ee8',body:'#7cc7ff',can:'作業の速さ1.3倍・スタミナ0.7倍・水やり・スープ・ジュースを作る・水の家具づくり'},
-  fire:{name:'火',col:'#ff6a3d',body:'#ff9f5a',can:'「コワイノ」とたたかう・夜の見回り・ベイクドポテト・焼き魚を作る・火の家具づくり'},
-  earth:{name:'土',col:'#b8863b',body:'#e6c07a',can:'作業の速さ0.75倍・スタミナ1.45倍・畑を耕す・柵を直す・パンを作る・土の家具づくり'},
-  wind:{name:'風',col:'#3fc0a0',body:'#c9f2e6',can:'歩く速さ1.45倍・たのしさ60より下で遊びに行く・ふしぎな種を拾う・風の家具づくり'},
+  wood:{name:'木',col:'#5fbf4f',body:'#8fdc7a',can:'はたらく速さ10・移動速度10・スタミナ10・畑の収穫+1・畑の世話・花や木を植える・サラダを作る・木の家具づくり'},
+  water:{name:'水',col:'#3f9ee8',body:'#7cc7ff',can:'はたらく速さ13・移動速度10・スタミナ7・水やり・スープ・ジュースを作る・水の家具づくり'},
+  fire:{name:'火',col:'#ff6a3d',body:'#ff9f5a',can:'はたらく速さ10・移動速度10・スタミナ10・「コワイノ」とたたかう・夜の見回り・ベイクドポテト・焼き魚を作る・火の家具づくり'},
+  earth:{name:'土',col:'#b8863b',body:'#e6c07a',can:'はたらく速さ8・移動速度9・スタミナ13・畑を耕す・柵を直す・パンを作る・土の家具づくり'},
+  wind:{name:'風',col:'#3fc0a0',body:'#c9f2e6',can:'はたらく速さ9・移動速度13・スタミナ8・たのしさ60より下で遊びに行く・ふしぎな種を拾う・風の家具づくり'},
 };
 const ELEM_KEYS=Object.keys(ELEM);
 /* 火山のそうび（js/gear.js）：鉱脈の表と、そうびがないときの効果。しくみの関数は gear.js がおきかえる（ほかのファイルだけを読むテストでも動くように） */
 const VEINS={vcopper:'copper',viron:'iron',vobsid:'obsidian',vsilver:'silver',vgold:'gold'},VEIN_IDS=Object.keys(VEINS);/* 鉱脈：ほると鉱石 */
-const GNONE={atk:0,rch:0,hit:1,iv:1,hun:0,mv:1,flee:1,rec:1,fun:1,work:1,cap:0,xp:1,ns:1,light:0,fear:0,rain:0,refl:0,tburn:0,fburn:0,nob:0,glow:0,burn:0,kb:0,slow:0,stun:0,steal:0,aoe:0,side:0,job:{},crop:0,stone:0,dish:0,wcan:0,prng:0,grow:1,pw:0,ore:0};
+const GNONE={atk:0,rch:0,hit:1,iv:1,hun:0,mv:0,flee:1,rec:1,fun:1,work:0,cap:0,xp:1,ns:1,light:0,fear:0,rain:0,refl:0,tburn:0,fburn:0,nob:0,glow:0,burn:0,kb:0,slow:0,stun:0,steal:0,aoe:0,side:0,job:{},crop:0,stone:0,dish:0,wcan:0,prng:0,grow:1,pw:0,ore:0};
 function gearStat(){return GNONE}function gJob(){return 1}function gearStrike(){}function gearHurt(){}function gearEnemyTick(){return false}function gearGlowNear(){return false}function gearMorning(){}function gearIdea(){}function mineOre(){return false}function placeVeins(){}function oreWakeTick(){}function oreWakeReset(){}function veinMorning(){}function vreqList(){return []}function oreMigrate(){}function smeltJob(){return false}function smeltWant(){return false}function smTick(){}function smPop(){}function smLit(){return false}function gearLightAt(){return false}function gearLights(){}function gearDropAll(){}function gearOffer(){return false}function gearFind(){}function towerVolley(){return 0}function ammoTotal(){return (S.inv.arrow||0)+(S.inv.arrow2||0)}function gearGive(){}function gearCount(){return 0}
