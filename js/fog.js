@@ -160,9 +160,16 @@ function printChain(){/* 足あとのならび：ならべなおした順（prin
 function printDir(j){/* あしあとの向き（絵の名前のうしろ）：つぎの足あとのほう。さいごの足あとは、前の足あとから来た向きのまま。上向きは '' */const C=printChain(),n=C.indexOf(j);if(n<0||C.length<2)return '';const a=n<C.length-1?j:C[n-1],b=n<C.length-1?C[n+1]:j,dx=b%W-a%W,dy=((b/W)|0)-((a/W)|0);
   return Math.abs(dx)>Math.abs(dy)?(dx>0?'~r':'~l'):(dy>0?'~d':'')}
 function printNext(j){/* つぎにたどる足あと：足あとのならびのつぎ（まだたどっていなければ）。なければ、まだたどっていない、いちばん近い足あと */const C=printChain(),q=C[C.indexOf(j)+1];if(q!=null&&C.indexOf(j)>=0&&!printTraced(q))return q;const x=j%W,y=(j/W)|0;let b=-1,bd=1e9;for(const f of printList()){if(f.j===j||printTraced(f.j))continue;const d=Math.hypot(f.j%W-x,((f.j/W)|0)-y);if(d<bd){bd=d;b=f.j}}return b}
-function drawPrintMarks(now,inFog){/* たどる依頼のあいだ、まだたどっていない足あとの上で、ドットの星がまたたく（霧の中の物は、霧の上に描く inFog） */if(!printOn()||!$('#dialog').hidden)return;
-  for(const f of printList()){if(printTraced(f.j)||fogAt(f.j)!==!!inFog)continue;const x=f.j%W,y=(f.j/W)|0,q=(now/900+f.j*.37)%1,a=Math.sin(Math.PI*q);if(a<.08)continue;const cx=x*TS+16,cy=y*TS-6-hiAt(f.j)*LIFT-Math.round(q*4),n=a>.6?2:1;
-    ctx.save();ctx.globalAlpha=a;ctx.fillStyle='#fff6c8';ctx.fillRect(cx-1,cy-1,2,2);ctx.fillStyle='#ffe58a';for(let k=1;k<=n;k++){ctx.fillRect(cx-1,cy-1-k*2,2,2);ctx.fillRect(cx-1,cy-1+k*2,2,2);ctx.fillRect(cx-1-k*2,cy-1,2,2);ctx.fillRect(cx-1+k*2,cy-1,2,2)}ctx.restore()}}
+const PRINT_STARS=[[-12,-4,0],[11,-9,.25],[-3,-17,.5],[13,6,.75],[-14,10,.6]];/* 足あとのまわりの星：[よこ,たて,はじまりのずれ]（世界の点） */
+function printStar(cx,cy,a,n){/* ドットの星（2点のます目）：まん中・十字のうで・大きいときは、ななめの点も。明るい地面・霧の上でも見えるように、まわりに少しこい色のふち（1点） */
+  const B=[[0,0]];for(let k=1;k<=n;k++)B.push([0,-k*2],[0,k*2],[-k*2,0],[k*2,0]);if(n>=3)B.push([-2,-2],[2,-2],[-2,2],[2,2]);
+  ctx.globalAlpha=a*.9;ctx.fillStyle='#e0a03a';for(const[dx,dy]of B)ctx.fillRect(cx-2+dx,cy-2+dy,4,4);
+  ctx.globalAlpha=a;for(const[dx,dy]of B){ctx.fillStyle=dx||dy?(Math.abs(dx)+Math.abs(dy)>=6?'#fff2b0':'#ffe27a'):'#fffbe6';ctx.fillRect(cx-1+dx,cy-1+dy,2,2)}}
+function drawPrintMarks(now,inFog){/* たどる依頼のあいだ、まだたどっていない足あとのまわりで、ドットの星がいくつもまたたき、光のつぶがたちのぼる（霧の中の物は、霧の上に描く inFog） */if(!printOn()||!$('#dialog').hidden)return;
+  for(const f of printList()){if(printTraced(f.j)||fogAt(f.j)!==!!inFog)continue;const x0=(f.j%W)*TS+16,y0=((f.j/W)|0)*TS+12-hiAt(f.j)*LIFT;ctx.save();
+    for(let m=0;m<3;m++){const q=(now/1600+m/3+f.j*.13)%1,px=x0+Math.round(Math.sin(q*6.3+m*2)*3)+(m-1)*7,py=y0-Math.round(q*26);ctx.globalAlpha=Math.sin(Math.PI*q)*.85;ctx.fillStyle=m%2?'#fff6c8':'#d8f3c0';ctx.fillRect(px-1,py-1,2,2)}/* 足あとから、光のつぶがたちのぼる */
+    for(const[dx,dy,o]of PRINT_STARS){const q=(now/1100+o+f.j*.37)%1,a=Math.sin(Math.PI*q);if(a<.1)continue;printStar(x0+dx,y0+dy,a,a>.85?3:a>.5?2:1)}
+    ctx.restore()}}
 let PRINTSC=null;/* いま見ている足あとの場面（保存しない） */
 function printScene(r,f,mem){const k=Math.min(PRINT_TRACE.length-1,printT().length),owner=S,session=VILLAGE_SESSION;PRINTSC={state:S,session,r,j:f.j};
   villageTimeout(()=>{if(S.res.includes(r)&&!r.act){r.path=[];r.act={type:'idle',stage:'do',t:0,dur:999,printHold:1}}},0);/* 会話のあいだ、足あとのそばで待つ */
