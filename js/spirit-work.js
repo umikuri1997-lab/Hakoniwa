@@ -144,7 +144,7 @@ function moveR(r,dt){
     if(r.wkT>30&&r.act.type!=='nmeet'){if(r.act.key)BAN.set(r.act.key,S.t+180);noPass(r);endAct(r);r.path=[];r.act={type:'idle',stage:'do',t:0,dur:8};r.wkA=null;return}}
   if(!r.path.length&&r.act)beginDo(r);
 }
-const NIGHT_OK=['nmeet','watchpost','phew','step','sleep','stay','shiver','eat','fetch','store','smat','flee','patrol','follow','faint','forage','questjoy','pray','reunion']/* お墓へはこぶ（pray）は夜もつづける：やめると毎コマやりなおしになって動けない */;
+const NIGHT_OK=['nmeet','watchpost','phew','step','sleep','stay','shiver','eat','fetch','eatwait','store','smat','flee','patrol','follow','faint','forage','questjoy','pray','reunion']/* お墓へはこぶ（pray）は夜もつづける：やめると毎コマやりなおしになって動けない */;
 const WORKT=new Set(['fert','till','sow','plant','build','craft','water','tend','repair','harvest','gather','chop','mine','cook']);
 function rescueStuck(r){if(r.hidden)return;const cj=(r.y|0)*W+(r.x|0),o=S.obj[cj];if(!(HOME_WALLS.has(o)||(FENCE_IDS.has(o)&&!GATE_IDS.has(o))||S.ground[cj]===1&&!(r.act&&(r.act.type==='bathe'||r.act.type==='plant'&&r.act.wade))))return;/* 水浴び・池のまんなかのハス植えは、水に入ってよい */if(r.act&&r.act.type==='step'||(r.stepT||0)>S.t)return;r.stepT=S.t+5;/* 壁や柵・水の中にいたら、いちばん近い歩ける場所へ歩いて出る（5分ごとにさがす） */const G=bfs(cj%W,(cj/W)|0),k=nearest(G,j=>j!==cj&&walk(j)&&!S.obj[j],12);if(k>=0){endAct(r);startAct(r,G,'step',k,{run:true})}}
 /* 草原のはじめ：ベッドを置く目標（bed）がおわるまでは、おなか・たのしさ・つかれが進まない（村にベッドが1つでもあれば、おわり） */
@@ -166,7 +166,7 @@ function updRes(r,dt){rescueStuck(r);if((RHOLD.get(r)||0)>performance.now())retu
   if(r.act&&!isNight()&&!URGNO.includes(r.act.type)&&!(r.act.type==='play'&&r.act.stage==='do')/* 遊び家具は、はじめたら、さいごまで */&&!heldN(r)&&!r.meal&&!r.cing&&r.hunger>=35&&r.energy>=25&&!(r.uchk>S.t)){r.uchk=S.t+2;if(hasUrgent(r)){// 建物や依頼は、いまの作業をやめてでも向かう
     const old=r.act,op=r.path,ob=r.bubble;endAct(r);const G=bfs(r.x|0,r.y|0);if(!(tryJob(r,G,'build')||tryJob(r,G,'craft'))){r.act=old;r.path=op;r.bubble=ob;if(old.key)reserve(old.key)}}}
   if(r.elem==='fire'&&r.act&&r.act.type==='patrol'&&isNight()&&S.enemyOn&&(r.act.hunt!=null?S.t-r.act.hunt>3:S.enemies.some(e=>e.spawned&&!e.dead&&nearRes(e))))endAct(r);/* 見回り中でも、拠点＋3マスにコワイノが来たらすぐ向かう */
-  if(r.elem==='fire'&&r.act&&!['step','patrol','eat','fetch','flee','faint','forage','bury'].includes(r.act.type)&&r.hunger>=50&&!r.refill&&!r.coffin&&!r.meal&&S.enemies.some(e=>e.spawned&&!e.dead&&nearRes(e)))endAct(r);/* 火の子は、ほかのことをしていても、拠点＋3マスにコワイノが来たら、やめてたたかいに行く */
+  if(r.elem==='fire'&&r.act&&!['step','patrol','eat','fetch','eatwait','flee','faint','forage','bury'].includes(r.act.type)&&r.hunger>=50&&!r.refill&&!r.coffin&&!r.meal&&S.enemies.some(e=>e.spawned&&!e.dead&&nearRes(e)))endAct(r);/* 火の子は、ほかのことをしていても、拠点＋3マスにコワイノが来たら、やめてたたかいに行く */
   if(r.act&&r.act.type==='wander'&&isNight()&&!(isWatch(r)&&S.enemyOn)){endAct(r)}/* 夜になったら、お散歩をやめて帰る */
   if(r.act&&IDLE_ACTS.includes(r.act.type)&&!((r.act.type==='fish'||r.act.type==='play')&&r.act.stage==='do')/* つり・遊び家具は、はじめたら、さいごまで（つりは50秒でやっと魚がとれる。遊びを仕事でとちゅうでやめると、たのしさがたまらず、ひとしごとごとに少しだけ遊ぶようになる） */&&!isNight()&&r.hunger>=55&&!(r.fun<(S.oracle==='play'?98:r.elem==='wind'?60:30)&&r.act.type!=='wander'&&r.act.type!=='idle')&&!r.act.rand/* 遊ぶきまり（decide0・おつげ）と同じ数で、遊びをやめない */){r.wchk=(r.wchk||0)+dt;if(r.wchk>=3){r.wchk=0;if(hasWork(r)){// 実際に仕事を始められたときだけ遊びをやめる（できないなら続ける）
     const old=r.act,op=r.path,ob=r.bubble;endAct(r);if(!goWork(r,bfs(r.x|0,r.y|0),true)){r.act=old;r.path=op;r.bubble=ob;if(old.key)reserve(old.key)}}}}
@@ -175,7 +175,7 @@ function updRes(r,dt){rescueStuck(r);if((RHOLD.get(r)||0)>performance.now())retu
   if(!S.enemyOn&&r.hunger<40)r.hunger=40;/* チュートリアル中は、おなかで消えない */
   if(r.hunger<10&&!r.hw10&&S.enemyOn){r.hw10=1;toast(r.name+'のおなかが、もうすぐからっぽ！','warn')}else if(r.hunger>=25)r.hw10=0;
   if(r.hunger<=0){r.hunger=0;return die(r)}
-  if(r.act&&hungry(r)&&!['step','eat','fetch','forage','flee','faint','smat','store'].includes(r.act.type))endAct(r);/* おなかが50より少なくなったら、なにをしていても（ねていても・たたかっていても）、やめて食べにいく */
+  if(r.act&&hungry(r)&&!['step','eat','fetch','eatwait','forage','flee','faint','smat','store'].includes(r.act.type))endAct(r);/* おなかが50より少なくなったら、なにをしていても（ねていても・たたかっていても）、やめて食べにいく */
   if(r.act&&r.act.type==='repair'&&r.hunger<=50&&S.food>0&&!isNight()){endAct(r);goEat(r,bfs(r.x|0,r.y|0));return}
   if(r.cing&&r.hunger<=25&&S.food<=0){const R=RECIPES.find(x=>x.out===r.cing.rec);if(R)for(const k in R.need)addFood(k,R.need[k]);r.cing=null;if(r.act&&r.act.type==='cook')endAct(r);if(r.bubble==='🔥'||r.bubble==='🍳')r.bubble=null}/* 料理中におなかがすいたら、材料をもどして食べにいく */
   if(r.act&&r.hunger<=(r.act.type==='cook'?25:50)&&S.food>0&&!isNight()&&WORKT.has(r.act.type)){endAct(r)}/* おなかが50いかになったら、作業をやめて食べにいく */

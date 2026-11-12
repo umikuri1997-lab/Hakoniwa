@@ -203,11 +203,11 @@ function updEnemy(e,dt){
     if(matTot()>0)for(let k=0;k<W*H;k++){if(!storageAt(k,'mat'))continue;for(const n of[k-1,k+1,k-W,k+W]){if(!walk(n)||!ok(n)||storeAdj(n,'mat')<0)continue;const d=Math.hypot(n%W+.5-e.x,((n/W)|0)+.5-e.y);if(d<bd){bd=d;goal=n;box=-2-k}}}
     if((e.stolen||0)>=10){e.flee=true;e.path=[];e.repath=0}
     else if(goal>=0&&bd<.6){const key=box===-1?'farm:'+goal:'box:'+box;if(e.stealKey!==key){e.stealKey=key;e.stealT=0}e.busyT=S.t;e.stealT=(e.stealT||0)+dt/DAYLEN;e.path=[];
-      if(e.stealT>=10){e.stealT-=10;let got='';
-        if(box<=-2){const m=Object.keys(S.mat).filter(k=>S.mat[k]>0).sort((a,b)=>S.mat[b]-S.mat[a])[0];if(m){S.mat[m]--;got=MATN[m]||m}}
-        else if(box>=0){if(takeFood(1,'any').length)got='食料'}
-        else{const d=S.dyn[goal],fk=cropK(d),n=(CROPS[fk]||{yield:1}).yield;d.stolen=(d.stolen||0)+1;got='畑の作物';if(d.stolen>=n){d.g=0;d.sown=false;d.crop=null;delete d.stolen}}
-        if(got){e.stolen=(e.stolen||0)+1;S.nightHurt++;if(S.ns)S.ns.lost.push(got);toast('カゲドロボウに'+got+'をぬすまれた！','warn');sfxAt('thief',e.x,e.y)}
+      if(e.stealT>=10){e.stealT-=10;let got='',lk='';
+        if(box<=-2){const m=Object.keys(S.mat).filter(k=>S.mat[k]>0).sort((a,b)=>S.mat[b]-S.mat[a])[0];if(m){S.mat[m]--;got=MATN[m]||m;lk='mat:'+m}}
+        else if(box>=0){const f=takeFood(1,'any');if(f.length){got='食料';lk='food:'+f[0]}}
+        else{const d=S.dyn[goal],fk=cropK(d),n=(CROPS[fk]||{yield:1}).yield;d.stolen=(d.stolen||0)+1;got='畑の作物';lk='food:'+fk;if(d.stolen>=n){d.g=0;d.sown=false;d.crop=null;delete d.stolen}}
+        if(got){if(lk){const L=e.loot||(e.loot={});L[lk]=(L[lk]||0)+1;(e.lootN||(e.lootN=[])).push(got)}/* ぬすんだ物（たおされたら落とす） */e.stolen=(e.stolen||0)+1;S.nightHurt++;if(S.ns)S.ns.lost.push(got);toast('カゲドロボウに'+got+'をぬすまれた！','warn');sfxAt('thief',e.x,e.y)}
         if(e.stolen>=10){e.flee=true;e.path=[];e.repath=0}}
       return
     }else{e.stealKey=null;e.stealT=0}}
@@ -298,6 +298,7 @@ function defeat(e,msg,r){if(e.dead)return;/* 同じ敵の撃破報酬は1回だ�
   if(D.boss&&!S.flags.sh_boss&&!S.flags.bossShake&&!WD&&S.res.some(r=>r.name===POKO)){S.flags.bossShake=1;{const go=()=>performance.now()<BOSSHOLD?setTimeout(go,300):dialog([[POKO,'#joy|……やった！ オオカゲを、追いはらったよ！','cheer'],[POKO,'#surprise|……あれ？ 手が、まだふるえてる……。'],...(S.res.some(r=>r.name===MINA)?[[MINA,'#joy|フタバ、すごかったねぇ。みんなで、村を守れたよぉ。'],[MINA,'ふるえるのは、それだけがんばったからだよぉ。こわかったのに、にげなかったもんねぇ。'],[POKO,'#cry|……うん。ノドカがいてくれたから、がんばれたんだ。'],[MINA,'#joy|今夜は、みんなでゆっくり休もうねぇ。'],[POKO,'#joy|うん！ みんな、ありがとう！']]:[[GOD,(GVOICE()||'#nod|')+'……ようやったのう、フタバ。ちゃんと見とったぞい。'],[GOD,'ふるえるのは、こわいのをこらえて、さいごまでふんばったしるしじゃ。'],[POKO,'#cry|……うん。こわかったけど、にげなかったよ。'],[GOD,'#joy|えらいぞ。今夜は、ゆっくり休むんじゃ。']])]);setTimeout(go,1200)}}/* 戦闘のあと：フタバのふるえ（かけらの話とは別）。追いはらいの演出で「進む」をおしてから */
   if(D.boss&&WD&&!S.flags.sh_boss&&!S.drops.some(d=>d.id==='shard'))dropAt(e.x,e.y,'shard');/* 草原では、最後のバトルに勝ったときだけかけらが出る *//* オオカゲが落とすかけらは1つだけ */
   if(D.boss&&Math.random()<.5)dropAt(e.x,e.y,'mebuki');/* 半分の確率で「めぶきのしずく」 */
+  if(e.loot){for(const id in e.loot)dropAt(e.x,e.y,id,e.loot[id]);if(S.ns)for(const g of e.lootN||[]){const i=S.ns.lost.indexOf(g);if(i>=0)S.ns.lost.splice(i,1)}toast('カゲドロボウが、ぬすんだ物を落とした','good');e.loot=null}/* カゲドロボウをたおすと、ぬすんだ物を落とす（せいれいがひろって箱へ） */
   for(const[id,n,pr]of dropRolls(e.type))if(Math.random()<pr)dropAt(e.x,e.y,id,n);/* 落とし物は1つずつ、べつべつにくじを引く（いくつも落とすことがある） */
   S.pt+=n;S.totalPt+=n;addFloat(e.x,e.y-1,'+'+n,'#ecdcbc');/* 追いはらいは表示どおり */toast((msg||D.name+'を追いはらった！')+' パワー+'+n,'good');
 }
