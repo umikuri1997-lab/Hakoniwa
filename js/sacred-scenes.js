@@ -77,8 +77,8 @@ function sacredGrowSparks(j,ms,stage,mode){
     sfx('sacred')},ms*(glow?.45:.7))}
 /* ---------- かけらを御神木にささげる場面 ----------
    フタバが歩みよる → 村の時間を止めて、カメラがよる → かけらが手の上にうかぶ → 幹へとんで入る → 光のすじが根から梢へ
-   → 1つめ：木のまわりに光の花が咲きひろがる／2つめ：村のせいれいから光があつまる／3つめ：3つの光の輪
-   → 1つめ・2つめ：木のよこに、ヌシ様の光のりんかくが少しだけあらわれる → 会話 → done（ささげたことにする）。木の姿はかえない */
+   → 1つめ：木のまわりに光の花が咲きひろがる／2つめ：村のせいれいから光があつまる／3つめ：3つの光が幹でひとつになって、木が大きく育つ
+   → 1つめ・2つめ：木のよこに、ヌシ様の光のりんかくが少しだけあらわれる → 会話 → done（ささげたことにする）。1つめ・2つめでは、木の姿はかえない */
 function shardLines(n){const N=keyName('earth'),H=keyName('fire'),M=keyName('water'),K=keyName('wind');
   const L=n===1?[[POKO,'#surprise|……いま、木のよこに……！'],[POKO,'#teary|……ヌシ様の、におい。お日さまと、草のにおいだ。'],[N,'花が、いっぺんに咲いたねぇ。土の下まで、ぽかぽかしてるよぉ。'],[GOD,'#nod|うむ。「育てる力」が、木にやどったんじゃ。……ヌシは、ちゃんと、ここにおるぞい。'],[POKO,'#joy|うん。……まっててね、ヌシ様。']]
     :[[POKO,'#surprise|みんなの光が、木に……！'],[POKO,'#teary|……こっちを、見てる。ヌシ様、みんな、なかよくしてるよ。'],[H,'……いま、木のよこに、でっけえ光が立ってなかったか？'],[M,'はい。……やさしい目でした。'],[K,'#think|フッ…風が、いっしゅん、やんだね。'],[GOD,'#joy|「想う力」も、とどいたのう。ヌシの姿が、だんだん、こくなってきておる。'],[POKO,'#joy|もうすこしだよ、ヌシ様。']];
@@ -93,7 +93,7 @@ function sacredOfferShard(j,done){
   const alive=()=>S===owner&&VILLAGE_SESSION===session&&S.res.includes(f)&&S.obj[j]==='tower';
   const finish=()=>{if(SHARD_OFFER===offer)SHARD_OFFER=null};
   let begun=false;const act=()=>{if(begun)return;begun=true;if(!alive())return finish();
-    endAct(f);f.path=[];f.act={type:'idle',stage:'do',t:0,dur:999};const hold=f.act,face=f.x<storyTreeX(j)?1:-1,T=n>=3?5800:9600,g=sacredGeo(j);f.face=face;
+    endAct(f);f.path=[];f.act={type:'idle',stage:'do',t:0,dur:999};const hold=f.act,face=f.x<storyTreeX(j)?1:-1,T=n>=3?10600:9600,g=sacredGeo(j);f.face=face;
     const at=(ms,fn)=>setTimeout(()=>{if(alive())fn()},ms),stopAll=()=>{SCENEHOLD=0;finish();if(f.act===hold)endAct(f);SACRED_POSES.delete(f)};
     SCENEHOLD=performance.now()+T+300;musicDuck(T+900);
     const lx=g.cx+face*84,ly=g.base+8,fb=[[f.x*TS-24,f.y*TS-62-uLift(f)],[f.x*TS+24,f.y*TS+10-uLift(f)]];
@@ -109,9 +109,12 @@ function sacredOfferShard(j,done){
         scnAdd('bloom',4600,{x:x*TS,y:y*TS-hiAt(q)*LIFT,col:C[k++%4]},(r-1.8)*420+Math.random()*200)}sfx('plant')});
     if(n===2)at(4100,()=>{/* 想う力：村のせいれいから、ちいさな光が木へあつまる */const L=S.res.filter(r=>!r.hidden&&r!==f).sort((a,b)=>Math.hypot(a.x-f.x,a.y-f.y)-Math.hypot(b.x-f.x,b.y-f.y)).slice(0,14);
       L.forEach((r,i)=>{const col=ELEM[r.elem].body;scnAdd('orb',1300,{x0:r.x*TS,y0:r.y*TS-18-uLift(r),x1:tx,y1:ty,arc:20,col,n:2},i*150);scnAdd('ring',700,{x:tx,y:ty+6,r0:4,r1:16,col,a:.7},i*150+1300)});sfx('power')});
-    if(n>=3)at(4100,()=>{['#c8f5a0','#ffd1e8','#fff6c8'].forEach((col,i)=>scnAdd('ring',1300,{x:g.cx,y:g.base-4,r0:8,r1:70+i*22,col},i*300));sacredLeafFall(g,12,40);sfx('level')});
+    if(n>=3){/* 3つめ：育てる力・想う力・守る力の3つの光が、幹でひとつになって、木が大きく育つ（このあと、ヌシ様が帰ってくる） */
+      at(4100,()=>{['#c8f5a0','#ffd1e8','#fff0a8'].forEach((col,i)=>{const a=-Math.PI/2+i*Math.PI*2/3;scnAdd('glow',1500,{x:tx+Math.cos(a)*48,y:ty-10+Math.sin(a)*30,r:10,col},i*250);scnAdd('orb',1200,{x0:tx+Math.cos(a)*48,y0:ty-10+Math.sin(a)*30,x1:tx,y1:ty,arc:14,col,n:3},i*250+300);scnAdd('ring',800,{x:tx,y:ty+6,r0:4,r1:24,col,a:.8},i*250+1500)});sfx('power')});
+      at(6000,()=>{const ms=4400,g4=sacredGeo(j,4);sacredStartEffect('growth',ms,{from:3,to:4});SACRED_PREVIEW.set(S,{session:VILLAGE_SESSION,stage:4,until:Infinity});SACRED_SHOWN.set(S,{session:VILLAGE_SESSION,stage:4});
+        storyShot([[g4.cx-74,g4.top-8],[g4.cx+74,g4.base+16],...fb],{limit:2.2,seconds:1.8,full:true});SACRED_POSES.delete(f);sacredScenePose(f,'lookUp',ms+400,{side:true,face});sacredGrowSparks(j,ms,4);sfx('sacred')})}
     if(n<3)at(n===1?5400:5800,()=>{/* ヌシ様の光のりんかく：木のむこうがわに立って、フタバのほうを見る */scnAdd('lord',n===1?3400:3200,{x:lx,y:ly,face:-face,str:n===1?.62:.92});storyShot([...near,[lx-60,ly-150],[lx+60,ly]],{limit:2.2,seconds:1.6,full:true});/* カメラが少し引いて、すがたが入る */SACRED_POSES.delete(f);f.face=face;sacredScenePose(f,'lookUp',4000,{side:true,face});JUMP.set(f,performance.now());sfx('sacred')});
-    at(T,()=>{stopAll();sacredNearJoy(j,1600,10);const end=()=>{if(S!==owner||VILLAGE_SESSION!==session)return;if(sacredDirection())sacredEndDirection(true);done()};
+    at(T,()=>{stopAll();if(n>=3)S.treeSeen=4;/* 育った木は、そのまま（sacredStage） */sacredNearJoy(j,1600,10);const end=()=>{if(S!==owner||VILLAGE_SESSION!==session)return;if(sacredDirection())sacredEndDirection(true);done()};
       const lines=n<3?shardLines(n):[];if(lines.length)storyShot(near,{limit:2.2,seconds:.9});if(!lines.length||dialog(lines,end,null,'')===false)end()})};
   if(!sacredSceneWalk(f,(j%W)+.5,by,{adjacentSide:true},act)&&!sacredSceneWalk(f,(j%W)+span-.5,by,{adjacentSide:true},act))act();
   setTimeout(()=>{if(!begun&&S===owner&&VILLAGE_SESSION===session)act();else if(!begun)finish()},15000);/* 歩くのをじゃまされても、止まったままにしない */
