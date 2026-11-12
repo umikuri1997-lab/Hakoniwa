@@ -11,16 +11,16 @@
  木箱 crate（64×69）：ふたの板4まい x8〜55・y1〜27／ふたの手前のふち y29〜33／左右の柱 x1〜7・x56〜62／柱のかど金 y26〜35／正面のへこんだ板 x9〜54・y37〜60 に X のすじかい／下の板 y62〜67"""
 import sys, os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from pixdraw import Pix, run, OT, OD, TB, TS, TI, LIP, AB, AS, LL
+from pixdraw import Pix, run, oval_rows, OT, OD, TB, TS, TI, LIP, AB, AS, LL
 
 def ltable():
-    p = Pix(61, 31); p.board(0, 1, 59, 23, front=5, legs=(3, 50), leg_w=7, leg_bottom=29, grain=((6, 8, 24), (12, 30, 50)), bottom=(3, 2, 1)); return p
+    p = Pix(61, 31); p.board(0, 1, 59, 23, front=5, legs=(3, 50), leg_w=7, leg_bottom=29, grain=((6, 8, 24), (12, 30, 50)), bottom=(3, 2, 1), fcorner=(3, 2, 1)); return p
 def ltable_v():
-    p = Pix(26, 50); p.board(1, 1, 24, 43, front=4, legs=(3, 17), leg_w=6, leg_bottom=49, vgrain=((8, 6, 18), (16, 20, 33)), top=(2, 1), bottom=(2, 1)); return p
+    p = Pix(26, 50); p.board(1, 1, 24, 43, front=4, legs=(3, 17), leg_w=6, leg_bottom=49, vgrain=((8, 6, 18), (16, 20, 33)), top=(2, 1), bottom=(2, 1), fcorner=(2, 1)); return p
 def bench():
-    p = Pix(100, 44); p.board(0, 0, 99, 31, front=5, legs=(5, 87), leg_w=8, leg_bottom=43, grain=((7, 12, 34), (14, 52, 84), (20, 20, 46)), bottom=(3, 2, 1)); return p
+    p = Pix(100, 44); p.board(0, 0, 99, 31, front=5, legs=(5, 87), leg_w=8, leg_bottom=43, grain=((7, 12, 34), (14, 52, 84), (20, 20, 46)), bottom=(3, 2, 1), fcorner=(3, 2, 1)); return p
 def bench_v():
-    p = Pix(47, 116); p.board(0, 0, 46, 106, front=7, legs=(4, 35), leg_w=8, leg_bottom=115, vgrain=((12, 14, 40), (24, 52, 86), (35, 22, 50)), bottom=(3, 2, 1, 1)); return p
+    p = Pix(47, 116); p.board(0, 0, 46, 106, front=7, legs=(4, 35), leg_w=8, leg_bottom=115, vgrain=((12, 14, 40), (24, 52, 86), (35, 22, 50)), bottom=(3, 2, 1, 1), fcorner=(3, 2, 1)); return p
 
 def stable():
     p = Pix(59, 64)
@@ -34,11 +34,14 @@ def stable():
         if y < 54: p.hl(y, a + 1, a + 2, LL); p.hl(y, 58 - a - 2, 58 - a - 1, AS)        # 光は左、かげは右
     p.leg(25, 50, 33, 63, AB, LL, AS, OD, drop=0)                                        # まん中の柱（足の前）
     p.rect(26, 42, 32, 49, AB); p.rect(26, 42, 27, 49, LL); p.rect(31, 42, 32, 49, AS)   # 柱の上（足とかさなる所は、輪郭なしでつなぐ）
-    hub = {40: (12, 46), 41: (13, 45), 42: (15, 43), 43: (17, 41), 44: (19, 39)}         # 天板のうらの、すぼまる台
-    p.shape(hub, AS, OD)
     # 2 丸い天板
     p.round_top(1, 1, 57, 34, 6, top=TB, side=AB, line_top=OT, line_side=OD, lip=LIP, side_shade=AS)
-    p.drop_shadow(OD, (AB, LL), AS, n=2)                                                 # 天板が足に落とすかげ
+    bowl = {y: r for y, r in oval_rows(15, 32, 43, 46).items() if y >= 41}                # 天板のうらの、丸くすぼまる台（天板の正面から、線なしでつづく）
+    p.shape(bowl, AS, OD)
+    for x in range(bowl[41][0], bowl[41][1] + 1):
+        for y in (41, 40, 39):
+            if p.at(x, y) == OD and p.at(x, y - 1) is not None: p.dot(x, y, AS)
+            else: break
     p.inner(TB, OT, TI, sides='ULR', y0=2, y1=26)
     for y, a, b in ((10, 14, 30), (18, 26, 46), (25, 12, 28)): p.hl(y, a, b, TS)
     return p
@@ -66,8 +69,9 @@ def crate():
     for L in (1, 56):
         p.rect(L, 0, L + 6, 68, CO); p.rect(L + 1, 1, L + 5, 25, CL); p.vl(L + 5, 1, 25, CB)
         p.rect(L + 1, 36, L + 5, 67, CB); p.vl(L + 1, 36, 67, CL); p.vl(L + 5, 36, 67, CS)
-        K = L - 1
-        p.rect(K, 26, K + 8, 35, CO); p.rect(K + 1, 27, K + 7, 34, CB); p.rect(K + 1, 27, K + 7, 28, CL); p.hl(34, K + 1, K + 7, CS)
+        K = L - 1                                # かど金：柱より左右に1ドット広い、明るい帯。こい線でかこまない
+        p.rect(K, 26, K + 8, 35, CB); p.rect(K, 26, K + 8, 27, CL); p.hl(35, K, K + 8, CS)
+        p.vl(0 if L == 1 else 63, 26, 35, CO); p.vl(8 if L == 1 else 55, 28, 34, CS)
     return p
 
 run({'ltable': ltable, 'ltable>1': ltable_v, 'bench': bench, 'bench>1': bench_v, 'stable': stable, 'crate': crate})

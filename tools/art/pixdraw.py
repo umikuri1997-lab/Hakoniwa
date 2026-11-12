@@ -114,9 +114,10 @@ class Pix:
         self.rect(x0 + 1, y0, x1 - 1, y1 - 1, base); self.rect(x0 + 1, y0, x0 + 2, y1 - 1, light); self.rect(x1 - 2, y0, x1 - 1, y1 - 1, shade)
         if drop: self.rect(x0 + 1, y0, x1 - 1, y0 + drop - 1, shade)
         self.vl(x0, y0, y1 - 1, line); self.vl(x1, y0, y1 - 1, line); self.hl(y1, x0 + 1, x1 - 1, line)
-    def board(self, x0, y0, x1, y1, front, legs=(), leg_w=10, leg_bottom=None, grain=(), vgrain=(), top=(4, 2, 1, 1), bottom=(2, 1)):
+    def board(self, x0, y0, x1, y1, front, legs=(), leg_w=10, leg_bottom=None, grain=(), vgrain=(), top=(4, 2, 1, 1), bottom=(2, 1), fcorner=()):
         """木の板の台（食卓・ローテーブル・ベンチ）を、木の家具の色で描く：上の面 y0〜y1-front（いちばん手前の行は光）、その下 front 行が正面、脚は legs（左はしの x）から leg_bottom まで。
-        grain=((y,xa,xb),…) はよこの木目、vgrain=((x,ya,yb),…) はたての木目（たてに長い板）"""
+        grain=((y,xa,xb),…) はよこの木目、vgrain=((x,ya,yb),…) はたての木目（たてに長い板）。
+        fcorner=(3, 2, 1) で、上の面の手前の左右の角を丸くする（手前の行から順のへこみ。へこんだ所は正面の色になり、光の線が角にそって上がる）"""
         yt = y1 - front
         self.slab(x0, y0, x1, y1, fill=TB, line=OT, top=top, bottom=bottom, line_rows={y: OD for y in range(yt + 1, y1 + 1)})
         self.rect(x0 + 1, yt + 1, x1 - 1, y1 - 2, AB)
@@ -124,9 +125,17 @@ class Pix:
         for x in range(x0, x1 + 1):
             if self.at(x, y1 - 1) in (AB, TB) and self.at(x - 1, y1 - 1) is not None and self.at(x + 1, y1 - 1) is not None: self.dot(x, y1 - 1, AS)
         self.vl(x0 + 1, yt + 1, y1 - 2, AS); self.vl(x1 - 1, yt + 1, y1 - 2, AS)
+        for i, d in enumerate(fcorner):          # 上の面の手前の角を丸く：へこんだ所を正面の色に、その行の輪郭は正面の輪郭の色に
+            y = yt - i
+            self.hl(y, x0 + 1, x0 + d, AB); self.hl(y, x1 - d, x1 - 1, AB); self.dot(x0 + 1, y, AS); self.dot(x1 - 1, y, AS)
+            self.dot(x0, y, OD); self.dot(x1, y, OD)
+        for y in range(yt - len(fcorner), yt + 1):  # 光の線は、上の面の下のふちにそう
+            for x in range(x0 + 1, x1):
+                if self.at(x, y) in (TB, LIP) and self.at(x, y + 1) in (AB, AS): self.dot(x, y, LIP)
+                elif self.at(x, y) == LIP: self.dot(x, y, TB)
         for y, a, b in grain: self.hl(y, a, b, TS)
         for x, a, b in vgrain: self.vl(x, a, b, TS)
-        self.inner(TB, OT, TI, sides='ULR', y0=y0 + 1, y1=yt - 1)
+        self.inner(TB, OT, TI, sides='ULR', y0=y0 + 1, y1=yt - 1 - len(fcorner))
         for L in legs: self.leg(L, y1 + 1, L + leg_w - 1, leg_bottom, AB, LL, AS, OD)
     def save(self, path): self.im.save(path)
     def put(self, cid, frame=0):
