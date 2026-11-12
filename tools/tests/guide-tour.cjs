@@ -20,6 +20,6 @@ const assert=require('node:assert/strict');
   /* オオカゲがいるあいだは、夜の曲のアレンジ（nightB）。鳴らしてもエラーにならない */
   const bm=JSON.parse(await run(`(()=>{S.enemies=[{type:'boss',spawned:true,dead:false,x:0,y:0}];const a=stageSong();S.enemies=[];const c=stageSong();
     let err='';try{audioInit();curSong=wantSong='nightB';step=0;if(AC&&AC.state==='running')sched()}catch(e){err=e.message}return JSON.stringify([a,c,err])})()`));
-  assert.equal(bm[0],'nightB');assert.notEqual(bm[1],'nightB');assert.equal(bm[2],'');console.log('boss music:',bm[0]);
+  assert.equal(bm[0],'nightB');assert.equal(await run(`(()=>{S.enemies=[{type:'hino',spawned:true,dead:false,x:0,y:0}];const a=stageSong();S.enemies=[];return a+'|'+SONGS.hino.mel.reduce((s,x)=>s+x[1],0)})()`),'hino|64','hino song');assert.notEqual(bm[1],'nightB');assert.equal(bm[2],'');console.log('boss music:',bm[0]);
   assert.deepEqual(errors,[]);await browser.close();console.log('OK');
 })().catch(e=>{console.error(e);process.exit(1)});
