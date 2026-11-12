@@ -434,6 +434,12 @@ const QUESTS1=[
     [POKO,'火の力をためて、火のせいれいをむかえよう！']]},
    get story(){return KS([['H','#joy|おう、来てやったぜ！ 今夜からは、おれも村を守る。'],[POKO,'あったかいせいれいが来てくれた！ あのね、あとで見てほしい木があるの。'],['H','木？ ……いいぜ。そんな顔されちゃ、あとで見てやるよ。']])}},
   companionFieldQuest("fireRoot","燃やさない火","切り株のそばにたき火を置いたら、切り株をタップ。火のせいれいが温めた石を根の周りに置く。ノドカと土を整えて、根元の変化を見届けよう","fire",[["F","ここ、あっためられる？"],["H","木を？"],["F","根っこのぬくもりが、少しずつ小さくなってるの。"],["H","……燃やしていい木じゃ、なさそうだな。"],["F","うん。だいじな木。"],["H","なら、根から少しはなして、小さなたき火をするぞ。そこで石を温めて、根のまわりに置くんだ。"]],[["F","ずっと、そばにいなくてもいいの？"],["H","村の見回りもあるからな。おれがいないあいだも、冷えにくくしてやろう。"],["F","待って。前に来たときも、ここにあった？",0,"stree:bud"],["N","……芽だねぇ。"],["F","#joy|芽！",0,"stree:gaze"],["H","見張ってても、急にはでかくならねえぞ。"],["F","でも、見てたい。"],["H","……じゃあ、ちょっとだけな。",0,"stree:sit"]],['fireRoot']),
+  /* 芽が出たあと：芽のそばからはなれないフタバに、火のせいれいがベイクドポテトを焼く（warmIns1）。かまどは、まだ思いついていなければ、ここで思いつく */
+  stepQuest({id:'warmMeal',text:'あたたかいごはん',
+   steps:[{id:'warmYaki',t:'火のせいれいに、ベイクドポテトを焼いてもらう',check:()=>!!S.flags.warmYaki,get how(){return cnt('oven')?'かまどをタップして、ベイクドポテトをえらぶ':'依頼ボードの「ごはん」でかまどをはって置き、かまどをタップして、ベイクドポテトをえらぶ'}}],
+   talk:{get who(){return keyName('fire')},when:()=>true,get learn(){return (S.guardianIdeas||{}).oven||(S.recipes||{}).oven?[]:['oven']},get lines(){const L=[['H','#think|フタバのやつ、朝から晩まで、あの芽のそばにいるな。'],['N','ごはんのことも、わすれてるみたいだよぉ。'],['H','しょうがねえな。あったかいもんでも、食わせてやるか。'],['H','いもを火で焼けば、ほくほくになる。焼くのは、おれにまかせな。']];
+    if(!(S.guardianIdeas||{}).oven&&!(S.recipes||{}).oven)L.push(['H','#think|けど、火にそのまま入れたら、まっ黒こげだ。守り神、なにか思いつかねえか？'],['@idea'],['H','#joy|へえ、この中で焼くのか。これなら、こがさずにすむな！']);return KS(L)}},
+   get story(){return KS([['H','ほらよ、焼きたてだ。',0,'give:H>F'],['F','#joy|あったかい！ ほくほくだね。'],['F','#think|芽のそばにいると、ごはんのこと、わすれちゃうんだ。'],['H','芽を見るのはいいけどな。おまえが元気じゃなきゃ、芽もしんぱいするぞ。'],['N','あしたからは、ごはんを食べてから、みんなで見に行こうねぇ。'],['F','#joy|うん！']])}}),
   stepQuest({id:'water',text:'水のせいれいをむかえよう',
    steps:[{id:'lv3',t:'村レベルを3にする',check:()=>S.lv>=3,prog:()=>'いま 村レベル'+S.lv,how:'せいれいが満足してパワーがたまると、村レベルが上がる'},
     {id:'water',t:'水のせいれいをむかえる',check:()=>elemCount('water')>=1&&NEWRES==null,prog:()=>'水の力 '+Math.floor(ATTR.water)+'/'+needFor('water'),how:'ハスを植えて水の力をため、朝に神殿の「！」から呼ぶ'}],
@@ -643,6 +649,14 @@ function migrateFarmFirst(state){
       for(const q of ['farm6','imoseed'].map(k=>QUESTS1[ix(k)])){const g=(q.talk&&q.talk.gives&&q.talk.gives.items)||{};for(const k in g){un[k]=true;if(k.startsWith('seed:')){const c=k.slice(5);cs[c]=(cs[c]||0)+g[k]}else inv[k]=(inv[k]||0)+g[k]}}
     }
   }else if(id==='farm6'||id==='imoseed')(state.flags.qPassed||(state.flags.qPassed={})).earthListen=1;/* 切り株の下では、もうした：そこへ来たら、とばす */
+}
+/* 「あたたかいごはん」（warmMeal）を、燃やさない火（fireRoot）のあとに足した（warmIns1）。pre：読みこんだときに、もう今のならび（farmFirst1）の番号だったセーブ。なかよしの想いの読みかえより先にする */
+function migrateWarmIns(state,pre){
+  if(state.flags.warmIns1)return;state.flags.warmIns1=1;
+  if(state.free||(state.world||0)!==0)return;
+  const w=qsIx('warmMeal');
+  if(pre){if((state.quest||0)>=w)state.quest=(state.quest||0)+1;if(state.qStory!=null&&state.qStory>=w)state.qStory++}
+  if(state.qStory===w-1&&(state.quest||0)>w){state.quest=w;state.qTalked=false}/* 燃やさない火のお礼を待っていた：お礼のあと「あたたかいごはん」へ */
 }
 /* 「なかよしの想い」（omoi）を、かけらさがし（lv5）のあとに足した（omoiIns1）。pre：読みこんだときに、もう今のならび（farmFirst1）の番号だったセーブ */
 function migrateOmoiIns(state,pre){
