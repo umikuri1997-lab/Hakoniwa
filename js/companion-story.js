@@ -107,17 +107,19 @@ function fieldStoryResult(r,a){
 ACT.fieldstory={
   start(r,a){if(!fieldStoryValid(a))return false;faceTo(r,a.look!=null?a.look:fieldStump(a.obj));r.bubble='';},
   tick(r,a,dt){
-    if(!fieldStoryValid(a))return;const step=FIELD_STORIES[a.fieldId][a.phase],others=fieldCast(step).filter(p=>p!==r);
+    if(a.cancel||!fieldStoryValid(a))return;const step=FIELD_STORIES[a.fieldId][a.phase],others=fieldCast(step).filter(p=>p!==r);
     if(others.some(p=>p.act?.type!=='fieldassist'||p.act.phase!==a.phase)){a.cancel=true;return;}
     if(others.some(p=>p.act.stage!=='do')){a.t=0;return;}
-    if(step.pre&&!a.preDone){if(!a.preOpen&&$('#dialog').hidden){a.preOpen=1;const owner=S,ses=VILLAGE_SESSION;dialog(KS(step.pre),()=>{if(S===owner&&VILLAGE_SESSION===ses)a.preDone=true})}a.t=0;return;}/* 集まったら、まず話してから、守り神の出番と動き */
-    {const pl=typeof FIELD_PLAY!=='undefined'&&FIELD_PLAY[a.fieldId];if(pl&&pl.phase===a.phase&&!a.played){if(!sacredPlayActive())startSacredPlay(a.fieldId,a.obj,fieldCast(step),()=>{a.played=true});a.t=0;return;}}/* 守り神の出番がすんでから、つづきの動き */
+    if(step.pre&&!a.preDone&&!fieldStoryState(a.fieldId)?.retry){/* やりなおしの日は、もう聞いた話をくりかえさない */if(!a.preOpen&&$('#dialog').hidden){a.preOpen=1;const owner=S,ses=VILLAGE_SESSION;dialog(KS(step.pre),()=>{if(S===owner&&VILLAGE_SESSION===ses)a.preDone=true})}a.t=0;return;}/* 集まったら、まず話してから、守り神の出番と動き */
+    {const pl=typeof FIELD_PLAY!=='undefined'&&FIELD_PLAY[a.fieldId];if(pl&&pl.phase===a.phase&&!a.played){if(!sacredPlayActive())startSacredPlay(a.fieldId,a.obj,fieldCast(step),()=>{a.played=true},()=>fieldPlayRetry(a));a.t=0;return;}}/* 守り神の出番がすんでから、つづきの動き */
     if(step.pose==='sit')for(const p of fieldCast(step))sacredSetPose(p,{anim:'talkthink',sit:true});
 
   },
   done:(r,a)=>a.cancel||!fieldStoryValid(a)||a.t>=FIELD_STORIES[a.fieldId][a.phase].dur,
   end:fieldStoryResult
 };
+/* 守り神の出番で3回しっぱい：その日の調べはやめて解散。つぎの日に、切り株をタップして、もう一度 */
+function fieldPlayRetry(a){const st=fieldStoryState(a.fieldId);if(!st)return;st.retry=callDay()+1;st.auto=false;a.cancel=true;dirty=true;toast('うまくいかなかった。あした、もう一度ためそう');renderQuest()}
 ACT.fieldassist={start(r,a){faceTo(r,fieldStump(a.obj));r.bubble='';},done:(r,a)=>!fieldStoryValid(a)||isNight()||hungry(r)||!S.res.some(p=>p.act?.type==='fieldstory'&&p.act.fieldId===a.fieldId&&p.act.phase===a.phase)};
 /* 調べのあいまの待ち：つぎの段階・つぎの調べがすぐつづくあいだは、木のそばでそのまま待つ。
    村での準備がいるとき・夜・コワイノ・おなかがすいたとき・調べがおわったとき・ゲームの1時間で、おわる */
