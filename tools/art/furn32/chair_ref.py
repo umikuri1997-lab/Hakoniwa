@@ -70,8 +70,8 @@ def crop(a, ax, ay):
 
 if __name__ == '__main__':
     meta = {}
-    b, f, ay = back(); s, ay1 = side()
-    for k, a, ay0 in (('chair>2', b, ay), ('chair>2.front', f, ay), ('chair>1', s, ay1)):
+    b, f, ay = back()   # よこ向き（side）は、元の絵にそう flat_art.py の絵にかえた
+    for k, a, ay0 in (('chair>2', b, ay), ('chair>2.front', f, ay)):
         c, ax, y = crop(a, AX, ay0)
         n = k.replace('>', '_3e')
         if k != 'chair>2': Image.fromarray(c, 'RGBA').save(os.path.join(REF, n + '.png'))   # うしろ向きは持ち主の絵のまま

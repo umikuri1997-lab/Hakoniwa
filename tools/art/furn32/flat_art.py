@@ -1,6 +1,6 @@
 """持ち主のベッドのお手本（ref/bed.png）と同じ作り（面ごとに1色のたいらなぬり・1ドットのうすい茶色の輪郭線・12色ほど）で、
-よこのベッド・食卓・たるを描く。形と大きさは、いまのチップ（clean64 の絵）と同じ。できた絵は ref/ に書き、clean64.py がそのまま使う。
-  python3 tools/art/furn32/flat_art.py"""
+食卓・たるを描き、よこのベッド・いすのよこ向きは元の絵（clean64 の絵）の色と線をおきかえる。形と大きさは、いまのチップ（clean64 の絵）と同じ。できた絵は ref/ に書き、clean64.py がそのまま使う。
+  CLEAN64_NOREF=1 python3 tools/art/furn32/clean64.py <raw> chair bed && FLAT_RAW=<raw> python3 tools/art/furn32/flat_art.py"""
 import os
 import numpy as np
 from PIL import Image
@@ -32,38 +32,21 @@ def post(cv, x0, y0, x1, y1, body=G, cap=J):
     """柱：上に2行の上の面、そのあとに線、下は前の面"""
     cv.box(x0, y0, x1, y1, body); cv.rect(x0 + 1, y0 + 1, x1 - 1, y0 + 2, cap); cv.hline(x0, x1, y0 + 3, B)
 
-def bed_side():
-    """よこのベッド（bed>1、77×77）：頭は左。左右の柱・マットレスの上の面・まくら・かけぶとん・手前のわく"""
-    cv = Cv(77, 77)
-    top, side, rail = 6, 56, 60                       # マットレスの上の面（6〜55行）・横の面（56〜58）・わく（60〜68）
-    cv.rect(7, top, 69, side - 1, A)
-    cv.hline(7, 69, top, C); cv.vline(69, top, side - 1, F)          # ふちのやわらかいかげ
-    cv.box(9, top + 4, 19, side - 4, A, ol=D, cut=True)                # まくら（よこ向き）
-    cv.rect(10, side - 7, 18, side - 5, C); cv.hline(10, 18, side - 5, F)
-    cv.rect(21, top, 26, side - 1, A); cv.vline(26, top, side - 1, C)  # かけぶとんのおり返し
-    cv.vline(27, top, side - 1, D); cv.vline(28, top, side - 1, F)
-    cv.rect(29, top + 1, 68, side - 2, A); cv.hline(29, 68, side - 2, C); cv.vline(29, top + 1, side - 2, C)
-    cv.rect(7, side, 69, side + 2, D); cv.hline(7, 69, side + 3, Lg)   # マットレスの横の面
-    cv.hline(7, 69, rail, B); cv.hline(7, 69, rail + 1, J); cv.hline(7, 69, rail + 2, Hc)
-    cv.hline(7, 69, rail + 3, B); cv.rect(7, rail + 4, 69, rail + 5, Hc); cv.rect(7, rail + 6, 69, rail + 7, E)
-    cv.hline(7, 69, rail + 8, B)
-    post(cv, 0, 0, 6, 76); post(cv, 70, 0, 76, 76)
-    return cv.img()
-
 def table():
-    """食卓（64×53）：天板の上の面・天板の手前の板・まえいた・脚2本"""
+    """食卓（64×53）：元の絵のとおり、角のまるい天板（木目のすじ2本）・あつい手前の板・ずんぐりした脚"""
     cv = Cv(64, 53)
-    cv.box(0, 0, 63, 35, G)
-    cv.hline(1, 62, 1, J)                              # 天板の上のふちの光
-    cv.hline(0, 63, 29, B); cv.rect(1, 30, 62, 31, Hc)  # 天板の手前の板
-    cv.hline(0, 63, 32, B); cv.rect(1, 33, 62, 34, E)   # まえいた
-    for x0 in (4, 50):                                  # 脚
-        cv.rect(x0, 35, x0 + 9, 51, B); cv.rect(x0 + 1, 35, x0 + 8, 50, Hc); cv.rect(x0 + 6, 35, x0 + 8, 50, E)
-        cv.a[51, x0] = 0; cv.a[51, x0 + 9] = 0
-        cv.hline(x0 + 1, x0 + 8, 52, B); cv.a[52, x0 + 1] = 0; cv.a[52, x0 + 8] = 0
-    cv.hline(5, 12, 35, B); cv.hline(51, 58, 35, B)
-    cv.a[35, 0] = 0; cv.a[35, 63] = 0
-    cv.hline(1, 62, 35, B)
+    cv.rect(0, 0, 63, 35, B); cv.rect(1, 1, 62, 34, G)
+    for x, y in ((0, 0), (1, 0), (0, 1), (63, 0), (62, 0), (63, 1), (0, 35), (1, 35), (0, 34), (63, 35), (62, 35), (63, 34)): cv.a[y, x] = 0
+    for x, y in ((1, 1), (62, 1), (1, 34), (62, 34)): cv.px(x, y, B)
+    cv.hline(2, 61, 1, J)                                   # 天板の上のふちの光
+    cv.hline(6, 30, 11, I); cv.hline(34, 57, 19, I)         # 木目のすじ
+    cv.hline(1, 62, 28, B)                                   # 天板の上の面と手前の板のさかい
+    cv.hline(2, 61, 29, Hc); cv.rect(2, 30, 61, 34, E)       # 手前の板（上のふちだけ明るい）
+    for x0 in (5, 49):                                       # 脚（左は明るく、右の3列はかげ）
+        cv.rect(x0, 35, x0 + 9, 51, B); cv.rect(x0 + 1, 36, x0 + 8, 50, Hc); cv.rect(x0 + 6, 36, x0 + 8, 50, E)
+        for x, y in ((x0, 51), (x0 + 9, 51)): cv.a[y, x] = 0
+        cv.px(x0 + 1, 51, B); cv.px(x0 + 8, 51, B); cv.hline(x0 + 2, x0 + 7, 52, B)
+        cv.rect(x0 + 2, 51, x0 + 7, 51, Hc); cv.rect(x0 + 6, 51, x0 + 7, 51, E)
     return cv.img()
 
 def taru():
@@ -87,7 +70,7 @@ def taru():
     for k in (-.72, -.36, 0, .36, .72):                # 板のさかいの線（ふくらみにそって）
         for y in range(ty, H):
             x = int(round(cx + k * hw(y + .5)))
-            if M[y, x]: cv.px(x, y, K)
+            if M[y, x]: cv.px(x, y, B)
     # 金具の輪：まん中ほど下へまがる帯
     for base in (20, 41):
         for x in range(W):
@@ -105,7 +88,7 @@ def taru():
     for y in range(H):                                 # ふたの板の線と、内の円のふちの線
         for x in range(W):
             e2 = ((x - cx) / 18.6) ** 2 + ((y + .5 - ty) / 7.6) ** 2
-            if e2 <= 1 and abs(x - cx - 6) < .5 or e2 <= 1 and abs(x - cx + 6) < .5: cv.px(x, y, G)
+            if e2 <= 1 and (abs(x - cx - 6) < .5 or abs(x - cx + 6) < .5): cv.px(x, y, B)
     I2 = np.zeros((H, W), bool)
     for y in range(H):
         for x in range(W): I2[y, x] = ((x - cx) / 18.6) ** 2 + ((y + .5 - ty) / 7.6) ** 2 <= 1
@@ -119,6 +102,79 @@ def taru():
     for y, x in zip(*np.where(edge(M))): cv.px(x, y, B)                                       # 外の輪郭
     return cv.img()
 
+# ---- 元の絵にそう作り：clean64 の絵（元の絵の形のまま）を、お手本の色と1ドットの線にする ----
+WOOD = [K, E, I, G, J]            # 木：こい → 明るい
+CLOTH = [Lg, D, F, C, A]          # 布
+METAL = [MO, MS, MM, MH]          # 金具
+
+def flatten(src):
+    """src：clean64 の絵。材料（木・布・金具）にわけ、線（いちばんこい色のかたまり＝clean64 の2ドットの線）は1ドットにして、
+    木はうすい茶色・金具はこい灰色。面は、その材料の明るさのじゅんに、お手本の色（木5・布5・金具4）へおきかえる。小さな点はまわりにそろえる"""
+    a = np.asarray(src.convert('RGBA')).astype(int); Hh, Ww = a.shape[:2]
+    m = a[..., 3] > 0
+    rgb = a[..., :3]; lum = rgb @ np.array([.3, .59, .11]); sat = rgb.max(2) - rgb.min(2)
+    mat = np.where(sat < 28, np.where(lum > 150, 1, 2), 0)            # 0 木・1 布・2 金具
+    mat[~m] = -1
+    lab = np.full((Hh, Ww), -1)                                         # 面の段（100*材料+段）。線は 99（木）・98（金具）
+    LUM = lambda c: c[0] * .3 + c[1] * .59 + c[2] * .11
+    for k, pal in ((0, WOOD), (1, CLOTH), (2, METAL)):
+        sel = mat == k
+        if not sel.any(): continue
+        pl = np.array([LUM(c) for c in pal])
+        line = sel & (lum <= lum[sel].min() + 20) if k != 1 else np.zeros_like(sel)
+        rest = sel & ~line
+        if k == 1: v = lum.copy()                                         # 布：明るさのまま（白は白）
+        else:                                                             # 木・金具：線いがいの明るさのはばを、お手本の色のはばにあてる
+            lo, hi = np.percentile(lum[rest], 3), np.percentile(lum[rest], 97)
+            v = pl[0] + (lum - lo) * (pl[-1] - pl[0]) / max(1, hi - lo)
+        lab[line] = 99 if k != 2 else 98
+        lab[rest] = 100 * k + np.abs(v[rest][:, None] - pl[None, :]).argmin(1)
+    # 線を1ドットに：2ドットの帯は、上・左がわの1ドットだけのこす
+    L = (lab == 99) | (lab == 98); P = np.pad(L, 1)
+    up, lf = P[:-2, 1:-1], P[1:-1, :-2]
+    thin = L & ~(up & lf) & ~(up & P[1:-1, 2:] & ~lf) & ~(lf & P[2:, 1:-1] & ~up)
+    drop = L & ~thin
+    FACE = lambda q: q not in (-1, 98, 99)
+    for _ in range(4):                                                  # けした線の所は、となりの面の色でうめる
+        for y, x in zip(*np.where(drop)):
+            nb = [lab[yy, xx] for yy, xx in ((y-1,x),(y+1,x),(y,x-1),(y,x+1)) if 0 <= yy < Hh and 0 <= xx < Ww and FACE(lab[yy, xx]) and not drop[yy, xx]]
+            if nb: lab[y, x] = max(set(nb), key=nb.count); drop[y, x] = False
+    lab[drop & (mat == 2)] = 98; lab[drop & (mat != 2)] = 99
+    for _ in range(2):                                                  # 小さな点（同じ段がとなりに1つまで）は、まわりの多い段に
+        n = lab.copy()
+        for y in range(Hh):
+            for x in range(Ww):
+                if not FACE(lab[y, x]): continue
+                nb = [lab[yy, xx] for yy in range(y-1, y+2) for xx in range(x-1, x+2) if (yy, xx) != (y, x) and 0 <= yy < Hh and 0 <= xx < Ww and FACE(lab[yy, xx])]
+                if nb and sum(1 for q in nb if q == lab[y, x]) <= 1: n[y, x] = max(set(nb), key=nb.count)
+        lab = n
+    P = np.pad(m, 1); edge = m & ~(P[:-2, 1:-1] & P[2:, 1:-1] & P[1:-1, :-2] & P[1:-1, 2:])   # 外のふち：1ドットの線
+    out = np.zeros((Hh, Ww, 4), np.uint8)
+    for y in range(Hh):
+        for x in range(Ww):
+            if not m[y, x]: continue
+            q = lab[y, x]
+            c = MO if q == 98 else B if (edge[y, x] or q == 99) else (WOOD, CLOTH, METAL)[q // 100][q % 100]
+            out[y, x, :3] = c; out[y, x, 3] = 255
+    return Image.fromarray(out, 'RGBA')
+
+RAW = os.environ.get('FLAT_RAW')   # clean64 の絵（CLEAN64_NOREF=1 で作った、元の絵の形のまま）のフォルダ
+
+def bed_side_raw():
+    """よこのベッド：元の絵の形（まくら・かけぶとんのおり返し・わく）は clean64 の絵から。柱は元の絵のとおり、上の面・帯2つ"""
+    im = flatten(Image.open(os.path.join(RAW, 'bed_3e1.png'))); a = np.asarray(im).copy(); cv = Cv(77, 77); cv.a = a
+    for x0 in (0, 70):
+        cv.box(x0, 0, x0 + 6, 76, Hc)
+        cv.rect(x0 + 1, 1, x0 + 5, 5, J); cv.rect(x0 + 1, 6, x0 + 5, 10, Hc); cv.hline(x0, x0 + 6, 11, B)
+        cv.rect(x0 + 1, 12, x0 + 5, 39, G); cv.hline(x0, x0 + 6, 40, B); cv.rect(x0 + 1, 41, x0 + 5, 45, J)
+    return cv.img()
+
+def chair_side_raw():
+    """いすのよこ向き：元の絵（まるい背もたれ）の形のまま、色と線をお手本の作りに"""
+    return flatten(Image.open(os.path.join(RAW, 'chair_3e1.png')))
+
 if __name__ == '__main__':
-    for n, f in (('bed_3e1', bed_side), ('table', table), ('taru', taru)):
+    todo = [('table', table), ('taru', taru)]
+    if RAW: todo += [('bed_3e1', bed_side_raw), ('chair_3e1', chair_side_raw)]
+    for n, f in todo:
         im = f(); im.save(os.path.join(REF, n + '.png')); print(n, im.size)

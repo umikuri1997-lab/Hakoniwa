@@ -457,7 +457,7 @@ def build(b):
         if k in HAND: fin = Image.fromarray(HAND[k](np.asarray(fin).copy()), 'RGBA')
         fin = Image.fromarray(unify_lines(np.asarray(fin).copy()), 'RGBA')
         rp = os.path.join(REF, fname(k) + '.png')
-        if os.path.exists(rp):   # 持ち主がかいたお手本（できた絵と同じ大きさ）があれば、そのまま使う
+        if os.path.exists(rp) and not os.environ.get('CLEAN64_NOREF'):   # 持ち主がかいたお手本（できた絵と同じ大きさ）があれば、そのまま使う
             ref = Image.open(rp).convert('RGBA'); rm = REFMETA.get(k)
             if rm: out[k] = {'f': [ref], 'ax': rm['ax'], 'ay': rm['ay']}; continue   # お手本から組んだ絵（ref/meta.json に場所）
             if ref.size != fin.size: raise SystemExit(f'{rp}: 大きさが {fin.size} とちがう {ref.size}')
