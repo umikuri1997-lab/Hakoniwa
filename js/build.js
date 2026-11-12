@@ -44,7 +44,7 @@ function canRoof(x,y,quiet){const no=t=>{if(!quiet)toast(t);return false};if(x<0
 const rugsIn=set=>{const L=[];for(const k in S.rug||{})if(rugCells(+k).some(c=>set.has(c)))L.push(S.rug[k]);return L};/* 家の中（どこか1マスでも）にあるラグ */
 function canRug(x,y,quiet){const no=t=>{if(!quiet)toast(t);return false};if(x<0||y<0||x+1>=W||y+1>=H)return false;
   if(x<0||y<0||x>=W-1||y>=H-1)return no('ここには置けません');for(const c of rugCells(y*W+x)){if(sacredNoBuild(c))return no('みんなで世話をしている木の場所です');if(S.ground[c]===1)return no('水の上には置けません');if(RUGC.has(c))return no('ここにはもうラグがあります');const o=S.obj[c],a=o==='part'?S.obj[S.ref[c]]:o;if(a&&!WEEDS.has(a)&&!(BL[a]&&BL[a].kind==='furn'&&!BL[a].trap&&!WALLD.has(a)))return no('ここにはもう何かあります')}return true}/* 家具の下にもしける */
-function canPlace(id,x,y,quiet){if(typeof fogBlock==='function'&&fogBlock(id,x,y,quiet))return false;/* 霧の中には置けない */if(WD===0&&id!=='tower'&&S.sacredRoot!=null){const z=szR(id,PLROTS[id]||0)||[1,1];for(let b=0;b<z[1];b++)for(let a=0;a<z[0];a++)if(sacredNoBuild((y+b)*W+x+a,id)){if(!quiet)toast('みんなで世話をしている木の場所です','warn');return false;}}if(id==='shinboku'&&(cnt('shinboku')>0||S.obj.some((o,k)=>o==='site'&&S.dyn[k]&&S.dyn[k].build==='shinboku'))){if(!quiet)toast('ご神木は、1本だけです','warn');return false}/* ご神木は村に1本 */
+function canPlace(id,x,y,quiet){if(typeof fogBlock==='function'&&fogBlock(id,x,y,quiet))return false;/* 霧の中には置けない */if(WD===0&&id!=='tower'&&S.sacredRoot!=null){const z=szR(id,PLROTS[id]||0)||[1,1];for(let b=0;b<z[1];b++)for(let a=0;a<z[0];a++)if(sacredNoBuild((y+b)*W+x+a,id)){if(!quiet)toast('みんなで世話をしている木の場所です','warn');return false;}}
   if(EDGES.has(id))return canEdge(x,y,quiet);
   if(RUGS.has(id))return canRug(x,y,quiet);
   if(CANOPY.has(id))return canRoof(x,y,quiet);
