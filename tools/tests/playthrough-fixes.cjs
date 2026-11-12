@@ -48,7 +48,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict');
   /* 9. 見張り台の知らせは、夜のあいだ、どの見張り台にもだれも向かっていないときだけ */
   const watch=JSON.parse(await run(`(()=>{const T=[];const t0=toast;toast=(m,k)=>{T.push(m)};try{${base}S.enemyOn=true;S.t=dayNo()*1440+23.5*60;const r=S.res[0],a=((r.y|0)+6)*W+(r.x|0)+6,b=a+6;for(const j of [a,b]){S.obj[j]='watch';setParts('watch',j,'part')}recount();
     const e={type:'basic',x:(a%W)+1,y:(a/W|0)+3,hp:5,spawned:true,path:[]};S.enemies=[e];S.ns={};const w=S.res.find(r=>r.elem==='wood');w.act={type:'watchpost',stage:'walk',obj:a};
-    for(let i=0;i<5;i++)updTowers(.2);const one=T.filter(m=>m.includes('見張り台に木')).length;w.act=null;S.ns={};for(let i=0;i<5;i++)updTowers(.2);const none=T.filter(m=>m.includes('見張り台に木')).length;
+    for(let i=0;i<5;i++)updTowers(.2);const one=T.filter(m=>m.includes('見張り台にせいれい')).length;w.act=null;S.ns={};for(let i=0;i<5;i++)updTowers(.2);const none=T.filter(m=>m.includes('見張り台にせいれい')).length;
     for(const j of [a,b]){clearObj(j)}S.enemies=[];recount();return JSON.stringify({one,none})}finally{toast=t0}})()`));
   assert.equal(watch.one,0,'one tower is being manned: no warning');assert.equal(watch.none,1,'nobody: one warning');
   console.log('Watch tower warning: only when no wood spirit is heading to any tower');
