@@ -19,7 +19,7 @@ function checkQuest(){
   if(S.qStory!=null){TALKW=storyWho(QUESTS[S.qStory]);QUESTCLEARW=TALKW;renderQuest();return}/* クエストのあとのお話は、💬をタップしてから */
   {const e=grassEndingTalk();if(e){if(grassEndingTalkLines(e))TALKW=POKO;renderQuest();return}}/* 最後のかけらの話：フタバの吹き出しから */
   if(qMissing(q).length){renderQuest();return}
-  if(q.talk&&!S.qTalked){if(q.talk.when()&&!isNight())TALKW=earthIntroQuest(q)?earthIntroSpeaker(q):firstSpk(q.talk.lines,q.talk.who);renderQuest();return}/* 新しいクエストの声かけは、昼だけ */
+  if(q.talk&&!S.qTalked){if(q.talk.when()&&!isNight()&&!tourPair())TALKW=earthIntroQuest(q)?earthIntroSpeaker(q):firstSpk(q.talk.lines,q.talk.who);renderQuest();return}/* 新しいクエストの声かけは、昼だけ。村のあんない（S.tour）のあいだは、おわってから */
 
   if(q.field)fieldStoryEnsure(fieldActiveId(q));
   const complete=q.check();if(!complete)checkQuestParts(q);
@@ -106,6 +106,7 @@ function questWaitNote(q){/* 条件はそろったのに、朝にならないと
   let ok=false;try{ok=!!q.check()}catch(e){}return ok&&isNight()?'朝を待とう':''}
 function mainTalkWaitText(q){/* メインの会話・お礼を待っているときの、ほんとうに止まっている理由 */const ms=qMissing(q);if(ms.length)return ms.join('と')+'がもどるまで、お話は進まない';
   if(!(S.qStory!=null||q.talk&&!S.qTalked))return '';if(isNight())return 'お話は、朝になってから';
+  if(S.qStory==null&&S.tour){const g=S.res.find(r=>r.id===S.tour.g),w=S.res.find(r=>r.id===S.tour.w);if(g&&w)return g.name+'が、'+w.name+'に村をあんないしている'}/* あんないがおわってから、つぎのお話 */
   return storyWaitStatusText()||(TALKW?mainStoryPromptText(TALKW):S.qStory==null&&q.talk.wait||'いまは、村をそだてよう')}
 function nextStageGoal(){/* 草原をクリアして、まだ火山のふもとへ旅立っていないとき */if(!S||WD!==0||S.free||!S.cleared||typeof departDone!=='function'||departDone())return null;
   const f=S.res.some(r=>r.name===POKO&&!r.hidden);if(S.flags.sacredReunion&&!S.flags.sacredQuietSeen)return {t:'ヌシ様と話そう',pr:isNight()?'お話は、朝になってから':'御神木のそばで、ヌシ様が待っている',how:'「みる」でヌシ様をタップして、話を聞こう。そのあと、フタバたちが、つぎの土地へのお見送りをしてくれる'};/* お見送りは、ヌシ様の話のあと（departDue と同じ条件） */return {t:'つぎの土地へ旅立とう',pr:isNight()?'お見送りは、朝になってから':!f?'フタバが帰ってきたら、お見送り':'みんなが、お見送りのしたくをしている',how:'昼になると、フタバたちが、つぎの土地へのお見送りをしてくれる。お見送りのあと、火山のふもとの村へ行く'}}
