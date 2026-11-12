@@ -49,7 +49,7 @@ function sacredCompleted(id){const i=sacredQuestIndex(id);return fieldStoryDone(
 function sacredRevealed(id){const i=sacredQuestIndex(id);return i>=0&&S.quest>i&&S.qStory!==i;}
 function sacredStage(){
   if(!S)return 4;if(IS_STORY_REPLAY&&S.replayMature)return 4;
-  if(S.obj.includes('tower'))return S.cleared||(S.setSh||0)>=2&&GRASSN>=1750?4:3;
+  if(S.obj.includes('tower'))return S.cleared||(S.setSh||0)>=3||S.treeSeen>=4?4:3;/* 大きな木になるのは、3つめのかけらをささげたとき（前のセーブで、もう育っていた木は、そのまま） */
   if(sacredRevealed('waterFilm'))return 2;
   if(sacredRevealed('fireRoot'))return 1;
   return 0;
@@ -81,7 +81,7 @@ function sacredSceneWalk(r,x,y,pose,arrived){
   if(stand<0)return false;if(pose.avoid)pose.avoid.add(stand);/* いっしょに歩く子と、同じマスに立たない（歩いている子のマスは occupied に入らない） */
   endAct(r);startAct(r,G,'nmeet',stand,{});let last=performance.now();const tick=now=>{if(S!==owner||VILLAGE_SESSION!==session||sacredDirection()!==direction||!(S.res.includes(r)||r===GUEST)||r.act?.type!=='nmeet')return;const dt=Math.min(.1,(now-last)/1000);last=now;if(r.act.stage==='walk'){moveR(r,dt*4);requestAnimationFrame(tick);}else{if(pose.anim)sacredSetPose(r,pose);if(arrived)arrived();}};requestAnimationFrame(tick);return true;
 }
-function sacredGrowWatch(j){/* 物語の場面の外で木が育ったとき（みどりのマス）：村の時間を止め、カメラがよって、育つところを見せ、みんながよろこぶ。かけらでは木は育たない */
+function sacredGrowWatch(j){/* 物語の場面の外で木が育ったとき（ふだんは起きない。場面を見ないまま育ったセーブのため）：村の時間を止め、カメラがよって、育つところを見せ、みんながよろこぶ。かけらでは木は育たない */
   if(!S||WD!==0||S.free||IS_STORY_REPLAY)return;const st=sacredStage();if(S.treeSeen==null||st<S.treeSeen){S.treeSeen=st;return;}{const sh=SACRED_SHOWN.get(S);if(sh&&sh.session===VILLAGE_SESSION&&sh.stage>=st){S.treeSeen=st;return;}}/* お話の場面で育つところを見せたときは、場面の外の育つ会話を出さない */
   if(st===S.treeSeen||sacredDirection()||!$('#dialog').hidden||isNight()||sheet!=null||performance.now()<SCENEHOLD||SHARD_OFFER&&SHARD_OFFER.state===S||SPOT_POPS.some(e=>e.state===S))return;
   const from=Math.floor(S.treeSeen);S.treeSeen=st;const ms=5200,g=sacredGeo(j,st),cx=storyTreeX(j),cy=storyTreeY(j);SCENEHOLD=performance.now()+ms+200;
@@ -92,7 +92,7 @@ function sacredGrowWatch(j){/* 物語の場面の外で木が育ったとき（�
 }
 function sacredGrowLines(st){/* 木が大きく育ったときの、みんなの会話（いる子の行だけ） */
   const N=keyName('earth'),H=keyName('fire'),M=keyName('water'),K=keyName('wind');if(st<4)return [];
-  return sacredCastLines([[POKO,'#surprise|わあ……！　木が、こんなに大きく……！'],[N,'見てぇ。根っこが、土の中で、ずうっと先までのびてるよぉ。'],[H,'#joy|みんなで世話した木だ。……葉っぱまで、あったかい。'],[M,'しずくが、葉の先で光っています。……きれいですね。'],[K,'#think|……葉ずれの音が、ずっと大きくなった。だれかが、こたえてるみたいだ。'],[GOD,'#joy|……ほんに、りっぱになったのう。おヌシらの手が、この木をここまで育てたんじゃ。'],[POKO,'#think|……ヌシ様に、もうすこしで、会えるのかな。'],[GOD,'#nod|うむ。のこりのかけらがそろえば、きっとのう。']]);
+  return sacredCastLines([[POKO,'#surprise|わあ……！　木が、こんなに大きく……！'],[N,'見てぇ。根っこが、土の中で、ずうっと先までのびてるよぉ。'],[H,'#joy|みんなで世話した木だ。……葉っぱまで、あったかい。'],[M,'しずくが、葉の先で光っています。……きれいですね。'],[K,'#think|……葉ずれの音が、ずっと大きくなった。だれかが、こたえてるみたいだ。'],[GOD,'#joy|……ほんに、りっぱになったのう。おヌシらの手が、この木をここまで育てたんじゃ。']]);
 }
 function drawStoryTree(c,x,y,j,now,full=false){
   if(!full)sacredGrowWatch(j);

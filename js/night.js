@@ -364,11 +364,11 @@ function bossTonight(){return !!(S&&S.enemyOn&&!S.cleared&&!S.free&&!S.finalNigh
 function evePair(){const F=S.res.find(r=>r.name===keyName('fire')&&!r.hidden);if(!F)return null;const A=WD===0?S.res.find(r=>r!==F&&!r.hidden&&r.name===POKO):S.res.find(r=>r!==F&&!r.hidden&&KEYS[WD].includes(r.name))||S.res.find(r=>r!==F&&!r.hidden);return A?[A.name,F.name]:null}/* 草原：相手はフタバ（セリフがフタバの口調）。フタバがいない日は、この会話は出さない */
 function bossEveTick(h){BOSSEVE=h>=15&&h<23&&bossTonight()?1:0;
   if(BOSSEVE&&h>=17&&S.flags.eveD!==dayNo()&&$('#dialog').hidden&&!sheet){const p=evePair();if(!p)return;S.flags.eveD=dayNo();const[A,F]=p,again=(S.bossKills||0)>0;
-    dialog(again?pickFresh('eveAgain',[
-        [[A,'#worry hush|……空の色、へんだね。'],[F,'#think|ああ。またあいつが来るな。'],[A,'#nod|うん。でも、前も追いはらえたもん。'],[F,'#joy|ああ。今夜も、みんなで守ろう。']],
-        [[A,'#worry hush|……鳥が、みんな、どこかへ行っちゃった。'],[F,'#think|ああ。今夜は、あいつだ。'],[A,'#nod|柵、ちゃんと見ておくね。'],[F,'#joy|たのむ。前は、まかせておけ。']],
-        [[A,'#think hush|夕やけが、いつもより赤いね。'],[F,'#nod|ああ。……来るぞ。'],[A,'#joy|こわいけど、ひとりじゃないもんね。'],[F,'#joy|そうだ。みんなで、朝をむかえよう。']],
-        [[A,'#worry hush|……草が、ざわざわしてる。'],[F,'#think|あいつの気配だな。'],[A,'#nod|ごはん、先に食べておこうか。'],[F,'#joy|いい考えだ。力をためておこう。']]])
+    dialog(again?pickFresh('eveAgain',[/* 2回めからは、ひとことだけ */
+        [[F,'#think|……また、あいつが来るな。']],
+        [[A,'#worry hush|……また、あの影が来るね。']],
+        [[F,'#nod|今夜は、あいつだ。']],
+        [[A,'#think hush|夕やけが赤い。……また、来るね。']]])
       :[[A,'#worry hush|……風が、つめたくなってきた。'],[F,'#think|ああ。今夜は、あいつが来る。'],[A,'#scared|……こわいね。'],[F,'#nod|だいじょうぶ。みんなで守るんだ。']])}
   if(S.flags.winMorn!=null&&h>=7&&h<12&&$('#dialog').hidden&&!sheet){const d=S.flags.winMorn;delete S.flags.winMorn;if(dayNo()-d>1)return;const p=evePair();if(!p)return;const[A,F]=p;
     dialog(pickFresh('winMorn',[
