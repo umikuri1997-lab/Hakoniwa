@@ -96,7 +96,7 @@ function startTalk(){if(!$('#dialog').hidden)return;if(isNight())return toast('�
     let once=0;return dialog(ideaDialogue(sq,sq.story,'clear'),()=>{if(once++||S.qStory!==QUESTS.indexOf(sq))return;/* 2回よばれても1回だけ */if(QUEST_CLEAR_WAIT&&QUEST_CLEAR_WAIT.quest===S.qStory)QUEST_CLEAR_WAIT=null;if(S.quest<=S.qStory&&!(S.flags.qPassed&&S.flags.qPassed[sq.id]))S.quest=S.qStory+1;/* 設置クエストは、お礼を聞き終えてから次の目標へ。古いセーブで、ならびをかえて前へもどした目標（qPassed）のお礼なら、いまの目標（畑）はとばさない */S.qStory=null;if(sq.field)sacredEndDirection();const after=questGives(sq);inspireQuest(sq,'clear');rewardPower(sq.reward??5);renderQuest();renderPalette();if(after)after();else checkQuest()},null)}
   {const e=grassEndingTalk();if(e)return startGrassEndingTalk(e)}
   const q=QUESTS[S.quest];if(!q||!q.talk)return;if(earthIntroQuest(q)&&!earthIntroSpeaker(q))return checkQuest();TALKW=null;QUESTCLEARW=null;S.flags.talked1=true;
-  if(q.field)sacredShot('care');let once=0;dialog(ideaDialogue(q,q.talk.lines),()=>{if(once++||QUESTS[S.quest]!==q)return;/* 2回よばれても1回だけ */S.qTalked=true;if(q.field)sacredEndDirection();if(!WD&&q.id==='nushi')acceptFinalDefense();recount();
+  if(q.field)sacredShot('care');let once=0;dialog(ideaDialogue(q,q.talk.lines),()=>{if(once++||QUESTS[S.quest]!==q)return;/* 2回よばれても1回だけ */S.qTalked=true;if(q.talk.done)q.talk.done();if(q.field)sacredEndDirection();if(!WD&&q.id==='nushi')acceptFinalDefense();recount();
     for(const id of q.talk.learn||[])S.recipes[id]=true;
     const after=q.talk.gives?questGives(q,q.talk.gives):null;inspireQuest(q);/* クエストに使う物は、会話のあとでわたす */
     sfx('quest');renderQuest();renderPalette();if(after)after();else checkQuest()},null)}
