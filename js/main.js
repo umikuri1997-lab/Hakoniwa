@@ -245,7 +245,7 @@ $('#sheetX').onclick=closeSheet;{let down=false;const sc=$('#scrim');sc.onpointe
 $('#questChip').onclick=openCurrentGoal;/* 会話・調査の場所へ。対象がなければ目標の一覧をひらく */
 $('#pauseBtn').onclick=()=>{sfx('tap');USERPAUSE=!USERPAUSE;$('#pauseIc').style.display=USERPAUSE?'none':'';$('#playIc').style.display=USERPAUSE?'':'none';$('#pauseBtn').setAttribute('aria-label',USERPAUSE?'うごかす':'とめる');$('#pauseBtn').classList.toggle('on',USERPAUSE)};
 $('#speedBtn').onclick=()=>{if(!(hasGlass()||TESTM)){if(glassUnlocked())adPrompt();return}sfx('tap');S.speed=S.speed===1?2:S.speed===2&&TESTM?3:S.speed===3&&TESTM?5:1;/* 広告でできるのは2倍まで */glassUI()};
-$('#helpPop').onclick=()=>{sfx('tap');$('#helpPop').hidden=true};$('#undoBtn').onclick=undo;$('#palL').onclick=()=>$('#palItems').scrollBy({left:-$('#palItems').clientWidth*.7,behavior:'smooth'});$('#palR').onclick=()=>$('#palItems').scrollBy({left:$('#palItems').clientWidth*.7,behavior:'smooth'});$('#palItems').addEventListener('scroll',palArrows,{passive:true});
+$('#helpPop').onclick=()=>{sfx('tap');$('#helpPop').hidden=true};$('#palL').onclick=()=>$('#palItems').scrollBy({left:-$('#palItems').clientWidth*.7,behavior:'smooth'});$('#palR').onclick=()=>$('#palItems').scrollBy({left:$('#palItems').clientWidth*.7,behavior:'smooth'});$('#palItems').addEventListener('scroll',palArrows,{passive:true});
 $('#cYes').onclick=confirmYes;$('#cRot').onclick=e=>{e.stopPropagation();rotPending()};$('#cNo').onclick=()=>{pending=null;selRect=null;$('#confirm').hidden=true};
 
 /* ---------- 起動 ---------- */

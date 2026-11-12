@@ -47,7 +47,7 @@ function faceTo(r,j){if(j==null||j<0)return;const ox=j%W+.5,oy=((j/W)|0)+.5;if(M
 const floats=[],shots=[],fx=[],pops=new Map(),RLVQ=[],LANDFX=new Map();/* LANDFX：置いたばかりの家具が、ぽんと着地する（マス→時刻、DROPT ミリ秒） */
 const DROPT=380;
 /* 木と花は、風でゆれる（雨の日は大きく）。根もと（マスの下）を軸に、よこにかたむける */
-function swayK(id,j,now){if(!S||!(TREES.has(id)||PLANTS.includes(id)))return 0;const a=S.rain?.035:.012;return Math.sin(now/(S.rain?520:900)+(j%W)*.7+((j/W)|0)*.45)*a*(TREES.has(id)?.6:1)}
+function swayK(id,j,now){if(!S||!(TREES.has(id)||PLANTS.includes(id))||id==='deadtree'&&WD!==1)return 0;/* 枯れ木はゆれない（火山の山の杉はゆれる） */const a=S.rain?.035:.012;return Math.sin(now/(S.rain?520:900)+(j%W)*.7+((j/W)|0)*.45)*a*(TREES.has(id)?.6:1)}
 function dropIn(c,j,x,y,now,fn,id){const k=id?swayK(id,j,now):0;if(k){const by=y+31;c.save();c.transform(1,0,k,1,-k*by,0);try{dropIn(c,j,x,y,now,fn)}finally{c.restore()}return}const t0=LANDFX.get(j);if(t0==null){fn();return}const u=(now-t0)/DROPT;if(u>=1||u<0){LANDFX.delete(j);fn();return}/* 上から6ドット落ちて、着地でちょっとつぶれて、もどる */const fall=u<.45?-6*(1-u/.45)*(1-u/.45):0,sq=u<.45?0:Math.sin((u-.45)/.55*Math.PI)*.08*(1-u),bx=x+16,by=y+31;c.save();c.translate(bx,by+fall);c.scale(1+sq,1-sq);c.translate(-bx,-by);try{fn()}finally{c.restore()}}
 function addFloat(x,y,text,color){if(floats.length>40)floats.shift();floats.push({x,y,text,color:color||'#ecdcbc',life:1})}
 /* 作業：けいけんだけ（パワーは、遊ぶ・食べる・たのしいときだけ）。成長を少しゆっくりにし、端数は保存する */
@@ -250,12 +250,13 @@ let FOUT=null,FOUTT=-1;function fenceOut(){/* 柵（門もふくむ）と壁で�
   for(let x=0;x<W;x++)for(const y of[0,H-1]){const j=y*W+x;if(open(j)&&!out[j]){out[j]=1;q.push(j)}}for(let y=0;y<H;y++)for(const x of[0,W-1]){const j=y*W+x;if(open(j)&&!out[j]){out[j]=1;q.push(j)}}
   while(q.length){const j=q.pop(),x=j%W,y=(j/W)|0;for(const[dx,dy]of DIRS){const nx=x+dx,ny=y+dy;if(nx<0||ny<0||nx>=W||ny>=H)continue;const k=ny*W+nx;if(!out[k]&&open(k)){out[k]=1;q.push(k)}}}
   FOUT=out;FOUTT=t;return out}
-let PMASK=null,PMASKT=-1;function patrolMask(){/* 見回りの場所：1＝柵・塀（家の壁・ドアがまざってもよい）でかこまれた所、2＝家のまわり3マス、3＝家の中。ゲームの1分ごとに作りなおす */const t=Math.floor(S.t);if(PMASK&&PMASKT===t)return PMASK;
+let PMASK=null,PMASKT=-1;function patrolMask(){/* 見回りの場所：1＝柵・塀（家の壁・ドアがまざってもよい）でかこまれた所、2＝家のまわり3マス、3＝家の中、4を足す＝灯りの範囲。ゲームの1分ごとに作りなおす */const t=Math.floor(S.t);if(PMASK&&PMASKT===t)return PMASK;
   const m=new Uint8Array(W*H),out=new Uint8Array(W*H),q=[],bar=j=>{const o=typeAt(j);return FENCE_IDS.has(o)||HOME_WALLS.has(o)||HOME_DOORS.has(o)};
   for(let x=0;x<W;x++)for(const y of[0,H-1]){const j=y*W+x;if(!bar(j)&&!out[j]){out[j]=1;q.push(j)}}for(let y=0;y<H;y++)for(const x of[0,W-1]){const j=y*W+x;if(!bar(j)&&!out[j]){out[j]=1;q.push(j)}}
   while(q.length){const j=q.pop(),x=j%W,y=(j/W)|0;for(const[dx,dy]of DIRS){const nx=x+dx,ny=y+dy;if(nx<0||ny<0||nx>=W||ny>=H)continue;const k=ny*W+nx;if(!out[k]&&!bar(k)){out[k]=1;q.push(k)}}}
   for(const h of HOUSES)for(const j of h.set){const x=j%W,y=(j/W)|0;for(let dy=-3;dy<=3;dy++)for(let dx=-3;dx<=3;dx++){const nx=x+dx,ny=y+dy;if(nx>=0&&ny>=0&&nx<W&&ny<H)m[ny*W+nx]=2}}
   for(let j=0;j<W*H;j++)if(!out[j]&&!bar(j))m[j]=1;for(const h of HOUSES)for(const j of h.set)m[j]=3;
+  for(const q of LIGHTS){const qx=q%W,qy=(q/W)|0;for(let y=Math.max(0,qy-9);y<=Math.min(H-1,qy+9);y++)for(let x=Math.max(0,qx-9);x<=Math.min(W-1,qx+9);x++){const j=y*W+x;if(m[j]!==3&&lampAt(x+.5,y+.5))m[j]|=4}}/* 4：灯りの範囲 */
   PMASK=m;PMASKT=t;return m}
 function graveCheck(){if(isNight()||STATUE<0||!cnt('grave')||S.graveDay===dayNo())return;const gs=[];for(let j=0;j<W*H;j++)if(S.obj[j]==='grave'&&S.dyn[j]&&!S.dyn[j].buried)gs.push(j);if(!gs.length)return;
   let G=null;for(const r of S.res){if(r.hidden)continue;const g=bfs(r.x|0,r.y|0);if(nearest(g,j=>adjOf(j,k=>k===STATUE||k===STATUE+W)>=0,300)>=0){G=g;break}}if(!G)return;/* 神殿まで行ける子から見て */
@@ -317,9 +318,9 @@ function decide0(r){
   else if(isNight()&&isWatch(r)){// 火のせいれいは寝ないで見回り
     if(r.elem==='fire'&&r.hunger<50&&hideIn(r,G))return;/* おなかが50より少ないときは、たたかわずに家へにげる */
     {const e=r.elem!=='fire'?null:pickFoe(r,foesNow());if(e){const t=huntSpot(G,e,60,r);/* 届かない所にいても、いちばん近くまで行く */if(t>=0)return startAct(r,G,'patrol',t,{hunt:S.t})}}/* 拠点にコワイノが入ったら、まっすぐたたかいに行く */
-    {const pm=patrolMask(),others=S.res.filter(t=>t!==r&&!t.hidden&&!t.dead),sx=STATUE%W,sy=(STATUE/W)|0;/* 見回る所：柵・塀でかこまれた所 → 家のまわり3マス → ほかの子のまわり3マス → 神殿のまわり3マス（家の中はのぞく） */
-      const tiers=[j=>pm[j]===1,j=>pm[j]===2,others.length?j=>others.some(t=>Math.abs(j%W+.5-t.x)<3.5&&Math.abs(((j/W)|0)+.5-t.y)<3.5):null,STATUE>=0?j=>Math.abs(j%W-sx)<=3&&Math.abs(((j/W)|0)-sy)<=3:null];
-      for(const f of tiers){if(!f)continue;const ok=j=>walk(j)&&pm[j]!==3&&f(j);let j=nearest(G,j=>ok(j)&&Math.random()<.04,8);if(j<0)j=nearest(G,ok,200);if(j>=0)return startAct(r,G,'patrol',j)}}
+    {const pm=patrolMask(),others=S.res.filter(t=>t!==r&&!t.hidden&&!t.dead),sx=STATUE%W,sy=(STATUE/W)|0;/* 見回る所：灯りの範囲だけ。灯りがなければ、柵・塀でかこまれた所 → 家のまわり3マス → ほかの子のまわり3マス → 神殿のまわり3マス（家の中はのぞく） */
+      const tiers=[j=>pm[j]&4,j=>(pm[j]&3)===1,j=>(pm[j]&3)===2,others.length?j=>others.some(t=>Math.abs(j%W+.5-t.x)<3.5&&Math.abs(((j/W)|0)+.5-t.y)<3.5):null,STATUE>=0?j=>Math.abs(j%W-sx)<=3&&Math.abs(((j/W)|0)-sy)<=3:null];
+      for(const f of tiers){if(!f)continue;const ok=j=>walk(j)&&(pm[j]&3)!==3&&f(j);let j=nearest(G,j=>ok(j)&&Math.random()<.04,8);if(j<0)j=nearest(G,ok,200);if(j>=0)return startAct(r,G,'patrol',j)}}
     return startAct(r,G,'wander',(r.y|0)*W+(r.x|0))}
   if(r.energy<25||isNight())return goSleep(r,G,S.enemies.some(e=>e.spawned));
   if(r.hunger<55&&!foeNear(r)&&!(r.noEatU>S.t))return goEat(r,G);
