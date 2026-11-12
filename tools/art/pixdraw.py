@@ -15,6 +15,17 @@ import os, sys
 from PIL import Image
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+# 木の家具の色（食卓・スツール・ベンチなど、同じ木の家具は、この8色を使いまわす）
+OT = (0xaf, 0x7b, 0x48)   # 上の面の輪郭・正面の面・脚
+OD = (0x8f, 0x5b, 0x36)   # 正面・脚の輪郭
+TB = (0xe0, 0xaf, 0x67)   # 上の面
+TS = (0xd9, 0xa7, 0x61)   # 上の面の木目
+TI = (0xcc, 0x98, 0x59)   # 上の面の輪郭の内がわ
+LIP = (0xee, 0xc5, 0x7c)  # 上の面の手前のふちの光
+AB = OT                   # 正面の面（上の面の輪郭と同じ色）
+AS = (0xa2, 0x6e, 0x43)   # 正面・脚のかげ
+LL = (0xbd, 0x88, 0x52)   # 脚の光
+
 class Pix:
     def __init__(self, w, h):
         self.w, self.h = w, h; self.im = Image.new('RGBA', (w, h), (0, 0, 0, 0)); self.px = self.im.load()
@@ -103,6 +114,20 @@ class Pix:
         self.rect(x0 + 1, y0, x1 - 1, y1 - 1, base); self.rect(x0 + 1, y0, x0 + 2, y1 - 1, light); self.rect(x1 - 2, y0, x1 - 1, y1 - 1, shade)
         if drop: self.rect(x0 + 1, y0, x1 - 1, y0 + drop - 1, shade)
         self.vl(x0, y0, y1 - 1, line); self.vl(x1, y0, y1 - 1, line); self.hl(y1, x0 + 1, x1 - 1, line)
+    def board(self, x0, y0, x1, y1, front, legs=(), leg_w=10, leg_bottom=None, grain=(), vgrain=(), top=(4, 2, 1, 1), bottom=(2, 1)):
+        """木の板の台（食卓・ローテーブル・ベンチ）を、木の家具の色で描く：上の面 y0〜y1-front（いちばん手前の行は光）、その下 front 行が正面、脚は legs（左はしの x）から leg_bottom まで。
+        grain=((y,xa,xb),…) はよこの木目、vgrain=((x,ya,yb),…) はたての木目（たてに長い板）"""
+        yt = y1 - front
+        self.slab(x0, y0, x1, y1, fill=TB, line=OT, top=top, bottom=bottom, line_rows={y: OD for y in range(yt + 1, y1 + 1)})
+        self.rect(x0 + 1, yt + 1, x1 - 1, y1 - 2, AB)
+        self.hl(yt, x0 + 1, x1 - 1, LIP)
+        for x in range(x0, x1 + 1):
+            if self.at(x, y1 - 1) in (AB, TB) and self.at(x - 1, y1 - 1) is not None and self.at(x + 1, y1 - 1) is not None: self.dot(x, y1 - 1, AS)
+        self.vl(x0 + 1, yt + 1, y1 - 2, AS); self.vl(x1 - 1, yt + 1, y1 - 2, AS)
+        for y, a, b in grain: self.hl(y, a, b, TS)
+        for x, a, b in vgrain: self.vl(x, a, b, TS)
+        self.inner(TB, OT, TI, sides='ULR', y0=y0 + 1, y1=yt - 1)
+        for L in legs: self.leg(L, y1 + 1, L + leg_w - 1, leg_bottom, AB, LL, AS, OD)
     def save(self, path): self.im.save(path)
     def put(self, cid, frame=0):
         """チップ cid の絵をさしかえて、アトラスと chips.js を作りなおす（大きさは同じでなければならない。ax・ay はそのまま）"""
@@ -121,11 +146,28 @@ def oval_rows(x0, y0, x1, y1):
         if b >= a: rows[y] = (max(a, x0), min(b, x1))
     return rows
 
-def rows_from(png, y0=None, y1=None):
-    """絵（前の絵など）の形から、行ごとの左はし・右はし {y:(x0,x1)} をとる（うすさが半分より上の所）。前の絵と同じ形で描きはじめるときに使う"""
+def rows_from(png, y0=None, y1=None, x0=None, x1=None):
+    """絵（前の絵など）の形から、行ごとの左はし・右はし {y:(x0,x1)} をとる（うすさが半分より上の所。x0・x1 で、よこのはんいをしぼれる：脚1本だけ など）。前の絵と同じ形で描きはじめるときに使う"""
     im = Image.open(png).convert('RGBA'); px = im.load(); rows = {}
     for y in range(im.height):
         if (y0 is not None and y < y0) or (y1 is not None and y > y1): continue
-        xs = [x for x in range(im.width) if px[x, y][3] > 127]
+        xs = [x for x in range(im.width) if px[x, y][3] > 127 and (x0 is None or x >= x0) and (x1 is None or x <= x1)]
         if xs: rows[y] = (xs[0], xs[-1])
     return rows
+
+def put_all(pics):
+    """いくつかのチップを、まとめてさしかえる（{id: Pix}）。アトラスと chips.js の作りなおしは1回だけ"""
+    sys.path.insert(0, os.path.join(ROOT, 'tools')); import chips
+    h, C = chips.load_imgs()
+    for cid, p in pics.items():
+        if (C[cid]['w'], C[cid]['h']) != p.im.size: raise SystemExit('大きさがちがう: %s は %dx%d' % (cid, C[cid]['w'], C[cid]['h']))
+        C[cid]['f'][0] = p.im
+    chips.pack_imgs(h, C); open(os.path.join(ROOT, '.chips_changed'), 'w').write('\n'.join(pics))
+
+def run(draws):
+    """スクリプトのおわりに書く：run({id: 描く関数})。引数にフォルダがあれば <id>.png を書き出すだけ（: > は _ に）、なければチップに入れる"""
+    pics = {k: f() for k, f in draws.items()}
+    if len(sys.argv) > 1:
+        os.makedirs(sys.argv[1], exist_ok=True)
+        for k, p in pics.items(): p.save(os.path.join(sys.argv[1], k.replace(':', '_').replace('>', '_r').replace('#', '_f') + '.png'))
+    else: put_all(pics)
