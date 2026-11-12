@@ -195,7 +195,7 @@ function lostSec(body,into){if(!(S.lost||[]).some(q=>!q.unb)||!(S.mebuki>0))retu
   for(const q of S.lost.filter(q=>!q.unb)){const row=rowEl(q.name,ELEM[q.elem].name+'の力 '+Math.floor(ATTR[q.elem]||0)+'/'+reviveNeed(q),spiritPort(q.elem,96,q.vr));const bt=el('<button class="btn pri">よみがえらせる</button>');bt.onclick=()=>{if(!(S.mebuki>0))return;if((ATTR[q.elem]||0)<reviveNeed(q))return toast(ELEM[q.elem].name+'の力が足りません（'+Math.floor(ATTR[q.elem]||0)+'/'+reviveNeed(q)+'）','warn');if(calledToday())return toast(S.mebukiDay===callDay()?'めぶきのしずくをつかえるのは、1日に1回です':'きょうは、なかまを呼んだので、つかえません','warn');S.mebuki--;S.mebukiDay=callDay();closeSheet();{const pv=S.summon;S.summon={rev:1,lost:q.name,mebuki:1};doSummon();S.summon=pv}sfx('level')};row.appendChild(bt);ls.querySelector('.rows').appendChild(row)}
   body.appendChild(ls)}
 function rowEl(title,desc,img,html){const r=el(`<div class="row">${img?'<img alt="">':''}<div class="tx"><b></b><small></small></div></div>`);if(img)r.querySelector('img').src=img;ckSet(r.querySelector('b'),title);if(html)r.querySelector('small').innerHTML=html+esc(desc||'');else r.querySelector('small').textContent=desc||'';return r}
-/* カミサマの値段：花は高め、畑・果物の苗は買うごとに上がる（果物の苗は10から、1本ごとに+2） */
+/* カミサマの値段：花は高め、畑・りんごの苗は買うごとに上がる（りんごの苗は10から、1本ごとに+2） */
 function shopPrice(id,k){let t=0;for(let i=0;i<k;i++){if(id==='farm')t+=4+Math.floor(((S.farmBuy||0)+i)/3);/* 畑は3こ買うごとに1ポイント上がる */else if(id==='fruit')t+=10+2*((S.fruitBuy||0)+i);else if(FLOWERS.has(id))t+=BL[id].sp;/* 花の種の値段は、表の sp */else t+=BL[id].cost}return t}
 /* メニューの中の画面：見出しの左に、小さな「もどる」 */
 function sheetBack(){const bk=el('<button class="btn back" aria-label="メニューにもどる">'+pxi('next','prev')+'もどる</button>');bk.onclick=()=>{sfx('tap');openSheet('menu')};$('#sheetTitle').before(bk)}
@@ -203,8 +203,8 @@ function renderSheet(){
   if(!sheet)return;const body=$('#sheetBody');const cqf=document.activeElement&&document.activeElement.id==='craftQ'?document.activeElement.selectionStart:null,cst=body.scrollTop;/* 名前でさがす欄に入力中なら、作りなおしたあとも、そのまま */body.innerHTML='';for(const b of document.querySelectorAll('#sheetWrap header .back'))b.parentNode.removeChild(b);const T=$('#sheetTitle');
   if(sheet==='vshop'){
     if(!visitHere())return closeSheet();const p=VISITORS[S.st2.visit.who];T.textContent=p[0]+'のお店';
-    body.appendChild(el('<p class="note">草原の花のたね・果物の苗と、パワーを交換します。</p>'));
-    const d=el('<div class="sec"><h3>花のたね・果物の苗</h3><div class="rows"></div></div>'),rows=d.querySelector('.rows');body.appendChild(d);
+    body.appendChild(el('<p class="note">草原の花のたね・りんごの苗と、パワーを交換します。</p>'));
+    const d=el('<div class="sec"><h3>花のたね・りんごの苗</h3><div class="rows"></div></div>'),rows=d.querySelector('.rows');body.appendChild(d);
     for(const id of PLANTS.filter(id=>id!=='tree')){const b=BL[id],r=rowEl(iname(id),'所持：'+inv(id),iconURL(id));helpify(r,withAttr(id,b.desc||''));const bx=el('<div style="display:flex;flex-direction:column;gap:4px;flex:none"></div>');r.appendChild(bx);rows.appendChild(r);
       for(const k of [1,5]){const c=shopPrice(id,k),bt=el('<button class="btn'+(k===1?' pri':'')+'"></button>');bt.textContent='×'+k+'　'+SP(c);bt.disabled=S.pt<c;bt.onclick=()=>{if(S.pt<c)return;S.pt-=c;if(id==='fruit')S.fruitBuy=(S.fruitBuy||0)+k;S.unlocked[id]=true;giveItem(id,k);sfx('power');renderSheet();renderPalette()};bx.appendChild(bt)}}
     return}
@@ -218,7 +218,7 @@ function renderSheet(){
     const row=(rows,title,desc,img,done)=>{const r=rowEl(title,desc,img);if(done)r.classList.add('done');const bx=el('<div style="display:flex;flex-direction:column;gap:4px;flex:none"></div>');r.appendChild(bx);rows.appendChild(r);return bx};
     const btn=(bx,label,dis,fn,pri)=>{const b=el('<button class="btn'+(pri?' pri':'')+'"></button>');b.textContent=label;b.disabled=!!dis;if(fn)b.onclick=fn;bx.appendChild(b)};
     const r1=sec('ブロック・種・苗');
-    for(const id of BLOCKS.filter(i=>S.unlocked[i]&&!BL[i].qty&&i!=='window').concat(S.feat.plant?PLANTS.filter(id=>lvOK(id)&&plantOK(id)&&(WD===0||S.free||id==='tree')):[])/* 花・果物の苗は草原だけ（火山では、温泉宿のお客さんが売る）。木の苗は、火山では杉の苗 *//* 花・果物の木・木の苗は草原だけ（火山では、温泉宿のお客さんが売る） */){const b=BL[id];
+    for(const id of BLOCKS.filter(i=>S.unlocked[i]&&!BL[i].qty&&i!=='window').concat(S.feat.plant?PLANTS.filter(id=>lvOK(id)&&plantOK(id)&&(WD===0||S.free||id==='tree')):[])/* 花・りんごの苗は草原だけ（火山では、温泉宿のお客さんが売る）。木の苗は、火山では杉の苗 *//* 花・りんごの木・木の苗は草原だけ（火山では、温泉宿のお客さんが売る） */){const b=BL[id];
       const bx=row(r1,iname(id),'所持：'+inv(id),iconURL(id));helpify(bx.parentNode,withAttr(id,b.desc||''));
       for(const k of [1,5]){const c=shopPrice(id,k);btn(bx,'×'+k+'　'+SP(c),S.pt<c,()=>{S.pt-=c;if(id==='farm')S.farmBuy=(S.farmBuy||0)+k;if(id==='fruit')S.fruitBuy=(S.fruitBuy||0)+k;giveItem(id,k);trade()},k===1)}}
     if(cnt('farm')||inv('farm')){const rs=sec('作物のたね');for(const k in CROPS){if(!cropOn(k))continue;const c=CROPS[k];const bx=row(rs,c.name+'のたね','所持：'+cseed(k)+'・'+c.desc,seedIcon(k));for(const n of [1,5]){const cst=2*n;btn(bx,'×'+n+'　'+SP(cst),S.pt<cst,()=>{S.pt-=cst;giveItem('seed:'+k,n);trade()},n===1)}}}
