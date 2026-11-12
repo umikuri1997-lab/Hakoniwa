@@ -7,7 +7,7 @@ const BOND_TALK=30,BOND_PLAY=60,BOND_MAX=100;
 const BOND5=new Set();/* なかよし100の子が3マス以内にいる子（毎秒つくりなおす） */
 function bondKey(a,b){return a.id<b.id?a.id+'_'+b.id:b.id+'_'+a.id}
 function bondOf(a,b){return a&&b&&a!==b&&S&&S.bond?S.bond[bondKey(a,b)]||0:0}
-function bondAdd(a,b,n){if(!S||!a||!b||a===b||IS_STORY_REPLAY)return;const B=S.bond||(S.bond={}),k=bondKey(a,b),v0=B[k]||0,v=Math.min(BOND_MAX,v0+n);if(v===v0)return;B[k]=v;
+function bondAdd(a,b,n,kind){if(!S||!a||!b||a===b||IS_STORY_REPLAY)return;if(kind)(S.bondDid||(S.bondDid={}))[bondKey(a,b)]=kind;/* 2人でさいごにしたこと（消えたときの思い出） */const B=S.bond||(S.bond={}),k=bondKey(a,b),v0=B[k]||0,v=Math.min(BOND_MAX,v0+n);if(v===v0)return;B[k]=v;
   if(v0<BOND_TALK&&v>=BOND_TALK){for(const x of[a,b])addFloat(x.x,x.y-1.4,'なかよし！');memo('🤝',a.name+'と'+b.name+'がなかよしになった');logEv(a.name+'と'+b.name+'がなかよしになった');SPOT_POPS.push({bond:[a.name,b.name],pair:[a,b].map(r=>({el:r.elem,vr:r.vr})),state:S});omoiNote(a,b,false)}
   else if(v0<BOND_PLAY&&v>=BOND_PLAY)omoiNote(a,b,true)}
 function bondSet(a,b,n){if(bondOf(a,b)<n)bondAdd(a,b,n-bondOf(a,b))}
@@ -111,17 +111,65 @@ function bondTalkTick(){if(!S||!S.bond)return;const D=S.sev||{};for(const pk in 
   const P=S.sevP||(S.sevP=[]),M=S.sevMiss||{};if(!P.some(k=>/^bd_/.test(k)))for(const e of SEV1){if(!e.bd||D[e.k]||M[e.k]||P.includes(e.k)||!e.at())continue;const L=sevLines(e.L);if(L&&L.length&&sevAllHere(e)){P.push(e.k);break}}
   sevBub()}
 
+/* ---------- なかよしが消えたとき：のこった子が、見た会話の思い出を話す ----------
+   思い出は、プレイヤーが見た2人の会話だけ（なかよしの雑談 CHATS の mate・mem は bondMemNote、なかよし30の会話は S.sev の bd_）。
+   見た会話がなければ、2人でさいごにしたこと（S.bondDid）。$ は消えた子の名前 */
+const BOND_MEM={
+ 'フタバ|ノドカ':{'フタバ':'#cry|これからも、となりにいようねって……$、言ったじゃない……。','ノドカ':'#cry|これからも、となりにいようねって、言ったのにねぇ……。'},
+ 'フタバ|ホノ':{'フタバ':'#cry|こんどの夜も、ずっと見てるって、約束したのに……。','ホノ':'#cry|……見ててくれるやつがいると、力が出るって言ったろ。まだ、もらいたりねえよ……。'},
+ 'フタバ|アオ':{'フタバ':'#cry|花の冠の作りかた、$に教えてあげるって、約束してたのに……。','アオ':'#cry|花の冠の作りかた、教えてもらう約束でしたよね……。まだ、ひとつも作れていないんです。'},
+ 'フタバ|フウ':{'フタバ':'#cry|$と歩くと、どこでも楽しかったのに……。あの丘、まだ、いっしょに行ってないよ……。','フウ':'#cry|……花のにおいのする丘へ、また、ふたりで行くつもりだったんだ。'},
+ 'ノドカ|ホノ':{'ノドカ':'#cry|きょうはいっしょに、ひなたぼっこしようねって、言ったのにねぇ……。','ホノ':'#cry|おまえに「おつかれさま」って言われると、つかれがとんだんだ。……もう、だれが言ってくれるんだよ。'},
+ 'ノドカ|アオ':{'ノドカ':'#cry|$となら、もっといい畑になるよぉって、言ったのにねぇ……。','アオ':'#cry|土と水で、いっしょに畑をそだてていたのに……。畑は、まだとちゅうなんです。'},
+ 'ノドカ|フウ':{'ノドカ':'#cry|いっしょに、のんびりしようねって、言ったのにねぇ……。','フウ':'#cry|……そののんびりが、よかったんだ。きみのそばは、風がやさしくなったのに。'},
+ 'ホノ|アオ':{'ホノ':'#cry|火と水で、ちょうどいいって言ってくれたよな……。おれの火、もう、だれがしずめてくれんだよ。','アオ':'#cry|火と水で、ちょうどいいって……。これからもよろしくって、言ったばかりなのに。'},
+ 'ホノ|フウ':{'ホノ':'#cry|夜の見まわり、ふたりで行こうって言ったじゃねえか……。','フウ':'#cry|……夜の見まわりは、ふたりで行こうと、言ったのにね。'},
+ 'アオ|フウ':{'アオ':'#cry|また、いっしょに池をながめましょうって……約束、したのに。','フウ':'#cry|……しずかな池の水面、また、ふたりでながめるはずだったのに。'},
+ 'ホムラ|シズク':{'ホムラ':'#cry|あんたとなら、どんな仕事も楽しいって……あたい、ほんとに、そう思ってたんだよ。','シズク':'#cry|これからも、よろしくおねがいしますって……まだ、言ったばかりなのに。'}};
+/* どの組でも：BOND_GEN と同じ組。[前の属性の子が言う, うしろの属性の子が言う] */
+const BOND_MEMG={
+ 'wood|wood':['#cry|いっしょにいると、日なたにいるみたいって……ほんとに、ぽかぽかしてたのに。'],
+ 'wood|earth':['#cry|いっしょにそだてた芽、もう顔を出してたんだよ……。見せてあげたかった。','#cry|たがやしてくれてありがとうって、言ってくれたのに……。'],
+ 'wood|fire':['#cry|守ってくれるから、安心してねむれたのに……。','#cry|守ってくれるから安心だって、言ってくれたのに……。守れなかった。'],
+ 'wood|water':['#cry|いっしょに世話をすると、花もうれしそうだったのに……。','#cry|いっしょに花の世話をしたね……。花は、まだ元気なのに。'],
+ 'wood|wind':['#cry|とんでいった花のたね、いっしょに見にいこうって言ったのに……。','#cry|新しい花がさいたら、いっしょに見にいこうって、さそったのに……。'],
+ 'earth|earth':['#cry|ふたりでいると、時間がゆっくりになるねって……。もっと、ゆっくりしたかったよ。'],
+ 'earth|fire':['#cry|いっしょに村を守ってるんだねって、言ってくれたのに……。','#cry|なおしてくれた壁、こわれなかったんだよ……。いっしょに村を守ってたのに。'],
+ 'earth|water':['#cry|水をくれると、土がふかふかになったのに……。','#cry|いっしょに、いい畑にしようねって……言ったのに。'],
+ 'earth|wind':['#cry|こんど、いっしょに村のはしまで歩こうって、言ってたのに……。','#cry|こんど、いっしょに村のはしまで歩こうって、さそったのに……。'],
+ 'fire|fire':['#cry|ふたりなら、こわくないねって……。ひとりの夜は、こわいよ。'],
+ 'fire|water':['#cry|けがはなかったって、いつも心配してくれたのに……。','#cry|いてくれると安心だって、言ってくれたのに……。'],
+ 'fire|wind':['#cry|こんど、いっしょにたき火をかこもうって言ったのに……。','#cry|いっしょにたき火をかこもうって、さそったのに……。'],
+ 'water|water':['#cry|いっしょにながめると、池がもっときれいに見えたのに……。'],
+ 'water|wind':['#cry|雲をはこんで、お日さまを出してくれたのに……。','#cry|お日さまが出たのは、ぼくのおかげだって、言ってくれたのに……。'],
+ 'wind|wind':['#cry|いっしょに、風のくる道をさがしにいこうって、言ってたのに……。']};
+const BOND_DIDL={eat:'#cry|いっしょにごはんを食べると、おいしかったのに……。',chat:'#cry|いっぱい、おしゃべりしたのに……。まだ、話したいこと、あるのに……。',guard:'#cry|夜、いっしょに村を守ったのに……。',tour:'#cry|村を、いっしょに見てまわったよね……。',any:'#cry|いつも、いっしょにいたのに……。'};
+function bondMemNote(A,B,ci){/* なかよしの雑談を見た（input.js）。新しい物をうしろに、4つまで */if(!S||IS_STORY_REPLAY||!CHATS[ci]||!CHATS[ci].mem)return;const M=S.bondMem||(S.bondMem={}),k=bondKey(A,B),L=(M[k]||[]).filter(i=>i!==ci);L.push(ci);M[k]=L.slice(-4)}
+function bondMemLine(m,d){/* のこった子 m が、消えた子 d との思い出を話す1行 */const k=bondKey(m,d),tone=t=>chatTone(t,m,1).replace(/\$/g,d.name);
+  const L=(S.bondMem||{})[k]||[];if(L.length){const c=CHATS[L[L.length-1]];if(c&&c.mem)return tone(c.mem)}
+  if((S.sev||{})['bd_'+k]){const nk=BOND_MEM[m.name+'|'+d.name]||BOND_MEM[d.name+'|'+m.name];if(nk&&nk[m.name])return nk[m.name].replace(/\$/g,d.name);
+    const f=ELEM_KEYS.indexOf(m.elem)<=ELEM_KEYS.indexOf(d.elem),G=BOND_MEMG[f?m.elem+'|'+d.elem:d.elem+'|'+m.elem];if(G)return tone(m.elem===d.elem?G[0]:G[f?0:1]||G[0])}
+  const did=(S.bondDid||{})[k]||'';if(/^play:/.test(did)){const w=BL[did.slice(5)];if(w)return tone('#cry|いっしょに'+w.name+'で遊んだの、たのしかったのに……。')}
+  return tone(BOND_DIDL[did]||BOND_DIDL.any)}
+/* 消えた子 d の、なかよしの子（村にいる子だけ）。なかよしがいなければ null */
+function deathMate(d,name){const n=name||(d&&d.mate);if(!n)return null;const m=S.res.find(q=>q.name===n&&!q.hidden);return m||null}
+/* なかよしの子が話す、はじめの3行（おどろき → 思い出 → かなしみ） */
+function deathMateLines(m,d){const n=d.name;
+  const A={wood:'#worry hush|……$？ ねえ、$……！',earth:'#worry hush|……$？ うそだよねぇ、$……。',fireA:'#danger hush|……$？ おい、うそだろ……！',fireB:'#danger hush|……$？ おい、うそだろ……！',water:'#worry hush|……$さん？ ……$さん！',wind:'#worry hush|……$？ ……風に、まぎれてしまったのかい。',windF:'#worry hush|……$？ ねえ、どこ行っちゃったの……？'},
+    C={wood:'#cry|……もっと、いっしょにいたかったよ……。',earth:'#cry|……もっと、いっしょにいたかったよぉ……。',fireA:'#cry|……もっと、いっしょにいたかったよ。',fireB:'#cry|……ちくしょう。もっと、いっしょにいたかったぜ……。',water:'#cry|……もっと、いっしょにいたかったです……。',wind:'#cry|……もっと、となりにいたかったよ。',windF:'#cry|……もっと、いっしょにいたかったなあ……。'};
+  const k=elemKey(m);return [[m.name,(A[k]||A.wood).replace(/\$/g,n)],[m.name,bondMemLine(m,d)],[m.name,C[k]||C.wood]]}
+
 /* ---------- 同じ夜にいっしょに守る（見張り台・夜の見まわり・こもれびのまもりについて行く） ---------- */
 const BOND_DEF=new Set(['watchpost','patrol','follow']);
 function bondNightTick(){if(!isNight()||!S.enemyOn)return;const n=dayNo()-(hour()<12?1:0),D=S.bondDef&&S.bondDef.n===n?S.bondDef:(S.bondDef={n,ids:[]});
-  for(const r of S.res){if(r.hidden||!r.act||!BOND_DEF.has(r.act.type)||D.ids.includes(r.id))continue;for(const id of D.ids){const q=S.res.find(x=>x.id===id);if(q)bondAdd(r,q,1)}D.ids.push(r.id)}}
+  for(const r of S.res){if(r.hidden||!r.act||!BOND_DEF.has(r.act.type)||D.ids.includes(r.id))continue;for(const id of D.ids){const q=S.res.find(x=>x.id===id);if(q)bondAdd(r,q,1,'guard')}D.ids.push(r.id)}}
 /* ---------- なかよし100：3マス以内ではたらく速さ+5% ---------- */
 function bondNearTick(){BOND5.clear();if(!S.bond)return;for(const pk in S.bond){if(S.bond[pk]<BOND_MAX)continue;const p=bondPair(pk);if(!p||p[0].hidden||p[1].hidden)continue;if(Math.hypot(p[0].x-p[1].x,p[0].y-p[1].y)<=3){BOND5.add(p[0]);BOND5.add(p[1])}}}
 function bondTick(){if(!S||IS_STORY_REPLAY)return;omoiSeed();bondNightTick();bondNearTick();bondTalkTick()}
 
 /* ---------- いっしょに遊ぶ ---------- */
 /* 同じ遊び家具で遊びはじめたら、先に遊んでいる子と+2（1回の遊びで1回） */
-function bondPlayStart(r,a){if(a.bd||a.obj==null)return;a.bd=1;for(const q of S.res)if(q!==r&&q.act&&q.act.type==='play'&&q.act.stage==='do'&&q.act.obj===a.obj)bondAdd(r,q,1)}
+function bondPlayStart(r,a){if(a.bd||a.obj==null)return;a.bd=1;for(const q of S.res)if(q!==r&&q.act&&q.act.type==='play'&&q.act.stage==='do'&&q.act.obj===a.obj)bondAdd(r,q,1,'play:'+a.what)}
 /* なかよし60：遊びに行くとき、ひまにしているなかよしをさそう */
 function bondInvite(r,o){if(!S||isNight()||!o||o.obj==null||(r.bdInv||0)>S.t)return false;const bb=bondBest(r);if(!bb||bb.v<BOND_PLAY)return false;const f=bb.q,p=BL[o.what]&&BL[o.what].play;
   if(!p||!free(o.key,p.cap)||f.hidden||!f.act||!['idle','wander'].includes(f.act.type)||f.fun>=100||f.hunger<50||hungry(f)||f.energy<25||onHold(f)||HOLD.has(f.id)||storyCalled(f)||carryN(f)>0||f.meal||toyTired(f,o.obj))return false;
@@ -147,7 +195,7 @@ function tourTarget(k){const isO=id=>q=>S.obj[q]===id||S.obj[q]==='part'&&S.obj[
 /* せいれいの行動をきめるときによぶ。あんないをしたら true */
 function tourTick(r,G){const P=tourPair();if(!P||r.hunger<40)return false;const {T,g,w}=P;
   if(r===g){while(T.i<TOUR_KINDS.length){const tg=tourTarget(TOUR_KINDS[T.i]);const j=tg?nearest(G,j=>walk(j)&&tg.pred(j)&&Math.hypot(j%W+.5-r.x,((j/W)|0)+.5-r.y)>=3,80):-1;if(j>=0){const lk=tg.look(j);startAct(r,G,'tourgo',j,{dur:TOUR_STOP,look:lk});return true}T.i++}
-    delete S.tour;JUMP.set(g,performance.now());JOYU.set(g,performance.now()+1500);if(Math.hypot(w.x-g.x,w.y-g.y)<4){JUMP.set(w,performance.now());JOYU.set(w,performance.now()+1500)}bondAdd(g,w,1.5);return false}/* さいごまで見せたら、ふたりでよろこぶ */
+    delete S.tour;JUMP.set(g,performance.now());JOYU.set(g,performance.now()+1500);if(Math.hypot(w.x-g.x,w.y-g.y)<4){JUMP.set(w,performance.now());JOYU.set(w,performance.now()+1500)}bondAdd(g,w,1.5,'tour');return false}/* さいごまで見せたら、ふたりでよろこぶ */
   if(r===w){const here=(r.y|0)*W+(r.x|0);if(Math.hypot(g.x-r.x,g.y-r.y)<=1.8){startAct(r,G,'tourf',here,{tg:g.id});return true}
     let q=-1,bd=1e9;for(let k=0;k<W*H;k++){const d=G.dist[k];if(d<0||d>60||!walk(k))continue;const h=Math.hypot(k%W+.5-g.x,((k/W)|0)+.5-g.y);if(h<.9||h>1.8)continue;if(d<bd){bd=d;q=k}}
     if(q>=0){startAct(r,G,'tourf',q,{tg:g.id});return true}}
