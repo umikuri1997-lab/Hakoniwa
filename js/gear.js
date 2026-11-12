@@ -51,9 +51,9 @@ function gearHurt(e,r){if(!r.gear||e.dead)return;const s=gearStat(r);if(s.refl){
 const AMMO=['arrow','arrow2',...GEAR_ARROWS];
 const ammoG=id=>id==='arrow'?{dmg:0}:id==='arrow2'?{dmg:1}:BL[id].g;
 function ammoTotal(){return AMMO.reduce((n,id)=>n+(S.inv[id]||0),0)}
-function ammoPick(){let b=null,bd=-1;for(const id of AMMO){if(!(S.inv[id]>0))continue;const d=ammoG(id).dmg;if(d>bd){bd=d;b=id}}return b}/* 威力の大きい矢から使う */
+function ammoOrder(){return AMMO.filter(id=>S.inv[id]>0).sort((p,q)=>ammoG(q).dmg-ammoG(p).dmg)}/* 持っている矢を、威力の大きい順に */
 /* 見張り台が1回うつ：矢の本数・つらぬき・まわり。うった数をかえす */
-function towerVolley(j,x,y,st,g,shots0){const id=ammoPick();if(!id)return 0;S.inv[id]--;const a=ammoG(id),rng=st.range+(a.rng||0);const L=[];for(const e of S.enemies){if(!e.spawned||e.dead)continue;const d=Math.hypot(e.x-x,e.y-y);if(d<rng)L.push([d,e])}if(!L.length){S.inv[id]++;return 0}L.sort((p,q)=>p[0]-q[0]);
+function towerVolley(j,x,y,st,g,shots0){/* 威力の大きい矢から、とどくコワイノがいる矢をえらぶ（射程の短い矢しかとどかないときも、ほかの矢でうつ） */const ids=ammoOrder();let id=null,a=null,L=[];for(const k of ids){const b=ammoG(k),rng=st.range+(b.rng||0),M=[];for(const e of S.enemies){if(!e.spawned||e.dead)continue;const d=Math.hypot(e.x-x,e.y-y);if(d<rng)M.push([d,e])}if(M.length){id=k;a=b;L=M;break}}if(!id)return 0;S.inv[id]--;L.sort((p,q)=>p[0]-q[0]);
   const n=a.n||1,dm=(st.dmg+(a.dmg||0))*(st.mul||1),hits=[];/* st.mul：見張り台に立つ子の属性の威力（WPEL） */for(let i=0;i<n;i++)hits.push(L[i%L.length][1]);
   for(const tg of hits){const T=[tg];if(a.pierce){let b=null,bd=2.5;for(const[,e]of L){if(e===tg)continue;const v=[tg.x-x,tg.y-y],w=[e.x-x,e.y-y],t=(v[0]*w[0]+v[1]*w[1])/(Math.hypot(...v)||1);if(t<Math.hypot(...v))continue;const off=Math.abs(v[0]*w[1]-v[1]*w[0])/(Math.hypot(...v)||1);if(off<bd){bd=off;b=e}}if(b)T.push(b)}/* つらぬき：うしろの1ぴきにも */
     for(const e of T){if(e.dead)continue;e.hp-=dm;e.flash=6;gearSpecial(a,e,x,y,g);shots0.push({x1:x,y1:y-1.9,x2:e.x,y2:e.y-.3,life:1,wood:true})}
