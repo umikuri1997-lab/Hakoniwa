@@ -28,6 +28,7 @@ const SONGS={
     mel:[[69,2],[72,2],[76,2],[72,2],[74,2],[72,1],[71,1],[69,4],[72,2],[74,2],[76,2],[77,2],[76,2],[74,2],[72,4],
          [76,2],[79,2],[81,2],[79,2],[77,2],[76,2],[74,4],[71,2],[72,2],[74,2],[76,2],[80,2],[76,2],[71,4]]},
 };
+/* オオカゲがいる夜：ふだんの夜の曲を、少しだけ速く、ひくい心臓の音のようなベースをかさねる（sched の bossArr） */SONGS.nightB=Object.assign({},SONGS.night,{bpm:72});SONGS.nightVB=Object.assign({},SONGS.nightV,{bpm:64});
 for(const k in SONGS){const g=SONGS[k];g.at=new Array(64).fill(null);let p=0;for(const[m,l]of g.mel){if(m)g.at[p%64]=[m,l];p+=l}}
 const SAMPLES={"bell":["assets/g/cb9ff20140.mp3"],"pat":["assets/g/e2b825e14e.mp3"],"voice":["assets/g/fc5ad15d4b.mp3"],"paper":["assets/g/b7b70de2d3.mp3"],"night":["assets/g/982aef2204.mp3"],"chop":["assets/g/1d86cabda1.mp3","assets/g/676cf2fa6d.mp3","assets/g/a8dd704564.mp3"],"dig":["assets/g/56f3308409.mp3"],"splash":["assets/g/05adadaa1c.mp3"],"cast":["assets/g/93da972520.mp3"],"nail":["assets/g/b121a3b6b8.mp3"],"bush":["assets/g/3c69ed59fd.mp3"],"bubble":["assets/g/3dae9cab95.mp3"],"catch":["assets/g/269701117d.mp3"],"box":["assets/g/8c8eeb8b61.mp3"],"fire":["assets/g/e8ad50e6e8.mp3"],"boil":["assets/g/55a7541497.mp3"],"rain":["assets/g/7178ec736f.mp3"],"birds":["assets/g/c0eec144c6.mp3"]};const SBUF={};
 Object.assign(SAMPLES,{"mine":["assets/g/ba69ed4c76.mp3"]});
@@ -72,7 +73,7 @@ function tone(m,t,dur,type,vol,out,f2){
 }
 function noise(t,dur,vol,out,hp){const s=AC.createBufferSource(),g=AC.createGain(),fl=AC.createBiquadFilter();s.buffer=noiseBuf;fl.type='highpass';fl.frequency.value=hp||6000;
   g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(.0001,t+dur);s.connect(fl);fl.connect(g);g.connect(out);s.start(t);s.stop(t+dur+.02)}
-const stageSong=()=>S&&S.enemies&&S.enemies.some(e=>e.type==='boss2'&&e.spawned&&!e.dead)?'battle':(isDark()?'night':'day')+(typeof WD!=='undefined'&&WD===1?'V':'');/* ヨルノオオカゲがいるあいだは、たたかいの曲 *//* ステージごとに曲をかえる（火山は dayV・nightV） */
+const stageSong=()=>S&&S.enemies&&S.enemies.some(e=>e.type==='boss2'&&e.spawned&&!e.dead)?'battle':S&&S.enemies&&S.enemies.some(e=>(e.type==='boss'||e.type==='hino'||e.type==='yama')&&e.spawned&&!e.dead)?(typeof WD!=='undefined'&&WD===1?'nightVB':'nightB')/* オオカゲがいるあいだは、夜の曲のアレンジ */:(isDark()?'night':'day')+(typeof WD!=='undefined'&&WD===1?'V':'');/* ヨルノオオカゲがいるあいだは、たたかいの曲 *//* ステージごとに曲をかえる（火山は dayV・nightV） */
 function stageMusic(){
   curSong=wantSong=stageSong();step=0;bgmSw=0;
   if(!AC)return;
@@ -87,13 +88,14 @@ function sched(){
   {const now=AC.currentTime;if(wantSong!==curSong&&!bgmSw){bgmSw=now+2.4;bgmF.gain.cancelScheduledValues(now);bgmF.gain.setValueAtTime(bgmF.gain.value,now);bgmF.gain.linearRampToValueAtTime(0,now+2.2)}
    else if(bgmSw&&now>=bgmSw){bgmSw=0;curSong=wantSong;step=0;nextT=now+.05;bgmF.gain.cancelScheduledValues(now);bgmF.gain.setValueAtTime(0,now);bgmF.gain.linearRampToValueAtTime(1,now+3)}}
   while(nextT<AC.currentTime+.3){
-    const g=SONGS[curSong],e=60/g.bpm/2,t=nextT,bar=(step/8)|0,ch=g.chords[bar%4],night=curSong==='night'||curSong==='nightV',opening=curSong==='opening',battle=curSong==='battle';
+    const g=SONGS[curSong],e=60/g.bpm/2,t=nextT,bar=(step/8)|0,ch=g.chords[bar%4],night=curSong.indexOf('night')===0,bossArr=night&&curSong.slice(-1)==='B',opening=curSong==='opening',battle=curSong==='battle';
     const n=g.at[step];if(n)tone(n[0],t,n[1]*e*.95,g.lead,battle?.045:opening?.08:night?.09:.075,bgmG);
     if(battle){if(step%2===0)tone(ch[0]+(step%4===2?12:0),t,e*1.7,'triangle',.15,bgmG);if(step%8===0)for(const c of ch[1])tone(c,t,e*7.5,'sawtooth',.012,bgmG);if(step%4===0)tone(45,t,.14,'sine',.16,bgmG,40);if(step%4===2)noise(t,.09,.05,bgmG,1800);else if(step%2===1)noise(t,.03,.025,bgmG);nextT+=e;step=(step+1)%64;continue}/* たたかい：ベースを8分できざみ、たいこ *//* マップ画面の曲（opening）：サインだけだとスマホのスピーカーで聞こえないので、三角波でほかの曲と同じくらいの大きさに */
     if(step%8===0)tone(ch[0],t,e*(opening?6:night?7.5:3.6),'triangle',opening?.11:.13,bgmG);
     if(!night&&step%8===4)tone(ch[0]+7,t,e*3.4,'triangle',.1,bgmG);
     if(opening){if(step%8===0)for(const c of ch[1])tone(c,t,e*7.2,'sine',.03,bgmG);if(step%4===2)tone(ch[1][(step>>2)%3]+24,t,e*1.8,'triangle',.025,bgmG)}
     else if(night){if(step%8===0)for(const c of ch[1])tone(c,t,e*7.8,'sine',.025,bgmG);if(step%4===2)tone(ch[1][(step>>2)%3]+12,t,e*1.6,'sine',.02,bgmG)}
+    if(bossArr&&(step%8===0||step%8===1))tone(ch[0]-12,t,e*.9,'triangle',step%8===0?.16:.11,bgmG,(mf(ch[0]-12))*.8);/* オオカゲ：どくん、どくん（ひくいベースを2つ） */
     else{tone(ch[1][step%3]+12,t,e*.55,'square',.012,bgmG);if(step%2===1)noise(t,.03,.025,bgmG)}
     nextT+=e;step=(step+1)%64;
   }
