@@ -11,6 +11,21 @@ OBJS = {
     'statueb': {'box': (995, 23, 1617, 835), 'w': 176},
 }
 FIX = {}
+NCOL = 256   # 色の数の上限（持ち主の指定）
+
+def cap_colors(im, n=NCOL):
+    """色を n 色までにする：メディアンカットで n 色をえらび、k-means で元の色の平均に近づける（ディザなし。透明な所は色に数えない）"""
+    import numpy as np
+    from PIL import Image
+    a = np.array(im.convert('RGBA')); m = a[..., 3] > 0; X = a[..., :3][m].astype(float)
+    rgb = a[..., :3].copy(); rgb[~m] = rgb[m][0]
+    P = np.unique(np.array(Image.fromarray(rgb).quantize(n, method=Image.Quantize.MEDIANCUT, dither=Image.Dither.NONE).convert('RGB'))[m], axis=0).astype(float)
+    for _ in range(15):
+        l = ((X[:, None, :] - P[None]) ** 2).sum(2).argmin(1)
+        for i in range(len(P)):
+            if (l == i).any(): P[i] = X[l == i].mean(0)
+    l = ((X[:, None, :] - P[None]) ** 2).sum(2).argmin(1)
+    o = a.copy(); o[..., :3][m] = np.round(P[l]).astype(np.uint8); return Image.fromarray(o, 'RGBA')
 
 # チップに入れる：どちらも、土台の下のはしを y62・左のはしを x−56（g64、置くマスの左上から。前の神殿の絵と同じ足もと）
 #   python3 tools/art/temple-ruin/temple_art.py          … チップに入れる
@@ -21,6 +36,7 @@ if __name__ == '__main__':
     from PIL import Image
     import pixdown
     src = Image.open(SRC).convert('RGBA'); ims = {k: pixdown.make(src, c['box'], c.get('w'), c.get('h'), c.get('sc'), c.get('lines'), FIX.get(k)) for k, c in OBJS.items()}
+    ims = {k: cap_colors(im) for k, im in ims.items()}
     if len(sys.argv) > 1:
         os.makedirs(sys.argv[1], exist_ok=True)
         for k, im in ims.items(): im.save(os.path.join(sys.argv[1], k + '.png'))
