@@ -13,6 +13,10 @@ const assert=require('node:assert/strict');
   console.log(r);
   assert.equal(r.n,3);assert.equal(r.open,1,'one moved out of the fog');assert(!r.vill,'outside the village');assert(r.reach,'Futaba can walk there');
   assert(r.focus,'goal list goes there');assert.equal(r.open2,1,'moves only once');
+  /* あしあとの絵は、つぎのあしあとのほうを向く（さいごは、来た向きのまま） */
+  const dir=JSON.parse(await run(`(()=>{const C=printChain(),d=(a,b)=>{const dx=b%W-a%W,dy=(b/W|0)-(a/W|0);return Math.abs(dx)>Math.abs(dy)?(dx>0?'~r':'~l'):(dy>0?'~d':'')};
+    return JSON.stringify({first:C[0]===S.flags.printNearJ,ok:C.every((j,n)=>printDir(j)===(n<C.length-1?d(j,C[n+1]):d(C[n-1],j))),chips:['~r','~d','~l'].every(k=>!!chipOf('nushiprint'+k)),next:printNext(C[0])===C[1]})})()`));
+  console.log(dir);assert(dir.first&&dir.ok&&dir.chips&&dir.next,'footprints face the next one');
   /* 霧の上の印（描いてもエラーにならない） */
   await run(`(()=>{const f=printList().find(f=>fogAt(f.j));panTo(f.j%W+.5,(f.j/W|0)+.5)})()`);await page.waitForTimeout(800);
   /* タップすると、フタバが歩いて行って、たどる */
@@ -20,6 +24,6 @@ const assert=require('node:assert/strict');
   const t0=Date.now();let done=false;while(Date.now()-t0<120000){if(await run('printN()')>=1){done=true;break}
     await run(`(()=>{S.enemyOn=false;if(isNight())S.t=Math.ceil(S.t/1440)*1440+480;if(!document.querySelector('#dialog').hidden){DLGA.n=DLGA.full.length;DLGA.readReady=0;const b=document.querySelector('#dlgBtns button');if(b&&!b.disabled&&performance.now()>=DLGA.holdUntil)b.click()}})()`);await page.waitForTimeout(100)}
   assert(done,'Futaba traced the moved footprint');
-  const lg=JSON.parse(await run('JSON.stringify(LOG)'));assert(lg.some(l=>l.includes('フウが見たのは'))&&lg.some(l=>l.includes('こっちっぽい')),'first footprint: Fuu found it, this way');
+  const lg=JSON.parse(await run('JSON.stringify(LOG)'));assert(lg.some(l=>l.includes('フウが見たのは'))&&lg.some(l=>l.includes('こっちへ歩いていった')),'first footprint: Fuu found it, this way');
   assert.deepEqual(errors,[]);await browser.close();console.log('OK');
 })().catch(e=>{console.error(e);process.exit(1)});
