@@ -19,7 +19,7 @@ function checkQuest(){
   if(S.qStory!=null){TALKW=storyWho(QUESTS[S.qStory]);QUESTCLEARW=TALKW;renderQuest();return}/* クエストのあとのお話は、💬をタップしてから */
   {const e=grassEndingTalk();if(e){if(grassEndingTalkLines(e))TALKW=POKO;renderQuest();return}}/* 最後のかけらの話：フタバの吹き出しから */
   if(qMissing(q).length){renderQuest();return}
-  if(q.talk&&!S.qTalked){if(q.talk.when()&&!isNight())TALKW=earthIntroQuest(q)?earthIntroSpeaker(q):firstSpk(q.talk.lines,q.talk.who);renderQuest();return}/* 新しいクエストの声かけは、昼だけ */
+  if(q.talk&&!S.qTalked){if(q.talk.when()&&!isNight()&&!tourPair())TALKW=earthIntroQuest(q)?earthIntroSpeaker(q):firstSpk(q.talk.lines,q.talk.who);renderQuest();return}/* 新しいクエストの声かけは、昼だけ。村のあんない（S.tour）のあいだは、おわってから */
 
   if(q.field)fieldStoryEnsure(fieldActiveId(q));
   const complete=q.check();if(!complete)checkQuestParts(q);
@@ -106,6 +106,7 @@ function questWaitNote(q){/* 条件はそろったのに、朝にならないと
   let ok=false;try{ok=!!q.check()}catch(e){}return ok&&isNight()?'朝を待とう':''}
 function mainTalkWaitText(q){/* メインの会話・お礼を待っているときの、ほんとうに止まっている理由 */const ms=qMissing(q);if(ms.length)return ms.join('と')+'がもどるまで、お話は進まない';
   if(!(S.qStory!=null||q.talk&&!S.qTalked))return '';if(isNight())return 'お話は、朝になってから';
+  if(S.qStory==null&&S.tour){const g=S.res.find(r=>r.id===S.tour.g),w=S.res.find(r=>r.id===S.tour.w);if(g&&w)return g.name+'が、'+w.name+'に村をあんないしている'}/* あんないがおわってから、つぎのお話 */
   return storyWaitStatusText()||(TALKW?mainStoryPromptText(TALKW):S.qStory==null&&q.talk.wait||'いまは、村をそだてよう')}
 function nextStageGoal(){/* 草原をクリアして、まだ火山のふもとへ旅立っていないとき */if(!S||WD!==0||S.free||!S.cleared||typeof departDone!=='function'||departDone())return null;
   const f=S.res.some(r=>r.name===POKO&&!r.hidden);if(S.flags.sacredReunion&&!S.flags.sacredQuietSeen)return {t:'ヌシ様と話そう',pr:isNight()?'お話は、朝になってから':'御神木のそばで、ヌシ様が待っている',how:'「みる」でヌシ様をタップして、話を聞こう。そのあと、フタバたちが、つぎの土地へのお見送りをしてくれる'};/* お見送りは、ヌシ様の話のあと（departDue と同じ条件） */return {t:'つぎの土地へ旅立とう',pr:isNight()?'お見送りは、朝になってから':!f?'フタバが帰ってきたら、お見送り':'みんなが、お見送りのしたくをしている',how:'昼になると、フタバたちが、つぎの土地へのお見送りをしてくれる。お見送りのあと、火山のふもとの村へ行く'}}
@@ -183,8 +184,10 @@ function heatScene(k){if(WD!==1||!S||!HSPC[k])return;const who=k==='b'?HOMURA:SH
     volWalk(h,r.x,r.y,{side:true},()=>{if(!alive())return;h.face=r.x>=h.x?1:-1;volPose(h,'storyTouch',1500,{});volShot([[dx,dy]],[r,h],2.4,1);villageTimeout(touch,1300);});};/* ホムラが背中に手をそえる */
   if(!r||Math.hypot(r.x-dx,r.y-dy)>10)brave();else volWalk(r,dx,dy+1,{},brave)}/* 遠すぎるときは、その場で */
 /* 会話の中の手の動き：give＝フタバがノドカに花のかんむりをわたす／push＝ノドカがフタバの背中を押す */
+function stageGive(from,to){/* 会話の「わたす」：from が to のほうを向いて、両手でさしだす */if(!S)return;const f=S.res.find(q=>q.name===from&&!q.hidden),n=S.res.find(q=>q.name===to&&!q.hidden);if(!f||!n)return;const now=performance.now();
+  f.face=n.x>=f.x?1:-1;n.face=-f.face;sacredScenePose(f,'storyOffer',1500,{side:true,face:f.face});for(let i=0;i<10;i++)villageTimeout(()=>{const q=i/10,hx=f.x*TS+f.face*6,hy=f.y*TS-30;fx.push({k:'p',x:hx+(n.x*TS-hx)*q,y:hy+(n.y*TS-44-hy)*q,vx:0,vy:-8,life:.7,col:i%2?'#ffd1e8':'#fff3a0',r:3})},500+i*50);villageTimeout(()=>{JOYU.set(n,performance.now()+1400);JUMP.set(n,performance.now());sfx('bush')},1100);STAGEWAIT=now+1500}
 function stageHands(c){if(!S)return;const f=S.res.find(q=>q.name===POKO&&!q.hidden),n=S.res.find(q=>q.name===MINA&&!q.hidden);if(!f||!n)return;const now=performance.now();
-  if(c==='give'){f.face=n.x>=f.x?1:-1;n.face=-f.face;sacredScenePose(f,'storyOffer',1500,{side:true,face:f.face});for(let i=0;i<10;i++)villageTimeout(()=>{const q=i/10,hx=f.x*TS+f.face*6,hy=f.y*TS-30;fx.push({k:'p',x:hx+(n.x*TS-hx)*q,y:hy+(n.y*TS-44-hy)*q,vx:0,vy:-8,life:.7,col:i%2?'#ffd1e8':'#fff3a0',r:3})},500+i*50);villageTimeout(()=>{JOYU.set(n,performance.now()+1400);JUMP.set(n,performance.now());sfx('bush')},1100);STAGEWAIT=now+1500}
+  if(c==='give')stageGive(POKO,MINA);
   else{n.face=f.x>=n.x?1:-1;f.face=n.face;sacredScenePose(n,'storyTouch',1300,{side:true,face:n.face});villageTimeout(()=>{JUMP.set(f,performance.now());JOYU.set(f,performance.now()+1500);sfx('wave')},450);STAGEWAIT=now+1300}}
 function calcScore(){const d=S.clearDay||dayNo(),parts=[['クリアした日',d+'日目',d<=26?4000:d<=30?3200:d<=34?2600:d<=39?2000:d<=44?1500:d<=54?1000:500],['せいれい',S.res.length+'人',S.res.length*100],['消えてしまったせいれい',(S.deaths||0)+'人',-Math.min(1000,(S.deaths||0)*50)]];
  const tot=Math.max(0,parts.reduce((a,p)=>a+p[2],0)),rank=tot>=5000?'S':tot>=4000?'A':tot>=2500?'B':'C'/* ふつうはB。はやく・消さずにクリアでS */;return{tot,rank,parts}}/* クリアスコア：早いほど・せいれいが多いほど・消えたせいれいが少ないほど高い。夜の数・パワーなど、長く遊ぶほどふえるものは入れない。クリアした日：26日目まで4000・30日目まで3200・34日目まで2600・39日目まで2000・44日目まで1500・54日目まで1000・それより後500。せいれい：1人100てん。消えたせいれい：1人50てん引く（引くのは1000まで）。S 5000・A 4000・B 2500 */
