@@ -122,7 +122,7 @@ function storyWaitReason(r,obj){
   if(r.coffin||['bury','pray'].includes(r.act?.type))return n+'がお見送りを終えてから向かう';
   if(!questVisitSafe(r,obj)||hostileNow(r))return '近くにコワイノがいる。安全になるのを待とう';
   if(['fieldintro','storywait'].includes(r.act?.type))return n+'がお話の場所へ向かっている';/* もう向かっている子に、荷物・食事の理由を出さない */
-  if(r.meal||hungry(r)||['eat','fetch','forage'].includes(r.act?.type))return n+'が食事を済ませてから向かう';
+  if(r.meal||hungry(r)||['eat','fetch','eatwait','forage'].includes(r.act?.type))return n+'が食事を済ませてから向かう';
   if(['sleep','faint'].includes(r.act?.type)||r.energy<20)return n+'が休んでから向かう';
   if(r.cing||r.act?.type==='cook')return n+'が料理を終えてから向かう';
   if(carryN(r)||matN(r))return n+'が荷物をしまってから向かう';
