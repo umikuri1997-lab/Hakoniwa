@@ -11,7 +11,7 @@ B = (191, 137, 81)                                   # 輪郭線
 J, G, Hc, I, E, K = (238, 196, 124), (232, 185, 112), (228, 179, 106), (225, 175, 103), (220, 169, 99), (204, 151, 88)  # 木：上の面 → こい所
 A, C, F, D, Lg = (250, 250, 250), (243, 243, 243), (231, 231, 231), (216, 215, 215), (178, 175, 172)                    # 布：白 → こい所
 # 金具（たるの輪）：布の灰色にそろえた、やわらかい灰色
-MH, MM, MS, MO = (226, 225, 223), (206, 204, 200), (186, 183, 179), (160, 156, 152)
+MH, MM, MS, MO = (222, 221, 220), (196, 195, 194), (172, 170, 170), (138, 135, 134)
 
 class Cv:
     def __init__(s, w, h): s.a = np.zeros((h, w, 4), np.uint8); s.w, s.h = w, h
@@ -107,39 +107,47 @@ WOOD = [K, E, I, G, J]            # 木：こい → 明るい
 CLOTH = [Lg, D, F, C, A]          # 布
 METAL = [MO, MS, MM, MH]          # 金具
 
-def flatten(src):
+def flatten(src, gray='cloth'):
     """src：clean64 の絵。材料（木・布・金具）にわけ、線（いちばんこい色のかたまり＝clean64 の2ドットの線）は1ドットにして、
     木はうすい茶色・金具はこい灰色。面は、その材料の明るさのじゅんに、お手本の色（木5・布5・金具4）へおきかえる。小さな点はまわりにそろえる"""
     a = np.asarray(src.convert('RGBA')).astype(int); Hh, Ww = a.shape[:2]
-    m = a[..., 3] > 0
+    m = a[..., 3] >= 128                                               # うすい（はんとうめいの）ふちは、外とみる
     rgb = a[..., :3]; lum = rgb @ np.array([.3, .59, .11]); sat = rgb.max(2) - rgb.min(2)
-    mat = np.where(sat < 28, np.where(lum > 150, 1, 2), 0)            # 0 木・1 布・2 金具
+    mat = np.where(sat < (28 if gray == 'cloth' else 45), 1 if gray == 'cloth' else 2, 0)          # 0 木・1 布・2 金具（灰色の所は、布か金具のどちらか：gray）
     mat[~m] = -1
     lab = np.full((Hh, Ww), -1)                                         # 面の段（100*材料+段）。線は 99（木）・98（金具）
+    from scipy.ndimage import median_filter, convolve
+    lm = np.where(m, lum, np.nan)                                       # まわり8つの明るさの平均（外はのぞく）
+    kk = np.ones((3, 3)); kk[1, 1] = 0
+    nsum = convolve(np.nan_to_num(lm), kk, mode='constant'); ncnt = convolve(m.astype(float), kk, mode='constant')
+    thinline = m & (ncnt >= 5) & (lum < nsum / np.maximum(ncnt, 1) - 16)   # まわりより、こい細い線
+    lum0 = lum.copy(); lum = np.where(m, median_filter(lum, 3), lum)                       # 面の明るさは、木目のむらをならしてから段にする
+    lum = np.where(thinline, a[..., :3] @ np.array([.3, .59, .11]), lum)
     LUM = lambda c: c[0] * .3 + c[1] * .59 + c[2] * .11
     for k, pal in ((0, WOOD), (1, CLOTH), (2, METAL)):
         sel = mat == k
-        if not sel.any(): continue
+        if sel.sum() < 4: mat[sel] = 0 if k else mat[sel]; continue
         pl = np.array([LUM(c) for c in pal])
-        line = sel & (lum <= lum[sel].min() + 20) if k != 1 else np.zeros_like(sel)
+        line = (sel & (lum0 <= (lum0[sel].min() + 20 if k == 0 else np.percentile(lum0[sel], 35))) if k != 1 else np.zeros_like(sel)) | (sel & thinline)
         rest = sel & ~line
+        if not rest.any(): rest = sel; line = np.zeros_like(sel)
         if k == 1: v = lum.copy()                                         # 布：明るさのまま（白は白）
         else:                                                             # 木・金具：線いがいの明るさのはばを、お手本の色のはばにあてる
             lo, hi = np.percentile(lum[rest], 3), np.percentile(lum[rest], 97)
             v = pl[0] + (lum - lo) * (pl[-1] - pl[0]) / max(1, hi - lo)
-        lab[line] = 99 if k != 2 else 98
+        lab[line] = (99, 97, 98)[k]
         lab[rest] = 100 * k + np.abs(v[rest][:, None] - pl[None, :]).argmin(1)
     # 線を1ドットに：2ドットの帯は、上・左がわの1ドットだけのこす
-    L = (lab == 99) | (lab == 98); P = np.pad(L, 1)
+    L = (lab >= 97) & (lab <= 99); P = np.pad(L, 1)
     up, lf = P[:-2, 1:-1], P[1:-1, :-2]
     thin = L & ~(up & lf) & ~(up & P[1:-1, 2:] & ~lf) & ~(lf & P[2:, 1:-1] & ~up)
     drop = L & ~thin
-    FACE = lambda q: q not in (-1, 98, 99)
+    FACE = lambda q: q not in (-1, 97, 98, 99)
     for _ in range(4):                                                  # けした線の所は、となりの面の色でうめる
         for y, x in zip(*np.where(drop)):
             nb = [lab[yy, xx] for yy, xx in ((y-1,x),(y+1,x),(y,x-1),(y,x+1)) if 0 <= yy < Hh and 0 <= xx < Ww and FACE(lab[yy, xx]) and not drop[yy, xx]]
             if nb: lab[y, x] = max(set(nb), key=nb.count); drop[y, x] = False
-    lab[drop & (mat == 2)] = 98; lab[drop & (mat != 2)] = 99
+    lab[drop & (mat == 2)] = 98; lab[drop & (mat == 1)] = 97; lab[drop & (mat == 0)] = 99
     for _ in range(2):                                                  # 小さな点（同じ段がとなりに1つまで）は、まわりの多い段に
         n = lab.copy()
         for y in range(Hh):
@@ -154,9 +162,33 @@ def flatten(src):
         for x in range(Ww):
             if not m[y, x]: continue
             q = lab[y, x]
-            c = MO if q == 98 else B if (edge[y, x] or q == 99) else (WOOD, CLOTH, METAL)[q // 100][q % 100]
+            c = B if (edge[y, x] and mat[y, x] == 0) else MO if (q == 98 or edge[y, x] and mat[y, x] == 2) else D if q == 97 else Lg if edge[y, x] else B if q == 99 else (WOOD, CLOTH, METAL)[q // 100][q % 100]
             out[y, x, :3] = c; out[y, x, 3] = 255
     return Image.fromarray(out, 'RGBA')
+
+SRC = os.path.join(HERE, 'src')   # 元の絵（道具で手を入れる前の絵）
+
+def taru_src():
+    """たる：元の絵の色と線をおきかえ、金具の輪2本は、元の絵の輪の位置・まがり方（まん中ほど下）で描きなおす"""
+    im = flatten(Image.open(os.path.join(SRC, 'taru.png')), 'metal'); a = np.asarray(im).copy()
+    Hh, Ww = a.shape[:2]; m = a[..., 3] > 0; cx = (Ww - 1) / 2
+    metal = m & (a[..., :3].max(2).astype(int) - a[..., :3].min(2) < 20)   # 灰色（金具）の所ぜんぶ
+    a[metal, :3] = E                                                     # 輪のまわりのみだれた灰色は、いったん木のかげに
+    for top, drop in ((29, 8), (49, 7)):                                 # 輪のいちばん上の行（まん中）・はしでの上がり
+        for x in range(Ww):
+            if not m[:, x].any(): continue
+            y0 = int(round(top - drop * ((x - cx) / 21) ** 2))
+            for k, c in enumerate((MO, MH, MM, MM, MS, MO)):
+                y = y0 + k
+                if 0 <= y < Hh and m[y, x]: a[y, x, :3] = c
+            for rx in (12, 35):                                          # びょう
+                if x == rx: a[y0 + 3, x, :3] = MO
+    P = np.pad(m, 1); edge = m & ~(P[:-2, 1:-1] & P[2:, 1:-1] & P[1:-1, :-2] & P[1:-1, 2:])
+    a[edge, :3] = B                                                      # 外の輪郭は、木と同じうすい茶色
+    return Image.fromarray(a, 'RGBA')
+
+def src_flat(n, gray='cloth'):
+    return lambda: flatten(Image.open(os.path.join(SRC, n + '.png')), gray)
 
 RAW = os.environ.get('FLAT_RAW')   # clean64 の絵（CLEAN64_NOREF=1 で作った、元の絵の形のまま）のフォルダ
 
@@ -174,7 +206,12 @@ def chair_side_raw():
     return flatten(Image.open(os.path.join(RAW, 'chair_3e1.png')))
 
 if __name__ == '__main__':
-    todo = [('table', table), ('taru', taru)]
-    if RAW: todo += [('bed_3e1', bed_side_raw), ('chair_3e1', chair_side_raw)]
-    for n, f in todo:
-        im = f(); im.save(os.path.join(REF, n + '.png')); print(n, im.size)
+    import json
+    SM = json.load(open(os.path.join(SRC, 'meta.json'))); MP = os.path.join(REF, 'meta.json')
+    RM = json.load(open(MP)) if os.path.exists(MP) else {}
+    todo = [('taru', 'taru', taru_src), ('table', 'table', src_flat('table')), ('bed>1', 'bed_3e1', src_flat('bed_3e1')), ('chair>1', 'chair_3e1', src_flat('chair_3e1'))]
+    for k, n, f in todo:
+        im = f(); bb = im.getbbox(); im = im.crop(bb); im.save(os.path.join(REF, n + '.png'))
+        RM[k] = {'ax': round(SM[k]['ax']) + bb[0], 'ay': round(SM[k]['ay']) + bb[1]}   # 元の絵と同じ場所に置く
+        print(k, im.size, RM[k])
+    json.dump(RM, open(MP, 'w'), ensure_ascii=False, indent=1)

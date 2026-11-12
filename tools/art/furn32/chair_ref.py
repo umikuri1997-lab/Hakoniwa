@@ -69,7 +69,7 @@ def crop(a, ax, ay):
     return a[ys[0]:ys[-1] + 1, xs[0]:xs[-1] + 1], ax + xs[0], ay + ys[0]
 
 if __name__ == '__main__':
-    meta = {}
+    MP = os.path.join(REF, 'meta.json'); meta = json.load(open(MP)) if os.path.exists(MP) else {}   # ほかの道具（flat_art.py）の分はのこす
     b, f, ay = back()   # よこ向き（side）は、元の絵にそう flat_art.py の絵にかえた
     for k, a, ay0 in (('chair>2', b, ay), ('chair>2.front', f, ay)):
         c, ax, y = crop(a, AX, ay0)
