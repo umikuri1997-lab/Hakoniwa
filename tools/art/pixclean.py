@@ -7,7 +7,8 @@
   4 --thin：輪郭が2ドット以上の所（chipcheck と同じ数え方）の、内がわのドットを、となりの中の色に（外がわの1ドットだけのこす）
   5 --outline：輪郭のとぎれ（透明にふれるのに、中の色と同じ明るさの所）を、その色を暗くした色でつなぐ
 使い方：
-  python3 tools/art/pixclean.py <前.png> <出力.png> [--n 20] [--merge 6] [--thin] [--outline]
+  python3 tools/art/pixclean.py <前.png> <出力.png> [--n 20] [--merge 6] [--k 0.8] [--thin] [--outline]
+      --k：細い線を強める強さ（0 で強めない。色を多く（48色より上）のこすときは 0）
   python3 tools/art/pixclean.py --put <id> <出力.png>     # できた絵をチップに入れる（大きさは同じ）"""
 import sys, os
 import numpy as np
@@ -122,8 +123,9 @@ if __name__ == '__main__':
         h, C = chips.load_imgs(); im = Image.open(av[2]).convert('RGBA')
         if (C[av[1]]['w'], C[av[1]]['h']) != im.size: raise SystemExit('大きさがちがう')
         C[av[1]]['f'][0] = im; chips.pack_imgs(h, C); sys.exit()
+    kk = float(av[av.index('--k') + 1]) if '--k' in av else .8
     n = int(av[av.index('--n') + 1]) if '--n' in av else 20; mg = int(av[av.index('--merge') + 1]) if '--merge' in av else 6
-    im = clean(Image.open(av[0]), n, mg)
+    im = clean(Image.open(av[0]), n, mg, kk)
     if '--thin' in av: im = thin(im)
     if '--outline' in av: im = close_outline(im)
     im.save(av[1])
