@@ -77,12 +77,12 @@ function sacredBeat(c){
   if(c==='bud'||c==='leaf'||c==='grow'){
     const from=sacredStage(),stage=c==='bud'?1:c==='leaf'?2:3;
     sacredStartEffect('growth',ms,{from:Math.min(from,stage-1),to:stage});SACRED_PREVIEW.set(S,{session:VILLAGE_SESSION,stage,until:Infinity});SACRED_SHOWN.set(S,{session:VILLAGE_SESSION,stage});/* お話の中で育つところを見せた（あとで、もう一度育つ会話を出さない） */
-    sacredShot(c==='grow'?'group':'detail',cast,1.4);sfx('bush');sacredGrowSparks(j,ms,stage);
+    sacredShot(c==='grow'?'group':'detail',cast,1.4);sfx('sacred');sacredGrowSparks(j,ms,stage);
   }
-  if(c==='glow'){/* 姿はかわらないが、根もとに光がたまって葉がゆれる */sacredStartEffect('sway',ms);sacredShot('detail',cast,1.4);sfx('bush');sacredGrowSparks(j,ms,Math.max(1,sacredStage()),'glow');}
+  if(c==='glow'){/* 姿はかわらないが、根もとに光がたまって葉がゆれる */sacredStartEffect('sway',ms);sacredShot('detail',cast,1.4);sfx('sacred');sacredGrowSparks(j,ms,Math.max(1,sacredStage()),'glow');}
   if(c==='omoishard')omoiShardBeat(j,ms,d);/* なかよしの想い：3つのあかりが、かけらになる */
-  if(c==='reply'){sacredStartEffect('reply',ms);sacredShot('face',cast,1.2);sfx('bush');for(const r of cast)sacredScenePose(r,'storyListen',600000,{side:true,target:j});}
-  if(c==='lookup'){/* フタバが木を見あげて、葉がゆれる（ひと呼吸） */sacredStartEffect('sway',ms);if(f){f.face=storyTreeX(j)>=f.x?1:-1;sacredScenePose(f,'storyListen',600000,{sit:true,side:true,target:j})}for(let i=0;i<3;i++)villageTimeout(()=>leafFX({x:storyTreeX(j)+(i-1)*.8,y:storyTreeY(j)-1.2}),i*350);sfx('bush');d.waitUntil=performance.now()+ms;}
+  if(c==='reply'){sacredStartEffect('reply',ms);sacredShot('face',cast,1.2);sfx('sacred');for(const r of cast)sacredScenePose(r,'storyListen',600000,{side:true,target:j});}
+  if(c==='lookup'){/* フタバが木を見あげて、葉がゆれる（ひと呼吸） */sacredStartEffect('sway',ms);if(f){f.face=storyTreeX(j)>=f.x?1:-1;sacredScenePose(f,'storyListen',600000,{sit:true,side:true,target:j})}for(let i=0;i<3;i++)villageTimeout(()=>leafFX({x:storyTreeX(j)+(i-1)*.8,y:storyTreeY(j)-1.2}),i*350);sfx('sacred');d.waitUntil=performance.now()+ms;}
   if(c==='gaze'&&f){/* フタバが芽によろこんではねてから、ひざをついて、じっと見る（ひと呼吸まつ） */const now=performance.now();JUMP.set(f,now);JOYU.set(f,now+900);f.face=storyTreeX(j)>=f.x?1:-1;sacredScenePose(f,'kneel',600000,{side:true,face:f.face,target:j});sacredShot('care',[f],1.4);d.waitUntil=performance.now()+ms;}
   if(c==='face')sacredShot('face',cast);
   if(c==='group'){d.effects.delete('hug');d.effects.delete('embrace');for(const r of cast)SACRED_POSES.delete(r);sacredShot('group',cast,1.7);}

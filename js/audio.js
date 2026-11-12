@@ -160,6 +160,10 @@ case'bossKO':noise(t,.5,.3,o,200);tone(70,t,1.4,'sine',.2,o,30);tone(900,t,.35,'
   case'kankan':for(let i=0;i<3;i++)playS('nail2',.42,i*.22);break;/* 強化したとき：カンカンカン *//* 建てているときの音（ふつうの1.5倍） */
   case'evap':noise(t,1.4,.05,o,2500);seq([67,64,60],.18,'sine',.03,.4);break;
   case'bush':playS('bush',.35);break;
+  case'sacred':{/* 御神木の場面：葉をわたる風（やわらかくふくらんで消える）と、高くすんだ鈴の音 */const sr=AC.createBufferSource(),g=AC.createGain(),bp=AC.createBiquadFilter();sr.buffer=noiseBuf;sr.loop=true;bp.type='bandpass';bp.Q.value=.7;bp.frequency.setValueAtTime(900,t);bp.frequency.linearRampToValueAtTime(1800,t+.6);bp.frequency.linearRampToValueAtTime(1100,t+1.4);
+    g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.05,t+.45);g.gain.linearRampToValueAtTime(0,t+1.5);sr.connect(bp);bp.connect(g);g.connect(o);sr.start(t);sr.stop(t+1.55);
+    [88,95,100].forEach((m,i)=>tone(m,t+.18+i*.16,1.2,'sine',.022,o));break}
+  case'chime':{/* 御神木の場面の小さな音（ひづめのあと・守り神の出番）：やさしい鈴ひとつ */const m=[91,95,98,100][Math.random()*4|0];tone(m,t,.6,'sine',.03,o);tone(m+12,t,.25,'sine',.008,o);break}
   case'cast':playS('cast',.35);break;
   case'catch':playS('catch',.35);break;
   case'bubble':playS('bubble',.35);break;
