@@ -32,6 +32,7 @@ im = Image.open('<出力>/<id>.png').convert('RGBA')
 C['<id>'] = {**C.get('<id>', {'g': 64}), 'ax': ..., 'ay': ..., 'w': im.width, 'h': im.height, 'f': [im]}
 chips.pack_imgs(h, C)   # アトラスと chips.js を作りなおす（ドットまで同じかたしかめる）
 ```
+- `pack_imgs` は、物ごとに256色をこえた絵を自動でへらす（`cap_colors`。CLAUDE.md の決まり）。「256色までにした」と出たら、その物を8倍で見て、目・光などの小さな色がかわっていないかたしかめる。
 - `ax,ay` は g64 のドットで、置くマス（左上）からのずれ。下のはしを、足もとの位置にそろえる（1マスなら 60前後、2×2なら 124前後）。
 - 絵は `chipOf(id)`・`drawChip` で描く。読みこむ前のためのコードの絵はのこす。
 - `tools/__pycache__` はけす。そのあと `index.html` の `E`、`APP_VER`、`node --check js/*.js`。

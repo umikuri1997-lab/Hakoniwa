@@ -11,6 +11,7 @@ OBJS = {
     'statueb': {'box': (995, 23, 1617, 835), 'w': 176},
 }
 FIX = {}
+# 色は、chips.pack_imgs が物ごとに256色までにする（tools/chips.py の cap_colors）
 
 # チップに入れる：どちらも、土台の下のはしを y62・左のはしを x−56（g64、置くマスの左上から。前の神殿の絵と同じ足もと）
 #   python3 tools/art/temple-ruin/temple_art.py          … チップに入れる
