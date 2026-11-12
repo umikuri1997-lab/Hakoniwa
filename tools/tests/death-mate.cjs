@@ -41,13 +41,13 @@ const {chromium}=require('playwright');
     griefTick();if(!h.grief||f.grief)throw Error('grief');
     for(const r of S.res)endAct(r);if(goMourn(h,bfs(h.x|0,h.y|0)))throw Error('mourn before burial');
     for(const L of [S.lost||[]])for(const q of L)delete q.unb;for(const j in S.dyn)if(S.obj[j]==='grave'){S.obj[j]='';delete S.dyn[j]}recount();
-    if(STATUE<0){const j=(CY-6)*W+CX;S.obj[j]='statue';recount()}
     if(!goMourn(h,bfs(h.x|0,h.y|0)))throw Error('no mourn');if(h.act.type!=='mourn')throw Error('act');if(goMourn(h,bfs(h.x|0,h.y|0))&&h.act.who!=='テスト')throw Error('twice');
-    h.act.stage='do';ACT.mourn.start(h,h.act);ACT.mourn.tick(h,Object.assign(h.act,{t:5}));if(!(S.tflw||[]).length)throw Error('flower');endAct(h);
+    const fk=h.act.obj;if(h.act.fl!=='clover'||fk<0||Math.hypot(fk%W-e.j%W,(fk/W|0)-(e.j/W|0))>MOURN_R*1.5)throw Error('spot '+JSON.stringify(h.act));h.act.stage='do';ACT.mourn.start(h,h.act);ACT.mourn.tick(h,Object.assign(h.act,{t:5}));if(S.obj[fk]!=='clover')throw Error('flower not planted');endAct(h);
+    /* 水のせいれい：そばに水がなければ、ゆり */const wq={elem:'water',j:e.j};const ws=mournSpot(wq);if(!ws||ws.id!=='lily')throw Error('water no-pond '+JSON.stringify(ws));S.ground[e.j+2]=1;recount();const ws2=mournSpot(wq);if(!ws2||ws2.id!=='lotus'||ws2.k!==e.j+2)throw Error('water pond '+JSON.stringify(ws2));S.ground[e.j+2]=0;recount();
     if(goneTalkName()!=='テスト')throw Error('talk name');const gi=CHATS.findIndex(c=>c.gone);if(gi<0)throw Error('no gone chat');
     let seen=0;for(let i=0;i<40;i++)if(CHATS[chatTopic(f,n)].gone)seen++;if(!seen)throw Error('gone chat never');
     const x=mkRes(S,'あたらしい','wood',CX+8.5,CY+.5);S.res.push(x);simNote(x);if(!x.simTo||x.simTo.m!==h.name)throw Error('sim');
-    return 'book「'+e.mem+'」 grief mourn flower chat'+seen+'/40 sim'})()`));
+    return 'book「'+e.mem+'」 grief mourn clover/lotus/lily chat'+seen+'/40 sim'})()`));
   if(errors.length)throw Error(errors.join('\n'));
   await browser.close();console.log('ok');
 })().catch(e=>{console.error(e);process.exit(1)});
