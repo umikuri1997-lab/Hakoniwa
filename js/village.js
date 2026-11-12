@@ -19,7 +19,7 @@ const CROPS={mugi:{name:'こむぎ',days:2,yield:1,desc:'2日で育つ。食料+
 const ALLRECIPES=[{out:'soup',need:{tomato:1,imo:1},time:107.1,el:'water'},{out:'bread',need:{mugi:2},time:84,el:'earth'},{out:'yakizakana',need:{fish:1},time:42,el:'fire'},{out:'yakiimo',need:{imo:1},time:35,el:'fire'},{out:'berryjuice',need:{berry:2},time:42,el:'water',st:'cooktable'},{out:'applejuice',need:{apple:1},time:42,el:'water',st:'cooktable'},{out:'salad',need:{tomato:2},time:63,el:'wood',st:'cooktable'}];/* time：料理にかかる時間（分）。el：その料理を作る属性（その属性のせいれいだけが作る）。st：作る家具（なければかまど） */
 const COOKST=new Set(['oven','cooktable']),dishSt=R=>R.st||'oven';/* 料理をする家具 */
 const repairTime=a=>a.re?30:20;/* 修理にかかる時間（分）：建て直しは30、ふつうの修理は20（ゲームの処理と、ゲージの表示で同じものを使う） */
-function cookTime(r,ov){const R=RECIPES.find(x=>x.out===(r.cing&&r.cing.rec))||{time:21};return R.time*ovenMul(ov)/(ov!=null?1+.1*spotN(ov,'kitchen','pan'):1)}/* キッチン：料理の速さ+10% *//* 料理にかかる時間（ゲームの処理と、ゲージの表示で同じものを使う） *//* 料理でふくれるおなか（v）は、FOODS に実数で書く（使った材料の合計と同じ） */let RECIPES=ALLRECIPES;soupFilter();/* time：料理にかかる時間（レシピごと） */
+function cookTime(r,ov){const R=RECIPES.find(x=>x.out===(r.cing&&r.cing.rec))||{time:21};return R.time*ovenMul(ov)/(ov!=null?1+.1*spotN(ov,'kitchen','pan'):1)}/* すいじ場：料理の速さ+10% *//* 料理にかかる時間（ゲームの処理と、ゲージの表示で同じものを使う） *//* 料理でふくれるおなか（v）は、FOODS に実数で書く（使った材料の合計と同じ） */let RECIPES=ALLRECIPES;soupFilter();/* time：料理にかかる時間（レシピごと） */
 function syncFood(){let n=0;for(const k in S.fs)n+=S.fs[k]||0;S.food=n}
 function addFood(k,n){S.fs[k]=(S.fs[k]||0)+n;syncFood()}
 function takeFood(n,pref){let got=[];const keys=Object.keys(S.fs).filter(k=>S.fs[k]>0);if(pref==='raw')keys.sort((a,b)=>(FOODS[a].v-FOODS[b].v));else keys.sort((a,b)=>FOODS[b].v-FOODS[a].v||Math.random()-.5);
@@ -71,12 +71,12 @@ function nearLotus(r){const x0=r.x|0,y0=r.y|0;for(let y=y0-2;y<=y0+2;y++)for(let
 const SEATS=['chair','stool','achair','bench','takebench','pouf','sofa1'],BENCHES=new Set(['bench','takebench']);/* BENCHES：休けい（rest）ができるベンチ */function fSpot(j){const t=typeAt(j);return !!t&&SEATS.includes(t)&&spotW(j)>=0}/* 水のすぐとなり（上下左右）の椅子＝釣りスポット（椅子にすわって釣る） */
 /* スポット：組み合わせて置くと、効果が少し上がる（物どうしがまわり3マス以内）。main のまわりに need がそろうとできる */
 const SPOTS=[
-  {k:'dining',n:'ダイニング',main:o=>o==='table',need:[[o=>SEATS.includes(o),2]],how:'食卓と、いす2つ',eff:'ここで食べたときのパワー+10%'},
+  {k:'dining',n:'しょくたく',main:o=>o==='table',need:[[o=>SEATS.includes(o),2]],how:'食卓と、いす2つ',eff:'ここで食べたときのパワー+10%'},
   {k:'tsuriba',n:'つり場',main:(o,j)=>SEATS.includes(o)&&spotW(j)>=0,need:[],how:'水べのいす',eff:'つりをする確率20%'},/* 水べのいすは、それだけでスポット（FISHPS） */
   {k:'fishspot',n:'つりスポット',main:(o,j)=>SEATS.includes(o)&&spotW(j)>=0,need:[[o=>o==='parasol',1]],how:'水べのいすと、パラソル',eff:'つりをする確率+10%'},
   {k:'park',n:'ちかばの公園',main:o=>o==='swing',need:[[o=>o==='sandbox',1]],how:'ブランコと、砂場',eff:'ここで遊ぶと、たのしさ+10%'},
   {k:'park2',n:'たのしい公園',main:o=>o==='swing',need:[[o=>o==='sandbox',1],[o=>o==='seesaw',1]],how:'ブランコと、砂場と、シーソー',eff:'ここで遊ぶと、たのしさ+20%'},
-  {k:'kitchen',n:'キッチン',main:o=>o==='oven'||o==='cooktable',need:[[o=>o==='sink',1],[o=>o==='tub',1]],how:'かまどか調理台と、流し台と、水おけ',eff:'料理の速さ+10%'},
+  {k:'kitchen',n:'すいじ場',main:o=>o==='oven'||o==='cooktable',need:[[o=>o==='sink',1],[o=>o==='tub',1]],how:'かまどか調理台と、流し台と、水おけ',eff:'料理の速さ+10%'},
   {k:'yasumi',n:'やすみば',main:o=>BENCHES.has(o),need:[[o=>o==='parasol',1]],how:'ベンチと、パラソル',eff:'ベンチで休むと、つかれのとれ方+10%'},
   {k:'camp',n:'キャンプ場',main:o=>o==='campfire',need:[[o=>BENCHES.has(o),2]],how:'たき火と、ベンチ2つ',eff:'たき火で遊ぶと、たのしさ+10%'},
   {k:'funsui',n:'ふんすいひろば',main:o=>o==='fountain',need:[[o=>BENCHES.has(o),1],[(o,q)=>FLOWERS.has(o)&&!isBud(q),2]],how:'噴水と、ベンチと、花2つ',eff:'噴水で遊ぶと、たのしさ+10%'},
@@ -88,7 +88,7 @@ const SPOTS=[
   {k:'hana',n:'花のベンチ',main:o=>BENCHES.has(o),need:[[(o,q)=>FLOWERS.has(o)&&!isBud(q),3]],how:'ベンチと、花3つ',eff:'ベンチで休むと、たのしさ+10%'},
   {k:'wa',n:'和の庭',main:o=>BENCHES.has(o),need:[[o=>o==='shishiodoshi',1],[o=>o==='toro',1]],how:'ベンチと、ししおどしと、石どうろう',eff:'ベンチで休むと、つかれのとれ方+15%'},
   {k:'chaya',n:'茶屋',main:o=>o==='takebench',need:[[o=>o==='noren',1],[o=>o==='takeakari',1]],how:'竹のベンチと、のれんと、竹あかり',eff:'ベンチで休むと、たのしさ+15%'},
-  {k:'monooki',n:'ものおき',main:o=>o==='mbox',need:[[o=>o==='crate',1]],how:'素材箱と、木箱',eff:'素材をしまう速さ+10%'},
+  {k:'monooki',n:'資材おき場',main:o=>o==='mbox',need:[[o=>o==='crate',1]],how:'素材箱と、木箱',eff:'素材をしまう速さ+10%'},
   {k:'buranko',n:'ぶらんこの庭',main:o=>o==='swing',need:[[o=>BENCHES.has(o),1],[(o,q)=>FLOWERS.has(o)&&!isBud(q),2]],how:'ブランコと、ベンチと、花2つ',eff:'ブランコで遊ぶと、たのしさ+10%'},
   {k:'doronko',n:'どろんこひろば',main:o=>o==='sandbox',need:[[o=>o==='tub',1]],how:'砂場と、水おけ',eff:'砂場で遊ぶと、たのしさ+10%'},
   {k:'mori',n:'もりのゆうぐ',main:o=>o==='swing',need:[[(o,q)=>(o==='tree'||o==='fruit')&&!isBud(q)||o==='ntree',2]],how:'ブランコと、木か果物の木2本',eff:'ブランコで遊ぶと、たのしさ+10%'},
