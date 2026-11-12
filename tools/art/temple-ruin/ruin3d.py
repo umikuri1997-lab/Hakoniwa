@@ -113,14 +113,14 @@ if __name__=='__main__':
     print('bad',shots(out))
 
 def sheet(out):
-    """絵をたのむときにわたす1まい：左がお手本のキューブ、まん中がこわれた神殿の3D（角度・大きさ・置く場所）、右がいまの神殿の絵（直したあとの神殿。デザインのお手本）。どれも1マス128で同じ大きさ"""
+    """絵をたのむときにわたす1まい：左からお手本のキューブ・こわれる前の神殿の3D・こわれた神殿の3D（角度・大きさ・置く場所）・いまの神殿の絵（デザインのお手本）。どれも1マス128で同じ大きさ"""
     import json,re
     ROOT=os.path.join(HERE,'..','..','..');s=open(os.path.join(ROOT,'chips.js'),encoding='utf8').read()
     pages=json.loads(re.search(r'window.CHIPA=(\[[^\]]*\])',s).group(1));d=json.loads(re.search(r'"statue":(\{[^}]*\]\]\})',s).group(1))
     p,x,y,w,h=d['f'][0];art=Image.open(os.path.join(ROOT,pages[p])).convert('RGBA').crop((x,y,x+w,y+h));art=art.resize((w*2,h*2),Image.NEAREST)
-    a=Image.open(f'{out}/ruin_full.png').convert('RGBA');b=grid_bg(EXT,(1,1));b.alpha_composite(art,(int((0-EXT[0])*128)+d['ax']*2,int((0-EXT[2])*128)+d['ay']*2))
+    a0=Image.open(f'{out}/intact_full.png').convert('RGBA');a=Image.open(f'{out}/ruin_full.png').convert('RGBA');b=grid_bg(EXT,(1,1));b.alpha_composite(art,(int((0-EXT[0])*128)+d['ax']*2,int((0-EXT[2])*128)+d['ay']*2))
     cube=Image.open(os.path.join(HERE,'..','ref','view-cube.png')).convert('RGBA');k=a.height/cube.height;cube=cube.resize((int(cube.width*k),a.height),Image.BOX)
-    G=40;sh=Image.new('RGBA',(cube.width+a.width+b.width+G*4,a.height+G*2),(255,255,255,255));X=G
-    for im in(cube,a,b):sh.alpha_composite(im,(X,G));X+=im.width+G
+    G=40;L=[cube,a0,a,b];sh=Image.new('RGBA',(sum(im.width for im in L)+G*(len(L)+1),a.height+G*2),(255,255,255,255));X=G
+    for im in L:sh.alpha_composite(im,(X,G));X+=im.width+G
     sh.convert('RGB').save(f'{out}/sheet.png');return sh.size
 if __name__=='__main__' and len(sys.argv)<=2:print('sheet',sheet(sys.argv[1] if len(sys.argv)>1 else HERE))
