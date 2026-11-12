@@ -2,7 +2,7 @@
 
 はじめからある、こわれた神殿（`statueb`）と、せいれいが直したあとの神殿（`statue`）を、同じ角度・同じ大きさで1回にたのむ。
 わたす絵は1まい：`sheet.png`（`python3 tools/art/temple-ruin/ruin3d.py` で作る）。左から、お手本のキューブ・こわれる前の神殿の3D・こわれた神殿の3D（角度・大きさ・置く場所のお手本）・いまの神殿の絵（デザイン・色・タッチのお手本）。黄色いわくが神殿のマス（像のマス）。
-もらったら：3Dのお手本と同じはば・同じ下のはしにそろえて、こわれた神殿は `python3 tools/art/temple-ruin/ruin_chip.py <もらった絵>` でチップにする（いまは3Dの絵をそのままチップにしている）。こわれる前の神殿は、いまの `statue` のチップとさしかえる。
+もらった絵は `image.png`。`python3 tools/art/temple-ruin/temple_art.py` で、`tools/art/pixdown.py` でちぢめて、こわれる前（`statue`）・こわれた神殿（`statueb`）のチップに入れる（土台のはばを176ドットにそろえる）。
 
 ```
 Use the attached reference image as a strict guide. It is one sheet with four panels. 1st panel: a view cube. 2nd panel: a 3D block-out of the temple when it is whole. 3rd panel: a 3D block-out of the same temple when it is old and partly collapsed. The two block-outs show the exact camera angle, size, position and parts. 4th panel: the current artwork of the whole temple; it shows the design, materials, colors and painting style, but NOT the camera angle. The faint grid squares are one tile each, and the yellow frame is the tile the temple stands on (the middle of the temple).
