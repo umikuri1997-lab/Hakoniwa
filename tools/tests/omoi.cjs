@@ -64,6 +64,6 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict');
  /* もっと古いセーブ（farmFirst1 のあとで名前で読みかえた物）はずらさない */
  assert.deepEqual(await run(`(()=>{const st={world:0,flags:{},quest:questIndexOf('wood6'),qStory:questIndexOf('lv5')};migrateOmoiIns(st,false);return [QUESTS1[st.quest].id,QUESTS1[st.qStory].id]})()`),['omoi','lv5']);
  /* 御神木の前のひとこと：同じ子が4回話しても、同じ場面の2人でも、同じセリフにならない */
- assert(await run(`(()=>{const [f,n,h,m,k]=S.res,w1=mkRes(S,'木A','wood',1,1),w2=mkRes(S,'木B','wood',2,2);S.res.push(w1,w2);const a=[1,2,3,4].map(()=>omoiLine(f,n)[1]),b=[omoiLine(w1,w2)[1].replace('木B','X'),omoiLine(w2,w1)[1].replace('木A','X')];S.res.length-=2;return new Set(a).size===4&&b[0]!==b[1]&&!a.concat(b).some(t=>t.includes('{P}'))})()`),'omoi lines do not repeat');
+ assert(await run(`(()=>{const [f,n,h,m,k]=S.res,w1=mkRes(S,'木A','wood',1,1),w2=mkRes(S,'木B','wood',2,2);S.res.push(w1,w2);S.flags.fresh={};const a=[1,2,3,4].map(()=>omoiLine(f,n)[1]),b=[omoiLine(w1,w2)[1].replace('木B','X'),omoiLine(w2,w1)[1].replace('木A','X')];S.res.length-=2;return new Set(a).size===4&&b[0]!==b[1]&&!a.concat(b).some(t=>t.includes('{P}'))})()`),'omoi lines do not repeat');
  assert.deepEqual(errors,[]);console.log('omoi ok');await browser.close();
 })().catch(e=>{console.error(e);console.error('ERRS',globalThis.__errs);process.exit(1)});
