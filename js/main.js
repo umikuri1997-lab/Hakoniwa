@@ -97,9 +97,12 @@ function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
 }
 const dayNoOf=s=>Math.floor((s.t-(s.hold||0))/1440)+1;
 $('#mSnd').onclick=()=>{const on=!(SND.bgm||SND.sfx);setSnd('bgm',on);setSnd('sfx',on);showMaps()};
-$('#mBack').onclick=()=>{$('#maps').hidden=true;$('#title').hidden=false};
+$('#mBack').onclick=()=>{$('#maps').hidden=true;$('#title').hidden=false;titleCont()};
 $('#tStart').onclick=()=>{audioInit();curSong=wantSong='opening';step=0;nextT=AC?AC.currentTime+.15:0;sfx('furn');const t0=Date.now(),go=()=>{if(KV.ready()||Date.now()-t0>5000)showMaps();else setTimeout(go,150)};if(!KV.ready())toast('セーブを読みこみ中…');go()};/* クラウドのセーブを待ってから、土地をえらぶ */
-$('#tSlot').onclick=()=>{sfx('tap');slotPop(false)};/* タイトル：セーブスロットからよみこむ */
+function lastPlayed(){/* さいごにあそんだステージ（なければ null） */refreshStageInfo();const top=[0,1,FREE].map(w=>[w,LIVE[w]&&LIVE[w].introSeen?coverLast(w):0]).filter(a=>a[1]>0).sort((a,b)=>b[1]-a[1])[0];return top?top[0]:null}
+function titleCont(){/* タイトルの「つづきから」：前にあそんだステージがあるときだけ出す */const t0=Date.now(),go=()=>{if(!KV.ready()&&Date.now()-t0<5000)return setTimeout(go,150);let w=null;try{w=lastPlayed()}catch(e){}const c=$('#tCont'),on=w!=null;if(c.hidden===on){c.hidden=!on;$('#tStart').classList.toggle('pri',!on);window.dispatchEvent(new Event('resize'))}};go()}
+$('#tCont').onclick=()=>{audioInit();sfx('tap');const w=lastPlayed();if(w==null)return titleCont();const L=loadStage(w);if(!L)return titleCont();continueGame(L)};/* 前にあそんだマップを、そのまま開く */
+titleCont();
 window.__ldDone=1;clearInterval(window.__ldT);$('#tLoad').hidden=true;if(window.__ldWant&&window.__ldWant())$('#tStart').onclick()/* 読みこみ中に「はじめる」をおしていたら、そのまま進む */
 
 /* ---------- ループ ---------- */

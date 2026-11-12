@@ -513,13 +513,13 @@ function renderSheet(){
       body.appendChild(sec)}
   }else if(sheet==='menu'){
     T.textContent=WORLDS[WD].name;
-    const MI=[['oracle','leaf','おつげ'],['manual','book','ひでんのしょ'],['goal','target','目標'],['record','memo','思い出帳'],['maps','compass','マップ選択'],['zukan','zukan','図鑑'],['save','box','セーブ'],['settings','gear','設定'],['support','cup','応援する']];
+    const MI=[['oracle','leaf','おつげ'],['manual','book','ひでんのしょ'],['goal','target','目標'],['record','memo','思い出帳'],['maps','compass','マップ選択'],['zukan','zukan','図鑑'],['settings','gear','設定'],['support','cup','応援する']];
     const sub=MI.find(m=>m[0]===sheetArg);
     if(!sub){/* メニューはアイコンを並べるだけ。タップで中身を開く */
       body.appendChild(el(`<div class="mtags"><span class="mtag">${pxi('grass')}みどりのマス <b>${GRASSN}</b></span><span class="mtag">${pxi('house')}村レベル <b>${S.lv}</b></span><span class="mtag">${pxi('spirit')}せいれい <b>${S.res.length}</b>人</span></div>`));
       const g=el('<div class="mgrid"></div>');
       for(const[k,ic,nm]of MI){const b=el('<button class="mtile"><span class="mi"></span><span class="mn"></span></button>');b.querySelector('.mi').innerHTML=pxi(ic);b.querySelector('.mn').textContent=nm;b.dataset.menu=k;
-        b.onclick=()=>{sfx('tap');if(k==='manual')return openSheet('manual');if(k==='maps'){save();closeSheet();return showMaps()}if(k==='save'){closeSheet();return slotPop(true)}openSheet('menu',k)};g.appendChild(b)}
+        b.onclick=()=>{sfx('tap');if(k==='manual')return openSheet('manual');if(k==='maps'){save();closeSheet();return showMaps()}openSheet('menu',k)};g.appendChild(b)}
       body.appendChild(g);return}
     T.textContent=sub[2];
     sheetBack();

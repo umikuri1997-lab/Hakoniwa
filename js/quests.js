@@ -334,7 +334,17 @@ const HOWK=n=>[[GOD,GVOICE()+backWhen(n)+n+'は、きっともどってくるぞ
 /* 「聞こえるかの？」は、会話の中でカミサマがはじめて話す行にだけつける */
 function gvOnce(L){if(!L)return L;const v='……聞こえるかの？ 遠くから、声だけ届けておるぞい。';let first=true;return L.map(l=>{if(l[0]!==GOD||typeof l[1]!=='string')return l;const had=l[1].includes(v);let t=l[1].replace(v,'');if(first){first=false;if(!godHere()){const m=t.match(/^#[^|]*\|/),h=m?m[0]:'';t=h+v+t.slice(h.length)}}else if(!had)return l;const c=l.slice();c[1]=t;return c})}
 function deathTalk(r){return gvOnce(deathTalk0(r))}
-function deathTalk0(r){if(WD)return null;const F=S.flags,n=r.name,tell=k=>{const t=!F.deathTold;F.deathTold=true;return t?[[GOD,'この土地に深くなじんだせいれいは、消えても土地とのつながりが残る。それをたどって、また帰ってこられるんじゃ。']].concat(HOWK(n)):[]};
+function deathTalkMate(r,m){/* なかよしの子が話す：おどろき → 見た会話の思い出 → かなしみ。そのあとに、もどってこられるか（自然にかえるか）の説明だけ */const F=S.flags,n=r.name,L=deathMateLines(m,r),T=x=>[m.name,chatTone(x,m,2)],G0=WD===0,NH=G0&&sevHere('N')&&m.name!==MINA;
+  if(isKey(n)){if(n===POKO)F.lostF=1;else if(n===MINA)F.lostN=1;else if(n===keyName('fire')&&F.guard){F.lostH=1;if(m.name===POKO)L[2]=[POKO,'#sigh|ぼく、守るって言ったのに……！ 葉っぱのまもり、もっと早く使えてたら……。']}else F['lostK'+r.elem]=1;
+    if(!G0){F.deathTold=true;return L.concat([T('#think|……'+backWhen(n)+n+'は、もどってくるんだよね。……ずっと、待ってるからね。')])}
+    const first=!F.deathTold;F.deathTold=true;
+    if(first)L.push(n===POKO&&(NH||m.name===MINA)?[MINA,'#think|……フタバは、この土地にすっかりなじんでるからねぇ。消えても、土や草とのつながりが残ってるんだぁ。それをたどって、帰ってこられるよぉ。']:[GOD,'この土地に深くなじんだせいれいは、消えても土地とのつながりが残る。それをたどって、また帰ってこられるんじゃ。']);
+    return L.concat(HOWK(n),[T('#think|……うん。帰ってくるまで、待ってるからね。')])}
+  const m2=!F.death2Told;F.death2Told=true;if(G0)F.lostA=1;
+  if(m2){if(G0){const NN=NH||m.name===MINA;L.push(NN?[MINA,'#think|……ふつうの子はねぇ、消えると、自然にかえるんだよぉ。自分の力だけでは、戻ってこられないんだぁ。']:[GOD,'#think|……ふつうのせいれいは、消えると自然にかえる。自分の力だけでは、戻ってこられんのじゃ。'],NN?[MINA,'#think|……あのねぇ。オオカゲが持ってる「めぶきのしずく」っていう、いのちの力があったら、またあえるかもしれないんだぁ。']:[GOD,'#think|……じゃが、オオカゲがためこんだ「めぶきのしずく」があれば、もう一度あえるかもしれん。あきらめるのは、まだ早いぞい。'])}
+    else{const D=DEATHL2[elemKey(m)];if(D)L.push([m.name,D(n)[1]])}}
+  return L.concat([T('#cry|……'+n+'のこと、ずっと、わすれないよ。')])}
+function deathTalk0(r){const mt=bestMate(r);if(mt&&!mt.hidden&&S.res.includes(mt))return deathTalkMate(r,mt);/* なかよしの子がいれば、その子が話す */if(WD)return null;const F=S.flags,n=r.name,tell=k=>{const t=!F.deathTold;F.deathTold=true;return t?[[GOD,'この土地に深くなじんだせいれいは、消えても土地とのつながりが残る。それをたどって、また帰ってこられるんじゃ。']].concat(HOWK(n)):[]};
   if(n===POKO&&!F.lostF){const L=sevLines([['N','#worry hush|……フタバ、いなくなっちゃったねぇ。',1],['N','フタバは、この土地にすっかりなじんでるからねぇ。消えても、土や草とのつながりが残ってるんだぁ。それをたどって、帰ってこられるよぉ。',1],['N','ぼくがいるからねぇ。フタバが帰ってくるまで、いっしょに村を守ろうねぇ。',1],['H','#sigh|あいつ、最後までだれかを守ろうとしてたぜ。',1],['M','神殿に力を集めましょう。また会えるはずです。',1],['K','帰ってきたら、ちゃんと迎えてあげよう。',1]]);if(!L)return null;F.lostF=1;F.deathTold=true;return L.concat(HOWK(n))}
   if(!sevHere('F'))return null;
   if(n===MINA&&!F.lostN){F.lostN=1;F.deathTold=true;return sevLines([['F','#think hush|……ノドカ？ ねえ、ノドカ！'],['F','#think|……いつもみたいに、「だいじょうぶだよぉ」って言ってよ……。'],['F','#think|……やだよ。ぼく、またひとりになるの……？'],['G',GVOICE()+'フタバ。ノドカは、この土地に深くなじんでおる。土地とのつながりをたどって、神殿から帰ってこられるんじゃ。'],['G',backWhen(MINA)+'ノドカは、きっともどってくるぞい。'],['F',backFirst(MINA)?'#think|……ほんと？ じゃあ、ぼく……明日まで待ってる。':'#think|……ほんと？ じゃあ、ぼく……帰ってくるまで待ってる。']])}
