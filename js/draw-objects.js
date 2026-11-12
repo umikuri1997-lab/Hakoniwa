@@ -103,6 +103,14 @@ function drawConn(c,id,x,y,i,now){const C=window.CHIPS;if(!C)return false;const 
   if(!vm)return drawChip(c,H,id,x,y,now,i);if(hm&&C[id+':m'+m])return drawChip(c,K(id+':m'+m),id,x,y,now,i);/* 角・つなぎ目の絵があれば、部品を重ねずにそれを使う */if(!hm)return drawChip(c,V,id,x,y,now,i);const r=CONNR[id]||'HV';
   if(r==='VH'){if(!drawChip(c,V,id,x,y,now,i))return false;return drawChip(c,H,id,x,y,now,i)}
   if(!drawChip(c,H,id,x,y,now,i))return false;if(r==='Hclip'){c.save();c.beginPath();if(vm&4)c.rect(x-64,y-64,192,66);if(vm&8)c.rect(x-64,y+26,192,96);c.clip();drawChip(c,V,id,x,y,now,i);c.restore();return true}return drawChip(c,V,id,x,y,now,i)}
+const BNOTE=[[26,34],[48,35],[70,34],[37,57],[59,56]];/* 依頼ボードの紙の場所（ボードの絵の左上から、1マス64ドットの数。板の中は x22〜88・y32〜78） */
+function boardNotes(c,x,y){/* 依頼ボード：はられた依頼の数だけ、紙を板にかさねる（紙は14×18ドット。64ドットの細かさで、整数のドット） */
+  if(!S||!S.orders)return;const n=Math.min(S.orders.length,BNOTE.length,boardMax()),ox=x+28,oy=y-27.5,P=(a,b,w,h,col)=>{c.fillStyle=col;c.fillRect(ox+a/2,oy+b/2,w/2,h/2)};
+  for(let k=0;k<n;k++){const a=BNOTE[k][0],b=BNOTE[k][1];
+    P(a+2,b+2,14,18,'rgba(92,58,34,.45)');/* 板に落ちるかげ */
+    P(a,b,14,18,'#d3c096');P(a+1,b+1,12,16,'#f6ecd6');P(a+1,b+1,12,1,'#fffaf0');/* ふち・紙・上のふちの明るい線 */
+    P(a+3,b+6,8,1,'#cdb98f');P(a+3,b+9,8,1,'#cdb98f');P(a+3,b+12,6,1,'#cdb98f');P(a+3,b+15,7,1,'#cdb98f');/* 文字の線 */
+    P(a+6,b-1,3,3,'#a8452f');P(a+6,b-1,1,1,'#e08a6a');P(a+7,b+2,1,1,'#6e3a28')}}/* 赤いピン */
 function berryOn(c,x,y){const bi=emoImg('🫐');if(!bi)return;for(const[cx,cy]of[[7,13.5],[25,19.5]]){const iw=14,ih=iw*bi.height/bi.width;c.drawImage(bi,x+cx-iw/2,y+cy-ih/2,iw,ih)}}/* 実ったベリーの茂み：運ぶときと同じベリーの絵を2つ、前の青い実と同じ位置・大きさ（はば14）にのせる */
 const PCH=new Set(['tree','ntree','fruit','deadtree','berry','clover','bellf','salvia','lily','lotus','statue','volcano','hedge']);/* 植物などは、ようすで絵をえらぶ */
 function plantChip(id,i,g){const C=window.CHIPS;if(!C)return null;if(!ICON&&i!=null&&S&&PLANTS.includes(id)&&isBud(i))return (id==='lotus'&&C['bud~w'])||C.bud||null;/* 芽（ハスは水の上なので、土のない芽） */
@@ -161,7 +169,7 @@ function drawObj(c,id,x,y,i,g,now){
   if(id==='onsen'&&!ICON&&!c._chip&&window.CHIPS&&CHIPS['onsen#1']){const ch=Math.floor(performance.now()/900)%2?CHIPS['onsen#1']:CHIPS.onsen;if(drawChip(c,ch,id,x,y,now,i))return}/* 露天ぶろ：湯気がゆらぐ */
   if(id==='bell'&&!ICON&&!c._chip&&window.CHIPS&&CHIPS['bell#1']){const t=performance.now()-BELLRING,ch=t<4500&&Math.floor(t/260)%2?CHIPS['bell#1']:CHIPS.bell;if(drawChip(c,ch,id,x,y,now,i))return}/* 村の鐘：朝に鳴るあいだ、ゆれる */
   if(id==='jar'&&!ICON&&i!=null&&!c._chip&&window.CHIPS&&CHIPS['jar~e']&&!(((S.dyn[i]||{}).w||0)>0)){if(drawChip(c,CHIPS['jar~e'],id,x,y,now,i))return}/* みずがめ：水がなくなったら、空の絵 */
-  if(!c._chip&&!c._win&&!SEATS.includes(id)&&!PCH.has(id)&&!DOORCH.has(id)&&id!=='farm'){const ch=chipOf(id,i);if(ch&&drawChip(c,ch,id,x,y,now,i)){if(id==='hotstone'&&!ICON)hotSteam(c,x,y,now,i);return}}/* ドット絵があれば、それを使う（いすは、つりざおをかいてから下で） */
+  if(!c._chip&&!c._win&&!SEATS.includes(id)&&!PCH.has(id)&&!DOORCH.has(id)&&id!=='farm'){const ch=chipOf(id,i);if(ch&&drawChip(c,ch,id,x,y,now,i)){if(id==='hotstone'&&!ICON)hotSteam(c,x,y,now,i);if(id==='board'&&!ICON)boardNotes(c,x,y);return}}/* ドット絵があれば、それを使う（いすは、つりざおをかいてから下で） */
   if(BL[id]&&BL[id].cs&&!ICON&&!c._cs){const k=BL[id].cs;c.save();c.translate(x+16,y+20);c.scale(k,k);c.translate(-x-16,-y-20);c._cs=1;drawObj(c,id,x,y,i,g,now);c._cs=0;c.restore();return}/* ラグは、絵だけ大きく（判定はそのまま） */
   if(!ICON&&i!=null&&S&&PLANTS.includes(id)&&isBud(i)){c.fillStyle='rgba(0,0,0,.18)';c.beginPath();c.ellipse(x+16,y+27,7,2.5,0,0,7);c.fill();c.fillStyle='#6fbf5a';c.fillRect(x+15,y+17,2,10);c.beginPath();c.ellipse(x+11,y+18,5,2.6,-.5,0,7);c.ellipse(x+21,y+18,5,2.6,.5,0,7);c.fill();return}/* 芽 */
   /* 向きをかえた家具は左右反転 */

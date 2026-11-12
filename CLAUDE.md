@@ -131,7 +131,7 @@
 
 ## 村・家・家具
 - 神殿は「おく」で建てない。どのステージ（これからのステージも）でも、はじめから、こわれた神殿（`statueb`）がある（`templeRuinPlace`：まん中の道の北のはしの先。水などで置けなければ、そのよこ）。「みる」でタップすると、せいれいが直して神殿になる（`templeRuinTap`）。古いセーブは `S.flags.ruinTemple1`。絵のお手本・プロンプトは `tools/art/temple-ruin/`。
-- 依頼ボード（`board`）は神殿の右の2×1マス（`sz:[2,1]`。右のマスは `part`。神殿のあと `templeRuinCells` の5マス）。絵は `tools/art/board2/temple-set.png` の中のボードを BOX で 193×155（g64、ax 12・ay −93）にちぢめた物。タップは絵のわく（`input.js` の `BOARD`）。前のセーブは `S.flags.board2x1`（`boardMigrate`：右どなりの物はもちものへ）。
+- 依頼ボード（`board`）は神殿の右の2×1マス（`sz:[2,1]`。右のマスは `part`。神殿のあと `templeRuinCells` の5マス）。絵は `tools/art/board2/temple-set.png` の中のボードを BOX で 145×117（g64、ax 56・ay −55）にちぢめた物。タップは絵のわく（`input.js` の `BOARD`）。前のセーブは `S.flags.board2x1`（`boardMigrate`：右どなりの物はもちものへ）。はられた依頼の数（はじめ3まい・広げたあと5まい、`boardMax`）だけ、紙の絵を板にかさねる（`boardNotes`・`BNOTE`：コードで描く、1マス64ドットの整数のドット。紙は14×18、赤いピンつき）。
 - 朽ちた壁：家の壁（`DECAYW`。石の塀・ドアはのぞく）は、じょうぶさが半分以下（`decayed`）だと朽ちた壁。家の壁にならない（`findHouses`）。絵はふつうの壁にひびをかさねる（`drawCrack`、チップ `crack#0〜5`・たて `crack:v#0〜5`。となりと同じ柄にしない、なければコードの仮の絵）。直すともどる。コワイノにたたかれて朽ちたら `decayCheck`。
 - クモの巣（`S.web`：マス→0左の角・1右の角）：家の中の1つで住み心地−5（`WEBCOMF`）。プレイヤーはこわせない。「みる」でタップ（`webTap`→`S.webq`）すると、せいれいがはらう（`sweep`）。毎朝、家ごとに10%で1つ（3つまで、`webMorning`）。チップ `web#0・1`。
 - お屋敷は右上のエリア（`MANSION_AREA`）。場所をきめるとき、まわりの段差を低くそろえる（`fogFlatten`）。晴れると、朽ちた壁・なくなった壁・こわれた家具・クモの巣のボロボロのお屋敷。

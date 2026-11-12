@@ -33,7 +33,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict'),fs=r
  /* この土地・ぜんぶ */
  await run(`(()=>{grecOf().set('swing',0);grecOf().set('fountain',0);S.recipes.swing=true;S.lv=10;return 1})()`);
  assert.equal(await run(`[otherLand('swing'),otherLand('bed'),otherLand('takebench')].join()`),'true,false,false');
- await run(`(()=>{RECALL=false;craftTab='遊び';openSheet('craft');return 1})()`);
+ await run(`(()=>{RECALL=false;craftTags=['遊び'];openSheet('craft');return 1})()`);
  let ct=await page.textContent('#sheetBody');assert.ok(ct.includes('この土地')&&!ct.includes('ブランコ'));await shot('craft-here');
  await page.click('.recsw .ctab:nth-child(2)');ct=await page.textContent('#sheetBody');assert.ok(ct.includes('ブランコ'));await shot('craft-all');
  const rad=await run(`[...document.querySelectorAll('#sheetBody *')].filter(n=>parseFloat(getComputedStyle(n).borderRadius)>0&&n.offsetParent).length`);assert.equal(rad,0);
