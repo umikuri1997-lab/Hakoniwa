@@ -397,7 +397,7 @@ const isWatch=r=>r.elem==='fire'&&!nightClear()/* コワイノをぜんぶ倒し
 let GREETT=0;
 function passGreet(dt){GREETT+=dt;if(GREETT<1)return;GREETT=0;if(isDark()||enemyLive())return;const L=S.res.filter(r=>!r.hidden&&r.act&&r.act.stage==='walk'&&r.path&&r.path.length>0&&!(r.greetT>S.t));
   for(let a=0;a<L.length;a++)for(let b=a+1;b<L.length;b++){const p=L[a],q=L[b];if(p.greetT>S.t||q.greetT>S.t)continue;if(Math.abs(p.x-q.x)+Math.abs(p.y-q.y)>1.5)continue;
-    p.greetT=q.greetT=S.t+90;if(Math.random()<.4){p.waveU=q.waveU=S.t+2.5;p.face=q.x<p.x?-1:1;q.face=p.x<q.x?-1:1}}}
+    p.greetT=q.greetT=S.t+90;if(Math.random()<.4){p.waveU=q.waveU=p.greetStop=q.greetStop=S.t+2.5;p.face=q.x<p.x?-1:1;q.face=p.x<q.x?-1:1}}}/* 立ちどまって、手をふってから歩きだす */
 const hostileNow=r=>S.enemies.some(e=>e.spawned&&!e.dead&&!e.flee&&foeAt(e,r));/* コワイノが、自分の3マス以内か、自分のいる家に来たときだけ、こわがる */
 function goShiver(r,G){/* 家の中（なければ、いまの場所）で、ふるえる */let k=-1;if(HOUSES.length){const hs=new Set();for(const h of HOUSES)for(const q of h.inside)hs.add(q);k=nearest(G,j=>hs.has(j)&&walk(j)&&!HOME_DOORS.has(S.obj[j]),200)}if(k<0)return withFlee(r,fleeAlarm,G);/* 家がなければ、逃げつづける */startAct(r,G,'shiver',k,{run:true});return true}
 function goSleep(r,G,run){
