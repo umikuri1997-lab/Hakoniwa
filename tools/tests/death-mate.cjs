@@ -48,6 +48,12 @@ const {chromium}=require('playwright');
     let seen=0;for(let i=0;i<40;i++)if(CHATS[chatTopic(f,n)].gone)seen++;if(!seen)throw Error('gone chat never');
     const x=mkRes(S,'あたらしい','wood',CX+8.5,CY+.5);S.res.push(x);simNote(x);if(!x.simTo||x.simTo.m!==h.name)throw Error('sim');
     return 'book「'+e.mem+'」 grief mourn clover/lotus/lily chat'+seen+'/40 sim'})()`));
+  /* よみがえったとき：なかよしとの再会の会話（さいごのひとこと・見た会話にこたえる）と、よろこぶ場面 */
+  await run(setup);
+  console.log('reunion',await run(`(()=>{const [f,n,h,a,w,t]=S.res;S.bond={};bondAdd(t,h,40);bondMemNote(t,h,CHATS.findIndex(c=>c.mate&&/星/.test(c.mem||'')));S.pendTalk={};die(t);const e=goneEntry('テスト');if(!e.lw)throw Error('no lw');
+    const q=mkRes(S,'テスト','wood',CX+3.5,CY+2.5);q.id=t.id;S.res.push(q);goneBack('テスト');q.reMate=h.name;reunite(q,[CX+3,CY+2]);if(q.reTalk!==h.name)throw Error('reTalk');
+    const L=reunionLines(q,h);if(L[0][0]!==h.name||L[1][0]!=='テスト'||!/星/.test(L[3][1]))throw Error(JSON.stringify(L));if(/ごめん|わる|わり|すまない/.test(e.lw)&&!/あやまった/.test(L[2][1]))throw Error('lw reply '+e.lw+' | '+JSON.stringify(L));
+    reunionJoy(q,h);if(!JOYU.has(h)||!JOYU.has(q))throw Error('joy');if(h.grief&&griefOn(h))throw Error('still grief');return L.map(l=>l[0]+'：'+l[1]).join(' / ')})()`));
   if(errors.length)throw Error(errors.join('\n'));
   await browser.close();console.log('ok');
 })().catch(e=>{console.error(e);process.exit(1)});

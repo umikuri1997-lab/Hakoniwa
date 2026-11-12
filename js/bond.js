@@ -198,7 +198,19 @@ function goMourn(r,G){if(!S||isNight()||hour()<7||hour()>=18||r.hunger<55||heldN
   const sp=mournSpot(e),tg=sp?sp.k:e.j,st=nearest(G,j=>walk(j)&&(j===tg&&!sp||adjOf(j,k=>k===tg)>=0),300);if(st<0)return false;e.vis=dayNo();startAct(r,G,'mourn',st,{who:e.name,obj:sp?sp.k:-1,fl:sp?sp.id:null});return true}
 function simNote(r){/* 新しく来た子が、消えたふつうの子と同じ属性 */if(!S||IS_STORY_REPLAY||!S.gone)return;const e=S.gone.slice().reverse().find(e=>!e.key&&!e.back&&!e.sim&&e.elem===r.elem&&e.mate&&e.mate!==r.name&&S.res.some(q=>q.name===e.mate));if(!e)return;e.sim=1;r.simTo={m:e.mate,d:e.name}}
 function griefTick(){const day=!isNight();for(const r of S.res){r.grief=griefOn(r);if(r.grief&&day&&r.act&&['idle','wander','rest'].includes(r.act.type)&&Math.random()<.04){const e=(S.gone||[]).slice().reverse().find(e=>e.mate===r.name&&!e.back);if(e)r.bubble='g:'+e.name}
+    reunionTick(r,day);
     if(r.simTo&&day&&!sevBusy()&&!r.hidden){const m=S.res.find(q=>q.name===r.simTo.m&&!q.hidden),d=r.simTo.d;delete r.simTo;if(m)talkOnce('sim'+r.id,[[m.name,chatTone('#teary|……'+r.name+'って、'+d+'に、ちょっと、にてるね。',m,0)],[r.name,chatTone('#surprise|……'+d+'？',r,1)],[m.name,chatTone('……ううん。なんでもないよ。……これから、よろしくね。',m,2)]],600)}}}
+/* 再会：よみがえった子 q と、なかよしだった子 m の会話（見た会話の思い出・さいごのひとことにこたえる）と、よろこぶ場面 */
+const RE_DIDL={eat:'#joy|また、いっしょにごはん食べようね。',chat:'#joy|話したいこと、いっぱいあるんだ。',guard:'#joy|こんどの夜も、いっしょに守ろうね。',tour:'#joy|また、村をいっしょに見てまわろうね。',any:'#joy|また、いっしょにいようね。'};
+function reunionLines(q,m){const e=goneEntry(q.name)||{},k=bondKey(q,m),T=(r,t,i)=>[r.name,chatTone(t,r,i).replace(/\$/g,(r===m?q:m).name)],L=[T(m,'#surprise hush|……$？ ……ほんとに、$なの……？',0),T(q,'#joy|……ただいま、$。',1)];
+  if(/ごめん|わる|わり|すまない/.test(e.lw||''))L.push(T(m,'#teary|さいごに、あやまったりして……もう、あんなこと言わないでね。',2));else L.push(T(m,'#teary|……ずっと、待ってたんだよ。',2));
+  const mi=((S.bondMem||{})[k]||[]),c=mi.length?CHATS[mi[mi.length-1]]:null;let back=c&&c.back;
+  if(!back){const did=(S.bondDid||{})[k]||'';if(/^play:/.test(did)&&BL[did.slice(5)])back='#joy|また、いっしょに'+BL[did.slice(5)].name+'で遊ぼうね。';else back=RE_DIDL[did]||RE_DIDL.any}
+  L.push(T(q,back,3),T(m,'#joy|……うん！ おかえり、$！',4));return L}
+function reunionJoy(q,m){/* 会話のあと：2人で向かい合ってはねる。まわりの子も、はくしゅ */if(!S.res.includes(q)||!S.res.includes(m))return;const now=performance.now();q.face=m.x>=q.x?1:-1;m.face=-q.face;for(const r of[q,m]){JUMP.set(r,now);JOYU.set(r,now+3000);r.bubble='💕';fxSpr('hearts',r.x*TS,(r.y-.7)*TS);addFloat(r.x,r.y-1.3,'おかえり！','#ffd6e6')}
+  sfx('good');for(const r of S.res)if(r!==q&&r!==m&&!r.hidden&&Math.hypot(r.x-q.x,r.y-q.y)<8){JUMP.set(r,now+300);JOYU.set(r,now+2500);r.bubble='👏'}bondAdd(q,m,3,'tour');logEv(m.name+'と'+q.name+'が、また会えた');memo('🌱',m.name+'と'+q.name+'が、また会えた')}
+function reunionTick(r,day){if(!r.reTalk||!day||sevBusy()||r.hidden)return;const m=S.res.find(x=>x.name===r.reTalk&&!x.hidden);delete r.reTalk;if(!m)return;const q=r,owner=S,key='ru'+q.id+'_'+dayNo();if(S.flags[key])return;
+  const L=reunionLines(q,m),P=S.pendTalk||(S.pendTalk={});P[key]=L;dialog(L,()=>{if(S!==owner)return;S.flags[key]=1;delete P[key];reunionJoy(q,m)})}
 /* さいごのひとこと（消える子が、なかよしの子へ。なかよしがいなければ、みんなへ）。$M はなかよしの名前 */
 const LASTW={wood:['#teary hush|……$M……ごめんね……。','#teary hush|……$M、ありがとう……。たのしかった、よ……。','#teary hush|……$M……また、あそぼうね……。'],
  earth:['#teary hush|……$M……ごめんねぇ……。','#teary hush|……$M……ありがとねぇ……。','#teary hush|……ちょっと、ねむいなぁ……。$M……またねぇ……。'],
