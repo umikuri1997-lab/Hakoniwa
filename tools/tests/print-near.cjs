@@ -17,6 +17,10 @@ const assert=require('node:assert/strict');
   const dir=JSON.parse(await run(`(()=>{const C=printChain(),d=(a,b)=>{const dx=b%W-a%W,dy=(b/W|0)-(a/W|0);return Math.abs(dx)>Math.abs(dy)?(dx>0?'~r':'~l'):(dy>0?'~d':'')};
     return JSON.stringify({first:C[0]===S.flags.printNearJ,ok:C.every((j,n)=>printDir(j)===(n<C.length-1?d(j,C[n+1]):d(C[n-1],j))),chips:['~r','~d','~l'].every(k=>!!chipOf('nushiprint'+k)),next:printNext(C[0])===C[1]})})()`));
   console.log(dir);assert(dir.first&&dir.ok&&dir.chips&&dir.next,'footprints face the next one');
+  /* つぎの足あとは、向いているほうのまっすぐ先（15〜40マス・横へのずれは3割まで）にある */
+  const line=JSON.parse(await run(`(()=>{const C=printChain(),U={'':[0,-1],'~r':[1,0],'~d':[0,1],'~l':[-1,0]};return JSON.stringify({ord:!!S.flags.printLine&&JSON.stringify(S.flags.printOrd)===JSON.stringify(C),n:C.length,
+    ok:C.slice(0,-1).every((j,n)=>{const q=C[n+1],[ux,uy]=U[printDir(j)],dx=q%W-j%W,dy=(q/W|0)-(j/W|0),a=dx*ux+dy*uy,b=Math.abs(dx*uy-dy*ux);return a>=15&&a<=40&&b<=a*.3}),fog:C.slice(1).map(j=>fogAt(j))})})()`));
+  console.log(line);assert(line.ord&&line.n===3&&line.ok,'next footprint lies ahead in the facing direction');
   /* 霧の上の印（描いてもエラーにならない） */
   await run(`(()=>{const f=printList().find(f=>fogAt(f.j));panTo(f.j%W+.5,(f.j/W|0)+.5)})()`);await page.waitForTimeout(800);
   /* タップすると、フタバが歩いて行って、たどる */

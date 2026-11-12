@@ -144,7 +144,17 @@ function printNear(){/* たどりはじめる前に、足あとがぜんぶ霧�
   C.sort((a,b)=>G.dist[a]-G.dist[b]);const j=C[(Math.random()*Math.min(20,C.length))|0],f=L.reduce((m,q)=>Math.hypot(q.j%W-p.x,((q.j/W)|0)-p.y)<Math.hypot(m.j%W-p.x,((m.j/W)|0)-p.y)?q:m);
   S.obj[f.j]='';S.fogReq=(S.fogReq||[]).filter(k=>k!==f.j);S.obj[j]='nushiprint';f.j=j;f.a=areaOf(j);S.flags.printNear=1;S.flags.printNearJ=j;dirty=true}
 function printFocus(){/* 目標の一覧から行く足あと：晴れている所の、まだたどっていない足あとで、フタバ（いなければ村のまん中）にいちばん近い物 */const p=S.res.find(r=>r.name===POKO&&!r.hidden),x=p?p.x:CX,y=p?p.y:CY;let b=-1,bd=1e9;for(const f of printList()){if(printTraced(f.j)||fogAt(f.j))continue;const d=Math.hypot(f.j%W-x,((f.j/W)|0)-y);if(d<bd){bd=d;b=f.j}}return b}
-function printChain(){/* 足あとのならび：はじめ（フウが見た足あと・たどった1つめ・村のまん中にいちばん近い足あと）から、のこりのいちばん近い足あとへ、じゅんに */const L=printList().map(f=>f.j);if(!L.length)return L;
+function printLine(){/* 足あとを、向いているほうへならべなおす（いちど）：はじめの足あとから、つぎの足あとは、上下左右のどれかの向きのまっすぐ先（15〜40マス）の、霧の中（晴れていてもよい）の空いた所。たどった足あとは、うごかさない。ならびは S.flags.printOrd */
+  if(!printOn()||S.flags.printLine)return;if(!S.flags.printNear&&printList().every(f=>fogAt(f.j)))return;/* 1つめを晴れた所へうつしてから */const C=printChain();if(C.length<2){S.flags.printLine=1;return}
+  const DIRS=[[0,-1],[1,0],[0,1],[-1,0]],ord=[C[0]],cand=(p,dir,used)=>{const px=p%W,py=(p/W)|0,[ux,uy]=DIRS[dir],L=[];for(let a=15;a<=40;a++)for(let b=-Math.floor(a*.3);b<=Math.floor(a*.3);b++){const x=px+ux*a-uy*b,y=py+uy*a+ux*b;if(x<3||y<3||x>=W-3||y>=H-3)continue;const k=y*W+x;
+    if(!fogSpotOK(S,k,null)||VILL[k]||(S.drops||[]).some(d=>d.y*W+d.x===k)||used.some(q=>Math.hypot(q%W-x,((q/W)|0)-y)<12))continue;if(!fogAt(k)&&!walk(k))continue;L.push(k)}return L};
+  for(let n=1;n<C.length;n++){const p=ord[n-1],f=(S.fogF||[]).find(q=>q.j===C[n]&&q.t==='print');if(!f||printTraced(f.j)){ord.push(C[n]);continue}
+    const used=ord.concat(C.slice(n+1).filter(printTraced)),back=n>1?(()=>{const q=ord[n-2],dx=p%W-q%W,dy=((p/W)|0)-((q/W)|0);return Math.abs(dx)>Math.abs(dy)?(dx>0?3:1):(dy>0?0:2)})():-1;/* 来た道へもどる向きは、えらばない */
+    const vx=p%W-CX,vy=((p/W)|0)-CY;let best=null,bs=-1e9;for(const dir of fogShuffle([0,1,2,3])){if(dir===back)continue;const L=cand(p,dir,used);if(!L.length)continue;const fogN=L.filter(k=>fogAt(k)).length,sc=(fogN?100:0)+(DIRS[dir][0]*vx+DIRS[dir][1]*vy>0?10:0)+Math.random();if(sc>bs){bs=sc;const F=L.filter(k=>fogAt(k));best=(F.length?F:L)[(Math.random()*(F.length?F:L).length)|0]}}/* 霧の中を先に。村から遠ざかる向きを先に */
+    if(best==null){ord.push(C[n]);continue}S.obj[f.j]='';S.fogReq=(S.fogReq||[]).filter(k=>k!==f.j);S.obj[best]='nushiprint';f.j=best;f.a=areaOf(best);ord.push(best)}
+  S.flags.printOrd=ord;S.flags.printLine=1;dirty=true}
+function printChain(){/* 足あとのならび：ならべなおした順（printOrd）。なければ、はじめ（フウが見た足あと・たどった1つめ・村のまん中にいちばん近い足あと）から、のこりのいちばん近い足あとへ、じゅんに */const L=printList().map(f=>f.j);if(!L.length)return L;
+  const O=S.flags.printOrd;if(O&&O.length===L.length&&O.every(k=>L.includes(k)))return O.slice();
   const t0=printT()[0],d2=(a,b)=>(a%W-b%W)**2+(((a/W)|0)-((b/W)|0))**2;let cur=L.includes(S.flags.printNearJ)?S.flags.printNearJ:L.includes(t0)?t0:L.reduce((m,k)=>d2(k,CY*W+CX)<d2(m,CY*W+CX)?k:m);
   const out=[cur],rest=L.filter(k=>k!==cur);while(rest.length){let bi=0;for(let n=1;n<rest.length;n++)if(d2(rest[n],cur)<d2(rest[bi],cur))bi=n;cur=rest.splice(bi,1)[0];out.push(cur)}return out}
 function printDir(j){/* あしあとの向き（絵の名前のうしろ）：つぎの足あとのほう。さいごの足あとは、前の足あとから来た向きのまま。上向きは '' */const C=printChain(),n=C.indexOf(j);if(n<0||C.length<2)return '';const a=n<C.length-1?j:C[n-1],b=n<C.length-1?C[n+1]:j,dx=b%W-a%W,dy=((b/W)|0)-((a/W)|0);
