@@ -472,7 +472,7 @@ function renderSheet(){
     const c2=el('<button class="btn">とじる</button>');c2.onclick=()=>{sfx('tap');closeSheet()};body.appendChild(c2);
   }else if(sheet==='stall'){const st=festStalls().find(t=>t.x===sheetArg);if(!st)return closeSheet();const M=STALLM[st.el],kp=S.res.find(r=>r.id===st.id);T.textContent=M.nm+'の屋台';
     {const sb=el('<div class="godSay"><b></b><span></span></div>');sb.querySelector('b').textContent=kp?kp.name:'';sb.querySelector('span').textContent='「'+(kp?chatTone(pick(STALLSAY),kp):pick(STALLSAY))+'」';body.appendChild(sb)}
-    body.appendChild(el('<p class="note">店番の子と、パワーで交換します。</p>'));const rows=el('<div class="rows"></div>');body.appendChild(rows);
+    body.appendChild(el('<p class="note">店番のせいれいと、パワーで交換します。</p>'));const rows=el('<div class="rows"></div>');body.appendChild(rows);
     const add=(title,desc,img,label,dis,fn)=>{const r=rowEl(title,desc,img),b=el('<button class="btn pri"></button>');b.textContent=label;b.disabled=!!dis;b.onclick=()=>{fn();sfx('furn');renderSheet();renderPalette()};r.appendChild(b);rows.appendChild(r)};
     for(const it of M.L){const c=it[it.length-1];
       if(it[0]==='f'){const f=FOODS[it[1]],room=foodCap()-S.food;add(f.e+' '+f.name+'×5',f.fx||'',null,room<5?'食料箱がいっぱい':SP(c),room<5||S.pt<c,()=>{S.pt-=c;addFood(it[1],5);toast(f.name+'を5つもらった','good')})}
@@ -488,8 +488,8 @@ function renderSheet(){
     const yg=o==='yogan',TB=yg?YOGAN:WATCH,L=S.hp['L'+j]||1,st=TB[L];T.textContent=BL[o].name;
     body.appendChild(el(`<p class="story">Lv${L}：威力 ${st.dmg}${yg?'（まわり '+st.sdmg+'）':''}・射程 ${st.range}マス・${st.cd}分ごとに${yg?'火の玉':'木の矢'}を放つ</p>`));if(!yg)body.appendChild(el(`<p class="story">木の矢：${inv('arrow')}本</p>`));
     if(!yg){/* 見張り台に立つ子：ベッドと同じように、きめられる。立つ子の属性で、うち方がかわる */const own=S.wpOwn||{},oid=own[j],ow=oid!=null?S.res.find(q=>q.id===oid&&q.elem!=='fire')||null:null;
-      const ef=el('<div class="sec"><h3>立つ子の属性</h3><p class="note" style="white-space:pre-line"></p></div>');ef.querySelector('p').textContent=ow?ELEM[ow.elem].name+'のせいれい：'+WPTXT[ow.elem]:['wood','earth','water','wind'].map(k=>ELEM[k].name+'：'+WPTXT[k]).join('\n');body.appendChild(ef);
-      const sec=el('<div class="sec"><h3>見張り台に立つ子</h3><div class="rows"></div></div>'),rows=sec.querySelector('.rows'),set=id=>{const B=S.wpOwn||(S.wpOwn={});for(const k in B)if(B[k]===id)delete B[k];if(id==null)delete B[j];else B[j]=id;sfx('next');renderSheet()};
+      const ef=el('<div class="sec"><h3>立つせいれいの属性</h3><p class="note" style="white-space:pre-line"></p></div>');ef.querySelector('p').textContent=ow?ELEM[ow.elem].name+'のせいれい：'+WPTXT[ow.elem]:['wood','earth','water','wind'].map(k=>ELEM[k].name+'：'+WPTXT[k]).join('\n');body.appendChild(ef);
+      const sec=el('<div class="sec"><h3>見張り台に立つせいれい</h3><div class="rows"></div></div>'),rows=sec.querySelector('.rows'),set=id=>{const B=S.wpOwn||(S.wpOwn={});for(const k in B)if(B[k]===id)delete B[k];if(id==null)delete B[j];else B[j]=id;sfx('next');renderSheet()};
       {const row=el('<button class="row" style="text-align:left;width:100%"><span class="dot" style="background:#efe6d2"></span><div class="tx"><b></b><small></small></div></button>');ckSet(row.querySelector('b'),(ow?'':'✓ ')+'だれでも');row.querySelector('small').textContent='あいていれば、だれでも立つ';row.onclick=()=>set(null);rows.appendChild(row)}
       for(const r of S.res){if(r.elem==='fire')continue;let mine=-1;for(const k in own)if(own[k]===r.id&&S.obj[k]==='watch')mine=+k;const row=el('<button class="row" style="text-align:left;width:100%"><span class="dot"></span><div class="tx"><b></b><small></small></div></button>');
         row.querySelector('.dot').style.cssText='background:#f6f1e6 url('+spiritPort(r.elem,96)+') center/86% no-repeat;box-shadow:inset 0 0 0 2px '+ELEM[r.elem].col;
