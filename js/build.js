@@ -215,7 +215,7 @@ function finishBuild(j,r){
   if(TERRA.has(S.dyn[j]&&S.dyn[j].build)){const up=S.dyn[j].build==='mound';delete S.dyn[j];S.obj[j]='';S.hi[j]=up?Math.min(HMAX,(S.hi[j]|0)+1):Math.max(0,(S.hi[j]|0)-1);recount();dirty=true;burst(j,'block');if(r)addSpiritXp(2,r);return}/* けずる・もる：段差の高さをかえる */
   const d=S.dyn[j],id=d.build,fix=!!d.ruin;/* こわれた神殿を直した */if(!d.mat&&BL[id].mat&&id!=='tower')(S.freeB||(S.freeB={}))[j]=1;/* ただで建てた（素材を使わなかった） */delete S.dyn[j];S.obj[j]=id;noteQuestPlacement(id,j);setParts(id,j,'part');if(STAIRS.has(id)){const d=stairDir(j);if(d>0){const o=stairOut(j,d);S.obj[o]='part';S.ref[o]=j}}/* 階段：低いほうのマス */if(BL[id].hp)S.hp[j]=BL[id].hp;if(BL[id].dyn)S.dyn[j]={g:0};
   recount();burst(j,'furn');if(r){addSpiritXp(4,r);r.made=(r.made||0)+1}if(fix)toast(BL[id].name+'が直った！','good');else{kurashi('b:'+id,['🏠','はじめて'+BL[id].name+'が建った']);toast(BL[id].name+'が建った！','good')}checkQuest();
-  if(id==='statue'){S.obj[j-1]='obox';S.obj[j+1]='board';S.obj[j+W]='altar';recount();burst(j-1,'furn');burst(j+1,'furn')}
+  if(id==='statue'){S.obj[j-1]='obox';S.obj[j+1]='board';S.obj[j+2]='part';S.ref[j+2]=j+1;S.obj[j+W]='altar';recount();burst(j-1,'furn');burst(j+1,'furn')}
   if(id==='tower'&&!S.cleared){if(WD===1){if(shLeft()>=1)S.usedSh=(S.usedSh||0)+1;/* かけらを台座にはめる */S.finalNight=true;memo('🌑','守護の台座が建った。最後の夜がくる');setTimeout(()=>toast('守護の台座が光りはじめた…！ 今夜、オオカゲたちがおしよせてくる','warn'),900)}else{memo('🌳','御神木が育った');setTimeout(()=>toast('御神木が育った','good'),900)}finalCheck()}/* ヌシ様の前に、きびしい最後の夜 */
 }
 function finishCraft(o,r){
