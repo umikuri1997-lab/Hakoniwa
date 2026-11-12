@@ -155,9 +155,22 @@ function bondMemLine(m,d){/* のこった子 m が、消えた子 d との思い
 function deathMate(d,name){const n=name||(d&&d.mate);if(!n)return null;const m=S.res.find(q=>q.name===n&&!q.hidden);return m||null}
 /* なかよしの子が話す、はじめの3行（おどろき → 思い出 → かなしみ） */
 function deathMateLines(m,d){const n=d.name;
-  const A={wood:'#worry hush|……$？ ねえ、$……！',earth:'#worry hush|……$？ うそだよねぇ、$……。',fireA:'#danger hush|……$？ おい、うそだろ……！',fireB:'#danger hush|……$？ おい、うそだろ……！',water:'#worry hush|……$さん？ ……$さん！',wind:'#worry hush|……$？ ……風に、まぎれてしまったのかい。',windF:'#worry hush|……$？ ねえ、どこ行っちゃったの……？'},
-    C={wood:'#cry|……もっと、いっしょにいたかったよ……。',earth:'#cry|……もっと、いっしょにいたかったよぉ……。',fireA:'#cry|……もっと、いっしょにいたかったよ。',fireB:'#cry|……ちくしょう。もっと、いっしょにいたかったぜ……。',water:'#cry|……もっと、いっしょにいたかったです……。',wind:'#cry|……もっと、となりにいたかったよ。',windF:'#cry|……もっと、いっしょにいたかったなあ……。'};
-  const k=elemKey(m);return [[m.name,(A[k]||A.wood).replace(/\$/g,n)],[m.name,bondMemLine(m,d)],[m.name,C[k]||C.wood]]}
+  /* 言いかたごとに4つ。ぜんぶ出しおわるまで、同じ物を出さない（pickFresh） */
+  const A={wood:['#worry hush|……$？ ねえ、$……！','#worry hush|……え？ $、どこ……？','#worry hush|うそ……。さっきまで、そこにいたのに……。','#worry hush|$……？ へんじして……ねえ……。'],
+    earth:['#worry hush|……$？ うそだよねぇ、$……。','#worry hush|……あれぇ？ $……どこ行っちゃったのぉ……？','#worry hush|$……？ ねぇ、へんじしてよぉ……。','#worry hush|……さっきまで、となりにいたのにねぇ……。'],
+    fireA:['#danger hush|……$？ うそでしょ……！','#danger hush|$！ ……ねえ、目をあけなよ……！','#danger hush|……まさか。$が……？','#danger hush|……$？ じょうだんは、よしなよ……。'],
+    fireB:['#danger hush|……$？ おい、うそだろ……！','#danger hush|$！ ……おい、へんじしろよ……！','#danger hush|……まさか。$が……？','#danger hush|……$？ じょうだんだろ、なあ……。'],
+    water:['#worry hush|……$さん？ ……$さん！','#worry hush|……え？ $さんが……？','#worry hush|$さん……どこへ、行ってしまったんですか……？','#worry hush|……うそです。さっきまで、そこにいたのに……。'],
+    wind:['#worry hush|……$？ ……風に、まぎれてしまったのかい。','#worry hush|……$。きみの気配が、どこにもないんだ。','#worry hush|……フッ…じょうだんだろう？ $……。','#worry hush|……$？ 風が、きゅうに、しずかになったね……。'],
+    windF:['#worry hush|……$？ ねえ、どこ行っちゃったの……？','#worry hush|あれ……？ $、かくれんぼ……？','#worry hush|……$？ うそでしょ、ねえ……。','#worry hush|$……。さっきまで、わらってたのに……。']},
+    C={wood:['#cry|……もっと、いっしょにいたかったよ……。','#cry|……まだ、いっしょにしたいこと、いっぱいあったのに……。','#cry|……ひとりにしないでよ……。','#cry|……ありがとうって、もっと、言えばよかった……。'],
+    earth:['#cry|……もっと、いっしょにいたかったよぉ……。','#cry|……まだ、いっしょにしたいこと、いっぱいあったのにねぇ……。','#cry|……さみしいよぉ……。','#cry|……ゆっくりでいいから、もどってきてほしいよぉ……。'],
+    fireA:['#cry|……もっと、いっしょにいたかったよ。','#cry|……守るって、決めてたのに……。','#cry|……泣かないつもりだったのにさ……。','#cry|……まだ、あんたに言ってないこと、あったのに。'],
+    fireB:['#cry|……ちくしょう。もっと、いっしょにいたかったぜ……。','#cry|……守るって、決めてたのによ……。','#cry|……なんでだよ。なんで、おまえなんだよ……。','#cry|……まだ、言ってねえこと、あったのによ……。'],
+    water:['#cry|……もっと、いっしょにいたかったです……。','#cry|……まだ、お礼も、ちゃんと言えていないのに……。','#cry|……こんなの、いやです……。','#cry|……となりが、こんなに、しずかなんて……。'],
+    wind:['#cry|……もっと、となりにいたかったよ。','#cry|……風は、いつか止むものだけど……こんなに早いなんてね。','#cry|……フッ…泣くのは、にあわないのにな……。','#cry|……きみのいない風は、つめたいね。'],
+    windF:['#cry|……もっと、いっしょにいたかったなあ……。','#cry|……まだ、いっしょに行きたい所、あったのに……。','#cry|……さみしいよ……。','#cry|……ねえ、またあえるよね……？']};
+  const k=elemKey(m),a=A[k]?k:'wood',c=C[k]?k:'wood';return [[m.name,pickFresh('dmA:'+a,A[a]).replace(/\$/g,n)],[m.name,bondMemLine(m,d)],[m.name,pickFresh('dmC:'+c,C[c])]]}
 
 /* ---------- 同じ夜にいっしょに守る（見張り台・夜の見まわり・こもれびのまもりについて行く） ---------- */
 const BOND_DEF=new Set(['watchpost','patrol','follow']);
