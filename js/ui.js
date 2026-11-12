@@ -55,7 +55,6 @@ function updItemInfo(){const ii=$('#itemInfo');if(!(mode==='build'||mode==='bulk
   ii.hidden=!nm;$('#iiName').textContent=nm;$('#iiDesc').innerHTML=ds;const q=$('#iiQ');if(q)q.onclick=e=>{e.stopPropagation();sfx('tap');helpPop(nm,withAttr(sel,BL[sel].desc||''))}}
 function renderPalette(){
   if(!S)return;updItemInfo();const box=$('#palItems');box.innerHTML='';
-  $('#undoBtn').hidden=mode!=='build';
   const pickItem=id=>()=>{sfx('tap');sel=id;if(pending&&pending.kind==='one'){pending=null;$('#confirm').hidden=true}selStamp=null;renderPalette();const b=BL[id];
     if(mode==='bulk'){if(!S.bulk)return toast('下から道具をえらんでください');toast('ハケで、なぞった範囲をぬれます');palOpen=false;renderPalette();return}
     if(b.kind==='furn'&&!inv(id))toast(b.name+'が足りません','warn');
