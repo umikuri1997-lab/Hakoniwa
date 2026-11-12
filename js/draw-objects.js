@@ -145,6 +145,7 @@ function drawRoofItem(c,id,x,y){/* ガゼボ・東屋：2×2マス（左上が x
   if(gz){c.fillStyle='#efe7da';c.fillRect(x+30,y-38,4,9);c.beginPath();c.arc(x+32,y-39,3,0,7);c.fill()}else{c.fillStyle=R[1];c.fillRect(x+22,y-33,20,4)}}
 const DOKU_PX=['..................rrrr....','................rrwrrdr...','...............rrrrrwrdd..','...............ddrrrrddd..','..................ss......','.....aaaaaaaaa....st......','...aabbbbbbbbbaa..st.aa...','..abbhhbbbbbbbbbaaststbba.','.abbhbbbbbbhhbbbbbtttbbba.','.abbbbbbbbbhbbbbbbbbbhbba.','.abbbbhhbbbbbbbbbbbbbbbba.','..abbbbbbbbbbbbhhbbbbbba..','...aabbbbbbbbbbbbbbbbaa...','.....aaaaaaaaaaaaaaaaa....'];/* どくの罠の絵（24×14） */
 function drawObj(c,id,x,y,i,g,now){
+  if(id==='statueb'){const ch=window.CHIPS&&CHIPS.statueb;if(ch)drawChip(c,ch,id,x,y,now,i);return}/* こわれた神殿 */
   if(id==='fogbox'||id==='nushiprint'||id==='fogspring'){drawFogObj(c,id,x,y,i,now);return}/* 霧の中で見つける物 */
   if(VEINS[id]){drawVein(c,id,x,y,i);return}/* 鉱脈 */
   if(id==='tower'&&WD===0){drawStoryTree(c,x,y,i,now,ICON);return;}
@@ -289,6 +290,7 @@ function drawObj(c,id,x,y,i,g,now){
   case'sprout':{if(!ICON&&S&&i!=null&&S.ground[i]!==1&&S.dyn[i]&&S.dyn[i].userMound){const bob=Math.sin((now||0)/600+i)*.6;if(chipOK('mound#0')&&chipOK('seed#s')){drawChip(c,CHIPS['mound#'+Math.min(2,(hash(i*13+5)*3)|0)],'mound',x+16,y+28,0);drawChip(c,CHIPS['seed#s'],'seed',x+16,y+23+Math.round(bob),0);break}plantMound(c,x,y,i);drawSeedShape(c,x+16,y+23+bob,.48);break}if(S&&i!=null&&S.ground[i]===1&&!ICON){const b=Math.sin((now||0)/600+i)*1.5;if(chipOK('seedring')&&chipOK('seed')){drawChip(c,CHIPS.seedring,'seed',x+16,y+21,0);drawChip(c,CHIPS.seed,'seed',x+16,y+17+Math.round(b),0);break}c.fillStyle='rgba(255,255,255,.35)';c.beginPath();c.ellipse(x+16,y+21,9,3,0,0,7);c.fill();drawSeedShape(c,x+16,y+17+b,1);break}/* 池に植える予定：種がぷかぷか */if(chipOK('sprout#plan'))drawChip(c,CHIPS['sprout#plan'],'sprout',x+16,y+22,0);else{c.fillStyle='rgba(120,90,50,.6)';c.beginPath();c.ellipse(x+16,y+22,9,5,0,0,7);c.fill();c.strokeStyle='#5fbf4f';c.lineWidth=2;c.beginPath();c.moveTo(x+16,y+21);c.lineTo(x+16,y+14);c.stroke();circ(c,x+13,y+14,3,'#7fd36b');circ(c,x+19,y+13,3,'#7fd36b')}
     c.strokeStyle='rgba(255,240,180,.8)';c.setLineDash([3,3]);c.lineWidth=1.5;c.strokeRect(x+3,y+3,TS-6,TS-6);c.setLineDash([]);break}
   case'site':{const d=ICON?null:S.dyn[i],sp=d&&siteSpan(d.build);
+    if(d&&d.ruin){const ch=window.CHIPS&&CHIPS.statueb;if(ch)drawChip(c,ch,'statueb',x,y,now,i);const p=Math.min(1,d.p/d.need),bw=64,bx=x+16-bw/2,by=y-92;c.fillStyle='rgba(0,0,0,.5)';rr(c,bx-1,by,bw+2,6,3);c.fillStyle='#ecdcbc';rr(c,bx,by+1,bw*p,4,2);break}/* こわれた神殿を直している：絵はこわれた神殿のまま、上に進みぐあい */
     if(sp&&SPR.site.ok){/* 建物の大きさに合わせた足場（見た目だけ。マスの判定は変えない） */const L=x+sp.x0*TS-2,Wd=sp.w*TS+4,Hd=Wd*91/104*sp.hf,B=y+sp.rows*TS;
       shadow(c,L+Wd/2,B-3,Wd/2-2,4);{const si=siteImg(Wd,Hd,i);if(si)c.drawImage(si,Math.round(L),Math.round(B-si.height));else c.drawImage(SPR.site.img,L,B-Hd,Wd,Hd)}
       const p=Math.min(1,d.p/d.need),bw=Math.min(Wd-8,64),bx=L+(Wd-bw)/2,by=B-Hd-10;c.fillStyle='rgba(0,0,0,.5)';rr(c,bx-1,by,bw+2,6,3);c.fillStyle='#ecdcbc';rr(c,bx,by+1,bw*p,4,2);break}
@@ -492,7 +494,7 @@ function drawObj(c,id,x,y,i,g,now){
     circ(c,x+17,y-6,5,'#2f4f86');tStar(c,x+17,y-6,4);
     const n=ICON?3:S.orders.length;const px=[[7,1],[14,2],[21,1]];for(let k=0;k<Math.min(3,n);k++){const[a,b]=px[k];c.fillStyle='#f6ecd6';rr(c,x+a,y+b,6,9,1);c.fillStyle='#d4c3a2';c.fillRect(x+a+1,y+b+3,4,.8);c.fillRect(x+a+1,y+b+5,3,.8);circ(c,x+a+3,y+b+.5,.9,'#8a5a33')}
     tBanner(c,x+31,y-4,12,now);break}
-  case'site2':{if(!ICON){/* 大きな足場は本体（site）がまとめて描くので、ここは足もとの資材だけ */c.fillStyle='rgba(0,0,0,.12)';c.beginPath();c.ellipse(x+16,y+27,12,3,0,0,7);c.fill();
+  case'site2':{if(!ICON&&i!=null&&S.ref[i]!=null&&S.dyn[S.ref[i]]&&S.dyn[S.ref[i]].ruin)break;/* こわれた神殿のまわりは、本体の絵だけ */if(!ICON){/* 大きな足場は本体（site）がまとめて描くので、ここは足もとの資材だけ */c.fillStyle='rgba(0,0,0,.12)';c.beginPath();c.ellipse(x+16,y+27,12,3,0,0,7);c.fill();
       c.fillStyle='#b98a58';c.fillRect(x+7,y+21,18,3);c.fillStyle='#a87a4a';c.fillRect(x+9,y+18,16,3);c.fillStyle='#9a9a94';circ(c,x+24,y+24,3,'#a8a8a0');break}
     if(SPR.site.ok){shadow(c,x+16,y+29,14,3);if(i%2){c.save();c.translate(x+16,0);c.scale(-1,1);c.drawImage(SPR.site.img,-17,y+1,34,30);c.restore()}else c.drawImage(SPR.site.img,x-1,y+1,34,30);break}shadow(c,x+16,y+29,14,3);c.fillStyle='#c9a46a';c.fillRect(x+3,y+20,26,8);c.strokeStyle='#8a5a33';c.lineWidth=2.5;c.beginPath();c.moveTo(x+5,y+28);c.lineTo(x+5,y+6);c.moveTo(x+27,y+28);c.lineTo(x+27,y+6);c.moveTo(x+5,y+10);c.lineTo(x+27,y+10);c.stroke();break}
   case'tower':{shadow(c,x+16,y+29,16,4);c.fillStyle='#9ea4ad';rr(c,x+2,y+20,28,9,3);c.fillStyle='#b8bcc4';rr(c,x+4,y+18,24,5,2);c.fillStyle='#c4523f';c.fillRect(x+7,y-8,4,28);c.fillRect(x+21,y-8,4,28);c.fillRect(x+3,y-12,26,4);c.fillRect(x+5,y-4,22,3);c.fillStyle='#8a2f22';c.fillRect(x+1,y-14,30,3);

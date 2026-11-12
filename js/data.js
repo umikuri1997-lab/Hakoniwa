@@ -154,6 +154,7 @@ const BL={
   stele:{hp:5,brk:1,fix:18,fixm:{wood:6,stone:25},name:'ノームの石像',kind:'build',mat:{wood:12,stone:50},pc:35,time:180,maker:'earth',lv:6,solid:1,attr:{earth:4},desc:'まわり7マスの壁・柵・塀が、1.5倍じょうぶになる（重複なし）'},
   fountain:{name:'噴水',sz:[2,2],kind:'build',mat:{wood:15,stone:60},pc:45,time:200,maker:'water',lv:6,solid:1,anim:1,play:{pt:6,pw:2.7,fun:45,dur:50,cap:3,adj:1},attr:{water:6},desc:'3人まで遊べる。たのしさ +45（33.3分）。遊ぶと10%の確率で、スタミナ+1'},
   statue:{name:'神殿',kind:'build',anim:1,pc:0,time:50,maker:null,solid:1,attr:{wood:1,water:1,fire:1,earth:1,wind:1},desc:'守り神の居場所'},
+  statueb:{name:'こわれた神殿',solid:1,desc:'守り神の居場所だった神殿'},/* はじめからある。「みる」でタップすると、せいれいが直す（templeRuinTap） */
   obox:{name:'おそなえ箱',solid:1,anim:1},
   board:{name:'依頼ボード',solid:1,anim:1,pc:0,time:120,maker:'earth',mat:{wood:15,stone:10},desc:'依頼を5まい貼れるように広げる。'},
   altar:{name:'カミサマの台座',solid:1,anim:1},
@@ -260,8 +261,10 @@ const INTRO=[
   [POKO,'#surprise|えへへ、急にお客さんが来るなんて、びっくりしちゃった。'],
   [POKO,'#joy|守り神さまと会えてうれしいな！'],
   [GOD,'#joy|ほっほ、ひとりで、よう待っとったのう。えらいぞ、フタバ。'],
-  [GOD,'この土地に守護の力を取り戻すには、おヌシの力を集める場所がいる。わしの居場所にもなる、小さな神殿を建てよう。'],
-  [GOD,'建てる場所は、おヌシが好きにえらんでよいぞ。建てるのは、せいれいたちがやってくれるぞい。'],
+  [GOD,'この土地に守護の力を取り戻すには、おヌシの力を集める場所がいる。'],
+  [GOD,'#think|……おや。あそこに、古い神殿がのこっとるのう。'],
+  [POKO,'#think|うん……。ぼくが気づいたときには、もう、くずれてたんだ。'],
+  [GOD,'#joy|あれを直せば、わしの居場所にもなる。せいれいたちに、直してもらおうのう。'],
 ];
 let TESTSPD=false;try{TESTSPD=KV.getItem('hakoniwa-test')==='1'}catch(e){}
 const GLASS_IC='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="2.5" rx="1" fill="#a0703f"/><rect x="5" y="19.5" width="14" height="2.5" rx="1" fill="#a0703f"/><path d="M7 4.5c0 5 10 5.5 10 7.5s-10 2.5-10 7.5h10c0-5-10-5.5-10-7.5s10-2.5 10-7.5z" fill="#dff1f7" stroke="#7a5233" stroke-width=".8"/><path d="M9 18.5c1-2 5-2 6 0z" fill="#e8c27a"/></svg>');
@@ -289,9 +292,9 @@ function choiceGuide(){const W=keyName('water'),opt=(t,v,L)=>({t,v,lines:KS([...
   pick:v=>{const w=S.res.find(r=>r.name===W),g=S.res.find(r=>r.name===v);if(!w||!g)return;bondSet(g,w,BOND_TALK);tourStart(g,w)},
   opts:[opt(POKO,POKO,[[POKO,'#joy|まかせて！ 池の音がよく聞こえる所、おしえてあげる！']]),opt(MINA,MINA,[[MINA,'ぼくでいいのぉ？ ゆっくり歩こうねぇ。']]),opt(keyName('fire'),keyName('fire'),[['H','しょうがねえな。ついてきな。']])]}}
 const QUESTS1=[
-  {id:'statue',text:'神殿を建ててもらおう',how:"下の「おく」→「神殿」をえらび、空いた場所をタップ",check:()=>cnt('statue')>=1,by:GOD,story:[
-    [POKO,'できたー！ りっぱな神殿！'],
-    [GOD,'#joy|りっぱな神殿じゃのう。ここが、おヌシとわしの、いばしょじゃ。'],
+  {id:'statue',text:'神殿を直してもらおう',how:'「みる」で、こわれた神殿をタップ',check:()=>cnt('statue')>=1,by:GOD,story:[
+    [POKO,'なおったー！ ぴかぴかの神殿！'],
+    [GOD,'#joy|りっぱに直ったのう。ここが、おヌシとわしの、いばしょじゃ。'],
     [POKO,'ぼく、ときどきおそなえ箱におそなえものを入れるね。守り神さま、自由に使ってね！'],
     [GOD,'#joy|ありがとうのう。それから、せいれいのようすも、ときどき見てやっておくれ。'],[GOD,'#worry|おなかがすききってしまうと、消えてしまうこともある。……そうならんよう、見守ってやっておくれ。']],gives:{feat:['inv'],flag:'tapAsk'}},
   {id:'stor',text:'食料箱を置こう',how:'「おく」→「食料箱」をえらんで置く',check:()=>cnt('stor')>=1,

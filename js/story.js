@@ -17,11 +17,13 @@ const INTRO2=[
   [HOMURA,'#think|……さいきんさ、風が、なんだかあったかい所から来る気がするんだ。……ふしぎだね。'],
   [HOMURA,'#wave|寒くてかなわないけど…ま、よろしく頼むよ。','vol:wave'],
   [GOD,'#joy|ほっほ、ひとりでよう村を守っとったのう、ホムラ。','vol:shoulders'],
-  [GOD,'まずは、わしの居場所になる神殿じゃな。'],
+  [GOD,'まずは、わしの居場所になる神殿じゃな。……あそこの古い神殿、ずいぶん、くずれとるのう。'],
+  [HOMURA,'#think|ああ、あれかい。だれも直す子がいなくてさ。'],
+  [GOD,'#joy|では、ホムラに直してもらおうかの。'],
 ];
 const QUESTS2=[
-  {id:'statue',text:'神殿を建ててもらおう',check:()=>cnt('statue')>=1,by:GOD,how:'下の「おく」→「神殿」をえらび、空いた場所をタップ',story:[
-    [HOMURA,'#surprise|ほんとに建っちまった。'],[HOMURA,'へえ、なかなかいい神殿じゃないか。'],
+  {id:'statue',text:'神殿を直してもらおう',check:()=>cnt('statue')>=1,by:GOD,how:'「みる」で、こわれた神殿をタップ',story:[
+    [HOMURA,'#surprise|ほんとに直っちまった。'],[HOMURA,'へえ、なかなかいい神殿じゃないか。'],
     [GOD,'じゃろ〜。ここが、おヌシとわしの居場所じゃ。'],
     [GOD,'#joy|くらしの道具は、とどけておいたぞい。'],[HOMURA,'……ま、助かるよ。']],
    gives:{feat:['inv','remove','plant','craft','people'],flag:'lv_oven',recipes:['oven','bed','stor','mbox'],items:{oven:1,bed:1,bamboowall:3,misugaki:10,spike:10},mat:{wood:10,stone:10},enemy:true}},
@@ -182,12 +184,12 @@ const PROF=[
   [GOD,'まあ、最初はちと寂しいかもしれんが……。'],
   [GOD,'せっかくじゃ！ ここにおヌシだけの村をつくってみんか？'],
   [GOD,'わしも楽しみにしとるぞ！']];
-function INTROFL(){return [[FA(),'#surprise|わあ、守り神さまだ！ ぼく、'+FA()+'！ この土地で、ひっそり暮らしてたんだ！'],[FB(),'#surprise|ふわぁ…。'+FB()+'#joy|だよぉ。ふたりきりだったから、うれしいねぇ。'],[GOD,'この土地にも、おヌシの力を集める場所がいるのう。わしの居場所にもなる神殿を建てよう。建てる場所は、おヌシが好きにえらんでよいぞ。']]}
+function INTROFL(){return [[FA(),'#surprise|わあ、守り神さまだ！ ぼく、'+FA()+'！ この土地で、ひっそり暮らしてたんだ！'],[FB(),'#surprise|ふわぁ…。'+FB()+'#joy|だよぉ。ふたりきりだったから、うれしいねぇ。'],[GOD,'この土地にも、おヌシの力を集める場所がいるのう。あそこの古い神殿を直せば、わしの居場所にもなる。']]}
 const TOYS4=['swing','sandbox','seesaw','slide'];/* 遊び道具（どれでもよい） */
 const LIGHTQ=['torch','lamp','campfire','lantern','candle','flamp','toro','takeakari','andon','yomawari'];/* クエストで数える「あかり」（どれでもよい） */
 const DECOQ=['hedge','birdbath','parasol','arch','signpost','monstera','jar','rockart','vane','kamizo','shishiodoshi','noren'];/* クエストで数える「かざり」（どれでもよい） */
 const QUESTSF=[
-  {id:'statue',text:'神殿を建ててもらおう',check:()=>cnt('statue')>=1,by:GOD,how:'下の「おく」→「神殿」をえらび、空いた場所をタップ',story:[
+  {id:'statue',text:'神殿を直してもらおう',check:()=>cnt('statue')>=1,by:GOD,how:'「みる」で、こわれた神殿をタップ',story:[
     [GOD,'#joy|ここが、おヌシとわしの居場所じゃ。せいれいたちも、きっと手を貸してくれるぞい。'],[GOD,'わしはここで、交換でもしながら見とるからの。']]},
   {id:'ep1',text:'第1話 はじめての居場所：家とベッド2つ',check:()=>HOUSES.length>=1&&houseBedCount()>=2,/* ベッドは家の中に2つ */prog:()=>'家 '+Math.min(1,HOUSES.length)+'/1・ベッド '+Math.min(2,houseBedCount())+'/2',how:'家の壁のすきまをオークの壁でふさぎ、依頼ボードでベッドをたのんで家の中に置く。思いついた形は依頼ボードに描くと、せいれいが作る。力がたまると、なかまを呼べる',
    talk:{get who(){return FA()},when:()=>true,get lines(){return [[FA(),'ねえねえ、あそこの家、まだ中がからっぽなの。'],[FB(),'草の上で寝るとねぇ、朝には背中がひんやりしてるんだよぉ。'],[FA(),'ここで、あったかく眠れるようになるかな？ 守り神さま、お願い！'],['@idea']]}},
