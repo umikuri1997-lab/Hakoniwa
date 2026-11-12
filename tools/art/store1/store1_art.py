@@ -3,9 +3,9 @@
   python3 tools/art/store1/store1_art.py <出力フォルダ>   # 絵だけ書き出す（<id>.png）
   python3 tools/art/store1/store1_art.py                  # チップに入れて、アトラスと chips.js を作りなおす
 元の絵は src/（描きなおす前のチップ。作りなおすときは、ここから）。
- たる taru・あさぶくろ asabukuro：前の絵のドットの色をまとめる（pixclean：16色・太い輪郭を1ドットに・輪郭のとぎれをつなぐ）。
+ たる taru・あさぶくろ asabukuro：前の絵の形のまま、ドットの色だけをまとめる（pixclean：64色まで）。
  食料箱 stor・素材箱 mbox：箱の木の所（柱・ふち・X のすじかい・下の板）は、木箱と同じ色・同じ作りで、コードで描く（かど金はなし）。
-   中の物（やさい・丸太・石）と、箱のおくの面は、前の絵からとって、色をまとめて（20色）のせる。
+   中の物（やさい・丸太・石）と、箱のおくの面は、前の絵からとって、色をまとめて（64色まで）のせる。
    箱：柱 x2〜8・x55〜61（上の面 y7〜30、正面 y31〜65）／おくのふち y6〜9／手前のふち y31〜35／へこんだ板 x9〜54・y37〜59 に X／下の板 y61〜65"""
 import sys, os, colorsys
 import numpy as np
@@ -22,14 +22,7 @@ def box():
     p.rect(9, 7, 54, 9, CB); p.hl(7, 9, 54, CL)                       # おくのふち
     p.rect(9, 11, 54, 30, CP); p.rect(9, 11, 54, 12, CD)              # 箱の中（おくの面）
     p.rect(9, 31, 54, 35, CB); p.hl(31, 9, 54, CL); p.hl(35, 9, 54, CS)   # 手前のふち
-    p.rect(10, 37, 53, 59, CP); p.rect(10, 37, 53, 38, CD)            # 正面のへこんだ板
-    for r in range(21):                                               # X のすじかい
-        xa = 11 + round(r * 34 / 20)
-        for x0 in (xa - 2, 55 - xa):
-            p.hl(39 + r, max(10, x0), min(53, x0 + 8), CB)
-    for y in range(39, 60):
-        for x in range(10, 54):
-            if p.at(x, y) == CB and p.at(x, y - 1) in (CP, CD) and p.at(x, y + 1) == CB: p.dot(x, y, CL)
+    p.xpanel(10, 37, 53, 59, CB, CL, CS, CO, CP, CD, arm=8)           # 正面：左右のたての板・へこんだ板に X のすじかい（前の絵と同じかたむき）
     p.rect(9, 61, 54, 65, CB); p.hl(61, 9, 54, CL); p.hl(65, 9, 54, CS)   # 下の板
     for L in (2, 55):                                                 # 左右の柱（まっすぐ）
         p.rect(L, 6, L + 6, 66, CO); p.rect(L + 1, 7, L + 5, 30, CL); p.vl(L + 5, 7, 30, CB)
@@ -45,7 +38,7 @@ def open2(m):
 def woodlike(c):
     h, s, v = colorsys.rgb_to_hsv(c[0] / 255, c[1] / 255, c[2] / 255); return 22 <= h * 360 <= 48 and .25 <= s <= .85
 
-def with_contents(name, n=20):
+def with_contents(name, n=64):
     """箱に、前の絵の中の物をのせる：箱の中（x9〜54・y30 まで）と、箱の上にはみ出した所は、ぜんぶ前の絵。柱の上にかさなる所は、木の色でないドットだけ"""
     p = box(); src = Image.open(os.path.join(HERE, 'src', name + '.png')).convert('RGBA'); a = np.asarray(src); op = a[..., 3] > 127
     ys, xs = np.mgrid[0:68, 0:64]; nw = np.array([[not woodlike(a[y, x]) for x in range(64)] for y in range(68)])
@@ -54,14 +47,14 @@ def with_contents(name, n=20):
     over = op & (ys <= 30) & ~inside & ((ys < 6) | ((ys < 10) & stick) | (nw & (xs >= 2) & (xs <= 61) & ((xs < 9) | (xs > 54))))   # 箱の上・おくのふちにかさなる所・柱にかさなる所
     side = over & ((xs < 9) | (xs > 54)); over = (over & ~side) | open2(side)               # 柱の上の、1ドットの線・点（前の箱の輪郭のなごり）は、とらない
     mask = inside | over; cont = np.zeros_like(a); cont[mask] = a[mask]; cont[mask, 3] = 255
-    q = np.asarray(pixclean.clean(Image.fromarray(cont, 'RGBA'), n, 3))
+    q = np.asarray(pixclean.clean(Image.fromarray(cont, 'RGBA'), n, 2, 0))               # 中の物は、色を多くのこす（色がおかしくならないように）
     for y in range(31):
         for x in range(64):
             if q[y, x, 3] > 127: p.dot(x, y, tuple(int(v) for v in q[y, x, :3]))
     return p
 
-def cleaned(name, n=16):
-    im = Image.open(os.path.join(HERE, 'src', name + '.png'))
-    im = pixclean.close_outline(pixclean.thin(pixclean.clean(im, n, 3))); p = Pix(*im.size); p.im = im; p.px = im.load(); return p
+def cleaned(name, n=64):
+    """描きなおさない。前の絵の形のまま、色だけをまとめる"""
+    im = pixclean.clean(Image.open(os.path.join(HERE, 'src', name + '.png')), n, 2, 0); p = Pix(*im.size); p.im = im; p.px = im.load(); return p
 
 run({'stor': lambda: with_contents('stor'), 'mbox': lambda: with_contents('mbox'), 'taru': lambda: cleaned('taru'), 'asabukuro': lambda: cleaned('asabukuro')})
