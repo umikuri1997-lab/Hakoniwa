@@ -17,5 +17,9 @@ const assert=require('node:assert/strict');
   const m=JSON.parse(await run(`(()=>{const a=stageSong();S.enemies=[{type:'boss2',spawned:true,dead:false,x:0,y:0}];const b=stageSong();S.enemies[0].dead=true;const c=stageSong();S.enemies=[];return JSON.stringify([a,b,c,SONGS.battle.mel.reduce((s,x)=>s+x[1],0)])})()`));
   assert.equal(m[1],'battle');assert.notEqual(m[0],'battle');assert.notEqual(m[2],'battle');assert.equal(m[3],64);
   console.log('music:',m.slice(0,3).join(' → '));
+  /* オオカゲがいるあいだは、夜の曲のアレンジ（nightB）。鳴らしてもエラーにならない */
+  const bm=JSON.parse(await run(`(()=>{S.enemies=[{type:'boss',spawned:true,dead:false,x:0,y:0}];const a=stageSong();S.enemies=[];const c=stageSong();
+    let err='';try{audioInit();curSong=wantSong='nightB';step=0;if(AC&&AC.state==='running')sched()}catch(e){err=e.message}return JSON.stringify([a,c,err])})()`));
+  assert.equal(bm[0],'nightB');assert.notEqual(bm[1],'nightB');assert.equal(bm[2],'');console.log('boss music:',bm[0]);
   assert.deepEqual(errors,[]);await browser.close();console.log('OK');
 })().catch(e=>{console.error(e);process.exit(1)});
