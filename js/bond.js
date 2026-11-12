@@ -11,12 +11,10 @@ function bondAdd(a,b,n){if(!S||!a||!b||a===b||IS_STORY_REPLAY)return;const B=S.b
   if(v0<BOND_TALK&&v>=BOND_TALK){for(const x of[a,b])addFloat(x.x,x.y-1.4,'なかよし！');memo('🤝',a.name+'と'+b.name+'がなかよしになった');logEv(a.name+'と'+b.name+'がなかよしになった');SPOT_POPS.push({bond:[a.name,b.name],pair:[a,b].map(r=>({el:r.elem,vr:r.vr})),state:S});omoiNote(a,b,false)}
   else if(v0<BOND_PLAY&&v>=BOND_PLAY)omoiNote(a,b,true)}
 function bondSet(a,b,n){if(bondOf(a,b)<n)bondAdd(a,b,n-bondOf(a,b))}
-/* 草原のメイン「なかよしの想い」（omoi）：依頼を受けたあとに、あたらしく「なかよし」になった組だけを数える（S.flags.omoiP）。
-   村の子どうしが、もうぜんぶなかよしのときだけ、なかよし60になった組も数える（進めなくならないように） */
+/* 草原のメイン「なかよしの想い」（omoi）：なかよしの組を数える（S.flags.omoiP）。依頼を受ける前から、なかよしの組も、御神木へ行く組になる（omoiSeed：なかよしの数の大きい組から、3組まで） */
 function omoiOn(){return !!S&&WD===0&&!S.free&&!IS_STORY_REPLAY&&typeof QUESTS!=='undefined'&&QUESTS[S.quest]?.id==='omoi'&&S.qTalked&&S.qStory==null}
 function omoiN(){return (S&&S.flags.omoiP||[]).length}
-function omoiAllBonded(){const R=S.res.filter(r=>!r.hidden);for(let i=0;i<R.length;i++)for(let k=i+1;k<R.length;k++)if(bondOf(R[i],R[k])<BOND_TALK)return false;return true}
-function omoiNote(a,b,deep){if(!omoiOn())return;const L=S.flags.omoiP||(S.flags.omoiP=[]),Q=S.flags.omoiW||(S.flags.omoiW=[]),k=bondKey(a,b);if(L.length+Q.length>=3||L.includes(k)||Q.includes(k)||deep&&!omoiAllBonded())return;
+function omoiNote(a,b,deep){if(!omoiOn())return;const L=S.flags.omoiP||(S.flags.omoiP=[]),Q=S.flags.omoiW||(S.flags.omoiW=[]),k=bondKey(a,b);if(L.length+Q.length>=3||L.includes(k)||Q.includes(k))return;
   Q.push(k);sfx('bush');toast(a.name+'と'+b.name+'が、御神木に会いにいきたそう','good');renderQuest();dirty=true}/* 数えるのは、2人が御神木へ行く場面を見おえてから（omoiScene） */
 /* なかよしの想いの場面：御神木（青いふきだし）をタップすると、待っている2人が根もとへ歩いて行き、それぞれの属性のしかたで木の世話をする。2人の光がひとつになって、枝のあかりになり（omoiLight・drawOmoiLamps）、2人がひとことずつ話す。
    会話を最後まで聞いたら1組に数える（S.flags.omoiP）。夜・コワイノが近い・2人のどちらかが村にいないときは、はじめない。とちゅうでやめたら、待っている組のまま */
@@ -25,6 +23,8 @@ const OMOI_VOICE={[POKO]:'#joy|{P}と、いっしょに来たかったんだ。'
 const OMOI_KEYV={fire:'#joy|へへっ、{P}となら、どこへだって行けるぜ。',water:'{P}といっしょに来られて、うれしいです。',wind:'フッ…{P}となら、悪くないね。'};
 const OMOI_ELV={wood:'#joy|{P}といっしょだと、花がもっときれいに見えるね。',water:'お水、{P}とふたりで、あげたよ。',fire:'あったかい？ {P}がとなりにいるから、ぽかぽかなんだ。',earth:'土、ふかふかにしたよ。{P}とふたりで。',wind:'葉っぱが、くすぐったそうにゆれてる。{P}も、見て。'};
 function omoiLine(r,p){const t=OMOI_VOICE[r.name]||(keyName(r.elem)===r.name?OMOI_KEYV[r.elem]:null)||OMOI_ELV[r.elem]||OMOI_ELV.wood;return [r.name,t.replace('{P}',p.name)]}
+function omoiSeed(){/* いままでに、なかよしになっている組も、御神木へ行く組にする（村にいる2人だけ） */if(!omoiOn()||!S.bond)return;const L=S.flags.omoiP||(S.flags.omoiP=[]),Q=S.flags.omoiW||(S.flags.omoiW=[]);if(L.length+Q.length>=3)return;
+  const C=Object.keys(S.bond).filter(k=>S.bond[k]>=BOND_TALK&&!L.includes(k)&&!Q.includes(k)&&bondPair(k)).sort((a,b)=>S.bond[b]-S.bond[a]);if(!C.length)return;for(const k of C){if(L.length+Q.length>=3)break;Q.push(k)}renderQuest();dirty=true}
 const omoiWait=()=>omoiOn()&&(S.flags.omoiW||[]).length>0;
 let OMOI_RUN=null;/* いまの場面（かさねてタップしても1回。保存しない） */
 function omoiScene(j){
@@ -108,7 +108,7 @@ function bondNightTick(){if(!isNight()||!S.enemyOn)return;const n=dayNo()-(hour(
   for(const r of S.res){if(r.hidden||!r.act||!BOND_DEF.has(r.act.type)||D.ids.includes(r.id))continue;for(const id of D.ids){const q=S.res.find(x=>x.id===id);if(q)bondAdd(r,q,2.5)}D.ids.push(r.id)}}
 /* ---------- なかよし100：3マス以内ではたらく速さ+5% ---------- */
 function bondNearTick(){BOND5.clear();if(!S.bond)return;for(const pk in S.bond){if(S.bond[pk]<BOND_MAX)continue;const p=bondPair(pk);if(!p||p[0].hidden||p[1].hidden)continue;if(Math.hypot(p[0].x-p[1].x,p[0].y-p[1].y)<=3){BOND5.add(p[0]);BOND5.add(p[1])}}}
-function bondTick(){if(!S||IS_STORY_REPLAY)return;bondNightTick();bondNearTick();bondTalkTick()}
+function bondTick(){if(!S||IS_STORY_REPLAY)return;omoiSeed();bondNightTick();bondNearTick();bondTalkTick()}
 
 /* ---------- いっしょに遊ぶ ---------- */
 /* 同じ遊び家具で遊びはじめたら、先に遊んでいる子と+2（1回の遊びで1回） */

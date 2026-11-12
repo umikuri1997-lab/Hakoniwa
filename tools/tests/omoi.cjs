@@ -30,11 +30,11 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict');
  await run(`(()=>{const r=S.res.find(r=>r.name===POKO),x=S.sacredRoot%W,y=S.sacredRoot/W|0;endAct(r);r.x=x-2.5;r.y=y+5.5})()`);/* 足あとから、木のそばへもどす */
  assert.equal(await run('S.shards'),1);assert(await run('S.flags.sh_land&&!S.flags.sh_key'),'land shard only');
  assert.equal(await run('QUESTS[S.quest].id'),'omoi');
- /* 受ける前のなかよしは数えない */
+ /* 受ける前のなかよしは、受けたあとで、御神木へ行く組になる */
  await run('(()=>{const [f,n]=S.res;bondSet(f,n,30)})()');assert.equal(await run('omoiN()+(S.flags.omoiW||[]).length'),0);
  await read();assert(await run('S.qTalked&&QUESTS[S.quest].id===\'omoi\''));
- assert.equal(await run('(()=>{const [f,n]=S.res;bondAdd(f,n,40);return (S.flags.omoiW||[]).length})()'),0,'already-bonded pair reaching 60 is not counted while others are unbonded');
- assert.equal(await run('(()=>{const [f,n,h,m,k]=S.res;bondSet(f,h,30);bondSet(f,h,40);bondSet(n,m,30);return (S.flags.omoiW||[]).length})()'),2,'new pairs wait once');
+ assert.equal(await run('(()=>{omoiSeed();omoiSeed();return (S.flags.omoiW||[]).length})()'),1,'a pair bonded before the request waits for the tree scene');
+ assert.equal(await run('(()=>{const [f,n,h,m,k]=S.res;bondSet(f,h,30);bondSet(f,h,40);bondSet(n,m,30);return (S.flags.omoiW||[]).length})()'),3,'new pairs wait once');
  assert.equal(await run('omoiN()'),0,'pairs count only after the tree scene');
  /* 御神木をタップすると、2人が根もとへ行って世話をし、ひとことずつ話す。聞きおえて1組 */
  for(let i=0;i<2;i++){assert(await run(`(sacredTreeTap(S.obj.indexOf('tower')),!!OMOI_RUN)`),'scene started');await talkOut();assert.equal(await run('omoiN()'),i+1);}
@@ -53,7 +53,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict');
  assert.equal(await run('wflTN()'),5);assert(await run('QUESTS[S.quest].check()'),'wood6 clears');
  assert.match(await run(`QUESTS[S.quest].story[0][1]`),new RegExp(await run('wflName()')));
  /* なかよしがもう、ぜんぶそろっているとき：なかよし60になった組を数える */
- assert.equal(await run(`(()=>{S.quest=questIndexOf('omoi');S.qTalked=false;S.qStory=null;S.flags.omoiP=[];const R=S.res;for(let i=0;i<R.length;i++)for(let k=i+1;k<R.length;k++)bondSet(R[i],R[k],30);S.qTalked=true;bondSet(R[2],R[4],60);return (S.flags.omoiW||[]).length})()`),1);
+ assert.equal(await run(`(()=>{S.quest=questIndexOf('omoi');S.qTalked=false;S.qStory=null;S.flags.omoiP=[];const R=S.res;for(let i=0;i<R.length;i++)for(let k=i+1;k<R.length;k++)bondSet(R[i],R[k],30);S.qTalked=true;S.flags.omoiW=[];omoiSeed();return (S.flags.omoiW||[]).length})()`),3);
  /* 古いセーブ：今のならび（farmFirst1）で、omoi のない番号 */
  const mig=(q,s,pre=true)=>run(`(()=>{const old=QUESTS1.map(v=>v.id).filter(id=>id!=='omoi'),st={world:0,flags:{farmFirst1:1},quest:old.indexOf('${q}'),qStory:${s?`old.indexOf('${s}')`:'null'}};migrateOmoiIns(st,${pre});migrateOmoiIns(st,${pre});return [QUESTS1[st.quest]?.id||null,st.qStory==null?null:QUESTS1[st.qStory].id]})()`);
  assert.deepEqual(await mig('lv5'),['lv5',null]);
