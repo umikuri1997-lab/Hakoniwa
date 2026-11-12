@@ -8,7 +8,7 @@
  ベンチ bench（100×44）：座面 x0〜99・y0〜26／正面 y27〜31／脚 x5〜12・x87〜94、y32〜43。木目よこ3本
  ベンチ（たて）bench>1（47×116）：座面 x0〜46・y0〜99／正面 y100〜106／脚 x4〜11・x35〜42、y107〜115。木目たて3本
  まるいサイドテーブル stable（59×64）：丸い天板（だ円 x1〜57・y1〜34、厚み6）／天板のうらの、すぼまる台 y40〜44／まん中の柱 x25〜33・y42〜63／左右にひらく丸い棒の足 y42〜55
- 木箱 crate（64×69）：ふたの板4まい x8〜55・y1〜27／ふたの手前のふち y29〜33／左右の柱 x1〜7・x56〜62／柱のかど金 y26〜35／正面のへこんだ板 x9〜54・y37〜60 に X のすじかい／下の板 y62〜67"""
+ 木箱 crate（64×69）：ふたの板4まい x8〜55・y1〜27／ふたの手前のふち y29〜33／左右の柱 x1〜7・x56〜62（かど金はなし）／正面のへこんだ板 x9〜54・y37〜60 に X のすじかい／下の板 y62〜67"""
 import sys, os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from pixdraw import Pix, run, oval_rows, OT, OD, TB, TS, TI, LIP, AB, AS, LL
@@ -65,13 +65,10 @@ def crate():
         for x in range(9, 55):
             if p.at(x, y) == CB and p.at(x, y - 1) in (CP, CD) and p.at(x, y + 1) == CB: p.dot(x, y, CL)
     p.rect(8, 62, 55, 67, CB); p.hl(62, 8, 55, CL); p.hl(67, 8, 55, CS)
-    # 4 左右の柱と、かど金
+    # 4 左右の柱（まっすぐ。上の面は明るく、正面はふたのふちの高さから）
     for L in (1, 56):
-        p.rect(L, 0, L + 6, 68, CO); p.rect(L + 1, 1, L + 5, 25, CL); p.vl(L + 5, 1, 25, CB)
-        p.rect(L + 1, 36, L + 5, 67, CB); p.vl(L + 1, 36, 67, CL); p.vl(L + 5, 36, 67, CS)
-        K = L - 1                                # かど金：柱より左右に1ドット広い、明るい帯。こい線でかこまない
-        p.rect(K, 26, K + 8, 35, CB); p.rect(K, 26, K + 8, 27, CL); p.hl(35, K, K + 8, CS)
-        p.vl(0 if L == 1 else 63, 26, 35, CO); p.vl(8 if L == 1 else 55, 28, 34, CS)
+        p.rect(L, 0, L + 6, 68, CO); p.rect(L + 1, 1, L + 5, 28, CL); p.vl(L + 5, 1, 28, CB)
+        p.rect(L + 1, 29, L + 5, 67, CB); p.vl(L + 1, 30, 67, CL); p.vl(L + 5, 29, 67, CS)
     return p
 
 run({'ltable': ltable, 'ltable>1': ltable_v, 'bench': bench, 'bench>1': bench_v, 'stable': stable, 'crate': crate})
