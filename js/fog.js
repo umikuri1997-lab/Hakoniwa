@@ -120,6 +120,8 @@ ACT.foglook={start(r,a){if(S.obj[a.obj]!=='nushiprint')return false;r.bubble=''}
   if(tr)return printScene(r,f,mem);dialog(mem,()=>{f.done=1})}};
 /* 草原のメイン「ヌシ様のかけらをさがそう」（lv5）：霧の中のヌシ様のあしあと3つを、フタバとたどる。たどったあしあとは S.flags.printT（この依頼で見た物だけ。前に見たあしあとも、もう一度見にいく）。
    1つめ・2つめ：フタバが、つぎのあしあとのほうを指さす（光の点々とカメラ）。3つめ：あしあとが光る。会話を最後まで聞いてから、たどったことにする。かけらは、お礼の会話でわたす */
+let PRINT_FUU=0;/* lv5 の依頼の会話に、フウが出たか（会話をおえたら S.flags.printFuu） */
+const PRINT_FUU_TRACE=[[POKO,'#think|つま先は……うん、こっちっぽい。','print:point'],[POKO,'#joy|ヌシ様が歩いていったほうへ、ついていってみよう！']];
 const PRINT_N=3,PRINT_BEAT_MS={point:1700,glow:2000,take:2600};
 const PRINT_TRACE=[
  [[POKO,'#think|ヌシ様の足あと……。もういちど、よく見てみるね。'],[POKO,'……あっ。つま先が、あっちを向いてる。','print:point'],[POKO,'#joy|ヌシ様が歩いていったほうへ、ついていってみよう！']],
@@ -140,7 +142,7 @@ function printNear(){/* たどりはじめる前に、足あとがぜんぶ霧�
   const nearV=k=>{const x=k%W,y=(k/W)|0;for(let b=-2;b<=2;b++)for(let a=-2;a<=2;a++){const nx=x+a,ny=y+b;if(nx>=0&&ny>=0&&nx<W&&ny<H&&VILL[ny*W+nx])return true}return false};
   for(let k=0;k<W*H;k++)if(G.dist[k]>=0&&!fogAt(k)&&fogSpotOK(S,k,null)&&walk(k)&&!nearV(k)&&!(S.drops||[]).some(d=>d.y*W+d.x===k))C.push(k);if(!C.length)return;
   C.sort((a,b)=>G.dist[a]-G.dist[b]);const j=C[(Math.random()*Math.min(20,C.length))|0],f=L.reduce((m,q)=>Math.hypot(q.j%W-p.x,((q.j/W)|0)-p.y)<Math.hypot(m.j%W-p.x,((m.j/W)|0)-p.y)?q:m);
-  S.obj[f.j]='';S.fogReq=(S.fogReq||[]).filter(k=>k!==f.j);S.obj[j]='nushiprint';f.j=j;f.a=areaOf(j);S.flags.printNear=1;dirty=true}
+  S.obj[f.j]='';S.fogReq=(S.fogReq||[]).filter(k=>k!==f.j);S.obj[j]='nushiprint';f.j=j;f.a=areaOf(j);S.flags.printNear=1;S.flags.printNearJ=j;dirty=true}
 function printFocus(){/* 目標の一覧から行く足あと：晴れている所の、まだたどっていない足あとで、フタバ（いなければ村のまん中）にいちばん近い物 */const p=S.res.find(r=>r.name===POKO&&!r.hidden),x=p?p.x:CX,y=p?p.y:CY;let b=-1,bd=1e9;for(const f of printList()){if(printTraced(f.j)||fogAt(f.j))continue;const d=Math.hypot(f.j%W-x,((f.j/W)|0)-y);if(d<bd){bd=d;b=f.j}}return b}
 function printNext(j){/* つぎにたどる足あと：まだたどっていない、いちばん近い足あと */const x=j%W,y=(j/W)|0;let b=-1,bd=1e9;for(const f of printList()){if(f.j===j||printTraced(f.j))continue;const d=Math.hypot(f.j%W-x,((f.j/W)|0)-y);if(d<bd){bd=d;b=f.j}}return b}
 function drawPrintMarks(now,inFog){/* たどる依頼のあいだ、まだたどっていない足あとの上で、ドットの星がまたたく（霧の中の物は、霧の上に描く inFog） */if(!printOn()||!$('#dialog').hidden)return;
@@ -150,7 +152,8 @@ let PRINTSC=null;/* いま見ている足あとの場面（保存しない） */
 function printScene(r,f,mem){const k=Math.min(PRINT_TRACE.length-1,printT().length),owner=S,session=VILLAGE_SESSION;PRINTSC={state:S,session,r,j:f.j};
   villageTimeout(()=>{if(S.res.includes(r)&&!r.act){r.path=[];r.act={type:'idle',stage:'do',t:0,dur:999,printHold:1}}},0);/* 会話のあいだ、足あとのそばで待つ */
   const release=()=>{if(r.act&&r.act.printHold)endAct(r);SACRED_POSES.delete(r);if(PRINTSC&&PRINTSC.r===r)PRINTSC=null;if(sacredDirection())sacredEndDirection(true)};
-  dialog([...mem,...PRINT_TRACE[k]],()=>{if(S!==owner||VILLAGE_SESSION!==session)return;f.done=1;release();if(!printOn()||printTraced(f.j))return;S.flags.printT=[...printT(),f.j];logEv('ヌシ様の足あとをたどった（'+printN()+'/'+PRINT_N+'）');dirty=true;renderQuest();checkQuest()})}
+  const fuu=k===0&&S.flags.printFuu&&(S.flags.printNearJ==null||S.flags.printNearJ===f.j);/* 1つめは、フウが見た足あと */
+  dialog([...(fuu?[[POKO,'フウが見たのは、きっとここだね。']]:[]),...mem,...(fuu?PRINT_FUU_TRACE:PRINT_TRACE[k])],()=>{if(S!==owner||VILLAGE_SESSION!==session)return;f.done=1;release();if(!printOn()||printTraced(f.j))return;S.flags.printT=[...printT(),f.j];logEv('ヌシ様の足あとをたどった（'+printN()+'/'+PRINT_N+'）');dirty=true;renderQuest();checkQuest()})}
 function printCue(c){const P=PRINTSC;if(!P||P.state!==S||P.session!==VILLAGE_SESSION||!S.res.includes(P.r))return;const r=P.r,d=sacredDirection(true);if(!d)return;const now=performance.now();
   if(c==='point'){const nx=printNext(P.j);if(nx<0)return;const tx=nx%W+.5,ty=((nx/W)|0)+.5,dist=Math.hypot(tx-r.x,ty-r.y)||1,u=Math.min(dist,6)/dist,ex=r.x+(tx-r.x)*u,ey=r.y+(ty-r.y)*u;
     r.face=tx>=r.x?1:-1;sacredScenePose(r,'point',600000,{side:true,face:r.face});sfx('tap');

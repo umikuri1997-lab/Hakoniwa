@@ -514,10 +514,11 @@ const QUESTS1=[
   ],[['F','枝が、伸びた……！'],['N','根の先も、さっきより遠くへ届いてるよぉ。'],['M','水の流れも、木のほうへ向いています。'],['F','大きくなったら、みんなで休もうね。']]),{check:()=>cnt('tower')>=1,gives:{shrine:true}}),
   stepQuest({id:'lv5',text:'ヌシ様のかけらをさがそう',
    steps:[{id:'green375',/* id はセーブの読みかえのため、前のまま（前は、みどりのマス） */t:'ヌシ様の足あとを3つたどる',check:()=>{printEnsure();printNear();return printN()>=PRINT_N},prog:()=>{const w=printWhy();return '足あと '+printN()+'/'+PRINT_N+(w?'　'+w:'')},how:'「みる」でヌシ様の足あとをタップして、フタバに見にいってもらう。霧は、となりの晴れた土地を緑にすると晴れる'}],
-   talk:{who:POKO,when:()=>true,get lines(){const seen=(S.fogF||[]).some(f=>f.t==='print'&&f.done);return [
+   talk:{who:POKO,when:()=>true,done(){S.flags.printFuu=PRINT_FUU},get lines(){const seen=(S.fogF||[]).some(f=>f.t==='print'&&f.done),fuu=S.res.some(r=>r.name===FIXK0.wind&&!r.hidden&&!r.coffin);PRINT_FUU=fuu?1:0;/* フウがいれば、1つめの足あとはフウが見た物 */return [
     [POKO,S.flags.nushiAlive?'ヌシ様は、生きてた。ぼくたちの声を聞いてくれたんだ。今度は、ぼくたちがヌシ様の力を取り戻したい！':'ヌシ様の力は、かけらの中に残ってるんだね。ぼくたちで、もう一度つなぎたい！'],
     [MINA,'あの木も、御神木に育ったねぇ。……土がねぇ、かけらが3つそろうのを、まってるみたいなんだぁ。'],
     [POKO,seen?'#think|……そうだ。霧の中で見つけた、ヌシ様の足あと。':'#think|ヌシ様はね、毎朝、草原を歩いてまわってたんだ。足あとが、まだどこかに残ってるかも。'],
+    ...(fuu?[[FIXK0.wind,'フッ…足あとなら、見たよ。風にのって、村の外をひとまわりしていたときにね。'],[FIXK0.wind,'大きな足あとだった。そこだけ、草がまっすぐ起きあがっていたよ。']]:[]),
     [POKO,'ヌシ様が歩いた道を、たどってみたいな。どこかで、かけらが待ってる気がするんだ。'],
     [GOD,'#nod|うむ。ヌシが歩いた道には、ヌシの力が、いまも残っておるはずじゃ。わしも、いっしょに見守るぞい。']]}},
    get story(){return [
