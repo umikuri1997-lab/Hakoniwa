@@ -57,5 +57,4 @@ def cleaned(name, n=64):
     """描きなおさない。前の絵の形のまま、色だけをまとめる"""
     im = pixclean.clean(Image.open(os.path.join(HERE, 'src', name + '.png')), n, 2, 0); p = Pix(*im.size); p.im = im; p.px = im.load(); return p
 
-# たる・あさぶくろは、ゲームに入れない（持ち主が、いまの絵のままにするとえらんだ）。絵を見るときは cleaned('taru') を書き出す
-run({'stor': lambda: with_contents('stor'), 'mbox': lambda: with_contents('mbox')})
+run({'stor': lambda: with_contents('stor'), 'mbox': lambda: with_contents('mbox'), 'taru': lambda: cleaned('taru'), 'asabukuro': lambda: cleaned('asabukuro')})
