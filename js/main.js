@@ -110,8 +110,8 @@ const paused=()=>(typeof sacredPlayActive==='function'&&sacredPlayActive())||sac
 let lastIn=performance.now();
 for(const ev of['pointerdown','keydown','wheel'])addEventListener(ev,()=>{lastIn=performance.now();const d=$('#idle');if(!d.hidden){d.hidden=true;last=performance.now()}},true);
 let tutCache={k:'',t:0,v:null};
-function craftHintEl(){/* 依頼ボードのしぼりこみで、さがす物がかくれているとき、もとにもどす所をさす */if(craftQ)return[document.getElementById('craftQ'),'さがす名前をけそう'];if(!craftOpen)return[document.querySelector('.cfind .ctab'),'「しぼりこみ」をタップ'];return[document.querySelector('.ctab[data-tag="ぜんぶ"]'),'「ぜんぶ」をタップ']}
-function orderTut(id){if(sheet){if(sheet!=='craft'||inv(id)>0||S.orders.some(o=>o.type===id))return{kind:'close'};return craftInTag(id,craftTab)&&!craftQ?{kind:'row'}:{kind:'tab'}}if(inv(id)>0)return{kind:'place'};if(S.orders.some(o=>o.type===id))return null;if(mode!=='look')return{kind:'look'};return BOARD>=0?{kind:'board'}:null}
+function craftHintEl(){/* 依頼ボードのしぼりこみで、さがす物がかくれているとき、もとにもどす所をさす */if(craftCan)return[document.querySelector('.cfind .cnow'),'「いま作れる」をタップ'];if(craftQ)return[document.getElementById('craftQ'),'さがす名前をけそう'];if(!craftOpen)return[document.querySelector('.cfind .ctab'),'「しぼりこみ」をタップ'];return[document.querySelector('.ctab[data-tag="ぜんぶ"]'),'「ぜんぶ」をタップ']}
+function orderTut(id){if(sheet){if(sheet!=='craft'||inv(id)>0||S.orders.some(o=>o.type===id))return{kind:'close'};return craftInTag(id,craftTab)&&!craftQ&&(!craftCan||canMakeNow(id))?{kind:'row'}:{kind:'tab'}}if(inv(id)>0)return{kind:'place'};if(S.orders.some(o=>o.type===id))return null;if(mode!=='look')return{kind:'look'};return BOARD>=0?{kind:'board'}:null}
 function tutView(){/* 画面のうち、上のバーと下のパネルにかくれていない所 */const ar=$('#app').getBoundingClientRect(),q=$('#questChip').getBoundingClientRect();let b=$('#botUI').getBoundingClientRect().top;const ii=$('#itemInfo');if(!ii.hidden){const t=ii.getBoundingClientRect().top;if(t>0)b=Math.min(b,t)}return[30,q.bottom-ar.top+50,VW-30,b-ar.top-100]}
 function tutSpot(id){const sz=BL[id].sz||[1,1],V=tutView(),vc=[Math.floor((cam.x+(V[0]+(V[2]-V[0])*.72)/cam.z)/TS-sz[0]/2+.5),Math.floor((cam.y+(V[1]+(V[3]-V[1])*.66)/cam.z)/TS-sz[1]/2+.5)];/* 画面の右下のマス（まん中だとじゃまなので） */
   const k=S.quest+':'+id+':'+vc;if(tutCache.k===k&&performance.now()-tutCache.t<1500)return tutCache.v;let v=null;
@@ -165,7 +165,7 @@ function updTut(){
   else if(qt==='stor'||qt==='mbox'){const bid=qt==='stor'?'stor':'mbox',bn=BL[bid].name;
     if(inv(bid)>0)placeHint(bid);
     else if(!S.orders.some(o=>o.type===bid)){
-      if(sheet==='craft'){if(!craftInTag(bid,craftTab)||craftQ){[el,lbl]=craftHintEl()}else{const row=[...document.querySelectorAll('#sheetBody .row')].find(r=>r.textContent.includes(bn));el=row&&([...row.querySelectorAll('button')].find(b=>b.textContent.includes('はる'))||[...row.querySelectorAll('button')].pop());lbl=el&&el.disabled?'木材が集まるまで待とう':'「はる」をタップ'}}
+      if(sheet==='craft'){if(!craftInTag(bid,craftTab)||craftQ||craftCan&&!canMakeNow(bid)){[el,lbl]=craftHintEl()}else{const row=[...document.querySelectorAll('#sheetBody .row')].find(r=>r.textContent.includes(bn));el=row&&([...row.querySelectorAll('button')].find(b=>b.textContent.includes('はる'))||[...row.querySelectorAll('button')].pop());lbl=el&&el.disabled?'木材が集まるまで待とう':'「はる」をタップ'}}
       else if(!sheet){if(mode!=='look'){el=document.querySelector('#dock [data-mode="look"]');lbl='「みる」をタップ'}else if(BOARD>=0){wp=[(BOARD%W+1)*TS,((BOARD/W)|0)*TS-12];lbl='依頼ボードをタップ'}}}}
   else if(qt==='fence4'){if(inv('fence')>0)placeHint('fence')}
   else if(qt==='wall'){if(inv('hwall')>0)placeHint('hwall')}

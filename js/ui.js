@@ -265,19 +265,19 @@ function renderSheet(){
       {const cx=el('<button class="cx" aria-label="やめる">×</button>');cx.onclick=e=>{e.stopPropagation();cancelOrder(o.id)};p.appendChild(cx)}/* 依頼をやめる */
       const bi=p.querySelector('.bar i');bi.style.width=Math.min(100,o.prog/o.need*100)+'%';bi.style.background='#e0a43a';bd.appendChild(p)}
     body.appendChild(bd);
-    const s2=el('<div class="sec"><h3>依頼を書く</h3><div class="cfind"><input id="craftQ" type="search" placeholder="名前でさがす" autocomplete="off"><button class="ctab"></button></div><div class="ctabs"></div><div class="rows"></div></div>');
+    const s2=el('<div class="sec"><h3>依頼を書く</h3><div class="cfind"><input id="craftQ" type="search" placeholder="名前でさがす" autocomplete="off"><button class="ctab cnow">いま作れる</button><button class="ctab cflt"></button></div><div class="ctabs"></div><div class="rows"></div></div>');
     const CIDS=CRAFT_TABS.flatMap(([,ids])=>ids),cShow=id=>recipeKnown(id)&&(lvOK(id)||S.recipes[id])&&recShown(id);
     const gearOn=WD===1||GEAR_IDS.some(id=>S.recipes&&S.recipes[id]);/* そうびは火山から */
     const tagOn=t=>t==='ぜんぶ'||(t!=='そうび'||gearOn)&&CIDS.some(id=>cShow(id)&&tagsOf(id).includes(t));
     if(!CRAFT_TAGS.includes(craftTab)||!tagOn(craftTab))craftTab='ぜんぶ';
-    {const q=s2.querySelector('#craftQ'),fb=s2.querySelector('.cfind .ctab');q.value=craftQ;
+    {const q=s2.querySelector('#craftQ'),fb=s2.querySelector('.cfind .cflt'),nb=s2.querySelector('.cfind .cnow');if(craftCan)nb.classList.add('on');nb.onclick=()=>{craftCan=!craftCan;renderSheet()};q.value=craftQ;
       q.oninput=e=>{if(e.isComposing)return;craftQ=q.value;renderSheet()};q.addEventListener('compositionend',()=>{craftQ=q.value;renderSheet()});/* 日本語の変換中は作りなおさない */
       fb.textContent=craftTab==='ぜんぶ'?'しぼりこみ':'しぼりこみ：'+craftTab;if(craftOpen||craftTab!=='ぜんぶ')fb.classList.add('on');fb.onclick=()=>{craftOpen=!craftOpen;renderSheet()}}
     if(craftOpen)for(const t of CRAFT_TAGS){if(!tagOn(t))continue;const b=el('<button class="ctab'+(t===craftTab?' on':'')+'"></button>');b.textContent=t;b.dataset.tag=t;b.onclick=()=>{craftTab=t===craftTab?'ぜんぶ':t;craftOpen=false;renderSheet()};s2.querySelector('.ctabs').appendChild(b)}
     else s2.querySelector('.ctabs').hidden=true;
     const kana=x=>x.replace(/[\u30a1-\u30f6]/g,c=>String.fromCharCode(c.charCodeAt(0)-0x60)),cq=kana(craftQ.trim());/* カタカナもひらがなでさがせる */
     recToggle(s2,CIDS.filter(id=>recipeKnown(id)&&(lvOK(id)||S.recipes[id])));s2.querySelector('.rows').before(s2.querySelector('.recsw')||document.createTextNode(''));
-    let gPrev=null;for(const id of CIDS){const b=BL[id];if(!craftInTag(id,craftTab)||cq&&!kana(b.name).includes(cq))continue;
+    let gPrev=null;for(const id of CIDS){const b=BL[id];if(!craftInTag(id,craftTab)||cq&&!kana(b.name).includes(cq)||craftCan&&!canMakeNow(id))continue;
       if(!recipeKnown(id)||!lvOK(id)&&!S.recipes[id]||!recShown(id))continue;{const h=gearBoardHead(id,gPrev);gPrev=id;if(h)s2.querySelector('.rows').appendChild(h)}/* そうび：わくごとの見出し *//* 思いついていない・レベル不足は出さない */
       /* レシピをまだ知らない */
       const r=helpify(rowEl(b.name+(b.qty?'×'+b.qty:'')+'　所持：'+inv(id),'',iconURL(id),b.mat?matNeedHTML(b.mat)+(b.sand?'<span class="mneed" style="margin-right:6px;'+((S.sand||0)>=b.sand?'':'color:#c0392b;font-weight:700')+'">やすらぎの砂（'+(S.sand||0)+'/'+b.sand+'）</span>':'')+Object.keys(b.food||{}).map(k=>'<span class="mneed" style="margin-right:6px;'+((S.fs[k]||0)>=b.food[k]?'':'color:#c0392b;font-weight:700')+'">'+FOODS[k].name+'（'+(S.fs[k]||0)+'/'+b.food[k]+'）</span>').join('')+' ':''),withAttr(id,b.desc));
@@ -286,7 +286,7 @@ function renderSheet(){
       if(!lvOK(id)){bt.textContent='村Lv'+b.lv;bt.disabled=true;r.classList.add('done')}else{bt.textContent='はる　'+SP(b.pc);bt.disabled=S.pt<b.pc||S.orders.length>=boardMax()||!matOK(b.mat)||!!(orderLock()&&orderLock()!==id);bt.onclick=()=>orderFurn(id)}
       r.appendChild(bt);s2.querySelector('.rows').appendChild(r)}
     if(craftTab==='そうび')gearBoardUp(s2.querySelector('.rows'));/* そうびの強化 */
-    if(!s2.querySelector('.rows').children.length)s2.querySelector('.rows').appendChild(nodata('paper',cq||craftTab!=='ぜんぶ'?'みつからないよ':'まだ作れるものがないよ'));
+    if(!s2.querySelector('.rows').children.length)s2.querySelector('.rows').appendChild(nodata('paper',cq||craftCan||craftTab!=='ぜんぶ'?'みつからないよ':'まだ作れるものがないよ'));
     body.appendChild(s2);
     if(cqf!==null){const q=s2.querySelector('#craftQ');q.focus();try{q.setSelectionRange(cqf,cqf)}catch(e){}body.scrollTop=cst}
     if(S.feat.inv){const ib=el('<button class="btn">もちものを見る</button>');ib.onclick=()=>openSheet('inv');body.appendChild(ib)}
