@@ -99,7 +99,7 @@ function updHUD(){
   const al=$('#alert');const msg=[];if(en)msg.push('「コワイノ」 '+en+'体');if(hungry)msg.push('おなかがすいたせいれい '+hungry+'人');if(S.food===0&&S.enemyOn)msg.push(cnt('stor')?'食料ゼロ':'食料箱がありません');/* 足りない理由もいっしょに出す */
   al.hidden=!msg.length;al.textContent=msg.join('・');
   if(PDOWN){}/* 押している最中に作りなおすと、タップが消えてしまう */
-  else if(sheet==='craft'){const sig=S.orders.map(o=>o.id+':'+o.worker).join(',')+'|'+CRAFT_TABS.flatMap(([,ids])=>ids).filter(id=>craftInTag(id,craftTab)).map(id=>(S.pt>=BL[id].pc?1:0)+''+(matOK(BL[id].mat)?1:0)+inv(id)+(lvOK(id)?1:0)).join('')+'|'+(S.mat.wood||0)+','+(S.mat.stone||0)+','+(S.mat.bamboo||0)+'|'+craftTab+'|'+S.lv+'|'+Object.keys(S.recipes).length;
+  else if(sheet==='craft'){const sig=S.orders.map(o=>o.id+':'+o.worker).join(',')+'|'+CRAFT_TABS.flatMap(([,ids])=>ids).filter(id=>craftInTag(id)).map(id=>(S.pt>=BL[id].pc?1:0)+''+(matOK(BL[id].mat)?1:0)+inv(id)+(lvOK(id)?1:0)).join('')+'|'+(S.mat.wood||0)+','+(S.mat.stone||0)+','+(S.mat.bamboo||0)+'|'+craftTags.join()+'|'+S.lv+'|'+Object.keys(S.recipes).length;
     if(sig!==craftSig){craftSig=sig;renderSheet()}else document.querySelectorAll('#sheetBody .paper .bar i').forEach((b,n)=>{const o=S.orders[n];if(o)b.style.width=Math.min(100,o.prog/o.need*100)+'%'})}/* 依頼ボードは、変わったときだけ作りなおす */
   else if(sheet==='people'||sheet==='res'||sheet==='house')renderSheet();
   else if(sheet==='stock'){const sig=Object.entries(S.fs).join()+'|'+Object.entries(S.mat).join()+'|'+foodCap()+','+matCap();if(sig!==STOCKSIG){STOCKSIG=sig;renderSheet()}}/* 数が変わったときだけ、そうこを描きなおす */
