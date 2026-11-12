@@ -11,7 +11,7 @@ const {chromium}=require('playwright');
     S.res=[mkRes(S,POKO,'wood',CX+.5,CY+.5),mkRes(S,MINA,'earth',CX+1.5,CY+.5),...['fire','water','wind'].map((el,i)=>mkRes(S,FIXK0[el],el,CX+i+2.5,CY+.5)),mkRes(S,'テスト','wood',CX+6.5,CY+.5)];for(const r of S.res){r.hunger=hMax(r);r.energy=100;r.fun=90;}for(const id of ['#title','#maps','#pro','#dialog'])document.querySelector(id).hidden=true;recount();showUI(true);})()`;
   await run(setup);
   await page.waitForFunction(()=>sacredEval('stageReady()'),{},{timeout:60000});
-  const last=`(()=>{const P=S.pendTalk||{},k=Object.keys(P).pop();return k?P[k]:null})()`;
+  const last=`(()=>{const P=S.pendTalk||{},k=Object.keys(P).pop(),L=k?P[k]:null;if(!L)return null;if(!/teary hush/.test(L[0][1])||!goneEntry(L[0][0]))throw Error('no last word '+JSON.stringify(L[0]));return L.slice(1)})()`;/* はじめの行は、消える子のさいごのひとこと */
   /* ふつうの子：なかよしのホノが、見た雑談の思い出を話す。棺はホノだけ */
   console.log('generic',await run(`(()=>{const [f,n,h,a,w,t]=S.res;S.bond={};bondAdd(t,h,40);const ci=CHATS.findIndex(c=>c.mate&&/合図/.test(c.mem||''));if(ci<0)throw Error('no mem chat');bondMemNote(t,h,ci);S.pendTalk={};die(t);
     const L=${last};if(!L)throw Error('no talk');if(L.slice(0,3).some(l=>l[0]!==h.name))throw Error('not mate '+JSON.stringify(L));if(!/合図/.test(L[1][1]))throw Error('no memory '+L[1][1]);if(L.some(l=>l[0]===POKO))throw Error('futaba talks');
@@ -34,6 +34,26 @@ const {chromium}=require('playwright');
   /* 火山：なかよしの子が話す */
   console.log('volcano',await run(`(()=>{setWorld(1);S=newState(1);LIVE[1]=S;started=true;S.t=720;S.hold=0;if(S.res.length<2)S.res.push(mkRes(S,SHIZUKU,'water',S.res[0].x+1,S.res[0].y));const [a,b]=S.res;for(const r of S.res){r.hunger=hMax(r);r.energy=100}
     S.bond={};bondAdd(a,b,30);(S.sev||(S.sev={}))['bd_'+bondKey(a,b)]=1;S.pendTalk={};die(b);const L=${last};if(!L||L[0][0]!==a.name)throw Error(JSON.stringify(L));return L.map(l=>l[0]+'：'+l[1]).join(' / ')})()`));
+  /* 消えたあと：思い出帳・しょんぼり・お墓まいり・雑談・にている子 */
+  await run(setup);
+  console.log('after',await run(`(()=>{const [f,n,h,a,w,t]=S.res;S.bond={};bondAdd(t,h,40);bondMemNote(t,h,CHATS.findIndex(c=>c.mate&&/星/.test(c.mem||'')));S.pendTalk={};die(t);
+    const e=goneEntry('テスト');if(!e||e.mate!==h.name||!/星/.test(e.mem||''))throw Error('book '+JSON.stringify(e));
+    griefTick();if(!h.grief||f.grief)throw Error('grief');
+    for(const r of S.res)endAct(r);if(goMourn(h,bfs(h.x|0,h.y|0)))throw Error('mourn before burial');
+    for(const L of [S.lost||[]])for(const q of L)delete q.unb;for(const j in S.dyn)if(S.obj[j]==='grave'){S.obj[j]='';delete S.dyn[j]}recount();
+    if(!goMourn(h,bfs(h.x|0,h.y|0)))throw Error('no mourn');if(h.act.type!=='mourn')throw Error('act');if(goMourn(h,bfs(h.x|0,h.y|0))&&h.act.who!=='テスト')throw Error('twice');
+    const fk=h.act.obj;if(h.act.fl!=='clover'||fk<0||Math.hypot(fk%W-e.j%W,(fk/W|0)-(e.j/W|0))>MOURN_R*1.5)throw Error('spot '+JSON.stringify(h.act));h.act.stage='do';ACT.mourn.start(h,h.act);ACT.mourn.tick(h,Object.assign(h.act,{t:5}));if(S.obj[fk]!=='clover')throw Error('flower not planted');endAct(h);
+    /* 水のせいれい：そばに水がなければ、ゆり */const wq={elem:'water',j:e.j};const ws=mournSpot(wq);if(!ws||ws.id!=='lily')throw Error('water no-pond '+JSON.stringify(ws));S.ground[e.j+2]=1;recount();const ws2=mournSpot(wq);if(!ws2||ws2.id!=='lotus'||ws2.k!==e.j+2)throw Error('water pond '+JSON.stringify(ws2));S.ground[e.j+2]=0;recount();
+    if(goneTalkName()!=='テスト')throw Error('talk name');const gi=CHATS.findIndex(c=>c.gone);if(gi<0)throw Error('no gone chat');
+    let seen=0;for(let i=0;i<40;i++)if(CHATS[chatTopic(f,n)].gone)seen++;if(!seen)throw Error('gone chat never');
+    const x=mkRes(S,'あたらしい','wood',CX+8.5,CY+.5);S.res.push(x);simNote(x);if(!x.simTo||x.simTo.m!==h.name)throw Error('sim');
+    return 'book「'+e.mem+'」 grief mourn clover/lotus/lily chat'+seen+'/40 sim'})()`));
+  /* よみがえったとき：なかよしとの再会の会話（さいごのひとこと・見た会話にこたえる）と、よろこぶ場面 */
+  await run(setup);
+  console.log('reunion',await run(`(()=>{const [f,n,h,a,w,t]=S.res;S.bond={};bondAdd(t,h,40);bondMemNote(t,h,CHATS.findIndex(c=>c.mate&&/星/.test(c.mem||'')));S.pendTalk={};die(t);const e=goneEntry('テスト');if(!e.lw)throw Error('no lw');
+    const q=mkRes(S,'テスト','wood',CX+3.5,CY+2.5);q.id=t.id;S.res.push(q);goneBack('テスト');q.reMate=h.name;reunite(q,[CX+3,CY+2]);if(q.reTalk!==h.name)throw Error('reTalk');
+    const L=reunionLines(q,h);if(L[0][0]!==h.name||L[1][0]!=='テスト'||!/星/.test(L[3][1]))throw Error(JSON.stringify(L));if(/ごめん|わる|わり|すまない/.test(e.lw)&&!/あやまった/.test(L[2][1]))throw Error('lw reply '+e.lw+' | '+JSON.stringify(L));
+    reunionJoy(q,h);if(!JOYU.has(h)||!JOYU.has(q))throw Error('joy');if(h.grief&&griefOn(h))throw Error('still grief');return L.map(l=>l[0]+'：'+l[1]).join(' / ')})()`));
   if(errors.length)throw Error(errors.join('\n'));
   await browser.close();console.log('ok');
 })().catch(e=>{console.error(e);process.exit(1)});

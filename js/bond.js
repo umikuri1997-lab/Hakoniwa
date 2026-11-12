@@ -176,7 +176,51 @@ function bondNightTick(){if(!isNight()||!S.enemyOn)return;const n=dayNo()-(hour(
   for(const r of S.res){if(r.hidden||!r.act||!BOND_DEF.has(r.act.type)||D.ids.includes(r.id))continue;for(const id of D.ids){const q=S.res.find(x=>x.id===id);if(q)bondAdd(r,q,1,'guard')}D.ids.push(r.id)}}
 /* ---------- なかよし100：3マス以内ではたらく速さ+5% ---------- */
 function bondNearTick(){BOND5.clear();if(!S.bond)return;for(const pk in S.bond){if(S.bond[pk]<BOND_MAX)continue;const p=bondPair(pk);if(!p||p[0].hidden||p[1].hidden)continue;if(Math.hypot(p[0].x-p[1].x,p[0].y-p[1].y)<=3){BOND5.add(p[0]);BOND5.add(p[1])}}}
-function bondTick(){if(!S||IS_STORY_REPLAY)return;omoiSeed();bondNightTick();bondNearTick();bondTalkTick()}
+/* ---------- 消えたあと ----------
+   S.gone：消えた子の記録（思い出帳の「いなくなったなかま」）。{name,elem,vr,came,day,key,mate,mem,back,vis,sim}
+   しょんぼり：なかよしの子は GRIEF_DAYS 日、たのしさのへりかた GRIEF_FUN 倍（r.grief）。ふきだしに消えた子の絵（'g:名前'）。
+   お墓まいり：なかよしの子が、消えた場所（e.j）のそばに、消えた子の属性の花を植えにいく（goMourn・mourn・MOURNFL）。水のせいれいはハス（そばに水がなければ、ゆり）。キーキャラは、もどるまで毎日。ふつうの子は MOURN_DAILY 日は毎日、そのあとは MOURN_EVERY 日ごと。
+   雑談：GONE_TALK_DAYS 日のあいだ、消えた子の話がまざる（CHATS の gone、@G）。
+   にている子：消えたふつうの子と同じ属性の子が来たら、なかよしだった子がひとこと（r.simTo）。 */
+const GRIEF_DAYS=3,GRIEF_FUN=1.5,GONE_TALK_DAYS=5,MOURN_DAILY=7,MOURN_EVERY=3,MOURN_R=3;
+const MOURNFL={wood:'clover',earth:'bellf',fire:'salvia',wind:'lily',water:'lotus'};
+function goneNote(r,m){if(!S||IS_STORY_REPLAY)return null;const L=S.gone||(S.gone=[]),e={name:r.name,elem:r.elem,vr:r.vr,j:(r.y|0)*W+(r.x|0),came:r.came||dayNo(),day:dayNo(),key:isKey(r.name),mate:m?m.name:null,mem:m?bondMemLine(m,r).replace(/^#[^|]*\|/,''):null};L.push(e);if(L.length>60)L.shift();return e}
+function goneBack(n){for(const e of S.gone||[])if(e.name===n&&!e.back)e.back=dayNo()}
+function goneEntry(n){const L=S&&S.gone||[];for(let i=L.length-1;i>=0;i--)if(L[i].name===n)return L[i];return null}
+const griefOn=r=>!!r&&(S.gone||[]).some(e=>e.mate===r.name&&!e.back&&dayNo()-e.day<GRIEF_DAYS);
+function goneTalkName(){/* 雑談で話す、消えたばかりの子（いちばん新しい子） */const L=S&&S.gone||[];for(let i=L.length-1;i>=0;i--){const e=L[i];if(!e.back&&dayNo()-e.day<GONE_TALK_DAYS&&!S.res.some(q=>q.name===e.name))return e.name}return null}
+const sentOff=n=>!S.res.some(q=>q.coffin&&q.coffin.name===n)&&![...(S.buried||[]),...(S.lost||[])].some(q=>q.name===n&&q.unb);/* おみおくりがすんだ */
+function mournDue(e){if(e.back||e.vis===dayNo()||!sentOff(e.name))return false;const d=dayNo()-e.day;return e.key||d<MOURN_DAILY||d%MOURN_EVERY===0}
+function mournSpot(e){/* 花を植えるマス：消えた場所から MOURN_R マスの中の、植えられる所（近い順）。水のせいれいは、水の上にハス。なければ、ゆり */const x0=e.j%W,y0=(e.j/W)|0,ids=e.elem==='water'?['lotus','lily']:[MOURNFL[e.elem]||'clover'];
+  for(const id of ids){let best=-1,bd=1e9;for(let dy=-MOURN_R;dy<=MOURN_R;dy++)for(let dx=-MOURN_R;dx<=MOURN_R;dx++){const x=x0+dx,y=y0+dy,k=y*W+x;if(x<1||y<1||x>=W-1||y>=H-1||S.obj[k]||S.floor[k]||S.res.some(q=>(q.x|0)===x&&(q.y|0)===y)||!canPlace(id,x,y,1))continue;const d=dx*dx+dy*dy;if(d<bd){bd=d;best=k}}if(best>=0)return {k:best,id}}return null}
+function goMourn(r,G){if(!S||isNight()||hour()<7||hour()>=18||r.hunger<55||heldN(r)||r.meal||r.cing||r.coffin||!S.gone)return false;
+  const e=(S.gone||[]).slice().reverse().find(e=>e.mate===r.name&&e.j!=null&&mournDue(e));if(!e)return false;
+  const sp=mournSpot(e),tg=sp?sp.k:e.j,st=nearest(G,j=>walk(j)&&(j===tg&&!sp||adjOf(j,k=>k===tg)>=0),300);if(st<0)return false;e.vis=dayNo();startAct(r,G,'mourn',st,{who:e.name,obj:sp?sp.k:-1,fl:sp?sp.id:null});return true}
+function simNote(r){/* 新しく来た子が、消えたふつうの子と同じ属性 */if(!S||IS_STORY_REPLAY||!S.gone)return;const e=S.gone.slice().reverse().find(e=>!e.key&&!e.back&&!e.sim&&e.elem===r.elem&&e.mate&&e.mate!==r.name&&S.res.some(q=>q.name===e.mate));if(!e)return;e.sim=1;r.simTo={m:e.mate,d:e.name}}
+function griefTick(){const day=!isNight();for(const r of S.res){r.grief=griefOn(r);if(r.grief&&day&&r.act&&['idle','wander','rest'].includes(r.act.type)&&Math.random()<.04){const e=(S.gone||[]).slice().reverse().find(e=>e.mate===r.name&&!e.back);if(e)r.bubble='g:'+e.name}
+    reunionTick(r,day);
+    if(r.simTo&&day&&!sevBusy()&&!r.hidden){const m=S.res.find(q=>q.name===r.simTo.m&&!q.hidden),d=r.simTo.d;delete r.simTo;if(m)talkOnce('sim'+r.id,[[m.name,chatTone('#teary|……'+r.name+'って、'+d+'に、ちょっと、にてるね。',m,0)],[r.name,chatTone('#surprise|……'+d+'？',r,1)],[m.name,chatTone('……ううん。なんでもないよ。……これから、よろしくね。',m,2)]],600)}}}
+/* 再会：よみがえった子 q と、なかよしだった子 m の会話（見た会話の思い出・さいごのひとことにこたえる）と、よろこぶ場面 */
+const RE_DIDL={eat:'#joy|また、いっしょにごはん食べようね。',chat:'#joy|話したいこと、いっぱいあるんだ。',guard:'#joy|こんどの夜も、いっしょに守ろうね。',tour:'#joy|また、村をいっしょに見てまわろうね。',any:'#joy|また、いっしょにいようね。'};
+function reunionLines(q,m){const e=goneEntry(q.name)||{},k=bondKey(q,m),T=(r,t,i)=>[r.name,chatTone(t,r,i).replace(/\$/g,(r===m?q:m).name)],L=[T(m,'#surprise hush|……$？ ……ほんとに、$なの……？',0),T(q,'#joy|……ただいま、$。',1)];
+  if(/ごめん|わる|わり|すまない/.test(e.lw||''))L.push(T(m,'#teary|さいごに、あやまったりして……もう、あんなこと言わないでね。',2));else L.push(T(m,'#teary|……ずっと、待ってたんだよ。',2));
+  const mi=((S.bondMem||{})[k]||[]),c=mi.length?CHATS[mi[mi.length-1]]:null;let back=c&&c.back;
+  if(!back){const did=(S.bondDid||{})[k]||'';if(/^play:/.test(did)&&BL[did.slice(5)])back='#joy|また、いっしょに'+BL[did.slice(5)].name+'で遊ぼうね。';else back=RE_DIDL[did]||RE_DIDL.any}
+  L.push(T(q,back,3),T(m,'#joy|……うん！ おかえり、$！',4));return L}
+function reunionJoy(q,m){/* 会話のあと：2人で向かい合ってはねる。まわりの子も、はくしゅ */if(!S.res.includes(q)||!S.res.includes(m))return;const now=performance.now();q.face=m.x>=q.x?1:-1;m.face=-q.face;for(const r of[q,m]){JUMP.set(r,now);JOYU.set(r,now+3000);r.bubble='💕';fxSpr('hearts',r.x*TS,(r.y-.7)*TS);addFloat(r.x,r.y-1.3,'おかえり！','#ffd6e6')}
+  sfx('good');for(const r of S.res)if(r!==q&&r!==m&&!r.hidden&&Math.hypot(r.x-q.x,r.y-q.y)<8){JUMP.set(r,now+300);JOYU.set(r,now+2500);r.bubble='👏'}bondAdd(q,m,3,'tour');logEv(m.name+'と'+q.name+'が、また会えた');memo('🌱',m.name+'と'+q.name+'が、また会えた')}
+function reunionTick(r,day){if(!r.reTalk||!day||sevBusy()||r.hidden)return;const m=S.res.find(x=>x.name===r.reTalk&&!x.hidden);delete r.reTalk;if(!m)return;const q=r,owner=S,key='ru'+q.id+'_'+dayNo();if(S.flags[key])return;
+  const L=reunionLines(q,m),P=S.pendTalk||(S.pendTalk={});P[key]=L;dialog(L,()=>{if(S!==owner)return;S.flags[key]=1;delete P[key];reunionJoy(q,m)})}
+/* さいごのひとこと（消える子が、なかよしの子へ。なかよしがいなければ、みんなへ）。$M はなかよしの名前 */
+const LASTW={wood:['#teary hush|……$M……ごめんね……。','#teary hush|……$M、ありがとう……。たのしかった、よ……。','#teary hush|……$M……また、あそぼうね……。'],
+ earth:['#teary hush|……$M……ごめんねぇ……。','#teary hush|……$M……ありがとねぇ……。','#teary hush|……ちょっと、ねむいなぁ……。$M……またねぇ……。'],
+ fireA:['#teary hush|……$M……わるいね、さきに……。','#teary hush|……泣くんじゃないよ、$M……。','#teary hush|……$M……ありがと、ね……。'],
+ fireB:['#teary hush|……わりい、$M……。','#teary hush|……泣くなよ、$M……。','#teary hush|……$M……ありがとな……。'],
+ water:['#teary hush|……$Mさん……ごめんなさい……。','#teary hush|……$Mさん、ありがとう……ございました……。','#teary hush|……$Mさん……わすれないで、くださいね……。'],
+ wind:['#teary hush|……フッ…$M……そんな顔、しないでおくれ……。','#teary hush|……$M……風に、なっても……そばに、いるよ……。','#teary hush|……$M……ありがとう……。']};
+const LASTW0={wood:'#teary hush|……みんな……ごめんね……。',earth:'#teary hush|……みんな……ごめんねぇ……。',fireA:'#teary hush|……みんな……わるいね……。',fireB:'#teary hush|……みんな……わりい……。',water:'#teary hush|……みなさん……ごめんなさい……。',wind:'#teary hush|……フッ…みんな……すまないね……。'};
+function lastWord(r,m){const k=elemKey(r),a=LASTW[k]?k:'wood';return [r.name,m?pickFresh('lw:'+a,LASTW[a]).replace(/\$M/g,m.name):LASTW0[a]]}
+function bondTick(){if(!S||IS_STORY_REPLAY)return;omoiSeed();bondNightTick();bondNearTick();bondTalkTick();griefTick()}
 
 /* ---------- いっしょに遊ぶ ---------- */
 /* 同じ遊び家具で遊びはじめたら、先に遊んでいる子と+2（1回の遊びで1回） */
