@@ -49,7 +49,8 @@ function omoiScene(j){
       villageTimeout(()=>{if(!alive())return stop();SCENEHOLD=0;storyShot(view,{limit:2.4,seconds:.9});for(const r of pr){r.face=r.x<tx?1:-1;sacredScenePose(r,'storyListen',600000,{side:true,target:j,face:r.face})}
         dialog([omoiLine(A,B),omoiLine(B,A)],()=>{if(S!==owner||VILLAGE_SESSION!==session)return;stop();const L=S.flags.omoiP||(S.flags.omoiP=[]);S.flags.omoiW=(S.flags.omoiW||[]).filter(k=>k!==pk);if(!omoiOn()||L.includes(pk))return;L.push(pk);toast('ふたりの想いが、御神木のあかりになった（'+L.length+'/3）','good');logEv(A.name+'と'+B.name+'の想いが、御神木にとどいた');renderQuest();checkQuest();dirty=true})},5200)})};
   const near=r=>Math.hypot(r.x-tx,r.y-by-1)<3;/* 根もとのそば */
-  for(const [r,dx] of [[A,-1],[B,1]])if(!near(r)&&!sacredSceneWalk(r,tx+dx,by+1,{},arrive)){stop(r.name+'が、御神木まで行けません');return true}else if(near(r))arrive();/* 行けないときは、はじめない（待っている組のまま） */
+  const taken=new Set();/* 2人は、木の左と右の、べつのマスに立つ（近くにいても、自分のマスへ歩く。同じマスに重ならない） */
+  for(const [r,dx] of [[A,-1.5],[B,1.5]])if(!sacredSceneWalk(r,tx+dx,by+1,{avoid:taken},arrive)){stop(r.name+'が、御神木まで行けません');return true}/* 行けないときは、はじめない（待っている組のまま） */
   villageTimeout(()=>{if(begun||OMOI_RUN!==run)return;if(pr.every(near)){n=2;arrive()}else stop('御神木に、ふたりがそろいませんでした')},Math.max(20000,2000+Math.max(...pr.map(r=>(r.path||[]).length))*900));/* 歩くのをじゃまされたら、遠くのまま始めずに、やめる（待つ時間は道のりに合わせる） */
   return true}
 function shardOfferReady(){/* 御神木にかけらをささげられる（sacredTreeTap と同じ条件） */if(!S||WD!==0||S.free||S.cleared||isNight())return false;if((S.shards||0)-(S.setSh||0)<=0)return false;if((S.setSh||0)>=2)return !!S.flags.finalWon&&!!(S.sev&&S.sev.e09)&&clearReady();return true}

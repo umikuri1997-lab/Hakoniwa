@@ -37,7 +37,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict');
  assert.equal(await run('(()=>{const [f,n,h,m,k]=S.res;bondSet(f,h,30);bondSet(f,h,40);bondSet(n,m,30);return (S.flags.omoiW||[]).length})()'),3,'new pairs wait once');
  assert.equal(await run('omoiN()'),0,'pairs count only after the tree scene');
  /* 御神木をタップすると、2人が根もとへ行って世話をし、ひとことずつ話す。聞きおえて1組 */
- for(let i=0;i<2;i++){assert(await run(`(sacredTreeTap(S.obj.indexOf('tower')),!!OMOI_RUN)`),'scene started');await talkOut();assert.equal(await run('omoiN()'),i+1);}
+ for(let i=0;i<2;i++){assert(await run(`(sacredTreeTap(S.obj.indexOf('tower')),!!OMOI_RUN)`),'scene started');await page.waitForFunction(()=>sacredEval(`!document.querySelector('#dialog').hidden`),{},{timeout:40000});assert(await run(`(()=>{const p=bondPair(S.flags.omoiW[0]);return ((p[0].y|0)*W+(p[0].x|0))!==((p[1].y|0)*W+(p[1].x|0))})()`),'the two stand on different cells');await talkOut();assert.equal(await run('omoiN()'),i+1);}
  assert(!await run('QUESTS[S.quest].check()'));
  assert.equal(await run('(()=>{const [f,n,h,m,k]=S.res;bondSet(m,k,30);bondSet(h,k,30);return omoiN()+(S.flags.omoiW||[]).length})()'),3,'stops at 3');
  await run(`sacredTreeTap(S.obj.indexOf('tower'))`);await talkOut();
