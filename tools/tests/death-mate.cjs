@@ -59,6 +59,19 @@ const {chromium}=require('playwright');
   /* 会話を最後まで送ると、よみがえった子が、なかよしの属性の花をとなりに植える */
   for(let i=0;i<120;i++){const done=await run(`(()=>{if(!document.querySelector('#dialog').hidden){DLGA.n=DLGA.full.length;DLGA.readReady=0;const b=document.querySelector('#dlgBtns button');if(b&&!b.disabled&&performance.now()>=(DLGA.holdUntil||0))b.click();return false}return (S.memo||[]).some(m=>/お礼の花/.test(m[2]))})()`);if(done)break;await page.waitForTimeout(150)}
   console.log('thanks',await run(`(()=>{const m=(S.memo||[]).find(m=>/お礼の花/.test(m[2]));if(!m)throw Error('no thanks flower');const e=goneEntry('テスト');const id=S.obj[e.fl[e.fl.length-1]];if(id!=='salvia')throw Error('flower '+id);return m[2]+' ('+id+')'})()`));
+  /* けんかと仲なおり */
+  await run(setup);
+  console.log('quarrel',await run(`(()=>{const [f,n,h,a,w,t]=S.res;S.bond={};bondAdd(h,t,40);const j=CY*W+CX+9;S.obj[j]='swing';h.act={type:'play',stage:'do',obj:j,t:0};bondPlayStart(t,{obj:j,what:'swing'});S.obj[j]='';endAct(h);
+    const R=Math.random,PB=preBedCalm;Math.random=()=>0;preBedCalm=()=>false;try{qrRoll()}finally{Math.random=R;preBedCalm=PB}const Q=S.qr;if(!Q||Q.why!=='play'||Q.w!=='swing')throw Error('roll '+JSON.stringify(Q));
+    const b0=bondOf(h,t);bondAdd(h,t,5);if(bondOf(h,t)!==b0)throw Error('bond grew');griefTick();if(!h.qrF||!t.qrF)throw Error('qrF');
+    const SB=sevBusy;sevBusy=()=>false;S.t=720;qrTick(true);sevBusy=SB;if(!Q.talk)throw Error('no fight talk');return 'quarrel over swing'})()`));
+  for(let i=0;i<40&&await run(`document.querySelector('#dialog').hidden`);i++)await page.waitForTimeout(200);
+  console.log('fight',await run(`(()=>{if(!/ブランコ/.test(DLGA.full))throw Error('fight talk '+DLGA.full);return DLGA.full})()`));
+  for(let i=0;i<40&&!(await run(`document.querySelector('#dialog').hidden`));i++){await run(`(()=>{DLGA.n=DLGA.full.length;DLGA.readReady=0;const b=document.querySelector('#dlgBtns button');if(b&&!b.disabled&&performance.now()>=(DLGA.holdUntil||0))b.click()})()`);await page.waitForTimeout(150)}
+  console.log('makeup',await run(`(()=>{const Q=S.qr,h=S.res.find(x=>x.id===Q.a),t=S.res.find(x=>x.id===Q.b);while(!(dayNo()>Q.day&&hour()>=9&&hour()<11))S.t+=5;S.qrD=-1;for(const r of S.res){endAct(r);r.hunger=hMax(r)}const SB=sevBusy;sevBusy=()=>false;qrTick(true);if(!Q.mk)throw Error('not make stage');qrTick(true);sevBusy=SB;
+    const g=Q.g===h.id?h:t,o=g===h?t:h;if(!g.act||g.act.type!=='qmake'||o.act.type!=='qwait')throw Error('acts '+JSON.stringify([g.act,o.act]));g.x=o.x+1;g.y=o.y;g.act.stage='do';ACT.qmake.start(g,g.act);if(g.act.fin)throw Error('makeup aborted');return g.name+'→'+o.name})()`));
+  for(let i=0;i<60&&!(await run(`!S.qr`));i++){await run(`(()=>{if(!document.querySelector('#dialog').hidden){DLGA.n=DLGA.full.length;DLGA.readReady=0;const b=document.querySelector('#dlgBtns button');if(b&&!b.disabled&&performance.now()>=(DLGA.holdUntil||0))b.click()}})()`);await page.waitForTimeout(150)}
+  console.log('made up',await run(`(()=>{if(S.qr)throw Error('still quarrel');const k=Object.keys(S.qMem||{})[0];if(!k)throw Error('no qMem');if(!(S.memo||[]).some(m=>/仲なおり/.test(m[2])))throw Error('memo');const [a,b]=bondPair(k);return bondMemLine(a,b)})()`));
   if(errors.length)throw Error(errors.join('\n'));
   await browser.close();console.log('ok');
 })().catch(e=>{console.error(e);process.exit(1)});
