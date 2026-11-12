@@ -7,7 +7,7 @@ const BOND_TALK=30,BOND_PLAY=60,BOND_MAX=100;
 const BOND5=new Set();/* なかよし100の子が3マス以内にいる子（毎秒つくりなおす） */
 function bondKey(a,b){return a.id<b.id?a.id+'_'+b.id:b.id+'_'+a.id}
 function bondOf(a,b){return a&&b&&a!==b&&S&&S.bond?S.bond[bondKey(a,b)]||0:0}
-function bondAdd(a,b,n,kind){if(!S||!a||!b||a===b||IS_STORY_REPLAY)return;if(kind)(S.bondDid||(S.bondDid={}))[bondKey(a,b)]=kind;/* 2人でさいごにしたこと（消えたときの思い出） */const B=S.bond||(S.bond={}),k=bondKey(a,b),v0=B[k]||0,v=Math.min(BOND_MAX,v0+n);if(v===v0)return;B[k]=v;
+function bondAdd(a,b,n,kind){if(!S||!a||!b||a===b||IS_STORY_REPLAY)return;if(kind!=='qr'&&qrPair(a,b))return;/* けんかの日は、なかよしがふえない */if(kind)(S.bondDid||(S.bondDid={}))[bondKey(a,b)]=kind;/* 2人でさいごにしたこと（消えたときの思い出） */const B=S.bond||(S.bond={}),k=bondKey(a,b),v0=B[k]||0,v=Math.min(BOND_MAX,v0+n);if(v===v0)return;B[k]=v;
   if(v0<BOND_TALK&&v>=BOND_TALK){for(const x of[a,b])addFloat(x.x,x.y-1.4,'なかよし！');memo('🤝',a.name+'と'+b.name+'がなかよしになった');logEv(a.name+'と'+b.name+'がなかよしになった');SPOT_POPS.push({bond:[a.name,b.name],pair:[a,b].map(r=>({el:r.elem,vr:r.vr})),state:S});omoiNote(a,b,false)}
   else if(v0<BOND_PLAY&&v>=BOND_PLAY)omoiNote(a,b,true)}
 function bondSet(a,b,n){if(bondOf(a,b)<n)bondAdd(a,b,n-bondOf(a,b))}
@@ -147,6 +147,7 @@ const BOND_DIDL={eat:'#cry|いっしょにごはんを食べると、おいし�
 function bondMemNote(A,B,ci){/* なかよしの雑談を見た（input.js）。新しい物をうしろに、4つまで */if(!S||IS_STORY_REPLAY||!CHATS[ci]||!CHATS[ci].mem)return;const M=S.bondMem||(S.bondMem={}),k=bondKey(A,B),L=(M[k]||[]).filter(i=>i!==ci);L.push(ci);M[k]=L.slice(-4)}
 function bondMemLine(m,d){/* のこった子 m が、消えた子 d との思い出を話す1行 */const k=bondKey(m,d),tone=t=>chatTone(t,m,1).replace(/\$/g,d.name);
   const L=(S.bondMem||{})[k]||[];if(L.length){const c=CHATS[L[L.length-1]];if(c&&c.mem)return tone(c.mem)}
+  {const q=(S.qMem||{})[k];if(q)return tone(QR_MEM[q.why].replace('@W',q.w?BL[q.w].name:'遊び家具'))}/* けんかして、仲なおりしたこと */
   if((S.sev||{})['bd_'+k]){const nk=BOND_MEM[m.name+'|'+d.name]||BOND_MEM[d.name+'|'+m.name];if(nk&&nk[m.name])return nk[m.name].replace(/\$/g,d.name);
     const f=ELEM_KEYS.indexOf(m.elem)<=ELEM_KEYS.indexOf(d.elem),G=BOND_MEMG[f?m.elem+'|'+d.elem:d.elem+'|'+m.elem];if(G)return tone(m.elem===d.elem?G[0]:G[f?0:1]||G[0])}
   const did=(S.bondDid||{})[k]||'';if(/^play:/.test(did)){const w=BL[did.slice(5)];if(w)return tone('#cry|いっしょに'+w.name+'で遊んだの、たのしかったのに……。')}
@@ -197,20 +198,53 @@ function goMourn(r,G){if(!S||isNight()||hour()<7||hour()>=18||r.hunger<55||heldN
   const e=(S.gone||[]).slice().reverse().find(e=>e.mate===r.name&&e.j!=null&&mournDue(e));if(!e)return false;
   const sp=mournSpot(e),tg=sp?sp.k:e.j,st=nearest(G,j=>walk(j)&&(j===tg&&!sp||adjOf(j,k=>k===tg)>=0),300);if(st<0)return false;e.vis=dayNo();startAct(r,G,'mourn',st,{who:e.name,obj:sp?sp.k:-1,fl:sp?sp.id:null});return true}
 function simNote(r){/* 新しく来た子が、消えたふつうの子と同じ属性 */if(!S||IS_STORY_REPLAY||!S.gone)return;const e=S.gone.slice().reverse().find(e=>!e.key&&!e.back&&!e.sim&&e.elem===r.elem&&e.mate&&e.mate!==r.name&&S.res.some(q=>q.name===e.mate));if(!e)return;e.sim=1;r.simTo={m:e.mate,d:e.name}}
-function griefTick(){const day=!isNight();revisitTick(day);for(const r of S.res){r.grief=griefOn(r);if(r.grief&&day&&r.act&&['idle','wander','rest'].includes(r.act.type)&&Math.random()<.04){const e=(S.gone||[]).slice().reverse().find(e=>e.mate===r.name&&!e.back);if(e)r.bubble='g:'+e.name}
+function griefTick(){const day=!isNight();revisitTick(day);qrTick(day);for(const r of S.res){r.grief=griefOn(r);r.qrF=!!S.qr&&!S.qr.mk&&(S.qr.a===r.id||S.qr.b===r.id);if(r.grief&&day&&r.act&&['idle','wander','rest'].includes(r.act.type)&&Math.random()<.04){const e=(S.gone||[]).slice().reverse().find(e=>e.mate===r.name&&!e.back);if(e)r.bubble='g:'+e.name}
     reunionTick(r,day);
     if(r.simTo&&day&&!sevBusy()&&!r.hidden){const m=S.res.find(q=>q.name===r.simTo.m&&!q.hidden),d=r.simTo.d;delete r.simTo;if(m)talkOnce('sim'+r.id,[[m.name,chatTone('#teary|……'+r.name+'って、'+d+'に、ちょっと、にてるね。',m,0)],[r.name,chatTone('#surprise|……'+d+'？',r,1)],[m.name,chatTone('……ううん。なんでもないよ。……これから、よろしくね。',m,2)]],600)}}}
 /* 再会：よみがえった子 q と、なかよしだった子 m の会話（見た会話の思い出・さいごのひとことにこたえる）と、よろこぶ場面 */
 const RE_DIDL={eat:'#joy|また、いっしょにごはん食べようね。',chat:'#joy|話したいこと、いっぱいあるんだ。',guard:'#joy|こんどの夜も、いっしょに守ろうね。',tour:'#joy|また、村をいっしょに見てまわろうね。',any:'#joy|また、いっしょにいようね。'};
 function reunionLines(q,m){const e=goneEntry(q.name)||{},k=bondKey(q,m),T=(r,t,i)=>[r.name,chatTone(t,r,i).replace(/\$/g,(r===m?q:m).name)],L=[T(m,'#surprise hush|……$？ ……ほんとに、$なの……？',0),T(q,'#joy|……ただいま、$。',1)];
   if(/ごめん|わる|わり|すまない/.test(e.lw||''))L.push(T(m,'#teary|さいごに、あやまったりして……もう、あんなこと言わないでね。',2));else L.push(T(m,'#teary|……ずっと、待ってたんだよ。',2));
-  const mi=((S.bondMem||{})[k]||[]),c=mi.length?CHATS[mi[mi.length-1]]:null;let back=c&&c.back;
+  const mi=((S.bondMem||{})[k]||[]),c=mi.length?CHATS[mi[mi.length-1]]:null;let back=c&&c.back;if(!back&&(S.qMem||{})[k])back='#joy|もう、けんかしても、すぐ仲なおりしようね。';
   if(!back){const did=(S.bondDid||{})[k]||'';if(/^play:/.test(did)&&BL[did.slice(5)])back='#joy|また、いっしょに'+BL[did.slice(5)].name+'で遊ぼうね。';else back=RE_DIDL[did]||RE_DIDL.any}
   L.push(T(q,back,3),T(m,'#joy|……うん！ おかえり、$！',4));return L}
 function reunionJoy(q,m){/* 会話のあと：2人で向かい合ってはねる。まわりの子も、はくしゅ */if(!S.res.includes(q)||!S.res.includes(m))return;const now=performance.now();q.face=m.x>=q.x?1:-1;m.face=-q.face;for(const r of[q,m]){JUMP.set(r,now);JOYU.set(r,now+3000);r.bubble='💕';fxSpr('hearts',r.x*TS,(r.y-.7)*TS);addFloat(r.x,r.y-1.3,'おかえり！','#ffd6e6')}
   sfx('good');for(const r of S.res)if(r!==q&&r!==m&&!r.hidden&&Math.hypot(r.x-q.x,r.y-q.y)<8){JUMP.set(r,now+300);JOYU.set(r,now+2500);r.bubble='👏'}bondAdd(q,m,3,'tour');q.reWith={n:m.name,until:dayNo()+RE_DAYS};m.reWith={n:q.name,until:dayNo()+RE_DAYS};const ge=goneEntry(q.name);if(ge&&(ge.fl||[]).some(k=>FLOWERS.has(S.obj[k])||S.obj[k]==='sprout'))S.rvq={q:q.id,m:m.id,t:S.t+30};logEv(m.name+'と'+q.name+'が、また会えた');memo('🌱',m.name+'と'+q.name+'が、また会えた')}
 function reunionTick(r,day){if(!r.reTalk||!day||sevBusy()||r.hidden)return;const m=S.res.find(x=>x.name===r.reTalk&&!x.hidden);delete r.reTalk;if(!m)return;const q=r,owner=S,key='ru'+q.id+'_'+dayNo();if(S.flags[key])return;
   const L=reunionLines(q,m),P=S.pendTalk||(S.pendTalk={});P[key]=L;dialog(L,()=>{if(S!==owner)return;S.flags[key]=1;delete P[key];reunionJoy(q,m)})}
+/* ---------- けんかと仲なおり ----------
+   S.qr={a,b,why,w,day,g,talk,mk,go}：なかよし（30以上）の2人が、朝に QR_P でけんか（村で1組だけ。同じ組は QR_GAP 日あける）。わけは2人でさいごにしたこと（S.bondDid）。
+   けんかの日：昼に2人の会話。いっしょに遊ばない・おしゃべりしない・なかよしがふえない・近くで顔をそむける・たのしさのへりかた QR_FUN 倍（r.qrF）。
+   つぎの日の昼：g が相手の好きな料理（なければ相手の属性の花）を持って歩いていき、わけにこたえてあやまる（qmake・qwait）。仲なおりした会話は、消えたときの思い出（S.qMem）。 */
+const QR_P=.05,QR_GAP=7,QR_FUN=1.2;
+const QR_MEM={play:'#cry|@Wの順番で、けんかしたよね……。つぎの日、ちゃんと仲なおりできたのに……。',eat:'#cry|ごはんのことで、けんかしたよね……。ちゃんと、仲なおりしたのに……。',guard:'#cry|夜の持ち場のことで、けんかしたよね……。もっと、いっしょに守りたかった……。',chat:'#cry|言いかたで、けんかしたこともあったね……。あのあと、もっとなかよくなれたのに……。'};
+function qrPair(a,b){const Q=S&&S.qr;return !!Q&&!!a&&!!b&&(Q.a===a.id&&Q.b===b.id||Q.a===b.id&&Q.b===a.id)}
+function qrRoll(){if(S.qr||S.free||IS_STORY_REPLAY||preBedCalm()||!S.bond)return;const L=S.qrLast||(S.qrLast={}),ks=Object.keys(S.bond).filter(k=>S.bond[k]>=BOND_TALK&&dayNo()-(L[k]??-99)>=QR_GAP);
+  for(let i=ks.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[ks[i],ks[j]]=[ks[j],ks[i]]}
+  for(const k of ks){const p=bondPair(k);if(!p||p.some(r=>r.hidden||griefOn(r)||storyCalled(r)))continue;if(Math.random()>=QR_P)continue;
+    const did=(S.bondDid||{})[k]||'',why=/^play:/.test(did)?'play':did==='eat'?'eat':did==='guard'?'guard':'chat',w=why==='play'&&BL[did.slice(5)]?did.slice(5):null,[a,b]=Math.random()<.5?p:[p[1],p[0]];
+    S.qr={a:a.id,b:b.id,why,w,day:dayNo(),g:(Math.random()<.5?a:b).id};L[k]=dayNo();return}}
+const QR_FIGHT={play:[[0,'#sigh droop|……@Wの順番、ずっと待ってたのに。'],[1,'#surprise|えっ、そんなの、知らなかったよ。'],[0,'#sigh|……もう、いい。']],
+ eat:[[0,'#sigh droop|さいごのごはん、だまって食べたでしょ。'],[1,'#surprise|……おなか、すいてたんだもん。'],[0,'#sigh|……ふん。']],
+ guard:[[0,'#sigh droop|ゆうべ、持ち場をはなれたでしょ。こわかったんだから。'],[1,'#surprise|……ちゃんと、もどったよ。'],[0,'#sigh|……もう、知らない。']],
+ chat:[[0,'#sigh droop|そんな言いかた、しなくてもいいのに。'],[1,'#surprise|……そんなつもりじゃ、なかったよ。'],[0,'#sigh|……ふん。']]};
+const QR_SORRY={play:'……@W、こんどは、先にどうぞ。……きのうは、ごめんね。',eat:'……きのうは、だまって食べて、ごめんね。',guard:'……持ち場をはなれて、こわい思いさせて、ごめんね。',chat:'……きのうは、きつい言いかたして、ごめんね。'};
+function qrTick(day){const Q=S.qr;
+  if(S.qrD!==dayNo()&&hour()>=6&&hour()<12){S.qrD=dayNo();if(Q&&dayNo()-Q.day>=3){delete S.qr;return}/* 3日たっても仲なおりの場面がなかったら、いつのまにか仲なおり */if(Q&&Q.day<dayNo())Q.mk=1;else if(!Q)qrRoll();return}
+  if(!Q)return;const a=S.res.find(x=>x.id===Q.a),b=S.res.find(x=>x.id===Q.b);if(!a||!b){delete S.qr;return}
+  if(!day||hour()<8||hour()>=18||a.hidden||b.hidden)return;
+  if(Math.hypot(a.x-b.x,a.y-b.y)<2.5&&!Q.mk){for(const [r,o] of[[a,b],[b,a]])if(!(r.act&&r.act.stage==='do'&&r.act.type!=='idle'&&r.act.type!=='wander')){r.face=o.x>=r.x?-1:1;if(Math.random()<.05)r.bubble='💢'}}/* 近くですれちがうと、ぷいっと顔をそむける */
+  if(sevBusy()||[a,b].some(r=>storyCalled(r)))return;const T=(r,t,i)=>[r.name,chatTone(t,r,i).replace(/@W/g,Q.w?BL[Q.w].name:'遊び家具').replace(/\$/g,(r===a?b:a).name)];
+  if(!Q.talk&&!Q.mk){Q.talk=1;dialog(QR_FIGHT[Q.why].map((l,i)=>T(l[0]?b:a,l[1],i)),()=>{for(const r of[a,b])if(S.res.includes(r))r.bubble='💢'});return}
+  if(Q.mk&&!Q.go&&hour()<17){const g=Q.g===a.id?a:b,t=g===a?b:a;if([g,t].some(r=>r.hunger<55||r.coffin||onHold(r)||r.act&&URGNO.includes(r.act.type)))return;
+    const G=bfs(g.x|0,g.y|0),tj=(t.y|0)*W+(t.x|0),st=nearest(G,j=>walk(j)&&j!==tj&&Math.abs(j%W-tj%W)+Math.abs(((j/W)|0)-((tj/W)|0))===1,300);if(st<0)return;
+    const fd=favDish(t),food=(S.fs[fd]||0)>0?fd:null;Q.go=1;endAct(t);t.path=[];t.act={type:'qwait',stage:'do',t:0,who:g.id};endAct(g);startAct(g,G,'qmake',st,{who:t.id,food})}}
+function qrMakeTalk(g,a){const Q=S.qr;if(!Q)return;const t=S.res.find(x=>x.id===a.who);if(!t||Math.hypot(t.x-g.x,t.y-g.y)>2.2){a.fin=1;Q.go=0;return}/* 相手が先に行ってしまったら、あとでもう一度 */
+  const T=(r,s,i)=>[r.name,chatTone(s,r,i).replace(/@W/g,Q.w?BL[Q.w].name:'遊び家具').replace(/\$/g,(r===g?t:g).name)],ga=g.id===Q.a,owner=S,k=bondKey(g,t);
+  faceTo(g,(t.y|0)*W+(t.x|0));t.face=g.x>=t.x?1:-1;if(a.food){S.fs[a.food]=Math.max(0,(S.fs[a.food]||0)-1);syncFood()}
+  const L=[T(g,a.food?'#sigh|……これ、$の好きな'+FOODS[a.food].name+'。……あげる。':'#sigh|……これ、$に、つんできたんだ。',0),T(g,ga?'……きのうは、言いすぎた。ごめんね。':QR_SORRY[Q.why],1),T(t,ga?'#teary|……ぼくも、ごめんね。……ありがとう。':'#teary|……ぼくも、言いすぎた。ごめん。',2),T(g,'#joy|……じゃあ、仲なおり、だね。',3)];
+  dialog(L,()=>{if(S!==owner)return;a.fin=1;if(t.act&&t.act.type==='qwait')t.act.fin=1;const now=performance.now();for(const r of[g,t]){JUMP.set(r,now);JOYU.set(r,now+2500);r.bubble='💕';fxSpr('hearts',r.x*TS,(r.y-.7)*TS)}sfx('good');
+    (S.qMem||(S.qMem={}))[k]={why:Q.why,w:Q.w,d:dayNo()};delete S.qr;bondAdd(g,t,3,'qr');memo('💕',g.name+'と'+t.name+'が仲なおりした');logEv(g.name+'と'+t.name+'が仲なおりした')})}
 /* よみがえったあとの日常：お墓まいりの花を2人で見にいき、よみがえった子がお礼の花を植える（revisit）。RE_DAYS 日のあいだ、いっしょに遊ぶ・ごはん・となりで寝る（reWith） */
 const RE_DAYS=3;
 function reWithP(r){const w=r&&r.reWith;if(!w)return null;if(dayNo()>=w.until){delete r.reWith;return null}const p=S.res.find(x=>x.name===w.n&&!x.hidden);return p||null}
@@ -240,7 +274,7 @@ function bondTick(){if(!S||IS_STORY_REPLAY)return;omoiSeed();bondNightTick();bon
 /* 同じ遊び家具で遊びはじめたら、先に遊んでいる子と+2（1回の遊びで1回） */
 function bondPlayStart(r,a){if(a.bd||a.obj==null)return;a.bd=1;for(const q of S.res)if(q!==r&&q.act&&q.act.type==='play'&&q.act.stage==='do'&&q.act.obj===a.obj)bondAdd(r,q,1,'play:'+a.what)}
 /* なかよし60：遊びに行くとき、ひまにしているなかよしをさそう */
-function bondInvite(r,o){if(!S||isNight()||!o||o.obj==null||(r.bdInv||0)>S.t)return false;const rw=reWithP(r),bb=rw?{q:rw,v:BOND_MAX}:bondBest(r);if(!bb||bb.v<BOND_PLAY)return false;const f=bb.q,p=BL[o.what]&&BL[o.what].play;
+function bondInvite(r,o){if(!S||isNight()||!o||o.obj==null||(r.bdInv||0)>S.t)return false;const rw=reWithP(r),bb=rw?{q:rw,v:BOND_MAX}:bondBest(r);if(!bb||bb.v<BOND_PLAY)return false;const f=bb.q,p=BL[o.what]&&BL[o.what].play;if(qrPair(r,f))return false;
   if(!p||!free(o.key,p.cap)||f.hidden||!f.act||!['idle','wander'].includes(f.act.type)||f.fun>=100||f.hunger<50||hungry(f)||f.energy<25||onHold(f)||HOLD.has(f.id)||storyCalled(f)||carryN(f)>0||f.meal||toyTired(f,o.obj))return false;
   const G=bfs(f.x|0,f.y|0),mine=r.act&&r.act.stand;let st=-1;if(o.what==='swing'){if(G.dist[o.obj]>=0)st=o.obj}else st=nearest(G,k=>k!==mine&&walk(k)&&adjOf(k,t=>anc(t)===o.obj)>=0,45);if(st<0)return false;
   const ng=(NIGATE[f.elem]||{})[o.what];r.bdInv=S.t+120;endAct(f);startAct(f,G,'play',st,Object.assign({},o,{fun:ng!=null?ng:p.fun,nig:ng!=null,inv:r.id}));
