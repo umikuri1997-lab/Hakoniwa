@@ -29,6 +29,24 @@ def chip_imgs(ids):
         print('%s: 大きさ %dx%d・置き方 ax %s ay %s・g %s・コマ %d・部品 %d' % (k, c['w'], c['h'], c['ax'], c['ay'], c.get('g', 32), len(c['f']), len(c.get('parts') or [])))
     return out
 
+def thick_points(a):
+    """輪郭が2ドット以上の所（x,y）：はしから2ドットめ（ななめもふくめて、透明にふれていないドット）に、輪郭と同じくらい暗い色（まわりの中の色より18%より暗い）がつづいている所"""
+    al = a[..., 3]; m = al > 127; L = a[..., :3] @ (.3, .59, .11)
+    Pm = np.pad(m, 1); touch = np.zeros_like(m)
+    for dy in (-1, 0, 1):
+        for dx in (-1, 0, 1): touch |= ~Pm[1 + dy:1 + dy + m.shape[0], 1 + dx:1 + dx + m.shape[1]]
+    d1 = m & touch; inner_ = m & ~d1; Pd = np.pad(d1, 1); d2 = np.zeros_like(m)
+    for dy, dx in ((0, 1), (0, -1), (1, 0), (-1, 0)): d2 |= Pd[1 + dy:1 + dy + m.shape[0], 1 + dx:1 + dx + m.shape[1]]
+    d2 &= inner_; deep = inner_ & ~d2; thick = []
+    for y, x in zip(*np.where(d2)):
+        w = deep[max(0, y - 4):y + 5, max(0, x - 4):x + 5]
+        if w.sum() < 4: continue   # 細い部品（脚など）は、中の色がないので数えない
+        mid = np.median(L[max(0, y - 4):y + 5, max(0, x - 4):x + 5][w])
+        nb = [L[y + dy, x + dx] for dy, dx in ((0, 1), (0, -1), (1, 0), (-1, 0)) if 0 <= y + dy < m.shape[0] and 0 <= x + dx < m.shape[1] and d1[y + dy, x + dx]]
+        if L[y, x] < mid * .82 and nb and min(nb) < mid * .82 and abs(L[y, x] - min(nb)) < mid * .06: thick.append((int(x), int(y)))
+    ts = set(thick); thick = [t for t in thick if any((t[0] + dx, t[1] + dy) in ts for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)))]   # 1点だけ（部品のつなぎ目）は数えない
+    return thick
+
 def runs(v):
     """[3,3,3,2,2] → '3x3 2x2'"""
     o = []; 
@@ -50,20 +68,7 @@ def check(im, name=''):
     else:
         print('  にた色 %d組%s' % (len(near), '  NG（まとめる）' if near else '')); ng += [bool(near)]
         for p, q in near[:6]: print('    #%02x%02x%02x と #%02x%02x%02x' % (p + q))
-    # 輪郭の太さ：はしから2ドットめ（ななめもふくめて、透明にふれていないドット）に、輪郭と同じくらい暗い色（まわりの中の色より18%より暗い）がつづいていたら、太い
-    Pm = np.pad(m, 1); touch = np.zeros_like(m)
-    for dy in (-1, 0, 1):
-        for dx in (-1, 0, 1): touch |= ~Pm[1 + dy:1 + dy + m.shape[0], 1 + dx:1 + dx + m.shape[1]]
-    d1 = m & touch; inner_ = m & ~d1; Pd = np.pad(d1, 1); d2 = np.zeros_like(m)
-    for dy, dx in ((0, 1), (0, -1), (1, 0), (-1, 0)): d2 |= Pd[1 + dy:1 + dy + m.shape[0], 1 + dx:1 + dx + m.shape[1]]
-    d2 &= inner_; deep = inner_ & ~d2; thick = []
-    for y, x in zip(*np.where(d2)):
-        w = deep[max(0, y - 4):y + 5, max(0, x - 4):x + 5]
-        if w.sum() < 4: continue   # 細い部品（脚など）は、中の色がないので数えない
-        mid = np.median(L[max(0, y - 4):y + 5, max(0, x - 4):x + 5][w])
-        nb = [L[y + dy, x + dx] for dy, dx in ((0, 1), (0, -1), (1, 0), (-1, 0)) if 0 <= y + dy < m.shape[0] and 0 <= x + dx < m.shape[1] and d1[y + dy, x + dx]]
-        if L[y, x] < mid * .82 and nb and min(nb) < mid * .82 and abs(L[y, x] - min(nb)) < mid * .06: thick.append((int(x), int(y)))
-    ts = set(thick); thick = [t for t in thick if any((t[0] + dx, t[1] + dy) in ts for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)))]   # 1点だけ（部品のつなぎ目）は数えない
+    thick = thick_points(a)
     print('  輪郭が2ドット以上の所 %d%s' % (len(thick), '  NG（外がわのこい色は1ドットに）：' + ' '.join('%d,%d' % t for t in thick[:12]) if thick else '')); ng += [bool(thick)]
     # 孤立ドット
     P = np.pad(a, ((1, 1), (1, 1), (0, 0))); orph = []
