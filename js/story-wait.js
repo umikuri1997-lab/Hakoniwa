@@ -102,6 +102,7 @@ function mainStoryFocusTarget(){
     if(j!=null)return{x:storyTreeX(j),y:storyTreeY(j)-.3,w:sacredSpan(),h:sacredSpan()};
   }
   if(!report&&S.qTalked&&q.id==='kagemark'&&S.flags.kgMark!=null&&!S.flags.kgLook){const k=S.flags.kgMark;return{x:k%W+.5,y:(k/W|0)+.5-hiAt(k)*LIFT/TS,w:3,h:2}}/* 大きなかげのあとをさがす：そのあとの場所へ */
+  if(!report&&q.id==='lv5'&&typeof printOn==='function'&&printOn()){const k=printFocus();if(k>=0)return{x:k%W+.5,y:(k/W|0)+.5-hiAt(k)*LIFT/TS,w:3,h:2}}/* ヌシ様の足あとをたどる：晴れている所の、まだたどっていない足あとへ */
   const p=mainStoryWaitInfo();if(!p)return null;const z=p.id&&BL[p.id]?szAt(p.id,p.obj)||[1,1]:[1,1];
   return{x:p.obj%W+z[0]/2,y:(p.obj/W|0)+z[1]/2-.5,w:z[0],h:z[1]};
 }
