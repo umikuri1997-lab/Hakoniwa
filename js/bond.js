@@ -176,7 +176,39 @@ function bondNightTick(){if(!isNight()||!S.enemyOn)return;const n=dayNo()-(hour(
   for(const r of S.res){if(r.hidden||!r.act||!BOND_DEF.has(r.act.type)||D.ids.includes(r.id))continue;for(const id of D.ids){const q=S.res.find(x=>x.id===id);if(q)bondAdd(r,q,1,'guard')}D.ids.push(r.id)}}
 /* ---------- なかよし100：3マス以内ではたらく速さ+5% ---------- */
 function bondNearTick(){BOND5.clear();if(!S.bond)return;for(const pk in S.bond){if(S.bond[pk]<BOND_MAX)continue;const p=bondPair(pk);if(!p||p[0].hidden||p[1].hidden)continue;if(Math.hypot(p[0].x-p[1].x,p[0].y-p[1].y)<=3){BOND5.add(p[0]);BOND5.add(p[1])}}}
-function bondTick(){if(!S||IS_STORY_REPLAY)return;omoiSeed();bondNightTick();bondNearTick();bondTalkTick()}
+/* ---------- 消えたあと ----------
+   S.gone：消えた子の記録（思い出帳の「いなくなったなかま」）。{name,elem,vr,came,day,key,mate,mem,back,vis,sim}
+   しょんぼり：なかよしの子は GRIEF_DAYS 日、たのしさのへりかた GRIEF_FUN 倍（r.grief）。ふきだしに消えた子の絵（'g:名前'）。
+   お墓まいり：なかよしの子が神殿へ花をおきにいく（goMourn・mourn）。キーキャラは、もどるまで毎日。ふつうの子は MOURN_DAILY 日は毎日、そのあとは MOURN_EVERY 日ごと。
+   雑談：GONE_TALK_DAYS 日のあいだ、消えた子の話がまざる（CHATS の gone、@G）。
+   にている子：消えたふつうの子と同じ属性の子が来たら、なかよしだった子がひとこと（r.simTo）。 */
+const GRIEF_DAYS=3,GRIEF_FUN=1.5,GONE_TALK_DAYS=5,MOURN_DAILY=7,MOURN_EVERY=3,TFLW_DAYS=3;
+function goneNote(r,m){if(!S||IS_STORY_REPLAY)return null;const L=S.gone||(S.gone=[]),e={name:r.name,elem:r.elem,vr:r.vr,came:r.came||dayNo(),day:dayNo(),key:isKey(r.name),mate:m?m.name:null,mem:m?bondMemLine(m,r).replace(/^#[^|]*\|/,''):null};L.push(e);if(L.length>60)L.shift();return e}
+function goneBack(n){for(const e of S.gone||[])if(e.name===n&&!e.back)e.back=dayNo()}
+function goneEntry(n){const L=S&&S.gone||[];for(let i=L.length-1;i>=0;i--)if(L[i].name===n)return L[i];return null}
+const griefOn=r=>!!r&&(S.gone||[]).some(e=>e.mate===r.name&&!e.back&&dayNo()-e.day<GRIEF_DAYS);
+function goneTalkName(){/* 雑談で話す、消えたばかりの子（いちばん新しい子） */const L=S&&S.gone||[];for(let i=L.length-1;i>=0;i--){const e=L[i];if(!e.back&&dayNo()-e.day<GONE_TALK_DAYS&&!S.res.some(q=>q.name===e.name))return e.name}return null}
+const sentOff=n=>!S.res.some(q=>q.coffin&&q.coffin.name===n)&&![...(S.buried||[]),...(S.lost||[])].some(q=>q.name===n&&q.unb);/* おみおくりがすんだ */
+function mournDue(e){if(e.back||e.vis===dayNo()||!sentOff(e.name))return false;const d=dayNo()-e.day;return e.key||d<MOURN_DAILY||d%MOURN_EVERY===0}
+function goMourn(r,G){if(!S||STATUE<0||isNight()||hour()<7||hour()>=18||r.hunger<55||heldN(r)||r.meal||r.cing||r.coffin||!S.gone)return false;
+  const e=(S.gone||[]).slice().reverse().find(e=>e.mate===r.name&&mournDue(e));if(!e)return false;
+  const st=nearest(G,j=>walk(j)&&adjOf(j,k=>k===STATUE||k===STATUE+W)>=0,300);if(st<0)return false;e.vis=dayNo();startAct(r,G,'mourn',st,{who:e.name});return true}
+function templeFlower(){const L=S.tflw||(S.tflw=[]);L.push({d:dayNo(),k:Math.floor(Math.random()*5)});while(L.length>6)L.shift()}
+function drawTempleFlowers(c,x,y){/* 神殿の前の花（ドット。TFLW_DAYS 日のこる） */const L=(S.tflw||[]).filter(f=>dayNo()-f.d<TFLW_DAYS);if(!L.length)return;const P=[[3,'#f6c6d6'],[8,'#fff2f6'],[23,'#ffe9a8'],[28,'#f6c6d6'],[13,'#fff2f6'],[18,'#ffd9b0']];
+  L.forEach((f,i)=>{const [dx,col]=P[(f.k+i)%P.length],fx=Math.round(x+dx),fy=Math.round(y+TS-4);c.fillStyle='#8fc47a';c.fillRect(fx,fy+1,1,2);c.fillStyle=col;c.fillRect(fx-1,fy-1,3,1);c.fillRect(fx,fy-2,1,3);c.fillStyle='#ffd76a';c.fillRect(fx,fy-1,1,1)})}
+function simNote(r){/* 新しく来た子が、消えたふつうの子と同じ属性 */if(!S||IS_STORY_REPLAY||!S.gone)return;const e=S.gone.slice().reverse().find(e=>!e.key&&!e.back&&!e.sim&&e.elem===r.elem&&e.mate&&e.mate!==r.name&&S.res.some(q=>q.name===e.mate));if(!e)return;e.sim=1;r.simTo={m:e.mate,d:e.name}}
+function griefTick(){const day=!isNight();for(const r of S.res){r.grief=griefOn(r);if(r.grief&&day&&r.act&&['idle','wander','rest'].includes(r.act.type)&&Math.random()<.04){const e=(S.gone||[]).slice().reverse().find(e=>e.mate===r.name&&!e.back);if(e)r.bubble='g:'+e.name}
+    if(r.simTo&&day&&!sevBusy()&&!r.hidden){const m=S.res.find(q=>q.name===r.simTo.m&&!q.hidden),d=r.simTo.d;delete r.simTo;if(m)talkOnce('sim'+r.id,[[m.name,chatTone('#teary|……'+r.name+'って、'+d+'に、ちょっと、にてるね。',m,0)],[r.name,chatTone('#surprise|……'+d+'？',r,1)],[m.name,chatTone('……ううん。なんでもないよ。……これから、よろしくね。',m,2)]],600)}}}
+/* さいごのひとこと（消える子が、なかよしの子へ。なかよしがいなければ、みんなへ）。$M はなかよしの名前 */
+const LASTW={wood:['#teary hush|……$M……ごめんね……。','#teary hush|……$M、ありがとう……。たのしかった、よ……。','#teary hush|……$M……また、あそぼうね……。'],
+ earth:['#teary hush|……$M……ごめんねぇ……。','#teary hush|……$M……ありがとねぇ……。','#teary hush|……ちょっと、ねむいなぁ……。$M……またねぇ……。'],
+ fireA:['#teary hush|……$M……わるいね、さきに……。','#teary hush|……泣くんじゃないよ、$M……。','#teary hush|……$M……ありがと、ね……。'],
+ fireB:['#teary hush|……わりい、$M……。','#teary hush|……泣くなよ、$M……。','#teary hush|……$M……ありがとな……。'],
+ water:['#teary hush|……$Mさん……ごめんなさい……。','#teary hush|……$Mさん、ありがとう……ございました……。','#teary hush|……$Mさん……わすれないで、くださいね……。'],
+ wind:['#teary hush|……フッ…$M……そんな顔、しないでおくれ……。','#teary hush|……$M……風に、なっても……そばに、いるよ……。','#teary hush|……$M……ありがとう……。']};
+const LASTW0={wood:'#teary hush|……みんな……ごめんね……。',earth:'#teary hush|……みんな……ごめんねぇ……。',fireA:'#teary hush|……みんな……わるいね……。',fireB:'#teary hush|……みんな……わりい……。',water:'#teary hush|……みなさん……ごめんなさい……。',wind:'#teary hush|……フッ…みんな……すまないね……。'};
+function lastWord(r,m){const k=elemKey(r),a=LASTW[k]?k:'wood';return [r.name,m?pickFresh('lw:'+a,LASTW[a]).replace(/\$M/g,m.name):LASTW0[a]]}
+function bondTick(){if(!S||IS_STORY_REPLAY)return;omoiSeed();bondNightTick();bondNearTick();bondTalkTick();griefTick()}
 
 /* ---------- いっしょに遊ぶ ---------- */
 /* 同じ遊び家具で遊びはじめたら、先に遊んでいる子と+2（1回の遊びで1回） */

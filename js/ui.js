@@ -551,6 +551,10 @@ function renderSheet(){
       for(const[a,b]of[['すごした日',dayNo()+'日'],...(S.score?[['クリアスコア',S.score.rank+'（'+S.score.tot+'てん）']]:[]),['のりこえた夜',(S.nights||0)+'回'],['いまのせいれい',S.res.length+'人'],['よんだせいれい',(S.summons||0)+'人'],['消えてしまったせいれい',(S.deaths||0)+'人'],
         ['追いはらった「コワイノ」',(S.kills||0)+'体'],['オオカゲ',(S.bossKills||0)+'回'],[SHN(),(S.shards||0)+'つ'],['めぶきのしずく',(S.mebuki||0)+'こ'],['ためたせいれいパワー',Math.floor(S.totalPt||0)+''],['みどりのマス',GRASSN+'マス'],['村レベル','Lv'+S.lv],['たっせいした目標',S.quest+'こ']]){const d=el('<div class="st"><span></span><b></b></div>');d.firstChild.textContent=a;d.lastChild.textContent=b;rw.appendChild(d)}
       body.appendChild(st);
+      if((S.gone||[]).length){/* いなくなったなかま：名前・いっしょにいた日・なかよしとの思い出 */const sec=el('<div class="sec"><h3>いなくなったなかま</h3><div class="rows"></div></div>'),rw2=sec.querySelector('.rows');
+        for(const e of S.gone.slice().reverse()){const r=el('<div class="row"><div class="tx"><b></b><small style="white-space:normal"></small></div></div>');r.querySelector('b').textContent=e.name+'（'+ELEM[e.elem].name+'のせいれい）';
+          r.querySelector('small').textContent=e.came+'日めから'+e.day+'日めまで、'+Math.max(1,e.day-e.came+1)+'日いっしょにいた'+(e.back?'。'+e.back+'日めに、もどってきた':'')+(e.mem?'\n'+e.mate+'との思い出：「'+e.mem+'」':'');r.querySelector('small').style.whiteSpace='pre-line';rw2.appendChild(r)}
+        body.appendChild(sec)}
       /* 思い出帳ときろくをひとつに：日ごとのできごと */
       const E=[];(S.memo||[]).forEach(([d,e,t],i)=>E.push([d,i,e+' '+t]));(S.log||[]).forEach(([d,t],i)=>E.push([d,1e4+i,t]));E.sort((a,b)=>b[0]-a[0]||b[1]-a[1]);
       if(!E.length)body.appendChild(el('<p class="note">はじめての出来事が、ここにのこります。</p>'));

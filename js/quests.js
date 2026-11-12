@@ -333,7 +333,7 @@ const GVOICE=()=>godHere()?'':'……聞こえるかの？ 遠くから、声だ
 const HOWK=n=>[[GOD,GVOICE()+backWhen(n)+n+'は、きっともどってくるぞい。']];
 /* 「聞こえるかの？」は、会話の中でカミサマがはじめて話す行にだけつける */
 function gvOnce(L){if(!L)return L;const v='……聞こえるかの？ 遠くから、声だけ届けておるぞい。';let first=true;return L.map(l=>{if(l[0]!==GOD||typeof l[1]!=='string')return l;const had=l[1].includes(v);let t=l[1].replace(v,'');if(first){first=false;if(!godHere()){const m=t.match(/^#[^|]*\|/),h=m?m[0]:'';t=h+v+t.slice(h.length)}}else if(!had)return l;const c=l.slice();c[1]=t;return c})}
-function deathTalk(r){return gvOnce(deathTalk0(r))}
+function deathTalk(r){const L=deathTalk0(r);if(!L||!L.length)return L;const m=bestMate(r);return gvOnce([lastWord(r,m&&!m.hidden?m:null)].concat(L))}/* さいごに、消える子のひとこと */
 function deathTalkMate(r,m){/* なかよしの子が話す：おどろき → 見た会話の思い出 → かなしみ。そのあとに、もどってこられるか（自然にかえるか）の説明だけ */const F=S.flags,n=r.name,L=deathMateLines(m,r),T=x=>[m.name,chatTone(x,m,2)],G0=WD===0,NH=G0&&sevHere('N')&&m.name!==MINA;
   if(isKey(n)){if(n===POKO)F.lostF=1;else if(n===MINA)F.lostN=1;else if(n===keyName('fire')&&F.guard){F.lostH=1;if(m.name===POKO)L[2]=[POKO,'#sigh|ぼく、守るって言ったのに……！ 葉っぱのまもり、もっと早く使えてたら……。']}else F['lostK'+r.elem]=1;
     if(!G0){F.deathTold=true;return L.concat([T('#think|……'+backWhen(n)+n+'は、もどってくるんだよね。……ずっと、待ってるからね。')])}
