@@ -52,18 +52,18 @@ function doSummon(){
 
 /* ---------- 敵（「コワイノ」） ---------- */
 const EN={
-  basic:{xp:5,pw:4,name:'コカゲ',hp:10,sp:.80,atk:25,hit:20,hitF:7.5,hitN:12,hitFS:4.5,hitNS:6,hitFN:18,hitFNS:9,col:'#2a1d46',eye:'#ff6b8a',size:1},
-  fast:{xp:4,pw:3,name:'ハヤカゲ',hp:5,sp:1.6,atk:16.7,/* コカゲの足2倍・攻撃1.5倍の速さ */hit:14,hitF:6,hitN:8,hitFS:3,hitNS:4,hitFN:12,hitFNS:6,col:'#1d3446',eye:'#7ff0ff',size:.8},
-  thief:{xp:2,pw:2,name:'カゲドロボウ',hp:3,sp:.88,atk:25,hit:10,hitF:4.5,hitN:6,hitFS:3,hitNS:3,hitFN:9,hitFNS:4.5,col:'#3b2a14',eye:'#ffd35c',size:.9,thief:1},
-  brute:{xp:8,pw:6,rng:1.2,name:'カタカゲ',hp:10,sp:.76,atk:9,hit:28,hitF:10.5,hitN:17,hitFS:6,hitNS:8,hitFN:25.5,hitFNS:12,col:'#3a1a1a',eye:'#ff8a3d',size:1.25,hs:1}/* 当たり判定は1マス */,
-  breaker:{xp:7,pw:5,name:'カベクダキ',hp:9,sp:.8,atk:6,hit:18,hitF:7.5,hitN:11,hitFS:4.5,hitNS:5,hitFN:16.5,hitFNS:7.5,col:'#3a2a1a',eye:'#ffa04a',size:1.1,wall:3},/* 壁や柵をこわすのが得意（こわす力3倍・速い）。よけずにまっすぐこわしにくる */
-  trapper:{xp:6,pw:5,name:'ワナクイ',hp:8,sp:.9,atk:12,hit:16,hitF:6,hitN:10,hitFS:3,hitNS:5,hitFN:15,hitFNS:7.5,col:'#2b3a1e',eye:'#c6ff6b',size:.95,trapper:1},/* 罠・見張り台を先にこわしにくる */
-  boss:{xp:25,pw:20,rng:2.1,name:'オオカゲ',hp:45,sp:.84,atk:7,hit:14,hitF:6,hitN:8,hitFS:3,hitNS:4,hitFN:12,hitFNS:6,col:'#120a24',eye:'#ff3b6b',size:1.8,boss:1},
-  ash:{xp:4,pw:3,name:'ハイカゲ',hp:6,sp:.9,atk:20,hit:12,hitF:9,hitN:7,hitFS:4.5,hitNS:4,hitFN:10.5,hitFNS:6,col:'#6d6a66',eye:'#ffb36b',size:.9,ash:1},/* かまど・ベンチなどを灰でよごして止める */
-  rockc:{xp:12,pw:8,name:'イワカゲ',hp:22,sp:.5,atk:30,hit:30,hitF:22.5,hitN:18,hitFS:12,hitNS:9,hitFN:27,hitFNS:13.5,col:'#5a4636',eye:'#ffcf6b',size:1.3},/* おそいけど、かたい */
-  hino:{xp:35,pw:25,rng:2.3,name:'ヒノオオカゲ',hp:65,sp:.7,atk:6,hit:40,hitF:30,hitN:24,hitFS:15,hitNS:12,hitFN:36,hitFNS:18,col:'#3a0c08',eye:'#ffb02e',size:2.1,boss:1,dev:1},/* 火山から下りてきて、熱の装置をねらう */
-  yama:{xp:40,pw:30,rng:2.4,name:'ヤマノオオカゲ',hp:65,sp:.75,atk:6,hit:20,hitF:15,hitN:12,hitFS:7.5,hitNS:6,hitFN:18,hitFNS:9,col:'#2a0904',eye:'#ff6a2e',size:2.4,boss:1,vol:1},/* 火山のふもとの最後の夜に、火の山からおりてきて、温泉の熱をうばう */
-  boss2:{xp:50,pw:30,rng:3.4,hx:2.6,hy:.8,name:'ヨルノオオカゲ',hp:95,sp:.9,atk:12,hit:30,hitF:22.5,hitN:18,hitFS:12,hitNS:9,hitFN:27,hitFNS:13.5,col:'#05030c',eye:'#ffd84a',size:4.6,boss:1},/* ヌシ様をむかえる準備ができたあとに来る */
+  basic:{xp:5,pw:4,name:'コカゲ',hp:10,sp:.80,atk:25,hit:20,hitF:3.75,hitN:6,hitFS:2.25,hitNS:3,hitFN:9,hitFNS:4.5,col:'#2a1d46',eye:'#ff6b8a',size:1},
+  fast:{xp:4,pw:3,name:'ハヤカゲ',hp:5,sp:1.6,atk:16.7,/* コカゲの足2倍・攻撃1.5倍の速さ */hit:14,hitF:3,hitN:4,hitFS:1.5,hitNS:2,hitFN:6,hitFNS:3,col:'#1d3446',eye:'#7ff0ff',size:.8},
+  thief:{xp:2,pw:2,name:'カゲドロボウ',hp:3,sp:.88,atk:25,hit:10,hitF:2.25,hitN:3,hitFS:1.5,hitNS:1.5,hitFN:4.5,hitFNS:2.25,col:'#3b2a14',eye:'#ffd35c',size:.9,thief:1},
+  brute:{xp:8,pw:6,rng:1.2,name:'カタカゲ',hp:10,sp:.76,atk:9,hit:28,hitF:5.25,hitN:8.5,hitFS:3,hitNS:4,hitFN:12.75,hitFNS:6,col:'#3a1a1a',eye:'#ff8a3d',size:1.25,hs:1}/* 当たり判定は1マス */,
+  breaker:{xp:7,pw:5,name:'カベクダキ',hp:9,sp:.8,atk:6,hit:18,hitF:3.75,hitN:5.5,hitFS:2.25,hitNS:2.5,hitFN:8.25,hitFNS:3.75,col:'#3a2a1a',eye:'#ffa04a',size:1.1,wall:3},/* 壁や柵をこわすのが得意（こわす力3倍・速い）。よけずにまっすぐこわしにくる */
+  trapper:{xp:6,pw:5,name:'ワナクイ',hp:8,sp:.9,atk:12,hit:16,hitF:3,hitN:5,hitFS:1.5,hitNS:2.5,hitFN:7.5,hitFNS:3.75,col:'#2b3a1e',eye:'#c6ff6b',size:.95,trapper:1},/* 罠・見張り台を先にこわしにくる */
+  boss:{xp:25,pw:20,rng:2.1,name:'オオカゲ',hp:45,sp:.84,atk:7,hit:14,hitF:3,hitN:4,hitFS:1.5,hitNS:2,hitFN:6,hitFNS:3,col:'#120a24',eye:'#ff3b6b',size:1.8,boss:1},
+  ash:{xp:4,pw:3,name:'ハイカゲ',hp:6,sp:.9,atk:20,hit:12,hitF:4.5,hitN:3.5,hitFS:2.25,hitNS:2,hitFN:5.25,hitFNS:3,col:'#6d6a66',eye:'#ffb36b',size:.9,ash:1},/* かまど・ベンチなどを灰でよごして止める */
+  rockc:{xp:12,pw:8,name:'イワカゲ',hp:22,sp:.5,atk:30,hit:30,hitF:11.25,hitN:9,hitFS:6,hitNS:4.5,hitFN:13.5,hitFNS:6.75,col:'#5a4636',eye:'#ffcf6b',size:1.3},/* おそいけど、かたい */
+  hino:{xp:35,pw:25,rng:2.3,name:'ヒノオオカゲ',hp:65,sp:.7,atk:6,hit:40,hitF:15,hitN:12,hitFS:7.5,hitNS:6,hitFN:18,hitFNS:9,col:'#3a0c08',eye:'#ffb02e',size:2.1,boss:1,dev:1},/* 火山から下りてきて、熱の装置をねらう */
+  yama:{xp:40,pw:30,rng:2.4,name:'ヤマノオオカゲ',hp:65,sp:.75,atk:6,hit:20,hitF:7.5,hitN:6,hitFS:3.75,hitNS:3,hitFN:9,hitFNS:4.5,col:'#2a0904',eye:'#ff6a2e',size:2.4,boss:1,vol:1},/* 火山のふもとの最後の夜に、火の山からおりてきて、温泉の熱をうばう */
+  boss2:{xp:50,pw:30,rng:3.4,hx:2.6,hy:.8,name:'ヨルノオオカゲ',hp:95,sp:.9,atk:12,hit:30,hitF:11.25,hitN:9,hitFS:6,hitNS:4.5,hitFN:13.5,hitFNS:6.75,col:'#05030c',eye:'#ffd84a',size:4.6,boss:1},/* ヌシ様をむかえる準備ができたあとに来る */
 };
 function bossDays(){const w=S.bossWarn;if(w==null)return '';const t=dayNo(),need=S.wipe?5:4;/* 全滅のあとは、5人そろうまで来ない（level.js の S.wipe） */if(!(S.res.length>=need&&S.res.some(q=>q.elem==='fire')&&KEYS[WD].every(n=>S.res.some(r=>r.name===n))))return 'オオカゲ：なかまが'+need+'人そろうまで来ない';let d=t;if(!S.bossOwed)while(!bossNight(d))d++;/* 来る日にそろっていなかった分（S.bossOwed）は、そろって3日たった夜に来る（waveFor と同じ） */if(S.res4Since!=null)d=Math.max(d,S.res4Since+3);return d===t?'オオカゲが来るまで：今夜':'オオカゲが来るまで：あと'+(d-t)+'日'}/* クエストの進みぐあいに、オオカゲが来る日を出す */
 const bossNight=d=>{const w=S&&S.bossWarn,k=S&&(S.ookDay||(S.enKills||{}).boss&&S.bossDay);if(k)return d-k>=5&&(d-k)%5===0;/* オオカゲをはじめて追いはらったあとは、5日ごと（S.ookDay：その日。前のセーブは、オオカゲをたおしていれば S.bossDay） */return w==null?d>=5&&(d-5)%3===0:d-w>=3&&(d-w-3)%3===0}/* オオカゲは「来るかも」と聞いた3日後、追いはらえなかったら3日ごと（火山のふもとは5日目、そのあと3日ごと）。はじめて追いはらったら、そのあとは5日ごと */;
