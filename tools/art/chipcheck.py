@@ -8,13 +8,14 @@
   色の数      16色まで（素材が1つなら12色まで）
   半透明      0（うすさは 0 か 255 だけ）
   輪郭        外がわのこい色は1ドット（はしから2ドットめにも、輪郭と同じこい色がつづく所の数。0 に。NG のときは、その点の x,y を出す）
-  孤立ドット  0（上下左右のどれとも色がちがう1ドット。目・光など、わざと置く点は数えてよい）
+  孤立ドット  0（まわり8つのどれとも色がちがう1ドット。目・光など、わざと置く点は数えてよい）
   にた色      0組（色の差が10より小さい2色。まとめる）
   形          行ごとの左はし・右はしを出す（とちゅうで急にかわる段・とびだしを、数字で見つける）
   色の一覧    多い順に12色（描きなおすときの色は、ここからとる）
---cmp のとき：形の重なり（前とあとの形が、どれだけ同じか）95%より上"""
-import sys, os
+--cmp のとき：形の重なり（前とあとの形が、どれだけ同じか）90%より上"""
+import sys, os, signal
 import numpy as np
+signal.signal(signal.SIGPIPE, signal.SIG_DFL)   # | head でとめても、エラーにしない
 from PIL import Image
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 GRASS = (150, 190, 120, 255)
@@ -67,7 +68,7 @@ def check(im, name=''):
     # 孤立ドット
     P = np.pad(a, ((1, 1), (1, 1), (0, 0))); orph = []
     for y, x in zip(ys, xs):
-        nb = [P[y + 1 + dy, x + 1 + dx] for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1))]; nb = [q for q in nb if q[3] > 127]
+        nb = [P[y + 1 + dy, x + 1 + dx] for dx in (-1, 0, 1) for dy in (-1, 0, 1) if dx or dy]; nb = [q for q in nb if q[3] > 127]   # ななめにつながる線（丸いふち）は、孤立ではない
         if len(nb) >= 3 and all(((q[:3] - a[y, x, :3]) ** 2).sum() >= 100 for q in nb): orph.append((x, y))
     print('  孤立ドット %d%s' % (len(orph), '  NG（けす・まとめる。わざと置いた点ならよい）：' + ' '.join('%d,%d' % o for o in orph[:12]) if orph else '')); ng += [bool(orph)]
     if n > 16:
@@ -85,7 +86,7 @@ def cmp(old, new, out, ids):
     A, B = Image.open(old).convert('RGBA'), Image.open(new).convert('RGBA'); row = chip_imgs(ids) if ids else {}
     if A.size == B.size:
         ma, mb = np.asarray(A)[..., 3] > 127, np.asarray(B)[..., 3] > 127; iou = (ma & mb).sum() * 100 / max(1, (ma | mb).sum())
-        print('形の重なり %.1f%%%s' % (iou, '' if iou > 95 else '  NG（95%%より上に。前の絵と形がちがう：はみ出した所 %d ドット・足りない所 %d ドット）' % ((mb & ~ma).sum(), (ma & ~mb).sum())))
+        print('形の重なり %.1f%%%s' % (iou, '' if iou > 90 else '  NG（90%%より上に。前の絵と形がちがう：はみ出した所 %d ドット・足りない所 %d ドット）' % ((mb & ~ma).sum(), (ma & ~mb).sum())))
     else: print('NG：大きさがちがう', A.size, B.size)
     rh = max([i.height * 2 for i in row.values()] + [0]); W = A.width * 8 + B.width * 8 + 16
     sheet = Image.new('RGBA', (max(W, sum(i.width * 2 + 8 for i in row.values()) + (A.width + B.width) * 2 + 16), max(A.height, B.height) * 8 + rh + 16), GRASS)

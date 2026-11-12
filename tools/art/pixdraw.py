@@ -7,6 +7,8 @@
   p.inner(TB, OT, TI, sides='ULR')                                            # 輪郭の内がわ1ドット
   p.oval(4, 2, 37, 30, fill=TB, line=OT)                                      # だ円（丸い物）
   p.shape(rows_from('before/stool.png'), fill=TB, line=OT)                    # 前の絵と同じ形
+  p.round_top(1, 1, 40, 27, 6, top=TB, side=AB, line_top=OT, line_side=OD, lip=LIP, side_shade=AS)   # 丸い板（上の面＋厚み）
+  p.leg(6, 58, 15, 73, LB, LL, LS, OD)                                        # 脚
   p.put('table')                                                              # チップに入れて、アトラスと chips.js を作りなおす
 色は (r, g, b)。座標はチップのドット（左上が 0,0）。x1・y1 はその点もふくむ。"""
 import os, sys
@@ -65,6 +67,42 @@ class Pix:
     def oval(self, x0, y0, x1, y1, fill, line, line_rows=None):
         """だ円（x0,y0〜x1,y1 にぴったり入る）。段の長さは、だ円の式から出すので、なめらかにかわる"""
         self.shape(oval_rows(x0, y0, x1, y1), fill, line, line_rows)
+    def round_top(self, x0, y0, x1, y1, thick, top, side, line_top, line_side, lip=None, side_shade=None):
+        """丸い板（丸い座面・丸いテーブル・たるのふた）：上の面のだ円（x0,y0〜x1,y1）と、その下の厚み thick ドットの正面の帯。
+        先に帯（だ円を下へずらして、あいだをうめた形）を side でぬって輪郭 line_side、その上に上の面を top でぬって輪郭 line_top。
+        上の面の手前のふち（下が帯の所）は lip の色の1行（光）。side_shade があれば、帯のいちばん下の行をその色に"""
+        R = oval_rows(x0, y0, x1, y1); B = {}
+        for y, (a, b) in R.items():
+            for yy in range(y, y + thick + 1):
+                o = B.get(yy); B[yy] = (min(a, o[0]), max(b, o[1])) if o else (a, b)
+        self.shape(B, side, line_side)
+        if side_shade:
+            for y, (a, b) in B.items():
+                for x in range(a, b + 1):
+                    if self.at(x, y) == tuple(side) and self.at(x, y + 1) == tuple(line_side): self.dot(x, y, side_shade)
+            for y, (a, b) in B.items():   # 1ドットだけのかげは、もどす
+                for x in range(a, b + 1):
+                    if self.at(x, y) == tuple(side_shade) and not any(self.at(x + dx, y + dy) == tuple(side_shade) for dx in (-1, 0, 1) for dy in (-1, 0, 1) if dx or dy): self.dot(x, y, side)
+        self.shape(R, top, line_top)
+        if lip:
+            for y, (a, b) in R.items():
+                for x in range(a + 1, b):
+                    if self.at(x, y) == tuple(line_top) and self.at(x, y + 1) in (tuple(side), tuple(side_shade or side)): self.dot(x, y, lip)
+            for y, (a, b) in R.items():   # 1ドットだけの光は、輪郭にもどす（孤立ドットにしない）
+                for x in range(a, b + 1):
+                    if self.at(x, y) == tuple(lip) and not any(self.at(x + dx, y + dy) == tuple(lip) for dx in (-1, 0, 1) for dy in (-1, 0, 1) if dx or dy): self.dot(x, y, line_top)
+    def drop_shadow(self, under, on, c, n=2):
+        """落ちるかげ：色 under（上の物の輪郭）のすぐ下 n 行にある、色 on（脚の色など。いくつでも）のドットを c にする"""
+        on = {tuple(k) for k in on}; under = tuple(under); hit = []
+        for y in range(self.h):
+            for x in range(self.w):
+                if self.at(x, y) in on and any(self.at(x, y - k) == under and all(self.at(x, y - i) in on for i in range(1, k)) for k in range(1, n + 1)): hit.append((x, y))
+        for x, y in hit: self.dot(x, y, c)
+    def leg(self, x0, y0, x1, y1, base, light, shade, line, drop=2):
+        """脚・柱（まっすぐ）：左右と下に輪郭1ドット、左2ドットが光、右2ドットがかげ、上 drop 行が、上の物の落とすかげ。はばは8〜10"""
+        self.rect(x0 + 1, y0, x1 - 1, y1 - 1, base); self.rect(x0 + 1, y0, x0 + 2, y1 - 1, light); self.rect(x1 - 2, y0, x1 - 1, y1 - 1, shade)
+        if drop: self.rect(x0 + 1, y0, x1 - 1, y0 + drop - 1, shade)
+        self.vl(x0, y0, y1 - 1, line); self.vl(x1, y0, y1 - 1, line); self.hl(y1, x0 + 1, x1 - 1, line)
     def save(self, path): self.im.save(path)
     def put(self, cid, frame=0):
         """チップ cid の絵をさしかえて、アトラスと chips.js を作りなおす（大きさは同じでなければならない。ax・ay はそのまま）"""

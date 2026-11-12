@@ -33,11 +33,7 @@ def draw():
     for y, a, b in ((28, 10, 25), (35, 36, 55), (43, 14, 32)): p.hl(y, a, b, TS)
     p.inner(TB, OT, TI, sides='ULR', y0=Y0 + 1, y1=YT - 1)   # 輪郭の内がわの1ドット（天板の上・左・右）
     # 5 脚（手前の2本）：光は左、かげは右と、前の面のすぐ下
-    for L in (6, 52):
-        R = L + 9
-        p.rect(L + 1, Y1 + 1, R - 1, H - 2, LB); p.rect(L + 1, Y1 + 1, L + 2, H - 2, LL); p.rect(R - 2, Y1 + 1, R - 1, H - 2, LS)
-        p.rect(L + 1, Y1 + 1, R - 1, Y1 + 2, LS)
-        p.vl(L, Y1 + 1, H - 2, OD); p.vl(R, Y1 + 1, H - 2, OD); p.hl(H - 1, L + 1, R - 1, OD)
+    for L in (6, 52): p.leg(L, Y1 + 1, L + 9, H - 1, LB, LL, LS, OD)
     return p
 
 if __name__ == '__main__':
