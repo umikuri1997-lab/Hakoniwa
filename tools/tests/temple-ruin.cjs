@@ -16,6 +16,7 @@ const assert=require('node:assert/strict');
   const c=JSON.parse(await run(`JSON.stringify({st:S.obj[STATUE],ob:S.obj[STATUE-1],bd:S.obj[STATUE+1],al:S.obj[STATUE+W],ruin:RUINT})`));
   assert.deepEqual(c,{st:'statue',ob:'obox',bd:'board',al:'altar',ruin:-1});
   assert.deepEqual(JSON.parse(await run(`JSON.stringify({p:S.obj[STATUE+2],r:S.ref[STATUE+2]===STATUE+1,sz:BL.board.sz})`)),{p:'part',r:true,sz:[2,1]},'依頼ボードは2マス');
+  await run(`(()=>{S.orders=[{id:1,type:'chair',prog:0,need:5,worker:null},{id:2,type:'chair',prog:0,need:5,worker:null}];const cv=document.createElement('canvas');cv.width=cv.height=300;drawObj(cv.getContext('2d'),'board',100,150,STATUE+1,0,0);S.orders=[];return 1})()`);/* 依頼がはられたボードの絵（紙）を描いても、エラーが出ない */
   /* 前のセーブ（ボードは1マス）：右どなりの物をどけて、2マスにする */
   const bm=JSON.parse(await run(`(()=>{const k=STATUE+2;S.obj[k]='lamp';delete S.ref[k];delete S.flags.board2x1;boardMigrate();return JSON.stringify({p:S.obj[k],r:S.ref[k]===STATUE+1,flag:!!S.flags.board2x1,inv:inv('lamp')>0})})()`));
   assert.deepEqual(bm,{p:'part',r:true,flag:true,inv:true},'前のセーブの右どなりの物をもちものへ');
