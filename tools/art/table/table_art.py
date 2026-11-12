@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """食卓（table）のチップを、ドットで描きなおす（もらった絵はない。前のチップの形・色・大きさ・置き方はそのまま）。スキル pixel-redraw の、四角い物のお手本。
-直した所：輪郭を、外がわ1ドット＋内がわのなじむ色1ドットに・角の段を 4・2・1・1 に・色を8色に（にた色の帯をまとめる）・うすさを 0 か 255 に・木目は板の向きの短い線だけ。
+直した所：輪郭を、外がわ1ドット＋内がわのなじむ色1ドットに・上の角の段を 4・2・1・1 に・上の面の手前の角と正面の下の角を丸く（3・2・1）・色を8色に（にた色の帯をまとめる）・うすさを 0 か 255 に・木目は板の向きの短い線だけ。
   python3 tools/art/table/table_art.py            # チップに入れて、アトラスと chips.js を作りなおす
   python3 tools/art/table/table_art.py <出力.png>  # 絵だけ書き出す
 設計：
@@ -14,7 +14,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))));
 
 def draw():
     p = Pix(68, 74)
-    p.board(2, 21, 65, 57, front=7, legs=(6, 52), leg_w=10, leg_bottom=73, grain=((28, 10, 25), (35, 36, 55), (43, 14, 32)))
+    p.board(2, 21, 65, 57, front=7, legs=(6, 52), leg_w=10, leg_bottom=73, grain=((28, 10, 25), (35, 36, 55), (43, 14, 32)), bottom=(3, 2, 1), fcorner=(3, 2, 1))
     return p
 
 if __name__ == '__main__':
