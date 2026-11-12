@@ -44,5 +44,5 @@ assert.equal(out.grassVeins,0);assert.equal(out.grassGear,0);
 /* 画面：そうびタブ・依頼ボード */
 await page.evaluate(()=>gearEval(`(()=>{document.getElementById('title').hidden=true;document.getElementById('title').style.display='none';const r=S.res.find(r=>r.elem==='fire');resTab=3;openSheet('res',r.id)})()`));await page.waitForTimeout(400);await page.screenshot({path:process.env.SHOT_DIR?process.env.SHOT_DIR+'/gear-tab.png':'/tmp/gear-tab.png'});
 const rad=await page.evaluate(()=>[...document.querySelectorAll('#sheet *')].filter(n=>parseFloat(getComputedStyle(n).borderRadius)>0&&n.offsetParent).map(n=>n.className).slice(0,5));
-await page.evaluate(()=>gearEval(`(()=>{closeSheet();craftTab=CRAFT_TABS.findIndex(t=>t[0]==='そうび');openSheet('craft')})()`));await page.waitForTimeout(400);await page.screenshot({path:process.env.SHOT_DIR?process.env.SHOT_DIR+'/gear-board.png':'/tmp/gear-board.png'});
+await page.evaluate(()=>gearEval(`(()=>{closeSheet();craftTab='そうび';openSheet('craft')})()`));await page.waitForTimeout(400);await page.screenshot({path:process.env.SHOT_DIR?process.env.SHOT_DIR+'/gear-board.png':'/tmp/gear-board.png'});
 console.log('radius',rad);assert.deepEqual(errors,[]);console.log('gear: ok');await browser.close()})().catch(e=>{console.error(e);process.exit(1)});

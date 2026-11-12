@@ -173,14 +173,15 @@ const GENRE_TAB={'家具':'家具','収納':'収納','遊び':'あそび道具',
 function genreOf(id){const b=BL[id];if(!b)return'';if(b.cat==='living')return'ダイニング家具';if(b.cat==='cook')return'料理家具';for(const[t,ids]of CRAFT_TABS)if(ids.includes(id))return GENRE_TAB[t]||t;return''}/* アイテムのジャンル（名前のとなりに出す） */
 const nameG=id=>{const g=genreOf(id);return BL[id].name+(g?'　【'+g+'】':'')};
 const CAT_TAG={living:'リビング',cook:'キッチン',toy:'遊び',light:'あかり',env:'ガーデン'},TAB_TAG={'家具':'家具','収納':'収納','遊び':'遊び','庭':'ガーデン','あかり':'あかり','ごはん':'キッチン','ワナ':'ワナ','家づくり':'家づくり','道・囲い':'道・囲い','クエスト':'クエスト'};
-const TAGMAP={stool:'リビング,キッチン',chair:'リビング,キッチン',achair:'リビング',pouf:'リビング',stable:'リビング',ltable:'リビング',table:'リビング,キッチン',sofa1:'リビング',rug1:'リビング,寝室',rug2:'リビング,寝室',bed:'寝室',
+const CRAFT_TAGS=['ぜんぶ','リビング','寝室','キッチン','お風呂','収納','かざり','あかり','遊び','ガーデン','家づくり','道・囲い','ワナ','矢','そうび','クエスト'];/* 依頼ボードのタグのならび */
+const TAGMAP={stool:'リビング,キッチン',chair:'リビング,キッチン',achair:'リビング',pouf:'リビング',stable:'リビング',ltable:'リビング',table:'リビング,キッチン',sofa1:'リビング',rug1:'リビング,寝室',rug2:'リビング,寝室',bed:'寝室',yorubed:'寝室',hoshirug:'リビング,寝室',takebench:'ガーデン',shishiodoshi:'ガーデン,かざり',takeakari:'あかり,ガーデン',toro:'あかり,ガーデン',andon:'あかり,リビング',
 tub:'キッチン,お風呂',sink:'キッチン',oven:'キッチン',bathtub:'お風呂',hotstone:'お風呂,ガーデン',crate:'収納',stor:'収納',mbox:'収納',shelf1:'収納,リビング',shelf2:'収納,かざり',cabinet:'収納,リビング',wshelf:'収納,かざり',
 monstera:'かざり,リビング',wreath:'かざり,リビング',curtain1:'かざり,リビング,寝室',curtain2:'かざり,リビング,寝室',paint1:'かざり,リビング',paint2:'かざり,リビング',paint3:'かざり,リビング',
 candle:'あかり,リビング',lantern:'あかり,リビング',flamp:'あかり,リビング',lamp:'あかり,ガーデン',torch:'あかり,ガーデン',
 signpost:'ガーデン',hedge:'ガーデン',joro:'ガーデン',composter:'ガーデン',birdbath:'ガーデン,かざり',arch:'ガーデン,かざり',parasol:'ガーデン,遊び',noren:'ガーデン,かざり',bench:'ガーデン,リビング',jar:'ガーデン,キッチン',kamizo:'ガーデン',rockart:'ガーデン,かざり',chochin:'かざり',furin:'かざり',ema:'かざり',komainu:'かざり,ガーデン',kadomatsu:'かざり,ガーデン',vane:'ガーデン,かざり',basin:'ガーデン',
 slide:'遊び,ガーデン',sandbox:'遊び,ガーデン',seesaw:'遊び,ガーデン',swing:'遊び,ガーデン',campfire:'遊び,あかり',fountain:'遊び,ガーデン',
 spike:'ワナ',puddle:'ワナ',sticky:'ワナ',firetrap:'ワナ',gust:'ワナ',watch:'防衛',tower:'防衛',lighthouse:'あかり,防衛',stele:'防衛',lurestatue:'防衛',well:'水まわり,ガーデン',windmill:'作業,ガーデン',lumber:'作業',quarry:'作業',statue:'神殿'};/* ジャンルのタグ（複数あるものは、すべて書く） */
-function tagsOf(id){const b=BL[id];if(!b)return[];if(TAGMAP[id])return TAGMAP[id].split(',');const t=[];if(CAT_TAG[b.cat])t.push(CAT_TAG[b.cat]);for(const[n,ids]of CRAFT_TABS)if(ids.includes(id)){const g=TAB_TAG[n]||n;if(!t.includes(g)&&!(g==='家具'&&t.length))t.push(g)}if(b.play&&!t.includes('遊び'))t.push('遊び');if(!t.length&&b.kind==='furn')t.push('家具');return t}/* 説明に出す、ジャンルのタグ */
+function tagsOf(id){const b=BL[id];if(!b)return[];if(TAGMAP[id])return TAGMAP[id].split(',');if(b.kind==='ammo'||b.g&&b.g.s==='ar')return['矢'];const t=[];if(CAT_TAG[b.cat])t.push(CAT_TAG[b.cat]);for(const[n,ids]of CRAFT_TABS)if(ids.includes(id)){const g=TAB_TAG[n]||n;if(!t.includes(g)&&!(g==='家具'&&t.length))t.push(g)}if(b.play&&!t.includes('遊び'))t.push('遊び');if(!t.length&&b.kind==='furn')t.push('家具');return t}/* 説明に出す、ジャンルのタグ */
 function tagsEl(id){const tg=tagsOf(id);if(!tg.length)return null;const d=document.createElement('div');d.className='tags';for(const g of tg){const sp=document.createElement('span');sp.className='tag';sp.textContent=g;d.appendChild(sp)}return d}
 function helpPop(t,text){const o=$('#helpPop');let tg=[];{const id=Object.keys(BL).find(k=>BL[k].name===t);if(id)tg=tagsOf(id)}{const bx=o.querySelector('.tags');if(bx){bx.innerHTML='';for(const g of tg){const sp=document.createElement('span');sp.className='tag';sp.textContent=g;bx.appendChild(sp)}bx.hidden=!tg.length}}o.querySelector('b').textContent=t;o.querySelector('p').textContent=text;o.hidden=false}
 function lostSum(L){/* ぬすまれた物を、物ごとの合計で「石材 ×3、木材 ×2」 */const m=new Map();for(const g of L){const k=String(g).replace(/\d+$/,'');m.set(k,(m.get(k)||0)+1)}return [...m].map(([k,n])=>k+' ×'+n).join('、')}
@@ -265,10 +266,13 @@ function renderSheet(){
       const bi=p.querySelector('.bar i');bi.style.width=Math.min(100,o.prog/o.need*100)+'%';bi.style.background='#e0a43a';bd.appendChild(p)}
     body.appendChild(bd);
     const s2=el('<div class="sec"><h3>依頼を書く</h3><div class="ctabs"></div><div class="rows"></div></div>');
-    const gTab=i=>CRAFT_TABS[i][0]==='そうび';if(gTab(craftTab)&&WD!==1&&!GEAR_IDS.some(id=>S.recipes&&S.recipes[id]))craftTab=0;
-    CRAFT_TABS.forEach(([nm],i)=>{if(gTab(i)&&WD!==1&&!GEAR_IDS.some(id=>S.recipes&&S.recipes[id]))return;/* そうびの欄は火山から */const t=el('<button class="ctab'+(i===craftTab?' on':'')+'"></button>');t.textContent=nm;t.onclick=()=>{craftTab=i;renderSheet()};s2.querySelector('.ctabs').appendChild(t)});
-    recToggle(s2,CRAFT_TABS.flatMap(([,ids])=>ids).filter(id=>recipeKnown(id)&&(lvOK(id)||S.recipes[id])));s2.querySelector('.rows').before(s2.querySelector('.recsw')||document.createTextNode(''));
-    let gPrev=null;for(const id of CRAFT_TABS[craftTab][1]){const b=BL[id];
+    const CIDS=CRAFT_TABS.flatMap(([,ids])=>ids),cShow=id=>recipeKnown(id)&&(lvOK(id)||S.recipes[id])&&recShown(id);
+    const gearOn=WD===1||GEAR_IDS.some(id=>S.recipes&&S.recipes[id]);/* そうびは火山から */
+    const tagOn=t=>t==='ぜんぶ'||(t!=='そうび'||gearOn)&&CIDS.some(id=>cShow(id)&&tagsOf(id).includes(t));
+    if(!CRAFT_TAGS.includes(craftTab)||!tagOn(craftTab))craftTab='ぜんぶ';
+    for(const t of CRAFT_TAGS){if(!tagOn(t))continue;const b=el('<button class="ctab'+(t===craftTab?' on':'')+'"></button>');b.textContent=t;b.dataset.tag=t;b.onclick=()=>{craftTab=t;renderSheet()};s2.querySelector('.ctabs').appendChild(b)}
+    recToggle(s2,CIDS.filter(id=>recipeKnown(id)&&(lvOK(id)||S.recipes[id])));s2.querySelector('.rows').before(s2.querySelector('.recsw')||document.createTextNode(''));
+    let gPrev=null;for(const id of CIDS){const b=BL[id];if(!craftInTag(id,craftTab))continue;
       if(!recipeKnown(id)||!lvOK(id)&&!S.recipes[id]||!recShown(id))continue;{const h=gearBoardHead(id,gPrev);gPrev=id;if(h)s2.querySelector('.rows').appendChild(h)}/* そうび：わくごとの見出し *//* 思いついていない・レベル不足は出さない */
       /* レシピをまだ知らない */
       const r=helpify(rowEl(b.name+(b.qty?'×'+b.qty:'')+'　所持：'+inv(id),'',iconURL(id),b.mat?matNeedHTML(b.mat)+(b.sand?'<span class="mneed" style="margin-right:6px;'+((S.sand||0)>=b.sand?'':'color:#c0392b;font-weight:700')+'">やすらぎの砂（'+(S.sand||0)+'/'+b.sand+'）</span>':'')+Object.keys(b.food||{}).map(k=>'<span class="mneed" style="margin-right:6px;'+((S.fs[k]||0)>=b.food[k]?'':'color:#c0392b;font-weight:700')+'">'+FOODS[k].name+'（'+(S.fs[k]||0)+'/'+b.food[k]+'）</span>').join('')+' ':''),withAttr(id,b.desc));
@@ -276,7 +280,7 @@ function renderSheet(){
       const bt=el('<button class="btn pri"></button>');
       if(!lvOK(id)){bt.textContent='村Lv'+b.lv;bt.disabled=true;r.classList.add('done')}else{bt.textContent='はる　'+SP(b.pc);bt.disabled=S.pt<b.pc||S.orders.length>=boardMax()||!matOK(b.mat)||!!(orderLock()&&orderLock()!==id);bt.onclick=()=>orderFurn(id)}
       r.appendChild(bt);s2.querySelector('.rows').appendChild(r)}
-    if(gTab(craftTab))gearBoardUp(s2.querySelector('.rows'));/* そうびの強化 */
+    if(craftTab==='そうび')gearBoardUp(s2.querySelector('.rows'));/* そうびの強化 */
     if(!s2.querySelector('.rows').children.length)s2.querySelector('.rows').appendChild(nodata('paper','まだ作れるものがないよ'));
     body.appendChild(s2);
     if(S.feat.inv){const ib=el('<button class="btn">もちものを見る</button>');ib.onclick=()=>openSheet('inv');body.appendChild(ib)}

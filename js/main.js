@@ -110,7 +110,7 @@ const paused=()=>(typeof sacredPlayActive==='function'&&sacredPlayActive())||sac
 let lastIn=performance.now();
 for(const ev of['pointerdown','keydown','wheel'])addEventListener(ev,()=>{lastIn=performance.now();const d=$('#idle');if(!d.hidden){d.hidden=true;last=performance.now()}},true);
 let tutCache={k:'',t:0,v:null};
-function orderTut(id){if(sheet){if(sheet!=='craft'||inv(id)>0||S.orders.some(o=>o.type===id))return{kind:'close'};const tab=craftTabFor(id);return craftTab===tab?{kind:'row'}:{kind:'tab',tab}}if(inv(id)>0)return{kind:'place'};if(S.orders.some(o=>o.type===id))return null;if(mode!=='look')return{kind:'look'};return BOARD>=0?{kind:'board'}:null}
+function orderTut(id){if(sheet){if(sheet!=='craft'||inv(id)>0||S.orders.some(o=>o.type===id))return{kind:'close'};return craftInTag(id,craftTab)?{kind:'row'}:{kind:'tab',tab:craftTabFor(id)}}if(inv(id)>0)return{kind:'place'};if(S.orders.some(o=>o.type===id))return null;if(mode!=='look')return{kind:'look'};return BOARD>=0?{kind:'board'}:null}
 function tutView(){/* 画面のうち、上のバーと下のパネルにかくれていない所 */const ar=$('#app').getBoundingClientRect(),q=$('#questChip').getBoundingClientRect();let b=$('#botUI').getBoundingClientRect().top;const ii=$('#itemInfo');if(!ii.hidden){const t=ii.getBoundingClientRect().top;if(t>0)b=Math.min(b,t)}return[30,q.bottom-ar.top+50,VW-30,b-ar.top-100]}
 function tutSpot(id){const sz=BL[id].sz||[1,1],V=tutView(),vc=[Math.floor((cam.x+(V[0]+(V[2]-V[0])*.72)/cam.z)/TS-sz[0]/2+.5),Math.floor((cam.y+(V[1]+(V[3]-V[1])*.66)/cam.z)/TS-sz[1]/2+.5)];/* 画面の右下のマス（まん中だとじゃまなので） */
   const k=S.quest+':'+id+':'+vc;if(tutCache.k===k&&performance.now()-tutCache.t<1500)return tutCache.v;let v=null;
@@ -147,7 +147,7 @@ function updTut(){
   else if(WD===0&&!sheet&&fieldTapNeed()!=null){const j=fieldTapNeed(),n=sacredSpan();lookAt([(j%W+n/2)*TS,((j/W|0)+n/2-.5)*TS],'切り株をタップ')}/* 御神木の調べ：準備ができたら、切り株をタップ */
   else if(qt==='statue'){if(WD===0&&RUINT>=0&&S.obj[RUINT]==='statueb'&&!sheet)lookAt([(RUINT%W+.5)*TS,((RUINT/W)|0)*TS-24],'こわれた神殿をタップ');else if(WD===0&&STATUE<0&&RUINT<0&&!S.obj.includes('site'))placeHint('statue')}/* 操作の案内は1章だけ */
   else if(qt==='springA'){if(inv('hotstone')>0)placeHint('hotstone')}
-  else if(qt==='table'){const g=orderTut('table');if(g&&g.kind==='place')placeHint('table');else if(g&&g.kind==='close'){el=$('#sheetX');lbl='依頼ボードをとじる'}else if(g&&g.kind==='look'){el=document.querySelector('#dock [data-mode="look"]');lbl='「みる」をタップ'}else if(g&&g.kind==='board'){wp=[(BOARD%W+1)*TS,((BOARD/W)|0)*TS-12];lbl='依頼ボードをタップ'}else if(g&&g.kind==='tab'){el=document.querySelectorAll('.ctab')[g.tab];lbl='「家具」をタップ'}else if(g&&g.kind==='row'){const row=[...document.querySelectorAll('#sheetBody .row')].find(r=>r.textContent.includes(BL.table.name));el=row&&([...row.querySelectorAll('button')].find(b=>b.textContent.includes('はる'))||[...row.querySelectorAll('button')].pop());lbl=el&&el.disabled?'パワーや素材が集まるまで待とう':'食卓の「はる」をタップ'}}
+  else if(qt==='table'){const g=orderTut('table');if(g&&g.kind==='place')placeHint('table');else if(g&&g.kind==='close'){el=$('#sheetX');lbl='依頼ボードをとじる'}else if(g&&g.kind==='look'){el=document.querySelector('#dock [data-mode="look"]');lbl='「みる」をタップ'}else if(g&&g.kind==='board'){wp=[(BOARD%W+1)*TS,((BOARD/W)|0)*TS-12];lbl='依頼ボードをタップ'}else if(g&&g.kind==='tab'){el=document.querySelector('.ctab[data-tag="'+g.tab+'"]');lbl='「'+g.tab+'」をタップ'}else if(g&&g.kind==='row'){const row=[...document.querySelectorAll('#sheetBody .row')].find(r=>r.textContent.includes(BL.table.name));el=row&&([...row.querySelectorAll('button')].find(b=>b.textContent.includes('はる'))||[...row.querySelectorAll('button')].pop());lbl=el&&el.disabled?'パワーや素材が集まるまで待とう':'食卓の「はる」をタップ'}}
   else if((qt==='stor'||qt==='mbox')&&sheet==='craft'&&S.orders.some(o=>o.type===(qt==='stor'?'stor':'mbox'))&&inv(qt==='stor'?'stor':'mbox')<=0){el=$('#sheetX');lbl='とじる'}/* はったあと：画面をとじて、できあがりを待つ */
   else if(qt==='farm6'){if(inv('farm')>0)placeHint('farm')}
   else if(qt==='imoseed'){if(imoSeedQuestPlots().length>=2)return hide();if(sheet){el=$('#sheetX');lbl='とじる'}else if(mode!=='build'){el=document.querySelector('#dock [data-mode="build"]');lbl='「おく」をタップ'}
@@ -161,10 +161,10 @@ function updTut(){
     else if(sheet){el=$('#sheetX');lbl='とじてメニューをひらこう'}
     else{el=document.querySelector('#dock [data-sheet="menu"]');lbl='「メニュー」をタップ'}
   }
-  else if(qt==='stor'||qt==='mbox'){const bid=qt==='stor'?'stor':'mbox',tb=craftTabFor(bid),tn=CRAFT_TABS[tb][0],bn=BL[bid].name;
+  else if(qt==='stor'||qt==='mbox'){const bid=qt==='stor'?'stor':'mbox',tb=craftTabFor(bid),tn=tb,bn=BL[bid].name;
     if(inv(bid)>0)placeHint(bid);
     else if(!S.orders.some(o=>o.type===bid)){
-      if(sheet==='craft'){if(craftTab!==tb){el=document.querySelectorAll('.ctab')[tb];lbl='「'+tn+'」をタップ'}else{const row=[...document.querySelectorAll('#sheetBody .row')].find(r=>r.textContent.includes(bn));el=row&&([...row.querySelectorAll('button')].find(b=>b.textContent.includes('はる'))||[...row.querySelectorAll('button')].pop());lbl=el&&el.disabled?'木材が集まるまで待とう':'「はる」をタップ'}}
+      if(sheet==='craft'){if(!craftInTag(bid,craftTab)){el=document.querySelector('.ctab[data-tag="'+tb+'"]');lbl='「'+tn+'」をタップ'}else{const row=[...document.querySelectorAll('#sheetBody .row')].find(r=>r.textContent.includes(bn));el=row&&([...row.querySelectorAll('button')].find(b=>b.textContent.includes('はる'))||[...row.querySelectorAll('button')].pop());lbl=el&&el.disabled?'木材が集まるまで待とう':'「はる」をタップ'}}
       else if(!sheet){if(mode!=='look'){el=document.querySelector('#dock [data-mode="look"]');lbl='「みる」をタップ'}else if(BOARD>=0){wp=[(BOARD%W+1)*TS,((BOARD/W)|0)*TS-12];lbl='依頼ボードをタップ'}}}}
   else if(qt==='fence4'){if(inv('fence')>0)placeHint('fence')}
   else if(qt==='wall'){if(inv('hwall')>0)placeHint('hwall')}
