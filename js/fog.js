@@ -134,9 +134,17 @@ function printEnsure(){/* あしあとが3つないセーブ（霧がない・�
   let need=PRINT_N-printList().length;if(need<=0)return;const has=new Set((S.fogF||[]).map(f=>f.a)),A=fogShuffle([...Array(AREAN*AREAN).keys()].filter(a=>!FOG_MID.includes(a)));
   for(const a of [...A.filter(a=>!has.has(a)),...A.filter(a=>has.has(a))]){if(need<=0)break;const R=fogArea(a);for(let tr=0;tr<400;tr++){const x=R.x0+4+((Math.random()*(AREAW-8))|0),y=R.y0+4+((Math.random()*(AREAW-8))|0),j=y*W+x;if(!fogSpotOK(S,j,null)||VILL[j])continue;S.obj[j]='nushiprint';S.fogF.push({t:'print',a,j});need--;break}}
   dirty=true}
+let PRINTNEAR_T=-1e9;
+function printNear(){/* たどりはじめる前に、足あとがぜんぶ霧の中なら、1つを晴れた所（村の外の、フタバが歩いて行ける空いた所）へうつす（いちど） */if(!printOn()||S.flags.printNear||printT().length)return;const L=printList();if(!L.length||!L.every(f=>fogAt(f.j)))return;
+  const now=performance.now();if(now-PRINTNEAR_T<5000&&now>=PRINTNEAR_T)return;PRINTNEAR_T=now;const p=S.res.find(r=>r.name===POKO&&!r.hidden);if(!p)return;const G=bfs(p.x|0,p.y|0),C=[];
+  const nearV=k=>{const x=k%W,y=(k/W)|0;for(let b=-2;b<=2;b++)for(let a=-2;a<=2;a++){const nx=x+a,ny=y+b;if(nx>=0&&ny>=0&&nx<W&&ny<H&&VILL[ny*W+nx])return true}return false};
+  for(let k=0;k<W*H;k++)if(G.dist[k]>=0&&!fogAt(k)&&fogSpotOK(S,k,null)&&walk(k)&&!nearV(k)&&!(S.drops||[]).some(d=>d.y*W+d.x===k))C.push(k);if(!C.length)return;
+  C.sort((a,b)=>G.dist[a]-G.dist[b]);const j=C[(Math.random()*Math.min(20,C.length))|0],f=L.reduce((m,q)=>Math.hypot(q.j%W-p.x,((q.j/W)|0)-p.y)<Math.hypot(m.j%W-p.x,((m.j/W)|0)-p.y)?q:m);
+  S.obj[f.j]='';S.fogReq=(S.fogReq||[]).filter(k=>k!==f.j);S.obj[j]='nushiprint';f.j=j;f.a=areaOf(j);S.flags.printNear=1;dirty=true}
+function printFocus(){/* 目標の一覧から行く足あと：晴れている所の、まだたどっていない足あとで、フタバ（いなければ村のまん中）にいちばん近い物 */const p=S.res.find(r=>r.name===POKO&&!r.hidden),x=p?p.x:CX,y=p?p.y:CY;let b=-1,bd=1e9;for(const f of printList()){if(printTraced(f.j)||fogAt(f.j))continue;const d=Math.hypot(f.j%W-x,((f.j/W)|0)-y);if(d<bd){bd=d;b=f.j}}return b}
 function printNext(j){/* つぎにたどる足あと：まだたどっていない、いちばん近い足あと */const x=j%W,y=(j/W)|0;let b=-1,bd=1e9;for(const f of printList()){if(f.j===j||printTraced(f.j))continue;const d=Math.hypot(f.j%W-x,((f.j/W)|0)-y);if(d<bd){bd=d;b=f.j}}return b}
-function drawPrintMarks(now){/* たどる依頼のあいだ、まだたどっていない足あと（晴れている所）の上で、ドットの星がまたたく */if(!printOn()||!$('#dialog').hidden)return;
-  for(const f of printList()){if(printTraced(f.j)||fogAt(f.j))continue;const x=f.j%W,y=(f.j/W)|0,q=(now/900+f.j*.37)%1,a=Math.sin(Math.PI*q);if(a<.08)continue;const cx=x*TS+16,cy=y*TS-6-hiAt(f.j)*LIFT-Math.round(q*4),n=a>.6?2:1;
+function drawPrintMarks(now,inFog){/* たどる依頼のあいだ、まだたどっていない足あとの上で、ドットの星がまたたく（霧の中の物は、霧の上に描く inFog） */if(!printOn()||!$('#dialog').hidden)return;
+  for(const f of printList()){if(printTraced(f.j)||fogAt(f.j)!==!!inFog)continue;const x=f.j%W,y=(f.j/W)|0,q=(now/900+f.j*.37)%1,a=Math.sin(Math.PI*q);if(a<.08)continue;const cx=x*TS+16,cy=y*TS-6-hiAt(f.j)*LIFT-Math.round(q*4),n=a>.6?2:1;
     ctx.save();ctx.globalAlpha=a;ctx.fillStyle='#fff6c8';ctx.fillRect(cx-1,cy-1,2,2);ctx.fillStyle='#ffe58a';for(let k=1;k<=n;k++){ctx.fillRect(cx-1,cy-1-k*2,2,2);ctx.fillRect(cx-1,cy-1+k*2,2,2);ctx.fillRect(cx-1-k*2,cy-1,2,2);ctx.fillRect(cx-1+k*2,cy-1,2,2)}ctx.restore()}}
 let PRINTSC=null;/* いま見ている足あとの場面（保存しない） */
 function printScene(r,f,mem){const k=Math.min(PRINT_TRACE.length-1,printT().length),owner=S,session=VILLAGE_SESSION;PRINTSC={state:S,session,r,j:f.j};
