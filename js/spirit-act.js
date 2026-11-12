@@ -219,7 +219,8 @@ const ACT={
   tourgo:{start(r,a){r.bubble='';tourFace(r,a.look);r.waveU=S.t+3;const w=S.tour&&S.res.find(q=>q.id===S.tour.w);if(w&&Math.hypot(w.x-r.x,w.y-r.y)<3){a.shown=1;tourFace(w,a.look);JUMP.set(w,performance.now())}},tick(r,a){const w=S.tour&&S.res.find(q=>q.id===S.tour.w);if(w&&!a.shown&&Math.hypot(w.x-r.x,w.y-r.y)<3){a.shown=1;a.t=0;tourFace(r,a.look);r.waveU=S.t+3;tourFace(w,a.look)}},done:(r,a)=>{const w=S.tour&&S.res.find(q=>q.id===S.tour.w);return !S.tour||!w||a.t>=a.dur&&(a.shown||a.t>=40)},end(r){if(S.tour&&S.tour.g===r.id)S.tour.i++}},/* 村のあんない：場所へ歩いて、その物のほうを向いて手をふる（ついてくる子が来るまで待って、来たらもう一度見せる） */
   tourf:{start(r){r.bubble=''},done:(r,a)=>{const t=S.res.find(q=>q.id===a.tg);return !S.tour||a.t>=.5||!t||Math.hypot(t.x-r.x,t.y-r.y)>1.9}},/* あんないしてもらう子：あとをついて歩く */
   wander:{start(r,a){a.dur=rnd(10,30)},done:(r,a)=>a.t>=a.dur,end(r){r.wanderRestUntil=S.t+45}},
-  idle:{start(r){r.bubble='☕'},done:(r,a)=>a.t>=a.dur},/* ひとやすみ中は、休けいの吹き出し */
+  idle:{start(r){r.bubble='☕'},done:(r,a)=>a.t>=a.dur},
+  eatwait:{start(r){r.bubble='📦'},done:(r,a)=>a.t>=3||!(S.food>0)},/* 食料箱があくのを待つ（おわったら、また食べにいく） *//* ひとやすみ中は、休けいの吹き出し */
   // ベッドがない子は、家の中で起きたまま夜をすごす
   stay:{start(r){r.bubble="🏠"},done:(r,a)=>hungry(r)&&a.t>5||r.hunger<18||!isNight()},
   shiver:{start(r){r.bubble='😨'},done:(r,a)=>r.hunger<50||!hostileNow(r)||r.hunger<hMax(r)*.5&&S.food>0&&!(r.eatTry>S.t),end(r){if(!hostileNow(r)&&r.hunger>=30)r.phewNext=true}},/* コワイノがいなくなったら、「ふぅ」とひと息ついてから寝る */
@@ -381,6 +382,8 @@ function goEat(r,G){if(r.cmat&&matCap()>0&&matTot()<matCap()&&!hostileNow(r)&&!f
   if(S.food>0){
     const j=nearest(G,j=>storeAdj(j,'food')>=0,200);
     if(j>=0){startAct(r,G,'fetch',j);return r.act&&r.act.type==='fetch'}
+    {const T=TAKEN;TAKEN=null;let b=-1;try{b=nearest(G,j=>storeAdj(j,'food')>=0,200)}finally{TAKEN=T}/* 箱のまわりが、ほかのせいれいでうまっているとき：箱のそばで、じゅんばんを待つ（ベリーへは行かない） */
+      if(b>=0){const bx=b%W,by=(b/W)|0,w=nearest(G,q=>q!==b&&!S.obj[q]&&Math.abs(q%W-bx)<=2&&Math.abs(((q/W)|0)-by)<=2,200);startAct(r,G,'eatwait',w>=0?w:b);return r.act&&r.act.type==='eatwait'}}
   }
   const f=ripeAdj(['berry','fruit']);const j=nearest(G,j=>f(j)>=0);
   if(j>=0){const k=f(j);startAct(r,G,'forage',j,{key:'o'+k,obj:k,run:S.food<=0});return r.act&&r.act.type==='forage'}/* 食料がゼロなら、茂みへは走る */
