@@ -235,6 +235,6 @@ const jobBlocked=k=>JOBBLK.S===S&&JOBBLK.set.has(k);
 /* 御神木のそばの花の世話（草原のメイン「木のなかまと花畑」。仕事えらびは wflJob、数えるのは quests.js の wflCells など） */
 ACT.fltend={start(r,a){if(!wflOn()||S.obj[a.obj]!==wflKind())return false;r.bubble='';r.face=(a.obj%W+.5)<r.x?-1:(a.obj%W+.5)>r.x?1:r.face},done:(r,a)=>a.t>=4,
   end(r,a){if(!wflOn()||wflT().includes(r.id))return;const T=S.flags.flTend=[...wflT(),r.id],x=a.obj%W+.5,y=(a.obj/W|0)+.5;sfxAt('bush',r.x,r.y);addFloat(r.x,r.y-1.6,'いいにおい');for(let i=0;i<6;i++)villageTimeout(()=>leafFX({x:x+(Math.random()-.5)*.6,y:y-.3}),i*120);addSpiritXp(1,r);
-    if(T.length>=WFL_TEND){const L=wflCells();L.forEach((k,i)=>villageTimeout(()=>{burst(k,'plant','none');leafFX({x:k%W+.5,y:(k/W|0)+.2})},i*160));sfx('bush');toast('御神木のそばの'+wflName()+'が、満開になった','good');logEv('御神木のそばの花畑が満開になった')}/* 5人の世話で、満開 */
+    if(T.length>=WFL_TEND){const L=wflCells();L.forEach((k,i)=>villageTimeout(()=>{burst(k,'plant','none');leafFX({x:k%W+.5,y:(k/W|0)+.2})},i*160));sfx('sacred');toast('御神木のそばの'+wflName()+'が、満開になった','good');logEv('御神木のそばの花畑が満開になった')}/* 5人の世話で、満開 */
     else toast(r.name+'が'+wflName()+'の世話をした（'+T.length+'/'+WFL_TEND+'）');renderQuest();checkQuest();dirty=true}};
 ACT_LBL.fltend='花の世話をしている';WORKFACE.add('fltend');/* 花のほうを向く（北の花には、うしろ向き） */

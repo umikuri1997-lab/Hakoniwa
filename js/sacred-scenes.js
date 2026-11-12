@@ -74,7 +74,7 @@ function sacredGrowSparks(j,ms,stage,mode){
   const n=8+stage*5;for(let i=0;i<n;i++)setTimeout(()=>{if(!live())return;const a=Math.random()*Math.PI*2,r=6+Math.random()*(12+stage*4);fx.push({k:'p',x:g.cx+Math.cos(a)*r,y:g.base-4,vx:Math.cos(a)*8,vy:-120-Math.random()*80,life:1.4,col:i%3?'#fff6c8':'#c8f5a0',r:2})},ms*.08+i*(ms*.45/n));
   setTimeout(()=>{if(!live())return;const R=glow?40+stage*8:36+stage*22;sacredRings(g.cx,g.base-4,glow?1:3,R,'#fff6c8');sacredLeafFall(g,glow?3+stage:6+stage*6,12+stage*12);
     if(!glow){for(let i=0;i<14+stage*5;i++){const a=Math.random()*Math.PI*2,v=30+Math.random()*60;fx.push({k:'p',x:g.cx,y:g.top+g.h*.4,vx:Math.cos(a)*v,vy:Math.sin(a)*v-80,life:1.3,col:i%2?'#c8f5a0':'#fff6c8',r:2})}sacredNearJoy(j,1800)}
-    sfx('bush')},ms*(glow?.45:.7))}
+    sfx('sacred')},ms*(glow?.45:.7))}
 /* ---------- かけらを御神木にささげる場面 ----------
    フタバが歩みよる → 村の時間を止めて、カメラがよる → かけらが手の上にうかぶ → 幹へとんで入る → 光のすじが根から梢へ
    → 1つめ：木のまわりに光の花が咲きひろがる／2つめ：村のせいれいから光があつまる／3つめ：3つの光の輪
@@ -102,7 +102,7 @@ function sacredOfferShard(j,done){
     const hx=()=>f.x*TS+face*5,hy=()=>f.y*TS-42-uLift(f),tx=g.cx,ty=g.base-Math.min(40,g.h*.4);
     at(500,()=>{scnAdd('gem',2000,{actor:f,dx:face*5,dy:-42,rise:8});sfx('shard')});
     at(2400,()=>{sacredScenePose(f,'storyListen',T,{side:true,face});scnAdd('orb',900,{x0:hx(),y0:hy()-8,x1:tx,y1:ty,arc:24,col:'#fff0a8',n:3})});
-    at(3300,()=>{sacredRings(tx,ty+10,1,34,'#fff6c8');scnAdd('vein',2600,{x:g.cx,y:g.base-6,h:g.h*.8,w:5});scnAdd('glow',3200,{x:g.cx,y:g.base-g.h*.4,r:Math.min(70,g.h*.6)});sacredStartEffect('sway',2600);sfx('bush');
+    at(3300,()=>{sacredRings(tx,ty+10,1,34,'#fff6c8');scnAdd('vein',2600,{x:g.cx,y:g.base-6,h:g.h*.8,w:5});scnAdd('glow',3200,{x:g.cx,y:g.base-g.h*.4,r:Math.min(70,g.h*.6)});sacredStartEffect('sway',2600);sfx('sacred');
       for(let i=0;i<12;i++){const a=i/12*Math.PI*2;fx.push({k:'p',x:tx,y:ty,vx:Math.cos(a)*50,vy:Math.sin(a)*40-40,life:1,col:i%2?'#fff6c8':'#bfe8ff',r:2})}});
     if(n===1)at(4100,()=>{/* 育てる力：木のまわりに、光の花が、内がわから外へ咲きひろがる */const cx=storyTreeX(j),cy=storyTreeY(j),C=['#ffd1e8','#fff2f6','#fff0a8','#d8c8ff'];let k=0;
       for(let i=0;i<70&&k<30;i++){const an=Math.random()*Math.PI*2,r=1.8+Math.random()*3.6,x=cx+Math.cos(an)*r,y=cy+.6+Math.sin(an)*r*.7,q=(y|0)*W+(x|0);if(x<0||y<0||x>=W||y>=H||S.obj[q]||S.ground[q]===1||S.ground[q]===2||(S.fog&&fogAt(q)))continue;
@@ -110,7 +110,7 @@ function sacredOfferShard(j,done){
     if(n===2)at(4100,()=>{/* 想う力：村のせいれいから、ちいさな光が木へあつまる */const L=S.res.filter(r=>!r.hidden&&r!==f).sort((a,b)=>Math.hypot(a.x-f.x,a.y-f.y)-Math.hypot(b.x-f.x,b.y-f.y)).slice(0,14);
       L.forEach((r,i)=>{const col=ELEM[r.elem].body;scnAdd('orb',1300,{x0:r.x*TS,y0:r.y*TS-18-uLift(r),x1:tx,y1:ty,arc:20,col,n:2},i*150);scnAdd('ring',700,{x:tx,y:ty+6,r0:4,r1:16,col,a:.7},i*150+1300)});sfx('power')});
     if(n>=3)at(4100,()=>{['#c8f5a0','#ffd1e8','#fff6c8'].forEach((col,i)=>scnAdd('ring',1300,{x:g.cx,y:g.base-4,r0:8,r1:70+i*22,col},i*300));sacredLeafFall(g,12,40);sfx('level')});
-    if(n<3)at(n===1?5400:5800,()=>{/* ヌシ様の光のりんかく：木のむこうがわに立って、フタバのほうを見る */scnAdd('lord',n===1?3400:3200,{x:lx,y:ly,face:-face,str:n===1?.62:.92});storyShot([...near,[lx-60,ly-150],[lx+60,ly]],{limit:2.2,seconds:1.6,full:true});/* カメラが少し引いて、すがたが入る */SACRED_POSES.delete(f);f.face=face;sacredScenePose(f,'lookUp',4000,{side:true,face});JUMP.set(f,performance.now());sfx('bush')});
+    if(n<3)at(n===1?5400:5800,()=>{/* ヌシ様の光のりんかく：木のむこうがわに立って、フタバのほうを見る */scnAdd('lord',n===1?3400:3200,{x:lx,y:ly,face:-face,str:n===1?.62:.92});storyShot([...near,[lx-60,ly-150],[lx+60,ly]],{limit:2.2,seconds:1.6,full:true});/* カメラが少し引いて、すがたが入る */SACRED_POSES.delete(f);f.face=face;sacredScenePose(f,'lookUp',4000,{side:true,face});JUMP.set(f,performance.now());sfx('sacred')});
     at(T,()=>{stopAll();sacredNearJoy(j,1600,10);const end=()=>{if(S!==owner||VILLAGE_SESSION!==session)return;if(sacredDirection())sacredEndDirection(true);done()};
       const lines=n<3?shardLines(n):[];if(lines.length)storyShot(near,{limit:2.2,seconds:.9});if(!lines.length||dialog(lines,end,null,'')===false)end()})};
   if(!sacredSceneWalk(f,(j%W)+.5,by,{adjacentSide:true},act)&&!sacredSceneWalk(f,(j%W)+span-.5,by,{adjacentSide:true},act))act();
@@ -132,11 +132,11 @@ function omoiLight(j,A,B,i,lit){/* 2人の胸から、属性の色の光がう�
   for(const[r,c]of[[A,cA],[B,cB]])scnAdd('orb',1100,{x0:r.x*TS,y0:r.y*TS-18-uLift(r),x1:mx,y1:my,arc:16,col:c,n:3});sfx('power');
   scnAdd('twin',1000,{x:mx,y:my,col:cA,col2:cB},1050);
   villageTimeout(()=>{sacredRings(mx,my+6,1,26,'#fff6c8');scnAdd('orb',750,{x0:mx,y0:my,x1:lx,y1:ly,arc:10,col:'#fff0a8',n:3});sfx('shard')},2050);
-  villageTimeout(()=>{lit([cA,cB]);scnAdd('ring',900,{x:lx,y:ly+4,r0:3,r1:22,col:cA});sacredStartEffect('sway',2200);sacredLeafFall(g,5,g.h*.3);sfx('bush')},2800)}
+  villageTimeout(()=>{lit([cA,cB]);scnAdd('ring',900,{x:lx,y:ly+4,r0:3,r1:22,col:cA});sacredStartEffect('sway',2200);sacredLeafFall(g,5,g.h*.3);sfx('sacred')},2800)}
 function omoiShardBeat(j,ms,d){/* お礼の会話：3つのあかりが枝から根もとへおりてきて、ひとつになり、かけらになる → フタバの両手へ */
   const g=sacredGeo(j),f=S.res.find(r=>r.name===POKO&&!r.hidden),P=(S.flags.omoiP||[]).slice(0,3),rx=g.cx,ry=g.base-18,owner=S;
   for(let i=0;i<3;i++){const[x,y]=omoiLampPos(j,i),c=omoiCols(P[i]);scnAdd('glow',900+i*350,{x,y,r:8,col:c[0]});scnAdd('orb',1200,{x0:x,y0:y,x1:rx,y1:ry,arc:-12,col:c[0],n:2},i*350)}
-  LAMPS_TAKEN.add(S);sfx('bush');
+  LAMPS_TAKEN.add(S);sfx('sacred');
   const near=f&&Math.hypot(f.x-storyTreeX(j),f.y-storyTreeY(j))<12;if(near){f.face=storyTreeX(j)>=f.x?1:-1;SACRED_POSES.delete(f);sacredScenePose(f,'storyOffer',600000,{side:true,face:f.face})}
   storyShot([[g.cx-60,g.top],[g.cx+60,g.base+14],...(near?[[f.x*TS-24,f.y*TS-60-uLift(f)],[f.x*TS+24,f.y*TS+10-uLift(f)]]:[])],{limit:2.3,seconds:1.3});
   villageTimeout(()=>{sacredRings(rx,ry+8,2,40,'#ffd1e8');scnAdd('gem',near?1500:2600,{x:rx,y:ry,rise:14});sfx('shard')},1900);
@@ -146,5 +146,5 @@ function omoiShardBeat(j,ms,d){/* お礼の会話：3つのあかりが枝から
 /* ---------- ヌシ様の足あと：むかし歩いた光のひづめのあとが、1歩ずつあらわれる ---------- */
 function hoofTrail(pts,gap,ms,delay){/* pts：[[x,y]...]（マスの座標）。1歩ずつ、左右にずらして出す */
   pts.forEach((p,i)=>{const a=pts[Math.max(0,i-1)],b=pts[Math.min(pts.length-1,i+1)],dx=b[0]-a[0],dy=b[1]-a[1],L=Math.hypot(dx,dy)||1,s=i%2?1:-1,x=p[0]-dy/L*.12*s,y=p[1]+dx/L*.12*s,q=(y|0)*W+(x|0);
-    scnAdd('hoof',ms,{x:x*TS,y:y*TS-(q>=0&&q<W*H?hiAt(q)*LIFT:0),v:Math.abs(dy)>Math.abs(dx)},(delay||0)+i*gap);villageTimeout(()=>sfx('tap'),(delay||0)+i*gap)})}
+    scnAdd('hoof',ms,{x:x*TS,y:y*TS-(q>=0&&q<W*H?hiAt(q)*LIFT:0),v:Math.abs(dy)>Math.abs(dx)},(delay||0)+i*gap);villageTimeout(()=>sfx('chime'),(delay||0)+i*gap)})}
 function hoofBlooms(x,y,n,delay){const C=['#ffd1e8','#fff2f6','#fff0a8'];for(let i=0;i<n;i++){const a=i/n*Math.PI*2+.4,r=.55+(i%3)*.22,bx=x+Math.cos(a)*r,by=y+Math.sin(a)*r*.7,q=(by|0)*W+(bx|0);scnAdd('bloom',3400,{x:bx*TS,y:by*TS-hiAt(q)*LIFT,col:C[i%3]},(delay||0)+i*130)}}

@@ -63,7 +63,7 @@ function startSacredPlay(id,j,cast,done,fail){
   if(P.type==='gather'){P.order=[...cast.filter(r=>r.name!==POKO),...cast.filter(r=>r.name===POKO)];P.need=P.order.length;P.prog=0;P.holding=false}/* 切り株を長おし：みんなが、じゅんに切り株へ力をおくる（フタバはさいご） */
   if(P.type==='brush'){P.area={x:cx-34,y:cy-10,w:68,h:20}}
   SPLAY=P;if(pop)sacredPlayPopOpen(P,def.pop);else camAnim={fz:cam.z,tz:Math.max(cam.z,2.4),fx:cam.x+VW/cam.z/2,fy:cam.y+VH/cam.z/2,tx:cx,ty:cy-10,t:0,dur:.6};
-  sacredPlayHint(P.hint+sacredPlayCount());sfx('tap');
+  sacredPlayHint(P.hint+sacredPlayCount());sfx('chime');
   if(IS_STORY_REPLAY)setTimeout(()=>{if(SPLAY===P)sacredPlayWin()},1600);/* 思い出帳では、守り神の手は見せるだけ */
 }
 function sacredPlayWin(){const P=SPLAY;if(!P)return;sacredPlayClose();if(P.owner!==S||P.session!==VILLAGE_SESSION)return;fxSpr('lighthit',P.cx,P.cy);sfx('good');sacredPlayBonus(P);P.done()}
@@ -72,19 +72,19 @@ function sacredPlayBonus(P){const b=FIELD_PLAY[P.id]?.bonus;if(!b||IS_STORY_REPL
   if(b.word)addFloat(P.cx/TS,P.cy/TS-1.6,b.word,'#fff3c4');/* 木のようすが、うれしそうにかわる（物はもらわない） */
   if(b.fun)for(const r of S.res){if(r.hidden||r.coffin)continue;r.fun=Math.min(100,r.fun+b.fun);addFloat(r.x,r.y-1.4,'たのしさ+'+b.fun)}}/* 村のみんなが、うれしくなる */
 /* しっぱい：数えて、3回でおわり（つぎの日に、もう一度） */
-function sacredPlayMiss(t){const P=SPLAY;if(!P)return;P.fails=(P.fails||0)+1;sacredPlayMsg(t);if(P.fails<PLAY_MISS){sacredPlayHint(P.hint+sacredPlayCount());return}sacredPlayClose();if(P.owner!==S||P.session!==VILLAGE_SESSION)return;sfx('tap');(P.fail||P.done)()}
+function sacredPlayMiss(t){const P=SPLAY;if(!P)return;P.fails=(P.fails||0)+1;sacredPlayMsg(t);if(P.fails<PLAY_MISS){sacredPlayHint(P.hint+sacredPlayCount());return}sacredPlayClose();if(P.owner!==S||P.session!==VILLAGE_SESSION)return;sfx('next');(P.fail||P.done)()}
 function sacredPlayClose(){SPLAY=null;sacredPlayHint('');pxTextFree();pxLayerFree();sacredPlayPopFree()}
 function cancelSacredPlay(){sacredPlayClose()}
 function sacredPlayMsg(t){const P=SPLAY;if(!P)return;P.msg=t;P.msgT=performance.now()}
 function sacredPlayNear(w,p,r){return Math.hypot(w.x-p.x,w.y-p.y)<=r}
 /* 風：指がはじめて入った葉を、順番とくらべる（同じ葉にいるあいだは1回） */
 function sacredPlayWind(P,w,now){let hit=-1;P.leaves.forEach((l,i)=>{if(sacredPlayNear(w,l,9))hit=i});if(hit<0||hit===P.last)return;P.last=hit;if(now<P.showEnd()){sacredPlayMsg('よく聞いて……');return}P.sw[hit]=now;
-  if(hit===P.order[P.got]){P.got++;sfx('bush');sacredPlayHint(P.hint+sacredPlayCount());if(P.got>=P.need)setTimeout(()=>{if(SPLAY===P)sacredPlayWin()},600);return}
+  if(hit===P.order[P.got]){P.got++;sfx('sacred');sacredPlayHint(P.hint+sacredPlayCount());if(P.got>=P.need)setTimeout(()=>{if(SPLAY===P)sacredPlayWin()},600);return}
   P.got=0;P.show=now+1000;sacredPlayMiss('そっちじゃない')}
 /* 指の動き（世界の座標） */
 function sacredPlayDown(w,now){const P=SPLAY;P.down={x:w.x,y:w.y,t:now,last:{x:w.x,y:w.y,t:now}};
   if(P.type==='hold'){if(sacredPlayNear(w,P.stone,14)){P.holding=true;P.heat=0}}
-  else if(P.type==='cover'){if(sacredPlayNear(w,P.pile,12)&&P.got<P.need){P.carry={x:w.x,y:w.y};sfx('tap')}}
+  else if(P.type==='cover'){if(sacredPlayNear(w,P.pile,12)&&P.got<P.need){P.carry={x:w.x,y:w.y};sfx('chime')}}
   else if(P.type==='drip'){if(!P.open&&sacredPlayNear(w,P.path[P.reach],9))P.hold=true}
   else if(P.type==='gather'){if(sacredPlayNear(w,{x:P.cx,y:P.cy-6},26))P.holding=true}
   else if(P.type==='dig'){P.trail=[{x:w.x,y:w.y,t:now}];P.lock=false}
@@ -95,16 +95,16 @@ function sacredPlayMove(w,now){const P=SPLAY,d=P.down;if(!d)return;const l=d.las
   if(P.type==='brush'){const a=P.area;if(w.x<a.x||w.x>a.x+a.w||w.y<a.y-6||w.y>a.y+a.h)return;if(v>260){if(P.prog>0)sacredPlayMsg('つよすぎる。そっと');P.prog=Math.max(0,P.prog-.25);return}P.prog=Math.min(1,P.prog+dist/360);if(Math.random()<.3)fx.push({k:'p',x:w.x,y:w.y,vx:(Math.random()-.5)*30,vy:-30,life:.6,col:'#b4925e',r:2});if(P.prog>=1)sacredPlayWin()}
   else if(P.type==='cover'&&P.carry){P.carry.x=w.x;P.carry.y=w.y}
   else if(P.type==='rhythm'){P.trail.push({x:w.x,y:w.y,t:now});if(P.trail.length>12)P.trail.shift();sacredPlayWind(P,w,now)}
-  else if(P.type==='drip'&&P.hold){let best=-1,bd=1e9;for(let i=Math.max(0,P.reach-2);i<=Math.min(P.path.length-1,P.reach+4);i++){const p=P.path[i],dd=Math.hypot(w.x-p.x,w.y-p.y);if(dd<bd){bd=dd;best=i}}if(bd>8){const p=P.path[P.reach];P.hold=false;P.fall={x:p.x,y:p.y,t:now};P.reach=0;sacredPlayMiss('しずくが、おちちゃった');return}if(best>P.reach)P.reach=best;if(P.reach>=P.path.length-1){P.hold=false;P.open=now;sfx('bush');setTimeout(()=>{if(SPLAY===P)sacredPlayWin()},900)}}
+  else if(P.type==='drip'&&P.hold){let best=-1,bd=1e9;for(let i=Math.max(0,P.reach-2);i<=Math.min(P.path.length-1,P.reach+4);i++){const p=P.path[i],dd=Math.hypot(w.x-p.x,w.y-p.y);if(dd<bd){bd=dd;best=i}}if(bd>8){const p=P.path[P.reach];P.hold=false;P.fall={x:p.x,y:p.y,t:now};P.reach=0;sacredPlayMiss('しずくが、おちちゃった');return}if(best>P.reach)P.reach=best;if(P.reach>=P.path.length-1){P.hold=false;P.open=now;sfx('sacred');setTimeout(()=>{if(SPLAY===P)sacredPlayWin()},900)}}
   else if(P.type==='dig')digRub(P,w,now,dist);
 }
 function sacredPlayUp(w,now){const P=SPLAY,d=P.down;P.down=null;
-  if(P.type==='hold'&&P.holding){P.holding=false;if(P.heat>=.58&&P.heat<=.84){sfx('bush');sacredPlayWin()}else if(P.heat<.6)sacredPlayMsg('まだ、つめたい');else sacredPlayMiss('こげちゃった')}
-  else if(P.type==='swipe'&&d){const len=Math.hypot(w.x-d.x,w.y-d.y),ms=now-d.t;if(len<18)return;if(len>110||ms<140){sacredPlayMsg('つよすぎる。やさしく');P.gust=now;return}P.got++;P.sway=now;sfx('bush');sacredPlayHint(P.hint+sacredPlayCount());if(P.got>=P.need)setTimeout(sacredPlayWin,600)}
+  if(P.type==='hold'&&P.holding){P.holding=false;if(P.heat>=.58&&P.heat<=.84){sfx('sacred');sacredPlayWin()}else if(P.heat<.6)sacredPlayMsg('まだ、つめたい');else sacredPlayMiss('こげちゃった')}
+  else if(P.type==='swipe'&&d){const len=Math.hypot(w.x-d.x,w.y-d.y),ms=now-d.t;if(len<18)return;if(len>110||ms<140){sacredPlayMsg('つよすぎる。やさしく');P.gust=now;return}P.got++;P.sway=now;sfx('sacred');sacredPlayHint(P.hint+sacredPlayCount());if(P.got>=P.need)setTimeout(sacredPlayWin,600)}
   else if(P.type==='dig'){P.lock=false;P.trail=null}
   else if(P.type==='drip')P.hold=false;
   else if(P.type==='rhythm')P.last=-1;
-  else if(P.type==='cover'&&P.carry){const c=P.carry;P.carry=null;let hit=-1;P.spots.forEach((p,i)=>{if(!P.covered.has(i)&&sacredPlayNear(c,p,10))hit=i});if(hit>=0&&P.cold.has(hit)){P.covered.add(hit);P.got=P.covered.size;sfx('bush');sacredPlayHint(P.hint+sacredPlayCount());if(P.got>=P.need)setTimeout(()=>{if(SPLAY===P)sacredPlayWin()},500);return}if(hit>=0)sacredPlayMsg('ここは、あたたかい');P.back={x:c.x,y:c.y,t:now}}/* のせなかった草は、山へもどる */
+  else if(P.type==='cover'&&P.carry){const c=P.carry;P.carry=null;let hit=-1;P.spots.forEach((p,i)=>{if(!P.covered.has(i)&&sacredPlayNear(c,p,10))hit=i});if(hit>=0&&P.cold.has(hit)){P.covered.add(hit);P.got=P.covered.size;sfx('sacred');sacredPlayHint(P.hint+sacredPlayCount());if(P.got>=P.need)setTimeout(()=>{if(SPLAY===P)sacredPlayWin()},500);return}if(hit>=0)sacredPlayMsg('ここは、あたたかい');P.back={x:c.x,y:c.y,t:now}}/* のせなかった草は、山へもどる */
   else if(P.type==='gather'&&P.holding){P.holding=false;if(P.got<P.need)sacredPlayMsg('はなさずに……')}
 }
 /* 出番のあいだは、地図の操作より先に指をうけとる */
@@ -142,7 +142,7 @@ function sacredPlayPaint(P,now){const t=(now-P.t0)/1000;
     const bx=PXR(s.x)-16,by=PXR(s.y)-26;PXG.fillStyle='#4a3424';PXG.fillRect(bx-1,by-1,34,6);PXG.fillStyle='#7a6048';PXG.fillRect(bx,by,32,4);PXG.fillStyle='#8fdc6a';PXG.fillRect(bx+19,by,8,4);PXG.fillStyle='#ffb347';PXG.fillRect(bx,by+1,PXR(32*Math.min(1,P.heat)),2)}
   if(P.type==='brush'){const a=P.area;PXG.globalAlpha=.7*(1-P.prog);PXG.fillStyle='#9c7a52';pxDisk(a.x+a.w/2,a.y+a.h/2,a.w/2,a.h/2);PXG.globalAlpha=P.prog;PXG.fillStyle='#d9b98a';{let q=null;for(let i=0;i<=16;i++){const u=i/16,x=(1-u)**2*(a.x+6)+2*u*(1-u)*(a.x+a.w/2)+u*u*(a.x+a.w-6),y=(1-u)**2*(a.y+12)+2*u*(1-u)*(a.y+2)+u*u*(a.y+14);if(q)pxLine(q.x,q.y,x,y,1);q={x,y}}}PXG.globalAlpha=1}
   if(P.type==='dig')digPaint(P,now,t);
-  if(P.type==='rhythm'){const k=Math.floor((now-P.show)/700),sh=now>=P.show&&k<P.need;if(sh&&P.rang!==P.show*10+k){P.rang=P.show*10+k;P.sw[P.order[k]]=now;sfx('bush')}/* お手本：順にゆれて鳴る */
+  if(P.type==='rhythm'){const k=Math.floor((now-P.show)/700),sh=now>=P.show&&k<P.need;if(sh&&P.rang!==P.show*10+k){P.rang=P.show*10+k;P.sw[P.order[k]]=now;sfx('sacred')}/* お手本：順にゆれて鳴る */
     P.leaves.forEach((l,i)=>{const a=now-P.sw[i],on=P.sw[i]&&a<520,sw=on?Math.sin(a/50)*.5*(1-a/520):0;if(on)glow(l.x,l.y,12,.55*(1-a/520));if(!mgs('leaf'+i+(on?'s':''),l.x+PXR(sw*2),l.y+11,'b'))pxLeaf(l.x,l.y,sw,on?'#bfe89a':'#8fdc6a','#5f9e3f')});
     if(P.down&&P.trail.length>1){for(let i=1;i<P.trail.length;i++){const a=Math.max(0,1-(now-P.trail[i].t)/400);if(a<=0)continue;PXG.fillStyle='rgba(255,255,255,'+(a*.7).toFixed(2)+')';pxLine(P.trail[i-1].x,P.trail[i-1].y,P.trail[i].x,P.trail[i].y,1)}const q=P.trail[P.trail.length-1];mgs('wind'+mgFrame(3,110),q.x,q.y)}/* 指の風 */
     if(now>=P.showEnd()){PXG.fillStyle='#fff6c8';for(let i=0;i<P.need;i++)PXG.fillRect(PXR(P.cx)-P.need*3+i*6+1,90,4,i<P.got?3:1)}}
@@ -153,7 +153,7 @@ function sacredPlayPaint(P,now){const t=(now-P.t0)/1000;
     if(!P.open){const d=pa[P.reach];glow(d.x,d.y-1,7,P.hold?.25:.4+.2*Math.sin(t*5),'150,210,255');if(!mgs('drop',d.x,d.y-3)){PXG.fillStyle='#4f93c0';pxDisk(d.x,d.y-1,2);PXG.fillStyle='#7fc4ec';pxDisk(d.x,d.y-2,1);PXG.fillStyle='#ffffff';PXG.fillRect(PXR(d.x)-1,PXR(d.y)-3,1,1)}}/* しずく */
     if(P.fall&&now-P.fall.t<600){const u=(now-P.fall.t)/600;if(!mgs('drop',P.fall.x,P.fall.y+u*u*30)){PXG.fillStyle='#7fc4ec';pxDisk(P.fall.x,P.fall.y+u*u*30,1)}}}
   if(P.type==='swipe'){const sw=P.sway&&now-P.sway<900?Math.sin((now-P.sway)/90)*(1-(now-P.sway)/900)*4:0,gu=P.gust&&now-P.gust<600?Math.sin((now-P.gust)/30)*3:0;pxLeaf(P.cx,P.cy-24,(sw+gu)*.08,'#8fdc6a','#5f9e3f');const d=P.down;if(d){PXG.fillStyle='rgba(255,255,255,.6)';pxLine(d.x,d.y,d.last.x,d.last.y,2)}}
-  if(P.type==='gather'){const dt=Math.min(.1,(now-(P.lt||now))/1000);P.lt=now;if(P.holding&&P.got<P.need){P.prog+=dt*1.25;if(P.prog>=P.got+1){const r=P.order[P.got];P.got++;if(r){faceTo(r,(Math.floor(P.cy/TS))*W+Math.floor(P.cx/TS));JUMP.set(r,now);fxSpr('twinkle',r.x*TS,r.y*TS-14)}sfx('tap');sacredPlayHint(P.hint+sacredPlayCount());if(P.got>=P.need){P.holding=false;setTimeout(sacredPlayWin,700)}}}
+  if(P.type==='gather'){const dt=Math.min(.1,(now-(P.lt||now))/1000);P.lt=now;if(P.holding&&P.got<P.need){P.prog+=dt*1.25;if(P.prog>=P.got+1){const r=P.order[P.got];P.got++;if(r){faceTo(r,(Math.floor(P.cy/TS))*W+Math.floor(P.cx/TS));JUMP.set(r,now);fxSpr('twinkle',r.x*TS,r.y*TS-14)}sfx('chime');sacredPlayHint(P.hint+sacredPlayCount());if(P.got>=P.need){P.holding=false;setTimeout(sacredPlayWin,700)}}}
     PXG.fillStyle='rgba(255,246,200,.75)';for(let i=0;i<P.got;i++){const r=P.order[i];if(!r)continue;pxLine(r.x*TS,r.y*TS-12,P.cx,P.cy-6,2);glow(r.x*TS,r.y*TS-12,10,.45);mgs('spark'+((mgFrame(4,140)+i)%4),r.x*TS,r.y*TS-14)}/* 力をおくった子から、切り株へ光の線 */
     glow(P.cx,P.cy-6,18+P.got*4,.25+.1*Math.sin(t*4)+P.got*.06);if(!P.holding&&P.got<P.need){PXG.fillStyle='rgba(255,246,200,'+(.5+.3*Math.sin(t*4))+')';pxRing(P.cx,P.cy-6,PXR(20+2*Math.sin(t*4)),2)}/* 長おしする所に、光の輪 */
     if(P.got)mgs('spark'+mgFrame(4,120),P.cx,P.cy-10);if(P.holding){const f=P.prog-P.got;PXG.fillStyle='#fff6c8';pxRing(P.cx,P.cy-6,20,3,f)}}
@@ -171,7 +171,7 @@ function digRub(P,w,now,dist){if(P.lock||P.won||!P.trail)return;P.trail.push({x:
   const nearRoot=P.path.some(p=>Math.hypot(p.x-w.x,p.y-w.y)<5&&(()=>{const i=digCell(P,p.x,p.y);return i<0||P.dirt[i]<.6})());/* 見えてきた根の上 */
   if(v>DIGFAST){if(nearRoot){P.lock=true;P.scar={x:w.x,y:w.y,t:now};sfx('hit');sacredPlayMiss('根にきずがついちゃった');return}sacredPlayMsg('そっと……');return}
   digClear(P,w.x,w.y,DIGR,Math.min(.5,dist*.16));if(Math.random()<.25)fx.push({k:'p',x:w.x,y:w.y,vx:(Math.random()-.5)*30,vy:-30,life:.6,col:'#b4925e',r:2});
-  if(digOpen(P)>=DIGWIN){P.won=now;sfx('bush');setTimeout(()=>{if(SPLAY===P)sacredPlayWin()},700)}}
+  if(digOpen(P)>=DIGWIN){P.won=now;sfx('sacred');setTimeout(()=>{if(SPLAY===P)sacredPlayWin()},700)}}
 function digPaint(P,now,t){const g=P.dg;PXG.fillStyle='#5e4630';PXG.fillRect(0,g.y0,PLAYW,PLAYH-g.y0);/* ほったあとの、しめった土 */
   const pa=P.path,glw=P.won?Math.min(1,(now-P.won)/600):0;PXG.fillStyle='#9c7a52';pxPath(pa.map(p=>({x:p.x,y:p.y+1})),pa.length-1,4);PXG.fillStyle=glw?'#f0d6a2':'#d9b98a';pxPath(pa,pa.length-1,3);PXG.fillStyle='#c4a274';for(let i=2;i<pa.length;i+=5)PXG.fillRect(PXR(pa[i].x),PXR(pa[i].y)+1,2,1);/* 根 */
   for(let r=0;r<g.ch;r++)for(let c=0;c<g.cw;c++){const d=P.dirt[r*g.cw+c];if(d<.25)continue;PXG.fillStyle=d<.6?'#a08259':((c*7+r*13)%11===0?'#7d6340':'#8b6f47');PXG.fillRect(g.x0+c*DIGC,g.y0+r*DIGC,DIGC,DIGC)}/* 上の土：うすくなると明るく */
@@ -187,10 +187,10 @@ function pipeInit(P,now){P.gx=PXR(P.cx-56);P.gy=PXR(P.cy+2);const N=PIPEC*PIPER,
   P.tiles=[];for(let r=0;r<PIPER;r++)for(let c=0;c<PIPEC;c++){const k=idx(c,r);let m=want[k]||[5,3][(h(20+k)*2)|0];const turns=k===0?1+((h(40+k)*3)|0):(h(60+k)*4)|0;for(let i=0;i<turns;i++)m=pipeRot(m);while(k===0&&(m&1))m=pipeRot(m);P.tiles.push({c,r,m,want:want[k]||0})}/* ばらばらに回しておく（はじめの石は、かならず上がひらいていない） */
   P.goal=idx(path[path.length-1][0],path[path.length-1][1]);P.flow=[];P.next=now+PIPEWAIT}
 function pipeAt(P,w){const c=Math.floor((w.x-P.gx)/PIPET),r=Math.floor((w.y-P.gy)/PIPET);return c<0||r<0||c>=PIPEC||r>=PIPER?-1:r*PIPEC+c}
-function pipeTap(P,w,now){if(P.won)return;const k=pipeAt(P,w);if(k<0)return;if(P.flow.some(f=>f.k===k))return sacredPlayMsg('水が入った石は、回せない');const T=P.tiles[k];T.m=pipeRot(T.m);T.spin=now;sfx('tap')}
+function pipeTap(P,w,now){if(P.won)return;const k=pipeAt(P,w);if(k<0)return;if(P.flow.some(f=>f.k===k))return sacredPlayMsg('水が入った石は、回せない');const T=P.tiles[k];T.m=pipeRot(T.m);T.spin=now;sfx('chime')}
 /* 水を1つ進める：いまの石の出口から、となりの石へ。つながっていなければ、こぼれる */
 function pipeStep(P,now){if(P.won)return;const last=P.flow[P.flow.length-1];let k,from;
-  if(!last){k=0;from=0}else{const T=P.tiles[last.k],out=[0,1,2,3].find(d=>(T.m>>d&1)&&d!==last.from);if(last.k===P.goal&&out===0){P.won=now;sfx('bush');setTimeout(()=>{if(SPLAY===P)sacredPlayWin()},900);return}
+  if(!last){k=0;from=0}else{const T=P.tiles[last.k],out=[0,1,2,3].find(d=>(T.m>>d&1)&&d!==last.from);if(last.k===P.goal&&out===0){P.won=now;sfx('sacred');setTimeout(()=>{if(SPLAY===P)sacredPlayWin()},900);return}
     const[dx,dy]=PDIR[out],c=T.c+dx,r=T.r+dy;if(c<0||r<0||c>=PIPEC||r>=PIPER)return pipeSpill(P,now,T.c+dx*.5,T.r+dy*.5);k=r*PIPEC+c;from=(out+2)%4}
   const N=P.tiles[k];if(!(N.m>>from&1)||P.flow.some(f=>f.k===k))return pipeSpill(P,now,N.c+PDIR[from][0]*.5,N.r+PDIR[from][1]*.5);
   P.flow.push({k,from,t:now});P.next=now+PIPESTEP}
