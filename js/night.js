@@ -68,15 +68,14 @@ const EN={
 function bossDays(){const w=S.bossWarn;if(w==null)return '';const t=dayNo(),need=S.wipe?5:4;/* 全滅のあとは、5人そろうまで来ない（level.js の S.wipe） */if(!(S.res.length>=need&&S.res.some(q=>q.elem==='fire')&&KEYS[WD].every(n=>S.res.some(r=>r.name===n))))return 'オオカゲ：なかまが'+need+'人そろうまで来ない';let d=t;if(!S.bossOwed)while(!bossNight(d))d++;/* 来る日にそろっていなかった分（S.bossOwed）は、そろって3日たった夜に来る（waveFor と同じ） */if(S.res4Since!=null)d=Math.max(d,S.res4Since+3);return d===t?'オオカゲが来るまで：今夜':'オオカゲが来るまで：あと'+(d-t)+'日'}/* クエストの進みぐあいに、オオカゲが来る日を出す */
 const bossNight=d=>{const w=S&&S.bossWarn,k=S&&(S.ookDay||(S.enKills||{}).boss&&S.bossDay);if(k)return d-k>=5&&(d-k)%5===0;/* オオカゲをはじめて追いはらったあとは、5日ごと（S.ookDay：その日。前のセーブは、オオカゲをたおしていれば S.bossDay） */return w==null?d>=5&&(d-5)%3===0:d-w>=3&&(d-w-3)%3===0}/* オオカゲは「来るかも」と聞いた3日後、追いはらえなかったら3日ごと（火山のふもとは5日目、そのあと3日ごと）。はじめて追いはらったら、そのあとは5日ごと */;
 const NIGHTHP=[0,0,2,4,6,8,10];/* 草原：オオカゲを追いはらったあと、夜10回ごとに、コワイノ（オオカゲはのぞく）の体力に足す数 */
-const WVLV=[0,0,0,0,1,1,1,2,2,2,3];/* 村のせいれいの平均レベル（0〜10、10より上は10）ごとに、コワイノの数にたす数 */
 function waveFor(day){
   if(!S.nights)return WD===1?['basic','basic','basic']:['basic'];/* 最初の夜は1体だけ（火山のふもとは3体） */
   if(day<2)return [];
   const rn=S.res.length,story=Math.min(1,(S.quest||0)/Math.max(1,QUESTS.length)),prog=Math.pow(story,1.4)/* 進みはじめはゆっくり、後半で段階的に強くなる */,late=(S.bossDay||(S.bossKills?(S.bossDay=day):0))?1+Math.floor(prog*3):0/* オオカゲを倒したあとの追加数 */,
-    alv=Math.floor(S.res.reduce((a,r)=>a+rLv(r),0)/Math.max(1,rn)),n=rn+WVLV[Math.min(alv,WVLV.length-1)],list=[];/* コワイノの数：せいれいの人数に、村のせいれいの平均レベルで数をたす（WVLV） *//* コワイノの数は、せいれいの数の1.5倍（小数点以下切りすて） *//* せいれいの数と進行度に合わせて、敵の数をゆっくり増やす（火山のふもとは、草原より2体多い） */let ntr=alv>=10?3:alv>=7?2:1;/* ワナクイの数は、平均レベルで */S.lateWave=late;
+    alv=Math.floor(S.res.reduce((a,r)=>a+rLv(r),0)/Math.max(1,rn)),n=Math.floor(rn*1.5)+alv,list=[];/* コワイノの数：せいれいの人数の1.5倍（小数点以下切りすて）に、村のせいれいの平均レベル（小数点以下切りすて）をたす */let ntr=alv>=10?3:alv>=7?2:1;/* ワナクイの数は、平均レベルで */S.lateWave=late;
   for(let i=0;i<n;i++){let t='basic';if(alv>=2&&i%3===1)t='thief';if(alv>=3&&i%3===2)t='fast';if(alv>=5&&i%4===3)t='brute';if(alv>=4&&i%5===4&&ntr>0){t='trapper';ntr--}if(alv>=7&&i%6===5)t='breaker';list.push(t)}/* しゅるいは、平均レベルでまじる（カゲドロボウLv2・ハヤカゲLv3・ワナクイLv4・カタカゲLv5・カベクダキLv7） */
   if(WD===1){for(let i=0;i<list.length;i++)if(list[i]==='brute')list[i]='rockc';const st=st2();/* 火山のふもと：カタカゲのかわりにイワカゲ。ハイカゲ・ヒノオオカゲはお話しだいで */
-    if(S.flags.ashOn){const big=S.flags.ashNight&&!st.ashNightAt,na=big?6:Math.min(3,1+(day>>2));for(let i=0;i<na;i++)list.unshift('ash');/* 前に入れる（人数が少ない夜の上限でけずられないように） */if(big)st.ashNightAt=(S.nights||0)+1}
+    if(S.flags.ashOn){const big=S.flags.ashNight&&!st.ashNightAt,na=big?6:Math.min(3,1+(day>>2));for(let i=0;i<na;i++)list.unshift('ash');if(big)st.ashNightAt=(S.nights||0)+1}
     if(S.flags.hinoNight&&!S.flags.hinoDown)list.unshift('hino');
     else if(S.flags.hinoDown&&bossNight(day-1)&&rn>=5)list.unshift('boss');
     return list}
@@ -91,7 +90,7 @@ function moonOf(d){return d%8===0?'full':d%8===4?'new':null}
 function moonNow(){const h=hour(),d=dayNo();return h>=20?moonOf(d):h<6?moonOf(d-1):null}/* 今夜の月（夕方20時から朝6時まで） */
 function moonSp(){const k=moonNow();return k?MOONSP[k]:1}
 const NVONLY={wana:'trapper',doro:'thief',ushio:'basic'},NVSWAP=new Set(['basic','fast','thief','brute','breaker','trapper','rockc']);/* 1しゅるいだけの夜に、入れかえるコワイノ（灰をまくコワイノなど、お話のコワイノはそのまま） */
-function nightVarWave(w){/* 夜12時、上限でけずったあとの今夜のコワイノを、1しゅるいだけの夜に入れかえる */const k=nightVarNow(),t=k&&NVONLY[k];if(!t)return w;const sw=w.filter(x=>NVSWAP.has(x)),ot=w.filter(x=>!NVSWAP.has(x));if(!sw.length)return w;const n=k==='wana'?Math.max(1,Math.floor(sw.length/2)):sw.length;return ot.concat(Array(n).fill(t))}
+function nightVarWave(w){/* 夜12時、今夜のコワイノを、1しゅるいだけの夜に入れかえる */const k=nightVarNow(),t=k&&NVONLY[k];if(!t)return w;const sw=w.filter(x=>NVSWAP.has(x)),ot=w.filter(x=>!NVSWAP.has(x));if(!sw.length)return w;const n=k==='wana'?Math.max(1,Math.floor(sw.length/2)):sw.length;return ot.concat(Array(n).fill(t))}
 function nightVarPick(){/* 夕方、今夜の波が決まったあとに1回だけ（S.nightVar に日ごとにしまうので、読みこみなおしてもかわらない） */const d=dayNo();if(S.nightVar&&S.nightVar.d===d)return;S.nightVar={d,k:null};
   const w=S.wave||[];if(S.herbD===d&&(!w.length||!w.some(t=>!EN[t].boss)||S.today==='odayaka'||S.rushOn||S.finalOn||S.trialOn)){S.herbD=null;S.herb=(S.herb||0)+1}/* とくべつな夜になったら、まよけのハーブをかえす */if(S.hornD===d){if(!w.length||w.some(t=>EN[t].boss)||S.today==='odayaka'||S.rushOn||S.finalOn||S.trialOn){S.hornD=null;S.horn=(S.horn||0)+1}return}/* 角笛をふいた夜は、霧・群れにしない。とくべつな夜になったら、角笛をかえす */if(!w.length||w.some(t=>EN[t].boss)||(S.nights||0)<4||d<5||S.today==='odayaka'||S.rushOn||S.finalOn||S.trialOn)return;
   const p=Math.random(),seen=S.seenEn||{},k=p<.15?'kiri':p<.20?(!(S.mureDay!=null&&d-S.mureDay<=7)?'mure':null):p<.25?(seen.trapper?'wana':null):p<.30?(seen.thief?'doro':null):p<.35?'ushio':null;if(!k)return;S.nightVar.k=k;if(k==='mure')S.mureDay=d;/* 群れの夜は5%、群れの夜のあと7日は群れにしない（S.mureDay）。ワナクイのうたげ・かげのどろぼう市・かげのうしおは5%ずつ（そのコワイノに会ってから） */toast({kiri:'今夜は霧が出そう',mure:'今夜は、コワイノがむれで来そう',wana:'今夜は、ワナクイがあつまってきそう',doro:'今夜は、カゲドロボウがあつまってきそう',ushio:'今夜は、コカゲがつぎつぎにおしよせてきそう'}[k],'warn')}
