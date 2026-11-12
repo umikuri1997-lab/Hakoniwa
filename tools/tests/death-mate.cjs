@@ -53,7 +53,12 @@ const {chromium}=require('playwright');
   console.log('reunion',await run(`(()=>{const [f,n,h,a,w,t]=S.res;S.bond={};bondAdd(t,h,40);bondMemNote(t,h,CHATS.findIndex(c=>c.mate&&/星/.test(c.mem||'')));S.pendTalk={};die(t);const e=goneEntry('テスト');if(!e.lw)throw Error('no lw');
     const q=mkRes(S,'テスト','wood',CX+3.5,CY+2.5);q.id=t.id;S.res.push(q);goneBack('テスト');q.reMate=h.name;reunite(q,[CX+3,CY+2]);if(q.reTalk!==h.name)throw Error('reTalk');
     const L=reunionLines(q,h);if(L[0][0]!==h.name||L[1][0]!=='テスト'||!/星/.test(L[3][1]))throw Error(JSON.stringify(L));if(/ごめん|わる|わり|すまない/.test(e.lw)&&!/あやまった/.test(L[2][1]))throw Error('lw reply '+e.lw+' | '+JSON.stringify(L));
-    reunionJoy(q,h);if(!JOYU.has(h)||!JOYU.has(q))throw Error('joy');if(h.grief&&griefOn(h))throw Error('still grief');return L.map(l=>l[0]+'：'+l[1]).join(' / ')})()`));
+    e.fl=[];const fk=e.j+1;S.obj[fk]='clover';e.fl.push(fk);recount();reunionJoy(q,h);if(!JOYU.has(h)||!JOYU.has(q))throw Error('joy');if(!S.rvq||reWithP(q)!==h||reWithP(h)!==q)throw Error('after reunion '+JSON.stringify(S.rvq));
+    S.rvq.t=0;for(const r of S.res){endAct(r);r.hunger=hMax(r)}revisitTick(true);if(!q.act||q.act.type!=='rvisit'||!h.act||h.act.type!=='rvisit'||q.act.obj!==fk)throw Error('revisit '+JSON.stringify([q.act,h.act]));
+    q.act.stage='do';h.act.stage='do';ACT.rvisit.start(q,q.act);ACT.rvisit.start(h,h.act);ACT.rvisit.tick(q,q.act);if(!q.act.talk)throw Error('no talk');if(document.querySelector('#dialog').hidden)throw Error('no dialog');if(h.grief&&griefOn(h))throw Error('still grief');return L.map(l=>l[0]+'：'+l[1]).join(' / ')+' + revisit'})()`));
+  /* 会話を最後まで送ると、よみがえった子が、なかよしの属性の花をとなりに植える */
+  for(let i=0;i<120;i++){const done=await run(`(()=>{if(!document.querySelector('#dialog').hidden){DLGA.n=DLGA.full.length;DLGA.readReady=0;const b=document.querySelector('#dlgBtns button');if(b&&!b.disabled&&performance.now()>=(DLGA.holdUntil||0))b.click();return false}return (S.memo||[]).some(m=>/お礼の花/.test(m[2]))})()`);if(done)break;await page.waitForTimeout(150)}
+  console.log('thanks',await run(`(()=>{const m=(S.memo||[]).find(m=>/お礼の花/.test(m[2]));if(!m)throw Error('no thanks flower');const e=goneEntry('テスト');const id=S.obj[e.fl[e.fl.length-1]];if(id!=='salvia')throw Error('flower '+id);return m[2]+' ('+id+')'})()`));
   if(errors.length)throw Error(errors.join('\n'));
   await browser.close();console.log('ok');
 })().catch(e=>{console.error(e);process.exit(1)});

@@ -197,7 +197,7 @@ function goMourn(r,G){if(!S||isNight()||hour()<7||hour()>=18||r.hunger<55||heldN
   const e=(S.gone||[]).slice().reverse().find(e=>e.mate===r.name&&e.j!=null&&mournDue(e));if(!e)return false;
   const sp=mournSpot(e),tg=sp?sp.k:e.j,st=nearest(G,j=>walk(j)&&(j===tg&&!sp||adjOf(j,k=>k===tg)>=0),300);if(st<0)return false;e.vis=dayNo();startAct(r,G,'mourn',st,{who:e.name,obj:sp?sp.k:-1,fl:sp?sp.id:null});return true}
 function simNote(r){/* 新しく来た子が、消えたふつうの子と同じ属性 */if(!S||IS_STORY_REPLAY||!S.gone)return;const e=S.gone.slice().reverse().find(e=>!e.key&&!e.back&&!e.sim&&e.elem===r.elem&&e.mate&&e.mate!==r.name&&S.res.some(q=>q.name===e.mate));if(!e)return;e.sim=1;r.simTo={m:e.mate,d:e.name}}
-function griefTick(){const day=!isNight();for(const r of S.res){r.grief=griefOn(r);if(r.grief&&day&&r.act&&['idle','wander','rest'].includes(r.act.type)&&Math.random()<.04){const e=(S.gone||[]).slice().reverse().find(e=>e.mate===r.name&&!e.back);if(e)r.bubble='g:'+e.name}
+function griefTick(){const day=!isNight();revisitTick(day);for(const r of S.res){r.grief=griefOn(r);if(r.grief&&day&&r.act&&['idle','wander','rest'].includes(r.act.type)&&Math.random()<.04){const e=(S.gone||[]).slice().reverse().find(e=>e.mate===r.name&&!e.back);if(e)r.bubble='g:'+e.name}
     reunionTick(r,day);
     if(r.simTo&&day&&!sevBusy()&&!r.hidden){const m=S.res.find(q=>q.name===r.simTo.m&&!q.hidden),d=r.simTo.d;delete r.simTo;if(m)talkOnce('sim'+r.id,[[m.name,chatTone('#teary|……'+r.name+'って、'+d+'に、ちょっと、にてるね。',m,0)],[r.name,chatTone('#surprise|……'+d+'？',r,1)],[m.name,chatTone('……ううん。なんでもないよ。……これから、よろしくね。',m,2)]],600)}}}
 /* 再会：よみがえった子 q と、なかよしだった子 m の会話（見た会話の思い出・さいごのひとことにこたえる）と、よろこぶ場面 */
@@ -208,9 +208,23 @@ function reunionLines(q,m){const e=goneEntry(q.name)||{},k=bondKey(q,m),T=(r,t,i
   if(!back){const did=(S.bondDid||{})[k]||'';if(/^play:/.test(did)&&BL[did.slice(5)])back='#joy|また、いっしょに'+BL[did.slice(5)].name+'で遊ぼうね。';else back=RE_DIDL[did]||RE_DIDL.any}
   L.push(T(q,back,3),T(m,'#joy|……うん！ おかえり、$！',4));return L}
 function reunionJoy(q,m){/* 会話のあと：2人で向かい合ってはねる。まわりの子も、はくしゅ */if(!S.res.includes(q)||!S.res.includes(m))return;const now=performance.now();q.face=m.x>=q.x?1:-1;m.face=-q.face;for(const r of[q,m]){JUMP.set(r,now);JOYU.set(r,now+3000);r.bubble='💕';fxSpr('hearts',r.x*TS,(r.y-.7)*TS);addFloat(r.x,r.y-1.3,'おかえり！','#ffd6e6')}
-  sfx('good');for(const r of S.res)if(r!==q&&r!==m&&!r.hidden&&Math.hypot(r.x-q.x,r.y-q.y)<8){JUMP.set(r,now+300);JOYU.set(r,now+2500);r.bubble='👏'}bondAdd(q,m,3,'tour');logEv(m.name+'と'+q.name+'が、また会えた');memo('🌱',m.name+'と'+q.name+'が、また会えた')}
+  sfx('good');for(const r of S.res)if(r!==q&&r!==m&&!r.hidden&&Math.hypot(r.x-q.x,r.y-q.y)<8){JUMP.set(r,now+300);JOYU.set(r,now+2500);r.bubble='👏'}bondAdd(q,m,3,'tour');q.reWith={n:m.name,until:dayNo()+RE_DAYS};m.reWith={n:q.name,until:dayNo()+RE_DAYS};const ge=goneEntry(q.name);if(ge&&(ge.fl||[]).some(k=>FLOWERS.has(S.obj[k])||S.obj[k]==='sprout'))S.rvq={q:q.id,m:m.id,t:S.t+30};logEv(m.name+'と'+q.name+'が、また会えた');memo('🌱',m.name+'と'+q.name+'が、また会えた')}
 function reunionTick(r,day){if(!r.reTalk||!day||sevBusy()||r.hidden)return;const m=S.res.find(x=>x.name===r.reTalk&&!x.hidden);delete r.reTalk;if(!m)return;const q=r,owner=S,key='ru'+q.id+'_'+dayNo();if(S.flags[key])return;
   const L=reunionLines(q,m),P=S.pendTalk||(S.pendTalk={});P[key]=L;dialog(L,()=>{if(S!==owner)return;S.flags[key]=1;delete P[key];reunionJoy(q,m)})}
+/* よみがえったあとの日常：お墓まいりの花を2人で見にいき、よみがえった子がお礼の花を植える（revisit）。RE_DAYS 日のあいだ、いっしょに遊ぶ・ごはん・となりで寝る（reWith） */
+const RE_DAYS=3;
+function reWithP(r){const w=r&&r.reWith;if(!w)return null;if(dayNo()>=w.until){delete r.reWith;return null}const p=S.res.find(x=>x.name===w.n&&!x.hidden);return p||null}
+function reWithEat(r){/* ごはんに行くとき、ひまにしているなかよしも、おなかがすいていれば、いっしょに行く */const p=reWithP(r);if(!p||isNight()||!p.act||!['idle','wander','rest'].includes(p.act.type)||p.meal||p.hunger>=hMax(p)-15||onHold(p)||storyCalled(p))return;endAct(p);goEat(p,bfs(p.x|0,p.y|0))}
+function reWithBed(r){/* なかよしが寝ているベッドの、いちばん近い空いたベッド（6マスまで） */const p=reWithP(r);if(!p||!p.act||p.act.type!=='sleep'||p.act.obj==null)return -1;const pj=p.act.obj;let best=-1,bd=7;for(let dy=-6;dy<=6;dy++)for(let dx=-6;dx<=6;dx++){const j=pj+dy*W+dx;if(j===pj||j<0||j>=W*H||!BEDSET.has(S.obj[j])||!free('o'+j,1))continue;const d=Math.abs(dx)+Math.abs(dy);if(d<bd){bd=d;best=j}}return best}
+function revisitTick(day){const R=S.rvq;if(!R||!day||S.t<R.t||hour()<7||hour()>=17||sevBusy())return;const q=S.res.find(x=>x.id===R.q),m=S.res.find(x=>x.id===R.m);if(!q||!m){delete S.rvq;return}
+  if(q.hidden||m.hidden||q.coffin||m.coffin||[q,m].some(r=>r.hunger<55||storyCalled(r)||onHold(r)||r.act&&(r.act.type==='rvisit'||URGNO.includes(r.act.type))))return;
+  const e=goneEntry(q.name),F=(e&&e.fl||[]).filter(k=>FLOWERS.has(S.obj[k])||S.obj[k]==='sprout');if(!F.length){delete S.rvq;return}
+  const k=F[0],Gq=bfs(q.x|0,q.y|0),Gm=bfs(m.x|0,m.y|0),sq=nearest(Gq,j=>walk(j)&&adjOf(j,x=>x===k)>=0,300);if(sq<0){R.t=S.t+120;return}const sm=nearest(Gm,j=>j!==sq&&walk(j)&&Math.abs(j%W-k%W)<=2&&Math.abs(((j/W)|0)-((k/W)|0))<=2,300);if(sm<0){R.t=S.t+120;return}
+  delete S.rvq;endAct(q);endAct(m);startAct(q,Gq,'rvisit',sq,{who:m.id,obj:k,lead:1});startAct(m,Gm,'rvisit',sm,{who:q.id,obj:k})}
+function revisitTalk(q,m,a){const e=goneEntry(q.name)||{},n=(e.fl||[]).filter(k=>FLOWERS.has(S.obj[k])||S.obj[k]==='sprout').length,T=(r,t,i)=>[r.name,chatTone(t,r,i).replace(/\$/g,(r===m?q:m).name)],owner=S,end=()=>{for(const r of[q,m])if(r.act&&r.act.type==='rvisit')r.act.fin=1};
+  dialog([T(q,'#surprise|……この花、もしかして……？',0),T(m,n>1?'……うん。$がいないあいだ、ここに植えにきてたんだ。':'……うん。$がいないあいだに、ここに植えたんだ。',1),T(q,'#teary|……ありがとう。……じゃあ、こんどは、ぼくが植えるね。',2)],()=>{if(S!==owner)return;
+    const sp=mournSpot({elem:m.elem,j:a.obj});if(sp){faceTo(q,sp.k);S.obj[sp.k]=sp.id;(S.bud||(S.bud={}))[sp.k]=callDay()+1;recount();plantSparkle(sp.k,sp.id);(e.fl||(e.fl=[])).push(sp.k)}
+    villageTimeout(()=>{if(S!==owner)return;dialog([T(m,'#joy|……ならんで咲いたら、きっと、きれいだね。',3)],()=>{if(S!==owner)return;const now=performance.now();for(const r of[q,m]){JUMP.set(r,now);JOYU.set(r,now+2500);fxSpr('hearts',r.x*TS,(r.y-.7)*TS)}sfx('good');bondAdd(q,m,2,'tour');memo('🌼',q.name+'が、'+m.name+'にお礼の花を植えた');end()})},1600)})}
 /* さいごのひとこと（消える子が、なかよしの子へ。なかよしがいなければ、みんなへ）。$M はなかよしの名前 */
 const LASTW={wood:['#teary hush|……$M……ごめんね……。','#teary hush|……$M、ありがとう……。たのしかった、よ……。','#teary hush|……$M……また、あそぼうね……。'],
  earth:['#teary hush|……$M……ごめんねぇ……。','#teary hush|……$M……ありがとねぇ……。','#teary hush|……ちょっと、ねむいなぁ……。$M……またねぇ……。'],
@@ -226,7 +240,7 @@ function bondTick(){if(!S||IS_STORY_REPLAY)return;omoiSeed();bondNightTick();bon
 /* 同じ遊び家具で遊びはじめたら、先に遊んでいる子と+2（1回の遊びで1回） */
 function bondPlayStart(r,a){if(a.bd||a.obj==null)return;a.bd=1;for(const q of S.res)if(q!==r&&q.act&&q.act.type==='play'&&q.act.stage==='do'&&q.act.obj===a.obj)bondAdd(r,q,1,'play:'+a.what)}
 /* なかよし60：遊びに行くとき、ひまにしているなかよしをさそう */
-function bondInvite(r,o){if(!S||isNight()||!o||o.obj==null||(r.bdInv||0)>S.t)return false;const bb=bondBest(r);if(!bb||bb.v<BOND_PLAY)return false;const f=bb.q,p=BL[o.what]&&BL[o.what].play;
+function bondInvite(r,o){if(!S||isNight()||!o||o.obj==null||(r.bdInv||0)>S.t)return false;const rw=reWithP(r),bb=rw?{q:rw,v:BOND_MAX}:bondBest(r);if(!bb||bb.v<BOND_PLAY)return false;const f=bb.q,p=BL[o.what]&&BL[o.what].play;
   if(!p||!free(o.key,p.cap)||f.hidden||!f.act||!['idle','wander'].includes(f.act.type)||f.fun>=100||f.hunger<50||hungry(f)||f.energy<25||onHold(f)||HOLD.has(f.id)||storyCalled(f)||carryN(f)>0||f.meal||toyTired(f,o.obj))return false;
   const G=bfs(f.x|0,f.y|0),mine=r.act&&r.act.stand;let st=-1;if(o.what==='swing'){if(G.dist[o.obj]>=0)st=o.obj}else st=nearest(G,k=>k!==mine&&walk(k)&&adjOf(k,t=>anc(t)===o.obj)>=0,45);if(st<0)return false;
   const ng=(NIGATE[f.elem]||{})[o.what];r.bdInv=S.t+120;endAct(f);startAct(f,G,'play',st,Object.assign({},o,{fun:ng!=null?ng:p.fun,nig:ng!=null,inv:r.id}));
