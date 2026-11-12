@@ -58,7 +58,66 @@ def pack(srcf):
         for p in c.get('parts', []) or []: p['f'] = [from_uri(u) for u in p['f']]
     pack_imgs(d['head'], C)
 
+OUTL = 24    # 色をへらしたとき、1つの色がこれより大きく（RGB のどれかで）ずれないようにする
+NCOL = 256   # 1つの物（id の : と # の前が同じ物：向き・コマ・開け閉め・つなぎの部品）の色の数の上限。うすさ（アルファ）は数えない・かえない
+
+def cap_colors(ims, n=NCOL):
+    """いくつかの絵（同じ物のコマ・部品）を、あわせて n 色（RGB）までにする。
+    メディアンカットで n 色をえらび、k-means（色ごとの数でおもみ）で元の色の平均に近づける。数の少ない、はなれた色（目・光など）が OUTL より大きくずれるときは、その色をそのまま入れる。ディザなし。うすさはそのまま。
+    n 色以下なら、そのままかえす"""
+    import numpy as np
+    A = [np.array(im.convert('RGBA')) for im in ims]
+    px = np.concatenate([a[..., :3][a[..., 3] > 0] for a in A]) if A else np.zeros((0, 3), np.uint8)
+    if len(px) == 0: return ims
+    U, inv, cnt = np.unique(px, axis=0, return_inverse=True, return_counts=True)
+    if len(U) <= n: return ims
+    strip = Image.fromarray(px.reshape(1, -1, 3))
+    P = np.unique(np.array(strip.quantize(n, method=Image.Quantize.MEDIANCUT, dither=Image.Dither.NONE).convert('RGB')).reshape(-1, 3), axis=0).astype(float)
+    X = U.astype(float); w = cnt.astype(float); xx = (X * X).sum(1)[:, None]
+    D = lambda P: xx - 2 * X @ P.T + (P * P).sum(1)[None]
+    pin = np.zeros(len(P), bool)   # はなれた色のために入れた色（k-means で動かさない）
+    for rnd in range(48):
+        for _ in range(15 if rnd == 0 else 4):
+            l = D(P).argmin(1)
+            s = np.zeros_like(P); np.add.at(s, l, X * w[:, None]); c = np.bincount(l, weights=w, minlength=len(P))
+            P = np.where((c[:, None] > 0) & ~pin[:, None], s / np.maximum(c, 1e-9)[:, None], P)
+        l = D(P).argmin(1); e = np.abs(X - P[l]).max(1)
+        bad = np.where(e > OUTL)[0]
+        if not len(bad): break
+        # いちばん大きくずれた色（数が多いほど先）を、使われ方のいちばん少ない色とおきかえる
+        b = bad[np.argmax(e[bad] * np.sqrt(w[bad]))]
+        c = np.bincount(l, weights=w, minlength=len(P)); c[pin] = np.inf
+        j = int(np.argmin(c)); P[j] = X[b]; pin[j] = True
+    P = np.clip(np.round(P), 0, 255).astype(np.uint8)
+    l = D(P.astype(float)).argmin(1)
+    newU = P[l]; newpx = newU[inv.ravel()]; out = []; o0 = 0
+    for a in A:
+        m = a[..., 3] > 0; o = a.copy(); k = int(m.sum())
+        o[..., :3][m] = newpx[o0:o0 + k]; o0 += k
+        out.append(Image.fromarray(o, 'RGBA'))
+    return out
+
+SOLO = {'story', 'crop', 'tex'}   # : の前が同じでも、べつべつの物（物語の絵・作物・地面のテクスチャ）
+
+def cap_all(C, n=NCOL):
+    """チップを、物ごと（id の : と # の前）に n 色までにする。へらした物の名前の一覧をかえす"""
+    G = {}
+    for k in C:
+        b = re.split(r'[:#]', k)[0]
+        G.setdefault(k.split('#')[0] if b in SOLO else b, []).append(k)
+    done = []
+    for g, ks in G.items():
+        refs = [(C[k], 'f', i) for k in ks for i in range(len(C[k]['f']))] + [(p, 'f', i) for k in ks for p in (C[k].get('parts') or []) for i in range(len(p['f']))]
+        ims = [o[f][i] for o, f, i in refs]
+        new = cap_colors(ims, n)
+        if new is ims: continue
+        for (o, f, i), im in zip(refs, new): o[f][i] = im
+        done.append(g)
+    return done
+
 def pack_imgs(head, C):
+    capped = cap_all(C)   # 物ごとに256色まで（新しい絵も、ここでかならずへる）
+    if capped: print('256色までにした:', len(capped), ' '.join(capped[:20]) + (' …' if len(capped) > 20 else ''))
     frames = []
     def add(img):
         frames.append(img); return len(frames) - 1
