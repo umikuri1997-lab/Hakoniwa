@@ -495,9 +495,9 @@ svg.pxi.ck{width:14px;height:12px;display:inline-block;vertical-align:-1px;margi
 .title .tbox{position:relative;z-index:1;padding:14px 18px 16px;margin-top:-18vh}@media (orientation:portrait){.title .tbox{margin-top:-52vh}}
 .title h1{text-shadow:0 3px 0 #3c5a2c,0 -2px 0 #3c5a2c,2px 0 0 #3c5a2c,-2px 0 0 #3c5a2c!important;color:#fff7d6}
 .title .tsub,.title .tline{color:#fff;text-shadow:0 1px 0 #3c5a2c,1px 0 0 #3c5a2c,-1px 0 0 #3c5a2c,0 -1px 0 #3c5a2c}
-#tStart{animation:tglow 3s steps(6,end) infinite alternate}
+.tbtns .btn.pri{animation:tglow 3s steps(6,end) infinite alternate}
 @keyframes tglow{from{box-shadow:0 0 0 0 rgba(255,236,160,0)}to{box-shadow:0 0 0 3px rgba(255,236,160,.85),0 0 0 6px rgba(255,236,160,.35)}}
-@media(prefers-reduced-motion:reduce){#tStart{animation:none}}
+@media(prefers-reduced-motion:reduce){.tbtns .btn.pri{animation:none}}
 /* マップえらび：絵はドット絵（190×70）を大きくする */
 .wcard canvas{height:auto!important;aspect-ratio:760/280}.wcard canvas.px{image-rendering:pixelated;image-rendering:crisp-edges}
 .wcard .wn{display:flex;align-items:center;gap:4px}.wcard .wn svg.pxi{width:14px;height:14px;fill:var(--muted)!important}
@@ -633,7 +633,7 @@ window.PXSCENE=function(c,gw,gh,P,kind,t){
  if(!TL&&!NOSP&&(kind==='meadow'||kind==='free')){/* せいれい */var ks=['wood','earth','fire'],bx2=Math.round(gw/2-17);for(var m=0;m<3;m++){var hop=(Math.floor(t*2+m*.7)%4===0)?1:0;spr(SPR[ks[m]],bx2+m*12,gy+((gh-gy)*0.35|0)-hop,{h:SC[ks[m]].h,a:SC[ks[m]].a,w:'#fffaf0',k:'#3a2a20',p:'#f4a9a0'});R(bx2+m*12+2,gy+((gh-gy)*0.35|0)+11,6,1,'rgba(40,60,30,.25)')}}
 };
 })();</script>
-  <div id="title" class="title"><canvas id="tScene" aria-hidden="true"></canvas><canvas id="tSpr" aria-hidden="true"></canvas><div class="tbox"><p class="tsub">守り神とせいれいのものがたり</p><h1>はこにわ暮らし</h1><p class="tline">荒れた土地に、もう一度いのちを。</p><div class="tbtns"><button class="btn pri" id="tStart">はじめる</button><button class="btn" id="tSlot">セーブをえらぶ</button></div><p class="tline" id="tLoad" hidden></p></div></div><script>/* タイトルの絵：ゲームのデータが読みこめるまでは、コードのドット絵（PXSCENE）。読みこめたら、ゲームの絵（地面・木・花・家具・せいれい）だけで、1マス64ドットの小さな場面（SCN）に描いて、整数倍で上のキャンバス（#tSpr）にうつす。空・丘・地面は1回だけ描いておき（L0）、物とせいれいは足もとの順に毎回描く（火・湯気が動く）。1秒に8回だけ、タイトルが見えないときは描かない。ステージをすすめるほど物がふえる（ART の t：はじめ・草原クリア・火山に来た・火山クリア）。たて・よこで、べつの配置 */
+  <div id="title" class="title"><canvas id="tScene" aria-hidden="true"></canvas><canvas id="tSpr" aria-hidden="true"></canvas><div class="tbox"><p class="tsub">守り神とせいれいのものがたり</p><h1>はこにわ暮らし</h1><p class="tline">荒れた土地に、もう一度いのちを。</p><div class="tbtns"><button class="btn pri" id="tCont" hidden>つづきから</button><button class="btn pri" id="tStart">はじめる</button><button class="btn" id="tSlot">セーブをえらぶ</button></div><p class="tline" id="tLoad" hidden></p></div></div><script>/* タイトルの絵：ゲームのデータが読みこめるまでは、コードのドット絵（PXSCENE）。読みこめたら、ゲームの絵（地面・木・花・家具・せいれい）だけで、1マス64ドットの小さな場面（SCN）に描いて、整数倍で上のキャンバス（#tSpr）にうつす。空・丘・地面は1回だけ描いておき（L0）、物とせいれいは足もとの順に毎回描く（火・湯気が動く）。1秒に8回だけ、タイトルが見えないときは描かない。ステージをすすめるほど物がふえる（ART の t：はじめ・草原クリア・火山に来た・火山クリア）。たて・よこで、べつの配置 */
 (function(){var cv=document.getElementById('tScene'),cs=document.getElementById('tSpr'),T=document.getElementById('title');if(!cv||!cv.getContext)return;var c=cv.getContext('2d'),q=cs&&cs.getContext('2d'),P=4,gw=0,gh=0,cw=0,ch=0,dpr=1,K=1,t0=performance.now(),SC=null,BB={},rb=0;
 function size(){var w=T.clientWidth||innerWidth,h=T.clientHeight||innerHeight;P=Math.max(4,Math.round(Math.min(w,h)/80));var ngw=Math.ceil(w/P),ngh=Math.ceil(h/P);if(ngw!==gw||ngh!==gh){gw=ngw;gh=ngh;cv.width=gw;cv.height=gh;cv.style.width=gw*P+'px';cv.style.height=gh*P+'px'}
  dpr=window.devicePixelRatio||1;K=Math.max(1,Math.round(Math.min(w,h)*dpr/700));var nw=Math.round(w*dpr),nh=Math.round(h*dpr);if(cs&&(nw!==cw||nh!==ch)){cw=nw;ch=nh;cs.width=cw;cs.height=ch;cs.style.width=w+'px';cs.style.height=h+'px';SC=null}}
