@@ -121,7 +121,7 @@ ACT.foglook={start(r,a){if(S.obj[a.obj]!=='nushiprint')return false;r.bubble=''}
 /* 草原のメイン「ヌシ様のかけらをさがそう」（lv5）：霧の中のヌシ様のあしあと3つを、フタバとたどる。たどったあしあとは S.flags.printT（この依頼で見た物だけ。前に見たあしあとも、もう一度見にいく）。
    1つめ・2つめ：フタバが、つぎのあしあとのほうを指さす（光の点々とカメラ）。3つめ：あしあとが光る。会話を最後まで聞いてから、たどったことにする。かけらは、お礼の会話でわたす */
 let PRINT_FUU=0;/* lv5 の依頼の会話に、フウが出たか（会話をおえたら S.flags.printFuu） */
-const PRINT_FUU_TRACE=[[POKO,'#think|つま先は……うん、こっちっぽい。','print:point'],[POKO,'#joy|ヌシ様が歩いていったほうへ、ついていってみよう！']];
+const PRINT_FUU_TRACE=[[POKO,'#think|つま先が、こっちを向いてる。……うん。ヌシ様は、こっちへ歩いていったんだ。','print:point'],[POKO,'#joy|ヌシ様が歩いていったほうへ、ついていってみよう！']];
 const PRINT_N=3,PRINT_BEAT_MS={point:1700,glow:2000,take:2600};
 const PRINT_TRACE=[
  [[POKO,'#think|ヌシ様の足あと……。もういちど、よく見てみるね。'],[POKO,'……あっ。つま先が、あっちを向いてる。','print:point'],[POKO,'#joy|ヌシ様が歩いていったほうへ、ついていってみよう！']],
@@ -144,7 +144,12 @@ function printNear(){/* たどりはじめる前に、足あとがぜんぶ霧�
   C.sort((a,b)=>G.dist[a]-G.dist[b]);const j=C[(Math.random()*Math.min(20,C.length))|0],f=L.reduce((m,q)=>Math.hypot(q.j%W-p.x,((q.j/W)|0)-p.y)<Math.hypot(m.j%W-p.x,((m.j/W)|0)-p.y)?q:m);
   S.obj[f.j]='';S.fogReq=(S.fogReq||[]).filter(k=>k!==f.j);S.obj[j]='nushiprint';f.j=j;f.a=areaOf(j);S.flags.printNear=1;S.flags.printNearJ=j;dirty=true}
 function printFocus(){/* 目標の一覧から行く足あと：晴れている所の、まだたどっていない足あとで、フタバ（いなければ村のまん中）にいちばん近い物 */const p=S.res.find(r=>r.name===POKO&&!r.hidden),x=p?p.x:CX,y=p?p.y:CY;let b=-1,bd=1e9;for(const f of printList()){if(printTraced(f.j)||fogAt(f.j))continue;const d=Math.hypot(f.j%W-x,((f.j/W)|0)-y);if(d<bd){bd=d;b=f.j}}return b}
-function printNext(j){/* つぎにたどる足あと：まだたどっていない、いちばん近い足あと */const x=j%W,y=(j/W)|0;let b=-1,bd=1e9;for(const f of printList()){if(f.j===j||printTraced(f.j))continue;const d=Math.hypot(f.j%W-x,((f.j/W)|0)-y);if(d<bd){bd=d;b=f.j}}return b}
+function printChain(){/* 足あとのならび：はじめ（フウが見た足あと・たどった1つめ・村のまん中にいちばん近い足あと）から、のこりのいちばん近い足あとへ、じゅんに */const L=printList().map(f=>f.j);if(!L.length)return L;
+  const t0=printT()[0],d2=(a,b)=>(a%W-b%W)**2+(((a/W)|0)-((b/W)|0))**2;let cur=L.includes(S.flags.printNearJ)?S.flags.printNearJ:L.includes(t0)?t0:L.reduce((m,k)=>d2(k,CY*W+CX)<d2(m,CY*W+CX)?k:m);
+  const out=[cur],rest=L.filter(k=>k!==cur);while(rest.length){let bi=0;for(let n=1;n<rest.length;n++)if(d2(rest[n],cur)<d2(rest[bi],cur))bi=n;cur=rest.splice(bi,1)[0];out.push(cur)}return out}
+function printDir(j){/* あしあとの向き（絵の名前のうしろ）：つぎの足あとのほう。さいごの足あとは、前の足あとから来た向きのまま。上向きは '' */const C=printChain(),n=C.indexOf(j);if(n<0||C.length<2)return '';const a=n<C.length-1?j:C[n-1],b=n<C.length-1?C[n+1]:j,dx=b%W-a%W,dy=((b/W)|0)-((a/W)|0);
+  return Math.abs(dx)>Math.abs(dy)?(dx>0?'~r':'~l'):(dy>0?'~d':'')}
+function printNext(j){/* つぎにたどる足あと：足あとのならびのつぎ（まだたどっていなければ）。なければ、まだたどっていない、いちばん近い足あと */const C=printChain(),q=C[C.indexOf(j)+1];if(q!=null&&C.indexOf(j)>=0&&!printTraced(q))return q;const x=j%W,y=(j/W)|0;let b=-1,bd=1e9;for(const f of printList()){if(f.j===j||printTraced(f.j))continue;const d=Math.hypot(f.j%W-x,((f.j/W)|0)-y);if(d<bd){bd=d;b=f.j}}return b}
 function drawPrintMarks(now,inFog){/* たどる依頼のあいだ、まだたどっていない足あとの上で、ドットの星がまたたく（霧の中の物は、霧の上に描く inFog） */if(!printOn()||!$('#dialog').hidden)return;
   for(const f of printList()){if(printTraced(f.j)||fogAt(f.j)!==!!inFog)continue;const x=f.j%W,y=(f.j/W)|0,q=(now/900+f.j*.37)%1,a=Math.sin(Math.PI*q);if(a<.08)continue;const cx=x*TS+16,cy=y*TS-6-hiAt(f.j)*LIFT-Math.round(q*4),n=a>.6?2:1;
     ctx.save();ctx.globalAlpha=a;ctx.fillStyle='#fff6c8';ctx.fillRect(cx-1,cy-1,2,2);ctx.fillStyle='#ffe58a';for(let k=1;k<=n;k++){ctx.fillRect(cx-1,cy-1-k*2,2,2);ctx.fillRect(cx-1,cy-1+k*2,2,2);ctx.fillRect(cx-1-k*2,cy-1,2,2);ctx.fillRect(cx-1+k*2,cy-1,2,2)}ctx.restore()}}
@@ -187,7 +192,7 @@ const CRACKC={};function crackArt(v,vert){/* 朽ちた壁のひびの仮の絵�
   if(vert){line(24+v*6,6,26,0);line(38-v*4,30,22,0)}else{const S0=[[10,4,30,.6],[44,8,22,-.5],[28,20,26,.3]];S0.forEach(([x,y,n,dx],q)=>{if(q<=v+1)line(x+v*5,y,n,dx)})}
   return CRACKC[key]=cv}
 function drawCrack(c,id,x,y,i){/* 朽ちた壁：ふつうの壁の上に、ひびの絵をかさねる */const m=connMask(id,i),vert=!(m&3)&&!!(m&12),tx=i%W,ty=(i/W)|0,v=(2*tx+3*ty)%10,h=(tx*7919+ty*104729)%3-1,k=(vert?'crack:v#':'crack#')+v,ch=window.CHIPS&&CHIPS[k];/* 5つの形を、かたむき・左右反転をかえて10しゅるい（形は v%5）。左右のとなりとは2、上下とは3ちがうので、となりと同じ形にならない。少しずらす（h：-1〜1） */if(ch&&drawChip(c,ch,k,vert?x:x+h*2,vert?y+h*2:y,0,i))return;c.drawImage(crackArt(v%3,vert),x,vert?y-10:y,32,32)}
-function drawFogObj(c,id,x,y,i,now){/* 見つける物の絵（マップチップ。読みこみ前はコードでかく） */const ch=chipOf(id);
+function drawFogObj(c,id,x,y,i,now){/* 見つける物の絵（マップチップ。読みこみ前はコードでかく）。あしあとは、つぎのあしあとのほうを向く（printDir） */const dv=id==='nushiprint'?printDir(i):'',ch=chipOf(id+dv)||chipOf(id);if(dv&&chipOf(id+dv))id=id+dv;
   if(ch){if(id==='fogbox')shadow(c,x+16,y+(id==='fogbox'?28:29),id==='fogbox'?16:14,id==='fogbox'?3:4);if(drawChip(c,ch,id,x,y,now,i))return}
   if(id==='fogbox'){shadow(c,x+16,y+28,12,3);c.fillStyle='#8a5a33';c.fillRect(x+5,y+14,22,13);c.fillStyle='#a8743f';c.fillRect(x+5,y+9,22,6);c.fillStyle='#c08a52';c.fillRect(x+6,y+9,20,1);c.fillStyle='#6e4527';c.fillRect(x+5,y+15,22,1);c.fillStyle='#d9b35a';c.fillRect(x+9,y+9,2,18);c.fillRect(x+21,y+9,2,18);c.fillRect(x+14,y+14,4,4);c.fillStyle='#f3dc8a';c.fillRect(x+15,y+15,2,1);return}
   if(id==='nushiprint'){const g=.35+.15*Math.sin((now||0)/700+(i||0));c.fillStyle='rgba(120,190,110,'+g+')';c.beginPath();c.ellipse(x+16,y+18,13,8,0,0,7);c.fill();c.fillStyle='rgba(92,74,52,.55)';for(const[px,py]of[[9,12],[21,20]]){c.beginPath();c.ellipse(x+px-1.6,y+py,1.6,3,-.15,0,7);c.fill();c.beginPath();c.ellipse(x+px+1.6,y+py,1.6,3,.15,0,7);c.fill()}return}
