@@ -252,7 +252,8 @@ const callDay=()=>Math.floor((clk()-360)/1440)+1;/* なかまを呼ぶ「1日」
 const nightLock=()=>S&&S.enemyOn&&isNight();/* 夜（コワイノの時間）は、建てることも解体もできない */
 const isNight=()=>{const h=hour();return h>=23||h<6},isDark=()=>{const h=hour();return h>=21||h<6};/* せいれいが寝るのは23時 */
 function foeAt(e,r){/* コワイノ e が、せいれい r の3マス以内か、r のいる家の中にいる */if(r.hidden||r.coffin)return false;if(Math.max(Math.abs(e.x-r.x),Math.abs(e.y-r.y))<=(r.gear&&gearStat(r).fear?2:3))return true;/* そうび：こわがるきょり2マス */const h=roomOf((r.y|0)*W+(r.x|0));return !!h&&h.set.has((e.y|0)*W+(e.x|0))}
-function nearRes(e){return e.hitT!=null&&S.t-e.hitT<5||S.res.some(r=>foeAt(e,r))||foeHitsFire(e)}
+function nearRes(e){return e.hitT!=null&&S.t-e.hitT<5||S.res.some(r=>foeAt(e,r))||foeHitsFire(e)||foeStealing(e)}
+function foeStealing(e){return e.stealKey!=null&&S.t-(e.busyT??-1e9)<1}/* 箱・畑からぬすんでいる（カゲドロボウ） */
 function foeHitsFire(e){if(typeof e.tg!=='number')return false;const q=S.res.find(q=>q.id===e.tg);return !!q&&q.elem==='fire'&&!q.hidden&&Math.hypot(q.x-e.x,q.y-e.y)<((EN[e.type]||{}).rng||1)+.5}/* 火のせいれいをたたいているコワイノ（とどかない所からでも、火のせいれいが近よって攻撃する） *//* だれかの3マス以内・だれかのいる家に来たコワイノと、塀・壁・建物をこうげきしているコワイノ（火の子がむかえうつ） */
 const anc=j=>{if(S.obj[j]==='part'||(S.obj[j]==='site2'&&S.ref[j]!=null))return S.ref[j];if(S.obj[j]==='site2')for(const k of[j-1,j+1,j-W])if(S.obj[k]==='site')return k;return j};/* 古いセーブの神殿の足場にも対応 */
 const typeAt=j=>S.obj[anc(j)];

@@ -498,6 +498,10 @@ function renderSheet(){
   }else if(sheet==='watch'){
     const j=sheetArg,o=S.obj[j];if(o!=='watch'&&o!=='yogan')return closeSheet();
     const yg=o==='yogan',TB=yg?YOGAN:WATCH,L=S.hp['L'+j]||1,st=TB[L];T.textContent=BL[o].name;
+    /* 強化は、いちばん上 */
+    const U=(yg?YUP:WUP)[L];if(U){const n=TB[L+1];const upTop=body.appendChild(el(`<p class="note">強化するとLv${L+1}：威力 ${n.dmg}${yg?'（まわり '+n.sdmg+'）':''}・射程 ${n.range}マス・${n.cd}分ごと<br>${SP(U.pc)}</p>`));{const m=document.createElement('div');m.className='mt upmt';m.innerHTML=Object.keys(U.mat).map(k=>{const h=S.mat[k]||0;return '<span class="mic'+(h>=U.mat[k]?'':' ng')+'"><img src="'+(ICONS[k]||'')+'" alt="'+MATN[k]+'">'+h+'/'+U.mat[k]+'</span>'}).join('')+(U.sand?'<span class="mic'+((S.sand||0)>=U.sand?'':' ng')+'">やすらぎの砂（'+(S.sand||0)+'/'+U.sand+'）</span>':'');body.appendChild(m)}/* 強化に使う素材：持っている数/いる数（足りない素材は赤） */
+      const b=el('<button class="btn pri">強化する</button>');b.onclick=()=>{if(S.pt<U.pc)return toast('パワーが足りません（'+SP(U.pc)+'）');if(!matOK(U.mat))return toast('素材が足りません（'+matTxt(U.mat)+'）');if(U.sand&&(S.sand||0)<U.sand)return toast('やすらぎの砂が足りません（'+U.sand+'）');S.pt-=U.pc;for(const k in U.mat)S.mat[k]-=U.mat[k];if(U.sand)S.sand-=U.sand;S.hp['L'+j]=L+1;dirty=true;try{rebuildStatic()}catch(e){}sfx('kankan');burst(j,'block','offer');toast(BL[o].name+'をLv'+(L+1)+'に強化した','good');renderSheet()};body.insertBefore(b,upTop)}/* ボタンをいちばん上に */
+    else body.appendChild(el('<p class="note">これ以上は強化できない</p>'));
     body.appendChild(el(`<p class="story">Lv${L}：威力 ${st.dmg}${yg?'（まわり '+st.sdmg+'）':''}・射程 ${st.range}マス・${st.cd}分ごとに${yg?'火の玉':'木の矢'}を放つ</p>`));if(!yg)body.appendChild(el(`<p class="story">木の矢：${inv('arrow')}本</p>`));
     if(!yg){/* 見張り台に立つ子：ベッドと同じように、きめられる。立つ子の属性で、うち方がかわる */const own=S.wpOwn||{},oid=own[j],ow=oid!=null?S.res.find(q=>q.id===oid&&q.elem!=='fire')||null:null;
       const ef=el('<div class="sec"><h3>立つせいれいの属性</h3><p class="note" style="white-space:pre-line"></p></div>');ef.querySelector('p').textContent=ow?ELEM[ow.elem].name+'のせいれい：'+WPTXT[ow.elem]:['wood','earth','water','wind'].map(k=>ELEM[k].name+'：'+WPTXT[k]).join('\n');body.appendChild(ef);
@@ -507,9 +511,6 @@ function renderSheet(){
         row.querySelector('.dot').style.cssText='background:#f6f1e6 url('+spiritPort(r.elem,96)+') center/86% no-repeat;box-shadow:inset 0 0 0 2px '+ELEM[r.elem].col;
         ckSet(row.querySelector('b'),(ow===r?'✓ ':'')+r.name+'  Lv'+rLv(r));row.querySelector('small').textContent=ELEM[r.elem].name+'のせいれい・'+(mine===j?'この見張り台':mine>=0?'ほかの見張り台':'きまっていない');row.onclick=()=>set(r.id);rows.appendChild(row)}
       body.appendChild(sec)}
-    const U=(yg?YUP:WUP)[L];if(U){const n=TB[L+1];body.appendChild(el(`<p class="note">強化するとLv${L+1}：威力 ${n.dmg}${yg?'（まわり '+n.sdmg+'）':''}・射程 ${n.range}マス・${n.cd}分ごと<br>${SP(U.pc)}</p>`));{const m=document.createElement('div');m.className='mt upmt';m.innerHTML=Object.keys(U.mat).map(k=>{const h=S.mat[k]||0;return '<span class="mic'+(h>=U.mat[k]?'':' ng')+'"><img src="'+(ICONS[k]||'')+'" alt="'+MATN[k]+'">'+h+'/'+U.mat[k]+'</span>'}).join('')+(U.sand?'<span class="mic'+((S.sand||0)>=U.sand?'':' ng')+'">やすらぎの砂（'+(S.sand||0)+'/'+U.sand+'）</span>':'');body.appendChild(m)}/* 強化に使う素材：持っている数/いる数（足りない素材は赤） */
-      const b=el('<button class="btn pri">強化する</button>');b.onclick=()=>{if(S.pt<U.pc)return toast('パワーが足りません（'+SP(U.pc)+'）');if(!matOK(U.mat))return toast('素材が足りません（'+matTxt(U.mat)+'）');if(U.sand&&(S.sand||0)<U.sand)return toast('やすらぎの砂が足りません（'+U.sand+'）');S.pt-=U.pc;for(const k in U.mat)S.mat[k]-=U.mat[k];if(U.sand)S.sand-=U.sand;S.hp['L'+j]=L+1;dirty=true;try{rebuildStatic()}catch(e){}sfx('kankan');burst(j,'block','offer');toast(BL[o].name+'をLv'+(L+1)+'に強化した','good');renderSheet()};body.appendChild(b)}
-    else body.appendChild(el('<p class="note">これ以上は強化できない</p>'));
   }else if(sheet==='menu'){
     T.textContent=WORLDS[WD].name;
     const MI=[['oracle','leaf','おつげ'],['manual','book','ひでんのしょ'],['goal','target','目標'],['record','memo','思い出帳'],['maps','compass','マップ選択'],['zukan','zukan','図鑑'],['save','box','セーブ'],['settings','gear','設定'],['support','cup','応援する']];
