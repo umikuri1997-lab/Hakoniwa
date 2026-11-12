@@ -42,7 +42,7 @@ const SCN_DRAW={
     const a=scnEnv(t,.1,.4);ctx.globalAlpha=a*.16;scnDisc(e.x,e.y,14,9,'#fff8c8');ctx.globalAlpha=a;
     for(const[u,w]of SCN_HOOF){const col='#fffbe6';if(e.v)scnDot(e.x+u*2,e.y+w*2-4,col);else scnDot(e.x+w*2-4,e.y+u*2,col)}},
   lord(e,t,now){/* ヌシ様の光のりんかく：うっすらあらわれて、消える */
-    const cv=lordSil();if(!cv)return;const a=scnEnv(t,.28,.3)*e.str*(.86+.14*Math.sin(now/170)),bob=Math.round(Math.sin(now/600));
+    const cv=lordSil();if(!cv)return;const a=scnEnv(t,.18,.2)*e.str*(.9+.1*Math.sin(now/170)),bob=Math.round(Math.sin(now/600));
     ctx.save();ctx.globalAlpha=a;ctx.translate(Math.round(e.x),Math.round(e.y+bob));if(e.face>0)ctx.scale(-1,1);ctx.drawImage(cv,-Math.round(cv.width/2),-cv.height);ctx.restore();
     for(let i=0;i<6;i++){const q=(now/1700+i/6)%1;scnStar(e.x+Math.cos(i*1.9)*44,e.y-20-q*110-(i%3)*8,a*Math.sin(Math.PI*q),1,i%2?'#eaffd8':'#fff6c8')}}
 };
@@ -54,7 +54,7 @@ function lordSil(){/* ヌシ様（横向き）の絵から、光のりんかく�
   const nb=(i,M)=>{const x=i%W2,y=(i/W2)|0;return x<1||y<1||x>=W2-1||y>=H2-1||!M[i-1]||!M[i+1]||!M[i-W2]||!M[i+W2]};
   for(let i=0;i<W2*H2;i++)if(op[i]&&nb(i,op))e1[i]=1;
   for(let i=0;i<W2*H2;i++){const p=i*4;if(!op[i]){a[p+3]=0;continue}const lum=(a[p]+a[p+1]+a[p+2])/3,x=i%W2,near=!e1[i]&&(e1[i-1]||e1[i+1]||(x>0&&e1[i-W2])||e1[i+W2]);
-    if(e1[i]){a[p]=255;a[p+1]=255;a[p+2]=240;a[p+3]=235}else if(near){a[p]=246;a[p+1]=255;a[p+2]=226;a[p+3]=140}else{a[p]=232;a[p+1]=250;a[p+2]=214;a[p+3]=36+Math.round(lum*.2)}}
+    if(e1[i]){a[p]=255;a[p+1]=255;a[p+2]=240;a[p+3]=235}else if(near){a[p]=250;a[p+1]=255;a[p+2]=232;a[p+3]=200}else{const k=lum/255;a[p]=Math.round(214+k*38);a[p+1]=Math.round(240+k*15);a[p+2]=Math.round(206+k*34);a[p+3]=Math.round(120+k*80)}/* 中も白っぽく光らせて、形がわかるように（明るい所ほど白く） */}
   c.putImageData(d,0,0);LORDCV=cv;return cv}
 function drawSacredScenes(now){
   drawOmoiLamps(now);if(!SCN.length)return;
@@ -93,7 +93,7 @@ function sacredOfferShard(j,done){
   const alive=()=>S===owner&&VILLAGE_SESSION===session&&S.res.includes(f)&&S.obj[j]==='tower';
   const finish=()=>{if(SHARD_OFFER===offer)SHARD_OFFER=null};
   let begun=false;const act=()=>{if(begun)return;begun=true;if(!alive())return finish();
-    endAct(f);f.path=[];f.act={type:'idle',stage:'do',t:0,dur:999};const hold=f.act,face=f.x<storyTreeX(j)?1:-1,T=n>=3?10600:9600,g=sacredGeo(j);f.face=face;
+    endAct(f);f.path=[];f.act={type:'idle',stage:'do',t:0,dur:999};const hold=f.act,face=f.x<storyTreeX(j)?1:-1,T=n>=3?10600:11400,g=sacredGeo(j);f.face=face;
     const at=(ms,fn)=>setTimeout(()=>{if(alive())fn()},ms),stopAll=()=>{SCENEHOLD=0;finish();if(f.act===hold)endAct(f);SACRED_POSES.delete(f)};
     SCENEHOLD=performance.now()+T+300;musicDuck(T+900);
     const lx=g.cx+face*84,ly=g.base+8,fb=[[f.x*TS-24,f.y*TS-62-uLift(f)],[f.x*TS+24,f.y*TS+10-uLift(f)]];
@@ -113,7 +113,12 @@ function sacredOfferShard(j,done){
       at(4100,()=>{['#c8f5a0','#ffd1e8','#fff0a8'].forEach((col,i)=>{const a=-Math.PI/2+i*Math.PI*2/3;scnAdd('glow',1500,{x:tx+Math.cos(a)*48,y:ty-10+Math.sin(a)*30,r:10,col},i*250);scnAdd('orb',1200,{x0:tx+Math.cos(a)*48,y0:ty-10+Math.sin(a)*30,x1:tx,y1:ty,arc:14,col,n:3},i*250+300);scnAdd('ring',800,{x:tx,y:ty+6,r0:4,r1:24,col,a:.8},i*250+1500)});sfx('power')});
       at(6000,()=>{const ms=4400,g4=sacredGeo(j,4);sacredStartEffect('growth',ms,{from:3,to:4});SACRED_PREVIEW.set(S,{session:VILLAGE_SESSION,stage:4,until:Infinity});SACRED_SHOWN.set(S,{session:VILLAGE_SESSION,stage:4});
         storyShot([[g4.cx-74,g4.top-8],[g4.cx+74,g4.base+16],...fb],{limit:2.2,seconds:1.8,full:true});SACRED_POSES.delete(f);sacredScenePose(f,'lookUp',ms+400,{side:true,face});sacredGrowSparks(j,ms,4);sfx('sacred')})}
-    if(n<3)at(n===1?5400:5800,()=>{/* ヌシ様の光のりんかく：木のむこうがわに立って、フタバのほうを見る */scnAdd('lord',n===1?3400:3200,{x:lx,y:ly,face:-face,str:n===1?.62:.92});storyShot([...near,[lx-60,ly-150],[lx+60,ly]],{limit:2.2,seconds:1.6,full:true});/* カメラが少し引いて、すがたが入る */SACRED_POSES.delete(f);f.face=face;sacredScenePose(f,'lookUp',4000,{side:true,face});JUMP.set(f,performance.now());sfx('sacred')});
+    if(n<3){/* ヌシ様の光のすがた：光のつぶが木のよこにあつまって大鹿の形になり、フタバのほうを見て、また光のつぶにほどけて木へかえる */
+      const cx=lx,cy=ly-72,str=n===1?.85:1;
+      at(5200,()=>{storyShot([...near,[lx-64,ly-156],[lx+64,ly+4]],{limit:2.2,seconds:1.4,full:true});scnAdd('glow',6200,{x:cx,y:cy+10,r:78,col:'#f4ffe0'});
+        for(let i=0;i<22;i++){const an=Math.random()*Math.PI*2,r=80+Math.random()*50;scnAdd('orb',900,{x0:cx+Math.cos(an)*r,y0:cy+Math.sin(an)*r*.8,x1:cx+(Math.random()-.5)*56,y1:cy+(Math.random()-.5)*100,arc:8,col:i%2?'#eaffd8':'#fff6c8',n:1},i*45)}sfx('power')});
+      at(6100,()=>{scnAdd('lord',4700,{x:lx,y:ly,face:-face,str});sacredRings(cx,ly-4,2,60,'#eaffd8');SACRED_POSES.delete(f);f.face=face;sacredScenePose(f,'lookUp',5200,{side:true,face});JUMP.set(f,performance.now());sfx('sacred')});
+      at(10100,()=>{for(let i=0;i<16;i++)scnAdd('orb',900,{x0:cx+(Math.random()-.5)*56,y0:cy+(Math.random()-.5)*100,x1:tx,y1:ty,arc:12,col:i%2?'#eaffd8':'#fff6c8',n:1},i*40);scnAdd('ring',900,{x:tx,y:ty+6,r0:4,r1:30,col:'#eaffd8'},900)})}
     at(T,()=>{stopAll();if(n>=3)S.treeSeen=4;/* 育った木は、そのまま（sacredStage） */sacredNearJoy(j,1600,10);const end=()=>{if(S!==owner||VILLAGE_SESSION!==session)return;if(sacredDirection())sacredEndDirection(true);done()};
       const lines=n<3?shardLines(n):[];if(lines.length)storyShot(near,{limit:2.2,seconds:.9});if(!lines.length||dialog(lines,end,null,'')===false)end()})};
   if(!sacredSceneWalk(f,(j%W)+.5,by,{adjacentSide:true},act)&&!sacredSceneWalk(f,(j%W)+span-.5,by,{adjacentSide:true},act))act();

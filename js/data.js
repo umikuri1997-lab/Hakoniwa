@@ -547,15 +547,16 @@ const QUESTS1=[
     {id:'flower50',/* id はセーブの読みかえのため、前のまま（前は、花を50こ） */get t(){return '御神木のそばに、'+wflName()+'を5本咲かせる'},check:()=>wflN()>=WFL_N,prog:()=>wflName()+' '+wflN()+'/'+WFL_N,get how(){return '「おく」で'+wflName()+'の種を、御神木のそばに置く'}},
     {id:'flTend',t:'木のせいれい5人に、花の世話をしてもらう',check:()=>wflTN()>=WFL_TEND,prog:()=>'花の世話 '+wflTN()+'/'+WFL_TEND+(wflN()<WFL_N?'　'+wflName()+'が咲くのを待っている':''),get how(){return '御神木のそばの'+wflName()+'が咲くのを待とう'}}],
    talk:{who:MINA,when:()=>true,learn:['campfire'],lines:[
-    [MINA,'御神木、大きくなってきたねぇ。ヌシ様は、この草原のせいれいを生んだんだってぇ。木のなかまがふえたら、御神木のお世話も、みんなでたっぷりできるねぇ。'],
-    [POKO,'守り神さま、ひとつ、おねがいしてもいい？ ヌシ様がいたころ、御神木のまわりは、花でいっぱいだったんだ。ヌシ様が帰ってきたとき、さいしょに、その花を見てほしいんだ。'],
-    [POKO,'木のなかまといっしょに、御神木のそばに花畑をつくって、みんなでお世話したいな！'],
+    [POKO,'ヌシ様がいたころ、御神木のそばには、花が咲いてたんだ。ぼくと、きょうだいたちの5人で、ひとり1本ずつ、お世話してた。'],
+    [POKO,'#think|……きょうだいたちは、もういないけど。木のなかまが5人そろったら、あのころと同じ花を、咲かせられると思うんだ。'],
+    [MINA,'#nod|ひとりに1本かぁ。だいじに育ててたんだねぇ。'],
+    [POKO,'守り神さま、おねがい。ヌシ様が帰ってきたとき、さいしょに、その花を見てほしいんだ。'],
     ['@choice',{key:'nushiFlower',who:POKO,q:'#think|ヌシ様に、さいしょに見てほしい花……どれがいいかな？',pick:v=>{S.unlocked[v]=true;/* えらんだ花は、カミサマのお店でも買える */const it={[v]:5};for(const[id,n]of Object.entries(it))giveItem(id,n);queueItemGift(it)},opts:[
      {t:'ききょう',v:'bellf',lines:[[POKO,'#joy|ききょう！ ノドカを呼んでくれた花だね！']]},
      {t:'ゆり',v:'lily',lines:[[POKO,'#joy|ゆり！ 白くて、ヌシ様の毛なみみたいだね！']]},
      {t:'シロツメクサ',v:'clover',lines:[[POKO,'#joy|シロツメクサ！ ヌシ様のそばで、よく四つ葉をさがしたんだ！']]}]}],
-    [MINA,'#joy|花が咲いたら、木のなかまで、お世話してあげてねぇ。']]},
-   get story(){return [[POKO,'#surprise|わあ…御神木のまわりが、'+wflName()+'でいっぱいだ！ 木のなかまも、こんなにふえたね！ ありがとう、守り神さま！'],[POKO,'#joy|みんなでお世話したから、こんなにきれいに咲いたんだね。'],[MINA,'にぎやかだねぇ。これで、御神木のお世話も、たっぷりできるねぇ。'],...KS([['M','#joy|花のあいだを、水がすうっと流れていきます。'],['K','フッ…花のかおりが、風にのって村じゅうに広がっているよ。'],['H','夜は、おれが花畑も見まわっとくぜ。']]).filter(l=>S.res.some(r=>r.name===l[0])),[POKO,'ヌシ様、見てくれるかな。……会いたいな。']]}}),
+    [MINA,'#joy|花が咲いたら、木のなかまで、ひとり1本ずつ、お世話してあげてねぇ。']]},
+   get story(){return [[POKO,'#surprise|わあ…御神木のまわりが、'+wflName()+'でいっぱいだ！ 木のなかまも、こんなにふえたね！ ありがとう、守り神さま！'],[POKO,'#joy|ひとり1本ずつ、5人で。……あのころと、同じ花だ。'],[MINA,'にぎやかだねぇ。御神木も、うれしそうだよぉ。'],...KS([['M','#joy|花のあいだを、水がすうっと流れていきます。'],['K','フッ…花のかおりが、風にのって村じゅうに広がっているよ。'],['H','夜は、おれが花畑も見まわっとくぜ。']]).filter(l=>S.res.some(r=>r.name===l[0])),[POKO,'ヌシ様、見てくれるかな。……会いたいな。']]}}),
   {id:'nushi',get text(){return grassEndingGoal().text},check:()=>!!S.cleared,prog:()=>grassEndingGoal().progress,get how(){return grassEndingGoal().how},
    talk:{who:POKO,when:()=>true,get lines(){return [
     [POKO,'かけらも、あと少しだね。ヌシ様をむかえる準備、もうすぐかな。'],
