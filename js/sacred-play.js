@@ -22,7 +22,7 @@ function fieldBuildNote(id,j){if(IS_STORY_REPLAY)return;const q=fieldStoryCurren
 function fieldBuildMove(id,a,j){if(IS_STORY_REPLAY)return;const q=fieldStoryCurrent();if(!q)return;const st=fieldStoryState(q.id),b=st&&st.built;if(!b||b.legacy||!b.cells)return;const i=b.cells.indexOf(a);if(i<0)return;b.cells.splice(i,1);if((st.step||0)===0&&S.sacredRoot!=null&&fieldDistance(j,S.sacredRoot)<=FIELD_NEAR_R)b.cells.push(j);dirty=true;renderQuest()}
 /* 依頼の前から切り株のそばにある物も、この調べの物として数に入れる（いまの調べで、まだ始まっていないときだけ） */
 function fieldBuildAdopt(id){const p=FIELD_PREP[id],j=S.sacredRoot;if(IS_STORY_REPLAY||!p||j==null||fieldBuildOK(id))return;const q=fieldStoryCurrent();if(!q||q.id!==id)return;const st=fieldStoryEnsure(id);if(!st||(st.step||0)>0)return;const b=st.built||(st.built={cells:[]});if(b.legacy)return;const R=FIELD_NEAR_R,x0=j%W-R,y0=(j/W|0)-R,n=sacredSpan()+R*2;for(let dy=0;dy<n;dy++)for(let dx=0;dx<n;dx++){const x=x0+dx,y=y0+dy;if(x<0||y<0||x>=W||y>=H)continue;const k=y*W+x;if(fieldBuildHas(k,p.build.ids)&&fieldDistance(k,j)<=R&&!b.cells.includes(k)){b.cells.push(k);dirty=true}}}
-function fieldPrepNeed(id){fieldBuildAdopt(id);const st=fieldStoryState(id),p=FIELD_PREP[id],j=S.sacredRoot;if(!IS_STORY_REPLAY&&id==='tower'&&WD===0&&j!=null&&!S.obj.includes('tower')&&!sacredRootFits(j))return {label:sacredCells(j).some(k=>roomOf(k))?'木のまわりを、家の中にしないでおこう':'木のまわりにある物を、先に片づけよう'};/* 切り株の4×4がふさがっていると、御神木に育たない（growStoryTree と同じ条件） */if(IS_STORY_REPLAY||!p||j==null||(st?.step||0)>0||fieldBuildOK(id))return null;{const nw=(p.learn||[]).filter(k=>!S.recipes[k]);recipeNotice(nw);for(const k of nw){S.recipes[k]=true;dirty=true}}/* 古いセーブでも、準備に使う物を作れるように */
+function fieldPrepNeed(id){fieldBuildAdopt(id);const st=fieldStoryState(id),p=FIELD_PREP[id],j=S.sacredRoot;if(!IS_STORY_REPLAY&&st?.retry&&callDay()<st.retry&&!fieldStoryDone(id))return {label:'あした、もう一度ためそう'};/* 守り神の出番でしっぱいした日は、もう調べない */if(!IS_STORY_REPLAY&&id==='tower'&&WD===0&&j!=null&&!S.obj.includes('tower')&&!sacredRootFits(j))return {label:sacredCells(j).some(k=>roomOf(k))?'木のまわりを、家の中にしないでおこう':'木のまわりにある物を、先に片づけよう'};/* 切り株の4×4がふさがっていると、御神木に育たない（growStoryTree と同じ条件） */if(IS_STORY_REPLAY||!p||j==null||(st?.step||0)>0||fieldBuildOK(id))return null;{const nw=(p.learn||[]).filter(k=>!S.recipes[k]);recipeNotice(nw);for(const k of nw){S.recipes[k]=true;dirty=true}}/* 古いセーブでも、準備に使う物を作れるように */
   const n=p.build.n||1,b=st?.built;if(n>1)return {...p,label:p.label+'（'+fieldBuildCount(id)+'/'+n+'）'};
   if(p.wait&&b&&!b.legacy&&(b.cells||[]).some(k=>S.obj[k]==='site'&&S.dyn[k]?.build===p.build.ids[0]))return {...p,label:p.wait};return p}
 /* 古いセーブ：いまの依頼で、前の準備（その時の決まり）がもうそろっていた調べは、そのまま進める（1回だけ） */
@@ -43,15 +43,15 @@ const mgOK=()=>!!MGIMG.ok;
 function mgs(id,x,y,by,fl){const r=MGSPR.r[id];if(!r||!MGIMG.ok)return false;const [sx,sy,w,h]=r,dx=PXR(x-w/2),dy=by==='b'?PXR(y)-h:PXR(y-h/2);if(fl){PXG.save();PXG.translate(dx*2+w,0);PXG.scale(-1,1)}PXG.drawImage(MGIMG,sx,sy,w,h,dx,dy,w,h);if(fl)PXG.restore();return true}
 const mgFrame=(n,ms,t0=0)=>Math.floor((performance.now()-t0)/ms)%n;
 let SPLAY=null;
-/* 遊べる出番：3回しっぱいしても、お話はそのまま進む（ごほうびだけ、なし） */
+/* 遊べる出番：3回しっぱいしたら、その日の調べはおわり。つぎの日に、もう一度（fieldPlayRetry） */
 const PLAY_MISS=3;
 const sacredPlayActive=()=>!!SPLAY&&SPLAY.owner===S&&SPLAY.session===VILLAGE_SESSION;
 function sacredPlayHint(t){if(SPLAY?.pop&&SPLAY.popHint){SPLAY.popHint.textContent=t;t=''}let h=$('#playHint');if(!h){h=document.createElement('div');h.id='playHint';h.className='toast';$('#toasts').appendChild(h)}h.textContent=t;h.hidden=!t}
 function sacredPlayCount(){const P=SPLAY;if(!P)return '';const n=P.need?' '+P.got+'/'+P.need:'';return FIELD_PLAY[P.id]?.bonus?n+' のこり'+(PLAY_MISS-(P.fails||0))+'回':n}
-function startSacredPlay(id,j,cast,done){
+function startSacredPlay(id,j,cast,done,fail){
   const def=FIELD_PLAY[id];if(!def)return done();
   const s=fieldStump(j),pop=!!def.pop,cx=pop?PLAYW/2:storyTreeX(j)*TS,cy=pop?PLAYBASE:((s/W|0)+.8)*TS-hiAt(j)*LIFT,now=performance.now();
-  const P={owner:S,session:VILLAGE_SESSION,id,type:def.type,hint:def.hint,pop,j,cx,cy,t0:now,done,cast,got:0,need:0,prog:0,msg:'',msgT:0};
+  const P={owner:S,session:VILLAGE_SESSION,id,type:def.type,hint:def.hint,pop,j,cx,cy,t0:now,done,fail,cast,got:0,need:0,prog:0,msg:'',msgT:0};
   const ring=(n,rx,ry,a0=0)=>Array.from({length:n},(_,i)=>{const a=a0+i/n*Math.PI*2;return{x:cx+Math.cos(a)*rx,y:cy+8+Math.sin(a)*ry}});
   if(P.type==='cover'){P.spots=ring(6,36,14,.2);const c=new Set();let k=0;while(c.size<3)c.add((hash((S.sacredRoot||0)*3+k++)*6)|0);P.cold=c;P.covered=new Set();P.need=3;P.pile={x:cx-50,y:cy-30};P.carry=null}/* 草の山から、草を1つずつ指で運ぶ */
   if(P.type==='hold'){P.stone={x:cx+20,y:cy+12};P.heat=0;P.holding=false}
@@ -71,8 +71,8 @@ function sacredPlayWin(){const P=SPLAY;if(!P)return;sacredPlayClose();if(P.owner
 function sacredPlayBonus(P){const b=FIELD_PLAY[P.id]?.bonus;if(!b||IS_STORY_REPLAY)return;const F=S.flags.playWon||(S.flags.playWon={});if(F[P.id])return;F[P.id]=true;dirty=true;
   if(b.word)addFloat(P.cx/TS,P.cy/TS-1.6,b.word,'#fff3c4');/* 木のようすが、うれしそうにかわる（物はもらわない） */
   if(b.fun)for(const r of S.res){if(r.hidden||r.coffin)continue;r.fun=Math.min(100,r.fun+b.fun);addFloat(r.x,r.y-1.4,'たのしさ+'+b.fun)}}/* 村のみんなが、うれしくなる */
-/* しっぱい：数えて、3回でおわり（お話は進む） */
-function sacredPlayMiss(t){const P=SPLAY;if(!P)return;P.fails=(P.fails||0)+1;sacredPlayMsg(t);if(P.fails<PLAY_MISS){sacredPlayHint(P.hint+sacredPlayCount());return}sacredPlayClose();if(P.owner!==S||P.session!==VILLAGE_SESSION)return;sfx('tap');P.done()}
+/* しっぱい：数えて、3回でおわり（つぎの日に、もう一度） */
+function sacredPlayMiss(t){const P=SPLAY;if(!P)return;P.fails=(P.fails||0)+1;sacredPlayMsg(t);if(P.fails<PLAY_MISS){sacredPlayHint(P.hint+sacredPlayCount());return}sacredPlayClose();if(P.owner!==S||P.session!==VILLAGE_SESSION)return;sfx('tap');(P.fail||P.done)()}
 function sacredPlayClose(){SPLAY=null;sacredPlayHint('');pxTextFree();pxLayerFree();sacredPlayPopFree()}
 function cancelSacredPlay(){sacredPlayClose()}
 function sacredPlayMsg(t){const P=SPLAY;if(!P)return;P.msg=t;P.msgT=performance.now()}
