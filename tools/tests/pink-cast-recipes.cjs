@@ -1,5 +1,5 @@
 const {chromium}=require('playwright'),assert=require('node:assert/strict');
-/* ピンクの会話は、かかわる子がみんないるときだけ／とげの罠の目標でワナのレシピをおぼえる／ききょうが咲いたら昼のうちにノドカを呼べる */
+/* ピンクの会話は、かかわる子がみんないるときだけ／どくの罠・すべる水たまりはサブクエストでおぼえる／ききょうが咲いたら昼のうちにノドカを呼べる */
 (async()=>{
   const browser=await chromium.launch({executablePath:process.env.CHROME_PATH||'/usr/bin/chromium',args:['--no-sandbox']});
   const page=await browser.newPage({viewport:{width:1200,height:900}}),errors=[];
@@ -24,12 +24,15 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict');
   assert.deepEqual(pink.noN,{e21:false,e22:false},'flower/swing talks need ノドカ');
   assert.equal(pink.withN.e21,true);assert.equal(pink.withN.e21len,5,'all ノドカ lines are spoken');
   assert.deepEqual(pink.noH,{e16:false,e15:false},'e16 needs the fire spirit; reply only when present');assert.deepEqual(pink.withH,{e16:true,e15:true});assert.equal(pink.e06,false,'ノドカ is mentioned only when present');
-  /* 2. とげの罠の目標（watch1）で、すべる水たまり・どくの罠をおぼえる。古いセーブも読みこみで */
-  const rec=JSON.parse(await run(`(()=>{const ids=[...questRecipeIds(QUESTS[questIndexOf('watch1')]),...questRecipeIds(QUESTS[questIndexOf('watch1')],'clear')];/* 水たまり・どくの罠は、お礼の会話でおぼえる */const notes=[];const rn=recipeNotice;recipeNotice=L=>{notes.push(...L)};
-    S.guardianIdeas={};delete S.recipes.puddle;delete S.recipes.sticky;inspireQuest(QUESTS[questIndexOf('watch1')]);inspireQuest(QUESTS[questIndexOf('watch1')],'clear');recipeNotice=rn;
-    const s=JSON.parse(JSON.stringify(S));delete s.recipes.puddle;delete s.recipes.sticky;s.quest=questIndexOf('kikyo');s.qStory=null;syncQuestRecipes(s);
-    return JSON.stringify({ids,notes,now:!!S.recipes.puddle&&!!S.recipes.sticky,old:!!s.recipes.puddle&&!!s.recipes.sticky})})()`));
-  assert.ok(rec.ids.includes('puddle')&&rec.ids.includes('sticky'));assert.ok(rec.notes.includes('puddle')&&rec.notes.includes('sticky'),'recipe notice');assert.equal(rec.now,true);assert.equal(rec.old,true,'old save learns on load');
+  /* 2. どくの罠・すべる水たまりは、とげの罠の目標（watch1）ではおぼえず、サブクエスト（sticky1・puddle1）でおぼえる。古いセーブは、使っていなければわすれる */
+  const rec=JSON.parse(await run(`(()=>{const w=QUESTS[questIndexOf('watch1')],wi=[...questRecipeIds(w),...questRecipeIds(w,'clear')];const sq=k=>SUBQ.find(q=>q.k===k);
+    const st=questRecipeIds(sq('sticky1')),pu=questRecipeIds(sq('puddle1'));
+    const sv=JSON.stringify(S);S.recipes.sticky=true;S.recipes.puddle=true;S.placed.puddle=1;delete S.flags.trapSub1;S.subSt={};S.subDone={};const p=JSON.parse(JSON.stringify(S));continueGame(p);
+    const mig={sticky:!!S.recipes.sticky,puddle:!!S.recipes.puddle,puDone:!!S.subDone.puddle1};continueGame(JSON.parse(sv));
+    return JSON.stringify({wi,st,pu,mig})})()`));
+  assert.ok(!rec.wi.includes('puddle')&&!rec.wi.includes('sticky'),'watch1 no longer teaches the traps');
+  assert.ok(rec.st.includes('sticky'));assert.ok(rec.pu.includes('puddle'));
+  assert.deepEqual(rec.mig,{sticky:false,puddle:true,puDone:true},'old save forgets unused trap recipes, keeps used ones');
   /* 3. ききょうが咲いたら、朝を待たずに昼のうちに呼べる。1日1回はそのまま */
   const sm=JSON.parse(await run(`(()=>{S.flags.minaCame=false;S.res=S.res.filter(r=>r.name!==MINA);S.summon=null;S.summonNext=null;S.summonDay=-1;S.mebukiDay=-1;S.feat.summon=true;
     S.quest=questIndexOf('summon');S.qTalked=true;S.qStory=null;const bf=[];for(let j=(CY+7)*W+CX-10;bf.length<2;j++)if(!S.obj[j]&&!S.floor[j]&&S.ground[j]!==1)bf.push(j);bf.forEach(j=>S.obj[j]='bellf');S.bud={};S.t=1440*4+13*60;
@@ -37,6 +40,6 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict');
     return JSON.stringify({a,day,b,c})})()`));
   assert.deepEqual(sm,{a:true,day:true,b:false,c:false},'summon available in the day right after bloom; one per day; not at night');
   assert.deepEqual(errors,[]);
-  console.log('Pink talk cast, trap recipes at watch1, earth summon right after bellflowers');
+  console.log('Pink talk cast, trap recipes in subquests, earth summon right after bellflowers');
   await browser.close();
 })().catch(e=>{console.error(e);process.exit(1)});
