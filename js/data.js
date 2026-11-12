@@ -155,7 +155,7 @@ const BL={
   statue:{name:'神殿',kind:'build',anim:1,pc:0,time:50,maker:null,solid:1,attr:{wood:1,water:1,fire:1,earth:1,wind:1},desc:'守り神の居場所'},
   statueb:{name:'こわれた神殿',solid:1,desc:'守り神の居場所だった神殿'},/* はじめからある。「みる」でタップすると、せいれいが直す（templeRuinTap） */
   obox:{name:'おそなえ箱',solid:1,anim:1},
-  board:{name:'依頼ボード',solid:1,anim:1,pc:0,time:120,maker:'earth',mat:{wood:15,stone:10},desc:'依頼を5まい貼れるように広げる。'},
+  board:{name:'依頼ボード',solid:1,sz:[2,1],anim:1,pc:0,time:120,maker:'earth',mat:{wood:15,stone:10},desc:'依頼を5まい貼れるように広げる。'},
   altar:{name:'カミサマの台座',solid:1,anim:1},
   site2:{name:'建てている場所',solid:1,job:1},
   part:{name:''},

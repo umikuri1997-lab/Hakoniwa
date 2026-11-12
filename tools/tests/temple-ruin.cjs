@@ -8,13 +8,17 @@ const assert=require('node:assert/strict');
   assert.equal(a.q,'statue');assert.match(a.how,/こわれた神殿/);
   /* 「みる」でタップ（屋根の所） */
   await run(`(()=>{setMode('look');const j=RUINT,wx=(j%W+.5)*TS,wy=((j/W)|0)*TS-2*TS;onTap((wx-cam.x)*cam.z,(wy-cam.y)*cam.z)})()`);/* 屋根の所（像のマスの2マス上）をタップ */
-  const b=JSON.parse(await run(`JSON.stringify({o:S.obj[RUINT],d:S.dyn[RUINT],s2:[RUINT-1,RUINT+1,RUINT+W].map(k=>S.obj[k])})`));
-  assert.equal(b.o,'site');assert.equal(b.d.build,'statue');assert.equal(b.d.ruin,1);assert.deepEqual(b.s2,['site2','site2','site2']);
+  const b=JSON.parse(await run(`JSON.stringify({o:S.obj[RUINT],d:S.dyn[RUINT],s2:[RUINT-1,RUINT+1,RUINT+W,RUINT+2].map(k=>S.obj[k])})`));
+  assert.equal(b.o,'site');assert.equal(b.d.build,'statue');assert.equal(b.d.ruin,1);assert.deepEqual(b.s2,['site2','site2','site2','site2']);
   assert.equal(await run(`templeRuinTap(RUINT)`),false,'second tap does nothing');
   /* せいれいが直す */
   await page.waitForFunction(()=>sacredEval('STATUE>=0'),{},{timeout:120000,polling:500}).catch(async e=>{console.log(await run(`JSON.stringify({t:S.t,res:S.res.map(r=>[r.name,r.act&&r.act.type,r.x,r.y]),d:S.dyn[RUINT],dlg:!document.querySelector('#dialog').hidden})`));throw e});
   const c=JSON.parse(await run(`JSON.stringify({st:S.obj[STATUE],ob:S.obj[STATUE-1],bd:S.obj[STATUE+1],al:S.obj[STATUE+W],ruin:RUINT})`));
   assert.deepEqual(c,{st:'statue',ob:'obox',bd:'board',al:'altar',ruin:-1});
+  assert.deepEqual(JSON.parse(await run(`JSON.stringify({p:S.obj[STATUE+2],r:S.ref[STATUE+2]===STATUE+1,sz:BL.board.sz})`)),{p:'part',r:true,sz:[2,1]},'依頼ボードは2マス');
+  /* 前のセーブ（ボードは1マス）：右どなりの物をどけて、2マスにする */
+  const bm=JSON.parse(await run(`(()=>{const k=STATUE+2;S.obj[k]='lamp';delete S.ref[k];delete S.flags.board2x1;boardMigrate();return JSON.stringify({p:S.obj[k],r:S.ref[k]===STATUE+1,flag:!!S.flags.board2x1,inv:inv('lamp')>0})})()`));
+  assert.deepEqual(bm,{p:'part',r:true,flag:true,inv:true},'前のセーブの右どなりの物をもちものへ');
   /* 古いセーブ（神殿がない）：1回だけ置く。2回めは置かない */
   const m=JSON.parse(await run(`(()=>{const s=JSON.parse(JSON.stringify(S));for(let j=0;j<s.obj.length;j++)if(['statue','obox','board','altar'].includes(s.obj[j]))s.obj[j]='';delete s.flags.ruinTemple1;s.quest=0;S=s;LIVE[WD]=S;recount();templeRuinMigrate();const n1=S.obj.filter(o=>o==='statueb').length;delete S.flags.ruinTemple1;templeRuinMigrate();return JSON.stringify({n1,n2:S.obj.filter(o=>o==='statueb').length,flag:!!newState(WD).flags.ruinTemple1})})()`));
   assert.deepEqual(m,{n1:1,n2:1,flag:true});
