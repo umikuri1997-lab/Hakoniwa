@@ -12,11 +12,11 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict');
     if(bondOf(f,n)!==0)throw Error('not zero at start');
     mate(f,n,3);if(bondOf(f,n)!==3)throw Error('chat +3');
     /* 同じ遊び家具 */const j=CY*W+CX+5;S.obj[j]='swing';n.act={type:'play',stage:'do',obj:j,t:0};const a={obj:j};bondPlayStart(f,a);bondPlayStart(f,a);if(bondOf(f,n)!==4)throw Error('play +1 once '+bondOf(f,n));S.obj[j]='';endAct(n);
-    /* 同じ夜 */S.enemyOn=true;S.t=1440*2+60;h.act={type:'patrol',stage:'do',t:0};k.act={type:'watchpost',stage:'do',t:0};bondNightTick();bondNightTick();if(bondOf(h,k)!==2.5)throw Error('night +2.5 once '+bondOf(h,k));
-    S.t=1440*3+60;bondNightTick();if(bondOf(h,k)!==5)throw Error('next night +2.5');endAct(h);endAct(k);S.enemyOn=false;S.t=1440*3+720;
+    /* 同じ夜 */S.enemyOn=true;S.t=1440*2+60;h.act={type:'patrol',stage:'do',t:0};k.act={type:'watchpost',stage:'do',t:0};bondNightTick();bondNightTick();if(bondOf(h,k)!==1)throw Error('night +1 once '+bondOf(h,k));
+    S.t=1440*3+60;bondNightTick();if(bondOf(h,k)!==2)throw Error('next night +1');endAct(h);endAct(k);S.enemyOn=false;S.t=1440*3+720;
     /* 思い出帳ではふえない：IS_STORY_REPLAY は const なので、セーブの値を見る */
     for(let i=0;i<40;i++)mate(f,n,3);if(bondOf(f,n)!==100)throw Error('cap 100');
-    if(!/なかよし/.test(JSON.stringify(S.memo||[])))throw Error('no memo at 30');return 'chat+3 play+1 night+2.5 cap100'})()`));
+    if(!/なかよし/.test(JSON.stringify(S.memo||[])))throw Error('no memo at 30');return 'chat+3 play+1 night+1 cap100'})()`));
   console.log('talk 30 once',await run(`(()=>{const [f,n,h,m,k]=S.res;S.bond={};bondAdd(h,m,30);bondTick();const key='bd_'+bondKey(h,m),e=SEV1.find(x=>x.k===key);if(!e)throw Error('no entry');
     const L=sevLines(e.L);if(!L||L.length<3||!L.every(l=>[h.name,m.name].includes(l[0])))throw Error('bad lines '+JSON.stringify(L));
     S.sevQuietUntil=0;S.sevTalkAt=null;checkSev();if(!(S.sevP||[]).includes(key))throw Error('not queued '+JSON.stringify(S.sevP));

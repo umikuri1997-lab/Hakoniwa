@@ -1,6 +1,6 @@
 'use strict';
 /* せいれいどうしのなかよし：S.bond（2人の id を小さい順に「a_b」）→ 0〜100。
-   ふえる：同じ遊び家具でいっしょに遊ぶ+1・おしゃべり+1.5・同じ食卓でいっしょに食べる+1・同じ夜にいっしょに守る+2.5（1晩1回）。
+   ふえる：同じ遊び家具でいっしょに遊ぶ+1・おしゃべり+1.5・同じ食卓でいっしょに食べる+1・同じ夜にいっしょに守る+1（1晩1回）。
    30：なかよし（2人のピンクの会話が1回）。60：遊ぶときに、なかよしをさそう。100：3マス以内にいるとはたらく速さ+5%（重複なし）。
    思い出帳の再生（IS_STORY_REPLAY）では、ふやさない。 */
 const BOND_TALK=30,BOND_PLAY=60,BOND_MAX=100;
@@ -114,7 +114,7 @@ function bondTalkTick(){if(!S||!S.bond)return;const D=S.sev||{};for(const pk in 
 /* ---------- 同じ夜にいっしょに守る（見張り台・夜の見まわり・こもれびのまもりについて行く） ---------- */
 const BOND_DEF=new Set(['watchpost','patrol','follow']);
 function bondNightTick(){if(!isNight()||!S.enemyOn)return;const n=dayNo()-(hour()<12?1:0),D=S.bondDef&&S.bondDef.n===n?S.bondDef:(S.bondDef={n,ids:[]});
-  for(const r of S.res){if(r.hidden||!r.act||!BOND_DEF.has(r.act.type)||D.ids.includes(r.id))continue;for(const id of D.ids){const q=S.res.find(x=>x.id===id);if(q)bondAdd(r,q,2.5)}D.ids.push(r.id)}}
+  for(const r of S.res){if(r.hidden||!r.act||!BOND_DEF.has(r.act.type)||D.ids.includes(r.id))continue;for(const id of D.ids){const q=S.res.find(x=>x.id===id);if(q)bondAdd(r,q,1)}D.ids.push(r.id)}}
 /* ---------- なかよし100：3マス以内ではたらく速さ+5% ---------- */
 function bondNearTick(){BOND5.clear();if(!S.bond)return;for(const pk in S.bond){if(S.bond[pk]<BOND_MAX)continue;const p=bondPair(pk);if(!p||p[0].hidden||p[1].hidden)continue;if(Math.hypot(p[0].x-p[1].x,p[0].y-p[1].y)<=3){BOND5.add(p[0]);BOND5.add(p[1])}}}
 function bondTick(){if(!S||IS_STORY_REPLAY)return;omoiSeed();bondNightTick();bondNearTick();bondTalkTick()}
