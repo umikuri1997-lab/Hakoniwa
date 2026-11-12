@@ -74,7 +74,7 @@ const BL={
   candle:{hp:5,brk:1,fix:1,fixm:{wood:1},offerOnly:1,name:'ろうそく',kind:'furn',cat:'light',f2:1,lv:5,pc:1,time:60,maker:'fire',attr:{fire:1},mat:{wood:2},solid:1,desc:'あかり。住み心地+3'},
   lantern:{hp:5,brk:1,fix:2,fixm:{wood:1,can:1},name:'ランタン',kind:'furn',cat:'light',f2:1,lv:6,pc:3,time:80,maker:'fire',attr:{fire:1},mat:{wood:2,can:1},solid:1,desc:'あかり。住み心地+5'},
   flamp:{hp:5,brk:1,fix:4,fixm:{wood:2,stone:1},offerOnly:1,name:'フロアランプ',kind:'furn',cat:'light',f2:1,lv:6,pc:7,time:100,maker:'fire',attr:{fire:1},mat:{wood:3,stone:2},solid:1,desc:'あかり。住み心地+6'},
-  mimamori:{name:'みまもりのぬいぐるみ',kind:'furn',cat:'other',f2:1,dropOnly:1,pc:0,solid:1,attr:{},desc:'家の中に置くと、その家で寝た子の、つかれのとれる速さ1.1倍。住み心地+6'},/* ここから、コワイノの落とし物だけで手に入る家具（絵はあとで） */
+  mimamori:{name:'みまもりのぬいぐるみ',kind:'furn',cat:'other',f2:1,dropOnly:1,pc:0,solid:1,attr:{},desc:'家の中に置くと、その家で寝たせいれいの、つかれのとれる速さ1.1倍。住み心地+6'},/* ここから、コワイノの落とし物だけで手に入る家具（絵はあとで） */
   yomawari:{name:'よまわりのランタン',kind:'furn',cat:'light',f2:1,dropOnly:1,pc:0,solid:1,attr:{},desc:'まわり3.5マスを照らす。住み心地+6'},
   oyasumi:{name:'おやすみのベル',kind:'furn',cat:'other',f2:1,dropOnly:1,pc:0,solid:1,attr:{},desc:'ドアのとなりにかざるベル。住み心地+8'},
   yonaka:{name:'よなかのうたの絵',kind:'furn',cat:'other',f2:1,dropOnly:1,pc:0,solid:1,attr:{},desc:'夜の歌の絵。住み心地+10'},
@@ -383,7 +383,7 @@ const QUESTS1=[
     [GOD,'#nod|うむ。柵は足止めにはなるが、追いはらえるわけではないんじゃ。時間をかせぐだけじゃからのう。'],
     [POKO,'じゃあ、足止めしてるあいだに、なんとかしないとだめだね。'],
     [GOD,'そこで見張り台じゃ。高いところから早めに見つけて、木の矢で追いはらえる。今回はわしのおごりじゃ。'],
-    [GOD,'見張り台は、夜の持ち場じゃ。火のせいれいのほかの子が上にのぼって、木の矢を放ってくれるぞい。'],
+    [GOD,'見張り台は、夜の持ち場じゃ。火のせいれいのほかのせいれいが上にのぼって、木の矢を放ってくれるぞい。'],
     [GOD,'#alarm|とげの罠と木の矢も、そろえておいたぞい。これで、フタバがふるえて夜をすごすことも、へるじゃろう。'],
     [POKO,'柵で足止めして、罠と見張り台で追いはらうんだね！ やってみる！'],['@idea']],gives:{watchNow:true,items:{spike:10,arrow:20},flags:['watchLearned']}},
    story:[
