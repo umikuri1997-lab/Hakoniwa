@@ -12,17 +12,18 @@ const OVENM=[1,.9,.8,.7,.6,.5,.4,.3,.2,.1,0];/* そばにある調理の家具�
 const rLv=r=>{const x=r.xp||0;let l=1;while(l+1<LVXP.length&&x>=LVXP[l+1])l++;return l},hMax=r=>{const lv=rLv(r);let c=HMC.get(r);if(!c||c.lv!==lv||c.f!==r.elem){let n=r.elem==='fire'?HMAX1F:HMAX1;for(let l=2;l<=lv;l++)n+=HMAXUP+Math.floor(hash(((r.id||0)*131+l*17+23)>>>0)*(HMAXUPX-HMAXUP+1));c={lv,f:r.elem,n};HMC.set(r,c)}return c.n};const HMC=new WeakMap();/* おなかの最大：上がったレベルごとに20〜150をたす */
 /* せいれいの能力。100がふつう。レベルが上がると、はたらく速さ・移動速度・持てる数などがふえる */
 const lvF=(lv,k)=>1+k*(Math.min(lv,10)-1);
-/* 10がふつう。レベルアップでふえる量は、せいれいとレベルごとにばらつく（0〜2） */
-function lvGain(r,k,lv){const P=(EL_GROW[r.elem]||EL_GROW.wood)[k];if(!P)return 0;let n=0;for(let l=2;l<=lv;l++){const h=hash(((r.id||0)*131+l*17+({work:7,move:3,cap:11,atk:13,eat:17,xp:19}[k]||3))>>>0)*100;n+=h<P[1]?2:h<P[0]+P[1]?1:0}return n}/* レベルが上がるたびに、属性ごとの%で+2・+1（EL_GROW） */
+/* 100がふつう。レベルアップでふえる量は、せいれいとレベルごとにばらつく（LVUP） */
+const LVUP={work:[10,20],move:[10,20],atk:[10,20],cap:[1,2]};/* レベルが上がったときにふえる数：[少ないとき,多いとき] */
+function lvGain(r,k,lv){const P=(EL_GROW[r.elem]||EL_GROW.wood)[k];if(!P)return 0;const U=LVUP[k];let n=0;for(let l=2;l<=lv;l++){const h=hash(((r.id||0)*131+l*17+({work:7,move:3,cap:11,atk:13,eat:17,xp:19}[k]||3))>>>0)*100;n+=h<P[1]?U[1]:h<P[0]+P[1]?U[0]:0}return n}/* レベルが上がるたびに、属性ごとの%で、LVUP の数だけふえる（EL_GROW） */
 const wkUp=r=>r.wkB>S.t?(r.wkM||0):0,mvUp=r=>r.mvT>S.t?(r.mvM||0):0;/* 料理で、しばらくふえる分 */
-const RSC=new WeakMap();function rMul(r,k){const lv=rLv(r);let c=RSC.get(r);if(!c||c.lv!==lv||c.vr!==r.vr||c.b!==r.boost||c.g!==(r.gv||0)||c.wu!==wkUp(r)||c.mu!==mvUp(r)){c={lv,vr:r.vr,b:r.boost,g:r.gv||0,wu:wkUp(r),mu:mvUp(r),s:rStat(r,lv)};RSC.set(r,c)}return c.s[k]/10*(k==='work'&&BOND5.has(r)?1.05:1)}/* 10がふつうの速さ。なかよし100が3マス以内：はたらく速さ+5% */
+const RSC=new WeakMap();function rMul(r,k){const lv=rLv(r);let c=RSC.get(r);if(!c||c.lv!==lv||c.vr!==r.vr||c.b!==r.boost||c.g!==(r.gv||0)||c.wu!==wkUp(r)||c.mu!==mvUp(r)){c={lv,vr:r.vr,b:r.boost,g:r.gv||0,wu:wkUp(r),mu:mvUp(r),s:rStat(r,lv)};RSC.set(r,c)}return c.s[k]/100*(k==='work'&&BOND5.has(r)?1.05:1)}/* 100がふつうの速さ。なかよし100が3マス以内：はたらく速さ+5% */
 function ovenMul(j){if(j==null)return 1;const x0=j%W,y0=(j/W)|0;const kinds=new Set();for(let y=y0-3;y<=y0+3;y++)for(let x=x0-3;x<=x0+3;x++){if(x<0||y<0||x>=W||y>=H)continue;const o=S.obj[y*W+x];if(o&&o!==S.obj[j]&&BL[o]&&BL[o].cat==='cook')kinds.add(o)}return OVENM[Math.min(kinds.size,OVENM.length-1)]}/* 調理の家具がそばにあると、料理が早い（同じ家具は1つ分だけ。下限はなし） */
-const fAtk=(r,lv)=>1+lvGain(r,'atk',lv);/* 火のせいれいの攻撃力：Lv1で1、上がるたびに EL_GROW の%でふえる */
-function staOf(r){const V=vrInt(r.vr)||{},B=EL_BASE[r.elem]||EL_BASE.wood;return Math.max(1,B.sta+(V.sta||0)+(trt(r,'tafu')||trt(r,'nebari')?3:0))}/* スタミナ */
+const fAtk=(r,lv)=>10+lvGain(r,'atk',lv);/* 火のせいれいの攻撃力：Lv1で10、上がるたびに EL_GROW の%でふえる */
+function staOf(r){const V=vrInt(r.vr)||{},B=EL_BASE[r.elem]||EL_BASE.wood;return Math.max(1,B.sta+(V.sta||0)+(trt(r,'tafu')||trt(r,'nebari')?30:0))}/* スタミナ */
 function rStat(r,lv){const V=vrInt(r.vr)||{},fire=r.elem==='fire',G=gearStat(r),B=EL_BASE[r.elem]||EL_BASE.wood;/* G：そうび。どれも、たし算の整数 */return{
   atk:fire?fAtk(r,lv)+((r.bst&&r.bst.atk)||0)+((r.sst&&r.sst.atk)||0)+G.atk:0,/* 攻撃できるのは火の子だけ */
-  work:Math.max(1,B.work+(V.pow||0)+(trt(r,'hataraki')?3:0)+G.work+wkUp(r)+lvGain(r,'work',lv)),
-  move:Math.max(1,B.move+(V.spd||0)+(trt(r,'hayaashi')?3:0)+G.mv+mvUp(r)+lvGain(r,'move',lv)),
+  work:Math.max(1,B.work+(V.pow||0)+(trt(r,'hataraki')?30:0)+G.work+wkUp(r)+lvGain(r,'work',lv)),
+  move:Math.max(1,B.move+(V.spd||0)+(trt(r,'hayaashi')?30:0)+G.mv+mvUp(r)+lvGain(r,'move',lv)),
   eat:Math.round(10*(V.eat||1)*(trt(r,'shoshoku')?.8:1)),
   sta:staOf(r),
   cap:B.cap+lvGain(r,'cap',lv)+(trt(r,'chikara')?2:0)+((r.bst&&r.bst.cap)||0)+((r.sst&&r.sst.cap)||0)+G.cap,

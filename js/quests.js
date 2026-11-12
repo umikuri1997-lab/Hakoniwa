@@ -405,10 +405,11 @@ function departScene(){const owner=S,session=VILLAGE_SESSION,alive=()=>S===owner
   DEPART_RUN=true;centerOn(TX*TS,TY*TS);gatherAt(TX,TY,()=>{if(!alive())return;if(isNight()){stop();DEPART_RETRY=performance.now()+5000;return}hold(true);villageTimeout(talk,400)},null,()=>{stop();DEPART_RETRY=performance.now()+20000})}/* 集まれなかったら、しばらくして集まるところから */
 /* ふしぎな種：せいれいにあげると、能力のどれかが上がる（パワーの強化とは別） */
 const UPK=[['atk','攻撃力'],['pow','はたらく速さ'],['spd','移動速度'],['sta','スタミナ'],['cap','持てる数']];
-function giveSeed(r){if((S.mseed||0)<1)return;const T=r.sst||(r.sst={}),L=UPK.filter(([k])=>(T[k]||0)<6&&(k!=='atk'||r.elem==='fire'));/* 攻撃力は火の子だけ */if(!L.length)return toast(r.name+'は、これ以上ふしぎな種で強くならない');
-  S.mseed--;const[k,nm]=pick(L),n=T[k]||0,inc=Math.min(Math.random()<.75?1:2,6-n);T[k]=n+inc;
+const UPINC={atk:[10,20],pow:[10,20],spd:[10,20],sta:[10,20],cap:[1,2]},SEEDMAX={atk:60,pow:60,spd:60,sta:60,cap:6};/* 強化・ふしぎな種で1回にふえる数：[75%で,25%で]。ふしぎな種でふやせる上限 */
+function giveSeed(r){if((S.mseed||0)<1)return;const T=r.sst||(r.sst={}),L=UPK.filter(([k])=>(T[k]||0)<SEEDMAX[k]&&(k!=='atk'||r.elem==='fire'));/* 攻撃力は火の子だけ */if(!L.length)return toast(r.name+'は、これ以上ふしぎな種で強くならない');
+  S.mseed--;const[k,nm]=pick(L),n=T[k]||0,U=UPINC[k],inc=Math.min(Math.random()<.75?U[0]:U[1],SEEDMAX[k]-n);T[k]=n+inc;
   if(k==='pow'||k==='spd'||k==='sta'){vrInt(r.vr);r.vr[k]=(r.vr[k]||0)+inc}
-  RSC.delete(r);addFloat(r.x,r.y-1.6,nm+'+'+inc,'#9fe8ff');upFx(r,nm,'+'+inc,inc>1);if(!S.mseed)sheetArg=null;renderSheet()}
+  RSC.delete(r);addFloat(r.x,r.y-1.6,nm+'+'+inc,'#9fe8ff');upFx(r,nm,'+'+inc,inc===U[1]);if(!S.mseed)sheetArg=null;renderSheet()}
 /* 強化の演出：せいれいが喜んで、光とキラキラ */
 const JOYU=new WeakMap(),STRAINU=new WeakMap(),RHOLD=new WeakMap(),DLGN=new Set();/* STRAINU：力をそそぐあいだの >< の顔 *//* HOLD：話している・喜んでいる間は作業を止める */
 const onHold=r=>(RHOLD.get(r)||0)>performance.now()||DLGN.has(r.name)&&!document.getElementById('dialog').hidden;/* 画面だけの時間（セーブしない） */

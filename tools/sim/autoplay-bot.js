@@ -113,7 +113,7 @@ H._all=()=>{all0();
   if(q&&q.id==='omoi'&&S.qTalked&&omoiWait()&&!OMOI_RUN&&!isNight()&&$('#dialog').hidden)sacredTreeTap(S.obj.indexOf('tower'));/* なかよしの2人を、御神木へ */
   if(q&&q.id==='wood6'&&S.qTalked&&wflCells().length<WFL_N&&S.sacredRoot!=null){const j=S.sacredRoot,R=FIELD_NEAR_R;for(let b=-R;b<sacredSpan()+R&&wflCells().length<WFL_N;b++)for(let a=-R;a<sacredSpan()+R&&wflCells().length<WFL_N;a++){const k=j+b*W+a;if(k>=0&&k<W*H&&!S.obj[k]&&!S.floor[k]&&walk(k)&&S.ground[k]===0)S.obj[k]=wflKind()}recount()}/* えらんだ花を、御神木のそばに */
   if(q&&q.id==='omoi'&&S.qTalked&&omoiN()+(S.flags.omoiW||[]).length<3){const R=S.res.filter(r=>!r.hidden);for(let i=0;i<R.length;i++)for(let k=i+1;k<R.length;k++)if(bondOf(R[i],R[k])<30){bondAdd(R[i],R[k],6);i=R.length;break}}
-  for(const e of S.enemies)if(e.type==='boss2'&&e.hp>30)e.hp=30;
+  for(const e of S.enemies)if(e.type==='boss2'&&e.hp>300)e.hp=300;
   }
   if(S.cleared&&!B.cl2){B.cl2=1;B.lg('CLEARED flags '+Object.keys(S.flags).filter(k=>/reun|final|sacred/i.test(k)).join(','))}
 };
