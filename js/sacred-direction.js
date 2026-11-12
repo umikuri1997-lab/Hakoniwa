@@ -26,17 +26,17 @@ function sacredShot(mode,cast=sacredCast(),seconds=1.1){
   if(mode==='battle')for(const e of S.enemies.filter(e=>e.spawned&&!e.dead&&e.type==='boss2'))points.push([e.x*TS-120,e.y*TS-240],[e.x*TS+120,e.y*TS+16]);
   storyShot(points,{limit,seconds,mode,cast});
 }
-/* 章に関係なく使えるカメラ：points（世界の座標）が、会話欄と立ち絵を避けた上の見える範囲に入るよう、ゆっくり寄る */
+/* 章に関係なく使えるカメラ：points（世界の座標）が、会話欄と立ち絵を避けた上の見える範囲に入るよう、ゆっくり寄る。full：会話のない場面（画面の高さいっぱいを使う） */
 function storyShot(points,o={}){
   if(!S||!points.length)return null;const d=sacredDirection(true);if(!d)return null;const limit=o.limit||2.5,seconds=o.seconds||1.1;
   const left=Math.min(...points.map(p=>p[0])),right=Math.max(...points.map(p=>p[0])),top=Math.min(...points.map(p=>p[1])),bottom=Math.max(...points.map(p=>p[1]));
   // 会話欄を避けた、上側の見える範囲に収める。縦長・横長どちらでも同じ構図を保つ。
   const side=VW>VH&&VH<500;$('#dialog').classList.toggle('sacred-side',side);
-  const panel=$('#dialog .dlg'),rect=panel?.getBoundingClientRect(),panelH=rect?.height||200,safeTop=side?(IS_STORY_REPLAY?16:76):76,dialogueTop=!$('#dialog').hidden&&rect?.height?rect.top:VH-Math.max(200,panelH)-90,safeBottom=side?VH-60:Math.min(VH-56,Math.max(safeTop+100,dialogueTop-110)),height=safeBottom-safeTop,safeLeft=side?16:28,safeRight=side?VW*.54-12:VW-28;
+  const panel=$('#dialog .dlg'),rect=panel?.getBoundingClientRect(),panelH=rect?.height||200,safeTop=side?(IS_STORY_REPLAY?16:76):76,dialogueTop=!$('#dialog').hidden&&rect?.height?rect.top:VH-Math.max(200,panelH)-90,safeBottom=side?VH-60:o.full?VH-110:Math.min(VH-56,Math.max(safeTop+100,dialogueTop-110)),height=safeBottom-safeTop,safeLeft=side?16:28,safeRight=side?VW*.54-12:VW-28;
   const z=Math.max(minZ(),Math.min(limit,(safeRight-safeLeft)/(right-left+36),height/(bottom-top+28)));
   const tx=(left+right)/2+(VW/2-(safeLeft+safeRight)/2)/z,ty=(top+bottom)/2+(VH/2-(safeTop+safeBottom)/2)/z;
   camAnim={fz:cam.z,tz:z,fx:cam.x+VW/cam.z/2,fy:cam.y+VH/cam.z/2,tx,ty,t:0,dur:seconds,sacred:true};
-  d.shot={mode:o.mode||'points',cast:o.cast||[],points:points.map(p=>p.slice()),limit,left,right,top,bottom,z,safeTop,safeBottom};return d.shot;
+  d.shot={mode:o.mode||'points',full:!!o.full,cast:o.cast||[],points:points.map(p=>p.slice()),limit,left,right,top,bottom,z,safeTop,safeBottom};return d.shot;
 }
 function sacredEndDirection(restore=true){
   $('#dialog').classList.remove('sacred-side');const d=sacredDirection();if(!d)return;
@@ -50,7 +50,7 @@ function sacredBody(r,now){
   const f=r.face||1,dx=p.anim==='storyBump'?f*3*Math.sin(Math.PI*q):p.anim==='stepBack'?-f*7*sacredEase(Math.min(1,t/.6)):p.anim==='grabSleeve'?f*3*sacredEase(Math.min(1,t/.45)):p.anim==='tremble'?Math.round(Math.sin(now/28)*1.2):0,dy=/^kneel/.test(p.anim||'')?3:0;
   return {...p,p:q,t,dx,dy};
 }
-const SACRED_BEAT_MS={soil:1800,touch:1700,stone:2400,bump:2600,cover:1900,water:2600,runoff:2400,wind:2200,bud:2000,leaf:3000,grow:3300,reply:2200,hug:600,glow:2600,group:1300,sit:1500,quiet:1400,face:1000,lookup:1500,gaze:3800};
+const SACRED_BEAT_MS={soil:1800,touch:1700,stone:2400,bump:2600,cover:1900,water:2600,runoff:2400,wind:2200,bud:3200,leaf:3600,grow:5000,omoishard:5200,reply:2200,hug:600,glow:2600,group:1300,sit:1500,quiet:1400,face:1000,lookup:1500,gaze:3800};
 function sacredLineHold(cue){return String(cue||'').split('+').reduce((ms,c)=>Math.max(ms,c.startsWith('stree:')?(SACRED_BEAT_MS[c.slice(6)]||0):c.startsWith('vol:')&&typeof VOL_BEAT_MS!=='undefined'?(VOL_BEAT_MS[c.slice(4)]||0):c.startsWith('print:')&&typeof PRINT_BEAT_MS!=='undefined'?(PRINT_BEAT_MS[c.slice(6)]||0):0),0);}
 function sacredDirectedLines(step,a){
   const beats={tower:['group']};/* なかまの調べは、セリフの行に合図を書く */
@@ -79,7 +79,8 @@ function sacredBeat(c){
     sacredStartEffect('growth',ms,{from:Math.min(from,stage-1),to:stage});SACRED_PREVIEW.set(S,{session:VILLAGE_SESSION,stage,until:Infinity});SACRED_SHOWN.set(S,{session:VILLAGE_SESSION,stage});/* お話の中で育つところを見せた（あとで、もう一度育つ会話を出さない） */
     sacredShot(c==='grow'?'group':'detail',cast,1.4);sfx('bush');sacredGrowSparks(j,ms,stage);
   }
-  if(c==='glow'){/* 姿はかわらないが、根もとに光がたまって葉がゆれる */sacredStartEffect('sway',ms);sacredShot('detail',cast,1.4);sfx('bush');sacredGrowSparks(j,ms,Math.max(1,sacredStage()));}
+  if(c==='glow'){/* 姿はかわらないが、根もとに光がたまって葉がゆれる */sacredStartEffect('sway',ms);sacredShot('detail',cast,1.4);sfx('bush');sacredGrowSparks(j,ms,Math.max(1,sacredStage()),'glow');}
+  if(c==='omoishard')omoiShardBeat(j,ms,d);/* なかよしの想い：3つのあかりが、かけらになる */
   if(c==='reply'){sacredStartEffect('reply',ms);sacredShot('face',cast,1.2);sfx('bush');for(const r of cast)sacredScenePose(r,'storyListen',600000,{side:true,target:j});}
   if(c==='lookup'){/* フタバが木を見あげて、葉がゆれる（ひと呼吸） */sacredStartEffect('sway',ms);if(f){f.face=storyTreeX(j)>=f.x?1:-1;sacredScenePose(f,'storyListen',600000,{sit:true,side:true,target:j})}for(let i=0;i<3;i++)villageTimeout(()=>leafFX({x:storyTreeX(j)+(i-1)*.8,y:storyTreeY(j)-1.2}),i*350);sfx('bush');d.waitUntil=performance.now()+ms;}
   if(c==='gaze'&&f){/* フタバが芽によろこんではねてから、ひざをついて、じっと見る（ひと呼吸まつ） */const now=performance.now();JUMP.set(f,now);JOYU.set(f,now+900);f.face=storyTreeX(j)>=f.x?1:-1;sacredScenePose(f,'kneel',600000,{side:true,face:f.face,target:j});sacredShot('care',[f],1.4);d.waitUntil=performance.now()+ms;}
@@ -94,26 +95,7 @@ function sacredBeat(c){
   d.beat=c;
 }
 let SHARD_OFFER=null;/* かけらをささげているところ（かさねてタップしても1回） */
-function sacredOfferShard(j,done){
-  if(SHARD_OFFER&&SHARD_OFFER.state===S&&SHARD_OFFER.session===VILLAGE_SESSION)return;
-  if(isNight())return toast('かけらをささげるのは、朝になってから');
-  const f=S.res.find(r=>r.name===POKO&&!r.hidden);if(!f)return toast('フタバがいません');
-  const owner=S,session=VILLAGE_SESSION,span=sacredSpan(),by=(j/W|0)+span-1+.5,offer={state:S,session};SHARD_OFFER=offer;
-  const alive=()=>S===owner&&VILLAGE_SESSION===session&&S.res.includes(f)&&S.obj[j]==='tower';
-  const finish=()=>{if(SHARD_OFFER===offer)SHARD_OFFER=null};
-  let begun=false;const act=()=>{if(begun)return;begun=true;if(!alive())return finish();endAct(f);f.path=[];f.act={type:'idle',stage:'do',t:0,dur:999};const hold=f.act;const face=f.x<storyTreeX(j)?1:-1;f.face=face;sacredScenePose(f,'storyOffer',3200,{side:true,face});
-    const cx=storyTreeX(j)*TS,cy=(storyTreeY(j)+.2)*TS-hiAt(j)*LIFT;
-    for(let i=0;i<24;i++)setTimeout(()=>{if(!alive())return;const hx=f.x*TS+face*6,hy=f.y*TS-30-uLift(f),q=i/24;fx.push({k:'p',x:hx+(cx-hx)*q,y:hy+(cy-40-hy)*q,vx:(cx-hx)*.6,vy:-150,life:1,col:i%2?'#fff6c8':'#bfe8ff',r:3})},900+i*60);
-    sfx('shard');setTimeout(()=>{finish();if(!alive())return;if(f.act===hold)endAct(f);done();},2800);};
-  if(!sacredSceneWalk(f,(j%W)+.5,by,{adjacentSide:true},act)&&!sacredSceneWalk(f,(j%W)+span-.5,by,{adjacentSide:true},act))act();
-  setTimeout(()=>{if(!begun&&S===owner&&VILLAGE_SESSION===session)act();else if(!begun)finish();},15000);/* 歩くのをじゃまされても、止まったままにしない */
-}
-function sacredGrowSparks(j,ms,stage){/* 育つあいだ、根もとから光と葉がまいあがり、のびきったときに、ふわっと広がる */
-  musicDuck(ms+600);
-  const owner=S,session=VILLAGE_SESSION,cx=storyTreeX(j)*TS,cy=(storyTreeY(j)+.5)*TS-hiAt(j)*LIFT,n=10+stage*6;
-  for(let i=0;i<n;i++)setTimeout(()=>{if(S!==owner||VILLAGE_SESSION!==session)return;const a=Math.random()*Math.PI*2,r=6+Math.random()*16;fx.push({k:'p',x:cx+Math.cos(a)*r,y:cy+2,vx:Math.cos(a)*10,vy:-130-Math.random()*90,life:1.4,col:i%3?'#fff6c8':'#c8f5a0',r:2+(i%2)})},ms*.15+i*(ms*.55/n));
-  setTimeout(()=>{if(S!==owner||VILLAGE_SESSION!==session)return;for(let i=0;i<18+stage*4;i++){const a=Math.random()*Math.PI*2,v=30+Math.random()*50;fx.push({k:'p',x:cx,y:cy-20-stage*12,vx:Math.cos(a)*v,vy:Math.sin(a)*v-90,life:1.3,col:i%2?'#c8f5a0':'#fff6c8',r:2})}fx.push({k:'ring',x:cx,y:cy-4,life:1,col:'rgba(255,248,200,.85)'});sfx('bush')},ms*.8);
-}
+/* かけらをささげる場面（sacredOfferShard）・木が育つときの光（sacredGrowSparks）は sacred-scenes.js */
 function sacredTreeMotion(now){
   const growth=sacredEffect('growth');const wind=sacredEffect('wind')||sacredEffect('reply')||sacredEffect('sway');
   return {growth,progress:growth?sacredEase((now-growth.at)/growth.ms):1,sway:wind?Math.sin((now-wind.at)/350)*.025*Math.sin(Math.PI*Math.min(1,(now-wind.at)/wind.ms)):0};
@@ -136,4 +118,4 @@ function drawSacredCare(now){
 }
 
 function sacredMotionPending(){if(performance.now()<STAGEWAIT)return true;const d=sacredDirection();return !!d&&performance.now()<(d.waitUntil||0);}
-function sacredResizeShot(){const q=sacredDirection()?.shot;if(!q)return;if(q.mode==='points')storyShot(q.points,{limit:q.limit,seconds:.6});else sacredShot(q.mode,q.cast,.6);}
+function sacredResizeShot(){const q=sacredDirection()?.shot;if(!q)return;if(q.mode==='points')storyShot(q.points,{limit:q.limit,seconds:.6,full:q.full});else sacredShot(q.mode,q.cast,.6);}
