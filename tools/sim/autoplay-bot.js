@@ -63,6 +63,8 @@ const field=prep=>q=>{const [sx,sy]=SR(),st=B.st;
   if(!isNight()&&S.qTalked){try{fieldStoryTap(sx+1,sy+1)}catch(e){B.lg('fieldTap err '+e.message)}}};
 H.earthListen=field('asabukuro');H.fireRoot=field('campfire');H.waterFilm=field('jar');H.windEcho=field('windmill');H.tower=field('bench');
 H.warmMeal=()=>{if(!recipeKnown('oven'))return;B.ensure('oven',1,60,52);S.ovenSet=S.ovenSet||{};for(let j=0;j<S.obj.length;j++)if(S.obj[j]==='oven')S.ovenSet[j]='yakiimo';B.sow('imo')};/* かまどでベイクドポテトを焼いてもらう */
+H.aoFish=()=>{S.ovenSet=S.ovenSet||{};for(let j=0;j<S.obj.length;j++)if(S.obj[j]==='oven')S.ovenSet[j]='yakizakana'};/* 魚をつって、焼き魚 */
+H.kite=()=>{if((S.mat.shina||0)<4){let c=0;S.wreq=S.wreq||{};for(let j=0;j<S.obj.length;j++){if(S.obj[j]==='weed0g'&&!S.wreq[j]&&Math.hypot(j%W-54,(j/W|0)-54)<24&&!(S.fog&&fogAt(j))){S.wreq[j]=1;if(++c>=4)break}}}};/* たこの材料：しなやかな草（枝はいつもひろう） */
 H.fire=()=>{if(elemCount('fire')<1&&B.have('watch')<2)B.ensure('watch',2,52,70)};
 H.wind=()=>{B.ensure('swing',2,58,54)};
 H.kagemark=()=>{if(S.flags.kgMark!=null&&!S.flags.kgLook&&!isNight()){const j=S.flags.kgMark;if(typeof j==='number'){setMode('look');centerOn((j%W+.5)*TS,((j/W|0)+.5)*TS);onTap(VW/2,VH/2)}}};
