@@ -9,5 +9,12 @@ const assert=require('node:assert/strict');
     return JSON.stringify({guard:g0,walked,hit:hp0-e.hp})})()`));
   console.log(r);
   assert.equal(r.guard,true,'enemy hitting the fire spirit is a target');assert.equal(r.walked,1,'moves toward it');assert(r.hit>0,'attacks it');
+  /* 壁をこわしているコワイノは、むれ（3びき）でも近よって攻撃する */
+  const w=JSON.parse(await run(`(()=>{const h=S.res[0];const wx=(h.x|0)+6,wy=h.y|0,wj=wy*W+wx;S.obj[wj]='hwall';recount();
+    S.enemies=[];for(let i=0;i<3;i++)S.enemies.push({type:'basic',x:wx+1.5,y:wy+.5+i*.4,hp:EN.basic.hp,spawned:true,path:[],hitT:S.t});
+    endAct(h);h.act=null;h.x=wx-4+.5;h.y=wy+.5;h.fatk=0;let go=0;const hp0=S.enemies.map(e=>e.hp);
+    for(let i=0;i<300;i++){S.t+=.05;for(const e of S.enemies)e.hitT=S.t;updRes(h,.05);if(h.act&&h.act.hunt!=null)go=1}
+    return JSON.stringify({mob:foeMobbed(S.enemies[0]),go,hit:S.enemies.reduce((s,e,i)=>s+hp0[i]-e.hp,0)})})()`));
+  console.log(w);assert.equal(w.mob,true);assert.equal(w.go,1,'goes to the wall breakers');assert(w.hit>0,'attacks them');
   assert.deepEqual(errors,[]);await browser.close();console.log('OK');
 })().catch(e=>{console.error(e);process.exit(1)});
