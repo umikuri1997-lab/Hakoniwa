@@ -137,6 +137,29 @@ class Pix:
         for x, a, b in vgrain: self.vl(x, a, b, TS)
         self.inner(TB, OT, TI, sides='ULR', y0=y0 + 1, y1=yt - 1 - len(fcorner))
         for L in legs: self.leg(L, y1 + 1, L + leg_w - 1, leg_bottom, AB, LL, AS, OD)
+    def xpanel(self, x0, y0, x1, y1, base, light, shade, line, panel, pshade, stile=3, arm=8, slope=1.3):
+        """箱の正面：左右のたての板（stile ドット）と、そのあいだのへこんだ板に X のすじかい。x0〜x1・y0〜y1 は、わくの線の内がわ。
+        X は、まん中でまじわり、1行で slope ドットずつよこへ進む（前の絵と同じかたむき。ねかせすぎない）。太さは、よこに arm ドット"""
+        self.rect(x0, y0, x1, y1, panel); self.hl(y0, x0, x1, pshade)
+        for a, b in ((x0, x0 + stile - 1), (x1 - stile + 1, x1)):
+            self.rect(a, y0, b, y1, base); self.vl(a, y0, y1, light); self.vl(b, y0, y1, shade)
+        px0, px1 = x0 + stile, x1 - stile; cx, cy = (px0 + px1) / 2, (y0 + y1) / 2
+        for y in range(y0 + 1, y1 + 1):
+            for sgn in (1, -1):
+                c = cx + sgn * (y - cy) * slope; a = int(round(c - arm / 2)); self.hl(y, max(px0, a), min(px1, a + arm - 1), base) if a + arm - 1 >= px0 and a <= px1 else None
+        for y in range(y0 + 1, y1 + 1):
+            for x in range(px0, px1 + 1):
+                if self.at(x, y) == tuple(base) and self.at(x, y - 1) in (tuple(panel), tuple(pshade)) and self.at(x, y + 1) == tuple(base): self.dot(x, y, light)
+    def rod(self, xa, ya, xb, yb, r, fill, line):
+        """丸い棒（ななめの足など）：(xa,ya) から (xb,yb) まで、半径 r の丸をならべた形。先は丸くなる"""
+        rows = {}; n = int(max(abs(xb - xa), abs(yb - ya)) * 2) + 1
+        for i in range(n + 1):
+            cx, cy = xa + (xb - xa) * i / n, ya + (yb - ya) * i / n
+            for y in range(int(cy - r - 1), int(cy + r + 2)):
+                d = r * r - (y - cy) ** 2
+                if d < 0: continue
+                a, b = int(round(cx - d ** .5)), int(round(cx + d ** .5)); o = rows.get(y); rows[y] = (min(a, o[0]), max(b, o[1])) if o else (a, b)
+        self.shape({y: v for y, v in rows.items() if 0 <= y < self.h}, fill, line)
     def save(self, path): self.im.save(path)
     def put(self, cid, frame=0):
         """チップ cid の絵をさしかえて、アトラスと chips.js を作りなおす（大きさは同じでなければならない。ax・ay はそのまま）"""
