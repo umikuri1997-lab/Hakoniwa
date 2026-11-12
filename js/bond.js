@@ -19,10 +19,18 @@ function omoiNote(a,b,deep){if(!omoiOn())return;const L=S.flags.omoiP||(S.flags.
 /* なかよしの想いの場面：御神木（青いふきだし）をタップすると、待っている2人が根もとへ歩いて行き、それぞれの属性のしかたで木の世話をする。2人の光がひとつになって、枝のあかりになり（omoiLight・drawOmoiLamps）、2人がひとことずつ話す。
    会話を最後まで聞いたら1組に数える（S.flags.omoiP）。夜・コワイノが近い・2人のどちらかが村にいないときは、はじめない。とちゅうでやめたら、待っている組のまま */
 const OMOI_CARE={wood:['storyOffer','touch'],water:['storyPour','water'],fire:['storyStone','stone'],earth:['storySoil','soil'],wind:['storyWind','wind']};
-const OMOI_VOICE={[POKO]:'#joy|{P}と、いっしょに来たかったんだ。',[MINA]:'ふたりで来るとねぇ、なんだか、あったかいねぇ。'};
-const OMOI_KEYV={fire:'#joy|へへっ、{P}となら、どこへだって行けるぜ。',water:'{P}といっしょに来られて、うれしいです。',wind:'フッ…{P}となら、悪くないね。'};
-const OMOI_ELV={wood:'#joy|{P}といっしょだと、花がもっときれいに見えるね。',water:'お水、{P}とふたりで、あげたよ。',fire:'あったかい？ {P}がとなりにいるから、ぽかぽかなんだ。',earth:'土、ふかふかにしたよ。{P}とふたりで。',wind:'葉っぱが、くすぐったそうにゆれてる。{P}も、見て。'};
-function omoiLine(r,p){const t=OMOI_VOICE[r.name]||(keyName(r.elem)===r.name?OMOI_KEYV[r.elem]:null)||OMOI_ELV[r.elem]||OMOI_ELV.wood;return [r.name,t.replace('{P}',p.name)]}
+/* 御神木の前のひとこと：その子の言いかたで、いくつか用意して、ぜんぶ出しおわるまで同じ物を出さない（pickFresh。同じ場面の2人も、べつのセリフ） */
+const OMOI_VOICE={[POKO]:['#joy|{P}と、いっしょに来たかったんだ。','{P}とならんで歩くとね、足が、かってにはずむんだ。','#joy|この木にね、{P}のこと、おしえてあげたかったんだ。','{P}のとなりは、ひなたみたいに、あったかいんだ。'],
+ [MINA]:['ふたりで来るとねぇ、なんだか、あったかいねぇ。','{P}といるとねぇ、土まで、にこにこしてる気がするよぉ。','#joy|{P}のこと、この木にも、見せてあげたかったんだぁ。','いそがなくていいよぉ。{P}と、ゆっくり見ていこうねぇ。']};
+const OMOI_KEYV={fire:['#joy|へへっ、{P}となら、どこへだって行けるぜ。','{P}は、おれが守る。……木のまえで言うと、てれるな。','{P}は、いいやつだぜ。おれが言うんだ、まちがいねえ。','#joy|{P}がとなりにいると、火が、いつもよりあったけえんだ。'],
+ water:['{P}さんといっしょに来られて、うれしいです。','{P}さんのそばは、しずかな水面みたいに、心がおちつきます。','#joy|この木に、{P}さんのことを、つたえたかったんです。','{P}さんと歩いた道は、ぜんぶ、おぼえています。'],
+ wind:['フッ…{P}となら、悪くないね。','フッ…風は気まぐれだけど、{P}のそばには、よく吹くんだ。','{P}と来ると、葉ずれの音まで、やさしく聞こえるよ。','フッ…{P}。きみといると、どこへも行きたくなくなるね。']};
+const OMOI_ELV={wood:['#joy|{P}といっしょだと、花がもっときれいに見えるね。','{P}とね、この木が大きくなるの、ずっと見ていたいな。','#joy|{P}と、なかよしになったんだよ。木にも、聞こえたかな。','{P}のとなりにいると、葉っぱが、ぴんってなるんだ。'],
+ water:['お水、{P}とふたりで、あげたよ。','{P}といるとね、心が、すうっと、すんでいくんだ。','#joy|{P}と見る水たまりは、空がふたつ分、うつるよ。','この木も、{P}のこと、好きになってくれるかな。'],
+ fire:['あったかい？ {P}がとなりにいるから、ぽかぽかなんだ。','#joy|{P}といると、むねの火が、ぱちぱちするよ。','{P}のことは、ぼくが、あっためるからね。','{P}って、すごくたのもしいんだよ。木にも、おしえたくて。'],
+ earth:['土、ふかふかにしたよ。{P}とふたりで。','{P}といると、足もとが、しっかりする気がするんだ。','#joy|この根っこみたいに、{P}と、ずっとつながっていたいな。','{P}と来ると、土のにおいまで、うれしそうだよ。'],
+ wind:['葉っぱが、くすぐったそうにゆれてる。{P}も、見て。','#joy|{P}といっしょだと、風が、うたってるみたいなんだ。','{P}とならね、どこまでも歩いていけそうだよ。','{P}のいいところ、ぜんぶ、風にのせて木にとどけたよ。']};
+function omoiLine(r,p){const key=keyName(r.elem)===r.name,L=OMOI_VOICE[r.name]||(key?OMOI_KEYV[r.elem]:null)||OMOI_ELV[r.elem]||OMOI_ELV.wood;return [r.name,pickFresh('omoi:'+(OMOI_VOICE[r.name]||key?r.name:r.elem),L).replace('{P}',p.name)]}
 function omoiSeed(){/* いままでに、なかよしになっている組も、御神木へ行く組にする（村にいる2人だけ） */if(!omoiOn()||!S.bond)return;const L=S.flags.omoiP||(S.flags.omoiP=[]),Q=S.flags.omoiW||(S.flags.omoiW=[]);if(L.length+Q.length>=3)return;
   const C=Object.keys(S.bond).filter(k=>S.bond[k]>=BOND_TALK&&!L.includes(k)&&!Q.includes(k)&&bondPair(k)).sort((a,b)=>S.bond[b]-S.bond[a]);if(!C.length)return;for(const k of C){if(L.length+Q.length>=3)break;Q.push(k)}renderQuest();dirty=true}
 const omoiWait=()=>omoiOn()&&(S.flags.omoiW||[]).length>0;
@@ -49,7 +57,8 @@ function omoiScene(j){
       villageTimeout(()=>{if(!alive())return stop();SCENEHOLD=0;storyShot(view,{limit:2.4,seconds:.9});for(const r of pr){r.face=r.x<tx?1:-1;sacredScenePose(r,'storyListen',600000,{side:true,target:j,face:r.face})}
         dialog([omoiLine(A,B),omoiLine(B,A)],()=>{if(S!==owner||VILLAGE_SESSION!==session)return;stop();const L=S.flags.omoiP||(S.flags.omoiP=[]);S.flags.omoiW=(S.flags.omoiW||[]).filter(k=>k!==pk);if(!omoiOn()||L.includes(pk))return;L.push(pk);toast('ふたりの想いが、御神木のあかりになった（'+L.length+'/3）','good');logEv(A.name+'と'+B.name+'の想いが、御神木にとどいた');renderQuest();checkQuest();dirty=true})},5200)})};
   const near=r=>Math.hypot(r.x-tx,r.y-by-1)<3;/* 根もとのそば */
-  for(const [r,dx] of [[A,-1],[B,1]])if(!near(r)&&!sacredSceneWalk(r,tx+dx,by+1,{},arrive)){stop(r.name+'が、御神木まで行けません');return true}else if(near(r))arrive();/* 行けないときは、はじめない（待っている組のまま） */
+  const taken=new Set();/* 2人は、木の左と右の、べつのマスに立つ（近くにいても、自分のマスへ歩く。同じマスに重ならない） */
+  for(const [r,dx] of [[A,-1.5],[B,1.5]])if(!sacredSceneWalk(r,tx+dx,by+1,{avoid:taken},arrive)){stop(r.name+'が、御神木まで行けません');return true}/* 行けないときは、はじめない（待っている組のまま） */
   villageTimeout(()=>{if(begun||OMOI_RUN!==run)return;if(pr.every(near)){n=2;arrive()}else stop('御神木に、ふたりがそろいませんでした')},Math.max(20000,2000+Math.max(...pr.map(r=>(r.path||[]).length))*900));/* 歩くのをじゃまされたら、遠くのまま始めずに、やめる（待つ時間は道のりに合わせる） */
   return true}
 function shardOfferReady(){/* 御神木にかけらをささげられる（sacredTreeTap と同じ条件） */if(!S||WD!==0||S.free||S.cleared||isNight())return false;if((S.shards||0)-(S.setSh||0)<=0)return false;if((S.setSh||0)>=2)return !!S.flags.finalWon&&!!(S.sev&&S.sev.e09)&&clearReady();return true}

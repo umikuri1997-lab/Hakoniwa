@@ -37,7 +37,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict');
  assert.equal(await run('(()=>{const [f,n,h,m,k]=S.res;bondSet(f,h,30);bondSet(f,h,40);bondSet(n,m,30);return (S.flags.omoiW||[]).length})()'),3,'new pairs wait once');
  assert.equal(await run('omoiN()'),0,'pairs count only after the tree scene');
  /* 御神木をタップすると、2人が根もとへ行って世話をし、ひとことずつ話す。聞きおえて1組 */
- for(let i=0;i<2;i++){assert(await run(`(sacredTreeTap(S.obj.indexOf('tower')),!!OMOI_RUN)`),'scene started');await talkOut();assert.equal(await run('omoiN()'),i+1);}
+ for(let i=0;i<2;i++){assert(await run(`(sacredTreeTap(S.obj.indexOf('tower')),!!OMOI_RUN)`),'scene started');await page.waitForFunction(()=>sacredEval(`!document.querySelector('#dialog').hidden`),{},{timeout:40000});assert(await run(`(()=>{const p=bondPair(S.flags.omoiW[0]);return ((p[0].y|0)*W+(p[0].x|0))!==((p[1].y|0)*W+(p[1].x|0))})()`),'the two stand on different cells');await talkOut();assert.equal(await run('omoiN()'),i+1);}
  assert(!await run('QUESTS[S.quest].check()'));
  assert.equal(await run('(()=>{const [f,n,h,m,k]=S.res;bondSet(m,k,30);bondSet(h,k,30);return omoiN()+(S.flags.omoiW||[]).length})()'),3,'stops at 3');
  await run(`sacredTreeTap(S.obj.indexOf('tower'))`);await talkOut();
@@ -63,5 +63,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict');
  assert.deepEqual(await mig('wind','tower'),['wind','tower']);
  /* もっと古いセーブ（farmFirst1 のあとで名前で読みかえた物）はずらさない */
  assert.deepEqual(await run(`(()=>{const st={world:0,flags:{},quest:questIndexOf('wood6'),qStory:questIndexOf('lv5')};migrateOmoiIns(st,false);return [QUESTS1[st.quest].id,QUESTS1[st.qStory].id]})()`),['omoi','lv5']);
+ /* 御神木の前のひとこと：同じ子が4回話しても、同じ場面の2人でも、同じセリフにならない */
+ assert(await run(`(()=>{const [f,n,h,m,k]=S.res,w1=mkRes(S,'木A','wood',1,1),w2=mkRes(S,'木B','wood',2,2);S.res.push(w1,w2);S.flags.fresh={};const a=[1,2,3,4].map(()=>omoiLine(f,n)[1]),b=[omoiLine(w1,w2)[1].replace('木B','X'),omoiLine(w2,w1)[1].replace('木A','X')];S.res.length-=2;return new Set(a).size===4&&b[0]!==b[1]&&!a.concat(b).some(t=>t.includes('{P}'))})()`),'omoi lines do not repeat');
  assert.deepEqual(errors,[]);console.log('omoi ok');await browser.close();
 })().catch(e=>{console.error(e);console.error('ERRS',globalThis.__errs);process.exit(1)});

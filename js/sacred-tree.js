@@ -77,8 +77,8 @@ function sacredPose(r){const q=SACRED_POSES.get(r);return q&&q.state===S&&q.sess
 function sacredSetPose(r,pose){SACRED_POSES.set(r,{...pose,state:S,session:VILLAGE_SESSION,until:performance.now()+(pose.duration||8000)});}
 function sacredCue(c){sacredBeat(c);}
 function sacredSceneWalk(r,x,y,pose,arrived){
-  const owner=S,session=VILLAGE_SESSION,direction=sacredDirection(true),G=bfs(r.x|0,r.y|0),occupied=occTiles(r),stand=nearest(G,j=>walk(j)&&!occupied.has(j)&&(pose.adjacentSide?Math.abs((j/W|0)+.5-y)<.1&&Math.abs(j%W+.5-x)===1:Math.hypot(j%W+.5-x,(j/W|0)+.5-y)<1.5),80);
-  if(stand<0)return false;
+  const owner=S,session=VILLAGE_SESSION,direction=sacredDirection(true),G=bfs(r.x|0,r.y|0),occupied=occTiles(r),stand=nearest(G,j=>walk(j)&&!occupied.has(j)&&!(pose.avoid&&pose.avoid.has(j))&&(pose.adjacentSide?Math.abs((j/W|0)+.5-y)<.1&&Math.abs(j%W+.5-x)===1:Math.hypot(j%W+.5-x,(j/W|0)+.5-y)<1.5),80);
+  if(stand<0)return false;if(pose.avoid)pose.avoid.add(stand);/* いっしょに歩く子と、同じマスに立たない（歩いている子のマスは occupied に入らない） */
   endAct(r);startAct(r,G,'nmeet',stand,{});let last=performance.now();const tick=now=>{if(S!==owner||VILLAGE_SESSION!==session||sacredDirection()!==direction||!(S.res.includes(r)||r===GUEST)||r.act?.type!=='nmeet')return;const dt=Math.min(.1,(now-last)/1000);last=now;if(r.act.stage==='walk'){moveR(r,dt*4);requestAnimationFrame(tick);}else{if(pose.anim)sacredSetPose(r,pose);if(arrived)arrived();}};requestAnimationFrame(tick);return true;
 }
 function sacredGrowWatch(j){/* 物語の場面の外で木が育ったとき（みどりのマス）：村の時間を止め、カメラがよって、育つところを見せ、みんながよろこぶ。かけらでは木は育たない */
