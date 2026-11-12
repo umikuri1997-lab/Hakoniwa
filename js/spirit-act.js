@@ -251,13 +251,10 @@ let FOUT=null,FOUTT=-1;function fenceOut(){/* 柵（門もふくむ）と壁で�
   for(let x=0;x<W;x++)for(const y of[0,H-1]){const j=y*W+x;if(open(j)&&!out[j]){out[j]=1;q.push(j)}}for(let y=0;y<H;y++)for(const x of[0,W-1]){const j=y*W+x;if(open(j)&&!out[j]){out[j]=1;q.push(j)}}
   while(q.length){const j=q.pop(),x=j%W,y=(j/W)|0;for(const[dx,dy]of DIRS){const nx=x+dx,ny=y+dy;if(nx<0||ny<0||nx>=W||ny>=H)continue;const k=ny*W+nx;if(!out[k]&&open(k)){out[k]=1;q.push(k)}}}
   FOUT=out;FOUTT=t;return out}
-let PMASK=null,PMASKT=-1;function patrolMask(){/* 見回りの場所：1＝柵・塀（家の壁・ドアがまざってもよい）でかこまれた所、2＝家のまわり3マス、3＝家の中、4を足す＝灯りの範囲。ゲームの1分ごとに作りなおす */const t=Math.floor(S.t);if(PMASK&&PMASKT===t)return PMASK;
-  const m=new Uint8Array(W*H),out=new Uint8Array(W*H),q=[],bar=j=>{const o=typeAt(j);return FENCE_IDS.has(o)||HOME_WALLS.has(o)||HOME_DOORS.has(o)};
-  for(let x=0;x<W;x++)for(const y of[0,H-1]){const j=y*W+x;if(!bar(j)&&!out[j]){out[j]=1;q.push(j)}}for(let y=0;y<H;y++)for(const x of[0,W-1]){const j=y*W+x;if(!bar(j)&&!out[j]){out[j]=1;q.push(j)}}
-  while(q.length){const j=q.pop(),x=j%W,y=(j/W)|0;for(const[dx,dy]of DIRS){const nx=x+dx,ny=y+dy;if(nx<0||ny<0||nx>=W||ny>=H)continue;const k=ny*W+nx;if(!out[k]&&!bar(k)){out[k]=1;q.push(k)}}}
+let PMASK=null,PMASKT=-1;function patrolMask(){/* 見回りの場所：2＝家のまわり3マス、3＝家の中。ゲームの1分ごとに作りなおす */const t=Math.floor(S.t);if(PMASK&&PMASKT===t)return PMASK;
+  const m=new Uint8Array(W*H);
   for(const h of HOUSES)for(const j of h.set){const x=j%W,y=(j/W)|0;for(let dy=-3;dy<=3;dy++)for(let dx=-3;dx<=3;dx++){const nx=x+dx,ny=y+dy;if(nx>=0&&ny>=0&&nx<W&&ny<H)m[ny*W+nx]=2}}
-  for(let j=0;j<W*H;j++)if(!out[j]&&!bar(j))m[j]=1;for(const h of HOUSES)for(const j of h.set)m[j]=3;
-  for(const q of LIGHTS){const lo=S.obj[q];if(lo==='statue'||lo==='tower'||roomOf(q))continue;/* 見回るのは、外に置いた灯り（神殿・御神木・家の中の灯りはのぞく） */const qx=q%W,qy=(q/W)|0;for(let y=Math.max(0,qy-9);y<=Math.min(H-1,qy+9);y++)for(let x=Math.max(0,qx-9);x<=Math.min(W-1,qx+9);x++){const j=y*W+x;if(m[j]!==3&&lampOne(q,x+.5,y+.5))m[j]|=4}}/* 4：灯りの範囲 */
+  for(const h of HOUSES)for(const j of h.set)m[j]=3;
   PMASK=m;PMASKT=t;return m}
 function graveCheck(){if(isNight()||STATUE<0||!cnt('grave')||S.graveDay===dayNo())return;const gs=[];for(let j=0;j<W*H;j++)if(S.obj[j]==='grave'&&S.dyn[j]&&!S.dyn[j].buried)gs.push(j);if(!gs.length)return;
   let G=null;for(const r of S.res){if(r.hidden)continue;const g=bfs(r.x|0,r.y|0);if(nearest(g,j=>adjOf(j,k=>k===STATUE||k===STATUE+W)>=0,300)>=0){G=g;break}}if(!G)return;/* 神殿まで行ける子から見て */
@@ -319,9 +316,9 @@ function decide0(r){
   else if(isNight()&&isWatch(r)){// 火のせいれいは寝ないで見回り
     if(r.elem==='fire'&&r.hunger<50&&hideIn(r,G))return;/* おなかが50より少ないときは、たたかわずに家へにげる */
     {const e=r.elem!=='fire'?null:pickFoe(r,foesNow());if(e){const t=huntSpot(G,e,60,r);/* 届かない所にいても、いちばん近くまで行く */if(t>=0)return startAct(r,G,'patrol',t,{hunt:S.t})}}/* 拠点にコワイノが入ったら、まっすぐたたかいに行く */
-    {const pm=patrolMask(),others=S.res.filter(t=>t!==r&&!t.hidden&&!t.dead),sx=STATUE%W,sy=(STATUE/W)|0;/* 見回る所：灯りの範囲だけ。灯りがなければ、柵・塀でかこまれた所 → 家のまわり3マス → ほかの子のまわり3マス → 神殿のまわり3マス（家の中はのぞく） */
-      const tiers=[j=>pm[j]&4,j=>(pm[j]&3)===1,j=>(pm[j]&3)===2,others.length?j=>others.some(t=>Math.abs(j%W+.5-t.x)<3.5&&Math.abs(((j/W)|0)+.5-t.y)<3.5):null,STATUE>=0?j=>Math.abs(j%W-sx)<=3&&Math.abs(((j/W)|0)-sy)<=3:null];
-      for(const f of tiers){if(!f)continue;const ok=j=>walk(j)&&(pm[j]&3)!==3&&f(j);let j=nearest(G,j=>ok(j)&&Math.random()<.04,8);if(j<0)j=nearest(G,ok,200);if(j>=0)return startAct(r,G,'patrol',j)}}
+    {const pm=patrolMask(),others=S.res.filter(t=>t!==r&&!t.hidden&&!t.dead),sx=STATUE%W,sy=(STATUE/W)|0;/* 見回る所：家のまわり3マスだけ。家がなければ、ほかの子のまわり3マス → 神殿のまわり3マス（家の中はのぞく） */
+      const tiers=[j=>pm[j]===2,others.length?j=>others.some(t=>Math.abs(j%W+.5-t.x)<3.5&&Math.abs(((j/W)|0)+.5-t.y)<3.5):null,STATUE>=0?j=>Math.abs(j%W-sx)<=3&&Math.abs(((j/W)|0)-sy)<=3:null];
+      for(const f of tiers){if(!f)continue;const ok=j=>walk(j)&&pm[j]!==3&&f(j);let j=nearest(G,j=>ok(j)&&Math.random()<.04,8);if(j<0)j=nearest(G,ok,200);if(j>=0)return startAct(r,G,'patrol',j)}}
     return startAct(r,G,'wander',(r.y|0)*W+(r.x|0))}
   if(r.energy<25||isNight())return goSleep(r,G,S.enemies.some(e=>e.spawned));
   if(r.hunger<55&&!foeNear(r)&&!(r.noEatU>S.t))return goEat(r,G);
