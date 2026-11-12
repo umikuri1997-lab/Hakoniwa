@@ -65,7 +65,7 @@ function lastFirst(list){/* さいごにあそんだステージを、いちば�
   const card=list.querySelector('.wcard[data-k="'+top[0]+'"]');if(card===list.firstElementChild)return;
   const pv=card.previousElementSibling,nx=card.nextElementSibling;if(pv&&pv.classList.contains('wlink'))pv.remove();else if(nx&&nx.classList.contains('wlink'))nx.remove();/* 道の線は、となりのステージどうしでつなぎなおす */
   card.classList.add('wtop');list.insertBefore(card,list.firstElementChild)}
-const APP_VER=1485;/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER=1480;/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
@@ -148,7 +148,7 @@ function updTut(){
   else if(WD===0&&!sheet&&fieldTapNeed()!=null){const j=fieldTapNeed(),n=sacredSpan();lookAt([(j%W+n/2)*TS,((j/W|0)+n/2-.5)*TS],'切り株をタップ')}/* 御神木の調べ：準備ができたら、切り株をタップ */
   else if(qt==='statue'){if(WD===0&&RUINT>=0&&S.obj[RUINT]==='statueb'&&!sheet)lookAt([(RUINT%W+.5)*TS,((RUINT/W)|0)*TS-24],'こわれた神殿をタップ');else if(WD===0&&STATUE<0&&RUINT<0&&!S.obj.includes('site'))placeHint('statue')}/* 操作の案内は1章だけ */
   else if(qt==='springA'){if(inv('hotstone')>0)placeHint('hotstone')}
-  else if(qt==='table'){const g=orderTut('table');if(g&&g.kind==='place')placeHint('table');else if(g&&g.kind==='close'){el=$('#sheetX');lbl='依頼ボードをとじる'}else if(g&&g.kind==='look'){el=document.querySelector('#dock [data-mode="look"]');lbl='「みる」をタップ'}else if(g&&g.kind==='board'){wp=[(BOARD%W+1)*TS,((BOARD/W)|0)*TS-12];lbl='依頼ボードをタップ'}else if(g&&g.kind==='tab'){[el,lbl]=craftHintEl()}else if(g&&g.kind==='row'){const row=[...document.querySelectorAll('#sheetBody .row')].find(r=>r.textContent.includes(BL.table.name));el=row&&([...row.querySelectorAll('button')].find(b=>b.textContent.includes('はる'))||[...row.querySelectorAll('button')].pop());lbl=el&&el.disabled?'パワーや素材が集まるまで待とう':'食卓の「はる」をタップ'}}
+  else if(qt==='table'){const g=orderTut('table');if(g&&g.kind==='place')placeHint('table');else if(g&&g.kind==='close'){el=$('#sheetX');lbl='依頼ボードをとじる'}else if(g&&g.kind==='look'){el=document.querySelector('#dock [data-mode="look"]');lbl='「みる」をタップ'}else if(g&&g.kind==='board'){wp=[(BOARD%W+1.9)*TS,((BOARD/W)|0)*TS-4];lbl='依頼ボードをタップ'}else if(g&&g.kind==='tab'){[el,lbl]=craftHintEl()}else if(g&&g.kind==='row'){const row=[...document.querySelectorAll('#sheetBody .row')].find(r=>r.textContent.includes(BL.table.name));el=row&&([...row.querySelectorAll('button')].find(b=>b.textContent.includes('はる'))||[...row.querySelectorAll('button')].pop());lbl=el&&el.disabled?'パワーや素材が集まるまで待とう':'食卓の「はる」をタップ'}}
   else if((qt==='stor'||qt==='mbox')&&sheet==='craft'&&S.orders.some(o=>o.type===(qt==='stor'?'stor':'mbox'))&&inv(qt==='stor'?'stor':'mbox')<=0){el=$('#sheetX');lbl='とじる'}/* はったあと：画面をとじて、できあがりを待つ */
   else if(qt==='farm6'){if(inv('farm')>0)placeHint('farm')}
   else if(qt==='imoseed'){if(imoSeedQuestPlots().length>=2)return hide();if(sheet){el=$('#sheetX');lbl='とじる'}else if(mode!=='build'){el=document.querySelector('#dock [data-mode="build"]');lbl='「おく」をタップ'}
@@ -166,7 +166,7 @@ function updTut(){
     if(inv(bid)>0)placeHint(bid);
     else if(!S.orders.some(o=>o.type===bid)){
       if(sheet==='craft'){if(!craftInTag(bid,craftTab)||craftQ||craftCan&&!canMakeNow(bid)){[el,lbl]=craftHintEl()}else{const row=[...document.querySelectorAll('#sheetBody .row')].find(r=>r.textContent.includes(bn));el=row&&([...row.querySelectorAll('button')].find(b=>b.textContent.includes('はる'))||[...row.querySelectorAll('button')].pop());lbl=el&&el.disabled?'木材が集まるまで待とう':'「はる」をタップ'}}
-      else if(!sheet){if(mode!=='look'){el=document.querySelector('#dock [data-mode="look"]');lbl='「みる」をタップ'}else if(BOARD>=0){wp=[(BOARD%W+1)*TS,((BOARD/W)|0)*TS-12];lbl='依頼ボードをタップ'}}}}
+      else if(!sheet){if(mode!=='look'){el=document.querySelector('#dock [data-mode="look"]');lbl='「みる」をタップ'}else if(BOARD>=0){wp=[(BOARD%W+1.9)*TS,((BOARD/W)|0)*TS-4];lbl='依頼ボードをタップ'}}}}
   else if(qt==='fence4'){if(inv('fence')>0)placeHint('fence')}
   else if(qt==='wall'){if(inv('hwall')>0)placeHint('hwall')}
   else if(qt==='bed'){if(inv('bed')>0)placeHint('bed')}
