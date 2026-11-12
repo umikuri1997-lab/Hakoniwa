@@ -450,6 +450,12 @@ const QUESTS1=[
     [MINA,'#nod|みんながここで楽しく暮らして、村が育って、水の力もたまったら、来てくれるかもねぇ。']]},
    get story(){return KS([['M','はじめまして。水やりや、水をくむ仕事なら、わたしにまかせてください。'],[POKO,'水のせいれいが来てくれた！ 畑がうるおうね！ これで、切り株の芽にも、ちゃんと水がとどくかな。'],['H','へぇ、水のせいれいか。悪くない村になってきたじゃねえか。'],['@choice',choiceGuide()]])},gives:{flag:'wellR'}}),
   companionFieldQuest("waterFilm","根まで届く水","切り株のそばにみずがめを置いたら、切り株をタップ。水の流れを確かめる。ノドカと水のせいれいに根まで通してもらい、若葉が開くのを、そばで見守る","water",[["M","フタバさん。その水は、どちらへ？"],["F","あの木に。芽が出たんだよ！"],["M","……根のところまで、届いていないようです。"],["F","こんなに、持ってきたのに？"],["M","ええ。でも、どこで止まっているか、わかりました。"],["M","木のそばに、みずがめを置きましょう。一度にかけずに、少しずつ流して確かめたいのです。"]],[["F","じゃあ、一緒に見ててくれる？"],["M","はい。",0,"stree:sit"],["F","……あ。",0,"stree:leaf"],["F","一枚だけだ。"],["M","一枚目、ですね。"],["F","#teary|うん。一枚目。"]],['waterFilm']),
+  /* 根まで届く水のあと：水のせいれいが、村へのお礼に、つった魚を火のせいれいに焼いてもらい、みんなにふるまう（aoIns1） */
+  stepQuest({id:'aoFish',text:'みんなで焼き魚',
+   steps:[{id:'aoCatch',t:'魚を3びきつる',check:()=>(S.flags.aoFishN||0)>=3,prog:()=>'魚 '+Math.min(3,S.flags.aoFishN||0)+'/3',how:'池や川のそばで、せいれいがつりをする'},
+    {id:'aoGrill',t:'火のせいれいに、焼き魚を作ってもらう',check:()=>!!S.flags.aoGrill,get how(){return cnt('oven')?'かまどをタップして、焼き魚をえらぶ':'依頼ボードの「ごはん」でかまどをはって置き、かまどをタップして、焼き魚をえらぶ'}}],
+   talk:{get who(){return keyName('water')},when:()=>true,get lines(){return KS([['M','この村に来てから、みなさんに、たくさん助けてもらいました。'],['M','#think|なにか、お礼ができないでしょうか……。'],['F','お礼なんて、いいのに。'],['M','池で、お魚をつってきます。ホノさんに焼いてもらって、みんなで食べたいんです。'],['H','#joy|おう、焼くのはまかせな！']])}},
+   get story(){return KS([['M','#joy|焼きたてです。どうぞ、フタバさん。',0,'give:M>F'],['F','#joy|いいにおい！ アオがつったお魚？'],['M','はい。……みなさんと同じものを食べられるのが、うれしいんです。'],['N','おいしいねぇ。水のにおいが、ちょっとするよぉ。'],['H','へへっ。焼きかげんも、ばっちりだろ？'],['M','#joy|ええ。この村に来て、よかったです。']])}}),
   stepQuest({id:'kagemark',text:'大きなかげのあとを調べよう',alias:['baseUp'],
    steps:[{id:'kagemark',t:'大きなかげのあとを見つける',check:()=>{if(S.flags.kgDay==null)S.flags.kgDay=dayNo();if(S.flags.kgMark==null&&dayNo()>S.flags.kgDay||S.flags.kgMark!=null&&!S.flags.kgLook&&!kgOpen(S.flags.kgMark))kgPlace();/* あとから草・茂みなどが生えて、かくれたら、空いた所へうつす */return !!S.flags.kgLook},/* 話を聞いたつぎの日から、村の南に大きなかげのあとが出る */prog:()=>S.flags.kgMark==null?'あしたの朝に':'村の南のはしにある',how:'「みる」で、村の南に出た、大きなかげのあとをタップする'},
     {id:'tale',t:'夕方、フタバの話を聞く',check:()=>{if(!S.flags.kgLook)return false;if(S.flags.taleDay==null){S.flags.taleDay=dayNo();S.flags.taleLate=hour()>=18}return (dayNo()>S.flags.taleDay||S.flags.taleLate===false)&&hour()>=18&&!isNight()},/* あとを見つけたあとの、さいしょの18時（18時より前に見つけたらその日、あとならあしたの18時） */how:'18時になると、フタバが話しはじめる'}],
@@ -483,6 +489,12 @@ const QUESTS1=[
     [POKO,'#think|ヌシ様、どこへ行っちゃったのかな……。'],
     [MINA,'土に残ったお話ではねぇ、ヌシ様は力をうばわれて、姿を保てなくなったんだってぇ。'],[MINA,'でも、ヌシ様の力は、まだ土のどこかに残ってる気がするよぉ。'],
     [POKO,'#think|……その力、どこにあるのかな。'],[MINA,'わからないねぇ。でも、あの切り株の根っこみたいに、どこかで静かに待ってるのかもしれないよぉ。']]}}),
+  /* オオカゲを追いはらったあと：フタバが「こもれびのまもり」をおぼえて、夜に火のせいれいを守る（前はピンクの会話 e06・e06d） */
+  stepQuest({id:'guardLearn',text:'こもれびのまもり',
+   steps:[{id:'guardUse',t:'夜、フタバがこもれびのまもりで火のせいれいを守る',check:()=>!!S.flags.guardUsed,how:'夜、「コワイノ」にねらわれている火のせいれいを、フタバがはなれた所から葉っぱで守る'}],
+   talk:{who:POKO,when:()=>true,get lines(){const e=SEV1.find(x=>x.k===(S.flags.hDied?'e06d':'e06'));return e?sevLines(e.L)||[]:[]},
+    gives:{run(){S.flags.guard=true;memo('🍃','フタバが「こもれびのまもり」をおぼえた');skillPop('leaf','フタバが「こもれびのまもり」をおぼえた！',['夜、「コワイノ」にねらわれている火のせいれいを、はなれた所から葉っぱで1人守る。','守られたせいれいは、40分のあいだ、「コワイノ」から受けるダメージ0.5倍。','つかったあとは、75分たつと、また守れる。'])}}},
+   get story(){return KS([['H','ゆうべは、助かったぜ。葉っぱが、ふわっとかかってさ。'],['F','#surprise|ほんと！？ ……ちゃんと、とどいてたんだ。'],['H','ああ。おまえも、いっしょに村を守ってたんだな。'],['F','#joy|うん！ これからも、いっしょに守ろうね。']])}}),
   {id:'wind',text:'風のせいれいをむかえよう',how:"「おく」→「ゆりの種」を植えたり、ブランコを置いたりして風の力をため、朝に神殿の「！」から呼ぶ",check:()=>elemCount('wind')>=1&&NEWRES==null,prog:()=>'風の力 '+Math.floor(ATTR.wind)+'/'+needFor('wind'),
    talk:{who:POKO,when:()=>true,learn:['swing'],lines:[
     [POKO,'#think|切り株の葉っぱ、まだ一枚だけなんだ。風がふくと、ちょっとだけゆれるの。'],
@@ -491,6 +503,12 @@ const QUESTS1=[
     [POKO,'#think|風のせいれいって、遊ぶのが好きなんだよね。ふわっとゆれる遊び道具があったら、よろこんでくれるかな？ 守り神さま、なにか思いつく？'],['@idea']]},
    get story(){return KS([['K','フッ…風に呼ばれて来てみれば、ずいぶん素朴な村だね。'],[POKO,'風のせいれいが来た！ これで5つの属性がそろったね！'],['K','フッ…素朴なのも、悪くない。ぼくの風で、もっと華やかにしてあげよう。'],[POKO,'#think|……そうだ。あの切り株の若葉にも、やさしい風をとどけてくれるかな。']])}},
   companionFieldQuest("windEcho","葉ずれの向こう","切り株のそばに風車を建てたら、切り株をタップ。風のせいれいと若葉の音を聞く。集まった仲間と世話をして、フタバの声を届けよう。返事を最後まで聞く","wind",[["K","ずいぶん大事にされているね。この木は。"],["F","みんなで、お世話してるんだ。"],["K","……根元へ、風を通してみてもいいかな。"],["F","葉っぱ、飛んでいかない？"],["K","そんな乱暴な風は、使わないさ。"],["K","木のそばに、風車を建ててもいいかな。羽が回れば、風の強さが目で見える。強すぎたら、すぐわかるよ。"]],[["F","#teary|……生きてる。"],["F","ヌシ様、生きてるんだ。"],["F","ぼくが、ひとりじゃないって……。"],["N","聞いてくれたねぇ。",0,"stree:touch"],["F","守り神さま。"],["F","ヌシ様を、もとの姿に戻してあげたい。"],["F","また、この木の下で……みんなで会いたい。"]],['windEcho']),
+  /* 葉ずれの向こうのあと：風のせいれいが、たこをあげて、空から村をながめる（kiteIns1）。霧のむこうの足あとに気づき、かけらさがしへつながる */
+  stepQuest({id:'kite',text:'空からのながめ',
+   steps:[{id:'kiteMat',t:'たこの材料をあつめる',check:()=>(S.mat.eda||0)>=3&&(S.mat.shina||0)>=4,prog:()=>'枝 '+Math.min(3,S.mat.eda||0)+'/3　しなやかな草 '+Math.min(4,S.mat.shina||0)+'/4',how:'枝と、しなやかな草を素材箱にためる'}],
+   talk:{get who(){return keyName('wind')},when:()=>true,get lines(){return KS([['K','フッ……この村の空は、いい風がふくね。'],['K','#think|ずっと高い所から、村をながめてみたいんだ。たこをあげたら、きっと見えるさ。'],['F','たこ？ ぼくも見たい！'],['K','枝と、しなやかな草があれば、作れるよ。'],['N','あつまったら、みんなで見ようねぇ。']])}},
+   get story(){return KS([['K','#joy|さあ、いくよ。風に、のせて……！',0,'kite:K'],['F','#surprise|わあ……！ あんなに高く！'],['K','フッ…見えるよ。御神木も、畑も、みんなの家も。'],['K','#think|……霧のむこうに、光る点がならんでいる。だれかが歩いた、あとみたいだ。'],['N','#surprise|それ、ヌシ様の足あとかもしれないねぇ……！'],['F','#joy|見にいきたい！ フウ、ありがとう！']])},
+   pay:{eda:3,shina:4}}),/* たこの材料は、クリアのときにつかう */
   Object.assign(companionFieldQuest('tower','この木を、御神木に育てよう','切り株のそばにベンチを置いたら、切り株をタップ。フタバたちと御神木を育てよう','wood',[
     ['G','……よう、声を届けたのう。'],['F','でも、すぐ聞こえなくなっちゃった。'],['G','声を返すだけでも、力が要ったのじゃろう。'],['F','どうしたら、戻ってこられる？'],['G','ヌシの力は、3つのかけらになって、この土地に散らばっておる。それを、もう一度つないでやるのじゃ。この木は、土地の奥まで根を伸ばしておる。'],['G','じゃが、この木はまだ細い。ヌシの力を受け止めるには、この木も、土地も、育たねばならん。'],['G','おヌシらが育てるなら、わしも手を貸そう。'],['F','じゃあ、木のそばにベンチを置こうよ。みんなで、木を見ていられるように。']
   ],[['F','枝が、伸びた……！'],['N','根の先も、さっきより遠くへ届いてるよぉ。'],['M','水の流れも、木のほうへ向いています。'],['F','大きくなったら、みんなで休もうね。']]),{check:()=>cnt('tower')>=1,gives:{shrine:true}}),
@@ -651,6 +669,15 @@ function migrateFarmFirst(state){
   }else if(id==='farm6'||id==='imoseed')(state.flags.qPassed||(state.flags.qPassed={})).earthListen=1;/* 切り株の下では、もうした：そこへ来たら、とばす */
 }
 /* 「あたたかいごはん」（warmMeal）を、燃やさない火（fireRoot）のあとに足した（warmIns1）。pre：読みこんだときに、もう今のならび（farmFirst1）の番号だったセーブ。なかよしの想いの読みかえより先にする */
+/* 「こもれびのまもり」（guardLearn）・「みんなで焼き魚」（aoFish）・「空からのながめ」（kite）を足した（story3ins1）。pre：読みこんだときに、もう今のならび（farmFirst1）の番号だったセーブ。番号は名前で読みかえる（なかよしの想いの読みかえのあとに） */
+const STORY3_NEW=['guardLearn','aoFish','kite'];
+function migrateStory3Ins(state,pre){
+  if(state.flags.story3ins1)return;state.flags.story3ins1=1;
+  if(state.free||(state.world||0)!==0)return;
+  if(pre){const old=QUESTS1.map(q=>q.id).filter(id=>!STORY3_NEW.includes(id)),to=i=>i==null?null:i>=old.length?QUESTS1.length:qsIx(old[i]);state.quest=to(state.quest||0);state.qStory=to(state.qStory)}
+  for(const id of STORY3_NEW){const w=qsIx(id);if(state.qStory===w-1&&(state.quest||0)===w+1){state.quest=w;state.qTalked=false}}/* 前の目標のお礼を待っていた：お礼のあと、足した目標へ */
+  const g=qsIx('guardLearn');if((state.quest||0)===g&&state.flags.guard){state.quest=g+1;state.qTalked=false}/* もうピンクの会話でおぼえていたら、とばす */
+}
 function migrateWarmIns(state,pre){
   if(state.flags.warmIns1)return;state.flags.warmIns1=1;
   if(state.free||(state.world||0)!==0)return;
