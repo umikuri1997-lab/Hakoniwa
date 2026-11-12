@@ -48,10 +48,12 @@ function canPlace(id,x,y,quiet){if(typeof fogBlock==='function'&&fogBlock(id,x,y
   if(EDGES.has(id))return canEdge(x,y,quiet);
   if(RUGS.has(id))return canRug(x,y,quiet);
   if(CANOPY.has(id))return canRoof(x,y,quiet);
+  if(id==='watch'&&watchNear(x,y)){if(!quiet)toast('見張り台どうしは、あいだを5マスあけてください','warn');return false}
   if(id==='statue'&&!(canPlace('fence',x-1,y,quiet)&&canPlace('fence',x+1,y,quiet)&&canPlace('fence',x,y+1,quiet)))return false;
   if(BL[id].sz){const F=fp(id,x,y);for(const[a,b]of F)if(!canPlace1(id,a,b,quiet))return false;if(F.some(([a,b])=>hiAt(b*W+a)!==hiAt(F[0][1]*W+F[0][0]))){if(!quiet)toast('段差をまたいでは置けません');return false}return true}
   return canPlace1(id,x,y,quiet);
 }
+const WATCHGAP=5;function watchNear(x,y){/* 見張り台（建てている途中の物も）と、あいだが5マスより少ないか。2×2どうし、たて・よこ・ななめで数える */for(let k=0;k<S.obj.length;k++){if(S.obj[k]!=='watch'&&!(S.obj[k]==='site'&&S.dyn[k]&&S.dyn[k].build==='watch'))continue;const ax=k%W,ay=(k/W)|0,gx=Math.max(x-(ax+2),ax-(x+2)),gy=Math.max(y-(ay+2),ay-(y+2));if(Math.max(gx,gy)<WATCHGAP)return true}return false}
 function starterGap(j){if(WD!==0||!S||S.free||S.obj[j]||qDone('wall'))return false;const y=(j/W)|0,x=j%W;return y===CY-2&&x>=CX-5&&x<=CX-3}/* 草原のはじめの家の、壁のすきま（壁のクエストで直す所） */
 function canPlace1(id,x,y,quiet){
   if(x<0||y<0||x>=W||y>=H)return false;
