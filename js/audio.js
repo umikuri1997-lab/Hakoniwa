@@ -76,7 +76,8 @@ function tone(m,t,dur,type,vol,out,f2){
 }
 function noise(t,dur,vol,out,hp){const s=AC.createBufferSource(),g=AC.createGain(),fl=AC.createBiquadFilter();s.buffer=noiseBuf;fl.type='highpass';fl.frequency.value=hp||6000;
   g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(.0001,t+dur);s.connect(fl);fl.connect(g);g.connect(out);s.start(t);s.stop(t+dur+.02)}
-const stageSong=()=>S&&S.enemies&&S.enemies.some(e=>e.type==='boss2'&&e.spawned&&!e.dead)?'battle':S&&S.enemies&&S.enemies.some(e=>e.type==='hino'&&e.spawned&&!e.dead)?'hino'/* ヒノオオカゲは専用の曲 */:S&&S.enemies&&S.enemies.some(e=>(e.type==='boss'||e.type==='yama')&&e.spawned&&!e.dead)?(typeof WD!=='undefined'&&WD===1?'nightVB':'nightB')/* オオカゲがいるあいだは、夜の曲のアレンジ */:(isDark()?'night':'day')+(typeof WD!=='undefined'&&WD===1?'V':'');/* ヨルノオオカゲがいるあいだは、たたかいの曲 *//* ステージごとに曲をかえる（火山は dayV・nightV） */
+function bossNear(e){if(!e.spawned||e.dead)return false;if(!e.nearV&&typeof VILL!=='undefined'&&VILL&&VILL[(e.y|0)*W+(e.x|0)])e.nearV=1;return !!e.nearV}/* オオカゲの曲は、村の中（置いた物のまわり3マス）に一度入ってから。出たり入ったりで曲をかえない */
+const stageSong=()=>S&&S.enemies&&S.enemies.some(e=>e.type==='boss2'&&e.spawned&&!e.dead)?'battle':S&&S.enemies&&S.enemies.some(e=>e.type==='hino'&&bossNear(e))?'hino'/* ヒノオオカゲは専用の曲 */:S&&S.enemies&&S.enemies.some(e=>(e.type==='boss'||e.type==='yama')&&bossNear(e))?(typeof WD!=='undefined'&&WD===1?'nightVB':'nightB')/* オオカゲがいるあいだは、夜の曲のアレンジ */:(isDark()?'night':'day')+(typeof WD!=='undefined'&&WD===1?'V':'');/* ヨルノオオカゲがいるあいだは、たたかいの曲 *//* ステージごとに曲をかえる（火山は dayV・nightV） */
 function stageMusic(){
   curSong=wantSong=stageSong();step=0;bgmSw=0;
   if(!AC)return;

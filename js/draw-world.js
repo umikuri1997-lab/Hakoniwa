@@ -385,7 +385,7 @@ function render(now){RFN++;
     add(y+.001,-1,null,()=>{for(const R of vs)cliffRow(y,R,true)},-1)}}/* うしろが低い所だけ、上の面の上はしをもう1回描いて、うしろの物の足もとをかくす *//* 段差：行ごとに、その行の物より先（ひとつ上の行の物より後） */
   D.sort((a,b)=>a.k-b.k||a.t-b.t);
   for(const it of D)it.draw();
-  drawSacredCare(now);drawStoryStage(now);
+  drawSacredCare(now);drawStoryStage(now);drawKite(now);
   if(performance.now()<TOWERGLOW){const tw=S.obj.indexOf('tower');if(tw>=0){/* 守護の台座が光る：やわらかい光が、ゆっくりゆれる */const cx=storyTreeX(tw)*TS,cy=storyTreeY(tw)*TS-hiAt(tw)*LIFT-8,rr=78+Math.sin(now/300)*8,g=ctx.createRadialGradient(cx,cy,4,cx,cy,rr);g.addColorStop(0,'rgba(255,250,200,.6)');g.addColorStop(.45,'rgba(255,235,150,.3)');g.addColorStop(1,'rgba(255,220,120,0)');ctx.save();ctx.globalCompositeOperation='lighter';ctx.fillStyle=g;ctx.fillRect(cx-rr,cy-rr,rr*2,rr*2);ctx.restore()}}
   if(pending&&pending.kind==='one'&&TERRA.has(pending.id)){/* けずる・もる：えらんだマスの枠は、段差の絵（上の面）より手前に。かくれて見えないのをふせぐ */const px=pending.x*TS,py=pending.y*TS-hiAt(pending.y*W+pending.x)*LIFT;ctx.fillStyle=pending.ok?'rgba(255,220,90,.35)':'rgba(255,90,90,.4)';ctx.fillRect(px,py,TS,TS);ctx.strokeStyle=pending.ok?'rgba(255,240,140,1)':'rgba(255,110,110,1)';ctx.lineWidth=3;ctx.setLineDash([6,4]);ctx.strokeRect(px+1.5,py+1.5,TS-3,TS-3);ctx.setLineDash([])}
   // 置く前のプレビューは、家の壁や屋根より手前に描く
