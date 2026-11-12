@@ -18,7 +18,7 @@ function omoiN(){return (S&&S.flags.omoiP||[]).length}
 function omoiAllBonded(){const R=S.res.filter(r=>!r.hidden);for(let i=0;i<R.length;i++)for(let k=i+1;k<R.length;k++)if(bondOf(R[i],R[k])<BOND_TALK)return false;return true}
 function omoiNote(a,b,deep){if(!omoiOn())return;const L=S.flags.omoiP||(S.flags.omoiP=[]),Q=S.flags.omoiW||(S.flags.omoiW=[]),k=bondKey(a,b);if(L.length+Q.length>=3||L.includes(k)||Q.includes(k)||deep&&!omoiAllBonded())return;
   Q.push(k);sfx('bush');toast(a.name+'と'+b.name+'が、御神木に会いにいきたそう','good');renderQuest();dirty=true}/* 数えるのは、2人が御神木へ行く場面を見おえてから（omoiScene） */
-/* なかよしの想いの場面：御神木（青いふきだし）をタップすると、待っている2人が根もとへ歩いて行き、それぞれの属性のしかたで木の世話をする。木が光って、2人がひとことずつ話す。
+/* なかよしの想いの場面：御神木（青いふきだし）をタップすると、待っている2人が根もとへ歩いて行き、それぞれの属性のしかたで木の世話をする。2人の光がひとつになって、枝のあかりになり（omoiLight・drawOmoiLamps）、2人がひとことずつ話す。
    会話を最後まで聞いたら1組に数える（S.flags.omoiP）。夜・コワイノが近い・2人のどちらかが村にいないときは、はじめない。とちゅうでやめたら、待っている組のまま */
 const OMOI_CARE={wood:['storyOffer','touch'],water:['storyPour','water'],fire:['storyStone','stone'],earth:['storySoil','soil'],wind:['storyWind','wind']};
 const OMOI_VOICE={[POKO]:'#joy|{P}と、いっしょに来たかったんだ。',[MINA]:'ふたりで来るとねぇ、なんだか、あったかいねぇ。'};
@@ -36,22 +36,25 @@ function omoiScene(j){
   const owner=S,session=VILLAGE_SESSION,run={state:S,session};OMOI_RUN=run;const span=sacredSpan(),by=(j/W|0)+span-1+.5,tx=storyTreeX(j);
   const alive=()=>S===owner&&VILLAGE_SESSION===session&&pr.every(r=>S.res.includes(r)&&!r.hidden)&&S.obj[j]==='tower';
   const hold=r=>{endAct(r);r.path=[];r.act={type:'idle',stage:'do',t:0,dur:999,omoiHold:1};r.face=r.x<tx?1:-1};
-  const stop=(msg)=>{if(OMOI_RUN===run)OMOI_RUN=null;for(const r of pr){if(r.act&&(r.act.omoiHold||r.act.type==='nmeet'))endAct(r);SACRED_POSES.delete(r)}if(sacredDirection())sacredEndDirection(true);if(msg)toast(msg)};
+  const stop=(msg)=>{if(OMOI_RUN===run){OMOI_RUN=null;SCENEHOLD=0}for(const r of pr){if(r.act&&(r.act.omoiHold||r.act.type==='nmeet'))endAct(r);SACRED_POSES.delete(r)}if(sacredDirection())sacredEndDirection(true);if(msg)toast(msg)};
   let n=0,begun=false;const arrive=()=>{if(++n<2||begun)return;begun=true;care()};
-  const care=()=>{if(!alive())return stop();if(isNight())return stop('御神木へ行くのは、朝になってから');for(const r of pr)hold(r);storyShot([[storyTreeX(j)*TS-40,sacredTopY(j)+20],[storyTreeX(j)*TS+40,storyTreeY(j)*TS-hiAt(j)*LIFT],...pr.flatMap(r=>[[r.x*TS-24,r.y*TS-55-uLift(r)],[r.x*TS+24,r.y*TS+10-uLift(r)]])],{limit:2.4,seconds:1.2});
+  const care=()=>{if(!alive())return stop();if(isNight())return stop('御神木へ行くのは、朝になってから');for(const r of pr)hold(r);const view=[[storyTreeX(j)*TS-40,sacredTopY(j)+20],[storyTreeX(j)*TS+40,storyTreeY(j)*TS-hiAt(j)*LIFT],...pr.flatMap(r=>[[r.x*TS-24,r.y*TS-55-uLift(r)],[r.x*TS+24,r.y*TS+10-uLift(r)]])];storyShot(view,{limit:2.4,seconds:1.2,full:true});
     const one=(r,at,then)=>villageTimeout(()=>{if(!alive())return stop();const c=OMOI_CARE[r.elem]||OMOI_CARE.wood;sacredScenePose(r,c[0],2200,{side:true,target:j,face:r.face});sacredStartEffect(c[1],2200,{actor:r});sfx(r.elem==='water'?'wave':'bush');
       if(r.elem==='wood')for(let i=0;i<10;i++)villageTimeout(()=>fx.push({k:'p',x:r.x*TS+r.face*8,y:r.y*TS-26-uLift(r),vx:r.face*(30+Math.random()*30),vy:-20-Math.random()*30,life:1,col:i%2?'#f6c6d6':'#fff2f6',r:2}),400+i*80);/* 花びら */
       if(then)villageTimeout(then,2300)},at);
-    one(A,500);one(B,1300,()=>{if(!alive())return stop();towerGlow(2600);sacredStartEffect('sway',2600);sfx('bush');for(let i=0;i<3;i++)villageTimeout(()=>leafFX({x:tx+(i-1)*.8,y:storyTreeY(j)-1.2}),i*300);/* 2人の想いに、御神木がこたえて光る */
-      villageTimeout(()=>{if(!alive())return stop();for(const r of pr){SACRED_POSES.delete(r);sacredScenePose(r,'storyListen',600000,{side:true,target:j,face:r.face})}
-        dialog([omoiLine(A,B),omoiLine(B,A)],()=>{if(S!==owner||VILLAGE_SESSION!==session)return;stop();const L=S.flags.omoiP||(S.flags.omoiP=[]);S.flags.omoiW=(S.flags.omoiW||[]).filter(k=>k!==pk);if(!omoiOn()||L.includes(pk))return;L.push(pk);toast('御神木が、ぽうっと光った（'+L.length+'/3）','good');logEv(A.name+'と'+B.name+'の想いが、御神木にとどいた');renderQuest();checkQuest();dirty=true})},1800)})};
+    SCENEHOLD=performance.now()+9500;/* 2人の光が、あかりになるまで、村の時間を止める */
+    one(A,500);one(B,1300,()=>{if(!alive())return stop();const idx=Math.min(2,omoiN());/* 2人の想いが、ひとつの光になって、枝のあかりになる */
+      omoiLight(j,A,B,idx,cols=>{if(OMOI_RUN===run)run.lamp=cols});
+      villageTimeout(()=>{if(!alive())return stop();for(const r of pr)SACRED_POSES.delete(r);A.face=B.x>=A.x?1:-1;B.face=-A.face;const now=performance.now();for(const r of pr){JUMP.set(r,now);JOYU.set(r,now+1300)}sfx('good')},3700);/* 向かい合って、はねる */
+      villageTimeout(()=>{if(!alive())return stop();SCENEHOLD=0;storyShot(view,{limit:2.4,seconds:.9});for(const r of pr){r.face=r.x<tx?1:-1;sacredScenePose(r,'storyListen',600000,{side:true,target:j,face:r.face})}
+        dialog([omoiLine(A,B),omoiLine(B,A)],()=>{if(S!==owner||VILLAGE_SESSION!==session)return;stop();const L=S.flags.omoiP||(S.flags.omoiP=[]);S.flags.omoiW=(S.flags.omoiW||[]).filter(k=>k!==pk);if(!omoiOn()||L.includes(pk))return;L.push(pk);toast('ふたりの想いが、御神木のあかりになった（'+L.length+'/3）','good');logEv(A.name+'と'+B.name+'の想いが、御神木にとどいた');renderQuest();checkQuest();dirty=true})},5200)})};
   const near=r=>Math.hypot(r.x-tx,r.y-by-1)<3;/* 根もとのそば */
   for(const [r,dx] of [[A,-1],[B,1]])if(!near(r)&&!sacredSceneWalk(r,tx+dx,by+1,{},arrive)){stop(r.name+'が、御神木まで行けません');return true}else if(near(r))arrive();/* 行けないときは、はじめない（待っている組のまま） */
   villageTimeout(()=>{if(begun||OMOI_RUN!==run)return;if(pr.every(near)){n=2;arrive()}else stop('御神木に、ふたりがそろいませんでした')},Math.max(20000,2000+Math.max(...pr.map(r=>(r.path||[]).length))*900));/* 歩くのをじゃまされたら、遠くのまま始めずに、やめる（待つ時間は道のりに合わせる） */
   return true}
 function shardOfferReady(){/* 御神木にかけらをささげられる（sacredTreeTap と同じ条件） */if(!S||WD!==0||S.free||S.cleared||isNight())return false;if((S.shards||0)-(S.setSh||0)<=0)return false;if((S.setSh||0)>=2)return !!S.flags.finalWon&&!!(S.sev&&S.sev.e09)&&clearReady();return true}
 function drawOmoiBub(now){/* なかよしの2人が待っている・かけらをささげられるときは、御神木に青いふきだし */if(!S||WD!==0||!(omoiWait()||shardOfferReady())||OMOI_RUN&&OMOI_RUN.state===S&&OMOI_RUN.session===VILLAGE_SESSION||SHARD_OFFER&&SHARD_OFFER.state===S||!$('#dialog').hidden)return;const j=S.sacredRoot;if(j==null||S.obj[j]!=='tower')return;talkBub(storyTreeX(j)*TS,sacredTopY(j)+34,now)}
-function sacredTopY(j){/* 御神木の絵のてっぺん（世界の座標）。育ちぐあいで絵がかわる（drawStoryTreeFrame と同じえらび方） */const st=sacredStage(),key=['story:stump','story:bud','story:leaf',st===3&&(S.setSh||0)>=1||st===3.5?'story:tree-young':'story:sapling','story:tree'][Math.floor(st)],a=window.CHIPS&&CHIPS[key];return (j/W|0)*TS+(sacredSpan()-4)*TS-hiAt(j)*LIFT+(a?a.ay/2:-60)}
+function sacredTopY(j,st){/* 御神木の絵のてっぺん（世界の座標）。育ちぐあい（st。なければ、いま）で絵がかわる */const a=window.CHIPS&&CHIPS[SACRED_ART[Math.floor(st==null?sacredStage():st)]];return (j/W|0)*TS+(sacredSpan()-4)*TS-hiAt(j)*LIFT+(a?a.ay/2:-60)}
 /* いちばんなかよしの子（村にいる子だけ）。{q,v} */
 function bondBest(r){let q=null,v=0;if(!S||!S.bond)return null;for(const o of S.res){if(o===r)continue;const b=S.bond[bondKey(r,o)]||0;if(b>v){v=b;q=o}}return q?{q,v}:null}
 function bondPair(pk){const [a,b]=pk.split('_').map(Number),A=S.res.find(r=>r.id===a),B=S.res.find(r=>r.id===b);return A&&B?[A,B]:null}

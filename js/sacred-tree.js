@@ -72,6 +72,7 @@ function growStoryTree(){
   S.obj[j]='tower';for(const k of sacredCells(j).slice(1)){S.obj[k]='part';S.ref[k]=j;}S.hp[j]=BL.tower.hp;S.flags.shrine=true;
   S.flags.treeBlessed=true;noteQuestPlacement('tower',j);recount();dirty=true;burst(j,'plant','none');memo('🌳','みんなで世話をした木が、御神木になった');return true;
 }
+const SACRED_ART=['story:stump','story:bud','story:leaf','story:sapling','story:tree'];/* 育ちぐあいごとの絵 */
 function sacredPose(r){const q=SACRED_POSES.get(r);return q&&q.state===S&&q.session===VILLAGE_SESSION&&performance.now()<q.until?q:null;}
 function sacredSetPose(r,pose){SACRED_POSES.set(r,{...pose,state:S,session:VILLAGE_SESSION,until:performance.now()+(pose.duration||8000)});}
 function sacredCue(c){sacredBeat(c);}
@@ -80,39 +81,35 @@ function sacredSceneWalk(r,x,y,pose,arrived){
   if(stand<0)return false;
   endAct(r);startAct(r,G,'nmeet',stand,{});let last=performance.now();const tick=now=>{if(S!==owner||VILLAGE_SESSION!==session||sacredDirection()!==direction||!(S.res.includes(r)||r===GUEST)||r.act?.type!=='nmeet')return;const dt=Math.min(.1,(now-last)/1000);last=now;if(r.act.stage==='walk'){moveR(r,dt*4);requestAnimationFrame(tick);}else{if(pose.anim)sacredSetPose(r,pose);if(arrived)arrived();}};requestAnimationFrame(tick);return true;
 }
-function sacredGrowWatch(j){/* 物語の場面の外で木が育ったとき（かけら・みどりのマス）：その場で育つ演出をして、みんながよろこぶ */
-  if(!S||WD!==0||S.free||IS_STORY_REPLAY)return;const st=sacredStage()+(sacredStage()===3&&(S.setSh||0)>=1?.5:0);if(S.treeSeen==null||st<S.treeSeen){S.treeSeen=st;return;}{const sh=SACRED_SHOWN.get(S);if(sh&&sh.session===VILLAGE_SESSION&&sh.stage>=st){S.treeSeen=st;return;}}/* お話の場面で育つところを見せたときは、場面の外の育つ会話を出さない */
-  if(st===S.treeSeen||sacredDirection()||!$('#dialog').hidden||isNight())return;
-  const from=S.treeSeen;S.treeSeen=st;const ms=3200;sacredStartEffect('growth',ms,{from,to:st});const d=sacredDirection();if(d)d.watch=true;villageTimeout(()=>{const e=sacredDirection();if(e&&e.watch)sacredEndDirection(false);},ms+100);sacredGrowSparks(j,ms,Math.ceil(st));
-  const cx=storyTreeX(j),cy=storyTreeY(j),now=performance.now();
-  for(const r of S.res){if(r.hidden||Math.hypot(r.x-cx,r.y-cy)>10)continue;r.face=r.x<cx?1:-1;r.bubble='✨';JOYU.set(r,now+2600);}
-  panTo(cx*TS,(cy-1)*TS);/* 育つところを見せる */
-  const lines=sacredGrowLines(st);if(!lines.length)return;let tries=0;const say=()=>{if($('#dialog').hidden&&!sacredDirection())dialog(lines,()=>{},null,'');else if(tries++<40)villageTimeout(say,1500);};villageTimeout(say,ms+400);/* ほかの会話中なら、おわってから */
+function sacredGrowWatch(j){/* 物語の場面の外で木が育ったとき（みどりのマス）：村の時間を止め、カメラがよって、育つところを見せ、みんながよろこぶ。かけらでは木は育たない */
+  if(!S||WD!==0||S.free||IS_STORY_REPLAY)return;const st=sacredStage();if(S.treeSeen==null||st<S.treeSeen){S.treeSeen=st;return;}{const sh=SACRED_SHOWN.get(S);if(sh&&sh.session===VILLAGE_SESSION&&sh.stage>=st){S.treeSeen=st;return;}}/* お話の場面で育つところを見せたときは、場面の外の育つ会話を出さない */
+  if(st===S.treeSeen||sacredDirection()||!$('#dialog').hidden||isNight()||sheet!=null||performance.now()<SCENEHOLD||SHARD_OFFER&&SHARD_OFFER.state===S||SPOT_POPS.some(e=>e.state===S))return;
+  const from=Math.floor(S.treeSeen);S.treeSeen=st;const ms=5200,g=sacredGeo(j,st),cx=storyTreeX(j),cy=storyTreeY(j);SCENEHOLD=performance.now()+ms+200;
+  sacredStartEffect('growth',ms,{from,to:st});storyShot([[g.cx-70,g.top-8],[g.cx+70,g.base+16]],{limit:2.2,seconds:1.6,full:true});const d=sacredDirection();if(d)d.watch=true;
+  villageTimeout(()=>{SCENEHOLD=0;const e=sacredDirection();if(e&&e.watch)sacredEndDirection(true);},ms+100);sacredGrowSparks(j,ms,Math.ceil(st));
+  for(const r of S.res){if(r.hidden||Math.hypot(r.x-cx,r.y-cy)>10)continue;r.face=r.x<cx?1:-1;}/* そばのせいれいは、木のほうを向く（のびきったら、はねてよろこぶ） */
+  const lines=sacredGrowLines(st);if(!lines.length)return;let tries=0;const say=()=>{if($('#dialog').hidden&&!sacredDirection())dialog(lines,()=>{},null,'');else if(tries++<40)villageTimeout(say,1500);};villageTimeout(say,ms+1300);/* ほかの会話中なら、おわってから */
 }
-function sacredGrowLines(st){/* 木が育ったときの、みんなの会話（いる子の行だけ） */
-  const N=keyName('earth'),H=keyName('fire'),M=keyName('water'),K=keyName('wind');
-  const L=st>=4?[[POKO,'#surprise|わあ……！　木が、こんなに大きく……！'],[N,'見てぇ。根っこが、土の中で、ずうっと先までのびてるよぉ。'],[H,'#joy|みんなで世話した木だ。……葉っぱまで、あったかい。'],[M,'しずくが、葉の先で光っています。……きれいですね。'],[K,'#think|……葉ずれの音が、ずっと大きくなった。だれかが、こたえてるみたいだ。'],[GOD,'#joy|……ほんに、りっぱになったのう。おヌシらの手が、この木をここまで育てたんじゃ。'],[POKO,'#think|……ヌシ様に、もうすこしで、会えるのかな。'],[GOD,'#nod|うむ。のこりのかけらがそろえば、きっとのう。']]
-    :[[POKO,'#joy|あっ……！　木が、ぐんって、のびた！'],[N,'かけらの光が、根っこまで、しみこんでいったねぇ。'],[GOD,'#nod|うむ。ヌシ様の力が、この木にやどりはじめたんじゃ。'],[POKO,'#joy|……もっと、大きくなってね。']];
-  let g=0;return L.filter(l=>l[0]&&(l[0]===GOD||spkOK(l[0]))).map(l=>{if(l[0]!==GOD||g++)return l;const m=/^(#[a-z]+\|)?(.*)$/.exec(l[1]);return [GOD,(m[1]||'')+GVOICE()+m[2]]});/* カミサマが遠くにいるときは、はじめの行だけ「聞こえるかの？」 */
+function sacredGrowLines(st){/* 木が大きく育ったときの、みんなの会話（いる子の行だけ） */
+  const N=keyName('earth'),H=keyName('fire'),M=keyName('water'),K=keyName('wind');if(st<4)return [];
+  return sacredCastLines([[POKO,'#surprise|わあ……！　木が、こんなに大きく……！'],[N,'見てぇ。根っこが、土の中で、ずうっと先までのびてるよぉ。'],[H,'#joy|みんなで世話した木だ。……葉っぱまで、あったかい。'],[M,'しずくが、葉の先で光っています。……きれいですね。'],[K,'#think|……葉ずれの音が、ずっと大きくなった。だれかが、こたえてるみたいだ。'],[GOD,'#joy|……ほんに、りっぱになったのう。おヌシらの手が、この木をここまで育てたんじゃ。'],[POKO,'#think|……ヌシ様に、もうすこしで、会えるのかな。'],[GOD,'#nod|うむ。のこりのかけらがそろえば、きっとのう。']]);
 }
 function drawStoryTree(c,x,y,j,now,full=false){
   if(!full)sacredGrowWatch(j);
   x+=(sacredSpan()-4)*TS/2;y+=(sacredSpan()-4)*TS;
   const motion=sacredTreeMotion(now),g=motion.growth,p=motion.progress;
   c.save();c.translate(x+64,y+122);c.rotate(motion.sway);c.translate(-x-64,-y-122);
-  if(g&&p<1){/* 育つ：根もとに光がたまり、前の姿がうすれ、新しい姿が根もとから、のびあがる（少しのびすぎて、もどる） */
-    const t=Math.min(1,(now-g.at)/g.ms),bx=x+64,by=y+122,glow=Math.sin(Math.PI*Math.min(1,t*1.25));
-    if(glow>0){c.save();const rg=c.createRadialGradient(bx,by-6,2,bx,by-6,46+30*t);rg.addColorStop(0,'rgba(255,248,200,'+(.55*glow)+')');rg.addColorStop(1,'rgba(255,248,200,0)');c.fillStyle=rg;c.fillRect(bx-80,by-122,160,120);c.restore();}
-    const fade=Math.max(0,1-t/.45);if(fade>0){c.save();c.globalAlpha=fade;drawStoryTreeFrame(c,x,y,j,now,g.from,1);c.restore();}
-    const u=Math.max(0,(t-.2)/.8),back=u<1?1+2.2*Math.pow(u-1,3)+1.2*Math.pow(u-1,2):1,sy=.12+.88*back,sx=.55+.45*Math.min(1,back);
-    if(u>0){c.save();c.globalAlpha=Math.min(1,u*2.5);c.translate(bx,by);c.scale(sx,sy);c.translate(-bx,-by);drawStoryTreeFrame(c,x,y,j,now,g.to,Math.min(1,u*1.4));c.restore();}}
+  if(g&&p<1){/* 育つ：ためる（前の姿が、だんだん明るくかがやく）→ 前の姿がうすれ、新しい姿が根もとから、白くかがやきながら、のびあがる（少しのびすぎて、もどる）。光・輪・葉は sacredGrowSparks */
+    const t=Math.min(1,(now-g.at)/g.ms),bx=x+64,by=y+122,ch=Math.min(1,t/.35),u=Math.max(0,Math.min(1,(t-.35)/.5)),back=u<1?1+2.2*Math.pow(u-1,3)+1.2*Math.pow(u-1,2):1,sy=.12+.88*back,sx=.55+.45*Math.min(1,back),fade=Math.max(0,1-u/.5);
+    if(fade>0){c.save();c.globalAlpha=fade;drawStoryTreeFrame(c,x,y,j,now,g.from,1);c.globalCompositeOperation='lighter';c.globalAlpha=fade*.7*ch*ch;drawStoryTreeFrame(c,x,y,j,now,g.from,1);c.restore();}
+    if(u>0){c.save();c.globalAlpha=Math.min(1,u*2.5);c.translate(bx,by);c.scale(sx,sy);c.translate(-bx,-by);drawStoryTreeFrame(c,x,y,j,now,g.to,Math.min(1,u*1.4));const w=Math.max(0,1-u*1.2)*.8;if(w>0){c.globalCompositeOperation='lighter';c.globalAlpha=w;drawStoryTreeFrame(c,x,y,j,now,g.to,1);}c.restore();}}
   else drawStoryTreeFrame(c,x,y,j,now,full?4:null,1);
   c.restore();
   if(sacredCompleted('fireRoot')||(fieldStoryState('fireRoot')?.step||0)>=1){const moving=sacredEffect('stone');for(const [dx,dy]of[[-20,1],[19,4],[10,14]]){if(moving&&dx===19&&(now-moving.at)/moving.ms<.9)continue;sacredStone(c,x+64+dx,y+112+dy,1);}}
 }
 function drawStoryTreeFrame(c,x,y,j,now,forced=null,unfold=1){
   let stage=forced??sacredStage();const preview=S&&SACRED_PREVIEW.get(S);if(forced==null&&preview?.session===VILLAGE_SESSION&&performance.now()<preview.until)stage=Math.max(stage,preview.stage);
-  const young=stage===3.5||stage===3&&forced==null&&(S.setSh||0)>=1;stage=Math.floor(stage);const key=['story:stump','story:bud','story:leaf',young?'story:tree-young':'story:sapling','story:tree'][stage],art=window.CHIPS?.[key];
+  stage=Math.floor(stage);const key=SACRED_ART[stage],art=window.CHIPS?.[key];/* かけらでは姿をかえない（前の「若い木」の絵は使わない） */
   if(art&&drawChip(c,art,key,x,y,now,j))return;
   const cx=x+64,cy=y+112;c.save();c.imageSmoothingEnabled=false;
   c.fillStyle='rgba(66,53,28,.17)';c.beginPath();c.ellipse(cx,cy+9,23,7,0,0,7);c.fill();
