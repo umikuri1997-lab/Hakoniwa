@@ -1,5 +1,5 @@
-/* かけらを御神木にささげる場面：場面と会話を見おえてから、ささげたことにする（とちゅうでは数えない）。かけらでは木の姿をかえない。場面のあとは時間が動く。
-   みどりがひろがって木が大きくなるときは、村の時間を止めて見せ、おわったら動く。3つめは会話なしで数える。夜・連続タップは1回だけ */
+/* かけらを御神木にささげる場面：場面と会話を見おえてから、ささげたことにする（とちゅうでは数えない）。1つめ・2つめでは木の姿をかえない。場面のあとは時間が動く。
+   みどりのマスだけでは育たない。3つめは、場面の中で木が大きく育ち、会話なしで数える。夜・連続タップは1回だけ */
 const assert=require('node:assert/strict');
 (async()=>{const {browser,page,run,errors}=await require('../sim/boot.cjs')();
   await run(`updTut=()=>{};checkLevel=()=>{};showItemGift=()=>{};showSpotPop=()=>{SPOT_POPS.length=0};`);
@@ -20,12 +20,11 @@ const assert=require('node:assert/strict');
   assert.equal(await run('sacredStage()'),3,'a shard does not change the tree');assert.equal(await run(`SACRED_ART[Math.floor(sacredStage())]`),'story:sapling');
   /* 2つめ */
   await run('S.shards=2;SPOT_POPS.length=0');await tap();await page.waitForFunction(()=>!document.querySelector('#dialog').hidden,{},{timeout:30000});await talkOut();assert.equal(await run('S.setSh'),2);
-  /* みどりがひろがって大きくなる：時間を止めて見せ、おわったら動く */
-  await run('SPOT_POPS.length=0;recount=()=>{};GRASSN=2000');await page.waitForFunction(()=>sacredEval('!!sacredEffect("growth")&&performance.now()<SCENEHOLD'),{},{timeout:10000});
-  assert.equal(await run('S.treeSeen'),4);await page.waitForFunction(()=>sacredEval('!sacredEffect("growth")&&performance.now()>=SCENEHOLD&&!sacredDirection()'),{},{timeout:12000});
-  await page.waitForFunction(()=>!document.querySelector('#dialog').hidden,{},{timeout:8000});await talkOut();
-  /* 3つめ：会話なしで数える */
-  await run('S.shards=3;S.flags.finalWon=true;S.sev.e09=1;SPOT_POPS.length=0;scheduleGrassReunion=()=>{}');await tap();await page.waitForFunction(()=>sacredEval('S.setSh===3'),{},{timeout:25000});
-  assert(await run('!SHARD_OFFER&&performance.now()>=SCENEHOLD'));
+  /* みどりがひろがっても、2つめまでは育たない */
+  await run('SPOT_POPS.length=0;recount=()=>{};GRASSN=3000');await page.waitForTimeout(600);assert(await run('sacredStage()===3&&!sacredEffect("growth")'),'green tiles alone do not grow the tree');
+  /* 3つめ：場面の中で木が大きく育ち、会話なしで数える。育った木はそのまま */
+  await run('S.shards=3;S.flags.finalWon=true;S.sev.e09=1;SPOT_POPS.length=0;scheduleGrassReunion=()=>{}');await tap();await page.waitForFunction(()=>sacredEval('!!sacredEffect("growth")'),{},{timeout:25000});assert.equal(await run('S.setSh'),2,'not counted while the tree is still growing');
+  await page.waitForFunction(()=>sacredEval('S.setSh===3'),{},{timeout:25000});
+  assert(await run('!SHARD_OFFER&&performance.now()>=SCENEHOLD&&sacredStage()===4&&S.treeSeen===4'));await page.waitForTimeout(500);assert(await run('!sacredEffect("growth")&&document.querySelector("#dialog").hidden'),'no second growth scene');
   assert.deepEqual(errors,[]);console.log('shard scene ok');await browser.close();
 })().catch(e=>{console.error(e);process.exit(1)});
