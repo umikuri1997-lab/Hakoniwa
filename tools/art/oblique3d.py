@@ -230,17 +230,27 @@ class Tex:
             self._c[S_] = np.where(q < 0, self.dark[1], np.where(q > 0, self.light[1], 1.0))
         return self._c[S_]
 
-def render_px(sc, proj, ext, depth, k=0.72, outer=True, merge=12):
+def render_px(sc, proj, ext, depth, k=0.72, outer=True, merge=12, split=0):
     """ドット絵にするための写し方：1マス S ドットで、ちぢめずに（1ドットに1点）写し、部品のさかいに1ドットの輪郭線を引く。
     輪郭線は、となりあう2つのドットの部品がちがうとき、うしろがわ（遠いほう）のドットに引く（手前の部品の形はけずらない）。
     交差・つきあてる所も、手前の部品の形のまま、うしろの部品に線が入る。色は、そのドットの色に k をかけた色。
     outer：まわりのふち（透明ととなりあう所）は、透明がわに1ドット（となりの色×k）。上下左右だけを見る（ななめは見ない）。
     sc.outline(0) のあとに足した部品は、線を引かない（中のくらい所など）。sc.group(名前) で同じグループにした部品どうしにも引かない。
-    merge：さいごに、色の差がこれより小さい色を、多いほうの色にまとめる（にた色をのこさない。0でまとめない）。"""
+    merge：さいごに、色の差がこれより小さい色を、多いほうの色にまとめる（にた色をのこさない。0でまとめない）。
+    split：三角形を、辺がこの長さ（マス）より短くなるまで分けてから写す（persp の遠近をかけるときに使う。辺が画面で少し曲がるので、大きいままだと奥行きの比べ方がずれる）。"""
     x0, x1, y0, y1 = ext; Wp = int(round((x1-x0)*S)); Hp = int(round((y1-y0)*S))
     col = np.zeros((Hp, Wp, 3)); zb = np.full((Hp, Wp), -1e9); idb = np.full((Hp, Wp), -1)
     wp = np.zeros((Hp, Wp, 3)); wn = np.zeros((Hp, Wp, 3))   # ドットごとの、せかいの場所と面の向き（テクスチャ用）
-    for a, b, c, cc, pid in sc.t:
+    TT = sc.t
+    if split > 0:
+        TT = []; st = list(sc.t)
+        while st:
+            a, b, c, cc, pid = st.pop(); E_ = [(np.linalg.norm(b-a), 0), (np.linalg.norm(c-b), 1), (np.linalg.norm(a-c), 2)]; L_, e = max(E_)
+            if L_ <= split: TT.append((a, b, c, cc, pid)); continue
+            if e == 0: m = (a+b)/2; st += [(a, m, c, cc, pid), (m, b, c, cc, pid)]
+            elif e == 1: m = (b+c)/2; st += [(a, b, m, cc, pid), (a, m, c, cc, pid)]
+            else: m = (c+a)/2; st += [(a, b, m, cc, pid), (m, b, c, cc, pid)]
+    for a, b, c, cc, pid in TT:
         n = np.cross(b-a, c-a); ln = np.linalg.norm(n)
         if ln < 1e-12: continue
         n /= ln
@@ -307,3 +317,18 @@ def render_px(sc, proj, ext, depth, k=0.72, outer=True, merge=12):
             d &= cnt <= cnt[i]; to[d] = i
         sub = img[m]; sub[:, :3] = u[to[inv.ravel()]]; img[m] = sub
     return Image.fromarray(img, 'RGBA')
+
+def persp(elev=51.34, fov=40.0, frame=None, center=(0.5, 0.65, 0.3)):
+    """左右は平行のまま、奥行き（上下）だけに遠近をかける写し方。render・render_px の proj と depth（見る向き）をかえす。
+    elev：見おろしの角度（度。51.34 でいまのゲームの見え方と同じ形 = 画面 (x, y−0.8z)）。
+    fov：上下の画角（度）。frame：その画角に入れる上下の範囲（マス。カメラとの距離がきまる）。None なら遠近なし（平行）。
+    center：カメラが向く所（せかいのマス）。大きさは、いまのゲームと同じ（51.34度・遠近なしで game と同じ数になる）"""
+    t = math.radians(elev); V = np.array([0, math.cos(t), math.sin(t)]); U_ = np.array([0, -math.sin(t), math.cos(t)])
+    k = 1/math.sin(math.radians(51.34)); c0 = np.array(center, float)
+    D = None if not frame else frame/(2*k*math.tan(math.radians(fov)/2))
+    oy = c0[1]-0.8*c0[2]   # center が、game と同じ画面の所に写るように
+    def proj(p):
+        p = np.asarray(p, float); h = -float(np.dot(p-c0, U_))
+        s = 1.0 if D is None else D/(D-float(np.dot(p-c0, V)))
+        return (p[0], oy+h*s*k)
+    return proj, V
