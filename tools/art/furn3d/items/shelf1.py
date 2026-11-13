@@ -18,6 +18,10 @@ def PARTS():
         while True:
             w=rd.uniform(0.055,0.085);h=rd.uniform(0.62,0.82)*(hh-0.04)
             if x+w>X1-SD-0.02:break
-            b=P('本（%d段・%.2f）'%(i+1,x),'box',(x,Y0+BK+0.02,z0,x+w,Y1-0.06,z0+h),rd.choice(BOOKS),on=('地板',) if i==0 else ('たなの板%d'%i,),bevel=0)
-            L.append(notex(b));x+=w+rd.choice((0,0,0.005))
+            col=rd.choice(BOOKS);on=('地板',) if i==0 else ('たなの板%d'%i,);g='本%d-%.2f'%(i,x);ya,yb=Y0+BK+0.02,Y1-0.06;CV=0.008;SP=0.02
+            nm='本（%d段・%.2f）'%(i+1,x)   # 本：背表紙（手前の角を丸める）・左右の表紙・中の紙（表紙より少し低く、上から白が見える）
+            L.append(notex(P(nm+'背表紙','prism',(rrect(x,yb-SP,x+w,yb,w*0.35,True),z0,z0+h,'z'),col,on=on,grp=g)))
+            for sx in(x,x+w-CV):L.append(notex(P(nm+'表紙','box',(sx,ya,z0,sx+CV,yb-SP,z0+h),col,on=on,bevel=0,grp=g)))
+            L.append(notex(P(nm+'中の紙','box',(x+CV,ya,z0,x+w-CV,yb-SP,z0+h-0.012),PAGE,on=on,bevel=0,grp=g)))
+            x+=w+rd.choice((0,0,0.005))
     return L

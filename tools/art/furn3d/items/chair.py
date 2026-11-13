@@ -12,7 +12,7 @@ def PARTS():
     for nx,x in(('左',X0),('右',X1-LG)):
         L.append(P('前の脚（%s）'%nx,'box',(x,Y1-LG,0,x+LG,Y1,ZS),WOOD2,bevel=0,note='地面にたてる'))
         L.append(P('背もたれの柱（%s）'%nx,'box',(x,Y0,0,x+LG,Y0+LG,ZTOP),WOOD2,bevel=0,note='うしろの脚が、そのまま背もたれの柱'))
-    L.append(P('座面','box',(X0-0.01,Y0,ZS,X1+0.01,Y1+0.01,ZS+TS),WOOD,on=('前の脚（左）','前の脚（右）','背もたれの柱（左）','背もたれの柱（右）'),bevel=0,note='4本の脚の上'))
+    L.append(P('座面','prism',(rrect(X0-0.01,Y0,X1+0.01,Y1+0.01,0.06),ZS,ZS+TS,'z'),WOOD,on=('前の脚（左）','前の脚（右）','背もたれの柱（左）','背もたれの柱（右）'),note='4本の脚の上。角を丸める'))
     L.append(P('背もたれの横木','box',(X0,Y0+0.005,ZTOP-0.12,X1,Y0+LG-0.005,ZTOP),WOOD,on=('背もたれの柱（左）','背もたれの柱（右）'),bevel=0,note='柱のあいだ'))
     n=2;w=0.06;gap=(X1-X0-2*LG-n*w)/(n+1)
     for i in range(n):
