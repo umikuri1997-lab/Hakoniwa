@@ -17,7 +17,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict'),fs=r
  assert.deepEqual(old,[0,false]);
  /* カミサマのお店 */
  await run(`(()=>{S.feat.plant=true;S.feat.shop=true;S.pt=500;S.lv=3;openSheet('shop');return 1})()`);
- const shopTxt=await page.textContent('#sheetBody');for(const n of ['果物の苗','サルビアの種'])assert.ok(!shopTxt.includes(n),'カミサマが売る: '+n);assert.ok(shopTxt.includes('杉の苗'),'杉の苗');
+ const shopTxt=await page.textContent('#sheetBody');for(const n of ['りんごの苗','サルビアの種'])assert.ok(!shopTxt.includes(n),'カミサマが売る: '+n);assert.ok(shopTxt.includes('杉の苗'),'杉の苗');
  await run(`closeSheet()`);
  /* 温泉宿のお客さん */
  await run(`(()=>{S.flags.guestDone=1;S.t=dayNo()*1440+600;visitMorning();return 1})()`);
@@ -25,7 +25,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict'),fs=r
  await run(`(()=>{const g=visitor();centerOn(g.x*TS,g.y*TS);dirty=true;return 1})()`);await page.waitForTimeout(400);await shot('visitor');
  const tap=await run(`(()=>{const g=visitor();return visitTap(g.x,g.y-.5)})()`);assert.equal(tap,true);
  await page.waitForFunction(()=>!document.querySelector('#dialog').hidden);await run(`(()=>{$('#dialog').hidden=true;openSheet('vshop');return 1})()`);
- const vt=await page.textContent('#sheetBody');assert.ok(vt.includes('果物の苗')&&!vt.includes('木の苗')&&!vt.includes('杉の苗'),'お客さんのお店');await shot('vshop');
+ const vt=await page.textContent('#sheetBody');assert.ok(vt.includes('りんごの苗')&&!vt.includes('木の苗')&&!vt.includes('杉の苗'),'お客さんのお店');await shot('vshop');
  const buy=await run(`(()=>{const b=[...document.querySelectorAll('#sheetBody .btn.pri')][5];const p=S.pt;b.click();return [p-S.pt>0,inv('fruit')]})()`);assert.ok(buy[0]&&buy[1]===1);
  await run(`closeSheet()`);
  await run(`(()=>{S.t+=1440;visitMorning();return 1})()`);assert.equal(await run(`visitHere()`),false,'つぎの日は帰る');
