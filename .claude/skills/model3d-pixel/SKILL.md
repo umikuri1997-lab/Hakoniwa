@@ -14,6 +14,7 @@ description: Hakoniwa で、家具・建物などの絵を、3Dモデル（設�
 - 天板と脚・幕板：食卓 `items/table.py`
 - 2×2マスの家具・板をならべた天板：大きな食卓 `items/dtable.py`
 - 小物をお手本の絵と同じならびで置く・モデルの色をかえる（`p.recol`）・ねかせた本：かざり棚 `items/shelf2.py`。とびら（わく・鏡板・つまみ）：キャビネット `items/cabinet.py`。まき（`logy`：皮の色と切り口 `LOGEND`）：まき棚 `items/makidana.py`。壁にかける物：かべ棚 `items/wshelf.py`
+- 布でつつんだ物（角も上下のふちも4分の1の円で丸める `common.soft`・背もたれを反らせる `lean`）：ひとりがけソファ `items/sofa1.py`・ひじかけいす `items/achair.py`。いまの絵と同じ大きさにするときは、いまの絵の大きさ（ドット）から寸法をきめる（たて1マス≒61ドット・おく1マス≒55ドット）。
 - まるい座面（`cyl`、`plainwall`）：スツール `items/stool.py`。2×1マス・4つの向き：ベンチ `items/bench.py`
 - 棚と中の小物（本）・3つの向き（前・右・左）：本棚 `items/shelf1.py`
 - 丸い物（ふくらんだ板・鉄の輪・丸いふた）：たる `items/taru.py`（`EXTRA(sc)` で三角形を組む）

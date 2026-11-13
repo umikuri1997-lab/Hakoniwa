@@ -534,7 +534,7 @@ CHATS.push(
  Object.assign([[0,"噴水を見ながら、すわって休めたら、すてきだよね。"],[1,"お花もそばに咲いてたら、もっといいなあ。"]],{hint:'funsui',ok:()=>spotHintOK('funsui','fountain')}),
  Object.assign([[0,"家の中に、素材をしまう物をぜんぶまとめておけたらなあ。"],[1,"箱と、ふくろと、たな……ひとつの部屋にあったら、すっきりしそう。"]],{hint:'monoheya',ok:()=>spotHintOK('monoheya','asabukuro')}),
  Object.assign([[0,"家の中に、ごはんをしまう部屋があったらいいな。"],[1,"箱のとなりに、たるがいくつかあったら、たくさん入りそう。"]],{hint:'chozo',ok:()=>spotHintOK('chozo','taru')}),
- Object.assign([[0,"どうぐと、いろんな入れものを、家の中にまとめておけたらなあ。"],[1,"木の箱も、たるも、ふくろも？ なやみたいだね。"]],{hint:'naya',ok:()=>spotHintOK('naya','kabedougu')}),
+ Object.assign([[0,"いろんな入れものを、家の中にまとめておけたらなあ。"],[1,"木の箱も、たるも、ふくろも？ なやみたいだね。"]],{hint:'naya',ok:()=>spotHintOK('naya','kabedougu')}),
  Object.assign([[0,"ねる前に、本をよめたらいいのになあ。"],[1,"ベッドのそばに、たながあったらいいね。"]],{hint:'shinshitsu',ok:()=>spotHintOK('shinshitsu','bed')}),
  Object.assign([[0,"家のおふろのそばに、お水をためておけたら、べんりだよね。"],[1,"うん。おふろに、すぐ足せるね。"]],{hint:'ofuro',ok:()=>spotHintOK('ofuro','bathtub')}),
  Object.assign([[0,"お花にかこまれて、すわってみたいなあ。"],[1,"ベンチのまわりに、いっぱい咲いてたら、すてきだね。"]],{hint:'hana',ok:()=>spotHintOK('hana','bench')}),

@@ -82,6 +82,12 @@
       "ids": [
         "stable"
       ]
+    },
+    {
+      "reason": "どうぐたて（kabedougu）は、ゲームからなくした（古いセーブは S.flags.noTool1 で、けして木材6・石材2をもどす）。",
+      "ids": [
+        "kabedougu"
+      ]
     }
   ]
 }

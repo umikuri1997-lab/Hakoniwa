@@ -19,7 +19,7 @@ function fogArea(a){const x0=(a%AREAN)*AREAW,y0=((a/AREAN)|0)*AREAW;return {x0,y
 function fogSpotOK(s,j,hi){return s.ground[j]===0&&!s.obj[j]&&!s.floor[j]&&(hi==null||(s.hi?s.hi[j]||0:0)===hi)}
 function fogShuffle(L){for(let i=L.length-1;i>0;i--){const k=(Math.random()*(i+1))|0;[L[i],L[k]]=[L[k],L[i]]}return L}
 /* 古い家のあと（小屋）：しゅるいごとに大きさと、のこっている家具（こわれた家具。スポットにならない組み合わせ）がちがう。家具は中の [よこ,たて]（かべの内がわ。ドアの上のマスはあける） */
-const RUIN_KINDS={naya:{w:6,h:4,n:'古い納屋のあと',furn:[['crate',1,1],['taru',2,1],['kabedougu',4,1]]},kitchen:{w:5,h:4,n:'古い台所のあと',furn:[['oven',1,1],['table',2,1],['tub',3,1]]},monooki:{w:4,h:4,n:'古い物置のあと',furn:[['makidana',1,1],['asabukuro',2,1]]}},RUIN_ORDER=['naya','kitchen','monooki'];
+const RUIN_KINDS={naya:{w:6,h:4,n:'古い納屋のあと',furn:[['crate',1,1],['taru',2,1],['makidana',4,1]]},kitchen:{w:5,h:4,n:'古い台所のあと',furn:[['oven',1,1],['table',2,1],['tub',3,1]]},monooki:{w:4,h:4,n:'古い物置のあと',furn:[['makidana',1,1],['asabukuro',2,1]]}},RUIN_ORDER=['naya','kitchen','monooki'];
 const ruinWH=f=>{const k=RUIN_KINDS[f.k];return k?[k.w,k.h]:[5,4]};/* しゅるいのない前の小屋は5×4 */
 function ruinFits(s,j,w,h){const x=j%W,y=(j/W)|0,hi=s.hi?s.hi[j]||0:0;for(let q=0;q<=h;q++)for(let c=0;c<w;c++){const k=(y+q)*W+x+c;if(x+c>=W||y+q>=H||!fogSpotOK(s,k,hi))return false}return true}
 function fogRuinAt(s,R,w,h){/* 古い家のあと：w×h と、ドアの前の1行が、平らで空いている所 */w=w||5;h=h||4;for(let tr=0;tr<3000;tr++){const x=R.x0+3+((Math.random()*(AREAW-6-w))|0),y=R.y0+3+((Math.random()*(AREAW-6-h))|0);if(ruinFits(s,y*W+x,w,h))return y*W+x}return -1}
