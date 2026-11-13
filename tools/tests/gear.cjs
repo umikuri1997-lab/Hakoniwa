@@ -35,7 +35,7 @@ for(const id of['gw03','gw02','ga03','gc01','gt04','gt07'])assert(out.gearInv.in
 assert.equal(out.earthWeapon,false);assert.equal(out.fireWeapon,true);assert.equal(out.fireTool,false);assert.equal(out.earthTool,true);assert.equal(out.mineJob,1.3);
 assert.equal(out.lossNo-out.lossArmor,2);
 assert.equal(out.hitShort,0,'out of reach without reach gear');
-assert.equal(out.hitFist,Math.round((out.fAtk+10)*out.fireMul)*2,'fist hits twice');
+assert(Math.abs(out.hitFist-(out.fAtk+10)*out.fireMul*2)<1e-6,'fist hits twice');
 assert(out.hitSpear>0,'spear reaches 2.2');
 assert.equal(out.pick1,'gar04');assert.equal(out.pick2,'gar19');assert.deepEqual(out.pierce.map(v=>v>0),[true,true,false]);
 assert.equal(out.pick3,'gar13');assert.deepEqual(out.shortRange,[1,3,2,10],'falls back to an arrow that reaches');assert(out.multi.every(v=>v>0),'3 arrows');

@@ -40,7 +40,7 @@ function gearSpecial(f,e,sx,sy,who){if(!e||e.dead)return;const D=EN[e.type];
   if(f.glow)e.glowU=S.t+SLOWT;
   if(f.kb&&!D.boss){let dx=e.x-sx,dy=e.y-sy;const l=Math.hypot(dx,dy)||1;const nx=e.x+dx/l*.6,ny=e.y+dy/l*.6,q=(ny|0)*W+(nx|0);if(nx>1&&ny>1&&nx<W-1&&ny<H-1&&walk(q)&&!HOME_DOORS.has(typeAt(q))&&!GATE_IDS.has(typeAt(q))){e.x=nx;e.y=ny;e.path=[];e.repath=0}}
   if(f.steal&&who)who.hunger=Math.min(hMax(who),who.hunger+1)}
-function gearEnemyTick(e,dt){if(e.burnU>S.t&&!e.dead){e.brT=(e.brT||0)+dt;if(e.brT>=1){e.brT-=1;hurtEn(e,BURND,{keep:1,nokb:1,k:'burn'});if(e.hp<=0){defeat(e);return true}}}return false}/* やけど：少しずつへる */
+function gearEnemyTick(e,dt){if(e.burnU>S.t&&!e.dead){e.hp-=BURND*dt;e.brT=(e.brT||0)+dt;if(e.brT>=1){const n=Math.floor(e.brT);e.brT-=n;hitFx(e,BURND*n,{nokb:1})}/* 数字は1ごとにまとめて出す */if(e.hp<=0){defeat(e);return true}}return false}/* やけど：少しずつへる */
 function gearGlowNear(e){if(e.glowU>S.t)return true;for(const r of S.res){if(r.hidden||!r.gear)continue;if(gearStat(r).glow&&Math.hypot(r.x-e.x,r.y-e.y)<=3)return true}return false}
 /* 火のせいれいの攻撃のあと：とくべつな効果・横・まわりの敵 */
 function gearStrike(r,en,dmg){const s=gearStat(r);if(!r.gear)return;gearSpecial(s,en,r.x,r.y,r);
@@ -54,7 +54,7 @@ function ammoTotal(){return AMMO.reduce((n,id)=>n+(S.inv[id]||0),0)}
 function ammoOrder(){return AMMO.filter(id=>S.inv[id]>0).sort((p,q)=>ammoG(q).dmg-ammoG(p).dmg)}/* 持っている矢を、威力の大きい順に */
 /* 見張り台が1回うつ：矢の本数・つらぬき・まわり。うった数をかえす */
 function towerVolley(j,x,y,st,g,shots0){/* 威力の大きい矢から、とどくコワイノがいる矢をえらぶ（射程の短い矢しかとどかないときも、ほかの矢でうつ） */const ids=ammoOrder();let id=null,a=null,L=[];for(const k of ids){const b=ammoG(k),rng=st.range+(b.rng||0),M=[];for(const e of S.enemies){if(!e.spawned||e.dead)continue;const d=Math.hypot(e.x-x,e.y-y);if(d<rng)M.push([d,e])}if(M.length){id=k;a=b;L=M;break}}if(!id)return 0;S.inv[id]--;L.sort((p,q)=>p[0]-q[0]);
-  const n=a.n||1,dm=Math.round((st.dmg+(a.dmg||0))*(st.mul||1)),hits=[];/* st.mul：見張り台に立つ子の属性の威力（WPEL） */for(let i=0;i<n;i++)hits.push(L[i%L.length][1]);
+  const n=a.n||1,dm=(st.dmg+(a.dmg||0))*(st.mul||1),hits=[];/* st.mul：見張り台に立つ子の属性の威力（WPEL） */for(let i=0;i<n;i++)hits.push(L[i%L.length][1]);
   for(const tg of hits){const T=[tg];if(a.pierce){let b=null,bd=2.5;for(const[,e]of L){if(e===tg)continue;const v=[tg.x-x,tg.y-y],w=[e.x-x,e.y-y],t=(v[0]*w[0]+v[1]*w[1])/(Math.hypot(...v)||1);if(t<Math.hypot(...v))continue;const off=Math.abs(v[0]*w[1]-v[1]*w[0])/(Math.hypot(...v)||1);if(off<bd){bd=off;b=e}}if(b)T.push(b)}/* つらぬき：うしろの1ぴきにも */
     for(const e of T){if(e.dead)continue;hurtEn(e,dm,{lag:SHOT_LAG,sx:x,sy:y});gearSpecial(a,e,x,y,g);shots0.push({x1:x,y1:y-1.9,x2:e.x,y2:e.y-.3,life:1,wood:true})}
     if(a.spl)for(const e of S.enemies){if(e===tg||!e.spawned||e.dead)continue;if(Math.hypot(e.x-tg.x,e.y-tg.y)<1.5){hurtEn(e,dm,{lag:SHOT_LAG,sx:tg.x,sy:tg.y});gearSpecial(a,e,x,y,g)}}}
