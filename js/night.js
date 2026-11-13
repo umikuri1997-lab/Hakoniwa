@@ -290,6 +290,7 @@ function areaBlast(cx,cy){
   S.pt-=3;PTW.q=true;AREACD=5;const px=cx*TS,py=cy*TS;fxSpr('areaguard',px,py);
   sfx('bush');
   for(const r of L){r.shU=S.t+40;leafFX(r)}}
+function nightClearJoy(){/* 今夜のコワイノをぜんぶ追いはらった瞬間：起きている子がぴょんぴょんよろこぶ（1晩1回、S.ns.clr） */if(!S.ns||S.ns.clr||!S.ns.kill||MEMRUN||!nightClear())return;S.ns.clr=1;const now=performance.now(),L=S.res.filter(r=>!r.hidden&&!(r.act&&(r.act.type==='sleep'||r.act.type==='faint')&&r.act.stage==='do')&&!(JOYU.get(r)>now));if(!L.length)return;sfx('chime');toast('今夜のコワイノを、ぜんぶ追いはらった！','good');for(const r of L){JUMP.set(r,now+Math.random()*300);villageTimeout(()=>JUMP.set(r,performance.now()),700+Math.random()*300)}}
 function defeat(e,msg,r){if(e.dead)return;/* 同じ敵の撃破報酬は1回だけ */if(r){r.beat=(r.beat||0)+1;addSpiritXp(EN[e.type].xp,r)}sfx('defeat');if(!EN[e.type].boss)fxSpr('shadowpop',e.x*TS,e.y*TS);if(EN[e.type].boss&&!S.flags.bossOutro&&!(S.bossKills>0)){S.flags.bossOutro=1;bossDefeatFX(e)}else if(e.type==='boss2'){bossDefeatFX(e);villageTimeout(finalWinCheer,5800)}/* 追いはらった演出（時間を止めて消えていく様子を見せる）は、はじめてボスを追いはらったときの1回だけ */
   if(!EVAP.some(it=>it.e===e))EVAP.push({e,t0:performance.now(),dur:1300,die:true});/* たおしたら、たおれるモーションをしてから消える */
   e.dead=true;S.kills++;const D=EN[e.type];{const K=S.enKills||(S.enKills={});K[e.type]=(K[e.type]||0)+1}if(S.ns){S.ns.kill++;if(D.boss)S.ns.boss=2;if(e.type==='boss2'){S.ns.b2=1;S.b2At={x:e.x,y:e.y}}}const n=D.pw||5;

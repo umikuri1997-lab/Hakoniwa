@@ -297,7 +297,7 @@ function renderSheet(){
     /* 項目ごとにまとめる：レベル／目標の進みぐあい／たくわえ／きょう */
     const L=S.lv,a=LV_XP[L-1],b=L>=maxLv()?a:LV_XP[L]??a,ic=q=>{const n=document.querySelector('.hud '+q);return n?n.cloneNode(true).outerHTML:''},bar=(v,c)=>'<div class="vlBar"><i style="width:'+clamp(v,0,1)*100+'%;background:'+c+'"></i></div>';
     const V=el('<div class="vl"></div>');
-    V.appendChild(el('<div class="vlHero"><div class="vlLv">'+ic('.lvb svg')+'<small>村レベル</small><b>'+L+'</b></div><div class="vlHw">'+(b>a?bar((S.totalPt-a)/(b-a),'#7ee08a')+'<small>つぎのレベルまで　あと '+Math.max(0,Math.ceil(b-S.totalPt))+'</small>':bar(1,'#7ee08a')+'<small>さいこうレベル</small>')+'</div></div>'));
+    V.appendChild(el('<div class="vlHero"><div class="vlLv">'+ic('.lvb svg')+'<small>村レベル</small><b>'+L+'</b></div><div class="vlHw">'+(b>a?bar((S.totalPt-a)/(b-a),'#7ee08a')+'<small>つぎのレベルまで　あと '+Math.max(0,Math.ceil(b-S.totalPt))+'</small>'+nextLvHtml(L+1):bar(1,'#7ee08a')+'<small>さいこうレベル</small>')+'</div></div>'));
     {const sk=suteki();V.appendChild(el('<div class="vlSec"><h4>すてき度</h4><div class="vlRow"><span>'+'★'.repeat(sk.st)+'☆'.repeat(5-sk.st)+'</span><b>'+sk.pt+'</b></div></div>'))}
     const sh=Math.min(3,S.shards||0);
     V.appendChild(el('<div class="vlSec"><h4>目標</h4><div class="vlRow"><span>'+SHN()+'</span><b class="vlSh">'+[0,1,2].map(k=>'<i class="'+(k<sh?'on':'')+'"></i>').join('')+'</b></div></div>'));

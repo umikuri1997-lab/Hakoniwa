@@ -49,6 +49,8 @@ function lvShow(l,bonus,opens){
 const LEVELUP_ITEMS=new Set(['bridge','path','woodpath','ladder_wood','ladder_bamboo','slope_earth','stairs_wood','stairs_stone','stairs_brick','gate','hwall','bamboowall','door','logfence','bamboofence','floor','brickfloor','stonefloor','window','plasterwall','gravel','wall','sdoor','logwall','brick','brickwall','carpet','curtain1','stone','stonegate','logdoor','loggate','kamizo','bell','bedge','onsen','signw','signs','andon','cooktable','lurestatue']);
 const levelUpItemsAt=n=>Object.keys(BL).filter(id=>LEVELUP_ITEMS.has(id)&&BL[id].lv===n&&!BL[id].offerOnly&&(BL[id].w||0)<=WD);
 const visibleLevelRewardsAt=n=>levelUpItemsAt(n).filter(id=>BL[id].kind!=='furn'||!S.free);/* フリーモードは、家具のレシピを村レベルでおぼえない */
+function nextLevelItems(n){/* 村レベル n でおぼえる物（まだおぼえていない物・このステージで使える物だけ）。建物・植える物は BL の lv で使えるようになる（learnedIn と同じ） */const a=visibleLevelRewardsAt(n);for(const id in BL){const b=BL[id];if((b.kind==='build'||b.kind==='plant')&&b.lv===n&&!QB.has(id)&&!b.offerOnly)a.push(id)}return [...new Set(a)].filter(id=>stageItemOK(id)&&!(S.recipes||{})[id]&&!(S.unlocked||{})[id])}
+function nextLvHtml(n){/* 村のようす：つぎのレベルでおぼえる物のアイコン */const L=nextLevelItems(n);if(!L.length)return '';const e=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]);return '<div class="vlNx"><small>レベル'+n+'でおぼえる</small>'+L.map(id=>'<span><img alt="" src="'+iconURL(id)+'">'+e(iname(id))+'</span>').join('')+'</div>'}
 function checkLevel(){
   const l=vLv();if(S.lv>l)return;/* 必要なパワーをふやしても、いまの村レベルは下げない */const old=S.lv||1,priorUnlocks={...(S.unlocked||{})},priorRecipes={...(S.recipes||{})};
   for(let n=2;n<=l;n++)for(const id of visibleLevelRewardsAt(n)){if(BL[id].kind==='block')S.unlocked[id]=true;else if(BL[id].kind==='furn'&&!S.free){S.recipes||(S.recipes={});S.recipes[id]=true}}
@@ -88,7 +90,7 @@ function stepWorld(dt){if((SUBT+=dt)>1){SUBT=0;checkSub();checkSev();bondTick();
   for(const r of S.res.slice())updRes(r,dt);
   passGreet(dt);
   sepRes(dt);
-  for(const e of S.enemies)updEnemy(e,dt);
+  for(const e of S.enemies)updEnemy(e,dt);nightClearJoy();
   updTowers(dt);
   if(S.nushi)updNushi(dt);
   if(prevH<6&&h>=6&&S.nightHad){S.nightHad=false;const left=S.enemies.length;{const t0=performance.now();for(const e of S.enemies)if(e.spawned&&!e.dead){const dl=Math.random()*500,x=e.x*TS,y=e.y*TS;EVAP.push({e,t0:t0+dl});setTimeout(()=>fxSpr('dawnfade',x,y),dl)}}/* 朝の光で、とけて消える */if(left)sfx('evap');S.enemies=[];

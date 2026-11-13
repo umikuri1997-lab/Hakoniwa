@@ -30,8 +30,12 @@ function enemyHidden(e,x0,y0,x1,y1){const ex=e.x|0,ey=e.y|0;
   for(let dy=0;dy<=4;dy++)for(let dx=-3;dx<=3;dx++){const x=ex+dx,y=ey+dy;if(x<0||y<0||x>=W||y>=H)continue;const a=anc(y*W+x),o=S.obj[a];if(!o||o==='part'||FLAT.has(o)||!BL[o])continue;
     const ay=(a/W)|0;if(ay<ey&&!(BL[o].sz&&ay+szAt(o,a)[1]-1>=ey))continue;const b=objBox(o,a);if(b[0]<x1&&b[2]>x0&&b[1]<y1&&b[3]>y0&&(ay>ey||dy>0||TREES.has(o)||BIG2.has(o)||BL[o].kind==='build'))return true}
   for(const h of HOUSES)if(h.set.has(ey*W+ex)||h.set.has((ey+1)*W+ex))return true;return false}
+const LUNGE=[0,130,200,330];/* 火のせいれいの攻撃（ミリ秒）：前へ出る 0〜130・当たって止まる 130〜200（ヒットストップ）・もどる 200〜330 */
+function lungeK(d){return d<LUNGE[1]?Math.sin(d/LUNGE[1]*Math.PI/2):d<LUNGE[2]?1:d<LUNGE[3]?Math.cos((d-LUNGE[2])/(LUNGE[3]-LUNGE[2])*Math.PI/2):0}
+const HITSHAKE=200;/* たたかれたコワイノが、よこにゆれる時間（ミリ秒）。はじめ3ドット、だんだん小さく */
+function hitJig(e,now){const d=now-(e.hitAt||-1e9);if(d<0||d>=HITSHAKE)return 0;const a=3*(1-d/HITSHAKE);return ((d/40)|0)%2?-a:a}/* hitAt は performance.now() なので、セーブから読んだ先の時刻は使わない */
 function drawEnemy(e,now){
-  if(!e.spawned)return;const D=EN[e.type],z=D.size*2,px=e.x*TS,py=e.y*TS;
+  if(!e.spawned)return;const D=EN[e.type],z=D.size*2,px=e.x*TS+hitJig(e,now)*D.size,py=e.y*TS;
   if(!EV.has(e))EV.set(e,{x:e.x,y:e.y,back:false,f:1,mv:0});const v=EV.get(e),dx=e.x-v.x,dy=e.y-v.y;
   if(Math.abs(dx)+Math.abs(dy)>.001){v.mv=now;if(Math.abs(dx)>.0005)v.f=dx<0?-1:1;v.back=dy<0&&-dy>Math.abs(dx)*.6}v.x=e.x;v.y=e.y;
   shadow(ctx,px,py+8,9*z,2.6*z);
