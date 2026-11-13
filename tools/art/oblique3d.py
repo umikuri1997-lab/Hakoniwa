@@ -1,7 +1,8 @@
 """3Dの下絵を、ゲームと同じ見え方で写すための小さな道具（パラソル・噴水などの絵をたのむ用）。
 x=東, y=南, z=上（単位はマス）。ゲームの見え方は 画面=(x, y-0.8z)、見る向きは (0,0.8,1)。
 三角形をならべ、zバッファで手前の面だけ写す。かげはトゥーンシェーダー（光のあたり方を3だんの色にわける）。
-輪郭線は、OUT を0より大きくしたときだけ、裏面法（部品をふくらませた形の、うら向きの面だけを、その部品の色をこくした色で）。ふだんは0（輪郭線なし）。
+輪郭線は、OUT を0より大きくしたときだけ、裏面法（lilToon などのトゥーンの輪郭線と同じ。部品をふくらませた形の、うら向きの面だけを、その部品の色に OUTK をかけた色で）。ふだんは0（輪郭線なし）。
+部品ごとに太さ・色をかえるときは sc.outline(w, k) のあとに部品を足す（w=0 でその部品は輪郭線なし。k はもとの色にかける数、0.8 ならうすい線）。
 箱の角は、すこし面取り（ベベル BEVEL）する。
 2倍の細かさで描いて BOX でちぢめる。"""
 import math
@@ -14,10 +15,16 @@ VIEW = np.array([0, 0.8, 1.0]); VIEW = VIEW / np.linalg.norm(VIEW)
 SIDE = np.array([0, 1.0, 0])
 
 OUT = 0.0        # 輪郭線のふとさ（マス）。0は輪郭線なし
+OUTK = 0.5       # 輪郭線の色（もとの色にかける数。1に近いほどうすい線）
 BEVEL = 0.022    # 箱の角の面取り（マス）
 class Scene:
-    def __init__(self): self.t = []; self.pid = 0
-    def part(self): self.pid += 1   # つぎの三角形から、べつの部品（輪郭線は部品ごとにふくらませる）
+    def __init__(self): self.t = []; self.pid = 0; self.ol = {}; self.cur = None
+    def outline(self, w=None, k=None):
+        """これから足す部品の輪郭線の太さ w（マス）・色 k（もとの色にかける数）。None は render の値"""
+        self.cur = None if w is None and k is None else (w, k)
+    def part(self):
+        self.pid += 1
+        if self.cur: self.ol[self.pid] = self.cur   # つぎの三角形から、べつの部品（輪郭線は部品ごとにふくらませる）
     def tri(self, a, b, c, col): self.t.append((np.array(a, float), np.array(b, float), np.array(c, float), np.array(col, float), self.pid))
     def quad(self, a, b, c, d, col): self.tri(a, b, c, col); self.tri(a, c, d, col)
     def ring_wall(self, cx, cy, r, z0, z1, colf, n=48):
@@ -104,7 +111,7 @@ class Scene:
 def game(p): return (p[0], p[1]-0.8*p[2])
 def side(p): return (p[0], -p[2])
 
-def render(sc, proj, ext, depth, out=None):
+def render(sc, proj, ext, depth, out=None, outk=None):
     x0, x1, y0, y1 = ext; Wp = int((x1-x0)*S*SS); Hp = int((y1-y0)*S*SS)
     img = np.zeros((Hp, Wp, 4)); zb = np.full((Hp, Wp), -1e9)
     def raster(a, b, c, cc, bias=0.0):
@@ -132,11 +139,13 @@ def render(sc, proj, ext, depth, out=None):
         d = float(np.dot(n, LIGHT)); sh = 1.0 if d > 0.55 else 0.87 if d > 0.1 else 0.76   # トゥーン：3だん
         raster(a, b, c, np.clip(col*sh, 0, 255))
     # 輪郭線（裏面法）：部品ごとに、外向きの面の向きを頂点ごとに平均して、その向きへ OUT ふくらませる。うら向き（見る向きと反対）の面だけかく
-    t = OUT if out is None else out
-    if t > 0:
+    t0 = OUT if out is None else out; k0 = OUTK if outk is None else outk
+    if t0 > 0 or any(w for w, _ in sc.ol.values() if w):
         parts = {}
         for a, b, c, col, pid in sc.t: parts.setdefault(pid, []).append((a, b, c, col))
-        for L in parts.values():
+        for pid, L in parts.items():
+            w, ok = sc.ol.get(pid, (None, None)); t = t0 if w is None else w; ok = k0 if ok is None else ok
+            if t <= 0: continue
             cen = np.mean([v for q in L for v in q[:3]], 0)
             vn = {}; info = []; off = {}
             flat = True
@@ -161,7 +170,7 @@ def render(sc, proj, ext, depth, out=None):
                         if k not in off:   # その頂点にあつまる面が、どれもちょうど t だけ外へ出るずらし方（角は各面を t ずつ。なめらかな面はほぼ法線の向き）
                             N = np.array(list(vn[k].values())); off[k] = np.linalg.lstsq(N, np.full(len(N), t), rcond=None)[0]
                         vs.append(v+off[k])
-                raster(vs[0], vs[1], vs[2], np.clip(col*0.5, 0, 255), bias=0.02)   # 輪郭線は少し奥に（かさなった面とあらそってざらざらにならない）
+                raster(vs[0], vs[1], vs[2], np.clip(col*ok, 0, 255), bias=0.02)   # 輪郭線は少し奥に（かさなった面とあらそってざらざらにならない）
     return Image.fromarray(img.astype(np.uint8), 'RGBA').resize((Wp//SS, Hp//SS), Image.BOX)
 
 def grid_bg(ext, foot=None):
