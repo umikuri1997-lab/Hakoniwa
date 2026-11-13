@@ -171,23 +171,23 @@ function rugsBig(){/* ラグがたて2・よこ2マスになった：前のラ�
   for(const k in S.rug||{})old.push([+k,S.rug[k],(S.rugRot||{})[k]||0]);S.rug={};S.rugRot={};RUGC=new Map();let back=0;
   for(const[j,id,rt]of old){const x=j%W,y=(j/W)|0,a=[[x,y],[x-1,y],[x,y-1],[x-1,y-1]].find(([ax,ay])=>canRug(ax,ay,true));if(!a){giveItem(id,1);back++;continue}const k=a[1]*W+a[0];S.rug[k]=id;if(rt)S.rugRot[k]=rt;for(const c of rugCells(k))RUGC.set(c,k)}
   if(back)setTimeout(()=>toast('ラグが大きくなったので、しけないラグを'+back+'つ、おそなえ箱にもどしました'),1500)}
-function clearObj(j){j=anc(j);const o=S.obj[j];if(S.bedOwn)delete S.bedOwn[j];/* ベッドをどけたら、だれのベッドかも消す */if(S.wpOwn)delete S.wpOwn[j];/* 見張り台も */const tl=o&&BL[o]&&BL[o].sz?fp(o,j%W,(j/W)|0).map(([a,b])=>b*W+a):[j];delete S.hp['L'+j];if(S.win&&S.win[j]){const p=S.win[j],wid='window';giveItem(p===1?wid:p,1);if(p==='curtain1'||p==='curtain2')giveItem(wid,1);delete S.win[j]}/* カーテンの下の窓ももどす */if(S.rot)delete S.rot[j];for(const k in S.ref)if(S.ref[k]===j){S.obj[k]='';delete S.ref[k]}S.obj[j]='';delete S.dyn[j];delete S.hp[j];delete S.hp['L'+j];
+function clearObj(j){j=anc(j);const o=S.obj[j];if(S.bedOwn)delete S.bedOwn[j];/* ベッドをどけたら、だれのベッドかも消す */if(S.wpOwn)delete S.wpOwn[j];/* 見張り台も */if(S.useOwn)delete S.useOwn[j];/* いす・遊び家具なども */const tl=o&&BL[o]&&BL[o].sz?fp(o,j%W,(j/W)|0).map(([a,b])=>b*W+a):[j];delete S.hp['L'+j];if(S.win&&S.win[j]){const p=S.win[j],wid='window';giveItem(p===1?wid:p,1);if(p==='curtain1'||p==='curtain2')giveItem(wid,1);delete S.win[j]}/* カーテンの下の窓ももどす */if(S.rot)delete S.rot[j];for(const k in S.ref)if(S.ref[k]===j){S.obj[k]='';delete S.ref[k]}S.obj[j]='';delete S.dyn[j];delete S.hp[j];delete S.hp['L'+j];
   for(const r of S.res)if(r.act&&r.act.obj===j)endAct(r);return o}
 let MOVESRC=null;/* ひっこしミトン：えらんだ物 {k:'obj'|'rug'|'roof',j} */
 const NOMOVE=new Set(['statue','statueb','obox','board','altar','tower','site','site2']);/* 神殿まわり・建てている物は、うつせない */
 function moveTarget(j){if(S.rug&&RUGC.has(j)&&!(S.obj[j]&&S.obj[j]!=='part'&&!WEEDS.has(S.obj[j])))return {k:'rug',j:RUGC.get(j)};const a=anc(j),o=S.obj[a];
   if(o&&BL[o]&&(BL[o].kind==='furn'||BL[o].kind==='build')&&!BL[o].natural&&!NOMOVE.has(o))return {k:'obj',j:a};if(RFC.has(j))return {k:'roof',j:RFC.get(j)};return null}
 function moveName(m){return BL[m.k==='rug'?S.rug[m.j]:m.k==='roof'?S.roof[m.j]:S.obj[m.j]].name}
-function writeObj(id,j,v){/* うつした物を書きこむ（向き・状態・じょうぶさもそのまま） */if(v.rot!=null)(S.rot||(S.rot={}))[j]=v.rot;S.obj[j]=id;if(STAIRS.has(id)){const d=stairDir(j);if(d>0){const o=stairOut(j,d);S.obj[o]='part';S.ref[o]=j}}else setParts(id,j,'part');if(v.dyn)S.dyn[j]=v.dyn;if(v.hp!=null)S.hp[j]=v.hp;if(v.hpL!=null)S.hp['L'+j]=v.hpL;if(v.own!=null)(S.bedOwn||(S.bedOwn={}))[j]=v.own;if(v.wown!=null)(S.wpOwn||(S.wpOwn={}))[j]=v.wown;if(v.cd!=null)(S.trapCd||(S.trapCd={}))[j]=v.cd}
+function writeObj(id,j,v){/* うつした物を書きこむ（向き・状態・じょうぶさもそのまま） */if(v.rot!=null)(S.rot||(S.rot={}))[j]=v.rot;S.obj[j]=id;if(STAIRS.has(id)){const d=stairDir(j);if(d>0){const o=stairOut(j,d);S.obj[o]='part';S.ref[o]=j}}else setParts(id,j,'part');if(v.dyn)S.dyn[j]=v.dyn;if(v.hp!=null)S.hp[j]=v.hp;if(v.hpL!=null)S.hp['L'+j]=v.hpL;if(v.own!=null)(S.bedOwn||(S.bedOwn={}))[j]=v.own;if(v.wown!=null)(S.wpOwn||(S.wpOwn={}))[j]=v.wown;if(v.uown!=null)(S.useOwn||(S.useOwn={}))[j]=v.uown;if(v.cd!=null)(S.trapCd||(S.trapCd={}))[j]=v.cd}
 function moveTap(tx,ty){const j=ty*W+tx;
   if(!MOVESRC){const m=moveTarget(j);if(!m)return toast('うつしたい家具・建物をタップ');if(m.k==='obj'&&fireAt(m.j))return toast('燃えているあいだは、うつせません');MOVESRC=m;sfx('tap');toast(moveName(m)+'を、どこへうつす？');dirty=true;renderPalette();return}
   const m=MOVESRC;if(m.j===j||m.k==='obj'&&anc(j)===m.j){MOVESRC=null;dirty=true;renderPalette();return toast('やめました')}/* 同じ物をタップしたら、やめる */
   if(m.k==='rug'||m.k==='roof'){const L=m.k==='rug'?S.rug:S.roof,id=L[m.j],rr=m.k==='rug'&&S.rugRot?S.rugRot[m.j]:null;delete L[m.j];if(rr!=null)delete S.rugRot[m.j];recount();
     if(!(m.k==='rug'?canRug(tx,ty,false):canRoof(tx,ty,false))){L[m.j]=id;if(rr!=null)S.rugRot[m.j]=rr;recount();return}
     L[j]=id;if(rr!=null)S.rugRot[j]=rr;for(const c of rugCells(j))if(WEEDS.has(S.obj[c]))S.obj[c]=''}
-  else{const a=m.j,id=S.obj[a],cells=fp(id,a%W,(a/W)|0).map(([x,y])=>y*W+x),v={rot:S.rot?S.rot[a]:null,dyn:S.dyn[a],hp:S.hp[a],hpL:S.hp['L'+a],own:S.bedOwn?S.bedOwn[a]:null,wown:S.wpOwn?S.wpOwn[a]:null,cd:S.trapCd?S.trapCd[a]:null};
+  else{const a=m.j,id=S.obj[a],cells=fp(id,a%W,(a/W)|0).map(([x,y])=>y*W+x),v={rot:S.rot?S.rot[a]:null,dyn:S.dyn[a],hp:S.hp[a],hpL:S.hp['L'+a],own:S.bedOwn?S.bedOwn[a]:null,wown:S.wpOwn?S.wpOwn[a]:null,uown:S.useOwn?S.useOwn[a]:null,cd:S.trapCd?S.trapCd[a]:null};
     if(STAIRS.has(id)){const d=stairDir(a);if(d>0)cells.push(stairOut(a,d))}
-    for(const c of cells){if(c!==a&&S.obj[c]!=='part')continue;S.obj[c]='';delete S.ref[c]}if(S.rot)delete S.rot[a];delete S.dyn[a];delete S.hp[a];delete S.hp['L'+a];if(S.bedOwn)delete S.bedOwn[a];if(S.wpOwn)delete S.wpOwn[a];if(S.trapCd)delete S.trapCd[a];
+    for(const c of cells){if(c!==a&&S.obj[c]!=='part')continue;S.obj[c]='';delete S.ref[c]}if(S.rot)delete S.rot[a];delete S.dyn[a];delete S.hp[a];delete S.hp['L'+a];if(S.bedOwn)delete S.bedOwn[a];if(S.wpOwn)delete S.wpOwn[a];if(S.useOwn)delete S.useOwn[a];if(S.trapCd)delete S.trapCd[a];
     const pr=PLROTS[id];PLROTS[id]=v.rot||0;let ok=false;try{ok=canPlace(id,tx,ty,false)}finally{if(pr==null)delete PLROTS[id];else PLROTS[id]=pr}
     if(!ok){writeObj(id,a,v);return}
     for(const r of S.res)if(r.act&&(r.act.obj===a||cells.includes(r.act.obj)))endAct(r);

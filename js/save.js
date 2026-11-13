@@ -13,7 +13,7 @@ function expandMap(d){const O=OFF,mi=j=>(((j/OW)|0)+O)*W+(j%OW)+O,inner=j=>{cons
   const mk=o=>{const r={};for(const k in o||{}){const m=/^([A-Za-z]*)(\d+)$/.exec(k);r[m?m[1]+mi(+m[2]):k]=o[k]}return r};/* マスの番号がキーのもの（「L12」などの頭の文字はそのまま） */
   d.ground=G;d.floor=F;d.obj=Ob;d.dyn=Object.assign(Dy,mk(d.dyn));
   const rf=mk(d.ref);for(const k in rf)rf[k]=mi(rf[k]);d.ref=Object.assign(Rf,rf);
-  for(const f of['hp','rot','win','rug','rugRot','edge','roof','bud','ovenSet','bedOwn','wpOwn','freeB','trapCd','wreq','vreq','smQ','smIn','web','webq'])if(d[f])d[f]=mk(d[f]);
+  for(const f of['hp','rot','win','rug','rugRot','edge','roof','bud','ovenSet','bedOwn','wpOwn','useOwn','freeB','trapCd','wreq','vreq','smQ','smIn','web','webq'])if(d[f])d[f]=mk(d[f]);
   if(d.st2)for(const f of['fire','frz','ash','hvb'])if(d.st2[f])d.st2[f]=mk(d.st2[f]);if(d.st2&&Array.isArray(d.st2.bw))d.st2.bw=d.st2.bw.map(mi);
   if(d.imoSeedQuestPlots)d.imoSeedQuestPlots=d.imoSeedQuestPlots.map(mi);
   for(const L of[d.regrow,d.broken,d.fogF])for(const q of L||[])q.j=mi(q.j);if(d.fogReq)d.fogReq=d.fogReq.map(mi);
