@@ -308,6 +308,7 @@ def render_px(sc, proj, ext, depth, k=0.72, outer=True, merge=12):
             sc_ = np.zeros((Hp, Wp, 3)); sc_[yd, xd] = col0[ys, xs]
             put = src & (alpha == 0)
             out[put] = sc_[put]*k; alpha[put] = 255
+    global LAST_IDS; LAST_IDS = idb   # ドットごとの部品の番号（その部品だけをとり出すとき用）
     img = np.dstack([np.round(out), alpha]).astype(np.uint8)
     if merge > 0:   # にた色をまとめる（多い色から順に、近い色をよせる）
         m = img[..., 3] > 0; px = img[m][:, :3].astype(int)
