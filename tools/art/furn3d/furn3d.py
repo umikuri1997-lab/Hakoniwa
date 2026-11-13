@@ -15,6 +15,7 @@ from PIL import Image
 import oblique3d as O
 from blueprint import build,blueprint,check
 ELEV,FOV,FRAME=42,10,1   # 見おろしの角度・画角・画角に入れる範囲（マス）。木箱と同じ
+LW=2   # 輪郭線のはば（持ち主がきめた：2ドット）
 def load(iid):return importlib.import_module(iid)
 def scene(M,k,only=None):
     sc=O.Scene();T=O.Tex(os.path.join(ART,'textures','wood049.png'));L=M.PARTS();keep=set()
@@ -30,7 +31,7 @@ def shot(M,k,only=None,S_=64):
     c=((V[:,0].min()+V[:,0].max())/2,(V[:,1].min()+V[:,1].max())/2,V[:,2].max()/2)
     PROJ,DEPTH=O.persp(ELEV,FOV,FRAME,c)
     P=np.array([PROJ(v) for v in V]);m=2/64;ext=(P[:,0].min()-m,P[:,0].max()+m,P[:,1].min()-m,P[:,1].max()+m);O.S=S_
-    im=O.render_px(sc,PROJ,ext,DEPTH,k=0.72)
+    im=O.render_px(sc,PROJ,ext,DEPTH,k=0.72,lw=LW)
     if only:   # その部品だけ（ほかの部品のドットは消す。輪郭線もふくめて、その部品のまわり1ドットまで）
         full=np.array(im);ids=O.LAST_IDS
         from scipy.ndimage import binary_dilation;mk=binary_dilation(np.isin(ids,list(keep)))

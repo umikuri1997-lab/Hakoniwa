@@ -246,13 +246,14 @@ class Tex:
             self._c[S_] = np.where(q < 0, self.dark[1], np.where(q > 0, self.light[1], 1.0))
         return self._c[S_]
 
-def render_px(sc, proj, ext, depth, k=0.72, outer=True, merge=12):
+def render_px(sc, proj, ext, depth, k=0.72, outer=True, merge=12, lw=1, k2=0.86):
     """ドット絵にするための写し方：1マス S ドットで、ちぢめずに（1ドットに1点）写し、部品のさかいに1ドットの輪郭線を引く。
     輪郭線は、となりあう2つのドットの部品がちがうとき、うしろがわ（遠いほう）のドットに引く（手前の部品の形はけずらない）。
     交差・つきあてる所も、手前の部品の形のまま、うしろの部品に線が入る。色は、そのドットの色に k をかけた色。
     outer：まわりのふち（透明ととなりあう所）は、透明がわに1ドット（となりの色×k）。上下左右だけを見る（ななめは見ない）。
     sc.outline(0) のあとに足した部品は、線を引かない（中のくらい所など）。sc.group(名前) で同じグループにした部品どうしにも引かない。
-    merge：さいごに、色の差がこれより小さい色を、多いほうの色にまとめる（にた色をのこさない。0でまとめない）。"""
+    merge：さいごに、色の差がこれより小さい色を、多いほうの色にまとめる（にた色をのこさない。0でまとめない）。
+    lw：輪郭線のはば（1か2）。2のときは、さかい目にふれる1ドットめが こい線（×k）、そのとなりの2ドットめが まわりになじむ うすい線（×k2）。まわりのふちは、外がわ1ドットがこい線・物の内がわ1ドットがうすい線。"""
     x0, x1, y0, y1 = ext; Wp = int(round((x1-x0)*S)); Hp = int(round((y1-y0)*S))
     col = np.zeros((Hp, Wp, 3)); zb = np.full((Hp, Wp), -1e9); idb = np.full((Hp, Wp), -1)
     wp = np.zeros((Hp, Wp, 3)); wn = np.zeros((Hp, Wp, 3))   # ドットごとの、せかいの場所と面の向き（テクスチャ用）
@@ -306,7 +307,7 @@ def render_px(sc, proj, ext, depth, k=0.72, outer=True, merge=12):
         iu = (np.floor((P@ax)*S).astype(int)+du) % n_; iv = (np.floor((P*v2).sum(1)*S).astype(int)+dv) % n_
         col[m] = np.clip(col[m]*T[iv, iu][:, None], 0, 255)
     noline = {p for p, (w, _) in sc.ol.items() if w == 0}
-    out = col.copy(); alpha = (idb >= 0).astype(float)*255; line = np.zeros((Hp, Wp), bool)
+    out = col.copy(); alpha = (idb >= 0).astype(float)*255; line = np.zeros((Hp, Wp), bool); line2 = np.zeros((Hp, Wp), bool)
     for dy, dx in ((0, 1), (0, -1), (1, 0), (-1, 0)):
         nid = np.full_like(idb, -1); nz = np.full_like(zb, -1e9)
         ys = slice(max(dy, 0), Hp+min(dy, 0)); xs = slice(max(dx, 0), Wp+min(dx, 0))
@@ -320,6 +321,10 @@ def render_px(sc, proj, ext, depth, k=0.72, outer=True, merge=12):
             for p_, g_ in sc.grp.items(): G[p_] = gi.setdefault(g_, len(gi))
             far &= ~((G[idb] >= 0) & (G[idb] == G[nid]))
         line |= far
+        if lw >= 2:   # 2ドットめ：線のドットの、さらに向こうの同じ部品のドット
+            l2 = np.zeros((Hp, Wp), bool); l2[yd, xd] = far[ys, xs]   # l2[q] = far[q+向き]（線のドットのうしろ）
+            l2 &= idb >= 0; same = np.zeros((Hp, Wp), bool); same[yd, xd] = idb[yd, xd] == idb[ys, xs]; line2 |= l2 & same
+    out[line2 & ~line] = col0[line2 & ~line]*k2
     out[line] = col0[line]*k
     if outer:
         for dy, dx in ((0, 1), (0, -1), (1, 0), (-1, 0)):
@@ -329,6 +334,14 @@ def render_px(sc, proj, ext, depth, k=0.72, outer=True, merge=12):
             sc_ = np.zeros((Hp, Wp, 3)); sc_[yd, xd] = col0[ys, xs]
             put = src & (alpha == 0)
             out[put] = sc_[put]*k; alpha[put] = 255
+        if lw >= 2:   # 物のふちの内がわ1ドット：うすい線（こい線の上にはぬらない）
+            edge = np.zeros((Hp, Wp), bool)
+            for dy, dx in ((0, 1), (0, -1), (1, 0), (-1, 0)):
+                ys = slice(max(dy, 0), Hp+min(dy, 0)); xs = slice(max(dx, 0), Wp+min(dx, 0))
+                yd = slice(max(-dy, 0), Hp+min(-dy, 0)); xd = slice(max(-dx, 0), Wp+min(-dx, 0))
+                e = np.zeros((Hp, Wp), bool); e[yd, xd] = idb[ys, xs] < 0; edge |= e
+            edge &= (idb >= 0) & ~line
+            out[edge] = col0[edge]*k2
     global LAST_IDS; LAST_IDS = idb   # ドットごとの部品の番号（その部品だけをとり出すとき用）
     img = np.dstack([np.round(out), alpha]).astype(np.uint8)
     if merge > 0:   # にた色をまとめる（多い色から順に、近い色をよせる）
