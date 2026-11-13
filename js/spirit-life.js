@@ -540,12 +540,12 @@ CHATS.push(
  Object.assign([[0,"お花にかこまれて、すわってみたいなあ。"],[1,"ベンチのまわりに、いっぱい咲いてたら、すてきだね。"]],{hint:'hana',ok:()=>spotHintOK('hana','bench')}),
  Object.assign([[0,"かこん、って音がする所で、すわって休みたいな。"],[1,"石のあかりもあったら、もっとおちつくね。"]],{hint:'wa',ok:()=>spotHintOK('wa','shishiodoshi')}),
  Object.assign([[0,"竹のベンチのそばに、のれんがかかってたら、お茶やさんみたいだよね。"],[1,"竹のあかりもあったら、ほっとしそう。"]],{hint:'chaya',ok:()=>spotHintOK('chaya','takebench')}),
- Object.assign([[0,"素材箱のとなりに、もうひとつ箱があったら、しまいやすいのにな。"],[1,"木の箱とか？ ならべておくと、べんりそう。"]],{hint:'monooki',ok:()=>spotHintOK('monooki','crate')}),
+ Object.assign([[0,"木箱のとなりに、ふくろもあったら、しまいやすいのにな。"],[1,"あさぶくろとか？ ならべておくと、べんりそう。"]],{hint:'monooki',ok:()=>spotHintOK('monooki','crate')}),
  Object.assign([[0,"ブランコのそばに、まってる子がすわれる所があったらいいな。"],[1,"お花も咲いてたら、まってるのもたのしいね。"]],{hint:'buranko',ok:()=>spotHintOK('buranko','swing')}),
  Object.assign([[0,"砂場のそばに、お水があったら、どろんこあそびができるのに。"],[1,"#joy|やってみたい！ よごれても、へっちゃら。"]],{hint:'doronko',ok:()=>spotHintOK('doronko','sandbox')}),
  Object.assign([[0,"木のあいだでブランコをこいだら、きもちよさそう。"],[1,"森の中みたいに、木がまわりにあったらいいね。"]],{hint:'mori',ok:()=>spotHintOK('mori','swing')}),
- Object.assign([[0,"食料箱のとなりに、木の箱があったら、ごはんがもっとしまえそう。"],[1,"ならべておいたら、とりやすいしね。"]],{hint:'shokuryo',ok:()=>spotHintOK('shokuryo','crate')}),
- Object.assign([[0,"かまどのそばに、ごはんの箱と、食卓があったら……"],[1,"#joy|パンやさんみたい！ やきたてをならべられるね。"]],{hint:'pan',ok:()=>spotHintOK('pan',['oven','stor','table','dtable'])}),
+ Object.assign([[0,"木箱のとなりに、たるがあったら、ごはんがもっとしまえそう。"],[1,"ならべておいたら、とりやすいしね。"]],{hint:'shokuryo',ok:()=>spotHintOK('shokuryo','crate')}),
+ Object.assign([[0,"かまどのそばに、ごはんの箱と、食卓があったら……"],[1,"#joy|パンやさんみたい！ やきたてをならべられるね。"]],{hint:'pan',ok:()=>spotHintOK('pan',['oven','crate','table','dtable'])}),
  Object.assign([[0,"お外の食卓で、日かげの下で食べてみたいな。"],[1,"#joy|パーティーみたいで、たのしそう！"]],{hint:'party',ok:()=>spotHintOK('party','parasol')}),
  Object.assign([[0,"夜も水べでつりができたらなあ。でも、くらいとこわいよね。"],[1,"そばに石のあかりがあったら、こわくないかも。"]],{hint:'yoruzuri',ok:()=>spotHintOK('yoruzuri','toro')}),
  Object.assign([[0,"小鳥が水をのみにくる所で、すわって見ていたいな。"],[1,"しげみもあったら、小鳥が安心して来てくれるよね。"]],{hint:'kotori',ok:()=>spotHintOK('kotori','birdbath')}),
@@ -584,8 +584,8 @@ CHATS.push(
  Object.assign([[0,'きのう、@Gの夢を見たよ。'],[1,'……どんな夢？'],[0,'#teary|いっしょに、わらってた。']],{gone:1}));
 /* くらしの動線のスポットのヒント（うしろに足すだけ） */
 CHATS.push(
- Object.assign([[0,"木を切ってから、箱まで、とおいなあ。"],[1,"切る所のそばに、木や石を入れる箱があったら、すぐしまえるのにね。"]],{hint:'shigotoba',ok:()=>spotHintOK('shigotoba','mbox')}),
- Object.assign([[0,"ごはんをとってから、食卓まで歩くうちに、おなかがなっちゃう。"],[1,"ごはんの箱が食卓のそばにあったら、すぐ食べられるね。"]],{hint:'gohan',ok:()=>spotHintOK('gohan',['stor','table'])}),
+ Object.assign([[0,"木を切ってから、箱まで、とおいなあ。"],[1,"切る所のそばに、木や石を入れる箱があったら、すぐしまえるのにね。"]],{hint:'shigotoba',ok:()=>spotHintOK('shigotoba','crate')}),
+ Object.assign([[0,"ごはんをとってから、食卓まで歩くうちに、おなかがなっちゃう。"],[1,"ごはんの箱が食卓のそばにあったら、すぐ食べられるね。"]],{hint:'gohan',ok:()=>spotHintOK('gohan',['crate','table'])}),
  Object.assign([[0,"おきたら、そのまま家の中でごはんにしたいな。"],[1,"ベッドのある家に、食卓もあったらいいね。"]],{hint:'nedoko',ok:()=>spotHintOK('nedoko',['bed','yorubed'])}));
 
 const CHATSEENKEY='hakoniwa-chat-v1';let CHATSEEN=null;/* 出た雑談は、ステージをこえておぼえる（ほかのステージで出た話は出にくい） */
@@ -622,5 +622,5 @@ const SPEC={wood:['plant','tend','fert','cookS'],water:['water','cookS'],fire:['
 const OWN={plant:'wood',tend:'wood',water:'water',till:'earth',repair:'earth',seed:'wind'};/* 料理は、だれでもできる */
 function ownOK(r,el){return !el||r.elem===el}
 function canJob(r,k){if(k==='seed')return r.elem==='wind';if(k==='fert')return r.elem==='wood';if(k==='harvest'&&r.elem!=='wood'&&S.res.some(q=>q.elem==='wood'))return false;/* 収穫は、木のせいれいがいれば木のせいれい */if(k==='tend'&&S.res.some(q=>q.elem==='water'))return false;/* 水やりは、水のせいれいがいれば水のせいれい（木の子の世話の水やりはしない） *//* 外にふしぎな種があれば、風の子はみんな拾いに行く */return ownOK(r,OWN[k])}
-const makerOf=id=>WD===1&&(id==='bench'||id==='noren')||id==='stor'||id==='mbox'?null:BL[id].maker;/* 箱は、だれでも作れる *//* 火山のふもと：温泉のクエストに使うベンチ・のれんは、だれでも作れる */
+const makerOf=id=>WD===1&&(id==='bench'||id==='noren')||id==='stor'||id==='mbox'||id==='crate'?null:BL[id].maker;/* 箱は、だれでも作れる *//* 火山のふもと：温泉のクエストに使うベンチ・のれんは、だれでも作れる */
 function craftOK(r,o){return ownOK(r,makerOf(o.type))}

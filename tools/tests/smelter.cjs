@@ -4,7 +4,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict'),fs=r
  page.on('pageerror',e=>errors.push(e.message));
  await page.route('**/js/main.js*',async route=>{const r=await route.fetch();await route.fulfill({response:r,body:(await r.text())+'\nwindow.smEval=s=>eval(s);'})});
  await page.goto(process.env.GAME_URL||'http://127.0.0.1:8000');await page.waitForFunction(()=>window.smEval);const run=s=>page.evaluate(s=>smEval(s),s);
- await run(`checkQuest=()=>{};updTut=()=>{};checkLevel=()=>{};true`);
+ await run(`checkQuest=()=>{};updTut=()=>{};checkLevel=()=>{};showSpotPop=()=>{};true`);
  await run(`(()=>{resetVillageTransient();setWorld(1);S=newState(1);LIVE[1]=S;started=true;USERPAUSE=true;NOSAVE=true;S.introSeen=true;S.enemyOn=false;for(const id of ['#title','#maps','#pro','#dialog','#lvup','#rlv'])document.querySelector(id).hidden=true;recount();return 1})()`);
  /* おぼえる */
  assert.equal(await run(`lvOK('smelter')`),false,'はじめから炉');
@@ -23,7 +23,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict'),fs=r
  const sim=await run(`(()=>{const fire=S.res.find(r=>r.elem==='fire');S.res.forEach(r=>{r.hidden=false;r.act=null});let lit=false,n=0;for(;n<6000&&(S.mat.icopper||0)<3;n++){stepWorld(.25);for(const q of S.res){q.hunger=hMax(q);q.fun=90;q.energy=90}if(smLit(${sj}))lit=true}return {n,ic:S.mat.icopper||0,cu:S.mat.copper,left:JSON.stringify(S.smIn||{}),lit,xp:fire.xp}})()`);
  console.log(JSON.stringify(sim));assert.equal(sim.ic,3,'延べ棒3こ');assert.equal(sim.cu,1);assert.equal(sim.lit,true,'火のついた絵');assert.equal(sim.left,'{}');
  /* こわれたら、入れた鉱石は返す */
- const rf=await run(`(()=>{S.smIn={[${sj}]:{iron:2}};S.smQ={[${sj}]:{gold:4}};S.mat.iron=0;S.mat.gold=0;clearObj(${sj});smTick();return [S.mat.iron,S.mat.gold,Object.keys(S.smIn).length+Object.keys(S.smQ).length]})()`);assert.deepEqual(rf,[2,4,0]);
+ const rf=await run(`(()=>{S.mat.iron=0;S.mat.gold=4;boxSync();S.smIn={[${sj}]:{iron:2}};S.smQ={[${sj}]:{gold:4}};boxSync();const g0=S.mat.gold;clearObj(${sj});smTick();boxSync();return [S.mat.iron,S.mat.gold+g0,Object.keys(S.smIn).length+Object.keys(S.smQ).length]})()`);assert.deepEqual(rf,[2,4,0],'炉がなくなったら、入れた鉱石はもどり、とっておいた鉱石は使える数にもどる');
  /* そうびは延べ棒で作る・鉱石で思いつく */
  const gr=await run(`(()=>{const b=BL.gw03;S.recipes={};S.mat={};S.gotMat={copper:1};gearIdea();return [JSON.stringify(b.mat),!!S.recipes.gw03,!!S.recipes.gw05,MATN.icopper]})()`);
  assert.deepEqual(gr,['{"icopper":2,"bamboo":1}',true,false,'銅の延べ棒']);

@@ -5,7 +5,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict'),fs=r
  page.on('pageerror',e=>errors.push(e.message));
  await page.route('**/js/main.js*',async route=>{const r=await route.fetch();await route.fulfill({response:r,body:(await r.text())+'\nwindow.oreEval=s=>eval(s);'})});
  await page.goto(process.env.GAME_URL||'http://127.0.0.1:8000');await page.waitForFunction(()=>window.oreEval);const run=s=>page.evaluate(s=>oreEval(s),s);
- await run(`checkQuest=()=>{};updTut=()=>{};checkLevel=()=>{};true`);
+ await run(`checkQuest=()=>{};updTut=()=>{};checkLevel=()=>{};showSpotPop=()=>{};true`);
  const fresh=()=>run(`(()=>{resetVillageTransient();if(sheet)closeSheet();setWorld(1);S=newState(1);LIVE[1]=S;started=true;USERPAUSE=true;NOSAVE=false;window.__noIdle=true;S.introSeen=true;for(const id of ['#title','#maps','#pro','#dialog','#lvup','#rlv'])document.querySelector(id).hidden=true;recount();return true})()`);
  const veins=`(()=>{const c={};for(const v of VEIN_IDS)c[v]=S.obj.filter(x=>x===v).length;return c})()`;
  const done=id=>`S.cleared=false;S.quest=questIndexOf('${id}')+1;S.qStory=null;S.qTalked=false;`;

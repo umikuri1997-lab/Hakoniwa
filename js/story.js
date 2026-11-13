@@ -26,7 +26,7 @@ const QUESTS2=[
     [HOMURA,'#surprise|ほんとに直っちまった。'],[HOMURA,'へえ、なかなかいい神殿じゃないか。'],
     [GOD,'じゃろ〜。ここが、おヌシとわしの居場所じゃ。'],
     [GOD,'#joy|くらしの道具は、とどけておいたぞい。'],[HOMURA,'……ま、助かるよ。']],
-   gives:{feat:['inv','remove','plant','craft','people'],flag:'lv_oven',recipes:['oven','bed','stor','mbox'],items:{oven:1,bed:1,bamboowall:3,misugaki:10,spike:10},mat:{wood:10,stone:10},enemy:true}},
+   gives:{feat:['inv','remove','plant','craft','people'],flag:'lv_oven',recipes:['oven','bed','crate'],items:{oven:1,bed:1,bamboowall:3,misugaki:10,spike:10},mat:{wood:10,stone:10},enemy:true}},
   {id:'coldSpring',text:'冷たい温泉を調べよう',check:()=>!!S.flags.sprLook,how:'「みる」で、村の水たまりをタップする',
    talk:{who:HOMURA,when:()=>true,lines:[
     [HOMURA,'…なあ守り神。この村、むかしは湯気がもくもく上がってたんだよ。'],
@@ -215,7 +215,7 @@ function freeSetup(s){const used=new Set(['フタバ','ノドカ']);const nm=()=
   s.fs={berry:12};s.food=12;s.mat={wood:20,stone:20};s.pt=40;
   for(let j=0;j<W*H;j++)if(s.obj[j]==='deadtree')s.obj[j]=Math.random()<.5?'ntree':'';
   for(let d=3;d<=5;d++){const j=(CY-2)*W+CX-d;s.obj[j]='hwall';s.floor[j]='';s.hp[j]=BL.hwall.hp}/* 家はこわれていない */
-  putNear(s,'stor',CX+3,CY+1);putNear(s,'mbox',CX+5,CY+1);
+  putNear(s,'crate',CX+3,CY+1);putNear(s,'crate',CX+5,CY+1);
   for(const k of ['tree','bellf','salvia','lily','lotus','clover'])if(BL[k]){s.unlocked[k]=true}
   s.inv=Object.assign(s.inv||{},{bellf:3,salvia:3,lily:3,lotus:3,clover:9});
   let c2=false;try{const t=KV.getItem(SAVE_KEYS[1]);c2=!!(t&&JSON.parse(t).cleared)}catch(e){}if(c2){s.inv.hotstone=(s.inv.hotstone||0)+2;s.flags.giftV=1}/* 火山の村をクリアしていたら、ほのお石もとどく */syncQuestRecipes(s)}

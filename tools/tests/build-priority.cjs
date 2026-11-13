@@ -3,7 +3,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict'),fs=r
 (async()=>{const browser=await chromium.launch({executablePath:process.env.CHROME_PATH||(fs.existsSync('/usr/bin/chromium')?'/usr/bin/chromium':undefined),args:['--no-sandbox']});const page=await browser.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));await page.route('**/js/main.js*',async route=>{const r=await route.fetch();await route.fulfill({response:r,body:(await r.text())+'\nwindow.bpEval=s=>eval(s);'});});await page.goto(process.env.GAME_URL||'http://127.0.0.1:8000');await page.waitForFunction(()=>!!window.bpEval);
 const out=await page.evaluate(()=>bpEval(`(()=>{const out={};
  function setup(){S=newState(0);setWorld(0);S.ground.fill(0);S.hi.fill(0);S.obj.fill('');S.floor.fill('');S.dyn={};S.orders=[];S.pt=99999;S.food=99;S.t=12*60;
-  S.obj[5*W+5]='stor';S.obj[5*W+7]='mbox';for(let k=0;k<6;k++)S.obj[(10+k)*W+8]='ntree';/* そばに木（ふだんの仕事）がある */
+  S.obj[5*W+5]='crate';S.obj[5*W+7]='crate';for(let k=0;k<6;k++)S.obj[(10+k)*W+8]='ntree';/* そばに木（ふだんの仕事）がある */
   const r=S.res.find(q=>!q.hidden)||S.res[0];r.x=6.5;r.y=12.5;r.act=null;r.path=[];r.hunger=hMax(r);r.fun=100;r.energy=100;S.res=[r];recount();return r}
  /* 遠い建てる場所 */
  let r=setup();const sj=100*W+100;S.obj[sj]='site';S.dyn[sj]={build:'fence',p:0,need:5};recount();const G=bfs(r.x|0,r.y|0);out.siteDist=G.dist[100*W+99];

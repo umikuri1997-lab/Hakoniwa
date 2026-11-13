@@ -11,7 +11,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict');
 
   console.log('ordinary main prompt',await run(`(()=>{
     updTut=()=>{};finalCheck=()=>{};showItemGift=()=>{};showSpotPop=()=>{};S.enemyOn=true;S.t=720;S.hold=0;
-    S.quest=questIndexOf('mbox');S.qStory=null;S.qTalked=false;const r=S.res[0],home=(r.y|0)*W+(r.x|0),j=home+8;S.obj[j]='mbox';recount();checkQuest();
+    S.quest=questIndexOf('stor');S.qStory=null;S.qTalked=false;const r=S.res[0],home=(r.y|0)*W+(r.x|0),j=home+8;S.obj[j]='crate';recount();checkQuest();
     for(let i=0;i<400&&!(r.act?.type==='storywait'&&r.act.stage==='do');i++)updRes(r,.5);
     if(!mainStoryBubbleReady(r)||r.act?.type!=='storywait'||r.act.stage!=='do'||!questVisitReached(r,j))throw Error('not waiting at box '+JSON.stringify(r.act));
     const hunger=r.hunger,fun=r.fun;for(let i=0;i<720;i++)updRes(r,.5);if(r.hunger!==hunger)throw Error('waiting consumed food');if(r.fun<fun)throw Error('waiting reduced fun');
@@ -19,7 +19,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict');
     if(Math.abs((r.y|0)-(home/W|0))+Math.abs((r.x|0)-home%W)>1)throw Error('return did not reach home');return 'walk to box, no hunger for long wait, walk back after conversation';
   })()`));
   console.log('waiting reasons',await run(`(()=>{
-    S.t=720;S.qTalked=false;S.qStory=null;S.quest=questIndexOf('mbox');const r=S.res[0],obj=mainStoryWaitInfo().obj;endAct(r);r.hunger=0;
+    S.t=720;S.qTalked=false;S.qStory=null;S.quest=questIndexOf('stor');const r=S.res[0],obj=mainStoryWaitInfo().obj;endAct(r);r.hunger=0;
     if(!storyWaitStatusText().includes('食事'))throw Error('missing food reason');r.hunger=hMax(r);r.energy=0;
     if(!storyWaitStatusText().includes('休んで'))throw Error('missing rest reason');r.energy=100;r.cing={rec:'test'};
     if(!storyWaitStatusText().includes('料理'))throw Error('missing cook reason');r.cing=null;

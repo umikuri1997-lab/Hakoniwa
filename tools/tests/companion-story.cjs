@@ -121,7 +121,7 @@ console.log('Morning growth: exactly half over two days, normal and restored lan
 const work=fs.readFileSync(path.join(root,'js/spirit-work.js'),'utf8');
 const choose=work.slice(work.indexOf('function goWork('),work.indexOf('/* 依頼ボードの作業場所'));
 const job=vm.createContext({console});
-vm.runInContext(`const S={mat:{wood:0,stone:0},food:100,drops:[]},SPEC={wind:['seed']},FARMJ=[],JOBCAT=[['build','repair'],['craft'],['harvest'],['cook','chop','mine','drop','weed']],ORACLE={};const foodLow=()=>0,foodCap=()=>100,wreqList=()=>[],smeltJob=()=>false,webJob=()=>false,vreqList=()=>[];let chosen='';var tryJob=function(r,G,k){if(['chop','mine','weed','drop'].includes(k)){chosen=k;return true}return false}`,job);
+vm.runInContext(`const S={mat:{wood:0,stone:0},food:100,drops:[]},SPEC={wind:['seed']},FARMJ=[],JOBCAT=[['build','repair'],['craft'],['harvest'],['cook','chop','mine','drop','weed']],ORACLE={};const foodLow=()=>0,foodCap=()=>100,wreqList=()=>[],smeltJob=()=>false,webJob=()=>false,vreqList=()=>[],haulJob=()=>false;let chosen='';var tryJob=function(r,G,k){if(['chop','mine','weed','drop'].includes(k)){chosen=k;return true}return false}`,job);
 vm.runInContext(choose,job);
 const counts=JSON.parse(vm.runInContext(`(()=>{const counts={chop:0,mine:0,weed:0,drop:0};for(let i=0;i<12000;i++){goWork({elem:'wind'},null,true);counts[chosen]++}return JSON.stringify(counts)})()`,job));
 assert.equal(counts.drop,12000,JSON.stringify(counts));/* 風のせいれいは、落ちている物を、木・石より先にひろう（落とし物 → ふしぎな種 → 雑草） */

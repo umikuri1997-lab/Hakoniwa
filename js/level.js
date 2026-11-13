@@ -82,7 +82,7 @@ const SEED_COUNTS={normal:[0,1,2,3],kaze:[3,4,5,6]};
 function dailySeedCount(){const p=Math.random(),i=p<.25?0:p<.75?1:p<.95?2:3;return SEED_COUNTS[S.today==='kaze'?'kaze':'normal'][i]}
 function planSeeds(){S.seedDay=dayNo();const n=dailySeedCount(),b=S.t-clk()%1440,from=Math.max(S.t,b+360),to=Math.max(from,b+1080);S.seeds=[];S.seedPlan=Array.from({length:n},()=>from+Math.random()*(to-from)).sort((a,b)=>a-b)}/* その日の昼に落ちる。時計を止めたチュートリアルの時間も考える */
 const DAYLEN=1.5;/* 1日の長さ：せいれいが動く時間の1.5倍で、時計が1分すすむ */
-function stepWorld(dt){if((SUBT+=dt)>1){SUBT=0;checkSub();checkSev();bondTick();guardTick();cmpTick();smTick();jobReachTick();if(typeof villageGiftTick==='function')villageGiftTick();troubleTick();stayGreen()}
+function stepWorld(dt){boxSync();if((SUBT+=dt)>1){SUBT=0;checkSub();checkSev();bondTick();guardTick();cmpTick();smTick();jobReachTick();if(typeof villageGiftTick==='function')villageGiftTick();troubleTick();stayGreen()}
   st2Tick();fireTick(dt/DAYLEN);
   const prevH=hour(),t0=S.t;let nt=S.t+dt/DAYLEN;// 時計：夜も昼と同じ速さ（1日は1.5倍の長さ）
   if(!S.enemyOn){const c=clk(),cap=Math.floor(c/1440)*1440+(WD===0?20:18)*60,nc=c+(nt-S.t);if(nc>cap)S.hold=(S.hold||0)+Math.min(nt-S.t,nc-cap)}/* チュートリアルで夜がはじまるまで、時計（朝・昼・夜）は18時（草原は20時）で止めておく。せいれいの動きにつかう時間（S.t）は進める */S.t=nt;const h=hour();

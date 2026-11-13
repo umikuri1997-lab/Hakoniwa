@@ -17,7 +17,7 @@ const assert=require('node:assert/strict');
     return JSON.stringify({mob:foeMobbed(S.enemies[0]),go,hit:S.enemies.reduce((s,e,i)=>s+hp0[i]-e.hp,0)})})()`));
   console.log(w);assert.equal(w.mob,true);assert.equal(w.go,1,'goes to the wall breakers');assert(w.hit>0,'attacks them');
   /* 箱からぬすんでいるカゲドロボウは、むれでも近よって攻撃する */
-  const th=JSON.parse(await run(`(()=>{const h=S.res[0];const bx=(h.x|0)+6,by=h.y|0;S.obj[by*W+bx]='stor';recount();
+  const th=JSON.parse(await run(`(()=>{const h=S.res[0];const bx=(h.x|0)+6,by=h.y|0;S.obj[by*W+bx]='crate';recount();
     S.enemies=[];for(let i=0;i<3;i++)S.enemies.push({type:'thief',x:bx+1.5,y:by+.5+i*.4,hp:EN.thief.hp,spawned:true,path:[],stealKey:'box:'+(by*W+bx),busyT:S.t});
     endAct(h);h.act=null;h.x=bx-4+.5;h.y=by+.5;h.fatk=0;let go=0;const hp0=S.enemies.map(e=>e.hp);const g=foeGuard(S.enemies[0],h);
     for(let i=0;i<800;i++){S.t+=.05;for(const e of S.enemies)e.busyT=S.t;updRes(h,.05);if(h.act&&h.act.hunt!=null)go=1}

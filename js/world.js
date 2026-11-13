@@ -15,7 +15,7 @@ function clearConds(){if(WD===1){const tm=TOWER_MAT(),n=springDone(),fac=['bench
   ['温泉のそばに、ベンチ・水おけ・のれん（いま'+fac+'/3）',fac>=3],
   ['ホムラとシズクのおねがい',!!S.flags.hReq&&!!S.flags.sReq],
   ['台座にはめるヌシ様の火だね（いま'+shLeft()+'つ）',shLeft()>=1],
-  ['素材箱に'+(tm.wood+tm.stone)+'こ入る（いま'+matCap()+'こ）',matCap()>=tm.wood+tm.stone],/* 素材箱が小さいと、台座の素材がためられない */
+  ['しまえる数'+(tm.wood+tm.stone)+'こ（いま'+boxCapTot()+'こ）',boxCapTot()>=tm.wood+tm.stone],/* 箱が小さいと、台座の素材がためられない */
   ['木材'+tm.wood+'・石材'+tm.stone+'（いま'+(S.mat.wood||0)+'・'+(S.mat.stone||0)+'）',(S.mat.wood||0)>=tm.wood&&(S.mat.stone||0)>=tm.stone]]}
   return [['御神木にヌシのかけらを2つ届ける（いま'+Math.min(2,S.setSh||0)+'つ）',(S.setSh||0)>=2]]}/* 草原：かけらがそろえば、さいごの防衛へ */
 const clearReady=()=>clearConds().every(c=>c[1]);
@@ -31,7 +31,7 @@ let S=null;
 const resv=new Map();
 let RUINT=-1/* こわれた神殿（直している途中もふくむ）のマス。recount で作る */,STATUE=-1,OBOX=-1,BOARD=-1,counts={},LIGHTS=[],JARS=[],COMPS=[],LITP=[],STELES=[],LURES=[],TOWERS=[],ENVE={},NEARMILL=new Set(),STUMPB=new Set(),NEARVANE=new Set(),NEARCART=new Set(),NEARJORO=new Set(),NEARSIGN=new Set(),NEARPARA=new Set(),SPOTJ=new Map(),SPOTM=new Map(),SPOTI=[],RUGC=new Map(),RFC=new Map(),ENVG=null,REV=new Set(),ATTR={},BASEPCT=0,GRASSN=0;
 function newState(w){w=w||0;
-  const s={v:8,mig:10,flags:{gup1:1,stat10:1,trapSub1:1,board2x1:1,bondX2:1,spring2:1,juice1:1,berryHalf:1,berryHalf2:1,land2:1,land3:1,land4:1,arrow0:1,q3ins:1,qmerge1:1,qsplit1:1,earthMerge1:1,fieldMerge1:1,tutSub1:1,farmFirst1:1,omoiIns1:1,warmIns1:1,story3ins1:1,vgift1:1,companionStory:1,fieldStoryV2:1,sacredStoryV1:1,sacredFootprint3:1,sacredFootprint4:1,sacredLeft1:1,fieldBuild1:1,trfit1:1,cookfit1:1,watch5:1,xp12:1,veins1:1,ore2:1,noBerry1:1,yogan2:1,bwall1:1,misu1:1,fl2v1:1,no2f1:1,vq1:1,fog1:1,ruinGap1:1,festq2:1,shin3:1,shinGone1:1,noStable1:1,noTool1:1,rec3:1,ruinTemple1:1},placed:{},feat:{build:true},inv:{},orders:[],enemyOn:false,nights:0,godGone:false,godShown:false,nushi:null,
+  const s={v:8,mig:10,box:{},pile:{},rsv:{},flags:{box1:1,gup1:1,stat10:1,trapSub1:1,board2x1:1,bondX2:1,spring2:1,juice1:1,berryHalf:1,berryHalf2:1,land2:1,land3:1,land4:1,arrow0:1,q3ins:1,qmerge1:1,qsplit1:1,earthMerge1:1,fieldMerge1:1,tutSub1:1,farmFirst1:1,omoiIns1:1,warmIns1:1,story3ins1:1,vgift1:1,companionStory:1,fieldStoryV2:1,sacredStoryV1:1,sacredFootprint3:1,sacredFootprint4:1,sacredLeft1:1,fieldBuild1:1,trfit1:1,cookfit1:1,watch5:1,xp12:1,veins1:1,ore2:1,noBerry1:1,yogan2:1,bwall1:1,misu1:1,fl2v1:1,no2f1:1,vq1:1,fog1:1,ruinGap1:1,festq2:1,shin3:1,shinGone1:1,noStable1:1,noTool1:1,rec3:1,ruinTemple1:1},placed:{},feat:{build:true},inv:{},orders:[],enemyOn:false,nights:0,godGone:false,godShown:false,nushi:null,
     lv:1,bossKills:0,nightHurt:0,nightHad:false,wave:null,lastWarn:0,
     ref:{},ground:new Array(W*H).fill(0),floor:new Array(W*H).fill(''),obj:new Array(W*H).fill(''),dyn:{},hp:{},
     res:[],enemies:[],pt:25,totalPt:0,food:0,fs:{},cseed:{imo:4},crops:{imo:true},mat:{wood:0,stone:0},regrow:[],t:w===0?15*60:12*60,/* 草原は15時からはじまる */speed:1,
@@ -121,7 +121,7 @@ function genWorld(s,w){
   for(let y=CY-6;y<=CY-2;y++)for(let d=2;d<=7;d++){if(d>2&&d<7&&y>CY-6&&y<CY-2)continue;const x=hx(-d),j=y*W+x;if(y===CY-2&&d>=3&&d<=5)continue;/* はじめは壁がこわれている（クエストで直す） */s.obj[j]=(d===2&&y===CY-4)?'door':'hwall';s.floor[j]=s.obj[j]==='door'?'path':'';if(s.obj[j]==='hwall')s.hp[j]=BL.hwall.hp}
   for(let d=1;d<=4;d++){const j=(CY-4)*W+hx(d);s.obj[j]='farm';s.floor[j]='';s.dyn[j]={g:50,wet:0,crop:'imo'}}/* 最初の畑は4つ。家の道をはさんだ向かいに横1列。作物は、はじめはいもだけ */
   }
-  if(V){const put=id=>{let best=-1,bd=1e9;for(let y=CY-7;y<CY;y++)for(let x=CX-6;x<CX;x++){const j=y*W+x;if(s.ground[j]===1||s.obj[j]||s.floor[j])continue;if([j-1,j+1,j-W,j+W,j-W-1,j-W+1,j+W-1,j+W+1].some(k=>s.ground[k]===1||s.obj[k]==='stor'||s.obj[k]==='mbox'))continue;const d=Math.hypot(x+.5-(CX-3),y+.5-(CY-3.5));if(d<bd){bd=d;best=j}}if(best>=0)s.obj[best]=id};{const j=(CY+4)*W+CX-8;s.obj[j]='stor';s.floor[j]='floor'}put('mbox');for(let y=CY-13;y<CY-8;y++){const j=y*W+CX;if(!s.obj[j]&&s.ground[j]!==1)s.floor[j]='path'}st2Place(s)}/* 火山のふもと：食料箱は古い家の中、素材箱は村の北西に（コワイノは南から来るので） */
+  if(V){const put=id=>{let best=-1,bd=1e9;for(let y=CY-7;y<CY;y++)for(let x=CX-6;x<CX;x++){const j=y*W+x;if(s.ground[j]===1||s.obj[j]||s.floor[j])continue;if([j-1,j+1,j-W,j+W,j-W-1,j-W+1,j+W-1,j+W+1].some(k=>s.ground[k]===1||s.obj[k]==='crate'))continue;const d=Math.hypot(x+.5-(CX-3),y+.5-(CY-3.5));if(d<bd){bd=d;best=j}}if(best>=0)s.obj[best]=id};{const j=(CY+4)*W+CX-8;s.obj[j]='crate';s.floor[j]='floor'}put('crate');for(let y=CY-13;y<CY-8;y++){const j=y*W+CX;if(!s.obj[j]&&s.ground[j]!==1)s.floor[j]='path'}st2Place(s)}/* 火山のふもと：木箱は古い家の中と、村の北西に（コワイノは南から来るので） */
   genLand(s,w)/* 川と段差（いちばん最後：ほかの物をおいたあと） */;/* 火山の鉱脈は、お話が進むと目をさます（oreWakeTick） */
 }
 

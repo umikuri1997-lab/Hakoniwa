@@ -10,8 +10,8 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict');
   await page.waitForFunction(()=>sacredEval('stageReady()'),{},{timeout:60000});
 
   const target=await run(`(()=>{
-    updTut=()=>{};showItemGift=()=>{};showSpotPop=()=>{};finalCheck=()=>{};S.t=720;S.hold=0;S.quest=questIndexOf('mbox');S.qStory=null;S.qTalked=false;
-    const j=(CY+4)*W+CX+5;S.obj[j]='mbox';recount();checkQuest();cam.z=.4;centerOn(100,100);const target=mainStoryFocusTarget();camAnim=null;document.querySelector('#questChip').click();if(sheet!=='menu'||sheetArg!=='goal'||camAnim)throw Error('goal chip should open the goal list');focusMainStoryPlace();
+    updTut=()=>{};showItemGift=()=>{};showSpotPop=()=>{};finalCheck=()=>{};S.t=720;S.hold=0;S.quest=questIndexOf('stor');S.qStory=null;S.qTalked=false;
+    const j=(CY+4)*W+CX+5;S.obj[j]='crate';recount();checkQuest();cam.z=.4;centerOn(100,100);const target=mainStoryFocusTarget();camAnim=null;document.querySelector('#questChip').click();if(sheet!=='menu'||sheetArg!=='goal'||camAnim)throw Error('goal chip should open the goal list');focusMainStoryPlace();
     if(sheet!==null||!camAnim?.storyGoal||mode!=='look'||!document.querySelector('#dialog').hidden||S.qTalked)throw Error('goal did not focus without starting talk');
     return target;
   })()`);
@@ -27,6 +27,6 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict');
     await page.getByRole('button',{name:'お話・調査の場所へ'}).click();assert(await run("sheet===null&&!!camAnim?.storyGoal"),'menu focus button');
     await run(`(()=>{resetVillageTransient();if(camAnim)throw Error('old goal camera survived village reset');})()`);
   }
-  await run(`(()=>{S.quest=questIndexOf('mbox');S.qTalked=true;S.qStory=null;TALKW=null;camAnim=null;document.querySelector('#questChip').click();if(sheet!=='menu'||sheetArg!=='goal')throw Error('ordinary non-story goal lost menu');})()`);
+  await run(`(()=>{S.quest=questIndexOf('stor');S.qTalked=true;S.qStory=null;TALKW=null;camAnim=null;document.querySelector('#questChip').click();if(sheet!=='menu'||sheetArg!=='goal')throw Error('ordinary non-story goal lost menu');})()`);
   assert.deepEqual(errors,[]);console.log('Goal tap opens the goal list; its place button focuses pending conversation and investigation without starting dialogue; desktop/phone framing, menu link, night/normal goal fallback, and village reset passed.');await browser.close();
 })().catch(e=>{console.error(e);process.exit(1)});

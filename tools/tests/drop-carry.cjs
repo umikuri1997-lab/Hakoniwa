@@ -5,7 +5,7 @@ await page.waitForFunction(()=>ltEval('!!window.CHIPS&&!!CHIPS["kg_basic:idle"]'
 const out=JSON.parse(await page.evaluate(()=>ltEval(`(()=>{const o={};newGame(0);for(const id of ['#title','#maps','#pro','#dialog'])document.querySelector(id).hidden=true;showUI(true);started=true;USERPAUSE=true;showItemGift=()=>{};showSpotPop=()=>{};S.enemyOn=false;S.t=12*60;
  const r=S.res[0],x=r.x|0,y=r.y|0;for(let b=-6;b<=6;b++)for(let a=-6;a<=6;a++){const k=(y+b)*W+x+a;if(!sacredReserved(k)&&!sacredNoBuild(k)&&(S.obj[k]==='tree'||S.obj[k]==='rock'||WEEDS.has(S.obj[k])))S.obj[k]=''}
  const free=[];for(let b=-5;b<=5;b++)for(let a=-5;a<=5;a++){const k=(y+b)*W+x+a;if(!S.obj[k]&&walk(k)&&!sacredNoBuild(k)&&(a||b))free.push(k)}
- S.obj[free[0]]='mbox';S.obj[free[free.length-1]]='obox';recount();o.boxes=OBOX>=0&&matCap()>0;r.hunger=hMax(r);r.energy=100;r.fun=90;r.xp=99999;
+ S.obj[free[0]]='crate';S.obj[free[free.length-1]]='obox';recount();o.boxes=OBOX>=0&&matCap()>0;r.hunger=hMax(r);r.energy=100;r.fun=90;r.xp=99999;
  const sand0=S.sand||0,horn0=S.horn||0,inv0=inv('stool');
  takeDrop({id:'sand',n:1,x,y},r);takeDrop({id:'horn',n:1,x,y},r);takeDrop({id:'stool',n:1,x,y},r);
  o.notYet=(S.sand||0)===sand0&&(S.horn||0)===horn0&&inv('stool')===inv0;o.held=citemN(r);o.icons=carryIcons(r).length;
