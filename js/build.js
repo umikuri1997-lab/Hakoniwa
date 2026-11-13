@@ -233,9 +233,9 @@ function askBulk(id,cells){if(WALLD.has(id))return toast(BL[id].name+'は、ハ�
   const ok=cells.filter(([x,y])=>canPlace(id,x,y,true));
   if(!ok.length){toast('置ける場所がありません');return}
   const b=BL[id];
-  if(b.kind==='plant'){const n=Math.min(ok.length,inv(id),Math.max(0,10-cnt('sprout')));if(!inv(id))return toast(iname(id)+'がおそなえ箱にありません');if(!n)return toast('植える予定がいっぱいです');/* 植える予定は10か所まで（1つずつ置くときと同じ） */ok.length=n;pending={kind:'plant',id,cells:ok};$('#confirmTxt').textContent=iname(id)+'を'+n+'か所に植えてもらう';$('#cYes').disabled=false}
+  if(b.kind==='plant'){const n=Math.min(ok.length,inv(id),Math.max(0,10-cnt('sprout')));if(!inv(id))return toast(iname(id)+'がおそなえ箱にありません');if(!n)return toast('植える予定がいっぱいです');/* 植える予定は10か所まで（1つずつ置くときと同じ） */ok.length=n;pending={kind:'plant',id,cells:ok};$('#confirmTxt').textContent=iname(id)+'を'+n+'か所に植えてもらう';lackOn($('#cYes'),'')}
   else{const s=shortCost({[id]:ok.length});if(b.qty){const n=Math.min(ok.length,inv(id));if(!n)return toast(b.name+'が足りません','warn');ok.length=n;s.cost=0;s.parts=[]}
-    pending={kind:'bulk',id,cells:ok,cost:s.cost,need:{[id]:ok.length}};$('#confirmTxt').textContent=b.name+' '+ok.length+'マス'+(s.parts.length?'（足りない'+s.parts.join('・')+'は'+SP(s.cost)+'で）':'（おそなえ箱から）');$('#cYes').disabled=S.pt<s.cost}
+    pending={kind:'bulk',id,cells:ok,cost:s.cost,need:{[id]:ok.length}};$('#confirmTxt').textContent=b.name+' '+ok.length+'マス'+(s.parts.length?'（足りない'+s.parts.join('・')+'は'+SP(s.cost)+'で）':'（おそなえ箱から）');lackOn($('#cYes'),lackPt(s.cost))}
   ($('#cRot').hidden=true,$('#confirm').hidden=false);
 }
 function askStamp(sid,x,y){
@@ -245,7 +245,7 @@ function askStamp(sid,x,y){
   const need={};for(const c of st.cells)need[c[2]]=(need[c[2]]||0)+1;
   const s=stampCost(need);if(!isFinite(s.cost))return toast(s.parts.join('・')+'足りません','warn');
   pending={kind:'stamp',sid,x,y,cost:s.cost,need};
-  $('#confirmTxt').textContent=st.name+(s.parts.length?'（足りない分は'+SP(s.cost)+'で）':'（おそなえ箱から）');$('#cYes').disabled=S.pt<s.cost;($('#cRot').hidden=true,$('#confirm').hidden=false);
+  $('#confirmTxt').textContent=st.name+(s.parts.length?'（足りない分は'+SP(s.cost)+'で）':'（おそなえ箱から）');lackOn($('#cYes'),lackPt(s.cost));($('#cRot').hidden=true,$('#confirm').hidden=false);
 }
 const SWAPG=[['fence','misugaki','logfence','bamboofence','wall'],['hwall','bamboowall','logwall','plasterwall','brickwall','yozorawall'],['path','gravel','woodpath','stone','brick'],['floor','brickfloor','stonefloor','herrfloor','carpet']],SWAPTHRU=[new Set(['gate','stonegate','logdoor','sdoor']),new Set(['door','yozoradoor']),new Set(),new Set()],SWAPNO=['柵や塀ではありません','家の壁ではありません','道ではありません','床ではありません'];/* つけかえトンカチ：柵・塀／家の壁／道／床のなかま。ドア・門はとおりぬけて、その先もつけかえる。道・床は S.floor */
 const swapT=(id,k)=>BL[id].floor?S.floor[k]:S.obj[k];
@@ -254,8 +254,8 @@ function askSwap(id,x,y){const gi=SWAPG.findIndex(g=>g.includes(id)),G=SWAPG[gi]
   const seen=new Set([j0]),q=[j0],cells=[];while(q.length){const j=q.pop();const tj=swapT(id,j);if(tj!==id&&G.includes(tj))cells.push(j);const x0=j%W;for(const k of [x0>0?j-1:-1,x0<W-1?j+1:-1,j-W,j+W]){if(k<0||k>=W*H||seen.has(k))continue;const o=swapT(id,k);if(G.includes(o)||T.has(o)&&!T.has(tj)){seen.add(k);q.push(k)}}}/* ドア・門はとおりぬけるが、ドアどうしはつながらない */
   if(!cells.length)return toast('もう'+BL[id].name+'です');
   if(inv(id)<cells.length)return toast(BL[id].name+'が足りません（'+cells.length+'こいる）','warn');
-  pending={kind:'swap',id,cells};$('#confirmTxt').textContent='つながっている'+cells.length+'マスを'+BL[id].name+'にかえる';$('#cYes').disabled=false;($('#cRot').hidden=true,$('#confirm').hidden=false)}
-function confirmOne(){const p=pending;if(!p||p.kind!=='one')return;const rb=$('#cRot'),rt=ROTS[p.id];rb.hidden=!rt;const lb=rt?'（'+ROTL[rt][rt===5?stairRot(p.id,p.y*W+p.x):PLROTS[p.id]||0]+'）':'';$('#confirmTxt').textContent=p.ok?BL[p.id].name+lb+'をここに置く？':rt===5?ROTL[5][stairRot(p.id,p.y*W+p.x)]+'おりる向きには置けません':'ここには置けません';$('#cYes').disabled=!p.ok}
+  pending={kind:'swap',id,cells};$('#confirmTxt').textContent='つながっている'+cells.length+'マスを'+BL[id].name+'にかえる';lackOn($('#cYes'),'');($('#cRot').hidden=true,$('#confirm').hidden=false)}
+function confirmOne(){const p=pending;if(!p||p.kind!=='one')return;const rb=$('#cRot'),rt=ROTS[p.id];rb.hidden=!rt;const lb=rt?'（'+ROTL[rt][rt===5?stairRot(p.id,p.y*W+p.x):PLROTS[p.id]||0]+'）':'';$('#confirmTxt').textContent=p.ok?BL[p.id].name+lb+'をここに置く？':rt===5?ROTL[5][stairRot(p.id,p.y*W+p.x)]+'おりる向きには置けません':'ここには置けません';lackOn($('#cYes'),'').disabled=!p.ok}
 function rotPending(){const p=pending;if(!p||p.kind!=='one'||!ROTS[p.id])return;PLROTS[p.id]=ROTS[p.id]===5?stairRot(p.id,p.y*W+p.x)%4+1:((PLROTS[p.id]||0)+1)%ROTN(p.id);p.ok=canPlace(p.id,p.x,p.y,true);sfx('tap');confirmOne();dirty=true}/* ↻：置く前に向きをかえる */
 function confirmYes(){
   if(pending&&nightLock()){pending=null;$('#confirm').hidden=true;selRect=null;return toast('夜のあいだは、置くことも、こわすこともできません')}
