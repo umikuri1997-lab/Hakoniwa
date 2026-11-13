@@ -9,4 +9,4 @@
 取ってきた所：GitHub にある Kenney のキットの写し（ネットの制限で kenney.nl から直接は取れなかった）。
 - `quaternius`：Quaternius「Ultimate House Interior Pack」（quaternius.com、CC0）の観葉植物（Houseplant_1〜8、OBJ と MTL）。はちの灰色は、3Dで読むときにやきものの色にかえる（`blueprint.py` の `POTCOL`）。
 - `kenney/nature` の丸太（log・log_large・log_stack）・石（stone_small・rock_small）も Nature Kit。モデルが材質の色だけを持つときは、その色を使う（`blueprint.py` の `model_tris`）。
-- `tripo`：持ち主がトリポ（Tripo）で作った小物のモデル（1つのモデルに入っていたのを、1つずつに切りわけた。色は点ごと）。はち植え（plant）・あさぶくろ（sack・sacks2）・つぼ（jar_band・terracotta）・ろうそく（candle）・ランタン（lantern）・じょうろ（wateringcan）・やさい（veggies）・バスタブ（bathtub）・やさいをのせたまな板（cutboard）。
+- `tripo`：持ち主がトリポ（Tripo）で作った小物のモデル（1つのモデルに入っていたのを、1つずつに切りわけた。色は点ごと）。はち植え（plant）・あさぶくろ（sack・sacks2）・つぼ（jar_band・terracotta）・ろうそく（candle）・ランタン（lantern）・じょうろ（wateringcan）・やさい（veggies）・バスタブ（bathtub）・やさいをのせたまな板（cutboard）・小鳥（bird：水飲み鳥のモデルから、鳥だけをとりだした）。
