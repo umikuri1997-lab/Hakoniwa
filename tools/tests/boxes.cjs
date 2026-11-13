@@ -13,8 +13,8 @@ const boot=require('../sim/boot.cjs'),assert=require('node:assert/strict');
   const b=JSON.parse(await run(`(()=>{const A=window.BA,B=window.BB;S.boxF={};${step(2400)}return JSON.stringify({A:S.box[A],B:S.box[B],pile:S.pile,wood:S.mat.wood})})()`));
   assert.equal(b.wood,100);assert.equal(b.pile.wood||0,0,'pile hauled: '+JSON.stringify(b));assert.equal((b.A.wood||0)+(b.B.wood||0),100);
   /* 食べる：その箱の食べ物をへらす */
-  const c=JSON.parse(await run(`(()=>{const A=window.BA,B=window.BB;const r=S.res[0];r.hunger=300;const f0=S.box[B]['f:berry'];${step(400)}return JSON.stringify({f0,f1:(S.box[B]||{})['f:berry']||0,food:S.food,h:r.hunger})})()`));
-  assert.ok(c.f1<c.f0,'ate from the box: '+JSON.stringify(c));assert.equal(c.food,c.f1);
+  const c=JSON.parse(await run(`(()=>{const A=window.BA,B=window.BB;const r=S.res[0];r.hunger=300;const f0=S.box[B]['f:berry'];${step(400)}let fa=0;for(const k in S.fs)fa+=totKey(fkey(k));return JSON.stringify({f0,f1:(S.box[B]||{})['f:berry']||0,food:S.food,inBoxes:fa,h:r.hunger})})()`));
+  assert.ok(c.f1<c.f0,'ate from the box: '+JSON.stringify(c));assert.equal(c.food,c.inBoxes,'food count is what the boxes hold');
   /* 建てる：たのんだときは、とっておくだけ。せいれいが箱から運んで、とどけてから建てる */
   const d=JSON.parse(await run(`(()=>{const A=window.BA,B=window.BB;const r=S.res[0],j=(r.y|0)*W+(r.x|0)-4;S.obj[j]='site';S.dyn[j]={build:'torch',p:0,need:30,mat:{wood:5},got:{}};rsvAdd({wood:5});recount();boxSync();
     const at={wood:S.mat.wood,rsv:S.rsv.wood,box:(S.box[A].wood||0)+(S.box[B].wood||0)};${step(1200)}
