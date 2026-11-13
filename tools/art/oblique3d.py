@@ -26,9 +26,9 @@ class Scene:
         """これから足す部品のグループ。同じグループの部品どうしのさかいには、render_px で線を引かない（同じ面にそろえて組んだ材など）"""
         self.gcur = g
     def part(self):
-        self.pid += 1
+        self.pid += 1   # つぎの三角形から、べつの部品（輪郭線は部品ごとにふくらませる）
         if self.cur: self.ol[self.pid] = self.cur
-        if self.gcur is not None: self.grp[self.pid] = self.gcur   # つぎの三角形から、べつの部品（輪郭線は部品ごとにふくらませる）
+        if self.gcur is not None: self.grp[self.pid] = self.gcur
     def tri(self, a, b, c, col): self.t.append((np.array(a, float), np.array(b, float), np.array(c, float), np.array(col, float), self.pid))
     def quad(self, a, b, c, d, col): self.tri(a, b, c, col); self.tri(a, c, d, col)
     def ring_wall(self, cx, cy, r, z0, z1, colf, n=48):
