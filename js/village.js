@@ -64,7 +64,7 @@ const BAN=new Map(),free=(k,cap)=>(resv.get(k)||0)<cap&&!(BAN.get(k)>(S?S.t:0))&
 const reserve=k=>resv.set(k,(resv.get(k)||0)+1);
 const release=k=>{const v=(resv.get(k)||0)-1;if(v<=0)resv.delete(k);else resv.set(k,v)};
 function nearLotus(r){const x0=r.x|0,y0=r.y|0;for(let y=y0-2;y<=y0+2;y++)for(let x=x0-2;x<=x0+2;x++){if(x<0||y<0||x>=W||y>=H)continue;if(S.obj[y*W+x]==='lotus')return true}return false}
-const SEATS=['chair','stool','achair','bench','takebench','pouf','sofa1'],BENCHES=new Set(['bench','takebench']);/* BENCHES：休けい（rest）ができるベンチ */function fSpot(j){const t=typeAt(j);return !!t&&SEATS.includes(t)&&spotW(j)>=0}/* 水のすぐとなり（上下左右）の椅子＝釣りスポット（椅子にすわって釣る） */
+const SEATS=['chair','stool','achair','bench','takebench','pouf','sofa1'],SEATOFF={chair:{0:[0,-15],1:[4.5,-25],2:[0,-25],3:[-4.5,-25]},achair:{0:[0,-5.5],1:[7,-15.5],2:[0,-13],3:[-7,-15.5]},sofa1:{0:[0,-6],1:[8,-20.5],2:[0,-16],3:[-8,-20.5]},bench:{0:[3.5,-5],2:[1.5,-8.5]},stool:{0:[0,-21.5]}},/* すわったせいれいの位置のずれ（家具の id → 向き0〜3 → [よこ,たて]。ゲームの点（1マス32）。持ち主が「すわる位置」のページできめた数を入れる。ないときは、ずらさない） */BENCHES=new Set(['bench','takebench']);/* BENCHES：休けい（rest）ができるベンチ */function fSpot(j){const t=typeAt(j);return !!t&&SEATS.includes(t)&&spotW(j)>=0}/* 水のすぐとなり（上下左右）の椅子＝釣りスポット（椅子にすわって釣る） */
 /* スポット：組み合わせて置くと、効果が少し上がる（物どうしがまわり3マス以内）。main のまわりに need がそろうとできる */
 const SPOTS=[
   {k:'dining',n:'しょくたく',main:o=>TABLES.has(o),need:[[o=>SEATS.includes(o),2]],how:'食卓と、いす2つ',eff:'ここで食べたときのパワー+10%'},

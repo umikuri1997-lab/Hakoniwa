@@ -8,13 +8,13 @@
 #   うしろの板：はば0.68・あつさ0.08・高さ0.04〜0.43（ひじかけの高さまで）。うしろの柱にとめる。
 #   背のクッション：あつさ0.15・高さ0.18〜0.70。座板にのせ、うしろの板にもたせる。10度うしろへ反らせる。
 #   座のクッション：背のクッションの前、座板の上（あつさ0.10・おく0.51）。全体のはばは0.70。
-# 後ろ向きでは、すわったせいれいの手前にうしろの板とひじかけがくるので、その絵（achair>2.front）も作る。すわった子の足は、cut でかくす。
+# 後ろ向きでは、すわったせいれいの手前にうしろの板がくるので、その絵（achair>2.front）も作る（ひじかけは、せいれいより下）。すわった子の足は、cut でかくす。
 from blueprint import Part as P
 from common import *
 ID='achair';BOTTOM=50
 VIEWS=[('achair',0),('achair>1',1),('achair>2',2),('achair>3',3)]
 X0,X1,Y0,Y1=0.15,0.85,0.08,0.83;AW=0.11;LG=0.07;ZA=0.36;ZB=ZA+0.07;ZC=0.70;CT=0.15
-FRONT={'achair>2.front':lambda n:n.startswith('うしろの') or n.startswith('ひじ')}
+FRONT={'achair>2.front':lambda n:n.startswith('うしろの')}   # ひじかけは、せいれいより下（持ち主がきめた）
 CUT=('achair>2',)
 def round_box(nm,x0,y0,x1,y1,z0,z1,col,on,note,r=0.04,bv=0.035,cloth=False):
     o=rrect(x0,y0,x1,y1,r);i_=rrect(x0+bv,y0+bv,x1-bv,y1-bv,max(0.005,r-bv/2))

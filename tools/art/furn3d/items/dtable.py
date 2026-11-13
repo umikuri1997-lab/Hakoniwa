@@ -7,7 +7,7 @@
 import math
 from blueprint import Part as P
 from common import *
-ID='dtable';BOTTOM=110
+ID='dtable';SZ=(2,2);BOTTOM=110
 VIEWS=[('dtable',0)]
 X0,X1,Y0,Y1=0.10,1.90,0.28,1.80;H=0.46;TT=0.07;LG=0.11;IN=0.07;AP=0.08
 def PARTS():

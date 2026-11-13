@@ -1,6 +1,6 @@
 # 家具の設計図で使う色。木材は、どの部品も同じ色 WOOD（持ち主がきめた：木材のマテリアルはぜんぶ同じ）（木箱 tools/art/crate3d と同じ、明るい木の色。ゲームのほかの絵に合わせた、明るくやわらかい色）
 WOOD=(230,183,117);METAL=(168,176,190);BOOKS=[(118,172,214),(232,122,95),(141,196,111),(240,204,114),(190,138,214),(238,223,178)]
-LOG=(176,124,82)   # まきの皮の色（家具の木材ではない）
+LOG=(196,146,96)   # まきの皮の色（家具の木材ではない）
 CLOTH=(238,234,208)   # いす・ソファの布（クリーム色。いまの絵に合わせる）
 SOFA=(222,228,200)   # ソファの布（うすい緑がかったクリーム色。いまの絵に合わせる）
 SACK=(236,218,186)   # あさぶくろの布
@@ -29,3 +29,21 @@ def soft(x0,y0,x1,y1,z0,z1,rc=0.06,re=0.05,lean=0.0,n=4,bottom=True,flare=(0,0),
     else:lay(0,z0)
     for k in range(n+1):a=math.pi/2*k/n;lay(re*(1-math.cos(a)),z1-re+re*math.sin(a))
     return L
+def hfield(sc,x0,y0,x1,y1,top,col,bot=None,n=(24,16),shape=None):
+    """高さの面（なだらかな砂・ふっくらしたまくらなど）を三角形で組む。top(x,y)：上の面の高さ。bot(x,y)：下の面の高さ（なければ上の面だけ）。
+    まわりのふちは、上と下をたての面でつなぐ（とじた形にする）。col は色か、col(x,y) で場所ごとの色（水の深さなど）。
+    shape(u,v)→(x,y)：0〜1 のます目を、形にあわせて動かす（まくらの角をつまむ など）"""
+    nx,ny=n;X=[x0+(x1-x0)*i/nx for i in range(nx+1)];Y=[y0+(y1-y0)*j/ny for j in range(ny+1)]
+    cf=col if callable(col) else (lambda x,y:col)
+    mv=(lambda x,y:shape((x-x0)/(x1-x0),(y-y0)/(y1-y0))) if shape else (lambda x,y:(x,y))
+    sc.part()
+    for i in range(nx):
+        for j in range(ny):
+            a,b,c,d=(X[i],Y[j]),(X[i+1],Y[j]),(X[i+1],Y[j+1]),(X[i],Y[j+1])
+            P=lambda q,f:(*mv(*q),f(*q));cc=cf((a[0]+c[0])/2,(a[1]+c[1])/2)
+            sc.quad(P(a,top),P(b,top),P(c,top),P(d,top),cc)
+            if bot:sc.quad(P(d,bot),P(c,bot),P(b,bot),P(a,bot),cc)
+    if bot:
+        ring=[(x,Y[0]) for x in X]+[(X[-1],y) for y in Y[1:]]+[(x,Y[-1]) for x in X[-2::-1]]+[(X[0],y) for y in Y[-2:0:-1]]
+        for q,r in zip(ring,ring[1:]+ring[:1]):sc.quad((*mv(*q),bot(*q)),(*mv(*r),bot(*r)),(*mv(*r),top(*r)),(*mv(*q),top(*q)),cf(*q))
+def SOFT(p):p.soft=True;return p   # 布・砂：なだらかなふくらみにも、かげをつける（oblique3d の SOFTLV）
