@@ -124,3 +124,6 @@ python3 tools/art/chipcheck.py --png <出力>/<物>.png
 - つき目に線を引いた → ゆるい角度の線が、とびとびの点になった。→ `grp` で線を引かない。
 - 木目をそのままはった → 点のぶつぶつ・40色。→ `Tex` の `flow`・`minrun`、線は木目の前の色、板の色をそろえる → 14色。
 - テクスチャを取ってきたら、Git LFS の目じるしだけだった → `media.githubusercontent.com` から取り、sha256 をたしかめる。
+
+## 材質
+- 3Dの絵で、いまあるテクスチャ（`tools/art/textures`）・マテリアル（`oblique3d` の `material`）で表せない材質（石・布の織り目・金属のさびなど）が出てきたら、CC0のテクスチャを新しく取ってくる・マテリアルを足す（出どころは `textures/README.md`）。いまある物でまにあわせない。
