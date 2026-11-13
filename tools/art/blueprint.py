@@ -114,8 +114,8 @@ def build(sc,parts):
             pts,y0,y1=d[:3];sc.part();n=len(pts);X=len(d)>3 and d[3]=='x'
             AX=d[3] if len(d)>3 else 'y';V={'x':(lambda u,w,z:(w,u,z)),'y':(lambda u,w,z:(u,w,z)),'z':(lambda u,w,z:(u,z,w))}[AX]   # u・z：形の2つの向き・w：のばす向き
             for i in range(n):(xa,za),(xb,zb)=pts[i],pts[(i+1)%n];sc.quad(V(xa,y0,za),V(xb,y0,zb),V(xb,y1,zb),V(xa,y1,za),tuple(c))
-            for yy in(y0,y1):
-                for i in range(1,n-1):sc.tri(V(pts[0][0],yy,pts[0][1]),V(pts[i][0],yy,pts[i][1]),V(pts[i+1][0],yy,pts[i+1][1]),tuple(c))
+            for yy in(y0,y1):   # はしの面：へこんだ形（アーチのぬけた形など）も正しくうめる（耳をきりとるやり方）
+                for a_,b_,c_ in earclip(pts):sc.tri(V(a_[0],yy,a_[1]),V(b_[0],yy,b_[1]),V(c_[0],yy,c_[1]),tuple(c))
         elif k=='loft':
             sc.part();R_=d;n=len(R_[0][0])
             for (A,za),(B,zb) in zip(R_,R_[1:]):
@@ -184,6 +184,25 @@ def barktex():
     if not _BT:
         from oblique3d import Tex;_BT.append(Tex(os.path.join(os.path.dirname(os.path.abspath(__file__)),'textures','bark001.png'),span=1.0,flow=6,minrun=3,dark=(0.16,0.93),light=(0.16,1.06)))
     return _BT[0]
+def earclip(pts):
+    """多角形（へこみがあってもよい）を三角形にわける。点のならびの向きはどちらでもよい"""
+    P_=[tuple(p) for p in pts]
+    if len(P_)>1 and P_[0]==P_[-1]:P_=P_[:-1]
+    ar=sum(P_[i][0]*P_[(i+1)%len(P_)][1]-P_[(i+1)%len(P_)][0]*P_[i][1] for i in range(len(P_)))
+    if ar<0:P_=P_[::-1]
+    idx=list(range(len(P_)));out=[];guard=0
+    cr=lambda o,a,b:(a[0]-o[0])*(b[1]-o[1])-(a[1]-o[1])*(b[0]-o[0])
+    def inside(p,a,b,c):return cr(a,b,p)>=0 and cr(b,c,p)>=0 and cr(c,a,p)>=0
+    while len(idx)>3 and guard<10000:
+        guard+=1;ok=False
+        for k in range(len(idx)):
+            i0,i1,i2=idx[k-1],idx[k],idx[(k+1)%len(idx)];a,b,c=P_[i0],P_[i1],P_[i2]
+            if cr(a,b,c)<=1e-12:continue
+            if any(inside(P_[j],a,b,c) for j in idx if j not in(i0,i1,i2)):continue
+            out.append((a,b,c));idx.pop(k);ok=True;break
+        if not ok:break
+    if len(idx)==3:out.append(tuple(P_[j] for j in idx))
+    return out
 MODELS=os.path.join(os.path.dirname(os.path.abspath(__file__)),'models')
 _MC={};MODEL_SOFT=0.3   # モデルの色を白にまぜる分
 POTCOL=(226,196,166)   # 観葉植物のはち（モデルではこい灰色）を、ゲームに合わせたやきものの色に
