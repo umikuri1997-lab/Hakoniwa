@@ -16,7 +16,9 @@ x=東, y=南, z=上（マス）。置くマスの左上が(0,0)。
   rope(a,b,r)                        なわ
   model(path,cx,cy,z0,size,rot,tilt)      フリーの3Dモデル（glTF の .glb。models/ にある CC0 の物）。size はモデルの高さ（マス）、rot は上から見てまわす角度・tilt は東西へたおす角度（度）
   lathe(cx,cy,[(半径,高さ),...])     まわした形（つぼ）。上から下への形
+  prism([(x,z),...],y0,y1)            正面（南から見た形）の多角形を、y0〜y1 へのばした板（すじかいのはしを、ほかの材にそって切るときなど）
   box は bevel=（面取りのはば）を部品ごとにかえられる
+  grp=（名前）：同じ名前の部品どうしのさかいには、ドット絵の輪郭線（oblique3d.render_px）を引かない
 """
 import math,os
 import numpy as np
@@ -24,8 +26,8 @@ from PIL import Image,ImageDraw,ImageFont
 from oblique3d import Scene,render,game,side,VIEW,SIDE,grid_bg
 
 class Part:
-    def __init__(s,name,kind,dims,col=(200,200,200),on=('ground',),note='',deco=False,detail=36,bevel=None):
-        s.name,s.kind,s.dims,s.col,s.on,s.note,s.deco,s.detail,s.bevel=name,kind,dims,col,tuple(on) if on else (),note,deco,detail,bevel
+    def __init__(s,name,kind,dims,col=(200,200,200),on=('ground',),note='',deco=False,detail=36,bevel=None,grp=None):
+        s.name,s.kind,s.dims,s.col,s.on,s.note,s.deco,s.detail,s.bevel,s.grp=name,kind,dims,col,tuple(on) if on else (),note,deco,detail,bevel,grp
     def bbox(s):
         k,d=s.kind,s.dims
         if k=='box':return d
@@ -35,6 +37,7 @@ class Part:
         if k=='wheel':cx,cy,cz,r,t=d;return(cx-r,cy-t/2,cz-r,cx+r,cy+t/2,cz+r)
         if k=='ball':cx,cy,cz,r=d;return(cx-r,cy-r,cz-r,cx+r,cy+r,cz+r)
         if k=='model':V,F,C=model_tris(*d);return(*V.min(0),*V.max(0))
+        if k=='prism':pts,y0,y1=d;a=np.array(pts,float);return(a[:,0].min(),y0,a[:,1].min(),a[:,0].max(),y1,a[:,1].max())
         if k=='lathe':cx,cy,pr=d;r=max(q[0] for q in pr);return(cx-r,cy-r,min(q[1] for q in pr),cx+r,cy+r,max(q[1] for q in pr))
         pts=s.corners();a=np.array(pts);return(*a.min(0),*a.max(0))
     def corners(s):
@@ -68,7 +71,7 @@ def check(parts,tol=0.035):
 
 def build(sc,parts):
     for p in parts:
-        k,d,c=p.kind,p.dims,np.array(p.col,float)
+        k,d,c=p.kind,p.dims,np.array(p.col,float);sc.group(p.grp)
         if k=='box':sc.box(*d,tuple(c),bevel=p.bevel)
         elif k=='lathe':cx,cy,pr=d;sc.revolve(cx,cy,pr,lambda k_,i:tuple(c),n=p.detail)
         elif k=='model':
@@ -85,6 +88,11 @@ def build(sc,parts):
             # 6つの面：ならびは a の4点（su,sv）と b の4点
             idx=[(0,1,3,2),(4,5,7,6),(0,1,5,4),(2,3,7,6),(0,2,6,4),(1,3,7,5)]
             for q in idx:sc.quad(*[P[i] for i in q],tuple(c))
+        elif k=='prism':
+            pts,y0,y1=d;sc.part();n=len(pts)
+            for i in range(n):(xa,za),(xb,zb)=pts[i],pts[(i+1)%n];sc.quad((xa,y0,za),(xb,y0,zb),(xb,y1,zb),(xa,y1,za),tuple(c))
+            for yy in(y0,y1):
+                for i in range(1,n-1):sc.tri((pts[0][0],yy,pts[0][1]),(pts[i][0],yy,pts[i][1]),(pts[i+1][0],yy,pts[i+1][1]),tuple(c))
         elif k=='rope':sc.tube([d[0],d[1]],d[2],tuple(c),n=6)
         elif k=='wheel':
             cx,cy,cz,r,t=d;sc.part()
