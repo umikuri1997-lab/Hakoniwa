@@ -232,13 +232,11 @@ function updEnemy(e,dt){
   let goal=-1,tgt=null;
   if(e.flee){e.fleeT=(e.fleeT||0)+dt;if(e.fleeT>40&&!e.path.length){e.dead=true;return}/* にげる道がどこにもないときだけ消える */if(e.x<.6||e.y<.6||e.x>W-.6||e.y>H-.6||(D.thief&&e.fleeT>12&&!VILL[(e.y|0)*W+(e.x|0)])){e.dead=true;return}}/* カゲドロボウは、にげたらすぐ消える */
   else if(D.thief){let bd=1e9,box=-1;if(!EREACH.has(e))EREACH.set(e,bfs(e.x|0,e.y|0,2).dist);const RD=EREACH.get(e),ok=q=>q>=0&&q<W*H&&RD[q]>=0;/* 歩いて行ける所からだけ盗む（壁のうらからは盗めない） */for(const k in S.dyn){if(S.obj[k]!=='farm'||S.dyn[k].sown===false||S.dyn[k].g<100||!ok(+k))continue;const fx2=k%W+.5,fy=((k/W)|0)+.5,d=Math.hypot(fx2-e.x,fy-e.y);if(d<bd){bd=d;goal=+k;box=-1}}
-    if(S.food>0)for(let k=0;k<W*H;k++){if(!storageAt(k,'food'))continue;for(const n of[k-1,k+1,k-W,k+W]){if(!walk(n)||!ok(n)||storeAdj(n,'food')<0)continue;const d=Math.hypot(n%W+.5-e.x,((n/W)|0)+.5-e.y);if(d<bd){bd=d;goal=n;box=k}}}
-    if(matTot()>0)for(let k=0;k<W*H;k++){if(!storageAt(k,'mat'))continue;for(const n of[k-1,k+1,k-W,k+W]){if(!walk(n)||!ok(n)||storeAdj(n,'mat')<0)continue;const d=Math.hypot(n%W+.5-e.x,((n/W)|0)+.5-e.y);if(d<bd){bd=d;goal=n;box=-2-k}}}
+    for(const k of BOXL){const bb=BOX()[k];if(!bb||!Object.keys(bb).some(q=>bb[q]>0&&availOf(q)>0))continue;for(const n of[k-1,k+1,k-W,k+W]){if(!walk(n)||!ok(n)||!boxSide(n,k))continue;const d=Math.hypot(n%W+.5-e.x,((n/W)|0)+.5-e.y);if(d<bd){bd=d;goal=n;box=k}}}/* 中身のある箱 */
     if((e.stolen||0)>=10){e.flee=true;e.path=[];e.repath=0}
     else if(goal>=0&&bd<.6){const key=box===-1?'farm:'+goal:'box:'+box;if(e.stealKey!==key){e.stealKey=key;e.stealT=0}e.busyT=S.t;e.stealT=(e.stealT||0)+dt/DAYLEN;e.path=[];
       if(e.stealT>=10){e.stealT-=10;let got='',lk='';
-        if(box<=-2){const m=Object.keys(S.mat).filter(k=>S.mat[k]>0).sort((a,b)=>S.mat[b]-S.mat[a])[0];if(m){S.mat[m]--;got=MATN[m]||m;lk='mat:'+m}}
-        else if(box>=0){const f=takeFood(1,'any');if(f.length){got='食料';lk='food:'+f[0]}}
+        if(box>=0){const bb=BOX()[box]||{},m=Object.keys(bb).filter(q=>bb[q]>0&&availOf(q)>0).sort((p,q)=>bb[q]-bb[p])[0];/* その箱の、いちばん多い物 */if(m&&boxOut(box,m,1)){if(isFK(m)){got='食料';lk='food:'+m.slice(2)}else{got=MATN[m]||m;lk='mat:'+m}}}
         else{const d=S.dyn[goal],fk=cropK(d),n=(CROPS[fk]||{yield:1}).yield;d.stolen=(d.stolen||0)+1;got='畑の作物';lk='food:'+fk;if(d.stolen>=n){d.g=0;d.sown=false;d.crop=null;delete d.stolen}}
         if(got){if(lk){const L=e.loot||(e.loot={});L[lk]=(L[lk]||0)+1;(e.lootN||(e.lootN=[])).push(got)}/* ぬすんだ物（たおされたら落とす） */e.stolen=(e.stolen||0)+1;S.nightHurt++;if(S.ns)S.ns.lost.push(got);toast('カゲドロボウに'+got+'をぬすまれた！','warn');sfxAt('thief',e.x,e.y)}
         if(e.stolen>=10){e.flee=true;e.path=[];e.repath=0}}
@@ -369,8 +367,8 @@ function takeDrop(d,r){let nm;
     if(r&&itemBoxOK()){const n=addItem(r,d.id,d.n);if(n<d.n)S.drops.push(Object.assign({},d,{n:d.n-n}));if(n>0){sfx('seed');toast(r.name+'が「'+itemName(d.id)+'」をひろった','good')}return}
     stowItem(d.id,d.n,r);return}/* しまう箱がひとつもないときだけ、そのまま */
   if(r&&(d.id.startsWith('food:')||d.id.startsWith('mat:'))){const food=d.id.startsWith('food:'),k=d.id.slice(food?5:4),n=Math.min(d.n,roomN(r));if(n>0){if(food)addCarry(r,k,n);else addMat(r,k,n)}if(n<d.n)S.drops.push(Object.assign({},d,{n:d.n-n}));/* せいれいがひろった食べ物・素材は、頭の上につんで、箱へはこぶ。持ちきれない分は地面にのこす */if(n>0&&!d.lt)toast(r.name+'がおとしものをひろった：'+(food?FOODS[k].name:MATN[k])+'×'+n,'good');return}
-  if(d.id.startsWith('food:')){const k=d.id.slice(5),add=Math.max(0,Math.min(d.n,foodCap()-S.food));if(add)addFood(k,add);if(add<d.n)S.drops.push(Object.assign({},d,{n:d.n-add}));/* 食料箱に入りきらない分は、そのまま地面にのこる */nm=FOODS[k].name+(add?'×'+add:'（食料箱がいっぱい）')}
-  else if(d.id.startsWith('mat:')){const k=d.id.slice(4),add=Math.max(0,Math.min(d.n,matCap()-matTot()));S.mat[k]=(S.mat[k]||0)+add;if(!S.gotMat)S.gotMat={};S.gotMat[k]=(S.gotMat[k]||0)+add;nm=MATN[k]+(add?'×'+add:'（素材箱がいっぱい）');bambooIdea();matIdea()}
+  if(d.id.startsWith('food:')){const k=d.id.slice(5),add=Math.max(0,Math.min(d.n,foodCap()-S.food));if(add)addFood(k,add);if(add<d.n)S.drops.push(Object.assign({},d,{n:d.n-add}));/* 箱に入りきらない分は、そのまま地面にのこる */nm=FOODS[k].name+(add?'×'+add:'（箱がいっぱい）')}
+  else if(d.id.startsWith('mat:')){const k=d.id.slice(4),add=Math.max(0,Math.min(d.n,matCap()-matTot()));S.mat[k]=(S.mat[k]||0)+add;if(!S.gotMat)S.gotMat={};S.gotMat[k]=(S.gotMat[k]||0)+add;nm=MATN[k]+(add?'×'+add:'（箱がいっぱい）');bambooIdea();matIdea()}
   if(!d.lt)toast((r?r.name+'が':'')+'おとしものをひろった：'+nm,'good')}/* 守りの光で落とした素材は、だまってひろう */
 function itemName(id){return id==='sand'?'やすらぎの砂':id==='horn'?'よびごえの角笛':id==='herb'?'まよけのハーブ':id==='mebuki'?'めぶきのしずく':id==='hai'?'ハイカゲの灰':id==='gear'||id==='gearf'?'そうび':id.startsWith('seed:')?CROPS[id.slice(5)].name+'のたね':BL[id]?(BL[id].item||BL[id].name):id}
 function stowItem(id,n,r){/* はこんだ物を、箱にしまったとき（もちものに入る）。知らせもここで出す */

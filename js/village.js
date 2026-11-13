@@ -27,22 +27,18 @@ function takeFood(n,pref){let got=[];const keys=Object.keys(S.fs).filter(k=>S.fs
 const carryN=r=>!r.carry?0:typeof r.carry==='number'?r.carry:Object.values(r.carry).reduce((a,b)=>a+b,0);
 const capOf=r=>rStat(r,rLv(r)).cap,matN=r=>r.cmat?Object.values(r.cmat).reduce((a,b)=>a+b,0):0,citemN=r=>r.citem?Object.values(r.citem).reduce((a,b)=>a+b,0):0,heldN=r=>carryN(r)+matN(r)+citemN(r),roomN=r=>r.coffin?0:Math.max(0,capOf(r)-heldN(r));// 持てる数はレベルと同じ（Lv1は1こ）
 function addCarry(r,k,n){if(typeof r.carry==='number')r.carry={mugi:r.carry};n=Math.min(n,roomN(r));if(n<=0)return;r.carry=r.carry||{};r.carry[k]=(r.carry[k]||0)+n;r.carryLast=k}/* アイコンは、最後に持ったもの */
-const ITEMMAT=id=>id==='sand'||id==='hai'||id.startsWith('seed:');/* 素材箱にしまう物（ほかは、おそなえ箱。なければ素材箱） */
-const itemDest=id=>ITEMMAT(id)||OBOX<0?'mat':'obox',itemBoxOK=()=>OBOX>=0||matCap()>0,itemAdj=(j,dest)=>dest==='obox'?adjOf(j,k=>OBOX>=0&&anc(k)===OBOX):storeAdj(j,'mat');
+const ITEMMAT=id=>id==='sand'||id==='hai'||id.startsWith('seed:');/* 箱にしまう物（ほかは、おそなえ箱。なければ箱） */
+const itemDest=id=>ITEMMAT(id)||OBOX<0?'mat':'obox',itemBoxOK=()=>OBOX>=0||BOXL.length>0,itemAdj=(j,dest)=>dest==='obox'?adjOf(j,k=>OBOX>=0&&anc(k)===OBOX):anyBox(j);
 function addItem(r,id,n){n=Math.min(n,roomN(r));if(n<=0)return 0;r.citem=r.citem||{};r.citem[id]=(r.citem[id]||0)+n;return n}/* ひろった物（素材・食べ物でない物）を、頭の上につむ */
 function addMat(r,k,n){n=Math.min(n,roomN(r));if(n<=0)return;r.cmat=r.cmat||{};r.cmat[k]=(r.cmat[k]||0)+n}
 function hYield(j,def){const o=S.obj[j],d=S.dyn[j];const cr=o==='farm'?CROPS[(d&&d.crop)||'mugi']:null;return (cr?cr.yield:def)+(NEARMILL.has(j)?1:0)+(cr&&d?d.fb||0:0)}
-// STORAGE: placed shelves share the village stock; wall attachments count only on standing walls.
-const STORAGE={stor:{food:50},mbox:{mat:80},taru:{food:60},kabebukuro:{food:55},asabukuro:{mat:65},makidana:{mat:130},crate:{food:30,mat:30},shelf1:{mat:160},shelf2:{mat:200},wshelf:{mat:200},cabinet:{food:90}};/* しまえる数（食料・素材） */
-function storageAt(j,type){const id=S.obj[anc(j)],wall=HOME_WALLS.has(id)&&(S.win||{})[j],b=STORAGE[wall]||STORAGE[id];return !!(b&&b[type])}
+function storageAt(j,type){/* マス j に、食べ物（素材）を入れられる箱がある */return !!boxTypeAt(j)&&boxCat(anc(j),type==='food')}
 const GRASSK=['shina','kasa','kuru','chiri','funba'];/* 草の素材 */
 const cmpOf=j=>S.dyn[j]||(S.dyn[j]={b:[],c:0}),cmpIn=j=>{const d=S.dyn[j];return d?(d.b||[]).reduce((a,x)=>a+x[1],0):0},cmpWait=j=>{const Q=(S.cmpQ||{})[j];let n=0;if(Q)for(const k in Q)n+=Q[k];for(const r of S.res)if(r.cpk&&r.cpk.j===j)for(const k in r.cpk.m)n+=r.cpk.m[k];return n};/* コンポスター：b＝入れた草（[入れた時刻, 数]）、c＝できた肥料 */
-function cmpRefund(m){for(const k in m||{})S.mat[k]=(S.mat[k]||0)+m[k]}/* コンポスターがなくなったら、運ぶまえの草は素材箱へもどす */
+function cmpRefund(m){rsvFree(m)}/* コンポスターがなくなったら、運ぶまえの草は、とっておくのをやめる */
 function cmpTick(){if(S.cmpQ)for(const k in S.cmpQ)if(S.obj[k]!=='composter'){cmpRefund(S.cmpQ[k]);delete S.cmpQ[k]}if(!COMPS.length)return;for(const j of COMPS){const d=S.dyn[j];if(!d||!d.b||!d.b.length)continue;const keep=[];for(const x of d.b){if(S.t-x[0]>=1440&&x[0]<=S.t)d.c=(d.c||0)+x[1];else keep.push(x)}d.b=keep}}/* 草を入れて1日たつと、肥料になる */
 function waterSrc(j){/* マス j のとなりの、水をくめる所（池・川の水、井戸、水のたまったみずがめ）。なければ -1 */return adjOf(j,k=>S.ground[k]===1||S.obj[anc(k)]==='well'||(S.obj[anc(k)]==='jar'&&((S.dyn[anc(k)]||{}).w||0)>0))}
-function storeAdj(j,type){/* マス j のとなりに、しまえる箱があるか（かべかけの物は、壁の正面＝すぐ下のマスからだけ） */return adjOf(j,k=>storageAt(k,type)&&(!(HOME_WALLS.has(S.obj[anc(k)])&&(S.win||{})[k])||k===j-W))}
-function storageCapacity(type){let n=0,add=0;{const got=new Set();for(const I of SPOTI||[])if(I.sp.cap&&I.sp.cap[type]&&!got.has(I.sp.k)){got.add(I.sp.k);add+=I.sp.cap[type]}}/* しまうスポット：おなじスポットは1こ分、ちがうスポットはたし算 */for(const id in STORAGE){const c=STORAGE[id][type];if(c)n+=cnt(id)*c}for(const j in S.win||{}){const c=(STORAGE[S.win[j]]||{})[type];if(HOME_WALLS.has(S.obj[j])&&c)n+=c}return Math.floor(n*(1+add))}
-const foodCap=()=>storageCapacity('food'),matCap=()=>storageCapacity('mat'),matTot=()=>Object.keys(MATN).reduce((a,k)=>a+(S.mat[k]||0),0);
+const foodCap=()=>S.food+roomFor(true),matCap=()=>matTot()+roomFor(false),matTot=()=>Object.keys(MATN).reduce((a,k)=>a+(S.mat[k]||0),0);
 let OTAKI_SEL={};/* そうこで、おたきあげにえらんでいる数 */
 const MATTRADE={shina:5,kasa:5,kuru:5,chiri:5,funba:5,wood:3,stone:3,bamboo:3,eda:3,can:2,copper:2,iron:2,obsidian:1,silver:1,gold:1,sulfur:2,crystal:1,icopper:1,iiron:1,isilver:1,igold:1};/* おたきあげ：素材をパワー1にかえるのに要る数（よく手に入る物ほど多い） */
 const MATN={wood:'木材',stone:'石材',bamboo:'竹',shina:'しなやかな草',kasa:'かさかさ草',kuru:'くるくる草',chiri:'ちりちり草',funba:'ふんばり草',eda:'枝',can:'空き缶',copper:'銅鉱石',iron:'鉄鉱石',obsidian:'黒曜石',silver:'銀鉱石',gold:'金鉱石',sulfur:'硫黄',crystal:'赤い水晶',icopper:'銅の延べ棒',iiron:'鉄の延べ棒',isilver:'銀の延べ棒',igold:'金の延べ棒'},WEEDS=new Set(['weed0g','weed0k','weed1g','weed1k','weedc','kinoko']),bambooOn=()=>WD===1||(S.mat.bamboo||0)>0;/* 竹は火山の素材。ほかのステージでは、持っているときだけ出す */const matTxt=m=>Object.keys(m||{}).map(k=>MATN[k]+m[k]).join('・');/* 素材は文字ではなくアイコンで */const esc=t=>String(t).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'})[c]);const matHTML=m=>Object.keys(m||{}).map(k=>'<span class="mic"><img src="'+(ICONS[k]||'')+'" alt="'+MATN[k]+'">'+m[k]+'</span>').join('');const matOK=m=>Object.keys(m||{}).every(k=>(S.mat[k]||0)>=m[k]);const matNeedHTML=m=>Object.keys(m||{}).map(k=>{const h=S.mat[k]||0,ok=h>=m[k];return '<span class="mneed" style="margin-right:6px;'+(ok?'':'color:#c0392b;font-weight:700')+'">'+MATN[k]+'（'+h+'/'+m[k]+'）</span>'}).join('');/* 依頼ボードの作るリスト：素材が足りるか（持っている数/いる数） */
@@ -80,20 +76,20 @@ const SPOTS=[
   {k:'yasumi',n:'やすみば',main:o=>BENCHES.has(o),need:[[o=>o==='parasol',1]],how:'ベンチと、パラソル',eff:'ベンチで休むと、つかれのとれ方+10%'},
   {k:'camp',n:'キャンプ場',main:o=>o==='campfire',need:[[o=>BENCHES.has(o),2]],how:'たき火と、ベンチ2つ',eff:'たき火で遊ぶと、たのしさ+10%'},
   {k:'funsui',n:'ふんすいひろば',main:o=>o==='fountain',need:[[o=>BENCHES.has(o),1],[(o,q)=>FLOWERS.has(o)&&!isBud(q),2]],how:'噴水と、ベンチと、花2つ',eff:'噴水で遊ぶと、たのしさ+10%'},
-  {k:'monoheya',n:'ものおき部屋',room:1,main:o=>o==='mbox',need:[[o=>o==='asabukuro',1],[o=>o==='makidana',1]],how:'家の中に、素材箱と、あさぶくろと、まき棚',eff:'素材をしまえる数+15%',cap:{mat:.15}},
-  {k:'chozo',n:'ちょぞう部屋',room:1,main:o=>o==='stor',need:[[o=>o==='taru',2]],how:'家の中に、食料箱と、たる2つ',eff:'食料をしまえる数+15%',cap:{food:.15}},
-  {k:'naya',n:'なや',room:1,main:o=>o==='crate',need:[[o=>o==='taru',1],[o=>o==='asabukuro',1],[o=>o==='kabedougu',1]],how:'家の中に、木箱と、たると、あさぶくろと、どうぐたて',eff:'食料と素材をしまえる数+10%',cap:{food:.1,mat:.1}},
+  {k:'monoheya',n:'ものおき部屋',room:1,main:o=>o==='crate',need:[[o=>o==='asabukuro',1],[o=>o==='makidana',1]],how:'家の中に、木箱と、あさぶくろと、まき棚',eff:'しまえる数+15%',cap:.15},
+  {k:'chozo',n:'ちょぞう部屋',room:1,main:o=>o==='crate',need:[[o=>o==='taru',2]],how:'家の中に、木箱と、たる2つ',eff:'しまえる数+15%',cap:.15},
+  {k:'naya',n:'なや',room:1,main:o=>o==='crate',need:[[o=>o==='taru',1],[o=>o==='asabukuro',1],[o=>o==='kabedougu',1]],how:'家の中に、木箱と、たると、あさぶくろと、どうぐたて',eff:'しまえる数+10%',cap:.1},
   {k:'shinshitsu',n:'しんしつ',room:1,main:o=>BEDSET.has(o),need:[[o=>o==='shelf1'||o==='shelf2',1]],how:'家の中に、ベッドと、本棚かかざり棚',eff:'眠るときの、つかれのとれ方+10%'},
   {k:'ofuro',n:'おふろば',room:1,main:o=>o==='bathtub',need:[[o=>o==='tub',1]],how:'家の中に、バスタブと、水おけ',eff:'おふろのたのしさ+10%'},
   {k:'hana',n:'花のベンチ',main:o=>BENCHES.has(o),need:[[(o,q)=>FLOWERS.has(o)&&!isBud(q),3]],how:'ベンチと、花3つ',eff:'ベンチで休むと、たのしさ+10%'},
   {k:'wa',n:'和の庭',main:o=>BENCHES.has(o),need:[[o=>o==='shishiodoshi',1],[o=>o==='toro',1]],how:'ベンチと、ししおどしと、石どうろう',eff:'ベンチで休むと、つかれのとれ方+15%'},
   {k:'chaya',n:'茶屋',main:o=>o==='takebench',need:[[o=>o==='noren',1],[o=>o==='takeakari',1]],how:'竹のベンチと、のれんと、竹あかり',eff:'ベンチで休むと、たのしさ+15%'},
-  {k:'monooki',n:'資材おき場',main:o=>o==='mbox',need:[[o=>o==='crate',1]],how:'素材箱と、木箱',eff:'素材をしまう速さ+10%'},
+  {k:'monooki',n:'資材おき場',main:o=>o==='crate',need:[[o=>o==='asabukuro',1]],how:'木箱と、あさぶくろ',eff:'素材をしまう速さ+10%'},
   {k:'buranko',n:'ぶらんこの庭',main:o=>o==='swing',need:[[o=>BENCHES.has(o),1],[(o,q)=>FLOWERS.has(o)&&!isBud(q),2]],how:'ブランコと、ベンチと、花2つ',eff:'ブランコで遊ぶと、たのしさ+10%'},
   {k:'doronko',n:'どろんこひろば',main:o=>o==='sandbox',need:[[o=>o==='tub',1]],how:'砂場と、水おけ',eff:'砂場で遊ぶと、たのしさ+10%'},
   {k:'mori',n:'もりのゆうぐ',main:o=>o==='swing',need:[[(o,q)=>(o==='tree'||o==='fruit')&&!isBud(q)||o==='ntree',2]],how:'ブランコと、木かりんごの木2本',eff:'ブランコで遊ぶと、たのしさ+10%'},
-  {k:'shokuryo',n:'食料庫',main:o=>o==='stor',need:[[o=>o==='crate',1]],how:'食料箱と、木箱',eff:'食料をしまう速さ+10%'},
-  {k:'pan',n:'パンやさん',main:o=>o==='oven',need:[[o=>o==='stor',1],[o=>o==='stable',1]],how:'かまどと、食料箱と、まるいサイドテーブル',eff:'料理の速さ+10%'},
+  {k:'shokuryo',n:'食料庫',main:o=>o==='crate',need:[[o=>o==='taru',1]],how:'木箱と、たる',eff:'食料をしまう速さ+10%'},
+  {k:'pan',n:'パンやさん',main:o=>o==='oven',need:[[o=>o==='crate',1],[o=>o==='stable',1]],how:'かまどと、木箱と、まるいサイドテーブル',eff:'料理の速さ+10%'},
   {k:'party',n:'ガーデンパーティー',main:o=>o==='table',need:[[o=>SEATS.includes(o),1],[o=>o==='parasol',1]],how:'食卓と、いすと、パラソル',eff:'ここで食べたときのパワー+10%'},
   {k:'yoruzuri',n:'よるづり場',main:(o,j)=>SEATS.includes(o)&&spotW(j)>=0,need:[[o=>o==='toro',1]],how:'水べのいすと、石どうろう',eff:'つりをする確率+10%'},
   {k:'kotori',n:'小鳥の庭',main:o=>BENCHES.has(o),need:[[o=>o==='birdbath',1],[o=>o==='hedge',1]],how:'ベンチと、水飲み鳥と、生垣',eff:'ベンチで休むと、たのしさ+15%'},
@@ -107,8 +103,8 @@ const SPOTS=[
   {k:'living',n:'リビング',room:1,main:o=>o==='sofa1',need:[[o=>o==='ltable',1],[o=>o==='monstera',1]],how:'家の中に、ひとりがけソファと、ローテーブルと、かんようしょくぶつ',eff:'その家の住み心地+10%'},
   {k:'dinroom',n:'ダイニング',room:1,main:o=>o==='table',need:[[o=>o==='chair'||o==='stool',2]],how:'家の中に、食卓と、いすかスツール2つ',eff:'その家の住み心地+5%'},
   {k:'daidokoro',n:'だいどころ',room:1,main:o=>o==='oven'||o==='cooktable',need:[[o=>o==='tub',1],[o=>o==='taru',1]],how:'家の中に、かまどか調理台と、水おけと、たる',eff:'その家の住み心地+5%'},
-  {k:'shigotoba',n:'しごとば',main:o=>o==='mbox',need:[[o=>NATG[o]!=null,3]],how:'素材箱と、木か岩3つ',eff:'まわり3マスの木を切る・岩をほる速さ+10%'},/* 仕事場のそばに箱：運ぶ道が短くなるうえに、少し速い */
-  {k:'gohan',n:'ごはんどころ',main:o=>o==='stor',need:[[o=>o==='table',1]],how:'食料箱と、食卓',eff:'まわり3マスで食べると、食べる速さ+20%'},
+  {k:'shigotoba',n:'しごとば',main:o=>o==='crate',need:[[o=>NATG[o]!=null,3]],how:'木箱と、木か岩3つ',eff:'まわり3マスの木を切る・岩をほる速さ+10%'},/* 仕事場のそばに箱：運ぶ道が短くなるうえに、少し速い */
+  {k:'gohan',n:'ごはんどころ',main:o=>o==='crate',need:[[o=>o==='table',1]],how:'木箱と、食卓',eff:'まわり3マスで食べると、食べる速さ+20%'},
   {k:'nedoko',n:'ねどこ',room:1,main:o=>BEDSET.has(o),need:[[o=>o==='table',1]],how:'家の中に、ベッドと、食卓',eff:'その家の住み心地+5%'}];
 const spotNear=(j,k)=>{if(j==null||j<0)return false;const x0=j%W,y0=(j/W)|0;for(let y=Math.max(0,y0-3);y<=Math.min(H-1,y0+3);y++)for(let x=Math.max(0,x0-3);x<=Math.min(W-1,x0+3);x++){const t=SPOTM.get(y*W+x);if(t&&t.has(k))return true}return false};/* そのマスのまわり3マスに、スポットのもとの物（伐採場・井戸・道しるべなど）があるか */
 const spotN=(j,...ks)=>ks.reduce((n,k)=>n+(spotHas(j,k)?1:0),0);/* おなじスポットは重ならない（いくつできても1こ分）。ちがうスポットは、たし算で重なる */
@@ -161,7 +157,7 @@ function attrTxt(id){const b=BL[id];if(!b||!b.attr||b.kind==='block')return'';co
 const withAttr=(id,t)=>{const a=attrTxt(id);return a?(t?t+'　':'')+'【'+a+'】':t||''};
 let SUTEKI=null;const SUTEKI_STAR=[10,25,45,70,100],SUTEKI_FUN=[1,.96,.92,.88,.84,.8];/* すてき度：かざり・花・道・スポットの点数。★の数（0〜5）で、せいれいのたのしさのへりかたがかわる（★0で1倍〜★5で0.8倍） */
 function suteki(){if(SUTEKI)return SUTEKI;let p=0;for(const id of DECOQ)p+=cnt(id)*2;p+=flowerN();{let n=0;for(const f of S.floor)if(f==='path'||f==='gravel'||f==='woodpath'||f==='stone'||f==='brick')n++;p+=Math.floor(n/10)}p+=new Set((SPOTI||[]).map(x=>x.sp.k)).size*3;let st=0;while(st<5&&p>=SUTEKI_STAR[st])st++;SUTEKI={pt:p,st};return SUTEKI}/* かざり1つ2点・花1本1点・道10マスで1点・スポット1しゅるい3点 */
-function recount(){if(S.fogF&&!S.flags.spring2)fogSpring2(S);if(S.fogF&&!S.flags.mansion2)fogMansionAdd(S);if(S.sacredLegacy2||S.sacredLegacy3)tryExpandSacredLegacy(S);if(S.broken)S.broken=S.broken.filter(b=>!S.obj[b.j]);calcSpots();/* こわれた物の場所に、なにか置いたら、こわれた物のリストからはずす */
+function recount(){if(S.fogF&&!S.flags.spring2)fogSpring2(S);if(S.fogF&&!S.flags.mansion2)fogMansionAdd(S);if(S.sacredLegacy2||S.sacredLegacy3)tryExpandSacredLegacy(S);if(S.broken)S.broken=S.broken.filter(b=>!S.obj[b.j]);boxScan();calcSpots();/* こわれた物の場所に、なにか置いたら、こわれた物のリストからはずす */
   for(const key in S.win||{}){const j=+key,wall=k=>HOME_WALLS.has(S.obj[k])||HOME_DOORS.has(S.obj[k]);if(S.win[j]==='wreath'&&HOME_DOORS.has(S.obj[j])&&(wall(j-W)||wall(j+W))&&!(wall(j-1)||wall(j+1))){S.inv.wreath=(S.inv.wreath||0)+1;delete S.win[j];toast('たてのドアのリースを、持ち物にもどしました')}}/* たてのドアにはリースをかけられない。まわりの壁が変わってたてになったら、知らせてもどす */
   STATUE=-1;RUINT=-1;OBOX=-1;BOARD=-1;SUTEKI=null;counts={};LIGHTS=[];JARS=[];COMPS=[];LITP=[];STELES=[];LURES=[];TOWERS=[];NEARMILL=new Set();STUMPB=new Set();if(WD===0&&!S.free&&S.sacredRoot!=null&&!S.obj.includes('tower')&&typeof fieldStump==='function'){const st=fieldStump(S.sacredRoot);STUMPB.add(st);STUMPB.add(st-W)}/* 切り株と、そのうしろ */NEARVANE=new Set();NEARCART=new Set();NEARTOOL=new Set();NEARJORO=new Set();NEARSIGN=new Set();NEARPARA=new Set();RUGC=new Map();for(const k in S.rug||{})for(const c of rugCells(+k))RUGC.set(c,+k);RFC=new Map();for(const k in S.roof||{})for(const c of rugCells(+k))RFC.set(c,+k);/* 屋根の下のマス→屋根の左上 *//* ラグがしいてあるマス→ラグの左上 */ENVG=new Float32Array(W*H);ENVE={};REV=new Set();ATTR={};ELEM_KEYS.forEach(k=>ATTR[k]=0);
   const around=(j,r,set)=>{const x=j%W,y=(j/W)|0,h=set===REV?hiAt(j):-1;for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){if(dx*dx+dy*dy>r*r+1)continue;const nx=x+dx,ny=y+dy;if(nx>=0&&ny>=0&&nx<W&&ny<H&&!(h>=0&&hiAt(ny*W+nx)!==h))set.add(ny*W+nx)}};/* 緑の広がり（REV）は、段差をこえない */

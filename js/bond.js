@@ -281,16 +281,16 @@ function bondInvite(r,o){if(!S||isNight()||!o||o.obj==null||(r.bdInv||0)>S.t)ret
   addFloat(r.x,r.y-1.4,'いっしょにあそぼう！');f.bubble='♪';return true}
 
 /* ---------- 村をあんないする（えらぶ場面 guide でえらばれた子が、新しい子をつれて村をまわる） ----------
-   S.tour={g:あんないする子のid,w:ついていく子のid,i:いまの場所,at:はじめた時刻}。場所は 畑・食料箱・池・家・切り株・神殿 のうち、ある物だけ。
+   S.tour={g:あんないする子のid,w:ついていく子のid,i:いまの場所,at:はじめた時刻}。場所は 畑・箱・池・家・切り株・神殿 のうち、ある物だけ。
    あんないする子は、つぎの場所へ歩いて、着いたらその物のほうを向いて手をふる（ついていく子が来るまで待つ）。ついていく子は、あとをついて歩く。
    夜・コワイノ・どちらかがいない・ながく進まないときは、やめる。 */
-const TOUR_KINDS=['farm','stor','water','house','stump','statue'],TOUR_STOP=12,TOUR_LIMIT=500;
+const TOUR_KINDS=['farm','box','water','house','stump','statue'],TOUR_STOP=12,TOUR_LIMIT=500;
 function tourStart(g,w){if(!S||IS_STORY_REPLAY||!g||!w||g===w)return;S.tour={g:g.id,w:w.id,i:0,at:S.t};for(const r of[g,w])if(r.act&&!URGNO.includes(r.act.type))endAct(r)}
 function tourPair(){const T=S&&S.tour;if(!T)return null;const g=S.res.find(r=>r.id===T.g&&!r.hidden),w=S.res.find(r=>r.id===T.w&&!r.hidden);if(!g||!w||isNight()||S.t-T.at>TOUR_LIMIT||S.enemies.some(e=>e.spawned&&!e.dead)){delete S.tour;return null}return {T,g,w}}
 function tourTarget(k){const isO=id=>q=>S.obj[q]===id||S.obj[q]==='part'&&S.obj[S.ref[q]]===id;
   if(k==='farm')return {pred:j=>adjOf(j,isO('farm'))>=0,look:j=>adjOf(j,isO('farm'))};
   if(k==='water')return {pred:j=>VILL[j]&&adjOf(j,q=>S.ground[q]===1)>=0,look:j=>adjOf(j,q=>S.ground[q]===1)};
-  if(k==='stor')return {pred:j=>adjOf(j,isO('stor'))>=0,look:j=>adjOf(j,isO('stor'))};
+  if(k==='box')return {pred:j=>adjOf(j,q=>!!boxTypeAt(q))>=0,look:j=>adjOf(j,q=>!!boxTypeAt(q))};
   if(k==='house'){const out=insideSet();return {pred:j=>out[j]&&adjOf(j,q=>HOME_DOORS.has(S.obj[q]))>=0,look:j=>adjOf(j,q=>HOME_DOORS.has(S.obj[q]))}}
   if(k==='statue')return {pred:j=>adjOf(j,isO('statue'))>=0,look:j=>adjOf(j,isO('statue'))};
   if(k==='stump'&&S.sacredRoot!=null){const tx=storyTreeX(S.sacredRoot),ty=storyTreeY(S.sacredRoot);return {pred:j=>{const d=Math.hypot(j%W+.5-tx,((j/W)|0)+.5-ty);return d>2.4&&d<3.4},look:()=>Math.floor(ty)*W+Math.floor(tx)}}

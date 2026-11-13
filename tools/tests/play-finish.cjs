@@ -7,7 +7,7 @@ await page.route('**/js/main.js*',async route=>{const r=await route.fetch();awai
 await page.goto(process.env.GAME_URL||'http://127.0.0.1:8000');await page.waitForFunction(()=>window.sacredEval);
 const run=s=>page.evaluate(s=>sacredEval(s),s);
 await run(`(()=>{setWorld(0);S=newState(0);LIVE[0]=S;started=true;USERPAUSE=true;NOSAVE=true;S.introSeen=true;S.flags.minaCame=true;S.enemyOn=false;S.t=420;S.hold=0;S.food=100;S.feat={summon:true,build:true,plant:true,craft:true,people:true};S.quest=questIndexOf('path');for(let y=CY-20;y<CY+20;y++)for(let x=CX-20;x<CX+20;x++){const j=y*W+x;S.obj[j]='';S.ground[j]=0;S.floor[j]='';S.hi[j]=0;delete S.ref[j];delete S.dyn[j];}
-S.obj[CY*W+CX-12]='bed';S.obj[(CY+3)*W+CX+3]='stor';S.obj[(CY+3)*W+CX+5]='mbox';S.obj[(CY-4)*W+CX+6]='swing';S.obj[(CY-4)*W+CX+7]='part';S.ref[(CY-4)*W+CX+7]=(CY-4)*W+CX+6;
+S.obj[CY*W+CX-12]='bed';S.obj[(CY+3)*W+CX+3]='crate';S.obj[(CY+3)*W+CX+5]='crate';S.obj[(CY-4)*W+CX+6]='swing';S.obj[(CY-4)*W+CX+7]='part';S.ref[(CY-4)*W+CX+7]=(CY-4)*W+CX+6;
 for(const [dx,dy,o] of [[-8,-4,'swing'],[0,-9,'sandbox'],[9,4,'sandbox']]){const j=(CY+dy)*W+CX+dx;S.obj[j]=o;S.obj[j+1]='part';S.ref[j+1]=j}for(let i=0;i<40;i++)S.orders.push({id:S.nid++,type:'stor',prog:0,need:BL.stor.time,worker:null});for(let i=0;i<14;i++)S.obj[(CY+8)*W+CX-7+i]='tree';
 S.res=[mkRes(S,POKO,'wood',CX+.5,CY+.5),mkRes(S,MINA,'earth',CX+1.5,CY+.5)];for(const r of S.res){r.hunger=hMax(r);r.energy=100;r.fun=25;}for(const id of ['#title','#maps','#pro','#dialog'])document.querySelector(id).hidden=true;recount();showUI(true);})()`);
 await page.waitForFunction(()=>sacredEval('stageReady()'),{},{timeout:60000});
