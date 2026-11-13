@@ -18,7 +18,7 @@ OUT = 0.0        # 輪郭線のふとさ（マス）。0は輪郭線なし
 OUTK = 0.5       # 輪郭線の色（もとの色にかける数。1に近いほどうすい線）
 BEVEL = 0.022    # 箱の角の面取り（マス）
 class Scene:
-    def __init__(self): self.t = []; self.pid = 0; self.ol = {}; self.cur = None; self.grp = {}; self.gcur = None; self.tx = {}; self.tcur = None; self.mt = {}; self.mcur = None
+    def __init__(self): self.t = []; self.pid = 0; self.ol = {}; self.cur = None; self.grp = {}; self.gcur = None; self.tx = {}; self.tcur = None; self.mt = {}; self.mcur = None; self.tg = {}; self.tcur2 = None; self.joins = set()
     def outline(self, w=None, k=None):
         """これから足す部品の輪郭線の太さ w（マス）・色 k（もとの色にかける数）。None は render の値"""
         self.cur = None if w is None and k is None else (w, k)
@@ -31,8 +31,13 @@ class Scene:
     def material(self, m=None):
         """これから足す部品の材質（render_px）。None はふつう、'metal' は金属（光の当たる所に、明るいつやのすじ）"""
         self.mcur = m
+    def tag(self, t=None):
+        """これから足す部品の名札。join(a, b) した名札の部品どうしのさかいには、render_px で線を引かない（つづいている1まいの板など）"""
+        self.tcur2 = t
+    def join(self, a, b): self.joins.add(frozenset((a, b)))
     def part(self):
         self.pid += 1   # つぎの三角形から、べつの部品（輪郭線は部品ごとにふくらませる）
+        if self.tcur2 is not None: self.tg[self.pid] = self.tcur2
         if self.mcur: self.mt[self.pid] = self.mcur
         if self.tcur is not None: self.tx[self.pid] = self.tcur
         if self.cur: self.ol[self.pid] = self.cur
@@ -320,6 +325,14 @@ def render_px(sc, proj, ext, depth, k=0.72, outer=True, merge=12, lw=1, k2=0.86)
             G = np.full(sc.pid+2, -1); gi = {}
             for p_, g_ in sc.grp.items(): G[p_] = gi.setdefault(g_, len(gi))
             far &= ~((G[idb] >= 0) & (G[idb] == G[nid]))
+        if sc.joins:
+            TG = [None]*(sc.pid+2)
+            for p_, t_ in sc.tg.items(): TG[p_] = t_
+            JN = np.zeros((sc.pid+2, sc.pid+2), bool)
+            for a_ in range(sc.pid+2):
+                for b_ in range(sc.pid+2):
+                    if TG[a_] is not None and TG[b_] is not None and frozenset((TG[a_], TG[b_])) in sc.joins: JN[a_, b_] = True
+            far &= ~JN[np.maximum(idb, 0), np.maximum(nid, 0)]
         line |= far
         if lw >= 2:   # 2ドットめ：線のドットの、さらに向こうの同じ部品のドット
             l2 = np.zeros((Hp, Wp), bool); l2[yd, xd] = far[ys, xs]   # l2[q] = far[q+向き]（線のドットのうしろ）
