@@ -259,7 +259,7 @@ const anc=j=>{if(S.obj[j]==='part'||(S.obj[j]==='site2'&&S.ref[j]!=null))return 
 const typeAt=j=>S.obj[anc(j)];
 
 const solidOf=j=>{const o=typeAt(j);return !!(o&&BL[o]&&BL[o].solid)};
-const FRONTS=new Set(['chair','achair','sofa1','bench']);/* 正面のある家具（置くときに矢印を出す） */const ROTS={chair:4,achair:4,sofa1:4,bench:4,bed:2,yorubed:2,sandbox:2,ltable:2,bathtub:2,slide:1,seesaw:1,swing:1,signpost:1,vane:1,oven:1,stairs_wood:5,stairs_stone:5,stairs_brick:5,slope_earth:5,cabinet:3,shelf1:3,crate:4};/* 向きをかえられる家具。4：前・右・後ろ・左　3：前・右・左（右は「id>1」の絵、左はその反転）　2：横・縦　1：左右反転だけ */
+const FRONTS=new Set(['chair','achair','sofa1','bench']);/* 正面のある家具（置くときに矢印を出す） */const ROTS={chair:4,achair:4,sofa1:4,bench:4,bed:2,yorubed:2,sandbox:2,ltable:2,bathtub:2,slide:1,seesaw:1,swing:1,signpost:1,vane:1,oven:1,stairs_wood:5,stairs_stone:5,stairs_brick:5,slope_earth:5,cabinet:3,shelf1:3,shelf2:3,makidana:3,crate:4};/* 向きをかえられる家具。4：前・右・後ろ・左　3：前・右・左（右は「id>1」の絵、左はその反転）　2：横・縦　1：左右反転だけ */
 const BEDHX=31,BEDHY=-1,BEDVY=8.5,BEDHS=.85;/* 横のベッド：寝る子の足もと（x,y）。たてのベッド：寝る子の足もとのy。BEDHS：横向きで寝るときの、せいれいの横はば。ふとんは重ねない（ベッドの上に寝る子をかく） */
 const ROTN=id=>ROTS[id]===5?4:ROTS[id]===4?4:ROTS[id]===3?3:ROTS[id]?2:1,ROTL={5:[,'手前へ','右へ','左へ','奥へ'],4:['前','右','後ろ','左'],3:['前','右','左'],2:['横','縦'],1:['そのまま','反転']};/* 5：階段の下りる向き（S.rot は 1手前 2右 3左 4奥。0は古いセーブだけ） */
 let PLROTS={};/* 置くときにえらんでいる向き（家具ごと） */
