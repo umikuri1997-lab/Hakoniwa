@@ -217,7 +217,8 @@ def grid_bg(ext, foot=None):
 SHADE = [(17.5, -5), (35, -10)]   # かげの色：ベースの色の HSV（100段階）から、明るさ・あざやかさを引く（半かげ・かげ）。持ち主がきめた（かげ＝明るさ−35・あざやかさ+10）
 SHINE = (12, -8)                # 金属のつや：明るさを足し、あざやかさを引く（白っぽく）
 METALSPEC = 0.97                # 金属のつやが出る向きの近さ
-CLEARA = 0.62   # すけて見える部品（material 'clear'。水）のこさ
+CLEARSPEC = (0.06, 0.035, 0.45, 0.15)   # すけて見える部品のつや：平らな面より、光と目のあいだの向きへかたむいた量（内積の差）が、これより大きい所につよいつや・よわいつや・白くする量・こさに足す量
+CLEARA = 0.66   # すけて見える部品（material 'clear'。水）のこさ
 SOFTLV = (0.86, 0.62)   # 布・砂（material 'soft'）の、光・半かげ・かげのさかい目（光の向きとの内積）
 def toon(cc, lv):
     """部品の色 cc の、光（0）・半かげ（1）・かげ（2）・金属のつや（-1）の色"""
@@ -370,7 +371,11 @@ def render_px(sc, proj, ext, depth, k=0.72, outer=True, merge=12, lw=1, k2=0.86)
             edge &= inner
             out[edge] = col0[edge]*k2
     for a, b, c, cc, n in CLR:   # すけて見える部品：手前にあるドットだけ、下の色に CLEARA のこさでまぜる（線は引かない・下の部品の線はのこす）
-        d = float(np.dot(n, LIGHT)); lv = 0 if d > 0.55 else 1 if d > 0.1 else 2; shc = toon(cc, lv)
+        d = float(np.dot(n, LIGHT)); lv = 0 if d > 0.55 else 1 if d > 0.1 else 2; shc = np.array(toon(cc, lv), float); al = CLEARA
+        hv = LIGHT+depth/np.linalg.norm(depth); hv = hv/np.linalg.norm(hv); sp = float(np.dot(n, hv))   # つや：光と目のあいだの向きを向く面（さざなみの山）は、白く光って、こく見える
+        sp -= float(hv[2])   # 平らな水面とくらべて、どれだけ光と目のほうへかたむいているか
+        if sp > CLEARSPEC[0]: shc = shc*(1-CLEARSPEC[2])+255*CLEARSPEC[2]; al = min(1.0, CLEARA+CLEARSPEC[3])
+        elif sp > CLEARSPEC[1]: shc = shc*(1-CLEARSPEC[2]*0.45)+255*CLEARSPEC[2]*0.45; al = min(1.0, CLEARA+CLEARSPEC[3]*0.5)
         P = [((proj(p)[0]-x0)*S, (proj(p)[1]-y0)*S) for p in (a, b, c)]; D = [float(np.dot(p, depth)) for p in (a, b, c)]
         xs = [p[0] for p in P]; ys = [p[1] for p in P]
         bx0 = max(int(math.floor(min(xs)))-2, 0); bx1 = min(int(math.ceil(max(xs)))+2, Wp-1); by0 = max(int(math.floor(min(ys)))-2, 0); by1 = min(int(math.ceil(max(ys)))+2, Hp-1)
@@ -389,7 +394,7 @@ def render_px(sc, proj, ext, depth, k=0.72, outer=True, merge=12, lw=1, k2=0.86)
             w0 = ((by_-cy_)*(gx-cx_)+(cx_-bx_)*(gy-cy_))/den; w1 = ((cy_-ay_)*(gx-cx_)+(ax_-cx_)*(gy-cy_))/den; w2 = 1-w0-w1
             m = (w0 >= -1e-6) & (w1 >= -1e-6) & (w2 >= -1e-6); z = w0*D[0]+w1*D[1]+w2*D[2]
         s_ = (slice(by0, by1+1), slice(bx0, bx1+1)); vis = m & (z > zb[s_]) & (alpha[s_] > 0)
-        o = out[s_]; o[vis] = o[vis]*(1-CLEARA)+np.array(shc)*CLEARA; out[s_] = o
+        o = out[s_]; o[vis] = o[vis]*(1-al)+shc*al; out[s_] = o
     global LAST_IDS; LAST_IDS = idb   # ドットごとの部品の番号（その部品だけをとり出すとき用）
     img = np.dstack([np.round(out), alpha]).astype(np.uint8)
     if merge > 0:   # にた色をまとめる（多い色から順に、近い色をよせる）

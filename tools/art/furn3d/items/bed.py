@@ -6,7 +6,7 @@
 #   マットレス：横の板の内がわ・上（高さ0.20〜0.30）。シーツ（しきシーツ）でつつむ。
 #   まくら：マットレスの頭がわにのせる。まん中がふっくら（高さ0.11）、ふちはうすく、4つの角をつまんだ形（EXTRA）。
 #   ふとんの重なり（ほんものと同じ順。下から）：マットレス（しきシーツでつつむ）→ うわシーツ → かけぶとん。
-#   かけぶとん：あつさ0.025の、なかわたの入った1まいの布。マットレスの上にのせ、頭がわのはしは、まくらの手前（YQ）。
+#   かけぶとん：あつさ0.025の、なかわたの入った1まいの布。マットレスの上にのせ、頭がわのはしは、まくらの手前に少しかかる（まくらの上にのる。YQ）。
 #     左右と足もとは、マットレスのふちで丸くまがり、自分のおもさで、わくの外へ0.035はみ出してたれる（ゆかから0.22まで。わくが見える）。
 #     2つのふちがかさなる足もとの角は、左右と足もとの、どちらにもたれるので、いちばん下までさがって、角がとがって見える。
 #   うわシーツ：かけぶとんの下から頭がわへ出て、かけぶとんの頭のはしをくるんで、上へ折り返す（折り返しのはば0.10・あつさ0.012）。
@@ -19,7 +19,7 @@ ID='bed';BOTTOM=64
 VIEWS=[('bed',0),('bed>1',1)]
 X0,X1,Y0,Y1=0.06,0.94,-0.06,0.96;PS=0.07;ZH=0.46;ZF=0.32
 SHEET=(252,252,250);QUILT=(246,246,244)   # シーツもかけぶとんも白（折り返しは、形とかげで見せる）
-YQ=Y0+PS+0.30;QT=0.025;ZM=0.31   # かけぶとんの頭がわのはし・かけぶとんのあつさ・マットレスの上の高さ
+YQ=Y0+PS+0.23;QT=0.025;ZM=0.31   # YQ：かけぶとんの頭がわのはし（まくらの手前0.05にかかる）   # かけぶとんの頭がわのはし・かけぶとんのあつさ・マットレスの上の高さ
 def PARTS():
     L=[]
     for nx,x in(('左',X0),('右',X1-PS)):
@@ -31,13 +31,16 @@ def PARTS():
     L.append(SOFT(notex(P('マットレス','loft',soft(X0+PS,Y0+PS,X1-PS,Y1-PS,0.20,0.31,0.04,0.035),SHEET,on=('横の板（左）','横の板（右）'),note='横の板の上'))))
     return L
 
+PXA,PXB=X0+PS+0.06,X1-PS-0.06;PYA,PYB=Y0+PS+0.02,Y0+PS+0.28;PZ0=0.312;PH=0.11   # まくらのはんい・高さ
+def pshape(x,y):
+    u=(2*(x-PXA)/(PXB-PXA)-1);v=(2*(y-PYA)/(PYB-PYA)-1)
+    if abs(u)>=1 or abs(v)>=1:return 0.0
+    return max(0,(1-u*u))**0.6*max(0,(1-v*v))**0.6
+def ptop(x,y):return PZ0+PH*pshape(x,y)   # まくらの上の面の高さ
 def EXTRA(sc):   # まくら：まん中がふっくら（高さ0.11）、ふちはうすく、4つの角をつまんだ形。かげは、つけない（ふつうの3だんのかげはこすぎる）。
     # かわりに、面の向きから、ごくうすいかげ（明るさ−4〜−12%）を、場所ごとの色でつける（まるく見せる）
     import math
-    xa,xb=X0+PS+0.06,X1-PS-0.06;ya,yb=Y0+PS+0.02,Y0+PS+0.28;z0=0.312;HP=0.11
-    def sh(x,y):
-        u=(2*(x-xa)/(xb-xa)-1);v=(2*(y-ya)/(yb-ya)-1);return max(0,(1-u*u))**0.6*max(0,(1-v*v))**0.6
-    top=lambda x,y:z0+HP*sh(x,y)
+    xa,xb,ya,yb,z0=PXA,PXB,PYA,PYB,PZ0;sh=pshape;top=ptop
     from oblique3d import LIGHT
     def col(x,y):
         e=0.004;gx=(top(x+e,y)-top(x-e,y))/(2*e);gy=(top(x,y+e)-top(x,y-e))/(2*e);n=(-gx,-gy,1.0);L=math.sqrt(sum(c*c for c in n));d=sum(n[k]/L*LIGHT[k] for k in range(3))
@@ -58,7 +61,8 @@ def duvet(sc):   # かけぶとんと、うわシーツの折り返し（たれ�
         return r+(t-r)*k
     def top(x,y):
         dx=max(0.0,x-(X1-0.005),(X0+0.005)-x);dy=max(0.0,y-(Y1-0.005))
-        return max(0.22,ZM+QT-drop(dx)-drop(dy))   # 角は、左右と足もとの両方へさがる
+        z=max(0.22,ZM+QT-drop(dx)-drop(dy))   # 角は、左右と足もとの両方へさがる
+        return max(z,ptop(x,y)+0.008) if pshape(x,y)>0 else z   # まくらにかかる所は、まくらの上にのる
     bot=lambda x,y:top(x,y)-QT
     sc.material('soft');hfield(sc,xa,ya,xb,yb,top,QUILT,bot=bot,n=(40,46));sc.material(None)
     # うわシーツの折り返し：かけぶとんの頭のはしをくるみ、上にはば0.10
