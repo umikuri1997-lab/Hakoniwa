@@ -13,8 +13,8 @@ const rj=S.obj.findIndex((x,j)=>x==='rock'&&oreNear(j));const rnd=Math.random;Ma
 const made=id=>{S.orders=[];orderFurn(id);const od=S.orders[0];if(!od)throw new Error('order '+id+' known='+recipeKnown(id)+' lv='+lvOK(id)+' lock='+orderLock()+' max='+boardMax()+' board='+BOARD);finishCraft(od,fire)};for(const id of['gw03','gw02','ga03','gar02','gc01','gt04','gt07'])made(id);
 o.gearInv=gearList().map(q=>q.id);o.arrows=S.inv.gar02;
 /* つける */const iw=()=>gearList().findIndex(q=>q.id==='gw03');o.earthWeapon=gearEquip(earth,iw());o.fireWeapon=gearEquip(fire,iw());const it=id=>gearList().findIndex(q=>q.id===id);o.fireTool=gearEquip(fire,it('gt04'));o.earthTool=gearEquip(earth,it('gt04'));o.mineJob=gJob(earth,'mine');
-/* へる */const en={type:'basic',x:fire.x+.5,y:fire.y,spawned:true,hp:10};earth.hunger=80;earth.x=fire.x;earth.y=fire.y;hitRes(en,earth,EN.basic);o.lossNo=80-earth.hunger;earth.fleeNow=false;gearEquip(earth,it('ga03'));earth.hunger=80;earth.faintGrace=0;earth.act=null;hitRes(en,earth,EN.basic);o.lossArmor=80-earth.hunger;
-/* 武器：回数・とどくきょり */S.enemies=[];const e2={type:'basic',x:fire.x+1.9,y:fire.y,spawned:true,hp:500,atk:0};S.enemies.push(e2);fire.act=null;fire.hidden=false;fire.fatk=0;fire.hunger=200;updRes(fire,0);o.hitShort=500-e2.hp;
+/* へる */const en={type:'basic',x:fire.x+.5,y:fire.y,spawned:true,hp:10};earth.hunger=800;earth.x=fire.x;earth.y=fire.y;hitRes(en,earth,EN.basic);o.lossNo=800-earth.hunger;earth.fleeNow=false;gearEquip(earth,it('ga03'));earth.hunger=800;earth.faintGrace=0;earth.act=null;hitRes(en,earth,EN.basic);o.lossArmor=800-earth.hunger;
+/* 武器：回数・とどくきょり */S.enemies=[];const e2={type:'basic',x:fire.x+1.9,y:fire.y,spawned:true,hp:500,atk:0};S.enemies.push(e2);fire.act=null;fire.hidden=false;fire.fatk=0;fire.hunger=2000;updRes(fire,0);o.hitShort=500-e2.hp;
 e2.hp=500;e2.x=fire.x+1.2;fire.fatk=0;fire.act=null;updRes(fire,0);o.hitFist=500-e2.hp;o.fAtk=fAtk(rLv(fire));o.fireMul=fireMul(fire);
 gearOff(fire,'w');gearEquip(fire,it('gw02'));e2.hp=500;e2.x=fire.x+2.2;fire.fatk=0;fire.act=null;updRes(fire,0);o.hitSpear=500-e2.hp;
 /* 矢：強い順・本数・つらぬき */S.inv={arrow:5,arrow2:5,gar02:10,gar04:10,gar19:10,gar13:10};o.pick1=ammoOrder()[0];const st={dmg:10,range:6,cd:10},sh=[];const E=(x,y)=>({type:'basic',x,y,spawned:true,hp:200});
@@ -33,9 +33,9 @@ assert.equal(out.oreMined,1);assert.equal(out.stoneFromVein,0);assert.equal(out.
 assert(out.learnCopper&&out.noSilver&&out.noSpecial);
 for(const id of['gw03','gw02','ga03','gc01','gt04','gt07'])assert(out.gearInv.includes(id),'made '+id);assert.equal(out.arrows,10);
 assert.equal(out.earthWeapon,false);assert.equal(out.fireWeapon,true);assert.equal(out.fireTool,false);assert.equal(out.earthTool,true);assert.equal(out.mineJob,1.3);
-assert.equal(out.lossNo-out.lossArmor,2);
+assert.equal(out.lossNo-out.lossArmor,20);
 assert.equal(out.hitShort,0,'out of reach without reach gear');
-assert(Math.abs(out.hitFist-(out.fAtk+10)*out.fireMul*2)<1e-6,'fist hits twice');
+assert.equal(out.hitFist,Math.round((out.fAtk+10)*out.fireMul)*2,'fist hits twice');
 assert(out.hitSpear>0,'spear reaches 2.2');
 assert.equal(out.pick1,'gar04');assert.equal(out.pick2,'gar19');assert.deepEqual(out.pierce.map(v=>v>0),[true,true,false]);
 assert.equal(out.pick3,'gar13');assert.deepEqual(out.shortRange,[1,3,2,10],'falls back to an arrow that reaches');assert(out.multi.every(v=>v>0),'3 arrows');

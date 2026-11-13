@@ -95,7 +95,7 @@ function updHUD(){
   if(PTW.s===S&&S.pt<PTW.v&&!PTW.q)sfx('power');PTW.s=S;PTW.v=S.pt;PTW.q=false;/* カミサマにパワーをわたして何かをもらったとき（光・はどうはべつの音） */
   {const it=S.seenIt||(S.seenIt={});for(const k in S.mat)if(S.mat[k]>0)it['m:'+k]=1;for(const k in S.fs||{})if(S.fs[k]>0)it['f:'+k]=1}/* 図鑑のアイテム：一度でも持った素材・食べ物 */
   $('#pt').textContent=S.pt;$('#food').textContent=S.food;$('#woodN').textContent=S.mat.wood||0;$('#matN').textContent=matTot();/* 素材は種類が多いので、上には総量だけ */$('#stoneN').textContent=S.mat.stone||0;{const bn=$('#bambooN'),bi=$('#bambooIc'),on=bambooOn();if(bn){bn.textContent=S.mat.bamboo||0;bn.hidden=!on;bi.hidden=!on;if(!bi.src)bi.src=ICONS.bamboo}}{const fc=foodCap(),mc=matCap(),fb=$('#foodBar'),mb=$('#matBar');fb.style.width=(fc?Math.min(100,S.food/fc*100):0)+'%';fb.style.background=fc&&S.food>=fc?'#d9a441':'';mb.style.width=(mc?Math.min(100,matTot()/mc*100):0)+'%';mb.style.background=mc&&matTot()>=mc?'#d9a441':'#c9a46a'}$('#resN').textContent=S.res.length;$('#revLbl').textContent='みどり '+GRASSN;
-  const hungry=S.res.filter(r=>r.hunger<20).length,en=S.enemies.filter(e=>e.spawned).length;
+  const hungry=S.res.filter(r=>r.hunger<200).length,en=S.enemies.filter(e=>e.spawned).length;
   const al=$('#alert');const msg=[];if(en)msg.push('「コワイノ」 '+en+'体');if(hungry)msg.push('おなかがすいたせいれい '+hungry+'人');if(S.food===0&&S.enemyOn)msg.push(cnt('stor')?'食料ゼロ':'食料箱がありません');/* 足りない理由もいっしょに出す */
   al.hidden=!msg.length;al.textContent=msg.join('・');
   if(PDOWN){}/* 押している最中に作りなおすと、タップが消えてしまう */

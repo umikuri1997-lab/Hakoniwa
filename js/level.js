@@ -5,11 +5,11 @@ const LV_XP=[0,60,315,693,1391,2678,4478,7200,9900,13500,18000,23625,30375,38250
 const maxLv=()=>S&&S.cleared?15:10;
 function vLv(){let l=1;while(l<maxLv()&&S.totalPt>=LV_XP[l])l++;return l}
 const LVXP=[0,0,30,143,355,679,1122,1690,2391,3229,4209,5335,6611,8040,9627,11374,13284,15360,17605,20021,22611,25377,28321,31446,34754,38247,41926,45794,49853,54104,58549,63189,68028,73065,78303,83743,89387,95236,101292,107556,114029];/* せいれいのレベル：そのレベルになるのに要るけいけん（Lv1〜40） */
-const HMAX1=100,HMAX1F=200,HMAXUP=20,HMAXUPX=150;/* おなかの最大：レベル1で100（火の子は200）。レベルが上がるたびに20〜150ふえる（せいれいとレベルごとにばらつく） */
+const HMAX1=1000,HMAX1F=2000,HMAXUP=200,HMAXUPN=131,HMAXSTEP=10;/* おなかの最大：レベル1で1000（火の子は2000）。レベルが上がるたびに200〜1500ふえる（10きざみで131とおり。せいれいとレベルごとにばらつく） */
 const OFFERPL=[0,0,0,0,1,1,1,2,2,2,3,3,3,4,4,4,5,5,5,6,6,6,7,7,7,8,8,8,9,9,9,10,10,10,11,11,11,12,12,12,13];/* せいれいのレベルごとに、おくりものにふえる数 */
 const SEEDPL=[0,0,0.5,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1];/* せいれいのレベルごとに、たねが1こふえる確率 */
 const OVENM=[1,.9,.8,.7,.6,.5,.4,.3,.2,.1,0];/* そばにある調理の家具の種類の数ごとの、料理にかかる時間の倍（0種=1・1種=0.9…） */
-const rLv=r=>{const x=r.xp||0;let l=1;while(l+1<LVXP.length&&x>=LVXP[l+1])l++;return l},hMax=r=>{const lv=rLv(r);let c=HMC.get(r);if(!c||c.lv!==lv||c.f!==r.elem){let n=r.elem==='fire'?HMAX1F:HMAX1;for(let l=2;l<=lv;l++)n+=HMAXUP+Math.floor(hash(((r.id||0)*131+l*17+23)>>>0)*(HMAXUPX-HMAXUP+1));c={lv,f:r.elem,n};HMC.set(r,c)}return c.n};const HMC=new WeakMap();/* おなかの最大：上がったレベルごとに20〜150をたす */
+const rLv=r=>{const x=r.xp||0;let l=1;while(l+1<LVXP.length&&x>=LVXP[l+1])l++;return l},hMax=r=>{const lv=rLv(r);let c=HMC.get(r);if(!c||c.lv!==lv||c.f!==r.elem){let n=r.elem==='fire'?HMAX1F:HMAX1;for(let l=2;l<=lv;l++)n+=HMAXUP+HMAXSTEP*Math.floor(hash(((r.id||0)*131+l*17+23)>>>0)*HMAXUPN);c={lv,f:r.elem,n};HMC.set(r,c)}return c.n};const HMC=new WeakMap();/* おなかの最大：上がったレベルごとに200〜1500をたす */
 /* せいれいの能力。100がふつう。レベルが上がると、はたらく速さ・移動速度・持てる数などがふえる */
 const lvF=(lv,k)=>1+k*(Math.min(lv,10)-1);
 /* 100がふつう。レベルアップでふえる量は、せいれいとレベルごとにばらつく（LVUP） */

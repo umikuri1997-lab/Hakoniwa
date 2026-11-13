@@ -194,7 +194,7 @@ const sentOff=n=>!S.res.some(q=>q.coffin&&q.coffin.name===n)&&![...(S.buried||[]
 function mournDue(e){if(e.back||e.vis===dayNo()||!sentOff(e.name))return false;const d=dayNo()-e.day;return e.key||d<MOURN_DAILY||d%MOURN_EVERY===0}
 function mournSpot(e){/* 花を植えるマス：消えた場所から MOURN_R マスの中の、植えられる所（近い順）。水のせいれいは、水の上にハス。なければ、ゆり */const x0=e.j%W,y0=(e.j/W)|0,ids=e.elem==='water'?['lotus','lily']:[MOURNFL[e.elem]||'clover'];
   for(const id of ids){let best=-1,bd=1e9;for(let dy=-MOURN_R;dy<=MOURN_R;dy++)for(let dx=-MOURN_R;dx<=MOURN_R;dx++){const x=x0+dx,y=y0+dy,k=y*W+x;if(x<1||y<1||x>=W-1||y>=H-1||S.obj[k]||S.floor[k]||S.res.some(q=>(q.x|0)===x&&(q.y|0)===y)||!canPlace(id,x,y,1))continue;const d=dx*dx+dy*dy;if(d<bd){bd=d;best=k}}if(best>=0)return {k:best,id}}return null}
-function goMourn(r,G){if(!S||isNight()||hour()<7||hour()>=18||r.hunger<55||heldN(r)||r.meal||r.cing||r.coffin||!S.gone)return false;
+function goMourn(r,G){if(!S||isNight()||hour()<7||hour()>=18||r.hunger<550||heldN(r)||r.meal||r.cing||r.coffin||!S.gone)return false;
   const e=(S.gone||[]).slice().reverse().find(e=>e.mate===r.name&&e.j!=null&&mournDue(e));if(!e)return false;
   const sp=mournSpot(e),tg=sp?sp.k:e.j,st=nearest(G,j=>walk(j)&&(j===tg&&!sp||adjOf(j,k=>k===tg)>=0),300);if(st<0)return false;e.vis=dayNo();startAct(r,G,'mourn',st,{who:e.name,obj:sp?sp.k:-1,fl:sp?sp.id:null});return true}
 function simNote(r){/* 新しく来た子が、消えたふつうの子と同じ属性 */if(!S||IS_STORY_REPLAY||!S.gone)return;const e=S.gone.slice().reverse().find(e=>!e.key&&!e.back&&!e.sim&&e.elem===r.elem&&e.mate&&e.mate!==r.name&&S.res.some(q=>q.name===e.mate));if(!e)return;e.sim=1;r.simTo={m:e.mate,d:e.name}}
@@ -236,7 +236,7 @@ function qrTick(day){const Q=S.qr;
   if(Math.hypot(a.x-b.x,a.y-b.y)<2.5&&!Q.mk){for(const [r,o] of[[a,b],[b,a]])if(!(r.act&&r.act.stage==='do'&&r.act.type!=='idle'&&r.act.type!=='wander')){r.face=o.x>=r.x?-1:1;if(Math.random()<.05)r.bubble='💢'}}/* 近くですれちがうと、ぷいっと顔をそむける */
   if(sevBusy()||[a,b].some(r=>storyCalled(r)))return;const T=(r,t,i)=>[r.name,chatTone(t,r,i).replace(/@W/g,Q.w?BL[Q.w].name:'遊び家具').replace(/\$/g,(r===a?b:a).name)];
   if(!Q.talk&&!Q.mk){Q.talk=1;dialog(QR_FIGHT[Q.why].map((l,i)=>T(l[0]?b:a,l[1],i)),()=>{for(const r of[a,b])if(S.res.includes(r))r.bubble='💢'});return}
-  if(Q.mk&&!Q.go&&hour()<17){const g=Q.g===a.id?a:b,t=g===a?b:a;if([g,t].some(r=>r.hunger<55||r.coffin||onHold(r)||r.act&&URGNO.includes(r.act.type)))return;
+  if(Q.mk&&!Q.go&&hour()<17){const g=Q.g===a.id?a:b,t=g===a?b:a;if([g,t].some(r=>r.hunger<550||r.coffin||onHold(r)||r.act&&URGNO.includes(r.act.type)))return;
     const G=bfs(g.x|0,g.y|0),tj=(t.y|0)*W+(t.x|0),st=nearest(G,j=>walk(j)&&j!==tj&&Math.abs(j%W-tj%W)+Math.abs(((j/W)|0)-((tj/W)|0))===1,300);if(st<0)return;
     const fd=favDish(t),food=(S.fs[fd]||0)>0?fd:null;Q.go=1;endAct(t);t.path=[];t.act={type:'qwait',stage:'do',t:0,who:g.id};endAct(g);startAct(g,G,'qmake',st,{who:t.id,food})}}
 function qrMakeTalk(g,a){const Q=S.qr;if(!Q)return;const t=S.res.find(x=>x.id===a.who);if(!t||Math.hypot(t.x-g.x,t.y-g.y)>2.2){a.fin=1;Q.go=0;return}/* 相手が先に行ってしまったら、あとでもう一度 */
@@ -248,10 +248,10 @@ function qrMakeTalk(g,a){const Q=S.qr;if(!Q)return;const t=S.res.find(x=>x.id===
 /* よみがえったあとの日常：お墓まいりの花を2人で見にいき、よみがえった子がお礼の花を植える（revisit）。RE_DAYS 日のあいだ、いっしょに遊ぶ・ごはん・となりで寝る（reWith） */
 const RE_DAYS=3;
 function reWithP(r){const w=r&&r.reWith;if(!w)return null;if(dayNo()>=w.until){delete r.reWith;return null}const p=S.res.find(x=>x.name===w.n&&!x.hidden);return p||null}
-function reWithEat(r){/* ごはんに行くとき、ひまにしているなかよしも、おなかがすいていれば、いっしょに行く */const p=reWithP(r);if(!p||isNight()||!p.act||!['idle','wander','rest'].includes(p.act.type)||p.meal||p.hunger>=hMax(p)-15||onHold(p)||storyCalled(p))return;endAct(p);goEat(p,bfs(p.x|0,p.y|0))}
+function reWithEat(r){/* ごはんに行くとき、ひまにしているなかよしも、おなかがすいていれば、いっしょに行く */const p=reWithP(r);if(!p||isNight()||!p.act||!['idle','wander','rest'].includes(p.act.type)||p.meal||p.hunger>=hMax(p)-150||onHold(p)||storyCalled(p))return;endAct(p);goEat(p,bfs(p.x|0,p.y|0))}
 function reWithBed(r){/* なかよしが寝ているベッドの、いちばん近い空いたベッド（6マスまで） */const p=reWithP(r);if(!p||!p.act||p.act.type!=='sleep'||p.act.obj==null)return -1;const pj=p.act.obj;let best=-1,bd=7;for(let dy=-6;dy<=6;dy++)for(let dx=-6;dx<=6;dx++){const j=pj+dy*W+dx;if(j===pj||j<0||j>=W*H||!BEDSET.has(S.obj[j])||!free('o'+j,1))continue;const d=Math.abs(dx)+Math.abs(dy);if(d<bd){bd=d;best=j}}return best}
 function revisitTick(day){const R=S.rvq;if(!R||!day||S.t<R.t||hour()<7||hour()>=17||sevBusy())return;const q=S.res.find(x=>x.id===R.q),m=S.res.find(x=>x.id===R.m);if(!q||!m){delete S.rvq;return}
-  if(q.hidden||m.hidden||q.coffin||m.coffin||[q,m].some(r=>r.hunger<55||storyCalled(r)||onHold(r)||r.act&&(r.act.type==='rvisit'||URGNO.includes(r.act.type))))return;
+  if(q.hidden||m.hidden||q.coffin||m.coffin||[q,m].some(r=>r.hunger<550||storyCalled(r)||onHold(r)||r.act&&(r.act.type==='rvisit'||URGNO.includes(r.act.type))))return;
   const e=goneEntry(q.name),F=(e&&e.fl||[]).filter(k=>FLOWERS.has(S.obj[k])||S.obj[k]==='sprout');if(!F.length){delete S.rvq;return}
   const k=F[0],Gq=bfs(q.x|0,q.y|0),Gm=bfs(m.x|0,m.y|0),sq=nearest(Gq,j=>walk(j)&&adjOf(j,x=>x===k)>=0,300);if(sq<0){R.t=S.t+120;return}const sm=nearest(Gm,j=>j!==sq&&walk(j)&&Math.abs(j%W-k%W)<=2&&Math.abs(((j/W)|0)-((k/W)|0))<=2,300);if(sm<0){R.t=S.t+120;return}
   delete S.rvq;endAct(q);endAct(m);startAct(q,Gq,'rvisit',sq,{who:m.id,obj:k,lead:1});startAct(m,Gm,'rvisit',sm,{who:q.id,obj:k})}
@@ -275,7 +275,7 @@ function bondTick(){if(!S||IS_STORY_REPLAY)return;omoiSeed();bondNightTick();bon
 function bondPlayStart(r,a){if(a.bd||a.obj==null)return;a.bd=1;for(const q of S.res)if(q!==r&&q.act&&q.act.type==='play'&&q.act.stage==='do'&&q.act.obj===a.obj)bondAdd(r,q,1,'play:'+a.what)}
 /* なかよし60：遊びに行くとき、ひまにしているなかよしをさそう */
 function bondInvite(r,o){if(!S||isNight()||!o||o.obj==null||(r.bdInv||0)>S.t)return false;const rw=reWithP(r),bb=rw?{q:rw,v:BOND_MAX}:bondBest(r);if(!bb||bb.v<BOND_PLAY)return false;const f=bb.q,p=BL[o.what]&&BL[o.what].play;if(qrPair(r,f))return false;
-  if(!p||!free(o.key,p.cap)||f.hidden||!f.act||!['idle','wander'].includes(f.act.type)||f.fun>=100||f.hunger<50||hungry(f)||f.energy<25||onHold(f)||HOLD.has(f.id)||storyCalled(f)||carryN(f)>0||f.meal||toyTired(f,o.obj))return false;
+  if(!p||!free(o.key,p.cap)||f.hidden||!f.act||!['idle','wander'].includes(f.act.type)||f.fun>=100||f.hunger<500||hungry(f)||f.energy<25||onHold(f)||HOLD.has(f.id)||storyCalled(f)||carryN(f)>0||f.meal||toyTired(f,o.obj))return false;
   const G=bfs(f.x|0,f.y|0),mine=r.act&&r.act.stand;let st=-1;if(o.what==='swing'){if(G.dist[o.obj]>=0)st=o.obj}else st=nearest(G,k=>k!==mine&&walk(k)&&adjOf(k,t=>anc(t)===o.obj)>=0,45);if(st<0)return false;
   const ng=(NIGATE[f.elem]||{})[o.what];r.bdInv=S.t+120;endAct(f);startAct(f,G,'play',st,Object.assign({},o,{fun:ng!=null?ng:p.fun,nig:ng!=null,inv:r.id}));
   addFloat(r.x,r.y-1.4,'いっしょにあそぼう！');f.bubble='♪';return true}
@@ -296,7 +296,7 @@ function tourTarget(k){const isO=id=>q=>S.obj[q]===id||S.obj[q]==='part'&&S.obj[
   if(k==='stump'&&S.sacredRoot!=null){const tx=storyTreeX(S.sacredRoot),ty=storyTreeY(S.sacredRoot);return {pred:j=>{const d=Math.hypot(j%W+.5-tx,((j/W)|0)+.5-ty);return d>2.4&&d<3.4},look:()=>Math.floor(ty)*W+Math.floor(tx)}}
   return null}
 /* せいれいの行動をきめるときによぶ。あんないをしたら true */
-function tourTick(r,G){const P=tourPair();if(!P||r.hunger<40)return false;const {T,g,w}=P;
+function tourTick(r,G){const P=tourPair();if(!P||r.hunger<400)return false;const {T,g,w}=P;
   if(r===g){while(T.i<TOUR_KINDS.length){const tg=tourTarget(TOUR_KINDS[T.i]);const j=tg?nearest(G,j=>walk(j)&&tg.pred(j)&&Math.hypot(j%W+.5-r.x,((j/W)|0)+.5-r.y)>=3,80):-1;if(j>=0){const lk=tg.look(j);startAct(r,G,'tourgo',j,{dur:TOUR_STOP,look:lk});return true}T.i++}
     delete S.tour;JUMP.set(g,performance.now());JOYU.set(g,performance.now()+1500);if(Math.hypot(w.x-g.x,w.y-g.y)<4){JUMP.set(w,performance.now());JOYU.set(w,performance.now()+1500)}bondAdd(g,w,1.5,'tour');return false}/* さいごまで見せたら、ふたりでよろこぶ */
   if(r===w){const here=(r.y|0)*W+(r.x|0);if(Math.hypot(g.x-r.x,g.y-r.y)<=1.8){startAct(r,G,'tourf',here,{tg:g.id});return true}

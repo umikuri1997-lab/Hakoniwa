@@ -98,7 +98,7 @@ H._all=()=>{all0();
   if(B.opts.supply){
   /* 補給（進行のたしかめ用）：パワー・食べ物・やられない */
   if(S.pt<400)S.pt=400;for(const k of ['wood','stone'])if((S.mat[k]||0)<60)S.mat[k]=60;for(const k of ['eda','kasa','shina','funba'])if((S.mat[k]||0)<12)S.mat[k]=12;if((S.fs.imo||0)<30){S.fs.imo=40;S.food=Object.values(S.fs).reduce((a,b)=>a+b,0)}
-  for(const r of S.res){if(r.hunger<70)r.hunger=70}
+  for(const r of S.res){if(r.hunger<700)r.hunger=700}
   const q=QUESTS[S.quest];if(q&&q.steps&&q.steps.some(s=>/^lv\d/.test(s.id))&&S.lv<10){S.totalPt+=25}
   if(q&&q.id==='lv2')S.totalPt+=10;
   if(S.quest>=questIndexOf('tower')||S.cleared){
