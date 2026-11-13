@@ -11,13 +11,13 @@ CUT=('chair>2',)   # 後ろ向きのいすにすわった子は、座面の下�
 def PARTS():
     L=[]
     for nx,x in(('左',X0),('右',X1-LG)):
-        L.append(P('前の脚（%s）'%nx,'box',(x,Y1-LG,0,x+LG,Y1,ZS),WOOD2,bevel=0,note='地面にたてる'))
-        L.append(P('背もたれの柱（%s）'%nx,'box',(x,Y0,0,x+LG,Y0+LG,ZTOP),WOOD2,bevel=0,note='うしろの脚が、そのまま背もたれの柱'))
+        L.append(P('前の脚（%s）'%nx,'box',(x,Y1-LG,0,x+LG,Y1,ZS),WOOD,bevel=0,note='地面にたてる'))
+        L.append(P('背もたれの柱（%s）'%nx,'box',(x,Y0,0,x+LG,Y0+LG,ZTOP),WOOD,bevel=0,note='うしろの脚が、そのまま背もたれの柱'))
     BV=0.033;o=rrect(X0,Y0,X1,Y1+0.015,0.09,True);i_=rrect(X0+BV,Y0,X1-BV,Y1+0.015-BV,0.07,True)   # 柱のそとがわにそろえる。うしろの角は柱があるので丸めない（前の角だけ）
     L.append(P('座面','loft',[(o,ZS),(o,ZS+TS-BV*0.7),(i_,ZS+TS)],WOOD,on=('前の脚（左）','前の脚（右）','背もたれの柱（左）','背もたれの柱（右）'),note='4本の脚の上。角を丸め、上のふちをななめにけずる'))
     L.append(P('背もたれの横木','box',(X0,Y0+0.0075,ZTOP-RL,X1,Y0+LG-0.0075,ZTOP),WOOD,on=('背もたれの柱（左）','背もたれの柱（右）'),bevel=0,note='柱のあいだ'))
     n=2;w=0.0675;gap=(X1-X0-2*LG-n*w)/(n+1)
     for i in range(n):
         x=X0+LG+gap*(i+1)+w*i
-        L.append(P('背もたれの桟%d'%(i+1),'box',(x,Y0+0.03,ZS+TS,x+w,Y0+LG-0.03,ZTOP-RL),WOOD2,on=('座面','背もたれの横木'),bevel=0,note='座面と横木のあいだ'))
+        L.append(P('背もたれの桟%d'%(i+1),'box',(x,Y0+0.03,ZS+TS,x+w,Y0+LG-0.03,ZTOP-RL),WOOD,on=('座面','背もたれの横木'),bevel=0,note='座面と横木のあいだ'))
     return L

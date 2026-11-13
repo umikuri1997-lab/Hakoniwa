@@ -6,10 +6,10 @@ ID='shelf1';BOTTOM=44
 VIEWS=[('shelf1',0),('shelf1>1',1),('shelf1>2',3)]
 X0,X1,Y0,Y1=0.02,0.98,0.60,0.90;H=1.16;SD=0.05;TP=0.06;KB=0.08;BK=0.02
 def PARTS():
-    L=[P('地板','box',(X0+SD,Y0,0,X1-SD,Y1,KB),WOODD,bevel=0,note='地面におく')]
-    for nx,x in(('左',X0),('右',X1-SD)):L.append(P('側板（%s）'%nx,'box',(x,Y0,0,x+SD,Y1,H-TP),WOOD2,bevel=0,note='地面にたてる'))
+    L=[P('地板','box',(X0+SD,Y0,0,X1-SD,Y1,KB),WOOD,bevel=0,note='地面におく')]
+    for nx,x in(('左',X0),('右',X1-SD)):L.append(P('側板（%s）'%nx,'box',(x,Y0,0,x+SD,Y1,H-TP),WOOD,bevel=0,note='地面にたてる'))
     L.append(P('天板','box',(X0-0.01,Y0-0.01,H-TP,X1+0.01,Y1+0.02,H),WOOD,on=('側板（左）','側板（右）'),bevel=0,note='側板の上'))
-    L.append(P('うしろの板','box',(X0+SD,Y0,KB,X1-SD,Y0+BK,H-TP),WOODD,on=('地板',),bevel=0,note='側板のあいだ'))
+    L.append(P('うしろの板','box',(X0+SD,Y0,KB,X1-SD,Y0+BK,H-TP),WOOD,on=('地板',),bevel=0,note='側板のあいだ'))
     n=3;hh=(H-TP-KB)/n;rd=random.Random(5)
     for i in range(n):
         z0=KB+hh*i
