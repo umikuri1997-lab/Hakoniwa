@@ -16,7 +16,7 @@ for(const [name,P] of Object.entries(L)){if(ONLY.length&&!ONLY.includes(name))co
   const P=${JSON.stringify(P)};
   if(P.house){const [x0,y0,x1,y1,dx]=P.house;for(let x=x0;x<=x1;x++){put('hwall',x,y0);put('hwall',x,y1)}for(let y=y0;y<=y1;y++){put('hwall',x0,y);put('hwall',x1,y)}S.obj[y1*W+dx]='door';for(let y=y0+1;y<y1;y++)for(let x=x0+1;x<x1;x++)S.floor[y*W+x]='floor'}
   for(let y=38;y<48;y+=2)for(let x=36;x<44;x+=2)put('ntree',x,y);for(let y=38;y<46;y+=2)for(let x=40;x<44;x+=2)put('rock',x+10,y-8);
-  put('statue',54,30);put('mbox',...P.mbox);put('stor',...P.stor);put('table',...P.table);for(const b of P.beds)put('bed',...b);
+  put('statue',54,30);put('crate',...P.mbox);put('crate',...P.stor);put('table',...P.table);for(const b of P.beds)put('bed',...b);
   S.res=S.res.slice(0,1);for(const [el,n] of [['earth',MINA],['wood','ハル'],['water','アオ']])S.res.push(mkRes(S,n,el,54,56));
   for(const q of S.res){q.x=54.5;q.y=56.5;q.act=null;q.path=[];q.hunger=hMax(q);q.energy=100;q.fun=100;q.walkT=0}
   S.mat={};S.fs={imo:60};syncFood();S.t=1440*3+6*60;S.lv=3;recount();window.TT={};window.WK={};return 1})()`);

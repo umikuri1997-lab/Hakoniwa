@@ -62,14 +62,14 @@ function sayLine(r){const L=[],fav=FOODS[favDish(r)],m=bestMate(r);
   if(r.coffin||r.act&&(r.act.type==='bury'||r.act.type==='pray'))return 'さみしいなぁ…';/* お墓へ向かう・埋葬するあいだ、タップしたときのひとこと */
   if(r.hunger<300)return 'おなかすいた…';if(r.energy<25)return 'ねむたいなぁ…';
   if(isNight()&&S.enemies.some(e=>e.spawned&&!e.dead))return r.elem==='fire'?'「コワイノ」なんて、こわくない！':'「コワイノ」、こわいね…';
-  if(cnt('stor')&&S.food<3)return '食料箱が、もうすぐからっぽだよ';
+  if(BOXL.length&&S.food<3)return '箱の食べ物が、もうすぐからっぽだよ';
   if((r.cryU||0)>S.t)return 'さみしいなぁ…';
   if(S.today)L.push({hosaku:'きょうは畑がにぎやか！',oshaberi:'きょうは、おしゃべりしたい気分！',odayaka:'今夜は静かになりそう',kaze:'風がつよいね！ 種がとんでくるよ',kami:'カミサマが来てるよ！',hoshi:'今夜は星がきれいなんだって',mono:'落とし物、さがしにいこう！'}[S.today]);
   if(S.ns&&S.ns.rw&&hour()<12)L.push('ゆうべは、ぶじでよかった！');
   if(!HOUSES.length)L.push('みんなの家、ほしいなぁ');
   if(GRASSN>=450)L.push('みどりがいっぱいで、うれしいな');else if(GRASSN<60)L.push('もっと草花がふえるといいな');
   if(m)L.push(m.name+'とあそぶの、たのしい！');
-  if((S.fs[favDish(r)]||0)>0)L.push('食料箱に'+fav.name+'がある！ たのしみ');else L.push(fav.name+'が食べたいなぁ');
+  if((S.fs[favDish(r)]||0)>0)L.push('箱に'+fav.name+'がある！ たのしみ');else L.push(fav.name+'が食べたいなぁ');
   if(r.fun>=80)L.push('ここでのくらし、たのしいよ');
   L.push(LIKES[r.like]+'がすき！');
   return L[(Math.floor(S.t/30)+r.id)%L.length]}/* 村のようすで、ひとことが変わる */

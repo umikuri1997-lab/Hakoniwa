@@ -3,7 +3,7 @@ const assert=require('node:assert/strict');
 (async()=>{const {browser,page,run,errors}=await require('../sim/boot.cjs')();
   await run(`document.querySelector('#dialog').hidden=true;S.introSeen=true;S.flags.tapped=1;S.hold=0;S.t=1440+600;S.enemyOn=false;
     const f=S.res[0];S.res.push(mkRes(S,MINA,'earth',f.x+1,f.y),mkRes(S,keyName('water')||'アオ','water',f.x+2,f.y));for(const r of S.res){r.nap=false;r.hunger=hMax(r);r.act=null}
-    S.obj[(f.y|0)*W+(f.x|0)+5]='stor';recount();S.quest=qsIx('waterFilm');S.qTalked=false;S.qStory=null;`);
+    S.obj[(f.y|0)*W+(f.x|0)+5]='crate';recount();S.quest=qsIx('waterFilm');S.qTalked=false;S.qStory=null;`);
   /* 1. あんないをはじめる（えらぶ場面の pick と同じ） */
   const a=JSON.parse(await run(`(()=>{const w=S.res.find(r=>r.elem==='water');choiceGuide().pick(MINA);checkQuest();const q=QUESTS[S.quest];return JSON.stringify({tour:!!S.tour,talk:TALKW,wait:mainTalkWaitText(q),g:S.tour&&S.res.find(r=>r.id===S.tour.g).name})})()`));
   assert.equal(a.tour,true);assert.equal(a.talk,null,'no next quest talk during the tour');assert.match(a.wait,/あんない/);

@@ -11,7 +11,7 @@ for(let k=0;k<N;k++){
   const r=S.res[0];for(const [el,n] of [['earth',MINA],['fire',FIXK0.fire],['water','アオ']])S.res.push(mkRes(S,n,el,50,54));
   for(const [x,y] of [[49,52],[50,52],[51,52]])S.obj[y*W+x]='hwall';
   const put=(id,x,y)=>{S.obj[y*W+x]=id;if(BL[id].dyn)S.dyn[y*W+x]=S.dyn[y*W+x]||{}};
-  put('statue',54,57);put('stor',50,55);put('mbox',52,55);put('table',49,50);for(const x of [48,49,50,51])put('bed',x,49);
+  put('statue',54,57);put('crate',50,55);put('crate',52,55);put('table',49,50);for(const x of [48,49,50,51])put('bed',x,49);
   put('watch',56,62);put('spike',54,64);put('spike',53,64);S.inv.arrow=60;S.unlocked.watch=true;
   if('${VAR}'==='fence'||'${VAR}'==='fence2'){/* 柵でかこんだ村：家・箱・神殿・見張り台を、柵の四角（44〜60,45〜66）でかこみ、南に柵のドア。罠を南の入り口の外に */
     for(let x=44;x<=60;x++)for(const y of [45,66])if(!S.obj[y*W+x])S.obj[y*W+x]='fence';for(let y=45;y<=66;y++)for(const x of [44,60])if(!S.obj[y*W+x])S.obj[y*W+x]='fence';

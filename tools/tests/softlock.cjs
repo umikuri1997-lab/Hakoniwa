@@ -4,7 +4,7 @@ const assert=require('node:assert/strict');
 (async()=>{const {browser,page,run,errors}=await require('../sim/boot.cjs')();
   const J=async s=>JSON.parse(await run(s));
   await run(`(()=>{document.querySelector('#dialog').hidden=true;USERPAUSE=true;S.introSeen=true;S.flags.tapped=1;S.flags.minaCame=true;S.hold=0;resetVillageTransient();dialog=()=>{};talkOnce=()=>{};
-    S.obj[57*W+54]='statue';S.obj[55*W+44]='stor';S.fs={imo:40};S.food=40;S.enemyOn=true;S.t=1440*20+10*60;S.quest=questIndexOf('ookage');S.qTalked=true;S.qStory=null;
+    S.obj[57*W+54]='statue';S.obj[55*W+44]='crate';S.fs={imo:40};S.food=40;S.enemyOn=true;S.t=1440*20+10*60;S.quest=questIndexOf('ookage');S.qTalked=true;S.qStory=null;
     for(const [el,n] of [['earth',MINA],['fire',FIXK0.fire],['water','アオ']])S.res.push(mkRes(S,n,el,44,58));recount();window.GRAVE=()=>S.obj.findIndex((o,j)=>o==='grave'&&!S.dyn[j].buried);})()`);
   /* 1. おみおくりの前のお墓をこわしても、つぎの朝に呼びもどせる */
   const a=await J(`(()=>{const r=S.res.find(q=>q.name===MINA);die(r);const g=GRAVE(),unb0=S.buried.find(q=>q.name===MINA).unb;setMode('remove');removeAt(g%W,(g/W)|0);const unb1=S.buried.find(q=>q.name===MINA).unb;S.summon=null;summonMorning();return JSON.stringify({unb0:!!unb0,unb1:!!unb1,gone:S.obj[g]!=='grave',rev:!!(S.summon&&S.summon.rev)})})()`);
