@@ -18,15 +18,19 @@ OUT = 0.0        # 輪郭線のふとさ（マス）。0は輪郭線なし
 OUTK = 0.5       # 輪郭線の色（もとの色にかける数。1に近いほどうすい線）
 BEVEL = 0.022    # 箱の角の面取り（マス）
 class Scene:
-    def __init__(self): self.t = []; self.pid = 0; self.ol = {}; self.cur = None; self.grp = {}; self.gcur = None
+    def __init__(self): self.t = []; self.pid = 0; self.ol = {}; self.cur = None; self.grp = {}; self.gcur = None; self.tx = {}; self.tcur = None
     def outline(self, w=None, k=None):
         """これから足す部品の輪郭線の太さ w（マス）・色 k（もとの色にかける数）。None は render の値"""
         self.cur = None if w is None and k is None else (w, k)
     def group(self, g=None):
         """これから足す部品のグループ。同じグループの部品どうしのさかいには、render_px で線を引かない（同じ面にそろえて組んだ材など）"""
         self.gcur = g
+    def texture(self, t=None):
+        """これから足す部品にはる木目など（Tex）。render_px で、部品ののびる向きにそって、明るさのちがいだけをつける"""
+        self.tcur = t
     def part(self):
         self.pid += 1   # つぎの三角形から、べつの部品（輪郭線は部品ごとにふくらませる）
+        if self.tcur is not None: self.tx[self.pid] = self.tcur
         if self.cur: self.ol[self.pid] = self.cur
         if self.gcur is not None: self.grp[self.pid] = self.gcur
     def tri(self, a, b, c, col): self.t.append((np.array(a, float), np.array(b, float), np.array(c, float), np.array(col, float), self.pid))
@@ -185,14 +189,41 @@ def grid_bg(ext, foot=None):
     if foot: fw, fh = foot; d.rectangle([((0-x0)*S, (0-y0)*S), ((fw-x0)*S, (fh-y0)*S)], outline=(214, 170, 70), width=3)
     return im
 
-def render_px(sc, proj, ext, depth, k=0.72, outer=True):
+class Tex:
+    """部品にはるテクスチャ（木目など）。もようが横むき（u がもようの流れる向き）の、くりかえしてつながる絵。
+    span：絵1まいが何マスぶんか。flow：もようの流れる向きに、なめらかにするはば（ドット。木目を点でなく、すじにする）。
+    minrun：これより短いすじ（ドット）は消す。lv：明るさを3だんにわける（こい所の割合と色にかける数・明るい所の割合と色にかける数）。
+    色は部品の色のまま、明るさのちがいだけをつける（ドット絵の色数をふやさない）"""
+    def __init__(self, path, span=2.0, flow=10, minrun=4, dark=(0.14, 0.9), light=(0.08, 1.06)):
+        self.src = Image.open(path).convert('L'); self.span = span; self.flow = flow; self.minrun = minrun; self.dark = dark; self.light = light; self._c = {}
+    def at(self, S_):
+        if S_ not in self._c:
+            from scipy.ndimage import uniform_filter1d
+            n = max(8, int(round(self.span*S_)))
+            a = np.asarray(self.src.resize((n, n), Image.BOX), float)
+            a = uniform_filter1d(a, self.flow, axis=1, mode='wrap')          # 木の流れる向きに、なめらかに
+            lo, hi = np.quantile(a, self.dark[0]), np.quantile(a, 1-self.light[0])
+            q = np.where(a <= lo, -1, np.where(a >= hi, 1, 0))
+            for y in range(n):                                               # 短いすじ（点）は消す
+                r = q[y]; x = 0
+                st = np.flatnonzero(np.diff(np.r_[r[-1], r]) != 0)
+                if len(st) == 0: continue
+                for i, x0 in enumerate(st):
+                    x1 = st[(i+1) % len(st)]; L = (x1-x0) % n or n
+                    if r[x0] != 0 and L < self.minrun: r[np.arange(x0, x0+L) % n] = 0
+            self._c[S_] = np.where(q < 0, self.dark[1], np.where(q > 0, self.light[1], 1.0))
+        return self._c[S_]
+
+def render_px(sc, proj, ext, depth, k=0.72, outer=True, merge=12):
     """ドット絵にするための写し方：1マス S ドットで、ちぢめずに（1ドットに1点）写し、部品のさかいに1ドットの輪郭線を引く。
     輪郭線は、となりあう2つのドットの部品がちがうとき、うしろがわ（遠いほう）のドットに引く（手前の部品の形はけずらない）。
     交差・つきあてる所も、手前の部品の形のまま、うしろの部品に線が入る。色は、そのドットの色に k をかけた色。
     outer：まわりのふち（透明ととなりあう所）は、透明がわに1ドット（となりの色×k）。上下左右だけを見る（ななめは見ない）。
-    sc.outline(0) のあとに足した部品は、線を引かない（中のくらい所など）。sc.group(名前) で同じグループにした部品どうしにも引かない。"""
+    sc.outline(0) のあとに足した部品は、線を引かない（中のくらい所など）。sc.group(名前) で同じグループにした部品どうしにも引かない。
+    merge：さいごに、色の差がこれより小さい色を、多いほうの色にまとめる（にた色をのこさない。0でまとめない）。"""
     x0, x1, y0, y1 = ext; Wp = int(round((x1-x0)*S)); Hp = int(round((y1-y0)*S))
     col = np.zeros((Hp, Wp, 3)); zb = np.full((Hp, Wp), -1e9); idb = np.full((Hp, Wp), -1)
+    wp = np.zeros((Hp, Wp, 3)); wn = np.zeros((Hp, Wp, 3))   # ドットごとの、せかいの場所と面の向き（テクスチャ用）
     for a, b, c, cc, pid in sc.t:
         n = np.cross(b-a, c-a); ln = np.linalg.norm(n)
         if ln < 1e-12: continue
@@ -212,6 +243,20 @@ def render_px(sc, proj, ext, depth, k=0.72, outer=True):
         z = w0*D[0]+w1*D[1]+w2*D[2]
         s = (slice(by0, by1+1), slice(bx0, bx1+1)); vis = m & (z > zb[s])
         zb[s][vis] = z[vis]; col[s][vis] = np.clip(np.array(cc)*sh, 0, 255); idb[s][vis] = pid
+        if pid in sc.tx:
+            wp[s][vis] = (w0[vis, None]*a+w1[vis, None]*b+w2[vis, None]*c); wn[s][vis] = n
+    col0 = col.copy()   # 木目をつける前の色（輪郭線はこの色から作る。木目ごとに線の色がわかれない）
+    for pid, tx in sc.tx.items():   # 部品ののびる向き（いちばん長い向き）にそって、木目をはる
+        m = idb == pid
+        if not m.any(): continue
+        V = np.array([v for t_ in sc.t if t_[4] == pid for v in t_[:3]]); V0 = V.mean(0)
+        ax = np.linalg.svd(V-V0)[2][0]
+        T = tx.at(S); n_ = T.shape[0]; P = wp[m]-V0; N = wn[m]
+        v2 = np.cross(N, ax); bad = np.linalg.norm(v2, axis=1) < 0.3
+        v2[bad] = np.cross(N[bad], np.array([0, 0, 1.0])); v2 /= np.maximum(np.linalg.norm(v2, axis=1, keepdims=True), 1e-9)
+        rs = np.random.RandomState(pid*7919+11); du, dv = rs.randint(0, n_, 2)
+        iu = (np.floor((P@ax)*S).astype(int)+du) % n_; iv = (np.floor((P*v2).sum(1)*S).astype(int)+dv) % n_
+        col[m] = np.clip(col[m]*T[iv, iu][:, None], 0, 255)
     noline = {p for p, (w, _) in sc.ol.items() if w == 0}
     out = col.copy(); alpha = (idb >= 0).astype(float)*255; line = np.zeros((Hp, Wp), bool)
     for dy, dx in ((0, 1), (0, -1), (1, 0), (-1, 0)):
@@ -227,14 +272,22 @@ def render_px(sc, proj, ext, depth, k=0.72, outer=True):
             for p_, g_ in sc.grp.items(): G[p_] = gi.setdefault(g_, len(gi))
             far &= ~((G[idb] >= 0) & (G[idb] == G[nid]))
         line |= far
-    out[line] = col[line]*k
+    out[line] = col0[line]*k
     if outer:
         for dy, dx in ((0, 1), (0, -1), (1, 0), (-1, 0)):
             ys = slice(max(dy, 0), Hp+min(dy, 0)); xs = slice(max(dx, 0), Wp+min(dx, 0))
             yd = slice(max(-dy, 0), Hp+min(-dy, 0)); xd = slice(max(-dx, 0), Wp+min(-dx, 0))
             src = np.zeros((Hp, Wp), bool); src[yd, xd] = idb[ys, xs] >= 0
-            sc_ = np.zeros((Hp, Wp, 3)); sc_[yd, xd] = col[ys, xs]
+            sc_ = np.zeros((Hp, Wp, 3)); sc_[yd, xd] = col0[ys, xs]
             put = src & (alpha == 0)
             out[put] = sc_[put]*k; alpha[put] = 255
-    img = np.dstack([out, alpha]).astype(np.uint8)
+    img = np.dstack([np.round(out), alpha]).astype(np.uint8)
+    if merge > 0:   # にた色をまとめる（多い色から順に、近い色をよせる）
+        m = img[..., 3] > 0; px = img[m][:, :3].astype(int)
+        u, inv, cnt = np.unique(px, axis=0, return_inverse=True, return_counts=True); to = np.arange(len(u))
+        for i in np.argsort(-cnt):
+            if to[i] != i: continue
+            d = ((u-u[i])**2).sum(1) < merge*merge; d[i] = False; d &= to == np.arange(len(u))
+            d &= cnt <= cnt[i]; to[d] = i
+        sub = img[m]; sub[:, :3] = u[to[inv.ravel()]]; img[m] = sub
     return Image.fromarray(img, 'RGBA')
