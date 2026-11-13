@@ -14,6 +14,7 @@ x=東, y=南, z=上（マス）。置くマスの左上が(0,0)。
   wheel(cx,cy,cz,r,t)                車輪（正面を向いた円板、あつさ t）
   ball(cx,cy,cz,r)                   丸いかたまり（葉・花・荷物）
   rope(a,b,r)                        なわ
+  tube(点の一覧,r)                    折れ線の管（取っ手の輪など）
   model(path,cx,cy,z0,size,rot,tilt)      フリーの3Dモデル（glTF の .glb。models/ にある CC0 の物）。size はモデルの高さ（マス）、rot は上から見てまわす角度・tilt は東西へたおす角度（度）
   lathe(cx,cy,[(半径,高さ),...])     まわした形（つぼ）。上から下への形
   prism([(x,z),...],y0,y1)            正面（南から見た形）の多角形を、y0〜y1 へのばした板（すじかいのはしを、ほかの材にそって切るときなど）
@@ -41,6 +42,7 @@ class Part:
         if k=='pyr':cx,cy,hw,hd,z0,z1=d;return(cx-hw,cy-hd,z0,cx+hw,cy+hd,z1)
         if k=='wheel':cx,cy,cz,r,t=d;return(cx-r,cy-t/2,cz-r,cx+r,cy+t/2,cz+r)
         if k=='ball':cx,cy,cz,r=d;return(cx-r,cy-r,cz-r,cx+r,cy+r,cz+r)
+        if k=='tube':a=np.array(d[0],float);r=d[1];return(*(a.min(0)-r),*(a.max(0)+r))
         if k=='model':V,F,C=model_tris(*d);return(*V.min(0),*V.max(0))
         if k=='loft':a=np.array([q for P_,z in d for q in P_],float);zs=[z for _,z in d];return(a[:,0].min(),a[:,1].min(),min(zs),a[:,0].max(),a[:,1].max(),max(zs))
         if k=='prism':
@@ -121,6 +123,7 @@ def build(sc,parts):
             for P_,z in(R_[0],R_[-1]):
                 for i in range(1,n-1):sc.tri((P_[0][0],P_[0][1],z),(P_[i][0],P_[i][1],z),(P_[i+1][0],P_[i+1][1],z),tuple(c))
         elif k=='rope':sc.tube([d[0],d[1]],d[2],tuple(c),n=6)
+        elif k=='tube':sc.tube(list(d[0]),d[1],tuple(c),n=8)   # 折れ線の管（取っ手の輪など）。d=(点の一覧, 太さ)
         elif k=='logy':   # まき・丸太：おく向き（y）にねかせた円柱。まわりは皮の色（col）、両はしの切り口は LOGEND
             cx,y0,y1,cz,r=d;sc.part();n=20
             for yy in(y0,y1):
