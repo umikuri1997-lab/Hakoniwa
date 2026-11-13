@@ -19,6 +19,7 @@ ID='bed';BOTTOM=64
 VIEWS=[('bed',0),('bed>1',1)]
 X0,X1,Y0,Y1=0.06,0.94,-0.06,0.96;PS=0.07;ZH=0.46;ZF=0.32
 SHEET=(252,252,250);QUILT=(246,246,244)   # シーツもかけぶとんも白（折り返しは、形とかげで見せる）
+DN=(40,46)   # かけぶとんのます目の数
 YQ=Y0+PS+0.23;QT=0.025;ZM=0.31   # YQ：かけぶとんの頭がわのはし（まくらの手前0.05にかかる）   # かけぶとんの頭がわのはし・かけぶとんのあつさ・マットレスの上の高さ
 def PARTS():
     L=[]
@@ -64,7 +65,7 @@ def duvet(sc):   # かけぶとんと、うわシーツの折り返し（たれ�
         z=max(0.22,ZM+QT-drop(dx)-drop(dy))   # 角は、左右と足もとの両方へさがる
         return max(z,ptop(x,y)+0.008) if pshape(x,y)>0 else z   # まくらにかかる所は、まくらの上にのる
     bot=lambda x,y:top(x,y)-QT
-    sc.material('soft');hfield(sc,xa,ya,xb,yb,top,QUILT,bot=bot,n=(40,46));sc.material(None)
+    sc.material('soft');hfield(sc,xa,ya,xb,yb,top,QUILT,bot=bot,n=DN);sc.material(None)
     # うわシーツの折り返し：かけぶとんの頭のはしをくるみ、上にはば0.10
     def stop(x,y):
         if y>=YQ:return top(x,YQ+0.0001 if y<YQ+0.0001 else y)+0.012

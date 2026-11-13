@@ -18,7 +18,7 @@ OUT = 0.0        # 輪郭線のふとさ（マス）。0は輪郭線なし
 OUTK = 0.5       # 輪郭線の色（もとの色にかける数。1に近いほどうすい線）
 BEVEL = 0.022    # 箱の角の面取り（マス）
 class Scene:
-    def __init__(self): self.t = []; self.pid = 0; self.ol = {}; self.cur = None; self.grp = {}; self.gcur = None; self.tx = {}; self.tcur = None; self.mt = {}; self.mcur = None; self.tg = {}; self.tcur2 = None; self.joins = set()
+    def __init__(self): self.t = []; self.pid = 0; self.ol = {}; self.cur = None; self.grp = {}; self.gcur = None; self.tx = {}; self.tcur = None; self.mt = {}; self.mcur = None; self.tg = {}; self.tcur2 = None; self.joins = set(); self.dc = {}; self.dcur = None
     def outline(self, w=None, k=None):
         """これから足す部品の輪郭線の太さ w（マス）・色 k（もとの色にかける数）。None は render の値"""
         self.cur = None if w is None and k is None else (w, k)
@@ -31,6 +31,9 @@ class Scene:
     def material(self, m=None):
         """これから足す部品の材質（render_px）。None はふつう、'metal' は金属（光の当たる所に、明るいつやのすじ）、'soft' は布・砂（なだらかなふくらみにもかげ）、'soft1' は 'soft' のかげを半かげまでにした物、'flat' は3だんのかげをつけない物（色にかげを入れてある。まくら）、'clear' はすけて見える物（水。CLEARA のこさで下にかさねる）"""
         self.mcur = m
+    def decal(self, f=None):
+        """これから足す部品の、もよう（3Dの面にのる柄）。f(x, y, z) → その場所の色（もようでない所は None）。render_px で、ドットごとに、見える面の場所から色をきめ、その場所のかげ（3だん）をつける"""
+        self.dcur = f
     def tag(self, t=None):
         """これから足す部品の名札。join(a, b) した名札の部品どうしのさかいには、render_px で線を引かない（つづいている1まいの板など）"""
         self.tcur2 = t
@@ -40,6 +43,7 @@ class Scene:
         if self.tcur2 is not None: self.tg[self.pid] = self.tcur2
         if self.mcur: self.mt[self.pid] = self.mcur
         if self.tcur is not None: self.tx[self.pid] = self.tcur
+        if self.dcur is not None: self.dc[self.pid] = self.dcur
         if self.cur: self.ol[self.pid] = self.cur
         if self.gcur is not None: self.grp[self.pid] = self.gcur
     def turn(self, k, foot=None):
@@ -58,6 +62,13 @@ class Scene:
         sh = np.array([0.5 if foot is None else (x0+x1)/2, y1-hd, 0])
         if k % 2: sh[0] = 0.5
         self.t = [(a+sh, b+sh, c+sh, col, pid) for a, b, c, col, pid in T]
+        def inv(f, sh=sh, k=k, cx=cx, cy=cy):   # もようは、まわす前の場所できめる（もようも物といっしょにまわる）
+            def g(x, y, z):
+                x, y = x-sh[0], y-sh[1]
+                for _ in range(k): x, y = -y, x
+                return f(x+cx, y+cy, z)
+            return g
+        self.dc = {pid: inv(f) for pid, f in self.dc.items()}
     def tri(self, a, b, c, col): self.t.append((np.array(a, float), np.array(b, float), np.array(c, float), np.array(col, float), self.pid))
     def quad(self, a, b, c, d, col): self.tri(a, b, c, col); self.tri(a, c, d, col)
     def ring_wall(self, cx, cy, r, z0, z1, colf, n=48):
@@ -226,6 +237,7 @@ def toon(cc, lv):
     h, s_, v = colorsys.rgb_to_hsv(*[c/255 for c in cc])
     if lv == 0: return np.array(cc, float)
     dv, ds = (-SHINE[0], -SHINE[1]) if lv < 0 else SHADE[lv-1]
+    if lv > 0 and v < 0.85: dv *= v/0.85   # くらい色は、かげで引く明るさを、色の明るさに合わせてへらす（黒っぽいかげにしない。持ち主がきめた）
     v = min(1, max(0, v-dv/100)); s_ = min(1, max(0, s_-ds/100))
     return np.array(colorsys.hsv_to_rgb(h, s_, v))*255
 
@@ -263,7 +275,7 @@ def render_px(sc, proj, ext, depth, k=0.72, outer=True, merge=12, lw=1, k2=0.86)
     merge：さいごに、色の差がこれより小さい色を、多いほうの色にまとめる（にた色をのこさない。0でまとめない）。
     lw：輪郭線のはば（1か2）。2のときは、さかい目にふれる1ドットめが こい線（×k）、そのとなりの2ドットめが まわりになじむ うすい線（×k2）。まわりのふちは、外がわ1ドットがこい線・物の内がわ1ドットがうすい線。"""
     x0, x1, y0, y1 = ext; Wp = int(round((x1-x0)*S)); Hp = int(round((y1-y0)*S))
-    col = np.zeros((Hp, Wp, 3)); zb = np.full((Hp, Wp), -1e9); idb = np.full((Hp, Wp), -1)
+    col = np.zeros((Hp, Wp, 3)); zb = np.full((Hp, Wp), -1e9); idb = np.full((Hp, Wp), -1); lvb = np.zeros((Hp, Wp), int)
     wp = np.zeros((Hp, Wp, 3)); wn = np.zeros((Hp, Wp, 3))   # ドットごとの、せかいの場所と面の向き（テクスチャ用）
     CLR = []   # すけて見える部品の三角形
     RAY = getattr(proj, 'ray', None)   # persp の写し方：ドットごとに、見える面の場所を式でとく（三角形を分けない）
@@ -304,9 +316,14 @@ def render_px(sc, proj, ext, depth, k=0.72, outer=True, merge=12, lw=1, k2=0.86)
             m = (w0 >= -1e-6) & (w1 >= -1e-6) & (w2 >= -1e-6)
             z = w0*D[0]+w1*D[1]+w2*D[2]
         s = (slice(by0, by1+1), slice(bx0, bx1+1)); vis = m & (z > zb[s])
-        zb[s][vis] = z[vis]; col[s][vis] = shc; idb[s][vis] = pid
-        if pid in sc.tx:
+        zb[s][vis] = z[vis]; col[s][vis] = shc; idb[s][vis] = pid; lvb[s][vis] = lv
+        if pid in sc.tx or pid in sc.dc:
             wp[s][vis] = (w0[vis, None]*a+w1[vis, None]*b+w2[vis, None]*c); wn[s][vis] = n
+    for pid, f in sc.dc.items():   # もよう：ドットごとに、見える面の場所の色（かげは、そのドットの3だん）
+        ys_, xs_ = np.nonzero(idb == pid)
+        for yy, xx in zip(ys_, xs_):
+            c_ = f(*wp[yy, xx])
+            if c_ is not None: col[yy, xx] = toon(c_, lvb[yy, xx])
     col0 = col.copy()   # 木目をつける前の色（輪郭線はこの色から作る。木目ごとに線の色がわかれない）
     for pid, tx in sc.tx.items():   # 部品ののびる向き（いちばん長い向き）にそって、木目をはる
         m = idb == pid
