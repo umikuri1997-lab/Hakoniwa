@@ -36,6 +36,7 @@ class Part:
         if k=='box':return d
         if k in('cyl','cone'):cx,cy,r,z0,z1=d;return(cx-r,cy-r,z0,cx+r,cy+r,z1)
         if k=='logy':cx,y0,y1,cz,r=d;return(cx-r,y0,cz-r,cx+r,y1,cz+r)
+        if k=='maki':cx,y0,y1,cz,r=d[:5];return(cx-r,y0,cz-r,cx+r,y1,cz+r)
         if k=='ring':cx,cy,r0,r,z0,z1=d;return(cx-r,cy-r,z0,cx+r,cy+r,z1)
         if k=='pyr':cx,cy,hw,hd,z0,z1=d;return(cx-hw,cy-hd,z0,cx+hw,cy+hd,z1)
         if k=='wheel':cx,cy,cz,r,t=d;return(cx-r,cy-t/2,cz-r,cx+r,cy+t/2,cz+r)
@@ -87,7 +88,7 @@ def build(sc,parts):
             V,F,C=model_tris(*d);sc.part()
             rc=getattr(p,'recol',None)
             if rc is not None:   # 色をかえる（その色に、モデルの明るさのちがいだけをのこす。例：つぼをクリーム色・青に）
-                L_=C.mean(1);C=np.clip(np.array(rc,float)[None,:]*(L_/max(1.0,L_.mean()))[:,None],0,255)
+                L_=C.mean(1);L_=L_/max(1.0,L_.mean());kk=getattr(p,'recolk',1.0);L_=1+(L_-1)*kk;C=np.clip(np.array(rc,float)[None,:]*L_[:,None],0,255)   # recolk：明るさのちがいをのこす分（0でむらなし）
             for f,cc in zip(F,C):sc.tri(V[f[0]],V[f[1]],V[f[2]],tuple(cc*(1-MODEL_SOFT)+255*MODEL_SOFT))   # モデルの色は、ゲームに合わせて少しうすく
         elif k=='cyl':   # plainwall：まわりのかべには木目をはらない（まるいかべの木目は、ドットでは、ぶつぶつのすじになる）
             cx,cy,r,z0,z1=d;t=sc.tcur
@@ -125,6 +126,36 @@ def build(sc,parts):
             for i in range(n):
                 a0=2*math.pi*i/n;a1=2*math.pi*(i+1)/n;P_=lambda a,yy:(cx+r*math.cos(a),yy,cz+r*math.sin(a))
                 sc.quad(P_(a0,y0),P_(a1,y0),P_(a1,y1),P_(a0,y1),tuple(c))
+        elif k=='maki':   # わったまき：おく向き（y）にねかせる。d=(cx,y0,y1,cz,r,形,まわす角度,太さ)。形 'round' 丸のまま・'half' 半分・'quarter' 4分の1。
+            # まわり：皮（col）、わった面 MAKISPLIT。切り口：皮のふち・明るい木 LOGEND・まん中（しん）MAKIHEART。r の円の中におさめる
+            cx,y0,y1,cz,r,sh,rot=d[:7];fr=d[7] if len(d)>7 else 1.0;sc.part();n=16
+            a0={'round':0,'half':0,'quarter':0}[sh];span={'round':2*math.pi,'half':math.pi,'quarter':math.pi/2}[sh]
+            arc=[(math.cos(a0+span*i/n*(1 if sh=='round' else 1)),math.sin(a0+span*i/n)) for i in range(n if sh=='round' else n+1)]
+            if sh=='round':P0=arc;pith=(0.0,0.0);isarc=[True]*len(P0)
+            else:P0=arc+[(0.0,0.0)];pith=(0.0,0.0);isarc=[True]*len(arc)+[False]
+            cr,sr=math.cos(math.radians(rot)),math.sin(math.radians(rot))
+            Q=[(u*cr-v*sr,u*sr+v*cr) for u,v in P0];pq=(0.0,0.0)
+            ux=[q[0] for q in Q];vz=[q[1] for q in Q];mu,mv=(max(ux)+min(ux))/2,(max(vz)+min(vz))/2;ex=max(max(ux)-min(ux),max(vz)-min(vz))/2
+            k_=r*fr/ex;Q=[((u-mu)*k_,(v-mv)*k_) for u,v in Q];pq=((0-mu)*k_,(0-mv)*k_)
+            V_=lambda q,yy:(cx+q[0],yy,cz+q[1]);m=len(Q);cl=sh=='round';t_=sc.tcur;sc.texture(barktex() if getattr(p,'bark',True) else None);sc.part()
+            for i in range(m if cl else m):
+                j=(i+1)%m
+                if not cl and j==0 and i==m-1:pass
+                bark=isarc[i] and isarc[j] and (cl or j!=0)
+                sc.quad(V_(Q[i],y0),V_(Q[j],y0),V_(Q[j],y1),V_(Q[i],y1),tuple(c) if bark else MAKISPLIT)
+            sc.texture(None);sc.part();sc.texture(t_)   # 切り口は木目なし（同じグループなので線は引かない）
+            for yy in(y0,y1):   # 切り口（皮のうすいふち・明るい木・年輪の線・しん。かさならない輪にわけて描く）
+                In=[(pq[0]+(q[0]-pq[0])*0.88,pq[1]+(q[1]-pq[1])*0.88) if a_ else q for q,a_ in zip(Q,isarc)]
+                for i in range(m):
+                    j=(i+1)%m
+                    if isarc[i] and isarc[j]:sc.quad(V_(Q[i],yy),V_(Q[j],yy),V_(In[j],yy),V_(In[i],yy),tuple(c))
+                Rg=lambda f:[(pq[0]+(q[0]-pq[0])*f,pq[1]+(q[1]-pq[1])*f) for q in In]
+                bands=[(1.0,0.66,LOGEND),(0.66,0.52,MAKIRING),(0.52,0.30,LOGEND)]
+                for fa,fb,cc_ in bands:
+                    A_,B_=Rg(fa),Rg(fb)
+                    for i in range(m):j=(i+1)%m;sc.quad(V_(A_[i],yy),V_(A_[j],yy),V_(B_[j],yy),V_(B_[i],yy),cc_)
+                Hc=Rg(0.30)
+                for i in range(m):j=(i+1)%m;sc.tri(V_(pq,yy),V_(Hc[i],yy),V_(Hc[j],yy),MAKIHEART)
         elif k=='wheel':
             cx,cy,cz,r,t=d;sc.part()
             for yy in(cy-t/2,cy+t/2):
@@ -137,6 +168,15 @@ def build(sc,parts):
         elif k=='ball':cx,cy,cz,r=d;sc.sphere(cx,cy,cz,r,tuple(c),n=14,m=8)
 
 LOGEND=(236,206,150)   # まきの切り口の色（年輪のある明るい木）
+MAKISPLIT=(222,178,118)   # わったまきの、たてにわれた面
+MAKIHEART=(222,180,122)   # まきの切り口のまん中（しん）
+MAKIRING=(228,192,136)   # まきの切り口の年輪の線
+_BT=[]
+def barktex():
+    """まきの皮のテクスチャ（ambientCG Bark001、textures/bark001.png）"""
+    if not _BT:
+        from oblique3d import Tex;_BT.append(Tex(os.path.join(os.path.dirname(os.path.abspath(__file__)),'textures','bark001.png'),span=1.0,flow=6,minrun=3,dark=(0.16,0.93),light=(0.16,1.06)))
+    return _BT[0]
 MODELS=os.path.join(os.path.dirname(os.path.abspath(__file__)),'models')
 _MC={};MODEL_SOFT=0.3   # モデルの色を白にまぜる分
 POTCOL=(226,196,166)   # 観葉植物のはち（モデルではこい灰色）を、ゲームに合わせたやきものの色に
@@ -149,7 +189,7 @@ def model_tris(path,cx,cy,z0,size,rot=0,tilt=0):
     for node in sc_.graph.nodes_geometry:   # 部品ごとに色をとる（テクスチャの色か、材質の色）
         T_,gname=sc_.graph[node];g=sc_.geometry[gname].copy();g.apply_transform(T_);vis=g.visual;col=None
         try:
-            vc=np.asarray(vis.to_color().vertex_colors,float)
+            vc=np.asarray((vis if getattr(vis,'kind',None)=='vertex' else vis.to_color()).vertex_colors,float)   # 色が点ごとにある物（トリポのモデル）は、そのまま
             if vc.ndim==2 and len(vc)==len(g.vertices):col=vc[:,:3][np.array(g.faces)].mean(1)
         except Exception:pass
         if col is None:
@@ -162,6 +202,11 @@ def model_tris(path,cx,cy,z0,size,rot=0,tilt=0):
         VS.append(np.asarray(g.vertices,float));FS.append(np.asarray(g.faces)+n);CS.append(col);n+=len(g.vertices)
     class _M:pass
     m=_M();m.vertices=np.concatenate(VS);m.faces=np.concatenate(FS);col=np.concatenate(CS)
+    if path.startswith('tripo/'):   # トリポのモデル：くらい色・色むらをへらし、あざやかにして、トゥーンの色に（持ち主：黒っぽいかげを使わない）
+        import colorsys
+        H=np.array([colorsys.rgb_to_hsv(*(c_/255)) for c_ in col]);vm=H[:,2].mean()
+        H[:,2]=np.clip(vm+(H[:,2]-vm)*0.4,0.6,1.0);H[:,1]=np.clip(H[:,1]*1.12+0.04,0,1)
+        col=np.array([colorsys.hsv_to_rgb(*h_) for h_ in H])*255
     if 'Houseplant' in path:col[(col.mean(1)<90)&(col.max(1)-col.min(1)<18)]=POTCOL   # 灰色のはちだけ（葉の緑はそのまま）
     v=np.array(m.vertices,float);V=np.stack([v[:,0],v[:,2],v[:,1]],1)   # glTF（y上・z手前）→ x・y南・z上
     k=size/(V[:,2].max()-V[:,2].min())   # size は、たおす前のモデルの高さ
