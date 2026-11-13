@@ -81,6 +81,8 @@ const likeExtra=(h,r)=>{const f=likeF(r),pt=COMFY[f]||0;if(!pt)return 0;let n=0,
 const comfyFor=(h,r,C)=>Math.min(COMFMAX,(C||houseComfort(h)).v+likeExtra(h,r));
 const comfyStars=v=>'★'.repeat(Math.min(5,Math.max(1,Math.ceil(v/(60)))))+'☆'.repeat(5-Math.min(5,Math.max(1,Math.ceil(v/(60)))));
 /* 家の広さで、ちょうどいい人数が決まる（中のマス4つで1人） */
+const OWNABLE=o=>!!o&&(SEATS.includes(o)||!!(BL[o]&&BL[o].play)||o==='bathtub'||o==='onsen'||COOKST.has(o));/* つかうせいれいをきめられる家具：いす・ベンチ・遊び家具・おふろ・料理の家具（ベッド・見張り台はべつ） */
+const useOwner=j=>{const id=(S.useOwn||{})[anc(j)];return id!=null&&OWNABLE(S.obj[anc(j)])?S.res.find(q=>q.id===id)||null:null},useFor=(j,r)=>{const o=useOwner(j);return !o||o===r};/* きまったせいれいがいれば、その子だけ使う（いない子のは、だれでも） */
 const bedOwner=j=>{const id=(S.bedOwn||{})[j];return id!=null&&BEDSET.has(S.obj[j])?S.res.find(q=>q.id===id)||null:null},myBed=r=>{const B=S.bedOwn||{};for(const k in B)if(B[k]===r.id&&BEDSET.has(S.obj[k]))return +k;return -1},bedFor=(j,r)=>{const o=bedOwner(j);return !o||o===r};/* ベッドの持ち主（いない子のは、だれでも使える） */
 const houseCap=h=>Math.max(1,Math.floor(h.inside.size/4))/* 床のマス数の1/4（壁はふくめない）。はじめの家で3人 */,roomOf=j=>HOUSES.find(h=>h.set.has(j)),roomSleepN=h=>S.res.filter(x=>x.act&&(x.act.type==='sleep'||x.act.type==='stay')&&x.act.stand>=0&&h.set.has(x.act.obj!=null?x.act.obj:x.act.stand)).length;
 // 屋根がすけて中をのぞいているときは、家の中のせいれいも外と同じに見せる

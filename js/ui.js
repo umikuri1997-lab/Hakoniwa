@@ -203,6 +203,11 @@ function rowEl(title,desc,img,html){const r=el(`<div class="row">${img?'<img alt
 function shopPrice(id,k){let t=0;for(let i=0;i<k;i++){if(id==='farm')t+=4+Math.floor(((S.farmBuy||0)+i)/3);/* 畑は3こ買うごとに1ポイント上がる */else if(id==='fruit')t+=10+2*((S.fruitBuy||0)+i);else if(FLOWERS.has(id))t+=BL[id].sp;/* 花の種の値段は、表の sp */else t+=BL[id].cost}return t}
 /* メニューの中の画面：見出しの左に、小さな「もどる」 */
 function sheetBack(){const bk=el('<button class="btn back" aria-label="メニューにもどる">'+pxi('next','prev')+'もどる</button>');bk.onclick=()=>{sfx('tap');openSheet('menu')};$('#sheetTitle').before(bk)}
+function useOwnSec(body,j,o){if(!(OWNABLE(o)&&S.obj[j]===o&&S.res.length))return;/* つかうせいれい：きめたせいれいだけが使う */const a=anc(j),ow=useOwner(a),sec=el('<div class="sec"><h3>つかうせいれい</h3><div class="rows"></div></div>'),rows=sec.querySelector('.rows'),set=id=>{const U=S.useOwn||(S.useOwn={});if(id==null)delete U[a];else U[a]=id;sfx('next');renderSheet()};
+      {const row=el('<button class="row" style="text-align:left;width:100%"><span class="dot" style="background:#efe6d2"></span><div class="tx"><b></b><small></small></div></button>');ckSet(row.querySelector('b'),(ow?'':'✓ ')+'だれでも');row.querySelector('small').textContent='あいていれば、だれでも使える';row.onclick=()=>set(null);rows.appendChild(row)}
+      for(const r of S.res){const row=el('<button class="row" style="text-align:left;width:100%"><span class="dot"></span><div class="tx"><b></b><small></small></div></button>');row.querySelector('.dot').style.cssText='background:#f6f1e6 url('+spiritPort(r.elem,96)+') center/86% no-repeat;box-shadow:inset 0 0 0 2px '+ELEM[r.elem].col;
+        ckSet(row.querySelector('b'),(ow===r?'✓ ':'')+r.name+'  Lv'+rLv(r));row.querySelector('small').textContent=ELEM[r.elem].name+'のせいれい';row.onclick=()=>set(r.id);rows.appendChild(row)}
+      body.appendChild(sec)}
 function renderSheet(){
   if(!sheet)return;const body=$('#sheetBody');const cqf=document.activeElement&&document.activeElement.id==='craftQ'?document.activeElement.selectionStart:null,cst=body.scrollTop;/* 名前でさがす欄に入力中なら、作りなおしたあとも、そのまま */body.innerHTML='';for(const b of document.querySelectorAll('#sheetWrap header .back'))b.parentNode.removeChild(b);const T=$('#sheetTitle');
   if(sheet==='vshop'){
@@ -444,6 +449,7 @@ function renderSheet(){
       const b=el('<button class="btn"></button>');b.textContent=cur===R.out?'やめる':'これを作る';if(cur===R.out)b.classList.add('pri');
       b.onclick=()=>{if(cur===R.out)delete S.ovenSet[j];else S.ovenSet[j]=R.out;sfx('tap');renderSheet()};r.appendChild(b);if(!has&&cur!==R.out){r.style.filter='grayscale(1)';r.style.opacity='.55'}/* 材料が足りない料理はグレー */rows.appendChild(r)}
     body.appendChild(rows);
+    useOwnSec(body,j,S.obj[j]);/* 料理をするせいれい */
   }else if(sheet==='manual'){
     T.textContent='ひでんのしょ';
     sheetBack();
@@ -463,6 +469,7 @@ function renderSheet(){
     {const rc=RFC.get(j);if(rc!=null&&S.roof&&S.roof[rc]){const b=el('<button class="btn"></button>');b.textContent=BL[S.roof[rc]].name+'を見る';b.onclick=()=>{sfx('tap');openSheet('roof',rc)};body.appendChild(b)}}/* 屋根の下の物：屋根の説明へ */
     {const R=rangeOf(o,j);if(R&&!BL[o].env&&!BENCHES.has(o))body.appendChild(el('<div class="rows"></div>')).appendChild(rowEl('効果のはんい','まわり'+(R.cells||R.r)+'マス'))}
 
+    useOwnSec(body,j,o);
     {const t=SPOTJ.get(j);if(t){for(const I of SPOTI)if(t.has(I.sp.k)&&spotCells(I).includes(j))spotFx(I)}/* 家具をタップしたときも、そのスポットを点線でかこむ */if(t)for(const sp of SPOTS){if(!t.has(sp.k))continue;body.appendChild(el('<div class="rows"></div>')).appendChild(rowEl('スポット：'+sp.n,sp.eff))}}/* スポット */
     if(o==='table'){const h=roomOf(j);let n=0;if(h)for(const q of h.inside){const oo=S.obj[q];if(oo&&BL[oo]&&BL[oo].cat==='living')n+=BL[oo].dw||1}if(h)for(const oo of rugsIn(h.inside))n+=BL[oo].dw||1;const bon=h?DINEPT[Math.min(6,n)]:0;
       body.appendChild(el('<div class="rows"></div>')).appendChild(rowEl('ここで食べたときのパワー（いま）',h?'+'+bon+'（家の中の食卓 +1・ダイニング家具で +'+(DINEPT[Math.min(6,n)]-1)+(n/2<3?'。ダイニング家具をふやすと、まだふえる':'。いちばん多い')+'）':'家の外なので、ふえない'))}/* 食卓：いまのパワーのボーナス */

@@ -151,6 +151,10 @@ function adjOf(j,fn){const x=j%W,y=(j/W)|0;for(const[dx,dy]of DIRS){const nx=x+d
 const elemCount=el=>S.res.filter(r=>r.elem===el).length;
 const NEEDT=[6,24,52,96,160,248,364,512,696,920,1188],NEEDF=[13,38,83,154,256,397,582,819,1114,1472,1901],needFor=el=>{const T=WD===FREE?NEEDF:NEEDT,dk=[...(S.buried||[]),...(S.lost||[])].filter(q=>q.elem===el&&isKey(q.name)).length;return T[Math.min(T.length-1,elemCount(el)+dk)]};/* いなくなったキーキャラも数に入れる（ひとり分の力で2人呼べないように） */
 const reviveNeed=q=>{const T=WD===FREE?NEEDF:NEEDT,dk=[...(S.buried||[]),...(S.lost||[])].filter(x=>x!==q&&x.elem===q.elem&&isKey(x.name)).length;return T[Math.min(T.length-1,elemCount(q.elem)+dk)]};/* めぶきのしずくでよみがえらせるのにいる、その属性の力 *//* なかまを呼ぶのに必要な力（いる人数ごと）。フリーモードは自然の力が弱いので多め */
+const STAYG=180;/* せいれいが、みんなの合計で時計の3時間（180分）いたマスは、緑になる */let STAYDIRTY=false;
+function stayTick(dt){if(!S||WD===FREE||IS_STORY_REPLAY)return;const m=dt/DAYLEN,st=S.stay||(S.stay={}),g=S.grn||(S.grn={});
+  for(const r of S.res){if(r.hidden)continue;const j=(r.y|0)*W+(r.x|0);if(j<0||j>=W*H||g[j]||S.ground[j]===1)continue;const v=(st[j]||0)+m;if(v>=STAYG){g[j]=1;delete st[j];STAYDIRTY=true}else st[j]=v}}
+function stayGreen(){if(!STAYDIRTY||!S)return;STAYDIRTY=false;recount()}/* 1秒に1回だけ、緑のマスを入れなおす */
 function revRadius(o){/* 緑が広がるのは、木や草を生やしたときだけ（家具・建物・道・畑では広がらない） */const b=BL[o];if(!b)return 0;if(o==='tower')return 7;if(o==='tree'||o==='fruit')return 5;if(b.kind==='plant')return 3;/* 植えた木はまわり5マス、花はまわり3マス */if(o==='ntree'||o==='berry'||o==='bamboo'||o==='takenoko')return 1;return 0}
 /* 属性の力の表示（例：属性 木+1・土+2） */
 function attrTxt(id){const b=BL[id];if(!b||!b.attr||b.kind==='block')return'';const a=Object.entries(b.attr).filter(e=>e[1]>0);return a.length?'属性 '+a.map(([k,v])=>ELEM[k].name+'+'+(+v.toFixed(2))).join('・'):''}
@@ -193,6 +197,7 @@ if(o==='vane')around(j,3,NEARVANE);if(o==='niguruma')around(j,3,NEARCART);if(o==
   if(counts.signw||counts.signs)for(const k in ATTR)ATTR[k]*=1.1;/* 村の看板：属性の力+10%（いくつあっても1回） */
   for(const k of NEARPARA)ENVG[k]+=7;/* パラソルがいくつ重なっても、1つぶん（BL.parasol.env） */
   if(WD===FREE)for(let j=0;j<W*H;j++)REV.add(j);/* フリーモードの土地は荒れていない */
+  for(const k in S.grn||{})REV.add(+k);/* せいれいがみんなで3時間すごしたマス（stayTick） */
   {const st=WD===1?1:0,g='weed'+st+'g',k='weed'+st+'k';for(let j=0;j<W*H;j++){const o=S.obj[j];if(o===k&&REV.has(j))S.obj[j]=g;else if((o===g||o==='weedc')&&!REV.has(j))S.obj[j]=k}}/* 雑草は土地に合わせる：よみがえった土地（緑）は緑の草、荒れた土地は枯れた草（あとから緑になった所の枯れた草も、緑の草に） */
   for(let j=0;j<W*H;j++){if(S.ground[j]===1)continue;baseN++;if(REV.has(j))revN++}
   /* 属性値は、せいれいの依頼が出る前から基地にある対象物も含めて数える。依頼開始時の基準化・差し引きはしない。 */
