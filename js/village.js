@@ -106,7 +106,10 @@ const SPOTS=[
   {k:'shosai',n:'しょさい',room:1,main:o=>o==='achair',need:[[o=>o==='shelf1',1],[o=>o==='flamp',1]],how:'家の中に、ひじかけいすと、本棚と、フロアランプ',eff:'その家の住み心地+10%'},
   {k:'living',n:'リビング',room:1,main:o=>o==='sofa1',need:[[o=>o==='ltable',1],[o=>o==='monstera',1]],how:'家の中に、ひとりがけソファと、ローテーブルと、かんようしょくぶつ',eff:'その家の住み心地+10%'},
   {k:'dinroom',n:'ダイニング',room:1,main:o=>o==='table',need:[[o=>o==='chair'||o==='stool',2]],how:'家の中に、食卓と、いすかスツール2つ',eff:'その家の住み心地+5%'},
-  {k:'daidokoro',n:'だいどころ',room:1,main:o=>o==='oven'||o==='cooktable',need:[[o=>o==='tub',1],[o=>o==='taru',1]],how:'家の中に、かまどか調理台と、水おけと、たる',eff:'その家の住み心地+5%'}];
+  {k:'daidokoro',n:'だいどころ',room:1,main:o=>o==='oven'||o==='cooktable',need:[[o=>o==='tub',1],[o=>o==='taru',1]],how:'家の中に、かまどか調理台と、水おけと、たる',eff:'その家の住み心地+5%'},
+  {k:'shigotoba',n:'しごとば',main:o=>o==='mbox',need:[[o=>NATG[o]!=null,3]],how:'素材箱と、木か岩3つ',eff:'まわり3マスの木を切る・岩をほる速さ+10%'},/* 仕事場のそばに箱：運ぶ道が短くなるうえに、少し速い */
+  {k:'gohan',n:'ごはんどころ',main:o=>o==='stor',need:[[o=>o==='table',1]],how:'食料箱と、食卓',eff:'まわり3マスで食べると、食べる速さ+20%'},
+  {k:'nedoko',n:'ねどこ',room:1,main:o=>BEDSET.has(o),need:[[o=>o==='table',1]],how:'家の中に、ベッドと、食卓',eff:'その家の住み心地+5%'}];
 const spotNear=(j,k)=>{if(j==null||j<0)return false;const x0=j%W,y0=(j/W)|0;for(let y=Math.max(0,y0-3);y<=Math.min(H-1,y0+3);y++)for(let x=Math.max(0,x0-3);x<=Math.min(W-1,x0+3);x++){const t=SPOTM.get(y*W+x);if(t&&t.has(k))return true}return false};/* そのマスのまわり3マスに、スポットのもとの物（伐採場・井戸・道しるべなど）があるか */
 const spotN=(j,...ks)=>ks.reduce((n,k)=>n+(spotHas(j,k)?1:0),0);/* おなじスポットは重ならない（いくつできても1こ分）。ちがうスポットは、たし算で重なる */
 const spotHas=(j,k)=>{const t=SPOTJ.get(anc(j));return !!t&&t.has(k)};

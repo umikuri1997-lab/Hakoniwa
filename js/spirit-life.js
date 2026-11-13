@@ -582,6 +582,11 @@ CHATS.push(
  Object.assign([[0,'@Gのぶんまで、ちゃんと、ごはん食べようね。'],[1,'#nod|……うん。']],{gone:1}),
  Object.assign([[0,'#sigh|……さみしいね。'],[1,'@Gのこと？'],[0,'うん。……いつも、そこにいたのにね。']],{gone:1}),
  Object.assign([[0,'きのう、@Gの夢を見たよ。'],[1,'……どんな夢？'],[0,'#teary|いっしょに、わらってた。']],{gone:1}));
+/* くらしの動線のスポットのヒント（うしろに足すだけ） */
+CHATS.push(
+ Object.assign([[0,"木を切ってから、箱まで、とおいなあ。"],[1,"切る所のそばに、木や石を入れる箱があったら、すぐしまえるのにね。"]],{hint:'shigotoba',ok:()=>spotHintOK('shigotoba','mbox')}),
+ Object.assign([[0,"ごはんをとってから、食卓まで歩くうちに、おなかがなっちゃう。"],[1,"ごはんの箱が食卓のそばにあったら、すぐ食べられるね。"]],{hint:'gohan',ok:()=>spotHintOK('gohan',['stor','table'])}),
+ Object.assign([[0,"おきたら、そのまま家の中でごはんにしたいな。"],[1,"ベッドのある家に、食卓もあったらいいね。"]],{hint:'nedoko',ok:()=>spotHintOK('nedoko',['bed','yorubed'])}));
 
 const CHATSEENKEY='hakoniwa-chat-v1';let CHATSEEN=null;/* 出た雑談は、ステージをこえておぼえる（ほかのステージで出た話は出にくい） */
 function chatSeen(){if(!CHATSEEN){try{CHATSEEN=new Set(JSON.parse(KV.getItem(CHATSEENKEY)||'[]'))}catch(e){CHATSEEN=new Set()}}return CHATSEEN}
