@@ -13,10 +13,10 @@ X0,X1,Y0,Y1=0.10,1.90,0.28,1.80;H=0.46;TT=0.07;LG=0.11;IN=0.07;AP=0.08
 def PARTS():
     L=[];xs=(X0+IN,X1-IN-LG);ys=(Y0+IN,Y1-IN-LG)
     for nx,x in zip('左右',xs):
-        for ny,y in zip(('うしろ','前'),ys):L.append(P('脚（%s%s）'%(nx,ny),'box',(x,y,0,x+LG,y+LG,H-TT),WOOD2,bevel=0,note='地面にたてる'))
-    L.append(P('幕板（前）','box',(xs[0]+LG,ys[1]+0.02,H-TT-AP,xs[1],ys[1]+LG-0.02,H-TT),WOOD2,on=('脚（左前）','脚（右前）'),bevel=0,note='脚のあいだ'))
-    L.append(P('幕板（うしろ）','box',(xs[0]+LG,ys[0]+0.02,H-TT-AP,xs[1],ys[0]+LG-0.02,H-TT),WOOD2,on=('脚（左うしろ）','脚（右うしろ）'),bevel=0,note='脚のあいだ'))
-    for nx,x in zip('左右',xs):L.append(P('幕板（%s）'%nx,'box',(x+0.02,ys[0]+LG,H-TT-AP,x+LG-0.02,ys[1],H-TT),WOOD2,on=('脚（%sうしろ）'%nx,'脚（%s前）'%nx),bevel=0,note='脚のあいだ'))
+        for ny,y in zip(('うしろ','前'),ys):L.append(P('脚（%s%s）'%(nx,ny),'box',(x,y,0,x+LG,y+LG,H-TT),WOOD,bevel=0,note='地面にたてる'))
+    L.append(P('幕板（前）','box',(xs[0]+LG,ys[1]+0.02,H-TT-AP,xs[1],ys[1]+LG-0.02,H-TT),WOOD,on=('脚（左前）','脚（右前）'),bevel=0,note='脚のあいだ'))
+    L.append(P('幕板（うしろ）','box',(xs[0]+LG,ys[0]+0.02,H-TT-AP,xs[1],ys[0]+LG-0.02,H-TT),WOOD,on=('脚（左うしろ）','脚（右うしろ）'),bevel=0,note='脚のあいだ'))
+    for nx,x in zip('左右',xs):L.append(P('幕板（%s）'%nx,'box',(x+0.02,ys[0]+LG,H-TT-AP,x+LG-0.02,ys[1],H-TT),WOOD,on=('脚（%sうしろ）'%nx,'脚（%s前）'%nx),bevel=0,note='脚のあいだ'))
     NB=4;RC=0.09;GAP=0.008;WB=(Y1-Y0-GAP*(NB-1))/NB   # 天板：よこにのびる板4まい。どれも同じはば WB（そとの角だけ丸める。板と板のあいだは GAP）
     for i in range(NB):
         ya=Y0+i*(WB+GAP);yb=ya+WB;pts=[]
