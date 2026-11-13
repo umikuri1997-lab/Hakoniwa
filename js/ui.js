@@ -184,7 +184,7 @@ function genreOf(id){const b=BL[id];if(!b)return'';if(b.cat==='living')return'�
 const nameG=id=>{const g=genreOf(id);return BL[id].name+(g?'　【'+g+'】':'')};
 const CAT_TAG={living:'リビング',cook:'キッチン',toy:'遊び',light:'あかり',env:'ガーデン'},TAB_TAG={'家具':'家具','収納':'収納','遊び':'遊び','庭':'ガーデン','あかり':'あかり','ごはん':'キッチン','ワナ':'ワナ','家づくり':'家づくり','道・囲い':'道・囲い','クエスト':'クエスト'};
 const CRAFT_TAGS=['ぜんぶ','リビング','寝室','キッチン','お風呂','収納','かざり','あかり','遊び','ガーデン','家づくり','道・囲い','ワナ','矢','そうび','クエスト'];/* 依頼ボードのタグのならび */
-const TAGMAP={stool:'リビング,キッチン',chair:'リビング,キッチン',achair:'リビング',pouf:'リビング',stable:'リビング',ltable:'リビング',table:'リビング,キッチン',sofa1:'リビング',rug1:'リビング,寝室',rug2:'リビング,寝室',bed:'寝室',yorubed:'寝室',hoshirug:'リビング,寝室',takebench:'ガーデン',shishiodoshi:'ガーデン,かざり',takeakari:'あかり,ガーデン',toro:'あかり,ガーデン',andon:'あかり,リビング',
+const TAGMAP={stool:'リビング,キッチン',chair:'リビング,キッチン',achair:'リビング',pouf:'リビング',dtable:'リビング,キッチン',ltable:'リビング',table:'リビング,キッチン',sofa1:'リビング',rug1:'リビング,寝室',rug2:'リビング,寝室',bed:'寝室',yorubed:'寝室',hoshirug:'リビング,寝室',takebench:'ガーデン',shishiodoshi:'ガーデン,かざり',takeakari:'あかり,ガーデン',toro:'あかり,ガーデン',andon:'あかり,リビング',
 tub:'キッチン,お風呂',sink:'キッチン',oven:'キッチン',bathtub:'お風呂',hotstone:'お風呂,ガーデン',crate:'収納',stor:'収納',mbox:'収納',shelf1:'収納,リビング',shelf2:'収納,かざり',cabinet:'収納,リビング',wshelf:'収納,かざり',
 monstera:'かざり,リビング',wreath:'かざり,リビング',curtain1:'かざり,リビング,寝室',curtain2:'かざり,リビング,寝室',paint1:'かざり,リビング',paint2:'かざり,リビング',paint3:'かざり,リビング',
 candle:'あかり,リビング',lantern:'あかり,リビング',flamp:'あかり,リビング',lamp:'あかり,ガーデン',torch:'あかり,ガーデン',
@@ -478,7 +478,7 @@ function renderSheet(){
 
     useOwnSec(body,j,o);
     {const t=SPOTJ.get(j);if(t){for(const I of SPOTI)if(t.has(I.sp.k)&&spotCells(I).includes(j))spotFx(I)}/* 家具をタップしたときも、そのスポットを点線でかこむ */if(t)for(const sp of SPOTS){if(!t.has(sp.k))continue;body.appendChild(el('<div class="rows"></div>')).appendChild(rowEl('スポット：'+sp.n,sp.eff))}}/* スポット */
-    if(o==='table'){const h=roomOf(j);let n=0;if(h)for(const q of h.inside){const oo=S.obj[q];if(oo&&BL[oo]&&BL[oo].cat==='living')n+=BL[oo].dw||1}if(h)for(const oo of rugsIn(h.inside))n+=BL[oo].dw||1;const bon=h?DINEPT[Math.min(6,n)]:0;
+    if(TABLES.has(o)){const h=roomOf(j);let n=0;if(h)for(const q of h.inside){const oo=S.obj[q];if(oo&&BL[oo]&&BL[oo].cat==='living')n+=BL[oo].dw||1}if(h)for(const oo of rugsIn(h.inside))n+=BL[oo].dw||1;const bon=h?DINEPT[Math.min(6,n)]:0;
       body.appendChild(el('<div class="rows"></div>')).appendChild(rowEl('ここで食べたときのパワー（いま）',h?'+'+bon+'（家の中の食卓 +1・ダイニング家具で +'+(DINEPT[Math.min(6,n)]-1)+(n/2<3?'。ダイニング家具をふやすと、まだふえる':'。いちばん多い')+'）':'家の外なので、ふえない'))}/* 食卓：いまのパワーのボーナス */
     if(BENCHES.has(o)){const ev=ENVG?Math.max(ENVG[j]||0,ENVG[j+1]||0):0;/* ベンチ：まわりのかざりで上がった回復 */
       body.appendChild(el('<div class="rows"></div>')).appendChild(rowEl('すわって休むと（1時間あたり）','つかれ −'+(Math.round((20+ev*.36)*10)/10)+' / たのしさ +'+(Math.round((4.8+ev*.36)*10)/10)+(ev>0?'':'')))}

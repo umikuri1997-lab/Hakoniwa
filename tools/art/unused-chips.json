@@ -76,6 +76,12 @@
       "ids": [
         "shinboku"
       ]
+    },
+    {
+      "reason": "まるいサイドテーブル（stable）は、ゲームからなくした（古いセーブは S.flags.noStable1 で、けして木材をもどす）。",
+      "ids": [
+        "stable"
+      ]
     }
   ]
 }

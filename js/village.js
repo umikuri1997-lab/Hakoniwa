@@ -71,7 +71,7 @@ function nearLotus(r){const x0=r.x|0,y0=r.y|0;for(let y=y0-2;y<=y0+2;y++)for(let
 const SEATS=['chair','stool','achair','bench','takebench','pouf','sofa1'],BENCHES=new Set(['bench','takebench']);/* BENCHES：休けい（rest）ができるベンチ */function fSpot(j){const t=typeAt(j);return !!t&&SEATS.includes(t)&&spotW(j)>=0}/* 水のすぐとなり（上下左右）の椅子＝釣りスポット（椅子にすわって釣る） */
 /* スポット：組み合わせて置くと、効果が少し上がる（物どうしがまわり3マス以内）。main のまわりに need がそろうとできる */
 const SPOTS=[
-  {k:'dining',n:'しょくたく',main:o=>o==='table',need:[[o=>SEATS.includes(o),2]],how:'食卓と、いす2つ',eff:'ここで食べたときのパワー+10%'},
+  {k:'dining',n:'しょくたく',main:o=>TABLES.has(o),need:[[o=>SEATS.includes(o),2]],how:'食卓と、いす2つ',eff:'ここで食べたときのパワー+10%'},
   {k:'tsuriba',n:'つり場',main:(o,j)=>SEATS.includes(o)&&spotW(j)>=0,need:[],how:'水べのいす',eff:'つりをする確率20%'},/* 水べのいすは、それだけでスポット（FISHPS） */
   {k:'fishspot',n:'つりスポット',main:(o,j)=>SEATS.includes(o)&&spotW(j)>=0,need:[[o=>o==='parasol',1]],how:'水べのいすと、パラソル',eff:'つりをする確率+10%'},
   {k:'park',n:'ちかばの公園',main:o=>o==='swing',need:[[o=>o==='sandbox',1]],how:'ブランコと、砂場',eff:'ここで遊ぶと、たのしさ+10%'},
@@ -93,8 +93,8 @@ const SPOTS=[
   {k:'doronko',n:'どろんこひろば',main:o=>o==='sandbox',need:[[o=>o==='tub',1]],how:'砂場と、水おけ',eff:'砂場で遊ぶと、たのしさ+10%'},
   {k:'mori',n:'もりのゆうぐ',main:o=>o==='swing',need:[[(o,q)=>(o==='tree'||o==='fruit')&&!isBud(q)||o==='ntree',2]],how:'ブランコと、木かりんごの木2本',eff:'ブランコで遊ぶと、たのしさ+10%'},
   {k:'shokuryo',n:'食料庫',main:o=>o==='stor',need:[[o=>o==='crate',1]],how:'食料箱と、木箱',eff:'食料をしまう速さ+10%'},
-  {k:'pan',n:'パンやさん',main:o=>o==='oven',need:[[o=>o==='stor',1],[o=>o==='stable',1]],how:'かまどと、食料箱と、まるいサイドテーブル',eff:'料理の速さ+10%'},
-  {k:'party',n:'ガーデンパーティー',main:o=>o==='table',need:[[o=>SEATS.includes(o),1],[o=>o==='parasol',1]],how:'食卓と、いすと、パラソル',eff:'ここで食べたときのパワー+10%'},
+  {k:'pan',n:'パンやさん',main:o=>o==='oven',need:[[o=>o==='stor',1],[o=>TABLES.has(o),1]],how:'かまどと、食料箱と、食卓',eff:'料理の速さ+10%'},
+  {k:'party',n:'ガーデンパーティー',main:o=>TABLES.has(o),need:[[o=>SEATS.includes(o),1],[o=>o==='parasol',1]],how:'食卓と、いすと、パラソル',eff:'ここで食べたときのパワー+10%'},
   {k:'yoruzuri',n:'よるづり場',main:(o,j)=>SEATS.includes(o)&&spotW(j)>=0,need:[[o=>o==='toro',1]],how:'水べのいすと、石どうろう',eff:'つりをする確率+10%'},
   {k:'kotori',n:'小鳥の庭',main:o=>BENCHES.has(o),need:[[o=>o==='birdbath',1],[o=>o==='hedge',1]],how:'ベンチと、水飲み鳥と、生垣',eff:'ベンチで休むと、たのしさ+15%'},
   {k:'terrace',n:'よるのテラス',main:o=>BENCHES.has(o),need:[[o=>o==='lantern',1],[o=>o==='lamp',1]],how:'ベンチと、ランタンと、かがり火',eff:'ベンチで休むと、つかれのとれ方+15%'},
@@ -105,11 +105,11 @@ const SPOTS=[
   {k:'takeyabu',n:'竹やぶの小道',main:o=>o==='takeakari',need:[[o=>o==='bamboo',3]],how:'竹あかりと、竹3本',eff:'まわり3マスの竹を切る速さ+10%'},
   {k:'shosai',n:'しょさい',room:1,main:o=>o==='achair',need:[[o=>o==='shelf1',1],[o=>o==='flamp',1]],how:'家の中に、ひじかけいすと、本棚と、フロアランプ',eff:'その家の住み心地+10%'},
   {k:'living',n:'リビング',room:1,main:o=>o==='sofa1',need:[[o=>o==='ltable',1],[o=>o==='monstera',1]],how:'家の中に、ひとりがけソファと、ローテーブルと、かんようしょくぶつ',eff:'その家の住み心地+10%'},
-  {k:'dinroom',n:'ダイニング',room:1,main:o=>o==='table',need:[[o=>o==='chair'||o==='stool',2]],how:'家の中に、食卓と、いすかスツール2つ',eff:'その家の住み心地+5%'},
+  {k:'dinroom',n:'ダイニング',room:1,main:o=>TABLES.has(o),need:[[o=>o==='chair'||o==='stool',2]],how:'家の中に、食卓と、いすかスツール2つ',eff:'その家の住み心地+5%'},
   {k:'daidokoro',n:'だいどころ',room:1,main:o=>o==='oven'||o==='cooktable',need:[[o=>o==='tub',1],[o=>o==='taru',1]],how:'家の中に、かまどか調理台と、水おけと、たる',eff:'その家の住み心地+5%'},
   {k:'shigotoba',n:'しごとば',main:o=>o==='mbox',need:[[o=>NATG[o]!=null,3]],how:'素材箱と、木か岩3つ',eff:'まわり3マスの木を切る・岩をほる速さ+10%'},/* 仕事場のそばに箱：運ぶ道が短くなるうえに、少し速い */
-  {k:'gohan',n:'ごはんどころ',main:o=>o==='stor',need:[[o=>o==='table',1]],how:'食料箱と、食卓',eff:'まわり3マスで食べると、食べる速さ+20%'},
-  {k:'nedoko',n:'ねどこ',room:1,main:o=>BEDSET.has(o),need:[[o=>o==='table',1]],how:'家の中に、ベッドと、食卓',eff:'その家の住み心地+5%'}];
+  {k:'gohan',n:'ごはんどころ',main:o=>o==='stor',need:[[o=>TABLES.has(o),1]],how:'食料箱と、食卓',eff:'まわり3マスで食べると、食べる速さ+20%'},
+  {k:'nedoko',n:'ねどこ',room:1,main:o=>BEDSET.has(o),need:[[o=>TABLES.has(o),1]],how:'家の中に、ベッドと、食卓',eff:'その家の住み心地+5%'}];
 const spotNear=(j,k)=>{if(j==null||j<0)return false;const x0=j%W,y0=(j/W)|0;for(let y=Math.max(0,y0-3);y<=Math.min(H-1,y0+3);y++)for(let x=Math.max(0,x0-3);x<=Math.min(W-1,x0+3);x++){const t=SPOTM.get(y*W+x);if(t&&t.has(k))return true}return false};/* そのマスのまわり3マスに、スポットのもとの物（伐採場・井戸・道しるべなど）があるか */
 const spotN=(j,...ks)=>ks.reduce((n,k)=>n+(spotHas(j,k)?1:0),0);/* おなじスポットは重ならない（いくつできても1こ分）。ちがうスポットは、たし算で重なる */
 const spotHas=(j,k)=>{const t=SPOTJ.get(anc(j));return !!t&&t.has(k)};

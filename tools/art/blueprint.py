@@ -85,7 +85,10 @@ def build(sc,parts):
         elif k=='model':
             V,F,C=model_tris(*d);sc.part()
             for f,cc in zip(F,C):sc.tri(V[f[0]],V[f[1]],V[f[2]],tuple(cc*(1-MODEL_SOFT)+255*MODEL_SOFT))   # モデルの色は、ゲームに合わせて少しうすく
-        elif k=='cyl':cx,cy,r,z0,z1=d;sc.ring_wall(cx,cy,r,z0,z1,lambda *a:tuple(c),n=p.detail);sc.annulus(cx,cy,0,r,z1,lambda *a:tuple(c*1.04),n=p.detail)
+        elif k=='cyl':   # plainwall：まわりのかべには木目をはらない（まるいかべの木目は、ドットでは、ぶつぶつのすじになる）
+            cx,cy,r,z0,z1=d;t=sc.tcur
+            if getattr(p,'plainwall',False):sc.texture(None)
+            sc.ring_wall(cx,cy,r,z0,z1,lambda *a:tuple(c),n=p.detail);sc.texture(t);sc.annulus(cx,cy,0,r,z1,lambda *a:tuple(c*1.04),n=p.detail)
         elif k=='ring':cx,cy,r0,r,z0,z1=d;sc.ring_wall(cx,cy,r,z0,z1,lambda i,a0,a1:tuple(c*(1 if i%2 else .95)),n=p.detail);sc.ring_wall(cx,cy,r0,z0,z1,lambda *a:tuple(c*.9),n=p.detail);sc.annulus(cx,cy,r0,r,z1,lambda *a:tuple(c*1.04),n=p.detail)
         elif k=='cone':cx,cy,r,z0,z1=d;sc.revolve(cx,cy,[(0.0,z1),(r,z0)],lambda k_,i:tuple(c),n=p.detail)
         elif k=='pyr':
