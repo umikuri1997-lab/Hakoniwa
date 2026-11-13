@@ -4,7 +4,7 @@
 #   出す物：<chip>.png（向きごと）・<chip>_x10.png・views_x4.png（向きをならべた4倍）・cmp_x4.png（いまのチップとならべた4倍）・bp.png（設計図）
 #   --chips：ゲームのチップ（chips.js とアトラス）に入れ、.chips_changed に id を書く。
 # items/<id>.py に書く物：
-#   ID（チップの名前）・PARTS()（blueprint.Part の表。木目をはらない部品は p.tex=False）・EXTRA(sc)（Part で書けない形。なければ書かない）
+#   ID（チップの名前）・PARTS()（blueprint.Part の表。木目をはらない部品は p.tex=False、金属の部品は p.metal=True）・EXTRA(sc)（Part で書けない形。なければ書かない）
 #   VIEWS=[(チップの名前, まわす数k), ...]（k：0前・1右・2後ろ・3左）・BOTTOM（絵の下のはし。g64のドット。いまのチップに合わせる）
 #   FRONT={チップの名前: 部品の名前を見る関数}（せいれいの手前にかさねる絵 .front。その向きで、その部品だけを写す）
 import sys,os,importlib
@@ -20,7 +20,7 @@ def load(iid):return importlib.import_module(iid)
 def scene(M,k,only=None):
     sc=O.Scene();T=O.Tex(os.path.join(ART,'textures','wood049.png'));L=M.PARTS();keep=set()
     for p in L:
-        sc.texture(T if getattr(p,'tex',True) else None);p0=sc.pid;build(sc,[p])
+        mt=getattr(p,'metal',False);sc.texture(T if getattr(p,'tex',True) and not mt else None);sc.material('metal' if mt else None);p0=sc.pid;build(sc,[p]);sc.material(None)
         if only and only(p.name):keep|=set(range(p0+1,sc.pid+1))
     if hasattr(M,'EXTRA'):sc.texture(None);M.EXTRA(sc)
     sc.texture(None)

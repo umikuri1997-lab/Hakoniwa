@@ -133,7 +133,7 @@ def build(sc,parts):
                     sc.tri((cx,yy,cz),P_(a0),P_(a1),tuple(c))
             for i in range(24):
                 a0=2*math.pi*i/24;a1=2*math.pi*(i+1)/24;P_=lambda a,yy:(cx+r*math.cos(a),yy,cz+r*math.sin(a))
-                sc.quad(P_(a0,cy-t/2),P_(a1,cy-t/2),P_(a1,cy+t/2),P_(a0,cy+t/2),tuple(c*.9))
+                sc.quad(P_(a0,cy-t/2),P_(a1,cy-t/2),P_(a1,cy+t/2),P_(a0,cy+t/2),tuple(c))   # まわりも同じ色（木材の色はひとつ）
         elif k=='ball':cx,cy,cz,r=d;sc.sphere(cx,cy,cz,r,tuple(c),n=14,m=8)
 
 LOGEND=(236,206,150)   # まきの切り口の色（年輪のある明るい木）
