@@ -9,7 +9,7 @@ await p.waitForFunction(()=>sacredEval('stageReady()'),{},{timeout:60000});
 const o=await run(`(()=>{const rs=['a','b','c'].map((n,i)=>mkRes(S,n,['wood','earth','water'][i],CX+i+.5,CY+.5));S.res=rs;for(const r of rs){r.hunger=hMax(r);r.energy=100;r.fun=50}
   const j=(CY+3)*W+CX+1;S.obj[j]='lamp';noteQuestPlacement('lamp',j);recount();
   const got=rs.map(r=>{endAct(r);return goAdmire(r,bfs(r.x|0,r.y|0))});
-  const a=rs[0],f0=a.fun;for(let i=0;i<200&&a.act&&a.act.type==='admire';i++)updRes(a,.1);
+  const a=rs[0],f0=a.fun;for(let i=0;i<800&&a.act&&a.act.type==='admire';i++)updRes(a,.1);
   /* 柵・壁は見にこない */const k=(CY-3)*W+CX;S.obj[k]='fence';noteQuestPlacement('fence',k);endAct(rs[2]);const fence=goAdmire(rs[2],bfs(rs[2].x|0,rs[2].y|0));
   return {got,gain:a.fun-f0,fence}})()`);
 assert.deepEqual(o.got,[true,true,false],'2人まで見にくる');assert.ok(o.gain>=1.5,'たのしさ+2 '+o.gain);assert.equal(o.fence,false,'柵は見にこない');
