@@ -40,7 +40,7 @@ function afterTick(){/* クリア後：新しいクエスト・きょうの目�
 const TRAPS=['spike','sticky','puddle','firetrap','gust'],CN=a=>a.reduce((n,k)=>n+cnt(k),0),FOODN=()=>Object.values(S.fs||{}).reduce((n,v)=>n+v,0);
 const outCnt=ids=>{const ins=new Set(HOUSES.flatMap(h=>[...h.inside]));let n=0;S.obj.forEach((o,j)=>{if(ids.has(o)&&!ins.has(j))n++});return n};/* 家の外にある数 */
 function houseBedCount(){const cells=new Set(HOUSES.flatMap(h=>[...h.inside]));return [...cells].filter(j=>BEDSET.has(S.obj[j])).length}
-function diningSeatCount(){return S.obj.reduce((n,o,j)=>n+(SEATS.includes(o)&&[-1,1,-W,W].some(d=>{const k=j+d;return k>=0&&k<W*H&&Math.abs(k%W-j%W)+Math.abs((k/W|0)-(j/W|0))===1&&S.obj[k]==='table'})),0)}
+function diningSeatCount(){return S.obj.reduce((n,o,j)=>n+(SEATS.includes(o)&&[-1,1,-W,W].some(d=>{const k=j+d;return k>=0&&k<W*H&&Math.abs(k%W-j%W)+Math.abs((k/W|0)-(j/W|0))===1&&TABLES.has(typeAt(k))})),0)}
 const waitingBellflowers=()=>WD===0&&qAt('kikyo')&&cnt('bellf')>0&&bloomCount('bellf')<2&&!S.flags.minaCame;
 const yoganUp=()=>Object.keys(S.hp).some(k=>k[0]==='L'&&S.hp[k]>=2&&S.obj[+k.slice(1)]==='yogan');/* ようがん台を強化した */
 const houseFood=()=>HOUSES.some(h=>[...h.inside].some(j=>storageAt(j,'food')));/* 家の中に食べ物の箱がある */
@@ -461,7 +461,7 @@ function questVisitTarget(q,ids,j){if(ids.includes(S.floor[j]))return true;const
   if(q.id==='imoseed'&&imoSeedQuestPlots().length)return imoSeedQuestPlots().includes(j);
   if(q.k==='bed3'||q.k==='houselight'||q.k==='room'||q.id==='bed'&&o==='bed')return HOUSES.some(h=>h.inside.has(j));
   if(q.id==='shizukuRest')return nearHot(j,4);
-  if(q.k==='chair2')return [-1,1,-W,W].some(d=>{const k=j+d;return k>=0&&k<W*H&&Math.abs(k%W-j%W)+Math.abs((k/W|0)-(j/W|0))===1&&S.obj[k]==='table'});
+  if(q.k==='chair2')return [-1,1,-W,W].some(d=>{const k=j+d;return k>=0&&k<W*H&&Math.abs(k%W-j%W)+Math.abs((k/W|0)-(j/W|0))===1&&TABLES.has(typeAt(k))});
   return true;
 }
 function queueQuestVisit(q,who,partIds,partKey){const ids=partIds||(q.k?QUEST_VISIT_SUB[q.k]:QUEST_VISIT_MAIN[q.id]);if(!ids)return null;

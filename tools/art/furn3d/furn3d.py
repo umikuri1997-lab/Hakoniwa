@@ -61,13 +61,14 @@ def run(iid,out,chips=False):
     can.resize((can.width*4,can.height*4),Image.NEAREST).save(os.path.join(out,'views_x4.png'))
     sys.path.insert(0,os.path.join(ROOT,'tools'));import chips as CHP
     head,CC=CHP.load_imgs();cur=[n for n,_ in M.VIEWS if n in CC]
-    row=[(CC[n]['f'][0].convert('RGBA'),CC[n]['ay']) for n in cur]+[(CH[n][0],CH[n][2]) for n in cur]
-    HB=int(max(i.height+max(0,M.BOTTOM-(a+i.height)) for i,a in row))+12
-    can=Image.new('RGBA',(sum(i.width+8 for i,_ in row)+16,HB),(150,190,120,255));x=8
-    for j,(i,a) in enumerate(row):
-        if j==len(cur):x+=8
-        can.alpha_composite(i,(x,int(round(HB-6-(M.BOTTOM-a)))));x+=i.width+8
-    can.resize((can.width*4,can.height*4),Image.NEAREST).save(os.path.join(out,'cmp_x4.png'))
+    if cur:   # いまのチップとくらべる（新しい家具は、いまのチップがないので出さない）
+      row=[(CC[n]['f'][0].convert('RGBA'),CC[n]['ay']) for n in cur]+[(CH[n][0],CH[n][2]) for n in cur]
+      HB=int(max(i.height+max(0,M.BOTTOM-(a+i.height)) for i,a in row))+12
+      can=Image.new('RGBA',(sum(i.width+8 for i,_ in row)+16,HB),(150,190,120,255));x=8
+      for j,(i,a) in enumerate(row):
+          if j==len(cur):x+=8
+          can.alpha_composite(i,(x,int(round(HB-6-(M.BOTTOM-a)))));x+=i.width+8
+      can.resize((can.width*4,can.height*4),Image.NEAREST).save(os.path.join(out,'cmp_x4.png'))
     if chips:
         for nm,(im,ax,ay) in CH.items():CC[nm]={'g':64,'ax':ax,'ay':ay,'w':im.width,'h':im.height,'f':[im]}
         for nm in getattr(M,'CUT',()):   # すわった子の足をかくす行（座面の下のはし）：まん中の列で、上から10ドットより下の、はじめてすきとおる行。ゲームの点（1マス32）

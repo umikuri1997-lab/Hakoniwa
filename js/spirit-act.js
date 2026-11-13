@@ -338,12 +338,13 @@ function decide0(r){if(r.wakeStretch){r.wakeStretch=0;if(!isNight()&&!enemyLive(
 }
 const ripeAdj=types=>j=>adjOf(j,k=>types.includes(S.obj[k])&&S.dyn[k]&&S.dyn[k].g>=100&&free('o'+k,1));
 const SEATPT={stool:1,chair:2,pouf:3,achair:5},SEATPW={stool:.45,chair:.9,pouf:.9,achair:2.25};/* SEATPT：けいけん、SEATPW：パワー *//* いすの効果：スツール＜椅子＜クッション＜クッションチェア＜ひじかけいす（×0.45がパワー） */
+function tableRoom(tj){/* 大きな食卓：食べている人数が、その食卓の人数（eat.cap）より少ないか */const t=S.obj[tj];if(t!=='dtable')return true;let n=0;for(const q of S.res){const a=q.act;if(a&&a.type==='eat'&&a.tdir!=null&&typeof a.key==='string'&&a.key.startsWith('seat')&&anc(+a.key.slice(4)+a.tdir)===tj)n++}return n<BL[t].eat.cap}
 function goMeal(r,G){
   if(r.hunger<150||isNight())return startAct(r,G,'eat',-1,{pt:0,pw:0});
   let best=-1,bs=1e9,tdir=0;
   for(let j=0;j<W*H;j++){const d=G.dist[j];if(d<0||d>40||!walk(j)||!free('seat'+j,1)||S.obj[j]&&!useFor(j,r))continue;
-    const td=[-1,1,-W,W].find(o=>j+o>=0&&j+o<W*H&&Math.abs((j+o)%W-j%W)+Math.abs(((j+o)/W|0)-(j/W|0))===1&&typeAt(j+o)==='table');if(td==null)continue;const sc=d-(SEATPT[S.obj[j]]||0)*10;if(sc<bs){bs=sc;best=j;tdir=td}}
-  if(best>=0)return startAct(r,G,'eat',best,{key:'seat'+best,tdir,pt:BL.table.eat.pt+(SEATPT[S.obj[best]]||0),pw:(BL.table.eat.pw+(SEATPW[S.obj[best]]||0))*(1+.1*spotN(best+tdir,'dining','party'))});/* しょくたく・ガーデンパーティー：パワー+10% */
+    const td=[-1,1,-W,W].find(o=>j+o>=0&&j+o<W*H&&Math.abs((j+o)%W-j%W)+Math.abs(((j+o)/W|0)-(j/W|0))===1&&TABLES.has(typeAt(j+o))&&tableRoom(anc(j+o)));if(td==null)continue;const sc=d-(SEATPT[S.obj[j]]||0)*10;if(sc<bs){bs=sc;best=j;tdir=td}}
+  if(best>=0)return startAct(r,G,'eat',best,{key:'seat'+best,tdir,pt:BL[typeAt(best+tdir)].eat.pt+(SEATPT[S.obj[best]]||0),pw:(BL[typeAt(best+tdir)].eat.pw+(SEATPW[S.obj[best]]||0))*(1+.1*spotN(best+tdir,'dining','party'))});/* しょくたく・ガーデンパーティー：パワー+10% */
   return startAct(r,G,'eat',-1,{pt:0,pw:0});
 }
 function fishLoot(r){/* つり：家具1%・空き缶30%・枝30%・のこりは魚（false をかえす） */const q=Math.random();sfxAt('catch',r.x,r.y);if(WD===1&&!S.free&&Math.random()<.005){r.bubble='✨';if(!addItem(r,'gearf',1))dropAt(r.x,r.y,'gearf',1);return true}/* 火山：そうび0.5% */
