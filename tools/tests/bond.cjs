@@ -34,7 +34,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict');
     const j=(CY+3)*W+CX-4;S.obj[j]='swing';recount();let hit=0;for(let i=0;i<200;i++){endAct(n);const G=bfs(n.x|0,n.y|0);goPlay(n,G,true);if(n.act&&n.act.type==='play'&&n.act.obj===j)hit++}
     if(hit)throw Error('earth went to swing '+hit);endAct(n);n.act={type:'idle',stage:'do',t:0,dur:30};
     bondAdd(f,n,60);const G=bfs(f.x|0,f.y|0);endAct(f);startAct(f,G,'play',j,{key:'o'+j,obj:j,what:'swing',fun:40,dur:40,pt:3,pw:1});if(bondInvite(f,f.act))throw Error('invited to nigate');
-    S.obj[j]='';recount();endAct(f);endAct(n);return 'earth never picks swing, no invite'})()`));
+    S.obj[j]='';recount();endAct(f);endAct(n);/* 風のせいれいは、どのおもちゃも好き */if((NIGATE.wind||[]).length||Object.keys(BL).some(k=>BL[k].play&&!FAVTOY.wind.includes(k)))throw Error('wind likes all');return 'earth never picks swing, no invite; wind likes every toy'})()`));
   console.log('speed 100',await run(`(()=>{const [f,n,h]=S.res;S.bond={};const w0=rMul(f,'work');bondAdd(f,n,100);n.x=f.x+2;n.y=f.y;bondNearTick();const w1=rMul(f,'work');
     if(Math.abs(w1/w0-1.05)>1e-9)throw Error('no +5% '+w0+' '+w1);bondAdd(f,h,100);h.x=f.x+1;h.y=f.y;bondNearTick();if(Math.abs(rMul(f,'work')/w0-1.05)>1e-9)throw Error('stacked');
     n.x=f.x+6;h.x=f.x+6;bondNearTick();if(rMul(f,'work')!==w0)throw Error('far still fast');return 'x1.05 within 3, no stacking, off when apart'})()`));
