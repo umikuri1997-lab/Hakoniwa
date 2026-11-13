@@ -18,7 +18,7 @@ OUT = 0.0        # 輪郭線のふとさ（マス）。0は輪郭線なし
 OUTK = 0.5       # 輪郭線の色（もとの色にかける数。1に近いほどうすい線）
 BEVEL = 0.022    # 箱の角の面取り（マス）
 class Scene:
-    def __init__(self): self.t = []; self.pid = 0; self.ol = {}; self.cur = None; self.grp = {}; self.gcur = None; self.tx = {}; self.tcur = None
+    def __init__(self): self.t = []; self.pid = 0; self.ol = {}; self.cur = None; self.grp = {}; self.gcur = None; self.tx = {}; self.tcur = None; self.mt = {}; self.mcur = None
     def outline(self, w=None, k=None):
         """これから足す部品の輪郭線の太さ w（マス）・色 k（もとの色にかける数）。None は render の値"""
         self.cur = None if w is None and k is None else (w, k)
@@ -28,8 +28,12 @@ class Scene:
     def texture(self, t=None):
         """これから足す部品にはる木目など（Tex）。render_px で、部品ののびる向きにそって、明るさのちがいだけをつける"""
         self.tcur = t
+    def material(self, m=None):
+        """これから足す部品の材質（render_px）。None はふつう、'metal' は金属（光の当たる所に、明るいつやのすじ）"""
+        self.mcur = m
     def part(self):
         self.pid += 1   # つぎの三角形から、べつの部品（輪郭線は部品ごとにふくらませる）
+        if self.mcur: self.mt[self.pid] = self.mcur
         if self.tcur is not None: self.tx[self.pid] = self.tcur
         if self.cur: self.ol[self.pid] = self.cur
         if self.gcur is not None: self.grp[self.pid] = self.gcur
@@ -205,6 +209,18 @@ def grid_bg(ext, foot=None):
     if foot: fw, fh = foot; d.rectangle([((0-x0)*S, (0-y0)*S), ((fw-x0)*S, (fh-y0)*S)], outline=(214, 170, 70), width=3)
     return im
 
+SHADE = [(10, 2.5), (20, 5)]   # かげの色：ベースの色の HSV（100段階）から、明るさ・あざやかさを引く（半かげ・かげ）。持ち主がきめた（かげ＝明るさ−20・あざやかさ−5）
+SHINE = (12, -8)                # 金属のつや：明るさを足し、あざやかさを引く（白っぽく）
+METALSPEC = 0.97                # 金属のつやが出る向きの近さ
+def toon(cc, lv):
+    """部品の色 cc の、光（0）・半かげ（1）・かげ（2）・金属のつや（-1）の色"""
+    import colorsys
+    h, s_, v = colorsys.rgb_to_hsv(*[c/255 for c in cc])
+    if lv == 0: return np.array(cc, float)
+    dv, ds = (-SHINE[0], -SHINE[1]) if lv < 0 else SHADE[lv-1]
+    v = min(1, max(0, v-dv/100)); s_ = min(1, max(0, s_-ds/100))
+    return np.array(colorsys.hsv_to_rgb(h, s_, v))*255
+
 class Tex:
     """部品にはるテクスチャ（木目など）。もようが横むき（u がもようの流れる向き）の、くりかえしてつながる絵。
     span：絵1まいが何マスぶんか。flow：もようの流れる向きに、なめらかにするはば（ドット。木目を点でなく、すじにする）。
@@ -246,7 +262,12 @@ def render_px(sc, proj, ext, depth, k=0.72, outer=True, merge=12):
         if ln < 1e-12: continue
         n /= ln
         if np.dot(n, depth) < 0: n = -n
-        d = float(np.dot(n, LIGHT)); sh = 1.0 if d > 0.55 else 0.87 if d > 0.1 else 0.76
+        d = float(np.dot(n, LIGHT)); lv = 0 if d > 0.55 else 1 if d > 0.1 else 2
+        if sc.mt.get(pid) == 'metal':   # 金属：光と目のあいだの向き（ハーフベクトル）を向く面に、つやのすじ
+            hv = LIGHT+depth/np.linalg.norm(depth); hv /= np.linalg.norm(hv); hh = np.array([hv[0], hv[1], 0]); nh = np.array([n[0], n[1], 0])
+            sp = float(np.dot(nh/(np.linalg.norm(nh) or 1), hh/(np.linalg.norm(hh) or 1))) if np.linalg.norm(nh) > .3 else float(np.dot(n, hv))
+            lv = -1 if sp > METALSPEC else lv
+        shc = toon(cc, lv)
         P = [((proj(p)[0]-x0)*S, (proj(p)[1]-y0)*S) for p in (a, b, c)]; D = [float(np.dot(p, depth)) for p in (a, b, c)]
         xs = [p[0] for p in P]; ys = [p[1] for p in P]; pad = 2 if RAY else 0   # 遠近では辺が少し曲がるので、まわり2ドットも見る
         bx0 = max(int(math.floor(min(xs)))-pad, 0); bx1 = min(int(math.ceil(max(xs)))+pad, Wp-1)
@@ -269,7 +290,7 @@ def render_px(sc, proj, ext, depth, k=0.72, outer=True, merge=12):
             m = (w0 >= -1e-6) & (w1 >= -1e-6) & (w2 >= -1e-6)
             z = w0*D[0]+w1*D[1]+w2*D[2]
         s = (slice(by0, by1+1), slice(bx0, bx1+1)); vis = m & (z > zb[s])
-        zb[s][vis] = z[vis]; col[s][vis] = np.clip(np.array(cc)*sh, 0, 255); idb[s][vis] = pid
+        zb[s][vis] = z[vis]; col[s][vis] = shc; idb[s][vis] = pid
         if pid in sc.tx:
             wp[s][vis] = (w0[vis, None]*a+w1[vis, None]*b+w2[vis, None]*c); wn[s][vis] = n
     col0 = col.copy()   # 木目をつける前の色（輪郭線はこの色から作る。木目ごとに線の色がわかれない）
