@@ -1,19 +1,14 @@
-/* 手ごたえ・目標・早送り・よろこび：火のせいれいの攻撃のヒットストップとゆれ、村のようすの「つぎのレベルでおぼえる物」、見た会話の早送り、夜のコワイノをぜんぶ追いはらったときのよろこび */
+/* 目標・早送り・よろこび：村のようすの「つぎのレベルでおぼえる物」、見た会話の早送り、夜のコワイノをぜんぶ追いはらったときのよろこび */
 const assert=require('node:assert/strict');
 (async()=>{const {browser,page,run,errors}=await require('../sim/boot.cjs')();
   await run(`document.querySelector('#dialog').hidden=true;S.introSeen=true;S.flags.tapped=1;S.hold=0;`);
-  /* 1. 攻撃：前へ出きって止まり（ヒットストップ）、もどる。コワイノは当たった瞬間からゆれる */
-  const k=JSON.parse(await run(`JSON.stringify([lungeK(0),lungeK(130),lungeK(165),lungeK(199),lungeK(265),lungeK(330),hitJig({hitAt:1000},1000),hitJig({hitAt:1000},1100),hitJig({hitAt:1000},1200),hitJig({hitAt:5000},1000)])`));
-  assert.equal(k[0],0);assert.equal(k[1],1);assert.equal(k[2],1);assert.equal(k[3],1,'the lunge holds at the hit');assert.ok(k[4]>0&&k[4]<1);assert.equal(k[5],0);
-  assert.equal(Math.abs(k[6]),3,'the enemy shakes 3 dots at the hit');assert.ok(Math.abs(k[7])>0&&Math.abs(k[7])<3,'the shake gets smaller');assert.equal(k[8],0,'the shake ends');assert.equal(k[9],0,'a future time from a save is not used');
-  console.log('Attack: the lunge holds at the hit and the enemy shakes, then stops');
-  /* 2. 村のようす：つぎのレベルでおぼえる物 */
+  /* 1. 村のようす：つぎのレベルでおぼえる物 */
   const nx=JSON.parse(await run(`(()=>{S.lv=1;const L=nextLevelItems(2);return JSON.stringify({L,ok:L.every(stageItemOK),html:nextLvHtml(2)})})()`));
   assert.ok(nx.L.length>0,'level 2 has something to learn');assert.ok(nx.ok);assert.ok(nx.html.includes('レベル2でおぼえる'));
   const nx2=JSON.parse(await run(`(()=>{const id=nextLevelItems(2)[0];S.unlocked[id]=true;S.recipes[id]=true;const r=!nextLevelItems(2).includes(id);delete S.unlocked[id];delete S.recipes[id];return JSON.stringify(r)})()`));
   assert.ok(nx2,'already learned things are not shown');
   console.log('Village: the next level shows what will be learned');
-  /* 3. 見た会話の早送り：はじめては出ない。見おえたら出る。動作の待ちは守る */
+  /* 2. 見た会話の早送り：はじめては出ない。見おえたら出る。動作の待ちは守る */
   const L=`[['${'フタバ'}','#joy|はじめのセリフ'],['${'フタバ'}','つぎのセリフ'],['${'フタバ'}','さいごのセリフ']]`;
   await run(`DLGGAP=0;DLGTAP=performance.now();dialog(${L})`);await page.waitForTimeout(200);
   assert.equal(await run(`[...document.querySelectorAll('#dlgBtns button')].some(b=>b.textContent==='はやおくり')`),false,'no fast-forward the first time');
@@ -27,9 +22,9 @@ const assert=require('node:assert/strict');
   await page.waitForFunction(()=>sacredEval(`document.querySelector('#dialog').hidden`),{},{timeout:5000});
   const dt=Date.now()-t0;assert.ok(dt>=900&&dt<3000,'fast-forward ends quickly but after the hold: '+dt);
   console.log('Talk: fast-forward only for seen talks, and it waits for the motions ('+dt+'ms)');
-  /* 4. 夜のコワイノをぜんぶ追いはらった：起きている子がよろこぶ。1晩1回 */
-  const j=JSON.parse(await run(`(()=>{S.nightHad=true;S.nushi=0;S.ns={n:1,kill:1,lost:[],hurt:0,broke:0};S.enemies=[{dead:true}];const r=S.res[0];endAct(r);JUMP.delete(r);nightClearJoy();const a=S.ns.clr,b=JUMP.has(r);JUMP.delete(r);nightClearJoy();return JSON.stringify({a,b,c:JUMP.has(r)})})()`));
-  assert.equal(j.a,1);assert.equal(j.b,true,'awake spirits jump');assert.equal(j.c,false,'only once a night');
+  /* 3. 夜のコワイノをぜんぶ追いはらった：起きている子がよろこぶ。1晩1回 */
+  const j=JSON.parse(await run(`(()=>{S.nightHad=true;S.nushi=0;S.ns={n:1,kill:1,lost:[],hurt:0,broke:0};S.enemies=[{dead:true}];const r=S.res[0];endAct(r);JUMP.delete(r);EVAP.push({e:S.enemies[0],t0:performance.now(),dur:1300,die:true});nightClearJoy();const w=!!S.ns.clr;EVAP.length=0;nightClearJoy();const a=S.ns.clr,b=JUMP.has(r);JUMP.delete(r);nightClearJoy();return JSON.stringify({w,a,b,c:JUMP.has(r)})})()`));
+  assert.equal(j.w,false,'waits while the last one is falling');assert.equal(j.a,1);assert.equal(j.b,true,'awake spirits jump');assert.equal(j.c,false,'only once a night');
   const j2=JSON.parse(await run(`(()=>{S.ns={n:1,kill:0,lost:[],hurt:0,broke:0};nightClearJoy();return JSON.stringify(!!S.ns.clr)})()`));
   assert.equal(j2,false,'a night with no enemies driven away does not celebrate');
   console.log('Night: driving all enemies away makes awake spirits jump once');
