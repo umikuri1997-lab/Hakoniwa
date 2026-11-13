@@ -11,7 +11,7 @@
 # 後ろ向きでは、すわったせいれいの手前にうしろの板がくるので、その絵（achair>2.front）も作る（ひじかけは、せいれいより下）。すわった子の足は、cut でかくす。
 from blueprint import Part as P
 from common import *
-ID='achair';BOTTOM=50
+ID='achair';GRAD=True;BOTTOM=50
 VIEWS=[('achair',0),('achair>1',1),('achair>2',2),('achair>3',3)]
 X0,X1,Y0,Y1=0.15,0.85,0.08,0.83;AW=0.11;LG=0.07;ZA=0.36;ZB=ZA+0.07;ZC=0.70;CT=0.15
 FRONT={'achair>2.front':lambda n:n.startswith('うしろの')}   # ひじかけは、せいれいより下（持ち主がきめた）
