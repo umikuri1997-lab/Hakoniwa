@@ -37,7 +37,7 @@ const RSTN=[['work','はたらく速さ'],['move','移動速度'],['cap','持て
 const fullN=r=>1+(r.elem==='fire'?1:0);/* 食べる量：1（火は2）。レベルではかわらない */
 let LVQ=null;
 function lvShow(l,bonus,opens){
-  const o=$('#lvup');o.querySelector('.n').textContent=l;{const pw=o.querySelector('.pw'),a=LIGHTCDL[l-1]||10,b=LIGHTCDL[l]||10;pw.hidden=!(b<a);pw.textContent='まもりの光のチャージ '+a+'秒 → '+b+'秒'}/* 村レベルで、まもりの光のチャージがみじかくなったら書く */
+  const o=$('#lvup');o.querySelector('.n').textContent=l;o.querySelector('.pw').hidden=true;/* まもりの光のチャージは、村レベルではかわらない（守り神のちからで強化） */
   const u=o.querySelector('.op');u.innerHTML='';u.hidden=!opens.length;
   const od=o.querySelector('.opd');od.hidden=true;
   if(opens.length){u.appendChild(el('<small>あたらしく使える</small>'));for(const id of [...new Set(opens)]){const b=el('<button class="lvic"><img alt=""><span></span></button>');b.querySelector('img').src=iconURL(id);b.querySelector('span').textContent=iname(id);b.onclick=e=>{e.stopPropagation();sfx('tap');u.querySelectorAll('.lvic').forEach(x=>x.classList.toggle('on',x===b));od.hidden=false;od.innerHTML='<b></b><p></p>';od.querySelector('b').textContent=iname(id);od.querySelector('p').textContent=withAttr(id,(BL[id]&&BL[id].desc)||'')};u.appendChild(b)}}/* 解放されたものはアイコン。タップで説明 */

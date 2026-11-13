@@ -517,7 +517,7 @@ function renderSheet(){
       body.appendChild(sec)}
   }else if(sheet==='menu'){
     T.textContent=WORLDS[WD].name;
-    const MI=[['oracle','leaf','おつげ'],['manual','book','ひでんのしょ'],['goal','target','目標'],['record','memo','思い出帳'],['maps','compass','マップ選択'],['zukan','zukan','図鑑'],['settings','gear','設定'],['support','cup','応援する']];
+    const MI=[['oracle','leaf','おつげ'],['manual','book','ひでんのしょ'],['goal','target','目標'],['record','memo','思い出帳'],['maps','compass','マップ選択'],['zukan','zukan','図鑑'],['gup','power','守り神のちから'],['settings','gear','設定'],['support','cup','応援する']];
     const sub=MI.find(m=>m[0]===sheetArg);
     if(!sub){/* メニューはアイコンを並べるだけ。タップで中身を開く */
       body.appendChild(el(`<div class="mtags"><span class="mtag">${pxi('grass')}みどりのマス <b>${GRASSN}</b></span><span class="mtag">${pxi('house')}村レベル <b>${S.lv}</b></span><span class="mtag">${pxi('spirit')}せいれい <b>${S.res.length}</b>人</span></div>`));
@@ -550,6 +550,14 @@ function renderSheet(){
       tr.appendChild(el('<p class="note">のりこえた試練：'+(S.trials||0)+'回</p>'));body.appendChild(tr);subSec(body);/* クリア後は、新しい目標を上に。サブクエストは下に */
     }else if(sheetArg==='goal'){if(mainStoryFocusTarget()){const b=el('<button class="btn pri" style="width:100%">お話・調査の場所へ</button>');b.onclick=focusMainStoryPlace;body.appendChild(b);}subSec(body,true);
     }else if(sheetArg==='zukan'){zukanBody(body)
+    }else if(sheetArg==='gup'){/* 守り神のちから：パワーで、守り神の技を強くする（GUP・GUPC は night.js） */
+      body.appendChild(el('<p class="note">パワーを使って、守り神の技を強くできる。</p>'));
+      const sec=el('<div class="sec"><div class="rows"></div></div>'),rw=sec.querySelector('.rows');
+      for(const g of GUP){if(g.k==='area'&&!(S.flags&&S.flags.areaSkill))continue;/* こもれびのまもりは、受けついでから */
+        const n=gupLv(g.k),mx=n>=10,r=rowEl(g.n+'（Lv'+n+'/10）',mx?'いま '+g.t[n]:'いま '+g.t[n]+'\nつぎ '+g.t[n+1]);r.querySelector('small').style.whiteSpace='pre-line';if(mx)r.classList.add('done');
+        const b=el('<button class="btn pri" style="flex:none"></button>');if(mx){b.textContent='さいだい';b.disabled=true}else{const c=GUPC[n];b.textContent='強化　'+SP(c);lackOn(b,lackPt(c));b.onclick=()=>{if(S.pt<c){sfx('tap');return toast(lackPt(c),'warn')}if(gupBuy(g.k))renderSheet()}}
+        r.appendChild(b);rw.appendChild(r)}
+      body.appendChild(sec)
     }else if(sheetArg==='record'){appendStoryReplays(body);
       const st=el('<div class="sec"><h3>これまで</h3><div class="recs"></div></div>'),rw=st.querySelector('.recs');
       for(const[a,b]of[['すごした日',dayNo()+'日'],...(S.score?[['クリアスコア',S.score.rank+'（'+S.score.tot+'てん）']]:[]),['のりこえた夜',(S.nights||0)+'回'],['いまのせいれい',S.res.length+'人'],['よんだせいれい',(S.summons||0)+'人'],['消えてしまったせいれい',(S.deaths||0)+'人'],

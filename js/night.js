@@ -312,18 +312,30 @@ function hitRes(e,r,D){if(onTower(r))return;if(BOSSFX[e.type]){shakeScreen();fxS
   {const lost=h0-r.hunger;if(lost>0)hitFx(r,lost,{sx:e.x,sy:e.y,big:lost>=100})}/* へったおなかの数字・火花・のけぞり */
   {const L=lightAt(e.x,e.y);e.rest=fire?(D.boss?(L?2:1.5):(L?2.667:2)):(D.boss?(L?4:3):(L?5.333:4))}/* たたいたあと、コワイノがひと休みする時間（明かりの中は長い）。やられて止まる stun とはちがい、うすくならない */e.path=[];e.repath=0;gearHurt(e,r);/* はね返し */
 }
-const LIGHTCDL=[10,10,9.5,9,8.5,8,7.5,7,6.5,6,5.5,5,4.5,4,3.5,3];/* 守りの光のチャージ時間（秒）。村レベル1で10秒、レベルが1上がるごとに0.5秒みじかい */let LIGHTCD=0,LIGHTARM=false;/* 守りの光：アイコンをタップしてから、コワイノ・木・岩をタップする *//* のこり秒（倍速なら早くもどる） */
-function guardLight(e){PTW.q=true;if(LIGHTCD>0){toast('まもりの光は、あと'+Math.ceil(LIGHTCD/(S.speed||1))+'秒');return}if(S.pt<1){toast('パワーが足りません');return}S.pt-=1;LIGHTCD=LIGHTCDL[S.lv]||10;
-  const D=EN[e.type];hurtEn(e,10,{flash:8,k:'light'});/* ダメージは10だけ */e.stun=D.boss?1:2.5;e.path=[];e.repath=0;
+const LIGHTCDL=[10,10,9.5,9,8.5,8,7.5,7,6.5,6,5.5,5,4.5,4,3.5,3];/* 前の、村レベルごとのチャージ（秒）。いまは使わない。古いセーブの読みかえ（gupMigrate）だけ */
+/* 守り神のちから（メニュー）：パワーで、守り神の技を10段階まで強くする（ステージごと。ほかのステージには引きつがない）。数字は段階0〜10の実数。stun・vb は e.stun の数（時計の1.5倍）、sh は葉のまもりの時計の分、cd は秒 */
+const GUPC=[100,200,300,500,700,1000,1400,1900,2500,3200];
+const GUP=[
+ {k:'cd',n:'まもりの光のチャージ',v:[10,9,8,7,6.5,6,5,4.5,4,3.5,3],t:['10秒','9秒','8秒','7秒','6.5秒','6秒','5秒','4.5秒','4秒','3.5秒','3秒']},
+ {k:'pow',n:'まもりの光の威力',v:[10,12,14,16,18,20,22,24,26,28,30],t:['10','12','14','16','18','20','22','24','26','28','30']},
+ {k:'stun',n:'まもりの光でとめる時間',v:[2.5,3,3.75,4.5,5.25,6,6.75,7.5,8.25,9,9.75],vb:[1,1.5,1.875,2.25,2.625,3,3.375,3.75,4.125,4.5,4.875],t:['1.7分・オオカゲなど0.7分','2分・オオカゲなど1分','2.5分・オオカゲなど1.25分','3分・オオカゲなど1.5分','3.5分・オオカゲなど1.75分','4分・オオカゲなど2分','4.5分・オオカゲなど2.25分','5分・オオカゲなど2.5分','5.5分・オオカゲなど2.75分','6分・オオカゲなど3分','6.5分・オオカゲなど3.25分']},
+ {k:'area',n:'こもれびのまもり',r:[2,2,2.5,2.5,3,3,3.5,3.5,4,4,4.5],sh:[40,45,50,55,60,65,70,75,80,85,90],cd:[5,4.75,4.5,4.25,4,3.75,3.5,3.25,3,2.75,2.5],t:['まわり2マス・葉のまもり40分・チャージ5秒','まわり2マス・葉のまもり45分・チャージ4.75秒','まわり2.5マス・葉のまもり50分・チャージ4.5秒','まわり2.5マス・葉のまもり55分・チャージ4.25秒','まわり3マス・葉のまもり60分・チャージ4秒','まわり3マス・葉のまもり65分・チャージ3.75秒','まわり3.5マス・葉のまもり70分・チャージ3.5秒','まわり3.5マス・葉のまもり75分・チャージ3.25秒','まわり4マス・葉のまもり80分・チャージ3秒','まわり4マス・葉のまもり85分・チャージ2.75秒','まわり4.5マス・葉のまもり90分・チャージ2.5秒']}];
+function gupLv(k){return Math.max(0,Math.min(10,((S.gup||{})[k])|0))}
+function gupOf(k){return GUP.find(g=>g.k===k)}
+function lightCdMax(){return gupOf('cd').v[gupLv('cd')]}
+function gupBuy(k){const n=gupLv(k);if(n>=10)return false;const c=GUPC[n];if(S.pt<c){toast(lackPt(c),'warn');return false}S.pt-=c;PTW.q=true;sfx('power');(S.gup||(S.gup={}))[k]=n+1;const g=gupOf(k);toast(g.n+'：'+g.t[n]+' → '+g.t[n+1],'good');save();return true}
+function gupMigrate(){/* 前は村レベルでチャージがみじかくなった。強化だけにしたので、古いセーブは、そのときのチャージより長くならない段階にする（1回だけ） */if(S.flags.gup1)return;S.flags.gup1=1;const old=LIGHTCDL[S.lv]||10,v=gupOf('cd').v;let i=0;while(i<10&&v[i]>old)i++;if(i>gupLv('cd'))(S.gup||(S.gup={})).cd=i}let LIGHTCD=0,LIGHTARM=false;/* 守りの光：アイコンをタップしてから、コワイノ・木・岩をタップする *//* のこり秒（倍速なら早くもどる） */
+function guardLight(e){PTW.q=true;if(LIGHTCD>0){toast('まもりの光は、あと'+Math.ceil(LIGHTCD/(S.speed||1))+'秒');return}if(S.pt<1){toast('パワーが足りません');return}S.pt-=1;LIGHTCD=lightCdMax();
+  const D=EN[e.type],G=gupOf('stun'),gs=gupLv('stun');hurtEn(e,gupOf('pow').v[gupLv('pow')],{flash:8,k:'light'});/* 威力・とめる時間は、守り神のちから（GUP）の段階 */e.stun=D.boss?G.vb[gs]:G.v[gs];e.path=[];e.repath=0;
   const cx=e.x*TS,cy=e.y*TS-18;fxSpr('lighthit',cx,cy);sfxAt('shoot',e.x,e.y);
   if(e.hp<=0)return defeat(e,'守り神の光で'+D.name+'を追いはらった！')}
-let AREACD=0,AREAARM=false;/* こもれびのまもり（フタバから受けついだ守り神の技）：タップした場所から2マスのせいれいに、葉のまもり40秒・パワー3 */
+let AREACD=0,AREAARM=false;/* こもれびのまもり（フタバから受けついだ守り神の技）：タップした場所のまわりのせいれいに、葉のまもり・パワー3。まわりのマス・葉のまもりの時間・チャージは GUP の area */
 function areaBlast(cx,cy){
-  const L=S.res.filter(r=>!r.hidden&&Math.hypot(r.x-cx,r.y-cy)<=2);
+  const A=gupOf('area'),ga=gupLv('area'),L=S.res.filter(r=>!r.hidden&&Math.hypot(r.x-cx,r.y-cy)<=A.r[ga]);
   if(!L.length){toast('はんいに、せいれいがいません');return}
-  S.pt-=3;PTW.q=true;AREACD=5;const px=cx*TS,py=cy*TS;fxSpr('areaguard',px,py);
+  S.pt-=3;PTW.q=true;AREACD=A.cd[ga];const px=cx*TS,py=cy*TS;fxSpr('areaguard',px,py);
   sfx('bush');
-  for(const r of L){r.shU=S.t+40;leafFX(r)}}
+  for(const r of L){r.shU=S.t+A.sh[ga];leafFX(r)}}
 function nightClearJoy(){/* 今夜のコワイノをぜんぶ追いはらった瞬間：起きている子がぴょんぴょんよろこぶ（1晩1回、S.ns.clr） */if(!S.ns||S.ns.clr||!S.ns.kill||MEMRUN||!nightClear())return;const now=performance.now();if(EVAP.some(it=>it.die&&now-it.t0<(it.dur||1800)))return;/* さいごのコワイノが白く止まって倒れおわってから */S.ns.clr=1;const L=S.res.filter(r=>!r.hidden&&!(r.act&&(r.act.type==='sleep'||r.act.type==='faint')&&r.act.stage==='do')&&!(JOYU.get(r)>now));if(!L.length)return;sfx('chime');toast('今夜のコワイノを、ぜんぶ追いはらった！','good');for(const r of L){JUMP.set(r,now+Math.random()*300);villageTimeout(()=>JUMP.set(r,performance.now()),700+Math.random()*300)}}
 function defeat(e,msg,r){if(e.dead)return;/* 同じ敵の撃破報酬は1回だけ */if(r){r.beat=(r.beat||0)+1;addSpiritXp(EN[e.type].xp,r)}sfx('defeat');const dT=Math.max(performance.now(),(HITV.get(e)||{t:0}).t);/* 当たるのを見せてから、たおれる */if(!EN[e.type].boss){const px=e.x*TS,py=e.y*TS;villageTimeout(()=>fxSpr('shadowpop',px,py),dT-performance.now()+KO_HOLD)}if(EN[e.type].boss&&!S.flags.bossOutro&&!(S.bossKills>0)){S.flags.bossOutro=1;bossDefeatFX(e)}else if(e.type==='boss2'){bossDefeatFX(e);villageTimeout(finalWinCheer,5800)}/* 追いはらった演出（時間を止めて消えていく様子を見せる）は、はじめてボスを追いはらったときの1回だけ */
   if(!EVAP.some(it=>it.e===e))EVAP.push({e,t0:dT,dur:1300,die:true});/* たおしたら、白く止まって（KO_HOLD）、たおれるモーションをしてから消える */
