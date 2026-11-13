@@ -417,7 +417,7 @@ function drawRes0(r,now){
   px+=hitOff(r,now,1)[0];/* たたかれたら、のけぞる */
   if(at==='shiver'&&ad)px+=Math.sin(now/26+r.id*3)*1.4;/* ふるえる */
   const tubB=at==='bathe'&&ad&&r.act.tub!=null&&r.act.in>0,wade=at==='bathe'&&ad&&r.act.in>0?r.act.in:sacredPose(r)?.anim==='soak'&&!walking?1:0;/* 水浴び：水の中では下半分がかくれる */
-  {const tp=toyPose(r,now);if(tp){px=tp.x;py=tp.y-9}}/* 遊具の上で遊ぶ */if(sj<0&&!wade&&!toyR(r))shadow(ctx,px,py+8,12,3.6);
+  {const tp=toyPose(r,now);if(tp){px=tp.x;py=tp.y-9}}/* 遊具の上で遊ぶ */const seated=!walking&&r.act&&r.act.stage==='do'&&SEATS.includes(S.obj[(r.y|0)*W+(r.x|0)]);/* いすにすわっているときは、かげを出さない */if(sj<0&&!wade&&!toyR(r)&&!seated)shadow(ctx,px,py+8,12,3.6);
   const lvR=rLv(r);
   const tt=now/1000+r.id*1.7,fy=py+9-bob;
   if(at==='craft'&&ad&&!CLAPON){const o=S.orders.find(q=>q.id===r.act.order),mx=px+(r.face<0?-1:1)*15,my=py+11;/* 材料（板）を、せいれいの前に置く。のこぎりが板の上にくるよう、せいれいより先に描く */

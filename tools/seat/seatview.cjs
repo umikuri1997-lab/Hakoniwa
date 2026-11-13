@@ -1,7 +1,7 @@
 /* すわる位置のページ（tools/seat/）につかう絵を、ゲームそのものの描き方で作る。
    node tools/seat/seatview.cjs <出力.json>
    家具ごと・向きごとに：家具だけの絵（base）・すわったせいれいだけの絵（spirit。手前に重ねる絵 .front と、足をかくす cut はのぞく）・手前に重ねる絵（front）・足をかくす行（clip）。
-   せいれいは、いまのゲームの位置（SEATOFF のずれなし）。1ドット＝ゲームの 0.5（1マス64ドット） */
+   せいれいは、SEATOFF のずれなしの位置で写し、いまの SEATOFF を×2 した数（1マス64ドット）を init に入れる（ページのはじめの数）。1ドット＝ゲームの 0.5 */
 const path=require('path'),fs=require('fs'),boot=require(path.join(__dirname,'..','sim','boot.cjs'));
 if(!process.env.CHROME_PATH)process.env.CHROME_PATH='/opt/pw-browsers/chromium';
 const OUT=process.argv[2]||'seat.json';
@@ -12,7 +12,9 @@ await page.waitForFunction(()=>sacredEval('assetsOK&&stageReady()'));
 const out=await run(`(()=>{USERPAUSE=true;const K=${K},CW=${CW},CH=${CH},OX=${OX},OY=${OY};const SE=${JSON.stringify(SEATS)};
  const X=CX+6,Y=CY+6,j=Y*W+X,x=X*TS,y=Y*TS;const now=performance.now();
  const r=S.res.find(q=>!q.dead);S.res.forEach(q=>{if(q!==r)q.hidden=true});
- const oc=window.chipOf;const res={K,CW,CH,OX,OY,seats:[]};
+ const oc=window.chipOf;const res={K,CW,CH,OX,OY,seats:[],init:{}};
+ const SO=JSON.parse(JSON.stringify(SEATOFF));for(const id in SEATOFF)delete SEATOFF[id];/* 写すあいだは、ずれなし */
+ for(const id in SO){res.init[id]={};for(const k in SO[id])res.init[id][k]=SO[id][k].map(v=>v*2)}
  const shot=f=>{const c=document.createElement('canvas');c.width=CW*K;c.height=CH*K;const g=c.getContext('2d');g.imageSmoothingEnabled=false;g.setTransform(K,0,0,K,-(x-OX)*K,-(y-OY)*K);f(g);return c};
  for(const[id,name,nr] of SE){const it={id,name,rots:[]};
   for(let k=0;k<nr;k++){
@@ -31,5 +33,5 @@ const out=await run(`(()=>{USERPAUSE=true;const K=${K},CW=${CW},CH=${CH},OX=${OX
    finally{window.chipOf=oc}
    it.rots.push({k,base:base.toDataURL(),spirit:sp.toDataURL(),front:front?front.toDataURL():null,clip})}
   res.seats.push(it)}
- dirty=true;return res})()`);
+ Object.assign(SEATOFF,SO);dirty=true;return res})()`);
 fs.writeFileSync(OUT,JSON.stringify(out));console.log(errors.length?'エラー: '+JSON.stringify(errors):'エラーなし','→',OUT,out.seats.map(s=>s.id+':'+s.rots.length).join(' '));await browser.close()})();

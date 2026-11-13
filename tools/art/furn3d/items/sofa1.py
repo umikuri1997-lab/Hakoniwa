@@ -12,7 +12,7 @@ from common import *
 ID='sofa1';BOTTOM=55
 VIEWS=[('sofa1',0),('sofa1>1',1),('sofa1>2',2),('sofa1>3',3)]
 X0,X1,Y0,Y1=0.032,0.968,0.04,0.83;AW=0.168;BD=0.24;FT=0.05
-FRONT={'sofa1>2.front':lambda n:n.startswith('背') or n.startswith('ひじ')}
+FRONT={'sofa1>2.front':lambda n:n.startswith('背')}   # ひじかけは、せいれいより下（持ち主がきめた）
 CUT=('sofa1>2',)
 def puff(nm,x0,y0,x1,y1,z0,z1,on,note,rc=0.07,re=0.06,lean=0,flare=(0,0),bulge=0.015):   # 布でつつんだ、角も上下のふちもまるい形
     return notex(P(nm,'loft',soft(x0,y0,x1,y1,z0,z1,rc,re,lean,n=7,flare=flare,bulge=bulge),SOFA,on=on,note=note))

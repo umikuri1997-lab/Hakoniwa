@@ -1,6 +1,6 @@
 # すわる位置のページ（Artifact「すわる位置」）を作る。
 # 使い方：python3 tools/seat/build_page.py <seatview.cjs が出した json> <出力.html>
-# 家具ごと（タブ）・向きごとに、すわったせいれいをドラッグ・矢じるしでずらし、ずれの数字（1マス64ドットのドット）をコピーする。
+# 家具ごと（タブ）・向きごとに、すわったせいれいをドラッグ・矢じるしでずらし、ずれの数字（1マス64ドットのドット。ずれなしが0）をコピーする。はじめの数は、いまのゲームの SEATOFF（D.init）。
 # 送られた数字は、ゲームの SEATOFF（village.js）に、÷2 して入れる（ゲームの点は1マス32）。
 import json, sys
 D = json.load(open(sys.argv[1]))
@@ -46,14 +46,15 @@ BODY = '''<div class="wrap">
   </div>
   <div class="cards" id="cards"></div>
   <div class="out">
-    <div class="row"><button class="main" id="copy">数字をコピー</button><span class="msg" id="msg">ずれは、いまのゲームの位置からのドット数（右と下がプラス）。はじめは 0（いまのゲームの位置）</span></div>
+    <div class="row"><button class="main" id="copy">数字をコピー</button><span class="msg" id="msg">ずれは、もとの位置からのドット数（右と下がプラス）。はじめは、いまのゲームに入っている数</span></div>
     <pre id="txt"></pre>
   </div>
 </div>
 '''
 JS = '''
 const NAMES={0:'正面',1:'右向き',2:'うしろ',3:'左向き'};
-const OFF={};for(const s of D.seats){OFF[s.id]={};for(const r of s.rots)OFF[s.id][r.k]=[0,0]}
+const INIT=k=>{const v=D.init&&D.init[cur0]&&D.init[cur0][k];return v?[...v]:[0,0]};let cur0;
+const OFF={};for(const s of D.seats){OFF[s.id]={};cur0=s.id;for(const r of s.rots)OFF[s.id][r.k]=INIT(r.k)}
 try{const sv=JSON.parse(localStorage.getItem('seatoff')||'null');if(sv)for(const id in sv)if(OFF[id])for(const k in sv[id])if(OFF[id][k])OFF[id][k]=sv[id][k]}catch(e){}
 let cur=D.seats[0].id;const IMG={};let CV={};
 function load(src){return new Promise(r=>{if(!src)return r(null);const i=new Image();i.onload=()=>r(i);i.src=src})}
@@ -85,7 +86,7 @@ function draw(){const z=+zoom.value,s=seat(),K=D.K;
   const o={};for(const s2 of D.seats){o[s2.id]={};for(const r of s2.rots)o[s2.id][r.k]=OFF[s2.id][r.k]}
   txt.textContent=JSON.stringify(o)}
 cards.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
-  if(b.dataset.reset!=null){setOff(+b.dataset.reset,0,0);return}
+  if(b.dataset.reset!=null){cur0=cur;const v=INIT(+b.dataset.reset);setOff(+b.dataset.reset,v[0],v[1]);return}
   if(b.dataset.r!=null){const k=+b.dataset.r,[a,c]=b.dataset.d.split(',').map(Number),o=OFF[cur][k];setOff(k,o[0]+a,o[1]+c)}});
 link.addEventListener('change',()=>{if(link.checked&&OFF[cur][1])setOff(1,OFF[cur][1][0],OFF[cur][1][1])});
 zoom.addEventListener('change',draw);
