@@ -171,7 +171,22 @@ function goAdmire(r,G){if(ADMS!==S||!ADMQ.length)return false;ADMQ=ADMQ.filter(q
 ACT.admire={start(r,a){const x=a.obj%W+.5;r.face=x>=r.x?1:-1;r.bubble='❗'},
   tick(r,a){if(a.t>=3&&!a.said){a.said=1;const k=elemKey(r),L=ADML[k]||ADML.wood,ln=pickFresh('adm:'+k,L);r.bubble='';addFloat(r.x,r.y-1.6,ln,'#fff3d6');if(likeF(r)===a.id||(FAVTOY[r.elem]||[]).includes(a.id)){JOYU.set(r,performance.now()+2500);r.bubble='💕'}}},
   done:(r,a)=>a.t>=a.dur||S.obj[a.obj]!==a.id,end(r){r.fun=Math.min(100,r.fun+ADMFUN);r.wanderRestUntil=S.t+30;r.bubble=''}};
-ACT_LBL.admire='新しい物を見にきた';ACT_LBL.rainjoy='雨をよろこんでいる';ACT_LBL.stretch='のびをしている';
+ACT_LBL.admire='新しい物を見にきた';
+/* ---------- こまりごと：1日に1つまで。村のじっさいのようすから、朝に1人えらぶ。なおったら、お礼とたのしさ+15 ---------- */
+const TROUBLEFUN=15,TROUBLEDAYS=3,TROUBLEFAR=25;
+const homeOf=r=>{const b=myBed(r);return b>=0?roomOf(b)||null:null};/* じぶんのベッドがある家 */
+const lightNear=h=>{const M=3;for(const j of LIGHTS){const x=j%W,y=(j/W)|0;if(x>=h.x0-M&&x<=h.x1+M&&y>=h.y0-M&&y<=h.y1+M)return true}return false};
+const TROUBLE={
+  cramped:{t:'家がきゅうくつ',ok:r=>{const h=homeOf(r);return !!h&&!!houseComfort(h).over},thx:['ひろびろして、のびのびできるよ。','ありがとう、これでゆっくり休めるよ。']},
+  dark:{t:'夜、家のまわりが暗くてこわい',ok:r=>{const h=homeOf(r);return !!h&&!lightNear(h)},thx:['あかりがあると、夜もこわくないね。','ありがとう。夜が、ちょっとたのしみになったよ。']},
+  fav:{t:r=>BL[likeF(r)].name+'がほしい',ok:r=>{const f=likeF(r);return !!f&&BL[f]&&BL[f].kind==='furn'&&!cnt(f)&&recipeKnown(f)&&lvOK(f)},thx:['ずっと、ほしかったんだ。ありがとう！','わあ、だいじにするね！']},
+  far:{t:'食料箱が遠い',ok:r=>{const b=myBed(r);if(b<0||!cnt('stor'))return false;const G=bfs(b%W,(b/W)|0);const k=nearest(G,j=>storeAdj(j,'food')>=0,200);return k<0||G.dist[k]>TROUBLEFAR},thx:['ごはんが近くなって、うれしいな。','これで、すぐ食べにいけるね。']}};
+const troubleText=r=>{const T=S.trouble&&S.trouble.id===r.id?TROUBLE[S.trouble.k]:null;return T?(typeof T.t==='function'?T.t(r):T.t):''};
+function troubleMorning(){if(!S||S.free||IS_STORY_REPLAY||typeof MEMRUN!=='undefined'&&MEMRUN)return;const d=dayNo(),T=S.trouble;
+  if(T&&(!S.res.some(r=>r.id===T.id)||d-T.d>=TROUBLEDAYS))S.trouble=null;if(S.trouble)return;
+  const C=[];for(const r of S.res){if(r.hidden&&!homeOf(r))continue;for(const k in TROUBLE)if(TROUBLE[k].ok(r))C.push([r,k])}if(!C.length)return;const [r,k]=C[Math.floor(Math.random()*C.length)];S.trouble={id:r.id,k,d}}
+let TRBT=0;function troubleTick(){const T=S&&S.trouble;if(!T||(TRBT=(TRBT+1)%5))return;/* 5秒に1回 */const r=S.res.find(q=>q.id===T.id);if(!r){S.trouble=null;return}const D=TROUBLE[T.k];if(!D){S.trouble=null;return}
+  if(D.ok(r))return;S.trouble=null;r.fun=Math.min(100,r.fun+TROUBLEFUN);if(!r.hidden){JOYU.set(r,performance.now()+3000);addFloat(r.x,r.y-1.6,pickFresh('trb:'+T.k,D.thx),'#fff3d6');r.bubble='💕'}toast(r.name+'のこまりごとが、なくなった','good')}ACT_LBL.rainjoy='雨をよろこんでいる';ACT_LBL.stretch='のびをしている';
 function moveR(r,dt){
   if(r.greetStop>S.t)return;/* すれちがって手をふるあいだは、立ちどまる */
   let step=.36*dt*rMul(r,'move')*(r.act&&r.act.type==='flee'?gearStat(r).flee:1)/* そうび：にげる速さ */*(r.act&&['questjoy','sevreact','reunion'].includes(r.act.type)&&r.act.stage==='walk'?2:1)/* クエストで駆け寄る間は、2倍 */*(r.act&&['storywait','fieldintro','fieldstory','fieldassist','fieldgather','fieldwait'].includes(r.act.type)&&r.act.stage==='walk'?2:1)/* メインのお話の場所へ向かうときは、2倍 */*Math.max(NEARVANE.has((r.y|0)*W+(r.x|0))?1.2:1,NEARSIGN.has((r.y|0)*W+(r.x|0))&&r.act&&r.act.type==='flee'?1.4:1)*/* 風見鶏と道しるべは重ならない（大きいほう） */(r.energy<5?.5:1)*(r.act&&(r.act.type==='flee'||r.act.run)?1.9:1)*(r.hunger<200&&r.act&&(r.act.type==='eat'||r.act.type==='fetch'||r.act.type==='forage')?1.6:1)/* おなかがへりすぎたら、急いで食べに行く */*(FSPD[S.floor[(r.y|0)*W+(r.x|0)]]||1);r.walkT=(r.walkT||0)+dt;if(r.path.length&&!isNight()&&!preBedCalm())r.energy=Math.max(0,r.energy-WALKTIRE*dt*100/staOf(r));/* 昼に歩くと、少しつかれる（遠い配置ほど、休む回数がふえる。夜の見回り・見張りはかえない） */

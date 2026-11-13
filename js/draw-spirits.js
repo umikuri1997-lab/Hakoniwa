@@ -454,7 +454,7 @@ function drawRes0(r,now){
   if(!zzz&&SUBW[r.name]){r.bubX=px;r.bubY=by-34;talkBub(px,by,now,'#ffd56b');return}/* サブクエスト：黄色の吹き出し *//* 話したそうにしている：水色の吹き出し */
   if(CLAPON)return;/* 拍手中は吹き出しを出さない */
   const warn=r.hunger<200;
-  if(!ci&&(r.bubble||warn)){const t0=warn&&!r.bubble?'🍙':r.bubble,t=(BUBFACE[t0]?null:NOFACE[t0])||t0;/* 顔の絵文字は使わない */
+  const trq=!r.bubble&&!warn&&S.trouble&&S.trouble.id===r.id&&r.act&&['idle','wander','quirk'].includes(r.act.type)?'❓':'';/* こまりごとのある子は、ひまなとき「？」 */if(!ci&&(r.bubble||warn||trq)){const t0=trq||(warn&&!r.bubble?'🍙':r.bubble),t=(BUBFACE[t0]?null:NOFACE[t0])||t0;/* 顔の絵文字は使わない */
     {const a=r.act;if(a&&a.stage==='do'&&(a.type==='mine'||a.type==='chop')&&NATHIT.has(a.obj)&&Math.abs((a.obj%W+.5)*TS-px)<TS+20){const yb=natBarY(a.obj);if(by-46<yb+7&&by-15>yb-2)by=yb+12}}/* 木・岩ののこりのバーと重なるときは、ふきだしをバーの上へ */
     const pic=/^(obj|ic|chip|crop):/.test(String(t)),bw=27;/* 絵のアイコンは、絵文字と同じはば *//* 吹き出しは1.5倍 */
     const BB=pxBub(ctx,px,by-47.5,bw,25.5,warn?'#ffd2cc':'#fff',warn?'#c98a80':'#b8a587');/* ドットのふきだし */
