@@ -31,6 +31,9 @@ const boot=require('../sim/boot.cjs'),assert=require('node:assert/strict');
   /* 箱がなくなったら、中身はその場所に落ちる */
   const g=JSON.parse(await run(`(()=>{const A=window.BA,B=window.BB;const n=S.box[A].wood||0;S.obj[A]='';recount();boxSync();const dp=(S.drops||[]).find(q=>q.id==='mat:wood'&&q.tap);return JSON.stringify({n,drop:dp?dp.n:0,box:!!S.box[A],wood:S.mat.wood})})()`));
   assert.equal(g.drop,g.n);assert.equal(g.box,false);assert.equal(g.wood,87-g.n);
+  /* まき棚：木材と枝だけ、200まで */
+  const mk=JSON.parse(await run(`(()=>{const A=window.BA,j=A+W*3;S.obj[j]='makidana';recount();return JSON.stringify({cap:boxCap(j),wood:boxRoom(j,'wood'),eda:boxRoom(j,'eda'),stone:boxRoom(j,'stone'),food:boxRoom(j,'f:berry'),catMat:boxCat(j,false)})})()`));
+  assert.deepEqual(mk,{cap:200,wood:200,eda:200,stone:0,food:0,catMat:false});
   /* 箱の画面：中身と、入れる物 */
   const h=await run(`(()=>{const A=window.BA,B=window.BB;openSheet('furn',B);const t=document.querySelector('#sheetBody').innerText;closeSheet();return t})()`);
   assert.match(h,/中身/);assert.match(h,/入れる物/);assert.match(h,/なんでも/);

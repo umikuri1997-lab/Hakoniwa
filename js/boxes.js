@@ -5,7 +5,8 @@
    S.rsv：建てる・作る・炉・コンポスター・おたきあげのために、とっておいた数（まだ箱の中にある）。
    S.mat・S.fs は「使える数」＝箱と神殿のまえの合計 − とっておいた数。
    S.mat などを、じかにふやした・へらした分は、boxSync があわせる（ふえた分はあいた箱へ、入らなければ神殿のまえへ。へった分は神殿のまえ → 箱からへらす）。 */
-const BOXCAP={crate:80,taru:60,kabebukuro:55,asabukuro:65,makidana:130,shelf1:160,shelf2:200,wshelf:200,cabinet:90};/* しまえる数 */
+const BOXCAP={crate:80,taru:60,kabebukuro:55,asabukuro:65,makidana:200,shelf1:160,shelf2:200,wshelf:200,cabinet:90};/* しまえる数 */
+const BOXONLY={makidana:{wood:1,eda:1}};/* その物しか入らない家具 */
 const PILE=-1,fkey=k=>'f:'+k,isFK=k=>k.charCodeAt(0)===102&&k.charCodeAt(1)===58,itemKeyName=k=>isFK(k)?(FOODS[k.slice(2)]||{}).name||k:MATN[k]||k;
 let BOXL=[];const RSV=()=>S.rsv||(S.rsv={}),BOX=()=>S.box||(S.box={}),PIL=()=>S.pile||(S.pile={});/* 箱のマス（recount で作る） */
 function boxTypeAt(k){if(k<0||k>=W*H)return '';const a=anc(k),id=S.obj[a];if(HOME_WALLS.has(id)){const w=(S.win||{})[a];return BOXCAP[w]?w:''}return BOXCAP[id]?id:''}
@@ -15,8 +16,8 @@ const bx=j=>{if(j===PILE)return PIL();const B=BOX();return B[j]||(B[j]={})};
 function boxCapAdd(){let add=0;const got=new Set();for(const I of SPOTI||[])if(I.sp.cap&&!got.has(I.sp.k)){got.add(I.sp.k);add+=I.sp.cap}return add}/* しまうスポット：おなじスポットは1こ分、ちがうスポットはたし算 */
 const boxCap=j=>Math.floor((BOXCAP[boxTypeAt(j)]||0)*(1+boxCapAdd()));
 function boxUsed(j){const b=BOX()[j];let n=0;if(b)for(const k in b)n+=b[k];return n}
-function boxOK(j,key){/* その箱に、この物を入れてよいか */const F=(S.boxF||{})[j];if(!F||!(F.food||F.mat||F.it&&Object.keys(F.it).length))return true;if(isFK(key)?F.food:F.mat)return true;return !!(F.it&&F.it[key])}
-function boxCat(j,food){/* その箱に、食べ物（素材）のどれかを入れてよいか */const F=(S.boxF||{})[j];if(!F||!(F.food||F.mat||F.it&&Object.keys(F.it).length))return true;if(food?F.food:F.mat)return true;for(const k in F.it||{})if(isFK(k)===food)return true;return false}
+function boxOK(j,key){/* その箱に、この物を入れてよいか */const O=BOXONLY[boxTypeAt(j)];if(O&&!O[key])return false;const F=(S.boxF||{})[j];if(!F||!(F.food||F.mat||F.it&&Object.keys(F.it).length))return true;if(isFK(key)?F.food:F.mat)return true;return !!(F.it&&F.it[key])}
+function boxCat(j,food){/* その箱に、食べ物（素材）のどれかを入れてよいか（その物しか入らない家具は、数えない） */if(BOXONLY[boxTypeAt(j)])return false;const F=(S.boxF||{})[j];if(!F||!(F.food||F.mat||F.it&&Object.keys(F.it).length))return true;if(food?F.food:F.mat)return true;for(const k in F.it||{})if(isFK(k)===food)return true;return false}
 const boxRoom=(j,key)=>boxOK(j,key)?Math.max(0,boxCap(j)-boxUsed(j)):0;
 function boxHas(j,key){const b=j===PILE?PIL():BOX()[j];return b?b[key]||0:0}
 function roomFor(food){/* 食べ物（素材）を、あといくつしまえるか */let n=0;for(const j of BOXL)if(boxCat(j,food))n+=Math.max(0,boxCap(j)-boxUsed(j));return n}
@@ -94,3 +95,4 @@ function boxMigrate(s){/* 食料箱・素材箱を木箱にまとめ、箱ごと
   for(const k in s.dyn||{}){if(s.obj[k]!=='site')continue;const d=s.dyn[k];if(d&&d.mat&&!d.got)d.got=Object.assign({},d.mat)}/* 前の建てる所も */
   for(const Q of[s.cmpQ,s.smQ])for(const j in Q||{})for(const k in Q[j])s.mat[k]=(s.mat[k]||0)+Q[j][k];for(const k in s.otakiQ||{})s.mat[k]=(s.mat[k]||0)+s.otakiQ[k];/* 前は、たのんだときにへらしていた：箱にもどして、とっておく */
   s.box={};s.pile={};s.rsv={}}
+function roomKey(key){/* この物を、あといくつしまえるか */let n=0;for(const j of BOXL)n+=boxRoom(j,key);return n}
