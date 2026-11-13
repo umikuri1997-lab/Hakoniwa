@@ -411,10 +411,11 @@ function goSleep(r,G,run){
   let j=nearest(G,j=>{if(!bedOK(j))return false;const h=roomOf(j);return !h||roomSleepN(h)<houseCap(h)},200);/* きゅうくつな家はなるべくさける */
   if(j<0)j=nearest(G,bedOK,200);
   if(j>=0){const b=BL[S.obj[j]].sleep;return startAct(r,G,'sleep',j,{key:'o'+j,obj:j,rate:b.rate,pt:b.pt,run:run&&!!isNight()})}
-  if(isNight()&&HOUSES.length){// ベッドがない：家の中にいてもいいが、寝られない（家がなければ床で寝る）
-    const hs=new Set();for(const h of HOUSES)for(const k of h.set)hs.add(k);
-    const k=hs.size?nearest(G,j=>hs.has(j)&&walk(j)&&!HOME_DOORS.has(S.obj[j]),200):-1;
-    return startAct(r,G,'stay',k,{run:run&&k>=0})}
+  if(HOUSES.length){/* ベッドがない：家の中の床で寝る。家に行けなければ、夜はその場でまつ */
+    const hs=new Set();for(const h of HOUSES)for(const k of h.inside)hs.add(k);
+    const k=hs.size?nearest(G,j=>hs.has(j)&&walk(j)&&!S.obj[j]&&!(TAKEN&&TAKEN.has(j)),200):-1;
+    if(k>=0)return startAct(r,G,'sleep',k,{rate:.12,pt:1,ground:true,floor:true,run:run&&!!isNight()});
+    if(isNight())return startAct(r,G,'stay',-1,{})}
   return startAct(r,G,'sleep',-1,{rate:.12,pt:1,ground:true});
 }
 function mate(a,b,n,kind){bondAdd(a,b,n,kind)}/* なかよしがふえる（bond.js） */
