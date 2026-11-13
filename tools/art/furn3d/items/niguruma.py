@@ -9,7 +9,7 @@
 #   あさぶくろ：荷台の上にのせる。
 from blueprint import Part as P
 from common import *
-ID='niguruma';BOTTOM=64
+ID='niguruma';SZ=(2,1);BOTTOM=64
 VIEWS=[('niguruma',0)]
 X0,X1,Y0,Y1=0.05,1.45,0.34,0.84;ZB=0.30;FW=0.06;XH=1.92;XAS=(0.38,1.12);RW=0.20
 def PARTS():

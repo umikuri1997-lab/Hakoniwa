@@ -4,8 +4,9 @@
 #   出す物：<chip>.png（向きごと）・<chip>_x10.png・views_x4.png（向きをならべた4倍）・cmp_x4.png（いまのチップとならべた4倍）・bp.png（設計図）
 #   --chips：ゲームのチップ（chips.js とアトラス）に入れ、.chips_changed に id を書く。
 # items/<id>.py に書く物：
-#   ID（チップの名前）・PARTS()（blueprint.Part の表。木目をはらない部品は p.tex=False、金属の部品は p.metal=True）・EXTRA(sc)（Part で書けない形。なければ書かない）
+#   ID（チップの名前）・PARTS()（blueprint.Part の表。木目をはらない部品は p.tex=False、金属の部品は p.metal=True、布・砂のなだらかな部品は p.soft=True（ゆるいふくらみにも、かげがつく））・EXTRA(sc)（Part で書けない形。なければ書かない）
 #   VIEWS=[(チップの名前, まわす数k), ...]（k：0前・1右・2後ろ・3左）・BOTTOM（絵の下のはし。g64のドット。いまのチップに合わせる）
+#   SZ=(よこ,たて)（置くマスの数。2×1 の物は (2,1)。たてにした向きを、置いたマスから下へのびる所に写す）
 #   FRONT={チップの名前: 部品の名前を見る関数}（せいれいの手前にかさねる絵 .front。その向きで、その部品だけを写す）
 import sys,os,importlib
 HERE=os.path.dirname(os.path.abspath(__file__));ART=os.path.join(HERE,'..');ROOT=os.path.join(ART,'..','..')
@@ -20,7 +21,7 @@ def load(iid):return importlib.import_module(iid)
 def scene(M,k,only=None):
     sc=O.Scene();T=O.Tex(os.path.join(ART,'textures','wood049.png'));L=M.PARTS();keep=set()
     for p in L:
-        mt=getattr(p,'metal',False);sc.texture(T if getattr(p,'tex',True) and not mt else None);sc.material('metal' if mt else None);p0=sc.pid;build(sc,[p]);sc.material(None)
+        mt=getattr(p,'metal',False);sc.texture(T if getattr(p,'tex',True) and not mt else None);sc.material('metal' if mt else 'soft' if getattr(p,'soft',False) else None);p0=sc.pid;build(sc,[p]);sc.material(None)
         if only and only(p.name):keep|=set(range(p0+1,sc.pid+1))
     if hasattr(M,'EXTRA'):sc.texture(None);M.EXTRA(sc)
     sc.texture(None)
@@ -37,22 +38,22 @@ def shot(M,k,only=None,S_=64):
         from scipy.ndimage import binary_dilation;mk=binary_dilation(np.isin(ids,list(keep)))
         full[~mk]=0;im=Image.fromarray(full)
     yb=V[:,1].max();base=(PROJ((c[0],yb,0))[1]-ext[2])*S_
-    return im,round(ext[0]*S_),base
+    return im,round(ext[0]*S_),base,yb   # yb：いちばん手前の地面（マス）。向きをかえると、かわる
 def run(iid,out,chips=False):
     M=load(iid);os.makedirs(out,exist_ok=True)
     L=M.PARTS();bad=check(L);print(iid,'ささえのたしかめ',bad or 'まちがいなし')
     if L:
       try:blueprint(os.path.join(out,'bp.png'),M.ID,L,(1,1),(-0.2,1.2,-0.2,1.2,1.6))
       except Exception as e:print('設計図をかけなかった',e)
-    CH={};ref=None
+    CH={};ref=None;SZ=getattr(M,'SZ',(1,1));rowsh=lambda k:(SZ[0]-SZ[1])*64 if k%2 else 0   # SZ：置くマスの数（よこ・たて）
     for nm,k in M.VIEWS:
-        im,ex0,base=shot(M,k);bb=im.getbbox();im=im.crop(bb);base-=bb[1]
+        im,ex0,base,yb=shot(M,k);bb=im.getbbox();im=im.crop(bb);base-=bb[1]
         if ref is None:ref=im.height-base   # 前の向きで、地面の行と絵の下のはしの差
-        ay=round(M.BOTTOM-base-ref);ax=ex0+bb[0];CH[nm]=(im,ax,ay)
+        ay=round(M.BOTTOM+rowsh(k)-base-ref);ax=ex0+bb[0];CH[nm]=(im,ax,ay)   # 2×1 などをたてにした向きは、ゲームでは置いたマスから下へのびるので、そのぶん下へずらす（rowsh）
         print('%s %dx%d ax %d ay %d'%(nm,im.width,im.height,ax,ay))
     for nm,f in getattr(M,'FRONT',{}).items():
-        k=dict(M.VIEWS)[nm.rsplit('.',1)[0]];im,ex0,base=shot(M,k,f);full,_,_=shot(M,k);bb=full.getbbox()
-        im=im.crop(bb);base-=bb[1];CH[nm]=(im,ex0+bb[0],round(M.BOTTOM-base-ref));print('%s %dx%d'%(nm,im.width,im.height))
+        k=dict(M.VIEWS)[nm.rsplit('.',1)[0]];im,ex0,base,yb=shot(M,k,f);full,_,_,_=shot(M,k);bb=full.getbbox()
+        im=im.crop(bb);base-=bb[1];CH[nm]=(im,ex0+bb[0],round(M.BOTTOM+rowsh(k)-base-ref));print('%s %dx%d'%(nm,im.width,im.height))
     for nm,(im,ax,ay) in CH.items():
         fn=nm.replace('>','_').replace('#','_');im.save(os.path.join(out,fn+'.png'));im.resize((im.width*10,im.height*10),Image.NEAREST).save(os.path.join(out,fn+'_x10.png'))
     vs=[CH[n][0] for n,_ in M.VIEWS];HB=max(i.height for i in vs)+12
