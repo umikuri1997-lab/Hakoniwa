@@ -1,4 +1,4 @@
-# いす（chair）：4本の脚・座面・うしろの脚がそのまま背もたれの柱・上の横木・たての桟3本。前・右・後ろ・左の4つの向き。
+# いす（chair）：4本の脚・座面・うしろの脚がそのまま背もたれの柱・上の横木・たての桟2本。前・右・後ろ・左の4つの向き。
 # 後ろ向きでは、すわったせいれいの手前に背もたれがくるので、背もたれだけの絵（chair>2.front）も作る。
 from blueprint import Part as P
 from common import *
@@ -14,7 +14,7 @@ def PARTS():
         L.append(P('背もたれの柱（%s）'%nx,'box',(x,Y0,0,x+LG,Y0+LG,ZTOP),WOOD2,bevel=0,note='うしろの脚が、そのまま背もたれの柱'))
     L.append(P('座面','box',(X0-0.01,Y0,ZS,X1+0.01,Y1+0.01,ZS+TS),WOOD,on=('前の脚（左）','前の脚（右）','背もたれの柱（左）','背もたれの柱（右）'),bevel=0,note='4本の脚の上'))
     L.append(P('背もたれの横木','box',(X0,Y0+0.005,ZTOP-0.12,X1,Y0+LG-0.005,ZTOP),WOOD,on=('背もたれの柱（左）','背もたれの柱（右）'),bevel=0,note='柱のあいだ'))
-    n=3;w=0.05;gap=(X1-X0-2*LG-n*w)/(n+1)
+    n=2;w=0.06;gap=(X1-X0-2*LG-n*w)/(n+1)
     for i in range(n):
         x=X0+LG+gap*(i+1)+w*i
         L.append(P('背もたれの桟%d'%(i+1),'box',(x,Y0+0.02,ZS+TS,x+w,Y0+LG-0.02,ZTOP-0.12),WOOD2,on=('座面','背もたれの横木'),bevel=0,note='座面と横木のあいだ'))

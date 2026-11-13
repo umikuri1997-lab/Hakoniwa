@@ -18,6 +18,7 @@ x=東, y=南, z=上（マス）。置くマスの左上が(0,0)。
   lathe(cx,cy,[(半径,高さ),...])     まわした形（つぼ）。上から下への形
   prism([(x,z),...],y0,y1)            正面（南から見た形）の多角形を、y0〜y1 へのばした板（すじかいのはしを、ほかの材にそって切るときなど）
   prism([(y,z),...],x0,x1,'x')        横（東から見た形）の多角形を、x0〜x1 へのばした板（横の面のすじかい）
+  prism([(x,y),...],z0,z1,'z')        上から見た形の多角形を、z0〜z1 へのばした板（角を丸めた天板など）
   box は bevel=（面取りのはば）を部品ごとにかえられる
   grp=（名前）：同じ名前の部品どうしのさかいには、ドット絵の輪郭線（oblique3d.render_px）を引かない
 """
@@ -41,6 +42,7 @@ class Part:
         if k=='prism':
             pts,c0,c1=d[:3];a=np.array(pts,float)
             if len(d)>3 and d[3]=='x':return(c0,a[:,0].min(),a[:,1].min(),c1,a[:,0].max(),a[:,1].max())
+            if len(d)>3 and d[3]=='z':return(a[:,0].min(),a[:,1].min(),c0,a[:,0].max(),a[:,1].max(),c1)
             return(a[:,0].min(),c0,a[:,1].min(),a[:,0].max(),c1,a[:,1].max())
         if k=='lathe':cx,cy,pr=d;r=max(q[0] for q in pr);return(cx-r,cy-r,min(q[1] for q in pr),cx+r,cy+r,max(q[1] for q in pr))
         pts=s.corners();a=np.array(pts);return(*a.min(0),*a.max(0))
@@ -94,7 +96,7 @@ def build(sc,parts):
             for q in idx:sc.quad(*[P[i] for i in q],tuple(c))
         elif k=='prism':
             pts,y0,y1=d[:3];sc.part();n=len(pts);X=len(d)>3 and d[3]=='x'
-            V=(lambda u,w,z:(w,u,z)) if X else (lambda u,w,z:(u,w,z))   # u：面にそった向き・w：のばす向き
+            AX=d[3] if len(d)>3 else 'y';V={'x':(lambda u,w,z:(w,u,z)),'y':(lambda u,w,z:(u,w,z)),'z':(lambda u,w,z:(u,z,w))}[AX]   # u・z：形の2つの向き・w：のばす向き
             for i in range(n):(xa,za),(xb,zb)=pts[i],pts[(i+1)%n];sc.quad(V(xa,y0,za),V(xb,y0,zb),V(xb,y1,zb),V(xa,y1,za),tuple(c))
             for yy in(y0,y1):
                 for i in range(1,n-1):sc.tri(V(pts[0][0],yy,pts[0][1]),V(pts[i][0],yy,pts[i][1]),V(pts[i+1][0],yy,pts[i+1][1]),tuple(c))
