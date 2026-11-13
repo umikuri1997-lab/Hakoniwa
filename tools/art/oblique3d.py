@@ -33,6 +33,22 @@ class Scene:
         if self.tcur is not None: self.tx[self.pid] = self.tcur
         if self.cur: self.ol[self.pid] = self.cur
         if self.gcur is not None: self.grp[self.pid] = self.gcur
+    def turn(self, k, foot=None):
+        """90度×k まわす（k=1 で正面（南）が右（東）を向く・2で後ろ（北）・3で左（西）。ゲームの向き 0前・1右・2後ろ・3左）。
+        foot=(x0,y0,x1,y1)：置く物の床の範囲。まわしたあと、よこはマスのまん中・手前のはしは、もとの手前のはしにそろえる"""
+        k %= 4
+        if not k: return
+        V = np.array([v for t_ in self.t for v in t_[:3]]); x0, y0, x1, y1 = foot if foot else (V[:, 0].min(), V[:, 1].min(), V[:, 0].max(), V[:, 1].max())
+        cx, cy = (x0+x1)/2, (y0+y1)/2
+        def R(v):
+            x, y = v[0]-cx, v[1]-cy
+            for _ in range(k): x, y = y, -x   # 正面（南 +y）→ 右（東 +x）
+            return np.array([x, y, v[2]])
+        T = [(R(a), R(b), R(c), col, pid) for a, b, c, col, pid in self.t]
+        hw, hd = ((y1-y0)/2, (x1-x0)/2) if k % 2 else ((x1-x0)/2, (y1-y0)/2)
+        sh = np.array([0.5 if foot is None else (x0+x1)/2, y1-hd, 0])
+        if k % 2: sh[0] = 0.5
+        self.t = [(a+sh, b+sh, c+sh, col, pid) for a, b, c, col, pid in T]
     def tri(self, a, b, c, col): self.t.append((np.array(a, float), np.array(b, float), np.array(c, float), np.array(col, float), self.pid))
     def quad(self, a, b, c, d, col): self.tri(a, b, c, col); self.tri(a, c, d, col)
     def ring_wall(self, cx, cy, r, z0, z1, colf, n=48):

@@ -1,7 +1,7 @@
 # 木箱（わくつきの木箱）の設計図（部品の表）。3Dから作るドット絵のお手本（スキル model3d-pixel）。
 # x=東, y=南, z=上（マス）。置くマスの左上が(0,0)。
-# 作り：底板に四すみの角柱 → 柱のあいだに側板3まい（4つの面）→ 前とうしろは側板の外に上下の横桟 →
-#       柱と横桟でかこんだ中にすじかい（1本は通し、もう1本は2つに分けて、はしを通しのふちで切ってつきあてる）→
+# 作り：底板に四すみの角柱 → 柱のあいだに側板3まい（4つの面）→ 4つの面の側板の外に上下の横桟 →
+#       4つの面とも、柱と横桟でかこんだ中にすじかい（1本は通し、もう1本は2つに分けて、はしを通しのふちで切ってつきあてる）→
 #       ふた板4まいを柱と側板の上に → ふたの左右に桟。
 import sys,os
 sys.path.insert(0,os.path.join(os.path.dirname(os.path.abspath(__file__)),'..'))
@@ -19,30 +19,38 @@ def parts():
     for face,xx in(('左',E),('右',1-E-T)):
         for i,(z0,z1) in enumerate(hs):
             L.append(P('%sの側板%d'%(face,i+1),'box',(xx,Y0+PO,z0,xx+T,Y1-PO,z1),BOARD if i%2 else BOARD2,on=('底板',) if i==0 else ('%sの側板%d'%(face,i),),bevel=0,note='柱にくぎでとめる'))
-    for face,ya,yb in(('前',Y1-E,Y1),('うしろ',Y0,Y0+E)):
-        L.append(P('%sの横桟（下）'%face,'box',(PO,ya,ZB,1-PO,yb,ZB+R),FRAME,on=('%sの側板1'%face,),bevel=0,note='側板の外にうつ'))
-        L.append(P('%sの横桟（上）'%face,'box',(PO,ya,ZT-R,1-PO,yb,ZT),FRAME,on=('%sの側板3'%face,),bevel=0,note='側板の外にうつ'))
-    # すじかい：横桟と柱でかこんだ中。1本は通し、もう1本は2つに分けて、はしを通しの1本のふちにそって切り、つきあてる
+    # 4つの面に、わく（上下の横桟）とすじかい。すじかいは横桟と柱でかこんだ中に、1本は通し、もう1本は2つに分けて、
+    # はしを通しの1本のふちにそって切り、つきあてる。u は面にそった向き（前・うしろは x、左・右は y）
     import numpy as np
-    xa,xb,za,zb=PO,1-PO,ZB+R,ZT-R;W=0.09;o=0.04;BT=0.017
-    def band(p,q,w):   # p→q の線の、はば w の帯の2本のふち（点と向き）
+    W=0.09;o=0.04;BT=0.017;za,zb=ZB+R,ZT-R
+    def band(p,q,w):   # p→q の線の、はば w の帯（点・向き・はばの半分のずれ）
         p,q=np.array(p,float),np.array(q,float);d=(q-p)/np.linalg.norm(q-p);nn=np.array([-d[1],d[0]]);return p,d,nn*w/2
     def cut(p,d,q,e):  # p+t*d の線と、q+s*e の線の交わる点
         t,_=np.linalg.solve(np.array([d,-e]).T,q-p);return p+t*d
-    A,B=(xa-o,za-o*0.45),(xb+o,zb+o*0.45);M=((xa+xb)/2,(za+zb)/2)
-    p0,d0,h0=band(A,B,W)
-    thr=[tuple(A-h0),tuple(B-h0),tuple(B+h0),tuple(A+h0)]
-    yf0,yf1=Y1-E,Y1-E+BT
-    L.append(P('前のすじかい（通し）','prism',(thr,yf0,yf1),FRAME,on=('前の側板2',),grp='すじかい',note='左下から右上へ。はしは横桟と柱の下へ'))
-    for nm,C in(('左上',(xa-o,zb+o*0.45)),('右下',(xb+o,za-o*0.45))):
-        p1,d1,h1=band(C,M,W)
-        fa=p0+h0 if nm=='左上' else p0-h0          # Cがわの、通しのふち
-        e1=cut(np.array(C)+h1,d1,fa,d0);e2=cut(np.array(C)-h1,d1,fa,d0)
-        poly=[tuple(np.array(C)+h1),tuple(e1),tuple(e2),tuple(np.array(C)-h1)]
-        L.append(P('前のすじかい（%s）'%nm,'prism',(poly,yf0,yf1),FRAME,on=('前の側板2',),grp='すじかい',note='通しのすじかいのふちで切って、つきあてる'))
+    FACES=(('前','y',PO,1-PO,(Y1-E,Y1),(Y1-E,Y1-E+BT)),('うしろ','y',PO,1-PO,(Y0,Y0+E),(Y0+E-BT,Y0+E)),
+           ('左','x',Y0+PO,Y1-PO,(0,E),(E-BT,E)),('右','x',Y0+PO,Y1-PO,(1-E,1),(1-E,1-E+BT)))
+    for face,ax,ua,ub,(w0,w1),(b0,b1) in FACES:
+        bx=(lambda u0,u1,z0,z1:(w0,u0,z0,w1,u1,z1)) if ax=='x' else (lambda u0,u1,z0,z1:(u0,w0,z0,u1,w1,z1))
+        L.append(P('%sの横桟（下）'%face,'box',bx(ua,ub,ZB,ZB+R),FRAME,on=('%sの側板1'%face,),bevel=0,note='側板の外にうつ'))
+        L.append(P('%sの横桟（上）'%face,'box',bx(ua,ub,ZT-R,ZT),FRAME,on=('%sの側板3'%face,),bevel=0,note='側板の外にうつ'))
+        k=(zb-za)/(ub-ua);A,B=(ua-o,za-o*k),(ub+o,zb+o*k);M=((ua+ub)/2,(za+zb)/2)
+        p0,d0,h0=band(A,B,W);ex=(b0,b1)+(('x',) if ax=='x' else ())
+        L.append(P('%sのすじかい（通し）'%face,'prism',([tuple(A-h0),tuple(B-h0),tuple(B+h0),tuple(A+h0)],)+ex,FRAME,on=('%sの側板2'%face,),grp='すじかい'+face,note='はしは横桟と柱の下へ'))
+        for nm,Cp in(('上',(ua-o,zb+o*k)),('下',(ub+o,za-o*k))):
+            p1,d1,h1=band(Cp,M,W);fa=p0+h0 if nm=='上' else p0-h0
+            e1=cut(np.array(Cp)+h1,d1,fa,d0);e2=cut(np.array(Cp)-h1,d1,fa,d0)
+            poly=[tuple(np.array(Cp)+h1),tuple(e1),tuple(e2),tuple(np.array(Cp)-h1)]
+            L.append(P('%sのすじかい（%s）'%(face,nm),'prism',(poly,)+ex,FRAME,on=('%sの側板2'%face,),grp='すじかい'+face,note='通しのすじかいのふちで切って、つきあてる'))
     n=4
     for i in range(n):
         y0=Y0+(Y1-Y0)*i/n;y1=Y0+(Y1-Y0)*(i+1)/n
         L.append(P('ふた板%d'%(i+1),'box',(0,y0,ZT,1,y1,ZT+0.035),LID if i%2 else LID2,on=('角柱（左うしろ）','角柱（右前）','前の側板3','うしろの側板3','左の側板3','右の側板3'),bevel=0,note='柱と側板の上'))
     for nx,x in(('左',0),('右',1-PO)):L.append(P('ふたの桟（%s）'%nx,'box',(x,Y0,ZT+0.035,x+PO,Y1,ZT+0.065),FRAME,on=['ふた板%d'%(i+1) for i in range(n)],bevel=0,note='ふた板をつなぐ'))
+    # 中のかげ（ふたを開けたときに見える、箱の中の暗い所。うすい板を内がわにはる。ささえのたしかめなし・輪郭線なし）
+    IN=(150,106,66);a=E+T+0.003;ya,yb=Y0+E+T+0.003,Y1-E-T-0.003;zt=ZT-0.002
+    L.append(P('中のかげ（底）','box',(a,ya,ZB,1-a,yb,ZB+0.004),IN,deco=True,bevel=0))
+    for nm,b in(('前',(a,yb-0.003,ZB,1-a,yb,zt)),('うしろ',(a,ya,ZB,1-a,ya+0.003,zt)),('左',(a,ya,ZB,a+0.003,yb,zt)),('右',(1-a-0.003,ya,ZB,1-a,yb,zt))):
+        L.append(P('中のかげ（%s）'%nm,'box',b,IN,deco=True,bevel=0))
     return L
+LIDP=lambda name:name.startswith('ふた')   # ふた（ふた板・ふたの桟）。うしろのはし（y=Y0, z=ZT）をちょうつがいにして開く
+INNER=lambda name:name.startswith('中のかげ')
