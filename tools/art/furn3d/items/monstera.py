@@ -44,16 +44,17 @@ def EXTRA(sc):
     tops=[]
     for f in stems:   # もとのくきの、いちばん上の点（葉の根もと）
         p=V[np.unique(f)];tops.append(p[p[:,2].argmax()])
-    for f in leaves:   # 葉：根もと（いちばん近いくきのさき）からの長さと、まん中のすじからのはなれで色をきめる
+    for f in leaves:   # 葉：根もと（いちばん近いくきのさき）からの長さと、まん中のすじからのはなれで、ドットごとに色をきめる（もよう。面ごとの色だと、すじが出る）
         p=V[np.unique(f)];ctr=p.mean(0)
         b=min(tops,key=lambda t:np.linalg.norm(t-ctr)) if tops else p[p[:,2].argmin()]
         ax=p[np.linalg.norm(p-b,axis=1).argmax()]-b;Ln=np.linalg.norm(ax);ax=ax/max(Ln,1e-9)
         wv=[np.linalg.norm((q-b)-ax*np.dot(q-b,ax)) for q in p];Wd=max(wv) or 1
-        sc.part()
-        for tri in f:
-            q=V[tri].mean(0);u=max(0,min(1,np.dot(q-b,ax)/Ln));w=np.linalg.norm((q-b)-ax*np.dot(q-b,ax))/Wd
-            t=min(1,w*0.8+u*0.45);cc=tuple(DARK[k]+(LIGHT[k]-DARK[k])*t for k in range(3))
-            sc.tri(V[tri[0]],V[tri[1]],V[tri[2]],cc)
+        def lcol(x,y,z,b=b,ax=ax,Ln=Ln,Wd=Wd):
+            q=np.array([x,y,z]);u=max(0,min(1,np.dot(q-b,ax)/Ln));w=min(1,np.linalg.norm((q-b)-ax*np.dot(q-b,ax))/Wd)
+            t=min(1,w*0.8+u*0.45);return tuple(DARK[k]+(LIGHT[k]-DARK[k])*t for k in range(3))
+        sc.decal(lcol);sc.part()
+        for tri in f:sc.tri(V[tri[0]],V[tri[1]],V[tri[2]],DARK)
+        sc.decal(None)
     for t in tops:   # くき：土のまん中から、まっすぐ上へのびてから、葉の根もとへひらく
         mid=np.array([CX+(t[0]-CX)*0.25,CY+(t[1]-CY)*0.25,soil+(t[2]-soil)*0.55])
         sc.part();sc.tube([(CX+(t[0]-CX)*0.08,CY+(t[1]-CY)*0.08,soil),tuple(mid),tuple(t)],0.014,STEM,n=6)

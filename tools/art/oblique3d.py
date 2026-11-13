@@ -353,10 +353,16 @@ def render_px(sc, proj, ext, depth, k=0.72, outer=True, merge=12, lw=1, k2=0.86)
             z = w0*D[0]+w1*D[1]+w2*D[2]
         s = (slice(by0, by1+1), slice(bx0, bx1+1)); vis = m & (z > zb[s])
         zb[s][vis] = z[vis]; col[s][vis] = shc; idb[s][vis] = pid; lvb[s][vis] = lv
-        if pid in sc.sm and lv >= 0 and sc.mt.get(pid) not in ('flat', 'metal') and vis.any():   # スムーズシェード：ドットごとに、角の向きをまぜた面の向きで段をきめる
+        if pid in sc.sm and sc.mt.get(pid) != 'flat' and vis.any():   # スムーズシェード：ドットごとに、角の向きをまぜた面の向きで段をきめる（金属は、つやのすじも）
             na, nb, nc = vnorm(pid, a, n), vnorm(pid, b, n), vnorm(pid, c, n)
             NN = w0[vis, None]*na+w1[vis, None]*nb+w2[vis, None]*nc; NN /= np.maximum(np.linalg.norm(NN, axis=1, keepdims=True), 1e-9)
-            dd = NN@LIGHT; mt_ = sc.mt.get(pid); L2 = np.array([_lvof(float(x), mt_) for x in dd])
+            dd = NN@LIGHT; mt_ = sc.mt.get(pid); L2 = np.array([_lvof(float(x), None if mt_ == 'metal' else mt_) for x in dd])
+            if mt_ == 'metal':
+                hv = LIGHT+depth/np.linalg.norm(depth); hv /= np.linalg.norm(hv); hh = np.array([hv[0], hv[1], 0]); hh /= max(1e-9, np.linalg.norm(hh))
+                for i_, q in enumerate(NN):
+                    nh = np.array([q[0], q[1], 0]); ln_ = np.linalg.norm(nh)
+                    sp = float(np.dot(nh/ln_, hh)) if ln_ > .3 else float(np.dot(q, hv))
+                    if sp > METALSPEC: L2[i_] = -1
             TC = {q: toon(cc, q) for q in set(L2.tolist())}
             col[s][vis] = np.array([TC[q] for q in L2]); lvb[s][vis] = L2
         if pid in sc.tx or pid in sc.dc:
