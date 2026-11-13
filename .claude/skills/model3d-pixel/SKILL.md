@@ -53,6 +53,11 @@ O.S = 64; im = O.render_px(sc, O.game, ext, O.VIEW, k=0.72)   # 1マス64ドッ�
 - 開けると見える中は、うすい暗い板（`中のかげ`、輪郭線なし）をはって、箱の中らしく暗くする。
 - ゲームに入れるのは、写すスクリプトの `--chips`（`chips.load_imgs`・`pack_imgs`、`.chips_changed` に id を書く）。そのあと `chip-art` のとおり、マップチップ工房も新しくする。
 
+## 2c. 見おろしの角度・奥行きの遠近
+- `O.persp(elev, fov, frame)` で、見おろしの角度（ゲームのほかの絵は51.34度）と、奥行きだけの遠近（左右は平行のまま。frame は画角に入れる上下の範囲（マス）、None で遠近なし）をえらべる。`render_px(sc, proj, ext, depth)` にそのままわたす。
+- 遠近の写し方は、ドットごとに、見える面の場所を式でとく（`proj.ray`）。三角形を細かく分けて写すやり方は、とても重いので使わない。
+- ほかの絵とならべるとちぢみ方がちがうので、ゲームに入れる前に、えらべるボタンで聞く。
+
 ## 3. 木目などのテクスチャ
 - テクスチャは CC0 の物だけ。`tools/art/textures/` に入れ、出どころ・ライセンス・とってきた所を `README.md` に書く。いまあるのは `wood049.png`（ambientCG、横むきの木目）。
 - 新しく取ってくるとき：ambientcg.com・polyhaven は、ネットの制限で直接とれない。GitHub の写しを、`raw.githubusercontent.com` で取る（さがすのは `gh api -X GET search/code -f q='ambientCG <名前> CC0'`）。

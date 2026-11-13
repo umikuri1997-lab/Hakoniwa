@@ -1,5 +1,5 @@
 # 木箱を、設計図（crate_parts.py）から3Dに組み、ドット絵に写す（スキル model3d-pixel のお手本）。
-# 使い方：python3 tools/art/crate3d/crate3d.py <出力フォルダ> [--elev 見おろしの角度] [--frame 画角に入れる上下の範囲（マス）] [--fov 画角（度、ふだん20）] [--chips]（--chips で、ゲームのチップ crate・crate>1〜3 と、ふたの開く絵 #o1〜#o3 に入れる）
+# 使い方：python3 tools/art/crate3d/crate3d.py <出力フォルダ> [--elev 見おろしの角度] [--frame 画角に入れる上下の範囲（マス）] [--fov 画角（度）] [--chips]（--chips で、ゲームのチップ crate・crate>1〜3 と、ふたの開く絵 #o1〜#o3 に入れる）
 # 出す物：bp_crate.png（設計図）・crate.png・crate_1.png・crate_2.png・crate_3.png（前・右・後ろ・左のドット絵、1マス64ドット。チップの crate・crate>1〜3）・
 #         <それぞれ>_x10.png（10倍）・views_x4.png（4つの向きをならべた4倍）・crate_big.png（3Dのたしかめ用、1マス512ドット）・cmp_x4.png（いまのチップとならべた4倍）
 import sys,os
@@ -13,8 +13,8 @@ import crate_parts as C
 out=sys.argv[1];os.makedirs(out,exist_ok=True)
 def opt(k,d):
     return float(sys.argv[sys.argv.index(k)+1]) if k in sys.argv else d
-ELEV=opt('--elev',51.34);FRAME=opt('--frame',0)   # 見おろしの角度（度）・画角に入れる上下の範囲（マス。0で遠近なし）
-FOV=opt('--fov',20)
+ELEV=opt('--elev',42);FRAME=opt('--frame',1)   # 見おろしの角度（度。ゲームのほかの絵は51.34）・画角に入れる上下の範囲（マス。0で遠近なし）。木箱は42度・画角10度・木箱ひとつ分（持ち主がえらんだ）
+FOV=opt('--fov',10)
 PROJ,DEPTH=O.persp(ELEV,FOV,FRAME or None,((C.X0+C.X1)/2,(C.Y0+C.Y1)/2,C.ZT/2))
 L=C.parts();bad=check(L);print('ささえのたしかめ',bad or 'まちがいなし')
 blueprint(os.path.join(out,'bp_crate.png'),'木箱',L,(1,1),(-0.1,1.1,0.1,1.1,0.8))
