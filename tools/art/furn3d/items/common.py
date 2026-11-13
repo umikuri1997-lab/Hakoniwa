@@ -13,13 +13,15 @@ def rrect(x0,y0,x1,y1,r,front_only=False,n=4):
         if rr==0:pts.append((x0 if a0==180 else x1,y0));continue
         for k in range(n+1):a=math.radians(a0+90*k/n);pts.append((cx+rr*math.cos(a),cy+rr*math.sin(a)))
     return pts
-def soft(x0,y0,x1,y1,z0,z1,rc=0.06,re=0.05,lean=0.0,n=4,bottom=True):
+def soft(x0,y0,x1,y1,z0,z1,rc=0.06,re=0.05,lean=0.0,n=4,bottom=True,flare=(0,0)):
     """布でつつんだ、まるい形の loft の層（Part の 'loft' にわたす）。rc：上から見た角の丸み、re：上・下のふちの丸み（4分の1の円）。
-    lean：上へいくほど、うしろ（y の小さいほう）へたおす角度（度。背もたれを反らせる）。bottom=False なら下のふちは丸めない"""
+    lean：上へいくほど、うしろ（y の小さいほう）へたおす角度（度。背もたれを反らせる）。bottom=False なら下のふちは丸めない。
+    flare=(左,右)：上へいくほど、左・右へひろげる長さ（上のはしで。ソファのひじかけを上ほど太くする）"""
     import math
     sh=lambda z:-math.tan(math.radians(lean))*(z-z0)
     L=[]
-    def lay(d,z):L.append((rrect(x0+d,y0+d+sh(z),x1-d,y1-d+sh(z),max(0.01,rc-d*0.6),n=4),z))
+    fx=lambda z:(z-z0)/max(1e-6,z1-z0)
+    def lay(d,z):L.append((rrect(x0-flare[0]*fx(z)+d,y0+d+sh(z),x1+flare[1]*fx(z)-d,y1-d+sh(z),max(0.01,rc-d*0.6),n=4),z))
     if bottom:
         for k in range(n+1):a=math.pi/2*k/n;lay(re*(1-math.sin(a)),z0+re*(1-math.cos(a)))
     else:lay(0,z0)
