@@ -4,7 +4,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict'),fs=r
  page.on('pageerror',e=>errors.push(e.message));
  await page.route('**/js/main.js*',async route=>{const r=await route.fetch();await route.fulfill({response:r,body:(await r.text())+'\nwindow.vlEval=s=>eval(s);'})});
  await page.goto(process.env.GAME_URL||'http://127.0.0.1:8000');await page.waitForFunction(()=>window.vlEval);const run=s=>page.evaluate(s=>vlEval(s),s);const shot=n=>process.env.SHOT_DIR?page.screenshot({path:process.env.SHOT_DIR+'/'+n+'.png'}):0;
- await run(`checkQuest=()=>{};updTut=()=>{};checkLevel=()=>{};true`);
+ await run(`checkQuest=()=>{};updTut=()=>{};showSpotPop=()=>{};checkLevel=()=>{};true`);
  await run(`(()=>{resetVillageTransient();setWorld(1);S=newState(1);LIVE[1]=S;started=true;USERPAUSE=true;NOSAVE=true;S.introSeen=true;for(const id of ['#title','#maps','#pro','#dialog','#lvup','#rlv'])document.querySelector(id).hidden=true;recount();return 1})()`);
  assert.equal(await run(`S.obj.filter(o=>o==='berry').length`),0,'火山にベリー');
  /* ようがん台 */
