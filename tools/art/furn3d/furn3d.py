@@ -4,7 +4,7 @@
 #   出す物：<chip>.png（向きごと）・<chip>_x10.png・views_x4.png（向きをならべた4倍）・cmp_x4.png（いまのチップとならべた4倍）・bp.png（設計図）
 #   --chips：ゲームのチップ（chips.js とアトラス）に入れ、.chips_changed に id を書く。
 # items/<id>.py に書く物：
-#   ID（チップの名前）・PARTS()（blueprint.Part の表。木目をはらない部品は p.tex=False、金属の部品は p.metal=True、布・砂のなだらかな部品は p.soft=True（ゆるいふくらみにも、かげがつく））・EXTRA(sc)（Part で書けない形。なければ書かない）
+#   ID（チップの名前）・PARTS()（blueprint.Part の表。木目をはらない部品は p.tex=False、金属の部品は p.metal=True、布・砂のなだらかな部品は p.soft=True（ゆるいふくらみにも、かげがつく）・うすいかげだけの部品は p.soft1=True・石の部品は p.stone=True（石のテクスチャ）)・EXTRA(sc)（Part で書けない形。なければ書かない）
 #   VIEWS=[(チップの名前, まわす数k), ...]（k：0前・1右・2後ろ・3左）・BOTTOM（絵の下のはし。g64のドット。いまのチップに合わせる）
 #   SZ=(よこ,たて)（置くマスの数。2×1 の物は (2,1)。たてにした向きを、置いたマスから下へのびる所に写す）
 #   FRONT={チップの名前: 部品の名前を見る関数}（せいれいの手前にかさねる絵 .front。その向きで、その部品だけを写す）
@@ -19,9 +19,9 @@ ELEV,FOV,FRAME=42,10,1   # 見おろしの角度・画角・画角に入れる�
 LW=2   # 輪郭線のはば（持ち主がきめた：2ドット）
 def load(iid):return importlib.import_module(iid)
 def scene(M,k,only=None):
-    sc=O.Scene();T=O.Tex(os.path.join(ART,'textures','wood049.png'));L=M.PARTS();keep=set()
+    sc=O.Scene();T=O.Tex(os.path.join(ART,'textures','wood049.png'));TS=O.Tex(os.path.join(ART,'textures','rock030.png'),span=1.0,flow=3,minrun=2,dark=(0.12,0.95),light=(0.10,1.04));L=M.PARTS();keep=set()   # TS：石の部品（p.stone）のテクスチャ
     for p in L:
-        mt=getattr(p,'metal',False);sc.texture(T if getattr(p,'tex',True) and not mt else None);sc.material('metal' if mt else 'soft' if getattr(p,'soft',False) else None);p0=sc.pid;build(sc,[p]);sc.material(None)
+        mt=getattr(p,'metal',False);sc.texture((TS if getattr(p,'stone',False) else T) if getattr(p,'tex',True) and not mt else None);sc.material('metal' if mt else 'soft1' if getattr(p,'soft1',False) else 'soft' if getattr(p,'soft',False) else None);p0=sc.pid;build(sc,[p]);sc.material(None)
         if only and only(p.name):keep|=set(range(p0+1,sc.pid+1))
     if hasattr(M,'EXTRA'):sc.texture(None);M.EXTRA(sc)
     sc.texture(None)
