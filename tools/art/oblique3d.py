@@ -230,43 +230,44 @@ class Tex:
             self._c[S_] = np.where(q < 0, self.dark[1], np.where(q > 0, self.light[1], 1.0))
         return self._c[S_]
 
-def render_px(sc, proj, ext, depth, k=0.72, outer=True, merge=12, split=0):
+def render_px(sc, proj, ext, depth, k=0.72, outer=True, merge=12):
     """ドット絵にするための写し方：1マス S ドットで、ちぢめずに（1ドットに1点）写し、部品のさかいに1ドットの輪郭線を引く。
     輪郭線は、となりあう2つのドットの部品がちがうとき、うしろがわ（遠いほう）のドットに引く（手前の部品の形はけずらない）。
     交差・つきあてる所も、手前の部品の形のまま、うしろの部品に線が入る。色は、そのドットの色に k をかけた色。
     outer：まわりのふち（透明ととなりあう所）は、透明がわに1ドット（となりの色×k）。上下左右だけを見る（ななめは見ない）。
     sc.outline(0) のあとに足した部品は、線を引かない（中のくらい所など）。sc.group(名前) で同じグループにした部品どうしにも引かない。
-    merge：さいごに、色の差がこれより小さい色を、多いほうの色にまとめる（にた色をのこさない。0でまとめない）。
-    split：三角形を、辺がこの長さ（マス）より短くなるまで分けてから写す（persp の遠近をかけるときに使う。辺が画面で少し曲がるので、大きいままだと奥行きの比べ方がずれる）。"""
+    merge：さいごに、色の差がこれより小さい色を、多いほうの色にまとめる（にた色をのこさない。0でまとめない）。"""
     x0, x1, y0, y1 = ext; Wp = int(round((x1-x0)*S)); Hp = int(round((y1-y0)*S))
     col = np.zeros((Hp, Wp, 3)); zb = np.full((Hp, Wp), -1e9); idb = np.full((Hp, Wp), -1)
     wp = np.zeros((Hp, Wp, 3)); wn = np.zeros((Hp, Wp, 3))   # ドットごとの、せかいの場所と面の向き（テクスチャ用）
-    TT = sc.t
-    if split > 0:
-        TT = []; st = list(sc.t)
-        while st:
-            a, b, c, cc, pid = st.pop(); E_ = [(np.linalg.norm(b-a), 0), (np.linalg.norm(c-b), 1), (np.linalg.norm(a-c), 2)]; L_, e = max(E_)
-            if L_ <= split: TT.append((a, b, c, cc, pid)); continue
-            if e == 0: m = (a+b)/2; st += [(a, m, c, cc, pid), (m, b, c, cc, pid)]
-            elif e == 1: m = (b+c)/2; st += [(a, b, m, cc, pid), (a, m, c, cc, pid)]
-            else: m = (c+a)/2; st += [(a, b, m, cc, pid), (m, b, c, cc, pid)]
-    for a, b, c, cc, pid in TT:
+    RAY = getattr(proj, 'ray', None)   # persp の写し方：ドットごとに、見える面の場所を式でとく（三角形を分けない）
+    for a, b, c, cc, pid in sc.t:
         n = np.cross(b-a, c-a); ln = np.linalg.norm(n)
         if ln < 1e-12: continue
         n /= ln
         if np.dot(n, depth) < 0: n = -n
         d = float(np.dot(n, LIGHT)); sh = 1.0 if d > 0.55 else 0.87 if d > 0.1 else 0.76
         P = [((proj(p)[0]-x0)*S, (proj(p)[1]-y0)*S) for p in (a, b, c)]; D = [float(np.dot(p, depth)) for p in (a, b, c)]
-        xs = [p[0] for p in P]; ys = [p[1] for p in P]
-        bx0 = max(int(math.floor(min(xs))), 0); bx1 = min(int(math.ceil(max(xs))), Wp-1)
-        by0 = max(int(math.floor(min(ys))), 0); by1 = min(int(math.ceil(max(ys))), Hp-1)
+        xs = [p[0] for p in P]; ys = [p[1] for p in P]; pad = 2 if RAY else 0   # 遠近では辺が少し曲がるので、まわり2ドットも見る
+        bx0 = max(int(math.floor(min(xs)))-pad, 0); bx1 = min(int(math.ceil(max(xs)))+pad, Wp-1)
+        by0 = max(int(math.floor(min(ys)))-pad, 0); by1 = min(int(math.ceil(max(ys)))+pad, Hp-1)
         if bx1 < bx0 or by1 < by0: continue
         gx, gy = np.meshgrid(np.arange(bx0, bx1+1)+0.5, np.arange(by0, by1+1)+0.5)
-        (ax, ay), (bx, by), (cx, cy) = P; den = (by-cy)*(ax-cx)+(cx-bx)*(ay-cy)
-        if abs(den) < 1e-9: continue
-        w0 = ((by-cy)*(gx-cx)+(cx-bx)*(gy-cy))/den; w1 = ((cy-ay)*(gx-cx)+(ax-cx)*(gy-cy))/den; w2 = 1-w0-w1
-        m = (w0 >= -1e-6) & (w1 >= -1e-6) & (w2 >= -1e-6)
-        z = w0*D[0]+w1*D[1]+w2*D[2]
+        if RAY:
+            X = x0+gx/S; A_, B_, C_ = RAY(y0+gy/S); r = float(np.dot(n, a))-n[0]*X; det = A_*n[2]-B_*n[1]
+            ok = np.abs(det) > 1e-9; det = np.where(ok, det, 1)
+            Yw = (C_*n[2]-B_*r)/det; Zw = (A_*r-C_*n[1])/det
+            Pw = np.stack([X, Yw, Zw], -1); v0, v1 = b-a, c-a; v2 = Pw-a
+            d00, d01, d11 = v0@v0, v0@v1, v1@v1; d20, d21 = v2@v0, v2@v1; dn = d00*d11-d01*d01
+            w1 = (d11*d20-d01*d21)/dn; w2 = (d00*d21-d01*d20)/dn; w0 = 1-w1-w2
+            m = ok & (w0 >= -1e-6) & (w1 >= -1e-6) & (w2 >= -1e-6)
+            z = Pw@depth
+        else:
+            (ax, ay), (bx, by), (cx, cy) = P; den = (by-cy)*(ax-cx)+(cx-bx)*(ay-cy)
+            if abs(den) < 1e-9: continue
+            w0 = ((by-cy)*(gx-cx)+(cx-bx)*(gy-cy))/den; w1 = ((cy-ay)*(gx-cx)+(ax-cx)*(gy-cy))/den; w2 = 1-w0-w1
+            m = (w0 >= -1e-6) & (w1 >= -1e-6) & (w2 >= -1e-6)
+            z = w0*D[0]+w1*D[1]+w2*D[2]
         s = (slice(by0, by1+1), slice(bx0, bx1+1)); vis = m & (z > zb[s])
         zb[s][vis] = z[vis]; col[s][vis] = np.clip(np.array(cc)*sh, 0, 255); idb[s][vis] = pid
         if pid in sc.tx:
@@ -331,4 +332,12 @@ def persp(elev=51.34, fov=40.0, frame=None, center=(0.5, 0.65, 0.3)):
         p = np.asarray(p, float); h = -float(np.dot(p-c0, U_))
         s = 1.0 if D is None else D/(D-float(np.dot(p-c0, V)))
         return (p[0], oy+h*s*k)
+    st, ct = math.sin(t), math.cos(t)
+    def ray(Ys):
+        """画面の上下の位置 Ys に写る点の、せかいの (y, z) がみたす式 A*y + B*z = C の A・B・C（x は画面の x のまま）"""
+        Y1 = (np.asarray(Ys, float)-oy)/k
+        if D is None: A, B, C = np.full_like(Y1, st), np.full_like(Y1, -ct), Y1
+        else: A, B, C = -Y1*ct-D*st, -Y1*st+D*ct, -Y1*D
+        return A, B, C+A*c0[1]+B*c0[2]
+    proj.ray = ray
     return proj, V
