@@ -18,13 +18,17 @@ OUT = 0.0        # 輪郭線のふとさ（マス）。0は輪郭線なし
 OUTK = 0.5       # 輪郭線の色（もとの色にかける数。1に近いほどうすい線）
 BEVEL = 0.022    # 箱の角の面取り（マス）
 class Scene:
-    def __init__(self): self.t = []; self.pid = 0; self.ol = {}; self.cur = None
+    def __init__(self): self.t = []; self.pid = 0; self.ol = {}; self.cur = None; self.grp = {}; self.gcur = None
     def outline(self, w=None, k=None):
         """これから足す部品の輪郭線の太さ w（マス）・色 k（もとの色にかける数）。None は render の値"""
         self.cur = None if w is None and k is None else (w, k)
+    def group(self, g=None):
+        """これから足す部品のグループ。同じグループの部品どうしのさかいには、render_px で線を引かない（同じ面にそろえて組んだ材など）"""
+        self.gcur = g
     def part(self):
         self.pid += 1
-        if self.cur: self.ol[self.pid] = self.cur   # つぎの三角形から、べつの部品（輪郭線は部品ごとにふくらませる）
+        if self.cur: self.ol[self.pid] = self.cur
+        if self.gcur is not None: self.grp[self.pid] = self.gcur   # つぎの三角形から、べつの部品（輪郭線は部品ごとにふくらませる）
     def tri(self, a, b, c, col): self.t.append((np.array(a, float), np.array(b, float), np.array(c, float), np.array(col, float), self.pid))
     def quad(self, a, b, c, d, col): self.tri(a, b, c, col); self.tri(a, c, d, col)
     def ring_wall(self, cx, cy, r, z0, z1, colf, n=48):
@@ -180,3 +184,57 @@ def grid_bg(ext, foot=None):
     for j in range(int(y1-y0)+1): d.line([(0, j*S), (W, j*S)], fill=(201, 194, 168), width=2)
     if foot: fw, fh = foot; d.rectangle([((0-x0)*S, (0-y0)*S), ((fw-x0)*S, (fh-y0)*S)], outline=(214, 170, 70), width=3)
     return im
+
+def render_px(sc, proj, ext, depth, k=0.72, outer=True):
+    """ドット絵にするための写し方：1マス S ドットで、ちぢめずに（1ドットに1点）写し、部品のさかいに1ドットの輪郭線を引く。
+    輪郭線は、となりあう2つのドットの部品がちがうとき、うしろがわ（遠いほう）のドットに引く（手前の部品の形はけずらない）。
+    交差・つきあてる所も、手前の部品の形のまま、うしろの部品に線が入る。色は、そのドットの色に k をかけた色。
+    outer：まわりのふち（透明ととなりあう所）は、透明がわに1ドット（となりの色×k）。上下左右だけを見る（ななめは見ない）。
+    sc.outline(0) のあとに足した部品は、線を引かない（中のくらい所など）。sc.group(名前) で同じグループにした部品どうしにも引かない。"""
+    x0, x1, y0, y1 = ext; Wp = int(round((x1-x0)*S)); Hp = int(round((y1-y0)*S))
+    col = np.zeros((Hp, Wp, 3)); zb = np.full((Hp, Wp), -1e9); idb = np.full((Hp, Wp), -1)
+    for a, b, c, cc, pid in sc.t:
+        n = np.cross(b-a, c-a); ln = np.linalg.norm(n)
+        if ln < 1e-12: continue
+        n /= ln
+        if np.dot(n, depth) < 0: n = -n
+        d = float(np.dot(n, LIGHT)); sh = 1.0 if d > 0.55 else 0.87 if d > 0.1 else 0.76
+        P = [((proj(p)[0]-x0)*S, (proj(p)[1]-y0)*S) for p in (a, b, c)]; D = [float(np.dot(p, depth)) for p in (a, b, c)]
+        xs = [p[0] for p in P]; ys = [p[1] for p in P]
+        bx0 = max(int(math.floor(min(xs))), 0); bx1 = min(int(math.ceil(max(xs))), Wp-1)
+        by0 = max(int(math.floor(min(ys))), 0); by1 = min(int(math.ceil(max(ys))), Hp-1)
+        if bx1 < bx0 or by1 < by0: continue
+        gx, gy = np.meshgrid(np.arange(bx0, bx1+1)+0.5, np.arange(by0, by1+1)+0.5)
+        (ax, ay), (bx, by), (cx, cy) = P; den = (by-cy)*(ax-cx)+(cx-bx)*(ay-cy)
+        if abs(den) < 1e-9: continue
+        w0 = ((by-cy)*(gx-cx)+(cx-bx)*(gy-cy))/den; w1 = ((cy-ay)*(gx-cx)+(ax-cx)*(gy-cy))/den; w2 = 1-w0-w1
+        m = (w0 >= -1e-6) & (w1 >= -1e-6) & (w2 >= -1e-6)
+        z = w0*D[0]+w1*D[1]+w2*D[2]
+        s = (slice(by0, by1+1), slice(bx0, bx1+1)); vis = m & (z > zb[s])
+        zb[s][vis] = z[vis]; col[s][vis] = np.clip(np.array(cc)*sh, 0, 255); idb[s][vis] = pid
+    noline = {p for p, (w, _) in sc.ol.items() if w == 0}
+    out = col.copy(); alpha = (idb >= 0).astype(float)*255; line = np.zeros((Hp, Wp), bool)
+    for dy, dx in ((0, 1), (0, -1), (1, 0), (-1, 0)):
+        nid = np.full_like(idb, -1); nz = np.full_like(zb, -1e9)
+        ys = slice(max(dy, 0), Hp+min(dy, 0)); xs = slice(max(dx, 0), Wp+min(dx, 0))
+        yd = slice(max(-dy, 0), Hp+min(-dy, 0)); xd = slice(max(-dx, 0), Wp+min(-dx, 0))
+        nid[yd, xd] = idb[ys, xs]; nz[yd, xd] = zb[ys, xs]
+        tie = np.abs(zb-nz) < 1e-4*S                                           # 同じ高さでならぶ板（ぴったりつけた板のさかい）は、番号の小さいほうに線
+        far = (idb >= 0) & (nid >= 0) & (nid != idb) & ((zb < nz) & ~tie | tie & (idb < nid))   # となりの部品のほうが手前
+        far &= ~np.isin(nid, list(noline)) if noline else True
+        if sc.grp:
+            G = np.full(sc.pid+2, -1); gi = {}
+            for p_, g_ in sc.grp.items(): G[p_] = gi.setdefault(g_, len(gi))
+            far &= ~((G[idb] >= 0) & (G[idb] == G[nid]))
+        line |= far
+    out[line] = col[line]*k
+    if outer:
+        for dy, dx in ((0, 1), (0, -1), (1, 0), (-1, 0)):
+            ys = slice(max(dy, 0), Hp+min(dy, 0)); xs = slice(max(dx, 0), Wp+min(dx, 0))
+            yd = slice(max(-dy, 0), Hp+min(-dy, 0)); xd = slice(max(-dx, 0), Wp+min(-dx, 0))
+            src = np.zeros((Hp, Wp), bool); src[yd, xd] = idb[ys, xs] >= 0
+            sc_ = np.zeros((Hp, Wp, 3)); sc_[yd, xd] = col[ys, xs]
+            put = src & (alpha == 0)
+            out[put] = sc_[put]*k; alpha[put] = 255
+    img = np.dstack([out, alpha]).astype(np.uint8)
+    return Image.fromarray(img, 'RGBA')
