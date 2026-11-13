@@ -15,13 +15,14 @@ import numpy as np
 from PIL import Image
 import oblique3d as O
 from blueprint import build,blueprint,check
+ROUND={'lathe','cyl','ball','tube','rope','ring','loft','wheel','logy','maki','model','cone'}   # まるい物（GRAD のとき、なめらかなかげ）
 ELEV,FOV,FRAME=42,10,1   # 見おろしの角度・画角・画角に入れる範囲（マス）。木箱と同じ
 LW=2   # 輪郭線のはば（持ち主がきめた：2ドット）
 def load(iid):return importlib.import_module(iid)
 def scene(M,k,only=None):
     sc=O.Scene();T=O.Tex(os.path.join(ART,'textures','wood049.png'));TS=O.Tex(os.path.join(ART,'textures','rock030.png'),span=1.0,flow=3,minrun=2,dark=(0.12,0.95),light=(0.10,1.04));L=M.PARTS();keep=set()   # TS：石の部品（p.stone）のテクスチャ
     for p in L:
-        mt=getattr(p,'metal',False);sc.texture((TS if getattr(p,'stone',False) else T) if getattr(p,'tex',True) and not mt else None);sc.material('metal' if mt else 'flat' if getattr(p,'glow',False) else 'soft1' if getattr(p,'soft1',False) else 'soft' if getattr(p,'soft',False) else None);p0=sc.pid;sc.decal(getattr(p,'decal',None));build(sc,[p]);sc.material(None);sc.decal(None)
+        mt=getattr(p,'metal',False);sc.texture((TS if getattr(p,'stone',False) else T) if getattr(p,'tex',True) and not mt else None);sc.material('metal' if mt else 'flat' if getattr(p,'glow',False) else 'soft1' if getattr(p,'soft1',False) else 'soft' if getattr(p,'soft',False) else None);p0=sc.pid;sc.decal(getattr(p,'decal',None));sc.smooth(O.GRAD and p.kind in ROUND);build(sc,[p]);sc.material(None);sc.decal(None);sc.smooth(False)
         if only and only(p.name):keep|=set(range(p0+1,sc.pid+1))
     if hasattr(M,'EXTRA'):sc.texture(None);M.EXTRA(sc)
     sc.texture(None)
@@ -32,7 +33,7 @@ def shot(M,k,only=None,S_=64):
     c=((V[:,0].min()+V[:,0].max())/2,(V[:,1].min()+V[:,1].max())/2,V[:,2].max()/2)
     PROJ,DEPTH=O.persp(ELEV,FOV,FRAME,c)
     P=np.array([PROJ(v) for v in V]);m=2/64;ext=(P[:,0].min()-m,P[:,0].max()+m,P[:,1].min()-m,P[:,1].max()+m);O.S=S_
-    im=O.render_px(sc,PROJ,ext,DEPTH,k=0.72,lw=LW)
+    im=O.render_px(sc,PROJ,ext,DEPTH,k=0.80 if O.GRAD else 0.72,lw=LW,k2=0.90 if O.GRAD else 0.86)   # GRAD の家具は、輪郭線もやわらかい色（持ち主がきめた）
     if only:   # その部品だけ（ほかの部品のドットは消す。輪郭線もふくめて、その部品のまわり1ドットまで）
         full=np.array(im);ids=O.LAST_IDS
         from scipy.ndimage import binary_dilation;mk=binary_dilation(np.isin(ids,list(keep)))
@@ -40,7 +41,7 @@ def shot(M,k,only=None,S_=64):
     yb=V[:,1].max();base=(PROJ((c[0],yb,0))[1]-ext[2])*S_
     return im,round(ext[0]*S_),base,yb   # yb：いちばん手前の地面（マス）。向きをかえると、かわる
 def run(iid,out,chips=False):
-    M=load(iid);os.makedirs(out,exist_ok=True)
+    M=load(iid);os.makedirs(out,exist_ok=True);O.GRAD=getattr(M,'GRAD',False);O.OSAT=getattr(M,'OSAT',0)   # GRAD=True の家具は、かげを4だんに。OSAT：輪郭線のあざやかさに足す量
     L=M.PARTS();bad=check(L);print(iid,'ささえのたしかめ',bad or 'まちがいなし')
     if L:
       try:blueprint(os.path.join(out,'bp.png'),M.ID,L,(1,1),(-0.2,1.2,-0.2,1.2,1.6))
