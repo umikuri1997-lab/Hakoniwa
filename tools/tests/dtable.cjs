@@ -1,4 +1,4 @@
-/* 大きな食卓（dtable、2×2）：4人まで食べられる・しょくたくなどのスポットの食卓になる。まるいサイドテーブル（stable）はなくした：古いセーブは、けして木材3（依頼中はパワー3も）をもどす（1回だけ） */
+/* 食卓は2人・大きな食卓（dtable、2×2）は4人まで食べられる・しょくたくなどのスポットの食卓になる。まるいサイドテーブル（stable）はなくした：古いセーブは、けして木材3（依頼中はパワー3も）をもどす（1回だけ） */
 const assert=require('node:assert/strict');
 (async()=>{const {browser,run,errors}=await require('../sim/boot.cjs')();
   await run(`document.querySelector('#dialog').hidden=true;S.introSeen=true`);
@@ -18,5 +18,11 @@ const assert=require('node:assert/strict');
     const sp=S.res.find(q=>!q.hidden);sp.x=X+.5;sp.y=Y-1.5;sp.meal={u:1,pt:0,pw:0,e:'x'};sp.act=null;goMeal(sp,bfs(X,Y-2));r.eatAt=sp.act&&sp.act.tdir!=null&&TABLES.has(typeAt(+sp.act.key.slice(4)+sp.act.tdir));
     S.res=keep.concat(fake(4));const sp2=sp;sp2.act=null;sp2.meal={u:1,pt:0,pw:0,e:'x'};goMeal(sp2,bfs(X,Y-2));S.res=keep;r.full=!(sp2.act&&sp2.act.tdir!=null&&typeAt(+sp2.act.key.slice(4)+sp2.act.tdir)==='dtable');return JSON.stringify(r)})()`));
   assert.deepEqual(c,{r3:true,r4:false,dining:true,chairTb:true,eatAt:true,full:true});
-  assert.deepEqual(errors,[]);console.log('dtable: 4 eaters, spots; stable removed and refunded once');await browser.close();
+  /* ふつうの食卓は2人まで */
+  const d=JSON.parse(await run(`(()=>{const X=CX+8,Y=CY+20;for(let y=Y-2;y<Y+3;y++)for(let x=X-2;x<X+3;x++){const k=y*W+x;S.obj[k]='';S.ground[k]=0;if(S.hi)S.hi[k]=0}
+    const j=Y*W+X;S.obj[j]='table';recount();const seats=[[j-W,W],[j+W,-W],[j-1,1]];const keep=S.res;
+    const room=n=>{S.res=keep.concat(seats.slice(0,n).map(([k,t])=>({act:{type:'eat',tdir:t,key:'seat'+k}})));const v=tableRoom(j);S.res=keep;return v};
+    return JSON.stringify({cap:BL.table.eat.cap,r1:room(1),r2:room(2)})})()`));
+  assert.deepEqual(d,{cap:2,r1:true,r2:false});
+  assert.deepEqual(errors,[]);console.log('table 2 / dtable 4 eaters, spots; stable removed and refunded once');await browser.close();
 })().catch(e=>{console.error(e);process.exit(1)});

@@ -14,7 +14,7 @@ def EXTRA(sc):
     T=O.Tex(os.path.join(os.path.dirname(os.path.abspath(__file__)),'..','..','textures','wood049.png'))
     sc.texture(T);NZ=10;ZL=H-0.025   # ふたは、たる板のふちより少し下
     for i in range(N):   # たる板の外の面：1まいずつべつの部品（さかいに輪郭線が入る）
-        sc.tag('板');sc.part();col=WOOD if i%2 else WOOD2
+        sc.tag('板');sc.part();col=WOOD
         p=lambda a,z,d=0:(CX+(R(z)-d)*math.cos(a),CY+(R(z)-d)*math.sin(a),z)
         for u in range(SUB):   # 1まいの板を、横に SUB に分けてまるめる（まわりの形をなめらかに）
             a0=2*math.pi*(i+u/SUB)/N;a1=2*math.pi*(i+(u+1)/SUB)/N
@@ -23,7 +23,7 @@ def EXTRA(sc):
     sc.tag('ふち');sc.join('板','ふち');sc.part()   # 上のふち（たる板のあつみの面と、ふたより上の内がわの面）：つながった1つの輪（中に線を入れない。たる板とのあいだにも線を入れない）
     for i in range(48):
         a0=2*math.pi*i/48;a1=2*math.pi*(i+1)/48;p=lambda a,z,d=0:(CX+(R(z)-d)*math.cos(a),CY+(R(z)-d)*math.sin(a),z)
-        sc.quad(p(a0,H),p(a1,H),p(a1,H,TH),p(a0,H,TH),WOOD2);sc.quad(p(a0,ZL,TH),p(a1,ZL,TH),p(a1,H,TH),p(a0,H,TH),WOOD2)
+        sc.quad(p(a0,H),p(a1,H),p(a1,H,TH),p(a0,H,TH),WOOD);sc.quad(p(a0,ZL,TH),p(a1,ZL,TH),p(a1,H,TH),p(a0,H,TH),WOOD)
     sc.tag(None);r=R(ZL)-TH;ws=[-r,-r/3,r/3,r]
     for i in range(3):   # ふたの板（たる板の内がわ）
         sc.part();a,b=ws[i],ws[i+1];pts=[]

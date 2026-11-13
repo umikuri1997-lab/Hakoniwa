@@ -35,6 +35,7 @@ class Part:
         k,d=s.kind,s.dims
         if k=='box':return d
         if k in('cyl','cone'):cx,cy,r,z0,z1=d;return(cx-r,cy-r,z0,cx+r,cy+r,z1)
+        if k=='logy':cx,y0,y1,cz,r=d;return(cx-r,y0,cz-r,cx+r,y1,cz+r)
         if k=='ring':cx,cy,r0,r,z0,z1=d;return(cx-r,cy-r,z0,cx+r,cy+r,z1)
         if k=='pyr':cx,cy,hw,hd,z0,z1=d;return(cx-hw,cy-hd,z0,cx+hw,cy+hd,z1)
         if k=='wheel':cx,cy,cz,r,t=d;return(cx-r,cy-t/2,cz-r,cx+r,cy+t/2,cz+r)
@@ -84,12 +85,15 @@ def build(sc,parts):
         elif k=='lathe':cx,cy,pr=d;sc.revolve(cx,cy,pr,lambda k_,i:tuple(c),n=p.detail)
         elif k=='model':
             V,F,C=model_tris(*d);sc.part()
+            rc=getattr(p,'recol',None)
+            if rc is not None:   # 色をかえる（その色に、モデルの明るさのちがいだけをのこす。例：つぼをクリーム色・青に）
+                L_=C.mean(1);C=np.clip(np.array(rc,float)[None,:]*(L_/max(1.0,L_.mean()))[:,None],0,255)
             for f,cc in zip(F,C):sc.tri(V[f[0]],V[f[1]],V[f[2]],tuple(cc*(1-MODEL_SOFT)+255*MODEL_SOFT))   # モデルの色は、ゲームに合わせて少しうすく
         elif k=='cyl':   # plainwall：まわりのかべには木目をはらない（まるいかべの木目は、ドットでは、ぶつぶつのすじになる）
             cx,cy,r,z0,z1=d;t=sc.tcur
             if getattr(p,'plainwall',False):sc.texture(None)
-            sc.ring_wall(cx,cy,r,z0,z1,lambda *a:tuple(c),n=p.detail);sc.texture(t);sc.annulus(cx,cy,0,r,z1,lambda *a:tuple(c*1.04),n=p.detail)
-        elif k=='ring':cx,cy,r0,r,z0,z1=d;sc.ring_wall(cx,cy,r,z0,z1,lambda i,a0,a1:tuple(c*(1 if i%2 else .95)),n=p.detail);sc.ring_wall(cx,cy,r0,z0,z1,lambda *a:tuple(c*.9),n=p.detail);sc.annulus(cx,cy,r0,r,z1,lambda *a:tuple(c*1.04),n=p.detail)
+            sc.ring_wall(cx,cy,r,z0,z1,lambda *a:tuple(c),n=p.detail);sc.texture(t);sc.annulus(cx,cy,0,r,z1,lambda *a:tuple(c),n=p.detail)
+        elif k=='ring':cx,cy,r0,r,z0,z1=d;sc.ring_wall(cx,cy,r,z0,z1,lambda i,a0,a1:tuple(c),n=p.detail);sc.ring_wall(cx,cy,r0,z0,z1,lambda *a:tuple(c),n=p.detail);sc.annulus(cx,cy,r0,r,z1,lambda *a:tuple(c),n=p.detail)
         elif k=='cone':cx,cy,r,z0,z1=d;sc.revolve(cx,cy,[(0.0,z1),(r,z0)],lambda k_,i:tuple(c),n=p.detail)
         elif k=='pyr':
             cx,cy,hw,hd,z0,z1=d;A=(cx,cy,z1);R=[(cx-hw,cy-hd),(cx+hw,cy-hd),(cx+hw,cy+hd),(cx-hw,cy+hd)];sc.part()
@@ -112,6 +116,15 @@ def build(sc,parts):
             for P_,z in(R_[0],R_[-1]):
                 for i in range(1,n-1):sc.tri((P_[0][0],P_[0][1],z),(P_[i][0],P_[i][1],z),(P_[i+1][0],P_[i+1][1],z),tuple(c))
         elif k=='rope':sc.tube([d[0],d[1]],d[2],tuple(c),n=6)
+        elif k=='logy':   # まき・丸太：おく向き（y）にねかせた円柱。まわりは皮の色（col）、両はしの切り口は LOGEND
+            cx,y0,y1,cz,r=d;sc.part();n=20
+            for yy in(y0,y1):
+                for i in range(n):
+                    a0=2*math.pi*i/n;a1=2*math.pi*(i+1)/n;P_=lambda a:(cx+r*math.cos(a),yy,cz+r*math.sin(a))
+                    sc.tri((cx,yy,cz),P_(a0),P_(a1),LOGEND)
+            for i in range(n):
+                a0=2*math.pi*i/n;a1=2*math.pi*(i+1)/n;P_=lambda a,yy:(cx+r*math.cos(a),yy,cz+r*math.sin(a))
+                sc.quad(P_(a0,y0),P_(a1,y0),P_(a1,y1),P_(a0,y1),tuple(c))
         elif k=='wheel':
             cx,cy,cz,r,t=d;sc.part()
             for yy in(cy-t/2,cy+t/2):
@@ -123,6 +136,7 @@ def build(sc,parts):
                 sc.quad(P_(a0,cy-t/2),P_(a1,cy-t/2),P_(a1,cy+t/2),P_(a0,cy+t/2),tuple(c*.9))
         elif k=='ball':cx,cy,cz,r=d;sc.sphere(cx,cy,cz,r,tuple(c),n=14,m=8)
 
+LOGEND=(236,206,150)   # まきの切り口の色（年輪のある明るい木）
 MODELS=os.path.join(os.path.dirname(os.path.abspath(__file__)),'models')
 _MC={};MODEL_SOFT=0.3   # モデルの色を白にまぜる分
 POTCOL=(226,196,166)   # 観葉植物のはち（モデルではこい灰色）を、ゲームに合わせたやきものの色に

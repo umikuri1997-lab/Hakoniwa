@@ -6,7 +6,7 @@
 import sys,os
 sys.path.insert(0,os.path.join(os.path.dirname(os.path.abspath(__file__)),'..'))
 from blueprint import Part as P
-FRAME=(240,198,134);BOARD=(222,172,106);BOARD2=BOARD;LID=(230,183,117);LID2=LID;BASE=(196,137,78)   # 木目で板の見分けがつくので、板ごとに色をかえない。わくの中の側板も明るい木の色（暗い色は底板と中だけ）
+FRAME=(230,183,117);BOARD=(230,183,117);BOARD2=BOARD;LID=(230,183,117);LID2=LID;BASE=(230,183,117)   # 木材は、どの部品も家具と同じ色（furn3d/items/common.py の WOOD）   # 木目で板の見分けがつくので、板ごとに色をかえない。わくの中の側板も明るい木の色（暗い色は底板と中だけ）
 X0,X1,Y0,Y1=0.05,0.95,0.30,1.0;   # 上から見て、はば0.9・おくゆき0.7（横向きにしても長く見えすぎない）
 ZB=0.04;ZT=0.58;PO=0.09;T=0.03;E=0.03;R=0.08
 def parts():
@@ -48,7 +48,7 @@ def parts():
         L.append(P('ふた板%d'%(i+1),'box',(X0+PO,y0,ZT,X1-PO,y1,ZT+0.035),LID if i%2 else LID2,on=('角柱（左うしろ）','角柱（右前）','前の側板3','うしろの側板3','左の側板3','右の側板3'),bevel=0,note='柱と側板の上'))
     for nx,x in(('左',X0),('右',X1-PO)):L.append(P('ふたの桟（%s）'%nx,'box',(x,Y0,ZT,x+PO,Y1,ZT+0.065),FRAME,on=('角柱（%sうしろ）'%nx,'角柱（%s前）'%nx),bevel=0,note='ふたの左右のわく。ふた板は桟のあいだに入れて、桟に横からくぎでとめる。前から後ろのはしまで'))
     # 中のかげ（ふたを開けたときに見える、箱の中の暗い所。うすい板を内がわにはる。ささえのたしかめなし・輪郭線なし）
-    IN=(150,98,51);a=X0+E+T+0.003;b_=X1-E-T-0.003;ya,yb=Y0+E+T+0.003,Y1-E-T-0.003;zt=ZT-0.002
+    IN=(230,183,117);a=X0+E+T+0.003;b_=X1-E-T-0.003;ya,yb=Y0+E+T+0.003,Y1-E-T-0.003;zt=ZT-0.002
     L.append(P('中のかげ（底）','box',(a,ya,ZB,b_,yb,ZB+0.004),IN,deco=True,bevel=0))
     for nm,b in(('前',(a,yb-0.003,ZB,b_,yb,zt)),('うしろ',(a,ya,ZB,b_,ya+0.003,zt)),('左',(a,ya,ZB,a+0.003,yb,zt)),('右',(b_-0.003,ya,ZB,b_,yb,zt))):
         L.append(P('中のかげ（%s）'%nm,'box',b,IN,deco=True,bevel=0))
