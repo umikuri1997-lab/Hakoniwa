@@ -102,7 +102,7 @@ function renderPalette(){
 }
 function gaugeHTML(r){
   const g=(l,v,c,k)=>`<span>${pxi(k)}${l}</span><div class="bar"><i style="width:${clamp(v,0,100)|0}%;background:${c}"></i></div>`;
-  return `<div class="gauges">${g('おなか '+Math.round(r.hunger)+'/'+hMax(r),r.hunger/hMax(r)*100,r.hunger<25?'var(--danger)':'#ffb35c','rice')}${g('たのしさ',r.fun,'var(--pink)','heart')}${g(S.t-(r.eUp||-9)<3?'つかれ（回復中）':'つかれ',100-r.energy,S.t-(r.eUp||-9)<3?'#7ed99a':r.energy<25?'var(--danger)':'#c9a7ff','moon')}</div>`;
+  return `<div class="gauges">${g('おなか '+Math.round(r.hunger)+'/'+hMax(r),r.hunger/hMax(r)*100,r.hunger<250?'var(--danger)':'#ffb35c','rice')}${g('たのしさ',r.fun,'var(--pink)','heart')}${g(S.t-(r.eUp||-9)<3?'つかれ（回復中）':'つかれ',100-r.energy,S.t-(r.eUp||-9)<3?'#7ed99a':r.energy<25?'var(--danger)':'#c9a7ff','moon')}</div>`;
 }
 function spiritXpGaugeHTML(r){const xp=spiritXpProgress(r),max=xp.next==null,base=LVXP[xp.lv],need=max?0:xp.next-base,current=max?0:Math.max(0,Math.round((xp.total-base)*1000)/1000),pct=max?100:clamp(current/need*100,0,100);return `<div class="spiritXp" style="margin-top:8px"><div style="display:flex;justify-content:space-between;gap:8px;font-size:11px"><span>${max?'けいけん MAX':'けいけん '+xpText(current)+' / '+xpText(need)}</span><span>${max?'Lv'+xp.lv:'次のLvまで '+Math.ceil(xp.remaining-1e-9)}</span></div><div class="bar" role="progressbar" aria-label="けいけん" aria-valuemin="0" aria-valuemax="${max?100:need}" aria-valuenow="${max?100:current}" style="margin-top:4px"><i style="width:${pct}%;background:#78b7cb"></i></div></div>`}
 let sheet=null,sheetArg=null;
@@ -378,7 +378,7 @@ function renderSheet(){
     const box=el(`<div class="row"><span class="dot"></span><div class="tx"><b></b><small></small></div></div>`);
     box.querySelector('.dot').style.cssText='background:#f6f1e6 url('+spiritPort(r.elem,96,r.vr)+') center/86% no-repeat;box-shadow:inset 0 0 0 2px '+ELEM[r.elem].col;
     box.querySelector('b').textContent=ELEM[r.elem].name+'のせいれい・'+(r.act?ACT_LBL[r.act.type]||'':'考え中');
-    box.querySelector('small').textContent=r.hunger<20?'おなか：危険！':r.hunger<50?'おなか：少なめ':'';
+    box.querySelector('small').textContent=r.hunger<200?'おなか：危険！':r.hunger<500?'おなか：少なめ':'';
     box.querySelector('.tx').insertAdjacentHTML('beforeend',gaugeHTML(r)+spiritXpGaugeHTML(r));body.appendChild(box);
     if(!isNew){const sy=el('<p class="story" style="margin:6px 0 2px"></p>');sy.textContent='「'+sayLine(r)+'」';body.appendChild(sy)}
     {const lv=rLv(r);
@@ -388,9 +388,9 @@ function renderSheet(){
        for(const[k,nm]of ST){const n=B[k]||0;const row=el('<div class="row" style="align-items:center"><div class="tx"><b></b><small></small></div></div>');row.querySelector('b').textContent=nm+'  +'+n;sec.appendChild(row)}
        const bw=el('<div class="row" style="justify-content:center"><button class="btn pri"></button></div>'),b=bw.querySelector('button');
        b.textContent='パワーをそそぐ（'+SP(cost)+'）';b.disabled=S.pt<cost;/* 強化に上限はない */
-       b.onclick=()=>{if(S.pt<cost)return toast('パワーが足りません（'+SP(cost)+'）');const L=ST;S.pt-=cost;const[k,nm]=L[(Math.random()*L.length)|0],n=B[k]||0,inc=Math.random()<.75?1:2;B[k]=n+inc;/* どこが上がるかはランダム */
+       b.onclick=()=>{if(S.pt<cost)return toast('パワーが足りません（'+SP(cost)+'）');const L=ST;S.pt-=cost;const[k,nm]=L[(Math.random()*L.length)|0],n=B[k]||0,U=UPINC[k],inc=Math.random()<.75?U[0]:U[1];B[k]=n+inc;/* どこが上がるかはランダム。ふえる数は UPINC */
          if(k==='pow'||k==='spd'||k==='sta'){vrInt(r.vr);r.vr[k]=(r.vr[k]||0)+inc}
-         r.boost=(r.boost||0)+1;RSC.delete(r);addFloat(r.x,r.y-1.6,nm+'+'+inc,'#9fe8ff');upFx(r,nm,'+'+inc,inc>1);renderSheet()};
+         r.boost=(r.boost||0)+1;RSC.delete(r);addFloat(r.x,r.y-1.6,nm+'+'+inc,'#9fe8ff');upFx(r,nm,'+'+inc,inc===U[1]);renderSheet()};
        bw.style.gap='8px';bw.style.flexWrap='wrap';sec.appendChild(bw);
        {const sb=el('<button class="btn"></button>'),sn=S.mseed||0;sb.textContent='ふしぎな種をあげる（'+sn+'こ）';sb.disabled=sn<1;sb.onclick=()=>giveSeed(r);bw.appendChild(sb)}/* ふしぎな種も、パワーのとなりからあげられる */
        body.appendChild(sec)}/* パワーで、せいれいを強化 */

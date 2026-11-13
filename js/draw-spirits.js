@@ -391,12 +391,13 @@ function drawRes0(r,now){
   const storyPose=walking?null:sacredPose(r);/* 歩いているあいだは、場面の姿勢（横向き・向きのこてい・聞く姿勢）をつかわず、歩く向きのまま。会話のあとに歩きだしても、すべらない */if(storyPose?.side){v.turn=1;v.back=false;if(storyPose.face)r.face=storyPose.face;else if(storyPose.target!=null)r.face=r.x>storyTreeX(storyPose.target)?-1:1;}
   if(!walking&&storyPose?.back&&!(storyPose.anim==='lookback'&&(sacredBody(r,now)?.t||0)>=.65)){v.back=true;v.turn=0;}/* 背中を見せる場面（ふりかえる動きは、半分から正面） */else if(!walking&&storyPose?.anim==='lookback'){v.back=false;v.turn=0;}
   const at=r.act&&r.act.type,ad=r.act&&r.act.stage==='do',jt=JUMP.get(r),held=HOLD.has(r.id),jumping=held||jt!=null&&now-jt<1000;
-  const reacting=(at==='sevreact'||at==='phew')&&ad&&r.act.reactAt!=null,rm=reacting?r.act.reactMotion:'',rp=reacting?dialoguePose(rm,now-r.act.reactAt):null;if(rp){const k=rm==='phew'?1:.4;px+=rp.x*k;py+=rp.y*k}if(walking&&r.hunger<10&&S.enemyOn)px+=Math.round(Math.sin(now/230)*2);/* おなかがもうすぐからっぽ：ふらふら歩く */
+  const reacting=(at==='sevreact'||at==='phew')&&ad&&r.act.reactAt!=null,rm=reacting?r.act.reactMotion:'',rp=reacting?dialoguePose(rm,now-r.act.reactAt):null;if(rp){const k=rm==='phew'?1:.4;px+=rp.x*k;py+=rp.y*k}if(walking&&r.hunger<100&&S.enemyOn)px+=Math.round(Math.sin(now/230)*2);/* おなかがもうすぐからっぽ：ふらふら歩く */
   const brave=now-(BRAVET.get(r)||-1e9)<1500;/* 勇ましい顔は、行動の切りかわりや、たたかれた時に、ちらちら消えないよう、1.5秒つづける */
-  const sw0=at==='storywait'&&ad?storyWaitLook(r):null,mood=sw0?sw0.face:reacting?({joy:'joy',shock:'shock',sad:'teary',think:'sad',nod:'smile',phew:'smile'}[rm]||'smile'):at==='watchpost'&&ad?(hostileNow(r)?'shock':bowNow(r,now)?'brave':'')/* 見張り台の上：コワイノが来るとこわがる（泣かない） */:((r.cryU||0)>S.t&&at!=='sleep'||r.coffin||at==='bury'||at==='pray'||at==='mourn'||at==='shiver'||r.hunger<10&&S.enemyOn)?'teary':/* 棺をはこぶ・埋葬するときは、うるうる顔 */r.hunger<20?'sad':(STRAINU.get(r)||0)>now?'strain':(JOYU.get(r)||0)>now?'joy':(ad&&['chop','mine','till','build','repair','weed'].includes(at))?'strain'/* 雑草をぬくときも >< の顔 */:jumping?'joy':at==='flee'?'strain':brave?'brave'/* たたかいに行く・たたいているときは、勇ましい顔 */:r.hurt>25?'strain':(at==='eat'&&ad)?'eat':(ad&&['play','chat','chatwait','npl','fish','tag','rest','bathe','bon','yatai','fwalk','hanabi','dance','shopkeep'].includes(at))||at==='tag'?'smile':'';
+  const sw0=at==='storywait'&&ad?storyWaitLook(r):null,mood=sw0?sw0.face:reacting?({joy:'joy',shock:'shock',sad:'teary',think:'sad',nod:'smile',phew:'smile'}[rm]||'smile'):at==='watchpost'&&ad?(hostileNow(r)?'shock':bowNow(r,now)?'brave':'')/* 見張り台の上：コワイノが来るとこわがる（泣かない） */:((r.cryU||0)>S.t&&at!=='sleep'||r.coffin||at==='bury'||at==='pray'||at==='mourn'||at==='shiver'||r.hunger<100&&S.enemyOn)?'teary':/* 棺をはこぶ・埋葬するときは、うるうる顔 */r.hunger<200?'sad':(STRAINU.get(r)||0)>now?'strain':(JOYU.get(r)||0)>now?'joy':(ad&&['chop','mine','till','build','repair','weed'].includes(at))?'strain'/* 雑草をぬくときも >< の顔 */:jumping?'joy':at==='flee'?'strain':brave?'brave'/* たたかいに行く・たたいているときは、勇ましい顔 */:r.hurt>25?'strain':(at==='eat'&&ad)?'eat':(ad&&['play','chat','chatwait','npl','fish','tag','rest','bathe','bon','yatai','fwalk','hanabi','dance','shopkeep'].includes(at))||at==='tag'?'smile':'';
   if(S.rain&&!walking&&!(r.act&&r.act.type==='sleep')&&!roomOf((r.y|0)*W+(r.x|0)))px+=Math.sin(now/45+r.id)*.4;/* 雨の日、外でじっとしている子は、少しふるえる */
   const bob=(walking?Math.abs(Math.sin(now/110+r.id))*2.5:0)+(()=>{const jt=JUMP.get(r),d=jt==null?-1:now-jt;return d>=0&&d<1000?Math.abs(Math.sin(d/130))*9*(1-d/1000):0})();
-  {const sw=Math.max(r.swing||0,r.swingT||0),sd=now-sw;if(sw&&sd>=0&&sd<280)px+=(r.face<0?-1:1)*Math.sin(sd/280*Math.PI)*8}/* 攻撃のとき、前にとびだす */
+  {const sw=Math.max(r.swing||0,r.swingT||0),sd=now-sw;if(sw&&sd>=0&&sd<400)px+=(r.face<0?-1:1)*atkLunge(sd)}/* 攻撃のとき：ためて、ふみこんで、当たって止まり、もどる */
+  px+=hitOff(r,now,1)[0];/* たたかれたら、のけぞる */
   if(at==='shiver'&&ad)px+=Math.sin(now/26+r.id*3)*1.4;/* ふるえる */
   const tubB=at==='bathe'&&ad&&r.act.tub!=null&&r.act.in>0,wade=at==='bathe'&&ad&&r.act.in>0?r.act.in:sacredPose(r)?.anim==='soak'&&!walking?1:0;/* 水浴び：水の中では下半分がかくれる */
   {const tp=toyPose(r,now);if(tp){px=tp.x;py=tp.y-9}}/* 遊具の上で遊ぶ */if(sj<0&&!wade&&!toyR(r))shadow(ctx,px,py+8,12,3.6);
@@ -437,7 +438,7 @@ function drawRes0(r,now){
   if(!zzz&&SEVW[r.name]){r.bubX=px;r.bubY=by-34;talkBub(px,by,now,'#ffb3d1');return}
   if(!zzz&&SUBW[r.name]){r.bubX=px;r.bubY=by-34;talkBub(px,by,now,'#ffd56b');return}/* サブクエスト：黄色の吹き出し *//* 話したそうにしている：水色の吹き出し */
   if(CLAPON)return;/* 拍手中は吹き出しを出さない */
-  const warn=r.hunger<20;
+  const warn=r.hunger<200;
   if(!ci&&(r.bubble||warn)){const t0=warn&&!r.bubble?'🍙':r.bubble,t=(BUBFACE[t0]?null:NOFACE[t0])||t0;/* 顔の絵文字は使わない */
     {const a=r.act;if(a&&a.stage==='do'&&(a.type==='mine'||a.type==='chop')&&NATHIT.has(a.obj)&&Math.abs((a.obj%W+.5)*TS-px)<TS+20){const yb=natBarY(a.obj);if(by-46<yb+7&&by-15>yb-2)by=yb+12}}/* 木・岩ののこりのバーと重なるときは、ふきだしをバーの上へ */
     const pic=/^(obj|ic|chip|crop):/.test(String(t)),bw=27;/* 絵のアイコンは、絵文字と同じはば *//* 吹き出しは1.5倍 */

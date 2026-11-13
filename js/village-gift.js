@@ -22,7 +22,7 @@ function vgPick(g,r){/* 置くマス（左上）。見つからなければ null
   L.sort((a,b)=>a[1]-b[1]);if(!L.length)return null;
   const out=[L[0][0]];for(const[j]of L.slice(1)){if(out.length>=g.n)break;if(out.some(k=>Math.abs(k%W-j%W)<=2&&Math.abs(((k/W)|0)-((j/W)|0))<=2&&k!==j))out.push(j)}/* 花は、かたまって咲かせる */
   const stand=vgStand(G,out,g.id);return stand<0?null:{cells:out,stand,G}}
-function vgBusy(r){const a=r.act;return r.hidden||r.hunger<50||hungry(r)||onHold(r)||HOLD.has(r.id)||!!a&&(a.type==='sleep'||URGNO.includes(a.type)||KEEPC.has(a.type)||MAINGO.has(a.type))}
+function vgBusy(r){const a=r.act;return r.hidden||r.hunger<500||hungry(r)||onHold(r)||HOLD.has(r.id)||!!a&&(a.type==='sleep'||URGNO.includes(a.type)||KEEPC.has(a.type)||MAINGO.has(a.type))}
 /* 火のせいれいをむかえたら、交換のサブクエストがすんでいなくても、カミサマは旅立つ。旅立ちの会話は1回、最後まで見てから（とちゅうでとじたら、またはじめから）。
    交換のサブクエストは、とりやめにする（交換は、カミサマが遊びにきたときにできる） */
 let GODBYE=0;

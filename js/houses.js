@@ -60,7 +60,7 @@ const DEATHL={wood:n=>[n+'が…！','…でも、だいじょうぶ。',backWhe
 function elemKey(r){if(KEYVR[r.name]&&KEYVR[r.name].pk)return KEYVR[r.name].pk;let h=0;for(const ch of r.name)h=(h*17+ch.charCodeAt(0))>>>0;return r.elem==='fire'?(WD===0?'fireB':h%2?'fireA':'fireB'):r.elem==='wind'?'wind':r.elem}/* 火のせいれいは名前で、あねご／あにき。風のせいれいは1つ（キザで自由人） */
 function sayLine(r){const L=[],fav=FOODS[favDish(r)],m=bestMate(r);
   if(r.coffin||r.act&&(r.act.type==='bury'||r.act.type==='pray'))return 'さみしいなぁ…';/* お墓へ向かう・埋葬するあいだ、タップしたときのひとこと */
-  if(r.hunger<30)return 'おなかすいた…';if(r.energy<25)return 'ねむたいなぁ…';
+  if(r.hunger<300)return 'おなかすいた…';if(r.energy<25)return 'ねむたいなぁ…';
   if(isNight()&&S.enemies.some(e=>e.spawned&&!e.dead))return r.elem==='fire'?'「コワイノ」なんて、こわくない！':'「コワイノ」、こわいね…';
   if(cnt('stor')&&S.food<3)return '食料箱が、もうすぐからっぽだよ';
   if((r.cryU||0)>S.t)return 'さみしいなぁ…';

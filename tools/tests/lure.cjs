@@ -6,7 +6,7 @@ const out=await page.evaluate(()=>luEval(`(()=>{const o={};S=newState(0);setWorl
  const w0=WD;o.lvGrass=levelUpItemsAt(6).includes('lurestatue');WD=2;o.lvWater=levelUpItemsAt(6).includes('lurestatue');WD=w0;
  grecOf().set('lurestatue',2);S.recipes=S.recipes||{};S.recipes.lurestatue=1;/* 水のステージでおぼえたことにする */
  const j=50*W+50;S.obj[j]='lurestatue';recount();o.lures=LURES.length;
- const fire=S.res.find(r=>r.elem==='fire')||S.res[0];fire.elem='fire';S.res=[Object.assign(fire,{hidden:false,x:50.5,y:36.5,act:null,hunger:999})];
+ const fire=S.res.find(r=>r.elem==='fire')||S.res[0];fire.elem='fire';S.res=[Object.assign(fire,{hidden:false,x:50.5,y:36.5,act:null,hunger:9999})];
  const mk=(id,type,x,y)=>({id,type,x,y,hp:99,max:99,spawned:true,path:[],atk:0,stun:0,flash:0,repath:0});
  const A=mk(1,'basic',55.5,50.5),B=mk(2,'basic',50.5,62.5),C=mk(3,'boss',54.5,51.5);S.enemies=[A,B,C];S.t=(5*24+22)*60;
  for(let i=0;i<40;i++){for(const e of S.enemies)updEnemy(e,.25);if(i===0)o.tgB=B.tg}
