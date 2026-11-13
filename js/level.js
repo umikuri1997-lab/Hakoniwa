@@ -89,6 +89,7 @@ function stepWorld(dt){if((SUBT+=dt)>1){SUBT=0;checkSub();checkSev();bondTick();
   for(const k in S.dyn){const o=S.obj[k],d=S.dyn[k];if(!o)continue;
     if(o==='farm'){if(S.rain&&d.g<100)d.wet=100}}/* 雨：たねをまく前の畑も、ぬれる */if(S.rain)for(const j of JARS){const d=S.dyn[j]||(S.dyn[j]={});d.w=10}/* 雨の日は、みずがめに水がたまる（畑10マスぶん） *//* ベリー・りんごの実は、朝6時に1日ぶんずつ育つ（morning） */
   for(const r of S.res.slice())updRes(r,dt);
+  critTick(dt);
   stayTick(dt);
   passGreet(dt);
   sepRes(dt);
