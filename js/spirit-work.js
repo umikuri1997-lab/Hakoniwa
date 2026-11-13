@@ -42,7 +42,7 @@ function tryJob(r,G,k){
 }
 const JOBCAT=[['build','repair'],['craft'],['harvest','water','tend','till','sow','plant'],['cook','chop','mine','drop','weed','seed','offer','gather']];
 const ALLJOB=['harvest','sow','offer','gather'],FARMJ=['harvest','water','tend','till','sow'];/* 畑の世話 */
-const IDLE_ACTS=['fish','play','wander','idle','quirk','critwatch','sunset','rainjoy'];
+const IDLE_ACTS=['fish','play','wander','idle','quirk','critwatch','sunset','rainjoy','admire'];
 // 種まき・植える・依頼・建築があるか（いつもの作業を中断してでも向かう仕事）
 function hasHighWork(r){
   if(!isNight()&&typeof fogWant==='function'&&fogWant(r))return true;if(!isNight()&&webWant(r))return true;/* たのまれたクモの巣 *//* たのまれた宝箱・あしあと */
@@ -118,6 +118,7 @@ function goWander(r,G){
   if(carryN(r)>0&&foodCap()>0)return goStore(r,G);
   const fw=isWatch(r)&&S.enemyOn;if(isNight()&&!fw)return goSleep(r,G,S.enemies.some(e=>e.spawned));/* 夜はお散歩しないで休む */
   if((r.wanderRestUntil||0)>S.t)return startAct(r,G,'idle',-1,{dur:Math.min(20,r.wanderRestUntil-S.t)});
+  if(!isNight()&&!enemyLive()&&goAdmire(r,G))return;/* 新しい物を見にいく */
   if(!isNight()&&!enemyLive()&&goWeather(r,G))return;/* 雨・夕焼け */
   if(!isNight()&&!enemyLive()&&Math.random()<.3&&goCritter(r,G))return;/* 小さな生き物を見つけたら、見にいく */
   if(!isNight()&&!enemyLive()&&(r.quirkT||0)<=S.t&&Math.random()<QUIRKP&&goQuirk(r,G))return;/* ひとりのときのしぐさ */
@@ -158,7 +159,19 @@ function goWeather(r,G){const h=hour(),here=(r.y|0)*W+(r.x|0),out=!roomOf(here)&
 ACT.sunset={start(r,a){r.face=-1;r.bubble=''},tick(r,a){if(a.t>6&&a.t<12)r.bubble='✨';else if(a.t>=12)r.bubble=''},done:(r,a)=>a.t>=a.dur||hour()>=SUNSET1+.5||S.rain,end(r){r.fun=Math.min(100,r.fun+SUNFUN);r.wanderRestUntil=S.t+45}};
 ACT.rainjoy={start(r){r.bubble='💧'},done:(r,a)=>a.t>=a.dur||!S.rain,end(r){r.fun=Math.min(100,r.fun+SUNFUN)}};
 ACT.stretch={start(r){r.bubble='✨'},done:(r,a)=>a.t>=a.dur,end(r){r.bubble=''}};
-ACT_LBL.sunset='夕焼けを見ている';ACT_LBL.rainjoy='雨をよろこんでいる';ACT_LBL.stretch='のびをしている';
+ACT_LBL.sunset='夕焼けを見ている';
+/* ---------- 新しい物を見にくる：家具・建物ができたら、昼、7マス以内のひまなせいれい2人まで ---------- */
+const ADMR=7,ADMN=2,ADMKEEP=120,ADMFUN=2;let ADMQ=[],ADMS=null;
+function admireNote(id,j){if(!S||IS_STORY_REPLAY||typeof MEMRUN!=='undefined'&&MEMRUN)return;const b=BL[id];if(!b||!(b.kind==='furn'||b.kind==='build')||FENCE_IDS.has(id)||HOME_WALLS.has(id)||HOME_DOORS.has(id)||STAIRS.has(id)||b.trap||id==='site')return;if(ADMS!==S){ADMQ=[];ADMS=S}ADMQ=ADMQ.filter(q=>q.j!==j&&S.t-q.t<ADMKEEP);ADMQ.push({j,id,t:S.t,who:[]})}
+const ADML={earth:['これ、しっかりしてるねぇ。','いいねぇ、ここにぴったりだねぇ。','ふふ、さわってみたくなるねぇ。'],wood:['わあ、あたらしいのがある！','いいなあ、かわいいね。','ここ、もっとすてきになったね。'],water:['あら、すてきですね。','きれいにおさまっていますね。','ここに来るのが、たのしみになりますね。'],
+  fireA:['へえ、いいじゃないか！','気に入ったよ、これ。','やるねぇ、守り神さま。'],fireB:['おっ、いいじゃねえか！','へへっ、気に入ったぜ。','やるなあ、守り神さま。'],wind:['フッ…悪くないね。','いいセンスだ。気に入ったよ。','風通しも、よさそうだ。']};
+function goAdmire(r,G){if(ADMS!==S||!ADMQ.length)return false;ADMQ=ADMQ.filter(q=>S.t-q.t<ADMKEEP&&S.obj[q.j]===q.id);
+  for(const q of ADMQ){if(q.who.length>=ADMN||q.who.includes(r.id))continue;const ox=q.j%W,oy=(q.j/W)|0;if(Math.hypot(ox-r.x,oy-r.y)>ADMR)continue;
+    const st=nearest(G,j=>walk(j)&&!S.obj[j]&&adjOf(j,k=>anc(k)===q.j)>=0&&!(TAKEN&&TAKEN.has(j)),20);if(st<0)continue;q.who.push(r.id);startAct(r,G,'admire',st,{obj:q.j,id:q.id,dur:12});return true}return false}
+ACT.admire={start(r,a){const x=a.obj%W+.5;r.face=x>=r.x?1:-1;r.bubble='❗'},
+  tick(r,a){if(a.t>=3&&!a.said){a.said=1;const k=elemKey(r),L=ADML[k]||ADML.wood,ln=pickFresh('adm:'+k,L);r.bubble='';addFloat(r.x,r.y-1.6,ln,'#fff3d6');if(likeF(r)===a.id||(FAVTOY[r.elem]||[]).includes(a.id)){JOYU.set(r,performance.now()+2500);r.bubble='💕'}}},
+  done:(r,a)=>a.t>=a.dur||S.obj[a.obj]!==a.id,end(r){r.fun=Math.min(100,r.fun+ADMFUN);r.wanderRestUntil=S.t+30;r.bubble=''}};
+ACT_LBL.admire='新しい物を見にきた';ACT_LBL.rainjoy='雨をよろこんでいる';ACT_LBL.stretch='のびをしている';
 function moveR(r,dt){
   if(r.greetStop>S.t)return;/* すれちがって手をふるあいだは、立ちどまる */
   let step=.36*dt*rMul(r,'move')*(r.act&&r.act.type==='flee'?gearStat(r).flee:1)/* そうび：にげる速さ */*(r.act&&['questjoy','sevreact','reunion'].includes(r.act.type)&&r.act.stage==='walk'?2:1)/* クエストで駆け寄る間は、2倍 */*(r.act&&['storywait','fieldintro','fieldstory','fieldassist','fieldgather','fieldwait'].includes(r.act.type)&&r.act.stage==='walk'?2:1)/* メインのお話の場所へ向かうときは、2倍 */*Math.max(NEARVANE.has((r.y|0)*W+(r.x|0))?1.2:1,NEARSIGN.has((r.y|0)*W+(r.x|0))&&r.act&&r.act.type==='flee'?1.4:1)*/* 風見鶏と道しるべは重ならない（大きいほう） */(r.energy<5?.5:1)*(r.act&&(r.act.type==='flee'||r.act.run)?1.9:1)*(r.hunger<200&&r.act&&(r.act.type==='eat'||r.act.type==='fetch'||r.act.type==='forage')?1.6:1)/* おなかがへりすぎたら、急いで食べに行く */*(FSPD[S.floor[(r.y|0)*W+(r.x|0)]]||1);r.walkT=(r.walkT||0)+dt;if(r.path.length&&!isNight()&&!preBedCalm())r.energy=Math.max(0,r.energy-WALKTIRE*dt*100/staOf(r));/* 昼に歩くと、少しつかれる（遠い配置ほど、休む回数がふえる。夜の見回り・見張りはかえない） */
@@ -206,7 +219,7 @@ function updRes(r,dt){rescueStuck(r);if((RHOLD.get(r)||0)>performance.now())retu
   if(r.elem==='fire'&&r.act&&r.act.type==='patrol'&&isNight()&&S.enemyOn&&(r.act.hunt!=null?S.t-r.act.hunt>3:S.enemies.some(e=>e.spawned&&!e.dead&&nearRes(e))))endAct(r);/* 見回り中でも、拠点＋3マスにコワイノが来たらすぐ向かう */
   if(r.elem==='fire'&&r.act&&!['step','patrol','eat','fetch','eatwait','flee','faint','forage','bury'].includes(r.act.type)&&r.hunger>=500&&!r.refill&&!r.coffin&&!r.meal&&S.enemies.some(e=>e.spawned&&!e.dead&&nearRes(e)))endAct(r);/* 火の子は、ほかのことをしていても、拠点＋3マスにコワイノが来たら、やめてたたかいに行く */
   if(r.act&&r.act.type==='wander'&&isNight()&&!(isWatch(r)&&S.enemyOn)){endAct(r)}/* 夜になったら、お散歩をやめて帰る */
-  if(r.act&&IDLE_ACTS.includes(r.act.type)&&!((r.act.type==='fish'||r.act.type==='play')&&r.act.stage==='do')/* つり・遊び家具は、はじめたら、さいごまで（つりは50秒でやっと魚がとれる。遊びを仕事でとちゅうでやめると、たのしさがたまらず、ひとしごとごとに少しだけ遊ぶようになる） */&&!isNight()&&r.hunger>=550&&!(r.fun<(S.oracle==='play'?98:r.elem==='wind'?60:30)&&r.act.type!=='wander'&&r.act.type!=='idle'&&r.act.type!=='quirk'&&r.act.type!=='critwatch'&&r.act.type!=='sunset'&&r.act.type!=='rainjoy')&&!r.act.rand/* 遊ぶきまり（decide0・おつげ）と同じ数で、遊びをやめない */){r.wchk=(r.wchk||0)+dt;if(r.wchk>=3){r.wchk=0;if(hasWork(r)){// 実際に仕事を始められたときだけ遊びをやめる（できないなら続ける）
+  if(r.act&&IDLE_ACTS.includes(r.act.type)&&!((r.act.type==='fish'||r.act.type==='play')&&r.act.stage==='do')/* つり・遊び家具は、はじめたら、さいごまで（つりは50秒でやっと魚がとれる。遊びを仕事でとちゅうでやめると、たのしさがたまらず、ひとしごとごとに少しだけ遊ぶようになる） */&&!isNight()&&r.hunger>=550&&!(r.fun<(S.oracle==='play'?98:r.elem==='wind'?60:30)&&r.act.type!=='wander'&&r.act.type!=='idle'&&r.act.type!=='quirk'&&r.act.type!=='critwatch'&&r.act.type!=='sunset'&&r.act.type!=='rainjoy'&&r.act.type!=='admire')&&!r.act.rand/* 遊ぶきまり（decide0・おつげ）と同じ数で、遊びをやめない */){r.wchk=(r.wchk||0)+dt;if(r.wchk>=3){r.wchk=0;if(hasWork(r)){// 実際に仕事を始められたときだけ遊びをやめる（できないなら続ける）
     const old=r.act,op=r.path,ob=r.bubble;endAct(r);if(!goWork(r,bfs(r.x|0,r.y|0),true)){r.act=old;r.path=op;r.bubble=ob;if(old.key)reserve(old.key)}}}}
   else if(r.act&&ROUTINE.includes(r.act.type)&&!isNight()&&!r.cing&&!(r.noInt>S.t)){r.wchk=(r.wchk||0)+dt;if(r.wchk>=3){r.wchk=0;if(hasHighWork(r)){const was=r.act.type;endAct(r);r.highFirst=true;decide(r);r.highFirst=false;if(r.act&&r.act.type===was)r.noInt=S.t+60}}}
   if(r.hurt>0)r.hurt-=dt;

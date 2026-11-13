@@ -453,7 +453,7 @@ function checkQuestParts(q){const parts=QUEST_PARTS[q.id];if(!parts)return;for(l
   queueQuestVisit(q,storyWho(q),ids,partKey);
 }}
 function questReplyWho(q){if(!q.k)return storyWho(q);const who=subWho(q);return firstSpk((q.X||[]).map(line=>[line[0]==='K'?who:line[0],line[1]]),who)}
-function noteQuestPlacement(id,j){let m=QUEST_PLACEMENTS.get(S);if(!m){m=new Map();QUEST_PLACEMENTS.set(S,m)}m.set(j,{id,n:++questPlaceSerial})}
+function noteQuestPlacement(id,j){admireNote(id,j);let m=QUEST_PLACEMENTS.get(S);if(!m){m=new Map();QUEST_PLACEMENTS.set(S,m)}m.set(j,{id,n:++questPlaceSerial})}
 function qvHas(j,id){return S.obj[j]===id||S.floor[j]===id}/* 見にくる物が、置いた物か、しいた床（あぜ道など）か */
 function questVisitTarget(q,ids,j){if(ids.includes(S.floor[j]))return true;const o=S.obj[j];if(!o||o==='part'||!BL[o])return false;
   if(!ids.includes(o)&&!(ids.includes('@furniture')&&BL[o].kind==='furn')&&!(ids.includes('@painting')&&['paint1','paint2','paint3'].includes((S.win||{})[j])))return false;
