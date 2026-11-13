@@ -18,7 +18,7 @@ OUT = 0.0        # 輪郭線のふとさ（マス）。0は輪郭線なし
 OUTK = 0.5       # 輪郭線の色（もとの色にかける数。1に近いほどうすい線）
 BEVEL = 0.022    # 箱の角の面取り（マス）
 class Scene:
-    def __init__(self): self.t = []; self.pid = 0; self.ol = {}; self.cur = None; self.grp = {}; self.gcur = None; self.tx = {}; self.tcur = None; self.mt = {}; self.mcur = None; self.tg = {}; self.tcur2 = None; self.joins = set(); self.dc = {}; self.dcur = None; self.sm = set(); self.scur = False
+    def __init__(self): self.t = []; self.pid = 0; self.ol = {}; self.cur = None; self.grp = {}; self.gcur = None; self.tx = {}; self.tcur = None; self.mt = {}; self.mcur = None; self.tg = {}; self.tcur2 = None; self.joins = set(); self.dc = {}; self.dcur = None; self.sm = set(); self.scur = False; self.cv = set(); self.ccur = False
     def outline(self, w=None, k=None):
         """これから足す部品の輪郭線の太さ w（マス）・色 k（もとの色にかける数）。None は render の値"""
         self.cur = None if w is None and k is None else (w, k)
@@ -34,6 +34,9 @@ class Scene:
     def smooth(self, on=False):
         """これから足す部品を、なめらかなかげ（スムーズシェード）にする。まるい物：ドットごとに、角の向きをまぜた面の向きで、かげの段をきめる（角ばった面のすじが出ない）"""
         self.scur = on
+    def curve(self, on=False):
+        """これから足す部品は、なだらかなふくらみ（ひくいドームなど）：かげの段のさかい目を、布・砂と同じ（光に近い向き）にして、ふくらみにもグラデーションを出す（金属でも）"""
+        self.ccur = on
     def decal(self, f=None):
         """これから足す部品の、もよう（3Dの面にのる柄）。f(x, y, z) → その場所の色（もようでない所は None）。render_px で、ドットごとに、見える面の場所から色をきめ、その場所のかげ（3だん）をつける"""
         self.dcur = f
@@ -48,6 +51,7 @@ class Scene:
         if self.tcur is not None: self.tx[self.pid] = self.tcur
         if self.dcur is not None: self.dc[self.pid] = self.dcur
         if self.scur: self.sm.add(self.pid)
+        if self.ccur: self.cv.add(self.pid)
         if self.cur: self.ol[self.pid] = self.cur
         if self.gcur is not None: self.grp[self.pid] = self.gcur
     def turn(self, k, foot=None):
@@ -239,6 +243,7 @@ GRAD = False   # True：かげを4だん（光・うすいかげ・半かげ・�
 SHADE4 = [(9, -2.5), (18, -5), (30, -9)]   # GRAD のときの、うすいかげ・半かげ・かげ（明るさ・あざやかさを引く）
 LV4 = (0.55, 0.32, 0.1)   # GRAD のときの、光・うすいかげ・半かげ・かげのさかい目（光の向きとの内積）
 SOFTLV4 = (0.88, 0.74, 0.58)
+CURVLV = (0.95, 0.88, 0.78)   # curve の部品（ひくいドーム）の、光・うすいかげ・半かげ・かげのさかい目（まうえ向きの面は0.92）
 OSAT = 0   # 輪郭線のあざやかさに足す量（100段階。明るい物の線が灰色っぽく1トーンに見えないように）
 def _ol(c, kk):
     """輪郭線の色：もとの色×kk。OSAT があれば、あざやかさを足す"""
@@ -285,6 +290,7 @@ class Tex:
 def _lvof(d, mt):
     """光の向きとの内積 d と材質から、かげの段（0光〜）"""
     if mt == 'flat': return 0
+    if mt == 'curve': return 0 if d > CURVLV[0] else 1 if d > CURVLV[1] else 2 if d > CURVLV[2] else 3
     if mt == 'soft1': return 0 if d > SOFTLV[0] else 1
     if mt == 'soft': return (0 if d > SOFTLV4[0] else 1 if d > SOFTLV4[1] else 2 if d > SOFTLV4[2] else 3) if GRAD else (0 if d > SOFTLV[0] else 1 if d > SOFTLV[1] else 2)
     return (0 if d > LV4[0] else 1 if d > LV4[1] else 2 if d > LV4[2] else 3) if GRAD else (0 if d > 0.55 else 1 if d > 0.1 else 2)
@@ -356,7 +362,7 @@ def render_px(sc, proj, ext, depth, k=0.72, outer=True, merge=12, lw=1, k2=0.86)
         if pid in sc.sm and sc.mt.get(pid) != 'flat' and vis.any():   # スムーズシェード：ドットごとに、角の向きをまぜた面の向きで段をきめる（金属は、つやのすじも）
             na, nb, nc = vnorm(pid, a, n), vnorm(pid, b, n), vnorm(pid, c, n)
             NN = w0[vis, None]*na+w1[vis, None]*nb+w2[vis, None]*nc; NN /= np.maximum(np.linalg.norm(NN, axis=1, keepdims=True), 1e-9)
-            dd = NN@LIGHT; mt_ = sc.mt.get(pid); L2 = np.array([_lvof(float(x), None if mt_ == 'metal' else mt_) for x in dd])
+            dd = NN@LIGHT; mt_ = sc.mt.get(pid); L2 = np.array([_lvof(float(x), 'curve' if pid in sc.cv else (None if mt_ == 'metal' else mt_)) for x in dd])
             if mt_ == 'metal':
                 hv = LIGHT+depth/np.linalg.norm(depth); hv /= np.linalg.norm(hv); hh = np.array([hv[0], hv[1], 0]); hh /= max(1e-9, np.linalg.norm(hh))
                 for i_, q in enumerate(NN):

@@ -12,7 +12,7 @@ from common import *
 import math
 ID='lantern';GRAD=True;BOTTOM=63
 VIEWS=[('lantern',0)]
-CX,CY=0.50,0.62;IRON=(122,116,124);GLASS=(255,190,96);GLC=(255,232,150)
+CX,CY=0.50,0.62;IRON=(146,140,150);GLASS=(255,190,96);GLC=(255,232,150)
 def MT(p):p.metal=True;return p
 def GL(p):p.glow=True;p.tex=False;return p
 def hexp(r,a0=0):return [(CX+r*math.cos(math.radians(a0+60*k)),CY+r*math.sin(math.radians(a0+60*k))) for k in range(6)]   # 六角：前（手前）に面がくる向き
@@ -24,7 +24,7 @@ def PARTS():
         d=math.hypot(x-CX,(z-0.20)*0.85)/0.18
         return GLC if d<0.45 else (255,212,128) if d<0.75 else GLASS
     g.decal=gcol;L.append(g)
-    L.append(MT(P('屋根','lathe',(CX,CY,[(0.0,0.375),(0.25,0.375),(0.245,0.394),(0.225,0.4125),(0.19,0.431),(0.14,0.446),(0.085,0.457),(0.0,0.461)]),IRON,detail=32,on=('柱1','柱4'),note='柱の上。まるいドーム')))
+    L.append(MT(P('屋根','lathe',(CX,CY,[(0.0,0.375),(0.25,0.375),(0.245,0.394),(0.225,0.4125),(0.19,0.431),(0.14,0.446),(0.085,0.457),(0.0,0.461)]),IRON,detail=32,on=('柱1','柱4'),note='柱の上。まるいドーム')));L[-1].curve=True   # ひくいドーム：ふくらみにもかげのグラデーション
     L.append(MT(P('筒','cyl',(CX,CY,0.045,0.45,0.48),IRON,detail=12,on=('屋根',),note='屋根のてっぺん')))
     ring=[(CX+0.055*math.cos(math.radians(a)),CY,0.53+0.055*math.sin(math.radians(a))) for a in range(-90,271,30)]
     L.append(MT(P('取っ手','tube',(ring,0.02),IRON,on=('筒',),note='筒の上')))
