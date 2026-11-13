@@ -12,7 +12,7 @@ import numpy as np
 import crate_parts as C
 out=sys.argv[1];os.makedirs(out,exist_ok=True)
 L=C.parts();bad=check(L);print('ささえのたしかめ',bad or 'まちがいなし')
-blueprint(os.path.join(out,'bp_crate.png'),'木箱',L,(1,1),(-0.1,1.1,0.3,1.1,0.8))
+blueprint(os.path.join(out,'bp_crate.png'),'木箱',L,(1,1),(-0.1,1.1,0.1,1.1,0.8))
 LIDANG=[0,35,70,105]   # ふたの開く角度（度）。0がしまった絵、1〜3が開くとちゅう・開いた絵（チップの #o1〜#o3）
 def scene(k=0,ang=0):
     sc=O.Scene();sc.texture(O.Tex(os.path.join(ART,'textures','wood049.png')));lid=set()
@@ -25,7 +25,7 @@ def scene(k=0,ang=0):
         def R(v):
             dy,dz=v[1]-C.Y0,v[2]-C.ZT;return np.array([v[0],C.Y0+dy*ct-dz*st,C.ZT+dy*st+dz*ct])
         sc.t=[(R(a_),R(b_),R(c_),col,pid) if pid in lid else (a_,b_,c_,col,pid) for a_,b_,c_,col,pid in sc.t]
-    sc.turn(k,(0,C.Y0,1,C.Y1));return sc
+    sc.turn(k,(C.X0,C.Y0,C.X1,C.Y1));return sc
 BOTTOM=45   # いまの木箱のチップの下のはし（g64のドット。ゲームで、物の下のはしをそろえる所）
 def shot(k,ang=0,S_=64):
     sc=scene(k,ang);V=np.array([v for t in sc.t for v in t[:3]]);P=np.array([O.game(v) for v in V]);m=2/64
