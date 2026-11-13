@@ -2,7 +2,7 @@
 # x=東, y=南, z=上（マス）。置くマスの左上が(0,0)。
 # 作り：底板に四すみの角柱 → 柱のあいだに側板3まい（4つの面）→ 4つの面の側板の外に上下の横桟 →
 #       4つの面とも、柱と横桟でかこんだ中にすじかい（1本は通し、もう1本は2つに分けて、はしを通しのふちで切ってつきあてる）→
-#       ふた板4まいを柱と側板の上に → ふたの左右に桟。
+#       ふたは、左右の桟（前から後ろのはしまで）のあいだに、ふた板4まいを入れる。
 import sys,os
 sys.path.insert(0,os.path.join(os.path.dirname(os.path.abspath(__file__)),'..'))
 from blueprint import Part as P
@@ -45,8 +45,8 @@ def parts():
     n=4
     for i in range(n):
         y0=Y0+(Y1-Y0)*i/n;y1=Y0+(Y1-Y0)*(i+1)/n
-        L.append(P('ふた板%d'%(i+1),'box',(X0,y0,ZT,X1,y1,ZT+0.035),LID if i%2 else LID2,on=('角柱（左うしろ）','角柱（右前）','前の側板3','うしろの側板3','左の側板3','右の側板3'),bevel=0,note='柱と側板の上'))
-    for nx,x in(('左',X0),('右',X1-PO)):L.append(P('ふたの桟（%s）'%nx,'box',(x,Y0,ZT+0.035,x+PO,Y1,ZT+0.065),FRAME,on=['ふた板%d'%(i+1) for i in range(n)],bevel=0,note='ふた板をつなぐ'))
+        L.append(P('ふた板%d'%(i+1),'box',(X0+PO,y0,ZT,X1-PO,y1,ZT+0.035),LID if i%2 else LID2,on=('角柱（左うしろ）','角柱（右前）','前の側板3','うしろの側板3','左の側板3','右の側板3'),bevel=0,note='柱と側板の上'))
+    for nx,x in(('左',X0),('右',X1-PO)):L.append(P('ふたの桟（%s）'%nx,'box',(x,Y0,ZT,x+PO,Y1,ZT+0.065),FRAME,on=('角柱（%sうしろ）'%nx,'角柱（%s前）'%nx),bevel=0,note='ふたの左右のわく。ふた板は桟のあいだに入れて、桟に横からくぎでとめる。前から後ろのはしまで'))
     # 中のかげ（ふたを開けたときに見える、箱の中の暗い所。うすい板を内がわにはる。ささえのたしかめなし・輪郭線なし）
     IN=(150,98,51);a=X0+E+T+0.003;b_=X1-E-T-0.003;ya,yb=Y0+E+T+0.003,Y1-E-T-0.003;zt=ZT-0.002
     L.append(P('中のかげ（底）','box',(a,ya,ZB,b_,yb,ZB+0.004),IN,deco=True,bevel=0))
