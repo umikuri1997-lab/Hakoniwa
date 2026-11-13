@@ -5,11 +5,11 @@
 #   本体は、石をつんだ2つのかたまり：
 #     前のかたまり（おく0.30）：まん中に、アーチの形のトンネル（はば0.50・高さ0〜0.49）がぬけている。これが火のへや。
 #     うしろのかたまり（おく0.30）：トンネルのない、つまったかたまり。トンネルのおくのかべになる。
-#     石のつみ目（よこ0.18・たて0.11、1だんごとに半分ずらす）のもよう。石のテクスチャ。
+#     石のつみ目（よこ0.18・たて0.11、1だんごとに半分ずらす）のもよう。石ごとに少しずつちがう色。石のテクスチャ。
 #   火のへや：トンネルのかべ・ゆか・おくのかべは、すすでくらい灰茶（くろくしない）。おくほど、くらい。
-#   レンガ：前の面の、トンネルのまわりにアーチ11こ（あつさ0.04、前の面から0.03出る）と、口の両わき（本体のはしまで3だん）。
+#   レンガ：前の面の、トンネルのまわりにアーチ15こ（はば0.057・長さ0.09のたて長、前の面から0.03出る）と、口の両わき（本体のはしまで、よこ長のレンガ（高さ0.08・はば0.12）3だん）。
 #   火：火のへやの中（前の面から0.14おく）のゆかに、まき2本と、火3つ（まん中が大きい）。コマごとに火の形がかわる（common.flame）。
-#   煙突：屋根のてっぺんの、うしろより（おくのかたまりの上）に、こい灰色の石のまるい煙突（半径0.12・高さ0.55〜0.72）。
+#   煙突：屋根のてっぺんの、うしろより（おくのかたまりの上）に、こい灰色の石のまるい煙突（外の半径0.12・穴の半径0.075・高さ0.55〜0.72）。穴の中はすす。
 from blueprint import Part as P
 from common import *
 import math
@@ -30,11 +30,13 @@ def arch(n=12):   # トンネルの形（右下 → アーチ → 左下）
 def in_tunnel(x,z):
     r=AW;zc=AH-r
     return abs(x-CX)<AW-0.003 and (z<zc or (x-CX)**2+(z-zc)**2<(r-0.003)**2)
-def stone_col(x,y,z):   # 石のつみ目。トンネルの中（すす）は、おくほどくらい
+SHADES=[(206,196,184),(194,184,172),(214,204,192),(188,178,168),(200,192,178)]   # 石ごとの色（少しずつちがう）
+def stone_col(x,y,z):   # 石のつみ目と、石ごとの色。トンネルの中（すす）は、おくほどくらい
     if in_tunnel(x,z) and y<YF-0.004:return SOOT2 if y<YF-0.18 else SOOT
     row=int(z/0.11);u=(x+(0.09 if row%2 else 0))/0.18
-    if abs(z/0.11-round(z/0.11))*0.11<0.006 or (abs(u-round(u))*0.18<0.006 and z<ZS+0.15):return JOINT
-    return None
+    if y<YF-0.004 and y>YB+0.004 and z>0.05:u=(y+(0.09 if row%2 else 0))/0.18   # 横の面は、おくの向きにならべる
+    if abs(z/0.11-round(z/0.11))*0.11<0.006 or (abs(u-round(u))*0.18<0.006 and z<ZT):return JOINT
+    return SHADES[(int(math.floor(u))*7+row*3)%len(SHADES)]
 def ST(p):p.stone=True;p.decal=stone_col;p.grp='本体';return p
 def PARTS():
     o=outline();a=arch()
@@ -43,18 +45,19 @@ def PARTS():
     L=[ST(P('前のかたまり','prism',(front,YM,YF,'y'),STONE,note='地面におく。まん中にトンネル（火のへや）'))]
     L.append(ST(P('うしろのかたまり','prism',(o,YB,YM,'y'),STONE,note='地面におく。前のかたまりのうしろにつける')))
     L.append(notex(P('火のへやのゆか','box',(CX-AW+0.004,YM,0.0,CX+AW-0.004,YF-0.004,0.012),SOOT,on=('ground',),bevel=0,note='トンネルのゆか（すす）')))
-    for i in range(11):   # アーチのレンガ
-        a0=math.pi*i/11;a1=math.pi*(i+1)/11;ri,ro=AW,AW+0.09;zc=AH-AW
+    NB=15
+    for i in range(NB):   # アーチのレンガ（たて長：はば0.057・長さ0.09）
+        a0=math.pi*i/NB;a1=math.pi*(i+1)/NB;ri,ro=AW,AW+0.09;zc=AH-AW
         pts=[(CX+ri*math.cos(a0),zc+ri*math.sin(a0)),(CX+ro*math.cos(a0),zc+ro*math.sin(a0)),(CX+ro*math.cos(a1),zc+ro*math.sin(a1)),(CX+ri*math.cos(a1),zc+ri*math.sin(a1))]
         q=P('レンガ%d'%(i+1),'prism',(pts,YF-0.01,YF+0.03,'y'),BRICK,on=('前のかたまり',),note='トンネルのまわりにアーチ');q.tex=False;L.append(q)
     zc=AH-AW
     for nx,xs in(('左',(CX-HW+0.02,CX-AW-0.09,CX-AW)),('右',(CX+AW,CX+AW+0.09,CX+HW-0.02))):   # 口の両わき：本体のはしまで、レンガ3だん
-        for j in range(3):
-            z0=j*zc/3;cuts=xs if j%2==0 else (xs[0],(xs[0]+xs[2])/2,xs[2])
+        for j in range(3):   # よこ長のレンガ（高さ0.08・はば0.12）を3だん。だんごとにずらす
+            z0=j*zc/3;w=xs[2]-xs[0];cuts=(xs[0],xs[0]+w*0.63,xs[2]) if j%2==0 else (xs[0],xs[0]+w*0.32,xs[2])
             for a_,b_ in zip(cuts,cuts[1:]):
                 q=P('レンガの柱（%s%d-%.2f）'%(nx,j+1,a_),'box',(a_+0.003,YF-0.01,z0+0.003,b_-0.003,YF+0.03,z0+zc/3),BRICK,on=('前のかたまり',),bevel=0,note='口の両わき。前の面にモルタルでつける');q.tex=False;L.append(q)
-    L.append(ST(P('煙突','cyl',(CX,CY-0.12,0.12,0.55,0.72),(132,124,122),detail=24,on=('うしろのかたまり',),note='屋根のてっぺんのうしろより')))
-    L[-1].decal=None;L[-1].grp=None
+    c=P('煙突','ring',(CX,CY-0.12,0.075,0.12,0.55,0.72),(132,124,122),detail=24,on=('うしろのかたまり',),note='屋根のてっぺんのうしろより。まん中に、けむりの出る穴');c.stone=True;L.append(c)
+    L.append(notex(P('煙突の中','cyl',(CX,CY-0.12,0.076,0.55,0.66),(78,66,62),detail=20,on=('煙突',),note='穴の中（すす）')))
     yl=YF-0.14
     for k,(ang) in enumerate((15,-20)):   # まき：火のへやのゆかに
         r_=math.radians(ang);L.append(notex(P('まき%d'%(k+1),'beam',((CX-0.13*math.cos(r_),yl-0.05*math.sin(r_),0.035+0.02*k),(CX+0.13*math.cos(r_),yl+0.05*math.sin(r_),0.035+0.02*k),0.025),LOG,on=('火のへやのゆか',),note='火のへやのゆか')))

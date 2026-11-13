@@ -21,7 +21,7 @@ ELEV,FOV,FRAME=42,10,1   # 見おろしの角度・画角・画角に入れる�
 LW=2   # 輪郭線のはば（持ち主がきめた：2ドット）
 def load(iid):return importlib.import_module(iid)
 def scene(M,k,only=None):
-    sc=O.Scene();T=O.Tex(os.path.join(ART,'textures','wood049.png'));TS=O.Tex(os.path.join(ART,'textures','rock030.png'),span=1.0,flow=3,minrun=2,dark=(0.12,0.95),light=(0.10,1.04));L=M.PARTS();keep=set()   # TS：石の部品（p.stone）のテクスチャ
+    sc=O.Scene();T=O.Tex(os.path.join(ART,'textures','wood049.png'));TS=O.Tex(os.path.join(ART,'textures','rock030.png'),span=1.0,flow=2,minrun=2,dark=(0.16,0.92),light=(0.14,1.06));L=M.PARTS();keep=set()   # TS：石の部品（p.stone）のテクスチャ
     for p in L:
         mt=getattr(p,'metal',False);sc.texture((TS if getattr(p,'stone',False) else T) if getattr(p,'tex',True) and not mt else None);sc.material('metal' if mt else 'flat' if getattr(p,'glow',False) else 'soft1' if getattr(p,'soft1',False) else 'soft' if getattr(p,'soft',False) else None);p0=sc.pid;sc.decal(getattr(p,'decal',None));sc.smooth(O.GRAD and p.kind in ROUND);sc.curve(getattr(p,'curve',False));build(sc,[p]);sc.material(None);sc.decal(None);sc.smooth(False);sc.curve(False)
         if only and only(p.name):keep|=set(range(p0+1,sc.pid+1))
