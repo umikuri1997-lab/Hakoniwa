@@ -42,7 +42,7 @@ function tryJob(r,G,k){
 }
 const JOBCAT=[['build','repair'],['craft'],['harvest','water','tend','till','sow','plant'],['cook','chop','mine','drop','weed','seed','offer','gather']];
 const ALLJOB=['harvest','sow','offer','gather'],FARMJ=['harvest','water','tend','till','sow'];/* 畑の世話 */
-const IDLE_ACTS=['fish','play','wander','idle'];
+const IDLE_ACTS=['fish','play','wander','idle','quirk'];
 // 種まき・植える・依頼・建築があるか（いつもの作業を中断してでも向かう仕事）
 function hasHighWork(r){
   if(!isNight()&&typeof fogWant==='function'&&fogWant(r))return true;if(!isNight()&&webWant(r))return true;/* たのまれたクモの巣 *//* たのまれた宝箱・あしあと */
@@ -118,10 +118,31 @@ function goWander(r,G){
   if(carryN(r)>0&&foodCap()>0)return goStore(r,G);
   const fw=isWatch(r)&&S.enemyOn;if(isNight()&&!fw)return goSleep(r,G,S.enemies.some(e=>e.spawned));/* 夜はお散歩しないで休む */
   if((r.wanderRestUntil||0)>S.t)return startAct(r,G,'idle',-1,{dur:Math.min(20,r.wanderRestUntil-S.t)});
+  if(!isNight()&&!enemyLive()&&(r.quirkT||0)<=S.t&&Math.random()<QUIRKP&&goQuirk(r,G))return;/* ひとりのときのしぐさ */
   const c=[];for(let j=0;j<W*H;j++){const d=G.dist[j];if(d>=2&&d<=7&&walk(j)&&!(TAKEN&&TAKEN.has(j))&&!((r.routeAvoid||{})[j]>S.t)){const x=j%W,y=(j/W)|0;if(isNight()&&!VILL[j])continue;c.push(j)}}
   if(!c.length)return startAct(r,G,'idle',-1,{dur:15});
   startAct(r,G,'wander',pick(c));
 }
+/* ---------- ひとりのときのしぐさ：昼、お散歩のかわりに30%。属性ごとの小さな動き。おわると、たのしさ+3 ---------- */
+const QUIRKP=.3,QUIRKFUN=3,QUIRKDUR=24,QUIRKCD=120;
+const QUIRKB={stone:'',sniff:'🌼',lookup:'🌿',peek:'💧',warm:'🔥',box:'💦',spin:'🎵'};/* しぐさのとちゅうに出すふきだし */
+function goQuirk(r,G){
+  let k='',st=-1,tg=-1;const free0=j=>walk(j)&&!S.obj[j]&&!(TAKEN&&TAKEN.has(j));
+  const side=(ok,d=1)=>{/* その物の左か右（dマスはなれた所）に立つ（横から見る） */const s=nearest(G,j=>free0(j)&&(j%W>=d&&ok(j-d)||j%W<W-d&&ok(j+d)),12);if(s<0)return false;st=s;tg=s%W>=d&&ok(s-d)?s-d:s+d;return true};
+  const here=(r.y|0)*W+(r.x|0);
+  if(r.elem==='earth'){if(S.obj[here]||S.floor[here]||S.ground[here])return false;k='stone'}
+  else if(r.elem==='wood'){if(side(j=>FLOWERS.has(S.obj[j])&&!isBud(j)))k='sniff';else if(side(j=>TREES.has(typeAt(j)),2))k='lookup';/* 木は、葉にかくれないように、2マスはなれて見上げる */else return false}
+  else if(r.elem==='water'){if(side(j=>S.ground[j]===1))k='peek';else return false}
+  else if(r.elem==='fire'){if(side(j=>{const t=typeAt(j);return t==='campfire'||t==='oven'}))k='warm';else k='box'}
+  else if(r.elem==='wind')k='spin';
+  if(!k)return false;r.quirkT=S.t+QUIRKCD;startAct(r,G,'quirk',st,{k,tg,dur:QUIRKDUR});return true}
+ACT.quirk={start(r,a){if(a.tg>=0)r.face=a.tg%W+.5>=r.x?1:-1;a.n=0},
+  tick(r,a,dt){const k=a.k;if(k==='stone')a.n=Math.min(5,1+Math.floor(a.t/4));/* 小石を1つずつならべる */
+    if(k==='spin'){a.sp=(a.sp||0)+dt;if(a.sp>=.35){a.sp=0;r.face=-r.face}}/* くるくるまわる */
+    if(k==='peek'&&!a.ev&&a.t>=10){a.ev=1;if(Math.random()<.4&&a.tg>=0){a.fish=1;fxSpr('fishsplash',(a.tg%W+.5)*TS,((a.tg/W|0)+.6)*TS);sfxAt('wave',r.x,r.y)}}/* ときどき、魚がはねる */
+    r.bubble=a.t<6?'':a.fish&&a.t<15?'❗':a.t>=a.dur-5?'✨':QUIRKB[k]||''},
+  done:(r,a)=>a.t>=a.dur,end(r,a){r.fun=Math.min(100,r.fun+QUIRKFUN);r.wanderRestUntil=S.t+45}};
+ACT_LBL.quirk='ひとりで、のんびりしている';
 function moveR(r,dt){
   if(r.greetStop>S.t)return;/* すれちがって手をふるあいだは、立ちどまる */
   let step=.36*dt*rMul(r,'move')*(r.act&&r.act.type==='flee'?gearStat(r).flee:1)/* そうび：にげる速さ */*(r.act&&['questjoy','sevreact','reunion'].includes(r.act.type)&&r.act.stage==='walk'?2:1)/* クエストで駆け寄る間は、2倍 */*(r.act&&['storywait','fieldintro','fieldstory','fieldassist','fieldgather','fieldwait'].includes(r.act.type)&&r.act.stage==='walk'?2:1)/* メインのお話の場所へ向かうときは、2倍 */*Math.max(NEARVANE.has((r.y|0)*W+(r.x|0))?1.2:1,NEARSIGN.has((r.y|0)*W+(r.x|0))&&r.act&&r.act.type==='flee'?1.4:1)*/* 風見鶏と道しるべは重ならない（大きいほう） */(r.energy<5?.5:1)*(r.act&&(r.act.type==='flee'||r.act.run)?1.9:1)*(r.hunger<200&&r.act&&(r.act.type==='eat'||r.act.type==='fetch'||r.act.type==='forage')?1.6:1)/* おなかがへりすぎたら、急いで食べに行く */*(FSPD[S.floor[(r.y|0)*W+(r.x|0)]]||1);r.walkT=(r.walkT||0)+dt;
@@ -154,7 +175,7 @@ function updRes(r,dt){rescueStuck(r);if((RHOLD.get(r)||0)>performance.now())retu
   if(HOLD.has(r.id)){if(r.act)endAct(r);r.act=null;return}
   if(r.hidden||r.act&&r.act.stage==='do'||Math.hypot(r.x-(r.stX??r.x),r.y-(r.stY??r.y))>.3){r.stX=r.x;r.stY=r.y;r.stT=S.t}else if(S.t-(r.stT??S.t)>=10&&!(r.act&&r.act.type==='nmeet')){if(r.act&&r.act.stand>=0){r.avoidJ=r.act.stand;r.avoidU=S.t+120}r.stX=r.x;r.stY=r.y;r.stT=S.t;if(r.act)endAct(r)}/* 動いてもいない・作業もしていないまま10分たったら、いまの行動をやめて、べつの行動をえらぶ */
   const sleeping=r.act&&r.act.type==='sleep'&&r.act.stage==='do',storyWaiting=storyWaitProtected(r)||preBedCalm();
-  const mv=r.act&&(r.act.stage==='walk'||r.act.type==='tag');const lazy=!r.act||r.act.type==='idle'||r.act.type==='wander'||r.act.type==='stay';const wk=r.act&&r.act.stage==='do'&&WORKT.has(r.act.type);/* おなかは、作業するとへる。つかれているほどへりやすい */if(!storyWaiting)r.hunger-=(sleeping?.03:wk?3:mv?.4:.2)*(lazy?.5:1)*(r.energy<10?2:r.energy<30?1.5:1)*dt*(trt(r,'shoshoku')?.8:1)*(r.full>S.t?.6:1)*(WD===1&&r.sprC===dayNo()?SPR_EFF.c:1);
+  const mv=r.act&&(r.act.stage==='walk'||r.act.type==='tag');const lazy=!r.act||r.act.type==='idle'||r.act.type==='wander'||r.act.type==='quirk'||r.act.type==='stay';const wk=r.act&&r.act.stage==='do'&&WORKT.has(r.act.type);/* おなかは、作業するとへる。つかれているほどへりやすい */if(!storyWaiting)r.hunger-=(sleeping?.03:wk?3:mv?.4:.2)*(lazy?.5:1)*(r.energy<10?2:r.energy<30?1.5:1)*dt*(trt(r,'shoshoku')?.8:1)*(r.full>S.t?.6:1)*(WD===1&&r.sprC===dayNo()?SPR_EFF.c:1);
   if(!sleeping&&!storyWaiting)r.fun-=.07*dt*(trt(r,'genki')?.6:1)*SUTEKI_FUN[suteki().st]*gearStat(r).fun*(S.rain&&gearStat(r).rain?0:1)*(rainbowToday()?RB_FUN:1)*(r.grief?GRIEF_FUN:1)*(r.qrF?QR_FUN:1);/* なかよしが消えたあとは、しょんぼり */
   {const jj=(r.y|0)*W+(r.x|0),ev=ENVG?ENVG[jj]+(ENVE[r.elem]?ENVE[r.elem][jj]:0):0;if(ev>0&&!sleeping){r.fun=Math.min(100,r.fun+ev*.004*dt);if(r.act&&r.act.stage==='do'&&(r.act.type==='idle'||r.act.type==='rest'))r.energy=Math.min(100,r.energy+ev*.004*recK(r)*dt)}}/* まわりの環境がいいと、休けい・たのしさが上がる */
   // 家の中で寝ている子は、壁が壊れて「コワイノ」が入ってこない限り起きない
@@ -169,7 +190,7 @@ function updRes(r,dt){rescueStuck(r);if((RHOLD.get(r)||0)>performance.now())retu
   if(r.elem==='fire'&&r.act&&r.act.type==='patrol'&&isNight()&&S.enemyOn&&(r.act.hunt!=null?S.t-r.act.hunt>3:S.enemies.some(e=>e.spawned&&!e.dead&&nearRes(e))))endAct(r);/* 見回り中でも、拠点＋3マスにコワイノが来たらすぐ向かう */
   if(r.elem==='fire'&&r.act&&!['step','patrol','eat','fetch','eatwait','flee','faint','forage','bury'].includes(r.act.type)&&r.hunger>=500&&!r.refill&&!r.coffin&&!r.meal&&S.enemies.some(e=>e.spawned&&!e.dead&&nearRes(e)))endAct(r);/* 火の子は、ほかのことをしていても、拠点＋3マスにコワイノが来たら、やめてたたかいに行く */
   if(r.act&&r.act.type==='wander'&&isNight()&&!(isWatch(r)&&S.enemyOn)){endAct(r)}/* 夜になったら、お散歩をやめて帰る */
-  if(r.act&&IDLE_ACTS.includes(r.act.type)&&!((r.act.type==='fish'||r.act.type==='play')&&r.act.stage==='do')/* つり・遊び家具は、はじめたら、さいごまで（つりは50秒でやっと魚がとれる。遊びを仕事でとちゅうでやめると、たのしさがたまらず、ひとしごとごとに少しだけ遊ぶようになる） */&&!isNight()&&r.hunger>=550&&!(r.fun<(S.oracle==='play'?98:r.elem==='wind'?60:30)&&r.act.type!=='wander'&&r.act.type!=='idle')&&!r.act.rand/* 遊ぶきまり（decide0・おつげ）と同じ数で、遊びをやめない */){r.wchk=(r.wchk||0)+dt;if(r.wchk>=3){r.wchk=0;if(hasWork(r)){// 実際に仕事を始められたときだけ遊びをやめる（できないなら続ける）
+  if(r.act&&IDLE_ACTS.includes(r.act.type)&&!((r.act.type==='fish'||r.act.type==='play')&&r.act.stage==='do')/* つり・遊び家具は、はじめたら、さいごまで（つりは50秒でやっと魚がとれる。遊びを仕事でとちゅうでやめると、たのしさがたまらず、ひとしごとごとに少しだけ遊ぶようになる） */&&!isNight()&&r.hunger>=550&&!(r.fun<(S.oracle==='play'?98:r.elem==='wind'?60:30)&&r.act.type!=='wander'&&r.act.type!=='idle'&&r.act.type!=='quirk')&&!r.act.rand/* 遊ぶきまり（decide0・おつげ）と同じ数で、遊びをやめない */){r.wchk=(r.wchk||0)+dt;if(r.wchk>=3){r.wchk=0;if(hasWork(r)){// 実際に仕事を始められたときだけ遊びをやめる（できないなら続ける）
     const old=r.act,op=r.path,ob=r.bubble;endAct(r);if(!goWork(r,bfs(r.x|0,r.y|0),true)){r.act=old;r.path=op;r.bubble=ob;if(old.key)reserve(old.key)}}}}
   else if(r.act&&ROUTINE.includes(r.act.type)&&!isNight()&&!r.cing&&!(r.noInt>S.t)){r.wchk=(r.wchk||0)+dt;if(r.wchk>=3){r.wchk=0;if(hasHighWork(r)){const was=r.act.type;endAct(r);r.highFirst=true;decide(r);r.highFirst=false;if(r.act&&r.act.type===was)r.noInt=S.t+60}}}
   if(r.hurt>0)r.hurt-=dt;
