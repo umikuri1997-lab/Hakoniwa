@@ -141,7 +141,7 @@ for(const k of['icopper','iiron','isilver','igold']){ICONS[k]=pixURL('ingot:'+k,
 for(const k of GEAR_ORES){ICONS[k]=pixURL('ore:'+k,GPIX.ore,ORE_COL[k]);const im=new Image();im.onload=()=>{im.ok=1};im.src=ICONS[k];ICI[k]=im}/* 鉱石の素材アイコン */
 
 /* ---------- 画面：せいれいの「そうび」タブ ---------- */
-function gearUpBtn(q,after){const b=el('<button class="btn"></button>');if(!gearCanUp(q.id)||(q.lv||0)>=3){b.textContent=(q.lv||0)>=3?'+3':'強化なし';b.disabled=true;return b}const c=gearUpCost(q);b.textContent='強化 '+MATN[c.k]+c.n+(c.pc?'・'+SP(c.pc):'');b.disabled=(S.mat[c.k]||0)<c.n||S.pt<c.pc;b.onclick=e=>{e.stopPropagation();if(gearUp(q))after()};return b}
+function gearUpBtn(q,after){const b=el('<button class="btn"></button>');if(!gearCanUp(q.id)||(q.lv||0)>=3){b.textContent=(q.lv||0)>=3?'+3':'強化なし';b.disabled=true;return b}const c=gearUpCost(q);b.textContent='強化 '+MATN[c.k]+c.n+(c.pc?'・'+SP(c.pc):'');lackOn(b,lackMat(c.k,c.n)||lackPt(c.pc));b.onclick=e=>{e.stopPropagation();if(gearUp(q))after()};return b}
 function gearRow(q,sub){const r=rowEl(gearName(q),'',gearIcon(q.id));r.querySelector('small').textContent=sub||BL[q.id].desc;r.style.alignItems='center';return r}
 function gearSheet(body,r){const sec=el('<div class="sec"></div>');
   for(const k of GSLOTK){if(k==='w'&&r.elem!=='fire')continue;const q=r.gear&&r.gear[k];const h=el('<b style="display:block;margin-top:6px"></b>');h.textContent=GSLOT[k];sec.appendChild(h);
