@@ -17,6 +17,9 @@ x=東, y=南, z=上（マス）。置くマスの左上が(0,0)。
   model(path,cx,cy,z0,size,rot,tilt)      フリーの3Dモデル（glTF の .glb。models/ にある CC0 の物）。size はモデルの高さ（マス）、rot は上から見てまわす角度・tilt は東西へたおす角度（度）
   lathe(cx,cy,[(半径,高さ),...])     まわした形（つぼ）。上から下への形
   prism([(x,z),...],y0,y1)            正面（南から見た形）の多角形を、y0〜y1 へのばした板（すじかいのはしを、ほかの材にそって切るときなど）
+  prism([(y,z),...],x0,x1,'x')        横（東から見た形）の多角形を、x0〜x1 へのばした板（横の面のすじかい）
+  prism([(x,y),...],z0,z1,'z')        上から見た形の多角形を、z0〜z1 へのばした板（角を丸めた天板など）
+  loft([([(x,y),...],z),...])          上から見た形（点の数は同じ）を、高さごとにかえながらつないだ板。下から上へ。ふちをななめにけずる（ベベル）など
   box は bevel=（面取りのはば）を部品ごとにかえられる
   grp=（名前）：同じ名前の部品どうしのさかいには、ドット絵の輪郭線（oblique3d.render_px）を引かない
 """
@@ -37,7 +40,12 @@ class Part:
         if k=='wheel':cx,cy,cz,r,t=d;return(cx-r,cy-t/2,cz-r,cx+r,cy+t/2,cz+r)
         if k=='ball':cx,cy,cz,r=d;return(cx-r,cy-r,cz-r,cx+r,cy+r,cz+r)
         if k=='model':V,F,C=model_tris(*d);return(*V.min(0),*V.max(0))
-        if k=='prism':pts,y0,y1=d;a=np.array(pts,float);return(a[:,0].min(),y0,a[:,1].min(),a[:,0].max(),y1,a[:,1].max())
+        if k=='loft':a=np.array([q for P_,z in d for q in P_],float);zs=[z for _,z in d];return(a[:,0].min(),a[:,1].min(),min(zs),a[:,0].max(),a[:,1].max(),max(zs))
+        if k=='prism':
+            pts,c0,c1=d[:3];a=np.array(pts,float)
+            if len(d)>3 and d[3]=='x':return(c0,a[:,0].min(),a[:,1].min(),c1,a[:,0].max(),a[:,1].max())
+            if len(d)>3 and d[3]=='z':return(a[:,0].min(),a[:,1].min(),c0,a[:,0].max(),a[:,1].max(),c1)
+            return(a[:,0].min(),c0,a[:,1].min(),a[:,0].max(),c1,a[:,1].max())
         if k=='lathe':cx,cy,pr=d;r=max(q[0] for q in pr);return(cx-r,cy-r,min(q[1] for q in pr),cx+r,cy+r,max(q[1] for q in pr))
         pts=s.corners();a=np.array(pts);return(*a.min(0),*a.max(0))
     def corners(s):
@@ -77,7 +85,10 @@ def build(sc,parts):
         elif k=='model':
             V,F,C=model_tris(*d);sc.part()
             for f,cc in zip(F,C):sc.tri(V[f[0]],V[f[1]],V[f[2]],tuple(cc*(1-MODEL_SOFT)+255*MODEL_SOFT))   # モデルの色は、ゲームに合わせて少しうすく
-        elif k=='cyl':cx,cy,r,z0,z1=d;sc.ring_wall(cx,cy,r,z0,z1,lambda *a:tuple(c),n=p.detail);sc.annulus(cx,cy,0,r,z1,lambda *a:tuple(c*1.04),n=p.detail)
+        elif k=='cyl':   # plainwall：まわりのかべには木目をはらない（まるいかべの木目は、ドットでは、ぶつぶつのすじになる）
+            cx,cy,r,z0,z1=d;t=sc.tcur
+            if getattr(p,'plainwall',False):sc.texture(None)
+            sc.ring_wall(cx,cy,r,z0,z1,lambda *a:tuple(c),n=p.detail);sc.texture(t);sc.annulus(cx,cy,0,r,z1,lambda *a:tuple(c*1.04),n=p.detail)
         elif k=='ring':cx,cy,r0,r,z0,z1=d;sc.ring_wall(cx,cy,r,z0,z1,lambda i,a0,a1:tuple(c*(1 if i%2 else .95)),n=p.detail);sc.ring_wall(cx,cy,r0,z0,z1,lambda *a:tuple(c*.9),n=p.detail);sc.annulus(cx,cy,r0,r,z1,lambda *a:tuple(c*1.04),n=p.detail)
         elif k=='cone':cx,cy,r,z0,z1=d;sc.revolve(cx,cy,[(0.0,z1),(r,z0)],lambda k_,i:tuple(c),n=p.detail)
         elif k=='pyr':
@@ -89,10 +100,17 @@ def build(sc,parts):
             idx=[(0,1,3,2),(4,5,7,6),(0,1,5,4),(2,3,7,6),(0,2,6,4),(1,3,7,5)]
             for q in idx:sc.quad(*[P[i] for i in q],tuple(c))
         elif k=='prism':
-            pts,y0,y1=d;sc.part();n=len(pts)
-            for i in range(n):(xa,za),(xb,zb)=pts[i],pts[(i+1)%n];sc.quad((xa,y0,za),(xb,y0,zb),(xb,y1,zb),(xa,y1,za),tuple(c))
+            pts,y0,y1=d[:3];sc.part();n=len(pts);X=len(d)>3 and d[3]=='x'
+            AX=d[3] if len(d)>3 else 'y';V={'x':(lambda u,w,z:(w,u,z)),'y':(lambda u,w,z:(u,w,z)),'z':(lambda u,w,z:(u,z,w))}[AX]   # u・z：形の2つの向き・w：のばす向き
+            for i in range(n):(xa,za),(xb,zb)=pts[i],pts[(i+1)%n];sc.quad(V(xa,y0,za),V(xb,y0,zb),V(xb,y1,zb),V(xa,y1,za),tuple(c))
             for yy in(y0,y1):
-                for i in range(1,n-1):sc.tri((pts[0][0],yy,pts[0][1]),(pts[i][0],yy,pts[i][1]),(pts[i+1][0],yy,pts[i+1][1]),tuple(c))
+                for i in range(1,n-1):sc.tri(V(pts[0][0],yy,pts[0][1]),V(pts[i][0],yy,pts[i][1]),V(pts[i+1][0],yy,pts[i+1][1]),tuple(c))
+        elif k=='loft':
+            sc.part();R_=d;n=len(R_[0][0])
+            for (A,za),(B,zb) in zip(R_,R_[1:]):
+                for i in range(n):(x0,y0),(x1,y1)=A[i],A[(i+1)%n];(u0,v0),(u1,v1)=B[i],B[(i+1)%n];sc.quad((x0,y0,za),(x1,y1,za),(u1,v1,zb),(u0,v0,zb),tuple(c))
+            for P_,z in(R_[0],R_[-1]):
+                for i in range(1,n-1):sc.tri((P_[0][0],P_[0][1],z),(P_[i][0],P_[i][1],z),(P_[i+1][0],P_[i+1][1],z),tuple(c))
         elif k=='rope':sc.tube([d[0],d[1]],d[2],tuple(c),n=6)
         elif k=='wheel':
             cx,cy,cz,r,t=d;sc.part()

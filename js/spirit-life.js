@@ -545,7 +545,7 @@ CHATS.push(
  Object.assign([[0,"砂場のそばに、お水があったら、どろんこあそびができるのに。"],[1,"#joy|やってみたい！ よごれても、へっちゃら。"]],{hint:'doronko',ok:()=>spotHintOK('doronko','sandbox')}),
  Object.assign([[0,"木のあいだでブランコをこいだら、きもちよさそう。"],[1,"森の中みたいに、木がまわりにあったらいいね。"]],{hint:'mori',ok:()=>spotHintOK('mori','swing')}),
  Object.assign([[0,"木箱のとなりに、たるがあったら、ごはんがもっとしまえそう。"],[1,"ならべておいたら、とりやすいしね。"]],{hint:'shokuryo',ok:()=>spotHintOK('shokuryo','crate')}),
- Object.assign([[0,"かまどのそばに、ごはんの箱と、小さなテーブルがあったら……"],[1,"#joy|パンやさんみたい！ やきたてをならべられるね。"]],{hint:'pan',ok:()=>spotHintOK('pan','stable')}),
+ Object.assign([[0,"かまどのそばに、ごはんの箱と、食卓があったら……"],[1,"#joy|パンやさんみたい！ やきたてをならべられるね。"]],{hint:'pan',ok:()=>spotHintOK('pan',['oven','crate','table','dtable'])}),
  Object.assign([[0,"お外の食卓で、日かげの下で食べてみたいな。"],[1,"#joy|パーティーみたいで、たのしそう！"]],{hint:'party',ok:()=>spotHintOK('party','parasol')}),
  Object.assign([[0,"夜も水べでつりができたらなあ。でも、くらいとこわいよね。"],[1,"そばに石のあかりがあったら、こわくないかも。"]],{hint:'yoruzuri',ok:()=>spotHintOK('yoruzuri','toro')}),
  Object.assign([[0,"小鳥が水をのみにくる所で、すわって見ていたいな。"],[1,"しげみもあったら、小鳥が安心して来てくれるよね。"]],{hint:'kotori',ok:()=>spotHintOK('kotori','birdbath')}),
