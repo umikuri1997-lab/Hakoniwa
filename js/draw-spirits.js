@@ -216,7 +216,7 @@ function drawSpiritDot(c,el,x,y,s,f,o){
   if(el==='wind'&&back){c.save();c.translate(0,-30*TUNE.bodyH);c.scale(TUNE.head,TUNE.head);c.translate(0,36);c.scale(1-tr*.3,1);wings(1);c.restore()}/* うしろ向きのはねは、頭といっしょに */
   if(!back){if(el!=='wind')spr('sp:head'+S);if(el==='fire'&&!tr)spr(E0+'bang');
     const md=o.sleep?'':o.mood==='cry'?'teary':o.mood||'',fy=el==='wind'?-3*D:0;
-    const fm=o.sleep||(o.blink&&!md)?'shut':md==='smile'||md==='joy'||md==='eat'?'hap':['teary','tear','shock','strain','sad','brave'].includes(md)?md:'n';
+    const fm=o.sleep||(o.blink&&!md)?'shut':md==='smile'||md==='joy'||md==='eat'?'hap':['teary','tear','shock','strain','sad','brave','tired','hungry'].includes(md)?md:'n';
     if(vr&&vr.cheek)spr('sp:cheek'+S,0,fy);
     spr('sp:face'+S+'#'+fm,0,fy);
     if(vr&&vr.lash&&fm!=='strain')spr('sp:lash'+S+'#'+fm,0,fy)}/* まつげは、表情ごとの目に合わせた絵 */
@@ -378,6 +378,7 @@ function rDepth(r){return r.y}
 const forageAnim=r=>{const t=r.act.t||0;return t<2?'pluck':t<3.5?'hold':'eat'};
 const GBUBP=new Map();/* 消えた子のふきだしの絵（名前→Image） */
 function goneBubPic(c,n,BB){const e=goneEntry(n);if(!e)return;let im=GBUBP.get(n);if(!im){im=new Image();im.src=spiritPort(e.elem,48,e.vr);GBUBP.set(n,im)}if(!im.complete||!im.width)return;const m=Math.round(Math.min(BB.f||BB.s,BB.s*1.3));c.save();c.setTransform(1,0,0,1,0,0);c.imageSmoothingEnabled=false;c.globalAlpha=.85;c.drawImage(im,Math.round(BB.x-m/2),Math.round(BB.y-m/2),m,m);c.restore()}
+const HUNGRYF=500,TIREDF=30,FUNF=70;/* 顔：おなかが500より少ない・つかれ30より少ない・たのしさ70いじょう */
 function drawRes0(r,now){
   if(r.hidden&&!peekH(r))return;
   const sleeping=r.nap||r.act&&r.act.type==='sleep'&&r.act.stage==='do',bedJ=sleeping&&r.act&&r.act.obj!=null&&BEDSET.has(S.obj[r.act.obj])&&BEDSPR.ok?r.act.obj:-1,benchJ=r.act&&r.act.type==='rest'&&r.act.stage==='do'&&BENCHES.has(S.obj[r.act.obj])?(r.act.seat??r.act.obj):-1;/* ベンチではすわって見える *//* ベッドで眠るときは、まくらに頭をのせて、ふとんをかける */
@@ -393,7 +394,7 @@ function drawRes0(r,now){
   const at=r.act&&r.act.type,ad=r.act&&r.act.stage==='do',jt=JUMP.get(r),held=HOLD.has(r.id),jumping=held||jt!=null&&now-jt<1000;
   const reacting=(at==='sevreact'||at==='phew')&&ad&&r.act.reactAt!=null,rm=reacting?r.act.reactMotion:'',rp=reacting?dialoguePose(rm,now-r.act.reactAt):null;if(rp){const k=rm==='phew'?1:.4;px+=rp.x*k;py+=rp.y*k}if(walking&&r.hunger<100&&S.enemyOn)px+=Math.round(Math.sin(now/230)*2);/* おなかがもうすぐからっぽ：ふらふら歩く */
   const brave=now-(BRAVET.get(r)||-1e9)<1500;/* 勇ましい顔は、行動の切りかわりや、たたかれた時に、ちらちら消えないよう、1.5秒つづける */
-  const sw0=at==='storywait'&&ad?storyWaitLook(r):null,mood=sw0?sw0.face:reacting?({joy:'joy',shock:'shock',sad:'teary',think:'sad',nod:'smile',phew:'smile'}[rm]||'smile'):at==='watchpost'&&ad?(hostileNow(r)?'shock':bowNow(r,now)?'brave':'')/* 見張り台の上：コワイノが来るとこわがる（泣かない） */:((r.cryU||0)>S.t&&at!=='sleep'||r.coffin||at==='bury'||at==='pray'||at==='mourn'||at==='shiver'||r.hunger<100&&S.enemyOn)?'teary':/* 棺をはこぶ・埋葬するときは、うるうる顔 */r.hunger<200?'sad':(STRAINU.get(r)||0)>now?'strain':(JOYU.get(r)||0)>now?'joy':(ad&&['chop','mine','till','build','repair','weed'].includes(at))?'strain'/* 雑草をぬくときも >< の顔 */:jumping?'joy':at==='flee'?'strain':brave?'brave'/* たたかいに行く・たたいているときは、勇ましい顔 */:r.hurt>25?'strain':(at==='eat'&&ad)?'eat':(ad&&['play','chat','chatwait','npl','fish','tag','rest','bathe','bon','yatai','fwalk','hanabi','dance','shopkeep'].includes(at))||at==='tag'?'smile':'';
+  const sw0=at==='storywait'&&ad?storyWaitLook(r):null,mood=sw0?sw0.face:reacting?({joy:'joy',shock:'shock',sad:'teary',think:'sad',nod:'smile',phew:'smile'}[rm]||'smile'):at==='watchpost'&&ad?(hostileNow(r)?'shock':bowNow(r,now)?'brave':'')/* 見張り台の上：コワイノが来るとこわがる（泣かない） */:((r.cryU||0)>S.t&&at!=='sleep'||r.coffin||at==='bury'||at==='pray'||at==='mourn'||at==='shiver'||r.hunger<100&&S.enemyOn)?'teary':/* 棺をはこぶ・埋葬するときは、うるうる顔 */r.hunger<HUNGRYF&&!(at==='eat'&&ad)?'hungry'/* おなかがすいた顔 */:r.energy<TIREDF?'tired'/* つかれた顔 */:(STRAINU.get(r)||0)>now?'strain':(JOYU.get(r)||0)>now?'joy':(ad&&['chop','mine','till','build','repair','weed'].includes(at))?'strain'/* 雑草をぬくときも >< の顔 */:jumping?'joy':at==='flee'?'strain':brave?'brave'/* たたかいに行く・たたいているときは、勇ましい顔 */:r.hurt>25?'strain':(at==='eat'&&ad)?'eat':(ad&&['play','chat','chatwait','npl','fish','tag','rest','bathe','bon','yatai','fwalk','hanabi','dance','shopkeep'].includes(at))||at==='tag'||r.fun>=FUNF?'smile':'';/* たのしいときは、にっこり */
   if(S.rain&&!walking&&!(r.act&&r.act.type==='sleep')&&!roomOf((r.y|0)*W+(r.x|0)))px+=Math.sin(now/45+r.id)*.4;/* 雨の日、外でじっとしている子は、少しふるえる */
   const bob=(walking?Math.abs(Math.sin(now/110+r.id))*2.5:0)+(()=>{const jt=JUMP.get(r),d=jt==null?-1:now-jt;return d>=0&&d<1000?Math.abs(Math.sin(d/130))*9*(1-d/1000):0})();
   {const sw=Math.max(r.swing||0,r.swingT||0),sd=now-sw;if(sw&&sd>=0&&sd<400)px+=(r.face<0?-1:1)*atkLunge(sd)}/* 攻撃のとき：ためて、ふみこんで、当たって止まり、もどる */
