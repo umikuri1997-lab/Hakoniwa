@@ -34,7 +34,7 @@ def EXTRA(sc):
         c=(sum(q[0] for q in pts)/len(pts),sum(q[1] for q in pts)/len(pts),ZL)
         for k in range(len(pts)):sc.tri(c,(pts[k][0],pts[k][1],ZL),(pts[(k+1)%len(pts)][0],pts[(k+1)%len(pts)][1],ZL),WOOD)
     sc.texture(None);sc.material('metal')
-    for zc in(0.13,0.49):   # 鉄の輪（金属：つやのすじ）
+    for zc in(0.09,0.555):   # 鉄の輪（金属：つやのすじ）。上の輪は、ふちのすぐ下（本物のたるの口の輪。ふちとのあいだに細いすきまを作らない）
         sc.part();z0,z1=zc-0.03,zc+0.03
         for i in range(48):
             a0=2*math.pi*i/48;a1=2*math.pi*(i+1)/48;q=lambda a,z:(CX+(R(z)+HOOP)*math.cos(a),CY+(R(z)+HOOP)*math.sin(a),z)

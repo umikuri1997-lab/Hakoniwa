@@ -35,7 +35,7 @@ BOTTOM=45   # いまの木箱のチップの下のはし（g64のドット。ゲ
 def shot(k,ang=0,S_=64):
     sc=scene(k,ang);V=np.array([v for t in sc.t for v in t[:3]]);P=np.array([PROJ(v) for v in V]);m=2/64
     ext=(P[:,0].min()-m,P[:,0].max()+m,P[:,1].min()-m,P[:,1].max()+m);O.S=S_
-    im=O.render_px(sc,PROJ,ext,DEPTH,k=0.72);bb=im.getbbox();im=im.crop(bb)
+    im=O.render_px(sc,PROJ,ext,DEPTH,k=0.72,lw=2);bb=im.getbbox();im=im.crop(bb)   # 輪郭線2ドット（家具と同じ）
     base=round((PROJ((0.5,C.Y1,0))[1]-ext[2])*S_)-bb[1]   # 置くマスの手前のはし（地面、y=1）の行
     ax=round(ext[0]*S_)+bb[0];return im,ax,base
 NAMES=['crate','crate>1','crate>2','crate>3'];VIEWS=['前','右','後ろ','左'];ims=[];CH={}

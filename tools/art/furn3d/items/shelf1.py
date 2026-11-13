@@ -16,7 +16,7 @@ def PARTS():
         if i:L.append(P('たなの板%d'%i,'box',(X0+SD,Y0+BK,z0-0.03,X1-SD,Y1-0.01,z0),WOOD,on=('側板（左）','側板（右）'),bevel=0,note='側板にのせる'))
         x=X0+SD+0.02
         while True:
-            w=rd.uniform(0.055,0.085);h=rd.uniform(0.62,0.82)*(hh-0.04)
+            w=rd.uniform(0.066,0.102);h=rd.uniform(0.62,0.82)*(hh-0.04)   # 本の厚み（はば）・高さ
             if x+w>X1-SD-0.02:break
             col=rd.choice(BOOKS);on=('地板',) if i==0 else ('たなの板%d'%i,);g='本%d-%.2f'%(i,x);ya,yb=Y0+BK+0.02,Y1-0.06;CV=0.008;SP=0.02
             nm='本（%d段・%.2f）'%(i+1,x)   # 本：背表紙（手前の角を丸める）・左右の表紙・中の紙（表紙より少し低く、上から白が見える）

@@ -70,6 +70,9 @@ def run(iid,out,chips=False):
     can.resize((can.width*4,can.height*4),Image.NEAREST).save(os.path.join(out,'cmp_x4.png'))
     if chips:
         for nm,(im,ax,ay) in CH.items():CC[nm]={'g':64,'ax':ax,'ay':ay,'w':im.width,'h':im.height,'f':[im]}
+        for nm in getattr(M,'CUT',()):   # すわった子の足をかくす行（座面の下のはし）：まん中の列で、上から10ドットより下の、はじめてすきとおる行。ゲームの点（1マス32）
+            im,ax,ay=CH[nm];a=np.array(im);col=a[:,a.shape[1]//2,3];row=next(i for i in range(10,len(col)) if col[i]==0)
+            CC[nm]['cut']=(ay+row)/2;print(nm,'cut',CC[nm]['cut'])
         CHP.pack_imgs(head,CC);open(os.path.join(ROOT,'.chips_changed'),'w').write('\n'.join(CH));print('チップに入れた',len(CH))
     return CH
 if __name__=='__main__':run(sys.argv[1],sys.argv[2],'--chips' in sys.argv)

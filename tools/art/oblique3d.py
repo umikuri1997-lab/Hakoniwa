@@ -214,7 +214,7 @@ def grid_bg(ext, foot=None):
     if foot: fw, fh = foot; d.rectangle([((0-x0)*S, (0-y0)*S), ((fw-x0)*S, (fh-y0)*S)], outline=(214, 170, 70), width=3)
     return im
 
-SHADE = [(10, 2.5), (20, 5)]   # かげの色：ベースの色の HSV（100段階）から、明るさ・あざやかさを引く（半かげ・かげ）。持ち主がきめた（かげ＝明るさ−20・あざやかさ−5）
+SHADE = [(17.5, -5), (35, -10)]   # かげの色：ベースの色の HSV（100段階）から、明るさ・あざやかさを引く（半かげ・かげ）。持ち主がきめた（かげ＝明るさ−35・あざやかさ+10）
 SHINE = (12, -8)                # 金属のつや：明るさを足し、あざやかさを引く（白っぽく）
 METALSPEC = 0.97                # 金属のつやが出る向きの近さ
 def toon(cc, lv):
@@ -336,7 +336,9 @@ def render_px(sc, proj, ext, depth, k=0.72, outer=True, merge=12, lw=1, k2=0.86)
         line |= far
         if lw >= 2:   # 2ドットめ：線のドットの、さらに向こうの同じ部品のドット
             l2 = np.zeros((Hp, Wp), bool); l2[yd, xd] = far[ys, xs]   # l2[q] = far[q+向き]（線のドットのうしろ）
-            l2 &= idb >= 0; same = np.zeros((Hp, Wp), bool); same[yd, xd] = idb[yd, xd] == idb[ys, xs]; line2 |= l2 & same
+            l2 &= idb >= 0; same = np.zeros((Hp, Wp), bool); same[yd, xd] = idb[yd, xd] == idb[ys, xs]
+            same2 = idb == np.roll(np.roll(idb, dy, 0), dx, 1)   # q-向き も同じ部品（部品が3ドット以上つづく）
+            line2 |= l2 & same & same2   # 細い部品（3ドットより細い）には2ドットめを引かない（部品が線だけになる）
     out[line2 & ~line] = col0[line2 & ~line]*k2
     out[line] = col0[line]*k
     if outer:
@@ -354,6 +356,11 @@ def render_px(sc, proj, ext, depth, k=0.72, outer=True, merge=12, lw=1, k2=0.86)
                 yd = slice(max(-dy, 0), Hp+min(-dy, 0)); xd = slice(max(-dx, 0), Wp+min(-dx, 0))
                 e = np.zeros((Hp, Wp), bool); e[yd, xd] = idb[ys, xs] < 0; edge |= e
             edge &= (idb >= 0) & ~line
+            inner = np.ones((Hp, Wp), bool)   # まわりのふちの内がわの線も、部品がそこから内がわへ3ドット以上つづく所だけ
+            for dy, dx in ((0, 1), (0, -1), (1, 0), (-1, 0)):
+                e = np.zeros((Hp, Wp), bool); e[max(-dy, 0):Hp+min(-dy, 0), max(-dx, 0):Wp+min(-dx, 0)] = idb[max(dy, 0):Hp+min(dy, 0), max(dx, 0):Wp+min(dx, 0)] < 0
+                inner &= ~e | ((np.roll(np.roll(idb, dy, 0), dx, 1) == idb) & (np.roll(np.roll(idb, 2*dy, 0), 2*dx, 1) == idb))
+            edge &= inner
             out[edge] = col0[edge]*k2
     global LAST_IDS; LAST_IDS = idb   # ドットごとの部品の番号（その部品だけをとり出すとき用）
     img = np.dstack([np.round(out), alpha]).astype(np.uint8)
