@@ -29,6 +29,12 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict');
     if(!ok||n.act.type!=='play'||n.act.obj!==j)throw Error('no invite '+JSON.stringify(n.act));
     for(let i=0;i<200&&!(n.act&&n.act.stage==='do'&&f.act&&f.act.stage==='do');i++){updRes(f,.3);updRes(n,.3)}
     S.obj[j]='';endAct(f);endAct(n);return 'friend joined play at the same toy, bond '+bondOf(f,n)})()`));
+  /* にがてなおもちゃには遊びに行かない（土のせいれいはブランコがにがて）・なかよしのさそいでも行かない */
+  console.log('nigate',await run(`(()=>{const [f,n]=S.res;S.bond={};for(const r of S.res){endAct(r);r.act={type:'idle',stage:'do',t:0,dur:30}}
+    const j=(CY+3)*W+CX-4;S.obj[j]='swing';recount();let hit=0;for(let i=0;i<200;i++){endAct(n);const G=bfs(n.x|0,n.y|0);goPlay(n,G,true);if(n.act&&n.act.type==='play'&&n.act.obj===j)hit++}
+    if(hit)throw Error('earth went to swing '+hit);endAct(n);n.act={type:'idle',stage:'do',t:0,dur:30};
+    bondAdd(f,n,60);const G=bfs(f.x|0,f.y|0);endAct(f);startAct(f,G,'play',j,{key:'o'+j,obj:j,what:'swing',fun:40,dur:40,pt:3,pw:1});if(bondInvite(f,f.act))throw Error('invited to nigate');
+    S.obj[j]='';recount();endAct(f);endAct(n);return 'earth never picks swing, no invite'})()`));
   console.log('speed 100',await run(`(()=>{const [f,n,h]=S.res;S.bond={};const w0=rMul(f,'work');bondAdd(f,n,100);n.x=f.x+2;n.y=f.y;bondNearTick();const w1=rMul(f,'work');
     if(Math.abs(w1/w0-1.05)>1e-9)throw Error('no +5% '+w0+' '+w1);bondAdd(f,h,100);h.x=f.x+1;h.y=f.y;bondNearTick();if(Math.abs(rMul(f,'work')/w0-1.05)>1e-9)throw Error('stacked');
     n.x=f.x+6;h.x=f.x+6;bondNearTick();if(rMul(f,'work')!==w0)throw Error('far still fast');return 'x1.05 within 3, no stacking, off when apart'})()`));
