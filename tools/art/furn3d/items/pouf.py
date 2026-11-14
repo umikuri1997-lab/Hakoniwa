@@ -5,7 +5,7 @@
 from blueprint import Part as P
 from common import *
 import math
-ID='pouf';BOTTOM=53
+ID='pouf';GRAD=True;BOTTOM=53
 VIEWS=[('pouf',0)]
 CX,CY=0.50,0.60;R=0.34;H=0.15;POUF=(232,236,212)   # 布の色（いまの絵に合わせた、うすい緑がかったクリーム色）
 def PARTS():return []
