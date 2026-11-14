@@ -137,8 +137,9 @@ def run(iid,out,chips=False):
     for nm,(im,ax,ay) in CH.items():
         fn=nm.replace('>','_').replace('#','_');im.save(os.path.join(out,fn+'.png'));im.resize((im.width*10,im.height*10),Image.NEAREST).save(os.path.join(out,fn+'_x10.png'))
     for nm,pl in PARTS_OUT.items():   # 動く部品を本体にかさねた絵（たしかめ用。ゲームでも本体の上にかさねる）
-        im,ax,ay=CH[nm];can=im.copy()
-        for q in pl:can.alpha_composite(q['f'][0],(q['ax']-ax,q['ay']-ay))
+        im,ax,ay=CH[nm];x0=min([ax]+[q['ax'] for q in pl]);y0=min([ay]+[q['ay'] for q in pl]);x1=max([ax+im.width]+[q['ax']+q['w'] for q in pl]);y1=max([ay+im.height]+[q['ay']+q['h'] for q in pl])
+        can=Image.new('RGBA',(x1-x0,y1-y0),(0,0,0,0));can.alpha_composite(im,(ax-x0,ay-y0))
+        for q in pl:can.alpha_composite(q['f'][0],(q['ax']-x0,q['ay']-y0))
         can.save(os.path.join(out,nm+'_all.png'));can.resize((can.width*10,can.height*10),Image.NEAREST).save(os.path.join(out,nm+'_all_x10.png'))
     vs=[CH[v[0]][0] for v in M.VIEWS];HB=max(i.height for i in vs)+12
     can=Image.new('RGBA',(sum(i.width+8 for i in vs)+8,HB),(150,190,120,255));x=8
