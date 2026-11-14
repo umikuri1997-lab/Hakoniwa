@@ -234,7 +234,8 @@ WOOD_SEL = ('.hud,.dock,.quest,.sheet,.dlg::before,.toast,#helpPop .hc,.idea-car
 
 
 def wood_css():
-    u = svg(wood_rows(), {'a': '#ecd6ad', 'g': '#e0c597', 'D': '#d3b484', 'l': '#f4e3c3', 'h': '#fff4dc',
+    # 木目のこさ（g・D・l）は、地の色 a との差を半分にして、うすくしてある
+    u = svg(wood_rows(), {'a': '#ecd6ad', 'g': '#e6cea2', 'D': '#e0c598', 'l': '#f0dcb8', 'h': '#fff4dc',
                           'k': '#f7e9cd', 'q': '#fffaf0', 'w': '#c9a46e', 'd': '#a8743f', 's': SHADOW})
     sel = ','.join('body.wd0 ' + x.strip() for x in WOOD_SEL.split(','))
     return ('/* 草原のパネルは、切りっぱなしの明るい板（わくなし・木目）。依頼ボードの紙はそのまま。body.wd0 は ui-fx.js の uiStageSync */\n'
@@ -278,11 +279,11 @@ def wbtn_rows(pressed=False):
 
 
 WBTN = {  # 面・木目・上のふち・下のふち・あつみ・あつみの下
-    'n': {'a': '#e2c18b', 'g': '#d6b27a', 'D': '#c9a36a', 'l': '#ebcd9b', 'h': '#f6e3be', 'k': '#f2dcb2', 'm': '#ead0a0',
+    'n': {'a': '#e2c18b', 'g': '#dcba82', 'D': '#d6b27a', 'l': '#e6c793', 'h': '#f6e3be', 'k': '#f2dcb2', 'm': '#ead0a0',
           'q': '#fffaf0', 'e': '#c79e66', 't': '#b98a52', 'b': '#8a5a30', 's': SHADOW},
-    'p': {'a': '#b98551', 'g': '#a8743f', 'D': '#99683a', 'l': '#c4905b', 'h': '#dcaa72', 'k': '#d29f68', 'm': '#c4915c',
+    'p': {'a': '#b98551', 'g': '#b07c48', 'D': '#a97646', 'l': '#be8a56', 'h': '#dcaa72', 'k': '#d29f68', 'm': '#c4915c',
           'q': '#f6d6aa', 'e': '#96643a', 't': '#7e5430', 'b': '#5e3d22', 's': SHADOW},
-    'y': {'a': '#f0cf86', 'g': '#e4bf70', 'D': '#d8b062', 'l': '#f6da98', 'h': '#fdecc4', 'k': '#fbe6b4', 'm': '#f6dca0',
+    'y': {'a': '#f0cf86', 'g': '#eac77b', 'D': '#e4c074', 'l': '#f3d48f', 'h': '#fdecc4', 'k': '#fbe6b4', 'm': '#f6dca0',
           'q': '#fffdf0', 'e': '#d3a24c', 't': '#b98a3a', 'b': '#7a5218', 's': SHADOW},
 }
 
