@@ -9,6 +9,7 @@
 #   SZ=(よこ,たて)（置くマスの数。2×1 の物は (2,1)。たてにした向きを、置いたマスから下へのびる所に写す）
 #   FRAMES=n（うごく絵のコマの数。PARTS・EXTRA は M.FR（0〜n−1）を見て、動く所だけかえる）
 #   PFIRE=[(cx,cy,z0,高さ,根もとの半径,粒の数,seed), ...]（粒の火とけむり。FRAMES のコマでループする。本体は1回だけ写す）
+#   PFIRE の8つめ（なくてよい）：{'smoke':けむりの粒の数か False,'sparks':False}。PSMOKE=[(x,y,z,高さ,半径,粒の数,seed)]（けむりだけ。煙突など）
 #   PFIRE_HIDE=部品の名前を見る関数（粒の火が、そのうしろにかくれる部品。ほかの部品には、火を上にかさねる。なければ、ぜんぶ）
 #   MOVE={チップの名前: {'sel':部品の名前を見る関数, 'pivot':(x,y,z)}}（動く部品。本体の絵からのぞいて、べつの絵 parts にし、のびちぢみ・回る支点 px・py をつける。ゲームの PARTMV で動かす）
 #   FRONT={チップの名前: 部品の名前を見る関数}（せいれいの手前にかさねる絵 .front。その向きで、その部品だけを写す）
@@ -50,7 +51,7 @@ def shot(M,k,only=None,S_=64,filt=None,info=None):
     return im,round(ext[0]*S_),base,yb   # yb：いちばん手前の地面（マス）。向きをかえると、かわる
 def pfire_box(M):   # 粒の火のとどく、はんい（見え方のはんいに入れる）
     out=[]
-    for cx,cy,z0,H,R,N,seed in getattr(M,'PFIRE',()):out+=[(cx-R*1.6,cy,z0),(cx+R*1.6,cy,z0),(cx,cy,z0+H*1.9),(cx+R*1.8,cy,z0+H*1.9)]
+    for cx,cy,z0,H,R,N,seed,*_ in list(getattr(M,'PFIRE',()))+[(x,y,z,Hs,Rs,0,0) for x,y,z,Hs,Rs,Ns,sd in getattr(M,'PSMOKE',())]:out+=[(cx-R*1.6,cy,z0),(cx+R*1.6,cy,z0),(cx,cy,z0+H*1.9),(cx+R*1.8,cy,z0+H*1.9)]
     return out
 FIRECOL=[(0.30,(255,230,96)),(0.46,(255,198,74)),(0.66,(255,152,60)),(0.84,(238,100,52))]   # 粒の年（0〜1）ごとの色：まん中の黄色 → こがね色 → だいだい → 赤み。それより年をとった粒は消える（持ち主：中心は黄色）
 SMOKECOL=[(0.35,(176,170,168)),(0.7,(196,192,190)),(1.0,(214,212,210))]   # けむりの色：上がるほど、うすい灰色
@@ -61,20 +62,21 @@ def pfire(M,im,inf,zb,f,NF):
     import random
     hid=getattr(M,'PFIRE_HIDE',lambda n:True);hide=lambda q:q>=0 and hid(PN.get(int(q),''));ids=inf['ids']
     a=np.array(im).copy();PROJ,E,S_,fw,dep=inf['PROJ'],inf['ext'],inf['S'],inf['fwd'],inf['depth'];Hh,Ww=a.shape[:2];t=f/NF;P=[]
-    for cx,cy,z0,H,R,N,seed in M.PFIRE:
-        rnd=random.Random(seed)
+    for cx,cy,z0,H,R,N,seed,*op in list(getattr(M,'PFIRE',()))+[(x,y,z,Hs,Rs,0,sd,{'smoke':Ns}) for x,y,z,Hs,Rs,Ns,sd in getattr(M,'PSMOKE',())]:
+        op=op[0] if op else {};rnd=random.Random(seed)
         for i in range(N):
             ph=rnd.random();an=rnd.uniform(0,6.283);rr=R*rnd.random()**0.5;hk=rnd.uniform(0.45,1.0);sz=rnd.uniform(0.7,1.1);sw=rnd.uniform(0,6.283);age=(t+ph)%1.0
             if age>FIRECOL[-1][0]:continue
             x=cx+rr*np.cos(an)*(1-age*0.9)+0.22*R*np.sin(sw+age*7)*age;y=cy+0.5*rr*np.sin(an)*(1-age*0.9);z=z0+age*H*hk
             ea=min(0.84,age+0.22*rr/R)   # 色：根もとのまん中ほど白っぽく、ふちの粒は早く色がかわる
             P.append((age,(x,y,z),R*0.55*sz*(1-age)**0.55,next(c for e,c in FIRECOL if ea<=e)))
-        for i in range(max(2,N//30)):   # 火の粉：小さく、高く上がる
+        for i in range(max(2,N//30) if N and op.get('sparks',True) else 0):   # 火の粉：小さく、高く上がる
             ph=rnd.random();an=rnd.uniform(0,6.283);age=(t+ph)%1.0;x=cx+R*0.8*np.cos(an)+0.3*R*np.sin(age*9+an);z=z0+H*(0.55+age*0.6)
             if age<0.85:P.append((0.9,(x,cy,z),0.0,(255,170,70) if age<0.5 else (240,110,56)))
-        for i in range(N//6):   # けむり：火の上から、ふくらみながら上がって、右へながれる。火よりうしろに描く
+        sm=op.get('smoke',True);sm=N//6 if sm is True else (sm or 0)
+        for i in range(sm):   # けむり：火の上から、ふくらみながら上がって、右へながれる。火よりうしろに描く
             ph=rnd.random();an=rnd.uniform(0,6.283);age=(t+ph)%1.0;sz=rnd.uniform(0.7,1.1)
-            x=cx+0.4*R*np.cos(an)+age*R*1.1+0.25*R*np.sin(age*6+an);z=z0+H*(0.7+age*0.7)
+            x=cx+0.4*R*np.cos(an)+age*R*1.1+0.25*R*np.sin(age*6+an);z=z0+H*((0.7 if N else 0.0)+age*0.7)
             if age<0.92:P.append((2+age,(x,cy-0.05,z),R*sz*(0.32+0.38*age),next(c for e,c in SMOKECOL if age<=e)))
     P.sort(key=lambda q:-q[0])
     for age,p,r,c in P:
@@ -98,7 +100,7 @@ def run(iid,out,chips=False):
     for v_ in M.VIEWS:
         nm,k=v_[:2];M.VAR=v_[2] if len(v_)>2 else None   # VIEWS の3つめ：同じ向きのべつの絵（みずがめの水あり・なし など。PARTS・EXTRA は M.VAR を見る）
         NF=getattr(M,'FRAMES',1);fr=[]
-        if hasattr(M,'PFIRE'):   # 粒の火：本体は1回だけ写し、コマごとに粒をかさねる（本体はどのコマも同じ絵）
+        if hasattr(M,'PFIRE') or hasattr(M,'PSMOKE'):   # 粒の火：本体は1回だけ写し、コマごとに粒をかさねる（本体はどのコマも同じ絵）
             M.FR=0;inf={};b0=shot(M,k,info=inf);zb=O.LAST_ZB.copy();inf['ids']=O.LAST_IDS.copy()
             for q in range(NF):fr.append((pfire(M,b0[0],inf,zb,q,NF),)+tuple(b0[1:]))
         else:
