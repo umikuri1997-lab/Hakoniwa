@@ -65,3 +65,34 @@ def flame(nm,cx,cy,z0,h,R,on,note=''):
         if t>0.86:return (246,122,56)   # さき：赤みのだいだい
         return (255,162,62)   # ふち：だいだい
     p=Part(nm,'lathe',(cx,cy,prof),(255,162,62),on=on,note=note,detail=24);p.glow=True;p.tex=False;p.decal=col;return p
+def fire(nm,cx,cy,z0,H,R,on,fr=0,seed=1,small=3,lift=True,note=''):
+    """リアルな火（たき火・たいまつ）：いくつもの炎の舌（tongue）。まん中の大きな舌3本（上でわかれて、それぞれちがう向きにゆれる）と、まわりの小さな舌 small 本、
+    はなれて上にうかぶ小さな炎（lift）。舌ごとに、芯からのはなれぐあいと高さで色をかえる（根もとの青・まん中の白っぽい黄色・黄色・だいだい・さきの赤み）。
+    fr：コマの番号（舌の高さ・ゆれがかわる）。H：いちばん高い舌の高さ。R：まん中の舌の太さ。かげはつけない（光る）"""
+    import math,random
+    from blueprint import Part
+    rnd=random.Random(seed*97+fr*13);out=[]
+    def tongue(name,bx,by,h,r,lean,ph,core=True):
+        n=9;sp=[];rs=[]
+        for i in range(n+1):
+            t=i/n;sw=lean*t+0.35*r*math.sin(ph+t*3.2)*t
+            sp.append((bx+sw*math.cos(ph*0.7),by+0.3*sw*math.sin(ph*0.7),z0+h*t));rs.append(max(0.0,r*math.sin(math.pi*min(1,t*1.9+0.08))**0.5*(1-t)**0.4))   # さきまで太めにして、急にとがらせる（細い線・はなれた点にならない）
+        def col(x,y,z,sp=sp,rs=rs):
+            t=max(0,min(1,(z-z0)/h));i=min(n-1,int(t*n));f=t*n-i;q=[sp[i][k]*(1-f)+sp[i+1][k]*f for k in range(3)];rr=max(1e-4,rs[i]*(1-f)+rs[i+1]*f)
+            u=abs(x-q[0])/rr   # 見る向き（手前）から見た、芯からのよこのはなれぐあい
+            if core and t<0.12 and u>0.55:return (150,176,255)   # 根もとのふち：青
+            if core and t<0.5 and u<0.5*(1-t*0.9):return (255,250,222)   # 芯：白っぽい黄色
+            if t<0.72 and u<0.8*(1-t*0.55):return (255,218,92)   # 黄色
+            if t>0.8:return (238,96,52)   # さき：赤みのだいだい
+            return (255,148,54)   # まわり：だいだい
+        p=Part(name,'tongue',(sp,rs),(255,148,54),on=on,note=note or '火');p.glow=True;p.tex=False;p.decal=col;return p
+    for k,(dx,lean) in enumerate(((0.0,0.0),(-0.9,-0.8),(0.9,0.8))):   # まん中の大きな舌3本
+        h=H*(1.0 if k==0 else 0.68)*rnd.uniform(0.84,1.08);out.append(tongue(nm+'（まん中%d）'%(k+1),cx+dx*R,cy+0.02,h,R*(1.0 if k==0 else 0.8),lean*R*rnd.uniform(0.6,1.4),rnd.uniform(0,6.28)))
+    for k in range(small):   # まわりの小さな舌
+        a=2*math.pi*k/small+rnd.uniform(-0.4,0.4);d=R*rnd.uniform(0.9,1.3)
+        out.append(tongue(nm+'（小%d）'%(k+1),cx+d*math.cos(a),cy+0.6*d*math.sin(a),H*rnd.uniform(0.32,0.55),R*rnd.uniform(0.42,0.58),d*0.35*math.cos(a),rnd.uniform(0,6.28)))
+    if lift:   # はなれて上にうかぶ小さな炎（コマごとに高さがかわる）
+        zz=z0;h0=H*0.24;bx=cx+R*rnd.uniform(-0.5,0.5);hh=H*rnd.uniform(0.55,0.68)
+        p=tongue(nm+'（うかぶ炎）',bx,cy,h0,R*0.4,0.0,rnd.uniform(0,6.28),core=False);p.deco=True;sp,rs=p.dims;p.dims=([(q[0],q[1],q[2]+hh) for q in sp],rs);p.on=on
+        f0=p.decal;p.decal=lambda x,y,z,f0=f0,hh=hh:f0(x,y,z-hh);out.append(p)
+    return out

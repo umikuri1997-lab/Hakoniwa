@@ -11,6 +11,9 @@ x=東, y=南, z=上（マス）。置くマスの左上が(0,0)。
   pyr(cx,cy,hw,hd,z0,z1)             四角すい
   plate(a,b,w,t)                     a→b の線にそった板（はば w は横、あつさ t）。ななめの材・すべり面・屋根
   beam(a,b,r)                        a→b の角材（はば・あつさ 2r）
+  frust(a,b,r0,r1)                   a→b の円すい台（ななめにおける）
+  tongue(芯の点,半径)                 火の舌（まがった芯にそって太さのかわる形）
+  log(a,b,r)                         a→b の丸太・まき（ななめにおける。皮のテクスチャ・切り口の年輪）
   wheel(cx,cy,cz,r,t)                車輪（正面を向いた円板、あつさ t）
   ball(cx,cy,cz,r)                   丸いかたまり（葉・花・荷物）
   rope(a,b,r)                        なわ
@@ -41,8 +44,9 @@ class Part:
         if k=='ring':cx,cy,r0,r,z0,z1=d;return(cx-r,cy-r,z0,cx+r,cy+r,z1)
         if k=='pyr':cx,cy,hw,hd,z0,z1=d;return(cx-hw,cy-hd,z0,cx+hw,cy+hd,z1)
         if k=='wheel':cx,cy,cz,r,t=d;return(cx-r,cy-t/2,cz-r,cx+r,cy+t/2,cz+r)
-        if k=='ball':cx,cy,cz,r=d;return(cx-r,cy-r,cz-r,cx+r,cy+r,cz+r)
+        if k=='ball':cx,cy,cz,r=d[:4];zs=d[4] if len(d)>4 else 1.0;return(cx-r,cy-r,cz-r*zs,cx+r,cy+r,cz+r*zs)
         if k=='tube':a=np.array(d[0],float);r=d[1];return(*(a.min(0)-r),*(a.max(0)+r))
+        if k=='tongue':a=np.array(d[0],float);r=max(d[1]);return(*(a.min(0)-r),*(a.max(0)+r))
         if k=='model':V,F,C=model_tris(*d);return(*V.min(0),*V.max(0))
         if k=='loft':a=np.array([q for P_,z in d for q in P_],float);zs=[z for _,z in d];return(a[:,0].min(),a[:,1].min(),min(zs),a[:,0].max(),a[:,1].max(),max(zs))
         if k=='prism':
@@ -54,9 +58,9 @@ class Part:
         pts=s.corners();a=np.array(pts);return(*a.min(0),*a.max(0))
     def corners(s):
         k,d=s.kind,s.dims
-        if k in('plate','beam','rope'):
+        if k in('plate','beam','rope','log','frust'):
             a,b=np.array(d[0],float),np.array(d[1],float)
-            w,t=(d[2],d[3]) if k=='plate' else (2*d[2],2*d[2])
+            w,t=(d[2],d[3]) if k=='plate' else (2*max(d[2],d[3]),)*2 if k=='frust' else (2*d[2],2*d[2])
             ax=b-a;ax/=np.linalg.norm(ax);u=np.cross(ax,[0,0,1.0])
             if np.linalg.norm(u)<1e-6:u=np.array([1.0,0,0])
             u/=np.linalg.norm(u);v=np.cross(u,ax);v/=np.linalg.norm(v)
@@ -130,6 +134,19 @@ def build(sc,parts):
                 for i in range(1,n-1):sc.tri((P_[0][0],P_[0][1],z),(P_[i][0],P_[i][1],z),(P_[i+1][0],P_[i+1][1],z),tuple(c))
         elif k=='rope':sc.tube([d[0],d[1]],d[2],tuple(c),n=6)
         elif k=='tube':sc.tube(list(d[0]),d[1],tuple(c),n=8)   # 折れ線の管（取っ手の輪など）。d=(点の一覧, 太さ)
+        elif k=='log':   # 丸太・まき：a→b の円柱（ななめにおける）。まわりは皮（col、皮のテクスチャ）、両はしの切り口は明るい木と年輪
+            a,b,r=np.array(d[0],float),np.array(d[1],float),d[2];ax=b-a;ax/=np.linalg.norm(ax);u=np.cross(ax,[0,0,1.0])
+            if np.linalg.norm(u)<1e-6:u=np.array([1.0,0,0])
+            u/=np.linalg.norm(u);v=np.cross(ax,u);n=16;R_=lambda e,t,f=1.0:e+r*f*(math.cos(t)*u+math.sin(t)*v)
+            t_=sc.tcur;sc.texture(barktex() if getattr(p,'bark',True) else None);sc.part()
+            for i in range(n):t0,t1=2*math.pi*i/n,2*math.pi*(i+1)/n;sc.quad(R_(a,t0),R_(b,t0),R_(b,t1),R_(a,t1),tuple(c))
+            sc.texture(None);sc.part()
+            for e in(a,b):
+                for i in range(n):
+                    t0,t1=2*math.pi*i/n,2*math.pi*(i+1)/n
+                    sc.quad(R_(e,t0),R_(e,t1),R_(e,t1,0.86),R_(e,t0,0.86),tuple(c));sc.quad(R_(e,t0,0.86),R_(e,t1,0.86),R_(e,t1,0.55),R_(e,t0,0.55),LOGEND)
+                    sc.quad(R_(e,t0,0.55),R_(e,t1,0.55),R_(e,t1,0.42),R_(e,t0,0.42),MAKIRING);sc.tri(e,R_(e,t0,0.42),R_(e,t1,0.42),LOGEND)
+            sc.texture(t_)
         elif k=='logy':   # まき・丸太：おく向き（y）にねかせた円柱。まわりは皮の色（col）、両はしの切り口は LOGEND
             cx,y0,y1,cz,r=d;sc.part();n=20
             for yy in(y0,y1):
@@ -178,7 +195,23 @@ def build(sc,parts):
             for i in range(24):
                 a0=2*math.pi*i/24;a1=2*math.pi*(i+1)/24;P_=lambda a,yy:(cx+r*math.cos(a),yy,cz+r*math.sin(a))
                 sc.quad(P_(a0,cy-t/2),P_(a1,cy-t/2),P_(a1,cy+t/2),P_(a0,cy+t/2),tuple(c))   # まわりも同じ色（木材の色はひとつ）
-        elif k=='ball':cx,cy,cz,r=d;sc.sphere(cx,cy,cz,r,tuple(c),n=14,m=8)
+        elif k=='tongue':   # 火の舌：まがった芯（点のならび）にそって、太さ（半径のならび）のかわる、とじた形。さきはとがる
+            sp=[np.array(q,float) for q in d[0]];rs=d[1];n=10;sc.part();rings=[]
+            for i,(q,r) in enumerate(zip(sp,rs)):
+                tg=sp[min(i+1,len(sp)-1)]-sp[max(i-1,0)];tg/=np.linalg.norm(tg);u=np.cross(tg,[0,1.0,0])
+                if np.linalg.norm(u)<1e-6:u=np.array([1.0,0,0])
+                u/=np.linalg.norm(u);v=np.cross(tg,u);rings.append([q+r*(math.cos(2*math.pi*a/n)*u+math.sin(2*math.pi*a/n)*v) for a in range(n)])
+            for A,B in zip(rings,rings[1:]):
+                for a in range(n):b=(a+1)%n;sc.quad(A[a],B[a],B[b],A[b],tuple(c))
+            for a in range(n):b=(a+1)%n;sc.tri(sp[0],rings[0][b],rings[0][a],tuple(c))
+        elif k=='ball':cx,cy,cz,r=d[:4];sc.sphere(cx,cy,cz,r,tuple(c),n=14,m=8,zs=d[4] if len(d)>4 else 1.0)   # d[4]：たての、つぶし（石・葉など）
+        elif k=='frust':   # a→b の円すい台（ななめにおける。じょうろのはす口など）。d=(a,b,aの半径,bの半径)。両はしもふさぐ
+            a,b,r0,r1=np.array(d[0],float),np.array(d[1],float),d[2],d[3];ax=b-a;ax/=np.linalg.norm(ax);u=np.cross(ax,[0,0,1.0])
+            if np.linalg.norm(u)<1e-6:u=np.array([1.0,0,0])
+            u/=np.linalg.norm(u);v=np.cross(ax,u);n=p.detail if p.detail<36 else 16;sc.part()
+            for i in range(n):
+                t0,t1=2*math.pi*i/n,2*math.pi*(i+1)/n;o=lambda r,t:r*(math.cos(t)*u+math.sin(t)*v)
+                sc.quad(a+o(r0,t0),b+o(r1,t0),b+o(r1,t1),a+o(r0,t1),tuple(c));sc.tri(a,a+o(r0,t1),a+o(r0,t0),tuple(c));sc.tri(b,b+o(r1,t0),b+o(r1,t1),tuple(c))
 
 LOGEND=(236,206,150)   # まきの切り口の色（年輪のある明るい木）
 MAKISPLIT=(222,178,118)   # わったまきの、たてにわれた面
