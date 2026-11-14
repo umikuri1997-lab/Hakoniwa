@@ -76,7 +76,9 @@ function ensureStor(s){for(const id in BL){const b=BL[id];if(b&&(b.offerOnly||b.
 /* 特性：ひとりにひとつ。キーキャラは決まっている */
 const TRK=el=>Object.keys(TRAITS).filter(k=>k!=='kizuna'&&k!=='tane'&&k!=='nebari'&&(k!=='shukaku'||el==='wood'));/* しゅうかく上手は木の子だけ（収穫をするのは木の子） *//* たねはこびは風の子だけ（mkRes）。料理じょうずはなくした（料理は、その属性の子だけが作り、時間はいつも料理の time） */const TRAITS={hayaashi:['はやあし','移動速度+30'],hataraki:['はたらきもの','はたらく速さ+30'],shukaku:['しゅうかく上手','畑や木の実の収穫+1'],kikori:['木こり','木を切ると、木材+1'],ishiku:['石工','石をほると、石材+1'],chikara:['力もち','持てる数+2'],shoshoku:['小食','おなかのへる速さ0.8倍'],tafu:['タフ','スタミナ+30'],nebari:['ねばりづよい','スタミナ+30・つかれのとれる速さ2倍'],kizuna:['めぐり','消えても、次の朝にもどってくる'],/* ねばりづよい・めぐりは、キーキャラだけ（TRK でのぞく）。ねばりづよいは、章のはじめからいる子 */genki:['元気いっぱい','たのしさのへる速さ0.6倍'],tane:['たねはこび','外のふしぎな種を拾いに行く']};
 const EL_BASE={wood:{work:100,move:100,sta:100,cap:1},water:{work:130,move:100,sta:70,cap:1},fire:{work:100,move:100,sta:100,cap:1},earth:{work:80,move:90,sta:130,cap:1},wind:{work:90,move:130,sta:80,cap:1}};/* Lv1の能力（属性ごと。はたらく速さ・移動速度・スタミナの合計は、どれも300）。100がふつうの速さ */
-const EL_GROW={wood:{work:[30,5],move:[25,5],cap:[25,5]},water:{work:[35,10],move:[20,5],cap:[20,5]},fire:{work:[25,5],move:[25,5],cap:[20,5],atk:[35,10]},earth:{work:[40,10],move:[15,5],cap:[35,10]},wind:{work:[20,5],move:[40,10],cap:[20,5]}};/* レベルが上がるたびに、少なくふえる%・多くふえる%（ふえる数は LVUP） */
+const EL_GROW={fire:{atk:[1,20],work:[1,7],move:[1,7],cap:25},earth:{atk:[1,10],work:[2,10],move:[1,5],cap:45},wood:{atk:[1,8],work:[1,8],move:[1,7],cap:30},water:{atk:[1,4],work:[1,10],move:[1,6],cap:25},wind:{atk:[1,6],work:[1,6],move:[2,10],cap:25}};/* レベルが上がるたびに、[いちばん少ない,いちばん多い] のどれかだけふえる。持てる数は、この%で+1 */
+const EL_ATK={fire:10,earth:8,wood:5,water:0,wind:3};/* Lv1の攻撃力 */
+const GRDEV=20;/* せいれいごとの、のびやすさ：能力ごとに−20〜+20（1きざみ） */
 const VRDEV=[-30,-20,-10,0,10,20,30];/* 個体ごとのばらつき：はたらく速さ・移動速度・スタミナを、それぞれ、この中から */
 function vrInt(V){if(V&&V.iv!==2){const K=['pow','spd','sta'];if(!V.iv)for(const k of K)V[k]=Math.round(((V[k]==null?1:V[k])-1)*10);for(const k of K)V[k]=(V[k]||0)*10;V.iv=2}return V}/* 前のセーブ：倍率（1がふつう）だったころの数・10がふつうだったころの数を、100がふつうの、たす数にかえる（iv が 2 なら、もうかえてある） */
 const trt=(r,k)=>!!(r&&r.vr&&r.vr.tr===k),recK=r=>(trt(r,'nebari')?2:1)*gearStat(r).rec;/* recK：つかれのとれる速さ（ねばりづよい子は2倍） */
@@ -272,7 +274,8 @@ const rotAt=j=>(S&&S.rot&&S.rot[j])||0;
 const szR=(id,rot)=>{const z=id==='tower'&&WD===0&&S?.sacredLegacy2?[2,2]:id==='tower'&&WD===0&&S?.sacredLegacy3?[3,3]:BL[id]&&BL[id].sz;if(!z)return null;return (ROTS[id]===2&&rot===1||ROTS[id]===4&&rot%2===1||ROTS[id]===3&&rot>=1)?[z[1],z[0]]:z};/* 向きをかえると、たて・よこが入れかわる */
 const szAt=(id,j)=>szR(id,j==null?0:(S.obj[j]===id||S.obj[j]==='site'?rotAt(j):(PLROTS[id]||0)));
 const fp=(id,x,y,rot)=>{const z=rot!=null?szR(id,rot):szAt(id,y*W+x);if(!z)return [[x,y]];const c=[];for(let b=0;b<z[1];b++)for(let a=0;a<z[0];a++)c.push([x+a,y+b]);return c};
-function walk(j){if(j<0||j>=W*H||S.ground[j]===1&&S.obj[j]!=='bridge'||STUMPB.has(j)||S.fog&&fogAt(j))return false;/* 霧の中は歩かない *//* 切り株の上は歩かない */return !solidOf(j)}/* 橋の上は歩ける。浅瀬（ground 2）は歩ける（ゆっくり） */
+let GODJ=-1;/* カミサマの立つマス（stepWorld で毎回きめる）。だれも通れない */
+function walk(j){if(j<0||j>=W*H||S.ground[j]===1&&S.obj[j]!=='bridge'||STUMPB.has(j)||j===GODJ||S.fog&&fogAt(j))return false;/* 霧の中は歩かない *//* 切り株の上は歩かない */return !solidOf(j)}/* 橋の上は歩ける。浅瀬（ground 2）は歩ける（ゆっくり） */
 const wetJ=j=>S.ground[j]===1&&S.obj[j]!=='bridge'||!!S.fog&&fogAt(j);/* 歩けない水 */
 const LIFT=26;/* 段差1だんの高さ（ドット）。高いマスの上の物は、これだけ上に描く */
 function hiAt(j){return S.hi?S.hi[j]|0:0}

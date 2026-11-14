@@ -210,7 +210,7 @@ function careSec(body,r){/* おせわ：なでる・毛布（どれも1人に1�
   if(outS||c.blanket===d)mk('blanket','毛布をかける','',()=>{r.act.blanket=1;r.bubble='💤'});
   body.appendChild(bw)}
 function sortieSec(body,r){/* 出撃する・しない（6時〜23時だけ、かえられる。夜はそのまま） */const on=fighter(r),sec=el('<div class="sec"><h3>出撃</h3><p class="note"></p><div class="btns" style="display:flex;gap:8px;flex-wrap:wrap;margin:4px 0 8px"></div></div>'),bw=sec.querySelector('.btns');
-  sec.querySelector('p').textContent=on?(r.elem==='fire'?'夜、近くのコワイノとたたかう':'夜、近くのコワイノとたたかう（'+SORTIETXT[r.elem]+'）'):(r.elem==='fire'?'夜、見張り台に立つ（'+WPTXT.fire+'）':'夜、見張り台に立つ');
+  sec.querySelector('p').textContent=on?(r.elem==='fire'?'夜、近くのコワイノとたたかう':'夜、近くのコワイノとたたかう'+(SORTIETXT[r.elem]?'（'+SORTIETXT[r.elem]+'）':'')):(r.elem==='fire'?'夜、見張り台に立つ（'+WPTXT.fire+'）':'夜、見張り台に立つ');
   const mk=(v,t)=>{const b=el('<button class="btn"></button>');b.textContent=t;if(on===v)b.classList.add('pri');lackOn(b,isNight()?'夜は、かえられない':'');b.onclick=()=>{if(isNight()||on===v)return;r.sortie=v;if(v===sortieDef(r))delete r.sortie;sfx('tap');renderSheet()};bw.appendChild(b)};
   mk(true,'出撃する');mk(false,'出撃しない');body.appendChild(sec)}
 const CAREPAT=10;

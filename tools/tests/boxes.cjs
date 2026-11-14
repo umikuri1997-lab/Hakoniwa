@@ -17,9 +17,9 @@ const boot=require('../sim/boot.cjs'),assert=require('node:assert/strict');
   assert.ok(c.f1<c.f0,'ate from the box: '+JSON.stringify(c));assert.equal(c.food,c.inBoxes,'food count is what the boxes hold');
   /* 建てる：たのんだときは、とっておくだけ。せいれいが箱から運んで、とどけてから建てる */
   const d=JSON.parse(await run(`(()=>{const A=window.BA,B=window.BB;const r=S.res[0],j=(r.y|0)*W+(r.x|0)-4;S.obj[j]='site';S.dyn[j]={build:'torch',p:0,need:30,mat:{wood:5},got:{}};rsvAdd({wood:5});recount();boxSync();
-    const at={wood:S.mat.wood,rsv:S.rsv.wood,box:(S.box[A].wood||0)+(S.box[B].wood||0)};${step(1200)}
-    return JSON.stringify({at,done:S.obj[j],wood:S.mat.wood,rsv:S.rsv.wood||0,box:(S.box[A].wood||0)+(S.box[B].wood||0)})})()`));
-  assert.deepEqual(d.at,{wood:95,rsv:5,box:100},'reserved, still in the box');assert.equal(d.done,'torch');assert.equal(d.box,95,'taken out of the box');assert.equal(d.rsv,0);assert.equal(d.wood,95);
+    const at={wood:S.mat.wood,rsv:S.rsv.wood,box:(S.box[A].wood||0)+(S.box[B].wood||0)};let bmMax=0,trips=0,ico=0,cap=capOf(r),was=0;for(let i=0;i<1200;i++){stepWorld(.25);for(const q of S.res){q.fun=90;q.energy=100}const n=bmN(r);if(n>bmMax)bmMax=n;if(n&&!was)trips++;was=n;if(n&&carryIcons(r).filter(e=>e==='🪵').length===n&&carryIcon(r)==='🪵')ico++}
+    return JSON.stringify({at,bmMax,trips,ico:ico>0,cap,done:S.obj[j],wood:S.mat.wood,rsv:S.rsv.wood||0,box:(S.box[A].wood||0)+(S.box[B].wood||0)})})()`));
+  assert.deepEqual(d.at,{wood:95,rsv:5,box:100},'reserved, still in the box');assert.equal(d.done,'torch');assert.ok(d.bmMax<=Math.max(1,d.cap),'carries up to the carry count: '+JSON.stringify(d));assert.equal(d.trips,Math.ceil(5/Math.max(1,d.cap)),'one trip per carry count');assert.ok(d.ico,'materials stacked on the head');assert.equal(d.box,95,'taken out of the box');assert.equal(d.rsv,0);assert.equal(d.wood,95);
   /* 依頼のものづくりも、素材を運んでから作る */
   const e=JSON.parse(await run(`(()=>{const A=window.BA,B=window.BB;const r=S.res[0],bj=(r.y|0)*W+(r.x|0)+10;S.obj[bj]='board';S.obj[bj+1]='part';S.ref[bj+1]=bj;recount();BL.crate.maker=null;
     S.orders.push({id:S.nid++,type:'crate',prog:0,need:20,worker:null,mat:{wood:8},food:{},got:{}});rsvAdd({wood:8});const n0=inv('crate');${step(2400)}
@@ -45,6 +45,6 @@ const boot=require('../sim/boot.cjs'),assert=require('node:assert/strict');
   assert.deepEqual(m.o1,{obj:['crate','crate'],crate:1,wood:70,rsv:6,stone:40,food:30,inBox:76,ord:'crate',got:{wood:8}});
   assert.deepEqual(m.o2,{wood:70,rsv:6,inBox:76,food:30});
   assert.deepEqual(errors,[]);
-  console.log('Boxes: per-box contents, filters, hauling from the temple, eating from a box, building and crafting fetch materials, cancel refunds, spilled boxes, old saves migrated twice');
+  console.log('Boxes: per-box contents, filters, hauling from the temple, eating from a box, building and crafting fetch materials (up to the carry count, on the head), cancel refunds, spilled boxes, old saves migrated twice');
   await browser.close();
 })().catch(e=>{console.error(e);process.exit(1)});

@@ -12,16 +12,17 @@ const OVENM=[1,.9,.8,.7,.6,.5,.4,.3,.2,.1,0];/* そばにある調理の家具�
 const rLv=r=>{const x=r.xp||0;let l=1;while(l+1<LVXP.length&&x>=LVXP[l+1])l++;return l},hMax=r=>{const lv=rLv(r);let c=HMC.get(r);if(!c||c.lv!==lv||c.f!==r.elem){let n=r.elem==='fire'?HMAX1F:HMAX1;for(let l=2;l<=lv;l++)n+=HMAXUP+HMAXSTEP*Math.floor(hash(((r.id||0)*131+l*17+23)>>>0)*HMAXUPN);c={lv,f:r.elem,n};HMC.set(r,c)}return c.n};const HMC=new WeakMap();/* おなかの最大：上がったレベルごとに200〜1500をたす */
 /* せいれいの能力。100がふつう。レベルが上がると、はたらく速さ・移動速度・持てる数などがふえる */
 const lvF=(lv,k)=>1+k*(Math.min(lv,10)-1);
-/* 100がふつう。レベルアップでふえる量は、せいれいとレベルごとにばらつく（LVUP） */
-const LVUP={work:[10,20],move:[10,20],atk:[10,20],cap:[1,2]};/* レベルが上がったときにふえる数：[少ないとき,多いとき] */
-function lvGain(r,k,lv){const P=(EL_GROW[r.elem]||EL_GROW.wood)[k];if(!P)return 0;const U=LVUP[k];let n=0;for(let l=2;l<=lv;l++){const h=hash(((r.id||0)*131+l*17+({work:7,move:3,cap:11,atk:13,eat:17,xp:19}[k]||3))>>>0)*100;n+=h<P[1]?U[1]:h<P[0]+P[1]?U[0]:0}return n}/* レベルが上がるたびに、属性ごとの%で、LVUP の数だけふえる（EL_GROW） */
+/* 100がふつう。レベルアップでふえる量は、属性ごとのはば（EL_GROW）の中で、せいれいとレベルごとにばらつく */
+const GRK={work:7,move:3,cap:11,atk:13};
+const grw=(r,k)=>Math.floor(hash(((r.id||0)*173+GRK[k]*29+5)>>>0)*(GRDEV*2+1))-GRDEV;/* のびやすさ：id と能力から決まるので、しまわない */
+function lvGain(r,k,lv){const P=(EL_GROW[r.elem]||EL_GROW.wood)[k];if(P==null)return 0;const g=grw(r,k);let n=0;for(let l=2;l<=lv;l++){const u=hash(((r.id||0)*131+l*17+GRK[k])>>>0)*100;if(typeof P==='number')n+=u<P+g?1:0;else{const v=Math.min(99.999,Math.max(0,u+g));n+=P[0]+Math.floor(v*(P[1]-P[0]+1)/100)}}return n}/* 持てる数は（%+のびやすさ）で+1。ほかは、のびやすさの分だけ多いほうへよる */
 const wkUp=r=>r.wkB>S.t?(r.wkM||0):0,mvUp=r=>r.mvT>S.t?(r.mvM||0):0;/* 料理で、しばらくふえる分 */
 const RSC=new WeakMap();function rMul(r,k){const lv=rLv(r);let c=RSC.get(r);if(!c||c.lv!==lv||c.vr!==r.vr||c.b!==r.boost||c.g!==(r.gv||0)||c.wu!==wkUp(r)||c.mu!==mvUp(r)){c={lv,vr:r.vr,b:r.boost,g:r.gv||0,wu:wkUp(r),mu:mvUp(r),s:rStat(r,lv)};RSC.set(r,c)}return c.s[k]/100*(k==='work'&&BOND5.has(r)?1.05:1)}/* 100がふつうの速さ。なかよし100が3マス以内：はたらく速さ+5% */
 function ovenMul(j){if(j==null)return 1;const x0=j%W,y0=(j/W)|0;const kinds=new Set();for(let y=y0-3;y<=y0+3;y++)for(let x=x0-3;x<=x0+3;x++){if(x<0||y<0||x>=W||y>=H)continue;const o=S.obj[y*W+x];if(o&&o!==S.obj[j]&&BL[o]&&BL[o].cat==='cook')kinds.add(o)}return OVENM[Math.min(kinds.size,OVENM.length-1)]}/* 調理の家具がそばにあると、料理が早い（同じ家具は1つ分だけ。下限はなし） */
-const fAtk=(r,lv)=>10+lvGain(r,'atk',lv);/* 火のせいれいの攻撃力：Lv1で10、上がるたびに EL_GROW の%でふえる */
+const fAtk=(r,lv)=>(EL_ATK[r.elem]||0)+lvGain(r,'atk',lv);/* 攻撃力：Lv1は EL_ATK、上がるたびに EL_GROW のはばでふえる */
 function staOf(r){const V=vrInt(r.vr)||{},B=EL_BASE[r.elem]||EL_BASE.wood;return Math.max(1,B.sta+(V.sta||0)+(trt(r,'tafu')||trt(r,'nebari')?30:0))}/* スタミナ */
 function rStat(r,lv){const V=vrInt(r.vr)||{},fire=r.elem==='fire',G=gearStat(r),B=EL_BASE[r.elem]||EL_BASE.wood;/* G：そうび。どれも、たし算の整数 */return{
-  atk:fire?fAtk(r,lv)+((r.bst&&r.bst.atk)||0)+((r.sst&&r.sst.atk)||0)+G.atk:0,/* 攻撃できるのは火の子だけ */
+  atk:fAtk(r,lv)+((r.bst&&r.bst.atk)||0)+((r.sst&&r.sst.atk)||0)+G.atk,
   work:Math.max(1,B.work+(V.pow||0)+(trt(r,'hataraki')?30:0)+G.work+wkUp(r)+lvGain(r,'work',lv)),
   move:Math.max(1,B.move+(V.spd||0)+(trt(r,'hayaashi')?30:0)+G.mv+mvUp(r)+lvGain(r,'move',lv)),
   eat:Math.round(10*(V.eat||1)*(trt(r,'shoshoku')?.8:1)),
@@ -82,7 +83,7 @@ const SEED_COUNTS={normal:[0,1,2,3],kaze:[3,4,5,6]};
 function dailySeedCount(){const p=Math.random(),i=p<.25?0:p<.75?1:p<.95?2:3;return SEED_COUNTS[S.today==='kaze'?'kaze':'normal'][i]}
 function planSeeds(){S.seedDay=dayNo();const n=dailySeedCount(),b=S.t-clk()%1440,from=Math.max(S.t,b+360),to=Math.max(from,b+1080);S.seeds=[];S.seedPlan=Array.from({length:n},()=>from+Math.random()*(to-from)).sort((a,b)=>a-b)}/* その日の昼に落ちる。時計を止めたチュートリアルの時間も考える */
 const DAYLEN=1.5;/* 1日の長さ：せいれいが動く時間の1.5倍で、時計が1分すすむ */
-function stepWorld(dt){boxSync();if((SUBT+=dt)>1){SUBT=0;checkSub();checkSev();bondTick();guardTick();cmpTick();smTick();jobReachTick();if(typeof villageGiftTick==='function')villageGiftTick();troubleTick();stayGreen()}
+function stepWorld(dt){GODJ=godHere()?Math.floor(godY())*W+Math.floor(godX()):-1;/* カミサマの立つマスは歩けない */boxSync();if((SUBT+=dt)>1){SUBT=0;checkSub();checkSev();bondTick();guardTick();cmpTick();smTick();jobReachTick();if(typeof villageGiftTick==='function')villageGiftTick();troubleTick();stayGreen()}
   st2Tick();fireTick(dt/DAYLEN);
   const prevH=hour(),t0=S.t;let nt=S.t+dt/DAYLEN;// 時計：夜も昼と同じ速さ（1日は1.5倍の長さ）
   if(!S.enemyOn){const c=clk(),cap=Math.floor(c/1440)*1440+(WD===0?20:18)*60,nc=c+(nt-S.t);if(nc>cap)S.hold=(S.hold||0)+Math.min(nt-S.t,nc-cap)}/* チュートリアルで夜がはじまるまで、時計（朝・昼・夜）は18時（草原は20時）で止めておく。せいれいの動きにつかう時間（S.t）は進める */S.t=nt;const h=hour();
