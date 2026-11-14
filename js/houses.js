@@ -61,7 +61,7 @@ function elemKey(r){if(KEYVR[r.name]&&KEYVR[r.name].pk)return KEYVR[r.name].pk;l
 function sayLine(r){const L=[],fav=FOODS[favDish(r)],m=bestMate(r);
   if(r.coffin||r.act&&(r.act.type==='bury'||r.act.type==='pray'))return 'さみしいなぁ…';/* お墓へ向かう・埋葬するあいだ、タップしたときのひとこと */
   if(r.hunger<300)return 'おなかすいた…';if(r.energy<25)return 'ねむたいなぁ…';
-  if(isNight()&&S.enemies.some(e=>e.spawned&&!e.dead))return r.elem==='fire'?'「コワイノ」なんて、こわくない！':'「コワイノ」、こわいね…';
+  if(isNight()&&S.enemies.some(e=>e.spawned&&!e.dead))return r.elem==='fire'?'「コワイノ」なんて、こわくない！':fighter(r)?'こわいけど、村をまもるよ！':'「コワイノ」、こわいね…';
   if(BOXL.length&&S.food<3)return '箱の食べ物が、もうすぐからっぽだよ';
   if((r.cryU||0)>S.t)return 'さみしいなぁ…';
   if(S.today)L.push({hosaku:'きょうは畑がにぎやか！',oshaberi:'きょうは、おしゃべりしたい気分！',odayaka:'今夜は静かになりそう',kaze:'風がつよいね！ 種がとんでくるよ',kami:'カミサマが来てるよ！',hoshi:'今夜は星がきれいなんだって',mono:'落とし物、さがしにいこう！'}[S.today]);
