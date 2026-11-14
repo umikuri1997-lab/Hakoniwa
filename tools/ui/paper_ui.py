@@ -145,7 +145,7 @@ def book_css():
     ])
 
 
-# ---- 草原の木のわく（ふちは細い木・中は明るい木目） ----
+# ---- 草原のパネル：切りっぱなしの明るい板（わくなし・木目） ----
 WM = 40  # 辺のまん中・中の木目のくりかえし（border-image の round で、まん中もならべる）
 
 
@@ -166,6 +166,7 @@ def wood_rows():
         for a, w in LT.get(q, ()):
             if (p - a) % WM < w: return 'l'
         return 'a'
+    # 切りっぱなしの板：わくはなし。ふちの1ドットだけ、切り口の色（上・左は明るく、下・右は少し暗い）。下の2行は板のあつみ、その下にかげ
     rows = []
     for y in range(NW + 1):
         r = ''
@@ -173,16 +174,13 @@ def wood_rows():
             if not ins(x, y):
                 r += 's' if (y >= NW - S and ins(x, y - 1)) else '.'
                 continue
-            k = min(y - tI(x), NW - 1 - tI(x) - y, x - lI(y), NW - 1 - lI(y) - x)
-            if k == 0 or not (ins(x - 1, y) and ins(x + 1, y) and ins(x, y - 1) and ins(x, y + 1)):
-                r += 'o'; continue
-            if k == 1:
-                top_left = (y - tI(x) == 1) or (x - lI(y) == 1)
-                r += 'h' if top_left else 'd'; continue
-            if k == 2:
+            dt, db, dl, dr = y - tI(x), NW - 1 - tI(x) - y, x - lI(y), NW - 1 - lI(y) - x
+            if db <= 1 and not (dl == 0 or dr == 0):
+                r += 'd' if db == 0 else 'w'; continue  # 板のあつみ（下の切り口）
+            if min(dt, dl) == 0 or not (ins(x - 1, y) and ins(x, y - 1)):
+                r += 'h'; continue
+            if min(db, dr) == 0 or not (ins(x + 1, y) and ins(x, y + 1)):
                 r += 'w'; continue
-            if k == 3:
-                r += 'i'; continue
             r += center(x, y)
         rows.append(r)
     return rows
@@ -193,10 +191,10 @@ WOOD_SEL = ('.hud,.dock,.quest,.sheet,.dlg::before,.toast,#helpPop .hc,.idea-car
 
 
 def wood_css():
-    u = svg(wood_rows(), {'a': '#ecd6ad', 'g': '#e2c89a', 'l': '#f3e1bf', 'o': '#6e4a28', 'h': '#c99257',
-                          'w': '#a8743f', 'd': '#8a5a30', 'i': '#d2b382', 's': SHADOW})
+    u = svg(wood_rows(), {'a': '#ecd6ad', 'g': '#e2c89a', 'l': '#f3e1bf', 'h': '#f7e8c9',
+                          'w': '#c9a46e', 'd': '#a8743f', 's': SHADOW})
     sel = ','.join('body.wd0 ' + x.strip() for x in WOOD_SEL.split(','))
-    return ('/* 草原のパネルは木（ふちは細い木のわく・中は明るい木目）。依頼ボードの紙はそのまま。body.wd0 は ui-fx.js の uiStageSync */\n'
+    return ('/* 草原のパネルは、切りっぱなしの明るい板（わくなし・木目）。依頼ボードの紙はそのまま。body.wd0 は ui-fx.js の uiStageSync */\n'
             f'{sel}{{border-image-source:{u}!important;border-image-repeat:round!important}}')
 
 
