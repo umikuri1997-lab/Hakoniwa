@@ -4,7 +4,7 @@
 #   出す物：<chip>.png（向きごと）・<chip>_x10.png・views_x4.png（向きをならべた4倍）・cmp_x4.png（いまのチップとならべた4倍）・bp.png（設計図）
 #   --chips：ゲームのチップ（chips.js とアトラス）に入れ、.chips_changed に id を書く。
 # items/<id>.py に書く物：
-#   ID（チップの名前）・PARTS()（blueprint.Part の表。木目をはらない部品は p.tex=False、金属の部品は p.metal=True、布・砂のなだらかな部品は p.soft=True（ゆるいふくらみにも、かげがつく）・うすいかげだけの部品は p.soft1=True・石の部品は p.stone=True（石のテクスチャ）・レンガの部品は p.brick=True（こまかい、ざらざらしたテクスチャ）・光る部品（火・あかりのガラス）は p.glow=True（かげをつけない）・面のもようは p.decal=f(x,y,z)→色・ひくいドームなど、なだらかなふくらみは p.curve=True（かげのグラデーションを出す）・輪郭線をうすくする部品は p.olk=0.86（もとの色にかける数）)・EXTRA(sc)（Part で書けない形。なければ書かない）
+#   ID（チップの名前）・PARTS()（blueprint.Part の表。木目をはらない部品は p.tex=False、金属の部品は p.metal=True、布・砂のなだらかな部品は p.soft=True（ゆるいふくらみにも、かげがつく）・うすいかげだけの部品は p.soft1=True・サテンの布（つやのある布）は p.satin=True・石の部品は p.stone=True（石のテクスチャ）・レンガの部品は p.brick=True（こまかい、ざらざらしたテクスチャ）・光る部品（火・あかりのガラス）は p.glow=True（かげをつけない）・面のもようは p.decal=f(x,y,z)→色・ひくいドームなど、なだらかなふくらみは p.curve=True（かげのグラデーションを出す）・輪郭線をうすくする部品は p.olk=0.86（もとの色にかける数）)・EXTRA(sc)（Part で書けない形。なければ書かない）
 #   VIEWS=[(チップの名前, まわす数k), ...]（k：0前・1右・2後ろ・3左）・BOTTOM（絵の下のはし。g64のドット。いまのチップに合わせる）
 #   SZ=(よこ,たて)（置くマスの数。2×1 の物は (2,1)。たてにした向きを、置いたマスから下へのびる所に写す）
 #   FRAMES=n（うごく絵のコマの数。PARTS・EXTRA は M.FR（0〜n−1）を見て、動く所だけかえる）
@@ -31,7 +31,7 @@ PN={}
 def scene(M,k,only=None,filt=None,foot=None):
     sc=O.Scene();T=O.Tex(os.path.join(ART,'textures','wood049.png'));TS=O.Tex(os.path.join(ART,'textures','rock030.png'),span=1.0,flow=2,minrun=2,dark=(0.16,0.92),light=(0.14,1.06));TB=O.Tex(os.path.join(ART,'textures','rock030.png'),span=0.5,flow=1,minrun=1,dark=(0.18,0.90),light=(0.12,1.07));L=[p for p in M.PARTS() if not filt or filt(p.name)];keep=set()   # filt：写す部品をえらぶ（動く部品だけ・動く部品のほか）   # TS：石の部品（p.stone）のテクスチャ
     for p in L:
-        mt=getattr(p,'metal',False);sc.texture((TB if getattr(p,'brick',False) else TS if getattr(p,'stone',False) else T) if getattr(p,'tex',True) or getattr(p,'brick',False) and not mt else None);sc.material('metal' if mt else 'flat' if getattr(p,'glow',False) or getattr(p,'flat',False) else 'soft1' if getattr(p,'soft1',False) else 'soft' if getattr(p,'soft',False) else None);p0=sc.pid;sc.decal(getattr(p,'decal',None));sc.smooth(O.GRAD and p.kind in ROUND);sc.curve(getattr(p,'curve',False));sc.outline(None,getattr(p,'olk',None));build(sc,[p]);sc.outline();sc.material(None);sc.decal(None);sc.smooth(False);sc.curve(False)
+        mt=getattr(p,'metal',False);sc.texture((TB if getattr(p,'brick',False) else TS if getattr(p,'stone',False) else T) if getattr(p,'tex',True) or getattr(p,'brick',False) and not mt else None);sc.material('metal' if mt else 'satin' if getattr(p,'satin',False) else 'flat' if getattr(p,'glow',False) or getattr(p,'flat',False) else 'soft1' if getattr(p,'soft1',False) else 'soft' if getattr(p,'soft',False) else None);p0=sc.pid;sc.decal(getattr(p,'decal',None));sc.smooth(O.GRAD and p.kind in ROUND);sc.curve(getattr(p,'curve',False));sc.outline(None,getattr(p,'olk',None));build(sc,[p]);sc.outline();sc.material(None);sc.decal(None);sc.smooth(False);sc.curve(False)
         if only and only(p.name):keep|=set(range(p0+1,sc.pid+1))
         for q in range(p0+1,sc.pid+1):PN[q]=p.name   # 部品の番号 → 名前（粒の火で、かくれる物をえらぶ）
     if hasattr(M,'EXTRA') and not filt:sc.texture(None);M.EXTRA(sc)
