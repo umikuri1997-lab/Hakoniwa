@@ -47,7 +47,7 @@ function faceTo(r,j){if(j==null||j<0)return;const ox=j%W+.5,oy=((j/W)|0)+.5;if(M
 const floats=[],shots=[],fx=[],pops=new Map(),RLVQ=[],LANDFX=new Map();/* LANDFX：置いたばかりの家具が、ぽんと着地する（マス→時刻、DROPT ミリ秒） */
 const DROPT=380;
 /* 木と花は、風でゆれる（雨の日は大きく）。根もと（マスの下）を軸に、よこにかたむける */
-function swayK(id,j,now){if(!S||!(TREES.has(id)||PLANTS.includes(id))||id==='deadtree'&&WD!==1)return 0;/* 枯れ木はゆれない（火山の山の杉はゆれる） */const a=S.rain?.035:.012;return Math.sin(now/(S.rain?520:900)+(j%W)*.7+((j/W)|0)*.45)*a*(TREES.has(id)?.6:1)}
+function swayK(id,j,now){if(!S||!(TREES.has(id)||PLANTS.includes(id))||id==='deadtree'&&WD!==1)return 0;/* 枯れ木はゆれない（火山のとんがりの木はゆれる） */const a=S.rain?.035:.012;return Math.sin(now/(S.rain?520:900)+(j%W)*.7+((j/W)|0)*.45)*a*(TREES.has(id)?.6:1)}
 function dropIn(c,j,x,y,now,fn,id){const k=id?swayK(id,j,now):0;if(k){const by=y+31;c.save();c.transform(1,0,k,1,-k*by,0);try{dropIn(c,j,x,y,now,fn)}finally{c.restore()}return}const t0=LANDFX.get(j);if(t0==null){fn();return}const u=(now-t0)/DROPT;if(u>=1||u<0){LANDFX.delete(j);fn();return}/* 上から6ドット落ちて、着地でちょっとつぶれて、もどる */const fall=u<.45?-6*(1-u/.45)*(1-u/.45):0,sq=u<.45?0:Math.sin((u-.45)/.55*Math.PI)*.08*(1-u),bx=x+16,by=y+31;c.save();c.translate(bx,by+fall);c.scale(1+sq,1-sq);c.translate(-bx,-by);try{fn()}finally{c.restore()}}
 function addFloat(x,y,text,color){if(floats.length>40)floats.shift();floats.push({x,y,text,color:color||'#ecdcbc',life:1})}
 /* 作業：けいけんだけ（パワーは、遊ぶ・食べる・たのしいときだけ）。成長を少しゆっくりにし、端数は保存する */

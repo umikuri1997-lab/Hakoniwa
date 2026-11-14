@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""火山の杉（自然の木 deadtree~v・植えた木 tree~v）のチップを、もらった絵 cedar.png から作る。
+"""火山のとんがりの木（自然の木 deadtree~v・植えた木 tree~v）のチップを、もらった絵 cedar.png から作る。
   python3 tools/art/cedar/cedar_art.py <出力フォルダ>
 透過と色はそのまま、BOX でちぢめる。2本とも同じ倍率（もらった絵の大きさのちがいを、そのままのこす）。"""
 import sys, os
 import numpy as np
 from PIL import Image
 HERE = os.path.dirname(os.path.abspath(__file__))
-SC = 100 / 563  # 自然の杉のはばを100（g64）に
+SC = 100 / 563  # 自然のとんがりの木のはばを100（g64）に
 OBJS = {'deadtree~v': (191, 12, 754, 1012), 'tree~v': (849, 267, 1307, 1012)}
 def main(out):
     os.makedirs(out, exist_ok=True)
