@@ -8,7 +8,7 @@
 #   側枝：主枝の 0.40〜0.85 の所から2〜3本（長さ 0.28〜0.40、半径 0.030 → 0.016）。小枝：側枝の先のほうから1〜2本（長さ 0.14〜0.20、半径 0.015 → 0.007）。
 #   どの枝も、曲がりがだんだんかわる曲線（curve3）：太い枝はゆるく上へ、細い枝の先は葉の重さで少し下がる。子の枝は親より細く、つけ根にえり。
 #   枝先（主枝・側枝・小枝の先）には、かならず葉群（葉のない枝先を作らない）。
-#   葉：もらった葉1まいのモデル（tripo/kit_leaf.glb、形も大きさもかえない）。枝先のまわりに、枝の先の6割にそって、左右たがいちがいに、細い枝は14〜20まい・主枝は10〜14まい。
+#   葉：もらった葉1まいのモデル（tripo/kit_leaf.glb）。葉柄の立ち上がりを面へもどし、葉ごとにしなり（裏がわへ曲げる）をつける（持ち主の指示：形をかえてよい）。大きさは1つ。枝先のまわりに、枝の先の6割にそって、左右たがいちがいに、細い枝は14〜20まい・主枝は10〜14まい。
 #     向きは枝ののびる向きを基本に外へ、重さで少し下へ。表は上へ（裏が上を向かない）。葉先が樹冠の形の外へ出る葉は置かない（外がわがなめらか）。
 #   骨格は1回だけ作って tree_skel.json に固定する（python3 tools/art/furn3d/items/tree.py --skel）。葉つきは読んで葉をたすだけ。SKEL=True で骨格だけ。
 import math,json,os
@@ -125,7 +125,11 @@ def kitleaf():
     if np.abs(w[Q0<a+0.15*L_]).max()>np.abs(w[Q0>b-0.15*L_]).max():e1=-e1   # 細いほう（葉柄）を、−のはしに
     e2=np.cross(e3,e1)   # 右手の向き（e1・e2・e3）：置くときの (o, sd=nn×o, nn) と同じならび
     Q=(V-c)@np.stack([e1,e2,e3],1);Q[:,0]-=Q[:,0].min();Q/=L_
-    F_=np.asarray(m.faces);base=Q[Q[:,0]<0.15];tip=base[np.argmax(base[:,2])]   # 葉柄のはし：つけ根がわで、いちばん表がわへ立ち上がった点（茎の先）
+    F_=np.asarray(m.faces)
+    # 葉柄の立ち上がりをなおす（持ち主の指示：モデルの形をかえてよい）：つけ根から葉の長さの2割までを、葉の面（その先の葉のまん中の高さ）へ、なだらかにもどす
+    zc=float(np.median(Q[(Q[:,0]>0.25)&(Q[:,0]<0.45)&(np.abs(Q[:,1])<0.05),2])) if ((Q[:,0]>0.25)&(Q[:,0]<0.45)&(np.abs(Q[:,1])<0.05)).any() else 0.0
+    w=np.clip(1-Q[:,0]/0.22,0,1);w=w*w*(3-2*w);Q[:,2]=Q[:,2]*(1-w)+zc*w+(Q[:,2]-zc)*w*0.25   # 葉柄は面のすぐそばへ（太さは少しのこす）
+    base=Q[Q[:,0]<0.06];tip=base.mean(0)   # 葉柄のはし
     _KL.append(Q[F_]);_KL.append(tip);return _KL[0]
 def stemtip():kitleaf();return _KL[1]
 def EXTRA(sc):
@@ -156,7 +160,8 @@ def EXTRA(sc):
             if nn[2]<0.2:nn=nn+UP*0.5;nn-=o*(nn@o);nn/=np.linalg.norm(nn)
             M=np.stack([o,np.cross(nn,o),nn],0);base=a_pt-(S@M)*LEAFL   # 葉柄のはしが、細枝の上の点に来る
             h=u0/DOME['umax'];tone=int(np.clip(round(h*1.8+abs(phi)*0.35-0.3),0,len(N.LEAFB)-2))
-            W3=Q@M*LEAFL+base;sc.part()
+            Qb=Q.copy();bend=rs.uniform(0.12,0.30);Qb[...,2]-=bend*np.clip(Qb[...,0]-0.2,0,None)**2   # しなり：葉先へいくほど裏がわへ（重さでたれる。葉ごとに強さがちがう）
+            W3=Qb@M*LEAFL+base;sc.part()
             for q in W3:sc.tri(q[0],q[1],q[2],N.LEAFB[tone])
     sc.material(None);sc.outline()
 def PARTS():return []
