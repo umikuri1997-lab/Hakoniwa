@@ -48,7 +48,7 @@ def clip(pts):
 # ---- かさの樹冠（持ち主のお手本の絵：ビルダーズの木）：ふちがたれた、きのこのかさのようなドーム ----
 # ---- 骨格：Y字に分かれる、ふつうの広葉樹（TREE_RULES.md の「骨格」） ----
 # 樹冠の形 ENV：横に広いドーム（お手本：ビルダーズの木）。底 ZB より上はだ円、ふちは少し下までたれる。枝はこの中でとまる。
-ENV=dict(cx=0.50,cy=0.60,R=0.98,zb=0.80,H=1.00)
+ENV=dict(cx=0.50,cy=0.60,R=0.98,zb=0.80,H=1.25)   # 高さ方向にも（持ち主の指示）
 def envin(p,sh=1.0):
     r=math.hypot(p[0]-ENV['cx'],(p[1]-ENV['cy'])/0.9)/(ENV['R']*sh);z=(p[2]-ENV['zb'])/(ENV['H']*sh)
     if z<0:return r<1 and z>-0.28*max(0,(r-0.35))/0.65   # 底：まん中は平ら、ふちは少し下まで（たれる）
@@ -57,7 +57,7 @@ def envnorm(p):
     """樹冠の形の、その場所の外向き（表の向き）"""
     v=np.array([(p[0]-ENV['cx'])/ENV['R']**2,(p[1]-ENV['cy'])/(0.81*ENV['R']**2),max(0.0,p[2]-ENV['zb'])/ENV['H']**2+0.15]);return v/np.linalg.norm(v)
 TRUNK=0.82
-MAIN=[(25,34,0.44,0.55),(118,30,0.40,0.70),(205,36,0.46,0.48),(300,32,0.42,0.62),(70,54,0.42,1.0),(160,40,0.40,0.34),(340,38,0.38,0.40)]   # 主枝は幹の下のほう（幹の4割5分〜7割）から（持ち主の指示）   # 向き・立ち上がり（水平から、度）・長さ・つけ根の高さ（幹の割合）。さいごは幹のつづき
+MAIN=[(25,34,0.44,0.55),(118,30,0.40,0.70),(205,36,0.46,0.48),(300,32,0.42,0.62),(70,54,0.42,1.0),(160,40,0.40,0.34),(340,38,0.38,0.40),(245,62,0.50,0.88),(140,60,0.48,0.93)]   # さいごの2本：高さ方向へ、ななめ上   # 主枝は幹の下のほう（幹の4割5分〜7割）から（持ち主の指示）   # 向き・立ち上がり（水平から、度）・長さ・つけ根の高さ（幹の割合）。さいごは幹のつづき
 def branch(B,p,d,L,lv,rs,plane,par):
     """1本の枝：のびる（太い枝はしならず、ほぼまっすぐ。いちばん細い枝だけ、ほんの少したれる）、樹冠の形の外へ出る所でとまる。
     先でY字に2本へ分かれる（角度・長さに差。分かれる面は親の面から90度±まわす）。とちゅうから、ときどき短い横の枝。
@@ -156,8 +156,19 @@ def sprigs(B):
             if len(pts)<3:continue
             r0=min(0.014,b['r1']*0.5);new.append({'pts':pts,'lv':5,'leaf':True,'r0':r0,'r1':r0*0.55,'sprig':True})
     B+=new
+def saveskel(B):json.dump([{'pts':[list(map(float,p)) for p in b['pts']],'r0':b['r0'],'r1':b['r1'],'lv':b['lv'],'leaf':b['leaf'],'nodes':b.get('nodes'),'pn':b.get('pn')} for b in B],open(SKELF,'w'))
 def makeskel():
-    B=skeleton();lengthen(B);sprigs(B);zigzag(B);json.dump([{'pts':[list(map(float,p)) for p in b['pts']],'r0':b['r0'],'r1':b['r1'],'lv':b['lv'],'leaf':b['leaf'],'nodes':b.get('nodes'),'pn':b.get('pn')} for b in B],open(SKELF,'w'))
+    """骨格を作り、葉の置き方を1回ためして、葉が1まいもつかない細枝（緑の細枝）は骨格からのぞく（持ち主の指示：葉のない細枝を作らない）。
+    のぞくと、まわりの葉が置けるようになることがあるので、かわらなくなるまでくりかえす。さいごの骨格を固定する"""
+    import oblique3d as O
+    B=skeleton();lengthen(B);sprigs(B);zigzag(B)
+    for it in range(4):
+        saveskel(B);O.GRAD=True;sc=O.Scene();EXTRA(sc);ln=EXTRA.leafn
+        keep=[b for b,n in zip(B,ln) if not (b['leaf'] and n==0)]
+        print('のぞいた葉のない細枝',len(B)-len(keep))
+        if len(keep)==len(B):break
+        B=keep
+    saveskel(B)
 def loadskel():
     return [{'pts':np.array(b['pts']),'r0':b['r0'],'r1':b['r1'],'lv':b['lv'],'leaf':b['leaf'],'nodes':b.get('nodes'),'pn':b.get('pn')} for b in json.load(open(SKELF))]
 def trunkmesh(T,pts,r0,r1,rs,n=28):
@@ -230,7 +241,8 @@ def EXTRA(sc):
         """ほかの葉・幹・枝と、三角形どうしで交差するか。葉柄のはし（枝につく所）は、枝にふれてよいので、しらべる形からのぞく"""
         return (bool(PL) and CM.in_collision_single(leafmesh(base,M,bend))) or CMB.in_collision_single(leafmesh(base,M,bend,True))   # 葉どうしは葉ぜんぶで、枝とは葉柄のはしをのぞいて
     skipped=0
-    for b in B:   # 葉は、小枝の節ごとに、左右たがいちがいに1まい。どの葉も、小枝をふくむ1まいの平らな面（光のほう）の上（お手本の写真：魚の骨の形、交差しない）。小枝の先に1まい
+    LEAFN=[0]*len(B)
+    for bi,b in enumerate(B):   # 葉は、小枝の節ごとに、左右たがいちがいに1まい。どの葉も、小枝をふくむ1まいの平らな面（光のほう）の上（お手本の写真：魚の骨の形、交差しない）。小枝の先に1まい
         if not b.get('nodes'):continue
         pts=b['pts'];pn=np.array(b['pn']);nd=b['nodes'];side=1 if (len(pts)%2) else -1
         for k,i in enumerate(nd):
@@ -246,14 +258,14 @@ def EXTRA(sc):
                 M=np.stack([o,np.cross(nn,o),nn],0);base=p+nn*lift-(S@M)*LEAFL
                 if not crosses(base,M,bend):ok=(base,M);break
             if ok is None:skipped+=1;continue   # どうしても交差する葉は置かない
-            base,M=ok;PL.append((base,M,bend));CM.add_object(str(len(PL)),leafmesh(base,M,bend))
+            base,M=ok;PL.append((base,M,bend));LEAFN[bi]+=1;CM.add_object(str(len(PL)),leafmesh(base,M,bend))
             h=(p[2]-ENV['zb'])/ENV['H'];lt=float(M[2]@N.LIGHTV)
             tone=int(np.clip(round((1-lt)*1.6+(1-h)*1.2-0.5),0,len(N.LEAFB)-2))
             Qb=Q.copy();Qb[...,2]+=bendz(Qb[...,0],bend)   # しなり（少し）。ねじらない
             W3=Qb@M*LEAFL+base;sc.part()
             for q in W3:sc.tri(q[0],q[1],q[2],N.LEAFB[tone])
     print('葉',len(PL),'まい。交差するので置かなかった葉',skipped)
-    EXTRA.placed=PL
+    EXTRA.placed=PL;EXTRA.leafn=LEAFN
     sc.material(None);sc.outline()
 def PARTS():return []
 def POST(im):return N.specks(im)
