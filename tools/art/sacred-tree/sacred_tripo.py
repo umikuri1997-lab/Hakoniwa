@@ -28,6 +28,7 @@ LEAFK=1.8       # 若葉：芽の大きさ
 # いまの絵の色（明るい所・ふつう・暗い所）
 BARK=[(239,175,121),(218,152,106),(182,125,88)]   # お手本の絵の木の皮：明るいすじ・ふつう・みぞ
 CUT=[(248,226,186),(238,210,166),(222,190,146)]
+HEART=[(214,170,122),(196,148,104)]   # 切り口のまん中（芯）のこい色
 LEAF=[(225,234,117),(191,208,99),(172,194,96)]   # お手本の絵の葉：明るい・ふつう・下のふち
 GLOW=(255,246,176)
 MOTEK=0.45     # 光のつぶの大きさ（モデルの玉は大きいので、ちぢめる）
@@ -514,6 +515,7 @@ class Stage:
                             if d<BARKT+0.02:return BARK[2]   # 樹皮と木のさかい
                             if d<BARKT+0.05:return CUT[0]
                             u=1-r/max(Rb-BARKT,1e-6)   # ふちから、まん中へ（0〜1）
+                            if u>0.86:return HEART[1] if u>0.95 else HEART[0]   # 芯：こい色
                             return CUT[2] if any(abs(u-q_)<0.045 for q_ in(0.32,0.55,0.78)) else CUT[1]
                         sc.decal(ring);sc.part()
                         for t in q[cut]:sc.tri(t[0],t[1],t[2],CUT[1])
@@ -535,18 +537,29 @@ class Stage:
         if False and s.name=='tree' and s._ros:crown(sc,s._ros,s.T(max((it for it in s.items if it[2]=='bark'),key=lambda it:it[1]['n'])[0]).reshape(-1,3))
         sc.smooth(False)
 
+def specks(im,maxn=3):
+    """葉（緑の色）の中の、同じ色が maxn ドットまでの小さなかたまりを、まわり（となりのドット）でいちばん多い色にする"""
+    from scipy.ndimage import label,binary_dilation
+    a=np.array(im);A_=a[...,3]>0;C_=a[...,:3].astype(int)
+    for _ in range(3):
+        key=C_[...,0]*65536+C_[...,1]*256+C_[...,2];green=A_&(C_[...,1]>C_[...,0]);ch=False
+        for k in np.unique(key[green]):
+            L_,n=label((key==k)&green)
+            if n==0:continue
+            sz=np.bincount(L_.ravel())
+            for j in np.flatnonzero(sz[1:]<=maxn)+1:
+                m=L_==j;ring=binary_dilation(m)&~m&A_
+                if not ring.any():continue
+                nk=key[ring];vals,cnt=np.unique(nk,return_counts=True);v=vals[cnt.argmax()]
+                C_[m]=[v>>16,(v>>8)&255,v&255];key[m]=v;ch=True
+        if not ch:break
+    a[...,:3]=C_;return Image.fromarray(a)
 def shot(M):
     """furn3d と同じ見え方で写し、ゲームの置き方（ax・ay、g64のドット）をきめる：幹の根もと (TX, y, 0) の写る所が、ゲームの (TX, y) に来るように"""
     O.GRAD=True;inf={};im,ex0,base,yb=F3.shot(M,0,info=inf)
     PROJ,E,S_,fw=inf['PROJ'],inf['ext'],inf['S'],inf['fwd']
     gy=TY;u,v=PROJ(fw((TX,gy,0)));px,py=(u-E[0])*S_,(v-E[2])*S_   # 根もとの近くの地面の点
-    a=np.array(im);A_=a[...,3]>0;C_=a[...,:3].astype(int);H_,W_=A_.shape   # まわり4つと色がちがう1ドットの点（葉の中のぽつんとした点）を、まわりの色でうめる
-    for _ in range(2):
-        up,dn,lf,rt=np.roll(C_,1,0),np.roll(C_,-1,0),np.roll(C_,1,1),np.roll(C_,-1,1);au,ad,al,ar=np.roll(A_,1,0),np.roll(A_,-1,0),np.roll(A_,1,1),np.roll(A_,-1,1)
-        same=lambda P,Q:(P==Q).all(-1)
-        lone=A_&au&ad&al&ar&~same(C_,up)&~same(C_,dn)&~same(C_,lf)&~same(C_,rt)&same(up,dn)&same(lf,rt)&same(up,lf)
-        C_[lone]=up[lone]
-    a[...,:3]=C_;im=Image.fromarray(a)
+    im=specks(im)   # 葉の中の、3ドットまでの小さな点のかたまりを、まわりの色に
     bb=im.getbbox();im=im.crop(bb)
     ax=round(TX*64-px)+bb[0];ay=round(gy*64-py)+bb[1]
     return im,ax,ay
