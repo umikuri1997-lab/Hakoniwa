@@ -114,7 +114,7 @@ def texpat(items,pal):
         return pal[2] if L<lo else pal[0] if L>hi else pal[1]
     return f
 
-LEAFSPEC=0.965   # 葉のつやが出る向きの近さ（大きいほど、つやは小さく、光にまっすぐ向いた所だけ）
+LEAFSPEC=0.93   # 葉のつやが出る向きの近さ（大きいほど、つやは小さく、光にまっすぐ向いた所だけ）
 LEAFVEIN=(160,182,86)   # 葉脈・まん中のすじ（谷）の色
 def veinpat(q):
     """1まいの葉（モデルの葉のかたまり1つ）の柄：葉ののびる向き（いちばん長い向き）を、まん中のすじにする。
@@ -196,14 +196,21 @@ def leafnat(q,uv,lh):
     X=(P-c0)@e1;Y=(P-c0)@e2;A=np.arctan2(Y,X);R=np.hypot(X,Y);nb=24;ab=((A+math.pi)/(2*math.pi)*nb).astype(int)%nb
     RM=np.array([R[ab==i].max() if (ab==i).any() else R.max() for i in range(nb)]);RM=(RM+np.roll(RM,1)+np.roll(RM,-1))/3
     T_=cKDTree(q.mean(1));H,W=TEXL.shape;lo,hi=lh
+    Pu,inv=np.unique(np.round(q.reshape(-1,3),6),axis=0,return_inverse=True);inv=inv.reshape(-1,3)   # 点ごとの面の向き（なめらかなつやのため）
+    fn=np.cross(q[:,1]-q[:,0],q[:,2]-q[:,0]);VN=np.zeros((len(Pu),3))
+    for k_ in range(3):np.add.at(VN,inv[:,k_],fn)
+    VN/=np.maximum(np.linalg.norm(VN,axis=1,keepdims=True),1e-12)
+    HV=O.LIGHT+np.array([0,math.cos(math.radians(42)),math.sin(math.radians(42))]);HV/=np.linalg.norm(HV)   # 光と目のあいだの向き
     def f(x,y,z):
         p=np.array((x,y,z));i=T_.query(p)[1];a,b,c=q[i];v0,v1,v2=b-a,c-a,p-a
         d00,d01,d11,d20,d21=v0@v0,v0@v1,v1@v1,v2@v0,v2@v1;dn=d00*d11-d01*d01 or 1e-12
         w1=(d11*d20-d01*d21)/dn;w2=(d00*d21-d01*d20)/dn;w0=1-w1-w2;u_=w0*uv[i,0]+w1*uv[i,1]+w2*uv[i,2]
         L=TEXL[min(H-1,max(0,int((1-u_[1])*H))),min(W-1,max(0,int(u_[0]*W)))];tl=min(1,max(0,(L-lo)/(hi-lo+1e-9)))
         d=p-c0;X_,Y_=float(d@e1),float(d@e2);an=math.atan2(Y_,X_);k=int((an+math.pi)/(2*math.pi)*nb)%nb;u=min(1,math.hypot(X_,Y_)/max(RM[k],1e-6))
-        v=0.5*tl+0.5*u**0.8   # テクスチャと、まん中が低い影を、半分ずつ
-        return LEAF[2] if v<0.36 else LEAF[1] if v<0.62 else LEAF[0] if v<0.86 else LEAFGLOSS
+        nv=w0*VN[inv[i,0]]+w1*VN[inv[i,1]]+w2*VN[inv[i,2]];sp=float(nv@HV)/max(np.linalg.norm(nv),1e-9)
+        v=0.6*tl+0.4*u**0.8   # テクスチャ（葉の重なり・細かなむら＝ざらつき）と、まん中が低い影
+        if sp>LEAFSPEC and v>0.45:return LEAFGLOSS   # つや：光と目のあいだを向いた、明るい所だけ
+        return LEAF[2] if v<0.34 else LEAF[1] if v<0.60 else LEAF[0]
     return f
 
 def flowfield(q,src):
