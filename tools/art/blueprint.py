@@ -94,6 +94,7 @@ def build(sc,parts):
         elif k=='lathe':cx,cy,pr=d;sc.revolve(cx,cy,pr,lambda k_,i:tuple(c),n=p.detail)
         elif k=='model':
             V,F,C=model_tris(*d);sc.part()
+            if getattr(p,'warp',None):V=p.warp(V.copy())   # warp：モデルの形をかえる関数（点の一覧 → 点の一覧。根をちぢめる など）
             rc=getattr(p,'recol',None)
             if rc is not None:   # 色をかえる（その色に、モデルの明るさのちがいだけをのこす。例：つぼをクリーム色・青に）
                 L_=C.mean(1);L_=L_/max(1.0,L_.mean());kk=getattr(p,'recolk',1.0);L_=1+(L_-1)*kk;C=np.clip(np.array(rc,float)[None,:]*L_[:,None],0,255)   # recolk：明るさのちがいをのこす分（0でむらなし）
