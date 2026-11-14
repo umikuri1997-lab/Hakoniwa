@@ -88,6 +88,27 @@
       "ids": [
         "kabedougu"
       ]
+    },
+    {
+      "reason": "足場は大きさごとに3Dから写したチップ（site:s1・s2・s2d・s2t・s3）にした。部品を組み立てる siteImg はなくした。",
+      "ids": [
+        "site:post",
+        "site:cap",
+        "site:beam",
+        "site:beamL",
+        "site:beamR",
+        "site:brace",
+        "site:brick",
+        "site:walltop",
+        "site:post2",
+        "site:cap2",
+        "site:beam2",
+        "site:beamL2",
+        "site:beamR2",
+        "site:brace2",
+        "site:sand",
+        "site:sand2"
+      ]
     }
   ]
 }

@@ -8,3 +8,7 @@
   取ってきた所：GitHub にある写し（Malcolmnixon/AliceMaze の `assets/ambientcg.com/Bark001_1K-JPG/Bark001_1K_Color.jpg`）。ネットの制限で ambientcg.com から直接は取れなかった。
 - `rock030.png`：ambientCG「Rock030」の色の絵（1K、https://ambientcg.com/view?id=Rock030 、CC0 1.0）。石の家具（流し台など）の石。
   取ってきた所：GitHub にある写し（matthewm174/Godot4.3-soulslike-controller の `textures/Rock030_1K-PNG/Rock030_1K-PNG_Color.png`。べつの写し（Alexamakans/bubbelspel）の Git LFS の sha256 0c859558…a738a と同じことをたしかめた）。
+- `plaster001.png`：ambientCG「Plaster001」の色の絵（1K、https://ambientcg.com/view?id=Plaster001 、CC0 1.0）。しっくいのかべ（灯台・風車の塔、部品に `p.plaster=True`）。
+  取ってきた所：GitHub にある写し（spatigen/espire の `espire/data/assets/Textures/ceiling/Plaster001_1K-PNG_Color.png`。Git LFS の中身の sha256 が 77967887…49d1b00 と同じことをたしかめた）。ファイルの形だけ、そのままの色で PNG に書きなおした。
+- `metal032.png`：ambientCG「Metal032」の色の絵（1K、https://ambientcg.com/view?id=Metal032 、CC0 1.0）。金属の板・鉄（灯台の屋根・枠・手すり、風車の屋根。部品に `p.mtex=True`）。
+  取ってきた所：GitHub にある写し（CC-Open-Learning/DLX-paramedic-ambulance の `Assets/Easter Eggs/Metal032_1K-PNG_Color.png`。Git LFS の中身の sha256 が 74b8db4a…b39cfde と同じことをたしかめた）。ファイルの形だけ、そのままの色で PNG に書きなおした。
