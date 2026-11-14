@@ -268,30 +268,27 @@ def wbtn_rows(pressed=False):
             k, (dt, db, dl, dr) = kk(x, y)
             if k < GAP:
                 r += 'G' if min(dt, dl) <= min(db, dr) else 'B'; continue  # すきま
-            tl = not face(x, y - 1) or not face(x - 1, y)
-            br = not face(x, y + 1) or not face(x + 1, y)
             fx, fy = x - GAP, y - GAP
-            if pressed:
-                if tl or (fy == 1 and not br) or (fx == 1 and not br): r += 'S'; continue  # しずんだ面のふちのかげ
-                if br: r += 'e'; continue
-                r += grain(x % BM, y % BM, BM); continue
-            if tl: r += 'h'; continue
-            if br: r += 'e'; continue
-            if fy == 1 or fx == 1: r += 'k'; continue  # つや：上と左の、明るいふち
-            if (fx, fy) in ((2, 2), (3, 2), (2, 3), (4, 2)): r += 'q'; continue  # つや：左上の光
-            if fy == 2 or fy == 3: r += 'm'; continue  # つや：上のほうに、うすい光の帯
+            ft, fl = k - GAP if dt == k else 99, k - GAP if dl == k else 99  # 面のふちからの近さ（上・左）
+            fb, fr = k - GAP if db == k else 99, k - GAP if dr == k else 99  # （下・右）
+            top_left = min(ft, fl) < min(fb, fr)
+            e = min(ft, fl, fb, fr)
+            if e <= 2:  # 面のふち3ドットに光とかげの段（ふくらんだ立体。おしたときは光とかげが入れかわって、へこむ）
+                lit = top_left != pressed
+                r += ('h', 'k', 'm')[e] if lit else ('e', 'E', 'F')[e]; continue
+            if not pressed and (fx, fy) in ((3, 3), (4, 3), (3, 4), (5, 3)): r += 'q'; continue  # つや：左上の光
             r += grain(x % BM, y % BM, BM)
         rows.append(r)
     return rows
 
 
 WBTN = {  # 面・木目・上のふち・下のふち・あつみ・あつみの下
-    'n': {'a': '#e2c18b', 'g': '#dfbe86', 'D': '#dcba82', 'l': '#e4c48f', 'h': '#f6e3be', 'k': '#f2dcb2', 'm': '#ead0a0',
-          'q': '#fffaf0', 'e': '#c79e66', 'G': '#a07a4c', 'B': '#c29c6a', 'S': '#c49c66', 't': '#b98a52', 'b': '#8a5a30', 's': SHADOW},
+    'n': {'a': '#e2c18b', 'g': '#dfbe86', 'D': '#dcba82', 'l': '#e4c48f', 'h': '#fbeccf', 'k': '#f2dcb2', 'm': '#e9cf9e',
+          'q': '#fffaf0', 'e': '#b08552', 'E': '#c49a62', 'F': '#d3ad76', 'G': '#a07a4c', 'B': '#c29c6a', 'S': '#c49c66', 't': '#b98a52', 'b': '#8a5a30', 's': SHADOW},
     'p': {'a': '#b98551', 'g': '#b4804c', 'D': '#b17e4c', 'l': '#bc8854', 'h': '#dcaa72', 'k': '#d29f68', 'm': '#c4915c',
-          'q': '#f6d6aa', 'e': '#96643a', 'G': '#6e4a28', 'B': '#8a5a30', 'S': '#8f5f34', 't': '#7e5430', 'b': '#5e3d22', 's': SHADOW},
+          'q': '#f6d6aa', 'e': '#7e5430', 'E': '#946238', 'F': '#a67244', 'G': '#6e4a28', 'B': '#8a5a30', 'S': '#8f5f34', 't': '#7e5430', 'b': '#5e3d22', 's': SHADOW},
     'y': {'a': '#f0cf86', 'g': '#edcb80', 'D': '#eac87d', 'l': '#f2d28a', 'h': '#fdecc4', 'k': '#fbe6b4', 'm': '#f6dca0',
-          'q': '#fffdf0', 'e': '#d3a24c', 'G': '#a07a4c', 'B': '#c29c6a', 'S': '#d0a453', 't': '#b98a3a', 'b': '#7a5218', 's': SHADOW},
+          'q': '#fffdf0', 'e': '#c4943f', 'E': '#d6aa58', 'F': '#e3bc6a', 'G': '#a07a4c', 'B': '#c29c6a', 'S': '#d0a453', 't': '#b98a3a', 'b': '#7a5218', 's': SHADOW},
 }
 
 
@@ -323,10 +320,11 @@ def disk_rows(N, rim=True):
         for x in range(N):
             if not inside(x, y): r += '.'; continue
             if not face(x, y): r += 'G' if (x + .5 - c) + (y + .5 - c) < 0 else 'B'; continue  # すきま
-            if not face(x, y - 1) or not face(x - 1, y): r += 'h'
-            elif not face(x, y + 1) or not face(x + 1, y): r += 'e'
-            elif (x + .5 - c + R * .45) ** 2 + (y + .5 - c + R * .5) ** 2 < (R * .08) ** 2: r += 'q'  # つや：左上の光
-            elif dist(x, y) > R - 4.2 and y < c and x < c + R * .3: r += 'k'  # つや：上のふちの明るい線
+            d = dist(x, y); e = int((R - 2) - d)
+            if e <= 2:  # 面のふち3ドットに光とかげの段（左上が光、右下がかげ）
+                lit = (x + .5 - c) + (y + .5 - c) < 0
+                r += ('h', 'k', 'm')[max(0, e)] if lit else ('e', 'E', 'F')[max(0, e)]
+            elif (x + .5 - c + R * .42) ** 2 + (y + .5 - c + R * .42) ** 2 < (R * .08) ** 2: r += 'q'  # つや：左上の光
             else: r += grain(x, y, 64)
         rows.append(r)
     return rows
