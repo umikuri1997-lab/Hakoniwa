@@ -254,8 +254,42 @@ def wbtn_css():
     ])
 
 
+# ---- 草原の丸いボタン（とじるボタン・守りの光）：切りっぱなしの丸い木（木目・下に2ドットのあつみ） ----
+def disk_rows(N, rim=True):
+    D = N - 2          # 面の直径（下に、あつみ2）
+    c, R = D / 2, D / 2
+    face = lambda x, y: 0 <= x < N and 0 <= y < D and (x + .5 - N / 2) ** 2 + (y + .5 - c) ** 2 <= R * R
+    rows = []
+    for y in range(N):
+        r = ''
+        for x in range(N):
+            if face(x, y):
+                if not face(x, y - 1) or not face(x - 1, y): r += 'h'
+                elif not face(x, y + 1) or not face(x + 1, y): r += 'e'
+                else: r += 'g' if (y % 5 == 2 and (x * 7 + y * 3) % 11 < 6) else 'a'
+            elif face(x, y - 1): r += 't'
+            elif face(x, y - 2): r += 'b'
+            else: r += '.'
+        rows.append(r)
+    return rows
+
+
+def disk_css():
+    n = {'a': '#e2c18b', 'g': '#d6b27a', 'h': '#f2dcb2', 'e': '#c79e66', 't': '#b98a52', 'b': '#8a5a30'}
+    lit = {'a': '#f0cf86', 'g': '#e4bf70', 'h': '#fbe6b4', 'e': '#d3a24c', 't': '#b98a3a', 'b': '#7a5218'}
+    x = svg(disk_rows(23), n)
+    gb = svg(disk_rows(52), n)
+    gc = svg(disk_rows(52), lit)
+    return '\n'.join([
+        '/* 草原の丸いボタン：とじるボタン・守りの光／こもれびのまもり（たまった所は、はちみつ色の木） */',
+        f'body.wd0 .sheet .x{{background:{x} center/100% 100% no-repeat!important}}',
+        f'body.wd0 .guard-btn .gb{{background:{gb} center/100% 100% no-repeat!important}}',
+        f'body.wd0 .guard-btn .gc{{background:{gc} center/100% 100% no-repeat!important}}',
+    ])
+
+
 def main():
-    css = '\n'.join([paper_css(), wood_css(), wbtn_css(), board_css(), book_css()])
+    css = '\n'.join([paper_css(), wood_css(), wbtn_css(), disk_css(), board_css(), book_css()])
     s = HTML.read_text()
     b, e = '/* paper-ui:begin */', '/* paper-ui:end */'
     if b not in s:
