@@ -22,7 +22,9 @@ MAIN=[   # 向き・立ち上がり・長さ・葉群の半径・つけ根の高
     (60,78,0.52,(0.44,0.38,0.34),1.0),     # 上（幹のつづき）
 ]   # 主枝は上から見て、ちがう向き（交差しない）
 TRUNK=0.62   # 幹はやや短く（デフォルメ）
-LVL={2:((3,4),(30,50),(0.60,0.80),(0.35,0.85)),3:((2,3),(28,45),(0.50,0.70),(0.35,0.90)),4:((1,2),(25,40),(0.45,0.60),(0.45,0.90))}   # 子の数は少なく（Y字に分かれる。トゲのような小枝を作らない）。太い枝ほど長い
+CROWN=((0.50,0.55,1.18),0.98,0.78,0.58)   # 樹冠の形（さいしょにきめる）：まん中・よこ・おく・たての半径。ゆるいでこぼこ（natcommon.envelope）。枝も葉も、この中
+def crownenv():return N.envelope(CROWN[0],*CROWN[1:],SEED*13)
+LVL={2:((3,4),(30,50),(0.50,0.70),(0.30,0.85)),3:((2,3),(25,42),(0.40,0.55),(0.30,0.90)),4:((1,2),(18,32),(0.30,0.45),(0.45,0.90))}   # Y字。細枝（4）は短く、おだやかな角度（トゲにしない）
 def spots(rs,span,nb,gap=0.18):
     """芽の場所：はんいの中に、たがいに gap より近づけない（1か所から何本も出さない）。間かくはまちまち"""
     out=[]
@@ -47,7 +49,7 @@ def grow(g,i0,d,L,lv,env,c,rs,tips):
     n=max(3,int(L/0.05));up=np.array([0,0,1.0]);idx=[i0];dd=d.copy()
     for k in range(n):
         out=g.P[idx[-1]]-c;out=out/np.linalg.norm(out) if np.linalg.norm(out)>1e-6 else dd
-        dd=dd*0.92+out*0.05+up*0.03+rs.normal(0,0.025,3);dd/=np.linalg.norm(dd)   # 1節の曲がりは小さく
+        dd=dd*0.90+out*0.04+up*(0.03+0.06*k/n)+rs.normal(0,0.045,3);dd/=np.linalg.norm(dd)   # 1節の曲がりは小さく、ゆるくまがり、先は上へ（まっすぐな槍にしない）
         idx.append(g.add(g.P[idx[-1]]+dd*L/n,idx[-1],lv))
     if lv==4:tips.append(idx);return
     nc,ang,lk,span=LVL[lv+1];nb=rs.randint(nc[0],nc[1]+1);az=rs.uniform(0,6.28)
@@ -75,8 +77,7 @@ def skeleton():
         md/=np.linalg.norm(md);m=int(ln/0.05);pts=[j];dd=md.copy()
         for t in range(m):   # 主枝：なめらかに外へ、先は少しずつ上へ
             dd=dd*0.93+up*(0.05 if t>m*0.5 else 0.01)+rs.normal(0,0.02,3);dd/=np.linalg.norm(dd);pts.append(g.add(g.P[pts[-1]]+dd*ln/m,pts[-1],1))
-        c=g.P[pts[-1]]+np.array([0,0,rr[2]*0.2]);env=N.envelope(c,*rr,SEED*7+k);lobes.append((c,rr))
-        bigenv=lambda p,env=env:env(p)   # 葉群の中
+        c=np.array(CROWN[0]);lobes.append((c,rr));bigenv=crownenv()   # 枝は樹冠の形の中
         nc,ang,lk,span=LVL[2];nb=rs.randint(nc[0],nc[1]+1);az2=rs.uniform(0,6.28)
         for s in spots(rs,(0.45,0.95),nb):   # 側枝
             i2=min(m-1,int(s*m));q=g.P[pts[i2]];ld=g.P[pts[i2+1]]-q;ld/=np.linalg.norm(ld)
@@ -99,11 +100,12 @@ def loadskel():
     d=json.load(open(SKELF));return np.array(d['P']),np.array(d['par']),np.array(d['lv']),d['tips'],[(np.array(c),tuple(rr)) for c,rr in d['lobes']]
 # ---- 葉（持ち主の指示：用意された葉1まいのモデルを、自然に分かれた枝のまわりに1まいずつ置き、そのかさなりで樹冠を作る。葉の塊を別の物として作らない） ----
 # 葉のモデル：tripo/kit_leaf.glb（もらった植物のセットの、葉1まい）。形はかえない（面もへらさない）。大きさだけ、まるごと同じ割合で（0.85〜1.2倍）。
-# 置く所：小枝・細枝（lv 3・4）と、側枝（lv 2）の幹から遠い所にそって、枝の長さ LEAFGAP ごとに1まい、左右たがいちがいに（1点から放射状に置かない）。
-#   葉柄のはし（モデルの細いほうのはし）を枝の上の点につける。こさは場所でゆっくりかわる。まん中に近い所ほど多い。
-# 向き：枝ののびる向きを基本に、横（たがいちがい）と少し上へ。表は上・太陽へ。ばらつきは少し（向きがばらばらになりすぎない）。
-LEAFGAP=0.015   # 葉と葉の、枝にそった間かく（マス）
-LEAFL=0.19   # 葉の長さ（マス）
+# 置く所：樹冠の形の中にある枝（主枝の先のほう・側枝・小枝・細枝）にそって、根もと側から先まで、間かく LEAFGAP ごとに1まい（間かくはまちまち）。
+#   枝のまわりの、上・下・手前・おくに、らせん（137.5度）でまわしながら（1点から放射状に置かない）。葉柄のはしを枝の上の点につける。
+# 向き：枝ののびる向きを基本に、外へひらく。表は、上と、樹冠の外がわのまん中（表が下を向かない：上の向きの成分を 0.25 より大きく）。
+#   回転は葉柄のはしを中心に、傾きはおだやかに（ばらつき少し）。大きさは1つ（かえない）。
+LEAFGAP=0.018   # 葉と葉の、枝にそった間かく（マス）
+LEAFL=0.19   # 葉の長さ（マス。どの葉も同じ）
 _KL=[]
 def kitleaf():
     """葉のモデルを読み、葉の軸にそろえる：のびる向き e1（葉柄のはしが原点、葉先が +）・はばの向き e2・表の向き e3（もらったセットで、うしろを向いていた面が表）。長さ1"""
@@ -131,25 +133,30 @@ def EXTRA(sc):
     N.roots(T,(CX,CY,0),0.14,np.random.RandomState(SEED+50),L=0.12)
     N.barkmesh(sc,T)
     if SKEL:return
-    rs=np.random.RandomState(SEED+100);up=np.array([0,0,1.0]);Q=kitleaf()
-    zs=P[lv>=3][:,2];zl,zh=zs.min(),zs.max();ctr=P[lv>=3].mean(0)
-    sc.outline(None,0.86);sc.material('flat');side=1
+    rs=np.random.RandomState(SEED+100);up=np.array([0,0,1.0]);Q=kitleaf();env=N.envelope(CROWN[0],*(np.array(CROWN[1:])*1.08),SEED*13)
+    C0=np.array(CROWN[0]);zl,zh=C0[2]-CROWN[3],C0[2]+CROWN[3]
+    sc.outline(None,0.86);sc.material('flat');az=0.0
     for i in range(1,len(P)):
         j=par[i]
-        if lv[i]<2:continue
-        if lv[i]==2 and math.hypot(P[i][0]-CX,P[i][1]-CY)<0.12:continue   # 側枝の、幹に近い所にはつけない
+        if lv[i]<1:continue
         d=P[i]-P[j];Le=np.linalg.norm(d)
         if Le<1e-6:continue
-        d/=Le;u=np.cross(d,up);u=u/np.linalg.norm(u) if np.linalg.norm(u)>1e-6 else np.array([1.0,0,0])
-        dens=(0.55+0.9*N.ST.vnoise(P[i][0]/0.3+5,P[i][1]/0.3,P[i][2]/0.3))*(1.25-0.5*min(1,np.linalg.norm((P[i]-ctr)/np.array([0.9,0.7,0.5]))))   # こさのむら・まん中ほど多い
-        k=int(Le/LEAFGAP*dens+rs.rand())
+        d/=Le;u=np.cross(d,up);u=u/np.linalg.norm(u) if np.linalg.norm(u)>1e-6 else np.array([1.0,0,0]);v=np.cross(d,u)
+        k=int(Le/LEAFGAP*rs.uniform(0.7,1.3)+rs.rand())
         for t_ in range(k):
-            side=-side;b0=P[j]+d*Le*rs.uniform(0,1)
-            o=d*0.75+u*side*0.75+up*rs.uniform(0.05,0.35)+rs.normal(0,0.12,3);o/=np.linalg.norm(o)   # 枝の向きを基本に、横（たがいちがい）・少し上へ
-            nn=up*0.6+N.SUN*0.4+rs.normal(0,0.15,3);nn-=o*(nn@o);nn/=np.linalg.norm(nn)   # 表は上・太陽へ
-            sd=np.cross(nn,o);f=rs.uniform(0.85,1.2)
-            h=(b0[2]-zl)/max(zh-zl,1e-6);tone=int(np.clip(round((1-float(nn@N.LIGHTV))*1.4+(1-h)*1.3-0.4),0,len(N.LEAFB)-2))
-            W3=Q@np.stack([o,sd,nn],0)*LEAFL*f+b0;sc.part()
+            b0=P[j]+d*Le*rs.uniform(0,1)
+            if not env(b0):continue   # 樹冠の形の外の枝（幹・主枝のつけ根）には、つけない
+            az+=N.GOLD;rad=u*math.cos(az)+v*math.sin(az)   # 枝のまわり（上・下・手前・おく）
+            o=d*0.55+rad*0.85+rs.normal(0,0.08,3);o/=np.linalg.norm(o)   # 枝ののびる向きを基本に、外へひらく
+            out=b0-C0;out/=max(np.linalg.norm(out),1e-6)
+            nn=up*0.6+out*0.4+rs.normal(0,0.10,3);nn-=o*(nn@o)
+            if np.linalg.norm(nn)<1e-3:continue
+            nn/=np.linalg.norm(nn)
+            if nn[2]<0.25:   # 表が下・横を向く置き方はしない：葉ののびる向きを上へ起こしてから、もう1回
+                o=o+up*0.8;o/=np.linalg.norm(o);nn=up-o*(up@o);nn/=np.linalg.norm(nn)
+            sd=np.cross(nn,o)
+            h=(b0[2]-zl)/max(zh-zl,1e-6);tone=int(np.clip(round((1-h)*1.6+(1-nn[2])*0.8-0.3),0,len(N.LEAFB)-2))   # 上ほど・表が上を向くほど明るい
+            W3=Q@np.stack([o,sd,nn],0)*LEAFL+b0;sc.part()
             for q in W3:sc.tri(q[0],q[1],q[2],N.LEAFB[tone])
     sc.material(None);sc.outline()
 def POST(im):return N.specks(im)
