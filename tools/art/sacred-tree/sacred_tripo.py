@@ -49,7 +49,7 @@ def load():
         s=np.where(fl==i)[0];p=V[Fc[s]].reshape(-1,3);c=col[s].mean(0)
         kind='glow' if c[0]>215 and c[1]>200 else 'leaf' if c[1]>c[0] else 'wood'
         q=p.mean(0);grp=('L' if q[0]<0 else 'R')+('B' if q[1]<0 else 'F')   # LB=育った木・RB=切り株・LF=若木・RF=芽
-        if grp[0]=='L' and 100<=len(s)<=130 and (p.max(0)-p.min(0)).max()<0.03:kind='glow'   # 光のつぶ（小さな玉。色が木の色に近い物も）
+        if grp[0]=='L' and (p.max(0)-p.min(0)).max()<0.035:kind='glow'   # 光のつぶ・こぼれた小さな玉（色が木や葉の色の物も）。絵には入れない
         comps.append(dict(f=Fc[s],uv=UV[Fc[s]],col=col[s],kind=kind,grp=grp,n=len(s),lo=p.min(0),hi=p.max(0)))
     return V,comps
 
@@ -273,7 +273,7 @@ class Stage:
         band=main[(z>z.min()+lo*Hm)&(z<z.min()+hi*Hm)];tcx=(band[:,0].max()+band[:,0].min())/2;tcy=(band[:,1].max()+band[:,1].min())/2   # 幹のまん中
         s.T=lambda p,k=k,tcx=tcx,tcy=tcy,z0=P[:,2].min():np.stack([(p[...,0]-tcx)*k+TX,(p[...,1]-tcy)*k+TY,(p[...,2]-z0)*k],-1)
     def leafbox(s):
-        if not hasattr(s,'_lb'):s._lb=[(s.T(p).reshape(-1,3).min(0),s.T(p).reshape(-1,3).max(0)) for p,c,k in s.items if k=='leaf' and c['n']>200]
+        if not hasattr(s,'_lb'):s._lb=[(s.T(p).reshape(-1,3).min(0),s.T(p).reshape(-1,3).max(0)) for p,c,k in s.items if k=='leaf' and c['n']>60]
         return s._lb
     def leaflh(s):
         """葉ぜんぶのテクスチャの明るさのはば（くらい所・明るい所）"""
@@ -299,7 +299,7 @@ class Stage:
                     sc.material(None);sc.outline();continue
                 if kind=='bark':
                     top=q[...,2].max();cut=(nz>0.75)&(q[:,:,2].mean(1)>top*0.7)&(c is s.items[0][1])   # 切り口（上を向いた、高い所の面）
-                    LB=[(lo+(hi-lo)*0.18,hi-(hi-lo)*0.18) for lo,hi in s.leafbox()]   # 葉のかたまりの中（ふちから少し内がわ）
+                    LB=[(lo+(hi-lo)*0.05,hi-(hi-lo)*0.05) for lo,hi in s.leafbox()]   # 葉のかたまりの中（ふちから少し内がわ）
                     keep=np.array([not ct and not any((t.mean(0)>lo).all() and (t.mean(0)<hi).all() for lo,hi in LB) for t,ct in zip(q,cut)])   # 葉のかたまりをつきぬけた枝のさきは描かない（モデルでは葉の中から茶色の点が出ていた）
                     zl,zh=q[...,2].min(),q[...,2].max();H=zh-zl
                     if c is s.items[0][1] and s.name!='tree':src=lambda K:K[:,2]>zh-0.08*H   # 切り株：切り口のふちから、幹を下へ・根の先へ

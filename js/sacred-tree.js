@@ -114,8 +114,9 @@ function drawSacredMotes(c,x,y,now){/* 御神木のまわりの光のつぶ：�
   c.save();for(let i=0;i<MOTEN;i++){
     const h1=(i*0.6180339887)%1,h2=(i*0.4142135623+0.37)%1,per=4200+2600*h2,t=((now/per)+h1*3.1)%1,a=Math.sin(t*Math.PI);if(a<.08)continue;
     const px=Math.round(x-26+170*((h1*7.3+h2*2.9)%1)+3*Math.sin(now/900+i)),py=Math.round(y-110+150*((h2*5.1+h1*1.7)%1)-14*t);/* 葉のまわり（絵の葉のある所） */
-    c.globalAlpha=a*.35;c.fillStyle='#fff3a6';c.fillRect(px-2,py,4,2);c.fillRect(px,py-2,2,6);c.fillRect(px-1,py-1,4,4);/* うすい光（段々のドットの丸） */
-    c.globalAlpha=a;c.fillStyle='#fffbe0';c.fillRect(px,py,2,2);/* まん中（2×2） */
+    c.fillStyle='#fff3a6';c.globalAlpha=a*.22;c.fillRect(px-3,py-1,9,5);c.fillRect(px-1,py-3,5,9);c.fillRect(px-2,py-2,7,7);/* 外の、うすい光（段々のドットの丸） */
+    c.globalAlpha=a*.5;c.fillRect(px-1,py,5,3);c.fillRect(px,py-1,3,5);/* なかの光 */
+    c.globalAlpha=a;c.fillStyle='#fffbe0';c.fillRect(px,py,3,3);/* まん中（3×3） */
   }c.restore();
 }
 function drawStoryTreeFrame(c,x,y,j,now,forced=null,unfold=1){
