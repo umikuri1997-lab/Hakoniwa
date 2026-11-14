@@ -5,7 +5,8 @@ const SACRED_PREVIEW=new WeakMap(),SACRED_SHOWN=new WeakMap(),SACRED_POSES=new W
 const sacredSpan=()=>S?.sacredLegacy2?2:S?.sacredLegacy3?3:4;
 const sacredCells=(j,n=sacredSpan())=>Array.from({length:n*n},(_,i)=>j+(i/n|0)*W+i%n);
 const storyTreeX=j=>j%W+(WD===0?sacredSpan():2)/2;
-const storyTreeY=j=>(j/W|0)+(WD===0?sacredSpan()-1:1);
+const STUMPBY=94;/* 御神木（切り株〜木）の根もとの高さ（絵の左上から、ゲームの点）。幹のまん中は4×4マスのまん中 */
+const storyTreeY=j=>(j/W|0)+(WD===0?sacredSpan()-1-(122-STUMPBY)/TS:1);/* 根もと（絵の y+STUMPBY）が base（storyTreeY*TS+26） */
 function migrateSacredFootprint3(state){/* 御神木を4×4へ（前は2×2・3×3）。空きがなければ、いまの大きさのまま、あとで空いたら広げる */
   if(state.free||(state.world||0)!==0||state.flags.sacredFootprint4&&!state.sacredLegacy2&&!state.sacredLegacy3)return;const N=4,cur=state.sacredLegacy2?2:state.sacredLegacy3||!state.flags.sacredFootprint4&&state.flags.sacredFootprint3?3:2;
   const old=state.obj.indexOf('tower'),pending=state.obj.findIndex((o,j)=>o==='site'&&state.dyn[j]?.build==='tower'),origin=old>=0?old:pending>=0?pending:state.sacredRoot;
@@ -98,30 +99,30 @@ function drawStoryTree(c,x,y,j,now,full=false){
   if(!full)sacredGrowWatch(j);
   x+=(sacredSpan()-4)*TS/2;y+=(sacredSpan()-4)*TS;
   const motion=sacredTreeMotion(now),g=motion.growth,p=motion.progress;
-  c.save();c.translate(x+64,y+122);c.rotate(motion.sway);c.translate(-x-64,-y-122);
+  c.save();c.translate(x+64,y+STUMPBY);c.rotate(motion.sway);c.translate(-x-64,-y-STUMPBY);
   if(g&&p<1){/* 育つ：ためる（前の姿が、だんだん明るくかがやく）→ 前の姿がうすれ、新しい姿が根もとから、白くかがやきながら、のびあがる（少しのびすぎて、もどる）。光・輪・葉は sacredGrowSparks */
-    const t=Math.min(1,(now-g.at)/g.ms),bx=x+64,by=y+122,ch=Math.min(1,t/.35),u=Math.max(0,Math.min(1,(t-.35)/.5)),back=u<1?1+2.2*Math.pow(u-1,3)+1.2*Math.pow(u-1,2):1,sy=.12+.88*back,sx=.55+.45*Math.min(1,back),fade=Math.max(0,1-u/.5);
+    const t=Math.min(1,(now-g.at)/g.ms),bx=x+64,by=y+STUMPBY,ch=Math.min(1,t/.35),u=Math.max(0,Math.min(1,(t-.35)/.5)),back=u<1?1+2.2*Math.pow(u-1,3)+1.2*Math.pow(u-1,2):1,sy=.12+.88*back,sx=.55+.45*Math.min(1,back),fade=Math.max(0,1-u/.5);
     if(fade>0){c.save();c.globalAlpha=fade;drawStoryTreeFrame(c,x,y,j,now,g.from,1);c.globalCompositeOperation='lighter';c.globalAlpha=fade*.7*ch*ch;drawStoryTreeFrame(c,x,y,j,now,g.from,1);c.restore();}
     if(u>0){c.save();c.globalAlpha=Math.min(1,u*2.5);c.translate(bx,by);c.scale(sx,sy);c.translate(-bx,-by);drawStoryTreeFrame(c,x,y,j,now,g.to,Math.min(1,u*1.4));const w=Math.max(0,1-u*1.2)*.8;if(w>0){c.globalCompositeOperation='lighter';c.globalAlpha=w;drawStoryTreeFrame(c,x,y,j,now,g.to,1);}c.restore();}}
   else drawStoryTreeFrame(c,x,y,j,now,full?4:null,1);
   c.restore();
   if(!full&&!(g&&p<1)&&Math.floor(sacredStage())>=4)drawSacredMotes(c,x,y,now);
-  if(sacredCompleted('fireRoot')||(fieldStoryState('fireRoot')?.step||0)>=1){const moving=sacredEffect('stone');for(const [dx,dy]of[[-20,1],[19,4],[10,14]]){if(moving&&dx===19&&(now-moving.at)/moving.ms<.9)continue;sacredStone(c,x+64+dx,y+112+dy,1);}}
+  if(sacredCompleted('fireRoot')||(fieldStoryState('fireRoot')?.step||0)>=1){const moving=sacredEffect('stone');for(const [dx,dy]of[[-20,1],[19,4],[10,14]]){if(moving&&dx===19&&(now-moving.at)/moving.ms<.9)continue;sacredStone(c,x+64+dx,y+STUMPBY-10+dy,1);}}
 }
-const MOTEN=16;/* 御神木のまわりの光のつぶの数 */
+const MOTEN=18;/* 御神木のまわりの光のつぶの数 */
 function drawSacredMotes(c,x,y,now){/* 御神木のまわりの光のつぶ：葉のまわりで、ゆっくりうかびながら、ついたり消えたりする（ドット：まん中1点と、まわり4点のうすい光） */
   c.save();for(let i=0;i<MOTEN;i++){
     const h1=(i*0.6180339887)%1,h2=(i*0.4142135623+0.37)%1,per=4200+2600*h2,t=((now/per)+h1*3.1)%1,a=Math.sin(t*Math.PI);if(a<.08)continue;
-    const px=Math.round(x-12+176*((h1*7.3+h2*2.9)%1)+3*Math.sin(now/900+i)),py=Math.round(y-120+170*((h2*5.1+h1*1.7)%1)-14*t);
-    c.globalAlpha=a*.45;c.fillStyle='#fff3a6';c.fillRect(px-1,py,1,1);c.fillRect(px+1,py,1,1);c.fillRect(px,py-1,1,1);c.fillRect(px,py+1,1,1);
-    c.globalAlpha=a;c.fillStyle='#fffbe0';c.fillRect(px,py,1,1);
+    const px=Math.round(x-26+170*((h1*7.3+h2*2.9)%1)+3*Math.sin(now/900+i)),py=Math.round(y-110+150*((h2*5.1+h1*1.7)%1)-14*t);/* 葉のまわり（絵の葉のある所） */
+    c.globalAlpha=a*.35;c.fillStyle='#fff3a6';c.fillRect(px-2,py,4,2);c.fillRect(px,py-2,2,6);c.fillRect(px-1,py-1,4,4);/* うすい光（段々のドットの丸） */
+    c.globalAlpha=a;c.fillStyle='#fffbe0';c.fillRect(px,py,2,2);/* まん中（2×2） */
   }c.restore();
 }
 function drawStoryTreeFrame(c,x,y,j,now,forced=null,unfold=1){
   let stage=forced??sacredStage();const preview=S&&SACRED_PREVIEW.get(S);if(forced==null&&preview?.session===VILLAGE_SESSION&&performance.now()<preview.until)stage=Math.max(stage,preview.stage);
   stage=Math.floor(stage);const key=SACRED_ART[stage],art=window.CHIPS?.[key];/* かけらでは姿をかえない（前の「若い木」の絵は使わない） */
   if(art&&drawChip(c,art,key,x,y,now,j))return;
-  const cx=x+64,cy=y+112;c.save();c.imageSmoothingEnabled=false;
+  const cx=x+64,cy=y+STUMPBY-10;c.save();c.imageSmoothingEnabled=false;
   c.fillStyle='rgba(66,53,28,.17)';c.beginPath();c.ellipse(cx,cy+9,23,7,0,0,7);c.fill();
   c.strokeStyle='#ab855e';c.lineWidth=7;c.lineCap='round';for(const [dx,dy]of[[-23,10],[24,8],[-14,17],[13,18]]){c.beginPath();c.moveTo(cx,cy+2);c.quadraticCurveTo(cx+dx*.5,cy+dy*.7,cx+dx,cy+dy);c.stroke();}
   c.fillStyle='#b78c61';c.fillRect(cx-14,cy-17,28,24);c.fillStyle='#d2ad7c';c.beginPath();c.ellipse(cx,cy-17,14,6,0,0,7);c.fill();

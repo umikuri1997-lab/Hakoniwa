@@ -9,7 +9,7 @@
 #     芽：右手前の切り株の芽を、その切り株の大きさ→右おくの切り株の大きさにうつして、のせる。若葉：同じ芽を1.8倍にして、のせる。
 #     若木：左手前の若木（幹・枝・葉）を、同じようにうつして、のせる。
 #   大きさ：切り株は、はば2.30マス（いまの絵と同じくらい）。御神木は、はば5.6マス（いまの絵と同じくらい）。
-#   置き方：幹のまん中を x=2.0（4×4のまん中）、いちばん手前の根の下のはしを y=3.85 に。
+#   置き方：幹のまん中を、4×4マスのまん中（x=2.0・y=2.0）に。
 #   色：いまの絵の色に合わせる。モデルの色の明るさのちがいだけをのこし（木の皮のすじ・年輪）、色は、いまの絵の木の皮・切り口・葉の色にする（3だんにそろえる）。
 import sys,os,math
 HERE=os.path.dirname(os.path.abspath(__file__));ART=os.path.join(HERE,'..');ROOT=os.path.join(ART,'..','..')
@@ -21,7 +21,7 @@ import furn3d as F3
 
 GLB=os.path.join(ART,'models','tripo','sacred_stump.glb')
 TX=2.0          # 幹のまん中（マス）
-FRONT=3.85      # いちばん手前の根の下のはし（マス）
+TY=2.0          # 幹のまん中（4×4マスのまん中）
 STUMPW=2.30     # 切り株（根もふくむ）のはば（マス）
 TREEW=5.60      # 御神木（葉もふくむ）のはば（マス）
 LEAFK=1.8       # 若葉：芽の大きさ
@@ -185,6 +185,27 @@ def leafclump(q):
         return LEAF[lv]
     return f
 
+LEAFGLOSS=(243,245,142)   # 葉のつや（お手本の絵の、いちばん明るい葉の色）
+def leafnat(q,uv,lh):
+    """葉のかたまり1つの柄：
+    ・モデルのテクスチャの明るさ（葉の重なり・すじ。モデルの形にそってかかれている）と、
+    ・まん中（茎のつく所）がいちばん低くくらい・ふちほど明るい、かたまりの形の影（ふちまでの長さで、なめらかに）
+    を、なめらかにまぜて、3つの色にする。いちばん明るいふちの所だけ、つや（さらに明るい色）。点のむらは入れない"""
+    from scipy.spatial import cKDTree
+    P=q.reshape(-1,3);c0=P.mean(0);_,_,vt=np.linalg.svd(P-c0,full_matrices=False);e1,e2=vt[0],vt[1]
+    X=(P-c0)@e1;Y=(P-c0)@e2;A=np.arctan2(Y,X);R=np.hypot(X,Y);nb=24;ab=((A+math.pi)/(2*math.pi)*nb).astype(int)%nb
+    RM=np.array([R[ab==i].max() if (ab==i).any() else R.max() for i in range(nb)]);RM=(RM+np.roll(RM,1)+np.roll(RM,-1))/3
+    T_=cKDTree(q.mean(1));H,W=TEXL.shape;lo,hi=lh
+    def f(x,y,z):
+        p=np.array((x,y,z));i=T_.query(p)[1];a,b,c=q[i];v0,v1,v2=b-a,c-a,p-a
+        d00,d01,d11,d20,d21=v0@v0,v0@v1,v1@v1,v2@v0,v2@v1;dn=d00*d11-d01*d01 or 1e-12
+        w1=(d11*d20-d01*d21)/dn;w2=(d00*d21-d01*d20)/dn;w0=1-w1-w2;u_=w0*uv[i,0]+w1*uv[i,1]+w2*uv[i,2]
+        L=TEXL[min(H-1,max(0,int((1-u_[1])*H))),min(W-1,max(0,int(u_[0]*W)))];tl=min(1,max(0,(L-lo)/(hi-lo+1e-9)))
+        d=p-c0;X_,Y_=float(d@e1),float(d@e2);an=math.atan2(Y_,X_);k=int((an+math.pi)/(2*math.pi)*nb)%nb;u=min(1,math.hypot(X_,Y_)/max(RM[k],1e-6))
+        v=0.5*tl+0.5*u**0.8   # テクスチャと、まん中が低い影を、半分ずつ
+        return LEAF[2] if v<0.36 else LEAF[1] if v<0.62 else LEAF[0] if v<0.86 else LEAFGLOSS
+    return f
+
 def flowfield(q,src):
     """木の皮の流れ：面の場所から、src（はじまりの点）からの、面をつたう道のりをはかり、その道のりがのびる向きを、面ごとの流れの向きにする。
     幹ではたて・根では外へ・枝では枝のさきへ。かえすのは、面のまん中の点・流れの向き・面の向き"""
@@ -245,15 +266,21 @@ class Stage:
     def __init__(s,V,comps,name):
         s.name=name;s.ID='story:'+name;s.items=stage(V,comps,name);s.GRAD=True;s.PARALLEL=True   # 遠近なし：furn3d の遠近は1マスの物に合わせた強さなので、大きな木では、上ほど大きくゆがむ
         P=np.concatenate([p.reshape(-1,3) for p,_,_ in s.items]);bark=np.concatenate([p.reshape(-1,3) for p,c,k in s.items if c is s.items[0][1]])
-        if name=='tree':
-            w=STUMPW if False else TREEW;k=w/(P[:,0].max()-P[:,0].min());base=P[P[:,2]<P[:,2].min()+0.02]   # 幹のまん中：根もとの点のまん中
-        else:
-            k=STUMPW/(bark[:,0].max()-bark[:,0].min());base=bark[bark[:,2]<bark[:,2].min()+0.02]
-        tcx=(base[:,0].max()+base[:,0].min())/2;fy=P[:,1].max() if name=='tree' else bark[:,1].max()
-        s.T=lambda p,k=k,tcx=tcx,fy=fy,z0=P[:,2].min():np.stack([(p[...,0]-tcx)*k+TX,(p[...,1]-fy)*k+FRONT,(p[...,2]-z0)*k],-1)
+        main=(max((it for it in s.items if it[2]=='bark'),key=lambda it:it[1]['n']) if name=='tree' else s.items[0])[0].reshape(-1,3)   # 切り株（はじめの部品）・御神木の幹（いちばん大きな木の部品）
+        if name=='tree':k=TREEW/(P[:,0].max()-P[:,0].min())
+        else:k=STUMPW/(bark[:,0].max()-bark[:,0].min())
+        z=main[:,2];Hm=z.max()-z.min();lo,hi=(0.5,0.8) if name!='tree' else (0.25,0.40)   # 幹の高さの所（根より上）の断面
+        band=main[(z>z.min()+lo*Hm)&(z<z.min()+hi*Hm)];tcx=(band[:,0].max()+band[:,0].min())/2;tcy=(band[:,1].max()+band[:,1].min())/2   # 幹のまん中
+        s.T=lambda p,k=k,tcx=tcx,tcy=tcy,z0=P[:,2].min():np.stack([(p[...,0]-tcx)*k+TX,(p[...,1]-tcy)*k+TY,(p[...,2]-z0)*k],-1)
     def leafbox(s):
         if not hasattr(s,'_lb'):s._lb=[(s.T(p).reshape(-1,3).min(0),s.T(p).reshape(-1,3).max(0)) for p,c,k in s.items if k=='leaf' and c['n']>200]
         return s._lb
+    def leaflh(s):
+        """葉ぜんぶのテクスチャの明るさのはば（くらい所・明るい所）"""
+        if not hasattr(s,'_lh'):
+            U=np.concatenate([c['uv'].mean(1) for p,c,k in s.items if k=='leaf']);H,W=TEXL.shape
+            L=TEXL[np.clip(((1-U[:,1])*H).astype(int),0,H-1),np.clip((U[:,0]*W).astype(int),0,W-1)];s._lh=(np.quantile(L,0.05),np.quantile(L,0.95))
+        return s._lh
     def PARTS(s):return []
     def EXTRA(s,sc):
         sc.smooth(True);s._gid=[]
@@ -302,16 +329,16 @@ class Stage:
                     m0=q.reshape(-1,3).mean(0);dd=np.sort(np.linalg.norm(s._lc-m0,axis=1))
                     if len(dd)>1 and dd[1]>0.9 or (q.reshape(-1,3).max(0)-q.reshape(-1,3).min(0)).max()<0.12:continue   # はなれて1つだけうかぶ葉（モデルのこぼれ）は描かない：お手本の絵と同じ、小さなまるい葉の玉がかさなる形に作りなおす（lobes）
                     lobes(sc,q,n,len(s._gid));s._gid.append(1);continue
-                sc.material('satin');sc.decal(leafclump(q));sc.part();sc.material(None)   # satin：光の当たる向きに、つや   # 葉：かたまりのまん中（茎のつく所）がいちばん低くくらい、ふちへ明るく。まん中から葉脈
+                sc.decal(leafnat(q,c['uv'],s.leaflh()));sc.part()   # 葉：モデルのテクスチャの明るさ（形にそったもよう）と、まん中が低い影を、なめらかにまぜる
                 for t in q:sc.tri(t[0],t[1],t[2],LEAF[1])
                 sc.decal(None)
         sc.smooth(False)
 
 def shot(M):
     """furn3d と同じ見え方で写し、ゲームの置き方（ax・ay、g64のドット）をきめる：幹の根もと (TX, y, 0) の写る所が、ゲームの (TX, y) に来るように"""
-    O.GRAD=True;O.SATINSPEC=LEAFSPEC;inf={};im,ex0,base,yb=F3.shot(M,0,info=inf)
+    O.GRAD=True;inf={};im,ex0,base,yb=F3.shot(M,0,info=inf)
     PROJ,E,S_,fw=inf['PROJ'],inf['ext'],inf['S'],inf['fwd']
-    gy=FRONT-0.6;u,v=PROJ(fw((TX,gy,0)));px,py=(u-E[0])*S_,(v-E[2])*S_   # 根もとの近くの地面の点
+    gy=TY;u,v=PROJ(fw((TX,gy,0)));px,py=(u-E[0])*S_,(v-E[2])*S_   # 根もとの近くの地面の点
     bb=im.getbbox();im=im.crop(bb)
     ax=round(TX*64-px)+bb[0];ay=round(gy*64-py)+bb[1]
     return im,ax,ay
