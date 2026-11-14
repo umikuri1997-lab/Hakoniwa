@@ -388,8 +388,8 @@ const YOGAN=[null,{dmg:10,range:5,cd:8,splash:1.5,sdmg:5},{dmg:20,range:5.5,cd:8
 const enemyLive=()=>!!S&&S.enemies.some(e=>e.spawned&&!e.dead);
 const WPEL={wood:{dmg:1,cd:1,rng:1},earth:{dmg:1.5,cd:2,rng:1},wind:{dmg:.5,cd:1,rng:1.5},water:{water:1,cd:1,rng:1},fire:{dmg:.5,cd:1,rng:1,use:2,burn:1}};/* 火：矢は1回に2本・あたったコワイノに延焼（BURN） *//* 見張り台に立つ子の属性ごと：威力・うつ間かく・射程の倍。水は矢をつかわず、あたったコワイノをすべらせて止める（ダメージなし） */
 const BURN={dmg:3,iv:3,n:3};/* 延焼：3ごと（時計の2分）に3ダメージを3回。かさねず、かけなおす */
-const SORTIE={wood:{dmg:5,cd:5,rng:1.5},earth:{dmg:8,cd:10,rng:1.5},wind:{dmg:3,cd:5,rng:2.25},water:{stop:1,cd:5,rng:1.5}};/* 出撃した火のせいれいでない子の近接：攻撃・間かく・とどくきょり。水はダメージなしで止める */
-const SORTIETXT={wood:'攻撃5',earth:'攻撃8・攻撃の速さ0.5倍',wind:'攻撃3・とどくきょり1.5倍',water:'ダメージなし。たたいた「コワイノ」は2分止まる。オオカゲなどは1分'};
+const SORTIE={wood:{cd:5,rng:1.5},earth:{cd:10,rng:1.5},wind:{cd:5,rng:2.25},water:{stop:1,cd:5,rng:1.5}};/* 出撃した火のせいれいでない子の近接：間かく・とどくきょり。ダメージは、その子の攻撃力。水はダメージなしで止める */
+const SORTIETXT={wood:'',earth:'攻撃の速さ0.5倍',wind:'攻撃3・とどくきょり1.5倍',water:'ダメージなし。たたいた「コワイノ」は2分止まる。オオカゲなどは1分'};
 const WPTXT={wood:'木の矢を放つ',earth:'威力1.5倍・うつ速さ0.5倍',wind:'射程1.5倍・威力0.5倍',water:'木の矢をつかわない。あたった「コワイノ」は2分止まる。オオカゲなどは1分。ダメージなし',fire:'威力0.5倍・木の矢を1回に2本。あたった「コワイノ」は、2分ごとに3ダメージを3回'};
 const wpGuardOf=j=>S.res.find(q=>!q.hidden&&q.act&&q.act.type==='watchpost'&&q.act.stage==='do'&&(q.act.cl||0)>=1&&q.act.obj===j)||null;const wpGuardAt=(j,si)=>S.res.find(q=>!q.hidden&&q.act&&q.act.type==='watchpost'&&q.act.stage==='do'&&(q.act.cl||0)>=1&&q.act.obj===j&&(q.act.slot||0)===si)||null;/* その立つ所（0・1）にいる子 */
 const watchGuard=j=>S.res.some(q=>!q.hidden&&q.act&&q.act.type==='watchpost'&&q.act.stage==='do'&&(q.act.cl||0)>=1&&q.act.obj===j);/* 見張り台にせいれいが立っているか */
