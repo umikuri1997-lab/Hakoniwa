@@ -128,10 +128,11 @@ def build(sc,parts):
                     sc.quad(V(qa,y0,ra),V(qb,y0,rb),V(xb,y0+b,zb),V(xa,y0+b,za),tuple(c));sc.quad(V(xa,y1-b,za),V(xb,y1-b,zb),V(qb,y1,rb),V(qa,y1,ra),tuple(c))
             for yy in(y0,y1):   # はしの面：へこんだ形（アーチのぬけた形など）も正しくうめる（耳をきりとるやり方）
                 for a_,b_,c_ in earclip(Q or pts):sc.tri(V(a_[0],yy,a_[1]),V(b_[0],yy,b_[1]),V(c_[0],yy,c_[1]),tuple(c))
-        elif k=='loft':
-            sc.part();R_=d;n=len(R_[0][0])
-            for (A,za),(B,zb) in zip(R_,R_[1:]):
-                for i in range(n):(x0,y0),(x1,y1)=A[i],A[(i+1)%n];(u0,v0),(u1,v1)=B[i],B[(i+1)%n];sc.quad((x0,y0,za),(x1,y1,za),(u1,v1,zb),(u0,v0,zb),tuple(c))
+        elif k=='loft':   # p.split=True：まわりの面ごとにべつの部品にする（屋根の四方の面のさかいに線＝むねが出る）
+            sc.part();R_=d;n=len(R_[0][0]);SP=getattr(p,'split',False)
+            for i in range(n):
+                if SP and i:sc.part()
+                for (A,za),(B,zb) in zip(R_,R_[1:]):(x0,y0),(x1,y1)=A[i],A[(i+1)%n];(u0,v0),(u1,v1)=B[i],B[(i+1)%n];sc.quad((x0,y0,za),(x1,y1,za),(u1,v1,zb),(u0,v0,zb),tuple(c))
             for P_,z in(R_[0],R_[-1]):
                 for i in range(1,n-1):sc.tri((P_[0][0],P_[0][1],z),(P_[i][0],P_[i][1],z),(P_[i+1][0],P_[i+1][1],z),tuple(c))
         elif k=='rope':sc.tube([d[0],d[1]],d[2],tuple(c),n=6)
