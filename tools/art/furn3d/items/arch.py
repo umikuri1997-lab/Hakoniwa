@@ -3,7 +3,7 @@
 #   柱：木の角柱4本（0.10角・高さ0〜1.55）。x=-0.25 と 1.20、y=0.30 と 0.80。地面にうめてたてる。
 #   横木：前とうしろに1本ずつ（木の角材 0.08×0.12、x=-0.36〜1.31・高さ1.50〜1.62）。柱の上にのせて、ほぞでとめる。
 #   たる木：おく向きの木の板6本（はば0.06・高さ0.10・長さ0.78、y=0.16〜0.94・高さ1.62〜1.72）。x=-0.24〜1.19 に同じ間かくで。横木の上にのせて、くぎでとめる。
-#   つるばら：たる木の上を、うねりながら左から右へ。右の前の柱を下へ、つる（太さ0.012）。葉（だ円の葉）と、白い花（半径0.055、まん中に黄色）。
+#   つるばら（トリポのモデル rose・roseleaf・rosevine）：たる木の上を、うねりながら左から右へ、つる（太さ0.012）と葉の小枝・白いばら5りん。右の前の柱には、のぼるつるばらの枝（高さ0.55）を3本、下からつないで。
 from blueprint import Part as P
 from common import *
 import math
@@ -19,14 +19,14 @@ def PARTS():
     for i in range(6):
         x=XL+0.01+(XR-XL-0.02)*i/5
         L.append(P('たる木%d'%(i+1),'box',(x-0.03,0.16,1.62,x+0.03,0.94,1.72),WOOD,bevel=0.01,on=('横木（前）','横木（うしろ）'),note='横木の上にのせて、くぎでとめる'))
-    # つるばら：前の横木の手前の面にそって、ゆるくたれながら左から右へ。右の前の柱にそって下へ
-    path=[(-0.10+1.25*t,0.55+0.22*math.sin(t*math.pi*2.5),1.74+0.01*math.sin(t*9)) for t in [i/14 for i in range(15)]]   # たる木の上を、左から右へ、うねりながら
-    path+=[(XR+0.02,Y1-0.02+0.05*t,1.74-0.10*t) for t in (0.5,1.0)]+[(XR+0.055,Y1+0.05,1.55-1.25*t) for t in [i/8 for i in range(1,9)]]   # 右の前の柱を下へ
-    L.append(notex(P('つる','tube',(path,0.012),VINE,on=('横木（前）','柱（右前）'),note='横木と柱にからまる')))
-    for k,(x,y,z) in enumerate(path[::2]):
-        for j,(dx,dy) in enumerate(((0.05,0.04),(-0.04,-0.05))):
-            L.append(notex(P('葉%d-%d'%(k+1,j+1),'egg',(x+dx,y+dy,z+0.01,0.065,0.04,0.025,(k*47+j*90)%180),LEAF if (k+j)%2 else LEAF2,on=('つる',),note='つるの葉')))
-    for k,(x,y,z) in enumerate((path[2],path[6],path[10],path[13],path[19],path[22])):
-        L.append(notex(P('花%d'%(k+1),'ball',(x,y+0.03,z,0.055),ROSE,on=('つる',),note='白いばら')))
-        L.append(notex(P('花のまん中%d'%(k+1),'ball',(x,y+0.07,z+0.03,0.016),ROSEC,on=('花%d'%(k+1),),note='花のまん中')))
+    # つるばら（トリポのモデル）：たる木の上を、うねりながら左から右へ、つると葉と白いばら。右の前の柱には、のぼるつるばらの枝
+    path=[(-0.10+1.25*t,0.55+0.22*math.sin(t*math.pi*2.5),1.74+0.01*math.sin(t*9)) for t in [i/14 for i in range(15)]]
+    L.append(notex(P('つる','tube',(path,0.012),VINE,on=('たる木1','たる木6'),note='たる木にからまる')))
+    for k,(x,y,z) in enumerate(path):   # 葉の小枝（トリポ roseleaf）を、つるにそって、向きをかえながら
+        if k%3==2:continue
+        L.append(P('葉%d'%(k+1),'model',('tripo/roseleaf.glb',x+0.03*((-1)**k),y,z-0.02,0.22,(k*67)%360,70),LEAF,on=('つる',),note='つるの葉'))
+    for k,i in enumerate((2,5,8,11,13)):   # 白いばら（トリポ rose）
+        x,y,z=path[i];L.append(P('花%d'%(k+1),'model',('tripo/rose.glb',x,y+0.02,z,0.10,(k*83)%360),ROSE,on=('つる',),note='白いばら'))
+    for k,(z,r) in enumerate(((0.0,200),(0.46,20),(0.92,190))):   # 右の前の柱：のぼるつるばらの枝（トリポ rosevine、高さ0.55）を3本、下からつないで
+        L.append(P('柱のつるばら%d'%(k+1),'model',('tripo/rosevine.glb',XR+0.03,Y1+0.07,z,0.55,r),VINE,on=('ground','柱（右前）'),note='右の前の柱にからまって、のぼるつるばら'))
     return L
