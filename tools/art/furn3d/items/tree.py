@@ -134,8 +134,30 @@ def lengthen(B):
             if not envin(q,1.02):break
             P.append(q);L+=0.04
         b['pts']=P
+SPRIGGAP=0.09   # 太い枝から出す短い細枝の間かく（マス）
+def sprigs(B):
+    """太い枝（主枝・側枝・小枝）の、樹冠の中にある所にそって、短い細枝を出す（持ち主の指示：枝が見えている所を、細枝と葉でかくす）。
+    外がわ・少し上へ。長さ 0.12〜0.2。左右たがいちがい（らせん）。骨格の一部"""
+    rs=np.random.RandomState(SEED+11);az=0.0;new=[]
+    for b in B:
+        if not 1<=b['lv']<=3:continue
+        P=[np.array(p) for p in b['pts']];Ls=np.cumsum([0]+[np.linalg.norm(P[i+1]-P[i]) for i in range(len(P)-1)]);tot=Ls[-1]
+        for sd_ in np.arange(SPRIGGAP*0.6,tot-0.03,SPRIGGAP*rs.uniform(0.8,1.2)):
+            j=max(0,min(len(P)-2,int(np.searchsorted(Ls,sd_))-1));t=(sd_-Ls[j])/max(Ls[j+1]-Ls[j],1e-9);q=P[j]+(P[j+1]-P[j])*t
+            if q[2]<0.45 or math.hypot(q[0]-ENV['cx'],(q[1]-ENV['cy'])/0.9)>ENV['R']*0.95:continue   # 樹冠の下の、見えている太い枝にも
+            d=P[j+1]-P[j];d/=np.linalg.norm(d);u=np.cross(d,UP);u=u/np.linalg.norm(u) if np.linalg.norm(u)>1e-6 else np.array([1.0,0,0]);v=np.cross(d,u)
+            az+=N.GOLD;side=u*math.cos(az)+v*math.sin(az);out=np.array([q[0]-ENV['cx'],q[1]-ENV['cy'],0.0]);out=out/np.linalg.norm(out) if np.linalg.norm(out)>1e-3 else side
+            c=d*0.4+side*0.7+out*0.5+UP*0.35;c/=np.linalg.norm(c);L=rs.uniform(0.12,0.20)
+            pts=[q];dd=c
+            for k in range(4):
+                dd=dd-UP*0.02+rs.normal(0,0.02,3);dd/=np.linalg.norm(dd);qq=pts[-1]+dd*L/4
+                if not envin(qq,1.02) and (qq[2]>ENV['zb'] or math.hypot(qq[0]-ENV['cx'],(qq[1]-ENV['cy'])/0.9)>ENV['R']):break
+                pts.append(qq)
+            if len(pts)<3:continue
+            r0=min(0.014,b['r1']*0.5);new.append({'pts':pts,'lv':5,'leaf':True,'r0':r0,'r1':r0*0.55,'sprig':True})
+    B+=new
 def makeskel():
-    B=skeleton();lengthen(B);zigzag(B);json.dump([{'pts':[list(map(float,p)) for p in b['pts']],'r0':b['r0'],'r1':b['r1'],'lv':b['lv'],'leaf':b['leaf'],'nodes':b.get('nodes'),'pn':b.get('pn')} for b in B],open(SKELF,'w'))
+    B=skeleton();lengthen(B);sprigs(B);zigzag(B);json.dump([{'pts':[list(map(float,p)) for p in b['pts']],'r0':b['r0'],'r1':b['r1'],'lv':b['lv'],'leaf':b['leaf'],'nodes':b.get('nodes'),'pn':b.get('pn')} for b in B],open(SKELF,'w'))
 def loadskel():
     return [{'pts':np.array(b['pts']),'r0':b['r0'],'r1':b['r1'],'lv':b['lv'],'leaf':b['leaf'],'nodes':b.get('nodes'),'pn':b.get('pn')} for b in json.load(open(SKELF))]
 def trunkmesh(T,pts,r0,r1,rs,n=28):
