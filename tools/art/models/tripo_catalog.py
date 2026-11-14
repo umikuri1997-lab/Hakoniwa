@@ -15,7 +15,9 @@ TRIPO=os.path.join(HERE,'tripo')
 SIZE={'oak':2.4,'oak_dead':2.2,'cedar':2.6,'maple':2.2,'acacia':2.0,'appletree':2.0,'bamboo':2.2,'berrybush':0.7,'rock':0.5,
       'rosevine':1.0,'rose':0.25,'roseleaf':0.3,'takenoko':0.35,'clover':0.25,'bellflower':0.45,'salvia':0.45,'lily':0.5,'lotus':0.35,
       'mushrooms':0.3,'grass':0.35,'grass2':0.35,'plant':0.6,'sack':0.5,'sacks2':0.6,'jar_band':0.5,'terracotta':0.5,'candle':0.3,
-      'lantern':0.45,'wateringcan':0.35,'veggies':0.3,'bathtub':0.6,'cutboard':0.2,'bird':0.2}
+      'lantern':0.45,'wateringcan':0.35,'veggies':0.3,'bathtub':0.6,'cutboard':0.2,'bird':0.2,
+      'stump':0.43,'stone_big':0.38,'stone_mid':0.3,'stone_round':0.32,'stone_slab':0.1,'stone_chunk':0.25,'pebbles2':0.08,'pebbles3a':0.08,'pebbles3b':0.08,
+      'pebble_a':0.06,'pebble_b':0.04,'pebble_c':0.06,'log_lying':0.22,'firewood':0.12,'sprig':0.18}
 def shot1(f,h):
     M=types.SimpleNamespace(ID=f,GRAD=True,VIEWS=[(f,0)])
     def PARTS():
