@@ -211,7 +211,7 @@ const ART={"fl_salvia": {"w": 91, "h": 96, "src": "assets/g/106ba40c68.webp"}, "
 for(const k in ART){const a=ART[k];a.img=new Image();a.img.onload=()=>{a.ok=true;artLoaded()};a.img.onerror=()=>{a.bad=true};a.img.src=a.src}
 const BIG2=new Set(['windmill','statue']);/* 見張り台は2×2マスにぴったりの大きさ（拡大しない） */// 見た目2倍
 const TREES=new Set(['tree','ntree','fruit','deadtree']);// 木はさらに1.5倍
-const SPR_OBJ=new Set(['lumber','quarry','well','puddle','spike','firetrap','gust']);
+const SPR_OBJ=new Set(['lumber','quarry','well','puddle','firetrap','gust']);
 const BIG=new Set(['table','clover','bellf','salvia','lily','lotus','tree','fruit','rock','deadtree','ntree','berry','grave','stor','mbox','oven','lamp','campfire','swing','torch','vane','kamizo','lighthouse','chair','achair','stool']);const BIGK={oven:1.2,campfire:1.2,kamizo:2,lighthouse:2,table:1.125,chair:1.125,achair:.75,stool:.75};/* 大きさの判定はそのままで、見た目だけ：いすは1.125倍、ほかの椅子とスツールは0.75倍 *//* 食卓・椅子・つぼ・石のオブジェは1マスぴったり。かまど・たき火は少しだけ大きく */// 罠は1マスぴったりなので大きくしない
 /* 新しい家具（スクリプトで描く）。マスの左上が (x,y)、足もとは y+30 */
 const F2C={wd:'#c08a58',wdD:'#8a5a36',wdL:'#dcae7c',ol:'#6e4a2e',cr:'#f7eedb',crD:'#e3d3b2',gr:'#8cc06a',grD:'#5e9a4a',pk:'#f2b5b5',bl:'#a8c8e6',st:'#c9c3b8',stD:'#9d968b'};
