@@ -13,7 +13,7 @@ from blueprint import Part as P
 from common import *
 import math,random
 from temple import GOLD,BAN,STARC,CRY,LEAF,LEAF2,star,MT,GL,LF,grass,gbox
-ID='board';BOTTOM=62;GRAD=True;CONTRAST=1.25;OUTERK=True;POUT=0.78   # まわりのふちの輪郭線は、目地のうすい線（olk）にしない。粒のコケ・草むらにも輪郭線
+ID='board';BOTTOM=62;GRAD=True;CONTRAST=1.25;OUTERK=True;POUT=0.84   # まわりのふちの輪郭線は、目地のうすい線（olk）にしない。粒のコケ・草むらにも輪郭線
 VIEWS=[('board',0)]
 XA,XB=0.95,2.44;PW=0.12;Y0,Y1=0.60,0.70;ZT=1.35
 def PARTS():

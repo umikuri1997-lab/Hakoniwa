@@ -10,7 +10,7 @@ from blueprint import Part as P
 from common import *
 import math,random
 from temple import ST,ST2,GOLD,LEAF,LEAF2,MT,LF,tufts,STONETEX,star3d,grass,gbox
-ID='obox';BOTTOM=62;GRAD=True;CONTRAST=1.25;OUTERK=0.66;POUT=0.78   # まわりのふちの輪郭線は、目地のうすい線（olk）にせず、白い石なので、こくする（となりの色×0.66）。粒のコケ・草むらにも輪郭線
+ID='obox';BOTTOM=62;GRAD=True;CONTRAST=1.25;OUTERK=True;POUT=0.84   # まわりのふちの輪郭線は、目地のうすい線（olk）にしない（ふつうのこさ。黒っぽくしない）。粒のコケ・草むらにも輪郭線
 VIEWS=[('obox',0)]
 X0,X1,Y0,Y1=0.08,0.92,0.46,0.90
 s0,s1,t0,t1=0.28,0.72,0.61,0.70;z0,z1=0.60,0.70
