@@ -286,9 +286,10 @@ def earclip(pts):
 MODELS=os.path.join(os.path.dirname(os.path.abspath(__file__)),'models')
 _MC={};MODEL_SOFT=0.3   # モデルの色を白にまぜる分
 POTCOL=(226,196,166)   # 観葉植物のはち（モデルではこい灰色）を、ゲームに合わせたやきものの色に
-def model_tris(path,cx,cy,z0,size,rot=0,tilt=0):
-    """glTF のモデルを読んで、ゲームの向き（x=東, y=南, z=上）の三角形にする。モデルの正面（+Z）を南（手前）へ。色はモデルの色（テクスチャの色をとる）"""
-    key=(path,cx,cy,z0,size,rot,tilt)
+def model_tris(path,cx,cy,z0,size,rot=0,tilt=0,zs=1.0):
+    """glTF のモデルを読んで、ゲームの向き（x=東, y=南, z=上）の三角形にする。モデルの正面（+Z）を南（手前）へ。色はモデルの色（テクスチャの色をとる）。
+    zs：たての高さだけ、のばす・ちぢめる（ひくい切り株など。size はちぢめる前の高さ）"""
+    key=(path,cx,cy,z0,size,rot,tilt,zs)
     if key in _MC:return _MC[key]
     import trimesh
     sc_=trimesh.load(os.path.join(MODELS,path),force='scene');VS,FS,CS=[],[],[];n=0
@@ -318,7 +319,7 @@ def model_tris(path,cx,cy,z0,size,rot=0,tilt=0):
     k=size/(V[:,2].max()-V[:,2].min())   # size は、たおす前のモデルの高さ
     t=math.radians(tilt);T=np.array([[math.cos(t),0,math.sin(t)],[0,1,0],[-math.sin(t),0,math.cos(t)]]);V=V@T.T   # よこにたおす（東西の向きに）
     a=math.radians(rot);R=np.array([[math.cos(a),-math.sin(a),0],[math.sin(a),math.cos(a),0],[0,0,1]]);V=V@R.T
-    V=(V-[(V[:,0].max()+V[:,0].min())/2,(V[:,1].max()+V[:,1].min())/2,V[:,2].min()])*k+[cx,cy,z0]
+    V=(V-[(V[:,0].max()+V[:,0].min())/2,(V[:,1].max()+V[:,1].min())/2,V[:,2].min()])*k;V[:,2]*=zs;V=V+[cx,cy,z0]
     _MC[key]=(V,np.array(m.faces),col);return _MC[key]
 
 TOP=np.array([0,0,1.0]);EAST=np.array([1.0,0,0])

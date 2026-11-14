@@ -69,7 +69,7 @@ A small tuft of wild grass: about a dozen thin pointed blades growing from one s
 
 # 3回め：伐採場・採石場（9こを1つのモデルに。`tools/art/models/tripo_split.py` で切りわける）
 
-ファイル名（切りわけたあと）：`stump.glb`（切り株）・`stone_big.glb`・`stone_mid.glb`（切り出した石）・`stone_slab.glb`（平たい石）・`stone_chunk.glb`（石のかけら）・`pebbles.glb`（小石）・`log_lying.glb`（ねかせた丸太）・`firewood.glb`（わったまき）・`sprig.glb`（葉の小枝）
+ファイル名（切りわけたあと）：`stump.glb`（切り株）・`stone_big.glb`・`stone_mid.glb`（切り出した石）・`stone_round.glb`（まるい石）・`stone_slab.glb`（平たい石）・`stone_chunk.glb`（石のかけら）・小石は5つにわかれた（`pebbles2`・`pebbles3a`・`pebbles3b`・`pebble_a`〜`c`）・`log_lying.glb`（ねかせた丸太）・`firewood.glb`（わったまき）・`sprig.glb`（葉の小枝）
 
 Nine separate objects for a cozy farming game, arranged in a 3 by 3 grid with wide empty gaps between them so that no two objects touch or overlap. Each object stands on its own, base flat on the same ground level, upright, perfectly vertical, not tilted, facing the front.
 1. A low, wide tree stump: a short round trunk about as tall as half its width, with a flat cut top showing pale concentric annual rings, light tan-orange bark with soft vertical grooves, and five thick roots of different lengths and shapes that flare smoothly out of the base of the trunk and spread low over the ground; the roots blend into the trunk with no seam, thick where they join the trunk and tapering to rounded tips.
