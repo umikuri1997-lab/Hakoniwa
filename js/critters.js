@@ -3,7 +3,6 @@
    かえる：雨の日か夕方、水べをはねる（ときどき水へとびこむ）。画面の近くにだけ出す（CRITMAX ぴきまで）。
    ひまなせいれいは、ときどき見つけて、そっと見る・追いかける（critwatch、おわると たのしさ+2）。 */
 const CRITMAX=6,CRITN={fly:3,bird:2,frog:2},CRITFUN=2;let CRIT=[],CRITS=null,CRITT=0,CRITID=1;
-const CRITC={fly:[['#f6bfd6','#e48fb2'],['#ffe08a','#e9b84a'],['#bfe3ff','#86bde8'],['#ffffff','#d7d2c6']]};
 function critView(){const z=cam.z||1;return [cam.x/TS,cam.y/TS,(cam.x+VW/z)/TS,(cam.y+VH/z)/TS]}
 function critOK(k,j){if(j<0||j>=W*H)return false;const h=hour();
   if(k==='fly')return h>=7&&h<18&&!S.rain&&FLOWERS.has(S.obj[j])&&!isBud(j);
@@ -12,7 +11,7 @@ function critOK(k,j){if(j<0||j>=W*H)return false;const h=hour();
   return false}
 function critSpawn(){if(CRIT.length>=CRITMAX||isNight()||enemyLive())return;const [a,b,c,d]=critView(),k=['fly','bird','frog'][Math.floor(Math.random()*3)];if(CRIT.filter(q=>q.k===k).length>=CRITN[k])return;
   for(let n=0;n<40;n++){const x=Math.floor(a+Math.random()*(c-a)),y=Math.floor(b+Math.random()*(d-b)),j=y*W+x;if(x<0||y<0||x>=W||y>=H||!critOK(k,j))continue;
-    const C=CRITC.fly[Math.floor(Math.random()*4)];CRIT.push({id:CRITID++,k,x:x+.5,y:y+.6,hx:x+.5,hy:y+.6,z:k==='fly'?12:0,vx:0,vy:0,face:Math.random()<.5?-1:1,t:0,life:60+Math.random()*60,hop:0,fl:0,col:C});return}}
+    CRIT.push({id:CRITID++,k,x:x+.5,y:y+.6,hx:x+.5,hy:y+.6,z:k==='fly'?12:0,vx:0,vy:0,face:Math.random()<.5?-1:1,t:0,life:60+Math.random()*60,hop:0,fl:0,ci:Math.floor(Math.random()*4)});/* ci：ちょうの色（4しゅるい） */return}}
 function critTick(dt){if(!S)return;if(CRITS!==S){CRIT=[];CRITS=S}if(IS_STORY_REPLAY){CRIT=[];return}
   CRITT+=dt;if(CRITT>=2){CRITT=0;critSpawn()}
   const night=isNight();
@@ -29,12 +28,15 @@ function critTick(dt){if(!S)return;if(CRITS!==S){CRIT=[];CRITS=S}if(IS_STORY_REP
       if(night||c.k==='bird'&&S.rain)c.life=Math.min(c.life,c.t+1)}}
   CRIT=CRIT.filter(c=>c.t<c.life)}
 const critById=id=>CRIT.find(c=>c.id===id)||null;
-/* 描く：せかいのドット（1マス32）。地面にかげ、とぶ物は上に */
-function drawCritter(g,c,now){const x=Math.round(c.x*TS),y=Math.round(c.y*TS),z=Math.round(c.z||0),f=c.face<0?-1:1,P=2,R=(dx,dy,w,h,col)=>{g.fillStyle=col;g.fillRect(f>0?x+dx*P:x-(dx+w)*P,y-z+dy*P,w*P,h*P)};/* 1ドットは せかいの2 */
+/* 描く：3Dから写した絵（tools/art/critter3d、チップ critfly:<色>#0・1・critbird#0・#f0・#f1・critfrog#0・#1）。
+   チップの ax・ay は足もとの点からのずれ（g64のドット）。右向きの絵なので、左を向くときは足もとの点で反転。地面にかげ、とぶ物は z だけ上に */
+function critChip(c,now){const C=window.CHIPS;if(!C)return null;
+  if(c.k==='fly'){const op=Math.floor(now/120+c.id)%2===0;return C['critfly:'+(c.ci||0)+'#'+(op?0:1)]}
+  if(c.k==='bird')return C[c.fl?'critbird#f'+(Math.floor(now/90)%2):'critbird#0'];
+  return C[c.jt!=null&&c.z>.5?'critfrog#1':'critfrog#0']}
+function drawCritter(g,c,now){const x=Math.round(c.x*TS),y=Math.round(c.y*TS),z=Math.round(c.z||0),f=c.face<0?-1:1,ch=critChip(c,now);
   g.fillStyle='rgba(40,30,20,.18)';g.fillRect(x-4,y,8,2);
-  if(c.k==='fly'){const op=Math.floor(now/120+c.id)%2===0,[a,b]=c.col;if(op){R(-4,-3,3,3,a);R(1,-3,3,3,a);R(-3,0,2,2,b);R(1,0,2,2,b)}else{R(-2,-4,2,4,a);R(0,-4,2,4,a)}R(0,-3,1,4,'#6b5a4a')}
-  else if(c.k==='bird'){const fl=c.fl&&Math.floor(now/90)%2===0;R(-3,-4,6,4,'#a8765a');R(-2,-2,4,2,'#f3e1c4');R(3,-3,2,1,'#f2b04a');R(1,-4,1,1,'#3a2c22');R(-4,-4,1,2,'#8d5f47');if(fl){R(-2,-7,3,3,'#8d5f47')}else{R(-2,-4,3,1,'#8d5f47')}if(!c.fl&&!z){R(-1,0,1,1,'#c98f4a');R(1,0,1,1,'#c98f4a')}}
-  else{R(-3,-3,6,3,'#8fcf6a');R(-3,-1,6,1,'#6fae52');R(-2,-5,2,2,'#8fcf6a');R(1,-5,2,2,'#8fcf6a');R(-2,-5,1,1,'#f7f7e8');R(1,-5,1,1,'#f7f7e8');R(-1,-4,1,1,'#2e3a22');R(2,-4,1,1,'#2e3a22');R(-4,-1,1,1,'#6fae52');R(3,-1,1,1,'#6fae52')}}
+  if(!ch)return;const im=chipImgs(ch,'crit'+c.k)[0];if(!im.ok)return;const sm=g.imageSmoothingEnabled;g.imageSmoothingEnabled=false;g.save();g.translate(x,y-z);if(f<0)g.scale(-1,1);g.drawImage(im,ch.ax/2,ch.ay/2,ch.w/2,ch.h/2);g.restore();g.imageSmoothingEnabled=sm}
 /* せいれいが見つけて、見る・追いかける */
 function goCritter(r,G){if(!CRIT.length)return false;let best=null,bd=1e9;for(const c of CRIT){if(c.fl)continue;const d=Math.hypot(c.x-r.x,c.y-r.y);if(d<7&&d<bd){bd=d;best=c}}if(!best)return false;
   const cj=(best.y|0)*W+(best.x|0),st=nearest(G,j=>walk(j)&&!S.obj[j]&&Math.abs(j%W-cj%W)<=2&&Math.abs(((j/W)|0)-((cj/W)|0))<=1&&j!==cj&&!(TAKEN&&TAKEN.has(j)),14);if(st<0)return false;
