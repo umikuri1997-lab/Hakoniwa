@@ -62,8 +62,8 @@ const field=prep=>q=>{const [sx,sy]=SR(),st=B.st;
     if(k==='build')B.put(prep,sx+2,sy+6,near);else if(inv(prep)>0)B.put(prep,sx+2,sy+6,near);else if(!B.ordered(prep)&&recipeKnown(prep))orderFurn(prep)}
   if(!isNight()&&S.qTalked){try{fieldStoryTap(sx+1,sy+1)}catch(e){B.lg('fieldTap err '+e.message)}}};
 H.earthListen=field('asabukuro');H.fireRoot=field('campfire');H.waterFilm=field('jar');H.windEcho=field('windmill');H.tower=field('bench');
-H.warmMeal=()=>{if(!recipeKnown('oven'))return;B.ensure('oven',1,60,52);S.ovenSet=S.ovenSet||{};for(let j=0;j<S.obj.length;j++)if(S.obj[j]==='oven')S.ovenSet[j]='yakiimo';B.sow('imo')};/* かまどでベイクドポテトを焼いてもらう */
-H.aoFish=()=>{S.ovenSet=S.ovenSet||{};for(let j=0;j<S.obj.length;j++)if(S.obj[j]==='oven')S.ovenSet[j]='yakizakana'};/* 魚をつって、焼き魚 */
+H.warmMeal=()=>{if(warmTableJ()>=0)return;const [sx,sy]=SR(),near=(x,y)=>fieldDistance(y*W+x,S.sacredRoot)<=FIELD_NEAR_R-1;if(inv('table')>0)B.put('table',sx+2,sy+6,near);else if(!B.ordered('table'))orderFurn('table')};/* 切り株のそばに食卓。フタバはそこで食べる */
+H.aoFish=()=>{if(!recipeKnown('cooktable'))return;B.ensure('cooktable',1,60,52);S.ovenSet=S.ovenSet||{};for(let j=0;j<S.obj.length;j++)if(S.obj[j]==='cooktable')S.ovenSet[j]='berryjuice'};/* 調理台で、水のせいれいがジュース */
 H.kite=()=>{if((S.mat.shina||0)<4){let c=0;S.wreq=S.wreq||{};for(let j=0;j<S.obj.length;j++){if(S.obj[j]==='weed0g'&&!S.wreq[j]&&Math.hypot(j%W-54,(j/W|0)-54)<24&&!(S.fog&&fogAt(j))){S.wreq[j]=1;if(++c>=4)break}}}};/* たこの材料：しなやかな草（枝はいつもひろう） */
 H.fire=()=>{if(elemCount('fire')<1&&B.have('watch')<2)B.ensure('watch',2,52,70)};
 H.wind=()=>{B.ensure('swing',2,58,54)};

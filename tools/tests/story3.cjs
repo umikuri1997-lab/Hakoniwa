@@ -1,4 +1,4 @@
-/* メインに足した3つ：こもれびのまもり（guardLearn）・みんなで焼き魚（aoFish）・空からのながめ（kite）。ならび・会話・進み・古いセーブ・たこの絵 */
+/* メインに足した3つ：こもれびのまもり（guardLearn）・みんなでジュース（aoFish）・空からのながめ（kite）。ならび・会話・進み・古いセーブ・たこの絵 */
 const assert=require('node:assert/strict');
 const lines=async(run,page)=>{for(let i=0;i<120;i++){const st=await run(`(()=>{DLGGAP=0;const b=document.querySelector('.idea-reveal button');if(b){b.disabled=false;b.click();return 'idea'}const d=document.querySelector('#dialog');if(!d.hidden){if(STAGEWAIT>performance.now())return 'wait';DLGA.n=DLGA.full.length;DLGA.readReady=0;DLGA.holdUntil=0;const c=document.querySelector('#dialog button');if(c){c.disabled=false;c.click()}else dlgNext();return 'dlg'}return 'none'})()`);if(st==='none')return i;await page.waitForTimeout(150)}return -1};
 (async()=>{const {browser,page,run,errors}=await require('../sim/boot.cjs')();
@@ -15,11 +15,11 @@ const lines=async(run,page)=>{for(let i=0;i<120;i++){const st=await run(`(()=>{D
   const g2=JSON.parse(await run(`JSON.stringify({talked:S.qTalked,guard:!!S.flags.guard})`));assert.deepEqual(g2,{talked:true,guard:true});
   await run(`(()=>{const f=S.res.find(r=>r.name===POKO),h=S.res.find(r=>r.elem==='fire');f.gw={t:S.t,tg:h};h.shU=0;S.enemies=[{type:'basic',x:h.x+1,y:h.y,spawned:true,hp:5,path:[]}];guardTick();S.enemies=[]})()`);
   assert.equal(await run(`!!S.flags.guardUsed&&QUESTS1[qsIx('guardLearn')].check()`),true);console.log('guardLearn: learn by talk, clear by guarding');
-  /* 3. 焼き魚：受けてからつった3びきと、焼き魚 */
-  const a=JSON.parse(await run(`(()=>{S.quest=qsIx('aoFish');S.qTalked=true;S.qStory=null;delete S.flags.aoFishN;delete S.flags.aoGrill;const w=S.res.find(r=>r.elem==='water');
-    const R=Math.random;Math.random=()=>.99;for(let i=0;i<3;i++){if(!fishLoot(w)){addCarry(w,'fish',1);S.fishN=(S.fishN||0)+1;if(qNow('aoCatch'))S.flags.aoFishN=(S.flags.aoFishN||0)+1}}Math.random=R;
-    const h=S.res.find(r=>r.elem==='fire');h.cing={rec:'yakizakana'};ACT.cook.end(h,{obj:0});return JSON.stringify({fish:S.flags.aoFishN,grill:!!S.flags.aoGrill,ok:QUESTS1[qsIx('aoFish')].check()})})()`));
-  assert.equal(a.grill,true);assert.equal(a.ok,a.fish>=3);console.log('aoFish:',a);
+  /* 3. ジュース：受けてから水のせいれいが作った3つ */
+  const a=JSON.parse(await run(`(()=>{S.quest=qsIx('aoFish');S.qTalked=true;S.qStory=null;delete S.flags.aoJuiceN;delete S.flags.aoGrill;const w=S.res.find(r=>r.elem==='water'),h=S.res.find(r=>r.elem==='fire');
+    h.cing={rec:'yakizakana'};ACT.cook.end(h,{obj:0});const n0=S.flags.aoJuiceN||0;for(let i=0;i<3;i++){w.cing={rec:i?'applejuice':'berryjuice'};ACT.cook.end(w,{obj:0})}
+    return JSON.stringify({n0,n:S.flags.aoJuiceN,ok:QUESTS1[qsIx('aoFish')].check()})})()`));
+  assert.deepEqual(a,{n0:0,n:3,ok:true});console.log('aoFish (juice):',a);
   /* 4. たこ：材料がそろうとクリア、お礼で材料をつかい、たこの絵 */
   await run(`S.quest=qsIx('kite');S.qTalked=true;S.qStory=null;S.mat.eda=5;S.mat.shina=6;checkQuest()`);await page.waitForTimeout(300);const ask=await run(`(()=>{const t=document.body.innerText;return /もらってもいい/.test(t)})()`);assert.equal(ask,true,'asks to take the materials');await run(`(()=>{document.querySelectorAll('.askyn').forEach(e=>e.remove());ASKING=false;PAYOK=true;checkQuest()})()`);for(let i=0;i<40&&await run('S.qStory==null');i++){await page.waitForTimeout(250);await run('checkQuest()')}
   const k0=JSON.parse(await run(`JSON.stringify({qs:S.qStory,k:qsIx('kite')})`));assert.equal(k0.qs,k0.k,'kite cleared, waiting thanks');

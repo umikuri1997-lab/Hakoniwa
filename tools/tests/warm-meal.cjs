@@ -1,4 +1,4 @@
-/* 「あたたかいごはん」（warmMeal）：燃やさない火のあとのメインクエスト。ならび・会話・焼いた物の数え方・わたす動き・古いセーブの読みかえ */
+/* 「芽のそばのごはん」（warmMeal）：燃やさない火のあとのメインクエスト。ならび・会話・切り株のそばの食卓・フタバが食べる・わたす動き・古いセーブの読みかえ */
 const assert=require('node:assert/strict');
 (async()=>{const {browser,page,run,errors}=await require('../sim/boot.cjs')();
   await run(`document.querySelector('#dialog').hidden=true;S.introSeen=true;S.flags.tapped=1;S.hold=0;S.t=1440+600;`);
@@ -6,28 +6,22 @@ const assert=require('node:assert/strict');
   const ids=JSON.parse(await run(`JSON.stringify(QUESTS1.map(q=>q.id))`)),w=ids.indexOf('warmMeal');
   assert.equal(ids[w-1],'fireRoot','after fireRoot');assert.equal(ids[w+1],'water','before water');
   console.log('order: fireRoot → warmMeal → water');
-  /* 2. 依頼の会話：かまどをまだ思いついていなければ、ここで思いつく */
+  /* 2. 依頼の会話：かまどは思いつかない（かまどは火山から） */
   const t=JSON.parse(await run(`(()=>{const H=mkRes(S,keyName('fire')||'ホノ','fire',S.res[0].x+1,S.res[0].y);if(!S.res.some(r=>r.elem==='fire'))S.res.push(H);const q=QUESTS1[qsIx('warmMeal')];
-    S.guardianIdeas={};S.recipes.oven=false;const a={learn:q.talk.learn,idea:q.talk.lines.some(l=>l[0]==='@idea'),who:q.talk.who};
-    S.guardianIdeas={oven:1};const b={learn:q.talk.learn,idea:q.talk.lines.some(l=>l[0]==='@idea')};
-    return JSON.stringify({a,b,speakers:[...new Set(q.story.map(l=>l[0]))],cue:q.story[0][3]})})()`));
-  assert.deepEqual(t.a.learn,['oven']);assert.equal(t.a.idea,true);assert.deepEqual(t.b.learn,[]);assert.equal(t.b.idea,false);
-  assert.equal(t.cue,'give:H>F');assert(t.speakers.every(n=>n&&n.length>1),'names resolved '+t.speakers);
-  console.log('talk: idea only when oven is new; thanks speakers',t.speakers.join('・'));
-  /* 3. 受けてから焼いたベイクドポテトだけ数える */
-  const c=JSON.parse(await run(`(()=>{const r=S.res.find(r=>r.elem==='fire'),fake=()=>{r.cing={rec:'yakiimo'};ACT.cook.end(r,{obj:S.res[0].y*W+(S.res[0].x|0)})};
-    S.quest=qsIx('warmMeal');S.qStory=null;S.qTalked=false;delete S.flags.warmYaki;fake();const before=!!S.flags.warmYaki;
-    S.qTalked=true;r.cing={rec:'yakizakana'};ACT.cook.end(r,{obj:0});const fish=!!S.flags.warmYaki;fake();const after=!!S.flags.warmYaki;
-    return JSON.stringify({before,fish,after,check:QUESTS1[qsIx('warmMeal')].check()})})()`));
-  assert.deepEqual(c,{before:false,fish:false,after:true,check:true});
-  console.log('cooking: counts only yakiimo baked after accepting');
-  /* 4. わたす動き */
-  const g=await run(`(()=>{const f=S.res.find(r=>r.name===POKO),h=S.res.find(r=>r.elem==='fire');h.x=f.x+1.5;h.y=f.y;dlgCue('give:H>F');return STAGEWAIT>performance.now()&&h.face===-1})()`);
-  assert.equal(g,true,'give cue turns the fire spirit to Futaba and holds the line');
-  console.log('give: fire spirit hands it to Futaba');
-  /* 5. かまどのサブクエストは、メインで先に思いついたら出さない */
-  const s=await run(`(()=>{const q=SUBQ.find(q=>q.k==='oven');S.guardianIdeas={};const a=q.at();S.guardianIdeas={oven:1};return a&&!q.at()})()`);
-  assert.equal(s,true);console.log('oven side quest: hidden once the main quest showed the idea');
+    return JSON.stringify({learn:q.talk.learn||[],idea:q.talk.lines.some(l=>l[0]==='@idea'),oven:JSON.stringify([q.talk.lines,q.story]).includes('かまど'),speakers:[...new Set(q.story.map(l=>l[0]))],w:BL.oven.w})})()`));
+  assert.deepEqual(t.learn,[]);assert.equal(t.idea,false);assert.equal(t.oven,false);assert.equal(t.w,1,'oven is from the volcano');
+  assert(t.speakers.every(n=>n&&n.length>1),'names resolved '+t.speakers);
+  console.log('talk: no oven; thanks speakers',t.speakers.join('・'));
+  /* 3. 切り株のそばの食卓と、受けてからフタバがそこで食べたことだけ数える */
+  const c=JSON.parse(await run(`(()=>{S.quest=qsIx('warmMeal');S.qStory=null;S.qTalked=true;delete S.flags.warmEat;delete S.flags.warmYaki;
+    const R=S.sacredRoot,x=R%W,y=R/W|0,far=(y+20)*W+x+20,near=(y+sacredSpan()+2)*W+x+1;S.obj[far]='table';const t0=QUESTS1[qsIx('warmMeal')].steps[0].check();S.obj[far]='';S.obj[near]='table';const t1=QUESTS1[qsIx('warmMeal')].steps[0].check();
+    const f=S.res.find(r=>r.name===POKO),eat=(cx,cy)=>{f.x=cx+.5;f.y=cy+.5;f.meal={u:1,pt:0,pw:0,e:'🍙'};ACT.eat.start(f,{tdir:-W})};
+    eat(x+20,y+21);const e0=!!S.flags.warmEat;eat(x+1,y+sacredSpan()+3);const e1=!!S.flags.warmEat;
+    return JSON.stringify({t0,t1,e0,e1,check:QUESTS1[qsIx('warmMeal')].check()})})()`));
+  assert.deepEqual(c,{t0:false,t1:true,e0:false,e1:true,check:true});
+  console.log('table near the stump, Futaba eats there');
+  /* 5. かまどのサブクエストはない */
+  assert.equal(await run(`SUBQ.some(q=>q.k==='oven')`),false);console.log('oven side quest: removed');
   /* 6. 古いセーブ：今のならびで warmMeal がない番号を読みかえる（2回でもずれない） */
   const m=JSON.parse(await run(`(()=>{const w=qsIx('warmMeal'),mk=(q,st,tk)=>({free:false,world:0,quest:q,qStory:st,qTalked:tk,flags:{}});
     const a=mk(w,null,true);migrateWarmIns(a,true);/* 前は water が w */const a2=a.quest;migrateWarmIns(a,true);
