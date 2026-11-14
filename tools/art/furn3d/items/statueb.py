@@ -1,6 +1,6 @@
 # こわれた神殿（statueb）：設計図は temple.py（神殿 statue と同じ3D。右の屋根・右の柱・右のかべ・はりの右はしがくずれた）
 from temple import *
-ID='statueb';BOTTOM=62;GRAD=True;CONTRAST=1.25
+ID='statueb';BOTTOM=62;GRAD=True;CONTRAST=1.25;OUTERK=0.66;POUT=0.78   # まわりのふちの輪郭線は、目地のうすい線（olk）にせず、白い石なので、こくする（となりの色×0.66）。粒のコケ・草むらにも輪郭線
 VIEWS=[('statueb',0)]
 def PARTS():
     L=PARTS_T(True)

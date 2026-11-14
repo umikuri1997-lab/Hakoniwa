@@ -14,6 +14,8 @@
 #   PFIRE_HIDE=部品の名前を見る関数（粒の火が、そのうしろにかくれる部品。ほかの部品には、火を上にかさねる。なければ、ぜんぶ）
 #   MERGE=n（にた色をまとめるさかい。色の数が多いとき）
 #   PARALLEL=True（奥行きのない物。遠近をかけずに写す）
+#   OUTERK=True か数（まわりのふちの輪郭線は、部品の olk でうすくしない。目地の線だけうすくするとき。数なら、まわりの線の色＝となりの色×その数）
+#   POUT=k（粒（PWATER）のかたまりのまわりに、粒の色×k の1ドットの輪郭線を引く）
 #   CONTRAST=c（写した絵のコントラストを c 倍に上げる。粒をかさねる前）
 #   FULLPERSP=True（左右にも、上下と同じ遠近をかける。まるい池など、奥行きだけの遠近ではたまごの形になる物）
 #   MOVE={チップの名前: {'sel':部品の名前を見る関数, 'pivot':(x,y,z)}}（動く部品より手前の本体は、奥行きをくらべて、動く部品の上に重ねる絵を自動で作る）（動く部品。本体の絵からのぞいて、べつの絵 parts にし、のびちぢみ・回る支点 px・py をつける。ゲームの PARTMV で動かす）
@@ -46,7 +48,7 @@ def shot(M,k,only=None,S_=64,filt=None,info=None):
     c=((V[:,0].min()+V[:,0].max())/2,(V[:,1].min()+V[:,1].max())/2,V[:,2].max()/2)
     PROJ,DEPTH=O.persp(ELEV,FOV,None if getattr(M,'PARALLEL',False) else FRAME,c,full=getattr(M,'FULLPERSP',False))   # FULLPERSP：左右にも上下と同じ遠近   # PARALLEL：奥行きのない物（リース・のれんなど）は、遠近をかけない（平行投影）
     P=np.array([PROJ(v) for v in V]+[PROJ(sc.fwd(q)) for q in pfire_box(M)+list(getattr(M,'PBOX',()))]);m=2/64;ext=(P[:,0].min()-m,P[:,0].max()+m,P[:,1].min()-m,P[:,1].max()+m);O.S=S_
-    im=O.render_px(sc,PROJ,ext,DEPTH,k=0.80 if O.GRAD else 0.72,lw=LW,k2=0.90 if O.GRAD else 0.86,merge=getattr(M,'MERGE',6 if O.GRAD else 12))   # MERGE：にた色をまとめるさかい（設計図でかえられる）   # GRAD：にた色をまとめるさかいを小さく（グラデーションの段をのこす）   # GRAD の家具は、輪郭線もやわらかい色（持ち主がきめた）
+    im=O.render_px(sc,PROJ,ext,DEPTH,k=0.80 if O.GRAD else 0.72,lw=LW,k2=0.90 if O.GRAD else 0.86,merge=getattr(M,'MERGE',6 if O.GRAD else 12),outerk=getattr(M,'OUTERK',False))   # OUTERK：まわりのふちは、部品の olk でうすくしない   # MERGE：にた色をまとめるさかい（設計図でかえられる）   # GRAD：にた色をまとめるさかいを小さく（グラデーションの段をのこす）   # GRAD の家具は、輪郭線もやわらかい色（持ち主がきめた）
     if only:   # その部品だけ（ほかの部品のドットは消す。輪郭線もふくめて、その部品のまわり1ドットまで）
         full=np.array(im);ids=O.LAST_IDS
         from scipy.ndimage import binary_dilation;mk=binary_dilation(np.isin(ids,list(keep)))
@@ -65,9 +67,10 @@ def pfire_box(M):   # 粒の火のとどく、はんい（見え方のはんい�
     return out
 FIRECOL=[(0.30,(255,230,96)),(0.46,(255,198,74)),(0.66,(255,152,60)),(0.84,(238,100,52))]   # 粒の年（0〜1）ごとの色：まん中の黄色 → こがね色 → だいだい → 赤み。それより年をとった粒は消える（持ち主：中心は黄色）
 SMOKECOL=[(0.35,(176,170,168)),(0.7,(196,192,190)),(1.0,(214,212,210))]   # けむりの色：上がるほど、うすい灰色
-def pdraw(im,inf,zb,P):
-    """粒をかさねる（粒の水など）。P=[(x,y,z,半径,色,順)]。順の大きい粒から描く。3Dの物より手前のドットだけ"""
-    a=np.array(im).copy();PROJ,E,S_,fw,dep=inf['PROJ'],inf['ext'],inf['S'],inf['fwd'],inf['depth'];Hh,Ww=a.shape[:2]
+def pdraw(im,inf,zb,P,pout=None):
+    """粒をかさねる（粒の水など）。P=[(x,y,z,半径,色,順)]。順の大きい粒から描く。3Dの物より手前のドットだけ。
+    pout：粒のかたまりのまわり（上下左右で、粒でないドット）に、となりの粒の色×pout の1ドットの輪郭線を引く（コケ・草むら）"""
+    a=np.array(im).copy();PROJ,E,S_,fw,dep=inf['PROJ'],inf['ext'],inf['S'],inf['fwd'],inf['depth'];Hh,Ww=a.shape[:2];pm=np.zeros((Hh,Ww),bool)
     for x,y,z,r,c,o in sorted(P,key=lambda q:-q[5]):
         q=fw((x,y,z));u,v=PROJ(q);px,py=(u-E[0])*S_,(v-E[2])*S_;zp=float(np.dot(q,dep));rp=max(0.5,r*S_)
         for yy in range(int(py-rp),int(py+rp)+1):
@@ -75,7 +78,17 @@ def pdraw(im,inf,zb,P):
                 if not(0<=yy<Hh and 0<=xx<Ww):continue
                 if (xx+0.5-px)**2+(yy+0.5-py)**2>rp*rp:continue
                 if a[yy,xx,3]>0 and zb[yy,xx]>zp:continue
-                a[yy,xx]=(*c,255)
+                a[yy,xx]=(*c,255);pm[yy,xx]=True
+    if pout:
+        pc=a[...,:3].astype(float).copy();ring=np.zeros((Hh,Ww),bool);rc=np.zeros((Hh,Ww,3))
+        for dy,dx in((0,1),(0,-1),(1,0),(-1,0)):
+            sm=np.roll(np.roll(pm,dy,0),dx,1);sc_=np.roll(np.roll(pc,dy,0),dx,1)
+            if dy==1:sm[0]=False
+            if dy==-1:sm[-1]=False
+            if dx==1:sm[:,0]=False
+            if dx==-1:sm[:,-1]=False
+            new=sm&~pm&~ring;rc[new]=sc_[new];ring|=new
+        a[ring,:3]=np.clip(rc[ring]*pout,0,255).astype(np.uint8);a[ring,3]=255
     return Image.fromarray(a)
 def pfire(M,im,inf,zb,f,NF):
     """粒（パーティクル）の火：火の根もとから、粒が上がりながら、まん中へよって、小さくなり、色が白→黄→だいだい→赤とかわって消える。
@@ -125,7 +138,7 @@ def run(iid,out,chips=False):
         if hasattr(M,'PWATER'):   # 粒の水：コマごとに本体を写し（水面がうごく）、粒をかさねる
             for q in range(NF):
                 M.FR=q;inf={};b0=shot(M,k,info=inf);zb=O.LAST_ZB.copy()
-                fr.append((pdraw(b0[0],inf,zb,M.PWATER()),)+tuple(b0[1:]))
+                fr.append((pdraw(b0[0],inf,zb,M.PWATER(),getattr(M,'POUT',None)),)+tuple(b0[1:]))
         elif hasattr(M,'PFIRE') or hasattr(M,'PSMOKE'):   # 粒の火：本体は1回だけ写し、コマごとに粒をかさねる（本体はどのコマも同じ絵）
             M.FR=0;inf={};b0=shot(M,k,info=inf);zb=O.LAST_ZB.copy();inf['ids']=O.LAST_IDS.copy()
             for q in range(NF):fr.append((pfire(M,b0[0],inf,zb,q,NF),)+tuple(b0[1:]))
