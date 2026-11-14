@@ -11,7 +11,7 @@
 #   PFIRE=[(cx,cy,z0,高さ,根もとの半径,粒の数,seed), ...]（粒の火とけむり。FRAMES のコマでループする。本体は1回だけ写す）
 #   PFIRE の8つめ（なくてよい）：{'smoke':けむりの粒の数か False,'sparks':False}。PSMOKE=[(x,y,z,高さ,半径,粒の数,seed)]（けむりだけ。煙突など）
 #   PFIRE_HIDE=部品の名前を見る関数（粒の火が、そのうしろにかくれる部品。ほかの部品には、火を上にかさねる。なければ、ぜんぶ）
-#   MOVE={チップの名前: {'sel':部品の名前を見る関数, 'pivot':(x,y,z)}}（動く部品。本体の絵からのぞいて、べつの絵 parts にし、のびちぢみ・回る支点 px・py をつける。ゲームの PARTMV で動かす）
+#   MOVE={チップの名前: {'sel':部品の名前を見る関数, 'pivot':(x,y,z)}}（動く部品より手前の本体は、奥行きをくらべて、動く部品の上に重ねる絵を自動で作る）（動く部品。本体の絵からのぞいて、べつの絵 parts にし、のびちぢみ・回る支点 px・py をつける。ゲームの PARTMV で動かす）
 #   FRONT={チップの名前: 部品の名前を見る関数}（せいれいの手前にかさねる絵 .front。その向きで、その部品だけを写す）
 import sys,os,importlib
 HERE=os.path.dirname(os.path.abspath(__file__));ART=os.path.join(HERE,'..');ROOT=os.path.join(ART,'..','..')
@@ -109,8 +109,11 @@ def run(iid,out,chips=False):
         M.FR=0;im,ex0,base,yb=fr[0]
         mv=getattr(M,'MOVE',{}).get(nm)   # 動く部品（ブランコの座面など）：本体の絵からのぞき、べつの絵（parts）にする
         if mv:
-            inf={};im,ex0,base,yb=shot(M,k,filt=lambda n:not mv['sel'](n),info=inf);fr=[(im,ex0,base,yb)]
-            pim=shot(M,k,filt=mv['sel'])[0]
+            inf={};im,ex0,base,yb=shot(M,k,filt=lambda n:not mv['sel'](n),info=inf);fr=[(im,ex0,base,yb)];zs=O.LAST_ZB.copy();imfull=im
+            pim=shot(M,k,filt=mv['sel'])[0];zm=O.LAST_ZB.copy()
+            from scipy.ndimage import maximum_filter,binary_dilation   # 本体のうち、動く部品より手前にある所（ゆれてもかさなる、まわり4〜6ドットまで）
+            zmd=maximum_filter(np.where(zm>-1e8,zm,-1e9),size=(9,13));sa=np.array(im)[...,3]>0
+            omask=binary_dilation((zs>-1e8)&(zmd>-1e8)&(zs>zmd),iterations=2)&sa
         bbs=[f[0].getbbox() for f in fr];bb=(min(b[0] for b in bbs),min(b[1] for b in bbs),max(b[2] for b in bbs),max(b[3] for b in bbs))
         if NF>1:CHF[nm]=[f[0].crop(bb) for f in fr]
         im=im.crop(bb);base-=bb[1]
@@ -119,7 +122,10 @@ def run(iid,out,chips=False):
         if mv:   # 動く部品の絵と、のびちぢみ・回る支点（ゲームの点。g64のドット、マスの左上から）
             pb=pim.getbbox();P_=inf['PROJ'](inf['fwd'](mv['pivot']));E=inf['ext'];S_=inf['S']
             PARTS_OUT[nm]=[{'ax':ex0+pb[0],'ay':ay+pb[1]-bb[1],'w':pb[2]-pb[0],'h':pb[3]-pb[1],'px':ex0+(P_[0]-E[0])*S_,'py':ay+(P_[1]-E[2])*S_-bb[1],'f':[pim.crop(pb)]}]
-            print(nm,'動く部品',PARTS_OUT[nm][0]['w'],'x',PARTS_OUT[nm][0]['h'],'支点',round(PARTS_OUT[nm][0]['px'],1),round(PARTS_OUT[nm][0]['py'],1))   # 2×1 などをたてにした向きは、ゲームでは置いたマスから下へのびるので、そのぶん下へずらす（rowsh）
+            print(nm,'動く部品',PARTS_OUT[nm][0]['w'],'x',PARTS_OUT[nm][0]['h'],'支点',round(PARTS_OUT[nm][0]['px'],1),round(PARTS_OUT[nm][0]['py'],1))
+            if omask.any():   # 動く部品より手前の本体（横木・手前の柱など）：動かさずに、動く部品の上に重ねる絵（fix）。奥行きをくらべて、自動でえらぶ
+                oa=np.array(imfull).copy();oa[~omask]=0;oim=Image.fromarray(oa);ob=oim.getbbox()
+                if ob:PARTS_OUT[nm].append({'ax':ex0+ob[0],'ay':ay+ob[1]-bb[1],'w':ob[2]-ob[0],'h':ob[3]-ob[1],'px':0,'py':0,'fix':1,'f':[oim.crop(ob)]});print(nm,'手前に重ねる部品',ob[2]-ob[0],'x',ob[3]-ob[1])   # 2×1 などをたてにした向きは、ゲームでは置いたマスから下へのびるので、そのぶん下へずらす（rowsh）
         print('%s %dx%d ax %d ay %d'%(nm,im.width,im.height,ax,ay))
     for nm,f in getattr(M,'FRONT',{}).items():
         k=dict(v[:2] for v in M.VIEWS)[nm.rsplit('.',1)[0]];im,ex0,base,yb=shot(M,k,f);full,_,_,_=shot(M,k);bb=full.getbbox()
@@ -131,7 +137,8 @@ def run(iid,out,chips=False):
     for nm,(im,ax,ay) in CH.items():
         fn=nm.replace('>','_').replace('#','_');im.save(os.path.join(out,fn+'.png'));im.resize((im.width*10,im.height*10),Image.NEAREST).save(os.path.join(out,fn+'_x10.png'))
     for nm,pl in PARTS_OUT.items():   # 動く部品を本体にかさねた絵（たしかめ用。ゲームでも本体の上にかさねる）
-        im,ax,ay=CH[nm];q=pl[0];can=im.copy();can.alpha_composite(q['f'][0],(q['ax']-ax,q['ay']-ay))
+        im,ax,ay=CH[nm];can=im.copy()
+        for q in pl:can.alpha_composite(q['f'][0],(q['ax']-ax,q['ay']-ay))
         can.save(os.path.join(out,nm+'_all.png'));can.resize((can.width*10,can.height*10),Image.NEAREST).save(os.path.join(out,nm+'_all_x10.png'))
     vs=[CH[v[0]][0] for v in M.VIEWS];HB=max(i.height for i in vs)+12
     can=Image.new('RGBA',(sum(i.width+8 for i in vs)+8,HB),(150,190,120,255));x=8
@@ -155,5 +162,5 @@ def run(iid,out,chips=False):
             im,ax,ay=CH[nm];a=np.array(im);col=a[:,a.shape[1]//2,3];t0=next(i for i in range(len(col)) if col[i]>0);row=next(i for i in range(max(10,t0+10),len(col)) if col[i]==0)   # 上のすきとおった所（ひじかけのあいだ など）はとばす
             CC[nm]['cut']=(ay+row)/2;print(nm,'cut',CC[nm]['cut'])
         CHP.pack_imgs(head,CC);open(os.path.join(ROOT,'.chips_changed'),'w').write('\n'.join(CH));print('チップに入れた',len(CH))
-    return CH
+    run.parts=PARTS_OUT;return CH   # run.parts：動く部品の絵（たしかめ用）
 if __name__=='__main__':run(sys.argv[1],sys.argv[2],'--chips' in sys.argv)
