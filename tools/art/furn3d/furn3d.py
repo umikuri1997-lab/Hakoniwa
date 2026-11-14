@@ -4,7 +4,7 @@
 #   出す物：<chip>.png（向きごと）・<chip>_x10.png・views_x4.png（向きをならべた4倍）・cmp_x4.png（いまのチップとならべた4倍）・bp.png（設計図）
 #   --chips：ゲームのチップ（chips.js とアトラス）に入れ、.chips_changed に id を書く。
 # items/<id>.py に書く物：
-#   ID（チップの名前）・PARTS()（blueprint.Part の表。木目をはらない部品は p.tex=False、金属の部品は p.metal=True、布・砂のなだらかな部品は p.soft=True（ゆるいふくらみにも、かげがつく）・うすいかげだけの部品は p.soft1=True・サテンの布（つやのある布）は p.satin=True・木の皮のテクスチャは p.barktex=True（根など、log でない形の皮）・石の部品は p.stone=True（石のテクスチャ）・しっくいの部品は p.plaster=True（しっくいのテクスチャ）・金属の板は p.mtex=True（金属のテクスチャ）・レンガの部品は p.brick=True（こまかい、ざらざらしたテクスチャ）・光る部品（火・あかりのガラス）は p.glow=True（かげをつけない）・面のもようは p.decal=f(x,y,z)→色・ひくいドームなど、なだらかなふくらみは p.curve=True（かげのグラデーションを出す）・輪郭線をうすくする部品は p.olk=0.86（もとの色にかける数）)・EXTRA(sc)（Part で書けない形。なければ書かない）
+#   ID（チップの名前）・PARTS()（blueprint.Part の表。木目をはらない部品は p.tex=False、金属の部品は p.metal=True、布・砂のなだらかな部品は p.soft=True（ゆるいふくらみにも、かげがつく）・うすいかげだけの部品は p.soft1=True・サテンの布（つやのある布）は p.satin=True・石の部品は p.stone=True（石のテクスチャ）・木の皮のテクスチャは p.barktex=True（根など、log でない形の皮）・べつのテクスチャをはる部品は p.texobj=oblique3d.Tex(...)・しっくいの部品は p.plaster=True（しっくいのテクスチャ）・金属の板は p.mtex=True（金属のテクスチャ）・レンガの部品は p.brick=True（こまかい、ざらざらしたテクスチャ）・光る部品（火・あかりのガラス）は p.glow=True（かげをつけない）・面のもようは p.decal=f(x,y,z)→色・ひくいドームなど、なだらかなふくらみは p.curve=True（かげのグラデーションを出す）・輪郭線をうすくする部品は p.olk=0.86（もとの色にかける数）)・EXTRA(sc)（Part で書けない形。なければ書かない）
 #   VIEWS=[(チップの名前, まわす数k), ...]（k：0前・1右・2後ろ・3左）・BOTTOM（絵の下のはし。g64のドット。いまのチップに合わせる）
 #   SZ=(よこ,たて)（置くマスの数。2×1 の物は (2,1)。たてにした向きを、置いたマスから下へのびる所に写す）
 #   FRAMES=n（うごく絵のコマの数。PARTS・EXTRA は M.FR（0〜n−1）を見て、動く所だけかえる）
@@ -13,8 +13,11 @@
 #   PWATER(sc_info)=関数（粒の水。FRAMES のコマでループ。M.FR を見て、粒の一覧 [(x,y,z,半径,色,奥へ描く順)] をかえす）。本体もコマごとに写す（水面のさざなみ）
 #   PFIRE_HIDE=部品の名前を見る関数（粒の火が、そのうしろにかくれる部品。ほかの部品には、火を上にかさねる。なければ、ぜんぶ）
 #   MERGE=n（にた色をまとめるさかい。色の数が多いとき）
-#   FOV=n（画角の度。なければ10。伐採場・採石場は30）・ELEV=n（見おろしの角度。なければ42）
+#   FOV=n（画角の度。なければ10）・ELEV=n（見おろしの角度。なければ42）
 #   PARALLEL=True（奥行きのない物。遠近をかけずに写す）
+#   OUTERK=True か数（まわりのふちの輪郭線は、部品の olk でうすくしない。目地の線だけうすくするとき。数なら、まわりの線の色＝となりの色×その数）
+#   POUT=k（粒（PWATER）のかたまりのまわりに、粒の色×k の1ドットの輪郭線を引く）
+#   CONTRAST=c（ぬった色のコントラストを c 倍に上げる。輪郭線は、そのあとの色から作るので、線はこくならない）
 #   FULLPERSP=True（左右にも、上下と同じ遠近をかける。まるい池など、奥行きだけの遠近ではたまごの形になる物）
 #   MOVE={チップの名前: {'sel':部品の名前を見る関数, 'pivot':(x,y,z)}}（動く部品より手前の本体は、奥行きをくらべて、動く部品の上に重ねる絵を自動で作る）（動く部品。本体の絵からのぞいて、べつの絵 parts にし、のびちぢみ・回る支点 px・py をつける。ゲームの PARTMV で動かす）
 #   FRONT={チップの名前: 部品の名前を見る関数}（せいれいの手前にかさねる絵 .front。その向きで、その部品だけを写す）
@@ -33,7 +36,7 @@ PN={}
 def scene(M,k,only=None,filt=None,foot=None):
     sc=O.Scene();T=O.Tex(os.path.join(ART,'textures','wood049.png'));TS=O.Tex(os.path.join(ART,'textures','rock030.png'),span=1.0,flow=2,minrun=2,dark=(0.16,0.92),light=(0.14,1.06));TB=O.Tex(os.path.join(ART,'textures','rock030.png'),span=0.5,flow=1,minrun=1,dark=(0.18,0.90),light=(0.12,1.07));TP=O.Tex(os.path.join(ART,'textures','plaster001.png'),span=2.0,flow=3,minrun=3,dark=(0.18,0.96),light=(0.16,1.03));TMT=O.Tex(os.path.join(ART,'textures','metal032.png'),span=1.0,flow=3,minrun=2,dark=(0.16,0.94),light=(0.14,1.05));L=[p for p in M.PARTS() if not filt or filt(p.name)];keep=set()   # filt：写す部品をえらぶ（動く部品だけ・動く部品のほか）   # TS：石の部品（p.stone）のテクスチャ
     for p in L:
-        mt=getattr(p,'metal',False);from blueprint import barktex as _bk;sc.texture(_bk() if getattr(p,'barktex',False) else TP if getattr(p,'plaster',False) else TMT if getattr(p,'mtex',False) else (TB if getattr(p,'brick',False) else TS if getattr(p,'stone',False) else T) if getattr(p,'tex',True) or getattr(p,'brick',False) and not mt else None);sc.material('metal' if mt else 'satin' if getattr(p,'satin',False) else 'flat' if getattr(p,'glow',False) or getattr(p,'flat',False) else 'soft1' if getattr(p,'soft1',False) else 'soft' if getattr(p,'soft',False) else None);p0=sc.pid;sc.decal(getattr(p,'decal',None));sc.smooth(O.GRAD and p.kind in ROUND);sc.curve(getattr(p,'curve',False));sc.outline(None,getattr(p,'olk',None));build(sc,[p]);sc.outline();sc.material(None);sc.decal(None);sc.smooth(False);sc.curve(False)
+        mt=getattr(p,'metal',False);from blueprint import barktex as _bk;sc.texture(getattr(p,'texobj',None) or (_bk() if getattr(p,'barktex',False) else TP if getattr(p,'plaster',False) else TMT if getattr(p,'mtex',False) else (TB if getattr(p,'brick',False) else TS if getattr(p,'stone',False) else T) if getattr(p,'tex',True) or getattr(p,'brick',False) and not mt else None));sc.material('metal' if mt else 'satin' if getattr(p,'satin',False) else 'flat' if getattr(p,'glow',False) or getattr(p,'flat',False) else 'soft1' if getattr(p,'soft1',False) else 'soft' if getattr(p,'soft',False) else None);p0=sc.pid;sc.decal(getattr(p,'decal',None));sc.smooth(O.GRAD and p.kind in ROUND);sc.curve(getattr(p,'curve',False));sc.outline(None,getattr(p,'olk',None));build(sc,[p]);sc.outline();sc.material(None);sc.decal(None);sc.smooth(False);sc.curve(False)
         if only and only(p.name):keep|=set(range(p0+1,sc.pid+1))
         for q in range(p0+1,sc.pid+1):PN[q]=p.name   # 部品の番号 → 名前（粒の火で、かくれる物をえらぶ）
     if hasattr(M,'EXTRA') and not filt:sc.texture(None);M.EXTRA(sc)
@@ -46,7 +49,7 @@ def shot(M,k,only=None,S_=64,filt=None,info=None):
     c=((V[:,0].min()+V[:,0].max())/2,(V[:,1].min()+V[:,1].max())/2,V[:,2].max()/2)
     PROJ,DEPTH=O.persp(getattr(M,'ELEV',ELEV),getattr(M,'FOV',FOV),None if getattr(M,'PARALLEL',False) else FRAME,c,full=getattr(M,'FULLPERSP',False))   # FULLPERSP：左右にも上下と同じ遠近   # PARALLEL：奥行きのない物（リース・のれんなど）は、遠近をかけない（平行投影）
     P=np.array([PROJ(v) for v in V]+[PROJ(sc.fwd(q)) for q in pfire_box(M)+list(getattr(M,'PBOX',()))]);m=2/64;ext=(P[:,0].min()-m,P[:,0].max()+m,P[:,1].min()-m,P[:,1].max()+m);O.S=S_
-    im=O.render_px(sc,PROJ,ext,DEPTH,k=0.80 if O.GRAD else 0.72,lw=LW,k2=0.90 if O.GRAD else 0.86,merge=getattr(M,'MERGE',6 if O.GRAD else 12))   # MERGE：にた色をまとめるさかい（設計図でかえられる）   # GRAD：にた色をまとめるさかいを小さく（グラデーションの段をのこす）   # GRAD の家具は、輪郭線もやわらかい色（持ち主がきめた）
+    im=O.render_px(sc,PROJ,ext,DEPTH,k=0.80 if O.GRAD else 0.72,lw=LW,k2=0.90 if O.GRAD else 0.86,merge=getattr(M,'MERGE',6 if O.GRAD else 12),outerk=getattr(M,'OUTERK',False),contrast=getattr(M,'CONTRAST',0))   # CONTRAST：輪郭線を作る前の色にかける   # OUTERK：まわりのふちは、部品の olk でうすくしない   # MERGE：にた色をまとめるさかい（設計図でかえられる）   # GRAD：にた色をまとめるさかいを小さく（グラデーションの段をのこす）   # GRAD の家具は、輪郭線もやわらかい色（持ち主がきめた）
     if only:   # その部品だけ（ほかの部品のドットは消す。輪郭線もふくめて、その部品のまわり1ドットまで）
         full=np.array(im);ids=O.LAST_IDS
         from scipy.ndimage import binary_dilation;mk=binary_dilation(np.isin(ids,list(keep)))
@@ -60,9 +63,10 @@ def pfire_box(M):   # 粒の火のとどく、はんい（見え方のはんい�
     return out
 FIRECOL=[(0.30,(255,230,96)),(0.46,(255,198,74)),(0.66,(255,152,60)),(0.84,(238,100,52))]   # 粒の年（0〜1）ごとの色：まん中の黄色 → こがね色 → だいだい → 赤み。それより年をとった粒は消える（持ち主：中心は黄色）
 SMOKECOL=[(0.35,(176,170,168)),(0.7,(196,192,190)),(1.0,(214,212,210))]   # けむりの色：上がるほど、うすい灰色
-def pdraw(im,inf,zb,P):
-    """粒をかさねる（粒の水など）。P=[(x,y,z,半径,色,順)]。順の大きい粒から描く。3Dの物より手前のドットだけ"""
-    a=np.array(im).copy();PROJ,E,S_,fw,dep=inf['PROJ'],inf['ext'],inf['S'],inf['fwd'],inf['depth'];Hh,Ww=a.shape[:2]
+def pdraw(im,inf,zb,P,pout=None):
+    """粒をかさねる（粒の水など）。P=[(x,y,z,半径,色,順)]。順の大きい粒から描く。3Dの物より手前のドットだけ。
+    pout：粒のかたまりのまわり（上下左右で、粒でないドット）に、となりの粒の色×pout の1ドットの輪郭線を引く（コケ・草むら）"""
+    a=np.array(im).copy();PROJ,E,S_,fw,dep=inf['PROJ'],inf['ext'],inf['S'],inf['fwd'],inf['depth'];Hh,Ww=a.shape[:2];pm=np.zeros((Hh,Ww),bool)
     for x,y,z,r,c,o in sorted(P,key=lambda q:-q[5]):
         q=fw((x,y,z));u,v=PROJ(q);px,py=(u-E[0])*S_,(v-E[2])*S_;zp=float(np.dot(q,dep));rp=max(0.5,r*S_)
         for yy in range(int(py-rp),int(py+rp)+1):
@@ -70,7 +74,17 @@ def pdraw(im,inf,zb,P):
                 if not(0<=yy<Hh and 0<=xx<Ww):continue
                 if (xx+0.5-px)**2+(yy+0.5-py)**2>rp*rp:continue
                 if a[yy,xx,3]>0 and zb[yy,xx]>zp:continue
-                a[yy,xx]=(*c,255)
+                a[yy,xx]=(*c,255);pm[yy,xx]=True
+    if pout:
+        pc=a[...,:3].astype(float).copy();ring=np.zeros((Hh,Ww),bool);rc=np.zeros((Hh,Ww,3))
+        for dy,dx in((0,1),(0,-1),(1,0),(-1,0)):
+            sm=np.roll(np.roll(pm,dy,0),dx,1);sc_=np.roll(np.roll(pc,dy,0),dx,1)
+            if dy==1:sm[0]=False
+            if dy==-1:sm[-1]=False
+            if dx==1:sm[:,0]=False
+            if dx==-1:sm[:,-1]=False
+            new=sm&~pm&~ring;rc[new]=sc_[new];ring|=new
+        a[ring,:3]=np.clip(rc[ring]*pout,0,255).astype(np.uint8);a[ring,3]=255
     return Image.fromarray(a)
 def pfire(M,im,inf,zb,f,NF):
     """粒（パーティクル）の火：火の根もとから、粒が上がりながら、まん中へよって、小さくなり、色が白→黄→だいだい→赤とかわって消える。
@@ -120,7 +134,7 @@ def run(iid,out,chips=False):
         if hasattr(M,'PWATER'):   # 粒の水：コマごとに本体を写し（水面がうごく）、粒をかさねる
             for q in range(NF):
                 M.FR=q;inf={};b0=shot(M,k,info=inf);zb=O.LAST_ZB.copy()
-                fr.append((pdraw(b0[0],inf,zb,M.PWATER()),)+tuple(b0[1:]))
+                fr.append((pdraw(b0[0],inf,zb,M.PWATER(),getattr(M,'POUT',None)),)+tuple(b0[1:]))
         elif hasattr(M,'PFIRE') or hasattr(M,'PSMOKE'):   # 粒の火：本体は1回だけ写し、コマごとに粒をかさねる（本体はどのコマも同じ絵）
             M.FR=0;inf={};b0=shot(M,k,info=inf);zb=O.LAST_ZB.copy();inf['ids']=O.LAST_IDS.copy()
             for q in range(NF):fr.append((pfire(M,b0[0],inf,zb,q,NF),)+tuple(b0[1:]))

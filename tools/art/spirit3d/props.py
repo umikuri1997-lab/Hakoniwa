@@ -12,6 +12,7 @@
   はたき    柄 長さ16・太さ1.8、先に羽 6本                                  #9a6a48・#f2ead8・#d9cdb2
   つりざお  さお 長さ34・太さ1.6（前へななめ上）                            #9a6a48
   小石      直径4
+  おけ      胴 直径7・高さ6（木）、たが2本 #7a4b2a、ふち #cf9566
   包丁      柄 長さ6・刃 1.2×4.4×9                                         木・#c9ccd1                                                          #b9b2a6"""
 import math
 import numpy as np
@@ -69,12 +70,13 @@ def rod():
 def pebble():
     return ball(H+[2.5, 0, 2], 2.0, hx('#b9b2a6')), {}
 def bucket():
-    b = cyl(H+[5, 0, 3], H+[11, 0, 3], 3.6, hx('#e07a5f')); rim = cyl(H+[4.4, 0, 3], H+[5.2, 0, 3], 4.0, hx('#f2a68d'))
-    return join(b, rim), {'tip': H+[5, 0, 3]}
-
-SCALE = 1.6   # 道具の大きさ（いまの絵の道具と同じくらい）
+    """木のおけ：木の胴に、たがを2本"""
+    body = cyl(H+[5, 0, 3], H+[11, 0, 3], 3.4, WOOD); rim = cyl(H+[4.4, 0, 3], H+[5.0, 0, 3], 3.7, hx('#cf9566'))
+    hoops = [cyl(H+[u, 0, 3], H+[u+0.7, 0, 3], 3.65, hx('#7a4b2a')) for u in (6.3, 9.6)]
+    return join(body, rim, *hoops), {'tip': H+[5, 0, 3]}
 def knife():
     return join(handle(5, 1.1, 1.5, WOOD2), box(H+[0, 0, 9.5], [0.6, 2.2, 4.5], hx('#c9ccd1')), box(H+[0, -1.6, 9.5], [0.4, 0.5, 4.5], hx('#e6e8eb'))), {'tip': H+[0, 0, 14]}
+SCALE = 1.6   # 道具の大きさ（いまの絵の道具と同じくらい）
 PROPS0 = {'knife': knife, 'shovel': shovel, 'hammer': hammer, 'axe': axe, 'pick': pick, 'hoe': hoe, 'can': can, 'ladle': ladle, 'duster': duster, 'rod': rod, 'pebble': pebble, 'bucket': bucket}
 _C = {}
 def prop(name):
