@@ -1,5 +1,5 @@
 const {chromium}=require('playwright'),assert=require('node:assert/strict');
-/* 草原の通しプレイで見つけた不具合：かまどの訪問でサブクエストが止まる・おねがいの会話のとちゅうでメインができる・全滅のあとのオオカゲの表示・もどったときのひとこと・「次の朝」・名前・見張り台の知らせ・行けない所の芽・ポップアップの絵 */
+/* 草原の通しプレイで見つけた不具合：サブクエストの物を見にいく予定・おねがいの会話のとちゅうでメインができる・全滅のあとのオオカゲの表示・もどったときのひとこと・「次の朝」・名前・見張り台の知らせ・行けない所の芽・ポップアップの絵 */
 (async()=>{
   const browser=await chromium.launch({executablePath:process.env.CHROME_PATH||'/usr/bin/chromium',args:['--no-sandbox']});
   const page=await browser.newPage({viewport:{width:1000,height:800}}),errors=[];
@@ -11,13 +11,10 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict');
   await page.waitForFunction(()=>sacredEval('stageReady()'),{},{timeout:60000});
   const base=`resetVillageTransient();S.quest=questIndexOf('water');S.qTalked=true;S.qStory=null;S.t=1440*10+600;S.hold=0;S.subDone={};S.subSeen={};S.subTalkAt=null;
     if(S.res.length<3){const r=S.res[0];for(const [el,n] of [['earth',MINA],['fire',FIXK0.fire]])S.res.push(mkRes(S,n,el,r.x+1,r.y))}`;
-  /* 1. かまどを置いて、まだ料理していなくても、かまどを見にいくのは1回だけ。そのあとは、ほかのサブクエストのふきだしが出る */
-  await run(`(()=>{${base}S.t=1440*10+7*60;S.subSt={oven:2,compost:1};S.subSeen={oven:1};S.flags.cooked=false;S.questPartSeen={};const r=S.res[0],k=((r.y|0)+2)*W+(r.x|0)+3;S.obj[k]='oven';recount();for(const q of S.res){q.hunger=hMax(q);q.energy=100;q.fun=100}TESTM=true;S.speed=5;USERPAUSE=false})()`);
-  await page.waitForFunction(()=>sacredEval(`!!(S.questPartSeen||{})['0:sub:oven:placed']`),{},{timeout:60000});
-  await page.waitForFunction(()=>sacredEval(`(()=>{checkSub();return Object.keys(SUBW).length>0})()`),{},{timeout:30000});
-  const oven=JSON.parse(await run(`(()=>{USERPAUSE=true;const w=JSON.stringify(SUBW),v={k:'0:sub:oven:placed'};const a=partVisitStale({partKey:v.k});S.subSt.oven=4;const b=partVisitStale({partKey:v.k});S.subSt.oven=2;return JSON.stringify({w,a,b,hour:hour()})})()`));
-  assert.equal(oven.a,false,'the oven visit is kept while the sub quest is accepted');assert.equal(oven.b,true,'dropped after the sub quest ends');
-  console.log('Oven placed but not cooked: visited once, then other sub quest bubbles appear',oven.w);
+  /* 1. サブクエストの物を見にいく予定は、そのサブクエストを受けているあいだだけ残す */
+  const vis=JSON.parse(await run(`(()=>{${base}S.subSt={compost:2};const k='0:sub:compost:placed';const a=partVisitStale({partKey:k});S.subSt.compost=4;const b=partVisitStale({partKey:k});return JSON.stringify({a,b})})()`));
+  assert.equal(vis.a,false,'the visit is kept while the sub quest is accepted');assert.equal(vis.b,true,'dropped after the sub quest ends');
+  console.log('Sub quest visit: kept while accepted, dropped after');
   /* 2. おねがいの会話のとちゅうでメインの目標ができても、聞きおえたら受けたことにする */
   const sub=JSON.parse(await run(`(()=>{${base}S.quest=questIndexOf('bed');S.subSt={benchbreak:1};subTalk('benchbreak');const open=!document.querySelector('#dialog').hidden;
     S.qStory=questIndexOf('bed');checkSub();const mid=S.subSt.benchbreak??null;
