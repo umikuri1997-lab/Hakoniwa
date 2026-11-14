@@ -68,7 +68,7 @@ def shoot(sp, face, p):
     _, _, zc = V(parts['body'][0].mean(0)[None]); zc = zc[0]   # 体のまん中の奥行き
     for i, nm in enumerate(names):
         P, col, kind = parts[nm]; X, Y, Z = V(P)
-        if nm.startswith(('arm', 'hand', 'prop')): Z = Z+np.where(Z > zc+2, 40.0, 0.0)   # 体より前に出たうで・手・道具は、頭より手前（いまの絵の frontArm と同じ）
+        if facing and nm.startswith(('arm', 'hand', 'prop')): Z = Z+np.where(Z > zc+2, 40.0, 0.0)   # 体より前に出たうで・手・道具は、頭より手前（いまの絵の frontArm と同じ）。うしろ向きでは、3Dの奥行きのまま（持ち主の指示）
         C = np.tile(np.array(CREAM if col == 'cream' else sp.hand, np.uint8), (len(P), 1)) if isinstance(col, str) else col
         if kind == 'h': Z = Z+7
         if nm == 'face': Z = Z+(60 if facing else -1000)
