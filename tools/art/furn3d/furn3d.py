@@ -16,7 +16,7 @@
 #   PARALLEL=True（奥行きのない物。遠近をかけずに写す）
 #   OUTERK=True か数（まわりのふちの輪郭線は、部品の olk でうすくしない。目地の線だけうすくするとき。数なら、まわりの線の色＝となりの色×その数）
 #   POUT=k（粒（PWATER）のかたまりのまわりに、粒の色×k の1ドットの輪郭線を引く）
-#   CONTRAST=c（写した絵のコントラストを c 倍に上げる。粒をかさねる前）
+#   CONTRAST=c（ぬった色のコントラストを c 倍に上げる。輪郭線は、そのあとの色から作るので、線はこくならない）
 #   FULLPERSP=True（左右にも、上下と同じ遠近をかける。まるい池など、奥行きだけの遠近ではたまごの形になる物）
 #   MOVE={チップの名前: {'sel':部品の名前を見る関数, 'pivot':(x,y,z)}}（動く部品より手前の本体は、奥行きをくらべて、動く部品の上に重ねる絵を自動で作る）（動く部品。本体の絵からのぞいて、べつの絵 parts にし、のびちぢみ・回る支点 px・py をつける。ゲームの PARTMV で動かす）
 #   FRONT={チップの名前: 部品の名前を見る関数}（せいれいの手前にかさねる絵 .front。その向きで、その部品だけを写す）
@@ -48,19 +48,14 @@ def shot(M,k,only=None,S_=64,filt=None,info=None):
     c=((V[:,0].min()+V[:,0].max())/2,(V[:,1].min()+V[:,1].max())/2,V[:,2].max()/2)
     PROJ,DEPTH=O.persp(ELEV,FOV,None if getattr(M,'PARALLEL',False) else FRAME,c,full=getattr(M,'FULLPERSP',False))   # FULLPERSP：左右にも上下と同じ遠近   # PARALLEL：奥行きのない物（リース・のれんなど）は、遠近をかけない（平行投影）
     P=np.array([PROJ(v) for v in V]+[PROJ(sc.fwd(q)) for q in pfire_box(M)+list(getattr(M,'PBOX',()))]);m=2/64;ext=(P[:,0].min()-m,P[:,0].max()+m,P[:,1].min()-m,P[:,1].max()+m);O.S=S_
-    im=O.render_px(sc,PROJ,ext,DEPTH,k=0.80 if O.GRAD else 0.72,lw=LW,k2=0.90 if O.GRAD else 0.86,merge=getattr(M,'MERGE',6 if O.GRAD else 12),outerk=getattr(M,'OUTERK',False))   # OUTERK：まわりのふちは、部品の olk でうすくしない   # MERGE：にた色をまとめるさかい（設計図でかえられる）   # GRAD：にた色をまとめるさかいを小さく（グラデーションの段をのこす）   # GRAD の家具は、輪郭線もやわらかい色（持ち主がきめた）
+    im=O.render_px(sc,PROJ,ext,DEPTH,k=0.80 if O.GRAD else 0.72,lw=LW,k2=0.90 if O.GRAD else 0.86,merge=getattr(M,'MERGE',6 if O.GRAD else 12),outerk=getattr(M,'OUTERK',False),contrast=getattr(M,'CONTRAST',0))   # CONTRAST：輪郭線を作る前の色にかける   # OUTERK：まわりのふちは、部品の olk でうすくしない   # MERGE：にた色をまとめるさかい（設計図でかえられる）   # GRAD：にた色をまとめるさかいを小さく（グラデーションの段をのこす）   # GRAD の家具は、輪郭線もやわらかい色（持ち主がきめた）
     if only:   # その部品だけ（ほかの部品のドットは消す。輪郭線もふくめて、その部品のまわり1ドットまで）
         full=np.array(im);ids=O.LAST_IDS
         from scipy.ndimage import binary_dilation;mk=binary_dilation(np.isin(ids,list(keep)))
         full[~mk]=0;im=Image.fromarray(full)
-    if getattr(M,'CONTRAST',0):im=contrast(im,M.CONTRAST)
     yb=V[:,1].max();base=(PROJ((c[0],yb,0))[1]-ext[2])*S_
     if info is not None:info.update(PROJ=PROJ,ext=ext,S=S_,fwd=sc.fwd,depth=DEPTH)
     return im,round(ext[0]*S_),base,yb   # yb：いちばん手前の地面（マス）。向きをかえると、かわる
-def contrast(im,c):
-    """コントラストを上げる（CONTRAST=c：絵の色のある所の、明るさのまん中（中央値）から、c 倍にはなす）。うすさはかえない"""
-    a=np.array(im).astype(float);m=a[...,3]>0;mid=float(np.median(a[m][:,:3])) if m.any() else 128.0
-    a[...,:3]=np.clip(mid+(a[...,:3]-mid)*c,0,255);return Image.fromarray(a.round().astype(np.uint8))
 def pfire_box(M):   # 粒の火のとどく、はんい（見え方のはんいに入れる）
     out=[]
     for cx,cy,z0,H,R,N,seed,*_ in list(getattr(M,'PFIRE',()))+[(x,y,z,Hs,Rs,0,0) for x,y,z,Hs,Rs,Ns,sd in getattr(M,'PSMOKE',())]:out+=[(cx-R*1.6,cy,z0),(cx+R*1.6,cy,z0),(cx,cy,z0+H*1.9),(cx+R*1.8,cy,z0+H*1.9)]
