@@ -1,6 +1,7 @@
-# 木の3D（furn3d の scene と同じ三角形・色）を、面ごとの色つきの glb に書き出す（リアルなレンダリング用）
+# 3D（furn3d の scene。--id=<設計図> でえらぶ。なければ木） と同じ三角形・色）を、面ごとの色つきの glb に書き出す（リアルなレンダリング用）
 import sys;sys.path[:0]=['tools/art/furn3d','tools/art/furn3d/items','tools/art']
-import numpy as np,trimesh,furn3d as F,oblique3d as O,tree   # 木の設計図（ほかの物は、ここをかえる）
+import numpy as np,trimesh,furn3d as F,oblique3d as O,importlib
+ids=[a[5:] for a in sys.argv if a.startswith('--id=')];tree=importlib.import_module(ids[0] if ids else 'tree')   # --id=<設計図の名前>（なければ木）
 O.GRAD=True;tree.SKEL='--skel' in sys.argv
 tree.YAW=0;sc,_=F.scene(tree,0)   # リアルなレンダリングは、まわさない
 V=[];C=[]
