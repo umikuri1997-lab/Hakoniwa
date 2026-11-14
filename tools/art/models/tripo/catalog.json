@@ -89,6 +89,222 @@
   "tris": 1150,
   "catalog_h": 0.5
  },
+ "kit_anemone": {
+  "w_per_h": 0.997,
+  "d_per_h": 0.774,
+  "tris": 2568,
+  "catalog_h": 0.3
+ },
+ "kit_bud_stem": {
+  "w_per_h": 0.503,
+  "d_per_h": 1.425,
+  "tris": 223,
+  "catalog_h": 0.4
+ },
+ "kit_clover_bush": {
+  "w_per_h": 1.239,
+  "d_per_h": 1.566,
+  "tris": 607,
+  "catalog_h": 0.3
+ },
+ "kit_cosmos": {
+  "w_per_h": 1.048,
+  "d_per_h": 0.888,
+  "tris": 1927,
+  "catalog_h": 0.3
+ },
+ "kit_daisy": {
+  "w_per_h": 1.071,
+  "d_per_h": 0.909,
+  "tris": 2857,
+  "catalog_h": 0.3
+ },
+ "kit_daisy_clump": {
+  "w_per_h": 2.206,
+  "d_per_h": 2.941,
+  "tris": 2095,
+  "catalog_h": 0.3
+ },
+ "kit_fern_bush": {
+  "w_per_h": 1.101,
+  "d_per_h": 1.744,
+  "tris": 2405,
+  "catalog_h": 0.45
+ },
+ "kit_flower_bush": {
+  "w_per_h": 0.995,
+  "d_per_h": 1.698,
+  "tris": 1718,
+  "catalog_h": 0.45
+ },
+ "kit_flower_bush2": {
+  "w_per_h": 0.901,
+  "d_per_h": 0.887,
+  "tris": 2259,
+  "catalog_h": 0.3
+ },
+ "kit_grass_blades": {
+  "w_per_h": 1.49,
+  "d_per_h": 1.893,
+  "tris": 167,
+  "catalog_h": 0.3
+ },
+ "kit_grass_tall": {
+  "w_per_h": 0.564,
+  "d_per_h": 0.945,
+  "tris": 189,
+  "catalog_h": 0.4
+ },
+ "kit_leaf": {
+  "w_per_h": 1.11,
+  "d_per_h": 0.386,
+  "tris": 114,
+  "catalog_h": 0.12
+ },
+ "kit_leaf_curl": {
+  "w_per_h": 1.164,
+  "d_per_h": 0.918,
+  "tris": 119,
+  "catalog_h": 0.15
+ },
+ "kit_leaf_fan": {
+  "w_per_h": 1.056,
+  "d_per_h": 0.42,
+  "tris": 369,
+  "catalog_h": 0.18
+ },
+ "kit_leaf_long": {
+  "w_per_h": 0.595,
+  "d_per_h": 0.595,
+  "tris": 102,
+  "catalog_h": 0.2
+ },
+ "kit_leaf_oak": {
+  "w_per_h": 0.851,
+  "d_per_h": 0.326,
+  "tris": 329,
+  "catalog_h": 0.14
+ },
+ "kit_leaf_pair": {
+  "w_per_h": 1.477,
+  "d_per_h": 0.569,
+  "tris": 274,
+  "catalog_h": 0.12
+ },
+ "kit_leaf_round": {
+  "w_per_h": 1.667,
+  "d_per_h": 1.556,
+  "tris": 35,
+  "catalog_h": 0.15
+ },
+ "kit_leaf_round2": {
+  "w_per_h": 1.165,
+  "d_per_h": 1.747,
+  "tris": 138,
+  "catalog_h": 0.3
+ },
+ "kit_leaf_round2b": {
+  "w_per_h": 1.0,
+  "d_per_h": 1.103,
+  "tris": 132,
+  "catalog_h": 0.3
+ },
+ "kit_leaf_spray": {
+  "w_per_h": 1.277,
+  "d_per_h": 1.277,
+  "tris": 321,
+  "catalog_h": 0.18
+ },
+ "kit_leaf_trio": {
+  "w_per_h": 1.349,
+  "d_per_h": 0.411,
+  "tris": 1050,
+  "catalog_h": 0.14
+ },
+ "kit_leaf_wide": {
+  "w_per_h": 1.0,
+  "d_per_h": 0.647,
+  "tris": 97,
+  "catalog_h": 0.2
+ },
+ "kit_lily2": {
+  "w_per_h": 1.093,
+  "d_per_h": 0.745,
+  "tris": 2139,
+  "catalog_h": 0.3
+ },
+ "kit_pansy": {
+  "w_per_h": 1.018,
+  "d_per_h": 0.613,
+  "tris": 2451,
+  "catalog_h": 0.3
+ },
+ "kit_peony": {
+  "w_per_h": 1.151,
+  "d_per_h": 0.867,
+  "tris": 2999,
+  "catalog_h": 0.3
+ },
+ "kit_poppy": {
+  "w_per_h": 1.286,
+  "d_per_h": 0.95,
+  "tris": 1536,
+  "catalog_h": 0.3
+ },
+ "kit_rose_bush": {
+  "w_per_h": 1.229,
+  "d_per_h": 1.795,
+  "tris": 1706,
+  "catalog_h": 0.4
+ },
+ "kit_rose_pair": {
+  "w_per_h": 1.254,
+  "d_per_h": 1.022,
+  "tris": 2065,
+  "catalog_h": 0.3
+ },
+ "kit_stem": {
+  "w_per_h": 0.133,
+  "d_per_h": 0.9,
+  "tris": 102,
+  "catalog_h": 0.12
+ },
+ "kit_tree_conifer": {
+  "w_per_h": 0.66,
+  "d_per_h": 0.651,
+  "tris": 1019,
+  "catalog_h": 1.6
+ },
+ "kit_tree_round2": {
+  "w_per_h": 1.479,
+  "d_per_h": 0.828,
+  "tris": 3000,
+  "catalog_h": 1.4
+ },
+ "kit_tulip": {
+  "w_per_h": 0.922,
+  "d_per_h": 0.585,
+  "tris": 1287,
+  "catalog_h": 0.3
+ },
+ "kit_tulip_buds": {
+  "w_per_h": 0.892,
+  "d_per_h": 1.448,
+  "tris": 391,
+  "catalog_h": 0.4
+ },
+ "kit_vine_hang": {
+  "w_per_h": 1.018,
+  "d_per_h": 0.55,
+  "tris": 1355,
+  "catalog_h": 0.5
+ },
+ "kit_vine_trail": {
+  "w_per_h": 2.925,
+  "d_per_h": 0.591,
+  "tris": 1911,
+  "catalog_h": 0.2
+ },
  "lantern": {
   "w_per_h": 0.634,
   "d_per_h": 0.555,
@@ -214,6 +430,12 @@
   "d_per_h": 1.013,
   "tris": 5040,
   "catalog_h": 0.6
+ },
+ "sacred_stump": {
+  "w_per_h": 1.881,
+  "d_per_h": 2.085,
+  "tris": 45754,
+  "catalog_h": 0.5
  },
  "salvia": {
   "w_per_h": 0.827,
