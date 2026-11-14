@@ -29,7 +29,7 @@ class Scene:
         """これから足す部品にはる木目など（Tex）。render_px で、部品ののびる向きにそって、明るさのちがいだけをつける"""
         self.tcur = t
     def material(self, m=None):
-        """これから足す部品の材質（render_px）。None はふつう、'metal' は金属（光の当たる所に、明るいつやのすじ）、'soft' は布・砂（なだらかなふくらみにもかげ）、'soft1' は 'soft' のかげを半かげまでにした物、'flat' は3だんのかげをつけない物（色にかげを入れてある。まくら）、'clear' はすけて見える物（水。CLEARA のこさで下にかさねる）"""
+        """これから足す部品の材質（render_px）。None はふつう、'metal' は金属（光の当たる所に、明るいつやのすじ）、'soft' は布・砂（なだらかなふくらみにもかげ）、'soft1' は 'soft' のかげを半かげまでにした物、'flat' は3だんのかげをつけない物（色にかげを入れてある。まくら）、'clear' はすけて見える物（水。CLEARA のこさで下にかさねる）、'satin' はサテンの布（'soft' のかげに、光と目のあいだの向きを向く所に、つや SATINSPEC）"""
         self.mcur = m
     def smooth(self, on=False):
         """これから足す部品を、なめらかなかげ（スムーズシェード）にする。まるい物：ドットごとに、角の向きをまぜた面の向きで、かげの段をきめる（角ばった面のすじが出ない）"""
@@ -238,6 +238,8 @@ def grid_bg(ext, foot=None):
 SHADE = [(17.5, -5), (35, -10)]   # かげの色：ベースの色の HSV（100段階）から、明るさ・あざやかさを引く（半かげ・かげ）。持ち主がきめた（かげ＝明るさ−35・あざやかさ+10）
 SHINE = (12, -8)                # 金属のつや：明るさを足し、あざやかさを引く（白っぽく）
 METALSPEC = 0.97                # 金属のつやが出る向きの近さ
+SATINSPEC = 0.80                # サテンの布（material 'satin'）のつやが出る向きの近さ（光と目のあいだの向きとの内積）
+SATINSHINE = (24, -6)           # サテンのつや（lv −2）：明るさを足し、あざやかさを引く
 CLEARSPEC = (0.06, 0.035, 0.45, 0.15)   # すけて見える部品のつや：平らな面より、光と目のあいだの向きへかたむいた量（内積の差）が、これより大きい所につよいつや・よわいつや・白くする量・こさに足す量
 CLEARA = 0.66   # すけて見える部品（material 'clear'。水）のこさ
 SOFTLV = (0.86, 0.62)
@@ -255,11 +257,11 @@ def _ol(c, kk):
     ns = np.clip(sat+OSAT/100, 0, 1); f = np.where(sat > 1e-6, ns/np.maximum(sat, 1e-9), 1)
     return mx-(mx-o)*f   # 布・砂（material 'soft'）の、光・半かげ・かげのさかい目（光の向きとの内積）
 def toon(cc, lv):
-    """部品の色 cc の、光（0）・半かげ（1）・かげ（2）・金属のつや（-1）の色"""
+    """部品の色 cc の、光（0）・半かげ（1）・かげ（2）・金属のつや（-1）・サテンのつや（-2）の色"""
     import colorsys
     h, s_, v = colorsys.rgb_to_hsv(*[c/255 for c in cc])
     if lv == 0: return np.array(cc, float)
-    dv, ds = (-SHINE[0], -SHINE[1]) if lv < 0 else (SHADE4 if GRAD else SHADE)[lv-1]
+    dv, ds = (-SATINSHINE[0], -SATINSHINE[1]) if lv == -2 else (-SHINE[0], -SHINE[1]) if lv < 0 else (SHADE4 if GRAD else SHADE)[lv-1]
     if lv > 0 and v < 0.85: dv *= v/0.85   # くらい色は、かげで引く明るさを、色の明るさに合わせてへらす（黒っぽいかげにしない。持ち主がきめた）
     v = min(1, max(0, v-dv/100)); s_ = min(1, max(0, s_-ds/100))
     return np.array(colorsys.hsv_to_rgb(h, s_, v))*255
@@ -347,6 +349,9 @@ def render_px(sc, proj, ext, depth, k=0.72, outer=True, merge=12, lw=1, k2=0.86)
             hv = LIGHT+depth/np.linalg.norm(depth); hv /= np.linalg.norm(hv); hh = np.array([hv[0], hv[1], 0]); nh = np.array([n[0], n[1], 0])
             sp = float(np.dot(nh/(np.linalg.norm(nh) or 1), hh/(np.linalg.norm(hh) or 1))) if np.linalg.norm(nh) > .3 else float(np.dot(n, hv))
             lv = -1 if sp > METALSPEC else lv
+        if sc.mt.get(pid) == 'satin':   # サテン：布のかげに、光と目のあいだの向きを向く所のつや
+            hv = LIGHT+depth/np.linalg.norm(depth); hv /= np.linalg.norm(hv)
+            lv = -2 if float(np.dot(n, hv)) > SATINSPEC else _lvof(d, 'soft')
         shc = toon(cc, lv)
         P = [((proj(p)[0]-x0)*S, (proj(p)[1]-y0)*S) for p in (a, b, c)]; D = [float(np.dot(p, depth)) for p in (a, b, c)]
         xs = [p[0] for p in P]; ys = [p[1] for p in P]; pad = 2 if RAY else 0   # 遠近では辺が少し曲がるので、まわり2ドットも見る
@@ -371,13 +376,15 @@ def render_px(sc, proj, ext, depth, k=0.72, outer=True, merge=12, lw=1, k2=0.86)
         if pid in sc.sm and sc.mt.get(pid) != 'flat' and vis.any():   # スムーズシェード：ドットごとに、角の向きをまぜた面の向きで段をきめる（金属は、つやのすじも）
             na, nb, nc = vnorm(pid, a, n), vnorm(pid, b, n), vnorm(pid, c, n)
             NN = w0[vis, None]*na+w1[vis, None]*nb+w2[vis, None]*nc; NN /= np.maximum(np.linalg.norm(NN, axis=1, keepdims=True), 1e-9)
-            dd = NN@LIGHT; mt_ = sc.mt.get(pid); L2 = np.array([_lvof(float(x), 'curve' if pid in sc.cv else (None if mt_ == 'metal' else mt_)) for x in dd])
+            dd = NN@LIGHT; mt_ = sc.mt.get(pid); L2 = np.array([_lvof(float(x), 'curve' if pid in sc.cv else (None if mt_ == 'metal' else 'soft' if mt_ == 'satin' else mt_)) for x in dd])
             if mt_ == 'metal':
                 hv = LIGHT+depth/np.linalg.norm(depth); hv /= np.linalg.norm(hv); hh = np.array([hv[0], hv[1], 0]); hh /= max(1e-9, np.linalg.norm(hh))
                 for i_, q in enumerate(NN):
                     nh = np.array([q[0], q[1], 0]); ln_ = np.linalg.norm(nh)
                     sp = float(np.dot(nh/ln_, hh)) if ln_ > .3 else float(np.dot(q, hv))
                     if sp > METALSPEC: L2[i_] = -1
+            if mt_ == 'satin':
+                hv = LIGHT+depth/np.linalg.norm(depth); hv /= np.linalg.norm(hv); L2[NN@hv > SATINSPEC] = -2
             TC = {q: toon(cc, q) for q in set(L2.tolist())}
             col[s][vis] = np.array([TC[q] for q in L2]); lvb[s][vis] = L2
         if pid in sc.tx or pid in sc.dc:

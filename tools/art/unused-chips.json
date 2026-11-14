@@ -105,7 +105,9 @@
         "site:beam2",
         "site:beamL2",
         "site:beamR2",
-        "site:brace2"
+        "site:brace2",
+        "site:sand",
+        "site:sand2"
       ]
     }
   ]
