@@ -1,1 +1,3 @@
 .chips_changed
+__pycache__/
+*.pyc
