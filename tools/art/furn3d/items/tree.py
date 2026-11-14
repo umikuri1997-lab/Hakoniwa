@@ -102,15 +102,15 @@ def pipe(B,rtip=0.005,E=2.3):
         b['r0']=b['r1']*(1.18 if b['lv']>0 else 1.0)
     for b in B:b['r0']=min(b['r0'],0.075 if b['lv']>0 else 9);b['r1']=min(b['r1'],0.065 if b['lv']>0 else 9)   # 主枝の太さの上限
     t=B[0];t['r1']=min(max(t['r1'],0.08),0.09);t['r0']=0.12   # 幹：根もとがいちばん太い（太すぎない）
-NODE=0.06   # 葉のつく節の間かく（マス）。左右たがいちがいなので、同じがわの葉の間かくは、その2倍（葉のはばくらい）
+NODE=0.045   # 葉のつく節の間かく（マス）。左右たがいちがいなので、同じがわの葉の間かくは、その2倍（葉のはばくらい）
 def zigzag(B):
     """葉をつける小枝（先の細枝と、その1つ手前の枝の先のほう）：節ごとに、葉のつく面の中で少しジグザグに折れる（お手本の写真）。
     葉のつく面（光のほう＝上と外のあいだ）の向き pn も、ここで決めて骨格にのこす"""
     for b in B:
-        if not (b['leaf'] or b['lv']>=3):continue   # 葉をつける枝：先の細枝・その手前の枝・小枝（の先のほう）
+        if not (b['leaf'] or b['lv']>=2):continue   # 葉をつける枝：先の細枝・その手前の枝・小枝・側枝（の先のほう）
         P=np.array(b['pts']);Ls=np.cumsum([0]+[np.linalg.norm(P[i+1]-P[i]) for i in range(len(P)-1)]);tot=Ls[-1]
         d=P[-1]-P[0];d/=np.linalg.norm(d);pn=UP*0.7+envnorm(P[-1])*0.3;pn-=d*(pn@d);pn/=np.linalg.norm(pn);sd=np.cross(pn,d)
-        s0=0.0 if b['leaf'] else tot*(0.45 if b['lv']>=4 else 0.55);ns=max(1,int((tot-s0)/NODE));nodes=[];side=1
+        s0=0.0 if b['leaf'] else tot*(0.35 if b['lv']>=4 else 0.45 if b['lv']==3 else 0.6);ns=max(1,int((tot-s0)/NODE));nodes=[];side=1
         q0=P[0].copy();pts=[P[i] for i in range(len(P)) if Ls[i]<=s0]
         for k in range(ns+1):
             sd_=s0+(tot-s0)*k/ns;j=max(0,min(len(P)-2,int(np.searchsorted(Ls,sd_))-1));t=(sd_-Ls[j])/max(Ls[j+1]-Ls[j],1e-9)
