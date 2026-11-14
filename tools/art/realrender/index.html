@@ -1,0 +1,15 @@
+<!doctype html><html><head><meta charset="utf-8"><style>body{margin:0;background:#9cc27e}</style>
+<script type="importmap">{"imports":{"three":"./node_modules/three/build/three.module.js","three/addons/":"./node_modules/three/examples/jsm/"}}</script></head><body>
+<script type="module">
+import * as THREE from 'three';import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
+const W=1400,H=1000,q=new URLSearchParams(location.search),file=q.get('f')||'tree.glb';
+const r=new THREE.WebGLRenderer({antialias:true,preserveDrawingBuffer:true});r.setSize(W,H);r.shadowMap.enabled=true;r.shadowMap.type=THREE.PCFSoftShadowMap;r.outputColorSpace=THREE.SRGBColorSpace;r.toneMapping=THREE.ACESFilmicToneMapping;r.toneMappingExposure=1.05;document.body.appendChild(r.domElement);
+const s=new THREE.Scene();s.background=new THREE.Color(0xbfdcef);
+s.add(new THREE.HemisphereLight(0xdfefff,0x6f8a4a,0.9));
+const sun=new THREE.DirectionalLight(0xfff2dd,2.6);sun.position.set(-3,6,3);sun.castShadow=true;sun.shadow.mapSize.set(4096,4096);const c=sun.shadow.camera;c.left=-3;c.right=3;c.top=3;c.bottom=-3;c.near=0.1;c.far=20;sun.shadow.bias=-0.0005;sun.shadow.normalBias=0.01;s.add(sun);
+const g=new THREE.Mesh(new THREE.PlaneGeometry(20,20),new THREE.MeshStandardMaterial({color:0x8fb36a,roughness:1}));g.rotation.x=-Math.PI/2;g.receiveShadow=true;s.add(g);
+new GLTFLoader().load(file,gl=>{gl.scene.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true;o.material=new THREE.MeshStandardMaterial({vertexColors:true,roughness:0.85,metalness:0,side:THREE.DoubleSide});o.geometry.computeVertexNormals()}});
+ s.add(gl.scene);const b=new THREE.Box3().setFromObject(gl.scene),ct=b.getCenter(new THREE.Vector3()),sz=b.getSize(new THREE.Vector3());
+ const cam=new THREE.PerspectiveCamera(24,W/H,0.1,50),el=THREE.MathUtils.degToRad(+(q.get('el')||28)),d=Math.max(sz.x,sz.y)*3.2;
+ cam.position.set(ct.x+d*0.35,ct.y+d*Math.sin(el),ct.z+d*Math.cos(el));cam.lookAt(ct);r.render(s,cam);window.DONE=1});
+</script></body></html>
