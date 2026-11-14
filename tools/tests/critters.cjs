@@ -9,7 +9,7 @@ for(const d of [-3,-2,-1])S.obj[CY*W+CX+d]='salvia';S.obj[(CY-3)*W+CX+5]='tree';
 await p.waitForFunction(()=>sacredEval('stageReady()'),{},{timeout:60000});
 const o=await run(`(()=>{cam.z=2;centerOn(CX*TS,(CY+.5)*TS);CRIT=[];for(let i=0;i<300;i++)critTick(.5);const kinds=[...new Set(CRIT.map(c=>c.k))];
   /* 小鳥は、せいれいが近づくと飛びたつ */CRIT=[];CRIT.push({id:999,k:'bird',x:CX+4.5,y:CY-2.4,hx:CX+4.5,hy:CY-2.4,z:0,face:1,t:0,life:100,hop:9,fl:0});const r=mkRes(S,'a','wind',CX+4.5,CY-1.5);S.res=[r];critTick(.1);const flew=!!critById(999).fl;
-  /* 見にいく */CRIT=[{id:7,k:'fly',x:CX-2.5,y:CY+.5,hx:CX-2.5,hy:CY+.5,z:12,face:1,t:0,life:999,hop:0,fl:0,col:['#fff','#ddd']}];r.x=CX+2.5;r.y=CY+.5;r.fun=50;r.hunger=hMax(r);r.energy=100;endAct(r);const ok=goCritter(r,bfs(r.x|0,r.y|0));const f0=r.fun;
+  /* 見にいく */CRIT=[{id:7,k:'fly',x:CX-2.5,y:CY+.5,hx:CX-2.5,hy:CY+.5,z:12,face:1,t:0,life:999,hop:0,fl:0,ci:3}];r.x=CX+2.5;r.y=CY+.5;r.fun=50;r.hunger=hMax(r);r.energy=100;endAct(r);const ok=goCritter(r,bfs(r.x|0,r.y|0));const f0=r.fun;
   for(let i=0;i<400&&r.act&&r.act.type==='critwatch';i++){updRes(r,.1);CRIT[0]&&(CRIT[0].life=999)}const gain=r.fun-f0;
   /* 夜は出ない */S.t=1440*3+60;CRIT=[];for(let i=0;i<100;i++)critTick(.5);const night=CRIT.length;
   return {kinds,flew,ok,gain,night}})()`);
