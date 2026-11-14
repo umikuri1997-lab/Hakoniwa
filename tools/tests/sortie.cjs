@@ -25,7 +25,7 @@ const assert=require('node:assert/strict');
   assert.equal(r.hit,true,'quest flag');assert.equal(r.fireFighter,false);
   assert.equal(r.arrows,8,'fire on tower uses 2 arrows');assert.equal(r.brn,3,'burn applied');assert.equal(r.burnDmg,9,'burn 3x3');assert.equal(r.brnLeft,0);
   /* 夜は切りかえられない */
-  const ui=await run(`(()=>{const h=S.res[0];h.elem='wood';delete h.sortie;S.t=1440*3+23.5*60;openSheet('res',h.id);const b=Array.from(document.querySelectorAll('.sheet button')).find(x=>x.textContent==='出撃する');if(!b)return 'nobtn';b.click();const n=fighter(h);S.t=1440*4+10*60;openSheet('res',h.id);const b2=Array.from(document.querySelectorAll('.sheet button')).find(x=>x.textContent==='出撃する');b2.click();return JSON.stringify({night:n,day:fighter(h)})})()`);
+  const ui=await run(`(()=>{const h=S.res[0];h.elem='wood';delete h.sortie;S.t=1440*3+23.5*60;openSheet('res',h.id);const b=Array.from(document.querySelectorAll('.sheet button')).find(x=>x.textContent==='たたかう');if(!b)return 'nobtn';b.click();const n=fighter(h);S.t=1440*4+10*60;openSheet('res',h.id);const b2=Array.from(document.querySelectorAll('.sheet button')).find(x=>x.textContent==='たたかう');b2.click();return JSON.stringify({night:n,day:fighter(h)})})()`);
   console.log(ui);const u=JSON.parse(ui);assert.equal(u.night,false);assert.equal(u.day,true);
   /* こもれびのまもり：出撃しているフタバのまわり3マスだけ。見張り台・出撃しないときは使わない */
   const g=JSON.parse(await run(`(()=>{S.flags.guard=true;S.flags.sortie=0;const f=S.res[0];f.name=POKO;f.elem='wood';delete f.sortie;f.hunger=hMax(f);endAct(f);f.act=null;f.gcd=0;f.gw=null;S.t=1440*5+23.5*60;S.enemyOn=true;

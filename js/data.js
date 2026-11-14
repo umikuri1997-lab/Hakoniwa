@@ -485,9 +485,9 @@ const QUESTS1=[
     [POKO,'#think|……その力、どこにあるのかな。'],[MINA,'わからないねぇ。でも、あの切り株の根っこみたいに、どこかで静かに待ってるのかもしれないよぉ。']]}}),
   /* オオカゲを追いはらったあと：フタバが「こもれびのまもり」をおぼえて、夜に火のせいれいを守る（前はピンクの会話 e06・e06d） */
   stepQuest({id:'guardLearn',text:'こもれびのまもり',
-   steps:[{id:'guardUse',t:'夜、フタバがこもれびのまもりで火のせいれいを守る',check:()=>!!S.flags.guardUsed,how:'夜、フタバが出撃して、そばで「コワイノ」にねらわれている火のせいれいを葉っぱで守る。フタバの出撃は、せいれいの画面でえらぶ'}],
+   steps:[{id:'guardUse',t:'夜、フタバがこもれびのまもりで火のせいれいを守る',check:()=>!!S.flags.guardUsed,how:'夜、フタバがたたかいに出て、そばで「コワイノ」にねらわれている火のせいれいを葉っぱで守る。フタバがたたかうかは、せいれいの画面でえらぶ'}],
    talk:{who:POKO,when:()=>true,get lines(){const e=SEV1.find(x=>x.k===(S.flags.hDied?'e06d':'e06'));return e?sevLines(e.L)||[]:[]},
-    gives:{run(){S.flags.guard=true;memo('🍃','フタバが「こもれびのまもり」をおぼえた');skillPop('leaf','フタバが「こもれびのまもり」をおぼえた！',['夜、出撃したフタバのまわり3マスで、「コワイノ」にねらわれている、たたかうせいれいを、葉っぱで1人守る。','守られたせいれいは、40分のあいだ、「コワイノ」から受けるダメージ0.5倍。','つかったあとは、75分たつと、また守れる。'])}}},
+    gives:{run(){S.flags.guard=true;memo('🍃','フタバが「こもれびのまもり」をおぼえた');skillPop('leaf','フタバが「こもれびのまもり」をおぼえた！',['夜、たたかうフタバのまわり3マスで、「コワイノ」にねらわれている、たたかうせいれいを、葉っぱで1人守る。','守られたせいれいは、40分のあいだ、「コワイノ」から受けるダメージ0.5倍。','つかったあとは、75分たつと、また守れる。'])}}},
    get story(){return KS([['H','ゆうべは、助かったぜ。葉っぱが、ふわっとかかってさ。'],['F','#surprise|ほんと！？ ……ちゃんと、とどいてたんだ。'],['H','ああ。おまえも、いっしょに村を守ってたんだな。'],['F','#joy|うん！ これからも、いっしょに守ろうね。']])}}),
   {id:'wind',text:'風のせいれいをむかえよう',how:"「おく」→「ゆりの種」を植えたり、ブランコを置いたりして風の力をため、朝に神殿の「！」から呼ぶ",check:()=>elemCount('wind')>=1&&NEWRES==null,prog:()=>'風の力 '+Math.floor(ATTR.wind)+'/'+needFor('wind'),
    talk:{who:POKO,when:()=>true,learn:['swing'],lines:[
@@ -634,6 +634,9 @@ function migrateEarthMerge(state){
   if(state.flags.qsplitPend==='earthListen')delete state.flags.qsplitPend;if(state.flags.qsplitStory==='earthListen')delete state.flags.qsplitStory;
 }
 /* 交換・おつげの目標を、メインからサブクエストへうつした（tutSub1）。古いセーブの番号（QUESTS1_V3）を名前で読みかえ、とちゅうなら、サブクエストのつづきにする（1回だけ） */
+function migrateTalkSub(state){/* 「せいれいにパワーをそそごう」（boost1）は「せいれいとお話ししよう」（talk1）にかえた：受けた・おわったなどの状態を、名前で読みかえる（1回だけ） */
+  if(state.flags.talkq1)return;state.flags.talkq1=1;
+  for(const k of['subSt','subDone','subSeen','subB','subArrived']){const o=state[k];if(o&&o.boost1!=null){o.talk1=o.boost1;delete o.boost1}}}
 function migrateTutSub(state){
   if(state.flags.tutSub1)return;state.flags.tutSub1=1;
   if(state.free||(state.world||0)!==0)return;
