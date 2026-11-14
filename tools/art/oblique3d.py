@@ -420,16 +420,20 @@ def render_px(sc, proj, ext, depth, k=0.72, outer=True, merge=12, lw=1, k2=0.86)
             l2 &= idb >= 0; same = np.zeros((Hp, Wp), bool); same[yd, xd] = idb[yd, xd] == idb[ys, xs]
             same2 = idb == np.roll(np.roll(idb, dy, 0), dx, 1)   # q-向き も同じ部品（部品が3ドット以上つづく）
             line2 |= l2 & same & same2   # 細い部品（3ドットより細い）には2ドットめを引かない（部品が線だけになる）
-    out[line2 & ~line] = _ol(col0[line2 & ~line], k2)
-    out[line] = _ol(col0[line], k)
+    KP = np.full(sc.pid+2, float(k)); KP2 = np.full(sc.pid+2, float(k2))   # 部品ごとの輪郭線の色（sc.outline(None, kk) のあとに足した部品は ×kk。2ドットめは ×(kk と1のまん中)）
+    for p_, (_, kk_) in sc.ol.items():
+        if kk_ is not None: KP[p_] = kk_; KP2[p_] = (kk_+1)/2
+    m_ = line2 & ~line; out[m_] = _ol(col0[m_], KP2[idb[m_]][:, None])
+    out[line] = _ol(col0[line], KP[idb[line]][:, None])
     if outer:
         for dy, dx in ((0, 1), (0, -1), (1, 0), (-1, 0)):
             ys = slice(max(dy, 0), Hp+min(dy, 0)); xs = slice(max(dx, 0), Wp+min(dx, 0))
             yd = slice(max(-dy, 0), Hp+min(-dy, 0)); xd = slice(max(-dx, 0), Wp+min(-dx, 0))
             src = np.zeros((Hp, Wp), bool); src[yd, xd] = idb[ys, xs] >= 0
             sc_ = np.zeros((Hp, Wp, 3)); sc_[yd, xd] = col0[ys, xs]
+            si = np.full((Hp, Wp), -1); si[yd, xd] = idb[ys, xs]
             put = src & (alpha == 0)
-            out[put] = _ol(sc_[put], k); alpha[put] = 255
+            out[put] = _ol(sc_[put], KP[si[put]][:, None]); alpha[put] = 255
         if lw >= 2:   # 物のふちの内がわ1ドット：うすい線（こい線の上にはぬらない）
             edge = np.zeros((Hp, Wp), bool)
             for dy, dx in ((0, 1), (0, -1), (1, 0), (-1, 0)):
@@ -442,7 +446,7 @@ def render_px(sc, proj, ext, depth, k=0.72, outer=True, merge=12, lw=1, k2=0.86)
                 e = np.zeros((Hp, Wp), bool); e[max(-dy, 0):Hp+min(-dy, 0), max(-dx, 0):Wp+min(-dx, 0)] = idb[max(dy, 0):Hp+min(dy, 0), max(dx, 0):Wp+min(dx, 0)] < 0
                 inner &= ~e | ((np.roll(np.roll(idb, dy, 0), dx, 1) == idb) & (np.roll(np.roll(idb, 2*dy, 0), 2*dx, 1) == idb))
             edge &= inner
-            out[edge] = _ol(col0[edge], k2)
+            out[edge] = _ol(col0[edge], KP2[idb[edge]][:, None])
     for a, b, c, cc, n in CLR:   # すけて見える部品：手前にあるドットだけ、下の色に CLEARA のこさでまぜる（線は引かない・下の部品の線はのこす）
         d = float(np.dot(n, LIGHT)); lv = (0 if d > LV4[0] else 1 if d > LV4[1] else 2 if d > LV4[2] else 3) if GRAD else (0 if d > 0.55 else 1 if d > 0.1 else 2); shc = np.array(toon(cc, lv), float); al = CLEARA
         hv = LIGHT+depth/np.linalg.norm(depth); hv = hv/np.linalg.norm(hv); sp = float(np.dot(n, hv))   # つや：光と目のあいだの向きを向く面（さざなみの山）は、白く光って、こく見える
