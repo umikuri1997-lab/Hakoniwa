@@ -131,47 +131,53 @@ def veinpat(q):
         return LEAF[1] if ad<0.45 else LEAF[0]
     return f
 
-BARKT=0.11    # 切り株の樹皮のあつさ（マス）
+BARKT=0.055   # 切り株の樹皮のあつさ（マス）
 def roundstump(P):
-    """切り株（モデル）のゆがみをへらす：幹（根より上）の切り口と同じ高さの断面を、向きごとに、平均の半径へ近づける（断面ごとまるく、ちぢめ・のばす）。
-    高さ×向きのます目ごとに、いちばん外の半径をはかり、まるくするための倍率を作って、なめらかにつないでかける。根（下のほう）はそのまま"""
-    from scipy.ndimage import uniform_filter
+    """切り株（モデル）の、かたむいた切り口をたいらにする：切り口の面のかたむきをはかり、根もとは動かさずに、上ほど、そのかたむきの分だけ高さをずらす（形はかえない）"""
     U,inv=np.unique(P.reshape(-1,3),axis=0,return_inverse=True);inv=inv.reshape(-1)
-    zl,zh=U[:,2].min(),U[:,2].max();H=zh-zl;top=U[U[:,2]>zh-0.06*H];cx,cy=top[:,0].mean(),top[:,1].mean()
-    dx,dy=U[:,0]-cx,U[:,1]-cy;r=np.hypot(dx,dy);A=np.arctan2(dy,dx)
-    NZ,NA=16,32;zi=np.clip(((U[:,2]-zl)/H*NZ).astype(int),0,NZ-1);ai=((A+math.pi)/(2*math.pi)*NA).astype(int)%NA
-    RS=np.zeros((NZ,NA))
-    for i in range(NZ):
-        for j in range(NA):
-            m=(zi==i)&(ai==j);RS[i,j]=r[m].max() if m.any() else np.nan
-    for i in range(NZ):   # 空のます目は、となりから
-        row=RS[i];
-        if np.isnan(row).all():RS[i]=RS[i-1] if i else 1;continue
-        idx=np.flatnonzero(~np.isnan(row));RS[i]=np.interp(np.arange(NA),idx,row[idx],period=NA)
-    TG=RS.mean(1,keepdims=True);K=TG/RS
-    W=np.clip(((np.arange(NZ)+0.5)/NZ-0.30)/0.25,0,1)[:,None]*0.8;K=1+(K-1)*W
-    K=uniform_filter(K,size=(3,3),mode=('nearest','wrap'))
-    zf=(U[:,2]-zl)/H*NZ-0.5;af=(A+math.pi)/(2*math.pi)*NA-0.5   # ます目のまん中どうしを、なめらかにつなぐ
-    z0=np.clip(np.floor(zf).astype(int),0,NZ-1);z1=np.clip(z0+1,0,NZ-1);tz=np.clip(zf-np.floor(zf),0,1)
-    a0=np.floor(af).astype(int)%NA;a1=(a0+1)%NA;ta=af-np.floor(af)
-    k=(K[z0,a0]*(1-ta)+K[z0,a1]*ta)*(1-tz)+(K[z1,a0]*(1-ta)+K[z1,a1]*ta)*tz
-    U2=U.copy();U2[:,0]=cx+dx*k;U2[:,1]=cy+dy*k
-    zt=np.median(U[U[:,2]>zh-0.10*H,2]);b0=zh-0.22*H;w=np.clip((U[:,2]-b0)/(0.10*H),0,1)   # 切り口を、たいらに（モデルでは前へかたむいていた）
-    U2[:,2]=U[:,2]+(zt-U[:,2])*w
+    zl,zh=U[:,2].min(),U[:,2].max();H=zh-zl;top=U[U[:,2]>zh-0.12*H];cx,cy=top[:,0].mean(),top[:,1].mean()
+    A=np.c_[np.ones(len(top)),top[:,0]-cx,top[:,1]-cy];a0,gx,gy=np.linalg.lstsq(A,top[:,2],rcond=None)[0]   # 切り口の面 z = a0 + gx·x + gy·y
+    w=np.clip((U[:,2]-zl)/H,0,1)**1.5
+    U2=U.copy();U2[:,2]=U[:,2]-(gx*(U[:,0]-cx)+gy*(U[:,1]-cy))*w
     return U2[inv].reshape(P.shape)
+SPROUT=[(186,220,112),(160,204,96)]   # 芽の葉の色（明るい・ふつう）
+STEMC=(150,188,92)
+def leafmesh(base,ang,L,W,pitch,fold=0.35,droop=0.25):
+    """平たい葉（先がとがった、たまごの形）を三角形にする。base：つけ根・ang：上から見た向き・pitch：上へのそり（ラジアン）。
+    まん中のすじがいちばん低い（fold：ふちほど上がる）。先は少したれる（droop）"""
+    d=np.array([math.cos(ang),math.sin(ang),0.0]);sd=np.array([-math.sin(ang),math.cos(ang),0.0]);up=np.array([0,0,1.0])
+    def P(t,u):
+        w=W*math.sin(math.pi*min(1,t*1.05))**0.75*(1-0.25*t);h=math.sin(pitch)*t*L-droop*L*t*t+fold*w*abs(u)
+        return base+d*math.cos(pitch)*t*L+sd*u*w+up*h
+    T=[];nt,ns=10,6
+    for i in range(nt):
+        for j in range(-ns,ns):
+            t0,t1=i/nt,(i+1)/nt;u0,u1=j/ns,(j+1)/ns
+            a,b,c,dd=P(t0,u0),P(t1,u0),P(t1,u1),P(t0,u1);T+= [(a,b,c),(a,c,dd)]
+    return np.array(T)
+def sprout(sc,base,name):
+    """切り株の切り口から出た芽：細い茎と、平たい葉（芽は1まい・若葉は2まい、ひらく）。葉はまん中のすじが低く、葉脈も"""
+    H=0.16 if name=='bud' else 0.24;top=base+np.array([0.01,0,H])
+    sc.part();sc.tube([tuple(base),tuple(base+np.array([0.0,0,H*0.5])),tuple(top)],0.018,STEMC,n=6)
+    lv=[leafmesh(top,-0.4,0.15,0.055,1.0,0.5,0.15)] if name=='bud' else [leafmesh(top,0.15,0.22,0.08,0.5),leafmesh(top,math.pi-0.15,0.22,0.08,0.5)]
+    for q in lv:
+        f=veinpat(q);sc.decal(lambda x,y,z,f=f:SPROUT[0] if f(x,y,z)==LEAF[0] else SPROUT[1] if f(x,y,z)==LEAF[1] else STEMC);sc.part()
+        for t in q:sc.tri(t[0],t[1],t[2],SPROUT[1])
+        sc.decal(None)
 def leafclump(q):
     """葉のかたまり1つの柄：茎のつく、まん中がいちばん低い（くらい）、ふちへいくほど明るい、3つの段（ふちの形にそった帯）。
     まん中から、ふちへ放射状に、細い葉脈を少し"""
     P=q.reshape(-1,3);c0=P.mean(0);_,_,vt=np.linalg.svd(P-c0,full_matrices=False);e1,e2=vt[0],vt[1]
     X=(P-c0)@e1;Y=(P-c0)@e2;A=np.arctan2(Y,X);R=np.hypot(X,Y);nb=24;ab=((A+math.pi)/(2*math.pi)*nb).astype(int)%nb
     RM=np.array([R[ab==i].max() if (ab==i).any() else R.max() for i in range(nb)]);RM=np.maximum(RM,(RM+np.roll(RM,1)+np.roll(RM,-1))/3)   # 向きごとの、ふちまでの長さ
-    NV=7;off=(c0[0]*13.1+c0[2]*7.7)%1   # 葉脈の本数と向きのずれ
+    NV=5;off=(c0[0]*13.1+c0[2]*7.7)%1   # 葉脈の本数と向きのずれ
     def f(x,y,z):
         d=np.array((x,y,z))-c0;X_,Y_=float(d@e1),float(d@e2);a=math.atan2(Y_,X_);i=int((a+math.pi)/(2*math.pi)*nb)%nb;u=math.hypot(X_,Y_)/max(RM[i],1e-6)
-        if 0.22<u<0.8:
+        u+=0.10*math.sin(3*a+off*6.3)+0.06*math.sin(7*a+off*2.1)+0.04*math.sin(13*a)   # さかいを、ゆらがせる（まんまるの帯にしない）
+        if 0.28<u<0.62:
             k=(a/(2*math.pi)*NV+off)%1
-            if min(k,1-k)*2*math.pi/NV*math.hypot(X_,Y_)<0.012:return LEAFVEIN   # 葉脈
-        return LEAF[2] if u<0.3 else LEAF[1] if u<0.68 else LEAF[0]
+            if min(k,1-k)*2*math.pi/NV*math.hypot(X_,Y_)<0.010:return LEAF[2]   # 葉脈（まん中のかげの色で、ふつうの所だけ）
+        return LEAF[2] if u<0.30 else LEAF[1] if u<0.70 else LEAF[0]
     return f
 
 def flowfield(q,src):
@@ -219,7 +225,7 @@ def stage(V,comps,name):
     if name in('bud','leaf'):
         src=big('RF');sp=[c for c in comps if c['grp']=='RF' and c is not src]
         P=[move(c,src,st) for c in sp];allp=np.concatenate([p.reshape(-1,3) for p in P]);anc=allp[allp[:,2].argmin()]   # 芽の根もと
-        return out+[(move(c,src,st,LEAFK if name=='leaf' else 1.0,anc),c,'leaf' if c['kind']!='wood' else 'stem') for c in sp]
+        return out+[(anc.reshape(1,1,3),dict(n=0,col=np.zeros((1,3)),uv=np.zeros((1,3,2))),'sprout')]   # 芽はモデルの形を使わず、作る（モデルの芽は、まるい玉に見えた）
     if name=='sapling':
         src=big('LF');its=[(move(c,src,st),c,{'wood':'bark','leaf':'leaf','glow':'glow'}[c['kind']]) for c in comps if c['grp']=='LF' and c is not src and c['kind']!='glow']   # 若木には光のつぶを出さない（いまの絵と同じ）
         tr=max((it for it in its if it[2]=='bark'),key=lambda it:it[1]['n'])[0].reshape(-1,3)   # 若木の幹
@@ -246,10 +252,13 @@ class Stage:
     def PARTS(s):return []
     def EXTRA(s,sc):
         sc.smooth(True);s._gid=[]
-        for kind in('bark','stem','leaf','glow'):
+        for kind in('bark','stem','leaf','glow','sprout'):
             its=[(p,c) for p,c,k in s.items if k==kind]
             if not its:continue
             allc=np.concatenate([c['col'] for p,c in its]);mean=allc.mean(1).mean()
+            if kind=='sprout':
+                for p,c in its:sprout(sc,s.T(p)[0,0],s.name)
+                continue
             for p,c in its:
                 q=s.T(p);n=np.cross(q[:,1]-q[:,0],q[:,2]-q[:,0]);nz=n[:,2]/np.maximum(np.linalg.norm(n,axis=1),1e-12)
                 if kind=='glow':   # 光のつぶ：小さくして、かげなしで光らせる
@@ -275,8 +284,8 @@ class Stage:
                             a=math.atan2(y-cy,x-cx);f_=(a+math.pi)/(2*math.pi)*NB-0.5;i0=int(math.floor(f_))%NB;tt=f_-math.floor(f_);Rb=RB[i0]*(1-tt)+RB[(i0+1)%NB]*tt
                             r=math.hypot(x-cx,y-cy);d=Rb-r
                             if d<BARKT:return BARK[2] if (a*16/(2*math.pi))%1<0.14 else BARK[1]   # あつい樹皮（ふちから同じあつさ。ところどころ、ひび）
-                            if d<BARKT+0.03:return BARK[2]   # 樹皮と木のさかい
-                            if d<BARKT+0.07:return CUT[0]
+                            if d<BARKT+0.02:return BARK[2]   # 樹皮と木のさかい
+                            if d<BARKT+0.05:return CUT[0]
                             u=1-r/max(Rb-BARKT,1e-6)   # ふちから、まん中へ（0〜1）
                             return CUT[2] if any(abs(u-q_)<0.045 for q_ in(0.32,0.55,0.78)) else CUT[1]
                         sc.decal(ring);sc.part()
