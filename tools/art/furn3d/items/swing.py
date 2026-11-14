@@ -12,8 +12,8 @@ from common import *
 import math
 ID='swing';GRAD=True;BOTTOM=63;SZ=(2,1)
 VIEWS=[('swing',0),('swing>1',1)]   # 横・縦（ROTS 2）
-CY=0.55;IRON=(146,140,150);ROPE=(226,212,180);ROPE2=(196,180,148);STONE=(200,194,186)
-def MT(p):p.metal=True;return p
+CY=0.55;IRON=(184,178,186);ROPE=(226,212,180);ROPE2=(196,180,148);STONE=(200,194,186)
+def MT(p):p.metal=True;p.olk=0.85;return p
 _sel=lambda n:n.startswith('ロープ') or n.startswith('座面')
 MOVE={'swing':{'sel':_sel,'pivot':(1.00,CY,1.15)},'swing>1':{'sel':_sel,'pivot':(1.00,CY,1.15)}}
 def PARTS():
@@ -24,7 +24,7 @@ def PARTS():
     L.append(P('横木','box',(0.38,CY-0.075,1.20,1.62,CY+0.075,1.33),WOOD,bevel=0.03,on=('柱（左）','柱（右）'),note='柱の上にのせて、ほぞでとめる'))
     for nx,x in(('左',0.62),('右',1.38)):
         L.append(MT(P('つり金具（%s）'%nx,'box',(x-0.03,CY-0.03,1.15,x+0.03,CY+0.03,1.20),IRON,bevel=0.008,on=('横木',),note='横木の下にねじでとめる')))
-        r=notex(P('ロープ（%s）'%nx,'rope',((x,CY,1.15),(x,CY,0.42),0.016),ROPE,on=('つり金具（%s）'%nx,),note='金具に結ぶ'));r.decal=(lambda X:(lambda x,y,z:ROPE2 if int((z*55+(x-X)*120)%2)==0 else None))(x);L.append(r)   # よったなわの、ななめのすじ
+        r=notex(P('ロープ（%s）'%nx,'rope',((x,CY,1.15),(x,CY,0.42),0.016),ROPE,on=('つり金具（%s）'%nx,),note='金具に結ぶ'));r.decal=(lambda X:(lambda x,y,z:ROPE2 if int((z*55+(x-X)*120)%2)==0 else None))(x);r.olk=0.95;L.append(r)   # よったなわの、ななめのすじ
         L.append(MT(P('座面の金具（%s）'%nx,'box',(x-0.035,CY-0.035,0.27,x+0.035,CY+0.035,0.44),IRON,bevel=0.008,on=('ロープ（%s）'%nx,),note='ロープのはしをとめる')))
     L.append(P('座面','box',(0.57,CY-0.11,0.30,1.43,CY+0.11,0.40),WOOD,bevel=0.012,on=('座面の金具（左）','座面の金具（右）'),note='両はしの穴にロープを通す'))
     return L
