@@ -219,7 +219,7 @@ function sacredPlayPopOpen(P,title){sacredPlayPopFree();const o=el('<div id="pla
   o.addEventListener('pointerdown',e=>e.stopPropagation())}
 function sacredPlayPopFree(){const o=$('#playPop');if(o){const c=o.querySelector('canvas');if(c)c.width=c.height=0;o.remove()}}
 function drawSacredPlayPop(now){const P=SPLAY,cvs=P.popCv;if(!cvs||!cvs.isConnected)return;const g=cvs.getContext('2d');PXG=g;g.setTransform(1,0,0,1,0,0);g.imageSmoothingEnabled=false;g.fillStyle='#a9c97a';g.fillRect(0,0,cvs.width,cvs.height);g.fillStyle='#9cbd6c';for(let y=0;y<PLAYH;y+=6)for(let x=(y/6&1)*5;x<PLAYW;x+=10)g.fillRect(x*PLAYK,y*PLAYK,PLAYK,PLAYK);/* 草地：うすい点々 */
-  g.setTransform(PLAYK,0,0,PLAYK,0,0);g.fillStyle='rgba(66,53,28,.18)';pxDisk(P.cx,P.cy-8,30,7);if(S.sacredRoot!=null&&typeof drawStoryTreeFrame==='function')drawStoryTreeFrame(g,P.cx-64,P.cy-122,S.sacredRoot,now);/* 村と同じ切り株（いまの育ちぐあい） */
+  g.setTransform(PLAYK,0,0,PLAYK,0,0);g.fillStyle='rgba(66,53,28,.18)';pxDisk(P.cx,P.cy-8,30,7);if(S.sacredRoot!=null&&typeof drawStoryTreeFrame==='function')drawStoryTreeFrame(g,P.cx-64,P.cy-STUMPBY,S.sacredRoot,now);/* 村と同じ切り株（いまの育ちぐあい） */
   sacredPlayPaint(P,now);g.setTransform(1,0,0,1,0,0)}
 /* 調べを1回はじめたら、その話の最後まで自動で続ける（会話のあと3秒あける） */
 function tryFieldAuto(r){const q=fieldStoryCurrent();if(!q||isNight()||!$('#dialog').hidden||sacredPlayActive())return false;const st=fieldStoryState(q.id);if(!st?.auto||fieldStoryDone(q.id))return false;
