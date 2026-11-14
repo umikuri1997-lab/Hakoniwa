@@ -99,25 +99,25 @@ def paper_css():
     ])
 
 
-# ---- 依頼ボードの板（48×24：つぎ目のない1まい板。木目だけ） ----
-def plank_rows():
-    W, H = 48, 24
+# ---- 依頼ボード：コルク（32×32 の、くりかえすドットの絵。つぶつぶの色を4つ） ----
+def cork_rows():
+    import random
+    rnd = random.Random(7)  # いつも同じ絵になるように
+    W = H = 32
     g = [['a'] * W for _ in range(H)]
-    # 木目（ゆるい横すじ）。くりかえしても目立たないように、長さ・場所をばらばらに
-    for y, x, w, c in ((1, 4, 13, 'g'), (3, 22, 9, 'g'), (5, 36, 11, 'g'), (8, 2, 7, 'g'), (9, 14, 16, 'h'),
-                       (12, 33, 10, 'g'), (14, 8, 12, 'g'), (16, 26, 6, 'h'), (18, 40, 12, 'g'), (20, 17, 10, 'g'),
-                       (22, 1, 8, 'h'), (23, 30, 9, 'g'), (6, 15, 4, 'h'), (11, 45, 6, 'h')):
-        for k in range(w): g[y][(x + k) % W] = c
-    # 小さなふし
-    for y, x in ((10, 40), (19, 6)):
-        g[y][x] = g[y][x + 1] = 'n'; g[y - 1][x] = g[y + 1][x + 1] = 'g'
+    for _ in range(150):
+        x, y = rnd.randrange(W), rnd.randrange(H)
+        c = rnd.choice('ddddllm')
+        g[y][x] = c
+        if c == 'd' and rnd.random() < .45: g[y][(x + 1) % W] = 'd'  # 小さなかたまり
+        if c == 'm' and rnd.random() < .5: g[(y + 1) % H][x] = 'd'
     return [''.join(r) for r in g]
 
 
 def board_css():
-    u = svg(plank_rows(), {'a': '#a8743f', 'h': '#b98551', 'g': '#97673a', 'n': '#7e5430'})
-    return ('/* 依頼ボードの板：つぎ目のない1まい板（木目だけのドットの絵、1ドット1.5px） */\n'
-            f'.board{{background:#a8743f {u} 0 0/72px 36px repeat!important;image-rendering:pixelated}}')
+    u = svg(cork_rows(), {'a': '#c99a62', 'd': '#b0824c', 'l': '#dcb27a', 'm': '#94693a'})
+    return ('/* 依頼ボード：コルク（つぶつぶのドットの絵、1ドット1.5px）。わくは木のまま */\n'
+            f'.board{{background:#c99a62 {u} 0 0/48px 48px repeat!important;image-rendering:pixelated}}')
 
 
 # ---- 図鑑：本の背としおり ----
