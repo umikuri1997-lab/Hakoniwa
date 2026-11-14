@@ -7,7 +7,6 @@
 #     下・内向きの芽は、のびないことが多い。どの段も、先の芽がそのままのびる。
 #   太さ：パイプモデル（先 0.005、親は子の太さ^1.8 の和。幹は 0.16 まで）。分かれた子のつけ根に、えり。
 #   骨格は1回だけ作って tree_skel.json に固定する（python3 tools/art/furn3d/items/tree.py --skel）。葉つきは、その骨格を読んで葉をたすだけ（枝を消す・うごかす・たすをしない）。
-#   葉の小枝：側枝から先の枝の節ごとに短い小枝（骨格の一部）。葉は、細枝と葉の小枝の節に、もらった葉1まいのモデルを1まいずつ。
 #   SKEL=True で写すと、葉をつけない骨格だけ（たしかめ用）。
 import math
 import numpy as np
@@ -23,7 +22,7 @@ MAIN=[   # 向き・立ち上がり・長さ・葉群の半径・つけ根の高
     (60,78,0.52,(0.44,0.38,0.34),1.0),     # 上（幹のつづき）
 ]   # 主枝は上から見て、ちがう向き（交差しない）
 TRUNK=0.62   # 幹はやや短く（デフォルメ）
-LVL={2:((2,4),(30,50),(0.55,0.75),(0.30,0.90)),3:((2,3),(28,50),(0.50,0.70),(0.25,0.90)),4:((1,3),(25,45),(0.45,0.65),(0.30,0.95))}   # 数は少なめ（交差・束にしない）
+LVL={2:((3,4),(30,50),(0.60,0.80),(0.35,0.85)),3:((2,3),(28,45),(0.50,0.70),(0.35,0.90)),4:((1,2),(25,40),(0.45,0.60),(0.45,0.90))}   # 子の数は少なく（Y字に分かれる。トゲのような小枝を作らない）。太い枝ほど長い
 def spots(rs,span,nb,gap=0.18):
     """芽の場所：はんいの中に、たがいに gap より近づけない（1か所から何本も出さない）。間かくはまちまち"""
     out=[]
@@ -92,26 +91,19 @@ def skeleton():
     return g,tips,lobes,rs
 import json,os
 SKELF=os.path.join(os.path.dirname(os.path.abspath(__file__)),'tree_skel.json')   # 固定した骨格（葉の有無で、ぜったいにかえない）
-SPRIG=(0.05,0.10)   # 葉の小枝の長さ
 def makeskel():
-    """骨格を1回だけ作って、ファイルに書く（python3 tools/art/furn3d/items/tree.py --skel）。
-    葉の小枝：側枝から先の枝（lv 2〜4）の節ごとに、短い葉の小枝（lv 5、2節）を、らせん137.5度で出す。葉はこの小枝と細枝につく。骨格の一部なので、葉なしの絵にも出る"""
-    g,tips,lobes,rs=skeleton();up=np.array([0,0,1.0]);n0=len(g.P);az=0.0
-    for i in range(1,n0):
-        if g.lv[i]<2 or g.par[i]<0:continue
-        d=g.P[i]-g.P[g.par[i]];L_=np.linalg.norm(d)
-        if L_<1e-6:continue
-        d/=L_;u=np.cross(d,up);u=u/np.linalg.norm(u) if np.linalg.norm(u)>1e-6 else np.array([1.0,0,0]);v=np.cross(d,u)
-        az+=N.GOLD;a=math.radians(rs.uniform(40,70));cd=d*math.cos(a)+(u*math.cos(az)+v*math.sin(az))*math.sin(a)+up*0.25;cd/=np.linalg.norm(cd)
-        l=rs.uniform(*SPRIG);j=g.add(g.P[i]+cd*l*0.5,i,5);g.add(g.P[j]+cd*l*0.5,j,5)
+    """骨格を1回だけ作って、ファイルに書く（python3 tools/art/furn3d/items/tree.py --skel）"""
+    g,tips,lobes,rs=skeleton()
     json.dump({'P':[list(map(float,p)) for p in g.P],'par':[int(x) for x in g.par],'lv':[int(x) for x in g.lv],'tips':[[int(i) for i in t] for t in tips],'lobes':[[list(map(float,c)),list(rr)] for c,rr in lobes]},open(SKELF,'w'))
 def loadskel():
     d=json.load(open(SKELF));return np.array(d['P']),np.array(d['par']),np.array(d['lv']),d['tips'],[(np.array(c),tuple(rr)) for c,rr in d['lobes']]
 # ---- 葉（持ち主の指示：用意された葉1まいのモデルを、自然に分かれた枝のまわりに1まいずつ置き、そのかさなりで樹冠を作る。葉の塊を別の物として作らない） ----
 # 葉のモデル：tripo/kit_leaf.glb（もらった植物のセットの、葉1まい）。形はかえない（面もへらさない）。大きさだけ、まるごと同じ割合で（0.85〜1.2倍）。
-# 置く所：細枝（lv 4）と葉の小枝（lv 5）の節。葉柄のはし（モデルの細いほうのはし）を節につける。1節に1〜4まい（場所でこさがかわる）。
-# 向き：枝から外へ・少し上へ、まわりはばらばら（同じ向きにならべない）。葉の表は、太陽と上のほうへ、ばらつきあり。
-LEAFL=0.17   # 葉の長さ（マス）
+# 置く所：小枝・細枝（lv 3・4）と、側枝（lv 2）の幹から遠い所にそって、枝の長さ LEAFGAP ごとに1まい、左右たがいちがいに（1点から放射状に置かない）。
+#   葉柄のはし（モデルの細いほうのはし）を枝の上の点につける。こさは場所でゆっくりかわる。まん中に近い所ほど多い。
+# 向き：枝ののびる向きを基本に、横（たがいちがい）と少し上へ。表は上・太陽へ。ばらつきは少し（向きがばらばらになりすぎない）。
+LEAFGAP=0.015   # 葉と葉の、枝にそった間かく（マス）
+LEAFL=0.19   # 葉の長さ（マス）
 _KL=[]
 def kitleaf():
     """葉のモデルを読み、葉の軸にそろえる：のびる向き e1（葉柄のはしが原点、葉先が +）・はばの向き e2・表の向き e3。長さ1"""
@@ -128,7 +120,7 @@ def kitleaf():
     _KL.append(Q[np.asarray(m.faces)]);return _KL[0]
 def EXTRA(sc):
     P,par,lv,tips,lobes=loadskel()
-    r,ch=N.radii(par,rtip=0.004,E=1.8,rmax=0.17)
+    r,ch=N.radii(par,rtip=0.006,E=1.6,rmax=0.12)
     T=[]
     for c in N.chains(par,ch,r):
         if len(c)<2:continue
@@ -140,20 +132,24 @@ def EXTRA(sc):
     N.barkmesh(sc,T)
     if SKEL:return
     rs=np.random.RandomState(SEED+100);up=np.array([0,0,1.0]);Q=kitleaf()
-    zs=P[lv>=4][:,2];zl,zh=zs.min(),zs.max()
-    sc.outline(None,0.86);sc.material('flat')
+    zs=P[lv>=3][:,2];zl,zh=zs.min(),zs.max();ctr=P[lv>=3].mean(0)
+    sc.outline(None,0.86);sc.material('flat');side=1
     for i in range(1,len(P)):
-        if lv[i]<4:continue
-        d=P[i]-P[par[i]];d/=max(np.linalg.norm(d),1e-9)
-        dens=0.6+0.9*N.ST.vnoise(P[i][0]/0.3+5,P[i][1]/0.3,P[i][2]/0.3)   # こさのむら
-        k=int(round((2.6 if not ch[i] else 1.8)*dens+rs.uniform(-0.5,0.5)))
-        for _ in range(max(0,k)):
-            u=np.cross(d,up);u=u/np.linalg.norm(u) if np.linalg.norm(u)>1e-6 else np.array([1.0,0,0]);v=np.cross(d,u);a=rs.uniform(0,6.28)
-            o=d*0.5+(u*math.cos(a)+v*math.sin(a))*0.8+up*rs.uniform(0.0,0.4);o/=np.linalg.norm(o)   # 葉ののびる向き
-            nn=N.SUN*0.5+up*0.3+rs.normal(0,0.25,3);nn-=o*(nn@o);nn/=np.linalg.norm(nn)   # 表は太陽・上へ（ばらつき）
+        j=par[i]
+        if lv[i]<2:continue
+        if lv[i]==2 and math.hypot(P[i][0]-CX,P[i][1]-CY)<0.12:continue   # 側枝の、幹に近い所にはつけない
+        d=P[i]-P[j];Le=np.linalg.norm(d)
+        if Le<1e-6:continue
+        d/=Le;u=np.cross(d,up);u=u/np.linalg.norm(u) if np.linalg.norm(u)>1e-6 else np.array([1.0,0,0])
+        dens=(0.55+0.9*N.ST.vnoise(P[i][0]/0.3+5,P[i][1]/0.3,P[i][2]/0.3))*(1.25-0.5*min(1,np.linalg.norm((P[i]-ctr)/np.array([0.9,0.7,0.5]))))   # こさのむら・まん中ほど多い
+        k=int(Le/LEAFGAP*dens+rs.rand())
+        for t_ in range(k):
+            side=-side;b0=P[j]+d*Le*rs.uniform(0,1)
+            o=d*0.75+u*side*0.75+up*rs.uniform(0.05,0.35)+rs.normal(0,0.12,3);o/=np.linalg.norm(o)   # 枝の向きを基本に、横（たがいちがい）・少し上へ
+            nn=up*0.6+N.SUN*0.4+rs.normal(0,0.15,3);nn-=o*(nn@o);nn/=np.linalg.norm(nn)   # 表は上・太陽へ
             sd=np.cross(nn,o);f=rs.uniform(0.85,1.2)
-            h=(P[i][2]-zl)/max(zh-zl,1e-6);tone=int(np.clip(round((1-float(nn@N.LIGHTV))*1.4+(1-h)*1.3-0.4),0,len(N.LEAFB)-2))
-            W3=Q@np.stack([o,sd,nn],0)*LEAFL*f+P[i];sc.part()
+            h=(b0[2]-zl)/max(zh-zl,1e-6);tone=int(np.clip(round((1-float(nn@N.LIGHTV))*1.4+(1-h)*1.3-0.4),0,len(N.LEAFB)-2))
+            W3=Q@np.stack([o,sd,nn],0)*LEAFL*f+b0;sc.part()
             for q in W3:sc.tri(q[0],q[1],q[2],N.LEAFB[tone])
     sc.material(None);sc.outline()
 def POST(im):return N.specks(im)
