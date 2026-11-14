@@ -1,4 +1,4 @@
-# 採石場（quarry）：画角30・左右にも遠近・見おろし34度。色は、いまの絵に合わせる。いまの絵（お手本）と同じならび。切り出した石をよせてつみ、右にツルハシを立てかける。手前に小石。
+# 採石場（quarry）：色は、いまの絵に合わせる。いまの絵（お手本）と同じならび。切り出した石をよせてつみ、右にツルハシを立てかける。手前に小石。
 # 形は、トリポのモデル（tools/art/models/tripo：stone_big・stone_mid・stone_round・stone_chunk・stone_slab・pebbles3a・pebble_a）。色は設計図でつける（モデルは色なし）。単位はマス。大きさは、いまの絵（94×72ドット）に合わせた。
 #   うしろ：大きな石（stone_big、高さ0.38）の上に、石のかけら（stone_chunk、高さ0.20）をのせる（大きな石のいちばん上の高さに置く）。
 #   左：まるい石（stone_round、0.32）。手前：大きな石を小さく向きをかえて（0.26）。右：中くらいの石（stone_mid、0.26）。右手前：平たい石（stone_slab、0.07）。どれも地面に置く。
@@ -9,7 +9,7 @@
 from blueprint import Part as P,model_tris
 from common import *
 import numpy as np
-ID='quarry';GRAD=True;BOTTOM=63;FOV=30;FULLPERSP=True;ELEV=34   # 画角30・左右にも遠近・見おろし34度（持ち主がきめた）
+ID='quarry';GRAD=True;BOTTOM=63
 VIEWS=[('quarry',0)]
 STONE=(192,178,166);MOSS=(174,200,96);IRON=(196,196,212);HANDLE=(214,150,90);T='tripo/'   # 色は、いまの絵（お手本）に合わせる
 def moss(spots,ztop):
