@@ -40,6 +40,9 @@ def load():
     col=np.asarray(m.visual.to_color().vertex_colors,float)[:,:3][Fc].mean(1)   # 面の色（テクスチャの色）
     _,inv=np.unique(np.round(v,5),axis=0,return_inverse=True);inv=inv.reshape(-1);F2=inv[Fc];n=inv.max()+1
     e=np.concatenate([F2[:,[0,1]],F2[:,[1,2]]]);_,lab=cc(sp.coo_matrix((np.ones(len(e)),(e[:,0],e[:,1])),shape=(n,n)),directed=False);fl=lab[F2[:,0]]
+    global TEXL
+    TEXL=np.asarray(m.visual.material.baseColorTexture.convert('L'),float)   # モデルのテクスチャの明るさ（もように使う）
+    UV=np.asarray(m.visual.uv,float)
     V=np.stack([v[:,0],v[:,2],v[:,1]],1);Fc=Fc[:,[0,2,1]]   # glTF（y上・z手前）→ x・y南・z上（軸を入れかえると裏表がかわるので、面のならびを逆に）
     comps=[]
     for i in np.unique(fl):
@@ -47,7 +50,7 @@ def load():
         kind='glow' if c[0]>215 and c[1]>200 else 'leaf' if c[1]>c[0] else 'wood'
         q=p.mean(0);grp=('L' if q[0]<0 else 'R')+('B' if q[1]<0 else 'F')   # LB=育った木・RB=切り株・LF=若木・RF=芽
         if grp[0]=='L' and 100<=len(s)<=130 and (p.max(0)-p.min(0)).max()<0.03:kind='glow'   # 光のつぶ（小さな玉。色が木の色に近い物も）
-        comps.append(dict(f=Fc[s],col=col[s],kind=kind,grp=grp,n=len(s),lo=p.min(0),hi=p.max(0)))
+        comps.append(dict(f=Fc[s],uv=UV[Fc[s]],col=col[s],kind=kind,grp=grp,n=len(s),lo=p.min(0),hi=p.max(0)))
     return V,comps
 
 _BT=[]
@@ -94,6 +97,22 @@ def lobes(sc,q,n,gi):
         w=rs.dirichlet((1,1,1));pt=w@q[k_];nn=n[k_];r=0.09+0.04*rs.rand();c_=pt-nn*r*0.45
         sc.sphere(c_[0],c_[1],c_[2],r,LEAF[0] if nn[2]>0.55 else LEAF[1],n=10,m=6)
     sc.group(None)
+
+TEXL=None
+def texpat(items,pal):
+    """モデルのテクスチャ（モデルの形に合わせて作られた、木の皮のすじ・葉の重なり）を、ドットごとに読み、
+    その明るさで、お手本の絵の色（明るい・ふつう・暗い）にする。items=[(面の点 q, 面ごとのuv)]"""
+    from scipy.spatial import cKDTree
+    Q=np.concatenate([q for q,u in items]);U=np.concatenate([u for q,u in items]);T_=cKDTree(Q.mean(1));H,W=TEXL.shape
+    def lum(uv):return TEXL[np.clip(((1-uv[...,1])*H).astype(int),0,H-1),np.clip((uv[...,0]*W).astype(int),0,W-1)]
+    ss=lum(U.mean(1));lo,hi=np.quantile(ss,0.3),np.quantile(ss,0.75)   # 明るさのさかい（そのなかまの中で）
+    def f(x,y,z):
+        p=np.array((x,y,z));i=T_.query(p)[1];a,b,c=Q[i];v0,v1,v2=b-a,c-a,p-a
+        d00,d01,d11,d20,d21=v0@v0,v0@v1,v1@v1,v2@v0,v2@v1;dn=d00*d11-d01*d01 or 1e-12
+        w1=(d11*d20-d01*d21)/dn;w2=(d00*d21-d01*d20)/dn;w0=1-w1-w2
+        L=float(lum(w0*U[i,0]+w1*U[i,1]+w2*U[i,2]))
+        return pal[2] if L<lo else pal[0] if L>hi else pal[1]
+    return f
 
 def flowfield(q,src):
     """木の皮の流れ：面の場所から、src（はじまりの点）からの、面をつたう道のりをはかり、その道のりがのびる向きを、面ごとの流れの向きにする。
@@ -185,8 +204,7 @@ class Stage:
                     if c is s.items[0][1] and s.name!='tree':src=lambda K:K[:,2]>zh-0.08*H   # 切り株：切り口のふちから、幹を下へ・根の先へ
                     elif s.name=='tree':src=lambda K:np.abs(K[:,2]-(zl+0.30*H))<0.02*H   # 御神木：幹のなかほどから、上は枝へ・下は根へ
                     else:src=lambda K:K[:,2]<zl+0.04*H   # 若木：根もとから、枝の先へ
-                    cen,g,n=flowfield(q[keep],src)
-                    sc.decal(barkpat(cen,g,n));sc.part()   # 木の皮：流れにそった、みぞとすじ
+                    sc.decal(texpat([(q[keep],c['uv'][keep])],BARK));sc.part()   # 木の皮：モデルのテクスチャのすじ（幹・根・枝の流れにそっている）
                     for t in q[keep]:sc.tri(t[0],t[1],t[2],BARK[1])
                     sc.decal(None)
                     if cut.any():   # 切り口：いまの絵と同じ、少しゆがんだ年輪（もよう）
@@ -199,13 +217,14 @@ class Stage:
                         for t in q[cut]:sc.tri(t[0],t[1],t[2],CUT[1])
                         sc.decal(None)
                     continue
-                if kind=='leaf' and s.name=='tree':   # 葉のかたまり（御神木）
+                if False:   # （前のやり方：葉の玉。使わない）
                     if not hasattr(s,'_lc'):s._lc=np.array([s.T(p_).reshape(-1,3).mean(0) for p_,c_,k_ in s.items if k_=='leaf'])
                     m0=q.reshape(-1,3).mean(0);dd=np.sort(np.linalg.norm(s._lc-m0,axis=1))
                     if len(dd)>1 and dd[1]>0.9 or (q.reshape(-1,3).max(0)-q.reshape(-1,3).min(0)).max()<0.12:continue   # はなれて1つだけうかぶ葉（モデルのこぼれ）は描かない：お手本の絵と同じ、小さなまるい葉の玉がかさなる形に作りなおす（lobes）
                     lobes(sc,q,n,len(s._gid));s._gid.append(1);continue
-                sc.part()   # 若木の葉・芽：モデルの葉の形のまま
+                sc.decal(texpat([(q,c['uv'])],LEAF));sc.part()   # 葉：モデルの葉の形のまま、モデルのテクスチャの葉の重なり
                 for t in q:sc.tri(t[0],t[1],t[2],LEAF[1])
+                sc.decal(None)
         sc.smooth(False)
 
 def shot(M):
