@@ -197,15 +197,19 @@ def kitleaf():
     base=Q[Q[:,0]<0.06];tip=base.mean(0)   # 葉柄のはし
     _KL.append(Q[F_]);_KL.append(tip);return _KL[0]
 def stemtip():kitleaf();return _KL[1]
+TWIG=(150,192,96)   # 細枝の色：葉の色（N.LEAFB）に近い緑
 def EXTRA(sc):
-    B=loadskel();rs=np.random.RandomState(SEED+50);T=[]
+    B=loadskel();rs=np.random.RandomState(SEED+50);T=[];TG=[]
     for b in B:
         pts=b['pts'];k=len(pts);rr=[b['r0']+(b['r1']-b['r0'])*(i/(k-1)) for i in range(k)]
         if b['lv']==0:trunkmesh(T,pts,b['r0'],b['r1'],rs);continue
         rr[0]*=1.12   # えり
         if b['leaf']:rr[-1]=min(rr[-1],0.005)   # 葉群の中で細くおわる
-        N.limb(T,pts,rr,n=10 if b['lv']<=1 else 7 if b['lv']<=3 else 5)
+        N.limb(TG if b['leaf'] else T,pts,rr,n=10 if b['lv']<=1 else 7 if b['lv']<=3 else 5)
     N.barkmesh(sc,T)
+    sc.smooth(True);sc.part()   # 細枝（葉をつける枝）は、葉の色（持ち主の指示）
+    for t in TG:sc.tri(t[0],t[1],t[2],TWIG)
+    sc.smooth(False);T=T+TG   # 当たり判定には、細枝も入れる
     if SKEL:return
     Q=kitleaf();rs=np.random.RandomState(SEED+100)
     sc.outline(None,0.86);sc.material('flat')

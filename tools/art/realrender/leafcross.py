@@ -17,7 +17,7 @@ print('葉',len(ms),'まい・交差する組',len(names) if hit else 0)
 bark=[t for t in sc.t if t[4] not in getattr(tree.EXTRA,'leafpids',set())]
 V=[];leafV=[]
 for a,b,c,col,pid in sc.t:
-    (leafV if col[1]>col[0]+8 else V).append((a,b,c))
+    (leafV if col[1]>col[0]+8 and tuple(np.round(col).astype(int))!=tuple(tree.TWIG) else V).append((a,b,c))   # 細枝（緑）は枝に入れる
 V=np.array(V).reshape(-1,3);n=len(V)//3;cb.add_object('bark',trimesh.Trimesh(V,np.arange(n*3).reshape(n,3),process=False))
 k=0
 for base,M,bend in PL:
