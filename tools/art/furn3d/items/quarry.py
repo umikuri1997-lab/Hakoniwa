@@ -9,7 +9,7 @@
 from blueprint import Part as P,model_tris
 from common import *
 import numpy as np
-ID='quarry';GRAD=True;BOTTOM=63
+ID='quarry';GRAD=True;BOTTOM=63;FULLPERSP=True   # 画角（10）を左右にもかける（持ち主がきめた）
 VIEWS=[('quarry',0)]
 STONE=(192,178,166);MOSS=(174,200,96);IRON=(196,196,212);HANDLE=(214,150,90);T='tripo/'   # 色は、いまの絵（お手本）に合わせる
 def moss(spots,ztop):

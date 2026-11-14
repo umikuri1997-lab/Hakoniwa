@@ -9,7 +9,7 @@ from blueprint import Part as P,model_tris,LOGEND,MAKIRING,MAKIHEART
 from common import *
 import math
 import numpy as np
-ID='lumber';GRAD=True;BOTTOM=62
+ID='lumber';GRAD=True;BOTTOM=62;FULLPERSP=True   # 画角（10）を左右にもかける（持ち主がきめた）
 VIEWS=[('lumber',0)]
 CX,CY=0.34,0.52
 BARK=(222,134,66);IRON=(176,180,196);LEAF=(150,200,86);HANDLE=(214,150,90)   # 色は、いまの絵（お手本）に合わせる
