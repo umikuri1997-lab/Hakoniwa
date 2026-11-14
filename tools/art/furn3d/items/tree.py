@@ -106,13 +106,13 @@ LEAFGAP=0.015   # 葉と葉の、枝にそった間かく（マス）
 LEAFL=0.19   # 葉の長さ（マス）
 _KL=[]
 def kitleaf():
-    """葉のモデルを読み、葉の軸にそろえる：のびる向き e1（葉柄のはしが原点、葉先が +）・はばの向き e2・表の向き e3（もらったセットで手前を向いていた面が表）。長さ1"""
+    """葉のモデルを読み、葉の軸にそろえる：のびる向き e1（葉柄のはしが原点、葉先が +）・はばの向き e2・表の向き e3（もらったセットで、うしろを向いていた面が表）。長さ1"""
     if _KL:return _KL[0]
     import trimesh
     m=trimesh.load(os.path.join(os.path.dirname(N.__file__),'..','..','models','tripo','kit_leaf.glb'),force='mesh')
-    V=np.asarray(m.vertices,float)   # glTF のまま（もらったセットでは、葉は表を手前 +Z に向けて、ならんでいた）
+    V=np.asarray(m.vertices,float)   # glTF のまま
     c=V.mean(0);_,_,vt=np.linalg.svd(V-c,full_matrices=False);e1,e3=vt[0],vt[2]
-    if e3[2]<0:e3=-e3   # 表の向き：手前（+Z）がわ
+    if e3[2]>0:e3=-e3   # 表の向き：もらったセットで、うしろ（−Z）を向いていたがわ（持ち主が見て、手前がわは裏だった）
     Q0=(V-c)@e1;a,b=Q0.min(),Q0.max();L_=b-a;w=(V-c)@np.cross(e3,e1)
     if np.abs(w[Q0<a+0.15*L_]).max()>np.abs(w[Q0>b-0.15*L_]).max():e1=-e1   # 細いほう（葉柄）を、−のはしに
     e2=np.cross(e3,e1)   # 右手の向き（e1・e2・e3）：置くときの (o, sd=nn×o, nn) と同じならび
