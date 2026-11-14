@@ -486,23 +486,23 @@ function drawRes0(r,now){
   if(r.act&&r.act.stage==='do'&&WORKP[r.act.type]&&WORKP[r.act.type](r,r.act)!=null){const f=Math.max(0,Math.min(1,WORKP[r.act.type](r,r.act)||0)),bx=px-16,byy=py+(r.hurt>0?19:12);ctx.fillStyle='rgba(150,115,75,.5)';rr(ctx,bx-1.5,byy-1.5,35,8,4);ctx.fillStyle='#e8dcc0';rr(ctx,bx,byy,32,5,2.5);ctx.fillStyle='#e0a43a';rr(ctx,bx,byy,Math.max(2.5,32*f),5,2.5)}/* 木を切る・石を掘る・畑・建てる・料理など、作業の進み具合 */
   if(r.act&&r.act.type==='repair'&&r.act.stage==='do'&&r.act.obj!=null){const a=r.act,p=Math.min(1,(a.t||0)/repairTime(a)),gx=(a.obj%W)*TS+2,gy=((a.obj/W)|0)*TS-8,g=()=>{ctx.fillStyle='rgba(0,0,0,.5)';rr(ctx,gx,gy,28,6,3);ctx.fillStyle='#ecdcbc';rr(ctx,gx+1,gy+1,26*p,4,2)};if(BUBQ)BUBQ.push(g);else g()}/* 修理の進みぐあい *//* 話したそうな吹き出しが出ていても、修理・料理のバーは出す（その場所のバーなので） */
   if(r.act&&r.act.type==='cook'&&r.act.stage==='do'&&r.act.obj!=null&&r.cing){const a=r.act,tot=cookTime(r,a.obj),p=Math.min(1,(a.t||0)/Math.max(1,tot)),gx=(a.obj%W)*TS+2,gy=((a.obj/W)|0)*TS-12,g=()=>{ctx.fillStyle='rgba(0,0,0,.5)';rr(ctx,gx,gy,28,6,3);ctx.fillStyle='#ffd38a';rr(ctx,gx+1,gy+1,26*p,4,2)};if(BUBQ)BUBQ.push(g);else g()}/* 料理の進みぐあい */
-  {const a=r.act;if(a&&a.stage==='do'&&a.obj!=null&&(a.type==='repair'||a.type==='cook'&&r.cing)){const gx=(a.obj%W)*TS+2,gy=((a.obj/W)|0)*TS-(a.type==='cook'?12:8);if(Math.abs(px-(gx+14))<34&&by-54<gy+6&&by-15>gy)by=gy+13}}/* 修理・料理のバーとふきだしが重なるときは、ふきだしをバーの上へ */
+  {const a=r.act;if(a&&a.stage==='do'&&a.obj!=null&&(a.type==='repair'||a.type==='cook'&&r.cing)){const gx=(a.obj%W)*TS+2,gy=((a.obj/W)|0)*TS-(a.type==='cook'?12:8);if(Math.abs(px-(gx+14))<60&&by-80<gy+6&&by-15>gy)by=gy+13}}/* 修理・料理のバーとふきだしが重なるときは、ふきだしをバーの上へ */
   by=bubLift(px,by,now);/* となりの子のふきだしと重なるときは、上へずらす */
   const zzz=r.act&&r.act.type==='sleep';/* 寝ているあいだは、話しかけの吹き出しを出さない */
-  if(!zzz&&QUESTCLEARW===r.name&&mainStoryBubbleReady(r)){r.bubX=px;r.bubY=by-34;talkBub(px,by,now,'#ffd56b');return}
+  if(!zzz&&QUESTCLEARW===r.name&&mainStoryBubbleReady(r)){r.bubX=px;r.bubY=by-49;talkBub(px,by,now,'#ffd56b');return}
   if(r.act&&(r.act.type==='eat'||r.act.type==='forage')&&r.act.stage==='do'&&!zzz){const p=Math.max(0,Math.min(1,r.hunger/hMax(r))),gx=px-12,gy=py+11,g=()=>{ctx.fillStyle='rgba(0,0,0,.5)';rr(ctx,gx,gy,24,6,3);ctx.fillStyle=p>=.999?'#8fd36a':'#ffc766';rr(ctx,gx+1,gy+1,Math.max(2,22*p),4,2)};if(BUBQ)BUBQ.push(g);else g()}/* ごはん中の、お腹ゲージの回復 */
-  if(!zzz&&TALKW===r.name&&mainStoryBubbleReady(r)){r.bubX=px;r.bubY=by-34;talkBub(px,by,now);return}
-  if(!zzz&&SEVW[r.name]){r.bubX=px;r.bubY=by-34;talkBub(px,by,now,'#ffb3d1');return}
-  if(!zzz&&SUBW[r.name]){r.bubX=px;r.bubY=by-34;talkBub(px,by,now,'#ffd56b');return}/* サブクエスト：黄色の吹き出し *//* 話したそうにしている：水色の吹き出し */
+  if(!zzz&&TALKW===r.name&&mainStoryBubbleReady(r)){r.bubX=px;r.bubY=by-49;talkBub(px,by,now);return}
+  if(!zzz&&SEVW[r.name]){r.bubX=px;r.bubY=by-49;talkBub(px,by,now,'#ffb3d1');return}
+  if(!zzz&&SUBW[r.name]){r.bubX=px;r.bubY=by-49;talkBub(px,by,now,'#ffd56b');return}/* サブクエスト：黄色の吹き出し *//* 話したそうにしている：水色の吹き出し */
   if(CLAPON)return;/* 拍手中は吹き出しを出さない */
   const warn=r.hunger<200;
   const trq=!r.bubble&&!warn&&S.trouble&&S.trouble.id===r.id&&r.act&&['idle','wander','quirk'].includes(r.act.type)?'❓':'';/* こまりごとのある子は、ひまなとき「？」 */if(!ci&&(r.bubble||warn||trq)){const t0=trq||(warn&&!r.bubble?'🍙':r.bubble),t=(BUBFACE[t0]?null:NOFACE[t0])||t0;/* 顔の絵文字は使わない */
-    {const a=r.act;if(a&&a.stage==='do'&&(a.type==='mine'||a.type==='chop')&&NATHIT.has(a.obj)&&Math.abs((a.obj%W+.5)*TS-px)<TS+20){const yb=natBarY(a.obj);if(by-46<yb+7&&by-15>yb-2)by=yb+12}}/* 木・岩ののこりのバーと重なるときは、ふきだしをバーの上へ */
-    const pic=/^(obj|ic|chip|crop):/.test(String(t)),bw=27;/* 絵のアイコンは、絵文字と同じはば *//* 吹き出しは1.5倍 */
-    const BB=pxBub(ctx,px,by-47.5,bw,25.5,warn?'#ffd2cc':'#fff',warn?'#c98a80':'#b8a587');/* ドットのふきだし */
+    {const a=r.act;if(a&&a.stage==='do'&&(a.type==='mine'||a.type==='chop')&&NATHIT.has(a.obj)&&Math.abs((a.obj%W+.5)*TS-px)<TS+20){const yb=natBarY(a.obj);if(by-73<yb+7&&by-15>yb-2)by=yb+12}}/* 木・岩ののこりのバーと重なるときは、ふきだしをバーの上へ */
+    const pic=/^(obj|ic|chip|crop):/.test(String(t)),bw=54;/* 絵のアイコンは、絵文字と同じはば */
+    const BB=pxBub(ctx,px,by-73,bw,51,warn?'#ffd2cc':'#fff',warn?'#c98a80':'#b8a587');/* ドットのふきだし */
     if(/^g:/.test(String(t)))goneBubPic(ctx,String(t).slice(2),BB);/* 消えた、なかよしの子の絵 */
     else if(t==='💬'){ctx.save();ctx.setTransform(1,0,0,1,0,0);ctx.fillStyle='#7a7064';const q=Math.max(2,Math.round(BB.s/9));for(let d=-1;d<=1;d++)ctx.fillRect(Math.round(BB.x-q/2)+d*q*2,Math.round(BB.y-q/2),q,q);ctx.restore()}/* おしゃべりは点々だけ */
-    else if(t==='🪓'&&!BUBS.ok&&PSPR.axe&&PSPR.axe.ok){const g=PSPR.axe.img,ih=17,iw=ih*g.width/g.height;ctx.save();ctx.translate(px,by-39);ctx.rotate(-Math.PI/4);ctx.drawImage(g,-iw/2,-ih/2,iw,ih);ctx.restore()}else if(!pic&&BUBI[bubKey(t)])bubIcon(ctx,t,Math.round(px/1.5)*1.5,by-39,1.5,BB);/* 絵文字は、ドットの絵（BUBI）で描く */else{const ei=emoImg(t);if(ei){const k=Math.min(BB.f,BB.s*.85*1.5)/Math.max(ei.width,ei.height),iw=Math.round(ei.width*k),ih=Math.round(ei.height*k);ctx.save();ctx.setTransform(1,0,0,1,0,0);ctx.drawImage(ei,Math.round(BB.x-iw/2),Math.round(BB.y-ih/2),iw,ih);ctx.restore()}/* 絵のアイコンも、ふきだしの中のまん中（画面のピクセル）に */else if(!pic&&!emoSrc(t))bubIcon(ctx,'?',Math.round(px/1.5)*1.5,by-39,1.5,BB)}}};
+    else if(t==='🪓'&&!BUBS.ok&&PSPR.axe&&PSPR.axe.ok){const g=PSPR.axe.img,ih=34,iw=ih*g.width/g.height;ctx.save();ctx.translate(px,by-56);ctx.rotate(-Math.PI/4);ctx.drawImage(g,-iw/2,-ih/2,iw,ih);ctx.restore()}else if(!pic&&BUBI[bubKey(t)])bubIcon(ctx,t,Math.round(px/3)*3,by-56,3,BB);/* 絵文字は、ドットの絵（BUBI）で描く */else{const ei=emoImg(t);if(ei){const k=Math.min(BB.f,BB.s*.85*1.5)/Math.max(ei.width,ei.height),iw=Math.round(ei.width*k),ih=Math.round(ei.height*k);ctx.save();ctx.setTransform(1,0,0,1,0,0);ctx.drawImage(ei,Math.round(BB.x-iw/2),Math.round(BB.y-ih/2),iw,ih);ctx.restore()}/* 絵のアイコンも、ふきだしの中のまん中（画面のピクセル）に */else if(!pic&&!emoSrc(t))bubIcon(ctx,'?',Math.round(px/3)*3,by-56,3,BB)}}};
   if(BUBQ){const T=ctx.getTransform();BUBQ.push(()=>{ctx.save();ctx.setTransform(T);over();ctx.restore()})}else over();/* あとで描くふきだしも、見張り台・段差の上の高さのまま */
 }
 let GODP=[-.82,-.6];const godX=()=>STATUE>=0?STATUE%W+.5+GODP[0]:RUINT>=0?RUINT%W+.5:CX+.5,godY=()=>STATUE>=0?((STATUE/W)|0)+(S.obj[STATUE+W]==='altar'?GODP[1]:1.9):RUINT>=0?((RUINT/W)|0)+2.4:CY-6.4;/* 神殿を直す前は、こわれた神殿の前 *//* カミサマは神殿の左の柱の前（おそなえ箱のうしろ）に立つ */
@@ -510,13 +510,13 @@ let GODOUT=false;/* お見送りのあと、カミサマが光になって消え
 const godHere=()=>S.godShown&&(!S.godGone||S.godVisit)&&!GODOUT;
 /* その画面（コマ）で描いたふきだしの場所。となりの子のふきだしと重ならないように、あとの子のぶんを上へずらす */
 const BUBR=[];let BUBF=-1;
-function bubLift(px,by,now){if(BUBF!==now){BUBF=now;BUBR.length=0}for(let k=0;k<3;k++){const hit=BUBR.some(b=>Math.abs(b[0]-px)<30&&Math.abs(b[1]-by)<27);if(!hit)break;by-=28.5}return by}
+function bubLift(px,by,now){if(BUBF!==now){BUBF=now;BUBR.length=0}for(let k=0;k<3;k++){const hit=BUBR.some(b=>Math.abs(b[0]-px)<60&&Math.abs(b[1]-by)<54);if(!hit)break;by-=57}return by}
 function pxStep(c,x,y,w,h,ins,col,d){/* 段々の角の四角 */const k=ins.length;c.fillStyle=col;c.fillRect(x,y+k*d,w,h-2*k*d);for(let i=0;i<k;i++){const a=ins[i]*d;c.fillRect(x+a,y+i*d,w-2*a,d);c.fillRect(x+a,y+h-(i+1)*d,w-2*a,d)}}
 function pxBub(c,cx,top,w,h,fill,line){{const T0=c.getTransform(),k=Math.min(1,homeZ()*dpr/Math.abs(T0.a||1));if(k<1){top+=h*(1-k);w*=k;h*=k}}/* 画面を大きくしても、ふきだしは、ふだんの大きさより大きくしない（しっぽの先はそのまま） *//* ドットのふきだし：段々の角（4・2・1・1ドット）と、段々のしっぽ。cx は、しっぽのまん中。画面のドットにそろえて描く（1ドット＝1、画面の整数ピクセル） */
-  const T=c.getTransform(),kk=Math.min(1,homeZ()*dpr/Math.abs(T.a||1)),d=Math.max(1,Math.round(T.a*kk)),n=Math.round(w*T.a/d/2),m=Math.round(h*T.a/d),tx=Math.round(T.a*cx+T.e),y=Math.round(T.d*top+T.f),x=tx-n*d;w=(2*n+1)*d;h=m*d;const t=Math.max(1,Math.round(1.5*T.a*kk));/* しっぽは前と同じ大きさ */
+  const T=c.getTransform(),kk=Math.min(1,homeZ()*dpr/Math.abs(T.a||1)),d=Math.max(1,Math.round(T.a*kk)),n=Math.round(w*T.a/d/2),m=Math.round(h*T.a/d),tx=Math.round(T.a*cx+T.e),y=Math.round(T.d*top+T.f),x=tx-n*d;w=(2*n+1)*d;h=m*d;const t=Math.max(1,Math.round(3*T.a*kk));
   c.save();c.setTransform(1,0,0,1,0,0);pxStep(c,x,y,w,h,[4,2,1,1],line,d);pxStep(c,x+d,y+d,w-2*d,h-2*d,[3,1,1],fill,d);
   const cxp=tx+d/2,R=(a,yy,ww,hh)=>c.fillRect(Math.round(cxp-ww/2),yy,ww,hh);c.fillStyle=line;R(0,y+h,5*t,t);R(0,y+h+t,3*t,t);R(0,y+h+2*t,t,t);c.fillStyle=fill;R(0,y+h-d,3*t,d+t);R(0,y+h+t,t,t);c.restore();return {x:cxp,y:y+h/2,s:(Math.min(2*n+1,m)-7)*d,f:(Math.min(2*n+1,m)-2)*d}}/* f：わくの内がわの大きさ *//* 中のまん中と、アイコンの大きさ（わくから2ドットあける） */
-function talkBub(px,by,now,col){if(BUBF!==now){BUBF=now;BUBR.length=0}BUBR.push([px,by]);const bw=30,bb=Math.round((by-Math.abs(Math.sin(now/260))*3)/1.5)*1.5,B=pxBub(ctx,px,bb-49,bw,28,col||'#9fdcff','#fff');
+function talkBub(px,by,now,col){if(BUBF!==now){BUBF=now;BUBR.length=0}BUBR.push([px,by]);const bw=60,bb=Math.round((by-Math.abs(Math.sin(now/260))*3)/1.5)*1.5,B=pxBub(ctx,px,bb-77,bw,56,col||'#9fdcff','#fff');
     ctx.save();ctx.setTransform(1,0,0,1,0,0);ctx.fillStyle='#1f5f86';const q=Math.max(2,Math.round(B.s/6));for(let d=-1;d<=1;d++)ctx.fillRect(Math.round(B.x-q/2)+d*q*2,Math.round(B.y-q/2),q,q);ctx.restore()}/* 点々も、四角いドット */
 const HB={t:0,rk:[],ps:[],fl:[]};
 function drawHanabi(now){const dt=Math.min(.05,Math.max(0,(now-(HB.t||now))/1000));HB.t=now;const h=hour();
