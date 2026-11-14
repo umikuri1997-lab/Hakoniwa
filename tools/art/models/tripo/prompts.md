@@ -1,4 +1,4 @@
-# トリポ（Tripo）にたのむ3Dモデルのプロンプト（20こ）
+# トリポ（Tripo）にたのむ3Dモデルのプロンプト（20こ＋伐採場・採石場の9こ）
 
 3Dのお手本（`blueprint.py` の `model`）に置く、植物・自然の物のモデル。どのプロンプトも、それだけで使えるように、共通のこと（形・色・向き・ノイズなし）をそれぞれに書いてある。
 できたモデル（.glb）は `tools/art/models/tripo/` に、下の「ファイル名」で入れる。
@@ -64,3 +64,21 @@ Three separate small mushrooms placed apart side by side: a fly agaric with a ro
 
 ## 20. 草のかたまり　ファイル名：`grass.glb`
 A small tuft of wild grass: about a dozen thin pointed blades growing from one spot and arching outward a little. Stylized, chunky game-asset 3D model with clean simple shapes and smooth surfaces, like a cozy farming game. Pale, light, soft colors: fresh light green blades, slightly lighter at the tips; no dark or heavily saturated colors. Clean flat colors with soft shading only, no texture noise, no grain, no speckles, no baked lighting or shadows. Base flat on the ground, single object, centered, no ground plane, no background.
+
+---
+
+# 3回め：伐採場・採石場（9こを1つのモデルに。`tools/art/models/tripo_split.py` で切りわける）
+
+ファイル名（切りわけたあと）：`stump.glb`（切り株）・`stone_big.glb`・`stone_mid.glb`（切り出した石）・`stone_round.glb`（まるい石）・`stone_slab.glb`（平たい石）・`stone_chunk.glb`（石のかけら）・小石は5つにわかれた（`pebbles2`・`pebbles3a`・`pebbles3b`・`pebble_a`〜`c`）・`log_lying.glb`（ねかせた丸太）・`firewood.glb`（わったまき）・`sprig.glb`（葉の小枝）
+
+Nine separate objects for a cozy farming game, arranged in a 3 by 3 grid with wide empty gaps between them so that no two objects touch or overlap. Each object stands on its own, base flat on the same ground level, upright, perfectly vertical, not tilted, facing the front.
+1. A low, wide tree stump: a short round trunk about as tall as half its width, with a flat cut top showing pale concentric annual rings, light tan-orange bark with soft vertical grooves, and five thick roots of different lengths and shapes that flare smoothly out of the base of the trunk and spread low over the ground; the roots blend into the trunk with no seam, thick where they join the trunk and tapering to rounded tips.
+2. A large quarried stone block: roughly a rectangular box, slightly wider than tall, with flat faces and softly rounded edges and corners, a few shallow chisel facets.
+3. A medium quarried stone block: a smaller, more cube-like version of the block, flat faces and softly rounded edges.
+4. A flat stone slab: low and wide, about a quarter as tall as it is wide, with flat top and bottom and softly rounded edges.
+5. A rough stone chunk: a small irregular piece of broken rock with a few flat angled facets.
+6. A small cluster of five pebbles of different sizes, smooth and rounded, lying close together.
+7. A felled log lying on its side: a straight cylinder with light tan-orange bark and soft long grooves, both cut ends flat showing pale annual rings.
+8. Three pieces of split firewood lying side by side: quarter-round wedges with bark on the curved side and pale fresh wood on the split faces and ends.
+9. A small leafy sprig growing from the ground: a few short stems with six to eight small rounded green leaves.
+Stylized, chunky game-asset 3D models with clean simple shapes and smooth surfaces. Pale, light, soft colors: light warm gray stone, light tan-orange bark, pale cream fresh wood and rings, fresh light green leaves; no dark or heavily saturated colors, no black. Clean flat colors with soft shading only, no texture noise, no grain, no speckles, no cracks, no moss, no baked lighting or shadows. No ground plane, no base platform, no background.
