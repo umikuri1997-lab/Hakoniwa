@@ -109,7 +109,8 @@ def shoot(sp, face, p):
     V0 = view(face, 0.0)
     def scr(P):
         X, Y, _ = V(np.asarray(P)[None]); return [round(float(X[0]), 2), round(float(Y[0]), 2)]
-    ex, ey = scr(anc['eye']); x0, y0, _ = V0(anc['eye0'][None])
+    ex, ey = scr(anc['eye']); x0, y0, _ = view(anc['ti'] if anc['ti'] != face else face, 0.0)(anc['eye0'][None])   # 目の絵の向き（くるくるまわるときは、そのとき見える向き）の、止まっているときの場所から
+    if anc['mir']: x0 = -x0
     A = {'eye': [int(round(ex-x0[0])), int(round(ey-y0[0])), anc['ti'], 1 if anc['mir'] else 0], 'facing': bool(facing)}
     for k, v in anc.items():
         if k not in ('eye', 'eye0', 'ti', 'mir'): A[k] = scr(v)
