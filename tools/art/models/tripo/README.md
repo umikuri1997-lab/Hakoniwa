@@ -48,11 +48,11 @@ P('名前','model',('tripo/oak.glb', cx, cy, z0, size, rot, tilt), on=('ground',
 | `rosevine.glb` | つるばらの枝 | たて長 | 小さく写すと、ばらが灰色っぽくなる |
 | `rose.glb` | 白いばら（1りん） | 花が上 | 1マス64ドットで0.1マスほどだと、花びらがくずれて見える。小さな花は、まるい部品で作るほうがよい（`arch.py`） |
 | `roseleaf.glb` | ばらの葉の小枝 | ねかせた形 | |
-| `oak.glb` | オーク | 立つ | |
-| `oak_dead.glb` | オークの枯れ木 | 立つ | |
-| `cedar.glb` | 杉 | 立つ | |
-| `maple.glb` | メープル（秋の色） | 立つ | |
-| `acacia.glb` | アカシア | 立つ | |
+| `oak.glb` | おおきな木 | 立つ | |
+| `oak_dead.glb` | おおきな木の枯れ木 | 立つ | |
+| `cedar.glb` | とんがりの木 | 立つ | |
+| `maple.glb` | ゆうやけの木（秋の色） | 立つ | |
+| `acacia.glb` | ひらたい木 | 立つ | |
 | `appletree.glb` | りんごの木 | 立つ | |
 | `berrybush.glb` | ベリーの茂み | 立つ | 実がついていない（実は部品で足す） |
 | `bamboo.glb` | 竹 | 立つ | |

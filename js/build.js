@@ -17,7 +17,7 @@ function spawnSeed(){
 let undoStack=[];
 const inv=id=>id.startsWith('seed:')?cseed(id.slice(5)):BL[id]&&BL[id].kind==='gear'?gearCount(id):S.inv[id]||0;
 const iname=id=>id.startsWith('seed:')?CROPS[id.slice(5)].name+'のたね':WD===1&&STAGEN[id]?STAGEN[id]:BL[id].item||BL[id].name;
-const STAGEN={tree:'杉の苗',deadtree:'山の杉'};/* 火山での名前（植えた木は杉、自然の木は山の杉） */
+const STAGEN={tree:'とんがりの木の苗',deadtree:'とんがりの木'};/* 火山での名前（植えた木も自然の木も、とんがりの木） */
 const cseed=k=>(S.cseed||(S.cseed={}))[k]||0;
 function sowFarm(d){if(d.sown!==false)return true;if(d.paid){d.paid=false;d.sown=true;d.g=0;dirty=true;return true}const k=cropK(d);if(cseed(k)>0){S.cseed[k]--;d.sown=true;d.g=0;dirty=true;return true}return false}
 function giveItem(id,n){if(BL[id]&&BL[id].kind==='gear'){gearGive(id,n);return}/* そうびは S.gear に1つずつ */if(id.startsWith('seed:')){const k=id.slice(5);S.cseed[k]=cseed(k)+n;return}S.inv[id]=inv(id)+n}
