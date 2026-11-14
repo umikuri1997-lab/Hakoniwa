@@ -131,6 +131,49 @@ def veinpat(q):
         return LEAF[1] if ad<0.45 else LEAF[0]
     return f
 
+BARKT=0.11    # 切り株の樹皮のあつさ（マス）
+def roundstump(P):
+    """切り株（モデル）のゆがみをへらす：幹（根より上）の切り口と同じ高さの断面を、向きごとに、平均の半径へ近づける（断面ごとまるく、ちぢめ・のばす）。
+    高さ×向きのます目ごとに、いちばん外の半径をはかり、まるくするための倍率を作って、なめらかにつないでかける。根（下のほう）はそのまま"""
+    from scipy.ndimage import uniform_filter
+    U,inv=np.unique(P.reshape(-1,3),axis=0,return_inverse=True);inv=inv.reshape(-1)
+    zl,zh=U[:,2].min(),U[:,2].max();H=zh-zl;top=U[U[:,2]>zh-0.06*H];cx,cy=top[:,0].mean(),top[:,1].mean()
+    dx,dy=U[:,0]-cx,U[:,1]-cy;r=np.hypot(dx,dy);A=np.arctan2(dy,dx)
+    NZ,NA=16,32;zi=np.clip(((U[:,2]-zl)/H*NZ).astype(int),0,NZ-1);ai=((A+math.pi)/(2*math.pi)*NA).astype(int)%NA
+    RS=np.zeros((NZ,NA))
+    for i in range(NZ):
+        for j in range(NA):
+            m=(zi==i)&(ai==j);RS[i,j]=r[m].max() if m.any() else np.nan
+    for i in range(NZ):   # 空のます目は、となりから
+        row=RS[i];
+        if np.isnan(row).all():RS[i]=RS[i-1] if i else 1;continue
+        idx=np.flatnonzero(~np.isnan(row));RS[i]=np.interp(np.arange(NA),idx,row[idx],period=NA)
+    TG=RS.mean(1,keepdims=True);K=TG/RS
+    W=np.clip(((np.arange(NZ)+0.5)/NZ-0.30)/0.25,0,1)[:,None]*0.8;K=1+(K-1)*W
+    K=uniform_filter(K,size=(3,3),mode=('nearest','wrap'))
+    zf=(U[:,2]-zl)/H*NZ-0.5;af=(A+math.pi)/(2*math.pi)*NA-0.5   # ます目のまん中どうしを、なめらかにつなぐ
+    z0=np.clip(np.floor(zf).astype(int),0,NZ-1);z1=np.clip(z0+1,0,NZ-1);tz=np.clip(zf-np.floor(zf),0,1)
+    a0=np.floor(af).astype(int)%NA;a1=(a0+1)%NA;ta=af-np.floor(af)
+    k=(K[z0,a0]*(1-ta)+K[z0,a1]*ta)*(1-tz)+(K[z1,a0]*(1-ta)+K[z1,a1]*ta)*tz
+    U2=U.copy();U2[:,0]=cx+dx*k;U2[:,1]=cy+dy*k
+    zt=np.median(U[U[:,2]>zh-0.10*H,2]);b0=zh-0.22*H;w=np.clip((U[:,2]-b0)/(0.10*H),0,1)   # 切り口を、たいらに（モデルでは前へかたむいていた）
+    U2[:,2]=U[:,2]+(zt-U[:,2])*w
+    return U2[inv].reshape(P.shape)
+def leafclump(q):
+    """葉のかたまり1つの柄：茎のつく、まん中がいちばん低い（くらい）、ふちへいくほど明るい、3つの段（ふちの形にそった帯）。
+    まん中から、ふちへ放射状に、細い葉脈を少し"""
+    P=q.reshape(-1,3);c0=P.mean(0);_,_,vt=np.linalg.svd(P-c0,full_matrices=False);e1,e2=vt[0],vt[1]
+    X=(P-c0)@e1;Y=(P-c0)@e2;A=np.arctan2(Y,X);R=np.hypot(X,Y);nb=24;ab=((A+math.pi)/(2*math.pi)*nb).astype(int)%nb
+    RM=np.array([R[ab==i].max() if (ab==i).any() else R.max() for i in range(nb)]);RM=np.maximum(RM,(RM+np.roll(RM,1)+np.roll(RM,-1))/3)   # 向きごとの、ふちまでの長さ
+    NV=7;off=(c0[0]*13.1+c0[2]*7.7)%1   # 葉脈の本数と向きのずれ
+    def f(x,y,z):
+        d=np.array((x,y,z))-c0;X_,Y_=float(d@e1),float(d@e2);a=math.atan2(Y_,X_);i=int((a+math.pi)/(2*math.pi)*nb)%nb;u=math.hypot(X_,Y_)/max(RM[i],1e-6)
+        if 0.22<u<0.8:
+            k=(a/(2*math.pi)*NV+off)%1
+            if min(k,1-k)*2*math.pi/NV*math.hypot(X_,Y_)<0.012:return LEAFVEIN   # 葉脈
+        return LEAF[2] if u<0.3 else LEAF[1] if u<0.68 else LEAF[0]
+    return f
+
 def flowfield(q,src):
     """木の皮の流れ：面の場所から、src（はじまりの点）からの、面をつたう道のりをはかり、その道のりがのびる向きを、面ごとの流れの向きにする。
     幹ではたて・根では外へ・枝では枝のさきへ。かえすのは、面のまん中の点・流れの向き・面の向き"""
@@ -171,7 +214,7 @@ def stage(V,comps,name):
         s=(dst['hi']-dst['lo'])/(src['hi']-src['lo']);p=(V[c['f']]-src['lo'])*s+dst['lo']
         if anchor is not None:p=(p-anchor)*k+anchor
         return p
-    st=big('RB');out=[(V[st['f']],st,'bark')]
+    st=big('RB');out=[(roundstump(V[st['f']]),st,'bark')]
     if name=='stump':return out
     if name in('bud','leaf'):
         src=big('RF');sp=[c for c in comps if c['grp']=='RF' and c is not src]
@@ -224,14 +267,18 @@ class Stage:
                     sc.decal(texpat([(q[keep],c['uv'][keep])],BARK));sc.part()   # 木の皮：モデルのテクスチャのすじ（幹・根・枝の流れにそっている）
                     for t in q[keep]:sc.tri(t[0],t[1],t[2],BARK[1])
                     sc.decal(None)
-                    if cut.any():   # 切り口：いまの絵と同じ、少しゆがんだ年輪（もよう）
-                        cq=q[cut].reshape(-1,3);cx,cy=(cq[:,0].max()+cq[:,0].min())/2,(cq[:,1].max()+cq[:,1].min())/2;R=max(cq[:,0].max()-cq[:,0].min(),cq[:,1].max()-cq[:,1].min())/2
-                        def ring(x,y,z,cx=cx,cy=cy,R=R):
-                            a=math.atan2(y-cy,x-cx);r=math.hypot(x-cx,y-cy)/R*(1+0.05*math.sin(3*a+1)+0.03*math.sin(5*a))
-                            if r>0.80:return BARK[2] if (a*14/(2*math.pi)+0.3*math.sin(a*5))%1<0.16 else BARK[1]   # あつい樹皮（ところどころ、ひび）
-                            if r>0.765:return BARK[2]   # 樹皮と木のさかい
-                            if r>0.70:return CUT[0]
-                            return CUT[2] if any(abs(r-q_)<0.035 for q_ in(0.14,0.32,0.50)) else CUT[1]
+                    if cut.any():   # 切り口：ふちから同じあつさの樹皮、その内がわに、ふちの形にそった年輪
+                        cq=q[cut].reshape(-1,3);cx,cy=cq[:,0].mean(),cq[:,1].mean();A_=np.arctan2(cq[:,1]-cy,cq[:,0]-cx);R_=np.hypot(cq[:,0]-cx,cq[:,1]-cy)
+                        NB=48;bi=((A_+math.pi)/(2*math.pi)*NB).astype(int)%NB;RB=np.array([R_[bi==i].max() if (bi==i).any() else np.nan for i in range(NB)])
+                        ok_=~np.isnan(RB);RB=np.interp(np.arange(NB),np.flatnonzero(ok_),RB[ok_],period=NB);RB=(RB+np.roll(RB,1)+np.roll(RB,-1)+np.roll(RB,2)+np.roll(RB,-2))/5   # 向きごとの、ふちまでの長さ（なめらかに）
+                        def ring(x,y,z,cx=cx,cy=cy,RB=RB):
+                            a=math.atan2(y-cy,x-cx);f_=(a+math.pi)/(2*math.pi)*NB-0.5;i0=int(math.floor(f_))%NB;tt=f_-math.floor(f_);Rb=RB[i0]*(1-tt)+RB[(i0+1)%NB]*tt
+                            r=math.hypot(x-cx,y-cy);d=Rb-r
+                            if d<BARKT:return BARK[2] if (a*16/(2*math.pi))%1<0.14 else BARK[1]   # あつい樹皮（ふちから同じあつさ。ところどころ、ひび）
+                            if d<BARKT+0.03:return BARK[2]   # 樹皮と木のさかい
+                            if d<BARKT+0.07:return CUT[0]
+                            u=1-r/max(Rb-BARKT,1e-6)   # ふちから、まん中へ（0〜1）
+                            return CUT[2] if any(abs(u-q_)<0.045 for q_ in(0.32,0.55,0.78)) else CUT[1]
                         sc.decal(ring);sc.part()
                         for t in q[cut]:sc.tri(t[0],t[1],t[2],CUT[1])
                         sc.decal(None)
@@ -241,7 +288,7 @@ class Stage:
                     m0=q.reshape(-1,3).mean(0);dd=np.sort(np.linalg.norm(s._lc-m0,axis=1))
                     if len(dd)>1 and dd[1]>0.9 or (q.reshape(-1,3).max(0)-q.reshape(-1,3).min(0)).max()<0.12:continue   # はなれて1つだけうかぶ葉（モデルのこぼれ）は描かない：お手本の絵と同じ、小さなまるい葉の玉がかさなる形に作りなおす（lobes）
                     lobes(sc,q,n,len(s._gid));s._gid.append(1);continue
-                sc.decal(veinpat(q));sc.part()   # 葉：まん中のすじがいちばん低い（谷）、ふちほど明るい。葉脈も
+                sc.decal(leafclump(q));sc.part()   # 葉：かたまりのまん中（茎のつく所）がいちばん低くくらい、ふちへ明るく。まん中から葉脈
                 for t in q:sc.tri(t[0],t[1],t[2],LEAF[1])
                 sc.decal(None)
         sc.smooth(False)
