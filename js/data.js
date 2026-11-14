@@ -634,6 +634,9 @@ function migrateEarthMerge(state){
   if(state.flags.qsplitPend==='earthListen')delete state.flags.qsplitPend;if(state.flags.qsplitStory==='earthListen')delete state.flags.qsplitStory;
 }
 /* 交換・おつげの目標を、メインからサブクエストへうつした（tutSub1）。古いセーブの番号（QUESTS1_V3）を名前で読みかえ、とちゅうなら、サブクエストのつづきにする（1回だけ） */
+function migrateTalkSub(state){/* 「せいれいにパワーをそそごう」（boost1）は「せいれいとお話ししよう」（talk1）にかえた：受けた・おわったなどの状態を、名前で読みかえる（1回だけ） */
+  if(state.flags.talkq1)return;state.flags.talkq1=1;
+  for(const k of['subSt','subDone','subSeen','subB','subArrived']){const o=state[k];if(o&&o.boost1!=null){o.talk1=o.boost1;delete o.boost1}}}
 function migrateTutSub(state){
   if(state.flags.tutSub1)return;state.flags.tutSub1=1;
   if(state.free||(state.world||0)!==0)return;
