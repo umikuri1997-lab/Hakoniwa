@@ -26,9 +26,9 @@ STUMPW=2.30     # 切り株（根もふくむ）のはば（マス）
 TREEW=5.60      # 御神木（葉もふくむ）のはば（マス）
 LEAFK=1.8       # 若葉：芽の大きさ
 # いまの絵の色（明るい所・ふつう・暗い所）
-BARK=[(236,186,140),(216,160,118),(190,134,98)]
+BARK=[(239,175,121),(218,152,106),(182,125,88)]   # お手本の絵の木の皮：明るいすじ・ふつう・みぞ
 CUT=[(248,226,186),(238,210,166),(222,190,146)]
-LEAF=[(216,236,140),(178,214,106),(140,188,88)]
+LEAF=[(225,234,117),(191,208,99),(172,194,96)]   # お手本の絵の葉：明るい・ふつう・下のふち
 GLOW=(255,246,176)
 MOTEK=0.45     # 光のつぶの大きさ（モデルの玉は大きいので、ちぢめる）
 
@@ -55,29 +55,74 @@ def BARKTEX():
     """木の皮のテクスチャ（ambientCG Bark001）。たてのすじが見えるように、まきの皮より、こく・大きく"""
     if not _BT:_BT.append(O.Tex(os.path.join(ART,'textures','bark001.png'),span=0.8,flow=7,minrun=4,dark=(0.24,0.86),light=(0.18,1.08)))
     return _BT[0]
-LEAFS=0.20    # 葉のならぶ間かく（マス）
+LEAFS=0.26    # まるい葉のならぶ間かく（マス）
 def _h(i,j,k):
     n=(i*73856093)^(j*19349663)^(k*83492791);n=(n^(n>>13))*1274126177&0xffffffff;return ((n&0xffff)/65535.0,((n>>16)&0xffff)/65535.0)
-def _leaf(u,v,cu,cv,ang,L):
-    """1まいの葉（先のとがった、たまごの形）の中か。中なら、葉のすじからどちらがわか（+ が左上）"""
-    c,s_=math.cos(ang),math.sin(ang);du,dv=u-cu,v-cv;a=du*c+dv*s_;b=-du*s_+dv*c   # a：葉ののびる向き
-    t=a/L
-    if not -0.5<=t<=0.5:return None
-    w=0.36*L*math.sin(math.pi*(t+0.5))**0.8*(1.15-0.3*t)   # 根もとが丸く、先がとがる
-    return b/w if abs(b)<w else None
 def leafpat(x,y,z):
-    """葉の柄：画面の上での場所（よこ x・たて z−0.75y）に、葉を1まいずつ、ばらばらの向き・大きさで、すきまをあけて置く。
-    葉の左上がわは明るく、右下がわはふつう、葉のすぐ右下にかげ。葉のない所は、かたまりの色のまま（かげの段は形から）"""
-    u=x/LEAFS;v=-(z-0.75*y)/LEAFS;iu,iv=math.floor(u),math.floor(v);sh=False
-    for dj in(1,0,-1):
-        for di in(1,0,-1):
+    """葉の柄（お手本の絵と同じ、小さなまるい葉がかさなるかたまり）：画面の上での場所（よこ x・たて z−0.9y）に、
+    まるい葉を1マスに1まい、ばらばらの場所・大きさで置き、下（手前）の葉を上にかさねる。
+    葉の下のふちに、少し暗い弧（葉のかさなりのかげ）。葉の左上に、ときどき明るい所。明るい・暗いの大きな段は、かたまりの形のかげで"""
+    u=x/LEAFS;v=-(z-0.9*y)/LEAFS;iu,iv=math.floor(u),math.floor(v);best=None
+    for dj in(-1,0,1):
+        for di in(-1,0,1):
             i,j=iu+di,iv+dj;a,b=_h(i,j,7);a2,b2=_h(i,j,11)
-            if a2>0.62:continue   # 葉のないマス（ならびが目立たないように）
-            cu=i+0.25+0.5*a;cv=j+0.25+0.5*b;ang=(b2-0.5)*2.0+(-0.6 if a>0.5 else 0.6);L=0.85+0.4*a2
-            r=_leaf(u,v,cu,cv,ang,L)
-            if r is not None:return LEAF[0] if r<0.15 else LEAF[1]
-            if _leaf(u-0.10,v-0.14,cu,cv,ang,L) is not None:sh=True   # 葉のかげ（右下に少しずらした所）
-    return LEAF[2] if sh else LEAF[1]
+            cu=i+0.15+0.7*a;cv=j+0.15+0.7*b;r=0.70+0.25*a2
+            du,dv=(u-cu)/r,(v-cv)/r
+            if du*du+dv*dv<1 and (best is None or cv>best[0]):best=(cv,du,dv,b2)
+    if best is None:return LEAF[2]
+    _,du,dv,b2=best;d=math.hypot(du,dv)
+    if d>0.76 and dv>0.15:return LEAF[2]     # 下のふちの弧
+    if b2<0.55 and math.hypot(du+0.3,dv+0.3)<0.33:return LEAF[0]   # 左上の明るい所
+    return LEAF[1]
+
+LOBE=0.17      # 葉の玉のならぶ間かく（マス）
+LEAFIN=(134,159,92)   # かたまりの中（玉と玉のすきまから見える、こい緑。お手本の絵の、かたまりの下のかげの色）
+def lobes(sc,q,n,gi):
+    """葉のかたまり（モデルの面 q・面の向き n）の、見える側の表面に、まるい葉の玉（半径 0.09〜0.13 マス）を、
+    面の大きさに合わせた数だけ、少し中へしずめてならべる。上を向いた所の玉は明るい黄緑、ほかはふつうの黄緑。
+    もとのかたまりは、少しちぢめて、こい緑の中身にする。玉どうし・中身とのさかいには線を引かない（同じグループ）"""
+    n=n/np.maximum(np.linalg.norm(n,axis=1,keepdims=True),1e-12)
+    rs=np.random.RandomState(1000+gi);area=np.linalg.norm(np.cross(q[:,1]-q[:,0],q[:,2]-q[:,0]),axis=1)/2
+    vis=(n[:,1]*0.67+n[:,2]*0.74>-0.25)   # 見える側（南と上）
+    A=area*vis;N=max(3,int(A.sum()/(LOBE*LOBE)))
+    cen=q.reshape(-1,3).mean(0)
+    sc.group('leaf%d'%gi)
+    sc.part()   # 中身
+    for t in q:t2=cen+(t-cen)*0.9;sc.tri(t2[0],t2[1],t2[2],LEAFIN)
+    idx=rs.choice(len(q),N,p=A/A.sum())
+    for k_ in idx:
+        w=rs.dirichlet((1,1,1));pt=w@q[k_];nn=n[k_];r=0.09+0.04*rs.rand();c_=pt-nn*r*0.45
+        sc.sphere(c_[0],c_[1],c_[2],r,LEAF[0] if nn[2]>0.55 else LEAF[1],n=10,m=6)
+    sc.group(None)
+
+def flowfield(q,src):
+    """木の皮の流れ：面の場所から、src（はじまりの点）からの、面をつたう道のりをはかり、その道のりがのびる向きを、面ごとの流れの向きにする。
+    幹ではたて・根では外へ・枝では枝のさきへ。かえすのは、面のまん中の点・流れの向き・面の向き"""
+    import scipy.sparse as sp
+    from scipy.sparse.csgraph import dijkstra
+    P=q.reshape(-1,3);key,inv=np.unique(np.round(P,5),axis=0,return_inverse=True);inv=inv.reshape(-1);F=inv.reshape(-1,3)
+    e=np.concatenate([F[:,[0,1]],F[:,[1,2]],F[:,[2,0]]]);w=np.linalg.norm(key[e[:,0]]-key[e[:,1]],axis=1)+1e-9
+    G=sp.coo_matrix((w,(e[:,0],e[:,1])),shape=(len(key),len(key))).tocsr();G=G.maximum(G.T)
+    S_=np.flatnonzero(src(key))
+    D=dijkstra(G,directed=False,indices=S_,min_only=True)
+    D[~np.isfinite(D)]=0
+    A,B,C=key[F[:,0]],key[F[:,1]],key[F[:,2]];n=np.cross(B-A,C-A);nn=np.linalg.norm(n,axis=1,keepdims=True)+1e-12;n=n/nn
+    e1,e2=B-A,C-A;d1,d2=(D[F[:,1]]-D[F[:,0]])[:,None],(D[F[:,2]]-D[F[:,0]])[:,None]   # 面の上での道のりの傾き（向き）
+    g=(d1*np.cross(n,e2)-d2*np.cross(n,e1))/nn
+    g/=np.linalg.norm(g,axis=1,keepdims=True)+1e-12
+    return (A+B+C)/3,g,n
+def barkpat(cen,g,n):
+    """木の皮の柄：流れの向きにのびる、とぎれとぎれのみぞと、明るいすじ（お手本の絵の木の皮）"""
+    from scipy.spatial import cKDTree
+    T_=cKDTree(cen);P_=0.13
+    def f(x,y,z):
+        i=T_.query((x,y,z))[1];a=g[i];b=np.cross(a,n[i]);p=np.array((x,y,z))
+        sv=float(p@b)/P_;t=float(p@a);w_=sv+0.3*math.sin(t*3+sv*0.4);k=math.floor(w_);fs=w_-k
+        h1,h2=_h(k,math.floor(t/0.5+_h(k,3,5)[0]),13)
+        if fs<0.22 and h1<0.85:return BARK[2]
+        if 0.45<fs<0.62 and h2<0.45:return BARK[0]
+        return BARK[1]
+    return f
 def tones(col,pal,mean):
     """モデルの色の明るさのちがい（そのなかまの平均とくらべる）だけで、3だんの色にする"""
     L=col.mean(1)/mean;return [pal[0] if l>1.06 else pal[2] if l<0.93 else pal[1] for l in L]
@@ -121,7 +166,7 @@ class Stage:
         return s._lb
     def PARTS(s):return []
     def EXTRA(s,sc):
-        sc.smooth(True)
+        sc.smooth(True);s._gid=[]
         for kind in('bark','stem','leaf','glow'):
             its=[(p,c) for p,c,k in s.items if k==kind]
             if not its:continue
@@ -134,13 +179,16 @@ class Stage:
                     sc.material(None);sc.outline();continue
                 if kind=='bark':
                     top=q[...,2].max();cut=(nz>0.75)&(q[:,:,2].mean(1)>top*0.7)&(c is s.items[0][1])   # 切り口（上を向いた、高い所の面）
-                    sc.texture(BARKTEX());sc.part();sc.txax[sc.pid]=np.array([0,0,1.0])   # 木の皮：皮のテクスチャ（ambientCG Bark001）で、たてのすじ
                     LB=[(lo+(hi-lo)*0.18,hi-(hi-lo)*0.18) for lo,hi in s.leafbox()]   # 葉のかたまりの中（ふちから少し内がわ）
-                    for t,ct in zip(q,cut):
-                        m_=t.mean(0)
-                        if ct or any((m_>lo).all() and (m_<hi).all() for lo,hi in LB):continue   # 葉のかたまりをつきぬけた枝のさきは描かない（モデルでは葉の中から茶色の点が出ていた）
-                        sc.tri(t[0],t[1],t[2],BARK[1])
-                    sc.texture(None)
+                    keep=np.array([not ct and not any((t.mean(0)>lo).all() and (t.mean(0)<hi).all() for lo,hi in LB) for t,ct in zip(q,cut)])   # 葉のかたまりをつきぬけた枝のさきは描かない（モデルでは葉の中から茶色の点が出ていた）
+                    zl,zh=q[...,2].min(),q[...,2].max();H=zh-zl
+                    if c is s.items[0][1] and s.name!='tree':src=lambda K:K[:,2]>zh-0.08*H   # 切り株：切り口のふちから、幹を下へ・根の先へ
+                    elif s.name=='tree':src=lambda K:np.abs(K[:,2]-(zl+0.30*H))<0.02*H   # 御神木：幹のなかほどから、上は枝へ・下は根へ
+                    else:src=lambda K:K[:,2]<zl+0.04*H   # 若木：根もとから、枝の先へ
+                    cen,g,n=flowfield(q[keep],src)
+                    sc.decal(barkpat(cen,g,n));sc.part()   # 木の皮：流れにそった、みぞとすじ
+                    for t in q[keep]:sc.tri(t[0],t[1],t[2],BARK[1])
+                    sc.decal(None)
                     if cut.any():   # 切り口：いまの絵と同じ、少しゆがんだ年輪（もよう）
                         cq=q[cut].reshape(-1,3);cx,cy=(cq[:,0].max()+cq[:,0].min())/2,(cq[:,1].max()+cq[:,1].min())/2;R=max(cq[:,0].max()-cq[:,0].min(),cq[:,1].max()-cq[:,1].min())/2
                         def ring(x,y,z,cx=cx,cy=cy,R=R):
@@ -151,9 +199,13 @@ class Stage:
                         for t in q[cut]:sc.tri(t[0],t[1],t[2],CUT[1])
                         sc.decal(None)
                     continue
-                sc.decal(leafpat if kind=='leaf' else None);sc.part()   # 葉：小さな葉がかさなる柄（leafpat）。かたまりの明るい・暗いは、かげの段で
+                if kind=='leaf' and s.name=='tree':   # 葉のかたまり（御神木）
+                    if not hasattr(s,'_lc'):s._lc=np.array([s.T(p_).reshape(-1,3).mean(0) for p_,c_,k_ in s.items if k_=='leaf'])
+                    m0=q.reshape(-1,3).mean(0);dd=np.sort(np.linalg.norm(s._lc-m0,axis=1))
+                    if len(dd)>1 and dd[1]>0.9 or (q.reshape(-1,3).max(0)-q.reshape(-1,3).min(0)).max()<0.12:continue   # はなれて1つだけうかぶ葉（モデルのこぼれ）は描かない：お手本の絵と同じ、小さなまるい葉の玉がかさなる形に作りなおす（lobes）
+                    lobes(sc,q,n,len(s._gid));s._gid.append(1);continue
+                sc.part()   # 若木の葉・芽：モデルの葉の形のまま
                 for t in q:sc.tri(t[0],t[1],t[2],LEAF[1])
-                sc.decal(None)
         sc.smooth(False)
 
 def shot(M):
