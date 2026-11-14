@@ -102,10 +102,38 @@ def pipe(B,rtip=0.005,E=2.3):
         b['r0']=b['r1']*(1.18 if b['lv']>0 else 1.0)
     for b in B:b['r0']=min(b['r0'],0.075 if b['lv']>0 else 9);b['r1']=min(b['r1'],0.065 if b['lv']>0 else 9)   # 主枝の太さの上限
     t=B[0];t['r1']=min(max(t['r1'],0.08),0.09);t['r0']=0.12   # 幹：根もとがいちばん太い（太すぎない）
+NODE=0.075   # 葉のつく節の間かく（マス）。左右たがいちがいなので、同じがわの葉の間かくは、その2倍（葉のはばくらい）
+def zigzag(B):
+    """葉をつける小枝（先の細枝と、その1つ手前の枝の先のほう）：節ごとに、葉のつく面の中で少しジグザグに折れる（お手本の写真）。
+    葉のつく面（光のほう＝上と外のあいだ）の向き pn も、ここで決めて骨格にのこす"""
+    for b in B:
+        if not (b['leaf'] or b['lv']>=4):continue
+        P=np.array(b['pts']);Ls=np.cumsum([0]+[np.linalg.norm(P[i+1]-P[i]) for i in range(len(P)-1)]);tot=Ls[-1]
+        d=P[-1]-P[0];d/=np.linalg.norm(d);pn=UP*0.7+envnorm(P[-1])*0.3;pn-=d*(pn@d);pn/=np.linalg.norm(pn);sd=np.cross(pn,d)
+        s0=0.0 if b['leaf'] else tot*0.45;ns=max(1,int((tot-s0)/NODE));nodes=[];side=1
+        q0=P[0].copy();pts=[P[i] for i in range(len(P)) if Ls[i]<=s0]
+        for k in range(ns+1):
+            sd_=s0+(tot-s0)*k/ns;j=max(0,min(len(P)-2,int(np.searchsorted(Ls,sd_))-1));t=(sd_-Ls[j])/max(Ls[j+1]-Ls[j],1e-9)
+            q=P[j]+(P[j+1]-P[j])*t+sd*side*0.006*(0 if k in(0,ns) else 1);side=-side
+            if pts and np.linalg.norm(q-pts[-1])<1e-4:nodes.append(len(pts)-1);continue   # 同じ点を2回入れない
+            pts.append(q);nodes.append(len(pts)-1)
+        b['pts']=pts;b['nodes']=nodes;b['pn']=list(map(float,pn))
+SHOOT=0.32   # 葉をつける小枝（先の細枝）の長さ（マス）。お手本の写真のように、1本に何まいも葉がつく長さ
+def lengthen(B):
+    """先の細枝を、ゆるくたれながら SHOOT までのばす（樹冠の形の外へは出さない）。骨格の一部（葉なしの絵にも出る）"""
+    rs=np.random.RandomState(SEED+7)
+    for b in B:
+        if not b['leaf']:continue
+        P=[np.array(p) for p in b['pts']];L=sum(np.linalg.norm(P[i+1]-P[i]) for i in range(len(P)-1));d=P[-1]-P[-2];d/=np.linalg.norm(d)
+        while L<SHOOT:
+            d=d-UP*0.04+rs.normal(0,0.03,3);d/=np.linalg.norm(d);q=P[-1]+d*0.04
+            if not envin(q,1.02):break
+            P.append(q);L+=0.04
+        b['pts']=P
 def makeskel():
-    B=skeleton();json.dump([{'pts':[list(map(float,p)) for p in b['pts']],'r0':b['r0'],'r1':b['r1'],'lv':b['lv'],'leaf':b['leaf']} for b in B],open(SKELF,'w'))
+    B=skeleton();lengthen(B);zigzag(B);json.dump([{'pts':[list(map(float,p)) for p in b['pts']],'r0':b['r0'],'r1':b['r1'],'lv':b['lv'],'leaf':b['leaf'],'nodes':b.get('nodes'),'pn':b.get('pn')} for b in B],open(SKELF,'w'))
 def loadskel():
-    return [{'pts':np.array(b['pts']),'r0':b['r0'],'r1':b['r1'],'lv':b['lv'],'leaf':b['leaf']} for b in json.load(open(SKELF))]
+    return [{'pts':np.array(b['pts']),'r0':b['r0'],'r1':b['r1'],'lv':b['lv'],'leaf':b['leaf'],'nodes':b.get('nodes'),'pn':b.get('pn')} for b in json.load(open(SKELF))]
 def trunkmesh(T,pts,r0,r1,rs,n=28):
     """幹：根もとは、角度ごとにちがう大きさのなめらかなふくらみ（根）で、なだらかに太くなり、地面へ広がる（1つづきの面）"""
     lobes=[(rs.uniform(0,6.28),rs.uniform(0.06,0.16),rs.uniform(0.35,0.6)) for _ in range(rs.randint(4,7))]   # 向き・大きさ・はば（ラジアン）
@@ -155,25 +183,23 @@ def EXTRA(sc):
     if SKEL:return
     Q=kitleaf();rs=np.random.RandomState(SEED+100)
     sc.outline(None,0.86);sc.material('flat')
-    S=stemtip();STEP=0.045
-    for b in B:   # 葉は、先の細枝（子のない枝）の外がわ6割と、その先に。左右たがいちがい、葉柄のはしを枝につける
-        if not b['leaf']:continue
-        pts=b['pts'];Ls=np.cumsum([0]+[np.linalg.norm(pts[i+1]-pts[i]) for i in range(len(pts)-1)]);tot=Ls[-1];side=rs.choice([-1,1])
-        n=max(2,int(tot*0.6/STEP))
-        for i in range(n+2):
-            sdist=tot*0.4+min(tot*0.6,i*STEP);j=max(0,min(len(pts)-2,int(np.searchsorted(Ls,sdist))-1));t=(sdist-Ls[j])/max(Ls[j+1]-Ls[j],1e-9)
-            a_pt=pts[j]+(pts[j+1]-pts[j])*t;dd=pts[j+1]-pts[j];dd/=np.linalg.norm(dd)
-            nrm=envnorm(a_pt);tg=dd-nrm*(dd@nrm);tg=tg/np.linalg.norm(tg) if np.linalg.norm(tg)>1e-6 else np.cross(nrm,[0,1.0,0])
-            side=-side;sd0=np.cross(nrm,tg)
-            ang=math.radians(40 if i<n+1 else 10*side)   # 左右へひらく（さいごの1まいは先へ）
-            o=tg*math.cos(ang)+sd0*side*math.sin(ang)-UP*0.15+rs.normal(0,0.06,3);o-=nrm*(o@nrm)*0.8;o/=np.linalg.norm(o)   # 樹冠の面にそって外・下へ
-            nn=nrm*0.8+UP*0.2+rs.normal(0,0.05,3);nn-=o*(nn@o);nn/=np.linalg.norm(nn)
-            if nn[2]<0.15:nn=nn+UP*0.4;nn-=o*(nn@o);nn/=np.linalg.norm(nn)   # 表が下を向かない
-            if not envin(a_pt+o*LEAFL,1.05):continue   # 葉先が樹冠の形から出る葉は置かない
-            M=np.stack([o,np.cross(nn,o),nn],0);base=a_pt-(S@M)*LEAFL
-            h=(a_pt[2]-ENV['zb'])/ENV['H'];lt=float(nn@N.LIGHTV)
+    S=stemtip();ANG=math.radians(52)   # 小枝から斜め前へひらく角度（どの葉も同じくらい）
+    for b in B:   # 葉は、小枝の節ごとに、左右たがいちがいに1まい。どの葉も、小枝をふくむ1まいの平らな面（光のほう）の上（お手本の写真：魚の骨の形、交差しない）。小枝の先に1まい
+        if not b.get('nodes'):continue
+        pts=b['pts'];pn=np.array(b['pn']);nd=b['nodes'];side=1 if (len(pts)%2) else -1
+        for k,i in enumerate(nd):
+            p=np.array(pts[i]);last=(k==len(nd)-1)
+            if k==0 and not last:continue   # 小枝のつけ根の節にはつけない
+            d=np.array(pts[min(i+1,len(pts)-1)])-np.array(pts[max(i-1,0)]);d/=np.linalg.norm(d);d-=pn*(d@pn);d/=np.linalg.norm(d)
+            sd=np.cross(pn,d);side=-side
+            o=d if last else d*math.cos(ANG)+sd*side*math.sin(ANG)
+            ang=rs.uniform(-0.06,0.06);o=o*math.cos(ang)+np.cross(pn,o)*math.sin(ang)   # ほんの少しだけ、ばらつき
+            nn=pn.copy()
+            if not envin(p+o*LEAFL,1.08):continue   # 葉先が樹冠の形から出る葉は置かない
+            M=np.stack([o,np.cross(nn,o),nn],0);base=p-(S@M)*LEAFL
+            h=(p[2]-ENV['zb'])/ENV['H'];lt=float(nn@N.LIGHTV)
             tone=int(np.clip(round((1-lt)*1.6+(1-h)*1.2-0.5),0,len(N.LEAFB)-2))
-            Qb=Q.copy();Qb[...,2]-=0.12*np.clip(Qb[...,0]-0.25,0,None)**2   # しなり（少し）。ねじらない
+            Qb=Q.copy();Qb[...,2]-=0.10*np.clip(Qb[...,0]-0.25,0,None)**2   # しなり（少し）。ねじらない
             W3=Qb@M*LEAFL+base;sc.part()
             for q in W3:sc.tri(q[0],q[1],q[2],N.LEAFB[tone])
     sc.material(None);sc.outline()
