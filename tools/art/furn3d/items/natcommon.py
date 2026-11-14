@@ -383,7 +383,7 @@ def tipleaves(clumps,L=0.16,W=0.10,dmin=0.62,seed=0):
             put.append(c);lv.append((base,ld,sd,nn,L*f,W*f,0.0))
         out.append(lv)
     return out
-def drawclumps(sc,groups,pal=LEAFB,olk=0.74,axis=(0.5,0.6)):
+def drawclumps(sc,groups,pal=LEAFB,olk=0.74,axis=(0.5,0.6),tonef=None):
     """葉の塊ごとに入れる（塊の中は線を引かない）。光に向く葉・外・上ほど明るい。すじの左右で1段、ふち（あつみ）は2段暗い"""
     zs=[l[0][2] for g in groups for l in g];zlo,zhi=min(zs),max(zs);rmax=max(math.hypot(l[0][0]-axis[0],l[0][1]-axis[1]) for g in groups for l in g)
     for gi,g in enumerate(groups):
@@ -391,7 +391,7 @@ def drawclumps(sc,groups,pal=LEAFB,olk=0.74,axis=(0.5,0.6)):
         sc.group('lc%d'%gi);sc.outline(None,olk);sc.material('flat')
         for b,ld,sd,nn,l,w,_ in g:
             h=(b[2]-zlo)/max(zhi-zlo,1e-6);ro=math.hypot(b[0]-axis[0],b[1]-axis[1])/rmax;lt=float(nn@LIGHTV)
-            tone=int(np.clip(round((1-lt)*1.5+(1-h)*1.9+(1-ro)*1.0-0.7),0,len(pal)-2));side=float(sd@LIGHTV);sc.part()   # 下・内ほど暗い（立体感）
+            tone=int(np.clip(round((1-lt)*1.5+(1-h)*1.9+(1-ro)*1.0-0.7),0,len(pal)-2)) if tonef is None else tonef(gi,b,nn);side=float(sd@LIGHTV);sc.part()   # 下・内ほど暗い（立体感）。tonef：葉群ごとのかげ
             TT,EE=roundleaf(b,ld,sd,nn,l,w)
             for q in TT:sc.tri(q[0],q[1],q[2],pal[tone+(0 if (((q[0]+q[1]+q[2])/3-b)@sd)*side>0 else 1)])
             for q in EE:sc.tri(q[0],q[1],q[2],pal[min(len(pal)-1,tone+2)])
