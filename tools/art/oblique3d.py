@@ -18,7 +18,7 @@ OUT = 0.0        # 輪郭線のふとさ（マス）。0は輪郭線なし
 OUTK = 0.5       # 輪郭線の色（もとの色にかける数。1に近いほどうすい線）
 BEVEL = 0.022    # 箱の角の面取り（マス）
 class Scene:
-    def __init__(self): self.t = []; self.pid = 0; self.ol = {}; self.cur = None; self.grp = {}; self.gcur = None; self.tx = {}; self.tcur = None; self.mt = {}; self.mcur = None; self.tg = {}; self.tcur2 = None; self.joins = set(); self.dc = {}; self.dcur = None
+    def __init__(self): self.t = []; self.pid = 0; self.ol = {}; self.cur = None; self.grp = {}; self.gcur = None; self.tx = {}; self.tcur = None; self.mt = {}; self.mcur = None; self.tg = {}; self.tcur2 = None; self.joins = set(); self.dc = {}; self.dcur = None; self.sm = set(); self.scur = False; self.cv = set(); self.ccur = False
     def outline(self, w=None, k=None):
         """これから足す部品の輪郭線の太さ w（マス）・色 k（もとの色にかける数）。None は render の値"""
         self.cur = None if w is None and k is None else (w, k)
@@ -31,6 +31,12 @@ class Scene:
     def material(self, m=None):
         """これから足す部品の材質（render_px）。None はふつう、'metal' は金属（光の当たる所に、明るいつやのすじ）、'soft' は布・砂（なだらかなふくらみにもかげ）、'soft1' は 'soft' のかげを半かげまでにした物、'flat' は3だんのかげをつけない物（色にかげを入れてある。まくら）、'clear' はすけて見える物（水。CLEARA のこさで下にかさねる）"""
         self.mcur = m
+    def smooth(self, on=False):
+        """これから足す部品を、なめらかなかげ（スムーズシェード）にする。まるい物：ドットごとに、角の向きをまぜた面の向きで、かげの段をきめる（角ばった面のすじが出ない）"""
+        self.scur = on
+    def curve(self, on=False):
+        """これから足す部品は、なだらかなふくらみ（ひくいドームなど）：かげの段のさかい目を、布・砂と同じ（光に近い向き）にして、ふくらみにもグラデーションを出す（金属でも）"""
+        self.ccur = on
     def decal(self, f=None):
         """これから足す部品の、もよう（3Dの面にのる柄）。f(x, y, z) → その場所の色（もようでない所は None）。render_px で、ドットごとに、見える面の場所から色をきめ、その場所のかげ（3だん）をつける"""
         self.dcur = f
@@ -44,6 +50,8 @@ class Scene:
         if self.mcur: self.mt[self.pid] = self.mcur
         if self.tcur is not None: self.tx[self.pid] = self.tcur
         if self.dcur is not None: self.dc[self.pid] = self.dcur
+        if self.scur: self.sm.add(self.pid)
+        if self.ccur: self.cv.add(self.pid)
         if self.cur: self.ol[self.pid] = self.cur
         if self.gcur is not None: self.grp[self.pid] = self.gcur
     def turn(self, k, foot=None):
@@ -230,13 +238,26 @@ SHINE = (12, -8)                # 金属のつや：明るさを足し、あざ�
 METALSPEC = 0.97                # 金属のつやが出る向きの近さ
 CLEARSPEC = (0.06, 0.035, 0.45, 0.15)   # すけて見える部品のつや：平らな面より、光と目のあいだの向きへかたむいた量（内積の差）が、これより大きい所につよいつや・よわいつや・白くする量・こさに足す量
 CLEARA = 0.66   # すけて見える部品（material 'clear'。水）のこさ
-SOFTLV = (0.86, 0.62)   # 布・砂（material 'soft'）の、光・半かげ・かげのさかい目（光の向きとの内積）
+SOFTLV = (0.86, 0.62)
+GRAD = False   # True：かげを4だん（光・うすいかげ・半かげ・かげ）にして、なめらかに（持ち主：かげにもう少しグラデーション）
+SHADE4 = [(9, -2.5), (18, -5), (30, -9)]   # GRAD のときの、うすいかげ・半かげ・かげ（明るさ・あざやかさを引く）
+LV4 = (0.55, 0.32, 0.1)   # GRAD のときの、光・うすいかげ・半かげ・かげのさかい目（光の向きとの内積）
+SOFTLV4 = (0.88, 0.74, 0.58)
+CURVLV = (0.95, 0.88, 0.78)   # curve の部品（ひくいドーム）の、光・うすいかげ・半かげ・かげのさかい目（まうえ向きの面は0.92）
+OSAT = 0   # 輪郭線のあざやかさに足す量（100段階。明るい物の線が灰色っぽく1トーンに見えないように）
+def _ol(c, kk):
+    """輪郭線の色：もとの色×kk。OSAT があれば、あざやかさを足す"""
+    o = c*kk
+    if not OSAT or len(o) == 0: return o
+    mx = o.max(-1, keepdims=True); mn = o.min(-1, keepdims=True); sat = np.where(mx > 0, (mx-mn)/np.maximum(mx, 1e-9), 0)
+    ns = np.clip(sat+OSAT/100, 0, 1); f = np.where(sat > 1e-6, ns/np.maximum(sat, 1e-9), 1)
+    return mx-(mx-o)*f   # 布・砂（material 'soft'）の、光・半かげ・かげのさかい目（光の向きとの内積）
 def toon(cc, lv):
     """部品の色 cc の、光（0）・半かげ（1）・かげ（2）・金属のつや（-1）の色"""
     import colorsys
     h, s_, v = colorsys.rgb_to_hsv(*[c/255 for c in cc])
     if lv == 0: return np.array(cc, float)
-    dv, ds = (-SHINE[0], -SHINE[1]) if lv < 0 else SHADE[lv-1]
+    dv, ds = (-SHINE[0], -SHINE[1]) if lv < 0 else (SHADE4 if GRAD else SHADE)[lv-1]
     if lv > 0 and v < 0.85: dv *= v/0.85   # くらい色は、かげで引く明るさを、色の明るさに合わせてへらす（黒っぽいかげにしない。持ち主がきめた）
     v = min(1, max(0, v-dv/100)); s_ = min(1, max(0, s_-ds/100))
     return np.array(colorsys.hsv_to_rgb(h, s_, v))*255
@@ -266,6 +287,14 @@ class Tex:
             self._c[S_] = np.where(q < 0, self.dark[1], np.where(q > 0, self.light[1], 1.0))
         return self._c[S_]
 
+def _lvof(d, mt):
+    """光の向きとの内積 d と材質から、かげの段（0光〜）"""
+    if mt == 'flat': return 0
+    if mt == 'curve': return 0 if d > CURVLV[0] else 1 if d > CURVLV[1] else 2 if d > CURVLV[2] else 3
+    if mt == 'soft1': return 0 if d > SOFTLV[0] else 1
+    if mt == 'soft': return (0 if d > SOFTLV4[0] else 1 if d > SOFTLV4[1] else 2 if d > SOFTLV4[2] else 3) if GRAD else (0 if d > SOFTLV[0] else 1 if d > SOFTLV[1] else 2)
+    return (0 if d > LV4[0] else 1 if d > LV4[1] else 2 if d > LV4[2] else 3) if GRAD else (0 if d > 0.55 else 1 if d > 0.1 else 2)
+SMCREASE = 0.5   # スムーズシェード：となりの面と、この内積より向きがちがう所（角）は、まぜない
 def render_px(sc, proj, ext, depth, k=0.72, outer=True, merge=12, lw=1, k2=0.86):
     """ドット絵にするための写し方：1マス S ドットで、ちぢめずに（1ドットに1点）写し、部品のさかいに1ドットの輪郭線を引く。
     輪郭線は、となりあう2つのドットの部品がちがうとき、うしろがわ（遠いほう）のドットに引く（手前の部品の形はけずらない）。
@@ -279,14 +308,27 @@ def render_px(sc, proj, ext, depth, k=0.72, outer=True, merge=12, lw=1, k2=0.86)
     wp = np.zeros((Hp, Wp, 3)); wn = np.zeros((Hp, Wp, 3))   # ドットごとの、せかいの場所と面の向き（テクスチャ用）
     CLR = []   # すけて見える部品の三角形
     RAY = getattr(proj, 'ray', None)   # persp の写し方：ドットごとに、見える面の場所を式でとく（三角形を分けない）
+    VN = {}   # スムーズシェード：部品ごと・点ごとの、まわりの面の向き
+    if sc.sm:
+        for a, b, c, cc, pid in sc.t:
+            if pid not in sc.sm: continue
+            n = np.cross(b-a, c-a); ln = np.linalg.norm(n)
+            if ln < 1e-12: continue
+            n = n/ln
+            if np.dot(n, depth) < 0: n = -n
+            for v in (a, b, c): VN.setdefault((pid,)+tuple(np.round(v, 5)), []).append(n)
+    def vnorm(pid, v, n):
+        L_ = [q for q in VN.get((pid,)+tuple(np.round(v, 5)), []) if np.dot(q, n) > SMCREASE]
+        if not L_: return n
+        m_ = np.sum(L_, 0); return m_/max(1e-9, np.linalg.norm(m_))
     for a, b, c, cc, pid in sc.t:
         n = np.cross(b-a, c-a); ln = np.linalg.norm(n)
         if ln < 1e-12: continue
         n /= ln
         if np.dot(n, depth) < 0: n = -n
         if sc.mt.get(pid) == 'clear': CLR.append((a, b, c, cc, n)); continue   # 水など、すけて見える部品は、ほかをぜんぶ描いてから、うすくかさねる
-        d = float(np.dot(n, LIGHT)); lv = 0 if d > 0.55 else 1 if d > 0.1 else 2
-        if sc.mt.get(pid) == 'soft': lv = 0 if d > SOFTLV[0] else 1 if d > SOFTLV[1] else 2
+        d = float(np.dot(n, LIGHT)); lv = (0 if d > LV4[0] else 1 if d > LV4[1] else 2 if d > LV4[2] else 3) if GRAD else (0 if d > 0.55 else 1 if d > 0.1 else 2)
+        if sc.mt.get(pid) == 'soft': lv = (0 if d > SOFTLV4[0] else 1 if d > SOFTLV4[1] else 2 if d > SOFTLV4[2] else 3) if GRAD else (0 if d > SOFTLV[0] else 1 if d > SOFTLV[1] else 2)
         if sc.mt.get(pid) == 'soft1': lv = 0 if d > SOFTLV[0] else 1   # 布（うすいかげだけ。まくらなど、かげをこくしない物）
         if sc.mt.get(pid) == 'flat': lv = 0   # かげを自分でつけた部品（場所ごとの色。まくら）：3だんのかげをつけない   # 布・砂：なだらかなふくらみにも、かげがつく（さかい目の向きを光に近くする）
         if sc.mt.get(pid) == 'metal':   # 金属：光と目のあいだの向き（ハーフベクトル）を向く面に、つやのすじ
@@ -317,6 +359,18 @@ def render_px(sc, proj, ext, depth, k=0.72, outer=True, merge=12, lw=1, k2=0.86)
             z = w0*D[0]+w1*D[1]+w2*D[2]
         s = (slice(by0, by1+1), slice(bx0, bx1+1)); vis = m & (z > zb[s])
         zb[s][vis] = z[vis]; col[s][vis] = shc; idb[s][vis] = pid; lvb[s][vis] = lv
+        if pid in sc.sm and sc.mt.get(pid) != 'flat' and vis.any():   # スムーズシェード：ドットごとに、角の向きをまぜた面の向きで段をきめる（金属は、つやのすじも）
+            na, nb, nc = vnorm(pid, a, n), vnorm(pid, b, n), vnorm(pid, c, n)
+            NN = w0[vis, None]*na+w1[vis, None]*nb+w2[vis, None]*nc; NN /= np.maximum(np.linalg.norm(NN, axis=1, keepdims=True), 1e-9)
+            dd = NN@LIGHT; mt_ = sc.mt.get(pid); L2 = np.array([_lvof(float(x), 'curve' if pid in sc.cv else (None if mt_ == 'metal' else mt_)) for x in dd])
+            if mt_ == 'metal':
+                hv = LIGHT+depth/np.linalg.norm(depth); hv /= np.linalg.norm(hv); hh = np.array([hv[0], hv[1], 0]); hh /= max(1e-9, np.linalg.norm(hh))
+                for i_, q in enumerate(NN):
+                    nh = np.array([q[0], q[1], 0]); ln_ = np.linalg.norm(nh)
+                    sp = float(np.dot(nh/ln_, hh)) if ln_ > .3 else float(np.dot(q, hv))
+                    if sp > METALSPEC: L2[i_] = -1
+            TC = {q: toon(cc, q) for q in set(L2.tolist())}
+            col[s][vis] = np.array([TC[q] for q in L2]); lvb[s][vis] = L2
         if pid in sc.tx or pid in sc.dc:
             wp[s][vis] = (w0[vis, None]*a+w1[vis, None]*b+w2[vis, None]*c); wn[s][vis] = n
     for pid, f in sc.dc.items():   # もよう：ドットごとに、見える面の場所の色（かげは、そのドットの3だん）
@@ -364,8 +418,8 @@ def render_px(sc, proj, ext, depth, k=0.72, outer=True, merge=12, lw=1, k2=0.86)
             l2 &= idb >= 0; same = np.zeros((Hp, Wp), bool); same[yd, xd] = idb[yd, xd] == idb[ys, xs]
             same2 = idb == np.roll(np.roll(idb, dy, 0), dx, 1)   # q-向き も同じ部品（部品が3ドット以上つづく）
             line2 |= l2 & same & same2   # 細い部品（3ドットより細い）には2ドットめを引かない（部品が線だけになる）
-    out[line2 & ~line] = col0[line2 & ~line]*k2
-    out[line] = col0[line]*k
+    out[line2 & ~line] = _ol(col0[line2 & ~line], k2)
+    out[line] = _ol(col0[line], k)
     if outer:
         for dy, dx in ((0, 1), (0, -1), (1, 0), (-1, 0)):
             ys = slice(max(dy, 0), Hp+min(dy, 0)); xs = slice(max(dx, 0), Wp+min(dx, 0))
@@ -373,7 +427,7 @@ def render_px(sc, proj, ext, depth, k=0.72, outer=True, merge=12, lw=1, k2=0.86)
             src = np.zeros((Hp, Wp), bool); src[yd, xd] = idb[ys, xs] >= 0
             sc_ = np.zeros((Hp, Wp, 3)); sc_[yd, xd] = col0[ys, xs]
             put = src & (alpha == 0)
-            out[put] = sc_[put]*k; alpha[put] = 255
+            out[put] = _ol(sc_[put], k); alpha[put] = 255
         if lw >= 2:   # 物のふちの内がわ1ドット：うすい線（こい線の上にはぬらない）
             edge = np.zeros((Hp, Wp), bool)
             for dy, dx in ((0, 1), (0, -1), (1, 0), (-1, 0)):
@@ -386,9 +440,9 @@ def render_px(sc, proj, ext, depth, k=0.72, outer=True, merge=12, lw=1, k2=0.86)
                 e = np.zeros((Hp, Wp), bool); e[max(-dy, 0):Hp+min(-dy, 0), max(-dx, 0):Wp+min(-dx, 0)] = idb[max(dy, 0):Hp+min(dy, 0), max(dx, 0):Wp+min(dx, 0)] < 0
                 inner &= ~e | ((np.roll(np.roll(idb, dy, 0), dx, 1) == idb) & (np.roll(np.roll(idb, 2*dy, 0), 2*dx, 1) == idb))
             edge &= inner
-            out[edge] = col0[edge]*k2
+            out[edge] = _ol(col0[edge], k2)
     for a, b, c, cc, n in CLR:   # すけて見える部品：手前にあるドットだけ、下の色に CLEARA のこさでまぜる（線は引かない・下の部品の線はのこす）
-        d = float(np.dot(n, LIGHT)); lv = 0 if d > 0.55 else 1 if d > 0.1 else 2; shc = np.array(toon(cc, lv), float); al = CLEARA
+        d = float(np.dot(n, LIGHT)); lv = (0 if d > LV4[0] else 1 if d > LV4[1] else 2 if d > LV4[2] else 3) if GRAD else (0 if d > 0.55 else 1 if d > 0.1 else 2); shc = np.array(toon(cc, lv), float); al = CLEARA
         hv = LIGHT+depth/np.linalg.norm(depth); hv = hv/np.linalg.norm(hv); sp = float(np.dot(n, hv))   # つや：光と目のあいだの向きを向く面（さざなみの山）は、白く光って、こく見える
         sp -= float(hv[2])   # 平らな水面とくらべて、どれだけ光と目のほうへかたむいているか
         if sp > CLEARSPEC[0]: shc = shc*(1-CLEARSPEC[2])+255*CLEARSPEC[2]; al = min(1.0, CLEARA+CLEARSPEC[3])

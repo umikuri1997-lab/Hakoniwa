@@ -47,3 +47,21 @@ def hfield(sc,x0,y0,x1,y1,top,col,bot=None,n=(24,16),shape=None):
         ring=[(x,Y[0]) for x in X]+[(X[-1],y) for y in Y[1:]]+[(x,Y[-1]) for x in X[-2::-1]]+[(X[0],y) for y in Y[-2:0:-1]]
         for q,r in zip(ring,ring[1:]+ring[:1]):sc.quad((*mv(*q),bot(*q)),(*mv(*r),bot(*r)),(*mv(*r),top(*r)),(*mv(*q),top(*q)),cf(*q))
 def SOFT(p):p.soft=True;return p   # 布・砂：なだらかなふくらみにも、かげをつける（oblique3d の SOFTLV）
+def flame(nm,cx,cy,z0,h,R,on,note=''):
+    """火（ろうそく・ランタンの火）：しずくの形（下はまるく、上へとがる）。光るのでかげをつけず、場所ごとの色（もよう）でグラデーション：
+    まん中の下は白っぽい黄色 → 黄色 → ふちと上はだいだい → さきは赤みのだいだい。根もとのふちに少し青"""
+    import math
+    from blueprint import Part
+    prof=[(0.0,z0),(0.55*R,z0+0.06*h),(0.92*R,z0+0.2*h),(R,z0+0.32*h),(0.85*R,z0+0.5*h),(0.55*R,z0+0.7*h),(0.25*R,z0+0.86*h),(0.0,z0+h)]
+    def rad(z):   # その高さの、しずくの半径
+        for (r0,a),(r1,b) in zip(prof,prof[1:]):
+            if a<=z<=b:return r0+(r1-r0)*(z-a)/max(1e-9,b-a)
+        return 1e-6
+    def col(x,y,z):
+        t=(z-z0)/h;u=abs(x-cx)/max(1e-6,rad(z))
+        if t<0.14 and u>0.5:return (170,190,255)   # 根もとのふち：青
+        if t<0.55 and u<0.42*(1-t*0.8):return (255,252,226)   # まん中：白っぽい黄色
+        if t<0.78 and u<0.78*(1-t*0.5):return (255,224,104)   # 黄色
+        if t>0.86:return (246,122,56)   # さき：赤みのだいだい
+        return (255,162,62)   # ふち：だいだい
+    p=Part(nm,'lathe',(cx,cy,prof),(255,162,62),on=on,note=note,detail=24);p.glow=True;p.tex=False;p.decal=col;return p

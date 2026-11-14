@@ -9,7 +9,7 @@
 # 後ろ向きでは、すわったせいれいの手前に背もたれとひじかけがくるので、その絵（sofa1>2.front）も作る。すわった子の足は、cut でかくす。
 from blueprint import Part as P
 from common import *
-ID='sofa1';BOTTOM=55
+ID='sofa1';GRAD=True;BOTTOM=55
 VIEWS=[('sofa1',0),('sofa1>1',1),('sofa1>2',2),('sofa1>3',3)]
 X0,X1,Y0,Y1=-0.028,1.028,0.04,0.83;AW=0.168;BD=0.24;FT=0.05
 FRONT={'sofa1>2.front':lambda n:n.startswith('背')}   # ひじかけは、せいれいより下（持ち主がきめた）

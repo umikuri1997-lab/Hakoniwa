@@ -14,6 +14,7 @@ x=東, y=南, z=上（マス）。置くマスの左上が(0,0)。
   wheel(cx,cy,cz,r,t)                車輪（正面を向いた円板、あつさ t）
   ball(cx,cy,cz,r)                   丸いかたまり（葉・花・荷物）
   rope(a,b,r)                        なわ
+  tube(点の一覧,r)                    折れ線の管（取っ手の輪など）
   model(path,cx,cy,z0,size,rot,tilt)      フリーの3Dモデル（glTF の .glb。models/ にある CC0 の物）。size はモデルの高さ（マス）、rot は上から見てまわす角度・tilt は東西へたおす角度（度）
   lathe(cx,cy,[(半径,高さ),...])     まわした形（つぼ）。上から下への形
   prism([(x,z),...],y0,y1)            正面（南から見た形）の多角形を、y0〜y1 へのばした板（すじかいのはしを、ほかの材にそって切るときなど）
@@ -41,6 +42,7 @@ class Part:
         if k=='pyr':cx,cy,hw,hd,z0,z1=d;return(cx-hw,cy-hd,z0,cx+hw,cy+hd,z1)
         if k=='wheel':cx,cy,cz,r,t=d;return(cx-r,cy-t/2,cz-r,cx+r,cy+t/2,cz+r)
         if k=='ball':cx,cy,cz,r=d;return(cx-r,cy-r,cz-r,cx+r,cy+r,cz+r)
+        if k=='tube':a=np.array(d[0],float);r=d[1];return(*(a.min(0)-r),*(a.max(0)+r))
         if k=='model':V,F,C=model_tris(*d);return(*V.min(0),*V.max(0))
         if k=='loft':a=np.array([q for P_,z in d for q in P_],float);zs=[z for _,z in d];return(a[:,0].min(),a[:,1].min(),min(zs),a[:,0].max(),a[:,1].max(),max(zs))
         if k=='prism':
@@ -109,11 +111,17 @@ def build(sc,parts):
             idx=[(0,1,3,2),(4,5,7,6),(0,1,5,4),(2,3,7,6),(0,2,6,4),(1,3,7,5)]
             for q in idx:sc.quad(*[P[i] for i in q],tuple(c))
         elif k=='prism':
-            pts,y0,y1=d[:3];sc.part();n=len(pts);X=len(d)>3 and d[3]=='x'
+            pts,y0,y1=d[:3];sc.part();X=len(d)>3 and d[3]=='x'
             AX=d[3] if len(d)>3 else 'y';V={'x':(lambda u,w,z:(w,u,z)),'y':(lambda u,w,z:(u,w,z)),'z':(lambda u,w,z:(u,z,w))}[AX]   # u・z：形の2つの向き・w：のばす向き
-            for i in range(n):(xa,za),(xb,zb)=pts[i],pts[(i+1)%n];sc.quad(V(xa,y0,za),V(xb,y0,zb),V(xb,y1,zb),V(xa,y1,za),tuple(c))
-            for yy in(y0,y1):
-                for i in range(1,n-1):sc.tri(V(pts[0][0],yy,pts[0][1]),V(pts[i][0],yy,pts[i][1]),V(pts[i+1][0],yy,pts[i+1][1]),tuple(c))
+            pts,Q=prism_bevel(pts,p.bevel or 0,abs(y1-y0));n=len(pts);b=p.bevel if Q else 0
+            if y1<y0:y0,y1=y1,y0
+            for i in range(n):(xa,za),(xb,zb)=pts[i],pts[(i+1)%n];sc.quad(V(xa,y0+b,za),V(xb,y0+b,zb),V(xb,y1-b,zb),V(xa,y1-b,za),tuple(c))
+            if Q:   # 面取り：はしの面は内へ b ちぢめた形、そのあいだをななめの帯でつなぐ
+                for i in range(n):
+                    (xa,za),(xb,zb)=pts[i],pts[(i+1)%n];(qa,ra),(qb,rb)=Q[i],Q[(i+1)%n]
+                    sc.quad(V(qa,y0,ra),V(qb,y0,rb),V(xb,y0+b,zb),V(xa,y0+b,za),tuple(c));sc.quad(V(xa,y1-b,za),V(xb,y1-b,zb),V(qb,y1,rb),V(qa,y1,ra),tuple(c))
+            for yy in(y0,y1):   # はしの面：へこんだ形（アーチのぬけた形など）も正しくうめる（耳をきりとるやり方）
+                for a_,b_,c_ in earclip(Q or pts):sc.tri(V(a_[0],yy,a_[1]),V(b_[0],yy,b_[1]),V(c_[0],yy,c_[1]),tuple(c))
         elif k=='loft':
             sc.part();R_=d;n=len(R_[0][0])
             for (A,za),(B,zb) in zip(R_,R_[1:]):
@@ -121,6 +129,7 @@ def build(sc,parts):
             for P_,z in(R_[0],R_[-1]):
                 for i in range(1,n-1):sc.tri((P_[0][0],P_[0][1],z),(P_[i][0],P_[i][1],z),(P_[i+1][0],P_[i+1][1],z),tuple(c))
         elif k=='rope':sc.tube([d[0],d[1]],d[2],tuple(c),n=6)
+        elif k=='tube':sc.tube(list(d[0]),d[1],tuple(c),n=8)   # 折れ線の管（取っ手の輪など）。d=(点の一覧, 太さ)
         elif k=='logy':   # まき・丸太：おく向き（y）にねかせた円柱。まわりは皮の色（col）、両はしの切り口は LOGEND
             cx,y0,y1,cz,r=d;sc.part();n=20
             for yy in(y0,y1):
@@ -181,6 +190,56 @@ def barktex():
     if not _BT:
         from oblique3d import Tex;_BT.append(Tex(os.path.join(os.path.dirname(os.path.abspath(__file__)),'textures','bark001.png'),span=1.0,flow=6,minrun=3,dark=(0.16,0.93),light=(0.16,1.06)))
     return _BT[0]
+def prism_bevel(pts,b,L):
+    """prism の面取り：とがった角（出た角）を b で切った形と、はしの面の、内へ b ちぢめた形（点の数は同じ）。うすすぎてできないときは (pts, None)"""
+    P_=[tuple(map(float,q)) for q in pts]
+    if len(P_)>1 and P_[0]==P_[-1]:P_=P_[:-1]
+    if b<=0 or L<3*b or len(P_)<3:return P_,None
+    A=sum(P_[i][0]*P_[(i+1)%len(P_)][1]-P_[(i+1)%len(P_)][0]*P_[i][1] for i in range(len(P_)))/2
+    if abs(A)<1e-9:return P_,None
+    sg=1 if A>0 else -1;R=[]
+    for i in range(len(P_)):   # 出た角（30度より強くまがる所）を b で切る
+        a,o,c_=np.array(P_[i-1]),np.array(P_[i]),np.array(P_[(i+1)%len(P_)]);u=o-a;v=c_-o;lu,lv=np.linalg.norm(u),np.linalg.norm(v)
+        if lu<1e-9 or lv<1e-9:continue
+        cr=(u[0]*v[1]-u[1]*v[0])/(lu*lv);dt=(u@v)/(lu*lv);ang=math.atan2(cr,dt)
+        if ang*sg>math.radians(30):k=min(b,0.4*lu,0.4*lv);R+=[tuple(o-u/lu*k),tuple(o+v/lv*k)]
+        else:R.append(tuple(o))
+    Q=[]
+    for i in range(len(R)):   # 内へ b ちぢめる（辺ごとに b ずつ。角はマイター）
+        a,o,c_=np.array(R[i-1]),np.array(R[i]),np.array(R[(i+1)%len(R)]);u=o-a;v=c_-o;lu,lv=np.linalg.norm(u),np.linalg.norm(v)
+        if lu<1e-9 or lv<1e-9:return P_,None
+        n1=np.array([-u[1],u[0]])/lu*sg;n2=np.array([-v[1],v[0]])/lv*sg;dn=1+n1@n2
+        if dn<0.2:return P_,None
+        off=b*(n1+n2)/dn
+        if np.linalg.norm(off)>2.5*b:return P_,None
+        Q.append(tuple(o+off))
+    A2=sum(Q[i][0]*Q[(i+1)%len(Q)][1]-Q[(i+1)%len(Q)][0]*Q[i][1] for i in range(len(Q)))/2
+    if A2*sg<=0 or abs(A2)<0.25*abs(A):return P_,None
+    try:
+        from shapely.geometry import Polygon as _Pg
+        if not _Pg(Q).is_valid:return P_,None
+    except ImportError:pass
+    return R,Q
+
+def earclip(pts):
+    """多角形（へこみがあってもよい）を三角形にわける。点のならびの向きはどちらでもよい"""
+    P_=[tuple(p) for p in pts]
+    if len(P_)>1 and P_[0]==P_[-1]:P_=P_[:-1]
+    ar=sum(P_[i][0]*P_[(i+1)%len(P_)][1]-P_[(i+1)%len(P_)][0]*P_[i][1] for i in range(len(P_)))
+    if ar<0:P_=P_[::-1]
+    idx=list(range(len(P_)));out=[];guard=0
+    cr=lambda o,a,b:(a[0]-o[0])*(b[1]-o[1])-(a[1]-o[1])*(b[0]-o[0])
+    def inside(p,a,b,c):return cr(a,b,p)>=0 and cr(b,c,p)>=0 and cr(c,a,p)>=0
+    while len(idx)>3 and guard<10000:
+        guard+=1;ok=False
+        for k in range(len(idx)):
+            i0,i1,i2=idx[k-1],idx[k],idx[(k+1)%len(idx)];a,b,c=P_[i0],P_[i1],P_[i2]
+            if cr(a,b,c)<=1e-12:continue
+            if any(inside(P_[j],a,b,c) for j in idx if j not in(i0,i1,i2)):continue
+            out.append((a,b,c));idx.pop(k);ok=True;break
+        if not ok:break
+    if len(idx)==3:out.append(tuple(P_[j] for j in idx))
+    return out
 MODELS=os.path.join(os.path.dirname(os.path.abspath(__file__)),'models')
 _MC={};MODEL_SOFT=0.3   # モデルの色を白にまぜる分
 POTCOL=(226,196,166)   # 観葉植物のはち（モデルではこい灰色）を、ゲームに合わせたやきものの色に
