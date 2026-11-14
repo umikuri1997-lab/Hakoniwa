@@ -107,9 +107,9 @@ function drawConn(c,id,x,y,i,now){const C=window.CHIPS;if(!C)return false;const 
   if(!vm)return drawChip(c,H,id,x,y,now,i);if(hm&&C[id+':m'+m])return drawChip(c,K(id+':m'+m),id,x,y,now,i);/* 角・つなぎ目の絵があれば、部品を重ねずにそれを使う */if(!hm)return drawChip(c,V,id,x,y,now,i);const r=CONNR[id]||'HV';
   if(r==='VH'){if(!drawChip(c,V,id,x,y,now,i))return false;return drawChip(c,H,id,x,y,now,i)}
   if(!drawChip(c,H,id,x,y,now,i))return false;if(r==='Hclip'){c.save();c.beginPath();if(vm&4)c.rect(x-64,y-64,192,66);if(vm&8)c.rect(x-64,y+26,192,96);c.clip();drawChip(c,V,id,x,y,now,i);c.restore();return true}return drawChip(c,V,id,x,y,now,i)}
-const BNOTE=[[26,34],[48,35],[70,34],[37,57],[59,56]];/* 依頼ボードの紙の場所（ボードの絵の左上から、1マス64ドットの数。板の中は x22〜88・y32〜78） */
+const BNOTE=[[22,43],[47,44],[72,43],[34,63],[60,62]];/* 依頼ボードの紙の場所（ボードの絵の左上から、1マス64ドットの数。板の中は x16〜93・y40〜84） */
 function boardNotes(c,x,y){/* 依頼ボード：はられた依頼の数だけ、紙を板にかさねる（紙は14×18ドット。64ドットの細かさで、整数のドット） */
-  if(!S||!S.orders)return;const n=Math.min(S.orders.length,BNOTE.length,boardMax()),ox=x+28,oy=y-27.5,P=(a,b,w,h,col)=>{c.fillStyle=col;c.fillRect(ox+a/2,oy+b/2,w/2,h/2)};
+  if(!S||!S.orders)return;const n=Math.min(S.orders.length,BNOTE.length,boardMax()),ox=x+27,oy=y-27,P=(a,b,w,h,col)=>{c.fillStyle=col;c.fillRect(ox+a/2,oy+b/2,w/2,h/2)};
   for(let k=0;k<n;k++){const a=BNOTE[k][0],b=BNOTE[k][1];
     P(a+2,b+2,14,18,'rgba(92,58,34,.45)');/* 板に落ちるかげ */
     P(a,b,14,18,'#d3c096');P(a+1,b+1,12,16,'#f6ecd6');P(a+1,b+1,12,1,'#fffaf0');/* ふち・紙・上のふちの明るい線 */
