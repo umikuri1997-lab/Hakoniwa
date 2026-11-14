@@ -6,7 +6,6 @@
 #   側枝・小枝・細枝：芽（らせん137.5度）から、親の向きから25〜55度ひらき、葉群の外へ向く。長さは親の 0.45〜0.65倍、葉群の中におさまる長さまで。
 #     下・内向きの芽は、のびないことが多い。どの段も、先の芽がそのままのびる。
 #   太さ：パイプモデル（先 0.005、親は子の太さ^1.8 の和。幹は 0.16 まで）。分かれた子のつけ根に、えり。
-#   葉：細枝の先と、先の半分の節に（長さ 0.16・はば 0.10 の0.8〜1.2倍、反り・あつみ・すじ、表は太陽へ。かさならない）。
 #   骨格は1回だけ作って tree_skel.json に固定する（python3 tools/art/furn3d/items/tree.py --skel）。葉つきは、その骨格を読んで葉をたすだけ（枝を消す・うごかす・たすをしない）。
 #   SKEL=True で写すと、葉をつけない骨格だけ（たしかめ用）。
 import math
@@ -98,35 +97,71 @@ def makeskel():
     json.dump({'P':[list(map(float,p)) for p in g.P],'par':[int(x) for x in g.par],'tips':[[int(i) for i in t] for t in tips],'lobes':[[list(map(float,c)),list(rr)] for c,rr in lobes]},open(SKELF,'w'))
 def loadskel():
     d=json.load(open(SKELF));return np.array(d['P']),np.array(d['par']),d['tips'],[(np.array(c),tuple(rr)) for c,rr in d['lobes']]
+# ---- デフォルメの樹冠（持ち主の指示：どうぶつの森・ドラゴンクエストビルダーズのような、かわいいデフォルメの広葉樹） ----
+# 骨格（tree_skel.json）は、そのまま。細い枝（太さ THIN より細い）は描くのをはぶく（骨格の中にはのこる）。
+# 葉群：側枝ごと（枝先から親へたどって、太さ GROUPR をこえた所の枝ごと）に1つ。まん中はその枝先たちのまん中、半径はその広がり＋ゆとり（大小まちまち）。
+#   主枝の先にも1つ。葉群は、でこぼこのある玉（ゆっくりかわるむら）で、となりの葉群とかさなって、1つづきの樹冠になる。
+#   表面に、小さな葉（長さ 0.09・はば 0.065 の0.75〜1.25倍）を、すきまなく（ほかの葉群の中になる所にはつけない）。葉は表面にそって、重さで下を向く。
+#   葉は1まいずつ目立たせない（葉群の中は線を引かない・すじの左右の色わけなし）。明暗は葉群ごと：葉群の中で上・光の向きが明るく、下が暗い。奥・下の葉群は1段暗い（手前・まん中・奥の3層）。
+THIN=0.011;GROUPR=0.024;PL,PW=0.09,0.065;PZ=0.74;WIDEN=0.22   # WIDEN：葉群を、幹から横へ広げる割合。PZ：葉群のたての、つぶし（見おろしの写し方で、丸い玉がたてにのびて見えるので）
+def puffs(P,par,r,tips):
+    groups={}
+    for idx in tips:
+        t=idx[-1];j=t
+        while par[j]>=0 and r[j]<GROUPR:j=par[j]
+        groups.setdefault(j,[]).append(P[t])
+    out=[]
+    for j,pts in groups.items():
+        Q=np.array(pts+[P[j]]);c=Q.mean(0);ext=np.linalg.norm(Q-c,axis=1).max()
+        c=c+np.array([(c[0]-CX)*WIDEN,(c[1]-CY)*WIDEN*0.5,0.04])   # 横へ少し広げる（樹冠を横に広く）。枝先は葉群の中のまま
+        out.append((c,max(0.21,min(0.36,ext*0.8+0.14))))
+    return out
 def EXTRA(sc):
     P,par,tips,lobes=loadskel();up=np.array([0,0,1.0]);rs=np.random.RandomState(SEED+100)   # 葉の乱数は、骨格とべつ
     r,ch=N.radii(par,rtip=0.005,E=1.8,rmax=0.16)
     T=[]
     for c in N.chains(par,ch,r):
         if len(c)<2:continue
-        pts=P[c];rr=list(r[c])
+        keep=[k for k in c if r[k]>=THIN or k==c[0]]   # 細い枝は、はぶく
+        if len(keep)<2:continue
+        pts=P[keep];rr=list(r[keep])
         if c[0]!=0 and len(ch[c[0]])>1:rr[1]=rr[1]*1.25   # えり
-        mr=max(rr);N.limb(T,pts,rr,n=14 if mr>0.08 else 8 if mr>0.03 else 5,flare=0.07 if c[0]==0 else 0.0,fh=0.2,wob=0.07 if mr>0.06 else 0.0,seed=len(T)%17)
+        rr[-1]=min(rr[-1],THIN*0.8)   # 先は細く（切り口にしない。葉群の中）
+        mr=max(rr);N.limb(T,pts,rr,n=14 if mr>0.08 else 8,flare=0.07 if c[0]==0 else 0.0,fh=0.2,wob=0.07 if mr>0.06 else 0.0,seed=len(T)%17)
     N.roots(T,(CX,CY,0),0.12,np.random.RandomState(SEED+50),L=0.10)
     N.barkmesh(sc,T)
     if SKEL:return
-    L,W=0.16,0.10;put=[];groups=[[] for _ in lobes]
-    for idx in tips:   # 細枝の先と、先の半分の節
-        pts=P[idx];nn_=len(pts);lob=int(np.argmin([np.linalg.norm((pts[-1]-c)/np.array(rr)) for c,rr in lobes]))
-        for t in range(nn_//2,nn_):
-            q=pts[t];d=pts[t]-pts[t-1];d/=max(np.linalg.norm(d),1e-9)
-            for _ in range(2 if t==nn_-1 else 1):
-                a=rs.uniform(0,6.28);u=np.cross(d,up);u=u/np.linalg.norm(u) if np.linalg.norm(u)>1e-6 else np.array([1.0,0,0]);v=np.cross(d,u)
-                o=d*0.45+(u*math.cos(a)+v*math.sin(a))*0.9+up*0.1;o/=np.linalg.norm(o)
-                nn=N.SUN*0.55+up*0.15+o*0.35+rs.normal(0,0.12,3);nn/=np.linalg.norm(nn)
-                ld=o-nn*(o@nn);ld/=np.linalg.norm(ld);sd=np.cross(nn,ld);f=rs.uniform(0.8,1.2)
-                c_=q+ld*L*f*0.5
-                if put and np.min(np.linalg.norm(np.array(put)-c_,axis=1))<0.55*L:continue
-                put.append(c_);groups[lob].append((q,ld,sd,nn,L*f,W*f,0.0))
-    def tonef(k,b,nn):   # 葉群ごとのかげ
-        c,rr_=lobes[k];o=(b-c)/np.array(rr_);o/=max(np.linalg.norm(o),1e-6);lt=float(o@N.LIGHTV)*0.7+float(nn@N.LIGHTV)*0.3
-        return int(np.clip(round((1-lt)*1.9-0.3+(0.6 if c[2]<1.0 else 0.0)),0,len(N.LEAFB)-2))
-    N.drawclumps(sc,groups,axis=(CX,CY),tonef=tonef)
+    PF=puffs(P,par,r,tips)
+    zs=[c[2] for c,_ in PF];ys=[c[1] for c,_ in PF];zlo,zhi=min(zs),max(zs);ylo,yhi=min(ys),max(ys)
+    def rad(k,u):   # 葉群 k の、向き u の半径（でこぼこ）
+        c,R=PF[k];return R*(1+0.22*(N.ST.vnoise(u[0]*1.8+k*3.1,u[1]*1.8,u[2]*1.8)-0.5)*2)
+    def inside(p,k0):
+        for k,(c,R) in enumerate(PF):
+            if k==k0:continue
+            d=p-c
+            dz=d*np.array([1,1,1/PZ]);n_=np.linalg.norm(dz)
+            if n_<rad(k,dz/max(n_,1e-9))*0.92:return True
+        return False
+    view=np.array([0,0.74,0.67])
+    for k,(c,R) in enumerate(PF):
+        lay=0.5*(1-(c[1]-ylo)/max(yhi-ylo,1e-6))+0.6*(1-(c[2]-zlo)/max(zhi-zlo,1e-6))   # 奥・下ほど暗い
+        sc.group('pf%d'%k);sc.outline(None,0.80);sc.material('flat')
+        sc.part();sc.sphere(*c,R*0.86,N.LEAFB[3],n=16,m=10,zs=PZ)   # 中身
+        n=int(4*math.pi*R*R/(PL*PW*0.55))
+        for i in range(n):   # 表面に、すきまなく（フィボナッチの点＋ばらつき）
+            zz=1-2*(i+0.5)/n;ph=i*N.GOLD+rs.uniform(-0.2,0.2);rr_=math.sqrt(max(0,1-zz*zz));u=np.array([rr_*math.cos(ph),rr_*math.sin(ph),zz])
+            if u@view<-0.35:continue   # 見えない裏がわ
+            p=c+u*rad(k,u)*0.97*np.array([1,1,PZ])
+            if inside(p,k):continue
+            lt=float(u@N.LIGHTV);tone=int(np.clip(round((1-lt)*1.7-0.4+lay),0,len(N.LEAFB)-2))
+            nn=u*0.85+N.SUN*0.15;nn/=np.linalg.norm(nn);t=np.cross(nn,up)
+            t=t/np.linalg.norm(t) if np.linalg.norm(t)>1e-6 else np.array([1.0,0,0]);dn=np.cross(t,nn)   # 表面にそって下へ（重さ）
+            a=rs.uniform(-0.9,0.9);ld=-dn*math.cos(a)+t*math.sin(a);sd=np.cross(nn,ld);f=rs.uniform(0.75,1.25)
+            base=p-ld*PL*f*0.45;sc.part()
+            TT,EE,VV=N.roundleaf(base,ld,sd,nn,PL*f,PW*f,fold=0.15,curl=0.10,th=0.0,nt=3,ns=1)
+            col=N.LEAFB[tone] if rs.rand()>0.15 else N.LEAFB[min(len(N.LEAFB)-1,tone+1)]
+            for q in TT[:len(TT)//2]:sc.tri(q[0],q[1],q[2],col)
+        sc.material(None);sc.outline();sc.group(None)
 def POST(im):return N.specks(im)
 if __name__=='__main__':
     import sys
