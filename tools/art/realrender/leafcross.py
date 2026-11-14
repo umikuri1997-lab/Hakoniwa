@@ -1,7 +1,7 @@
 # 木の葉どうしが交差していないかを、葉の三角形どうしで、たしかめる（fcl の当たり判定）。使い方：python3 tools/art/realrender/leafcross.py
 import sys;sys.path[:0]=['tools/art/furn3d','tools/art/furn3d/items','tools/art']
 import numpy as np,trimesh,furn3d as F,oblique3d as O,tree
-O.GRAD=True;sc,_=F.scene(tree,0)
+O.GRAD=True;tree.YAW=0;sc,_=F.scene(tree,0)   # まわさない（葉の場所はまわす前）
 PL=tree.EXTRA.placed;Q=tree.kitleaf()
 ms=[]
 for base,M,bend in PL:

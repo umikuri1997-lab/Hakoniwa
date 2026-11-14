@@ -2,7 +2,7 @@
 import sys;sys.path[:0]=['tools/art/furn3d','tools/art/furn3d/items','tools/art']
 import numpy as np,trimesh,furn3d as F,oblique3d as O,tree   # 木の設計図（ほかの物は、ここをかえる）
 O.GRAD=True;tree.SKEL='--skel' in sys.argv
-sc,_=F.scene(tree,0)
+tree.YAW=0;sc,_=F.scene(tree,0)   # リアルなレンダリングは、まわさない
 V=[];C=[]
 for a,b,c,col,pid in sc.t:
     f=sc.dc.get(pid);cc=col
