@@ -1,91 +1,113 @@
-# 木（tree：植えた木・ntree：森の木。同じ絵）。持ち主の指示（自然な樹形の法則）：
-#   樹冠は、主枝ごとの大きな葉群（4〜5こ）の組み合わせ。葉群は部分的にかさなるが1つにとけない。葉群のあいだにすきま・くぼみ。
-#   葉は葉群の外がわの層だけ（内がわは空いて、太い枝が見える）。幹から主枝への分かれ目は、葉で全部はかくさない。
+# 木（tree：植えた木・ntree：森の木。同じ絵）。持ち主の指示（自然な樹形の法則）。いちばん大事なこと：幹から葉の先まで枝がつながり、葉をとっても1本の木として成り立つ骨格。
 # 設計図（単位はマス。地面 z=0。根もと (0.5, 0.62)）：
-#   幹：まっすぐ上へ 0.70（少しかたむき、ゆるくまがる）。太さはパイプモデル（幹は 0.16 まで）。根張り（太い根5本、側根つき）。
-#   主枝 MAIN：幹の 0.50〜0.70 の高さから、(向き（上から見た角度）, 立ち上がり, 長さ, 葉群の半径 (よこ, おく, たて), 葉のこさ)。
-#     主枝は、つけ根はななめ上・先は上へ。先のあたりが葉群のまん中。
-#   葉群：主枝の先のまわりの、でこぼこのあるだ円体（natcommon.envelope）。目じるしは葉群の外がわの層（まん中から 0.55〜1.0）にまく。
-#   枝：主枝の点から、目じるしへ 0.05 ずつのばす（natcommon.colonize と同じやり方）。
-#   葉：葉群の外がわの層にある、細い枝の節と枝先に（長さ 0.16・はば 0.10 の0.8〜1.2倍、反り・あつみ、表は太陽へ）。
-#     葉群ごとに、葉のこさがちがう（上はこく、下はうすい）。葉群ごとに線でかこみ、葉群ごとにかげ（まん中から見て、光の向きが明るい）をつける（1つにとけない）。
+#   幹：根もとから上へ（少しかたむき、ゆるくまがる）。幹の先は、そのまま「上の主枝」になって細くなる（とちゅうで切れない）。
+#   主枝 MAIN：(向き, 立ち上がり, 長さ, 葉群の半径 (よこ, おく, たて), つけ根の高さ)。幹からなめらかに外へ、先は少しずつ上へ（U字・フックにしない：1節で曲がるのは小さく）。
+#   葉群：主枝の先のまわりの、でこぼこのあるだ円体（natcommon.envelope）。その主枝の枝は、ぜんぶこの中におさまる長さ（葉群の形が樹冠の形）。
+#   側枝・小枝・細枝：芽（らせん137.5度）から、親の向きから25〜55度ひらき、葉群の外へ向く。長さは親の 0.45〜0.65倍、葉群の中におさまる長さまで。
+#     下・内向きの芽は、のびないことが多い。どの段も、先の芽がそのままのびる。
+#   太さ：パイプモデル（先 0.005、親は子の太さ^1.8 の和。幹は 0.16 まで）。分かれた子のつけ根に、えり。
+#   葉：細枝の先と、先の半分の節に（長さ 0.16・はば 0.10 の0.8〜1.2倍、反り・あつみ・すじ、表は太陽へ。かさならない）。
+#   SKEL=True で写すと、葉をつけない骨格だけ（たしかめ用）。
 import math
 import numpy as np
 import natcommon as N
 ID='tree';GRAD=True;PARALLEL=True;BOTTOM=56
 VIEWS=[('tree',0),('ntree',0)]
-CX,CY=0.5,0.62;SEED=2;TRUNK=0.70
-MAIN=[   # 向き・立ち上がり・長さ・葉群の半径・こさ・つけ根の高さ
-    (195,32,0.80,(0.36,0.30,0.26),1.0,0.50),   # 左
-    (325,28,0.84,(0.40,0.32,0.26),0.9,0.60),   # 右おく
-    (15,40,0.70,(0.30,0.27,0.24),0.8,0.55),    # 右
-    (100,30,0.55,(0.26,0.22,0.20),0.6,0.66),   # 手前（小さく、うすい：幹が見える）
-    (255,70,0.78,(0.38,0.33,0.28),1.1,0.70),   # 上（幹の先）
+CX,CY=0.5,0.62;SEED=2;SKEL=False
+MAIN=[   # 向き・立ち上がり・長さ・葉群の半径・つけ根の高さ（幹の長さにたいする割合。1.0 は幹の先＝上の主枝）
+    (195,35,0.62,(0.46,0.38,0.32),0.62),   # 左
+    (330,30,0.66,(0.48,0.38,0.32),0.74),   # 右おく
+    (25,40,0.56,(0.40,0.34,0.30),0.68),    # 右
+    (110,32,0.46,(0.32,0.28,0.26),0.82),   # 手前（小さい：幹が見える）
+    (240,70,0.58,(0.46,0.38,0.34),1.0),    # 上（幹のつづき）
 ]
+TRUNK=0.78
+LVL={2:((4,6),(30,55),(0.55,0.75),(0.25,0.95)),3:((3,4),(28,55),(0.50,0.70),(0.20,0.95)),4:((2,3),(25,50),(0.45,0.65),(0.25,1.0))}
+class G:
+    def __init__(s):s.P=[];s.par=[];s.lv=[]
+    def add(s,p,pa,lv):s.P.append(np.array(p,float));s.par.append(pa);s.lv.append(lv);return len(s.P)-1
+def fit(env,p,d,L):
+    """p から d へ、葉群の外へ出るまでの長さ（L まで）。葉群の外から出る枝は、葉群に入ってから出るまで"""
+    t=0.0;inside=env(p)
+    while t<L:
+        q=env(p+d*(t+0.03))
+        if inside and not q:break
+        inside=inside or q;t+=0.03
+    return t if inside else L*0.5
+def grow(g,i0,d,L,lv,env,c,rs,tips):
+    """節 i0 から、向き d・長さ L の枝（lv 段）。節ごとに少しだけ曲がる（外・上へ）。芽から子の枝"""
+    n=max(3,int(L/0.05));up=np.array([0,0,1.0]);idx=[i0];dd=d.copy()
+    for k in range(n):
+        out=g.P[idx[-1]]-c;out=out/np.linalg.norm(out) if np.linalg.norm(out)>1e-6 else dd
+        dd=dd*0.92+out*0.05+up*0.03+rs.normal(0,0.025,3);dd/=np.linalg.norm(dd)   # 1節の曲がりは小さく
+        idx.append(g.add(g.P[idx[-1]]+dd*L/n,idx[-1],lv))
+    if lv==4:tips.append(idx);return
+    nc,ang,lk,span=LVL[lv+1];nb=rs.randint(nc[0],nc[1]+1);az=rs.uniform(0,6.28)
+    for s in np.sort(rs.uniform(span[0],span[1],nb)):
+        i=min(n-1,int(s*n));q=g.P[idx[i]];ld=g.P[idx[i+1]]-g.P[idx[i]];ld/=np.linalg.norm(ld)
+        u=np.cross(ld,up);u=u/np.linalg.norm(u) if np.linalg.norm(u)>1e-6 else np.array([1.0,0,0]);v=np.cross(ld,u)
+        az+=N.GOLD;side=u*math.cos(az)+v*math.sin(az);a=math.radians(rs.uniform(*ang))
+        cd=ld*math.cos(a)+side*math.sin(a);out=q-c;out=out/np.linalg.norm(out) if np.linalg.norm(out)>1e-6 else cd
+        cd=cd*0.75+out*0.25;cd/=np.linalg.norm(cd)
+        if cd[2]<-0.35 and rs.rand()<0.7:continue   # 下向きの芽は、のびないことが多い
+        cl=min(L*rs.uniform(*lk),fit(env,q,cd,L))
+        if cl<0.06:continue
+        grow(g,idx[i],cd,cl,lv+1,env,c,rs,tips)
+    cl=min(L*rs.uniform(*LVL[lv+1][2]),fit(env,g.P[idx[-1]],dd,L))   # 先の芽
+    if cl>=0.06:grow(g,idx[-1],dd,cl,lv+1,env,c,rs,tips)
+    elif lv<4:tips.append(idx[-3:])
 def PARTS():return []
+def skeleton():
+    rs=np.random.RandomState(SEED);g=G();up=np.array([0,0,1.0]);tips=[];lobes=[]
+    i=g.add((CX,CY,0),-1,0);n=int(TRUNK/0.05);tr=[i];d=np.array([0.04,0.0,1.0]);d/=np.linalg.norm(d)
+    for k in range(n):
+        d=d+rs.normal(0,0.02,3);d[2]=max(d[2],0.9);d/=np.linalg.norm(d);tr.append(g.add(g.P[tr[-1]]+d*TRUNK/n,tr[-1],0))
+    for k,(az,el,ln,rr,h0) in enumerate(MAIN):
+        j=tr[min(len(tr)-1,int(round(h0*n)))];md=N.dirv(az,el) if h0<1.0 else (d*0.6+N.dirv(az,el)*0.4)
+        md/=np.linalg.norm(md);m=int(ln/0.05);pts=[j];dd=md.copy()
+        for t in range(m):   # 主枝：なめらかに外へ、先は少しずつ上へ
+            dd=dd*0.93+up*(0.05 if t>m*0.5 else 0.01)+rs.normal(0,0.02,3);dd/=np.linalg.norm(dd);pts.append(g.add(g.P[pts[-1]]+dd*ln/m,pts[-1],1))
+        c=g.P[pts[-1]]+np.array([0,0,rr[2]*0.2]);env=N.envelope(c,*rr,SEED*7+k);lobes.append((c,rr))
+        bigenv=lambda p,env=env:env(p)   # 葉群の中
+        nc,ang,lk,span=LVL[2];nb=rs.randint(nc[0],nc[1]+1);az2=rs.uniform(0,6.28)
+        for s in np.sort(rs.uniform(0.45,0.95,nb)):   # 側枝
+            i2=min(m-1,int(s*m));q=g.P[pts[i2]];ld=g.P[pts[i2+1]]-q;ld/=np.linalg.norm(ld)
+            u=np.cross(ld,up);u=u/np.linalg.norm(u) if np.linalg.norm(u)>1e-6 else np.array([1.0,0,0]);v=np.cross(ld,u)
+            az2+=N.GOLD;cd=ld*math.cos(math.radians(rs.uniform(*ang)))+(u*math.cos(az2)+v*math.sin(az2))*math.sin(math.radians(rs.uniform(*ang)))
+            out=q-c;cd=cd/np.linalg.norm(cd)*0.7+(out/np.linalg.norm(out) if np.linalg.norm(out)>1e-6 else cd)*0.3;cd/=np.linalg.norm(cd)
+            if cd[2]<-0.35 and rs.rand()<0.7:continue
+            cl=min(ln*rs.uniform(*lk),fit(bigenv,q,cd,ln))
+            if cl>=0.06:grow(g,pts[i2],cd,cl,2,bigenv,c,rs,tips)
+        cl=min(ln*0.55,fit(bigenv,g.P[pts[-1]],dd,ln))   # 主枝の先の芽
+        if cl>=0.06:grow(g,pts[-1],dd,cl,2,bigenv,c,rs,tips)
+    return g,tips,lobes,rs
 def EXTRA(sc):
-    rs=np.random.RandomState(SEED);up=np.array([0,0,1.0])
-    # 幹と主枝の骨（点の列）
-    P=[np.array((CX,CY,0.0))];par=[-1];D=0.05;z=0
-    while z<TRUNK:z+=D;P.append(P[-1]+np.array([rs.normal(0,0.006)+0.003,rs.normal(0,0.005),D]));par.append(len(P)-2)
-    lobes=[];A=[];owner=[]
-    for k,(az,el,ln,(rx,ry,rz),dens,h0) in enumerate(MAIN):
-        j=int(round(h0/D));j=min(j,len(P)-1);d=N.dirv(az,el);q=P[j].copy();last=j;n=int(ln/D)
-        for i in range(n):
-            t=i/n;d=N._bendto(d,up,0.05 if t>0.5 else 0.0);d=d+rs.normal(0,0.06,3);d/=np.linalg.norm(d)
-            q=q+d*D;P.append(q.copy());par.append(last);last=len(P)-1
-        c=q+np.array([0,0,rz*0.25]);env=N.envelope(c,rx,ry,rz,SEED*7+k);lobes.append((c,(rx,ry,rz),dens,env))
-        m=int(260*rx*ry*rz/0.04)   # 目じるしの数は、葉群の大きさに合わせる
-        cnt=0
-        while cnt<m:   # 外がわの層だけ
-            p=c+np.array([rx,ry,rz])*rs.uniform(-1.25,1.25,3)
-            if not env(p):continue
-            e=np.linalg.norm((p-c)/np.array([rx,ry,rz]))
-            if e<0.55:continue
-            A.append(p);owner.append(k);cnt+=1
-    A=np.array(A);alive=np.ones(len(A),bool);di,dk=0.40,0.08
-    for it in range(200):
-        if not alive.any():break
-        Pn=np.array(P);acc={}
-        for ai in np.flatnonzero(alive):
-            dd=np.linalg.norm(Pn-A[ai],axis=1)
-            dd[:TRUNK and int(TRUNK/D)]=9   # 幹からは直接のばさない（主枝から）
-            j=int(dd.argmin())
-            if dd[j]<dk:alive[ai]=False;continue
-            if dd[j]<di:acc.setdefault(j,[]).append((A[ai]-Pn[j])/dd[j])
-        if not acc:break
-        for j,vs in acc.items():
-            v=np.sum(vs,0);v/=np.linalg.norm(v);v=v+up*0.10+rs.normal(0,0.10,3);v/=np.linalg.norm(v)
-            P.append(P[j]+v*D);par.append(j)
-    P=np.array(P);par=np.array(par)
-    r,ch=N.radii(par,rtip=0.006,E=1.5,rmax=0.16)
+    g,tips,lobes,rs=skeleton();P=np.array(g.P);par=np.array(g.par);up=np.array([0,0,1.0])
+    r,ch=N.radii(par,rtip=0.005,E=1.8,rmax=0.16)
     T=[]
     for c in N.chains(par,ch):
         if len(c)<2:continue
         pts=P[c];rr=list(r[c])
         if c[0]!=0 and len(ch[c[0]])>1:rr[1]=rr[1]*1.25   # えり
         mr=max(rr);N.limb(T,pts,rr,n=14 if mr>0.08 else 8 if mr>0.03 else 5,flare=0.07 if c[0]==0 else 0.0,fh=0.2,wob=0.07 if mr>0.06 else 0.0,seed=len(T)%17)
-    N.roots(T,(CX,CY,0),0.19,rs,L=0.15)
+    N.roots(T,(CX,CY,0),0.16,rs,L=0.15)
     N.barkmesh(sc,T)
-    # 葉：葉群の外がわの層の、細い枝の節・枝先
+    if SKEL:return
     L,W=0.16,0.10;put=[];groups=[[] for _ in lobes]
-    for i in range(1,len(P)):
-        if r[i]>0.022:continue
-        es=[np.linalg.norm((P[i]-c)/np.array(rr_)) for c,rr_,_,_ in lobes];k=int(np.argmin(es));e=es[k]
-        if e<0.5:continue
-        c,_,dens,_=lobes[k];hz=(P[i][2]-c[2])/lobes[k][1][2]   # 葉群の中の高さ（上ほどこく）
-        nl=int(round((2.2 if not ch[i] else 1.0)*dens*(0.75+0.35*hz)+rs.uniform(-0.5,0.5)))
-        d=P[i]-P[par[i]];d/=np.linalg.norm(d)
-        for _ in range(max(0,nl)):
-            a=rs.uniform(0,6.28);u=np.cross(d,up);u=u/np.linalg.norm(u) if np.linalg.norm(u)>1e-6 else np.array([1.0,0,0]);v=np.cross(d,u)
-            o=d*0.4+(u*math.cos(a)+v*math.sin(a))*0.9+up*0.1;o/=np.linalg.norm(o)
-            nn=N.SUN*0.55+up*0.15+o*0.35+rs.normal(0,0.12,3);nn/=np.linalg.norm(nn)
-            ld=o-nn*(o@nn);ld/=np.linalg.norm(ld);sd=np.cross(nn,ld);f=rs.uniform(0.8,1.2);b=P[i]+rs.normal(0,0.012,3)
-            c_=b+ld*L*f*0.5
-            if put and np.min(np.linalg.norm(np.array(put)-c_,axis=1))<0.55*L:continue
-            put.append(c_);groups[k].append((b,ld,sd,nn,L*f,W*f,0.0))
-    def tonef(k,b,nn):   # 葉群ごとのかげ：葉群のまん中から見た向きが光に向くほど明るい（左上が明るく、右下が暗い）。下の葉群は1段暗い
-        c,rr_,_,_=lobes[k];o=(b-c)/np.array(rr_);o/=max(np.linalg.norm(o),1e-6);lt=float(o@N.LIGHTV)*0.7+float(nn@N.LIGHTV)*0.3
-        return int(np.clip(round((1-lt)*1.9-0.3+(0.6 if c[2]<1.05 else 0.0)),0,len(N.LEAFB)-2))
+    for idx in tips:   # 細枝の先と、先の半分の節
+        pts=P[idx];nn_=len(pts);lob=int(np.argmin([np.linalg.norm((pts[-1]-c)/np.array(rr)) for c,rr in lobes]))
+        for t in range(nn_//2,nn_):
+            q=pts[t];d=pts[t]-pts[t-1];d/=max(np.linalg.norm(d),1e-9)
+            for _ in range(2 if t==nn_-1 else 1):
+                a=rs.uniform(0,6.28);u=np.cross(d,up);u=u/np.linalg.norm(u) if np.linalg.norm(u)>1e-6 else np.array([1.0,0,0]);v=np.cross(d,u)
+                o=d*0.45+(u*math.cos(a)+v*math.sin(a))*0.9+up*0.1;o/=np.linalg.norm(o)
+                nn=N.SUN*0.55+up*0.15+o*0.35+rs.normal(0,0.12,3);nn/=np.linalg.norm(nn)
+                ld=o-nn*(o@nn);ld/=np.linalg.norm(ld);sd=np.cross(nn,ld);f=rs.uniform(0.8,1.2)
+                c_=q+ld*L*f*0.5
+                if put and np.min(np.linalg.norm(np.array(put)-c_,axis=1))<0.55*L:continue
+                put.append(c_);groups[lob].append((q,ld,sd,nn,L*f,W*f,0.0))
+    def tonef(k,b,nn):   # 葉群ごとのかげ
+        c,rr_=lobes[k];o=(b-c)/np.array(rr_);o/=max(np.linalg.norm(o),1e-6);lt=float(o@N.LIGHTV)*0.7+float(nn@N.LIGHTV)*0.3
+        return int(np.clip(round((1-lt)*1.9-0.3+(0.6 if c[2]<1.0 else 0.0)),0,len(N.LEAFB)-2))
     N.drawclumps(sc,groups,axis=(CX,CY),tonef=tonef)
 def POST(im):return N.specks(im)
