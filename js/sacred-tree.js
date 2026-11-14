@@ -105,7 +105,17 @@ function drawStoryTree(c,x,y,j,now,full=false){
     if(u>0){c.save();c.globalAlpha=Math.min(1,u*2.5);c.translate(bx,by);c.scale(sx,sy);c.translate(-bx,-by);drawStoryTreeFrame(c,x,y,j,now,g.to,Math.min(1,u*1.4));const w=Math.max(0,1-u*1.2)*.8;if(w>0){c.globalCompositeOperation='lighter';c.globalAlpha=w;drawStoryTreeFrame(c,x,y,j,now,g.to,1);}c.restore();}}
   else drawStoryTreeFrame(c,x,y,j,now,full?4:null,1);
   c.restore();
+  if(!full&&!(g&&p<1)&&Math.floor(sacredStage())>=4)drawSacredMotes(c,x,y,now);
   if(sacredCompleted('fireRoot')||(fieldStoryState('fireRoot')?.step||0)>=1){const moving=sacredEffect('stone');for(const [dx,dy]of[[-20,1],[19,4],[10,14]]){if(moving&&dx===19&&(now-moving.at)/moving.ms<.9)continue;sacredStone(c,x+64+dx,y+112+dy,1);}}
+}
+const MOTEN=16;/* 御神木のまわりの光のつぶの数 */
+function drawSacredMotes(c,x,y,now){/* 御神木のまわりの光のつぶ：葉のまわりで、ゆっくりうかびながら、ついたり消えたりする（ドット：まん中1点と、まわり4点のうすい光） */
+  c.save();for(let i=0;i<MOTEN;i++){
+    const h1=(i*0.6180339887)%1,h2=(i*0.4142135623+0.37)%1,per=4200+2600*h2,t=((now/per)+h1*3.1)%1,a=Math.sin(t*Math.PI);if(a<.08)continue;
+    const px=Math.round(x-12+176*((h1*7.3+h2*2.9)%1)+3*Math.sin(now/900+i)),py=Math.round(y-120+170*((h2*5.1+h1*1.7)%1)-14*t);
+    c.globalAlpha=a*.45;c.fillStyle='#fff3a6';c.fillRect(px-1,py,1,1);c.fillRect(px+1,py,1,1);c.fillRect(px,py-1,1,1);c.fillRect(px,py+1,1,1);
+    c.globalAlpha=a;c.fillStyle='#fffbe0';c.fillRect(px,py,1,1);
+  }c.restore();
 }
 function drawStoryTreeFrame(c,x,y,j,now,forced=null,unfold=1){
   let stage=forced??sacredStage();const preview=S&&SACRED_PREVIEW.get(S);if(forced==null&&preview?.session===VILLAGE_SESSION&&performance.now()<preview.until)stage=Math.max(stage,preview.stage);

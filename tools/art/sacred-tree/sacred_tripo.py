@@ -114,6 +114,23 @@ def texpat(items,pal):
         return pal[2] if L<lo else pal[0] if L>hi else pal[1]
     return f
 
+LEAFVEIN=(160,182,86)   # 葉脈・まん中のすじ（谷）の色
+def veinpat(q):
+    """1まいの葉（モデルの葉のかたまり1つ）の柄：葉ののびる向き（いちばん長い向き）を、まん中のすじにする。
+    まん中のすじがいちばん低い谷なので暗く、そこからふちへ明るくなる。すじから、葉の先のほうへななめに、細い葉脈"""
+    P=q.reshape(-1,3);c0=P.mean(0);_,_,vt=np.linalg.svd(P-c0,full_matrices=False);e1,e2=vt[0],vt[1]
+    t0=(P-c0)@e1;s0=(P-c0)@e2;L=t0.max()-t0.min();tip=1 if t0.max()>-t0.min() else -1
+    nb=12;edges=np.linspace(t0.min(),t0.max(),nb+1);W_=np.array([np.abs(s0[(t0>=edges[i])&(t0<=edges[i+1])]).max() if ((t0>=edges[i])&(t0<=edges[i+1])).any() else 0 for i in range(nb)])   # 長さの場所ごとの、葉のはば
+    mid=np.array([np.median(s0[(t0>=edges[i])&(t0<=edges[i+1])]) if ((t0>=edges[i])&(t0<=edges[i+1])).any() else 0 for i in range(nb)])   # まん中のすじの場所
+    VP=0.11    # 葉脈の間かく（マス）
+    def f(x,y,z):
+        d=np.array((x,y,z))-c0;t=float(d@e1);sv=float(d@e2);k=min(nb-1,max(0,int((t-edges[0])/(L/nb+1e-9))))
+        w=max(W_[k],1e-6);ds=(sv-mid[k])/w;ad=abs(ds)
+        if ad<0.09:return LEAFVEIN   # まん中のすじ（谷）
+        if 0.15<ad<0.72 and ((t*tip-ad*w*0.9)/VP)%1<0.11:return LEAFVEIN if ad<0.45 else LEAF[1]   # 葉脈：すじから、先のほうへななめ
+        return LEAF[1] if ad<0.45 else LEAF[0]
+    return f
+
 def flowfield(q,src):
     """木の皮の流れ：面の場所から、src（はじまりの点）からの、面をつたう道のりをはかり、その道のりがのびる向きを、面ごとの流れの向きにする。
     幹ではたて・根では外へ・枝では枝のさきへ。かえすのは、面のまん中の点・流れの向き・面の向き"""
@@ -167,7 +184,7 @@ def stage(V,comps,name):
         a=math.atan2(t0[1]-b0[1],t0[2]-b0[2])   # うしろ（北）へのかたむき。根もとのまわりに、まっすぐ立てる（モデルでは、うしろへたおれていた）
         R=np.array([[1,0,0],[0,math.cos(a),-math.sin(a)],[0,math.sin(a),math.cos(a)]])
         return out+[(((p_-b0)@R.T)+b0,c,k) for p_,c,k in its]
-    return [(V[c['f']],c,{'wood':'bark','leaf':'leaf','glow':'glow'}[c['kind']]) for c in comps if c['grp']=='LB']
+    return [(V[c['f']],c,{'wood':'bark','leaf':'leaf'}[c['kind']]) for c in comps if c['grp']=='LB' and c['kind']!='glow']   # 光のつぶは絵に入れない（ゲームで動くつぶにする drawSacredMotes）
 
 class Stage:
     """furn3d.shot にわたす設計図（PARTS は空、EXTRA で三角形を足す）"""
@@ -211,8 +228,10 @@ class Stage:
                         cq=q[cut].reshape(-1,3);cx,cy=(cq[:,0].max()+cq[:,0].min())/2,(cq[:,1].max()+cq[:,1].min())/2;R=max(cq[:,0].max()-cq[:,0].min(),cq[:,1].max()-cq[:,1].min())/2
                         def ring(x,y,z,cx=cx,cy=cy,R=R):
                             a=math.atan2(y-cy,x-cx);r=math.hypot(x-cx,y-cy)/R*(1+0.05*math.sin(3*a+1)+0.03*math.sin(5*a))
-                            if r>0.86:return CUT[0]
-                            return CUT[2] if any(abs(r-q_)<0.035 for q_ in(0.16,0.36,0.56,0.74)) else CUT[1]
+                            if r>0.80:return BARK[2] if (a*14/(2*math.pi)+0.3*math.sin(a*5))%1<0.16 else BARK[1]   # あつい樹皮（ところどころ、ひび）
+                            if r>0.765:return BARK[2]   # 樹皮と木のさかい
+                            if r>0.70:return CUT[0]
+                            return CUT[2] if any(abs(r-q_)<0.035 for q_ in(0.14,0.32,0.50)) else CUT[1]
                         sc.decal(ring);sc.part()
                         for t in q[cut]:sc.tri(t[0],t[1],t[2],CUT[1])
                         sc.decal(None)
@@ -222,7 +241,7 @@ class Stage:
                     m0=q.reshape(-1,3).mean(0);dd=np.sort(np.linalg.norm(s._lc-m0,axis=1))
                     if len(dd)>1 and dd[1]>0.9 or (q.reshape(-1,3).max(0)-q.reshape(-1,3).min(0)).max()<0.12:continue   # はなれて1つだけうかぶ葉（モデルのこぼれ）は描かない：お手本の絵と同じ、小さなまるい葉の玉がかさなる形に作りなおす（lobes）
                     lobes(sc,q,n,len(s._gid));s._gid.append(1);continue
-                sc.decal(texpat([(q,c['uv'])],LEAF));sc.part()   # 葉：モデルの葉の形のまま、モデルのテクスチャの葉の重なり
+                sc.decal(veinpat(q));sc.part()   # 葉：まん中のすじがいちばん低い（谷）、ふちほど明るい。葉脈も
                 for t in q:sc.tri(t[0],t[1],t[2],LEAF[1])
                 sc.decal(None)
         sc.smooth(False)
