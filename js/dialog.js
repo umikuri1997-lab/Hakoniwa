@@ -116,7 +116,7 @@ function updHUD(){
 let started=false,titleDrift=0,STOCKSIG='';
 function showUI(on){$('#topUI').hidden=!on;$('#botUI').hidden=!on}
 /* 引き継ぎ：便利な道具（ひろびろハケ・かたどりスタンプ・つけかえトンカチ・ひっこしミトン）だけは、ほかの土地でもらっていれば使える */
-function syncTools(s){for(const L of LIVE)if(L&&L!==s){if(L.bulk)s.bulk=true;if(L.stamps)s.stamps=true;if(L.swap)s.swap=true;if(L.dig)s.dig=true;if(L.mover)s.mover=true;if((s.world||0)!==0&&(L.areaSkill||L.flags&&L.flags.areaSkill))(s.flags||(s.flags={})).areaSkill=true}}/* 「こもれびのまもり」も、草原でおぼえたら、ほかのステージで使える（草原は、はじめからやりなおしても、自分でおぼえなおす） */
+function syncTools(s){for(const L of LIVE)if(L&&L!==s){if(L.bulk)s.bulk=true;if(L.stamps)s.stamps=true;if(L.swap)s.swap=true;if(L.dig)s.dig=true;if(L.mover)s.mover=true;if((s.world||0)!==0&&(L.areaSkill||L.flags&&L.flags.areaSkill))(s.flags||(s.flags={})).areaSkill=true;if((s.world||0)!==0&&L.flags&&L.flags.sortie)(s.flags||(s.flags={})).sortie=true/* 出撃も、草原でおぼえたら、ほかのステージで */}}/* 「こもれびのまもり」も、草原でおぼえたら、ほかのステージで使える（草原は、はじめからやりなおしても、自分でおぼえなおす） */
 const LISTEN_ACT=new Set(['idle','storywait','fieldwait','fieldgather','fieldintro','fieldassist','chatwait','nmeet']);
 function dlgListen(w){/* 会話のあいだ、話している子のそばで待っている子は、話している子のほうを向いて聞く（仕事・遊び・ねている子はそのまま。演出の姿勢があればそのまま） */if(!S||!w||!S.res)return;const sp=S.res.find(r=>r.name===w&&!r.hidden);if(!sp)return;const p0=sacredPose(sp);if(p0&&p0.listen)SACRED_POSES.delete(sp);const now=performance.now();
   for(const r of S.res){if(r===sp||r.hidden||Math.hypot(r.x-sp.x,r.y-sp.y)>6||Math.abs(sp.x-r.x)<.3)continue;const a=r.act;if(a&&!(a.stage==='do'&&LISTEN_ACT.has(a.type)))continue;const p=sacredPose(r);if(p&&!p.listen)continue;const f=sp.x>r.x?1:-1;r.face=f;sacredSetPose(r,{anim:'storyListen',at:now,duration:5000,side:true,face:f,listen:true})}}
