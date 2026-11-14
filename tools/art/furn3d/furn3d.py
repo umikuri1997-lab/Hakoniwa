@@ -11,6 +11,7 @@
 #   PFIRE=[(cx,cy,z0,高さ,根もとの半径,粒の数,seed), ...]（粒の火とけむり。FRAMES のコマでループする。本体は1回だけ写す）
 #   PFIRE の8つめ（なくてよい）：{'smoke':けむりの粒の数か False,'sparks':False}。PSMOKE=[(x,y,z,高さ,半径,粒の数,seed)]（けむりだけ。煙突など）
 #   PFIRE_HIDE=部品の名前を見る関数（粒の火が、そのうしろにかくれる部品。ほかの部品には、火を上にかさねる。なければ、ぜんぶ）
+#   PARALLEL=True（奥行きのない物。遠近をかけずに写す）
 #   MOVE={チップの名前: {'sel':部品の名前を見る関数, 'pivot':(x,y,z)}}（動く部品より手前の本体は、奥行きをくらべて、動く部品の上に重ねる絵を自動で作る）（動く部品。本体の絵からのぞいて、べつの絵 parts にし、のびちぢみ・回る支点 px・py をつける。ゲームの PARTMV で動かす）
 #   FRONT={チップの名前: 部品の名前を見る関数}（せいれいの手前にかさねる絵 .front。その向きで、その部品だけを写す）
 import sys,os,importlib
@@ -39,7 +40,7 @@ def shot(M,k,only=None,S_=64,filt=None,info=None):
     sc,keep=scene(M,k,only);V=np.array([v for t in sc.t for v in t[:3]])   # 見え方（中心・はんい）は、いつも、ぜんぶの部品からきめる（動く部品と本体の絵の場所をそろえる）
     if filt:sc,keep=scene(M,k,only,filt,foot=sc.foot)   # まわす中心も、ぜんぶの部品の床の範囲で
     c=((V[:,0].min()+V[:,0].max())/2,(V[:,1].min()+V[:,1].max())/2,V[:,2].max()/2)
-    PROJ,DEPTH=O.persp(ELEV,FOV,FRAME,c)
+    PROJ,DEPTH=O.persp(ELEV,FOV,None if getattr(M,'PARALLEL',False) else FRAME,c)   # PARALLEL：奥行きのない物（リース・のれんなど）は、遠近をかけない（平行投影）
     P=np.array([PROJ(v) for v in V]+[PROJ(sc.fwd(q)) for q in pfire_box(M)]);m=2/64;ext=(P[:,0].min()-m,P[:,0].max()+m,P[:,1].min()-m,P[:,1].max()+m);O.S=S_
     im=O.render_px(sc,PROJ,ext,DEPTH,k=0.80 if O.GRAD else 0.72,lw=LW,k2=0.90 if O.GRAD else 0.86,merge=6 if O.GRAD else 12)   # GRAD：にた色をまとめるさかいを小さく（グラデーションの段をのこす）   # GRAD の家具は、輪郭線もやわらかい色（持ち主がきめた）
     if only:   # その部品だけ（ほかの部品のドットは消す。輪郭線もふくめて、その部品のまわり1ドットまで）
