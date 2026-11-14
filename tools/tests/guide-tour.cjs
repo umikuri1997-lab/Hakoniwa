@@ -9,8 +9,8 @@ const assert=require('node:assert/strict');
   assert.equal(a.tour,true);assert.equal(a.talk,null,'no next quest talk during the tour');assert.match(a.wait,/あんない/);
   console.log('during tour:',a.wait);
   /* 2. まわりおわるまで、ゲームを進める */
-  const b=JSON.parse(await run(`(()=>{let n=0,walked=0,called=0;const g=S.res.find(r=>r.name===MINA),p0=[g.x,g.y];for(;n<6000&&S.tour;n++){S.t+=.1;for(const r of S.res)updRes(r,.1);if(S.tour&&g.act&&g.act.type==='tourgo')walked=1;if(S.tour&&n%20===0){checkQuest();if(S.res.some(r=>storyCalled(r)))called=1}}
-    checkQuest();return JSON.stringify({steps:n,tour:!!S.tour,walked,called,wait:mainTalkWaitText(QUESTS[S.quest]),moved:Math.hypot(g.x-p0[0],g.y-p0[1])>2})})()`));
+  const b=JSON.parse(await run(`(()=>{let n=0,walked=0,called=0,far=0;const g=S.res.find(r=>r.name===MINA),p0=[g.x,g.y];for(;n<6000&&S.tour;n++){S.t+=.1;for(const r of S.res)updRes(r,.1);if(S.tour&&g.act&&g.act.type==='tourgo')walked=1;far=Math.max(far,Math.hypot(g.x-p0[0],g.y-p0[1]));if(S.tour&&n%20===0){checkQuest();if(S.res.some(r=>storyCalled(r)))called=1}}
+    checkQuest();return JSON.stringify({steps:n,tour:!!S.tour,walked,called,wait:mainTalkWaitText(QUESTS[S.quest]),moved:far>2})/* 村をまわるあいだに、はじめの場所から2マスより遠くへ行った（おわりの場所は、はじめの場所の近くのこともある） */})()`));
   assert.equal(b.tour,false,'tour ends');assert.equal(b.walked,1,'guide walked the village');assert.doesNotMatch(b.wait,/あんない/,'next quest goes on after the tour');assert.equal(b.moved,true);assert.equal(b.called,0,'nobody is called to the story during the tour');
   console.log('after tour:',b.wait,'(game minutes',(b.steps*.1).toFixed(0)+')');
   /* 3. 曲 */
