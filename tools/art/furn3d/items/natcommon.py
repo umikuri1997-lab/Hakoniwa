@@ -218,25 +218,31 @@ def crownleaves(clusters,L=0.16,W=0.10,ext=1.25):
                 lv.append((b,ld,sd,nn,L,W,r/(R*ext)))
         out.append(lv)
     return out
-LEAFTH=0.014   # 葉のあつさ（マス）
-def roundleaf(base,d,sd,nn,L,W,fold=0.30,curl=0.14,th=LEAFTH,nt=6,ns=2):
-    """まるい葉（根もとからまるく広がり、先が少しとがる）。
-    反り：先ほど、表のほうへ反りかえる（curl：先の高さ＝長さ×curl。持ち主の指示：葉をそらせる）。
-    あつみ：表と裏の2まいの面と、ふちの面（th。持ち主の指示：あつみをつける）。かえす：(表と裏の三角形, ふちの三角形)"""
+LEAFTH=0.030   # 葉のあつさ（マス。持ち主の指示：あつみをもっと）
+LEAFVEINC=(222,240,150)   # 葉のまん中のすじ（明るい線）
+def roundleaf(base,d,sd,nn,L,W,fold=0.30,curl=0.14,th=LEAFTH,nt=8,ns=3):
+    """1まいの葉：根もとからまるく広がり、先はとがる（たまごの形）。
+    反り：先ほど、表のほうへ反りかえる（curl。持ち主の指示）。あつみ：表と裏の面と、ふちの面（th。持ち主の指示）。ふちの面は2段暗い色で、あつみが見える。
+    すじ：まん中に、表より少し上の、細い明るい帯（葉脈）。
+    かえす：(表と裏の三角形, ふちの三角形, すじの三角形)"""
+    def wid(t):
+        if not 0<t<1:return 0.0
+        return W*math.sin(math.pi*t**0.8)**0.75*(1-0.45*max(0,t-0.55)/0.45)   # 先ほど細くとがる
     def P(t,u,k):
-        w=W*(1-abs(2*t-1)**2.5)**0.5*(1-0.25*max(0,t-0.6)/0.4) if 0<t<1 else 0.0
-        return base+d*t*L+sd*u*w+nn*(fold*w*abs(u)+curl*L*t*t+k*th*(1-abs(u)**2)*(0.3+0.7*math.sin(math.pi*t)))
-    T=[];E=[]
+        w=wid(t);return base+d*t*L+sd*u*w+nn*(fold*w*abs(u)+curl*L*t*t+k*th*(1-abs(u)**2)*(0.35+0.65*math.sin(math.pi*t)))
+    T=[];E=[];V=[]
     for k in(0.5,-0.5):
         for i in range(nt):
             for j in range(-ns,ns):
                 t0,t1=i/nt,(i+1)/nt;u0,u1=j/ns,(j+1)/ns;a,b,c,e=P(t0,u0,k),P(t1,u0,k),P(t1,u1,k),P(t0,u1,k);T+=[(a,b,c),(a,c,e)]
-    for i in range(nt):   # ふち（u=±1）：表と裏のあいだ。あつみが見える
+    for i in range(nt):   # ふち（u=±1）：表と裏のあいだ。あつみ
         t0,t1=i/nt,(i+1)/nt
         for u in(-1,1):
-            a,b=P(t0,u,0.5),P(t1,u,0.5);c,e=P(t1,u,-0.5),P(t0,u,-0.5)
-            o=sd*u*0.004;E+=[(a+o,b+o,c+o),(a+o,c+o,e+o)]
-    return T,E
+            a,b=P(t0,u,0.5),P(t1,u,0.5);c,e=P(t1,u,-0.5),P(t0,u,-0.5);o=sd*u*0.003;E+=[(a+o,b+o,c+o),(a+o,c+o,e+o)]
+    hw=0.006;lift=nn*0.004   # すじ：はば0.012（1ドットくらい）
+    for i in range(1,nt-1):
+        t0,t1=i/nt,(i+1)/nt;a,b=P(t0,0,0.5)+lift,P(t1,0,0.5)+lift;V+=[(a-sd*hw,b-sd*hw,b+sd*hw),(a-sd*hw,b+sd*hw,a+sd*hw)]
+    return T,E,V
 def crowncore(sc,c,R,H,ext=1.25,dz=0.05,n=24,m=8,col=LEAFB[4]):
     """かたまりの中身：葉の面の少し下の、こい緑の面（葉のすきまから枝が見えないように）"""
     sc.part()
@@ -252,9 +258,10 @@ def drawcrown(sc,groups,pal=LEAFB,olk=0.74,cl=None):
         for b,ld,sd,nn,l,w,e in g:
             h=(b[2]-zlo)/max(zhi-zlo,1e-6);lt=float(nn@LIGHTV);tone=int(np.clip(round((1-lt)*1.8+0.8*e**3+(1-h)*0.8-0.4),0,len(pal)-2))   # 光に向く葉ほど明るく、ふち（たれた所）と低い所は少し暗い
             side=float(sd@LIGHTV);sc.part()
-            TT,EE=roundleaf(b,ld,sd,nn,l,w)
+            TT,EE,VV=roundleaf(b,ld,sd,nn,l,w)
             for q in TT:sc.tri(q[0],q[1],q[2],pal[tone+(0 if (((q[0]+q[1]+q[2])/3-b)@sd)*side>0 else 1)])
             for q in EE:sc.tri(q[0],q[1],q[2],pal[min(len(pal)-1,tone+2)])   # ふち（あつみ）は2段暗い
+            for q in VV:sc.tri(q[0],q[1],q[2],LEAFVEINC if tone<=1 else pal[max(0,tone-1)])   # すじ：1段明るい
         sc.material(None);sc.outline();sc.group(None)
 
 def poisson(c,Rmax,rmin,seed,k=30,sl=None):
@@ -383,19 +390,21 @@ def tipleaves(clumps,L=0.16,W=0.10,dmin=0.62,seed=0):
             put.append(c);lv.append((base,ld,sd,nn,L*f,W*f,0.0))
         out.append(lv)
     return out
+LEAFOLK=0.86   # 葉の輪郭線のこさ（となりの色×これ）
 def drawclumps(sc,groups,pal=LEAFB,olk=0.74,axis=(0.5,0.6),tonef=None):
     """葉の塊ごとに入れる（塊の中は線を引かない）。光に向く葉・外・上ほど明るい。すじの左右で1段、ふち（あつみ）は2段暗い"""
     zs=[l[0][2] for g in groups for l in g];zlo,zhi=min(zs),max(zs);rmax=max(math.hypot(l[0][0]-axis[0],l[0][1]-axis[1]) for g in groups for l in g)
     for gi,g in enumerate(groups):
         if not g:continue
-        sc.group('lc%d'%gi);sc.outline(None,olk);sc.material('flat')
+        sc.outline(None,LEAFOLK);sc.material('flat')   # 葉1まいずつに、うすい輪郭線（葉群でまとめない：1まいずつ見える）
         for b,ld,sd,nn,l,w,_ in g:
             h=(b[2]-zlo)/max(zhi-zlo,1e-6);ro=math.hypot(b[0]-axis[0],b[1]-axis[1])/rmax;lt=float(nn@LIGHTV)
             tone=int(np.clip(round((1-lt)*1.5+(1-h)*1.9+(1-ro)*1.0-0.7),0,len(pal)-2)) if tonef is None else tonef(gi,b,nn);side=float(sd@LIGHTV);sc.part()   # 下・内ほど暗い（立体感）。tonef：葉群ごとのかげ
-            TT,EE=roundleaf(b,ld,sd,nn,l,w)
+            TT,EE,VV=roundleaf(b,ld,sd,nn,l,w)
             for q in TT:sc.tri(q[0],q[1],q[2],pal[tone+(0 if (((q[0]+q[1]+q[2])/3-b)@sd)*side>0 else 1)])
-            for q in EE:sc.tri(q[0],q[1],q[2],pal[min(len(pal)-1,tone+2)])
-        sc.material(None);sc.outline();sc.group(None)
+            for q in EE:sc.tri(q[0],q[1],q[2],pal[min(len(pal)-1,tone+2)])   # ふち（あつみ）は2段暗い
+            for q in VV:sc.tri(q[0],q[1],q[2],LEAFVEINC if tone<=1 else pal[max(0,tone-1)])   # すじ：1段明るい
+        sc.material(None);sc.outline()
 
 # ---- 樹冠の形を先にきめて、その中に枝をのばす（持ち主の指示：自然な樹形の20の法則） ----
 # スペース・コロニゼーション（Runions ほか 2007）：樹冠の形の中に目じるしの点をまき、幹の先から、近くの目じるしへ向かって枝をのばす（ついた目じるしは消す）。
