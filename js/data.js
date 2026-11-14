@@ -444,11 +444,12 @@ const QUESTS1=[
     [MINA,'#nod|みんながここで楽しく暮らして、村が育って、水の力もたまったら、来てくれるかもねぇ。']]},
    get story(){return KS([['M','はじめまして。水やりや、水をくむ仕事なら、わたしにまかせてください。'],[POKO,'水のせいれいが来てくれた！ 畑がうるおうね！ これで、切り株の芽にも、ちゃんと水がとどくかな。'],['H','へぇ、水のせいれいか。悪くない村になってきたじゃねえか。'],['@choice',choiceGuide()]])},gives:{flag:'wellR'}}),
   companionFieldQuest("waterFilm","根まで届く水","切り株のそばにみずがめを置いたら、切り株をタップ。水の流れを確かめる。ノドカと水のせいれいに根まで通してもらい、若葉が開くのを、そばで見守る","water",[["M","フタバさん。その水は、どちらへ？"],["F","あの木に。芽が出たんだよ！"],["M","……根のところまで、届いていないようです。"],["F","こんなに、持ってきたのに？"],["M","ええ。でも、どこで止まっているか、わかりました。"],["M","木のそばに、みずがめを置きましょう。一度にかけずに、少しずつ流して確かめたいのです。"]],[["F","じゃあ、一緒に見ててくれる？"],["M","はい。",0,"stree:sit"],["F","……あ。",0,"stree:leaf"],["F","一枚だけだ。"],["M","一枚目、ですね。"],["F","#teary|うん。一枚目。"]],['waterFilm']),
-  /* 根まで届く水のあと：水のせいれいが、村へのお礼に、調理台でジュースを作って、みんなにふるまう（aoIns1。id は前のまま） */
-  stepQuest({id:'aoFish',text:'みんなでジュース',
-   steps:[{id:'aoJuice',t:'水のせいれいに、ジュースを3つ作ってもらう',check:()=>!!S.flags.aoGrill||(S.flags.aoJuiceN||0)>=3,prog:()=>'ジュース '+Math.min(3,S.flags.aoJuiceN||0)+'/3',get how(){return cnt('cooktable')?'調理台をタップして、ジュースをえらぶ':'依頼ボードの「ごはん」で調理台をたのんで置き、調理台をタップして、ジュースをえらぶ'}}],
-   talk:{get who(){return keyName('water')},when:()=>true,get lines(){return KS([['M','この村に来てから、みなさんに、たくさん助けてもらいました。'],['M','#think|なにか、お礼ができないでしょうか……。'],['F','お礼なんて、いいのに。'],['M','くだものをしぼって、つめたいジュースを作ります。水のことなら、わたしにまかせてください。'],['H','#joy|おう、そいつはたのしみだ！']])}},
-   get story(){return KS([['M','#joy|できました。どうぞ、フタバさん。',0,'give:M>F'],['F','#joy|つめたい！ あまくて、おいしいね。'],['M','はい。……みなさんと同じものを、いっしょに飲めるのが、うれしいんです。'],['N','すっきりするねぇ。ちょっと、水のにおいがするよぉ。'],['H','へへっ。仕事のあとに、ちょうどいいな。'],['M','#joy|ええ。この村に来て、よかったです。']])}}),
+  /* 根まで届く水のあと：水のせいれいが、つかれたみんなを、ハスのそばの水あびにさそう（aoIns1。id は前のまま） */
+  stepQuest({id:'aoFish',text:'ハスのそばの水あび',
+   steps:[{id:'aoLotus',t:'池に、ハスの花を咲かせる',check:()=>S.obj.some((o,j)=>o==='lotus'&&!isBud(j)),how:'「おく」で、ハスの種を池の上に置く'},
+    {id:'aoBath',t:'ハスのそばの水べで、せいれいが3人、水あびをする',check:()=>(S.flags.aoBath||[]).length>=3,prog:()=>'水あび '+Math.min(3,(S.flags.aoBath||[]).length)+'/3',how:'夕方になると、せいれいが水べで水あびをする'}],
+   talk:{get who(){return keyName('water')},when:()=>true,get lines(){return KS([['M','#think|みなさん、毎日よくはたらいて、夜も見回りをして……つかれていませんか。'],['F','うん、ちょっとだけ。'],['M','水につかると、つかれも、こわい気持ちも、すっと流れていくんです。'],['M','ハスの花のそばの水は、とくにやさしいんですよ。みんなで、水あびをしませんか。'],['H','#think|……水か。おれは、見てるだけにしとくぜ。']])}},
+   get story(){return KS([['F','#joy|つめたくて、きもちいいね！'],['N','ハスの花のにおいがするよぉ。ねむくなっちゃうねぇ。'],['M','#joy|よかった。みなさんが笑ってくれると、水も、うれしそうです。'],['H','へっ。見てるだけでも、なんだか、すっとするな。'],['M','つかれた日は、また、ここで水あびしましょう。'],['F','#joy|うん！']])}}),
   stepQuest({id:'kagemark',text:'大きなかげのあとを調べよう',alias:['baseUp'],
    steps:[{id:'kagemark',t:'大きなかげのあとを見つける',check:()=>{if(S.flags.kgDay==null)S.flags.kgDay=dayNo();if(S.flags.kgMark==null&&dayNo()>S.flags.kgDay||S.flags.kgMark!=null&&!S.flags.kgLook&&!kgOpen(S.flags.kgMark))kgPlace();/* あとから草・茂みなどが生えて、かくれたら、空いた所へうつす */return !!S.flags.kgLook},/* 話を聞いたつぎの日から、村の南に大きなかげのあとが出る */prog:()=>S.flags.kgMark==null?'あしたの朝に':'村の南のはしにある',how:'「みる」で、村の南に出た、大きなかげのあとをタップする'},
     {id:'tale',t:'夕方、フタバの話を聞く',check:()=>{if(!S.flags.kgLook)return false;if(S.flags.taleDay==null){S.flags.taleDay=dayNo();S.flags.taleLate=hour()>=18}return (dayNo()>S.flags.taleDay||S.flags.taleLate===false)&&hour()>=18&&!isNight()},/* あとを見つけたあとの、さいしょの18時（18時より前に見つけたらその日、あとならあしたの18時） */how:'18時になると、フタバが話しはじめる'}],
@@ -664,7 +665,7 @@ function migrateFarmFirst(state){
   }else if(id==='farm6'||id==='imoseed')(state.flags.qPassed||(state.flags.qPassed={})).earthListen=1;/* 切り株の下では、もうした：そこへ来たら、とばす */
 }
 /* 「あたたかいごはん」（warmMeal）を、燃やさない火（fireRoot）のあとに足した（warmIns1）。pre：読みこんだときに、もう今のならび（farmFirst1）の番号だったセーブ。なかよしの想いの読みかえより先にする */
-/* 「こもれびのまもり」（guardLearn）・「みんなで焼き魚」（aoFish）・「空からのながめ」（kite）を足した（story3ins1）。pre：読みこんだときに、もう今のならび（farmFirst1）の番号だったセーブ。番号は名前で読みかえる（なかよしの想いの読みかえのあとに） */
+/* 「こもれびのまもり」（guardLearn）・「ハスのそばの水あび」（aoFish）・「空からのながめ」（kite）を足した（story3ins1）。pre：読みこんだときに、もう今のならび（farmFirst1）の番号だったセーブ。番号は名前で読みかえる（なかよしの想いの読みかえのあとに） */
 const STORY3_NEW=['guardLearn','aoFish','kite'];
 function migrateStory3Ins(state,pre){
   if(state.flags.story3ins1)return;state.flags.story3ins1=1;
