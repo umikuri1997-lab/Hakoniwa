@@ -184,6 +184,20 @@ def EXTRA(sc):
     Q=kitleaf();rs=np.random.RandomState(SEED+100)
     sc.outline(None,0.86);sc.material('flat')
     S=stemtip();ANG=math.radians(52)   # 小枝から斜め前へひらく角度（どの葉も同じくらい）
+    Qflat=Q.reshape(-1,3);SAMP=Qflat[::max(1,len(Qflat)//60)]   # 交差しらべ用の、葉の形の点
+    xs=np.linspace(0,1,21);HW=np.array([np.abs(Qflat[np.abs(Qflat[:,0]-x)<0.03,1]).max() if (np.abs(Qflat[:,0]-x)<0.03).any() else 0 for x in xs])   # 葉のはば（長さの場所ごと）
+    PL=[]   # 置いた葉：(葉柄の点, 向きの行列 M, しなり)
+    def bendz(x,bend):return -bend*np.clip(x-0.25,0,None)**2
+    import trimesh
+    CM=trimesh.collision.CollisionManager()   # 置いた葉の三角形（正確な当たり判定 fcl）
+    def leafmesh(base,M,bend):
+        Qb=Q.copy();Qb[...,2]+=bendz(Qb[...,0],bend);W=(Qb@M*LEAFL+base).reshape(-1,3);n=len(W)//3
+        return trimesh.Trimesh(W,np.arange(n*3).reshape(n,3),process=False)
+    def crosses(base,M,bend):
+        """ほかの葉と、三角形どうしで交差するか（すれすれは、少しふくらませた形でしらべる）"""
+        if not PL:return False
+        return CM.in_collision_single(leafmesh(base+M[2]*0.0,M,bend))
+    skipped=0
     for b in B:   # 葉は、小枝の節ごとに、左右たがいちがいに1まい。どの葉も、小枝をふくむ1まいの平らな面（光のほう）の上（お手本の写真：魚の骨の形、交差しない）。小枝の先に1まい
         if not b.get('nodes'):continue
         pts=b['pts'];pn=np.array(b['pn']);nd=b['nodes'];side=1 if (len(pts)%2) else -1
@@ -192,16 +206,22 @@ def EXTRA(sc):
             if k==0 and not last:continue   # 小枝のつけ根の節にはつけない
             d=np.array(pts[min(i+1,len(pts)-1)])-np.array(pts[max(i-1,0)]);d/=np.linalg.norm(d);d-=pn*(d@pn);d/=np.linalg.norm(d)
             sd=np.cross(pn,d);side=-side
-            o=d if last else d*math.cos(ANG)+sd*side*math.sin(ANG)
-            ang=rs.uniform(-0.06,0.06);o=o*math.cos(ang)+np.cross(pn,o)*math.sin(ang)   # ほんの少しだけ、ばらつき
-            nn=pn.copy()
-            if not envin(p+o*LEAFL,1.08):continue   # 葉先が樹冠の形から出る葉は置かない
-            M=np.stack([o,np.cross(nn,o),nn],0);base=p-(S@M)*LEAFL
-            h=(p[2]-ENV['zb'])/ENV['H'];lt=float(nn@N.LIGHTV)
+            o0=d if last else d*math.cos(ANG)+sd*side*math.sin(ANG)
+            if not envin(p+o0*LEAFL,1.08):continue   # 葉先が樹冠の形から出る葉は置かない
+            bend=0.10;ok=None
+            for dang,lift in ((0,0),(0.18*side,0),(-0.18*side,0),(0,0.02),(0.35*side,0.01),(0,0.04),(-0.35*side,0.02),(0.5*side,0.03)):   # 交差したら、同じ面の中で少しまわす・少しうかせる
+                o=o0*math.cos(dang)+np.cross(pn,o0)*math.sin(dang);nn=pn.copy()
+                M=np.stack([o,np.cross(nn,o),nn],0);base=p+nn*lift-(S@M)*LEAFL
+                if not crosses(base,M,bend):ok=(base,M);break
+            if ok is None:skipped+=1;continue   # どうしても交差する葉は置かない
+            base,M=ok;PL.append((base,M,bend));CM.add_object(str(len(PL)),leafmesh(base,M,bend))
+            h=(p[2]-ENV['zb'])/ENV['H'];lt=float(M[2]@N.LIGHTV)
             tone=int(np.clip(round((1-lt)*1.6+(1-h)*1.2-0.5),0,len(N.LEAFB)-2))
-            Qb=Q.copy();Qb[...,2]-=0.10*np.clip(Qb[...,0]-0.25,0,None)**2   # しなり（少し）。ねじらない
+            Qb=Q.copy();Qb[...,2]+=bendz(Qb[...,0],bend)   # しなり（少し）。ねじらない
             W3=Qb@M*LEAFL+base;sc.part()
             for q in W3:sc.tri(q[0],q[1],q[2],N.LEAFB[tone])
+    print('葉',len(PL),'まい。交差するので置かなかった葉',skipped)
+    EXTRA.placed=PL
     sc.material(None);sc.outline()
 def PARTS():return []
 def POST(im):return N.specks(im)
