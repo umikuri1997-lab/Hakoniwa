@@ -166,15 +166,15 @@ function spProp(c,prop,sx,a,t,o){/* せいれいが手に持つ道具 */c.save()
 /* 3Dから写した動き（js/spirit-motions.js の SPM。tools/art/spirit3d/build.py が作る）。
    動きの絵は、はじめて使うときに読みこみ、SPMIDLE ミリ秒使わなければ手ばなす。せいれいの色にかえたコマは、ぜんぶで SPMCAP まで持つ（古い物からすてる） */
 const SPMI={},SPMC=new Map(),SPMCAP=500,SPMIDLE=60000;let SPMT=0;
-function spmImg(nm){const m=SPM[nm];let g=SPMI[nm];if(!g){g=SPMI[nm]={img:new Image(),ok:0,u:0};g.img.onload=()=>{g.ok=1;dirty=true};g.img.src=m.src}g.u=performance.now();return g.ok?g.img:null}
-function spmFree(now){if(now-SPMT<5000)return;SPMT=now;for(const nm in SPMI){const g=SPMI[nm];if(now-g.u>SPMIDLE){g.img.src='';delete SPMI[nm];for(const[k,cv]of SPMC)if(k.startsWith(nm+'|')){cv.width=cv.height=0;SPMC.delete(k)}}}}
+function spmImg(nm,el){const k=SPM[nm].s[el];let g=SPMI[k];if(!g){g=SPMI[k]={img:new Image(),ok:0,u:0};g.img.onload=()=>{g.ok=1;dirty=true};g.img.src=k}/* 同じ形の動き（しまう・とる など）は、同じ絵のファイル */g.u=performance.now();return g.ok?g.img:null}
+function spmFree(now){if(now-SPMT<5000)return;SPMT=now;for(const k in SPMI){const g=SPMI[k];if(now-g.u>SPMIDLE){g.img.src='';delete SPMI[k];for(const[c0,cv]of SPMC)if(c0.startsWith(k+'|')){cv.width=cv.height=0;SPMC.delete(c0)}}}}
 function spmCell(nm,el,vr,dir,i){/* せいれいの色にした1コマ（色のかえ方は spDot と同じ。色をかえないときは、もとの絵の場所） */
-  const m=SPM[nm],G=m.g[el],im=spmImg(nm);if(!G||!im)return null;const sx=i*G[1],sy=G[0]+dir*G[2],A=SPC[el],B=spcVar(el,vr);
+  const m=SPM[nm],G=m.g[el];if(!G)return null;const im=spmImg(nm,el);if(!im)return null;const sx=i*G[0],sy=dir*G[1],A=SPC[el],B=spcVar(el,vr);
   if(A===B)return[im,sx,sy];
-  const k=nm+'|'+el+'|'+(vr&&vr.h||0)+'_'+(vr&&vr.l||0)+'|'+dir+'|'+i;let cv=SPMC.get(k);
+  const k=m.s[el]+'|'+(vr&&vr.h||0)+'_'+(vr&&vr.l||0)+'|'+dir+'|'+i;let cv=SPMC.get(k);
   if(cv){SPMC.delete(k);SPMC.set(k,cv);return[cv,0,0]}
-  cv=document.createElement('canvas');cv.width=G[1];cv.height=G[2];const g=cv.getContext('2d');g.drawImage(im,sx,sy,G[1],G[2],0,0,G[1],G[2]);
-  const d=g.getImageData(0,0,G[1],G[2]),p=d.data,M={};for(const r in A)if(B[r])M[A[r].toLowerCase()]=B[r];
+  cv=document.createElement('canvas');cv.width=G[0];cv.height=G[1];const g=cv.getContext('2d');g.drawImage(im,sx,sy,G[0],G[1],0,0,G[0],G[1]);
+  const d=g.getImageData(0,0,G[0],G[1]),p=d.data,M={};for(const r in A)if(B[r])M[A[r].toLowerCase()]=B[r];
   for(let q=0;q<p.length;q+=4){if(!p[q+3])continue;const h='#'+((1<<24)|(p[q]<<16)|(p[q+1]<<8)|p[q+2]).toString(16).slice(1),to=M[h];if(to){p[q]=parseInt(to.slice(1,3),16);p[q+1]=parseInt(to.slice(3,5),16);p[q+2]=parseInt(to.slice(5,7),16)}}
   g.putImageData(d,0,0);SPMC.set(k,cv);
   while(SPMC.size>SPMCAP){const[k0,c0]=SPMC.entries().next().value;c0.width=c0.height=0;SPMC.delete(k0)}
@@ -192,7 +192,7 @@ function spToyPh(r,now){/* 遊具のゆれ・進みぐあい（0〜1）：toyPos
 function spmDraw(c,el,x,y,s,f,o,nm,t,back,tr,spr,D){/* 3Dの動きの1コマを描いて、目・ほっぺ・まつげをかさねる */
   const m=SPM[nm],G=m.g[el];if(!G)return false;const dir=back?2:tr?1:0,ph=m.r==='ph'?(o.ph==null?0:o.ph):((t*m.r)%1+1)%1,i=Math.floor(ph*m.n)%m.n,cell=spmCell(nm,el,o.vr,dir,i);if(!cell)return false;
   const vr=o.vr,e=m.e[el][dir][i];c.save();c.translate(x,y);c.scale(s*f,s);const sm=c.imageSmoothingEnabled;c.imageSmoothingEnabled=false;
-  c.drawImage(cell[0],cell[1],cell[2],G[1],G[2],G[3]*D,G[4]*D,G[1]*D,G[2]*D);
+  c.drawImage(cell[0],cell[1],cell[2],G[0],G[1],G[2]*D,G[3]*D,G[0]*D,G[1]*D);
   if(e[2]<2){const S2=e[2]===1?'S':'',md=o.mood==='cry'?'teary':o.mood||'',fm=o.blink&&!md?'shut':md==='smile'||md==='joy'||md==='eat'?'hap':['teary','tear','shock','strain','sad','brave','tired','hungry'].includes(md)?md:'n',ex=e[0]*D,ey=e[1]*D+(el==='wind'?-3*D:0);
     if(e[3]){c.scale(-1,1)}
     if(vr&&vr.cheek)spr('sp:cheek'+S2,e[3]?-ex:ex,ey);spr('sp:face'+S2+'#'+fm,e[3]?-ex:ex,ey);if(vr&&vr.lash&&fm!=='strain')spr('sp:lash'+S2+'#'+fm,e[3]?-ex:ex,ey)}
