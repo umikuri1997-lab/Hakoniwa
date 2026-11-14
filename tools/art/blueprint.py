@@ -94,6 +94,7 @@ def build(sc,parts):
         elif k=='lathe':cx,cy,pr=d;sc.revolve(cx,cy,pr,lambda k_,i:tuple(c),n=p.detail)
         elif k=='model':
             V,F,C=model_tris(*d);sc.part()
+            if getattr(p,'warp',None):V=p.warp(V.copy())   # warp：モデルの形をかえる関数（点の一覧 → 点の一覧。根をちぢめる など）
             rc=getattr(p,'recol',None)
             if rc is not None:   # 色をかえる（その色に、モデルの明るさのちがいだけをのこす。例：つぼをクリーム色・青に）
                 L_=C.mean(1);L_=L_/max(1.0,L_.mean());kk=getattr(p,'recolk',1.0);L_=1+(L_-1)*kk;C=np.clip(np.array(rc,float)[None,:]*L_[:,None],0,255)   # recolk：明るさのちがいをのこす分（0でむらなし）
@@ -286,9 +287,11 @@ def earclip(pts):
 MODELS=os.path.join(os.path.dirname(os.path.abspath(__file__)),'models')
 _MC={};MODEL_SOFT=0.3   # モデルの色を白にまぜる分
 POTCOL=(226,196,166)   # 観葉植物のはち（モデルではこい灰色）を、ゲームに合わせたやきものの色に
-def model_tris(path,cx,cy,z0,size,rot=0,tilt=0):
-    """glTF のモデルを読んで、ゲームの向き（x=東, y=南, z=上）の三角形にする。モデルの正面（+Z）を南（手前）へ。色はモデルの色（テクスチャの色をとる）"""
-    key=(path,cx,cy,z0,size,rot,tilt)
+def model_tris(path,cx,cy,z0,size,rot=0,tilt=0,zs=1.0,up=None):
+    """glTF のモデルを読んで、ゲームの向き（x=東, y=南, z=上）の三角形にする。モデルの正面（+Z）を南（手前）へ。色はモデルの色（テクスチャの色をとる）。
+    zs：たての高さだけ、のばす・ちぢめる（ひくい切り株など。size はちぢめる前の高さ）。
+    up：モデルの中で、まっすぐ上にしたい向き（ゲームの向き。rot・tilt の前）。かたむいた切り口を水平にするときなど"""
+    key=(path,cx,cy,z0,size,rot,tilt,zs,None if up is None else tuple(up))
     if key in _MC:return _MC[key]
     import trimesh
     sc_=trimesh.load(os.path.join(MODELS,path),force='scene');VS,FS,CS=[],[],[];n=0
@@ -316,9 +319,13 @@ def model_tris(path,cx,cy,z0,size,rot=0,tilt=0):
     if 'Houseplant' in path:col[(col.mean(1)<90)&(col.max(1)-col.min(1)<18)]=POTCOL   # 灰色のはちだけ（葉の緑はそのまま）
     v=np.array(m.vertices,float);V=np.stack([v[:,0],v[:,2],v[:,1]],1)   # glTF（y上・z手前）→ x・y南・z上
     k=size/(V[:,2].max()-V[:,2].min())   # size は、たおす前のモデルの高さ
+    if up is not None:   # up の向きを、まっすぐ上（z）へまわす（ロドリゲスの式）
+        u=np.asarray(up,float);u/=np.linalg.norm(u);ax=np.cross(u,[0,0,1.0]);sn=np.linalg.norm(ax);cs=u[2]
+        if sn>1e-9:
+            ax/=sn;K=np.array([[0,-ax[2],ax[1]],[ax[2],0,-ax[0]],[-ax[1],ax[0],0]]);Rm=np.eye(3)+sn*K+(1-cs)*K@K;c0=V.mean(0);V=(V-c0)@Rm.T+c0
     t=math.radians(tilt);T=np.array([[math.cos(t),0,math.sin(t)],[0,1,0],[-math.sin(t),0,math.cos(t)]]);V=V@T.T   # よこにたおす（東西の向きに）
     a=math.radians(rot);R=np.array([[math.cos(a),-math.sin(a),0],[math.sin(a),math.cos(a),0],[0,0,1]]);V=V@R.T
-    V=(V-[(V[:,0].max()+V[:,0].min())/2,(V[:,1].max()+V[:,1].min())/2,V[:,2].min()])*k+[cx,cy,z0]
+    V=(V-[(V[:,0].max()+V[:,0].min())/2,(V[:,1].max()+V[:,1].min())/2,V[:,2].min()])*k;V[:,2]*=zs;V=V+[cx,cy,z0]
     _MC[key]=(V,np.array(m.faces),col);return _MC[key]
 
 TOP=np.array([0,0,1.0]);EAST=np.array([1.0,0,0])

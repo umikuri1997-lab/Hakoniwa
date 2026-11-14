@@ -65,6 +65,12 @@
   "tris": 3004,
   "catalog_h": 0.2
  },
+ "firewood": {
+  "w_per_h": 2.148,
+  "d_per_h": 2.16,
+  "tris": 2999,
+  "catalog_h": 0.12
+ },
  "grass": {
   "w_per_h": 0.956,
   "d_per_h": 0.895,
@@ -95,6 +101,12 @@
   "tris": 2840,
   "catalog_h": 0.5
  },
+ "log_lying": {
+  "w_per_h": 2.026,
+  "d_per_h": 1.722,
+  "tris": 2714,
+  "catalog_h": 0.22
+ },
  "lotus": {
   "w_per_h": 1.748,
   "d_per_h": 1.597,
@@ -124,6 +136,42 @@
   "d_per_h": 0.32,
   "tris": 1463,
   "catalog_h": 2.2
+ },
+ "pebble_a": {
+  "w_per_h": 1.427,
+  "d_per_h": 1.378,
+  "tris": 448,
+  "catalog_h": 0.06
+ },
+ "pebble_b": {
+  "w_per_h": 1.719,
+  "d_per_h": 1.594,
+  "tris": 462,
+  "catalog_h": 0.04
+ },
+ "pebble_c": {
+  "w_per_h": 1.765,
+  "d_per_h": 1.765,
+  "tris": 418,
+  "catalog_h": 0.06
+ },
+ "pebbles2": {
+  "w_per_h": 2.398,
+  "d_per_h": 2.364,
+  "tris": 858,
+  "catalog_h": 0.08
+ },
+ "pebbles3a": {
+  "w_per_h": 1.723,
+  "d_per_h": 2.084,
+  "tris": 2548,
+  "catalog_h": 0.08
+ },
+ "pebbles3b": {
+  "w_per_h": 1.779,
+  "d_per_h": 1.889,
+  "tris": 2726,
+  "catalog_h": 0.08
  },
  "plant": {
   "w_per_h": 1.125,
@@ -172,6 +220,48 @@
   "d_per_h": 0.912,
   "tris": 4695,
   "catalog_h": 0.45
+ },
+ "sprig": {
+  "w_per_h": 1.227,
+  "d_per_h": 0.868,
+  "tris": 2999,
+  "catalog_h": 0.18
+ },
+ "stone_big": {
+  "w_per_h": 1.472,
+  "d_per_h": 1.535,
+  "tris": 400,
+  "catalog_h": 0.38
+ },
+ "stone_chunk": {
+  "w_per_h": 1.319,
+  "d_per_h": 1.387,
+  "tris": 668,
+  "catalog_h": 0.25
+ },
+ "stone_mid": {
+  "w_per_h": 0.925,
+  "d_per_h": 1.223,
+  "tris": 356,
+  "catalog_h": 0.3
+ },
+ "stone_round": {
+  "w_per_h": 1.214,
+  "d_per_h": 1.251,
+  "tris": 754,
+  "catalog_h": 0.32
+ },
+ "stone_slab": {
+  "w_per_h": 3.101,
+  "d_per_h": 2.958,
+  "tris": 822,
+  "catalog_h": 0.1
+ },
+ "stump": {
+  "w_per_h": 2.216,
+  "d_per_h": 2.501,
+  "tris": 3000,
+  "catalog_h": 0.43
  },
  "takenoko": {
   "w_per_h": 0.558,
