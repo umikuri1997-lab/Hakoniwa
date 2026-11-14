@@ -78,3 +78,21 @@ P('名前','model',('tripo/oak.glb', cx, cy, z0, size, rot, tilt), on=('ground',
 植物・自然の物（`rosevine` から下）は、1つのモデルに21こ入っていたのを `tools/art/models/tripo_split.py` で切りわけた（つながっている形ごとに分け、色は UV からとって点ごとの色に）。モデルを新しくもらったときも、同じように切りわけて、ここの一覧と `catalog` を足す。
 
 3回め（`stump` から下）は、色のない FBX（y が上）。`tripo_split.py` は、上の向きを自分でみつけ、面の向きをそろえ、面を3000までへらす。色は設計図で `recol` する。
+
+## 植物のセット（kit_*）
+
+持ち主からもらった、色のない植物のセット（もとは `tools/art/models/tripo_src/plant_kit.glb`。36こが、正面から見た1まいの絵のように、たて・よこにならんでいた）を、`python3 tools/art/models/kit_split.py` で1こずつにした物。ファイルは `tripo/kit_<名前>.glb`（足もとが原点・正面が +Z・y が上。面は3000まで）。色はないので、設計図で `p.recol` する。
+木の葉（`tools/art/furn3d/items/tree.py` の `KITLEAF`）は、ここの `leaf`・`leaf_oak`・`leaf_long`・`leaf_wide` を、面を40までへらして使っている。
+
+| 名前 | なに |
+|---|---|
+| `leaf`・`leaf_long`・`leaf_wide`・`leaf_curl`・`leaf_round` | 葉1まい（ふつう・細長い・はばが広い・まるまった・まるい） |
+| `leaf_pair`・`leaf_trio`・`leaf_oak`・`leaf_round2`・`leaf_round2b` | 葉の組（2まい・ギザギザの3まい・オークのような葉・まるい葉2まい） |
+| `leaf_fan`・`leaf_spray` | 葉のかたまり（ひろがる・小枝についた） |
+| `stem` | 茎のきれはし |
+| `tree_round2`・`tree_conifer` | 木（まるい木2本・とがった木） |
+| `vine_hang`・`vine_trail` | つる（たれる・はう） |
+| `grass_blades`・`grass_tall` | 草（ひくい・せの高い） |
+| `clover_bush`・`fern_bush`・`daisy_clump`・`flower_bush`・`flower_bush2`・`rose_bush` | 茂み・花の株 |
+| `tulip_buds`・`bud_stem` | つぼみ |
+| `rose_pair`・`poppy`・`tulip`・`lily2`・`anemone`・`cosmos`・`peony`・`daisy`・`pansy` | 花（葉つき） |

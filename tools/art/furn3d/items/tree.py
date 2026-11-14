@@ -101,7 +101,7 @@ def loadskel():
 # 骨格（tree_skel.json）は、そのまま。細い枝（太さ THIN より細い）は描くのをはぶく（骨格の中にはのこる）。
 # 葉群：側枝ごと（枝先から親へたどって、太さ GROUPR をこえた所の枝ごと）に1つ。まん中はその枝先たちのまん中、半径はその広がり＋ゆとり（大小まちまち）。
 #   主枝の先にも1つ。葉群は、でこぼこのある玉（ゆっくりかわるむら）で、となりの葉群とかさなって、1つづきの樹冠になる。
-#   表面に、小さな葉（長さ 0.09・はば 0.065 の0.75〜1.25倍）を、すきまなく（ほかの葉群の中になる所にはつけない）。葉は表面にそって、重さで下を向く。
+#   表面に、小さな葉（セットの葉4しゅるい KITLEAF をまぜる。長さ 0.10 の0.75〜1.25倍）を、すきまなく（ほかの葉群の中になる所にはつけない）。葉は表面にそって、重さで下を向く。
 #   葉は1まいずつ目立たせない（葉群の中は線を引かない・すじの左右の色わけなし）。明暗は葉群ごと：葉群の中で上・光の向きが明るく、下が暗い。奥・下の葉群は1段暗い（手前・まん中・奥の3層）。
 THIN=0.011;GROUPR=0.024;PL,PW=0.09,0.065;PZ=0.74;WIDEN=0.22   # WIDEN：葉群を、幹から横へ広げる割合。PZ：葉群のたての、つぶし（見おろしの写し方で、丸い玉がたてにのびて見えるので）
 def puffs(P,par,r,tips):
@@ -116,6 +116,19 @@ def puffs(P,par,r,tips):
         c=c+np.array([(c[0]-CX)*WIDEN,(c[1]-CY)*WIDEN*0.5,0.04])   # 横へ少し広げる（樹冠を横に広く）。枝先は葉群の中のまま
         out.append((c,max(0.21,min(0.36,ext*0.8+0.14))))
     return out
+KITLEAF=['leaf','leaf_oak','leaf_long','leaf_wide']   # 葉の形（持ち主からもらった植物のセット tripo/kit_*.glb から。持ち主の指示：葉はここから）
+_KL=[]
+def kitleaves():
+    """セットの葉を読み、面をへらして（たくさん置くので）、葉の向きの軸にそろえる：のびる向き e1・はばの向き e2・表の向き e3。長さ1・まん中が原点"""
+    if _KL:return _KL
+    import trimesh
+    for nm in KITLEAF:
+        m=trimesh.load(os.path.join(os.path.dirname(N.__file__),'..','..','models','tripo','kit_'+nm+'.glb'),force='mesh')
+        if len(m.faces)>40:m=m.simplify_quadric_decimation(face_count=40)
+        V=np.asarray(m.vertices,float);V=np.stack([V[:,0],-V[:,2],V[:,1]],1)   # glTF（y上・z手前）→ x・y南・z上
+        c=V.mean(0);_,_,vt=np.linalg.svd(V-c,full_matrices=False);Q=(V-c)@vt.T;Q/=Q[:,0].max()-Q[:,0].min()
+        _KL.append(Q[np.asarray(m.faces)])
+    return _KL
 def EXTRA(sc):
     P,par,tips,lobes=loadskel();up=np.array([0,0,1.0]);rs=np.random.RandomState(SEED+100)   # 葉の乱数は、骨格とべつ
     r,ch=N.radii(par,rtip=0.005,E=1.8,rmax=0.16)
@@ -157,10 +170,10 @@ def EXTRA(sc):
             nn=u*0.85+N.SUN*0.15;nn/=np.linalg.norm(nn);t=np.cross(nn,up)
             t=t/np.linalg.norm(t) if np.linalg.norm(t)>1e-6 else np.array([1.0,0,0]);dn=np.cross(t,nn)   # 表面にそって下へ（重さ）
             a=rs.uniform(-0.9,0.9);ld=-dn*math.cos(a)+t*math.sin(a);sd=np.cross(nn,ld);f=rs.uniform(0.75,1.25)
-            base=p-ld*PL*f*0.45;sc.part()
-            TT,EE,VV=N.roundleaf(base,ld,sd,nn,PL*f,PW*f,fold=0.15,curl=0.10,th=0.0,nt=3,ns=1)
             col=N.LEAFB[tone] if rs.rand()>0.15 else N.LEAFB[min(len(N.LEAFB)-1,tone+1)]
-            for q in TT[:len(TT)//2]:sc.tri(q[0],q[1],q[2],col)
+            Q=kitleaves()[rs.randint(len(KITLEAF))];sz=PL*f*1.15;M3=np.stack([ld,sd*rs.choice([-1,1]),nn],0)   # セットの葉を、その場所・向き・大きさに
+            W3=Q@M3*sz+p;sc.part()
+            for q in W3:sc.tri(q[0],q[1],q[2],col)
         sc.material(None);sc.outline();sc.group(None)
 def POST(im):return N.specks(im)
 if __name__=='__main__':

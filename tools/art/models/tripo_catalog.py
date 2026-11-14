@@ -17,7 +17,14 @@ SIZE={'oak':2.4,'oak_dead':2.2,'cedar':2.6,'maple':2.2,'acacia':2.0,'appletree':
       'mushrooms':0.3,'grass':0.35,'grass2':0.35,'plant':0.6,'sack':0.5,'sacks2':0.6,'jar_band':0.5,'terracotta':0.5,'candle':0.3,
       'lantern':0.45,'wateringcan':0.35,'veggies':0.3,'bathtub':0.6,'cutboard':0.2,'bird':0.2,
       'stump':0.43,'stone_big':0.38,'stone_mid':0.3,'stone_round':0.32,'stone_slab':0.1,'stone_chunk':0.25,'pebbles2':0.08,'pebbles3a':0.08,'pebbles3b':0.08,
-      'pebble_a':0.06,'pebble_b':0.04,'pebble_c':0.06,'log_lying':0.22,'firewood':0.12,'sprig':0.18}
+      'pebble_a':0.06,'pebble_b':0.04,'pebble_c':0.06,'log_lying':0.22,'firewood':0.12,'sprig':0.18,
+      # 植物のセット（kit_*。tools/art/models/kit_split.py で切りわけた。色なし）
+      'kit_leaf':0.12,'kit_leaf_pair':0.12,'kit_leaf_oak':0.14,'kit_leaf_trio':0.14,'kit_stem':0.12,'kit_leaf_fan':0.18,'kit_leaf_spray':0.18,
+      'kit_tree_round2':1.4,'kit_tree_conifer':1.6,'kit_vine_hang':0.5,'kit_vine_trail':0.2,'kit_leaf_long':0.2,'kit_leaf_wide':0.2,
+      'kit_grass_blades':0.3,'kit_clover_bush':0.3,'kit_tulip_buds':0.4,'kit_leaf_round2':0.3,'kit_leaf_round2b':0.3,'kit_rose_bush':0.4,
+      'kit_daisy_clump':0.3,'kit_fern_bush':0.45,'kit_bud_stem':0.4,'kit_grass_tall':0.4,'kit_leaf_curl':0.15,'kit_leaf_round':0.15,
+      'kit_flower_bush':0.45,'kit_rose_pair':0.3,'kit_poppy':0.3,'kit_tulip':0.3,'kit_lily2':0.3,'kit_flower_bush2':0.3,'kit_anemone':0.3,
+      'kit_cosmos':0.3,'kit_peony':0.3,'kit_daisy':0.3,'kit_pansy':0.3}
 def shot1(f,h):
     M=types.SimpleNamespace(ID=f,GRAD=True,VIEWS=[(f,0)])
     def PARTS():
