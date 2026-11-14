@@ -17,7 +17,7 @@ function bfs0(sx,sy,enemy){
   let h=0,t=0;const s=clamp(sy,0,H-1)*W+clamp(sx,0,W-1);dist[s]=0;q[t++]=s;
   while(h<t){const i=q[h++],x=i%W,y=(i/W)|0;
     for(const[dx,dy]of DIRS){const nx=x+dx,ny=y+dy;if(nx<0||ny<0||nx>=W||ny>=H)continue;const j=ny*W+nx;if(dist[j]>=0)continue;
-      if(wetJ(j)||STUMPB.has(j)||cliff2(i,j))continue;/* 切り株の根もとは、だれも通れない（walk と同じ） */if((solidOf(j)||HOME_DOORS.has(typeAt(j))||GATE_IDS.has(typeAt(j)))&&(enemy===2||!breakable(typeAt(j))))continue;
+      if(wetJ(j)||STUMPB.has(j)||j===GODJ||cliff2(i,j))continue;/* 切り株の根もとは、だれも通れない（walk と同じ） */if((solidOf(j)||HOME_DOORS.has(typeAt(j))||GATE_IDS.has(typeAt(j)))&&(enemy===2||!breakable(typeAt(j))))continue;
       dist[j]=dist[i]+1;prev[j]=i;q[t++]=j}}
   return {dist,prev};
 }
@@ -26,7 +26,7 @@ function bfsE(sx,sy,wk,sd){
   const N=W*H,dist=new Int16Array(N).fill(-1),prev=new Int32Array(N).fill(-1),cost=new Int32Array(N).fill(-1),B=[];
   const s=clamp(sy,0,H-1)*W+clamp(sx,0,W-1);cost[s]=0;dist[s]=0;B[0]=[s];
   for(let c=0;c<B.length;c++){const L=B[c];if(!L)continue;for(const i of L){if(cost[i]!==c)continue;const x=i%W,y=(i/W)|0;
-    for(const[dx,dy]of DIRS){const nx=x+dx,ny=y+dy;if(nx<0||ny<0||nx>=W||ny>=H)continue;const j=ny*W+nx;if(wetJ(j)||STUMPB.has(j)||cliff2(i,j))continue;/* 切り株の根もとは通れない（walk と同じ。通れる道にすると、その道を歩けずに止まる） */
+    for(const[dx,dy]of DIRS){const nx=x+dx,ny=y+dy;if(nx<0||ny<0||nx>=W||ny>=H)continue;const j=ny*W+nx;if(wetJ(j)||STUMPB.has(j)||j===GODJ||cliff2(i,j))continue;/* 切り株の根もとは通れない（walk と同じ。通れる道にすると、その道を歩けずに止まる） */
       let add=2+((Math.imul(j^sd,2654435761)>>>29)&1);const o=typeAt(j);
       if(jumpEdge(i,j))add*=3;/* 段差を飛ぶのは3倍 */if(S.ground[j]===2)add*=2;/* 浅瀬は2倍 */if(solidOf(j)||HOME_DOORS.has(o)||GATE_IDS.has(o)){if(!breakable(o))continue;add+=wk}/* 壁はどれも同じ手間（守りの薄い所をねらうことはしない） */
       const nc=c+add;if(cost[j]>=0&&cost[j]<=nc)continue;cost[j]=nc;dist[j]=dist[i]+1;prev[j]=i;(B[nc]||(B[nc]=[])).push(j)}}}
