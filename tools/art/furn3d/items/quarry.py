@@ -1,16 +1,16 @@
-# 採石場（quarry）：いまの絵（お手本）と同じならび。切り出した石をよせてつみ、右にツルハシを立てかける。手前に小石。
+# 採石場（quarry）：画角30・左右にも遠近。色は、いまの絵に合わせる。いまの絵（お手本）と同じならび。切り出した石をよせてつみ、右にツルハシを立てかける。手前に小石。
 # 形は、トリポのモデル（tools/art/models/tripo：stone_big・stone_mid・stone_round・stone_chunk・stone_slab・pebbles3a・pebble_a）。色は設計図でつける（モデルは色なし）。単位はマス。大きさは、いまの絵（94×72ドット）に合わせた。
 #   うしろ：大きな石（stone_big、高さ0.38）の上に、石のかけら（stone_chunk、高さ0.20）をのせる（大きな石のいちばん上の高さに置く）。
 #   左：まるい石（stone_round、0.32）。手前：大きな石を小さく向きをかえて（0.26）。右：中くらいの石（stone_mid、0.26）。右手前：平たい石（stone_slab、0.07）。どれも地面に置く。
 #   上を向いた面のところどころに、こけ（うすい緑。石の面のもよう）。
-#   ツルハシ：木の柄（半径0.03）を、地面（1.08,0.84）から、うしろの石によせて立てかける。頭は鉄（まがった管、半径0.026）。柄のさきを頭の穴にさしこむ。
+#   ツルハシ：木の柄（半径0.03）を、地面（1.08,0.84）から、うしろの石によせて立てかける。頭は鉄（まがった形。まん中が太く半径0.048、さきへ細く0.014）。柄のさきを頭の穴にさしこむ。
 #   小石：3このかたまり・1こを、手前の地面に。
 from blueprint import Part as P,model_tris
 from common import *
 import numpy as np
-ID='quarry';GRAD=True;BOTTOM=63
+ID='quarry';GRAD=True;BOTTOM=63;FOV=30;FULLPERSP=True   # 画角30・左右にも遠近（持ち主がきめた）
 VIEWS=[('quarry',0)]
-STONE=(196,188,176);MOSS=(170,200,112);IRON=(176,180,196);T='tripo/'
+STONE=(192,178,166);MOSS=(174,200,96);IRON=(196,196,212);HANDLE=(214,150,90);T='tripo/'   # 色は、いまの絵（お手本）に合わせる
 def moss(spots,ztop):
     def f(x,y,z):
         if z<ztop-0.07:return None
@@ -34,9 +34,11 @@ def PARTS():
        rock('小石（3こ）','pebbles3a.glb',0.16,0.96,0.07,10)[0],
        rock('小石','pebble_a.glb',1.18,0.80,0.05,40)[0]]
     B=np.array((1.08,0.84,0.0));Tp=np.array((0.90,0.46,0.58));a=(Tp-B)/np.linalg.norm(Tp-B)
-    h=P('ツルハシの柄','frust',(tuple(B),tuple(Tp+a*0.02),0.032,0.030),WOOD,on=('右の石','大きな石'),note='地面から、石に立てかける');h.detail=12;L.append(notex(h))
+    h=P('ツルハシの柄','frust',(tuple(B),tuple(Tp+a*0.02),0.032,0.030),HANDLE,on=('右の石','大きな石'),note='地面から、石に立てかける');h.detail=12;L.append(notex(h))
     side=np.cross(a,(0,1.0,0));side/=np.linalg.norm(side)
     if side[0]<0:side=-side
-    pts=[tuple(Tp+side*s_-a*0.16*(s_/0.30)**2) for s_ in np.linspace(-0.30,0.30,11)]
-    m=P('ツルハシの頭','tube',(pts,0.026),IRON,on=('ツルハシの柄',),note='柄のさきを、頭の穴にさしこむ');m.metal=True;L.append(notex(m))
+    pts=[Tp+side*s_-a*0.16*(s_/0.30)**2 for s_ in np.linspace(-0.30,0.30,13)];rr=lambda s_:0.014+0.034*(1-abs(s_)/0.30)**0.8   # 頭：まん中が太く（半径0.048）、さきへ細く（0.014）
+    ss=np.linspace(-0.30,0.30,13)
+    for i in range(12):   # 円すい台をつないで、まがった頭（同じグループ：つなぎめに線を引かない）
+        m=P('ツルハシの頭%d'%(i+1),'frust',(tuple(pts[i]),tuple(pts[i+1]),rr(ss[i]),rr(ss[i+1])),IRON,on=('ツルハシの柄',),note='柄のさきを、頭の穴にさしこむ',grp='ツルハシの頭');m.detail=12;m.metal=True;L.append(notex(m))
     return L

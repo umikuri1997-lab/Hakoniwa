@@ -1,4 +1,4 @@
-# 伐採場（lumber）：いまの絵（お手本）と同じならび。根のはった切り株に斧がささり、右に丸太を2本ななめにねかせ、左手前に、わったまき、そばに葉の小枝。
+# 伐採場（lumber）：画角30・左右にも遠近。色は、いまの絵に合わせる。いまの絵（お手本）と同じならび。根のはった切り株に斧がささり、右に丸太を2本ななめにねかせ、左手前に、わったまき、そばに葉の小枝。
 # 形は、トリポのモデル（tools/art/models/tripo：stump・log_lying・firewood・sprig）。色は設計図でつける（モデルは色なし）。単位はマス。大きさは、いまの絵（93×68ドット）に合わせた。
 #   切り株（stump.glb）：高さ0.42で、地面に置く（根が手前へまっすぐ向かないよう40度まわす）。上の面（切り口。モデルでは少しかたむいている）は年輪の色（もよう）、ほかは皮の色。
 #   斧：鉄の頭（あつさ0.035、刃はこの面の中で、柄にちょっかく）を、切り株のまん中より0.10うしろに、刃を切り口に切りこませる。柄（木、半径0.028）は頭の穴から右上へ。刃先は、といだ明るい色。
@@ -9,18 +9,19 @@ from blueprint import Part as P,model_tris,LOGEND,MAKIRING,MAKIHEART
 from common import *
 import math
 import numpy as np
-ID='lumber';GRAD=True;BOTTOM=62
+ID='lumber';GRAD=True;BOTTOM=62;FOV=30;FULLPERSP=True   # 画角30・左右にも遠近（持ち主がきめた）
 VIEWS=[('lumber',0)]
 CX,CY=0.34,0.52
-BARK=(200,144,92);IRON=(176,180,196);LEAF=(150,206,104)
+BARK=(222,134,66);IRON=(176,180,196);LEAF=(150,200,86);HANDLE=(214,150,90)   # 色は、いまの絵（お手本）に合わせる
+TOP=(234,186,126);RING=(246,222,174);HEART=(240,200,140);CHIP=(240,206,150)
 EDGE=(238,242,250)   # 刃先：といだ明るい色
 T='tripo/'
 def rings(r,R):   # 切り口の色：皮のふち・明るい木・年輪の線・しん
     q=r/R
     if q>0.90:return BARK
-    if 0.58<q<0.66 or 0.30<q<0.35:return MAKIRING
-    if q<0.12:return MAKIHEART
-    return LOGEND
+    if 0.58<q<0.66 or 0.30<q<0.35:return RING
+    if q<0.12:return HEART
+    return TOP
 def model(nm,f,cx,cy,size,rot,col,zs=1.0,k=0.5,note='地面に置く',on=('ground',)):
     d=(T+f,cx,cy,0,size,rot,0,zs);p=P(nm,'model',d,col,on=on,note=note);p.recol=col;p.recolk=k;return notex(p),model_tris(*d)[0]
 def PARTS():
@@ -36,7 +37,7 @@ def PARTS():
     ax=P('斧の頭','prism',(head,AY-0.0175,AY+0.0175),IRON,on=('切り株',),note='刃を切り口に切りこませる');ax.metal=True
     ax.decal=lambda x,y,z:EDGE if (x-E[0])*b[0]+(z-E[1])*b[1]>0.165 else None;L.append(notex(ax))
     a=pt(-0.02,0);e=pt(0.34,0)
-    h=P('斧の柄','frust',((a[0],AY,a[1]),(e[0],AY,e[1]),0.026,0.030),WOOD,on=('斧の頭',),note='頭の穴にさしこむ');h.detail=12;L.append(notex(h))
+    h=P('斧の柄','frust',((a[0],AY,a[1]),(e[0],AY,e[1]),0.026,0.030),HANDLE,on=('斧の頭',),note='頭の穴にさしこむ');h.detail=12;L.append(notex(h))
     for k,(x,y) in enumerate(((0.86,0.58),(1.08,0.66))):   # 丸太：ななめ（おくが左・手前が右）
         lg,V=model('丸太%d'%(k+1),'log_lying.glb',x,y,0.22,0,BARK,note='地面に、ななめにねかせる')
         P2=V[:,:2]-V[:,:2].mean(0);w,U=np.linalg.eigh(P2.T@P2);u=U[:,1]   # 丸太の向き（上から見ていちばん長い向き）
@@ -49,9 +50,9 @@ def PARTS():
                 v=-(x-m0[0])*u[1]+(y-m0[1])*u[0];return rings(math.hypot(v,z-cz),Rl)
             return None
         lg.decal=dec;lg.barktex=True;L.append(lg)
-    fw,_=model('わったまき','firewood.glb',0.04,0.88,0.12,90,LOGEND,k=0.6);L.append(fw)
+    fw,_=model('わったまき','firewood.glb',0.04,0.88,0.12,90,CHIP,k=0.6);L.append(fw)
     for k,(x,y,w,dd) in enumerate(((0.40,0.92,0.09,0.05),(0.56,0.97,0.07,0.04),(0.66,0.88,0.06,0.04))):
-        L.append(notex(P('木くず%d'%(k+1),'box',(x,y,0,x+w,y+dd,0.02),LOGEND,bevel=0,note='地面')))
+        L.append(notex(P('木くず%d'%(k+1),'box',(x,y,0,x+w,y+dd,0.02),CHIP,bevel=0,note='地面')))
     for k,(x,y,sz,rot) in enumerate(((-0.10,0.58,0.20,0),(0.66,0.82,0.17,70))):
         g,_=model('葉の小枝%d'%(k+1),'sprig.glb',x,y,sz,rot,LEAF,k=0.6);g.deco=True;g.olk=0.86;L.append(g)
     return L
