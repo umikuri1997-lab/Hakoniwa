@@ -99,34 +99,25 @@ def paper_css():
     ])
 
 
-# ---- 依頼ボードの板（32×24：よこの板が3まい） ----
+# ---- 依頼ボードの板（48×24：つぎ目のない1まい板。木目だけ） ----
 def plank_rows():
-    W, H = 32, 24
+    W, H = 48, 24
     g = [['a'] * W for _ in range(H)]
-    for y in range(H):
-        if y % 8 == 0:
-            for x in range(W): g[y][x] = 'h'      # 板の上のふちの明るい線
-        if y % 8 == 7:
-            for x in range(W): g[y][x] = 'd'      # 板と板のすきま
-    # 板のつぎ目（板ごとにずらす）
-    for row, x in ((0, 21), (1, 6), (2, 27)):
-        for y in range(row * 8 + 1, row * 8 + 7): g[y][x] = 'd'
-        g[row * 8 + 1][x + 1 if x + 1 < W else 0] = 'h'
-    # 木目（短い横線）
-    for y, x, w in ((3, 3, 7), (5, 12, 5), (2, 25, 4), (11, 14, 8), (13, 26, 4), (10, 1, 3),
-                    (19, 4, 5), (21, 16, 6), (18, 22, 3)):
-        for i in range(w): g[y][(x + i) % W] = 'g'
-    # くぎ（つぎ目の両がわ）
-    for row, x in ((0, 21), (1, 6), (2, 27)):
-        for dx in (-2, 2):
-            g[row * 8 + 4][(x + dx) % W] = 'n'
+    # 木目（ゆるい横すじ）。くりかえしても目立たないように、長さ・場所をばらばらに
+    for y, x, w, c in ((1, 4, 13, 'g'), (3, 22, 9, 'g'), (5, 36, 11, 'g'), (8, 2, 7, 'g'), (9, 14, 16, 'h'),
+                       (12, 33, 10, 'g'), (14, 8, 12, 'g'), (16, 26, 6, 'h'), (18, 40, 12, 'g'), (20, 17, 10, 'g'),
+                       (22, 1, 8, 'h'), (23, 30, 9, 'g'), (6, 15, 4, 'h'), (11, 45, 6, 'h')):
+        for k in range(w): g[y][(x + k) % W] = c
+    # 小さなふし
+    for y, x in ((10, 40), (19, 6)):
+        g[y][x] = g[y][x + 1] = 'n'; g[y - 1][x] = g[y + 1][x + 1] = 'g'
     return [''.join(r) for r in g]
 
 
 def board_css():
-    u = svg(plank_rows(), {'a': '#a8743f', 'h': '#bd8a55', 'd': '#7e5430', 'g': '#97673a', 'n': '#5e3d22'})
-    return ('/* 依頼ボードの板：ドットの板（1ドット1.5px）。前の点々の模様（radial-gradient）のかわり */\n'
-            f'.board{{background:#a8743f {u} 0 0/48px 36px repeat!important;image-rendering:pixelated}}')
+    u = svg(plank_rows(), {'a': '#a8743f', 'h': '#b98551', 'g': '#97673a', 'n': '#7e5430'})
+    return ('/* 依頼ボードの板：つぎ目のない1まい板（木目だけのドットの絵、1ドット1.5px） */\n'
+            f'.board{{background:#a8743f {u} 0 0/72px 36px repeat!important;image-rendering:pixelated}}')
 
 
 # ---- 図鑑：本の背としおり ----
@@ -154,8 +145,55 @@ def book_css():
     ])
 
 
+# ---- 草原の木のわく（ふちは木・中は明るいまま） ----
+WM = 24  # 辺のまん中（くりかえす所）
+
+
+def wood_rows():
+    NW = 2 * S + WM
+    cp = lambda d: PR[d] if d < 4 else 0
+    tI = lambda x: cp(min(x, NW - 1 - x))
+    lI = lambda y: cp(min(y, NW - 1 - y))
+    ins = lambda x, y: 0 <= x < NW and 0 <= y < NW and tI(x) <= y <= NW - 1 - tI(x) and lI(y) <= x <= NW - 1 - lI(y)
+    rows = []
+    for y in range(NW + 1):
+        r = ''
+        for x in range(NW):
+            if not ins(x, y):
+                r += 's' if (y >= NW - S and ins(x, y - 1)) else '.'
+                continue
+            dt, db, dl, dr = y - tI(x), NW - 1 - tI(x) - y, x - lI(y), NW - 1 - lI(y) - x
+            k = min(dt, db, dl, dr)
+            if k == 0 or not (ins(x - 1, y) and ins(x + 1, y) and ins(x, y - 1) and ins(x, y + 1)):
+                r += 'o'; continue
+            if k >= 5:
+                r += 'a'; continue
+            if k == 4:
+                r += 'i'; continue
+            side = 't' if k == dt else 'b' if k == db else 'l' if k == dl else 'r'
+            if k == 1:
+                r += 'h' if side in 'tl' else 'd'; continue
+            p = (x if side in 'tb' else y) - S  # 辺にそった場所（木目をならべる）
+            grain = (p // 3 + k * 2) % 5 == 0  # 3ドットの木目のすじ
+            r += 'g' if grain else 'w'
+        rows.append(r)
+    return rows
+
+
+WOOD_SEL = ('.hud,.dock,.quest,.sheet,.dlg::before,.toast,#helpPop .hc,.idea-card,.askyn .ak,'
+            '#rlv .rcard,.iinfo,#confirm,#palette,.wcard,.idea-item,.pxcard,#idle .card,#lvup .pw')
+
+
+def wood_css():
+    u = svg(wood_rows(), {'a': '#f4e9d2', 'o': '#5e3d22', 'h': '#d29a5c', 'w': '#b98146', 'g': '#9c6a38',
+                          'd': '#8a5a30', 'i': '#7a4f2b', 's': SHADOW})
+    sel = ','.join('body.wd0 ' + x.strip() for x in WOOD_SEL.split(','))
+    return ('/* 草原のパネルは木のわく（ふちは木目つきの木・中は明るいまま）。依頼ボードの紙はそのまま。body.wd0 は ui-fx.js の uiStageSync */\n'
+            f'{sel}{{border-image-source:{u}!important;border-image-repeat:round!important}}')
+
+
 def main():
-    css = '\n'.join([paper_css(), board_css(), book_css()])
+    css = '\n'.join([paper_css(), wood_css(), board_css(), book_css()])
     s = HTML.read_text()
     b, e = '/* paper-ui:begin */', '/* paper-ui:end */'
     if b not in s:
