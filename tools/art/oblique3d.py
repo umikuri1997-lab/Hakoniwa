@@ -309,13 +309,14 @@ def _raysolve(proj, X, Ys, n, a):
     M = np.stack([np.stack([np.full_like(Ey, n[0]), np.full_like(Ey, n[1]), np.full_like(Ey, n[2])], -1), np.stack([Ex, Ey, Ez], -1), np.stack([np.zeros_like(A_), A_, B_], -1)], -2)
     R = np.stack([np.full_like(Eb, r0), Eb, C_], -1); det = np.linalg.det(M); ok = np.abs(det) > 1e-12
     M = np.where(ok[..., None, None], M, np.eye(3)); return np.linalg.solve(M, R[..., None])[..., 0], ok
-def render_px(sc, proj, ext, depth, k=0.72, outer=True, merge=12, lw=1, k2=0.86, outerk=False):
+def render_px(sc, proj, ext, depth, k=0.72, outer=True, merge=12, lw=1, k2=0.86, outerk=False, contrast=0):
     """ドット絵にするための写し方：1マス S ドットで、ちぢめずに（1ドットに1点）写し、部品のさかいに1ドットの輪郭線を引く。
     輪郭線は、となりあう2つのドットの部品がちがうとき、うしろがわ（遠いほう）のドットに引く（手前の部品の形はけずらない）。
     交差・つきあてる所も、手前の部品の形のまま、うしろの部品に線が入る。色は、そのドットの色に k をかけた色。
     outer：まわりのふち（透明ととなりあう所）は、透明がわに1ドット（となりの色×k）。上下左右だけを見る（ななめは見ない）。
     sc.outline(0) のあとに足した部品は、線を引かない（中のくらい所など）。sc.group(名前) で同じグループにした部品どうしにも引かない。
     merge：さいごに、色の差がこれより小さい色を、多いほうの色にまとめる（にた色をのこさない。0でまとめない）。
+    contrast：0 でなければ、ぬった色（木目のあと）のコントラストを、物の色の明るさのまん中（中央値）から contrast 倍にする。輪郭線は、そのあとの色から作る（線までこくならない）。
     outerk：True なら、まわりのふち（透明ととなりあう所）は、部品ごとの線のこさ（sc.outline の k・p.olk）を使わず、いつも k・k2 で引く（目地だけうすくしたいとき）。数なら、外の線はその数、内がわの線は (数+1)/2（白い物の、まわりの線をこくするとき）。
     lw：輪郭線のはば（1か2）。2のときは、さかい目にふれる1ドットめが こい線（×k）、そのとなりの2ドットめが まわりになじむ うすい線（×k2）。まわりのふちは、外がわ1ドットがこい線・物の内がわ1ドットがうすい線。"""
     x0, x1, y0, y1 = ext; Wp = int(round((x1-x0)*S)); Hp = int(round((y1-y0)*S))
@@ -408,6 +409,10 @@ def render_px(sc, proj, ext, depth, k=0.72, outer=True, merge=12, lw=1, k2=0.86,
         rs = np.random.RandomState(pid*7919+11); du, dv = rs.randint(0, n_, 2)
         iu = (np.floor((P@ax)*S).astype(int)+du) % n_; iv = (np.floor((P*v2).sum(1)*S).astype(int)+dv) % n_
         col[m] = np.clip(col[m]*T[iv, iu][:, None], 0, 255)
+    if contrast:   # コントラスト：輪郭線を作る前に、ぬった色だけにかける
+        m_ = idb >= 0
+        if m_.any():
+            mid = float(np.median(col[m_])); col[m_] = np.clip(mid+(col[m_]-mid)*contrast, 0, 255); col0[m_] = np.clip(mid+(col0[m_]-mid)*contrast, 0, 255)
     noline = {p for p, (w, _) in sc.ol.items() if w == 0}
     out = col.copy(); alpha = (idb >= 0).astype(float)*255; line = np.zeros((Hp, Wp), bool); line2 = np.zeros((Hp, Wp), bool)
     for dy, dx in ((0, 1), (0, -1), (1, 0), (-1, 0)):

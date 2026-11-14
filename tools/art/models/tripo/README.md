@@ -5,7 +5,7 @@
 - 一覧の絵：`catalog.png`（どれも家具と同じ写し方。1マス64ドットのゲームの見え方）
 - 大きさの表：`catalog.json`（`w_per_h`・`d_per_h`：もとの形の、高さに対するよこ・おくゆきの比。`tris`：三角形の数。`catalog_h`：一覧で写した高さ（マス））
 - 作りなおし：`python3 tools/art/models/tripo_catalog.py`（モデルを足したら、そのファイルの `SIZE` にも足す）
-- たのんだときのプロンプト：`prompts.md`（2回めの植物・自然の物）
+- たのんだときのプロンプト：`prompts.md`（2回めの植物・自然の物、3回めの伐採場・採石場の物）
 
 ## 置き方
 
@@ -65,5 +65,16 @@ P('名前','model',('tripo/oak.glb', cx, cy, z0, size, rot, tilt), on=('ground',
 | `lotus.glb` | ハス | 水にうく | |
 | `mushrooms.glb` | きのこ3しゅるい | 立つ | |
 | `grass.glb`・`grass2.glb` | 草 | 立つ | |
+| `stump.glb` | 切り株（根が放射状） | 立つ | 色なし（`recol`）。根は `warp` でちぢめて使っている（`lumber.py`） |
+| `stone_big.glb`・`stone_mid.glb` | 切り出した石（大・中） | 立つ | 色なし |
+| `stone_round.glb` | まるい石 | 立つ | 色なし |
+| `stone_slab.glb` | 平たい石 | ひくい | 色なし。よこに広い（高さの3倍） |
+| `stone_chunk.glb` | 石のかけら | 立つ | 色なし |
+| `pebbles2.glb`・`pebbles3a.glb`・`pebbles3b.glb`・`pebble_a〜c.glb` | 小石（2こ・3こ・1こ） | ひくい | 色なし |
+| `log_lying.glb` | ねかせた丸太 | ねかせた形 | 色なし。モデルの中でななめを向いているので、向きは上から見ていちばん長い向きでしらべる（`lumber.py`） |
+| `firewood.glb` | わったまき（3つ） | ねかせた形 | 色なし |
+| `sprig.glb` | 葉の小枝 | 立つ | 色なし |
 
 植物・自然の物（`rosevine` から下）は、1つのモデルに21こ入っていたのを `tools/art/models/tripo_split.py` で切りわけた（つながっている形ごとに分け、色は UV からとって点ごとの色に）。モデルを新しくもらったときも、同じように切りわけて、ここの一覧と `catalog` を足す。
+
+3回め（`stump` から下）は、色のない FBX（y が上）。`tripo_split.py` は、上の向きを自分でみつけ、面の向きをそろえ、面を3000までへらす。色は設計図で `recol` する。
