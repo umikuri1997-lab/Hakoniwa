@@ -1,7 +1,9 @@
 # 木（tree：植えた木・ntree：森の木。同じ絵）。ドラゴンクエストビルダーズのような、自然な構造とかわいいデフォルメの広葉樹（持ち主の指示）。
 # 前の枝・根の形は引き継がず、作りなおした（幹 → 根 → 主枝 → 側枝 → 小枝 → 葉群、が1本の木としてつながる）。
 # 設計図（単位はマス。地面 z=0。根もと (0.5, 0.62)）：
-#   樹冠の形 CROWN：まるくコンパクトな形（よこはば≒たかさ、重心は幹の近く）。枝はこの中まで、葉はこの外へはみ出さない。
+#   樹冠：大きなふくらみ LOBES をつなげた、かさの形（お手本：ビルダーズの木）。ふくらみごとに、てっぺんから面にそって外・下へ、葉のついた細枝（スプレー）。
+#   内がわにも細枝と葉の層（暗い色。むこうがすけない）。
+#   葉：細枝の左右に、たがいちがいに、細枝から同じ角度（45度）でひらき、面にそってねかせる。上の葉ほど少し外がわ（かわらのように重なり、交差しない）。
 #   幹：根もとから TRUNK まで、ゆるくまがる。半径 0.13 → 0.085。根もとは、角度ごとにちがう大きさのなめらかなふくらみ（4〜6本）で、
 #     なだらかに太くなり、地面へ広がる（幹と1つづきの面。板・台座にしない：trunkmesh）。
 #   主枝 MAIN：幹の上のほうから、ななめ上へ（向き・立ち上がり・長さ・つけ根の高さはまちまち）。半径 0.060 → 0.030。
@@ -48,53 +50,47 @@ def clip(pts):
         out.append(q);was=was or inside(q)
     return out
 # ---- かさの樹冠（持ち主のお手本の絵：ビルダーズの木）：ふちがたれた、きのこのかさのようなドーム ----
-DOME=dict(top=1.85,R=0.92,H=0.62,umax=1.10)   # てっぺんの高さ・よこの半径・たての半径・ふちまでの角度（1で横、1をこえると下へまわりこむ）
-def dome(u,th,k=1.0):
-    """かさの面の点：u（0 てっぺん → 1 ふち）・th（まわりの角度）・k（1 で面、1より小さいと内がわ）。ゆるいでこぼこあり"""
-    a=u*DOME['umax']*math.pi/2;bump=1+0.07*(N.ST.vnoise(math.cos(th)*1.6+3,math.sin(th)*1.6,u*2.2)-0.5)*2
-    R=DOME['R']*bump*k;H=DOME['H']*bump*k;c=np.array([CX,CY-0.05,DOME['top']-DOME['H']])
-    return c+np.array([R*math.sin(a)*math.cos(th),R*math.sin(a)*math.sin(th)*0.9,H*math.cos(a)])
-def anchors(rs,step=0.32):
-    """細枝の先がとどく所：かさの面の少し内がわ（k 0.86）に、まちまちな間かくで"""
-    A=[]
-    nu=int(DOME['umax']*1.3/step*1.0)+1
-    for i in range(nu):
-        u=(i+0.5)/nu;rr=DOME['R']*math.sin(u*DOME['umax']*math.pi/2);m=max(1,int(2*math.pi*rr/step));ph=rs.uniform(0,6.28)
-        for j in range(m):A.append((u,ph+2*math.pi*j/m+rs.uniform(-0.15,0.15)))
-    return A
+# ---- 樹冠：大きなふくらみ（LOBES）をつなげた、かさの形（お手本：ビルダーズの木） ----
+# ふくらみ：まん中・半径（たてはその0.8倍）。てっぺんに1つ、まわりに4つ（少し低い）。となりとかさなって1つの樹冠
+LOBES=[((0.50,0.60,1.66),0.46),((0.06,0.66,1.36),0.42),((0.92,0.62,1.38),0.42),((0.52,0.20,1.42),0.40),((0.48,1.00,1.30),0.40)]
+LZ=0.8;LUMAX=1.12   # ふくらみのたてのつぶし・ふちまでの角度（1をこえると下へまわりこむ：ふちがたれる）
+def lobept(k,u,th,dk=0.0):
+    c,r=LOBES[k];r=r*(1+dk);a=u*LUMAX*math.pi/2
+    return np.array(c)+np.array([r*math.sin(a)*math.cos(th),r*math.sin(a)*math.sin(th),r*LZ*math.cos(a)])
+def lobenorm(k,u,th):
+    a=u*LUMAX*math.pi/2;n=np.array([math.sin(a)*math.cos(th),math.sin(a)*math.sin(th),math.cos(a)/LZ]);return n/np.linalg.norm(n)
+def inlobe(p,k0,sh=0.985):
+    """ほかのふくらみの中か（そこには細枝・葉を置かない：ふくらみどうしで葉が交差しない）"""
+    for k,(c,r) in enumerate(LOBES):
+        if k==k0:continue
+        d=(np.array(p)-np.array(c))/np.array([r,r,r*LZ])
+        if np.linalg.norm(d)<sh:return True
+    return False
+SPRAYGAP=0.13   # 細枝（スプレー）どうしの、ふちでの間かく（マス）
 def skeleton():
     rs=np.random.RandomState(SEED);B=[]
-    FORK=0.95
+    FORK=1.02
     tr=curve3((CX,CY,0),(0.03,0.0,1.0),FORK,0.0,0.0,rs,n=10,wob=0.02);B.append({'pts':tr,'r0':0.15,'r1':0.11,'lv':0,'leaf':False})
-    top=tr[-1];A=anchors(rs);P_A=np.array([dome(u,th,0.86) for u,th in A])   # 細枝の先は、かさの面の内がわ（葉の下にかくれる）
-    # 主枝：またから5本（上・まわり4本）。まわりの主枝は、かさのなかほど（u≈0.55）の内がわへ、ななめ上へ
-    mains=[];nm=4;ph=rs.uniform(0,6.28)
-    for k in range(nm+1):
-        if k==nm:tgt=dome(0.05,0,0.6)
-        else:th=ph+2*math.pi*k/nm+rs.uniform(-0.35,0.35);tgt=dome(rs.uniform(0.45,0.62),th,0.62)
-        d=tgt-top;L=np.linalg.norm(d);d0=d/L*0.7+UP*0.3;d0/=np.linalg.norm(d0)
-        m=curve3(top-UP*0.05,d0,L,0.0,0.05,rs,n=8,wob=0.03);mains.append(m);B.append({'pts':m,'r0':0.075,'r1':0.04,'lv':1,'leaf':False})
-    # 側枝：主枝ごとに2〜3本、主枝のなかほど〜先から、まわりへ（かさの面の内がわ k 0.75 へ）
-    sides=[]
-    for m in mains:
-        for kk in range(rs.randint(3,5)):
-            q,dm,_=at(m,rs.uniform(0.35,0.95));
-            th=math.atan2(q[1]-CY,q[0]-CX)+rs.uniform(-0.9,0.9);u=min(DOME['umax']*0.92,math.acos(max(-1,min(1,(q[2]-(DOME['top']-DOME['H']))/DOME['H'])))/(math.pi/2)/DOME['umax']+rs.uniform(0.1,0.35))
-            tgt=dome(u,th,0.74);d=tgt-q;L=np.linalg.norm(d)
-            if L<0.08:continue
-            sb=curve3(q,d/L,L,0.05,0.10,rs,n=6,wob=0.04);sides.append(sb);B.append({'pts':sb,'r0':0.035,'r1':0.018,'lv':2,'leaf':False})
-    # 細枝：かさの面の内がわの、どの「とどく所」にも、いちばん近い側枝・主枝の点から1本（先は少し下がる）
-    nodes=[(p,2) for sb in sides for p in sb[2:]]+[(p,1) for m in mains for p in m[4:]]
-    NP=np.array([p for p,_ in nodes])
-    for (u,th),pa in zip(A,P_A):
-        j=int(np.argmin(np.linalg.norm(NP-pa,axis=1)));q=NP[j];d=pa-q;L=np.linalg.norm(d)
-        if L<0.03:continue
-        tw=curve3(q,d/L,L,0.0,0.15,rs,n=4,wob=0.03);B.append({'pts':tw,'r0':0.011,'r1':0.005,'lv':3,'leaf':True,'u':u,'th':th})
+    top=tr[-1]
+    for k,(c,r) in enumerate(LOBES):
+        c=np.array(c);inn=c-np.array([0,0,r*LZ*0.35])   # ふくらみの中の、枝が分かれる所
+        d=inn-top;L=np.linalg.norm(d);d0=d/L*0.75+UP*0.25;d0/=np.linalg.norm(d0)
+        m=curve3(top-UP*0.06,d0,L,0.0,0.0,rs,n=8,wob=0.02);m[-1]=inn;B.append({'pts':m,'r0':0.07,'r1':0.04,'lv':1,'leaf':False})
+        # 細枝（スプレー）：ふくらみのてっぺん近くから、面にそって外・下へ。本数は、ふちでの間かく SPRAYGAP から
+        for layer,dk in ((0,-0.03),(1,-0.20)):   # 外の層と、内がわの層（むこうがすけない）
+          ns=max(6,int(2*math.pi*r*(1+dk)/SPRAYGAP));ph=rs.uniform(0,6.28)
+          for j in range(ns):
+            th=ph+2*math.pi*j/ns+rs.uniform(-0.08,0.08);u0=rs.uniform(0.08,0.16)
+            path=[lobept(k,u,th,dk) for u in np.linspace(u0,LUMAX*0.92,9)]
+            if inlobe(path[len(path)//2],k,0.95) and inlobe(path[-1],k,0.95):continue   # ほかのふくらみにうまる細枝は作らない
+            start=inn+(path[0]-inn)*0.15
+            pts=[start]+[inn+(path[0]-inn)*t for t in (0.5,0.85)]+path   # ふくらみの中の分かれ目から、面へ出て、面にそって下へ
+            B.append({'pts':pts,'r0':0.014,'r1':0.006,'lv':3,'leaf':True,'lobe':k,'th':th,'u0':u0,'dk':dk})
     return B
 def makeskel():
-    B=skeleton();json.dump([{'pts':[list(map(float,p)) for p in b['pts']],'r0':b['r0'],'r1':b['r1'],'lv':b['lv'],'leaf':b['leaf'],'u':b.get('u'),'th':b.get('th')} for b in B],open(SKELF,'w'))
+    B=skeleton();json.dump([{'pts':[list(map(float,p)) for p in b['pts']],'r0':b['r0'],'r1':b['r1'],'lv':b['lv'],'leaf':b['leaf'],'lobe':b.get('lobe'),'th':b.get('th'),'u0':b.get('u0'),'dk':b.get('dk')} for b in B],open(SKELF,'w'))
 def loadskel():
-    return [{'pts':np.array(b['pts']),'r0':b['r0'],'r1':b['r1'],'lv':b['lv'],'leaf':b['leaf'],'u':b.get('u'),'th':b.get('th')} for b in json.load(open(SKELF))]
+    return [{'pts':np.array(b['pts']),'r0':b['r0'],'r1':b['r1'],'lv':b['lv'],'leaf':b['leaf'],'lobe':b.get('lobe'),'th':b.get('th'),'u0':b.get('u0'),'dk':b.get('dk')} for b in json.load(open(SKELF))]
 def trunkmesh(T,pts,r0,r1,rs,n=28):
     """幹：根もとは、角度ごとにちがう大きさのなめらかなふくらみ（根）で、なだらかに太くなり、地面へ広がる（1つづきの面）"""
     lobes=[(rs.uniform(0,6.28),rs.uniform(0.06,0.16),rs.uniform(0.35,0.6)) for _ in range(rs.randint(4,7))]   # 向き・大きさ・はば（ラジアン）
@@ -144,23 +140,24 @@ def EXTRA(sc):
     if SKEL:return
     Q=kitleaf();rs=np.random.RandomState(SEED+100)
     sc.outline(None,0.86);sc.material('flat')
-    S=stemtip()   # 葉柄のはし（葉のモデルの中の点）。ここを細枝の上の点につける
-    C=np.array([CX,CY-0.05,DOME['top']-DOME['H']])
-    for b in B:   # 細枝の先の半分の、いくつもの点に、葉柄のはしをつける。葉は、そこから外へ・下へひろがり、かさの面をおおう
+    S=stemtip()
+    LEAFANG=math.radians(45);STEP=LEAFL*0.32   # 細枝からひらく角度（どの葉も同じ）・葉と葉の、細枝にそった間かく
+    for b in B:   # 細枝（スプレー）の、面にそった所に、左右たがいちがいに。葉は面にそってねかせ、外・下へ。上の葉ほど外がわ（かわらのように、上の葉が下の葉のつけ根にかさなる。交差しない）
         if not b['leaf']:continue
-        u0,th0=b['u'],b['th'];pts=b['pts'];nL=rs.randint(12,17)
-        for k in range(nL):
-            a_pt,_,_=at(pts,min(0.95,0.35+0.60*(k+rs.rand())/nL))   # 細枝の先の手前まで（先が葉からつき出ない）
-            out=a_pt-C;out/=np.linalg.norm(out)
-            g=dome(min(DOME['umax']+0.1,u0+0.05),th0)-dome(u0,th0);g-=out*(g@out);g/=max(np.linalg.norm(g),1e-9)   # かさの面にそって下（重さ）
-            if u0<0.2:a0=rs.uniform(0,6.28);g=np.array([math.cos(a0),math.sin(a0),0.0]);g-=out*(g@out);g/=np.linalg.norm(g)   # てっぺんは、まわりへ
-            sdir=np.cross(out,g);phi=rs.uniform(-1.9,1.9)   # 下を中心に、まわり（左右）へ、まちまちに
-            o=g*math.cos(phi)+sdir*math.sin(phi);o+=rs.normal(0,0.08,3);o-=out*(o@out);o/=np.linalg.norm(o)
-            nn=out*0.85+UP*0.15+rs.normal(0,0.05,3);nn-=o*(nn@o);nn/=np.linalg.norm(nn)
-            if nn[2]<0.2:nn=nn+UP*0.5;nn-=o*(nn@o);nn/=np.linalg.norm(nn)
-            M=np.stack([o,np.cross(nn,o),nn],0);base=a_pt-(S@M)*LEAFL   # 葉柄のはしが、細枝の上の点に来る
-            h=u0/DOME['umax'];tone=int(np.clip(round(h*1.8+abs(phi)*0.35-0.3),0,len(N.LEAFB)-2))
-            Qb=Q.copy();bend=rs.uniform(0.12,0.30);Qb[...,2]-=bend*np.clip(Qb[...,0]-0.2,0,None)**2   # しなり：葉先へいくほど裏がわへ（重さでたれる。葉ごとに強さがちがう）
+        k=b['lobe'];th=b['th'];u0=b['u0'];pts=b['pts'][3:];Ls=np.cumsum([0]+[np.linalg.norm(pts[i+1]-pts[i]) for i in range(len(pts)-1)]);tot=Ls[-1]
+        n=int(tot/STEP);side=1 if (int(th*100)%2) else -1
+        for i in range(n):
+            sdist=(i+0.5)*STEP;j=min(len(pts)-2,int(np.searchsorted(Ls,sdist))-1);j=max(j,0);t=(sdist-Ls[j])/max(Ls[j+1]-Ls[j],1e-9)
+            a_pt=pts[j]+(pts[j+1]-pts[j])*t;dd=pts[j+1]-pts[j];dd/=np.linalg.norm(dd)
+            u=u0+(LUMAX*0.92-u0)*sdist/tot;nn=lobenorm(k,u,th);dd-=nn*(dd@nn);dd/=np.linalg.norm(dd)
+            side=-side;sd0=np.cross(nn,dd);o=dd*math.cos(LEAFANG)+sd0*side*math.sin(LEAFANG);o/=np.linalg.norm(o)   # 細枝の向きから、左右へ同じ角度
+            tipp=a_pt+o*LEAFL
+            if inlobe(tipp,k,0.99) or inlobe(a_pt,k,0.99):continue   # ほかのふくらみにうまる葉は置かない（ふくらみどうしで交差しない）
+            M=np.stack([o,np.cross(nn,o),nn],0)
+            lift=0.004*(n-i)+0.003*(k%2)   # 上（細枝のつけ根がわ）の葉ほど、少し外へ：下の葉のつけ根の上にかさなる
+            base=a_pt+nn*(0.035+lift)-(S@M)*LEAFL
+            lt=float(nn@N.LIGHTV);tone=int(np.clip(round((1-lt)*1.8+u*0.6-0.4+(0.5 if LOBES[k][0][2]<1.4 else 0)+(1.2 if b.get('dk',0)<-0.1 else 0)),0,len(N.LEAFB)-2))   # 内がわの層は暗い
+            Qb=Q.copy();Qb[...,2]-=0.12*np.clip(Qb[...,0]-0.25,0,None)**2   # しなり（少し、どの葉も同じ）。ねじらない
             W3=Qb@M*LEAFL+base;sc.part()
             for q in W3:sc.tri(q[0],q[1],q[2],N.LEAFB[tone])
     sc.material(None);sc.outline()
