@@ -252,6 +252,52 @@ def leafparts(sc,q,gi):
         for t in leafpart(base,d,sd,nn,L,W):sc.tri(t[0],t[1],t[2],col)
     sc.outline()
 
+ROSL,ROSW=0.26,0.15
+ROSGRID=1.0   # 葉のかたまりをまとめるます目（マス）   # ロゼットの葉1まいの長さ・はば（マス）
+def rosette(sc,c,out,sz,gi,rs):
+    """葉のかたまり1つ：まるい中身（半径 r）を、葉の部品でおおう。葉は、かたまりの上から下へ、かわらのように重なる
+    （どの葉も、上から下へ、表面にそってのびる。上の輪ほど葉が少ない）。
+    色は葉の向き（上向きほど明るい）で、ばらつきは少し。かたまりの中は線を引かず（同じグループ）、まわりだけ線"""
+    r=0.40*sz;k=sz;sc.group('ros%d'%gi);sc.outline(None,0.86)
+    sc.part();sc.sphere(*c,r*0.9,LEAFTONES[3],n=12,m=8)   # 中身（葉のすきまから見える）
+    tw=rs.uniform(0,6.28)
+    for th in(12,42,72,100):
+        t=math.radians(th);m=max(1,int(round(2*math.pi*math.sin(t)*r/(ROSL*0.62))));ph=tw+rs.uniform(0,6.28)
+        for i in range(m):
+            a=ph+2*math.pi*i/m+rs.uniform(-0.15,0.15)
+            nn=np.array([math.sin(t)*math.cos(a),math.sin(t)*math.sin(a),math.cos(t)])
+            d=np.array([math.cos(t)*math.cos(a),math.cos(t)*math.sin(a),-math.sin(t)])   # 表面にそって、上から下へ
+            base=c+nn*r-d*ROSL*0.25
+            sd=np.cross(nn,d);up_=nn[2]
+            tone=int(np.clip(round(1.6-up_*1.8+rs.uniform(-0.25,0.25)),0,4))
+            sc.part()
+            for tt in leafpart(base,d,sd,nn,ROSL*rs.uniform(0.9,1.08),ROSW*rs.uniform(0.9,1.1),fold=0.25,droop=0.15):sc.tri(tt[0],tt[1],tt[2],LEAFTONES[tone])
+    sc.group(None);sc.outline()
+def branch(sc,pts,r0,r1):
+    """枝：点をつないだ、先ほど細い管（木の皮の色）"""
+    n=len(pts)
+    for i in range(n-1):
+        r=r0+(r1-r0)*i/(n-1);sc.tube([tuple(pts[i]),tuple(pts[i+1])],r,BARK[1],n=8)
+def crown(sc,ros,bark):
+    """御神木の葉の全体：モデルの葉のかたまりの場所に、ロゼットを置く。
+    さらに、幹から、むこうがわ（北）と左右へ枝をのばし、その先にもロゼットを置く（奥にも枝と葉があるつくり）"""
+    rs=np.random.RandomState(77);C=np.array([c for c,_ in ros]);cc=C.mean(0);cc[2]=C[:,2].min()+0.35*(C[:,2].max()-C[:,2].min())
+    z=bark[:,2];H=z.max()-z.min();fork=bark[np.abs(z-(z.min()+0.55*H))<0.03*H].mean(0)   # 幹のまたの高さ
+    extra=[]
+    for ang,el,ln in((math.pi*0.5+0.0,0.55,1.5),(math.pi*0.5+0.9,0.45,1.6),(math.pi*0.5-0.9,0.45,1.6),(math.pi*0.5+1.8,0.3,1.4),(math.pi*0.5-1.8,0.3,1.4)):   # 向き（上から見て。+π/2 が北＝むこう）・上へのかたむき・長さ
+        d=np.array([math.cos(ang),-math.sin(ang),0.0])*math.cos(el)+np.array([0,0,math.sin(el)])
+        p1=fork+d*ln*0.5+np.array([0,0,0.25]);p2=fork+d*ln
+        branch(sc,[fork,p1,p2],0.11,0.035)
+        extra.append((p2,d))
+        for j in range(2):   # 枝の先と、とちゅうの小枝の先に
+            q_=p2+np.array([rs.uniform(-0.3,0.3),rs.uniform(-0.3,0.3),rs.uniform(0.0,0.35)]);branch(sc,[p1+(p2-p1)*0.6,q_],0.04,0.02);extra.append((q_,d))
+    G={}   # モデルの葉のかたまりを、1マスくらいのます目でまとめる（かたまりを大きく・少なくして、あいだから枝と奥が見えるように）
+    for c,sz in ros:G.setdefault(tuple(np.floor(c/ROSGRID).astype(int)),[]).append(c)
+    big=[(np.mean(v,0),min(1.35,0.95+0.07*len(v))) for v in G.values()]
+    allr=[(c,(c-cc)+np.array([0,0,0.6]),k) for c,k in big]+[(p,d+np.array([0,0,0.5]),1.1) for p,d in extra]
+    allr.sort(key=lambda r:r[0][2])
+    for gi,(c,out,k) in enumerate(allr):rosette(sc,np.array(c),np.array(out,float),k,gi,rs)
+
 def flowfield(q,src):
     """木の皮の流れ：面の場所から、src（はじまりの点）からの、面をつたう道のりをはかり、その道のりがのびる向きを、面ごとの流れの向きにする。
     幹ではたて・根では外へ・枝では枝のさきへ。かえすのは、面のまん中の点・流れの向き・面の向き"""
@@ -329,7 +375,7 @@ class Stage:
         return s._lh
     def PARTS(s):return []
     def EXTRA(s,sc):
-        sc.smooth(True);s._gid=[]
+        sc.smooth(True);s._gid=[];s._ros=[]
         for kind in('bark','stem','leaf','glow','sprout'):
             its=[(p,c) for p,c,k in s.items if k==kind]
             if not its:continue
@@ -379,10 +425,11 @@ class Stage:
                     if not hasattr(s,'_lc'):s._lc=np.array([s.T(p_).reshape(-1,3).mean(0) for p_,c_,k_ in s.items if k_=='leaf'])
                     m0=q.reshape(-1,3).mean(0);dd=np.sort(np.linalg.norm(s._lc-m0,axis=1))
                     if len(dd)>1 and dd[1]>0.9:continue   # はなれて1つだけうかぶ葉（モデルのこぼれ）
-                    leafparts(sc,q,len(s._gid));s._gid.append(1);continue
+                    P_=q.reshape(-1,3);s._ros.append((P_.mean(0),float((P_.max(0)-P_.min(0)).max())));continue   # 葉のかたまりの場所と大きさ（あとで crown がロゼットにする）
                 sc.decal(leafnat(q,c['uv'],s.leaflh()));sc.part()   # 若木の葉：モデルのテクスチャの明るさと、まん中が低い影
                 for t in q:sc.tri(t[0],t[1],t[2],LEAF[1])
                 sc.decal(None)
+        if s.name=='tree' and s._ros:crown(sc,s._ros,s.T(max((it for it in s.items if it[2]=='bark'),key=lambda it:it[1]['n'])[0]).reshape(-1,3))
         sc.smooth(False)
 
 def shot(M):
