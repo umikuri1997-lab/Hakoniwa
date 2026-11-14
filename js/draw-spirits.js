@@ -163,6 +163,15 @@ function spProp(c,prop,sx,a,t,o){/* せいれいが手に持つ道具 */c.save()
       else if(prop==='rod'){c.strokeStyle='#9a6a48';c.lineWidth=3;c.beginPath();c.moveTo(-4,4);c.lineTo(30,-34);c.stroke();const bb=Math.sin(t*3)*3;c.strokeStyle='rgba(255,255,255,.8)';c.lineWidth=1.2;c.beginPath();c.moveTo(30,-34);c.lineTo(38,14+bb);c.stroke();c.fillStyle='#e8604f';c.beginPath();c.arc(38,14+bb,3,0,7);c.fill()}}
     c.restore()}
 // せいれいのドット絵：パーツ（頭・体・うで・手・しっぽ・表情）を、spPoseの動きで組み立てる。体・うで・手・表情は全属性で共通の絵を、色だけかえて使う
+const SPW3D={'src':'assets/g/fecbbffba5.webp','n':8,'geo':{'earth':[0,86,97,-43,-96],'water':[291,73,94,-37,-93],'fire':[573,72,111,-36,-110],'wind':[906,111,95,-57,-94],'wood':[1191,78,105,-39,-104]},'eye':{'earth':[[[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0]],[[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0]],[[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0]]],'water':[[[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0]],[[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0]],[[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0]]],'fire':[[[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0]],[[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0]],[[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0]]],'wind':[[[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0]],[[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0]],[[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0]]],'wood':[[[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0]],[[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0]],[[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0]]]}};/* 3Dから写した「歩く」（tools/art/spirit3d/spirit3d.py が書く） */
+const SPW3I={img:null,ok:0,cv:{}};if(SPW3D.src){const im=new Image();im.onload=()=>{SPW3I.ok=1;dirty=true};im.src=SPW3D.src;SPW3I.img=im}
+function spWalkImg(el,vr){/* その属性の「歩く」の絵（3行×8コマ）を、その子の色にした物（色のかえ方は spDot と同じ） */
+  const k=el+'|'+(vr&&vr.h||0)+'_'+(vr&&vr.l||0);if(SPW3I.cv[k])return SPW3I.cv[k];const G=SPW3D.geo[el];if(!G)return null;
+  const A=SPC[el],B=spcVar(el,vr),w=G[1]*SPW3D.n,h=G[2]*3,cv=document.createElement('canvas');cv.width=w;cv.height=h;const g=cv.getContext('2d');g.drawImage(SPW3I.img,0,G[0],w,h,0,0,w,h);
+  if(A!==B){const d=g.getImageData(0,0,w,h),p=d.data,M={};for(const r in A)if(B[r])M[A[r].toLowerCase()]=B[r];
+    for(let i=0;i<p.length;i+=4){if(!p[i+3])continue;const hh='#'+((1<<24)|(p[i]<<16)|(p[i+1]<<8)|p[i+2]).toString(16).slice(1),to=M[hh];if(to){p[i]=parseInt(to.slice(1,3),16);p[i+1]=parseInt(to.slice(3,5),16);p[i+2]=parseInt(to.slice(5,7),16)}}
+    g.putImageData(d,0,0)}
+  return SPW3I.cv[k]=cv}
 const SPDOT={},SPDOK={};
 function spDot(key,el,vr){/* 絵の色を、その子の色にかえる（もとの色：共通の絵は木、ほかはその属性） */
   const ch=window.CHIPS&&CHIPS[key];if(!ch)return null;const im=chipImgs(ch,key)[0];if(!im.ok)return null;
@@ -188,6 +197,13 @@ function drawSpiritDot(c,el,x,y,s,f,o){
   const TUNE=o.vr&&o.vr.key?KEYTUNE:BASETUNE,vr=o.vr,t=o.t||0,back=!!o.back,tr=(o.turn||0)>.5?1:0,D=1/.87;/* せいれいの絵は、ゲームの1ドットを2×2に分けた細かさ */
   let {br,st,arm,A,aN,aF,prop,lean2,sq,frontArm,bothF}=spPose(o,t,tr,back);
   const spr=(key,X,Y)=>{const ch=CHIPS[key],im=spDot(key,el,vr);if(im)c.drawImage(im,(X||0)+ch.ax*D,(Y||0)+ch.ay*D,ch.w*D,ch.h*D)};
+  if(o.walk&&SPW3I.ok&&!o.carry&&!prop&&!frontArm&&!bothF&&!o.sitF&&!o.sit){/* 歩く：3Dから写した絵（目・ほっぺ・まつげは、いまの絵をかさねる） */
+    const dir=back?2:tr?1:0,i=Math.floor((((t*9/(2*Math.PI))%1+1)%1)*SPW3D.n)%SPW3D.n,im=spWalkImg(el,vr);
+    if(im){const e=SPW3D.eye[el][dir][i],G=SPW3D.geo[el];c.save();c.translate(x,y);c.scale(s*f,s);const sm=c.imageSmoothingEnabled;c.imageSmoothingEnabled=false;
+      c.drawImage(im,i*G[1],dir*G[2],G[1],G[2],G[3]*D,G[4]*D,G[1]*D,G[2]*D);
+      if(!back){const S2=tr?'S':'',md=o.mood==='cry'?'teary':o.mood||'',fm=o.blink&&!md?'shut':md==='smile'||md==='joy'||md==='eat'?'hap':['teary','tear','shock','strain','sad','brave','tired','hungry'].includes(md)?md:'n',ex=e[0]*D,ey=e[1]*D+(el==='wind'?-3*D:0);
+        if(vr&&vr.cheek)spr('sp:cheek'+S2,ex,ey);spr('sp:face'+S2+'#'+fm,ex,ey);if(vr&&vr.lash&&fm!=='strain')spr('sp:lash'+S2+'#'+fm,ex,ey)}
+      c.imageSmoothingEnabled=sm;c.restore();return true}}
   const E0='sp_'+el+':',S=tr?'S':'';
   // いきをする・しゃがむ・かたむくは、絵を回さずに、頭とうでをドット単位でずらす（ドットがくずれないように）
   const L=(o.lean||0)+lean2,hDy=-Math.round((br-sq)*44)*D,aDy=-Math.round((br-sq)*20)*D,hDx=Math.round(L*52)*D,aDx=Math.round(L*22)*D;
