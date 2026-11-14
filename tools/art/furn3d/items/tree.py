@@ -60,12 +60,12 @@ def envnorm(p):
 TRUNK=1.00
 MAIN=[(25,34,0.44,0.55),(118,30,0.40,0.70),(205,36,0.46,0.48),(300,32,0.42,0.62),(70,62,0.38,1.0)]   # 主枝は幹の下のほう（幹の4割5分〜7割）から（持ち主の指示）   # 向き・立ち上がり（水平から、度）・長さ・つけ根の高さ（幹の割合）。さいごは幹のつづき
 def branch(B,p,d,L,lv,rs,plane,par):
-    """1本の枝：ゆるい曲線でのび（太い枝はゆるく上へ、細い枝の先は少したれる）、樹冠の形の外へ出る所でとまる。
+    """1本の枝：のびる（太い枝はしならず、ほぼまっすぐ。いちばん細い枝だけ、ほんの少したれる）、樹冠の形の外へ出る所でとまる。
     先でY字に2本へ分かれる（角度・長さに差。分かれる面は親の面から90度±まわす）。とちゅうから、ときどき短い横の枝。
     樹冠のふちでとまっても、細い枝に分かれて終わる（太い枝を急に終わらせない）。かえす：この枝の番号"""
     n=6 if lv<=2 else 4;pts=[np.array(p,float)];dd=np.array(d,float)/np.linalg.norm(d);hit=False
     for k in range(n):
-        t=(k+1)/n;dd=dd+UP*((0.025 if lv<=2 else 0.01)-(0.10*t*t if lv>=4 else 0.0))+rs.normal(0,0.03,3);dd/=np.linalg.norm(dd)
+        t=(k+1)/n;dd=dd-UP*(0.025*t if lv>=5 else 0.0)+rs.normal(0,0.012 if lv<=3 else 0.02,3);dd/=np.linalg.norm(dd)   # 太い枝はしならない（ほぼまっすぐ）。いちばん細い枝だけ、ほんの少したれる
         q=pts[-1]+dd*L/n
         if not envin(q) and (envin(pts[-1]) or q[2]>ENV['zb']) and len(pts)>1:hit=True;break   # 樹冠の形の外へ出る所でとまる（底より上では、かならず）
         pts.append(q)
@@ -126,7 +126,7 @@ def lengthen(B):
         if not b['leaf']:continue
         P=[np.array(p) for p in b['pts']];L=sum(np.linalg.norm(P[i+1]-P[i]) for i in range(len(P)-1));d=P[-1]-P[-2];d/=np.linalg.norm(d)
         while L<SHOOT:
-            d=d-UP*0.04+rs.normal(0,0.03,3);d/=np.linalg.norm(d);q=P[-1]+d*0.04
+            d=d-UP*0.012+rs.normal(0,0.015,3);d/=np.linalg.norm(d);q=P[-1]+d*0.04   # いちばん細い枝：ほんの少したれる
             if not envin(q,1.02):break
             P.append(q);L+=0.04
         b['pts']=P
