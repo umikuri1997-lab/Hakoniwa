@@ -28,6 +28,7 @@ LEAFK=1.8       # 若葉：芽の大きさ
 # いまの絵の色（明るい所・ふつう・暗い所）
 BARK=[(239,175,121),(218,152,106),(182,125,88)]   # お手本の絵の木の皮：明るいすじ・ふつう・みぞ
 CUT=[(248,226,186),(238,210,166),(222,190,146)]
+SCARRX,SCARRZ=0.17,0.30   # ヌシの傷の、よこ・たての半径（マス。どの段階も同じ）
 HEART=[(214,170,122),(196,148,104)]   # 切り口のまん中（芯）のこい色
 LEAF=[(225,234,117),(191,208,99),(172,194,96)]   # お手本の絵の葉：明るい・ふつう・下のふち
 GLOW=(255,246,176)
@@ -118,7 +119,12 @@ def texpat(items,pal,nlv=3):
     return f
 BARK4=[(239,175,121),(218,152,106),(196,134,94),(172,116,82)]   # 木の皮の4だん（明るいすじ・ふつう・暗い・みぞ）
 SCAR=[(255,214,158),(248,186,128)]   # ヌシの傷：明るいすじ・傷の面（かげの段で暗くなるので、明るめ）   # ヌシの傷（お手本の幹の、明るいだ円）：まん中の光・中・ふち
-def almond(at,x,z):
+def SY(sy,z):
+    """傷をつける所の、手前のさかい（y）。sy は数か、(高さの一覧, yの一覧)（高さごとの幹の正面から0.35マス）"""
+    if isinstance(sy,tuple):return float(np.interp(z,sy[0],sy[1]))
+    return sy
+def almond(at,x,y,z):
+    z=z-0.9*y   # 画面のたての場所（見おろし42度）。幹がかたむいていても、画面で同じ形・大きさに見える
     """ヌシの傷の形の中での場所：(よこ e, たて v)。e は 0（まん中）〜1（ふち）。外なら None"""
     sx,sy,sz,rx,rz=at;ca,sa=math.cos(0.45),math.sin(0.45)
     u=((x-sx)*ca-(z-sz)*sa*rx/rz)/rx;v=((x-sx)*sa*rz/rx+(z-sz)*ca)/rz;w=1-v*v
@@ -129,7 +135,7 @@ def carve(q,uv,at):
     """ヌシの傷を、メッシュをえぐって作る：傷のまわりの面を4つずつに2回わけて（こまかく）、傷の中の点を、幹のまん中のほうへ押しこむ（まん中ほど深い）"""
     if at is None:return q,uv
     sx,sy,sz,rx,rz=at;dep=0.30*rx
-    def near(t):m=t.mean(0);return m[1]>sy-0.05 and abs(m[0]-sx)<rx*1.6 and abs(m[2]-sz)<rz*1.3
+    def near(t):m=t.mean(0);return m[1]>SY(sy,m[2])-0.05 and abs(m[0]-sx)<rx*1.6 and abs(m[2]-0.9*m[1]-sz)<rz*1.3
     Q,U=list(q),list(uv)
     for _ in range(2):
         Q2,U2=[],[]
@@ -141,8 +147,8 @@ def carve(q,uv,at):
         Q,U=Q2,U2
     Q=np.array(Q);U=np.array(U);P=Q.reshape(-1,3).copy()
     for i,p in enumerate(P):
-        if p[1]<=sy:continue
-        a=almond(at,p[0],p[2])
+        if p[1]<=SY(sy,p[2]):continue
+        a=almond(at,p[0],p[1],p[2])
         if a is None:continue
         d=np.array([TX-p[0],TY-p[1],0.0]);d/=max(np.linalg.norm(d),1e-9);P[i]=p+d*dep*(1-a[0]**2)*(1-a[1]**2)**0.5
     return P.reshape(Q.shape),U
@@ -152,8 +158,8 @@ def scar(f,at):
     if at is None:return f
     sx,sy,sz,rx,rz=at;ca,sa=math.cos(0.45),math.sin(0.45)   # かたむき（右上→左下）
     def g(x,y,z):
-        if y>sy:
-            u=((x-sx)*ca-(z-sz)*sa*rx/rz)/rx;v=((x-sx)*sa*rz/rx+(z-sz)*ca)/rz   # u：はば・v：長さ（かたむけた）
+        if y>SY(sy,z):
+            ze=z-0.9*y;u=((x-sx)*ca-(ze-sz)*sa*rx/rz)/rx;v=((x-sx)*sa*rz/rx+(ze-sz)*ca)/rz   # u：はば・v：長さ（画面の上で、かたむけた）
             w=1-v*v   # アーモンド：長さのはしほど細い
             if w>0 and abs(u)<w**0.9:
                 e=abs(u)/max(w**0.9,1e-6)
@@ -470,12 +476,18 @@ class Stage:
         P_=q.reshape(-1,3);z=P_[:,2];H_=z.max()-z.min()
         if s.name=='tree':
             if len(P_)<3000:return None
-            zc=z.min()+0.20*H_;rz=0.10*H_
+            zc=z.min()+0.30*H_   # 根のわかれ目より上の、たいらな幹
         else:
             if abs(P_[:,0].mean()-TX)>0.6:return None   # 若木の幹には、つけない（切り株だけ）
-            zc=z.min()+0.55*H_;rz=0.20*H_
-        band=P_[np.abs(z-zc)<0.04*H_];front=band[band[:,1]>TY];sy=TY+0.25*(front[:,1].max()-TY) if len(front) else TY
-        return (TX-0.02,sy,zc,0.17 if s.name!='tree' else 0.30,rz*1.15)   # 光の当たる正面（少し左）
+            zc=z.min()+0.45*H_
+        band=P_[np.abs(z-zc)<0.04*H_];front=band[band[:,1]>TY]
+        zs=np.linspace(zc-SCARRZ*1.4,zc+SCARRZ*1.4,15);ys=[]
+        for zz in zs:   # 高さごとの、傷のよこはばの中の正面（いちばん手前）から0.35マス
+            b_=P_[(np.abs(P_[:,2]-zz)<0.02)&(P_[:,1]>TY)];ys.append(max(TY,b_[:,1].max()-0.35) if len(b_) else TY)
+        sy=(zs,np.array(ys))   # 幹がかたむいていても、傷の上も下も、正面につく
+        fx=(front[:,0].max()+front[:,0].min())/2-0.12 if len(front) else TX   # その高さの幹の正面の、少し左（光の当たる所）
+        yf=float(np.interp(zc,sy[0],sy[1]))+0.35
+        return (fx,sy,zc-0.9*yf,SCARRX,SCARRZ)   # sz は画面のたての場所（z−0.9y）   # 光の当たる正面（少し左）。形・大きさは、どの段階も同じ
     def PARTS(s):return []
     def EXTRA(s,sc):
         sc.smooth(True);s._gid=[];s._ros=[]
