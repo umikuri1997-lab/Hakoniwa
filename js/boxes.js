@@ -64,6 +64,7 @@ const anyBox=j=>adjOf(j,k=>!!boxTypeAt(k)&&boxSide(j,k));
 function needLeft(t){/* t：建てる所の S.dyn か、依頼。まだ運んでいない素材 {key:数} */const m={};const need=t.mat||{},got=t.got||{};for(const k in need){const n=need[k]-(got[k]||0)-carryFor(t,k);if(n>0)m[k]=n}const fn=t.food||{};for(const k in fn){const key=fkey(k),n=fn[k]-(got[key]||0)-carryFor(t,key);if(n>0)m[key]=n}return m}
 function carryFor(t,key){let n=0;for(const r of S.res)if(r.bm&&r.bm.t===t.bid&&r.bm.m[key])n+=r.bm.m[key];return n}
 const needKeys=t=>Object.keys(needLeft(t)),hasNeed=t=>needKeys(t).length>0;
+const bmN=r=>r.bm?Object.values(r.bm.m).reduce((a,b)=>a+b,0):0;/* 建てる所・依頼へ運んでいる素材の数 */
 function deliver(r,t){/* 運んできた素材を、建てる所・依頼にわたす */if(!r.bm||r.bm.t!==t.bid)return;const g=t.got||(t.got={});for(const k in r.bm.m)g[k]=(g[k]||0)+r.bm.m[k];r.bm=null}
 function bmDrop(r){/* 運んでいた素材の行き先がなくなった：もちものの素材としてしまいにいく */if(!r.bm)return;for(const key in r.bm.m){const n=r.bm.m[key];if(isFK(key)){r.carry=r.carry&&typeof r.carry==='object'?r.carry:{};const k=key.slice(2);r.carry[k]=(r.carry[k]||0)+n}else{r.cmat=r.cmat||{};r.cmat[key]=(r.cmat[key]||0)+n}}r.bm=null}
 function bmTargets(){/* 素材を運ぶのを待っている所（建てる所・依頼） */const L=[];for(let j=0;j<W*H;j++){if(S.obj[j]!=='site')continue;const d=S.dyn[j];if(!d)continue;if(d.bid==null)d.bid='s'+j;if(hasNeed(d))L.push(d)}for(const o of S.orders||[]){if(o.bid==null)o.bid='o'+o.id;if(hasNeed(o))L.push(o)}return L}
