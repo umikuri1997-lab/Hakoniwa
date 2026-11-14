@@ -12,6 +12,12 @@ for a,b,c,col,pid in sc.t:
     V+= [a,b,c];C.append(cc)
 V=np.array(V);n=len(V)//3;Fc=np.arange(n*3).reshape(n,3)
 V=np.stack([V[:,0],V[:,2],V[:,1]],1)   # ゲーム（x東・y南・z上）→ three.js（x・y上・z手前）
-C=((np.clip(np.array(C),0,255)/255)**2.2)*255   # glTF の色は、明るさの直線の値
-m=trimesh.Trimesh(V,Fc,process=False);m.visual.face_colors=np.c_[C,np.full(n,255)].astype(np.uint8)
+C=np.clip(np.array(C),0,255);leaf=C[:,1]>C[:,0]+8   # 葉（緑）と、幹・枝をわける（葉は、つやのある材質にする）
+C=((C/255)**2.2)*255   # glTF の色は、明るさの直線の値
+scn=trimesh.Scene()
+for nm,sel in(('bark',~leaf),('leaf',leaf)):
+    if not sel.any():continue
+    idx=np.flatnonzero(sel);Fs=np.arange(len(idx)*3).reshape(-1,3);Vs=V.reshape(-1,3,3)[idx].reshape(-1,3)
+    mm=trimesh.Trimesh(Vs,Fs,process=False);mm.visual.face_colors=np.c_[C[idx],np.full(len(idx),255)].astype(np.uint8);scn.add_geometry(mm,node_name=nm,geom_name=nm)
+m=scn
 m.export(sys.argv[1]);print(n,'tris')
