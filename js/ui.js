@@ -209,6 +209,10 @@ function careSec(body,r){/* おせわ：なでる・毛布（どれも1人に1�
   mk('pat','なでる',sl?'ねているので、おこさない':'',()=>{r.fun=Math.min(100,r.fun+CAREPAT);JOYU.set(r,performance.now()+2500);r.bubble='💕';addFloat(r.x,r.y-1.6,'たのしさ+'+CAREPAT,'#ffd7e8')});
   if(outS||c.blanket===d)mk('blanket','毛布をかける','',()=>{r.act.blanket=1;r.bubble='💤'});
   body.appendChild(bw)}
+function sortieSec(body,r){/* 出撃する・しない（6時〜23時だけ、かえられる。夜はそのまま） */const on=fighter(r),sec=el('<div class="sec"><h3>出撃</h3><p class="note"></p><div class="btns" style="display:flex;gap:8px;flex-wrap:wrap;margin:4px 0 8px"></div></div>'),bw=sec.querySelector('.btns');
+  sec.querySelector('p').textContent=on?(r.elem==='fire'?'夜、近くのコワイノとたたかう':'夜、近くのコワイノとたたかう（'+SORTIETXT[r.elem]+'）'):(r.elem==='fire'?'夜、見張り台に立つ（'+WPTXT.fire+'）':'夜、見張り台に立つ');
+  const mk=(v,t)=>{const b=el('<button class="btn"></button>');b.textContent=t;if(on===v)b.classList.add('pri');lackOn(b,isNight()?'夜は、かえられない':'');b.onclick=()=>{if(isNight()||on===v)return;r.sortie=v;if(r.elem==='fire'&&v||r.elem!=='fire'&&!v)delete r.sortie;sfx('tap');renderSheet()};bw.appendChild(b)};
+  mk(true,'出撃する');mk(false,'出撃しない');body.appendChild(sec)}
 const CAREPAT=10;
 function boxSec(body,j){/* しまう家具：中身と、入れる物 */const a=anc(j);if(!boxTypeAt(a))return;const b=BOX()[a]||{},used=boxUsed(a),cap=boxCap(a);
   {const MOBJ={shina:'weed0g',kasa:'weed0k',kuru:'weed1g',chiri:'weed1k',funba:'weedc'},mic=k=>isFK(k)?foodIc(k.slice(2)):ICONS[k]||(MOBJ[k]&&BL[MOBJ[k]]?iconURL(MOBJ[k]):null);
@@ -415,7 +419,7 @@ function renderSheet(){
     box.querySelector('b').textContent=ELEM[r.elem].name+'のせいれい・'+(r.act?ACT_LBL[r.act.type]||'':'考え中');
     box.querySelector('small').textContent=r.hunger<200?'おなか：危険！':r.hunger<500?'おなか：少なめ':'';
     box.querySelector('.tx').insertAdjacentHTML('beforeend',gaugeHTML(r)+spiritXpGaugeHTML(r));body.appendChild(box);
-    if(!isNew){const sy=el('<p class="story" style="margin:6px 0 2px"></p>');sy.textContent='「'+sayLine(r)+'」';body.appendChild(sy)}if(!isNew&&!r.hidden)careSec(body,r);/* おせわ */
+    if(!isNew){const sy=el('<p class="story" style="margin:6px 0 2px"></p>');sy.textContent='「'+sayLine(r)+'」';body.appendChild(sy)}if(!isNew&&!r.hidden)careSec(body,r);/* おせわ */if(!isNew&&!r.hidden&&sortieOn())sortieSec(body,r);/* 出撃 */
     {const lv=rLv(r);
      const gOn=WD===1||!!(r.gear&&GSLOTK.some(k=>r.gear[k]))||gearList().length>0;if(!gOn&&resTab===3)resTab=0;/* そうびは火山から */const tb=el('<div class="ctabs"></div>');['ステータス','プロフィール','強化',...(gOn?['そうび']:[])].forEach((nm,i)=>{const t=el('<button class="ctab'+(i===resTab?' on':'')+'"></button>');t.textContent=nm;t.onclick=()=>{resTab=i;sfx('next');renderSheet()};tb.appendChild(t)});body.appendChild(tb);/* ステータスと、得意・好きなものは別のタブ */
      if(resTab===3)gearSheet(body,r);
@@ -541,11 +545,11 @@ function renderSheet(){
       const b=el('<button class="btn pri">強化する</button>');b.onclick=()=>{if(S.pt<U.pc)return toast('パワーが足りません（'+SP(U.pc)+'）');if(!matOK(U.mat))return toast('素材が足りません（'+matTxt(U.mat)+'）');if(U.sand&&(S.sand||0)<U.sand)return toast('やすらぎの砂が足りません（'+U.sand+'）');S.pt-=U.pc;for(const k in U.mat)S.mat[k]-=U.mat[k];if(U.sand)S.sand-=U.sand;S.hp['L'+j]=L+1;dirty=true;try{recount();rebuildStatic()}catch(e){}/* あかり（見張り台のLv5〜）を数えなおす */sfx('kankan');burst(j,'block','offer');toast(BL[o].name+'をLv'+(L+1)+'に強化した','good');renderSheet()};body.insertBefore(b,upTop)}/* ボタンをいちばん上に */
     else body.appendChild(el('<p class="note">これ以上は強化できない</p>'));
     body.appendChild(el(`<p class="story">Lv${L}：威力 ${st.dmg}${yg?'（まわり '+st.sdmg+'）':''}・射程 ${st.range}マス・${st.cd}分ごとに${yg?'火の玉':'木の矢'}を放つ${!yg&&L>=WLIGHT?'・夜にあかりがつく':''}${!yg&&L>=WTWO?'・せいれいが2人立てる':''}</p>`));if(!yg)body.appendChild(el(`<p class="story">木の矢：${inv('arrow')}本</p>`));
-    if(!yg){/* 見張り台に立つ子：ベッドと同じように、きめられる。立つ子の属性で、うち方がかわる */const own=S.wpOwn||{},oid=own[j],ow=oid!=null?S.res.find(q=>q.id===oid&&q.elem!=='fire')||null:null;
-      const ef=el('<div class="sec"><h3>立つせいれいの属性</h3><p class="note" style="white-space:pre-line"></p></div>');ef.querySelector('p').textContent=ow?ELEM[ow.elem].name+'のせいれい：'+WPTXT[ow.elem]:['wood','earth','water','wind'].map(k=>ELEM[k].name+'：'+WPTXT[k]).join('\n');body.appendChild(ef);
+    if(!yg){/* 見張り台に立つ子：ベッドと同じように、きめられる。立つ子の属性で、うち方がかわる */const own=S.wpOwn||{},oid=own[j],ow=oid!=null?S.res.find(q=>q.id===oid&&(q.elem!=='fire'||sortieOn()))||null:null;
+      const ef=el('<div class="sec"><h3>立つせいれいの属性</h3><p class="note" style="white-space:pre-line"></p></div>');ef.querySelector('p').textContent=ow?ELEM[ow.elem].name+'のせいれい：'+WPTXT[ow.elem]:['wood','earth','water','wind',...(sortieOn()?['fire']:[])].map(k=>ELEM[k].name+'：'+WPTXT[k]).join('\n');body.appendChild(ef);
       const sec=el('<div class="sec"><h3>見張り台に立つせいれい</h3><div class="rows"></div></div>'),rows=sec.querySelector('.rows'),set=id=>{const B=S.wpOwn||(S.wpOwn={});for(const k in B)if(B[k]===id)delete B[k];if(id==null)delete B[j];else B[j]=id;sfx('next');renderSheet()};
       {const row=el('<button class="row" style="text-align:left;width:100%"><span class="dot" style="background:#efe6d2"></span><div class="tx"><b></b><small></small></div></button>');ckSet(row.querySelector('b'),(ow?'':'✓ ')+'だれでも');row.querySelector('small').textContent='あいていれば、だれでも立つ';row.onclick=()=>set(null);rows.appendChild(row)}
-      for(const r of S.res){if(r.elem==='fire')continue;let mine=-1;for(const k in own)if(own[k]===r.id&&S.obj[k]==='watch')mine=+k;const row=el('<button class="row" style="text-align:left;width:100%"><span class="dot"></span><div class="tx"><b></b><small></small></div></button>');
+      for(const r of S.res){if(r.elem==='fire'&&!sortieOn())continue;let mine=-1;for(const k in own)if(own[k]===r.id&&S.obj[k]==='watch')mine=+k;const row=el('<button class="row" style="text-align:left;width:100%"><span class="dot"></span><div class="tx"><b></b><small></small></div></button>');
         row.querySelector('.dot').style.cssText='background:#f6f1e6 url('+spiritPort(r.elem,96)+') center/86% no-repeat;box-shadow:inset 0 0 0 2px '+ELEM[r.elem].col;
         ckSet(row.querySelector('b'),(ow===r?'✓ ':'')+r.name+'  Lv'+rLv(r));row.querySelector('small').textContent=ELEM[r.elem].name+'のせいれい・'+(mine===j?'この見張り台':mine>=0?'ほかの見張り台':'きまっていない');row.onclick=()=>set(r.id);rows.appendChild(row)}
       body.appendChild(sec)}
