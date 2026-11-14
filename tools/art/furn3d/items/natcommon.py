@@ -450,15 +450,15 @@ def radii(par,rtip=0.010,E=2.4,rmax=None):
         if ch[i]:r[i]=sum(r[c]**E for c in ch[i])**(1/E)
     if rmax:r=np.minimum(r,rmax)
     return r,ch
-def chains(par,ch):
-    """枝を、分かれる所から先へ、つながった点の列にする（いちばん太い子は親の列のつづき）"""
+def chains(par,ch,r=None):
+    """枝を、分かれる所から先へ、つながった点の列にする（いちばん太い子が親の列のつづき。太い枝が、とちゅうで切れたように終わらない）"""
     out=[];stack=[(0,None)]
     while stack:
         i,pp=stack.pop();c=[pp,i] if pp is not None else [i]
         while True:
             cs=ch[i]
             if not cs:break
-            big=max(cs,key=lambda k:len(ch[k])+0)   # つづき
+            big=max(cs,key=lambda k:r[k] if r is not None else len(ch[k]))   # つづき：いちばん太い子
             for k in cs:
                 if k!=big:stack.append((k,i))
             c.append(big);i=big

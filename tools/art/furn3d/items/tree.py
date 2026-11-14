@@ -7,6 +7,7 @@
 #     下・内向きの芽は、のびないことが多い。どの段も、先の芽がそのままのびる。
 #   太さ：パイプモデル（先 0.005、親は子の太さ^1.8 の和。幹は 0.16 まで）。分かれた子のつけ根に、えり。
 #   葉：細枝の先と、先の半分の節に（長さ 0.16・はば 0.10 の0.8〜1.2倍、反り・あつみ・すじ、表は太陽へ。かさならない）。
+#   骨格は1回だけ作って tree_skel.json に固定する（python3 tools/art/furn3d/items/tree.py --skel）。葉つきは、その骨格を読んで葉をたすだけ（枝を消す・うごかす・たすをしない）。
 #   SKEL=True で写すと、葉をつけない骨格だけ（たしかめ用）。
 import math
 import numpy as np
@@ -22,18 +23,26 @@ MAIN=[   # 向き・立ち上がり・長さ・葉群の半径・つけ根の高
     (240,70,0.58,(0.46,0.38,0.34),1.0),    # 上（幹のつづき）
 ]
 TRUNK=0.78
-LVL={2:((4,6),(30,55),(0.55,0.75),(0.25,0.95)),3:((3,4),(28,55),(0.50,0.70),(0.20,0.95)),4:((2,3),(25,50),(0.45,0.65),(0.25,1.0))}
+LVL={2:((2,4),(30,50),(0.55,0.75),(0.30,0.90)),3:((2,3),(28,50),(0.50,0.70),(0.25,0.90)),4:((1,3),(25,45),(0.45,0.65),(0.30,0.95))}   # 数は少なめ（交差・束にしない）
+def spots(rs,span,nb,gap=0.18):
+    """芽の場所：はんいの中に、たがいに gap より近づけない（1か所から何本も出さない）。間かくはまちまち"""
+    out=[]
+    for _ in range(nb*20):
+        if len(out)>=nb:break
+        x=rs.uniform(*span)
+        if all(abs(x-y)>=gap for y in out):out.append(x)
+    return sorted(out)
 class G:
     def __init__(s):s.P=[];s.par=[];s.lv=[]
     def add(s,p,pa,lv):s.P.append(np.array(p,float));s.par.append(pa);s.lv.append(lv);return len(s.P)-1
 def fit(env,p,d,L):
-    """p から d へ、葉群の外へ出るまでの長さ（L まで）。葉群の外から出る枝は、葉群に入ってから出るまで"""
+    """p から d へ、葉群の外へ出るまでの長さ（L まで）。葉群の外から出る枝は、葉群に入ってから出るまで。入らなければ0"""
     t=0.0;inside=env(p)
     while t<L:
         q=env(p+d*(t+0.03))
         if inside and not q:break
         inside=inside or q;t+=0.03
-    return t if inside else L*0.5
+    return t if inside else 0.0   # 葉群に入らない枝は、のばさない（分かれ目のまわりに短い枝がかたまらない）
 def grow(g,i0,d,L,lv,env,c,rs,tips):
     """節 i0 から、向き d・長さ L の枝（lv 段）。節ごとに少しだけ曲がる（外・上へ）。芽から子の枝"""
     n=max(3,int(L/0.05));up=np.array([0,0,1.0]);idx=[i0];dd=d.copy()
@@ -43,7 +52,7 @@ def grow(g,i0,d,L,lv,env,c,rs,tips):
         idx.append(g.add(g.P[idx[-1]]+dd*L/n,idx[-1],lv))
     if lv==4:tips.append(idx);return
     nc,ang,lk,span=LVL[lv+1];nb=rs.randint(nc[0],nc[1]+1);az=rs.uniform(0,6.28)
-    for s in np.sort(rs.uniform(span[0],span[1],nb)):
+    for s in spots(rs,span,nb):
         i=min(n-1,int(s*n));q=g.P[idx[i]];ld=g.P[idx[i+1]]-g.P[idx[i]];ld/=np.linalg.norm(ld)
         u=np.cross(ld,up);u=u/np.linalg.norm(u) if np.linalg.norm(u)>1e-6 else np.array([1.0,0,0]);v=np.cross(ld,u)
         az+=N.GOLD;side=u*math.cos(az)+v*math.sin(az);a=math.radians(rs.uniform(*ang))
@@ -70,7 +79,7 @@ def skeleton():
         c=g.P[pts[-1]]+np.array([0,0,rr[2]*0.2]);env=N.envelope(c,*rr,SEED*7+k);lobes.append((c,rr))
         bigenv=lambda p,env=env:env(p)   # 葉群の中
         nc,ang,lk,span=LVL[2];nb=rs.randint(nc[0],nc[1]+1);az2=rs.uniform(0,6.28)
-        for s in np.sort(rs.uniform(0.45,0.95,nb)):   # 側枝
+        for s in spots(rs,(0.45,0.95),nb):   # 側枝
             i2=min(m-1,int(s*m));q=g.P[pts[i2]];ld=g.P[pts[i2+1]]-q;ld/=np.linalg.norm(ld)
             u=np.cross(ld,up);u=u/np.linalg.norm(u) if np.linalg.norm(u)>1e-6 else np.array([1.0,0,0]);v=np.cross(ld,u)
             az2+=N.GOLD;cd=ld*math.cos(math.radians(rs.uniform(*ang)))+(u*math.cos(az2)+v*math.sin(az2))*math.sin(math.radians(rs.uniform(*ang)))
@@ -81,16 +90,24 @@ def skeleton():
         cl=min(ln*0.55,fit(bigenv,g.P[pts[-1]],dd,ln))   # 主枝の先の芽
         if cl>=0.06:grow(g,pts[-1],dd,cl,2,bigenv,c,rs,tips)
     return g,tips,lobes,rs
+import json,os
+SKELF=os.path.join(os.path.dirname(os.path.abspath(__file__)),'tree_skel.json')   # 固定した骨格（葉の有無で、ぜったいにかえない）
+def makeskel():
+    """骨格を1回だけ作って、ファイルに書く（python3 tools/art/furn3d/items/tree.py --skel）"""
+    g,tips,lobes,_=skeleton()
+    json.dump({'P':[list(map(float,p)) for p in g.P],'par':[int(x) for x in g.par],'tips':[[int(i) for i in t] for t in tips],'lobes':[[list(map(float,c)),list(rr)] for c,rr in lobes]},open(SKELF,'w'))
+def loadskel():
+    d=json.load(open(SKELF));return np.array(d['P']),np.array(d['par']),d['tips'],[(np.array(c),tuple(rr)) for c,rr in d['lobes']]
 def EXTRA(sc):
-    g,tips,lobes,rs=skeleton();P=np.array(g.P);par=np.array(g.par);up=np.array([0,0,1.0])
+    P,par,tips,lobes=loadskel();up=np.array([0,0,1.0]);rs=np.random.RandomState(SEED+100)   # 葉の乱数は、骨格とべつ
     r,ch=N.radii(par,rtip=0.005,E=1.8,rmax=0.16)
     T=[]
-    for c in N.chains(par,ch):
+    for c in N.chains(par,ch,r):
         if len(c)<2:continue
         pts=P[c];rr=list(r[c])
         if c[0]!=0 and len(ch[c[0]])>1:rr[1]=rr[1]*1.25   # えり
         mr=max(rr);N.limb(T,pts,rr,n=14 if mr>0.08 else 8 if mr>0.03 else 5,flare=0.07 if c[0]==0 else 0.0,fh=0.2,wob=0.07 if mr>0.06 else 0.0,seed=len(T)%17)
-    N.roots(T,(CX,CY,0),0.16,rs,L=0.15)
+    N.roots(T,(CX,CY,0),0.12,np.random.RandomState(SEED+50),L=0.10)
     N.barkmesh(sc,T)
     if SKEL:return
     L,W=0.16,0.10;put=[];groups=[[] for _ in lobes]
@@ -111,3 +128,6 @@ def EXTRA(sc):
         return int(np.clip(round((1-lt)*1.9-0.3+(0.6 if c[2]<1.0 else 0.0)),0,len(N.LEAFB)-2))
     N.drawclumps(sc,groups,axis=(CX,CY),tonef=tonef)
 def POST(im):return N.specks(im)
+if __name__=='__main__':
+    import sys
+    if '--skel' in sys.argv:makeskel();print('骨格を書いた',SKELF)
