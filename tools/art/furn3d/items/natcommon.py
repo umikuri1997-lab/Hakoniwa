@@ -72,7 +72,7 @@ def tree(sc,glb,cx,cy,size,rot=0,leaf=True,csize=0.7,zs=1.0,root=1.0,ys=1.0):
 
 def specks(im):return ST.specks(im)
 
-def limb(T,pts,rs,n=14,flare=0.0,lobes=5,fh=0.16,cap=True):
+def limb(T,pts,rs,n=14,flare=0.0,lobes=5,fh=0.16,cap=True,wob=0.0,seed=0):
     """幹・枝：点 pts をつないだ管。rs は点ごとの半径。まわりの向きは、ねじれないように、となりの輪からうつしていく。
     flare：根のふくらみ（根もとの半径に足す分、lobes 本の根。高さ fh まで、なめらかに消える）。cap：先をふさぐ。三角形を T に足す"""
     P=[np.array(q,float) for q in pts];m=len(P)
@@ -82,6 +82,7 @@ def limb(T,pts,rs,n=14,flare=0.0,lobes=5,fh=0.16,cap=True):
         u=u-D[i]*(u@D[i]);u/=np.linalg.norm(u);v=np.cross(D[i],u);ring=[]
         for j in range(n):
             a=2*math.pi*j/n;r=rs[i]
+            if wob:r*=1+wob*(math.sin(2*a+seed+0.3*i)*0.6+math.sin(3*a+seed*1.7)*0.4)   # 断面は、まるでなく少しいびつ
             if flare:
                 h=P[i][2]-P[0][2];w=max(0.0,1-h/fh)**2;r=r+flare*w*(0.45+0.55*max(0.0,math.cos(lobes*a+0.7))**1.5)
             ring.append(P[i]+r*(math.cos(a)*u+math.sin(a)*v))
@@ -217,16 +218,26 @@ def crownleaves(clusters,L=0.16,W=0.10,ext=1.25):
                 lv.append((b,ld,sd,nn,L,W,r/(R*ext)))
         out.append(lv)
     return out
-def roundleaf(base,d,sd,nn,L,W,fold=0.35,droop=0.08,nt=5,ns=2):
-    """まるい葉（根もとからまるく広がり、先が少しとがる）。かさねずに、ならべてすきまが小さい形"""
-    def P(t,u):
-        w=W*(1-abs(2*t-1)**2.5)**0.5*(1-0.25*max(0,t-0.6)/0.4) if 0<t<1 else 0.0;return base+d*t*L+sd*u*w+nn*(fold*w*abs(u)-droop*L*t*t)
-    T=[]
-    for i in range(nt):
-        for j in range(-ns,ns):
-            t0,t1=i/nt,(i+1)/nt;u0,u1=j/ns,(j+1)/ns;a,b,c,e=P(t0,u0),P(t1,u0),P(t1,u1),P(t0,u1);T+=[(a,b,c),(a,c,e)]
-    return T
-def crowncore(sc,c,R,H,ext=1.25,dz=0.05,n=24,m=8,col=LEAFB[3]):
+LEAFTH=0.014   # 葉のあつさ（マス）
+def roundleaf(base,d,sd,nn,L,W,fold=0.30,curl=0.14,th=LEAFTH,nt=6,ns=2):
+    """まるい葉（根もとからまるく広がり、先が少しとがる）。
+    反り：先ほど、表のほうへ反りかえる（curl：先の高さ＝長さ×curl。持ち主の指示：葉をそらせる）。
+    あつみ：表と裏の2まいの面と、ふちの面（th。持ち主の指示：あつみをつける）。かえす：(表と裏の三角形, ふちの三角形)"""
+    def P(t,u,k):
+        w=W*(1-abs(2*t-1)**2.5)**0.5*(1-0.25*max(0,t-0.6)/0.4) if 0<t<1 else 0.0
+        return base+d*t*L+sd*u*w+nn*(fold*w*abs(u)+curl*L*t*t+k*th*(1-abs(u)**2)*(0.3+0.7*math.sin(math.pi*t)))
+    T=[];E=[]
+    for k in(0.5,-0.5):
+        for i in range(nt):
+            for j in range(-ns,ns):
+                t0,t1=i/nt,(i+1)/nt;u0,u1=j/ns,(j+1)/ns;a,b,c,e=P(t0,u0,k),P(t1,u0,k),P(t1,u1,k),P(t0,u1,k);T+=[(a,b,c),(a,c,e)]
+    for i in range(nt):   # ふち（u=±1）：表と裏のあいだ。あつみが見える
+        t0,t1=i/nt,(i+1)/nt
+        for u in(-1,1):
+            a,b=P(t0,u,0.5),P(t1,u,0.5);c,e=P(t1,u,-0.5),P(t0,u,-0.5)
+            o=sd*u*0.004;E+=[(a+o,b+o,c+o),(a+o,c+o,e+o)]
+    return T,E
+def crowncore(sc,c,R,H,ext=1.25,dz=0.05,n=24,m=8,col=LEAFB[4]):
     """かたまりの中身：葉の面の少し下の、こい緑の面（葉のすきまから枝が見えないように）"""
     sc.part()
     def P(i,j):r=R*ext*i/m;a=2*math.pi*j/n;return (c[0]+r*math.cos(a),c[1]+r*math.sin(a),c[2]+H*(1-(r/R)**2)-dz)
@@ -239,23 +250,28 @@ def drawcrown(sc,groups,pal=LEAFB,olk=0.74,cl=None):
         sc.group('cr%d'%gi);sc.outline(None,olk);sc.material('flat')
         if cl:crowncore(sc,*cl[gi])
         for b,ld,sd,nn,l,w,e in g:
-            h=(b[2]-zlo)/max(zhi-zlo,1e-6);tone=int(np.clip(round(1.8*e**3+(1-h)*1.6-0.2),0,len(pal)-2))   # ふち（たれた所）と低い所ほど暗い
+            h=(b[2]-zlo)/max(zhi-zlo,1e-6);lt=float(nn@LIGHTV);tone=int(np.clip(round((1-lt)*1.8+0.8*e**3+(1-h)*0.8-0.4),0,len(pal)-2))   # 光に向く葉ほど明るく、ふち（たれた所）と低い所は少し暗い
             side=float(sd@LIGHTV);sc.part()
-            for q in roundleaf(b,ld,sd,nn,l,w):
-                sc.tri(q[0],q[1],q[2],pal[tone+(0 if (((q[0]+q[1]+q[2])/3-b)@sd)*side>0 else 1)])
+            TT,EE=roundleaf(b,ld,sd,nn,l,w)
+            for q in TT:sc.tri(q[0],q[1],q[2],pal[tone+(0 if (((q[0]+q[1]+q[2])/3-b)@sd)*side>0 else 1)])
+            for q in EE:sc.tri(q[0],q[1],q[2],pal[min(len(pal)-1,tone+2)])   # ふち（あつみ）は2段暗い
         sc.material(None);sc.outline();sc.group(None)
 
-def poisson(c,Rmax,rmin,seed,k=30):
-    """上から見た円（まん中 c・半径 Rmax）の中に、たがいに rmin より近づかない点を、ばらばらに、すきまなくまく（ブリッドソンのやり方）"""
+def poisson(c,Rmax,rmin,seed,k=30,sl=None):
+    """上から見た円（まん中 c・半径 Rmax）の中に、たがいに rmin より近づかない点を、ばらばらに、すきまなくまく（ブリッドソンのやり方）。
+    sl(点)：その所の面のかたむき。ななめの所ほど、上から見た間かくをつめる（面の上で同じこさ）"""
+    f=(lambda q:rmin/math.sqrt(1+sl(q)**2)) if sl else (lambda q:rmin)
     rs=np.random.RandomState(seed);P=[np.array(c[:2],float)+rs.uniform(-0.03,0.03,2)];act=[0]
     while act:
-        i=act[rs.randint(len(act))];ok=False
+        i=act[rs.randint(len(act))];ok=False;ri=f(P[i])
         for _ in range(k):
-            a=rs.uniform(0,2*math.pi);r=rs.uniform(rmin,2*rmin);q=P[i]+r*np.array((math.cos(a),math.sin(a)))
+            a=rs.uniform(0,2*math.pi);r=rs.uniform(ri,2*ri);q=P[i]+r*np.array((math.cos(a),math.sin(a)))
             if np.hypot(*(q-c[:2]))>Rmax:continue
-            if all(np.hypot(*(q-p))>=rmin for p in P):P.append(q);act.append(len(P)-1);ok=True;break
+            rq=f(q)
+            if all(np.hypot(*(q-p))>=min(rq,f(p)) for p in P):P.append(q);act.append(len(P)-1);ok=True;break
         if not ok:act.remove(i)
     return np.array(P)
+DENS=0.85   # 葉と葉のいちばん近い間かく（葉の長さの何倍。持ち主の指示：密度を下げる）
 def crownleaves2(clusters,L=0.16,W=0.10,ext=1.2,seed=0):
     """かたまりごとに、葉をばらばらに（均等にしない）、かさならないように、上から見てすきまなくまく（poisson）。大きさも少しずつちがう。
     葉の高さは、かたまりの面（外ほど重さでたれる）。ほかの、もっと高いかたまりの下には置かない。
@@ -266,15 +282,117 @@ def crownleaves2(clusters,L=0.16,W=0.10,ext=1.2,seed=0):
         return None if r>R*ext else c[2]+H*(1-(r/R)**2)
     for k,(c,R,H) in enumerate(clusters):
         rs=np.random.RandomState(seed*31+k);lv=[]
-        for x,y in poisson(np.array(c),R*ext,0.62*L,seed*31+k):
+        for x,y in poisson(np.array(c),R*ext,DENS*L,seed*31+k,sl=lambda q,c=c,R=R,H=H:2*H*math.hypot(q[0]-c[0],q[1]-c[1])/R**2):
             z=zat(k,x,y);r=math.hypot(x-c[0],y-c[1])
             if any(q!=k and zat(q,x,y) is not None and zat(q,x,y)>z for q in range(len(clusters))):continue
             a=math.atan2(y-c[1],x-c[0])+rs.uniform(-0.5,0.5) if r>0.02 else rs.uniform(0,6.28)
             o=np.array([math.cos(a),math.sin(a),0.0])
             g=np.array([-2*H*(x-c[0])/R**2,-2*H*(y-c[1])/R**2,1.0]);g/=np.linalg.norm(g)
-            nn=g*0.6+SUN*0.4+rs.uniform(-0.12,0.12,3);nn/=np.linalg.norm(nn)
+            nn=g*0.8+SUN*0.2+rs.uniform(-0.12,0.12,3);nn/=np.linalg.norm(nn)
             ld=o-nn*(o@nn);ld/=np.linalg.norm(ld);sd=np.cross(nn,ld);f=rs.uniform(0.85,1.15)
             b=np.array((x,y,z))-ld*L*f*0.5+g*0.02+nn*rs.uniform(0,0.01)
             lv.append((b,ld,sd,nn,L*f,W*f,r/(R*ext)))
         out.append(lv)
     return out
+
+# ---- 骨格から育てる木（持ち主の指示：根もと → 幹 → 主枝 → 側枝 → 小枝 → 細枝 → 葉の塊） ----
+# ・枝は節（芽）から出る：枝にそって、らせんに 137.5度ずつまわる芽の位置から（葉序）。
+# ・先ほど細い：どの枝も、つけ根から先へ、なめらかに細くなる。子の枝は、つけた所の親の太さより細い。
+# ・つけ根はふくらんで、親となめらかにつながる（枝のえり：はじめの少しだけ太い）。
+# ・分かれる角度はまちまち（段ごとのはんいの中で）。光（上・外）へ曲がる（屈光）。外・上の芽ほど枝を出す。
+# ・成長の履歴：ゆるい曲がり・太さのむら・ところどころ枯れ枝の跡（短く折れた枝）。
+# ・葉は細枝の先のまわりにだけ（葉の塊）。樹冠の形は、枝ののび方できまる。
+GOLD=math.radians(137.5)
+LV=[   # 段ごと：(子の数のはんい, 親からの角度のはんい（度）, 長さ（親の何倍）, 子が出るはんい（親の長さの割合）)
+    None,
+    ((3,4),(50,72),(0.78,0.98),(0.0,0.0)),    # 主枝（幹から）
+    ((3,5),(35,70),(0.50,0.66),(0.30,0.95)),  # 側枝
+    ((2,4),(30,75),(0.48,0.62),(0.30,0.95)),  # 小枝
+    ((2,3),(25,65),(0.45,0.60),(0.35,1.00)),  # 細枝
+]
+def _bendto(d,want,k):v=d*(1-k)+want*k;return v/np.linalg.norm(v)
+def roots(T,p,r,rs,n=5,L=0.24):
+    """根張り：幹の根もとから、太い根が外へ（幹の延長）。とちゅうで側根を1本。太さ・長さ・向きはまちまち"""
+    az=rs.uniform(0,6.28)
+    for k in range(n):
+        az+=2*math.pi/n+rs.uniform(-0.45,0.45);o=np.array([math.cos(az),math.sin(az),0.0]);l=L*rs.uniform(0.6,1.25)
+        a=np.array(p)+np.array([0,0,0.09]);pts=[a+o*r*0.4,a+o*(r*0.8+l*0.3)-np.array([0,0,0.07]),a+o*(r+l*0.7)-np.array([0,0,0.10]),a+o*(r+l)-np.array([0,0,0.12])]
+        rr=[r*0.45,r*0.30,r*0.18,r*0.08];limb(T,pts,rr,n=10,wob=0.1,seed=k)
+        q=pts[2];o2=np.array([math.cos(az+0.9*rs.choice([-1,1])),math.sin(az+0.9),0.0]);o2/=np.linalg.norm(o2)
+        limb(T,[q,q+o2*l*0.35-np.array([0,0,0.03])],[r*0.12,r*0.05],n=6)
+def growbranch(T,leafs,p,d,length,r0,lv,rs,top,stubs=True,used=None):
+    """1本の枝を、節ごとにのばし、芽から子の枝を出す。lv：0幹・1主枝・2側枝・3小枝・4細枝。
+    向き：つけ根はななめ上・なかほどは重さで横へ（垂れ）・先は上へ（光）。外へ広がる"""
+    nseg=10 if lv<=1 else 6;pts=[np.array(p,float)];dd=d.copy();up=np.array([0,0,1.0])
+    for i in range(nseg):
+        t=i/nseg;out=pts[-1]-np.array([top[0],top[1],pts[-1][2]]);out=out/np.linalg.norm(out) if np.linalg.norm(out)>1e-6 else np.zeros(3)
+        if lv==0:dd=_bendto(dd,up,0.04)
+        else:
+            dd=_bendto(dd,out if np.linalg.norm(out)>0 else dd,0.05)   # 外へ（光・すきまのある方へ）
+            if lv<=2 and 0.25<t<0.7:dd=dd+np.array([0,0,-0.02*length/0.6])   # 重さで、なかほどが垂れる
+            if t>=0.6:dd=_bendto(dd,up,0.10 if lv<=2 else 0.05)   # 先は上へ
+        dd=dd+rs.normal(0,0.07 if lv>0 else 0.04,3);dd[2]=max(dd[2],-0.08);dd/=np.linalg.norm(dd)   # 成長の履歴：ゆるい曲がり
+        pts.append(pts[-1]+dd*length/nseg)
+    rend=r0*(0.55 if lv<4 else 0.35)
+    rr=[r0+(rend-r0)*(i/nseg)**0.8 for i in range(nseg+1)]
+    rr=[r*(1+0.05*math.sin(i*1.7+lv)) for i,r in enumerate(rr)]   # 太さのむら
+    if lv>0:rr[0]*=1.45;rr[1]*=1.15   # 枝えり：つけ根のふくらみ
+    limb(T,pts,rr,n=14 if lv==0 else 10 if lv<=2 else 6,flare=0.08 if lv==0 else 0.0,fh=0.22,wob=0.08 if lv<=1 else 0.0,seed=lv*7+len(T)%13)
+    if lv==0:roots(T,p,r0,rs)
+    if lv==4:   # 細枝：節ごとに葉（葉の塊）
+        leafs.append(pts);return
+    nlv=lv+1;nc,ang,lk,span=LV[nlv]
+    nb=rs.randint(nc[0],nc[1]+1)
+    spots=np.sort(rs.uniform(0.58,0.88,nb)) if lv==0 else np.sort(rs.uniform(span[0],span[1],nb))   # 間かくは、まちまち
+    az=rs.uniform(0,6.28);used=[] if lv==0 else used
+    for k,s in enumerate(spots):
+        i=min(nseg-1,int(s*nseg));q=pts[i]+(pts[i+1]-pts[i])*(s*nseg-i);ld=pts[i+1]-pts[i];ld/=np.linalg.norm(ld)
+        u=np.cross(ld,[0,0,1.0]);u=u/np.linalg.norm(u) if np.linalg.norm(u)>1e-6 else np.array([1.0,0,0]);v=np.cross(ld,u)
+        if lv==0:   # 主枝：芽のらせん（137.5度）の近くで、ほかの主枝のいない向き（すきまのある方）
+            cands=[az+GOLD*(k+1)+dz for dz in np.linspace(-0.8,0.8,7)]
+            ca=max(cands,key=lambda x:min([abs((x-w+math.pi)%(2*math.pi)-math.pi) for w in used] or [9]))
+            used.append(ca);side=np.array([math.cos(ca),math.sin(ca),0.0])
+        else:
+            az+=GOLD;side=u*math.cos(az)+v*math.sin(az)   # 芽は、らせんに137.5度ずつ
+        a=math.radians(rs.uniform(*ang));cd=ld*math.cos(a)+side*math.sin(a);cd/=np.linalg.norm(cd)
+        out=q-np.array([top[0],top[1],q[2]]);light=0.5+0.5*max(0.0,(out/np.linalg.norm(out)) @ cd if np.linalg.norm(out)>1e-6 else 0.5)+0.3*max(0.0,cd[2])   # 外・上を向く芽ほど、よくのびる
+        if lv>=2 and light<0.55 and rs.rand()<0.5:continue   # 内がわ・下向きの芽は、のびないことが多い
+        cl=length*rs.uniform(*lk)*min(1.15,light)*(1.15-0.5*s if lv==0 else 1-0.35*s)   # 下の（古い）枝ほど長い
+        if stubs and lv<=1 and rs.rand()<0.12:   # 枯れ枝の跡：短く折れた枝
+            limb(T,[q,q+cd*0.06],[rr[i]*0.5,rr[i]*0.42],n=8);continue
+        growbranch(T,leafs,q,cd,cl,min(rr[i]*0.62,r0*0.68),nlv,rs,top,stubs,used)   # 子は、親より細い
+    if lv<=3:   # 先の芽：そのままのびる（幹の先は、主枝の1本になる）
+        growbranch(T,leafs,pts[-1],dd,length*(0.55 if lv==0 else rs.uniform(*LV[nlv][2])),rend*0.9,nlv,rs,top,stubs,used)
+def tipleaves(clumps,L=0.16,W=0.10,dmin=0.62,seed=0):
+    """細枝の節に葉：細枝の先の半分に、節を4〜6こ（間かくはまちまち）、節ごとに1まい（互生：となりの節と137.5度ずつまわる）、先に2まい。
+    葉は細枝から外へ（葉柄の向き）、表は太陽へ。向き・大きさは少しずつちがう。葉どうしは、まん中が dmin×長さ より近づかない（かさならない）"""
+    rs=np.random.RandomState(seed);up=np.array([0,0,1.0]);put=[];out=[]
+    for pts in clumps:
+        P=np.array(pts);lv=[];n=rs.randint(4,7);ts=np.sort(rs.uniform(0.45,1.0,n));az=rs.uniform(0,6.28)
+        nodes=[(t,None) for t in ts]+[(1.0,0.4),(1.0,-0.4)]
+        for t,tw in nodes:
+            f_=t*(len(P)-1);i=min(len(P)-2,int(f_));base=P[i]+(P[i+1]-P[i])*(f_-i);d=P[i+1]-P[i];d/=np.linalg.norm(d)
+            u=np.cross(d,up);u=u/np.linalg.norm(u) if np.linalg.norm(u)>1e-6 else np.array([1.0,0,0]);v=np.cross(d,u)
+            if tw is None:az+=GOLD;o=d*0.45+(u*math.cos(az)+v*math.sin(az))*0.9
+            else:o=d+u*tw
+            o=o+up*0.15;o/=np.linalg.norm(o)
+            nn=SUN*0.6+up*0.2+o*0.3+rs.normal(0,0.12,3);nn/=np.linalg.norm(nn)   # 表は太陽へ（ばらつき）
+            ld=o-nn*(o@nn);ld/=np.linalg.norm(ld);sd=np.cross(nn,ld);f=rs.uniform(0.8,1.2)
+            c=base+ld*L*f*0.5
+            if any(np.linalg.norm(c-q)<dmin*L for q in put):continue
+            put.append(c);lv.append((base,ld,sd,nn,L*f,W*f,0.0))
+        out.append(lv)
+    return out
+def drawclumps(sc,groups,pal=LEAFB,olk=0.74,axis=(0.5,0.6)):
+    """葉の塊ごとに入れる（塊の中は線を引かない）。光に向く葉・外・上ほど明るい。すじの左右で1段、ふち（あつみ）は2段暗い"""
+    zs=[l[0][2] for g in groups for l in g];zlo,zhi=min(zs),max(zs);rmax=max(math.hypot(l[0][0]-axis[0],l[0][1]-axis[1]) for g in groups for l in g)
+    for gi,g in enumerate(groups):
+        if not g:continue
+        sc.group('lc%d'%gi);sc.outline(None,olk);sc.material('flat')
+        for b,ld,sd,nn,l,w,_ in g:
+            h=(b[2]-zlo)/max(zhi-zlo,1e-6);ro=math.hypot(b[0]-axis[0],b[1]-axis[1])/rmax;lt=float(nn@LIGHTV)
+            tone=int(np.clip(round((1-lt)*1.6+(1-h)*1.2+(1-ro)*0.8-0.5),0,len(pal)-2));side=float(sd@LIGHTV);sc.part()
+            TT,EE=roundleaf(b,ld,sd,nn,l,w)
+            for q in TT:sc.tri(q[0],q[1],q[2],pal[tone+(0 if (((q[0]+q[1]+q[2])/3-b)@sd)*side>0 else 1)])
+            for q in EE:sc.tri(q[0],q[1],q[2],pal[min(len(pal)-1,tone+2)])
+        sc.material(None);sc.outline();sc.group(None)
