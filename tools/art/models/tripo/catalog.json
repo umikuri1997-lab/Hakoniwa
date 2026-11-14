@@ -1,0 +1,200 @@
+{
+ "acacia": {
+  "w_per_h": 1.275,
+  "d_per_h": 1.142,
+  "tris": 6997,
+  "catalog_h": 2.0
+ },
+ "appletree": {
+  "w_per_h": 0.965,
+  "d_per_h": 0.909,
+  "tris": 5053,
+  "catalog_h": 2.0
+ },
+ "bamboo": {
+  "w_per_h": 0.919,
+  "d_per_h": 0.696,
+  "tris": 1254,
+  "catalog_h": 2.2
+ },
+ "bathtub": {
+  "w_per_h": 1.359,
+  "d_per_h": 0.984,
+  "tris": 2562,
+  "catalog_h": 0.6
+ },
+ "bellflower": {
+  "w_per_h": 1.0,
+  "d_per_h": 0.837,
+  "tris": 2568,
+  "catalog_h": 0.45
+ },
+ "berrybush": {
+  "w_per_h": 1.182,
+  "d_per_h": 1.0,
+  "tris": 1335,
+  "catalog_h": 0.7
+ },
+ "bird": {
+  "w_per_h": 1.3,
+  "d_per_h": 1.062,
+  "tris": 1047,
+  "catalog_h": 0.2
+ },
+ "candle": {
+  "w_per_h": 1.174,
+  "d_per_h": 1.025,
+  "tris": 1368,
+  "catalog_h": 0.3
+ },
+ "cedar": {
+  "w_per_h": 0.625,
+  "d_per_h": 0.632,
+  "tris": 1766,
+  "catalog_h": 2.6
+ },
+ "clover": {
+  "w_per_h": 0.967,
+  "d_per_h": 0.398,
+  "tris": 2811,
+  "catalog_h": 0.25
+ },
+ "cutboard": {
+  "w_per_h": 2.533,
+  "d_per_h": 2.27,
+  "tris": 3004,
+  "catalog_h": 0.2
+ },
+ "grass": {
+  "w_per_h": 0.956,
+  "d_per_h": 0.895,
+  "tris": 1621,
+  "catalog_h": 0.35
+ },
+ "grass2": {
+  "w_per_h": 0.807,
+  "d_per_h": 0.708,
+  "tris": 1288,
+  "catalog_h": 0.35
+ },
+ "jar_band": {
+  "w_per_h": 1.227,
+  "d_per_h": 1.227,
+  "tris": 1150,
+  "catalog_h": 0.5
+ },
+ "lantern": {
+  "w_per_h": 0.634,
+  "d_per_h": 0.555,
+  "tris": 1094,
+  "catalog_h": 0.45
+ },
+ "lily": {
+  "w_per_h": 1.213,
+  "d_per_h": 0.745,
+  "tris": 2840,
+  "catalog_h": 0.5
+ },
+ "lotus": {
+  "w_per_h": 1.748,
+  "d_per_h": 1.597,
+  "tris": 2457,
+  "catalog_h": 0.35
+ },
+ "maple": {
+  "w_per_h": 1.013,
+  "d_per_h": 0.918,
+  "tris": 3363,
+  "catalog_h": 2.2
+ },
+ "mushrooms": {
+  "w_per_h": 1.331,
+  "d_per_h": 0.713,
+  "tris": 2624,
+  "catalog_h": 0.3
+ },
+ "oak": {
+  "w_per_h": 1.064,
+  "d_per_h": 0.912,
+  "tris": 6679,
+  "catalog_h": 2.4
+ },
+ "oak_dead": {
+  "w_per_h": 0.864,
+  "d_per_h": 0.32,
+  "tris": 1463,
+  "catalog_h": 2.2
+ },
+ "plant": {
+  "w_per_h": 1.125,
+  "d_per_h": 0.975,
+  "tris": 2113,
+  "catalog_h": 0.6
+ },
+ "rock": {
+  "w_per_h": 1.465,
+  "d_per_h": 1.053,
+  "tris": 116,
+  "catalog_h": 0.5
+ },
+ "rose": {
+  "w_per_h": 1.0,
+  "d_per_h": 0.794,
+  "tris": 1394,
+  "catalog_h": 0.25
+ },
+ "roseleaf": {
+  "w_per_h": 0.887,
+  "d_per_h": 0.509,
+  "tris": 1684,
+  "catalog_h": 0.3
+ },
+ "rosevine": {
+  "w_per_h": 0.644,
+  "d_per_h": 0.479,
+  "tris": 2845,
+  "catalog_h": 1.0
+ },
+ "sack": {
+  "w_per_h": 0.873,
+  "d_per_h": 0.789,
+  "tris": 2441,
+  "catalog_h": 0.5
+ },
+ "sacks2": {
+  "w_per_h": 1.403,
+  "d_per_h": 1.013,
+  "tris": 5040,
+  "catalog_h": 0.6
+ },
+ "salvia": {
+  "w_per_h": 0.827,
+  "d_per_h": 0.912,
+  "tris": 4695,
+  "catalog_h": 0.45
+ },
+ "takenoko": {
+  "w_per_h": 0.558,
+  "d_per_h": 0.564,
+  "tris": 628,
+  "catalog_h": 0.35
+ },
+ "terracotta": {
+  "w_per_h": 1.043,
+  "d_per_h": 1.043,
+  "tris": 940,
+  "catalog_h": 0.5
+ },
+ "veggies": {
+  "w_per_h": 1.82,
+  "d_per_h": 1.866,
+  "tris": 5343,
+  "catalog_h": 0.3
+ },
+ "wateringcan": {
+  "w_per_h": 1.276,
+  "d_per_h": 1.345,
+  "tris": 1629,
+  "catalog_h": 0.35
+ }
+}
