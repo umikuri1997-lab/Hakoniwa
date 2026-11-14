@@ -198,8 +198,64 @@ def wood_css():
             f'{sel}{{border-image-source:{u}!important;border-image-repeat:round!important}}')
 
 
+# ---- 草原のボタン：板と同じ、切りっぱなしの木（木目・ふちは切り口の色・下に2ドットのあつみ）。おしたときは、あつみがなくなって2ドット下がる ----
+BS, BM = 7, 16      # はし（上下7・左右5）と、くりかえす所
+BN = 2 * BS + BM    # 30（たても横も）
+
+
+def wbtn_rows(pressed=False):
+    W = H = BN
+    top = 2 if pressed else 0
+    fh = H - 3  # 板の面の高さ（下に、あつみ2＋かげ1）
+    cp = lambda d: PR[d] if d < 4 else 0
+    def face(x, y):
+        y -= top
+        if not (0 <= x < W and 0 <= y < fh): return False
+        return cp(min(x, W - 1 - x)) <= y <= fh - 1 - cp(min(x, W - 1 - x)) and cp(min(y, fh - 1 - y)) <= x <= W - 1 - cp(min(y, fh - 1 - y))
+    GR = {3: [(2, 7)], 6: [(9, 6)], 9: [(1, 4), (12, 3)], 12: [(6, 8)], 15: [(0, 3), (11, 5)], 18: [(4, 6)], 21: [(10, 5)]}
+    rows = []
+    for y in range(H):
+        r = ''
+        for x in range(W):
+            if face(x, y):
+                if not face(x, y - 1) or not face(x - 1, y): r += 'h'; continue
+                if not face(x, y + 1) or not face(x + 1, y): r += 'e'; continue
+                q, p = (y - top) % BM, x % BM
+                r += 'g' if any((p - a) % BM < w for a, w in GR.get(q, ())) else 'a'
+                continue
+            if not pressed and (face(x, y - 1) or face(x, y - 2)):
+                r += 'b' if not face(x, y - 1) else 't'; continue  # あつみ（下の切り口）
+            if not pressed and (face(x, y - 3)):
+                r += 's'; continue
+            r += '.'
+        rows.append(r)
+    return rows
+
+
+WBTN = {  # 面・木目・上のふち・下のふち・あつみ・あつみの下
+    'n': {'a': '#e2c18b', 'g': '#d6b27a', 'h': '#f2dcb2', 'e': '#c79e66', 't': '#b98a52', 'b': '#8a5a30', 's': SHADOW},
+    'p': {'a': '#b98551', 'g': '#a8743f', 'h': '#d29f68', 'e': '#96643a', 't': '#7e5430', 'b': '#5e3d22', 's': SHADOW},
+    'y': {'a': '#f0cf86', 'g': '#e4bf70', 'h': '#fbe6b4', 'e': '#d3a24c', 't': '#b98a3a', 'b': '#7a5218', 's': SHADOW},
+}
+
+
+def wbtn_css():
+    w = lambda k, pr=False: svg(wbtn_rows(pr), WBTN[k])
+    sl = (f'border-image-slice:{BS} 5 {BS} 5 fill!important;border-image-width:calc(var(--pp)*{BS}) calc(var(--pp)*5) '
+          f'calc(var(--pp)*{BS}) calc(var(--pp)*5)!important;border-image-repeat:round!important')
+    q = lambda sel: ','.join('body.wd0 ' + x.strip() for x in sel.split(','))
+    return '\n'.join([
+        '/* 草原のボタンは木（板と同じ切りっぱなし。ふつう・大事・えらんだ、と、おしたとき） */',
+        f'{q(".btn,.ctab,.slot,.qbtn,.mtile,.chip,#speedBtn,#pauseBtn,#skipBtn")}{{border-image-source:{w("n")}!important;{sl}}}',
+        f'{q(".btn.pri,.ctab.on,.chip.more,.palA")}{{border-image-source:{w("p")}!important;{sl}}}',
+        f'{q(".chip.sel")}{{border-image-source:{w("y")}!important;{sl}}}',
+        f'{q(".btn:active,.ctab:active,.slot:active,.mtile:active,.chip:active,#speedBtn:active,#pauseBtn:active,#skipBtn:active,.dock button:active")}{{border-image-source:{w("n", True)}!important;{sl}}}',
+        f'{q(".btn.pri:active,.ctab.on:active,.chip.more:active,.dock button.on,.dock button.on:active")}{{border-image-source:{w("p", True)}!important;{sl}}}',
+    ])
+
+
 def main():
-    css = '\n'.join([paper_css(), wood_css(), board_css(), book_css()])
+    css = '\n'.join([paper_css(), wood_css(), wbtn_css(), board_css(), book_css()])
     s = HTML.read_text()
     b, e = '/* paper-ui:begin */', '/* paper-ui:end */'
     if b not in s:
