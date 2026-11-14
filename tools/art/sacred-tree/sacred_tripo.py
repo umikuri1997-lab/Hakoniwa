@@ -99,20 +99,36 @@ def lobes(sc,q,n,gi):
     sc.group(None)
 
 TEXL=None
-def texpat(items,pal):
+def texpat(items,pal,nlv=3):
     """モデルのテクスチャ（モデルの形に合わせて作られた、木の皮のすじ・葉の重なり）を、ドットごとに読み、
     その明るさで、お手本の絵の色（明るい・ふつう・暗い）にする。items=[(面の点 q, 面ごとのuv)]"""
     from scipy.spatial import cKDTree
     Q=np.concatenate([q for q,u in items]);U=np.concatenate([u for q,u in items]);T_=cKDTree(Q.mean(1));H,W=TEXL.shape
     def lum(uv):return TEXL[np.clip(((1-uv[...,1])*H).astype(int),0,H-1),np.clip((uv[...,0]*W).astype(int),0,W-1)]
     ss=lum(U.mean(1));lo,hi=np.quantile(ss,0.3),np.quantile(ss,0.75)   # 明るさのさかい（そのなかまの中で）
+    if nlv==4:lo,mid,hi=np.quantile(ss,0.14),np.quantile(ss,0.45),np.quantile(ss,0.8)
     def f(x,y,z):
         p=np.array((x,y,z));i=T_.query(p)[1];a,b,c=Q[i];v0,v1,v2=b-a,c-a,p-a
         d00,d01,d11,d20,d21=v0@v0,v0@v1,v1@v1,v2@v0,v2@v1;dn=d00*d11-d01*d01 or 1e-12
         w1=(d11*d20-d01*d21)/dn;w2=(d00*d21-d01*d20)/dn;w0=1-w1-w2
         L=float(lum(w0*U[i,0]+w1*U[i,1]+w2*U[i,2]))
+        if nlv==4:return pal[0] if L>hi else pal[1] if L>mid else pal[2] if L>lo else pal[3]
         return pal[2] if L<lo else pal[0] if L>hi else pal[1]
     return f
+BARK4=[(239,175,121),(218,152,106),(196,134,94),(172,116,82)]   # 木の皮の4だん（明るいすじ・ふつう・暗い・みぞ）
+SCAR=[(255,226,184),(250,208,160),(186,124,88)]   # かげの段で暗くなるので、明るめ   # ヌシの傷（お手本の幹の、明るいだ円）：まん中の光・中・ふち
+def scar(f,at):
+    """ヌシの傷：幹の正面（南がわ）に、たてに長い、明るいだ円（お手本の絵の幹の傷）。at=(x, y, z, よこの半径, たての半径)。ふちは暗い線"""
+    if at is None:return f
+    sx,sy,sz,rx,rz=at
+    def g(x,y,z):
+        if y>sy:
+            d=((x-sx)/rx)**2+((z-sz)/rz)**2
+            if d<1:
+                if d>0.72:return SCAR[2]
+                return SCAR[0] if (x-sx)/rx+(z-sz)/rz*0.3<-0.25 and d<0.45 else SCAR[1]
+        return f(x,y,z)
+    return g
 
 LEAFSPEC=0.93   # 葉のつやが出る向きの近さ（大きいほど、つやは小さく、光にまっすぐ向いた所だけ）
 LEAFVEIN=(160,182,86)   # 葉脈・まん中のすじ（谷）の色
@@ -234,9 +250,10 @@ def leafparts(sc,q,gi):
     rs=np.random.RandomState(500+gi);fn=np.cross(q[:,1]-q[:,0],q[:,2]-q[:,0]);ar=np.linalg.norm(fn,axis=1)/2;n=fn/np.maximum(2*ar[:,None],1e-12)
     vis=(n[:,1]*0.74+n[:,2]*0.67>-0.35);A=ar*vis
     P0=q.reshape(-1,3);c0=P0.mean(0);zl,zh=P0[:,2].min(),P0[:,2].max()
+    sc.group('lp%d'%gi)   # かたまりの中は線を引かない（葉と葉のあいだの線がノイズに見えた）。まわりだけ線
     sc.part()   # 中身
     for t in q:t2=c0+(t-c0)*0.86;sc.tri(t2[0],t2[1],t2[2],LEAFIN)
-    if A.sum()<=0:return
+    if A.sum()<=0:sc.group(None);return
     N=max(6,int(A.sum()/(LEAFGAP*LEAFGAP)));idx=rs.choice(len(q),N,p=A/A.sum());sc.outline(None,0.9)
     order=[]
     for k_ in idx:
@@ -250,7 +267,7 @@ def leafparts(sc,q,gi):
     for base,d,sd,nn,L,W,col in order:
         sc.part()
         for t in leafpart(base,d,sd,nn,L,W):sc.tri(t[0],t[1],t[2],col)
-    sc.outline()
+    sc.outline();sc.group(None)
 
 ROSL,ROSW=0.26,0.15
 ROSGRID=1.0   # 葉のかたまりをまとめるます目（マス）   # ロゼットの葉1まいの長さ・はば（マス）
@@ -373,6 +390,17 @@ class Stage:
             U=np.concatenate([c['uv'].mean(1) for p,c,k in s.items if k=='leaf']);H,W=TEXL.shape
             L=TEXL[np.clip(((1-U[:,1])*H).astype(int),0,H-1),np.clip((U[:,0]*W).astype(int),0,W-1)];s._lh=(np.quantile(L,0.05),np.quantile(L,0.95))
         return s._lh
+    def scarat(s,q):
+        """ヌシの傷の場所：幹（いちばん大きな木の部品）の正面。切り株は切り口より少し下、御神木は幹の下のほう"""
+        P_=q.reshape(-1,3);z=P_[:,2];H_=z.max()-z.min()
+        if s.name=='tree':
+            if len(P_)<3000:return None
+            zc=z.min()+0.20*H_;rz=0.10*H_
+        else:
+            if abs(P_[:,0].mean()-TX)>0.6:return None   # 若木の幹には、つけない（切り株だけ）
+            zc=z.min()+0.55*H_;rz=0.20*H_
+        band=P_[np.abs(z-zc)<0.04*H_];front=band[band[:,1]>TY];sy=TY+0.25*(front[:,1].max()-TY) if len(front) else TY
+        return (TX+0.14,sy,zc,0.17 if s.name!='tree' else 0.22,rz)
     def PARTS(s):return []
     def EXTRA(s,sc):
         sc.smooth(True);s._gid=[];s._ros=[]
@@ -397,7 +425,7 @@ class Stage:
                     if c is s.items[0][1] and s.name!='tree':src=lambda K:K[:,2]>zh-0.08*H   # 切り株：切り口のふちから、幹を下へ・根の先へ
                     elif s.name=='tree':src=lambda K:np.abs(K[:,2]-(zl+0.30*H))<0.02*H   # 御神木：幹のなかほどから、上は枝へ・下は根へ
                     else:src=lambda K:K[:,2]<zl+0.04*H   # 若木：根もとから、枝の先へ
-                    sc.decal(texpat([(q[keep],c['uv'][keep])],BARK));sc.part()   # 木の皮：モデルのテクスチャのすじ（幹・根・枝の流れにそっている）
+                    sc.decal(scar(texpat([(q[keep],c['uv'][keep])],BARK4,4),s.scarat(q)));sc.part()   # 木の皮：モデルのテクスチャのすじ（4だん）と、ヌシの傷
                     for t in q[keep]:sc.tri(t[0],t[1],t[2],BARK[1])
                     sc.decal(None)
                     if cut.any():   # 切り口：ふちから同じあつさの樹皮、その内がわに、ふちの形にそった年輪
@@ -421,15 +449,15 @@ class Stage:
                     m0=q.reshape(-1,3).mean(0);dd=np.sort(np.linalg.norm(s._lc-m0,axis=1))
                     if len(dd)>1 and dd[1]>0.9 or (q.reshape(-1,3).max(0)-q.reshape(-1,3).min(0)).max()<0.12:continue   # はなれて1つだけうかぶ葉（モデルのこぼれ）は描かない：お手本の絵と同じ、小さなまるい葉の玉がかさなる形に作りなおす（lobes）
                     lobes(sc,q,n,len(s._gid));s._gid.append(1);continue
-                if kind=='leaf' and s.name=='tree':   # 御神木：葉のかたまりの表面に、小さな葉の部品をならべる（leafparts）
+                if kind=='leaf' and s.name in('tree','sapling'):   # 御神木・若木：葉のかたまりの表面に、小さな葉の部品をならべる（leafparts）
                     if not hasattr(s,'_lc'):s._lc=np.array([s.T(p_).reshape(-1,3).mean(0) for p_,c_,k_ in s.items if k_=='leaf'])
                     m0=q.reshape(-1,3).mean(0);dd=np.sort(np.linalg.norm(s._lc-m0,axis=1))
-                    if len(dd)>1 and dd[1]>0.9:continue   # はなれて1つだけうかぶ葉（モデルのこぼれ）
-                    P_=q.reshape(-1,3);s._ros.append((P_.mean(0),float((P_.max(0)-P_.min(0)).max())));continue   # 葉のかたまりの場所と大きさ（あとで crown がロゼットにする）
+                    if s.name=='tree' and len(dd)>1 and dd[1]>0.9:continue   # はなれて1つだけうかぶ葉（モデルのこぼれ）
+                    leafparts(sc,q,len(s._gid));s._gid.append(1);continue
                 sc.decal(leafnat(q,c['uv'],s.leaflh()));sc.part()   # 若木の葉：モデルのテクスチャの明るさと、まん中が低い影
                 for t in q:sc.tri(t[0],t[1],t[2],LEAF[1])
                 sc.decal(None)
-        if s.name=='tree' and s._ros:crown(sc,s._ros,s.T(max((it for it in s.items if it[2]=='bark'),key=lambda it:it[1]['n'])[0]).reshape(-1,3))
+        if False and s.name=='tree' and s._ros:crown(sc,s._ros,s.T(max((it for it in s.items if it[2]=='bark'),key=lambda it:it[1]['n'])[0]).reshape(-1,3))
         sc.smooth(False)
 
 def shot(M):
