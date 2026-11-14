@@ -129,52 +129,57 @@ def kitleaves():
         c=V.mean(0);_,_,vt=np.linalg.svd(V-c,full_matrices=False);Q=(V-c)@vt.T;Q/=Q[:,0].max()-Q[:,0].min()
         _KL.append(Q[np.asarray(m.faces)])
     return _KL
+# ---- 葉のボリューム（持ち主の指示：丸い葉の塊を組み合わせず、枝をつつむ一体の葉のボリューム。ローポリ。1まいずつの葉は描かない） ----
+# 骨格の枝（側枝から先）のまわりに、なめらかにふくらむ量（メタボール）を置く：枝先に近いほど大きく（細枝 FR1・小枝 FR2）。
+#   幹と主枝のつけ根のまわりには置かない（中に少しすきまができて、主要な枝が見える）。
+# 量を足しあわせた場の、さかい（ISO）の面を、マーチングキューブで面にし、ゆっくりかわるでこぼこをつけ、面をへらしてローポリにする（LOWF まで）。
+# 色：面ごと（かげは面の向きで）。上ほど明るい色、下ほど暗い色（いまの木の色 LEAFB）。
+FR1,FR2,FRT=0.20,0.15,0.30   # 枝先からの道のり FRT までの枝に、量。半径は枝先で FR1、FRT で FR2
+ISO=0.55;GRID=0.022;LOWF=900
+def foliage(P,par,r,ch):
+    from scipy.spatial import cKDTree
+    from skimage.measure import marching_cubes
+    import trimesh
+    n=len(P);dist=np.full(n,9.0)   # 枝先からの道のり（いちばん近い枝先）
+    for i in range(n-1,-1,-1):
+        if not ch[i]:dist[i]=0.0
+        for c in ch[i]:dist[i]=min(dist[i],dist[c]+np.linalg.norm(P[c]-P[i]))
+    S=[];R=[]
+    for i in range(1,n):
+        if dist[i]>FRT or r[i]>0.05:continue
+        t=dist[i]/FRT;S.append(P[i]);R.append(FR1+(FR2-FR1)*t)
+    S=np.array(S);R=np.array(R);lo=S.min(0)-0.35;hi=S.max(0)+0.35
+    nx,ny,nz=((hi-lo)/GRID).astype(int)+1;X=np.zeros((nx,ny,nz))
+    for p,rad in zip(S,R):   # メタボール：(1−(d/R)²)² を足す
+        i0=np.maximum(((p-rad-lo)/GRID).astype(int),0);i1=np.minimum(((p+rad-lo)/GRID).astype(int)+2,[nx,ny,nz])
+        gx,gy,gz=[lo[k]+np.arange(i0[k],i1[k])*GRID for k in range(3)]
+        d2=((gx[:,None,None]-p[0])**2+(gy[None,:,None]-p[1])**2+(gz[None,None,:]-p[2])**2)/(rad*rad)
+        X[i0[0]:i1[0],i0[1]:i1[1],i0[2]:i1[2]]+=np.where(d2<1,(1-d2)**2,0)
+    V,F,_,_=marching_cubes(X,ISO*X.max()*0+ISO);V=V*GRID+lo
+    nz_=np.array([N.ST.vnoise(x/0.16+3,y/0.16,z/0.16) for x,y,z in V])-0.5   # でこぼこ（外へ・内へ）
+    m=trimesh.Trimesh(V,F,process=True);vn=m.vertex_normals;m.vertices=m.vertices+vn*nz_[:len(vn),None]*0.07
+    m=m.simplify_quadric_decimation(face_count=LOWF)
+    return np.asarray(m.vertices),np.asarray(m.faces)
 def EXTRA(sc):
-    P,par,tips,lobes=loadskel();up=np.array([0,0,1.0]);rs=np.random.RandomState(SEED+100)   # 葉の乱数は、骨格とべつ
+    P,par,tips,lobes=loadskel()
     r,ch=N.radii(par,rtip=0.005,E=1.8,rmax=0.16)
     T=[]
     for c in N.chains(par,ch,r):
         if len(c)<2:continue
-        keep=[k for k in c if r[k]>=THIN or k==c[0]]   # 細い枝は、はぶく
-        if len(keep)<2:continue
-        pts=P[keep];rr=list(r[keep])
+        pts=P[c];rr=list(r[c])
         if c[0]!=0 and len(ch[c[0]])>1:rr[1]=rr[1]*1.25   # えり
-        rr[-1]=min(rr[-1],THIN*0.8)   # 先は細く（切り口にしない。葉群の中）
-        mr=max(rr);N.limb(T,pts,rr,n=14 if mr>0.08 else 8,flare=0.07 if c[0]==0 else 0.0,fh=0.2,wob=0.07 if mr>0.06 else 0.0,seed=len(T)%17)
+        rr[-1]=min(rr[-1],0.004)   # 先は細く（切り口にしない）
+        mr=max(rr);N.limb(T,pts,rr,n=14 if mr>0.08 else 8 if mr>0.02 else 5,flare=0.07 if c[0]==0 else 0.0,fh=0.2,wob=0.07 if mr>0.06 else 0.0,seed=len(T)%17)
     N.roots(T,(CX,CY,0),0.12,np.random.RandomState(SEED+50),L=0.10)
     N.barkmesh(sc,T)
     if SKEL:return
-    PF=puffs(P,par,r,tips)
-    zs=[c[2] for c,_ in PF];ys=[c[1] for c,_ in PF];zlo,zhi=min(zs),max(zs);ylo,yhi=min(ys),max(ys)
-    def rad(k,u):   # 葉群 k の、向き u の半径（でこぼこ）
-        c,R=PF[k];return R*(1+0.22*(N.ST.vnoise(u[0]*1.8+k*3.1,u[1]*1.8,u[2]*1.8)-0.5)*2)
-    def inside(p,k0):
-        for k,(c,R) in enumerate(PF):
-            if k==k0:continue
-            d=p-c
-            dz=d*np.array([1,1,1/PZ]);n_=np.linalg.norm(dz)
-            if n_<rad(k,dz/max(n_,1e-9))*0.92:return True
-        return False
-    view=np.array([0,0.74,0.67])
-    for k,(c,R) in enumerate(PF):
-        lay=0.5*(1-(c[1]-ylo)/max(yhi-ylo,1e-6))+0.6*(1-(c[2]-zlo)/max(zhi-zlo,1e-6))   # 奥・下ほど暗い
-        sc.group('pf%d'%k);sc.outline(None,0.80);sc.material('flat')
-        sc.part();sc.sphere(*c,R*0.86,N.LEAFB[3],n=16,m=10,zs=PZ)   # 中身
-        n=int(4*math.pi*R*R/(PL*PW*0.55))
-        for i in range(n):   # 表面に、すきまなく（フィボナッチの点＋ばらつき）
-            zz=1-2*(i+0.5)/n;ph=i*N.GOLD+rs.uniform(-0.2,0.2);rr_=math.sqrt(max(0,1-zz*zz));u=np.array([rr_*math.cos(ph),rr_*math.sin(ph),zz])
-            if u@view<-0.35:continue   # 見えない裏がわ
-            p=c+u*rad(k,u)*0.97*np.array([1,1,PZ])
-            if inside(p,k):continue
-            lt=float(u@N.LIGHTV);tone=int(np.clip(round((1-lt)*1.7-0.4+lay),0,len(N.LEAFB)-2))
-            nn=u*0.85+N.SUN*0.15;nn/=np.linalg.norm(nn);t=np.cross(nn,up)
-            t=t/np.linalg.norm(t) if np.linalg.norm(t)>1e-6 else np.array([1.0,0,0]);dn=np.cross(t,nn)   # 表面にそって下へ（重さ）
-            a=rs.uniform(-0.9,0.9);ld=-dn*math.cos(a)+t*math.sin(a);sd=np.cross(nn,ld);f=rs.uniform(0.75,1.25)
-            col=N.LEAFB[tone] if rs.rand()>0.15 else N.LEAFB[min(len(N.LEAFB)-1,tone+1)]
-            Q=kitleaves()[rs.randint(len(KITLEAF))];sz=PL*f*1.15;M3=np.stack([ld,sd*rs.choice([-1,1]),nn],0)   # セットの葉を、その場所・向き・大きさに
-            W3=Q@M3*sz+p;sc.part()
-            for q in W3:sc.tri(q[0],q[1],q[2],col)
-        sc.material(None);sc.outline();sc.group(None)
+    V,F=foliage(P,par,r,ch);zl,zh=V[:,2].min(),V[:,2].max()
+    sc.group('fol');sc.outline(None,0.80);sc.part()
+    for f in F:
+        q=V[f];h=(q[:,2].mean()-zl)/max(zh-zl,1e-6)
+        col=N.LEAFB[1] if h>0.62 else N.LEAFB[2] if h>0.32 else N.LEAFB[3]   # 上ほど明るい
+        sc.tri(q[0],q[1],q[2],col)
+    sc.outline();sc.group(None)
 def POST(im):return N.specks(im)
 if __name__=='__main__':
     import sys
