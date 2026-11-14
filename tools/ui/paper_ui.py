@@ -161,29 +161,40 @@ def _h(x, y):  # いつも同じになる、ドットごとのばらつき（0�
     return (v & 0xffff) / 65535
 
 
-def grain(x, y, P, Q=None, lines=5, knot=None):
-    """木目の明るさ（'D' こいすじ・'g' すじ・'a' 地・'l' 明るい所）。P×Q でくりかえしてもつながる（sin の周期をそろえる）。
-    年輪のすじは、よこにゆるく波うつ。こまかい繊維と、ふし（knot：(x,y,r)）のまわりで、すじがまがる。"""
-    Q = Q or P
-    t = 2 * math.pi
-    u = y + .9 * math.sin(t * x / P) + .5 * math.sin(t * (2 * x / P + y / Q)) + .35 * math.sin(t * (3 * x / P - 2 * y / Q))
-    if knot:
-        kx, ky, kr = knot
-        dx = min(abs(x - kx), P - abs(x - kx)); dy = min(abs(y - ky), Q - abs(y - ky))
-        d = math.hypot(dx * .55, dy)
-        if d < kr: return 'D' if d < kr * .45 else ('g' if int(d * 1.6) % 2 == 0 else 'a')  # ふしの年輪
-        u += kr * 2.2 * math.exp(-(d - kr) / (kr * 1.2)) * (1 if y > ky else -1)
-    band = math.sin(t * lines * u / Q)
-    fib = math.sin(t * (lines * 3) * u / Q + 2.0 * math.sin(t * 2 * x / P))
-    v = band * .62 + fib * .26 + (_h(x % P, y % Q) - .5) * .32
-    if v > .74: return 'D'
-    if v > .42: return 'g'
-    if v < -.74: return 'l'
-    return 'a'
+TEX = ROOT / 'tools' / 'art' / 'textures' / 'wood049.png'  # CC0 の木のテクスチャ（横むきの木目・くりかえしてつながる）
+_TEXC = {}
+
+
+def tex_tones(T):
+    """木のテクスチャを T×T ドットにちぢめ（BOX）、明るさを4つのこさ（'D' こい・'g'・'a' 地・'l' 明るい）にする。
+    木目の流れる向き（横）になめらかにして、短い点（2ドットより短いつづき）はけす。くりかえしてもつながる。"""
+    if T in _TEXC: return _TEXC[T]
+    from PIL import Image
+    im = Image.open(TEX).convert('L').resize((T, T), Image.BOX)
+    px = [[im.getpixel((x, y)) for x in range(T)] for y in range(T)]
+    # 横（木目の向き）に、となりと平均して、なめらかに
+    sm = [[(px[y][(x - 1) % T] + 2 * px[y][x] + px[y][(x + 1) % T]) / 4 for x in range(T)] for y in range(T)]
+    vals = sorted(v for r in sm for v in r)
+    q = lambda f: vals[int(f * (len(vals) - 1))]
+    cD, cg, cl = q(.12), q(.34), q(.86)
+    g = [['D' if v <= cD else 'g' if v <= cg else 'l' if v >= cl else 'a' for v in r] for r in sm]
+    for y in range(T):  # 短い点をけす
+        r = g[y]
+        for x in range(T):
+            if r[x] != r[(x - 1) % T] and r[x] != r[(x + 1) % T]:
+                r[x] = r[(x - 1) % T]
+    _TEXC[T] = [''.join(r) for r in g]
+    return _TEXC[T]
+
+
+def grain(x, y, P, Q=None, **_):
+    """木目：テクスチャ（P×P にちぢめた物）の、そのドットのこさ"""
+    t = tex_tones(P)
+    return t[y % P][x % P]
 
 
 # ---- 草原のパネル：切りっぱなしの明るい板（わくなし・木目） ----
-WM = 64  # 辺のまん中・中の木目のくりかえし（border-image の round で、まん中もならべる）
+WM = 96  # 辺のまん中・中の木目のくりかえし（border-image の round で、まん中もならべる）
 
 
 def wood_rows():
@@ -193,7 +204,7 @@ def wood_rows():
     lI = lambda y: cp(min(y, NW - 1 - y))
     ins = lambda x, y: 0 <= x < NW and 0 <= y < NW and tI(x) <= y <= NW - 1 - tI(x) and lI(y) <= x <= NW - 1 - lI(y)
     def center(x, y):  # 中は、こまかい木目（WM×WM でくりかえす）とふし
-        return grain((x - S) % WM, (y - S) % WM, WM, WM, lines=6, knot=(46, 20, 3.2))
+        return grain((x - S) % WM, (y - S) % WM, WM)
     # 切りっぱなしの板：わくはなし。ふちの1ドットだけ、切り口の色（上・左は明るく、下・右は少し暗い）。下の2行は板のあつみ、その下にかげ
     rows = []
     for y in range(NW + 1):
@@ -231,7 +242,7 @@ def wood_css():
 
 
 # ---- 草原のボタン：板と同じ、切りっぱなしの木（木目・ふちは切り口の色・下に2ドットのあつみ）。おしたときは、あつみがなくなって2ドット下がる ----
-BS, BM = 7, 16      # はし（上下7・左右5）と、くりかえす所
+BS, BM = 7, 48      # はし（上下7・左右5）と、くりかえす所
 BN = 2 * BS + BM    # 30（たても横も）
 
 
@@ -255,7 +266,7 @@ def wbtn_rows(pressed=False):
                 if fy == 1 or x == 1 and fy < fh - 4: r += 'k'; continue  # つや：上と左の、明るいふち
                 if (x, fy) in ((2, 2), (3, 2), (2, 3), (4, 2)): r += 'q'; continue  # つや：左上の光
                 if fy == 2 or fy == 3: r += 'm'; continue  # つや：上のほうに、うすい光の帯
-                r += grain(x % BM, fy % BM, BM, BM, lines=2)
+                r += grain(x % BM, fy % BM, BM)
                 continue
             if not pressed and (face(x, y - 1) or face(x, y - 2)):
                 r += 'b' if not face(x, y - 1) else 't'; continue  # あつみ（下の切り口）
@@ -305,7 +316,7 @@ def disk_rows(N, rim=True):
                 elif not face(x, y + 1) or not face(x + 1, y): r += 'e'
                 elif (x + .5 - N / 2 + R * .45) ** 2 + (y + .5 - c + R * .5) ** 2 < (R * .08) ** 2: r += 'q'  # つや：左上の光
                 elif ((x + .5 - N / 2) ** 2 + (y + .5 - c) ** 2 > (R - 2.2) ** 2) and y < c and x < N / 2 + R * .3: r += 'k'  # つや：上のふちの明るい線
-                else: r += grain(x, y, 64, 64, lines=6)
+                else: r += grain(x, y, 64)
             elif face(x, y - 1): r += 't'
             elif face(x, y - 2): r += 'b'
             else: r += '.'
