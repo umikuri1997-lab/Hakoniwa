@@ -1,6 +1,6 @@
 # 伐採場（lumber）：画角30・左右にも遠近・見おろし34度。色は、いまの絵に合わせる。いまの絵（お手本）と同じならび。根のはった切り株に斧がささり、右に丸太を2本ななめにねかせ、左手前に、わったまき、そばに葉の小枝。
 # 形は、トリポのモデル（tools/art/models/tripo：stump・log_lying・firewood・sprig）。色は設計図でつける（モデルは色なし）。単位はマス。大きさは、いまの絵（93×68ドット）に合わせた。
-#   切り株（stump.glb）：根は、のこす長さ0.6にちぢめ、さきほど細く・低くする（rootwarp）。高さ0.63で、地面に置く（根が手前へまっすぐ向かないよう40度まわす）。上の面（切り口。モデルでは約17度かたむいているので、モデルをまわして水平にする）は年輪の色（もよう）、ほかは皮の色。
+#   切り株（stump.glb）：根は、のこす長さ0.6にちぢめ、さきほど低く（細く）する（rootwarp。なめらかな式）。高さ0.63で、地面に置く（根が手前へまっすぐ向かないよう40度まわす）。上の面（切り口。モデルでは約17度かたむいているので、モデルをまわして水平にする）は年輪の色（もよう）、ほかは皮の色。
 #   斧：鉄の頭（あつさ0.035、刃はこの面の中で、柄にちょっかく）を、切り株のまん中より0.10うしろに、刃を切り口に切りこませる。柄（木、半径0.028）は頭の穴から右上へ。刃先は、といだ明るい色。
 #   丸太（log_lying.glb）2本：地面に、ななめにねかせる（おくが左・手前が右）。切り口は明るい木で、年輪の線とふちは皮の色（もよう）。
 #   わったまき（firewood.glb）：左手前の地面に。わった面・切り口は明るい木、皮は皮の色。
@@ -28,21 +28,12 @@ def logring(r,R):   # 丸太の切り口：年輪の線とふちは皮の色
     if q<0.14:return HEART
     return TOP
 def rootwarp(c,R,HT):
-    """根をちぢめ、さきほど細くする：幹（半径 R）の外の点を、まん中へよせ（のこす長さ0.6）、
-    根のまん中の向き（地面の近くの点の向きの山、5本）へよせ（さきほど強く）、高さもさきほど低くする"""
+    """根をちぢめ、さきほど細くする：幹（半径 R）の外の点を、まん中へよせ（のこす長さ0.6）、高さもさきほど低くする。
+    どこでも、なめらかにつながる式にする（さかい目でとぶと、根がゆがむ）"""
     def f(V):
-        d=V[:,:2]-c;r=np.hypot(d[:,0],d[:,1]);th=np.arctan2(d[:,1],d[:,0]);o=r>R*1.05
-        g=V[:,2]<HT*0.35;hb=np.histogram(th[o&g],bins=72,range=(-np.pi,np.pi),weights=r[o&g]-R)[0]
-        hb=np.convolve(np.r_[hb[-3:],hb,hb[:3]],np.ones(5),'same')[3:-3];pk=[]
-        for i in np.argsort(-hb):
-            a=-np.pi+(i+0.5)*2*np.pi/72
-            if all(abs((a-b+np.pi)%(2*np.pi)-np.pi)>0.5 for b in pk):pk.append(a)
-            if len(pk)==5:break
-        rm=r[o].max();t=np.clip((r-R)/(rm-R),0,1)
-        nr=np.where(o,R+(r-R)*0.6,r)
-        P_=np.array(pk);df=(th[:,None]-P_[None,:]+np.pi)%(2*np.pi)-np.pi;j=np.argmin(np.abs(df),1);dd=df[np.arange(len(th)),j]
-        nth=np.where(o,th-dd*0.55*t,th)
-        V[:,0]=c[0]+nr*np.cos(nth);V[:,1]=c[1]+nr*np.sin(nth);V[:,2]=np.where(o,V[:,2]*(1-0.45*t),V[:,2]);return V
+        d=V[:,:2]-c;r=np.hypot(d[:,0],d[:,1]);e=np.maximum(r-R,0);rm=e.max();t=e/rm;sm=t*t*(3-2*t)
+        nr=r-e*0.4;k=np.where(r>1e-9,nr/np.maximum(r,1e-9),1.0)
+        V[:,0]=c[0]+d[:,0]*k;V[:,1]=c[1]+d[:,1]*k;V[:,2]=V[:,2]*(1-0.45*sm);return V
     return f
 def model(nm,f,cx,cy,size,rot,col,zs=1.0,k=0.5,note='地面に置く',on=('ground',),up=None):
     d=(T+f,cx,cy,0,size,rot,0,zs,up);p=P(nm,'model',d,col,on=on,note=note);p.recol=col;p.recolk=k;return notex(p),model_tris(*d)[0]
