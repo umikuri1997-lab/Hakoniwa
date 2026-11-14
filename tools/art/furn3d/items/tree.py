@@ -18,7 +18,6 @@ import natcommon as N
 ID='tree';GRAD=True;PARALLEL=True;BOTTOM=56
 VIEWS=[('tree',0),('ntree',0)]
 CX,CY=0.5,0.62;SEED=4;SKEL=False
-TRUNK=0.72
 CROWN=((0.50,0.60,1.25),0.74,0.64,0.60)
 LEAFL=0.24   # 葉の長さ（マス。どの葉も同じ。お手本の絵では、樹冠のはばに7〜8まい）
 SKELF=os.path.join(os.path.dirname(os.path.abspath(__file__)),'tree_skel.json')
@@ -57,8 +56,8 @@ def envin(p,sh=1.0):
 def envnorm(p):
     """樹冠の形の、その場所の外向き（表の向き）"""
     v=np.array([(p[0]-ENV['cx'])/ENV['R']**2,(p[1]-ENV['cy'])/(0.81*ENV['R']**2),max(0.0,p[2]-ENV['zb'])/ENV['H']**2+0.15]);return v/np.linalg.norm(v)
-TRUNK=1.00
-MAIN=[(25,34,0.44,0.55),(118,30,0.40,0.70),(205,36,0.46,0.48),(300,32,0.42,0.62),(70,62,0.38,1.0),(160,40,0.40,0.34),(340,38,0.38,0.40)]   # 主枝は幹の下のほう（幹の4割5分〜7割）から（持ち主の指示）   # 向き・立ち上がり（水平から、度）・長さ・つけ根の高さ（幹の割合）。さいごは幹のつづき
+TRUNK=0.82
+MAIN=[(25,34,0.44,0.55),(118,30,0.40,0.70),(205,36,0.46,0.48),(300,32,0.42,0.62),(70,54,0.42,1.0),(160,40,0.40,0.34),(340,38,0.38,0.40)]   # 主枝は幹の下のほう（幹の4割5分〜7割）から（持ち主の指示）   # 向き・立ち上がり（水平から、度）・長さ・つけ根の高さ（幹の割合）。さいごは幹のつづき
 def branch(B,p,d,L,lv,rs,plane,par):
     """1本の枝：のびる（太い枝はしならず、ほぼまっすぐ。いちばん細い枝だけ、ほんの少したれる）、樹冠の形の外へ出る所でとまる。
     先でY字に2本へ分かれる（角度・長さに差。分かれる面は親の面から90度±まわす）。とちゅうから、ときどき短い横の枝。
@@ -83,6 +82,11 @@ def branch(B,p,d,L,lv,rs,plane,par):
     if hit:a1,a2=math.radians(rs.uniform(45,60)),math.radians(rs.uniform(55,70))   # ふちでは、横へひらいて分かれる（細い枝で終わる）
     k1,k2=(rs.uniform(0.72,0.86),rs.uniform(0.55,0.70)) if not hit else (0.45,0.38)
     c1=ed*math.cos(a1)+pl*math.sin(a1);c2=ed*math.cos(a2)-pl*math.sin(a2)
+    def lean(c,q=end):   # 上へまっすぐ立つ枝は、外がわへかたむける（持ち主の指示：まっすぐ上へのばさない）
+        if c[2]<0.88:return c
+        out=np.array([q[0]-ENV['cx'],q[1]-ENV['cy'],0.0]);out=out/np.linalg.norm(out) if np.linalg.norm(out)>1e-3 else pl
+        c=c+out*(c[2]-0.88)*1.2;return c/np.linalg.norm(c)
+    c1,c2=lean(c1),lean(c2)
     r1=branch(B,end,c1,L*k1,lv+1,rs,pl,me);r2=branch(B,end,c2,L*k2,lv+1,rs,pl,me)
     if not B[me]['ch']:B[me]['leaf']=True
     return me
