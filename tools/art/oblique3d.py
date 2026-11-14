@@ -468,7 +468,7 @@ def render_px(sc, proj, ext, depth, k=0.72, outer=True, merge=12, lw=1, k2=0.86)
             m = (w0 >= -1e-6) & (w1 >= -1e-6) & (w2 >= -1e-6); z = w0*D[0]+w1*D[1]+w2*D[2]
         s_ = (slice(by0, by1+1), slice(bx0, bx1+1)); vis = m & (z > zb[s_]) & (alpha[s_] > 0)
         o = out[s_]; o[vis] = o[vis]*(1-al)+shc*al; out[s_] = o
-    global LAST_IDS; LAST_IDS = idb   # ドットごとの部品の番号（その部品だけをとり出すとき用）
+    global LAST_IDS, LAST_ZB; LAST_IDS = idb; LAST_ZB = zb   # ドットごとの部品の番号（その部品だけをとり出すとき用）・奥行き（大きいほど手前。粒の火をかさねるとき用）
     img = np.dstack([np.round(out), alpha]).astype(np.uint8)
     if merge > 0:   # にた色をまとめる（多い色から順に、近い色をよせる）
         m = img[..., 3] > 0; px = img[m][:, :3].astype(int)

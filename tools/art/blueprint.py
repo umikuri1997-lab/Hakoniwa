@@ -12,6 +12,7 @@ x=東, y=南, z=上（マス）。置くマスの左上が(0,0)。
   plate(a,b,w,t)                     a→b の線にそった板（はば w は横、あつさ t）。ななめの材・すべり面・屋根
   beam(a,b,r)                        a→b の角材（はば・あつさ 2r）
   frust(a,b,r0,r1)                   a→b の円すい台（ななめにおける）
+  egg(cx,cy,cz,rx,ry,rz,ang)         だ円の玉（よこ・おく・たての半径、上から見てまわす角度）
   tongue(芯の点,半径)                 火の舌（まがった芯にそって太さのかわる形）
   log(a,b,r)                         a→b の丸太・まき（ななめにおける。皮のテクスチャ・切り口の年輪）
   wheel(cx,cy,cz,r,t)                車輪（正面を向いた円板、あつさ t）
@@ -46,6 +47,7 @@ class Part:
         if k=='wheel':cx,cy,cz,r,t=d;return(cx-r,cy-t/2,cz-r,cx+r,cy+t/2,cz+r)
         if k=='ball':cx,cy,cz,r=d[:4];zs=d[4] if len(d)>4 else 1.0;return(cx-r,cy-r,cz-r*zs,cx+r,cy+r,cz+r*zs)
         if k=='tube':a=np.array(d[0],float);r=d[1];return(*(a.min(0)-r),*(a.max(0)+r))
+        if k=='egg':cx,cy,cz,rx,ry,rz=d[:6];r=max(rx,ry);return(cx-r,cy-r,cz-rz,cx+r,cy+r,cz+rz)
         if k=='tongue':a=np.array(d[0],float);r=max(d[1]);return(*(a.min(0)-r),*(a.max(0)+r))
         if k=='model':V,F,C=model_tris(*d);return(*V.min(0),*V.max(0))
         if k=='loft':a=np.array([q for P_,z in d for q in P_],float);zs=[z for _,z in d];return(a[:,0].min(),a[:,1].min(),min(zs),a[:,0].max(),a[:,1].max(),max(zs))
@@ -195,6 +197,13 @@ def build(sc,parts):
             for i in range(24):
                 a0=2*math.pi*i/24;a1=2*math.pi*(i+1)/24;P_=lambda a,yy:(cx+r*math.cos(a),yy,cz+r*math.sin(a))
                 sc.quad(P_(a0,cy-t/2),P_(a1,cy-t/2),P_(a1,cy+t/2),P_(a0,cy+t/2),tuple(c))   # まわりも同じ色（木材の色はひとつ）
+        elif k=='egg':   # だ円の玉（石など）：よこ rx・おく ry・たて rz の半径、上から見て ang（度）まわす
+            cx,cy,cz,rx,ry,rz=d[:6];an=math.radians(d[6] if len(d)>6 else 0);ca,sa=math.cos(an),math.sin(an);sc.part();n,m=18,10
+            def E(t,a):
+                u,v=rx*math.sin(t)*math.cos(a),ry*math.sin(t)*math.sin(a);return(cx+u*ca-v*sa,cy+u*sa+v*ca,cz+rz*math.cos(t))
+            for j in range(m):
+                t0,t1=math.pi*j/m,math.pi*(j+1)/m
+                for i in range(n):a0,a1=2*math.pi*i/n,2*math.pi*(i+1)/n;sc.quad(E(t0,a0),E(t1,a0),E(t1,a1),E(t0,a1),tuple(c))
         elif k=='tongue':   # 火の舌：まがった芯（点のならび）にそって、太さ（半径のならび）のかわる、とじた形。さきはとがる
             sp=[np.array(q,float) for q in d[0]];rs=d[1];n=10;sc.part();rings=[]
             for i,(q,r) in enumerate(zip(sp,rs)):
