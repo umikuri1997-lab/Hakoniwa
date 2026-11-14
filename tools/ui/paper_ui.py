@@ -12,10 +12,11 @@ HTML = ROOT / 'index.html'
 
 
 def svg(rows, pal, w=None, h=None):
+    """ドットのならび → SVG。色ごとに、行のつづきを太さ1の線でつなぐ（M でその行へ・m で同じ行のつぎのつづきへ）"""
     H = len(rows); W = len(rows[0])
     paths = {}
     for y, r in enumerate(rows):
-        x = 0
+        x = 0; cur = {}
         while x < W:
             c = r[x]
             if c == '.':
@@ -23,17 +24,22 @@ def svg(rows, pal, w=None, h=None):
             e = x
             while e < W and r[e] == c:
                 e += 1
-            paths.setdefault(c, []).append(f'M{x} {y}h{e-x}v1h-{e-x}z')
+            L = paths.setdefault(c, [])
+            if c in cur:
+                L.append(f'm{x - cur[c]} 0h{e - x}')
+            else:
+                L.append(f'M{x} {y}.5h{e - x}')
+            cur[c] = e
             x = e
     s = f'<svg xmlns="http://www.w3.org/2000/svg" width="{W}" height="{H}" viewBox="0 0 {W} {H}" shape-rendering="crispEdges">'
     for c, p in paths.items():
         col = pal[c]
-        if len(col) == 9:  # #rrggbbaa → fill-opacity（古いブラウザのため）
-            s += f'<path d="{"".join(p)}" fill="{col[:7]}" fill-opacity="{int(col[7:],16)/255:.2f}"/>'
-        else:
-            s += f'<path d="{"".join(p)}" fill="{col}"/>'
+        op = f' stroke-opacity="{int(col[7:], 16) / 255:.2f}"' if len(col) == 9 else ''
+        s += f'<path d="{"".join(p)}" stroke="{col[:7]}"{op}/>'
     s += '</svg>'
-    return 'url("data:image/svg+xml,' + urllib.parse.quote(s, safe='') + '")'
+    # 文字をへらすため、%・#・<・> と引用符だけをおきかえる（空白などはそのまま。url("…") の中なので使える）
+    s = s.replace('%', '%25').replace('#', '%23').replace('<', '%3C').replace('>', '%3E').replace('"', "'")
+    return 'url("data:image/svg+xml,' + s + '")'
 
 
 # ---- 紙のわく ----
@@ -145,8 +151,39 @@ def book_css():
     ])
 
 
+# ---- 木目（草原の板・ボタンでつかう） ----
+import math
+
+
+def _h(x, y):  # いつも同じになる、ドットごとのばらつき（0〜1）
+    v = (x * 374761393 + y * 668265263) & 0xffffffff
+    v = ((v ^ (v >> 13)) * 1274126177) & 0xffffffff
+    return (v & 0xffff) / 65535
+
+
+def grain(x, y, P, Q=None, lines=5, knot=None):
+    """木目の明るさ（'D' こいすじ・'g' すじ・'a' 地・'l' 明るい所）。P×Q でくりかえしてもつながる（sin の周期をそろえる）。
+    年輪のすじは、よこにゆるく波うつ。こまかい繊維と、ふし（knot：(x,y,r)）のまわりで、すじがまがる。"""
+    Q = Q or P
+    t = 2 * math.pi
+    u = y + .9 * math.sin(t * x / P) + .5 * math.sin(t * (2 * x / P + y / Q)) + .35 * math.sin(t * (3 * x / P - 2 * y / Q))
+    if knot:
+        kx, ky, kr = knot
+        dx = min(abs(x - kx), P - abs(x - kx)); dy = min(abs(y - ky), Q - abs(y - ky))
+        d = math.hypot(dx * .55, dy)
+        if d < kr: return 'D' if d < kr * .45 else ('g' if int(d * 1.6) % 2 == 0 else 'a')  # ふしの年輪
+        u += kr * 2.2 * math.exp(-(d - kr) / (kr * 1.2)) * (1 if y > ky else -1)
+    band = math.sin(t * lines * u / Q)
+    fib = math.sin(t * (lines * 3) * u / Q + 2.0 * math.sin(t * 2 * x / P))
+    v = band * .62 + fib * .26 + (_h(x % P, y % Q) - .5) * .32
+    if v > .74: return 'D'
+    if v > .42: return 'g'
+    if v < -.74: return 'l'
+    return 'a'
+
+
 # ---- 草原のパネル：切りっぱなしの明るい板（わくなし・木目） ----
-WM = 40  # 辺のまん中・中の木目のくりかえし（border-image の round で、まん中もならべる）
+WM = 64  # 辺のまん中・中の木目のくりかえし（border-image の round で、まん中もならべる）
 
 
 def wood_rows():
@@ -155,17 +192,8 @@ def wood_rows():
     tI = lambda x: cp(min(x, NW - 1 - x))
     lI = lambda y: cp(min(y, NW - 1 - y))
     ins = lambda x, y: 0 <= x < NW and 0 <= y < NW and tI(x) <= y <= NW - 1 - tI(x) and lI(y) <= x <= NW - 1 - lI(y)
-    # 中の木目（よこのすじ）：行ごとに、すじのはじまり・長さ
-    GR = {2: [(3, 14), (24, 9)], 6: [(12, 18)], 9: [(30, 12)], 11: [(1, 8)], 14: [(18, 15)], 18: [(5, 11), (33, 6)],
-          21: [(22, 13)], 25: [(0, 7), (12, 9)], 28: [(28, 14)], 31: [(8, 16)], 35: [(20, 10)], 38: [(2, 12), (34, 5)]}
-    LT = {4: [(16, 6)], 16: [(34, 7)], 23: [(4, 9)], 33: [(26, 8)]}
-    def center(x, y):
-        p, q = (x - S) % WM, (y - S) % WM
-        for a, w in GR.get(q, ()):
-            if (p - a) % WM < w: return 'g'
-        for a, w in LT.get(q, ()):
-            if (p - a) % WM < w: return 'l'
-        return 'a'
+    def center(x, y):  # 中は、こまかい木目（WM×WM でくりかえす）とふし
+        return grain((x - S) % WM, (y - S) % WM, WM, WM, lines=6, knot=(46, 20, 3.2))
     # 切りっぱなしの板：わくはなし。ふちの1ドットだけ、切り口の色（上・左は明るく、下・右は少し暗い）。下の2行は板のあつみ、その下にかげ
     rows = []
     for y in range(NW + 1):
@@ -181,6 +209,10 @@ def wood_rows():
                 r += 'h'; continue
             if min(db, dr) == 0 or not (ins(x + 1, y) and ins(x, y + 1)):
                 r += 'w'; continue
+            if (dt == 1 or dl == 1) and min(db, dr) > 1:
+                r += 'k'; continue  # つや：上と左のふちの内がわに、明るい線
+            if dt + dl <= 4 and dt >= 1 and dl >= 1 and (dt, dl) in ((2, 2), (2, 3), (3, 2)):
+                r += 'q'; continue  # つや：左上の角の光
             r += center(x, y)
         rows.append(r)
     return rows
@@ -191,8 +223,8 @@ WOOD_SEL = ('.hud,.dock,.quest,.sheet,.dlg::before,.toast,#helpPop .hc,.idea-car
 
 
 def wood_css():
-    u = svg(wood_rows(), {'a': '#ecd6ad', 'g': '#e2c89a', 'l': '#f3e1bf', 'h': '#f7e8c9',
-                          'w': '#c9a46e', 'd': '#a8743f', 's': SHADOW})
+    u = svg(wood_rows(), {'a': '#ecd6ad', 'g': '#e0c597', 'D': '#d3b484', 'l': '#f4e3c3', 'h': '#fff4dc',
+                          'k': '#f7e9cd', 'q': '#fffaf0', 'w': '#c9a46e', 'd': '#a8743f', 's': SHADOW})
     sel = ','.join('body.wd0 ' + x.strip() for x in WOOD_SEL.split(','))
     return ('/* 草原のパネルは、切りっぱなしの明るい板（わくなし・木目）。依頼ボードの紙はそのまま。body.wd0 は ui-fx.js の uiStageSync */\n'
             f'{sel}{{border-image-source:{u}!important;border-image-repeat:round!important}}')
@@ -212,7 +244,6 @@ def wbtn_rows(pressed=False):
         y -= top
         if not (0 <= x < W and 0 <= y < fh): return False
         return cp(min(x, W - 1 - x)) <= y <= fh - 1 - cp(min(x, W - 1 - x)) and cp(min(y, fh - 1 - y)) <= x <= W - 1 - cp(min(y, fh - 1 - y))
-    GR = {3: [(2, 7)], 6: [(9, 6)], 9: [(1, 4), (12, 3)], 12: [(6, 8)], 15: [(0, 3), (11, 5)], 18: [(4, 6)], 21: [(10, 5)]}
     rows = []
     for y in range(H):
         r = ''
@@ -220,8 +251,11 @@ def wbtn_rows(pressed=False):
             if face(x, y):
                 if not face(x, y - 1) or not face(x - 1, y): r += 'h'; continue
                 if not face(x, y + 1) or not face(x + 1, y): r += 'e'; continue
-                q, p = (y - top) % BM, x % BM
-                r += 'g' if any((p - a) % BM < w for a, w in GR.get(q, ())) else 'a'
+                fy = y - top
+                if fy == 1 or x == 1 and fy < fh - 4: r += 'k'; continue  # つや：上と左の、明るいふち
+                if (x, fy) in ((2, 2), (3, 2), (2, 3), (4, 2)): r += 'q'; continue  # つや：左上の光
+                if fy == 2 or fy == 3: r += 'm'; continue  # つや：上のほうに、うすい光の帯
+                r += grain(x % BM, fy % BM, BM, BM, lines=2)
                 continue
             if not pressed and (face(x, y - 1) or face(x, y - 2)):
                 r += 'b' if not face(x, y - 1) else 't'; continue  # あつみ（下の切り口）
@@ -233,9 +267,12 @@ def wbtn_rows(pressed=False):
 
 
 WBTN = {  # 面・木目・上のふち・下のふち・あつみ・あつみの下
-    'n': {'a': '#e2c18b', 'g': '#d6b27a', 'h': '#f2dcb2', 'e': '#c79e66', 't': '#b98a52', 'b': '#8a5a30', 's': SHADOW},
-    'p': {'a': '#b98551', 'g': '#a8743f', 'h': '#d29f68', 'e': '#96643a', 't': '#7e5430', 'b': '#5e3d22', 's': SHADOW},
-    'y': {'a': '#f0cf86', 'g': '#e4bf70', 'h': '#fbe6b4', 'e': '#d3a24c', 't': '#b98a3a', 'b': '#7a5218', 's': SHADOW},
+    'n': {'a': '#e2c18b', 'g': '#d6b27a', 'D': '#c9a36a', 'l': '#ebcd9b', 'h': '#f6e3be', 'k': '#f2dcb2', 'm': '#ead0a0',
+          'q': '#fffaf0', 'e': '#c79e66', 't': '#b98a52', 'b': '#8a5a30', 's': SHADOW},
+    'p': {'a': '#b98551', 'g': '#a8743f', 'D': '#99683a', 'l': '#c4905b', 'h': '#dcaa72', 'k': '#d29f68', 'm': '#c4915c',
+          'q': '#f6d6aa', 'e': '#96643a', 't': '#7e5430', 'b': '#5e3d22', 's': SHADOW},
+    'y': {'a': '#f0cf86', 'g': '#e4bf70', 'D': '#d8b062', 'l': '#f6da98', 'h': '#fdecc4', 'k': '#fbe6b4', 'm': '#f6dca0',
+          'q': '#fffdf0', 'e': '#d3a24c', 't': '#b98a3a', 'b': '#7a5218', 's': SHADOW},
 }
 
 
@@ -266,7 +303,9 @@ def disk_rows(N, rim=True):
             if face(x, y):
                 if not face(x, y - 1) or not face(x - 1, y): r += 'h'
                 elif not face(x, y + 1) or not face(x + 1, y): r += 'e'
-                else: r += 'g' if (y % 5 == 2 and (x * 7 + y * 3) % 11 < 6) else 'a'
+                elif (x + .5 - N / 2 + R * .45) ** 2 + (y + .5 - c + R * .5) ** 2 < (R * .08) ** 2: r += 'q'  # つや：左上の光
+                elif ((x + .5 - N / 2) ** 2 + (y + .5 - c) ** 2 > (R - 2.2) ** 2) and y < c and x < N / 2 + R * .3: r += 'k'  # つや：上のふちの明るい線
+                else: r += grain(x, y, 64, 64, lines=6)
             elif face(x, y - 1): r += 't'
             elif face(x, y - 2): r += 'b'
             else: r += '.'
@@ -275,8 +314,8 @@ def disk_rows(N, rim=True):
 
 
 def disk_css():
-    n = {'a': '#e2c18b', 'g': '#d6b27a', 'h': '#f2dcb2', 'e': '#c79e66', 't': '#b98a52', 'b': '#8a5a30'}
-    lit = {'a': '#f0cf86', 'g': '#e4bf70', 'h': '#fbe6b4', 'e': '#d3a24c', 't': '#b98a3a', 'b': '#7a5218'}
+    n = {k: v for k, v in WBTN['n'].items() if k != 's'}
+    lit = {k: v for k, v in WBTN['y'].items() if k != 's'}
     x = svg(disk_rows(23), n)
     gb = svg(disk_rows(52), n)
     gc = svg(disk_rows(52), lit)
