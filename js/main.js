@@ -67,7 +67,7 @@ function lastFirst(list){/* さいごにあそんだステージを、いちば�
   const card=list.querySelector('.wcard[data-k="'+top[0]+'"]');if(card===list.firstElementChild)return;
   const pv=card.previousElementSibling,nx=card.nextElementSibling;if(pv&&pv.classList.contains('wlink'))pv.remove();else if(nx&&nx.classList.contains('wlink'))nx.remove();/* 道の線は、となりのステージどうしでつなぎなおす */
   card.classList.add('wtop');list.insertBefore(card,list.firstElementChild)}
-const APP_VER=1614;/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER=1618;/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
@@ -105,7 +105,7 @@ function lastPlayed(){/* さいごにあそんだステージ（なければ nul
 function titleCont(){/* タイトルの「つづきから」：前にあそんだステージがあるときだけ出す */const t0=Date.now(),go=()=>{if(!KV.ready()&&Date.now()-t0<5000)return setTimeout(go,150);let w=null;try{w=lastPlayed()}catch(e){}const c=$('#tCont'),on=w!=null;if(c.hidden===on){c.hidden=!on;$('#tStart').classList.toggle('pri',!on);window.dispatchEvent(new Event('resize'))}};go()}
 $('#tCont').onclick=()=>{audioInit();sfx('tap');const w=lastPlayed();if(w==null)return titleCont();const L=loadStage(w);if(!L)return titleCont();continueGame(L)};/* 前にあそんだマップを、そのまま開く */
 titleCont();
-window.__ldDone=1;clearInterval(window.__ldT);$('#tLoad').hidden=true;if(window.__ldWant&&window.__ldWant())$('#tStart').onclick()/* 読みこみ中に「はじめる」をおしていたら、そのまま進む */
+window.__ldDone=1;clearInterval(window.__ldT);$('#tLoad').hidden=true;{const d=document.getElementById('stageLd');if(d&&!d.hidden)stageLoading(true)}/* 思い出帳の再生：つづけて、マップを読みこみ中と出す */if(window.__ldWant&&window.__ldWant())$('#tStart').onclick()/* 読みこみ中に「はじめる」をおしていたら、そのまま進む */
 
 /* ---------- ループ ---------- */
 let last=performance.now(),frameT=0,tutT=0,saveT=0,questT=0,running=true;

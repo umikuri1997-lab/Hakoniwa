@@ -137,7 +137,7 @@ async function playStoryReplay(run){
 }
 function bootStoryReplayPage(){
   const params=new URLSearchParams(location.search),token=params.get('replayToken'),key=params.get('storyReplay'),episode=STORY_REPLAY_EVENTS.find(e=>e.key===key);
-  if(parent===window||!token||!episode){$('#tStart').textContent='思い出帳から開いてください';$('#tStart').disabled=true;return;}
+  if(parent===window||!token||!episode){{const d=document.getElementById('stageLd');if(d)d.hidden=true}$('#tStart').textContent='思い出帳から開いてください';$('#tStart').disabled=true;return;}
   const receive=async event=>{
     if(event.origin!==location.origin||event.source!==parent||event.data?.type!=='story-replay-start'||event.data.token!==token||event.data.key!==key||STORY_REPLAY_RUN)return;
     const run={token,episode,auto:false,running:false,cancelled:false,finished:false};STORY_REPLAY_RUN=run;prepareStoryReplay(run,event.data);
