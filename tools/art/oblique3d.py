@@ -18,7 +18,7 @@ OUT = 0.0        # 輪郭線のふとさ（マス）。0は輪郭線なし
 OUTK = 0.5       # 輪郭線の色（もとの色にかける数。1に近いほどうすい線）
 BEVEL = 0.022    # 箱の角の面取り（マス）
 class Scene:
-    def __init__(self): self.t = []; self.pid = 0; self.ol = {}; self.cur = None; self.grp = {}; self.gcur = None; self.tx = {}; self.tcur = None; self.mt = {}; self.mcur = None; self.tg = {}; self.tcur2 = None; self.joins = set(); self.dc = {}; self.dcur = None; self.sm = set(); self.scur = False; self.cv = set(); self.ccur = False
+    def __init__(self): self.t = []; self.pid = 0; self.ol = {}; self.cur = None; self.grp = {}; self.gcur = None; self.tx = {}; self.tcur = None; self.mt = {}; self.mcur = None; self.tg = {}; self.tcur2 = None; self.joins = set(); self.dc = {}; self.dcur = None; self.sm = set(); self.scur = False; self.cv = set(); self.ccur = False; self.txax = {}
     def outline(self, w=None, k=None):
         """これから足す部品の輪郭線の太さ w（マス）・色 k（もとの色にかける数）。None は render の値"""
         self.cur = None if w is None and k is None else (w, k)
@@ -400,7 +400,8 @@ def render_px(sc, proj, ext, depth, k=0.72, outer=True, merge=12, lw=1, k2=0.86,
         m = idb == pid
         if not m.any(): continue
         V = np.array([v for t_ in sc.t if t_[4] == pid for v in t_[:3]]); V0 = V.mean(0)
-        ax = np.linalg.svd(V-V0)[2][0]
+        ax = getattr(sc, 'txax', {}).get(pid)   # sc.txax：部品ごとに、もようの流れる向きをきめる（もらったモデルの木の皮は、たて）
+        if ax is None: ax = np.linalg.svd(V-V0, full_matrices=False)[2][0]   # full_matrices=False：点が多い部品（もらったモデル）で、大きな行列を作らない
         T = tx.at(S); n_ = T.shape[0]; P = wp[m]-V0; N = wn[m]
         v2 = np.cross(N, ax); bad = np.linalg.norm(v2, axis=1) < 0.3
         v2[bad] = np.cross(N[bad], np.array([0, 0, 1.0])); v2 /= np.maximum(np.linalg.norm(v2, axis=1, keepdims=True), 1e-9)
