@@ -3,6 +3,7 @@
 #   台：木のまるい台（半径0.19・高さ0〜0.08、上のふちはまるい）。地面におく。
 #   柱：木の丸い柱（半径0.028・高さ0.06〜1.20）。台のまん中の穴にさしこむ。
 #   かさ：布をはった、まるいかさ（ふちの半径0.58・高さ1.00 → てっぺん1.22。ゆるいまるみ）。布は8まい。ピンクとクリーム色を、かわりばんこ（布の面のもよう）。柱のさきにとめる。
+#   ひだ：かさのふちから下へたれる布（布1まいごとに、下のはしが半円にふくらむ。まん中で0.10・さかい目で0.03たれる）。布と同じ色のしま。
 #   玉：かさのてっぺんに、木の玉（半径0.045）。
 from blueprint import Part as P
 from common import *
@@ -19,3 +20,14 @@ def PARTS():
     L.append(k)
     L.append(P('玉','ball',(CX,CY,1.235,0.045),WOOD,on=('かさ',),note='かさのてっぺん'))
     return L
+def stripe(x,y):return PINK if int(((math.atan2(y-CY,x-CX)+math.pi/8)%(2*math.pi))/(math.pi/4))%2==0 else CREAM
+def EXTRA(sc):   # ひだ：かさのふちから下へたれる布。布1まいごとに、下のはしが半円にふくらむ（ほたて貝の形）。外がわへ少しひらく
+    sc.part();sc.smooth(True);n=96;R0=0.58;Z0=1.00
+    for i in range(n):
+        a0,a1=2*math.pi*i/n,2*math.pi*(i+1)/n
+        def drop(a):   # 布1まい（45度）ごとの、たれる長さ：まん中0.10・さかい目0.03
+            u=((a+math.pi/8)%(math.pi/4))/(math.pi/4);return 0.03+0.07*math.sin(math.pi*u)
+        P_=lambda a,z,r:(CX+r*math.cos(a),CY+r*math.sin(a),z)
+        t0,t1=P_(a0,Z0,R0),P_(a1,Z0,R0);b0,b1=P_(a0,Z0-drop(a0),R0+0.012),P_(a1,Z0-drop(a1),R0+0.012)
+        c=stripe(*P_((a0+a1)/2,Z0,R0)[:2]);sc.quad(t0,t1,b1,b0,c)
+    sc.smooth(False)
