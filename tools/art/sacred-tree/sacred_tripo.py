@@ -114,6 +114,7 @@ def texpat(items,pal):
         return pal[2] if L<lo else pal[0] if L>hi else pal[1]
     return f
 
+LEAFSPEC=0.965   # 葉のつやが出る向きの近さ（大きいほど、つやは小さく、光にまっすぐ向いた所だけ）
 LEAFVEIN=(160,182,86)   # 葉脈・まん中のすじ（谷）の色
 def veinpat(q):
     """1まいの葉（モデルの葉のかたまり1つ）の柄：葉ののびる向き（いちばん長い向き）を、まん中のすじにする。
@@ -158,10 +159,10 @@ def leafmesh(base,ang,L,W,pitch,fold=0.35,droop=0.25):
 def sprout(sc,base,name):
     """切り株の切り口から出た芽：細い茎と、平たい葉（芽は1まい・若葉は2まい、ひらく）。葉はまん中のすじが低く、葉脈も"""
     H=0.16 if name=='bud' else 0.24;top=base+np.array([0.01,0,H])
-    sc.part();sc.tube([tuple(base),tuple(base+np.array([0.0,0,H*0.5])),tuple(top)],0.018,STEMC,n=6)
+    sc.part();sc.tube([tuple(base),tuple(base+np.array([0.0,0,H*0.5])),tuple(top)],0.008,STEMC,n=6)   # 細い茎
     lv=[leafmesh(top,-0.4,0.15,0.055,1.0,0.5,0.15)] if name=='bud' else [leafmesh(top,0.15,0.22,0.08,0.5),leafmesh(top,math.pi-0.15,0.22,0.08,0.5)]
     for q in lv:
-        f=veinpat(q);sc.decal(lambda x,y,z,f=f:SPROUT[0] if f(x,y,z)==LEAF[0] else SPROUT[1] if f(x,y,z)==LEAF[1] else STEMC);sc.part()
+        f=veinpat(q);sc.material('satin');sc.decal(lambda x,y,z,f=f:SPROUT[0] if f(x,y,z)==LEAF[0] else SPROUT[1] if f(x,y,z)==LEAF[1] else STEMC);sc.part();sc.material(None)
         for t in q:sc.tri(t[0],t[1],t[2],SPROUT[1])
         sc.decal(None)
 def leafclump(q):
@@ -177,7 +178,11 @@ def leafclump(q):
         if 0.28<u<0.62:
             k=(a/(2*math.pi)*NV+off)%1
             if min(k,1-k)*2*math.pi/NV*math.hypot(X_,Y_)<0.010:return LEAF[2]   # 葉脈（まん中のかげの色で、ふつうの所だけ）
-        return LEAF[2] if u<0.30 else LEAF[1] if u<0.70 else LEAF[0]
+        lv=2 if u<0.30 else 1 if u<0.70 else 0
+        h_,_=_h(math.floor(x/0.034),math.floor((z-0.9*y)/0.034),23)   # ざらつき：葉の表面の小さなむら（2ドットくらいの点を、ところどころ）
+        if h_<0.08:lv=min(2,lv+1)
+        elif h_<0.12 and lv==1:lv=0
+        return LEAF[lv]
     return f
 
 def flowfield(q,src):
@@ -297,14 +302,14 @@ class Stage:
                     m0=q.reshape(-1,3).mean(0);dd=np.sort(np.linalg.norm(s._lc-m0,axis=1))
                     if len(dd)>1 and dd[1]>0.9 or (q.reshape(-1,3).max(0)-q.reshape(-1,3).min(0)).max()<0.12:continue   # はなれて1つだけうかぶ葉（モデルのこぼれ）は描かない：お手本の絵と同じ、小さなまるい葉の玉がかさなる形に作りなおす（lobes）
                     lobes(sc,q,n,len(s._gid));s._gid.append(1);continue
-                sc.decal(leafclump(q));sc.part()   # 葉：かたまりのまん中（茎のつく所）がいちばん低くくらい、ふちへ明るく。まん中から葉脈
+                sc.material('satin');sc.decal(leafclump(q));sc.part();sc.material(None)   # satin：光の当たる向きに、つや   # 葉：かたまりのまん中（茎のつく所）がいちばん低くくらい、ふちへ明るく。まん中から葉脈
                 for t in q:sc.tri(t[0],t[1],t[2],LEAF[1])
                 sc.decal(None)
         sc.smooth(False)
 
 def shot(M):
     """furn3d と同じ見え方で写し、ゲームの置き方（ax・ay、g64のドット）をきめる：幹の根もと (TX, y, 0) の写る所が、ゲームの (TX, y) に来るように"""
-    O.GRAD=True;inf={};im,ex0,base,yb=F3.shot(M,0,info=inf)
+    O.GRAD=True;O.SATINSPEC=LEAFSPEC;inf={};im,ex0,base,yb=F3.shot(M,0,info=inf)
     PROJ,E,S_,fw=inf['PROJ'],inf['ext'],inf['S'],inf['fwd']
     gy=FRONT-0.6;u,v=PROJ(fw((TX,gy,0)));px,py=(u-E[0])*S_,(v-E[2])*S_   # 根もとの近くの地面の点
     bb=im.getbbox();im=im.crop(bb)
