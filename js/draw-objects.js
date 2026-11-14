@@ -70,7 +70,7 @@ const CHA={};function chipPage(n){/* マップチップのアトラス（大き�
 function atlasFrame(r,id){/* アトラスの (x,y,w,h) を、1まいの絵（キャンバス）に切り出す。読みこむまでは ok=0 */const[n,x,y,w,h]=r,c=document.createElement('canvas');c.width=w;c.height=h;c.ok=0;const a=chipPage(n),done=()=>{const g=c.getContext('2d');g.drawImage(a.im,x,y,w,h,0,0,w,h);if(id==='hwall'||id.startsWith('hwall:')){/* オークの壁だけを明るい黄褐色に。木目と透明度は保つ */const img=g.getImageData(0,0,w,h),d=img.data;for(let k=0;k<d.length;k+=4){if(!d[k+3])continue;const l=.299*d[k]+.587*d[k+1]+.114*d[k+2];d[k]=Math.min(255,l*1.12+18);d[k+1]=Math.min(255,l*.88+14);d[k+2]=Math.min(255,l*.57+10)}g.putImageData(img,0,0)}c.ok=1;try{delete iconCache[id]}catch(e){}};if(a.ok)done();else a.q.push(done);return c}
 function chipImgs(ch,id){if(!ch._im)ch._im=ch.f.map(r=>atlasFrame(r,id));return ch._im}
 const PARTMV={/* 動く部品の動き：rot＝回る角度、sx・sy＝のびちぢみ（どれも支点のまわり） */
-  swing:(i,now)=>{if(ICON)return{};/* アイコンは、マップと同じ形 */const d=i!=null&&S&&toyUsers(i).length?swAng(i,now):0;return rotAt(i)===1?{rot:d*SWROT}:{sx:1+d*.12,sy:1+d*.3}},/* 縦のブランコは、横から見るので、支点のまわりに左右へゆれる */
+  swing:(i,now)=>{if(ICON)return{};/* アイコンは、マップと同じ形 */const d=i!=null&&S&&toyUsers(i).length?swAng(i,now):0;return{sx:1+d*.12,sy:1+d*.3}},
   seesaw:(i,now)=>({rot:!ICON&&i!=null&&S?ssAng(i,now||0):0}),
   windmill:(i,now)=>({rot:ICON?0:(now||performance.now())/1000*.9}),
   vane:(i,now)=>({sx:ICON?1:Math.cos(Math.sin((now||performance.now())/1300+(i||0))*.6)})};
