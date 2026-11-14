@@ -79,7 +79,7 @@ def leafpat(x,y,z):
     return LEAF[1]
 
 LOBE=0.17      # 葉の玉のならぶ間かく（マス）
-LEAFIN=(134,159,92)   # かたまりの中（玉と玉のすきまから見える、こい緑。お手本の絵の、かたまりの下のかげの色）
+LEAFIN=(146,172,88)   # かたまりの中（玉と玉のすきまから見える、こい緑。お手本の絵の、かたまりの下のかげの色）
 def lobes(sc,q,n,gi):
     """葉のかたまり（モデルの面 q・面の向き n）の、見える側の表面に、まるい葉の玉（半径 0.09〜0.13 マス）を、
     面の大きさに合わせた数だけ、少し中へしずめてならべる。上を向いた所の玉は明るい黄緑、ほかはふつうの黄緑。
@@ -213,6 +213,45 @@ def leafnat(q,uv,lh):
         return LEAF[2] if v<0.34 else LEAF[1] if v<0.60 else LEAF[0]
     return f
 
+LEAFL,LEAFW=0.13,0.085   # 葉の部品1まいの長さ・はば（マス）
+LEAFGAP=0.085   # 葉をならべる間かく（マス）
+LEAFTONES=[(232,240,128),(214,230,112),(194,216,100),(172,198,92),(150,180,86)]   # 葉の色（明るい→暗い。お手本の絵の葉の色）
+def leafpart(base,d,sd,nn,L,W,fold=0.25,droop=0.35):
+    """葉1まいの部品：つけ根 base から、向き d へのびる、先のとがったたまごの形。sd：はばの向き、nn：葉の表の向き。
+    まん中のすじがいちばん低い（ふちほど表がわへ上がる fold）。先はうらがわへ少したれる（droop）"""
+    def P(t,u):
+        w=W*math.sin(math.pi*min(1,t*1.04))**0.7*(1-0.3*t);return base+d*t*L+sd*u*w+nn*(fold*w*abs(u)-droop*L*t*t)
+    T=[];nt,ns=5,2
+    for i in range(nt):
+        for j in range(-ns,ns):
+            t0,t1=i/nt,(i+1)/nt;u0,u1=j/ns,(j+1)/ns;a,b,c,e=P(t0,u0),P(t1,u0),P(t1,u1),P(t0,u1);T+=[(a,b,c),(a,c,e)]
+    return T
+def leafparts(sc,q,gi):
+    """葉のかたまり（モデルの面 q）を、小さな葉の部品でおおう（お手本の絵の、葉がかさなるかたまり）：
+    ・かたまりの中身：少しちぢめた、こい緑（葉のすきまのかげ）
+    ・見える側の表面に、面の大きさに合わせた数の葉。つけ根は表面の少し内、葉は表面にそって、外へ・下へたれる向き（ばらつき）。
+    ・葉の色は、かたまりの上ほど明るく、下・内ほど暗い（5つの色から、ばらつきも少し）"""
+    rs=np.random.RandomState(500+gi);fn=np.cross(q[:,1]-q[:,0],q[:,2]-q[:,0]);ar=np.linalg.norm(fn,axis=1)/2;n=fn/np.maximum(2*ar[:,None],1e-12)
+    vis=(n[:,1]*0.74+n[:,2]*0.67>-0.35);A=ar*vis
+    P0=q.reshape(-1,3);c0=P0.mean(0);zl,zh=P0[:,2].min(),P0[:,2].max()
+    sc.part()   # 中身
+    for t in q:t2=c0+(t-c0)*0.86;sc.tri(t2[0],t2[1],t2[2],LEAFIN)
+    if A.sum()<=0:return
+    N=max(6,int(A.sum()/(LEAFGAP*LEAFGAP)));idx=rs.choice(len(q),N,p=A/A.sum());sc.outline(None,0.9)
+    order=[]
+    for k_ in idx:
+        w=rs.dirichlet((1,1,1));pt=w@q[k_];nn=n[k_]
+        dn=np.array([0,0,-1.0])-nn*(-nn[2]);out=pt-c0;out-=nn*(out@nn)   # 表面にそって、下へ・外へ
+        d=0.3*dn/max(np.linalg.norm(dn),1e-6)+0.7*out/max(np.linalg.norm(out),1e-6)
+        ang=rs.uniform(-0.7,0.7);sd0=np.cross(nn,d);d=d*math.cos(ang)+sd0*math.sin(ang);d-=nn*(d@nn);d/=max(np.linalg.norm(d),1e-6);sd=np.cross(nn,d)
+        L=LEAFL*rs.uniform(0.8,1.15);W=LEAFW*rs.uniform(0.85,1.15)
+        h=(pt[2]-zl)/max(zh-zl,1e-6);tone=int(np.clip(round((1-h)*1.6+(1-nn[2])*1.3+rs.uniform(-0.35,0.35)),0,4))   # かたまりの上・上向きほど明るく、下・下向きほど暗く
+        order.append((pt+nn*0.01-d*L*0.35,d,sd,nn,L,W,LEAFTONES[tone]))   # つけ根は、表面の少し外・少しうしろ（葉のまん中が表面のあたり）
+    for base,d,sd,nn,L,W,col in order:
+        sc.part()
+        for t in leafpart(base,d,sd,nn,L,W):sc.tri(t[0],t[1],t[2],col)
+    sc.outline()
+
 def flowfield(q,src):
     """木の皮の流れ：面の場所から、src（はじまりの点）からの、面をつたう道のりをはかり、その道のりがのびる向きを、面ごとの流れの向きにする。
     幹ではたて・根では外へ・枝では枝のさきへ。かえすのは、面のまん中の点・流れの向き・面の向き"""
@@ -336,7 +375,12 @@ class Stage:
                     m0=q.reshape(-1,3).mean(0);dd=np.sort(np.linalg.norm(s._lc-m0,axis=1))
                     if len(dd)>1 and dd[1]>0.9 or (q.reshape(-1,3).max(0)-q.reshape(-1,3).min(0)).max()<0.12:continue   # はなれて1つだけうかぶ葉（モデルのこぼれ）は描かない：お手本の絵と同じ、小さなまるい葉の玉がかさなる形に作りなおす（lobes）
                     lobes(sc,q,n,len(s._gid));s._gid.append(1);continue
-                sc.decal(leafnat(q,c['uv'],s.leaflh()));sc.part()   # 葉：モデルのテクスチャの明るさ（形にそったもよう）と、まん中が低い影を、なめらかにまぜる
+                if kind=='leaf' and s.name=='tree':   # 御神木：葉のかたまりの表面に、小さな葉の部品をならべる（leafparts）
+                    if not hasattr(s,'_lc'):s._lc=np.array([s.T(p_).reshape(-1,3).mean(0) for p_,c_,k_ in s.items if k_=='leaf'])
+                    m0=q.reshape(-1,3).mean(0);dd=np.sort(np.linalg.norm(s._lc-m0,axis=1))
+                    if len(dd)>1 and dd[1]>0.9:continue   # はなれて1つだけうかぶ葉（モデルのこぼれ）
+                    leafparts(sc,q,len(s._gid));s._gid.append(1);continue
+                sc.decal(leafnat(q,c['uv'],s.leaflh()));sc.part()   # 若木の葉：モデルのテクスチャの明るさと、まん中が低い影
                 for t in q:sc.tri(t[0],t[1],t[2],LEAF[1])
                 sc.decal(None)
         sc.smooth(False)
