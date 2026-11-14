@@ -145,8 +145,8 @@ def book_css():
     ])
 
 
-# ---- 草原の木のわく（ふちは木・中は明るいまま） ----
-WM = 24  # 辺のまん中（くりかえす所）
+# ---- 草原の木のわく（ふちは細い木・中は明るい木目） ----
+WM = 40  # 辺のまん中・中の木目のくりかえし（border-image の round で、まん中もならべる）
 
 
 def wood_rows():
@@ -155,6 +155,17 @@ def wood_rows():
     tI = lambda x: cp(min(x, NW - 1 - x))
     lI = lambda y: cp(min(y, NW - 1 - y))
     ins = lambda x, y: 0 <= x < NW and 0 <= y < NW and tI(x) <= y <= NW - 1 - tI(x) and lI(y) <= x <= NW - 1 - lI(y)
+    # 中の木目（よこのすじ）：行ごとに、すじのはじまり・長さ
+    GR = {2: [(3, 14), (24, 9)], 6: [(12, 18)], 9: [(30, 12)], 11: [(1, 8)], 14: [(18, 15)], 18: [(5, 11), (33, 6)],
+          21: [(22, 13)], 25: [(0, 7), (12, 9)], 28: [(28, 14)], 31: [(8, 16)], 35: [(20, 10)], 38: [(2, 12), (34, 5)]}
+    LT = {4: [(16, 6)], 16: [(34, 7)], 23: [(4, 9)], 33: [(26, 8)]}
+    def center(x, y):
+        p, q = (x - S) % WM, (y - S) % WM
+        for a, w in GR.get(q, ()):
+            if (p - a) % WM < w: return 'g'
+        for a, w in LT.get(q, ()):
+            if (p - a) % WM < w: return 'l'
+        return 'a'
     rows = []
     for y in range(NW + 1):
         r = ''
@@ -162,20 +173,17 @@ def wood_rows():
             if not ins(x, y):
                 r += 's' if (y >= NW - S and ins(x, y - 1)) else '.'
                 continue
-            dt, db, dl, dr = y - tI(x), NW - 1 - tI(x) - y, x - lI(y), NW - 1 - lI(y) - x
-            k = min(dt, db, dl, dr)
+            k = min(y - tI(x), NW - 1 - tI(x) - y, x - lI(y), NW - 1 - lI(y) - x)
             if k == 0 or not (ins(x - 1, y) and ins(x + 1, y) and ins(x, y - 1) and ins(x, y + 1)):
                 r += 'o'; continue
-            if k >= 5:
-                r += 'a'; continue
-            if k == 4:
-                r += 'i'; continue
-            side = 't' if k == dt else 'b' if k == db else 'l' if k == dl else 'r'
             if k == 1:
-                r += 'h' if side in 'tl' else 'd'; continue
-            p = (x if side in 'tb' else y) - S  # 辺にそった場所（木目をならべる）
-            grain = (p // 3 + k * 2) % 5 == 0  # 3ドットの木目のすじ
-            r += 'g' if grain else 'w'
+                top_left = (y - tI(x) == 1) or (x - lI(y) == 1)
+                r += 'h' if top_left else 'd'; continue
+            if k == 2:
+                r += 'w'; continue
+            if k == 3:
+                r += 'i'; continue
+            r += center(x, y)
         rows.append(r)
     return rows
 
@@ -185,10 +193,10 @@ WOOD_SEL = ('.hud,.dock,.quest,.sheet,.dlg::before,.toast,#helpPop .hc,.idea-car
 
 
 def wood_css():
-    u = svg(wood_rows(), {'a': '#f4e9d2', 'o': '#5e3d22', 'h': '#d29a5c', 'w': '#b98146', 'g': '#9c6a38',
-                          'd': '#8a5a30', 'i': '#7a4f2b', 's': SHADOW})
+    u = svg(wood_rows(), {'a': '#ecd6ad', 'g': '#e2c89a', 'l': '#f3e1bf', 'o': '#6e4a28', 'h': '#c99257',
+                          'w': '#a8743f', 'd': '#8a5a30', 'i': '#d2b382', 's': SHADOW})
     sel = ','.join('body.wd0 ' + x.strip() for x in WOOD_SEL.split(','))
-    return ('/* 草原のパネルは木のわく（ふちは木目つきの木・中は明るいまま）。依頼ボードの紙はそのまま。body.wd0 は ui-fx.js の uiStageSync */\n'
+    return ('/* 草原のパネルは木（ふちは細い木のわく・中は明るい木目）。依頼ボードの紙はそのまま。body.wd0 は ui-fx.js の uiStageSync */\n'
             f'{sel}{{border-image-source:{u}!important;border-image-repeat:round!important}}')
 
 
