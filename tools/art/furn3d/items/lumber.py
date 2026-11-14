@@ -1,6 +1,6 @@
 # 伐採場（lumber）：画角30・左右にも遠近・見おろし34度。色は、いまの絵に合わせる。いまの絵（お手本）と同じならび。根のはった切り株に斧がささり、右に丸太を2本ななめにねかせ、左手前に、わったまき、そばに葉の小枝。
 # 形は、トリポのモデル（tools/art/models/tripo：stump・log_lying・firewood・sprig）。色は設計図でつける（モデルは色なし）。単位はマス。大きさは、いまの絵（93×68ドット）に合わせた。
-#   切り株（stump.glb）：根は、のこす長さ0.6にちぢめ、さきほど低く（細く）する（rootwarp。なめらかな式）。高さ0.63で、地面に置く（根が手前へまっすぐ向かないよう40度まわす）。上の面（切り口。モデルでは約17度かたむいているので、モデルをまわして水平にする）は年輪の色（もよう）、ほかは皮の色。
+#   切り株（stump.glb、根が放射状にのびる形）：高さ0.43で、地面に置く（根が手前へまっすぐ向かないよう40度まわす）。上の面（切り口。かたむいていれば、モデルをまわして水平にする）は年輪の色（もよう）、ほかは皮の色。
 #   斧：鉄の頭（あつさ0.035、刃はこの面の中で、柄にちょっかく）を、切り株のまん中より0.10うしろに、刃を切り口に切りこませる。柄（木、半径0.028）は頭の穴から右上へ。刃先は、といだ明るい色。
 #   丸太（log_lying.glb）2本：地面に、ななめにねかせる（おくが左・手前が右）。切り口は明るい木で、年輪の線とふちは皮の色（もよう）。
 #   わったまき（firewood.glb）：左手前の地面に。わった面・切り口は明るい木、皮は皮の色。
@@ -27,14 +27,6 @@ def logring(r,R):   # 丸太の切り口：年輪の線とふちは皮の色
     if q>0.86 or 0.52<q<0.62:return BARK
     if q<0.14:return HEART
     return TOP
-def rootwarp(c,R,HT):
-    """根をちぢめ、さきほど細くする：幹（半径 R）の外の点を、まん中へよせ（のこす長さ0.6）、高さもさきほど低くする。
-    どこでも、なめらかにつながる式にする（さかい目でとぶと、根がゆがむ）"""
-    def f(V):
-        d=V[:,:2]-c;r=np.hypot(d[:,0],d[:,1]);e=np.maximum(r-R,0);rm=e.max();t=e/rm;sm=t*t*(3-2*t)
-        nr=r-e*0.4;k=np.where(r>1e-9,nr/np.maximum(r,1e-9),1.0)
-        V[:,0]=c[0]+d[:,0]*k;V[:,1]=c[1]+d[:,1]*k;V[:,2]=V[:,2]*(1-0.45*sm);return V
-    return f
 def model(nm,f,cx,cy,size,rot,col,zs=1.0,k=0.5,note='地面に置く',on=('ground',),up=None):
     d=(T+f,cx,cy,0,size,rot,0,zs,up);p=P(nm,'model',d,col,on=on,note=note);p.recol=col;p.recolk=k;return notex(p),model_tris(*d)[0]
 def PARTS():
@@ -42,11 +34,11 @@ def PARTS():
     V0,F0,_=model_tris(T+'stump.glb',0,0,0,1.0);t0=V0[F0];n0=np.cross(t0[:,1]-t0[:,0],t0[:,2]-t0[:,0]);n0/=np.linalg.norm(n0,axis=1,keepdims=True)+1e-9
     sel=(np.abs(n0[:,2])>0.85)&(t0[:,:,2].mean(1)>V0[:,2].max()*0.6);ar=np.linalg.norm(np.cross(t0[:,1]-t0[:,0],t0[:,2]-t0[:,0]),axis=1)
     UP=(n0[sel]*np.sign(n0[sel][:,2:3])*ar[sel,None]).sum(0)   # モデルの切り口の向き（かたむいている）→ これをまっすぐ上にする
-    s,V=model('切り株','stump.glb',CX,CY,0.63,40,BARK,up=tuple(UP))
+    s,V=model('切り株','stump.glb',CX,CY,0.43,40,BARK,up=tuple(UP))
     Fm=model_tris(*s.dims)[1];t=V[Fm];n=np.cross(t[:,1]-t[:,0],t[:,2]-t[:,0]);n/=np.linalg.norm(n,axis=1,keepdims=True)+1e-9
     tp=t[(np.abs(n[:,2])>0.85)&(t[:,:,2].mean(1)>V[:,2].max()*0.6)].reshape(-1,3)   # 切り口（上を向いた、高い所の面。モデルの切り口は少しかたむいている）
     co=np.linalg.lstsq(np.c_[tp[:,:2],np.ones(len(tp))],tp[:,2],rcond=None)[0];c=tp[:,:2].mean(0);R=np.hypot(*(tp[:,:2]-c).T).max();HT=float(co@[c[0],c[1],1])
-    s.decal=lambda x,y,z:rings(math.hypot(x-c[0],y-c[1]),R) if z>co[0]*x+co[1]*y+co[2]-0.02 and math.hypot(x-c[0],y-c[1])<R*1.02 else None;s.barktex=True;s.warp=rootwarp(c,R,HT);L.append(s)
+    s.decal=lambda x,y,z:rings(math.hypot(x-c[0],y-c[1]),R) if z>co[0]*x+co[1]*y+co[2]-0.02 and math.hypot(x-c[0],y-c[1])<R*1.02 else None;s.barktex=True;L.append(s)
     d=(0.82,0.57);b=(0.57,-0.82);E=(c[0]-0.13,HT+0.17);AY=c[1]-0.08   # 斧：柄の向き d、刃の向き b（d にちょっかく）
     pt=lambda s_,t:(E[0]+s_*d[0]+t*b[0],E[1]+s_*d[1]+t*b[1])
     head=[pt(-0.055,-0.06),pt(0.055,-0.06),pt(0.065,0.08),pt(0.13,0.24),pt(-0.13,0.24),pt(-0.065,0.08)]
