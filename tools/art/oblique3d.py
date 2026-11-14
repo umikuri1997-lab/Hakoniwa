@@ -79,6 +79,16 @@ class Scene:
                 return f(x+cx, y+cy, z)
             return g
         self.dc = {pid: inv(f) for pid, f in self.dc.items()}
+    def yaw(self, deg, cx, cy):
+        """上から見て、(cx, cy) のまわりに deg 度まわす（光の向きはそのまま）。もようは、まわす前の場所できめる"""
+        a = math.radians(deg); ca, sa = math.cos(a), math.sin(a)
+        def R(v): x, y = v[0]-cx, v[1]-cy; return np.array([cx+x*ca-y*sa, cy+x*sa+y*ca, v[2]])
+        self.t = [(R(a_), R(b), R(c), col, pid) for a_, b, c, col, pid in self.t]
+        f0 = self.fwd if hasattr(self, 'fwd') else (lambda v: np.array(v, float)); self.fwd = lambda v, f0=f0: R(f0(v))
+        def inv(f):
+            def g(x, y, z): x, y = x-cx, y-cy; return f(cx+x*ca+y*sa, cy-x*sa+y*ca, z)
+            return g
+        self.dc = {pid: inv(f) for pid, f in self.dc.items()}
     def tri(self, a, b, c, col): self.t.append((np.array(a, float), np.array(b, float), np.array(c, float), np.array(col, float), self.pid))
     def quad(self, a, b, c, d, col): self.tri(a, b, c, col); self.tri(a, c, d, col)
     def ring_wall(self, cx, cy, r, z0, z1, colf, n=48):

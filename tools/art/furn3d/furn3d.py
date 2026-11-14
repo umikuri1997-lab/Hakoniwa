@@ -42,7 +42,9 @@ def scene(M,k,only=None,filt=None,foot=None):
     if hasattr(M,'EXTRA') and not filt:sc.texture(None);M.EXTRA(sc)
     sc.texture(None)
     if foot is None:V=np.array([v for t in sc.t for v in t[:3]]);foot=(V[:,0].min(),V[:,1].min(),V[:,0].max(),V[:,1].max())
-    sc.turn(k,foot);sc.foot=foot;return sc,keep
+    sc.turn(k,foot)
+    if getattr(M,'YAW',0):sc.yaw(M.YAW,*M.YAWC)   # YAW：上から見て、まわす角度（度）。YAWC：まわす中心
+    sc.foot=foot;return sc,keep
 def shot(M,k,only=None,S_=64,filt=None,info=None):
     sc,keep=scene(M,k,only);V=np.array([v for t in sc.t for v in t[:3]])   # 見え方（中心・はんい）は、いつも、ぜんぶの部品からきめる（動く部品と本体の絵の場所をそろえる）
     if filt:sc,keep=scene(M,k,only,filt,foot=sc.foot)   # まわす中心も、ぜんぶの部品の床の範囲で

@@ -15,7 +15,7 @@
 import math,json,os
 import numpy as np
 import natcommon as N
-ID='tree';GRAD=True;BOTTOM=56;ELEV=20;FULLPERSP=True   # ドット絵：見おろし20度・遠近を左右にも（持ち主の指示）
+ID='tree';GRAD=True;BOTTOM=56;ELEV=10;FULLPERSP=True;YAW=30;YAWC=(0.5,0.62)   # ドット絵：上から見て30度まわす（幹のまわり）・見おろし10度・遠近を左右にも（持ち主の指示）
 VIEWS=[('tree',0),('ntree',0)]
 CX,CY=0.5,0.62;SEED=4;SKEL=False
 CROWN=((0.50,0.60,1.25),0.74,0.64,0.60)
