@@ -12,20 +12,21 @@ import numpy as np
 ID='lumber';GRAD=True;BOTTOM=62;FULLPERSP=True   # 画角（10）を左右にもかける（持ち主がきめた）
 VIEWS=[('lumber',0)]
 CX,CY=0.34,0.52
-BARK=(180,106,56);IRON=(176,180,196);LEAF=(150,200,86);HANDLE=(214,150,90)   # 色は、いまの絵（お手本）に合わせる
-TOP=(240,204,146);RING=(220,160,100);HEART=(236,190,130);CHIP=(240,206,150)   # 切り口：明るい木に、少しこい年輪の線（いまの絵に合わせる）
+BARK=(189,79,20);IRON=(176,180,196);LEAF=(150,200,86);HANDLE=(214,150,90)   # 色は、いまの絵（お手本）に合わせる
+RIM=(180,117,74)   # 切り口のもようでつかう皮の色（もようの色はそのまま出るので、写した皮の色に合わせる）
+TOP=(240,204,146);RING=(220,160,100);HEART=(206,146,88);CHIP=(240,206,150)   # 切り口：明るい木に、少しこい年輪の線、しんはこい色。BARK は、写すとうすく灰色っぽくなる（モデルの色の処理・皮のテクスチャ）ので、こく・あざやかにしてある（写した色 ≒ #b4784a）
 EDGE=(238,242,250)   # 刃先：といだ明るい色
 T='tripo/'
 def rings(r,R):   # 切り口の色：皮のふち・明るい木に、同じ太さ・同じ間かくの年輪の線3本・しん
     q=r/R
-    if q>0.88:return BARK
-    if q<0.08:return HEART
+    if q>0.88:return RIM
+    if q<0.12:return HEART   # しん：こい色
     for m in(0.22,0.44,0.66):
         if abs(q-m)<0.035:return RING
     return TOP
 def logring(r,R):   # 丸太の切り口：年輪の線とふちは皮の色
     q=r/R
-    if q>0.86 or 0.52<q<0.62:return BARK
+    if q>0.86 or 0.52<q<0.62:return RIM
     if q<0.14:return HEART
     return TOP
 def rootwarp(c,R,ke=0.6):
