@@ -378,12 +378,15 @@ function lvCharm(c,el,x,y,t){c.save();c.translate(x,y);c.rotate(Math.sin(t*1.3)*
   else{c.rotate(.6);c.fillStyle='#9fe8d2';c.beginPath();c.moveTo(0,-6.5);c.quadraticCurveTo(4,-1,.6,5.5);c.quadraticCurveTo(-3.6,-1,0,-6.5);c.fill();c.strokeStyle='#3fae8e';c.lineWidth=1;c.lineCap='round';c.beginPath();c.moveTo(0,-5);c.quadraticCurveTo(.6,0,.4,7);c.stroke()}/* 風の羽根 */
   c.restore()}
 function foodEmo(k){/* 運ぶ食べ物の頭の上のアイコン：もらった絵がある物は、その字（EMO_IC）。ないキャベツなどは作物の絵 */const f=FOODS[k];if(!f)return'🧺';return EMO_IC[f.e]||!CROPS[k]?f.e:'crop:'+k}
+const MATIC={wood:'🪵',stone:'🪨',bamboo:'🎋',eda:'chip:drop:eda',kinoko:'obj:kinoko',can:'chip:drop:can'};/* 素材の、頭の上のアイコン（枝・空き缶は落ちているときと同じ絵。草・鉱石などは、その物の絵） */
+function matIc(k){return MATIC[k]||'ic:'+k}
 function carryIcon(r){
   if(r.coffin)return r.act&&r.act.type==='pray'&&r.act.stage==='do'?'':'⚰️';/* おいのりのあいだは、棺はおろしている */
   if(r.act&&r.act.stage==='do'&&r.act.type==='cook')return null;
   if(r.carry&&carryN(r)>0){if(typeof r.carry==='number')return FOODS.mugi.e;const k=r.carryLast&&r.carry[r.carryLast]>0?r.carryLast:Object.keys(r.carry).find(k=>r.carry[k]>0);return foodEmo(k)}
   if(r.cpk){const k=GRASSK.find(k=>(r.cpk.m[k]||0)>0);if(k)return'ic:'+k}if(r.fert>0)return'ic:hiryo';/* 運んでいる草・肥料 */
-  if(r.cmat)return r.cmat.wood?'🪵':'🪨';
+  if(r.cmat){const k=Object.keys(r.cmat).find(k=>r.cmat[k]>0);if(k)return matIc(k)}
+  if(r.bm){const k=Object.keys(r.bm.m).find(k=>r.bm.m[k]>0);if(k)return isFK(k)?foodEmo(k.slice(2)):matIc(k)}/* 建てる所・依頼へ運ぶ素材 */
   if(r.citem){const id=Object.keys(r.citem).find(k=>r.citem[k]>0);if(id)return itemIc(id)}
   if(r.meal)return typeof r.meal==='number'?'🍙':(r.meal.e||'🍙');
   if(r.cing&&!isNight()){const R=RECIPES.find(x=>x.out===r.cing.rec);return R?FOODS[Object.keys(R.need)[0]].e:'🧺'}/* 夜は料理ができないので、材料を持っている絵は出さない */
@@ -399,7 +402,8 @@ function carryIcons(r){/* 持っているものを、そのまま1つずつ並�
   else if(r.carry){const ks=Object.keys(r.carry).filter(k=>r.carry[k]>0);if(r.carryLast&&ks.includes(r.carryLast)){ks.splice(ks.indexOf(r.carryLast),1);ks.push(r.carryLast)}for(const k of ks)for(let i=0;i<r.carry[k];i++)out.push(em(k))}
   if(r.cpk){for(const k of GRASSK)for(let i=0;i<(r.cpk.m[k]||0);i++)out.push('ic:'+k)}/* コンポスターへ運ぶ草 */
   if(r.fert>0)for(let i=0;i<r.fert;i++)out.push('ic:hiryo');/* 畑へ運ぶ肥料 */
-  if(r.cmat){for(let i=0;i<(r.cmat.wood||0);i++)out.push('🪵');for(let i=0;i<(r.cmat.stone||0);i++)out.push('🪨');for(let i=0;i<(r.cmat.bamboo||0);i++)out.push('🎋');for(const[k,e]of[['shina','ic:shina'],['kasa','ic:kasa'],['kuru','ic:kuru'],['chiri','ic:chiri'],['funba','ic:funba'],['eda','chip:drop:eda'],['kinoko','obj:kinoko'],['can','chip:drop:can']])/* 枝・空き缶は、落ちているときと同じ絵 *//* 草・きのこは、その物の絵（小麦などの絵文字にしない） */for(let i=0;i<(r.cmat[k]||0);i++)out.push(e)}
+  if(r.cmat)for(const k in r.cmat)for(let i=0;i<(r.cmat[k]||0);i++)out.push(matIc(k));
+  if(r.bm)for(const k in r.bm.m)for(let i=0;i<(r.bm.m[k]||0);i++)out.push(isFK(k)?em(k.slice(2)):matIc(k));/* 建てる所・依頼へ運ぶ素材 */
   if(r.citem)for(const id in r.citem)for(let i=0;i<(r.citem[id]||0);i++)out.push(itemIc(id));/* ひろった物（砂・角笛・家具など） */
   if(r.meal){if(r.meal.items&&r.meal.items.length)for(const k of r.meal.items)out.push(em(k));else for(let i=0,n=Math.ceil(typeof r.meal==='number'?r.meal:r.meal.u||1);i<n;i++)out.push(typeof r.meal==='number'?'🍙':(r.meal.e||'🍙'))}
   if(!out.length&&r.cing&&!isNight()){const R=RECIPES.find(x=>x.out===r.cing.rec);out.push(R?em(Object.keys(R.need)[0]):'🧺')}
