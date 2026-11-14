@@ -142,7 +142,7 @@ def roundstump(P):
     U2=U.copy();U2[:,2]=U[:,2]-(gx*(U[:,0]-cx)+gy*(U[:,1]-cy))*w
     return U2[inv].reshape(P.shape)
 SPROUT=[(186,220,112),(160,204,96)]   # 芽の葉の色（明るい・ふつう）
-STEMC=(150,188,92)
+STEMC=(132,172,82)
 def leafmesh(base,ang,L,W,pitch,fold=0.35,droop=0.25):
     """平たい葉（先がとがった、たまごの形）を三角形にする。base：つけ根・ang：上から見た向き・pitch：上へのそり（ラジアン）。
     まん中のすじがいちばん低い（fold：ふちほど上がる）。先は少したれる（droop）"""
@@ -159,7 +159,7 @@ def leafmesh(base,ang,L,W,pitch,fold=0.35,droop=0.25):
 def sprout(sc,base,name):
     """切り株の切り口から出た芽：細い茎と、平たい葉（芽は1まい・若葉は2まい、ひらく）。葉はまん中のすじが低く、葉脈も"""
     H=0.16 if name=='bud' else 0.24;top=base+np.array([0.01,0,H])
-    sc.part();sc.tube([tuple(base),tuple(base+np.array([0.0,0,H*0.5])),tuple(top)],0.008,STEMC,n=6)   # 細い茎
+    sc.outline(0);sc.tube([tuple(base),tuple(base+np.array([0.0,0,H*0.5])),tuple(top)],0.008,STEMC,n=6);sc.outline()   # 細い茎（輪郭線なし。1〜2ドット）
     lv=[leafmesh(top,-0.4,0.15,0.055,1.0,0.5,0.15)] if name=='bud' else [leafmesh(top,0.15,0.22,0.08,0.5),leafmesh(top,math.pi-0.15,0.22,0.08,0.5)]
     for q in lv:
         f=veinpat(q);sc.material('satin');sc.decal(lambda x,y,z,f=f:SPROUT[0] if f(x,y,z)==LEAF[0] else SPROUT[1] if f(x,y,z)==LEAF[1] else STEMC);sc.part();sc.material(None)
