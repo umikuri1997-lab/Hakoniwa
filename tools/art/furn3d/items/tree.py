@@ -190,13 +190,15 @@ def EXTRA(sc):
     def bendz(x,bend):return -bend*np.clip(x-0.25,0,None)**2
     import trimesh
     CM=trimesh.collision.CollisionManager()   # 置いた葉の三角形（正確な当たり判定 fcl）
-    def leafmesh(base,M,bend):
-        Qb=Q.copy();Qb[...,2]+=bendz(Qb[...,0],bend);W=(Qb@M*LEAFL+base).reshape(-1,3);n=len(W)//3
+    CMB=trimesh.collision.CollisionManager();TB=np.array(T,float).reshape(-1,3);nb=len(TB)//3;CMB.add_object('bark',trimesh.Trimesh(TB,np.arange(nb*3).reshape(nb,3),process=False))   # 幹・枝も入れる（枝が葉にささらない）
+    def leafmesh(base,M,bend,trim=False):
+        Qb=Q.copy()
+        if trim:Qb=Qb[Qb[...,0].min(1)>0.12]   # 葉柄のはしの近くは、のぞく（枝についてよい所）
+        Qb[...,2]+=bendz(Qb[...,0],bend);W=(Qb@M*LEAFL+base).reshape(-1,3);n=len(W)//3
         return trimesh.Trimesh(W,np.arange(n*3).reshape(n,3),process=False)
     def crosses(base,M,bend):
-        """ほかの葉と、三角形どうしで交差するか（すれすれは、少しふくらませた形でしらべる）"""
-        if not PL:return False
-        return CM.in_collision_single(leafmesh(base+M[2]*0.0,M,bend))
+        """ほかの葉・幹・枝と、三角形どうしで交差するか。葉柄のはし（枝につく所）は、枝にふれてよいので、しらべる形からのぞく"""
+        return (bool(PL) and CM.in_collision_single(leafmesh(base,M,bend))) or CMB.in_collision_single(leafmesh(base,M,bend,True))   # 葉どうしは葉ぜんぶで、枝とは葉柄のはしをのぞいて
     skipped=0
     for b in B:   # 葉は、小枝の節ごとに、左右たがいちがいに1まい。どの葉も、小枝をふくむ1まいの平らな面（光のほう）の上（お手本の写真：魚の骨の形、交差しない）。小枝の先に1まい
         if not b.get('nodes'):continue
