@@ -211,10 +211,10 @@ function careSec(body,r){/* お世話のタブ：お話・なでる・毛布・�
   if(outS||c.blanket===d)mk('blanket','毛布をかける','',()=>{r.act.blanket=1;r.bubble='💤'});
   {const b=el('<button class="btn">おやつをあげる（食料1）</button>');lackOn(b,S.food<1?'食料が足りません':'');b.onclick=()=>{const it=takeFood(1,'raw')[0];endAct(r);r.meal={u:.3*fullN(r),pt:1,e:FOODS[it]?FOODS[it].e:'🍙',items:[it]};startAct(r,null,'eat',-1,{snack:1});addFloat(r.x,r.y-1.6,'わーい！','#ffd38a');sfx('eat');closeSheet()};bw.appendChild(b)}/* おやつ：よろこんで、その場で食べる */
   body.appendChild(bw)}
-function sortieSec(body,r){/* 出撃する・しない（6時〜23時だけ、かえられる。夜はそのまま） */const on=fighter(r),sec=el('<div class="sec"><h3>出撃</h3><p class="note"></p><div class="btns" style="display:flex;gap:8px;flex-wrap:wrap;margin:4px 0 8px"></div></div>'),bw=sec.querySelector('.btns');
+function sortieSec(body,r){/* 出撃する・しない（6時〜23時だけ、かえられる。夜はそのまま） */const on=fighter(r),sec=el('<div class="sec"><h3>たたかう</h3><p class="note"></p><div class="btns" style="display:flex;gap:8px;flex-wrap:wrap;margin:4px 0 8px"></div></div>'),bw=sec.querySelector('.btns');
   sec.querySelector('p').textContent=on?(r.elem==='fire'?'夜、近くのコワイノとたたかう':'夜、近くのコワイノとたたかう'+(SORTIETXT[r.elem]?'（'+SORTIETXT[r.elem]+'）':'')):(r.elem==='fire'?'夜、見張り台に立つ（'+WPTXT.fire+'）':'夜、見張り台に立つ');
   const mk=(v,t)=>{const b=el('<button class="btn"></button>');b.textContent=t;if(on===v)b.classList.add('pri');lackOn(b,isNight()?'夜は、かえられない':'');b.onclick=()=>{if(isNight()||on===v)return;r.sortie=v;if(v===sortieDef(r))delete r.sortie;sfx('tap');renderSheet()};bw.appendChild(b)};
-  mk(true,'出撃する');mk(false,'出撃しない');body.appendChild(sec)}
+  mk(true,'たたかう');mk(false,'たたかわない');body.appendChild(sec)}
 const CAREPAT=10;
 function boxSec(body,j){/* しまう家具：中身と、入れる物 */const a=anc(j);if(!boxTypeAt(a))return;const b=BOX()[a]||{},used=boxUsed(a),cap=boxCap(a);
   {const MOBJ={shina:'weed0g',kasa:'weed0k',kuru:'weed1g',chiri:'weed1k',funba:'weedc'},mic=k=>isFK(k)?foodIc(k.slice(2)):ICONS[k]||(MOBJ[k]&&BL[MOBJ[k]]?iconURL(MOBJ[k]):null);
