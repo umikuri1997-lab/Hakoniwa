@@ -297,6 +297,16 @@ def _lvof(d, mt):
     if mt == 'soft': return (0 if d > SOFTLV4[0] else 1 if d > SOFTLV4[1] else 2 if d > SOFTLV4[2] else 3) if GRAD else (0 if d > SOFTLV[0] else 1 if d > SOFTLV[1] else 2)
     return (0 if d > LV4[0] else 1 if d > LV4[1] else 2 if d > LV4[2] else 3) if GRAD else (0 if d > 0.55 else 1 if d > 0.1 else 2)
 SMCREASE = 0.5   # スムーズシェード：となりの面と、この内積より向きがちがう所（角）は、まぜない
+def _raysolve(proj, X, Ys, n, a):
+    """ドットの画面の場所 (X, Ys) に写る、面（向き n・a をとおる）の上の点。ok は とけたか"""
+    A_, B_, C_ = proj.ray(Ys); r0 = float(np.dot(n, a))
+    if getattr(proj, 'ray3', None) is None:   # 左右は平行：x は画面の x のまま
+        r = r0-n[0]*X; det = A_*n[2]-B_*n[1]; ok = np.abs(det) > 1e-9; det = np.where(ok, det, 1)
+        return np.stack([X, (C_*n[2]-B_*r)/det, (A_*r-C_*n[1])/det], -1), ok
+    Ex, Ey, Ez, Eb = proj.ray3(X)   # 左右にも遠近：Ex*x+Ey*y+Ez*z=Eb、A*y+B*z=C、n・p=r0 の3つの式をとく
+    M = np.stack([np.stack([np.full_like(Ey, n[0]), np.full_like(Ey, n[1]), np.full_like(Ey, n[2])], -1), np.stack([Ex, Ey, Ez], -1), np.stack([np.zeros_like(A_), A_, B_], -1)], -2)
+    R = np.stack([np.full_like(Eb, r0), Eb, C_], -1); det = np.linalg.det(M); ok = np.abs(det) > 1e-12
+    M = np.where(ok[..., None, None], M, np.eye(3)); return np.linalg.solve(M, R[..., None])[..., 0], ok
 def render_px(sc, proj, ext, depth, k=0.72, outer=True, merge=12, lw=1, k2=0.86):
     """ドット絵にするための写し方：1マス S ドットで、ちぢめずに（1ドットに1点）写し、部品のさかいに1ドットの輪郭線を引く。
     輪郭線は、となりあう2つのドットの部品がちがうとき、うしろがわ（遠いほう）のドットに引く（手前の部品の形はけずらない）。
@@ -345,10 +355,7 @@ def render_px(sc, proj, ext, depth, k=0.72, outer=True, merge=12, lw=1, k2=0.86)
         if bx1 < bx0 or by1 < by0: continue
         gx, gy = np.meshgrid(np.arange(bx0, bx1+1)+0.5, np.arange(by0, by1+1)+0.5)
         if RAY:
-            X = x0+gx/S; A_, B_, C_ = RAY(y0+gy/S); r = float(np.dot(n, a))-n[0]*X; det = A_*n[2]-B_*n[1]
-            ok = np.abs(det) > 1e-9; det = np.where(ok, det, 1)
-            Yw = (C_*n[2]-B_*r)/det; Zw = (A_*r-C_*n[1])/det
-            Pw = np.stack([X, Yw, Zw], -1); v0, v1 = b-a, c-a; v2 = Pw-a
+            Pw, ok = _raysolve(proj, x0+gx/S, y0+gy/S, n, a); v0, v1 = b-a, c-a; v2 = Pw-a
             d00, d01, d11 = v0@v0, v0@v1, v1@v1; d20, d21 = v2@v0, v2@v1; dn = d00*d11-d01*d01
             w1 = (d11*d20-d01*d21)/dn; w2 = (d00*d21-d01*d20)/dn; w0 = 1-w1-w2
             m = ok & (w0 >= -1e-6) & (w1 >= -1e-6) & (w2 >= -1e-6)
@@ -459,9 +466,7 @@ def render_px(sc, proj, ext, depth, k=0.72, outer=True, merge=12, lw=1, k2=0.86)
         if bx1 < bx0 or by1 < by0: continue
         gx, gy = np.meshgrid(np.arange(bx0, bx1+1)+0.5, np.arange(by0, by1+1)+0.5)
         if RAY:
-            X = x0+gx/S; A_, B_, C_ = RAY(y0+gy/S); r = float(np.dot(n, a))-n[0]*X; det = A_*n[2]-B_*n[1]
-            ok = np.abs(det) > 1e-9; det = np.where(ok, det, 1); Yw = (C_*n[2]-B_*r)/det; Zw = (A_*r-C_*n[1])/det
-            Pw = np.stack([X, Yw, Zw], -1); v0, v1 = b-a, c-a; v2 = Pw-a
+            Pw, ok = _raysolve(proj, x0+gx/S, y0+gy/S, n, a); v0, v1 = b-a, c-a; v2 = Pw-a
             d00, d01, d11 = v0@v0, v0@v1, v1@v1; d20, d21 = v2@v0, v2@v1; dn = d00*d11-d01*d01
             w1 = (d11*d20-d01*d21)/dn; w2 = (d00*d21-d01*d20)/dn; w0 = 1-w1-w2
             m = ok & (w0 >= -1e-6) & (w1 >= -1e-6) & (w2 >= -1e-6); z = Pw@depth
@@ -484,7 +489,7 @@ def render_px(sc, proj, ext, depth, k=0.72, outer=True, merge=12, lw=1, k2=0.86)
         sub = img[m]; sub[:, :3] = u[to[inv.ravel()]]; img[m] = sub
     return Image.fromarray(img, 'RGBA')
 
-def persp(elev=51.34, fov=40.0, frame=None, center=(0.5, 0.65, 0.3)):
+def persp(elev=51.34, fov=40.0, frame=None, center=(0.5, 0.65, 0.3), full=False):
     """左右は平行のまま、奥行き（上下）だけに遠近をかける写し方。render・render_px の proj と depth（見る向き）をかえす。
     elev：見おろしの角度（度。51.34 でいまのゲームの見え方と同じ形 = 画面 (x, y−0.8z)）。
     fov：上下の画角（度）。frame：その画角に入れる上下の範囲（マス。カメラとの距離がきまる）。None なら遠近なし（平行）。
@@ -496,7 +501,7 @@ def persp(elev=51.34, fov=40.0, frame=None, center=(0.5, 0.65, 0.3)):
     def proj(p):
         p = np.asarray(p, float); h = -float(np.dot(p-c0, U_))
         s = 1.0 if D is None else D/(D-float(np.dot(p-c0, V)))
-        return (p[0], oy+h*s*k)
+        return (c0[0]+(p[0]-c0[0])*s if full and D is not None else p[0], oy+h*s*k)
     st, ct = math.sin(t), math.cos(t)
     def ray(Ys):
         """画面の上下の位置 Ys に写る点の、せかいの (y, z) がみたす式 A*y + B*z = C の A・B・C（x は画面の x のまま）"""
@@ -505,4 +510,8 @@ def persp(elev=51.34, fov=40.0, frame=None, center=(0.5, 0.65, 0.3)):
         else: A, B, C = -Y1*ct-D*st, -Y1*st+D*ct, -Y1*D
         return A, B, C+A*c0[1]+B*c0[2]
     proj.ray = ray
+    if full and D is not None:   # full：左右にも、上下と同じ遠近（カメラから遠い所ほど小さい）
+        def ray3(Xs):
+            q = np.asarray(Xs, float)-c0[0]; return (np.full_like(q, D), q*V[1], q*V[2], q*(D+float(np.dot(V, c0)))+D*c0[0])
+        proj.ray3 = ray3
     return proj, V
