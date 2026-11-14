@@ -125,12 +125,12 @@ const TOYS=new Set(['swing','seesaw','sandbox','slide']);/* 平らな物のう�
 const win64=i=>!!(S&&S.win&&typeof S.win[i]==='string'&&window.CHIPS&&window.CHIPS[S.win[i]]&&window.CHIPS[S.win[i]].g===64);/* 1マス64ドットの絵をかけた壁・ドアも、画面の大きさでかく */
 function toyR(r){const a=r.act;return a&&a.type==='play'&&a.stage==='do'&&TOYS.has(a.what)&&a.obj!=null&&S.obj[a.obj]===a.what?a:null}
 function toyUsers(j){return S.res.filter(q=>{const a=toyR(q);return a&&a.obj===j}).sort((p,q)=>p.id-q.id)}
-function swAng(j,now){return Math.sin(now/1000*2.6+j)}/* -1〜1：手前に来ると下に大きく、奥に行くと上に小さく */
+const SWROT=.35,SWLEN=35,SWPV=[16,9.7];/* 縦のブランコ：ゆれる角度の大きさ・支点から足までの長さ・支点（マスの左上から、ゲームの点） */function swAng(j,now){return Math.sin(now/1000*2.6+j)}/* -1〜1：手前に来ると下に大きく、奥に行くと上に小さく */
 function ssAng(j,now){return Math.sin(now/1000*1.8+j)*(toyUsers(j).length?.28:.12)}
 /* 遊具で遊ぶ子の位置（足もと）。おもちゃの絵に合わせて動く */
 function toyPose(r,now){const p=toyPose0(r,now);if(!p)return p;const a=toyR(r),j=a.obj,t=ROTS[a.what],rv=rotAt(j);if(t===1&&rv){const fw=((szR(a.what,0)||[1,1])[0])*TS,X=(j%W)*TS;p.x=2*X+fw-p.x;r.face=-r.face}return p}/* 左右反転した遊具では、遊ぶ位置も反転 */
 function toyPose0(r,now){const a=toyR(r);if(!a)return null;const j=a.obj,X=(j%W)*TS,Y=((j/W)|0)*TS,us=toyUsers(j),k=Math.max(0,us.indexOf(r)),T=now/1000;
-  if(a.what==='swing'){const d=swAng(j,now);r.face=1;return{x:X+32,y:Y+29+d*9,z:Y/TS+1.05}}/* 座面（chips.js の swing の部品）の下に足。ゆれると、座面といっしょに前後する */
+  if(a.what==='swing'){const d=swAng(j,now);r.face=1;if(rotAt(j)===1){const an=d*SWROT;return{x:X+SWPV[0]-Math.sin(an)*SWLEN,y:Y+SWPV[1]+Math.cos(an)*SWLEN,z:Y/TS+2.05}}/* 縦：横から見て、左右にゆれる */return{x:X+32,y:Y+29+d*9,z:Y/TS+1.05}}/* 座面（chips.js の swing の部品）の下に足。ゆれると、座面といっしょに前後する */
   if(a.what==='seesaw'){const sg=us.length>1?(k?1:-1):(r.x<X+16?-1:1)*(TS/TS),an=ssAng(j,now),X0=X+16,Y0=Y+7;r.face=-sg;return{x:X0+Math.cos(an)*sg*22+Math.sin(an)*5,y:Y0+Math.sin(an)*sg*22-Math.cos(an)*5+5,z:Y/TS+1.05}}
   if(a.what==='sandbox'){const o=[-15,15,0][k%3];if(rotAt(j)===1){r.face=k%2?-1:1;return{x:X+16+(k===2?0:(k?6:-6)),y:Y+32+o+8-Math.abs(Math.sin(T*5+k))*1.5,z:Y/TS+1.05+(o+16)/TS}}/* 縦の砂場では、たてにならぶ */const cx=X+32;r.face=o>0?-1:1;return{x:cx+o,y:Y+26-Math.abs(Math.sin(T*5+k))*1.5,z:Y/TS+1.05}}
   if(a.what==='slide'){const p=(T*.45+k*.5)%1;let x,y,f=1;
