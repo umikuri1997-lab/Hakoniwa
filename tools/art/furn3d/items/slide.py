@@ -4,7 +4,7 @@
 #     台の手すり：うしろに横木2本（高さ0.86・0.98）。台の下の前に、横板3まい（高さ0.20・0.36・0.52）。
 #   階段：左へおりる階段（はば0.48、6だん、1だんの高さ0.117・おくゆき0.083。x=0.05〜0.55、高さ0〜0.70）。両がわの側板（ささら、あつさ0.03）のあいだに、ふみ板（あつさ0.025）とけこみ板をはめる。
 #     手すり：両がわに、地面に立てた支えと台の柱にとめた、ななめの手すり。
-#   すべる面：台の右から右下へ（x=1.05〜1.66、高さ0.74 → 0.16）、さいごは平ら（x=1.66〜1.95、高さ0.12〜0.16）。まげた1まいの板なので、まがる所に線を引かない（同じグループ）。平らな所は木の台（高さ0.10）にのせる。クリーム色の板（はば0.46）、両がわに木のふち（高さ0.14）。下のはしは、木の脚で地面にとめる。
+#   すべる面（EXTRA）：台の右から右下へ（x=1.05〜1.66、高さ0.74 → 0.16）、さいごは平ら（x=1.66〜1.95、高さ0.12〜0.16）。まげた1まいの板なので、まがる所に線を引かない（同じグループ）。平らな所は木の台（高さ0.10）にのせる。クリーム色の板（はば0.46）、両がわに木のふち（高さ0.14）。下のはしは、木の脚で地面にとめる。
 from blueprint import Part as P
 from common import *
 import math
@@ -33,14 +33,29 @@ def PARTS():
         L.append(P('ふみ板%d'%(i+1),'box',(x0-0.015,CY-0.235,z1-0.025,x0+dx,CY+0.235,z1),WOOD,bevel=0.006,on=('ささら（前）','ささら（うしろ）'),note='ささらのあいだにはめる'))
     # すべる面：台から右下へすべりおりて、さいごは地面すれすれで平らになる
     # すべる面のかたち（x, 高さ）：台から右下へのまっすぐな坂 → なめらかなカーブ → 平ら。まげた1まいの板（同じグループ・線なし）
-    prof=[(1.05,0.74)]
-    for k in range(9):   # カーブ：坂（かたむき−0.98）から平らへ、2じの曲線でつなぐ（x 1.48〜1.80）
-        t=k/8;x0,z0,x1,z1,x2,z2=1.48,0.32,1.64,0.16,1.80,0.14
-        prof.append(((1-t)**2*x0+2*(1-t)*t*x1+t*t*x2,(1-t)**2*z0+2*(1-t)*t*z1+t*t*z2))
-    prof.append((1.95,0.14))
-    for k,((xa,za),(xb,zb)) in enumerate(zip(prof,prof[1:])):
-        L.append(notex(P('すべる面%d'%(k+1),'plate',((xa-0.003,CY,za),(xb+0.003,CY,zb),0.46,0.03),CREAM,on=('床板',) if k==0 else ('すべる面%d'%k,),note='まげた1まいの板',grp='すべる面')))
-        for ny,y in(('前',CY+0.245),('うしろ',CY-0.245)):
-            L.append(P('すべる面のふち（%s%d）'%(ny,k+1),'plate',((xa-0.003,y,za+0.06),(xb+0.003,y,zb+0.06),0.03,0.14),WOOD,on=('すべる面%d'%(k+1),),note='すべる面の両がわ（板といっしょにまげる）',grp='ふち'+ny))
     L.append(P('すべる面の脚','box',(1.70,CY-0.20,0.0,1.92,CY+0.20,0.10),WOOD,bevel=0.006,on=('ground',),note='平らな所をのせる台'))
     return L
+
+def PROF():   # すべる面のかたち（x, 高さ）：台から右下へのまっすぐな坂 → なめらかなカーブ（2じの曲線） → 平ら
+    pr=[(1.05+0.43*k/6,0.74-0.42*k/6) for k in range(6)]
+    for k in range(25):
+        t=k/24;x0,z0,x1,z1,x2,z2=1.48,0.32,1.64,0.16,1.80,0.14
+        pr.append(((1-t)**2*x0+2*(1-t)*t*x1+t*t*x2,(1-t)**2*z0+2*(1-t)*t*z1+t*t*z2))
+    pr.append((1.95,0.14));return pr
+def sweep(sc,pr,ya,yb,d0,d1,col):   # かたち pr にそって、おくゆき ya〜yb・面からの高さ d0〜d1 の板を1まいで（まがる所に線もつなぎ目も出さない）
+    N=[]
+    for k in range(len(pr)):
+        a=pr[max(k-1,0)];b=pr[min(k+1,len(pr)-1)];tx,tz=b[0]-a[0],b[1]-a[1];l=math.hypot(tx,tz);N.append((-tz/l,tx/l))
+    P_=lambda k,y,d:(pr[k][0]+N[k][0]*d,y,pr[k][1]+N[k][1]*d)
+    for k in range(len(pr)-1):
+        sc.quad(P_(k,ya,d1),P_(k+1,ya,d1),P_(k+1,yb,d1),P_(k,yb,d1),col)   # 上の面
+        sc.quad(P_(k,yb,d0),P_(k+1,yb,d0),P_(k+1,ya,d0),P_(k,ya,d0),col)   # 下の面
+        sc.quad(P_(k,yb,d1),P_(k+1,yb,d1),P_(k+1,yb,d0),P_(k,yb,d0),col)   # 手前の面
+        sc.quad(P_(k,ya,d0),P_(k+1,ya,d0),P_(k+1,ya,d1),P_(k,ya,d1),col)   # おくの面
+    for k in(0,len(pr)-1):sc.quad(P_(k,ya,d0),P_(k,yb,d0),P_(k,yb,d1),P_(k,ya,d1),col)   # はし
+def EXTRA(sc):   # すべる面と両がわのふち：まげた1まいの板（まがる所に、さかい目・線を出さない）
+    pr=PROF()
+    sc.group('すべる面');sc.material('flat');sc.part();sc.smooth(True);sweep(sc,pr,CY-0.23,CY+0.23,-0.03,0.0,CREAM)
+    for ny,y in(('前',CY+0.245),('うしろ',CY-0.245)):
+        sc.group('ふち'+ny);sc.material(None);sc.part();sweep(sc,pr,y-0.015,y+0.015,-0.02,0.12,WOOD)
+    sc.smooth(False);sc.material(None);sc.group(None)
