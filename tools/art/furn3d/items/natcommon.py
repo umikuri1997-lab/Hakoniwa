@@ -391,8 +391,67 @@ def drawclumps(sc,groups,pal=LEAFB,olk=0.74,axis=(0.5,0.6)):
         sc.group('lc%d'%gi);sc.outline(None,olk);sc.material('flat')
         for b,ld,sd,nn,l,w,_ in g:
             h=(b[2]-zlo)/max(zhi-zlo,1e-6);ro=math.hypot(b[0]-axis[0],b[1]-axis[1])/rmax;lt=float(nn@LIGHTV)
-            tone=int(np.clip(round((1-lt)*1.6+(1-h)*1.2+(1-ro)*0.8-0.5),0,len(pal)-2));side=float(sd@LIGHTV);sc.part()
+            tone=int(np.clip(round((1-lt)*1.5+(1-h)*1.9+(1-ro)*1.0-0.7),0,len(pal)-2));side=float(sd@LIGHTV);sc.part()   # 下・内ほど暗い（立体感）
             TT,EE=roundleaf(b,ld,sd,nn,l,w)
             for q in TT:sc.tri(q[0],q[1],q[2],pal[tone+(0 if (((q[0]+q[1]+q[2])/3-b)@sd)*side>0 else 1)])
             for q in EE:sc.tri(q[0],q[1],q[2],pal[min(len(pal)-1,tone+2)])
         sc.material(None);sc.outline();sc.group(None)
+
+# ---- 樹冠の形を先にきめて、その中に枝をのばす（持ち主の指示：自然な樹形の20の法則） ----
+# スペース・コロニゼーション（Runions ほか 2007）：樹冠の形の中に目じるしの点をまき、幹の先から、近くの目じるしへ向かって枝をのばす（ついた目じるしは消す）。
+#   → 主枝は放射状に・長さも向きもまちまち・とちゅうで何度も分かれ・側枝が横へ・樹冠の中までうまる。枝は幹から先までつながる。
+# 太さ：先の枝から根もとへ、子の太さを合わせて親の太さにする（r^E の和。急に細くならない）。分かれた所は、子のほうが細い。
+def envelope(c,rx,ry,rz,seed):
+    """樹冠の形：横に広いだ円体に、ゆっくりかわるでこぼこ（突き出し・くぼみ）。かえす：点がその中か"""
+    def inside(p):
+        x,y,z=(p[0]-c[0])/rx,(p[1]-c[1])/ry,(p[2]-c[2])/rz;d=math.sqrt(x*x+y*y+z*z)
+        if d<1e-9:return True
+        b=1+0.18*(ST.vnoise(x*1.6+seed,y*1.6,z*1.6)-0.5)*2+0.08*(ST.vnoise(x*4+seed,y*4+3,z*4)-0.5)*2
+        if z<-0.35:b*=0.85   # 下は少しすぼまる
+        return d<b
+    return inside
+def colonize(base,trunkh,env,box,n_att=520,D=0.055,di=0.45,dk=0.09,seed=0,iters=220):
+    """幹（base からまっすぐ上へ trunkh）をのばしてから、目じるしへ枝をのばす。かえす：点・親の番号"""
+    rs=np.random.RandomState(seed);lo,hi=np.array(box[0]),np.array(box[1]);A=[]
+    while len(A)<n_att:
+        p=lo+(hi-lo)*rs.rand(3)
+        if env(p):A.append(p)
+    A=np.array(A);P=[np.array(base,float)];par=[-1];z=0.0
+    while z<trunkh:   # 幹：少しかたむき、ゆるくまがる
+        z+=D;q=P[-1]+np.array([rs.normal(0,0.008)+0.004,rs.normal(0,0.006),D]);P.append(q);par.append(len(P)-2)
+    alive=np.ones(len(A),bool)
+    for it in range(iters):
+        if not alive.any():break
+        Pn=np.array(P);acc={}
+        for ai in np.flatnonzero(alive):
+            d=np.linalg.norm(Pn-A[ai],axis=1);j=int(d.argmin())
+            if d[j]<dk:alive[ai]=False;continue
+            if d[j]<di:v=(A[ai]-Pn[j])/d[j];acc.setdefault(j,[]).append(v)
+        if not acc:break
+        for j,vs in acc.items():
+            v=np.sum(vs,0);v/=np.linalg.norm(v);v=v+np.array([0,0,0.12])+rs.normal(0,0.10,3);v/=np.linalg.norm(v)   # 光（上）へ少し・成長のむら
+            P.append(P[j]+v*D);par.append(j)
+    return np.array(P),np.array(par)
+def radii(par,rtip=0.010,E=2.4,rmax=None):
+    """太さ：先（子のない点）は rtip。親は、子の太さの r^E の和の E 乗根（パイプモデル）"""
+    n=len(par);r=np.full(n,rtip);ch=[[] for _ in range(n)]
+    for i in range(1,n):
+        if par[i]>=0:ch[par[i]].append(i)
+    for i in range(n-1,-1,-1):
+        if ch[i]:r[i]=sum(r[c]**E for c in ch[i])**(1/E)
+    if rmax:r=np.minimum(r,rmax)
+    return r,ch
+def chains(par,ch):
+    """枝を、分かれる所から先へ、つながった点の列にする（いちばん太い子は親の列のつづき）"""
+    out=[];stack=[(0,None)]
+    while stack:
+        i,pp=stack.pop();c=[pp,i] if pp is not None else [i]
+        while True:
+            cs=ch[i]
+            if not cs:break
+            big=max(cs,key=lambda k:len(ch[k])+0)   # つづき
+            for k in cs:
+                if k!=big:stack.append((k,i))
+            c.append(big);i=big
+        out.append(c)
+    return out
