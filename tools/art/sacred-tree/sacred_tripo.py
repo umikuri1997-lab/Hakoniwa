@@ -117,6 +117,34 @@ def texpat(items,pal,nlv=3):
     return f
 BARK4=[(239,175,121),(218,152,106),(196,134,94),(172,116,82)]   # 木の皮の4だん（明るいすじ・ふつう・暗い・みぞ）
 SCAR=[(255,214,158),(248,186,128)]   # ヌシの傷：明るいすじ・傷の面（かげの段で暗くなるので、明るめ）   # ヌシの傷（お手本の幹の、明るいだ円）：まん中の光・中・ふち
+def almond(at,x,z):
+    """ヌシの傷の形の中での場所：(よこ e, たて v)。e は 0（まん中）〜1（ふち）。外なら None"""
+    sx,sy,sz,rx,rz=at;ca,sa=math.cos(0.45),math.sin(0.45)
+    u=((x-sx)*ca-(z-sz)*sa*rx/rz)/rx;v=((x-sx)*sa*rz/rx+(z-sz)*ca)/rz;w=1-v*v
+    if w<=0:return None
+    e=abs(u)/max(w**0.9,1e-6)
+    return (e*(1 if u>=0 else -1),v) if e<1 else None
+def carve(q,uv,at):
+    """ヌシの傷を、メッシュをえぐって作る：傷のまわりの面を4つずつに2回わけて（こまかく）、傷の中の点を、幹のまん中のほうへ押しこむ（まん中ほど深い）"""
+    if at is None:return q,uv
+    sx,sy,sz,rx,rz=at;dep=0.30*rx
+    def near(t):m=t.mean(0);return m[1]>sy-0.05 and abs(m[0]-sx)<rx*1.6 and abs(m[2]-sz)<rz*1.3
+    Q,U=list(q),list(uv)
+    for _ in range(2):
+        Q2,U2=[],[]
+        for t,u in zip(Q,U):
+            if not near(t):Q2.append(t);U2.append(u);continue
+            m=[(t[0]+t[1])/2,(t[1]+t[2])/2,(t[2]+t[0])/2];mu=[(u[0]+u[1])/2,(u[1]+u[2])/2,(u[2]+u[0])/2]
+            for a,b,c_,ua,ub,uc in((t[0],m[0],m[2],u[0],mu[0],mu[2]),(m[0],t[1],m[1],mu[0],u[1],mu[1]),(m[2],m[1],t[2],mu[2],mu[1],u[2]),(m[0],m[1],m[2],mu[0],mu[1],mu[2])):
+                Q2.append(np.array([a,b,c_]));U2.append(np.array([ua,ub,uc]))
+        Q,U=Q2,U2
+    Q=np.array(Q);U=np.array(U);P=Q.reshape(-1,3).copy()
+    for i,p in enumerate(P):
+        if p[1]<=sy:continue
+        a=almond(at,p[0],p[2])
+        if a is None:continue
+        d=np.array([TX-p[0],TY-p[1],0.0]);d/=max(np.linalg.norm(d),1e-9);P[i]=p+d*dep*(1-a[0]**2)*(1-a[1]**2)**0.5
+    return P.reshape(Q.shape),U
 def scar(f,at):
     """ヌシの傷（お手本の絵の幹の傷）：幹の正面（南がわ）の、ななめにかたむいたアーモンドの形（両はしがとがる）の、明るい所。
     ふちに線はなく、まわりの木の皮より明るい。左上のふちに、いちばん明るいすじ。at=(x, y, z, よこの半径, たての半径)"""
@@ -333,6 +361,17 @@ def barkaxis(q):
             A_=ax[ids];sg=np.sign(A_@ax[i]);sg[sg==0]=1;m=(A_*sg[:,None]).mean(0);ax2[i]=m/max(np.linalg.norm(m),1e-9)
         ax=ax2
     return cen,ax,n
+BARK4W=[(242,168,116),(222,144,100),(200,126,90),(176,108,78)]   # 色むら：赤みのある木の皮
+BARK4P=[(240,184,134),(220,162,120),(198,144,106),(174,126,94)]   # 色むら：白っぽい木の皮
+def vnoise(x,y,z):
+    """なめらかなノイズ（0〜1）。ます目のかどの数を、なめらかにまぜる"""
+    ix,iy,iz=math.floor(x),math.floor(y),math.floor(z);fx,fy,fz=x-ix,y-iy,z-iz;sm=lambda t:t*t*(3-2*t);fx,fy,fz=sm(fx),sm(fy),sm(fz)
+    def r(a,b,c):return _h(a,b,c*7+3)[0]
+    v=0
+    for dx in(0,1):
+        for dy in(0,1):
+            for dz in(0,1):v+=r(ix+dx,iy+dy,iz+dz)*(fx if dx else 1-fx)*(fy if dy else 1-fy)*(fz if dz else 1-fz)
+    return v
 def barkpat2(base,cen,ax,n):
     """木の皮の書きこみ（お手本の絵の幹）：流れの向きにのびる、細長い暗いみぞと、明るいすじ。
     色は、もとの木の皮の4だん（base）から、みぞは1だん暗く・すじは1だん明るく"""
@@ -341,12 +380,13 @@ def barkpat2(base,cen,ax,n):
     def f(x,y,z):
         c=base(x,y,z);k=idx.get(tuple(c))
         if k is None:return c
+        nz=vnoise(x/0.55,y/0.55,z/0.55);pal=BARK4W if nz>0.66 else BARK4P if nz<0.34 else BARK4   # 色むら：赤みのある所・白っぽい所
         i=T_.query((x,y,z))[1];a=ax[i];b=np.cross(a,n[i]);p=np.array((x,y,z))
         sv=float(p@b)/0.05;t=float(p@a)/0.30;col=math.floor(sv);fs=sv-col
         h1,_=_h(col,math.floor(t+_h(col,5,3)[0]),31);h2,_=_h(col,math.floor(t*1.3+_h(col,9,4)[1]),37)
-        if fs<0.30 and h1<0.55:return BARK4[min(3,k+1)]   # みぞ
-        if 0.55<fs<0.80 and h2<0.30:return BARK4[max(0,k-1)]   # すじ
-        return c
+        if fs<0.30 and h1<0.55:return pal[min(3,k+1)]   # みぞ
+        if 0.55<fs<0.80 and h2<0.30:return pal[max(0,k-1)]   # すじ
+        return pal[k]
     return f
 
 def flowfield(q,src):
@@ -459,8 +499,9 @@ class Stage:
                     if c is s.items[0][1] and s.name!='tree':src=lambda K:K[:,2]>zh-0.08*H   # 切り株：切り口のふちから、幹を下へ・根の先へ
                     elif s.name=='tree':src=lambda K:np.abs(K[:,2]-(zl+0.30*H))<0.02*H   # 御神木：幹のなかほどから、上は枝へ・下は根へ
                     else:src=lambda K:K[:,2]<zl+0.04*H   # 若木：根もとから、枝の先へ
-                    cen_,ax_,n_=barkaxis(q[keep]);sc.decal(scar(barkpat2(texpat([(q[keep],c['uv'][keep])],BARK4,4),cen_,ax_,n_),s.scarat(q)));sc.part()   # 木の皮：モデルのテクスチャのすじ（4だん）と、ヌシの傷
-                    for t in q[keep]:sc.tri(t[0],t[1],t[2],BARK[1])
+                    at_=s.scarat(q);qk,uk=carve(q[keep],c['uv'][keep],at_)   # ヌシの傷：メッシュをえぐる
+                    cen_,ax_,n_=barkaxis(qk);sc.decal(scar(barkpat2(texpat([(qk,uk)],BARK4,4),cen_,ax_,n_),at_));sc.part()   # 木の皮：モデルのテクスチャのすじ（4だん）・色むら・みぞとすじ・ヌシの傷
+                    for t in qk:sc.tri(t[0],t[1],t[2],BARK[1])
                     sc.decal(None)
                     if cut.any():   # 切り口：ふちから同じあつさの樹皮、その内がわに、ふちの形にそった年輪
                         cq=q[cut].reshape(-1,3);cx,cy=cq[:,0].mean(),cq[:,1].mean();A_=np.arctan2(cq[:,1]-cy,cq[:,0]-cx);R_=np.hypot(cq[:,0]-cx,cq[:,1]-cy)
@@ -499,6 +540,13 @@ def shot(M):
     O.GRAD=True;inf={};im,ex0,base,yb=F3.shot(M,0,info=inf)
     PROJ,E,S_,fw=inf['PROJ'],inf['ext'],inf['S'],inf['fwd']
     gy=TY;u,v=PROJ(fw((TX,gy,0)));px,py=(u-E[0])*S_,(v-E[2])*S_   # 根もとの近くの地面の点
+    a=np.array(im);A_=a[...,3]>0;C_=a[...,:3].astype(int);H_,W_=A_.shape   # まわり4つと色がちがう1ドットの点（葉の中のぽつんとした点）を、まわりの色でうめる
+    for _ in range(2):
+        up,dn,lf,rt=np.roll(C_,1,0),np.roll(C_,-1,0),np.roll(C_,1,1),np.roll(C_,-1,1);au,ad,al,ar=np.roll(A_,1,0),np.roll(A_,-1,0),np.roll(A_,1,1),np.roll(A_,-1,1)
+        same=lambda P,Q:(P==Q).all(-1)
+        lone=A_&au&ad&al&ar&~same(C_,up)&~same(C_,dn)&~same(C_,lf)&~same(C_,rt)&same(up,dn)&same(lf,rt)&same(up,lf)
+        C_[lone]=up[lone]
+    a[...,:3]=C_;im=Image.fromarray(a)
     bb=im.getbbox();im=im.crop(bb)
     ax=round(TX*64-px)+bb[0];ay=round(gy*64-py)+bb[1]
     return im,ax,ay
