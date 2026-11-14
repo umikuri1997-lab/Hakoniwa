@@ -45,19 +45,24 @@ let HUSHD=null;function dlgHush(on){/* 大事なセリフのあいだだけ、�
   if(on&&!HUSHD){HUSHD=document.createElement('div');HUSHD.style.cssText='position:absolute;inset:0;pointer-events:none;opacity:0;background:#0b0f0a;transition:opacity .9s ease';$('#dialog').prepend(HUSHD);/* 会話のわくより奥（村だけを暗くする） */requestAnimationFrame(()=>requestAnimationFrame(()=>{if(HUSHD)HUSHD.style.opacity='.3'}))}
   else if(!on&&HUSHD){const d=HUSHD;HUSHD=null;d.style.transition='opacity 1.1s ease';d.style.opacity='0';setTimeout(()=>d.remove(),1200)}}
 let DLGEL=null;const DLGA={who:'',el:null,full:'',n:0,mood:'smile',lineT:0,enterT:0,raf:0,last:0};
-const LOOKS={/* セリフの見た目。セリフの文の中に「#joy|」のように書く（空白で区切って重ねられる）。face＝顔、motion＝動き、hold＝「つぎへ」を押せるまで、lead＝文字が出はじめるまで（どちらもミリ秒）、wave＝はじめに手をふる */
+const LOOKS={/* セリフの見た目。セリフの文の中に「#joy|」のように書く（空白で区切って重ねられる）。face＝顔、motion＝動き、hold＝「つぎへ」を押せるまで、lead＝文字が出はじめるまで（どちらもミリ秒）、wave＝はじめに手をふる、fx＝文字のうごき（shake ふるえる・wave なみうつ） */
   happy:{face:'joy'},sigh:{face:'sad'},shocked:{face:'shock'},teary:{face:'teary'},tear:{face:'tear'},
-  hop:{motion:'joy',hold:950,lead:120},ponder:{motion:'think',hold:1050,lead:380},jolt:{motion:'shock',hold:720,lead:170},alarm:{motion:'shock',hold:850,lead:220},nod:{motion:'nod',hold:650,lead:150},droop:{motion:'sad',hold:950,lead:280},wave:{wave:true},
-  joy:{face:'joy',motion:'joy',hold:950,lead:120},think:{face:'sad',motion:'think',hold:1050,lead:380},surprise:{face:'shock',motion:'shock',hold:720,lead:170},danger:{face:'shock',motion:'shock',hold:850,lead:220},
-  scared:{face:'teary',motion:'shock',hold:850,lead:220},cry:{face:'teary',motion:'sad',hold:950,lead:280},worry:{face:'teary',motion:'think',hold:1050,lead:380},
+  hop:{motion:'joy',hold:950,lead:120},ponder:{motion:'think',hold:1050,lead:380},jolt:{motion:'shock',hold:720,lead:170},alarm:{motion:'shock',hold:850,lead:220,fx:'shake'},nod:{motion:'nod',hold:650,lead:150},droop:{motion:'sad',hold:950,lead:280},wave:{wave:true},
+  joy:{face:'joy',motion:'joy',hold:950,lead:120,fx:'wave'},think:{face:'sad',motion:'think',hold:1050,lead:380},surprise:{face:'shock',motion:'shock',hold:720,lead:170},danger:{face:'shock',motion:'shock',hold:850,lead:220,fx:'shake'},
+  scared:{face:'teary',motion:'shock',hold:850,lead:220,fx:'shake'},cry:{face:'teary',motion:'sad',hold:950,lead:280},worry:{face:'teary',motion:'think',hold:1050,lead:380},
   hush:{hush:true,hold:1500,lead:900,slow:1.8}};/* 大事なセリフ：音楽を小さくし、まわりを少し暗くして、ひと呼吸おいてから、ゆっくり話す */
 const LOOKRX=/#([a-z ]+)\|/;
 function lineLook(tx){const m=LOOKRX.exec(tx),o={face:'smile',motion:'none',hold:0,lead:0,slow:1,hush:false,wave:false,text:m?tx.replace(m[0],''):tx};if(m)for(const w of m[1].split(' '))Object.assign(o,LOOKS[w]);return o}/* セリフの印を読んで、印をのぞいた文といっしょに返す */
 /* 文字送り中も、あとの文字は見えないまま場所をとっておく（枠が最初から全文の大きさになる） */
-function dlgSet(full,n){const p=$('#dlgText');if(p.childNodes.length!==2||p.firstChild.nodeType!==1){p.textContent='';const a=document.createElement('span'),b=document.createElement('span');b.style.visibility='hidden';p.append(a,b)}p.firstChild.textContent=full.slice(0,n);p.lastChild.textContent=full.slice(n)}
+function dlgSet(full,n){const p=$('#dlgText');
+  if(DLGA.fx){/* 気持ちでうごく文字：1字ずつの箱にして、こわいときはふるえ（shake）、うれしいときはなみうつ（wave）。まだの字は見えないまま場所をとる */
+    if(p._fx!==full){p.textContent='';p.className='fx-'+DLGA.fx;const ch=full.split('');for(let i=0;i<ch.length;i++){if(ch[i]==='\n'){p.appendChild(document.createElement('br'));continue}const e=document.createElement('span');e.textContent=ch[i];e.style.visibility='hidden';e.style.animationDelay=(DLGA.fx==='wave'?-i*110:-(i*67%200))+'ms';e._i=i;p.appendChild(e)}p._fx=full;p._n=0}
+    if(n<p._n)p._n=0;for(const e of p.children)if(e._i!=null&&e._i>=p._n&&e._i<n)e.style.visibility='';p._n=n;return}
+  if(p.className){p.className='';p.textContent=''}p._fx=null;
+  if(p.childNodes.length!==2||p.firstChild.nodeType!==1){p.textContent='';const a=document.createElement('span'),b=document.createElement('span');b.style.visibility='hidden';p.append(a,b)}p.firstChild.textContent=full.slice(0,n);p.lastChild.textContent=full.slice(n)}
 /* 話す人ごとの文字の速さ：声の高い子は少し速く、低い声（カミサマ・ヌシ）はゆっくり（1が基本） */
 function speakerPace(w){if(/ヌシ/.test(w||''))return 1.3;if(w===GOD||w==='？？？')return 1.15;const r=S&&S.res&&S.res.find(q=>q.name===w),vo=(r&&r.vr&&r.vr.vo)||(typeof KEYVR!=='undefined'&&KEYVR[w]&&KEYVR[w].vo)||1.12;return Math.max(.88,Math.min(1.12,1.12/vo))}
-function dlgSpeak(w,el,tx,lk){const now=performance.now();if(w!==DLGA.who){DLGA.enterT=now}DLGA.who=w;DLGA.el=el;DLGA.full=tx;DLGA.n=0;dlgSet(tx,0);DLGA.mood=lk.face;DLGA.wave=lk.wave;DLGA.lineT=now;DLGA.last=now;DLGA.charAt=now+(lk.hush?lk.lead:0);DLGA.slow=(lk.slow||1)*speakerPace(w);DLGA.readReady=Infinity;dlgHush(lk.hush);voiceStart(w,tx.length/38+.1);
+function dlgSpeak(w,el,tx,lk){const now=performance.now();if(w!==DLGA.who){DLGA.enterT=now}DLGA.who=w;DLGA.el=el;DLGA.full=tx;DLGA.n=0;DLGA.fx=lk.fx||'';$('#dlgText')._fx=null;dlgSet(tx,0);DLGA.mood=lk.face;DLGA.wave=lk.wave;DLGA.lineT=now;DLGA.last=now;DLGA.charAt=now+(lk.hush?lk.lead:0);DLGA.slow=(lk.slow||1)*speakerPace(w);DLGA.readReady=Infinity;dlgHush(lk.hush);voiceStart(w,tx.length/38+.1);
   const cv=$('#dlgPort');cv.hidden=!(el||w===GOD);
   if(S&&el){const r=S.res.find(q=>q.name===w);if(r&&!r.hidden){JUMP.set(r,now)}}/* 「…」の吹き出しは、せいれいどうしのおしゃべりだけ */
   if(!DLGA.raf)DLGA.raf=requestAnimationFrame(dlgLoop)}

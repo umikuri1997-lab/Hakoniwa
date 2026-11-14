@@ -67,7 +67,7 @@ function lastFirst(list){/* さいごにあそんだステージを、いちば�
   const card=list.querySelector('.wcard[data-k="'+top[0]+'"]');if(card===list.firstElementChild)return;
   const pv=card.previousElementSibling,nx=card.nextElementSibling;if(pv&&pv.classList.contains('wlink'))pv.remove();else if(nx&&nx.classList.contains('wlink'))nx.remove();/* 道の線は、となりのステージどうしでつなぎなおす */
   card.classList.add('wtop');list.insertBefore(card,list.firstElementChild)}
-const APP_VER=1627;/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER=1623;/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
@@ -199,7 +199,7 @@ function frame(now){
   if(!S||STORY_REPLAY_SHELL){last=now;return}
   if(now-frameT<(menuOpen?125:31))return;frameT=now;
   if(!stageReady()&&(started||!$('#pro').hidden)){if(GRD.job&&GRD.job.s!==S){GRD.job=null;tmpFree()}if(GRD.job)stageStep(now);else{if(GRD.wS!==S){GRD.wS=S;GRD.w0=now}if(assetsOK()||now-GRD.w0>20000)GRD.job=stageJob()}}/* ステージを開いたら、絵がぜんぶ読みこめてから、マップ全体を先に作る（ゲーム中に作らない） */
-  {const ld=started&&!stageReady()&&!menuOpen&&$('#pro').hidden;if(ld||ld!==STLD){STLD=ld;stageLoading(ld)}}/* 作りおわるまで「マップを読みこみ中…」でマップをかくす *//* タイトルは静止画なので8コマ/秒。ゲーム中は30コマ/秒 */
+  if(typeof uiStageSync==='function')uiStageSync();{const ld=started&&!stageReady()&&!menuOpen&&$('#pro').hidden;if(ld||ld!==STLD){STLD=ld;stageLoading(ld)}}/* 作りおわるまで「マップを読みこみ中…」でマップをかくす *//* タイトルは静止画なので8コマ/秒。ゲーム中は30コマ/秒 */
   if(now-tutT>120){tutT=now;try{palArrows();updTut()}catch(e){}}
   const rdt=Math.min(.25,(now-last)/1000);last=now;
   const PZ=started&&sheet!=null,prdt=PZ?0:rdt;/* メニューを開いているあいだは、アニメーションも止める */

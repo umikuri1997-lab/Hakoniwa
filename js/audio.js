@@ -74,6 +74,11 @@ function tone(m,t,dur,type,vol,out,f2){
   g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(vol,t+.012);g.gain.exponentialRampToValueAtTime(.0001,t+dur);
   o.connect(g);g.connect(out);o.start(t);o.stop(t+dur+.05);
 }
+/* やわらかい手ざわりの音（ASMRのような、小さく近い音）：木をそっとたたく「コトッ」（knock）と、紙・葉がこすれる「さらっ」（rustle） */
+function knock(f,t,vol,out,dec){dec=dec||.09;const o=AC.createOscillator(),g=AC.createGain(),lp=AC.createBiquadFilter();o.type='sine';o.frequency.setValueAtTime(f*1.6,t);o.frequency.exponentialRampToValueAtTime(f,t+.012);lp.type='lowpass';lp.frequency.value=f*3;
+  g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(vol,t+.002);g.gain.exponentialRampToValueAtTime(.0001,t+dec);o.connect(lp);lp.connect(g);g.connect(out);o.start(t);o.stop(t+dec+.02)}
+function rustle(t,dur,vol,out,f0,f1,q){const s=AC.createBufferSource(),g=AC.createGain(),bp=AC.createBiquadFilter();s.buffer=noiseBuf;s.loop=true;bp.type='bandpass';bp.Q.value=q||.8;bp.frequency.setValueAtTime(f0,t);bp.frequency.exponentialRampToValueAtTime(f1||f0,t+dur);
+  g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(vol,t+Math.min(.03,dur*.35));g.gain.exponentialRampToValueAtTime(.0001,t+dur);s.connect(bp);bp.connect(g);g.connect(out);s.start(t);s.stop(t+dur+.02)}
 function noise(t,dur,vol,out,hp){const s=AC.createBufferSource(),g=AC.createGain(),fl=AC.createBiquadFilter();s.buffer=noiseBuf;fl.type='highpass';fl.frequency.value=hp||6000;
   g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(.0001,t+dur);s.connect(fl);fl.connect(g);g.connect(out);s.start(t);s.stop(t+dur+.02)}
 function bossNear(e){if(!e.spawned||e.dead)return false;if(!e.nearV&&typeof VILL!=='undefined'&&VILL&&VILL[(e.y|0)*W+(e.x|0)])e.nearV=1;return !!e.nearV}/* オオカゲの曲は、村の中（置いた物のまわり3マス）に一度入ってから。出たり入ったりで曲をかえない */
@@ -129,7 +134,13 @@ function sfx(k){
   case'furnPlace':if(playS('furniturePlace',.72))break;seq([72,76,79,84],.06,'triangle',.07);break;
   case'matDrop':if(playS('matDrop',.8))break;tone(520,t,.06,'triangle',.06,o,260);break;
   case'power':seq([79,84,88,91],.055,'sine',.07);tone(1568,t+.24,.35,'triangle',.03,o,2093);break;/* パワーをカミサマにわたした：きらっとした音 */
-  case'tap':if(playS('click',.9))break;tone(1300,t,.03,'square',.1,o);tone(1950,t+.025,.03,'triangle',.08,o);break;
+  case'tap':if(playS('click',.9))break;tone(1300,t,.03,'square',.1,o);tone(1950,t+.025,.03,'triangle',.08,o);break;/* ボタン：もらった音（click） */
+  case'next':{const r=.96+Math.random()*.08;knock(470*r,t,.09,o,.08);rustle(t+.01,.07,.025,o,3600,2600,.6)}break;/* 会話の「つぎへ」：コトッと、紙をめくる音 */
+  case'open':rustle(t,.15,.06,o,900,2600,.7);knock(340,t+.11,.06,o,.1);break;/* 画面をひらく：さらっ…コトッ */
+  case'close':rustle(t,.12,.05,o,2400,800,.7);knock(270,t+.08,.06,o,.1);break;/* 画面をとじる */
+  case'count':{const r=.98+Math.random()*.04;tone(2093*r,t,.07,'sine',.03,o);tone(3136*r,t+.035,.09,'sine',.018,o)}break;/* 数がふえた：小さなガラスの「チリッ」 */
+  case'leaf':rustle(t,.09,.04,o,2800,2200,.9);rustle(t+.05,.08,.028,o,3600,2600,.9);break;/* 葉が舞う：さわさわ */
+  case'crackle':for(let i=0;i<3;i++)rustle(t+i*.025+Math.random()*.015,.012,.06,o,4500,4500,2);break;/* 火の粉：パチパチ */
   /* せいれいの攻撃：属性ごと。当たる音（arrow）に、属性の音をかさねる */
   case'atk_fire':if(playS('fireatk',.45))break;noise(t,.2,.15,o,300);break;/* ボッ（もらった音） */
   case'atk_earth':tone(50,t,.18,'sine',.2,o,45);noise(t,.12,.18,o,500);for(let n=0;n<3;n++)noise(t+.14+n*.07,.03,.08,o,1400);tone(42,t+.02,.12,'triangle',.08,o,60);break;/* ずしんとひびいて、石がころころ */
