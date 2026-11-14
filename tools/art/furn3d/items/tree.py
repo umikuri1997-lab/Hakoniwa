@@ -49,7 +49,14 @@ def clip(pts):
 # ---- 骨格：Y字に分かれる、ふつうの広葉樹（TREE_RULES.md の「骨格」） ----
 # 樹冠の形 ENV：横に広いドーム（お手本：ビルダーズの木）。底 ZB より上はだ円、ふちは少し下までたれる。枝はこの中でとまる。
 ENV=dict(cx=0.50,cy=0.60,R=0.98,zb=0.70,H=0.95)   # 高さは低め（持ち主の指示）
+LUMP=0.30   # 樹冠の形のでこぼこの強さ（持ち主の指示：樹形をくずす）
+def lump(p):
+    """樹冠の形の、向きでかわる大きなでこぼこ（1±LUMP）。左（x の小さいほう）を少し大きく（左右の差）"""
+    dx,dy,dz=p[0]-ENV['cx'],p[1]-ENV['cy'],p[2]-ENV['zb'];n=math.sqrt(dx*dx+dy*dy+dz*dz)+1e-9
+    u=(dx/n,dy/n,dz/n);v=N.ST.vnoise(u[0]*1.3+7.1,u[1]*1.3+2.3,u[2]*1.3+5.5)*0.75+N.ST.vnoise(u[0]*2.6+1.7,u[1]*2.6,u[2]*2.6+3.1)*0.25
+    return 1+LUMP*(v-0.5)*2+0.08*(-u[0])
 def envin(p,sh=1.0):
+    if p[2]>ENV['zb']:sh=sh*lump(p)   # でこぼこは底より上だけ（幹がかくれない）
     r=math.hypot(p[0]-ENV['cx'],(p[1]-ENV['cy'])/0.9)/(ENV['R']*sh);z=(p[2]-ENV['zb'])/(ENV['H']*sh)
     if z<0:return r<1 and z>-0.28*max(0,(r-0.35))/0.65   # 底：まん中は平ら、ふちは少し下まで（たれる）
     return r*r+z*z<1
@@ -94,7 +101,7 @@ def skeleton():
     rs=np.random.RandomState(SEED);B=[]
     tr=curve3((CX,CY,0),(0.03,0.0,1.0),TRUNK,0.0,0.0,rs,n=10,wob=0.02);B.append({'pts':tr,'lv':0,'leaf':False,'par':None,'ch':[]})
     for az,el,L,h in MAIN:
-        p,_,_=at(tr,min(h,0.999));d=N.dirv(az+rs.uniform(-10,10),el+rs.uniform(-5,5))
+        p,_,_=at(tr,min(h,0.999));d=N.dirv(az+rs.uniform(-22,22),el+rs.uniform(-10,10));L=L*rs.uniform(0.75,1.3)   # 向き・長さのばらつきを大きく（樹形をくずす）
         branch(B,p,d,L,1,rs,np.array([math.cos(math.radians(az+90)),math.sin(math.radians(az+90)),0.0]),0)
     pipe(B);return B
 def pipe(B,rtip=0.005,E=2.3):
