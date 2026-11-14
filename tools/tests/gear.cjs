@@ -15,7 +15,7 @@ o.gearInv=gearList().map(q=>q.id);o.arrows=S.inv.gar02;
 /* つける */const iw=()=>gearList().findIndex(q=>q.id==='gw03');o.earthWeapon=gearEquip(earth,iw());o.fireWeapon=gearEquip(fire,iw());const it=id=>gearList().findIndex(q=>q.id===id);o.fireTool=gearEquip(fire,it('gt04'));o.earthTool=gearEquip(earth,it('gt04'));o.mineJob=gJob(earth,'mine');
 /* へる */const en={type:'basic',x:fire.x+.5,y:fire.y,spawned:true,hp:10};earth.hunger=800;earth.x=fire.x;earth.y=fire.y;hitRes(en,earth,EN.basic);o.lossNo=800-earth.hunger;earth.fleeNow=false;gearEquip(earth,it('ga03'));earth.hunger=800;earth.faintGrace=0;earth.act=null;hitRes(en,earth,EN.basic);o.lossArmor=800-earth.hunger;
 /* 武器：回数・とどくきょり */S.enemies=[];const e2={type:'basic',x:fire.x+1.9,y:fire.y,spawned:true,hp:500,atk:0};S.enemies.push(e2);fire.act=null;fire.hidden=false;fire.fatk=0;fire.hunger=2000;updRes(fire,0);o.hitShort=500-e2.hp;
-e2.hp=500;e2.x=fire.x+1.2;fire.fatk=0;fire.act=null;updRes(fire,0);o.hitFist=500-e2.hp;o.fAtk=fAtk(rLv(fire));o.fireMul=fireMul(fire);
+e2.hp=500;e2.x=fire.x+1.2;fire.fatk=0;fire.act=null;updRes(fire,0);o.hitFist=500-e2.hp;o.fAtk=fAtk(fire,rLv(fire));o.fireMul=fireMul(fire);
 gearOff(fire,'w');gearEquip(fire,it('gw02'));e2.hp=500;e2.x=fire.x+2.2;fire.fatk=0;fire.act=null;updRes(fire,0);o.hitSpear=500-e2.hp;
 /* 矢：強い順・本数・つらぬき */S.inv={arrow:5,arrow2:5,gar02:10,gar04:10,gar19:10,gar13:10};o.pick1=ammoOrder()[0];const st={dmg:10,range:6,cd:10},sh=[];const E=(x,y)=>({type:'basic',x,y,spawned:true,hp:200});
 S.enemies=[E(50,50),E(51,50),E(52,50)];S.inv.gar04=0;S.inv.gar19=1;o.pick2=ammoOrder()[0];towerVolley(0,47,50,st,null,sh);o.pierce=S.enemies.map(e=>200-e.hp);
