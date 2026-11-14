@@ -50,6 +50,7 @@ def shot(M,k,only=None,S_=64,filt=None,info=None):
     PROJ,DEPTH=O.persp(getattr(M,'ELEV',ELEV),getattr(M,'FOV',FOV),None if getattr(M,'PARALLEL',False) else FRAME,c,full=getattr(M,'FULLPERSP',False))   # FULLPERSP：左右にも上下と同じ遠近   # PARALLEL：奥行きのない物（リース・のれんなど）は、遠近をかけない（平行投影）
     P=np.array([PROJ(v) for v in V]+[PROJ(sc.fwd(q)) for q in pfire_box(M)+list(getattr(M,'PBOX',()))]);m=2/64;ext=(P[:,0].min()-m,P[:,0].max()+m,P[:,1].min()-m,P[:,1].max()+m);O.S=S_
     im=O.render_px(sc,PROJ,ext,DEPTH,k=0.80 if O.GRAD else 0.72,lw=LW,k2=0.90 if O.GRAD else 0.86,merge=getattr(M,'MERGE',6 if O.GRAD else 12),outerk=getattr(M,'OUTERK',False),contrast=getattr(M,'CONTRAST',0))   # CONTRAST：輪郭線を作る前の色にかける   # OUTERK：まわりのふちは、部品の olk でうすくしない   # MERGE：にた色をまとめるさかい（設計図でかえられる）   # GRAD：にた色をまとめるさかいを小さく（グラデーションの段をのこす）   # GRAD の家具は、輪郭線もやわらかい色（持ち主がきめた）
+    if hasattr(M,'POST'):im=M.POST(im)   # POST：写したあとの絵の仕上げ（木の葉の小さな点をまわりの色に、など）
     if only:   # その部品だけ（ほかの部品のドットは消す。輪郭線もふくめて、その部品のまわり1ドットまで）
         full=np.array(im);ids=O.LAST_IDS
         from scipy.ndimage import binary_dilation;mk=binary_dilation(np.isin(ids,list(keep)))
