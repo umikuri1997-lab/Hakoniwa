@@ -27,5 +27,11 @@ const assert=require('node:assert/strict');
   /* 夜は切りかえられない */
   const ui=await run(`(()=>{const h=S.res[0];h.elem='wood';delete h.sortie;S.t=1440*3+23.5*60;openSheet('res',h.id);const b=Array.from(document.querySelectorAll('.sheet button')).find(x=>x.textContent==='出撃する');if(!b)return 'nobtn';b.click();const n=fighter(h);S.t=1440*4+10*60;openSheet('res',h.id);const b2=Array.from(document.querySelectorAll('.sheet button')).find(x=>x.textContent==='出撃する');b2.click();return JSON.stringify({night:n,day:fighter(h)})})()`);
   console.log(ui);const u=JSON.parse(ui);assert.equal(u.night,false);assert.equal(u.day,true);
+  /* こもれびのまもり：出撃しているフタバのまわり3マスだけ。見張り台・出撃しないときは使わない */
+  const g=JSON.parse(await run(`(()=>{S.flags.guard=true;S.flags.sortie=0;const f=S.res[0];f.name=POKO;f.elem='wood';delete f.sortie;f.hunger=hMax(f);endAct(f);f.act=null;f.gcd=0;f.gw=null;S.t=1440*5+23.5*60;S.enemyOn=true;
+    const h=mkRes(S,'テスト火','fire',f.x+2,f.y);S.res=[f,h];const out={fdef:fighter(f),ui:sortieOK(f)};
+    const try1=(dx)=>{h.x=f.x+dx;h.y=f.y;h.shU=0;f.gcd=0;f.gw=null;S.enemies=[{id:950,type:'basic',x:h.x+1,y:h.y,hp:100,max:100,spawned:true,path:[]}];guardTick();S.t+=1;guardTick();return (h.shU||0)>S.t};
+    out.near=try1(2);out.far=try1(6);f.sortie=false;out.off=try1(2);delete f.sortie;return JSON.stringify(out)})()`));
+  console.log(g);assert.equal(g.fdef,true,'futaba sorties after guard');assert.equal(g.ui,true);assert.equal(g.near,true,'guards within 3');assert.equal(g.far,false,'not far');assert.equal(g.off,false,'not when not sortied');
   assert.deepEqual(errors,[]);await browser.close();console.log('OK');
 })().catch(e=>{console.error(e);process.exit(1)});
