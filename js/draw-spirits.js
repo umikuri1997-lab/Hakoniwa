@@ -614,6 +614,6 @@ function drawShadeDot(c,ty,x,y,s,f,o){
   c.save();c.translate(x,y);c.scale(sc*f,sc);c.drawImage(kgDot(key,!!o.flash),0,fi*ch.h,ch.w,ch.h,ch.ax,ch.ay,ch.w,ch.h);c.restore();
   c.imageSmoothingEnabled=sm;return true}
 const BEDSPR={w:160,h:163,src:'assets/g/88c626b7df.webp'};BEDSPR.img=new Image();BEDSPR.img.onload=()=>{BEDSPR.ok=1;if(typeof iconCache!=='undefined')delete iconCache.bed;if(typeof rebuildStatic==='function'&&S)rebuildStatic(true)};BEDSPR.img.src=BEDSPR.src;
-const SPR={god:{w:72,h:150,src:'assets/g/c48b773300.webp'},site:{w:104,h:91,src:'assets/g/e757fabc49.webp'}};
-for(const k in SPR){const g=SPR[k];g.img=new Image();g.img.onload=()=>{g.ok=1;if(k==='site')artLoaded()};g.img.src=g.src}
+const SPR={god:{w:72,h:150,src:'assets/g/c48b773300.webp'}};
+for(const k in SPR){const g=SPR[k];g.img=new Image();g.img.onload=()=>{g.ok=1};g.img.src=g.src}
 function drawShade(c,ty,x,y,s,f,o){if(drawShadeDot(c,ty,x,y,s,f,o))return;}/* コワイノはドット絵だけ（絵の読みこみ前は描かない） */

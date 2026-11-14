@@ -53,28 +53,11 @@ function drawEnemy(e,now){
 }
 // 物の見た目のおおよその範囲（描き直し・重なり判定用、少し大きめ）
 // 建てている足場の見た目の広さ（マス）。x0:左はし, w:はば, rows:足もとまでの行数, hf:高さの倍率
-// 足場・畑の区画・芽のドット絵。足場は大きさがいろいろなので、柱・横木・ななめ木・れんが・砂山のパーツを組み立てて、1まいの絵にしておく
-const SITEK=['site:post','site:cap','site:beam','site:beamL','site:beamR','site:brace','site:brick','site:walltop','site:sand','site:post2','site:cap2','site:beam2','site:beamL2','site:beamR2','site:brace2','site:sand2'],SITEC={};
+// 足場の絵は、大きさごとに3Dから写したチップ（tools/art/furn3d/items/site*.py）。建物の大きさで、えらぶ
 const chipOK=k=>{const C=window.CHIPS;return !!(C&&C[k]&&chipImgs(C[k],k)[0].ok)};
-function siteImg(Wd,Hd,seed){Wd=Math.round(Wd);Hd=Math.round(Hd);if(!SITEK.every(chipOK))return null;const key=Wd+'x'+Hd+'_'+(seed%5);if(SITEC[key])return SITEC[key];
-  const cv=document.createElement('canvas');cv.width=Wd;cv.height=Hd;const g=cv.getContext('2d'),C=CHIPS,im=k=>chipImgs(C[k],k)[0],put=(k,x,y)=>g.drawImage(im(k),Math.round(x+C[k].ax),Math.round(y+C[k].ay)),B=Hd;
-  // 作りかけの壁：右へいくほど低い、だんだんの形
-  const x0=Math.round(Wd*.1),x1=Math.round(Wd*.9),n=Math.max(1,Math.ceil((x1-x0)/6));g.save();g.beginPath();const tops=[];
-  for(let k=0;k<n;k++){const t=n>1?k/(n-1):0,h=Math.floor((Hd*(.9-.42*t)+hash(seed*7+k)*5)/6)*6;tops.push(B-h);g.rect(x0+k*6,B-h,6,h)}g.clip();
-  for(let y=B-6,r=0;y>-6;y-=6,r++)for(let x=x0-12+(r%2?6:0);x<x1;x+=12)put('site:brick',x,y);g.restore();
-  for(let k=0;k<n;k++)for(let x=0;x<6&&x0+k*6+x<x1;x+=6)put('site:walltop',x0+k*6,tops[k]);
-  const Z=Wd>=80?'2':'',PW=Z?9:6,BW=Z?7:5;/* 大きい足場は、太い柱と横木 */
-  // 柱
-  const posts=[[Math.round(Wd*.12)-(Z?4:3),Hd],[Math.round(Wd*.8),Math.round(Hd*.88)]];if(Wd>90)posts.push([Math.round(Wd*.48),Math.round(Hd*.78)]);
-  for(const[px,ph]of posts){for(let y=B-8;y>B-ph;y-=8)put('site:post'+Z,px,y);put('site:cap'+Z,px,B-ph)}
-  // ななめ木
-  {const ax=posts[0][0]+(Z?4:3),ay=B-Math.round(Hd*.5),bx=Math.round(Wd*.56),by=B-3,len=Math.max(Math.abs(bx-ax),Math.abs(by-ay));for(let s=0;s<=len;s++)put('site:brace'+Z,ax+(bx-ax)*s/len,ay+(by-ay)*s/len)}
-  // 横木（柱より手前）
-  for(const yy of[B-Math.round(Hd*.62),B-Math.round(Hd*.22)]){const E2=Z?3:2;put('site:beamL'+Z,0,yy);for(let x=E2;x<Wd-E2;x+=8)put('site:beam'+Z,Math.min(x,Wd-E2-8),yy);put('site:beamR'+Z,Wd-E2,yy)}
-  for(const[px]of posts)put('site:sand'+Z,px+(Z?4:3),B);
-  return SITEC[key]=cv}
+function siteKey(id){if(id==='statue')return'site:s3';if(id==='windmill')return'site:s2t';const sp=id&&siteSpan(id);if(sp&&sp.w>=2)return sp.rows>=2?'site:s2d':'site:s2';return'site:s1'}
 function siteSpan(id){const b=BL[id];if(!b)return null;if(id==='statue')return{x0:-1,w:3,rows:1,hf:1.25};if(BIG2.has(id))return{x0:-.5,w:2,rows:1,hf:1.4};if(b.sz)return{x0:0,w:b.sz[0],rows:b.sz[1],hf:1};if(b.kind==='build')return{x0:-.2,w:1.4,rows:1,hf:1.1};return null}
-function objBox(o,j){if(STAIRS.has(o)){const x=(j%W)*TS,y=((j/W)|0)*TS;return[x-TS-4,y-TS-30,x+2*TS+4,y+2*TS+4]}/* 階段は1×2で、どの向きにものびる */if(o==='site'&&S.dyn[j]){const sp=siteSpan(S.dyn[j].build);if(sp){const x=j%W,y=(j/W)|0,L=x*TS+sp.x0*TS-4,Wd=sp.w*TS+8,B=(y+sp.rows)*TS+3;return[L,B-Wd*91/104*sp.hf-20,L+Wd,B]}}
+function objBox(o,j){if(STAIRS.has(o)){const x=(j%W)*TS,y=((j/W)|0)*TS;return[x-TS-4,y-TS-30,x+2*TS+4,y+2*TS+4]}/* 階段は1×2で、どの向きにものびる */if(o==='site'&&S.dyn[j]){const ch=(window.CHIPS||{})[siteKey(S.dyn[j].build)];if(ch){const x=(j%W)*TS,y=((j/W)|0)*TS;return[x+ch.ax/2-4,y+ch.ay/2-20,x+(ch.ax+ch.w)/2+4,y+(ch.ay+ch.h)/2+4]}}/* 足場の絵の大きさ（上は進みぐあいのバーのぶん） */
 const x=j%W,y=(j/W)|0,b=BL[o],z=szAt(o,j)||[1,1],k=BIG2.has(o)?2:TREES.has(o)?2.25:(o==='stor'||o==='mbox')?1.25:BIG.has(o)?(BIGK[o]||1.5):1,tall=BIG2.has(o)||TREES.has(o)||b.kind==='build';
   const cx=x*TS+16*z[0],by=(y+z[1])*TS+3,hw=Math.max(16*z[0]*k,tall?28:16)+6,ht=tall?150:b.kind==='block'?44:48*k*z[1]+8;return[cx-hw,by-ht,cx+hw,by]}
 const FLAT=new Set(['rug1','rug2','hoshirug','farm','plot','sprout','spike','puddle','sticky','firetrap','gust','crack']);/* 地面に近い物：その上に立つせいれいより下に描く */
