@@ -116,17 +116,20 @@ def texpat(items,pal,nlv=3):
         return pal[2] if L<lo else pal[0] if L>hi else pal[1]
     return f
 BARK4=[(239,175,121),(218,152,106),(196,134,94),(172,116,82)]   # 木の皮の4だん（明るいすじ・ふつう・暗い・みぞ）
-SCAR=[(255,226,184),(250,208,160),(186,124,88)]   # かげの段で暗くなるので、明るめ   # ヌシの傷（お手本の幹の、明るいだ円）：まん中の光・中・ふち
+SCAR=[(255,214,158),(248,186,128)]   # ヌシの傷：明るいすじ・傷の面（かげの段で暗くなるので、明るめ）   # ヌシの傷（お手本の幹の、明るいだ円）：まん中の光・中・ふち
 def scar(f,at):
-    """ヌシの傷：幹の正面（南がわ）に、たてに長い、明るいだ円（お手本の絵の幹の傷）。at=(x, y, z, よこの半径, たての半径)。ふちは暗い線"""
+    """ヌシの傷（お手本の絵の幹の傷）：幹の正面（南がわ）の、ななめにかたむいたアーモンドの形（両はしがとがる）の、明るい所。
+    ふちに線はなく、まわりの木の皮より明るい。左上のふちに、いちばん明るいすじ。at=(x, y, z, よこの半径, たての半径)"""
     if at is None:return f
-    sx,sy,sz,rx,rz=at
+    sx,sy,sz,rx,rz=at;ca,sa=math.cos(0.45),math.sin(0.45)   # かたむき（右上→左下）
     def g(x,y,z):
         if y>sy:
-            d=((x-sx)/rx)**2+((z-sz)/rz)**2
-            if d<1:
-                if d>0.72:return SCAR[2]
-                return SCAR[0] if (x-sx)/rx+(z-sz)/rz*0.3<-0.25 and d<0.45 else SCAR[1]
+            u=((x-sx)*ca-(z-sz)*sa*rx/rz)/rx;v=((x-sx)*sa*rz/rx+(z-sz)*ca)/rz   # u：はば・v：長さ（かたむけた）
+            w=1-v*v   # アーモンド：長さのはしほど細い
+            if w>0 and abs(u)<w**0.9:
+                e=abs(u)/max(w**0.9,1e-6)
+                if u<0 and 0.45<e<0.8 and abs(v)<0.75:return SCAR[0]   # 左上のふちの、明るいすじ
+                return SCAR[1] if e<0.85 else BARK4[0]
         return f(x,y,z)
     return g
 
@@ -315,6 +318,37 @@ def crown(sc,ros,bark):
     allr.sort(key=lambda r:r[0][2])
     for gi,(c,out,k) in enumerate(allr):rosette(sc,np.array(c),np.array(out,float),k,gi,rs)
 
+def barkaxis(q):
+    """木の皮の流れの向き（面ごと）：まわりの面の向きが、いちばんかわらない方向（幹・根・枝ののびる向き）。
+    まわり（半径 0.22 マス）の面の向きのばらつきを調べて、いちばん小さい向きにする"""
+    from scipy.spatial import cKDTree
+    cen=q.mean(1);fn=np.cross(q[:,1]-q[:,0],q[:,2]-q[:,0]);ar=np.linalg.norm(fn,axis=1,keepdims=True)+1e-12;n=fn/ar
+    T_=cKDTree(cen);ax=np.zeros_like(cen)
+    nb=T_.query_ball_point(cen,0.22)
+    for i,ids in enumerate(nb):
+        N_=n[ids]*np.sqrt(ar[ids]);C=N_.T@N_;w,v=np.linalg.eigh(C);ax[i]=v[:,0]
+    for _ in range(2):   # なめらかに（向きをそろえてから平均）
+        ax2=np.zeros_like(ax)
+        for i,ids in enumerate(nb):
+            A_=ax[ids];sg=np.sign(A_@ax[i]);sg[sg==0]=1;m=(A_*sg[:,None]).mean(0);ax2[i]=m/max(np.linalg.norm(m),1e-9)
+        ax=ax2
+    return cen,ax,n
+def barkpat2(base,cen,ax,n):
+    """木の皮の書きこみ（お手本の絵の幹）：流れの向きにのびる、細長い暗いみぞと、明るいすじ。
+    色は、もとの木の皮の4だん（base）から、みぞは1だん暗く・すじは1だん明るく"""
+    from scipy.spatial import cKDTree
+    T_=cKDTree(cen);idx={c:i for i,c in enumerate(BARK4)}
+    def f(x,y,z):
+        c=base(x,y,z);k=idx.get(tuple(c))
+        if k is None:return c
+        i=T_.query((x,y,z))[1];a=ax[i];b=np.cross(a,n[i]);p=np.array((x,y,z))
+        sv=float(p@b)/0.05;t=float(p@a)/0.30;col=math.floor(sv);fs=sv-col
+        h1,_=_h(col,math.floor(t+_h(col,5,3)[0]),31);h2,_=_h(col,math.floor(t*1.3+_h(col,9,4)[1]),37)
+        if fs<0.30 and h1<0.55:return BARK4[min(3,k+1)]   # みぞ
+        if 0.55<fs<0.80 and h2<0.30:return BARK4[max(0,k-1)]   # すじ
+        return c
+    return f
+
 def flowfield(q,src):
     """木の皮の流れ：面の場所から、src（はじまりの点）からの、面をつたう道のりをはかり、その道のりがのびる向きを、面ごとの流れの向きにする。
     幹ではたて・根では外へ・枝では枝のさきへ。かえすのは、面のまん中の点・流れの向き・面の向き"""
@@ -400,7 +434,7 @@ class Stage:
             if abs(P_[:,0].mean()-TX)>0.6:return None   # 若木の幹には、つけない（切り株だけ）
             zc=z.min()+0.55*H_;rz=0.20*H_
         band=P_[np.abs(z-zc)<0.04*H_];front=band[band[:,1]>TY];sy=TY+0.25*(front[:,1].max()-TY) if len(front) else TY
-        return (TX+0.14,sy,zc,0.17 if s.name!='tree' else 0.22,rz)
+        return (TX-0.02,sy,zc,0.17 if s.name!='tree' else 0.30,rz*1.15)   # 光の当たる正面（少し左）
     def PARTS(s):return []
     def EXTRA(s,sc):
         sc.smooth(True);s._gid=[];s._ros=[]
@@ -425,7 +459,7 @@ class Stage:
                     if c is s.items[0][1] and s.name!='tree':src=lambda K:K[:,2]>zh-0.08*H   # 切り株：切り口のふちから、幹を下へ・根の先へ
                     elif s.name=='tree':src=lambda K:np.abs(K[:,2]-(zl+0.30*H))<0.02*H   # 御神木：幹のなかほどから、上は枝へ・下は根へ
                     else:src=lambda K:K[:,2]<zl+0.04*H   # 若木：根もとから、枝の先へ
-                    sc.decal(scar(texpat([(q[keep],c['uv'][keep])],BARK4,4),s.scarat(q)));sc.part()   # 木の皮：モデルのテクスチャのすじ（4だん）と、ヌシの傷
+                    cen_,ax_,n_=barkaxis(q[keep]);sc.decal(scar(barkpat2(texpat([(q[keep],c['uv'][keep])],BARK4,4),cen_,ax_,n_),s.scarat(q)));sc.part()   # 木の皮：モデルのテクスチャのすじ（4だん）と、ヌシの傷
                     for t in q[keep]:sc.tri(t[0],t[1],t[2],BARK[1])
                     sc.decal(None)
                     if cut.any():   # 切り口：ふちから同じあつさの樹皮、その内がわに、ふちの形にそった年輪
