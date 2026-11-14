@@ -129,11 +129,11 @@ def kitleaves():
         c=V.mean(0);_,_,vt=np.linalg.svd(V-c,full_matrices=False);Q=(V-c)@vt.T;Q/=Q[:,0].max()-Q[:,0].min()
         _KL.append(Q[np.asarray(m.faces)])
     return _KL
-# ---- 葉のボリューム（持ち主の指示：丸い葉の塊を組み合わせず、枝をつつむ一体の葉のボリューム。ローポリ。1まいずつの葉は描かない） ----
+# ---- 葉のボリューム（持ち主の指示：丸い葉の塊を組み合わせず、枝をつつむ一体の葉のボリューム。ローポリ） ----
 # 骨格の枝（側枝から先）のまわりに、なめらかにふくらむ量（メタボール）を置く：枝先に近いほど大きく（細枝 FR1・小枝 FR2）。
 #   幹と主枝のつけ根のまわりには置かない（中に少しすきまができて、主要な枝が見える）。
 # 量を足しあわせた場の、さかい（ISO）の面を、マーチングキューブで面にし、ゆっくりかわるでこぼこをつけ、面をへらしてローポリにする（LOWF まで）。
-# 色：面ごと（かげは面の向きで）。上ほど明るい色、下ほど暗い色（いまの木の色 LEAFB）。
+# 葉：その表面に、セットの葉（KITLEAF）をすきまなくはる（持ち主の指示：葉は消さない）。表面の少し内がわに、こい緑の中身。上・光の向きほど明るい。
 FR1,FR2,FRT=0.20,0.15,0.30   # 枝先からの道のり FRT までの枝に、量。半径は枝先で FR1、FRT で FR2
 ISO=0.55;GRID=0.022;LOWF=900
 def foliage(P,par,r,ch):
@@ -173,13 +173,29 @@ def EXTRA(sc):
     N.roots(T,(CX,CY,0),0.12,np.random.RandomState(SEED+50),L=0.10)
     N.barkmesh(sc,T)
     if SKEL:return
-    V,F=foliage(P,par,r,ch);zl,zh=V[:,2].min(),V[:,2].max()
-    sc.group('fol');sc.outline(None,0.80);sc.part()
-    for f in F:
-        q=V[f];h=(q[:,2].mean()-zl)/max(zh-zl,1e-6)
-        col=N.LEAFB[1] if h>0.62 else N.LEAFB[2] if h>0.32 else N.LEAFB[3]   # 上ほど明るい
-        sc.tri(q[0],q[1],q[2],col)
-    sc.outline();sc.group(None)
+    V,F=foliage(P,par,r,ch);zl,zh=V[:,2].min(),V[:,2].max();rs=np.random.RandomState(SEED+100);up=np.array([0,0,1.0])
+    # 中身：葉のボリュームの面を少し内へ（葉のすきまから見える、こい緑）
+    import trimesh
+    m=trimesh.Trimesh(V,F,process=False)
+    if m.volume<0:m.invert();F=np.asarray(m.faces)   # 面の向きを外へそろえる（マーチングキューブの面は内向きのことがある）
+    vn=m.vertex_normals;Vi=V-vn*0.02
+    sc.group('fol');sc.outline(None,0.80);sc.material('flat');sc.part()
+    for f in F:q=Vi[f];sc.tri(q[0],q[1],q[2],N.LEAFB[3])
+    # 葉：ボリュームの表面に、セットの葉（KITLEAF）を、すきまなく（面の大きさに合わせた数）。表は、面の向きと太陽のまん中。重さで少し下を向く
+    fn=m.face_normals;ar=m.area_faces;cnt=np.random.RandomState(SEED+7).poisson(ar/(PL*PW*0.5));view=np.array([0,0.74,0.67])
+    for fi in np.flatnonzero(cnt):
+        u=fn[fi]
+        if u@view<-0.3:continue   # 見えない裏がわ
+        for _ in range(cnt[fi]):
+            w=rs.dirichlet((1,1,1));p=w@V[F[fi]]
+            h=(p[2]-zl)/max(zh-zl,1e-6);lt=float(u@N.LIGHTV)
+            tone=int(np.clip(round((1-lt)*1.4+(1-h)*1.4-0.5),0,len(N.LEAFB)-2))
+            nn=u*0.8+N.SUN*0.2;nn/=np.linalg.norm(nn);t=np.cross(nn,up);t=t/np.linalg.norm(t) if np.linalg.norm(t)>1e-6 else np.array([1.0,0,0]);dn=np.cross(t,nn)
+            a=rs.uniform(-1.0,1.0);ld=-dn*math.cos(a)+t*math.sin(a);sd=np.cross(nn,ld);f=rs.uniform(0.75,1.25)
+            col=N.LEAFB[tone] if rs.rand()>0.15 else N.LEAFB[min(len(N.LEAFB)-1,tone+1)]
+            Q=kitleaves()[rs.randint(len(KITLEAF))];W3=Q@np.stack([ld,sd*rs.choice([-1,1]),nn],0)*PL*f*1.15+p+u*0.01;sc.part()
+            for q in W3:sc.tri(q[0],q[1],q[2],col)
+    sc.material(None);sc.outline();sc.group(None)
 def POST(im):return N.specks(im)
 if __name__=='__main__':
     import sys
