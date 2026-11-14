@@ -1,6 +1,6 @@
 # 木（tree：植えた木・ntree：森の木。同じ絵）。持ち主の指示（自然な樹形の法則）。いちばん大事なこと：幹から葉の先まで枝がつながり、葉をとっても1本の木として成り立つ骨格。
 # 設計図（単位はマス。地面 z=0。根もと (0.5, 0.62)）：
-#   幹：根もとから上へ（少しかたむき、ゆるくまがる）。幹の先は、そのまま「上の主枝」になって細くなる（とちゅうで切れない）。
+#   幹：根もとから上へ（少しかたむき、ゆるくまがる）。根は、幹の下がそのまま、ひくく・なだらかに広がる（根の板はつけない）。幹の先は、そのまま「上の主枝」になって細くなる（とちゅうで切れない）。
 #   主枝 MAIN：(向き, 立ち上がり, 長さ, 葉群の半径 (よこ, おく, たて), つけ根の高さ)。幹からなめらかに外へ、先は少しずつ上へ（U字・フックにしない：1節で曲がるのは小さく）。
 #   葉群：主枝の先のまわりの、でこぼこのあるだ円体（natcommon.envelope）。その主枝の枝は、ぜんぶこの中におさまる長さ（葉群の形が樹冠の形）。
 #   側枝・小枝・細枝：芽（らせん137.5度）から、親の向きから25〜55度ひらき、葉群の外へ向く。長さは親の 0.45〜0.65倍、葉群の中におさまる長さまで。
@@ -15,14 +15,14 @@ ID='tree';GRAD=True;PARALLEL=True;BOTTOM=56
 VIEWS=[('tree',0),('ntree',0)]
 CX,CY=0.5,0.62;SEED=2;SKEL=False
 MAIN=[   # 向き・立ち上がり・長さ・葉群の半径・つけ根の高さ（幹の長さにたいする割合。1.0 は幹の先＝上の主枝）
-    (185,30,0.58,(0.50,0.40,0.34),0.70),   # 左（いちばん長い）
-    (345,34,0.52,(0.44,0.36,0.32),0.84),   # 右（左より高い所から：左右非対称）
-    (285,40,0.46,(0.40,0.34,0.30),0.92),   # 右おく
-    (125,40,0.42,(0.34,0.30,0.28),0.78),   # 左手前（小さい）
-    (60,70,0.34,(0.44,0.38,0.34),1.0),     # 上（幹のつづき。短く：上がとがらない）
+    (185,55,0.44,(0.50,0.40,0.34),0.72),   # 左（ななめ上へ）
+    (345,58,0.40,(0.44,0.36,0.32),0.84),   # 右（左より高い所から：左右非対称）
+    (285,62,0.36,(0.40,0.34,0.30),0.92),   # 右おく
+    (115,55,0.34,(0.34,0.30,0.28),0.80),   # 左手前（小さい）
+    (60,80,0.40,(0.44,0.38,0.34),1.0),     # 上（幹のつづき）
 ]   # 主枝は上から見て、ちがう向き（交差しない）
 TRUNK=0.62   # 幹はやや短く（デフォルメ）
-CROWN=((0.50,0.55,1.00),1.05,0.82,0.54)   # 樹冠の形（さいしょにきめる）：まん中・よこ・おく・たての半径。ゆるいでこぼこ（natcommon.envelope）。枝も葉も、この中
+CROWN=((0.50,0.58,1.16),0.72,0.64,0.62)   # ドーム〜たまごの形：よこはば（1.4）は、木の高さ（2.0くらい）より少しせまい   # 樹冠の形（さいしょにきめる）：まん中・よこ・おく・たての半径。ゆるいでこぼこ（natcommon.envelope）。枝も葉も、この中
 def crownenv():return N.envelope(CROWN[0],*CROWN[1:],SEED*13)
 LVL={2:((3,4),(30,50),(0.52,0.70),(0.30,0.85)),3:((2,3),(25,42),(0.38,0.52),(0.30,0.90)),4:((1,2),(18,30),(0.25,0.38),(0.45,0.90))}   # Y字。長い枝は短く、細枝（4）はもっと短く、おだやかな角度（トゲにしない）
 def spots(rs,span,nb,gap=0.18):
@@ -49,7 +49,7 @@ def grow(g,i0,d,L,lv,env,c,rs,tips):
     n=max(3,int(L/0.05));up=np.array([0,0,1.0]);idx=[i0];dd=d.copy()
     for k in range(n):
         out=g.P[idx[-1]]-c;out=out/np.linalg.norm(out) if np.linalg.norm(out)>1e-6 else dd
-        dd=dd*0.90+out*0.04+up*(0.03+0.06*k/n)+rs.normal(0,0.045,3);dd/=np.linalg.norm(dd)   # 1節の曲がりは小さく、ゆるくまがり、先は上へ（まっすぐな槍にしない）
+        dd=dd*0.90+out*0.03+up*(0.05 if k<n*0.6 else -0.04)+rs.normal(0,0.045,3);dd/=np.linalg.norm(dd)   # 1節の曲がりは小さく、ゆるくまがる。なかほどまでは上へ、先は葉の重さで少し下がる
         idx.append(g.add(g.P[idx[-1]]+dd*L/n,idx[-1],lv))
     if lv==4:tips.append(idx);return
     nc,ang,lk,span=LVL[lv+1];nb=rs.randint(nc[0],nc[1]+1);az=rs.uniform(0,6.28)
@@ -76,7 +76,7 @@ def skeleton():
         j=tr[min(len(tr)-1,int(round(h0*n)))];md=N.dirv(az,el) if h0<1.0 else (d*0.6+N.dirv(az,el)*0.4)
         md/=np.linalg.norm(md);m=int(ln/0.05);pts=[j];dd=md.copy()
         for t in range(m):   # 主枝：なめらかに外へ、先は少しずつ上へ
-            dd=dd*0.93+up*(0.05 if t>m*0.5 else 0.01)+rs.normal(0,0.02,3);dd/=np.linalg.norm(dd);pts.append(g.add(g.P[pts[-1]]+dd*ln/m,pts[-1],1))
+            dd=dd*0.93+up*(0.02 if t<m*0.7 else -0.03)+rs.normal(0,0.02,3);dd/=np.linalg.norm(dd);pts.append(g.add(g.P[pts[-1]]+dd*ln/m,pts[-1],1))   # ななめ上へ。先は少しだけ下がる（重さ）
         c=np.array(CROWN[0]);lobes.append((c,rr));bigenv=crownenv()   # 枝は樹冠の形の中
         nc,ang,lk,span=LVL[2];nb=rs.randint(nc[0],nc[1]+1);az2=rs.uniform(0,6.28)
         for s in spots(rs,(0.45,0.95),nb):   # 側枝
@@ -104,7 +104,7 @@ def loadskel():
 #   左右たがいちがいに、まわりも少しずつずらして、上・下・手前・おくへ（1点から放射状に置かない）。内がわほど多い。葉柄のはしを枝の上の点につける。
 # 向き：枝ののびる向きを基本に、外へひらく。表は、上と、樹冠の外がわのまん中（表が下を向かない：上の向きの成分を 0.25 より大きく）。
 #   回転は葉柄のはしを中心に、傾きはおだやかに（ばらつき少し）。大きさは1つ（かえない）。
-LEAFGAP=0.018   # 葉と葉の、枝にそった間かく（マス）
+LEAFGAP=0.013   # 葉と葉の、枝にそった間かく（マス）
 LEAFL=0.19   # 葉の長さ（マス。どの葉も同じ）
 _KL=[]
 def kitleaf():
@@ -129,8 +129,7 @@ def EXTRA(sc):
         pts=P[c];rr=list(r[c])
         if c[0]!=0 and len(ch[c[0]])>1:rr[1]=rr[1]*1.25   # えり
         rr[-1]=min(rr[-1],0.004)   # 先は細く
-        mr=max(rr);N.limb(T,pts,rr,n=14 if mr>0.08 else 8 if mr>0.02 else 5,flare=0.08 if c[0]==0 else 0.0,fh=0.2,wob=0.07 if mr>0.06 else 0.0,seed=len(T)%17)
-    N.roots(T,(CX,CY,0),0.14,np.random.RandomState(SEED+50),L=0.12)
+        mr=max(rr);N.limb(T,pts,rr,n=14 if mr>0.08 else 8 if mr>0.02 else 5,flare=0.13 if c[0]==0 else 0.0,fh=0.20,wob=0.07 if mr>0.06 else 0.0,seed=len(T)%17)
     N.barkmesh(sc,T)
     if SKEL:return
     rs=np.random.RandomState(SEED+100);up=np.array([0,0,1.0]);Q=kitleaf();env=N.envelope(CROWN[0],*(np.array(CROWN[1:])*1.08),SEED*13)
@@ -138,16 +137,17 @@ def EXTRA(sc):
     sc.outline(None,0.86);sc.material('flat');az=0.0
     for i in range(1,len(P)):
         j=par[i]
-        if lv[i]<1:continue
+        if lv[i]<3:continue   # 葉は小枝・細枝に（先のほうに多い）
         d=P[i]-P[j];Le=np.linalg.norm(d)
         if Le<1e-6:continue
         d/=Le;u=np.cross(d,up);u=u/np.linalg.norm(u) if np.linalg.norm(u)>1e-6 else np.array([1.0,0,0]);v=np.cross(d,u)
-        e_=np.linalg.norm((P[i]-C0)/np.array(CROWN[1:]));k=int(Le/LEAFGAP*(1.35-0.55*min(1,e_))*rs.uniform(0.8,1.2)+rs.rand())   # 内がわほど多く、外がわは少し少なく
+        tipw=1.0+1.6*(lv[i]==4 or not len(ch[i]))   # 細枝・枝先のまわりに多く（小さな葉群）
+        k=int(Le/LEAFGAP*tipw*rs.uniform(0.6,1.4)+rs.rand())
         for t_ in range(k):
             b0=P[j]+d*Le*rs.uniform(0,1)
             if not env(b0):continue   # 樹冠の形の外の枝（幹・主枝のつけ根）には、つけない
             az+=math.pi+rs.uniform(-0.6,0.6);rad=u*math.cos(az)+v*math.sin(az)   # 左右たがいちがい（となりの葉と反対がわ、ばらつき少し）。まわりも少しずつずれて、上・下・手前・おくへ
-            o=d*0.55+rad*0.85+rs.normal(0,0.08,3);o/=np.linalg.norm(o)   # 枝ののびる向きを基本に、外へひらく
+            o=d*0.6+rad*0.8-up*0.15+rs.normal(0,0.10,3);o/=np.linalg.norm(o)   # 枝ののびる向きを基本に、外へひらき、重さで少し下へ
             out=b0-C0;out/=max(np.linalg.norm(out),1e-6)
             nn=up*0.6+out*0.4+rs.normal(0,0.10,3);nn-=o*(nn@o)
             if np.linalg.norm(nn)<1e-3:continue

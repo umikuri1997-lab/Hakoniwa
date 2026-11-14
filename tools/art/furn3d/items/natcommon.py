@@ -84,7 +84,7 @@ def limb(T,pts,rs,n=14,flare=0.0,lobes=5,fh=0.16,cap=True,wob=0.0,seed=0):
             a=2*math.pi*j/n;r=rs[i]
             if wob:r*=1+wob*(math.sin(2*a+seed+0.3*i)*0.6+math.sin(3*a+seed*1.7)*0.4)   # 断面は、まるでなく少しいびつ
             if flare:
-                h=P[i][2]-P[0][2];w=max(0.0,1-h/fh)**2;r=r+flare*w*(0.45+0.55*max(0.0,math.cos(lobes*a+0.7))**1.5)
+                h=P[i][2]-P[0][2];w=max(0.0,1-h/fh)**2;r=r+flare*w*(0.45+0.55*max(0.0,math.cos(lobes*a+0.7+0.3*math.sin(2*a+seed)))**1.5)*(0.75+0.25*math.sin(3*a+seed*1.3))   # 根張り：幹からなだらかに広がる。根の太さ・向きは少しずつちがう
             ring.append(P[i]+r*(math.cos(a)*u+math.sin(a)*v))
         R.append(ring)
     for i in range(m-1):
