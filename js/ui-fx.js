@@ -48,6 +48,4 @@ function ldWalk(c){const g=c.getContext('2d');g.setTransform(1,0,0,1,0,0);g.clea
   g.setTransform(1,0,0,1,0,0)}
 /* ステージごとのUIの見た目：草原（WD 0）は木のわく（body.wd0）。毎コマよばれるが、かわったときだけさわる */
 let UIWD=null;function uiStageSync(){const w=started&&typeof WD==='number'?WD:-1;if(w===UIWD)return;UIWD=w;document.body.classList.toggle('wd0',w===0)}
-/* ボタンをおしこんだときの、ひくい「トッ」（はなしたときの音は、それぞれの「コトッ」） */
-document.addEventListener('pointerdown',e=>{const b=e.target&&e.target.closest&&e.target.closest('button,.btn,.ctab,.chip,.slot,.mtile,.tapStk');if(b&&!b.disabled&&typeof sfx==='function')sfx('press')},true);
 uiNumWatch();

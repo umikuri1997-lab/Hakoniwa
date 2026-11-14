@@ -39,7 +39,7 @@ Object.assign(SAMPLES,{"gravel":["assets/g/1367715265.mp3"],"wdon":["assets/g/6e
 Object.assign(SAMPLES,{"spike":["assets/g/5e814bb008.mp3"],"poison":["assets/g/1b43a21e56.mp3"]});/* 効果音ラボ（ユーザー提供）：とげの罠は「芝生の上を歩く」のひと足ぶん、どくの罠は「水中で息を吐く」 */
 SAMPLES.shard=['assets/g/9464bc7161.mp3'];/* ヌシのかけらをはめる音（ユーザーの音） */
 SAMPLES.furniturePlace=['assets/g/e33cbd97b8.mp3'];/* 家具を置く音：ユーザー提供 */
-SAMPLES.matDrop=['assets/g/ef846d878d.mp3'];/* 守りの光で木・岩をこわして、素材が落ちたときの音（もらった音） */
+SAMPLES.matDrop=['assets/g/ef846d878d.mp3'];SAMPLES.click=['assets/g/dc1fab61b3.mp3'];/* ボタンをおす音（もらった音） *//* 守りの光で木・岩をこわして、素材が落ちたときの音（もらった音） */
 function loadSamples(){/* 音のファイル（assets/g/*.mp3）を読みこんで、鳴らせる形にしておく */for(const k in SAMPLES){SBUF[k]=[];SAMPLES[k].forEach((u,i)=>{fetch(u).then(r=>r.arrayBuffer()).then(b=>AC.decodeAudioData(b,buf=>{SBUF[k][i]=buf},()=>{})).catch(()=>{})})}}
 // セリフの声：キャラごとに高さを変える（カミサマは低め）
 let VOICE=null,voxC=null;const BRAVET=new WeakMap();
@@ -134,14 +134,20 @@ function sfx(k){
   case'furnPlace':if(playS('furniturePlace',.72))break;seq([72,76,79,84],.06,'triangle',.07);break;
   case'matDrop':if(playS('matDrop',.8))break;tone(520,t,.06,'triangle',.06,o,260);break;
   case'power':seq([79,84,88,91],.055,'sine',.07);tone(1568,t+.24,.35,'triangle',.03,o,2093);break;/* パワーをカミサマにわたした：きらっとした音 */
-  case'tap':{const r=.96+Math.random()*.08;knock(640*r,t,.11,o,.07);knock(1280*r,t+.004,.03,o,.04);rustle(t,.018,.05,o,5200,5200,1.2)}break;/* ボタン：木の小さな「コトッ」（毎回すこし高さがかわる） */
-  case'press':knock((230+Math.random()*20),t,.12,o,.05);rustle(t,.02,.03,o,1800,1800,.7);break;/* ボタンをおしこんだ：ひくい「トッ」 */
+  case'tap':if(playS('click',.9))break;tone(1300,t,.03,'square',.1,o);tone(1950,t+.025,.03,'triangle',.08,o);break;/* ボタン：もらった音（click） */
   case'next':{const r=.96+Math.random()*.08;knock(470*r,t,.09,o,.08);rustle(t+.01,.07,.025,o,3600,2600,.6)}break;/* 会話の「つぎへ」：コトッと、紙をめくる音 */
   case'open':rustle(t,.15,.06,o,900,2600,.7);knock(340,t+.11,.06,o,.1);break;/* 画面をひらく：さらっ…コトッ */
   case'close':rustle(t,.12,.05,o,2400,800,.7);knock(270,t+.08,.06,o,.1);break;/* 画面をとじる */
   case'count':{const r=.98+Math.random()*.04;tone(2093*r,t,.07,'sine',.03,o);tone(3136*r,t+.035,.09,'sine',.018,o)}break;/* 数がふえた：小さなガラスの「チリッ」 */
   case'leaf':rustle(t,.09,.04,o,2800,2200,.9);rustle(t+.05,.08,.028,o,3600,2600,.9);break;/* 葉が舞う：さわさわ */
   case'crackle':for(let i=0;i<3;i++)rustle(t+i*.025+Math.random()*.015,.012,.06,o,4500,4500,2);break;/* 火の粉：パチパチ */
+  /* せいれいの攻撃：属性ごと。当たる音（arrow）に、属性の音をかさねる */
+  case'atk_fire':playS('arrow',.4);playSeg('fire',.9,.7);{const sr=AC.createBufferSource(),g=AC.createGain(),lp=AC.createBiquadFilter();sr.buffer=noiseBuf;sr.loop=true;lp.type='lowpass';lp.Q.value=.5;lp.frequency.setValueAtTime(260,t);lp.frequency.linearRampToValueAtTime(520,t+.05);lp.frequency.exponentialRampToValueAtTime(180,t+.4);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.5,t+.02);g.gain.exponentialRampToValueAtTime(.001,t+.45);sr.connect(lp);lp.connect(g);g.connect(o);sr.start(t);sr.stop(t+.47)}tone(48,t,.25,'sine',.12,o,40);for(let n=0;n<5;n++){const d=t+.1+n*.07+Math.random()*.05;noise(d,.015,.09,o,2000);tone(1600+Math.random()*1200,d,.012,'square',.02,o)}break;/* ボッと火がつき（ひくい音）、焚き火の音がのこって、ぱちぱちはぜる */
+  case'atk_earth':tone(50,t,.18,'sine',.2,o,45);noise(t,.12,.18,o,500);for(let n=0;n<3;n++)noise(t+.14+n*.07,.03,.08,o,1400);tone(42,t+.02,.12,'triangle',.08,o,60);break;/* ずしんとひびいて、石がころころ */
+  case'atk_wood':{const sr=AC.createBufferSource(),g=AC.createGain(),bp=AC.createBiquadFilter();sr.buffer=noiseBuf;bp.type='bandpass';bp.Q.value=2;bp.frequency.setValueAtTime(1200,t);bp.frequency.exponentialRampToValueAtTime(4200,t+.12);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.12,t+.08);g.gain.linearRampToValueAtTime(0,t+.14);sr.connect(bp);bp.connect(g);g.connect(o);sr.start(t);sr.stop(t+.16)}noise(t+.13,.04,.2,o,2200);tone(330,t+.13,.06,'triangle',.06,o,200);playS('bush',.25,.16);break;/* ひゅっ、ぴしっ。葉がざわっ */
+  case'atk_wind':for(const[d,f0,f1]of[[0,700,2400],[.09,900,3000]]){const sr=AC.createBufferSource(),g=AC.createGain(),bp=AC.createBiquadFilter();sr.buffer=noiseBuf;bp.type='bandpass';bp.Q.value=3;bp.frequency.setValueAtTime(f0,t+d);bp.frequency.exponentialRampToValueAtTime(f1,t+d+.18);g.gain.setValueAtTime(0,t+d);g.gain.linearRampToValueAtTime(1.3,t+d+.06);g.gain.linearRampToValueAtTime(0,t+d+.22);sr.connect(bp);bp.connect(g);g.connect(o);sr.start(t+d);sr.stop(t+d+.24)}tone(1800,t+.05,.2,'sine',.15,o,2600);break;/* ひゅんひゅん、と風が2回 */
+  case'atk_water':if(!playS('splash',1.1))noise(t,.2,.2,o,2500);tone(380,t,.12,'sine',.22,o,900);[0,.07,.15].forEach(d=>tone(900+Math.random()*500,t+.08+d,.05,'sine',.09,o,1800));break;/* ぽちゃん、とはじける */
+  case'next':tone(88,t,.04,'triangle',.05,o);break;
   case'good':seq([84,88],.07,'sine',.06);break;
   case'warn':seq([62,57],.14,'square',.035,.22);break;
   case'quest':seq([72,76,79,84,79,84],.09,'triangle',.08,.16);break;
