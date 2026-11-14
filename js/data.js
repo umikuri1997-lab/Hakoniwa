@@ -5,7 +5,7 @@
 const BL={
   path:{name:'あぜ道',kind:'block',floor:1,lv:2,cost:1,pc:2,time:30,maker:'earth',qty:10,mat:{stone:2},attr:{earth:.25},desc:'草地のあいだを通る土の道。歩く速さ×1.25'},
   bridge:{name:'木の橋',kind:'build',lv:5,pc:2,time:40,maker:'wood',mat:{wood:4},desc:'川や池にかける木の橋。歩いてわたれる'},
-  ladder_wood:{name:'オークのハシゴ',kind:'build',lv:3,pc:8,time:30,maker:'wood',mat:{wood:8},desc:'段差のがけに立てかけるハシゴ。上り下りの速さ×0.5'},
+  ladder_wood:{name:'木のハシゴ',kind:'build',lv:3,pc:8,time:30,maker:'wood',mat:{wood:8},desc:'段差のがけに立てかけるハシゴ。上り下りの速さ×0.5'},
   ladder_bamboo:{name:'竹のハシゴ',kind:'build',lv:3,w:1,pc:8,time:30,maker:'wood',mat:{bamboo:8},desc:'段差のがけに立てかけるハシゴ。上り下りの速さ×0.5'},
   stairs_wood:{name:'木の階段',kind:'build',lv:8,pc:25,time:50,maker:'wood',mat:{wood:25},attr:{wood:.3},desc:'段差を上り下りできる'},
   stairs_brick:{name:'レンガの階段',kind:'build',lv:6,w:1,pc:35,time:60,maker:'fire',mat:{stone:35},attr:{fire:.5},desc:'段差を上り下りできる'},
@@ -27,7 +27,7 @@ const BL={
   bedge:{name:'花壇のふち',kind:'block',cost:1,pc:2,time:20,maker:'wood',qty:10,lv:8,attr:{},mat:{wood:1},desc:'花壇をかこむ、低い丸太のふち'},
   bamboofence:{name:'竹の柵',fix:3,fixm:{bamboo:1},kind:'block',cost:3,pc:7,time:75,maker:'wood',qty:10,lv:4,offerOnly:1,solid:1,brk:1,hp:32,hpS:48.8,attr:{},mat:{bamboo:8},desc:'竹を組んだ柵。じょうぶさ32'},
   bamboowall:{name:'竹の壁',fix:3,fixm:{bamboo:1},kind:'block',cost:2,pc:6,time:60,maker:'wood',qty:10,lv:3,w:1,solid:1,hp:30,hpS:45.5,attr:{},mat:{bamboo:3},desc:'かこってドアをつけると家になる。じょうぶさ30'},
-  hwall:{name:'オークの壁',fix:3,fixm:{wood:1},kind:'block',cost:2,pc:6,time:60,maker:'wood',qty:10,lv:3,solid:1,hp:30,hpS:45.5,attr:{},mat:{wood:6},desc:'かこってドアをつけると家になる。じょうぶさ30'},
+  hwall:{name:'木の壁',fix:3,fixm:{wood:1},kind:'block',cost:2,pc:6,time:60,maker:'wood',qty:10,lv:3,solid:1,hp:30,hpS:45.5,attr:{},mat:{wood:6},desc:'かこってドアをつけると家になる。じょうぶさ30'},
   logwall:{name:'丸太の壁',fix:4,fixm:{wood:1},kind:'block',cost:3,pc:9,time:80,maker:'wood',qty:10,lv:7,solid:1,hp:50,hpS:75.5,brk:1,attr:{},mat:{wood:9},desc:'丸太を組んだ家の壁。じょうぶさ50'},
   plasterwall:{name:'しっくいの壁',fix:5,fixm:{wood:1},kind:'block',cost:4,pc:11,time:90,maker:'earth',qty:10,lv:5,solid:1,hp:48,hpS:72.2,brk:1,attr:{},mat:{wood:6,stone:3},desc:'明るいしっくい仕上げの家の壁。じょうぶさ48'},
   brickwall:{name:'レンガの壁',fix:6,fixm:{stone:1},kind:'block',cost:5,pc:13,time:100,maker:'fire',qty:10,lv:6,w:1,solid:1,hp:55,hpS:82.25,brk:1,attr:{},mat:{stone:14},desc:'レンガを積んだ家の壁。じょうぶさ55'},
@@ -324,13 +324,13 @@ const QUESTS1=[
    story:[
     [POKO,'#joy|これが、食卓なんだ！ ベリーに土がつかないね。えへへ、おいしい！'],
     [GOD,'#think|うむ。おヌシの思いつきが、ちゃんと形になったのう。']]},
-  {id:'wall',text:'家の壁を直そう',how:'「おく」→「オークの壁」をえらんで、家の壁のすきまをふさぐ',check:()=>HOUSES.length>=1,
+  {id:'wall',text:'家の壁を直そう',how:'「おく」→「木の壁」をえらんで、家の壁のすきまをふさぐ',check:()=>HOUSES.length>=1,
    talk:{who:GOD,when:()=>true,lines:[
     [GOD,'しまう場所もできたのう。…そろそろ、夜のことも話しておかんとな。'],
     [GOD,'#alarm|この土地には、夜になると「コワイノ」が来るんじゃ。家の中にいればおそわれん。じゃが、壁にすきまがあると、こわして入ろうとするんじゃ。'],
     [POKO,'#scared|「コワイノ」……。夜は、あの穴のあいた家にかくれてたんだ。'],
     [GOD,'#worry|あの家、壁がこわれたままなんじゃ。あれでは、夜が心配じゃのう。'],
-    [GOD,'じょうぶなオークの壁を、おそなえ箱に用意しておいたぞい。すきまをふさいで、フタバが安心して眠れる家にしてやっておくれ。']],gives:{feat:['people'],items:{hwall:3}}},
+    [GOD,'じょうぶな木の壁を、おそなえ箱に用意しておいたぞい。すきまをふさいで、フタバが安心して眠れる家にしてやっておくれ。']],gives:{feat:['people'],items:{hwall:3}}},
    story:[
     [POKO,'#scared|前に、夜に壁をこわされたことがあったんだ。'],[POKO,'#joy|でも、もうすきまはないね。壁があると、なんだかほっとする！']]},
   {id:'bed',text:'家にベッドを置こう',how:'「おく」→「ベッド」をえらんで、壁で囲まれた家の中に置く。夜は、守りの光のアイコンをタップしてから「コワイノ」をタップすると、光をあてておどかせる',check:()=>houseBedCount()>=1,
@@ -377,7 +377,7 @@ const QUESTS1=[
     [GOD,'#nod|うむ。柵は足止めにはなるが、追いはらえるわけではないんじゃ。時間をかせぐだけじゃからのう。'],
     [POKO,'じゃあ、足止めしてるあいだに、なんとかしないとだめだね。'],
     [GOD,'そこで見張り台じゃ。高いところから早めに見つけて、木の矢で追いはらえる。今回はわしのおごりじゃ。'],
-    [GOD,'見張り台は、夜の持ち場じゃ。火のせいれいのほかのせいれいが上にのぼって、木の矢を放ってくれるぞい。'],
+    [GOD,'見張り台は、夜の持ち場じゃ。せいれいが上にのぼって、木の矢を放ってくれるぞい。'],
     [GOD,'#alarm|とげの罠と木の矢も、そろえておいたぞい。これで、フタバがふるえて夜をすごすことも、へるじゃろう。'],
     [POKO,'柵で足止めして、罠と見張り台で追いはらうんだね！ やってみる！'],['@idea']],gives:{watchNow:true,items:{spike:10,arrow:20},flags:['watchLearned']}},
    story:[
@@ -484,9 +484,9 @@ const QUESTS1=[
     [POKO,'#think|……その力、どこにあるのかな。'],[MINA,'わからないねぇ。でも、あの切り株の根っこみたいに、どこかで静かに待ってるのかもしれないよぉ。']]}}),
   /* オオカゲを追いはらったあと：フタバが「こもれびのまもり」をおぼえて、夜に火のせいれいを守る（前はピンクの会話 e06・e06d） */
   stepQuest({id:'guardLearn',text:'こもれびのまもり',
-   steps:[{id:'guardUse',t:'夜、フタバがこもれびのまもりで火のせいれいを守る',check:()=>!!S.flags.guardUsed,how:'夜、「コワイノ」にねらわれている火のせいれいを、フタバがはなれた所から葉っぱで守る'}],
+   steps:[{id:'guardUse',t:'夜、フタバがこもれびのまもりで火のせいれいを守る',check:()=>!!S.flags.guardUsed,how:'夜、フタバが出撃して、そばで「コワイノ」にねらわれている火のせいれいを葉っぱで守る。フタバの出撃は、せいれいの画面でえらぶ'}],
    talk:{who:POKO,when:()=>true,get lines(){const e=SEV1.find(x=>x.k===(S.flags.hDied?'e06d':'e06'));return e?sevLines(e.L)||[]:[]},
-    gives:{run(){S.flags.guard=true;memo('🍃','フタバが「こもれびのまもり」をおぼえた');skillPop('leaf','フタバが「こもれびのまもり」をおぼえた！',['夜、「コワイノ」にねらわれている火のせいれいを、はなれた所から葉っぱで1人守る。','守られたせいれいは、40分のあいだ、「コワイノ」から受けるダメージ0.5倍。','つかったあとは、75分たつと、また守れる。'])}}},
+    gives:{run(){S.flags.guard=true;memo('🍃','フタバが「こもれびのまもり」をおぼえた');skillPop('leaf','フタバが「こもれびのまもり」をおぼえた！',['夜、出撃したフタバのまわり3マスで、「コワイノ」にねらわれている、たたかうせいれいを、葉っぱで1人守る。','守られたせいれいは、40分のあいだ、「コワイノ」から受けるダメージ0.5倍。','つかったあとは、75分たつと、また守れる。'])}}},
    get story(){return KS([['H','ゆうべは、助かったぜ。葉っぱが、ふわっとかかってさ。'],['F','#surprise|ほんと！？ ……ちゃんと、とどいてたんだ。'],['H','ああ。おまえも、いっしょに村を守ってたんだな。'],['F','#joy|うん！ これからも、いっしょに守ろうね。']])}}),
   {id:'wind',text:'風のせいれいをむかえよう',how:"「おく」→「ゆりの種」を植えたり、ブランコを置いたりして風の力をため、朝に神殿の「！」から呼ぶ",check:()=>elemCount('wind')>=1&&NEWRES==null,prog:()=>'風の力 '+Math.floor(ATTR.wind)+'/'+needFor('wind'),
    talk:{who:POKO,when:()=>true,learn:['swing'],lines:[

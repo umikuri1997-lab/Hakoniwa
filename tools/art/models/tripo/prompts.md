@@ -14,19 +14,19 @@ A single open white rose flower head with a few layered rounded petals and a sof
 ## 3. ばらの葉の小枝　ファイル名：`roseleaf.glb`
 A short rose twig with five small oval serrated green leaves arranged in pairs plus one at the tip. Stylized, slightly chunky game-asset 3D model with clean simple shapes and smooth surfaces. Pale, light, soft greens; no dark or heavily saturated colors. Clean flat colors with no texture noise, no grain, no speckles, no baked lighting or shadows. Lying flat, single object, centered, no base, no ground, no background.
 
-## 4. オークの木　ファイル名：`oak.glb`
+## 4. おおきな木（オーク）　ファイル名：`oak.glb`
 A full-grown oak tree with a thick sturdy trunk, a few strong spreading branches, and a broad rounded crown made of several soft clumps of leaves. Stylized, chunky game-asset 3D model with clean simple shapes and smooth surfaces, like a cozy farming game. Pale, light, soft colors: warm light brown bark, fresh light green leaves; no dark or heavily saturated colors. Clean flat colors with soft shading only, no texture noise, no grain, no speckles, no baked lighting or shadows. Standing upright, perfectly vertical, not tilted, trunk base flat on the ground, single object, centered, no ground plane, no background.
 
-## 5. オークの枯れ木　ファイル名：`oak_dead.glb`
+## 5. おおきな木の枯れ木（オーク）　ファイル名：`oak_dead.glb`
 A dead, leafless oak tree with a thick gnarled trunk and a few bare twisted branches spreading upward, some branches broken short. Stylized, chunky game-asset 3D model with clean simple shapes and smooth surfaces, like a cozy farming game. Pale, light, soft colors: light grayish brown dry wood; no dark or heavily saturated colors. Clean flat colors with soft shading only, no texture noise, no grain, no speckles, no baked lighting or shadows. Standing upright, perfectly vertical, not tilted, trunk base flat on the ground, single object, centered, no ground plane, no background.
 
-## 6. 杉の木　ファイル名：`cedar.glb`
+## 6. とんがりの木（杉）　ファイル名：`cedar.glb`
 A tall Japanese cedar tree with a straight trunk and a narrow conical crown made of several stacked soft tiers of needle foliage, pointed top. Stylized, chunky game-asset 3D model with clean simple shapes and smooth surfaces, like a cozy farming game. Pale, light, soft colors: light reddish brown bark, soft muted green foliage; no dark or heavily saturated colors. Clean flat colors with soft shading only, no texture noise, no grain, no speckles, no baked lighting or shadows. Standing upright, perfectly vertical, not tilted, trunk base flat on the ground, single object, centered, no ground plane, no background.
 
-## 7. メープルの木　ファイル名：`maple.glb`
+## 7. ゆうやけの木（メープル）　ファイル名：`maple.glb`
 A maple tree with a medium trunk, branches spreading upward, and a rounded crown of soft leaf clumps in autumn colors. Stylized, chunky game-asset 3D model with clean simple shapes and smooth surfaces, like a cozy farming game. Pale, light, soft colors: light brown bark, soft orange and light red leaves with a little yellow; no dark or heavily saturated colors. Clean flat colors with soft shading only, no texture noise, no grain, no speckles, no baked lighting or shadows. Standing upright, perfectly vertical, not tilted, trunk base flat on the ground, single object, centered, no ground plane, no background.
 
-## 8. アカシアの木　ファイル名：`acacia.glb`
+## 8. ひらたい木（アカシア）　ファイル名：`acacia.glb`
 An acacia tree with a slender trunk that splits into a few angled branches, and a wide, flat, umbrella-shaped crown of soft leaf clumps on top. Stylized, chunky game-asset 3D model with clean simple shapes and smooth surfaces, like a cozy farming game. Pale, light, soft colors: light warm brown bark, soft olive-green leaves; no dark or heavily saturated colors. Clean flat colors with soft shading only, no texture noise, no grain, no speckles, no baked lighting or shadows. Trunk base flat on the ground, single object, centered, no ground plane, no background.
 
 ## 9. りんごの木（実つき）　ファイル名：`appletree.glb`
