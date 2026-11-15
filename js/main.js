@@ -80,7 +80,7 @@ function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
     const hide=!open&&!(k===2&&LIVE[1]&&LIVE[1].cleared);/* まだひらいていないステージは、名前も絵も見せない */
     if(hide)card.querySelector('.wn').innerHTML=pxi('lock','wlk')+'WORLD '+(k+1);else card.querySelector('.wn').textContent=wd.sub;card.querySelector('h3').textContent=hide?'？？？':wd.name;
     let info=wd.desc;
-    if(k<=1&&L&&L.introSeen)info=(L.summary?'':'せいれい '+L.res.length+'人・')+'村レベル '+L.lv+(L.cleared?'・ヌシ様が帰ってきた！':'');
+    if(k<=1&&L&&L.introSeen)info=(L.vname?L.vname+'村・':'')+(L.summary?'':'せいれい '+L.res.length+'人・')+'村レベル '+L.lv+(L.cleared?'・ヌシ様が帰ってきた！':'');
     else if(k===1&&!open)info='はじまりの草原でヌシ様をむかえると、ひらきます。';
     if(k===2)info=LIVE[1]&&LIVE[1].cleared?'道がひらいた！ …けれど、まだ準備中。':'まえの土地でヌシ様をむかえると、ひらきます。';
     if(k>=3)info=k===5?'？？？':'まえの土地でヌシ様をむかえると、ひらきます。';

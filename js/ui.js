@@ -339,6 +339,7 @@ function renderSheet(){
     const L=S.lv,a=LV_XP[L-1],b=L>=maxLv()?a:LV_XP[L]??a,ic=q=>{const n=document.querySelector('.hud '+q);return n?n.cloneNode(true).outerHTML:''},bar=(v,c)=>'<div class="vlBar"><i style="width:'+clamp(v,0,1)*100+'%;background:'+c+'"></i></div>';
     const V=el('<div class="vl"></div>');
     V.appendChild(el('<div class="vlHero"><div class="vlLv">'+ic('.lvb svg')+'<small>村レベル</small><b>'+L+'</b></div><div class="vlHw">'+(b>a?bar((S.totalPt-a)/(b-a),'#7ee08a')+'<small>つぎのレベルまで　あと '+Math.max(0,Math.ceil(b-S.totalPt))+'</small>'+nextLvHtml(L+1):bar(1,'#7ee08a')+'<small>さいこうレベル</small>')+'</div></div>'));
+    {const s2=el('<div class="vlSec"><h4>村の名前</h4><div class="vlRow"><span></span><b></b></div></div>'),b=el('<button class="btn" type="button"></button>');s2.querySelector('span').textContent=vName()||'まだない';b.textContent=S.vname?'かえる':'つける';b.onclick=()=>{sfx('tap');vnamePop(()=>{if(sheet)renderSheet()})};s2.querySelector('b').appendChild(b);V.appendChild(s2)}
     {const sk=suteki();V.appendChild(el('<div class="vlSec"><h4>すてき度</h4><div class="vlRow"><span>'+'★'.repeat(sk.st)+'☆'.repeat(5-sk.st)+'</span><b>'+sk.pt+'</b></div></div>'))}
     const sh=Math.min(3,S.shards||0);
     V.appendChild(el('<div class="vlSec"><h4>目標</h4><div class="vlRow"><span>'+SHN()+'</span><b class="vlSh">'+[0,1,2].map(k=>'<i class="'+(k<sh?'on':'')+'"></i>').join('')+'</b></div></div>'));
@@ -589,7 +590,7 @@ function renderSheet(){
         const b=el('<button class="btn pri" style="flex:none"></button>');if(mx){b.textContent='さいだい';b.disabled=true}else{const c=GUPC[n];b.textContent='強化　'+SP(c);lackOn(b,lackPt(c));b.onclick=()=>{if(S.pt<c){sfx('tap');return toast(lackPt(c),'warn')}if(gupBuy(g.k))renderSheet()}}
         r.appendChild(b);rw.appendChild(r)}
       body.appendChild(sec)
-    }else if(sheetArg==='record'){appendStoryReplays(body);diaryList(body);
+    }else if(sheetArg==='record'){appendStoryReplays(body);diaryList(body);photoSec(body);
       const st=el('<div class="sec"><h3>これまで</h3><div class="recs"></div></div>'),rw=st.querySelector('.recs');
       for(const[a,b]of[['すごした日',dayNo()+'日'],...(S.score?[['クリアスコア',S.score.rank+'（'+S.score.tot+'てん）']]:[]),['のりこえた夜',(S.nights||0)+'回'],['いまのせいれい',S.res.length+'人'],['よんだせいれい',(S.summons||0)+'人'],['消えてしまったせいれい',(S.deaths||0)+'人'],
         ['追いはらった「コワイノ」',(S.kills||0)+'体'],['オオカゲ',(S.bossKills||0)+'回'],[SHN(),(S.shards||0)+'つ'],['めぶきのしずく',(S.mebuki||0)+'こ'],['ためたせいれいパワー',Math.floor(S.totalPt||0)+''],['みどりのマス',GRASSN+'マス'],['村レベル','Lv'+S.lv],['たっせいした目標',S.quest+'こ']]){const d=el('<div class="st"><span></span><b></b></div>');d.firstChild.textContent=a;d.lastChild.textContent=b;rw.appendChild(d)}
