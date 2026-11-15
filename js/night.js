@@ -60,7 +60,7 @@ const EN={
   trapper:{xp:6,pw:5,name:'ワナクイ',hp:80,sp:.9,atk:12,hit:16,hitF:30,hitN:50,hitFS:15,hitNS:25,hitFN:75,hitFNS:38,col:'#2b3a1e',eye:'#c6ff6b',size:.95,trapper:1},/* 罠・見張り台を先にこわしにくる */
   boss:{xp:25,pw:20,rng:2.1,name:'オオカゲ',hp:600,sp:.84,atk:7,hit:14,hitF:30,hitN:40,hitFS:15,hitNS:20,hitFN:60,hitFNS:30,col:'#120a24',eye:'#ff3b6b',size:1.8,boss:1},
   ash:{xp:4,pw:3,name:'ハイカゲ',hp:60,sp:.9,atk:20,hit:12,hitF:45,hitN:35,hitFS:23,hitNS:20,hitFN:53,hitFNS:30,col:'#6d6a66',eye:'#ffb36b',size:.9,ash:1},/* かまど・ベンチなどを灰でよごして止める */
-  armor:{xp:9,pw:7,name:'ヨロイカゲ',hp:150,sp:.7,atk:25,hit:24,hitF:45,hitN:70,hitFS:25,hitNS:35,hitFN:100,hitFNS:50,col:'#4a4a5a',eye:'#9fe0ff',size:1.3,art:'rockc',armor:1},/* 矢は半分、火・どく・延焼は2倍（defense.js）。絵はイワカゲの絵をかりる（仮） */
+  armor:{xp:9,pw:7,name:'ヨロイカゲ',hp:120,sp:.7,atk:25,hit:24,hitF:45,hitN:70,hitFS:25,hitNS:35,hitFN:100,hitFNS:50,col:'#4a4a5a',eye:'#9fe0ff',size:1.3,art:'rockc',armor:1},/* 矢は半分、火・どく・延焼は2倍（defense.js）。絵はイワカゲの絵をかりる（仮） */
   shiny:{xp:10,pw:10,name:'ヒカリカゲ',hp:60,sp:1.4,atk:30,hit:0,hitF:0,hitN:0,hitFS:0,hitNS:0,hitFN:0,hitFNS:0,col:'#fff2b0',eye:'#ffffff',size:.8,art:'fast',glow:1,shiny:1},/* まれに来て、横切って帰る。絵はハヤカゲの絵に光をかさねる（仮） */
   rockc:{xp:12,pw:8,name:'イワカゲ',hp:220,sp:.5,atk:30,hit:30,hitF:113,hitN:90,hitFS:60,hitNS:45,hitFN:135,hitFNS:68,col:'#5a4636',eye:'#ffcf6b',size:1.3},/* おそいけど、かたい */
   hino:{xp:35,pw:25,rng:2.3,name:'ヒノオオカゲ',hp:750,sp:.7,atk:6,hit:40,hitF:150,hitN:120,hitFS:75,hitNS:60,hitFN:180,hitFNS:90,col:'#3a0c08',eye:'#ffb02e',size:2.1,boss:1,dev:1},/* 火山から下りてきて、熱の装置をねらう */

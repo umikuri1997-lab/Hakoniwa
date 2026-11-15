@@ -20,7 +20,7 @@ const WXNOTE={rain:'雨の夜：ほのおの罠のダメージ半分・延焼な
 function wxNightNote(){const d=dayNo();if(S.flags.wxNote===d||!(S.wave&&S.wave.length))return;S.flags.wxNote=d;const w=nightWx();if(w)toast(WXNOTE[w],'warn')}
 /* ---------- ヨロイカゲ・ヒカリカゲ ---------- */
 function armorMul(e,o){if(!EN[e.type]||!EN[e.type].armor)return 1;const t=o&&o.dt;return t==='arrow'?.5:t==='fire'||t==='poison'||t==='burn'?2:1}
-function defWave(list,alv){/* 草原：はじめてオオカゲを追いはらったあと、平均レベル6から、ヨロイカゲがまじる */if(WD!==0||S.free||!((S.bossKills||0)>0)||alv<6)return;for(let i=0;i<list.length;i++)if(list[i]==='basic'&&i%7===6)list[i]='armor'}
+function defWave(list,alv){/* 草原：はじめてオオカゲを追いはらったあと、平均レベル7から、ヨロイカゲがまじる */if(WD!==0||S.free||!((S.bossKills||0)>0)||alv<7)return;for(let i=0;i<list.length;i++)if(list[i]==='basic'&&i%7===6)list[i]='armor'}
 function shinyAdd(){/* ヒカリカゲ：波の夜に、まれに1ぴき */if(Math.random()>=SHINYP)return 0;const hp=EN.shiny.hp;S.enemies.push({id:S.nid++,type:'shiny',x:0,y:0,hp,max:hp,delay:WAVES[1]+20,side:Math.random()<.5?'w':'e',shiny:1,spawned:false,path:[],repath:0,atk:0,stun:0,flash:0,flee:false});return 1}
 function shinyTick(e){if(!e.shiny||e.flee)return false;if(e.sx0==null){e.sx0=e.x;S.flags.shinySeen=1;toast('ヒカリカゲがあらわれた！','good')}if(Math.abs(e.x-e.sx0)>5&&(e.x<1.5||e.x>W-1.5||(fogOn()&&(fogAt((e.y|0)*W+Math.min(W-1,(e.x|0)+1))||fogAt((e.y|0)*W+Math.max(0,(e.x|0)-1)))))){e.dead=true;toast('ヒカリカゲは、行ってしまった');return false}return true}
 function shinyGoal(e){/* 来たのと反対のはしへ（行けるいちばん近い所） */const s=e.side==='w'?'e':'w',G=bfsE(e.x|0,e.y|0,40,e.sd||(e.sd=(Math.random()*1e9)|0));let b=-1,bd=1e9;for(let y=0;y<H;y++){const x=sideEdge(y,s);if(x<0)continue;const q=y*W+x;if(G.dist[q]<0)continue;if(G.dist[q]<bd){bd=G.dist[q];b=q}}return b}

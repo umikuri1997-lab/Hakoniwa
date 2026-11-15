@@ -9,8 +9,8 @@ const out=await page.evaluate(()=>dfEval(`(()=>{const o={};S=newState(0);setWorl
  S.obj[52*W+53]='drum';recount();o.cdDrum=towerMod(j,WATCH[5]).cd;S.obj[52*W+53]='';S.obj[60*W+62]='drum';recount();o.cdFar=towerMod(j,WATCH[5]).cd;S.obj[60*W+62]='';recount();
  S.rain=true;o.ft=fireTrapDmg();o.ws=waterStunMul();S.rain=false;S.today='kaze';o.rKaze=towerRng(null);o.gust=gustDist();S.today=null;o.ft0=fireTrapDmg();o.gust0=gustDist();
  o.disp=rangeOf('watch',j).r;
- /* ヨロイカゲ */const a={type:'armor',hp:150,max:150};hurtEn(a,20,{dt:'arrow'});o.aArrow=150-a.hp;a.hp=150;hurtEn(a,20,{dt:'fire'});o.aFire=150-a.hp;a.hp=150;hurtEn(a,20,{});o.aNone=150-a.hp;const b={type:'basic',hp:100,max:100};hurtEn(b,20,{dt:'arrow'});o.bArrow=100-b.hp;
- const L=Array(14).fill('basic');S.bossKills=1;defWave(L,6);o.armorN=L.filter(t=>t==='armor').length;const L2=Array(14).fill('basic');defWave(L2,5);o.armor5=L2.filter(t=>t==='armor').length;S.bossKills=0;const L3=Array(14).fill('basic');defWave(L3,9);o.armorEarly=L3.filter(t=>t==='armor').length;
+ /* ヨロイカゲ */const a={type:'armor',hp:120,max:120};hurtEn(a,20,{dt:'arrow'});o.aArrow=120-a.hp;a.hp=120;hurtEn(a,20,{dt:'fire'});o.aFire=120-a.hp;a.hp=120;hurtEn(a,20,{});o.aNone=120-a.hp;o.aHp=EN.armor.hp;const b={type:'basic',hp:100,max:100};hurtEn(b,20,{dt:'arrow'});o.bArrow=100-b.hp;
+ const L=Array(14).fill('basic');S.bossKills=1;defWave(L,7);o.armorN=L.filter(t=>t==='armor').length;const L2=Array(14).fill('basic');defWave(L2,6);o.armor5=L2.filter(t=>t==='armor').length;S.bossKills=0;const L3=Array(14).fill('basic');defWave(L3,9);o.armorEarly=L3.filter(t=>t==='armor').length;
  /* 目印：見張り台は印のコワイノを先に */S.enemies=[];const near={id:1,type:'basic',x:51,y:53,hp:100,max:100,spawned:true,path:[]},far={id:2,type:'basic',x:51,y:56,hp:100,max:100,spawned:true,path:[],mark:1};S.enemies=[near,far];S.inv.arrow=10;const shots=[];towerVolley(j,51,51,{dmg:10,range:8,cd:10},null,shots);o.markHit=far.hp<100&&near.hp===100;
  S.enemies=[near];LIGHTCD=0;S.pt=99;try{guardLight(near)}catch(e){o.glErr=String(e)}o.marked=!!near.mark;
  /* ヒカリカゲ */S.enemies=[];const mr=Math.random;Math.random=()=>.05;o.shinyAdd=shinyAdd();Math.random=mr;const sh=S.enemies[0];o.shinyType=sh&&sh.type;S.ns={n:1,kill:0,lost:[]};S.drops=[];sh.spawned=true;sh.x=CX;sh.y=CY;defeat(sh,'x');o.shinyDrop=(S.drops||[]).map(d=>d.id).filter(id=>id==='sand'||id==='fukuro').length;
@@ -22,7 +22,7 @@ assert.equal(out.cdFast,7,'はやうち');assert.ok(Math.abs(out.cdDrum-5.6)<1e-
 assert.equal(out.ft,20);assert.equal(out.ws,1.5);assert.equal(out.rKaze,1);assert.equal(out.gust,9);assert.equal(out.ft0,40);assert.equal(out.gust0,6);
 assert.equal(out.disp,WATCHR5(),'射程の円にも入る');
 assert.equal(out.aArrow,10);assert.equal(out.aFire,40);assert.equal(out.aNone,20);assert.equal(out.bArrow,20);
-assert.equal(out.armorN,2);assert.equal(out.armor5,0);assert.equal(out.armorEarly,0);
+assert.equal(out.aHp,120);assert.equal(out.armorN,2);assert.equal(out.armor5,0);assert.equal(out.armorEarly,0);
 assert.ok(out.markHit,'目印のコワイノを先に');assert.ok(out.marked,'まもりの光で目印');
 assert.equal(out.shinyAdd,1);assert.equal(out.shinyType,'shiny');assert.ok(out.shinyDrop>=1,'ヒカリカゲの落とし物');
 assert.equal(out.gift,3);assert.equal(out.giftBroke,null,'こわされた夜はなし');
