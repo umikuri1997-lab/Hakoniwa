@@ -68,6 +68,7 @@ function hasWork(r){
   if(!isNight()&&(r.cpk||S.cmpQ&&Object.keys(S.cmpQ).length))return true;
   if(smeltWant(r))return true;
   if(jobWork(r,null,1))return true;/* しごと場の担当 */
+  if(typeof bpJob==='function'&&bpJob(r,null,1))return true;/* 家の設計図 */
   if(!isNight()&&r.elem==='wood'&&COMPS.some(c=>(S.dyn[c]||{}).c>0||r.fert>0)&&S.obj.some((o,q)=>o==='farm'&&S.dyn[q]&&S.dyn[q].sown!==false&&S.dyn[q].g<100&&S.dyn[q].fdD!==dayNo()))return true;
   if(!isNight()&&S.drops&&S.drops.length&&S.drops.some(q=>(q.id==='shard'||Math.hypot(q.x+.5-r.x,q.y+.5-r.y)<=(r.elem==='wind'?10:5)+gearStat(r).prng)&&(q.id!=='shard'||r.name===POKO||!S.res.some(x=>x.name===POKO&&!x.hidden))&&walk(q.y*W+q.x)&&free('d'+(q.y*W+q.x),1)))return true;
   if(canJob(r,'build')&&S.obj.some((o,j)=>o==='site'&&free('o'+j,2)))return true;
@@ -96,7 +97,8 @@ function goWork(r,G,nw){boxFullReset();
   if(r.elem==='earth'&&tryJob(r,G,'repair'))return true;/* 土のせいれいは、修理がいちばん先（木・石・雑草・畑の世話より先） */
   // 食料がゼロなら、まず食べ物を集める
   if(S.food<foodLow()&&foodCap()>0)for(const k of['harvest','gather'])if(tryJob(r,G,k))return true;/* 食料が人数×2より少なくなったら、ほかの仕事より先に食べ物をあつめる */
-  for(const k of['build','craft'])if(tryJob(r,G,k))return true;/* 建てる・依頼のものづくりは、遠くても、ふだんの仕事（植える・ひろう・畑・木・石・草）より先 */
+  for(const k of['build','craft'])if(tryJob(r,G,k))return true;
+  if(typeof bpJob==='function'&&bpJob(r,G))return true;/* 家の設計図：置く所の木・岩をかたづける *//* 建てる・依頼のものづくりは、遠くても、ふだんの仕事（植える・ひろう・畑・木・石・草）より先 */
   // おつげがあれば、それを先にする
   if(S.oracle==='play'&&r.fun<98&&goPlay(r,G,true))return true;
   // 花や木の苗は、空腹などの急ぎの用事を除いて、ほかの仕事より先に植える
