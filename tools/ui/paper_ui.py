@@ -185,17 +185,37 @@ def note_rows(F=FOLD):
     return rows
 
 
+PIN = [  # 依頼の紙をとめる押しピン：木のまるい頭を、少し見おろした形（14×12）。o ふち・h つや・l 光・a 木・d かげ・e 側面・s 紙に落ちるかげ
+    '....oooooo....',
+    '..oolllaaaoo..',
+    '.olhhllaaaado.',
+    '.olhhlaaaaado.',
+    'olllaaaaaaaddo',
+    'olaaaaaaaadddo',
+    'oaaaaaaaaddddo',
+    'oaaaaaaadddddo',
+    'oeaaaaddddddeos',
+    '.oeeeeeeeeeeos',
+    '..oooooooooos.',
+    '....ssssssss..',
+]
+
+
 def note_css():
     F = FOLD
     fib = svg(ptex_rows(), {'d': '#8a6a3a24', 'm': '#8a6a3a10', 'l': '#ffffff70'})
     fr = svg(note_rows(), {'a': '#f4e9d2', 'o': '#a8743f', 'h': '#f7eedb', 'b': '#ebdcbb', 'B': '#dccaa2', 'e': '#c9ad7c', 'k': '#e2d3b2', 's': SHADOW})
+    pin = svg([r.ljust(15, '.')[:15] for r in PIN], {'o': '#6e4a28', 'h': '#fbe6c2', 'l': '#e2b47a', 'a': '#c9925a', 'd': '#a8743f', 'e': '#8a5a30', 's': '#3a2a1a40'})
     return ('/* 依頼の紙：右下の角がそり返った紙のわく（note_rows）と、紙の柄（ptex_rows：CC0 の紙のテクスチャ。そり返った角にはかけない） */\n'
             f'body .paper:not(.empty){{border-image-source:{fr}!important;border-image-slice:4 {F + 2} {F + 3} 4 fill!important;'
             f'border-image-width:4px {F + 2}px {F + 3}px 4px!important;border-image-repeat:stretch!important;padding-bottom:{F - 2}px!important}}\n'
             f'body .paper:not(.empty)::after{{content:"";position:absolute;inset:2px 2px 3px 2px;z-index:-1;pointer-events:none;image-rendering:pixelated;'
             f'background:{fib} 0 0/96px 96px repeat;'
             f'-webkit-mask:linear-gradient(#000 0 0) 0 0/100% calc(100% - {F}px) no-repeat,linear-gradient(#000 0 0) 0 0/calc(100% - {F}px) 100% no-repeat;'
-            f'mask:linear-gradient(#000 0 0) 0 0/100% calc(100% - {F}px) no-repeat,linear-gradient(#000 0 0) 0 0/calc(100% - {F}px) 100% no-repeat}}')
+            f'mask:linear-gradient(#000 0 0) 0 0/100% calc(100% - {F}px) no-repeat,linear-gradient(#000 0 0) 0 0/calc(100% - {F}px) 100% no-repeat}}\n'
+            f'/* 押しピン：木のまるい頭（立体）とかげ */\n'
+            f'body .paper:not(.empty)::before{{width:15px;height:12px;top:-6px;margin-left:-7px;background:{pin} 0 0/15px 12px no-repeat!important;'
+            f'-webkit-mask:none!important;mask:none!important;image-rendering:pixelated;z-index:1}}')
 
 
 def board_css():
