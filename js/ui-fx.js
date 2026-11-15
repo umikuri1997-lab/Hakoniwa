@@ -19,7 +19,7 @@ function uiRoll(e,old,up){const tag=e.closest('.htag');if(!tag)return;for(const 
   const o=document.createElement('b');o.className='nold '+(up?'u':'d');o.textContent=old;o.style.left=e.offsetLeft+'px';o.style.top=e.offsetTop+'px';o.style.color=getComputedStyle(e).color;tag.appendChild(o);setTimeout(()=>o.remove(),260);
   e.classList.remove('nrollU','nrollD');void e.offsetWidth;e.classList.add(up?'nrollU':'nrollD');clearTimeout(e._roT);e._roT=setTimeout(()=>e.classList.remove('nrollU','nrollD'),260)}
 /* 木くず：草原のボタンをはなしたとき・下のシートが「ことん」と置かれたとき、板のはしから、小さな木くずがこぼれる */
-function sawdust(x,y,n,w){if(uiReduced())return;let box=document.getElementById('tapFx');if(!box){box=document.createElement('div');box.id='tapFx';document.body.appendChild(box)}
+function sawdust(x,y,n,w){if(uiReduced())return;sfx('dust');let box=document.getElementById('tapFx');if(!box){box=document.createElement('div');box.id='tapFx';document.body.appendChild(box)}
   const cols=['#b08552','#c49a62','#9a6c40'];
   for(let i=0;i<n&&UIFX.parts.length<40;i++){const d=document.createElement('i'),sz=(i%3?1.5:3);d.style.width=d.style.height=sz+'px';d.style.background=cols[i%3];box.appendChild(d);
     UIFX.parts.push({d,x:x+(Math.random()-.5)*(w||0),y,vx:(Math.random()-.5)*1.6,vy:-.4-Math.random()*.9,t:0,dust:1,ph:i})}
@@ -61,7 +61,7 @@ function ldWalk(c){const g=c.getContext('2d');g.setTransform(1,0,0,1,0,0);g.clea
 /* ステージごとのUIの見た目：草原（WD 0）は木のわく（body.wd0）。毎コマよばれるが、かわったときだけさわる */
 let UIWD=null,UIRAIN=null;function uiStageSync(){const w=started&&typeof WD==='number'?WD:-1,rn=!!(started&&S&&S.rain);if(rn!==UIRAIN){UIRAIN=rn;document.body.classList.toggle('wrain',rn)}/* 雨の日は、木札が少し大きくゆれる */if(w===UIWD)return;UIWD=w;document.body.classList.toggle('wd0',w===0)}
 /* つるした木札（草原の下のバー・目標）：タップすると、ぶらんとゆれる */
-function uiSwing(e){if(uiReduced()||!e)return;e.classList.remove('uswing');void e.offsetWidth;e.classList.add('uswing');clearTimeout(e._swT);e._swT=setTimeout(()=>e.classList.remove('uswing'),1050)}
+function uiSwing(e){if(uiReduced()||!e)return;{const n=performance.now();if(n-(UIFX.crk||0)>450){UIFX.crk=n;sfx('creak')}}/* なわが、きゅ… */e.classList.remove('uswing');void e.offsetWidth;e.classList.add('uswing');clearTimeout(e._swT);e._swT=setTimeout(()=>e.classList.remove('uswing'),1050)}
 document.addEventListener('click',e=>{if(!document.body.classList.contains('wd0'))return;const b=e.target&&e.target.closest&&e.target.closest('.dock button,.quest');if(b)uiSwing(b)},true);
 /* 草原のボタン：はなしたとき、ぽよんとはねかえる */
 document.addEventListener('pointerup',e=>{if(!document.body.classList.contains('wd0')||uiReduced())return;const b=e.target&&e.target.closest&&e.target.closest('.btn,.ctab,.slot,.qbtn,.mtile,.chip,#speedBtn,#pauseBtn,#skipBtn');if(!b||b.disabled)return;b.classList.remove('uboing');void b.offsetWidth;b.classList.add('uboing');clearTimeout(b._boT);b._boT=setTimeout(()=>b.classList.remove('uboing'),360);
@@ -76,9 +76,48 @@ function stampCanvas(){if(STAMPC)return STAMPC;const c=document.createElement('c
   const d=h.getImageData(0,0,32,32);for(let i=3;i<d.data.length;i+=4)d.data[i]=d.data[i]>110?255:0;h.putImageData(d,0,0);g.drawImage(t,0,0);t.width=t.height=0;/* 字はドットのまま（うすい所はけす） */
   return STAMPC=c}
 function uiStamp(el,small){if(!el||!el.isConnected)return;const c=document.createElement('canvas');c.width=c.height=32;c.getContext('2d').drawImage(stampCanvas(),0,0);c.className='ustamp'+(small?' s':'');
-  if(getComputedStyle(el).position==='static')el.style.position='relative';el.appendChild(c);setTimeout(()=>{el.classList.remove('ushake');void el.offsetWidth;el.classList.add('ushake')},180);
+  if(getComputedStyle(el).position==='static')el.style.position='relative';el.appendChild(c);setTimeout(()=>{el.classList.remove('ushake');void el.offsetWidth;el.classList.add('ushake');sfx('stamp');buzz(18)},180);/* ポンとおされた瞬間に、ぽむっ */
   setTimeout(()=>c.classList.add('out'),2400);setTimeout(()=>c.remove(),2850)}
-uiNumWatch();
+/* ---- 手ざわりのつづき：ふるえ・長おし・タブの音・行がならぶ・板がしなる・ゲージの音 ---- */
+/* スマホのふるえ（Android。iPhone のブラウザはふるえない）。設定の「ふるえ」でとめられる */
+function buzz(ms){if(SND.vib===false||!navigator.vibrate)return;try{navigator.vibrate(ms)}catch(e){}}
+/* タブをおしたら、めくる音（そのタブのボタンの音のかわり。audio.js の SFXTAB） */
+document.addEventListener('click',e=>{const t=e.target&&e.target.closest&&e.target.closest('.ctab');if(!t)return;const flip=document.body.classList.contains('wd0')&&!uiReduced()&&t.closest('.ctabs')&&!t.closest('.pxcard')&&!t.closest('.sheet[data-k="zukan"]');/* 草原で札がくるっとまわるタブは、その音（flip）だけ */
+  SFXTAB=flip?2:1;SFXTABD=0;setTimeout(()=>{if(!SFXTABD&&!flip)sfx('tab');SFXTAB=0},0)},true);
+/* ±のボタン：長くおすと、くりかえし数がかわり、だんだん速くなる（かち、かち、かちかちかち） */
+const REP={b:null,t:0,n:0,done:0,inC:0},REPSEL='.btn.m,.btn.p';
+function repStop(){clearTimeout(REP.t);REP.b=null}
+document.addEventListener('pointerdown',e=>{const b=e.target&&e.target.closest&&e.target.closest(REPSEL);repStop();REP.n=0;REP.done=0;if(!b)return;REP.b=b;
+  const tick=()=>{if(REP.b!==b||!b.isConnected)return repStop();REP.n++;SFXR=1+Math.min(.12,REP.n*.006);REP.inC=1;try{b.click()}finally{REP.inC=0;SFXR=1}REP.done=1;DEEP.rep=1;buzz(4);REP.t=setTimeout(tick,Math.max(50,170-REP.n*20))};REP.t=setTimeout(tick,420)},true);
+for(const ev of['pointerup','pointercancel'])document.addEventListener(ev,repStop,true);
+document.addEventListener('click',e=>{if(REP.inC||!REP.done)return;const b=e.target&&e.target.closest&&e.target.closest(REPSEL);if(b){REP.done=0;e.stopPropagation();e.preventDefault()}},true);/* くりかえしたあと、指をはなしたときの1回はかぞえない */
+/* おしこむ深さ：0.28秒より長くおすと、もう1ドット深くしずむ。はなすと、大きくはねて「ぽよん」（長くおすほど高い） */
+const DEEP={b:null,t0:0,tm:0,rep:0},DEEPT=280,PRESSSEL='.btn,.ctab,.slot,.qbtn,.mtile,.chip,#speedBtn,#pauseBtn,#skipBtn,.dock button';
+document.addEventListener('pointerdown',e=>{const b=e.target&&e.target.closest&&e.target.closest(PRESSSEL);if(!b||b.disabled)return;buzz(6);if(holdOn(b))return;/* おしつづけて決めるボタンは、焼き印のほう */DEEP.b=b;DEEP.t0=performance.now();DEEP.rep=0;clearTimeout(DEEP.tm);DEEP.tm=setTimeout(()=>{if(DEEP.b===b&&!uiReduced())b.classList.add('udeep')},DEEPT)},true);
+for(const ev of['pointerup','pointercancel'])document.addEventListener(ev,e=>{const b=DEEP.b;if(!b)return;DEEP.b=null;clearTimeout(DEEP.tm);const held=performance.now()-DEEP.t0,deep=b.classList.contains('udeep');b.classList.remove('udeep');
+  if(ev!=='pointerup'||!deep||DEEP.rep||held<DEEPT||uiReduced())return;if(document.body.classList.contains('wd0')&&b.closest('.dock'))return;/* 草原の下のバーは、つるした木札（ゆれる） */
+  b.classList.remove('uboing','uboing2');void b.offsetWidth;b.classList.add('uboing2');clearTimeout(b._bo2);b._bo2=setTimeout(()=>b.classList.remove('uboing2'),480);SFXR=1+Math.min(1,(held-DEEPT)/900)*.6;try{sfx('boing')}finally{SFXR=1}},true);
+/* 下のシートを開いたとき：行が上から1つずつ、ことっと置かれる（見えている所の10行まで） */
+function uiRowsIn(){if(uiReduced())return;const b=document.getElementById('sheetBody');if(!b)return;const L=[];
+  for(const c of b.children){const rs=[...c.children].filter(e=>e.matches('.row,.mtile,.slot,.mtag,label,.zk'));if(rs.length>2)L.push(...rs);else L.push(c)}
+  if(document.body.classList.contains('wd0'))for(let i=L.length-1;i>=0;i--)if(L[i].matches('.mtile')||L[i].querySelector('.mtile'))L.splice(i,1);/* 草原のメニューの板は「とん、とん」（tileStagger）のほう *//* 一覧・タイルのならびは、1つずつ */
+  const top=b.getBoundingClientRect().top,Hh=b.clientHeight,base=document.body.classList.contains('wd0')?150:60;let i=0;
+  for(const c of L){if(i>=10)break;if(!c.offsetHeight)continue;if(c.getBoundingClientRect().top-top>Hh)break;const d=base+i*55,k=i;c.style.animationDelay=d+'ms';c.classList.add('urow');setTimeout(()=>{if(!c.isConnected)return;SFXR=1.05+k*.035;try{sfx('rowin')}finally{SFXR=1}},d);setTimeout(()=>{c.classList.remove('urow');c.style.animationDelay=''},d+300);i++}}
+/* 一覧のはしまでスクロールすると、板が少したわんで、もどる（1ドットずつ） */
+const OSB={el:null,y:0,p:0,an:0,wh:0};
+function osbSet(el,p){el.style.transform=p?'translateY('+Math.round(p/1.5)*1.5+'px)':''}
+function osbSpring(el,p){const sq=[p,-p*.3,p*.12,-p*.05,0];let i=0;clearTimeout(OSB.an);const st=()=>{osbSet(el,sq[i]);if(++i<sq.length)OSB.an=setTimeout(st,55)};st()}
+const osbTop=el=>el.scrollTop<=0,osbBot=el=>el.scrollTop+el.clientHeight>=el.scrollHeight-1;
+document.addEventListener('touchstart',e=>{const el=e.target&&e.target.closest&&e.target.closest('#sheetBody');OSB.el=el&&!uiReduced()?el:null;if(OSB.el){OSB.y=e.touches[0].clientY;OSB.p=0}},{capture:true,passive:true});
+document.addEventListener('touchmove',e=>{const el=OSB.el;if(!el)return;const y=e.touches[0].clientY,dy=y-OSB.y;let p=0;
+  if(dy>0&&osbTop(el))p=Math.min(12,dy*.2);else if(dy<0&&osbBot(el))p=Math.max(-12,dy*.2);else OSB.y=y;/* はしに着くまでは、ひっぱった分にしない */
+  OSB.p=p;clearTimeout(OSB.an);osbSet(el,p)},{capture:true,passive:true});
+for(const ev of['touchend','touchcancel'])document.addEventListener(ev,()=>{const el=OSB.el;if(!el)return;OSB.el=null;const p=OSB.p;OSB.p=0;if(Math.abs(p)>=4.5){SFXR=Math.min(1,Math.abs(p)/12);try{sfx('bend')}finally{SFXR=1}}if(p)osbSpring(el,p)},{capture:true,passive:true});
+document.addEventListener('wheel',e=>{const el=e.target&&e.target.closest&&e.target.closest('#sheetBody');if(!el||uiReduced()||el.scrollHeight<=el.clientHeight+1)return;const n=performance.now();if(n-OSB.wh<500)return;
+  const p=e.deltaY<0&&osbTop(el)?6:e.deltaY>0&&osbBot(el)?-6:0;if(!p)return;OSB.wh=n;SFXR=.4;try{sfx('bend')}finally{SFXR=1}osbSpring(el,p)},{passive:true});
+/* 村レベルのゲージがたまると、とくとく */
+function uiGaugeWatch(){const e=document.getElementById('xpBar');if(!e)return;let pv=parseFloat(e.style.width)||0,lt=0;new MutationObserver(()=>{const v=parseFloat(e.style.width)||0,p=pv;pv=v;if(!(v>p)||!started)return;const n=performance.now();if(n-lt<600)return;lt=n;sfx('glug')}).observe(e,{attributes:true,attributeFilter:['style']})}
+uiNumWatch();uiGaugeWatch();
 /* 草原：メニュー・一覧をひらくと、ボタンの板が1まいずつ「とん、とん」と置かれる（kotonn と同じ動き。CSS の tontile と、おくれ --ti）。音は板が置かれる瞬間に */
 document.addEventListener('animationstart',e=>{if(e.animationName==='tontile'&&!uiReduced())setTimeout(()=>sfx('tile'),90)});
 function tileStagger(root){if(!document.body.classList.contains('wd0')||uiReduced()||!root)return;const L=root.querySelectorAll('.mtile');let i=0;for(const b of L){if(i>=12)break;b.style.setProperty('--ti',(i*45)+'ms');b.classList.remove('utile');void b.offsetWidth;b.classList.add('utile');i++}}
