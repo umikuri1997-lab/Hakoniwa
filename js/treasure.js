@@ -15,7 +15,7 @@ function mapOpen(){if(!(S.tmap>0))return;if(S.tx!=null)return toast('もう宝�
 function txValid(){if(S.tx==null)return false;const j=S.tx;if(j<0||j>=W*H||S.ground[j]||(S.fog&&fogAt(j))){S.tx=null;return false}if(S.obj[j]&&!WEEDS.has(S.obj[j])){const k=txSpot();S.tx=k<0?null:k;return S.tx!=null}return true}/* 印の所に物が置かれたら、べつの空き地へうつす */
 function txJob(r,G){/* 宝の場所へ行って、ほる（畑の世話のあと、木・石より先） */if(isNight()||!txValid()||!free('tx',1))return false;const j=S.tx,st=nearest(G,k=>k===j||adjOf(k,q=>q===j)>=0&&walk(k),9999);if(st<0)return false;startAct(r,G,'tdig',st,{key:'tx',obj:j});return true}
 ACT.tdig={start(r,a){if(S.tx!==a.obj)return false;r.bubble='';if(a.stand!==a.obj)r.face=(a.obj%W+.5)<r.x?-1:1},tick(r,a,dt){work(r,dt);a.h=(a.h||0)+dt;if(a.h>=3){a.h=0;sfxAt('dig',r.x,r.y);spawnFX(a.obj%W+.5,((a.obj/W)|0)+.7,'#c9a77a')}},done:(r,a)=>a.t>=TDIGT||S.tx!==a.obj,
-  end(r,a){if(S.tx!==a.obj||a.t<TDIGT)return;S.tx=null;burst(a.obj,'furn','furnPlace');sfx('seed');addSpiritXp(1,r);
+  end(r,a){if(S.tx!==a.obj||a.t<TDIGT)return;S.tx=null;if(typeof vrecAdd==='function')vrecAdd('treasure');burst(a.obj,'furn','furnPlace');sfx('seed');addSpiritXp(1,r);
     const got=['ふしぎなふくろ'];if(!(itemBoxOK()&&addItem(r,'fukuro',1)))dropAt(r.x,r.y,'fukuro',1);
     if(typeof bpNext==='function'&&bpNext()&&Math.random()<.3){bpGiveNext(null);got.push('家の設計図')}else{const L=FURN.filter(id=>giftPoolOK(id));if(L.length){const id=pick(L);got.push(BL[id].name);if(!(itemBoxOK()&&addItem(r,id,1)))dropAt(r.x,r.y,id,1)}}
     toast(r.name+'が宝をほりあてた：'+got.join('・'),'good');addFloat(r.x,r.y-1.8,'宝！','#ffe08a');logEv('宝をほりあてた');recount();dirty=true}};

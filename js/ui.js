@@ -616,7 +616,7 @@ function renderSheet(){
         const b=el('<button class="btn pri" style="flex:none"></button>');if(mx){b.textContent='さいだい';b.disabled=true}else{const c=GUPC[n];b.textContent='強化　'+SP(c);lackOn(b,lackPt(c));b.onclick=()=>{if(S.pt<c){sfx('tap');return toast(lackPt(c),'warn')}if(gupBuy(g.k))renderSheet()}}
         r.appendChild(b);rw.appendChild(r)}
       body.appendChild(sec)
-    }else if(sheetArg==='record'){reflectSec(body);appendStoryReplays(body);diaryList(body);photoSec(body);
+    }else if(sheetArg==='record'){reflectSec(body);appendStoryReplays(body);diaryList(body);vrecSec(body);photoSec(body);
       const st=el('<div class="sec"><h3>これまで</h3><div class="recs"></div></div>'),rw=st.querySelector('.recs');
       for(const[a,b]of[['すごした日',dayNo()+'日'],['のりこえた夜',(S.nights||0)+'回'],['いまのせいれい',S.res.length+'人'],['よんだせいれい',(S.summons||0)+'人'],['消えてしまったせいれい',(S.deaths||0)+'人'],
         ['追いはらった「コワイノ」',(S.kills||0)+'体'],['オオカゲ',(S.bossKills||0)+'回'],[SHN(),(S.shards||0)+'つ'],['めぶきのしずく',(S.mebuki||0)+'こ'],['ためたせいれいパワー',Math.floor(S.totalPt||0)+''],['みどりのマス',GRASSN+'マス'],['村レベル','Lv'+S.lv],['たっせいした目標',S.quest+'こ']]){const d=el('<div class="st"><span></span><b></b></div>');d.firstChild.textContent=a;d.lastChild.textContent=b;rw.appendChild(d)}

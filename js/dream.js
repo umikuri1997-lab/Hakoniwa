@@ -14,7 +14,7 @@ function dreamMorning(){if(!S||S.free||IS_STORY_REPLAY)return;const D=S.dream;if
   S.dream={id:r.id,k,day:dayNo(),f:k==='wish'?f:null,m:k==='mate'?m.id:null,sky:k==='sky'?(Math.random()*DREAMSKY.length)|0:null};
   if(k==='mate'){bondAdd(r,m,DREAMBOND,'dream');r.fun=Math.min(100,r.fun+DREAMFUN);m.fun=Math.min(100,m.fun+DREAMFUN)}
   if(k==='sky')r.fun=Math.min(100,r.fun+DREAMFUN);
-  r.bubble='💭';S.flags.dreamSeen=1;toast(r.name+'は、ゆうべ、ゆめを見たみたい','good');logEv(r.name+'がゆめを見た')}
+  r.bubble='💭';S.flags.dreamSeen=1;if(typeof vrecAdd==='function')vrecAdd('dream');toast(r.name+'は、ゆうべ、ゆめを見たみたい','good');logEv(r.name+'がゆめを見た')}
 function dreamText(r){const D=S.dream;if(!D||D.id!==r.id)return '';if(D.k==='wish')return BL[D.f]?BL[D.f].name+'のゆめ':'';if(D.k==='mate'){const m=S.res.find(q=>q.id===D.m);return m?m.name+'のゆめ':'なかよしのゆめ'}return 'ふしぎなゆめ'}
 function dreamTopic(r){/* お話の話題（1回だけ） */const D=S.dream;if(!D||D.id!==r.id||D.told)return null;D.told=1;
   if(D.k==='wish'&&BL[D.f])return{u:1,L:['ゆうべ、ふしぎなゆめを見たんだ。','村に、'+BL[D.f].name+'があってね。','#joy|みんなで、つかってたんだ。……ほんとうに、あったらいいな。']};
