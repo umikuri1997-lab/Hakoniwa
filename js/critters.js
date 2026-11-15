@@ -43,7 +43,7 @@ function critTick(dt){if(!S)return;if(CRITS!==S){CRIT=[];CRITS=S}if(IS_STORY_REP
   for(const c of CRIT){c.t+=dt;const K=CK[c.k],m=K.m;if(c.act>0)c.act-=dt;
     if(m==='fly'){/* ちかくの花へ（みつばちは花にとまって、少しやすむ） */
       if(c.rest>0){c.rest-=dt;c.z=Math.max(3,c.z-20*dt);if(c.rest<=0)c.t5=0}
-      else{if((c.t5=(c.t5||0)+dt)>5||Math.hypot(c.hx-c.x,c.hy-c.y)<.2){c.t5=0;if(c.k==='mitsubachi'&&Math.hypot(c.hx-c.x,c.hy-c.y)<.2&&Math.random()<.6)c.rest=1.5+Math.random()*2;else{const x0=c.x|0,y0=c.y|0;for(let n=0;n<12;n++){const x=x0+Math.floor(Math.random()*9)-4,y=y0+Math.floor(Math.random()*9)-4,j=y*W+x;if(x>=0&&y>=0&&x<W&&y<H&&FLOWERS.has(S.obj[j])){c.hx=x+.5+(Math.random()-.5)*.7;c.hy=y+.5+(Math.random()-.5)*.5;break}}}}
+      else{if((c.t5=(c.t5||0)+dt)>5||Math.hypot(c.hx-c.x,c.hy-c.y)<.2){c.t5=0;if(c.k==='mitsubachi'&&Math.hypot(c.hx-c.x,c.hy-c.y)<.2&&Math.random()<.6)c.rest=1.5+Math.random()*2;else{const x0=c.x|0,y0=c.y|0;let ok=false;for(let n=0;n<12;n++){const x=x0+Math.floor(Math.random()*9)-4,y=y0+Math.floor(Math.random()*9)-4,j=y*W+x;if(x>=0&&y>=0&&x<W&&y<H&&FLOWERS.has(S.obj[j])){c.hx=x+.5+(Math.random()-.5)*.7;c.hy=y+.5+(Math.random()-.5)*.5;ok=true;break}}if(!ok){c.hx=x0+.5+(Math.random()-.5)*1.4;c.hy=y0+.5+(Math.random()-.5)*1}}/* 花が見つからなければ、いまの花のまわりを少しとぶ */}
         const dx=c.hx-c.x,dy=c.hy-c.y,L=Math.hypot(dx,dy)||1,sp=Math.min(L,.9*dt);c.x+=dx/L*sp+Math.sin(c.t*3+c.id)*.01;c.y+=dy/L*sp;if(Math.abs(dx)>.05)c.face=dx>0?1:-1;c.z=14+Math.sin(c.t*2.3+c.id)*5}
       if(S.rain||night)c.life=Math.min(c.life,c.t+2)}
     else if(m==='hover'){/* とんぼ：水の上で止まって（ホバリング）、すっと、つぎの所へ */
