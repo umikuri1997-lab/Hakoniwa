@@ -11,7 +11,8 @@ import sys,os,numpy as np,trimesh
 from scipy.sparse import coo_matrix
 from scipy.sparse.csgraph import connected_components
 HERE=os.path.dirname(os.path.abspath(__file__));OUT=os.path.join(HERE,'..','models','animals')
-EYE=(70,58,66);CHEEK=None;   # ほっぺはつけない（持ち主のきめ）。CHEEK の部品は、からだの色
+EYE=(70,58,66);NOSE=(240,172,180);   # 鼻：目と同じ大きさのたいらな点（もとの部品は大きすぎた）
+CHEEK=None;   # ほっぺはつけない（持ち主のきめ）。CHEEK の部品は、からだの色
 MOUTH=(156,96,96)
 def _hv(i,j,k):
     v=np.sin(i*127.1+j*311.7+k*74.7)*43758.5453;return v-np.floor(v)
@@ -28,8 +29,7 @@ def spots(x,y,z):
 def deep(c,k=0.3):return tuple(max(0,min(255,round((v-255*k)/(1-k)))) for v in c)
 # 生き物ごと：名前・からだの色・部品の色・場所の色（x,y：まん中から・z：地面から。どれも高さ H でわった数）
 SPEC={   # 色は、持ち主のお手本の絵（生き物15この絵）に合わせる
- 0:dict(name='usagi',body=(248,240,226),parts={3:(240,172,180),6:EYE,5:EYE,   # 3（まん中の点）は鼻、6 と 5 が目（持ち主に教えてもらった）
- 4:(252,248,240)}),
+ 0:dict(name='usagi',body=(248,240,226),parts={3:NOSE,6:EYE,5:EYE,4:(252,248,240)},),   # 3（まん中の点）は鼻、6 と 5 が目（持ち主に教えてもらった）。おくの目 6 は顔のはしで小さく見えるので、少し外へ出す（鼻のほうへよせると、鼻にかさなった）
  1:dict(name='kaeru',body=(184,208,122),parts={6:EYE,5:EYE},region=lambda x,y,z:(242,238,204) if (0.9*y-0.4*x)>0.12 and z<0.6 else None),   # おなか：顔のがわ（手前・左）の下
  2:dict(name='niwatori',body=(250,244,226),parts={3:(244,182,84),7:EYE,6:EYE,1:(242,170,96),2:(242,170,96)}),
  3:dict(name='harinezumi',body=(222,204,170),parts={8:(120,84,70),6:EYE,7:EYE,12:CHEEK,9:(246,226,202)},region=lambda x,y,z:(246,226,202) if (x<-0.12 and z<0.62) or z<0.18 else None),
@@ -122,10 +122,16 @@ def run(src):
             keep=np.array([c_!=EYE for c_ in cols])
             tris=tris[keep];cols=[c_ for c_,k_ in zip(cols,keep) if k_]
             mid=np.mean([ec for _,ec,_ in info],0)
-            for i,ec,r in info:
+            ni=[i for i in range(len(u)) if sp['parts'].get(i)==NOSE]
+            if ni:   # 鼻：目と同じ大きさのたいらな点に
+                keep=np.array([c_!=NOSE for c_ in cols]);tris=tris[keep];cols=[c_ for c_,k_ in zip(cols,keep) if k_]
+                info+=[(i,T[idx==i].reshape(-1,3).mean(0),0,'n') for i in ni]
+            for it in info:
+                i,ec,r=it[:3];col=NOSE if len(it)>3 else EYE
                 nrm=ec-bc;nrm/=np.linalg.norm(nrm)+1e-12
+                ec=ec+nrm*R*sp.get('eyeout',{}).get(i,0)   # おくの目：顔のはしでかくれるので、外へ出す
                 bv,bf=ball(np.zeros(3),1.0);bv=bv*R;bv-=np.outer(bv@nrm,nrm)*0.55   # 向きの方向に、うすく
-                tris=np.concatenate([tris,(bv+ec+nrm*R*0.35)[bf]]);cols+=[EYE]*len(bf)   # 小さくした分、少し外へ（からだにうまらないように）
+                tris=np.concatenate([tris,(bv+ec+nrm*R*0.35)[bf]]);cols+=[col]*len(bf)   # 小さくした分、少し外へ（からだにうまらないように）
         Vt=tris.reshape(-1,3).copy();Vt[:,0]-=c[0];Vt[:,1]-=c[1];Vt[:,2]-=z0
         out=np.c_[Vt[:,0],Vt[:,2],Vt[:,1]]   # glTF：x 右・y 上・+z 手前
         CC=np.repeat(np.array([deep(q) for q in cols]),3,0)
