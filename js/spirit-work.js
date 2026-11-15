@@ -19,7 +19,7 @@ function tryJob(r,G,k){
   case'craft':{const o=S.orders.find(q=>q.worker===r.id&&craftOK(r,q))||S.orders.find(q=>(!q.worker||!S.res.some(x=>x.id===q.worker))&&craftOK(r,q)&&(!hasNeed(q)||needReady(q)));if(!o)return false;if(o.bid==null)o.bid='o'+o.id;if(hasNeed(o)&&!(r.bm&&r.bm.t===o.bid)){if(!needReady(o))return false;o.worker=r.id;return fetchFor(r,G,o)}/* 素材がそろっていなければ、先に箱へとりにいく */const sp=craftSpot(G),st=sp>=0?sp:BOARD<0?-1:nearest(G,j=>adjOf(j,k=>k===BOARD)>=0,9999);/* 依頼ボードも、遠くても行ける所なら行く */if(st<0)return false;o.worker=r.id;startAct(r,G,'craft',st,sp>=0?{order:o.id,key:'cs'+sp}:{order:o.id});return true}
   case'chop':case'mine':{if(k==='mine'&&!isNight()){const RQ=vreqList();if(RQ.length&&matCap()>0&&roomN(r)>=1&&matTot()+matN(r)<matCap()){const nt=q=>RQ.includes(q)&&free('o'+q,1);const vj=nearest(G,j=>adjOf(j,nt)>=0,9999);if(vj>=0){const q=adjOf(vj,nt);startAct(r,G,'mine',vj,{key:'o'+q,obj:q});return true}}}/* 「みる」でタップした鉱脈を先にほる */if(k==='mine'&&WD===1&&!isNight()){const bq=q=>S.obj[q]==='boulder'&&free('o'+q,1);const bj=nearest(G,j=>adjOf(j,bq)>=0,90);if(bj>=0){const q=adjOf(bj,bq);startAct(r,G,'mine',bj,{key:'o'+q,obj:q});return true}}/* 大岩を先にくだく */
     if(isNight()||roomN(r)<1||matTot()+matN(r)>=matCap()&&!(k==='chop'&&roomKey('wood')>matN(r)))return false;/* まき棚は木材だけ入る *//* 箱に1つでも空きがあれば集めにいく（ぴったり満杯までためられる） */const camp=k==='chop'?'lumber':'quarry',nat=k==='chop'?(WD===1?((S.mat.bamboo||0)<(S.mat.wood||0)?[['bamboo'],['ntree','deadtree']]:[['ntree','deadtree'],['bamboo']]):[['ntree','deadtree']]):[['rock',...VEIN_IDS]];/* 火山：木材と竹の、すくないほうを先に切る */
-    const cp=q=>typeAt(q)===camp&&free('o'+anc(q),2);j=nearest(G,j=>adjOf(j,cp)>=0,60);if(j>=0){const q=anc(adjOf(j,cp));startAct(r,G,k,j,{key:'o'+q,obj:q,camp:true});return true}
+    const cp=q=>typeAt(q)===camp&&free('o'+anc(q),2)&&jobFor(q,r);j=nearest(G,j=>adjOf(j,cp)>=0,60);if(j>=0){const q=anc(adjOf(j,cp));startAct(r,G,k,j,{key:'o'+q,obj:q,camp:true});return true}
     for(const ns of nat){const nt=q=>ns.includes(S.obj[q])&&free('o'+q,1);j=nearest(G,j=>adjOf(j,nt)>=0,40);if(j>=0){const q=adjOf(j,nt);startAct(r,G,k,j,{key:'o'+q,obj:q});return true}}return false}
   case'cookS':case'cook':{const sp=k==='cookS';if(!cnt('oven')&&!cnt('cooktable')||!(foodCap()>0)||isNight())return false;const hg=k=>r.cgot?r.cgot.m[k]||0:0,rs=RECIPES.filter(R=>Object.keys(R.need).every(k=>(S.fs[k]||0)+hg(k)>=R.need[k]));if(!rs.length){cgBack(r);return false}
     if(!S.ovenSet)S.ovenSet={};const ok=q=>{const R=rs.find(R=>R.out===S.ovenSet[q]);return !!R&&dishSt(R)===S.obj[q]&&r.elem===R.el};/* 守り神さまがえらんだ料理だけ作る。料理は、その料理の属性のせいれいだけが作る */
@@ -67,6 +67,7 @@ function hasWork(r){
   if(!isNight()&&STATUE>=0&&(r.otaki||S.otakiQ&&Object.keys(S.otakiQ).length))return true;
   if(!isNight()&&(r.cpk||S.cmpQ&&Object.keys(S.cmpQ).length))return true;
   if(smeltWant(r))return true;
+  if(jobWork(r,null,1))return true;/* しごと場の担当 */
   if(!isNight()&&r.elem==='wood'&&COMPS.some(c=>(S.dyn[c]||{}).c>0||r.fert>0)&&S.obj.some((o,q)=>o==='farm'&&S.dyn[q]&&S.dyn[q].sown!==false&&S.dyn[q].g<100&&S.dyn[q].fdD!==dayNo()))return true;
   if(!isNight()&&S.drops&&S.drops.length&&S.drops.some(q=>(q.id==='shard'||Math.hypot(q.x+.5-r.x,q.y+.5-r.y)<=(r.elem==='wind'?10:5)+gearStat(r).prng)&&(q.id!=='shard'||r.name===POKO||!S.res.some(x=>x.name===POKO&&!x.hidden))&&walk(q.y*W+q.x)&&free('d'+(q.y*W+q.x),1)))return true;
   if(canJob(r,'build')&&S.obj.some((o,j)=>o==='site'&&free('o'+j,2)))return true;
@@ -79,6 +80,9 @@ function hasWork(r){
 const toyTired=(r,j)=>!!(r.lastToy&&r.lastToy.j===j&&S.t-r.lastToy.t<240);/* 同じ遊び家具には4時間行かない */
 const ORACLE={play:{name:'いっぱいあそぶ',e:'🎈',jobs:[],water:1},wood:{name:'木をあつめる',e:'🪵',jobs:['chop']},stone:{name:'石をあつめる',e:'🪨',jobs:['mine']},food:{name:'食料をあつめる',e:'🍎',jobs:['harvest','gather','fish']}};
 const oracleOK=k=>!ORACLE[k].water||!!(S&&S.flags&&S.flags.oracleWater);/* はじめにえらべるおつげは、木・石・食料だけ。ほかは水のステージでおぼえる（S.flags.oracleWater） */
+function jobWork(r,G,dry){if(isNight())return false;const j=jobOf(r);if(j<0)return false;const o=S.obj[j],st=k=>anc(k)===j;
+  if(o==='smelter'){if(r.elem!=='fire'||!(S.smIn||{})[j]||!Object.values(S.smIn[j]).some(n=>n>=SMELT_ORE)||!free('sm'+j,1))return false;if(dry)return true;const q=nearest(G,q=>adjOf(q,st)>=0,200);if(q<0)return false;startAct(r,G,'smelt',q,{key:'sm'+j,obj:j});return true}
+  const k=o==='lumber'?'chop':'mine';if(!canJob(r,k)||roomN(r)<1||matTot()+matN(r)>=matCap()&&!(k==='chop'&&roomKey('wood')>matN(r))||!free('o'+j,2))return false;if(dry)return true;const q=nearest(G,q=>adjOf(q,st)>=0,200);if(q<0)return false;startAct(r,G,k,q,{key:'o'+j,obj:j,camp:true});return true}
 function goWork(r,G,nw){
   // 木材と石材は、少ないほうから集める（どちらかが得意なら両方やる）
   const mo=(S.mat.stone||0)<=(S.mat.wood||0)?['mine','chop']:['chop','mine'];let gd=false;
@@ -91,6 +95,7 @@ function goWork(r,G,nw){
   // おつげがあれば、それを先にする
   if(S.oracle==='play'&&r.fun<98&&goPlay(r,G,true))return true;
   // 花や木の苗は、空腹などの急ぎの用事を除いて、ほかの仕事より先に植える
+  if(jobWork(r,G))return true;/* しごと場の担当は、ふだんの仕事（植える・ひろう・畑・木・石・草）より先に、そのしごと場で働く */
   if(tryJob(r,G,'plant'))return true;
   if(tryJob(r,G,'otaki'))return true;
   if(haulJob(r,G))return true;/* 神殿のまえの物を、箱へ運ぶ */
@@ -284,7 +289,7 @@ function updRes(r,dt){rescueStuck(r);if((RHOLD.get(r)||0)>performance.now())retu
   if(!r.act){decide(r);return}
   const a=r.act;
   if(a.stage==='walk'){if(a.whyW>S.t&&a.whyW-S.t<=WHYHOLD)return;moveR(r,dt);return}/* 行動のわけ：その物を見てから、むかう（whyNote） */
-  const wdt=(WORKT.has(a.type)&&a.type!=='cook'?dt*rMul(r,'work'):dt)*gJob(r,a.type);/* 専用品：作業ごとの速さ *//* 料理は、力に関係なく、説明どおりの時間 *//* 力があるほど作業が速い */
+  const wdt=(WORKT.has(a.type)&&a.type!=='cook'?dt*(rMul(r,'work')+nareAdd(r,a)):dt)*gJob(r,a.type);nareTick(r,a,dt);/* 担当のしごと場では、なれのぶん速い *//* 専用品：作業ごとの速さ *//* 料理は、力に関係なく、説明どおりの時間 *//* 力があるほど作業が速い */
   a.t+=wdt;const A=ACT[a.type];
   if(A.tick)A.tick(r,a,wdt);
   if(A.done(r,a)){a.fin=1;dayNote(r,a);titleNote(r,a);/* しごとの称号 *//* きょうしたことをおぼえる（お話で話す） */if(A.end)A.end(r,a);endAct(r)}
