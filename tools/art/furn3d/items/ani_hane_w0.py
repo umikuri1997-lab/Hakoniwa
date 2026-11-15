@@ -1,7 +1,10 @@
-# 飼う生き物（ハネマリ）のチップ ani:hane#w0：別に作った生き物のモデル（animals/niwatori.glb、anim_niwatori.py と同じ）を、右ななめ前（rot −45度）に向けて写す。歩く（前後に5度ゆらす）。
+# 飼う生き物（ハネマリ）のチップ ani:hane#w0（歩く1）：持ち主のモデル（animals/niwatori.glb）にボーンを入れて、ポーズをつけて写す（tools/art/animals/ani_rig.py）。右むき（ani_rig.ROT）。
+import sys,os;sys.path.insert(0,os.path.join(os.path.dirname(os.path.abspath(__file__)),'..','..','animals'))
+import ani_rig
 from blueprint import Part as P
 from natcommon import notex,flat
 ID='ani:hane#w0';GRAD=False;SHADE=[(4.5,-1.2),(9,-2.5)];ELEV=15;BOTTOM=58
 VIEWS=[('ani:hane#w0',0)]
 def PARTS():
-    p=P('ハネマリ','model',('animals/niwatori.glb',0.5,0.5,0,0.5,-45,5),(255,255,255),on=('ground',),note='地面に立つ');return[flat(notex(p))]
+    ani_rig.load('niwatori',0.5)
+    p=P('ハネマリ','model',('animals/niwatori.glb',0.5,0.5,0,0.5,0,0),(255,255,255),on=('ground',),note='地面に立つ');p.warp=ani_rig.warp('niwatori','w0');return[flat(notex(p))]
