@@ -103,31 +103,116 @@ def scene_log(m):
     for cy in np.arange(0.08,1.0,0.1667):   # 根もとの石（たて：東がわ）
         if m==12 or (cy<PC[1]-PR and U) or (cy>PC[1]+PR and D):P.append(('stone',Part('石','ball',(0.69,cy,0.025,0.06,0.6),STONE),(0,cy)))
     return P
-def render(P):
+BAM=(202,194,134);BAMP=(186,176,116);CRM=(240,214,164);CRMP=(222,192,136);ST=(222,212,198);STC=(236,228,216)
+def tube(nm,a,b,r,col,det=12):return Part(nm,'frust',(a,b,r,r),col,detail=det)
+def vsegs(m,PCY,back,front,full=(-EXT,1.0)):
+    """たての部品の、マスの中のはんい（上のマスへのばす所 -EXT〜0 もふくむ）"""
+    if m==12:return [full]
+    L=[]
+    if m&4:L.append((-EXT,back))
+    if m&8:L.append((front,1.0))
+    return L
+def addv(P,kind,mk,y0,y1,col,org=(0,0)):
+    """たての部品を、上のマスへのばした所（ext）と、マスの中の所にわけて足す。mk(y0,y1)→Part"""
+    if y0<0:P.append(('ext',mk(y0,0.0),org));y0=0.0
+    if y1>y0:P.append((kind,mk(y0,y1),org))
+def scene_bamboo(m):   # 竹の柵（四つ目垣）：親柱・立子（たて）・胴縁（よこ）
+    L,R,U,D=m&1,m&2,m&4,m&8;post=not(m in(3,12));P=[];YC=0.86;PC=(0.5,YC)
+    for cx in(0,0.25,0.5,0.75,1.0):   # 立子
+        if (cx<0.5 and L) or (cx>0.5 and R) or (cx==0.5 and m==3):P.append(('bam',tube('立子',(cx,YC,0),(cx,YC,0.70),0.026,BAM),None))
+    for cy in(0.125,0.375,0.625,0.875):
+        if post and abs(cy-YC)<0.15:continue
+        if m==12 or (cy<YC and U) or (cy>YC and D):P.append(('bam',tube('立子',(0.5,cy,0),(0.5,cy,0.70),0.026,BAM),None))
+    if post:
+        P.append(('bam',tube('親柱',(0.5,YC,0),(0.5,YC,0.80),0.055,BAMP,16),None))
+        for z in(0.28,0.56):P.append(('bam',tube('ふし',(0.5,YC,z),(0.5,YC,z+0.02),0.06,BAMP,16),None))
+    for z in(0.24,0.52):
+        if L or R:
+            x0=-0.4 if L else 0.5;x1=1.4 if R else 0.5
+            P.append(('bam',tube('胴縁',(x0,YC+0.05,z),(x1,YC+0.05,z),0.03,BAM),None))
+        for y0,y1 in vsegs(m,YC,YC-0.06,YC+0.06):
+            g='bv%d'%(z*100)
+            addv(P,'bamv',lambda a,b,z=z,g=g:Part('胴縁','frust',((0.55,a,z),(0.55,b,z),0.03,0.03),BAM,detail=12,grp=g),y0,y1,BAM)
+    return P
+def scene_misugaki(m):   # 御簾垣：親柱・細い竹を横につんだ面（御簾）・押縁（たて）・玉縁（上）
+    L,R,U,D=m&1,m&2,m&4,m&8;post=not(m in(3,12));P=[];YC=0.90;H=0.98;NS=22
+    def slats_h(x0,x1):
+        for k in range(NS):
+            z=0.04+k*(H-0.08)/(NS-1);P.append(('crm',Part('御簾','frust',((x0,YC,z),(x1,YC,z),0.024,0.024),CRM,detail=8,grp='mh'),None))
+        P.append(('crm',tube('玉縁',(x0,YC,H),(x1,YC,H),0.04,CRMP),None))
+        for bx in(0,0.25,0.5,0.75,1.0):
+            if x0<=bx<=x1 and not(post and bx==0.5):P.append(('crm',Part('押縁','box',(bx-0.02,YC+0.024,0.02,bx+0.02,YC+0.05,H-0.02),CRMP),None))
+    if L or R:slats_h(-0.4 if L else 0.5,1.4 if R else 0.5)
+    for y0,y1 in vsegs(m,YC,YC-0.06,YC+0.06):
+        for k in range(NS):
+            z=0.04+k*(H-0.08)/(NS-1)
+            addv(P,'crmv',lambda a,b,z=z:Part('御簾','frust',((0.5,a,z),(0.5,b,z),0.024,0.024),CRM,detail=8,grp='mv'),y0,y1,CRM)
+        addv(P,'crmv',lambda a,b:Part('玉縁','frust',((0.5,a,H),(0.5,b,H),0.04,0.04),CRMP,detail=12,grp='tv'),y0,y1,CRMP)
+        for by in(0.25,0.75):
+            if y0<=by-0.02 and by+0.02<=y1:P.append(('crm',Part('押縁','box',(0.524,by-0.02,0.02,0.55,by+0.02,H-0.02),CRMP),None))
+    if post:
+        P.append(('crm',tube('親柱',(0.5,YC,0),(0.5,YC,H+0.08),0.06,CRMP,16),None))
+        for z in(0.35,0.7):P.append(('crm',tube('ふし',(0.5,YC,z),(0.5,YC,z+0.02),0.066,CRMP,16),None))
+    return P
+def scene_wall(m):   # 石の塀（石垣）：おなじ大きさの石を、だんごとに半分ずらしてつむ。上にかさ石。角・はし・まじわる所に石の柱
+    L,R,U,D=m&1,m&2,m&4,m&8;post=not(m in(3,12));P=[];Y0,Y1=0.64,0.98;X0,X1=0.33,0.67;CH=0.283;NC=3;ZT=CH*NC
+    def stone(nm,b,col,org):P.append(('stone',Part(nm,'box',b,col),org))
+    if L or R:
+        spans=[(-0.4,1.4)] if not post else [q for q,c_ in(((-0.4,0.29),L),((0.71,1.4),R)) if c_]   # 柱があれば、柱の横の面まで
+        for xa,xb in spans:
+          for c in range(NC):
+              off=0.125 if c%2==0 else 0.375
+              for k in range(-3,5):
+                  a=off+k*0.5;b=a+0.5;a,b=max(a,xa),min(b,xb)
+                  if b-a>0.01:stone('石',(a,Y0,c*CH,b,Y1,(c+1)*CH),ST,((a%1),c))
+          for k in range(-2,4):
+              a=0.25+k*0.5;b=a+0.5;a,b=max(a,xa),min(b,xb)
+              if b-a>0.01:stone('かさ石',(a,Y0-0.02,ZT,b,Y1+0.02,ZT+0.1),STC,((a%1),9))
+    for y0,y1 in vsegs(m,0.8,0.6,1.0,(0.0,1.0)):
+        y0=max(0.0,y0);ga=0.016 if y0==0 else 0.0
+        for c in range(NC):
+            for k in range(-1,3):
+                a=k*0.5+(0.25 if c%2 else 0);b=a+0.5;a,b=max(a,y0+ga),min(b,y1)
+                if b-a>0.01:stone('石',(X0,a,c*CH,X1,b,(c+1)*CH),ST,(0,(a%1)+c))
+        for a,b in((0,0.5),(0.5,1.0)):
+            a,b=max(a,y0+ga),min(b,y1)
+            if b-a>0.01:stone('かさ石',(X0-0.02,a,ZT,X1+0.02,b,ZT+0.1),STC,(0,(a%1)+9))
+    if post:
+        for c in range(3):stone('柱の石',(0.29,0.6,c*0.32,0.71,1.0,(c+1)*0.32),ST,(0.5,20+c))
+        stone('柱のかさ',(0.26,0.57,0.96,0.74,1.0,1.08),STC,(0.5,30))
+    return P
+def render(P,xr=(0,1)):
     sc=O.Scene();sc.txo={};sc.txax={};ext_ids=set()
     for kind,p,org in P:
         if kind=='stone':sc.texture(TS)
-        elif kind in('picket','post','railh','railv','ext'):sc.texture(TW)
+        elif kind in('picket','post','railh','railv','ext') and p.col not in(BAM,BAMP,CRM,CRMP):sc.texture(TW)
         else:sc.texture(None)
         sc.material('metal' if kind=='iron' else None);p0=sc.pid;build(sc,[p]);sc.material(None)
         ids=range(p0+1,sc.pid+1)
+        rot=org if isinstance(org,tuple) and org and org[0]=='rot' else None
+        if rot:   # とびら：ちょうつがいのたての軸のまわりに、部品をまわす
+            _,hx,hy,deg=rot;ca,sa=math.cos(math.radians(deg)),math.sin(math.radians(deg));idset=set(ids)
+            def R_(v):dx,dy=v[0]-hx,v[1]-hy;return np.array([hx+dx*ca-dy*sa,hy+dx*sa+dy*ca,v[2]])
+            sc.t=[(R_(t[0]),R_(t[1]),R_(t[2]),t[3],t[4]) if t[4] in idset else t for t in sc.t];org=None
         if kind=='ext':ext_ids|=set(ids)
+        if org is not None and kind=='stone':
+            for q in ids:sc.txo[q]=((0,0,0),int(org[0]*64)*7+int(org[1]*8)*37,int(org[1]*8)*19+5)
         if org is not None and kind in('picket','railh','railv','ext','post'):   # 木目：1マスでくりかえす（となりのマスとつながる）
             for q in ids:
                 ax=(1,0,0) if kind=='railh' else (0,1,0) if kind in('railv','ext') else (0,0,1)
                 sc.txo[q]=((0,0,0) if kind!='picket' else (org[0],org[1],0),(int(round(org[0]*4))*13+int(round(org[1]*8))*29) if kind=='picket' else 0,11);sc.txax[q]=np.array(ax,float)
     sc.texture(None);O.S=64
-    ex=(-0.5,1.5,-2.0,1.25);im=O.render_px(sc,O.game,ex,O.VIEW,k=0.80,lw=2,k2=0.90,merge=4)
+    ex=(xr[0]-0.5,xr[1]+0.5,-2.0,2.4);im=O.render_px(sc,O.game,ex,O.VIEW,k=0.80,lw=2,k2=0.90,merge=4)
     a=np.array(im).copy();ids=O.LAST_IDS
     if ext_ids:   # 上のマスへのばした横木と、そのまわりの線を消す
         em=np.isin(ids,list(ext_ids));own=(ids>=0)&~em;nb=np.zeros_like(em);no=np.zeros_like(em)
         for dy,dx in((0,1),(0,-1),(1,0),(-1,0)):nb|=np.roll(np.roll(em,dy,0),dx,1);no|=np.roll(np.roll(own,dy,0),dx,1)
         a[em]=0;a[(ids<0)&nb&~no]=0
-    a=a[:,32:96]   # マスのはば（x 0〜64）で切る
-    im=Image.fromarray(a);bb=im.getbbox();return im.crop(bb),bb[0],bb[1]-128
+    a=a[:,32:32+int(round((xr[1]-xr[0])*64))]   # マスのはば（x 0〜64）で切る
+    im=Image.fromarray(a);bb=im.getbbox();return im.crop(bb),bb[0]+int(round(xr[0]*64)),bb[1]-128
 OLD={0:'H0',1:'HL',2:'HR',3:'HLR',4:'VU',8:'VD',12:'VUD'}
 def build_all(iid):
-    fn=scene_fence if iid=='fence' else scene_log;out={}
+    fn={'fence':scene_fence,'logfence':scene_log,'bamboofence':scene_bamboo,'misugaki':scene_misugaki,'wall':scene_wall}[iid];out={}
     for m in range(16):im,ax,ay=render(fn(m));out[m]=(im,ax,ay)
     return out
 def sheet(res,path,layout):
@@ -147,7 +232,7 @@ LAY=['#####...###',
      '..#........']
 if __name__=='__main__':
     out=sys.argv[1];os.makedirs(out,exist_ok=True);chips='--chips' in sys.argv;R={}
-    for iid in('fence','logfence'):
+    for iid in([a for a in sys.argv[2:] if not a.startswith('-')] or ['fence','logfence','bamboofence','misugaki','wall']):
         res=build_all(iid);R[iid]=res;sheet(res,os.path.join(out,iid+'_lay.png'),LAY)
         for m,(im,ax,ay) in res.items():im.save(os.path.join(out,'%s_m%d.png'%(iid,m)));print(iid,m,im.size,ax,ay,len(set(map(tuple,np.array(im).reshape(-1,4)[np.array(im).reshape(-1,4)[:,3]>0].tolist()))),'色')
     if chips:

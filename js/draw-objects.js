@@ -41,14 +41,6 @@ function wallFront(c,id,x,y,i){/* 家の壁の正面：断面と形は部品の�
   const o=.5,f=(a,b)=>{if(inn){ext(a,b,y);wallBand(c,'night',a,b,x,y,i)}else ext(a,b)};/* 家の中から見える正面：てっぺんだけ絵、その下は夜空の帯 */c._noSh=1;
   if(hasH){if(!D){if(L&&R)f(x-o,x+TS+o);else{post();if(L)f(x-o,x+5);if(R)f(x+27,x+TS+o)}}/* 上にしきりの壁がつながっていても、正面は柱を立てずにつなげる（しきりは正面から見えない） */else{if(L)f(x-o,x+5);if(R)f(x+27,x+TS+o)}}else if(!D)post();
   c._noSh=0}/* となりの壁に0.5だけ重ねて描く（拡大したとき、マスのさかいめにすきまの線が出ないように） */
-function stoneFront(c,x,y,i){/* 石の塀（石垣）の正面：もらった絵（正面 wall:ext を世界の座標でならべる・柱 wall:post）を、部品の絵にかさねる */
-  if(i==null||ICON)return;const C=window.CHIPS,E=C&&C['wall:ext'],P=C&&C['wall:post'],ei=E&&chipImgs(E,'wall')[0],pi=P&&chipImgs(P,'wall')[0];if(!ei||!ei.ok)return;
-  const f=k=>{const o=typeAt(k);return o==='wall'||o==='stonegate'},sd=k=>typeAt(k)==='sdoor',L=f(i-1),R=f(i+1),U=f(i-W),D=f(i+W),dl=sd(i-1),dr=sd(i+1),hasH=L||R||dl||dr||!(U||D);if(!hasH)return;
-  const gx=(i%W)*TS-x,eh=E.h/2,ey=y+E.ay/2,pw=E.w*eh/E.h,o=.5,ext=(a,b)=>{c.save();c.beginPath();c.rect(a,ey,b-a,eh);c.clip();for(let wx=Math.floor((a+gx)/pw)*pw;wx<b+gx;wx+=pw)c.drawImage(ei,wx-gx,ey,pw,eh);c.restore()};
-  const post=cx=>{if(pi&&pi.ok)c.drawImage(pi,cx-P.w/4,y+P.ay/2,P.w/2,P.h/2)};
-  if((L||dl)&&(R||dr)&&!U&&!D)ext(x-o,x+TS+o);else{if(L||dl)ext(x-o,x+16);if(R||dr)ext(x+16,x+TS+o)}
-  const V=U||D;if(dl&&!V)post(x+P.w/4);if(dr&&!V)post(x+TS-P.w/4);if(V||!dl&&!dr&&!(L&&R))post(x+16);/* 石の塀のドアのとなりは、塀をドアのふちまでのばして、柱をドアにつける（角の柱があるマスは、角の柱からドアまで塀でつなぐ） */
-  if(D){if(L||R||dl||dr){const a=x+16-P.w/4,b=x+16+P.w/4;c.save();c.beginPath();c.rect(a,y+12,b-a,ey+eh-y-12);c.clip();ext(a,b);c.restore()}/* 角の柱は、かさの下に横の塀の正面をのばす（もらった絵の角と同じ） */const V=C['wall:vtop'];if(V)drawChip(c,V,'wall',x,y,0,i)}}/* 下へ塀がつづく柱は、柱の正面の上に、たての塀の上面をかさねる（柱のかさの下から） */
 const SEC={a:null,b:null,cache:new Map()};
 function drawSection(c,ox,oy,rs){/* 断面（壁・柱のてっぺん）：形のまわりだけ少し濃く、内がわは少し薄く。つながる側へはみ出した分で、マスのさかいめにも線が出ない。形ごとに1回だけ絵にして使いまわす */
   const W0=TS+16,H0=TS+40,X=ox-8,Y=oy-8,key=rs.map(r=>r.map((v,k)=>Math.round((v-(k%2?oy:ox))*100)).join(',')).join('|');let sp=SEC.cache.get(key);
@@ -84,23 +76,16 @@ function drawChip(c,ch,id,x,y,now,i){const src=ch.src||ch,g64=src.g===64,ims=chi
 if(window.CHIPS)for(const k in window.CHIPS){const ch=window.CHIPS[k],id=k.split(/[@>:]/)[0];chipImgs(ch,id);for(const p of ch.parts||[])partImg(p,id)}/* 動く部品（ブランコの座面など）も *//* はじめに読みこんでおく */
 const CONN={bedge:'s',fence:'f',misugaki:'f',logfence:'f',bamboofence:'f',wall:'w',hwall:'h',bamboowall:'h',logwall:'h',plasterwall:'h',brickwall:'h',yozorawall:'h'},CONNR={'bedge':'HV','fence':'HV','misugaki':'HV','logfence':'HV','bamboofence':'VH','wall':'HV','hwall':'HV','bamboowall':'HV','logwall':'HV','plasterwall':'HV','brickwall':'HV'};/* つながる物：横の部品（H0 柱・HL・HR・HLR 横板）と縦の部品（VU・VD・VUD 縦板）を、となりのつながりで組み合わせる。CONNR：角で横と縦を重ねる順 */
 const LOGF=new Set(['logfence','logdoor','loggate']);
-const GLX={gate:2.2,logdoor:32/3,loggate:32/3};/* 左がこのドア・門：右の柱がとなりのマスにはみ出すので、柵・塀の左はしをこのはばだけ描かない */
+const GLX={gate:2.56,logdoor:6.4,loggate:7.04,sdoor:5.76,stonegate:6.4};/* 左がこのドア・門：右の柱がとなりのマスにはみ出すので、柵・塀の左はしをこのはばだけ描かない */
 function connMask(id,i){if(ICON)return 3;/* アイコンは、左右につながった形で見せる */if(i==null||!S)return 0;const t=CONN[id];let f;if(t==='s')f=k=>!!(S.edge&&S.edge[k]===id);/* 花壇のふちは、花壇のふちどうしだけつながる */else if(id==='logfence')f=k=>LOGF.has(typeAt(k));/* 丸太の塀は、丸太の塀・そのドア・大門とだけつながる（ほかの柵のとなりでは、はしの柱で終わる） */else if(t==='f')f=k=>FENCE_IDS.has(typeAt(k));else if(t==='w')f=k=>{const o=typeAt(k);return o==='wall'||o==='stonegate'};else f=(k,v)=>{const o=typeAt(k);return o!=='wall'&&o!=='sdoor'&&(HOME_WALLS.has(o)||!v&&HOME_DOORS.has(o))};/* 上下のドア（たて置きのドア）とはつながらない：ドアの上下の壁には、はしの柱を立てる */return (f(i-1)?1:0)|(f(i+1)?2:0)|(f(i-W,1)?4:0)|(f(i+W,1)?8:0)}/* 石の塀は、石の塀のドアのとなりでは終わる */
-const FRAIL={bamboofence:15.5,misugaki:4};const MCONN=new Set(['fence','logfence']);/* 3Dから写した柵・丸太の塀は、つなぎ方16とおりの絵（<id>:m0〜m15、tools/art/fence3d）を1まい描くだけ *//* 柵の上の横木のてっぺん（マスの上から。たての帯をここから柱にかぶせる） */
+const MCONN=new Set(['fence','logfence','bamboofence','misugaki','wall']);/* 3Dから写した柵・丸太の塀は、つなぎ方16とおりの絵（<id>:m0〜m15、tools/art/fence3d）を1まい描くだけ *//* 柵の上の横木のてっぺん（マスの上から。たての帯をここから柱にかぶせる） */
 function doorVert(k){/* たて置きのドアか（左右に家の壁・ドアがなく、上か下にある） */if(!HOME_DOORS.has(typeAt(k)))return false;const isW=q=>{const t=typeAt(q);return t!=='wall'&&HOME_WALLS.has(t)};/* ドアどうしはつながらない */return !isW(k-1)&&!isW(k+1)&&(isW(k-W)||isW(k+W))}
 /* 花壇のふち：つなげると、ぜんたいの外わくだけ（中の仕切りは出さない）。となりにふちがない向きにだけ、丸太を1本ずつ。うしろ・横は花より奥（front=false）、手前の丸太は花より手前（front=true） */
 function drawBedge(c,x,y,j,front,now){const C=window.CHIPS;if(!C)return;const E=S.edge||{},has=k=>E[k]==='bedge',L=!has(j-1),R=!has(j+1),U=!has(j-W),D=!has(j+W),H=C['bedge:HLR'],V=C['bedge:VUD'];if(!H||!V)return;
   if(front){if(D)drawChip(c,H,'bedge',x,y+9.5,now,j);return}
   if(U)drawChip(c,H,'bedge',x,y-9.5,now,j);if(L)drawChip(c,V,'bedge',x-11.5,y,now,j);if(R)drawChip(c,V,'bedge',x+11.5,y,now,j)}
 function drawConn(c,id,x,y,i,now){const C=window.CHIPS;if(!C)return false;const inn=!ICON&&i!=null&&HOME_WALLS.has(id)&&HOUSES.some(h=>h.inside.has(i+W)||h.inside.has(i+W-1)||h.inside.has(i+W+1)),K=k=>(inn&&C[k+'~in'])||C[k]/* 下かななめ下が家の中なら、かげのうすい絵（家の角も） */,m=connMask(id,i),hm=m&3,vm=(m&12)|(!ICON&&i!=null&&CONN[id]==='h'&&doorVert(i+W)?8:0)|(!ICON&&i!=null&&CONN[id]==='h'&&doorVert(i-W)?4:0)/* たて置きのドアの上と下の壁は、柱を立てず、断面のままドアの横の見切りまでつづける */,H=K(id+':'+['H0','HL','HR','HLR'][hm]),V=vm?K(id+':'+{4:'VU',8:'VD',12:'VUD'}[vm]):null;if(!H||vm&&!V)return false;
-  if(MCONN.has(id)){const q=C[id+':m'+m];if(q)return drawChip(c,q,id,x,y,now,i)}
-  if(id==='wall'&&!vm&&!ICON){const dl=!(hm&1)&&typeAt(i-1)==='sdoor',dr=!(hm&2)&&typeAt(i+1)==='sdoor';if(dl||dr){const H2=C['wall:'+['H0','HL','HR','HLR'][hm|(dl?1:0)|(dr?2:0)]];if(!H2||!drawChip(c,H2,id,x,y,now,i))return false;return true}}/* となりが石の塀のドア：塀はマスのはしまでのばす（ドアにつける柱は stoneFront でかく） */
-  if(vm&&FRAIL[id]!=null&&!ICON&&i!=null){/* 板の柵・竹の柵：おくゆきの順にかさねる（生垣の見本と同じ）。北からくる たての帯は、横の柵・柱のうしろ。南へのびる たての帯は、横の柵・柱の前（下のマスが、柱の上の横木のてっぺん FRAIL から柱にかぶせる） */
-    const VB=C[id+':VUD'],up=vm&4?connMask(id,i-W):0,over=vm&4&&(!(up&4)||(up&3)),t=y-32+FRAIL[id],band=(t0,b0,dy)=>{c.save();c.beginPath();c.rect(x-64,t0,192,b0-t0);c.clip();drawChip(c,VB,id,x,y+dy,now,i);c.restore()};
-    if(hm){if(VB&&vm&4)band(y-64,y+16,0);/* 北からの帯は、柱のうしろで終わる */if(!drawChip(c,H,id,x,y,now,i))return false;if(hm===3&&C[id+':H0'])drawChip(c,C[id+':H0'],id,x,y,now,i)}/* 横の柵と、まじわる所の柱 */
-    else if(!drawChip(c,V,id,x,y,now,i))return false;
-    if(over&&VB){band(t,y,-32);c.fillStyle='rgba(70,45,25,.55)';c.fillRect(x+VB.ax/2,t,VB.w/2,1)}/* 上のマスが、はしの柱か、横の柵とまじわる柱なら、帯をその柱の横木のてっぺんからかぶせて、区切り線 */
-    return true}
+  if(MCONN.has(id)){let mm=m;if(id==='wall'&&!ICON&&i!=null){if(typeAt(i-1)==='sdoor')mm|=1;if(typeAt(i+1)==='sdoor')mm|=2}/* 石の塀は、となりの石の塀のドアまでのばす */const q=C[id+':m'+mm];if(q)return drawChip(c,q,id,x,y,now,i)}
   if(!vm)return drawChip(c,H,id,x,y,now,i);if(hm&&C[id+':m'+m])return drawChip(c,K(id+':m'+m),id,x,y,now,i);/* 角・つなぎ目の絵があれば、部品を重ねずにそれを使う */if(!hm)return drawChip(c,V,id,x,y,now,i);const r=CONNR[id]||'HV';
   if(r==='VH'){if(!drawChip(c,V,id,x,y,now,i))return false;return drawChip(c,H,id,x,y,now,i)}
   if(!drawChip(c,H,id,x,y,now,i))return false;if(r==='Hclip'){c.save();c.beginPath();if(vm&4)c.rect(x-64,y-64,192,66);if(vm&8)c.rect(x-64,y+26,192,96);c.clip();drawChip(c,V,id,x,y,now,i);c.restore();return true}return drawChip(c,V,id,x,y,now,i)}
@@ -163,7 +148,7 @@ function drawObj(c,id,x,y,i,g,now){
   if(id==='yorubed'&&!chipOf('yorubed',i)){drawObj(c,'bed',x,y,i,g,now);const v=i!=null&&S&&S.rot&&S.rot[i]%2===1;c.save();c.globalAlpha=.55;c.fillStyle='#2a3168';if(v)c.fillRect(x+6,y+8,20,-30<0?20:20);else c.fillRect(x+12,y+4,16,22);c.globalAlpha=1;c.fillStyle='#fff3b8';for(let n=0;n<4;n++)c.fillRect(x+(v?8:14)+hash((i||0)+n)*12,y+(v?10:6)+hash((i||0)*3+n)*16,1.5,1.5);c.restore();return}/* よぞらのベッド（仮の絵）：ふつうのベッドに夜空色のふとん */
   if(!c._chip&&id==='farm'&&drawFarmChip(c,x,y,i,g,now))return;/* 畑のドット絵 */
   if(!c._chip&&DOORCH.has(id)&&!(S&&S.win&&i!=null&&S.win[i]&&!c._win)&&drawDoorChip(c,id,x,y,i,now))return;/* ドア・門のドット絵（リースのあるドアは、リースの前にドアだけ） */
-  if(CONN[id]&&!c._chip&&!(HOME_WALLS.has(id)&&S&&S.win&&S.win[i]&&!c._win)){const gL=CONN[id]==='f'&&id!=='misugaki'&&!ICON&&i!=null&&GLX[typeAt(i-1)];/* 御簾垣の戸は、柱がマスの中におさまる */if(gL){const gx=GLX[typeAt(i-1)];c.save();c.beginPath();c.rect(x+gx,y-64,96,160);c.clip()}/* 丸太の塀のドアの右の柱も、となりのマスにはみ出す *//* 左が柵のドア：ドアの右の柱（このマスの左はし2.4ドット。すきまが出ないよう2.2から描く）にかぶる板を描かない（横木は柱のふちから） */const ok=drawConn(c,id,x,y,i,now);if(gL)c.restore();if(ok){if(id==='wall')stoneFront(c,x,y,i);else if(HOME_WALLS.has(id)&&window.CHIPS[id+':ext'])wallFront(c,id,x,y,i);if(!ICON&&i!=null&&DECAYW.has(id)&&decayed(i))drawCrack(c,id,x,y,i);/* 朽ちた壁：ひびをかさねる */return}}/* つながる物は部品で（窓のある壁は、窓の前に壁だけ）。家の壁は、先に、となりの床を壁のふちまでのばす */
+  if(CONN[id]&&!c._chip&&!(HOME_WALLS.has(id)&&S&&S.win&&S.win[i]&&!c._win)){const gL=(CONN[id]==='f'||CONN[id]==='w')&&id!=='misugaki'&&!ICON&&i!=null&&GLX[typeAt(i-1)];/* 御簾垣の戸は、柱がマスの中におさまる */if(gL){const gx=GLX[typeAt(i-1)];c.save();c.beginPath();c.rect(x+gx,y-64,96,160);c.clip()}/* 丸太の塀のドアの右の柱も、となりのマスにはみ出す *//* 左が柵のドア：ドアの右の柱（このマスの左はし2.4ドット。すきまが出ないよう2.2から描く）にかぶる板を描かない（横木は柱のふちから） */const ok=drawConn(c,id,x,y,i,now);if(gL)c.restore();if(ok){if(id!=='wall'&&HOME_WALLS.has(id)&&window.CHIPS[id+':ext'])wallFront(c,id,x,y,i);if(!ICON&&i!=null&&DECAYW.has(id)&&decayed(i))drawCrack(c,id,x,y,i);/* 朽ちた壁：ひびをかさねる */return}}/* つながる物は部品で（窓のある壁は、窓の前に壁だけ）。家の壁は、先に、となりの床を壁のふちまでのばす */
   if(!c._chip&&PCH.has(id)){const ch=plantChip(id,i,g);if(ch&&drawChip(c,ch,id,x,y,now,i)){if(id==='berry'&&g>=100)berryOn(c,x,y);if(id==='statue'&&i!=null&&!ICON)for(const q of[i-1,i+1])if(S.obj[q]==='obox'||S.obj[q]==='board')drawObj(c,S.obj[q],x+(q-i)*TS,y,q,0,now);/* 女神像の横の箱・ボードを手前に */return}}
   if(id==='smelter'&&!ICON&&!c._chip&&i!=null&&window.CHIPS&&CHIPS['smelter#on']&&smLit(i)){if(drawChip(c,CHIPS['smelter#on'],id,x,y,now,i))return}/* 炉：精錬しているあいだは、火のついた絵 */
   if(id==='crate'&&!ICON&&!c._chip&&i!=null&&S){const f=crateLid(i);if(f){const ch=chipOf('crate',i,null,'#o'+f);if(ch&&drawChip(c,ch,id,x,y,now,i))return}}/* 木箱：せいれいがしまう・とりだすあいだ、ふたが開く */
@@ -269,7 +254,7 @@ function drawObj(c,id,x,y,i,g,now){
     else{const ph=18*(1-op*.82);c.fillStyle=RL;c.fillRect(x+12,y+7,3,ph);c.fillRect(x+17,y+7,3,ph);c.fillStyle=SL;for(let k=0;k<3;k++)c.fillRect(x+11,y+7+ph*(k+.5)/3-1.5,10,3);
       c.fillStyle=P;c.fillRect(x+12,y,8,7);c.fillRect(x+12,y+25,8,7);c.fillStyle=PC;c.fillRect(x+12,y,8,3);c.fillRect(x+12,y+25,8,3)}break}
   case'fence':case'misugaki':case'logfence':case'bamboofence':case'wall':{const W2=id==='wall';const isF=k=>W2?(typeAt(k)==='wall'||typeAt(k)==='sdoor'||typeAt(k)==='stonegate'):FENCE_IDS.has(typeAt(k));const L=!ICON&&isF(i-1)&&!(W2&&typeAt(i-1)==='sdoor'),R=!ICON&&isF(i+1)&&!(W2&&typeAt(i+1)==='sdoor'),U=!ICON&&isF(i-W)&&!(W2&&typeAt(i-W)==='sdoor'),D=!ICON&&isF(i+W)&&!(W2&&typeAt(i+W)==='sdoor');/* 石の塀のドアの横では、塀はそこで終わって端の柱が立つ */
-    if(W2)break;/* 石の塀（石垣）は部品の絵（drawConn・stoneFront）だけで描く */
+    if(W2)break;/* 石の塀（石垣）は、つなぎ方ごとの絵（drawConn）だけで描く */
     shadow(c,x+16,y+28,12,3);
     const sdL=!ICON&&!W2&&typeAt(i-1)==='sdoor',sdR=!ICON&&!W2&&typeAt(i+1)==='sdoor';/* 石の塀のドアのとなり：柵はドアのふちまでのびて、端の柱がドアにぴったりつく */
     if((sdL||sdR)&&(id==='logfence'||id==='fence')){const lg=id==='logfence';for(const px of[sdL?x:-1,sdR?x+24:-1]){if(px<0)continue;const rx=px<x+12?x+4:x+16;c.fillStyle=lg?'#85552f':'#c08a55';if(lg){rr(c,rx,y+11,12,6,2);rr(c,rx,y+20,12,6,2)}else{c.fillRect(rx,y+12,12,4);c.fillRect(rx,y+20,12,4)}c.fillStyle=lg?'#85552f':'#a0703f';c.fillRect(px,y+8,8,20);c.fillStyle=lg?'#c88c52':'#d6a874';c.fillRect(px,y+8,8,3)}}

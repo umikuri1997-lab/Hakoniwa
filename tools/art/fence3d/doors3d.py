@@ -1,0 +1,158 @@
+# 柵・塀のドアと門を、3Dで組んで、ゲームの見え方（oblique3d.game）のドット絵に写す（fence3d.py と同じやり方）。
+# 使い方：python3 tools/art/fence3d/doors3d.py <出力フォルダ> [id...] [--chips]
+#   id：gate（柵のドア）・logdoor（丸太の塀のドア）・loggate（丸太の大門）・sdoor（石の塀のドア）・stonegate（石の大門）・misugaki.gate（御簾垣の戸）
+#   コマ：<id>#h0〜h3（よこ置き。0しまる→3ひらく）・<id>#v0〜v3（たて置き。gate・logdoor・sdoor）。<id>（アイコン）は #h0 と同じ絵。
+#   とびらは、ちょうつがいのたての軸のまわりに、じっさいにまわして写す（0・30・60・85度）。よこ置きは手前（南）へ、たて置きは東へひらく。
+#
+# 設計図（マス。u＝柵ののびる向き・w＝おく行き。よこ置きは x=u・y=w、たて置きは x=w・y=u）
+#   よこ置きの柱は、マスのさかい（u=0・1、大門は 0・2）にまたがって立つ。右どなりの柵・塀は、柱にかかる所を描かない（ゲームの GLX＝柱のはばの半分）。
+#   たて置きの柱は、マスの中（u 0〜・〜1）に立つ（下のマスの柵が、あとから柱の上に描かれないように）。
+#   柵のドア：柱 0.16角・高さ1.0（四角すいの先）。とびら：くい3〜4まい（はば0.16・あつさ0.05・先は三角）・横木2本・すじかい（Z）・ちょうつがい・取っ手。
+#   丸太の塀のドア：柱は半径0.2（たては0.15）・高さ1.33の丸太、鉄の輪と根もとの石。とびら：丸太（半径0.1）・板2まい・鉄の帯・輪の取っ手。
+#   丸太の大門：柱は半径0.22・高さ1.5、とびら2まい（丸太4本ずつ）。
+#   石の塀のドア：石の柱 0.36角（石3だん＋かさ石）。とびら：上のまるい板戸（たて板・鉄の帯2本・輪の取っ手）。
+#   石の大門：石の柱 0.4角・高さ1.2、板戸2まい。
+#   御簾垣の戸：竹の柱（マスの中）、とびらは竹のわくに御簾（細い竹をよこにつむ）。
+import sys,os,math
+HERE=os.path.dirname(os.path.abspath(__file__));sys.path.insert(0,HERE)
+import fence3d as F
+from fence3d import Part,tube,FENCEC,NAIL,LOGC,IRON,STONE,ST,STC,CRM,CRMP
+import numpy as np
+from PIL import Image
+DOORW=(176,118,72);DOORD=(150,98,60)   # 石の塀のドア・石の大門の板戸の木の色
+ANG=[0,30,60,85]
+class B:
+    """u・w の向きで部品を書き、よこ置き（x=u,y=w）・たて置き（x=w,y=u）へなおす"""
+    def __init__(s,v):s.v=v;s.P=[]
+    def xy(s,u,w):return (w,u) if s.v else (u,w)
+    def box(s,kind,nm,u0,w0,z0,u1,w1,z1,col,org=None,grp=None):
+        (x0,y0),(x1,y1)=s.xy(u0,w0),s.xy(u1,w1);s.P.append((kind,Part(nm,'box',(min(x0,x1),min(y0,y1),z0,max(x0,x1),max(y0,y1),z1),col,grp=grp),org))
+    def tube(s,kind,nm,a,b,r,col,org=None,det=12):
+        A=(*s.xy(a[0],a[1]),a[2]);Bq=(*s.xy(b[0],b[1]),b[2]);s.P.append((kind,tube(nm,A,Bq,r,col,det),org))
+    def log(s,nm,u,w,z1,r,col=LOGC,org=None):x,y=s.xy(u,w);s.P.append(('log',Part(nm,'log',((x,y,0),(x,y,z1),r),col),org))
+    def cyl(s,kind,nm,u,w,r,z0,z1,col,org=None):x,y=s.xy(u,w);s.P.append((kind,Part(nm,'cyl',(x,y,r,z0,z1),col),org))
+    def ball(s,nm,u,w,z,r,col=STONE):x,y=s.xy(u,w);s.P.append(('stone',Part(nm,'ball',(x,y,z,r,0.6),col),None))
+    def pyr(s,kind,nm,u,w,h,z0,z1,col):x,y=s.xy(u,w);s.P.append((kind,Part(nm,'pyr',(x,y,h,h,z0,z1),col),None))
+    def prism(s,kind,nm,pts,w0,w1,col,org=None):   # 正面（u・z）の形を、おくへのばす
+        s.P.append((kind,Part(nm,'prism',(pts,w0,w1,'x') if s.v else (pts,w0,w1),col),org))
+    def plate(s,kind,nm,a,b,w,t,col,org=None):
+        A=(*s.xy(a[0],a[1]),a[2]);Bq=(*s.xy(b[0],b[1]),b[2]);s.P.append((kind,Part(nm,'plate',(A,Bq,w,t),col),org))
+    def hinge(s,hu,hw,deg):
+        """ここまでの「とびら」の部品（leaf=True で足した物）を、ちょうつがい (hu,hw) のまわりにまわす印をつける"""
+        hx,hy=s.xy(hu,hw);return ('rot',hx,hy,(-deg if s.v else deg))
+def leaf(b,rot,fn):
+    """fn(b) で足した部品を、とびらとして rot でまわす"""
+    n0=len(b.P);fn(b)
+    for i in range(n0,len(b.P)):k,p,_=b.P[i];b.P[i]=(k,p,rot)
+def gate(v,n):
+    b=B(v);W0,W1=(0.885,0.945) if not v else (0.45,0.51);PW=0.865 if not v else 0.5;FR=W1
+    posts=[0.0,1.0] if not v else [0.08,0.92];h=0.08
+    for pu in posts:b.box('post','柱',pu-h,PW-h,0,pu+h,PW+h,0.92,FENCEC);b.P.append(('post',Part('柱の先','pyr',(*b.xy(pu,PW),h,h,0.92,1.0),FENCEC),None))
+    u0,u1=posts[0]+h,posts[1]-h;rot=b.hinge(u0,FR+0.04,ANG[n])
+    def body(b):
+        k=4 if not v else 3;wd=0.15;sp=(u1-u0-0.02-wd)/(k-1)
+        for i in range(k):
+            c=u0+0.01+wd/2+i*sp;b.prism('picket','くい',[(c-wd/2,0.04),(c+wd/2,0.04),(c+wd/2,0.84),(c,0.93),(c-wd/2,0.84)],W0,W1,FENCEC)
+        for z0,z1 in((0.60,0.72),(0.18,0.30)):b.box('railh','横木',u0+0.01,FR,z0,u1-0.01,FR+0.04,z1,FENCEC)
+        b.plate('railh','すじかい',(u0+0.06,FR+0.02,0.30),(u1-0.06,FR+0.02,0.60),0.04,0.09,FENCEC)
+        for z in(0.66,0.24):b.box('iron','ちょうつがい',u0+0.0,FR+0.04,z-0.035,u0+0.10,FR+0.055,z+0.035,(96,96,104))
+        b.box('iron','取っ手',u1-0.08,FR+0.04,0.42,u1-0.04,FR+0.07,0.50,(96,96,104))
+    leaf(b,rot,body);return b.P,((-0.2,1.2) if not v else (0,1))
+def logdoor(v,n):
+    b=B(v);PW=0.76 if not v else 0.5;PR=0.2 if not v else 0.15;posts=[0.0,1.0] if not v else [0.15,0.85]
+    for pu in posts:
+        b.log('柱',pu,PW,1.33,PR);b.cyl('iron','鉄の輪',pu,PW,PR+0.018,1.02,1.12,IRON)
+        for k in range(5):a=math.pi*(0.1+0.8*k/4);b.ball('石',pu+math.cos(a)*(PR+0.02),PW+math.sin(a)*(PR+0.02),0.02,0.055)
+    u0,u1=posts[0]+PR,posts[1]-PR;LW=PW+0.06;FR=LW+0.1;rot=b.hinge(u0,FR,ANG[n])
+    def body(b):
+        k=max(2,round((u1-u0)/0.2));r=(u1-u0)/k/2
+        for i in range(k):b.log('丸太',u0+r+2*r*i,LW,1.02,r)
+        for z0,z1 in((0.62,0.74),(0.18,0.30)):
+            b.box('railh','板',u0+0.02,FR,z0,u1-0.02,FR+0.04,z1,LOGC)
+            for bu in(u0+0.06,u1-0.06):b.box('iron','鉄の帯',bu-0.025,FR-0.006,z0-0.012,bu+0.025,FR+0.05,z1+0.012,IRON)
+        b.cyl('iron','輪の取っ手',u1-0.09,FR+0.055,0.035,0.44,0.46,IRON) if not v else b.box('iron','取っ手',u1-0.1,FR+0.04,0.42,u1-0.06,FR+0.07,0.5,IRON)
+    leaf(b,rot,body);return b.P,((-0.4,1.4) if not v else (0,1))
+def loggate(v,n):
+    b=B(0);PW=0.76;PR=0.22
+    for pu in(0.0,2.0):
+        b.log('柱',pu,PW,1.5,PR)
+        for z in(1.02,0.4):b.cyl('iron','鉄の輪',pu,PW,PR+0.018,z,z+0.1,IRON)
+        for k in range(5):a=math.pi*(0.1+0.8*k/4);b.ball('石',pu+math.cos(a)*(PR+0.02),PW+math.sin(a)*(PR+0.02),0.02,0.06)
+    LW=PW+0.06;FR=LW+0.1
+    for side in(0,1):
+        u0,u1=(PR,1.0) if side==0 else (1.0,2-PR);hu=u0 if side==0 else u1;rot=('rot',hu,FR,ANG[n] if side==0 else -ANG[n])
+        def body(b,u0=u0,u1=u1,side=side):
+            k=4;r=(u1-u0)/k/2
+            for i in range(k):b.log('丸太',u0+r+2*r*i,LW,1.14,r)
+            for z0,z1 in((0.70,0.82),(0.18,0.30)):
+                b.box('railh','板',u0+0.02,FR,z0,u1-0.02,FR+0.04,z1,LOGC)
+                for bu in(u0+0.06,u1-0.06):b.box('iron','鉄の帯',bu-0.025,FR-0.006,z0-0.012,bu+0.025,FR+0.05,z1+0.012,IRON)
+            hu2=u1-0.1 if side==0 else u0+0.1;b.cyl('iron','輪の取っ手',hu2,FR+0.055,0.035,0.48,0.5,IRON)
+        leaf(b,rot,body)
+    return b.P,(-0.4,2.4)
+def pillar(b,pu,PW,hw,nc,ch):
+    for c in range(nc):b.box('stone','柱の石',pu-hw,PW-hw,c*ch,pu+hw,PW+hw,(c+1)*ch,ST,org=(pu%1,20+c))
+    b.box('stone','柱のかさ',pu-hw-0.03,PW-hw-0.03,nc*ch,pu+hw+0.03,PW+hw+0.03,nc*ch+0.12,STC,org=(pu%1,30))
+def planks(b,u0,u1,w0,w1,top,col,arch=False):
+    k=max(3,round((u1-u0)/0.11));wd=(u1-u0)/k;cu=(u0+u1)/2;R_=(u1-u0)/2
+    for i in range(k):
+        a,c=u0+i*wd,u0+(i+1)*wd
+        if arch:   # 上のまるい戸：板ごとに、上のはしを円にそって切る
+            f=lambda u:top-R_+math.sqrt(max(0,R_*R_-(u-cu)**2));pts=[(a,0.02),(c,0.02)]+[(c-(c-a)*j/4,f(c-(c-a)*j/4)) for j in range(5)]
+        else:pts=[(a,0.02),(c,0.02),(c,top),(a,top)]
+        b.prism('door','板',pts,w0,w1,col if i%2==0 else DOORD)
+def sdoor(v,n):
+    b=B(v);PW=0.8 if not v else 0.5;hw=0.18 if not v else 0.15;posts=[0.0,1.0] if not v else [0.15,0.85]
+    for pu in posts:pillar(b,pu,PW,hw,3,0.32)
+    u0,u1=posts[0]+hw,posts[1]-hw;W0,W1=PW-0.03,PW+0.03;rot=b.hinge(u0,W1,ANG[n])
+    def body(b):
+        planks(b,u0,u1,W0,W1,0.98,DOORW,arch=True)
+        for z in(0.22,0.62):b.box('iron','鉄の帯',u0+0.01,W1,z,u1-0.01,W1+0.015,z+0.05,IRON)
+        b.cyl('iron','輪の取っ手',u1-0.08,W1+0.03,0.03,0.42,0.44,IRON) if not v else b.box('iron','取っ手',u1-0.09,W1,0.4,u1-0.05,W1+0.03,0.48,IRON)
+    leaf(b,rot,body);return b.P,((-0.3,1.3) if not v else (0,1))
+def stonegate(v,n):
+    b=B(0);PW=0.8;hw=0.2
+    for pu in(0.0,2.0):pillar(b,pu,PW,hw,3,0.37)
+    W0,W1=PW-0.03,PW+0.03
+    for side in(0,1):
+        u0,u1=(hw,1.0) if side==0 else (1.0,2-hw);hu=u0 if side==0 else u1;rot=('rot',hu,W1,ANG[n] if side==0 else -ANG[n])
+        def body(b,u0=u0,u1=u1,side=side):
+            planks(b,u0,u1,W0,W1,1.0,DOORW)
+            for z in(0.2,0.7):b.box('iron','鉄の帯',u0+0.01,W1,z,u1-0.01,W1+0.015,z+0.05,IRON)
+            hu2=u1-0.08 if side==0 else u0+0.08;b.cyl('iron','輪の取っ手',hu2,W1+0.03,0.03,0.46,0.48,IRON)
+        leaf(b,rot,body)
+    return b.P,(-0.3,2.3)
+def misugate(v,n):
+    b=B(0);PW=0.9;posts=[0.06,0.94];H=0.98
+    for pu in posts:
+        b.tube('crm','親柱',(pu,PW,0),(pu,PW,H+0.08),0.055,CRMP,det=16)
+        for z in(0.35,0.7):b.tube('crm','ふし',(pu,PW,z),(pu,PW,z+0.02),0.06,CRMP,det=16)
+    u0,u1=posts[0]+0.055,posts[1]-0.055;rot=b.hinge(u0,PW+0.03,ANG[n])
+    def body(b):
+        for z in(0.04,H):b.tube('crm','わく',(u0,PW,z),(u1,PW,z),0.03,CRMP)
+        for u in(u0+0.03,u1-0.03):b.tube('crm','わく',(u,PW,0.04),(u,PW,H),0.03,CRMP)
+        for k in range(18):z=0.09+k*(H-0.16)/17;b.tube('crm','御簾',(u0+0.05,PW,z),(u1-0.05,PW,z),0.022,F.CRM,det=8)
+        for bu in((u0+u1)/2,):b.box('crm','押縁',bu-0.02,PW+0.022,0.06,bu+0.02,PW+0.048,H-0.04,CRMP)
+    leaf(b,rot,body);return b.P,(0,1)
+DOORS={'gate':(gate,True),'logdoor':(logdoor,True),'loggate':(loggate,False),'sdoor':(sdoor,True),'stonegate':(stonegate,False),'misugaki.gate':(misugate,False)}
+def build_door(iid):
+    fn,hasv=DOORS[iid];out={}
+    for o in(['h','v'] if hasv else ['h']):
+        for n in range(4):
+            P,xr=fn(o=='v',n);out[iid+'#'+o+str(n)]=F.render(P,xr)
+    return out
+if __name__=='__main__':
+    out=sys.argv[1];os.makedirs(out,exist_ok=True);ids=[a for a in sys.argv[2:] if not a.startswith('-')] or list(DOORS);R={}
+    for iid in ids:
+        res=build_door(iid);R[iid]=res
+        ks=list(res);can=Image.new('RGBA',(sum(res[k][0].width+60 for k in ks)+40,260),(150,190,120,255));x=30
+        for k in ks:
+            im,ax,ay=res[k];can.alpha_composite(im,(x,150+ay));x+=im.width+60;print(k,im.size,ax,ay)
+        can.resize((can.width*3,can.height*3),Image.NEAREST).save(os.path.join(out,iid+'_x3.png'))
+    if '--chips' in sys.argv:
+        sys.path.insert(0,os.path.join(F.ROOT,'tools'));import chips as CHP
+        head,CC=CHP.load_imgs();names=[]
+        for iid,res in R.items():
+            for k,(im,ax,ay) in res.items():CC[k]={'g':64,'ax':ax,'ay':ay,'w':im.width,'h':im.height,'f':[im]};names.append(k)
+            if iid+'#h0' in res and iid in CC:im,ax,ay=res[iid+'#h0'];CC[iid]={'g':64,'ax':ax,'ay':ay,'w':im.width,'h':im.height,'f':[im]};names.append(iid)
+        CHP.pack_imgs(head,CC);open(os.path.join(F.ROOT,'.chips_changed'),'a').write('\n'+'\n'.join(names));print('チップに入れた',len(names))
