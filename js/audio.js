@@ -124,6 +124,7 @@ function ambTick(){if(!AC||AC.state!=='running')return;if(!ambG){ambG=AC.createG
   for(const k in want){let a=AMB[k];if(!a){if(!want[k])continue;const b=(SBUF[k]||[])[0];if(!b)continue;const src=AC.createBufferSource(),g=AC.createGain();src.buffer=b;src.loop=true;src.loopStart=.06;src.loopEnd=b.duration-.06;g.gain.value=0;src.connect(g);g.connect(ambG);src.start();a=AMB[k]={src,g}}a.g.gain.setTargetAtTime(want[k],AC.currentTime,.8)}}
 const lastSfx={};
 let SFXV=1;
+let XYLN=0;
 function sfx(k){
   if(!AC||!SND.sfx||AC.state!=='running')return;const now=AC.currentTime;if(lastSfx[k]&&now-lastSfx[k]<.07)return;lastSfx[k]=now;
   const t=now+.01,o=SFXV!==1?(()=>{const g=AC.createGain();g.gain.value=SFXV;g.connect(sfxG);return g})():sfxG,seq=(ns,gap,type,v,d)=>ns.forEach((m,i)=>tone(m,t+i*gap,d||gap*1.6,type,v,o));
@@ -139,6 +140,8 @@ function sfx(k){
   case'open':rustle(t,.15,.06,o,900,2600,.7);knock(340,t+.11,.06,o,.1);break;/* 画面をひらく：さらっ…コトッ */
   case'close':rustle(t,.12,.05,o,2400,800,.7);knock(270,t+.08,.06,o,.1);break;/* 画面をとじる */
   case'count':{const r=.98+Math.random()*.04;tone(2093*r,t,.07,'sine',.03,o);tone(3136*r,t+.035,.09,'sine',.018,o)}break;/* 数がふえた：小さなガラスの「チリッ」 */
+  case'xyl':{const f=[523,587,659,784,880,1047,1175,1319][XYLN&7];knock(f,t,.035,o,.16);tone(f*2,t,.12,'sine',.012,o)}break;/* 一覧をなでる：木琴のコロコロ（XYLN が音の高さ） */
+  case'pin':rustle(t,.05,.05,o,1200,600,.7);knock(300,t+.03,.06,o,.08);knock(1500,t+.16,.03,o,.03);break;/* 紙をぺたっ、ピンをぷすっ */
   case'tile':{const r=.94+Math.random()*.12;knock(520*r,t,.045,o,.06)}break;/* 板が1まいずつ置かれる：とん、とん */
   case'flip':rustle(t,.06,.035,o,1800,3400,.8);knock(380,t+.07,.05,o,.07);break;/* 札を裏返す：ぱたっ */
   case'sizzle':rustle(t,.32,.07,o,5200,2400,1.2);rustle(t+.02,.22,.04,o,1800,900,.8);knock(210,t,.07,o,.12);break;/* 焼き印：じゅっ */
