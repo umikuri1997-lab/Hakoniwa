@@ -2,7 +2,6 @@
    高い所の見張り台：段差1だんごとに射程+HIRNG。強化の2つの道：Lv5から、とおめ（射程+1）か、はやうち（うつ間かく0.7倍）。S.dyn[j].wp にしまう（ひっこしミトン・広げるときも、いっしょにうつる）。
    合図の太鼓（drum）：まわり5マスの見張り台の、うつ間かく0.8倍（重複なし）。
    天気の夜：雨（ほのおの罠のダメージ半分・延焼なし・水の足止め1.5倍）・風の強い日（射程+1・つむじ風9マス）・あらし（射程−1）。夜20時に知らせる。
-   朝のおくりもの：けがもこわされた物もない夜の朝に、くらしの品を3つから1つ（S.mgift）。
    ヨロイカゲ（armor）：矢は半分、火・どく・延焼は2倍。ヒカリカゲ（shiny）：まれに来て、村の南を横切って帰る。たおすと、やすらぎの砂かふしぎなふくろ。 */
 const HIRNG=.5,WPATHLV=5,WPATH={far:{n:'とおめ',rng:1,cd:1,t:'射程+1マス'},fast:{n:'はやうち',rng:0,cd:.7,t:'うつ間かく0.7倍'}},DRUMR=5,DRUMCD=.8,SHINYP=.1;
 function wpathOf(j){const d=j!=null&&S.dyn[j];return d&&WPATH[d.wp]?d.wp:null}
@@ -22,10 +21,3 @@ function shinyAdd(){/* ヒカリカゲ：波の夜に、まれに1ぴき */if(Ma
 function shinyTick(e){if(!e.shiny||e.flee)return false;if(e.sx0==null){e.sx0=e.x;S.flags.shinySeen=1;toast('ヒカリカゲがあらわれた！','good')}if(Math.abs(e.x-e.sx0)>5&&(e.x<1.5||e.x>W-1.5||(fogOn()&&(fogAt((e.y|0)*W+Math.min(W-1,(e.x|0)+1))||fogAt((e.y|0)*W+Math.max(0,(e.x|0)-1)))))){e.dead=true;toast('ヒカリカゲは、行ってしまった');return false}return true}
 function shinyGoal(e){/* 来たのと反対のはしへ（行けるいちばん近い所） */const s=e.side==='w'?'e':'w',G=bfsE(e.x|0,e.y|0,40,e.sd||(e.sd=(Math.random()*1e9)|0));let b=-1,bd=1e9;for(let y=0;y<H;y++){const x=sideEdge(y,s);if(x<0)continue;const q=y*W+x;if(G.dist[q]<0)continue;if(G.dist[q]<bd){bd=G.dist[q];b=q}}return b}
 function shinyDrop(e){if(!e.shiny)return;const id=Math.random()<.5?'sand':'fukuro';dropAt(e.x,e.y,id,1);toast('ヒカリカゲが、'+(id==='sand'?'やすらぎの砂':'ふしぎなふくろ')+'を落とした！','good')}
-/* ---------- 朝のおくりもの ---------- */
-const MGIFT={sand:{n:'やすらぎの砂1つ',give(){S.sand=(S.sand||0)+1}},pt:{n:'パワー20',give(){rewardPower(20)}},fun:{n:'みんなのたのしさ+20',give(){for(const r of S.res)r.fun=Math.min(100,r.fun+20)}},mat:{n:'木材10・石材10',give(){S.mat.wood=(S.mat.wood||0)+10;S.mat.stone=(S.mat.stone||0)+10}}};
-function mgiftMorning(){/* 朝6時：ゆうべ、コワイノが来て、けがもこわされた物もなかったら */if(!S.ns||S.nightHurt||S.ns.broke||!(S.ns.n>0)||!S.enemyOn)return;const k=Object.keys(MGIFT);for(let i=k.length-1;i>0;i--){const q=(Math.random()*(i+1))|0;[k[i],k[q]]=[k[q],k[i]]}S.mgift={d:dayNo(),o:k.slice(0,3)}}
-function mgiftTick(){const g=S.mgift;if(!g||document.querySelector('.idea-reveal')||!$('#dialog').hidden||sheet||(typeof GIFT_ACTIVE!=='undefined'&&GIFT_ACTIVE)||(typeof NOSAVE!=='undefined'&&NOSAVE))return;if(g.d!==dayNo()||!g.o.every(k=>MGIFT[k])){S.mgift=null;return}/* 前の品（守りの品）のときの物は出さない */
-  const ov=el('<div class="idea-reveal" role="dialog" aria-modal="true"></div>'),cd=el('<div class="idea-card"><h2>朝のおくりもの</h2><p class="note">ゆうべは、だれもけがをしなかった。ひとつえらぼう。</p><div class="mgopts"></div></div>'),bx=cd.querySelector('.mgopts');
-  for(const k of g.o){const b=el('<button class="btn" type="button" style="width:100%;margin-top:6px"></button>');b.textContent=MGIFT[k].n;b.onclick=()=>{if(S.mgift!==g)return;S.mgift=null;MGIFT[k].give();sfx('power');toast(MGIFT[k].n+'をうけとった','good');ov.remove();if(sheet==='inv')renderSheet()};bx.appendChild(b)}
-  ov.appendChild(cd);document.body.appendChild(ov)}
