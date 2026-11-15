@@ -353,7 +353,7 @@ function defeat(e,msg,r,by){if(e.dead)return;dyKill(r||by,msg);/* 同じ敵の�
 const DROPS=[['mat:wood',3],['mat:stone',3],['sand',1]];/* sand：やすらぎの砂（コワイノの落とし物だけで手に入る） */
 const DROPSEED={basic:'imo',fast:'tomato',thief:'mugi',brute:'imo',breaker:'mugi',trapper:'tomato',ash:'tomato',rockc:'imo',boss:'mugi',hino:'tomato',yama:'imo',boss2:'mugi'};/* コワイノの種類で、落とす種がちがう（まだ育てられない作物なら、いも） */
 const DROPF={basic:'mimamori',fast:'yomawari',breaker:'oyasumi',boss:'yonaka'};/* コワイノの種類ごとの、落とし物だけの家具 */
-function dropRolls(t){const sd=DROPSEED[t]&&cropOn(DROPSEED[t])?DROPSEED[t]:'imo',L=[['mat:wood',3,.2],['mat:stone',3,.2],['seed:'+sd,2,.2],['sand',1,.1]];if(DROPF[t])L.push([DROPF[t],1,.005]);if(KWR.some(id=>!(S.recipes||{})[id]))L.push(['recipe',1,.001]);if(WD===0&&!EN[t].boss)L.push(['horn',1,.03]);/* 草原：よびごえの角笛3% */if(WD===1&&!S.free){L.push(['gear',1,.005]);if(t==='rockc')L.push(['mat:iron',1,.2]);if(t==='hino'||t==='yama')L.push(['mat:obsidian',2,.5])}/* 火山：そうび0.5%・鉄・黒曜石 */return L}/* [物, 数, 落とす確率]：木材・石材・種20%、やすらぎの砂10%、家具0.5%、コワイノのレシピ0.1% */
+function dropRolls(t){const sd=DROPSEED[t]&&cropOn(DROPSEED[t])?DROPSEED[t]:'imo',L=[['mat:wood',3,.2],['mat:stone',3,.2],['seed:'+sd,2,.2],['sand',1,.1]];if(DROPF[t])L.push([DROPF[t],1,.005]);if(KWR.some(id=>!(S.recipes||{})[id]))L.push(['recipe',1,.001]);if(WD===0&&!EN[t].boss)L.push(['horn',1,.03]);if(!EN[t].boss)L.push(['mapPc',1,.02],['fukuro',1,.01]);/* 地図の切れはし2%・ふしぎなふくろ1% *//* 草原：よびごえの角笛3% */if(WD===1&&!S.free){L.push(['gear',1,.005]);if(t==='rockc')L.push(['mat:iron',1,.2]);if(t==='hino'||t==='yama')L.push(['mat:obsidian',2,.5])}/* 火山：そうび0.5%・鉄・黒曜石 */return L}/* [物, 数, 落とす確率]：木材・石材・種20%、やすらぎの砂10%、家具0.5%、コワイノのレシピ0.1% */
 function dropList(t){const sd=DROPSEED[t]&&cropOn(DROPSEED[t])?DROPSEED[t]:'imo',L=DROPS.concat([['seed:'+sd,2]]);if(DROPF[t])L.push([DROPF[t],1]);return L}
 function monoDrops(n){/* ものひろいの日：村の中の、せいれいが歩いて行ける空いた所に落とす */if(!S.drops)S.drops=[];const r0=S.res.find(q=>!q.hidden),G=bfs(r0?r0.x|0:CX,r0?r0.y|0:CY),C=[];
   for(let q=0;q<W*H;q++)if(VILL[q]&&!S.obj[q]&&walk(q)&&G.dist[q]>=0&&!S.drops.some(d=>d.y*W+d.x===q))C.push(q);
@@ -372,8 +372,8 @@ function takeDrop(d,r){let nm;
   if(d.id.startsWith('food:')){const k=d.id.slice(5),add=Math.max(0,Math.min(d.n,foodCap()-S.food));if(add)addFood(k,add);if(add<d.n)S.drops.push(Object.assign({},d,{n:d.n-add}));/* 箱に入りきらない分は、そのまま地面にのこる */nm=FOODS[k].name+(add?'×'+add:'（箱がいっぱい）')}
   else if(d.id.startsWith('mat:')){const k=d.id.slice(4),add=Math.max(0,Math.min(d.n,matCap()-matTot()));S.mat[k]=(S.mat[k]||0)+add;if(!S.gotMat)S.gotMat={};S.gotMat[k]=(S.gotMat[k]||0)+add;nm=MATN[k]+(add?'×'+add:'（箱がいっぱい）');bambooIdea();matIdea()}
   if(!d.lt)toast((r?r.name+'が':'')+'おとしものをひろった：'+nm,'good')}/* 守りの光で落とした素材は、だまってひろう */
-function itemName(id){return id==='sand'?'やすらぎの砂':id==='horn'?'よびごえの角笛':id==='herb'?'まよけのハーブ':id==='mebuki'?'めぶきのしずく':id==='hai'?'ハイカゲの灰':id==='gear'||id==='gearf'?'そうび':id.startsWith('seed:')?CROPS[id.slice(5)].name+'のたね':BL[id]?(BL[id].item||BL[id].name):id}
-function stowItem(id,n,r){/* はこんだ物を、箱にしまったとき（もちものに入る）。知らせもここで出す */
+function itemName(id){return typeof TRNAME!=='undefined'&&TRNAME[id]?TRNAME[id]:id==='sand'?'やすらぎの砂':id==='horn'?'よびごえの角笛':id==='herb'?'まよけのハーブ':id==='mebuki'?'めぶきのしずく':id==='hai'?'ハイカゲの灰':id==='gear'||id==='gearf'?'そうび':id.startsWith('seed:')?CROPS[id.slice(5)].name+'のたね':BL[id]?(BL[id].item||BL[id].name):id}
+function stowItem(id,n,r){/* はこんだ物を、箱にしまったとき（もちものに入る）。知らせもここで出す */if(typeof trStow==='function'&&trStow(id,n))return;/* 地図の切れはし・宝の地図・ふしぎなふくろ */
   if(id==='gear'||id==='gearf'){for(let i=0;i<n;i++)gearFind(r,id==='gearf'?'つりあげた！':'ひろった！');return}
   if(id==='sand'){S.sand=(S.sand||0)+n;if(WD>=1&&!(S.recipes||(S.recipes={})).toro){S.recipes.toro=true;memo('🏮','しずけさの石どうろうが作れるようになった');queueItemGift({toro:1},'あたらしいレシピ！',true)}/* 火山で、やすらぎの砂をはじめてしまったら、石どうろうのレシピ（和風の物は火山から） */return}
   if(id==='horn'){S.horn=(S.horn||0)+n;(S.seenIt||(S.seenIt={}))['x:horn']=1;return}

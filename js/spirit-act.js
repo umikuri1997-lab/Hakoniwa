@@ -372,6 +372,7 @@ function goMeal(r,G){
   return startAct(r,G,'eat',-1,{pt:0,pw:0});
 }
 function fishLoot(r){/* つり：家具1%・空き缶30%・枝30%・のこりは魚（false をかえす） */const q=Math.random();sfxAt('catch',r.x,r.y);if(!S.free&&Math.random()<BPFISH&&typeof bpNext==='function'&&bpNext()){r.bubble='✨';bpGiveNext(null);return true}/* 家の設計図 */if(WD===1&&!S.free&&Math.random()<.005){r.bubble='✨';if(!addItem(r,'gearf',1))dropAt(r.x,r.y,'gearf',1);return true}/* 火山：そうび0.5% */
+  if(!S.free&&Math.random()<.06){const id=Math.random()<.67?'mapPc':'fukuro';r.bubble='✨';sfx('seed');if(!(itemBoxOK()&&addItem(r,id,1)))dropAt(r.x,r.y,id,1);return true}/* 地図の切れはし4%・ふしぎなふくろ2% */
   if(q<.01){const oo=FURN.filter(giftPoolOK);if(oo.length){const id=pick(oo);r.bubble='✨';sfx('seed');toast(r.name+'が「'+BL[id].name+'」をつりあげた','good');if(!addItem(r,id,1))dropAt(r.x,r.y,id,1);return true}}/* 箱へはこんでから、もちものに入る */
   if(q>=.61){omo('fish',r.name);return false}
   const k=q<.31?'can':'eda';if(k==='can'&&!S.free&&!(S.guardianIdeas||{}).joro){(S.recipes||(S.recipes={})).joro=true;(S.guardianIdeas||(S.guardianIdeas={})).joro=true;sfx('level');queueItemGift({joro:1},'あたらしいレシピ！',true)}/* はじめて空き缶をつったら、ブリキのじょうろを思いつく */r.bubble='chip:drop:'+k;/* 落ちているときと同じ絵 */if(roomN(r)>0)addMat(r,k,1);else dropAt(r.x,r.y,'mat:'+k,1);return true}
