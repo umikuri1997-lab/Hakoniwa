@@ -1,23 +1,23 @@
 /* 草原の夜の来かた（はじめてオオカゲを追いはらったあと）と、植物の守り。
-   波：コワイノは0時10分・1時半・3時ごろの3つの波（WAVES）で、その夜の3わり・3わり・のこり（WAVEPART）。波の中は WAVEGAP ごとに1ぴき。オオカゲはさいごの波。
+   波：コワイノは0時10分から約50分ごとの5つの波（WAVES）で、2わりずつ（WAVEPART）、のこりはさいごの波。波の中は WAVEGAP ごとに1ぴき。オオカゲはさいごの波。
    先ぶれ：0時にハヤカゲが1ぴき（平均レベル5から2ひき、SCOUTLV）。村（VILL）に入ったら南へ帰る。帰りつく前にたおすと、1ぴきごとに、まだ来ていない本隊を SCOUTCUT へらす。
    横から：3晩に1回くらい（SIDEP）、その夜の3分の1が、東か西のはし（晴れている所のはし）から来る。夜20時に知らせる（nightSidePick）。
    ねばり草（nebari）：上を歩くコワイノの速さ NEBARISP 倍。ほたるの草むら（hotaru）：まわり2マスのあかり。はじめて光に入ったコワイノを HOTARUSTUN 止める（1ぴきに1晩1回）。 */
-const WAVES=[15,135,270],WAVEGAP=4.5,WAVEPART=[.3,.3],SCOUTCUT=.2,SCOUTLV=[3,5],SIDEP=1/3,NEBARISP=.5,HOTARUSTUN=3,HOTARUSTUNB=1.5,HOTARUR2=4;
+const WAVES=[15,90,165,240,315],WAVEGAP=4.5,WAVEPART=.2,SCOUTCUT=.2,SCOUTLV=[3,5],SIDEP=1/3,NEBARISP=.5,HOTARUSTUN=3,HOTARUSTUNB=1.5,HOTARUR2=4;
 function wavesOn(){/* 波に分けて来る夜：草原、はじめてオオカゲを追いはらったあと、ふつうの夜だけ（最後の夜の前の群れ・最後の夜・試練・かげのうしおはのぞく） */
   return WD===0&&!S.free&&(S.bossKills||0)>0&&!S.rushOn&&!S.finalOn&&!S.trialOn&&nightVarNow()!=='ushio'}
 function villAvgLv(){return Math.floor(S.res.reduce((a,r)=>a+rLv(r),0)/Math.max(1,S.res.length))}
 function waveApply(es){/* spawnWave で入れたコワイノを、3つの波にならべかえる。先ぶれを足す */
-  const ord=es.filter(e=>!EN[e.type].boss).concat(es.filter(e=>EN[e.type].boss)),n=ord.length,a=Math.floor(n*WAVEPART[0]),b=Math.floor(n*WAVEPART[1]);
+  const ord=es.filter(e=>!EN[e.type].boss).concat(es.filter(e=>EN[e.type].boss)),n=ord.length,p=Math.floor(n*WAVEPART),last=WAVES.length-1;
   const side=nightSideNow();let k=0;
-  ord.forEach((e,i)=>{const g=i<a?0:i<a+b?1:2,ix=g===0?i:g===1?i-a:i-a-b;e.wv=g;e.delay=WAVES[g]+ix*WAVEGAP;if(side&&!EN[e.type].boss&&(k++)%3===2)e.side=side});/* 横から来るのは、3びきに1ぴき */
+  ord.forEach((e,i)=>{const g=p>0?Math.min(last,Math.floor(i/p)):last,ix=i-g*p;e.wv=g;e.delay=WAVES[g]+ix*WAVEGAP;if(side&&!EN[e.type].boss&&(k++)%3===2)e.side=side});/* 横から来るのは、3びきに1ぴき */
   const lv=villAvgLv(),ns=lv>=SCOUTLV[1]?2:lv>=SCOUTLV[0]?1:0;
   for(let i=0;i<ns;i++){const hp=EN.fast.hp;S.enemies.push({id:S.nid++,type:'fast',x:0,y:0,hp,max:hp,delay:i*6,scout:1,spawned:false,path:[],repath:0,atk:0,stun:0,flash:0,flee:false})}
   return ns}
 function waveNote(){/* 目標の欄：つぎの波まで */
   if(!S||WD!==0||!S.enemies||!S.enemies.length)return '';const L=S.enemies.filter(e=>e.wv!=null&&!e.dead);if(!L.length)return '';
   const wait=L.filter(e=>!e.spawned);if(!wait.length)return '';const g=Math.min(...wait.map(e=>e.wv));
-  if(L.some(e=>e.wv===g&&e.spawned))return '影の波 '+(g+1)+'/3';
+  if(L.some(e=>e.wv===g&&e.spawned))return '影の波 '+(g+1)+'/'+WAVES.length;
   const m=Math.max(1,Math.ceil(Math.min(...wait.filter(e=>e.wv===g).map(e=>e.delay))/DAYLEN));return 'つぎの波まで：あと'+(m>=60?Math.floor(m/60)+'時間'+(m%60?m%60+'分':''):m+'分')}
 /* ---------- 先ぶれ ---------- */
 function scoutTick(e){/* 先ぶれは、村に入ったら、のぞいて南へ帰る（たたかわない）。帰る道は、にげるコワイノと同じ */

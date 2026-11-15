@@ -18,12 +18,12 @@ const out=await page.evaluate(()=>wvEval(`(()=>{const o={};S=newState(0);setWorl
 console.log(JSON.stringify(out));
 const A=out.after.filter(e=>!e.sc);
 assert.ok(out.before.every(e=>e.wv==null&&!e.sc),'オオカゲの前は、いままでどおり');
-assert.deepEqual([0,1,2].map(g=>A.filter(e=>e.wv===g).length),[3,3,5],'3わり・3わり・のこり');
-assert.equal(A.find(e=>e.t==='boss').wv,2,'オオカゲはさいごの波');
-assert.deepEqual([0,1,2].map(g=>Math.min(...A.filter(e=>e.wv===g).map(e=>e.d))),[15,135,270],'0時10分・1時半・3時');
+assert.deepEqual([0,1,2,3,4].map(g=>A.filter(e=>e.wv===g).length),[2,2,2,2,3],'2わりずつ、のこりはさいご');
+assert.equal(A.find(e=>e.t==='boss').wv,4,'オオカゲはさいごの波');
+assert.deepEqual([0,1,2,3,4].map(g=>Math.min(...A.filter(e=>e.wv===g).map(e=>e.d))),[15,90,165,240,315],'0時10分から50分ごと');
 assert.equal(out.after.filter(e=>e.sc).length,2,'平均レベル5で先ぶれ2ひき');assert.equal(out.n,13);assert.equal(out.lv2,0);assert.equal(out.lv3,1);
 assert.equal(out.cut,2,'10ぴきの2わり');assert.equal(out.nsCut,2);assert.ok(out.bossLeft,'オオカゲはへらない');assert.ok(out.back,'先ぶれは村に入ると帰る');
-assert.equal(out.note0,'つぎの波まで：あと10分');assert.equal(out.note1,'影の波 1/3');assert.equal(out.note2,'つぎの波まで：あと1時間30分','波がぜんぶ来たら、つぎの波まで');
+assert.equal(out.note0,'つぎの波まで：あと10分');assert.equal(out.note1,'影の波 1/5');assert.equal(out.note2,'つぎの波まで：あと1時間','波がぜんぶ来たら、つぎの波まで');
 assert.ok(out.side==='e'||out.side==='w');assert.equal(out.sideNo,null);assert.equal(out.sideEarly,null,'オオカゲの前は横から来ない');assert.equal(out.sideN,3,'3びきに1ぴき');assert.ok(out.sideX>60,'東のはし');
 assert.equal(out.neb,.5);assert.equal(out.nebBud,1,'芽のあいだは効かない');
 assert.ok(out.hotL);assert.equal(out.stun1,3);assert.equal(out.stun2,false,'1晩1回');assert.equal(out.stunB,1.5);assert.equal(out.far,false,'2マスより遠くは止めない');
