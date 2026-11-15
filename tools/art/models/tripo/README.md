@@ -74,7 +74,14 @@ P('名前','model',('tripo/oak.glb', cx, cy, z0, size, rot, tilt), on=('ground',
 | `log_lying.glb` | ねかせた丸太 | ねかせた形 | 色なし。モデルの中でななめを向いているので、向きは上から見ていちばん長い向きでしらべる（`lumber.py`） |
 | `firewood.glb` | わったまき（3つ） | ねかせた形 | 色なし |
 | `sprig.glb` | 葉の小枝 | 立つ | 色なし |
+| `nat_tree.glb` | 草原の木（自然物のチップ tree・ntree・fruit・fruit#mi） | 立つ | 目じるしの色（幹・葉）。`tools/art/nature3d/nature_prep.py` で作る。設計図は `furn3d/items/nat_*.py` |
+| `nat_deadtree.glb` | 枯れ木（deadtree） | 立つ | 同上 |
+| `nat_bush.glb` | ベリーの茂み（berry） | 立つ | 同上 |
+| `nat_cedar.glb`・`nat_cedar2.glb` | とんがりの木（tree~v・deadtree~v） | 立つ | 同上 |
+| `nat_kinoko0〜2.glb` | きのこ（kinoko#0〜2） | 立つ | 目じるしの色（かさ・かさのうら・じく） |
 
 植物・自然の物（`rosevine` から下）は、1つのモデルに21こ入っていたのを `tools/art/models/tripo_split.py` で切りわけた（つながっている形ごとに分け、色は UV からとって点ごとの色に）。モデルを新しくもらったときも、同じように切りわけて、ここの一覧と `catalog` を足す。
+
+4回め（`nat_*`）は、自然物のチップ用。持ち主の色なしの FBX を `tripo_split.py`（`--faces 20000`）で切りわけ、`nature_prep.py` で部品ごとに目じるしの色をつけた（色そのものは設計図の `recol`・`decal`）。
 
 3回め（`stump` から下）は、色のない FBX（y が上）。`tripo_split.py` は、上の向きを自分でみつけ、面の向きをそろえ、面を3000までへらす。色は設計図で `recol` する。
