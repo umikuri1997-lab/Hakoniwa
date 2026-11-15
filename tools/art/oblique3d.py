@@ -400,13 +400,14 @@ def render_px(sc, proj, ext, depth, k=0.72, outer=True, merge=12, lw=1, k2=0.86,
     for pid, tx in sc.tx.items():   # 部品ののびる向き（いちばん長い向き）にそって、木目をはる
         m = idb == pid
         if not m.any(): continue
-        V = np.array([v for t_ in sc.t if t_[4] == pid for v in t_[:3]]); V0 = V.mean(0)
+        V = np.array([v for t_ in sc.t if t_[4] == pid for v in t_[:3]]); V0 = V.mean(0); txo = getattr(sc, 'txo', {}).get(pid)   # sc.txo：部品ごとに、もようのもとの点と、ずらす数（du,dv）をきめる（マスのさかいでつなぐ柵の横木など）
         ax = getattr(sc, 'txax', {}).get(pid)   # sc.txax：部品ごとに、もようの流れる向きをきめる（もらったモデルの木の皮は、たて）
         if ax is None: ax = np.linalg.svd(V-V0, full_matrices=False)[2][0]   # full_matrices=False：点が多い部品（もらったモデル）で、大きな行列を作らない
         T = tx.at(S); n_ = T.shape[0]; P = wp[m]-V0; N = wn[m]
         v2 = np.cross(N, ax); bad = np.linalg.norm(v2, axis=1) < 0.3
         v2[bad] = np.cross(N[bad], np.array([0, 0, 1.0])); v2 /= np.maximum(np.linalg.norm(v2, axis=1, keepdims=True), 1e-9)
         rs = np.random.RandomState(pid*7919+11); du, dv = rs.randint(0, n_, 2)
+        if txo is not None: V0 = np.array(txo[0], float); du, dv = txo[1] % n_, txo[2] % n_
         iu = (np.floor((P@ax)*S).astype(int)+du) % n_; iv = (np.floor((P*v2).sum(1)*S).astype(int)+dv) % n_
         col[m] = np.clip(col[m]*T[iv, iu][:, None], 0, 255)
     if contrast:   # コントラスト：輪郭線を作る前に、ぬった色だけにかける
