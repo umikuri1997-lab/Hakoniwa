@@ -58,7 +58,7 @@ function towerVolley(j,x,y,st,g,shots0){/* 威力の大きい矢から、とど�
   for(const tg of hits){const T=[tg];if(a.pierce){let b=null,bd=2.5;for(const[,e]of L){if(e===tg)continue;const v=[tg.x-x,tg.y-y],w=[e.x-x,e.y-y],t=(v[0]*w[0]+v[1]*w[1])/(Math.hypot(...v)||1);if(t<Math.hypot(...v))continue;const off=Math.abs(v[0]*w[1]-v[1]*w[0])/(Math.hypot(...v)||1);if(off<bd){bd=off;b=e}}if(b)T.push(b)}/* つらぬき：うしろの1ぴきにも */
     for(const e of T){if(e.dead)continue;hurtEn(e,dm,{lag:SHOT_LAG,sx:x,sy:y});if(st.burn){e.brn=BURN.n;e.brT=0}gearSpecial(a,e,x,y,g);shots0.push({x1:x,y1:y-1.9,x2:e.x,y2:e.y-.3,life:1,wood:true})}
     if(a.spl)for(const e of S.enemies){if(e===tg||!e.spawned||e.dead)continue;if(Math.hypot(e.x-tg.x,e.y-tg.y)<1.5){hurtEn(e,dm,{lag:SHOT_LAG,sx:tg.x,sy:tg.y});gearSpecial(a,e,x,y,g)}}}
-  for(const e of S.enemies)if(e.spawned&&!e.dead&&e.hp<=0)defeat(e);
+  for(const e of S.enemies)if(e.spawned&&!e.dead&&e.hp<=0)defeat(e,'',null,g);
   return a.iv||1}
 /* ---------- 夜の明かり（そうび） ---------- */
 function gearLightAt(x,y){if(!isNight())return false;for(const r of S.res){if(r.hidden||!r.gear)continue;const R=gearStat(r).light;if(R&&(r.x-x)**2+(r.y-y)**2<R*R)return true}return false}

@@ -435,6 +435,7 @@ function renderSheet(){
      const Z=rStat(r,lv);for(const[k,v,ic]of[['攻撃力',Z.atk?String(Math.floor(Z.atk+1e-9)):'なし','sword'],['はたらく速さ',String(Math.floor(Z.work)),'hammer'],['移動速度',String(Math.floor(Z.move)),'boot'],['スタミナ',String(Math.floor(Z.sta)),'heart'],['持てる数',heldN(r)+' / '+Z.cap,'box']])g.appendChild(el('<div class="stat sti">'+pxi(ic)+'<span>'+k+'</span><b>'+v+'</b></div>'));/* アイコンつきの2列 */
      body.appendChild(st)}}
     if(isNew){const nb=el('<button class="btn pri">つぎへ</button>');nb.onclick=()=>{sfx('next');closeSheet()};/* 来た子が、ひとことあいさつ（closeSheet の中で。×でとじても同じ） */body.appendChild(nb);return}
+  }else if(sheet==='diary'){diaryBody(T,body,sheetArg);
   }else if(sheet==='night'){const N=S.ns;if(!N)return closeSheet();T.textContent=N.trial?(N.trialOK?'試練をのりこえた！':'試練の夜'):N.rw?'夜をぶじに守りきった！':'ゆうべの守り';
     const g=el('<div class="stats"></div>');
     for(const[k,v]of[['来た「コワイノ」',N.n+'体'],['追いはらった',N.kill+'体'],['おそわれたせいれい',N.hurt?N.hurt+'回':'なし'],['こわされた柵・設備',N.broke?N.broke+'こ':'なし'],['ぬすまれたもの',N.lost.length?lostSum(N.lost):'なし']].concat(N.rw?[['ごほうび','パワー+'+N.rw+'・みんなのたのしさ+10']]:[]).concat(N.trialOK?[['試練のごほうび','パワー+60・めぶきのしずく']]:[]))g.appendChild(el('<div class="stat"><span>'+k+'</span><b>'+v+'</b></div>'));
@@ -588,7 +589,7 @@ function renderSheet(){
         const b=el('<button class="btn pri" style="flex:none"></button>');if(mx){b.textContent='さいだい';b.disabled=true}else{const c=GUPC[n];b.textContent='強化　'+SP(c);lackOn(b,lackPt(c));b.onclick=()=>{if(S.pt<c){sfx('tap');return toast(lackPt(c),'warn')}if(gupBuy(g.k))renderSheet()}}
         r.appendChild(b);rw.appendChild(r)}
       body.appendChild(sec)
-    }else if(sheetArg==='record'){appendStoryReplays(body);
+    }else if(sheetArg==='record'){appendStoryReplays(body);diaryList(body);
       const st=el('<div class="sec"><h3>これまで</h3><div class="recs"></div></div>'),rw=st.querySelector('.recs');
       for(const[a,b]of[['すごした日',dayNo()+'日'],...(S.score?[['クリアスコア',S.score.rank+'（'+S.score.tot+'てん）']]:[]),['のりこえた夜',(S.nights||0)+'回'],['いまのせいれい',S.res.length+'人'],['よんだせいれい',(S.summons||0)+'人'],['消えてしまったせいれい',(S.deaths||0)+'人'],
         ['追いはらった「コワイノ」',(S.kills||0)+'体'],['オオカゲ',(S.bossKills||0)+'回'],[SHN(),(S.shards||0)+'つ'],['めぶきのしずく',(S.mebuki||0)+'こ'],['ためたせいれいパワー',Math.floor(S.totalPt||0)+''],['みどりのマス',GRASSN+'マス'],['村レベル','Lv'+S.lv],['たっせいした目標',S.quest+'こ']]){const d=el('<div class="st"><span></span><b></b></div>');d.firstChild.textContent=a;d.lastChild.textContent=b;rw.appendChild(d)}
