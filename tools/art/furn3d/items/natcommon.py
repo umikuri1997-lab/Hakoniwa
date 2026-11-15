@@ -163,7 +163,7 @@ def vnoise2(x,y):
 def barktexdecal(p,pal,span=(1.5,0.75),axis=None):
     """木の皮：CC0 のテクスチャ（ambientCG Bark001、textures/bark001.png。すじは横むき）を、幹ののびる向きにすじが通るようにはる。
     axis='z'：まっすぐな幹（まわりの向きは幹のまん中からの角度）。None：枝ごとの向き（sacred_tripo.barkaxis）。
-    明るさを4だん（pal：明るい・ふつう・少し暗い・みぞ）。テクスチャはぼかしてから使い、ドットのぶつぶつにしない"""
+    明るさを4だん（pal：明るい・ふつう・少し暗い・みぞ。もようの色は、ふつうの色に近く、うすく）。テクスチャはぼかしてから使い、ドットのぶつぶつにしない"""
     import sys,os,math;from PIL import Image,ImageFilter
     sys.path.insert(0,os.path.join(os.path.dirname(os.path.abspath(__file__)),'..','..','sacred-tree'))
     import sacred_tripo as ST

@@ -6,5 +6,5 @@ VIEWS=[('tree',0),('ntree',0),('fruit',0)]   # 植えた木・森の木・りん
 BARK=(196,124,84);H=1.9
 TONES=[(195,227,107),(178,218,100),(151,203,98),(120,188,105),(92,171,108)]   # お手本の木の葉の色（明るい→暗い）
 POST=post_clean
-def PARTS():return[flat(barktexdecal(nat('幹','nat_tree.glb',H,BARK,'bark',wide=WIDE),[(208,133,88),(194,124,84),(178,116,80),(160,104,74)],axis='z'))]
+def PARTS():return[flat(barktexdecal(nat('幹','nat_tree.glb',H,BARK,'bark',wide=WIDE),[(201,129,86),(194,124,84),(186,120,82),(177,114,79)],axis='z'))]
 def EXTRA(sc):leafballs(sc,'nat_tree.glb',H,TONES,(84,152,100),wide=WIDE)
