@@ -97,10 +97,10 @@ function boardNotes(c,x,y){/* 依頼ボード：はられた依頼の数だけ�
     P(a,b,14,18,'#d3c096');P(a+1,b+1,12,16,'#f6ecd6');P(a+1,b+1,12,1,'#fffaf0');/* ふち・紙・上のふちの明るい線 */
     P(a+3,b+6,8,1,'#cdb98f');P(a+3,b+9,8,1,'#cdb98f');P(a+3,b+12,6,1,'#cdb98f');P(a+3,b+15,7,1,'#cdb98f');/* 文字の線 */
     P(a+6,b-1,3,3,'#a8452f');P(a+6,b-1,1,1,'#e08a6a');P(a+7,b+2,1,1,'#6e3a28')}}/* 赤いピン */
+function appleOn(c,x,y){const ai=emoImg('🍎');if(!ai)return;for(const[cx,cy]of[[2,-30],[26,-38],[40,-14],[12,-8],[-12,-16]]){const ih=11,iw=ih*ai.width/ai.height;c.drawImage(ai,x+cx-iw/2,y+cy-ih/2,iw,ih)}}/* 実ったりんごの木：ふつうの木の絵に、りんごのアイコンをのせる（3Dの実の絵は作らない） */
 function berryOn(c,x,y){const bi=emoImg('🫐');if(!bi)return;for(const[cx,cy]of[[7,13.5],[25,19.5]]){const iw=14,ih=iw*bi.height/bi.width;c.drawImage(bi,x+cx-iw/2,y+cy-ih/2,iw,ih)}}/* 実ったベリーの茂み：運ぶときと同じベリーの絵を2つ、前の青い実と同じ位置・大きさ（はば14）にのせる */
 const PCH=new Set(['tree','ntree','fruit','deadtree','berry','clover','bellf','salvia','lily','lotus','statue','volcano','hedge']);/* 植物などは、ようすで絵をえらぶ */
 function plantChip(id,i,g){const C=window.CHIPS;if(!C)return null;if(!ICON&&i!=null&&S&&PLANTS.includes(id)&&isBud(i))return (id==='lotus'&&C['bud~w'])||C.bud||null;/* 芽（ハスは水の上なので、土のない芽） */
-  if(id==='fruit'&&g>=100)return C[id+'#mi']||null;/* 実った絵（ベリーは、茂みの上に、運ぶときと同じベリーをのせる） */
   if(id==='hedge'){if(ICON||i==null||!S)return C.hedge||null;const t=k=>typeAt(k)==='hedge',hl=i%W>0&&t(i-1),hr=i%W<W-1&&t(i+1),m=(hl?1:0)|(hr?2:0)|(t(i-W)?4:0)|(t(i+W)?8:0);return C['hedge:'+m]||null}/* 生け垣は、となりとのつながりの形で（tools/art/hedge/hedge_art.py） */
   if(WD===1&&(id==='deadtree'||id==='tree')&&C[id+'~v'])return C[id+'~v'];/* 火山：自然の木も植えた木も、とんがりの木（tools/art/furn3d/items/nat_cedar.py） */
   return C[id]||null}
@@ -149,7 +149,7 @@ function drawObj(c,id,x,y,i,g,now){
   if(!c._chip&&id==='farm'&&drawFarmChip(c,x,y,i,g,now))return;/* 畑のドット絵 */
   if(!c._chip&&DOORCH.has(id)&&!(S&&S.win&&i!=null&&S.win[i]&&!c._win)&&drawDoorChip(c,id,x,y,i,now))return;/* ドア・門のドット絵（リースのあるドアは、リースの前にドアだけ） */
   if(CONN[id]&&!c._chip&&!(HOME_WALLS.has(id)&&S&&S.win&&S.win[i]&&!c._win)){const gL=(CONN[id]==='f'||CONN[id]==='w')&&id!=='misugaki'&&!ICON&&i!=null&&GLX[typeAt(i-1)];/* 御簾垣の戸は、柱がマスの中におさまる */if(gL){const gx=GLX[typeAt(i-1)];c.save();c.beginPath();c.rect(x+gx,y-64,96,160);c.clip()}/* 丸太の塀のドアの右の柱も、となりのマスにはみ出す *//* 左が柵のドア：ドアの右の柱（このマスの左はし2.4ドット。すきまが出ないよう2.2から描く）にかぶる板を描かない（横木は柱のふちから） */const ok=drawConn(c,id,x,y,i,now);if(gL)c.restore();if(ok){if(id!=='wall'&&HOME_WALLS.has(id)&&window.CHIPS[id+':ext'])wallFront(c,id,x,y,i);if(!ICON&&i!=null&&DECAYW.has(id)&&decayed(i))drawCrack(c,id,x,y,i);/* 朽ちた壁：ひびをかさねる */return}}/* つながる物は部品で（窓のある壁は、窓の前に壁だけ）。家の壁は、先に、となりの床を壁のふちまでのばす */
-  if(!c._chip&&PCH.has(id)){const ch=plantChip(id,i,g);if(ch&&drawChip(c,ch,id,x,y,now,i)){if(id==='berry'&&g>=100)berryOn(c,x,y);if(id==='statue'&&i!=null&&!ICON)for(const q of[i-1,i+1])if(S.obj[q]==='obox'||S.obj[q]==='board')drawObj(c,S.obj[q],x+(q-i)*TS,y,q,0,now);/* 女神像の横の箱・ボードを手前に */return}}
+  if(!c._chip&&PCH.has(id)){const ch=plantChip(id,i,g);if(ch&&drawChip(c,ch,id,x,y,now,i)){if(id==='berry'&&g>=100)berryOn(c,x,y);if(id==='fruit'&&g>=100&&!ICON)appleOn(c,x,y);if(id==='statue'&&i!=null&&!ICON)for(const q of[i-1,i+1])if(S.obj[q]==='obox'||S.obj[q]==='board')drawObj(c,S.obj[q],x+(q-i)*TS,y,q,0,now);/* 女神像の横の箱・ボードを手前に */return}}
   if(id==='smelter'&&!ICON&&!c._chip&&i!=null&&window.CHIPS&&CHIPS['smelter#on']&&smLit(i)){if(drawChip(c,CHIPS['smelter#on'],id,x,y,now,i))return}/* 炉：精錬しているあいだは、火のついた絵 */
   if(id==='crate'&&!ICON&&!c._chip&&i!=null&&S){const f=crateLid(i);if(f){const ch=chipOf('crate',i,null,'#o'+f);if(ch&&drawChip(c,ch,id,x,y,now,i))return}}/* 木箱：せいれいがしまう・とりだすあいだ、ふたが開く */
   if(id==='andon'&&!ICON&&!c._chip&&window.CHIPS&&CHIPS['andon#on']&&darkness()>.15){if(drawChip(c,CHIPS['andon#on'],id,x,y,now,i))return}/* 行燈：暗くなったら、あかりのついた絵 */

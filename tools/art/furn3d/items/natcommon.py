@@ -267,21 +267,3 @@ def cedar(sc,cx,cy,H,R,n,pal,trunk,snow=None,seed=0):
             sc.tri((cx,cy,zb+0.25*hs),q1,q0,(255,255,255))   # 下の面（下から見えないが、すきまをふさぐ）
         sc.group(None)
     sc.decal(None)
-def apples(sc,glb,size,wide,n,col,r=0.07,cx=0.5,cy=0.5,seed=1):
-    """りんご：葉のかたまりの手前・上の面に、赤い玉を n こ、なるべくはなしてならべる（お手本のりんごの木の実）"""
-    import math
-    from blueprint import model_tris
-    V,F,C=model_tris('tripo/'+glb,cx,cy,0,size,0,0);V=widen(cx,cy,wide)(V.copy());sel=np.array([kind(c)=='leaf' for c in C]);t=V[F[sel]];ctr=t.mean(1)
-    zl,zh=ctr[:,2].min(),ctr[:,2].max();cand=ctr[(ctr[:,1]>np.percentile(ctr[:,1],75))&(ctr[:,2]>zl+(zh-zl)*0.3)&(ctr[:,2]<zl+(zh-zl)*0.85)]
-    rs=np.random.RandomState(seed);pts=[cand[rs.randint(len(cand))]]
-    for _ in range(n-1):
-        d=np.min([np.linalg.norm(cand-q,axis=1) for q in pts],0);pts.append(cand[d.argmax()])
-    sc.texture(None);sc.decal(None);sc.material(None);sc.smooth(False)
-    for k,p in enumerate(pts):   # 玉は、葉の部品より手前へ（うまらないように）
-        c=p+np.array([0,r*1.6,0]);sc.group('ap%d'%k);sc.part();m=10;l=6
-        for i in range(l):
-            for j in range(m):
-                a0,a1=2*math.pi*j/m,2*math.pi*(j+1)/m;b0,b1=math.pi*i/l-math.pi/2,math.pi*(i+1)/l-math.pi/2
-                P=lambda a,b:(c[0]+r*math.cos(b)*math.cos(a),c[1]+r*math.cos(b)*math.sin(a),c[2]+r*0.95*math.sin(b))
-                sc.quad(P(a0,b0),P(a1,b0),P(a1,b1),P(a0,b1),col)
-        sc.group(None)

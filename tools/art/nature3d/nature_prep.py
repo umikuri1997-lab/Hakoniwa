@@ -2,7 +2,7 @@
 """持ち主のトリポのモデル（自然の物11こ、色なしの FBX）を、自然物のチップ用に、1つずつの glb にする。
   1) python3 tools/art/models/tripo_split.py <FBX> <フォルダ> --faces 20000   → obj00〜obj10.glb（色なし）
   2) python3 tools/art/nature3d/nature_prep.py <そのフォルダ>                → tools/art/models/tripo/nat_*.glb
-（岩は、このモデルの岩でなく、お手本の形に組む（furn3d/items/nat_rock.py）。りんごの木は nat_tree.glb に実を足す（nat_fruit.py））
+（岩は、このモデルの岩でなく、お手本の形に組む（furn3d/items/nat_rock.py）。りんごの木の実は、ゲームでふつうの木の絵にりんごのアイコンをのせる（3Dでは作らない））
 つながった部品ごとに、目じるしの色（幹・葉・かさ・じく など）をつける。色そのものは設計図（furn3d/items/nat_*.py）で recol する。
 小さすぎるかけら（地面にちらばった点）・地面の平たい板は、すてる。"""
 import sys,os,numpy as np,trimesh
