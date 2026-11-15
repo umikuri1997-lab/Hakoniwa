@@ -329,6 +329,7 @@ function decide0(r){if(r.wakeStretch){r.wakeStretch=0;if(!isNight()&&!enemyLive(
     return startAct(r,G,'wander',(r.y|0)*W+(r.x|0))}
   if(r.energy<25||isNight())return goSleep(r,G,S.enemies.some(e=>e.spawned));
   if(r.hunger<550&&!foeNear(r)&&!(r.noEatU>S.t))return goEat(r,G);
+  if(evAct(r,G))return;/* 強化のイベントに出る子は、イベントの場所へ（events.js） */
   if(festOn()&&!isNight()&&r.energy>=30&&!foeNear(r)&&festAct(r,G))return;/* おまつりの日は、朝7時から夜10時まで、おどる・屋台・おしゃべり・見てまわる。夜8時から9時は花火 */
   if(!isNight()&&r.fun>=99&&tryJob(r,G,'offer'))return;
   // 楽しさが低いときは、仕事より先に遊びにいく
