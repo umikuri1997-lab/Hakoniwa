@@ -1,34 +1,35 @@
-/* 強化のイベント：ひらく → つぎの日に集まってする → さいごまでいた子の能力がふえる。夜・コワイノでつぎの日に。やめたらもどる。1季節に1回 */
+/* 強化のイベント：ひらく → つぎの日に集まってする → さいごまでいた子の能力がふえる。夜・コワイノでつぎの日に。やめたらもどる。1季節に1回。季節の大会。
+   時間は前にだけすすめる（もどすと、せいれいの待ち時間がおかしくなる） */
 const assert=require('node:assert/strict');
 (async()=>{const {browser,page,run,errors}=await require('../sim/boot.cjs')({viewport:{width:390,height:780}});
   await run(`document.querySelector('#dialog').hidden=true;S.introSeen=true;S.flags.tapped=1;S.hold=0;if(sheet)closeSheet();S.enemyOn=true;S.enemies=[];NOSAVE=true;
     for(const el of ['wood','earth','water','wind'])S.res.push(mkRes(S,'t'+el,el,CX+.5+S.res.length,CY+2.5));for(const r of S.res){r.hunger=hMax(r);r.energy=100;r.fun=60}
-    S.pt=2000;for(let i=0;i<60;i++)addFood('apple',1);`);
-  /* 1日すすめる（せいれいの動き・世界） */
+    S.pt=5000;S.mat.wood=60;for(let i=0;i<99;i++)addFood('apple',1);S.t=12*60;`);
   const sim=(clockMin,stopIf)=>run(`(()=>{const end=S.t+${clockMin};let n=0;while(S.t<end&&n<40000){stepWorld(1.5);for(const r of S.res){updRes(r,1.5);r.hunger=Math.max(r.hunger,800);r.energy=Math.max(r.energy,80)}S.enemies=[];n++;${stopIf?'if('+stopIf+')break;':''}}return n})()`);
-  const day=d=>`S.t=(${d}-1)*1440`;
-  const go=async(id,n,needs,od=3)=>{
-    const o=JSON.parse(await run(`(()=>{${day(od)}+12*60;${needs||''}recount();const who=S.res.slice(0,${n||99}).map(r=>r.id);const pt=S.pt,f=S.food;const ok=evOpen('${id}',who);return JSON.stringify({ok,pt:pt-S.pt,f:f-S.food,ev:!!S.ev,day:S.ev&&S.ev.day})})()`));
-    assert.ok(o.ok&&o.ev,id+' opened');assert.equal(o.day,od+1);
-    await run(`${day(od+1)}+EVENTS['${id}'].at*60-5`);
-    await sim(60*8,'!S.ev');
+  /* 前へすすめる：d 日めの h 時（いまより前なら、なにもしない） */
+  const to=(d,h)=>run(`(()=>{const t=(${d}-1)*1440+(${h})*60;if(t>S.t)S.t=t;return dayNo()})()`);
+  const go=async(id,n,needs,minDay=0)=>{
+    let d=await run(`dayNo()`);if(minDay&&d<minDay-1)d=minDay-1;await to(d,15);
+    while(await run(`seasonDay(dayNo()+1)===CUPDAY`)){d=await run(`dayNo()`)+1;await to(d,15)}
+    const o=JSON.parse(await run(`(()=>{${needs||''}recount();const who=S.res.slice(0,${n||99}).map(r=>r.id);const pt=S.pt,f=S.food;const ok=evOpen('${id}',who);return JSON.stringify({ok,pt:pt-S.pt,f:f-S.food,ev:!!S.ev,day:S.ev&&S.ev.day,now:dayNo()})})()`));
+    assert.ok(o.ok&&o.ev,id+' opened '+JSON.stringify(o));
+    const before=JSON.parse(await run(`JSON.stringify(S.res.map(r=>Object.assign({},r.est)))`));
+    await to(o.day,`EVENTS['${id}'].at-0.1`);await sim(60*8,'!S.ev');
     const r=JSON.parse(await run(`JSON.stringify({ev:S.ev,est:S.res.map(r=>r.est||{}),memo:(S.memo||[]).map(m=>m[2]).filter(t=>t.includes(EVENTS['${id}'].n))})`));
     assert.equal(r.ev,null,id+' finished: '+JSON.stringify(r.ev));assert.ok(r.memo.length,id+' memo');
-    const g=await run(`JSON.stringify(EVENTS['${id}'].gain)`);console.log(id,'paid',o,'est',JSON.stringify(r.est),'gain',g);return r};
-  const base=await run(`JSON.stringify(S.res.map(r=>Math.round(rMul(r,'move')*100)))`);
-  await go('taiso',0);
-  const a=await go('oni',3);assert.ok(a.est.slice(0,3).every(e=>e.move>=5),'oni gives move');
-  const after=JSON.parse(await run(`JSON.stringify(S.res.map(r=>Math.round(rMul(r,'move')*100)))`));assert.ok(after[0]>=JSON.parse(base)[0]+5,'rMul uses est');
+    const gain=r.est.map((e,i)=>{const o2={};for(const k in e)if(e[k]!==(before[i][k]||0))o2[k]=e[k]-(before[i][k]||0);return o2});
+    console.log(id,'paid',o.pt,o.f,'gain',JSON.stringify(gain));return gain};
+  const base=JSON.parse(await run(`JSON.stringify(S.res.map(r=>Math.round(rMul(r,'move')*100)))`));
+  const t=await go('taiso',0);assert.ok(t.every(g=>g.sta===3),'taiso');
+  assert.equal(await run(`!!evOpen('taiso',[S.res[0].id])`),false,'once per season');
+  const a=await go('oni',3);assert.ok(a.slice(0,3).every(e=>e.move===5),'oni gives move');
+  const after=JSON.parse(await run(`JSON.stringify(S.res.map(r=>Math.round(rMul(r,'move')*100)))`));assert.ok(after[0]>=base[0]+5,'rMul uses est');
   await go('ensoku',4);
   await go('gochi',2,"{const j=(CY+5)*W+CX-6;S.obj[j]='table';S.obj[j+1]='part';S.ref[j+1]=j;}");
   await go('soji',0,"for(let i=0;i<6;i++){const j=(CY+4)*W+CX+4+i;if(!S.obj[j])S.obj[j]='weed0g'}");
-  /* たから探し：箱の物を3つかくして、見つけた子ほど上がる。見つからなかった物は箱へもどる */
-  await run(`S.mat.wood=(S.mat.wood||0)+20;S.mat.stone=(S.mat.stone||0)+20`);
-  const m0=await run(`(S.mat.wood||0)+(S.mat.stone||0)+S.res.reduce((a,r)=>a+(r.cmat?(r.cmat.wood||0)+(r.cmat.stone||0):0),0)`);
-  await go('takara',4);
-  /* 家具・季節のイベント */
+  const tk=await go('takara',4);assert.ok(tk.slice(0,4).every(g=>g.move>=3&&g.move<=8),'takara 3..8');
   await go('yomi',0,"{const j=(CY+6)*W+CX+6;S.obj[j]='shelf1';}");
-  assert.equal(await run(`(${day(3)}+12*60,!!evOpen('mizu',[S.res[0].id]))`),false,'summer only');
+  assert.equal(await run(`!!evOpen('mizu',[S.res[0].id])`),false,'summer only');
   await go('mizu',0,"{const j=(CY+6)*W+CX-8;S.obj[j]='fountain';for(const k of[j+1,j+W,j+W+1]){S.obj[k]='part';S.ref[k]=j}}",9);
   await go('camp',0,"{const j=(CY+7)*W+CX+2;S.obj[j]='campfire';}",9);
   const b0=await run(`(S.bond&&Object.values(S.bond).reduce((a,b)=>a+b,0))||0`);
@@ -36,23 +37,33 @@ const assert=require('node:assert/strict');
   const b1=await run(`(S.bond&&Object.values(S.bond).reduce((a,b)=>a+b,0))||0`);assert.ok(b1>=b0+10,'tea raises bond '+b0+'→'+b1);
   await go('hoshi',0,'',23);
   assert.equal(await run(`evOn('onsen')`),false,'onsen is volcano only');
-  /* 同じ季節に2回はひらけない */
-  assert.equal(await run(`(${day(4)}+12*60,!!evOpen('oni',[S.res[0].id]))`),false,'once per season');
+  /* 季節の大会：5日めの朝にきまり、みんなが出る。順位で上がる数がかわる。4日めには、5日めのイベントをひらけない */
+  await to(32,12);assert.equal(await run(`(S.ev=null,evWhy('oni'))`),'あしたはかけっこ大会です');
+  for(const [id,d] of [['cup0',33],['cup1',40],['cup2',47],['cup3',54]]){
+    const before=JSON.parse(await run(`JSON.stringify(S.res.map(r=>Object.assign({},r.est)))`));
+    await to(d,6.02);await run(`S.ev=null;evMorning();`);assert.equal(await run(`S.ev&&S.ev.id`),id,id+' scheduled');
+    await sim(60*12,'!S.ev');
+    const r=JSON.parse(await run(`JSON.stringify({ev:S.ev,est:S.res.map(r=>r.est||{}),memo:(S.memo||[]).map(m=>m[2]).filter(t=>t.startsWith(EVENTS['${id}'].n))})`));
+    assert.equal(r.ev,null,id+' finished');assert.ok(r.memo.length&&r.memo[0].includes('1位'),id+' podium '+r.memo);
+    const st=await run(`EVENTS['${id}'].stat`),R=JSON.parse(await run(`JSON.stringify(EVENTS['${id}'].rank)`)),gains=r.est.map((e,i)=>(e[st]||0)-(before[i][st]||0)).sort((a,b)=>b-a);
+    console.log(id,r.memo[0],JSON.stringify(gains));
+    assert.equal(gains[0],R[0],id+' 1st');assert.equal(gains.filter(g=>g>0).length,id==='cup3'?3:5,id+' every spirit placed '+gains)}
   /* やめたらもどる */
-  const c=JSON.parse(await run(`(()=>{${day(9)}+10*60;const p=S.pt,f=S.food;evOpen('gochi',[S.res[0].id]);const p1=S.pt;evCancel();return JSON.stringify({back:S.pt===p&&S.food===f,paid:p-p1,ev:S.ev})})()`));
-  assert.ok(c.back&&c.paid===58&&c.ev===null,'cancel refunds '+JSON.stringify(c));
+  const c2=JSON.parse(await run(`(()=>{const p=S.pt,f=S.food,w=S.mat.wood;const ok=evOpen('camp',[S.res[0].id]);const p1=S.pt;evCancel();return JSON.stringify({ok,back:S.pt===p&&S.food===f&&S.mat.wood===w,paid:p-p1,ev:S.ev,why:evWhy('camp')})})()`));
+  assert.ok(c2.back&&c2.ev===null,'cancel refunds '+JSON.stringify(c2));
   /* とちゅうで暗くなったら、つぎの日に */
-  const d=JSON.parse(await run(`(()=>{${day(9)}+12*60;evOpen('oni',S.res.slice(0,2).map(r=>r.id));${day(10)}+13*60;evTick();const ph=S.ev.ph;S.t=(10-1)*1440+21*60+5;evTick();return JSON.stringify({ph,after:S.ev.ph,day:S.ev.day})})()`));
-  assert.equal(d.ph,'go');assert.equal(d.after,null);assert.equal(d.day,11);
+  const dd=await run(`dayNo()`);
+  const d=JSON.parse(await run(`(()=>{S.evDone={};evOpen('oni',S.res.slice(0,2).map(r=>r.id));S.t=(${dd})*1440+13*60;evTick();const ph=S.ev.ph;S.t=(${dd})*1440+21*60+5;evTick();return JSON.stringify({ph,after:S.ev.ph,day:S.ev.day})})()`));
+  assert.equal(d.ph,'go');assert.equal(d.after,null);assert.equal(d.day,dd+2);
   /* 上限 */
-  const cap=await run(`(()=>{const r=S.res[0];r.est={move:58};const D=EVENTS.oni;S.ev={id:'oni',who:[r.id],ph:'do',t0:S.t,at:{[r.id]:1},got:{},backed:[],paid:{pt:0,food:[]}};evEnd();return r.est.move})()`);assert.equal(cap,60,'capped at 60');
+  const cap=await run(`(()=>{S.ev=null;const r=S.res[0];r.est={move:58};S.ev={id:'oni',who:[r.id],ph:'do',t0:S.t,at:{[r.id]:1},got:{},backed:[],paid:{pt:0,food:[]}};evEnd();return r.est.move})()`);assert.equal(cap,60,'capped at 60');
   /* 画面 */
-  await run(`S.ev=null;${day(16)}+10*60;openSheet('craft')`);await page.waitForTimeout(300);await run(`document.querySelector('#evBtn').click()`);await page.waitForTimeout(400);
-  const rows=await run(`document.querySelectorAll('#sheetBody .row').length`);assert.ok(rows>=11,'event rows '+rows);
-  await run(`document.querySelector('#sheetBody .row .btn.pri').click()`);await page.waitForTimeout(300);
+  await run(`S.ev=null;S.evDone={};S.t=(dayNo())*1440+7*60;openSheet('craft')`);await page.waitForTimeout(300);await run(`document.querySelector('#evBtn').click()`);await page.waitForTimeout(400);
+  const rows=await run(`document.querySelectorAll('#sheetBody .row').length`);assert.ok(rows>=12,'event rows '+rows);
+  await run(`[...document.querySelectorAll('#sheetBody .row .btn.pri')].find(b=>!b.classList.contains('lack')).click()`);await page.waitForTimeout(300);
   if(process.env.SHOT_DIR)await page.screenshot({path:process.env.SHOT_DIR+'/event-pop.png'});
   await run(`document.querySelector('.pxcard .go').click()`);await page.waitForTimeout(300);
-  assert.ok(await run(`!!S.ev&&S.ev.id==='taiso'`),'opened from popup');
+  assert.ok(await run(`!!S.ev`),'opened from popup');
   if(process.env.SHOT_DIR)await page.screenshot({path:process.env.SHOT_DIR+'/event-sheet.png'});
   const rad=await run(`[...document.querySelectorAll('*')].filter(e=>parseFloat(getComputedStyle(e).borderRadius)>0).length`);assert.equal(rad,0);
   await page.waitForTimeout(500);assert.deepEqual(errors,[]);await browser.close();console.log('Events: ok');

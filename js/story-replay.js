@@ -31,7 +31,7 @@ function appendStoryReplays(body){
   body.appendChild(sec);
 }
 let STORY_REPLAY_SHELL=null;
-function openStoryReplay(key){
+function openStoryReplay(key){if(typeof followEnd==='function')followEnd();/* 見守るは、もとの村にのこさない */
   const episode=availableStoryReplays().find(e=>e.key===key);if(!episode||STORY_REPLAY_SHELL)return false;
   const owner=S,nonce=(crypto.randomUUID?crypto.randomUUID():String(Date.now())+Math.random()),/* randomUUID は、古い iPhone にない */oldFocus=document.activeElement,audio=AC?.state==='running';
   const shell=el('<div role="dialog" aria-modal="true" aria-label="物語の再生" style="position:fixed;inset:0;z-index:100;background:#faf3e3;display:flex;flex-direction:column;overflow:clip"><div style="min-height:54px;flex-shrink:0;padding:8px 12px;display:flex;align-items:center;justify-content:space-between;gap:8px;box-sizing:border-box"><b></b><button class="btn">思い出帳へ戻る</button></div><iframe title="物語の再生" style="border:0;width:100%;flex:1;min-height:0" allow="autoplay"></iframe></div>');
