@@ -44,7 +44,7 @@ function gearEnemyTick(e,dt){if(e.burnU>S.t&&!e.dead){e.brT=(e.brT||0)+dt;while(
 function gearGlowNear(e){if(e.glowU>S.t)return true;for(const r of S.res){if(r.hidden||!r.gear)continue;if(gearStat(r).glow&&Math.hypot(r.x-e.x,r.y-e.y)<=3)return true}return false}
 /* 火のせいれいの攻撃のあと：とくべつな効果・横・まわりの敵 */
 function gearStrike(r,en,dmg){const s=gearStat(r);if(!r.gear)return;gearSpecial(s,en,r.x,r.y,r);
-  if(s.aoe||s.side){const R=s.aoe?1.5+s.rch:1.2;for(const e of S.enemies){if(e===en||!e.spawned||e.dead)continue;const d=s.aoe?Math.hypot(e.x-r.x,e.y-r.y):Math.hypot(e.x-en.x,e.y-en.y);if(d>R||fenceBetween(r.x,r.y,e.x,e.y))continue;for(let i=0;i<s.hit;i++)hurtEn(e,dmg,{lag:HIT_LAG+i*90,sx:r.x,sy:r.y,dt:'fire'});gearSpecial(s,e,r.x,r.y,r);if(e.hp<=0)defeat(e,r.name+'が'+EN[e.type].name+'を追いはらった！',r)}}}
+  if(s.aoe||s.side){const R=s.aoe?1.5+s.rch:1.2;for(const e of S.enemies){if(e===en||!e.spawned||e.dead)continue;const d=s.aoe?Math.hypot(e.x-r.x,e.y-r.y):Math.hypot(e.x-en.x,e.y-en.y);if(d>R||fenceBetween(r.x,r.y,e.x,e.y))continue;for(let i=0;i<s.hit;i++)hurtEn(e,dmg,{lag:HIT_LAG+i*90,sx:r.x,sy:r.y,dt:'fire',el:r.elem});gearSpecial(s,e,r.x,r.y,r);if(e.hp<=0)defeat(e,r.name+'が'+EN[e.type].name+'を追いはらった！',r)}}}
 /* たたかれたとき：はね返し・ふれたらやけど */
 function gearHurt(e,r){if(!r.gear||e.dead)return;const s=gearStat(r);if(s.refl)hurtEn(e,s.refl,{sx:r.x,sy:r.y});if(s.tburn)e.burnU=S.t+BURNT;if(e.hp<=0)defeat(e,r.name+'が'+EN[e.type].name+'を追いはらった！',r)}
 /* ---------- 見張り台の矢 ---------- */
@@ -56,9 +56,9 @@ function ammoOrder(){return AMMO.filter(id=>S.inv[id]>0).sort((p,q)=>ammoG(q).dm
 function towerVolley(j,x,y,st,g,shots0){/* 威力の大きい矢から、とどくコワイノがいる矢をえらぶ（射程の短い矢しかとどかないときも、ほかの矢でうつ） */const ids=ammoOrder();let id=null,a=null,L=[];for(const k of ids){const b=ammoG(k),rng=st.range+(b.rng||0),M=[];for(const e of S.enemies){if(!e.spawned||e.dead)continue;const d=Math.hypot(e.x-x,e.y-y);if(d<rng)M.push([d,e])}if(M.length){id=k;a=b;L=M;break}}if(!id)return 0;S.inv[id]--;for(let u=1;u<(st.use||1);u++){const k=S.inv[id]>0?id:ammoOrder()[0];if(k)S.inv[k]--}/* st.use：1回につかう本数（火のせいれいは2本。足りなければある分だけ） */L.sort((p,q)=>p[0]-q[0]);
   const n=a.n||1,dm=Math.round((st.dmg+(a.dmg||0))*(st.mul||1)),hits=[];/* st.mul：見張り台に立つ子の属性の威力（WPEL） */for(let i=0;i<n;i++)hits.push(L[i%L.length][1]);
   for(const tg of hits){const T=[tg];if(a.pierce){let b=null,bd=2.5;for(const[,e]of L){if(e===tg)continue;const v=[tg.x-x,tg.y-y],w=[e.x-x,e.y-y],t=(v[0]*w[0]+v[1]*w[1])/(Math.hypot(...v)||1);if(t<Math.hypot(...v))continue;const off=Math.abs(v[0]*w[1]-v[1]*w[0])/(Math.hypot(...v)||1);if(off<bd){bd=off;b=e}}if(b)T.push(b)}/* つらぬき：うしろの1ぴきにも */
-    for(const e of T){if(e.dead)continue;hurtEn(e,dm,{lag:SHOT_LAG,sx:x,sy:y,dt:'arrow'});if(st.burn&&!wxRain()){/* 雨の夜は延焼しない */e.brn=BURN.n;e.brT=0}gearSpecial(a,e,x,y,g);shots0.push({x1:x,y1:y-1.9,x2:e.x,y2:e.y-.3,life:1,wood:true})}
-    if(a.spl)for(const e of S.enemies){if(e===tg||!e.spawned||e.dead)continue;if(Math.hypot(e.x-tg.x,e.y-tg.y)<1.5){hurtEn(e,dm,{lag:SHOT_LAG,sx:tg.x,sy:tg.y,dt:'arrow'});gearSpecial(a,e,x,y,g)}}}
-  for(const e of S.enemies)if(e.spawned&&!e.dead&&e.hp<=0)defeat(e,'',null,g);
+    for(const e of T){if(e.dead)continue;hurtEn(e,dm,{lag:SHOT_LAG,sx:x,sy:y,dt:'arrow',el:g&&g.elem});if(st.burn&&!wxRain()){/* 雨の夜は延焼しない */e.brn=BURN.n;e.brT=0}gearSpecial(a,e,x,y,g);shots0.push({x1:x,y1:y-1.9,x2:e.x,y2:e.y-.3,life:1,wood:true})}
+    if(a.spl)for(const e of S.enemies){if(e===tg||!e.spawned||e.dead)continue;if(Math.hypot(e.x-tg.x,e.y-tg.y)<1.5){hurtEn(e,dm,{lag:SHOT_LAG,sx:tg.x,sy:tg.y,dt:'arrow',el:g&&g.elem});gearSpecial(a,e,x,y,g)}}}
+  for(const e of S.enemies)if(e.spawned&&!e.dead&&e.hp<=0){vetKill(j);defeat(e,'',null,g)}/* ベテランの見張り台：追いはらった数（defense.js） */
   return a.iv||1}
 /* ---------- 夜の明かり（そうび） ---------- */
 function gearLightAt(x,y){if(!isNight())return false;for(const r of S.res){if(r.hidden||!r.gear)continue;const R=gearStat(r).light;if(R&&(r.x-x)**2+(r.y-y)**2<R*R)return true}return false}
