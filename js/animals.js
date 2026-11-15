@@ -4,7 +4,7 @@
    えさと水をもらった日の夕方（ANIPRODH 時）に、小屋にとれる物がたまり、せいれいが箱へ運ぶ（aniJob）。夜は小屋の中。コワイノにはねらわれない。
    セーブ：S.ani（生き物）・S.dyn[小屋]（feed えさ・wd 水をもらった日・pr とれた物・ak つぎに来る生き物）。 */
 const ANI={hane:{name:'ハネマリ',hut:'coop',prod:'egg',cap:3,spd:.9},moko:{name:'モコダマ',hut:'barn',prod:'wool',cap:2,spd:.7},tsuno:{name:'ツノクサ',hut:'barn',prod:'milk',cap:2,spd:.8}};
-const HUTK={coop:['hane'],barn:['moko','tsuno']},PENMAX=300,ANIFUN=3,ANIPRODH=17,ANIFEED=2;
+const HUTK={coop:['hane'],barn:['moko','tsuno']},PENMAX=300,ANIFUN=3,ANIPET=5,ANIPRODH=17,ANIFEED=2;/* ANIFUN：ひまなときに自分からなでる・ANIPET：「みる」でたのんでなでる（1ぴき1日1回 a.petD） */
 let HUTS=[],PENS=new Map(),ANISUB=0;
 const isHut=o=>!!HUTK[o];
 function hutFront(h){const o=S.obj[h];return o==='barn'?[h+2*W,h+2*W+1]:[h+W]}/* 小屋の出入り口の前のマス */
@@ -59,18 +59,38 @@ Object.assign(ACT,{
   awater:{start(r,a){if(!isHut(S.obj[a.obj])||!(r.wcan>0))return false;r.bubble='💦';faceTo(r,a.obj)},done:(r,a)=>a.t>=5,end(r,a){if(!isHut(S.obj[a.obj]))return;hutD(a.obj).wd=callDay();r.wcan=Math.max(0,(r.wcan||0)-1);r.bubble='';sfxAt('water',r.x,r.y)}},/* 水入れに水 */
   acol:{start(r,a){const d=S.dyn[a.obj];if(!d||!d.pr||!Object.keys(d.pr).length)return false;r.bubble='';faceTo(r,a.obj)},done:(r,a)=>a.t>=4,
     end(r,a){const d=S.dyn[a.obj];if(!d||!d.pr)return;for(const k of Object.keys(d.pr)){const n=Math.min(d.pr[k],roomN(r));if(n<=0)break;if(FOODS[k])addCarry(r,k,n);else addMat(r,k,n);d.pr[k]-=n;if(d.pr[k]<=0)delete d.pr[k]}sfxAt('box',r.x,r.y)}},/* とれた物をとる（箱へは、いつものしまい方で） */
-  apet:{start(r,a){const b=(S.ani||[]).find(q=>q.id===a.aid);if(!b||b.in)return false;b.pet=a.dur;b.face=r.x<b.x?-1:1;r.face=b.x<r.x?-1:1;r.bubble='❗'},tick(r,a){if(a.t>2)r.bubble='🎵'},done:(r,a)=>a.t>=a.dur,end(r,a){r.fun=Math.min(100,r.fun+ANIFUN);r.wanderRestUntil=S.t+45;r.bubble=''}}});
-ACT_LBL.apick='生き物のえさをとりにいく';ACT_LBL.aput='生き物にえさをあげている';ACT_LBL.awater='生き物に水をあげている';ACT_LBL.acol='生き物のとれた物をとっている';ACT_LBL.apet='生き物をなでている';
+  apet:{start(r,a){const b=(S.ani||[]).find(q=>q.id===a.aid);if(!b||b.in)return false;b.pet=a.dur;b.face=r.x<b.x?-1:1;r.face=b.x<r.x?-1:1;r.bubble='❗'},tick(r,a){if(a.t>2)r.bubble='🎵'},done:(r,a)=>a.t>=a.dur,
+    end(r,a){const b=(S.ani||[]).find(q=>q.id===a.aid);if(a.t<a.dur){if(a.tap&&b){b.petD=null;b.pet=0}return}/* とちゅうでやめたら、たのんだなでるは、なかったことに */const n=a.tap?ANIPET:ANIFUN;r.fun=Math.min(100,r.fun+n);r.wanderRestUntil=S.t+45;r.bubble='';if(b){b.pet=0;aniJoy(b)}if(a.tap){addFloat(r.x,r.y-1.6,'たのしさ+'+n,'#ffd7e8');JOYU.set(r,performance.now()+1500)}}}});
+ACT.apetq=ACT.apet;/* 「みる」でたのんだ、なでる（とちゅうで仕事にうつらない） */KEEPC.add('apet');KEEPC.add('apetq');/* 荷物は持ったまま、なでにいく */
+ACT_LBL.apick='生き物のえさをとりにいく';ACT_LBL.aput='生き物にえさをあげている';ACT_LBL.awater='生き物に水をあげている';ACT_LBL.acol='生き物のとれた物をとっている';ACT_LBL.apet='生き物をなでている';ACT_LBL.apetq='生き物をなでにいく';
 IDLE_ACTS.push('apet');
+/* ---------- 「みる」で生き物をタップ：小さな画面（aniPop）→「なでる」で、行けるいちばん近いせいれいが、なでにいく（aniPetAsk） ---------- */
+function aniAtTap(px,py){/* 足もとのまわり（絵の大きさ） */let best=null,bd=1e9;for(const a of S.ani||[]){if(a.in)continue;const sx=a.k==='hane'?.45:.65,top=a.k==='hane'?.85:1.25,dx=px-a.x,dy=py-a.y;if(Math.abs(dx)>sx||dy>.3||dy<-top)continue;const d=Math.hypot(dx,dy+top/2);if(d<bd){bd=d;best=a}}return best}
+const ANIBUSY=r=>r.hidden||r.coffin||r.hunger<500||storyCalled(r)||onHold(r)||r.act&&(URGNO.includes(r.act.type)||MAINGO.has(r.act.type)||r.act.type==='apetq'||r.act.type==='watchpost');
+function aniPetWhy(a){if(!a||a.in)return 'いまは小屋の中';if(a.petD===callDay())return 'きょうは、もうなでた';if(isNight())return '夜は、なでられない';if(enemyLive())return 'コワイノがいる';if(S.res.some(r=>r.act&&r.act.type==='apetq'&&r.act.aid===a.id))return 'なでにいっている';return ''}
+function aniPetAsk(a){/* 行けるせいれいのうち、道のりがいちばん近い子 */if(aniPetWhy(a))return null;const bx=a.x|0,by=a.y|0,C=S.res.filter(r=>!ANIBUSY(r)).sort((p,q)=>Math.hypot(p.x-a.x,p.y-a.y)-Math.hypot(q.x-a.x,q.y-a.y)).slice(0,6);let best=null,bd=1e9,bG=null,bs=-1;
+  for(const r of C){const G=bfs(r.x|0,r.y|0),st=nearest(G,j=>Math.abs(j%W-bx)+Math.abs(((j/W)|0)-by)===1&&walk(j)&&!S.obj[j],400);if(st<0||G.dist[st]>=bd)continue;bd=G.dist[st];best=r;bG=G;bs=st}
+  if(!best)return null;a.petD=callDay();a.pet=120;a.path=null;/* 着くまで、その場で待つ */endAct(best);startAct(best,bG,'apetq',bs,{aid:a.id,dur:12,tap:1});if(!best.act||best.act.type!=='apetq'){a.petD=null;a.pet=0;return null}return best}
+function aniPop(a){/* 名前・すんでいる小屋・きょうのえさと水 */const day=callDay(),h=a.h,d=isHut(S.obj[h])?hutD(h):null;
+  const o=el('<div style="position:fixed;inset:0;z-index:45;display:flex;align-items:center;justify-content:center;background:rgba(30,24,16,.45);padding:24px"><div class="pxcard" style="background:var(--panel);padding:16px 18px;max-width:320px;width:100%;color:var(--ink)"><b class="t" style="display:block;font-size:16px;margin-bottom:6px"></b><div class="rows"></div><div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px"><button class="btn x">とじる</button><button class="btn pri go">なでる</button></div></div></div>');
+  o.querySelector('.t').textContent=ANI[a.k].name;const rows=o.querySelector('.rows');
+  rows.appendChild(rowEl('すんでいる小屋',d?BL[S.obj[h]].name:'小屋がない'));rows.appendChild(rowEl('えさ',a.fd===day?'もらった':'まだ'));rows.appendChild(rowEl('水',d&&d.wd===day?'もらった':'まだ'));
+  const g=o.querySelector('.go'),why=aniPetWhy(a);lackOn(g,why);
+  g.onclick=()=>{if(aniPetWhy(a))return;const r=aniPetAsk(a);if(!r){toast('いまは、なでにいけるせいれいがいない');return}sfx('tap');o.remove();toast(r.name+'が、'+ANI[a.k].name+'をなでにいく')};
+  o.querySelector('.x').onclick=()=>{sfx('tap');o.remove()};o.onclick=e=>{if(e.target===o)o.remove()};document.body.appendChild(o)}
 function goPetAnimal(r,G){/* ひまなとき：近くの生き物をなでにいく（かこいの中へは、柵のドアから入る） */if(!S.ani||!S.ani.length)return false;let best=null,bd=10;for(const a of S.ani){if(a.in||a.pet>0)continue;const d=Math.hypot(a.x-r.x,a.y-r.y);if(d<bd){bd=d;best=a}}if(!best)return false;
   const bx=best.x|0,by=best.y|0,st=nearest(G,j=>Math.abs(j%W-bx)+Math.abs(((j/W)|0)-by)===1&&walk(j)&&!S.obj[j],30);if(st<0)return false;startAct(r,G,'apet',st,{aid:best.id,dur:12});return true}
 /* ---------- 絵 ---------- */
 const ANIEAT=['e0','e1','e2','e1'];/* 食べる：さげる → ついばむ → かむ → ついばむ */
+const ANIJOYF=[['j0',110,0],['j1',170,6],['j2',110,2],['j0',90,0],['j1',170,6],['j2',110,2]],ANIJOYT=760,AJOY=new WeakMap();/* よろこぶ：コマ・ミリ秒・はねる高さ（ゲームの点。絵は下のはしをそろえて写したので、描く位置を上げる）。実時間。セーブしない */
+function aniJoy(a){AJOY.set(a,performance.now());if(typeof sfxAt==='function')sfxAt('good',a.x,a.y)}
+function aniJoyF(a,now){const t0=AJOY.get(a);if(t0==null)return null;let e=now-t0;if(e<0||e>=ANIJOYT){AJOY.delete(a);return null}for(const f of ANIJOYF){if(e<f[1])return f;e-=f[1]}return null}
 function aniChip(a,now){/* ボーンで動かして写したコマ（tools/art/animals/ani_rig.py）：歩く4コマ（150ミリ秒ごと）・食べる（220ミリ秒ごと）・立つ（息をする2コマ、700ミリ秒ごと。生き物ごとにずらす） */const k=a.k,C=window.CHIPS||{};if(a.in)return null;
+  const jf=aniJoyF(a,now);if(jf)return C['ani:'+k+'#'+jf[0]]||C['ani:'+k+'#0']||null;
   const f=a.eat>0?ANIEAT[(now/220|0)%4]:a.mv?'w'+((now/150|0)%4):String(((now+a.id*337)/700|0)%2);return C['ani:'+k+'#'+f]||C['ani:'+k+'#0']||null}
 function drawAnimal(g,a,now){/* 足もと（a.x, a.y）に、チップの足（下のはし58/64）をそろえる。左むきは、足もとのまん中で反転 */const ch=aniChip(a,now);if(!ch)return;const im=chipImgs(ch,'ani'+a.k)[0];if(!im.ok)return;
   const x=Math.round(a.x*TS),y=Math.round(a.y*TS),sz=a.k==='hane'?6:10;g.fillStyle='rgba(60,50,30,.18)';g.fillRect(x-sz,y-1,sz*2,2);g.fillRect(x-sz+2,y+1,sz*2-4,1);/* かげ（ドット） */
-  g.save();g.translate(x,y);if(a.face<0)g.scale(-1,1);g.imageSmoothingEnabled=false;g.drawImage(im,ch.ax/2-TS/2,ch.ay/2-29,ch.w/2,ch.h/2);g.restore()}
+  const jf=aniJoyF(a,now);g.save();g.translate(x,y-(jf?jf[2]:0));if(a.face<0)g.scale(-1,1);g.imageSmoothingEnabled=false;g.drawImage(im,ch.ax/2-TS/2,ch.ay/2-29,ch.w/2,ch.h/2);g.restore()}
 function aniDraw(add,vis,now,ctx){for(const a of S.ani||[]){if(a.in||!vis(a))continue;const px=a.x*TS,fy=a.y*TS;add(a.y,2,[px-20,fy-34,px+20,fy+4],()=>liftDraw(uLift(a),()=>drawAnimal(ctx,a,now)),(a.y|0)*W+(a.x|0))}}
 /* ---------- とれる物のアイコン（16×16のドット） ---------- */
 const ANIPIX={egg:['................','................','.......oo.......','......ohho......','.....ohhmmo.....','....ohhmmmmo....','....ohmmmmmo....','...ohmmmmmmmo...','...ommmmmmmdo...','...ommmmmmmdo...','...ommmmmmddo...','....ommmmddo....','.....oddddo.....','......oooo......','................','................'],
