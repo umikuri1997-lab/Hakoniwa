@@ -495,8 +495,8 @@ svg.pxi.ck{width:14px;height:12px;display:inline-block;vertical-align:-1px;margi
 #tScene,#tSpr{position:absolute;left:0;top:0;image-rendering:pixelated;image-rendering:crisp-edges;pointer-events:none}
 .title .tbox{position:relative;z-index:1;padding:14px 18px 16px;margin-top:-18vh}@media (orientation:portrait){.title .tbox{margin-top:-52vh}}
 .title h1{text-shadow:0 3px 0 #3c5a2c,0 -2px 0 #3c5a2c,2px 0 0 #3c5a2c,-2px 0 0 #3c5a2c!important;color:#fff7d6}
-.title .tsub,.title .tline{color:#fff;text-shadow:0 1px 0 #3c5a2c,1px 0 0 #3c5a2c,-1px 0 0 #3c5a2c,0 -1px 0 #3c5a2c}
-.tbtns .btn.pri{animation:tglow 3s steps(6,end) infinite alternate}
+.title .tsub,.title .tline{color:#3c5a2c;text-shadow:0 1.5px 0 rgba(255,250,236,.75)}/* タイトルの小さい字は、ふちどり（上下左右のかげ）をやめて、こい緑の字に（にじまない） */
+.tbtns .btn.pri{animation:tglow 3s steps(6,end) infinite alternate}.tbtns .btn{color:#fffdf6!important;text-shadow:0 1.5px 0 #5e3d22!important;letter-spacing:.06em}/* タイトルのボタン：字は白く、下にだけこいかげ（はっきり読める） */
 @keyframes tglow{from{box-shadow:0 0 0 0 rgba(255,236,160,0)}to{box-shadow:0 0 0 3px rgba(255,236,160,.85),0 0 0 6px rgba(255,236,160,.35)}}
 @media(prefers-reduced-motion:reduce){.tbtns .btn.pri{animation:none}}
 /* マップえらび：絵はドット絵（190×70）を大きくする */
