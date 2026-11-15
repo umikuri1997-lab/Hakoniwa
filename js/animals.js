@@ -65,7 +65,9 @@ IDLE_ACTS.push('apet');
 function goPetAnimal(r,G){/* ひまなとき：近くの生き物をなでにいく（かこいの中へは、柵のドアから入る） */if(!S.ani||!S.ani.length)return false;let best=null,bd=10;for(const a of S.ani){if(a.in||a.pet>0)continue;const d=Math.hypot(a.x-r.x,a.y-r.y);if(d<bd){bd=d;best=a}}if(!best)return false;
   const bx=best.x|0,by=best.y|0,st=nearest(G,j=>Math.abs(j%W-bx)+Math.abs(((j/W)|0)-by)===1&&walk(j)&&!S.obj[j],30);if(st<0)return false;startAct(r,G,'apet',st,{aid:best.id,dur:12});return true}
 /* ---------- 絵 ---------- */
-function aniChip(a,now){const k=a.k,C=window.CHIPS||{};if(a.in)return null;const nm=a.eat>0?'ani:'+k+'#e':a.mv?'ani:'+k+'#w'+((now/220|0)%2):'ani:'+k+'#0';return C[nm]||C['ani:'+k+'#0']||null}
+const ANIEAT=['e0','e1','e2','e1'];/* 食べる：さげる → ついばむ → かむ → ついばむ */
+function aniChip(a,now){/* ボーンで動かして写したコマ（tools/art/animals/ani_rig.py）：歩く4コマ（150ミリ秒ごと）・食べる（220ミリ秒ごと）・立つ（息をする2コマ、700ミリ秒ごと。生き物ごとにずらす） */const k=a.k,C=window.CHIPS||{};if(a.in)return null;
+  const f=a.eat>0?ANIEAT[(now/220|0)%4]:a.mv?'w'+((now/150|0)%4):String(((now+a.id*337)/700|0)%2);return C['ani:'+k+'#'+f]||C['ani:'+k+'#0']||null}
 function drawAnimal(g,a,now){/* 足もと（a.x, a.y）に、チップの足（下のはし58/64）をそろえる。左むきは、足もとのまん中で反転 */const ch=aniChip(a,now);if(!ch)return;const im=chipImgs(ch,'ani'+a.k)[0];if(!im.ok)return;
   const x=Math.round(a.x*TS),y=Math.round(a.y*TS),sz=a.k==='hane'?6:10;g.fillStyle='rgba(60,50,30,.18)';g.fillRect(x-sz,y-1,sz*2,2);g.fillRect(x-sz+2,y+1,sz*2-4,1);/* かげ（ドット） */
   g.save();g.translate(x,y);if(a.face<0)g.scale(-1,1);g.imageSmoothingEnabled=false;g.drawImage(im,ch.ax/2-TS/2,ch.ay/2-29,ch.w/2,ch.h/2);g.restore()}
