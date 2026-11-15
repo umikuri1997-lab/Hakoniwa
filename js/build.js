@@ -324,4 +324,4 @@ function focusQuestSpeaker(w){if(!w||VW<100||VH<100)return;const r=S.res.find(q=
 /* きろく：できごとを日づけつきで残す */
 function omo(k,who){/* いっしょにした「はじめて」を、その場にいた子といっしょにおぼえる（あとで、せいれいどうしの思い出話になる） */if(!S)return;const O=S.omo||(S.omo={});if(O[k])return;O[k]={d:dayNo(),w:who?[who]:S.res.filter(r=>!r.hidden).map(r=>r.name)}}
 const omoWe=(k,r,p,days=2)=>{const o=S.omo&&S.omo[k];return !!(o&&r&&p&&dayNo()-o.d>=days&&o.w.includes(r.name)&&(o.w.length===1||o.w.includes(p.name)))}/* 思い出の話：その場にいた子が話す（2日たってから） */
-function memo(e,t){if(!S)return;(S.memo||(S.memo=[])).push([dayNo(),e,t]);if(S.memo.length>200)S.memo.shift()}/* 思い出帳 */
+function memo(e,t){if(!S)return;dyEv(t);(S.memo||(S.memo=[])).push([dayNo(),e,t]);if(S.memo.length>200)S.memo.shift()}/* 思い出帳 */
