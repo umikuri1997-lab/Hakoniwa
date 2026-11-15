@@ -206,6 +206,7 @@ function frame(now){
   const PZ=started&&sheet!=null,prdt=PZ?0:rdt;/* メニューを開いているあいだは、アニメーションも止める */
   if(CAMW&&CAMW!==camAnim){const w=CAMW;CAMW=null;if(!w.fin&&w.done){w.fin=1;try{w.done()}catch(e){frameErr('cam',e)}}}/* おわりの処理つきのカメラが、とちゅうでほかの動きに上書きされたら、おわりの処理だけはする（しないと、演出がおわらず、ゲームが止まったままになる） */if(camAnim&&camAnim.done)CAMW=camAnim;
   if(camAnim){camAnim.t+=rdt;const p=Math.min(1,camAnim.t/camAnim.dur),e=p<.5?2*p*p:1-Math.pow(-2*p+2,2)/2;cam.z=camAnim.fz+(camAnim.tz-camAnim.fz)*e;centerOn(camAnim.fx+(camAnim.tx-camAnim.fx)*e,camAnim.fy+(camAnim.ty-camAnim.fy)*e);if(p>=1){const a=camAnim,d=a.done;camAnim=null;a.fin=1;if(d)d()}}
+  followTick(rdt);/* 見守る */
   if(started&&!window.__noIdle&&now-lastIn>120000&&$('#idle').hidden&&$('#title').hidden&&$('#maps').hidden){$('#idle').hidden=false;try{save()}catch(e){}}
   if(SKIP&&!(isNight()&&S.enemyOn))SKIP=false;/* 朝になったら、ふつうの速さにもどす */
   if(started&&!sacredQuietActive()&&!menuOpen&&$('#pro').hidden&&sheet==null&&NEWRES==null&&$('#dialog').hidden&&$('#lvup').hidden&&$('#rlv').hidden&&!calmNow()){showItemGift();showSpotPop();reflectNoteTick();if(typeof fogRevealTick==='function')fogRevealTick();oreWakeTick()}
