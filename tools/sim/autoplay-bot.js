@@ -51,7 +51,8 @@ B.sow=k=>{let n=0;for(let j=0;j<S.obj.length;j++){if(S.obj[j]!=='farm')continue;
 H.statue=()=>{if(RUINT>=0&&S.obj[RUINT]==='statueb')templeRuinTap(RUINT);else B.ensure('statue',1,54,57)};/* こわれた神殿を「みる」でタップ */H.stor=()=>B.ensure('crate',1,50,55);H.mbox=()=>{};
 H.table=()=>B.ensure('table',1,49,50,inHouse);
 H.wall=()=>{for(const [x,y] of [[49,52],[50,52],[51,52]])if(!S.obj[y*W+x])place('hwall',x,y)};
-H.bed=()=>B.ensure('bed',1,48,49,inHouse);
+B.weave=n=>{/* はたおり機で、布を n こまで（はたおり機がなければ、置く・たのむ） */if(B.have('loom')<1){if(inv('loom')>0)B.put('loom',56,52);else if(!B.ordered('loom')&&recipeKnown('loom'))orderFurn('loom');return}const j=S.obj.indexOf('loom');if(j<0||(S.mat.nuno||0)+prCount(j)>=n)return;for(const k of GRASSKEYS){const c=Math.min(Math.floor((S.mat[k]||0)/3),n-(S.mat.nuno||0)-prCount(j),PROC.loom.cap-prCount(j));if(c>0){const Q=(S.prQ||(S.prQ={}))[j]||(S.prQ[j]={});rsvAdd({[k]:c*3});Q[k]=(Q[k]||0)+c*3;return}}};
+H.bed=()=>{if(houseBedCount()+inv('bed')+B.sites('bed')<1&&!B.ordered('bed'))B.weave(1);B.ensure('bed',1,48,49,inHouse)};
 H.path=()=>{if(pathMade()<5)B.put('path',58,60)};
 H.fence4=()=>B.ensure('fence',4,54,76);
 H.watch1=()=>{B.ensure('watch',1,56,70);B.ensure('spike',2,54,72)};/* 切り株のまわり（調べの物を置く所）は、あけておく */
@@ -77,7 +78,7 @@ H._all=()=>{
   if(S.quest>12)for(const k of ['imo','mugi','tomato','cabbage'])if(CROPS[k])B.sow(k);
   if((S.mat.eda||0)<12){let c=0;for(const d of S.drops){if(d.id==='mat:eda'&&!d.tap&&Math.hypot(d.x-54,d.y-54)<22&&!(S.fog&&fogAt(d.y*W+d.x))){d.tap=1;if(++c>=6)break}}}
   if((S.mat.kasa||0)<8){let c=0;S.wreq=S.wreq||{};for(let j=0;j<S.obj.length;j++){if(S.obj[j]==='weed0k'&&!S.wreq[j]&&Math.hypot(j%W-54,(j/W|0)-54)<24&&!(S.fog&&fogAt(j))){S.wreq[j]=1;if(++c>=4)break}}}
-  if(houseBedCount()+inv('bed')<n){if(!B.ordered('bed'))orderFurn('bed')}
+  if(houseBedCount()+inv('bed')<n){if(!B.ordered('bed')){B.weave(1);orderFurn('bed')}}
   if(inv('bed')>0)(B.put('bed',48,49,inHouse)||B.put('bed',60,49));
   if(S.quest>7){for(const [id,k] of [['chair',2],['bench',2],['swing',1],['campfire',1],['sandbox',1]])if(recipeKnown(id)&&lvOK(id)&&B.have(id)<k&&S.pt>50)B.ensure(id,k,60,50)}
   if(S.enemyOn&&S.quest>9){
