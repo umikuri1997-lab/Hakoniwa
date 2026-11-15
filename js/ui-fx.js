@@ -51,6 +51,8 @@ let UIWD=null;function uiStageSync(){const w=started&&typeof WD==='number'?WD:-1
 /* つるした木札（草原の下のバー・目標）：タップすると、ぶらんとゆれる */
 function uiSwing(e){if(uiReduced()||!e)return;e.classList.remove('uswing');void e.offsetWidth;e.classList.add('uswing');clearTimeout(e._swT);e._swT=setTimeout(()=>e.classList.remove('uswing'),1050)}
 document.addEventListener('click',e=>{if(!document.body.classList.contains('wd0'))return;const b=e.target&&e.target.closest&&e.target.closest('.dock button,.quest');if(b)uiSwing(b)},true);
+/* 草原のボタン：はなしたとき、ぽよんとはねかえる */
+document.addEventListener('pointerup',e=>{if(!document.body.classList.contains('wd0')||uiReduced())return;const b=e.target&&e.target.closest&&e.target.closest('.btn,.ctab,.slot,.qbtn,.mtile,.chip,#speedBtn,#pauseBtn,#skipBtn');if(!b||b.disabled)return;b.classList.remove('uboing');void b.offsetWidth;b.classList.add('uboing');clearTimeout(b._boT);b._boT=setTimeout(()=>b.classList.remove('uboing'),360)},true);
 /* ハンコ：たっせいした物（目標の札・知らせ）に、赤い「できた」をポンとおす。2.4秒でうすくなって消える */
 let STAMPC=null;
 function stampCanvas(){if(STAMPC)return STAMPC;const c=document.createElement('canvas');c.width=32;c.height=32;const g=c.getContext('2d'),cx=16,cy=16,R=15;g.fillStyle='#d6453a';
