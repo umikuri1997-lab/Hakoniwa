@@ -283,7 +283,7 @@ function pathMade(){const n=S.floor.filter(f=>f==='path').length;if(S.flags.path
 function companionFieldQuest(id,text,how,elem,intro,outro,parts=[id]){return {id,text,how,field:true,fieldParts:parts,check:()=>parts.every(fieldStoryDone),prog:()=>fieldQuestProgress(parts),talk:{get who(){return elem==='earth'?MINA:keyName(elem)},when:()=>true,get learn(){return typeof FIELD_PREP!=='undefined'?parts.flatMap(p=>FIELD_PREP[p]?.learn||[]):[]},get lines(){return KS(intro)}},get story(){return KS(outro)},...(parts.includes('windEcho')?{gives:{flag:'nushiAlive'}}:{})}}
 /* まとめた目標：steps（小さな目標）がぜんぶできたらクリア。どれからしてもよい。parts：クエストの番号を、もとの小さな目標の名前でもさがせるように（qAt・qDone・qNow） */
 function stepQuest(o){const st=o.steps;o.parts=[...(o.alias||[]),...st.map(s=>s.id)];o.check=()=>st.every(s=>s.check());
-  o.prog=()=>{const n=st.filter(s=>s.check()).length,s=st.find(s=>!s.check()),p=s&&s.prog?s.prog():'';return 'できた '+n+'/'+st.length+(p?'　'+p:'')};
+  o.prog=()=>{const n=st.filter(s=>s.check()).length,s=st.find(s=>!s.check()),p=s&&s.prog?s.prog():'',t=o.tail?o.tail(s):'';return 'できた '+n+'/'+st.length+(p?'　'+p:'')+(t?'　'+t:'')};/* tail：ほかの目標の進みぐあいといっしょに、いつも出す物（オオカゲが来るまでの日数） */
   Object.defineProperty(o,'how',{get(){const s=S&&S.qTalked&&st.find(s=>!s.check())||st[0];return s.how||''}});return o}
 const questStep=q=>q&&q.steps?(q.steps.find(s=>!s.check())||q.steps[q.steps.length-1]).id:q&&q.id;/* いまの小さな目標（案内の指など） */
 /* えらぶ場面：水のせいれいを村へあんないする子（えらんだ子と、なかよしになる） */
@@ -468,7 +468,7 @@ const QUESTS1=[
     ['@choice',{key:'futabaBrave',who:POKO,q:'#worry|……ぼく、つよくなれるかな。',opts:[
      {t:'なれるよ',v:'strong',lines:[[POKO,'#joy|……うん。ありがとう、守り神さま。']]},
      {t:'いっしょに守ろう',v:'together',lines:[[POKO,'#nod|……うん。いっしょなら、こわくない。']]}]}]]}),
-  stepQuest({id:'ookage',text:'オオカゲから村を守ろう',
+  stepQuest({id:'ookage',text:'オオカゲから村を守ろう',tail:s=>!s||s.id==='ookage'?'':bossDays().replace('オオカゲが来るまで：','オオカゲ：'),
    steps:[{id:'lv4',t:'村レベルを4にする',check:()=>S.lv>=4,prog:()=>'いま 村レベル'+S.lv,how:'せいれいが満足してパワーがたまると、村レベルが上がる'},
     {id:'yoru10',t:'「コワイノ」を10体追いはらう',check:()=>killsSince()>=10,prog:()=>'コワイノ '+Math.min(10,killsSince())+'/10',how:'夜に来る「コワイノ」を、あわせて10体追いはらう'},
     {id:'ookage',t:'オオカゲを追いはらう',check:()=>(S.bossKills||0)>=1,prog:()=>bossDays(),how:'柵・見張り台・罠を整え、夜に来るオオカゲを追いはらう'}],

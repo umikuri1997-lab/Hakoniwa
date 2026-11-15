@@ -67,6 +67,7 @@ function sacredTreeTap(j){/* 御神木をタップ：かけらの光をとどけ
     if(!clearReady())return toast('ヌシのかけらが足りません','warn');
   }
   omoiSeed();if(omoiWait()&&omoiScene(j))return;/* なかよしの2人が、御神木に会いにくる（青いふきだしが出ているときは、かけらより先） */
+  if(av>0&&shardWarnAsk(j))return;/* 2つめをささげる前に、影がやってくることをたしかめる */
   if(av>0)return sacredOfferShard(j,()=>{S.setSh=(S.setSh||0)+1;sfx('shard');burst(j,'furn','none');SPOT_POPS.push({state:S,shard:S.setSh,after:S.setSh>=3?()=>scheduleGrassReunion():null});/* 大きな知らせ。最後のかけらは、知らせをとじてから再会へ */logEv('かけらの光を御神木へ届けた');dirty=true;checkQuest();});/* かけらは、フタバが御神木へ歩いていって、ささげる */
   if((S.setSh||0)>=3){const reason=grassReunionBlockReason();if(reason)return toast(reason);scheduleGrassReunion();return;}
   return openSheet('clear');

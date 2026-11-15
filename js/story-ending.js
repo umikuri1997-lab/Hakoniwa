@@ -44,7 +44,7 @@ function grassEndingGoal(){
   if(active)return {text:wave===3?'ヨルノオオカゲを追いはらおう':'御神木を守ろう',progress:'御神木の防衛 '+wave+'/3夜目',how:wave===3?'村と御神木を守り、ヨルノオオカゲを追いはらおう':'村と御神木を、朝まで守ろう'};
   if(S.finalNight||S.finalOn||S.rushOn)return {text:'今夜、御神木を守ろう',progress:'次は、防衛 '+wave+'/3夜目',how:'柵や罠を整え、食事と休息を済ませて、今夜の影に備えよう'};
   if(clearReady()){const left=Math.max(0,(S.finalDay??S.flags.finalReadyDay??dayNo())-dayNo()),why=S.res.length<5?'なかまが5人そろうまで、影は来ない':!S.res.some(r=>r.name===POKO)?'フタバがもどるまで、影は来ない':cnt('tower')<1?'御神木がこわれている':'';/* finalCheck が止まっている理由（同じ条件）を、進みぐあいに出す */return {text:'御神木を守る準備をしよう',progress:why||(left?'影が来るまで、あと'+left+'日':'今夜、影がやってくる'),how:'御神木を守れるように、柵や罠・食事と休息の準備を整えよう'};}
-  return {text:'ヌシのかけらを御神木へ届けよう',progress:'かけら '+Math.min(2,S.setSh||0)+'/2',how:'御神木をタップして、ヌシのかけらを届けよう'};
+  return {text:'ヌシのかけらを御神木へ届けよう',progress:'かけら '+Math.min(2,S.setSh||0)+'/2',how:(S.setSh||0)>=1?'御神木をタップして、ヌシのかけらを届けよう。2つめの光がやどると、影の群れがやってくる':'御神木をタップして、ヌシのかけらを届けよう'};
 }
 function grassEndingFocusTarget(){
   if(WD!==0||!S.flags.finalWon)return null;
@@ -89,3 +89,9 @@ function startSacredQuiet(){
     requestAnimationFrame(tick);
   };requestAnimationFrame(tick);
 }
+
+/* 草原：ヌシのかけらの2つめをささげると、さいごの防衛がはじまる。ささげる前に、影がやってくることをたしかめる（はいで、ささげる。来る日はかえない） */
+let SHARDASK=false,SHARDOK=false;
+function shardWarnAsk(j){if(WD!==0||S.cleared||(S.setSh||0)!==1||finalDefenseBegun())return false;if(SHARDOK){SHARDOK=false;return false}if(SHARDASK)return true;
+  const r=S.flags.finalReadyDay,soon=r!=null&&r<=dayNo()&&!isNight()&&S.res.length>=5&&S.res.some(q=>q.name===POKO)&&cnt('tower')>=1;/* finalCheck と同じ条件で、その日の夜に来るか */
+  SHARDASK=true;const S0=S;askYesNo('ヌシのかけら',soon?'この光をささげると、御神木の力に、影たちが気づく。今夜にも、大きな影の群れがやってくる。ささげる？':'この光をささげると、御神木の力に、影たちが気づく。もうすぐ、大きな影の群れがやってくる。ささげる？',()=>{SHARDASK=false;if(S!==S0)return;SHARDOK=true;sacredTreeTap(j)},()=>{SHARDASK=false});return true}
