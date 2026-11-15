@@ -372,22 +372,41 @@ def disk_css():
 
 
 # ---- 草原のかざり：木札をつるす横木 ----
-BEAM = [  # 横木（丸太。32×9、よこにくりかえす）
-    'hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh',
-    'aaaagaaaaaaaaaaaaagggaaaaaaaaaaa',
-    'aaaaaaaaaaagggaaaaaaaaaaaaaagaaa',
-    'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
-    'gggaaaaaaaaaaaaaaaaaaaggaaaaaaaa',
-    'aaaaaaaggaaaaaaaaaaaaaaaaaaaaaga',
-    'dddddddddddddddddddddddddddddddd',
-    'eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
-    'ssssssssssssssssssssssssssssssss',
-]
+def beam_rows(W=96, H=9):
+    """横木：自然の板（よこにくりかえす）。上のふちは、ゆるくでこぼこ（0〜1ドット）、木目はテクスチャ、ふしが2つ。
+    下に、板のあつみ（こい2行）とかげ"""
+    import math
+    t = tex_tones(W)
+    top = lambda x: 1 if math.sin(x / W * 2 * math.pi * 3 + .7) + .5 * math.sin(x / W * 2 * math.pi * 7) > .9 else 0
+    knots = [(22, 3.5, 3.2, 1.3), (71, 4.2, 2.4, 1.0)]  # ふし（まん中・よこ・たて の半分）
+    rows = []
+    for y in range(H):
+        r = ''
+        for x in range(W):
+            tp = top(x)
+            if y < tp: r += '.'; continue
+            if y == H - 1: r += 's'; continue
+            if y == H - 2: r += 'e'; continue
+            if y == H - 3: r += 'd'; continue
+            if y == tp: r += 'h'; continue
+            k = ''
+            for kx, ky, rx, ry in knots:
+                dx = min(abs(x + .5 - kx), W - abs(x + .5 - kx)) / rx; dy = (y + .5 - ky) / ry
+                q = dx * dx + dy * dy
+                if q < .45: k = 'k'
+                elif q < 1.3 and not k: k = 'K'
+            r += k or t[(y * 3) % W][x]
+        rows.append(r)
+    return rows
+
+
+BEAM = beam_rows()
 ROPE = ['ab', 'bc', 'ab', 'bc']  # なわ（2×4、たてにくりかえす。ねじれ）
 
 
 def deco_css():
-    beam = svg(BEAM, {'h': '#d6a46c', 'a': '#b98551', 'g': '#a8743f', 'd': '#8a5a30', 'e': '#6e4a28', 's': SHADOW})
+    beam = svg(BEAM, {'h': '#e2b57c', 'l': '#cf9e64', 'a': '#c29158', 'g': '#b5844d', 'D': '#a87843', 'k': '#7e5230', 'K': '#9b6c3c',
+                       'd': '#8a5a30', 'e': '#6e4a28', 's': SHADOW})
     rope = svg(ROPE, {'a': '#c9a36a', 'b': '#a8834f', 'c': '#8a6a45'})
     tag = svg(wood_rows(), {'a': '#e6cb99', 'g': '#e2c693', 'D': '#dec18d', 'l': '#ead0a2', 'h': '#f4e1bd',
                             'w': '#b98a52', 'd': '#8a5a30', 'k': '#efd8ae', 'q': '#f8ead0', 's': SHADOW})  # 下の木札：パネルより少しこい、切りっぱなしの板
@@ -396,7 +415,7 @@ def deco_css():
         '/* 草原のかざり：下のバーは横木からつるした木札（なわ） */',
         f'body.wd0 #topUI .hud{{position:relative}}',
         f'body.wd0 .dock{{position:relative;border-image:none!important;background:none!important;box-shadow:none!important;padding:calc({pp}*20) 4px 4px!important;overflow:visible}}',
-        f'body.wd0 .dock::before{{content:"";position:absolute;left:calc(50% - 50vw);width:100vw;top:0;height:calc({pp}*9);background:{beam} 0 0/calc({pp}*32) calc({pp}*9) repeat-x;image-rendering:pixelated;pointer-events:none}}',
+        f'body.wd0 .dock::before{{content:"";position:absolute;left:calc(50% - 50vw);width:100vw;top:0;height:calc({pp}*9);background:{beam} 0 0/calc({pp}*{len(BEAM[0])}) calc({pp}*{len(BEAM)}) repeat-x;image-rendering:pixelated;pointer-events:none}}',
         f'body.wd0 .dock button,body.wd0 .quest{{position:relative;overflow:visible}}',
         f'body.wd0 .dock button{{border:solid transparent!important;border-width:calc({pp}*3)!important;border-image:{tag} 5 5 6 5 fill/calc({pp}*5) calc({pp}*5) calc({pp}*6) round!important;background:none!important;color:#86715a!important;transform:none}}',
         f'body.wd0 .dock button.on{{color:#4a2a12!important;filter:saturate(1.15) brightness(1.03);margin-top:calc({pp}*3);text-shadow:1.5px 0 0 rgba(140,90,40,.3),-1.5px 0 0 rgba(140,90,40,.3),0 1.5px 0 rgba(255,236,200,.7)}}',
