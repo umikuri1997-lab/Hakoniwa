@@ -495,7 +495,7 @@ function renderSheet(){
     body.appendChild(el('<p class="story">作る料理をえらぶと、せいれいが箱の材料で作ってくれる。</p>'));
     {const m=ovenMul(j),pc=Math.round((1-m)*100);body.appendChild(el('<div class="rows"></div>')).appendChild(rowEl('料理の速さ（いま）',pc>0?'料理の時間 -'+pc+'%（まわり3マスの料理家具）':'ふつう'))}/* かまど：いまの料理の速さ */
     const rows=el('<div class="rows"></div>');
-    for(const R of RECIPES){if(dishSt(R)!==S.obj[j])continue;/* その家具で作る料理だけ */const F=FOODS[R.out],need=needTxt(R),has=Object.keys(R.need).every(k=>(S.fs[k]||0)>=R.need[k]);
+    for(const R of RECIPES){if(dishSt(R)!==S.obj[j])continue;/* その家具で作る料理だけ */const F=FOODS[R.out],need=needTxt(R),has=(N=>Object.keys(N).every(k=>(S.fs[k]||0)>=N[k]))(needR(R,null));
       const r=helpify(rowEl((icURL(F.e)?'':F.e+' ')+F.name+(cur===R.out?'（作っている）':''),'材料：'+need+' / 作る：'+ELEM[R.el].name+' / 時間：'+R.time+'分'+(F.fx?' / 効果：'+F.fx:'')+(has?'':'・材料が足りない'),icURL(F.e)),DISHD(R));
       const b=el('<button class="btn"></button>');b.textContent=cur===R.out?'やめる':'これを作る';if(cur===R.out)b.classList.add('pri');
       b.onclick=()=>{if(cur===R.out)delete S.ovenSet[j];else S.ovenSet[j]=R.out;sfx('tap');renderSheet()};r.appendChild(b);if(!has&&cur!==R.out){r.style.filter='grayscale(1)';r.style.opacity='.55'}/* 材料が足りない料理はグレー */rows.appendChild(r)}
@@ -675,7 +675,7 @@ function renderSheet(){
 }
 
 /* 図鑑：マップごとに、見つけた・おぼえた物だけ（スポット・家具・建物・レシピ・コワイノ・アイテム） */
-let ZKW=null,ZKT=0;const ZKTABS=['スポット','家具','建物','レシピ','コワイノ','アイテム'];
+let ZKW=null,ZKT=0;const ZKTABS=['スポット','家具','建物','レシピ','コワイノ','アイテム','さかな'];
 function zukanBody(body){
   const ws=[0,1,2,3,4,5].filter(w=>(w===WD&&!S.free)||savedStage(w));if(!ws.length){body.appendChild(el('<p class="note">まだありません</p>'));return}
   if(ZKW==null||!ws.includes(ZKW))ZKW=ws.includes(WD)?WD:ws[0];
@@ -691,6 +691,7 @@ function zukanBody(body){
   else if(ZKT===4){const seen=d.seenEn||{},K=d.enKills||{};for(const k of Object.keys(EN).filter(k=>ZUKAN[k]&&seen[k])){const D=EN[k],row=el('<div class="zk"><canvas width="144" height="144"></canvas><div class="zt"><b></b><p></p><small></small></div></div>');
       const c=row.querySelector('canvas').getContext('2d');c.scale(2,2);try{drawShade(c,k,36,64,(k==='boss'||k==='hino'||k==='yama'||k==='boss2'?.46:.56),1,{t:0,dot:1})}catch(_){}
       row.querySelector('b').textContent=D.name;row.querySelector('p').textContent=ZUKAN[k];row.querySelector('small').textContent='体力 '+D.hp+'・はやさ '+D.sp+(WEAK[k]?'・弱点 '+ELEM[WEAK[k]].name:'')+'・追いはらった '+(K[k]||0)+'回・たおしたときのけいけん +'+xpText(spiritXpGain(D.xp,1))+'（Lv1・2）';if(d.cleared&&ZURA[k]){const u=el('<p class="note"></p>');u.textContent='もとのすがた：'+ZURA[k];row.querySelector('.zt').appendChild(u)}rows.appendChild(row);list.push(null)}}
+  else if(ZKT===6)fishZukan(d,add);
   else{const it=Object.assign({},d.seenIt||{});for(const k in d.mat||{})if(d.mat[k]>0)it['m:'+k]=1;for(const k in d.fs||{})if(d.fs[k]>0)it['f:'+k]=1;
     for(const k in MATN)if(it['m:'+k])add(MATN[k],'素材',ICONS[k]||null);for(const k in FOODS)if(it['f:'+k])add(FOODS[k].name,FOODS[k].fx||'食べ物',foodIc(k));if(it['x:horn'])add('よびごえの角笛',HORNDESC,hornIco());if(it['x:herb'])add('まよけのハーブ',HERBDESC,herbIco())}
   body.appendChild(el('<p class="story">'+list.length+'こ</p>'));

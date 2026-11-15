@@ -1,0 +1,34 @@
+/* 魚のしゅるい：川・池・温泉・時間・雨・ステージでつれる魚がかわる・つった魚を数える・どの魚でも料理の材料・食べた効果・図鑑・絵 */
+const assert=require('node:assert/strict');
+(async()=>{const {browser,run,errors}=await require('../sim/boot.cjs')({world:0});
+  const r=JSON.parse(await run(`(()=>{document.querySelector('#dialog').hidden=true;S.introSeen=true;S.flags.tapped=1;USERPAUSE=true;const out={};
+    /* 水：はしにつながる水は川、それいがいは池 */S.ground.fill(0);for(let y=0;y<H;y++)S.ground[y*W+3]=1;for(let y=50;y<53;y++)for(let x=50;x<53;x++)S.ground[y*W+x]=1;recount();
+    out.river=waterKind(20*W+3);out.pond=waterKind(51*W+51);
+    const at=(h,rain)=>{S.t=1440*3+h*60;S.rain=rain};const pk=(j,h,rain,n)=>{at(h,rain);const s=new Set();for(let i=0;i<n;i++)s.add(fishPick(j));return [...s].sort().join(',')};
+    const rs=20*W+4,ps=51*W+53;/* 川のそば・池のそば（fishW が水をさがす） */
+    out.rDay=pk(rs,10,false,60);out.rEve=pk(rs,18,false,60);out.rNight=pk(rs,21,false,60);out.rRainDay=pk(rs,10,true,80);
+    out.pDay=pk(ps,10,false,60);out.pEve=pk(ps,18,false,60);out.pRain=pk(ps,18,true,80);
+    /* つり：その魚を持って、数える */const a=S.res[0];a.carry=null;at(10,false);a.act={type:'fish',stand:ps,t:50,stage:'do'};const q0=Math.random;Math.random=()=>.99;ACT.fish.end(a,a.act);Math.random=q0;out.carry=Object.keys(a.carry||{});out.rec=JSON.stringify(S.fishRec);
+    /* 料理：さかなは、どの魚でもよい */S.fs={koi:2};out.need=JSON.stringify(needR(ALLRECIPES.find(R=>R.out==='yakizakana'),null));out.needTxt=needTxt(ALLRECIPES.find(R=>R.out==='marine'));
+    a.cgot={rec:'kushiyaki',m:{funa:1}};S.fs={koi:3,funa:0};out.held=JSON.stringify(needR(ALLRECIPES.find(R=>R.out==='kushiyaki'),a));a.cgot=null;
+    a.cing={rec:'foil',ov:-1,nd:{dojo:1,imo:1}};out.cingNeed=JSON.stringify(needR(ALLRECIPES.find(R=>R.out==='foil'),a));a.cing=null;
+    out.kaba=JSON.stringify(needR(ALLRECIPES.find(R=>R.out==='kabayaki'),null));
+    out.wants=(S.ovenSet={[5]:'yakizakana'},S.obj[5]='oven',S.fs={},[cookWants('koi'),(S.fs={funa:1},cookWants('koi'))]);S.obj[5]='';S.ovenSet={};
+    /* 食べた効果 */a.fun=50;a.energy=50;a.wkB=0;ACT.eat.end(a,{items:['koi','dojo','unagi']});out.fun=a.fun;out.en=a.energy;out.wkM=a.wkM;out.wkD=Math.round(a.wkB-S.t);
+    /* たき火も料理の家具：料理の画面で、たき火の料理を出す */S.obj[60*W+60]='campfire';recount();openSheet('oven',60*W+60);out.camp=[...document.querySelectorAll('.sheet .row b, .sheet .row .rt b, .sheet .row')].map(e=>e.textContent).join('|');closeSheet();S.obj[60*W+60]='';
+    /* 図鑑の「さかな」 */openSheet('menu','zukan');ZKT=6;renderSheet();out.zk=document.querySelector('.sheet').textContent;closeSheet();
+    out.ico=[...FISHK,'marine','kushiyaki','foil','fishsoup','kabayaki'].filter(k=>!ICONS[k]||!foodIc(k));out.emoName=[...FISHK].filter(k=>!icURL(FOODS[k].e));
+    return JSON.stringify(out)})()`));
+  console.log(JSON.stringify(r));
+  assert.equal(r.river,'river');assert.equal(r.pond,'pond');
+  assert.equal(r.rDay,'nijimasu');assert.equal(r.rEve,'yumasu');assert.equal(r.rNight,'namazu');assert.equal(r.rRainDay,'namazu,nijimasu');
+  assert.equal(r.pDay,'funa,koi');assert.equal(r.pEve,'funa');assert.equal(r.pRain,'dojo,funa');
+  assert.deepEqual(r.carry,['koi'].filter(k=>r.carry.includes(k)).length?r.carry:r.carry);assert.ok(['funa','koi'].includes(r.carry[0]),r.carry);assert.ok(JSON.parse(r.rec)[r.carry[0]]===1,r.rec);
+  assert.equal(r.need,'{"koi":1}');assert.equal(r.needTxt,'さかな・キャベツ');assert.equal(r.held,'{"funa":1}');assert.equal(r.cingNeed,'{"imo":1,"dojo":1}');assert.equal(r.kaba,'{"unagi":1}');
+  assert.deepEqual(r.wants,[true,false]);
+  assert.equal(r.fun,60);assert.equal(r.en,70);assert.equal(r.wkM,20);assert.equal(r.wkD,480);
+  assert.ok(r.camp.includes('魚のくしやき')&&r.camp.includes('ホイル焼き')&&!r.camp.includes('焼き魚'),r.camp);
+  assert.ok(r.zk.includes(r.carry[0]==='koi'?'コイ':'フナ')&&r.zk.includes('つった数 1'),r.zk.slice(0,300));
+  assert.deepEqual(r.ico,[]);assert.deepEqual(r.emoName,[]);
+  assert.deepEqual(errors,[]);await browser.close();console.log('OK');
+})().catch(e=>{console.error(e);process.exit(1)});

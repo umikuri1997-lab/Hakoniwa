@@ -1,6 +1,6 @@
 'use strict';
 const foodLow=()=>S.res.filter(r=>!r.hidden).length*2;/* 箱が、せいれいの人数×2より少なくなったら、食べ物を先にあつめる */
-function cookWants(f){/* 調理台・かまどでえらんだ料理に、その食べ物が足りないか */for(const q in S.ovenSet||{}){if(!COOKST.has(S.obj[q]))continue;const R=ALLRECIPES.find(R=>R.out===S.ovenSet[q]);if(R&&R.need[f]&&(S.fs[f]||0)<R.need[f])return true}return false}
+function cookWants(f){/* 調理台・かまどでえらんだ料理に、その食べ物が足りないか */for(const q in S.ovenSet||{}){if(!COOKST.has(S.obj[q]))continue;const R=ALLRECIPES.find(R=>R.out===S.ovenSet[q]);if(R&&R.need.fish&&(f==='fish'||isFish(f))){let n=0;for(const k of ['fish',...FISHK])n+=S.fs[k]||0;if(n<R.need.fish)return true;continue}/* さかなは、どの魚でもよい */if(R&&R.need[f]&&(S.fs[f]||0)<R.need[f])return true}return false}
 function tryJob(r,G,k){
   if(!canJob(r,k))return false;
   let j;
@@ -21,10 +21,10 @@ function tryJob(r,G,k){
     if(isNight()||roomN(r)<1)return false;if(matTot()+matN(r)>=matCap()&&!(k==='chop'&&roomKey('wood')>matN(r))){boxFullNote();return false}/* まき棚は木材だけ入る *//* 箱に1つでも空きがあれば集めにいく（ぴったり満杯までためられる） */const camp=k==='chop'?'lumber':'quarry',nat=k==='chop'?(WD===1?((S.mat.bamboo||0)<(S.mat.wood||0)?[['bamboo'],['ntree','deadtree']]:[['ntree','deadtree'],['bamboo']]):[['ntree','deadtree']]):[['rock',...VEIN_IDS]];/* 火山：木材と竹の、すくないほうを先に切る */
     const cp=q=>typeAt(q)===camp&&free('o'+anc(q),2)&&jobFor(q,r);j=nearest(G,j=>adjOf(j,cp)>=0,60);if(j>=0){const q=anc(adjOf(j,cp));startAct(r,G,k,j,{key:'o'+q,obj:q,camp:true});return true}
     for(const ns of nat){const nt=q=>ns.includes(S.obj[q])&&free('o'+q,1);j=nearest(G,j=>adjOf(j,nt)>=0,40);if(j>=0){const q=adjOf(j,nt);startAct(r,G,k,j,{key:'o'+q,obj:q});return true}}return false}
-  case'cookS':case'cook':{const sp=k==='cookS';if(!cnt('oven')&&!cnt('cooktable')||!(foodCap()>0)||isNight())return false;const hg=k=>r.cgot?r.cgot.m[k]||0:0,rs=RECIPES.filter(R=>Object.keys(R.need).every(k=>(S.fs[k]||0)+hg(k)>=R.need[k]));if(!rs.length){cgBack(r);return false}
+  case'cookS':case'cook':{const sp=k==='cookS';if(!cnt('oven')&&!cnt('cooktable')&&!cnt('campfire')||!(foodCap()>0)||isNight())return false;const hg=k=>r.cgot?r.cgot.m[k]||0:0,rs=RECIPES.filter(R=>{const N=needR(R,r);return Object.keys(N).every(k=>(S.fs[k]||0)+hg(k)>=N[k])});if(!rs.length){cgBack(r);return false}
     if(!S.ovenSet)S.ovenSet={};const ok=q=>{const R=rs.find(R=>R.out===S.ovenSet[q]);return !!R&&dishSt(R)===S.obj[q]&&r.elem===R.el};/* 守り神さまがえらんだ料理だけ作る。料理は、その料理の属性のせいれいだけが作る */
     const ov=q=>COOKST.has(S.obj[q])&&ok(q)&&!ashed(q)&&free('o'+q,1)&&useFor(q,r)&&!S.res.some(x=>x.cing&&x.cing.ov===q);j=nearest(G,j=>adjOf(j,ov)>=0,80);if(j<0)return false;const q=adjOf(j,ov),R=RECIPES.find(x=>x.out===S.ovenSet[q]);
-    if(r.cgot&&r.cgot.rec!==R.out)cgBack(r);const lk=Object.keys(cgLeft(r,R)).map(fkey);if(!lk.length){r.cing={rec:R.out,ov:q};r.cgot=null;const st=ovenStand(G,q);startAct(r,G,'cook',st>=0?st:j,{key:'o'+q,obj:q});return true}/* 材料がそろっていたら、そのまま料理へ */const sj=nearestVia(G,bfs(j%W,(j/W)|0),j=>keysAdj(j,lk)>=0,80);if(sj<0)return false;/* 材料は、料理の家具までの道のりがいちばん短くなる箱からとる（1つの箱にそろっていなければ、いくつかの箱から） */
+    if(r.cgot&&r.cgot.rec!==R.out)cgBack(r);const lk=Object.keys(cgLeft(r,R)).map(fkey);if(!lk.length){r.cing={rec:R.out,ov:q,nd:r.cgot?Object.assign({},r.cgot.m):null};r.cgot=null;const st=ovenStand(G,q);startAct(r,G,'cook',st>=0?st:j,{key:'o'+q,obj:q});return true}/* 材料がそろっていたら、そのまま料理へ */const sj=nearestVia(G,bfs(j%W,(j/W)|0),j=>keysAdj(j,lk)>=0,80);if(sj<0)return false;/* 材料は、料理の家具までの道のりがいちばん短くなる箱からとる（1つの箱にそろっていなければ、いくつかの箱から） */
     startAct(r,G,'cgrab',sj,{rec:R.out,ov:q});return true}
   case'harvest':{if(!(foodCap()>0&&S.food<foodCap()))return false;const fRoom=foodCap()-S.food-carryN(r);j=nearest(G,j=>{if(S.obj[j]!=='farm'||!S.dyn[j]||S.dyn[j].g<100||!free('o'+j,1)||roomN(r)<1)return false;const c=CROPS[cropK(S.dyn[j])];return fRoom>=(c?c.yield:2)+(NEARMILL.has(j)?1:0)+(trt(r,'shukaku')?1:0)+(S.today==='hosaku'?1:0)+(r.elem==='wood'?1:0)});/* 箱に入りきらないときは収穫しない（持っている物を捨てない）。木の子は+1ぶんも見る */if(j>=0){startAct(r,G,'harvest',j,{key:'o'+j,obj:j,food:1});return true}
     const fr=ripeAdj(['fruit']);j=roomN(r)>=1&&fRoom>=2?nearest(G,j=>fr(j)>=0):-1;if(j>=0){const q=fr(j);startAct(r,G,'harvest',j,{key:'o'+q,obj:q,food:1});return true}return false}
@@ -285,7 +285,7 @@ function updRes(r,dt){rescueStuck(r);if((RHOLD.get(r)||0)>performance.now())retu
   if(r.hunger<=0){r.hunger=0;return die(r)}
   if(r.act&&hungry(r)&&!['step','eat','fetch','eatwait','forage','flee','faint','smat','store'].includes(r.act.type))endAct(r);/* おなかが50より少なくなったら、なにをしていても（ねていても・たたかっていても）、やめて食べにいく */
   if(r.act&&r.act.type==='repair'&&r.hunger<=500&&S.food>0&&!isNight()){endAct(r);goEat(r,bfs(r.x|0,r.y|0));return}
-  if(r.cgot&&(isNight()||r.hunger<=250))cgBack(r);if(r.cing&&r.hunger<=250&&S.food<=0){const R=RECIPES.find(x=>x.out===r.cing.rec);if(R)for(const k in R.need)addFood(k,R.need[k]);r.cing=null;if(r.act&&r.act.type==='cook')endAct(r);if(r.bubble==='🔥'||r.bubble==='🍳')r.bubble=null}/* 料理中におなかがすいたら、材料をもどして食べにいく */
+  if(r.cgot&&(isNight()||r.hunger<=250))cgBack(r);if(r.cing&&r.hunger<=250&&S.food<=0){const R=RECIPES.find(x=>x.out===r.cing.rec);if(R){const N=needR(R,r);for(const k in N)addFood(k,N[k])};r.cing=null;if(r.act&&r.act.type==='cook')endAct(r);if(r.bubble==='🔥'||r.bubble==='🍳')r.bubble=null}/* 料理中におなかがすいたら、材料をもどして食べにいく */
   if(r.act&&r.hunger<=(r.act.type==='cook'?250:500)&&S.food>0&&!isNight()&&WORKT.has(r.act.type)){endAct(r)}/* おなかが50いかになったら、作業をやめて食べにいく */
   if(r.refill&&(r.refill<=S.t||r.hunger>=hMax(r)-10||S.food<=0))r.refill=0;/* にげて食べに来たときは、マックスまで食べる */
   if(fighter(r)&&r.hunger>=500&&!r.refill){r.fleeNow=false;if(r.act&&r.act.type==='flee')endAct(r)}
