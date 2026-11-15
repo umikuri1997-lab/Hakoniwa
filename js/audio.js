@@ -139,6 +139,9 @@ function sfx(k){
   case'open':rustle(t,.15,.06,o,900,2600,.7);knock(340,t+.11,.06,o,.1);break;/* 画面をひらく：さらっ…コトッ */
   case'close':rustle(t,.12,.05,o,2400,800,.7);knock(270,t+.08,.06,o,.1);break;/* 画面をとじる */
   case'count':{const r=.98+Math.random()*.04;tone(2093*r,t,.07,'sine',.03,o);tone(3136*r,t+.035,.09,'sine',.018,o)}break;/* 数がふえた：小さなガラスの「チリッ」 */
+  case'tile':{const r=.94+Math.random()*.12;knock(520*r,t,.045,o,.06)}break;/* 板が1まいずつ置かれる：とん、とん */
+  case'flip':rustle(t,.06,.035,o,1800,3400,.8);knock(380,t+.07,.05,o,.07);break;/* 札を裏返す：ぱたっ */
+  case'sizzle':rustle(t,.32,.07,o,5200,2400,1.2);rustle(t+.02,.22,.04,o,1800,900,.8);knock(210,t,.07,o,.12);break;/* 焼き印：じゅっ */
   case'leaf':rustle(t,.09,.04,o,2800,2200,.9);rustle(t+.05,.08,.028,o,3600,2600,.9);break;/* 葉が舞う：さわさわ */
   case'crackle':for(let i=0;i<3;i++)rustle(t+i*.025+Math.random()*.015,.012,.06,o,4500,4500,2);break;/* 火の粉：パチパチ */
   /* せいれいの攻撃：属性ごと。当たる音（arrow）に、属性の音をかさねる */

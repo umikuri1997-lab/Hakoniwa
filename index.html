@@ -663,6 +663,23 @@ body.wd0 .toast.bump{animation:tbump .22s ease-out}body.wd0 .toast.out{opacity:1
 /* 草原の下のシート：板が「ことん」と置かれる（下からあがって、少しはねて止まる） */
 body.wd0 .sheet{animation:kotonn .3s steps(1)}
 @keyframes kotonn{0%{transform:translateY(36px);opacity:.5}18%{transform:translateY(18px);opacity:1}36%{transform:translateY(4.5px)}55%{transform:none}68%{transform:translateY(-3px)}82%{transform:none}91%{transform:translateY(-1.5px)}100%{transform:none}}
+/* 草原：メニューの板が1まいずつ「とん、とん」 */
+body.wd0 .mtile.utile{animation:tontile .26s steps(1) backwards;animation-delay:var(--ti,0ms)}
+@keyframes tontile{0%{transform:translateY(-12px);opacity:0}25%{transform:translateY(-6px);opacity:1}50%{transform:none}65%{transform:translateY(1.5px) scaleY(.94)}80%{transform:translateY(-1.5px)}100%{transform:none}}
+/* 草原：タブをかえると、中の板が札のようにくるっとまわる（横にちぢんでから、ひろがる） */
+.uflip{animation:uflip .28s steps(1)}
+@keyframes uflip{0%{transform:scaleX(.08);filter:brightness(.8)}20%{transform:scaleX(.3);filter:brightness(.86)}40%{transform:scaleX(.6);filter:brightness(.93)}60%{transform:scaleX(.85)}80%{transform:scaleX(1.02)}100%{transform:none;filter:none}}
+/* 草原：おしつづけて決めるボタン。こげ色が左からたまり、決まると「じゅっ」と少し光る */
+body.wd0 [data-hold]{position:relative;overflow:hidden}
+body.wd0 [data-hold]::after{content:"";position:absolute;left:0;top:0;bottom:0;width:0;background:rgba(74,42,18,.32);pointer-events:none}
+body.wd0 [data-hold].holding::after{animation:holdfill var(--hold,700ms) steps(14) forwards}
+body.wd0 [data-hold].branded::after{width:100%;background:rgba(255,236,190,.55);animation:branded .4s steps(4) forwards}
+@keyframes holdfill{from{width:0}to{width:100%}}@keyframes branded{from{opacity:1}to{opacity:0}}
+/* 草原：ゲージは、はちみつのように、とろっとのびて、さきがゆれる */
+body.wd0 #topUI .xp i,body.wd0 #topUI .gauge i{transition:width .9s steps(10);position:relative}
+body.wd0 #topUI .gwob i::after{content:"";position:absolute;right:0;top:0;bottom:0;width:1.5px;background:rgba(255,246,220,.85);animation:gwob 1.3s steps(1) forwards}
+@keyframes gwob{0%{transform:none;opacity:1}55%{transform:translateX(-1.5px)}65%{transform:translateX(-3px)}75%{transform:translateX(-1.5px)}85%{transform:none}92%{transform:translateX(-1.5px)}100%{transform:none;opacity:0}}
+@media (prefers-reduced-motion:reduce){.mtile.utile,.uflip,body.wd0 [data-hold].holding::after,body.wd0 #topUI .gwob i::after{animation:none!important}body.wd0 #topUI .xp i,body.wd0 #topUI .gauge i{transition:none!important}}
 @media (prefers-reduced-motion:reduce){body.wd0 .dock button,body.wd0 .toast,body.wd0 .sheet,#topUI .htag .nold,#topUI .htag b.nrollU,#topUI .htag b.nrollD{animation:none!important}}
 @media (prefers-reduced-motion:reduce){#dlgText>span,#topUI .htag b.nbump,.pxcard,.idea-card,#helpPop .hc,.askyn .ak,.toast,.dock button.on svg.pxi{animation:none!important}}
 </style>

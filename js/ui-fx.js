@@ -79,3 +79,22 @@ function uiStamp(el,small){if(!el||!el.isConnected)return;const c=document.creat
   if(getComputedStyle(el).position==='static')el.style.position='relative';el.appendChild(c);setTimeout(()=>{el.classList.remove('ushake');void el.offsetWidth;el.classList.add('ushake')},180);
   setTimeout(()=>c.classList.add('out'),2400);setTimeout(()=>c.remove(),2850)}
 uiNumWatch();
+/* 草原：メニュー・一覧をひらくと、ボタンの板が1まいずつ「とん、とん」と置かれる（kotonn と同じ動き。CSS の tontile と、おくれ --ti）。音は板が置かれる瞬間に */
+document.addEventListener('animationstart',e=>{if(e.animationName==='tontile'&&!uiReduced())setTimeout(()=>sfx('tile'),90)});
+function tileStagger(root){if(!document.body.classList.contains('wd0')||uiReduced()||!root)return;const L=root.querySelectorAll('.mtile');let i=0;for(const b of L){if(i>=12)break;b.style.setProperty('--ti',(i*45)+'ms');b.classList.remove('utile');void b.offsetWidth;b.classList.add('utile');i++}}
+function tileWatch(){const b=document.getElementById('sheetBody');if(!b)return;new MutationObserver(()=>{const n=b.querySelectorAll('.mtile').length,k=n?n+'|'+(b.firstElementChild?b.firstElementChild.textContent.slice(0,20):''):0;if(k!==b._tileN){b._tileN=k;if(n)tileStagger(b)}}).observe(b,{childList:true})}/* 下のシートの中身がかわったときだけ */
+/* 草原：タブをかえると、中の板が、札をひっくり返すように、くるっとまわって中身がかわる（タブのならび .ctabs のあとの物。図鑑の本はのぞく） */
+document.addEventListener('click',e=>{const t=e.target&&e.target.closest&&e.target.closest('.ctabs .ctab');if(!t||!document.body.classList.contains('wd0')||uiReduced()||t.closest('.pxcard')||t.closest('.sheet[data-k="zukan"]'))return;
+  sfx('flip');requestAnimationFrame(()=>{const tb=document.querySelector('#sheetBody .ctabs');if(!tb)return;let n=tb.nextElementSibling;while(n){n.classList.remove('uflip');void n.offsetWidth;n.classList.add('uflip');n=n.nextElementSibling}})},true);
+/* 草原：もどせない決定（data-hold のボタン）は、おしつづけると、焼き印のこげ色がたまって「じゅっ」と決まる（0.7秒）。ふつうのタップでは決まらない */
+const HOLDMS=700;
+function holdOn(b){return b&&b.dataset&&b.dataset.hold&&document.body.classList.contains('wd0')}
+document.addEventListener('pointerdown',e=>{const b=e.target&&e.target.closest&&e.target.closest('[data-hold]');if(!holdOn(b)||b.disabled)return;b.classList.add('holding');b.style.setProperty('--hold',HOLDMS+'ms');
+  clearTimeout(b._hT);b._hT=setTimeout(()=>{b.classList.remove('holding');b._held=1;sfx('sizzle');b.classList.add('branded');setTimeout(()=>b.classList.remove('branded'),400);b.click();b._held=0},HOLDMS)},true);
+for(const ev of['pointerup','pointercancel','pointerleave'])document.addEventListener(ev,e=>{const b=e.target&&e.target.closest&&e.target.closest('[data-hold]');if(!b||!b._hT)return;if(b.classList.contains('holding')){clearTimeout(b._hT);b._hT=0;b.classList.remove('holding')}},true);
+document.addEventListener('click',e=>{const b=e.target&&e.target.closest&&e.target.closest('[data-hold]');if(!holdOn(b)||b._held)return;e.preventDefault();e.stopImmediatePropagation();toast('おしつづけて決めよう')},true);
+/* 草原：ゲージがふえるときは、はちみつのように、とろっとのびて、さきが少しゆれて止まる（gwob） */
+function gaugeWatch(){for(const id of['xpBar','foodBar','matBar']){const i=document.getElementById(id);if(!i)continue;let p=parseFloat(i.style.width)||0;
+  new MutationObserver(()=>{const v=parseFloat(i.style.width)||0;if(v>p+.5&&document.body.classList.contains('wd0')&&!uiReduced()){const g=i.parentElement;g.classList.remove('gwob');void g.offsetWidth;g.classList.add('gwob');clearTimeout(g._gT);g._gT=setTimeout(()=>g.classList.remove('gwob'),1400)}p=v}).observe(i,{attributes:true,attributeFilter:['style']})}}
+if(document.readyState!=='loading'){gaugeWatch();tileWatch()}else document.addEventListener('DOMContentLoaded',()=>{gaugeWatch();tileWatch()});
+
