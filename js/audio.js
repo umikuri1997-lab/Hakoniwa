@@ -2,7 +2,7 @@
 
 
 /* ---------- おと（BGM・効果音はWeb Audioで鳴らすオリジナル） ---------- */
-const SND={bgm:true,sfx:true};try{Object.assign(SND,JSON.parse(KV.getItem('hakoniwa-sound')||'{}'))}catch(e){}
+const SND={bgm:true,sfx:true,vib:true};try{Object.assign(SND,JSON.parse(KV.getItem('hakoniwa-sound')||'{}'))}catch(e){}
 const saveSnd=()=>{try{KV.setItem('hakoniwa-sound',JSON.stringify(SND))}catch(e){}};
 let bgmF=null,bgmSw=0,AC=null,bgmG=null,sfxG=null,noiseBuf=null,curSong='day',wantSong='day',nextT=0,step=0;
 const mf=m=>440*Math.pow(2,(m-69)/12);
@@ -40,6 +40,7 @@ Object.assign(SAMPLES,{"spike":["assets/g/5e814bb008.mp3"],"poison":["assets/g/1
 SAMPLES.shard=['assets/g/9464bc7161.mp3'];/* ヌシのかけらをはめる音（ユーザーの音） */
 SAMPLES.furniturePlace=['assets/g/e33cbd97b8.mp3'];/* 家具を置く音：ユーザー提供 */
 SAMPLES.matDrop=['assets/g/ef846d878d.mp3'];SAMPLES.fireatk=['assets/g/149bc0958c.mp3'];/* 火のせいれいの攻撃：ボッ（もらった音） *//* fire：焚き火のぱちぱち（もらった音。60秒のうち12秒を切り出し） */SAMPLES.click=['assets/g/dc1fab61b3.mp3'];/* ボタンをおす音（もらった音） *//* 守りの光で木・岩をこわして、素材が落ちたときの音（もらった音） */
+Object.assign(SAMPLES,{"stamp":["assets/g/5fb1653535.mp3","assets/g/9f56c224e9.mp3","assets/g/f1cb5ea1ff.mp3"],"dust":["assets/g/814fe2b628.mp3","assets/g/8189f95d0a.mp3","assets/g/6bfc4bd6ec.mp3","assets/g/ca1ad9eafa.mp3"],"creak":["assets/g/6c7654c715.mp3","assets/g/c82a840632.mp3"],"bend":["assets/g/b60262d9ed.mp3"],"tab":["assets/g/646421dca2.mp3","assets/g/8553ad0946.mp3"],"knockw":["assets/g/b16e923e81.mp3","assets/g/44cd883b60.mp3","assets/g/c00e91f7e0.mp3","assets/g/b4f4e74b6b.mp3","assets/g/ff0c586227.mp3"],"notch":["assets/g/e4390406ba.mp3","assets/g/0ab0818cbf.mp3","assets/g/bd4aa0ed1d.mp3"]});/* UIの手ざわりの本物の音（Kenney の CC0 の音を tools/sound/ui_asmr.py でととのえた物）：ハンコ・木くず・なわのきしみ・板のしなり・タブ・ことっ・± */
 function loadSamples(){/* 音のファイル（assets/g/*.mp3）を読みこんで、鳴らせる形にしておく */for(const k in SAMPLES){SBUF[k]=[];SAMPLES[k].forEach((u,i)=>{fetch(u).then(r=>r.arrayBuffer()).then(b=>AC.decodeAudioData(b,buf=>{SBUF[k][i]=buf},()=>{})).catch(()=>{})})}}
 // セリフの声：キャラごとに高さを変える（カミサマは低め）
 let VOICE=null,voxC=null;const BRAVET=new WeakMap();
@@ -51,13 +52,15 @@ function voiceHmm(r){voiceStop();if(!AC||!SND.sfx||AC.state!=='running')return;c
   const src=AC.createBufferSource(),g=AC.createGain();src.buffer=b;src.playbackRate.setValueAtTime(vo*.95,t);src.playbackRate.setValueAtTime(vo*.95,t+.16);src.playbackRate.linearRampToValueAtTime(vo*1.35,t+.36);
   g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.7*(SND.vv??1),t+.03);g.gain.setValueAtTime(.7*(SND.vv??1),t+.3);g.gain.linearRampToValueAtTime(0,t+.42);src.connect(g);g.connect(voxC);src.start(t,Math.random()*b.duration*.5);src.stop(t+.45);VOICE={src,g}}
 function voiceStop(){if(!VOICE)return;const v=VOICE;VOICE=null;clearTimeout(v.end);try{const t=AC.currentTime;v.g.gain.setTargetAtTime(0,t,.04);v.src.stop(t+.2)}catch(e){}}
-function playSeg(k,vol,dur){if(!AC||!SND.sfx||AC.state!=='running')return false;const L=(SBUF[k]||[]).filter(Boolean);if(!L.length)return false;const b=pick(L),src=AC.createBufferSource(),g=AC.createGain(),t=AC.currentTime;src.buffer=b;const v=vol*SFXV;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(v,t+.15);g.gain.setValueAtTime(v,t+dur-.3);g.gain.linearRampToValueAtTime(0,t+dur);src.connect(g);g.connect(sfxG);src.start(t,Math.random()*Math.max(0,b.duration-dur));src.stop(t+dur+.05);return true}
+function playSeg(k,vol,dur){if(!AC||!SND.sfx||AC.state!=='running')return false;const L=(SBUF[k]||[]).filter(Boolean);if(!L.length)return false;const b=pick(L),src=AC.createBufferSource(),g=AC.createGain(),t=AC.currentTime;src.buffer=b;const v=vol*(SFXO?1:SFXV);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(v,t+.15);g.gain.setValueAtTime(v,t+dur-.3);g.gain.linearRampToValueAtTime(0,t+dur);src.connect(g);g.connect(SFXO||sfxG);src.start(t,Math.random()*Math.max(0,b.duration-dur));src.stop(t+dur+.05);return true}
 let WAVE=null;/* 水浴びの音は1つだけ。水浴びが終わったら止める */
 function playWave(vol){if(WAVE||!AC)return;const L=(SBUF.wave||[]).filter(Boolean);if(!L.length)return;const src=AC.createBufferSource(),g=AC.createGain();src.buffer=pick(L);g.gain.value=vol*SFXV;src.connect(g);g.connect(sfxG);const w={src,g};src.onended=()=>{if(WAVE===w)WAVE=null};WAVE=w;src.start()}
 function stopWave(){if(!WAVE)return;const{src,g}=WAVE;WAVE=null;try{g.gain.setTargetAtTime(0,AC.currentTime,.12);src.stop(AC.currentTime+.5)}catch(e){}}
 function bellRing(x,y){/* 村の鐘：教会の鐘の音を、間をあけて3回。少しずつ小さく、あとの2回は少しだけ低く。遠くても小さく聞こえる */if(!AC||!SND.sfx)return;const L=(SBUF.bell||[]).filter(Boolean);if(!L.length)return;const vw=VW/cam.z,vh=VH/cam.z,d=Math.hypot(x*TS-(cam.x+vw/2),y*TS-(cam.y+vh/2)),v=Math.max(.35,1-d/(Math.max(vw,vh)*1.5));
   [[0,1,1],[1.5,.97,.8],[3,.995,.65]].forEach(([t,rt,g0])=>{const src=AC.createBufferSource(),g=AC.createGain();src.buffer=L[0];src.playbackRate.value=rt;g.gain.value=1.6*g0*v;src.connect(g);g.connect(sfxG);src.start(AC.currentTime+t)})}
-function playS(k,vol,dl){const L=(SBUF[k]||[]).filter(Boolean);if(!L.length)return false;const src=AC.createBufferSource(),g=AC.createGain();src.buffer=pick(L);src.playbackRate.value=.92+Math.random()*.16;g.gain.value=vol*SFXV;src.connect(g);g.connect(sfxG);src.start(AC.currentTime+(dl||0));return true}
+function playS(k,vol,dl,rt){const L=(SBUF[k]||[]).filter(Boolean);if(!L.length)return false;const src=AC.createBufferSource(),g=AC.createGain();src.buffer=pick(L);src.playbackRate.value=(rt||1)*(.92+Math.random()*.16);g.gain.value=vol*(SFXO?1:SFXV);src.connect(g);g.connect(SFXO||sfxG);src.start(AC.currentTime+(dl||0));return true}
+/* UIの本物の音：鳴らすたびに、ちがう録音（3〜5しゅるい）と、少しちがう高さ・大きさ（同じ音のくりかえしは機械っぽく聞こえる） */
+function playU(k,vol,rt,dl){return playS(k,vol*(.85+Math.random()*.3),dl,rt||1)}
 function audioInit(){
   if(AC){if(AC.state==='suspended')AC.resume().catch(()=>{});return}
   try{AC=new (window.AudioContext||window.webkitAudioContext)();if(AC.state==='suspended')AC.resume().catch(()=>{})}catch(e){return}
@@ -118,16 +121,24 @@ let ambG=null;const AMB={};
 /* 夕方の虫の声：短い高い音を2回ずつ（のこした音の素材はつかわず、その場でつくる）。夕方（17.5〜20時）だけ、ときどき */
 let AMBNEXT=0;
 function ambAccent(on,h){if(!on||!ambG||!(h>=17.5&&h<20))return;const t=AC.currentTime;if(t<AMBNEXT||DUCKT>t)return;AMBNEXT=t+2.5+Math.random()*4;const f=3800+Math.random()*900;for(let i=0;i<2+(Math.random()*2|0);i++){tone(f,t+i*.11,.06,'sine',.05,ambG,f*.97)}}
-function ambTick(){if(!AC||AC.state!=='running')return;if(!ambG){ambG=AC.createGain();ambG.gain.value=.12;ambG.connect(AC.destination)}
+let ambF=null,AMBIN=false;
+/* 家の中を映しているか：画面のまん中のマスが、屋根をはずした家の中（ふだんの拡大より、ちぢめていないとき） */
+function ambIndoor(){if(!S||!started||typeof HOUSES==='undefined'||!HOUSES.length||typeof cam==='undefined')return false;const vw=VW/cam.z,vh=VH/cam.z,cx=((cam.x+vw/2)/TS)|0,cy=((cam.y+vh/2)/TS)|0;if(cx<0||cy<0||cx>=W||cy>=H)return false;
+  if(cam.z<homeZ()*.95)return false;const h=HOUSES.find(q=>q.set.has(cy*W+cx));return !!h&&roofAOf(h)<.5}
+function ambTick(){if(!AC||AC.state!=='running')return;if(!ambG){ambG=AC.createGain();ambG.gain.value=.12;ambF=AC.createBiquadFilter();ambF.type='lowpass';ambF.frequency.value=18000;ambF.Q.value=.4;ambG.connect(ambF);ambF.connect(AC.destination)}
+  {const inn=ambIndoor();if(inn!==AMBIN){AMBIN=inn;ambF.frequency.setTargetAtTime(inn?700:18000,AC.currentTime,inn?.25:.4)}}/* 家の中を映すと、外の雨・鳥・虫の音が、壁ごしにやわらかくこもる */
   const want={birds:0,rain:0,night:0};let h=12,on=false;if(S&&started&&SND.sfx&&$('#title').hidden&&$('#maps').hidden){on=true;h=hour();if(S.rain)want.rain=.45;else{/* 朝と夕方は、ゆっくり入れかわる（夜あけは鳥が少しにぎやか） */const cl=v=>Math.max(0,Math.min(1,v));want.birds=h<5||h>=18.5?0:h<6.5?cl((h-5)/1.5)*1.3:h<7.5?1.3-(h-6.5)*.3:h<17?1:cl((18.5-h)/1.5);want.night=h>=17.5?cl((h-17.5)/1.5)*6:h<5.5?cl((5.5-h)/1)*6:0/* 夜の環境音（もらった音）：大きさ6 */}}
   ambAccent(on&&!S.rain&&!(typeof paused!=='undefined'&&paused),h);
   for(const k in want){let a=AMB[k];if(!a){if(!want[k])continue;const b=(SBUF[k]||[])[0];if(!b)continue;const src=AC.createBufferSource(),g=AC.createGain();src.buffer=b;src.loop=true;src.loopStart=.06;src.loopEnd=b.duration-.06;g.gain.value=0;src.connect(g);g.connect(ambG);src.start();a=AMB[k]={src,g}}a.g.gain.setTargetAtTime(want[k],AC.currentTime,.8)}}
 const lastSfx={};
-let SFXV=1;
+let SFXV=1,SFXP=0,SFXL=0,SFXO=null,SFXR=1,SFXTAB=0,SFXTABD=0;/* SFXP：左右（-1左〜1右）・SFXL：空気でこもる高さ（Hz、0はそのまま）・SFXR：音の高さ */
+/* マップの音の出口：大きさ → 左右 → 遠いほど高い音がへる（空気の中で、遠くの音はこもって聞こえる） */
+function sfxOut(){let n=AC.createGain(),h=n;n.gain.value=SFXV;if(SFXP&&AC.createStereoPanner){const p=AC.createStereoPanner();p.pan.value=SFXP;h.connect(p);h=p}if(SFXL){const f=AC.createBiquadFilter();f.type='lowpass';f.frequency.value=SFXL;f.Q.value=.5;h.connect(f);h=f}h.connect(sfxG);return n}
 let XYLN=0;
 function sfx(k){
   if(!AC||!SND.sfx||AC.state!=='running')return;const now=AC.currentTime;if(lastSfx[k]&&now-lastSfx[k]<.07)return;lastSfx[k]=now;
-  const t=now+.01,o=SFXV!==1?(()=>{const g=AC.createGain();g.gain.value=SFXV;g.connect(sfxG);return g})():sfxG,seq=(ns,gap,type,v,d)=>ns.forEach((m,i)=>tone(m,t+i*gap,d||gap*1.6,type,v,o));
+  const t=now+.01,o=SFXV!==1||SFXP||SFXL?sfxOut():sfxG,seq=(ns,gap,type,v,d)=>ns.forEach((m,i)=>tone(m,t+i*gap,d||gap*1.6,type,v,o));
+  SFXO=o===sfxG?null:o;if(SFXTAB&&(k==='tap'||k==='next')){SFXTABD=1;if(SFXTAB===2)return;k='tab'}/* タブをおしたときのボタンの音は、めくる音に */
   switch(k){
   case'block':if(playS('wdon',.5))break;tone(260,t,.07,'square',.05,o,520);tone(83,t+.05,.07,'triangle',.06,o);break;
   case'plant':tone(500,t,.1,'triangle',.08,o,950);tone(88,t+.08,.1,'sine',.06,o);break;
@@ -203,6 +214,15 @@ case'bossKO':noise(t,.5,.3,o,200);tone(70,t,1.4,'sine',.2,o,30);tone(900,t,.35,'
   case'spike':if(playS('spike',.5))break;noise(t,.05,.06,o,2600);break;/* とげの罠でダメージ */
   case'poison':if(playS('poison',.1125))break;noise(t,.2,.0125,o,500);break;/* どくの罠：ふんだとき・ダメージ */
   case'bonk':if(playS('punch',.45))break;noise(t,.07,.1,o,600);tone(140,t,.1,'square',.05,o,90);break;
+  case'stamp':if(!playU('stamp',.5,.95))knock(150,t,.12,o,.14);rustle(t+.005,.05,.012,o,1800,900,.7);break;/* ハンコ：紙ごしの、ぽむっ */
+  case'dust':playU('dust',.07,1.15+Math.random()*.25);break;/* 木くずが、さらさらこぼれる */
+  case'creak':playU('creak',.06,1.2);break;/* つるしたなわが、きゅ… */
+  case'bend':playU('bend',.04+.08*SFXR,.85+SFXR*.15);break;/* 板がしなって、ぎぃ（SFXR：しなりの大きさ 0〜1） */
+  case'tab':if(!playU('tab',.3,1.05))rustle(t,.06,.03,o,3600,2400,.6);playU('knockw',.12,1.35,.025);break;/* タブ：ぱたっとめくって、ことっ */
+  case'notch':if(!playU('notch',.32,SFXR))knock(1600*SFXR,t,.04,o,.02);break;/* ±：かちっ（ねじを回す音） */
+  case'rowin':playU('knockw',.07,SFXR);break;/* 一覧の行が、ことっと置かれる */
+  case'glug':for(let i=0;i<2;i++){const d=i*.13,f=260+Math.random()*60;tone(f,t+d,.07,'sine',.035,o,f*2.1)}break;/* ゲージがたまる：とくとく（水があわになってのぼる音） */
+  case'boing':{const f=200*SFXR;tone(f,t,.22,'sine',.045,o,f*1.6);tone(f*2,t+.01,.12,'sine',.012,o,f*3)}playU('knockw',.06,.8);break;/* 長くおしたボタンをはなした：ぽよん（長くおすほど高い） */
   case'thief':seq([76,79,76,79],.06,'square',.03);break;
   case'eat':if(playS('munch',.45))break;[0,.14,.28].forEach(d=>{noise(t+d,.06,.03,o,1800);tone(240+Math.random()*60,t+d,.06,'triangle',.05,o,150)});tone(84,t+.42,.12,'sine',.05,o);tone(88,t+.5,.16,'sine',.05,o);break;
   case'poof':noise(t,.3,.08,o,2500);seq([84,91],.08,'sine',.05);break;
@@ -212,6 +232,9 @@ case'bossKO':noise(t,.5,.3,o,200);tone(70,t,1.4,'sine',.2,o,30);tone(900,t,.35,'
 }
 // 画面の中心から遠いほど小さく鳴らす
 const SFXGAP={chop:1.3,cookfire:2,pour:2.5,crack:1.3,spike:.4,poison:.6},SFXLAST={};/* 同じ音が重ならないように */
-function sfxAt(k,x,y,m=1){if(!S)return;if(SFXGAP[k]){const n=performance.now()/1000;if(n-(SFXLAST[k]||0)<SFXGAP[k])return;SFXLAST[k]=n}const vw=VW/cam.z,vh=VH/cam.z,d=Math.hypot(x*TS-(cam.x+vw/2),y*TS-(cam.y+vh/2)),R=Math.max(vw,vh)*.8,v=Math.pow(Math.max(0,1-d/R),1.5);if(v<.04)return;SFXV=v*m;try{sfx(k)}finally{SFXV=1}}
+function sfxAt(k,x,y,m=1){if(!S)return;if(SFXGAP[k]){const n=performance.now()/1000;if(n-(SFXLAST[k]||0)<SFXGAP[k])return;SFXLAST[k]=n}const vw=VW/cam.z,vh=VH/cam.z,d=Math.hypot(x*TS-(cam.x+vw/2),y*TS-(cam.y+vh/2)),R=Math.max(vw,vh)*.8,v=Math.pow(Math.max(0,1-d/R),1.5);if(v<.04)return;
+  const zr=Math.max(.6,Math.min(1.4,cam.z/(typeof homeZ==='function'?homeZ():cam.z))),dx=(x*TS-(cam.x+vw/2))/(vw/2);/* 拡大すると近くで聞こえる（少し大きく、高い音までくっきり） */
+  SFXV=v*m*(.85+.15*zr);SFXP=Math.max(-.75,Math.min(.75,dx*.75));SFXL=Math.min(18000,1100*Math.pow(15,v)*zr);/* 画面の左の音は左から。遠いほどこもる */
+  try{sfx(k)}finally{SFXV=1;SFXP=0;SFXL=0;SFXO=null}}
 const gainB=()=>SND.bgm?.385*(SND.bv??1):0,gainS=()=>SND.sfx?.15*(SND.sv??1):0;/* 音楽・効果音の音量（0〜1） */
 function setSnd(k,v){SND[k]=v;saveSnd();if(AC){bgmG.gain.setTargetAtTime(gainB(),AC.currentTime,.1);sfxG.gain.setTargetAtTime(gainS(),AC.currentTime,.1)}}
