@@ -31,12 +31,12 @@ const mv=await run(`(()=>{const out={miss:[],moved:{},fled:{}};S.rain=false;
   const put=(k,x,y,h)=>{S.t=1440*6+h*60;CRIT=[];S.res=[];const c={id:50,k,x,y,hx:x,hy:y,z:CK[k].m==='fly'?12:CK[k].m==='hover'?18:CK[k].m==='drift'?10:0,vx:0,vy:0,face:1,t:0,life:999,hop:0,fl:0,ci:0,act:0,ph:0,wait:0};CRIT.push(c);return c};
   for(const [k,x,y,h] of [['usagi',CX+1.5,CY+1.5,10],['risu',CX+4.5,CY-2.5,10],['nezumi',CX-5.5,CY-2.5,10],['harinezumi',CX+5.5,CY+2.5,18],['tentoumushi',CX-1.5,CY+1.5,10],['katatsumuri',CX-1.5,CY+1.5,10],['mitsubachi',CX-2.5,CY+.5,10],['tonbo',CX-5.5,CY+3.5,12],['hotaru',CX-6.5,CY+2.5,20],['frog',CX-6.5,CY+2.5,18]]){
     if(k==='katatsumuri')S.rain=true;const c=put(k,x,y,h),x0=c.x,y0=c.y;const fr=new Set();for(let i=0;i<600;i++){critTick(.05);if(!critById(50))break;fr.add(critChip(c,performance.now()+i*97)?1:0)}S.rain=false;
-    out.moved[k]=Math.round(Math.hypot(c.x-x0,c.y-y0)*100)/100+(fr.has(0)?' nochip':'')}
+    out.moved[k]=Math.round(Math.hypot(c.x-x0,c.y-y0)*100)/100+(fr.has(0)?' nochip':'')+(critById(50)?'':' gone')}
   for(const k of ['usagi','risu','nezumi']){const c=put(k,CX+1.5,CY+1.5,10);S.res=[mkRes(S,'a','wind',CX+1.5,CY+2.3)];critTick(.05);out.fled[k]=!!c.fl}
   put('hotaru',CX-6.5,CY+2.5,20);cam.z=2;centerOn(CX*TS,CY*TS);ctx.save();drawCritGlow(ctx,performance.now());ctx.restore();
   return out})()`);
 assert.deepEqual(mv.miss,[],'チップがない '+mv.miss);
-for(const k of ['usagi','risu','nezumi','harinezumi','tentoumushi','mitsubachi','tonbo','hotaru','frog'])assert.ok(parseFloat(mv.moved[k])>0.05&&!/nochip/.test(mv.moved[k]),'動く '+k+' '+mv.moved[k]);
+for(const k of ['usagi','risu','nezumi','harinezumi','tentoumushi','mitsubachi','tonbo','hotaru','frog'])assert.ok((parseFloat(mv.moved[k])>0.05||k==='frog'&&/gone/.test(mv.moved[k]))&&!/nochip/.test(mv.moved[k]),'動く '+k+' '+mv.moved[k]);/* かえるは、水へとびこんで、いなくなることもある */
 for(const k of ['usagi','risu','nezumi'])assert.ok(mv.fled[k],'にげる '+k);
 /* もぐらは土のステージ（WD 3）だけ */
 const mg=await run(`(()=>{const w0=WD;WD=3;S.t=1440*7+600;const j=(CY+3)*W+CX+4,ok=critOK('mogura',j);WD=w0;return ok})()`);assert.ok(mg,'土のステージに、もぐら');
