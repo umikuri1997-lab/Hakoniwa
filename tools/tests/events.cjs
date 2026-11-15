@@ -48,6 +48,12 @@ const assert=require('node:assert/strict');
     const st=await run(`EVENTS['${id}'].stat`),R=JSON.parse(await run(`JSON.stringify(EVENTS['${id}'].rank)`)),gains=r.est.map((e,i)=>(e[st]||0)-(before[i][st]||0)).sort((a,b)=>b-a);
     console.log(id,r.memo[0],JSON.stringify(gains));
     assert.equal(gains[0],R[0],id+' 1st');assert.equal(gains.filter(g=>g>0).length,id==='cup3'?3:5,id+' every spirit placed '+gains)}
+  /* しごとの称号：同じ仕事を100回で称号、その仕事だけ はたらく速さ+10 */
+  const tt=JSON.parse(await run(`(()=>{const r=S.res[1];r.jc={kikori:98};const g0=gJob(r,'chop');titleNote(r,{type:'chop',stage:'do'});const t1=!!(r.ttl||{}).kikori;titleNote(r,{type:'chop',stage:'do'});const w=rStat(r,rLv(r)).work;return JSON.stringify({t1,t2:!!r.ttl.kikori,g0,g1:gJob(r,'chop'),gm:gJob(r,'mine'),w})})()`));
+  assert.ok(!tt.t1&&tt.t2,'title at 100');assert.equal(tt.g0,1);assert.ok(Math.abs(tt.g1-(tt.w+10)/tt.w)<1e-9,'chop +10');assert.equal(tt.gm,1,'other jobs unchanged');
+  await run(`openSheet('res',S.res[1].id)`);await page.waitForTimeout(400);
+  const shown=await run(`document.querySelector('#sheetBody').textContent.includes('きこりの名人')`);await run(`closeSheet()`);
+  assert.ok(shown,'title shown on spirit sheet');
   /* やめたらもどる */
   const c2=JSON.parse(await run(`(()=>{const p=S.pt,f=S.food,w=S.mat.wood;const ok=evOpen('camp',[S.res[0].id]);const p1=S.pt;evCancel();return JSON.stringify({ok,back:S.pt===p&&S.food===f&&S.mat.wood===w,paid:p-p1,ev:S.ev,why:evWhy('camp')})})()`));
   assert.ok(c2.back&&c2.ev===null,'cancel refunds '+JSON.stringify(c2));
