@@ -139,6 +139,8 @@ const BL={
   dig:{name:'けずる',kind:'build',pc:50,time:40,maker:'earth',attr:{},desc:'高いマスを1だん低くする工事。パワー50'},
   mound:{name:'もる',kind:'build',pc:50,time:40,maker:'earth',attr:{},desc:'低いマスを1だん高くする工事。パワー50'},
   watch:{name:'見張り台',fix:10,fixm:{wood:10,stone:10},kind:'build',sz:[2,2],mat:{wood:25,stone:20},pc:20,time:150,maker:'earth',lv:2,solid:1,attr:{fire:2,earth:2},desc:'夜、せいれいが上に立って、「コワイノ」に木の矢を放つ。ダメージ10／6.7分ごと／範囲6マス'},
+  coop:{name:'とり小屋',kind:'build',mat:{wood:20},pc:15,time:120,maker:'wood',lv:4,solid:1,attr:{wood:1},desc:'ハネマリが3羽まで住む小屋。'},
+  barn:{name:'家畜小屋',kind:'build',sz:[2,2],mat:{wood:50,stone:10},pc:30,time:200,maker:'earth',lv:4,solid:1,attr:{earth:2},desc:'モコダマかツノクサが2頭まで住む小屋。'},
   smelter:{name:'炉',fix:10,fixm:{stone:10},kind:'build',sz:[2,2],mat:{wood:10,stone:30},pc:20,time:150,maker:'fire',w:1,solid:1,attr:{fire:2},desc:'鉱石2こで、延べ棒1こを作る'},
   yogan:{name:'ようがん台',fix:10,fixm:{stone:15},kind:'build',sz:[2,2],mat:{wood:5,stone:40},pc:20,time:150,maker:'fire',lv:1,solid:1,attr:{fire:3},desc:'火山のふもとの守り。「コワイノ」に火の玉を飛ばす。ダメージ10（まわり5）／5.3分ごと／範囲5マス'},
   well:{hp:5,brk:1,fix:10,fixm:{wood:4,stone:15},name:'井戸',kind:'build',mat:{wood:8,stone:30},pc:20,time:140,maker:'water',lv:6,solid:1,attr:{water:4},desc:'いくらでも水をくめる井戸。'},
@@ -217,7 +219,7 @@ const TABLES=new Set(['table','dtable']);/* 食べられる食卓（ふつう・
 const FURN=['composter','cooktable','joro','kabebukuro','niguruma','taru','asabukuro','makidana','hoshirug','yorubed','toro','table','chair','oven','bed','bench','takebench','takeakari','andon','shishiodoshi','campfire','swing','torch','jar','rockart','vane','spike','puddle','sticky','stool','dtable','pouf','achair','ltable','rug1','sofa1','rug2','tub','sink','crate','monstera','shelf1','wreath','curtain1','cabinet','paint2','shelf2','curtain2','paint3','wshelf','paint1','bathtub','candle','lantern','flamp','signpost','hedge','birdbath','parasol','arch','slide','sandbox','seesaw','kamizo','noren','gazebo','azumaya'];// 属性の罠（sticky/firetrap/gust）は次のステージから
 
 const TERRA=new Set(['dig','mound']);/* だんさスコップの工事 */
-const BUILDS=['statue','watch','bridge','ladder_wood','ladder_bamboo','slope_earth','stairs_wood','stairs_stone','stairs_brick','yogan','smelter','lumber','well','quarry','windmill','fountain','lighthouse','bell','onsen','signw','signs','stele','lurestatue','tower'];
+const BUILDS=['statue','watch','bridge','ladder_wood','ladder_bamboo','slope_earth','stairs_wood','stairs_stone','stairs_brick','yogan','smelter','coop','barn','lumber','well','quarry','windmill','fountain','lighthouse','bell','onsen','signw','signs','stele','lurestatue','tower'];
 const STAMPS={
   fields:{name:'畑セット',cells:[[0,0,'farm'],[1,0,'farm'],[2,0,'farm'],[0,1,'farm'],[1,1,'farm'],[2,1,'farm']]},
   ring:{name:'柵の囲い',cells:(()=>{const c=[];for(let y=0;y<5;y++)for(let x=0;x<5;x++)if(x===0||y===0||x===4||y===4)c.push([x,y,'fence']);return c})()},

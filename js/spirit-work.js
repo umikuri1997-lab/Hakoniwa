@@ -68,6 +68,7 @@ function hasWork(r){
   if(!isNight()&&(r.cpk||S.cmpQ&&Object.keys(S.cmpQ).length))return true;
   if(smeltWant(r))return true;
   if(jobWork(r,null,1))return true;/* しごと場の担当 */
+  if(typeof aniJob==='function'&&aniJob(r,null,1))return true;/* 飼う生き物の世話 */
   if(!isNight()&&r.elem==='wood'&&COMPS.some(c=>(S.dyn[c]||{}).c>0||r.fert>0)&&S.obj.some((o,q)=>o==='farm'&&S.dyn[q]&&S.dyn[q].sown!==false&&S.dyn[q].g<100&&S.dyn[q].fdD!==dayNo()))return true;
   if(!isNight()&&S.drops&&S.drops.length&&S.drops.some(q=>(q.id==='shard'||Math.hypot(q.x+.5-r.x,q.y+.5-r.y)<=(r.elem==='wind'?10:5)+gearStat(r).prng)&&(q.id!=='shard'||r.name===POKO||!S.res.some(x=>x.name===POKO&&!x.hidden))&&walk(q.y*W+q.x)&&free('d'+(q.y*W+q.x),1)))return true;
   if(canJob(r,'build')&&S.obj.some((o,j)=>o==='site'&&free('o'+j,2)))return true;
@@ -100,6 +101,7 @@ function goWork(r,G,nw){
   if(tryJob(r,G,'otaki'))return true;
   if(haulJob(r,G))return true;/* 神殿のまえの物を、箱へ運ぶ */
   if(tryJob(r,G,'cfill'))return true;
+  if(typeof aniJob==='function'&&aniJob(r,G))return true;/* 飼う生き物：えさ・水・とれた物 */
   if(smeltJob(r,G))return true;/* 炉：鉱石を運ぶ・火のせいれいが精錬する */
   if(typeof fogJob==='function'&&fogJob(r,G))return true;if(typeof wflJob==='function'&&wflJob(r,G))return true;/* 御神木のそばの花の世話（木のなかまと花畑） */if(webJob(r,G))return true;/* クモの巣のそうじ *//* 霧の中で見つけた宝箱・あしあと */
   if(r.elem==='wind')for(const k of['drop','seed','weed'])if(tryJob(r,G,k))return true;/* 風のせいれいは、落ちている物（落とし物・枝・ふしぎな種・雑草・きのこ）を、畑の世話・おつげ・木・石より先にひろう */
@@ -130,7 +132,7 @@ function goWander(r,G){
   if(!isNight()&&!enemyLive()&&goAdmire(r,G))return;/* 新しい物を見にいく */
   if(!isNight()&&!enemyLive()&&Math.random()<OWNSEATP&&goOwnSeat(r,G))return;/* じぶんのいすで休む */
   if(!isNight()&&!enemyLive()&&goWeather(r,G))return;/* 雨・夕焼け */
-  if(!isNight()&&!enemyLive()&&Math.random()<.3&&goCritter(r,G))return;/* 小さな生き物を見つけたら、見にいく */
+  if(!isNight()&&!enemyLive()&&Math.random()<.3&&goCritter(r,G))return;if(!isNight()&&!enemyLive()&&Math.random()<.25&&typeof goPetAnimal==='function'&&goPetAnimal(r,G))return;/* 飼う生き物をなでにいく *//* 小さな生き物を見つけたら、見にいく */
   if(!isNight()&&!enemyLive()&&(r.quirkT||0)<=S.t&&Math.random()<QUIRKP&&goQuirk(r,G))return;/* ひとりのときのしぐさ */
   const c=[];for(let j=0;j<W*H;j++){const d=G.dist[j];if(d>=2&&d<=7&&walk(j)&&!(TAKEN&&TAKEN.has(j))&&!((r.routeAvoid||{})[j]>S.t)){const x=j%W,y=(j/W)|0;if(isNight()&&!VILL[j])continue;c.push(j)}}
   if(!c.length)return startAct(r,G,'idle',-1,{dur:15});

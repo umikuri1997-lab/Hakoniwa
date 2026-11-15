@@ -518,7 +518,7 @@ function renderSheet(){
     {const rc=RFC.get(j);if(rc!=null&&S.roof&&S.roof[rc]){const b=el('<button class="btn"></button>');b.textContent=BL[S.roof[rc]].name+'を見る';b.onclick=()=>{sfx('tap');openSheet('roof',rc)};body.appendChild(b)}}/* 屋根の下の物：屋根の説明へ */
     {const R=rangeOf(o,j);if(R&&!BL[o].env&&!BENCHES.has(o))body.appendChild(el('<div class="rows"></div>')).appendChild(rowEl('効果のはんい','まわり'+(R.cells||R.r)+'マス'))}
 
-    useOwnSec(body,j,o);jobOwnSec(body,j,o);boxSec(body,j);
+    useOwnSec(body,j,o);jobOwnSec(body,j,o);if(typeof aniSec==='function')aniSec(body,j,o);boxSec(body,j);
     {const t=SPOTJ.get(j);if(t){for(const I of SPOTI)if(t.has(I.sp.k)&&spotCells(I).includes(j))spotFx(I)}/* 家具をタップしたときも、そのスポットを点線でかこむ */if(t)for(const sp of SPOTS){if(!t.has(sp.k))continue;body.appendChild(el('<div class="rows"></div>')).appendChild(rowEl('スポット：'+sp.n,sp.eff))}}/* スポット */
     if(TABLES.has(o)){const h=roomOf(j);let n=0;if(h)for(const q of h.inside){const oo=S.obj[q];if(oo&&BL[oo]&&BL[oo].cat==='living')n+=BL[oo].dw||1}if(h)for(const oo of rugsIn(h.inside))n+=BL[oo].dw||1;const bon=h?DINEPT[Math.min(6,n)]:0;
       body.appendChild(el('<div class="rows"></div>')).appendChild(rowEl('ここで食べたときのパワー（いま）',h?'+'+bon+'（家の中の食卓 +1・ダイニング家具で +'+(DINEPT[Math.min(6,n)]-1)+(n/2<3?'。ダイニング家具をふやすと、まだふえる':'。いちばん多い')+'）':'家の外なので、ふえない'))}/* 食卓：いまのパワーのボーナス */
