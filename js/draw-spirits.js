@@ -628,6 +628,7 @@ function atkLean(p){return p>=.95&&p<1?.12:p>.84?-.08*(p-.84)/.11:0}
 const KGDOT={},KGDOK={};
 function kgDot(key,white){const ch=CHIPS[key],im=chipImgs(ch,key)[0];if(!white)return im;const k=key+'|w';if(KGDOT[k])return KGDOT[k];
   const cv=document.createElement('canvas');cv.width=im.width;cv.height=im.height;const g=cv.getContext('2d');g.drawImage(im,0,0);g.globalCompositeOperation='source-in';g.fillStyle='#f4eefa';g.fillRect(0,0,cv.width,cv.height);return KGDOT[k]=cv}/* ひかったときは白いかげ */
+function kgTint(key,col){const k=key+'|'+col;if(KGDOT[k])return KGDOT[k];const im=chipImgs(CHIPS[key],key)[0],cv=document.createElement('canvas');cv.width=im.width;cv.height=im.height;const g=cv.getContext('2d');g.drawImage(im,0,0);g.globalCompositeOperation='source-in';g.fillStyle=col;g.fillRect(0,0,cv.width,cv.height);return KGDOT[k]=cv}
 function drawShadeDot(c,ty,x,y,s,f,o){
   const K='kg_'+(EN[ty]&&EN[ty].art||ty)+':';if(!window.CHIPS||!CHIPS[K+'idle'])return false;/* art：ほかのコワイノの絵をかりる（ヨロイカゲ・ヒカリカゲ、仮の絵） */
   if(!KGDOK[ty]){for(const k in CHIPS)if(k.startsWith(K)&&!chipImgs(CHIPS[k],k)[0].ok)return false;KGDOK[ty]=1}
@@ -639,7 +640,7 @@ function drawShadeDot(c,ty,x,y,s,f,o){
   else if(p>=.84){mo='atk';const n=(CHIPS[K+'atk'+B]||CHIPS[K+'atk']).n||3;fi=p<.95?0:Math.min(n-1,1+Math.floor((p-.95)/.05*(n-1)))}/* ふりかぶる → ふりおろす → もどる */
   const key=mo==='hurt'||!CHIPS[K+mo+B]?K+mo:K+mo+B,ch=CHIPS[key];fi=mo==='hurt'?Math.min(fi,ch.n-1):fi%(ch.n||1);
   const sm=c.imageSmoothingEnabled;c.imageSmoothingEnabled=sc<.9;/* 図鑑などで小さく描くときだけ、なめらかに縮める */
-  c.save();c.translate(x,y);c.scale(sc*f,sc);c.drawImage(kgDot(key,!!o.flash),0,fi*ch.h,ch.w,ch.h,ch.ax,ch.ay,ch.w,ch.h);if(EN[ty]&&EN[ty].glow&&!o.flash){c.globalAlpha=.45+.15*Math.sin(t*6);c.drawImage(kgDot(key,true),0,fi*ch.h,ch.w,ch.h,ch.ax,ch.ay,ch.w,ch.h);c.globalAlpha=1}/* ヒカリカゲ：白い光をかさねる */c.restore();
+  c.save();c.translate(x,y);c.scale(sc*f,sc);c.drawImage(kgDot(key,!!o.flash),0,fi*ch.h,ch.w,ch.h,ch.ax,ch.ay,ch.w,ch.h);if(EN[ty]&&EN[ty].tint&&!o.flash){c.globalAlpha=.45;c.drawImage(kgTint(key,EN[ty].tint),0,fi*ch.h,ch.w,ch.h,ch.ax,ch.ay,ch.w,ch.h);c.globalAlpha=1}/* 季節のコワイノ：色をかさねる（仮の絵） */if(EN[ty]&&EN[ty].glow&&!o.flash){c.globalAlpha=.45+.15*Math.sin(t*6);c.drawImage(kgDot(key,true),0,fi*ch.h,ch.w,ch.h,ch.ax,ch.ay,ch.w,ch.h);c.globalAlpha=1}/* ヒカリカゲ：白い光をかさねる */c.restore();
   c.imageSmoothingEnabled=sm;return true}
 const BEDSPR={w:160,h:163,src:'assets/g/88c626b7df.webp'};BEDSPR.img=new Image();BEDSPR.img.onload=()=>{BEDSPR.ok=1;if(typeof iconCache!=='undefined')delete iconCache.bed;if(typeof rebuildStatic==='function'&&S)rebuildStatic(true)};BEDSPR.img.src=BEDSPR.src;
 const SPR={god:{w:72,h:150,src:'assets/g/c48b773300.webp'}};
