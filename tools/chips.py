@@ -202,7 +202,7 @@ def kobo(dirp, *keys):
     for q in sorted(want - have):   # 工房にまだない新しい絵（向きの絵 id>1 など）は、もとの id のグループに足す
         b = re.split(r'[>:#@~.]', q)[0]
         for g in idx['genres']:
-            grp = next((G for G in g['groups'] if G[0] == b), None)
+            grp = max((G for G in g['groups'] if G[0] == b or q.startswith(G[0]) and q[len(G[0]):][:1] in '>:#@~.'), key=lambda G: len(G[0]), default=None)   # いちばん長く合うグループ（ani:hane など、名前に : がある物も）
             if grp: grp[1].append(q); g['count'] = g.get('count', 0) + 1; break
     for g in idx['genres']:
         ks = [q for _, L in g['groups'] for q in L if q in want]
