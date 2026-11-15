@@ -400,6 +400,7 @@ function carryIcons(r){/* 持っているものを、そのまま1つずつ並�
   if(r.act&&r.act.stage==='do'&&r.act.type==='cook')return out;
   if(typeof r.carry==='number')for(let i=0;i<r.carry;i++)out.push(FOODS.mugi.e);
   else if(r.carry){const ks=Object.keys(r.carry).filter(k=>r.carry[k]>0);if(r.carryLast&&ks.includes(r.carryLast)){ks.splice(ks.indexOf(r.carryLast),1);ks.push(r.carryLast)}for(const k of ks)for(let i=0;i<r.carry[k];i++)out.push(em(k))}
+  if(r.apk){for(const k of GRASSK)for(let i=0;i<(r.apk.m[k]||0);i++)out.push('ic:'+k)}/* 生き物のえさの草 */
   if(r.cpk){for(const k of GRASSK)for(let i=0;i<(r.cpk.m[k]||0);i++)out.push('ic:'+k)}/* コンポスターへ運ぶ草 */
   if(r.fert>0)for(let i=0;i<r.fert;i++)out.push('ic:hiryo');/* 畑へ運ぶ肥料 */
   if(r.cmat)for(const k in r.cmat)for(let i=0;i<(r.cmat[k]||0);i++)out.push(matIc(k));

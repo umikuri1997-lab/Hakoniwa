@@ -1,4 +1,4 @@
-# トリポ（Tripo）にたのむ3Dモデルのプロンプト（20こ＋伐採場・採石場の9こ）
+# トリポ（Tripo）にたのむ3Dモデルのプロンプト（20こ＋伐採場・採石場の9こ）＋生き物の絵（GPT）1まい
 
 3Dのお手本（`blueprint.py` の `model`）に置く、植物・自然の物のモデル。どのプロンプトも、それだけで使えるように、共通のこと（形・色・向き・ノイズなし）をそれぞれに書いてある。
 できたモデル（.glb）は `tools/art/models/tripo/` に、下の「ファイル名」で入れる。
@@ -82,3 +82,37 @@ Nine separate objects for a cozy farming game, arranged in a 3 by 3 grid with wi
 8. Three pieces of split firewood lying side by side: quarter-round wedges with bark on the curved side and pale fresh wood on the split faces and ends.
 9. A small leafy sprig growing from the ground: a few short stems with six to eight small rounded green leaves.
 Stylized, chunky game-asset 3D models with clean simple shapes and smooth surfaces. Pale, light, soft colors: light warm gray stone, light tan-orange bark, pale cream fresh wood and rings, fresh light green leaves; no dark or heavily saturated colors, no black. Clean flat colors with soft shading only, no texture noise, no grain, no speckles, no cracks, no moss, no baked lighting or shadows. No ground plane, no base platform, no background.
+
+---
+
+## 生き物の絵（15こを1まい。GPT で絵を作り、その1まいをトリポで1つのモデルにする）　ファイル名：`creatures.glb`
+飼う生き物3こ（ハネマリ：たまご・モコダマ：わた毛・ツノクサ：ミルク）と、村のにぎやかしの生き物12こ（ちょう・とんぼ・かえる・はち・てんとうむし・かたつむり・りす・うさぎ・はりねずみ・ほたる・もぐら・のねずみの役）を、ぜんぶ1まいにならべてかく。ほんものの生き物そのままではなく、花びら・葉・つゆ・木の実・こけ・雲・わた毛など、自然のものがからだになった、この世界だけの生き物。
+絵ではどれも同じくらいの大きさでかく（ゲームの大きさは、せいれいを物差しにして、こちらできめる）。トリポは1回で1つのモデルにし、こちらで点のつながりで1つずつに切りわける（`tripo_split.py`）ので、どの生き物も、はなしてならべ、さわらせない。
+絵はトリポで3Dにするための元なので、ゲームの見おろしの角度ではなく、すこしななめ前から見た全身・白い背景にしてある。できたモデルを `tools/art/models/tripo/` に、上のファイル名で入れる。
+
+```
+A character sheet of fifteen small, gentle creatures from a cozy fantasy meadow world, arranged in a neat grid of 5 columns and 3 rows in one image, all standing or resting on the same invisible flat floor at the same ground level, with wide empty space between them so none of them touch or overlap. They are NOT real animals or insects: each is a unique little creature whose body is made of natural things like petals, leaves, dewdrops, berries, acorns, moss, clouds and cotton fluff, with only a faint hint of a familiar animal. Draw all fifteen at about the same size so every shape is clear (the real sizes are set later). All share the same style and soft lighting, with cute chibi proportions: big round heads, round bodies, tiny legs, small round dark-brown eyes, calm sweet faces.
+
+Row 1:
+1. "Hanemari" (lays eggs; a faint hint of a chick): a plump round ball of soft creamy white petal-like down, shaped like a fluffy dandelion puff, with a tiny short warm-yellow beak, two little leaf-shaped wings folded on its sides, a crest of three small fresh green leaves sprouting from the top of its head, a short tail of soft pale-green grass blades, and two tiny peach-orange feet.
+2. "Mokodama" (gives soft fluff; a faint hint of a sheep): a big round puffy body like a small cumulus cloud made of a few large soft rounded lumps, pale cream with a very light lavender tint in the shadows, a few tiny pale-pink and white clover flowers tucked into the fluff, a smooth round light-beige face peeking out of the front, two small rounded leaf-shaped ears, and four very short stubby legs mostly hidden under the fluff.
+3. "Tsunokusa" (gives milk; a faint hint of a calf or goat): a rounded compact body with smooth short fur in light warm cream with a few soft pale-green moss-colored round patches on the back, a big round head with two small curled fern-frond horns in light green, two soft drooping leaf-shaped ears, a small tuft of moss under the chin, a short tail ending in a little clover tuft, and four short sturdy legs with small rounded light-brown hooves.
+4. Petal flutter (a faint hint of a butterfly): a tiny soft round body with two short curly antennae and four wings that are pale pink flower petals, resting with the wings spread out flat and level, symmetrical.
+5. Dew dart (a faint hint of a dragonfly): a slim body like a smooth pale-green grass stem, a round head with two big round dewdrop eyes in pale aqua, four long thin wings like clear pale-green blades of grass, resting with the wings spread out flat and level.
+
+Row 2:
+6. Lilypad hopper (a faint hint of a frog): a round soft light-green body sitting with tucked legs, a wide gentle smile, and a small round lily pad leaf worn on its head like a cap.
+7. Pollen puff (a faint hint of a bee): a round fluffy ball like a soft yellow mimosa flower, with two tiny pale translucent oval wings on the back and two short antennae.
+8. Berry beetle (a faint hint of a ladybug): a dome-shaped shell like a shiny soft red berry with a few tiny cream seed dots and one small green leaf on top, a small round light-brown head, short legs.
+9. Bud snail (a faint hint of a snail): a soft pale-beige body with two short eye stalks, carrying a shell that is a big closed pale-pink flower bud wound in a spiral.
+10. Acorn tail (a faint hint of a squirrel): a small round light orange-brown body sitting up, wearing an acorn cap as a little hat, with a big soft tail shaped like a curled green fern frond.
+
+Row 3:
+11. Clover ears (a faint hint of a rabbit): a round soft cream-white body sitting on all fours, with two long upright ears shaped like pale-green clover leaves and a tiny pink nose.
+12. Moss roll (a faint hint of a hedgehog): a round little body whose back is covered with soft rounded tufts of light-green moss instead of spines, a light-beige face and a tiny dark nose.
+13. Seed lantern (a faint hint of a firefly): a tiny round light-brown bug with short wings and a round pale-yellow glowing seed-pod lantern as its tail.
+14. Pebble digger (a faint hint of a mole): a round soft light-gray-brown body with a smooth back patterned like a few round pale pebbles, two small spade-like front paws and a tiny pink nose.
+15. Fluff mouse (a faint hint of a field mouse): a tiny round light warm-brown mouse-like body with round ears and a long tail ending in a white dandelion-fluff puff.
+
+Each creature: full body, three-quarter front view seen from slightly above (about 20 degrees down), the head turned toward the viewer's right, upright and level, not tilted, standing or resting on the same flat floor; winged ones rest with their wings spread out flat and level. Clean illustration meant to be turned into one 3D model and then separated: soft simple chunky shapes, clean flat colors with soft shading only; no noise, no grain, no speckles, no dithering, no gritty texture, no fine fur, feather strands or vein lines. Pale, light, soft colors; no dark or heavily saturated colors. No thick or dark outlines; if an outline is used, it is a thin line only slightly darker than the color next to it, never black or near-black. Plain pure white background, no shadows, no ground texture, no props, no text, no labels, no numbers.
+```
