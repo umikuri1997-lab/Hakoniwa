@@ -48,6 +48,29 @@ const assert=require('node:assert/strict');
     const st=await run(`EVENTS['${id}'].stat`),R=JSON.parse(await run(`JSON.stringify(EVENTS['${id}'].rank)`)),gains=r.est.map((e,i)=>(e[st]||0)-(before[i][st]||0)).sort((a,b)=>b-a);
     console.log(id,r.memo[0],JSON.stringify(gains));
     assert.equal(gains[0],R[0],id+' 1st');assert.equal(gains.filter(g=>g>0).length,id==='cup3'?3:5,id+' every spirit placed '+gains)}
+  /* 新しい家具のイベント（草原）：弓の的・ピクニックシート。村レベルでおぼえる */
+  assert.deepEqual(JSON.parse(await run(`JSON.stringify([levelUpItemsAt(6).includes('mato'),levelUpItemsAt(5).includes('picnic'),levelUpItemsAt(6).includes('taiko')])`)),[true,true,false],'level rewards (taiko is volcano)');
+  await run(`S.inv.arrow=(S.inv.arrow||0)+40`);const ar0=await run(`S.inv.arrow`);
+  const mg=await go('matoate',3,"{const j=(CY+6)*W+CX+3;S.obj[j]='mato';}");assert.ok(mg.slice(0,3).every(g=>g.atk===5),'matoate atk+5');assert.equal(await run(`S.inv.arrow`),ar0-15,'arrows used');
+  await go('pikunikku',0,"{const j=(CY+8)*W+CX-3;for(const k of[j,j+1,j+W,j+W+1])S.obj[k]=k===j?'picnic':'part';for(const k of[j+1,j+W,j+W+1])S.ref[k]=j}",58);
+  /* 豪華なイベント：決まった数をはらい、みんなが出る */
+  await run(`for(const id of ['salvia','lily'])S.inv[id]=(S.inv[id]||0)+6;S.mat.shina=(S.mat.shina||0)+30;S.mat.wood=(S.mat.wood||0)+40;addFood('mugi',20);addFood('imo',15);for(let i=0;i<60;i++)addFood('apple',1);S.pt+=3000`);
+  const fl="{let n=0;for(let y=CY-14;y<CY-8&&n<30;y++)for(let x=CX-12;x<CX+12&&n<30;x++){const j=y*W+x;if(!S.obj[j]&&!S.ground[j]&&walk(j)){S.obj[j]='salvia';n++}}}";
+  const h0=await run(`S.inv.salvia+S.inv.lily`);
+  const hg=await go('hana',0,fl,58);assert.ok(hg.every(g=>g.sta===8),'hana sta+8');assert.equal(await run(`S.inv.salvia+S.inv.lily`),h0-10,'10 flower seeds used');
+  const ug=await go('undo',0,'',72);const big=ug.filter(g=>g.work===10).length,small=ug.filter(g=>g.work===5).length;assert.ok(big>=1&&big+small===ug.length,'undo +5 / winners +10 '+JSON.stringify(ug));
+  const farm="{let n=0;for(let y=CY+9;y<CY+12&&n<10;y++)for(let x=CX-4;x<CX+4&&n<10;x++){const j=y*W+x;if(!S.obj[j]&&!S.ground[j]&&walk(j)){S.obj[j]='plot';S.dyn[j]={p:0};n++}}}";
+  await run(`addFood('mugi',20);addFood('imo',15)`);/* 運動会の食料で作物がへっているので、たす */
+  const cr0=await run(`(S.fs.mugi||0)+(S.fs.imo||0)+(S.fs.tomato||0)`);
+  const sg=await go('shukaku',0,farm,73);assert.ok(sg.every(g=>g.cap===1),'shukaku cap+1');assert.equal(await run(`(S.fs.mugi||0)+(S.fs.imo||0)+(S.fs.tomato||0)`),cr0-30,'30 crops used');
+  const lg=await go('lantern',0,'',79);assert.ok(lg.every(g=>g.work===8),'lantern work+8');
+  assert.equal(await run(`evOn('himatsuri')||evOn('utage')`),false,'volcano only');
+  /* しごとの称号：同じ仕事を100回で称号、その仕事だけ はたらく速さ+10 */
+  const tt=JSON.parse(await run(`(()=>{const r=S.res[1];r.jc={kikori:98};const g0=gJob(r,'chop');titleNote(r,{type:'chop',stage:'do'});const t1=!!(r.ttl||{}).kikori;titleNote(r,{type:'chop',stage:'do'});const w=rStat(r,rLv(r)).work;return JSON.stringify({t1,t2:!!r.ttl.kikori,g0,g1:gJob(r,'chop'),gm:gJob(r,'mine'),w})})()`));
+  assert.ok(!tt.t1&&tt.t2,'title at 100');assert.equal(tt.g0,1);assert.ok(Math.abs(tt.g1-(tt.w+10)/tt.w)<1e-9,'chop +10');assert.equal(tt.gm,1,'other jobs unchanged');
+  await run(`openSheet('res',S.res[1].id)`);await page.waitForTimeout(400);
+  const shown=await run(`document.querySelector('#sheetBody').textContent.includes('きこりの名人')`);await run(`closeSheet()`);
+  assert.ok(shown,'title shown on spirit sheet');
   /* やめたらもどる */
   const c2=JSON.parse(await run(`(()=>{const p=S.pt,f=S.food,w=S.mat.wood;const ok=evOpen('camp',[S.res[0].id]);const p1=S.pt;evCancel();return JSON.stringify({ok,back:S.pt===p&&S.food===f&&S.mat.wood===w,paid:p-p1,ev:S.ev,why:evWhy('camp')})})()`));
   assert.ok(c2.back&&c2.ev===null,'cancel refunds '+JSON.stringify(c2));
@@ -58,7 +81,7 @@ const assert=require('node:assert/strict');
   /* 上限 */
   const cap=await run(`(()=>{S.ev=null;const r=S.res[0];r.est={move:58};S.ev={id:'oni',who:[r.id],ph:'do',t0:S.t,at:{[r.id]:1},got:{},backed:[],paid:{pt:0,food:[]}};evEnd();return r.est.move})()`);assert.equal(cap,60,'capped at 60');
   /* 画面 */
-  await run(`S.ev=null;S.evDone={};S.t=(dayNo())*1440+7*60;openSheet('craft')`);await page.waitForTimeout(300);await run(`document.querySelector('#evBtn').click()`);await page.waitForTimeout(400);
+  await run(`S.ev=null;S.evDone={};S.t=(dayNo())*1440+7*60;while(seasonDay(dayNo()+1)===CUPDAY)S.t+=1440;S.pt+=500;openSheet('craft')`);await page.waitForTimeout(300);await run(`document.querySelector('#evBtn').click()`);await page.waitForTimeout(400);
   const rows=await run(`document.querySelectorAll('#sheetBody .row').length`);assert.ok(rows>=12,'event rows '+rows);
   await run(`[...document.querySelectorAll('#sheetBody .row .btn.pri')].find(b=>!b.classList.contains('lack')).click()`);await page.waitForTimeout(300);
   if(process.env.SHOT_DIR)await page.screenshot({path:process.env.SHOT_DIR+'/event-pop.png'});
