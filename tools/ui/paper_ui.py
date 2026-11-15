@@ -185,39 +185,51 @@ def note_rows(F=FOLD):
     return rows
 
 
-PIN = [  # 依頼の紙をとめる押しピン：白木の糸まきの形（上の頭・くびれ・紙にのる台）を、少し見おろした形（12×14）。
-    # o ふち・h つや・l 光・a 木・d かげ・D こいかげ・s 紙に落ちるかげ（もらったお手本の写真の、木の押しピン）
-    '..oooooooo..',
-    '.ohhlllaaao.',
-    'olhllaaaaddo',
-    'oaaaaaaadddo',
-    '.oaaaaadddo.',
-    'olaadddddDDo',
-    '.oladdddDDo.',
-    '..oladdDDo..',
-    '...oladDo...',
-    '...oladDo...',
-    '..oladddDo..',
-    '.olaadddDDo.',
-    '.oooooooooos',
-    '..sssssssss.',
-]
+def pin_rows(N=18):
+    """依頼の紙をとめる押しピン：白木の糸まき形のピンを、ボードにまっすぐさした形。頭がこちらを向き、少し上から見るので、
+    おくの台（紙にのる円）は上に、手前の頭の面は下に見え、あいだに頭の側面が見える。紙には右下へかげ（16×16）。
+    o ふち・h つや・l 頭の面の光・a 頭の面・d 側面・D 側面のかげ・b 台・s 紙に落ちるかげ"""
+    import math
+    cx = 8.5
+    L = [  # おくから手前へ：(中心y, 半径, 色の決め方)
+        ('base', 6.6, 7.0), ('side', 8.4, 6.1), ('face', 11.0, 6.1)]
+    g = [['.'] * N for _ in range(N)]
+    for y in range(N):  # かげ（頭の面を右下へずらした形）
+        for x in range(N):
+            if math.hypot(x + .5 - (cx + 2.0), y + .5 - 12.6) <= 6.0: g[y][x] = 's'
+    for name, cy, r in L:
+        inside = lambda x, y: math.hypot(x + .5 - cx, y + .5 - cy) <= r
+        for y in range(N):
+            for x in range(N):
+                if not inside(x, y): continue
+                edge = not (inside(x - 1, y) and inside(x + 1, y) and inside(x, y - 1) and inside(x, y + 1))
+                if edge: g[y][x] = 'o'; continue
+                dx = x + .5 - cx
+                if name == 'base': g[y][x] = 'b'
+                elif name == 'side': g[y][x] = 'D' if dx > 1.8 else 'd'
+                else:
+                    if math.hypot(dx + 2.2, y + .5 - (cy - 2.2)) < 1.3: g[y][x] = 'h'
+                    else: g[y][x] = 'l' if dx < -.8 else 'a'
+    return [''.join(r) for r in g]
+
+
+PIN = pin_rows()
 
 
 def note_css():
     F = FOLD
     fib = svg(ptex_rows(), {'d': '#8a6a3a24', 'm': '#8a6a3a10', 'l': '#ffffff70'})
     fr = svg(note_rows(), {'a': '#f4e9d2', 'o': '#a8743f', 'h': '#f7eedb', 'b': '#ebdcbb', 'B': '#dccaa2', 'e': '#c9ad7c', 'k': '#e2d3b2', 's': SHADOW})
-    pin = svg(PIN, {'o': '#94704a', 'h': '#fffaf0', 'l': '#f7e8cc', 'a': '#ecd5ae', 'd': '#dcbd90', 'D': '#c9a676', 's': '#3a2a1a38'})
+    pin = svg(PIN, {'o': '#94704a', 'h': '#fffaf0', 'l': '#f7e8cc', 'a': '#ecd5ae', 'd': '#dcbd90', 'D': '#c9a676', 'b': '#d4b384', 's': '#3a2a1a38'})
     return ('/* 依頼の紙：右下の角がそり返った紙のわく（note_rows）と、紙の柄（ptex_rows：CC0 の紙のテクスチャ。そり返った角にはかけない） */\n'
             f'body .paper:not(.empty){{border-image-source:{fr}!important;border-image-slice:4 {F + 2} {F + 3} 4 fill!important;'
-            f'border-image-width:4px {F + 2}px {F + 3}px 4px!important;border-image-repeat:stretch!important;padding-bottom:{F - 2}px!important}}\n'
+            f'border-image-width:4px {F + 2}px {F + 3}px 4px!important;border-image-repeat:stretch!important;padding-top:17px!important;padding-bottom:{F - 2}px!important}}\n'
             f'body .paper:not(.empty)::after{{content:"";position:absolute;inset:2px 2px 3px 2px;z-index:-1;pointer-events:none;image-rendering:pixelated;'
             f'background:{fib} 0 0/96px 96px repeat;'
             f'-webkit-mask:linear-gradient(#000 0 0) 0 0/100% calc(100% - {F}px) no-repeat,linear-gradient(#000 0 0) 0 0/calc(100% - {F}px) 100% no-repeat;'
             f'mask:linear-gradient(#000 0 0) 0 0/100% calc(100% - {F}px) no-repeat,linear-gradient(#000 0 0) 0 0/calc(100% - {F}px) 100% no-repeat}}\n'
             f'/* 押しピン：木のまるい頭（立体）とかげ */\n'
-            f'body .paper:not(.empty)::before{{width:18px;height:21px;top:-14px;margin-left:-9px;background:{pin} 0 0/18px 21px no-repeat!important;'
+            f'body .paper:not(.empty)::before{{width:18px;height:18px;top:-3px;margin-left:-9px;background:{pin} 0 0/18px 18px no-repeat!important;'
             f'-webkit-mask:none!important;mask:none!important;image-rendering:pixelated;z-index:1}}')
 
 
