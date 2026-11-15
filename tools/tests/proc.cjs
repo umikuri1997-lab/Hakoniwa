@@ -1,4 +1,4 @@
-/* 加工のつながり：はたおり機（草3こ→布1こ）・粉ひき小屋（こむぎ2こ→こむぎこ1こ）。タップで数をえらぶ・せいれいが箱から運ぶ・加工する（その属性のせいれい、いなければだれでも）・
+/* 加工のつながり：はたおり機（草3こ・わた毛2こ→布1こ）・粉ひき小屋（こむぎ2こ→こむぎこ1こ）。タップで数をえらぶ・せいれいが箱から運ぶ・加工する（その属性のせいれい、いなければだれでも）・
    水車のまわり5マスは、せいれいがいなくても動く（できた物は、せいれいが箱へ運ぶ）・水車は水のとなりだけ・家具がなくなったら返す・レシピ（布・こむぎこ）・はじめのベッドの目標 */
 const assert=require('node:assert/strict');
 (async()=>{const {browser,page,run,errors}=await require('../sim/boot.cjs')({world:0});
@@ -46,6 +46,16 @@ const assert=require('node:assert/strict');
   /* 家具がなくなったら、入れた物・とっておいた物はもどる */
   const rf=JSON.parse(await run(`(()=>{const lm=${ws.lm};S.mat.kasa=6;boxSync();S.prIn={[lm]:{kasa:3}};S.prQ={[lm]:{kasa:3}};rsvAdd({kasa:3});S.prOut={[lm]:{nuno:1}};const n0=S.mat.nuno;clearObj(lm);stepWorld(.05);boxSync();return JSON.stringify([S.mat.kasa,S.mat.nuno-n0,Object.keys(S.prIn).length+Object.keys(S.prQ).length+Object.keys(S.prOut).length])})()`));
   assert.deepEqual(rf,[9,1,0]);
+  /* はたおり機：わた毛2こで布1こ（わた毛5こ→2つまで） */
+  assert.deepEqual(JSON.parse(await run(`JSON.stringify([PROC.loom.ins.includes('wool'),prN(PROC.loom,'wool'),prN(PROC.loom,'kasa'),BL.loom.desc])`)),[true,2,3,'草3こか、わた毛2こで、布1こをおる']);
+  await run(`S.mat.wool=5;boxSync();prPop(${lj});1`);
+  const wpop=await page.evaluate(()=>[...document.querySelectorAll('.pxcard .nm')].map(e=>e.textContent));
+  const wi=wpop.indexOf('布（わた毛0/5）');assert.ok(wi>=0,JSON.stringify(wpop));
+  const wv=await page.evaluate(i=>{const r=document.querySelectorAll('.pxcard .ks > div')[i];for(let n=0;n<3;n++)r.querySelector('.p').click();const v=r.querySelector('.v').textContent;document.querySelector('.pxcard .go').click();return v},wi);/* ほかの知らせが上にかさなることがあるので、じかにおす */
+  assert.equal(wv,'2','わた毛5こなら2つまで');
+  assert.deepEqual(JSON.parse(await run(`JSON.stringify([S.mat.wool,S.prQ[${lj}]])`)),[1,{wool:4}]);
+  const wsim=JSON.parse(await run(`(()=>{const a=S.res[0],n0=S.mat.nuno||0;let n=0;for(;n<20000&&(S.mat.nuno||0)<n0+2;n++){stepWorld(.25);a.hunger=hMax(a);a.fun=90;a.energy=90}return JSON.stringify({n,got:(S.mat.nuno||0)-n0,wool:S.mat.wool||0,left:Object.keys(S.prIn||{}).length+Object.keys(S.prQ||{}).length})})()`));
+  console.log(JSON.stringify(wsim));assert.equal(wsim.got,2,'わた毛4こで布2こ');assert.equal(wsim.wool,1);assert.equal(wsim.left,0);
   /* はじめのベッドの目標 */
   const bq=JSON.parse(await run(`(()=>{const q=QUESTS.find(q=>q.id==='bed');return JSON.stringify({gives:q.talk.gives,prog:typeof q.prog==='function'?q.prog():''})})()`));
   assert.deepEqual(bq.gives,{items:{loom:1},mat:{wood:6,kasa:3}});assert.ok(/^はたおり機 1\/1・布 1\/1・ベッド 0\/1$/.test(bq.prog),bq.prog);
