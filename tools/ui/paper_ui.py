@@ -371,103 +371,53 @@ def disk_css():
     ])
 
 
-# ---- 草原のかざり：植物（すみの葉とつる・花）・木札をつるす横木 ----
-IVY = [  # 左上：すみから下へたれる、つた（20×34）。o 葉のふち・g 葉・l 葉の光・s くき
-    '.............ooo....',
-    '............ogglo...',
-    '...........sogggo...',
-    '..........s..ooo....',
-    '....oo...s..........',
-    '...oglo.s...........',
-    '...oggos............',
-    '....ooss............',
-    '......s.............',
-    '.....s..............',
-    '....s.oo............',
-    '....soglo...........',
-    '...s.oggo...........',
-    '..oo..oo............',
-    '.oglo...............',
-    '.oggos..............',
-    '..oo.s..............',
-    '.....s..............',
-    '....s...............',
-    '....s.oo............',
-    '....soglo...........',
-    '.....oggo...........',
-    '.....soo............',
-    '....s...............',
-    '...os...............',
-    '..oglo..............',
-    '..oggo..............',
-    '...oo...............',
-]
-BLOOM = [  # 右上：花のかたまり（22×16）。p 花・P 花のかげ・c 花のまん中・w 白い花・b つぼみ・o g l s は葉とくき
-    '....ppp...............',
-    '...pPcpp..www.........',
-    '...ppccP.wwcww........',
-    '....pPp..wcccw........',
-    '..oo.s....wcw...bb....',
-    '.ogloss....s...bpb....',
-    '.oggo..ss.s.ss..b.....',
-    '..oo.....sss..s.s.....',
-    '..........s....s......',
-    '......ooo.s.ooo.......',
-    '.....ogglsooglo.......',
-    '......oggogggo........',
-    '.......ooooo..........',
-    '..........s...........',
-    '..........s...........',
-    '..........s...........',
-]
-SPRIG = BLOOM
-VINE = [  # 横木にからむ、つる（32×10。よこにくりかえす）
-    '......oo..................oo....',
-    '.....oggo................oglo...',
-    '....oglgo...............oggo....',
-    '.....oogs..............sgo......',
-    '.......ss.............ss........',
-    'ssss.....sssss....sssss.....ssss',
-    '...........ss....ss.............',
-    '............s.oo.s..............',
-    '.............oggo...............',
-    '..............oo................',
-]
-BEAM = [  # 横木（丸太。32×9、よこにくりかえす）
-    'hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh',
-    'aaaagaaaaaaaaaaaaagggaaaaaaaaaaa',
-    'aaaaaaaaaaagggaaaaaaaaaaaaaagaaa',
-    'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
-    'gggaaaaaaaaaaaaaaaaaaaggaaaaaaaa',
-    'aaaaaaaggaaaaaaaaaaaaaaaaaaaaaga',
-    'dddddddddddddddddddddddddddddddd',
-    'eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
-    'ssssssssssssssssssssssssssssssss',
-]
+# ---- 草原のかざり：木札をつるす横木 ----
+def beam_rows(W=96, H=9):
+    """横木：自然の板（よこにくりかえす）。上のふちは、ゆるくでこぼこ（0〜1ドット）、木目はテクスチャ、ふしが2つ。
+    下に、板のあつみ（こい2行）とかげ"""
+    import math
+    t = tex_tones(W)
+    top = lambda x: 1 if math.sin(x / W * 2 * math.pi * 3 + .7) + .5 * math.sin(x / W * 2 * math.pi * 7) > .9 else 0
+    knots = [(22, 3.5, 3.2, 1.3), (71, 4.2, 2.4, 1.0)]  # ふし（まん中・よこ・たて の半分）
+    rows = []
+    for y in range(H):
+        r = ''
+        for x in range(W):
+            tp = top(x)
+            if y < tp: r += '.'; continue
+            if y == H - 1: r += 's'; continue
+            if y == H - 2: r += 'e'; continue
+            if y == H - 3: r += 'd'; continue
+            if y == tp: r += 'h'; continue
+            k = ''
+            for kx, ky, rx, ry in knots:
+                dx = min(abs(x + .5 - kx), W - abs(x + .5 - kx)) / rx; dy = (y + .5 - ky) / ry
+                q = dx * dx + dy * dy
+                if q < .45: k = 'k'
+                elif q < 1.3 and not k: k = 'K'
+            r += k or t[(y * 3) % W][x]
+        rows.append(r)
+    return rows
+
+
+BEAM = beam_rows()
 ROPE = ['ab', 'bc', 'ab', 'bc']  # なわ（2×4、たてにくりかえす。ねじれ）
 
 
 def deco_css():
-    lp = {'o': '#4f8a40', 'g': '#7cc06a', 'l': '#a8dc8c', 's': '#7a5532', 'f': '#fff4f0', 'c': '#f2c94c',
-          'p': '#f4a7b9', 'P': '#e07f98', 'w': '#fffaf2', 'b': '#e88aa2'}
-    ivy = svg(IVY, lp)
-    bloom = svg(BLOOM, lp)
-    vine = svg(VINE, lp)
-    beam = svg(BEAM, {'h': '#d6a46c', 'a': '#b98551', 'g': '#a8743f', 'd': '#8a5a30', 'e': '#6e4a28', 's': SHADOW})
+    beam = svg(BEAM, {'h': '#e2b57c', 'l': '#cf9e64', 'a': '#c29158', 'g': '#b5844d', 'D': '#a87843', 'k': '#7e5230', 'K': '#9b6c3c',
+                       'd': '#8a5a30', 'e': '#6e4a28', 's': SHADOW})
     rope = svg(ROPE, {'a': '#c9a36a', 'b': '#a8834f', 'c': '#8a6a45'})
     tag = svg(wood_rows(), {'a': '#e6cb99', 'g': '#e2c693', 'D': '#dec18d', 'l': '#ead0a2', 'h': '#f4e1bd',
                             'w': '#b98a52', 'd': '#8a5a30', 'k': '#efd8ae', 'q': '#f8ead0', 's': SHADOW})  # 下の木札：パネルより少しこい、切りっぱなしの板
     pp = 'var(--pp)'
     return '\n'.join([
-        '/* 草原のかざり：上の欄と画面のすみに植物（つたの葉・小さな花）。下のバーは横木からつるした木札（なわ・つる） */',
+        '/* 草原のかざり：下のバーは横木からつるした木札（なわ） */',
         f'body.wd0 #topUI .hud{{position:relative}}',
-        f'body.wd0 #topUI .hud::before{{content:"";position:absolute;left:calc({pp}*-6);top:calc({pp}*-5);width:calc({pp}*20);height:calc({pp}*28);background:{ivy} 0 0/100% 100% no-repeat;image-rendering:pixelated;pointer-events:none;z-index:2}}',
-        f'body.wd0 #topUI .hud::after,body.wd0 .sheet:not([data-k="zukan"])::before{{content:"";position:absolute;right:calc({pp}*-4);top:calc({pp}*-7);width:calc({pp}*22);height:calc({pp}*16);background:{bloom} 0 0/100% 100% no-repeat;image-rendering:pixelated;pointer-events:none;z-index:2}}',
-        f'body.wd0 .sheet:not([data-k="zukan"])::before{{right:auto;left:calc({pp}*8)}}',
         f'body.wd0 .dock{{position:relative;border-image:none!important;background:none!important;box-shadow:none!important;padding:calc({pp}*20) 4px 4px!important;overflow:visible}}',
-        f'body.wd0 .dock::before{{content:"";position:absolute;left:calc(50% - 50vw);width:100vw;top:0;height:calc({pp}*9);background:{beam} 0 0/calc({pp}*32) calc({pp}*9) repeat-x;image-rendering:pixelated;pointer-events:none}}',
-        f'body.wd0 .dock::after{{content:"";position:absolute;left:calc(50% - 50vw);width:100vw;top:calc({pp}*-1);height:calc({pp}*10);background:{vine} calc({pp}*7) 0/calc({pp}*32) calc({pp}*10) repeat-x;image-rendering:pixelated;pointer-events:none}}',
+        f'body.wd0 .dock::before{{content:"";position:absolute;left:calc(50% - 50vw);width:100vw;top:0;height:calc({pp}*9);background:{beam} 0 0/calc({pp}*{len(BEAM[0])}) calc({pp}*{len(BEAM)}) repeat-x;image-rendering:pixelated;pointer-events:none}}',
         f'body.wd0 .dock button,body.wd0 .quest{{position:relative;overflow:visible}}',
+        f'body.wd0 .toast .trope::before,body.wd0 .toast .trope::after{{content:"";position:absolute;top:calc({pp}*-13);width:calc({pp}*2);height:calc({pp}*13);background:linear-gradient(#5e3d22 calc({pp}*2),transparent 0),{rope} 0 0/calc({pp}*2) calc({pp}*4) repeat-y;image-rendering:pixelated;pointer-events:none}}body.wd0 .toast .trope::before{{left:22%}}body.wd0 .toast .trope::after{{right:22%}}',
         f'body.wd0 .dock button{{border:solid transparent!important;border-width:calc({pp}*3)!important;border-image:{tag} 5 5 6 5 fill/calc({pp}*5) calc({pp}*5) calc({pp}*6) round!important;background:none!important;color:#86715a!important;transform:none}}',
         f'body.wd0 .dock button.on{{color:#4a2a12!important;filter:saturate(1.15) brightness(1.03);margin-top:calc({pp}*3);text-shadow:1.5px 0 0 rgba(140,90,40,.3),-1.5px 0 0 rgba(140,90,40,.3),0 1.5px 0 rgba(255,236,200,.7)}}',
         f'body.wd0 .dock button.on svg.pxi{{fill:#4a2a12!important}}',

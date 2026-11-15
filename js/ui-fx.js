@@ -8,10 +8,22 @@ function spiritCanvas(r,w,h,foot,mood){const el=r?r.elem:'wood';if(typeof spDotR
   const c=document.createElement('canvas');c.width=w;c.height=h;drawSpirit(c.getContext('2d'),el,w/2,foot,.87,1,{dot:1,t:0,vr:r?r.vr:KEYVR['フタバ'],mood:mood||'smile',walk:false,work:false});return c}
 /* 上の数（パワー・せいれい・食料・素材）：ふえたら、数字がはねて、キラッと光る */
 function uiNumWatch(){for(const id of['pt','resN','food','matN']){const e=document.getElementById(id);if(!e)continue;UIFX.prev[id]=parseInt(e.textContent,10);new MutationObserver(()=>uiNumChanged(id,e)).observe(e,{childList:true,characterData:true,subtree:true})}}
-function uiNumChanged(id,e){const v=parseInt(e.textContent,10),p=UIFX.prev[id];UIFX.prev[id]=v;if(!(v>p)||!started||uiReduced())return;
+function uiNumChanged(id,e){const v=parseInt(e.textContent,10),p=UIFX.prev[id],pt=UIFX.prevT&&UIFX.prevT[id];(UIFX.prevT=UIFX.prevT||{})[id]=e.textContent;UIFX.prev[id]=v;
+  if(document.body.classList.contains('wd0')&&started&&!uiReduced()&&isFinite(p)&&isFinite(v)&&v!==p&&pt!=null)uiRoll(e,pt,v>p);/* 草原は、数がかわるたびに、木のめくり数字のように、くるっとまわる */
+  if(!(v>p)||!started||uiReduced())return;
   const now=performance.now();if(now-(UIFX.spk[id]||0)<350)return;UIFX.spk[id]=now;/* 続けてふえるときは、0.35秒に1回だけ */
-  e.classList.remove('nbump');void e.offsetWidth;e.classList.add('nbump');sfx('count');
+  if(!document.body.classList.contains('wd0')){e.classList.remove('nbump');void e.offsetWidth;e.classList.add('nbump')}sfx('count');
   const tag=e.closest('.htag');if(tag){const s=document.createElement('i');s.className='nspk';tag.appendChild(s);setTimeout(()=>s.remove(),520)}}
+/* 草原の数字：前の数が上（へったときは下）へまわってきえ、新しい数が下（上）からまわって出る。前の数は、同じ所にかさねた写し */
+function uiRoll(e,old,up){const tag=e.closest('.htag');if(!tag)return;for(const o of tag.querySelectorAll('.nold'))o.remove();
+  const o=document.createElement('b');o.className='nold '+(up?'u':'d');o.textContent=old;o.style.left=e.offsetLeft+'px';o.style.top=e.offsetTop+'px';o.style.color=getComputedStyle(e).color;tag.appendChild(o);setTimeout(()=>o.remove(),260);
+  e.classList.remove('nrollU','nrollD');void e.offsetWidth;e.classList.add(up?'nrollU':'nrollD');clearTimeout(e._roT);e._roT=setTimeout(()=>e.classList.remove('nrollU','nrollD'),260)}
+/* 木くず：草原のボタンをはなしたとき・下のシートが「ことん」と置かれたとき、板のはしから、小さな木くずがこぼれる */
+function sawdust(x,y,n,w){if(uiReduced())return;let box=document.getElementById('tapFx');if(!box){box=document.createElement('div');box.id='tapFx';document.body.appendChild(box)}
+  const cols=['#b08552','#c49a62','#9a6c40'];
+  for(let i=0;i<n&&UIFX.parts.length<40;i++){const d=document.createElement('i'),sz=(i%3?1.5:3);d.style.width=d.style.height=sz+'px';d.style.background=cols[i%3];box.appendChild(d);
+    UIFX.parts.push({d,x:x+(Math.random()-.5)*(w||0),y,vx:(Math.random()-.5)*1.6,vy:-.4-Math.random()*.9,t:0,dust:1,ph:i})}
+  if(!UIFX.raf)UIFX.raf=requestAnimationFrame(tapFxStep)}
 /* 地図をタップしたところに、小さな葉（火山は火の粉）。1粒は1ドット（1.5px）のます目にそろえて動かす */
 function tapFx(x,y){if(uiReduced())return;const fire=WD===1,n=fire?6:5;let box=document.getElementById('tapFx');if(!box){box=document.createElement('div');box.id='tapFx';document.body.appendChild(box)}
   const cols=fire?['#f2a43a','#f7d067','#e0663a']:['#6aa857','#8fca6b','#4f8a40'];
@@ -19,7 +31,7 @@ function tapFx(x,y){if(uiReduced())return;const fire=WD===1,n=fire?6:5;let box=d
     const a=Math.PI*2*i/n+Math.random()*.6,sp=1+Math.random()*1.4;UIFX.parts.push({d,x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-(fire?1.8:1.2),t:0,fire,ph:i})}
   sfx(fire?'crackle':'leaf');if(!UIFX.raf)UIFX.raf=requestAnimationFrame(tapFxStep)}
 function tapFxStep(){UIFX.raf=0;const P=UIFX.parts;for(let i=P.length-1;i>=0;i--){const p=P[i];p.t++;p.x+=p.vx;p.y+=p.vy;
-    if(p.fire){p.vy-=.03;p.vx*=.97}else{p.vy+=.05;p.vx*=.96;p.x+=Math.sin(p.t*.2+p.ph)*.5}/* 火の粉はのぼり、葉はゆれながら落ちる */
+    if(p.dust){p.vy+=.14;p.vx*=.94}else if(p.fire){p.vy-=.03;p.vx*=.97}else{p.vy+=.05;p.vx*=.96;p.x+=Math.sin(p.t*.2+p.ph)*.5}/* 火の粉はのぼり、葉はゆれながら落ちる */
     p.d.style.transform='translate('+Math.round(p.x/1.5)*1.5+'px,'+Math.round(p.y/1.5)*1.5+'px)';if(p.t>32)p.d.style.opacity=String(Math.max(0,(48-p.t)/16));if(p.t>=48){p.d.remove();P.splice(i,1)}}
   if(P.length)UIFX.raf=requestAnimationFrame(tapFxStep)}
 /* 知らせに名前が出るせいれいがいれば、その顔（よい知らせはにっこり・注意はおどろき） */
@@ -47,12 +59,15 @@ function ldWalk(c){const g=c.getContext('2d');g.setTransform(1,0,0,1,0,0);g.clea
   if(LDW.pat==='carry'){const ei=typeof emoImg==='function'?emoImg(LDW.item):null;if(ei){const k=22/Math.max(ei.width,ei.height),iw=ei.width*k,ih=ei.height*k,cb=Math.round(Math.abs(Math.sin(t*9))*1);g.drawImage(ei,Math.round(x-iw/2),Math.round(FY-54-cb-ih/2),Math.round(iw),Math.round(ih))}}/* 頭の上に、運ぶ物（村で運ぶときと同じ絵） */
   g.setTransform(1,0,0,1,0,0)}
 /* ステージごとのUIの見た目：草原（WD 0）は木のわく（body.wd0）。毎コマよばれるが、かわったときだけさわる */
-let UIWD=null;function uiStageSync(){const w=started&&typeof WD==='number'?WD:-1;if(w===UIWD)return;UIWD=w;document.body.classList.toggle('wd0',w===0)}
+let UIWD=null,UIRAIN=null;function uiStageSync(){const w=started&&typeof WD==='number'?WD:-1,rn=!!(started&&S&&S.rain);if(rn!==UIRAIN){UIRAIN=rn;document.body.classList.toggle('wrain',rn)}/* 雨の日は、木札が少し大きくゆれる */if(w===UIWD)return;UIWD=w;document.body.classList.toggle('wd0',w===0)}
 /* つるした木札（草原の下のバー・目標）：タップすると、ぶらんとゆれる */
 function uiSwing(e){if(uiReduced()||!e)return;e.classList.remove('uswing');void e.offsetWidth;e.classList.add('uswing');clearTimeout(e._swT);e._swT=setTimeout(()=>e.classList.remove('uswing'),1050)}
 document.addEventListener('click',e=>{if(!document.body.classList.contains('wd0'))return;const b=e.target&&e.target.closest&&e.target.closest('.dock button,.quest');if(b)uiSwing(b)},true);
 /* 草原のボタン：はなしたとき、ぽよんとはねかえる */
-document.addEventListener('pointerup',e=>{if(!document.body.classList.contains('wd0')||uiReduced())return;const b=e.target&&e.target.closest&&e.target.closest('.btn,.ctab,.slot,.qbtn,.mtile,.chip,#speedBtn,#pauseBtn,#skipBtn');if(!b||b.disabled)return;b.classList.remove('uboing');void b.offsetWidth;b.classList.add('uboing');clearTimeout(b._boT);b._boT=setTimeout(()=>b.classList.remove('uboing'),360)},true);
+document.addEventListener('pointerup',e=>{if(!document.body.classList.contains('wd0')||uiReduced())return;const b=e.target&&e.target.closest&&e.target.closest('.btn,.ctab,.slot,.qbtn,.mtile,.chip,#speedBtn,#pauseBtn,#skipBtn');if(!b||b.disabled)return;b.classList.remove('uboing');void b.offsetWidth;b.classList.add('uboing');clearTimeout(b._boT);b._boT=setTimeout(()=>b.classList.remove('uboing'),360);
+  const q=b.getBoundingClientRect();if(q.width){sawdust(q.left+4,q.bottom-3,3);sawdust(q.right-4,q.bottom-3,3)}},true);
+/* 下のシートが「ことん」と置かれた瞬間（kotonn の55%）に、上の左右のはしから木くず */
+document.addEventListener('animationstart',e=>{if(e.animationName!=='kotonn')return;const el=e.target;setTimeout(()=>{const q=el.getBoundingClientRect();if(q.width&&document.body.classList.contains('wd0')){sawdust(q.left+12,q.top+2,4,16);sawdust(q.right-12,q.top+2,4,16)}},165)});
 /* ハンコ：たっせいした物（目標の札・知らせ）に、赤い「できた」をポンとおす。2.4秒でうすくなって消える */
 let STAMPC=null;
 function stampCanvas(){if(STAMPC)return STAMPC;const c=document.createElement('canvas');c.width=32;c.height=32;const g=c.getContext('2d'),cx=16,cy=16,R=15;g.fillStyle='#d6453a';
