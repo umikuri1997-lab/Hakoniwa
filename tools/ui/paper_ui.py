@@ -120,6 +120,68 @@ def cork_rows():
     return [''.join(r) for r in g]
 
 
+def fiber_rows(N=24):
+    """依頼の紙の、紙のすじ（うすい短い線。f こい・w 白）。くりかえしてもつながる。ざらざらの点にしない（線は2〜4ドット）"""
+    import random
+    rnd = random.Random(7)
+    g = [['.'] * N for _ in range(N)]
+    for k in range(22):
+        x, y, L = rnd.randrange(N), rnd.randrange(N), rnd.choice((2, 2, 3, 4))
+        c = 'f' if k % 3 else 'w'
+        dy = rnd.choice((0, 0, 0, 1))
+        for i in range(L):
+            g[(y + (i * dy) // 2) % N][(x + i) % N] = c
+    return [''.join(r) for r in g]
+
+
+FOLD = 16  # 角の折り返しの大きさ（ドット）
+
+
+def note_rows(F=FOLD):
+    """依頼の紙のわく（9スライス）：右下の角を内がわへ折った紙。a 紙・o ふち・b 紙のうら・B うらのかげ・e 折り目・s かげ。
+    上と左のスライスは4、右は F+2、下は F+3（いちばん下の行は紙のかげ）"""
+    NW = 2 * F + 8
+    H = NW + 1
+    cp = lambda d: PR[d] if d < 4 else 0
+    def ins(x, y):
+        if not (0 <= x < NW and 0 <= y < NW): return False
+        u, v = NW - 1 - x, NW - 1 - y
+        if u + v < F: return False  # 折ってなくなった角
+        return cp(min(x, u)) <= y <= NW - 1 - cp(min(x, u)) and cp(min(y, v)) <= x <= NW - 1 - cp(min(y, v))
+    rows = []
+    for y in range(H):
+        r = ''
+        for x in range(NW):
+            u, v = NW - 1 - x, NW - 1 - y
+            if ins(x, y):
+                if u <= F and v <= F and u + v >= F:  # 折り返し（紙のうら）
+                    if u + v == F: r += 'e'
+                    elif u == F or v == F: r += 'o'
+                    else: r += 'B' if u + v >= 2 * F - 3 else 'b'
+                    continue
+                edge = not (ins(x - 1, y) and ins(x + 1, y) and ins(x, y - 1) and ins(x, y + 1))
+                r += 'o' if edge else 'a'
+            elif ins(x, y - 1) or (u + v < F and ins(x - 1, y)):
+                r += 's'  # 紙の下・折った角のかげ
+            else:
+                r += '.'
+        rows.append(r)
+    return rows
+
+
+def note_css():
+    F = FOLD
+    fib = svg(fiber_rows(), {'f': '#8a6a3a14', 'w': '#ffffff80'})
+    fr = svg(note_rows(), {'a': '#f4e9d2', 'o': '#a8743f', 'b': '#e9d9b6', 'B': '#dcc89f', 'e': '#c9ad7c', 's': SHADOW})
+    return ('/* 依頼の紙：右下の角を折った紙のわく（note_rows）と、紙のすじ（fiber_rows。折った角にはかけない） */\n'
+            f'body .paper:not(.empty){{border-image-source:{fr}!important;border-image-slice:4 {F + 2} {F + 3} 4 fill!important;'
+            f'border-image-width:4px {F + 2}px {F + 3}px 4px!important;border-image-repeat:stretch!important;padding-bottom:{F - 2}px!important}}\n'
+            f'body .paper:not(.empty)::after{{content:"";position:absolute;inset:2px 2px 3px 2px;z-index:-1;pointer-events:none;image-rendering:pixelated;'
+            f'background:{fib} 0 0/24px 24px repeat;'
+            f'-webkit-mask:linear-gradient(#000 0 0) 0 0/100% calc(100% - {F}px) no-repeat,linear-gradient(#000 0 0) 0 0/calc(100% - {F}px) 100% no-repeat;'
+            f'mask:linear-gradient(#000 0 0) 0 0/100% calc(100% - {F}px) no-repeat,linear-gradient(#000 0 0) 0 0/calc(100% - {F}px) 100% no-repeat}}')
+
+
 def board_css():
     u = svg(cork_rows(), {'a': '#c99a62', 'd': '#b0824c', 'l': '#dcb27a', 'm': '#94693a'})
     return ('/* 依頼ボード：コルク（つぶつぶのドットの絵、1ドット1.5px）。わくは木のまま */\n'
@@ -429,7 +491,7 @@ def deco_css():
 
 
 def main():
-    css = '\n'.join([paper_css(), wood_css(), wbtn_css(), disk_css(), deco_css(), board_css(), book_css()])
+    css = '\n'.join([paper_css(), wood_css(), wbtn_css(), disk_css(), deco_css(), board_css(), note_css(), book_css()])
     s = HTML.read_text()
     b, e = '/* paper-ui:begin */', '/* paper-ui:end */'
     if b not in s:
