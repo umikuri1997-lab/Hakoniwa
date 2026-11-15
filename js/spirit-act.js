@@ -371,9 +371,9 @@ function goMeal(r,G){
   if(best>=0)return startAct(r,G,'eat',best,{key:'seat'+best,tdir,pt:BL[typeAt(best+tdir)].eat.pt+(SEATPT[S.obj[best]]||0),pw:(BL[typeAt(best+tdir)].eat.pw+(SEATPW[S.obj[best]]||0))*(1+.1*spotN(best+tdir,'dining','party'))});/* しょくたく・ガーデンパーティー：パワー+10% */
   return startAct(r,G,'eat',-1,{pt:0,pw:0});
 }
-function fishLoot(r){/* つり：家具1%・空き缶30%・枝30%・のこりは魚（false をかえす） */const q=Math.random();sfxAt('catch',r.x,r.y);if(!S.free&&Math.random()<BPFISH&&typeof bpNext==='function'&&bpNext()){r.bubble='✨';bpGiveNext(null);return true}/* 家の設計図 */if(WD===1&&!S.free&&Math.random()<.005){r.bubble='✨';if(!addItem(r,'gearf',1))dropAt(r.x,r.y,'gearf',1);return true}/* 火山：そうび0.5% */
-  if(!S.free&&Math.random()<.06){const id=Math.random()<.67?'mapPc':'fukuro';r.bubble='✨';sfx('seed');if(!(itemBoxOK()&&addItem(r,id,1)))dropAt(r.x,r.y,id,1);return true}/* 地図の切れはし4%・ふしぎなふくろ2% */
+function fishLoot(r){/* つり：家具1%・空き缶30%・枝30%・地図の切れはし4%・ふしぎなふくろ2%・のこりは魚（false をかえす） */const q=Math.random();sfxAt('catch',r.x,r.y);if(!S.free&&Math.random()<BPFISH&&typeof bpNext==='function'&&bpNext()){r.bubble='✨';bpGiveNext(null);return true}/* 家の設計図 */if(WD===1&&!S.free&&Math.random()<.005){r.bubble='✨';if(!addItem(r,'gearf',1))dropAt(r.x,r.y,'gearf',1);return true}/* 火山：そうび0.5% */
   if(q<.01){const oo=FURN.filter(giftPoolOK);if(oo.length){const id=pick(oo);r.bubble='✨';sfx('seed');toast(r.name+'が「'+BL[id].name+'」をつりあげた','good');if(!addItem(r,id,1))dropAt(r.x,r.y,id,1);return true}}/* 箱へはこんでから、もちものに入る */
+  if(q>=.61&&q<.67&&!S.free){const id=q<.65?'mapPc':'fukuro';r.bubble='✨';sfx('seed');if(!(itemBoxOK()&&addItem(r,id,1)))dropAt(r.x,r.y,id,1);return true}/* 地図の切れはし4%・ふしぎなふくろ2% */
   if(q>=.61){omo('fish',r.name);return false}
   const k=q<.31?'can':'eda';if(k==='can'&&!S.free&&!(S.guardianIdeas||{}).joro){(S.recipes||(S.recipes={})).joro=true;(S.guardianIdeas||(S.guardianIdeas={})).joro=true;sfx('level');queueItemGift({joro:1},'あたらしいレシピ！',true)}/* はじめて空き缶をつったら、ブリキのじょうろを思いつく */r.bubble='chip:drop:'+k;/* 落ちているときと同じ絵 */if(roomN(r)>0)addMat(r,k,1);else dropAt(r.x,r.y,'mat:'+k,1);return true}
 const AREAW=27,AREAN=4,areaOf=k=>((((k/W)|0)/AREAW)|0)*AREAN+((k%W)/AREAW|0);/* マップを4×4の16エリア（1エリア27×27マス）にわける */const STORET=18;/* 箱にしまう時間 */const WEEDDAY=[1,2],WEEDMAX=20,FUNDAY=[1,2],FUNMAX=20,KINODAY=1,KINOMAX=5,EDADAY=5,EDAMAX=10,EDAP=.25;/* 1エリアの雑草・きのこの最大 */

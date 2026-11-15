@@ -5,7 +5,7 @@ for(const f of ['core','data','story','world','quests','level','night'])vm.runIn
 const pick=(f,start)=>fs.readFileSync(root+'js/'+f,'utf8').split('\n').find(l=>l.startsWith(start));
 vm.runInContext(pick('build.js','const WIND_STAGE_TOYS'),c);vm.runInContext(pick('village.js','const QB='),c);
 const act=fs.readFileSync(root+'js/spirit-act.js','utf8');
-vm.runInContext(act.match(/function stageItemOK[\s\S]*?\n/)[0],c);{const L=act.split('\n'),i=L.findIndex(l=>l.startsWith('function fishLoot'));vm.runInContext(L.slice(i,i+4).join('\n'),c)}
+vm.runInContext(act.match(/function stageItemOK[\s\S]*?\n/)[0],c);{const L=act.split('\n'),i=L.findIndex(l=>l.startsWith('function fishLoot'));const e=L.findIndex((l,n)=>n>i&&l.startsWith('  const k=q<.31'));vm.runInContext(L.slice(i,e+1).join('\n'),c)}
 {const L=act.split('\n'),i=L.findIndex(l=>l.startsWith('  offer:{'));let k=i+1;while(!/^  [a-z]+:\{/.test(L[k]))k++;vm.runInContext('ACT2={'+L.slice(i,k).join('\n').trim().replace(/,\s*$/,'')+'}',c)}
 const run=s=>vm.runInContext(s,c);
 // 実際の offer.end と fishLoot を、乱数を0にして何回も回し、出た家具をあつめる
