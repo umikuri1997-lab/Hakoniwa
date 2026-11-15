@@ -417,6 +417,7 @@ def deco_css():
         f'body.wd0 .dock{{position:relative;border-image:none!important;background:none!important;box-shadow:none!important;padding:calc({pp}*20) 4px 4px!important;overflow:visible}}',
         f'body.wd0 .dock::before{{content:"";position:absolute;left:calc(50% - 50vw);width:100vw;top:0;height:calc({pp}*9);background:{beam} 0 0/calc({pp}*{len(BEAM[0])}) calc({pp}*{len(BEAM)}) repeat-x;image-rendering:pixelated;pointer-events:none}}',
         f'body.wd0 .dock button,body.wd0 .quest{{position:relative;overflow:visible}}',
+        f'body.wd0 .toast .trope::before,body.wd0 .toast .trope::after{{content:"";position:absolute;top:calc({pp}*-13);width:calc({pp}*2);height:calc({pp}*13);background:linear-gradient(#5e3d22 calc({pp}*2),transparent 0),{rope} 0 0/calc({pp}*2) calc({pp}*4) repeat-y;image-rendering:pixelated;pointer-events:none}}body.wd0 .toast .trope::before{{left:22%}}body.wd0 .toast .trope::after{{right:22%}}',
         f'body.wd0 .dock button{{border:solid transparent!important;border-width:calc({pp}*3)!important;border-image:{tag} 5 5 6 5 fill/calc({pp}*5) calc({pp}*5) calc({pp}*6) round!important;background:none!important;color:#86715a!important;transform:none}}',
         f'body.wd0 .dock button.on{{color:#4a2a12!important;filter:saturate(1.15) brightness(1.03);margin-top:calc({pp}*3);text-shadow:1.5px 0 0 rgba(140,90,40,.3),-1.5px 0 0 rgba(140,90,40,.3),0 1.5px 0 rgba(255,236,200,.7)}}',
         f'body.wd0 .dock button.on svg.pxi{{fill:#4a2a12!important}}',
