@@ -234,8 +234,9 @@ addEventListener('resize',resize);
 for(const ev of ['pointerdown','touchend','click'])document.addEventListener(ev,()=>{if(AC&&AC.state!=='running'&&!document.hidden)AC.resume().catch(()=>{})},true);addEventListener('focus',()=>{if(AC&&AC.state!=='running')AC.resume().catch(()=>{})});
 
 $('#alert').addEventListener('click',()=>{const L=S.enemies.filter(e=>e.spawned&&!e.dead);if(!L.length)return;ALI=(ALI+1)%L.length;const e=L[ALI];centerOn(e.x*TS,e.y*TS);sfx('tap')});/* 「コワイノ ○体」をタップすると、その場所へ */
-$('#guardStatus').addEventListener('click',e=>{e.stopPropagation();if(!S||!started)return;if(!LIGHTARM&&S.pt<1)return toast('パワーが足りません');sfx('tap');const on=!LIGHTARM;setMode('look');LIGHTARM=on;AREAARM=false;dockSync();if(on)toast('光をあてる物をタップ')});/* 守りの光は、もう一度ボタンをおすか、みる・おく・こわすをえらぶまで、えらんだまま（チャージ中も）。えらんでいるあいだは、置く・こわす・みるはしない */
-$('#areaBtn').addEventListener('click',e=>{e.stopPropagation();if(AREACD>0)return toast('こもれびのまもりは、あと'+Math.ceil(AREACD/(S.speed||1))+'秒');if(S.pt<3)return toast('パワーが足りません');sfx('tap');AREAARM=!AREAARM;LIGHTARM=false;if(AREAARM)toast('光をはなつ場所をタップ')});
+$('#guardStatus').addEventListener('click',e=>{e.stopPropagation();if(!S||!started)return;if(!LIGHTARM&&S.pt<1)return toast('パワーが足りません');sfx('tap');const on=!LIGHTARM;setMode('look');LIGHTARM=on;AREAARM=false;LEAFARM=false;dockSync();if(on)toast('光をあてる物をタップ')});/* 守りの光は、もう一度ボタンをおすか、みる・おく・こわすをえらぶまで、えらんだまま（チャージ中も）。えらんでいるあいだは、置く・こわす・みるはしない */
+$('#areaBtn').addEventListener('click',e=>{e.stopPropagation();if(AREACD>0)return toast('こもれびのまもりは、あと'+Math.ceil(AREACD/(S.speed||1))+'秒');if(S.pt<3)return toast('パワーが足りません');sfx('tap');AREAARM=!AREAARM;LIGHTARM=false;LEAFARM=false;if(AREAARM)toast('光をはなつ場所をタップ')});
+$('#leafBtn').addEventListener('click',e=>{e.stopPropagation();const L=leafLeft();if(L>0)return toast('葉のかべは、あと'+Math.ceil(L/DAYLEN)+'分');if(S.pt<LEAFPT)return toast(lackPt(LEAFPT),'warn');sfx('tap');LEAFARM=!LEAFARM;LIGHTARM=false;AREAARM=false;dockSync();if(LEAFARM)toast('葉のかべを生やす所をなぞる')});/* 葉のかべ（defense.js） */
 $('#skipBtn').addEventListener('click',()=>{if(!canSkip())return;sfx('tap');SKIP=true;$('#skipBtn').hidden=true;toast('朝まで休もう…','good')});
 let RLVR=null;
 function rlvShow(q){const r=S.res.find(x=>x.id===q.id);if(!r)return;RLVR=r;const o=$('#rlv'),a=rStat(r,q.from),b=rStat(r,q.to);
