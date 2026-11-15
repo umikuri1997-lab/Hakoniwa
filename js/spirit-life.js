@@ -599,7 +599,7 @@ function chatTopic(r,p){const L=[],mt=bondOf(r,p)>=BOND_TALK,gn=!!goneTalkName()
   if(C.some(i=>CHATS[i].kc)&&Math.random()<.4)C=C.filter(i=>CHATS[i].kc);/* キーキャラの話は、まだしていなければ4割で選ばれる */
   const t=C[Math.floor(Math.random()*C.length)];for(let o;(o=R.indexOf(t))>=0;)R.splice(o,1);R.push(t);chatMark(t);return t}
 /* 「手、ふっとこうか」：このあと手をふる */
-function trySocial(r,G){const sb=socialBest(r,G);if(!sb)return false;const best=sb.b;const o=S.res.find(q=>q.id===best.o.partner);if(!o)return false;endAct(o);o.act={type:'chatwait',stage:'do',t:0,partner:r.id};o.bubble='👋';startAct(r,G,'chat',best.stand,best.o);return true}
+function trySocial(r,G){const sb=socialBest(r,G);if(!sb)return false;const best=sb.b;const o=S.res.find(q=>q.id===best.o.partner);if(!o)return false;if(evIn(o)||evIn(r))return false;/* イベントに出ている子は、おしゃべりによばない */endAct(o);o.act={type:'chatwait',stage:'do',t:0,partner:r.id};o.bubble='👋';startAct(r,G,'chat',best.stand,best.o);return true}
 const NIGATE={fire:['fountain'],wood:['campfire'],water:['campfire'],earth:['swing'],wind:[]};/* 属性ごとの、にがてなおもちゃ：遊びに行かない */
 const nigate=(el,k)=>(NIGATE[el]||[]).includes(k);
 const FAVTOY={earth:['sandbox'],wood:['swing'],water:['fountain'],fire:['campfire'],wind:['slide','seesaw','sandbox','swing','fountain','campfire']};/* 属性ごとに、よく遊ぶおもちゃ（ほかの子より選ばれやすい） */
