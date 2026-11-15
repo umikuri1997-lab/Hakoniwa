@@ -22,12 +22,12 @@ function ovenMul(j){if(j==null)return 1;const x0=j%W,y0=(j/W)|0;const kinds=new 
 const fAtk=(r,lv)=>(EL_ATK[r.elem]||0)+lvGain(r,'atk',lv);/* 攻撃力：Lv1は EL_ATK、上がるたびに EL_GROW のはばでふえる */
 function staOf(r){const V=vrInt(r.vr)||{},B=EL_BASE[r.elem]||EL_BASE.wood;return Math.max(1,B.sta+(V.sta||0)+(trt(r,'tafu')||trt(r,'nebari')?30:0)+evSt(r,'sta'))}/* スタミナ */
 function rStat(r,lv){const V=vrInt(r.vr)||{},fire=r.elem==='fire',G=gearStat(r),B=EL_BASE[r.elem]||EL_BASE.wood;/* G：そうび。どれも、たし算の整数 */return{
-  atk:fAtk(r,lv)+((r.bst&&r.bst.atk)||0)+((r.sst&&r.sst.atk)||0)+G.atk+evSt(r,'atk'),
-  work:Math.max(1,B.work+(V.pow||0)+(trt(r,'hataraki')?30:0)+G.work+wkUp(r)+lvGain(r,'work',lv)+evSt(r,'work')),
-  move:Math.max(1,B.move+(V.spd||0)+(trt(r,'hayaashi')?30:0)+G.mv+mvUp(r)+lvGain(r,'move',lv)+evSt(r,'move')),
+  atk:fAtk(r,lv)+((r.bst&&r.bst.atk)||0)+((r.sst&&r.sst.atk)||0)+G.atk+evSt(r,'atk')+(typeof pathA==='function'?pathA('atk'):0),
+  work:Math.max(1,B.work+(V.pow||0)+(trt(r,'hataraki')?30:0)+G.work+wkUp(r)+lvGain(r,'work',lv)+evSt(r,'work')+(typeof pathA==='function'?pathA('work'):0)),
+  move:Math.max(1,B.move+(V.spd||0)+(trt(r,'hayaashi')?30:0)+G.mv+mvUp(r)+lvGain(r,'move',lv)+evSt(r,'move')+(typeof pathA==='function'?pathA('move'):0)),
   eat:Math.round(10*(V.eat||1)*(trt(r,'shoshoku')?.8:1)),
   sta:staOf(r),
-  cap:B.cap+lvGain(r,'cap',lv)+(trt(r,'chikara')?2:0)+((r.bst&&r.bst.cap)||0)+((r.sst&&r.sst.cap)||0)+G.cap+evSt(r,'cap'),
+  cap:B.cap+lvGain(r,'cap',lv)+(trt(r,'chikara')?2:0)+((r.bst&&r.bst.cap)||0)+((r.sst&&r.sst.cap)||0)+G.cap+evSt(r,'cap')+(typeof pathA==='function'?pathA('cap'):0),
   bonus:0}}
 // 獲得量は端数も保存。表示と実際の加算で同じ計算を使う。
 const spiritXpGain=(base,lv,r)=>base*.8;
