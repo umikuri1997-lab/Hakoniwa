@@ -574,7 +574,7 @@ function renderSheet(){
       body.appendChild(sec)}
   }else if(sheet==='menu'){
     T.textContent=WORLDS[WD].name;
-    const MI=[['oracle','leaf','おつげ'],['manual','book','ひでんのしょ'],['goal','target','目標'],['record','memo','思い出帳'],['maps','compass','マップ選択'],['zukan','zukan','図鑑'],['gup','power','守り神のちから'],['settings','gear','設定'],['support','cup','応援する']];
+    const MI=[['oracle','leaf','おつげ'],['manual','book','ひでんのしょ'],['goal','target','目標'],['record','memo','思い出帳'],['maps','compass','マップ選択'],['zukan','zukan','図鑑'],['gup','power','守り神のちから'],['path','next','ひらき道'],['settings','gear','設定'],['support','cup','応援する']];
     const sub=MI.find(m=>m[0]===sheetArg);
     if(!sub){/* メニューはアイコンを並べるだけ。タップで中身を開く */
       body.appendChild(el(`<div class="mtags"><span class="mtag">${pxi('grass')}みどりのマス <b>${GRASSN}</b></span><span class="mtag">${pxi('house')}村レベル <b>${S.lv}</b></span><span class="mtag">${pxi('spirit')}せいれい <b>${S.res.length}</b>人</span></div>`));
@@ -607,6 +607,7 @@ function renderSheet(){
       tr.appendChild(el('<p class="note">のりこえた試練：'+(S.trials||0)+'回</p>'));body.appendChild(tr);subSec(body);/* クリア後は、新しい目標を上に。サブクエストは下に */
     }else if(sheetArg==='goal'){if(mainStoryFocusTarget()){const b=el('<button class="btn pri" style="width:100%">お話・調査の場所へ</button>');b.onclick=focusMainStoryPlace;body.appendChild(b);}subSec(body,true);
     }else if(sheetArg==='zukan'){zukanBody(body)
+    }else if(sheetArg==='path'){pathSec(body);
     }else if(sheetArg==='gup'){/* 守り神のちから：パワーで、守り神の技を強くする（GUP・GUPC は night.js） */
       body.appendChild(el('<p class="note">パワーを使って、守り神の技を強くできる。</p>'));
       const sec=el('<div class="sec"><div class="rows"></div></div>'),rw=sec.querySelector('.rows');
