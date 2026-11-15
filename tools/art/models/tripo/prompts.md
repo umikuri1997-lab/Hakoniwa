@@ -1,4 +1,4 @@
-# トリポ（Tripo）にたのむ3Dモデルのプロンプト（20こ＋伐採場・採石場の9こ）＋飼う生き物の絵（GPT）1こ
+# トリポ（Tripo）にたのむ3Dモデルのプロンプト（20こ＋伐採場・採石場の9こ）＋生き物の絵（GPT）2まい
 
 3Dのお手本（`blueprint.py` の `model`）に置く、植物・自然の物のモデル。どのプロンプトも、それだけで使えるように、共通のこと（形・色・向き・ノイズなし）をそれぞれに書いてある。
 できたモデル（.glb）は `tools/art/models/tripo/` に、下の「ファイル名」で入れる。
@@ -85,12 +85,12 @@ Stylized, chunky game-asset 3D models with clean simple shapes and smooth surfac
 
 ---
 
-## 飼う生き物の絵（GPT で1まいの絵を作り、その絵をトリポで3Dにする）　ファイル名：`hanemari.glb`・`mokodama.glb`・`tsunokusa.glb`
+## 飼う生き物の絵（GPT で1まいの絵を作り、その絵をトリポで3Dにする）　ファイル名：`livestock.glb`（3つ入りのまま。こちらで切りわける）
 ハネマリ（たまご）・モコダマ（わた毛）・ツノクサ（ミルク）の3つを、1まいにならべてかく。ほんものの動物そのままではなく、草原の土地の、この世界だけの生き物（葉・花・わた毛・雲のような、自然のものがからだになっている）。大きさは、せいれい（2〜3頭身）を物差しにして、同じくらいデフォルメする（ハネマリが小さく、モコダマ・ツノクサはその1.6倍くらい）。
-絵はトリポで3Dにするための元なので、ゲームの見おろしの角度ではなく、すこしななめ前から見た全身・白い背景にしてある。できた絵を1つずつに切りわけてトリポにわたし、できたモデル（.glb）を `tools/art/models/tripo/` に、上のファイル名で入れる。
+絵はトリポで3Dにするための元なので、ゲームの見おろしの角度ではなく、すこしななめ前から見た全身・白い背景にしてある。絵を1まいのままトリポにわたし、できたモデル（.glb）を `tools/art/models/tripo/` に、上のファイル名で入れる（3つは、こちらで点のつながりで切りわける `tripo_split.py`）。
 
 ```
-A character sheet of three small, gentle farm creatures from a cozy fantasy meadow world, drawn side by side in one image with wide empty space between them so each can be cut out separately. They are NOT real animals: each is a unique little creature whose body is made of natural things like leaves, flowers, cotton fluff and clouds, with only a faint hint of a familiar farm animal. All three share the same style, the same soft lighting and the same chibi proportions: big round head merged into a round body, tiny stubby legs, small round dark-brown eyes, a calm sweet face.
+A character sheet of three small, gentle farm creatures from a cozy fantasy meadow world, drawn side by side in one image, all standing on the same invisible flat floor at the same ground level, with wide empty space between them so none of them touch or overlap. They are NOT real animals: each is a unique little creature whose body is made of natural things like leaves, flowers, cotton fluff and clouds, with only a faint hint of a familiar farm animal. All three share the same style, the same soft lighting and the same chibi proportions: big round head merged into a round body, tiny stubby legs, small round dark-brown eyes, a calm sweet face.
 
 Left — "Hanemari" (the smallest, lays eggs; a faint hint of a chick): a plump round ball of soft creamy white petal-like down, shaped like a fluffy dandelion puff, with a tiny short warm-yellow beak, two little leaf-shaped wings folded on its sides, a crest of three small fresh green leaves sprouting from the top of its head, a short tail of soft pale-green grass blades, and two tiny peach-orange feet.
 
@@ -99,4 +99,32 @@ Middle — "Mokodama" (about 1.6 times the size of Hanemari, gives soft fluff; a
 Right — "Tsunokusa" (about 1.6 times the size of Hanemari, gives milk; a faint hint of a calf or goat): a rounded compact body with smooth short fur in light warm cream with a few soft pale-green moss-colored round patches on the back, a big round head with two small curled fern-frond horns in light green, two soft drooping leaf-shaped ears, a small tuft of moss under the chin, a short tail ending in a little clover tuft, and four short sturdy legs with small rounded light-brown hooves.
 
 Each creature: full body, centered in its own area, three-quarter front view seen from slightly above (about 20 degrees down), the head turned toward the viewer's right, standing level and upright, not tilted, all feet on one flat plane. Clean illustration meant to be turned into 3D models: soft simple chunky shapes, clean flat colors with soft shading only; no noise, no grain, no speckles, no dithering, no gritty texture, no fine fur or feather strands. Pale, light, soft colors; no dark or heavily saturated colors. No thick or dark outlines; if an outline is used, it is a thin line only slightly darker than the color next to it, never black or near-black. Plain pure white background, no shadows, no ground, no props, no text, no labels.
+```
+
+## 村のにぎやかしの生き物（むし・小さな生き物）の絵（GPT で1まいの絵を作り、その絵をトリポで3Dにする）　ファイル名：`critters.glb`（12こ入りのまま。こちらで切りわける）
+ちょう・とんぼ・かえる・はち・てんとうむし・かたつむり・りす・うさぎ・はりねずみ・ほたる・もぐら・のねずみの役の、この世界だけの小さな生き物12こを、1まいにならべてかく。ほんものの生き物そのままではなく、花びら・葉・つゆ・木の実・こけ・わた毛など、自然のものがからだになっている。
+ゲームでは0.3〜0.6マスの小ささだが、3Dにしたとき形がつぶれないよう、絵ではどれも同じくらいの大きさでかく（大きさは、こちらできめる）。トリポで1つのモデルにしてから、点のつながりで1つずつに切りわける（`tripo_split.py`）ので、どの生き物も、はなしてならべ、さわらせない。
+
+```
+A character sheet of twelve tiny, gentle wild creatures from a cozy fantasy meadow world, arranged in a neat grid of 4 columns and 3 rows in one image, all standing or resting on the same invisible flat floor at the same ground level, with wide empty space between them so none of them touch or overlap. They are NOT real animals or insects: each is a unique little creature whose body is made of natural things like petals, leaves, dewdrops, berries, acorns, moss and cotton fluff, with only a faint hint of a familiar small animal. Draw all twelve at about the same size so every shape is clear. All share the same style and soft lighting, with cute chibi proportions: big round heads, round bodies, tiny legs, small round dark-brown eyes, calm sweet faces.
+
+Row 1:
+1. Petal flutter (a faint hint of a butterfly): a tiny soft round body with two short curly antennae and four wings that are pale pink flower petals, resting with the wings spread out flat and level, symmetrical.
+2. Dew dart (a faint hint of a dragonfly): a slim body like a smooth pale-green grass stem, a round head with two big round dewdrop eyes in pale aqua, four long thin wings like clear pale-green blades of grass, resting with the wings spread out flat and level.
+3. Lilypad hopper (a faint hint of a frog): a round soft light-green body sitting with tucked legs, a wide gentle smile, and a small round lily pad leaf worn on its head like a cap.
+4. Pollen puff (a faint hint of a bee): a round fluffy ball like a soft yellow mimosa flower, with two tiny pale translucent oval wings on the back and two short antennae.
+
+Row 2:
+5. Berry beetle (a faint hint of a ladybug): a dome-shaped shell like a shiny soft red berry with a few tiny cream seed dots and one small green leaf on top, a small round light-brown head, short legs.
+6. Bud snail (a faint hint of a snail): a soft pale-beige body with two short eye stalks, carrying a shell that is a big closed pale-pink flower bud wound in a spiral.
+7. Acorn tail (a faint hint of a squirrel): a small round light orange-brown body sitting up, wearing an acorn cap as a little hat, with a big soft tail shaped like a curled green fern frond.
+8. Clover ears (a faint hint of a rabbit): a round soft cream-white body sitting on all fours, with two long upright ears shaped like pale-green clover leaves and a tiny pink nose.
+
+Row 3:
+9. Moss roll (a faint hint of a hedgehog): a round little body whose back is covered with soft rounded tufts of light-green moss instead of spines, a light-beige face and a tiny dark nose.
+10. Seed lantern (a faint hint of a firefly): a tiny round light-brown bug with short wings and a round pale-yellow glowing seed-pod lantern as its tail.
+11. Pebble digger (a faint hint of a mole): a round soft light-gray-brown body with a smooth back patterned like a few round pale pebbles, two small spade-like front paws and a tiny pink nose.
+12. Fluff mouse (a faint hint of a field mouse): a tiny round light warm-brown mouse-like body with round ears and a long tail ending in a white dandelion-fluff puff.
+
+Each creature: full body, three-quarter front view seen from slightly above (about 20 degrees down), the head turned toward the viewer's right, upright and level, not tilted, resting on the same flat floor. Clean illustration meant to be turned into one 3D model and then separated: soft simple chunky shapes, clean flat colors with soft shading only; no noise, no grain, no speckles, no dithering, no gritty texture, no fine fur strands or vein lines. Pale, light, soft colors; no dark or heavily saturated colors. No thick or dark outlines; if an outline is used, it is a thin line only slightly darker than the color next to it, never black or near-black. Plain pure white background, no shadows, no ground texture, no props, no text, no labels, no numbers.
 ```
