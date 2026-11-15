@@ -314,32 +314,43 @@ def wbtn_css():
 # ---- 草原の丸いボタン（とじるボタン・守りの光）：切りっぱなしの丸い木（木目・下に2ドットのあつみ） ----
 def disk_rows(N, rim=True):
     """すこしベベルした木の円柱（上から少し見おろした形）：上の面は丸く、こい木のふち、ふちの2ドットがななめに落ちる面（左上は光・右下はかげ）、
-    下に円柱の側面（あつみ）"""
+    下に円柱の側面（あつみ）。光は、ふちにそった、とぎれない弧だけ（点の光はつけない）"""
+    import math
     TH = 2 if N < 30 else 4  # 側面のあつみ
     r = (N - TH) / 2
     cx, cy = N / 2, r
     d = lambda x, y, oy=0: ((x + .5 - cx) ** 2 + (y + .5 - cy - oy) ** 2) ** .5
     top = lambda x, y: 0 <= x < N and 0 <= y < N and d(x, y) <= r
     side = lambda x, y: any(d(x, y, k) <= r for k in range(1, TH + 1))
+    # ふちからの段（0 がこいふち、1・2… が内がわ）
+    ring = {}
+    for y in range(N):
+        for x in range(N):
+            if top(x, y) and not (top(x - 1, y) and top(x + 1, y) and top(x, y - 1) and top(x, y + 1)): ring[x, y] = 0
     BV = 2 if N < 30 else 3  # ベベルのはば
+    for k in range(1, BV + 1):
+        for y in range(N):
+            for x in range(N):
+                if top(x, y) and (x, y) not in ring and any(ring.get(q) == k - 1 for q in ((x - 1, y), (x + 1, y), (x, y - 1), (x, y + 1))): ring[x, y] = k
     rows = []
     for y in range(N):
         o = ''
         for x in range(N):
             if top(x, y):
-                if not (top(x - 1, y) and top(x + 1, y) and top(x, y - 1) and top(x, y + 1)): o += 'o'; continue
-                e = r - d(x, y)
-                ang = (x + .5 - cx) * .6 + (y + .5 - cy)
-                if e <= BV:
-                    if ang < -r * .25: o += 'h' if e <= BV * .55 else 'k'
-                    elif ang > r * .25: o += 'E' if e <= BV * .55 else 'F'
-                    else: o += 'm'
+                k = ring.get((x, y))
+                if k == 0: o += 'o'; continue
+                if k is not None:
+                    a = math.degrees(math.atan2(y + .5 - cy, x + .5 - cx))  # -135 が左上
+                    t = abs(((a + 135) + 180) % 360 - 180)  # 左上からの角度 0〜180
+                    if t < 50: o += 'h' if k == 1 else 'k'
+                    elif t < 95: o += 'k' if k == 1 else 'm'
+                    elif t < 130: o += 'm' if k == 1 else grain(x, y, 64)
+                    else: o += 'E' if k == 1 else 'F'
                     continue
-                if (x + .5 - cx + r * .38) ** 2 + (y + .5 - cy + r * .42) ** 2 < (r * .1) ** 2: o += 'q'; continue
                 o += grain(x, y, 64); continue
-            if side(x, y) and 0 <= y < N:
-                below_edge = not side(x, y + 1)
-                o += 'b' if below_edge or not (side(x - 1, y) or top(x - 1, y)) or not (side(x + 1, y) or top(x + 1, y)) else ('e' if x + .5 < cx else 't')
+            if side(x, y):
+                edge = not side(x, y + 1) or not (side(x - 1, y) or top(x - 1, y)) or not (side(x + 1, y) or top(x + 1, y))
+                o += 'b' if edge else ('e' if x + .5 < cx else 't')
                 continue
             o += '.'
         rows.append(o)
