@@ -10,7 +10,7 @@ const out=await page.evaluate(()=>ltEval(`(()=>{const o={};S=newState(0);setWorl
  e=mk('basic');S.enemies=[e];LIGHTCD=0;guardLight(e);o.max={hp:999-e.hp,stun:e.stun,cd:LIGHTCD};
  const b=mk('boss');S.enemies=[b];LIGHTCD=0;guardLight(b);o.boss=b.stun;
  S.flags.areaSkill=true;const r=S.res[0];r.x=40.5;r.y=40.5;r.hidden=false;r.shU=0;const t0=S.t;areaBlast(40.5+4.4,40.5);o.area={sh:Math.round(r.shU-t0),cd:AREACD};
- openSheet('menu','gup');o.rows=document.querySelectorAll('#sheetBody .row').length;o.txt=document.querySelector('#sheetBody').textContent;closeSheet();
+ openSheet('menu','gup');o.rows=[...document.querySelectorAll('#sheetBody .row')].filter(r=>r.textContent.includes('（Lv')).length;/* 強くする行（わざの枠の行はのぞく） */o.txt=document.querySelector('#sheetBody').textContent;closeSheet();
  /* 古いセーブ：村レベル12（前のチャージ4.5秒）→ 4.5秒の段階 */S.flags.gup1=0;S.gup={};S.lv=12;gupMigrate();o.mig12=S.gup.cd;S.flags.gup1=0;S.gup={};S.lv=1;gupMigrate();o.mig1=S.gup.cd||0;
  return o})()`));
 console.log(JSON.stringify(out));
