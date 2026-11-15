@@ -165,7 +165,7 @@ function nushiReturns(resume){if(NUSHI_RUN||S.cleared||WD===0&&grassReunionBlock
         if(WD!==0){startClap();for(const r of S.res)r.bubble='👏';}if(WD!==0)for(let k=0;k<8;k++)villageTimeout(()=>{const r=pick(S.res);if(r)spawnFX(r.x-.5,r.y-.6,pick(['#ffd84a','#ff9cc0','#9ff0ff','#b8ff9a']))},k*350);villageTimeout(endClap,3200);/* みんなで拍手 */
         dialog((T.world&&sevLines(T.world)||[]).concat(T.reu&&sevLines(T.reu)||[],T.next&&sevLines(T.next)||[],T.after),()=>{
           S.cleared=true;if(WD===0){S.flags.sacredReunion=true;S.flags.sacredQuietSeen=false;endClap();sacredEndDirection();dirty=true;}delete S.flags.nushiDue;NUSHI_RUN=false;TOWERGLOW=0;for(const r of S.res)RHOLD.set(r,0);renderQuest();toast(T.toast,'good');
-          S.clearDay=dayNo();S.score=calcScore();villageTimeout(()=>WD===0?openSheet('score'):dialog(['#think hush|……この土地も、もとにもどったのう'],()=>openSheet('score'),T.last,GOD),1200);
+          clearSnap();reunionCalm();save();if(WD!==0)villageTimeout(()=>dialog(['#think hush|……この土地も、もとにもどったのう'],()=>reunionCalm(),T.last,GOD),1200);/* 評価の画面は出さない。村にもどって、しずかにながめられる（ふりかえりは思い出帳から） */
         });
       },null,T.name||'ヌシ様'),3200);
     }},t0+5200);
@@ -197,8 +197,6 @@ function stageGive(from,to){/* 会話の「わたす」：from が to のほう�
 function stageHands(c){if(!S)return;const f=S.res.find(q=>q.name===POKO&&!q.hidden),n=S.res.find(q=>q.name===MINA&&!q.hidden);if(!f||!n)return;const now=performance.now();
   if(c==='give')stageGive(POKO,MINA);
   else{n.face=f.x>=n.x?1:-1;f.face=n.face;sacredScenePose(n,'storyTouch',1300,{side:true,face:n.face});villageTimeout(()=>{JUMP.set(f,performance.now());JOYU.set(f,performance.now()+1500);sfx('wave')},450);STAGEWAIT=now+1300}}
-function calcScore(){const d=S.clearDay||dayNo(),parts=[['クリアした日',d+'日目',d<=26?4000:d<=30?3200:d<=34?2600:d<=39?2000:d<=44?1500:d<=54?1000:500],['せいれい',S.res.length+'人',S.res.length*100],['消えてしまったせいれい',(S.deaths||0)+'人',-Math.min(1000,(S.deaths||0)*50)]];
- const tot=Math.max(0,parts.reduce((a,p)=>a+p[2],0)),rank=tot>=5000?'S':tot>=4000?'A':tot>=2500?'B':'C'/* ふつうはB。はやく・消さずにクリアでS */;return{tot,rank,parts}}/* クリアスコア：早いほど・せいれいが多いほど・消えたせいれいが少ないほど高い。夜の数・パワーなど、長く遊ぶほどふえるものは入れない。クリアした日：26日目まで4000・30日目まで3200・34日目まで2600・39日目まで2000・44日目まで1500・54日目まで1000・それより後500。せいれい：1人100てん。消えたせいれい：1人50てん引く（引くのは1000まで）。S 5000・A 4000・B 2500 */
 function visionFX(lines,after){const d=document.createElement('div');d.style.cssText='position:absolute;inset:0;background:#0b0f0a;opacity:0;pointer-events:none;z-index:25;transition:opacity .9s ease';$('#app').appendChild(d);requestAnimationFrame(()=>requestAnimationFrame(()=>{d.style.opacity='.55'}));setTimeout(()=>dialog(lines,()=>{d.style.opacity='0';setTimeout(()=>{d.remove();after&&after()},900)},null,''),1000)}/* かけらにふれたとき、画面が暗くなって記憶がうかぶ（会話の枠は暗くしない・暗さは控えめ） */
 function flashScreen(){const d=document.createElement('div');d.style.cssText='position:fixed;inset:0;background:#fff;opacity:.85;pointer-events:none;z-index:60;transition:opacity 1.4s ease-out';document.body.appendChild(d);requestAnimationFrame(()=>requestAnimationFrame(()=>{d.style.opacity='0'}));setTimeout(()=>d.remove(),1600)}/* 白くひかる */
 const NTALK=[[/* 草原のヌシ：守り神に話す（ひとつずつ、順番に） */
