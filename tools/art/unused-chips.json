@@ -109,6 +109,14 @@
         "site:sand",
         "site:sand2"
       ]
+    },
+    {
+      "reason": "石の塀は、3Dから写したつなぎ方ごとの絵（wall:m0〜m15、tools/art/fence3d）を1まい描くので、正面と柱をかさねる stoneFront と、その部品の絵は使わない。",
+      "ids": [
+        "wall:ext",
+        "wall:post",
+        "wall:vtop"
+      ]
     }
   ]
 }
