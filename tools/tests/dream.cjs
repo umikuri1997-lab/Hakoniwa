@@ -1,0 +1,20 @@
+/* せいれいのゆめ：朝、ねていた子がゆめを見る・ねがいのゆめの家具ができたらよろこぶ・なかよしのゆめ・お話の話題は1回・せいれいの画面・3日でわすれる */
+const assert=require('node:assert/strict');
+(async()=>{const {browser,run,errors}=await require('../sim/boot.cjs')({world:0});
+  const r=JSON.parse(await run(`(()=>{document.querySelector('#dialog').hidden=true;S.introSeen=true;S.flags.tapped=1;USERPAUSE=true;S.enemyOn=false;const a=S.res[0],out={};S.t=1440*4+6*60;
+    const b=mkRes(S,'テスト土','earth',a.x+1,a.y);S.res.push(b);
+    /* 起きていた子は見ない */a.wakeStretch=0;b.wakeStretch=0;a.act=null;b.act=null;const R=Math.random;Math.random=()=>0.01;dreamMorning();out.awake=S.dream;
+    /* ねがいのゆめ */a.wakeStretch=1;S.recipes=Object.assign(S.recipes||{},{chair:true,stool:true,taru:true});Math.random=(()=>{const q=[0.01,0,0.5];let i=0;return()=>q[Math.min(i++,q.length-1)]})();dreamMorning();Math.random=R;out.k=S.dream&&S.dream.k;out.f=S.dream&&S.dream.f;out.id=S.dream&&S.dream.id===a.id;
+    out.text=dreamText(a);out.t1=JSON.stringify(dreamTopic(a));out.t2=dreamTopic(a);
+    resTab=1;openSheet('res',a.id);out.sheet=document.querySelector('.sheet').textContent.includes('ゆめ');closeSheet();
+    a.fun=10;const f=S.dream.f;let j=-1;for(let q=(a.y|0)*W+(a.x|0)+3;q<W*H;q++)if(!S.obj[q]&&!S.ground[q]){j=q;break}S.obj[j]=f;recount();for(let i=0;i<6;i++)dreamTick();out.done=S.dream;out.fun=a.fun;
+    /* なかよしのゆめ */S.bond={};bondAdd(a,b,40);a.wakeStretch=1;const v0=(S.bond||{})[bondKey(a,b)];Math.random=(()=>{const q=[0.01,0,0.1];let i=0;return()=>q[Math.min(i++,q.length-1)]})();dreamMorning();Math.random=R;out.mk=S.dream&&S.dream.k;out.bond=(S.bond||{})[bondKey(a,b)]-v0;
+    /* 3日でわすれる */S.t+=1440*3;dreamMorning();out.forgot=S.dream===null||S.dream.day===dayNo();
+    return JSON.stringify(out)})()`));
+  console.log(JSON.stringify(r));
+  assert.equal(r.awake,undefined);assert.equal(r.k,'wish');assert.ok(r.f);assert.equal(r.id,true);assert.ok(r.text.endsWith('のゆめ'));
+  assert.ok(r.t1.includes('ふしぎなゆめ'));assert.equal(r.t2,null,'お話は1回');assert.equal(r.sheet,true);
+  assert.equal(r.done,null);assert.equal(r.fun,40,'たのしさ+30');
+  assert.equal(r.mk,'mate');assert.equal(r.bond,3);assert.equal(r.forgot,true);
+  assert.deepEqual(errors,[]);await browser.close();console.log('OK');
+})().catch(e=>{console.error(e);process.exit(1)});
