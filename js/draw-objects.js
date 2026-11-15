@@ -100,10 +100,10 @@ function boardNotes(c,x,y){/* 依頼ボード：はられた依頼の数だけ�
     P(a+6,b-1,3,3,'#a8452f');P(a+6,b-1,1,1,'#e08a6a');P(a+7,b+2,1,1,'#6e3a28')}}/* 赤いピン */
 function appleOn(c,x,y){const ai=emoImg('🍎');if(!ai)return;for(const[cx,cy]of[[2,-30],[26,-38],[40,-14],[12,-8],[-12,-16]]){const ih=11,iw=ih*ai.width/ai.height;c.drawImage(ai,x+cx-iw/2,y+cy-ih/2,iw,ih)}}/* 実ったりんごの木：ふつうの木の絵に、りんごのアイコンをのせる（3Dの実の絵は作らない） */
 function berryOn(c,x,y){const bi=emoImg('🫐');if(!bi)return;for(const[cx,cy]of[[7,13.5],[25,19.5]]){const iw=14,ih=iw*bi.height/bi.width;c.drawImage(bi,x+cx-iw/2,y+cy-ih/2,iw,ih)}}/* 実ったベリーの茂み：運ぶときと同じベリーの絵を2つ、前の青い実と同じ位置・大きさ（はば14）にのせる */
-const PCH=new Set(['tree','ntree','fruit','deadtree','berry','clover','bellf','salvia','lily','lotus','nebari','hotaru','statue','volcano','hedge']);/* 植物などは、ようすで絵をえらぶ */
+const PCH=new Set(['tree','ntree','fruit','deadtree','berry','clover','bellf','salvia','lily','lotus','nebari','hotaru','drum','statue','volcano','hedge']);/* 植物などは、ようすで絵をえらぶ */
 function plantChip(id,i,g){const C=window.CHIPS;if(!C)return null;if(!ICON&&i!=null&&S&&PLANTS.includes(id)&&isBud(i))return (id==='lotus'&&C['bud~w'])||C.bud||null;/* 芽（ハスは水の上なので、土のない芽） */
   if(id==='hedge'){if(ICON||i==null||!S)return C.hedge||null;const t=k=>typeAt(k)==='hedge',hl=i%W>0&&t(i-1),hr=i%W<W-1&&t(i+1),m=(hl?1:0)|(hr?2:0)|(t(i-W)?4:0)|(t(i+W)?8:0);return C['hedge:'+m]||null}/* 生け垣は、となりとのつながりの形で（tools/art/hedge/hedge_art.py） */
-  if(id==='nebari')return C['weedc#1']||null;if(id==='hotaru')return C.berry||null;/* 仮の絵：ねばり草はふんばり草、ほたるの草むらは茂みの絵（その上に、しずく・ほたるのドット） */
+  if(id==='nebari')return C['weedc#1']||null;if(id==='hotaru')return C.berry||null;if(id==='drum')return C.taru||null;/* 仮の絵：合図の太鼓は、たるの絵 *//* 仮の絵：ねばり草はふんばり草、ほたるの草むらは茂みの絵（その上に、しずく・ほたるのドット） */
   if(WD===1&&(id==='deadtree'||id==='tree')&&C[id+'~v'])return C[id+'~v'];/* 火山：自然の木も植えた木も、とんがりの木（tools/art/furn3d/items/nat_cedar.py） */
   return C[id]||null}
 function drawFarmChip(c,x,y,i,g,now){const C=window.CHIPS;if(!C)return false;if(ICON||i==null||!S){const ch=C.farm;return !!ch&&drawChip(c,ch,'farm',x,y,now,i)}
