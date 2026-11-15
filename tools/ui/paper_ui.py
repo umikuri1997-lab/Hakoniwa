@@ -299,7 +299,7 @@ def wbtn_css():
     q = lambda sel: ','.join('body.wd0 ' + x.strip() for x in sel.split(','))
     return '\n'.join([
         '/* 草原のボタンは木（板と同じ切りっぱなし。ふつう・大事・えらんだ、と、おしたとき） */',
-        f'{q(".btn,.ctab,.slot,.qbtn,.mtile,.chip,#speedBtn,#pauseBtn,#skipBtn")}{{border-image-source:{w("n")}!important;{sl}}}',
+        f'{q(".btn,.ctab,.slot,.qbtn,.mtile,.chip,#speedBtn,#pauseBtn,#skipBtn,.dock button")}{{border-image-source:{w("n")}!important;{sl}}}',
         f'{q(".btn.pri,.ctab.on,.chip.more,.palA")}{{border-image-source:{w("p")}!important;{sl}}}',
         f'{q(".chip.sel")}{{border-image-source:{w("y")}!important;{sl}}}',
         f'{q(".btn:active,.ctab:active,.slot:active,.mtile:active,.chip:active,#speedBtn:active,#pauseBtn:active,#skipBtn:active,.dock button:active")}{{border-image-source:{w("n", True)}!important;{sl}}}',
@@ -344,8 +344,78 @@ def disk_css():
     ])
 
 
+# ---- 草原のかざり：植物（すみの葉とつる・花）・木札をつるす横木 ----
+SPRIG = [  # すみからのびる、つたの葉3まいと小さな花（22×18）。o 葉のふち・g 葉・l 葉の光・s くき・f 花・c 花のまん中
+    '..............ooo.....',
+    '.............ogllo....',
+    '............ogglgo....',
+    '............oggggo....',
+    '.....oo......oggo.....',
+    '....ogloo.....os......',
+    '...ogglgo....s........',
+    '...oggggo...s.........',
+    '....oggo...s..fff.....',
+    '.....oos..s..fcccf....',
+    '.......s.s...fcccf....',
+    '..oo....ss...fcccf....',
+    '.oglo...s.....fff.....',
+    '.oggos.s..............',
+    '..oo..ss..............',
+    '.....s................',
+    '....s.................',
+    '...s..................',
+]
+VINE = [  # 横木にからむ、つる（32×10。よこにくりかえす）
+    '......oo..................oo....',
+    '.....oggo................oglo...',
+    '....oglgo...............oggo....',
+    '.....oogs..............sgo......',
+    '.......ss.............ss........',
+    'ssss.....sssss....sssss.....ssss',
+    '...........ss....ss.............',
+    '............s.oo.s..............',
+    '.............oggo...............',
+    '..............oo................',
+]
+BEAM = [  # 横木（丸太。32×9、よこにくりかえす）
+    'hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh',
+    'aaaagaaaaaaaaaaaaagggaaaaaaaaaaa',
+    'aaaaaaaaaaagggaaaaaaaaaaaaaagaaa',
+    'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+    'gggaaaaaaaaaaaaaaaaaaaggaaaaaaaa',
+    'aaaaaaaggaaaaaaaaaaaaaaaaaaaaaga',
+    'dddddddddddddddddddddddddddddddd',
+    'eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
+    'ssssssssssssssssssssssssssssssss',
+]
+ROPE = ['ab', 'bc', 'ab', 'bc']  # なわ（2×4、たてにくりかえす。ねじれ）
+
+
+def deco_css():
+    lp = {'o': '#4f8a40', 'g': '#7cc06a', 'l': '#a8dc8c', 's': '#7a5532', 'f': '#fff4f0', 'c': '#f2c94c'}
+    sprig = svg(SPRIG, lp)
+    sprigR = svg([r[::-1] for r in SPRIG], lp)
+    vine = svg(VINE, lp)
+    beam = svg(BEAM, {'h': '#d6a46c', 'a': '#b98551', 'g': '#a8743f', 'd': '#8a5a30', 'e': '#6e4a28', 's': SHADOW})
+    rope = svg(ROPE, {'a': '#c9a36a', 'b': '#a8834f', 'c': '#8a6a45'})
+    pp = 'var(--pp)'
+    return '\n'.join([
+        '/* 草原のかざり：上の欄と画面のすみに植物（つたの葉・小さな花）。下のバーは横木からつるした木札（なわ・つる） */',
+        f'body.wd0 #topUI .hud{{position:relative}}',
+        f'body.wd0 #topUI .hud::before,body.wd0 .sheet:not([data-k="zukan"])::before{{content:"";position:absolute;left:calc({pp}*-5);top:calc({pp}*-6);width:calc({pp}*22);height:calc({pp}*18);background:{sprig} 0 0/100% 100% no-repeat;image-rendering:pixelated;pointer-events:none;z-index:2}}',
+        f'body.wd0 #topUI .hud::after{{content:"";position:absolute;right:calc({pp}*-5);top:calc({pp}*-6);width:calc({pp}*22);height:calc({pp}*18);background:{sprigR} 0 0/100% 100% no-repeat;image-rendering:pixelated;pointer-events:none;z-index:2}}',
+        f'body.wd0 .dock{{position:relative;border-image:none!important;background:none!important;box-shadow:none!important;padding:calc({pp}*20) 4px 4px!important;overflow:visible}}',
+        f'body.wd0 .dock::before{{content:"";position:absolute;left:0;right:0;top:0;height:calc({pp}*9);background:{beam} 0 0/calc({pp}*32) calc({pp}*9) repeat-x;image-rendering:pixelated;pointer-events:none}}',
+        f'body.wd0 .dock::after{{content:"";position:absolute;left:0;right:0;top:calc({pp}*-1);height:calc({pp}*10);background:{vine} calc({pp}*7) 0/calc({pp}*32) calc({pp}*10) repeat-x;image-rendering:pixelated;pointer-events:none}}',
+        f'body.wd0 .dock button,body.wd0 .quest{{position:relative;overflow:visible}}',
+        f'body.wd0 .dock button::before,body.wd0 .dock button::after,body.wd0 .quest::before,body.wd0 .quest::after{{content:"";position:absolute;top:calc({pp}*-13);width:calc({pp}*2);height:calc({pp}*13);background:{rope} 0 0/calc({pp}*2) calc({pp}*4) repeat-y;image-rendering:pixelated;pointer-events:none}}',
+        f'body.wd0 .dock button::before,body.wd0 .quest::before{{left:22%}}body.wd0 .dock button::after,body.wd0 .quest::after{{right:22%}}',
+        f'body.wd0 .quest::before,body.wd0 .quest::after{{top:calc({pp}*-8);height:calc({pp}*8)}}',
+    ])
+
+
 def main():
-    css = '\n'.join([paper_css(), wood_css(), wbtn_css(), disk_css(), board_css(), book_css()])
+    css = '\n'.join([paper_css(), wood_css(), wbtn_css(), disk_css(), deco_css(), board_css(), book_css()])
     s = HTML.read_text()
     b, e = '/* paper-ui:begin */', '/* paper-ui:end */'
     if b not in s:

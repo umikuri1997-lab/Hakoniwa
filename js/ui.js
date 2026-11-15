@@ -19,7 +19,7 @@ function pxi(k,c){return '<svg class="pxi'+(c?' '+c:'')+'" viewBox="0 0 32 32" a
 function rewardPower(n){if(!n)return;S.pt+=n;S.totalPt+=n;toast('ごほうび：パワー+'+n,'good');if(typeof STATUE!=='undefined'&&STATUE>=0)addFloat(STATUE%W+.5,(STATUE/W|0)-1,'+'+n,'#ecdcbc')}
 /* 知らせ：同じ文はまとめて（数をつける）、出すのは2つまで、のこりは順番にまつ（TOASTQ）。大事な物（good・warn）は大きく長く、ほかは短く */
 const TOASTQ=[],TOASTMAX=2,TOASTMS={good:3200,warn:3200,'':2000};
-function toastShow(it){const box=$('#toasts'),t=document.createElement('div');t.className='toast'+(it.kind?' '+it.kind:'');t._msg=it.msg;t._n=it.n;const tx=document.createElement('span');tx.className='ttx';tx.textContent=it.n>1?it.msg+'（'+it.n+'）':it.msg;const fc=typeof toastFace==='function'?toastFace(it.msg,it.kind):null;/* 名前の出るせいれいの顔 */if(fc){t.classList.add('hasface');t.appendChild(fc)}t.appendChild(tx);box.appendChild(t);toastTimer(t,it.kind)}
+function toastShow(it){const box=$('#toasts'),t=document.createElement('div');t.className='toast'+(it.kind?' '+it.kind:'');t._msg=it.msg;t._n=it.n;const tx=document.createElement('span');tx.className='ttx';tx.textContent=it.n>1?it.msg+'（'+it.n+'）':it.msg;const fc=typeof toastFace==='function'?toastFace(it.msg,it.kind):null;/* 名前の出るせいれいの顔 */if(fc){t.classList.add('hasface');t.appendChild(fc)}t.appendChild(tx);box.appendChild(t);if(/たっせい/.test(it.msg)&&typeof uiStamp==='function')uiStamp(t,true);/* たっせいの知らせには、ハンコ */toastTimer(t,it.kind)}
 function toastTimer(t,kind){clearTimeout(t._tm);t._tm=setTimeout(()=>{t.classList.add('out');setTimeout(()=>{t.remove();toastNext()},180)},TOASTMS[kind||'']||2000)}
 function toastNext(){const box=$('#toasts');while(TOASTQ.length&&box.querySelectorAll('.toast:not(.out):not(#playHint)').length<TOASTMAX)toastShow(TOASTQ.shift())}
 function toast(msg,kind){kind=kind||'';const box=$('#toasts');
@@ -665,5 +665,7 @@ function zukanBody(body){
   else{const it=Object.assign({},d.seenIt||{});for(const k in d.mat||{})if(d.mat[k]>0)it['m:'+k]=1;for(const k in d.fs||{})if(d.fs[k]>0)it['f:'+k]=1;
     for(const k in MATN)if(it['m:'+k])add(MATN[k],'素材',ICONS[k]||null);for(const k in FOODS)if(it['f:'+k])add(FOODS[k].name,FOODS[k].fx||'食べ物',foodIc(k));if(it['x:horn'])add('よびごえの角笛',HORNDESC,hornIco());if(it['x:herb'])add('まよけのハーブ',HERBDESC,herbIco())}
   body.appendChild(el('<p class="story">'+list.length+'こ</p>'));
-  for(const q of list){if(!q)continue;rows.appendChild(rowEl(q[0],q[1],q[2]))}
+  const zs=S.flags.zkSeen||(S.flags.zkSeen={});let zn=0;const zNew=(name,e)=>{const k=ZKW+':'+ZKT+':'+name;if(zs[k]||!e)return;zs[k]=1;e.classList.add('stknew');e.style.animationDelay=(Math.min(zn++,8)*.06)+'s'};/* 新しく見つけた物のシールは、ぺたっとはる（1回だけ） */
+  for(const q of list){if(!q)continue;const r=rowEl(q[0],q[1],q[2]);zNew(q[0],r.querySelector('img'));rows.appendChild(r)}
+  for(const z of rows.querySelectorAll('.zk'))zNew(z.querySelector('b').textContent,z.querySelector('canvas'));
   if(!list.length)body.appendChild(nodata('zukan','まだ見つけていないよ'));body.appendChild(rows)}

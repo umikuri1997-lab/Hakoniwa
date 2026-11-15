@@ -48,4 +48,17 @@ function ldWalk(c){const g=c.getContext('2d');g.setTransform(1,0,0,1,0,0);g.clea
   g.setTransform(1,0,0,1,0,0)}
 /* ステージごとのUIの見た目：草原（WD 0）は木のわく（body.wd0）。毎コマよばれるが、かわったときだけさわる */
 let UIWD=null;function uiStageSync(){const w=started&&typeof WD==='number'?WD:-1;if(w===UIWD)return;UIWD=w;document.body.classList.toggle('wd0',w===0)}
+/* つるした木札（草原の下のバー・目標）：タップすると、ぶらんとゆれる */
+function uiSwing(e){if(uiReduced()||!e)return;e.classList.remove('uswing');void e.offsetWidth;e.classList.add('uswing');clearTimeout(e._swT);e._swT=setTimeout(()=>e.classList.remove('uswing'),1050)}
+document.addEventListener('click',e=>{if(!document.body.classList.contains('wd0'))return;const b=e.target&&e.target.closest&&e.target.closest('.dock button,.quest');if(b)uiSwing(b)},true);
+/* ハンコ：たっせいした物（目標の札・知らせ）に、赤い「できた」をポンとおす。2.4秒でうすくなって消える */
+let STAMPC=null;
+function stampCanvas(){if(STAMPC)return STAMPC;const c=document.createElement('canvas');c.width=32;c.height=32;const g=c.getContext('2d'),cx=16,cy=16,R=15;g.fillStyle='#d6453a';
+  for(let y=0;y<32;y++)for(let x=0;x<32;x++){const d=Math.hypot(x+.5-cx,y+.5-cy);if(d<=R&&d>R-2.2&&(x*7+y*3)%11)g.fillRect(x,y,1,1)}/* ふちは、ところどころインクがかすれる */
+  const t=document.createElement('canvas');t.width=32;t.height=32;const h=t.getContext('2d');h.font='10px PixelMplus10';h.textAlign='center';h.textBaseline='middle';h.fillStyle='#d6453a';h.fillText('でき',cx,cy-5);h.fillText('た',cx,cy+6);
+  const d=h.getImageData(0,0,32,32);for(let i=3;i<d.data.length;i+=4)d.data[i]=d.data[i]>110?255:0;h.putImageData(d,0,0);g.drawImage(t,0,0);t.width=t.height=0;/* 字はドットのまま（うすい所はけす） */
+  return STAMPC=c}
+function uiStamp(el,small){if(!el||!el.isConnected)return;const c=document.createElement('canvas');c.width=c.height=32;c.getContext('2d').drawImage(stampCanvas(),0,0);c.className='ustamp'+(small?' s':'');
+  if(getComputedStyle(el).position==='static')el.style.position='relative';el.appendChild(c);setTimeout(()=>{el.classList.remove('ushake');void el.offsetWidth;el.classList.add('ushake')},180);
+  setTimeout(()=>c.classList.add('out'),2400);setTimeout(()=>c.remove(),2850)}
 uiNumWatch();
