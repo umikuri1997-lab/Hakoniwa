@@ -248,46 +248,50 @@ BN = 2 * BS + BM    # 30（たても横も）
 
 
 def wbtn_rows(pressed=False):
-    """板にはめこんだボタン：まわりに2ドットのすきま（みぞ。上と左はかげでこく、下と右はうすい）、中に面（板と同じ高さ）。
-    おしたときは、面の上と左のふちにかげが入って、しずんで見える（あつみ・下のかげはない）"""
+    """ぷくっとふくらんだ木の板のボタン（角は小さく、まるくしすぎない）。こい木のふち、上は光、下はかげ、下に3ドットのあつみ。
+    おしたときは、あつみが1ドットになって、面が2ドット下がり、少しくらくなる（ぺこっとへこむ）"""
     W = H = BN
-    cp = lambda d: PR[d] if d < 4 else 0
-    tI = lambda x: cp(min(x, W - 1 - x))
-    lI = lambda y: cp(min(y, H - 1 - y))
-    ins = lambda x, y: 0 <= x < W and 0 <= y < H and tI(x) <= y <= H - 1 - tI(x) and lI(y) <= x <= W - 1 - lI(y)
-    GAP = 2
-    def kk(x, y):
-        dt, db, dl, dr = y - tI(x), H - 1 - tI(x) - y, x - lI(y), W - 1 - lI(y) - x
-        return min(dt, db, dl, dr), (dt, db, dl, dr)
-    face = lambda x, y: ins(x, y) and kk(x, y)[0] >= GAP
+    TH = 1 if pressed else 3
+    fh = H - 4  # 面の高さ（下に、あつみ3＋かげ1）
+    top = 2 if pressed else 0
+    PRB = [2, 1]
+    cp = lambda d: PRB[d] if d < len(PRB) else 0
+    def face(x, y):
+        y -= top
+        if not (0 <= x < W and 0 <= y < fh): return False
+        return cp(min(x, W - 1 - x)) <= y <= fh - 1 - cp(min(x, W - 1 - x)) and cp(min(y, fh - 1 - y)) <= x <= W - 1 - cp(min(y, fh - 1 - y))
     rows = []
     for y in range(H):
         r = ''
         for x in range(W):
-            if not ins(x, y): r += '.'; continue
-            k, (dt, db, dl, dr) = kk(x, y)
-            if k < GAP:
-                r += 'G' if min(dt, dl) <= min(db, dr) else 'B'; continue  # すきま
-            fx, fy = x - GAP, y - GAP
-            ft, fl = k - GAP if dt == k else 99, k - GAP if dl == k else 99  # 面のふちからの近さ（上・左）
-            fb, fr = k - GAP if db == k else 99, k - GAP if dr == k else 99  # （下・右）
-            top_left = min(ft, fl) < min(fb, fr)
-            e = min(ft, fl, fb, fr)
-            if e <= 2:  # 面のふち3ドットに光とかげの段（ふくらんだ立体。おしたときは光とかげが入れかわって、へこむ）
-                lit = top_left != pressed
-                r += ('h', 'k', 'm')[e] if lit else ('e', 'E', 'F')[e]; continue
-            if not pressed and (fx, fy) in ((3, 3), (4, 3), (3, 4), (5, 3)): r += 'q'; continue  # つや：左上の光
-            r += grain(x % BM, y % BM, BM)
+            if face(x, y):
+                if not (face(x - 1, y) and face(x + 1, y) and face(x, y - 1) and face(x, y + 1)): r += 'o'; continue
+                fy = y - top
+                if pressed:
+                    r += 'E' if fy == 1 else 'F' if fy == 2 else ('e' if fy >= fh - 2 else grain(x % BM, y % BM, BM)); continue
+                if fy == 1: r += 'h'; continue
+                if fy == 2: r += 'k'; continue
+                if fy == 3: r += 'm'; continue
+                if x == 1 and fy < fh - 3: r += 'k'; continue
+                if (x, fy) in ((2, 2), (3, 2), (4, 2)): r += 'q'; continue
+                if fy >= fh - 2: r += 'e' if fy == fh - 2 else 'E'; continue
+                r += grain(x % BM, y % BM, BM); continue
+            below = [face(x, y - d) for d in range(1, TH + 2)]
+            if any(below[:TH]):
+                r += 'b' if (face(x, y - TH) and not face(x, y - 1)) or (TH == 1) else 't'; continue
+            if below[TH]:
+                r += 's'; continue
+            r += '.'
         rows.append(r)
     return rows
 
 
 WBTN = {  # 面・木目・上のふち・下のふち・あつみ・あつみの下
-    'n': {'a': '#e2c18b', 'g': '#dfbe86', 'D': '#dcba82', 'l': '#e4c48f', 'h': '#fbeccf', 'k': '#f2dcb2', 'm': '#e9cf9e',
+    'n': {'o': '#8a5a30', 'a': '#e2c18b', 'g': '#dfbe86', 'D': '#dcba82', 'l': '#e4c48f', 'h': '#fbeccf', 'k': '#f2dcb2', 'm': '#e9cf9e',
           'q': '#fffaf0', 'e': '#b08552', 'E': '#c49a62', 'F': '#d3ad76', 'G': '#a07a4c', 'B': '#c29c6a', 'S': '#c49c66', 't': '#b98a52', 'b': '#8a5a30', 's': SHADOW},
-    'p': {'a': '#b98551', 'g': '#b4804c', 'D': '#b17e4c', 'l': '#bc8854', 'h': '#dcaa72', 'k': '#d29f68', 'm': '#c4915c',
+    'p': {'o': '#5e3d22', 'a': '#b98551', 'g': '#b4804c', 'D': '#b17e4c', 'l': '#bc8854', 'h': '#dcaa72', 'k': '#d29f68', 'm': '#c4915c',
           'q': '#f6d6aa', 'e': '#7e5430', 'E': '#946238', 'F': '#a67244', 'G': '#6e4a28', 'B': '#8a5a30', 'S': '#8f5f34', 't': '#7e5430', 'b': '#5e3d22', 's': SHADOW},
-    'y': {'a': '#f0cf86', 'g': '#edcb80', 'D': '#eac87d', 'l': '#f2d28a', 'h': '#fdecc4', 'k': '#fbe6b4', 'm': '#f6dca0',
+    'y': {'o': '#9a6a20', 'a': '#f0cf86', 'g': '#edcb80', 'D': '#eac87d', 'l': '#f2d28a', 'h': '#fdecc4', 'k': '#fbe6b4', 'm': '#f6dca0',
           'q': '#fffdf0', 'e': '#c4943f', 'E': '#d6aa58', 'F': '#e3bc6a', 'G': '#a07a4c', 'B': '#c29c6a', 'S': '#d0a453', 't': '#b98a3a', 'b': '#7a5218', 's': SHADOW},
 }
 
@@ -302,31 +306,54 @@ def wbtn_css():
         f'{q(".btn,.ctab,.slot,.qbtn,.mtile,.chip,#speedBtn,#pauseBtn,#skipBtn")}{{border-image-source:{w("n")}!important;{sl}}}',
         f'{q(".btn.pri,.ctab.on,.chip.more,.palA")}{{border-image-source:{w("p")}!important;{sl}}}',
         f'{q(".chip.sel")}{{border-image-source:{w("y")}!important;{sl}}}',
-        f'{q(".btn:active,.ctab:active,.slot:active,.mtile:active,.chip:active,#speedBtn:active,#pauseBtn:active,#skipBtn:active,.dock button:active")}{{border-image-source:{w("n", True)}!important;{sl}}}',
-        f'{q(".btn.pri:active,.ctab.on:active,.chip.more:active,.dock button.on,.dock button.on:active")}{{border-image-source:{w("p", True)}!important;{sl}}}',
+        f'{q(".btn:active,.ctab:active,.slot:active,.mtile:active,.chip:active,#speedBtn:active,#pauseBtn:active,#skipBtn:active")}{{border-image-source:{w("n", True)}!important;{sl}}}',
+        f'{q(".btn.pri:active,.ctab.on:active,.chip.more:active")}{{border-image-source:{w("p", True)}!important;{sl}}}',
     ])
 
 
 # ---- 草原の丸いボタン（とじるボタン・守りの光）：切りっぱなしの丸い木（木目・下に2ドットのあつみ） ----
 def disk_rows(N, rim=True):
-    """板にはめこんだ丸いボタン：まわりに2ドットのすきま（上がわはかげでこい）、中に木の面"""
-    c, R = N / 2, N / 2
-    dist = lambda x, y: ((x + .5 - c) ** 2 + (y + .5 - c) ** 2) ** .5
-    inside = lambda x, y: 0 <= x < N and 0 <= y < N and dist(x, y) <= R
-    face = lambda x, y: inside(x, y) and dist(x, y) <= R - 2
+    """すこしベベルした木の円柱（上から少し見おろした形）：上の面は丸く、こい木のふち、ふちの2ドットがななめに落ちる面（左上は光・右下はかげ）、
+    下に円柱の側面（あつみ）。光は、ふちにそった、とぎれない弧だけ（点の光はつけない）"""
+    import math
+    TH = 2 if N < 30 else 4  # 側面のあつみ
+    r = (N - TH) / 2
+    cx, cy = N / 2, r
+    d = lambda x, y, oy=0: ((x + .5 - cx) ** 2 + (y + .5 - cy - oy) ** 2) ** .5
+    top = lambda x, y: 0 <= x < N and 0 <= y < N and d(x, y) <= r
+    side = lambda x, y: any(d(x, y, k) <= r for k in range(1, TH + 1))
+    # ふちからの段（0 がこいふち、1・2… が内がわ）
+    ring = {}
+    for y in range(N):
+        for x in range(N):
+            if top(x, y) and not (top(x - 1, y) and top(x + 1, y) and top(x, y - 1) and top(x, y + 1)): ring[x, y] = 0
+    BV = 2 if N < 30 else 3  # ベベルのはば
+    for k in range(1, BV + 1):
+        for y in range(N):
+            for x in range(N):
+                if top(x, y) and (x, y) not in ring and any(ring.get(q) == k - 1 for q in ((x - 1, y), (x + 1, y), (x, y - 1), (x, y + 1))): ring[x, y] = k
     rows = []
     for y in range(N):
-        r = ''
+        o = ''
         for x in range(N):
-            if not inside(x, y): r += '.'; continue
-            if not face(x, y): r += 'G' if (x + .5 - c) + (y + .5 - c) < 0 else 'B'; continue  # すきま
-            d = dist(x, y); e = int((R - 2) - d)
-            if e <= 2:  # 面のふち3ドットに光とかげの段（左上が光、右下がかげ）
-                lit = (x + .5 - c) + (y + .5 - c) < 0
-                r += ('h', 'k', 'm')[max(0, e)] if lit else ('e', 'E', 'F')[max(0, e)]
-            elif (x + .5 - c + R * .42) ** 2 + (y + .5 - c + R * .42) ** 2 < (R * .08) ** 2: r += 'q'  # つや：左上の光
-            else: r += grain(x, y, 64)
-        rows.append(r)
+            if top(x, y):
+                k = ring.get((x, y))
+                if k == 0: o += 'o'; continue
+                if k is not None:
+                    a = math.degrees(math.atan2(y + .5 - cy, x + .5 - cx))  # -135 が左上
+                    t = abs(((a + 135) + 180) % 360 - 180)  # 左上からの角度 0〜180
+                    if t < 50: o += 'h' if k == 1 else 'k'
+                    elif t < 95: o += 'k' if k == 1 else 'm'
+                    elif t < 130: o += 'm' if k == 1 else grain(x, y, 64)
+                    else: o += 'E' if k == 1 else 'F'
+                    continue
+                o += grain(x, y, 64); continue
+            if side(x, y):
+                edge = not side(x, y + 1) or not (side(x - 1, y) or top(x - 1, y)) or not (side(x + 1, y) or top(x + 1, y))
+                o += 'b' if edge else ('e' if x + .5 < cx else 't')
+                continue
+            o += '.'
+        rows.append(o)
     return rows
 
 
@@ -344,8 +371,115 @@ def disk_css():
     ])
 
 
+# ---- 草原のかざり：植物（すみの葉とつる・花）・木札をつるす横木 ----
+IVY = [  # 左上：すみから下へたれる、つた（20×34）。o 葉のふち・g 葉・l 葉の光・s くき
+    '.............ooo....',
+    '............ogglo...',
+    '...........sogggo...',
+    '..........s..ooo....',
+    '....oo...s..........',
+    '...oglo.s...........',
+    '...oggos............',
+    '....ooss............',
+    '......s.............',
+    '.....s..............',
+    '....s.oo............',
+    '....soglo...........',
+    '...s.oggo...........',
+    '..oo..oo............',
+    '.oglo...............',
+    '.oggos..............',
+    '..oo.s..............',
+    '.....s..............',
+    '....s...............',
+    '....s.oo............',
+    '....soglo...........',
+    '.....oggo...........',
+    '.....soo............',
+    '....s...............',
+    '...os...............',
+    '..oglo..............',
+    '..oggo..............',
+    '...oo...............',
+]
+BLOOM = [  # 右上：花のかたまり（22×16）。p 花・P 花のかげ・c 花のまん中・w 白い花・b つぼみ・o g l s は葉とくき
+    '....ppp...............',
+    '...pPcpp..www.........',
+    '...ppccP.wwcww........',
+    '....pPp..wcccw........',
+    '..oo.s....wcw...bb....',
+    '.ogloss....s...bpb....',
+    '.oggo..ss.s.ss..b.....',
+    '..oo.....sss..s.s.....',
+    '..........s....s......',
+    '......ooo.s.ooo.......',
+    '.....ogglsooglo.......',
+    '......oggogggo........',
+    '.......ooooo..........',
+    '..........s...........',
+    '..........s...........',
+    '..........s...........',
+]
+SPRIG = BLOOM
+VINE = [  # 横木にからむ、つる（32×10。よこにくりかえす）
+    '......oo..................oo....',
+    '.....oggo................oglo...',
+    '....oglgo...............oggo....',
+    '.....oogs..............sgo......',
+    '.......ss.............ss........',
+    'ssss.....sssss....sssss.....ssss',
+    '...........ss....ss.............',
+    '............s.oo.s..............',
+    '.............oggo...............',
+    '..............oo................',
+]
+BEAM = [  # 横木（丸太。32×9、よこにくりかえす）
+    'hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh',
+    'aaaagaaaaaaaaaaaaagggaaaaaaaaaaa',
+    'aaaaaaaaaaagggaaaaaaaaaaaaaagaaa',
+    'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+    'gggaaaaaaaaaaaaaaaaaaaggaaaaaaaa',
+    'aaaaaaaggaaaaaaaaaaaaaaaaaaaaaga',
+    'dddddddddddddddddddddddddddddddd',
+    'eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
+    'ssssssssssssssssssssssssssssssss',
+]
+ROPE = ['ab', 'bc', 'ab', 'bc']  # なわ（2×4、たてにくりかえす。ねじれ）
+
+
+def deco_css():
+    lp = {'o': '#4f8a40', 'g': '#7cc06a', 'l': '#a8dc8c', 's': '#7a5532', 'f': '#fff4f0', 'c': '#f2c94c',
+          'p': '#f4a7b9', 'P': '#e07f98', 'w': '#fffaf2', 'b': '#e88aa2'}
+    ivy = svg(IVY, lp)
+    bloom = svg(BLOOM, lp)
+    vine = svg(VINE, lp)
+    beam = svg(BEAM, {'h': '#d6a46c', 'a': '#b98551', 'g': '#a8743f', 'd': '#8a5a30', 'e': '#6e4a28', 's': SHADOW})
+    rope = svg(ROPE, {'a': '#c9a36a', 'b': '#a8834f', 'c': '#8a6a45'})
+    tag = svg(wood_rows(), {'a': '#e6cb99', 'g': '#e2c693', 'D': '#dec18d', 'l': '#ead0a2', 'h': '#f4e1bd',
+                            'w': '#b98a52', 'd': '#8a5a30', 'k': '#efd8ae', 'q': '#f8ead0', 's': SHADOW})  # 下の木札：パネルより少しこい、切りっぱなしの板
+    pp = 'var(--pp)'
+    return '\n'.join([
+        '/* 草原のかざり：上の欄と画面のすみに植物（つたの葉・小さな花）。下のバーは横木からつるした木札（なわ・つる） */',
+        f'body.wd0 #topUI .hud{{position:relative}}',
+        f'body.wd0 #topUI .hud::before{{content:"";position:absolute;left:calc({pp}*-6);top:calc({pp}*-5);width:calc({pp}*20);height:calc({pp}*28);background:{ivy} 0 0/100% 100% no-repeat;image-rendering:pixelated;pointer-events:none;z-index:2}}',
+        f'body.wd0 #topUI .hud::after,body.wd0 .sheet:not([data-k="zukan"])::before{{content:"";position:absolute;right:calc({pp}*-4);top:calc({pp}*-7);width:calc({pp}*22);height:calc({pp}*16);background:{bloom} 0 0/100% 100% no-repeat;image-rendering:pixelated;pointer-events:none;z-index:2}}',
+        f'body.wd0 .sheet:not([data-k="zukan"])::before{{right:auto;left:calc({pp}*8)}}',
+        f'body.wd0 .dock{{position:relative;border-image:none!important;background:none!important;box-shadow:none!important;padding:calc({pp}*20) 4px 4px!important;overflow:visible}}',
+        f'body.wd0 .dock::before{{content:"";position:absolute;left:calc(50% - 50vw);width:100vw;top:0;height:calc({pp}*9);background:{beam} 0 0/calc({pp}*32) calc({pp}*9) repeat-x;image-rendering:pixelated;pointer-events:none}}',
+        f'body.wd0 .dock::after{{content:"";position:absolute;left:calc(50% - 50vw);width:100vw;top:calc({pp}*-1);height:calc({pp}*10);background:{vine} calc({pp}*7) 0/calc({pp}*32) calc({pp}*10) repeat-x;image-rendering:pixelated;pointer-events:none}}',
+        f'body.wd0 .dock button,body.wd0 .quest{{position:relative;overflow:visible}}',
+        f'body.wd0 .dock button{{border:solid transparent!important;border-width:calc({pp}*3)!important;border-image:{tag} 5 5 6 5 fill/calc({pp}*5) calc({pp}*5) calc({pp}*6) round!important;background:none!important;color:#86715a!important;transform:none}}',
+        f'body.wd0 .dock button.on{{color:#4a2a12!important;filter:saturate(1.15) brightness(1.03);margin-top:calc({pp}*3);text-shadow:1.5px 0 0 rgba(140,90,40,.3),-1.5px 0 0 rgba(140,90,40,.3),0 1.5px 0 rgba(255,236,200,.7)}}',
+        f'body.wd0 .dock button.on svg.pxi{{fill:#4a2a12!important}}',
+        f'body.wd0 .dock button::before,body.wd0 .dock button::after,body.wd0 .quest::before,body.wd0 .quest::after{{content:"";position:absolute;top:calc({pp}*-16);width:calc({pp}*2);height:calc({pp}*19);background:linear-gradient(transparent calc(100% - {pp}*2),#5e3d22 0),{rope} 0 0/calc({pp}*2) calc({pp}*4) repeat-y;image-rendering:pixelated;pointer-events:none;z-index:1}}',
+        f'body.wd0 .dock button::before,body.wd0 .quest::before{{left:22%}}body.wd0 .dock button::after,body.wd0 .quest::after{{right:22%}}',
+        f'body.wd0 .quest::before,body.wd0 .quest::after{{top:calc({pp}*-8);height:calc({pp}*11)}}',
+        f'body.wd0 .dock button.on::before,body.wd0 .dock button.on::after{{top:calc({pp}*-19);height:calc({pp}*22)}}',
+    ])
+
+
 def main():
-    css = '\n'.join([paper_css(), wood_css(), wbtn_css(), disk_css(), board_css(), book_css()])
+    css = '\n'.join([paper_css(), wood_css(), wbtn_css(), disk_css(), deco_css(), board_css(), book_css()])
     s = HTML.read_text()
     b, e = '/* paper-ui:begin */', '/* paper-ui:end */'
     if b not in s:
