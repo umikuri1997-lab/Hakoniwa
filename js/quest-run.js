@@ -1,6 +1,6 @@
 'use strict';
 function kurashi(key,mt){if(!S)return;const K=S.kb||(S.kb={done:{}});if(K.done[key])return;K.done[key]=1;if(mt)memo(mt[0],mt[1]);}/* 暮らしボーナスはなし（思い出帳のメモだけ） */
-function logEv(t){if(!S.log)S.log=[];S.log.push([dayNo(),t]);if(S.log.length>300)S.log.shift()}
+function logEv(t){dyEv(t);if(!S.log)S.log=[];S.log.push([dayNo(),t]);if(S.log.length>300)S.log.shift()}
 function checkQuest(){
   if(sacredQuietActive())return;
   if(S.flags.qsplitPend||S.flags.qsplitStory)questSplitResolve();

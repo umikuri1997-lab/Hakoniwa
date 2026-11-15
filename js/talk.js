@@ -14,7 +14,7 @@ function dayNote(r,a){if(!r||!a||IS_STORY_REPLAY)return;let v='';const t=a.type;
   else if(t==='plant'){const d=S.dyn[a.obj];v=d&&d.plant||'';if(!BL[v])return}
   else if(t==='admire'){v=S.obj[a.obj]||'';if(!BL[v])return}
   else if(!['fish','bathe','critwatch','sunset','rainjoy','chop','mine','weed','water','till','repair','ownseat'].includes(t))return;
-  const d=callDay();if(!r.dl||r.dl.d!==d)r.dl={d,e:[]};const E=r.dl.e;for(let i=E.length-1;i>=0;i--)if(E[i][0]===t&&E[i][1]===v)E.splice(i,1);E.push([t,v]);if(E.length>DLMAX)E.shift()}
+  const d=callDay();if(!r.dl||r.dl.d!==d)r.dl={d,e:[]};const E=r.dl.e;for(let i=E.length-1;i>=0;i--)if(E[i][0]===t&&E[i][1]===v)E.splice(i,1);E.push([t,v]);if(E.length>DLMAX)E.shift();dyWork(r,t,v)}
 const dlToday=r=>r.dl&&r.dl.d===callDay()?r.dl.e:[];
 const tName=id=>BL[id]?BL[id].name:FOODS[id]?FOODS[id].name:CROPS[id]?CROPS[id].name:LIKES[id]||'',fName=id=>FOODS[id]?FOODS[id].name:CROPS[id]?CROPS[id].name:tName(id);/* 食べ物は、食べ物の名前（ベリーの茂みでなく、ベリー） */
 /* お話のセリフ。どれも、そのせいれい（ぼく・〜だよ・〜ね）の言いかたで書き、chatTone でその子の口調にする。
