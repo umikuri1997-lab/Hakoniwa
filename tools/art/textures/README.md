@@ -12,3 +12,5 @@
   取ってきた所：GitHub にある写し（spatigen/espire の `espire/data/assets/Textures/ceiling/Plaster001_1K-PNG_Color.png`。Git LFS の中身の sha256 が 77967887…49d1b00 と同じことをたしかめた）。ファイルの形だけ、そのままの色で PNG に書きなおした。
 - `metal032.png`：ambientCG「Metal032」の色の絵（1K、https://ambientcg.com/view?id=Metal032 、CC0 1.0）。金属の板・鉄（灯台の屋根・枠・手すり、風車の屋根。部品に `p.mtex=True`）。
   取ってきた所：GitHub にある写し（CC-Open-Learning/DLX-paramedic-ambulance の `Assets/Easter Eggs/Metal032_1K-PNG_Color.png`。Git LFS の中身の sha256 が 74b8db4a…b39cfde と同じことをたしかめた）。ファイルの形だけ、そのままの色で PNG に書きなおした。
+- `paper005.png`：ambientCG「Paper005」の色の絵（1K、https://ambientcg.com/view?id=Paper005 、CC0 1.0）。依頼の紙の柄（`tools/ui/paper_ui.py` の `ptex_rows` が、ドットにちぢめて `index.html` に書きこむ）。
+  取ってきた所：GitHub にある写し（bucekpet/Dungeon-platformer の `Textures/paper/Paper005_1K-JPG_Color.jpg`。中身の sha256 は 128d5ba1…）。ネットの制限で ambientcg.com から直接は取れなかった。ファイルの形だけ、そのままの色で PNG に書きなおした。

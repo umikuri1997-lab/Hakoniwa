@@ -31,7 +31,7 @@ function tapFx(x,y){if(uiReduced())return;const fire=WD===1,n=fire?6:5;let box=d
     const a=Math.PI*2*i/n+Math.random()*.6,sp=1+Math.random()*1.4;UIFX.parts.push({d,x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-(fire?1.8:1.2),t:0,fire,ph:i})}
   sfx(fire?'crackle':'leaf');if(!UIFX.raf)UIFX.raf=requestAnimationFrame(tapFxStep)}
 function tapFxStep(){UIFX.raf=0;const P=UIFX.parts;for(let i=P.length-1;i>=0;i--){const p=P[i];p.t++;p.x+=p.vx;p.y+=p.vy;
-    if(p.dust){p.vy+=.14;p.vx*=.94}else if(p.fire){p.vy-=.03;p.vx*=.97}else{p.vy+=.05;p.vx*=.96;p.x+=Math.sin(p.t*.2+p.ph)*.5}/* 火の粉はのぼり、葉はゆれながら落ちる */
+    if(p.smoke){p.vy*=.97;p.vx+=Math.sin(p.t*.25+p.ph)*.04}else if(p.dust){p.vy+=.14;p.vx*=.94}else if(p.fire){p.vy-=.03;p.vx*=.97}else{p.vy+=.05;p.vx*=.96;p.x+=Math.sin(p.t*.2+p.ph)*.5}/* 火の粉はのぼり、葉はゆれながら落ちる */
     p.d.style.transform='translate('+Math.round(p.x/1.5)*1.5+'px,'+Math.round(p.y/1.5)*1.5+'px)';if(p.t>32)p.d.style.opacity=String(Math.max(0,(48-p.t)/16));if(p.t>=48){p.d.remove();P.splice(i,1)}}
   if(P.length)UIFX.raf=requestAnimationFrame(tapFxStep)}
 /* 知らせに名前が出るせいれいがいれば、その顔（よい知らせはにっこり・注意はおどろき） */
@@ -82,7 +82,8 @@ function uiStamp(el,small){if(!el||!el.isConnected)return;const c=document.creat
 /* スマホのふるえ（Android。iPhone のブラウザはふるえない）。設定の「ふるえ」でとめられる */
 function buzz(ms){if(SND.vib===false||!navigator.vibrate)return;try{navigator.vibrate(ms)}catch(e){}}
 /* タブをおしたら、めくる音（そのタブのボタンの音のかわり。audio.js の SFXTAB） */
-document.addEventListener('click',e=>{const t=e.target&&e.target.closest&&e.target.closest('.ctab');if(!t)return;SFXTAB=1;SFXTABD=0;setTimeout(()=>{if(!SFXTABD)sfx('tab');SFXTAB=0},0)},true);
+document.addEventListener('click',e=>{const t=e.target&&e.target.closest&&e.target.closest('.ctab');if(!t)return;const flip=document.body.classList.contains('wd0')&&!uiReduced()&&t.closest('.ctabs')&&!t.closest('.pxcard')&&!t.closest('.sheet[data-k="zukan"]');/* 草原で札がくるっとまわるタブは、その音（flip）だけ */
+  SFXTAB=flip?2:1;SFXTABD=0;setTimeout(()=>{if(!SFXTABD&&!flip)sfx('tab');SFXTAB=0},0)},true);
 /* ±のボタン：長くおすと、くりかえし数がかわり、だんだん速くなる（かち、かち、かちかちかち） */
 const REP={b:null,t:0,n:0,done:0,inC:0},REPSEL='.btn.m,.btn.p';
 function repStop(){clearTimeout(REP.t);REP.b=null}
@@ -92,13 +93,14 @@ for(const ev of['pointerup','pointercancel'])document.addEventListener(ev,repSto
 document.addEventListener('click',e=>{if(REP.inC||!REP.done)return;const b=e.target&&e.target.closest&&e.target.closest(REPSEL);if(b){REP.done=0;e.stopPropagation();e.preventDefault()}},true);/* くりかえしたあと、指をはなしたときの1回はかぞえない */
 /* おしこむ深さ：0.28秒より長くおすと、もう1ドット深くしずむ。はなすと、大きくはねて「ぽよん」（長くおすほど高い） */
 const DEEP={b:null,t0:0,tm:0,rep:0},DEEPT=280,PRESSSEL='.btn,.ctab,.slot,.qbtn,.mtile,.chip,#speedBtn,#pauseBtn,#skipBtn,.dock button';
-document.addEventListener('pointerdown',e=>{const b=e.target&&e.target.closest&&e.target.closest(PRESSSEL);if(!b||b.disabled)return;buzz(6);DEEP.b=b;DEEP.t0=performance.now();DEEP.rep=0;clearTimeout(DEEP.tm);DEEP.tm=setTimeout(()=>{if(DEEP.b===b&&!uiReduced())b.classList.add('udeep')},DEEPT)},true);
+document.addEventListener('pointerdown',e=>{const b=e.target&&e.target.closest&&e.target.closest(PRESSSEL);if(!b||b.disabled)return;buzz(6);if(holdOn(b))return;/* おしつづけて決めるボタンは、焼き印のほう */DEEP.b=b;DEEP.t0=performance.now();DEEP.rep=0;clearTimeout(DEEP.tm);DEEP.tm=setTimeout(()=>{if(DEEP.b===b&&!uiReduced())b.classList.add('udeep')},DEEPT)},true);
 for(const ev of['pointerup','pointercancel'])document.addEventListener(ev,e=>{const b=DEEP.b;if(!b)return;DEEP.b=null;clearTimeout(DEEP.tm);const held=performance.now()-DEEP.t0,deep=b.classList.contains('udeep');b.classList.remove('udeep');
   if(ev!=='pointerup'||!deep||DEEP.rep||held<DEEPT||uiReduced())return;if(document.body.classList.contains('wd0')&&b.closest('.dock'))return;/* 草原の下のバーは、つるした木札（ゆれる） */
   b.classList.remove('uboing','uboing2');void b.offsetWidth;b.classList.add('uboing2');clearTimeout(b._bo2);b._bo2=setTimeout(()=>b.classList.remove('uboing2'),480);SFXR=1+Math.min(1,(held-DEEPT)/900)*.6;try{sfx('boing')}finally{SFXR=1}},true);
 /* 下のシートを開いたとき：行が上から1つずつ、ことっと置かれる（見えている所の10行まで） */
 function uiRowsIn(){if(uiReduced())return;const b=document.getElementById('sheetBody');if(!b)return;const L=[];
-  for(const c of b.children){const rs=[...c.children].filter(e=>e.matches('.row,.mtile,.slot,.mtag,label,.zk'));if(rs.length>2)L.push(...rs);else L.push(c)}/* 一覧・タイルのならびは、1つずつ */
+  for(const c of b.children){const rs=[...c.children].filter(e=>e.matches('.row,.mtile,.slot,.mtag,label,.zk'));if(rs.length>2)L.push(...rs);else L.push(c)}
+  if(document.body.classList.contains('wd0'))for(let i=L.length-1;i>=0;i--)if(L[i].matches('.mtile')||L[i].querySelector('.mtile'))L.splice(i,1);/* 草原のメニューの板は「とん、とん」（tileStagger）のほう *//* 一覧・タイルのならびは、1つずつ */
   const top=b.getBoundingClientRect().top,Hh=b.clientHeight,base=document.body.classList.contains('wd0')?150:60;let i=0;
   for(const c of L){if(i>=10)break;if(!c.offsetHeight)continue;if(c.getBoundingClientRect().top-top>Hh)break;const d=base+i*55,k=i;c.style.animationDelay=d+'ms';c.classList.add('urow');setTimeout(()=>{if(!c.isConnected)return;SFXR=1.05+k*.035;try{sfx('rowin')}finally{SFXR=1}},d);setTimeout(()=>{c.classList.remove('urow');c.style.animationDelay=''},d+300);i++}}
 /* 一覧のはしまでスクロールすると、板が少したわんで、もどる（1ドットずつ） */
@@ -116,3 +118,41 @@ document.addEventListener('wheel',e=>{const el=e.target&&e.target.closest&&e.tar
 /* 村レベルのゲージがたまると、とくとく */
 function uiGaugeWatch(){const e=document.getElementById('xpBar');if(!e)return;let pv=parseFloat(e.style.width)||0,lt=0;new MutationObserver(()=>{const v=parseFloat(e.style.width)||0,p=pv;pv=v;if(!(v>p)||!started)return;const n=performance.now();if(n-lt<600)return;lt=n;sfx('glug')}).observe(e,{attributes:true,attributeFilter:['style']})}
 uiNumWatch();uiGaugeWatch();
+/* 草原：メニュー・一覧をひらくと、ボタンの板が1まいずつ「とん、とん」と置かれる（kotonn と同じ動き。CSS の tontile と、おくれ --ti）。音は板が置かれる瞬間に */
+document.addEventListener('animationstart',e=>{if(e.animationName==='tontile'&&!uiReduced())setTimeout(()=>sfx('tile'),90)});
+function tileStagger(root){if(!document.body.classList.contains('wd0')||uiReduced()||!root)return;const L=root.querySelectorAll('.mtile');let i=0;for(const b of L){if(i>=12)break;b.style.setProperty('--ti',(i*45)+'ms');b.classList.remove('utile');void b.offsetWidth;b.classList.add('utile');i++}}
+function tileWatch(){const b=document.getElementById('sheetBody');if(!b)return;new MutationObserver(()=>{const n=b.querySelectorAll('.mtile').length,k=n?n+'|'+(b.firstElementChild?b.firstElementChild.textContent.slice(0,20):''):0;if(k!==b._tileN){b._tileN=k;if(n)tileStagger(b)}}).observe(b,{childList:true})}/* 下のシートの中身がかわったときだけ */
+/* 草原：タブをかえると、中の板が、札をひっくり返すように、くるっとまわって中身がかわる（タブのならび .ctabs のあとの物。図鑑の本はのぞく） */
+document.addEventListener('click',e=>{const t=e.target&&e.target.closest&&e.target.closest('.ctabs .ctab');if(!t||!document.body.classList.contains('wd0')||uiReduced()||t.closest('.pxcard')||t.closest('.sheet[data-k="zukan"]'))return;
+  sfx('flip');requestAnimationFrame(()=>{const tb=document.querySelector('#sheetBody .ctabs');if(!tb)return;let n=tb.nextElementSibling;while(n){n.classList.remove('uflip');void n.offsetWidth;n.classList.add('uflip');n=n.nextElementSibling}})},true);
+/* 草原：もどせない決定（data-hold のボタン）は、おしつづけると、焼き印のこげ色がたまって「じゅっ」と決まる（0.7秒）。ふつうのタップでは決まらない */
+const HOLDMS=700;
+function holdOn(b){return b&&b.dataset&&b.dataset.hold&&document.body.classList.contains('wd0')}
+document.addEventListener('pointerdown',e=>{const b=e.target&&e.target.closest&&e.target.closest('[data-hold]');if(!holdOn(b)||b.disabled)return;b.classList.add('holding');b.style.setProperty('--hold',HOLDMS+'ms');
+  clearTimeout(b._hT);b._hT=setTimeout(()=>{b.classList.remove('holding');b._held=1;sfx('sizzle');b.classList.add('branded');setTimeout(()=>b.classList.remove('branded'),400);b.click();b._held=0},HOLDMS)},true);
+for(const ev of['pointerup','pointercancel','pointerleave'])document.addEventListener(ev,e=>{const b=e.target&&e.target.closest&&e.target.closest('[data-hold]');if(!b||!b._hT)return;if(b.classList.contains('holding')){clearTimeout(b._hT);b._hT=0;b.classList.remove('holding')}},true);
+document.addEventListener('click',e=>{const b=e.target&&e.target.closest&&e.target.closest('[data-hold]');if(!holdOn(b)||b._held)return;e.preventDefault();e.stopImmediatePropagation();toast('おしつづけて決めよう')},true);
+/* 草原：ゲージがふえるときは、はちみつのように、とろっとのびて、さきが少しゆれて止まる（gwob） */
+function gaugeWatch(){for(const id of['xpBar','foodBar','matBar']){const i=document.getElementById(id);if(!i)continue;let p=parseFloat(i.style.width)||0;
+  new MutationObserver(()=>{const v=parseFloat(i.style.width)||0;if(v>p+.5&&document.body.classList.contains('wd0')&&!uiReduced()){const g=i.parentElement;g.classList.remove('gwob');void g.offsetWidth;g.classList.add('gwob');clearTimeout(g._gT);g._gT=setTimeout(()=>g.classList.remove('gwob'),1400)}p=v}).observe(i,{attributes:true,attributeFilter:['style']})}}
+
+/* 草原：一覧を指でなでると、行の板が通りすぎるたびに、木琴の音（行ごとに音の高さがかわる。1行は約40px） */
+document.addEventListener('scroll',e=>{const el=e.target;if(!el||!el.closest||!el.closest('#sheetWrap')||!document.body.classList.contains('wd0'))return;const k=Math.floor(el.scrollTop/40);if(el._xyl===undefined)el._xyl=0;
+  if(k!==el._xyl){XYLN=((k%8)+8)%8;el._xyl=k;sfx('xyl')}},true);
+/* 草原：村レベルが上がったら、上の欄の数に、新しい数が焼き印で「じゅっ」とおされて、けむりがたつ */
+function smoke(x,y,n){if(uiReduced())return;let box=document.getElementById('tapFx');if(!box){box=document.createElement('div');box.id='tapFx';document.body.appendChild(box)}
+  const cols=['#d8cfc0','#c4baa9','#ece4d6'];for(let i=0;i<n&&UIFX.parts.length<40;i++){const d=document.createElement('i'),sz=(i%2?3:1.5);d.style.width=d.style.height=sz+'px';d.style.background=cols[i%3];box.appendChild(d);
+    UIFX.parts.push({d,x:x+(Math.random()-.5)*8,y,vx:(Math.random()-.5)*.4,vy:-.5-Math.random()*.5,t:-i*3,smoke:1,ph:i})}if(!UIFX.raf)UIFX.raf=requestAnimationFrame(tapFxStep)}
+function lvWatch(){const e=document.getElementById('lvLbl');if(!e)return;let p=parseInt(e.textContent,10);new MutationObserver(()=>{const v=parseInt(e.textContent,10);
+  if(v>p&&started&&document.body.classList.contains('wd0')&&!uiReduced()){e.classList.remove('ubrand');void e.offsetWidth;e.classList.add('ubrand');sfx('sizzle');const q=e.getBoundingClientRect();smoke(q.left+q.width/2,q.top,7);clearTimeout(e._bT);e._bT=setTimeout(()=>e.classList.remove('ubrand'),1000)}p=v}).observe(e,{childList:true,characterData:true,subtree:true})}
+/* 草原：下のシートをとじるとき、板が少しうきあがってから、下へすべっていく（とじた画面の写しを動かす。本物は、すぐとじる） */
+function sheetGhost(){if(!document.body.classList.contains('wd0')||uiReduced())return;const w=document.getElementById('sheetWrap');if(!w||w.hidden)return;const s=w.querySelector('.sheet');if(!s)return;
+  const g=w.cloneNode(true);/* 同じ id の写しは、本物のすぐあとに置くので、id でさがすと本物が先に見つかる */
+  const cs=w.querySelectorAll('canvas'),cg=g.querySelectorAll('canvas');cs.forEach((c,i)=>{try{if(cg[i]&&c.width)cg[i].getContext('2d').drawImage(c,0,0)}catch(e){}});
+  g.classList.add('ughostw');g.style.pointerEvents='none';const gs=g.querySelector('.sheet');gs.classList.add('ughost');const gb=g.querySelector('.sheet [id="sheetBody"]');
+  w.after(g);if(gb)gb.scrollTop=(w.querySelector('#sheetBody')||{}).scrollTop||0;setTimeout(()=>g.remove(),300)}
+/* 草原：依頼ボードの新しい紙は、ぺたっとおかれて、赤いピンがぷすっとささる（このページをひらいてから、新しくたのんだ依頼だけ） */
+let PINMAX=null;function boardPinFx(bd){const ps=[...bd.querySelectorAll('.paper[data-oid]')],ids=ps.map(p=>+p.dataset.oid);if(PINMAX===null){PINMAX=Math.max(-1,...ids);return}
+  let hit=false;for(const p of ps)if(+p.dataset.oid>PINMAX&&document.body.classList.contains('wd0')&&!uiReduced()){p.classList.add('upin');hit=true}PINMAX=Math.max(PINMAX,...ids);if(hit)setTimeout(()=>sfx('pin'),60)}
+
+if(document.readyState!=='loading'){gaugeWatch();tileWatch();lvWatch()}else document.addEventListener('DOMContentLoaded',()=>{gaugeWatch();tileWatch();lvWatch()});

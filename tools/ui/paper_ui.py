@@ -120,6 +120,119 @@ def cork_rows():
     return [''.join(r) for r in g]
 
 
+PAPERTEX = pathlib.Path(__file__).resolve().parent.parent / 'art' / 'textures' / 'paper005.png'
+
+
+def ptex_rows(T=96):
+    """依頼の紙の柄：CC0 の紙のテクスチャ（ambientCG Paper005）を T×T にちぢめ（BOX）、こさを4つ（d こい・m 少しこい・.・l 明るい）にする。くりかえしてもつながる"""
+    from PIL import Image
+    im = Image.open(PAPERTEX).convert('L').resize((T, T), Image.BOX)
+    px = [im.getpixel((x, y)) for y in range(T) for x in range(T)]
+    m = sum(px) / len(px); sd = (sum((p - m) ** 2 for p in px) / len(px)) ** .5 or 1
+    rows = []
+    for y in range(T):
+        r = ''
+        for x in range(T):
+            z = (px[y * T + x] - m) / sd
+            r += 'd' if z < -1.1 else 'm' if z < -.35 else '.' if z < .6 else 'l'
+        rows.append(r)
+    return rows
+
+
+FOLD = 16  # 角の折り返しの大きさ（ドット）
+
+
+def note_rows(F=FOLD):
+    """依頼の紙のわく（9スライス）：右下の角が、ゆるくまるくそり返った紙。
+    そり返った所は、折り目（角に向かってへこんだ曲線 √u+√v=√F）と、外のふち（内がわの点 (F,F) を中心にした弧）のあいだ。
+    a 紙・o ふち・e 折り目・B うらのかげ・b うら・h うらの光・k そりの下のかげ・s 紙のかげ。上と左のスライスは4、右は F+2、下は F+3"""
+    import math
+    NW = 2 * F + 8
+    H = NW + 1
+    cp = lambda d: PR[d] if d < 4 else 0
+    A = lambda u, v: ((u + .5) / F) ** .6 + ((v + .5) / F) ** .6  # 折り目（1 より小さいと、なくなった角）
+    Bq = lambda u, v: ((u + .5) / F) ** 1.6 + ((v + .5) / F) ** 1.6  # そり返った所の外のふち（1 より小さいと、そり返った所）
+    cut = lambda u, v: u >= 0 and v >= 0 and A(u, v) < 1
+    def ins(x, y):
+        if not (0 <= x < NW and 0 <= y < NW): return False
+        u, v = NW - 1 - x, NW - 1 - y
+        if cut(u, v): return False
+        return cp(min(x, u)) <= y <= NW - 1 - cp(min(x, u)) and cp(min(y, v)) <= x <= NW - 1 - cp(min(y, v))
+    def flap(u, v): return u >= 0 and v >= 0 and Bq(u, v) < 1 and not cut(u, v)
+    rows = []
+    for y in range(H):
+        r = ''
+        for x in range(NW):
+            u, v = NW - 1 - x, NW - 1 - y
+            if ins(x, y):
+                if flap(u, v):
+                    a0, b0 = A(u, v) - 1, 1 - Bq(u, v)
+                    t = a0 / (a0 + b0 + 1e-6)  # 0 折り目 → 1 外のふち
+                    edge = not (flap(u - 1, v) and flap(u + 1, v) and flap(u, v - 1) and flap(u, v + 1))
+                    if edge and Bq(u + 1, v) >= 1 or edge and Bq(u, v + 1) >= 1: r += 'o'
+                    elif t < .18: r += 'e'
+                    else: r += 'B' if t < .4 else 'b' if t < .75 else 'h'
+                    continue
+                if 1 <= Bq(u, v) < 1.22 and u < F and v < F:
+                    r += 'k'; continue  # そりの下のかげ
+                edge = not (ins(x - 1, y) and ins(x + 1, y) and ins(x, y - 1) and ins(x, y + 1))
+                r += 'o' if edge else 'a'
+            elif ins(x, y - 1) or (cut(u, v) and ins(x - 1, y)):
+                r += 's'
+            else:
+                r += '.'
+        rows.append(r)
+    return rows
+
+
+def pin_rows(N=18):
+    """依頼の紙をとめる押しピン：白木の糸まき形のピンを、ボードにまっすぐさした形。頭がこちらを向き、少し下から見上げるので、
+    おくの台（紙にのる円）は下に、手前の頭の面は上に見え、あいだに頭の側面が見える。紙には右下へかげ（16×16）。
+    o ふち・h つや・l 頭の面の光・a 頭の面・d 側面・D 側面のかげ・b 台・s 紙に落ちるかげ"""
+    import math
+    cx = 8.5
+    L = [  # おくから手前へ：(中心y, 半径, 色の決め方)
+        ('base', 10.4, 7.0), ('side', 8.6, 6.1), ('face', 6.0, 6.1)]
+    g = [['.'] * N for _ in range(N)]
+    for y in range(N):  # かげ（頭の面を右下へずらした形）
+        for x in range(N):
+            if math.hypot(x + .5 - (cx + 2.0), y + .5 - 11.6) <= 6.2: g[y][x] = 's'
+    for name, cy, r in L:
+        inside = lambda x, y: math.hypot(x + .5 - cx, y + .5 - cy) <= r
+        for y in range(N):
+            for x in range(N):
+                if not inside(x, y): continue
+                edge = not (inside(x - 1, y) and inside(x + 1, y) and inside(x, y - 1) and inside(x, y + 1))
+                if edge: g[y][x] = 'o'; continue
+                dx = x + .5 - cx
+                if name == 'base': g[y][x] = 'b'
+                elif name == 'side': g[y][x] = 'D' if dx > 1.8 else 'd'
+                else:
+                    if math.hypot(dx + 2.2, y + .5 - (cy - 2.2)) < 1.3: g[y][x] = 'h'
+                    else: g[y][x] = 'l' if dx < -.8 else 'a'
+    return [''.join(r) for r in g]
+
+
+PIN = pin_rows()
+
+
+def note_css():
+    F = FOLD
+    fib = svg(ptex_rows(), {'d': '#8a6a3a24', 'm': '#8a6a3a10', 'l': '#ffffff70'})
+    fr = svg(note_rows(), {'a': '#f4e9d2', 'o': '#a8743f', 'h': '#f7eedb', 'b': '#ebdcbb', 'B': '#dccaa2', 'e': '#c9ad7c', 'k': '#e2d3b2', 's': SHADOW})
+    pin = svg(PIN, {'o': '#94704a', 'h': '#fffaf0', 'l': '#f7e8cc', 'a': '#ecd5ae', 'd': '#dcbd90', 'D': '#c9a676', 'b': '#d4b384', 's': '#3a2a1a38'})
+    return ('/* 依頼の紙：右下の角がそり返った紙のわく（note_rows）と、紙の柄（ptex_rows：CC0 の紙のテクスチャ。そり返った角にはかけない） */\n'
+            f'body .paper:not(.empty){{border-image-source:{fr}!important;border-image-slice:4 {F + 2} {F + 3} 4 fill!important;'
+            f'border-image-width:4px {F + 2}px {F + 3}px 4px!important;border-image-repeat:stretch!important;padding-top:24px!important;padding-bottom:{F - 2}px!important}}\n'
+            f'body .paper:not(.empty)::after{{content:"";position:absolute;inset:2px 2px 3px 2px;z-index:-1;pointer-events:none;image-rendering:pixelated;'
+            f'background:{fib} 0 0/96px 96px repeat;'
+            f'-webkit-mask:linear-gradient(#000 0 0) 0 0/100% calc(100% - {F}px) no-repeat,linear-gradient(#000 0 0) 0 0/calc(100% - {F}px) 100% no-repeat;'
+            f'mask:linear-gradient(#000 0 0) 0 0/100% calc(100% - {F}px) no-repeat,linear-gradient(#000 0 0) 0 0/calc(100% - {F}px) 100% no-repeat}}\n'
+            f'/* 押しピン：木のまるい頭（立体）とかげ */\n'
+            f'body .paper:not(.empty)::before{{width:18px;height:18px;top:4px;margin-left:-9px;background:{pin} 0 0/18px 18px no-repeat!important;'
+            f'-webkit-mask:none!important;mask:none!important;image-rendering:pixelated;z-index:1}}')
+
+
 def board_css():
     u = svg(cork_rows(), {'a': '#c99a62', 'd': '#b0824c', 'l': '#dcb27a', 'm': '#94693a'})
     return ('/* 依頼ボード：コルク（つぶつぶのドットの絵、1ドット1.5px）。わくは木のまま */\n'
@@ -429,7 +542,7 @@ def deco_css():
 
 
 def main():
-    css = '\n'.join([paper_css(), wood_css(), wbtn_css(), disk_css(), deco_css(), board_css(), book_css()])
+    css = '\n'.join([paper_css(), wood_css(), wbtn_css(), disk_css(), deco_css(), board_css(), note_css(), book_css()])
     s = HTML.read_text()
     b, e = '/* paper-ui:begin */', '/* paper-ui:end */'
     if b not in s:
