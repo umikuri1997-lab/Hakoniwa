@@ -11,13 +11,14 @@ import sys,os,numpy as np,trimesh
 from scipy.sparse import coo_matrix
 from scipy.sparse.csgraph import connected_components
 HERE=os.path.dirname(os.path.abspath(__file__));OUT=os.path.join(HERE,'..','models','animals')
-EYE=(70,58,66);CHEEK=(246,170,180);MOUTH=(156,96,96)
+EYE=(70,58,66);CHEEK=None;   # ほっぺはつけない（持ち主のきめ）。CHEEK の部品は、からだの色
+MOUTH=(156,96,96)
 def deep(c,k=0.3):return tuple(max(0,min(255,round((v-255*k)/(1-k)))) for v in c)
 # 生き物ごと：名前・からだの色・部品の色・場所の色（x,y：まん中から・z：地面から。どれも高さ H でわった数）
 SPEC={   # 色は、持ち主のお手本の絵（生き物15この絵）に合わせる
  0:dict(name='usagi',body=(248,240,226),parts={3:EYE,6:EYE,5:EYE,4:(252,248,240)}),
  1:dict(name='kaeru',body=(184,208,122),parts={6:EYE,5:EYE},region=lambda x,y,z:(242,238,204) if (0.9*y-0.4*x)>0.12 and z<0.6 else None),   # おなか：顔のがわ（手前・左）の下
- 2:dict(name='niwatori',nocheek=1,body=(250,244,226),parts={3:(244,182,84),7:EYE,6:EYE,1:(242,170,96),2:(242,170,96)}),
+ 2:dict(name='niwatori',body=(250,244,226),parts={3:(244,182,84),7:EYE,6:EYE,1:(242,170,96),2:(242,170,96)}),
  3:dict(name='harinezumi',body=(222,204,170),parts={8:(120,84,70),6:EYE,7:EYE,12:CHEEK,9:(246,226,202)},region=lambda x,y,z:(246,226,202) if (x<-0.12 and z<0.62) or z<0.18 else None),
  4:dict(name='hitsuji',body=(238,224,238),parts={17:(246,226,204),18:(246,226,204),19:EYE,14:EYE,15:MOUTH,12:(246,226,204),13:(246,226,204),16:(246,226,204)},small=((246,178,198),(252,250,246))),   # 毛の中の花：お手本のピンクと白の花
  5:dict(name='mitsubachi',body=(250,224,124),parts={7:(246,248,250),9:(246,248,250),6:EYE,1:EYE,5:MOUTH,8:(250,220,110),10:(250,220,110),12:(170,130,96),13:(170,130,96),2:(196,150,110),3:(196,150,110),4:(196,150,110),11:(196,150,110)},fix='bee'),
@@ -29,7 +30,7 @@ SPEC={   # 色は、持ち主のお手本の絵（生き物15この絵）に合�
  # 11 ちょう：持ち主のきめで、ゲームのいまのちょう（critter3d）を使う。ここでは作らない
  11:dict(name=None,skip=1,body=(248,236,214),parts={7:(246,190,204),0:(246,190,204),11:(246,190,204),1:(246,190,204),6:EYE,4:EYE,5:MOUTH,8:(230,200,160),3:(230,200,160),10:(220,190,150),9:(220,190,150)}),
  12:dict(name='risu',body=(236,180,120),belly=(250,232,206),parts={10:(186,140,96),12:(166,122,84),7:(236,180,120),2:(246,224,196),1:(246,224,196),13:(232,172,112),11:EYE,8:EYE,9:MOUTH}),
- 13:dict(name='tonbo',nocheek=1,body=(172,206,120),parts={7:(222,240,226),10:(222,240,226),2:(222,240,226),1:(222,240,226),0:(222,240,226),11:(172,206,120),3:(150,212,204),12:(150,212,204),9:EYE,8:EYE,6:EYE}),
+ 13:dict(name='tonbo',body=(172,206,120),parts={7:(222,240,226),10:(222,240,226),2:(222,240,226),1:(222,240,226),0:(222,240,226),11:(172,206,120),3:(150,212,204),12:(150,212,204),9:EYE,8:EYE,6:EYE}),
  14:dict(name='nezumi',body=(240,196,150),belly=(250,232,206),parts={5:(252,250,246),10:(252,250,246),11:(244,196,190),4:(244,196,190),13:(232,186,140),6:EYE,7:MOUTH,8:MOUTH,0:(244,196,190),1:(244,196,190),2:(244,196,190),12:(244,196,190)}),
 }
 def comps(V,F):
@@ -95,18 +96,14 @@ def run(src):
             bc=G[F[o][idx==body]].reshape(-1,3).mean(0);info=[]
             for i in ei:
                 P=T[idx==i].reshape(-1,3);ec=P.mean(0);r=np.percentile(np.linalg.norm(P-ec,axis=1),80);info.append((i,ec,r))
-            R=float(np.median([r for _,_,r in info]))
+            R=float(np.median([r for _,_,r in info]))*0.7   # 目は、もとの目より小さく（持ち主のきめ）
             keep=np.array([c_!=EYE for c_ in cols])
             tris=tris[keep];cols=[c_ for c_,k_ in zip(cols,keep) if k_]
             mid=np.mean([ec for _,ec,_ in info],0)
             for i,ec,r in info:
                 nrm=ec-bc;nrm/=np.linalg.norm(nrm)+1e-12
                 bv,bf=ball(np.zeros(3),1.0);bv=bv*R;bv-=np.outer(bv@nrm,nrm)*0.55   # 向きの方向に、うすく
-                tris=np.concatenate([tris,(bv+ec)[bf]]);cols+=[EYE]*len(bf)
-                if not sp.get('nocheek') and len(info)>=2:   # ほっぺ（お手本）：目の下・外がわに、目より少し大きいたいらな玉
-                    out=ec-mid;out[2]=0;out/=np.linalg.norm(out)+1e-12;cc=ec+np.array([0,0,-1.5*R])+out*0.9*R+nrm*0.1*R
-                    bv,bf=ball(np.zeros(3),1.0);bv=bv*R*np.array([1.25,1.25,0.85]);bv-=np.outer(bv@nrm,nrm)*0.6
-                    tris=np.concatenate([tris,(bv+cc)[bf]]);cols+=[CHEEK]*len(bf)
+                tris=np.concatenate([tris,(bv+ec+nrm*R*0.35)[bf]]);cols+=[EYE]*len(bf)   # 小さくした分、少し外へ（からだにうまらないように）
         Vt=tris.reshape(-1,3).copy();Vt[:,0]-=c[0];Vt[:,1]-=c[1];Vt[:,2]-=z0
         out=np.c_[Vt[:,0],Vt[:,2],Vt[:,1]]   # glTF：x 右・y 上・+z 手前
         CC=np.repeat(np.array([deep(q) for q in cols]),3,0)
