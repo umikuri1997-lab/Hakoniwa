@@ -1,9 +1,9 @@
 /* 草原の夜の来かた（はじめてオオカゲを追いはらったあと）と、植物の守り。
-   波：コワイノは0時半・2時・3時半ごろの3つの波（WAVES）で、その夜の3わり・3わり・のこり（WAVEPART）。波の中は WAVEGAP ごとに1ぴき。オオカゲはさいごの波。
+   波：コワイノは0時10分・1時半・3時ごろの3つの波（WAVES）で、その夜の3わり・3わり・のこり（WAVEPART）。波の中は WAVEGAP ごとに1ぴき。オオカゲはさいごの波。
    先ぶれ：0時にハヤカゲが1ぴき（平均レベル5から2ひき、SCOUTLV）。村（VILL）に入ったら南へ帰る。帰りつく前にたおすと、1ぴきごとに、まだ来ていない本隊を SCOUTCUT へらす。
    横から：3晩に1回くらい（SIDEP）、その夜の3分の1が、東か西のはし（晴れている所のはし）から来る。夜20時に知らせる（nightSidePick）。
    ねばり草（nebari）：上を歩くコワイノの速さ NEBARISP 倍。ほたるの草むら（hotaru）：まわり2マスのあかり。はじめて光に入ったコワイノを HOTARUSTUN 止める（1ぴきに1晩1回）。 */
-const WAVES=[45,180,315],WAVEGAP=4.5,WAVEPART=[.3,.3],SCOUTCUT=.2,SCOUTLV=[3,5],SIDEP=1/3,NEBARISP=.5,HOTARUSTUN=3,HOTARUSTUNB=1.5,HOTARUR2=4;
+const WAVES=[15,135,270],WAVEGAP=4.5,WAVEPART=[.3,.3],SCOUTCUT=.2,SCOUTLV=[3,5],SIDEP=1/3,NEBARISP=.5,HOTARUSTUN=3,HOTARUSTUNB=1.5,HOTARUR2=4;
 function wavesOn(){/* 波に分けて来る夜：草原、はじめてオオカゲを追いはらったあと、ふつうの夜だけ（最後の夜の前の群れ・最後の夜・試練・かげのうしおはのぞく） */
   return WD===0&&!S.free&&(S.bossKills||0)>0&&!S.rushOn&&!S.finalOn&&!S.trialOn&&nightVarNow()!=='ushio'}
 function villAvgLv(){return Math.floor(S.res.reduce((a,r)=>a+rLv(r),0)/Math.max(1,S.res.length))}
