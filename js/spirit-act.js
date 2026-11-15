@@ -123,7 +123,7 @@ function startAct(r,G,type,stand,o){
 /* ---------- 行動のわけを、しぐさとひとことで（whyNote）：直しにいく・食べ物を集めにいく・おなかがすいた・休みにいく。
    はじめに、その物のほうを見て（直す・集めるは、ちょっと止まって見てからむかう）、ときどき、その子の言いかたでひとこと（WHYL、くりかえさない pickFresh）。
    同じ子・同じわけは時計の6時間に1回（WHYCD）、村のだれかが言ったら20秒はほかの子は言わない（WHYGAP）。会話・思い出帳の再生・コワイノのそばでは出さない ---------- */
-const WHYCD=360,WHYGAP=20000,WHYHOLD=700;let WHYT=-1e9;
+const WHYCD=360,WHYGAP=20000,WHYHOLD=2;/* WHYHOLD：見てからむかうまで（村の時間。1倍速で0.8秒） */let WHYT=-1e9;
 const WHYL={repair:{earth:['あれ、ここ、いたんでるねぇ。','ここ、直しておこうねぇ。','ちょっと、なおしてくるねぇ。'],wood:['あっ、こわれてる！','ここ、直しておこう！','いたそう…なおしてあげるね。'],water:['あら、ここが傷んでいますね。','直しておきますね。','少し、手当てしておきましょう。'],fireA:['おや、ほころんでるね。直しとくよ。','ここ、あたしが直しておくよ。','こりゃいけない、すぐ直すよ。'],fireB:['おっと、いたんでるじゃねえか。','ここ、おれが直しとくぜ。','よし、ちゃちゃっと直すか！'],wind:['フッ…ここ、ほつれているね。','直しておこう。美しくないからね。','おや、すき間風だ。ふさいでおこう。']},
   food:{earth:['ごはん、少なくなってきたねぇ。','みんなの分、とってくるねぇ。','箱がさみしいねぇ。'],wood:['ごはん、少なくなってきたね！','みんなのごはん、とってくる！','箱、からっぽになっちゃう！'],water:['ごはんが少なくなってきましたね。','みんなの分を、集めてきますね。','箱が、さみしくなっていますね。'],fireA:['ごはんが心もとないね。とってくるよ。','腹ぺこが出る前に、集めとこう。','箱が軽いね。ひとっ走り行くよ。'],fireB:['メシが少ねえな。とってくるぜ！','みんなのメシ、集めてくるか！','箱がすっからかんじゃねえか。'],wind:['フッ…食料が心細いね。','みんなのために、ひと仕事しようか。','箱が軽いね。風のように集めてこよう。']},
   hungry:{earth:['おなか、すいたねぇ…。','ちょっと、ごはんにしようかねぇ。','ひと休みして、食べようかねぇ。'],wood:['おなか、ぺこぺこ…。','ごはん、ごはん！','おなかがなっちゃった。'],water:['少し、おなかがすきましたね。','ごはんにしましょうか。','ひと休みして、いただきますね。'],fireA:['腹がへっては、なんとやらだね。','ちょいと、ごはんにするよ。','おなかがすいたよ。'],fireB:['腹へったー！','メシだメシ！','ちょっと腹ごしらえしてくるぜ。'],wind:['フッ…おなかが空いたようだ。','優雅に、食事の時間といこう。','少し、腹ごしらえを。']},
@@ -135,7 +135,7 @@ function whyKind(r,a,prevT){const t=a.type;if(t==='repair')return 'repair';if((t
 function whyNote(r,prevT){if(!S||IS_STORY_REPLAY||typeof MEMRUN!=='undefined'&&MEMRUN||!r.act||r.hidden||r.act.stage!=='walk')return;const a=r.act,k=whyKind(r,a,prevT);if(!k)return;
   const cd=r.whyT||(r.whyT={});if(S.t>=(cd[k]||-1e9)&&S.t-(cd[k]||-1e9)<WHYCD)return;if(hostileNow(r)||typeof foeNear==='function'&&foeNear(r))return;const now=performance.now();if(now-WHYT<WHYGAP&&now>=WHYT)return;if(!document.getElementById('dialog').hidden)return;
   cd[k]=S.t;WHYT=now;const tj=a.obj!=null?a.obj:a.stand;if(tj!=null&&tj>=0){const x=tj%W+.5;if(Math.abs(x-r.x)>.3)r.face=x>=r.x?1:-1}/* その物のほうを見る */
-  r.bubble=WHYB[k];if((k==='repair'||k==='food')&&(RHOLD.get(r)||0)<=now)RHOLD.set(r,now+WHYHOLD);/* 気づいて、ちょっと見てから、むかう */
+  r.bubble=WHYB[k];if(k==='repair'||k==='food')a.whyW=S.t+WHYHOLD;/* 気づいて、ちょっと見てから、むかう（村の時間で。速さをかえても同じ） */
   const b=WHYB[k];villageTimeout(()=>{if(r.bubble===b&&r.act===a&&a.stage==='walk')r.bubble=''},1600);
   if(Math.random()<.5){const ek=elemKey(r),L=WHYL[k][ek]||WHYL[k].wood;addFloat(r.x,r.y-1.6,chatTone(pickFresh('why:'+k+':'+ek,L),r),'#fff3d6')}}
 function noPass(r){if(r.act){if(r.act.key)BAN.set(r.act.key,S.t+60);if(r.act.stand>=0){r.routeAvoid=r.routeAvoid||{};r.routeAvoid[r.act.stand]=S.t+60}}r.visitRetryAt=S.t+10;if((r.npT||0)>S.t)return;r.npT=S.t+90;addFloat(r.x,r.y-1.6,'通れないよ…','#ffd0c0')}

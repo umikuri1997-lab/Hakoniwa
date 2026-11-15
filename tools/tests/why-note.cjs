@@ -10,7 +10,7 @@ const assert=require('node:assert/strict');
   const rp=JSON.parse(await run(`(()=>{const r=S.res[0];r.elem='earth';r.hunger=hMax(r);r.energy=100;r.hidden=false;S.enemies=[];WHYT=-1e9;delete r.whyT;
     const x=(r.x|0)+3,y=r.y|0,j=y*W+x;S.obj[j]='fence';S.hp[j]=1;recount();r.act={type:'chop',stage:'do',t:0};const G=bfs(r.x|0,r.y|0);
     const st=nearest(G,k=>walk(k)&&Math.abs(k%W-x)+Math.abs((k/W|0)-y)===1,40);startAct(r,G,'repair',st,{key:'o'+j,obj:j});
-    const a={b:r.bubble,face:r.face,hold:RHOLD.get(r)>performance.now(),cd:r.whyT&&r.whyT.repair===S.t};
+    const a={b:r.bubble,face:r.face,hold:r.act.whyW>S.t,cd:r.whyT&&r.whyT.repair===S.t};
     /* もう1回：同じわけは、しばらく言わない */
     r.bubble='';RHOLD.delete(r);WHYT=-1e9;r.act={type:'chop',stage:'do',t:0};startAct(r,G,'repair',st,{key:'o'+j,obj:j});a.again=r.bubble;
     /* 会話中は出さない */
