@@ -113,13 +113,31 @@ function startAct(r,G,type,stand,o){
   if(stand>=0&&stand===r.avoidJ&&S.t<r.avoidU&&type!=='idle')return startAct(r,G,'idle',-1,{dur:15});/* 10分止まったままだった行き先は、しばらくえらばない */
   if(!KEEPC.has(type)&&G&&!(o&&(o.run||o.hunt!=null))&&!r.coffin){let k=-1;if(matN(r)>0&&!MATJOB.has(type)&&matTot()<matCap()){{const ks=cmatKeys(r);k=nearest(G,j=>putAdj(j,ks)>=0,200)}if(k>=0){type='smat';stand=k;o=null}}if(k<0&&carryN(r)>0&&!FOODJOB.has(type)&&S.food<foodCap()){{const ks=carryKeys(r);k=nearest(G,j=>putAdj(j,ks)>=0,200)}if(k>=0){type='store';stand=k;o=null}}if(k<0&&citemN(r)>0){for(const dest of new Set(Object.keys(r.citem).filter(id=>r.citem[id]>0).map(itemDest))){k=nearest(G,j=>itemAdj(j,dest)>=0,200);if(k>=0){type='sitem';stand=k;o={dest};break}}}}/* ひろった物（砂・角笛・家具など）は、おそなえ箱・箱へ *//* べつの行動にうつる前に、持っている物を箱へしまう（同じ物をあつめる作業のつづきと、にげる・たたかう・食べるときはそのまま） */
   if(type==='idle'&&stand<0&&G&&!isNight()&&(r.restCD||0)<=S.t){const bj=benchSpot(G,r);if(bj>=0){type='rest';stand=bj;o={key:'o'+bj,obj:anc(bj),seat:bj,dur:Math.max(30,(o&&o.dur)||15)}}}/* ひとやすみは、あいているベンチがあればベンチで */
-  r.bubble='';/* 前の行動の吹き出し（💤など）を残さない */
-  r.act=Object.assign({type,stand,t:0,stage:'walk'},o||{});
+  const prevT=r.act&&r.act.type;r.bubble='';/* 前の行動の吹き出し（💤など）を残さない */
+  r.act=Object.assign({type,stand,t:0,stage:'walk'},o||{});whyNote(r,prevT);
   if(r.act.key)reserve(r.act.key);
   r.path=stand>=0?avoidPath(r,G,stand):[];
   if(stand>=0&&G&&G.dist[stand]<0||!r.path.length&&stand>=0&&stand!==(r.y|0)*W+(r.x|0)&&Math.abs(stand%W+.5-r.x)+Math.abs(((stand/W)|0)+.5-r.y)>1.6){noPass(r);endAct(r);r.act={type:'idle',stage:'do',t:0,dur:8};return}/* 行きたい場所に通れない */
   if(!r.path.length)beginDo(r);
 }
+/* ---------- 行動のわけを、しぐさとひとことで（whyNote）：直しにいく・食べ物を集めにいく・おなかがすいた・休みにいく。
+   はじめに、その物のほうを見て（直す・集めるは、ちょっと止まって見てからむかう）、ときどき、その子の言いかたでひとこと（WHYL、くりかえさない pickFresh）。
+   同じ子・同じわけは時計の6時間に1回（WHYCD）、村のだれかが言ったら20秒はほかの子は言わない（WHYGAP）。会話・思い出帳の再生・コワイノのそばでは出さない ---------- */
+const WHYCD=360,WHYGAP=20000,WHYHOLD=700;let WHYT=-1e9;
+const WHYL={repair:{earth:['あれ、ここ、いたんでるねぇ。','ここ、直しておこうねぇ。','ちょっと、なおしてくるねぇ。'],wood:['あっ、こわれてる！','ここ、直しておこう！','いたそう…なおしてあげるね。'],water:['あら、ここが傷んでいますね。','直しておきますね。','少し、手当てしておきましょう。'],fireA:['おや、ほころんでるね。直しとくよ。','ここ、あたしが直しておくよ。','こりゃいけない、すぐ直すよ。'],fireB:['おっと、いたんでるじゃねえか。','ここ、おれが直しとくぜ。','よし、ちゃちゃっと直すか！'],wind:['フッ…ここ、ほつれているね。','直しておこう。美しくないからね。','おや、すき間風だ。ふさいでおこう。']},
+  food:{earth:['ごはん、少なくなってきたねぇ。','みんなの分、とってくるねぇ。','箱がさみしいねぇ。'],wood:['ごはん、少なくなってきたね！','みんなのごはん、とってくる！','箱、からっぽになっちゃう！'],water:['ごはんが少なくなってきましたね。','みんなの分を、集めてきますね。','箱が、さみしくなっていますね。'],fireA:['ごはんが心もとないね。とってくるよ。','腹ぺこが出る前に、集めとこう。','箱が軽いね。ひとっ走り行くよ。'],fireB:['メシが少ねえな。とってくるぜ！','みんなのメシ、集めてくるか！','箱がすっからかんじゃねえか。'],wind:['フッ…食料が心細いね。','みんなのために、ひと仕事しようか。','箱が軽いね。風のように集めてこよう。']},
+  hungry:{earth:['おなか、すいたねぇ…。','ちょっと、ごはんにしようかねぇ。','ひと休みして、食べようかねぇ。'],wood:['おなか、ぺこぺこ…。','ごはん、ごはん！','おなかがなっちゃった。'],water:['少し、おなかがすきましたね。','ごはんにしましょうか。','ひと休みして、いただきますね。'],fireA:['腹がへっては、なんとやらだね。','ちょいと、ごはんにするよ。','おなかがすいたよ。'],fireB:['腹へったー！','メシだメシ！','ちょっと腹ごしらえしてくるぜ。'],wind:['フッ…おなかが空いたようだ。','優雅に、食事の時間といこう。','少し、腹ごしらえを。']},
+  rest:{earth:['ふあぁ…ねむくなってきたねぇ。','ちょっと、休もうかねぇ。','きょうは、ここまでにしようかねぇ。'],wood:['ふあ…ねむい…。','ちょっとだけ、休むね。','くたくた…。'],water:['ふぁ…少し、休みますね。','つかれてしまいました。','きょうは、ここまでにしますね。'],fireA:['ふあ…さすがに、くたびれたね。','ひと休みするよ。','きょうは、よく働いたね。'],fireB:['ふあぁ…ねみい。','ちょっと休むぜ。','くたくただぜ…。'],wind:['フッ…まぶたが重い。','少し、夢の風にのろうか。','きょうは、ここまでにしよう。']}};
+const WHYWORK=new Set(['chop','mine','build','craft','repair','harvest','gather','water','tend','till','sow','plant','weed','drop','cook','offer','fert','draw','haul','bfetch','deliver']);
+const WHYB={repair:'❗',food:'❗',hungry:'🍙',rest:'💤'};
+function whyKind(r,a,prevT){const t=a.type;if(t==='repair')return 'repair';if((t==='harvest'||t==='gather')&&S.food<foodLow())return 'food';
+  if((t==='fetch'||t==='forage'||t==='eatwait')&&r.hunger<500&&WHYWORK.has(prevT))return 'hungry';if(t==='sleep'&&(r.energy<25&&!isNight()||isNight()&&WHYWORK.has(prevT)))return 'rest';return ''}
+function whyNote(r,prevT){if(!S||IS_STORY_REPLAY||typeof MEMRUN!=='undefined'&&MEMRUN||!r.act||r.hidden||r.act.stage!=='walk')return;const a=r.act,k=whyKind(r,a,prevT);if(!k)return;
+  const cd=r.whyT||(r.whyT={});if(S.t>=(cd[k]||-1e9)&&S.t-(cd[k]||-1e9)<WHYCD)return;if(hostileNow(r)||typeof foeNear==='function'&&foeNear(r))return;const now=performance.now();if(now-WHYT<WHYGAP&&now>=WHYT)return;if(!document.getElementById('dialog').hidden)return;
+  cd[k]=S.t;WHYT=now;const tj=a.obj!=null?a.obj:a.stand;if(tj!=null&&tj>=0){const x=tj%W+.5;if(Math.abs(x-r.x)>.3)r.face=x>=r.x?1:-1}/* その物のほうを見る */
+  r.bubble=WHYB[k];if((k==='repair'||k==='food')&&(RHOLD.get(r)||0)<=now)RHOLD.set(r,now+WHYHOLD);/* 気づいて、ちょっと見てから、むかう */
+  const b=WHYB[k];villageTimeout(()=>{if(r.bubble===b&&r.act===a&&a.stage==='walk')r.bubble=''},1600);
+  if(Math.random()<.5){const ek=elemKey(r),L=WHYL[k][ek]||WHYL[k].wood;addFloat(r.x,r.y-1.6,chatTone(pickFresh('why:'+k+':'+ek,L),r),'#fff3d6')}}
 function noPass(r){if(r.act){if(r.act.key)BAN.set(r.act.key,S.t+60);if(r.act.stand>=0){r.routeAvoid=r.routeAvoid||{};r.routeAvoid[r.act.stand]=S.t+60}}r.visitRetryAt=S.t+10;if((r.npT||0)>S.t)return;r.npT=S.t+90;addFloat(r.x,r.y-1.6,'通れないよ…','#ffd0c0')}
 const workOn=j=>j!=null&&!!S&&S.res.some(r=>r.act&&r.act.stage==='do'&&r.act.obj===j&&WORKP[r.act.type]&&WORKP[r.act.type](r,r.act)!=null);/* せいれいが作業中のマス：そのマスの育ちぐあいのバーは出さない（足もとの作業のバーと二重にしない） */
 const waterDur=(r,a)=>(r.elem==='water'?8:16)/(NEARJORO.has(a.obj)?1.1:1);/* 水やりの時間：ブリキのじょうろのそば+10% */
