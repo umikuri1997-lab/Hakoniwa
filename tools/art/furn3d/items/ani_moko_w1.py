@@ -1,0 +1,7 @@
+# 飼う生き物（モコダマ）のチップ ani:moko#w1：別に作った生き物のモデル（animals/hitsuji.glb、anim_hitsuji.py と同じ）を、右ななめ前（rot −45度）に向けて写す。歩く（前後に5度ゆらす）。
+from blueprint import Part as P
+from natcommon import notex,flat
+ID='ani:moko#w1';GRAD=False;SHADE=[(4.5,-1.2),(9,-2.5)];ELEV=15;BOTTOM=58
+VIEWS=[('ani:moko#w1',0)]
+def PARTS():
+    p=P('モコダマ','model',('animals/hitsuji.glb',0.5,0.5,0,0.75,-45,-5),(255,255,255),on=('ground',),note='地面に立つ');return[flat(notex(p))]
