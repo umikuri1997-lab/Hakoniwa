@@ -472,15 +472,10 @@ def disk_rows(N, rim=True):
 
 def disk_css():
     n = {k: v for k, v in WBTN['n'].items() if k != 's'}
-    lit = {k: v for k, v in WBTN['y'].items() if k != 's'}
     x = svg(disk_rows(23), n)
-    gb = svg(disk_rows(52), n)
-    gc = svg(disk_rows(52), lit)
     return '\n'.join([
-        '/* 草原の丸いボタン：とじるボタン・守りの光／こもれびのまもり（たまった所は、はちみつ色の木） */',
+        '/* 草原の丸いボタン：とじるボタン（守りの光／こもれびのまもりは、ほかのステージと同じ半透明） */',
         f'body.wd0 .sheet .x{{background:{x} center/100% 100% no-repeat!important}}',
-        f'body.wd0 .guard-btn .gb{{background:{gb} center/100% 100% no-repeat!important}}',
-        f'body.wd0 .guard-btn .gc{{background:{gc} center/100% 100% no-repeat!important}}',
     ])
 
 
