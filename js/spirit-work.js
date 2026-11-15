@@ -37,7 +37,7 @@ function tryJob(r,G,k){
     if(!S.obj.some((o,q)=>o==='farm'&&need(q)))return false;const cj=COMPS.find(c=>(S.dyn[c]||{}).c>0);if(cj==null)return false;j=nearest(G,q=>adjOf(q,k=>k===cj)>=0,200);if(j>=0){startAct(r,G,'cget',j,{obj:cj});return true}return false}/* 肥料やり：コンポスターから肥料をもっていって、畑にまく（1日1回） */
   case'otaki':{if(isNight()||STATUE<0)return false;if(r.otaki){j=nearest(G,j=>adjOf(j,k=>k===STATUE||k===STATUE+W)>=0,300);if(j>=0){startAct(r,G,'otaki',j,{});return true}return false}
     if(!S.otakiQ||!Object.keys(S.otakiQ).length||S.res.some(q=>q!==r&&q.act&&q.act.type==='otakiget'))return false;if(qStale(S.otakiQ)){S.otakiQ={};return false}const ok=Object.keys(S.otakiQ);j=nearest(G,j=>keysAdj(j,ok)>=0,200);if(j>=0){startAct(r,G,'otakiget',j,{});return true}return false}/* おたきあげ：箱から素材をとって、神殿へ */
-  case'weed':{const mF=matTot()+matN(r)>=matCap(),fF=foodCap()-S.food<=0,okW=k=>S.obj[k]==='kinoko'?!fF:!mF;/* きのこは箱、草は箱 */if(isNight()||mF&&fF||roomN(r)<1)return false;{const RQ=wreqList();j=RQ.length?nearest(G,j=>RQ.includes(j)&&okW(j)&&free('o'+j,1),9999):-1}if(j<0)j=nearest(G,j=>WEEDS.has(S.obj[j])&&okW(j)&&free('o'+j,1),WEEDNEAR||5);/* 「みる」でタップした草は、遠くてもさきに */if(j>=0){startAct(r,G,'weed',j,{key:'o'+j,obj:j});return true}return false}
+  case'weed':{const mF=matTot()+matN(r)>=matCap(),fF=foodCap()-S.food<=0,okW=k=>S.obj[k]==='kinoko'?!fF:!mF;/* きのこは箱、草は箱 */if(isNight()||mF&&fF||roomN(r)<1)return false;{const RQ=wreqList();j=RQ.length?nearest(G,j=>RQ.includes(j)&&okW(j)&&free('o'+j,1),9999):-1}if(j<0){const GN=grassNeed();if(GN)j=nearest(G,j=>GN[(BL[S.obj[j]]||{}).weed]>0&&okW(j)&&free('o'+j,1),GRASSFAR)}/* 目標に足りない草は、遠くてもとりに行く */if(j<0)j=nearest(G,j=>WEEDS.has(S.obj[j])&&okW(j)&&free('o'+j,1),WEEDNEAR||5);/* 「みる」でタップした草は、遠くてもさきに */if(j>=0){startAct(r,G,'weed',j,{key:'o'+j,obj:j});return true}return false}
       case'seed':if(!S.seeds.length||isNight())return false;j=nearest(G,j=>S.seeds.some(q=>q.y*W+q.x===j)&&free('s'+j,1),90);if(j>=0){startAct(r,G,'pickseed',j,{key:'s'+j,obj:j});return true}return false;
   }
   return false;
@@ -84,6 +84,10 @@ const oracleOK=k=>!ORACLE[k].water||!!(S&&S.flags&&S.flags.oracleWater);/* は�
 function jobWork(r,G,dry){if(isNight())return false;const j=jobOf(r);if(j<0)return false;const o=S.obj[j],st=k=>anc(k)===j;
   if(o==='smelter'){if(r.elem!=='fire'||!(S.smIn||{})[j]||!Object.values(S.smIn[j]).some(n=>n>=SMELT_ORE)||!free('sm'+j,1))return false;if(dry)return true;const q=nearest(G,q=>adjOf(q,st)>=0,200);if(q<0)return false;startAct(r,G,'smelt',q,{key:'sm'+j,obj:j});return true}
   const k=o==='lumber'?'chop':'mine';if(!canJob(r,k)||roomN(r)<1||matTot()+matN(r)>=matCap()&&!(k==='chop'&&roomKey('wood')>matN(r))||!free('o'+j,2))return false;if(dry)return true;const q=nearest(G,q=>adjOf(q,st)>=0,200);if(q<0)return false;startAct(r,G,k,q,{key:'o'+j,obj:j,camp:true});return true}
+function grassNeed(){/* いまの目標で作る物（御神木の調べの準備）に足りない草：素材のキー→足りない数。なければ null */
+  const q=QUESTS[S.quest];if(!q||!S.qTalked||typeof FIELD_PREP==='undefined')return null;const p=FIELD_PREP[q.id];if(!p||!p.build||fieldBuildOK(q.id))return null;
+  const id=p.build.ids[0],m=(BL[id]||{}).mat;if(!m||inv(id)>0||S.orders.some(o=>o.type===id))return null;const out={};let n=0;for(const k in m)if(GRASSK.includes(k)&&(S.mat[k]||0)<m[k]){out[k]=m[k]-(S.mat[k]||0);n++}return n?out:null}
+const GRASSFAR=60;/* 目標に足りない草は、この歩数までとりに行く */
 const WOODLOW=10;/* 木材がこれより少ないときは、雑草・枝ひろいより先に木を切る */
 let BOXFULL=0;/* 箱がいっぱいを知らせたときの、しまえる数（セーブしない） */
 function boxFullNote(){/* 箱がいっぱいで、木・石をあつめられないとき、1回だけ知らせる。しまえる数がふえるか、2わり空いたら、また知らせる */
@@ -116,7 +120,7 @@ function goWork(r,G,nw){boxFullReset();
   // 建てる・家具づくりがいちばん先。そのつぎに得意な仕事をする
   for(const k of[...(SPEC[r.elem]||[])])if(tryJob(r,G,k))return true;
   for(const cat of JOBCAT)for(const k of cat){
-    if(['chop','mine','drop','weed'].includes(k)){if(gd)continue;gd=true;if((S.mat.wood||0)<WOODLOW&&tryJob(r,G,'chop'))return true;/* 木材が少ないときは、雑草・枝より先に木を切る */if(tryJob(r,G,'weed'))return true;/* まわり5マスの雑草・きのこは、木・石より先にむしる */if(tryJob(r,G,'drop'))return true;/* 落とし物（枝など）は、木・石より先にひろう */const jobs=[...mo];for(let i=jobs.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[jobs[i],jobs[j]]=[jobs[j],jobs[i]]}for(const m of jobs)if(tryJob(r,G,m))return true;continue}/* 木・石は、同じ優先度でえらぶ */
+    if(['chop','mine','drop','weed'].includes(k)){if(gd)continue;gd=true;if(grassNeed()&&tryJob(r,G,'weed'))return true;/* 目標に足りない草が先 */if((S.mat.wood||0)<WOODLOW&&tryJob(r,G,'chop'))return true;/* 木材が少ないときは、雑草・枝より先に木を切る */if(tryJob(r,G,'weed'))return true;/* まわり5マスの雑草・きのこは、木・石より先にむしる */if(tryJob(r,G,'drop'))return true;/* 落とし物（枝など）は、木・石より先にひろう */const jobs=[...mo];for(let i=jobs.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[jobs[i],jobs[j]]=[jobs[j],jobs[i]]}for(const m of jobs)if(tryJob(r,G,m))return true;continue}/* 木・石は、同じ優先度でえらぶ */
     if(tryJob(r,G,k))return true}
   if(nw)return false;goWander(r,G);return true;
 }
