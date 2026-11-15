@@ -67,7 +67,7 @@ function lastFirst(list){/* さいごにあそんだステージを、いちば�
   const card=list.querySelector('.wcard[data-k="'+top[0]+'"]');if(card===list.firstElementChild)return;
   const pv=card.previousElementSibling,nx=card.nextElementSibling;if(pv&&pv.classList.contains('wlink'))pv.remove();else if(nx&&nx.classList.contains('wlink'))nx.remove();/* 道の線は、となりのステージどうしでつなぎなおす */
   card.classList.add('wtop');list.insertBefore(card,list.firstElementChild)}
-const APP_VER=1643;/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER=1644;/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
@@ -202,12 +202,13 @@ function frame(now){
   if(typeof uiStageSync==='function')uiStageSync();{const ld=started&&!stageReady()&&!menuOpen&&$('#pro').hidden;if(ld||ld!==STLD){STLD=ld;stageLoading(ld)}}/* 作りおわるまで「マップを読みこみ中…」でマップをかくす *//* タイトルは静止画なので8コマ/秒。ゲーム中は30コマ/秒 */
   if(now-tutT>120){tutT=now;try{palArrows();updTut()}catch(e){}}
   const rdt=Math.min(.25,(now-last)/1000);last=now;
+  if(started&&!IS_STORY_REPLAY&&!document.hidden&&$('#idle').hidden&&!menuOpen)playAdd(rdt);/* あそんだ時間（クリアまでの記録）。S には、セーブのときに入れる */
   const PZ=started&&sheet!=null,prdt=PZ?0:rdt;/* メニューを開いているあいだは、アニメーションも止める */
   if(CAMW&&CAMW!==camAnim){const w=CAMW;CAMW=null;if(!w.fin&&w.done){w.fin=1;try{w.done()}catch(e){frameErr('cam',e)}}}/* おわりの処理つきのカメラが、とちゅうでほかの動きに上書きされたら、おわりの処理だけはする（しないと、演出がおわらず、ゲームが止まったままになる） */if(camAnim&&camAnim.done)CAMW=camAnim;
   if(camAnim){camAnim.t+=rdt;const p=Math.min(1,camAnim.t/camAnim.dur),e=p<.5?2*p*p:1-Math.pow(-2*p+2,2)/2;cam.z=camAnim.fz+(camAnim.tz-camAnim.fz)*e;centerOn(camAnim.fx+(camAnim.tx-camAnim.fx)*e,camAnim.fy+(camAnim.ty-camAnim.fy)*e);if(p>=1){const a=camAnim,d=a.done;camAnim=null;a.fin=1;if(d)d()}}
   if(started&&!window.__noIdle&&now-lastIn>120000&&$('#idle').hidden&&$('#title').hidden&&$('#maps').hidden){$('#idle').hidden=false;try{save()}catch(e){}}
   if(SKIP&&!(isNight()&&S.enemyOn))SKIP=false;/* 朝になったら、ふつうの速さにもどす */
-  if(started&&!sacredQuietActive()&&!menuOpen&&$('#pro').hidden&&sheet==null&&NEWRES==null&&$('#dialog').hidden&&$('#lvup').hidden&&$('#rlv').hidden){showItemGift();showSpotPop();if(typeof fogRevealTick==='function')fogRevealTick();oreWakeTick()}
+  if(started&&!sacredQuietActive()&&!menuOpen&&$('#pro').hidden&&sheet==null&&NEWRES==null&&$('#dialog').hidden&&$('#lvup').hidden&&$('#rlv').hidden&&!calmNow()){showItemGift();showSpotPop();reflectNoteTick();if(typeof fogRevealTick==='function')fogRevealTick();oreWakeTick()}
   if(!paused()){if(S.speed>1&&!TESTSPD&&!TESTM){S.glassT=Math.max(0,(S.glassT||0)-rdt);if(S.glassT<=0)S.speed=1}glassUI();LIGHTCD=Math.max(0,LIGHTCD-rdt*S.speed*(SKIP?40:1));AREACD=Math.max(0,AREACD-rdt*S.speed*(SKIP?40:1));let g=rdt*MIN_PER_SEC*S.speed*(SKIP?40:1);while(g>0){const s=Math.min(g,2);try{stepWorld(s)}catch(e){frameErr('step',e);break}g-=s;if(performance.now()<BOSSHOLD)break}/* オオカゲの登場・撃破で止めたら、残りは進めない */}
   for(const f of floats)f.life-=prdt*.7;while(floats.length&&floats[0].life<=0)floats.shift();
   for(const s of shots)s.life-=prdt*1.4;while(shots.length&&shots[0].life<=0)shots.shift();

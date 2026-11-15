@@ -54,7 +54,7 @@ const visibleLevelRewardsAt=n=>levelUpItemsAt(n).filter(id=>BL[id].kind!=='furn'
 function nextLevelItems(n){/* 村レベル n でおぼえる物（まだおぼえていない物・このステージで使える物だけ）。建物・植える物は BL の lv で使えるようになる（learnedIn と同じ） */const a=visibleLevelRewardsAt(n);for(const id in BL){const b=BL[id];if((b.kind==='build'||b.kind==='plant')&&b.lv===n&&!QB.has(id)&&!b.offerOnly)a.push(id)}return [...new Set(a)].filter(id=>stageItemOK(id)&&!(S.recipes||{})[id]&&!(S.unlocked||{})[id])}
 function nextLvHtml(n){/* 村のようす：つぎのレベルでおぼえる物のアイコン */const L=nextLevelItems(n);if(!L.length)return '';const e=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]);return '<div class="vlNx"><small>レベル'+n+'でおぼえる</small>'+L.map(id=>'<span><img alt="" src="'+iconURL(id)+'">'+e(iname(id))+'</span>').join('')+'</div>'}
 function checkLevel(){
-  const l=vLv();if(S.lv>l)return;/* 必要なパワーをふやしても、いまの村レベルは下げない */const old=S.lv||1,priorUnlocks={...(S.unlocked||{})},priorRecipes={...(S.recipes||{})};
+  const l=vLv();if(S.lv>l)return;if(l>(S.lv||1)&&calmNow())return;/* 再会のあとは、レベルアップの知らせを少しまつ *//* 必要なパワーをふやしても、いまの村レベルは下げない */const old=S.lv||1,priorUnlocks={...(S.unlocked||{})},priorRecipes={...(S.recipes||{})};
   for(let n=2;n<=l;n++)for(const id of visibleLevelRewardsAt(n)){if(BL[id].kind==='block')S.unlocked[id]=true;else if(BL[id].kind==='furn'&&!S.free){S.recipes||(S.recipes={});S.recipes[id]=true}}
   if(l>=2)S.unlocked.path=true;
   if(old<13&&l>=13)setTimeout(()=>toast('家の屋根の色を、えらべるようになりました','good'),1500);/* 屋根の色（家をタップしてえらぶ） */
