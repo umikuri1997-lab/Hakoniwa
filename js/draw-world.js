@@ -48,7 +48,7 @@ function drawEnemy(e,now){
    if(darkness()>0&&!enemyHidden(e,ox,oy,ox+ww,py+8)){if(GLW.width!==cv.width||GLW.height!==cv.height){GLW.width=cv.width;GLW.height=cv.height}if(!GLWN){glx.setTransform(1,0,0,1,0,0);glx.clearRect(0,0,GLW.width,GLW.height)}GLWN++;
      glx.setTransform(ctx.getTransform());/* 段差の上・よじのぼり中の高さ（liftDraw）も、本体と同じにする */for(const[dx,dy]of OFF)glx.drawImage(EOS,0,0,cw,ch,ox+dx,oy+dy,sw,sh);glx.globalCompositeOperation='destination-out';glx.drawImage(EOC,0,0,cw,ch,ox,oy,sw,sh);glx.globalCompositeOperation='source-over'}
    ctx.globalAlpha=e.stun>0?.55:1;ctx.drawImage(EOC,0,0,cw,ch,ox,oy,sw,sh);ctx.globalAlpha=1}
-  const bw=Math.max(14,e.max*.22)*Math.min(z,1.3),bx=px-bw/2,byy=py+8-27*z-6;if(e.mark)drawMarks(ctx,e,px,byy-8,z,now);/* 守り神の目印（defense.js） */
+  const bw=Math.max(14,e.max*.22)*Math.min(z,1.3),bx=px-bw/2,byy=py+8-27*z-6;
   const bar=()=>{let by=byy;for(const[j]of WALLHIT){const wx=(j%W)*TS,wy=((j/W)|0)*TS;if(bx<wx+TS&&bx+bw>wx&&by+3>wy-18&&by-1<wy){by=Math.min(by,wy-22)}}/* 柵などの体力ゲージと重なるときは、その上に出す */ctx.fillStyle='rgba(0,0,0,.5)';ctx.fillRect(bx-1,by-1,bw+2,4);ctx.fillStyle='#ff6b8a';ctx.fillRect(bx,by,bw*Math.max(0,e.hp)/e.max,2)};if(BUBQ)BUBQ.push(bar);else bar();/* 体力ゲージは物にかくれないよう最後に */
 }
 // 物の見た目のおおよその範囲（描き直し・重なり判定用、少し大きめ）

@@ -345,7 +345,6 @@ function decide0(r){if(r.wakeStretch){r.wakeStretch=0;if(!isNight()&&!enemyLive(
       const tiers=[j=>pm[j]===2,others.length?j=>others.some(t=>Math.abs(j%W+.5-t.x)<3.5&&Math.abs(((j/W)|0)+.5-t.y)<3.5):null,STATUE>=0?j=>Math.abs(j%W-sx)<=3&&Math.abs(((j/W)|0)-sy)<=3:null];
       for(const f of tiers){if(!f)continue;const ok=j=>walk(j)&&pm[j]!==3&&f(j);let j=nearest(G,j=>ok(j)&&Math.random()<.04,8);if(j<0)j=nearest(G,ok,200);if(j>=0)return startAct(r,G,'patrol',j)}}
     return startAct(r,G,'wander',(r.y|0)*W+(r.x|0))}
-  if(isNight()&&nightFixGo(r,G))return;/* 波のあいまの修理（defense.js） */
   if(r.energy<25||isNight())return goSleep(r,G,S.enemies.some(e=>e.spawned));
   if(r.hunger<550&&!foeNear(r)&&!(r.noEatU>S.t))return goEat(r,G);
   if(evAct(r,G))return;/* 強化のイベントに出る子は、イベントの場所へ（events.js） */
