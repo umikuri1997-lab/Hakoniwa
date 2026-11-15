@@ -75,7 +75,7 @@ Object.assign(B.SUB,{
   sticky1:()=>B.furnN('sticky',2,52,62,(x,y)=>y>=61&&y<=64),puddle1:()=>B.furnN('puddle',2,50,62,(x,y)=>y>=61&&y<=64),
   toy2:()=>B.furnN('sandbox',1,57,47),swing1:()=>B.furnN('swing',1,57,45),stor2:()=>B.furnN('taru',1,51,49,inHouse),mbox2:()=>B.furnN('makidana',1,52,56),
   stele1:()=>B.furnN('stele',1,45,45),fountain1:()=>B.furnN('fountain',1,58,53),lighthouse1:()=>B.furnN('lighthouse',1,44,50),lumber1:()=>B.furnN('lumber',1,46,52),quarry1:()=>B.furnN('quarry',1,58,58),
-  drum1:()=>B.furnN('drum',1,49,62,(x,y)=>y>=61&&y<=64),nebari1:()=>B.flower('nebari',47,64),hotaru1:()=>B.flower('hotaru',57,64),
+  drum1:()=>B.furnN('drum',1,49,62,(x,y)=>y>=61&&y<=64),pit1:()=>B.furnN('pit',1,55,64,(x,y)=>y>=63&&y<=66),nebari1:()=>B.flower('nebari',47,64),hotaru1:()=>B.flower('hotaru',57,64),
   arrow2:()=>{if(!B.ordered('arrow2')&&recipeKnown('arrow2'))orderFurn('arrow2')},
   talk1:()=>{const r=S.res.find(r=>!(r.act&&r.act.type==='sleep'));if(r&&!document.querySelector('#dialog:not([hidden])'))try{talkTo(r)}catch(e){}},
   festdeco:q=>B.anyOf(DECOQ,CN(DECOQ)+1,58,47),festlight:q=>B.anyOf(LIGHTQ,CN(LIGHTQ)+1,53,52),

@@ -280,7 +280,7 @@ function confirmYes(){
 }
 
 /* ---------- 家具の注文 ---------- */
-const RLOCK=new Set(['coop','barn','lumber','quarry','stele','fountain','lighthouse','windmill','bed','loom','campfire','oven','swing','lamp','bench','chair','stool','arrow2','drum']);/* 会話でひらめくまで作れない家具 */
+const RLOCK=new Set(['coop','barn','lumber','quarry','stele','fountain','lighthouse','windmill','bed','loom','campfire','oven','swing','lamp','bench','chair','stool','arrow2','drum','pit']);/* 会話でひらめくまで作れない家具 */
 /* ほかの土地でおぼえた物か（依頼ボード・「建てる」で、「この土地」のときは出さない）。この土地のお話・村レベル・思いつきでおぼえる物は、この土地の物 */
 let RECALL=false,NATIVE=null,NATIVEW=-1;
 function nativeSet(){if(NATIVE&&NATIVEW===WD)return NATIVE;const N=new Set();const add=L=>{for(const id of L||[])N.add(id)};

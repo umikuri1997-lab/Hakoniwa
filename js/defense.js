@@ -15,15 +15,15 @@ const fireTrapDmg=()=>wxRain()?20:40,gustDist=()=>nightWx()==='kaze'?9:6,waterSt
 const WXNOTE={rain:'雨の夜：ほのおの罠のダメージ半分・延焼なし。水の足止め1.5倍',storm:'あらしの夜：見張り台の射程−1。ほのおの罠のダメージ半分・延焼なし。水の足止め1.5倍',kaze:'風の強い夜：見張り台の射程+1。つむじ風の罠は9マスとばす'};
 function wxNightNote(){const d=dayNo();if(S.flags.wxNote===d||!(S.wave&&S.wave.length))return;S.flags.wxNote=d;const w=nightWx();if(w)toast(WXNOTE[w],'warn')}
 /* ---------- ヨロイカゲ・ヒカリカゲ ---------- */
-function armorMul(e,o){if(!EN[e.type]||!EN[e.type].armor)return 1;const t=o&&o.dt;return t==='arrow'?.5:t==='fire'||t==='poison'||t==='burn'?2:1}
-function defWave(list,alv){/* 草原：はじめてオオカゲを追いはらったあと、かげの巣1つでコカゲ+2。平均レベル7から、ヨロイカゲがまじる */if(WD!==0||S.free||!((S.bossKills||0)>0))return;{const n=nestCount();for(let i=0;i<n*NESTADD;i++)list.push('basic')}if(alv<7)return;for(let i=0;i<list.length;i++)if(list[i]==='basic'&&i%7===6)list[i]='armor'}
+function armorMul(e,o){if(EN[e.type]&&EN[e.type].fireRes&&o&&o.dt==='fire')return .5;/* ホテリカゲ：火は半分 */if(!EN[e.type]||!EN[e.type].armor)return 1;const t=o&&o.dt;return t==='arrow'?.5:t==='fire'||t==='poison'||t==='burn'?2:1}
+function defWave(list,alv){/* 草原：はじめてオオカゲを追いはらったあと、かげの巣1つでコカゲ+2。平均レベル7から、ヨロイカゲがまじる */if(WD!==0||S.free||!((S.bossKills||0)>0))return;{const n=nestCount();for(let i=0;i<n*NESTADD;i++)list.push('basic')}seasonFoes(list);/* 季節のコワイノ */if(alv<7)return;for(let i=0;i<list.length;i++)if(list[i]==='basic'&&i%7===6)list[i]='armor'}
 function shinyAdd(){/* ヒカリカゲ：波の夜に、まれに1ぴき */if(Math.random()>=SHINYP)return 0;const hp=EN.shiny.hp;S.enemies.push({id:S.nid++,type:'shiny',x:0,y:0,hp,max:hp,delay:WAVES[1]+20,side:Math.random()<.5?'w':'e',shiny:1,spawned:false,path:[],repath:0,atk:0,stun:0,flash:0,flee:false});return 1}
 function shinyTick(e){if(!e.shiny||e.flee)return false;if(e.sx0==null){e.sx0=e.x;S.flags.shinySeen=1;toast('ヒカリカゲがあらわれた！','good')}if(Math.abs(e.x-e.sx0)>5&&(e.x<1.5||e.x>W-1.5||(fogOn()&&(fogAt((e.y|0)*W+Math.min(W-1,(e.x|0)+1))||fogAt((e.y|0)*W+Math.max(0,(e.x|0)-1)))))){e.dead=true;toast('ヒカリカゲは、行ってしまった');return false}return true}
 function shinyGoal(e){/* 来たのと反対のはしへ（行けるいちばん近い所） */const s=e.side==='w'?'e':'w',G=bfsE(e.x|0,e.y|0,40,e.sd||(e.sd=(Math.random()*1e9)|0));let b=-1,bd=1e9;for(let y=0;y<H;y++){const x=sideEdge(y,s);if(x<0)continue;const q=y*W+x;if(G.dist[q]<0)continue;if(G.dist[q]<bd){bd=G.dist[q];b=q}}return b}
 function shinyDrop(e){if(!e.shiny)return;const id=Math.random()<.5?'sand':'fukuro';dropAt(e.x,e.y,id,1);toast('ヒカリカゲが、'+(id==='sand'?'やすらぎの砂':'ふしぎなふくろ')+'を落とした！','good')}
 /* ---------- コワイノの弱点（属性） ----------
    弱点の属性で攻撃すると、ダメージ1.5倍。水（ダメージなし）は、止める時間1.5倍。見張り台は上に立つせいれい、たたかうせいれいは自分の属性（hurtEn の o.el）。 */
-const WEAK={fast:'earth',brute:'wind',breaker:'water',trapper:'fire',thief:'wood',rockc:'water',armor:'water',ash:'water'},WEAKMUL=1.5;
+const WEAK={hana:'fire',hoteri:'water',ochiba:'wind',yuki:'fire',fast:'earth',brute:'wind',breaker:'water',trapper:'fire',thief:'wood',rockc:'water',armor:'water',ash:'water'},WEAKMUL=1.5;
 const weakMul=(e,o)=>o&&o.el&&WEAK[e.type]===o.el?WEAKMUL:1,weakStun=(e,el)=>WEAK[e.type]===el?WEAKMUL:1;
 /* ---------- ベテランの見張り台：追いはらった数（S.dyn[j].vk）で威力が少し上がる ---------- */
 const VETN=[50,200,500],VETD=[2,4,6];
@@ -77,3 +77,31 @@ function skillSec(body){const sec=el('<div class="sec"><h3>わざの枠（3つ�
   for(const[k,n,ok]of SKILLS){if(!ok())continue;const r=el('<button class="row" style="text-align:left;width:100%"><div class="tx"><b></b><small></small></div></button>');ckSet(r.querySelector('b'),(on.includes(k)?'✓ ':'')+n);r.querySelector('small').textContent=on.includes(k)?'セットしている':'セットしていない';r.onclick=()=>{skillToggle(k);renderSheet()};rw.appendChild(r)}
   if(!leafOK()){const r=rowEl('葉のかべ','夜、地面をなぞると、葉のかべが生える。コワイノの道をふさぐ');const b=el('<button class="btn pri" style="flex:none"></button>');b.textContent='おぼえる　'+SP(LEAFLEARN);lackOn(b,lackPt(LEAFLEARN));b.onclick=()=>{if(S.pt<LEAFLEARN){sfx('tap');return toast(lackPt(LEAFLEARN),'warn')}leafLearn();renderSheet()};r.appendChild(b);rw.appendChild(r)}
   body.appendChild(sec)}
+/* ---------- 見張り台のねらう順（S.dyn[j].to：near・hp・fast・vill） ---------- */
+const TORDER=[['near','近い','いちばん近いコワイノ'],['hp','強い','体力がいちばん多いコワイノ'],['fast','速い','足がいちばん速いコワイノ'],['vill','村に近い','村のまん中にいちばん近いコワイノ']];
+const torderOf=j=>(j!=null&&S.dyn[j]&&S.dyn[j].to)||'near';
+function torderKey(j,e,d){const k=torderOf(j);return k==='hp'?-e.hp:k==='fast'?-EN[e.type].sp:k==='vill'?Math.hypot(e.x-CX,e.y-CY):d}
+function torderSet(j,k){(S.dyn[j]||(S.dyn[j]={})).to=k;sfx('tap')}
+function torderSec(body,j){const sec=el('<div class="sec"><h3>ねらう順</h3><div class="rows"></div></div>'),rw=sec.querySelector('.rows'),cur=torderOf(j);for(const[k,n,t]of TORDER){const r=el('<button class="row" style="text-align:left;width:100%"><div class="tx"><b></b><small></small></div></button>');ckSet(r.querySelector('b'),(cur===k?'✓ ':'')+n);r.querySelector('small').textContent=t;r.onclick=()=>{torderSet(j,k);renderSheet()};rw.appendChild(r)}body.appendChild(sec)}
+/* ---------- 落とし穴の罠（pit）：ふんだコワイノは、その夜はもう出てこない（大きいコワイノはのぞく）。1回でつかいおわって穴（S.dyn[j].pu）。昼に土のせいれいが、時計の20分でほりなおす ---------- */
+const PITT=30;
+function pitStep(e,tj){const d=S.dyn[tj]||(S.dyn[tj]={});if(d.pu||EN[e.type].boss)return false;d.pu=1;sfxAt('wbreak',e.x,e.y);fxSpr('rockbreak',(tj%W+.5)*TS,((tj/W|0)+.6)*TS);defeat(e,EN[e.type].name+'が落とし穴に落ちた！');dirty=true;return true}
+function pitJob(r,G){if(isNight()||r.elem!=='earth')return false;const nt=q=>S.obj[q]==='pit'&&S.dyn[q]&&S.dyn[q].pu&&free('o'+q,1);const vj=nearest(G,j=>adjOf(j,nt)>=0,9999);if(vj<0)return false;const q=adjOf(vj,nt);startAct(r,G,'pitfix',vj,{key:'o'+q,obj:q});return true}
+ACT.pitfix={start(r,a){if(S.obj[a.obj]!=='pit')return false;r.bubble='⛏';faceTo(r,a.obj)},tick(r,a,dt){work(r,dt);a.h=(a.h||0)+dt;if(a.h>=2.5){a.h=0;sfxAt('crack',r.x,r.y)}},done:(r,a)=>a.t>=PITT||S.obj[a.obj]!=='pit'||isNight(),end(r,a){if(a.t>=PITT&&S.obj[a.obj]==='pit'){const d=S.dyn[a.obj];if(d)delete d.pu;dirty=true;addSpiritXp(1,r)}}};
+function drawPit(c,x,y,i){/* 落とし穴（コードのドット絵、仮の絵）：ふたの葉っぱ／あいた穴 */const P=(dx,dy,w,h,col)=>{c.fillStyle=col;c.fillRect(x+dx,y+dy,w,h)};const pu=i!=null&&S.dyn[i]&&S.dyn[i].pu;
+  if(pu){P(6,14,20,12,'#3a2a1c');P(8,16,16,8,'#24180f');P(6,12,20,2,'#6b4f33')}else{P(6,16,20,10,'#8a6a44');P(8,14,6,4,'#6fae4f');P(16,18,6,4,'#5f9a3e');P(12,22,8,3,'#7cc25e');P(22,15,3,3,'#6fae4f')}}
+/* ---------- 季節のコワイノ（草原、はじめてオオカゲを追いはらったあと、夜に1〜2ひき） ---------- */
+const SEASONEN=['hana','hoteri','ochiba','yuki'];
+function seasonFoes(list){const t=SEASONEN[seasonNow()];if(!t)return;const n=1+(dayNo()%2);for(let i=0;i<n;i++)list.push(t)}
+/* ---------- せいれいの大わざ：攻撃を10回あてると、つぎの1回が大わざ（r.ult） ---------- */
+const ULTN=10;
+function ultHit(r,en,dmg){r.ult=(r.ult||0)+1;if(r.ult<=ULTN)return;r.ult=0;const near=R=>S.enemies.filter(e=>e.spawned&&!e.dead&&Math.hypot(e.x-r.x,e.y-r.y)<=R);addFloat(r.x,r.y-1.4,'大わざ！','#ffd38a');sfxAt('kankan',r.x,r.y);fxSpr('shock',r.x*TS,r.y*TS,ELEM[r.elem].col);
+  if(r.elem==='fire'){for(const e of near(1.5)){hurtEn(e,dmg*2,{lag:HIT_LAG,sx:r.x,sy:r.y,dt:'fire',el:'fire'});if(e.hp<=0)defeat(e,r.name+'が'+EN[e.type].name+'を追いはらった！',r)}}
+  else if(r.elem==='earth'){for(const e of near(2)){e.stun=Math.max(e.stun||0,3);e.path=[]}}
+  else if(r.elem==='water'){for(const e of near(2)){e.stun=Math.max(e.stun||0,4.5);e.path=[]}}
+  else if(r.elem==='wind'){for(const e of near(2)){let dx=e.x-r.x,dy=e.y-r.y;const l=Math.hypot(dx,dy)||1;dx/=l;dy/=l;let bx=null,by=null;for(let k=1;k<=3;k++){const nx=e.x+dx*k,ny=e.y+dy*k,q=(ny|0)*W+(nx|0);if(!(nx>1&&ny>1&&nx<W-1&&ny<H-1)||!walk(q)||HOME_DOORS.has(typeAt(q))||GATE_IDS.has(typeAt(q)))break;bx=nx;by=ny}if(bx!=null){e.x=bx;e.y=by;e.path=[];e.repath=0}}}
+  else if(r.elem==='wood'){for(const q of S.res)if(!q.hidden&&Math.hypot(q.x-r.x,q.y-r.y)<=2)q.hunger=Math.min(hMax(q),q.hunger+100)}}
+/* ---------- 守りつづけた夜：けがもこわされた物もない夜がつづくと、はたらく速さ+（S.streak） ---------- */
+const STREAKN=[3,7,14],STREAKW=[5,10,15];
+function streakWork(){const n=(S&&S.streak)||0;let b=0;for(let i=0;i<STREAKN.length;i++)if(n>=STREAKN[i])b=STREAKW[i];return b}
+function streakMorning(){if(!S.ns||!(S.ns.n>0))return;if(!S.nightHurt&&!S.ns.broke){const b0=streakWork();S.streak=(S.streak||0)+1;const b1=streakWork();if(b1>b0)toast('守りつづけて'+S.streak+'晩：はたらく速さ+'+b1,'good')}else S.streak=0}

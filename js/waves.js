@@ -39,7 +39,7 @@ function nightSidePick(){/* 夜20時、今夜のコワイノが決まったあ�
 function sideEdge(y,s){if(!fogOn())return s==='e'?W-1:0;if(s==='e'){for(let x=W-1;x>=0;x--)if(!fogAt(y*W+x))return x}else for(let x=0;x<W;x++)if(!fogAt(y*W+x))return x;return -1}
 function sideSpot(s){const R=spawnReach();for(let t=0;t<300;t++){const y=(Math.random()*H)|0,x=sideEdge(y,s),j=y*W+x;if(x<0||S.ground[j]===1||solidOf(j)||lightAt(x+.5,y+.5)||R[j]<0)continue;return [x+.5,y+.5]}return spawnSpot()}/* 見つからなければ、南のはし */
 /* ---------- 植物の守り ---------- */
-function nebariMul(e){const j=(e.y|0)*W+(e.x|0);return S.obj[j]==='nebari'&&!isBud(j)?NEBARISP:1}
+function nebariMul(e){const j=(e.y|0)*W+(e.x|0);return !(EN[e.type]&&EN[e.type].nosl)&&S.obj[j]==='nebari'&&!isBud(j)?NEBARISP:1}
 function hotaruTick(e){/* はじめて、ほたるの草むらの光に入ったら止まる。止めたら true */
   if(!HOTL.length||e.flee)return false;for(const j of HOTL){if(S.obj[j]!=='hotaru'||isBud(j))continue;const dx=j%W+.5-e.x,dy=((j/W)|0)+.5-e.y;if(dx*dx+dy*dy>=HOTARUR2)continue;const H0=e.htr||(e.htr=[]);if(H0.includes(j))continue;
     H0.push(j);e.stun=EN[e.type].boss?HOTARUSTUNB:HOTARUSTUN;e.path=[];fxSpr('twinkle',e.x*TS,e.y*TS-8);sfxAt('bonk',e.x,e.y);return true}return false}
