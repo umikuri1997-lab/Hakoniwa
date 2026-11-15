@@ -1,0 +1,18 @@
+/* パワーのひらき道：上からじゅんにひらく・パワーがへる・効果（はたらく速さ・移動速度・持てる数・攻撃力・住み心地・しまえる数・たのしさのへり）・メニューの画面 */
+const assert=require('node:assert/strict');
+(async()=>{const {browser,run,errors}=await require('../sim/boot.cjs')({world:0});
+  const r=JSON.parse(await run(`(()=>{document.querySelector('#dialog').hidden=true;S.introSeen=true;S.flags.tapped=1;USERPAUSE=true;const a=S.res[0],out={};
+    const st0=rStat(a,rLv(a));out.pa0=pathA('work');
+    S.pt=50;out.poor=pathBuy(VPATH[1].L[0]);out.pt0=S.pt;
+    S.pt=10000;for(const b of VPATH)for(const p of b.L)pathBuy(p);out.pt=S.pt;out.all=Object.keys(S.vpath).length;
+    const st1=rStat(a,rLv(a));out.d={work:st1.work-st0.work,move:st1.move-st0.move,cap:st1.cap-st0.cap,atk:st1.atk-st0.atk};
+    out.box=pathBox();out.fun=pathFun();out.wdmg=pathA('wdmg');out.wrng=pathA('wrng');out.comf=pathA('comf');
+    S.vpath={};openSheet('menu','path');out.rows=[...document.querySelectorAll('.sheet .row')].map(e=>e.textContent.replace(/\\s+/g,' ').trim()).slice(0,3);out.btns=document.querySelectorAll('.sheet .row .btn').length;closeSheet();
+    return JSON.stringify(out)})()`));
+  console.log(JSON.stringify(r));
+  assert.equal(r.pa0,0);assert.equal(r.poor,false);assert.equal(r.pt0,50);
+  assert.equal(r.all,9);assert.equal(r.pt,10000-(100+200+300+100+200+400+150+250+350));
+  assert.deepEqual(r.d,{work:5,move:5,cap:1,atk:2});assert.equal(r.box,.1);assert.equal(r.fun,.9);assert.equal(r.wdmg,2);assert.equal(r.wrng,1);assert.equal(r.comf,10);
+  assert.equal(r.btns,3,'道ごとに、いちばん上だけひらける');
+  assert.deepEqual(errors,[]);await browser.close();console.log('OK');
+})().catch(e=>{console.error(e);process.exit(1)});

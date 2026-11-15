@@ -67,6 +67,7 @@ function hasWork(r){
   if(!isNight()&&STATUE>=0&&(r.otaki||S.otakiQ&&Object.keys(S.otakiQ).length))return true;
   if(!isNight()&&(r.cpk||S.cmpQ&&Object.keys(S.cmpQ).length))return true;
   if(smeltWant(r))return true;
+  if(!isNight()&&S.tx!=null&&free('tx',1))return true;/* 宝の場所 */
   if(typeof procWant==='function'&&procWant(r))return true;/* 加工（粉ひき小屋・はたおり機） */
   if(jobWork(r,null,1))return true;/* しごと場の担当 */
   if(typeof bpJob==='function'&&bpJob(r,null,1))return true;/* 家の設計図 */
@@ -116,7 +117,7 @@ function goWork(r,G,nw){boxFullReset();
   if(typeof procJob==='function'&&procJob(r,G))return true;/* 加工：運ぶ・加工する・水車でできた物を運ぶ */
   if(typeof fogJob==='function'&&fogJob(r,G))return true;if(typeof wflJob==='function'&&wflJob(r,G))return true;/* 御神木のそばの花の世話（木のなかまと花畑） */if(webJob(r,G))return true;/* クモの巣のそうじ *//* 霧の中で見つけた宝箱・あしあと */
   if(r.elem==='wind')for(const k of['drop','seed','weed'])if(tryJob(r,G,k))return true;/* 風のせいれいは、落ちている物（落とし物・枝・ふしぎな種・雑草・きのこ）を、畑の世話・おつげ・木・石より先にひろう */
-  if((S.drops||[]).some(q=>q.lt||q.tap)||wreqList().length){for(const k of FARMJ)if(tryJob(r,G,k))return true;if(tryJob(r,G,'drop'))return true;if(wreqList().length&&tryJob(r,G,'weed'))return true}if(vreqList().length&&tryJob(r,G,'mine'))return true;/* タップした鉱脈 *//* 「みる」でタップした草・きのこ・落とし物も、ここでとりにいく *//* 守り神の光でこわした物（落ちた木材・石材）は、おつげ・木を切る・石をほるより先にひろう。畑の世話よりはあと */
+  if((S.drops||[]).some(q=>q.lt||q.tap)||wreqList().length){for(const k of FARMJ)if(tryJob(r,G,k))return true;if(tryJob(r,G,'drop'))return true;if(wreqList().length&&tryJob(r,G,'weed'))return true}if(vreqList().length&&tryJob(r,G,'mine'))return true;/* タップした鉱脈 */if(typeof txJob==='function'&&txJob(r,G))return true;/* 宝の場所をほる *//* 「みる」でタップした草・きのこ・落とし物も、ここでとりにいく *//* 守り神の光でこわした物（落ちた木材・石材）は、おつげ・木を切る・石をほるより先にひろう。畑の世話よりはあと */
   if(r.elem==='earth'&&tryJob(r,G,'till'))return true;/* 土のせいれいは、おつげがあっても、畑づくりを先にする */
   if(S.oracle&&ORACLE[S.oracle])for(const k of ORACLE[S.oracle].jobs){if((k==='chop'||k==='mine')&&tryJob(r,G,'drop'))return true;if(tryJob(r,G,k))return true}/* 落とし物は、木を切る・石をほるより先にひろう */
   // 建てる・家具づくりがいちばん先。そのつぎに得意な仕事をする
@@ -252,7 +253,7 @@ function updRes(r,dt){rescueStuck(r);if((RHOLD.get(r)||0)>performance.now())retu
   if(r.hidden||r.act&&r.act.stage==='do'||Math.hypot(r.x-(r.stX??r.x),r.y-(r.stY??r.y))>.3){r.stX=r.x;r.stY=r.y;r.stT=S.t}else if(S.t-(r.stT??S.t)>=10&&!(r.act&&r.act.type==='nmeet')){if(r.act&&r.act.stand>=0){r.avoidJ=r.act.stand;r.avoidU=S.t+120}r.stX=r.x;r.stY=r.y;r.stT=S.t;if(r.act)endAct(r)}/* 動いてもいない・作業もしていないまま10分たったら、いまの行動をやめて、べつの行動をえらぶ */
   const sleeping=r.act&&r.act.type==='sleep'&&r.act.stage==='do',storyWaiting=storyWaitProtected(r)||preBedCalm();
   const mv=r.act&&(r.act.stage==='walk'||r.act.type==='tag');const lazy=!r.act||r.act.type==='idle'||r.act.type==='wander'||r.act.type==='quirk'||r.act.type==='stay';const wk=r.act&&r.act.stage==='do'&&WORKT.has(r.act.type);/* おなかは、作業するとへる。つかれているほどへりやすい */if(!storyWaiting)r.hunger-=(sleeping?.03:wk?3:mv?.4:.2)*(lazy?.5:1)*(r.energy<10?2:r.energy<30?1.5:1)*dt*(trt(r,'shoshoku')?.8:1)*(r.full>S.t?.6:1)*(WD===1&&r.sprC===dayNo()?SPR_EFF.c:1);
-  if(!sleeping&&!storyWaiting)r.fun-=.07*dt*(trt(r,'genki')?.6:1)*SUTEKI_FUN[suteki().st]*gearStat(r).fun*(S.rain&&gearStat(r).rain?0:1)*(rainbowToday()?RB_FUN:1)*(r.grief?GRIEF_FUN:1)*(r.qrF?QR_FUN:1);/* なかよしが消えたあとは、しょんぼり */
+  if(!sleeping&&!storyWaiting)r.fun-=.07*dt*(trt(r,'genki')?.6:1)*SUTEKI_FUN[suteki().st]*(typeof pathFun==='function'?pathFun():1)*(typeof stormFun==='function'?stormFun(r):1)*gearStat(r).fun*(S.rain&&gearStat(r).rain?0:1)*(rainbowToday()?RB_FUN:1)*(r.grief?GRIEF_FUN:1)*(r.qrF?QR_FUN:1);/* なかよしが消えたあとは、しょんぼり */
   {const jj=(r.y|0)*W+(r.x|0),ev=ENVG?ENVG[jj]+(ENVE[r.elem]?ENVE[r.elem][jj]:0):0;if(ev>0&&!sleeping){r.fun=Math.min(100,r.fun+ev*.004*dt);if(r.act&&r.act.stage==='do'&&(r.act.type==='idle'||r.act.type==='rest'))r.energy=Math.min(100,r.energy+ev*.004*recK(r)*dt)}}/* まわりの環境がいいと、休けい・たのしさが上がる */
   // 家の中で寝ている子は、壁が壊れて「コワイノ」が入ってこない限り起きない
   if(sleeping&&fighter(r)&&r.energy>30&&S.enemies.some(e=>e.spawned&&Math.hypot(e.x-r.x,e.y-r.y)<8)){const out=insideSet(),me=(r.y|0)*W+(r.x|0);
