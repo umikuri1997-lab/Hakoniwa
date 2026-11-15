@@ -313,24 +313,36 @@ def wbtn_css():
 
 # ---- 草原の丸いボタン（とじるボタン・守りの光）：切りっぱなしの丸い木（木目・下に2ドットのあつみ） ----
 def disk_rows(N, rim=True):
-    """板にはめこんだ丸いボタン：まわりに2ドットのすきま（上がわはかげでこい）、中に木の面"""
-    c, R = N / 2, N / 2
-    dist = lambda x, y: ((x + .5 - c) ** 2 + (y + .5 - c) ** 2) ** .5
-    inside = lambda x, y: 0 <= x < N and 0 <= y < N and dist(x, y) <= R
-    face = lambda x, y: inside(x, y) and dist(x, y) <= R - 2
+    """すこしベベルした木の円柱（上から少し見おろした形）：上の面は丸く、こい木のふち、ふちの2ドットがななめに落ちる面（左上は光・右下はかげ）、
+    下に円柱の側面（あつみ）"""
+    TH = 2 if N < 30 else 4  # 側面のあつみ
+    r = (N - TH) / 2
+    cx, cy = N / 2, r
+    d = lambda x, y, oy=0: ((x + .5 - cx) ** 2 + (y + .5 - cy - oy) ** 2) ** .5
+    top = lambda x, y: 0 <= x < N and 0 <= y < N and d(x, y) <= r
+    side = lambda x, y: any(d(x, y, k) <= r for k in range(1, TH + 1))
+    BV = 2 if N < 30 else 3  # ベベルのはば
     rows = []
     for y in range(N):
-        r = ''
+        o = ''
         for x in range(N):
-            if not inside(x, y): r += '.'; continue
-            if not face(x, y): r += 'G' if (x + .5 - c) + (y + .5 - c) < 0 else 'B'; continue  # すきま
-            d = dist(x, y); e = int((R - 2) - d)
-            if e <= 2:  # 面のふち3ドットに光とかげの段（左上が光、右下がかげ）
-                lit = (x + .5 - c) + (y + .5 - c) < 0
-                r += ('h', 'k', 'm')[max(0, e)] if lit else ('e', 'E', 'F')[max(0, e)]
-            elif (x + .5 - c + R * .42) ** 2 + (y + .5 - c + R * .42) ** 2 < (R * .08) ** 2: r += 'q'  # つや：左上の光
-            else: r += grain(x, y, 64)
-        rows.append(r)
+            if top(x, y):
+                if not (top(x - 1, y) and top(x + 1, y) and top(x, y - 1) and top(x, y + 1)): o += 'o'; continue
+                e = r - d(x, y)
+                ang = (x + .5 - cx) * .6 + (y + .5 - cy)
+                if e <= BV:
+                    if ang < -r * .25: o += 'h' if e <= BV * .55 else 'k'
+                    elif ang > r * .25: o += 'E' if e <= BV * .55 else 'F'
+                    else: o += 'm'
+                    continue
+                if (x + .5 - cx + r * .38) ** 2 + (y + .5 - cy + r * .42) ** 2 < (r * .1) ** 2: o += 'q'; continue
+                o += grain(x, y, 64); continue
+            if side(x, y) and 0 <= y < N:
+                below_edge = not side(x, y + 1)
+                o += 'b' if below_edge or not (side(x - 1, y) or top(x - 1, y)) or not (side(x + 1, y) or top(x + 1, y)) else ('e' if x + .5 < cx else 't')
+                continue
+            o += '.'
+        rows.append(o)
     return rows
 
 
