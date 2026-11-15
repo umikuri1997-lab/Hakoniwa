@@ -19,9 +19,11 @@ const assert=require('node:assert/strict');
   /* 3. タブ：めくる音 */
   await run(`openSheet('res',S.res[0].id)`);await page.waitForTimeout(400);
   await run(`REC.length=0;RECU.length=0;lastSfx.tab=0;document.querySelectorAll('#sheetBody .ctab')[1].click()`);await page.waitForTimeout(80);
-  assert.ok(JSON.parse(await run(`JSON.stringify(RECU)`)).includes('tab'),'tab sound');console.log('UI touch: tabs flip');
+  {const r=JSON.parse(await run(`JSON.stringify({u:RECU,s:REC})`));assert.ok(r.s.includes('flip')&&!r.u.includes('tab'),'meadow: only the flip sound '+JSON.stringify(r))}
+  await run(`document.body.classList.remove('wd0');REC.length=0;RECU.length=0;lastSfx.tab=0;lastSfx.next=0;document.querySelectorAll('#sheetBody .ctab')[0].click()`);await page.waitForTimeout(80);
+  assert.ok(JSON.parse(await run(`JSON.stringify(RECU)`)).includes('tab'),'tab sound');await run(`UIWD=null;uiStageSync()`);console.log('UI touch: tabs flip (meadow: the flip sound only)');
   /* 4. 行が1つずつならぶ */
-  await run(`closeSheet();openSheet('menu')`);const rows=+await run(`document.querySelectorAll('#sheetBody .urow').length`);assert.ok(rows>=5,'rows: '+rows);
+  await run(`closeSheet();openSheet('menu')`);const rows=+await run(`document.querySelectorAll('#sheetBody .urow').length`);assert.ok(rows>=3,'rows: '+rows);assert.equal(+await run(`document.querySelectorAll('#sheetBody .mtile.urow').length`),0,'meadow menu tiles use the tile stagger');
   await page.waitForTimeout(1200);assert.equal(+await run(`document.querySelectorAll('#sheetBody .urow').length`),0,'the class goes away');console.log('UI touch: rows are placed one by one ('+rows+')');
   /* 5. ±の長おし：だんだん速くかわる。はなしたときの1回はかぞえない */
   await run(`closeSheet();window.NCLK=0;const o=document.createElement('div');o.id='tstep';o.style.cssText='position:fixed;left:200px;top:200px;z-index:99';o.innerHTML='<button class="btn p">＋</button>';o.firstChild.onclick=()=>{sfx('notch');NCLK++};document.body.appendChild(o)`);await page.waitForTimeout(300);
