@@ -303,8 +303,10 @@ function renderSheet(){
     if((S.herb||0)>0){const b=el('<button class="slot"><span class="ct"></span><img alt=""><span class="nm">まよけのハーブ</span></button>');b.querySelector('img').src=herbIco();b.querySelector('.ct').textContent=S.herb;b.onclick=()=>{sfx('tap');itemPop('herb')};grid.appendChild(b)}
     body.appendChild(grid);
     if(typeof sheetArg==='string'&&(sheetArg==='mseed'?(S.mseed||0)>0:sheetArg.startsWith('seed:')?!!CROPS[sheetArg.slice(5)]:ids.includes(sheetArg))){const a=sheetArg;sheetArg=null;itemPop(a)}/* ほかの画面から、物をえらんで開いたときは、そのメニューも出す */
+  }else if(sheet==='event'){evSheet(body);
   }else if(sheet==='craft'){
     T.textContent='依頼ボード';
+    {const eb=el('<button class="btn" id="evBtn" style="width:100%;margin-bottom:8px">イベント</button>');eb.onclick=()=>{sfx('tap');openSheet('event')};body.appendChild(eb)}/* 強化のイベント（events.js） */
     body.appendChild(el('<p class="note">'+(orderLock()?'いまは「'+BL[orderLock()].name+'」だけたのめます。':'できたものはおそなえ箱に入ります。')+'</p>'));
     const bd=el('<div class="board"></div>');
     for(let n=0;n<boardMax();n++){const o=S.orders[n];
@@ -509,10 +511,8 @@ function renderSheet(){
 
   }else if(sheet==='roof'){const j=sheetArg,o=(S.roof||{})[j];if(!o||!BL[o])return closeSheet();T.textContent=BL[o].name;{const te=tagsEl(o);if(te)body.appendChild(te)}
     body.appendChild(rowEl(BL[o].name,withAttr(o,BL[o].desc||''),iconURL(o)));/* ガゼボ・東屋（屋根の層）の説明 */
-  }else if(sheet==='score'){const sc=S.score||calcScore();T.textContent='クリアスコア';
-    body.appendChild(el('<div style="text-align:center;margin:6px 0 10px"><div style="font-size:44px;font-weight:900;color:#e0a43a;line-height:1">'+sc.rank+'</div><div style="font-size:24px;font-weight:800;margin-top:4px">'+sc.tot+' てん</div></div>'));
-    const g=el('<div class="rows"></div>');for(const[a,b,c]of sc.parts)g.appendChild(rowEl(a+'：'+b,(c>=0?'+':'')+c+' てん'));body.appendChild(g);
-    const b=el('<button class="btn pri" style="width:100%;margin-top:10px">とじる</button>');b.onclick=()=>{sfx('tap');closeSheet()};body.appendChild(b);
+  }else if(sheet==='score'||sheet==='reflect'){if(!reflectOK())return closeSheet();reflectBody(T,body);/* 前の「クリアスコア」は、ふりかえりにした */
+  }else if(sheet==='clearrec'){if(!reflectOK())return closeSheet();clearRecBody(T,body);
   }else if(sheet==='heatv'){const j=sheetArg,t=st2();T.textContent=j===D1?'手前の熱の装置':'奥の熱の装置';
     const P=tx=>{body.appendChild(el('<p class="story"></p>')).textContent=tx};
     const dir=j===D1?t.d1:t.d2;
@@ -596,9 +596,9 @@ function renderSheet(){
         const b=el('<button class="btn pri" style="flex:none"></button>');if(mx){b.textContent='さいだい';b.disabled=true}else{const c=GUPC[n];b.textContent='強化　'+SP(c);lackOn(b,lackPt(c));b.onclick=()=>{if(S.pt<c){sfx('tap');return toast(lackPt(c),'warn')}if(gupBuy(g.k))renderSheet()}}
         r.appendChild(b);rw.appendChild(r)}
       body.appendChild(sec)
-    }else if(sheetArg==='record'){appendStoryReplays(body);diaryList(body);photoSec(body);
+    }else if(sheetArg==='record'){reflectSec(body);appendStoryReplays(body);diaryList(body);photoSec(body);
       const st=el('<div class="sec"><h3>これまで</h3><div class="recs"></div></div>'),rw=st.querySelector('.recs');
-      for(const[a,b]of[['すごした日',dayNo()+'日'],...(S.score?[['クリアスコア',S.score.rank+'（'+S.score.tot+'てん）']]:[]),['のりこえた夜',(S.nights||0)+'回'],['いまのせいれい',S.res.length+'人'],['よんだせいれい',(S.summons||0)+'人'],['消えてしまったせいれい',(S.deaths||0)+'人'],
+      for(const[a,b]of[['すごした日',dayNo()+'日'],['のりこえた夜',(S.nights||0)+'回'],['いまのせいれい',S.res.length+'人'],['よんだせいれい',(S.summons||0)+'人'],['消えてしまったせいれい',(S.deaths||0)+'人'],
         ['追いはらった「コワイノ」',(S.kills||0)+'体'],['オオカゲ',(S.bossKills||0)+'回'],[SHN(),(S.shards||0)+'つ'],['めぶきのしずく',(S.mebuki||0)+'こ'],['ためたせいれいパワー',Math.floor(S.totalPt||0)+''],['みどりのマス',GRASSN+'マス'],['村レベル','Lv'+S.lv],['たっせいした目標',S.quest+'こ']]){const d=el('<div class="st"><span></span><b></b></div>');d.firstChild.textContent=a;d.lastChild.textContent=b;rw.appendChild(d)}
       body.appendChild(st);
       if((S.gone||[]).length){/* いなくなったなかま：名前・いっしょにいた日・なかよしとの思い出 */const sec=el('<div class="sec"><h3>いなくなったなかま</h3><div class="rows"></div></div>'),rw2=sec.querySelector('.rows');
