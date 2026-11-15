@@ -26,7 +26,7 @@ function seasonDraw(ctx,now,dk){if(!S)return;const k=seasonNow();
 /* 記念日 */
 function annivOf(r){if(!r||!r.came||r.back)return 0;const n=dayNo()-r.came;return ANNIV.includes(n)?n:0}
 function annivMorning(){if(typeof MEMRUN!=='undefined'&&MEMRUN)return;for(const r of S.res){if(r.hidden)continue;const n=annivOf(r);if(!n)continue;
-  memo('',r.name+'が村に来て'+n+'日');const m=bestMate(r);
+  memo('',r.name+'が村に来て'+n+'日');if(typeof letterQ==='function')letterQ(r,'anniv',n);const m=bestMate(r);
   villageTimeout(()=>{if(!S.res.includes(r))return;toast(r.name+'が村に来て'+n+'日！','good');addFloat(r.x,r.y-1.4,n+'日！','#ffe7a8');JUMP.set(r,performance.now());
     if(m&&!m.hidden&&S.res.includes(m)){addFloat(m.x,m.y-1.4,'おめでとう！','#ffd2e4');JUMP.set(m,performance.now()+250)}},1600)}}
 function annivTopic(r){const n=annivOf(r);if(!n)return null;const m=bestMate(r);

@@ -75,7 +75,7 @@ function sacredTreeTap(j){/* 御神木をタップ：かけらの光をとどけ
   if((S.setSh||0)>=3){const reason=grassReunionBlockReason();if(reason)return toast(reason);scheduleGrassReunion();return;}
   return openSheet('clear');
 }
-function onTap(sx,sy){if(GIFT_ACTIVE&&camAnim&&camAnim.done)return;/* 霧が晴れる・鉱脈が目をさます演出のカメラ中は、タップをうけない */DLGTAP=performance.now();/* タップで始める会話は、またずにすぐ出す */if(mode==='look'&&typeof tapFx==='function')tapFx(sx,sy);/* みるでタップしたところに、葉（火山は火の粉）が舞う */
+function onTap(sx,sy){if(GIFT_ACTIVE&&camAnim&&camAnim.done)return;if(typeof starTap==='function'&&starTap())return;/* 流れ星が流れているあいだのタップは、おねがい *//* 霧が晴れる・鉱脈が目をさます演出のカメラ中は、タップをうけない */DLGTAP=performance.now();/* タップで始める会話は、またずにすぐ出す */if(mode==='look'&&typeof tapFx==='function')tapFx(sx,sy);/* みるでタップしたところに、葉（火山は火の粉）が舞う */
   let w=toWorld(sx,sy);const w0=w,tx=Math.floor(w.x/TS);{const tl=tapLv(w.x,w.y);if(tl)w={x:w.x,y:w.y+tl*LIFT}}const ty=Math.floor(w.y/TS);/* 高い段のマス・物・せいれい・コワイノは上にずらして描くので、タップの場所も高さの分だけ下へもどす */
   if(AREAARM){AREAARM=false;return areaBlast(w.x/TS,w.y/TS)}
   if(LEAFARM){const tl=tapLv(w.x,w.y),wy=w.y+(tl?tl*LIFT:0);LEAFDRAG=[];leafAdd(Math.floor(wy/TS)*W+Math.floor(w.x/TS));const c=LEAFDRAG;LEAFDRAG=null;return leafPlace(c)}/* 葉のかべ：タップは1マス *//* こもれびのまもり：タップした場所のまわり */
