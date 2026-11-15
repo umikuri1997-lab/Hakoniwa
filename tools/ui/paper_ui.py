@@ -372,54 +372,83 @@ def disk_css():
 
 
 # ---- 草原のかざり：植物（すみの葉とつる・花）・木札をつるす横木 ----
-IVY = [  # 左上：すみから下へたれる、つた（20×34）。o 葉のふち・g 葉・l 葉の光・s くき
-    '.............ooo....',
-    '............ogglo...',
-    '...........sogggo...',
-    '..........s..ooo....',
-    '....oo...s..........',
-    '...oglo.s...........',
-    '...oggos............',
-    '....ooss............',
-    '......s.............',
-    '.....s..............',
-    '....s.oo............',
-    '....soglo...........',
-    '...s.oggo...........',
-    '..oo..oo............',
-    '.oglo...............',
-    '.oggos..............',
-    '..oo.s..............',
-    '.....s..............',
-    '....s...............',
-    '....s.oo............',
-    '....soglo...........',
-    '.....oggo...........',
-    '.....soo............',
-    '....s...............',
-    '...os...............',
-    '..oglo..............',
-    '..oggo..............',
-    '...oo...............',
+# 植物は、葉・花の型（ドット）を、くきの上にならべて組む。色：o 葉のふち・d 葉のかげ・g 葉・l 葉の光・h 葉のつや・v 葉すじ
+#   s くき・S くきの光・r 花のふち・P 花のかげ・p 花・q 花の光・c 花のしん・C しんのかげ・x 白い花のふち・W 白い花のかげ・w 白い花
+LEAF = [  # ハート形のつたの葉（7×6、下向き）。左が光・右がかげ
+    '.oo.oo.',
+    'olhogdo',
+    'ollvgdo',
+    '.olvdo.',
+    '..ovo..',
+    '...o...',
 ]
-BLOOM = [  # 右上：花のかたまり（22×16）。p 花・P 花のかげ・c 花のまん中・w 白い花・b つぼみ・o g l s は葉とくき
-    '....ppp...............',
-    '...pPcpp..www.........',
-    '...ppccP.wwcww........',
-    '....pPp..wcccw........',
-    '..oo.s....wcw...bb....',
-    '.ogloss....s...bpb....',
-    '.oggo..ss.s.ss..b.....',
-    '..oo.....sss..s.s.....',
-    '..........s....s......',
-    '......ooo.s.ooo.......',
-    '.....ogglsooglo.......',
-    '......oggogggo........',
-    '.......ooooo..........',
-    '..........s...........',
-    '..........s...........',
-    '..........s...........',
+LEAFS = [  # 小さな葉（5×4）
+    '.o.o.',
+    'olvdo',
+    '.ovo.',
+    '..o..',
 ]
+ROSE = [  # ピンクの花（7×7）：花びらのかさなりのかげ
+    '..rrr..',
+    '.rqqpr.',
+    'rqpPppr',
+    'rppqPpr',
+    'rpPppPr',
+    '.rpPPr.',
+    '..rrr..',
+]
+DAISY = [  # 白い小花（5×5）
+    '.xwx.',
+    'xwwwx',
+    'wwccw',
+    'xwCWx',
+    '.xWx.',
+]
+BUD = ['.r.', 'rqr', 'rPr', 'ovo']  # つぼみ（3×4、がく）
+LEAFR = [  # 横向きの葉（8×5、右向き）
+    '.oo.....',
+    'olhgoo..',
+    '.ovvvddo',
+    'olgddoo.',
+    '.oo.....',
+]
+
+
+def flipx(t): return [r[::-1].translate(str.maketrans('lhdg', 'dglh')) if False else r[::-1] for r in t]
+
+
+def plant(W, H, stems, items):
+    """stems: [(x,y),...] の点をつなぐくき。items: (型, x, y, 左右反転) を、うしろから順にかさねる"""
+    g = [['.'] * W for _ in range(H)]
+    for pts in stems:
+        for (x0, y0), (x1, y1) in zip(pts, pts[1:]):
+            n = max(abs(x1 - x0), abs(y1 - y0), 1)
+            for k in range(n + 1):
+                x = round(x0 + (x1 - x0) * k / n); y = round(y0 + (y1 - y0) * k / n)
+                if 0 <= x < W and 0 <= y < H: g[y][x] = 's'
+    for t, x0, y0, fl in items:
+        t = [r[::-1] for r in t] if fl else t
+        if fl:  # 反転しても、光は左上
+            t = [r.translate(str.maketrans('ld', 'dl')) for r in t]
+        for y, r in enumerate(t):
+            for x, c in enumerate(r):
+                if c != '.' and 0 <= x0 + x < W and 0 <= y0 + y < H: g[y0 + y][x0 + x] = c
+    return [''.join(r) for r in g]
+
+
+# 左上：すみから下へ、ゆれながらたれる、つた（24×40）。葉は大小・下向き・横向きをまぜる
+IVY = plant(24, 40,
+            [[(15, 0), (13, 4), (11, 9), (9, 13), (8, 18), (9, 23), (8, 28), (6, 33), (6, 38)],
+             [(11, 9), (13, 11)]],
+            [(LEAF, 11, 0, False), (LEAFR, 1, 6, True), (LEAFS, 12, 11, False), (LEAFS, 4, 12, True),
+             (LEAFR, 10, 18, False), (LEAF, 2, 21, True), (LEAFS, 9, 27, False), (LEAF, 1, 30, True), (LEAFS, 5, 36, False)])
+# 右上：花のかたまり（28×18）。葉をうしろに、ピンクの花2つ・白い小花2つ・つぼみ2つをよせて、花束のようにまとめる
+BLOOM = plant(28, 18,
+              [[(14, 17), (14, 12), (11, 8)], [(14, 12), (18, 9)], [(14, 14), (6, 8)], [(14, 14), (23, 9)]],
+              [(LEAFR, 0, 9, True), (LEAFR, 20, 9, False), (LEAF, 4, 1, True), (LEAF, 17, 2, False), (LEAFS, 11, 12, False),
+               (LEAF, 8, 9, True), (LEAF, 14, 9, False),
+               (ROSE, 8, 3, False), (ROSE, 14, 5, True), (DAISY, 4, 7, False), (DAISY, 20, 6, False),
+               (BUD, 6, 1, False), (BUD, 22, 2, False), (LEAFS, 12, 14, False)])
 SPRIG = BLOOM
 VINE = [  # 横木にからむ、つる（32×10。よこにくりかえす）
     '......oo..................oo....',
@@ -448,8 +477,9 @@ ROPE = ['ab', 'bc', 'ab', 'bc']  # なわ（2×4、たてにくりかえす。�
 
 
 def deco_css():
-    lp = {'o': '#4f8a40', 'g': '#7cc06a', 'l': '#a8dc8c', 's': '#7a5532', 'f': '#fff4f0', 'c': '#f2c94c',
-          'p': '#f4a7b9', 'P': '#e07f98', 'w': '#fffaf2', 'b': '#e88aa2'}
+    lp = {'o': '#4a8a3e', 'd': '#62a352', 'g': '#7cc06a', 'l': '#a2d886', 'h': '#d2f0b0', 'v': '#5c9a4c',
+          's': '#7a5532', 'S': '#a8784a', 'r': '#c9637f', 'P': '#e48aa2', 'p': '#f6aec0', 'q': '#ffd8e2',
+          'c': '#f2c94c', 'C': '#d9a23a', 'x': '#cdbfa6', 'W': '#ece0cc', 'w': '#fffaf2', 'f': '#fff4f0', 'b': '#e88aa2'}
     ivy = svg(IVY, lp)
     bloom = svg(BLOOM, lp)
     vine = svg(VINE, lp)
@@ -461,8 +491,8 @@ def deco_css():
     return '\n'.join([
         '/* 草原のかざり：上の欄と画面のすみに植物（つたの葉・小さな花）。下のバーは横木からつるした木札（なわ・つる） */',
         f'body.wd0 #topUI .hud{{position:relative}}',
-        f'body.wd0 #topUI .hud::before{{content:"";position:absolute;left:calc({pp}*-6);top:calc({pp}*-5);width:calc({pp}*20);height:calc({pp}*28);background:{ivy} 0 0/100% 100% no-repeat;image-rendering:pixelated;pointer-events:none;z-index:2}}',
-        f'body.wd0 #topUI .hud::after,body.wd0 .sheet:not([data-k="zukan"])::before{{content:"";position:absolute;right:calc({pp}*-4);top:calc({pp}*-7);width:calc({pp}*22);height:calc({pp}*16);background:{bloom} 0 0/100% 100% no-repeat;image-rendering:pixelated;pointer-events:none;z-index:2}}',
+        f'body.wd0 #topUI .hud::before{{content:"";position:absolute;left:calc({pp}*-6);top:calc({pp}*-5);width:calc({pp}*{len(IVY[0])});height:calc({pp}*{len(IVY)});background:{ivy} 0 0/100% 100% no-repeat;image-rendering:pixelated;pointer-events:none;z-index:2}}',
+        f'body.wd0 #topUI .hud::after,body.wd0 .sheet:not([data-k="zukan"])::before{{content:"";position:absolute;right:calc({pp}*-4);top:calc({pp}*-7);width:calc({pp}*{len(BLOOM[0])});height:calc({pp}*{len(BLOOM)});background:{bloom} 0 0/100% 100% no-repeat;image-rendering:pixelated;pointer-events:none;z-index:2}}',
         f'body.wd0 .sheet:not([data-k="zukan"])::before{{right:auto;left:calc({pp}*8)}}',
         f'body.wd0 .dock{{position:relative;border-image:none!important;background:none!important;box-shadow:none!important;padding:calc({pp}*20) 4px 4px!important;overflow:visible}}',
         f'body.wd0 .dock::before{{content:"";position:absolute;left:calc(50% - 50vw);width:100vw;top:0;height:calc({pp}*9);background:{beam} 0 0/calc({pp}*32) calc({pp}*9) repeat-x;image-rendering:pixelated;pointer-events:none}}',
