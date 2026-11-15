@@ -1,0 +1,9 @@
+# 火山の木（deadtree~v）：トリポのとんがりの木（nat_cedar2.glb）。幹は木の皮のテクスチャ（barktexdecal）、葉は小さな葉の部品（natcommon.leafballs）。
+# 高さはモデルのまま、よこ・おくゆきは1.3倍。見おろしは4度（ほぼ正面）。かげはうすいトゥーン。
+from natcommon import nat,deep,flat,leafballs,post_clean,barktexdecal
+ID='deadtree~v';GRAD=False;SHADE=[(9,-2.5),(18,-5)];ELEV=4;WIDE=1.3;BOTTOM=62
+VIEWS=[('deadtree~v',0)]
+BARK=deep((176,110,80));H=2.6;POST=post_clean
+TONES=[(168,206,120),(150,194,110),(134,182,102),(120,170,96),(108,158,90)]   # とんがりの木の葉（すこし青い緑）
+def PARTS():return[flat(barktexdecal(nat('幹','nat_cedar2.glb',H,BARK,'bark',wide=WIDE),[(226,170,138),(212,152,120),(196,138,108),(176,122,96)],axis='z'))]
+def EXTRA(sc):leafballs(sc,'nat_cedar2.glb',H,TONES,(96,142,84),gap=0.05,L=0.09,W=0.05,wide=WIDE)

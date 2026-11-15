@@ -20,6 +20,8 @@
 #   CONTRAST=c（ぬった色のコントラストを c 倍に上げる。輪郭線は、そのあとの色から作るので、線はこくならない）
 #   FULLPERSP=True（左右にも、上下と同じ遠近をかける。まるい池など、奥行きだけの遠近ではたまごの形になる物）
 #   MOVE={チップの名前: {'sel':部品の名前を見る関数, 'pivot':(x,y,z)}}（動く部品より手前の本体は、奥行きをくらべて、動く部品の上に重ねる絵を自動で作る）（動く部品。本体の絵からのぞいて、べつの絵 parts にし、のびちぢみ・回る支点 px・py をつける。ゲームの PARTMV で動かす）
+#   POST=関数（写した絵 → なおした絵。葉の中の小さな点をまわりの色に など）
+#   SHADE=[(明るさ,あざやかさ),(…)]（GRAD でないときの、半かげ・かげで引く数。かげをうすくするとき。なければ oblique3d.SHADE）
 #   FRONT={チップの名前: 部品の名前を見る関数}（せいれいの手前にかさねる絵 .front。その向きで、その部品だけを写す）
 import sys,os,importlib
 HERE=os.path.dirname(os.path.abspath(__file__));ART=os.path.join(HERE,'..');ROOT=os.path.join(ART,'..','..')
@@ -50,6 +52,7 @@ def shot(M,k,only=None,S_=64,filt=None,info=None):
     PROJ,DEPTH=O.persp(getattr(M,'ELEV',ELEV),getattr(M,'FOV',FOV),None if getattr(M,'PARALLEL',False) else FRAME,c,full=getattr(M,'FULLPERSP',False))   # FULLPERSP：左右にも上下と同じ遠近   # PARALLEL：奥行きのない物（リース・のれんなど）は、遠近をかけない（平行投影）
     P=np.array([PROJ(v) for v in V]+[PROJ(sc.fwd(q)) for q in pfire_box(M)+list(getattr(M,'PBOX',()))]);m=2/64;ext=(P[:,0].min()-m,P[:,0].max()+m,P[:,1].min()-m,P[:,1].max()+m);O.S=S_
     im=O.render_px(sc,PROJ,ext,DEPTH,k=0.80 if O.GRAD else 0.72,lw=LW,k2=0.90 if O.GRAD else 0.86,merge=getattr(M,'MERGE',6 if O.GRAD else 12),outerk=getattr(M,'OUTERK',False),contrast=getattr(M,'CONTRAST',0))   # CONTRAST：輪郭線を作る前の色にかける   # OUTERK：まわりのふちは、部品の olk でうすくしない   # MERGE：にた色をまとめるさかい（設計図でかえられる）   # GRAD：にた色をまとめるさかいを小さく（グラデーションの段をのこす）   # GRAD の家具は、輪郭線もやわらかい色（持ち主がきめた）
+    if hasattr(M,'POST'):im=M.POST(im)   # POST：写したあとの絵をなおす関数（葉の中の小さな点をなくす など）
     if only:   # その部品だけ（ほかの部品のドットは消す。輪郭線もふくめて、その部品のまわり1ドットまで）
         full=np.array(im);ids=O.LAST_IDS
         from scipy.ndimage import binary_dilation;mk=binary_dilation(np.isin(ids,list(keep)))
@@ -120,7 +123,7 @@ def pfire(M,im,inf,zb,f,NF):
                 a[yy,xx]=(*c,255)
     return Image.fromarray(a)
 def run(iid,out,chips=False):
-    M=load(iid);os.makedirs(out,exist_ok=True);O.GRAD=getattr(M,'GRAD',False);O.OSAT=getattr(M,'OSAT',0)   # GRAD=True の家具は、かげを4だんに。OSAT：輪郭線のあざやかさに足す量
+    M=load(iid);os.makedirs(out,exist_ok=True);O.GRAD=getattr(M,'GRAD',False);O.SHADE=getattr(M,'SHADE',[(17.5,-5),(35,-10)]);O.OSAT=getattr(M,'OSAT',0)   # GRAD=True の家具は、かげを4だんに。OSAT：輪郭線のあざやかさに足す量
     L=M.PARTS();bad=check(L);print(iid,'ささえのたしかめ',bad or 'まちがいなし')
     if L:
       try:blueprint(os.path.join(out,'bp.png'),M.ID,L,(1,1),(-0.2,1.2,-0.2,1.2,1.6))
