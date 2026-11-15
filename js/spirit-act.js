@@ -74,7 +74,7 @@ const RANGE_COL={flower:'255,150,190',well:'90,170,240',windmill:'90,210,180',li
 function rangeOf(o,j){if(o==='lotus')return{k:'flower',cells:3};/* ハス：まわり3マス */if(FLOWERS.has(o))return{k:'flower',cells:3};/* 花：まわり3マス */if(o==='tree'||o==='fruit')return{k:'env',cells:3};if(o==='joro')return{k:'well',cells:5};if(o==='niguruma')return{k:'sign',cells:3};if(o==='tub'||o==='sink')return{k:'env',cells:3};if(o==='well')return{k:'well',cells:3};if(o==='windmill'||o==='suisha')return{k:'windmill',cells:5};if(o==='vane')return{k:'vane',cells:3};if(o==='signpost')return{k:'sign',cells:3};if(BL[o]&&BL[o].env)return{k:'env',cells:BL[o].er||3,sq:1};
   if(INDL.has(o)){const h=j!=null&&roomOf(j);if(!h)return{k:'light',r:1.5};let m=1;for(const k of h.set)m=Math.max(m,Math.hypot(k%W-j%W,((k/W)|0)-((j/W)|0)));return{k:'light',r:m+1.5}}
   if(o==='lamp'||o==='campfire'||o==='torch'||o==='yomawari'||o==='toro'||o==='takeakari'||o==='andon')return{k:'light',r:3.5};if(o==='lighthouse')return{k:'light',r:8};if(o==='stele')return{k:'sign',cells:5};if(o==='tower')return{k:'light',r:7};
-  if(o==='watch'||o==='yogan'){const st=(o==='yogan'?YOGAN:WATCH)[(j!=null&&S.hp['L'+j])||1],g=o==='watch'&&j!=null&&typeof wpGuardOf==='function'?wpGuardOf(j):null,k=(g?(WPEL[g.elem]||WPEL.wood).rng:1)*(typeof nightVarNow==='function'&&nightVarNow()==='kiri'?.5:1);return{k:'watch',r:st.range*k}}/* 上に立つ子の属性・霧の夜の射程も入れる（うつ所と同じ） */return null}
+  if(o==='watch'||o==='yogan'){const st=(o==='yogan'?YOGAN:WATCH)[(j!=null&&S.hp['L'+j])||1],g=o==='watch'&&j!=null&&typeof wpGuardOf==='function'?wpGuardOf(j):null,k=(g?(WPEL[g.elem]||WPEL.wood).rng:1)*(typeof nightVarNow==='function'&&nightVarNow()==='kiri'?.5:1);return{k:'watch',r:Math.max(1,st.range+(o==='watch'&&typeof towerRng==='function'?towerRng(j):0))*k}}/* 上に立つ子の属性・霧の夜の射程も入れる（うつ所と同じ） */return null}
 let SHOWR=null,MANC='あそびかた';
 function drawRangeOne(o,j,x,y,strong){const R=rangeOf(o,j);if(!R)return;const col=RANGE_COL[R.k],z=BL[o].sz||[1,1],cx=(x+z[0]/2)*TS,cy=(y+z[1]/2)*TS;
   ctx.save();if(R.cells){const set=new Set(),r=R.cells;for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){if(!R.sq&&dx*dx+dy*dy>r*r+1)continue;set.add((dx+8)*32+(dy+8))}
@@ -345,6 +345,7 @@ function decide0(r){if(r.wakeStretch){r.wakeStretch=0;if(!isNight()&&!enemyLive(
       const tiers=[j=>pm[j]===2,others.length?j=>others.some(t=>Math.abs(j%W+.5-t.x)<3.5&&Math.abs(((j/W)|0)+.5-t.y)<3.5):null,STATUE>=0?j=>Math.abs(j%W-sx)<=3&&Math.abs(((j/W)|0)-sy)<=3:null];
       for(const f of tiers){if(!f)continue;const ok=j=>walk(j)&&pm[j]!==3&&f(j);let j=nearest(G,j=>ok(j)&&Math.random()<.04,8);if(j<0)j=nearest(G,ok,200);if(j>=0)return startAct(r,G,'patrol',j)}}
     return startAct(r,G,'wander',(r.y|0)*W+(r.x|0))}
+  if(isNight()&&nightFixGo(r,G))return;/* 波のあいまの修理（defense.js） */
   if(r.energy<25||isNight())return goSleep(r,G,S.enemies.some(e=>e.spawned));
   if(r.hunger<550&&!foeNear(r)&&!(r.noEatU>S.t))return goEat(r,G);
   if(evAct(r,G))return;/* 強化のイベントに出る子は、イベントの場所へ（events.js） */

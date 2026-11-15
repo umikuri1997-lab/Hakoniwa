@@ -13,7 +13,7 @@ function waveApply(es){/* spawnWave で入れたコワイノを、3つの波に�
   ord.forEach((e,i)=>{const g=p>0?Math.min(last,Math.floor(i/p)):last,ix=i-g*p;e.wv=g;e.delay=WAVES[g]+ix*WAVEGAP;if(side&&!EN[e.type].boss&&(k++)%3===2)e.side=side});/* 横から来るのは、3びきに1ぴき */
   const lv=villAvgLv(),ns=lv>=SCOUTLV[1]?2:lv>=SCOUTLV[0]?1:0;
   for(let i=0;i<ns;i++){const hp=EN.fast.hp;S.enemies.push({id:S.nid++,type:'fast',x:0,y:0,hp,max:hp,delay:i*6,scout:1,spawned:false,path:[],repath:0,atk:0,stun:0,flash:0,flee:false})}
-  return ns}
+  return ns+(typeof shinyAdd==='function'?shinyAdd():0)}
 function waveNote(){/* 目標の欄：つぎの波まで */
   if(!S||WD!==0||!S.enemies||!S.enemies.length)return '';const L=S.enemies.filter(e=>e.wv!=null&&!e.dead);if(!L.length)return '';
   const wait=L.filter(e=>!e.spawned);if(!wait.length)return '';const g=Math.min(...wait.map(e=>e.wv));
