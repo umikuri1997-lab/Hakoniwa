@@ -223,13 +223,13 @@ def note_css():
     pin = svg(PIN, {'o': '#94704a', 'h': '#fffaf0', 'l': '#f7e8cc', 'a': '#ecd5ae', 'd': '#dcbd90', 'D': '#c9a676', 'b': '#d4b384', 's': '#3a2a1a38'})
     return ('/* 依頼の紙：右下の角がそり返った紙のわく（note_rows）と、紙の柄（ptex_rows：CC0 の紙のテクスチャ。そり返った角にはかけない） */\n'
             f'body .paper:not(.empty){{border-image-source:{fr}!important;border-image-slice:4 {F + 2} {F + 3} 4 fill!important;'
-            f'border-image-width:4px {F + 2}px {F + 3}px 4px!important;border-image-repeat:stretch!important;padding-top:17px!important;padding-bottom:{F - 2}px!important}}\n'
+            f'border-image-width:4px {F + 2}px {F + 3}px 4px!important;border-image-repeat:stretch!important;padding-top:24px!important;padding-bottom:{F - 2}px!important}}\n'
             f'body .paper:not(.empty)::after{{content:"";position:absolute;inset:2px 2px 3px 2px;z-index:-1;pointer-events:none;image-rendering:pixelated;'
             f'background:{fib} 0 0/96px 96px repeat;'
             f'-webkit-mask:linear-gradient(#000 0 0) 0 0/100% calc(100% - {F}px) no-repeat,linear-gradient(#000 0 0) 0 0/calc(100% - {F}px) 100% no-repeat;'
             f'mask:linear-gradient(#000 0 0) 0 0/100% calc(100% - {F}px) no-repeat,linear-gradient(#000 0 0) 0 0/calc(100% - {F}px) 100% no-repeat}}\n'
             f'/* 押しピン：木のまるい頭（立体）とかげ */\n'
-            f'body .paper:not(.empty)::before{{width:18px;height:18px;top:-3px;margin-left:-9px;background:{pin} 0 0/18px 18px no-repeat!important;'
+            f'body .paper:not(.empty)::before{{width:18px;height:18px;top:4px;margin-left:-9px;background:{pin} 0 0/18px 18px no-repeat!important;'
             f'-webkit-mask:none!important;mask:none!important;image-rendering:pixelated;z-index:1}}')
 
 
