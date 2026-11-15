@@ -12,11 +12,11 @@ const assert=require('node:assert/strict');
     S.mat.stone-=1;boxSync();goWork(a,G(),true);endAct(a);a.act=null;S.mat.stone+=1;boxSync();tryJob(a,G(),'chop');out.c2=cnt();/* 1つ空いて、またうまっても、くりかえさない */
     S.obj[j2]='crate';recount();goWork(a,G(),true);endAct(a);a.act=null;S.mat.stone+=matCap()-matTot();boxSync();tryJob(a,G(),'mine');out.c3=cnt();/* 箱がふえて、またいっぱいになったら、もう1回 */
     /* 木材が少ないときは、雑草より先に木を切る */
-    for(const k of Object.keys(S.box))S.box[k]={};S.mat={wood:2,stone:0};S.pile={};boxSync();const wj=(a.y|0)*W+(a.x|0)+1;if(!S.obj[wj])S.obj[wj]='weed0g';
-    S.food=100;endAct(a);a.act=null;goWork(a,G(),true);out.lowAct=a.act&&a.act.type;
+    for(const k of Object.keys(S.box))S.box[k]={};S.mat={wood:2,stone:0};S.pile={};boxSync();const wj=(a.y|0)*W+(a.x|0)-1;if(!S.obj[wj])S.obj[wj]='weed0g';
+    S.food=100;const f=mkRes(S,'テスト火','fire',a.x,a.y);f.hunger=hMax(f);f.energy=100;f.fun=100;S.res.push(f);endAct(f);f.act=null;goWork(f,bfs(f.x|0,f.y|0),true);out.lowAct=f.act&&f.act.type;endAct(f);f.act=null;f.path=[];S.mat.wood=10;boxSync();addFood("berry",20);boxSync();goWork(f,bfs(f.x|0,f.y|0),true);out.okAct=f.act&&f.act.type;/* とくいな仕事の少ない火のせいれいで、木と雑草の順だけを見る */
     toast=t0;return JSON.stringify(out)})()`));
   console.log(r);
   assert.equal(r.full,true);assert.equal(r.c1,1,'notify once when full');assert.equal(r.c2,1,'no repeat when one slot opens');assert.equal(r.c3,2,'notify again after more boxes fill up');
-  assert.equal(r.lowAct,'chop','low wood: chop before nearby weeds');
+  assert.equal(r.lowAct,'chop','low wood: chop before nearby weeds');assert.equal(r.okAct,'weed','enough wood: nearby weeds first');
   assert.deepEqual(errors,[]);await browser.close();console.log('OK');
 })().catch(e=>{console.error(e);process.exit(1)});
