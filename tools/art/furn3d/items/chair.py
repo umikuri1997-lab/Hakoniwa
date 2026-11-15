@@ -2,9 +2,9 @@
 # 後ろ向きでは、すわったせいれいの手前に背もたれがくるので、背もたれだけの絵（chair>2.front）も作る。すわった子の足は、座面の下のはしでかくす（cut）。
 from blueprint import Part as P
 from common import *
-ID='chair';BOTTOM=51
+ID='chair';BOTTOM=60
 VIEWS=[('chair',0),('chair>1',1),('chair>2',2),('chair>3',3)]
-X0,X1,Y0,Y1=0.17,0.83,0.20,0.83;LG=0.105;ZS=0.51;TS=0.15;ZTOP=1.14;RL=0.18   # はば0.66・おくゆき0.63・高さ1.14。座面のあつみ0.15
+X0,X1,Y0,Y1=0.17,0.83,0.20,0.83;LG=0.105;ZS=0.40;TS=0.15;ZTOP=1.03;RL=0.18   # はば0.66・おくゆき0.63・高さ1.03。座面のあつみ0.15
 BACK=lambda n:n.startswith('背')
 FRONT={'chair>2.front':BACK}
 CUT=('chair>2',)   # 後ろ向きのいすにすわった子は、座面の下のはしより下（足）を描かない（チップに cut を書く）
