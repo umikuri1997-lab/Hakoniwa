@@ -37,16 +37,16 @@ function evMax(id){const D=EVENTS[id],all=S.res.filter(evHere).length;if(D.need)
 function evNeedOK(id){const D=EVENTS[id];if(D.need&&!EVNEED[D.need].list().length)return EVNEED[D.need].n+'がありません';return ''}
 function evWhy(id){const D=EVENTS[id];if(S.ev)return 'ほかのイベントがきまっています';if(seasonDay(dayNo()+1)===CUPDAY&&!evDoneNow(cupOf(dayNo()+1)))return 'あしたは'+EVENTS[cupOf(dayNo()+1)].n+'です';if(evDoneNow(id))return 'この季節は、もうひらきました';if(D.sea!=null&&seasonOf(dayNo()+1)!==D.sea)return EVSEA[D.sea]+'だけです';return evNeedOK(id)||(D.set?setLack(D):'')}
 const evOn=id=>{const D=EVENTS[id];return D&&(D.stage==null||D.stage===WD)};
-function evCost(id,n){const D=EVENTS[id];return{pt:D.pt+D.per*n,food:(D.food||0)*n,wood:(D.wood||0)*n}}
+function evCost(id,n){const D=EVENTS[id];return{pt:D.pt+D.per*n,food:(D.food||0)*n,wood:(D.wood||0)*n,arrow:(D.arrow||0)*n,bamboo:(D.bamboo||0)*n}}
 function evDoneNow(id){return(S.evDone||{})[id]===seasonKey()}
-function evCostTxt(id){const D=EVENTS[id];if(D.set)return'パワー'+D.pt+'・'+setTxt(D);return'パワー'+D.pt+(D.per?'＋ひとり'+D.per:'')+(D.wood?'・ひとり木材'+D.wood:'')+(D.food?'・ひとり食料'+D.food:'')}
+function evCostTxt(id){const D=EVENTS[id];if(D.set)return'パワー'+D.pt+'・'+setTxt(D);return'パワー'+D.pt+(D.per?'＋ひとり'+D.per:'')+(D.wood?'・ひとり木材'+D.wood:'')+(D.bamboo?'・ひとり竹'+D.bamboo:'')+(D.arrow?'・ひとり木の矢'+D.arrow+'本':'')+(D.food?'・ひとり食料'+D.food:'')}
 function evGainTxt(id){const D=EVENTS[id],g=D.gain;if(D.gainTxt)return D.gainTxt;return Object.keys(g).map(k=>EVSTN[k]+'+'+g[k]).concat(D.fun?['たのしさ+'+D.fun]:[],D.bond?['なかよし+'+D.bond]:[]).join('・')}
 /* ひらく：お金をはらって、つぎの日にきめる */
 function evOpen(id,who){const D=EVENTS[id],c=evCost(id,who.length);if(!evOn(id))return;{const w=evWhy(id);if(w)return toast(w)}
-  if(!who.length)return toast('出るせいれいがいません');if(S.pt<c.pt)return toast('パワーが足りません');{const w=setLack(D);if(w)return toast(w)}if(S.food<c.food)return toast('食料が足りません');if((S.mat.wood||0)<c.wood)return toast('木材が足りません');
-  S.pt-=c.pt;if(c.wood)S.mat.wood-=c.wood;const got=c.food?takeFood(c.food):[];S.ev={id,day:dayNo()+1,who:who.slice(),paid:{pt:c.pt,food:got,wood:c.wood,set:D.set?setPay(D):null},ph:null};(S.evDone||(S.evDone={}))[id]=seasonKey();
+  if(!who.length)return toast('出るせいれいがいません');if(S.pt<c.pt)return toast('パワーが足りません');{const w=setLack(D);if(w)return toast(w)}if(S.food<c.food)return toast('食料が足りません');if((S.mat.wood||0)<c.wood)return toast('木材が足りません');if((S.mat.bamboo||0)<c.bamboo)return toast('竹が足りません');if((S.inv.arrow||0)<c.arrow)return toast('木の矢が足りません');
+  S.pt-=c.pt;if(c.wood)S.mat.wood-=c.wood;if(c.bamboo)S.mat.bamboo-=c.bamboo;if(c.arrow)S.inv.arrow-=c.arrow;const got=c.food?takeFood(c.food):[];S.ev={id,day:dayNo()+1,who:who.slice(),paid:{pt:c.pt,food:got,wood:c.wood,bamboo:c.bamboo,arrow:c.arrow,set:D.set?setPay(D):null},ph:null};(S.evDone||(S.evDone={}))[id]=seasonKey();
   sfx('power');toast('あしたは、'+D.n+'！','good');return true}
-function evCancel(){const E=S.ev;if(!E||E.ph)return;S.pt+=E.paid.pt;if(E.paid.set)setRefund(E.paid.set);if(E.paid.wood)S.mat.wood=(S.mat.wood||0)+E.paid.wood;for(const k of E.paid.food||[])addFood(k,1);if(S.evDone&&S.evDone[E.id]===seasonKey())delete S.evDone[E.id];S.ev=null;toast(EVENTS[E.id].n+'を、やめた')}
+function evCancel(){const E=S.ev;if(!E||E.ph)return;S.pt+=E.paid.pt;if(E.paid.set)setRefund(E.paid.set);if(E.paid.wood)S.mat.wood=(S.mat.wood||0)+E.paid.wood;if(E.paid.bamboo)S.mat.bamboo=(S.mat.bamboo||0)+E.paid.bamboo;if(E.paid.arrow)S.inv.arrow=(S.inv.arrow||0)+E.paid.arrow;for(const k of E.paid.food||[])addFood(k,1);if(S.evDone&&S.evDone[E.id]===seasonKey())delete S.evDone[E.id];S.ev=null;toast(EVENTS[E.id].n+'を、やめた')}
 /* 集まる場所 */
 function evSlots(G,cx,cy,n,rad,pred){const L=[];for(let y=Math.floor(cy-rad);y<=cy+rad;y++)for(let x=Math.floor(cx-rad);x<=cx+rad;x++){if(x<1||y<1||x>=W-1||y>=H-1)continue;const j=y*W+x;if(G.dist[j]<0||!walk(j)||S.obj[j]||S.ground[j]||sacredNoBuild(j))continue;if(pred&&!pred(j))continue;L.push([Math.hypot(x+.5-cx,y+.5-cy),j])}
   L.sort((a,b)=>a[0]-b[0]);const out=[];for(const[,j]of L){if(out.some(k=>Math.abs(k%W-j%W)+Math.abs(((k/W)|0)-((j/W)|0))<2))continue;out.push(j);if(out.length>=n)break}
@@ -85,7 +85,7 @@ function evTick(){const E=S&&S.ev;if(!E||typeof MEMRUN!=='undefined'&&MEMRUN)ret
   if(isNight()||!D.late&&isDark())return evStop('暗くなったので、');if(foe)return evStop('コワイノが来たので、');
   const P=E.who.map(id=>S.res.find(r=>r.id===id)).filter(evHere);if(!P.length){S.ev=null;return}
   const here=r=>r.act&&r.act.type==='evt'&&r.act.stage==='do'&&!r.act.back;
-  if(E.ph==='go'){for(const r of P)if(here(r))E.at[r.id]=1;const all=P.every(r=>E.at[r.id]);if(all||S.t-E.t0>EVWAIT){E.who=E.who.filter(id=>E.at[id]);if(!E.who.length)return evStop('だれも集まれなかったので、');E.ph='do';E.t0=S.t;sfx('good');for(const r of P)if(E.at[r.id])JUMP.set(r,performance.now()+Math.random()*300)}return}
+  if(E.ph==='go'){for(const r of P)if(here(r))E.at[r.id]=1;const all=P.every(r=>E.at[r.id]);if(all||S.t-E.t0>EVWAIT){if(!all)for(const r of P){const j=E.slot&&E.slot[r.id];if(j!=null&&Math.hypot(j%W+.5-r.x,((j/W)|0)+.5-r.y)<=2.5)E.at[r.id]=1}/* 時間切れでも、立つ所のすぐそばまで来ている子は、来られたことにする */E.who=E.who.filter(id=>E.at[id]);if(!E.who.length)return evStop('だれも集まれなかったので、');E.ph='do';E.t0=S.t;sfx('good');for(const r of P)if(E.at[r.id])JUMP.set(r,performance.now()+Math.random()*300)}return}
   if(D.grand)grandFx(E,P);if(E.ph==='do'&&D.cup)return cupTick(E,P);if(E.ph==='do'&&E.id==='undo')return undoTick(E,P);
   if(E.ph==='do'){if(E.id==='soji')for(const r of P)if(r.act&&['weed','pickdrop','sweep','evt'].includes(r.act.type))E.got[r.id]=1;
     if(E.id==='takara'&&E.tr.every(t=>t.got))return evEnd();
@@ -112,7 +112,7 @@ function evAct(r,G){const E=S&&S.ev;if(!E||!E.ph||isNight()||r.hidden||!E.who.in
 function evLegSlots(E,L,G){const c=E.legs[E.leg];E.c=c;const SL=evSlots(G,c[0],c[1],L.length,4);E.slot={};L.forEach((r,i)=>{if(SL[i]!=null)E.slot[r.id]=SL[i]});return SL.length>0}
 function evSeekEnd(r){const E=S.ev;if(!E||!E.tr)return;const t=E.tr.find(t=>!t.got&&Math.abs(t.j%W+.5-r.x)<=1.6&&Math.abs(((t.j/W)|0)+.5-r.y)<=1.6);if(!t)return;t.got=1;E.find[r.id]=(E.find[r.id]||0)+1;if(t.k)addMat(r,t.k,1);JUMP.set(r,performance.now());spawnFX(t.j%W+.5,((t.j/W)|0)+.5,'#ffe08a');addFloat(r.x,r.y-1.6,(t.k?MATN[t.k]+'を':'たからを')+'みつけた！','#ffe7a8');sfx('good')}
 const evDish=E=>{const f=(E.paid&&E.paid.food)||[];const k=f.length?pick(f):'apple';return(FOODS[k]||FOODS.apple).e};
-ACT.evt={start(r,a){const E=S.ev;r.bubble='';if(!E)return false;a.ev=E.id;if(E.id==='gochi'&&E.tab&&E.tab[r.id]!=null){const c=(r.y|0)*W+(r.x|0),t=E.tab[r.id];for(const d of[-W,-1,1,W])if(anc(c+d)===t||c+d===t){a.tdir=d;break}a.e=evDish(E)}else if(E.id==='cha'||E.id==='utage')a.e=evDish(E);else if(E.id==='shukaku')a.e=FOODS[pick(EVCROP)].e;
+ACT.evt={start(r,a){const E=S.ev;r.bubble='';if(!E)return false;a.ev=E.id;if(E.id==='gochi'&&E.tab&&E.tab[r.id]!=null){const c=(r.y|0)*W+(r.x|0),t=E.tab[r.id];for(const d of[-W,-1,1,W])if(anc(c+d)===t||c+d===t){a.tdir=d;break}a.e=evDish(E)}else if(E.id==='cha'||E.id==='utage'||E.id==='pikunikku')a.e=evDish(E);else if(E.id==='shukaku')a.e=FOODS[pick(EVCROP)].e;
     if(E.id==='cup1'&&E.pairs){const p=E.pairs.find(q=>q.includes(r.id));if(p){r.face=p[0]===r.id?1:-1;return}}if(E.id==='cup0'||E.id==='cup3'||E.id==='undo'&&UNDOSEG[E.seg]==='race'){r.face=1;return}if(E.id==='undo'&&UNDOSEG[E.seg]==='tug'){r.face=E.team[r.id]?-1:1;return}
     if(a.tdir==null&&!a.back&&!a.seek){const u=E.id==='yomi'&&E.reader!=null&&E.reader!==r.id?(()=>{const q=S.res.find(o=>o.id===E.reader);return q?[q.x,q.y]:null})():(E.unit&&E.unit[r.id])||E.c;if(u&&Math.abs(u[0]-r.x)>.2)r.face=u[0]<r.x?-1:1}},
   tick(r,a,dt){const E=S.ev;if(!E||a.back||a.sweep)return;if(E.ph!=='do'){a.h=0;return}r.fun=Math.min(100,r.fun+.2*dt);a.h=(a.h||0)+dt;
@@ -123,6 +123,7 @@ ACT.evt={start(r,a){const E=S.ev;r.bubble='';if(!E)return false;a.ev=E.id;if(E.i
 function evAnim(r){const a=r.act,E=S&&S.ev;if(!a||!E)return 'talk';if(a.sweep)return 'sweep';if(a.back)return 'wave';if(E.ph!=='do')return 'talk';
   const cy=(L,n)=>L[Math.floor(a.t/n)%L.length];
   if(E.id==='undo'){const sg=UNDOSEG[E.seg];return sg==='race'?(E.order.includes(r.id)?'talkjoy':'chase'):sg==='tug'?'pluck':cy(['qrain','punch'],3)}
+  if(E.id==='matoate')return cy(['bow','bowidle'],4);if(E.id==='pikunikku')return cy(['eat','sunset','talkjoy'],8);if(E.id==='taikokai')return cy(['punch','qspin','punch'],4);if(E.id==='ocha')return cy(['talkthink','talk'],8);if(E.id==='hokomairi')return 'pray';
   if(E.id==='hana')return cy(['qspin','talkjoy','qsniff'],6);if(E.id==='lantern')return cy(['qlookup','qrain'],8);if(E.id==='shukaku'||E.id==='utage')return cy(['eat','talkjoy'],8);if(E.id==='himatsuri')return cy(['qwarm','qspin','punch'],5);
   if(E.id==='cup0')return E.order.includes(r.id)?'talkjoy':'chase';if(E.id==='cup1')return E.pairs&&E.pairs.some(p=>p.includes(r.id))?cy(['punch','shield'],2):'clap';if(E.id==='cup2')return 'craft';if(E.id==='cup3')return a.dir<0?'chase':'carry';
   if(E.id==='taiso')return cy(['qstretch','qspin','qrain','qstretch'],9);if(E.id==='oni')return 'chase';if(E.id==='gochi')return 'eat';if(E.id==='ensoku')return cy(['point','qlookup','talkjoy'],12);
@@ -145,9 +146,9 @@ function evPop(id){/* 出る子をえらぶ */const D=EVENTS[id],mx=evMax(id),L=
   const o=el('<div style="position:fixed;inset:0;z-index:45;display:flex;align-items:center;justify-content:center;background:rgba(30,24,16,.45);padding:24px"><div class="pxcard" style="background:var(--panel);padding:16px 18px;max-width:340px;width:100%;color:var(--ink)"><b class="t" style="display:block;font-size:16px;margin-bottom:4px"></b><p class="note n" style="margin:0 0 8px"></p><div class="ks" style="display:flex;flex-wrap:wrap;gap:6px"></div><p class="note c" style="margin:10px 0 0"></p><div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px"><button class="btn x">とじる</button><button class="btn pri go">ひらく</button></div></div></div>');
   o.querySelector('.t').textContent=D.n;o.querySelector('.n').textContent=evGainTxt(id)+'（'+mx+'人まで）';
   const bs=L.map(r=>{const b=el('<button class="btn"></button>');b.textContent=r.name;b.onclick=()=>{sfx('notch');if(pick0.has(r.id))pick0.delete(r.id);else if(pick0.size<mx)pick0.add(r.id);upd()};o.querySelector('.ks').appendChild(b);return[r,b]});
-  const upd=()=>{for(const[r,b]of bs)b.classList.toggle('pri',pick0.has(r.id));const c=evCost(id,pick0.size);o.querySelector('.c').textContent=pick0.size+'人・パワー（'+Math.floor(S.pt)+'/'+c.pt+'）'+(c.wood?'・木材（'+(S.mat.wood||0)+'/'+c.wood+'）':'')+(c.food?'・食料（'+S.food+'/'+c.food+'）':'')+(D.set?'・'+setTxt(D):'');lackOn(o.querySelector('.go'),!pick0.size?'出るせいれいがいません':lackPt(c.pt)||lackMat('wood',c.wood)||(S.food<c.food?'食料が足りません':''))};
+  const upd=()=>{for(const[r,b]of bs)b.classList.toggle('pri',pick0.has(r.id));const c=evCost(id,pick0.size);o.querySelector('.c').textContent=pick0.size+'人・パワー（'+Math.floor(S.pt)+'/'+c.pt+'）'+(c.wood?'・木材（'+(S.mat.wood||0)+'/'+c.wood+'）':'')+(c.food?'・食料（'+S.food+'/'+c.food+'）':'')+(D.set?'・'+setTxt(D):'');lackOn(o.querySelector('.go'),!pick0.size?'出るせいれいがいません':lackPt(c.pt)||lackMat('wood',c.wood)||lackMat('bamboo',c.bamboo)||((S.inv.arrow||0)<c.arrow?'木の矢が足りません':'')||(S.food<c.food?'食料が足りません':''))};
   o.querySelector('.x').onclick=()=>{sfx('tap');o.remove()};o.onclick=e=>{if(e.target===o)o.remove()};
-  o.querySelector('.go').onclick=()=>{const c=evCost(id,pick0.size);if(!pick0.size||S.pt<c.pt||S.food<c.food||(S.mat.wood||0)<c.wood)return;if(evOpen(id,[...pick0])){o.remove();renderSheet()}};upd();document.body.appendChild(o)}
+  o.querySelector('.go').onclick=()=>{const c=evCost(id,pick0.size);if(!pick0.size||S.pt<c.pt||S.food<c.food||(S.mat.wood||0)<c.wood||(S.mat.bamboo||0)<c.bamboo||(S.inv.arrow||0)<c.arrow)return;if(evOpen(id,[...pick0])){o.remove();renderSheet()}};upd();document.body.appendChild(o)}
 /* 季節の大会（cup0〜3）：その季節の5日め（seasonDay 5）の朝に、みんなが出る大会をきめる（パワー・材料いらない、ひらく画面には出ない）。
    4日めの朝に知らせ、4日めにはほかのイベントを5日めにひらけない。順位（E.rank：1位から）で、上がる数（D.rank：1位・2位・3位・出ただけ）。
    春 かけっこ（コースを走る、移動速度でかわる）・夏 すもう（勝ちぬき、攻撃力でかわる）・秋 ものづくり（はたらく速さでかわる）・冬 荷はこびリレー（持てる数と移動速度でかわる）。 */
@@ -238,3 +239,12 @@ function undoTick(E,P){const sg=UNDOSEG[E.seg],seg=30;
 function undoMove(r,a,dt){const E=S.ev;if(UNDOSEG[E.seg]!=='race'||E.order.includes(r.id))return;const end=E.tk.x+E.tk.len-.5;r.face=1;r.x=Math.min(end,r.x+dt*.55*rMul(r,'move')*(.85+.3*Math.random()));if(r.x>=end){E.order.push(r.id);addFloat(r.x,r.y-1.5,E.order.length+'着！','#ffe7a8')}}
 function grandFx(E,P){/* 1秒ごとの見せ場：花びら・火の粉・ランタンの光（小さなエフェクト） */if(E.ph!=='do')return;const n=E.id==='himatsuri'?'embers':E.id==='hana'||E.id==='lantern'?'twinkle':null;if(!n||Math.random()<.5)return;const r=pick(P);if(!r)return;
   if(E.id==='lantern'){for(let k=0;k<3;k++)villageTimeout(()=>fxSpr(n,r.x*TS,(r.y-1.2-k*1.1)*TS),k*300)}else fxSpr(n,(r.x+(Math.random()-.5)*2)*TS,(r.y-.4)*TS)}
+/* 家具でひらくイベント（新しい家具：弓の的・ピクニックシート・たいこ・茶道具の台・ほこら） */
+Object.assign(EVENTS,{
+  matoate:{n:'的あて',d:'弓の的のまえで、木の矢で的をねらう。',at:14,dur:30,pt:30,per:5,arrow:5,need:'mato',gain:{atk:5},talk:['ねらって……えいっ！','#joy|まんなか、あたった！','#surprise|あっ、それた！']},
+  pikunikku:{n:'ピクニック',d:'シートをひろげて、花のそばでおべんとう。',sea:0,stage:0,at:12,dur:40,pt:50,per:8,food:2,need:'picnic',gain:{sta:3},fun:20,talk:['#joy|おべんとう、おいしい！','風が、きもちいいね。','ねころびたくなっちゃう。']},
+  taikokai:{n:'たいこの会',d:'たいこをたたいて、みんなでおどる。',stage:1,at:16,dur:30,pt:50,per:8,bamboo:1,need:'taiko',gain:{atk:5},talk:['どん、どん、どん！','#joy|からだが、はずむ！','もっと、つよく！']},
+  ocha:{n:'お茶のけいこ',d:'茶道具の台のまえで、しずかにお茶をたてる。',stage:1,at:14,dur:30,pt:50,per:8,food:1,need:'chadogu',gain:{work:5},talk:['しゃか、しゃか……。','いい香り。','こころが、おちつくね。']},
+  hokomairi:{n:'ほこらまいり',d:'朝、みんなでほこらにおまいりする。',stage:1,at:6.5,dur:20,pt:30,per:5,need:'hokora',gain:{sta:5},talk:['きょうも、いい日になりますように。','……。','#joy|なんだか、げんきが出てきた。']}});
+EVORDER.splice(EVORDER.indexOf('undo'),0,'matoate','pikunikku','taikokai','ocha','hokomairi');
+Object.assign(EVNEED,{mato:{n:'弓の的',list:()=>evObjs('mato'),cap:()=>3},picnic:{n:'ピクニックシート',list:()=>evObjs('picnic'),cap:()=>6},taiko:{n:'たいこ',list:()=>evObjs('taiko'),cap:()=>6},chadogu:{n:'茶道具の台',list:()=>evObjs('chadogu'),cap:()=>4},hokora:{n:'ほこら',list:()=>evObjs('hokora'),cap:()=>99}});
