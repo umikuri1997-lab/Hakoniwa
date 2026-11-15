@@ -35,6 +35,8 @@ const BL={
   clover:{sp:9,name:'シロツメクサ',item:'シロツメクサの種',kind:'plant',cost:3,attr:{wood:1},desc:'まわり3マスで、たのしさ+0.2／1時間'},
   bellf:{sp:9,name:'ききょう',item:'ききょうの種',kind:'plant',cost:3,attr:{earth:1},desc:'まわり3マスで、たのしさ+0.2／1時間'},
   salvia:{sp:9,name:'サルビア',item:'サルビアの種',kind:'plant',cost:3,attr:{fire:1},desc:'まわり3マスで、たのしさ+0.2／1時間'},
+  nebari:{sp:9,name:'ねばり草',item:'ねばり草の種',kind:'plant',cost:3,attr:{wood:1},desc:'上を歩く「コワイノ」の速さ0.5倍。まわり3マスで、たのしさ+0.2／1時間'},
+  hotaru:{sp:9,name:'ほたるの草むら',item:'ほたるの草むらの苗',kind:'plant',cost:3,attr:{water:1},desc:'夜、まわり2マスをてらすあかり。はじめて光に入った「コワイノ」が2分止まる'},
   lily:{sp:9,name:'ゆり',item:'ゆりの種',kind:'plant',cost:3,attr:{wind:1},desc:'まわり3マスで、たのしさ+0.2／1時間'},
   lotus:{sp:9,name:'ハス',item:'ハスの種',kind:'plant',cost:3,attr:{water:1},desc:'池にうかぶ花。まわり3マスで、たのしさ+0.2／1時間。まわり2マスで水浴びすると、たのしさ×1.5 / つかれ −9／1時間'},
   tree:{hp:5,brk:1,fix:1,fixm:{},name:'木',item:'木の苗',kind:'plant',cost:4,lv:3,solid:1,env:1,attr:{wood:3},desc:'まわり5マスを緑にする。まわり3マスで、たのしさ+0.4／1時間'},
@@ -189,7 +191,7 @@ const BL={
 const BLOCKS=['path','gravel','woodpath','stone','brick','floor','brickfloor','stonefloor','herrfloor','carpet','farm','fence','misugaki','logfence','bamboofence','bedge','gate','stonegate','logdoor','loggate','hwall','bamboowall','logwall','plasterwall','brickwall','yozorawall','door','yozoradoor','wall','sdoor','window'];const GATE_IDS=new Set(['gate','stonegate','logdoor','loggate']),FENCE_IDS=new Set(['fence','misugaki','logfence','bamboofence','gate','stonegate','logdoor','loggate']),HOME_WALLS=new Set(['hwall','bamboowall','logwall','plasterwall','brickwall','yozorawall','wall']),HOME_DOORS=new Set(['door','yozoradoor','sdoor']);
 const TOWER_STONE={...BL.tower};
 const TOWER_TREE={...BL.tower,sz:[4,4],name:'御神木',pc:0,mat:{},maker:'wood',desc:'みんなで育てた木。土地に散らばったヌシ様の力を結ぶ。まわり7マスを照らす'};
-const PLANTS=['clover','bellf','salvia','lily','lotus','tree','fruit'],FLOWERS=new Set(['clover','bellf','salvia','lily','lotus']),ATTRFL=new Set(['clover','bellf','salvia','lily','lotus']),plantOK=id=>!ATTRFL.has(id)||!!S.unlocked[id]/* 属性の花はクエストで解放 */,isBud=j=>!!(S&&S.bud&&S.bud[j]>callDay())/* 植えた日の次の朝6時まで、花と木は芽（夜中の0時ではかわらない） */,flowerN=()=>S.obj.reduce((a,o,j)=>a+(FLOWERS.has(o)&&!isBud(j)?1:0),0),BREQ={windmill:'wind',fountain:'water',well:'water',lighthouse:'fire',stele:'earth'}/* 属性の子がいないと建てられない */;
+const PLANTDEF=new Set(['nebari','hotaru'])/* 守りの草：草原のサブクエストでおぼえる */,PLANTS=['clover','bellf','salvia','lily','lotus','nebari','hotaru','tree','fruit'],FLOWERS=new Set(['clover','bellf','salvia','lily','lotus','nebari']),ATTRFL=new Set(['clover','bellf','salvia','lily','lotus','nebari','hotaru']),plantOK=id=>!ATTRFL.has(id)||!!S.unlocked[id]/* 属性の花はクエストで解放 */,isBud=j=>!!(S&&S.bud&&S.bud[j]>callDay())/* 植えた日の次の朝6時まで、花と木は芽（夜中の0時ではかわらない） */,flowerN=()=>S.obj.reduce((a,o,j)=>a+(FLOWERS.has(o)&&!isBud(j)?1:0),0),BREQ={windmill:'wind',fountain:'water',well:'water',lighthouse:'fire',stele:'earth'}/* 属性の子がいないと建てられない */;
 function bedStep(){/* はじめのベッド：はたおり機 → 布 → ベッドの、いまの所 */const lm=cnt('loom')>0,nu=(S.mat.nuno||0)>0||(S.orders||[]).some(o=>o.type==='bed')||cnt('bed')>0||(S.inv||{}).bed>0;return 'はたおり機 '+(lm?'1':'0')+'/1・布 '+(nu?'1':'0')+'/1・ベッド '+Math.min(1,houseBedCount())+'/1'}
 const bloomCount=id=>S.obj.reduce((n,o,j)=>n+(o===id&&!isBud(j)?1:0),0);
 const FLOWER_QUESTS=new Set(['salvia3','lotus3','lily5','clover3']);
