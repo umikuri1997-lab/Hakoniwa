@@ -120,49 +120,65 @@ def cork_rows():
     return [''.join(r) for r in g]
 
 
-def fiber_rows(N=24):
-    """依頼の紙の、紙のすじ（うすい短い線。f こい・w 白）。くりかえしてもつながる。ざらざらの点にしない（線は2〜4ドット）"""
-    import random
-    rnd = random.Random(7)
-    g = [['.'] * N for _ in range(N)]
-    for k in range(22):
-        x, y, L = rnd.randrange(N), rnd.randrange(N), rnd.choice((2, 2, 3, 4))
-        c = 'f' if k % 3 else 'w'
-        dy = rnd.choice((0, 0, 0, 1))
-        for i in range(L):
-            g[(y + (i * dy) // 2) % N][(x + i) % N] = c
-    return [''.join(r) for r in g]
+PAPERTEX = pathlib.Path(__file__).resolve().parent.parent / 'art' / 'textures' / 'paper005.png'
+
+
+def ptex_rows(T=96):
+    """依頼の紙の柄：CC0 の紙のテクスチャ（ambientCG Paper005）を T×T にちぢめ（BOX）、こさを4つ（d こい・m 少しこい・.・l 明るい）にする。くりかえしてもつながる"""
+    from PIL import Image
+    im = Image.open(PAPERTEX).convert('L').resize((T, T), Image.BOX)
+    px = [im.getpixel((x, y)) for y in range(T) for x in range(T)]
+    m = sum(px) / len(px); sd = (sum((p - m) ** 2 for p in px) / len(px)) ** .5 or 1
+    rows = []
+    for y in range(T):
+        r = ''
+        for x in range(T):
+            z = (px[y * T + x] - m) / sd
+            r += 'd' if z < -1.1 else 'm' if z < -.35 else '.' if z < .6 else 'l'
+        rows.append(r)
+    return rows
 
 
 FOLD = 16  # 角の折り返しの大きさ（ドット）
 
 
 def note_rows(F=FOLD):
-    """依頼の紙のわく（9スライス）：右下の角を内がわへ折った紙。a 紙・o ふち・b 紙のうら・B うらのかげ・e 折り目・s かげ。
-    上と左のスライスは4、右は F+2、下は F+3（いちばん下の行は紙のかげ）"""
+    """依頼の紙のわく（9スライス）：右下の角が、ゆるくまるくそり返った紙。
+    そり返った所は、折り目（角に向かってへこんだ曲線 √u+√v=√F）と、外のふち（内がわの点 (F,F) を中心にした弧）のあいだ。
+    a 紙・o ふち・e 折り目・B うらのかげ・b うら・h うらの光・k そりの下のかげ・s 紙のかげ。上と左のスライスは4、右は F+2、下は F+3"""
+    import math
     NW = 2 * F + 8
     H = NW + 1
     cp = lambda d: PR[d] if d < 4 else 0
+    A = lambda u, v: ((u + .5) / F) ** .6 + ((v + .5) / F) ** .6  # 折り目（1 より小さいと、なくなった角）
+    Bq = lambda u, v: ((u + .5) / F) ** 1.6 + ((v + .5) / F) ** 1.6  # そり返った所の外のふち（1 より小さいと、そり返った所）
+    cut = lambda u, v: u >= 0 and v >= 0 and A(u, v) < 1
     def ins(x, y):
         if not (0 <= x < NW and 0 <= y < NW): return False
         u, v = NW - 1 - x, NW - 1 - y
-        if u + v < F: return False  # 折ってなくなった角
+        if cut(u, v): return False
         return cp(min(x, u)) <= y <= NW - 1 - cp(min(x, u)) and cp(min(y, v)) <= x <= NW - 1 - cp(min(y, v))
+    def flap(u, v): return u >= 0 and v >= 0 and Bq(u, v) < 1 and not cut(u, v)
     rows = []
     for y in range(H):
         r = ''
         for x in range(NW):
             u, v = NW - 1 - x, NW - 1 - y
             if ins(x, y):
-                if u <= F and v <= F and u + v >= F:  # 折り返し（紙のうら）
-                    if u + v == F: r += 'e'
-                    elif u == F or v == F: r += 'o'
-                    else: r += 'B' if u + v >= 2 * F - 3 else 'b'
+                if flap(u, v):
+                    a0, b0 = A(u, v) - 1, 1 - Bq(u, v)
+                    t = a0 / (a0 + b0 + 1e-6)  # 0 折り目 → 1 外のふち
+                    edge = not (flap(u - 1, v) and flap(u + 1, v) and flap(u, v - 1) and flap(u, v + 1))
+                    if edge and Bq(u + 1, v) >= 1 or edge and Bq(u, v + 1) >= 1: r += 'o'
+                    elif t < .18: r += 'e'
+                    else: r += 'B' if t < .4 else 'b' if t < .75 else 'h'
                     continue
+                if 1 <= Bq(u, v) < 1.22 and u < F and v < F:
+                    r += 'k'; continue  # そりの下のかげ
                 edge = not (ins(x - 1, y) and ins(x + 1, y) and ins(x, y - 1) and ins(x, y + 1))
                 r += 'o' if edge else 'a'
-            elif ins(x, y - 1) or (u + v < F and ins(x - 1, y)):
-                r += 's'  # 紙の下・折った角のかげ
+            elif ins(x, y - 1) or (cut(u, v) and ins(x - 1, y)):
+                r += 's'
             else:
                 r += '.'
         rows.append(r)
@@ -171,13 +187,13 @@ def note_rows(F=FOLD):
 
 def note_css():
     F = FOLD
-    fib = svg(fiber_rows(), {'f': '#8a6a3a14', 'w': '#ffffff80'})
-    fr = svg(note_rows(), {'a': '#f4e9d2', 'o': '#a8743f', 'b': '#e9d9b6', 'B': '#dcc89f', 'e': '#c9ad7c', 's': SHADOW})
-    return ('/* 依頼の紙：右下の角を折った紙のわく（note_rows）と、紙のすじ（fiber_rows。折った角にはかけない） */\n'
+    fib = svg(ptex_rows(), {'d': '#8a6a3a24', 'm': '#8a6a3a10', 'l': '#ffffff70'})
+    fr = svg(note_rows(), {'a': '#f4e9d2', 'o': '#a8743f', 'h': '#f7eedb', 'b': '#ebdcbb', 'B': '#dccaa2', 'e': '#c9ad7c', 'k': '#e2d3b2', 's': SHADOW})
+    return ('/* 依頼の紙：右下の角がそり返った紙のわく（note_rows）と、紙の柄（ptex_rows：CC0 の紙のテクスチャ。そり返った角にはかけない） */\n'
             f'body .paper:not(.empty){{border-image-source:{fr}!important;border-image-slice:4 {F + 2} {F + 3} 4 fill!important;'
             f'border-image-width:4px {F + 2}px {F + 3}px 4px!important;border-image-repeat:stretch!important;padding-bottom:{F - 2}px!important}}\n'
             f'body .paper:not(.empty)::after{{content:"";position:absolute;inset:2px 2px 3px 2px;z-index:-1;pointer-events:none;image-rendering:pixelated;'
-            f'background:{fib} 0 0/24px 24px repeat;'
+            f'background:{fib} 0 0/96px 96px repeat;'
             f'-webkit-mask:linear-gradient(#000 0 0) 0 0/100% calc(100% - {F}px) no-repeat,linear-gradient(#000 0 0) 0 0/calc(100% - {F}px) 100% no-repeat;'
             f'mask:linear-gradient(#000 0 0) 0 0/100% calc(100% - {F}px) no-repeat,linear-gradient(#000 0 0) 0 0/calc(100% - {F}px) 100% no-repeat}}')
 
