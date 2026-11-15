@@ -28,7 +28,7 @@ def spots(x,y,z):
 def deep(c,k=0.3):return tuple(max(0,min(255,round((v-255*k)/(1-k)))) for v in c)
 # 生き物ごと：名前・からだの色・部品の色・場所の色（x,y：まん中から・z：地面から。どれも高さ H でわった数）
 SPEC={   # 色は、持ち主のお手本の絵（生き物15この絵）に合わせる
- 0:dict(name='usagi',body=(248,240,226),parts={3:EYE,6:(240,172,180),5:EYE,   # 6 は鼻（目にすると、つぶれた片目に見えた）
+ 0:dict(name='usagi',body=(248,240,226),parts={3:(240,172,180),6:EYE,5:EYE,   # 3（まん中の点）は鼻、6 と 5 が目（持ち主に教えてもらった）
  4:(252,248,240)}),
  1:dict(name='kaeru',body=(184,208,122),parts={6:EYE,5:EYE},region=lambda x,y,z:(242,238,204) if (0.9*y-0.4*x)>0.12 and z<0.6 else None),   # おなか：顔のがわ（手前・左）の下
  2:dict(name='niwatori',body=(250,244,226),parts={3:(244,182,84),7:EYE,6:EYE,1:(242,170,96),2:(242,170,96)}),
