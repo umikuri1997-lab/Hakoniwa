@@ -24,7 +24,7 @@ const assert=require('node:assert/strict');
   assert.ok(/81日め/.test(full.c)&&/1時間6分/.test(full.c)&&!bad(full.c),full.c);
   console.log('Reflection: built from this village\'s records; long stay is not judged');
   /* 知らせ：再会のあと、しずかなあいだはまつ。1回だけ */
-  const n=JSON.parse(await run(`(()=>{delete S.flags.rfNote;reunionCalm();const q=document.querySelector('#toasts');q.innerHTML='';reflectNoteTick();const w=!!S.flags.rfNote;CALMT=0;reflectNoteTick();const t1=q.textContent;q.innerHTML='';reflectNoteTick();return JSON.stringify({w,on:!!S.flags.rfNote,t1,t2:q.textContent})})()`));
+  const n=JSON.parse(await run(`(()=>{delete S.flags.rfNote;camAnim=null;reunionCalm();/* カメラが動いているあいだは知らせをまつので、止めておく */const q=document.querySelector('#toasts');q.innerHTML='';reflectNoteTick();const w=!!S.flags.rfNote;CALMT=0;reflectNoteTick();const t1=q.textContent;q.innerHTML='';reflectNoteTick();return JSON.stringify({w,on:!!S.flags.rfNote,t1,t2:q.textContent})})()`));
   assert.equal(n.w,false,'waits during the calm');assert.ok(n.on&&/思い出帳/.test(n.t1));assert.equal(n.t2,'','only once');
   /* 再会のあとのしずかなあいだは、レベルアップの知らせもまつ */
   assert.equal(await run(`(()=>{const l=S.lv;S.lv=1;reunionCalm();checkLevel();const r=S.lv;CALMT=0;S.lv=l;return r})()`),1);
