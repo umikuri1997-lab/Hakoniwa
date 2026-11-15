@@ -134,6 +134,7 @@ function onTap(sx,sy){if(GIFT_ACTIVE&&camAnim&&camAnim.done)return;/* 霧が晴�
     if(o==='watch'||o==='yogan')return openSheet('watch',j);
     if(o==='composter')return cmpPop(j);
     if(o==='smelter')return smPop(j);
+    if(PROC[o])return prPop(j);/* 粉ひき小屋・はたおり機 */
     if(o==='obox')return S.feat.inv?openSheet('inv'):toast('おそなえ箱');
     if(o==='grave'){const d=S.dyn[j]||{};if(!d.buried)return toast((d.name||'せいれい')+'のお墓。なかまが神殿へはこんで、おみおくりしてくれる');/* 守り神は埋葬できない */return toast((d.name||'せいれい')+'のお墓')}
     if(o==='tower'&&!WD&&!S.cleared)return sacredTreeTap(j);

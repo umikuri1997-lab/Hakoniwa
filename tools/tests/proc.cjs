@@ -1,0 +1,53 @@
+/* 加工のつながり：はたおり機（草3こ→布1こ）・粉ひき小屋（こむぎ2こ→こむぎこ1こ）。タップで数をえらぶ・せいれいが箱から運ぶ・加工する（その属性のせいれい、いなければだれでも）・
+   水車のまわり5マスは、せいれいがいなくても動く（できた物は、せいれいが箱へ運ぶ）・水車は水のとなりだけ・家具がなくなったら返す・レシピ（布・こむぎこ）・はじめのベッドの目標 */
+const assert=require('node:assert/strict');
+(async()=>{const {browser,page,run,errors}=await require('../sim/boot.cjs')({world:0});
+  await run(`checkQuest=()=>{};updTut=()=>{};checkLevel=()=>{};showSpotPop=()=>{};true`);
+  const base=JSON.parse(await run(`(()=>{document.querySelector('#dialog').hidden=true;S.introSeen=true;S.flags.tapped=1;S.hold=0;USERPAUSE=true;S.enemyOn=false;
+    const a=S.res[0];S.res=[a];endAct(a);a.act=null;S.t=1440*3+8*60;
+    const free=(x,y,w,h)=>{for(let b=0;b<h;b++)for(let c=0;c<w;c++){const k=(y+b)*W+x+c;if(S.obj[k]||S.ground[k]||S.floor[k]||hiAt(k)||(S.fog&&S.fog[k]))return false}return true};
+    let p=null;for(let y=CY+3;y<CY+20&&!p;y++)for(let x=CX-8;x<CX+8;x++)if(free(x,y,8,4)){p=[x,y];break}const [x0,y0]=p;
+    const lj=y0*W+x0,mj=y0*W+x0+3,bj=(y0+3)*W+x0+6;S.obj[lj]='loom';S.obj[mj]='mill';for(const q of[mj+1,mj+W,mj+W+1]){S.obj[q]='part';S.ref[q]=mj}S.obj[bj]='crate';S.obj[bj+1]='crate';recount();
+    for(const k of Object.keys(S.mat))S.mat[k]=0;S.fs={};S.mat.kasa=7;S.mat.shina=2;addFood('mugi',5);addFood('apple',20);boxSync();
+    return JSON.stringify({lj,mj,bj})})()`));
+  const {lj,mj}=base;
+  /* データ */
+  const dt=JSON.parse(await run(`JSON.stringify({bed:BL.bed.mat,rug:BL.rug1.mat,pouf:BL.pouf.mat,cur:BL.curtain1.mat,bread:ALLRECIPES.find(R=>R.out==='bread').need,dango:ALLRECIPES.find(R=>R.out==='dango'),nuno:MATN.nuno,ko:FOODS.komugiko.name,loomLock:RLOCK.has('loom'),insp:QUEST_INSPIRATIONS.bed})`));
+  assert.deepEqual(dt.bed,{wood:6,nuno:1});assert.deepEqual(dt.rug,{nuno:3});assert.deepEqual(dt.pouf,{wood:1,nuno:2});assert.deepEqual(dt.cur,{wood:10,nuno:2});
+  assert.deepEqual(dt.bread,{komugiko:1});assert.equal(dt.dango.st,'cooktable');assert.deepEqual(dt.dango.need,{komugiko:1});
+  assert.equal(dt.nuno,'布');assert.equal(dt.ko,'こむぎこ');assert.equal(dt.loomLock,true);assert.deepEqual(dt.insp,['loom','bed']);
+  /* はたおり機：タップで数をえらぶ（かさかさ草7こ→2つまで。しなやかな草2こは出ない） */
+  await run(`prPop(${lj});1`);
+  const pop=await page.evaluate(()=>[...document.querySelectorAll('.pxcard .nm')].map(e=>e.textContent));
+  assert.deepEqual(pop,['布（かさかさ草0/7）'],'2こしかない草は出ない');
+  await page.click('.pxcard .p');await page.click('.pxcard .p');
+  assert.equal(await page.textContent('.pxcard .v'),'2');assert.equal(await page.evaluate(()=>document.querySelector('.pxcard .p').disabled),true,'7こなら2つまで');
+  await page.click('.pxcard .go');
+  assert.deepEqual(JSON.parse(await run(`JSON.stringify([S.mat.kasa,S.prQ])`)),[1,{[lj]:{kasa:6}}]);
+  /* 粉ひき：じかにたのむ */
+  await run(`prPop(${mj});1`);await page.click('.pxcard .p');await page.click('.pxcard .p');
+  assert.equal(await page.textContent('.pxcard .v'),'2','こむぎ5こなら2つまで');await page.click('.pxcard .go');
+  /* せいれい（木のせいれいだけ：風・土がいないので、だれでも）が運んで加工する */
+  const sim=JSON.parse(await run(`(()=>{const a=S.res[0];let lit=false,n=0;for(;n<20000&&((S.mat.nuno||0)<2||(S.fs.komugiko||0)<2);n++){stepWorld(.25);a.hunger=hMax(a);a.fun=90;a.energy=90;if(prLit(${lj})||prLit(${mj}))lit=true}
+    return JSON.stringify({n,nuno:S.mat.nuno||0,ko:S.fs.komugiko||0,mugi:S.fs.mugi||0,kasa:S.mat.kasa,lit,left:Object.keys(S.prIn||{}).length+Object.keys(S.prQ||{}).length})})()`));
+  console.log(JSON.stringify(sim));
+  assert.equal(sim.nuno,2,'布2こ');assert.equal(sim.ko,2,'こむぎこ2こ');assert.equal(sim.mugi,1);assert.equal(sim.kasa,1);assert.equal(sim.lit,true);assert.equal(sim.left,0);
+  /* 属性：風のせいれいがいれば、はたおりは風のせいれいだけ */
+  const el=JSON.parse(await run(`(()=>{const a=S.res[0],w=mkRes(S,'テスト風','wind',a.x+1,a.y);S.res.push(w);const r=[procOK(a,'loom'),procOK(w,'loom'),procOK(a,'mill'),jobOK(a,'loom'),jobOK(w,'loom')];S.res.pop();return JSON.stringify(r)})()`));
+  assert.deepEqual(el,[false,true,true,false,true]);
+  /* 水車：水のとなりだけ。まわり5マスは、ひとりでに動き、できた物はせいれいが箱へ */
+  const ws=JSON.parse(await run(`(()=>{const w=(${lj})+W*6+2;S.obj[w]='';S.obj[w+1]='';S.ground[w+1]=1;
+    const dry=(${lj})+W*2;const okDry=canPlace('suisha',dry%W,(dry/W)|0,true),okWet=canPlace('suisha',w%W,(w/W)|0,true);
+    S.obj[w]='suisha';let lm=-1;for(const d of[-W*2,W*2,-2,-W*3,W*3,-3,-W,W,-1])if(S.obj[w+d]===''&&S.ground[w+d]===0&&!(S.fog&&S.fog[w+d])&&adjOf(w+d,k=>walk(k))>=0){lm=w+d;break}S.obj[lm]='loom';recount();
+    const a=S.res[0];S.prIn={[lm]:{kasa:6}};const t0=S.t;let n=0,auto=false;for(;n<20000&&(S.mat.nuno||0)<4;n++){stepWorld(.25);a.hunger=hMax(a);a.fun=90;a.energy=90;if((S.prOut||{})[lm])auto=true;if(a.act&&a.act.type==='proc'&&a.act.obj===lm)return JSON.stringify({bad:'spirit wove at waterwheel'})}
+    return JSON.stringify({okDry,okWet,near:suiOn(lm),auto,nuno:S.mat.nuno||0,out:Object.keys(S.prOut||{}).length,lm})})()`));
+  console.log(JSON.stringify(ws));
+  assert.equal(ws.bad,undefined,ws.bad);assert.equal(ws.okDry,false,'水のない所には建てられない');assert.equal(ws.okWet,true);assert.equal(ws.near,true);assert.equal(ws.auto,true,'水車で、ひとりでにできる');assert.equal(ws.nuno,4,'できた布はせいれいが箱へ');assert.equal(ws.out,0);
+  /* 家具がなくなったら、入れた物・とっておいた物はもどる */
+  const rf=JSON.parse(await run(`(()=>{const lm=${ws.lm};S.mat.kasa=6;boxSync();S.prIn={[lm]:{kasa:3}};S.prQ={[lm]:{kasa:3}};rsvAdd({kasa:3});S.prOut={[lm]:{nuno:1}};const n0=S.mat.nuno;clearObj(lm);stepWorld(.05);boxSync();return JSON.stringify([S.mat.kasa,S.mat.nuno-n0,Object.keys(S.prIn).length+Object.keys(S.prQ).length+Object.keys(S.prOut).length])})()`));
+  assert.deepEqual(rf,[9,1,0]);
+  /* はじめのベッドの目標 */
+  const bq=JSON.parse(await run(`(()=>{const q=QUESTS.find(q=>q.id==='bed');return JSON.stringify({gives:q.talk.gives,prog:typeof q.prog==='function'?q.prog():''})})()`));
+  assert.deepEqual(bq.gives,{items:{loom:1},mat:{wood:6,kasa:3}});assert.ok(/^はたおり機 1\/1・布 1\/1・ベッド 0\/1$/.test(bq.prog),bq.prog);
+  assert.deepEqual(errors,[]);await browser.close();console.log('OK');
+})().catch(e=>{console.error(e);process.exit(1)});

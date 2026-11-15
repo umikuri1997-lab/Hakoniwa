@@ -66,6 +66,7 @@ const PARTMV={/* 動く部品の動き：rot＝回る角度、sx・sy＝のび�
   swing:(i,now)=>{if(ICON)return{};/* アイコンは、マップと同じ形 */const d=i!=null&&S&&toyUsers(i).length?swAng(i,now):0;return rotAt(i)===1?{rot:d*SWROT}:{sx:1+d*.04,sy:1+d*.3}},/* 縦のブランコは、横から見るので、支点のまわりに左右へゆれる */
   seesaw:(i,now)=>({rot:!ICON&&i!=null&&S?ssAng(i,now||0):0}),
   windmill:(i,now)=>({rot:ICON?0:(now||performance.now())/1000*.9}),
+  suisha:(i,now)=>({rot:ICON?0:(now||performance.now())/1000*.7}),/* 水車の輪は、ずっとまわる */
   vane:(i,now)=>({sx:ICON?1:Math.cos(Math.sin((now||performance.now())/1300+(i||0))*.6)})};
 function partImg(p,id){if(!p._im)p._im=atlasFrame(p.f[0],id);return p._im}
 function hotSteam(c,x,y,now,i){/* 湯のわき岩の湯気：4コマを、となりのコマとうすくかさねて、ゆっくり入れかえる */const C=window.CHIPS;if(!C||!C['hotstone:steam#0'])return;const t=((now||performance.now())/700+(i||0)*.37)%4,k=t|0,f=t-k,a0=c.globalAlpha;for(const[n,al]of[[k,1-f],[(k+1)%4,f]]){if(al<=.01)continue;c.globalAlpha=a0*al*.8;drawChip(c,C['hotstone:steam#'+n],'hotstone:steam',x,y,now,i)}c.globalAlpha=a0}

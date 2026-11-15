@@ -7,7 +7,7 @@ const assert=require('node:assert/strict');
     const clear=(x,y)=>{const j=y*W+x;S.obj[j]='';delete S.ref[j];delete S.dyn[j];S.floor[j]='';S.ground[j]=0;if(S.hi)S.hi[j]=0;if(S.fog)S.fog[j]=0};
     for(let y=y0-2;y<=y0+6;y++)for(let x=x0-2;x<=x0+7;x++)clear(x,y);
     for(let k=0;k<4;k++)S.obj[(y0+5)*W+x0+k]='crate';/* 箱を4つ（素材がいっぱいにならないように） */S.obj[(y0+1)*W+x0+2]='ntree';/* 置く所に木 */
-    recount();S.mat.wood=(S.mat.wood||0)+120;S.mat.kasa=(S.mat.kasa||0)+10;boxSync();
+    recount();S.mat.wood=(S.mat.wood||0)+120;S.mat.kasa=(S.mat.kasa||0)+10;S.mat.nuno=(S.mat.nuno||0)+5;boxSync();
     bpGive('small',f.id);out.inv=S.bpInv.length;
     out.sites0=S.obj.filter(o=>o==='site').length;
     askBp(0,x0,y0);out.askOk=pending&&pending.kind==='bp'&&pending.ok;confirmYes();out.bp=S.bp.length;out.pt=S.pt;

@@ -96,3 +96,27 @@ def fire(nm,cx,cy,z0,H,R,on,fr=0,seed=1,small=3,lift=True,note=''):
         p=tongue(nm+'（うかぶ炎）',bx,cy,h0,R*0.4,0.0,rnd.uniform(0,6.28),core=False);p.deco=True;sp,rs=p.dims;p.dims=([(q[0],q[1],q[2]+hh) for q in sp],rs);p.on=on
         f0=p.decal;p.decal=lambda x,y,z,f0=f0,hh=hh:f0(x,y,z-hh);out.append(p)
     return out
+
+def planks(name,x0,x1,y0,y1,z0,top,hole=None,on=(),PW=0.095,PG=0.0):
+    """たて板を x0〜x1 にならべる。top(x)：その x での板の上のはし。hole=(hx0,hx1,hz)：そこは板を hz から上だけにする"""
+    from blueprint import Part as P
+    L=[];n=max(1,round((x1-x0)/(PW+PG)));w=(x1-x0)/n
+    for i in range(n):
+        a=x0+i*w+PG/2;b=x0+(i+1)*w-PG/2;zb=z0
+        if hole and a<hole[1]-1e-6 and b>hole[0]+1e-6:
+            if a<hole[0]-0.01 or b>hole[1]+0.01:   # 出入り口のふちにかかる板は、出入り口の所だけ切りかく
+                pts=[]
+                if a<hole[0]:pts+= [(a,z0),(hole[0],z0),(hole[0],hole[2])]
+                else:pts+=[(a,hole[2])]
+                if b>hole[1]:pts+= [(hole[1],hole[2]),(hole[1],z0),(b,z0)]
+                else:pts+=[(b,hole[2])]
+                pts+=[(b,top(b)),(a,top(a))]
+                L.append(P('%s%d'%(name,i+1),'prism',(pts,y0,y1),WOOD,on=on,note='柱にくぎでとめる'));continue
+            zb=hole[2]
+        pts=[(a,zb),(b,zb),(b,top(b))]
+        mid=(a+b)/2
+        if top(mid)>max(top(a),top(b))+1e-4:pts.append((mid,top(mid)))   # 棟の所は山の形
+        pts.append((a,top(a)))
+        L.append(P('%s%d'%(name,i+1),'prism',(pts,y0,y1),WOOD,on=on,note='柱にくぎでとめる'))
+    return L
+

@@ -67,6 +67,7 @@ function hasWork(r){
   if(!isNight()&&STATUE>=0&&(r.otaki||S.otakiQ&&Object.keys(S.otakiQ).length))return true;
   if(!isNight()&&(r.cpk||S.cmpQ&&Object.keys(S.cmpQ).length))return true;
   if(smeltWant(r))return true;
+  if(typeof procWant==='function'&&procWant(r))return true;/* 加工（粉ひき小屋・はたおり機） */
   if(jobWork(r,null,1))return true;/* しごと場の担当 */
   if(typeof bpJob==='function'&&bpJob(r,null,1))return true;/* 家の設計図 */
   if(!isNight()&&r.elem==='wood'&&COMPS.some(c=>(S.dyn[c]||{}).c>0||r.fert>0)&&S.obj.some((o,q)=>o==='farm'&&S.dyn[q]&&S.dyn[q].sown!==false&&S.dyn[q].g<100&&S.dyn[q].fdD!==dayNo()))return true;
@@ -96,7 +97,7 @@ function boxFullReset(){if(BOXFULL&&(matCap()>BOXFULL||matTot()<=matCap()*.8))BO
 function goWork(r,G,nw){boxFullReset();
   // 木材と石材は、少ないほうから集める（どちらかが得意なら両方やる）
   const mo=(S.mat.stone||0)<=(S.mat.wood||0)?['mine','chop']:['chop','mine'];let gd=false;
-  if(r.spk&&smeltJob(r,G))return true;/* 運んでいる鉱石も、先に炉へ */
+  if(r.spk&&smeltJob(r,G))return true;/* 運んでいる鉱石も、先に炉へ */if(r.ppk&&typeof procJob==='function'&&procJob(r,G))return true;/* 運んでいる加工の物も */
   if(r.cpk&&tryJob(r,G,'cfill'))return true;if(r.fert>0&&tryJob(r,G,'fert'))return true;/* 運んでいる草・肥料は、先におわらせる */
   if(r.elem==='earth'&&tryJob(r,G,'repair'))return true;/* 土のせいれいは、修理がいちばん先（木・石・雑草・畑の世話より先） */
   // 食料がゼロなら、まず食べ物を集める
@@ -112,6 +113,7 @@ function goWork(r,G,nw){boxFullReset();
   if(haulJob(r,G))return true;/* 神殿のまえの物を、箱へ運ぶ */
   if(tryJob(r,G,'cfill'))return true;
   if(smeltJob(r,G))return true;/* 炉：鉱石を運ぶ・火のせいれいが精錬する */
+  if(typeof procJob==='function'&&procJob(r,G))return true;/* 加工：運ぶ・加工する・水車でできた物を運ぶ */
   if(typeof fogJob==='function'&&fogJob(r,G))return true;if(typeof wflJob==='function'&&wflJob(r,G))return true;/* 御神木のそばの花の世話（木のなかまと花畑） */if(webJob(r,G))return true;/* クモの巣のそうじ *//* 霧の中で見つけた宝箱・あしあと */
   if(r.elem==='wind')for(const k of['drop','seed','weed'])if(tryJob(r,G,k))return true;/* 風のせいれいは、落ちている物（落とし物・枝・ふしぎな種・雑草・きのこ）を、畑の世話・おつげ・木・石より先にひろう */
   if((S.drops||[]).some(q=>q.lt||q.tap)||wreqList().length){for(const k of FARMJ)if(tryJob(r,G,k))return true;if(tryJob(r,G,'drop'))return true;if(wreqList().length&&tryJob(r,G,'weed'))return true}if(vreqList().length&&tryJob(r,G,'mine'))return true;/* タップした鉱脈 *//* 「みる」でタップした草・きのこ・落とし物も、ここでとりにいく *//* 守り神の光でこわした物（落ちた木材・石材）は、おつげ・木を切る・石をほるより先にひろう。畑の世話よりはあと */
