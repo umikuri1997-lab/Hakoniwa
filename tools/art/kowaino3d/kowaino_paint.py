@@ -17,10 +17,10 @@ hx = lambda h: np.array([int(h[i:i+2], 16) for i in (1, 3, 5)], float)
 
 # しゅるいごとの色と目じるし。場所は高さ1のときの (よこ x, 高さ z)。front：前からのたね
 CFG = {
-    'basic': dict(HPX=54, thin=0, hem=('#ac9776', 0.03), under='#3a3150', lining='#3a3150', base='#685d7f', parts='#b9aab6', legs=('#342b44', 0.1), eyes=dict(x=0.085, z=0.52, rx=0.03, rz=0.075, col='#c2afae', edge='#9e8a92'),
+    'basic': dict(HPX=54, thin=0, hem=('#ac9776', 0.03), under='#2c2440', lining='#2c2440', base='#685d7f', parts='#b9aab6', legs=('#342b44', 0.1), eyes=dict(x=0.085, z=0.52, rx=0.03, rz=0.075, col='#c2afae', edge='#9e8a92'),
                   seeds=[('hood', 0.0, 0.85, '#6f6487', 0), ('face', 0.0, 0.52, '#241c33', 1),
-                         ('handL', -0.1, 0.37, '#8e83a2', 1), ('handR', 0.06, 0.37, '#8e83a2', 1)],
-                  pom=((0.36, 0.5), '#c8bcc8'), tip=0.35, fingers=True, apart=0.035),
+                         ('handL', -0.1, 0.37, '#a597ba', 1), ('handR', 0.06, 0.37, '#a597ba', 1)],
+                  pom=((0.36, 0.5), '#c8bcc8'), tip=0, cone=((0.136, -0.292, 0.883), (-0.013, -0.231, 0.808)), fingers=True, apart=0.07),
 }
 
 def load(path):
@@ -29,6 +29,8 @@ def load(path):
     comp = np.zeros(len(F), int)
     for i, c in enumerate(cc): comp[c] = i
     return m, comp
+
+POMC = []
 
 def paint(m, comp, cfg):
     V = m.vertices; F = m.faces; H = m.bounds[1][1]; P = np.stack([V[:, 0], V[:, 2], V[:, 1]], 1); cen = P[F].mean(1)/H
@@ -59,7 +61,17 @@ def paint(m, comp, cfg):
         if len(near):
             c0 = P[near].mean(0); r0 = np.percentile(np.linalg.norm(P[near]-c0, axis=1), 70)
             for k in np.nonzero(lab == 'hood')[0]:
-                if np.linalg.norm(P[F[k]]-c0, axis=1).max() < r0*1.15: col[k] = hx(pc); lab[k] = 'pom'
+                if np.linalg.norm(P[F[k]]-c0, axis=1).max() < r0*1.12: col[k] = hx(pc); lab[k] = 'pom'
+            vp = np.unique(F[lab == 'pom'])
+            if len(vp):   # さかい目は、写すドットごとに、玉のまん中からのきょりできめる（pomf）。まん中・半径は、ぽんぽんの点だけから
+                bd = np.array(sorted(set(vp) & set(F[lab == 'hood'].ravel())))   # ぽんぽんと、ずきんの先がつながる所の点
+                c1 = P[vp].mean(0); cb = P[bd].mean(0) if len(bd) else c1+np.array([0, 0, 0.05*H])
+                ax = (cb-c1)/max(1e-9, np.linalg.norm(cb-c1))
+                if len(bd) >= 3:   # つながる所の輪の面の向き（いちばんうすい向き）。玉がわから、つながる所へ向ける
+                    n_ = np.linalg.svd(P[bd]-cb)[2][2]; ax = n_ if n_@ax > 0 else -n_
+                Am = np.c_[2*P[vp], np.ones(len(vp))]; sol = np.linalg.lstsq(Am, (P[vp]**2).sum(1), rcond=None)[0]   # 玉をあてはめる
+                cs = sol[:3]; rs = math.sqrt(max(1e-12, sol[3]+cs@cs))
+                POMC[:] = [c1, float((cb-c1)@ax), hx(pc), ax, rs*1.12, cs, rs]   # まん中 cs・半径 rs の玉の面の上で、ずきんの先へつながる向きから POMANG 度より外が、ぽんぽん
     for nm, f, inside, c in cfg.get('boxes', []):
         for k in range(len(F)):
             if lab[k] == inside and f(cen[k]): col[k] = hx(c); lab[k] = nm
@@ -74,12 +86,29 @@ def paint(m, comp, cfg):
         if comp[k] > 0: col[k] = hx(cfg['parts']); lab[k] = 'part'
     return P, F, col, lab, H, cen
 
+def cone(P, F, lab, H, uv):
+    """ずきんの先：根もと（uv の2点のまん中。太さは2点のきょりの半分。持ち主がうしろの絵に引いた線のはじまり）から、ぽんぽんのつなぎ目まで、まっすぐ細くなる形にする。
+    太さは、その場所のいまの太さのまん中に対する比をのこす（布のふにゃふにゃした感じは、そのまま）。根もとのほうは、少しずつ（もとの形となめらかにつなぐ）"""
+    U, L = np.array(uv[0])*H, np.array(uv[1])*H; B = (U+L)/2; rb = np.linalg.norm(U-L)/2
+    c1, pr, _, ax = POMC[:4]; A = c1+ax*pr; vb = np.array(sorted(set(F[lab == 'pom'].ravel()) & set(F[lab == 'hood'].ravel())))
+    rt = np.linalg.norm(P[vb]-A, axis=1).mean() if len(vb) else 0.05*H
+    d = A-B; Ld = np.linalg.norm(d); dh = d/Ld; P = P.copy()
+    vh = np.unique(F[lab == 'hood']); T = ((P[vh]-B)@dh)/Ld; rad = P[vh]-(B+np.outer(T*Ld, dh)); cr = np.linalg.norm(rad, axis=1)
+    sel = (T > 0) & (T < 1.02) & (cr < np.maximum(rb, rt)*1.8)
+    bins = np.clip((T*10).astype(int), 0, 10); med = {b: np.median(cr[sel & (bins == b)]) for b in set(bins[sel].tolist())}
+    for i in np.nonzero(sel)[0]:
+        t = min(1.0, T[i]); want = rb*(1-t)+rt*t; m_ = med.get(bins[i], cr[i]) or cr[i]
+        u = min(1, t/0.3); w = u*u*(3-2*u)   # 根もとは、少しずつ
+        P[vh[i]] = B+dh*T[i]*Ld+rad[i]*((1-w)+w*want/max(m_, 1e-9))
+    return P
+
 def tipthin(P, F, lab, H, k):
     """ずきんの先（ぽんぽんへのびる所）を細く：ずきんの点を、まわり（TIPR）のずきんの点のまん中へよせる。顔の中心から右へいくほど強く（ずきんの頭の所はかえない）"""
     from scipy.spatial import cKDTree
     vh = np.unique(F[(lab == 'hood') | (lab == 'pom')]); vp = set(F[lab == 'pom'].ravel()); Q = P[vh]; t = cKDTree(Q); P = P.copy()
     for i, v in enumerate(vh):
-        w = min(1, max(0, (Q[i, 0]/H-0.12)/0.16))
+        u = min(1, max(0, (Q[i, 0]/H-0.05)/0.3)); w = u*u*(3-2*u)   # なめらかに（急にすぼまらない）
+        if POMC: w *= min(1, max(0, (np.linalg.norm(Q[i]-POMC[0])/(0.09*H)-1.0)/0.8))   # ぽんぽんのそばは、細くしない
         if w <= 0 or v in vp: continue
         nb = t.query_ball_point(Q[i], 0.07*H); c0 = Q[nb].mean(0); P[v] = Q[i]+(c0-Q[i])*k*w
     return P
@@ -165,28 +194,38 @@ def hemdecal(P, F, lab, comp, H, cfg, yaw):
 
 HEMR, HEMTOP = 0.07, 0.18
 
-def fingers(sc, P, F, lab, R):
-    """手：まるい手（handL・handR）の、体のまん中がわに、4本の指（まん中のほうへのばして、まるめる。たてにならぶ）と、上に親指を足す（手は内がわを向く）"""
+def ellip(sc, c, r, col, n=20, m=12):
+    sc.part()
+    for j in range(m):
+        t0, t1 = math.pi*j/m, math.pi*(j+1)/m
+        for i in range(n):
+            a0, a1 = 2*math.pi*i/n, 2*math.pi*(i+1)/n
+            p = lambda t, a: np.array([c[0]+r[0]*math.sin(t)*math.cos(a), c[1]+r[1]*math.sin(t)*math.sin(a), c[2]+r[2]*math.cos(t)])
+            sc.quad(p(t0, a0), p(t1, a0), p(t1, a1), p(t0, a1), col)
+
+def hands(P, F, lab, H, dx):
+    """手の場所：もらったモデルの手（handL・handR）の玉のまん中と半径。左右へ dx（高さ1あたり）はなす"""
+    out = []
     for nm in ('handL', 'handR'):
         vs = np.unique(F[lab == nm])
         if not len(vs): continue
-        c0 = P[vs].mean(0); r = np.percentile(np.linalg.norm(P[vs]-c0, axis=1), 80); col = hx('#8e83a2')
-        si = 1 if c0[0] < 0 else -1   # 体のまん中へ向かう向き
-        for j, fz in enumerate((0.42, 0.14, -0.14, -0.42)):
-            L = 1-0.12*abs(fz)/0.42
-            pts = [c0+np.array([si*0.7*r, 0.45*r, fz*r]), c0+np.array([si*1.05*r*L, 0.55*r, fz*r*1.05]), c0+np.array([si*1.15*r*L, 0.3*r, fz*r*1.05-0.1*r])]
-            tube(sc, [R(p) for p in pts], [0.2*r, 0.19*r, 0.17*r], col)
-        pts = [c0+np.array([si*0.3*r, 0.7*r, 0.6*r]), c0+np.array([si*0.65*r, 0.85*r, 0.75*r]), c0+np.array([si*0.95*r, 0.8*r, 0.65*r])]
-        tube(sc, [R(p) for p in pts], [0.21*r, 0.2*r, 0.18*r], col)
+        c0 = P[vs].mean(0); r = np.percentile(np.linalg.norm(P[vs]-c0, axis=1), 80)
+        c0 = c0+np.array([(-1 if c0[0] < 0 else 1)*dx*H, 0, 0]); out.append((c0, r))
+    return out
 
-def handapart(P, F, lab, H, dx):
-    """手をはなす：手（handL・handR）だけの点を、外へ dx（高さ1あたり）ずらす（体とつながる点はそのまま）"""
-    P = P.copy(); other = set(F[(lab != 'handL') & (lab != 'handR')].ravel())
-    for nm in ('handL', 'handR'):
-        vs = [v for v in np.unique(F[lab == nm]) if v not in other]
-        if not vs: continue
-        sx = -1 if P[vs, 0].mean() < 0 else 1; P[vs, 0] += sx*dx*H
-    return P
+def fingers(sc, HD, R, col):
+    """手：胸の前で、手のひらどうしを向かい合わせる（親指が上）。手のひら（ミトンの玉）の前のはしから、4本の指が前へのびて、先が内がわ（もう1つの手のほう）へまるまる。
+    4本は、たてにならぶ（人さし指が上）。親指は、手の上から前へのびる"""
+    for c0, r in HD:
+        si = 1 if c0[0] < 0 else -1   # 体のまん中へ向かう向き
+        sc.smooth(True); n0 = len(sc.t); ellip(sc, c0, (r*0.8, r*0.9, r*0.95), col)
+        sc.t[n0:] = [(R(a), R(b), R(c), cc, pid) for a, b, c, cc, pid in sc.t[n0:]]   # ellip は、まわす前の場所で作ったので、まわす
+        for j, fz in enumerate((0.4, 0.13, -0.13, -0.4)):
+            L = 1-0.15*abs(fz+0.05)/0.45
+            pts = [c0+np.array([si*0.25*r, 0.7*r, fz*r]), c0+np.array([si*0.35*r, 1.1*r*L, fz*r]), c0+np.array([si*0.7*r, 1.25*r*L, fz*r*0.95]), c0+np.array([si*0.95*r, 1.05*r*L, fz*r*0.9])]
+            tube(sc, [R(p) for p in pts], [0.2*r, 0.19*r, 0.18*r, 0.16*r], col)
+        pts = [c0+np.array([si*0.1*r, 0.5*r, 0.75*r]), c0+np.array([si*0.25*r, 0.9*r, 0.85*r]), c0+np.array([si*0.4*r, 1.15*r, 0.75*r])]
+        tube(sc, [R(p) for p in pts], [0.22*r, 0.2*r, 0.18*r], col)
 
 def tube(sc, pts, rs, col, n=10):
     sc.part(); pts = [np.array(q, float) for q in pts]; rings = []
@@ -204,16 +243,36 @@ def shoot(name, cfg, src, yaw=0.0):
     m, comp = load(os.path.join(src, 'kg_%s.glb' % name)); P, F, col, lab, H, cen = paint(m, comp, cfg)
     if cfg.get('thin'): P = thin(P, F, lab, k=cfg['thin'])
     if cfg.get('tip'): P = tipthin(P, F, lab, H, cfg['tip'])
-    if cfg.get('apart'): P = handapart(P, F, lab, H, cfg['apart'])
+    if cfg.get('cone') and POMC: P = cone(P, F, lab, H, cfg['cone'])
+    HD = hands(P, F, lab, H, cfg.get('apart', 0)) if cfg.get('fingers') else []
+    if HD:   # もらったモデルの手は、まん中へちぢめてかくす（新しい手を組む）
+        P = P.copy(); other = set(F[(lab != 'handL') & (lab != 'handR')].ravel())
+        for nm in ('handL', 'handR'):
+            vs = [v for v in np.unique(F[lab == nm]) if v not in other]
+            if vs: P[vs] = P[vs].mean(0)+(P[vs]-P[vs].mean(0))*0.3
     c, s = math.cos(yaw), math.sin(yaw); R = lambda p: np.array([p[0]*c-p[1]*s, p[0]*s+p[1]*c, p[2]])
     O.LIGHT[:] = np.array([-0.45, 0.65, 0.65])/np.linalg.norm([-0.45, 0.65, 0.65])
     sc = O.Scene(); last = None; sc.smooth(True)
     hemf = hemdecal(P, F, lab, comp, H, cfg, yaw) if cfg.get('hem') else None
+    pomf = None
+    if POMC:   # ぽんぽんのさかい目：玉のまん中からのきょりで、ドットごとに（三角形のさかいの、まっすぐな線や切れこみを出さない）
+        pc0 = R(POMC[0]); pr = POMC[1]; pcol = POMC[2]; pax = R(POMC[3]); prad = POMC[4]; hcol = hx(dict((q[0], q[3]) for q in cfg['seeds']).get('hood', cfg['base']))
+        lw_ = 1.0*H/cfg['HPX']; lcol = hcol*0.72   # さかい目の輪郭線：1ドットのはば、ずきんの色を暗くした色
+        cs = R(POMC[5]); rs = POMC[6]
+        Bc = R((np.array(cfg['cone'][0])+np.array(cfg['cone'][1]))/2*H) if cfg.get('cone') else R(POMC[0]+POMC[3])
+        tdir = (Bc-cs)/np.linalg.norm(Bc-cs); ca = math.cos(math.radians(POMANG)); lwa = lw_/rs   # 輪郭線のはば（角度のぶん）
+        def pomf(x, y, z):
+            q = np.array([x, y, z])-cs; d = np.linalg.norm(q)
+            if d > rs*1.12: return hcol   # 玉からはなれた所は、ずきん
+            c_ = float(q@tdir)/max(d, 1e-9)   # ずきんの先へつながる向きとの、角度の cos
+            return hcol if c_ > ca else lcol if c_ > ca-lwa else pcol
     for k, f in enumerate(F):
-        if lab[k] != last: sc.decal(hemf if lab[k] == 'base' else None); sc.part(); last = lab[k]
+        if lab[k] != last:
+            sc.decal(hemf if lab[k] == 'base' else pomf if lab[k] in ('hood', 'pom') else None); sc.group('hoodpom' if lab[k] in ('hood', 'pom') else None)   # ずきんとぽんぽんは、三角形のさかいに線を引かない（さかい目の線は pomf）
+            sc.part(); last = lab[k]
         sc.tri(R(P[f[0]]), R(P[f[1]]), R(P[f[2]]), col[k])
-    sc.decal(None)
-    if cfg.get('fingers'): fingers(sc, P, F, lab, R)
+    sc.decal(None); sc.group(None)
+    if HD: fingers(sc, HD, R, hx(cfg.get('hand', '#a597ba')))
     sc.smooth(False)
     # 大きく（BIG 倍）写してから、色の平均（pixdown）でちぢめる：三角形ごとのかげのむらが、ならされる
     # カメラ：たての画角は、焦点距離 FOCAL の 35mm判（たて24mm）。体の高さの1.15倍がちょうど入るきょりに置く。体のまん中の奥行きで、高さ HPX ドット
@@ -226,6 +285,7 @@ def shoot(name, cfg, src, yaw=0.0):
     Q = np.array([proj(p) for tr in sc.t for p in tr[:3]]); ext = (math.floor(Q[:, 0].min())-2, math.ceil(Q[:, 0].max())+2, math.floor(Q[:, 1].min())-2, math.ceil(Q[:, 1].max())+2)
     O.S = BIG; O.GRAD = True
     hi = O.render_px(sc, proj, ext, V, k=0.80, lw=2, k2=0.90, merge=0)
+    if os.environ.get('KWDBG'): hi.save(os.path.join(os.environ['KWDBG'], 'hi_%s_%d.png' % (name, round(math.degrees(yaw)))))   # たしかめ用：ちぢめる前の大きな絵
     import pixdown
     W0, H0 = (ext[1]-ext[0]), (ext[3]-ext[2])
     o = pixdown.shrink(np.asarray(hi).astype(float), W0, H0); o = pixdown.lines(o, np.asarray(hi).astype(float)); o = pixdown.outline(o, np.asarray(hi).astype(float))
@@ -235,6 +295,7 @@ def shoot(name, cfg, src, yaw=0.0):
     return im, ext
 
 BACKEL = 15.0
+POMANG = 50.0   # ぽんぽん：ずきんの先がつながる向きから、この角度までは、ずきん
 BIG = 8; NCOL = 15   # 大きく写す倍・色の数（目の色を足して16）
 
 def rim(im, k=0.62):
