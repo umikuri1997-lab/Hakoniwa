@@ -166,7 +166,7 @@ const BL={
   stele:{hp:5,brk:1,fix:18,fixm:{wood:6,stone:25},name:'ノームの石像',kind:'build',mat:{wood:12,stone:50},pc:35,time:180,maker:'earth',lv:6,solid:1,attr:{earth:4},desc:'まわり7マスの壁・柵・塀が、1.5倍じょうぶになる（重複なし）'},
   fountain:{name:'噴水',sz:[2,2],kind:'build',mat:{wood:15,stone:60},pc:45,time:200,maker:'water',lv:6,solid:1,anim:1,play:{pt:6,pw:2.7,fun:45,dur:50,cap:3,adj:1},attr:{water:6},desc:'3人まで遊べる。たのしさ +45（33.3分）。遊ぶと10%の確率で、スタミナ+10'},
   statue:{name:'神殿',kind:'build',anim:1,pc:0,time:50,maker:null,solid:1,attr:{wood:1,water:1,fire:1,earth:1,wind:1},desc:'守り神の居場所'},
-  statueb:{name:'こわれた神殿',solid:1,desc:'守り神の居場所だった神殿'},/* はじめからある。「みる」でタップすると、せいれいが直す（templeRuinTap） */
+  statueb:{name:'こわれた神殿',solid:1,desc:'守り神の居場所だった神殿'},/* はじめからある。「しらべる」でタップすると、せいれいが直す（templeRuinTap） */
   obox:{name:'おそなえ箱',solid:1,anim:1},
   board:{name:'依頼ボード',solid:1,sz:[2,1],anim:1,pc:0,time:120,maker:'earth',mat:{wood:15,stone:10},desc:'依頼を5まい貼れるように広げる。'},
   altar:{name:'カミサマの台座',solid:1,anim:1},
@@ -307,7 +307,7 @@ function choiceGuide(){const W=keyName('water'),opt=(t,v,L)=>({t,v,lines:KS([...
   pick:v=>{const w=S.res.find(r=>r.name===W),g=S.res.find(r=>r.name===v);if(!w||!g)return;bondSet(g,w,BOND_TALK);tourStart(g,w)},
   opts:[opt(POKO,POKO,[[POKO,'#joy|まかせて！ 池の音がよく聞こえる所、おしえてあげる！']]),opt(MINA,MINA,[[MINA,'ぼくでいいのぉ？ ゆっくり歩こうねぇ。']]),opt(keyName('fire'),keyName('fire'),[['H','しょうがねえな。ついてきな。']])]}}
 const QUESTS1=[
-  {id:'statue',text:'神殿を直してもらおう',how:'「みる」で、こわれた神殿をタップ',check:()=>cnt('statue')>=1,by:GOD,story:[
+  {id:'statue',text:'神殿を直してもらおう',how:'「しらべる」で、こわれた神殿をタップ',check:()=>cnt('statue')>=1,by:GOD,story:[
     [POKO,'なおったー！ ぴかぴかの神殿！'],
     [GOD,'#joy|りっぱに直ったのう。ここが、おヌシとわしの、いばしょじゃ。'],
     [POKO,'ぼく、ときどきおそなえ箱におそなえものを入れるね。守り神さま、自由に使ってね！'],
@@ -412,7 +412,7 @@ const QUESTS1=[
    story:[
     [POKO,'ききょう、きれいだね！ 土の力が満ちたみたい！'],
     [GOD,'#nod|うむ、これで土のせいれいが来てくれるぞい。'],[POKO,'なかま、どんな子かなあ。どきどきする！']]},
-  {id:'summon',text:'神殿の「！」でなかまを呼ぼう',how:"神殿の上に「！」が出たら、「みる」で神殿をタップ",check:()=>!!S.flags.minaCame&&NEWRES==null&&!NEWQ.length,
+  {id:'summon',text:'神殿の「！」でなかまを呼ぼう',how:"神殿の上に「！」が出たら、「しらべる」で神殿をタップ",check:()=>!!S.flags.minaCame&&NEWRES==null&&!NEWQ.length,
    talk:{who:GOD,when:()=>true,lines:[
     [GOD,'#nod|力は満ちたのう……。朝になれば、呼ぶしるしが出るはずじゃ。'],
     [POKO,'#joy|ぼく、はじめに、なんて言おうかな。']],gives:{flag:'sumTold'}},
@@ -470,7 +470,7 @@ const QUESTS1=[
    talk:{get who(){return keyName('water')},when:()=>true,get lines(){return KS([['M','#think|みなさん、毎日よくはたらいて、夜も見回りをして……つかれていませんか。'],['F','うん、ちょっとだけ。'],['M','水につかると、つかれも、こわい気持ちも、すっと流れていくんです。'],['M','ハスの花のそばの水は、とくにやさしいんですよ。みんなで、水あびをしませんか。'],['H','#think|……水か。おれは、見てるだけにしとくぜ。']])}},
    get story(){return KS([['F','#joy|つめたくて、きもちいいね！'],['N','ハスの花のにおいがするよぉ。ねむくなっちゃうねぇ。'],['M','#joy|よかった。みなさんが笑ってくれると、水も、うれしそうです。'],['H','へっ。見てるだけでも、なんだか、すっとするな。'],['M','つかれた日は、また、ここで水あびしましょう。'],['F','#joy|うん！']])}}),
   stepQuest({id:'kagemark',text:'大きなかげのあとを調べよう',alias:['baseUp'],
-   steps:[{id:'kagemark',t:'大きなかげのあとを見つける',check:()=>{if(S.flags.kgDay==null)S.flags.kgDay=dayNo();if(S.flags.kgMark==null&&dayNo()>S.flags.kgDay||S.flags.kgMark!=null&&!S.flags.kgLook&&!kgOpen(S.flags.kgMark))kgPlace();/* あとから草・茂みなどが生えて、かくれたら、空いた所へうつす */return !!S.flags.kgLook},/* 話を聞いたつぎの日から、村の南に大きなかげのあとが出る */prog:()=>S.flags.kgMark==null?'あしたの朝に':'村の南のはしにある',how:'「みる」で、村の南に出た、大きなかげのあとをタップする'},
+   steps:[{id:'kagemark',t:'大きなかげのあとを見つける',check:()=>{if(S.flags.kgDay==null)S.flags.kgDay=dayNo();if(S.flags.kgMark==null&&dayNo()>S.flags.kgDay||S.flags.kgMark!=null&&!S.flags.kgLook&&!kgOpen(S.flags.kgMark))kgPlace();/* あとから草・茂みなどが生えて、かくれたら、空いた所へうつす */return !!S.flags.kgLook},/* 話を聞いたつぎの日から、村の南に大きなかげのあとが出る */prog:()=>S.flags.kgMark==null?'あしたの朝に':'村の南のはしにある',how:'「しらべる」で、村の南に出た、大きなかげのあとをタップする'},
     {id:'tale',t:'夕方、フタバの話を聞く',check:()=>{if(!S.flags.kgLook)return false;if(S.flags.taleDay==null){S.flags.taleDay=dayNo();S.flags.taleLate=hour()>=18}return (dayNo()>S.flags.taleDay||S.flags.taleLate===false)&&hour()>=18&&!isNight()},/* あとを見つけたあとの、さいしょの18時（18時より前に見つけたらその日、あとならあしたの18時） */how:'18時になると、フタバが話しはじめる'}],
    talk:{who:POKO,when:()=>true,lines:[
     [POKO,'さいきん、夜になると、村の外のほうで、ずしん…ずしん…って音がするんだ。'],
@@ -526,7 +526,7 @@ const QUESTS1=[
     ['G','……よう、声を届けたのう。'],['F','でも、すぐ聞こえなくなっちゃった。'],['G','声を返すだけでも、力が要ったのじゃろう。'],['F','どうしたら、戻ってこられる？'],['G','ヌシの力は、3つのかけらになって、この土地に散らばっておる。それを、もう一度つないでやるのじゃ。この木は、土地の奥まで根を伸ばしておる。'],['G','じゃが、この木はまだ細い。ヌシの力を受け止めるには、この木も、土地も、育たねばならん。'],['G','おヌシらが育てるなら、わしも手を貸そう。'],['F','じゃあ、木のそばにベンチを置こうよ。みんなで、木を見ていられるように。']
   ],[['F','枝が、伸びた……！'],['N','根の先も、さっきより遠くへ届いてるよぉ。'],['M','水の流れも、木のほうへ向いています。'],['F','大きくなったら、みんなで休もうね。']]),{check:()=>cnt('tower')>=1,gives:{shrine:true}}),
   stepQuest({id:'lv5',text:'ヌシ様のかけらをさがそう',
-   steps:[{id:'green375',/* id はセーブの読みかえのため、前のまま（前は、みどりのマス） */t:'ヌシ様の足あとを3つたどる',check:()=>{printEnsure();printNear();printLine();return printN()>=PRINT_N},prog:()=>{const w=printWhy();return '足あと '+printN()+'/'+PRINT_N+(w?'　'+w:'')},how:'「みる」でヌシ様の足あとをタップして、フタバに見にいってもらう。霧は、となりの晴れた土地を緑にすると晴れる'}],
+   steps:[{id:'green375',/* id はセーブの読みかえのため、前のまま（前は、みどりのマス） */t:'ヌシ様の足あとを3つたどる',check:()=>{printEnsure();printNear();printLine();return printN()>=PRINT_N},prog:()=>{const w=printWhy();return '足あと '+printN()+'/'+PRINT_N+(w?'　'+w:'')},how:'「しらべる」でヌシ様の足あとをタップして、フタバに見にいってもらう。霧は、となりの晴れた土地を緑にすると晴れる'}],
    talk:{who:POKO,when:()=>true,done(){S.flags.printFuu=PRINT_FUU},get lines(){const seen=(S.fogF||[]).some(f=>f.t==='print'&&f.done),fuu=S.res.some(r=>r.name===FIXK0.wind&&!r.hidden&&!r.coffin);const kiteSaw=qDone('kite');/* たこの上から、光る足あとを見ていれば、その話につなげる */PRINT_FUU=fuu?1:0;/* フウがいれば、1つめの足あとはフウが見た物 */return [
     [POKO,S.flags.nushiAlive?'ヌシ様は、生きてた。ぼくたちの声を聞いてくれたんだ。今度は、ぼくたちがヌシ様の力を取り戻したい！':'ヌシ様の力は、かけらの中に残ってるんだね。ぼくたちで、もう一度つなぎたい！'],
     [MINA,'あの木も、御神木に育ったねぇ。……土がねぇ、かけらが3つそろうのを、まってるみたいなんだぁ。'],

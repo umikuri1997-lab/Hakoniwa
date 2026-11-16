@@ -30,7 +30,7 @@ const VETN=[50,200,500],VETD=[2,4,6];
 function vetBonus(j){const n=(S.dyn[j]&&S.dyn[j].vk)||0;let b=0;for(let i=0;i<VETN.length;i++)if(n>=VETN[i])b=VETD[i];return b}
 function vetKill(j){if(j==null||S.obj[j]!=='watch')return;const d=S.dyn[j]||(S.dyn[j]={}),b0=vetBonus(j);d.vk=(d.vk||0)+1;const b1=vetBonus(j);if(b1>b0)toast(BL.watch.name+'がベテランになった（威力+'+b1+'）','good')}
 /* ---------- かげの巣（草原、はじめてオオカゲを追いはらったあと） ----------
-   朝に30%で、晴れた所の村の外に1つ（3つまで）。1つで、その夜のコワイノ+2。「みる」でタップすると、昼にせいれいがこわしにいく（S.dyn[j].nq）。こわすと、やすらぎの砂。 */
+   朝に30%で、晴れた所の村の外に1つ（3つまで）。1つで、その夜のコワイノ+2。「しらべる」でタップすると、昼にせいれいがこわしにいく（S.dyn[j].nq）。こわすと、やすらぎの砂。 */
 const NESTP=.3,NESTMAX=3,NESTADD=2,NESTT=30;
 function nestCount(){let n=0;for(let j=0;j<W*H;j++)if(S.obj[j]==='kagenest')n++;return n}
 function nestMorning(){if(WD!==0||S.free||!((S.bossKills||0)>0)||Math.random()>=NESTP)return;if(nestCount()>=NESTMAX)return;const R=spawnReach(),C=[];

@@ -22,12 +22,12 @@ const INTRO2=[
   [GOD,'#joy|では、ホムラに直してもらおうかの。'],
 ];
 const QUESTS2=[
-  {id:'statue',text:'神殿を直してもらおう',check:()=>cnt('statue')>=1,by:GOD,how:'「みる」で、こわれた神殿をタップ',story:[
+  {id:'statue',text:'神殿を直してもらおう',check:()=>cnt('statue')>=1,by:GOD,how:'「しらべる」で、こわれた神殿をタップ',story:[
     [HOMURA,'#surprise|ほんとに直っちまった。'],[HOMURA,'へえ、なかなかいい神殿じゃないか。'],
     [GOD,'じゃろ〜。ここが、おヌシとわしの居場所じゃ。'],
     [GOD,'#joy|くらしの道具は、とどけておいたぞい。'],[HOMURA,'……ま、助かるよ。']],
    gives:{feat:['inv','remove','plant','craft','people'],flag:'lv_oven',recipes:['oven','bed','crate'],items:{oven:1,bed:1,bamboowall:3,misugaki:10,spike:10},mat:{wood:10,stone:10},enemy:true}},
-  {id:'coldSpring',text:'冷たい温泉を調べよう',check:()=>!!S.flags.sprLook,how:'「みる」で、村の水たまりをタップする',
+  {id:'coldSpring',text:'冷たい温泉を調べよう',check:()=>!!S.flags.sprLook,how:'「しらべる」で、村の水たまりをタップする',
    talk:{who:HOMURA,when:()=>true,lines:[
     [HOMURA,'…なあ守り神。この村、むかしは湯気がもくもく上がってたんだよ。'],
     [HOMURA,'それが、いつのまにか消えちまってさ。そこらの水たまり、みんな温泉だったんだ。'],
@@ -55,7 +55,7 @@ const QUESTS2=[
     [GOD,'#nod|ほう、ヌシ様の火だねか。だいじに持っておくんじゃぞ。きっと、この村の力になってくれるはずじゃ。'],
     [GOD,'#joy|ほっほ、ホムラにも、やっと笑顔がもどったのう。わしもうれしいわい。'],[GOD,'では、わしはほかの土地を見まわってくるぞい。ときどき遊びに来るからの。ではな〜！']],
    gives:{flag:'onsen',feat:['summon','shop'],shard:'land',godLeave:true}},
-  {id:'summon',text:'なかまをむかえよう',check:()=>!!S.flags.minaCame&&NEWRES==null&&!NEWQ.length,how:'朝、神殿の上に「！」が出たら、「みる」で神殿をタップ',
+  {id:'summon',text:'なかまをむかえよう',check:()=>!!S.flags.minaCame&&NEWRES==null&&!NEWQ.length,how:'朝、神殿の上に「！」が出たら、「しらべる」で神殿をタップ',
    talk:{who:HOMURA,when:()=>true,lines:[
     [HOMURA,'お湯から、水の力が満ちてきたね。だれか来てくれるかもしれないよ。'],
     [HOMURA,'なかまか…。にぎやかになるのは、悪くないね。']],gives:{flag:'sumTold'}},
@@ -86,7 +86,7 @@ const QUESTS2=[
     [HOMURA,'よし、決まりだ。温泉のそばに、かまどと食卓をたのむよ！','hop']]},
    story:[[HOMURA,'#joy|ほら、できたての温泉たまごだよ！ みんな、食べな！','cheer+vol:egg'],[SHIZUKU,'……かたいです。','vol:eatS'],[HOMURA,'半熟なんて、ぐにゃっとして……'],[SHIZUKU,'#joy|でも、おいしいです。'],[HOMURA,'#joy|だろ？ これで、湯けむりの村らしくなってきた！']]},
 
-  {id:'haikage3',text:'ハイカゲの灰で、ひびわれをうめよう',check:()=>CRACKS.every(j=>S.obj[j]!=='crack'),prog:()=>'ひびわれ '+CRACKS.filter(j=>S.obj[j]!=='crack').length+'/'+CRACKS.length+'・灰 '+(st2().hai||0),how:'夜に来るハイカゲを追いはらうと、灰を落とす。せいれいがひろった灰で、村の北のひびわれを「みる」でタップしてうめる',
+  {id:'haikage3',text:'ハイカゲの灰で、ひびわれをうめよう',check:()=>CRACKS.every(j=>S.obj[j]!=='crack'),prog:()=>'ひびわれ '+CRACKS.filter(j=>S.obj[j]!=='crack').length+'/'+CRACKS.length+'・灰 '+(st2().hai||0),how:'夜に来るハイカゲを追いはらうと、灰を落とす。せいれいがひろった灰で、村の北のひびわれを「しらべる」でタップしてうめる',
    talk:{who:SHIZUKU,when:()=>true,lines:[
     [SHIZUKU,'守り神さま。温泉の熱は、火山から地面の下の「熱の道」を通って、とどいていたのです。'],
     [SHIZUKU,'村の北の地面に、ひびわれがあります。そこから熱がもれているようです。'],
@@ -130,7 +130,7 @@ const QUESTS2=[
     [SHIZUKU,'あし湯ができたら、みなさんも、きっと遊びに来ますね。'],
     [GOD,'花のたねを、とどけておいたぞい。']],gives:{items:{clover:3}}},
    story:[[SHIZUKU,'あし湯ができました……！ 足だけでも、ぽかぽかします。','vol:ashiyu'],[SHIZUKU,'足だけなら、あつくありません。','vol:ripple'],[HOMURA,'#joy|あんた、やっぱりお湯が苦手なんだろ。'],[SHIZUKU,'……水のせいれいですから。'],[HOMURA,'花を見ながら、のんびりおしゃべり。いいもんだね。']]},
-  {id:'volcano',text:'火山を調べよう',check:()=>!!S.flags.volLook,how:'「みる」で、北の火山をタップする',
+  {id:'volcano',text:'火山を調べよう',check:()=>!!S.flags.volLook,how:'「しらべる」で、北の火山をタップする',
    talk:{who:SHIZUKU,when:()=>true,lines:[
     [SHIZUKU,'奥の温泉に熱をとどけるには、奥の装置を使うはずです。'],
     [SHIZUKU,'その前に、火山を調べてみませんか。熱の流れが、どうなっているか…。']]},
@@ -189,7 +189,7 @@ const TOYS4=['swing','sandbox','seesaw','slide'];/* 遊び道具（どれでも�
 const LIGHTQ=['torch','lamp','campfire','lantern','candle','flamp','toro','takeakari','andon','yomawari','watchlight'];/* watchlight：あかりのついた見張り台（Lv5〜。recount で数える） *//* クエストで数える「あかり」（どれでもよい） */
 const DECOQ=['hedge','birdbath','parasol','arch','signpost','monstera','jar','rockart','vane','kamizo','shishiodoshi','noren'];/* クエストで数える「かざり」（どれでもよい） */
 const QUESTSF=[
-  {id:'statue',text:'神殿を直してもらおう',check:()=>cnt('statue')>=1,by:GOD,how:'「みる」で、こわれた神殿をタップ',story:[
+  {id:'statue',text:'神殿を直してもらおう',check:()=>cnt('statue')>=1,by:GOD,how:'「しらべる」で、こわれた神殿をタップ',story:[
     [GOD,'#joy|ここが、おヌシとわしの居場所じゃ。せいれいたちも、きっと手を貸してくれるぞい。'],[GOD,'わしはここで、交換でもしながら見とるからの。']]},
   {id:'ep1',text:'第1話 はじめての居場所：家とベッド2つ',check:()=>HOUSES.length>=1&&houseBedCount()>=2,/* ベッドは家の中に2つ */prog:()=>'家 '+Math.min(1,HOUSES.length)+'/1・ベッド '+Math.min(2,houseBedCount())+'/2',how:'家の壁のすきまを木の壁でふさぎ、依頼ボードでベッドをたのんで家の中に置く。思いついた形は依頼ボードに描くと、せいれいが作る。力がたまると、なかまを呼べる',
    talk:{get who(){return FA()},when:()=>true,get lines(){return [[FA(),'ねえねえ、あそこの家、まだ中がからっぽなの。'],[FB(),'草の上で寝るとねぇ、朝には背中がひんやりしてるんだよぉ。'],[FA(),'ここで、あったかく眠れるようになるかな？ 守り神さま、お願い！'],['@idea']]}},

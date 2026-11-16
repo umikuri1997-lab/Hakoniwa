@@ -1,4 +1,4 @@
-/* 守りの光をえらんでいるあいだは、みる・おく・こわすはしない。みる・おく・こわすをおすと、やめる */
+/* 守りの光をえらんでいるあいだは、しらべる・おく・こわすはしない。しらべる・おく・こわすをおすと、やめる */
 const {chromium}=require('playwright'),assert=require('node:assert/strict');
 
 (async()=>{const browser=await chromium.launch({executablePath:process.env.CHROME_PATH||'/usr/bin/chromium',args:['--no-sandbox']});const page=await browser.newPage({viewport:{width:1200,height:900}}),errors=[];

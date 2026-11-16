@@ -107,7 +107,7 @@ B.tick=()=>{ if(!B.on||!S)return; try{
 const H=B.H,inHouse=(x,y)=>x>=48&&x<=51&&y>=49&&y<=51,SR=()=>{const j=S.sacredRoot;return [j%W,(j/W)|0]};
 B.plantAll=(id,nx,ny)=>{let n=0;while(inv(id)>0&&cnt('sprout')<10&&n++<10){if(!B.put(id,nx||58,ny||58))break}};
 B.sow=k=>{let n=0;for(let j=0;j<S.obj.length;j++){if(S.obj[j]!=='farm')continue;const d=S.dyn[j];if(!d||d.crop)continue;if(cseed(k)<1)break;place('seed:'+k,j%W,(j/W)|0);n++}return n};
-H.statue=()=>{if(RUINT>=0&&S.obj[RUINT]==='statueb')templeRuinTap(RUINT);else B.ensure('statue',1,54,57)};/* こわれた神殿を「みる」でタップ */H.stor=()=>B.ensure('crate',1,51,51,inHouse);H.mbox=()=>{};
+H.statue=()=>{if(RUINT>=0&&S.obj[RUINT]==='statueb')templeRuinTap(RUINT);else B.ensure('statue',1,54,57)};/* こわれた神殿を「しらべる」でタップ */H.stor=()=>B.ensure('crate',1,51,51,inHouse);H.mbox=()=>{};
 H.table=()=>B.ensure('table',1,49,50,inHouse);
 H.wall=()=>{for(const [x,y] of [[49,52],[50,52],[51,52]])if(!S.obj[y*W+x])place('hwall',x,y)};
 B.weave=n=>{/* はたおり機で、布を n こまで（はたおり機がなければ、置く・たのむ） */if(B.have('loom')<1){if(inv('loom')>0)B.put('loom',56,52);else if(!B.ordered('loom')&&recipeKnown('loom'))orderFurn('loom');return}const j=S.obj.indexOf('loom');if(j<0||(S.mat.nuno||0)+prCount(j)>=n)return;for(const k of GRASSKEYS){const c=Math.min(Math.floor((S.mat[k]||0)/3),n-(S.mat.nuno||0)-prCount(j),PROC.loom.cap-prCount(j));if(c>0){const Q=(S.prQ||(S.prQ={}))[j]||(S.prQ[j]={});rsvAdd({[k]:c*3});Q[k]=(Q[k]||0)+c*3;return}}};

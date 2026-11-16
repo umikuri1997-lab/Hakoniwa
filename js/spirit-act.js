@@ -35,7 +35,7 @@ function bfsE(sx,sy,wk,sd){
 function pathTo(G,j){const p=[];while(j>=0&&G.dist[j]>0){p.push(j);j=G.prev[j]}return p.reverse()}
 // ほかの子がいる・向かっているマスは避けて、空いている別のマスから作業する（空きがなければ同じマスも使う）
 let TAKEN=null;
-let WEEDNEAR=0;function wreqList(){/* 「みる」でタップした草・きのこ（のこっている物だけ） */const q=S.wreq;if(!q)return [];const L=[];for(const k in q){if(WEEDS.has(S.obj[+k]))L.push(+k);else delete q[k]}return L}
+let WEEDNEAR=0;function wreqList(){/* 「しらべる」でタップした草・きのこ（のこっている物だけ） */const q=S.wreq;if(!q)return [];const L=[];for(const k in q){if(WEEDS.has(S.obj[+k]))L.push(+k);else delete q[k]}return L}
 function nearest(G,pred,maxD=60){let best=-1,bd=1e9;for(let j=0;j<W*H;j++){const d=G.dist[j];if(d<0||d>=bd||d>maxD)continue;if(TAKEN&&TAKEN.has(j))continue;if(pred(j)){best=j;bd=d}}
   return best}
 function nearestVia(G,G2,pred,maxD=60){let best=-1,bd=1e9;for(let j=0;j<W*H;j++){const d=G.dist[j],d2=G2.dist[j];if(d<0||d2<0||d>maxD||d+d2>=bd)continue;if(TAKEN&&TAKEN.has(j))continue;if(pred(j)){best=j;bd=d+d2}}
@@ -69,7 +69,7 @@ function burst(j,kind,snd){
 function plantMound(c,x,y,i){const k=i==null?0:hash(i*13+5);const w=7.5+k*2,h=2.8+k*.8;c.fillStyle='rgba(54,38,24,.22)';c.beginPath();c.ellipse(x+16,y+29,w+1,h*.72,0,0,7);c.fill();c.fillStyle='#a9784f';c.beginPath();c.ellipse(x+16,y+27.5,w,h,0,Math.PI,0);c.ellipse(x+16,y+27.5,w,h*.48,0,0,Math.PI);c.fill();c.fillStyle='rgba(225,177,125,.5)';c.beginPath();c.ellipse(x+15,y+26.3,w*.58,h*.38,-.08,Math.PI,0);c.fill()}
 function plantSparkle(j,id){const FK={clover:'fl_clover',bellf:'fl_bell',salvia:'fl_salvia',lily:'fl_lily',lotus:'fl_lotus'},key=FK[id]||'tree',a=ART[key],w=FLOWERS.has(id)?26:30,h=a&&a.ok?w*a.h/a.w:w,cx=(j%W)*TS+16,cy=((j/W)|0)*TS+30-h*.65;fxSpr('twinkle',cx,cy);sfxAt('sow',(j%W)+.5,(j/W)|0)}
 /* ---------- 効果範囲の表示 ---------- */
-// おく画面ではまわりに効く物の範囲を出す。みる画面ではタップした物の範囲をしばらく出す
+// おく画面ではまわりに効く物の範囲を出す。しらべる画面ではタップした物の範囲をしばらく出す
 const RANGE_COL={flower:'255,150,190',well:'90,170,240',windmill:'90,210,180',light:'255,190,90',watch:'255,110,110',env:'150,205,110',vane:'150,170,255',sign:'255,170,120'};
 function rangeOf(o,j){if(o==='lotus')return{k:'flower',cells:3};/* ハス：まわり3マス */if(FLOWERS.has(o))return{k:'flower',cells:3};/* 花：まわり3マス */if(o==='tree'||o==='fruit')return{k:'env',cells:3};if(o==='joro')return{k:'well',cells:5};if(o==='niguruma')return{k:'sign',cells:3};if(o==='tub'||o==='sink')return{k:'env',cells:3};if(o==='well')return{k:'well',cells:3};if(o==='windmill'||o==='suisha')return{k:'windmill',cells:5};if(o==='vane')return{k:'vane',cells:3};if(o==='signpost')return{k:'sign',cells:3};if(BL[o]&&BL[o].env)return{k:'env',cells:BL[o].er||3,sq:1};
   if(INDL.has(o)){const h=j!=null&&roomOf(j);if(!h)return{k:'light',r:1.5};let m=1;for(const k of h.set)m=Math.max(m,Math.hypot(k%W-j%W,((k/W)|0)-((j/W)|0)));return{k:'light',r:m+1.5}}
@@ -89,7 +89,7 @@ function drawRangeOne(o,j,x,y,strong){const R=rangeOf(o,j);if(!R)return;const co
 function drawRanges(now){
   if(mode==='build'){const x0=Math.floor(cam.x/TS)-7,y0=Math.floor(cam.y/TS)-7,x1=Math.ceil((cam.x+VW/cam.z)/TS)+7,y1=Math.ceil((cam.y+VH/cam.z)/TS)+7;
     const U={};// 同じ種類のマス範囲はまとめて1つの形にする
-    for(let y=Math.max(0,y0);y<Math.min(H,y1);y++)for(let x=Math.max(0,x0);x<Math.min(W,x1);x++){const j=y*W+x,o=S.obj[j];if(!o)continue;const R=rangeOf(o,j);if(!R||R.k==='watch')continue;// 射程は「みる」でタップしたときだけ
+    for(let y=Math.max(0,y0);y<Math.min(H,y1);y++)for(let x=Math.max(0,x0);x<Math.min(W,x1);x++){const j=y*W+x,o=S.obj[j];if(!o)continue;const R=rangeOf(o,j);if(!R||R.k==='watch')continue;// 射程は「しらべる」でタップしたときだけ
       if(R.cells){const st=U[R.k]||(U[R.k]=new Set()),r=R.cells;for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){if(!R.sq&&dx*dx+dy*dy>r*r+1)continue;const nx=x+dx,ny=y+dy;if(nx>=0&&ny>=0&&nx<W&&ny<H)st.add(ny*W+nx)}}else drawRangeOne(o,j,x,y,false)}
     for(const k in U){const set=U[k],col=RANGE_COL[k];ctx.save();ctx.fillStyle='rgba('+col+',.14)';for(const j of set)ctx.fillRect((j%W)*TS,((j/W)|0)*TS,TS,TS);
       ctx.strokeStyle='rgba('+col+',.7)';ctx.lineWidth=1.5;ctx.beginPath();for(const j of set){const px=(j%W)*TS,py=((j/W)|0)*TS;
