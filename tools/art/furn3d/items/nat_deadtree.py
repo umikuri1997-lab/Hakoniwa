@@ -1,7 +1,7 @@
 # 枯れ木（deadtree）：トリポの枯れ木（nat_deadtree.glb）。皮のテクスチャ。いまのチップ（はば100・下のはし56、g64）に合わせる。
-# かげはコワイノの絵と同じ付け方（持ち主がきめた）：明るさを多いだんにして、左上が明るく、右下とふちの内がわが暗い（POST の rimshade）。
-from natcommon import nat,deep,flat,barktexdecal,post_clean,rimshade
-POST=lambda im:rimshade(post_clean(im))
+# かげはコワイノの絵と同じ付け方（持ち主がきめた）：左上から光。幹の色は5つだけ（かげ2色・base・ハイライト2色）で、さかいめは市松もようのあみかけ。皮のすじは少しだけ（POST の tone5）。
+from natcommon import nat,deep,barktexdecal,post_clean,tone5
+POST=lambda im:tone5(post_clean(im),(198,138,103))
 ID='deadtree';GRAD=True;SHADE4=[(10,-2),(21,-4),(33,-6)];ELEV=4;WIDE=1.3;BOTTOM=56
 LIGHT=(-0.6,0.5,0.8)   # 光は左上・手前から（コワイノの絵と同じ）
 VIEWS=[('deadtree',0)]
