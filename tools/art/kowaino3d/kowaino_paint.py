@@ -220,11 +220,11 @@ def fingers(sc, HD, R, col):
     4本は、たてにならぶ（人さし指が上）。親指は、手の上から前へのびる"""
     for c0, r, mid in HD:
         si = 1 if c0[0] < mid else -1   # もう1つの手へ向かう向き（2つの手のまん中をさかいに）
-        sc.smooth(True); n0 = len(sc.t); ellip(sc, c0, (r*0.8, r*0.9, r*0.95), col)
+        sc.smooth(True); n0 = len(sc.t); ellip(sc, c0, (r*PALMW, r*0.9, r*0.95), col)   # 手のひらは、もう1つの手のほうを向くので、あつみは左右（x）
         sc.t[n0:] = [(R(a), R(b), R(c), cc, pid) for a, b, c, cc, pid in sc.t[n0:]]   # ellip は、まわす前の場所で作ったので、まわす
         for j, fz in enumerate((0.4, 0.13, -0.13, -0.4)):
             L = 1-0.15*abs(fz+0.05)/0.45
-            pts = [c0+np.array([si*0.25*r, 0.7*r, fz*r]), c0+np.array([si*0.35*r, 1.1*r*L, fz*r]), c0+np.array([si*0.7*r, 1.25*r*L, fz*r*0.95]), c0+np.array([si*0.95*r, 1.05*r*L, fz*r*0.9])]
+            pts = [c0+np.array([si*0.12*r, 0.7*r, fz*r]), c0+np.array([si*0.22*r, 1.1*r*L, fz*r]), c0+np.array([si*0.7*r, 1.25*r*L, fz*r*0.95]), c0+np.array([si*0.95*r, 1.05*r*L, fz*r*0.9])]
             tube(sc, [R(p) for p in pts], [0.2*r, 0.19*r, 0.18*r, 0.16*r], col)
         pts = [c0+np.array([si*0.1*r, 0.5*r, 0.75*r]), c0+np.array([si*0.25*r, 0.9*r, 0.85*r]), c0+np.array([si*0.4*r, 1.15*r, 0.75*r])]
         tube(sc, [R(p) for p in pts], [0.22*r, 0.2*r, 0.18*r], col)
@@ -297,7 +297,8 @@ def shoot(name, cfg, src, yaw=0.0):
     return im, ext
 
 BACKEL = 15.0
-POMANG = 50.0   # ぽんぽん：ずきんの先がつながる向きから、この角度までは、ずきん
+POMANG = 50.0
+PALMW = 0.45   # 手のひらのあつみ（左右の半径。手の大きさ r に対して）   # ぽんぽん：ずきんの先がつながる向きから、この角度までは、ずきん
 BIG = 8; NCOL = 15   # 大きく写す倍・色の数（目の色を足して16）
 
 def rim(im, k=0.62):
