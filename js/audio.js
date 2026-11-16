@@ -151,7 +151,10 @@ function sfx(k){
   case'open':rustle(t,.15,.06,o,900,2600,.7);knock(340,t+.11,.06,o,.1);break;/* 画面をひらく：さらっ…コトッ */
   case'close':rustle(t,.12,.05,o,2400,800,.7);knock(270,t+.08,.06,o,.1);break;/* 画面をとじる */
   case'count':{const r=.98+Math.random()*.04;tone(2093*r,t,.07,'sine',.03,o);tone(3136*r,t+.035,.09,'sine',.018,o)}break;/* 数がふえた：小さなガラスの「チリッ」 */
-  case'xyl':{const f=[523,587,659,784,880,1047,1175,1319][XYLN&7];knock(f,t,.035,o,.16);tone(f*2,t,.12,'sine',.012,o)}break;/* 一覧をなでる：木琴のコロコロ（XYLN が音の高さ） */
+  case'xyl':{/* 一覧をなでる：マリンバの「ぽろん」（XYLN が音の高さ。ドレミソラの5音なので、つづけて鳴らしてもにごらない）。木の板の音は、もとの音の3.93倍・9.2倍の音が、すぐ消える */
+    const f=[262,294,330,392,440,523,587,659][XYLN&7],lp=AC.createBiquadFilter();lp.type='lowpass';lp.frequency.value=2600;lp.connect(o);
+    const pt=(fr,d,v,f0)=>{const s=AC.createOscillator(),g=AC.createGain();s.type='sine';s.frequency.setValueAtTime(f0||fr,t);if(f0)s.frequency.exponentialRampToValueAtTime(fr,t+.012);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(v,t+.002);g.gain.exponentialRampToValueAtTime(.0001,t+d);s.connect(g);g.connect(lp);s.start(t);s.stop(t+d+.02)};
+    pt(f,.42,.06,f*1.03);pt(f*3.93,.07,.014);pt(f*9.2,.025,.004);rustle(t,.015,.03,lp,f*4,f*4,1.2)}break;
   case'pin':rustle(t,.05,.05,o,1200,600,.7);knock(300,t+.03,.06,o,.08);knock(1500,t+.16,.03,o,.03);break;/* 紙をぺたっ、ピンをぷすっ */
   case'tile':{const r=.94+Math.random()*.12;knock(520*r,t,.045,o,.06)}break;/* 板が1まいずつ置かれる：とん、とん */
   case'flip':rustle(t,.06,.035,o,1800,3400,.8);knock(380,t+.07,.05,o,.07);break;/* 札を裏返す：ぱたっ */
