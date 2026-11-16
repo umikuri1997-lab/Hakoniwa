@@ -181,7 +181,7 @@ function moveTarget(j){if(S.rug&&RUGC.has(j)&&!(S.obj[j]&&S.obj[j]!=='part'&&!WE
 function moveName(m){return BL[m.k==='rug'?S.rug[m.j]:m.k==='roof'?S.roof[m.j]:S.obj[m.j]].name}
 function writeObj(id,j,v){/* うつした物を書きこむ（向き・状態・じょうぶさもそのまま） */if(v.rot!=null)(S.rot||(S.rot={}))[j]=v.rot;S.obj[j]=id;if(STAIRS.has(id)){const d=stairDir(j);if(d>0){const o=stairOut(j,d);S.obj[o]='part';S.ref[o]=j}}else setParts(id,j,'part');if(v.dyn)S.dyn[j]=v.dyn;if(v.hp!=null)S.hp[j]=v.hp;if(v.hpL!=null)S.hp['L'+j]=v.hpL;if(v.own!=null)(S.bedOwn||(S.bedOwn={}))[j]=v.own;if(v.wown!=null)(S.wpOwn||(S.wpOwn={}))[j]=v.wown;if(v.uown!=null)(S.useOwn||(S.useOwn={}))[j]=v.uown;if(v.jown!=null)(S.jobOwn||(S.jobOwn={}))[j]=v.jown;if(v.cd!=null)(S.trapCd||(S.trapCd={}))[j]=v.cd}
 function moveTap(tx,ty){const j=ty*W+tx;
-  if(!MOVESRC){const m=moveTarget(j);if(!m)return toast('うつしたい家具・建物をタップ');if(m.k==='obj'&&fireAt(m.j))return toast('燃えているあいだは、うつせません');MOVESRC=m;sfx('tap');toast(moveName(m)+'を、どこへうつす？');dirty=true;renderPalette();return}
+  if(!MOVESRC){const m=moveTarget(j);if(!m)return toast('うつしたい家具・建物をタップ');if(m.k==='obj'&&fireAt(m.j))return toast('燃えているあいだは、うつせません');MOVESRC=m;sfx('mtap');toast(moveName(m)+'を、どこへうつす？');dirty=true;renderPalette();return}
   const m=MOVESRC;if(m.j===j||m.k==='obj'&&anc(j)===m.j){MOVESRC=null;dirty=true;renderPalette();return toast('やめました')}/* 同じ物をタップしたら、やめる */
   if(m.k==='rug'||m.k==='roof'){const L=m.k==='rug'?S.rug:S.roof,id=L[m.j],rr=m.k==='rug'&&S.rugRot?S.rugRot[m.j]:null;delete L[m.j];if(rr!=null)delete S.rugRot[m.j];recount();
     if(!(m.k==='rug'?canRug(tx,ty,false):canRoof(tx,ty,false))){L[m.j]=id;if(rr!=null)S.rugRot[m.j]=rr;recount();return}

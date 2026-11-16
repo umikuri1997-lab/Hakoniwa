@@ -147,6 +147,7 @@ function sfx(k){
   case'matDrop':if(playS('matDrop',.8))break;tone(520,t,.06,'triangle',.06,o,260);break;
   case'power':seq([79,84,88,91],.055,'sine',.07);tone(1568,t+.24,.35,'triangle',.03,o,2093);break;/* パワーをカミサマにわたした：きらっとした音 */
   case'tap':if(playS('click',.6))break;tone(1300,t,.03,'square',.07,o);tone(1950,t+.025,.03,'triangle',.05,o);break;/* ボタン：もらった音（click） */
+  case'mtap':{const r=.93+Math.random()*.14;knock(640*r,t,.07,o,.07);knock(980*r,t+.018,.025,o,.04)}break;/* 地図の物をタップ：こつっ（ボタンの音とはべつ） */
   case'next':{const r=.96+Math.random()*.08;knock(470*r,t,.09,o,.08);rustle(t+.01,.07,.025,o,3600,2600,.6)}break;/* 会話の「つぎへ」：コトッと、紙をめくる音 */
   case'open':rustle(t,.15,.06,o,900,2600,.7);knock(340,t+.11,.06,o,.1);break;/* 画面をひらく：さらっ…コトッ */
   case'close':rustle(t,.12,.05,o,2400,800,.7);knock(270,t+.08,.06,o,.1);break;/* 画面をとじる */
