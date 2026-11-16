@@ -244,6 +244,7 @@ SHADE = [(17.5, -5), (35, -10)]   # かげの色：ベースの色の HSV（100�
 SHINE = (12, -8)                # 金属のつや：明るさを足し、あざやかさを引く（白っぽく）
 DITHER = 0   # 0 でなければ、かげを1色にして、うすいかげをあみ（できあがりの1ドットごと。この数は1ドットの大きさ）であらわす
 DITHERR = (0.22, 0.72)   # あみ：かげになりはじめる・ぜんぶかげになる、光の向きとの内積
+LAST = None
 DITHERT = None   # あみの色の段（DITHER のとき。None なら DITHERR・DITHERHL の2色＋ハイライト）
 DITHERHL = None   # あみのハイライト：(はじまる・ぜんぶになる 光の向きとの内積, 明るさを足す, あざやかさを引く)（100段階）
 DITHERLV = 3   # あみのときの、かげの色（toon の段）
@@ -433,6 +434,7 @@ def render_px(sc, proj, ext, depth, k=0.72, outer=True, merge=12, lw=1, k2=0.86,
                     import colorsys
                     h_, s2, v2 = colorsys.rgb_to_hsv(*(np.array(q)/255)); hl = np.array(colorsys.hsv_to_rgb(h_, max(0, s2-DITHERHL[3]/100), min(1, v2+DITHERHL[2]/100)))*255
                     dh = np.clip((dlb-DITHERHL[0])/(DITHERHL[1]-DITHERHL[0]), 0, 1); col[k_ & (dh > th)] = hl
+    global LAST; LAST = (idb.copy(), zb.copy())   # たしかめ・あとの処理用：ドットごとの部品の番号と奥行き
     col0 = col.copy()   # 木目をつける前の色（輪郭線はこの色から作る。木目ごとに線の色がわかれない）
     for pid, tx in sc.tx.items():   # 部品ののびる向き（いちばん長い向き）にそって、木目をはる
         m = idb == pid

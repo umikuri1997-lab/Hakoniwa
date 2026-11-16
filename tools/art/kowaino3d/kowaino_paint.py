@@ -334,7 +334,7 @@ def shoot(name, cfg, src, yaw=0.0):
             if vs: P[vs] = P[vs].mean(0)+(P[vs]-P[vs].mean(0))*0.3
     c, s = math.cos(yaw), math.sin(yaw); R = lambda p: np.array([p[0]*c-p[1]*s, p[0]*s+p[1]*c, p[2]])
     O.LIGHT[:] = np.array([-0.45, 0.65, 0.65])/np.linalg.norm([-0.45, 0.65, 0.65])
-    sc = O.Scene(); last = None; sc.smooth(True)
+    sc = O.Scene(); last = None; sc.smooth(True); PL = {}
     hemf = hemdecal(P, F, lab, comp, H, cfg, yaw) if cfg.get('hem') else None
     pomf = None
     if POMC:   # ぽんぽんのさかい目：玉のまん中からのきょりで、ドットごとに（三角形のさかいの、まっすぐな線や切れこみを出さない）
@@ -353,7 +353,7 @@ def shoot(name, cfg, src, yaw=0.0):
             sc.decal(hemf if lab[k] == 'base' else pomf if lab[k] in ('hood', 'pom') else None); sc.group('hoodpom' if lab[k] in ('hood', 'pom') else None)   # ずきんとぽんぽんは、三角形のさかいに線を引かない（さかい目の線は pomf）
             if cfg.get('mats'):   # 材質：でこぼこ・色のむら（kw_tex.py）と、金属のつや
                 mt_ = cfg['mats'].get(lab[k]); sc.bump(kw_tex.bump(mt_, H, seed=len(sc.bm)) if mt_ in kw_tex.MATS else None); sc.material('metal' if mt_ in ('metal', 'ice') else None)
-            sc.part(); last = lab[k]
+            sc.part(); last = lab[k]; PL[sc.pid] = lab[k]
         sc.tri(R(P[f[0]]), R(P[f[1]]), R(P[f[2]]), col[k])
     sc.decal(None); sc.group(None); sc.bump(None); sc.material(None)
     if HD: fingers(sc, HD, R, hx(cfg.get('hand', '#a597ba')))
@@ -374,6 +374,22 @@ def shoot(name, cfg, src, yaw=0.0):
     import pixdown
     W0, H0 = (ext[1]-ext[0]), (ext[3]-ext[2])
     o = pixdown.shrink(np.asarray(hi).astype(float), W0, H0); o = pixdown.lines(o, np.asarray(hi).astype(float)); o = pixdown.outline(o, np.asarray(hi).astype(float))
+    if PARTLINE:   # 部品のさかい（布・かざり・手・顔・ぽんぽん）に、できあがりの1ドットの線。奥のがわのドットに引く（持ち主）
+        idb, zb = O.LAST; grp = lambda l: PARTG.get(l, l)
+        GL = np.full(max(PL)+2 if PL else 2, -1); names = sorted(set(grp(v) for v in PL.values()))
+        for p_, l_ in PL.items(): GL[p_] = names.index(grp(l_))
+        hb = idb.shape; Hs, Ws = o.shape[:2]; lb = np.full((Hs, Ws), -1); zs = np.full((Hs, Ws), -1e9)
+        g_ = np.where(idb >= 0, GL[np.maximum(idb, 0)], -1)
+        for y in range(Hs):
+            for x in range(Ws):
+                blk = g_[y*BIG:(y+1)*BIG, x*BIG:(x+1)*BIG]; v = blk[blk >= 0]
+                if len(v)*2 < blk.size: continue
+                lb[y, x] = np.bincount(v).argmax(); zz = zb[y*BIG:(y+1)*BIG, x*BIG:(x+1)*BIG]; zs[y, x] = zz[blk == lb[y, x]].mean()
+        ln = np.zeros((Hs, Ws), bool)
+        for dy, dx in ((0, 1), (0, -1), (1, 0), (-1, 0)):
+            nb = np.roll(np.roll(lb, -dy, 0), -dx, 1); nz = np.roll(np.roll(zs, -dy, 0), -dx, 1)
+            ln |= (lb >= 0) & (nb >= 0) & (nb != lb) & (nz > zs)
+        o = o.copy(); o[ln, :3] = o[ln, :3]*PARTK
     im = (lambda x: x if DITH else despeckle(x))(quant(rim(Image.fromarray(o.round().astype(np.uint8), 'RGBA')), NCOL, cfg.get('hem', (None,))[0]))
     if abs(math.cos(yaw)-1) < 1e-6:   # 正面だけ、目をおす
         im = stamp(im, [(proj(R(p))[0]-ext[0], proj(R(p))[1]-ext[2]) for p in eyepos(P, F, lab, H, cfg['eyes'])], cfg['eyes']['col'], cfg['eyes'].get('edge'))
@@ -390,6 +406,9 @@ KWT = ([(0.08, 0.14), (0.4, 0.47), (0.9, 0.96)], [3, 2, 0, (7, -4)])   # 色の�
 KWMSPEC = 0.9   # 金属のつやが出る向きの近さ（コワイノ。光沢・反射で金属をあらわす）
 KWDR = (0.4, 0.47)   # あみ：光の向きとの内積がこのあいだだけ（光とかげのさかいの細い帯。ほかは光かかげの1色。あみを多用しない、持ち主がきめた）
 KWHL = (0.92, 0.97, 14, 6)   # ハイライト：光の向きとの内積がこのあいだで、あみがふえる。明るさ+14・あざやかさ−6
+PARTLINE = True   # 部品のさかいの線
+PARTK = 0.62   # 部品のさかいの線の色（そのドットの色にかける）
+PARTG = {'red': 'base', 'under': 'base', 'rim': 'base', 'foot': 'face'}   # 同じ部品とみなす色わけ（表と裏地・顔と足には線を引かない）
 DITH = True   # かげを1色＋あみ（ドットの密度）にする
 BIG = 8; NCOL = 15   # 大きく写す倍・色の数（目の色を足して16）
 
