@@ -1,4 +1,4 @@
-/* 飼う生き物：柵でかこんだ所の小屋に、つぎの朝すみつく。えさの草・水をせいれいが運び、夕方にとれる物を箱へ。夜は小屋へ。 */
+/* 飼う生き物：柵でかこんだ所の小屋に空きがあると、朝にたまに村の外に野良が来る。おむかえすると、せいれいがつれてきて小屋にすむ。えさの草・水をせいれいが運び、夕方にとれる物を箱へ。夜は小屋へ。 */
 const assert=require('node:assert/strict');
 (async()=>{const {browser,run,errors}=await require('../sim/boot.cjs')({world:0});
   const r=JSON.parse(await run(`(()=>{document.querySelector('#dialog').hidden=true;S.introSeen=true;S.flags.tapped=1;S.hold=0;USERPAUSE=true;
@@ -14,7 +14,12 @@ const assert=require('node:assert/strict');
     recount();out.fenceWalk=walk(y0*W+x0);out.pen=(PENS.get(coop)||[]).length;out.huts=HUTS.length;
     /* 柵のドアを柵にかえると… → かこいはそのまま。柵を1つはずすと、かこいでない */
     S.obj[y0*W+x0+1]='';recount();out.open=PENS.get(coop);S.obj[y0*W+x0+1]='fence';recount();
-    animalMorning();out.ani=S.ani.map(a=>a.k);out.inPen=S.ani.length?(PENS.get(coop)||[]).includes((S.ani[0].y|0)*W+(S.ani[0].x|0)):false;
+    {const R=Math.random;Math.random=()=>.99;animalMorning();out.noStray=S.ani.length;Math.random=()=>0;animalMorning();Math.random=R}/* 5%：来ない日・来る日 */
+    {const a=S.ani[0];out.stray=!!(a&&a.stray);out.strayOut=a?!VILL[(a.y|0)*W+(a.x|0)]:false;
+      document.querySelectorAll('.pxcard').forEach(c=>c.parentNode.remove());out.atTap=aniAtTap(a.x,a.y-.3)===a;aniPop(a);const card=document.querySelector('.pxcard');out.spop=card?card.textContent:'';if(card)card.querySelector('.go').click();out.going=!!(f.act&&f.act.type==='astray');
+      let led=-1,home=-1;for(let i=0;i<30000;i++){S.food=100;f.hunger=hMax(f);f.energy=100;f.fun=100;S.t=Math.min(S.t,1440*3+12*60);stepWorld(.1);if(led<0&&f.act&&f.act.type==='alead')led=i;if(!a.stray){home=i;break}}
+      out.led=led;out.home=home;out.inPen0=(PENS.get(coop)||[]).includes((a.y|0)*W+(a.x|0));out.h=a.h===coop}
+    out.ani=S.ani.map(a=>a.k);out.inPen=S.ani.length?(PENS.get(coop)||[]).includes((S.ani[0].y|0)*W+(S.ani[0].x|0)):false;
     /* えさ：箱に草 */
     S.mat.shina=(S.mat.shina||0)+6;boxSync();
     const d=S.dyn[coop];const run=(n,cond)=>{for(let i=0;i<n;i++){S.food=100;f.hunger=hMax(f);f.energy=100;f.fun=100;stepWorld(.1);if(cond())return i}return -1};
@@ -22,7 +27,7 @@ const assert=require('node:assert/strict');
     out.ate=run(400,()=>S.ani[0].fd===callDay());
     out.waterAt=run(20000,()=>d.wd===callDay());
     /* 「しらべる」で生き物をタップ → 小さな画面 →「なでる」→ いちばん近いせいれいが、なでにいく → よろこぶ → たのしさ+5。1ぴき1日1回 */
-    {const a0=S.ani[0];S.t=1440*3+10*60;a0.path=null;a0.eat=0;f.fun=50;endAct(f);f.act=null;setMode&&setMode('look');
+    {const a0=S.ani[0];AJOY.delete(a0);S.t=1440*3+10*60;a0.path=null;a0.eat=0;f.fun=50;endAct(f);f.act=null;setMode&&setMode('look');
       document.querySelectorAll('.pxcard').forEach(c=>c.parentNode.remove());
       onTap((a0.x*TS-cam.x)*cam.z,((a0.y-.3)*TS-cam.y)*cam.z);
       const card=document.querySelector('.pxcard');out.pop=card?card.textContent:'';
@@ -40,11 +45,16 @@ const assert=require('node:assert/strict');
     /* 画面 */
     S.t=1440*4+9*60;openSheet('furn',coop);out.sec=Array.from(document.querySelectorAll('.sheet h3')).map(e=>e.textContent).find(t=>t.startsWith('すんでいる生き物'))||'';closeSheet();
     /* 小屋をこわすと、つぎの朝、野へかえる */
+    {S.ani.push({id:99,k:'hane',h:-1,stray:1,x:1.5,y:1.6,face:1,wt:0});S.t=1440*4+18*60+1;run(30,()=>!S.ani.some(a=>a.id===99));out.strayGone=!S.ani.some(a=>a.id===99)}/* 野良は夕方に帰る */
+    out.spots=['makiba','norakomichi','fureai','hidamari','hoshikusa'].filter(k=>SPOTS.some(p=>p.k===k)).length;out.hints=CHATS.filter(c=>['makiba','norakomichi','fureai','hidamari','hoshikusa'].includes(c.hint)).length;
     clearObj(coop);recount();animalMorning();out.left=S.ani.length;
     out.sub=!!SUBQ.find(q=>q.k==='animals1'&&q.learn.includes('coop')&&q.learn.includes('barn'));
     return JSON.stringify(out)})()`));
   console.log(r);
   assert.equal(r.fenceWalk,false,'fence blocks');assert.ok(r.pen>0,'pen found');assert.equal(r.huts,1);assert.equal(r.open,null,'open fence is not a pen');
+  assert.equal(r.noStray,0,'no stray at 99%');assert.equal(r.stray,true,'stray came');assert.equal(r.strayOut,true,'outside village');
+  assert.ok(r.spop.includes('野良のハネマリ')&&r.spop.includes('おむかえ'),r.spop);assert.equal(r.atTap,true,'tap finds stray');assert.equal(r.going,true,'spirit goes');assert.ok(r.led>=0,'leading');assert.ok(r.home>=0,'settled');assert.equal(r.inPen0,true);assert.equal(r.h,true);
+  assert.equal(r.strayGone,true,'stray leaves at 18');assert.equal(r.spots,5);assert.equal(r.hints,5);
   assert.deepEqual(r.ani,['hane']);assert.equal(r.inPen,true);
   assert.ok(r.feedAt>=0,'feed carried');assert.ok(r.ate>=0,'animal ate');assert.ok(r.waterAt>=0,'watered');
   assert.ok(r.pop.includes('ハネマリ')&&r.pop.includes('とり小屋')&&r.pop.includes('なでる'),r.pop);assert.equal(r.asked,true,'pet asked');

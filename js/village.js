@@ -106,7 +106,12 @@ const SPOTS=[
   {k:'daidokoro',n:'だいどころ',room:1,main:o=>o==='oven'||o==='cooktable',need:[[o=>o==='tub',1],[o=>o==='taru',1]],how:'家の中に、かまどか調理台と、水おけと、たる',eff:'その家の住み心地+5%'},
   {k:'shigotoba',n:'しごとば',main:o=>o==='crate',need:[[o=>NATG[o]!=null,3]],how:'木箱と、木か岩3つ',eff:'まわり3マスの木を切る・岩をほる速さ+10%'},/* 仕事場のそばに箱：運ぶ道が短くなるうえに、少し速い */
   {k:'gohan',n:'ごはんどころ',main:o=>o==='crate',need:[[o=>TABLES.has(o),1]],how:'木箱と、食卓',eff:'まわり3マスで食べると、食べる速さ+20%'},
-  {k:'nedoko',n:'ねどこ',room:1,main:o=>BEDSET.has(o),need:[[o=>TABLES.has(o),1]],how:'家の中に、ベッドと、食卓',eff:'その家の住み心地+5%'}];
+  {k:'nedoko',n:'ねどこ',room:1,main:o=>BEDSET.has(o),need:[[o=>TABLES.has(o),1]],how:'家の中に、ベッドと、食卓',eff:'その家の住み心地+5%'},
+  {k:'makiba',n:'まきば',main:o=>o==='coop'||o==='barn',need:[[o=>o==='tub',1],[o=>o==='crate',1]],how:'とり小屋か家畜小屋と、水おけと、木箱',eff:'小屋へえさ・水を運ぶ速さ+10%'},/* 飼う生き物（animals.js） */
+  {k:'norakomichi',n:'のらの小道',main:o=>o==='coop'||o==='barn',need:[[o=>o==='signpost',1],[o=>o==='hedge',1]],how:'とり小屋か家畜小屋と、道しるべと、生垣',eff:'野良の生き物が来る確率+5%'},
+  {k:'fureai',n:'ふれあいひろば',main:o=>o==='coop'||o==='barn',need:[[o=>BENCHES.has(o),2]],how:'とり小屋か家畜小屋と、ベンチ2つ',eff:'まわり3マスで生き物をなでると、たのしさ+20%'},
+  {k:'hidamari',n:'ひだまりのとや',main:o=>o==='coop',need:[[(o,q)=>FLOWERS.has(o)&&!isBud(q),2]],how:'とり小屋と、花2つ',eff:'生き物に水をあげる速さ+10%'},
+  {k:'hoshikusa',n:'ほしくさおき場',main:o=>o==='barn',need:[[o=>o==='makidana',1]],how:'家畜小屋と、まき棚',eff:'まわり3マスで、えさの草を箱からとる速さ+10%'}];
 const spotNear=(j,k)=>{if(j==null||j<0)return false;const x0=j%W,y0=(j/W)|0;for(let y=Math.max(0,y0-3);y<=Math.min(H-1,y0+3);y++)for(let x=Math.max(0,x0-3);x<=Math.min(W-1,x0+3);x++){const t=SPOTM.get(y*W+x);if(t&&t.has(k))return true}return false};/* そのマスのまわり3マスに、スポットのもとの物（伐採場・井戸・道しるべなど）があるか */
 const spotN=(j,...ks)=>ks.reduce((n,k)=>n+(spotHas(j,k)?1:0),0);/* おなじスポットは重ならない（いくつできても1こ分）。ちがうスポットは、たし算で重なる */
 const spotHas=(j,k)=>{const t=SPOTJ.get(anc(j));return !!t&&t.has(k)};
