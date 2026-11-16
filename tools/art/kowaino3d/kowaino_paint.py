@@ -20,7 +20,7 @@ CFG = {
     'basic': dict(HPX=54, thin=0, hem=('#ac9776', 0.03), under='#3a3150', lining='#3a3150', base='#685d7f', parts='#b9aab6', legs=('#342b44', 0.1), eyes=dict(x=0.085, z=0.52, rx=0.03, rz=0.075, col='#c2afae', edge='#9e8a92'),
                   seeds=[('hood', 0.0, 0.85, '#6f6487', 0), ('face', 0.0, 0.52, '#241c33', 1),
                          ('handL', -0.1, 0.37, '#8e83a2', 1), ('handR', 0.06, 0.37, '#8e83a2', 1)],
-                  pom=((0.36, 0.5), '#c8bcc8'), tip=0.35, fingers=True),
+                  pom=((0.36, 0.5), '#c8bcc8'), tip=0.35, fingers=True, apart=0.035),
 }
 
 def load(path):
@@ -166,17 +166,27 @@ def hemdecal(P, F, lab, comp, H, cfg, yaw):
 HEMR, HEMTOP = 0.07, 0.18
 
 def fingers(sc, P, F, lab, R):
-    """手：まるい手（handL・handR）の前がわに、4本の指（下へまるめる）と、内がわの親指を足す（もらったモデルの手はミトンの形）"""
-    for nm, si in (('handL', 1), ('handR', -1)):
+    """手：まるい手（handL・handR）の、体のまん中がわに、4本の指（まん中のほうへのばして、まるめる。たてにならぶ）と、上に親指を足す（手は内がわを向く）"""
+    for nm in ('handL', 'handR'):
         vs = np.unique(F[lab == nm])
         if not len(vs): continue
         c0 = P[vs].mean(0); r = np.percentile(np.linalg.norm(P[vs]-c0, axis=1), 80); col = hx('#8e83a2')
-        for j, fx in enumerate((-0.6, -0.2, 0.2, 0.6)):
-            L = 1-0.12*abs(fx)/0.6
-            pts = [c0+np.array([fx*r, 0.78*r, -0.05*r]), c0+np.array([fx*r*1.05, 1.0*r, -0.45*r*L]), c0+np.array([fx*r*1.05, 0.9*r, -0.85*r*L])]
-            tube(sc, [R(p) for p in pts], [0.22*r, 0.21*r, 0.18*r], col)
-        pts = [c0+np.array([si*0.75*r, 0.55*r, 0.1*r]), c0+np.array([si*1.05*r, 0.85*r, 0.2*r]), c0+np.array([si*1.0*r, 1.0*r, -0.05*r])]
-        tube(sc, [R(p) for p in pts], [0.23*r, 0.22*r, 0.19*r], col)
+        si = 1 if c0[0] < 0 else -1   # 体のまん中へ向かう向き
+        for j, fz in enumerate((0.42, 0.14, -0.14, -0.42)):
+            L = 1-0.12*abs(fz)/0.42
+            pts = [c0+np.array([si*0.7*r, 0.45*r, fz*r]), c0+np.array([si*1.05*r*L, 0.55*r, fz*r*1.05]), c0+np.array([si*1.15*r*L, 0.3*r, fz*r*1.05-0.1*r])]
+            tube(sc, [R(p) for p in pts], [0.2*r, 0.19*r, 0.17*r], col)
+        pts = [c0+np.array([si*0.3*r, 0.7*r, 0.6*r]), c0+np.array([si*0.65*r, 0.85*r, 0.75*r]), c0+np.array([si*0.95*r, 0.8*r, 0.65*r])]
+        tube(sc, [R(p) for p in pts], [0.21*r, 0.2*r, 0.18*r], col)
+
+def handapart(P, F, lab, H, dx):
+    """手をはなす：手（handL・handR）だけの点を、外へ dx（高さ1あたり）ずらす（体とつながる点はそのまま）"""
+    P = P.copy(); other = set(F[(lab != 'handL') & (lab != 'handR')].ravel())
+    for nm in ('handL', 'handR'):
+        vs = [v for v in np.unique(F[lab == nm]) if v not in other]
+        if not vs: continue
+        sx = -1 if P[vs, 0].mean() < 0 else 1; P[vs, 0] += sx*dx*H
+    return P
 
 def tube(sc, pts, rs, col, n=10):
     sc.part(); pts = [np.array(q, float) for q in pts]; rings = []
@@ -194,6 +204,7 @@ def shoot(name, cfg, src, yaw=0.0):
     m, comp = load(os.path.join(src, 'kg_%s.glb' % name)); P, F, col, lab, H, cen = paint(m, comp, cfg)
     if cfg.get('thin'): P = thin(P, F, lab, k=cfg['thin'])
     if cfg.get('tip'): P = tipthin(P, F, lab, H, cfg['tip'])
+    if cfg.get('apart'): P = handapart(P, F, lab, H, cfg['apart'])
     c, s = math.cos(yaw), math.sin(yaw); R = lambda p: np.array([p[0]*c-p[1]*s, p[0]*s+p[1]*c, p[2]])
     O.LIGHT[:] = np.array([-0.45, 0.65, 0.65])/np.linalg.norm([-0.45, 0.65, 0.65])
     sc = O.Scene(); last = None; sc.smooth(True)
@@ -223,7 +234,7 @@ def shoot(name, cfg, src, yaw=0.0):
         im = stamp(im, [(proj(R(p))[0]-ext[0], proj(R(p))[1]-ext[2]) for p in eyepos(P, F, lab, H, cfg['eyes'])], cfg['eyes']['col'], cfg['eyes'].get('edge'))
     return im, ext
 
-BACKEL = 30.0
+BACKEL = 15.0
 BIG = 8; NCOL = 15   # 大きく写す倍・色の数（目の色を足して16）
 
 def rim(im, k=0.62):
