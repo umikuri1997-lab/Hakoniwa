@@ -603,6 +603,7 @@ body .paper:not(.empty)::before{width:18px;height:18px;top:4px;margin-left:-9px;
 body.wd0 #topUI .hud{padding:6px 7px 8px!important}body.wd0 .dock{padding:6px 6px 8px}
 /* 草原：文字とアイコンは、木に彫りこんだ見た目（こい木の色＋下に明るい線）。文字の下の札（時刻・天気・一覧の行など）の色はなし */
 body.wd0 :is(#topUI,.dock,.sheet,.toast,.pxcard,#confirm,.dlg,#helpPop,.idea-card,.iinfo,.askyn,#palette,.wcard,#idle){color:#5e3d22;text-shadow:0 1.5px 0 rgba(255,246,226,.8)}
+body.wd0 #topUI .alert,body.wd0 #idle .card span{text-shadow:none}/* 白い字に明るいかげをつけると、字が2つかさなって二重に見える */
 body.wd0 :is(#topUI,.dock,.sheet,.toast,.pxcard,#confirm,.dlg,#helpPop,.idea-card,.iinfo,.askyn,#palette,.wcard,#idle) svg.pxi{fill:#6e4a28!important;filter:drop-shadow(0 1.5px 0 rgba(255,246,226,.8))}
 body.wd0 :is(.btn.pri,.ctab.on,.chip.more,.palA,.dock button.on){color:#3e2614!important;text-shadow:0 1.5px 0 rgba(226,180,120,.75)!important}
 body.wd0 :is(.btn.pri,.ctab.on,.chip.more,.palA,.dock button.on) svg.pxi{fill:#3e2614!important;filter:drop-shadow(0 1.5px 0 rgba(226,180,120,.75))}
