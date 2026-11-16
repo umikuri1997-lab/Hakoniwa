@@ -68,9 +68,26 @@ FXBMP = {
     'slash': ['.......aa|.....aab.|....ab...|...ab....|..ab.....|.ab......|ab.......', '.....ab|...ab..|.ab....|ab.....', '..b|.b.|b..'],
     'impact': ['...a...|...a...|..bab..|aaabaaa|..bab..|...a...|...a...', 'b...a...b|.b..a..b.|.........|.........|aa.....aa|.........|.........|.b..a..b.|b...a...b', 'a.....a|.......|.......|.......|.......|.......|a.....a'],   # うった所：かたい十字の光 → 外へとぶ すじ → きえる
 }
-FXSHAPE = {'dust': 'puff', 'ash': 'puff', 'spark': 'spark', 'ember': 'ember', 'snow': 'snow', 'leaf': 'leaf', 'petal': 'petal', 'sweat': 'sweat', 'star': 'star', 'slash': 'slash', 'impact': 'impact'}
+def _arc(R, th, a0, a1, dots=False):
+    """大きな三日月の すじ（ドット）：半径 R・はば th（先ほど細い）、a0〜a1 度（0 が右、上が 90）。a：外がわの白・b：中・c：先"""
+    n = 2*R+3; g = [['.']*n for _ in range(n)]; c = R+1
+    for y in range(n):
+        for x in range(n):
+            dx, dy = x-c, c-y; r = math.hypot(dx, dy); a = math.degrees(math.atan2(dy, dx))
+            t = ((a-a0) % 360)/max(1e-9, (a1-a0) % 360)
+            if t > 1: continue
+            w = th*math.sin(math.pi*min(1, t*1.15))   # まん中が太く、両はしが細い
+            if R-w <= r <= R+0.5 and w > 0.4:
+                if dots and (x+y) % 2: continue
+                g[y][x] = 'a' if r > R-1 else ('c' if t > 0.8 else 'b')
+    rows = [''.join(r) for r in g]; rows = [r for r in rows if r.strip('.')] or ['.']
+    return '|'.join(rows)
+FXBMP['swipe'] = [_arc(15, 4.5, 200, 20), _arc(16, 2.6, 190, 30), _arc(17, 1.2, 180, 40, True)]   # 大きな ひっかき・なぎはらいの すじ（右下から右上へ）
+FXBMP['swipeL'] = ['|'.join(r[::-1] for r in b.split('|')) for b in FXBMP['swipe']]   # 左へ
+FXCOL['swipe'] = FXCOL['swipeL'] = ('#ffffff', '#e4defc', '#b8acdc')
+FXSHAPE = {'swipe': 'swipe', 'swipeL': 'swipeL', 'dust': 'puff', 'ash': 'puff', 'spark': 'spark', 'ember': 'ember', 'snow': 'snow', 'leaf': 'leaf', 'petal': 'petal', 'sweat': 'sweat', 'star': 'star', 'slash': 'slash', 'impact': 'impact'}
 FXMOVE = {'dust': (0, 0, 0.05, 0.6), 'ash': (0, 0, 0.06, 0.8), 'spark': (0, 0, 0.02, 1.2), 'ember': (0, 0, 0.1, 0.6), 'snow': (0, 0, -0.06, 0.6), 'leaf': (0, 0, -0.05, 0.9),
-          'petal': (0, 0, -0.04, 1.0), 'sweat': (0, 0, -0.05, 0.3), 'star': (0, 0, 0, 0.0), 'slash': (0, 0, 0, 0), 'impact': (0, 0, 0, 0)}   # (…, …, 上へ（コマごと）, ひろがる速さ（コマごと、ひろがりの倍）)
+          'petal': (0, 0, -0.04, 1.0), 'sweat': (0, 0, -0.05, 0.3), 'star': (0, 0, 0, 0.0), 'slash': (0, 0, 0, 0), 'impact': (0, 0, 0, 0), 'swipe': (0, 0, 0, 0), 'swipeL': (0, 0, 0, 0)}   # (…, …, 上へ（コマごと）, ひろがる速さ（コマごと、ひろがりの倍）)
 FXLIFE = 3   # パーティクルは 3コマ のこる（年れい 0・1・2）
 
 def fxparts(frames, name):
@@ -572,7 +589,13 @@ def sheets(name, out):
             for p, fp in zip(ps, fxp): im, e = shoot(name, dict(CFG[name], pose=p, fxp=fp), None, yaw); fr.append((im, e))
             x0 = min(e[0] for _, e in fr); y0 = min(e[2] for _, e in fr); x1 = max(e[0]+im.width for im, e in fr); y1 = max(e[2]+im.height for im, e in fr)
             w, h = x1-x0, y1-y0; sh = Image.new('RGBA', (w, h*len(fr)))
-            for i, (im, e) in enumerate(fr): sh.alpha_composite(im, (e[0]-x0, i*h+e[2]-y0))
+            gc = (hx(CFG[name]['labcol']['base'])*0.35+np.array([255, 255, 255])*0.65).astype(int)   # 残像の色：布の色を白っぽく
+            for i, (im, e) in enumerate(fr):
+                for k in range(min(i, int(ps[i].get('ghost', 0))), 0, -1):   # 残像：まえのコマの形を、あみ（ドットの密度）で うすく。古いほど まばら
+                    gim, ge = fr[i-k]; g = Image.new('RGBA', (w, h)); g.alpha_composite(gim, (ge[0]-x0, ge[2]-y0)); a = np.array(g)
+                    yy, xx = np.indices(a.shape[:2]); keep = ((xx+yy) % 2 == 0) if k == 1 else ((xx % 2 == 0) & (yy % 2 == 0))
+                    o = np.zeros_like(a); m = (a[..., 3] > 0) & keep; o[m, :3] = gc; o[m, 3] = 255; sh.alpha_composite(Image.fromarray(o), (0, i*h))
+                sh.alpha_composite(im, (e[0]-x0, i*h+e[2]-y0))
             k = 'kg_%s:%s%s' % (name, mo, B); sh.save(os.path.join(out, k.replace(':', '_')+'.png')); info[k] = dict(w=w, h=h, ax=x0, ay=y0, n=len(fr))
     json.dump(info, open(os.path.join(out, 'kg_%s.json' % name), 'w'), indent=1); return info
 
