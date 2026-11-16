@@ -14,10 +14,11 @@ const assert=require('node:assert/strict');
     return JSON.stringify({n,inv0,head,inv:inv('chair'),citem:a.citem,cmade:a.cmade,T:__T.filter(t=>/いす/.test(t))})})()`));
   console.log(JSON.stringify(c));assert.ok(c.head,'できた');assert.equal(c.head.inv,c.inv0,'できたときは、まだもちものに入らない');assert.equal(c.head.ic,1,'頭の上に、いすのアイコン');assert.equal(c.inv,c.inv0+1,'しまったら入る');assert.equal(c.citem,null);
   assert.ok(c.T.some(t=>/おそなえ箱に入れた/.test(t)),'しまったときの知らせ');assert.ok(!c.T.some(t=>/ひろった/.test(t)),'ひろったとは言わない');
-  /* 木の矢：持てる数（1）をこえた分は、その場において、じゅんにはこぶ */
-  const ar=JSON.parse(await run(`(()=>{const a=S.res[0],inv0=inv('arrow');S.orders=[];finishCraft({type:'arrow',id:'a1'},a);const room=capOf(a),head=citemN(a),dr=(S.drops||[]).filter(d=>d.made).map(d=>d.id+':'+d.n+':'+d.tap);let n=0;for(;n<80000;n++){stepWorld(.25);a.hunger=hMax(a);a.fun=90;a.energy=90;if(!citemN(a)&&!(S.drops||[]).some(d=>d.made))break}
-    return JSON.stringify({n,room,head,dr,inv0,inv:inv('arrow'),qty:BL.arrow.qty})})()`));
-  console.log(JSON.stringify(ar));assert.equal(ar.head,Math.min(ar.room,ar.qty));assert.deepEqual(ar.dr,['arrow:'+(ar.qty-ar.head)+':1']);assert.equal(ar.inv,ar.inv0+ar.qty,'ぜんぶ運んで入る');
+  /* 木の矢・柵：1回の依頼でできた10こは、ひとまとめで1つ。頭がいっぱいなら、その場において、はこぶ */
+  const ar=JSON.parse(await run(`(()=>{const a=S.res[0],out={};for(const id of['arrow','fence']){const inv0=inv(id);S.orders=[];finishCraft({type:id,id:'a'+id},a);const head=JSON.stringify(a.citem),ic=carryIcons(a).length;let n=0;for(;n<80000;n++){stepWorld(.25);a.hunger=hMax(a);a.fun=90;a.energy=90;if(!citemN(a))break}out[id]={head,ic,add:inv(id)-inv0}}
+    endAct(a);a.act=null;a.citem={sand:capOf(a)};const inv1=inv('arrow');finishCraft({type:'arrow',id:'a2'},a);out.full=(S.drops||[]).filter(d=>d.made).map(d=>d.id+':'+d.n+':'+d.tap);a.citem=null;for(let n=0;n<80000;n++){stepWorld(.25);a.hunger=hMax(a);a.fun=90;a.energy=90;if(!citemN(a)&&!(S.drops||[]).some(d=>d.made))break}out.fullAdd=inv('arrow')-inv1;out.T=__T.filter(t=>/矢|柵/.test(t));return JSON.stringify(out)})()`));
+  console.log(JSON.stringify(ar));for(const id of['arrow','fence']){assert.equal(ar[id].head,JSON.stringify({['set:'+id]:1}),'ひとまとめで1つ');assert.equal(ar[id].ic,1);assert.equal(ar[id].add,10)}
+  assert.deepEqual(ar.full,['set:arrow:1:1'],'頭がいっぱいなら、その場に');assert.equal(ar.fullAdd,10);assert.ok(ar.T.some(t=>/木の矢×10をおそなえ箱に入れた/.test(t)));
   /* 箱がひとつもないとき：すぐ入る */
   const nb=JSON.parse(await run(`(()=>{const a=S.res[0];endAct(a);a.citem=null;const inv0=inv('chair'),ob=OBOX,bl=BOXL.slice();OBOX=-1;BOXL.length=0;finishCraft({type:'chair',id:'x'},a);const r={inv:inv('chair')-inv0,c:citemN(a)};OBOX=ob;BOXL.push(...bl);return JSON.stringify(r)})()`));
   console.log(JSON.stringify(nb));assert.deepEqual(nb,{inv:1,c:0});
