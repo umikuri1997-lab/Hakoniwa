@@ -326,6 +326,8 @@ def shoot(name, cfg, src, yaw=0.0):
     if cfg.get('thin'): P = thin(P, F, lab, k=cfg['thin'])
     if cfg.get('tip'): P = tipthin(P, F, lab, H, cfg['tip'])
     if cfg.get('cone') and POMC: P = cone(P, F, lab, H, cfg['cone'])
+    if cfg.get('pose'):   # モーション（kw_rig.py）
+        import kw_rig; P = kw_rig.pose(P, H, **cfg['pose'])
     HD = hands(P, F, lab, H, cfg.get('apart', 0)) if cfg.get('fingers') and not cfg.get('model') else []
     if HD:   # もらったモデルの手は、まん中へちぢめてかくす（新しい手を組む）
         P = P.copy(); other = set(F[(lab != 'handL') & (lab != 'handR')].ravel())
@@ -476,6 +478,24 @@ def despeckle(im, n=2):
         a = b
     return Image.fromarray(a)
 
+def sheets(name, out):
+    """モーションのコマ（kw_rig.POSES）を写して、モーションごとに、たてにならべた1まいの絵にする（いまのゲームと同じ形：w・h・ax・ay・n）。
+    正面と、うしろ（B。やられはなし）。コマの大きさは、そのモーションのコマぜんぶが入る大きさ（足もとの点をそろえる）"""
+    import kw_rig, json; info = {}
+    for mo, ps in kw_rig.POSES.items():
+        for B, yaw in (('', 0.0), ('B', math.pi)):
+            if mo == 'hurt' and B: continue
+            fr = []
+            for p in ps: im, e = shoot(name, dict(CFG[name], pose=p), None, yaw); fr.append((im, e))
+            x0 = min(e[0] for _, e in fr); y0 = min(e[2] for _, e in fr); x1 = max(e[0]+im.width for im, e in fr); y1 = max(e[2]+im.height for im, e in fr)
+            w, h = x1-x0, y1-y0; sh = Image.new('RGBA', (w, h*len(fr)))
+            for i, (im, e) in enumerate(fr): sh.alpha_composite(im, (e[0]-x0, i*h+e[2]-y0))
+            k = 'kg_%s:%s%s' % (name, mo, B); sh.save(os.path.join(out, k.replace(':', '_')+'.png')); info[k] = dict(w=w, h=h, ax=x0, ay=y0, n=len(fr))
+    json.dump(info, open(os.path.join(out, 'kg_%s.json' % name), 'w'), indent=1); return info
+
+if __name__ == '__main__' and sys.argv[1] == '--sheets':
+    for name in sys.argv[3:]: print(name, sheets(name, sys.argv[2]))
+    sys.exit()
 if __name__ == '__main__':
     src, out = sys.argv[1], sys.argv[2]; os.makedirs(out, exist_ok=True)
     for name in (sys.argv[3:] or list(CFG)):
