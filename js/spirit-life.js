@@ -2,7 +2,7 @@
 function treePlanted(){let n=cnt('tree')+cnt('fruit');for(let j=0;j<S.obj.length;j++){if(S.obj[j]==='sprout'&&S.dyn[j]&&(S.dyn[j].plant==='tree'||S.dyn[j].plant==='fruit'))n++}return n}/* 木・果樹（苗もふくむ）。花の芽はかぞえない */
 const kcOK=(c,r,p)=>!WD&&sevName(c.kc[0])===r.name&&(c.kc[1]==='*'?!isKey(p.name):sevName(c.kc[1])===p.name);
 const kGuard=()=>!!(S.flags||{}).guard,kE09=()=>!!(S.sev||{}).e09,kSh=()=>(S.bossKills||0)>=1,kE18=()=>!!(S.sev||{}).e18,kClr=()=>!!S.cleared,kRuin=d=>()=>(S.fogF||[]).some(f=>f.t==='ruin'&&!!f.done===!!d&&!(S.fog&&S.fog[f.a]));/* 晴れた所に、古い家のあとがある（d：もう家にもどった） */
-/* せいれいどうしのおしゃべり。0が話しかけた子、1が相手。「みる」でタップすると読める。「コワイノ」のお話は、はっきりは言わず、聞いていると正体が少しずつわかる（STORY.md） */
+/* せいれいどうしのおしゃべり。0が話しかけた子、1が相手。「しらべる」でタップすると読める。「コワイノ」のお話は、はっきりは言わず、聞いていると正体が少しずつわかる（STORY.md） */
 const CHATS=[/* kc：キーキャラどうし（話しかける子, 相手）、el：その属性の子だけ、mate：なかよしだけ、ok：出る条件。セーブに番号が入るので、順番を変えない */
  Object.assign([[0,'ねえ、さっき柵のむこうで、なにか光ってなかった？'],[1,'見た見た！ きらきらってしてた。'],[0,'なんだろう…。さわったら、いいことあるのかな。']],{ok:()=>['fence','misugaki','logfence','bamboofence','wall'].some(id=>cnt(id)>0)}),
  [[0,'きらきらしてるのって、風にはこばれてくるんだって。'],[1,'へえ。じゃあ、風の強い日は、いっぱい来るのかな。'],[0,'かもね。こんど、さがしてみよっと。']],
@@ -586,7 +586,12 @@ CHATS.push(
 CHATS.push(
  Object.assign([[0,"木を切ってから、箱まで、とおいなあ。"],[1,"切る所のそばに、木や石を入れる箱があったら、すぐしまえるのにね。"]],{hint:'shigotoba',ok:()=>spotHintOK('shigotoba','crate')}),
  Object.assign([[0,"ごはんをとってから、食卓まで歩くうちに、おなかがなっちゃう。"],[1,"ごはんの箱が食卓のそばにあったら、すぐ食べられるね。"]],{hint:'gohan',ok:()=>spotHintOK('gohan',['crate','table'])}),
- Object.assign([[0,"おきたら、そのまま家の中でごはんにしたいな。"],[1,"ベッドのある家に、食卓もあったらいいね。"]],{hint:'nedoko',ok:()=>spotHintOK('nedoko',['bed','yorubed'])}));
+ Object.assign([[0,"おきたら、そのまま家の中でごはんにしたいな。"],[1,"ベッドのある家に、食卓もあったらいいね。"]],{hint:'nedoko',ok:()=>spotHintOK('nedoko',['bed','yorubed'])}),
+ Object.assign([[0,"生き物の小屋へ、草と水を運ぶの、けっこう遠いんだよね。"],[1,"小屋のそばに、水おけと箱があったら、らくなのにね。"]],{hint:'makiba',ok:()=>spotHintOK('makiba',['coop','barn'])}),
+ Object.assign([[0,"村の外の生き物、小屋がどこにあるか、わかるかなあ。"],[1,"道しるべと生垣があったら、まよわずに来られそうだね。"]],{hint:'norakomichi',ok:()=>spotHintOK('norakomichi',['coop','barn'])}),
+ Object.assign([[0,"小屋の生き物を、すわって、ゆっくりながめたいな。"],[1,"小屋のそばに、ベンチがふたつあったらいいね。"]],{hint:'fureai',ok:()=>spotHintOK('fureai',['coop','barn'])}),
+ Object.assign([[0,"ハネマリって、お花のそばだと、うれしそうなんだよ。"],[1,"とり小屋のまわりに、花がさいてたら、いいね。"]],{hint:'hidamari',ok:()=>spotHintOK('hidamari','coop')}),
+ Object.assign([[0,"家畜小屋のえさの草、かわかしておく所があったらなあ。"],[1,"小屋のそばに、まき棚があったら、草もおいておけそう。"]],{hint:'hoshikusa',ok:()=>spotHintOK('hoshikusa','barn')}));
 
 const CHATSEENKEY='hakoniwa-chat-v1';let CHATSEEN=null;/* 出た雑談は、ステージをこえておぼえる（ほかのステージで出た話は出にくい） */
 function chatSeen(){if(!CHATSEEN){try{CHATSEEN=new Set(JSON.parse(KV.getItem(CHATSEENKEY)||'[]'))}catch(e){CHATSEEN=new Set()}}return CHATSEEN}

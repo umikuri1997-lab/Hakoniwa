@@ -1,4 +1,4 @@
-/* 「みる」でコワイノをタップすると、名前と体力を出す（何も起きないタップにしない）。守りの光はあてない */
+/* 「しらべる」でコワイノをタップすると、名前と体力を出す（何も起きないタップにしない）。守りの光はあてない */
 const assert=require('node:assert/strict');
 (async()=>{const {browser,run,errors}=await require('../sim/boot.cjs')();
   await run(`document.querySelector('#dialog').hidden=true;S.introSeen=true;S.flags.tapped=1;S.hold=0;`);

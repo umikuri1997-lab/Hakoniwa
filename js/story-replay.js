@@ -2,7 +2,7 @@
 /* 思い出は別フレームで再現する。元の村の状態・予約・会話待ちに触れず、子画面は保存しない。 */
 const STORY_REPLAY_QUESTS=['earthListen','fireRoot','waterFilm','windEcho','tower'];/* 御神木の調べの依頼（中の調べは fieldParts） */
 const replayParts=id=>QUESTS1.find(q=>q.id===id)?.fieldParts||[id];
-const STORY_REPLAY_EVENTS=[...STORY_REPLAY_QUESTS.map(id=>({key:'quest:'+id,id,kind:'quest'})),
+const STORY_REPLAY_EVENTS=[{key:'grass:intro',id:'intro',kind:'gintro',title:'はじまりの草原へ'},/* 草原のはじめ：花かんむりの夢 → 着いてからの会話（カミサマの話はのぞく） */...STORY_REPLAY_QUESTS.map(id=>({key:'quest:'+id,id,kind:'quest'})),
   {key:'event:e16',id:'e16',kind:'event',title:'御神木を守る仲間たち'},
   {key:'event:e15',id:'e15',kind:'event',title:'フタバが仲間を守る'},
   {key:'event:e16g',id:'e16g',kind:'event',title:'守り神へ受け継ぐ力'},
@@ -18,6 +18,7 @@ function availableStoryReplays(state=S){
   if(state.world===1)return STORY_REPLAY_EVENTS.filter(e=>{if(e.kind!=='vol')return false;if(e.id==='intro')return !!state.introSeen;if(e.id==='tower')return !!state.cleared;const i=QUESTS2.findIndex(q=>q.id===e.id);return i>=0&&(state.cleared||state.quest>i)&&state.qStory!==i;});
   if((state.world||0)!==0)return [];
   return STORY_REPLAY_EVENTS.filter(e=>{if(e.kind==='vol')return false;
+    if(e.kind==='gintro')return !!state.introSeen;
     if(e.kind==='quest'){const i=QUESTS1.findIndex(q=>q.id===e.id);return i>=0&&(state.cleared||state.quest>i)&&state.qStory!==i;}
     if(e.kind==='event')return !!state.sev?.[e.id];
     return e.kind==='reunion'?!!state.cleared:!!state.flags?.sacredQuietSeen;
@@ -53,6 +54,7 @@ function replayControls(run){
 function prepareStoryReplay(run,payload){
   if(payload.sound)Object.assign(SND,{bgm:payload.sound.bgm!==false,sfx:payload.sound.sfx!==false});
   if(run.episode.kind==='vol')return prepareVolReplay(run,payload);
+  if(run.episode.kind==='gintro')return prepareGrassIntroReplay(run,payload);
   const e=run.episode,at=STORY_REPLAY_QUESTS.indexOf(e.id),count=e.kind!=='quest'?5:[2,3,4,5,5][at];
   setWorld(0);S=newState(0);LIVE[0]=S;S.introSeen=true;S.flags.minaCame=true;S.enemyOn=false;S.t=720;S.hold=0;S.speed=1;S.food=100;S.godShown=true;S.godGone=false;
   S.feat={build:true,plant:true,craft:true,summon:true,people:true};S.sacredRoot=(CY-3)*W+CX-2;S.fieldSites={root:S.sacredRoot};const x=S.sacredRoot%W,y=S.sacredRoot/W|0;
@@ -78,8 +80,15 @@ function replayLockUI(run){
   USERPAUSE=true;NOSAVE=true;started=true;window.__noIdle=true;
   for(const id of ['#title','#maps','#pro','#dialog','#lvup','#rlv'])$(id).hidden=true;showUI(true);
   const style=document.createElement('style');style.textContent='#topUI,#botUI,#helpPop,#hand,#idle{display:none!important}#cv{pointer-events:none}';document.head.appendChild(style);
-  const nativeCheckQuest=checkQuest;checkQuest=()=>{if(run.running&&run.episode.kind!=='vol')nativeCheckQuest();};checkLevel=()=>{};checkSev=()=>{};finalCheck=()=>{};updTut=()=>{};showItemGift=()=>{};showSpotPop=()=>{};openSheet=()=>{};
+  const nativeCheckQuest=checkQuest;checkQuest=()=>{if(run.running&&run.episode.kind!=='vol'&&run.episode.kind!=='gintro')nativeCheckQuest();};checkLevel=()=>{};checkSev=()=>{};finalCheck=()=>{};updTut=()=>{};showItemGift=()=>{};showSpotPop=()=>{};openSheet=()=>{};
   replayControls(run);
+}
+/* 草原のはじめの村：新しい草原の一時データ。本編と同じく、カミサマが着いて、フタバはすわってうとうと */
+function prepareGrassIntroReplay(run,payload){
+  setWorld(0);S=newState(0);fogInit(S);LIVE[0]=S;S.introSeen=true;S.enemyOn=false;S.hold=0;S.speed=1;S.godShown=true;S.godGone=false;
+  recount();if(sacredRootEnsure(S.res.find(r=>!r.hidden))!=null){recount();introAtStump()}weedMorning(true);/* newGame と同じ村のはじめ（おぼえたレシピなど、のこる物にはさわらない） */
+  for(const r of S.res){const original=payload.actors?.find(a=>a.name===r.name&&a.elem===r.elem);if(original?.vr)r.vr=JSON.parse(JSON.stringify(original.vr));r.energy=100;r.hunger=hMax(r);r.fun=90;}
+  recount();const f=arriveF();cam.z=homeZ();centerOn(f?(CX+f.x)/2*TS:CX*TS,f?(CY-3+f.y-1)/2*TS:(CY-3)*TS);replayLockUI(run);
 }
 /* 火山の場面の村：一時データだけ。場面に要る物（ようがん台・ベンチ・かまど・食卓・湯のわき岩・台座）と、ホムラ・シズクをおく */
 const VOL_REPLAY_AT={intro:'c',springA:'a',summon:'a',rockCanal:'b',shizukuRest:'a',yatai:'a',haikage3:'k',springB:'d1',fire3:'y',fest:'m',ashiyu:'b',volcano:'m',rockDeep:'d2',springC:'d2',ashNight:'m',hinoookage:'v',inn:'a',guest:'a',tower:'m'};
@@ -99,6 +108,12 @@ function prepareVolReplay(run,payload){
   S.quest=Math.max(0,QUESTS2.findIndex(q=>q.id===id));S.qStory=null;S.qTalked=true;S.spotSeen=Object.fromEntries(SPOTS.map(v=>[v.k,1]));recount();
   cam.z=homeZ();centerOn(S.res[0].x*TS,S.res[0].y*TS);replayLockUI(run);
 }
+async function playGrassIntroReplay(run){
+  const say=lines=>new Promise(ok=>{DLGTAP=performance.now();DLGGAP=0;dialog(lines,ok);});
+  const f=S.res.find(r=>r.name===POKO);if(f){f.nap=true;RHOLD.set(f,performance.now()+6e5)}
+  await new Promise(ok=>sceneShift('mem',dreamScene,ok));if(STORY_REPLAY_RUN!==run||run.cancelled)throw Error('replay cancelled');
+  await say(INTRO);for(const r of S.res)if(r.nap){r.nap=false;RHOLD.set(r,0)}
+}
 async function playVolReplay(run){
   const id=run.episode.id,q=QUESTS2.find(x=>x.id===id),say=lines=>new Promise(ok=>{DLGTAP=performance.now();DLGGAP=0;dialog(lines,ok);});
   if(id==='intro')await say(INTRO2);
@@ -117,6 +132,7 @@ async function playStoryReplay(run){
   },33);
   try{
     if(e.kind==='vol')await playVolReplay(run);
+    else if(e.kind==='gintro')await playGrassIntroReplay(run);
     else if(e.kind==='quest'){
       checkQuest();await waitStoryReplay(run,()=>!!earthIntroSpeaker(QUESTS[S.quest]));DLGTAP=performance.now();startTalk();await waitStoryReplay(run,()=>S.qTalked);
       for(const pid of replayParts(e.id))for(let phase=0;phase<FIELD_STORIES[pid].length;phase++){replayReadyActors();DLGTAP=performance.now();const j=S.sacredRoot;fieldStoryTap(j%W,j/W|0);await waitStoryReplay(run,()=>fieldStoryState(pid).step>phase);}

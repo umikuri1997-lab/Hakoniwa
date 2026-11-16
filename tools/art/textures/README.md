@@ -14,3 +14,8 @@
   取ってきた所：GitHub にある写し（CC-Open-Learning/DLX-paramedic-ambulance の `Assets/Easter Eggs/Metal032_1K-PNG_Color.png`。Git LFS の中身の sha256 が 74b8db4a…b39cfde と同じことをたしかめた）。ファイルの形だけ、そのままの色で PNG に書きなおした。
 - `paper005.png`：ambientCG「Paper005」の色の絵（1K、https://ambientcg.com/view?id=Paper005 、CC0 1.0）。依頼の紙の柄（`tools/ui/paper_ui.py` の `ptex_rows` が、ドットにちぢめて `index.html` に書きこむ）。
   取ってきた所：GitHub にある写し（bucekpet/Dungeon-platformer の `Textures/paper/Paper005_1K-JPG_Color.jpg`。中身の sha256 は 128d5ba1…）。ネットの制限で ambientcg.com から直接は取れなかった。ファイルの形だけ、そのままの色で PNG に書きなおした。
+- `fabric026.png`・`fabric026_n.png`：ambientCG「Fabric026」の色の絵とノーマルマップ（OpenGL の向き。1K、https://ambientcg.com/view?id=Fabric026 、CC0 1.0）。布の織り目（コワイノの布、`tools/art/kowaino3d/kw_tex.py`）。
+  取ってきた所：GitHub にある写し（MrGoonAndWatch/Goons-House-Of-Doom-2 の `textures/cc0/Fabric026_1K-PNG_Color.png`・`_NormalGL.png`）。ネットの制限で ambientcg.com から直接は取れなかった。256×256 に色の平均（BOX）でちぢめ、ノーマルマップは 16bit を 8bit にした。
+- `rock030_n.png`：ambientCG「Rock030」のノーマルマップ（OpenGL の向き、`rock030.png` と同じ物）。岩のでこぼこ（コワイノの岩、`kw_tex.py`）。
+  取ってきた所：GitHub にある写し（matthewm174/Godot4.3-soulslike-controller の `textures/Rock030_1K-PNG/Rock030_1K-PNG_NormalGL.png`）。256×256 に色の平均（BOX）でちぢめ、16bit を 8bit にした。
+- Metal032 のノーマルマップは、たいらで、でこぼこがない（使わない）。金属は、つやのすじ（`oblique3d` の `material('metal')`）と、金属の色のむら（`metal032.png`）で出す。
