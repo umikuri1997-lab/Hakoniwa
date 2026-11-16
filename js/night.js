@@ -338,13 +338,13 @@ function gupBuy(k){const n=gupLv(k);if(n>=10)return false;const c=GUPC[n];if(S.p
 function gupMigrate(){/* 前は村レベルでチャージがみじかくなった。強化だけにしたので、古いセーブは、そのときのチャージより長くならない段階にする（1回だけ） */if(S.flags.gup1)return;S.flags.gup1=1;const old=LIGHTCDL[S.lv]||10,v=gupOf('cd').v;let i=0;while(i<10&&v[i]>old)i++;if(i>gupLv('cd'))(S.gup||(S.gup={})).cd=i}let LIGHTCD=0,LIGHTARM=false;/* 守りの光：アイコンをタップしてから、コワイノ・木・岩をタップする *//* のこり秒（倍速なら早くもどる） */
 function guardLight(e){PTW.q=true;if(LIGHTCD>0){toast('まもりの光は、あと'+Math.ceil(LIGHTCD/(S.speed||1))+'秒');return}if(S.pt<1){toast('パワーが足りません');return}S.pt-=1;LIGHTCD=lightCdMax();
   const D=EN[e.type],G=gupOf('stun'),gs=gupLv('stun');hurtEn(e,gupOf('pow').v[gupLv('pow')],{flash:8,k:'light'});/* 威力・とめる時間は、守り神のちから（GUP）の段階 */e.stun=D.boss?G.vb[gs]:G.v[gs];e.path=[];e.repath=0;
-  const cx=e.x*TS,cy=e.y*TS-18;fxSpr('lighthit',cx,cy);sfxAt('shoot',e.x,e.y);
+  const cx=e.x*TS,cy=e.y*TS-18;fxSpr('godlight',cx,cy);skillFx('light');sfxAt('shoot',e.x,e.y);
   if(e.hp<=0)return defeat(e,'守り神の光で'+D.name+'を追いはらった！')}
 let AREACD=0,AREAARM=false;/* こもれびのまもり（フタバから受けついだ守り神の技）：タップした場所のまわりのせいれいに、葉のまもり・パワー3。まわりのマス・葉のまもりの時間・チャージは GUP の area */
 function areaBlast(cx,cy){
   const A=gupOf('area'),ga=gupLv('area'),L=S.res.filter(r=>!r.hidden&&Math.hypot(r.x-cx,r.y-cy)<=A.r[ga]);
   if(!L.length){toast('はんいに、せいれいがいません');return}
-  S.pt-=3;PTW.q=true;AREACD=A.cd[ga];const px=cx*TS,py=cy*TS;fxSpr('areaguard',px,py);
+  S.pt-=3;PTW.q=true;AREACD=A.cd[ga];const px=cx*TS,py=cy*TS;fxSpr('areaguard',px,py);skillFx('area');{const R=A.r[ga]*TS,N=Math.max(12,Math.round(A.r[ga]*6));for(let i=0;i<N;i++){const a=i/N*Math.PI*2;villageTimeout(()=>fxSpr('arealeaf',px+Math.cos(a)*R,py+Math.sin(a)*R),i*260/N)}}/* はんいのふちに、葉がぐるっと出る */
   sfx('bush');
   for(const r of L){r.shU=S.t+A.sh[ga];leafFX(r)}}
 function nightClearJoy(){/* 今夜のコワイノをぜんぶ追いはらった瞬間：起きている子がぴょんぴょんよろこぶ（1晩1回、S.ns.clr） */if(!S.ns||S.ns.clr||!S.ns.kill||MEMRUN||!nightClear())return;const now=performance.now();if(EVAP.some(it=>it.die&&now-it.t0<(it.dur||1800)))return;/* さいごのコワイノが白く止まって倒れおわってから */S.ns.clr=1;const L=S.res.filter(r=>!r.hidden&&!(r.act&&(r.act.type==='sleep'||r.act.type==='faint')&&r.act.stage==='do')&&!(JOYU.get(r)>now));if(!L.length)return;sfx('chime');toast('今夜のコワイノを、ぜんぶ追いはらった！','good');for(const r of L){JUMP.set(r,now+Math.random()*300);villageTimeout(()=>JUMP.set(r,performance.now()),700+Math.random()*300)}}

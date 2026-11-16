@@ -92,6 +92,10 @@ button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 @keyframes uprays{from{transform:rotate(0)}to{transform:rotate(60deg);opacity:.4}}
 @keyframes shk{0%,100%{transform:translate(0,0)}15%{transform:translate(-7px,3px)}35%{transform:translate(6px,-4px)}55%{transform:translate(-4px,2px)}75%{transform:translate(3px,-2px)}}
 #cv.shk{animation:shk .5s}
+@keyframes shk2{0%,100%{transform:translate(0,0)}25%{transform:translate(-3px,2px)}50%{transform:translate(3px,-2px)}75%{transform:translate(-2px,1px)}}
+#cv.shk2{animation:shk2 .25s steps(1)}
+@keyframes shk3{0%,100%{transform:translate(0,0)}20%{transform:translate(-4px,2px)}40%{transform:translate(4px,-3px)}60%{transform:translate(-3px,2px)}80%{transform:translate(2px,-1px)}}
+#cv.shk3{animation:shk3 .35s steps(1)}
 @keyframes uphop{0%,100%{transform:translateY(0)}50%{transform:translateY(-16px)}}
 @keyframes upsp{from{transform:translate(-50%,-50%) scale(.4);opacity:1}to{transform:translate(calc(-50% + var(--dx)),calc(-50% + var(--dy))) scale(1.1);opacity:0}}
 #rlv{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(40,28,14,.45);z-index:31;pointer-events:auto}#rlv[hidden]{display:none}
