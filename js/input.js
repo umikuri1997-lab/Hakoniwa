@@ -125,6 +125,7 @@ function onTap(sx,sy){if(GIFT_ACTIVE&&camAnim&&camAnim.done)return;if(typeof sta
     if(o==='farm')return openSheet('farm',j);
     if(BEDSET.has(o))return openSheet('bed',j);
     if(COOKST.has(o))return openSheet('oven',j);/* たき火も料理の家具 */
+    if(o==='wbench')return openSheet('craft');/* 作業台：依頼ボードを開く */
     if(o==='plot')return toast('耕す前の畑：せいれいが耕しにくる');
     if(o==='sprout')return toast(BL[S.dyn[j].plant].name+'を植える場所：せいれいが植えにくる');
     if(o==='site'){const d=S.dyn[j],rs=S.res.filter(q=>!q.hidden);toast(BL[d.build].name+'を建設中：'+Math.floor(d.p/d.need*100)+'%'+(gotList(d).length&&(hasNeed(d)||d.p<=0)?'　'+gotTxt(d).join(' '):''));/* 素材を運んでいるあいだは、運んだ数も */if(rs.length&&!rs.some(q=>{const G=bfs(q.x|0,q.y|0);return G.dist.some((v,k)=>v>=0&&adjOf(k,q2=>anc(q2)===j)>=0)}))toast('建てる所へ行けません','warn');return}/* 行けないときは、その理由を出す */
