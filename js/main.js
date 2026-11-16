@@ -67,7 +67,7 @@ function lastFirst(list){/* さいごにあそんだステージを、いちば�
   const card=list.querySelector('.wcard[data-k="'+top[0]+'"]');if(card===list.firstElementChild)return;
   const pv=card.previousElementSibling,nx=card.nextElementSibling;if(pv&&pv.classList.contains('wlink'))pv.remove();else if(nx&&nx.classList.contains('wlink'))nx.remove();/* 道の線は、となりのステージどうしでつなぎなおす */
   card.classList.add('wtop');list.insertBefore(card,list.firstElementChild)}
-const APP_VER=1697;/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER=1698;/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
@@ -144,7 +144,7 @@ function updTut(){
       if(el){const pr=$('#palItems').getBoundingClientRect(),cr=el.getBoundingClientRect();if(cr.top<pr.top-2||cr.bottom>pr.bottom+2)el.scrollIntoView({block:'nearest'})}return}
     const sp=tutSpot(id);if(sp){const z=BL[id].sz||[1,1];wp=[(sp[0]+z[0]/2)*TS,(sp[1]+z[1]/2)*TS];const hh=HOUSES.find(h=>h.set.has(sp[1]*W+sp[0]));lbl=hh&&!OPENH.has(hKey(hh))?'家をタップして中を見る':'置きたい場所をタップ'}};
   const lookAt=(p,l)=>{if(mode!=='look'){el=document.querySelector('#dock [data-mode="look"]');lbl='「みる」をタップ'}else{wp=p;lbl=l}};
-  if(WD===0&&TALKW&&!isNight()&&(!S.flags.talked1||!S.godGone)&&!questGuideAccepted()&&!sheet){if(TALKW===GOD&&godHere())lookAt([godX()*TS,(godY()-2)*TS],'タップして話を聞こう');else{const r=S.res.find(q=>q.name===TALKW&&!q.hidden);if(r)lookAt([r.x*TS,(r.y-1.3)*TS],'タップして話を聞こう')}}
+  if(WD===0&&TALKW&&!isNight()&&(!S.flags.talked1||!S.godGone)&&!questGuideAccepted()&&!sheet){if(TALKW===GOD){if(godHere()&&mainStoryBubbleReady())lookAt([godX()*TS,(godY()-2)*TS],'タップして話を聞こう')}else{const r=S.res.find(q=>q.name===TALKW&&!q.hidden);if(r&&!CLAPON&&!(r.act&&r.act.type==='sleep')&&mainStoryBubbleReady(r))lookAt([r.x*TS,(r.y-1.3)*TS],'タップして話を聞こう')}}/* 吹き出しが出ているときだけ、案内を出す（吹き出しを描く所と同じ条件） */
   else if(WD===0&&SUBW[GOD]&&godHere()&&!isNight()&&!sheet&&$('#dialog').hidden)lookAt([godX()*TS,(godY()-2)*TS],'タップして話を聞こう');/* 交換のサブクエスト：カミサマが話す */
   else if(S.qStory!=null){}/* お話を聞く前は、クエストの案内を出さない */
   else if(WD===0&&S.summon&&STATUE>=0&&!sheet&&(S.summons||0)<2)lookAt([(STATUE%W+.5)*TS,((STATUE/W)|0)*TS-58],'「！」をタップ');
