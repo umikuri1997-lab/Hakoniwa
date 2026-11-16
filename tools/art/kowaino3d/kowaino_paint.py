@@ -27,6 +27,27 @@ CFG = {
                   pom=((0.36, 0.5), '#c8bcc8'), tip=0, cone=((0.136, -0.292, 0.883), (-0.013, -0.231, 0.808)), fingers=True, apart=0.07),
 }
 
+def mk(name, size, cloth, dark, deco, eye, pom=None, edge=None, **kw):
+    """持ち主が直したモデル（models/kg_<名前>.glb）の色わけで写すときの色。布・裏地と顔（こい色）・かざり・目。大きさはゲームの size（コカゲが1）"""
+    return dict(model=os.path.join(HERE, 'models', 'kg_%s.glb' % name), HPX=round(54*size), base=cloth,
+                labcol={'base': cloth, 'under': dark, 'red': dark, 'face': dark, 'deco': deco, 'pom': pom or deco},
+                eyes=dict(x=0.085, rx=0.03, rz=0.075, col=eye, edge=edge or eye), **kw)
+CFG.update({   # 色は、いまのゲームの絵（ない物は、night.js の col・eye・tint）から
+    'fast': mk('fast', .8, '#5e5480', '#1f1a33', '#5b7fae', '#a9c4e0'),
+    'thief': mk('thief', .9, '#6a5468', '#231a2c', '#8f7a56', '#e0cc94'),
+    'brute': mk('brute', 1.25, '#4a4262', '#1b1628', '#968a9e', '#c2afae'),
+    'breaker': mk('breaker', 1.1, '#5e5474', '#1d1729', '#8c8496', '#c2afae'),
+    'trapper': mk('trapper', .95, '#3e3654', '#171223', '#c4b2b0', '#c2afae'),
+    'ash': mk('ash', .9, '#7a6a7a', '#251c2e', '#a09098', '#d8c8c8'),
+    'rockc': mk('rockc', 1.3, '#6c5e70', '#211a2a', '#9b888c', '#c2afae'),
+    'armor': mk('armor', 1.3, '#4e4e60', '#1a1a24', '#8c92a2', '#9fe0ff'),
+    'shiny': mk('shiny', .8, '#e2d498', '#5a4f2a', '#fff2b0', '#ffffff', edge='#f0e6c0'),
+    'hana': mk('hana', 1, '#8a5a7a', '#2e1a28', '#eaa6c8', '#ffc6e0'),
+    'hoteri': mk('hoteri', 1, '#7c4232', '#2a1410', '#f0905a', '#ffb36b'),
+    'ochiba': mk('ochiba', .8, '#7a5a3a', '#291a10', '#d9a05a', '#ffd38a'),
+    'yuki': mk('yuki', 1.3, '#8494a8', '#26303c', '#dff1ff', '#e0f4ff', pom='#f4faff', pomh=0.0),
+})
+
 def load_labeled(path):
     """kw_model.py で書き出した、マテリアルつきの glb（マテリアルの名前が色わけの名前）→ (m, comp, lab)"""
     sc = trimesh.load(path); V = []; F = []; L = []; o = 0
@@ -43,6 +64,16 @@ def paint_labeled(m, comp, lab0, cfg):
     """マテリアルの色わけ（lab0）から、色をきめる。布は1つの色。ずきんの裏地は、顔のまわりの布をひとまわり（持ち主の写真の所。モデルにマテリアルがないので）"""
     V = m.vertices; F = m.faces; H = m.bounds[1][1]; P = np.stack([V[:, 0], V[:, 2], V[:, 1]], 1); cen = P[F].mean(1)/H
     lab = np.array(['base' if l == 'cloth' else l for l in lab0], object)
+    red = np.nonzero(lab == 'red')[0]
+    if len(red):   # 赤：ぽんぽんと裏地。赤どうしでつながったかたまりごとに、顔にふれず、上のほう（POMH より上）にあるのが、ぽんぽん
+        from scipy.sparse import coo_matrix
+        from scipy.sparse.csgraph import connected_components
+        rv = np.zeros(len(V), bool); rv[F[red].ravel()] = True
+        A = coo_matrix((np.ones(len(red)*3), (np.repeat(np.arange(len(red)), 3), F[red].ravel())), shape=(len(red), len(V))).tocsr()
+        _, rl = connected_components(A@A.T, directed=False); fv = np.zeros(len(V), bool); fv[F[lab == 'face'].ravel()] = True
+        for q in np.unique(rl):
+            ks = red[rl == q]
+            if cen[ks, 2].mean() > cfg.get('pomh', POMH) and not fv[F[ks].ravel()].any() and len(ks) < 0.5*len(red): lab[ks] = 'pom'   # 裏地（大きなかたまり）はのぞく
     if cfg.get('lining'):
         vf = set(F[lab == 'face'].ravel())
         for k in range(len(F)):
@@ -153,9 +184,10 @@ EYEPX = ['+##+', '####', '####', '####', '####', '####', '+##+']   # 目のド�
 
 def eyepos(P, F, lab, H, e):
     """目のまん中（3D）：顔の面のまん中を中心に、左右そろえて、顔の面のいちばん前"""
-    fc = P[F].mean(1); f0 = fc[lab == 'face']; cx = (f0[:, 0].min()+f0[:, 0].max())/2; out = []
+    fc = P[F].mean(1); f0 = fc[lab == 'face']; fu = f0[f0[:, 2] > 0.3*H]; f0 = fu if len(fu) else f0; cx = (f0[:, 0].min()+f0[:, 0].max())/2; out = []
     for sx in (-1, 1):
-        x, z = cx+sx*e['x']*H, e['z']*H
+        z0 = e['z']*H if 'z' in e else float(np.mean(f0[f0[:, 2] > 0.3*H][:, 2]))   # 'z' がなければ、顔のまん中の高さ（足はのぞく）
+        x, z = cx+sx*e['x']*H, z0
         near = [k for k in np.nonzero(lab == 'face')[0] if abs(fc[k, 0]-x) < 0.06*H and abs(fc[k, 2]-z) < 0.08*H]
         y = max(fc[k, 1] for k in near) if near else 0.3*H
         out.append(np.array([x, y, z]))
@@ -328,6 +360,7 @@ def shoot(name, cfg, src, yaw=0.0):
     return im, ext
 
 BACKEL = 15.0
+POMH = 0.45   # ぽんぽん：赤のかたまりのまん中が、この高さ（高さのうち）より上
 POMANG = 50.0
 PALMW = 0.45   # 手のひらのあつみ（左右の半径。手の大きさ r に対して）   # ぽんぽん：ずきんの先がつながる向きから、この角度までは、ずきん
 BIG = 8; NCOL = 15   # 大きく写す倍・色の数（目の色を足して16）
