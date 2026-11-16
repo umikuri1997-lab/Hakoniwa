@@ -203,7 +203,7 @@ def eyepos(P, F, lab, H, e):
     """目のまん中（3D）：顔の面のまん中を中心に、左右そろえて、顔の面のいちばん前"""
     fc = P[F].mean(1); f0 = fc[lab == 'face']; fu = f0[f0[:, 2] > 0.3*H]; f0 = fu if len(fu) else f0; cx = (f0[:, 0].min()+f0[:, 0].max())/2; out = []
     for sx in (-1, 1):
-        z0 = e['z']*H if 'z' in e else float(np.mean(f0[f0[:, 2] > 0.3*H][:, 2]))   # 'z' がなければ、顔のまん中の高さ（足はのぞく）
+        z0 = e['z']*H if 'z' in e else float(np.mean(f0[:, 2]))   # 'z' がなければ、顔のまん中の高さ（足はのぞく）
         x, z = cx+sx*e['x']*H, z0
         near = [k for k in np.nonzero(lab == 'face')[0] if abs(fc[k, 0]-x) < 0.06*H and abs(fc[k, 2]-z) < 0.08*H]
         y = max(fc[k, 1] for k in near) if near else 0.3*H
@@ -327,8 +327,8 @@ def shoot(name, cfg, src, yaw=0.0):
     if cfg.get('thin'): P = thin(P, F, lab, k=cfg['thin'])
     if cfg.get('tip'): P = tipthin(P, F, lab, H, cfg['tip'])
     if cfg.get('cone') and POMC: P = cone(P, F, lab, H, cfg['cone'])
-    if cfg.get('pose'):   # モーション（kw_rig.py）。部品は、色わけ（lab）と つながった かたまり（comp0）でえらぶ
-        import kw_rig; P = kw_rig.pose(P, H, F, lab, comp0, **cfg['pose'])
+    if cfg.get('pose'):   # モーション（kw_skel.py）。部品は、色わけ（lab）と つながった かたまり（comp0）でえらぶ
+        import kw_skel; P = kw_skel.Skel(name, P, F, lab, comp0, H).pose(P, **cfg['pose'])   # ボーンを入れて、ポーズをつける
     HD = hands(P, F, lab, H, cfg.get('apart', 0)) if cfg.get('fingers') and not cfg.get('model') else []
     if HD:   # もらったモデルの手は、まん中へちぢめてかくす（新しい手を組む）
         P = P.copy(); other = set(F[(lab != 'handL') & (lab != 'handR')].ravel())
@@ -412,8 +412,12 @@ def shoot(name, cfg, src, yaw=0.0):
             ln |= (lb >= 0) & (nb >= 0) & (nb != lb) & (nz > zs)
         o = o.copy(); o[ln, :3] = o[ln, :3]*PARTK
     im = (lambda x: x if DITH else despeckle(x))(quant((lambda x: x if HULL else rim(x))(Image.fromarray(o.round().astype(np.uint8), 'RGBA')), NCOL, cfg.get('hem', (None,))[0]))
+    idbH, _ = O.LAST; fpid = {p_ for p_, l_ in PL.items() if l_ == 'face'}
+    def eyevis(q, ext):   # 目の場所（大きな絵の上）に、顔の部品が見えているか（まわりのドットの半分より多く）
+        x, y = int((q[0]-ext[0])*BIG), int((q[1]-ext[2])*BIG); blk = idbH[max(0, y-BIG):y+BIG, max(0, x-BIG):x+BIG]
+        return blk.size and np.isin(blk, list(fpid)).mean() > 0.5
     if abs(math.cos(yaw)-1) < 1e-6:   # 正面だけ、目をおす
-        im = stamp(im, [(proj(R(p))[0]-ext[0], proj(R(p))[1]-ext[2]) for p in eyepos(P, F, lab, H, cfg['eyes']) if p[1] > 0.05*H], cfg['eyes']['col'], cfg['eyes'].get('edge'))   # まわって うしろを向いた目は、おさない
+        im = stamp(im, [(proj(R(p))[0]-ext[0], proj(R(p))[1]-ext[2]) for p in eyepos(P, F, lab, H, cfg['eyes']) if eyevis(proj(R(p)), ext)], cfg['eyes']['col'], cfg['eyes'].get('edge'))   # 顔が見えている所だけ、目をおす（まわる・うつむくと、かくれる）
     return im, ext
 
 BACKEL = 15.0
@@ -480,10 +484,10 @@ def despeckle(im, n=2):
     return Image.fromarray(a)
 
 def sheets(name, out):
-    """モーションのコマ（kw_rig.POSES）を写して、モーションごとに、たてにならべた1まいの絵にする（いまのゲームと同じ形：w・h・ax・ay・n）。
+    """モーションのコマ（kw_skel.poses）を写して、モーションごとに、たてにならべた1まいの絵にする（いまのゲームと同じ形：w・h・ax・ay・n）。
     正面と、うしろ（B。やられはなし）。コマの大きさは、そのモーションのコマぜんぶが入る大きさ（足もとの点をそろえる）"""
-    import kw_rig, json; info = {}
-    for mo, ps in kw_rig.poses(name).items():
+    import kw_skel, json; info = {}
+    for mo, ps in kw_skel.poses(name).items():
         for B, yaw in (('', 0.0), ('B', math.pi)):
             if mo == 'hurt' and B: continue
             fr = []
