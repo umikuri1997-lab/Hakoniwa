@@ -140,7 +140,9 @@ def paint_labeled(m, comp, lab0, cfg):
             ks = fc[fl == q]
             if V[F[ks], 1].min() < 0.05*H:   # 地面にとどくかたまり：すその広さの FOOTR より内がわの下のほうが足、ほかは（足にくっついた）手
                 rr = np.hypot(cen[ks, 0], cen[ks, 1]); lo = (m.vertices[:, 1] < 0.25*H); rs = np.percentile(np.hypot(V[lo, 0], V[lo, 2]), 95)/H
-                ft = (rr < FOOTR*rs) & (cen[ks, 2] < 0.25); lab[ks[ft]] = 'foot'; lab[ks[~ft]] = 'hand'; continue
+                ft = (rr < FOOTR*rs) & (cen[ks, 2] < 0.25)
+                if ft.mean() < 0.2 and not NOFIST: ft[:] = False   # 足から切りはなした大きなこぶし（地面にとどく）は、ぜんぶ手
+                lab[ks[ft]] = 'foot'; lab[ks[~ft]] = 'hand'; continue
             if best is None or cen[ks, 2].mean() > cen[best, 2].mean(): best = ks   # 顔は、いちばん高い所のかたまり
         for q in np.unique(fl):
             ks = fc[fl == q]
@@ -488,6 +490,7 @@ def shoot(name, cfg, src, yaw=0.0):
     return im, ext
 
 BACKEL = 15.0
+NOFIST = False   # 足とつながったこぶしを切りはなすとき（glb を直す道具）だけ True
 FOOTR = 0.6   # 足：すその広さ（95%の半径）のこのわりより内がわ
 POMH = 0.45   # ぽんぽん：赤のかたまりのまん中が、この高さ（高さのうち）より上
 POMANG = 50.0

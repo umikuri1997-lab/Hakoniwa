@@ -38,7 +38,8 @@ TAILL = {'yuki': 0.9}   # 長くたれた フードのしっぽ：先からこ�
 HOODAMP = 0.03   # フードの先が なびく大きさに、たす（高さのうち）
 TIPL = 0.35   # フードの先から、なびく はんい（メッシュの辺をたどった きょり）
 SCARF = {'fast': True}   # マフラー（体とはなれた かざり）が なびく
-SPREAD = {'ash': ['deco'], 'shiny': ['deco'], 'hana': ['deco']}
+PIVOT = {'breaker': {'armL': (-0.2, 0.02, 0.5)}}   # 腕の支点を、かたにする（手を支点にすると、ハンマーが手のまわりで まわるだけで、ふりおろしても下までとどかない）
+SPREAD = {'ash': ['deco'], 'hana': ['deco']}
 SPREADZ = {'hana': 0.5}
 
 def smooth(e0, e1, x): t = np.clip((x-e0)/(e1-e0), 0, 1); return t*t*(3-2*t)
@@ -70,10 +71,11 @@ class Skel:
         hand = lab == 'hand'; big = np.bincount(comp).argmax()
         if hand.sum() > 20:
             from scipy.spatial import cKDTree
-            hv = np.unique(F[hand]); d, _ = cKDTree(P[hv]).query(P); wa = 1-smooth(0, ARMR*H, d)
+            hv = np.unique(F[hand]); d, _ = cKDTree(P[hv]).query(P); wa = (1-smooth(0, ARMR*H, d))*np.maximum(d < 1e-9, smooth(0.2, 0.3, z))   # 手のまわりを なめらかに腕へ。足もと・すそ（低い所）は まぜない（こぶしが大きいと、足がのびた）
             for side, bone in ((-1, 'armL'), (1, 'armR')):
                 m = (np.sign(P[:, 0]) == side) & (wa > 0); hs = hv[np.sign(P[hv, 0]) == side]
                 if len(hs): hc = P[hs].mean(0); s.piv[bone] = np.array([hc[0]-side*0.1*H, hc[1]*0.4, max(hc[2]+0.14*H, 0.38*H)])   # 腕の支点：手の内がわ・上（かたの高さ）
+                if len(hs) and not np.isin(hs, np.unique(F[comp == big])).any(): m &= d < 1e-9   # 体からはなれた手（こぶし）：体の布は うごかさない（のびて見えた）
                 put(np.nonzero(m)[0], bone, wa[m])
         else:
             bodyv0 = np.zeros(V, bool); bodyv0[np.unique(F[comp == big])] = True   # 体のかたまりだけ（マフラーなど、はなれた物は腕にしない）
@@ -91,8 +93,18 @@ class Skel:
         fv = np.unique(F[lab == 'foot'])
         for side, bone in ((-1, 'footL'), (1, 'footR')):
             vs = fv[np.sign(P[fv, 0]) == side]; W[vs] = 0; W[vs, ix[bone]] = 1
+        if hand.sum() > 20:   # 手（こぶし）は さいごに、ぜんぶ腕へ（足・頭のかざりと点を共有していると、こぶしの一部が のこって のびて見えた）。こぶしに ついた かざり（岩のかけら）も腕へ
+            fin = np.isin(lab, ['deco']); hvs = set(np.unique(F[hand]).tolist())
+            seed = fin & np.array([bool(hvs.intersection(f)) for f in F.tolist()]); grow = seed.copy()
+            for _ in range(20):
+                vv = np.zeros(V, bool); vv[np.unique(F[grow])] = True; nx = fin & vv[F].any(1) & ~grow
+                if not nx.any(): break
+                grow |= nx
+            for side, bone in ((-1, 'armL'), (1, 'armR')):
+                vs = np.unique(F[hand | grow]); vs = vs[np.sign(P[vs, 0]) == side]; W[vs] = 0; W[vs, ix[bone]] = 1
+        for bn, pv in PIVOT.get(name, {}).items(): s.piv[bn] = np.array(pv, float)*H
         W /= np.maximum(W.sum(1, keepdims=True), 1e-9); s.W = W
-        s.hem = (1-smooth(HEM*0.4, HEM, z))*(W[:, ix['footL']]+W[:, ix['footR']] < 0.5); s.ang = np.arctan2(P[:, 1], P[:, 0])
+        s.hem = (1-smooth(HEM*0.4, HEM, z))*(W[:, ix['footL']]+W[:, ix['footR']] < 0.5)*(1-W[:, ix['armL']]-W[:, ix['armR']]); s.ang = np.arctan2(P[:, 1], P[:, 0])
         # なびく布：フードの先（先からの きょり＝メッシュの辺をたどった きょり。体の布を まきこまない）と、マフラーのはし（体とはなれた かたまり）
         from scipy.sparse import coo_matrix
         from scipy.sparse.csgraph import dijkstra
@@ -122,7 +134,7 @@ class Skel:
                 if P[vs, 2].mean()/H > SPREADZ.get(name, 9): continue
                 s.sprc.append(vs)
 
-    def pose(s, P, move=(0, 0, 0), spread=1.0, orbit=0.0, melt=0.0, scale=1.0, flutter=(0, 0), look=(0, 0), fx=(), wave=(0, 0), lag=(0, 0, 0), sq=1.0, **bones):
+    def pose(s, P, move=(0, 0, 0), spread=1.0, orbit=0.0, melt=0.0, scale=1.0, flutter=(0, 0), look=(0, 0), fx=(), wave=(0, 0), lag=(0, 0, 0), sq=1.0, flare=0.0, **bones):
         H = s.H; Ms = {}
         for n, par, _ in BONES:
             p = s.piv[n]; a = tuple(bones.get(n, ())) + (0,)*6
@@ -139,6 +151,9 @@ class Skel:
         if flutter[0]:   # すそを ひらひら（まわりの角度で波うつ。外と上へ）
             wv = np.sin(s.ang*3+flutter[1])*flutter[0]*H*s.hem; d = np.stack([np.cos(s.ang), np.sin(s.ang), 0*s.ang], 1)
             Q += wv[:, None]*d; Q[:, 2] += np.abs(wv)*0.6
+        if flare:   # まわって ひるがえる すそ（マント）：すそが外へ ひろがって もちあがり、まわる向きと はんたいへ おくれる（flare＞0 は 上から見て左まわりに まわったとき）
+            r = np.stack([np.cos(s.ang), np.sin(s.ang), 0*s.ang], 1); tg = np.stack([-np.sin(s.ang), np.cos(s.ang), 0*s.ang], 1)
+            Q += (s.hem*abs(flare)*H)[:, None]*(r*0.8-np.sign(flare)*tg*0.6); Q[:, 2] += s.hem*abs(flare)*H*0.7
         if wave[0]:   # なびく：はしほど大きく、先へ すすむ波（位相＝コマ。くりかえすと つながる）。うごいた向きと はんたいへ おくれる
             amp, ph = wave
             if s.tw.any():
@@ -167,7 +182,7 @@ WALK = [dict(hip=(5, 4, 0), chest=(2, -3, 4), head=(0, -2, -3), armL=(8, 4, 0), 
         dict(hip=(4, 0, 0), chest=(2, 0, 0), armL=(0, 4, 0), armR=(0, 4, 0), footR=(0, 0, 0, 0, 0, 0.05), flutter=(0.03, 1.6), move=(0, 0, 0.03), look=(0.012, 0.004), wave=(0.05, 1.57)),
         dict(hip=(5, -4, 0), chest=(2, 3, -4), head=(0, 2, 3), armL=(-6, 4, 0), armR=(8, 4, 0), footL=(0, 0, 0, 0, -0.05, 0.02), footR=(0, 0, 0, 0, 0.05, 0), flutter=(0.025, 3.1), look=(-0.01, 0), wave=(0.05, 3.14)),
         dict(hip=(4, 0, 0), chest=(2, 0, 0), armL=(0, 4, 0), armR=(0, 4, 0), footL=(0, 0, 0, 0, 0, 0.05), flutter=(0.03, 4.7), move=(0, 0, 0.03), look=(-0.012, 0.004), wave=(0.05, 4.71))]
-WALKX = {'hana': [dict(orbit=12), dict(orbit=24), dict(orbit=36), dict(orbit=48)], 'shiny': [dict(orbit=15), dict(orbit=30), dict(orbit=45), dict(orbit=60)], 'ash': [dict(orbit=10), dict(orbit=20), dict(orbit=30), dict(orbit=40)]}
+WALKX = {'hana': [dict(orbit=12), dict(orbit=24), dict(orbit=36), dict(orbit=48)], 'ash': [dict(orbit=10), dict(orbit=20), dict(orbit=30), dict(orbit=40)]}
 
 MOVES = {
     # 体当たりで、両手でひっかく / くるっとまわって、とばされ、よこにたおれる
@@ -185,72 +200,75 @@ MOVES = {
                   hurt=[dict(chest=(10, 0, 0), head=(14, 0, 0), armL=(70, -30, 0), armR=(60, -20, 0), look=(0, 0.02), fx=[('sweat', (0.18, 0.1, 0.72), 2, 0.05, 0.025)]),
                         dict(root=(-10, 0, 0), armL=(70, -30, 0), armR=(60, -20, 0), move=(0, -0.1, 0.08)),
                         dict(root=(-16, -20, 0), hip=(-16, 0, 0), chest=(30, 0, 0), head=(30, -10, 0), armL=(90, -30, 0), armR=(-20, 60, 0), move=(0, -0.08, -0.08), fx=[('dust', (0, -0.1, 0.02), 4, 0.15, 0.03)])]),
-    # 両こぶしをふりあげて、たたきつける / 目をまわし、よろけて、つんのめる
+    # 両こぶしをふりあげて、たたきつける / 目をまわし、よろけて、よこへたおれる
     'brute': dict(atk=[dict(chest=(-8, 0, 0), head=(-6, 0, 0), armL=(60, 10, 0), armR=(60, 10, 0)),
                        dict(hip=(-6, 0, 0), chest=(-14, 0, 0), head=(-8, 0, 0), armL=(140, 8, 0), armR=(140, 8, 0), move=(0, 0, 0.03)),
                        dict(hip=(20, 0, 0), chest=(20, 0, 0), head=(8, 0, 0), armL=(20, 0, 0), armR=(20, 0, 0), move=(0, 0.05, -0.02), fx=[('dust', (0, 0.35, 0.03), 7, 0.25, 0.04), ('impact', (0, 0.35, 0.1), 1, 0, 0.14)]),
                        dict(chest=(5, 0, 0), armL=(25, 8, 0), armR=(25, 8, 0))],
                   hurt=[dict(head=(0, 12, 25), chest=(0, -6, -10), armL=(30, 40, 0), armR=(20, 30, 0), fx=[('star', (0, 0.05, 1.0), 3, 0.15, 0.04)]),
                         dict(root=(0, 14, 0), chest=(6, -8, 0), head=(8, 10, 0), armL=(10, 50, 0), armR=(40, 10, 0), move=(0.08, 0, 0)),
-                        dict(root=(55, 0, 0), chest=(20, 0, 0), head=(-10, 0, 0), armL=(110, 30, 0), armR=(110, 30, 0), move=(0, 0.1, -0.02), fx=[('dust', (0, 0.4, 0.02), 6, 0.25, 0.04)])]),
-    # ハンマーを頭の上へふりかぶって、前へふりおろす / ハンマーがすべり、ひざをつき、もたれる
-    'breaker': dict(atk=[dict(chest=(-6, -6, -15), armL=(20, 25, 0)), dict(hip=(-6, 0, 0), chest=(-14, 0, 0), head=(-8, 0, 0), armL=(40, -30, 0), move=(0, 0, 0.03)),
-                         dict(hip=(18, 0, 0), chest=(22, 0, 10), head=(10, 0, 0), armL=(-100, -25, 0), move=(0, 0.05, 0), fx=[('dust', (0.05, 0.42, 0.03), 7, 0.22, 0.04), ('impact', (0.05, 0.42, 0.1), 1, 0, 0.14)]),
-                         dict(chest=(8, 0, 0), armL=(-60, -15, 0))],
+                        dict(root=(0, 60, 0), chest=(4, 12, 0), head=(0, -8, 0), armL=(30, 20, 0), armR=(40, 110, 0), move=(0.12, 0, -0.02), fx=[('dust', (0.4, 0, 0.02), 6, 0.25, 0.04)])]),
+    # ハンマーを頭のうしろへふりかぶって、前の地面へふりおろす / ハンマーがすべり、よろけて、よこへたおれる
+    'breaker': dict(atk=[dict(hip=(4, 0, 0), chest=(4, -4, -10), armL=(25, 10, 0), armR=(20, 20, 0), move=(0, 0, -0.01)),
+                         dict(hip=(-8, 0, 0), chest=(-14, 4, 10), armL=(70, 10, 0), armR=(60, 10, 0), move=(0, -0.02, 0.03)),
+                         dict(hip=(16, 0, 0), chest=(20, 0, 0), armL=(-115, 5, 0), armR=(-40, 15, 0), move=(0, 0.05, -0.01), fx=[('dust', (-0.1, 0.5, 0.03), 7, 0.22, 0.04), ('impact', (-0.1, 0.5, 0.1), 1, 0, 0.14)]),
+                         dict(hip=(8, 0, 0), chest=(10, 0, 0), armL=(-95, 5, 0), armR=(-10, 10, 0))],
                     hurt=[dict(root=(0, -10, 0), head=(0, -10, -15), armL=(30, 20, 0), armR=(40, 50, 0), fx=[('sweat', (-0.15, 0.1, 0.72), 2, 0.05, 0.025)]),
-                          dict(hip=(20, 10, 0), chest=(10, 8, 0), armL=(-40, -30, 0), armR=(20, 30, 0), move=(0, 0, -0.03)),
-                          dict(root=(10, 40, 0), hip=(20, 0, 0), chest=(20, 10, 0), head=(20, 16, 0), armL=(-10, -80, 0), armR=(20, 60, 0), move=(0.05, 0, -0.06))]),
-    # 口をあけて、とびついてかむ / ぶるぶる ふるえて、とびあがり、まるまる
+                          dict(hip=(6, 14, 0), chest=(4, 8, 0), armL=(-40, -30, 0), armR=(20, 30, 0), move=(0, 0, -0.03)),
+                          dict(root=(0, 45, 0), hip=(4, 6, 0), chest=(4, 10, 0), head=(2, 14, 0), armL=(-10, -80, 0), armR=(20, 60, 0), move=(0.08, 0, -0.04))]),
+    # 口をあけて、とびついてかむ / ぶるぶる ふるえて、とびあがり、よこへころがる
     'trapper': dict(atk=[dict(chest=(-10, 0, 0), head=(-14, 0, 0), jaw=(30, 0, 0)), dict(root=(16, 0, 0), head=(-14, 0, 0), jaw=(42, 0, 0), move=(0, 0.08, 0.08)),
                          dict(root=(14, 0, 0), head=(10, 0, 0), jaw=(-8, 0, 0), move=(0, 0.1, 0), fx=[('impact', (0, 0.45, 0.35), 1, 0, 0.12)]), dict(root=(4, 0, 0), move=(0, 0.03, 0))],
                     hurt=[dict(head=(0, 0, 22), chest=(0, 0, -12), jaw=(20, 0, 0), fx=[('sweat', (0.2, 0.1, 0.75), 2, 0.05, 0.025)]),
                           dict(head=(0, 0, -22), chest=(0, 0, 12), jaw=(-6, 0, 0), move=(0, 0, 0.07)),
-                          dict(hip=(45, 0, 0), chest=(40, 0, 0), head=(40, 0, 0), jaw=(-10, 0, 0), armL=(70, -40, 0), armR=(70, -40, 0), move=(0, 0, -0.1))]),
-    # 両手をふって、灰をまく / 灰をふきだして、くずれ、灰の山になる
+                          dict(root=(0, 70, 0), hip=(0, 10, 0), chest=(4, 8, 0), jaw=(-10, 0, 0), armL=(60, -20, 0), armR=(60, -20, 0), move=(0.12, 0, -0.04), fx=[('dust', (0.4, 0, 0.02), 4, 0.2, 0.03)])]),
+    # 両手をふって、灰をまく / 灰をふきだして、よこへくずれ、灰の山になる
     'ash': dict(atk=[dict(chest=(-6, -8, -20), armL=(-20, 20, 0), armR=(-20, 20, 0), spread=0.9),
                      dict(chest=(-4, -6, -30), armL=(60, 100, 0), armR=(40, 40, 0), spread=1.2, fx=[('ash', (-0.35, 0.1, 0.5), 5, 0.12, 0.035)]),
                      dict(chest=(8, 12, 30), armL=(30, 30, 0), armR=(90, 110, 0), spread=1.6, fx=[('ash', (0.4, 0.2, 0.45), 9, 0.25, 0.04)]),
                      dict(chest=(4, 0, 0), spread=1.2, fx=[('ash', (0.3, 0.3, 0.3), 6, 0.3, 0.035)])],
                 hurt=[dict(head=(0, 0, 20), armL=(40, 60, 0), armR=(40, 60, 0), fx=[('ash', (0, 0.1, 0.6), 6, 0.25, 0.035)]),
-                      dict(hip=(30, 10, 0), chest=(20, -10, 0), head=(20, 10, 0), armL=(-20, 30, 0), armR=(-20, 60, 0), move=(0, 0, -0.05), spread=0.8),
-                      dict(hip=(70, 18, 0), chest=(50, -18, 0), head=(45, 18, 0), armL=(-40, 90, 0), armR=(-40, 100, 0), move=(0, 0, -0.2), spread=0.4, fx=[('ash', (0, 0.1, 0.1), 8, 0.3, 0.045)])]),
-    # 岩のこぶしで、地面をたたく / 岩がゆれ、ひざをつき、つんのめる
+                      dict(hip=(6, 16, 0), chest=(4, -10, 0), head=(4, 14, 0), armL=(-20, 30, 0), armR=(-20, 60, 0), move=(0, 0, -0.05), spread=0.8, melt=0.15),
+                      dict(hip=(6, 30, 0), chest=(4, -18, 0), head=(4, 22, 0), armL=(-40, 90, 0), armR=(-40, 100, 0), move=(0.04, 0, -0.04), spread=0.4, melt=0.45, fx=[('ash', (0, 0.1, 0.1), 8, 0.3, 0.045)])]),
+    # 岩のこぶしで、地面をたたく / 岩がゆれ、ひざをつき、よこへたおれる
     'rockc': dict(atk=[dict(chest=(-6, 0, 0), armL=(45, 10, 0), armR=(45, 10, 0)), dict(hip=(-6, 0, 0), chest=(-12, 0, 0), armL=(110, 8, 0), armR=(110, 8, 0), move=(0, 0, 0.03)),
                        dict(hip=(18, 0, 0), chest=(18, 0, 0), armL=(10, 4, 0), armR=(10, 4, 0), move=(0, 0.04, -0.02), fx=[('dust', (0, 0.35, 0.03), 8, 0.3, 0.045), ('impact', (0, 0.35, 0.1), 1, 0, 0.16)]),
                        dict(chest=(4, 0, 0), armL=(20, 8, 0), armR=(20, 8, 0))],
                   hurt=[dict(head=(0, 10, 0), chest=(0, -6, 0), armL=(20, 20, 0), armR=(20, 20, 0), fx=[('dust', (0, 0, 0.9), 5, 0.25, 0.035)]),
-                        dict(hip=(22, 0, 0), chest=(10, 0, 0), head=(-6, 0, 0), armL=(20, 6, 0), armR=(20, 6, 0), move=(0, 0.02, -0.03)),
-                        dict(root=(50, 0, 0), chest=(18, 0, 0), head=(-10, 0, 0), armL=(100, 25, 0), armR=(100, 25, 0), move=(0, 0.1, -0.02), fx=[('dust', (0, 0.45, 0.02), 7, 0.3, 0.045)])]),
-    # マントで、なぎはらう / かぶとが鳴って、よろけ、すわりこむ
-    'armor': dict(atk=[dict(chest=(0, -6, -30), head=(0, 0, -10), armR=(-10, 60, 0)), dict(chest=(-6, 0, -10), armR=(40, 100, 0)),
-                       dict(chest=(6, 8, 35), head=(0, 0, 10), armR=(70, -10, 0), fx=[('slash', (-0.3, 0.3, 0.45), 1, 0, 0.14)]), dict(chest=(2, 0, 10), armR=(20, 10, 0))],
+                        dict(hip=(6, -16, 0), chest=(4, -8, 0), head=(0, 8, 0), armL=(20, 30, 0), armR=(20, 6, 0), move=(-0.03, 0, -0.03)),
+                        dict(root=(0, -55, 0), chest=(4, -10, 0), head=(0, 10, 0), armL=(40, 100, 0), armR=(30, 20, 0), move=(-0.13, 0, -0.02), fx=[('dust', (-0.45, 0, 0.02), 7, 0.3, 0.045)])]),
+    # 体ごとまわって、マントで なぎはらう / かぶとが鳴って、よろけ、すわりこむ
+    'armor': dict(atk=[dict(root=(0, 0, -30), chest=(0, -4, -15), armL=(10, 30, 0), armR=(-15, 70, 0), flutter=(0.03, 0), move=(0, 0, -0.01), flare=-0.04),
+                       dict(root=(0, 0, 5), chest=(4, 4, 15), armL=(0, 40, 0), armR=(25, 110, 0), flutter=(0.04, 1.5), flare=0.1),
+                       dict(root=(0, 0, 40), chest=(6, 8, 20), armL=(-10, 50, 0), armR=(40, 125, 0), flutter=(0.05, 3.0), flare=0.18, fx=[('slash', (0.35, 0.35, 0.4), 1, 0, 0.16)]),
+                       dict(root=(0, 0, 20), chest=(2, 0, 8), armL=(0, 25, 0), armR=(20, 60, 0), flutter=(0.04, 4.5), flare=0.07)],
                   hurt=[dict(head=(0, 16, 0), armL=(30, 50, 0), armR=(30, 50, 0), fx=[('spark', (0.15, 0.15, 0.9), 4, 0.08, 0.03)]),
                         dict(root=(-8, 0, 0), armL=(80, 40, 0), armR=(70, 40, 0), move=(0, -0.08, 0.02)),
                         dict(root=(-10, 30, 0), hip=(-16, 0, 0), chest=(20, 10, 0), head=(10, 50, 0), armL=(60, -10, 0), armR=(20, 70, 0), move=(0, -0.06, -0.1))]),
     # 体をひろげて、光る / ちかちかして、まわり、ちぢんで光がきえる
-    'shiny': dict(atk=[dict(chest=(-6, 0, 0), armL=(-10, 10, 0), armR=(-10, 10, 0), spread=0.8),
-                       dict(chest=(-12, 0, 0), head=(-10, 0, 0), armL=(30, 100, 0), armR=(30, 100, 0), move=(0, 0, 0.05), spread=1.4, orbit=40, fx=[('spark', (0, 0, 0.5), 6, 0.4, 0.035)]),
-                       dict(chest=(-14, 0, 0), head=(-12, 0, 0), armL=(40, 140, 0), armR=(40, 140, 0), move=(0, 0, 0.08), spread=1.9, orbit=80, fx=[('spark', (0, 0, 0.5), 10, 0.55, 0.045)]),
-                       dict(armL=(10, 30, 0), armR=(10, 30, 0), spread=1.2, orbit=100)],
+    'shiny': dict(atk=[dict(chest=(-6, 0, 0), armL=(-10, 10, 0), armR=(-10, 10, 0)),
+                       dict(chest=(-12, 0, 0), head=(-10, 0, 0), armL=(30, 100, 0), armR=(30, 100, 0), move=(0, 0, 0.05), fx=[('spark', (0, 0, 0.5), 6, 0.4, 0.035)]),
+                       dict(chest=(-14, 0, 0), head=(-12, 0, 0), armL=(40, 140, 0), armR=(40, 140, 0), move=(0, 0, 0.08), fx=[('spark', (0, 0, 0.5), 10, 0.55, 0.045)]),
+                       dict(armL=(10, 30, 0), armR=(10, 30, 0))],
                   hurt=[dict(root=(0, 0, 50), armL=(30, 60, 0), armR=(30, 60, 0), scale=0.9, fx=[('spark', (0, 0, 0.5), 5, 0.4, 0.03)]),
-                        dict(root=(0, 0, 120), hip=(10, 0, 0), chest=(14, 0, 0), armL=(60, -30, 0), armR=(60, -30, 0), scale=0.8, spread=0.6),
-                        dict(hip=(30, 0, 0), chest=(30, 0, 0), head=(30, 0, 0), armL=(80, -40, 0), armR=(80, -40, 0), scale=0.6, spread=0.1)]),
-    # まわりの花びらを まわして、とばす / 花びらがちって、しおれて、まえへたれる
+                        dict(root=(0, 0, 120), hip=(4, 8, 0), chest=(4, 8, 0), armL=(60, -30, 0), armR=(60, -30, 0), scale=0.8),
+                        dict(root=(0, 40, 0), hip=(4, 10, 0), chest=(4, 10, 0), armL=(80, -40, 0), armR=(80, -40, 0), move=(0.06, 0, 0), scale=0.6)]),
+    # まわりの花びらを まわして、とばす / 花びらがちって、しおれて、よこへたれる
     'hana': dict(atk=[dict(chest=(-6, 0, -15), armL=(-20, 30, 0), armR=(-20, 30, 0), spread=0.8, orbit=-20),
                       dict(chest=(-6, 0, 10), armL=(20, 90, 0), armR=(20, 90, 0), move=(0, 0, 0.04), spread=1.2, orbit=90, fx=[('petal', (0, 0, 0.5), 5, 0.4, 0.035)]),
                       dict(chest=(8, 0, 20), armL=(40, 60, 0), armR=(90, 20, 0), spread=1.8, orbit=200, fx=[('petal', (0.3, 0.4, 0.45), 9, 0.3, 0.04)]),
                       dict(armL=(10, 30, 0), armR=(10, 30, 0), spread=1.1, orbit=260)],
                  hurt=[dict(head=(0, -10, 0), armL=(30, 50, 0), armR=(30, 50, 0), spread=1.4, fx=[('petal', (0, 0, 0.6), 7, 0.4, 0.035)]),
-                       dict(hip=(10, 0, 0), chest=(28, 0, 0), head=(30, 0, 0), armL=(-20, 5, 0), armR=(-20, 5, 0), spread=1.2),
-                       dict(hip=(20, 0, 0), chest=(50, 0, 0), head=(70, 0, 0), armL=(-40, 0, 0), armR=(-40, 0, 0), move=(0, 0.04, -0.06), spread=0.9, fx=[('petal', (0, 0.2, 0.03), 5, 0.3, 0.035)])]),
-    # のびあがって、つのをひろげ、火の粉をとばす / とびあがって、しぼむ
+                       dict(hip=(4, 8, 0), chest=(6, 20, 0), head=(6, 24, 0), armL=(-20, 5, 0), armR=(-20, 30, 0), spread=1.2),
+                       dict(hip=(6, 16, 0), chest=(8, 40, 0), head=(8, 45, 0), armL=(-30, 10, 0), armR=(-40, 60, 0), move=(0.06, 0, -0.06), spread=0.9, fx=[('petal', (0.3, 0, 0.03), 5, 0.3, 0.035)])]),
+    # のびあがって、つのをひろげ、火の粉をとばす / とびあがって、しぼみ、よこへたおれる
     'hoteri': dict(atk=[dict(hip=(8, 0, 0), chest=(10, 0, 0), head=(8, 0, 0), move=(0, 0, -0.02)),
                         dict(hip=(-6, 0, 0), chest=(-12, 0, 0), head=(-10, 0, 0), hornL=(0, -30, 0), hornR=(0, 30, 0), armL=(20, 50, 0), armR=(20, 50, 0), move=(0, 0, 0.08), fx=[('ember', (0, 0, 0.9), 5, 0.3, 0.035)]),
                         dict(chest=(-10, 0, 0), head=(-8, 0, 0), hornL=(0, -45, 0), hornR=(0, 45, 0), armL=(30, 70, 0), armR=(30, 70, 0), move=(0, 0.04, 0.1), fx=[('ember', (0, 0.1, 0.8), 10, 0.5, 0.04)]),
                         dict(hornL=(0, -10, 0), hornR=(0, 10, 0), move=(0, 0, 0.02))],
                    hurt=[dict(move=(0, 0, 0.08), armL=(40, 70, 0), armR=(40, 70, 0), fx=[('ember', (0, 0, 0.7), 5, 0.3, 0.03)]),
-                         dict(hip=(18, 0, 0), chest=(16, 0, 0), head=(18, 0, 0), hornL=(0, 20, 0), hornR=(0, -20, 0), armL=(-10, 0, 0), armR=(-10, 0, 0), move=(0, 0, -0.03)),
-                         dict(hip=(40, 0, 0), chest=(40, 0, 0), head=(36, 0, 0), hornL=(0, 60, 0), hornR=(0, -60, 0), armL=(-30, -10, 0), armR=(-30, -10, 0), move=(0, 0, -0.12))]),
+                         dict(hip=(4, -12, 0), chest=(4, -10, 0), head=(4, -8, 0), hornL=(0, 20, 0), hornR=(0, -20, 0), armL=(-10, 0, 0), armR=(-10, 0, 0), move=(0, 0, -0.03)),
+                         dict(root=(0, -50, 0), hip=(4, -10, 0), chest=(4, -10, 0), hornL=(0, 60, 0), hornR=(0, -60, 0), armL=(-30, 60, 0), armR=(-30, -10, 0), move=(-0.12, 0, -0.04), scale=0.9, fx=[('ember', (-0.35, 0, 0.1), 3, 0.2, 0.03)])]),
     # くるくるまわる / 落ち葉のように、ひらひら地面へ
     'ochiba': dict(atk=[dict(chest=(-6, 0, -30), armL=(0, 40, 0), armR=(0, 40, 0)), dict(root=(0, 0, 100), armL=(10, 100, 0), armR=(10, 100, 0), move=(0, 0, 0.08), flutter=(0.04, 0), fx=[('leaf', (0, 0, 0.4), 4, 0.4, 0.035)]),
                         dict(root=(0, 0, 200), armL=(10, 110, 0), armR=(10, 110, 0), move=(0, 0, 0.12), flutter=(0.05, 2), fx=[('leaf', (0, 0, 0.5), 7, 0.5, 0.04)]),
@@ -264,19 +282,20 @@ MOVES = {
                       dict(chest=(4, 0, 0), armL=(20, 10, 0), armR=(20, 10, 0))],
                  hurt=[dict(root=(0, 4, 0), chest=(0, -6, 0), head=(0, 8, 0), armL=(20, 40, 0), armR=(20, 40, 0), fx=[('snow', (0, 0, 0.7), 6, 0.35, 0.03)]),
                        dict(root=(0, -4, 0), chest=(12, 6, 0), head=(16, -8, 0), armL=(30, 20, 0), armR=(30, 20, 0), move=(0, 0, -0.03), fx=[('snow', (0, 0.1, 0.5), 5, 0.35, 0.03)]),
-                       dict(hip=(20, 0, 0), chest=(20, 0, 0), head=(20, 0, 0), armL=(-20, 60, 0), armR=(-20, 60, 0), melt=0.55, fx=[('snow', (0, 0.1, 0.05), 6, 0.35, 0.035)])]),
+                       dict(hip=(4, 14, 0), chest=(4, 12, 0), head=(4, 10, 0), armL=(-20, 60, 0), armR=(-20, 60, 0), melt=0.55, fx=[('snow', (0, 0.1, 0.05), 6, 0.35, 0.035)])]),
 }
 
 NECK = 0.85   # 攻撃：首が、体の かたむきの このわりを うちけす（頭は大きく うごかさない。持ち主）
 ATKSQ = (0.92, 1.06, 0.9, 1.02)   # 攻撃のため・のび：ためる（ちぢむ）→ ふりかぶる（のびる）→ うつ（ちぢむ）→ もどる
 HURTSQ = (0.94, 1.0, 1.0)   # やられ：うけた しゅんかんだけ、少しちぢむ
+LAGMAX = 0.05   # 布のおくれの いちばん大きい長さ
 LAGK = 0.8   # 布のおくれ：頭のてっぺんが うごいた分の、このわり
 BODY = ('root', 'hip', 'chest')
 
 def _steady(f):
-    """攻撃のコマ：頭は、体（足もと・こし・むね）の かたむきを、首でうちけす"""
+    """攻撃のコマ：頭は、体（足もと・こし・むね）の かたむき（前・よこ）を、首でうちけす。まわる向き（twist）は うちけさない（体といっしょに まわる）"""
     f = dict(f); a = [sum(tuple(f.get(b, ()))[k] if len(tuple(f.get(b, ()))) > k else 0 for b in BODY) for k in range(3)]
-    h = tuple(f.get('head', ()))+(0,)*6; f['head'] = (h[0]-NECK*a[0], h[1]-NECK*a[1], h[2]-NECK*a[2]*0.5)+h[3:6]; return f
+    h = tuple(f.get('head', ()))+(0,)*6; f['head'] = (h[0]-NECK*a[0], h[1]-NECK*a[1], h[2])+h[3:6]; return f
 
 def _top(f):
     """頭のてっぺんの だいたいの場所（布のおくれを きめるため）"""
@@ -288,7 +307,7 @@ def _lag(L, loop):
     out = []
     for i, f in enumerate(L):
         pv = L[i-1] if (i or loop) else {}; d = _top(f)-_top(pv); f = dict(f)
-        if 'lag' not in f: f['lag'] = tuple(-d*LAGK)
+        if 'lag' not in f: lg = -d*LAGK; n = float(np.linalg.norm(lg)); f['lag'] = tuple(lg*min(1, LAGMAX/max(n, 1e-9)))   # 大きくうごいても、のびすぎない
         out.append(f)
     return out
 
