@@ -19,8 +19,17 @@ function pxi(k,c){return '<svg class="pxi'+(c?' '+c:'')+'" viewBox="0 0 32 32" a
 function rewardPower(n){if(!n)return;S.pt+=n;S.totalPt+=n;toast('ごほうび：パワー+'+n,'good');if(typeof STATUE!=='undefined'&&STATUE>=0)addFloat(STATUE%W+.5,(STATUE/W|0)-1,'+'+n,'#ecdcbc')}
 /* 知らせ：同じ文はまとめて（数をつける）、出すのは2つまで、のこりは順番にまつ（TOASTQ）。大事な物（good・warn）は大きく長く、ほかは短く */
 const TOASTQ=[],TOASTMAX=2,TOASTMS={good:3200,warn:3200,'':2000};
-function toastShow(it){const box=$('#toasts'),t=document.createElement('div');t.className='toast'+(it.kind?' '+it.kind:'');t._msg=it.msg;t._n=it.n;const tx=document.createElement('span');tx.className='ttx';tx.textContent=it.n>1?it.msg+'（'+it.n+'）':it.msg;const fc=typeof toastFace==='function'?toastFace(it.msg,it.kind):null;/* 名前の出るせいれいの顔 */if(fc){t.classList.add('hasface');t.appendChild(fc)}t.appendChild(tx);if(document.body.classList.contains('wd0')){const h=document.createElement('i');h.className='trope';t.appendChild(h)}/* 草原の知らせは、なわでつるした木札 */box.appendChild(t);if(/たっせい/.test(it.msg)&&typeof uiStamp==='function')uiStamp(t,true);/* たっせいの知らせには、ハンコ */toastTimer(t,it.kind)}
-function toastTimer(t,kind){clearTimeout(t._tm);t._tm=setTimeout(()=>{t.classList.add('out');setTimeout(()=>{t.remove();toastNext()},180)},TOASTMS[kind||'']||2000)}
+/* 知らせの木札のなわは、上にある板（上の欄・目標の札・ボタン・上の知らせ）のしたまでのばす。どこにもつながらない、なわを出さない */
+function ropeSolid(e){for(;e&&e!==document.body;e=e.parentElement){if(e.id==='cv'||e.id==='toasts')return null;const cs=getComputedStyle(e);if(cs.borderImageSource!=='none'||cs.backgroundImage!=='none'||(cs.backgroundColor!=='transparent'&&!/rgba\([^)]*,\s*0\)$/.test(cs.backgroundColor)))return e}return null}
+function toastRopes(){if(!document.body.classList.contains('wd0'))return;const box=$('#toasts');if(!box)return;const br=box.getBoundingClientRect(),ts=[...box.querySelectorAll('.toast')],pp=parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--pp'))||1.5;
+  for(let i=0;i<ts.length;i++){const t=ts[i],top=br.top+t.offsetTop,l=br.left+t.offsetLeft,w=t.offsetWidth;
+    for(const [k,x] of [['--rl',l+w*.22+pp],['--rr',l+w*.78-pp]]){let y=null;
+      for(let j=i-1;j>=0;j--){const u=ts[j],ut=br.top+u.offsetTop,ul=br.left+u.offsetLeft;if(x>=ul&&x<=ul+u.offsetWidth){y=ut+u.offsetHeight;break}}/* 上の知らせ */
+      if(y===null)for(let yy=top-1;yy>0;yy-=2){const e=ropeSolid(document.elementFromPoint(x,yy));if(e){y=e.getBoundingClientRect().bottom;break}}
+      t.style.setProperty(k,Math.max(pp*2,Math.round(top-(y===null?0:y)+pp*2))+'px')}}}/* 板のうらに2ドットかくす */
+addEventListener('resize',()=>toastRopes());
+function toastShow(it){const box=$('#toasts'),t=document.createElement('div');t.className='toast'+(it.kind?' '+it.kind:'');t._msg=it.msg;t._n=it.n;const tx=document.createElement('span');tx.className='ttx';tx.textContent=it.n>1?it.msg+'（'+it.n+'）':it.msg;const fc=typeof toastFace==='function'?toastFace(it.msg,it.kind):null;/* 名前の出るせいれいの顔 */if(fc){t.classList.add('hasface');t.appendChild(fc)}t.appendChild(tx);if(document.body.classList.contains('wd0')){const h=document.createElement('i');h.className='trope';t.appendChild(h)}/* 草原の知らせは、なわでつるした木札 */box.appendChild(t);toastRopes();if(/たっせい/.test(it.msg)&&typeof uiStamp==='function')uiStamp(t,true);/* たっせいの知らせには、ハンコ */toastTimer(t,it.kind)}
+function toastTimer(t,kind){clearTimeout(t._tm);t._tm=setTimeout(()=>{t.classList.add('out');setTimeout(()=>{t.remove();toastRopes();toastNext()},180)},TOASTMS[kind||'']||2000)}
 function toastNext(){const box=$('#toasts');while(TOASTQ.length&&box.querySelectorAll('.toast:not(.out):not(#playHint)').length<TOASTMAX)toastShow(TOASTQ.shift())}
 function toast(msg,kind){kind=kind||'';const box=$('#toasts');
   for(const t of box.querySelectorAll('.toast:not(.out):not(#playHint)'))if(t._msg===msg){t._n++;(t.querySelector('.ttx')||t).textContent=msg+'（'+t._n+'）';t.classList.remove('bump');void t.offsetWidth;t.classList.add('bump');toastTimer(t,kind);return}
