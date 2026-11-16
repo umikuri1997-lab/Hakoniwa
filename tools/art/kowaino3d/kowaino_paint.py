@@ -57,7 +57,7 @@ FXCOL = {'dust': ('#efe6d2', '#d8ccb4', '#b8aa90'), 'ash': ('#cfc8d2', '#aaa2ae'
          'petal': ('#fbe4ee', '#eab8cc', '#c890a8'), 'sweat': ('#f0f8ff', '#b8dcf4', '#88b4d8'), 'star': ('#fffbe0', '#ffe08a', '#e0b050'),
          'slash': ('#ffffff', '#ece8ff', '#c0b8e0'), 'impact': ('#ffffff', '#fff6d8', '#e8d090')}
 FXBMP = {
-    'puff': ['.bb.|baab|baab|.bb.', '.b.|bab|.b.', 'b'],
+    'puff': ['.bb.|baab|baab|.bb.', '.bbb.|baaab|ba.ab|baaab|.bbb.', '.b.b.|b...b|.....|b...b|.b.b.'],   # 土けむり：ひろがって、うすれる
     'spark': ['..a..|..b..|abaab|..b..|..a..', '.a.|aba|.a.', 'a'],
     'ember': ['.c.|cab|.b.', 'ab|bc', 'b'],
     'snow': ['.a.|aba|.a.', 'ab|ba', 'a'],
@@ -66,7 +66,7 @@ FXBMP = {
     'sweat': ['.a.|aab|abb|.c.', 'a|b', 'b'],
     'star': ['..a..|.aba.|abbba|.aba.|..a..', '.a.|aba|.a.', 'a'],
     'slash': ['.......aa|.....aab.|....ab...|...ab....|..ab.....|.ab......|ab.......', '.....ab|...ab..|.ab....|ab.....', '..b|.b.|b..'],
-    'impact': ['a...a...a|.a..a..a.|..b.b.b..|...aaa...|aabaaabaa|...aaa...|..b.b.b..|.a..a..a.|a...a...a', 'a.a.a|.bab.|aaaaa|.bab.|a.a.a', '.a.|aba|.a.'],
+    'impact': ['...a...|...a...|..bab..|aaabaaa|..bab..|...a...|...a...', 'b...a...b|.b..a..b.|.........|.........|aa.....aa|.........|.........|.b..a..b.|b...a...b', 'a.....a|.......|.......|.......|.......|.......|a.....a'],   # うった所：かたい十字の光 → 外へとぶ すじ → きえる
 }
 FXSHAPE = {'dust': 'puff', 'ash': 'puff', 'spark': 'spark', 'ember': 'ember', 'snow': 'snow', 'leaf': 'leaf', 'petal': 'petal', 'sweat': 'sweat', 'star': 'star', 'slash': 'slash', 'impact': 'impact'}
 FXMOVE = {'dust': (0, 0, 0.05, 0.6), 'ash': (0, 0, 0.06, 0.8), 'spark': (0, 0, 0.02, 1.2), 'ember': (0, 0, 0.1, 0.6), 'snow': (0, 0, -0.06, 0.6), 'leaf': (0, 0, -0.05, 0.9),

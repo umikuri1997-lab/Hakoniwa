@@ -27,13 +27,14 @@ HEM = 0.3
 
 ATTACH = {
     'thief': [(['base'], dict(box=((0.12, 1), (-1, 1), (0, 0.5)), small=True), 'armR')],   # ふくろ（3Dモデルで体からわけた）：右手
-    'breaker': [(['deco'], dict(box=((-1, 0.0), (-1, 1), (0, 1.0))), 'armL'), (['hand'], {}, 'armL')],   # ハンマーと、もつ両手：左腕
+    'breaker': [(['deco'], dict(box=((-1, 0.0), (-1, 1), (0, 1.0))), 'armL')],   # ハンマー：左腕（ハンマーをもつ手は、手の重みで左腕へ。右手は右腕のまま）
     'trapper': [(['deco'], dict(box=((-1, 1), (0.15, 1), (0, 0.5))), 'jaw')],   # 牙：あご
     'hoteri': [(['deco'], dict(box=((-1, -0.1), (-1, 1), (0.6, 1.2))), 'hornL'), (['deco'], dict(box=((0.1, 1), (-1, 1), (0.6, 1.2))), 'hornR')],
 }
 TIP = {'fast': 'far', 'thief': 'pom', 'breaker': 'pom', 'shiny': 'pom', 'hana': 'pom', 'yuki': 'pom', 'ash': 'far', 'armor': 'far', 'hoteri': 'far', 'ochiba': 'far'}   # なびくフードの先（pom：ぽんぽん・far：頭からいちばん遠い うしろの点）
 TIPZ = 0.6   # フードの先をさがす高さ（これより上）
 TAILL = {'yuki': 0.9}   # 長くたれた フードのしっぽ：先からこの きょりまで、あたまの骨に
+HOODAMP = 0.03   # フードの先が なびく大きさに、たす（高さのうち）
 TIPL = 0.35   # フードの先から、なびく はんい（メッシュの辺をたどった きょり）
 SCARF = {'fast': True}   # マフラー（体とはなれた かざり）が なびく
 SPREAD = {'ash': ['deco'], 'shiny': ['deco'], 'hana': ['deco']}
@@ -140,7 +141,7 @@ class Skel:
         if wave[0]:   # なびく：はしほど大きく、先へ すすむ波（位相＝コマ。くりかえすと つながる）。うごいた向きと はんたいへ おくれる
             amp, ph = wave; lag = -np.array(move, float)*H*0.6
             if s.tw.any():
-                w = s.tw; Q[:, 0] += w*amp*H*np.sin(ph-w*2.2); Q[:, 2] += w*amp*H*0.5*np.cos(ph-w*2.2); Q += (w**2)[:, None]*lag
+                w = s.tw; ah = amp+HOODAMP; Q[:, 0] += w*ah*H*np.sin(ph-w*2.2); Q[:, 2] += w*ah*H*0.5*np.cos(ph-w*2.2); Q += (w**2)[:, None]*lag   # フードの先は、マフラーより大きく なびく
             if s.sw.any():
                 w = s.sw; Q[:, 2] += w*amp*H*1.6*np.sin(ph-w*3.5); Q[:, 1] += w*amp*H*0.8*np.cos(ph-w*3.5); Q += (w**2)[:, None]*lag
         if s.sprc:   # とびちる かざり：むねのまわりで はなす・まわす
@@ -154,7 +155,7 @@ class Skel:
         if lo < 0: Q[:, 2] -= lo
         s.Ms = Ms; return Q
 
-IDLE = [dict(wave=(0.03, i*math.pi/2)) for i in range(4)]   # 待機：体はうごかさない（頭を上げ下げしない。持ち主）。フードの先・マフラーだけ なびく
+IDLE = [dict(wave=(0.03, i*math.pi/2), flutter=(0.012, i*math.pi/2)) for i in range(4)]   # 待機：体はうごかさない（頭を上げ下げしない。持ち主）。フードの先・マフラーだけ なびく
 WALK = [dict(hip=(5, 4, 0), chest=(2, -3, 4), head=(0, -2, -3), armL=(8, 4, 0), armR=(-6, 4, 0), footL=(0, 0, 0, 0, 0.05, 0), footR=(0, 0, 0, 0, -0.05, 0.02), flutter=(0.025, 0), look=(0.01, 0), wave=(0.05, 0)),
         dict(hip=(4, 0, 0), chest=(2, 0, 0), armL=(0, 4, 0), armR=(0, 4, 0), footR=(0, 0, 0, 0, 0, 0.05), flutter=(0.03, 1.6), move=(0, 0, 0.03), look=(0.012, 0.004), wave=(0.05, 1.57)),
         dict(hip=(5, -4, 0), chest=(2, 3, -4), head=(0, 2, 3), armL=(-6, 4, 0), armR=(8, 4, 0), footL=(0, 0, 0, 0, -0.05, 0.02), footR=(0, 0, 0, 0, 0.05, 0), flutter=(0.025, 3.1), look=(-0.01, 0), wave=(0.05, 3.14)),
