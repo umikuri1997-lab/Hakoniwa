@@ -17,11 +17,38 @@ hx = lambda h: np.array([int(h[i:i+2], 16) for i in (1, 3, 5)], float)
 
 # しゅるいごとの色と目じるし。場所は高さ1のときの (よこ x, 高さ z)。front：前からのたね
 CFG = {
-    'basic': dict(HPX=54, thin=0, hem=('#ac9776', 0.03), under='#2c2440', lining='#2c2440', base='#685d7f', parts='#b9aab6', legs=('#342b44', 0.1), eyes=dict(x=0.085, z=0.52, rx=0.03, rz=0.075, col='#c2afae', edge='#9e8a92'),
+    'basic': dict(model=os.path.join(HERE, 'models', 'kg_basic.glb'),   # 持ち主が直したモデル＋手（kw_model.py）
+                  labcol={'base': '#6f6487', 'rim': '#2c2440', 'under': '#2c2440', 'face': '#241c33', 'deco': '#b9aab6', 'pom': '#c8bcc8', 'hand': '#a597ba'},
+                  HPX=54, base='#6f6487', lining=True, hem=('#ac9776', 0.03), under='#2c2440', legs=('#342b44', 0.1),
+                  eyes=dict(x=0.085, z=0.52, rx=0.03, rz=0.075, col='#c2afae', edge='#9e8a92')),
+    'basic_old': dict(HPX=54, thin=0, hem=('#ac9776', 0.03), under='#2c2440', lining='#2c2440', base='#685d7f', parts='#b9aab6', legs=('#342b44', 0.1), eyes=dict(x=0.085, z=0.52, rx=0.03, rz=0.075, col='#c2afae', edge='#9e8a92'),
                   seeds=[('hood', 0.0, 0.85, '#6f6487', 0), ('face', 0.0, 0.52, '#241c33', 1),
                          ('handL', -0.1, 0.37, '#a597ba', 1), ('handR', 0.06, 0.37, '#a597ba', 1)],
                   pom=((0.36, 0.5), '#c8bcc8'), tip=0, cone=((0.136, -0.292, 0.883), (-0.013, -0.231, 0.808)), fingers=True, apart=0.07),
 }
+
+def load_labeled(path):
+    """kw_model.py で書き出した、マテリアルつきの glb（マテリアルの名前が色わけの名前）→ (m, comp, lab)"""
+    sc = trimesh.load(path); V = []; F = []; L = []; o = 0
+    for n, g in sc.geometry.items():
+        T = sc.graph[[k for k in sc.graph.nodes_geometry if sc.graph[k][1] == n][0]][0]; g2 = g.copy(); g2.apply_transform(T)
+        V.append(g2.vertices); F.append(g2.faces+o); L += [g.visual.material.name]*len(g2.faces); o += len(g2.vertices)
+    m = weld(trimesh.Trimesh(vertices=np.vstack(V), faces=np.vstack(F), process=False)); F_ = m.faces
+    cc = sorted(trimesh.graph.connected_components(m.face_adjacency, min_len=1, nodes=np.arange(len(F_))), key=len, reverse=True)
+    comp = np.zeros(len(F_), int)
+    for i, c in enumerate(cc): comp[c] = i
+    return m, comp, np.array(L, object)
+
+def paint_labeled(m, comp, lab0, cfg):
+    """マテリアルの色わけ（lab0）から、色をきめる。布は1つの色。ずきんの裏地は、顔のまわりの布をひとまわり（持ち主の写真の所。モデルにマテリアルがないので）"""
+    V = m.vertices; F = m.faces; H = m.bounds[1][1]; P = np.stack([V[:, 0], V[:, 2], V[:, 1]], 1); cen = P[F].mean(1)/H
+    lab = np.array(['base' if l == 'cloth' else l for l in lab0], object)
+    if cfg.get('lining'):
+        vf = set(F[lab == 'face'].ravel())
+        for k in range(len(F)):
+            if lab[k] == 'base' and vf & set(F[k]) and cen[k, 1] > 0: lab[k] = 'rim'
+    COLS = cfg['labcol']; col = np.array([hx(COLS.get(l, cfg['base'])) for l in lab])
+    return P, F, col, lab, H, cen
 
 def load(path):
     m = weld(list(trimesh.load(path).geometry.values())[0]); F = m.faces
@@ -192,7 +219,7 @@ def hemdecal(P, F, lab, comp, H, cfg, yaw):
         return col if d < hh*H and z >= Qr[i, 2]-0.002*H else None
     return f
 
-HEMR, HEMTOP = 0.07, 0.18
+HEMR, HEMTOP = 0.07, 0.26
 
 def ellip(sc, c, r, col, n=20, m=12):
     sc.part()
@@ -242,11 +269,15 @@ def tube(sc, pts, rs, col, n=10):
     for i in range(n): sc.tri(pts[-1], rings[-1][i], rings[-1][(i+1) % n], col)
 
 def shoot(name, cfg, src, yaw=0.0):
-    m, comp = load(os.path.join(src, 'kg_%s.glb' % name)); P, F, col, lab, H, cen = paint(m, comp, cfg)
+    if cfg.get('model'):   # マテリアルつきのモデル（持ち主が直した物・kw_model.py で手を足した物）：色わけはマテリアルのまま
+        m, comp, lab0 = load_labeled(cfg['model']); P, F, col, lab, H, cen = paint_labeled(m, comp, lab0, cfg); POMC[:] = []
+        comp = np.where(np.isin(lab, ['base', 'under', 'rim', 'face']), 0, comp+1)   # すそのライン・目は、布・顔の所で見る
+    else:
+        m, comp = load(os.path.join(src, 'kg_%s.glb' % name)); P, F, col, lab, H, cen = paint(m, comp, cfg)
     if cfg.get('thin'): P = thin(P, F, lab, k=cfg['thin'])
     if cfg.get('tip'): P = tipthin(P, F, lab, H, cfg['tip'])
     if cfg.get('cone') and POMC: P = cone(P, F, lab, H, cfg['cone'])
-    HD = hands(P, F, lab, H, cfg.get('apart', 0)) if cfg.get('fingers') else []
+    HD = hands(P, F, lab, H, cfg.get('apart', 0)) if cfg.get('fingers') and not cfg.get('model') else []
     if HD:   # もらったモデルの手は、まん中へちぢめてかくす（新しい手を組む）
         P = P.copy(); other = set(F[(lab != 'handL') & (lab != 'handR')].ravel())
         for nm in ('handL', 'handR'):
