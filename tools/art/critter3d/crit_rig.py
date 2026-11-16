@@ -9,6 +9,7 @@
 import sys,os,math,numpy as np
 sys.path.insert(0,os.path.join(os.path.dirname(os.path.abspath(__file__)),'..','animals'))
 from ani_rig import smooth,rotm
+TONBOB=-.3   # とんぼの胴体を小さくする（−0.3 で0.7倍）
 TURN=20   # 右むきから、手前へ何度（顔が少し見える）
 def band(x,a,b,e=.06):return smooth(a-e,a+e,x)*(1-smooth(b-e,b+e,x))   # a〜b のあいだ（ふちはなめらか）
 def near(c,col,t=24):return (np.abs(col-np.array(c,float)).max(1)<t).astype(float)   # その色の点
@@ -47,7 +48,7 @@ C={
    fr={'0':{},'1':dict(horn=-8),'w0':dict(st=1.08,sq=.97),'w1':dict(st=1.03),'w2':dict(st=.96,sq=1.0),'w3':dict(st=1.0),
        'e0':dict(horn=30,hide=-.25),'e1':dict(horn=50,hide=-.45),'e2':dict(horn=30,hide=-.25)}),   # からにひっこむ
  'tentoumushi':dict(size=.22,legs=dict(zc=.12,hip=.25,rad=.14,n=100),bones=[
-     dict(k='wing',w=lambda u,v,z,c:near((216,31,16),c,40),p=(-.1,0,.95),ax='f',mir=1)],   # 赤いはね：左右にひらく
+     dict(k='wing',w=lambda u,v,z,c:np.maximum(near((216,31,16),c,40),near((242,222,176),c,10)*smooth(.38,.45,z)*(1-smooth(.4,.5,u))),p=(-.1,0,.95),ax='f',mir=1)],   # 赤いはね：左右にひらく。はねの上の白い点（足・おなかと同じクリーム色の、高い所の部品）もいっしょに（ないと、ひらいたとき点がからだの中にのこる）
    fr={'0':{},'1':dict(sq=.96),'w0':dict(swing=35),'w1':dict(sq=.97),'w2':dict(swing=-35),'w3':dict(sq=.97),
        'e0':dict(wing=22),'e1':dict(wing=40),'e2':dict(wing=22)}),
  'mitsubachi':dict(size=.3,fly=1,legs=dict(zc=.06,hip=.2,rad=.12,col=(171,105,48)),bones=[
@@ -57,8 +58,9 @@ C={
      dict(k='wing',w=lambda u,v,z,c:near((242,245,248),c,20),p=(-.05,0,.6),sc=1,root=1)],   # 羽：つけねへちぢむ（はばたいて見える。まわすと、うすい羽がとがった線になった）
    fr={'w0':dict(wing=0,dangle=12),'w1':dict(wing=-.55,dangle=-4)}),
  'tonbo':dict(size=.3,fly=1,fdeg=-101,bones=[   # 目の色がないので、からだののびる向き（頭は目の青いほう）
-     dict(k='wing',w=lambda u,v,z,c:near((208,234,214),c,24),p=(0,0,.62),ax='f',mir=1)],
-   fr={'w0':dict(wing=-12),'w1':dict(wing=10),'e0':dict(wing=-4),'e1':dict(wing=4)}),   # はばたく・ホバリング
+     dict(k='wing',w=lambda u,v,z,c:near((208,234,214),c,24),p=(0,0,.62),ax='f',mir=1),
+     dict(k='body',w=lambda u,v,z,c:1-near((208,234,214),c,24),p=(0,0,.62),sc=1)],   # 胴体と頭（羽いがい）：羽のつけねを中心に小さく（持ち主のきめ）
+   fr={'w0':dict(body=TONBOB,wing=-12),'w1':dict(body=TONBOB,wing=10),'e0':dict(body=TONBOB,wing=-4),'e1':dict(body=TONBOB,wing=4)}),   # はばたく・ホバリング
  'kaeru':dict(size=.3,legs=dict(zc=.06,hip=.25,rad=.18,merge=.34,n=100),bones=[   # 足：ゆびの出っぱりを、足ごとにまとめる
      
      dict(k='puff',w=lambda u,v,z,c:smooth(.25,.45,u)*smooth(.5,.3,z)*smooth(.05,.15,z),p=(.3,0,.25),sc=1)],   # のど
