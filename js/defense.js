@@ -36,7 +36,7 @@ function nestCount(){let n=0;for(let j=0;j<W*H;j++)if(S.obj[j]==='kagenest')n++;
 function nestMorning(){if(WD!==0||S.free||!((S.bossKills||0)>0)||Math.random()>=NESTP)return;if(nestCount()>=NESTMAX)return;const R=spawnReach(),C=[];
   for(let j=0;j<W*H;j++){if(S.obj[j]||VILL[j]||S.ground[j]!==0||!walk(j)||R[j]<0||(fogOn()&&fogAt(j))||S.floor&&S.floor[j])continue;C.push(j)}
   if(!C.length)return;const j=C[(Math.random()*C.length)|0];S.obj[j]='kagenest';dirty=true;try{recount()}catch(e){}toast('村の外に、かげの巣ができた','warn')}
-function nestTap(j){if(S.obj[j]!=='kagenest')return false;(S.dyn[j]||(S.dyn[j]={})).nq=1;sfx('mtap');toast('かげの巣：せいれいがこわしにいく');return true}
+function nestTap(j){if(S.obj[j]!=='kagenest')return false;(S.dyn[j]||(S.dyn[j]={})).nq=1;sfx('tfoe');toast('かげの巣：せいれいがこわしにいく');return true}
 function nestJob(r,G){if(isNight())return false;let has=false;for(const k in S.dyn)if(S.dyn[k]&&S.dyn[k].nq&&S.obj[+k]==='kagenest'){has=true;break}if(!has)return false;
   const nt=q=>S.obj[q]==='kagenest'&&S.dyn[q]&&S.dyn[q].nq&&free('o'+q,1);const vj=nearest(G,j=>adjOf(j,nt)>=0,9999);if(vj<0)return false;const q=adjOf(vj,nt);startAct(r,G,'nest',vj,{key:'o'+q,obj:q});return true}
 function nestBreak(j){if(S.obj[j]!=='kagenest')return;S.obj[j]='';delete S.dyn[j];dirty=true;try{recount()}catch(e){}fxSpr('shadowpop',(j%W+.5)*TS,((j/W|0)+.6)*TS);dropAt(j%W+.5,((j/W)|0)+.5,'sand',1);toast('かげの巣をこわした','good')}
