@@ -209,15 +209,17 @@ def hands(P, F, lab, H, dx):
     for nm in ('handL', 'handR'):
         vs = np.unique(F[lab == nm])
         if not len(vs): continue
-        c0 = P[vs].mean(0); r = np.percentile(np.linalg.norm(P[vs]-c0, axis=1), 80)
-        c0 = c0+np.array([(-1 if c0[0] < 0 else 1)*dx*H, 0, 0]); out.append((c0, r))
-    return out
+        c0 = P[vs].mean(0); r = np.percentile(np.linalg.norm(P[vs]-c0, axis=1), 80); out.append([c0, r])
+    if len(out) == 2:   # 2つの手のまん中をさかいに、外へはなす（体のまん中 x=0 ではない。もらったモデルの手は左によっている）
+        mid = (out[0][0][0]+out[1][0][0])/2
+        for h in out: h[0] = h[0]+np.array([(-1 if h[0][0] < mid else 1)*dx*H, 0, 0])
+    return [(c, r, mid if len(out) == 2 else 0.0) for c, r in out]
 
 def fingers(sc, HD, R, col):
     """手：胸の前で、手のひらどうしを向かい合わせる（親指が上）。手のひら（ミトンの玉）の前のはしから、4本の指が前へのびて、先が内がわ（もう1つの手のほう）へまるまる。
     4本は、たてにならぶ（人さし指が上）。親指は、手の上から前へのびる"""
-    for c0, r in HD:
-        si = 1 if c0[0] < 0 else -1   # 体のまん中へ向かう向き
+    for c0, r, mid in HD:
+        si = 1 if c0[0] < mid else -1   # もう1つの手へ向かう向き（2つの手のまん中をさかいに）
         sc.smooth(True); n0 = len(sc.t); ellip(sc, c0, (r*0.8, r*0.9, r*0.95), col)
         sc.t[n0:] = [(R(a), R(b), R(c), cc, pid) for a, b, c, cc, pid in sc.t[n0:]]   # ellip は、まわす前の場所で作ったので、まわす
         for j, fz in enumerate((0.4, 0.13, -0.13, -0.4)):
