@@ -263,6 +263,16 @@ function sceneShift(kind,body,after){/* 場面転換：画面が白く（夢・�
   const S0=S,cv=$('#cv'),d=document.createElement('div'),ns=NOSAVE;d.style.cssText='position:absolute;inset:0;pointer-events:none;z-index:25;opacity:0;transition:opacity .7s ease;background:'+(kind==='mem'?'#0b0f0a':'#fffbe8');$('#app').appendChild(d);
   const fade=(o,f)=>{requestAnimationFrame(()=>requestAnimationFrame(()=>{d.style.opacity=o}));setTimeout(f,800)};
   fade('1',()=>{if(S!==S0){d.remove();return}NOSAVE=true;cv.style.filter=kind==='mem'?'sepia(.85) brightness(.8)':'saturate(1.5) brightness(1.1)';fade('0',()=>body(()=>fade('1',()=>{cv.style.filter='';NOSAVE=ns;fade('0',()=>{d.remove();after&&after()})})))})}
+let DREAMC=null;/* 夢の場面の、花かんむりの動き（dream:walk・put・clap・joy） */
+function dreamCue(c){const D=DREAMC;if(!D||D.S!==S||!EXTRA.length)return;const{F,Wv}=D,now=performance.now();
+  if(c==='walk'){/* 花かんむりを持って、フタバのそばへ歩いていく（実時間） */const sx=Wv.x,sy=Wv.y,tx=F.x-1.15,ty=F.y,t0=now;sacredSetPose(Wv,{anim:'offer2',at:now,duration:60000,side:true,face:1,crownHand:true});
+    const st=n=>{if(!EXTRA.length)return;const p=Math.min(1,(n-t0)/900),k=p<.5?2*p*p:1-Math.pow(-2*p+2,2)/2;Wv.x=sx+(tx-sx)*k;Wv.y=sy+(ty-sy)*k;if(p<1)requestAnimationFrame(st)};requestAnimationFrame(st);
+    F.face=-1;sacredSetPose(F,{anim:'talkshock',at:now+700,duration:900,side:true,face:-1});STAGEWAIT=Math.max(STAGEWAIT,now+1000);return}
+  if(c==='put'){/* そっと頭にのせる：フタバは頭をさげ、のったら、はなが舞う */sacredSetPose(Wv,{anim:'crownput',at:now,duration:60000,side:true,face:1,crownHand:true});sacredSetPose(F,{anim:'crownbow',at:now,duration:1500,side:true,face:-1});
+    setTimeout(()=>{if(!EXTRA.length)return;F.crownT=1;sacredSetPose(Wv,{anim:'storyListen',at:performance.now(),duration:60000,side:true,face:1});sacredSetPose(F,{anim:'talkchest',at:performance.now(),duration:60000,side:true,face:-1});sfx('bush');
+      for(let k=0;k<14;k++)fx.push({k:'p',x:F.x*TS+(Math.random()-.5)*20,y:F.y*TS-34,vx:(Math.random()-.5)*28,vy:-18-Math.random()*14,life:1.1,col:CROWNF[k%4],r:2})},1200);STAGEWAIT=Math.max(STAGEWAIT,now+1700);return}
+  if(c==='clap'){EXTRA.slice(2).forEach((g,i)=>setTimeout(()=>{if(!EXTRA.length)return;g.face=g.x<F.x?1:-1;sacredSetPose(g,{anim:'clap',at:performance.now(),duration:1600,side:true,face:g.face})},i*150));return}
+  if(c==='joy'){sacredSetPose(F,{anim:'talkjoy',at:now,duration:60000,side:false});JUMP.set(F,now);return}}
 let EXTRA=[],MEMRUN=false;/* 場面だけに出る子（むかしのきょうだいなど。セーブしない） */
 function dreamScene(done){/* 草原のはじめ：むかしの、花畑。フタバと、だれかわからないきょうだいたち（草のせいれい）が、たのしそうに話す（セピアの思い出）。おわったら、いまの荒れた草原にもどす */
   const vx=(cam.x+VW/cam.z/2)/TS,vy=(cam.y+VH/cam.z/2)/TS,okC=k=>!S.obj[k]||(BL[S.obj[k]]&&BL[S.obj[k]].natural),flat=(k,h)=>hiAt(k)===h;
@@ -277,10 +287,14 @@ function dreamScene(done){/* 草原のはじめ：むかしの、花畑。フタ
   const real=S.res.filter(r=>!r.hidden),keep=real.map(r=>[r,r.hidden]);real.forEach(r=>r.hidden=true);/* いまの子は、思い出のあいだ見せない */
   const mk=(name,dx,dy)=>{const g=mkRes({nid:-910},name,'wood',cx+dx,cy+dy);g.vr=mkVar(POKO,'wood');g.id=-910-EXTRA.length;return g};
   const F=mk(POKO,0,.4);EXTRA=[F,mk('？',-1.3,-.2),mk('？',1.3,-.2),mk('？',-1.6,1.2),mk('？',1.6,1.2)];EXTRA.forEach(g=>{g.face=g.x<cx?1:-1});F.face=1;
-  setTimeout(()=>dialog(Object.assign([['？','#joy|フタバ、こっちこっち！ 花のかんむり、できたよ！'],[POKO,'#joy|わあ……！ ぼくに、くれるの？'],['？','#joy|お日さまの下であんだから、ぽかぽかだぞ。'],['？','その花かんむり、フタバによく似合ってるね。'],['？','#joy|あしたも、みんなで、ここであそぼうな！'],[POKO,'#joy|うんっ！ ずっと、ずーっとね！']],{skip:1}),()=>{
+  setTimeout(()=>{if(!EXTRA.length)return;const Wv=EXTRA[1],now0=performance.now();F.face=-1;DREAMC={F,Wv,all:EXTRA.slice(),S:S};/* 花をあむ子（左のきょうだい）。ほかの子は、のぞきこんで待つ */
+  sacredSetPose(Wv,{anim:'weave',at:now0,duration:60000,side:true,face:1,crownHand:true,crownN:2});EXTRA.slice(2).forEach(g=>{g.face=g.x<Wv.x?1:-1;sacredSetPose(g,{anim:'lnod',at:now0,duration:2800,side:true,face:g.face})});sacredSetPose(F,{anim:'storyListen',at:now0,duration:60000,side:true,face:-1});
+  for(let k=1;k<=6;k++)setTimeout(()=>{const p=SACRED_POSES.get(Wv);if(!EXTRA.length||!p||p.anim!=='weave')return;p.crownN=2+k;fx.push({k:'p',x:Wv.x*TS+6,y:Wv.y*TS-16,vx:(Math.random()-.5)*10,vy:-12,life:.8,col:CROWNF[k%4],r:2})},k*400);/* 花を1つずつ、あんでいく */
+  setTimeout(()=>{if(!EXTRA.length)return;sacredSetPose(Wv,{anim:'crownup',at:performance.now(),duration:60000,side:false,crownHand:true});JUMP.set(Wv,performance.now());sfx('bush');
+   dialog(Object.assign([['？','#joy|フタバ、こっちこっち！ 花のかんむり、できたよ！',0,'dream:walk'],[POKO,'#heart|わあ……！ ぼくに、くれるの？'],['？','#joy|お日さまの下であんだから、ぽかぽかだぞ。',0,'dream:put'],['？','その花かんむり、フタバによく似合ってるね。',0,'dream:clap'],['？','#joy|あしたも、みんなで、ここであそぼうな！'],[POKO,'#joy|うんっ！ ずっと、ずーっとね！',0,'dream:joy']],{skip:1}),()=>{DREAMC=null;
     EXTRA.forEach((g,i)=>setTimeout(()=>{JUMP.set(g,performance.now());JOYU.set(g,performance.now()+1500)},i*120));
-    setTimeout(()=>{for(const [k,v] of prev){S.obj[k]=v||'';if(!v)delete S.hp[k]}EXTRA=[];cam.z=z0;centerOn(vx*TS,vy*TS);keep.forEach(([r,h])=>r.hidden=h);recount();S.spotSeen=ss;for(let n=SPOT_POPS.length-1;n>=0;n--)if(SPOT_POPS[n].state===S)SPOT_POPS.splice(n,1);MEMRUN=false;dirty=true;done()},1400)},null,''),600);
-  const tk=setInterval(()=>{if(!EXTRA.length){clearInterval(tk);return}const w=DLGA.who,L2=EXTRA.filter(q=>q.name===w);if(L2.length&&Math.random()<.5)JUMP.set(pick(L2),performance.now())},1300)}
+    setTimeout(()=>{for(const [k,v] of prev){S.obj[k]=v||'';if(!v)delete S.hp[k]}for(const g of EXTRA)SACRED_POSES.delete(g);EXTRA=[];cam.z=z0;centerOn(vx*TS,vy*TS);keep.forEach(([r,h])=>r.hidden=h);recount();S.spotSeen=ss;for(let n=SPOT_POPS.length-1;n>=0;n--)if(SPOT_POPS[n].state===S)SPOT_POPS.splice(n,1);MEMRUN=false;dirty=true;done()},1400)},null,'')},2900)},600);
+  const tk=setInterval(()=>{if(!EXTRA.length){clearInterval(tk);return}const w=DLGA.who,L2=EXTRA.filter(q=>q.name===w&&!SACRED_POSES.has(q));if(L2.length&&Math.random()<.5)JUMP.set(pick(L2),performance.now())},1300)}
 function memScene(done){/* むかしを思い出す：夜、影がせまり、フタバがふるえ、ほかの子が前に立つ。光がはじける */
   const f=S.res.find(r=>r.name===POKO)||S.res[0];if(!f)return done();centerOn(f.x*TS,f.y*TS);const hn=performance.now();for(const r of S.res)RHOLD.set(r,hn+7000);STRAINU.set(f,hn+5500);
   for(let n=0;n<26;n++)setTimeout(()=>{const a=Math.random()*Math.PI,R=5*TS;fx.push({k:'p',x:f.x*TS+Math.cos(a)*R*(Math.random()<.5?-1:1),y:f.y*TS+Math.sin(a)*R*.6+TS*2,vx:0,vy:-25,life:1.6,col:'#1a1420',r:5})},n*120);
@@ -297,7 +311,7 @@ const visitHere=()=>visitOn()&&!isNight()&&!GUESTRUN&&!!visitor();
 function visitMorning(){if(WD!==1||S.free||!(S.flags.guestDone||S.cleared))return;const t=st2();if(t.visit&&dayNo()-t.visit.day<VISIT_EVERY)return;const n=t.visitN||0;t.visitN=n+1;t.visit={day:dayNo(),who:n%VISITORS.length};VISITOR=null;toast(VISITORS[t.visit.who][0]+'が、温泉宿にとまりに来た','good')}
 function visitSpot(){const inn=innHouse();let base=-1;if(inn){const dj=[...inn.h.set].find(j=>HOME_DOORS.has(S.obj[j]));if(dj!=null)base=dj+W}if(base<0)base=STATUE>=0?STATUE+2*W:CY*W+CX;for(let r=0;r<6;r++)for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){const k=base+dy*W+dx+1;if(k>0&&k<W*H&&walk(k)&&!S.obj[k]&&S.ground[k]!==1)return k}return base}
 function visitor(){if(!visitOn())return null;const v=S.st2.visit;if(VISITOR&&VISITOR.vs===v&&VISITOR.st===S)return VISITOR;const p=VISITORS[v.who],k=visitSpot();const g=mkRes({nid:-901},p[0],p[1],k%W+.5,(k/W|0)+.6);g.id=-901;g.hidden=false;g.face=1;g.vs=v;g.st=S;VISITOR=g;return g}
-function visitTap(wx,wy){if(!visitHere())return false;const g=visitor();if(Math.hypot(wx-g.x,wy-(g.y-.5))>1.1)return false;sfx('mtap');const p=VISITORS[S.st2.visit.who];dialog([[p[0],p[2]]],()=>openSheet('vshop'));return true}
+function visitTap(wx,wy){if(!visitHere())return false;const g=visitor();if(Math.hypot(wx-g.x,wy-(g.y-.5))>1.1)return false;sfx('tbell');const p=VISITORS[S.st2.visit.who];dialog([[p[0],p[2]]],()=>openSheet('vshop'));return true}
 function guestScene(){/* 火山：草原のフタバが、温泉にあそびに来る。宿の前にあらわれ、歩いて露天ぶろへ行き、つかって、手をふって帰る（場面だけ。セーブしない人） */
   const hot=[];for(let j=0;j<W*H;j++)if(S.ground[j]===1&&nearHot(j,0))hot.push(j);const inn=innHouse();/* 温泉宿の露天ぶろに入る（なければ、温泉） */
   const tgt=inn?inn.onsen+W+1:hot.length?hot[(hot.length/2)|0]:STATUE>=0?STATUE+W:CY*W+CX;let st=-1;for(let r=1;r<6&&st<0;r++)for(let dy=-r;dy<=r&&st<0;dy++)for(let dx=-r;dx<=r;dx++){const k=tgt+dy*W+dx;if(k>0&&k<W*H&&walk(k)&&!S.obj[k]&&S.ground[k]!==1){st=k;break}}
