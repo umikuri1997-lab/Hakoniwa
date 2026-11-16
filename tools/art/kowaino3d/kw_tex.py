@@ -10,11 +10,11 @@ from PIL import Image
 TEX = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'textures')
 # 材質：(ノーマルマップ, 色のテクスチャ, 1まいがおおう長さ（体の高さのうち）, でこぼこの強さ, 色のむらの強さ, ちぢめる大きさ)
 MATS = {
-    'fabric': ('fabric026_n.png', 'fabric026.png', 0.45, 0.35, 0.0, 20),   # 布：織り目のすじ（色のむらはつけない。すじのかげだけ）
-    'rock': ('rock030_n.png', 'rock030.png', 0.7, 0.6, 1.2, 14),            # 岩：ごつごつ・ひび・色のむら
-    'metal': (None, 'metal032.png', 0.8, 0.0, 0.7, 10),                     # 金属：でこぼこなし・うすい色のむら（つやは material('metal')）
+    'fabric': ('fabric026_n.png', 'fabric026.png', 0.45, 0.6, 0.0, 20),   # 布：織り目のすじ（色のむらはつけない。すじのかげだけ）
+    'rock': ('rock030_n.png', 'rock030.png', 0.7, 1.0, 1.8, 14),            # 岩：ごつごつ・ひび・色のむら
+    'metal': (None, 'metal032.png', 0.8, 0.0, 1.2, 10),                     # 金属：でこぼこなし・うすい色のむら（つやは material('metal')）
 }
-MULQ = 0.07   # 色のむらの1だんの明るさのちがい
+MULQ = 0.1   # 色のむらの1だんの明るさのちがい
 
 _cache = {}
 def _load(fn, n):
