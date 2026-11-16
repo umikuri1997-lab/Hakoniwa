@@ -39,7 +39,7 @@ TAILL = {'yuki': 0.9}   # 長くたれた フードのしっぽ：先からこ�
 HOODAMP = 0.03   # フードの先が なびく大きさに、たす（高さのうち）
 TIPL = 0.35   # フードの先から、なびく はんい（メッシュの辺をたどった きょり）
 SCARF = {'fast': True}   # マフラー（体とはなれた かざり）が なびく
-PIVOT = {'breaker': {'armL': (-0.2, 0.02, 0.5)}}   # 腕の支点を、かたにする（手を支点にすると、ハンマーが手のまわりで まわるだけで、ふりおろしても下までとどかない）
+PIVOT = {'breaker': {'armL': (-0.2, 0.02, 0.5)}, 'basic': {'armL': (-0.36, 0.12, 0.52), 'armR': (0.3, 0.12, 0.52)}}   # 腕の支点を、かたにする（手を支点にすると、ハンマーが手のまわりで まわるだけで、ふりおろしても下までとどかない）
 SPREAD = {'ash': ['deco'], 'hana': ['deco']}
 SPREADZ = {'hana': 0.5}
 
@@ -108,6 +108,14 @@ class Skel:
                 grow |= nx
             for side, bone in ((-1, 'armL'), (1, 'armR')):
                 vs = np.unique(F[hand | grow]); vs = vs[s.vside[vs] == side]; W[vs] = 0; W[vs, ix[bone]] = 1
+        sl = lab == 'sleeve'
+        if sl.any():   # 腕（そで）：肩（体）から手首（手）へ、なめらかに むね → 腕 の重み（体と手の どちらに近いか）
+            from scipy.spatial import cKDTree
+            sv = np.unique(F[sl]); bv = np.setdiff1d(np.unique(F[(comp == big) & ~sl]), sv); hv3 = np.unique(F[hand])
+            db, _ = cKDTree(P[bv]).query(P[sv]); dh, _ = cKDTree(P[hv3]).query(P[sv]); t = smooth(0.15, 0.85, db/np.maximum(db+dh, 1e-9))
+            hx = P[hv3, 0].mean(); W[sv] = 0; W[sv, ix['chest']] = 1-t
+            for side, bone in ((-1, 'armL'), (1, 'armR')):
+                k = np.sign(P[sv, 0]-hx) == side; W[sv[k], ix[bone]] = t[k]
         for bn, pv in PIVOT.get(name, {}).items(): s.piv[bn] = np.array(pv, float)*H
         W /= np.maximum(W.sum(1, keepdims=True), 1e-9); s.W = W
         # くずれる（collapse）ときに、形をたもつ かたまり：手・足・ぽんぽん・体とはなれた かたまり（こぶし・ふくろ・ハンマー・かざり）。かたまりごとに、まん中の動きで いっしょに うごく
