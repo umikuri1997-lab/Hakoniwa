@@ -60,12 +60,12 @@ const EN={
   trapper:{xp:6,pw:5,name:'ワナクイ',hp:80,sp:.9,atk:12,hit:16,hitF:30,hitN:50,hitFS:15,hitNS:25,hitFN:75,hitFNS:38,col:'#2b3a1e',eye:'#c6ff6b',size:.95,trapper:1},/* 罠・見張り台を先にこわしにくる */
   boss:{xp:25,pw:20,rng:2.1,name:'オオカゲ',hp:600,sp:.84,atk:7,hit:14,hitF:30,hitN:40,hitFS:15,hitNS:20,hitFN:60,hitFNS:30,col:'#120a24',eye:'#ff3b6b',size:1.8,boss:1},
   ash:{xp:4,pw:3,name:'ハイカゲ',hp:60,sp:.9,atk:20,hit:12,hitF:45,hitN:35,hitFS:23,hitNS:20,hitFN:53,hitFNS:30,col:'#6d6a66',eye:'#ffb36b',size:.9,ash:1},/* かまど・ベンチなどを灰でよごして止める */
-  armor:{xp:9,pw:7,name:'ヨロイカゲ',hp:120,sp:.7,atk:25,hit:24,hitF:45,hitN:70,hitFS:25,hitNS:35,hitFN:100,hitFNS:50,col:'#4a4a5a',eye:'#9fe0ff',size:1.3,art:'rockc',armor:1},/* 矢は半分、火・どく・延焼は2倍（defense.js）。絵はイワカゲの絵をかりる（仮） */
-  shiny:{xp:10,pw:10,name:'ヒカリカゲ',hp:60,sp:1.4,atk:30,hit:0,hitF:0,hitN:0,hitFS:0,hitNS:0,hitFN:0,hitFNS:0,col:'#fff2b0',eye:'#ffffff',size:.8,art:'fast',glow:1,shiny:1},/* まれに来て、横切って帰る。絵はハヤカゲの絵に光をかさねる（仮） */
-  hana:{xp:4,pw:3,name:'ハナカゲ',hp:80,sp:.9,atk:25,hit:16,hitF:30,hitN:45,hitFS:18,hitNS:24,hitFN:70,hitFNS:35,col:'#6a3a5a',eye:'#ffc6e0',size:1,art:'basic',tint:'#ffb3d9'},/* 季節のコワイノ（defense.js、絵は色をかさねた仮の絵） */
-  hoteri:{xp:6,pw:5,name:'ホテリカゲ',hp:100,sp:.9,atk:25,hit:20,hitF:38,hitN:60,hitFS:23,hitNS:30,hitFN:90,hitFNS:45,col:'#5a2a1a',eye:'#ffb36b',size:1,art:'basic',tint:'#ff9a5a',fireRes:1},
-  ochiba:{xp:5,pw:4,name:'オチバカゲ',hp:60,sp:1.2,atk:20,hit:14,hitF:30,hitN:40,hitFS:15,hitNS:20,hitFN:60,hitFNS:30,col:'#5a3a1a',eye:'#ffd38a',size:.8,art:'fast',tint:'#d9a05a',nosl:1},
-  yuki:{xp:9,pw:7,name:'ユキカゲ',hp:160,sp:.6,atk:30,hit:24,hitF:45,hitN:70,hitFS:25,hitNS:35,hitFN:100,hitFNS:50,col:'#3a4a5a',eye:'#e0f4ff',size:1.3,art:'rockc',tint:'#dff1ff'},
+  armor:{xp:9,pw:7,name:'ヨロイカゲ',hp:120,sp:.7,atk:25,hit:24,hitF:45,hitN:70,hitFS:25,hitNS:35,hitFN:100,hitFNS:50,col:'#4a4a5a',eye:'#9fe0ff',size:1.3,armor:1},/* 矢は半分、火・どく・延焼は2倍（defense.js） */
+  shiny:{xp:10,pw:10,name:'ヒカリカゲ',hp:60,sp:1.4,atk:30,hit:0,hitF:0,hitN:0,hitFS:0,hitNS:0,hitFN:0,hitFNS:0,col:'#fff2b0',eye:'#ffffff',size:.8,glow:1,shiny:1},/* まれに来て、横切って帰る */
+  hana:{xp:4,pw:3,name:'ハナカゲ',hp:80,sp:.9,atk:25,hit:16,hitF:30,hitN:45,hitFS:18,hitNS:24,hitFN:70,hitFNS:35,col:'#6a3a5a',eye:'#ffc6e0',size:1},/* 季節のコワイノ（defense.js） */
+  hoteri:{xp:6,pw:5,name:'ホテリカゲ',hp:100,sp:.9,atk:25,hit:20,hitF:38,hitN:60,hitFS:23,hitNS:30,hitFN:90,hitFNS:45,col:'#5a2a1a',eye:'#ffb36b',size:1,fireRes:1},
+  ochiba:{xp:5,pw:4,name:'オチバカゲ',hp:60,sp:1.2,atk:20,hit:14,hitF:30,hitN:40,hitFS:15,hitNS:20,hitFN:60,hitFNS:30,col:'#5a3a1a',eye:'#ffd38a',size:.8,nosl:1},
+  yuki:{xp:9,pw:7,name:'ユキカゲ',hp:160,sp:.6,atk:30,hit:24,hitF:45,hitN:70,hitFS:25,hitNS:35,hitFN:100,hitFNS:50,col:'#3a4a5a',eye:'#e0f4ff',size:1.3},
   rockc:{xp:12,pw:8,name:'イワカゲ',hp:220,sp:.5,atk:30,hit:30,hitF:113,hitN:90,hitFS:60,hitNS:45,hitFN:135,hitFNS:68,col:'#5a4636',eye:'#ffcf6b',size:1.3},/* おそいけど、かたい */
   hino:{xp:35,pw:25,rng:2.3,name:'ヒノオオカゲ',hp:750,sp:.7,atk:6,hit:40,hitF:150,hitN:120,hitFS:75,hitNS:60,hitFN:180,hitFNS:90,col:'#3a0c08',eye:'#ffb02e',size:2.1,boss:1,dev:1},/* 火山から下りてきて、熱の装置をねらう */
   yama:{xp:40,pw:30,rng:2.4,name:'ヤマノオオカゲ',hp:750,sp:.75,atk:6,hit:20,hitF:75,hitN:60,hitFS:38,hitNS:30,hitFN:90,hitFNS:45,col:'#2a0904',eye:'#ff6a2e',size:2.4,boss:1,vol:1},/* 火山のふもとの最後の夜に、火の山からおりてきて、温泉の熱をうばう */

@@ -239,3 +239,88 @@ def carry(w, face):
     p = walk(w, face); p.update(sN=2.9, sF=2.9, bN=0.35, bF=0.35, yaw=p['yaw']*0.5, roll=p['roll']*0.5, hy=0.0)
     return p
 M('carry', 8, 9/(2*PI), carry)
+
+# ---- 会話の身ぶり（立ち絵・村の中の、話す子と聞く子） ----
+def talk(w, face):
+    """話す：手前の手を胸の前で小さく動かし、頭も少しゆれる"""
+    return breathe(dict(sN=0.9+0.35*S(w), bN=-0.35+0.15*S(w*2), tN=0.2*S(w), sF=0.25, bF=-0.1, hp=0.03*S(w*2), hr=0.04*S(w)), w, 0.6)
+M('talk', 8, 0.6, talk)
+def talkjoy(w, face):
+    """うれしく話す：両手を上げて、小さくはずむ"""
+    j = 1.2*max(0.0, S(w*2))
+    return dict(z=j, legz=j*0.6, sN=0.7, sF=0.7, bN=1.75+0.3*S(w*2), bF=1.75-0.3*S(w*2), hp=-0.1, hr=0.06*S(w), top=0.12*S(w*2), tail=0.25*S(w*2), wing=0.15*S(w*2))
+M('talkjoy', 8, 0.9, talkjoy)
+def talkshock(w, face):
+    """おどろく：両手を顔の前に上げて、体をそらす"""
+    return dict(sN=1.2, sF=1.2, bN=0.9, bF=0.9, lean=-0.13, hp=-0.12, hr=0.03*S(w*4), z=0.3*S(w*4), top=-0.1)
+M('talkshock', 8, 1.0, talkshock)
+def talkthink(w, face):
+    """考える：手前の手をあごに、奥の手はおなかの前。首をかしげる"""
+    return breathe(dict(sN=1.9, bN=-1.0, sF=0.65, bF=-0.65, hr=0.15+0.03*S(w), hp=-0.05, hy=0.08*S(w*0.5)), w, 0.5)
+M('talkthink', 8, 0.25, talkthink)
+def talksad(w, face):
+    """しょんぼり：両手を下で組んで、うつむく"""
+    return breathe(dict(sN=0.5, sF=0.5, bN=-0.7, bF=-0.7, hp=0.32, lean=0.07, z=-0.5, top=0.05), w, 0.5)
+M('talksad', 8, 0.25, talksad)
+def talktilt(w, face):
+    """首をかしげる：ほおに指をあてる"""
+    return breathe(dict(sN=1.85, bN=-0.85, sF=0.15, hr=0.28+0.03*S(w), hp=-0.04), w, 0.5)
+M('talktilt', 8, 0.3, talktilt)
+def talkmouth(w, face):
+    """くすくす：手を口にあてて、かたをゆらす"""
+    k = abs(S(w*3))
+    return dict(sN=1.95, bN=-1.05, sF=0.65, bF=-0.65, z=0.5*k, legz=0.2*k, hp=0.1, hr=0.06*S(w*3), top=0.08*S(w*3))
+M('talkmouth', 8, 0.5, talkmouth)
+def talkchest(w, face):
+    """胸に手をあてる：両手を胸に、少しうつむく"""
+    return breathe(dict(sN=1.45, sF=1.45, bN=-1.0, bF=-1.0, hp=0.14, hr=0.05*S(w), lean=0.03), w, 0.7)
+M('talkchest', 8, 0.3, talkchest)
+def talkshy(w, face):
+    """もじもじ：手を下で組んで、体を左右にひねる"""
+    return dict(sN=0.65, sF=0.65, bN=-0.75, bF=-0.75, yaw=0.16*S(w), hp=0.18, hr=0.08*S(w), legM=0.15*S(w), legP=-0.15*S(w), z=0.3*abs(S(w)), top=0.08*S(w))
+M('talkshy', 8, 0.45, talkshy)
+def talkproud(w, face):
+    """えっへん：手をこしにあてて、むねをはる"""
+    return breathe(dict(sN=-0.15, sF=-0.15, bN=0.75, bF=0.75, tN=0.4, tF=0.4, lean=-0.1, hp=-0.16, z=0.4*max(0, S(w))), w, 0.5)
+M('talkproud', 8, 0.4, talkproud)
+def lnod(w, face):
+    """聞いて、うなずく"""
+    return breathe(dict(sN=0.3, sF=0.3, bN=-0.3, bF=-0.3, hp=0.2*max(0, S(w)), z=-0.3*max(0, S(w))), w, 0.4)
+M('lnod', 8, 0.8, lnod)
+
+# ---- わたす・うけとる ----
+def offer2(w, face):
+    """両手を前へさしだす"""
+    return breathe(dict(sN=1.35, sF=1.35, bN=-0.55, bF=-0.55, lean=0.09, hp=0.06), w, 0.5)
+M('offer2', 8, 0.3, offer2)
+def receive(w, face):
+    """両手でうけとって、むねの前でだく"""
+    return breathe(dict(sN=1.55, sF=1.55, bN=-0.95, bF=-0.95, hp=0.1, lean=0.04, hr=0.06*S(w)), w, 0.6)
+M('receive', 8, 0.4, receive)
+
+# ---- 花かんむり ----
+def weave(w, face):
+    """すわって、ひざの上で花をあむ（花かんむりの絵は、ゲームで手のあいだに）"""
+    p = sit({}, 6.0, 1.2)
+    p.update(sN=0.95+0.15*S(w*2), sF=0.95-0.15*S(w*2), bN=-0.7, bF=-0.7, tN=0.35*S(w*2), tF=-0.35*S(w*2), hp=0.28, lean=0.08, hr=0.05*S(w))
+    return breathe(p, w, 0.4)
+M('weave', 8, 0.8, weave)
+def crownup(w, face):
+    """できた花かんむりを、両手で胸の前にもって「見て」と見せ、はずむ（頭巾が大きく、上げた手はかくれるので、胸の前）"""
+    j = 0.9*max(0.0, S(w))
+    return dict(sN=1.5, sF=1.5, bN=-0.6, bF=-0.6, hp=-0.12, lean=-0.04, z=j, legz=j*0.5, top=0.1*S(w), tail=0.2*S(w))
+M('crownup', 8, 0.6, crownup)
+def crownput(w, face):
+    """前の子の頭に、両手でそっとのせる"""
+    return breathe(dict(sN=1.95+0.06*S(w), sF=1.95+0.06*S(w), bN=-0.45, bF=-0.45, lean=0.12, hp=0.12), w, 0.4)
+M('crownput', 8, 0.4, crownput)
+def crownbow(w, face):
+    """頭をさげて、のせてもらう"""
+    return breathe(dict(sN=0.55, sF=0.55, bN=-0.7, bF=-0.7, hp=0.4, lean=0.16, z=-0.6), w, 0.4)
+M('crownbow', 8, 0.3, crownbow)
+def dance(w, face):
+    """おどる：左右にステップして、両手をふる"""
+    j = 1.4*abs(S(w))
+    return dict(x=1.5*S(w), z=j, legz=j*0.7, roll=0.12*S(w), sN=2.0+0.45*S(w), sF=2.0-0.45*S(w), bN=0.6, bF=0.6, liftM=2.0*max(0, S(w)), liftP=2.0*max(0, -S(w)),
+                hr=0.1*S(w), top=0.2*S(w), tail=0.3*S(w), wing=0.25*S(w*2))
+M('dance', 8, 0.8, dance)

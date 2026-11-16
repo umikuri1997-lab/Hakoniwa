@@ -47,7 +47,7 @@ function sacredEndDirection(restore=true){
 function sacredScenePose(r,anim,ms=2400,extra={}){if(r)sacredSetPose(r,{anim,at:performance.now(),duration:ms,...extra});}
 function sacredBody(r,now){
   const p=sacredPose(r);if(!p)return null;const t=Math.max(0,(now-(p.at??now))/1000),q=Math.min(1,t/((p.duration||2400)/1000));
-  const f=r.face||1,dx=p.anim==='storyBump'?f*3*Math.sin(Math.PI*q):p.anim==='stepBack'?-f*7*sacredEase(Math.min(1,t/.6)):p.anim==='grabSleeve'?f*3*sacredEase(Math.min(1,t/.45)):p.anim==='tremble'?Math.round(Math.sin(now/28)*1.2):0,dy=/^kneel/.test(p.anim||'')?3:0;
+  const f=r.face||1,dx=p.anim==='storyBump'?f*3*Math.sin(Math.PI*q):p.anim==='stepBack'?-f*7*sacredEase(Math.min(1,t/.6)):p.anim==='grabSleeve'?f*3*sacredEase(Math.min(1,t/.45)):p.anim==='offer2'||p.anim==='crownput'?f*4*sacredEase(Math.min(1,t/.5)):p.anim==='tremble'?Math.round(Math.sin(now/28)*1.2):0,dy=/^kneel/.test(p.anim||'')?3:0;
   return {...p,p:q,t,dx,dy};
 }
 const SACRED_BEAT_MS={soil:1800,touch:1700,stone:2400,bump:2600,cover:1900,water:2600,runoff:2400,wind:2200,bud:3200,leaf:3600,grow:5000,omoishard:5200,reply:2200,hug:600,glow:2600,group:1300,sit:1500,quiet:1400,face:1000,lookup:1500,gaze:3800};
