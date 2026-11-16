@@ -70,7 +70,7 @@ function volBeat(c){
     if(Math.abs(h.y-s.y)<.6&&Math.abs(h.x-s.x)<1.6)go();else volWalk(s,h.x,h.y,{side:true},go);break;}
   case 'lanterns':{const cast=[h,s].filter(Boolean);if(!cast.length)break;const mx=cast.reduce((a,r)=>a+r.x,0)/cast.length,my=cast.reduce((a,r)=>a+r.y,0)/cast.length;
     let pts=festOn()?festPoles().map(([x,y])=>[x+.5,y+.5]).sort((p,q)=>Math.hypot(p[0]-mx,p[1]-my)-Math.hypot(q[0]-mx,q[1]-my)).slice(0,6):[];if(pts.length<4)pts=[0,1,2,3,4,5].map(i=>[mx+Math.cos(Math.PI*(1.1+i*.16))*3.2,my+Math.sin(Math.PI*(1.1+i*.16))*2.2]);
-    volFx('lanterns',600000,{pts,step:450});volShot(pts,cast,2.2,1.3);for(let i=0;i<pts.length;i++)villageTimeout(()=>sfx('mtap'),i*450);volHold(pts.length*450+500);break;}
+    volFx('lanterns',600000,{pts,step:450});volShot(pts,cast,2.2,1.3);for(let i=0;i<pts.length;i++)villageTimeout(()=>sfx('twood'),i*450);volHold(pts.length*450+500);break;}
   case 'eggsUp':{if(!h||!s)break;volFace(h,s.x);volFace(s,h.x);for(const r of[h,s]){volPose(r,'storyOffer',2400,{});volFx('egg',2400,{actor:r,up:true});}volShot([],[h,s],2.6,1);volHold(1600);break;}
   case 'cheer':{stageMotion('cheer');for(const r of[h,s])if(r)SACRED_POSES.delete(r);volHold(900);break;}
   case 'ashiyu':{const[sx,sy]=HSPC.b,b1=volNear(['bench','takebench'],sx,sy,10),b2=volNear(['bench','takebench'],sx,sy,10,b1),done=volTask(d,30000);let n=0;const one=()=>{if(++n===2)done(900);};volShot([[sx,sy]],[h,s]);
