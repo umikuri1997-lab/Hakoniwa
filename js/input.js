@@ -75,7 +75,7 @@ function sacredTreeTap(j){/* 御神木をタップ：かけらの光をとどけ
   if((S.setSh||0)>=3){const reason=grassReunionBlockReason();if(reason)return toast(reason);scheduleGrassReunion();return;}
   return openSheet('clear');
 }
-function onTap(sx,sy){if(GIFT_ACTIVE&&camAnim&&camAnim.done)return;/* 霧が晴れる・鉱脈が目をさます演出のカメラ中は、タップをうけない */DLGTAP=performance.now();/* タップで始める会話は、またずにすぐ出す */if(mode==='look'&&typeof tapFx==='function')tapFx(sx,sy);/* みるでタップしたところに、葉（火山は火の粉）が舞う */
+function onTap(sx,sy){if(GIFT_ACTIVE&&camAnim&&camAnim.done)return;if(typeof starTap==='function'&&starTap())return;/* 流れ星が流れているあいだのタップは、おねがい *//* 霧が晴れる・鉱脈が目をさます演出のカメラ中は、タップをうけない */DLGTAP=performance.now();/* タップで始める会話は、またずにすぐ出す */if(mode==='look'&&typeof tapFx==='function')tapFx(sx,sy);/* みるでタップしたところに、葉（火山は火の粉）が舞う */
   let w=toWorld(sx,sy);const w0=w,tx=Math.floor(w.x/TS);{const tl=tapLv(w.x,w.y);if(tl)w={x:w.x,y:w.y+tl*LIFT}}const ty=Math.floor(w.y/TS);/* 高い段のマス・物・せいれい・コワイノは上にずらして描くので、タップの場所も高さの分だけ下へもどす */
   if(AREAARM){AREAARM=false;return areaBlast(w.x/TS,w.y/TS)}
   if(LEAFARM){const tl=tapLv(w.x,w.y),wy=w.y+(tl?tl*LIFT:0);LEAFDRAG=[];leafAdd(Math.floor(wy/TS)*W+Math.floor(w.x/TS));const c=LEAFDRAG;LEAFDRAG=null;return leafPlace(c)}/* 葉のかべ：タップは1マス *//* こもれびのまもり：タップした場所のまわり */
@@ -124,10 +124,10 @@ function onTap(sx,sy){if(GIFT_ACTIVE&&camAnim&&camAnim.done)return;/* 霧が晴�
     if(o&&rangeOf(o,j))SHOWR={j,o,until:performance.now()+4000};
     if(o==='farm')return openSheet('farm',j);
     if(BEDSET.has(o))return openSheet('bed',j);
-    if(o==='oven'||o==='cooktable')return openSheet('oven',j);
+    if(COOKST.has(o))return openSheet('oven',j);/* たき火も料理の家具 */
     if(o==='plot')return toast('耕す前の畑：せいれいが耕しにくる');
     if(o==='sprout')return toast(BL[S.dyn[j].plant].name+'を植える場所：せいれいが植えにくる');
-    if(o==='site'){const d=S.dyn[j],rs=S.res.filter(q=>!q.hidden);toast(BL[d.build].name+'を建設中：'+Math.floor(d.p/d.need*100)+'%');if(rs.length&&!rs.some(q=>{const G=bfs(q.x|0,q.y|0);return G.dist.some((v,k)=>v>=0&&adjOf(k,q2=>anc(q2)===j)>=0)}))toast('建てる所へ行けません','warn');return}/* 行けないときは、その理由を出す */
+    if(o==='site'){const d=S.dyn[j],rs=S.res.filter(q=>!q.hidden);toast(BL[d.build].name+'を建設中：'+Math.floor(d.p/d.need*100)+'%'+(gotList(d).length&&(hasNeed(d)||d.p<=0)?'　'+gotTxt(d).join(' '):''));/* 素材を運んでいるあいだは、運んだ数も */if(rs.length&&!rs.some(q=>{const G=bfs(q.x|0,q.y|0);return G.dist.some((v,k)=>v>=0&&adjOf(k,q2=>anc(q2)===j)>=0)}))toast('建てる所へ行けません','warn');return}/* 行けないときは、その理由を出す */
     if(o==='berry'||o==='fruit'){const g=(S.dyn[j]||{g:0}).g;return toast(BL[o].name+'：'+(g>=100?'実がなっている':'実がなるまで あと'+Math.max(1,Math.ceil((100-g)/25))+'日'))}/* タップで見るだけ（セーブの中身はかえない） */
     if(HOME_WALLS.has(o)&&boxTypeAt(j))return openSheet('box',j);/* 壁にかけた、しまう家具 */
     const fw=o&&(FENCE_IDS.has(o)||HOME_WALLS.has(o)||HOME_DOORS.has(o));/* 柵・塀・家の壁・ドア・門は、短い知らせのまま */

@@ -1,6 +1,6 @@
 # 小さな生き物（ちょう・小鳥・かえる。js/critters.js）を、3Dから写したドット絵にする（スキル model3d-pixel）。
 # 使い方：python3 tools/art/critter3d/critter3d.py <出力フォルダ> [--chips]
-#   見え方は家具と同じ（見おろし42度・奥行きだけ遠近、furn3d.shot）。1マス64ドットで、ちぢめずに写す。どれも右（東）を向く。左はゲームで反転。
+#   見え方は家具と同じ（見おろし42度・奥行きだけ遠近、furn3d.shot）。1マス32ドット（PX）で写して2倍にのばす（あらいドット。持ち主がきめた）。チップは g64。どれも右（東）を向く。左はゲームで反転。
 #   チップの ax・ay は、生き物の足もと（地面の点、3Dの (0,0,0)）からのずれ（g64のドット）。ゲームは足もとの点から描く（drawCritter）。
 # 設計図（単位はマス。大きさは、前のコードの絵（はば0.5マスくらい）に合わせた）
 #   ちょう：羽だけ（からだはつけない。持ち主がきめた）。蝶の羽（前羽は外のふちがまるい三角、後ろ羽はまるいひだ）を、まん中の線を軸に左右に。
@@ -56,7 +56,7 @@ def fly(ci,fr):
             for W in(FORE,HIND):
                 sc.part();poly(sc,[R(u,s*v*math.cos(th),z0+FK*v*math.sin(th)) for u,v in W],a)
         sc.decal(None);sc.material(None)
-    return types.SimpleNamespace(PARTS=PARTS,EXTRA=EXTRA,ELEV=ELEV)
+    return types.SimpleNamespace(PARTS=PARTS,EXTRA=EXTRA,ELEV=ELEV,PX=32,LW=1)
 
 # ---------- 小鳥 ----------
 BH=0.28;BROT=210   # モデルの高さ・まわす角度（モデルは右うしろへ30度ななめなので、まっすぐ右を向くように）
@@ -93,7 +93,7 @@ def bird(fly_=None):
         sc.material('soft1');sc.decal(wc)
         for s in(1,-1):sc.part();poly(sc,[(sx+u,s*(0.03+v*math.cos(th)),sz+v*math.sin(th)) for u,v in W],BWG)
         sc.decal(None);sc.material(None)
-    return types.SimpleNamespace(PARTS=PARTS,EXTRA=EXTRA,ELEV=ELEV)
+    return types.SimpleNamespace(PARTS=PARTS,EXTRA=EXTRA,ELEV=ELEV,PX=32,LW=1)
 
 # ---------- かえる ----------
 GK=1.7   # かえるの大きさ（下の寸法にかける）
@@ -141,13 +141,13 @@ def frog(fr):
         for i in range(len(xs)-1):
             for k in range(n):sc.quad(Q(i,k),Q(i+1,k),Q(i+1,(k+1)%n),Q(i,(k+1)%n),FG)
         sc.decal(None);sc.smooth(False);sc.material(None);sc.group(None)
-    return types.SimpleNamespace(PARTS=PARTS,EXTRA=EXTRA,ELEV=ELEV)
+    return types.SimpleNamespace(PARTS=PARTS,EXTRA=EXTRA,ELEV=ELEV,PX=32,LW=1)
 
 def ITEMS():
     L=[]
     for ci in range(4):
         for fr in(0,1):L.append(('critfly:%d#%d'%(ci,fr),fly(ci,fr)))
-    L+= [('critbird#0',bird()),('critbird#f0',bird(0)),('critbird#f1',bird(1)),('critfrog#0',frog(0)),('critfrog#1',frog(1))]
+    L+= [('critbird#0',bird()),('critbird#f0',bird(0)),('critbird#f1',bird(1))]   # かえるは、持ち主のモデルから写した critkaeru（crit_build.py）
     return L
 
 def shot(M):
@@ -181,7 +181,7 @@ def run(out,chips=False):
         im.save(os.path.join(out,fn+'.png'));im.resize((im.width*10,im.height*10),Image.NEAREST).save(os.path.join(out,fn+'_x10.png'))
         print('%s %dx%d ax %d ay %d'%(nm,im.width,im.height,ax,ay))
     # 前の絵とならべる（4倍。上の列が前の絵、下の列が3Dの絵。足もとの線をそろえる）
-    olds=[old('fly',ci,fr) for ci in range(4) for fr in(0,1)]+[old('bird',0,0),old('bird',0,1),old('bird',0,1),old('frog'),old('frog')]
+    olds=[old('fly',ci,fr) for ci in range(4) for fr in(0,1)]+[old('bird',0,0),old('bird',0,1),old('bird',0,1)]
     news=list(CH.values());cw=max(i.width for i,_,_ in olds+news)+12;top=-min(a for _,_,a in olds+news)+6;HH=top+12
     can=Image.new('RGBA',(cw*len(news),HH*2),(150,190,120,255))
     for r,row in enumerate((olds,news)):

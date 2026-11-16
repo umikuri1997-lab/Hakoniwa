@@ -279,14 +279,29 @@ function cliffPart(key,K){if(CPART.s!==S){CPART.clear();atlasClear();CPART.s=S}/
   finally{TOPF=null;REV=R0;CLV=cv;tmpDone()}
   P.t=performance.now();CPART.set(ck,P);return P}
 function cliffPreload(){/* ステージを開くとき：このマップで使う段差の部品を、まとめて作っておく（はじめて見る所で止まらないように） */const RW=cliffRuns(),keys=new Set();for(const[y,L]of RW)for(const R of L)for(let k=R.x0;k<=R.x1;k++)keys.add(cliffKey(k,y,R.lv));for(const K of [2,1])for(const k of keys)cliffPart(k,K)}
-function cliffRow(y,R,top){/* 1つのかたまり（行・段）の段差を描く：かげ・がけ（部品A）→ 上の面の地面（地面の下絵をずらす）→ ふち（部品B）。top：うしろが低い所の、上はしだけ（うしろの物の足もとをかくす） */
-  const lv=R.lv,dy=(lv-1)*LIFT,oy=y*TS-LIFT-6-dy,keys=[],kz=dpr*cam.z,SX=v=>cam.x+Math.round((v-cam.x)*kz)/kz,SY=v=>cam.y+Math.round((v-cam.y)*kz)/kz,DI=(im,sx,sy,sw,sh,x,y2,w,h)=>{const a=SX(x),b=SY(y2);ctx.drawImage(im,sx,sy,sw,sh,a,b,SX(x+w)-a,SY(y2+h)-b)};/* 部品は、画面のドットのさかいに合わせておく（マスのさかいめに、うすい線やすきまが出ないように） */for(let k=R.x0;k<=R.x1;k++)keys.push(cliffKey(k,y,lv));
+function cliffRow(y,R,top,B){/* 1つのかたまり（行・段）の段差を描く（B：遠くの絵に描くときの {g:描く先,kz:細かさ,ox,oy:ドットをそろえる元}）：かげ・がけ（部品A）→ 上の面の地面（地面の下絵をずらす）→ ふち（部品B）。top：うしろが低い所の、上はしだけ（うしろの物の足もとをかくす） */
+  const g=B?B.g:ctx,lod=B?true:GLOD,ox=B?B.ox:cam.x,oz=B?B.oy:cam.y,lv=R.lv,dy=(lv-1)*LIFT,oy=y*TS-LIFT-6-dy,keys=[],kz=B?B.kz:dpr*cam.z,SX=v=>ox+Math.round((v-ox)*kz)/kz,SY=v=>oz+Math.round((v-oz)*kz)/kz,DI=(im,sx,sy,sw,sh,x,y2,w,h)=>{const a=SX(x),b=SY(y2);g.drawImage(im,sx,sy,sw,sh,a,b,SX(x+w)-a,SY(y2+h)-b)};/* 部品は、画面のドットのさかいに合わせておく（マスのさかいめに、うすい線やすきまが出ないように） */for(let k=R.x0;k<=R.x1;k++)keys.push(cliffKey(k,y,lv));
   const hh=top?LIFT+6:CPH,ok=k=>!top||!(y>0&&hiAt((y-1)*W+k)>=lv);
-  if(!top){const m=i=>(keys[i]&2)&&!(keys[i]&256);let i=0;while(i<keys.length){if(!m(i)){i++;continue}let e=i;while(e+1<keys.length&&m(e+1))e++;const px=(R.x0+i)*TS,w=(e-i+1)*TS,py=y*TS;ctx.save();ctx.translate(0,2*(py+TS)-dy);ctx.scale(1,-1);gblit(ctx,px-6,py+TS,w+12,8,px-6,py+TS,w+12,8,GLOD);ctx.restore();i=e+1}}/* がけの下はしのすきまには、すぐ下の低い地面（下絵を上下に鏡うつし。つづいた所はまとめて1回） */
+  if(!top){const m=i=>(keys[i]&2)&&!(keys[i]&256);let i=0;while(i<keys.length){if(!m(i)){i++;continue}let e=i;while(e+1<keys.length&&m(e+1))e++;const px=(R.x0+i)*TS,w=(e-i+1)*TS,py=y*TS;g.save();g.translate(0,2*(py+TS)-dy);g.scale(1,-1);gblit(g,px-6,py+TS,w+12,8,px-6,py+TS,w+12,8,lod);g.restore();i=e+1}}/* がけの下はしのすきまには、すぐ下の低い地面（下絵を上下に鏡うつし。つづいた所はまとめて1回） */
   const PK=kz>1.5?2:1,part=(L)=>{for(let i=0;i<keys.length;i++){const kk=keys[i],k=R.x0+i;if(!(kk&15)&&L==='a')continue;if(!ok(k))continue;const q=cliffPart(kk,PK)[L];if(!q)continue;const a=Math.max(q.x,(kk&4)?0:8),b=Math.min(q.x+q.w,(kk&8)?TS+16:TS+8),y2=Math.min(q.y+q.h,hh);if(b<=a||y2<=q.y)continue;DI(q.c,q.sx+(a-q.x)*PK,q.sy,(b-a)*PK,(y2-q.y)*PK,k*TS-8+a,oy+q.y,b-a,y2-q.y)}};
   part('a');
-  {let k=R.x0;while(k<=R.x1){if(!ok(k)){k++;continue}let e=k;while(e+1<=R.x1&&ok(e+1))e++;const w=(e-k+1)*TS;{const a=SX(k*TS),b=SY(y*TS-lv*LIFT);gblit(ctx,k*TS,y*TS,w,top?LIFT:TS,a,b,SX(k*TS+w)-a,SY(y*TS-lv*LIFT+(top?LIFT:TS))-b,GLOD)}{ctx.fillStyle='rgba(255,250,225,.10)';const a=SX(k*TS),b=SY(y*TS-lv*LIFT);ctx.fillRect(a,b,SX(k*TS+w)-a,SY(y*TS-lv*LIFT+(top?LIFT:TS))-b)}k=e+1}}/* 上の面の地面：地面の下絵を、そのまま上へずらす。高い所は少し明るく */
+  {let k=R.x0;while(k<=R.x1){if(!ok(k)){k++;continue}let e=k;while(e+1<=R.x1&&ok(e+1))e++;const w=(e-k+1)*TS;{const a=SX(k*TS),b=SY(y*TS-lv*LIFT);gblit(g,k*TS,y*TS,w,top?LIFT:TS,a,b,SX(k*TS+w)-a,SY(y*TS-lv*LIFT+(top?LIFT:TS))-b,lod)}{g.fillStyle='rgba(255,250,225,.10)';const a=SX(k*TS),b=SY(y*TS-lv*LIFT);g.fillRect(a,b,SX(k*TS+w)-a,SY(y*TS-lv*LIFT+(top?LIFT:TS))-b)}k=e+1}}/* 上の面の地面：地面の下絵を、そのまま上へずらす。高い所は少し明るく */
   part('b')}
+const FARZ=.5,FARK=.25,FAR={s:null,c:new Map(),bt:0};/* 遠くの絵（LOD）：拡大 FARZ より小さいときは、段差を、16×16マスの区画ごとに作っておいた絵（1マス8ドット、1こ約64KB・マップぜんぶで約3MB）で1まいずつ描く。段差の部品を毎コマ描かない。そのかわり、遠くの画面でだけ、段差と物の重なり順がふだんとちがう */
+function farClear(){for(const f of FAR.c.values())if(f.c)f.c.width=f.c.height=0;FAR.c.clear();FAR.s=S}
+function farDep(cx,cy){/* 遠くの区画が使う地面の区画（まわり1こずつ）の、いちばん新しい作りなおしの番号 */let v=0;for(let b=cy-1;b<=cy+1;b++)for(let a=cx-1;a<=cx+1;a++){const q=GRD.c.get(b*64+a);if(q&&q.v>v)v=q.v}return v}
+function farBuild(cx,cy){/* 遠くの区画 (cx,cy) を作る：その区画にかかる段差を、ふだんと同じ順（行ごと・段ごと）で、すきとおった絵に描く */const t0=performance.now();if(FAR.s!==S)farClear();
+  for(let b=cy-1;b<=cy+1;b++)for(let a=cx-1;a<=cx+1;a++){if(a<0||b<0||a>(W-1)>>4||b>(H-1)>>4)continue;const q=gq(a,b);if(!q.l)gbuild(a,b,q)}/* 上の面は地面の下絵から写すので、まわりの地面の区画がなければ先に作る（古いだけなら、作りなおされたときに、この区画も作りなおす） */
+  const X0=cx*GCS,Y0=cy*GCS,X1=Math.min(W,X0+GCS)-1,Y1=Math.min(H,Y0+GCS)-1,w=Math.ceil((X1-X0+1)*TS*FARK),h=Math.ceil((Y1-Y0+1)*TS*FARK);let f=FAR.c.get(cy*64+cx);if(!f){f={c:document.createElement('canvas')};FAR.c.set(cy*64+cx,f)}
+  const c=f.c;if(c.width!==w||c.height!==h){c.width=w;c.height=h}const g=c.getContext('2d');g.setTransform(1,0,0,1,0,0);g.clearRect(0,0,w,h);g.imageSmoothingEnabled=true;g.save();g.setTransform(FARK,0,0,FARK,-X0*TS*FARK,-Y0*TS*FARK);g.beginPath();g.rect(X0*TS,Y0*TS,(X1-X0+1)*TS,(Y1-Y0+1)*TS);g.clip();
+  const RW=cliffRuns(),B={g,kz:FARK,ox:X0*TS,oy:Y0*TS},L=[];for(let y=Math.max(0,Y0-2);y<=Math.min(H-1,Y1+4);y++){const R0=RW.get(y);if(!R0)continue;const vs=[];for(const R of R0)if(R.x1>=X0-1&&R.x0<=X1+1)vs.push({x0:Math.max(R.x0,X0-1),x1:Math.min(R.x1,X1+1),lv:R.lv});if(!vs.length)continue;L.push([y-1+.0005,()=>{for(const R of vs)cliffRow(y,R,false,B)}],[y+.001,()=>{for(const R of vs)cliffRow(y,R,true,B)}])}/* render の段差と同じ順 */
+  L.sort((a,b)=>a[0]-b[0]);try{for(const[,fn]of L)fn()}finally{g.restore()}
+  f.rw=RW;f.hs=farHs(cx,cy);f.v=farDep(cx,cy);FAR.bt+=performance.now()-t0;return f}
+function farHs(cx,cy){/* 遠くの区画にかかるマスの高さ（区画のまわりもふくむ）を、1つの文字にまとめる */const X0=cx*GCS,Y0=cy*GCS;let t='';for(let y=Math.max(0,Y0-2);y<=Math.min(H-1,Y0+GCS+3);y++)for(let x=Math.max(0,X0-2);x<=Math.min(W-1,X0+GCS+1);x++)t+=hiAt(y*W+x);return t}
+function farOK(cx,cy){const f=FAR.s===S&&FAR.c.get(cy*64+cx);if(!f||f.v!==farDep(cx,cy))return false;const RW=cliffRuns();if(f.rw!==RW){if(f.hs!==farHs(cx,cy))return false;f.rw=RW}return true}/* 作ってあって、段差・地面が、作ったときのままか（どこかの段差がかわっても、この区画の高さが同じなら、そのまま使う） */
+function farDraw(x0,y0,x1,y1){/* 見えている遠くの区画をならべる。作るのは1コマ GBUD ミリ秒まで（少なくとも1こ）。まだできていない区画があれば false（そのコマは、ふだんの描き方） */if(FAR.s!==S)farClear();FAR.bt=0;const k=dpr*cam.z,SX=v=>cam.x+Math.round((v-cam.x)*k)/k,SY=v=>cam.y+Math.round((v-cam.y)*k)/k,cx0=Math.max(0,x0>>4),cy0=Math.max(0,y0>>4),cx1=Math.min((W-1)>>4,x1>>4),cy1=Math.min((H-1)>>4,(y1+3)>>4),L=[];let built=0;
+  for(let cy=cy0;cy<=cy1;cy++)for(let cx=cx0;cx<=cx1;cx++){if(!farOK(cx,cy)){if(built&&FAR.bt>=GBUD)return false;farBuild(cx,cy);built++}L.push([cx,cy])}
+  for(const[cx,cy]of L){const f=FAR.c.get(cy*64+cx),ox=cx*GPX,oy=cy*GPX,w=Math.min(GPX,W*TS-ox),h=Math.min(GPX,H*TS-oy),a=SX(ox),b=SY(oy);ctx.drawImage(f.c,a,b,SX(ox+w)-a,SY(oy+h)-b)}return true}
 const natBarY=j=>((j/W)|0)*TS-(S.obj[j]==='rock'||VEINS[S.obj[j]]?7:30)-hiAt(j)*LIFT;/* 木・岩の上の、のこりのバーの上はし */
 function drawArrowTags(x0,y0,x1,y1){/* 見張り台の上の、木の矢の本数（夜の暗さより上にかく） */
   for(const j of TOWERS){if(S.obj[j]!=='watch')continue;const tx=(j%W)*TS,ty=((j/W)|0)*TS-hiAt(j+W)*LIFT;if(j%W<x0-2||j%W>x1+1||((j/W)|0)<y0-2||((j/W)|0)>y1+3)continue;/* 見張り台の上の、木の矢の本数（せいれいが立つ所より上） */
@@ -307,6 +322,7 @@ function render(now){RFN++;
   waterShimmer(now,x0,y0,x1,y1);drawFords(x0,y0,x1,y1);drawRugsLive(x0,y0,x1,y1);
   drawSacredRoot(now);drawFieldStory(now);if(typeof drawTreasure==='function')drawTreasure(now);
   for(const[j,t0]of pops){const a=1-(now-t0)/350;if(a<=0){pops.delete(j);continue}ctx.fillStyle='rgba(255,255,240,'+a*.6+')';const s=4*(1-a);rr(ctx,(j%W)*TS-s,((j/W)|0)*TS-s,TS+s*2,TS+s*2,6)}
+  for(const o of S.orders||[])if(o.cs!=null&&o.got){const x=o.cs%W,y=(o.cs/W)|0;if(x>=x0&&x<=x1&&y>=y0&&y<=y1)drawGotPile(ctx,o,x*TS+38,y*TS+29-hiAt(o.cs)*LIFT)}/* 依頼の作る場所：運んだ素材の山（作るせいれいの右どなり） */
   for(const d of S.drops||[]){const dz=hiAt(d.y*W+d.x)*LIFT,cx=d.x*TS+16,cy=d.y*TS+19-dz,tw=Math.sin(now/260+d.x*1.7)*.5+.5;
     if(d.id==='mat:eda'||d.id==='mat:can'){const ch=window.CHIPS&&CHIPS['drop:'+d.id.slice(4)];if(ch&&drawChip(ctx,ch,d.id,d.x*TS,d.y*TS-dz,0))continue;ctx.fillStyle='rgba(40,25,10,.18)';ctx.beginPath();ctx.ellipse(cx,cy+8,7,2.2,0,0,7);ctx.fill();drawMatIc(ctx,d.id.slice(4),cx,cy+2,18);continue}/* 枝・空き缶の落とし物 */
     if(d.id==='hai'){/* ハイカゲの灰：灰色の小さな山（仮の絵） */ctx.fillStyle='rgba(40,25,10,.18)';ctx.beginPath();ctx.ellipse(cx,cy+8,9,2.6,0,0,7);ctx.fill();ctx.fillStyle='#9a948e';ctx.beginPath();ctx.ellipse(cx,cy+4,9,5,0,Math.PI,0);ctx.fill();ctx.fillStyle='#bdb7b0';ctx.beginPath();ctx.ellipse(cx-2,cy+2,5,3,0,Math.PI,0);ctx.fill();ctx.fillStyle='rgba(255,170,90,'+(.35+tw*.35)+')';ctx.fillRect(cx+2,cy+1,2,2);continue}
@@ -346,7 +362,7 @@ function render(now){RFN++;
   const D=[];BUBQ=[];const bubs=BUBQ;
   const add=(k,t,box,draw,own)=>D.push({k,t,box,draw,own});
   for(const r of S.res)if(vis(r)){const px=r.x*TS,fy=r.y*TS,onB=r.act&&r.act.type==='rest'&&r.act.stage==='do'&&BENCHES.has(S.obj[r.act.obj]),onAl=STATUE>=0&&(r.y|0)*W+(r.x|0)===STATUE+W;/* ベンチにすわっている子は、ベンチの背もたれより手前（縦のベンチは2マスめより手前）。神殿の台座の上にいる子は、台座より手前 */const rj=(r.y|0)*W+(r.x|0),inJ=BEDSET.has(typeAt(rj))?anc(rj):r.act&&r.act.stage==='do'?(r.act.type==='sleep'&&BEDSET.has(S.obj[r.act.obj])?r.act.obj:r.act.type==='bathe'&&r.act.tub!=null?r.act.tub:-1):-1,inO=inJ>=0?S.obj[anc(inJ)]:null;/* ベッドの上にいる子（寝る子も、歩いている子も）・バスタブに入る子は、その家具より手前 */const inDr=HOME_DOORS.has(typeAt((r.y|0)*W+(r.x|0)))||GATE_IDS.has(typeAt((r.y|0)*W+(r.x|0)))||SEATS.includes(typeAt((r.y|0)*W+(r.x|0)));/* いすにすわる子も、いすより手前 *//* ドアのマスを通る子は、ドアより手前 */add(r.act&&r.act.type==='watchpost'&&r.act.stage==='do'&&S.obj[r.act.obj]==='watch'?objectDepth('watch',r.act.obj)+.02:toyR(r)?toyPose(r,now).z:inO&&BL[inO]?objectDepth(inO,anc(inJ))+.02:onB?((r.act.obj/W)|0)+(rotAt(r.act.obj)%2===1?2.05:1.05):onAl?((STATUE/W)|0)+2.03:inDr?(r.y|0)+1.02:sacredEffect('embrace')?.actor===r?S.nushi.y+.21:rDepth(r),2,[px-22,fy-64,px+22,fy+13],()=>liftDraw(uLift(r),()=>drawRes(r,now)),(r.y|0)*W+(r.x|0))}
-  for(const c of CRIT)if(vis(c)){const px=c.x*TS,fy=c.y*TS;add(c.k==='fly'?c.y+.6:c.y,2,[px-13,fy-34,px+13,fy+4],()=>liftDraw(uLift(c),()=>drawCritter(ctx,c,now)),(c.y|0)*W+(c.x|0))}/* 小さな生き物 */
+  for(const c of CRIT)if(vis(c)){const px=c.x*TS,fy=c.y*TS;add(c.z>6?c.y+.6:c.y,2,[px-13,fy-34,px+13,fy+4],()=>liftDraw(uLift(c),()=>drawCritter(ctx,c,now)),(c.y|0)*W+(c.x|0))}/* 小さな生き物 */
   if(typeof aniDraw==='function')aniDraw(add,vis,now,ctx);/* 飼う生き物 */
   for(const g of EXTRA){const px=g.x*TS,fy=g.y*TS;add(g.y,2,[px-30,fy-70,px+30,fy+15],()=>drawRes(g,now),(g.y|0)*W+(g.x|0))}/* 思い出の場面だけの子 */
   if(WD===1)storyStageAdd(add,now);/* 火山の物語の、地面に置く演出（たき火・灰・たまご・ちょうちん）は、せいれいと同じ奥行きの順で */
@@ -367,7 +383,8 @@ function render(now){RFN++;
   if(festOn()){const SL=festStalls();for(const[x,y]of festPoles()){const j=y*W+x;if(S.obj[j]||S.ground[j]===1||!vis({x:x+.5,y:y+.5})||SL.some(t=>t.y===y&&Math.abs(t.x-x)<=2))continue;add(y+1,1,[x*TS,y*TS-24,x*TS+TS+8,y*TS+TS],()=>drawFestPole(x,y,now),-1)}}/* おまつりのちょうちん（木や岩・水の上、屋台のところには立てない） */
   for(const h of HOUSES){const bot=h.y1,ib=h.ib;if(bot<y0-1||h.y0>y1+1||h.x1<x0-1||h.x0>x1+1)continue;
     add(bot+1.001,3,/* 屋根は、その家の壁（手前の壁もふくむ）のすぐ後に描く。家の前にいる物は屋根より手前 */[h.x0*TS-6,h.y0*TS-40,(h.x1+1)*TS+6,(ib+1)*TS+12],()=>liftDraw((()=>{const L=[...h.set],h0=hiAt(L[0]);return L.every(j=>hiAt(j)===h0)?h0*LIFT:0})(),()=>drawRoofs(ctx,now,[h])),-1);}/* 屋根は家ごとにひとまとまり。その家の壁は屋根の上に描き直さない *//* 屋根は、横の壁より後・手前の壁より先に描く */
-  if(S.hi){const RW=cliffRuns();for(let y=Math.max(0,y0-1);y<Math.min(H,y1+2);y++){const L=RW.get(y);if(!L)continue;const vs=[];for(const R of L)if(R.x1>=x0-1&&R.x0<=x1)vs.push({x0:Math.max(R.x0,x0-1),x1:Math.min(R.x1,x1),lv:R.lv});if(!vs.length)continue;/* 見えている所だけ */
+  const farOn=S.hi&&cam.z<FARZ&&cliffChipsOK()&&farDraw(x0,y0,x1,y1);/* 遠くの絵（段差は、作っておいた絵で1まいずつ） */
+  if(S.hi&&!farOn){const RW=cliffRuns();for(let y=Math.max(0,y0-1);y<Math.min(H,y1+2);y++){const L=RW.get(y);if(!L)continue;const vs=[];for(const R of L)if(R.x1>=x0-1&&R.x0<=x1)vs.push({x0:Math.max(R.x0,x0-1),x1:Math.min(R.x1,x1),lv:R.lv});if(!vs.length)continue;/* 見えている所だけ */
     add(y-1+.0005,-1,null,()=>{for(const R of vs)cliffRow(y,R,false)},-1);/* ひとつ上の行の物より先：段差の上の物のかげが、手前の行の上の面にかくれないように */
     add(y+.001,-1,null,()=>{for(const R of vs)cliffRow(y,R,true)},-1)}}/* うしろが低い所だけ、上の面の上はしをもう1回描いて、うしろの物の足もとをかくす *//* 段差：行ごとに、その行の物より先（ひとつ上の行の物より後） */
   D.sort((a,b)=>a.k-b.k||a.t-b.t);
@@ -431,13 +448,13 @@ function render(now){RFN++;
     {const wl=HOUSEART['wall-window-lit'];if(wl&&wl.complete&&wl.naturalWidth&&isDark()){ctx.globalAlpha=1;for(const h of litH)for(const q of h.set){if(((q/W)|0)===h.y0)continue;/* 上がわの壁の窓は、昼も夜も同じ色 */if(!S.win||S.win[q]!==1||!(HOME_WALLS.has(S.obj[q])||S.obj[q]==='window'))continue;const qx=q%W,qy=(q/W)|0;if(qx<x0-1||qx>x1||qy<y0-1||qy>y1)continue;if(winCovered(qx,qy))continue;/* 手前に背の高い物があれば、窓の光はかさねない */{const lk='window:lit',lc=window.CHIPS&&CHIPS[lk];if(!(lc&&drawChip(ctx,lc,lk,qx*TS,qy*TS-1.5,0,q)))ctx.drawImage(wl,qx*TS+3.625,qy*TS+1.5,24.75,21.7125)}}/* 明かりの絵もチップの大きさのまま */ctx.globalAlpha=1}}/* 夜（21時〜6時）だけ、灯りのある家の窓ガラスは中が明るい色に（暗さの上にかく） */
     ctx.setTransform(dpr,0,0,dpr,0,0)}
   if(GLWN){ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=Math.min(1,dk*1.5);ctx.globalCompositeOperation='lighter';ctx.drawImage(GLW,0,0);ctx.globalCompositeOperation='source-over';ctx.globalAlpha=1;ctx.setTransform(dpr,0,0,dpr,0,0);GLWN=0}
-  ctx.setTransform(k,0,0,k,-cam.x*k,-cam.y*k);drawArrowTags(x0,y0,x1,y1);if(bubLate)for(const f of bubs)f();drawBattleFx(now);drawLeafPrev();ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.setTransform(k,0,0,k,-cam.x*k,-cam.y*k);drawArrowTags(x0,y0,x1,y1);drawCritGlow(ctx,now);if(bubLate)for(const f of bubs)f();drawBattleFx(now);drawLeafPrev();ctx.setTransform(dpr,0,0,dpr,0,0);
   // 空気の粒（昼は花粉、夜はホタル）
   for(const m of motes){const x=m.x*VW,y=m.y*VH;if(dk>.3){const a=(Math.sin(now/400+m.p)*.5+.5)*.8;ctx.globalCompositeOperation='lighter';circ(ctx,x,y,2.2*m.s,'rgba(200,255,140,'+a+')');circ(ctx,x,y,6*m.s,'rgba(200,255,140,'+a*.15+')');ctx.globalCompositeOperation='source-over'}else{circ(ctx,x,y,1.4*m.s,'rgba(255,250,220,'+(.35+.2*Math.sin(now/600+m.p))+')')}}
   drawHanabi(now);
   drawRainbow(now);
   seasonDraw(ctx,now,dk);/* 季節の色と粒（冬の雨の日は雪） */
-  if(S.rain&&!snowNow()){ctx.strokeStyle='rgba(200,225,255,.45)';ctx.lineWidth=1;ctx.beginPath();for(const d of rain){const x=d.x*VW,y=d.y*VH;ctx.moveTo(x,y);ctx.lineTo(x-3,y+10*d.s)}ctx.stroke()}if(typeof drawStorm==='function')drawStorm(now);
+  if(S.rain&&!snowNow()){ctx.strokeStyle='rgba(200,225,255,.45)';ctx.lineWidth=1;ctx.beginPath();for(const d of rain){const x=d.x*VW,y=d.y*VH;ctx.moveTo(x,y);ctx.lineTo(x-3,y+10*d.s)}ctx.stroke()}if(typeof drawStorm==='function')drawStorm(now);if(typeof drawStar==='function')drawStar(now);
   if(!VIG||VIG.w!==VW||VIG.h!==VH){const c2=document.createElement('canvas');c2.width=VW;c2.height=VH;const g2=c2.getContext('2d');const vg=g2.createRadialGradient(VW/2,VH/2,Math.min(VW,VH)*.45,VW/2,VH/2,Math.max(VW,VH)*.75);vg.addColorStop(0,'rgba(0,0,0,0)');vg.addColorStop(1,'rgba(10,20,15,.28)');g2.fillStyle=vg;g2.fillRect(0,0,VW,VH);VIG={c:c2,w:VW,h:VH}}
   ctx.drawImage(VIG.c,0,0);
 }

@@ -112,7 +112,7 @@ const BL={
   takeakari:{hp:5,brk:1,fix:2,fixm:{bamboo:2},name:'竹あかり',kind:'furn',cat:'light',lv:4,pc:4,time:90,maker:'fire',solid:1,anim:1,attr:{fire:1,wood:1},mat:{bamboo:4},desc:'まわり3.5マスを照らす。住み心地+5'},
   shishiodoshi:{hp:5,brk:1,fix:2,fixm:{bamboo:2,stone:1},name:'ししおどし',kind:'furn',cat:'env',lv:5,pc:6,time:110,maker:'water',solid:1,anim:1,attr:{water:1,wood:1},mat:{bamboo:5,stone:3},desc:'水でうごく竹のかざり。住み心地+6'},
   bench:{name:'ベンチ',sz:[2,1],kind:'furn',pc:3,time:100,maker:'wood',attr:{wood:1},mat:{wood:5},desc:'2人すわれる。昼につかれたら、ここで休む。つかれ −30／1時間。住み心地+5'},
-  loom:{hp:5,brk:1,fix:2,fixm:{wood:2},name:'はたおり機',kind:'furn',cat:'other',pc:3,time:80,maker:'wood',attr:{wind:1},mat:{wood:6},solid:1,desc:'草3こで、布1こをおる'},
+  loom:{hp:5,brk:1,fix:2,fixm:{wood:2},name:'はたおり機',kind:'furn',cat:'other',pc:3,time:80,maker:'wood',attr:{wind:1},mat:{wood:6},solid:1,desc:'草3こか、わた毛2こで、布1こをおる'},
   bed:{name:'ベッド',kind:'furn',pc:10,time:200,maker:'wood',sleep:{cap:1,pt:5,rate:.1},attr:{wood:2},mat:{wood:6,nuno:1},desc:'1人眠れる。つかれ −9／1時間'},
   yorubed:{name:'よぞらのベッド',kind:'furn',pc:10,time:200,maker:'wood',sleep:{cap:1,pt:5,rate:.1},attr:{wood:2},mat:{wood:8},kwr:1,desc:'夜空の色のふとんのベッド。1人眠れる。つかれ −9／1時間'},/* コワイノのレシピ（落とし物でまれに手に入る）。ふつうのベッドと同じはたらき */
   yozorawall:{name:'よぞらの壁',fix:5,fixm:{wood:1},kind:'block',cost:4,pc:11,time:90,maker:'earth',qty:10,lv:1,solid:1,hp:48,hpS:72.2,brk:1,attr:{},mat:{wood:6,stone:3},kwr:1,desc:'夜空の色の家の壁。じょうぶさ48'},
@@ -313,15 +313,16 @@ const QUESTS1=[
     [GOD,'#joy|ありがとうのう。それから、せいれいのようすも、ときどき見てやっておくれ。'],[GOD,'#worry|おなかがすききってしまうと、消えてしまうこともある。……そうならんよう、見守ってやっておくれ。']],gives:{feat:['inv'],flag:'tapAsk'}},
   {id:'stor',text:'木箱を置こう',how:'「おく」→「木箱」をえらんで置く',check:()=>cnt('crate')>=1,/* id はセーブのため、そのまま */
    talk:{who:POKO,when:()=>!S.flags.tapAsk||!!S.flags.tapped,wait:'せいれいをタップして、ようすを見てみよう',/* ステータスを見てから、次のお話 */lines:[
-    [POKO,'守り神さま、見て見て！ ベリーいっぱい集めたよ！ すごいでしょ！'],
-    [POKO,'#surprise|……あれ？ あっ！ 虫さん！ たべちゃったの！？'],
-    [POKO,'#think|ひろった木の枝や石も、そこらに置いてたら、どれがどれだか、わかんなくなっちゃった……。'],
-    ['@idea'],[GOD,'#think|ほっほ、おヌシ。なんでもしまえる箱を思いついたんじゃな。'],
-    [GOD,'その形どおりの「木箱」を、おそなえ箱に入れておいたぞい。ベリーも、木や石も、これで迷子にならんのう。']],gives:{items:{crate:1}}},
+    [POKO,'#joy|守り神さま、見て！ おなかがすいたときのために、ベリーをとっておいたんだ。'],
+    [POKO,'#surprise|……あっ！ 虫さんが食べてる！ こらー！'],
+    [POKO,'#worry|そのへんに置いておくと、だめなんだね。ひろった枝や石も、草にまぎれて、どこに置いたかわからなくなっちゃうし……。'],
+    [POKO,'#think|ふたのついた入れ物があったら、ぜんぶまとめてしまっておけるのになあ。'],
+    ['@idea'],[GOD,'#think|ほっほ。ふたのついた、じょうぶな箱じゃな。「木箱」と呼ぼうかの。'],
+    [GOD,'その形どおりの木箱をひとつこしらえて、おそなえ箱に入れておいたぞい。']],gives:{items:{crate:1}}},
    story:[
-    [POKO,'#joy|ありがとう、守り神さま！ ベリーも、集めてた木と石も、ぜんぶ入れておくね！'],
-    [POKO,'おなかがすいたら、ここから出して食べるね。'],
-    [GOD,'#nod|うむ、いい場所に置けたのう。'],[GOD,'せいれいたちは、困っていることや、やってみたいことを話してくれる。どんな形でかなえるかは、おヌシのひらめき次第じゃ。']],pre:{food:{berry:10}},
+    [POKO,'#joy|わあ、ふたもぴったり！ ベリーも、枝も石も、ぜんぶ入れておくね！'],
+    [POKO,'これなら虫さんにも食べられないし、おなかがすいたら、すぐ出せるね。'],
+    [GOD,'#joy|うむ。これで、たくわえができたのう。'],[GOD,'せいれいたちは、困っていることや、やってみたいことを話してくれる。どんな形でかなえるかは、おヌシのひらめき次第じゃ。']],pre:{food:{berry:10}},
    get gives(){return S&&S.flags.qmMbox?{feat:['remove','plant']}:{feat:['remove','plant'],mat:{wood:10,stone:10},flag:'qmMbox',msg:'フタバが集めていた木材10・石材10を木箱に入れた'}}},/* qmMbox：もう木材・石材をもらっている */
   {id:'mbox',skip:true,text:'木箱を置こう',how:'',check:()=>true,/* 食料箱と素材箱を木箱にまとめた（box1）。古いセーブの番号のために、とばす目標としてのこす */
    story:[

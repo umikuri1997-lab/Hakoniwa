@@ -267,3 +267,76 @@ def cedar(sc,cx,cy,H,R,n,pal,trunk,snow=None,seed=0):
             sc.tri((cx,cy,zb+0.25*hs),q1,q0,(255,255,255))   # 下の面（下から見えないが、すきまをふさぐ）
         sc.group(None)
     sc.decal(None)
+def rimshade(im,dark=(16,4),light=(9,-3),vmin=45):
+    """コワイノの絵と同じかげの付け方：ふちの内がわ（輪郭のすぐ内の1ドット）を、右・下がわは暗く、左・上がわは明るく。
+    dark・light：明るさ（100段階）を引く・足す数と、あざやかさを足す・引く数。vmin：これより暗い色は、この明るさまで上げる（黒っぽくしない）"""
+    import colorsys
+    from PIL import Image
+    a=np.array(im).copy();A0=a[...,3]>0;A=A0&mask(a) if mask else A0;H,W=A.shape
+    pad=np.pad(A,1);out=lambda dy,dx:~pad[1+dy:1+dy+H,1+dx:1+dx+W]
+    edge=A&(out(0,1)|out(0,-1)|out(1,0)|out(-1,0))   # 輪郭のドット
+    inner=A&~edge;pe=np.pad(edge,1);nb=lambda dy,dx:pe[1+dy:1+dy+H,1+dx:1+dx+W]
+    dk=inner&(nb(0,1)|nb(1,0)|nb(1,1));lt=inner&(nb(0,-1)|nb(-1,0)|nb(-1,-1))&~dk
+    def adj(c,dv,ds):
+        h,s,v=colorsys.rgb_to_hsv(*(np.asarray(c,float)/255));v=min(1,max(0,v-dv/100));s=min(1,max(0,s+ds/100))
+        return [round(x*255) for x in colorsys.hsv_to_rgb(h,s,v)]
+    cache={}
+    for m,(dv,ds) in ((dk,dark),(lt,(-light[0],light[1]))):
+        for y,x in zip(*np.nonzero(m)):
+            k=(tuple(a[y,x,:3]),dv,ds)
+            if k not in cache:cache[k]=adj(a[y,x,:3],dv,ds)
+            a[y,x,:3]=cache[k]
+    for y,x in zip(*np.nonzero(A&(a[...,:3].max(-1)<vmin*2.55))):   # 輪郭・かげの黒っぽい色
+        h,s,v=colorsys.rgb_to_hsv(*(a[y,x,:3]/255.0));a[y,x,:3]=[round(q*255) for q in colorsys.hsv_to_rgb(h,s,vmin/100)]
+    return Image.fromarray(a)
+def tone5(im,base,hi=((10,-4),(19,-8)),sh=((15,4),(28,8)),ol=(38,10),cuts=(12,35,72,92),dw=0.12,rim=0.7,streak=(0.14,0.07),blur=1.4,vmin=45,light=(-0.6,-0.5,0.8),mask=None,thin=True,mix=0.0,under=None,pal=None,olc=None):
+    """コワイノの絵のようなかげ（持ち主がきめた）：色は5つだけ（こいかげ・かげ・base・ハイライト・明るいハイライト）と輪郭。
+    写したときの奥行き（oblique3d.LAST_ZB）から面の向きを出し、光（light：画面の左・下・手前の向き）とのなめらかな明るさを5だんにわける。だんのさかいめ（dw のはば）は、2色を市松もようのあみかけでまぜる。
+    hi・sh：base から明るさ（100段階）を足す・引く数と、あざやかさを引く・足す数。ol：輪郭（base から）。cuts：だんのさかいめ（明るさの順の%）。
+    rim：ふちの内がわは、右下を暗く・左上を明るく（だんの数）。streak：木の皮のすじをのこす量（暗いすじ・明るいすじ。いちばん強い所の割合）。vmin：輪郭の明るさの下限。
+    mask：かえる所（絵の色 → True/False の関数。ほかの所はそのまま。木の幹と葉を、べつの色で2回かける）。thin：すじは細長い所だけ（False なら、まるい所も。葉の部品のさかいめ）。
+    mix：写した絵の明るさ（ぼかしたもの）を、面の向きの明るさにまぜる割合（葉のつぶつぶの形をのこす）。under：(上にある物の色 → True/False, ドット数, だん数)：その物の下は、近いほど暗く（葉のかげ）。
+    pal・olc：5色（暗い→明るい）と輪郭の色をじかにきめる（葉：かげは青みのある緑）"""
+    import colorsys
+    from PIL import Image
+    from scipy.ndimage import gaussian_filter,label
+    def hsv(dv,ds):
+        h,s,v=colorsys.rgb_to_hsv(*(np.asarray(base,float)/255));v=min(1,max(vmin/100 if dv<-30 else 0,v+dv/100));s=min(1,max(0,s+ds/100))
+        return np.array([round(x*255) for x in colorsys.hsv_to_rgb(h,s,v)],np.uint8)
+    pal=[np.array(c,np.uint8) for c in pal] if pal else [hsv(-sh[1][0],sh[1][1]),hsv(-sh[0][0],sh[0][1]),hsv(0,0),hsv(hi[0][0],hi[0][1]),hsv(hi[1][0],hi[1][1])];OL=np.array(olc,np.uint8) if olc else hsv(-ol[0],ol[1])
+    a=np.array(im).copy();A0=a[...,3]>0;A=A0&mask(a) if mask else A0;H,W=A.shape
+    pad=np.pad(A,1);out=lambda dy,dx:~pad[1+dy:1+dy+H,1+dx:1+dx+W]
+    pad0=np.pad(A0,1);out0=lambda dy,dx:~pad0[1+dy:1+dy+H,1+dx:1+dx+W]
+    edge=A&(out0(0,1)|out0(0,-1)|out0(1,0)|out0(-1,0));inner=A&~edge   # 輪郭は、すきとおった所とのさかいだけ（幹と葉のさかいは輪郭にしない）
+    if inner.sum()<8:return im   # かえる所がない（葉のない切り株など）
+    L=a[...,:3].astype(float)@[0.299,0.587,0.114]
+    m=inner.astype(float);Lb=gaussian_filter(L*m,blur)/np.maximum(gaussian_filter(m,blur),1e-6)   # 皮のすじを見つけるための、ぼかした明るさ
+    import oblique3d as O
+    z=O.LAST_ZB;mz=(z>-1e8)&A0;w=gaussian_filter(mz.astype(float),1.2);zs=gaussian_filter(np.where(mz,z,0),1.2)/np.maximum(w,1e-6)
+    gy,gx=np.gradient(zs);gx=np.clip(gx*O.S,-3,3);gy=np.clip(gy*O.S,-3,3)   # 奥行きのかたむき（1ドットあたり）→ 面の向き
+    n=np.dstack([-gx,-gy,np.ones_like(gx)]);n/=np.linalg.norm(n,axis=2,keepdims=True);lv_=np.asarray(light,float);sh_=n@(lv_/np.linalg.norm(lv_))
+    if mix:   # 面の向きの明るさと、写した絵の明るさを、それぞれ順番（%）にしてまぜる
+        rk=lambda v:np.interp(v,np.sort(v[inner]),np.linspace(0,1,int(inner.sum())))
+        sh_=(1-mix)*rk(sh_)+mix*rk(Lb)
+    q=np.percentile(sh_[inner],[0]+list(cuts)+[100]);t=np.interp(sh_,q,[0,0.5,1.5,2.5,3.5,4])
+    if under:   # 上にある物（葉）のかげ：上 n ドットのうちに、その物があれば、近いほど暗く
+        um=under[0](a)&A0;n_,k_=under[1],under[2]
+        dist=np.full((H,W),n_+1)
+        for dy in range(n_,0,-1):
+            sm=np.zeros_like(um);sm[dy:]=um[:-dy];dist[sm]=dy
+        hit=inner&(dist<=n_);t[hit]-=k_*(1-(dist[hit]-1)/n_)
+    pe=np.pad(edge,1);nb=lambda dy,dx:pe[1+dy:1+dy+H,1+dx:1+dx+W]
+    t[inner&(nb(0,1)|nb(1,0)|nb(1,1))]-=rim;t[inner&(nb(0,-1)|nb(-1,0)|nb(-1,-1))&~(nb(0,1)|nb(1,0)|nb(1,1))]+=rim*0.6
+    d=L-Lb;lv=np.floor(t+0.5);fr=t+0.5-lv   # fr：0.5 がだんのまん中、0 と 1 がさかいめ
+    yy,xx=np.mgrid[0:H,0:W];ck=(xx+yy)%2==0
+    lo=fr<dw;up=fr>1-dw;lv[lo&ck]-=1;lv[up&~ck]+=1   # さかいめは市松もようで、となりのだんとまぜる
+    for sgn,k_ in ((-1,streak[0]),(1,streak[1])):   # 木の皮のすじ：いちばん強い所だけ、1だん
+        if k_<=0:continue
+        thr=np.quantile(sgn*d[inner],1-k_);s_=inner&(sgn*d>=thr);lab,n=label(s_)
+        from scipy.ndimage import find_objects
+        for i_,sl in enumerate(find_objects(lab),1):   # 細長いすじだけ（長さ3ドットから、はばの2倍より長い）。まるい点はのこさない
+            hh,ww=sl[0].stop-sl[0].start,sl[1].stop-sl[1].start
+            if not thin or max(hh,ww)>=3 and max(hh,ww)>=2*min(hh,ww):lv[sl][lab[sl]==i_]+=sgn
+    lv=np.clip(lv,0,4).astype(int)
+    P=np.array(pal);a[inner,:3]=P[lv[inner]];a[edge,:3]=OL
+    return Image.fromarray(a)

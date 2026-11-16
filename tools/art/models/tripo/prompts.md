@@ -116,3 +116,32 @@ Row 3:
 
 Each creature: full body, three-quarter front view seen from slightly above (about 20 degrees down), the head turned toward the viewer's right, upright and level, not tilted, standing or resting on the same flat floor; winged ones rest with their wings spread out flat and level. Clean illustration meant to be turned into one 3D model and then separated: soft simple chunky shapes, clean flat colors with soft shading only; no noise, no grain, no speckles, no dithering, no gritty texture, no fine fur, feather strands or vein lines. Pale, light, soft colors; no dark or heavily saturated colors. No thick or dark outlines; if an outline is used, it is a thin line only slightly darker than the color next to it, never black or near-black. Plain pure white background, no shadows, no ground texture, no props, no text, no labels, no numbers.
 ```
+
+## 5回め：魚と魚料理（18こを1つのモデルに。図鑑・もちもの・ふきだしのアイコン用）
+
+もらったモデルは `tripo_split.py` で切りわけ、左上から順に `fish_funa.glb`・`fish_koi.glb`・`fish_nijimasu.glb`・`fish_yumasu.glb`・`fish_namazu.glb`・`fish_dojo.glb`・`fish_iwana.glb`・`fish_yamame.glb`・`fish_ayu.glb`・`fish_unagi.glb`・`fish_yuami.glb`・`fish_akahara.glb`・`dish_yakizakana.glb`・`dish_marine.glb`・`dish_kushiyaki.glb`・`dish_foil.glb`・`dish_fishsoup.glb`・`dish_kabayaki.glb` にする。
+
+```
+18 separate cozy-game food objects in one model, in a neat 3x6 grid with clear space between them, no two touching.
+Rows 1-2: 12 whole fish, each lying straight, side view, head pointing right, not curled, simple round eye, clear fins and tail:
+1 crucian carp, deep round body, olive-gold back, cream belly
+2 koi, thick body, short barbels, orange with large white patches
+3 rainbow trout, slim, silver-blue, soft pink side stripe
+4 sunset trout, slim, peach-orange, golden side stripe
+5 catfish, wide flat head, long whiskers, olive-green
+6 pond loach, very thin and long, sandy brown with small dots, short whiskers
+7 char, slim, gray-green with small white spots
+8 masu parr, slim, silver-blue with oval blue-gray side marks
+9 sweetfish, slender, olive-green, small yellow mark behind gills, forked tail
+10 eel, very long round snake-like body, blue-gray
+11 small round chubby hot-spring fish, peach-pink
+12 dace, slim, gray-brown back, coral-red belly
+Row 3: 6 fish dishes, upright, flat, each about one fish in size:
+13 grilled whole fish with grill marks and a lemon wedge on an oval white plate
+14 thin pink fish slices with onion rings and green herbs on a round white plate
+15 small grilled fish on one straight wooden skewer, horizontal
+16 opened silver foil parcel with fish and potato chunks on a round white plate
+17 wooden bowl of light golden fish soup with fish, potato and herbs
+18 two glazed amber eel fillets on a rectangular white plate
+Style: stylized, slightly chunky, clean simple smooth shapes; pale, light, soft colors, no dark or heavily saturated colors; clean flat colors with soft shading, no texture noise, no grain, no scales texture, no baked shadows, no steam. No base, no ground, no water, no table, no background.
+```

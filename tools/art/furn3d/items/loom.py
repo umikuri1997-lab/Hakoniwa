@@ -12,7 +12,7 @@ from common import *
 import math
 ID='loom';BOTTOM=48;GRAD=True
 VIEWS=[('loom',0)]
-X0,X1=0.16,0.84;YB,YF=0.46,0.82
+X0,X1=0.036,0.964;YB,YF=0.46,0.82
 THREAD=(246,240,222);THREAD2=(226,218,196);CLOTHC=(212,230,246);CLOTH2=(190,214,238)
 def PARTS():
     L=[]
