@@ -13,7 +13,7 @@ function boxTypeAt(k){if(k<0||k>=W*H)return '';const a=anc(k),id=S.obj[a];if(HOM
 function boxScan(){BOXL=[];for(let j=0;j<W*H;j++){const o=S.obj[j];if(BOXCAP[o])BOXL.push(j)}for(const k in S.win||{}){const j=+k;if(BOXCAP[S.win[k]]&&HOME_WALLS.has(S.obj[j]))BOXL.push(j)}}
 const pileJ=()=>STATUE>=0?STATUE:RUINT;
 const bx=j=>{if(j===PILE)return PIL();const B=BOX();return B[j]||(B[j]={})};
-function boxCapAdd(){let add=typeof pathBox==='function'?pathBox():0;/* ひらき道 */const got=new Set();for(const I of SPOTI||[])if(I.sp.cap&&!got.has(I.sp.k)){got.add(I.sp.k);add+=I.sp.cap}return add}/* しまうスポット：おなじスポットは1こ分、ちがうスポットはたし算 */
+function boxCapAdd(){let add=typeof pathBox==='function'?pathBox():0;/* むらのちから */const got=new Set();for(const I of SPOTI||[])if(I.sp.cap&&!got.has(I.sp.k)){got.add(I.sp.k);add+=I.sp.cap}return add}/* しまうスポット：おなじスポットは1こ分、ちがうスポットはたし算 */
 const boxCap=j=>Math.floor((BOXCAP[boxTypeAt(j)]||0)*(1+boxCapAdd()));
 function boxUsed(j){const b=BOX()[j];let n=0;if(b)for(const k in b)n+=b[k];return n}
 function boxOK(j,key){/* その箱に、この物を入れてよいか */const O=BOXONLY[boxTypeAt(j)];if(O&&!O[key])return false;const F=(S.boxF||{})[j];if(!F||!(F.food||F.mat||F.it&&Object.keys(F.it).length))return true;if(isFK(key)?F.food:F.mat)return true;return !!(F.it&&F.it[key])}
