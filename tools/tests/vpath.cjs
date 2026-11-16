@@ -1,21 +1,27 @@
-/* むらのちから（村の枝）：上からじゅんにひらく・パワーがへる・効果（はたらく速さ・移動速度・持てる数・攻撃力・住み心地・しまえる数・たのしさのへり）・メニューの画面 */
+/* むらのちから（村の枝）：つながった下の点をひらくとひらける・パワーがへる・効果・前の木のセーブはパワーをもどす・守り神の枝はLvごとの点・メニューの画面 */
 const assert=require('node:assert/strict');
 (async()=>{const {browser,run,errors}=await require('../sim/boot.cjs')({world:0});
   const r=JSON.parse(await run(`(()=>{document.querySelector('#dialog').hidden=true;S.introSeen=true;S.flags.tapped=1;USERPAUSE=true;const a=S.res[0],out={};
-    const st0=rStat(a,rLv(a));out.pa0=pathA('work');
-    S.pt=50;out.poor=pathBuy(VPATH[1].L[0]);out.pt0=S.pt;
-    S.pt=10000;for(const b of VPATH)for(const p of b.L)pathBuy(p);out.pt=S.pt;out.all=Object.keys(S.vpath).length;
-    const st1=rStat(a,rLv(a));out.d={work:st1.work-st0.work,move:st1.move-st0.move,cap:st1.cap-st0.cap,atk:st1.atk-st0.atk};
-    out.box=pathBox();out.fun=pathFun();out.wdmg=pathA('wdmg');out.wrng=pathA('wrng');out.comf=pathA('comf');
-    S.vpath={};S.pt=10000;openSheet('menu','gup');const st=()=>[...document.querySelectorAll('.stree .tnode')].filter(b=>b.dataset.node.startsWith('v:')).map(b=>b.dataset.st).join(',');out.st0=st();
-    document.querySelector('.stree .tnode[data-node="v:s1"]').click();out.pop=document.querySelector('#treePop .t').textContent;document.querySelector('#treePop .go').click();out.popGone=!document.getElementById('treePop');out.pend=TREEPEND;out.stP=st();/* ひらくと、ポップアップをとじて、光が点にとどくまで前のようす */
-    TREEPEND=null;renderSheet();out.st1=st();out.pt2=S.pt;out.ring=document.querySelectorAll('.stree .tnode[data-node="v:s2"] .tglow').length;out.icon=document.querySelectorAll('.stree .tnode .tic').length;out.menu=[...document.querySelectorAll('.mtile')].length;closeSheet();
+    const st0=rStat(a,rLv(a)),sta0=staOf(a),rec0=recK(a);out.pa0=pathA('work');
+    S.pt=10000;out.lock=pathBuy(VPATH[1].L[1]);/* 下の点がまだ */S.pt=10;out.poor=pathBuy(VPATH[1].L[0]);out.pt0=S.pt;
+    S.pt=10000;let n=0,tot=0;for(let k=0;k<5;k++)for(const b of VPATH)for(const p of b.L)if(pathBuy(p)){n++;tot+=p.c}out.pt=S.pt;out.n=n;out.tot=tot;out.all=Object.keys(S.vpath).length;
+    const st1=rStat(a,rLv(a));out.d={work:st1.work-st0.work,move:st1.move-st0.move,cap:st1.cap-st0.cap,atk:st1.atk-st0.atk,sta:staOf(a)-sta0};out.rec=+(recK(a)/rec0).toFixed(3);
+    out.box=pathBox();out.fun=+pathFun().toFixed(3);out.wdmg=pathA('wdmg');out.wrng=pathA('wrng');out.comf=pathA('comf');out.cook=pathA('cook');out.fish=pathA('fish');out.hun=pathA('hun');out.wcd=pathA('wcd');out.trap=pathA('trap');out.kpt=pathA('kpt');
+    S.vpath={k1:1,k2:1,s1:1};S.flags.vpath2=0;S.pt=0;vpathMigrate();out.mig=[S.pt,Object.keys(S.vpath).length];vpathMigrate();out.mig2=S.pt;
+    S.vpath={};S.pt=10000;S.gup={};openSheet('menu','gup');const st=()=>[...document.querySelectorAll('.stree .tnode')].filter(b=>b.dataset.node.startsWith('v:')).map(b=>b.dataset.node.slice(2)+'='+b.dataset.st).filter(x=>!x.endsWith('lock')).join(',');out.st0=st();
+    out.gnodes=document.querySelectorAll('.stree .tnode[data-node^="g:cd:"]').length;out.g1=document.querySelector('.stree .tnode[data-node="g:cd:1"]').dataset.st;out.g2=document.querySelector('.stree .tnode[data-node="g:cd:2"]').dataset.st;
+    document.querySelector('.stree .tnode[data-node="v:sw1"]').click();out.pop=document.querySelector('#treePop .t').textContent;document.querySelector('#treePop .go').click();out.popGone=!document.getElementById('treePop');out.pend=TREEPEND;
+    TREEPEND=null;renderSheet();out.st1=st();out.pt2=S.pt;out.ring=document.querySelectorAll('.stree .tnode[data-node="v:sm1"] .tglow').length;out.icon=document.querySelectorAll('.stree .tnode .tic').length;
+    document.querySelector('.stree .tnode[data-node="g:cd:1"]').click();document.querySelector('#treePop .go').click();TREEPEND=null;renderSheet();out.gl=gupLv('cd');out.g2b=document.querySelector('.stree .tnode[data-node="g:cd:2"]').dataset.st;closeSheet();
     return JSON.stringify(out)})()`));
   console.log(JSON.stringify(r));
-  assert.equal(r.pa0,0);assert.equal(r.poor,false);assert.equal(r.pt0,50);
-  assert.equal(r.all,9);assert.equal(r.pt,10000-(100+200+300+100+200+400+150+250+350));
-  assert.deepEqual(r.d,{work:5,move:5,cap:1,atk:2});assert.equal(r.box,.1);assert.equal(r.fun,.9);assert.equal(r.wdmg,2);assert.equal(r.wrng,1);assert.equal(r.comf,10);
-  assert.equal(r.st0,'can,lock,lock,can,lock,lock,can,lock,lock','道ごとに、いちばん下だけひらける');assert.equal(r.pop,'しごと（1/3）');
-  assert.equal(r.st1,'can,lock,lock,done,can,lock,can,lock,lock');assert.equal(r.pt2,9900);assert.equal(r.popGone,true);assert.equal(r.pend,'v:s1');assert.equal(r.stP,'can,lock,lock,can,lock,lock,can,lock,lock');assert.equal(r.ring,1,'ひらける点は光る');assert.ok(r.icon>=13,'点のアイコン');
+  assert.equal(r.pa0,0);assert.equal(r.lock,false);assert.equal(r.poor,false);assert.equal(r.pt0,10);
+  assert.equal(r.n,26);assert.equal(r.all,26);assert.equal(r.pt,10000-r.tot);
+  assert.deepEqual(r.d,{work:5,move:5,cap:1,atk:2,sta:10});assert.equal(r.rec,1.1);
+  assert.equal(r.box,.1);assert.equal(r.fun,.9);assert.equal(r.wdmg,2);assert.equal(r.wrng,1);assert.equal(r.comf,10);assert.equal(r.cook,20);assert.equal(r.fish,5);assert.equal(r.hun,5);assert.equal(r.wcd,5);assert.equal(r.trap,2);assert.equal(r.kpt,1);
+  assert.deepEqual(r.mig,[400,0],'前の木の点はとじて、パワーをもどす');assert.equal(r.mig2,400,'1回だけ');
+  assert.equal(r.st0,'kb1=can,sw1=can,md1=can','いちばん下の点だけひらける');assert.equal(r.pop,'しごと');
+  assert.equal(r.popGone,true);assert.equal(r.pend,'v:sw1');assert.equal(r.st1,'kb1=can,sw1=done,sw2=can,sm1=can,ss1=can,md1=can','枝わかれ');assert.equal(r.pt2,9950);assert.equal(r.ring,1,'ひらける点は光る');assert.ok(r.icon>=60,'点のアイコン');
+  assert.equal(r.gnodes,10);assert.equal(r.g1,'can');assert.equal(r.g2,'lock');assert.equal(r.gl,1);assert.equal(r.g2b,'can');
   assert.deepEqual(errors,[]);await browser.close();console.log('OK');
 })().catch(e=>{console.error(e);process.exit(1)});
