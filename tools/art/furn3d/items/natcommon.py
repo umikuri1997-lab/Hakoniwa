@@ -267,3 +267,25 @@ def cedar(sc,cx,cy,H,R,n,pal,trunk,snow=None,seed=0):
             sc.tri((cx,cy,zb+0.25*hs),q1,q0,(255,255,255))   # 下の面（下から見えないが、すきまをふさぐ）
         sc.group(None)
     sc.decal(None)
+def rimshade(im,dark=(16,4),light=(9,-3),vmin=45):
+    """コワイノの絵と同じかげの付け方：ふちの内がわ（輪郭のすぐ内の1ドット）を、右・下がわは暗く、左・上がわは明るく。
+    dark・light：明るさ（100段階）を引く・足す数と、あざやかさを足す・引く数。vmin：これより暗い色は、この明るさまで上げる（黒っぽくしない）"""
+    import colorsys
+    from PIL import Image
+    a=np.array(im).copy();A=a[...,3]>0;H,W=A.shape
+    pad=np.pad(A,1);out=lambda dy,dx:~pad[1+dy:1+dy+H,1+dx:1+dx+W]
+    edge=A&(out(0,1)|out(0,-1)|out(1,0)|out(-1,0))   # 輪郭のドット
+    inner=A&~edge;pe=np.pad(edge,1);nb=lambda dy,dx:pe[1+dy:1+dy+H,1+dx:1+dx+W]
+    dk=inner&(nb(0,1)|nb(1,0)|nb(1,1));lt=inner&(nb(0,-1)|nb(-1,0)|nb(-1,-1))&~dk
+    def adj(c,dv,ds):
+        h,s,v=colorsys.rgb_to_hsv(*(np.asarray(c,float)/255));v=min(1,max(0,v-dv/100));s=min(1,max(0,s+ds/100))
+        return [round(x*255) for x in colorsys.hsv_to_rgb(h,s,v)]
+    cache={}
+    for m,(dv,ds) in ((dk,dark),(lt,(-light[0],light[1]))):
+        for y,x in zip(*np.nonzero(m)):
+            k=(tuple(a[y,x,:3]),dv,ds)
+            if k not in cache:cache[k]=adj(a[y,x,:3],dv,ds)
+            a[y,x,:3]=cache[k]
+    for y,x in zip(*np.nonzero(A&(a[...,:3].max(-1)<vmin*2.55))):   # 輪郭・かげの黒っぽい色
+        h,s,v=colorsys.rgb_to_hsv(*(a[y,x,:3]/255.0));a[y,x,:3]=[round(q*255) for q in colorsys.hsv_to_rgb(h,s,vmin/100)]
+    return Image.fromarray(a)

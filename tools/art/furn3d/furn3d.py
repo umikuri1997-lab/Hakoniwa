@@ -22,6 +22,8 @@
 #   MOVE={チップの名前: {'sel':部品の名前を見る関数, 'pivot':(x,y,z)}}（動く部品より手前の本体は、奥行きをくらべて、動く部品の上に重ねる絵を自動で作る）（動く部品。本体の絵からのぞいて、べつの絵 parts にし、のびちぢみ・回る支点 px・py をつける。ゲームの PARTMV で動かす）
 #   POST=関数（写した絵 → なおした絵。葉の中の小さな点をまわりの色に など）
 #   SHADE=[(明るさ,あざやかさ),(…)]（GRAD でないときの、半かげ・かげで引く数。かげをうすくするとき。なければ oblique3d.SHADE）
+#   LIGHT=(x,y,z)（光のくる向き。なければ oblique3d.LIGHT）
+#   SHADE4=[(明るさ,あざやかさ)×3]（GRAD のときの、うすいかげ・半かげ・かげで引く数。なければ oblique3d.SHADE4）
 #   FRONT={チップの名前: 部品の名前を見る関数}（せいれいの手前にかさねる絵 .front。その向きで、その部品だけを写す）
 import sys,os,importlib
 HERE=os.path.dirname(os.path.abspath(__file__));ART=os.path.join(HERE,'..');ROOT=os.path.join(ART,'..','..')
@@ -123,7 +125,8 @@ def pfire(M,im,inf,zb,f,NF):
                 a[yy,xx]=(*c,255)
     return Image.fromarray(a)
 def run(iid,out,chips=False):
-    M=load(iid);os.makedirs(out,exist_ok=True);O.GRAD=getattr(M,'GRAD',False);O.SHADE=getattr(M,'SHADE',[(17.5,-5),(35,-10)]);O.OSAT=getattr(M,'OSAT',0)   # GRAD=True の家具は、かげを4だんに。OSAT：輪郭線のあざやかさに足す量
+    M=load(iid);os.makedirs(out,exist_ok=True);O.GRAD=getattr(M,'GRAD',False);O.SHADE=getattr(M,'SHADE',[(17.5,-5),(35,-10)]);O.OSAT=getattr(M,'OSAT',0);O.SHADE4=getattr(M,'SHADE4',[(9,-2.5),(18,-5),(30,-9)]);_l=np.array(getattr(M,'LIGHT',(-0.35,0.25,1.0)),float);O.LIGHT=_l/np.linalg.norm(_l)   # SHADE4：GRAD のときの、うすいかげ・半かげ・かげで引く数（なければ oblique3d.SHADE4）
+    # GRAD=True の家具は、かげを4だんに。OSAT：輪郭線のあざやかさに足す量
     L=M.PARTS();bad=check(L);print(iid,'ささえのたしかめ',bad or 'まちがいなし')
     if L:
       try:blueprint(os.path.join(out,'bp.png'),M.ID,L,(1,1),(-0.2,1.2,-0.2,1.2,1.6))
