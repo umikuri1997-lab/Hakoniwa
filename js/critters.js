@@ -1,17 +1,19 @@
 /* ---------- 小さな生き物：見た目だけ（セーブしない） ----------
-   画面の近くにだけ出す（ぜんぶで CRITMAX ひき、1しゅるい CRITN ひきまで）。夜（23時〜6時）・コワイノのいるときは出さない。
+   画面の近くにだけ出す（ぜんぶで CRITMAX ひき、1しゅるい CK の n ひきまで）。夜（23時〜6時）・コワイノのいるときは出さない。
    どこに・いつ（critOK）：ちょう・みつばち＝昼の花・雨でない／小鳥・りす＝昼の木のそば／うさぎ＝昼のみどりの草地／はりねずみ＝夕方の茂みのそば／
    ねずみ＝昼の箱のそば／もぐら＝土のステージ（WD 3）の昼の畑のそば／かたつむり＝雨の日の花・草のそば／てんとうむし＝昼の花のそば（地面）／
    とんぼ＝昼〜夕方の水の上／ほたる＝夜のはじめ（19〜23時）の水べ、おしりが光る／かえる＝雨の日か夕方の水べ。
    うさぎ・りす・ねずみ・小鳥は、せいれいが近づくと、にげる（小鳥は飛びたつ）。
    ひまなせいれいは、ときどき見つけて、そっと見る・追いかける（critwatch、おわると たのしさ+2）。 */
-const CRITMAX=6,CRITN=2,CRITFUN=2;let CRIT=[],CRITS=null,CRITT=0,CRITID=1;
+const CRITMAX=6,CRITFUN=2;let CRIT=[],CRITS=null,CRITT=0,CRITID=1;
 /* しゅるい：m 動き（fly 花へとぶ・hover とんで止まる・drift ふわふわ・hop はねる・walk 歩く・bird 小鳥）。ch チップの名前（crit<ch>#<コマ>、tools/art/critter3d/crit_build.py）。
-   hop はねる長さ（マス）・sp 歩く速さ（マス/秒）・flee にげる・sw かげのはば */
-const CK={fly:{m:'fly',sw:8},bird:{m:'bird',sw:8},frog:{m:'hop',ch:'kaeru',hop:.35,sw:8},usagi:{m:'hop',hop:.5,flee:1,sw:10},risu:{m:'hop',hop:.4,flee:1,sw:10},
+   hop はねる長さ（マス）・sp 歩く速さ（マス/秒）・flee にげる・sw かげのはば・w えらばれやすさ（書いてなければ1）・n 同時に出る数（書いてなければ1）。
+   小鳥・ちょう・とんぼはよく出て、ほかはあまり出ない（持ち主のきめ）。 */
+const CK={fly:{m:'fly',sw:8,w:10,n:2},bird:{m:'bird',sw:8,w:10,n:2},frog:{m:'hop',ch:'kaeru',hop:.35,sw:8},usagi:{m:'hop',hop:.5,flee:1,sw:10},risu:{m:'hop',hop:.4,flee:1,sw:10},
   harinezumi:{m:'walk',sp:.25,sw:9},nezumi:{m:'walk',sp:.5,flee:1,sw:8},mogura:{m:'walk',sp:.2,sw:10},katatsumuri:{m:'walk',sp:.06,sw:8},tentoumushi:{m:'walk',sp:.15,sw:5},
-  mitsubachi:{m:'fly',sw:5},tonbo:{m:'hover',sw:6},hotaru:{m:'drift',sw:4}};
-const CRITKINDS=Object.keys(CK);
+  mitsubachi:{m:'fly',sw:5},tonbo:{m:'hover',sw:6,w:10,n:2},hotaru:{m:'drift',sw:4}};
+const CRITKINDS=Object.keys(CK),CRITW=CRITKINDS.reduce((t,k)=>t+(CK[k].w||1),0);
+function critPick(){let r=Math.random()*CRITW;for(const k of CRITKINDS){r-=CK[k].w||1;if(r<0)return k}return CRITKINDS[CRITKINDS.length-1]}
 function critView(){const z=cam.z||1;return [cam.x/TS,cam.y/TS,(cam.x+VW/z)/TS,(cam.y+VH/z)/TS]}
 const critOpen=j=>walk(j)&&!S.obj[j]&&!S.floor[j]&&S.ground[j]!==1;/* 地面の空いたマス */
 function critNear(j,r,f){const x0=j%W,y0=(j/W)|0;for(let y=y0-r;y<=y0+r;y++)for(let x=x0-r;x<=x0+r;x++){if(x<0||y<0||x>=W||y>=H||(x===x0&&y===y0))continue;if(f(y*W+x))return true}return false}
@@ -29,7 +31,7 @@ function critOK(k,j){if(j<0||j>=W*H)return false;const h=hour(),day=h>=7&&h<17,d
   if(k==='hotaru')return h>=19&&h<23&&dry&&critOpen(j)&&[1,-1,W,-W].some(d=>S.ground[j+d]===1);
   if(k==='frog')return (S.rain&&h>=6&&h<20||h>=17&&h<20)&&critOpen(j)&&[1,-1,W,-W].some(d=>S.ground[j+d]===1);
   return false}
-function critSpawn(){if(CRIT.length>=CRITMAX||isNight()||enemyLive())return;const [a,b,c,d]=critView(),k=CRITKINDS[Math.floor(Math.random()*CRITKINDS.length)],m=CK[k].m;if(CRIT.filter(q=>q.k===k).length>=CRITN)return;
+function critSpawn(){if(CRIT.length>=CRITMAX||isNight()||enemyLive())return;const [a,b,c,d]=critView(),k=critPick(),m=CK[k].m;if(CRIT.filter(q=>q.k===k).length>=(CK[k].n||1))return;
   for(let n=0;n<40;n++){const x=Math.floor(a+Math.random()*(c-a)),y=Math.floor(b+Math.random()*(d-b)),j=y*W+x;if(x<0||y<0||x>=W||y>=H||!critOK(k,j))continue;
     CRIT.push({id:CRITID++,k,x:x+.5,y:y+.6,hx:x+.5,hy:y+.6,z:m==='fly'?12:m==='hover'?18:m==='drift'?10:0,vx:0,vy:0,face:Math.random()<.5?-1:1,t:0,life:60+Math.random()*60,hop:Math.random()*2,fl:0,ci:Math.floor(Math.random()*4),act:0,ph:0,wait:1+Math.random()*2});/* ci：ちょうの色（4しゅるい） */return}}
 /* 地面の生き物がにげる：近いせいれいからはなれる向きへ、はやく。少しして、いなくなる */
