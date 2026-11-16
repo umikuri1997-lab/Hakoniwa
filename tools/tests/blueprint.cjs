@@ -7,7 +7,7 @@ const assert=require('node:assert/strict');
     const clear=(x,y)=>{const j=y*W+x;S.obj[j]='';delete S.ref[j];delete S.dyn[j];S.floor[j]='';S.ground[j]=0;if(S.hi)S.hi[j]=0;if(S.fog)S.fog[j]=0};
     for(let y=y0-2;y<=y0+6;y++)for(let x=x0-2;x<=x0+7;x++)clear(x,y);
     for(let k=0;k<4;k++)S.obj[(y0+5)*W+x0+k]='crate';/* 箱を4つ（素材がいっぱいにならないように） */S.obj[(y0+1)*W+x0+2]='ntree';/* 置く所に木 */
-    recount();S.mat.wood=(S.mat.wood||0)+120;S.mat.kasa=(S.mat.kasa||0)+10;S.mat.nuno=(S.mat.nuno||0)+5;boxSync();
+    recount();S.mat.wood=(S.mat.wood||0)+120;S.mat.kasa=(S.mat.kasa||0)+10;S.mat.eda=(S.mat.eda||0)+10;S.mat.nuno=(S.mat.nuno||0)+5;boxSync();
     bpGive('small',f.id);out.inv=S.bpInv.length;
     out.sites0=S.obj.filter(o=>o==='site').length;
     askBp(0,x0,y0);out.askOk=pending&&pending.kind==='bp'&&pending.ok;confirmYes();out.bp=S.bp.length;out.pt=S.pt;
@@ -37,10 +37,37 @@ const assert=require('node:assert/strict');
     return JSON.stringify({had:before,left:S.obj.filter(o=>o==='site').length,bp:S.bp.length})})()`));
   console.log(c);assert.ok(c.had>0);assert.equal(c.left,0,'all sites of the blueprint removed');assert.equal(c.bp,0);
   const q=JSON.parse(await run(`JSON.stringify({sub:!!SUBQ.find(q=>q.k==='bphome'&&q.bp)})`));assert.equal(q.sub,true);
-  /* どの設計図も、家の中の空いたマスがぜんぶドアの前までつながっている（とじこめられる所がない） */
-  const lay=JSON.parse(await run(`JSON.stringify(Object.keys(BPS).map(k=>{const b=BPS[k],R=b.rows,fu=new Set(b.furn.map(f=>f[0]+','+f[1]));let door=null;R.forEach((row,y)=>{for(let x=0;x<row.length;x++)if(row[x]==='D')door=[x,y]});
-    const fr=(x,y)=>R[y]&&R[y][x]==='.'&&!fu.has(x+','+y);const st=[door[0],door[1]-1];const seen=new Set([st+'']),Q=[st];while(Q.length){const[x,y]=Q.pop();for(const[a,c]of[[1,0],[-1,0],[0,1],[0,-1]]){const k=[x+a,y+c];if(fr(...k)&&!seen.has(k+'')){seen.add(k+'');Q.push(k)}}}
-    let free=0;R.forEach((row,y)=>{for(let x=0;x<row.length;x++)if(fr(x,y))free++});return [k,fr(...st),seen.size===free]}))`));
-  console.log(lay);for(const[k,front,all]of lay){assert.equal(front,true,k+' door front free');assert.equal(all,true,k+' no closed-off cells')}
+  /* どの設計図も、空いたマスがぜんぶ外（家はドアの前）までつながり、どの家具・建物も、行けるマスのとなりにある（とじこめられる所がない） */
+  const lay=JSON.parse(await run(`JSON.stringify(Object.keys(BPS).map(k=>{const b=BPS[k],R=b.rows,h=R.length,w=Math.max(...R.map(r=>r.length)),blk=new Set(),own=[];
+    for(const[x,y,id,rot]of b.furn){const c=fp(id,x,y,rot||0);own.push([id,c]);for(const[a,d]of c){if(a>=w||d>=h)return [k,'out',id];blk.add(a+','+d)}}
+    const fr=(x,y)=>x<0||y<0||x>=w||y>=h||(()=>{const c=R[y][x]||' ';return !'WOF'.includes(c)&&!blk.has(x+','+y)})();
+    const seen=new Set(),Q=[];for(let y=-1;y<=h;y++)for(let x=-1;x<=w;x++)if(x<0||y<0||x>=w||y>=h){seen.add(x+','+y);Q.push([x,y])}
+    while(Q.length){const[x,y]=Q.pop();for(const[a,c]of[[1,0],[-1,0],[0,1],[0,-1]]){const X=x+a,Y=y+c;if(X<-1||Y<-1||X>w||Y>h)continue;const q=X+','+Y;if(fr(X,Y)&&!seen.has(q)){seen.add(q);Q.push([X,Y])}}}
+    let bad=[];for(let y=0;y<h;y++)for(let x=0;x<w;x++)if(fr(x,y)&&!seen.has(x+','+y))bad.push(x+','+y);
+    for(const[id,c]of own){if(BL[id].kind==='plant')continue;if(!c.some(([a,d])=>[[1,0],[-1,0],[0,1],[0,-1]].some(([p,q])=>seen.has((a+p)+','+(d+q)))))bad.push(id)}
+    const cats=b.cat;return [k,cats,bad.join(' ')]}))`));
+  console.log(JSON.stringify(lay));for(const[k,cat,bad]of lay){assert.ok(['house','garden','farm','play','guard'].includes(cat),k+' cat');assert.equal(bad,'',k+' closed-off cells / furniture')}
+  const cnt=lay.reduce((m,[,c])=>(m[c]=(m[c]||0)+1,m),{});console.log(cnt);assert.equal(lay.length,50);
+  /* おそなえだけの家具は入れない・家でない物も建てられる（花・ふち・畑・柵・柵のドア・2×2の建物） */
+  const off=JSON.parse(await run(`JSON.stringify(Object.keys(BPS).filter(k=>BPS[k].furn.some(f=>BL[f[2]].offerOnly&&STAGEONLY[f[2]]==null)))`));assert.deepEqual(off,[],'no offer-only furniture');
+  /* おぼえていない物の入った設計図は、もらえない */
+  const g=JSON.parse(await run(`(()=>{const sv=S.recipes;S.recipes={};const a=Object.keys(BPS).filter(bpCanGet);S.recipes=sv;return JSON.stringify({a,ok:a.every(k=>BPS[k].furn.every(f=>BL[f[2]].kind!=='furn'))})})()`));console.log('no recipes:',g.a);assert.ok(g.ok,'only furniture-free blueprints without recipes');
+  /* 家でない設計図を、さいごまで建てる */
+  const nh=JSON.parse(await run(`(()=>{const f=S.res[0];S.lv=15;S.feat.plant=true;S.flags.watchLearned=true;for(const id in BL){const b=BL[id];if(b.kind==='furn')S.recipes[id]=true;if(b.kind==='block')S.unlocked[id]=true;if(ATTRFL.has(id))S.unlocked[id]=true}
+    const out={can:Object.keys(BPS).filter(bpCanGet).length,miss:Object.keys(BPS).filter(k=>!bpCanGet(k)).map(k=>k+':'+bpPieces(k).filter(p=>!bpKnown(p[2],p[3])).map(p=>p[3]).join('/'))};const tests=['kadan','sakuhatake','toride','kouen'],X=(f.x|0)-14,Y=(f.y|0)+10;
+    const clear=(x,y)=>{const j=y*W+x;S.obj[j]='';delete S.ref[j];delete S.dyn[j];S.floor[j]='';if(S.edge)delete S.edge[j];S.ground[j]=0;if(S.hi)S.hi[j]=0;if(S.fog)S.fog[j]=0};
+    for(let y=Y-1;y<Y+8;y++)for(let x=X-1;x<X+34;x++)clear(x,y);recount();S.mat.wood=(S.mat.wood||0)+300;S.mat.stone=(S.mat.stone||0)+300;S.mat.shina=(S.mat.shina||0)+40;S.mat.funba=(S.mat.funba||0)+40;S.mat.eda=(S.mat.eda||0)+40;S.pt+=500;boxSync();
+    let ox=X;const E=[];for(const k of tests){bpGive(k,f.id);const i=S.bpInv.findIndex(q=>q.k===k);const ck=bpCheck(k,ox,Y);out[k+'chk']=ck[1];askBp(i,ox,Y);confirmYes();E.push([k,S.bp.find(q=>q.k===k),ox]);ox+=bpSize(k).w+2}
+    out.placed=S.bp.length;
+    for(let i=0;i<300000&&S.bp.length;i++){S.food=100;for(const r of S.res){r.hunger=hMax(r);r.energy=100;r.fun=100}if(hour()>=19||hour()<7)S.t=(Math.floor(S.t/1440)+1)*1440+7*60;S.mat.wood=Math.max(S.mat.wood,200);S.mat.stone=Math.max(S.mat.stone,200);stepWorld(.1);if(S.dialog||!document.querySelector('#dialog').hidden){document.querySelector('#dialog').hidden=true}}
+    out.left=S.bp.map(e=>e.k+':'+e.ps.filter(p=>p.s<2).map(p=>p.t+'/'+p.id+'/'+p.s).join(','));
+    for(const[k,e,x]of E){if(!e)continue;const at=(dx,dy)=>(Y+dy)*W+x+dx;
+      if(k==='kadan')out.kadan=e.ps.filter(p=>p.t==='edge').every(p=>S.edge&&S.edge[p.j]==='bedge')&&e.ps.filter(p=>p.t==='plant').every(p=>S.obj[p.j]===p.id)&&S.obj[at(2,2)]==='signpost';
+      if(k==='sakuhatake')out.saku=e.ps.filter(p=>p.t==='fence').every(p=>S.obj[p.j]==='fence')&&S.obj[at(2,3)]==='gate'&&e.ps.filter(p=>p.t==='farm').every(p=>S.obj[p.j]==='plot'||S.obj[p.j]==='farm');
+      if(k==='toride')out.toride=S.obj[at(2,1)]==='watch'&&S.obj[at(3,2)]==='part'&&S.ref[at(3,2)]===at(2,1);
+      if(k==='kouen')out.kouen=S.obj[at(0,0)]==='swing'&&S.obj[at(1,0)]==='part'&&S.obj[at(3,0)]==='sandbox'&&S.obj[at(1,2)]==='bench'}
+    out.done=S.bpDone;out.house=bpHouseN();return JSON.stringify(out)})()`));
+  console.log(nh);for(const k of['kamado','renga','wanoniwa','takemichi'])assert.ok(nh.miss.some(m=>m.startsWith(k+':')),k+' is volcano only');assert.ok(nh.miss.every(m=>['kamado','renga','wanoniwa','takemichi','funsui','idohatake','komugi','toriniwa','makiba','toride'].includes(m.split(':')[0])),'unexpected missing: '+nh.miss);assert.equal(nh.placed,4,JSON.stringify(nh));assert.deepEqual(nh.left,[]);
+  assert.equal(nh.kadan,true);assert.equal(nh.saku,true);assert.equal(nh.toride,true);assert.equal(nh.kouen,true);assert.equal(nh.house,1,'only houses count as houses');
   assert.deepEqual(errors,[]);await browser.close();console.log('OK');
 })().catch(e=>{console.error(e);process.exit(1)});
