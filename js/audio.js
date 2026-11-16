@@ -157,6 +157,7 @@ function sfx(k){
     const pt=(fr,d,v,f0)=>{const s=AC.createOscillator(),g=AC.createGain();s.type='sine';s.frequency.setValueAtTime(f0||fr,t);if(f0)s.frequency.exponentialRampToValueAtTime(fr,t+.012);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(v,t+.002);g.gain.exponentialRampToValueAtTime(.0001,t+d);s.connect(g);g.connect(lp);s.start(t);s.stop(t+d+.02)};
     pt(f,.42,.03,f*1.03);pt(f*3.93,.07,.007);pt(f*9.2,.025,.002);rustle(t,.015,.015,lp,f*4,f*4,1.2)}break;
   case'pin':rustle(t,.05,.05,o,1200,600,.7);knock(300,t+.03,.06,o,.08);knock(1500,t+.16,.03,o,.03);break;/* 紙をぺたっ、ピンをぷすっ */
+  case'crit':{const r=.94+Math.random()*.12;rustle(t,.08,.03,o,2600*r,4200*r,.7);knock(900*r,t+.05,.03,o,.04)}break;/* 小さな生き物をタップ：かさっ、と小さく */
   case'tile':{const r=.94+Math.random()*.12;knock(520*r,t,.045,o,.06)}break;/* 板が1まいずつ置かれる：とん、とん */
   case'flip':rustle(t,.06,.035,o,1800,3400,.8);knock(380,t+.07,.05,o,.07);break;/* 札を裏返す：ぱたっ */
   case'sizzle':rustle(t,.32,.07,o,5200,2400,1.2);rustle(t+.02,.22,.04,o,1800,900,.8);knock(210,t,.07,o,.12);break;/* 焼き印：じゅっ */
