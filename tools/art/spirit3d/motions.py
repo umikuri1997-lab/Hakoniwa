@@ -324,3 +324,42 @@ def dance(w, face):
     return dict(x=1.5*S(w), z=j, legz=j*0.7, roll=0.12*S(w), sN=2.0+0.45*S(w), sF=2.0-0.45*S(w), bN=0.6, bF=0.6, liftM=2.0*max(0, S(w)), liftP=2.0*max(0, -S(w)),
                 hr=0.1*S(w), top=0.2*S(w), tail=0.3*S(w), wing=0.25*S(w*2))
 M('dance', 8, 0.8, dance)
+
+# ---- 2人でふれあう ----
+def pinky(w, face):
+    """となりの子と、小指をつなぐ：手前の手を前の下へのばし、てれて体をゆらす"""
+    return breathe(dict(sN=0.75, bN=-0.15, tN=0.3, sF=0.3, bF=-0.3, hp=0.14, hr=0.07*S(w), yaw=0.08*S(w), z=0.3*abs(S(w))), w, 0.5)
+M('pinky', 8, 0.35, pinky)
+def squeeze(w, face):
+    """つないだ手を、ぎゅっぎゅっと2回にぎる"""
+    k = max(0.0, S(w*2))
+    return breathe(dict(sN=0.75+0.2*k, bN=-0.15, tN=0.3, sF=0.3, bF=-0.3, hp=0.06-0.06*k, z=0.5*k, legz=0.2*k), w, 0.4)
+M('squeeze', 8, 0.5, squeeze)
+def yubikiri(w, face):
+    """ゆびきり：小指をからめた手を、上下にゆらす"""
+    return breathe(dict(sN=1.15+0.3*S(w*2), bN=-0.25, tN=0.4, sF=0.4, bF=-0.4, hp=0.04, z=0.4*abs(S(w*2))), w, 0.4)
+M('yubikiri', 8, 0.5, yubikiri)
+def leanon(w, face):
+    """となりにすわって、かたにもたれる（正面から。左右は絵の反転で）"""
+    p = sit({}, 6.0, 1.3); p.update(roll=0.26, hr=0.22, hp=0.08, sN=0.6, sF=0.6, bN=-0.6, bF=-0.6)
+    return breathe(p, w, 0.5)
+M('leanon', 8, 0.2, leanon)
+def sitfront(w, face):
+    """となりにすわる（もたれてもらう子）：ひざに手をおいて、少し体をよせる"""
+    p = sit({}, 6.0, 1.3); p.update(roll=-0.06, hr=-0.05, sN=0.6, sF=0.6, bN=-0.6, bF=-0.6)
+    return breathe(p, w, 0.5)
+M('sitfront', 8, 0.2, sitfront)
+def liedown(w, face):
+    """草の上に、ねころぶ：体ぜんたいをうしろへたおして、あおむけに。手を左右へひろげる"""
+    p = dict(lean=-0.9, z=-7.0, legz=-7.0, y=-1.0, hp=-0.7, sN=-0.6, sF=-0.6, bN=1.3, bF=1.3, legM=1.2+0.06*S(w), legP=1.2-0.06*S(w))
+    return breathe(p, w, 0.6)
+M('liedown', 8, 0.2, liedown)
+def yawn(w, face):
+    """あくび：うでを外へのばして、頭をうしろへ"""
+    u = (w/(2*PI)) % 1; k = S(PI*min(1, u/0.75))
+    return dict(sN=0.4+0.4*k, sF=0.4+0.4*k, bN=0.3+1.1*k, bF=0.3+1.1*k, hp=-0.28*k, lean=-0.08*k, z=0.6*k, legz=0.3*k)
+M('yawn', 8, 0.5, yawn)
+def headpat(w, face):
+    """なでる：手前の手を前の上へのばして、ゆっくりなでる"""
+    return breathe(dict(sN=1.9+0.12*S(w*2), bN=-0.2+0.15*S(w*2), sF=0.3, bF=-0.3, lean=0.08, hp=-0.12), w, 0.4)
+M('headpat', 8, 0.5, headpat)

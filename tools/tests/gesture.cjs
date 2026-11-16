@@ -21,6 +21,14 @@ const assert=require('node:assert/strict');
   assert.equal(await run('spCrownOn(S.res[1])'),true,'receiver wears the crown');
   await next();await next().catch(()=>{});await page.waitForTimeout(300);
   assert.equal(await run('DLGPOSE.size'),0,'gestures are cleared when the talk ends');
+  /* 2b. 2人でふれあう・物をわたす・あくびがうつる・指さす・ヌシ様をなでる */
+  await run('S.t=1440+720;DLGGAP=0;DLGQ.length=0');await run(`dialog([[POKO,'#pinky|小指だけ。'],[MINA,'#give stone|これ、あげる。'],[POKO,'#yawn|……ふあぁ。'],[POKO,'#point tree|見て見て！']])`);await page.waitForTimeout(200);
+  assert.equal(await pose(POKO),'pinky','pinky pair (speaker)');assert.equal(await pose(MINA),'pinky','pinky pair (partner)');
+  await next();await page.waitForTimeout(1500);assert.equal(await run(`(sacredPose(S.res[0])||{}).handItem`),'stone','the receiver holds the stone');
+  await next();await page.waitForTimeout(1500);assert.equal(await pose(MINA),'yawn','the yawn is catching');
+  await run(`S.obj[CY*W+CX-3]='tree'`);await next();await page.waitForTimeout(200);assert.equal(await pose(POKO),'point','point at the tree');assert.equal(await run('S.res[0].face'),-1,'faces the tree');
+  await next();await run(`S.obj[CY*W+CX-3]=''`);
+  assert.equal(await run(`(()=>{const r=S.res[2],n0=S.nushi;r.act={type:'npl',stage:'do',t:0};S.nushi={x:r.x+1.5,y:r.y,pl:{id:r.id}};nushiPet();const a=(sacredPose(r)||{}).anim;S.nushi=n0;dlgGestEnd();r.act={type:'idle',stage:'do',t:0,dur:9999};return a})()`),'headpat','pet Nushi');
   /* 3. つぎの朝6時で、はずれる */
   await run('S.t=1440*2+400');assert.equal(await run('spCrownOn(S.res[1])'),false,'the crown is gone the next morning');
   /* 4. 夢の場面：あむ → 歩いていく → のせる */
