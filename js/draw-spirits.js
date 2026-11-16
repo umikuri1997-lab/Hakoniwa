@@ -632,12 +632,12 @@ function kgDot(key,white){const ch=CHIPS[key],im=chipImgs(ch,key)[0];if(!white)r
   const cv=document.createElement('canvas');cv.width=im.width;cv.height=im.height;const g=cv.getContext('2d');g.drawImage(im,0,0);g.globalCompositeOperation='source-in';g.fillStyle='#f4eefa';g.fillRect(0,0,cv.width,cv.height);return KGDOT[k]=cv}/* ひかったときは白いかげ */
 function kgTint(key,col){const k=key+'|'+col;if(KGDOT[k])return KGDOT[k];const im=chipImgs(CHIPS[key],key)[0],cv=document.createElement('canvas');cv.width=im.width;cv.height=im.height;const g=cv.getContext('2d');g.drawImage(im,0,0);g.globalCompositeOperation='source-in';g.fillStyle=col;g.fillRect(0,0,cv.width,cv.height);return KGDOT[k]=cv}
 function drawShadeDot(c,ty,x,y,s,f,o){
-  const K='kg_'+(EN[ty]&&EN[ty].art||ty)+':';if(!window.CHIPS||!CHIPS[K+'idle'])return false;/* art：ほかのコワイノの絵をかりる（ヨロイカゲ・ヒカリカゲ、仮の絵） */
+  const K='kg_'+(EN[ty]&&EN[ty].art||ty)+':';if(!window.CHIPS||!CHIPS[K+'idle'])return false;/* art：ほかのコワイノの絵をかりる */
   if(!KGDOK[ty]){for(const k in CHIPS)if(k.startsWith(K)&&!chipImgs(CHIPS[k],k)[0].ok)return false;KGDOK[ty]=1}
   const t=o.t||0,B=o.back?'B':'',p=o.atk||0,sc=s/(.27*EN[ty].size*2);
   // どのモーションの、何コマ目か
   let mo='idle',fi=Math.floor(t*1.6);
-  if(o.die!=null){mo='hurt';fi=o.die}/* たおされたとき：やられの3コマ目（たおれる）まで */else if(o.hurt!=null){mo='hurt';fi=o.hurt<.5?0:1}/* 攻撃をうけただけのときは、いたがる2コマだけ（たおれない） */
+  if(o.die!=null){mo='hurt';fi=o.die}/* たおされたとき：たおれる（3コマ目）→ つぶにほどけて きえる（4・5コマ目） */else if(o.hurt!=null){mo='hurt';fi=o.hurt<.5?0:1}/* 攻撃をうけただけのときは、いたがる2コマだけ（たおれない） */
   else if(o.walk){mo='walk';fi=Math.floor(t*6)}
   else if(p>=.84){mo='atk';const n=(CHIPS[K+'atk'+B]||CHIPS[K+'atk']).n||3;fi=p<.95?0:Math.min(n-1,1+Math.floor((p-.95)/.05*(n-1)))}/* ふりかぶる → ふりおろす → もどる */
   const key=mo==='hurt'||!CHIPS[K+mo+B]?K+mo:K+mo+B,ch=CHIPS[key];fi=mo==='hurt'?Math.min(fi,ch.n-1):fi%(ch.n||1);
