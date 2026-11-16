@@ -328,6 +328,7 @@ function decide0(r){if(r.wakeStretch){r.wakeStretch=0;if(!isNight()&&!enemyLive(
     if(!cnt(cs)){if(cR){const N=needR(cR,r);for(const k in N)addFood(k,N[k])};r.cing=null}}
   if(r.toStor){if(carryN(r)>0&&foodCap()>0)return goStore(r,G);r.toStor=0}
   if(!isNight()&&tourTick(r,G))return;/* 村のあんない */
+  if(r.alead&&!isNight()&&typeof aniLeadGo==='function'&&aniLeadGo(r,G))return;/* 野良の生き物を、小屋へつれていく（animals.js） */
   if(!storyCalled(r)){/* お話・調べによばれている子は、水浴びをはじめない（ごはんは先） */
   {const h=hour();if(!isNight()&&r.hunger>=400&&h>=18+hash((r.id||0)*13+5)*.4&&r.bathD!==dayNo()&&goBathe(r,G))return}/* 夜（23時〜）は水浴びを始めない（始めても、すぐやめさせられるので）。おなかがすいているときは、ごはんが先 */
   if(r.elem==='water'&&!isNight()&&r.hunger>=400&&r.bathW!==dayNo()&&hour()>=10+hash((r.id||0)*7+dayNo())*6){const bd=r.bathD;r.bathW=dayNo();if(goBathe(r,G))return;r.bathD=bd}/* 水のせいれいは、昼間にも水あそびをする */
