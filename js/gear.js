@@ -111,7 +111,7 @@ function veinMorning(){if(!S||WD!==1||S.free)return;if(IS_STORY_REPLAY||typeof M
   const okC=j=>{const x=j%W,y=(j/W)|0;return x>0&&y>0&&x<W-1&&y<H-1&&!S.obj[j]&&!S.floor[j]&&S.ground[j]===0&&!VILL[j]&&walk(j)&&!(Math.abs(x+.5-CX)<7&&Math.abs(y+.5-CY)<7)&&!S.res.some(r=>(r.x|0)===x&&(r.y|0)===y)};
   const rk=q=>S.obj[q]==='rock'||!!VEINS[S.obj[q]];let C=[];for(let j=0;j<W*H;j++)if(okC(j)&&[j-1,j+1,j-W,j+W].some(rk))C.push(j);if(!C.length)for(let j=0;j<W*H;j+=7)if(okC(j))C.push(j);
   const tot=kinds.reduce((a,v)=>a+VEIN_W[v],0);let put=0;while(n-->0&&C.length){const i=(Math.random()*C.length)|0,j=C[i];C.splice(i,1);let q=Math.random()*tot,v=kinds[0];for(const o of kinds){q-=VEIN_W[o];if(q<0){v=o;break}}S.obj[j]=v;S.dyn[j]={vg:1};delete S.hp['n'+j];put++}if(put){recount();dirty=true}}
-/* 「みる」でタップした鉱脈（のこっている物だけ） */
+/* 「しらべる」でタップした鉱脈（のこっている物だけ） */
 function vreqList(){const q=S.vreq;if(!q)return [];const L=[];for(const k in q){if(VEINS[S.obj[+k]])L.push(+k);else delete q[k]}return L}
 /* はじめての鉱石で、そうびのレシピを思いつく（火山だけ） */
 function gearIdea(){if(!S||S.free||WD!==1)return;const got=k=>(S.gotMat&&S.gotMat[k]>0)||(S.mat[k]||0)>0;if(!GEAR_ORES.some(got))return;S.recipes||(S.recipes={});S.guardianIdeas||(S.guardianIdeas={});const nw={};

@@ -126,7 +126,7 @@ function findHouses(){const isB=j=>HOME_WALLS.has(typeAt(j))&&!decayed(j)||HOME_
       out.push({set,inside:new Set(cells),x0,y0,x1,y1,ib})}}
   HOUSES=out}
 // 屋根：上から見た切妻屋根。いちばん下の列は正面の壁（窓つき）。拡大すると消えて中が見える
-/* 屋根は、ズームでは変えない。「みる」では屋根あり、置く・こわすときだけ外して中を見せる */
+/* 屋根は、ズームでは変えない。「しらべる」では屋根あり、置く・こわすときだけ外して中を見せる */
 /* 屋根は家ごと。家をタップすると屋根が消えて中が見える。家の外をタップすると、もどる */
 const OPENH=new Set(),ROOFS=new Map(),hKey=h=>h.x0+','+h.y0;
 function roofAOf(h){const k=hKey(h);let v=ROOFS.get(k);if(!v){v={a:OPENH.has(k)?0:1};ROOFS.set(k,v)}return v.a}/* 描くときは読むだけ。すけぐあいは stepLooks で進める */

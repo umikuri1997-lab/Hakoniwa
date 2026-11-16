@@ -323,7 +323,7 @@ function hitRes(e,r,D){if(onTower(r))return;if(BOSSFX[e.type]){shakeScreen();fxS
   {const L=lightAt(e.x,e.y);e.rest=fire?(D.boss?(L?2:1.5):(L?2.667:2)):(D.boss?(L?4:3):(L?5.333:4))}/* たたいたあと、コワイノがひと休みする時間（明かりの中は長い）。やられて止まる stun とはちがい、うすくならない */e.path=[];e.repath=0;gearHurt(e,r);/* はね返し */
 }
 const LIGHTCDL=[10,10,9.5,9,8.5,8,7.5,7,6.5,6,5.5,5,4.5,4,3.5,3];/* 前の、村レベルごとのチャージ（秒）。いまは使わない。古いセーブの読みかえ（gupMigrate）だけ */
-/* 守り神のちから（メニュー）：パワーで、守り神の技を10段階まで強くする（ステージごと。ほかのステージには引きつがない）。数字は段階0〜10の実数。stun・vb は e.stun の数（時計の1.5倍）、sh は葉のまもりの時計の分、cd は秒 */
+/* むらのちから（メニュー）の守り神の枝：パワーで、守り神の技を10段階まで強くする（ステージごと。ほかのステージには引きつがない）。数字は段階0〜10の実数。stun・vb は e.stun の数（時計の1.5倍）、sh は葉のまもりの時計の分、cd は秒 */
 const GUPC=[100,200,300,500,700,1000,1400,1900,2500,3200];
 const GUP=[
  {k:'cd',n:'まもりの光のチャージ',v:[10,9,8,7,6.5,6,5,4.5,4,3.5,3],t:['10秒','9秒','8秒','7秒','6.5秒','6秒','5秒','4.5秒','4秒','3.5秒','3秒']},
@@ -338,13 +338,13 @@ function gupBuy(k){const n=gupLv(k);if(n>=10)return false;const c=GUPC[n];if(S.p
 function gupMigrate(){/* 前は村レベルでチャージがみじかくなった。強化だけにしたので、古いセーブは、そのときのチャージより長くならない段階にする（1回だけ） */if(S.flags.gup1)return;S.flags.gup1=1;const old=LIGHTCDL[S.lv]||10,v=gupOf('cd').v;let i=0;while(i<10&&v[i]>old)i++;if(i>gupLv('cd'))(S.gup||(S.gup={})).cd=i}let LIGHTCD=0,LIGHTARM=false;/* 守りの光：アイコンをタップしてから、コワイノ・木・岩をタップする *//* のこり秒（倍速なら早くもどる） */
 function guardLight(e){PTW.q=true;if(LIGHTCD>0){toast('まもりの光は、あと'+Math.ceil(LIGHTCD/(S.speed||1))+'秒');return}if(S.pt<1){toast('パワーが足りません');return}S.pt-=1;LIGHTCD=lightCdMax();
   const D=EN[e.type],G=gupOf('stun'),gs=gupLv('stun');hurtEn(e,gupOf('pow').v[gupLv('pow')],{flash:8,k:'light'});/* 威力・とめる時間は、守り神のちから（GUP）の段階 */e.stun=D.boss?G.vb[gs]:G.v[gs];e.path=[];e.repath=0;
-  const cx=e.x*TS,cy=e.y*TS-18;fxSpr('lighthit',cx,cy);sfxAt('shoot',e.x,e.y);
+  const cx=e.x*TS,cy=e.y*TS-18;fxSpr('godlight',cx,cy);skillFx('light');sfxAt('shoot',e.x,e.y);
   if(e.hp<=0)return defeat(e,'守り神の光で'+D.name+'を追いはらった！')}
 let AREACD=0,AREAARM=false;/* こもれびのまもり（フタバから受けついだ守り神の技）：タップした場所のまわりのせいれいに、葉のまもり・パワー3。まわりのマス・葉のまもりの時間・チャージは GUP の area */
 function areaBlast(cx,cy){
   const A=gupOf('area'),ga=gupLv('area'),L=S.res.filter(r=>!r.hidden&&Math.hypot(r.x-cx,r.y-cy)<=A.r[ga]);
   if(!L.length){toast('はんいに、せいれいがいません');return}
-  S.pt-=3;PTW.q=true;AREACD=A.cd[ga];const px=cx*TS,py=cy*TS;fxSpr('areaguard',px,py);
+  S.pt-=3;PTW.q=true;AREACD=A.cd[ga];const px=cx*TS,py=cy*TS;fxSpr('areaguard',px,py);skillFx('area');{const R=A.r[ga]*TS,N=Math.max(12,Math.round(A.r[ga]*6));for(let i=0;i<N;i++){const a=i/N*Math.PI*2;villageTimeout(()=>fxSpr('arealeaf',px+Math.cos(a)*R,py+Math.sin(a)*R),i*260/N)}}/* はんいのふちに、葉がぐるっと出る */
   sfx('bush');
   for(const r of L){r.shU=S.t+A.sh[ga];leafFX(r)}}
 function nightClearJoy(){/* 今夜のコワイノをぜんぶ追いはらった瞬間：起きている子がぴょんぴょんよろこぶ（1晩1回、S.ns.clr） */if(!S.ns||S.ns.clr||!S.ns.kill||MEMRUN||!nightClear())return;const now=performance.now();if(EVAP.some(it=>it.die&&now-it.t0<(it.dur||1800)))return;/* さいごのコワイノが白く止まって倒れおわってから */S.ns.clr=1;const L=S.res.filter(r=>!r.hidden&&!(r.act&&(r.act.type==='sleep'||r.act.type==='faint')&&r.act.stage==='do')&&!(JOYU.get(r)>now));if(!L.length)return;sfx('chime');toast('今夜のコワイノを、ぜんぶ追いはらった！','good');for(const r of L){JUMP.set(r,now+Math.random()*300);villageTimeout(()=>JUMP.set(r,performance.now()),700+Math.random()*300)}}
@@ -409,7 +409,7 @@ function updTowers(dt){
   for(const j of TOWERS){const o=S.obj[j];if(o!=='watch'&&o!=='yogan'&&o!=='tower'||o==='tower'&&WD===0)continue;/* 草原の御神木は矢をうたない */
    for(let si=0,sn=o==='watch'?wpCap(j):1;si<sn;si++){const tk=si?'w'+j+'_'+si:'w'+j;/* 見張り台に2人立てるときは、立つ所ごとに、うつ間かくをかぞえる */
     S.hp[tk]=(S.hp[tk]||0)-dt;if(S.hp[tk]>0)continue;
-    let st=o==='tower'?{dmg:10,range:10,cd:10}:(o==='yogan'?YOGAN:WATCH)[S.hp['L'+j]||1];if(o==='watch'&&typeof pathA==='function'&&(pathA('wdmg')||pathA('wrng')))st=Object.assign({},st,{dmg:st.dmg+pathA('wdmg'),range:st.range+pathA('wrng')});/* ひらき道 */if(o==='watch')st=towerMod(j,st);/* 高さ・強化の道・太鼓・天気（defense.js） */if(nightVarNow()==='kiri')st=Object.assign({},st,{range:st.range/2});/* 霧の夜：とどく所が半分 */if(o==='watch'&&!wpGuardAt(j,si)){S.hp[tk]=1;if(si)continue;if(!watchGuard(j)&&S.ns&&!S.ns.noGuard&&isNight()&&S.enemies.some(e=>e.spawned&&!e.dead)&&!S.res.some(q=>q.act&&q.act.type==='watchpost')){S.ns.noGuard=1;toast('見張り台にせいれいがいません','warn')}continue}/* 知らせるのは、夜のあいだ、どの見張り台にもだれも向かっていないときだけ（見張り台がいくつかあって、木のせいれいが1人のときは知らせない。朝におりたあとも知らせない） *//* 見張り台は、せいれいが立っているときだけうつ */const wg=o==='watch'?wpGuardAt(j,si):null,WE=wg?WPEL[wg.elem]||WPEL.wood:WPEL.wood;if(o==='watch'&&!WE.water&&ammoTotal()<1){S.hp[tk]=1;if(!S.flags.noArrow&&S.enemies.some(e=>e.spawned&&!e.dead)){S.flags.noArrow=1;toast('見張り台の木の矢がありません','warn')}continue}/* 見張り台は、木の矢がないとうてない */
+    let st=o==='tower'?{dmg:10,range:10,cd:10}:(o==='yogan'?YOGAN:WATCH)[S.hp['L'+j]||1];if(o==='watch'&&typeof pathA==='function'&&(pathA('wdmg')||pathA('wrng')))st=Object.assign({},st,{dmg:st.dmg+pathA('wdmg'),range:st.range+pathA('wrng')});/* むらのちから */if(o==='watch')st=towerMod(j,st);/* 高さ・強化の道・太鼓・天気（defense.js） */if(nightVarNow()==='kiri')st=Object.assign({},st,{range:st.range/2});/* 霧の夜：とどく所が半分 */if(o==='watch'&&!wpGuardAt(j,si)){S.hp[tk]=1;if(si)continue;if(!watchGuard(j)&&S.ns&&!S.ns.noGuard&&isNight()&&S.enemies.some(e=>e.spawned&&!e.dead)&&!S.res.some(q=>q.act&&q.act.type==='watchpost')){S.ns.noGuard=1;toast('見張り台にせいれいがいません','warn')}continue}/* 知らせるのは、夜のあいだ、どの見張り台にもだれも向かっていないときだけ（見張り台がいくつかあって、木のせいれいが1人のときは知らせない。朝におりたあとも知らせない） *//* 見張り台は、せいれいが立っているときだけうつ */const wg=o==='watch'?wpGuardAt(j,si):null,WE=wg?WPEL[wg.elem]||WPEL.wood:WPEL.wood;if(o==='watch'&&!WE.water&&ammoTotal()<1){S.hp[tk]=1;if(!S.flags.noArrow&&S.enemies.some(e=>e.spawned&&!e.dead)){S.flags.noArrow=1;toast('見張り台の木の矢がありません','warn')}continue}/* 見張り台は、木の矢がないとうてない */
     const z0=szAt(o,j)||[1,1],x=j%W+z0[0]/2,y=((j/W)|0)+z0[1]/2;
     let tg=null,bd=st.range+(o==='watch'?(nightVarNow()==='kiri'?3:6):0);/* 見張り台は、矢の射程ぶん遠くまで見る（あたるかは矢ごと） */for(const e of S.enemies){if(!e.spawned||e.dead)continue;const d=Math.hypot(e.x-x,e.y-y);if(d<bd){bd=d;tg=e}}
     if(o==='watch'&&WE.water){let w2=null,wd=1e9;const wr=st.range*WE.rng;for(const e of S.enemies){if(!e.spawned||e.dead||(e.stun||0)>0)continue;const d=Math.hypot(e.x-x,e.y-y);if(d>=wr)continue;const kk=torderKey(j,e,d);if(kk<wd){wd=kk;w2=e}}/* ねらう順 *//* 水：止まっていないコワイノのうち、いちばん近い子 */if(!w2){S.hp[tk]=1;continue}w2.stun=(EN[w2.type].boss?1.5:3)*waterStunMul()*weakStun(w2,'water');/* 2分（オオカゲなどは1分）。雨の夜は1.5倍 */w2.path=[];shots.push({x1:x,y1:y-1.9,x2:w2.x,y2:w2.y-.3,life:1,water:true});if(wg){wg.bowT=performance.now();wg.face=w2.x<wg.x?-1:1}S.hp[tk]=st.cd*WE.cd/(wg?rMul(wg,'work'):1);sfxAt('shoot',x,y);continue}

@@ -1,5 +1,5 @@
 const {chromium}=require('playwright'),assert=require('node:assert/strict'),fs=require('node:fs');
-/* 守り神のちから（10段階・ステージごと）：パワーで強化すると、まもりの光のチャージ・威力・とめる時間と、こもれびのまもりがかわる。古いセーブは村レベルのチャージより長くならない */
+/* むらのちから・守り神の枝（10段階・ステージごと）：パワーで強化すると、まもりの光のチャージ・威力・とめる時間と、こもれびのまもりがかわる。古いセーブは村レベルのチャージより長くならない */
 (async()=>{const browser=await chromium.launch({executablePath:process.env.CHROME_PATH||(fs.existsSync('/usr/bin/chromium')?'/usr/bin/chromium':undefined),args:['--no-sandbox']});const page=await browser.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));await page.route('**/js/main.js*',async route=>{const r=await route.fetch();await route.fulfill({response:r,body:(await r.text())+'\nwindow.ltEval=s=>eval(s);'});});await page.goto(process.env.GAME_URL||'http://127.0.0.1:8000');await page.waitForFunction(()=>!!window.ltEval);
 await page.waitForFunction(()=>ltEval('!!window.CHIPS&&!!CHIPS["kg_basic:idle"]'),null,{timeout:30000});
 const out=await page.evaluate(()=>ltEval(`(()=>{const o={};S=newState(0);setWorld(0);S.enemies=[];S.pt=5000;
@@ -10,12 +10,12 @@ const out=await page.evaluate(()=>ltEval(`(()=>{const o={};S=newState(0);setWorl
  e=mk('basic');S.enemies=[e];LIGHTCD=0;guardLight(e);o.max={hp:999-e.hp,stun:e.stun,cd:LIGHTCD};
  const b=mk('boss');S.enemies=[b];LIGHTCD=0;guardLight(b);o.boss=b.stun;
  S.flags.areaSkill=true;const r=S.res[0];r.x=40.5;r.y=40.5;r.hidden=false;r.shU=0;const t0=S.t;areaBlast(40.5+4.4,40.5);o.area={sh:Math.round(r.shU-t0),cd:AREACD};
- openSheet('menu','gup');o.rows=[...document.querySelectorAll('#sheetBody .row')].filter(r=>r.textContent.includes('（Lv')).length;/* 強くする行（わざの枠の行はのぞく） */o.txt=document.querySelector('#sheetBody').textContent;closeSheet();
+ openSheet('menu','gup');o.rows=[...document.querySelectorAll('.stree .tnode')].filter(b=>b.dataset.node.startsWith('g:')&&b.dataset.st==='done').length;/* 守り神の枝の点（さいだいまで強化） */document.querySelector('.stree .tnode[data-node="g:pow"]').click();o.txt=document.querySelector('#treePop').textContent;document.querySelector('#treePop .x').click();closeSheet();
  /* 古いセーブ：村レベル12（前のチャージ4.5秒）→ 4.5秒の段階 */S.flags.gup1=0;S.gup={};S.lv=12;gupMigrate();o.mig12=S.gup.cd;S.flags.gup1=0;S.gup={};S.lv=1;gupMigrate();o.mig1=S.gup.cd||0;
  return o})()`));
 console.log(JSON.stringify(out));
 assert.deepEqual(out.base,{hp:10,stun:2.5,cd:10});assert.equal(out.noMoney,false);
 assert.equal(out.pt,50000-4*11800);
 assert.deepEqual(out.max,{hp:30,stun:9.75,cd:3});assert.equal(out.boss,4.875);assert.deepEqual(out.area,{sh:90,cd:2.5});
-assert.equal(out.rows,4);assert.ok(out.txt.includes('さいだい'));assert.equal(out.mig12,7);assert.equal(out.mig1,0);
+assert.equal(out.rows,4);assert.ok(out.txt.includes('Lv10/10')&&!out.txt.includes('強化'));assert.equal(out.mig12,7);assert.equal(out.mig1,0);
 assert.deepEqual(errors,[]);console.log('God upgrades: OK. Browser errors: none');await browser.close()})().catch(e=>{console.error(e);process.exit(1)});

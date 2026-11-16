@@ -18,7 +18,7 @@ OUT = 0.0        # 輪郭線のふとさ（マス）。0は輪郭線なし
 OUTK = 0.5       # 輪郭線の色（もとの色にかける数。1に近いほどうすい線）
 BEVEL = 0.022    # 箱の角の面取り（マス）
 class Scene:
-    def __init__(self): self.t = []; self.pid = 0; self.ol = {}; self.cur = None; self.grp = {}; self.gcur = None; self.tx = {}; self.tcur = None; self.mt = {}; self.mcur = None; self.tg = {}; self.tcur2 = None; self.joins = set(); self.dc = {}; self.dcur = None; self.sm = set(); self.scur = False; self.cv = set(); self.ccur = False; self.txax = {}
+    def __init__(self): self.t = []; self.pid = 0; self.ol = {}; self.cur = None; self.grp = {}; self.gcur = None; self.tx = {}; self.tcur = None; self.mt = {}; self.mcur = None; self.tg = {}; self.tcur2 = None; self.joins = set(); self.dc = {}; self.dcur = None; self.sm = set(); self.scur = False; self.cv = set(); self.ccur = False; self.txax = {}; self.bm = {}; self.bcur = None
     def outline(self, w=None, k=None):
         """これから足す部品の輪郭線の太さ w（マス）・色 k（もとの色にかける数）。None は render の値"""
         self.cur = None if w is None and k is None else (w, k)
@@ -40,6 +40,10 @@ class Scene:
     def decal(self, f=None):
         """これから足す部品の、もよう（3Dの面にのる柄）。f(x, y, z) → その場所の色（もようでない所は None）。render_px で、ドットごとに、見える面の場所から色をきめ、その場所のかげ（3だん）をつける"""
         self.dcur = f
+    def bump(self, f=None):
+        """これから足す部品の、でこぼこ（ノーマルマップ）と色のむら。f(P, N) → (N2, mul)：ドットごとの見える面の場所 P・なめらかな面の向き N から、
+        でこぼこをつけた面の向き N2 と、色にかける数 mul（なければ None）。スムーズシェードの部品だけ。かげの段は N2 できめる（段のままなので、ドットらしいかげ）"""
+        self.bcur = f
     def tag(self, t=None):
         """これから足す部品の名札。join(a, b) した名札の部品どうしのさかいには、render_px で線を引かない（つづいている1まいの板など）"""
         self.tcur2 = t
@@ -50,6 +54,7 @@ class Scene:
         if self.mcur: self.mt[self.pid] = self.mcur
         if self.tcur is not None: self.tx[self.pid] = self.tcur
         if self.dcur is not None: self.dc[self.pid] = self.dcur
+        if self.bcur is not None: self.bm[self.pid] = self.bcur
         if self.scur: self.sm.add(self.pid)
         if self.ccur: self.cv.add(self.pid)
         if self.cur: self.ol[self.pid] = self.cur
@@ -237,6 +242,14 @@ def grid_bg(ext, foot=None):
 
 SHADE = [(17.5, -5), (35, -10)]   # かげの色：ベースの色の HSV（100段階）から、明るさ・あざやかさを引く（半かげ・かげ）。持ち主がきめた（かげ＝明るさ−35・あざやかさ+10）
 SHINE = (12, -8)                # 金属のつや：明るさを足し、あざやかさを引く（白っぽく）
+DITHER = 0   # 0 でなければ、かげを1色にして、うすいかげをあみ（できあがりの1ドットごと。この数は1ドットの大きさ）であらわす
+DITHERR = (0.22, 0.72)   # あみ：かげになりはじめる・ぜんぶかげになる、光の向きとの内積
+LAST = None
+DITHERG = None   # つやつやの部品の、色の段（DITHERT と同じ形。段は1つ多くてよい）
+DITHERO = (0, 0)   # あみのならびの もとの点（大きな絵のドット）
+DITHERT = None   # あみの色の段（DITHER のとき。None なら DITHERR・DITHERHL の2色＋ハイライト）
+DITHERHL = None   # あみのハイライト：(はじまる・ぜんぶになる 光の向きとの内積, 明るさを足す, あざやかさを引く)（100段階）
+DITHERLV = 3   # あみのときの、かげの色（toon の段）
 METALSPEC = 0.97                # 金属のつやが出る向きの近さ
 SATINSPEC = 0.80                # サテンの布（material 'satin'）のつやが出る向きの近さ（光と目のあいだの向きとの内積）
 SATINSHINE = (24, -6)           # サテンのつや（lv −2）：明るさを足し、あざやかさを引く
@@ -320,7 +333,7 @@ def render_px(sc, proj, ext, depth, k=0.72, outer=True, merge=12, lw=1, k2=0.86,
     outerk：True なら、まわりのふち（透明ととなりあう所）は、部品ごとの線のこさ（sc.outline の k・p.olk）を使わず、いつも k・k2 で引く（目地だけうすくしたいとき）。数なら、外の線はその数、内がわの線は (数+1)/2（白い物の、まわりの線をこくするとき）。
     lw：輪郭線のはば（1か2）。2のときは、さかい目にふれる1ドットめが こい線（×k）、そのとなりの2ドットめが まわりになじむ うすい線（×k2）。まわりのふちは、外がわ1ドットがこい線・物の内がわ1ドットがうすい線。"""
     x0, x1, y0, y1 = ext; Wp = int(round((x1-x0)*S)); Hp = int(round((y1-y0)*S))
-    col = np.zeros((Hp, Wp, 3)); zb = np.full((Hp, Wp), -1e9); idb = np.full((Hp, Wp), -1); lvb = np.zeros((Hp, Wp), int)
+    col = np.zeros((Hp, Wp, 3)); ccb = np.zeros((Hp, Wp, 3)); dlb = np.zeros((Hp, Wp)); zb = np.full((Hp, Wp), -1e9); idb = np.full((Hp, Wp), -1); lvb = np.zeros((Hp, Wp), int)
     wp = np.zeros((Hp, Wp, 3)); wn = np.zeros((Hp, Wp, 3))   # ドットごとの、せかいの場所と面の向き（テクスチャ用）
     CLR = []   # すけて見える部品の三角形
     RAY = getattr(proj, 'ray', None)   # persp の写し方：ドットごとに、見える面の場所を式でとく（三角形を分けない）
@@ -337,16 +350,18 @@ def render_px(sc, proj, ext, depth, k=0.72, outer=True, merge=12, lw=1, k2=0.86,
         L_ = [q for q in VN.get((pid,)+tuple(np.round(v, 5)), []) if np.dot(q, n) > SMCREASE]
         if not L_: return n
         m_ = np.sum(L_, 0); return m_/max(1e-9, np.linalg.norm(m_))
+    INK = {p_ for p_, m_ in sc.mt.items() if m_ == 'ink'}
     for a, b, c, cc, pid in sc.t:
         n = np.cross(b-a, c-a); ln = np.linalg.norm(n)
         if ln < 1e-12: continue
         n /= ln
+        if pid in INK and np.dot(n, depth) > 0: continue   # 背面法の輪郭（ふくらませた うら返しの皮）：うらを向いた面だけ描く
         if np.dot(n, depth) < 0: n = -n
         if sc.mt.get(pid) == 'clear': CLR.append((a, b, c, cc, n)); continue   # 水など、すけて見える部品は、ほかをぜんぶ描いてから、うすくかさねる
         d = float(np.dot(n, LIGHT)); lv = (0 if d > LV4[0] else 1 if d > LV4[1] else 2 if d > LV4[2] else 3) if GRAD else (0 if d > 0.55 else 1 if d > 0.1 else 2)
         if sc.mt.get(pid) == 'soft': lv = (0 if d > SOFTLV4[0] else 1 if d > SOFTLV4[1] else 2 if d > SOFTLV4[2] else 3) if GRAD else (0 if d > SOFTLV[0] else 1 if d > SOFTLV[1] else 2)
         if sc.mt.get(pid) == 'soft1': lv = 0 if d > SOFTLV[0] else 1   # 布（うすいかげだけ。まくらなど、かげをこくしない物）
-        if sc.mt.get(pid) == 'flat': lv = 0   # かげを自分でつけた部品（場所ごとの色。まくら）：3だんのかげをつけない   # 布・砂：なだらかなふくらみにも、かげがつく（さかい目の向きを光に近くする）
+        if sc.mt.get(pid) in ('flat', 'ink'): lv = 0   # かげを自分でつけた部品（場所ごとの色。まくら）：3だんのかげをつけない   # 布・砂：なだらかなふくらみにも、かげがつく（さかい目の向きを光に近くする）
         if sc.mt.get(pid) == 'metal':   # 金属：光と目のあいだの向き（ハーフベクトル）を向く面に、つやのすじ
             hv = LIGHT+depth/np.linalg.norm(depth); hv /= np.linalg.norm(hv); hh = np.array([hv[0], hv[1], 0]); nh = np.array([n[0], n[1], 0])
             sp = float(np.dot(nh/(np.linalg.norm(nh) or 1), hh/(np.linalg.norm(hh) or 1))) if np.linalg.norm(nh) > .3 else float(np.dot(n, hv))
@@ -374,10 +389,13 @@ def render_px(sc, proj, ext, depth, k=0.72, outer=True, merge=12, lw=1, k2=0.86,
             m = (w0 >= -1e-6) & (w1 >= -1e-6) & (w2 >= -1e-6)
             z = w0*D[0]+w1*D[1]+w2*D[2]
         s = (slice(by0, by1+1), slice(bx0, bx1+1)); vis = m & (z > zb[s])
-        zb[s][vis] = z[vis]; col[s][vis] = shc; idb[s][vis] = pid; lvb[s][vis] = lv
+        zb[s][vis] = z[vis]; col[s][vis] = shc; ccb[s][vis] = cc; dlb[s][vis] = d; idb[s][vis] = pid; lvb[s][vis] = lv
         if pid in sc.sm and sc.mt.get(pid) != 'flat' and vis.any():   # スムーズシェード：ドットごとに、角の向きをまぜた面の向きで段をきめる（金属は、つやのすじも）
             na, nb, nc = vnorm(pid, a, n), vnorm(pid, b, n), vnorm(pid, c, n)
             NN = w0[vis, None]*na+w1[vis, None]*nb+w2[vis, None]*nc; NN /= np.maximum(np.linalg.norm(NN, axis=1, keepdims=True), 1e-9)
+            BMUL = None
+            if pid in sc.bm:   # でこぼこ（ノーマルマップ）：見える面の場所から、面の向きをかえる
+                NN, BMUL = sc.bm[pid](w0[vis, None]*a+w1[vis, None]*b+w2[vis, None]*c, NN)
             dd = NN@LIGHT; mt_ = sc.mt.get(pid); L2 = np.array([_lvof(float(x), 'curve' if pid in sc.cv else (None if mt_ == 'metal' else 'soft' if mt_ == 'satin' else mt_)) for x in dd])
             if mt_ == 'metal':
                 hv = LIGHT+depth/np.linalg.norm(depth); hv /= np.linalg.norm(hv); hh = np.array([hv[0], hv[1], 0]); hh /= max(1e-9, np.linalg.norm(hh))
@@ -388,14 +406,46 @@ def render_px(sc, proj, ext, depth, k=0.72, outer=True, merge=12, lw=1, k2=0.86,
             if mt_ == 'satin':
                 hv = LIGHT+depth/np.linalg.norm(depth); hv /= np.linalg.norm(hv); L2[NN@hv > SATINSPEC] = -2
             TC = {q: toon(cc, q) for q in set(L2.tolist())}
-            col[s][vis] = np.array([TC[q] for q in L2]); lvb[s][vis] = L2
+            col[s][vis] = np.array([TC[q] for q in L2])*(1 if BMUL is None else BMUL[:, None]); lvb[s][vis] = L2; dlb[s][vis] = dd; ccb[s][vis] = np.clip(np.array(cc, float)*(1 if BMUL is None else BMUL[:, None]), 0, 255)
         if pid in sc.tx or pid in sc.dc:
             wp[s][vis] = (w0[vis, None]*a+w1[vis, None]*b+w2[vis, None]*c); wn[s][vis] = n
     for pid, f in sc.dc.items():   # もよう：ドットごとに、見える面の場所の色（かげは、そのドットの3だん）
         ys_, xs_ = np.nonzero(idb == pid)
         for yy, xx in zip(ys_, xs_):
             c_ = f(*wp[yy, xx])
-            if c_ is not None: col[yy, xx] = toon(c_, lvb[yy, xx])
+            if c_ is not None: col[yy, xx] = toon(c_, lvb[yy, xx]); ccb[yy, xx] = c_
+    if DITHER:   # かげを1色にして、うすいかげはかげのドットの密度（あみ）であらわす。あみは、できあがりの1ドット（DITHER ドット四方）ごと
+        BY = np.array([[0, 8, 2, 10], [12, 4, 14, 6], [3, 11, 1, 9], [15, 7, 13, 5]])/16+1/32   # 4×4 のならび（16だん）
+        yy_, xx_ = np.mgrid[0:Hp, 0:Wp]; th = BY[((yy_+DITHERO[1])//DITHER) % 4, ((xx_+DITHERO[0])//DITHER) % 4]   # あみのならびは、足もとの点をもとに（コマで絵のわくがかわっても、ずれない）
+        m_ = (idb >= 0) & (lvb >= 0) & ~np.isin(idb, list(INK))   # 背面法の輪郭は、そのままの色
+        if DITHERT:   # 色の段（こい かげ・かげ・光・ハイライト）と、そのさかいのあみ。DITHERT：段のさかい目ごとの（はじまる・おわる 光の向きとの内積）、段の色（toon の段か、(明るさ, あざやかさ) を足す）
+            bd, tones = DITHERT; idx = np.zeros((Hp, Wp), int)
+            for lo, hi in bd: idx += (np.clip((dlb-lo)/(hi-lo), 0, 1) > th) | (dlb >= hi)
+            import colorsys
+            def tone(q, t):
+                if not isinstance(t, tuple): return toon(q, t)
+                h_, s2, v2 = colorsys.rgb_to_hsv(*(np.array(q)/255)); return np.array(colorsys.hsv_to_rgb(h_, min(1, max(0, s2+t[1]/100)), min(1, max(0, v2+t[0]/100))))*255
+            GLS = np.isin(idb, [p_ for p_, m2 in sc.mt.items() if m2 == 'gloss'])
+            if GLS.any() and DITHERG:   # つやつや（material 'gloss'）：光の段を広くして、白っぽい つやの光を足す
+                bg, tg = DITHERG; ig = np.zeros((Hp, Wp), int)
+                for lo, hi in bg: ig += (np.clip((dlb-lo)/(hi-lo), 0, 1) > th) | (dlb >= hi)
+                idx = np.where(GLS, ig, idx)
+            for q in np.unique(ccb[m_].reshape(-1, 3), axis=0):
+                k_ = m_ & np.all(ccb == q, axis=2)
+                for i_, t_ in enumerate(tones): col[k_ & (idx == i_) & ~GLS] = tone(q, t_)
+                if GLS.any() and DITHERG:
+                    for i_, t_ in enumerate(DITHERG[1]): col[k_ & (idx == i_) & GLS] = tone(q, t_)
+        else:
+            lo, hi = DITHERR; den = np.clip((hi-dlb)/(hi-lo), 0, 1)   # かげのこさ：光の向きとの内積が hi で0、lo で1（そのあいだは、なめらか）
+            for q in np.unique(ccb[m_].reshape(-1, 3), axis=0):
+                k_ = m_ & np.all(ccb == q, axis=2); lt = toon(q, 0); dk = toon(q, DITHERLV)
+                sh = k_ & (den > th)
+                col[k_ & ~sh] = lt; col[sh] = dk
+                if DITHERHL:   # ハイライト：光のよく当たる所に、明るい1色を、同じあみで
+                    import colorsys
+                    h_, s2, v2 = colorsys.rgb_to_hsv(*(np.array(q)/255)); hl = np.array(colorsys.hsv_to_rgb(h_, max(0, s2-DITHERHL[3]/100), min(1, v2+DITHERHL[2]/100)))*255
+                    dh = np.clip((dlb-DITHERHL[0])/(DITHERHL[1]-DITHERHL[0]), 0, 1); col[k_ & (dh > th)] = hl
+    global LAST; LAST = (idb.copy(), zb.copy())   # たしかめ・あとの処理用：ドットごとの部品の番号と奥行き
     col0 = col.copy()   # 木目をつける前の色（輪郭線はこの色から作る。木目ごとに線の色がわかれない）
     for pid, tx in sc.tx.items():   # 部品ののびる向き（いちばん長い向き）にそって、木目をはる
         m = idb == pid

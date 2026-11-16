@@ -23,7 +23,7 @@ SRC = {
  'ustk': (.45, "0%{transform:translateY(-24px) scale(1.4);opacity:0}20%{transform:translateY(-15px) scale(1.25);opacity:1}40%{transform:translateY(-4.5px) scale(1.1)}60%{transform:scale(.95)}80%{transform:scale(1.03)}100%{transform:none}"),
  'nbump': (.42, "0%{transform:translateY(-4.5px)}30%{transform:translateY(-1.5px)}60%{transform:translateY(1.5px)}100%{transform:none}"),
  'nspk': (.5, "0%{opacity:1}50%{opacity:1;transform:translateY(-1.5px)}100%{opacity:0;transform:translateY(-3px)}"),
- 'nyuU': (.4, "0%{transform:translateY(48px);opacity:0}10%{transform:translateY(33px);opacity:1}20%{transform:translateY(19.5px)}30%{transform:translateY(9px)}40%{transform:translateY(1.5px)}50%{transform:translateY(-3px)}60%{transform:translateY(-4.5px)}70%{transform:translateY(-3px)}80%{transform:translateY(-1.5px)}90%,100%{transform:none}"),
+ 'nyuU': (.8, "0%{transform:translateY(48px);opacity:0}5%{transform:translateY(33px);opacity:1}10%{transform:translateY(19.5px)}15%{transform:translateY(9px)}20%{transform:translateY(1.5px)}25%{transform:translateY(-3px) rotate(1.6deg)}30%{transform:translateY(-4.5px) rotate(2deg)}35%{transform:translateY(-3px) rotate(.6deg)}40%{transform:translateY(-1.5px) rotate(-1.4deg)}48%{transform:rotate(-1.6deg)}58%{transform:rotate(.2deg)}68%{transform:rotate(1deg)}78%{transform:rotate(-.5deg)}88%{transform:rotate(.2deg)}100%{transform:none}"),
  'nyuD': (.32, "0%{transform:translateY(-24px);opacity:0}15%{transform:translateY(-15px);opacity:1}30%{transform:translateY(-7.5px)}45%{transform:translateY(-1.5px)}60%{transform:translateY(3px)}75%{transform:translateY(1.5px)}90%,100%{transform:none}"),
  'uidle': (7, "0%,100%{transform:rotate(0)}15%{transform:rotate(.4deg)}30%{transform:rotate(.8deg)}45%{transform:rotate(.4deg)}60%{transform:rotate(-.3deg)}75%{transform:rotate(-.7deg)}90%{transform:rotate(-.3deg)}"),
  'uidleR': (7, "0%,100%{transform:rotate(0)}15%{transform:rotate(1deg)}30%{transform:rotate(1.8deg)}45%{transform:rotate(.8deg)}60%{transform:rotate(-.8deg)}75%{transform:rotate(-1.6deg)}90%{transform:rotate(-.6deg)}"),
@@ -43,6 +43,8 @@ SRC = {
  'uboing2y': (.4, "0%{transform:translateY(-4.5px)}20%{transform:translateY(1.5px)}40%{transform:translateY(-1.5px)}60%{transform:none}80%{transform:translateY(-1.5px)}100%{transform:none}"),
  'uboing2': (.45, "0%{transform:scale(.93,1.16)}20%{transform:scale(1.07,.92)}40%{transform:scale(.97,1.05)}60%{transform:scale(1.02,.98)}80%{transform:scale(.995,1.01)}100%{transform:none}"),
  'urow': (.24, "0%{transform:translateY(6px);opacity:0}25%{transform:translateY(3px);opacity:.6}50%{transform:translateY(-1.5px);opacity:1}75%,100%{transform:none;opacity:1}"),
+ 'tglow': (1.6, "0%{opacity:.3}50%{opacity:1}100%{opacity:.3}"),
+ 'tpop': (.5, "0%{transform:scale(.6)}35%{transform:scale(1.25)}60%{transform:scale(.94)}80%{transform:scale(1.04)}100%{transform:none}"),
  'lvpop': (.45, "0%{transform:scale(.3);opacity:0}60%{transform:scale(1.08);opacity:1}100%{transform:scale(1);opacity:1}"),
 }
 SRC['tontileR'] = (.4, SRC['tontile'][1].replace('rotate(', 'rotate(-').replace('rotate(--', 'rotate('))
