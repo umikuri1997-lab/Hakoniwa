@@ -2,7 +2,7 @@
    画面の近くにだけ出す（ぜんぶで CRITMAX ひき、1しゅるい CK の n ひきまで）。夜（23時〜6時）・コワイノのいるときは出さない。
    どこに・いつ（critOK）：ちょう・みつばち＝昼の花・雨でない／小鳥・りす＝昼の木のそば／うさぎ＝昼のみどりの草地／はりねずみ＝夕方の茂みのそば／
    ねずみ＝昼の箱のそば／もぐら＝土のステージ（WD 3）の昼の畑のそば／かたつむり＝雨の日の花・草のそば／てんとうむし＝昼の花のそば（地面）／
-   とんぼ＝昼〜夕方の水の上／ほたる＝夜のはじめ（19〜23時）の水べ、おしりが光る／かえる＝雨の日か夕方の水べ。
+   とんぼ＝秋の昼〜夕方の水の上／ほたる＝夜のはじめ（19〜23時）の水べ、おしりが光る／かえる＝雨の日か夕方の水べ。
    うさぎ・りす・ねずみ・小鳥は、せいれいが近づくと、にげる（小鳥は飛びたつ）。
    ひまなせいれいは、ときどき見つけて、そっと見る・追いかける（critwatch、おわると たのしさ+2）。 */
 const CRITMAX=6,CRITFUN=2;let CRIT=[],CRITS=null,CRITT=0,CRITID=1;
@@ -27,7 +27,7 @@ function critOK(k,j){if(j<0||j>=W*H)return false;const h=hour(),day=h>=7&&h<17,d
   if(k==='mogura')return WD===3&&day&&critOpen(j)&&critNear(j,2,q=>o(q)==='farm');/* もぐらは土のステージだけ（持ち主のきめ） */
   if(k==='katatsumuri')return S.rain&&h>=6&&h<20&&critOpen(j)&&critNear(j,1,q=>FLOWERS.has(o(q))||WEEDS.has(o(q)));
   if(k==='tentoumushi')return day&&dry&&critOpen(j)&&critNear(j,1,q=>FLOWERS.has(o(q)));
-  if(k==='tonbo')return h>=9&&h<18&&dry&&S.ground[j]===1&&[1,-1,W,-W].some(d=>S.ground[j+d]!==1&&walk(j+d));
+  if(k==='tonbo')return seasonNow()===2&&h>=9&&h<18&&dry&&S.ground[j]===1&&[1,-1,W,-W].some(d=>S.ground[j+d]!==1&&walk(j+d));
   if(k==='hotaru')return h>=19&&h<23&&dry&&critOpen(j)&&[1,-1,W,-W].some(d=>S.ground[j+d]===1);
   if(k==='frog')return (S.rain&&h>=6&&h<20||h>=17&&h<20)&&critOpen(j)&&[1,-1,W,-W].some(d=>S.ground[j+d]===1);
   return false}
