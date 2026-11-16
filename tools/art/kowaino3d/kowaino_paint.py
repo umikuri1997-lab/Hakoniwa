@@ -320,14 +320,15 @@ def tube(sc, pts, rs, col, n=10):
 def shoot(name, cfg, src, yaw=0.0):
     if cfg.get('model'):   # マテリアルつきのモデル（持ち主が直した物・kw_model.py で手を足した物）：色わけはマテリアルのまま
         m, comp, lab0 = load_labeled(cfg['model']); P, F, col, lab, H, cen = paint_labeled(m, comp, lab0, cfg); POMC[:] = []
+        comp0 = comp.copy()
         comp = np.where(np.isin(lab, ['base', 'under', 'rim', 'face']), 0, comp+1)   # すそのライン・目は、布・顔の所で見る
     else:
         m, comp = load(os.path.join(src, 'kg_%s.glb' % name)); P, F, col, lab, H, cen = paint(m, comp, cfg)
     if cfg.get('thin'): P = thin(P, F, lab, k=cfg['thin'])
     if cfg.get('tip'): P = tipthin(P, F, lab, H, cfg['tip'])
     if cfg.get('cone') and POMC: P = cone(P, F, lab, H, cfg['cone'])
-    if cfg.get('pose'):   # モーション（kw_rig.py）
-        import kw_rig; P = kw_rig.pose(P, H, **cfg['pose'])
+    if cfg.get('pose'):   # モーション（kw_rig.py）。部品は、色わけ（lab）と つながった かたまり（comp0）でえらぶ
+        import kw_rig; P = kw_rig.pose(P, H, F, lab, comp0, **cfg['pose'])
     HD = hands(P, F, lab, H, cfg.get('apart', 0)) if cfg.get('fingers') and not cfg.get('model') else []
     if HD:   # もらったモデルの手は、まん中へちぢめてかくす（新しい手を組む）
         P = P.copy(); other = set(F[(lab != 'handL') & (lab != 'handR')].ravel())
@@ -412,7 +413,7 @@ def shoot(name, cfg, src, yaw=0.0):
         o = o.copy(); o[ln, :3] = o[ln, :3]*PARTK
     im = (lambda x: x if DITH else despeckle(x))(quant((lambda x: x if HULL else rim(x))(Image.fromarray(o.round().astype(np.uint8), 'RGBA')), NCOL, cfg.get('hem', (None,))[0]))
     if abs(math.cos(yaw)-1) < 1e-6:   # 正面だけ、目をおす
-        im = stamp(im, [(proj(R(p))[0]-ext[0], proj(R(p))[1]-ext[2]) for p in eyepos(P, F, lab, H, cfg['eyes'])], cfg['eyes']['col'], cfg['eyes'].get('edge'))
+        im = stamp(im, [(proj(R(p))[0]-ext[0], proj(R(p))[1]-ext[2]) for p in eyepos(P, F, lab, H, cfg['eyes']) if p[1] > 0.05*H]   # まわって うしろを向いた目は、おさない, cfg['eyes']['col'], cfg['eyes'].get('edge'))
     return im, ext
 
 BACKEL = 15.0
@@ -482,7 +483,7 @@ def sheets(name, out):
     """モーションのコマ（kw_rig.POSES）を写して、モーションごとに、たてにならべた1まいの絵にする（いまのゲームと同じ形：w・h・ax・ay・n）。
     正面と、うしろ（B。やられはなし）。コマの大きさは、そのモーションのコマぜんぶが入る大きさ（足もとの点をそろえる）"""
     import kw_rig, json; info = {}
-    for mo, ps in kw_rig.POSES.items():
+    for mo, ps in kw_rig.poses(name).items():
         for B, yaw in (('', 0.0), ('B', math.pi)):
             if mo == 'hurt' and B: continue
             fr = []
