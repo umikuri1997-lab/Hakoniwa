@@ -123,6 +123,7 @@ class Skel:
         rf = np.isin(lab, ['hand', 'foot', 'pom']) | (comp != big); gk = np.where(rf, comp*20+kind*3+side+1, -1)
         s.sackv = np.setdiff1d(np.unique(F[took]), np.unique(F[comp == big])) if name == 'thief' else np.zeros(0, int)   # カゲドロボウのふくろ（ATTACH でえらんだ、体とはなれた布のかたまりだけ）
         hv2 = np.unique(F[lab == 'hand']); s.handR = hv2[P[hv2, 0] > 0] if name == 'thief' else np.zeros(0, int)
+        s.vcloth = np.zeros(V, bool); s.vcloth[np.unique(F[np.isin(lab, ['base', 'red', 'rim', 'under', 'sleeve'])])] = True   # 布の点
         s.rig = np.full(V, -1);
         for k in range(3): s.rig[F[rf, k]] = gk[rf]
         s.hem =(1-smooth(HEM*0.4, HEM, z))*(W[:, ix['footL']]+W[:, ix['footR']] < 0.5)*(1-W[:, ix['armL']]-W[:, ix['armR']]); s.ang = np.arctan2(P[:, 1], P[:, 0])
@@ -183,16 +184,38 @@ class Skel:
         over = z0 >= sup-0.02*H   # 体の上にあった布は、体の上で とまる（おおいかぶさる）
         zn = np.where(over & (sup > 0), np.maximum(zn, sup*np.where(soft > 0, 1, 0)+np.where(soft > 0, 0.01*H, -9*H)), zn)
         zn = np.where(core, z0, zn)
-        arm = s.W[:, s.names.index('armL')]+s.W[:, s.names.index('armR')]
-        for g in np.unique(s.rig[s.rig >= 0]):   # 手にもった物・こぶし・ふくろ（腕の かたまり）：力がぬけて、形のまま地面まで おちる（頭・つのに ついた物は、頭といっしょ）
-            vs = s.rig == g
-            if s.sw[vs].max() > 0 or vs.sum() < 4 or arm[vs].mean() < 0.5: continue
-            zn[vs] = z0[vs]-z0[vs].min()
+        bi = {b: s.names.index(b) for b in ('armL', 'armR', 'hornL', 'hornR')}
         b = np.maximum(0, -zn); zn = np.maximum(zn, 0)   # 地面までおちた布は、のこった分だけ よこへ ひろがる
         c = Q[core, :2].mean(0); d = Q[:, :2]-c; nn = np.maximum(np.linalg.norm(d, axis=1), 1e-9); Q[:, :2] += d/nn[:, None]*(b*0.6)[:, None]
-        Q[:, 2] = zn; return Q
+        Q[:, 2] = zn
+        # 布の山：いきたえた体の布は、重さで 低い山の形より上には のこらない（つきでた すそ・はしが 上に のこらない）
+        R = np.percentile(np.linalg.norm(Q[:, :2]-c, axis=1), 95); env = ENVH*H*np.sqrt(np.clip(1-(np.linalg.norm(Q[:, :2]-c, axis=1)/max(R, 1e-9))**2, 0, 1))+0.03*H
+        cl = s.vcloth & (s.rig < 0); Q[cl, 2] = np.minimum(Q[cl, 2], np.maximum(env[cl], 0))
+        from scipy.spatial import cKDTree
+        tc = cKDTree(Q[cl, :2]); zc = Q[cl, 2]
+        for g in np.unique(s.rig[s.rig >= 0]):   # 頭・体に ついた かざり（つぶ・つの・岩）：うかずに、下の布の上に のる
+            vs = s.rig == g; X = Q[vs]; idx = tc.query_ball_point(X[:, :2].mean(0), 0.08*H)
+            if not idx: continue
+            top = zc[idx].max(); lo = X[:, 2].min()
+            if lo > top+0.01*H: Q[vs, 2] -= lo-top
+        base = (s.rig < 0) & ~s.vcloth   # 布でない 体の部品（顔・足 など）も、布の山より上に のこさない
+        Q[base, 2] = np.minimum(Q[base, 2], np.maximum(env[base], 0)+0.02*H)
+        # 手にもった物・こぶし・ふくろ・つの（腕・つのの かたまり）：力がぬけて、地面に おちて ころがる（いちばん うすい向きを たてにして ねかせる）。つながる そで・腕も いっしょに うごく
+        for g in np.unique(s.rig[s.rig >= 0]):
+            vs = s.rig == g
+            if s.sw[vs].max() > 0 or vs.sum() < 4: continue
+            bw = {k: s.W[vs, i].mean() for k, i in bi.items()}; bn = max(bw, key=bw.get)
+            if bw[bn] < 0.5: continue
+            X = Q[vs]; c0 = X.mean(0); ax = np.linalg.svd(X-c0, full_matrices=False)[2][2]   # いちばん うすい向き
+            if ax[2] < 0: ax = -ax
+            v = np.cross(ax, [0, 0, 1.0]); sn = np.linalg.norm(v); cs_ = ax[2]
+            Rr = np.eye(3) if sn < 1e-6 else _r(tuple(v/sn), math.degrees(math.atan2(sn, cs_)))
+            X2 = (X-c0)@Rr.T+c0; X2[:, 2] -= X2[:, 2].min()
+            if bn.startswith('horn'): X2[:, :2] += (c0[:2]-c)/max(np.linalg.norm(c0[:2]-c), 1e-9)*0.15*H   # つのは、頭から はずれて よこへ ころがる
+            dv = (X2-X).mean(0); w = s.W[:, bi[bn]].copy(); w[vs] = 0; Q += w[:, None]*dv; Q[vs] = X2
+        Q[:, 2] = np.maximum(Q[:, 2], 0); return Q
 
-    def pose(s, P, move=(0, 0, 0), spread=1.0, orbit=0.0, melt=0.0, scale=1.0, flutter=(0, 0), look=(0, 0), fx=(), wave=(0, 0), lag=(0, 0, 0), hlag=(0, 0, 0), sq=1.0, flare=0.0, collapse=0.0, cz=0.45, ground=False, ghost=0, dead=False, sacksq=1.0, fade=0.0, pool=0.6, **bones):
+    def pose(s, P, move=(0, 0, 0), spread=1.0, orbit=0.0, melt=0.0, scale=1.0, flutter=(0, 0), look=(0, 0), fx=(), wave=(0, 0), lag=(0, 0, 0), hlag=(0, 0, 0), sq=1.0, flare=0.0, collapse=0.0, cz=0.45, ground=False, ghost=0, dead=False, sacksq=1.0, fade=0.0, pool=0.6, smear=(0, 0, 0), **bones):
         H = s.H; Ms = {}
         if collapse: P = s.collapse(P, collapse, cz)
         for n, par, _ in BONES:
@@ -210,6 +233,9 @@ class Skel:
         if flutter[0]:   # すそを ひらひら（まわりの角度で波うつ。外と上へ）
             wv = np.sin(s.ang*3+flutter[1])*flutter[0]*H*s.hem; d = np.stack([np.cos(s.ang), np.sin(s.ang), 0*s.ang], 1)
             Q += wv[:, None]*d; Q[:, 2] += np.abs(wv)*0.6
+        if any(smear):   # ぶれ（モーションブラー）：うごいた向きの うしろがわを、うしろへ のばす（はやく うごいた コマ）
+            sv = np.array(smear, float)*H; n = np.linalg.norm(sv); u = sv/max(n, 1e-9); c = Q.mean(0); t = (Q-c)@u; R = max(np.abs(t).max(), 1e-9)
+            Q -= (np.clip(-t/R, 0, 1)**1.2)[:, None]*sv[None, :]
         if flare:   # まわって ひるがえる すそ（マント）：すそが外へ ひろがって もちあがり、まわる向きと はんたいへ おくれる（flare＞0 は 上から見て左まわりに まわったとき）
             r = np.stack([np.cos(s.ang), np.sin(s.ang), 0*s.ang], 1); tg = np.stack([-np.sin(s.ang), np.cos(s.ang), 0*s.ang], 1)
             Q += (s.hem*abs(flare)*H)[:, None]*(r*0.8-np.sign(flare)*tg*0.6); Q[:, 2] += s.hem*abs(flare)*H*0.7
@@ -262,9 +288,9 @@ MOVES = {
                         dict(root=(0, 14, 0), hip=(4, 6, 0), chest=(4, -6, 0), armL=(-10, 30, 0), armR=(-10, 30, 0), move=(0.04, 0, 0), collapse=0.25),
                         dict(hip=(4, 10, 0), chest=(2, -6, 0), head=(4, 12, 0), armL=(-30, 50, 0), armR=(-30, 50, 0), fx=[('dust', (0, 0.1, 0.02), 6, 0.3, 0.035)])]),
     # ひくく かまえて、ダッシュで つっこみ、つめで おおきく ひっかく（残像） / くるっとまわって、とばされ、よこにたおれて、布が つぶれる
-    'fast': dict(atk=[dict(hip=(-10, -6, 0), chest=(-14, -8, -15), armL=(-50, 40, 0), armR=(-60, 50, 0), move=(-0.05, 0, -0.02), flutter=(0.03, 0), fx=[('dust', (-0.05, 0, 0.02), 4, 0.15, 0.03)]),
-                      dict(root=(8, 20, 0), chest=(10, 6, 10), armL=(-30, 30, 0), armR=(-40, 40, 0), move=(0.3, 0.04, 0.03), flutter=(0.05, 1.5), ghost=1, fx=[('dust', (-0.1, 0, 0.02), 6, 0.15, 0.035)]),
-                      dict(root=(6, 12, 0), chest=(8, 10, 35), armL=(50, -10, 0), armR=(95, 15, 0), move=(0.34, 0.05, 0.04), flutter=(0.05, 3), ghost=2, fx=[('swipe', (0.62, 0.2, 0.5), 1, 0, 0), ('impact', (0.7, 0.25, 0.45), 1, 0, 0.1)]),
+    'fast': dict(atk=[dict(hip=(-10, -6, 0), chest=(-14, -8, -15), armL=(-50, 40, 0), armR=(-60, 50, 0), move=(-0.05, 0, -0.02), flutter=(0.03, 0)),
+                      dict(root=(8, 20, 0), chest=(10, 6, 10), armL=(-30, 30, 0), armR=(-40, 40, 0), move=(0.3, 0.04, 0.03), flutter=(0.05, 1.5), ghost=1, fx=[('dust', (-0.15, 0, 0.02), 4, 0.1, 0.03)]),
+                      dict(root=(6, 12, 0), chest=(8, 10, 35), armL=(50, -10, 0), armR=(95, 15, 0), move=(0.34, 0.05, 0.04), flutter=(0.05, 3), ghost=2, fx=[('swipe', (0.12, 0.4, 0.38), 1, 0, 0)]),
                       dict(chest=(4, 6, 20), armL=(20, 10, 0), armR=(60, 15, 0), move=(0.24, 0.03, 0), ghost=1)],
                  hurt=[dict(root=(0, 0, 40), head=(0, -8, 0), armL=(30, 60, 0), armR=(30, 60, 0), fx=[('sweat', (0.15, 0.1, 0.7), 2, 0.05, 0.025)]),
                        dict(root=(-10, 40, 0), head=(-10, 10, 0), armL=(60, 95, 0), armR=(60, 95, 0), move=(-0.12, -0.08, 0.16), flutter=(0.04, 2)),
@@ -373,7 +399,10 @@ HLAGK = 0.7; HLAGMAX = 0.07   # すその おくれ：足もとが うごいた�
 DEADROLL = 12  # いきたえるコマの、よこへの かたむきの いちばん大きい角度
 DEADCOL = 0.82  # いきたえたときの、くずれる強さ（これより小さい物は、ここまで）
 DROPG = 0.15  # たおれたとき、布（すそ・フードの先・マフラー）が重さで おちる長さ（高さのうち。はしほど大きい）
-DROPCELL = 0.04   # 体の芯の上の面をしらべる ます目の大きさ（高さのうち）
+ENVH = 0.42   # いきたえた体の布の山の、いちばん高い所（高さのうち）
+DROPCELL = 0.04  # 体の芯の上の面をしらべる ます目の大きさ（高さのうち）
+LAGMAXN = {'fast': 0.16}; LAGKN = {'fast': 1.6}; WAVEN = {'fast': 0.12}   # フードが大きく なびく コワイノ（はやい うごきに 大きく おくれる）
+SMEARK = 0.8; SMEARMIN = 0.06   # ぶれ：うごいた長さの このわりだけ、うしろへ のばす（この長さより はやいとき）
 LAGMAX = 0.05  # 布のおくれの いちばん大きい長さ
 LAGK = 0.8   # 布のおくれ：頭のてっぺんが うごいた分の、このわり
 BODY = ('root', 'hip', 'chest')
@@ -388,12 +417,15 @@ def _top(f):
     a = [sum(tuple(f.get(b, ()))[k] if len(tuple(f.get(b, ()))) > k else 0 for b in BODY+('head',)) for k in range(2)]
     m = np.array(f.get('move', (0, 0, 0)), float); return m+np.array([math.sin(math.radians(a[1]))*0.8, math.sin(math.radians(a[0]))*0.8, 0])
 
-def _lag(L, loop):
-    """コマごとの布のおくれ：まえのコマからの頭のてっぺんの うごきと、はんたいへ"""
-    out = []
+def _lag(L, loop, name=None, smear=False):
+    """コマごとの布のおくれ：まえのコマからの頭のてっぺんの うごきと、はんたいへ。smear：はやい うごきの ぶれ（体を うごいた向きの うしろへ のばす）"""
+    out = []; lk = LAGKN.get(name, LAGK); lm = LAGMAXN.get(name, LAGMAX)
     for i, f in enumerate(L):
         pv = L[i-1] if (i or loop) else {}; d = _top(f)-_top(pv); f = dict(f)
-        if 'lag' not in f: lg = -d*LAGK; n = float(np.linalg.norm(lg)); f['lag'] = tuple(lg*min(1, LAGMAX/max(n, 1e-9)))   # 大きくうごいても、のびすぎない
+        if 'lag' not in f: lg = -d*lk; n = float(np.linalg.norm(lg)); f['lag'] = tuple(lg*min(1, lm/max(n, 1e-9)))   # 大きくうごいても、のびすぎない
+        if smear and 'smear' not in f:
+            dm = np.array(f.get('move', (0, 0, 0)), float)-np.array(pv.get('move', (0, 0, 0)), float); dm[2] = 0
+            if np.linalg.norm(dm) > SMEARMIN: f['smear'] = tuple(dm*SMEARK)
         if 'hlag' not in f:   # すそ：足もと（move）と こしの かたむきの うごきの はんたいへ
             mv = lambda g: np.array(g.get('move', (0, 0, 0)), float)+np.array([math.sin(math.radians((tuple(g.get('root', ()))+(0, 0))[1]))*0.3, math.sin(math.radians((tuple(g.get('root', ()))+(0,))[0]))*0.3, 0])
             hl = -(mv(f)-mv(pv))*HLAGK; hl[2] = 0; n = float(np.linalg.norm(hl)); f['hlag'] = tuple(hl*min(1, HLAGMAX/max(n, 1e-9)))
@@ -403,16 +435,17 @@ def _lag(L, loop):
 def poses(name):
     m = MOVES[name]; wx = WALKX.get(name)
     walk = [dict(f, **wx[i]) for i, f in enumerate(WALK)] if wx else WALK
-    wv = lambda L: [dict({'wave': (0.06, i*math.pi/2)}, **f) for i, f in enumerate(L)]   # 攻撃・やられも、なびく
+    wv = lambda L: [dict({'wave': (WAVEN.get(name, 0.06), i*math.pi/2)}, **f) for i, f in enumerate(L)]   # 攻撃・やられも、なびく
     atk = [dict({'sq': ATKSQ[i]}, **_steady(f)) for i, f in enumerate(m['atk'])]
     hurt = [dict({'sq': HURTSQ[i]}, **f) for i, f in enumerate(m['hurt'])]
     fl = dict(hurt[-1]); r = tuple(fl.get('root', ()))+(0,)*6
     fl['root'] = (r[0], max(-DEADROLL, min(DEADROLL, r[1])))+r[2:]   # いきたえるコマ：よこへ たおれこまず、その場で下へ グチャっと くずれる（横から見て。持ち主）
     hurt[-1] = dict(fl, dead=True, ground=True, collapse=max(fl.get('collapse', 0), DEADCOL), cz=max(fl.get('cz', 0.45), 0.6))   # さいごのコマ：いきたえる（力がぬけて、布が重さで くずれ、体が地面について、目の光がきえる）
     add = lambda f, k, v: tuple(a+b for a, b in zip(tuple(f.get(k, ()))+(0,)*6, v+(0,)*(6-len(v))))
+    if len(atk) > 2: atk[2] = dict(atk[2], ghost=max(1, atk[2].get('ghost', 0)))   # とびこむ コマは、残像（ぶれ）を のこす
     for i, (dm, dl) in enumerate(ATKLUNGE):   # 攻撃：大きく ためて（うしろへ さがる）→ うつ しゅんかん、こちら（前）へ とびこむ
         if i < len(atk): atk[i] = dict(atk[i], move=add(atk[i], 'move', (0, dm, 0))[:3], hip=add(atk[i], 'hip', (dl,)))
     for i, (dm, dl) in enumerate(HURTKB):   # やられ：うけた しゅんかん、うしろへ はじかれて のけぞる（うしろへ そるのは −16度まで）
         if i < len(hurt)-1: hurt[i] = dict(hurt[i], move=add(hurt[i], 'move', (0, dm, 0))[:3], chest=(lambda c: (max(-16, c[0]),)+c[1:])(add(hurt[i], 'chest', (dl,))))
     hurt += [dict(hurt[-1], fade=fd, fx=[(DEADSMOKE.get(name, 'smoke'), (0, 0.05, 0.15+0.15*k), 6+3*k, 0.35, 0.05)], lag=(0, 0, 0), hlag=(0, 0, 0)) for k, fd in enumerate(DEADFADE)]   # たおれたあと：むらさきの けむりに なって きえる
-    return dict(idle=_lag(IDLE, True), walk=_lag(walk, True), atk=_lag(wv(atk), False), hurt=_lag(wv(hurt), False))
+    return dict(idle=_lag(IDLE, True), walk=_lag(walk, True), atk=_lag(wv(atk), False, name, True), hurt=_lag(wv(hurt), False, name))

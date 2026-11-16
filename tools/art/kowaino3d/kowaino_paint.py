@@ -506,6 +506,8 @@ def shoot(name, cfg, src, yaw=0.0):
     if cfg.get('pose', {}).get('fade'):   # けむりになって きえる：体を あみで うすく（あみは 足もとの点が もと。けむりは このあとで おす）
         a = np.array(im); yy, xx = np.indices(a.shape[:2]); B4 = np.array([[0, 8, 2, 10], [12, 4, 14, 6], [3, 11, 1, 9], [15, 7, 13, 5]])/16
         a[B4[(yy+ext[2]) % 4, (xx+ext[0]) % 4] < cfg['pose']['fade'], 3] = 0; im = Image.fromarray(a)
+    if cfg.get('fxp') and abs(math.cos(yaw)-1) > 1e-6:   # うしろ向き：体の前がわ（体の むこう）の パーティクルは、体に かくれるので おさない
+        cfg = dict(cfg, fxp=[q for q in cfg['fxp'] if q[1][1] < 0.08])
     if cfg.get('fxp'):   # パーティクル（色の数をへらしたあとに おす。絵のわくの外に出る分は、わくを広げて入れる）
         q = [(k, proj(R(np.asarray(p)*H))) for k, p, ag in cfg['fxp']]; ages = [ag for _, _, ag in cfg['fxp']]
         x0 = min([ext[0]]+[int(math.floor(v[0]))-5 for _, v in q]); y0 = min([ext[2]]+[int(math.floor(v[1]))-5 for _, v in q])
