@@ -566,12 +566,27 @@ def specks(im,maxn=3):
                 C_[m]=[v>>16,(v>>8)&255,v&255];key[m]=v;ch=True
         if not ch:break
     a[...,:3]=C_;return Image.fromarray(a)
+def tone5im(im):
+    """木の皮と葉を、それぞれ5色（かげ2色・もとの色・ハイライト2色）と輪郭にする（natcommon.tone5）。切り口・光のつぶ（うすい色）はそのまま"""
+    sys.path.insert(0,os.path.join(ART,'furn3d','items'));from natcommon import tone5
+    def hs(a):
+        c=a[...,:3].astype(float);mx=c.max(-1);mn=c.min(-1);return (mx-mn)/np.maximum(mx,1),mx
+    LF=lambda a:a[...,1].astype(int)>a[...,0].astype(int)
+    PALE=lambda a:(hs(a)[0]<0.38)&~LF(a)
+    im=tone5(im,BARK[1],mask=lambda a:~LF(a)&~PALE(a),under=(LF,14,3.0))
+    return tone5(im,LEAF[1],mask=LF,mix=0.85,blur=0.6,streak=(0,0))
 def shot(M):
     """furn3d と同じ見え方で写し、ゲームの置き方（ax・ay、g64のドット）をきめる：幹の根もと (TX, y, 0) の写る所が、ゲームの (TX, y) に来るように"""
-    O.GRAD=True;inf={};im,ex0,base,yb=F3.shot(M,0,info=inf)
+    global SCAR
+    O.GRAD=True;s0=SCAR;SCAR=[(255,0,255),(255,0,255)]   # 1回め：ヌシの傷だけ、目じるしの色で写して、傷の場所をしらべる（あとのかげの付けなおしで、傷の色をのこす）
+    try:mk=np.array(F3.shot(M,0)[0]).astype(int)
+    finally:SCAR=s0
+    scarm=(mk[...,3]>0)&(mk[...,0]>mk[...,1]+40)&(mk[...,2]>mk[...,1]+40)
+    inf={};im,ex0,base,yb=F3.shot(M,0,info=inf)
     PROJ,E,S_,fw=inf['PROJ'],inf['ext'],inf['S'],inf['fwd']
     gy=TY;u,v=PROJ(fw((TX,gy,0)));px,py=(u-E[0])*S_,(v-E[2])*S_   # 根もとの近くの地面の点
     im=specks(im)   # 葉の中の、3ドットまでの小さな点のかたまりを、まわりの色に
+    pre=np.array(im);im=np.array(tone5im(im));im[scarm]=pre[scarm];im=Image.fromarray(im)   # かげは枯れ木・草原の木と同じ（持ち主がきめた）：5色と輪郭、さかいめは市松もようのあみかけ。ヌシの傷は前の色のまま
     bb=im.getbbox();im=im.crop(bb)
     ax=round(TX*64-px)+bb[0];ay=round(gy*64-py)+bb[1]
     return im,ax,ay

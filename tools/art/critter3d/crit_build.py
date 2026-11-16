@@ -15,7 +15,7 @@ import sys,os;sys.path.insert(0,os.path.join(os.path.dirname(os.path.abspath(__f
 import crit_rig
 from blueprint import Part as P
 from natcommon import notex,flat
-ID='crit{name}#{fr}';GRAD=False;SHADE=[(4.5,-1.2),(9,-2.5)];ELEV=15;BOTTOM=58
+ID='crit{name}#{fr}';PX=32;LW=1;GRAD=False;SHADE=[(4.5,-1.2),(9,-2.5)];ELEV=15;BOTTOM=58
 VIEWS=[('crit{name}#{fr}',0)]
 def PARTS():
     p=P('{name}','model',('animals/{name}.glb',0.5,0.5,0,{size},0,0),(255,255,255),on=('ground',),note='地面に立つ');p.warp=crit_rig.warp('{name}','{fr}')

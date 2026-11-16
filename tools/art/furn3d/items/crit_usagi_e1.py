@@ -3,7 +3,7 @@ import sys,os;sys.path.insert(0,os.path.join(os.path.dirname(os.path.abspath(__f
 import crit_rig
 from blueprint import Part as P
 from natcommon import notex,flat
-ID='critusagi#e1';GRAD=False;SHADE=[(4.5,-1.2),(9,-2.5)];ELEV=15;BOTTOM=58
+ID='critusagi#e1';PX=32;LW=1;GRAD=False;SHADE=[(4.5,-1.2),(9,-2.5)];ELEV=15;BOTTOM=58
 VIEWS=[('critusagi#e1',0)]
 def PARTS():
     p=P('usagi','model',('animals/usagi.glb',0.5,0.5,0,0.45,0,0),(255,255,255),on=('ground',),note='地面に立つ');p.warp=crit_rig.warp('usagi','e1')
