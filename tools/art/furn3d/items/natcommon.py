@@ -308,6 +308,7 @@ def tone5(im,base,hi=((10,-4),(19,-8)),sh=((15,4),(28,8)),ol=(38,10),cuts=(12,35
     pad=np.pad(A,1);out=lambda dy,dx:~pad[1+dy:1+dy+H,1+dx:1+dx+W]
     pad0=np.pad(A0,1);out0=lambda dy,dx:~pad0[1+dy:1+dy+H,1+dx:1+dx+W]
     edge=A&(out0(0,1)|out0(0,-1)|out0(1,0)|out0(-1,0));inner=A&~edge   # 輪郭は、すきとおった所とのさかいだけ（幹と葉のさかいは輪郭にしない）
+    if inner.sum()<8:return im   # かえる所がない（葉のない切り株など）
     L=a[...,:3].astype(float)@[0.299,0.587,0.114]
     m=inner.astype(float);Lb=gaussian_filter(L*m,blur)/np.maximum(gaussian_filter(m,blur),1e-6)   # 皮のすじを見つけるための、ぼかした明るさ
     import oblique3d as O

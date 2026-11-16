@@ -207,7 +207,7 @@ function reunionLines(q,m){const e=goneEntry(q.name)||{},k=bondKey(q,m),T=(r,t,i
   if(/ごめん|わる|わり|すまない/.test(e.lw||''))L.push(T(m,'#teary|さいごに、あやまったりして……もう、あんなこと言わないでね。',2));else L.push(T(m,'#teary|……ずっと、待ってたんだよ。',2));
   const mi=((S.bondMem||{})[k]||[]),c=mi.length?CHATS[mi[mi.length-1]]:null;let back=c&&c.back;if(!back&&(S.qMem||{})[k])back='#joy|もう、けんかしても、すぐ仲なおりしようね。';
   if(!back){const did=(S.bondDid||{})[k]||'';if(/^play:/.test(did)&&BL[did.slice(5)])back='#joy|また、いっしょに'+BL[did.slice(5)].name+'で遊ぼうね。';else back=RE_DIDL[did]||RE_DIDL.any}
-  L.push(T(q,back,3),T(m,'#joy|……うん！ おかえり、$！',4));return L}
+  L.push(T(q,back,3),T(m,'#joy big|……うん！ おかえり、$！',4));return L}
 function reunionJoy(q,m){/* 会話のあと：2人で向かい合ってはねる。まわりの子も、はくしゅ */if(!S.res.includes(q)||!S.res.includes(m))return;const now=performance.now();q.face=m.x>=q.x?1:-1;m.face=-q.face;for(const r of[q,m]){JUMP.set(r,now);JOYU.set(r,now+3000);r.bubble='💕';fxSpr('hearts',r.x*TS,(r.y-.7)*TS);addFloat(r.x,r.y-1.3,'おかえり！','#ffd6e6')}
   sfx('good');for(const r of S.res)if(r!==q&&r!==m&&!r.hidden&&Math.hypot(r.x-q.x,r.y-q.y)<8){JUMP.set(r,now+300);JOYU.set(r,now+2500);r.bubble='👏'}bondAdd(q,m,3,'tour');q.reWith={n:m.name,until:dayNo()+RE_DAYS};m.reWith={n:q.name,until:dayNo()+RE_DAYS};const ge=goneEntry(q.name);if(ge&&(ge.fl||[]).some(k=>FLOWERS.has(S.obj[k])||S.obj[k]==='sprout'))S.rvq={q:q.id,m:m.id,t:S.t+30};logEv(m.name+'と'+q.name+'が、また会えた');if(typeof letterQ==='function')letterQ(q,'back',{m:m.name});memo('🌱',m.name+'と'+q.name+'が、また会えた')}
 function reunionTick(r,day){if(!r.reTalk||!day||sevBusy()||r.hidden)return;const m=S.res.find(x=>x.name===r.reTalk&&!x.hidden);delete r.reTalk;if(!m)return;const q=r,owner=S,key='ru'+q.id+'_'+dayNo();if(S.flags[key])return;
