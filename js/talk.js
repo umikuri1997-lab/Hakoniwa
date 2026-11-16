@@ -128,5 +128,6 @@ function talkLines(r){const now=nowTopic(r),E=dlToday(r);let L=null;
     if(!L)L=smallTalk(r)}
   const out=[hiLine(r),...L];if(Math.random()<.35)out.push(pick(TALKBYE));
   return out.map((t,i)=>[r.name,chatTone(t,r,i)])}
-function talkTo(r){if(!r||r.hidden||!S.res.includes(r))return;const owner=S,id=r.id,d=callDay();DLGTAP=performance.now();
-  dialog(talkLines(r),()=>{if(S!==owner)return;const q=S.res.find(x=>x.id===id);if(!q)return;const c=q.care||(q.care={});if(c.talk!==d){c.talk=d;q.fun=Math.min(100,q.fun+TALKFUN);addFloat(q.x,q.y-1.6,'たのしさ+'+TALKFUN,'#ffd7e8')}JOYU.set(q,performance.now()+2000);q.bubble='💕';if(typeof bpTalkGift==='function')bpTalkGift(q);if((S.subSt||{}).talk1===2)S.flags.talkQ=1;dirty=true;resTab=2;openSheet('res',id)})}
+let TALKID=null;/* お話しているせいれい：会話のあいだは、歩くとちゅうでも、立ちどまって正面を向く（draw-spirits の walking） */
+function talkTo(r){if(!r||r.hidden||!S.res.includes(r))return;const owner=S,id=r.id,d=callDay();DLGTAP=performance.now();TALKID=id;
+  dialog(talkLines(r),()=>{if(TALKID===id)TALKID=null;if(S!==owner)return;const q=S.res.find(x=>x.id===id);if(!q)return;const c=q.care||(q.care={});if(c.talk!==d){c.talk=d;q.fun=Math.min(100,q.fun+TALKFUN);addFloat(q.x,q.y-1.6,'たのしさ+'+TALKFUN,'#ffd7e8')}JOYU.set(q,performance.now()+2000);q.bubble='💕';if(typeof bpTalkGift==='function')bpTalkGift(q);if((S.subSt||{}).talk1===2)S.flags.talkQ=1;dirty=true;resTab=2;openSheet('res',id)})}
