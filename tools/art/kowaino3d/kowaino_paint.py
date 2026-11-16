@@ -50,6 +50,12 @@ CFG.update({   # 色は、いまのゲームの絵（ない物は、night.js の
     'yuki': mk('yuki', 1.3, '#8a939e', '#272d34', '#e4ecf2', '#e6f0f6', pom='#f4faff', pomh=0.0, mats={'deco': 'ice'}),
 })
 
+FXCOL = {'dust': '#c9bca4', 'ash': '#9a929e', 'spark': '#fff4c0', 'ember': '#f2a46a', 'snow': '#f4f8fc', 'leaf': '#c49a66', 'sweat': '#b8d8f4', 'star': '#ffe08a', 'slash': '#f4f0ff', 'impact': '#fff8e0'}   # パーティクルの色（petal は、かざりの色）
+def octa(sc, c, r, col):
+    """パーティクルの粒：小さな八面体"""
+    v = [c+np.array(d, float)*r for d in ((1, 0, 0), (-1, 0, 0), (0, 1, 0), (0, -1, 0), (0, 0, 1), (0, 0, -1))]
+    for a, b in ((0, 2), (2, 1), (1, 3), (3, 0)): sc.tri(v[a], v[b], v[4], col); sc.tri(v[b], v[a], v[5], col)
+
 def load_labeled(path):
     """kw_model.py で書き出した、マテリアルつきの glb（マテリアルの名前が色わけの名前）→ (m, comp, lab)"""
     sc = trimesh.load(path); V = []; F = []; L = []; o = 0
@@ -333,7 +339,7 @@ def shoot(name, cfg, src, yaw=0.0):
         import kw_skel
         EY0 = eyepos(P, F, lab, H, cfg['eyes']); from scipy.spatial import cKDTree; EYI = cKDTree(P).query(EY0)[1]; EYO = [e-P[i] for e, i in zip(EY0, EYI)]   # 目：休みのポーズで きめて、近い点といっしょに動かす
         P = kw_skel.Skel(name, P, F, lab, comp0, H).pose(P, **cfg['pose'])   # ボーンを入れて、ポーズをつける
-        EYES = [P[i]+o for i, o in zip(EYI, EYO)]
+        lk = cfg['pose'].get('look', (0, 0)); EYES = [P[i]+o+np.array([lk[0], 0, lk[1]])*H for i, o in zip(EYI, EYO)]   # look：目を うごかす
     else: EYES = None
     HD = hands(P, F, lab, H, cfg.get('apart', 0)) if cfg.get('fingers') and not cfg.get('model') else []
     if HD:   # もらったモデルの手は、まん中へちぢめてかくす（新しい手を組む）
@@ -365,6 +371,18 @@ def shoot(name, cfg, src, yaw=0.0):
             sc.part(); last = lab[k]; PL[sc.pid] = lab[k]
         sc.tri(R(P[f[0]]), R(P[f[1]]), R(P[f[2]]), col[k])
     sc.decal(None); sc.group(None); sc.bump(None); sc.material(None)
+    for fk in (cfg.get('pose') or {}).get('fx', ()):   # パーティクル（kw_skel の fx）：小さな粒を、その場所のまわりに
+        kind, at, n, spr, sz = fk; mv = np.array((cfg['pose'] or {}).get('move', (0, 0, 0)), float); c0 = (np.array(at, float)+mv)*H
+        rs = np.random.RandomState(abs(hash((name, kind, tuple(at), n))) % 2**31); col_ = hx(FXCOL[kind] if kind in FXCOL else cfg['labcol'].get('deco', '#ffffff'))
+        if kind == 'petal': col_ = hx(cfg['labcol'].get('deco', '#e0b0c8'))
+        sc.material('flat'); sc.smooth(False)
+        if kind in ('slash', 'impact'):   # 弧（ひっかき・なぎはらい）／星がた（うつ所）
+            pts = [c0+np.array([math.cos(t)*sz*H*2, 0, math.sin(t)*sz*H*2]) for t in (np.linspace(-1.2, 1.2, 7) if kind == 'slash' else np.linspace(0, 2*math.pi, 9)[:-1])]
+            for i_, q in enumerate(pts): sc.part(); octa(sc, R(q), sz*H*(0.35 if kind == 'slash' else 0.3)*(1 if kind == 'impact' else 1-abs(i_-3)/5), col_)
+        else:
+            for i_ in range(n): q = c0+(rs.rand(3)*2-1)*spr*H*np.array([1, 0.6, 0.8]); sc.part(); octa(sc, R(q), sz*H*(0.6+0.6*rs.rand()), col_)
+        sc.material(None); sc.smooth(True)
+    sc.smooth(False)
     if HULL:   # 背面法の輪郭：点を面の向きへ HULL ドットぶん ふくらませた うら返しの皮を、こい色で（うらを向いた面だけ描く）。物のふち・かさなる所・部品のさかいに線が出る
         tm_ = trimesh.Trimesh(vertices=P, faces=F, process=False); VN = tm_.vertex_normals*(1 if tm_.volume > 0 else -1); w_ = HULL*H/cfg['HPX']; Ph = P+VN*w_
         sc.smooth(False); sc.outline(0); sc.material('ink'); sc.part()
