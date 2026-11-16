@@ -20,7 +20,7 @@ function letterQ(r,k,v,sub,d){/* 手紙を書く（つぎの朝にとどく）�
   const tx=L[i<0?0:i].map(t=>chatTone(fill(t),r));Q.push({id:r.id,who:r.name,el:r.elem,k,d:d!=null?d:dayNo(),tx,g:LETTERGIFT[k]?letterGift(r.elem):null})}
 function letterMorning(){/* 朝6時：きのう書いた手紙がとどく */letterHouse();const Q=S.letterQ;if(!Q||!Q.length)return;const L=S.letters||(S.letters=[]),got=[];for(const q of Q){if(q.d>=dayNo())continue;L.push({who:q.who,el:q.el,k:q.k,d:dayNo(),tx:q.tx,g:q.g||null,read:0});got.push(q.who)}S.letterQ=Q.filter(q=>q.d>=dayNo());
   if(L.length>60)L.splice(0,L.length-60);if(got.length){toast((got.length>1?got.length+'通の':got[0]+'から')+'手紙がとどいた','good');sfx('offer');if(sheet==='inv')renderSheet()}}
-function letterHouse(){/* じぶんのベッドのある家が、はじめてできた（前からある家は、手紙なし） */if(!S||S.free)return;const first=!S.flags.lhome1;S.flags.lhome1=1;for(const r of S.res){if(r.hidden||r.lhome||typeof homeOf!=='function'||!homeOf(r))continue;r.lhome=1;if(!first)letterQ(r,'house')}}
+function letterHouse(has){/* じぶんのベッドのある家が、はじめてできた（前からある家は、手紙なし）。has：家があるか（ふだんは homeOf） */if(!S||S.free)return;const H=has||(typeof homeOf==='function'?homeOf:()=>null),first=!S.flags.lhome1;S.flags.lhome1=1;for(const r of S.res){if(r.hidden||r.lhome||!H(r))continue;r.lhome=1;if(!first)letterQ(r,'house')}}
 const letterUnread=()=>(S.letters||[]).filter(l=>!l.read).length;
 const LETTERPX=['................','................','................','.oooooooooooooo.','.ohhhhhhhhhhhhd.','.odhhhhhhhhhhdd.','.omdhhhhhhhhdmd.','.ommdhhhhhhdmmd.','.ommmddhhddmmmd.','.ommmmmddmmmmmd.','.ommmmmmmmmmmmd.','.ommmmmmmmmmmmd.','.oddddddddddddo.','.oooooooooooooo.','................','................'];
 function letterIco(){return pixURL('letter',LETTERPX,'#f0e2c4')}/* 手紙（ふうとう）のドット絵 */
