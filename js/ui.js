@@ -97,7 +97,7 @@ function renderPalette(){
     if(S.bulk){lbl(box,'ハケ');box.appendChild(chip(toolIcon('hake'),'ひろびろハケ','下からえらぶ','wide',()=>toast('ぬりたいブロックや種をえらんで、指でなぞろう')))}/* もらった道具だけ出す */
     if(S.mover){lbl(box,'ひっこし');box.appendChild(chip(toolIcon('mover'),'ひっこしミトン','うつす','wide'+(selStamp==='move'?' sel':''),()=>{selStamp='move';MOVESRC=null;palOpen=false;renderPalette();toast('うつしたい家具・建物をタップ')}))}/* ひっこしミトン：家具・建物を、すぐべつの場所へ */
     if(S.stamps){lbl(box,'スタンプ');for(const sid in STAMPS)box.appendChild(chip(stampIcon(sid),STAMPS[sid].name,'スタンプ','wide'+(selStamp===sid?' sel':''),()=>{selStamp=sid;palOpen=false;renderPalette();toast('置きたい場所の左上をタップ')}))}
-    if((S.bpInv||[]).length){lbl(box,'設計図');S.bpInv.forEach((it,i)=>{const k='bp:'+i;box.appendChild(chip(bpIcon(it.k),BPS[it.k].name,BPCAT[BPS[it.k].cat]+'の設計図','wide'+(selStamp===k?' sel':''),()=>{selStamp=k;palOpen=false;renderPalette();toast('建てたい場所の左上をタップ')}))})}/* 家の設計図 */
+    if((S.bpInv||[]).length){lbl(box,'設計図');S.bpInv.forEach((it,i)=>{const k='bp:'+i;box.appendChild(chip(bpIcon(it.k),BPS[it.k].name,BPCAT[BPS[it.k].cat]+'の設計図','wide'+(selStamp===k?' sel':''),()=>{sfx('tap');bpPop(i)}))})}/* 家の設計図 */
     if(S.swap){lbl(box,'つけかえ');for(const id of SWAPG.flat().filter(id=>S.unlocked[id])){const k='swap:'+id;box.appendChild(chip(iconURL(id),BL[id].name,'×'+inv(id),selStamp===k?'sel':'',()=>{selStamp=k;palOpen=false;renderPalette();toast('つけかえたい物をタップ')}))}}/* つけかえトンカチ：つながっている柵・塀・家の壁・道・床を、えらんだ種類にまとめてかえる */
     if(!S.bulk)return/* ハケがなければ、ぬるブロック・種は出さない */
   }
