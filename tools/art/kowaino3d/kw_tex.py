@@ -12,7 +12,7 @@ from PIL import Image
 TEX = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'textures')
 MATS = ('fabric', 'rock', 'metal', 'ice')
 # 布：(ノーマルマップ, 1まいがおおう長さ（体の高さのうち）, 織り目の強さ, ちぢめる大きさ)
-FABRIC = ('fabric026_n.png', 1.6, 0.18, 48)
+FABRIC = ('fabric026_n.png', 1.6, 0.07, 48)
 FOLD = (5, 0.7, 0.5)    # 布のしわ：まわりにいくつ・強さ（すそほど強い）・ゆらぎ（高さでひだがうねる）
 # 岩：(ノーマルマップ, 色のテクスチャ, 1まいがおおう長さ, でこぼこの強さ, ちぢめる大きさ)
 ROCK = ('rock030_n.png', 'rock030.png', 0.9, 1.3, 14)
