@@ -4,7 +4,9 @@
   灰（204,204,204）＝布・青（3,0,204）＝顔・緑（10,204,0）＝かざり・赤（204,0,1）＝ぽんぽん（上のほう）と布の裏（下のほう）。
 見分け方：まず、となりの面との角度が REGANG 度より小さい面をつなげて、まとまりにわける（モデルの角で区切る）。色は、まとまりごとにきめる。
   顔：正面から見て、顔のまん中（FACEAT・FACE）にうつるまとまり。
-  裏地：面の向きに光をとばして体にあたる（内がわを向いた）まとまりのうち、顔のまわり（フードの裏）と、すその下（UNDERH より下）。それと、すその下のふた（CAPNY・CAPR）。
+  外がわの面：まよこから見えて、外を向いたまとまり。
+  裏地：すその下（UNDERH より下）の、外がわの面でない所ぜんぶ（すその内がわ・下のふた・ふちのあつみ）。
+        顔のまわりは、顔からとなりへたどった、内がわを向いた（光が体にあたる）まとまり（フードの裏）。
   足：足の先（地面にとどく、まん中に近い面）から、となりとの角度が FOOTAS 度より小さい面だけをたどった所（足とすそのさかいの角で止まる。広がりすぎたら角度を小さくする）。顔と同じこい色。
   かざり：いちばん大きなかたまり（体）からはなれた部品ぜんぶ。
   ぽんぽん：体とくっついた物は、フードのしっぽの先から首までのきょりの中（POM）。はなれた部品の物は、その場所にいちばん近い部品（POMPART）。
@@ -24,6 +26,8 @@ FACEAT = (0.0, 0.55)   # 顔のまん中（高さのうち。よこ・上）
 FACE = {}              # コワイノごとの顔のまん中（ちがうときだけ）
 UNDERH = 0.3           # 布の裏・足：すその下（まとまりのまん中の高さが、これより下）
 CAPNY, CAPR = -0.6, 0.7   # 布の裏：すその下のふた（下を向いて、すその広さのこのわりより内がわ）
+OUTNR = 0.2            # 外がわの面：外を向いた（面積でならした法線の、外向きの成分がこれより上）
+HOODSTEP = 2           # フードの裏：顔から、いくつとなりのまとまりまで
 INK, INR, INDIST = 5, 3, 0.5   # 裏地：とばす光の本数・あたる本数・とどくきょり（高さのうち）
 # UNR           # 布の裏：内がわ（まん中の軸のほう）を向いたまとまり（面積でならした法線の、外向きの成分がこれより下）
 FOOT, FOOTY, FOOTH = 0.5, 0.015, 0.2   # 足の先：すその広さ（95%の半径）のこのわりより内がわで、この高さより下。足はこの高さまで
@@ -87,11 +91,20 @@ def label(path, name):
         loc, ri, _ = m.ray.intersects_location(c+d*1e-4*H, d, multiple_hits=False)
         dist = np.full(len(F), np.inf); dist[ri] = np.linalg.norm(loc-c[ri], axis=1); hits += dist < INDIST*H
     rin = avg((hits >= INR).astype(float)) > 0.5   # まとまりの半分より多くが内がわを向く
-    # 裏地：内がわを向いたまとまりのうち、顔のまわり（顔のまとまりにとなる、フードの裏）と、すその下（UNDERH より下）。
-    #   それと、すその下のふた（下を向いて、まん中に近い。CAPNY・CAPR）
-    fr2 = np.zeros(nreg, bool); fa2 = L[adj[:, 0]] == 'face'; fb2 = L[adj[:, 1]] == 'face'
-    fr2[reg[adj[fa2 & ~fb2, 1]]] = True; fr2[reg[adj[fb2 & ~fa2, 0]]] = True
-    under = body & (L == 'cloth') & ((rin[reg] & (fr2[reg] | (rcy[reg] < UNDERH*H))) | ((rcy[reg] < UNDERH*H) & (rny[reg] < CAPNY) & (rrr[reg] < CAPR*rs)))
+    # 外がわの面：まよこ（16の向き）から見えて、外を向いた（OUTNR）まとまり
+    vis = np.zeros(len(F), bool)
+    for k8 in range(16):
+        a8 = 2*math.pi*k8/16; ca, sa = math.cos(a8), math.sin(a8); R = np.stack([V[:, 0]*ca-V[:, 2]*sa, V[:, 1], V[:, 0]*sa+V[:, 2]*ca], 1)
+        _, Iv, _ = zbuf(R, F, H); vis |= np.bincount(Iv[Iv >= 0], minlength=len(F)) >= 2
+    outer = (avg(vis.astype(float)) > 0.5) & (rnr > OUTNR)
+    # 裏地：
+    #   すその下（UNDERH より下）は、外がわの面でない所ぜんぶ（すその内がわ・下のふた・ふちのあつみ）
+    #   顔のまわりは、顔のまとまりにとなる、内がわを向いた（光が体にあたる）まとまりと、そのとなりの内がわを向いたまとまり（フードの裏）
+    hood = np.zeros(nreg, bool); isf = L == 'face'
+    for _ in range(HOODSTEP):
+        tg = isf | hood[reg]; fa2 = tg[adj[:, 0]]; fb2 = tg[adj[:, 1]]; nx = np.zeros(nreg, bool)
+        nx[reg[adj[fa2 & ~fb2, 1]]] = True; nx[reg[adj[fb2 & ~fa2, 0]]] = True; hood |= nx & rin & ~outer
+    under = body & (L == 'cloth') & (((rcy[reg] < UNDERH*H) & ~outer[reg]) | hood[reg])
     # 足：足の先（まん中に近い FOOT、地面にとどく FOOTY の面。はばが TIPW より広い物はのぞく）から、
     #   となりの面との角度が FOOTAS 度より小さい所だけをたどる（足と すそのさかいの角で止まる）。高さ FOOTH まで
     tip = body & (rr < FOOT*rs) & (c[:, 1] < FOOTY*H); feet = np.zeros(len(F), bool)
