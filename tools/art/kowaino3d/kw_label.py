@@ -23,10 +23,14 @@ COL = {'cloth': (204, 204, 204), 'face': (3, 0, 204), 'deco': (10, 204, 0), 'red
 FACE0 = dict(t=0.006, lo=0.33, hi=0.85, y=0.55)   # 顔：段とみなす奥行きのとび（高さのうち）・さがす高さ・さがしはじめる高さ
 FACE = {'fast': dict(t=0.004), 'trapper': dict(lo=0.45), 'hana': dict(lo=0.45)}   # コワイノごとに、かえる所
 UNDERH = 0.29          # 布の裏をさがす高さ（高さのうち）
+FACERIM, FACEDEEP, FACEGROW = 0.12, 0.012, 9   # 顔の穴を広げる：ふちをさがす広さ・ふちより奥とみなす深さ（高さのうち）・広げるドット数
 HOLED = 0.03           # 顔の穴の中：いちばん奥の顔より、これだけ奥まで
 FOOT, FOOTH = 0.5, 0.18 # 足：すその広さ（95%の半径）のこの わりより内がわで、この高さより下
 FOOTT = 0.03           # 足の先：この高さより下
-LEGR = (0.03, 0.55)    # 足の太さ：足の先からの横のきょり（高さのうち）＝ 先 ＋ 高さ×わり
+LEGR = (0.06, 0.7)    # 足の太さ：足の先からの横のきょり（高さのうち）＝ 先 ＋ 高さ×わり
+USMOOTH = 1            # 布の裏：なめらかにする回数
+UNR, UNY, UNRIM = -0.1, -0.6, 0.9   # 布の裏：内がわを向く・下を向く（法線）・すそのふちをのぞく
+UHOLE = 0.25           # 布の裏：かこまれた布のかたまりを裏にする大きさ（裏の面積のうち）
 UEL = 0.2              # 布の裏：まわりから見る角度（上から、ラジアン）
 NG = 220              # 奥行きの絵のこまかさ
 POM = {'thief': dict(r=0.16), 'breaker': dict(r=0.14), 'hana': dict(r=0.13), 'yuki': dict(r=0.18, lo=0.05), 'shiny': dict(r=0.12, at=(0.44, 0.61, -0.13))}   # 体とくっついたぽんぽん：しっぽの先から首までのきょり（高さのうち）。at：しっぽの先の場所（ないときは、頭のまん中からいちばん遠い、うしろの点）
@@ -66,7 +70,7 @@ def label(path, name):
     Fb = np.nonzero(body)[0]; Z, I, s = zbuf(V, F[Fb], H); ok = np.isfinite(Z); Zf = np.where(ok, Z, -1e9); T = fc['t']*H
     dx = np.abs(np.diff(Zf, axis=1)) > T; dy = np.abs(np.diff(Zf, axis=0)) > T; ex = np.zeros_like(ok)
     ex[:, 1:] |= dx; ex[:, :-1] |= dx; ex[1:] |= dy; ex[:-1] |= dy
-    ex = ndimage.binary_dilation(ex, iterations=3)
+    ex0 = ex.copy(); ex = ndimage.binary_dilation(ex, iterations=3)
     hg = (H-(np.arange(Z.shape[0])+0.5)/s)/H; band = ((hg > fc['lo']) & (hg < fc['hi']))[:, None]
     sq = np.ones((3, 3)); free = ndimage.binary_opening(ok & ~ex & band, structure=sq, iterations=4); lab, k = ndimage.label(free)
     cx = int((0-V[:, 0].min())*s); cy = int((1-fc['y'])*H*s); q = lab[cy, cx]
@@ -78,8 +82,13 @@ def label(path, name):
         # 顔の穴の中（正面から見て穴の中にうつる所）は、奥のかべまで顔にする（持ち主の直し）
         x0 = V[:, 0].min(); px = ((c[:, 0]-x0)*s).astype(int); py = ((H-c[:, 1])*s).astype(int)
         inr = (px >= 0) & (px < rec.shape[1]) & (py >= 0) & (py < rec.shape[0])
-        hole = ndimage.binary_erosion(rec, structure=sq, iterations=2); inh = np.zeros(len(F), bool); inh[inr] = hole[py[inr], px[inr]]
-        if len(seed): L[body & inh & (c[:, 2] >= c[seed, 2].min()-HOLED*H)] = 'face'
+        # 穴を、フードのふちの段まで広げる（ふち（まわりでいちばん手前の所）より奥の所だけ、FACEGROW ドットまで）
+        rim = ndimage.grey_dilation(Zf, footprint=np.ones((int(FACERIM*NG)|1,)*2)); deep = ok & (Zf < rim-FACEDEEP*H)
+        hole = rec.copy()
+        for _ in range(FACEGROW): hole = ndimage.binary_dilation(hole, structure=sq) & deep & ~ex0   # ふちの段はこえない
+        hole |= rec; inh = np.zeros(len(F), bool); inh[inr] = hole[py[inr], px[inr]]
+        rz = np.full(len(F), np.inf); rz[inr] = rim[py[inr], px[inr]]
+        if len(seed): L[body & inh & (c[:, 2] >= c[seed, 2].min()-HOLED*H) & (c[:, 2] < rz-FACEDEEP*H*0.5)] = 'face'
     # 布の裏：すその下（UNDERH より下）で、まわり（16の向き・少し上 UEL から）から見えない、下・内がわを向いた面
     def around(el):
         v = np.zeros(len(F), bool)
@@ -89,9 +98,17 @@ def label(path, name):
             _, Iv, _ = zbuf(R2, F, H*1.6); v |= np.bincount(Iv[Iv >= 0], minlength=len(F)) >= 2
         return v
     vis = around(UEL)
-    under = body & ~vis & (n[:, 1] < 0.35) & (c[:, 1] < UNDERH*H) & (L == 'cloth')
+    # 下・内がわを向いた面（法線）で、すそのふち（その向きのいちばん外の UNRIM わりより外）はのぞく
+    rr = np.linalg.norm(c[:, [0, 2]], axis=1); nr = (n[:, [0, 2]]*(c[:, [0, 2]]/np.maximum(rr[:, None], 1e-9))).sum(1)
+    cand = body & (c[:, 1] < UNDERH*H) & (L == 'cloth'); bins = ((np.arctan2(c[:, 2], c[:, 0])+math.pi)/(2*math.pi)*24).astype(int) % 24
+    rout = np.array([rr[cand & (bins == b2)].max() if (cand & (bins == b2)).any() else 0 for b2 in range(24)])
+    under = cand & ((nr < UNR) | (n[:, 1] < UNY)) & (rr < UNRIM*rout[bins])
+    under |= cand & ~vis & (n[:, 1] < 0.35)
+    ar = m.area_faces; nb = coo_matrix((np.ones(len(F)*3), (np.repeat(np.arange(len(F)), 3), F.ravel())), shape=(len(F), len(V))).tocsr(); A = (nb@nb.T).tocsr()
+    for _ in range(USMOOTH):   # なめらかに：となりの面の、面積の多いほうにそろえる
+        w = A@(ar*under); t = A@(ar*cand); under = cand & (w > 0.5*np.maximum(t, 1e-12))
     # 足：足の先（すその広さの FOOT の わりより内がわの、いちばん下の面）から上へ、足の太さ（LEGR）の中で、FOOTH より下。顔と同じこい色
-    rr = np.linalg.norm(c[:, [0, 2]], axis=1); low = body & (c[:, 1] > 0.05*H) & (c[:, 1] < 0.25*H)
+    low = body & (c[:, 1] > 0.05*H) & (c[:, 1] < 0.25*H)
     rs = np.percentile(rr[low], 95) if low.any() else H
     feet = np.zeros(len(F), bool); tipf = body & (rr < FOOT*rs) & (c[:, 1] < FOOTT*H)
     if tipf.any():   # 足の先（いちばん下の面）を、つながりでまとめ、それぞれの先から上へ、足の太さ（LEGR）の中
