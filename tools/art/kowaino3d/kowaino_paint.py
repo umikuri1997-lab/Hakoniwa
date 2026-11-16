@@ -368,7 +368,7 @@ def shoot(name, cfg, src, yaw=0.0):
         return (q[0]*sc_*k, -(cz+float(q@U)*sc_)*k)
     Q = np.array([proj(p) for tr in sc.t for p in tr[:3]]); ext = (math.floor(Q[:, 0].min())-2, math.ceil(Q[:, 0].max())+2, math.floor(Q[:, 1].min())-2, math.ceil(Q[:, 1].max())+2)
     O.S = BIG; O.GRAD = True; O.DITHER = BIG if DITH else 0   # かげは1色、うすいかげは、かげのドットの密度（持ち主がきめた）
-    sv = (O.LV4, O.SHADE4); O.LV4 = KWLV; O.SHADE4 = KWSHADE   # 立体感：かげの所を広く・かげの色をこく（コワイノだけ）
+    sv = (O.LV4, O.SHADE4); O.LV4 = KWLV; O.SHADE4 = KWSHADE; O.DITHERR = (KWLV[2], KWLV[0])   # 立体感：かげの所を広く・かげの色をこく（コワイノだけ）
     hi = O.render_px(sc, proj, ext, V, k=0.80, lw=2, k2=0.90, merge=0); O.LV4, O.SHADE4 = sv
     if os.environ.get('KWDBG'): hi.save(os.path.join(os.environ['KWDBG'], 'hi_%s_%d.png' % (name, round(math.degrees(yaw)))))   # たしかめ用：ちぢめる前の大きな絵
     import pixdown
