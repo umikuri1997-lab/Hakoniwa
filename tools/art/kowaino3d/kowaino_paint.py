@@ -1,0 +1,215 @@
+"""コワイノのトリポのモデル（split18.py で分けた kg_<しゅるい>.glb、色なし）に色をつけて、ドット絵に写す。
+  python3 tools/art/kowaino3d/kowaino_paint.py <分けたフォルダ> <出力フォルダ> [しゅるい...]
+色のつけ方：
+  ・近い点をまとめて（weld）、三角形のつながりで部品に分ける（星・すそのかざり・手・ぽんぽん など、べつの部品になっている物がある）。
+  ・体の部品の中は、目じるしの場所（たね）から、面の向きが急にかわる所（折れ目、ANG 度）までぬりひろげて、顔・手・ずきんなどを分ける。
+  ・目はモデルにないので、顔の面の上に、うすい色のたての だ円をのせる。
+写し方：せいれいと同じく、ほぼ正面（見おろし EL 度・遠近なし）から、1ドット＝1で写す（高さはいまのチップに合わせる HPX）。"""
+import math, os, sys
+import numpy as np, trimesh
+from PIL import Image
+HERE = os.path.dirname(os.path.abspath(__file__)); sys.path.insert(0, HERE); sys.path.insert(0, os.path.dirname(HERE))
+import oblique3d as O
+from weld import weld
+
+EL = 0.0; ANG = 40   # 前向きも後ろ向きも、まっすぐ正面から写す（持ち主がきめた）
+hx = lambda h: np.array([int(h[i:i+2], 16) for i in (1, 3, 5)], float)
+
+# しゅるいごとの色と目じるし。場所は高さ1のときの (よこ x, 高さ z)。front：前からのたね
+CFG = {
+    'basic': dict(HPX=54, thin=0.97, hem=('#e2c46a', 0.022), under='#3a3150', base='#685d7f', parts='#b9aab6', legs=('#342b44', 0.1), eyes=dict(x=0.085, z=0.52, rx=0.03, rz=0.075, col='#e6d8de'),
+                  seeds=[('hood', 0.0, 0.85, '#6f6487', 0), ('rim', -0.2, 0.47, '#3a3150', 1), ('face', 0.0, 0.52, '#241c33', 1),
+                         ('handL', -0.1, 0.37, '#8e83a2', 1), ('handR', 0.06, 0.37, '#8e83a2', 1)],
+                  boxes=[('pom', lambda c: c[0] > 0.28 and c[2] < 0.62, 'hood', '#c8bcc8')]),
+}
+
+def load(path):
+    m = weld(list(trimesh.load(path).geometry.values())[0]); F = m.faces
+    cc = sorted(trimesh.graph.connected_components(m.face_adjacency, min_len=1, nodes=np.arange(len(F))), key=len, reverse=True)
+    comp = np.zeros(len(F), int)
+    for i, c in enumerate(cc): comp[c] = i
+    return m, comp
+
+def paint(m, comp, cfg):
+    V = m.vertices; F = m.faces; H = m.bounds[1][1]; P = np.stack([V[:, 0], V[:, 2], V[:, 1]], 1); cen = P[F].mean(1)/H
+    nb = {}
+    for (a, b), t in zip(m.face_adjacency, m.face_adjacency_angles):
+        nb.setdefault(a, []).append((b, t)); nb.setdefault(b, []).append((a, t))
+    def seed(x, z, front):
+        ok = (comp == 0) & ((cen[:, 0]-x)**2+(cen[:, 2]-z)**2 < 0.06**2); idx = np.nonzero(ok)[0]
+        if not len(idx): idx = np.array([min(np.nonzero(comp == 0)[0], key=lambda k: (cen[k, 0]-x)**2+(cen[k, 2]-z)**2)])
+        return int(idx[np.argmax(cen[idx, 1] if front else -cen[idx, 1])])
+    def grow(s):
+        th = math.radians(ANG); reg = {s}; st = [s]
+        while st:
+            k = st.pop()
+            for j, t in nb.get(k, []):
+                if j not in reg and t < th and comp[j] == 0: reg.add(j); st.append(j)
+        return reg
+    col = np.tile(hx(cfg['base']), (len(F), 1)); lab = np.array(['base']*len(F), object)
+    for nm, x, z, c, front in cfg['seeds']:
+        for k in grow(seed(x, z, front)): col[k] = hx(c); lab[k] = nm
+    for nm, f, inside, c in cfg.get('boxes', []):
+        for k in range(len(F)):
+            if lab[k] == inside and f(cen[k]): col[k] = hx(c); lab[k] = nm
+    if cfg.get('under'):   # 布の裏がわ（マント・ずきんの、下を向いた面）は、こいかげの色
+        T = P[F]; fn = np.cross(T[:, 1]-T[:, 0], T[:, 2]-T[:, 0]); fn /= np.maximum(np.linalg.norm(fn, axis=1, keepdims=True), 1e-12)
+        c0 = P.mean(0); fn[((T.mean(1)-c0)*fn).sum(1) < 0] *= -1   # 三角形の表と裏がばらばらなので、外向きにそろえる
+        for k in range(len(F)):
+            if comp[k] == 0 and lab[k] in ('base', 'hood') and fn[k, 2] < -0.35: col[k] = hx(cfg['under']); lab[k] = 'under'
+    lc, lz = cfg['legs']
+    for k in range(len(F)):
+        if comp[k] == 0 and lab[k] == 'base' and cen[k, 2] < lz: col[k] = hx(lc); lab[k] = 'legs'
+        if comp[k] > 0: col[k] = hx(cfg['parts']); lab[k] = 'part'
+    return P, F, col, lab, H, cen
+
+def thin(P, F, lab, inner='face', band='rim', outer='hood', k=0.6):
+    """布をうすく：ふち（band）の点のうち、内がわ（inner）にふれる点を、外がわ（outer）にふれる、いちばん近い点へ k だけよせる（帯がほそくなる。顔の面もいっしょにのびる）"""
+    vi = set(F[lab == inner].ravel()); vb = set(F[lab == band].ravel()); vo = np.array(sorted(set(F[lab == outer].ravel()) & vb))
+    if not len(vo): return P
+    P = P.copy(); Q = P[vo]
+    for v in sorted(vi & vb):
+        j = np.argmin(((Q[:, [0, 2]]-P[v, [0, 2]])**2).sum(1)); P[v] = P[v]+(Q[j]-P[v])*k
+    return P
+
+EYEPX = ['.##.', '####', '####', '####', '####', '####', '.##.']   # 目のドット（はば4・高さ7の だ円）
+
+def eyepos(P, F, lab, H, e):
+    """目のまん中（3D）：顔の面のまん中を中心に、左右そろえて、顔の面のいちばん前"""
+    fc = P[F].mean(1); f0 = fc[lab == 'face']; cx = (f0[:, 0].min()+f0[:, 0].max())/2; out = []
+    for sx in (-1, 1):
+        x, z = cx+sx*e['x']*H, e['z']*H
+        near = [k for k in np.nonzero(lab == 'face')[0] if abs(fc[k, 0]-x) < 0.06*H and abs(fc[k, 2]-z) < 0.08*H]
+        y = max(fc[k, 1] for k in near) if near else 0.3*H
+        out.append(np.array([x, y, z]))
+    return out
+
+def stamp(im, pts, col):
+    """目：きめたドットの形を、その場所におす（左右でまったく同じ形）"""
+    a = np.array(im); c = list(hx(col).astype(int))+[255]; h, w = len(EYEPX), len(EYEPX[0])
+    for X, Y in pts:
+        x0, y0 = int(round(X-w/2)), int(round(Y-h/2))
+        for r, row in enumerate(EYEPX):
+            for q, ch in enumerate(row):
+                if ch == '#' and 0 <= y0+r < a.shape[0] and 0 <= x0+q < a.shape[1] and a[y0+r, x0+q, 3]: a[y0+r, x0+q] = c
+    return Image.fromarray(a)
+
+SMIT = 12   # 面の向きをならす回数
+
+def smoothshade(P, F, lab, R):
+    """ドットごとのかげ：部品（lab）ごとに、点をならした写しの、点の面の向き（外向き）を、近い点からまぜて、光のあたり方を3だんにする"""
+    from scipy.spatial import cKDTree
+    cache = {}
+    def part(name):
+        if name in cache: return cache[name]
+        fs = F[lab == name]; vs = np.unique(fs); idx = {v: i for i, v in enumerate(vs)}; fl = np.vectorize(idx.get)(fs); Q = P[vs]
+        T = Q[fl]; fn = np.cross(T[:, 1]-T[:, 0], T[:, 2]-T[:, 0]); c0 = Q.mean(0)
+        fn[((T.mean(1)-c0)*fn).sum(1) < 0] *= -1   # 三角形の表と裏がばらばらなので、外向きにそろえる（面の大きさで重みがつく）
+        n = np.zeros_like(Q)
+        for j in range(3): np.add.at(n, fl[:, j], fn)
+        nbv = [set() for _ in range(len(Q))]
+        for a_, b_, c_ in fl: nbv[a_] |= {b_, c_}; nbv[b_] |= {a_, c_}; nbv[c_] |= {a_, b_}
+        n /= np.maximum(np.linalg.norm(n, axis=1, keepdims=True), 1e-9)
+        for _ in range(SMIT):   # となりの点とまぜて、なめらかに
+            n = np.array([n[i]+sum(n[j] for j in nbv[i]) for i in range(len(Q))]); n /= np.maximum(np.linalg.norm(n, axis=1, keepdims=True), 1e-9)
+        pts = np.array([R(p) for p in P[vs]]); nr = np.array([R(q) for q in n])
+        cache[name] = (cKDTree(pts), nr); return cache[name]
+    def mk(base, name):
+        t, nr = part(name)
+        def f(x, y, z):
+            d, i = t.query([x, y, z], k=6); w = 1/np.maximum(d, 1e-6); n = (nr[i]*w[:, None]).sum(0); n /= max(1e-9, np.linalg.norm(n))
+            q = float(np.dot(n, O.LIGHT)); lv = 0 if q > 0.55 else 1 if q > 0.1 else 2
+            return O.toon(base, lv)
+        return f
+    return mk
+
+def hemdecal(P, F, lab, comp, H, cfg, yaw):
+    """すそのライン：写すドットごとに、真上から見て近く（HEMR）のマント（base）の点のいちばん下を「すそ」とし、そこから hem の高さまでを、その色に。
+    すそがマントの下のあたり（いちばん下から HEMTOP）のときだけ（マントの上のほうや左右のはしに、のびない）"""
+    from scipy.spatial import cKDTree
+    hc, hh = cfg['hem']; vs = np.unique(F[(lab == 'base') & (comp == 0)]); Q = P[vs]; Q = Q[Q[:, 2] > cfg['legs'][1]*H]
+    c, s_ = math.cos(yaw), math.sin(yaw); X = Q[:, 0]*c-Q[:, 1]*s_; Y = Q[:, 0]*s_+Q[:, 1]*c
+    t = cKDTree(np.stack([X, Y], 1)); zmin = Q[:, 2].min(); col = hx(hc)
+    def f(x, y, z):
+        i = t.query_ball_point([x, y], HEMR*H)
+        if not i: return None
+        low = Q[i, 2].min()
+        return col if low < zmin+HEMTOP*H and z < low+hh*H else None
+    return f
+
+HEMR, HEMTOP = 0.07, 0.12
+
+def shoot(name, cfg, src, yaw=0.0):
+    m, comp = load(os.path.join(src, 'kg_%s.glb' % name)); P, F, col, lab, H, cen = paint(m, comp, cfg)
+    if cfg.get('thin'): P = thin(P, F, lab, k=cfg['thin'])
+    c, s = math.cos(yaw), math.sin(yaw); R = lambda p: np.array([p[0]*c-p[1]*s, p[0]*s+p[1]*c, p[2]])
+    O.LIGHT[:] = np.array([-0.45, 0.65, 0.65])/np.linalg.norm([-0.45, 0.65, 0.65])
+    sc = O.Scene(); last = None; sc.smooth(True)
+    hemf = hemdecal(P, F, lab, comp, H, cfg, yaw) if cfg.get('hem') else None
+    for k, f in enumerate(F):
+        if lab[k] != last: sc.decal(hemf if lab[k] == 'base' else None); sc.part(); last = lab[k]
+        sc.tri(R(P[f[0]]), R(P[f[1]]), R(P[f[2]]), col[k])
+    sc.decal(None); sc.smooth(False)
+    # 大きく（BIG 倍）写してから、色の平均（pixdown）でちぢめる：三角形ごとのかげのむらが、ならされる
+    t = math.radians(EL); V = np.array([0, math.cos(t), math.sin(t)]); k = cfg['HPX']/H
+    proj = lambda p: (p[0]*k, -(p[2]*math.cos(t)+p[1]*math.sin(t))*k)
+    Q = np.array([proj(p) for tr in sc.t for p in tr[:3]]); ext = (math.floor(Q[:, 0].min())-2, math.ceil(Q[:, 0].max())+2, math.floor(Q[:, 1].min())-2, math.ceil(Q[:, 1].max())+2)
+    O.S = BIG; O.GRAD = True
+    hi = O.render_px(sc, proj, ext, V, k=0.80, lw=2, k2=0.90, merge=0)
+    import pixdown
+    W0, H0 = (ext[1]-ext[0]), (ext[3]-ext[2])
+    o = pixdown.shrink(np.asarray(hi).astype(float), W0, H0); o = pixdown.lines(o, np.asarray(hi).astype(float)); o = pixdown.outline(o, np.asarray(hi).astype(float))
+    im = despeckle(quant(rim(Image.fromarray(o.round().astype(np.uint8), 'RGBA')), NCOL, cfg.get('hem', (None,))[0]))
+    if abs(math.cos(yaw)-1) < 1e-6:   # 正面だけ、目をおす
+        im = stamp(im, [(proj(R(p))[0]-ext[0], proj(R(p))[1]-ext[2]) for p in eyepos(P, F, lab, H, cfg['eyes'])], cfg['eyes']['col'])
+    return im, ext
+
+BIG = 8; NCOL = 15   # 大きく写す倍・色の数（目の色を足して16）
+
+def rim(im, k=0.62):
+    """外の輪郭線：透明の所で、上下左右に物があるドットを、となりの色を暗くした色にする（黒にはしない）"""
+    a = np.array(im); b = a.copy(); m = a[..., 3] > 0; H, W = m.shape
+    for y in range(H):
+        for x in range(W):
+            if m[y, x]: continue
+            nb = [a[y+dy, x+dx, :3] for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)) if 0 <= y+dy < H and 0 <= x+dx < W and m[y+dy, x+dx]]
+            if nb: b[y, x, :3] = np.mean(nb, 0)*k; b[y, x, 3] = 255
+    return Image.fromarray(b)
+
+def quant(im, n, keep=None, nk=2):
+    """色を n 色にまとめる（メディアンカット）。keep（金のライン）に近い色のドットは、べつに nk 色にまとめる（まざって、ほかの所が黄色くならない）"""
+    a = np.array(im); m = a[..., 3] > 0; g = np.zeros_like(m)
+    if keep is not None:
+        import colorsys
+        hk = colorsys.rgb_to_hsv(*(hx(keep)/255))[0]
+        for y, x in zip(*np.nonzero(m)):
+            h, s_, v = colorsys.rgb_to_hsv(*(a[y, x, :3]/255))
+            g[y, x] = s_ > 0.25 and min(abs(h-hk), 1-abs(h-hk)) < 0.06
+    for sel, k in ((m & ~g, n-(nk if g.any() else 0)), (g, nk)):
+        if not sel.any(): continue
+        px = a[..., :3][sel]; q = np.array(Image.fromarray(px.reshape(1, -1, 3)).quantize(k, method=Image.Quantize.MEDIANCUT, dither=Image.Dither.NONE).convert('RGB')).reshape(-1, 3)
+        a[..., :3][sel] = q
+    return Image.fromarray(a)
+
+def despeckle(im, n=2):
+    """まわり8つのどれともちがう色の1ドット（孤立ドット）を、まわりでいちばん多い色にする"""
+    a = np.array(im); H, W = a.shape[:2]
+    for _ in range(n):
+        b = a.copy()
+        for y in range(1, H-1):
+            for x in range(1, W-1):
+                if a[y, x, 3] == 0: continue
+                nb = [tuple(a[y+dy, x+dx]) for dy in (-1, 0, 1) for dx in (-1, 0, 1) if dy or dx]
+                me = tuple(a[y, x])
+                if me in nb: continue
+                op = [c for c in nb if c[3]]
+                if len(op) < 8: continue   # まわりのふち（輪郭）は、そのまま
+                b[y, x] = max(set(op), key=op.count)
+        a = b
+    return Image.fromarray(a)
+
+if __name__ == '__main__':
+    src, out = sys.argv[1], sys.argv[2]; os.makedirs(out, exist_ok=True)
+    for name in (sys.argv[3:] or list(CFG)):
+        for B, yaw in (('', 0.0), ('B', math.pi)):
+            im, e = shoot(name, CFG[name], src, yaw); im.save(os.path.join(out, 'kg_%s%s.png' % (name, B))); print(name+B, im.size, e)
