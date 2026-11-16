@@ -199,6 +199,7 @@ function removeAt(x,y){const tx0=x,ty0=y;
   const j=anc(y*W+x),o=S.obj[j];x=j%W;y=(j/W)|0;
   if(S.win&&S.win[j]){const id=S.win[j]===1?'window':S.win[j];if(id==='curtain1'||id==='curtain2')S.win[j]=1;else delete S.win[j];giveItem(id,1,1);/* カーテンをはずすと、窓がのこる */toast(BL[id].name+'をおそなえ箱にもどした');burst(j,'furn','rm');recount();renderPalette();return}
   if(o){const b=BL[o];if(o==='grave'){const d=S.dyn[j];if(d&&!d.buried&&d.name)for(const L of[S.buried||[],S.lost||[]])for(const q of L)if(q.name===d.name)delete q.unb}/* おみおくりの前のお墓をこわしたら、おみおくりがすんだことにする（unb がのこると、その子を二度と呼びもどせない） */if(o==='tower')return toast(storyTreeName()+'はこわせません');if(o==='volcano'||o==='heatv'||o==='crack'||o==='boulder'||o==='fogbox'||o==='nushiprint'||o==='fogspring')return toast(b.name+'はこわせません');if(o==='statue'||o==='statueb'||o==='obox'||o==='board'||o==='altar'||o==='site2')return toast('神殿はこわせません');if((o==='stor'||o==='mbox')&&cnt(o)<=1&&!(WD===0&&!S.free&&!qDone('wall')&&y===CY-2&&x>=CX-5&&x<=CX-3))return toast(BL[o].name+'は1つ以上必要です');
+    if(o==='wbench')return toast('作業台は、依頼がおわるとかたづきます');
     if(o==='site'){const d=S.dyn[j];if(d.build==='statue')return toast('神殿はこわせません');if(d.bp!=null&&typeof bpOfSite==='function'){const e=bpOfSite(j);if(e)return bpCancel(e)}siteRefund(d,j);clearObj(j);toast('建てるのをやめた')}/* 素材はもどる・パワーはもどらない */
     else if(o==='sprout'){const d=S.dyn[j];clearObj(j);giveItem(d.plant,1,1);toast('植えるのをやめた')}
     else{clearObj(j);
@@ -223,7 +224,7 @@ function finishBuild(j,r){
   if(id==='tower'&&!S.cleared){if(WD===1){if(shLeft()>=1)S.usedSh=(S.usedSh||0)+1;/* かけらを台座にはめる */S.finalNight=true;memo('🌑','守護の台座が建った。最後の夜がくる');setTimeout(()=>toast('守護の台座が光りはじめた…！ 今夜、オオカゲたちがおしよせてくる','warn'),900)}else{memo('🌳','御神木が育った');setTimeout(()=>toast('御神木が育った','good'),900)}finalCheck()}/* ヌシ様の前に、きびしい最後の夜 */
 }
 function finishCraft(o,r){
-  S.orders=S.orders.filter(q=>q!==o);if(o.type==='board'){S.flags.board5=true;delete S.recipes.board;addSpiritXp(3,r);burst(BOARD,'furn');toast('依頼ボードが広がった！','good');checkSub();if(sheet==='craft')renderSheet();return}S.unlocked[o.type]=true;giveItem(o.type,BL[o.type].qty||1);if(o.type==='arrow2')S.flags.a2made=(S.flags.a2made||0)+BL.arrow2.qty;addSpiritXp(3,r);if(r)r.made=(r.made||0)+1;kurashi('f:'+o.type,['🪑','はじめて'+BL[o.type].name+'を作った']);burstAt(r.x,r.y,'furn');
+  S.orders=S.orders.filter(q=>q!==o);wbenchDel(o);if(o.type==='board'){S.flags.board5=true;delete S.recipes.board;addSpiritXp(3,r);burst(BOARD,'furn');toast('依頼ボードが広がった！','good');checkSub();if(sheet==='craft')renderSheet();return}S.unlocked[o.type]=true;giveItem(o.type,BL[o.type].qty||1);if(o.type==='arrow2')S.flags.a2made=(S.flags.a2made||0)+BL.arrow2.qty;addSpiritXp(3,r);if(r)r.made=(r.made||0)+1;kurashi('f:'+o.type,['🪑','はじめて'+BL[o.type].name+'を作った']);burstAt(r.x,r.y,'furn');
   toast(r.name+'が'+BL[o.type].name+'を作って、おそなえ箱に入れた！','good');renderPalette();if(sheet==='craft')renderSheet();
 }
 function rectCells(a,b){const x0=Math.min(a.x,b.x),x1=Math.max(a.x,b.x),y0=Math.min(a.y,b.y),y1=Math.max(a.y,b.y);const c=[];for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++)c.push([x,y]);return c}
@@ -304,9 +305,17 @@ const MANMET={'木':()=>manEl('wood'),'水':()=>manEl('water'),'火':()=>manEl('
   'やすらぎの砂':()=>(S.sand||0)>0,'ヌシのかけら':()=>(S.shards||0)>0,'めぶきのしずく':()=>(S.mebuki||0)>0,'おみおくり':manGone,'お墓':manGone,'霧の夜':()=>manNv('kiri'),'群れの夜':()=>manNv('mure'),'影の波':()=>manNv('wave'),'先ぶれ':()=>manNv('scout'),'横からの夜':()=>manNv('side'),'雨の夜':()=>manNv('wx_rain')||manNv('wx_storm'),'風の強い夜':()=>manNv('wx_kaze'),'あらしの夜':()=>manNv('wx_storm'),'ワナクイのうたげ':()=>manNv('wana'),'かげのどろぼう市':()=>manNv('doro'),'かげのうしお':()=>manNv('ushio'),'満月':()=>manNv('full'),'新月':()=>manNv('new'),'おだやかな夜':()=>manNv('odayaka'),'星空の夜':()=>manNv('hoshi'),'オオカゲの夜':()=>manNv('boss')||!!S.flags.bossIntro||(S.bossKills||0)>0,'角笛の夜':()=>manNv('horn')||S.hornD!=null,'まよけの夜':()=>manNv('herb')||S.herbD!=null};
 function manMet(t){if(S.free||!MANMET[t])return true;const F=S.flags.man||(S.flags.man={});if(F[t])return true;if(MANMET[t]()){F[t]=1;return true}return false}
 const boardMax=()=>S.flags.board5?5:3;
+/* 作業台：依頼をはったとき、依頼ボードのそばの空いたマスに出す（o.cs）。家具ができる・依頼をやめると、かたづける */
+function wbenchOK(j,G){if(j<0||j>=W*H||S.obj[j]||!walk(j)||S.ground[j]||(S.roof&&[j,j-1,j-W,j-W-1].some(k=>S.roof[k]))||STUMPB.has(j))return false;const x=j%W;if(x<1||x>=W-1||j+W>=W*H)return false;for(const k of[j+W,j-1,j+1])if(!walk(k)||S.obj[k]&&!(BL[S.obj[k]]&&BL[S.obj[k]].floor))return false;/* 前と左右は通れるまま（道をふさがない） */if(G&&G.dist[j+W]<0)return false;if(S.res.some(r=>!r.hidden&&(r.y|0)*W+(r.x|0)===j)||S.enemies.some(e=>e.spawned&&!e.dead&&(e.y|0)*W+(e.x|0)===j))return false;return true}
+function wbenchPut(o){if(!o||BOARD<0||o.cs!=null&&S.obj[o.cs]==='wbench')return;const r0=S.res.find(q=>!q.hidden),G=r0?bfs(r0.x|0,r0.y|0):null;let best=-1,bd=1e9;const bx=BOARD%W,by=(BOARD/W)|0;
+  for(let dy=-4;dy<=4;dy++)for(let dx=-3;dx<=5;dx++){const m=Math.max(Math.abs(dx-.5),Math.abs(dy));if(m<2)continue;const x=bx+dx,y=by+dy;if(x<0||y<0||x>=W||y>=H)continue;const j=y*W+x;if(!wbenchOK(j,G))continue;const d=m*10+(dy<0?5:0)+Math.abs(dx-.5);if(d<bd){bd=d;best=j}}/* 依頼ボード（2×1）から2〜4マス。手前を先に */
+  if(best<0)return;S.obj[best]='wbench';S.dyn[best]={order:o.id};o.cs=best;recount()}
+function wbenchDel(o){if(!o||o.cs==null)return;const j=o.cs;if(S.obj[j]==='wbench'&&S.dyn[j]&&S.dyn[j].order===o.id){S.obj[j]='';delete S.dyn[j];recount()}}
+function wbenchFix(){/* 読みこんだとき：依頼のない作業台はかたづけ、作業台のない依頼には出す */const ids=new Set((S.orders||[]).map(o=>o.id));for(let j=0;j<S.obj.length;j++)if(S.obj[j]==='wbench'&&!(S.dyn[j]&&ids.has(S.dyn[j].order))){S.obj[j]='';delete S.dyn[j]}for(const o of S.orders||[])if(!(o.cs!=null&&S.obj[o.cs]==='wbench')&&!(o.got&&Object.keys(o.got).length)){o.cs=null;wbenchPut(o)}}
+function wbenchStand(cs,G){for(const k of[cs+1,cs-1,cs+W,cs-W]){if(k<0||k>=W*H||Math.abs(k%W-cs%W)>1)continue;if(walk(k)&&G.dist[k]>=0)return k}return -1}/* 作業台の横（なければ前・うしろ）に立って作る（台の上の素材がかくれないように） */
 /* 依頼をやめる：パワーと素材はもどる。作っていた子は手をとめる */
 function cancelOrder(oid){const k=S.orders.findIndex(q=>q.id===oid);if(k<0)return;const o=S.orders[k],b=BL[o.type];S.orders.splice(k,1);
-  S.pt+=b.pc;if(o.mat||o.food)siteRefund(o,o.cs!=null?o.cs:BOARD);else for(const m in b.mat||{})S.mat[m]=(S.mat[m]||0)+b.mat[m];if(b.sand)S.sand=(S.sand||0)+b.sand;/* とっておいた素材はもどし、運んだ分は作る場所（なければ依頼ボードのまえ）に置く */
+  S.pt+=b.pc;const cs=o.cs;wbenchDel(o);if(o.mat||o.food)siteRefund(o,cs!=null?cs:BOARD);else for(const m in b.mat||{})S.mat[m]=(S.mat[m]||0)+b.mat[m];if(b.sand)S.sand=(S.sand||0)+b.sand;/* とっておいた素材はもどし、運んだ分は作る場所（なければ依頼ボードのまえ）に置く */
   for(const r of S.res)if(r.act&&r.act.type==='craft'&&r.act.order===oid){endAct(r);r.act=null;r.path=[]}
   toast(b.name+'の依頼をやめた');sfx('post');renderSheet()}
 const ORDER_LOCK={'stor':'crate'};
@@ -314,7 +323,7 @@ const orderLock=()=>{const q=QUESTS[S.quest];return !S.cleared&&q&&ORDER_LOCK[q.
 function canMakeNow(id){/* パワー・素材・村レベルがそろっていて、いま依頼をはれる物 */const b=BL[id];return lvOK(id)&&S.pt>=b.pc&&matOK(b.mat)&&(!b.sand||(S.sand||0)>=b.sand)&&Object.keys(b.food||{}).every(k=>(S.fs[k]||0)>=b.food[k])}
 function orderFurn(id){if(!recipeKnown(id))return;if(!lvOK(id))return toast('村Lv'+BL[id].lv+'から作れます');{const L=orderLock();if(L&&id!==L)return toast('いまは「'+BL[L].name+'」だけたのめます')}
   const b=BL[id];if(BOARD<0)return toast('神殿がありません');if(S.orders.length>=boardMax())return toast('依頼ボードがいっぱいです（'+boardMax()+'まい）');if(S.pt<b.pc)return toast('パワーが足りません');if(!matOK(b.mat))return toast('素材が足りません（'+matTxt(b.mat)+'）');if(b.sand&&(S.sand||0)<b.sand)return toast('やすらぎの砂が足りません（'+b.sand+'）');for(const k in b.food||{})if((S.fs[k]||0)<b.food[k])return toast(FOODS[k].name+'が足りません（'+b.food[k]+'）');
-  S.pt-=b.pc;rsvAdd(b.mat);rsvAdd(b.food,true);if(b.sand)S.sand-=b.sand;/* 素材・食べ物（どくの罠のきのこ）は、とっておく（せいれいが箱から運ぶ） */S.orders.push({id:S.nid++,type:id,prog:0,need:b.time,worker:null,mat:Object.assign({},b.mat||{}),food:Object.assign({},b.food||{}),got:{}});toast(b.name+'の依頼をはった');sfx('post');renderSheet();
+  S.pt-=b.pc;rsvAdd(b.mat);rsvAdd(b.food,true);if(b.sand)S.sand-=b.sand;/* 素材・食べ物（どくの罠のきのこ）は、とっておく（せいれいが箱から運ぶ） */S.orders.push({id:S.nid++,type:id,prog:0,need:b.time,worker:null,mat:Object.assign({},b.mat||{}),food:Object.assign({},b.food||{}),got:{}});wbenchPut(S.orders[S.orders.length-1]);toast(b.name+'の依頼をはった');sfx('post');renderSheet();
 }
 
 /* ---------- 目標 ---------- */
