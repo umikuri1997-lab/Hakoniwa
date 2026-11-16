@@ -55,6 +55,7 @@ B.SUB={
   oracle:()=>{S.oracle='wood';S.flags.oracleSet=true;checkQuest();try{openSheet('menu')}catch(e){}closeSheet()},
   lighttry:()=>{if(LIGHTCD>0||S.pt<20)return;let best=-1,bd=1e9;S.obj.forEach((o,j)=>{if(o!=='deadtree'&&o!=='tree'&&o!=='rock')return;if(o==='tree'&&!(BL[o]&&BL[o].natural))return;const d=Math.hypot(j%W-52,((j/W)|0)-52);if(d<bd){bd=d;best=j}});if(best>=0){try{natLight(best)}catch(e){B.lg('natLight err '+e.message)}}},
   seedwait_gate:()=>{},/* 南の柵のドアで、そろう */
+  table1:()=>{B.ensure('table',1,49,50,inHouse)},
   chair2:()=>{const t=S.obj.indexOf('table');if(t<0)return;const tx=t%W,ty=(t/W)|0,near=(x,y)=>Math.abs(x-tx)<=1&&Math.abs(y-ty)<=1;B.ensure('chair',2,tx,ty,near)},
   farm10:()=>{B.ensure('farm',10,44,56)},
   deco3:()=>{const n=CN(DECOQ);if(n>=3)return;for(const id of DECOQ){if(inv(id)>0){B.put(id,58,47);return}}const c=DECOQ.find(id=>recipeKnown(id)&&lvOK(id));if(c&&!S.orders.some(o=>DECOQ.includes(o.type)))orderFurn(c)},
@@ -83,10 +84,10 @@ Object.assign(B.SUB,{
 
 /* 属性の力をためて、なかまをふやす：呼べる属性のうち、いちばん力が足りる見こみのある属性の物（花・家具）を置く */
 B.attrTick=()=>{if(isNight()||S.summon||S.res.length>=30)return;let c=null;try{c=sumCands().filter(x=>!x.cap&&x.v<x.n&&storySummonOK(x.el)).sort((a,b)=>b.v/b.n-a.v/a.n)[0]}catch(e){}if(!c)return;const el=c.el;
-  const ids=Object.keys(BL).filter(id=>{const b=BL[id];return b&&b.attr&&b.attr[el]>0&&!b.offerOnly&&!b.trap});
+  const ids=Object.keys(BL).filter(id=>{const b=BL[id];return b&&b.attr&&b.attr[el]>0&&!b.offerOnly&&!b.trap&&!(BEDSET.has(id)&&houseBedCount()<1)});/* 家にまだベッドがなければ、ベッドは家の中へ（H.bed） */
   for(const id of ids)if(BL[id].kind==='plant'&&inv(id)>0&&cnt('sprout')<10){B.plantAll(id,50,46);return}/* 持っている花・苗を植える */
   if(S.feat.shop&&godHere()){for(const id of ids){if(BL[id].kind!=='plant')continue;try{const p=shopPrice(id,1);if(p>0&&S.pt>p+40){S.pt-=p;S.inv[id]=(S.inv[id]||0)+1;return}}catch(e){}}}
-  if(S.orders.length>=boardMax())return;const f=ids.filter(id=>BL[id].kind==='furn'&&recipeKnown(id)&&lvOK(id)&&!B.ordered(id)).sort((a,b)=>(BL[b].attr[el]||0)-(BL[a].attr[el]||0))[0];
+  if(S.orders.length>=boardMax()||(S.subSt||{}).table1===2&&!cnt('table')&&!B.ordered('table'))return;/* 食卓のサブクエストのあいだは、木材をとっておく */const f=ids.filter(id=>BL[id].kind==='furn'&&recipeKnown(id)&&lvOK(id)&&!B.ordered(id)).sort((a,b)=>(BL[b].attr[el]||0)-(BL[a].attr[el]||0))[0];
   if(f){if(inv(f)>0){B.put(f,56,48,B.inRing);return}if(Object.entries(BL[f].mat||{}).every(([k,v])=>(S.mat[k]||0)>=v+5))orderFurn(f)}else for(const id of ids)if(inv(id)>0&&BL[id].kind==='furn'){B.put(id,56,48,B.inRing);return}};
 B.tick=()=>{ if(!B.on||!S)return; try{
   if(B.ui())return;
@@ -108,7 +109,6 @@ const H=B.H,inHouse=(x,y)=>x>=48&&x<=51&&y>=49&&y<=51,SR=()=>{const j=S.sacredRo
 B.plantAll=(id,nx,ny)=>{let n=0;while(inv(id)>0&&cnt('sprout')<10&&n++<10){if(!B.put(id,nx||58,ny||58))break}};
 B.sow=k=>{let n=0;for(let j=0;j<S.obj.length;j++){if(S.obj[j]!=='farm')continue;const d=S.dyn[j];if(!d||d.crop)continue;if(cseed(k)<1)break;place('seed:'+k,j%W,(j/W)|0);n++}return n};
 H.statue=()=>{if(RUINT>=0&&S.obj[RUINT]==='statueb')templeRuinTap(RUINT);else B.ensure('statue',1,54,57)};/* こわれた神殿を「しらべる」でタップ */H.stor=()=>B.ensure('crate',1,51,51,inHouse);H.mbox=()=>{};
-H.table=()=>B.ensure('table',1,49,50,inHouse);
 H.wall=()=>{for(const [x,y] of [[49,52],[50,52],[51,52]])if(!S.obj[y*W+x])place('hwall',x,y)};
 B.weave=n=>{/* はたおり機で、布を n こまで（はたおり機がなければ、置く・たのむ） */if(B.have('loom')<1){if(inv('loom')>0)B.put('loom',56,52);else if(!B.ordered('loom')&&recipeKnown('loom'))orderFurn('loom');return}const j=S.obj.indexOf('loom');if(j<0||(S.mat.nuno||0)+prCount(j)>=n)return;for(const k of GRASSKEYS){const c=Math.min(Math.floor((S.mat[k]||0)/3),n-(S.mat.nuno||0)-prCount(j),PROC.loom.cap-prCount(j));if(c>0){const Q=(S.prQ||(S.prQ={}))[j]||(S.prQ[j]={});rsvAdd({[k]:c*3});Q[k]=(Q[k]||0)+c*3;return}}};
 H.bed=()=>{if(houseBedCount()+inv('bed')+B.sites('bed')<1&&!B.ordered('bed'))B.weave(1);B.ensure('bed',1,48,49,inHouse)};
