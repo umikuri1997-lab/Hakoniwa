@@ -41,7 +41,7 @@ function dockSync(){document.querySelectorAll('#dock [data-mode]').forEach(b=>b.
 function setMode(m){
   mode=m;palOpen=m==='build'||m==='bulk';pending=null;selRect=null;$('#confirm').hidden=true;
   if(S&&STATUE<0&&m==='build'&&usable('statue'))sel='statue';else if(sel==='statue'&&STATUE>=0)sel='farm';
-  LIGHTARM=false;dockSync();/* みる・おく・こわすをえらんだら、守りの光はやめる */
+  LIGHTARM=false;dockSync();/* しらべる・おく・こわすをえらんだら、守りの光はやめる */
   $('#palette').hidden=!(m==='build'||m==='bulk');renderPalette();
 }
 function chip(img,name,cost,cls,onClick,mat){

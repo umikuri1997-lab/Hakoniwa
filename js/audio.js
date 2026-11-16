@@ -47,7 +47,7 @@ let VOICE=null,voxC=null;const BRAVET=new WeakMap();
 function voiceStart(w,dur){voiceStop();if(!AC||!SND.sfx||AC.state!=='running')return;const b=(SBUF.voice||[])[0];if(!b)return;
   const src=AC.createBufferSource(),g=AC.createGain();src.buffer=b;src.loop=true;{const sr=S&&S.res&&S.res.find(q=>q.name===w),vb=sr&&sr.vr&&sr.vr.vo;src.playbackRate.value=/ヌシ/.test(w||'')?.55:(w===GOD||w==='？？？')?.78:vb||(KEYVR[w]&&KEYVR[w].vo)||1.12}/* 声の高さは一人ずつちがう */
   {const t=AC.currentTime;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.8*(SND.vv??1),t+.03)}/* 声の出だしは、ぷつっと大きくならないよう、少しずつ */src.connect(g);g.connect(voxC);src.start(0,Math.random()*b.duration*.5);VOICE={src,g};if(dur)VOICE.end=setTimeout(voiceStop,dur*1000)}
-/* みるでタップしたときの「ほにゃ？」：短く、最後が上がる声 */
+/* しらべるでタップしたときの「ほにゃ？」：短く、最後が上がる声 */
 function voiceHmm(r){voiceStop();if(!AC||!SND.sfx||AC.state!=='running')return;const b=(SBUF.voice||[])[0];if(!b)return;const vo=(r.vr&&r.vr.vo)||1.12,t=AC.currentTime;
   const src=AC.createBufferSource(),g=AC.createGain();src.buffer=b;src.playbackRate.setValueAtTime(vo*.95,t);src.playbackRate.setValueAtTime(vo*.95,t+.16);src.playbackRate.linearRampToValueAtTime(vo*1.35,t+.36);
   g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.7*(SND.vv??1),t+.03);g.gain.setValueAtTime(.7*(SND.vv??1),t+.3);g.gain.linearRampToValueAtTime(0,t+.42);src.connect(g);g.connect(voxC);src.start(t,Math.random()*b.duration*.5);src.stop(t+.45);VOICE={src,g}}

@@ -21,7 +21,7 @@ const assert=require('node:assert/strict');
     out.feedAt=run(20000,()=>(d.feed||0)>0||S.ani[0].fd===callDay());
     out.ate=run(400,()=>S.ani[0].fd===callDay());
     out.waterAt=run(20000,()=>d.wd===callDay());
-    /* 「みる」で生き物をタップ → 小さな画面 →「なでる」→ いちばん近いせいれいが、なでにいく → よろこぶ → たのしさ+5。1ぴき1日1回 */
+    /* 「しらべる」で生き物をタップ → 小さな画面 →「なでる」→ いちばん近いせいれいが、なでにいく → よろこぶ → たのしさ+5。1ぴき1日1回 */
     {const a0=S.ani[0];S.t=1440*3+10*60;a0.path=null;a0.eat=0;f.fun=50;endAct(f);f.act=null;setMode&&setMode('look');
       document.querySelectorAll('.pxcard').forEach(c=>c.parentNode.remove());
       onTap((a0.x*TS-cam.x)*cam.z,((a0.y-.3)*TS-cam.y)*cam.z);
