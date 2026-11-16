@@ -138,10 +138,11 @@ function bpJob(r,G,dry){/* 置く所の木・岩を、切る・ほる */if(isNig
     const j=nearest(G,s=>adjOf(s,c=>c===q)>=0,200);if(j>=0){startAct(r,G,k,j,{key:'o'+q,obj:q});return true}}return false}
 const bpHouseName=h=>{if(!S.hname)return null;for(const k in S.hname)if(h.inside.has(+k))return S.hname[k];return null};
 function bpGive(k,g){(S.bpInv||(S.bpInv=[])).push({k,g:g==null?null:g});toast('設計図「'+BPS[k].name+'」をもらった','good')}
-function bpNext(cat,el){/* まだ持っていない・建てていない設計図から1つ（cat：しゅるい、el：くれるせいれいの属性。同じ属性の物がえらばれやすい） */const have=new Set([...(S.bpInv||[]).map(q=>q.k),...(S.bp||[]).map(q=>q.k),...Object.keys(S.bpGot||{})]);
+const bpOpen=()=>!!(S.subDone||{}).bphome||!!S.flags.bpOpen;/* 設計図は、土のせいれいのサブクエスト（bphome）をおえてから出る。火山などは、草原でおえていれば（syncTools） */
+function bpNext(cat,el,force){/* まだ持っていない・建てていない設計図から1つ（cat：しゅるい、el：くれるせいれいの属性。同じ属性の物がえらばれやすい。force：bphome のとき） */if(!force&&!bpOpen())return null;const have=new Set([...(S.bpInv||[]).map(q=>q.k),...(S.bp||[]).map(q=>q.k),...Object.keys(S.bpGot||{})]);
   const L=Object.keys(BPS).filter(k=>!have.has(k)&&(!cat||BPS[k].cat===cat)&&bpCanGet(k));if(!L.length)return null;const wt=k=>el&&BPS[k].el===el?BPELW:1;let n=Math.random()*L.reduce((a,k)=>a+wt(k),0);for(const k of L)if((n-=wt(k))<0)return k;return L[L.length-1]}
 function bpGiveK(k,g){(S.bpGot||(S.bpGot={}))[k]=1;bpGive(k,g);return k}
-function bpGiveNext(g,cat){const r=g!=null?S.res.find(q=>q.id===g):null,k=bpNext(cat,r&&r.elem);return k?bpGiveK(k,g):null}
+function bpGiveNext(g,cat,force){const r=g!=null?S.res.find(q=>q.id===g):null,k=bpNext(cat,r&&r.elem,force);return k?bpGiveK(k,g):null}
 /* ---------- 絵：置く前のわく・建てる前の部品のうすい形 ---------- */
 function bpGhostDraw(ctx){const L=[];if(pending&&pending.kind==='bp'){const {w,h}=bpSize(pending.k);L.push([pending.k,pending.x,pending.y,pending.ok,null])}
   for(const e of S.bp||[])L.push([e.k,e.x,e.y,true,e]);if(!L.length)return;ctx.save();

@@ -66,8 +66,8 @@ const assert=require('node:assert/strict');
       if(k==='sakuhatake')out.saku=e.ps.filter(p=>p.t==='fence').every(p=>S.obj[p.j]==='fence')&&S.obj[at(2,3)]==='gate'&&e.ps.filter(p=>p.t==='farm').every(p=>S.obj[p.j]==='plot'||S.obj[p.j]==='farm');
       if(k==='toride')out.toride=S.obj[at(2,1)]==='watch'&&S.obj[at(3,2)]==='part'&&S.ref[at(3,2)]===at(2,1);
       if(k==='kouen')out.kouen=S.obj[at(0,0)]==='swing'&&S.obj[at(1,0)]==='part'&&S.obj[at(3,0)]==='sandbox'&&S.obj[at(1,2)]==='bench'}
-    out.done=S.bpDone;out.house=bpHouseN();return JSON.stringify(out)})()`));
+    out.done=S.bpDone;out.house=bpHouseN();const sd=S.subDone.bphome;S.subDone.bphome=false;out.lock=bpNext()===null&&!!bpNext('house',null,1);S.subDone.bphome=true;out.open=!!bpNext();S.subDone.bphome=sd;return JSON.stringify(out)})()`));
   console.log(nh);for(const k of['kamado','renga','wanoniwa','takemichi'])assert.ok(nh.miss.some(m=>m.startsWith(k+':')),k+' is volcano only');assert.ok(nh.miss.every(m=>['kamado','renga','wanoniwa','takemichi','funsui','idohatake','komugi','toriniwa','makiba','toride'].includes(m.split(':')[0])),'unexpected missing: '+nh.miss);assert.equal(nh.placed,4,JSON.stringify(nh));assert.deepEqual(nh.left,[]);
-  assert.equal(nh.kadan,true);assert.equal(nh.saku,true);assert.equal(nh.toride,true);assert.equal(nh.kouen,true);assert.equal(nh.house,1,'only houses count as houses');
+  assert.equal(nh.kadan,true);assert.equal(nh.saku,true);assert.equal(nh.toride,true);assert.equal(nh.kouen,true);assert.equal(nh.house,1,'only houses count as houses');assert.equal(nh.lock,true,'no blueprints before the bphome subquest');assert.equal(nh.open,true,'blueprints after the bphome subquest');
   assert.deepEqual(errors,[]);await browser.close();console.log('OK');
 })().catch(e=>{console.error(e);process.exit(1)});
