@@ -101,7 +101,7 @@ B.tick=()=>{ if(!B.on||!S)return; try{
   if(B.opts.supply)for(const r of S.res){const m=hMax(r)*.6;if(r.hunger<m)r.hunger=m}
   B.light();B.talk();
   const now=performance.now();if(now-(B.ht||0)<1200)return;B.ht=now;
-  const q=QUESTS[S.quest];if(q&&B.H[q.id])B.H[q.id](q);
+  const q=QUESTS[S.quest];if(q&&B.H[q.id])B.H[q.id](q);if(WD===0&&inv('table')>0&&!cnt('table')&&S.flags.tablePend)B.put('table',49,50,inHouse);/* 食卓の目標は、たのんだらクリア。できたら置く */
   B.H._all();
 }catch(e){B.lg('BOT ERR '+e.message+' '+(e.stack||'').split('\n')[1])}};
 const H=B.H,inHouse=(x,y)=>x>=48&&x<=51&&y>=49&&y<=51,SR=()=>{const j=S.sacredRoot;return [j%W,(j/W)|0]};
