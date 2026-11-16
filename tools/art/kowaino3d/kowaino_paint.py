@@ -197,7 +197,7 @@ def thin(P, F, lab, inner='face', band='rim', outer='hood', k=0.6):
         j = np.argmin(((Q[:, [0, 2]]-P[v, [0, 2]])**2).sum(1)); P[v] = P[v]+(Q[j]-P[v])*k
     return P
 
-EYEPX = ['+##+', '####', '####', '####', '####', '####', '+##+']   # 目のドット（はば4・高さ7の だ円。+ は、ふちの色。いまの絵の目と同じ色）
+EYEPX = ['.++.', '+##+', '####', '####', '####', '+##+', '.++.']   # 目：たてながの まるい形（角をけずる。四角にしない。持ち主がきめた）   # 目のドット（はば4・高さ7の だ円。+ は、ふちの色。いまの絵の目と同じ色）
 
 def eyepos(P, F, lab, H, e):
     """目のまん中（3D）：顔の面のまん中を中心に、左右そろえて、顔の面のいちばん前"""
@@ -368,7 +368,7 @@ def shoot(name, cfg, src, yaw=0.0):
         return (q[0]*sc_*k, -(cz+float(q@U)*sc_)*k)
     Q = np.array([proj(p) for tr in sc.t for p in tr[:3]]); ext = (math.floor(Q[:, 0].min())-2, math.ceil(Q[:, 0].max())+2, math.floor(Q[:, 1].min())-2, math.ceil(Q[:, 1].max())+2)
     O.S = BIG; O.GRAD = True; O.DITHER = BIG if DITH else 0   # かげは1色、うすいかげは、かげのドットの密度（持ち主がきめた）
-    sv = (O.LV4, O.SHADE4); O.LV4 = KWLV; O.SHADE4 = KWSHADE; O.DITHERR = (KWLV[2], KWLV[0])   # 立体感：かげの所を広く・かげの色をこく（コワイノだけ）
+    sv = (O.LV4, O.SHADE4); O.LV4 = KWLV; O.SHADE4 = KWSHADE; O.DITHERR = (KWLV[2], KWLV[0]); O.DITHERHL = KWHL   # 立体感：かげの所を広く・かげの色をこく（コワイノだけ）
     hi = O.render_px(sc, proj, ext, V, k=0.80, lw=2, k2=0.90, merge=0); O.LV4, O.SHADE4 = sv
     if os.environ.get('KWDBG'): hi.save(os.path.join(os.environ['KWDBG'], 'hi_%s_%d.png' % (name, round(math.degrees(yaw)))))   # たしかめ用：ちぢめる前の大きな絵
     import pixdown
@@ -386,6 +386,7 @@ POMANG = 50.0
 PALMW = 0.45   # 手のひらのあつみ（左右の半径。手の大きさ r に対して）   # ぽんぽん：ずきんの先がつながる向きから、この角度までは、ずきん
 KWLV = (0.72, 0.5, 0.22)   # 光・うすいかげ（あみ1/4）・半かげ（あみ2/4）・かげ のさかい目（光の向きとの内積）
 KWSHADE = [(9, -2.5), (18, -5), (40, -4)]   # かげの色（3つめ。明るさ・あざやかさを引く）
+KWHL = (0.86, 0.99, 14, 6)   # ハイライト：光の向きとの内積がこのあいだで、あみがふえる。明るさ+14・あざやかさ−6
 DITH = True   # かげを1色＋あみ（ドットの密度）にする
 BIG = 8; NCOL = 15   # 大きく写す倍・色の数（目の色を足して16）
 
