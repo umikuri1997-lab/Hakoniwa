@@ -3,7 +3,7 @@
    どこに・いつ（critOK）：ちょう・みつばち＝昼の花・雨でない／小鳥・りす＝昼の木のそば／うさぎ＝昼のみどりの草地／はりねずみ＝夕方の茂みのそば／
    ねずみ＝昼の箱のそば／もぐら＝土のステージ（WD 3）の昼の畑のそば／かたつむり＝雨の日の花・草のそば／てんとうむし＝昼の花のそば（地面）／
    とんぼ＝秋の昼〜夕方の水の上／ほたる＝夜のはじめ（19〜23時）の水べ、おしりが光る／かえる＝雨の日か夕方の水べ。
-   うさぎ・りす・ねずみ・小鳥は、せいれいが近づくと、にげる（小鳥は飛びたつ）。
+   うさぎ・りす・ねずみ・小鳥は、せいれいが近づくと、にげる（小鳥は飛びたつ）。いなくなるとき（寿命・にげる・雨・夜）は、画面の外へ去ってから消える（critLeave）。
    ひまなせいれいは、ときどき見つけて、そっと見る・追いかける（critwatch、おわると たのしさ+2）。 */
 const CRITMAX=6,CRITFUN=2;let CRIT=[],CRITS=null,CRITT=0,CRITID=1;
 /* しゅるい：m 動き（fly 花へとぶ・hover とんで止まる・drift ふわふわ・hop はねる・walk 歩く・bird 小鳥）。ch チップの名前（crit<ch>#<コマ>、tools/art/critter3d/crit_build.py）。
@@ -36,13 +36,29 @@ function critSpawn(){if(CRIT.length>=CRITMAX||isNight()||enemyLive())return;cons
     CRIT.push({id:CRITID++,k,x:x+.5,y:y+.6,hx:x+.5,hy:y+.6,z:m==='fly'?12:m==='hover'?18:m==='drift'?10:0,vx:0,vy:0,face:Math.random()<.5?-1:1,t:0,life:60+Math.random()*60,hop:Math.random()*2,fl:0,ci:Math.floor(Math.random()*4),act:0,ph:0,wait:1+Math.random()*2});/* ci：ちょうの色（4しゅるい） */return}}
 /* 地面の生き物がにげる：近いせいれいからはなれる向きへ、はやく。少しして、いなくなる */
 function critFlee(c){if(c.fl||!CK[c.k].flee&&c.k!=='bird')return;const r=S.res.find(r=>!r.hidden&&Math.hypot(r.x-c.x,r.y-c.y)<1.6);if(!r)return;
-  const L=Math.hypot(c.x-r.x,c.y-r.y)||1;c.fl=1;c.vx=(c.x-r.x)/L;c.vy=(c.y-r.y)/L;c.face=c.vx>0?1:-1;c.act=0;
-  if(c.k==='bird'){c.vx*=2.4;c.vy=c.vy*2.4-.6}else{c.life=Math.min(c.life,c.t+1.6);c.hop=0}}
+  const L=Math.hypot(c.x-r.x,c.y-r.y)||1;c.fl=1;c.hop=0;critLeave(c,(c.x-r.x)/L,(c.y-r.y)/L)}
+/* いなくなるとき：その場で消さず、画面の外へ去る（とぶ物はとんで、地面の物は歩いて・はねて）。見えなくなったら消す（critTick のさいご）。
+   行けない所でとまった（3秒）・25秒たっても出られないときだけ、うすくなって消える（fade）。vx,vy をわたせば、その向き（にげる）、なければ近い画面のはしへ */
+function critLeave(c,vx,vy){if(vx==null){if(c.go)return;const [a,b,cc,d]=critView(),e=[[c.x-a,-1,0],[cc-c.x,1,0],[c.y-b,0,-1],[d-c.y,0,1]].sort((p,q)=>p[0]-q[0])[0];vx=e[1];vy=e[2]}
+  c.go=1;c.gt=c.gt||0;c.stk=0;c.act=0;c.rest=0;c.vx=vx;c.vy=vy;if(Math.abs(vx)>.05)c.face=vx>0?1:-1}
+/* 地面の物が、去る向き（行けなければ、少しずらした向き）へ len だけ進めるか。進めたら、その向き */
+function critDir(c,len){for(const t of [0,.7,-.7,1.4,-1.4]){const cs=Math.cos(t),sn=Math.sin(t),dx=c.vx*cs-c.vy*sn,dy=c.vx*sn+c.vy*cs,L=Math.hypot(dx,dy)||1;if(critGround(c.x+dx/L*Math.max(len,.3),c.y+dy/L*Math.max(len,.3)))return [dx/L,dy/L]}return null}
+function critGo(c,dt,K,m){c.gt+=dt;if(c.fade!=null){c.fade-=dt/.6;return}
+  if(m==='fly'||m==='hover'||m==='drift'||m==='bird'){if(m==='bird'){c.fl=1;c.jt=null;c.pre=0}
+    const sp=m==='bird'?2.6:m==='hover'?2.4:m==='drift'?.6:1.4;c.x+=c.vx*sp*dt;c.y+=(c.vy-(m==='bird'?.25:0))*sp*dt;c.z=Math.min(m==='bird'?90:30,c.z+(m==='bird'?14:5)*dt);if(Math.abs(c.vx)>.05)c.face=c.vx>0?1:-1}
+  else if(m==='walk'){const sp=K.sp*(c.fl?4:2)*dt,o=critDir(c,sp);if(o){c.x+=o[0]*sp;c.y+=o[1]*sp;c.ph+=sp/(c.fl?.08:Math.max(.03,K.sp*.18));c.mv=1;c.stk=0;if(Math.abs(o[0])>.05)c.face=o[0]>0?1:-1}else{c.mv=0;c.stk+=dt}}
+  else{/* はねる：かがむ→とぶ→つく を、去る向きへくりかえす */
+    if(c.pre>0){c.pre-=dt;if(c.pre<=0)c.jt=0}
+    else if(c.jt!=null){c.jt+=dt;const q=Math.min(1,c.jt/.4);c.x=c.jx+(c.nx-c.jx)*q;c.y=c.jy+(c.ny-c.jy)*q;c.z=Math.max(0,Math.sin(q*Math.PI)*(K.hop||.35)*16);if(q>=1){c.jt=null;c.z=0;c.land=.12}}
+    else{if(c.land>0)c.land-=dt;if((c.hop-=dt)<=0){c.hop=c.fl?.05:.25+Math.random()*.3;const D=K.hop||.35,o=critDir(c,D);
+      if(o){c.jx=c.x;c.jy=c.y;c.nx=c.x+o[0]*D;c.ny=c.y+o[1]*D;if(Math.abs(o[0])>.1)c.face=o[0]>0?1:-1;c.pre=c.fl?.05:.12;c.stk=0}else c.stk+=c.hop}}}
+  if(c.stk>3||c.gt>25)c.fade=1}
 const critGround=(x,y)=>{const j=(y|0)*W+(x|0);return x>=0&&y>=0&&x<W&&y<H&&walk(j)&&!S.obj[j]&&S.ground[j]!==1};
 function critTick(dt){if(!S)return;if(CRITS!==S){CRIT=[];CRITS=S}if(IS_STORY_REPLAY){CRIT=[];return}
   CRITT+=dt;if(CRITT>=2){CRITT=0;critSpawn()}
   const night=isNight();
   for(const c of CRIT){c.t+=dt;const K=CK[c.k],m=K.m;if(c.act>0)c.act-=dt;
+    if(m==='walk'||m==='hop'||m==='bird')critFlee(c);if(!c.go&&c.t>=c.life)critLeave(c);if(c.go){critGo(c,dt,K,m);continue}
     if(m==='fly'){/* ちかくの花へ（みつばちは花にとまって、少しやすむ） */
       if(c.rest>0){c.rest-=dt;c.z=Math.max(3,c.z-20*dt);if(c.rest<=0)c.t5=0}
       else{if((c.t5=(c.t5||0)+dt)>5||Math.hypot(c.hx-c.x,c.hy-c.y)<.2){c.t5=0;if(c.k==='mitsubachi'&&Math.hypot(c.hx-c.x,c.hy-c.y)<.2&&Math.random()<.6)c.rest=1.5+Math.random()*2;else{const x0=c.x|0,y0=c.y|0;let ok=false;for(let n=0;n<12;n++){const x=x0+Math.floor(Math.random()*9)-4,y=y0+Math.floor(Math.random()*9)-4,j=y*W+x;if(x>=0&&y>=0&&x<W&&y<H&&FLOWERS.has(S.obj[j])){c.hx=x+.5+(Math.random()-.5)*.7;c.hy=y+.5+(Math.random()-.5)*.5;ok=true;break}}if(!ok){c.hx=x0+.5+(Math.random()-.5)*1.4;c.hy=y0+.5+(Math.random()-.5)*1}}/* 花が見つからなければ、いまの花のまわりを少しとぶ */}
@@ -57,25 +73,23 @@ function critTick(dt){if(!S)return;if(CRITS!==S){CRIT=[];CRITS=S}if(IS_STORY_REP
       if(c.tx==null||Math.hypot(c.tx-c.x,c.ty-c.y)<.1){c.tx=c.hx+(Math.random()-.5)*3;c.ty=c.hy+(Math.random()-.5)*2}
       const dx=c.tx-c.x,dy=c.ty-c.y,L=Math.hypot(dx,dy)||1,sp=Math.min(L,.35*dt);c.x+=dx/L*sp;c.y+=dy/L*sp;if(Math.abs(dx)>.05)c.face=dx>0?1:-1;c.z=10+Math.sin(c.t*1.7+c.id)*4;
       if(S.rain||night||hour()<19)c.life=Math.min(c.life,c.t+2)}
-    else if(c.fl&&m==='bird'){c.x+=c.vx*dt;c.y+=c.vy*dt;c.z+=14*dt;if(c.z>60)c.life=0}/* 飛びたつ */
     else if(m==='walk'){/* 歩く：家のまわりの空いた所へ歩いて、止まって、ときどき何かする（にげるときは、はやく） */
-      critFlee(c);
       if(c.fl){const sp=K.sp*4*dt;if(critGround(c.x+c.vx*sp,c.y+c.vy*sp)){c.x+=c.vx*sp;c.y+=c.vy*sp}c.ph+=sp/.08;c.mv=1}
       else if(c.tx!=null){const dx=c.tx-c.x,dy=c.ty-c.y,L=Math.hypot(dx,dy),sp=Math.min(L,K.sp*dt);if(L<.02){c.tx=c.ty=null;c.mv=0;c.wait=1+Math.random()*3;if(Math.random()<.4)c.act=1.6}else{c.x+=dx/L*sp;c.y+=dy/L*sp;c.ph+=sp/Math.max(.03,K.sp*.18);c.mv=1;if(Math.abs(dx)>.01)c.face=dx>0?1:-1}}
       else if(c.act<=0&&(c.wait-=dt)<=0){for(let n=0;n<8;n++){const x=c.hx+(Math.random()-.5)*2.4,y=c.hy+(Math.random()-.5)*2;if(critGround(x,y)){c.tx=x;c.ty=y;break}}if(c.tx==null)c.wait=1}
       if(night||c.k!=='katatsumuri'&&S.rain&&c.k!=='nezumi'||c.k==='katatsumuri'&&!S.rain||c.k==='harinezumi'&&hour()>=21)c.life=Math.min(c.life,c.t+1)}
     else{/* はねる（うさぎ・りす・かえる）・小鳥：ぴょんと、となりへ。かがむ→とぶ→つく */
-      critFlee(c);if(c.fl&&m==='bird')continue;
       if(c.pre>0){c.pre-=dt;if(c.pre<=0){c.jt=0}}
       else if(c.jt!=null){c.jt+=dt;const T=m==='bird'?.35:.4,q=Math.min(1,c.jt/T);c.x=c.jx+(c.nx-c.jx)*q;c.y=c.jy+(c.ny-c.jy)*q;c.z=Math.max(0,Math.sin(q*Math.PI)*(m==='bird'?5:K.hop*16));if(q>=1){c.jt=null;c.z=0;c.land=.12}}
       else{if(c.land>0)c.land-=dt;c.hop-=dt;
         if(c.hop<=0&&c.act<=0){c.hop=c.fl?.05:1+Math.random()*2.5;
           if(!c.fl&&m==='hop'&&Math.random()<.3){c.act=1.6;c.hop+=1.6}/* 何かする（耳をぴくぴく・木の実をかじる・のどをふくらます） */
           else{const D=K.hop||.35,o=c.fl?[c.vx,c.vy]:[[1,0],[-1,0],[0,1],[0,-1]][Math.floor(Math.random()*4)],nx=c.x+o[0]*D,ny=c.y+o[1]*D,j=(ny|0)*W+(nx|0);
-            if(c.k==='frog'&&S.ground[j]===1&&Math.random()<.25){c.life=0;fxSpr&&fxSpr('fishsplash',nx*TS,(ny+.1)*TS)}/* 水へとびこむ */
+            if(c.k==='frog'&&S.ground[j]===1&&Math.random()<.25){c.dead=1;fxSpr&&fxSpr('fishsplash',nx*TS,(ny+.1)*TS)}/* 水へとびこむ */
             else if((c.fl||Math.abs(nx-c.hx)<1.2&&Math.abs(ny-c.hy)<1.2)&&critGround(nx,ny)){c.jx=c.x;c.jy=c.y;c.nx=nx;c.ny=ny;if(Math.abs(o[0])>.1)c.face=o[0]>0?1:-1;if(m==='bird')c.jt=0;else c.pre=c.fl?.05:.12}}}}
       if(night||(c.k==='bird'||c.k==='usagi'||c.k==='risu')&&S.rain)c.life=Math.min(c.life,c.t+1)}}
-  CRIT=CRIT.filter(c=>c.t<c.life)}
+  /* 去っている物は、画面の外に出たら（とぶ高さもふくめて）・うすくなりおわったら消す */
+  const [va,vb,vc,vd]=critView();CRIT=CRIT.filter(c=>!c.dead&&!(c.fade!=null&&c.fade<=0)&&!(c.go&&(c.x<va-1||c.x>vc+1||c.y-(c.z||0)/TS<vb-1||c.y>vd+1.5)))}
 const critById=id=>CRIT.find(c=>c.id===id)||null;
 /* 描く：3Dから写した絵。ちょう・小鳥は tools/art/critter3d/critter3d.py（critfly:<色>#0・1・critbird#0・#f0・#f1）、
    ほかは持ち主のモデルにボーンを入れて写したコマ（crit_build.py：crit<名前>#0・1 止まる・w0〜w3 歩く/はねる/はばたく・e0〜e2 何かする）。
@@ -93,18 +107,18 @@ function critChip(c,now){const C=window.CHIPS;if(!C)return null;
   if(c.k==='bird')return C[c.fl?'critbird#f'+(Math.floor(now/90)%2):'critbird#0'];
   return C['crit'+(CK[c.k].ch||c.k)+'#'+critFrame(c,now)]||C['crit'+(CK[c.k].ch||c.k)+'#0']}
 function drawCritter(g,c,now){const x=Math.round(c.x*TS),y=Math.round(c.y*TS),z=Math.round(c.z||0),f=c.face<0?-1:1,ch=critChip(c,now),sw=CK[c.k].sw;
-  g.fillStyle='rgba(40,30,20,.18)';g.fillRect(x-(sw>>1),y,sw,2);
-  if(!ch)return;const im=chipImgs(ch,'crit'+c.k)[0];if(!im.ok)return;const sm=g.imageSmoothingEnabled;g.imageSmoothingEnabled=false;g.save();g.translate(x,y-z);if(f<0)g.scale(-1,1);g.drawImage(im,ch.ax/2,ch.ay/2,ch.w/2,ch.h/2);g.restore();g.imageSmoothingEnabled=sm}
+  if(c.fade==null||c.fade>0){g.fillStyle='rgba(40,30,20,.18)';g.fillRect(x-(sw>>1),y,sw,2)}
+  if(!ch)return;const im=chipImgs(ch,'crit'+c.k)[0];if(!im.ok)return;const sm=g.imageSmoothingEnabled;g.imageSmoothingEnabled=false;g.save();if(c.fade!=null)g.globalAlpha=Math.max(0,c.fade);g.translate(x,y-z);if(f<0)g.scale(-1,1);g.drawImage(im,ch.ax/2,ch.ay/2,ch.w/2,ch.h/2);g.restore();g.imageSmoothingEnabled=sm}
 /* ほたるの光：夜の暗さより上に、おしりのドットの光（ゆっくり明るく・暗く）。draw-world.js が暗さのあとでよぶ */
 function drawCritGlow(g,now){for(const c of CRIT){if(c.k!=='hotaru')continue;const a=.55+.45*Math.sin(now/520+c.id*1.7);if(a<.15)continue;
   const x=Math.round(c.x*TS)-(c.face<0?-3:3),y=Math.round(c.y*TS-(c.z||0))-3;
   liftDraw(uLift(c),()=>{g.globalAlpha=a*.3;g.fillStyle='#d6f27a';g.fillRect(x-2,y-1,4,3);g.fillRect(x-1,y-2,2,5);g.globalAlpha=a;g.fillStyle='#f2ffa8';g.fillRect(x-1,y,2,1);g.globalAlpha=1})}}
 /* せいれいが見つけて、見る・追いかける */
-function goCritter(r,G){if(!CRIT.length)return false;let best=null,bd=1e9;for(const c of CRIT){if(c.fl)continue;const d=Math.hypot(c.x-r.x,c.y-r.y);if(d<7&&d<bd){bd=d;best=c}}if(!best)return false;
+function goCritter(r,G){if(!CRIT.length)return false;let best=null,bd=1e9;for(const c of CRIT){if(c.fl||c.go)continue;const d=Math.hypot(c.x-r.x,c.y-r.y);if(d<7&&d<bd){bd=d;best=c}}if(!best)return false;
   const cj=(best.y|0)*W+(best.x|0),st=nearest(G,j=>walk(j)&&!S.obj[j]&&Math.abs(j%W-cj%W)<=2&&Math.abs(((j/W)|0)-((cj/W)|0))<=1&&j!==cj&&!(TAKEN&&TAKEN.has(j)),14);if(st<0)return false;
   startAct(r,G,'critwatch',st,{cid:best.id,k:best.k,dur:16,chase:(r.elem==='wind'||r.elem==='wood')&&best.k==='fly'?2:0});return true}
 ACT.critwatch={start(r,a){const c=critById(a.cid);if(c)r.face=c.x>=r.x?1:-1;r.bubble='❗'},
   tick(r,a,dt){const c=critById(a.cid);if(c&&!c.fl)r.face=c.x>=r.x?1:-1;if(a.t>3)r.bubble=c?'🎵':'';
-    if(a.chase&&c&&!c.fl&&Math.hypot(c.x-r.x,c.y-r.y)>2.2&&a.t>4){a.chase--;const G=bfs(r.x|0,r.y|0),cj=(c.y|0)*W+(c.x|0),st=nearest(G,j=>walk(j)&&!S.obj[j]&&Math.abs(j%W-cj%W)<=1&&Math.abs(((j/W)|0)-((cj/W)|0))<=1&&j!==cj,10);if(st>=0){r.path=avoidPath(r,G,st);a.stand=st;a.stage='walk';a.t=0}}},
+    if(a.chase&&c&&!c.fl&&!c.go&&Math.hypot(c.x-r.x,c.y-r.y)>2.2&&a.t>4){a.chase--;const G=bfs(r.x|0,r.y|0),cj=(c.y|0)*W+(c.x|0),st=nearest(G,j=>walk(j)&&!S.obj[j]&&Math.abs(j%W-cj%W)<=1&&Math.abs(((j/W)|0)-((cj/W)|0))<=1&&j!==cj,10);if(st>=0){r.path=avoidPath(r,G,st);a.stand=st;a.stage='walk';a.t=0}}},
   done:(r,a)=>a.t>=a.dur||!critById(a.cid)&&a.t>2,end(r,a){r.fun=Math.min(100,r.fun+CRITFUN);r.wanderRestUntil=S.t+45;r.bubble=''}};
 ACT_LBL.critwatch='小さな生き物を見ている';
