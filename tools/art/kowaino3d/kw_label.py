@@ -5,7 +5,7 @@
 見分け方：まず、となりの面との角度が REGANG 度より小さい面をつなげて、まとまりにわける（モデルの角で区切る）。色は、まとまりごとにきめる。
   顔：正面から見て、顔のまん中（FACEAT・FACE）にうつるまとまり。
   布の裏：すその下（UNDERH より下）の、内がわ（まん中の軸のほう）を向いたまとまり（UNR。面積でならした法線で見る）。
-  足：足の先（地面にとどく、まん中に近い面）から上へ、足の太さ（LEGR）の中。ほとんど（FOOTFR）が足のまとまりは、まるごと足。顔と同じこい色。
+  足：足の先（地面にとどく、まん中に近い面）から、となりとの角度が FOOTAS 度より小さい面だけをたどった所（足とすそのさかいの角で止まる。広がりすぎたら角度を小さくする）。顔と同じこい色。
   かざり：いちばん大きなかたまり（体）からはなれた部品ぜんぶ。
   ぽんぽん：体とくっついた物は、フードのしっぽの先から首までのきょりの中（POM）。はなれた部品の物は、その場所にいちばん近い部品（POMPART）。
 見分けられない所（体とくっついた手・ベルト・つらら など）は布のまま。持ち主が Blender で直す。
@@ -25,10 +25,13 @@ FACE = {}              # コワイノごとの顔のまん中（ちがうとき�
 UNDERH = 0.3           # 布の裏・足：すその下（まとまりのまん中の高さが、これより下）
 CAPNY, CAPR = -0.6, 0.7   # 布の裏：すその下のふた（下を向いて、すその広さのこのわりより内がわ）
 UNR = -0.15            # 布の裏：内がわ（まん中の軸のほう）を向いたまとまり（面積でならした法線の、外向きの成分がこれより下）
-FOOT, FOOTY, FOOTH = 0.5, 0.03, 0.2   # 足の先：すその広さ（95%の半径）のこのわりより内がわで、この高さより下。足はこの高さまで
+FOOT, FOOTY, FOOTH = 0.5, 0.015, 0.2   # 足の先：すその広さ（95%の半径）のこのわりより内がわで、この高さより下。足はこの高さまで
+TIPD = 0.04            # 足の先：この近さの点を、1本の足の先にまとめる
 TIPW = 0.08            # 足の先のはばが、これより広いときは足にしない
-FOOTFR = 0.6           # 足：このわりより多くが足の先からの太さの中にあるまとまりは、まるごと足
-LEGR = (0.06, 0.7)     # 足の太さ：足の先からの横のきょり（高さのうち）＝ 先 ＋ 高さ×わり
+FOOTAS = (60, 50, 40, 35, 30, 25, 20)
+LEGRR = 0.55           # 足：すその広さ（95%の半径）のこのわりより内がわだけ
+# FOOTAS  # 足：たどる角度（度）。足が LEGW より広がったら、つぎの小さい角度で
+LEGW = 0.55            # 足1本の横の広さが、すその広さ（95%の半径）のこのわりより広いときは、すそへもれている
 NG = 220              # 奥行きの絵のこまかさ
 POM = {'thief': dict(r=0.16), 'breaker': dict(r=0.14), 'hana': dict(r=0.13), 'yuki': dict(r=0.18, lo=0.05), 'shiny': dict(r=0.12, at=(0.44, 0.61, -0.13))}   # 体とくっついたぽんぽん：しっぽの先から首までのきょり（高さのうち）。at：しっぽの先の場所（ないときは、頭のまん中からいちばん遠い、うしろの点）
 POMPART = {'trapper': (0, 0.92, -0.35), 'hoteri': (0.08, 0.64, -0.35)}   # はなれた部品のぽんぽん：場所（高さのうち。x・y上・z前）
@@ -77,18 +80,28 @@ def label(path, name):
     # 布の裏：すその下の、内がわ（まん中の軸のほう）を向いたまとまり（UNR）。すそのふちの下を向いた面は、外を向くので布のまま
     low = body & (c[:, 1] > 0.05*H) & (c[:, 1] < 0.25*H); rs = np.percentile(rr[low], 95) if low.any() else H
     under = body & (L == 'cloth') & (rcy[reg] < UNDERH*H) & ((rnr[reg] < UNR) | ((rny[reg] < CAPNY) & (rrr[reg] < CAPR*rs)))   # 内がわを向いた・まん中の下を向いた（すその下のふた）
-    # 足：足の先（まん中に近い FOOT、地面にとどく FOOTY の面）から上へ、足の太さ（LEGR）の中。そのうえで、半分より多くが足のまとまりは、まるごと足。顔と同じこい色
-    tip = body & (rr < FOOT*rs) & (c[:, 1] < FOOTY*H); seed = np.zeros(len(F), bool)
+    # 足：足の先（まん中に近い FOOT、地面にとどく FOOTY の面。はばが TIPW より広い物はのぞく）から、
+    #   となりの面との角度が FOOTAS 度より小さい所だけをたどる（足と すそのさかいの角で止まる）。高さ FOOTH まで
+    tip = body & (rr < FOOT*rs) & (c[:, 1] < FOOTY*H); feet = np.zeros(len(F), bool)
     if tip.any():
-        _, tl = connected_components(coo_matrix((np.ones(keep.sum()), (adj[keep, 0], adj[keep, 1])), shape=(len(F),)*2) if False else
-                                     (lambda T: coo_matrix((np.ones(len(T)), (T[:, 0], T[:, 1])), shape=(len(F),)*2))(adj[tip[adj[:, 0]] & tip[adj[:, 1]]]), directed=False)
-        for g in np.unique(tl[tip]):
-            tp = c[tip & (tl == g)][:, [0, 2]]; tc = tp.mean(0); d = np.linalg.norm(c[:, [0, 2]]-tc, axis=1)
-            if np.ptp(tp, axis=0).max() > TIPW*H: continue   # 足の先にしては広い（ふくろのそこ など）
-            seed |= body & (c[:, 1] < FOOTH*H) & (d < LEGR[0]*H+LEGR[1]*c[:, 1])
-    seed &= (L == 'cloth'); fr = avg(seed.astype(float))
-    feet = (seed & ~under) | (body & (L == 'cloth') & (fr[reg] > FOOTFR))   # ほとんど足のまとまりは足、ほかは布の裏が先
-    under &= ~feet
+        ok2 = body & (c[:, 1] < FOOTH*H) & (rr < LEGRR*rs) & (~(under & (n[:, 1] < CAPNY)) | (V[F, 1].min(1) < 2*FOOTY*H))   # すその外がわ・すその下のふた（下を向いた布の裏）には、もれない（足の先はのぞく）
+        # 足の先：いちばん下の点（FOOTY より下）を、近さ（TIPD）でまとめる。1つのまとまりが1本の足
+        tv = np.nonzero((V[:, 1] < FOOTY*H) & (np.linalg.norm(V[:, [0, 2]], axis=1) < FOOT*rs))[0]
+        from scipy.spatial import cKDTree
+        pr = cKDTree(V[tv][:, [0, 2]]).query_pairs(TIPD*H, output_type='ndarray') if len(tv) else np.zeros((0, 2), int)
+        _, tg = connected_components(coo_matrix((np.ones(len(pr)), (pr[:, 0], pr[:, 1])), shape=(len(tv),)*2), directed=False) if len(tv) else (0, np.zeros(0, int))
+        fls = {}
+        for g in np.unique(tg):
+            vs = tv[tg == g]; tp = body & np.isin(F, vs).any(1)
+            if np.ptp(V[vs][:, [0, 2]], axis=0).max() > TIPW*H: continue   # 足の先にしては広い（ふくろのそこ など）
+            for fa in FOOTAS:   # 足がすそへもれて広がったら、角度を小さくしてやりなおす
+                if fa not in fls:
+                    e2 = adj[(m.face_adjacency_angles < math.radians(fa)) & ok2[adj[:, 0]] & ok2[adj[:, 1]]]
+                    fls[fa] = connected_components(coo_matrix((np.ones(len(e2)), (e2[:, 0], e2[:, 1])), shape=(len(F),)*2), directed=False)[1]
+                got = ok2 & np.isin(fls[fa], np.unique(fls[fa][tp & ok2]))
+                if not got.any(): break
+                if np.ptp(c[got][:, [0, 2]], axis=0).max() < LEGW*rs: feet |= got; break
+    feet &= (L == 'cloth'); under &= ~feet
     L[under] = 'red'; L[feet] = 'face'
     # ぽんぽん：しっぽの先（頭のまん中から、いちばん遠い、うしろの点）から、首までのきょりの中
     if name in POM:
