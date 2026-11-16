@@ -4,7 +4,7 @@
   ・近い点をまとめて（weld）、三角形のつながりで部品に分ける（星・すそのかざり・手・ぽんぽん など、べつの部品になっている物がある）。
   ・体の部品の中は、目じるしの場所（たね）から、面の向きが急にかわる所（折れ目、ANG 度）までぬりひろげて、顔・手・ずきんなどを分ける。
   ・目はモデルにないので、顔の面の上に、うすい色のたての だ円をのせる。
-写し方：せいれいと同じく、ほぼ正面（見おろし EL 度・遠近なし）から、1ドット＝1で写す（高さはいまのチップに合わせる HPX）。"""
+写し方：まっすぐ正面から、焦点距離 FOCAL（50mm）のカメラで、1ドット＝1で写す（高さはいまのチップに合わせる HPX）。"""
 import math, os, sys
 import numpy as np, trimesh
 from PIL import Image
@@ -12,13 +12,13 @@ HERE = os.path.dirname(os.path.abspath(__file__)); sys.path.insert(0, HERE); sys
 import oblique3d as O
 from weld import weld
 
-EL = 0.0; ANG = 40   # 前向きも後ろ向きも、まっすぐ正面から写す（持ち主がきめた）
+FOCAL = 50.0; ANG = 40   # 前向きも後ろ向きも、まっすぐ正面から、焦点距離50mm（35mm判）のカメラで写す（持ち主がきめた）
 hx = lambda h: np.array([int(h[i:i+2], 16) for i in (1, 3, 5)], float)
 
 # しゅるいごとの色と目じるし。場所は高さ1のときの (よこ x, 高さ z)。front：前からのたね
 CFG = {
-    'basic': dict(HPX=54, thin=0.97, hem=('#e2c46a', 0.022), under='#3a3150', base='#685d7f', parts='#b9aab6', legs=('#342b44', 0.1), eyes=dict(x=0.085, z=0.52, rx=0.03, rz=0.075, col='#e6d8de'),
-                  seeds=[('hood', 0.0, 0.85, '#6f6487', 0), ('rim', -0.2, 0.47, '#3a3150', 1), ('face', 0.0, 0.52, '#241c33', 1),
+    'basic': dict(HPX=54, thin=0, hem=('#c9b072', 0.03), under='#3a3150', lining='#3a3150', base='#685d7f', parts='#b9aab6', legs=('#342b44', 0.1), eyes=dict(x=0.085, z=0.52, rx=0.03, rz=0.075, col='#e6d8de'),
+                  seeds=[('hood', 0.0, 0.85, '#6f6487', 0), ('face', 0.0, 0.52, '#241c33', 1),
                          ('handL', -0.1, 0.37, '#8e83a2', 1), ('handR', 0.06, 0.37, '#8e83a2', 1)],
                   boxes=[('pom', lambda c: c[0] > 0.28 and c[2] < 0.62, 'hood', '#c8bcc8')]),
 }
@@ -49,14 +49,18 @@ def paint(m, comp, cfg):
     col = np.tile(hx(cfg['base']), (len(F), 1)); lab = np.array(['base']*len(F), object)
     for nm, x, z, c, front in cfg['seeds']:
         for k in grow(seed(x, z, front)): col[k] = hx(c); lab[k] = nm
+    if cfg.get('lining'):   # ずきんの裏地：まだどこにも入っていない体の面のうち、手より上で前がわ（ずきんの内がわの帯。持ち主の写真の所）
+        hz = max(cen[k, 2] for k in range(len(F)) if lab[k].startswith('hand')) if any(l.startswith('hand') for l in lab) else 0.4
+        for k in range(len(F)):
+            if comp[k] == 0 and lab[k] == 'base' and cen[k, 2] > hz-0.02 and cen[k, 1] > 0: col[k] = hx(cfg['lining']); lab[k] = 'rim'
     for nm, f, inside, c in cfg.get('boxes', []):
         for k in range(len(F)):
             if lab[k] == inside and f(cen[k]): col[k] = hx(c); lab[k] = nm
-    if cfg.get('under'):   # 布の裏がわ（マント・ずきんの、下を向いた面）は、こいかげの色
+    if cfg.get('under'):   # 布の裏がわ：マントのすその下の面（下を向いた面）は、こいかげの色。ずきんの裏地は rim（顔のまわりの帯）
         T = P[F]; fn = np.cross(T[:, 1]-T[:, 0], T[:, 2]-T[:, 0]); fn /= np.maximum(np.linalg.norm(fn, axis=1, keepdims=True), 1e-12)
         c0 = P.mean(0); fn[((T.mean(1)-c0)*fn).sum(1) < 0] *= -1   # 三角形の表と裏がばらばらなので、外向きにそろえる
         for k in range(len(F)):
-            if comp[k] == 0 and lab[k] in ('base', 'hood') and fn[k, 2] < -0.35: col[k] = hx(cfg['under']); lab[k] = 'under'
+            if comp[k] == 0 and lab[k] == 'base' and fn[k, 2] < -0.2: col[k] = hx(cfg['under']); lab[k] = 'under'
     lc, lz = cfg['legs']
     for k in range(len(F)):
         if comp[k] == 0 and lab[k] == 'base' and cen[k, 2] < lz: col[k] = hx(lc); lab[k] = 'legs'
@@ -124,17 +128,22 @@ def smoothshade(P, F, lab, R):
     return mk
 
 def hemdecal(P, F, lab, comp, H, cfg, yaw):
-    """すそのライン：写すドットごとに、真上から見て近く（HEMR）のマント（base）の点のいちばん下を「すそ」とし、そこから hem の高さまでを、その色に。
-    すそがマントの下のあたり（いちばん下から HEMTOP）のときだけ（マントの上のほうや左右のはしに、のびない）"""
+    """すそのライン：マントの外がわ（base）と、すその下の面（under）のさかい目の線から、hem の高さまでを、その色に（写すドットごと）。
+    さかい目は1本につながっているので、どの向きから見ても、とぎれない"""
     from scipy.spatial import cKDTree
-    hc, hh = cfg['hem']; vs = np.unique(F[(lab == 'base') & (comp == 0)]); Q = P[vs]; Q = Q[Q[:, 2] > cfg['legs'][1]*H]
-    c, s_ = math.cos(yaw), math.sin(yaw); X = Q[:, 0]*c-Q[:, 1]*s_; Y = Q[:, 0]*s_+Q[:, 1]*c
-    t = cKDTree(np.stack([X, Y], 1)); zmin = Q[:, 2].min(); col = hx(hc)
+    hc, hh = cfg['hem']; vb = set(F[lab == 'base'].ravel()); vu = set(F[lab == 'under'].ravel()); bd = vb & vu
+    pts = []
+    for f in F[lab == 'base']:   # さかい目の辺を、こまかい点にする
+        for i in range(3):
+            a, b = f[i], f[(i+1) % 3]
+            if a in bd and b in bd:
+                for t in np.linspace(0, 1, 8): pts.append(P[a]+(P[b]-P[a])*t)
+    if not pts: return None
+    c, s_ = math.cos(yaw), math.sin(yaw); Q = np.array(pts); Qr = np.stack([Q[:, 0]*c-Q[:, 1]*s_, Q[:, 0]*s_+Q[:, 1]*c, Q[:, 2]], 1)
+    t = cKDTree(Qr); col = hx(hc)
     def f(x, y, z):
-        i = t.query_ball_point([x, y], HEMR*H)
-        if not i: return None
-        low = Q[i, 2].min()
-        return col if low < zmin+HEMTOP*H and z < low+hh*H else None
+        d, i = t.query([x, y, z])
+        return col if d < hh*H and z >= Qr[i, 2]-0.002*H else None
     return f
 
 HEMR, HEMTOP = 0.07, 0.12
@@ -151,8 +160,9 @@ def shoot(name, cfg, src, yaw=0.0):
         sc.tri(R(P[f[0]]), R(P[f[1]]), R(P[f[2]]), col[k])
     sc.decal(None); sc.smooth(False)
     # 大きく（BIG 倍）写してから、色の平均（pixdown）でちぢめる：三角形ごとのかげのむらが、ならされる
-    t = math.radians(EL); V = np.array([0, math.cos(t), math.sin(t)]); k = cfg['HPX']/H
-    proj = lambda p: (p[0]*k, -(p[2]*math.cos(t)+p[1]*math.sin(t))*k)
+    # カメラ：たての画角は、焦点距離 FOCAL の 35mm判（たて24mm）。体の高さの1.15倍がちょうど入るきょりに置く。体のまん中の奥行きで、高さ HPX ドット
+    fov = 2*math.atan(12/FOCAL); Dc = 1.15*H/(2*math.tan(fov/2)); cz = H/2; k = cfg['HPX']/H; V = np.array([0, 1.0, 0])
+    proj = lambda p: (p[0]*k*Dc/(Dc-p[1]), -(cz+(p[2]-cz)*Dc/(Dc-p[1]))*k)
     Q = np.array([proj(p) for tr in sc.t for p in tr[:3]]); ext = (math.floor(Q[:, 0].min())-2, math.ceil(Q[:, 0].max())+2, math.floor(Q[:, 1].min())-2, math.ceil(Q[:, 1].max())+2)
     O.S = BIG; O.GRAD = True
     hi = O.render_px(sc, proj, ext, V, k=0.80, lw=2, k2=0.90, merge=0)
