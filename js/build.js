@@ -224,9 +224,17 @@ function finishBuild(j,r){
   if(id==='tower'&&!S.cleared){if(WD===1){if(shLeft()>=1)S.usedSh=(S.usedSh||0)+1;/* かけらを台座にはめる */S.finalNight=true;memo('🌑','守護の台座が建った。最後の夜がくる');setTimeout(()=>toast('守護の台座が光りはじめた…！ 今夜、オオカゲたちがおしよせてくる','warn'),900)}else{memo('🌳','御神木が育った');setTimeout(()=>toast('御神木が育った','good'),900)}finalCheck()}/* ヌシ様の前に、きびしい最後の夜 */
 }
 function finishCraft(o,r){
-  S.orders=S.orders.filter(q=>q!==o);wbenchDel(o);if(o.type==='board'){S.flags.board5=true;delete S.recipes.board;addSpiritXp(3,r);burst(BOARD,'furn');toast('依頼ボードが広がった！','good');checkSub();if(sheet==='craft')renderSheet();return}S.unlocked[o.type]=true;giveItem(o.type,BL[o.type].qty||1);if(o.type==='arrow2')S.flags.a2made=(S.flags.a2made||0)+BL.arrow2.qty;addSpiritXp(3,r);if(r)r.made=(r.made||0)+1;kurashi('f:'+o.type,['🪑','はじめて'+BL[o.type].name+'を作った']);burstAt(r.x,r.y,'furn');
-  toast(r.name+'が'+BL[o.type].name+'を作って、おそなえ箱に入れた！','good');renderPalette();if(sheet==='craft')renderSheet();
+  S.orders=S.orders.filter(q=>q!==o);wbenchDel(o);if(o.type==='board'){S.flags.board5=true;delete S.recipes.board;addSpiritXp(3,r);burst(BOARD,'furn');toast('依頼ボードが広がった！','good');checkSub();if(sheet==='craft')renderSheet();return}S.unlocked[o.type]=true;craftCarry(o,r);if(o.type==='arrow2')S.flags.a2made=(S.flags.a2made||0)+BL.arrow2.qty;addSpiritXp(3,r);if(r)r.made=(r.made||0)+1;kurashi('f:'+o.type,['🪑','はじめて'+BL[o.type].name+'を作った']);burstAt(r.x,r.y,'furn');
+  renderPalette();if(sheet==='craft')renderSheet();
 }
+function craftCarry(o,r){/* できた物は、作ったせいれいが頭の上につんで、おそなえ箱（なければ箱）へはこぶ。持てる数をこえた分は、その場におき、せいれいがじゅんにはこぶ。箱がひとつもないときだけ、すぐ入れる */
+  const id=o.type,n=BL[id].qty||1,nm=BL[id].name;
+  if(!r||!itemBoxOK()){giveItem(id,n);toast((r?r.name+'が':'')+nm+'を作った！','good');return}
+  gotNote(id);const k=addItem(r,id,n);if(k>0)(r.cmade||(r.cmade={}))[id]=(r.cmade[id]||0)+k;
+  for(let left=n-k;left>0;){const b=(S.drops||[]).length;dropAt(r.x,r.y,id,left);if(!(S.drops&&S.drops.length>b)){giveItem(id,left,1);break}const d=S.drops[S.drops.length-1];d.tap=1;d.made=1;break}/* 置けなければ、そのまま入れる */
+  toast(r.name+'が'+nm+'を作った！','good')}
+function madeStow(id,n,r){/* 作った物をしまった：「ひろった」とは言わない。しまった数（のこりはふつうにしまう）をかえす */
+  const c=r&&r.cmade,m=c?Math.min(n,c[id]||0):0;if(m<=0)return 0;c[id]-=m;if(!(c[id]>0))delete c[id];giveItem(id,m,1);toast((r.name?r.name+'が':'')+itemName(id)+(m>1?'×'+m:'')+'を'+(itemDest(id)==='obox'?'おそなえ箱':'箱')+'に入れた','good');return m}
 function rectCells(a,b){const x0=Math.min(a.x,b.x),x1=Math.max(a.x,b.x),y0=Math.min(a.y,b.y),y1=Math.max(a.y,b.y);const c=[];for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++)c.push([x,y]);return c}
 let pending=null;
 const STAMPC10={farm:32,fence:16,stone:16,path:8};/* スタンプで足りない分を買うときの値段（1こあたり、パワーの10倍の数：畑3.2・柵1.6・石1.6・あぜ道0.8） */
