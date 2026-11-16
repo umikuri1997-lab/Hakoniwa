@@ -368,7 +368,8 @@ def shoot(name, cfg, src, yaw=0.0):
         return (q[0]*sc_*k, -(cz+float(q@U)*sc_)*k)
     Q = np.array([proj(p) for tr in sc.t for p in tr[:3]]); ext = (math.floor(Q[:, 0].min())-2, math.ceil(Q[:, 0].max())+2, math.floor(Q[:, 1].min())-2, math.ceil(Q[:, 1].max())+2)
     O.S = BIG; O.GRAD = True; O.DITHER = BIG if DITH else 0   # かげは1色、うすいかげは、かげのドットの密度（持ち主がきめた）
-    hi = O.render_px(sc, proj, ext, V, k=0.80, lw=2, k2=0.90, merge=0)
+    sv = (O.LV4, O.SHADE4); O.LV4 = KWLV; O.SHADE4 = KWSHADE   # 立体感：かげの所を広く・かげの色をこく（コワイノだけ）
+    hi = O.render_px(sc, proj, ext, V, k=0.80, lw=2, k2=0.90, merge=0); O.LV4, O.SHADE4 = sv
     if os.environ.get('KWDBG'): hi.save(os.path.join(os.environ['KWDBG'], 'hi_%s_%d.png' % (name, round(math.degrees(yaw)))))   # たしかめ用：ちぢめる前の大きな絵
     import pixdown
     W0, H0 = (ext[1]-ext[0]), (ext[3]-ext[2])
@@ -383,6 +384,8 @@ FOOTR = 0.6   # 足：すその広さ（95%の半径）のこのわりより内�
 POMH = 0.45   # ぽんぽん：赤のかたまりのまん中が、この高さ（高さのうち）より上
 POMANG = 50.0
 PALMW = 0.45   # 手のひらのあつみ（左右の半径。手の大きさ r に対して）   # ぽんぽん：ずきんの先がつながる向きから、この角度までは、ずきん
+KWLV = (0.72, 0.5, 0.22)   # 光・うすいかげ（あみ1/4）・半かげ（あみ2/4）・かげ のさかい目（光の向きとの内積）
+KWSHADE = [(9, -2.5), (18, -5), (40, -4)]   # かげの色（3つめ。明るさ・あざやかさを引く）
 DITH = True   # かげを1色＋あみ（ドットの密度）にする
 BIG = 8; NCOL = 15   # 大きく写す倍・色の数（目の色を足して16）
 
