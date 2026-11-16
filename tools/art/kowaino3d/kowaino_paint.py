@@ -44,9 +44,9 @@ CFG.update({   # 色は、いまのゲームの絵（ない物は、night.js の
     'rockc': mk('rockc', 1.3, '#6c5e70', '#211a2a', '#9b888c', '#c2afae', hand='#8a7a80', mats={'deco': 'rock', 'hand': 'rock'}),
     'armor': mk('armor', 1.3, '#4e4e60', '#1a1a24', '#8c92a2', '#9fe0ff', mats={'deco': 'metal'}),
     'shiny': mk('shiny', .8, '#e2d498', '#5a4f2a', '#fff2b0', '#ffffff', edge='#f0e6c0'),
-    'hana': mk('hana', 1, '#8a5a7a', '#2e1a28', '#eaa6c8', '#ffc6e0'),
+    'hana': mk('hana', 1, '#8a5a7a', '#2e1a28', '#eaa6c8', '#ffc6e0', mats={'deco': 'gloss'}, gloss=([(0.12, 0.18), (0.36, 0.42), (0.66, 0.72), (0.86, 0.9)], [(-38, 8), (-20, 5), 0, (12, -4), (22, -10)])),   # 花びら・落ち葉：ハイライトとかげを強く（持ち主）
     'hoteri': mk('hoteri', 1, '#7c4232', '#2a1410', '#f0905a', '#ffb36b', mats={'deco': 'gloss'}, gloss=([(0.0, 0.06), (0.2, 0.26), (0.5, 0.56), (0.7, 0.76)], [3, 2, 0, (14, -8), (32, -28)])),   # 細いので、つやの光を広く,
-    'ochiba': mk('ochiba', .8, '#7a5a3a', '#291a10', '#d9a05a', '#ffd38a'),
+    'ochiba': mk('ochiba', .8, '#7a5a3a', '#291a10', '#d9a05a', '#ffd38a', mats={'deco': 'gloss'}, gloss=([(0.12, 0.18), (0.36, 0.42), (0.66, 0.72), (0.86, 0.9)], [(-38, 8), (-20, 5), 0, (12, -4), (22, -10)])),   # 花びら・落ち葉：ハイライトとかげを強く（持ち主）
     'yuki': mk('yuki', 1.3, '#8494a8', '#26303c', '#dff1ff', '#e0f4ff', pom='#f4faff', pomh=0.0, mats={'deco': 'ice'}),
 })
 
