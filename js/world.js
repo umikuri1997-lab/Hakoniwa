@@ -63,7 +63,7 @@ function boardMigrate(){/* 依頼ボードは神殿の右の2マス。前のセ�
   if(S.obj[k]&&!ruinClearable(S.obj[k]))return;
   S.obj[k]=STATUE>=0?'part':site?'site2':'part';S.ref[k]=STATUE>=0?t+1:t;delete S.dyn[k];delete S.hp[k];if(S.hp)delete S.hp['n'+k];S.flags.board2x1=1;recount()}
 function templeRuinMigrate(){if(S.flags.ruinTemple1)return;S.flags.ruinTemple1=1;if(STATUE<0&&!statueSite()&&templeRuinPlace(S)>=0)recount()}/* 神殿を建てる前の古いセーブに、こわれた神殿を1回だけ（recount のあとによぶ） */
-/* 「みる」でこわれた神殿をタップ：せいれいが直しにいく（神殿を建てる足場と同じ。絵は、こわれた神殿のまま） */
+/* 「しらべる」でこわれた神殿をタップ：せいれいが直しにいく（神殿を建てる足場と同じ。絵は、こわれた神殿のまま） */
 function templeRuinTap(j){j=anc(j);if(S.obj[j]!=='statueb')return false;
   S.obj[j]='site';S.dyn[j]={build:'statue',p:0,need:BL.statue.time,ruin:1};for(const k of templeRuinCells(j).slice(1)){S.obj[k]='site2';S.ref[k]=j}
   sfx('tap');toast('せいれいが神殿を直しにきてくれる');recount();dirty=true;renderQuest();return true}

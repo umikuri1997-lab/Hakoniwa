@@ -67,7 +67,7 @@ function lastFirst(list){/* さいごにあそんだステージを、いちば�
   const card=list.querySelector('.wcard[data-k="'+top[0]+'"]');if(card===list.firstElementChild)return;
   const pv=card.previousElementSibling,nx=card.nextElementSibling;if(pv&&pv.classList.contains('wlink'))pv.remove();else if(nx&&nx.classList.contains('wlink'))nx.remove();/* 道の線は、となりのステージどうしでつなぎなおす */
   card.classList.add('wtop');list.insertBefore(card,list.firstElementChild)}
-const APP_VER=1726;/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER=1727;/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
@@ -143,17 +143,17 @@ function updTut(){
     if(sel!==id||palOpen){if(!palOpen){el=$('#palMore');lbl='「ほかをえらぶ」をタップ';return}const nm=BL[id].kind==='plant'?iname(id):BL[id].name;el=[...document.querySelectorAll('#palItems .chip')].find(c=>c.querySelector('.nm').textContent===nm);lbl=nm+'をえらぶ';
       if(el){const pr=$('#palItems').getBoundingClientRect(),cr=el.getBoundingClientRect();if(cr.top<pr.top-2||cr.bottom>pr.bottom+2)el.scrollIntoView({block:'nearest'})}return}
     const sp=tutSpot(id);if(sp){const z=BL[id].sz||[1,1];wp=[(sp[0]+z[0]/2)*TS,(sp[1]+z[1]/2)*TS];const hh=HOUSES.find(h=>h.set.has(sp[1]*W+sp[0]));lbl=hh&&!OPENH.has(hKey(hh))?'家をタップして中を見る':'置きたい場所をタップ'}};
-  const lookAt=(p,l)=>{if(mode!=='look'){el=document.querySelector('#dock [data-mode="look"]');lbl='「みる」をタップ'}else{wp=p;lbl=l}};
+  const lookAt=(p,l)=>{if(mode!=='look'){el=document.querySelector('#dock [data-mode="look"]');lbl='「しらべる」をタップ'}else{wp=p;lbl=l}};
   if(WD===0&&TALKW&&!isNight()&&(!S.flags.talked1||!S.godGone)&&!questGuideAccepted()&&!sheet){if(TALKW===GOD){if(godHere()&&mainStoryBubbleReady())lookAt([godX()*TS,(godY()-2)*TS],'タップして話を聞こう')}else{const r=S.res.find(q=>q.name===TALKW&&!q.hidden);if(r&&!CLAPON&&!(r.act&&r.act.type==='sleep')&&mainStoryBubbleReady(r))lookAt([r.x*TS,(r.y-1.3)*TS],'タップして話を聞こう')}}/* 吹き出しが出ているときだけ、案内を出す（吹き出しを描く所と同じ条件） */
   else if(WD===0&&SUBW[GOD]&&godHere()&&!isNight()&&!sheet&&$('#dialog').hidden)lookAt([godX()*TS,(godY()-2)*TS],'タップして話を聞こう');/* 交換のサブクエスト：カミサマが話す */
   else if(S.qStory!=null){}/* お話を聞く前は、クエストの案内を出さない */
   else if(WD===0&&S.summon&&STATUE>=0&&!sheet&&(S.summons||0)<2)lookAt([(STATUE%W+.5)*TS,((STATUE/W)|0)*TS-58],'「！」をタップ');
-  else if(S.flags.tapAsk&&!S.flags.tapped&&$('#dialog').hidden){if(sheet==='res'){el=$('#sheetX');lbl='見たら、とじる'}else if(!sheet){if(mode!=='look'){el=document.querySelector('#dock [data-mode="look"]');lbl='「みる」をタップ'}else{const r=S.res.find(q=>!q.hidden);if(r){wp=[r.x*TS,(r.y-.5)*TS];lbl='せいれいをタップ'}}}}/* 神殿のあと：せいれいをタップしてステータスを見る */
+  else if(S.flags.tapAsk&&!S.flags.tapped&&$('#dialog').hidden){if(sheet==='res'){el=$('#sheetX');lbl='見たら、とじる'}else if(!sheet){if(mode!=='look'){el=document.querySelector('#dock [data-mode="look"]');lbl='「しらべる」をタップ'}else{const r=S.res.find(q=>!q.hidden);if(r){wp=[r.x*TS,(r.y-.5)*TS];lbl='せいれいをタップ'}}}}/* 神殿のあと：せいれいをタップしてステータスを見る */
   else if(q.talk&&!S.qTalked){}/* 会話の前は、クエストの案内を出さない */
   else if(WD===0&&!sheet&&fieldTapNeed()!=null){const j=fieldTapNeed(),n=sacredSpan();lookAt([(j%W+n/2)*TS,((j/W|0)+n/2-.5)*TS],'切り株をタップ')}/* 御神木の調べ：準備ができたら、切り株をタップ */
   else if(qt==='statue'){if(WD===0&&RUINT>=0&&S.obj[RUINT]==='statueb'&&!sheet)lookAt([(RUINT%W+.5)*TS,((RUINT/W)|0)*TS-24],'こわれた神殿をタップ');else if(WD===0&&STATUE<0&&RUINT<0&&!S.obj.includes('site'))placeHint('statue')}/* 操作の案内は1章だけ */
   else if(qt==='springA'){if(inv('hotstone')>0)placeHint('hotstone')}
-  else if(qt==='table'){const g=orderTut('table');if(g&&g.kind==='place')placeHint('table');else if(g&&g.kind==='close'){el=$('#sheetX');lbl='依頼ボードをとじる'}else if(g&&g.kind==='look'){el=document.querySelector('#dock [data-mode="look"]');lbl='「みる」をタップ'}else if(g&&g.kind==='board'){wp=[(BOARD%W+1.9)*TS,((BOARD/W)|0)*TS-4];lbl='依頼ボードをタップ'}else if(g&&g.kind==='tab'){[el,lbl]=craftHintEl()}else if(g&&g.kind==='row'){const row=[...document.querySelectorAll('#sheetBody .row')].find(r=>r.textContent.includes(BL.table.name));el=row&&([...row.querySelectorAll('button')].find(b=>b.textContent.includes('はる'))||[...row.querySelectorAll('button')].pop());lbl=el&&el.disabled?'パワーや素材が集まるまで待とう':'食卓の「はる」をタップ'}}
+  else if(qt==='table'){const g=orderTut('table');if(g&&g.kind==='place')placeHint('table');else if(g&&g.kind==='close'){el=$('#sheetX');lbl='依頼ボードをとじる'}else if(g&&g.kind==='look'){el=document.querySelector('#dock [data-mode="look"]');lbl='「しらべる」をタップ'}else if(g&&g.kind==='board'){wp=[(BOARD%W+1.9)*TS,((BOARD/W)|0)*TS-4];lbl='依頼ボードをタップ'}else if(g&&g.kind==='tab'){[el,lbl]=craftHintEl()}else if(g&&g.kind==='row'){const row=[...document.querySelectorAll('#sheetBody .row')].find(r=>r.textContent.includes(BL.table.name));el=row&&([...row.querySelectorAll('button')].find(b=>b.textContent.includes('はる'))||[...row.querySelectorAll('button')].pop());lbl=el&&el.disabled?'パワーや素材が集まるまで待とう':'食卓の「はる」をタップ'}}
   else if(qt==='stor'&&sheet==='craft'&&S.orders.some(o=>o.type==='crate')&&inv('crate')<=0){el=$('#sheetX');lbl='とじる'}/* はったあと：画面をとじて、できあがりを待つ */
   else if(qt==='farm6'){if(inv('farm')>0)placeHint('farm')}
   else if(qt==='imoseed'){if(imoSeedQuestPlots().length>=2)return hide();if(sheet){el=$('#sheetX');lbl='とじる'}else if(mode!=='build'){el=document.querySelector('#dock [data-mode="build"]');lbl='「おく」をタップ'}
@@ -171,12 +171,12 @@ function updTut(){
     if(inv(bid)>0)placeHint(bid);
     else if(!S.orders.some(o=>o.type===bid)){
       if(sheet==='craft'){if(!craftInTag(bid)||craftQ||craftCan&&!canMakeNow(bid)){[el,lbl]=craftHintEl()}else{const row=[...document.querySelectorAll('#sheetBody .row')].find(r=>r.textContent.includes(bn));el=row&&([...row.querySelectorAll('button')].find(b=>b.textContent.includes('はる'))||[...row.querySelectorAll('button')].pop());lbl=el&&el.disabled?'木材が集まるまで待とう':'「はる」をタップ'}}
-      else if(!sheet){if(mode!=='look'){el=document.querySelector('#dock [data-mode="look"]');lbl='「みる」をタップ'}else if(BOARD>=0){wp=[(BOARD%W+1.9)*TS,((BOARD/W)|0)*TS-4];lbl='依頼ボードをタップ'}}}}
+      else if(!sheet){if(mode!=='look'){el=document.querySelector('#dock [data-mode="look"]');lbl='「しらべる」をタップ'}else if(BOARD>=0){wp=[(BOARD%W+1.9)*TS,((BOARD/W)|0)*TS-4];lbl='依頼ボードをタップ'}}}}
   else if(qt==='fence4'){if(inv('fence')>0)placeHint('fence')}
   else if(qt==='wall'){if(inv('hwall')>0)placeHint('hwall')}
   else if(qt==='bed'){if(inv('bed')>0)placeHint('bed')}
   else if(qt==='watch1'){if(watchQ())placeHint('watch');else if(inv('spike')>0&&(S.placed.spike||0)<2)placeHint('spike')}
-  else if(qt==='trade'){if(sheet==='shop'){if(S.flags.traded){el=$('#shopEnd');lbl='交換がおわったら「交換をおわる」'}else{el=[...document.querySelectorAll('#sheetBody .btn.pri')].find(b=>!b.disabled);lbl='交換してみよう'}}else if(!sheet&&godHere()){if(mode!=='look'){el=document.querySelector('#dock [data-mode="look"]');lbl='「みる」をタップ'}else{wp=[godX()*TS,(godY()-.2)*TS];lbl='カミサマをタップ'}}}
+  else if(qt==='trade'){if(sheet==='shop'){if(S.flags.traded){el=$('#shopEnd');lbl='交換がおわったら「交換をおわる」'}else{el=[...document.querySelectorAll('#sheetBody .btn.pri')].find(b=>!b.disabled);lbl='交換してみよう'}}else if(!sheet&&godHere()){if(mode!=='look'){el=document.querySelector('#dock [data-mode="look"]');lbl='「しらべる」をタップ'}else{wp=[godX()*TS,(godY()-.2)*TS];lbl='カミサマをタップ'}}}
   let x,y,elT=0;
   if(el){const r=el.getBoundingClientRect(),ar=$('#app').getBoundingClientRect();if(!r.width)return hide();x=r.left-ar.left+r.width/2;y=r.top-ar.top+r.height/2;const nb=r.top-ar.top>ar.height-120,sd=!nb&&r.right-ar.left+170<ar.width;elT=sd?2:r.top-ar.top<140?1:-1;if(sd){x=r.right-ar.left-2}else y=elT<0?r.top-ar.top+2:r.bottom-ar.top-2}/* ボタンは、指と文字をボタンの上（上のほうなら下）に出して、ボタンの文字をかくさない */
   else if(wp){const ar=$('#app').getBoundingClientRect(),cr=cv.getBoundingClientRect();x=cr.left-ar.left+(wp[0]-cam.x)*cam.z*(cr.width/VW);y=cr.top-ar.top+(wp[1]-cam.y)*cam.z*(cr.height/VH);if(x<0||y<0||x>ar.width||y>ar.height)return hide()}
@@ -234,7 +234,7 @@ addEventListener('resize',resize);
 for(const ev of ['pointerdown','touchend','click'])document.addEventListener(ev,()=>{if(AC&&AC.state!=='running'&&!document.hidden)AC.resume().catch(()=>{})},true);addEventListener('focus',()=>{if(AC&&AC.state!=='running')AC.resume().catch(()=>{})});
 
 $('#alert').addEventListener('click',()=>{const L=S.enemies.filter(e=>e.spawned&&!e.dead);if(!L.length)return;ALI=(ALI+1)%L.length;const e=L[ALI];centerOn(e.x*TS,e.y*TS);sfx('tap')});/* 「コワイノ ○体」をタップすると、その場所へ */
-$('#guardStatus').addEventListener('click',e=>{e.stopPropagation();if(!S||!started)return;if(!LIGHTARM&&S.pt<1)return toast('パワーが足りません');sfx('tap');const on=!LIGHTARM;setMode('look');LIGHTARM=on;AREAARM=false;LEAFARM=false;dockSync();if(on)toast('光をあてる物をタップ')});/* 守りの光は、もう一度ボタンをおすか、みる・おく・こわすをえらぶまで、えらんだまま（チャージ中も）。えらんでいるあいだは、置く・こわす・みるはしない */
+$('#guardStatus').addEventListener('click',e=>{e.stopPropagation();if(!S||!started)return;if(!LIGHTARM&&S.pt<1)return toast('パワーが足りません');sfx('tap');const on=!LIGHTARM;setMode('look');LIGHTARM=on;AREAARM=false;LEAFARM=false;dockSync();if(on)toast('光をあてる物をタップ')});/* 守りの光は、もう一度ボタンをおすか、しらべる・おく・こわすをえらぶまで、えらんだまま（チャージ中も）。えらんでいるあいだは、置く・こわす・みるはしない */
 $('#areaBtn').addEventListener('click',e=>{e.stopPropagation();if(AREACD>0)return toast('こもれびのまもりは、あと'+Math.ceil(AREACD/(S.speed||1))+'秒');if(S.pt<3)return toast('パワーが足りません');sfx('tap');AREAARM=!AREAARM;LIGHTARM=false;LEAFARM=false;if(AREAARM)toast('光をはなつ場所をタップ')});
 $('#leafBtn').addEventListener('click',e=>{e.stopPropagation();const L=leafLeft();if(L>0)return toast('葉のかべは、あと'+Math.ceil(L/DAYLEN)+'分');if(S.pt<LEAFPT)return toast(lackPt(LEAFPT),'warn');sfx('tap');LEAFARM=!LEAFARM;LIGHTARM=false;AREAARM=false;dockSync();if(LEAFARM)toast('葉のかべを生やす所をなぞる')});/* 葉のかべ（defense.js） */
 $('#skipBtn').addEventListener('click',()=>{if(!canSkip())return;sfx('tap');SKIP=true;$('#skipBtn').hidden=true;toast('朝まで休もう…','good')});
