@@ -242,6 +242,8 @@ def grid_bg(ext, foot=None):
 
 SHADE = [(17.5, -5), (35, -10)]   # かげの色：ベースの色の HSV（100段階）から、明るさ・あざやかさを引く（半かげ・かげ）。持ち主がきめた（かげ＝明るさ−35・あざやかさ+10）
 SHINE = (12, -8)                # 金属のつや：明るさを足し、あざやかさを引く（白っぽく）
+DITHER = 0   # 0 でなければ、かげを1色にして、うすいかげをあみ（できあがりの1ドットごと。この数は1ドットの大きさ）であらわす
+DITHERLV = 3   # あみのときの、かげの色（toon の段）
 METALSPEC = 0.97                # 金属のつやが出る向きの近さ
 SATINSPEC = 0.80                # サテンの布（material 'satin'）のつやが出る向きの近さ（光と目のあいだの向きとの内積）
 SATINSHINE = (24, -6)           # サテンのつや（lv −2）：明るさを足し、あざやかさを引く
@@ -325,7 +327,7 @@ def render_px(sc, proj, ext, depth, k=0.72, outer=True, merge=12, lw=1, k2=0.86,
     outerk：True なら、まわりのふち（透明ととなりあう所）は、部品ごとの線のこさ（sc.outline の k・p.olk）を使わず、いつも k・k2 で引く（目地だけうすくしたいとき）。数なら、外の線はその数、内がわの線は (数+1)/2（白い物の、まわりの線をこくするとき）。
     lw：輪郭線のはば（1か2）。2のときは、さかい目にふれる1ドットめが こい線（×k）、そのとなりの2ドットめが まわりになじむ うすい線（×k2）。まわりのふちは、外がわ1ドットがこい線・物の内がわ1ドットがうすい線。"""
     x0, x1, y0, y1 = ext; Wp = int(round((x1-x0)*S)); Hp = int(round((y1-y0)*S))
-    col = np.zeros((Hp, Wp, 3)); zb = np.full((Hp, Wp), -1e9); idb = np.full((Hp, Wp), -1); lvb = np.zeros((Hp, Wp), int)
+    col = np.zeros((Hp, Wp, 3)); ccb = np.zeros((Hp, Wp, 3)); zb = np.full((Hp, Wp), -1e9); idb = np.full((Hp, Wp), -1); lvb = np.zeros((Hp, Wp), int)
     wp = np.zeros((Hp, Wp, 3)); wn = np.zeros((Hp, Wp, 3))   # ドットごとの、せかいの場所と面の向き（テクスチャ用）
     CLR = []   # すけて見える部品の三角形
     RAY = getattr(proj, 'ray', None)   # persp の写し方：ドットごとに、見える面の場所を式でとく（三角形を分けない）
@@ -379,7 +381,7 @@ def render_px(sc, proj, ext, depth, k=0.72, outer=True, merge=12, lw=1, k2=0.86,
             m = (w0 >= -1e-6) & (w1 >= -1e-6) & (w2 >= -1e-6)
             z = w0*D[0]+w1*D[1]+w2*D[2]
         s = (slice(by0, by1+1), slice(bx0, bx1+1)); vis = m & (z > zb[s])
-        zb[s][vis] = z[vis]; col[s][vis] = shc; idb[s][vis] = pid; lvb[s][vis] = lv
+        zb[s][vis] = z[vis]; col[s][vis] = shc; ccb[s][vis] = cc; idb[s][vis] = pid; lvb[s][vis] = lv
         if pid in sc.sm and sc.mt.get(pid) != 'flat' and vis.any():   # スムーズシェード：ドットごとに、角の向きをまぜた面の向きで段をきめる（金属は、つやのすじも）
             na, nb, nc = vnorm(pid, a, n), vnorm(pid, b, n), vnorm(pid, c, n)
             NN = w0[vis, None]*na+w1[vis, None]*nb+w2[vis, None]*nc; NN /= np.maximum(np.linalg.norm(NN, axis=1, keepdims=True), 1e-9)
@@ -396,14 +398,22 @@ def render_px(sc, proj, ext, depth, k=0.72, outer=True, merge=12, lw=1, k2=0.86,
             if mt_ == 'satin':
                 hv = LIGHT+depth/np.linalg.norm(depth); hv /= np.linalg.norm(hv); L2[NN@hv > SATINSPEC] = -2
             TC = {q: toon(cc, q) for q in set(L2.tolist())}
-            col[s][vis] = np.array([TC[q] for q in L2])*(1 if BMUL is None else BMUL[:, None]); lvb[s][vis] = L2
+            col[s][vis] = np.array([TC[q] for q in L2])*(1 if BMUL is None else BMUL[:, None]); lvb[s][vis] = L2; ccb[s][vis] = np.clip(np.array(cc, float)*(1 if BMUL is None else BMUL[:, None]), 0, 255)
         if pid in sc.tx or pid in sc.dc:
             wp[s][vis] = (w0[vis, None]*a+w1[vis, None]*b+w2[vis, None]*c); wn[s][vis] = n
     for pid, f in sc.dc.items():   # もよう：ドットごとに、見える面の場所の色（かげは、そのドットの3だん）
         ys_, xs_ = np.nonzero(idb == pid)
         for yy, xx in zip(ys_, xs_):
             c_ = f(*wp[yy, xx])
-            if c_ is not None: col[yy, xx] = toon(c_, lvb[yy, xx])
+            if c_ is not None: col[yy, xx] = toon(c_, lvb[yy, xx]); ccb[yy, xx] = c_
+    if DITHER:   # かげを1色にして、うすいかげはかげのドットの密度（あみ）であらわす。あみは、できあがりの1ドット（DITHER ドット四方）ごと
+        BY = np.array([[0, 2], [3, 1]])   # 2×2 のならび：うすいかげ（1）は1/4、半かげ（2）は2/4、かげ（3）はぜんぶ
+        yy_, xx_ = np.mgrid[0:Hp, 0:Wp]; th = BY[(yy_//DITHER) % 2, (xx_//DITHER) % 2]
+        m_ = (idb >= 0) & (lvb >= 0)
+        for q in np.unique(ccb[m_].reshape(-1, 3), axis=0):
+            k_ = m_ & np.all(ccb == q, axis=2); lt = toon(q, 0); dk = toon(q, DITHERLV)
+            sh = k_ & (th < np.choose(np.clip(lvb, 0, 3), [0, 1, 2, 4]))
+            col[k_ & ~sh] = lt; col[sh] = dk
     col0 = col.copy()   # 木目をつける前の色（輪郭線はこの色から作る。木目ごとに線の色がわかれない）
     for pid, tx in sc.tx.items():   # 部品ののびる向き（いちばん長い向き）にそって、木目をはる
         m = idb == pid

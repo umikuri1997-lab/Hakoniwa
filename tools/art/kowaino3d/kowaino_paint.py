@@ -367,13 +367,13 @@ def shoot(name, cfg, src, yaw=0.0):
         q = np.asarray(p)-C0; d = float(q@V); sc_ = Dc/(Dc-d)
         return (q[0]*sc_*k, -(cz+float(q@U)*sc_)*k)
     Q = np.array([proj(p) for tr in sc.t for p in tr[:3]]); ext = (math.floor(Q[:, 0].min())-2, math.ceil(Q[:, 0].max())+2, math.floor(Q[:, 1].min())-2, math.ceil(Q[:, 1].max())+2)
-    O.S = BIG; O.GRAD = True
+    O.S = BIG; O.GRAD = True; O.DITHER = BIG if DITH else 0   # かげは1色、うすいかげは、かげのドットの密度（持ち主がきめた）
     hi = O.render_px(sc, proj, ext, V, k=0.80, lw=2, k2=0.90, merge=0)
     if os.environ.get('KWDBG'): hi.save(os.path.join(os.environ['KWDBG'], 'hi_%s_%d.png' % (name, round(math.degrees(yaw)))))   # たしかめ用：ちぢめる前の大きな絵
     import pixdown
     W0, H0 = (ext[1]-ext[0]), (ext[3]-ext[2])
     o = pixdown.shrink(np.asarray(hi).astype(float), W0, H0); o = pixdown.lines(o, np.asarray(hi).astype(float)); o = pixdown.outline(o, np.asarray(hi).astype(float))
-    im = despeckle(quant(rim(Image.fromarray(o.round().astype(np.uint8), 'RGBA')), NCOL, cfg.get('hem', (None,))[0]))
+    im = (lambda x: x if DITH else despeckle(x))(quant(rim(Image.fromarray(o.round().astype(np.uint8), 'RGBA')), NCOL, cfg.get('hem', (None,))[0]))
     if abs(math.cos(yaw)-1) < 1e-6:   # 正面だけ、目をおす
         im = stamp(im, [(proj(R(p))[0]-ext[0], proj(R(p))[1]-ext[2]) for p in eyepos(P, F, lab, H, cfg['eyes'])], cfg['eyes']['col'], cfg['eyes'].get('edge'))
     return im, ext
@@ -383,6 +383,7 @@ FOOTR = 0.6   # 足：すその広さ（95%の半径）のこのわりより内�
 POMH = 0.45   # ぽんぽん：赤のかたまりのまん中が、この高さ（高さのうち）より上
 POMANG = 50.0
 PALMW = 0.45   # 手のひらのあつみ（左右の半径。手の大きさ r に対して）   # ぽんぽん：ずきんの先がつながる向きから、この角度までは、ずきん
+DITH = True   # かげを1色＋あみ（ドットの密度）にする
 BIG = 8; NCOL = 15   # 大きく写す倍・色の数（目の色を足して16）
 
 def rim(im, k=0.62):
