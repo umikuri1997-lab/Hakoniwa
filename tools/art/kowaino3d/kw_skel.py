@@ -69,12 +69,17 @@ class Skel:
         W[:, ix['root']] = 1-a1; W[:, ix['hip']] = a1-a2; W[:, ix['chest']] = a2-a3; W[:, ix['head']] = a3
         def put(vs, bone, w=1.0):
             w = np.broadcast_to(np.asarray(w, float), (len(vs),))[:, None]; W[vs] *= (1-w); W[vs, ix[bone]] += w[:, 0]
-        hand = lab == 'hand'; big = np.bincount(comp).argmax()
+        hand = lab == 'hand'; big = np.bincount(comp[~hand], minlength=comp.max()+1).argmax()   # 体のかたまり（手の面はかぞえない。手のほうが面の多いコワイノがいる）
         if hand.sum() > 20:
             from scipy.spatial import cKDTree
             hv = np.unique(F[hand]); d, _ = cKDTree(P[hv]).query(P); wa = (1-smooth(0, ARMRN.get(name, ARMR)*H, d))*np.maximum(d < 1e-9, smooth(0.2, 0.3, z))   # 手のまわりを なめらかに腕へ。足もと・すそ（低い所）は まぜない（こぶしが大きいと、足がのびた）
+            vside = np.sign(P[:, 0]); hq = [q for q in np.argsort(-np.bincount(comp[hand], minlength=comp.max()+1))[:2] if q != big and (comp[hand] == q).sum() > 20]
+            if len(hq) == 2:   # 手が2つの はなれた かたまり：かたまりごとに左右（まん中によった手を、x の正負で分けると、手がのびた）
+                cx = [P[np.unique(F[comp == q]), 0].mean() for q in hq]; xm = sum(cx)/2; vside = np.sign(P[:, 0]-xm)
+                for q, x in zip(hq, cx): vside[np.unique(F[comp == q])] = np.sign(x-xm)
+            s.vside = vside
             for side, bone in ((-1, 'armL'), (1, 'armR')):
-                m = (np.sign(P[:, 0]) == side) & (wa > 0); hs = hv[np.sign(P[hv, 0]) == side]
+                m = (vside == side) & (wa > 0); hs = hv[vside[hv] == side]
                 if len(hs): hc = P[hs].mean(0); s.piv[bone] = np.array([hc[0]-side*0.1*H, hc[1]*0.4, max(hc[2]+0.14*H, 0.38*H)])   # 腕の支点：手の内がわ・上（かたの高さ）
                 if len(hs) and not np.isin(hs, np.unique(F[comp == big])).any(): m &= d < 1e-9   # 体からはなれた手（こぶし）：体の布は うごかさない（のびて見えた）
                 put(np.nonzero(m)[0], bone, wa[m])
@@ -102,7 +107,7 @@ class Skel:
                 if not nx.any(): break
                 grow |= nx
             for side, bone in ((-1, 'armL'), (1, 'armR')):
-                vs = np.unique(F[hand | grow]); vs = vs[np.sign(P[vs, 0]) == side]; W[vs] = 0; W[vs, ix[bone]] = 1
+                vs = np.unique(F[hand | grow]); vs = vs[s.vside[vs] == side]; W[vs] = 0; W[vs, ix[bone]] = 1
         for bn, pv in PIVOT.get(name, {}).items(): s.piv[bn] = np.array(pv, float)*H
         W /= np.maximum(W.sum(1, keepdims=True), 1e-9); s.W = W
         # くずれる（collapse）ときに、形をたもつ かたまり：手・足・ぽんぽん・体とはなれた かたまり（こぶし・ふくろ・ハンマー・かざり）。かたまりごとに、まん中の動きで いっしょに うごく
@@ -179,7 +184,7 @@ class Skel:
         c = Q[core, :2].mean(0); d = Q[:, :2]-c; nn = np.maximum(np.linalg.norm(d, axis=1), 1e-9); Q[:, :2] += d/nn[:, None]*(b*0.6)[:, None]
         Q[:, 2] = zn; return Q
 
-    def pose(s, P, move=(0, 0, 0), spread=1.0, orbit=0.0, melt=0.0, scale=1.0, flutter=(0, 0), look=(0, 0), fx=(), wave=(0, 0), lag=(0, 0, 0), sq=1.0, flare=0.0, collapse=0.0, cz=0.45, ground=False, ghost=0, dead=False, sacksq=1.0, **bones):
+    def pose(s, P, move=(0, 0, 0), spread=1.0, orbit=0.0, melt=0.0, scale=1.0, flutter=(0, 0), look=(0, 0), fx=(), wave=(0, 0), lag=(0, 0, 0), hlag=(0, 0, 0), sq=1.0, flare=0.0, collapse=0.0, cz=0.45, ground=False, ghost=0, dead=False, sacksq=1.0, **bones):
         H = s.H; Ms = {}
         if collapse: P = s.collapse(P, collapse, cz)
         for n, par, _ in BONES:
@@ -208,8 +213,10 @@ class Skel:
                 w = s.sw; Q[:, 2] += w*amp*H*1.6*np.sin(ph-w*3.5); Q[:, 1] += w*amp*H*0.8*np.cos(ph-w*3.5)
         if any(lag):   # 布のおくれ：体が うごいた向きと はんたいへ、はしほど大きく のこる（すそは半分）
             lg = np.array(lag, float)*H
-            for w in (s.tw**2, s.sw**2, s.hem*0.5):
+            for w in (s.tw**2, s.sw**2):
                 if w.any(): Q += w[:, None]*lg
+        if any(hlag):   # すその おくれ：体（足もと）が うごいた向きと はんたいへ、すそのはしほど大きく、少し もちあがる（動きに合わせて ひるがえる）
+            Q += (s.hem**1.5)[:, None]*(np.array(hlag, float)*H); Q[:, 2] += s.hem**1.5*np.linalg.norm(hlag[:2])*H*0.6
         if s.sprc:   # とびちる かざり：むねのまわりで はなす・まわす
             c0 = Ms['chest'][0]@(np.array([0, 0, 0.45])*H)+Ms['chest'][1]; Ro = _r((0, 0, 1), orbit)
             for vs in s.sprc:
@@ -237,6 +244,14 @@ WALK = [dict(hip=(5, 4, 0), chest=(2, -3, 4), head=(0, -2, -3), armL=(8, 4, 0), 
 WALKX = {'hana': [dict(orbit=12), dict(orbit=24), dict(orbit=36), dict(orbit=48)], 'ash': [dict(orbit=10), dict(orbit=20), dict(orbit=30), dict(orbit=40)]}
 
 MOVES = {
+    # りょう手を ふりあげて、とびついて ひっかく / びくっとして、よろけて、その場で くずれる
+    'basic': dict(atk=[dict(hip=(-6, 0, 0), chest=(-10, 0, 0), armL=(-30, 20, 0), armR=(-30, 20, 0), move=(0, -0.02, -0.01)),
+                       dict(hip=(-6, 0, 0), chest=(-12, 0, 0), armL=(40, 100, 0), armR=(40, 100, 0), move=(0, 0.04, 0.06), ghost=1),
+                       dict(hip=(14, 0, 0), chest=(16, 0, 0), armL=(75, 15, 0), armR=(75, 15, 0), move=(0, 0.12, 0), ghost=1, fx=[('swipe', (0.15, 0.5, 0.4), 1, 0, 0), ('impact', (0, 0.55, 0.3), 1, 0, 0.1)]),
+                       dict(chest=(4, 0, 0), armL=(10, 0, 0), armR=(10, 0, 0), move=(0, 0.05, 0))],
+                  hurt=[dict(chest=(-6, 0, 0), head=(0, 10, 0), armL=(40, 40, 0), armR=(40, 40, 0), fx=[('sweat', (0.15, 0.1, 0.7), 2, 0.05, 0.025)]),
+                        dict(root=(0, 14, 0), hip=(4, 6, 0), chest=(4, -6, 0), armL=(-10, 30, 0), armR=(-10, 30, 0), move=(0.04, 0, 0), collapse=0.25),
+                        dict(hip=(4, 10, 0), chest=(2, -6, 0), head=(4, 12, 0), armL=(-30, 50, 0), armR=(-30, 50, 0), fx=[('dust', (0, 0.1, 0.02), 6, 0.3, 0.035)])]),
     # ひくく かまえて、ダッシュで つっこみ、つめで おおきく ひっかく（残像） / くるっとまわって、とばされ、よこにたおれて、布が つぶれる
     'fast': dict(atk=[dict(hip=(-10, -6, 0), chest=(-14, -8, -15), armL=(-50, 40, 0), armR=(-60, 50, 0), move=(-0.05, 0, -0.02), flutter=(0.03, 0), fx=[('dust', (-0.05, 0, 0.02), 4, 0.15, 0.03)]),
                       dict(root=(8, 20, 0), chest=(10, 6, 10), armL=(-30, 30, 0), armR=(-40, 40, 0), move=(0.3, 0.04, 0.03), flutter=(0.05, 1.5), ghost=1, fx=[('dust', (-0.1, 0, 0.02), 6, 0.15, 0.035)]),
@@ -341,7 +356,9 @@ MOVES = {
 NECK = 0.85   # 攻撃：首が、体の かたむきの このわりを うちけす（頭は大きく うごかさない。持ち主）
 ATKSQ = (0.92, 1.06, 0.9, 1.02)   # 攻撃のため・のび：ためる（ちぢむ）→ ふりかぶる（のびる）→ うつ（ちぢむ）→ もどる
 HURTSQ = (0.94, 1.0, 1.0)   # やられ：うけた しゅんかんだけ、少しちぢむ
-DEADCOL = 0.75   # いきたえたときの、くずれる強さ（これより小さい物は、ここまで）
+HLAGK = 0.7; HLAGMAX = 0.07   # すその おくれ：足もとが うごいた分の このわり・いちばん大きい長さ
+DEADROLL = 12  # いきたえるコマの、よこへの かたむきの いちばん大きい角度
+DEADCOL = 0.82  # いきたえたときの、くずれる強さ（これより小さい物は、ここまで）
 DROPG = 0.15  # たおれたとき、布（すそ・フードの先・マフラー）が重さで おちる長さ（高さのうち。はしほど大きい）
 DROPCELL = 0.04   # 体の芯の上の面をしらべる ます目の大きさ（高さのうち）
 LAGMAX = 0.05  # 布のおくれの いちばん大きい長さ
@@ -364,6 +381,9 @@ def _lag(L, loop):
     for i, f in enumerate(L):
         pv = L[i-1] if (i or loop) else {}; d = _top(f)-_top(pv); f = dict(f)
         if 'lag' not in f: lg = -d*LAGK; n = float(np.linalg.norm(lg)); f['lag'] = tuple(lg*min(1, LAGMAX/max(n, 1e-9)))   # 大きくうごいても、のびすぎない
+        if 'hlag' not in f:   # すそ：足もと（move）と こしの かたむきの うごきの はんたいへ
+            mv = lambda g: np.array(g.get('move', (0, 0, 0)), float)+np.array([math.sin(math.radians((tuple(g.get('root', ()))+(0, 0))[1]))*0.3, math.sin(math.radians((tuple(g.get('root', ()))+(0,))[0]))*0.3, 0])
+            hl = -(mv(f)-mv(pv))*HLAGK; hl[2] = 0; n = float(np.linalg.norm(hl)); f['hlag'] = tuple(hl*min(1, HLAGMAX/max(n, 1e-9)))
         out.append(f)
     return out
 
@@ -373,5 +393,7 @@ def poses(name):
     wv = lambda L: [dict({'wave': (0.06, i*math.pi/2)}, **f) for i, f in enumerate(L)]   # 攻撃・やられも、なびく
     atk = [dict({'sq': ATKSQ[i]}, **_steady(f)) for i, f in enumerate(m['atk'])]
     hurt = [dict({'sq': HURTSQ[i]}, **f) for i, f in enumerate(m['hurt'])]
-    hurt[-1] = dict(hurt[-1], dead=True, ground=True, collapse=max(hurt[-1].get('collapse', 0), DEADCOL))   # さいごのコマ：いきたえる（力がぬけて、布が重さで くずれ、体が地面について、目の光がきえる）
+    fl = dict(hurt[-1]); r = tuple(fl.get('root', ()))+(0,)*6
+    fl['root'] = (r[0], max(-DEADROLL, min(DEADROLL, r[1])))+r[2:]   # いきたえるコマ：よこへ たおれこまず、その場で下へ グチャっと くずれる（横から見て。持ち主）
+    hurt[-1] = dict(fl, dead=True, ground=True, collapse=max(fl.get('collapse', 0), DEADCOL), cz=max(fl.get('cz', 0.45), 0.6))   # さいごのコマ：いきたえる（力がぬけて、布が重さで くずれ、体が地面について、目の光がきえる）
     return dict(idle=_lag(IDLE, True), walk=_lag(walk, True), atk=_lag(wv(atk), False), hurt=_lag(wv(hurt), False))
