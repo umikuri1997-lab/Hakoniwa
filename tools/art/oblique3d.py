@@ -246,6 +246,7 @@ DITHER = 0   # 0 でなければ、かげを1色にして、うすいかげを�
 DITHERR = (0.22, 0.72)   # あみ：かげになりはじめる・ぜんぶかげになる、光の向きとの内積
 LAST = None
 DITHERG = None   # つやつやの部品の、色の段（DITHERT と同じ形。段は1つ多くてよい）
+DITHERO = (0, 0)   # あみのならびの もとの点（大きな絵のドット）
 DITHERT = None   # あみの色の段（DITHER のとき。None なら DITHERR・DITHERHL の2色＋ハイライト）
 DITHERHL = None   # あみのハイライト：(はじまる・ぜんぶになる 光の向きとの内積, 明るさを足す, あざやかさを引く)（100段階）
 DITHERLV = 3   # あみのときの、かげの色（toon の段）
@@ -415,7 +416,7 @@ def render_px(sc, proj, ext, depth, k=0.72, outer=True, merge=12, lw=1, k2=0.86,
             if c_ is not None: col[yy, xx] = toon(c_, lvb[yy, xx]); ccb[yy, xx] = c_
     if DITHER:   # かげを1色にして、うすいかげはかげのドットの密度（あみ）であらわす。あみは、できあがりの1ドット（DITHER ドット四方）ごと
         BY = np.array([[0, 8, 2, 10], [12, 4, 14, 6], [3, 11, 1, 9], [15, 7, 13, 5]])/16+1/32   # 4×4 のならび（16だん）
-        yy_, xx_ = np.mgrid[0:Hp, 0:Wp]; th = BY[(yy_//DITHER) % 4, (xx_//DITHER) % 4]
+        yy_, xx_ = np.mgrid[0:Hp, 0:Wp]; th = BY[((yy_+DITHERO[1])//DITHER) % 4, ((xx_+DITHERO[0])//DITHER) % 4]   # あみのならびは、足もとの点をもとに（コマで絵のわくがかわっても、ずれない）
         m_ = (idb >= 0) & (lvb >= 0) & ~np.isin(idb, list(INK))   # 背面法の輪郭は、そのままの色
         if DITHERT:   # 色の段（こい かげ・かげ・光・ハイライト）と、そのさかいのあみ。DITHERT：段のさかい目ごとの（はじまる・おわる 光の向きとの内積）、段の色（toon の段か、(明るさ, あざやかさ) を足す）
             bd, tones = DITHERT; idx = np.zeros((Hp, Wp), int)

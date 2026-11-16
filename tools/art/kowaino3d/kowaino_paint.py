@@ -50,11 +50,55 @@ CFG.update({   # 色は、いまのゲームの絵（ない物は、night.js の
     'yuki': mk('yuki', 1.3, '#8a939e', '#272d34', '#e4ecf2', '#e6f0f6', pom='#f4faff', pomh=0.0, mats={'deco': 'ice'}),
 })
 
-FXCOL = {'dust': '#c9bca4', 'ash': '#9a929e', 'spark': '#fff4c0', 'ember': '#f2a46a', 'snow': '#f4f8fc', 'leaf': '#c49a66', 'sweat': '#b8d8f4', 'star': '#ffe08a', 'slash': '#f4f0ff', 'impact': '#fff8e0'}   # パーティクルの色（petal は、かざりの色）
-def octa(sc, c, r, col):
-    """パーティクルの粒：小さな八面体"""
-    v = [c+np.array(d, float)*r for d in ((1, 0, 0), (-1, 0, 0), (0, 1, 0), (0, -1, 0), (0, 0, 1), (0, 0, -1))]
-    for a, b in ((0, 2), (2, 1), (1, 3), (3, 0)): sc.tri(v[a], v[b], v[4], col); sc.tri(v[b], v[a], v[5], col)
+# パーティクル：コードで描く小さなドット絵（ドットごとの文字：a 明るい・b ふつう・c こい（ふち）。年れい 0・1・2 で ちぢむ・うすれる）
+# 色は3だん（明るい・ふつう・ふち）。ふちは黒にしない。体の色の数（quant）とは べつに、あとから おす（目と同じ）
+FXCOL = {'dust': ('#efe6d2', '#d8ccb4', '#b8aa90'), 'ash': ('#cfc8d2', '#aaa2ae', '#857d8a'), 'spark': ('#fffef0', '#fff0a8', '#e8c870'),
+         'ember': ('#fff0b0', '#f6a860', '#d07040'), 'snow': ('#ffffff', '#eef4fa', '#c8d4e0'), 'leaf': ('#e8c080', '#c49a66', '#9a7448'),
+         'petal': ('#fbe4ee', '#eab8cc', '#c890a8'), 'sweat': ('#f0f8ff', '#b8dcf4', '#88b4d8'), 'star': ('#fffbe0', '#ffe08a', '#e0b050'),
+         'slash': ('#ffffff', '#ece8ff', '#c0b8e0'), 'impact': ('#ffffff', '#fff6d8', '#e8d090')}
+FXBMP = {
+    'puff': ['.bb.|baab|baab|.bb.', '.b.|bab|.b.', 'b'],
+    'spark': ['..a..|..b..|abaab|..b..|..a..', '.a.|aba|.a.', 'a'],
+    'ember': ['.c.|cab|.b.', 'ab|bc', 'b'],
+    'snow': ['.a.|aba|.a.', 'ab|ba', 'a'],
+    'leaf': ['..cb|.bab|bab.|c...', '.b|bab|b.', 'b'],
+    'petal': ['.bb.|baab|.bc.', 'ba|cb', 'b'],
+    'sweat': ['.a.|aab|abb|.c.', 'a|b', 'b'],
+    'star': ['..a..|.aba.|abbba|.aba.|..a..', '.a.|aba|.a.', 'a'],
+    'slash': ['.......aa|.....aab.|....ab...|...ab....|..ab.....|.ab......|ab.......', '.....ab|...ab..|.ab....|ab.....', '..b|.b.|b..'],
+    'impact': ['a...a...a|.a..a..a.|..b.b.b..|...aaa...|aabaaabaa|...aaa...|..b.b.b..|.a..a..a.|a...a...a', 'a.a.a|.bab.|aaaaa|.bab.|a.a.a', '.a.|aba|.a.'],
+}
+FXSHAPE = {'dust': 'puff', 'ash': 'puff', 'spark': 'spark', 'ember': 'ember', 'snow': 'snow', 'leaf': 'leaf', 'petal': 'petal', 'sweat': 'sweat', 'star': 'star', 'slash': 'slash', 'impact': 'impact'}
+FXMOVE = {'dust': (0, 0, 0.05, 0.6), 'ash': (0, 0, 0.06, 0.8), 'spark': (0, 0, 0.02, 1.2), 'ember': (0, 0, 0.1, 0.6), 'snow': (0, 0, -0.06, 0.6), 'leaf': (0, 0, -0.05, 0.9),
+          'petal': (0, 0, -0.04, 1.0), 'sweat': (0, 0, -0.05, 0.3), 'star': (0, 0, 0, 0.0), 'slash': (0, 0, 0, 0), 'impact': (0, 0, 0, 0)}   # (…, …, 上へ（コマごと）, ひろがる速さ（コマごと、ひろがりの倍）)
+FXLIFE = 3   # パーティクルは 3コマ のこる（年れい 0・1・2）
+
+def fxparts(frames, name):
+    """コマごとの fx（kw_skel）から、コマごとの パーティクル [(しゅるい, 3Dの場所（高さのうち）, 年れい)] を作る。出たパーティクルは、つぎのコマで 年をとり、うごく（同じ粒）"""
+    import zlib
+    out = [[] for _ in frames]
+    for i, f in enumerate(frames):
+        mv = np.array(f.get('move', (0, 0, 0)), float)
+        for kind, at, n, spr, sz in f.get('fx', ()):
+            rs = np.random.RandomState(zlib.crc32(('%s|%s|%d|%d' % (name, kind, i, n)).encode()))
+            for k in range(n):
+                off = (rs.rand(3)*2-1)*np.array([1, 0.6, 0.8])*spr if n > 1 else np.zeros(3); vz = FXMOVE[kind][2]; sp = FXMOVE[kind][3]
+                for age in range(FXLIFE):
+                    j = i+age
+                    if j >= len(frames): break
+                    out[j].append((kind, np.array(at, float)+mv+off*(1+sp*age)+np.array([0, 0, vz*age]), age))
+    return out
+
+def stampfx(im, pts):
+    """パーティクルを おす（pts：(しゅるい, 絵の上の x, y, 年れい)）"""
+    a = np.array(im)
+    for kind, X, Y, age in pts:
+        rows = FXBMP[FXSHAPE[kind]][min(age, 2)].split('|'); col = {k: list(hx(c).astype(int))+[255] for k, c in zip('abc', FXCOL[kind])}
+        h, w = len(rows), len(rows[0]); x0, y0 = int(round(X-w/2)), int(round(Y-h/2))
+        for r, row in enumerate(rows):
+            for q, ch in enumerate(row):
+                if ch in col and 0 <= y0+r < a.shape[0] and 0 <= x0+q < a.shape[1]: a[y0+r, x0+q] = col[ch]
+    return Image.fromarray(a)
 
 def load_labeled(path):
     """kw_model.py で書き出した、マテリアルつきの glb（マテリアルの名前が色わけの名前）→ (m, comp, lab)"""
@@ -371,17 +415,6 @@ def shoot(name, cfg, src, yaw=0.0):
             sc.part(); last = lab[k]; PL[sc.pid] = lab[k]
         sc.tri(R(P[f[0]]), R(P[f[1]]), R(P[f[2]]), col[k])
     sc.decal(None); sc.group(None); sc.bump(None); sc.material(None)
-    for fk in (cfg.get('pose') or {}).get('fx', ()):   # パーティクル（kw_skel の fx）：小さな粒を、その場所のまわりに
-        kind, at, n, spr, sz = fk; mv = np.array((cfg['pose'] or {}).get('move', (0, 0, 0)), float); c0 = (np.array(at, float)+mv)*H
-        rs = np.random.RandomState(abs(hash((name, kind, tuple(at), n))) % 2**31); col_ = hx(FXCOL[kind] if kind in FXCOL else cfg['labcol'].get('deco', '#ffffff'))
-        if kind == 'petal': col_ = hx(cfg['labcol'].get('deco', '#e0b0c8'))
-        sc.material('flat'); sc.smooth(False)
-        if kind in ('slash', 'impact'):   # 弧（ひっかき・なぎはらい）／星がた（うつ所）
-            pts = [c0+np.array([math.cos(t)*sz*H*2, 0, math.sin(t)*sz*H*2]) for t in (np.linspace(-1.2, 1.2, 7) if kind == 'slash' else np.linspace(0, 2*math.pi, 9)[:-1])]
-            for i_, q in enumerate(pts): sc.part(); octa(sc, R(q), sz*H*(0.6 if kind == 'slash' else 0.5)*(1 if kind == 'impact' else 1-abs(i_-3)/5), col_)
-        else:
-            for i_ in range(n): q = c0+(rs.rand(3)*2-1)*spr*H*np.array([1, 0.6, 0.8]); sc.part(); octa(sc, R(q), sz*H*(1.2+0.8*rs.rand()), col_)
-        sc.material(None); sc.smooth(True)
     sc.smooth(False)
     if HULL:   # 背面法の輪郭：点を面の向きへ HULL ドットぶん ふくらませた うら返しの皮を、こい色で（うらを向いた面だけ描く）。物のふち・かさなる所・部品のさかいに線が出る
         tm_ = trimesh.Trimesh(vertices=P, faces=F, process=False); VN = tm_.vertex_normals*(1 if tm_.volume > 0 else -1); w_ = HULL*H/cfg['HPX']; Ph = P+VN*w_
@@ -403,6 +436,7 @@ def shoot(name, cfg, src, yaw=0.0):
         return (q[0]*sc_*k, -(cz+float(q@U)*sc_)*k)
     Q = np.array([proj(p) for tr in sc.t for p in tr[:3]]); ext = (math.floor(Q[:, 0].min())-2, math.ceil(Q[:, 0].max())+2, math.floor(Q[:, 1].min())-2, math.ceil(Q[:, 1].max())+2)
     O.S = BIG; O.GRAD = True; O.DITHER = BIG if DITH else 0   # かげは1色、うすいかげは、かげのドットの密度（持ち主がきめた）
+    O.DITHERO = (ext[0]*BIG, ext[2]*BIG)
     sv = (O.LV4, O.SHADE4); O.LV4 = KWLV; O.SHADE4 = KWSHADE; O.DITHERT = KWT; O.DITHERG = cfg.get('gloss', KWG); sv2 = O.METALSPEC; O.METALSPEC = KWMSPEC   # 立体感：かげの所を広く・かげの色をこく（コワイノだけ）
     hi = O.render_px(sc, proj, ext, V, k=0.80, lw=2, k2=0.90, merge=0); O.LV4, O.SHADE4 = sv; O.METALSPEC = sv2; O.DITHERT = None; O.DITHERG = None
     if os.environ.get('KWDBG'): hi.save(os.path.join(os.environ['KWDBG'], 'hi_%s_%d.png' % (name, round(math.degrees(yaw)))))   # たしかめ用：ちぢめる前の大きな絵
@@ -435,7 +469,7 @@ def shoot(name, cfg, src, yaw=0.0):
             nb = np.roll(np.roll(lb, -dy, 0), -dx, 1); nz = np.roll(np.roll(zs, -dy, 0), -dx, 1)
             ln |= (lb >= 0) & (nb >= 0) & (nb != lb) & (nz > zs)
         o = o.copy(); o[ln, :3] = o[ln, :3]*PARTK
-    im = (lambda x: x if DITH else despeckle(x))(quant((lambda x: x if HULL else rim(x))(Image.fromarray(o.round().astype(np.uint8), 'RGBA')), NCOL, cfg.get('hem', (None,))[0]))
+    im = (lambda x: x if DITH else despeckle(x))(quant((lambda x: x if HULL else rim(x))(Image.fromarray(o.round().astype(np.uint8), 'RGBA')), NCOL, cfg.get('hem', (None,))[0], pal=PALS.setdefault((name, round(yaw, 3)), [None]) if cfg.get('pose') is not None else None))
     idbH, zbH = O.LAST; fpid = {p_ for p_, l_ in PL.items() if l_ == 'face'}
     def eyevis(q, ext, dep):   # 目の場所（大きな絵の上）に、顔の部品が見えていて（まわりのドットの半分より多く）、目より手前に物がない
         x, y = int((q[0]-ext[0])*BIG), int((q[1]-ext[2])*BIG); sl = (slice(max(0, y-BIG), y+BIG), slice(max(0, x-BIG), x+BIG)); blk = idbH[sl]
@@ -445,6 +479,12 @@ def shoot(name, cfg, src, yaw=0.0):
         ey = EYES if EYES is not None else eyepos(P, F, lab, H, cfg['eyes'])
         q2 = [proj(R(p)) for p in ey]; side = abs(q2[1][1]-q2[0][1]) > abs(q2[1][0]-q2[0][0])   # 両目のならびが たて：よこにたおれている
         im = stamp(im, [(proj(R(p))[0]-ext[0], proj(R(p))[1]-ext[2]) for p in ey if eyevis(proj(R(p)), ext, float(np.dot(R(p), V)))], cfg['eyes']['col'], cfg['eyes'].get('edge'), side)   # 見えている目だけ、おす（まわる・うつむく・前に物があると、かくれる）
+    if cfg.get('fxp'):   # パーティクル（色の数をへらしたあとに おす。絵のわくの外に出る分は、わくを広げて入れる）
+        q = [(k, proj(R(np.asarray(p)*H))) for k, p, ag in cfg['fxp']]; ages = [ag for _, _, ag in cfg['fxp']]
+        x0 = min([ext[0]]+[int(math.floor(v[0]))-5 for _, v in q]); y0 = min([ext[2]]+[int(math.floor(v[1]))-5 for _, v in q])
+        x1 = max([ext[0]+im.width]+[int(math.ceil(v[0]))+5 for _, v in q]); y1 = max([ext[2]+im.height]+[int(math.ceil(v[1]))+5 for _, v in q])
+        big_ = Image.new('RGBA', (x1-x0, y1-y0)); big_.alpha_composite(im, (ext[0]-x0, ext[2]-y0)); im = stampfx(big_, [(k, v[0]-x0, v[1]-y0, ag) for (k, v), ag in zip(q, ages)])
+        ext = (x0, x0+im.width, y0, y0+im.height)
     return im, ext
 
 BACKEL = 15.0
@@ -479,7 +519,8 @@ def rim(im, k=0.62):
             if nb: b[y, x, :3] = np.mean(nb, 0)*k; b[y, x, 3] = 255
     return Image.fromarray(b)
 
-def quant(im, n, keep=None, nk=2):
+PALS = {}   # コワイノ・向きごとの色（はじめのコマで きめて、ほかのコマも同じ色にする。コマで色がかわると、ちらつく）
+def quant(im, n, keep=None, nk=2, pal=None):
     """色を n 色にまとめる（メディアンカット）。keep（金のライン）に近い色のドットは、べつに nk 色にまとめる（まざって、ほかの所が黄色くならない）"""
     a = np.array(im); m = a[..., 3] > 0; g = np.zeros_like(m)
     if keep is not None:
@@ -488,6 +529,11 @@ def quant(im, n, keep=None, nk=2):
         for y, x in zip(*np.nonzero(m)):
             h, s_, v = colorsys.rgb_to_hsv(*(a[y, x, :3]/255))
             g[y, x] = s_ > 0.25 and min(abs(h-hk), 1-abs(h-hk)) < 0.06
+    if pal is not None:   # きまった色：いちばん近い色に
+        if pal[0] is None:
+            q = quant(im, n, keep, nk); b = np.array(q); pal[0] = np.unique(b[..., :3][b[..., 3] > 0].reshape(-1, 3), axis=0).astype(float); return q
+        px = a[..., :3][m].astype(float); d = ((px[:, None, :]-pal[0][None])**2).sum(2); a[..., :3][m] = pal[0][d.argmin(1)].astype(np.uint8)
+        return Image.fromarray(a)
     for sel, k in ((m & ~g, n-(nk if g.any() else 0)), (g, nk)):
         if not sel.any(): continue
         px = a[..., :3][sel]; q = np.array(Image.fromarray(px.reshape(1, -1, 3)).quantize(k, method=Image.Quantize.MEDIANCUT, dither=Image.Dither.NONE).convert('RGB')).reshape(-1, 3)
@@ -519,7 +565,8 @@ def sheets(name, out):
         for B, yaw in (('', 0.0), ('B', math.pi)):
             if mo == 'hurt' and B: continue
             fr = []
-            for p in ps: im, e = shoot(name, dict(CFG[name], pose=p), None, yaw); fr.append((im, e))
+            fxp = fxparts(ps, name)
+            for p, fp in zip(ps, fxp): im, e = shoot(name, dict(CFG[name], pose=p, fxp=fp), None, yaw); fr.append((im, e))
             x0 = min(e[0] for _, e in fr); y0 = min(e[2] for _, e in fr); x1 = max(e[0]+im.width for im, e in fr); y1 = max(e[2]+im.height for im, e in fr)
             w, h = x1-x0, y1-y0; sh = Image.new('RGBA', (w, h*len(fr)))
             for i, (im, e) in enumerate(fr): sh.alpha_composite(im, (e[0]-x0, i*h+e[2]-y0))

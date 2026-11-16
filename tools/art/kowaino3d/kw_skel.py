@@ -11,7 +11,7 @@
   move：体ぜんたいを うごかす。flutter：(強さ, 位相) すそを ひらひら。look：(よこ, たて) 目を うごかす。
   spread：とびちる かざり（体とはなれた かたまりだけ）を、むねからはなす倍。orbit：とびちる かざりを、体のまわりにまわす（度）。
   fx：パーティクル [(しゅるい, (x,y,z), 数, ひろがり, 大きさ)]（しゅるいは kowaino_paint.FXCOL）。melt：とける・scale：大きさ。
-コマ数：待機2・歩き4（右足 → すれちがい → 左足 → すれちがい）・攻撃4（ためる → ふりかぶる → うつ → もどる）・やられ3（ひるむ → とちゅう → さいご＝たおされたとき）。
+コマ数：待機4（体はうごかさず、布だけ なびく）・歩き4（右足 → すれちがい → 左足 → すれちがい）・攻撃4（ためる → ふりかぶる → うつ → もどる）・やられ3（ひるむ → とちゅう → さいご＝たおされたとき）。
 攻撃とやられは、コワイノごと（MOVES。持ち主とえらんだ案）。体をうしろへそるのは −16度まで（すその裏が見えて暗くなる）。たてにつぶす動きは使わない。"""
 import math
 import numpy as np
@@ -21,7 +21,8 @@ BONES = [('root', None, (0, 0, 0)), ('hip', 'root', (0, 0, 0.12)), ('chest', 'hi
          ('hornL', 'head', (-0.2, 0, 0.74)), ('hornR', 'head', (0.2, 0, 0.74)), ('footL', 'root', (-0.08, 0, 0.06)), ('footR', 'root', (0.08, 0, 0.06))]
 WZ = ((0.03, 0.2), (0.26, 0.46), (0.46, 0.62))
 ARMR = 0.07
-SLEEVE = ((0.14, 0.3), (0.12, 0.52))
+SLEEVE = ((0.24, 0.36), (0.2, 0.46))   # 手がないとき：そで（よこのはしのきょり・高さ）。すその横まで ひろげない（すそが ひっぱられて裏地が見える）
+SLEEVEW = 0.7   # 手がないとき：そでの重みの いちばん大きい わり
 HEM = 0.3
 
 ATTACH = {
@@ -30,6 +31,11 @@ ATTACH = {
     'trapper': [(['deco'], dict(box=((-1, 1), (0.15, 1), (0, 0.5))), 'jaw')],   # 牙：あご
     'hoteri': [(['deco'], dict(box=((-1, -0.1), (-1, 1), (0.6, 1.2))), 'hornL'), (['deco'], dict(box=((0.1, 1), (-1, 1), (0.6, 1.2))), 'hornR')],
 }
+TIP = {'fast': 'far', 'thief': 'pom', 'breaker': 'pom', 'shiny': 'pom', 'hana': 'pom', 'yuki': 'pom', 'ash': 'far', 'armor': 'far', 'hoteri': 'far', 'ochiba': 'far'}   # なびくフードの先（pom：ぽんぽん・far：頭からいちばん遠い うしろの点）
+TIPZ = 0.6   # フードの先をさがす高さ（これより上）
+TAILL = {'yuki': 0.9}   # 長くたれた フードのしっぽ：先からこの きょりまで、あたまの骨に
+TIPL = 0.35   # フードの先から、なびく はんい（メッシュの辺をたどった きょり）
+SCARF = {'fast': True}   # マフラー（体とはなれた かざり）が なびく
 SPREAD = {'ash': ['deco'], 'shiny': ['deco'], 'hana': ['deco']}
 SPREADZ = {'hana': 0.5}
 
@@ -68,7 +74,8 @@ class Skel:
                 if len(hs): hc = P[hs].mean(0); s.piv[bone] = np.array([hc[0]-side*0.1*H, hc[1]*0.4, max(hc[2]+0.14*H, 0.38*H)])   # 腕の支点：手の内がわ・上（かたの高さ）
                 put(np.nonzero(m)[0], bone, wa[m])
         else:
-            wa = smooth(*SLEEVE[0], ax)*smooth(SLEEVE[1][0], SLEEVE[1][0]+0.08, z)*(1-smooth(SLEEVE[1][1]-0.08, SLEEVE[1][1], z))*(P[:, 1] > -0.15*H)
+            bodyv0 = np.zeros(V, bool); bodyv0[np.unique(F[comp == big])] = True   # 体のかたまりだけ（マフラーなど、はなれた物は腕にしない）
+            wa = smooth(*SLEEVE[0], ax)*smooth(SLEEVE[1][0], SLEEVE[1][0]+0.06, z)*(1-smooth(SLEEVE[1][1]-0.06, SLEEVE[1][1], z))*(P[:, 1] > -0.1*H)*bodyv0*SLEEVEW
             for side, bone in ((-1, 'armL'), (1, 'armR')):
                 m = (np.sign(P[:, 0]) == side) & (wa > 0); put(np.nonzero(m)[0], bone, wa[m])
         took = np.zeros(len(F), bool)
@@ -78,11 +85,32 @@ class Skel:
         for q in np.unique(comp[deco]):
             k = deco & (comp == q); vs = np.unique(F[k])
             if (P[vs, 2].mean()/H) > 0.55: put(vs, 'head')
+            elif q != big: put(vs, 'chest')   # 体とはなれた かざり（マフラーなど）は、むねに（腕・こしに わかれない）
         fv = np.unique(F[lab == 'foot'])
         for side, bone in ((-1, 'footL'), (1, 'footR')):
             vs = fv[np.sign(P[fv, 0]) == side]; W[vs] = 0; W[vs, ix[bone]] = 1
         W /= np.maximum(W.sum(1, keepdims=True), 1e-9); s.W = W
         s.hem = (1-smooth(HEM*0.4, HEM, z))*(W[:, ix['footL']]+W[:, ix['footR']] < 0.5); s.ang = np.arctan2(P[:, 1], P[:, 0])
+        # なびく布：フードの先（先からの きょり＝メッシュの辺をたどった きょり。体の布を まきこまない）と、マフラーのはし（体とはなれた かたまり）
+        from scipy.sparse import coo_matrix
+        from scipy.sparse.csgraph import dijkstra
+        e = np.concatenate([F[:, [0, 1]], F[:, [1, 2]], F[:, [2, 0]]]); ln = np.linalg.norm(P[e[:, 0]]-P[e[:, 1]], axis=1)
+        G = coo_matrix((ln, (e[:, 0], e[:, 1])), shape=(V, V)).tocsr(); G = G.maximum(G.T)
+        bodyv = np.zeros(V, bool); bodyv[np.unique(F[comp == big])] = True; s.tw = np.zeros(V)
+        tip = TIP.get(name)
+        if tip is not None:
+            if tip == 'pom' and (lab == 'pom').any(): tv = np.unique(F[lab == 'pom']); t0 = tv[np.argmin(np.linalg.norm(P[tv]-P[tv].mean(0), axis=1))]
+            else:
+                hc = np.array([0, 0, 0.6*H]); far = np.linalg.norm(P-hc, axis=1)*(z > TIPZ)*(P[:, 1] < 0.05*H)*bodyv; t0 = int(np.argmax(far))   # 頭の高さより上の、うしろの いちばん遠い点（すその はしを まちがえない）
+            d = dijkstra(G, indices=t0, limit=TAILL.get(name, TIPL)*H); d[~np.isfinite(d)] = 9*H
+            s.tw = (1-smooth(0, TIPL*H, d))**1.5; s.tw[np.unique(F[lab == 'pom'])] = 1.0 if tip == 'pom' else s.tw[np.unique(F[lab == 'pom'])]   # ぽんぽんは、先といっしょに（かたいまま）。フードの先に ぽんぽんがない物（ハイカゲの すじ）は そのまま
+            tail = 1-smooth(TAILL.get(name, TIPL)*H*0.8, TAILL.get(name, TIPL)*H, d)   # フードのしっぽ：ぜんぶ あたまの骨に（高さで こし・むねに わかれて、のびないように）
+            W *= (1-tail)[:, None]; W[:, ix['head']] += tail
+        s.sw = np.zeros(V); s.sdir = np.zeros((V, 3))
+        for q in SCARF.get(name, []) and np.unique(comp[(lab == 'deco')]):
+            if q == big: continue
+            vs = np.unique(F[comp == q]); a0 = vs[np.argmin(np.abs(P[vs, 0]))]   # 首に近い はし
+            d = dijkstra(G, indices=a0); dv = d[vs]; L = max(1e-9, dv[np.isfinite(dv)].max()); s.sw[vs] = np.clip(dv/L, 0, 1)
         s.sprc = []
         if name in SPREAD:
             fs = np.isin(lab, SPREAD[name]) & ~took
@@ -92,7 +120,7 @@ class Skel:
                 if P[vs, 2].mean()/H > SPREADZ.get(name, 9): continue
                 s.sprc.append(vs)
 
-    def pose(s, P, move=(0, 0, 0), spread=1.0, orbit=0.0, melt=0.0, scale=1.0, flutter=(0, 0), look=(0, 0), fx=(), **bones):
+    def pose(s, P, move=(0, 0, 0), spread=1.0, orbit=0.0, melt=0.0, scale=1.0, flutter=(0, 0), look=(0, 0), fx=(), wave=(0, 0), **bones):
         H = s.H; Ms = {}
         for n, par, _ in BONES:
             p = s.piv[n]; a = tuple(bones.get(n, ())) + (0,)*6
@@ -109,6 +137,12 @@ class Skel:
         if flutter[0]:   # すそを ひらひら（まわりの角度で波うつ。外と上へ）
             wv = np.sin(s.ang*3+flutter[1])*flutter[0]*H*s.hem; d = np.stack([np.cos(s.ang), np.sin(s.ang), 0*s.ang], 1)
             Q += wv[:, None]*d; Q[:, 2] += np.abs(wv)*0.6
+        if wave[0]:   # なびく：はしほど大きく、先へ すすむ波（位相＝コマ。くりかえすと つながる）。うごいた向きと はんたいへ おくれる
+            amp, ph = wave; lag = -np.array(move, float)*H*0.6
+            if s.tw.any():
+                w = s.tw; Q[:, 0] += w*amp*H*np.sin(ph-w*2.2); Q[:, 2] += w*amp*H*0.5*np.cos(ph-w*2.2); Q += (w**2)[:, None]*lag
+            if s.sw.any():
+                w = s.sw; Q[:, 2] += w*amp*H*1.6*np.sin(ph-w*3.5); Q[:, 1] += w*amp*H*0.8*np.cos(ph-w*3.5); Q += (w**2)[:, None]*lag
         if s.sprc:   # とびちる かざり：むねのまわりで はなす・まわす
             c0 = Ms['chest'][0]@(np.array([0, 0, 0.45])*H)+Ms['chest'][1]; Ro = _r((0, 0, 1), orbit)
             for vs in s.sprc:
@@ -120,12 +154,11 @@ class Skel:
         if lo < 0: Q[:, 2] -= lo
         s.Ms = Ms; return Q
 
-IDLE = [dict(chest=(1.5, 0, 0), head=(1.5, 0, 0), armL=(2, 3, 0), armR=(2, 3, 0)),
-        dict(chest=(-1, 0, 0), head=(-1.5, 0, 0), armL=(-2, 5, 0), armR=(-2, 5, 0), move=(0, 0, 0.008))]
-WALK = [dict(hip=(5, 4, 0), chest=(2, -3, 4), head=(0, -2, -3), armL=(8, 4, 0), armR=(-6, 4, 0), footL=(0, 0, 0, 0, 0.05, 0), footR=(0, 0, 0, 0, -0.05, 0.02), flutter=(0.025, 0), look=(0.01, 0)),
-        dict(hip=(4, 0, 0), chest=(2, 0, 0), armL=(0, 4, 0), armR=(0, 4, 0), footR=(0, 0, 0, 0, 0, 0.05), flutter=(0.03, 1.6), move=(0, 0, 0.03), look=(0.012, 0.004)),
-        dict(hip=(5, -4, 0), chest=(2, 3, -4), head=(0, 2, 3), armL=(-6, 4, 0), armR=(8, 4, 0), footL=(0, 0, 0, 0, -0.05, 0.02), footR=(0, 0, 0, 0, 0.05, 0), flutter=(0.025, 3.1), look=(-0.01, 0)),
-        dict(hip=(4, 0, 0), chest=(2, 0, 0), armL=(0, 4, 0), armR=(0, 4, 0), footL=(0, 0, 0, 0, 0, 0.05), flutter=(0.03, 4.7), move=(0, 0, 0.03), look=(-0.012, 0.004))]
+IDLE = [dict(wave=(0.03, i*math.pi/2)) for i in range(4)]   # 待機：体はうごかさない（頭を上げ下げしない。持ち主）。フードの先・マフラーだけ なびく
+WALK = [dict(hip=(5, 4, 0), chest=(2, -3, 4), head=(0, -2, -3), armL=(8, 4, 0), armR=(-6, 4, 0), footL=(0, 0, 0, 0, 0.05, 0), footR=(0, 0, 0, 0, -0.05, 0.02), flutter=(0.025, 0), look=(0.01, 0), wave=(0.05, 0)),
+        dict(hip=(4, 0, 0), chest=(2, 0, 0), armL=(0, 4, 0), armR=(0, 4, 0), footR=(0, 0, 0, 0, 0, 0.05), flutter=(0.03, 1.6), move=(0, 0, 0.03), look=(0.012, 0.004), wave=(0.05, 1.57)),
+        dict(hip=(5, -4, 0), chest=(2, 3, -4), head=(0, 2, 3), armL=(-6, 4, 0), armR=(8, 4, 0), footL=(0, 0, 0, 0, -0.05, 0.02), footR=(0, 0, 0, 0, 0.05, 0), flutter=(0.025, 3.1), look=(-0.01, 0), wave=(0.05, 3.14)),
+        dict(hip=(4, 0, 0), chest=(2, 0, 0), armL=(0, 4, 0), armR=(0, 4, 0), footL=(0, 0, 0, 0, 0, 0.05), flutter=(0.03, 4.7), move=(0, 0, 0.03), look=(-0.012, 0.004), wave=(0.05, 4.71))]
 WALKX = {'hana': [dict(orbit=12), dict(orbit=24), dict(orbit=36), dict(orbit=48)], 'shiny': [dict(orbit=15), dict(orbit=30), dict(orbit=45), dict(orbit=60)], 'ash': [dict(orbit=10), dict(orbit=20), dict(orbit=30), dict(orbit=40)]}
 
 MOVES = {
@@ -229,4 +262,5 @@ MOVES = {
 def poses(name):
     m = MOVES[name]; wx = WALKX.get(name)
     walk = [dict(f, **wx[i]) for i, f in enumerate(WALK)] if wx else WALK
-    return dict(idle=IDLE, walk=walk, atk=m['atk'], hurt=m['hurt'])
+    wv = lambda L: [dict({'wave': (0.06, i*math.pi/2)}, **f) for i, f in enumerate(L)]   # 攻撃・やられも、なびく
+    return dict(idle=IDLE, walk=walk, atk=wv(m['atk']), hurt=wv(m['hurt']))
