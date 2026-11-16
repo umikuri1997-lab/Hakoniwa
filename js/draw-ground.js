@@ -4,17 +4,18 @@
 const cv=$('#cv'),ctx=cv.getContext('2d');
 let dpr=1,VW=0,VH=0;const cam={x:0,y:0,z:1};let camAnim=null;
 const GCS=16,GPX=GCS*TS,GFULL=64,GBUD=8;/* 地面の下絵の区画：16×16マス（512ドット）。くわしい区画は、ステージを開くときにぜんぶ作って、すてない（64こまで。マップは7×7＝49こ）。半分の細かさの区画（ちぢめたとき用、1こ約0.25MB）は、ぜんぶとっておく。区画を作る時間は1コマ8ミリ秒まで（少なくとも1こ） */
-const GRD={s:null,c:new Map(),bt:0,any:false,pre:null,busy:false};/* key → {f:くわしい絵, l:半分の絵, u:さいごに使ったコマ, st:作りなおすしるし} */
+const GRD={s:null,c:new Map(),bt:0,any:false,pre:null,busy:false,n:0};/* key → {f:くわしい絵, l:半分の絵, u:さいごに使ったコマ, st:作りなおすしるし} */
 function gq(cx,cy){const k=cy*64+cx;let q=GRD.c.get(k);if(!q){q={f:null,l:null,u:0,st:false};GRD.c.set(k,q)}return q}
 function gbuild(cx,cy,q){/* 区画 (cx,cy) のくわしい絵を作る（まわり4マス・下へ6マスもいっしょに描いて、区画の中だけをのこす：となりのマスからはみ出す平らな物・水のふち・草のふち）。半分の細かさの絵も、ここから作る */const t0=performance.now(),X0=cx*GCS,Y0=cy*GCS,X1=Math.min(W,X0+GCS)-1,Y1=Math.min(H,Y0+GCS)-1,w=(X1-X0+1)*TS,h=(Y1-Y0+1)*TS;
   const c=q.f||document.createElement('canvas');if(c.width!==w||c.height!==h){c.width=w;c.height=h}const g=c.getContext('2d');g.setTransform(1,0,0,1,0,0);g.clearRect(0,0,w,h);g.setTransform(1,0,0,1,-X0*TS,-Y0*TS);drawStaticArea(g,Math.max(0,X0-4),Math.max(0,Y0-4),Math.min(W-1,X1+4),Math.min(H-1,Y1+6));g.setTransform(1,0,0,1,0,0);
   const l=q.l||document.createElement('canvas');l.width=Math.ceil(w/2);l.height=Math.ceil(h/2);const gl=l.getContext('2d');gl.imageSmoothingEnabled=true;gl.imageSmoothingQuality='high';gl.drawImage(c,0,0,l.width,l.height);
-  q.f=c;q.l=l;q.st=false;q.u=RFN;GRD.bt+=performance.now()-t0;
+  q.f=c;q.l=l;q.st=false;q.u=RFN;q.v=++GRD.n;/* 作りなおしの番号（遠くの絵が、新しくするかを見る） */GRD.bt+=performance.now()-t0;
   let n=0;for(const v of GRD.c.values())if(v.f)n++;if(n>GFULL){const L=[...GRD.c.values()].filter(v=>v.f&&v.u<RFN-1).sort((a,b)=>a.u-b.u);for(const v of L){if(n<=GFULL)break;v.f.width=v.f.height=0;v.f=null;n--}}/* くわしい区画が多すぎたら、しばらく使っていない区画からすてる（半分の絵はのこす） */}
 function stageJob(){/* マップ全体を作る仕事の一覧：地面の区画（くわしい絵と半分の絵）・水面の区画・段差の部品。1こずつ、コマをまたいで作る（読みこみの%を出すため） */const L=[()=>{if(dirty)rebuildStatic(STATICFULL);if(GRD.s!==S)gclear()}],NX=(W-1)>>4,NY=(H-1)>>4;
   for(let cy=0;cy<=NY;cy++)for(let cx=0;cx<=NX;cx++)L.push(()=>{const q=gq(cx,cy);if(!q.f||q.st)gbuild(cx,cy,q)});L.push(()=>{GRD.any=true});
   if(WD!==1&&waterChipsOK())for(let cy=0;cy<=NY;cy++)for(let cx=0;cx<=NX;cx++)L.push(()=>waterChunk(cx,cy));
   if(S.hi&&cliffChipsOK()){CPRE=S;const RW=cliffRuns(),keys=new Set();for(const[y,R0]of RW)for(const R of R0)for(let k=R.x0;k<=R.x1;k++)keys.add(cliffKey(k,y,R.lv));for(const K of [2,1])for(const k of keys)L.push(()=>cliffPart(k,K))}
+  if(S.hi&&cliffChipsOK())for(let cy=0;cy<=NY;cy++)for(let cx=0;cx<=NX;cx++)L.push(()=>{if(!farOK(cx,cy))farBuild(cx,cy)});/* 遠くの絵（拡大が小さいとき）も、先に作っておく */
   return {s:S,L,i:0}}
 function stageStep(now){/* 作る仕事を、1コマに90ミリ秒ぶんだけすすめる（読みこみ中は、マップを描かないので、長めにする）。おわったら、マップを開く */const J=GRD.job,t0=performance.now();while(J.i<J.L.length&&performance.now()-t0<90){try{J.L[J.i]()}catch(e){frameErr('preload',e)}J.i++}if(J.i>=J.L.length){GRD.job=null;GRD.pre=J.s;tmpFree()}}
 function assetPct(){/* 絵の読みこみの進みぐあい（0〜1）。マップチップのアトラス（大きい絵）で半分、ほかの絵で半分 */let n=0,d=0,cn=0;const cp=(window.CHIPA||[]).length;for(let k=0;k<cp;k++){const a=chipPage(k);if(a.ok||a.bad)cn++}for(const k in ICI){const im=ICI[k];d++;if(im.ok||im.bad||im.complete)n++}for(const k in ART){const a=ART[k];d++;if(a.ok||a.bad)n++}return ((cp?cn/cp:1)+(d?n/d:1))/2}
@@ -23,7 +24,7 @@ function assetsOK(){/* 絵がぜんぶ読みこめたか（マップチップの
 const stageReady=()=>GRD.pre===S;/* マップ全体を作りおわったか。おわるまで、マップを見せず、時間も止める */
 function stageLoading(on){/* 「マップを読みこみ中…」（作るあいだ、画面をおおう） */let d=document.getElementById('stageLd');if(!d){d=document.createElement('div');d.id='stageLd';d.style.cssText='position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;background:#1e1810;color:#fff3d6;font-size:16px';document.body.appendChild(d)}if(!d.querySelector('#ldTxt')){d.style.flexDirection='column';d.style.gap='6px';d.innerHTML='<canvas id="ldWalk" width="320" height="150" style="width:160px;height:75px;image-rendering:pixelated"></canvas><span id="ldTxt"></span>'}/* 歩くせいれいと、読みこみの文 */if(on){d.querySelector('#ldTxt').textContent='マップを読みこみ中… '+loadPct()+'%';if(typeof ldWalk==='function')ldWalk(d.querySelector('#ldWalk'))}d.hidden=!on;return d}
 function gget(cx,cy){/* 区画のくわしい絵（なければ・古ければ、すぐ作る） */if(GRD.s!==S)gclear();const q=gq(cx,cy);if(!q.f||q.st)gbuild(cx,cy,q);q.u=RFN;return q.f}
-function gclear(){for(const v of GRD.c.values()){if(v.f)v.f.width=v.f.height=0;if(v.l)v.l.width=v.l.height=0}GRD.c.clear();GRD.s=S;GRD.any=false}
+function gclear(){for(const v of GRD.c.values()){if(v.f)v.f.width=v.f.height=0;if(v.l)v.l.width=v.l.height=0}GRD.c.clear();GRD.s=S;GRD.any=false;if(typeof farClear==='function')farClear()}
 function gblit(c,sx,sy,sw,sh,dx,dy,dw,dh,lod){/* 地面の下絵の (sx,sy,sw,sh) を、c の (dx,dy,dw,dh) へ描く（区画をまたいでもよい）。lod：半分の細かさの絵を使う */const kx=dw/sw,ky=dh/sh;
   for(let cy=Math.max(0,Math.floor(sy/GPX));cy<=Math.min((H-1)>>4,Math.floor((sy+sh-.001)/GPX));cy++)for(let cx=Math.max(0,Math.floor(sx/GPX));cx<=Math.min((W-1)>>4,Math.floor((sx+sw-.001)/GPX));cx++){
     const ox=cx*GPX,oy=cy*GPX,a=Math.max(sx,ox),b=Math.max(sy,oy),a2=Math.min(sx+sw,ox+GPX,W*TS),b2=Math.min(sy+sh,oy+GPX,H*TS);if(a2<=a||b2<=b)continue;
