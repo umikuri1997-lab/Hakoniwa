@@ -168,13 +168,13 @@ function spProp(c,prop,sx,a,t,o){/* せいれいが手に持つ道具 */c.save()
 const SPMI={},SPMC=new Map(),SPMCAP=500,SPMIDLE=60000;let SPMT=0;
 function spmImg(nm,el){const k=SPM[nm].s[el];let g=SPMI[k];if(!g){g=SPMI[k]={img:new Image(),ok:0,u:0};g.img.onload=()=>{g.ok=1;dirty=true};g.img.src=k}/* 同じ形の動き（しまう・とる など）は、同じ絵のファイル */g.u=performance.now();return g.ok?g.img:null}
 function spmFree(now){if(now-SPMT<5000)return;SPMT=now;for(const k in SPMI){const g=SPMI[k];if(now-g.u>SPMIDLE){g.img.src='';delete SPMI[k];for(const[c0,cv]of SPMC)if(c0.startsWith(k+'|')){cv.width=cv.height=0;SPMC.delete(c0)}}}}
-function spmCell(nm,el,vr,dir,i){/* せいれいの色にした1コマ（色のかえ方は spDot と同じ。色をかえないときは、もとの絵の場所） */
-  const m=SPM[nm],G=m.g[el];if(!G)return null;const im=spmImg(nm,el);if(!im)return null;const sx=i*G[0],sy=dir*G[1],A=SPC[el],B=spcVar(el,vr);
+function spmCell(nm,el,vr,dir,i){/* せいれいの色にした1コマ（色のかえ方は spDot と同じ。色をかえないときは、もとの絵の場所）。dir 3〜5 は、目の上にかさねる絵（正面・横・うしろ。G[5] の高さ） */
+  const m=SPM[nm],G=m.g[el];if(!G)return null;const im=spmImg(nm,el);if(!im)return null;const ov=dir>2,H=ov?G[5]:G[1],sx=i*G[0],sy=ov?G[1]*3+(dir-3)*H:dir*G[1],A=SPC[el],B=spcVar(el,vr);
   if(A===B)return[im,sx,sy];
   const k=m.s[el]+'|'+(vr&&vr.h||0)+'_'+(vr&&vr.l||0)+'|'+dir+'|'+i;let cv=SPMC.get(k);
   if(cv){SPMC.delete(k);SPMC.set(k,cv);return[cv,0,0]}
-  cv=document.createElement('canvas');cv.width=G[0];cv.height=G[1];const g=cv.getContext('2d');g.drawImage(im,sx,sy,G[0],G[1],0,0,G[0],G[1]);
-  const d=g.getImageData(0,0,G[0],G[1]),p=d.data,M={};for(const r in A)if(B[r])M[A[r].toLowerCase()]=B[r];
+  cv=document.createElement('canvas');cv.width=G[0];cv.height=H;const g=cv.getContext('2d');g.drawImage(im,sx,sy,G[0],H,0,0,G[0],H);
+  const d=g.getImageData(0,0,G[0],H),p=d.data,M={};for(const r in A)if(B[r])M[A[r].toLowerCase()]=B[r];
   for(let q=0;q<p.length;q+=4){if(!p[q+3])continue;const h='#'+((1<<24)|(p[q]<<16)|(p[q+1]<<8)|p[q+2]).toString(16).slice(1),to=M[h];if(to){p[q]=parseInt(to.slice(1,3),16);p[q+1]=parseInt(to.slice(3,5),16);p[q+2]=parseInt(to.slice(5,7),16)}}
   g.putImageData(d,0,0);SPMC.set(k,cv);
   while(SPMC.size>SPMCAP){const[k0,c0]=SPMC.entries().next().value;c0.width=c0.height=0;SPMC.delete(k0)}
@@ -189,13 +189,14 @@ function spMotion(o,A){/* いまの動きの名前（3Dの絵がない動きは 
 function spToyPh(r,now){/* 遊具のゆれ・進みぐあい（0〜1）：toyPose0 と同じ時刻の式 */
   const a=toyR(r);if(!a)return null;const j=a.obj,T=now/1000,us=toyUsers(j),k=Math.max(0,us.indexOf(r)),fr=v=>(v%1+1)%1;
   if(a.what==='swing')return fr((T*2.6+j)/(2*Math.PI));if(a.what==='seesaw')return fr((T*1.8+j)/(2*Math.PI)+(k?.5:0));if(a.what==='slide')return fr(T*.45+k*.5);return null}
-function spmDraw(c,el,x,y,s,f,o,nm,t,back,tr,spr,D){/* 3Dの動きの1コマを描いて、目・ほっぺ・まつげをかさねる */
+function spmDraw(c,el,x,y,s,f,o,nm,t,back,tr,spr,D){/* 3Dの動きの1コマを描いて、目・ほっぺ・まつげをかさね、その上に、ずきん・顔の手前にある、うで・手・道具（G[4]・G[5]）をかさねる */
   const m=SPM[nm],G=m.g[el];if(!G)return false;const dir=back?2:tr?1:0,ph=m.r==='ph'?(o.ph==null?0:o.ph):((t*m.r)%1+1)%1,i=Math.floor(ph*m.n)%m.n,cell=spmCell(nm,el,o.vr,dir,i);if(!cell)return false;
   const vr=o.vr,e=m.e[el][dir][i];c.save();c.translate(x,y);c.scale(s*f,s);const sm=c.imageSmoothingEnabled;c.imageSmoothingEnabled=false;
   c.drawImage(cell[0],cell[1],cell[2],G[0],G[1],G[2]*D,G[3]*D,G[0]*D,G[1]*D);
   if(e[2]<2){const S2=e[2]===1?'S':'',md=o.mood==='cry'?'teary':o.mood||'',fm=o.blink&&!md?'shut':md==='smile'||md==='joy'||md==='eat'?'hap':['teary','tear','shock','strain','sad','brave','tired','hungry'].includes(md)?md:'n',ex=e[0]*D,ey=e[1]*D+(el==='wind'?-3*D:0);
     if(e[3]){c.scale(-1,1)}
-    if(vr&&vr.cheek)spr('sp:cheek'+S2,e[3]?-ex:ex,ey);spr('sp:face'+S2+'#'+fm,e[3]?-ex:ex,ey);if(vr&&vr.lash&&fm!=='strain')spr('sp:lash'+S2+'#'+fm,e[3]?-ex:ex,ey)}
+    if(vr&&vr.cheek)spr('sp:cheek'+S2,e[3]?-ex:ex,ey);spr('sp:face'+S2+'#'+fm,e[3]?-ex:ex,ey);if(vr&&vr.lash&&fm!=='strain')spr('sp:lash'+S2+'#'+fm,e[3]?-ex:ex,ey)
+    if(e[3])c.scale(-1,1);if(G[5]){const ov=spmCell(nm,el,vr,dir+3,i);if(ov)c.drawImage(ov[0],ov[1],ov[2],G[0],G[5],G[2]*D,(G[3]+G[4])*D,G[0]*D,G[5]*D)}}/* 目の上に、手前のうで・手・道具をもう1回 */
   const h=m.h[dir][i];/* 手前の手・奥の手・道具の先（チップのドット） */
   if((nm==='eat'||nm==='hold')&&o.food&&dir!==2){const ei=emoImg(o.food);if(ei){const ih=40,iw=ih*ei.width/ei.height,hx=(h[0]+h[2])/2*D,hy=(h[1]+h[3])/2*D-6;c.save();if(f<0)c.scale(-1,1);c.drawImage(ei,(f<0?-hx:hx)-iw/2,hy-ih/2,iw,ih);c.restore()}}/* 食べ物は、両手のあいだ（絵の左右は反転しない） */
   if((nm==='water'||nm==='tend')&&h.length>4){for(let k=0;k<3;k++){const p=(t*1.8+k/3)%1;c.fillStyle='rgba(120,190,255,'+(1-p)+')';c.beginPath();c.ellipse(h[4]*D+p*3,h[5]*D+p*24,1.8,2.6,0,0,7);c.fill()}}/* じょうろの先から水のつぶ */

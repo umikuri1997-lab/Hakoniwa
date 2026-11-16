@@ -62,24 +62,42 @@ def shoot(sp, face, p):
     """ポーズ p の絵（EXT の大きさ、RGBA）と、場所（目のずれ・手・道具の先。チップのドット、足もとが原点）"""
     parts, anc = posed(sp, face, p); V = view(face, p.get('spin', 0.0))
     names = list(parts); Wd, Hd = (EXT[1]-EXT[0])*SSN, (EXT[3]-EXT[2])*SSN
-    zb = np.full(Wd*Hd, -1e9); idb = np.full(Wd*Hd, -1); cb = np.zeros((Wd*Hd, 3), np.uint8)
-    # 顔は、こちらを向いているときだけ、ずきんの上に見える
+    zb = np.full(Wd*Hd, -1e9); idb = np.full(Wd*Hd, -1); cb = np.zeros((Wd*Hd, 3), np.uint8); gz = np.full(Wd*Hd, -1e9)
+    # 重なりは、本当の奥行き（手前の点が勝つ）。ただし、同じ部品のまとまりの中だけで、少しの差をつける：
+    #   顔は、ずきんの表面にかさねる絵（顔の形はずきんの中にうまるので、ずきんにだけ勝つ）。こちらを向いていないときは、ずきんにかくれる。
+    #   手は自分のうでに、道具は自分の手・うでに、少しだけ勝つ（GB）。
+    #   体より前に出たうで・手・道具は、頭（ずきん・顔・頭の上の物）にだけ勝つ（頭がうでの長さより前へ出ているので、本当の奥行きでは、あげた手がかならず頭にかくれる。持ち主がえらんだ）。
+    #   体・足・しっぽ・はねとは、本当の奥行きでくらべる。うしろ向きでは、ぜんぶ本当の奥行きのまま（持ち主の指示）。
     fdir = rz(p.get('hy', 0))@np.array([0, 1., 0]); _, _, toward = V(np.array([fdir, [0, 0, 0]])); facing = toward[0]-toward[1] > -0.3   # うしろを向いているときだけ、顔をかくす
+    GB = {'arm': 0.0, 'hand': 7.0, 'prop': 1.5}
+    grp = {nm: (nm[-1] if nm.startswith(('arm', 'hand', 'prop')) else None) for nm in names}
     _, _, zc = V(parts['body'][0].mean(0)[None]); zc = zc[0]   # 体のまん中の奥行き
+    HEAD = ('hood', 'face')+tuple(nm for nm, _ in sp.tops); fa = np.zeros(Wd*Hd, bool)   # fa：頭に勝つ、うで・手・道具のドット
+    hoodi = names.index('hood'); headcov = np.zeros(Wd*Hd, bool)   # ずきん・顔のうつる所（目をかさねる所。うでが前にあれば、目の上にもう1回描く）
     for i, nm in enumerate(names):
         P, col, kind = parts[nm]; X, Y, Z = V(P)
-        if facing and nm.startswith(('arm', 'hand', 'prop')): Z = Z+np.where(Z > zc+2, 40.0, 0.0)   # 体より前に出たうで・手・道具は、頭より手前（いまの絵の frontArm と同じ）。うしろ向きでは、3Dの奥行きのまま（持ち主の指示）
         C = np.tile(np.array(CREAM if col == 'cream' else sp.hand, np.uint8), (len(P), 1)) if isinstance(col, str) else col
-        if kind == 'h': Z = Z+7
-        if nm == 'face': Z = Z+(60 if facing else -1000)
-        if kind == 'p': Z = Z+1.5
+        g0 = grp[nm]; gb = GB[nm[:-1]] if g0 else 0.0
+        same = np.array([grp[n] == g0 for n in names]+[False]) if g0 else None
         k = int(round((QH if kind == 't' and not nm.startswith(('tail', 'wing')) else Q)*SSN))
         for ox in range(k):
             for oy in range(k):
                 c = np.floor((X-EXT[0])*SSN).astype(int)+ox; r = np.floor((Y-EXT[2])*SSN).astype(int)+oy
                 ok = (c >= 0) & (c < Wd) & (r >= 0) & (r < Hd); j = r[ok]*Wd+c[ok]; z = Z[ok]; cc = C[ok]
                 o = np.lexsort((z, j)); j, z, cc = j[o], z[o], cc[o]; last = np.r_[j[1:] != j[:-1], True]; j, z, cc = j[last], z[last], cc[last]
-                bt = z > zb[j]; zb[j[bt]] = z[bt]; idb[j[bt]] = i; cb[j[bt]] = cc[bt]
+                if nm in ('hood', 'face'): headcov[j] |= (nm == 'hood') or facing
+                if nm == 'face':
+                    bt = ((z > zb[j]) | ((idb[j] == hoodi) & facing)) & ~fa[j]
+                    zb[j[bt]] = np.maximum(z[bt], zb[j[bt]]+0.5)
+                elif g0:
+                    sg = same[idb[j]]; bt = np.where(sg, z+gb > gz[j], z > zb[j])
+                    zb[j[bt]] = np.maximum(z[bt], np.where(sg[bt], zb[j[bt]], -1e9)); gz[j[bt]] = z[bt]+gb
+                    fa[j[bt]] = facing & (z[bt] > zc+2)
+                else:
+                    bt = z > zb[j]
+                    if nm in HEAD: bt &= ~fa[j]
+                    zb[j[bt]] = z[bt]; fa[j[bt]] = False
+                idb[j[bt]] = i; cb[j[bt]] = cc[bt]
     zb = zb.reshape(Hd, Wd); idb = idb.reshape(Hd, Wd); cb = cb.reshape(Hd, Wd, 3)
     W1, H1 = Wd//SSN, Hd//SSN
     blk = idb.reshape(H1, SSN, W1, SSN).transpose(0, 2, 1, 3).reshape(H1, W1, -1)
@@ -106,6 +124,9 @@ def shoot(sp, face, p):
             if d == 1: pline |= isprop & ((nid < 0) | ((nid != ids) & (dep-nd > DZ)))
     img[line, :3] = sp.line
     for yy, xx in np.argwhere(pline): img[yy, xx, :3] = darker(tuple(img[yy, xx, :3]))
+    # 目・ほっぺはゲームが顔の所にかさねるので、ずきん・顔の上で手前にある、うで・手・道具の所を、もう1まい（目の上にかさねる絵）にする
+    hc = headcov.reshape(H1, SSN, W1, SSN).any(axis=(1, 3)); armi = [i for i, n in enumerate(names) if grp[n]]
+    over = np.zeros_like(img); m = hc & np.isin(ids, armi); over[m] = img[m]
     V0 = view(face, 0.0)
     def scr(P):
         X, Y, _ = V(np.asarray(P)[None]); return [round(float(X[0]), 2), round(float(Y[0]), 2)]
@@ -114,4 +135,4 @@ def shoot(sp, face, p):
     A = {'eye': [int(round(ex-x0[0])), int(round(ey-y0[0])), anc['ti'], 1 if anc['mir'] else 0], 'facing': bool(facing)}
     for k, v in anc.items():
         if k not in ('eye', 'eye0', 'ti', 'mir'): A[k] = scr(v)
-    return img, A
+    return img, over, A
