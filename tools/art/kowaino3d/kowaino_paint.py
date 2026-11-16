@@ -57,7 +57,8 @@ FXCOL = {'dust': ('#efe6d2', '#d8ccb4', '#b8aa90'), 'ash': ('#cfc8d2', '#aaa2ae'
          'petal': ('#fbe4ee', '#eab8cc', '#c890a8'), 'sweat': ('#f0f8ff', '#b8dcf4', '#88b4d8'), 'star': ('#fffbe0', '#ffe08a', '#e0b050'),
          'slash': ('#ffffff', '#ece8ff', '#c0b8e0'), 'impact': ('#ffffff', '#fff6d8', '#e8d090')}
 FXBMP = {
-    'puff': ['.bb.|baab|baab|.bb.', '.bbb.|baaab|ba.ab|baaab|.bbb.', '.b.b.|b...b|.....|b...b|.b.b.'],   # 土けむり：ひろがって、うすれる
+    'gdust': ['...bab..b...|.bbaabbaab..|bcbbcbbbcbbc', '..b..ba..b..|.b.bc..cb.b.|b.c......c.b', '.b........b.|............|c..........c'],   # 地面すれすれの 土ぼこり（よこに のびる でこぼこの すじ。丸い玉にしない。持ち主）
+    'flake': ['ab.|.bc', 'ab|.c', 'b'],   # 灰の かけら
     'spark': ['..a..|..b..|abaab|..b..|..a..', '.a.|aba|.a.', 'a'],
     'ember': ['.c.|cab|.b.', 'ab|bc', 'b'],
     'snow': ['.a.|aba|.a.', 'ab|ba', 'a'],
@@ -100,8 +101,8 @@ def _ell(Rx, Ry, th, a0, a1):
 FXBMP['spin'] = [_ell(25, 8, 3.2, 150, 350), _ell(26, 8, 2.0, 170, 360), _ell(27, 9, 1.0, 190, 10)]   # まわって ひっかく わ（左の おくから 手前を とおって 右へ）
 FXCOL['spin'] = ('#ffffff', '#e4defc', '#b8acdc')
 FXCOL['swipe'] = FXCOL['swipeL'] = ('#ffffff', '#e4defc', '#b8acdc')
-FXSHAPE = {'spin': 'spin', 'swipe': 'swipe', 'swipeL': 'swipeL', 'dust': 'puff', 'ash': 'puff', 'spark': 'spark', 'ember': 'ember', 'snow': 'snow', 'leaf': 'leaf', 'petal': 'petal', 'sweat': 'sweat', 'star': 'star', 'slash': 'slash', 'impact': 'impact'}
-FXMOVE = {'spin': (0, 0, 0, 0), 'dust': (0, 0, 0.05, 0.6), 'ash': (0, 0, 0.06, 0.8), 'spark': (0, 0, 0.02, 1.2), 'ember': (0, 0, 0.1, 0.6), 'snow': (0, 0, -0.06, 0.6), 'leaf': (0, 0, -0.05, 0.9),
+FXSHAPE = {'spin': 'spin', 'swipe': 'swipe', 'swipeL': 'swipeL', 'dust': 'gdust', 'ash': 'flake', 'spark': 'spark', 'ember': 'ember', 'snow': 'snow', 'leaf': 'leaf', 'petal': 'petal', 'sweat': 'sweat', 'star': 'star', 'slash': 'slash', 'impact': 'impact'}
+FXMOVE = {'spin': (0, 0, 0, 0), 'dust': (0, 0, 0, 0.6), 'ash': (0, 0, 0.06, 0.8), 'spark': (0, 0, 0.02, 1.2), 'ember': (0, 0, 0.1, 0.6), 'snow': (0, 0, -0.06, 0.6), 'leaf': (0, 0, -0.05, 0.9),
           'petal': (0, 0, -0.04, 1.0), 'sweat': (0, 0, -0.05, 0.3), 'star': (0, 0, 0, 0.0), 'slash': (0, 0, 0, 0), 'impact': (0, 0, 0, 0), 'swipe': (0, 0, 0, 0), 'swipeL': (0, 0, 0, 0)}   # (…, …, 上へ（コマごと）, ひろがる速さ（コマごと、ひろがりの倍）)
 FADEN = 4   # きえるとき、ほどけた ドットの 1/FADEN が つぶになって のぼる
 FADEUP = 20   # つぶの のぼる高さ（ドット。ほどけきるときに）
@@ -117,6 +118,7 @@ def fxparts(frames, name):
             rs = np.random.RandomState(zlib.crc32(('%s|%s|%d|%d' % (name, kind, i, n)).encode()))
             for k in range(n):
                 off = (rs.rand(3)*2-1)*np.array([1, 0.6, 0.8])*spr if n > 1 else np.zeros(3); vz = FXMOVE[kind][2]; sp = FXMOVE[kind][3]
+                if kind == 'dust': off[2] = 0; at = (at[0], at[1], 0.02)   # 土ぼこりは 地面に
                 for age in range(FXLIFE):
                     j = i+age
                     if j >= len(frames) or (j > i and frames[j].get('fade')): break   # きえる コマには、前の コマの つぶを のこさない
