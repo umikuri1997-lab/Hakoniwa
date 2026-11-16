@@ -58,6 +58,6 @@ const assert=require('node:assert/strict');
   console.log(JSON.stringify(wsim));assert.equal(wsim.got,2,'わた毛4こで布2こ');assert.equal(wsim.wool,1);assert.equal(wsim.left,0);
   /* はじめのベッドの目標 */
   const bq=JSON.parse(await run(`(()=>{const q=QUESTS.find(q=>q.id==='bed');return JSON.stringify({gives:q.talk.gives,prog:typeof q.prog==='function'?q.prog():''})})()`));
-  assert.deepEqual(bq.gives,{items:{loom:1},mat:{wood:6,kasa:3}});assert.ok(/^はたおり機 1\/1・布 1\/1・ベッド 0\/1$/.test(bq.prog),bq.prog);
+  assert.deepEqual(bq.gives,{feat:['craft'],items:{loom:1},mat:{wood:6,kasa:3}});assert.ok(/^はたおり機 1\/1・布 1\/1・ベッド 0\/1$/.test(bq.prog),bq.prog);
   assert.deepEqual(errors,[]);await browser.close();console.log('OK');
 })().catch(e=>{console.error(e);process.exit(1)});
