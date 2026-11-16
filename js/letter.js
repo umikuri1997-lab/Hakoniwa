@@ -1,54 +1,26 @@
 /* ---------- せいれいの手紙 ----------
+   こまかいわけ：なかよしは あいての属性、記念日は 日数、こまりごとは しゅるい、季節は 春夏秋冬、つよくなったは Lv5〜10・15〜25・30〜40（a・b・c）。文は属性ごとに3通。
+   ほかのきっかけ：来たつぎの朝（new）・じぶんの家（house、letterHouse）・はじめての料理（cook）・あの大きな影を追いはらった朝（boss）・仲なおり（make）。
    なかよし（mate）・村に来た記念日（anniv）・こまりごとがなおった（thx）・ゆめがかなった（dream）・よみがえった（back）・Lv5ごと（lv）・季節がかわった（season）に、せいれいが手紙を書く（letterQ → S.letterQ）。
    お礼にあたる手紙（LETTERGIFT）には、その子の属性のお礼の品（letterGift）が入っていて、はじめて読んだときにうけとる。
    つぎの朝6時に、おそなえ箱に手紙がとどく（letterMorning → S.letters）。もちものの「手紙」で読む。読んだ手紙は、思い出帳の「手紙」で何度でも読める。
    文はその子の言いかた（chatTone）。同じ子が同じ文をくりかえさない（pickFresh）。 */
-const LETTERT={/* {m} なかま・{n} 数・{f} 家具・{s} 季節 */
- mate:[['きょう、{m}と、なかよしになったよ。','いっしょにいると、なんだか、ほっとするんだ。','これからも、ふたりで村をにぎやかにするね。'],
-  ['{m}って、すごくやさしいんだ。','ぼくがこまっていると、すぐに気づいてくれる。','守り神さまにも、知ってほしくて書いたよ。'],
-  ['{m}と、たくさん話したよ。','わらうところが、ぼくとそっくりなんだ。','あしたも、いっしょに遊べるといいな。'],
-  ['ないしょの話なんだけどね。','{m}といると、時間がたつのが、はやいんだ。','これって、なかよしってことだよね。'],
-  ['{m}に、すきな場所をおしえてもらったよ。','こんどは、ぼくのすきな場所もおしえるんだ。','守り神さまも、いつか見にきてね。']],
- anniv:[['この村に来て、{n}日になったよ。','はじめは、なにもかもが、ふしぎだった。','いまは、ここがぼくの家だよ。ありがとう。'],
-  ['{n}日、あっというまだったなあ。','守り神さまが見ていてくれるから、がんばれたよ。','これからも、よろしくね。'],
-  ['村に来て{n}日の、記念の手紙だよ。','すきな場所も、すきななかまも、ふえたんだ。','ずっと、ここでくらしたいな。'],
-  ['きょうで{n}日め。','はじめて見た朝の光を、まだおぼえているよ。','この村をえらんでよかった。'],
-  ['{n}日のおいわいに、手紙を書いたよ。','ちょっとてれるけど、いつもありがとう。','おれいの気もちを、いっしょに入れておくね。']],
- thx:[['こまっていたこと、なおしてくれて、ありがとう。','守り神さまは、ちゃんと見ていてくれるんだね。','ぼくも、もっとがんばるよ。'],
-  ['ねえ、気づいてくれたんだね。','すごく、うれしかったよ。','おかえしに、きょうも、いっぱいはたらくね。'],
-  ['あのね、ずっと言えなかったことがあったんだ。','でも、もう、だいじょうぶ。ありがとう。','守り神さまのおかげだよ。'],
-  ['ゆうべは、ひさしぶりに、ぐっすりねむれたよ。','なおしてくれたからだね。','ささやかだけど、おれいを入れておくね。'],
-  ['ことばだと、うまく言えないから、手紙にしたよ。','ほんとうに、ありがとう。','ぼくにできることがあったら、なんでも言ってね。']],
- dream:[['ゆめで見た{f}が、ほんとうにできたよ！','まだ、ゆめのつづきみたいなんだ。','守り神さま、ありがとう。'],
-  ['{f}、すごくすてきだよ。','ゆめで見たのより、もっとすてきかも。','毎日、見にいっちゃうと思う。'],
-  ['ゆめって、かなうんだね。','{f}のそばにいると、むねがぽかぽかするよ。','つぎは、どんなゆめを見ようかな。'],
-  ['{f}ができた日のこと、ずっとわすれないよ。','みんなにも、じまんしちゃった。','おれいのしるしを、入れておくね。'],
-  ['ほんとうは、ちょっとだけ、あきらめてたんだ。','でも、{f}がそこにある。','守り神さまって、まほうつかいみたいだね。']],
- back:[['また、この村にもどってこられたよ。','{m}が、ずっとまっていてくれたんだ。','よびもどしてくれて、ありがとう。'],
-  ['ねむっているあいだも、村のおとが聞こえていた気がする。','{m}の声も、守り神さまの気配も。','おかえりって言ってもらえて、うれしかったよ。'],
-  ['もどってきて、まず{m}に会いにいったよ。','ふたりで、たくさんないちゃった。','もう、どこにもいかないからね。'],
-  ['村のけしき、すこしかわったね。','でも、なつかしいにおいは、そのままだったよ。','また、ここでくらせるのが、うれしいな。'],
-  ['ありがとう、のほかに、ことばが見つからないよ。','{m}にも、守り神さまにも。','これからは、まえよりもっと、がんばるね。']],
- lv:[['きょう、すこしつよくなった気がするよ。','Lv{n}って、なんだかかっこいいでしょ。','守り神さまにも、つたえたくて。'],
-  ['まえより、からだがかるいんだ。','まいにち、はたらいて、あそんだからかな。','これからも、見ていてね。'],
-  ['ぼく、すこしはせいちょうしたかな。','{n}って数を見て、うれしくなったよ。','おいわいに、手紙を書いてみたんだ。'],
-  ['できることが、ふえてきたよ。','村のために、もっとやくに立ちたいな。','いつも、ありがとう。'],
-  ['すこしだけ、じしんがついたよ。','守り神さまが、まもってくれるおかげだね。','おれいを、入れておくね。']],
- season:[['{s}になったね。','風のにおいが、きのうとちがうんだ。','守り神さまは、どの季節がすき？'],
-  ['{s}の村も、すてきだよ。','みんなで、{s}の遊びをさがしてるんだ。','見つけたら、おしえるね。'],
-  ['季節がかわると、なんだかわくわくするね。','{s}の空は、いつもより広く見えるよ。','きょうも、いい日になりますように。'],
-  ['{s}がきたよ、守り神さま。','村の木も花も、よろこんでいるみたい。','ぼくも、{s}をたのしむね。'],
-  ['また、ひとつ季節がめぐったね。','この村で{s}をむかえられて、うれしいな。','つぎの季節も、いっしょにいようね。']]};
-const LETTERK={mate:'なかよしのこと',anniv:'記念日',thx:'ありがとう',dream:'ゆめがかなった',back:'もどってきた',lv:'つよくなった',season:'季節のたより'};
-const LETTERGIFT={thx:1,anniv:1,dream:1,back:1,lv:1};/* お礼の品を入れる手紙 */
+/* 文は js/letter-data.js の LETTERD（しゅるい→こまかいわけ→属性→3通）。{m} なかま・{n} 数・{f} 家具や料理・{s} 季節 */
+const LETTERK={mate:'なかよしのこと',anniv:'記念日',thx:'ありがとう',dream:'ゆめがかなった',back:'もどってきた',lv:'つよくなった',season:'季節のたより',new:'はじめまして',house:'じぶんの家',cook:'はじめての料理',boss:'まもってくれて',make:'仲なおり'};
+const LETTERSEA=['spring','summer','autumn','winter'];
+const lvBand=n=>n<=10?'a':n<=25?'b':'c';
+const LETTERGIFT={thx:1,anniv:1,dream:1,back:1,lv:1,house:1,boss:1};/* お礼の品を入れる手紙 */
 function letterGift(el){/* お礼の品：その子の属性の物 */if(el==='wood'){const L=Object.keys(CROPS).filter(c=>cropOn(c));return L.length?{k:'seed:'+pick(L),n:3}:{k:'mat:wood',n:8}}
   if(el==='earth')return{k:'mat:stone',n:8};if(el==='fire')return{k:'mat:wood',n:8};if(el==='wind')return{k:'mat:eda',n:6};if(el==='water'){const L=FISHK.filter(f=>FISHI[f].w===(WD===1?1:0)&&FISHI[f].tm==='any'&&!FISHI[f].rain);return{k:'food:'+(L.length?pick(L):'fish'),n:2}}return{k:'mat:wood',n:8}}
 function giftName(g){if(!g)return '';const[t,id]=[g.k.slice(0,g.k.indexOf(':')),g.k.slice(g.k.indexOf(':')+1)];return (t==='mat'?MATN[id]:t==='food'?FOODS[id].name:t==='seed'?CROPS[id].name+'のたね':id)+'×'+g.n}
 function giftGive(g){if(!g)return;const t=g.k.slice(0,g.k.indexOf(':')),id=g.k.slice(g.k.indexOf(':')+1);if(t==='mat')S.mat[id]=(S.mat[id]||0)+g.n;else if(t==='food')addFood(id,g.n);else if(t==='seed')giveItem(g.k,g.n);sfx('power')}
-function letterQ(r,k,v){/* 手紙を書く（つぎの朝にとどく） */if(!r||!S||S.free||IS_STORY_REPLAY||(typeof MEMRUN!=='undefined'&&MEMRUN)||(typeof NOSAVE!=='undefined'&&NOSAVE)||!LETTERT[k])return;const Q=S.letterQ||(S.letterQ=[]);if(Q.some(q=>q.id===r.id&&q.k===k))return;
-  const L=LETTERT[k],i=L.indexOf(pickFresh('lt:'+r.id+':'+k,L)),tx=L[i<0?0:i].map(s=>chatTone(s.split('{m}').join(v!=null?v:'').split('{n}').join(v!=null?v:'').split('{f}').join(v!=null?v:'').split('{s}').join(v!=null?v:''),r));Q.push({id:r.id,who:r.name,el:r.elem,k,d:dayNo(),tx,g:LETTERGIFT[k]?letterGift(r.elem):null})}
-function letterMorning(){/* 朝6時：きのう書いた手紙がとどく */const Q=S.letterQ;if(!Q||!Q.length)return;const L=S.letters||(S.letters=[]),got=[];for(const q of Q){if(q.d>=dayNo())continue;L.push({who:q.who,el:q.el,k:q.k,d:dayNo(),tx:q.tx,g:q.g||null,read:0});got.push(q.who)}S.letterQ=Q.filter(q=>q.d>=dayNo());
+function letterTx(k,sub,el){/* その場面・属性の手紙の文（3通）。こまかいわけがなければ '' */const K=LETTERD[k];if(!K)return null;const C=K[sub!=null&&K[sub]?sub:'']||K[Object.keys(K)[0]];return C&&(C[el]||C.wood)||null}
+function letterQ(r,k,v,sub,d){/* 手紙を書く（つぎの朝にとどく）。v：{m,n,f,s}。sub：こまかいわけ */if(!r||!S||S.free||IS_STORY_REPLAY||(typeof MEMRUN!=='undefined'&&MEMRUN)||(typeof NOSAVE!=='undefined'&&NOSAVE))return;const L=letterTx(k,sub,r.elem);if(!L)return;const Q=S.letterQ||(S.letterQ=[]);if(Q.some(q=>q.id===r.id&&q.k===k))return;
+  const V=v&&typeof v==='object'?v:{m:v,n:v,f:v,s:v},sb=sub!=null&&LETTERD[k][sub]?sub:'',i=L.indexOf(pickFresh('lt:'+r.id+':'+k+':'+sb,L)),fill=t=>t.replace(/\{([mnfs])\}/g,(_,c)=>V[c]!=null?V[c]:'');
+  const tx=L[i<0?0:i].map(t=>chatTone(fill(t),r));Q.push({id:r.id,who:r.name,el:r.elem,k,d:d!=null?d:dayNo(),tx,g:LETTERGIFT[k]?letterGift(r.elem):null})}
+function letterMorning(){/* 朝6時：きのう書いた手紙がとどく */letterHouse();const Q=S.letterQ;if(!Q||!Q.length)return;const L=S.letters||(S.letters=[]),got=[];for(const q of Q){if(q.d>=dayNo())continue;L.push({who:q.who,el:q.el,k:q.k,d:dayNo(),tx:q.tx,g:q.g||null,read:0});got.push(q.who)}S.letterQ=Q.filter(q=>q.d>=dayNo());
   if(L.length>60)L.splice(0,L.length-60);if(got.length){toast((got.length>1?got.length+'通の':got[0]+'から')+'手紙がとどいた','good');sfx('offer');if(sheet==='inv')renderSheet()}}
+function letterHouse(has){/* じぶんのベッドのある家が、はじめてできた（前からある家は、手紙なし）。has：家があるか（ふだんは homeOf） */if(!S||S.free)return;const H=has||(typeof homeOf==='function'?homeOf:()=>null),first=!S.flags.lhome1;S.flags.lhome1=1;for(const r of S.res){if(r.hidden||r.lhome||!H(r))continue;r.lhome=1;if(!first)letterQ(r,'house')}}
 const letterUnread=()=>(S.letters||[]).filter(l=>!l.read).length;
 const LETTERPX=['................','................','................','.oooooooooooooo.','.ohhhhhhhhhhhhd.','.odhhhhhhhhhhdd.','.omdhhhhhhhhdmd.','.ommdhhhhhhdmmd.','.ommmddhhddmmmd.','.ommmmmddmmmmmd.','.ommmmmmmmmmmmd.','.ommmmmmmmmmmmd.','.oddddddddddddo.','.oooooooooooooo.','................','................'];
 function letterIco(){return pixURL('letter',LETTERPX,'#f0e2c4')}/* 手紙（ふうとう）のドット絵 */
