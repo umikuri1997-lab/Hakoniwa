@@ -45,4 +45,11 @@ for(const k of ['usagi','risu','nezumi','harinezumi','tentoumushi','mitsubachi',
 for(const k of ['usagi','risu','nezumi'])assert.ok(mv.fled[k],'にげる '+k);
 /* もぐらは土のステージ（WD 3）だけ */
 const mg=await run(`(()=>{const w0=WD;WD=3;S.t=1440*7+600;const j=(CY+3)*W+CX+4,ok=critOK('mogura',j);WD=w0;return ok})()`);assert.ok(mg,'土のステージに、もぐら');
+/* いなくなるとき（寿命・にげる・雨）は、画面の外へ去ってから消える（見えている所でパッと消えない） */
+const lv=await run(`(()=>{S.rain=false;S.t=1440*8+600;cam.z=2;centerOn(CX*TS,(CY+.5)*TS);S.res=[];const [a,b,c,d]=critView(),bad=[];let n=0;
+  const mk=(id,k,x,y,life)=>({id,k,x,y,hx:x,hy:y,z:CK[k].m==='fly'?12:0,vx:0,vy:0,face:1,t:0,life,hop:0,fl:0,ci:0,act:0,ph:0,wait:0});
+  CRIT=[mk(1,'usagi',CX+1.5,CY+1.5,1),mk(2,'fly',CX-2.5,CY+.5,1),mk(3,'bird',CX+.5,CY-1.5,1),mk(4,'risu',CX+3.5,CY-1.5,999),mk(5,'tentoumushi',CX-1.5,CY+1.5,1)];S.res=[mkRes(S,'a','wind',CX+3.5,CY-.8)];
+  let last=new Map();for(let i=0;i<800&&CRIT.some(c=>c.id<=5);i++){critTick(.1);S.res=[];const ids=new Set(CRIT.map(c=>c.id));for(const [id,q] of last)if(!ids.has(id)){n++;if(q.fade==null&&q.x>a&&q.x<c&&q.y-(q.z||0)/TS>b&&q.y<d)bad.push(q.k)}last=new Map(CRIT.filter(c=>c.id<=5).map(c=>[c.id,{k:c.k,x:c.x,y:c.y,z:c.z,fade:c.fade}]))}
+  return {n,bad,left:CRIT.filter(c=>c.id<=5).length}})()`);
+assert.equal(lv.n,5,'去っていなくなる '+JSON.stringify(lv));assert.deepEqual(lv.bad,[],'見えている所で消えない');
 assert.deepEqual(errors,[]);console.log('critters ok',JSON.stringify(o),JSON.stringify(mv.moved));await browser.close()})();
