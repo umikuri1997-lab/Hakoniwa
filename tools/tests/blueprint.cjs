@@ -69,5 +69,11 @@ const assert=require('node:assert/strict');
     out.done=S.bpDone;out.house=bpHouseN();const sd=S.subDone.bphome;S.subDone.bphome=false;out.lock=bpNext()===null&&!!bpNext('house',null,1);S.subDone.bphome=true;out.open=!!bpNext();S.subDone.bphome=sd;return JSON.stringify(out)})()`));
   console.log(nh);for(const k of['kamado','renga','wanoniwa','takemichi'])assert.ok(nh.miss.some(m=>m.startsWith(k+':')),k+' is volcano only');assert.ok(nh.miss.every(m=>['kamado','renga','wanoniwa','takemichi','funsui','idohatake','komugi','toriniwa','makiba','toride'].includes(m.split(':')[0])),'unexpected missing: '+nh.miss);assert.equal(nh.placed,4,JSON.stringify(nh));assert.deepEqual(nh.left,[]);
   assert.equal(nh.kadan,true);assert.equal(nh.saku,true);assert.equal(nh.toride,true);assert.equal(nh.kouen,true);assert.equal(nh.house,1,'only houses count as houses');assert.equal(nh.lock,true,'no blueprints before the bphome subquest');assert.equal(nh.open,true,'blueprints after the bphome subquest');
+  /* 設計図の依頼（bpreq）とプレビュー */
+  const rq=JSON.parse(await run(`(()=>{const out={};S.subDone.bphome=1;S.bpReq=null;const mr=Math.random;Math.random=()=>0.01;bpMorning();Math.random=mr;out.req=!!S.bpReq;const q=SUBQ.find(x=>x.k==='bpreq');out.at=q.at();out.t=q.t;out.rw=q.rw===BPS[S.bpReq.k].rw;
+    q.onAccept();const i=S.bpInv.findIndex(z=>z.k===S.bpReq.k&&z.req);out.inv=i>=0;
+    bpPop(i);const cv=document.querySelector('.pxcard canvas.pv');out.pv=!!cv&&cv.width>0&&cv.height>0;out.txt=document.querySelector('.pxcard .n').textContent;document.querySelector('.pxcard .x').click();out.closed=!document.querySelector('.pxcard canvas.pv');
+    bpComplete({k:S.bpReq.k,g:null,req:1,ps:[]});out.ok=q.ok();S.subDone.bpreq=1;bpMorning();out.cleared=S.bpReq===null&&!S.subDone.bpreq;return JSON.stringify(out)})()`));
+  console.log(rq);for(const k of['req','at','rw','inv','pv','closed','ok','cleared'])assert.equal(rq[k],true,'bpreq '+k);assert.ok(/むずかしさ/.test(rq.txt));
   assert.deepEqual(errors,[]);await browser.close();console.log('OK');
 })().catch(e=>{console.error(e);process.exit(1)});
