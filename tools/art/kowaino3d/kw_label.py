@@ -4,7 +4,9 @@
   灰（204,204,204）＝布・青（3,0,204）＝顔・緑（10,204,0）＝かざり・赤（204,0,1）＝ぽんぽん（上のほう）と布の裏（下のほう）。
 見分け方：
   顔：正面から見た奥行きの絵で、フードのふちとの段（奥行きがとぶ所）でかこまれた、まん中のかたまり（FACE0・FACE）。
-  布の裏：下を向いた面（法線の上の成分が UNDERN より下）で、高さが UNDERH より下。
+  顔の穴の中：正面から見て穴にうつる所は、奥のかべまで顔（HOLED）。
+  足：すその下の、まん中に近い所（FOOT）。顔と同じこい色。
+  布の裏：すその下（UNDERH より下）の、まわり（16の向き・少し上から）から見えない、下・内がわを向いた面。
   かざり：いちばん大きなかたまり（体）からはなれた部品ぜんぶ。
   ぽんぽん：体とくっついた物は、フードのしっぽの先から首までのきょりの中（POM）。はなれた部品の物は、その場所にいちばん近い部品（POMPART）。
 見分けられない所（体とくっついた手・ベルト・つらら など）は布のまま。持ち主が Blender で直す。
@@ -20,7 +22,12 @@ from weld import weld
 COL = {'cloth': (204, 204, 204), 'face': (3, 0, 204), 'deco': (10, 204, 0), 'red': (204, 0, 1)}
 FACE0 = dict(t=0.006, lo=0.33, hi=0.85, y=0.55)   # 顔：段とみなす奥行きのとび（高さのうち）・さがす高さ・さがしはじめる高さ
 FACE = {'fast': dict(t=0.004), 'trapper': dict(lo=0.45), 'hana': dict(lo=0.45)}   # コワイノごとに、かえる所
-UNDERN, UNDERH = -0.45, 0.3
+UNDERH = 0.29          # 布の裏をさがす高さ（高さのうち）
+HOLED = 0.03           # 顔の穴の中：いちばん奥の顔より、これだけ奥まで
+FOOT, FOOTH = 0.5, 0.18 # 足：すその広さ（95%の半径）のこの わりより内がわで、この高さより下
+FOOTT = 0.03           # 足の先：この高さより下
+LEGR = (0.03, 0.55)    # 足の太さ：足の先からの横のきょり（高さのうち）＝ 先 ＋ 高さ×わり
+UEL = 0.2              # 布の裏：まわりから見る角度（上から、ラジアン）
 NG = 220              # 奥行きの絵のこまかさ
 POM = {'thief': dict(r=0.16), 'breaker': dict(r=0.14), 'hana': dict(r=0.13), 'yuki': dict(r=0.18, lo=0.05), 'shiny': dict(r=0.12, at=(0.44, 0.61, -0.13))}   # 体とくっついたぽんぽん：しっぽの先から首までのきょり（高さのうち）。at：しっぽの先の場所（ないときは、頭のまん中からいちばん遠い、うしろの点）
 POMPART = {'trapper': (0, 0.92, -0.35), 'hoteri': (0.08, 0.64, -0.35)}   # はなれた部品のぽんぽん：場所（高さのうち。x・y上・z前）
@@ -67,9 +74,41 @@ def label(path, name):
     if q:
         rec = ndimage.binary_dilation(lab == q, structure=sq, iterations=4) & ok
         cnt = np.bincount(I[rec], minlength=len(Fb)); tot = np.bincount(I[ok], minlength=len(Fb))
-        L[Fb[(cnt >= 0.5*np.maximum(tot, 1)) & (tot > 0)]] = 'face'
-    # 布の裏
-    L[body & (n[:, 1] < UNDERN) & (c[:, 1] < UNDERH*H) & (L == 'cloth')] = 'red'
+        seed = Fb[(cnt >= 0.5*np.maximum(tot, 1)) & (tot > 0)]; L[seed] = 'face'
+        # 顔の穴の中（正面から見て穴の中にうつる所）は、奥のかべまで顔にする（持ち主の直し）
+        x0 = V[:, 0].min(); px = ((c[:, 0]-x0)*s).astype(int); py = ((H-c[:, 1])*s).astype(int)
+        inr = (px >= 0) & (px < rec.shape[1]) & (py >= 0) & (py < rec.shape[0])
+        hole = ndimage.binary_erosion(rec, structure=sq, iterations=2); inh = np.zeros(len(F), bool); inh[inr] = hole[py[inr], px[inr]]
+        if len(seed): L[body & inh & (c[:, 2] >= c[seed, 2].min()-HOLED*H)] = 'face'
+    # 布の裏：すその下（UNDERH より下）で、まわり（16の向き・少し上 UEL から）から見えない、下・内がわを向いた面
+    def around(el):
+        v = np.zeros(len(F), bool)
+        for k8 in range(16):
+            a = 2*math.pi*k8/16; ca, sa = math.cos(a), math.sin(a); R = np.stack([V[:, 0]*ca-V[:, 2]*sa, V[:, 1], V[:, 0]*sa+V[:, 2]*ca], 1)
+            R2 = np.stack([R[:, 0], R[:, 1]*math.cos(el)-R[:, 2]*math.sin(el)+H*0.3, R[:, 1]*math.sin(el)+R[:, 2]*math.cos(el)], 1)
+            _, Iv, _ = zbuf(R2, F, H*1.6); v |= np.bincount(Iv[Iv >= 0], minlength=len(F)) >= 2
+        return v
+    vis = around(UEL)
+    under = body & ~vis & (n[:, 1] < 0.35) & (c[:, 1] < UNDERH*H) & (L == 'cloth')
+    # 足：足の先（すその広さの FOOT の わりより内がわの、いちばん下の面）から上へ、足の太さ（LEGR）の中で、FOOTH より下。顔と同じこい色
+    rr = np.linalg.norm(c[:, [0, 2]], axis=1); low = body & (c[:, 1] > 0.05*H) & (c[:, 1] < 0.25*H)
+    rs = np.percentile(rr[low], 95) if low.any() else H
+    feet = np.zeros(len(F), bool); tipf = body & (rr < FOOT*rs) & (c[:, 1] < FOOTT*H)
+    if tipf.any():   # 足の先（いちばん下の面）を、つながりでまとめ、それぞれの先から上へ、足の太さ（LEGR）の中
+        lf = np.full(len(F), -1); idx = np.nonzero(tipf)[0]; vt = {}
+        for k in idx:
+            for v in F[k]: vt.setdefault(v, []).append(k)
+        par = {k: k for k in idx}
+        def fd(k):
+            while par[k] != k: par[k] = par[par[k]]; k = par[k]
+            return k
+        for ks in vt.values():
+            for k in ks[1:]: par[fd(k)] = fd(ks[0])
+        for g in set(fd(k) for k in idx):
+            ks = [k for k in idx if fd(k) == g]; tc = c[ks][:, [0, 2]].mean(0)
+            d = np.linalg.norm(c[:, [0, 2]]-tc, axis=1); feet |= body & (c[:, 1] < FOOTH*H) & (d < LEGR[0]*H+LEGR[1]*c[:, 1])
+    feet &= (L == 'cloth')
+    L[under & ~feet] = 'red'; L[feet] = 'face'
     # ぽんぽん：しっぽの先（頭のまん中から、いちばん遠い、うしろの点）から、首までのきょりの中
     if name in POM:
         pc = POM[name]; vb = np.unique(F[body]); P = V[vb]
