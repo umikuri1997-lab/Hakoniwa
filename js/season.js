@@ -9,7 +9,7 @@ const ANNIV=[10,30,50,100,200,365];
 function seasonOf(d){return Math.floor(Math.max(0,d-1)/SEASONDAYS)%4}
 function seasonNow(){return S?seasonOf(dayNo()):0}
 const snowNow=()=>seasonNow()===3&&!!S.rain;
-function seasonMorning(){const d=dayNo();if(d<=1||seasonOf(d)===seasonOf(d-1))return;const n=SEASONS[seasonOf(d)];memo('',n+'になった');{const L=S.res.filter(r=>!r.hidden);if(L.length&&typeof letterQ==='function')letterQ(pick(L),'season',n)}setTimeout(()=>toast(n+'になった','good'),900)}
+function seasonMorning(){const d=dayNo();if(d<=1||seasonOf(d)===seasonOf(d-1))return;const n=SEASONS[seasonOf(d)];memo('',n+'になった');{const L=S.res.filter(r=>!r.hidden);if(L.length&&typeof letterQ==='function')letterQ(pick(L),'season',{s:n},LETTERSEA[seasonOf(d)])}setTimeout(()=>toast(n+'になった','good'),900)}
 /* 粒：画面の中の場所（0〜1）。p：ゆれ、s：速さ、c：色 */
 const SEAP=Array.from({length:60},()=>({x:Math.random(),y:Math.random(),p:Math.random()*6,s:rnd(.5,1),c:Math.random()}));
 const SEACOL=[['#f7c4d6','#f3aec5','#fbe0ea'],null,['#f6a650','#ec6f45','#f5d25a','#e2884a'],['#ffffff','#f1f6ff','#e4eefb']];
@@ -26,7 +26,7 @@ function seasonDraw(ctx,now,dk){if(!S)return;const k=seasonNow();
 /* 記念日 */
 function annivOf(r){if(!r||!r.came||r.back)return 0;const n=dayNo()-r.came;return ANNIV.includes(n)?n:0}
 function annivMorning(){if(typeof MEMRUN!=='undefined'&&MEMRUN)return;for(const r of S.res){if(r.hidden)continue;const n=annivOf(r);if(!n)continue;
-  memo('',r.name+'が村に来て'+n+'日');if(typeof letterQ==='function')letterQ(r,'anniv',n);const m=bestMate(r);
+  memo('',r.name+'が村に来て'+n+'日');if(typeof letterQ==='function')letterQ(r,'anniv',{n},String(n));const m=bestMate(r);
   villageTimeout(()=>{if(!S.res.includes(r))return;toast(r.name+'が村に来て'+n+'日！','good');addFloat(r.x,r.y-1.4,n+'日！','#ffe7a8');JUMP.set(r,performance.now());
     if(m&&!m.hidden&&S.res.includes(m)){addFloat(m.x,m.y-1.4,'おめでとう！','#ffd2e4');JUMP.set(m,performance.now()+250)}},1600)}}
 function annivTopic(r){const n=annivOf(r);if(!n)return null;const m=bestMate(r);
