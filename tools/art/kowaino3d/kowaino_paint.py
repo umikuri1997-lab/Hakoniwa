@@ -84,12 +84,27 @@ def _arc(R, th, a0, a1, dots=False):
     return '|'.join(rows)
 FXBMP['swipe'] = [_arc(15, 4.5, 200, 20), _arc(16, 2.6, 190, 30), _arc(17, 1.2, 180, 40, True)]   # 大きな ひっかき・なぎはらいの すじ（右下から右上へ）
 FXBMP['swipeL'] = ['|'.join(r[::-1] for r in b.split('|')) for b in FXBMP['swipe']]   # 左へ
+def _ell(Rx, Ry, th, a0, a1):
+    """まわる ひっかきの わ（ドット）：よこ Rx・たて Ry の だ円の a0〜a1 度（0 が右、手前が 270）。はば th（あとほど細い）。a：外がわ・b：中・c：先"""
+    W, Hh = 2*Rx+3, 2*Ry+int(th)+4; g = [['.']*W for _ in range(Hh)]; cx, cy = Rx+1, Ry+1
+    for y in range(Hh):
+        for x in range(W):
+            dx, dy = (x-cx)/Rx, (cy-y)/Ry; a = math.degrees(math.atan2(dy, dx)); t = ((a-a0) % 360)/max(1e-9, (a1-a0) % 360)
+            if t > 1: continue
+            w = th*t**0.8   # 先（a1）が いちばん太い（つめの いる所）
+            r = math.hypot(dx, dy); d = (r-1)*Ry   # だ円の ふちからの たての はなれ（ドット）
+            if -w <= d <= 0.5 and w > 0.4:
+                g[y][x] = 'a' if d > -1 else ('c' if t < 0.35 else 'b')
+    rows = [''.join(r) for r in g]; rows = [r for r in rows if r.strip('.')] or ['.']
+    return '|'.join(rows)
+FXBMP['spin'] = [_ell(25, 8, 3.2, 150, 350), _ell(26, 8, 2.0, 170, 360), _ell(27, 9, 1.0, 190, 10)]   # まわって ひっかく わ（左の おくから 手前を とおって 右へ）
+FXCOL['spin'] = ('#ffffff', '#e4defc', '#b8acdc')
 FXCOL['swipe'] = FXCOL['swipeL'] = ('#ffffff', '#e4defc', '#b8acdc')
-FXBMP['smoke'] = ['..bbb..|.baaab.|baaaaab|baaaaab|baaaaab|.bcccb.|..ccc..', '.b.b.b.|b.aaa.b|.aaaaa.|baaaaab|.aaaaa.|b.ccc.b|.b.c.b.', '.b...b.|.......|b..a..b|...a...|b..a..b|.......|.b...b.']   # けむり：まるい もくもく → ほどけて → 点になって きえる
-FXCOL['smoke'] = ('#cdb8e0', '#9e88b8', '#7a6696'); FXBMP['steam'] = FXBMP['smoke']; FXCOL['steam'] = ('#ffffff', '#e4f0fa', '#b8cee0')
-FXSHAPE = {'steam': 'steam', 'smoke': 'smoke', 'swipe': 'swipe', 'swipeL': 'swipeL', 'dust': 'puff', 'ash': 'puff', 'spark': 'spark', 'ember': 'ember', 'snow': 'snow', 'leaf': 'leaf', 'petal': 'petal', 'sweat': 'sweat', 'star': 'star', 'slash': 'slash', 'impact': 'impact'}
-FXMOVE = {'dust': (0, 0, 0.05, 0.6), 'ash': (0, 0, 0.06, 0.8), 'spark': (0, 0, 0.02, 1.2), 'ember': (0, 0, 0.1, 0.6), 'snow': (0, 0, -0.06, 0.6), 'leaf': (0, 0, -0.05, 0.9),
-          'petal': (0, 0, -0.04, 1.0), 'sweat': (0, 0, -0.05, 0.3), 'star': (0, 0, 0, 0.0), 'slash': (0, 0, 0, 0), 'impact': (0, 0, 0, 0), 'swipe': (0, 0, 0, 0), 'swipeL': (0, 0, 0, 0), 'smoke': (0, 0, 0.08, 0.5), 'steam': (0, 0, 0.1, 0.5)}   # (…, …, 上へ（コマごと）, ひろがる速さ（コマごと、ひろがりの倍）)
+FXSHAPE = {'spin': 'spin', 'swipe': 'swipe', 'swipeL': 'swipeL', 'dust': 'puff', 'ash': 'puff', 'spark': 'spark', 'ember': 'ember', 'snow': 'snow', 'leaf': 'leaf', 'petal': 'petal', 'sweat': 'sweat', 'star': 'star', 'slash': 'slash', 'impact': 'impact'}
+FXMOVE = {'spin': (0, 0, 0, 0), 'dust': (0, 0, 0.05, 0.6), 'ash': (0, 0, 0.06, 0.8), 'spark': (0, 0, 0.02, 1.2), 'ember': (0, 0, 0.1, 0.6), 'snow': (0, 0, -0.06, 0.6), 'leaf': (0, 0, -0.05, 0.9),
+          'petal': (0, 0, -0.04, 1.0), 'sweat': (0, 0, -0.05, 0.3), 'star': (0, 0, 0, 0.0), 'slash': (0, 0, 0, 0), 'impact': (0, 0, 0, 0), 'swipe': (0, 0, 0, 0), 'swipeL': (0, 0, 0, 0)}   # (…, …, 上へ（コマごと）, ひろがる速さ（コマごと、ひろがりの倍）)
+FADEN = 4   # きえるとき、ほどけた ドットの 1/FADEN が つぶになって のぼる
+FADEUP = 20   # つぶの のぼる高さ（ドット。ほどけきるときに）
 FXLIFE = 3   # パーティクルは 3コマ のこる（年れい 0・1・2）
 
 def fxparts(frames, name):
@@ -104,7 +119,7 @@ def fxparts(frames, name):
                 off = (rs.rand(3)*2-1)*np.array([1, 0.6, 0.8])*spr if n > 1 else np.zeros(3); vz = FXMOVE[kind][2]; sp = FXMOVE[kind][3]
                 for age in range(FXLIFE):
                     j = i+age
-                    if j >= len(frames): break
+                    if j >= len(frames) or (j > i and frames[j].get('fade')): break   # きえる コマには、前の コマの つぶを のこさない
                     out[j].append((kind, np.array(at, float)+mv+off*(1+sp*age)+np.array([0, 0, vz*age]), age))
     return out
 
@@ -503,9 +518,16 @@ def shoot(name, cfg, src, yaw=0.0):
         ey = EYES if EYES is not None else eyepos(P, F, lab, H, cfg['eyes'])
         q2 = [proj(R(p)) for p in ey]; side = abs(q2[1][1]-q2[0][1]) > abs(q2[1][0]-q2[0][0])   # 両目のならびが たて：よこにたおれている
         im = stamp(im, [(proj(R(p))[0]-ext[0], proj(R(p))[1]-ext[2]) for p in ey if eyevis(proj(R(p)), ext, float(np.dot(R(p), V)))], cfg['eyes']['col'], cfg['eyes'].get('edge'), side, cfg.get('pose', {}).get('dead', False))   # 見えている目だけ、おす（まわる・うつむく・前に物があると、かくれる）
-    if cfg.get('pose', {}).get('fade'):   # けむりになって きえる：体を あみで うすく（あみは 足もとの点が もと。けむりは このあとで おす）
-        a = np.array(im); yy, xx = np.indices(a.shape[:2]); B4 = np.array([[0, 8, 2, 10], [12, 4, 14, 6], [3, 11, 1, 9], [15, 7, 13, 5]])/16
-        a[B4[(yy+ext[2]) % 4, (xx+ext[0]) % 4] < cfg['pose']['fade'], 3] = 0; im = Image.fromarray(a)
+    if cfg.get('pose', {}).get('fade'):   # きえる：体が 上から ばらばらに ほどけ、ほどけた ドットの いくつかが、体の色の つぶになって 上へ のぼる
+        fd = cfg['pose']['fade']; a = np.array(im); yy, xx = np.indices(a.shape[:2]); 
+        gx, gy = xx+ext[0], yy+ext[2]; hs = (gx*73856093 ^ gy*19349663) & 1023; on = a[..., 3] > 0; ys = yy[on]; y0_, y1_ = (ys.min(), ys.max()) if len(ys) else (0, 1)
+        hh = (y1_-yy)/max(1, y1_-y0_); nz = ((hs*2654435761) & 1023)/1023   # 上から ほどける（高さ＋ばらつき。あみの ならびに しない）
+        off = on & (hh*0.55+nz*0.45 > 1-fd)
+        sel = off & (hs % FADEN == 0); up = np.round(fd*FADEUP).astype(int)+(hs >> 4) % 5   # つぶ：ほどけた ドットの 1/FADEN。上へ（ほどけるほど 高く、少しずつ ばらばら）
+        sy, sx = yy[sel]-up[sel], xx[sel]+((hs[sel] >> 7) % 3-1); col = a[sel].copy(); a[off, 3] = 0
+        pad = max(0, -int(sy.min())) if len(sy) else 0
+        if pad: a = np.concatenate([np.zeros((pad,)+a.shape[1:], a.dtype), a]); sy = sy+pad; ext = (ext[0], ext[1], ext[2]-pad, ext[3])
+        ok = (sx >= 0) & (sx < a.shape[1]); a[sy[ok], sx[ok]] = col[ok]; im = Image.fromarray(a)
     if cfg.get('fxp') and abs(math.cos(yaw)-1) > 1e-6:   # うしろ向き：体の前がわ（体の むこう）の パーティクルは、体に かくれるので おさない
         cfg = dict(cfg, fxp=[q for q in cfg['fxp'] if q[1][1] < 0.08])
     if cfg.get('fxp'):   # パーティクル（色の数をへらしたあとに おす。絵のわくの外に出る分は、わくを広げて入れる）
