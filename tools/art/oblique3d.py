@@ -348,16 +348,18 @@ def render_px(sc, proj, ext, depth, k=0.72, outer=True, merge=12, lw=1, k2=0.86,
         L_ = [q for q in VN.get((pid,)+tuple(np.round(v, 5)), []) if np.dot(q, n) > SMCREASE]
         if not L_: return n
         m_ = np.sum(L_, 0); return m_/max(1e-9, np.linalg.norm(m_))
+    INK = {p_ for p_, m_ in sc.mt.items() if m_ == 'ink'}
     for a, b, c, cc, pid in sc.t:
         n = np.cross(b-a, c-a); ln = np.linalg.norm(n)
         if ln < 1e-12: continue
         n /= ln
+        if pid in INK and np.dot(n, depth) > 0: continue   # 背面法の輪郭（ふくらませた うら返しの皮）：うらを向いた面だけ描く
         if np.dot(n, depth) < 0: n = -n
         if sc.mt.get(pid) == 'clear': CLR.append((a, b, c, cc, n)); continue   # 水など、すけて見える部品は、ほかをぜんぶ描いてから、うすくかさねる
         d = float(np.dot(n, LIGHT)); lv = (0 if d > LV4[0] else 1 if d > LV4[1] else 2 if d > LV4[2] else 3) if GRAD else (0 if d > 0.55 else 1 if d > 0.1 else 2)
         if sc.mt.get(pid) == 'soft': lv = (0 if d > SOFTLV4[0] else 1 if d > SOFTLV4[1] else 2 if d > SOFTLV4[2] else 3) if GRAD else (0 if d > SOFTLV[0] else 1 if d > SOFTLV[1] else 2)
         if sc.mt.get(pid) == 'soft1': lv = 0 if d > SOFTLV[0] else 1   # 布（うすいかげだけ。まくらなど、かげをこくしない物）
-        if sc.mt.get(pid) == 'flat': lv = 0   # かげを自分でつけた部品（場所ごとの色。まくら）：3だんのかげをつけない   # 布・砂：なだらかなふくらみにも、かげがつく（さかい目の向きを光に近くする）
+        if sc.mt.get(pid) in ('flat', 'ink'): lv = 0   # かげを自分でつけた部品（場所ごとの色。まくら）：3だんのかげをつけない   # 布・砂：なだらかなふくらみにも、かげがつく（さかい目の向きを光に近くする）
         if sc.mt.get(pid) == 'metal':   # 金属：光と目のあいだの向き（ハーフベクトル）を向く面に、つやのすじ
             hv = LIGHT+depth/np.linalg.norm(depth); hv /= np.linalg.norm(hv); hh = np.array([hv[0], hv[1], 0]); nh = np.array([n[0], n[1], 0])
             sp = float(np.dot(nh/(np.linalg.norm(nh) or 1), hh/(np.linalg.norm(hh) or 1))) if np.linalg.norm(nh) > .3 else float(np.dot(n, hv))
@@ -413,7 +415,7 @@ def render_px(sc, proj, ext, depth, k=0.72, outer=True, merge=12, lw=1, k2=0.86,
     if DITHER:   # かげを1色にして、うすいかげはかげのドットの密度（あみ）であらわす。あみは、できあがりの1ドット（DITHER ドット四方）ごと
         BY = np.array([[0, 8, 2, 10], [12, 4, 14, 6], [3, 11, 1, 9], [15, 7, 13, 5]])/16+1/32   # 4×4 のならび（16だん）
         yy_, xx_ = np.mgrid[0:Hp, 0:Wp]; th = BY[(yy_//DITHER) % 4, (xx_//DITHER) % 4]
-        m_ = (idb >= 0) & (lvb >= 0)
+        m_ = (idb >= 0) & (lvb >= 0) & ~np.isin(idb, list(INK))   # 背面法の輪郭は、そのままの色
         if DITHERT:   # 色の段（こい かげ・かげ・光・ハイライト）と、そのさかいのあみ。DITHERT：段のさかい目ごとの（はじまる・おわる 光の向きとの内積）、段の色（toon の段か、(明るさ, あざやかさ) を足す）
             bd, tones = DITHERT; idx = np.zeros((Hp, Wp), int)
             for lo, hi in bd: idx += (np.clip((dlb-lo)/(hi-lo), 0, 1) > th) | (dlb >= hi)

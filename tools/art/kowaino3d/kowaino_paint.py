@@ -356,6 +356,14 @@ def shoot(name, cfg, src, yaw=0.0):
             sc.part(); last = lab[k]; PL[sc.pid] = lab[k]
         sc.tri(R(P[f[0]]), R(P[f[1]]), R(P[f[2]]), col[k])
     sc.decal(None); sc.group(None); sc.bump(None); sc.material(None)
+    if HULL:   # 背面法の輪郭：点を面の向きへ HULL ドットぶん ふくらませた うら返しの皮を、こい色で（うらを向いた面だけ描く）。物のふち・かさなる所・部品のさかいに線が出る
+        tm_ = trimesh.Trimesh(vertices=P, faces=F, process=False); VN = tm_.vertex_normals*(1 if tm_.volume > 0 else -1); w_ = HULL*H/cfg['HPX']; Ph = P+VN*w_
+        sc.smooth(False); sc.outline(0); sc.material('ink'); sc.part()
+        for k, f in enumerate(F):
+            a_, b_, c_ = (R(Ph[f[0]]), R(Ph[f[1]]), R(Ph[f[2]])); nn = np.cross(b_-a_, c_-a_); av = R(VN[f].mean(0))
+            if np.dot(nn, av) < 0: b_, c_ = c_, b_
+            sc.tri(a_, b_, c_, np.array(col[k], float)*HULLK)
+        sc.material(None); sc.outline(None)
     if HD: fingers(sc, HD, R, hx(cfg.get('hand', '#a597ba')))
     sc.smooth(False)
     # 大きく（BIG 倍）写してから、色の平均（pixdown）でちぢめる：三角形ごとのかげのむらが、ならされる
@@ -390,7 +398,7 @@ def shoot(name, cfg, src, yaw=0.0):
             nb = np.roll(np.roll(lb, -dy, 0), -dx, 1); nz = np.roll(np.roll(zs, -dy, 0), -dx, 1)
             ln |= (lb >= 0) & (nb >= 0) & (nb != lb) & (nz > zs)
         o = o.copy(); o[ln, :3] = o[ln, :3]*PARTK
-    im = (lambda x: x if DITH else despeckle(x))(quant(rim(Image.fromarray(o.round().astype(np.uint8), 'RGBA')), NCOL, cfg.get('hem', (None,))[0]))
+    im = (lambda x: x if DITH else despeckle(x))(quant((lambda x: x if HULL else rim(x))(Image.fromarray(o.round().astype(np.uint8), 'RGBA')), NCOL, cfg.get('hem', (None,))[0]))
     if abs(math.cos(yaw)-1) < 1e-6:   # 正面だけ、目をおす
         im = stamp(im, [(proj(R(p))[0]-ext[0], proj(R(p))[1]-ext[2]) for p in eyepos(P, F, lab, H, cfg['eyes'])], cfg['eyes']['col'], cfg['eyes'].get('edge'))
     return im, ext
@@ -406,7 +414,9 @@ KWT = ([(0.08, 0.14), (0.4, 0.47), (0.9, 0.96)], [3, 2, 0, (7, -4)])   # 色の�
 KWMSPEC = 0.9   # 金属のつやが出る向きの近さ（コワイノ。光沢・反射で金属をあらわす）
 KWDR = (0.4, 0.47)   # あみ：光の向きとの内積がこのあいだだけ（光とかげのさかいの細い帯。ほかは光かかげの1色。あみを多用しない、持ち主がきめた）
 KWHL = (0.92, 0.97, 14, 6)   # ハイライト：光の向きとの内積がこのあいだで、あみがふえる。明るさ+14・あざやかさ−6
-PARTLINE = True   # 部品のさかいの線
+HULL = 0.9   # 背面法の輪郭のふとさ（できあがりのドット。0 で引かない）
+HULLK = 0.45   # 背面法の輪郭の色（部品の色にかける）
+PARTLINE = False   # 部品のさかいの線
 PARTK = 0.62   # 部品のさかいの線の色（そのドットの色にかける）
 PARTG = {'red': 'base', 'under': 'base', 'rim': 'base', 'foot': 'face'}   # 同じ部品とみなす色わけ（表と裏地・顔と足には線を引かない）
 DITH = True   # かげを1色＋あみ（ドットの密度）にする
