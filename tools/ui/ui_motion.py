@@ -43,6 +43,8 @@ SRC = {
  'uboing2y': (.4, "0%{transform:translateY(-4.5px)}20%{transform:translateY(1.5px)}40%{transform:translateY(-1.5px)}60%{transform:none}80%{transform:translateY(-1.5px)}100%{transform:none}"),
  'uboing2': (.45, "0%{transform:scale(.93,1.16)}20%{transform:scale(1.07,.92)}40%{transform:scale(.97,1.05)}60%{transform:scale(1.02,.98)}80%{transform:scale(.995,1.01)}100%{transform:none}"),
  'urow': (.24, "0%{transform:translateY(6px);opacity:0}25%{transform:translateY(3px);opacity:.6}50%{transform:translateY(-1.5px);opacity:1}75%,100%{transform:none;opacity:1}"),
+ 'tglow': (1.6, "0%{opacity:.3}50%{opacity:1}100%{opacity:.3}"),
+ 'tpop': (.5, "0%{transform:scale(.6)}35%{transform:scale(1.25)}60%{transform:scale(.94)}80%{transform:scale(1.04)}100%{transform:none}"),
  'lvpop': (.45, "0%{transform:scale(.3);opacity:0}60%{transform:scale(1.08);opacity:1}100%{transform:scale(1);opacity:1}"),
 }
 SRC['tontileR'] = (.4, SRC['tontile'][1].replace('rotate(', 'rotate(-').replace('rotate(--', 'rotate('))
