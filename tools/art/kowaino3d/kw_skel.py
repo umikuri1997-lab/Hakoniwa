@@ -22,6 +22,7 @@ BONES = [('root', None, (0, 0, 0)), ('hip', 'root', (0, 0, 0.12)), ('chest', 'hi
          ('hornL', 'head', (-0.2, 0, 0.74)), ('hornR', 'head', (0.2, 0, 0.74)), ('footL', 'root', (-0.08, 0, 0.06)), ('footR', 'root', (0.08, 0, 0.06))]
 WZ = ((0.03, 0.2), (0.26, 0.46), (0.46, 0.62))
 ARMR = 0.07
+JAWCLOTH = {'trapper': ((0.08, 0.22), (0.12, 0.26, 0.42, 0.47))}   # あごの布：前（y）が この あいだで ふえ、高さ（z）が この4つの あいだ（下から ふえて、顔の下で へる）
 ARMRN = {'thief': 0.2}   # 手を大きくうごかすコワイノ：そでを広く なめらかに腕へ（せまいと、そでが1本のすじに のびる）
 SLEEVE = ((0.24, 0.36), (0.2, 0.46))   # 手がないとき：そで（よこのはしのきょり・高さ）。すその横まで ひろげない（すそが ひっぱられて裏地が見える）
 SLEEVEW = 0.7   # 手がないとき：そでの重みの いちばん大きい わり
@@ -108,6 +109,10 @@ class Skel:
                 grow |= nx
             for side, bone in ((-1, 'armL'), (1, 'armR')):
                 vs = np.unique(F[hand | grow]); vs = vs[s.vside[vs] == side]; W[vs] = 0; W[vs, ix[bone]] = 1
+        if name in JAWCLOTH:   # 口をあけると、牙のまわりの布（あごの布）も いっしょに下がる
+            jy, jz = JAWCLOTH[name]; y = P[:, 1]/H
+            wj = smooth(*jy, y)*smooth(jz[0], jz[1], z)*(1-smooth(jz[2], jz[3], z))*np.isin(np.arange(V), np.unique(F[np.isin(lab, ['base', 'red', 'rim', 'under'])]))
+            vj = np.nonzero(wj > 0)[0]; put(vj, 'jaw', wj[vj])
         sl = lab == 'sleeve'
         if sl.any():   # 腕（そで）：肩（体）から手首（手）へ、なめらかに むね → 腕 の重み（体と手の どちらに近いか）
             from scipy.spatial import cKDTree
