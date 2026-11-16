@@ -39,7 +39,7 @@ CFG.update({   # 色は、いまのゲームの絵（ない物は、night.js の
     'thief': mk('thief', .9, '#6a5468', '#231a2c', '#8f7a56', '#e0cc94', mats={'deco': 'fabric'}),
     'brute': mk('brute', 1.25, '#4a4262', '#1b1628', '#968a9e', '#c2afae', hand='#8c80a0', mats={'deco': 'rock'}),
     'breaker': mk('breaker', 1.1, '#5e5474', '#1d1729', '#8c8496', '#c2afae', hand='#8c80a0', mats={'deco': 'metal'}),
-    'trapper': mk('trapper', .95, '#3e3654', '#171223', '#c4b2b0', '#c2afae', mats={'deco': 'gloss'}),
+    'trapper': mk('trapper', .95, '#3e3654', '#171223', '#c4b2b0', '#c2afae', nohand=True, mats={'deco': 'gloss'}),
     'ash': mk('ash', .9, '#7a6a7a', '#251c2e', '#a09098', '#d8c8c8', mats={'deco': 'rock'}),
     'rockc': mk('rockc', 1.3, '#6c5e70', '#211a2a', '#9b888c', '#c2afae', hand='#8a7a80', mats={'deco': 'rock', 'hand': 'rock'}),
     'armor': mk('armor', 1.3, '#4e4e60', '#1a1a24', '#8c92a2', '#9fe0ff', mats={'deco': 'metal'}),
@@ -166,7 +166,7 @@ def paint_labeled(m, comp, lab0, cfg):
             if best is None or cen[ks, 2].mean() > cen[best, 2].mean(): best = ks   # 顔は、いちばん高い所のかたまり
         for q in np.unique(fl):
             ks = fc[fl == q]
-            if lab[ks[0]] == 'face' and (best is None or ks[0] not in set(best.tolist())): lab[ks] = 'hand'
+            if lab[ks[0]] == 'face' and (best is None or ks[0] not in set(best.tolist())) and not cfg.get('nohand'): lab[ks] = 'hand'   # nohand：手のない コワイノ（顔の色の 小さな かたまりは、口の中など 顔のつづき）
     COLS = cfg['labcol']; col = np.array([hx(COLS.get(l, COLS.get('face' if l in ('foot', 'hand') else l, cfg['base']))) for l in lab])
     return P, F, col, lab, H, cen
 
