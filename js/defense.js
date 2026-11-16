@@ -54,7 +54,7 @@ function bossPhase(e){const t=e.type;if(t!=='boss'&&t!=='boss2'||e.dead)return;
 function bossLeap(e){/* いちばん近い柵・塀を1つとびこえる（むこうがわが歩ける所だけ） */let best=null,bd=1e9;const x0=e.x|0,y0=e.y|0;for(let dy=-4;dy<=4;dy++)for(let dx=-4;dx<=4;dx++){const j=(y0+dy)*W+x0+dx;if(j<0||j>=W*H||!breakable(typeAt(j)))continue;const d=Math.hypot(dx,dy);if(d>=bd||d<.5)continue;const ux=Math.sign(dx),uy=Math.sign(dy),k=j+uy*W+ux;if(!walk(k))continue;bd=d;best=k}
   if(best==null)return;e.x=best%W+.5;e.y=((best/W)|0)+.5;e.path=[];e.repath=0;sfxAt('bonk',e.x,e.y);fxSpr('shock',e.x*TS,e.y*TS,'#120a24');toast(EN[e.type].name+'が柵をとびこえた！','warn')}
 const rageMul=e=>e.rage>S.t?RAGESP:1;
-/* ---------- 葉のかべ（守り神のわざ。守り神のちからでパワー300でおぼえる S.flags.leafSkill） ----------
+/* ---------- 葉のかべ（守り神のわざ。むらのちからの木でパワー300でおぼえる S.flags.leafSkill） ----------
    夜、地面をなぞると、葉のかべ（leafwall、せいれいは通れる・コワイノはこわして通る、じょうぶさ30）が生える。パワー5。のこる時間・つかえない時間は時計の時間（GUP の leaf）。 */
 const LEAFLEARN=300,LEAFPT=5;let LEAFARM=false,LEAFDRAG=null,LEAFT=0;
 const leafLv=()=>gupLv('leaf'),leafG=()=>gupOf('leaf');
@@ -64,7 +64,7 @@ function leafLearn(){if(leafOK())return;if(S.pt<LEAFLEARN){toast(lackPt(LEAFLEAR
 function leafCellOK(j){return j>=0&&j<W*H&&!S.obj[j]&&walk(j)&&S.ground[j]===0&&!(S.drops||[]).some(d=>d.y*W+d.x===j)}
 function leafAdd(j){const L=LEAFDRAG;if(!L)return;const max=leafG().len[leafLv()];if(L.length>=max||L.includes(j))return;if(L.length){const p=L[L.length-1];if(Math.abs(p%W-j%W)+Math.abs(((p/W)|0)-((j/W)|0))!==1)return}if(!leafCellOK(j))return;L.push(j)}
 function leafPlace(cells){LEAFARM=false;if(!cells||!cells.length)return;if(!isNight())return toast('葉のかべは、夜だけ');if(leafLeft()>0)return toast('葉のかべは、まだ使えない');if(S.pt<LEAFPT)return toast(lackPt(LEAFPT),'warn');
-  S.pt-=LEAFPT;PTW.q=true;const g=leafG(),n=leafLv(),until=S.t+g.dur[n];for(const j of cells){if(!leafCellOK(j))continue;S.obj[j]='leafwall';S.hp[j]=BL.leafwall.hp;(S.dyn[j]||(S.dyn[j]={})).lw=until;burstAt(j%W+.5,((j/W)|0)+.5,'furn')}S.flags.leafCd=S.t+g.cd[n];sfx('bush');dirty=true;try{recount()}catch(e){}for(const e of S.enemies)e.repath=0}
+  S.pt-=LEAFPT;PTW.q=true;const g=leafG(),n=leafLv(),until=S.t+g.dur[n];for(const j of cells){if(!leafCellOK(j))continue;S.obj[j]='leafwall';S.hp[j]=BL.leafwall.hp;(S.dyn[j]||(S.dyn[j]={})).lw=until;burstAt(j%W+.5,((j/W)|0)+.5,'furn');{const k=cells.indexOf(j),fx0=(j%W+.5)*TS,fy0=(((j/W)|0)+.5)*TS;villageTimeout(()=>fxSpr('leafsprout',fx0,fy0),k*60)}/* 葉がはじけて生える（なぞった順に） */}skillFx('leaf');S.flags.leafCd=S.t+g.cd[n];sfx('bush');dirty=true;try{recount()}catch(e){}for(const e of S.enemies)e.repath=0}
 function leafTick(){/* のこる時間がすぎた葉のかべを消す。こわされた葉のかべは、直す一覧に入れない */if(S.broken&&S.broken.some(b=>b.id==='leafwall'))S.broken=S.broken.filter(b=>b.id!=='leafwall');let ch=false;for(const k in S.dyn){const d=S.dyn[k];if(!d||d.lw==null)continue;const j=+k;if(S.obj[j]!=='leafwall'){delete d.lw;continue}if(S.t>=d.lw||!isNight()){S.obj[j]='';delete S.dyn[j];delete S.hp[j];fxSpr('twinkle',(j%W+.5)*TS,((j/W|0)+.5)*TS);ch=true}}if(ch){dirty=true;try{recount()}catch(e){}}}
 function drawLeafWall(c,x,y,i,now){/* 葉のかべ（コードのドット絵、仮の絵）：こんもりした葉のかたまり */const P=(dx,dy,w,h,col)=>{c.fillStyle=col;c.fillRect(x+dx,y+dy,w,h)};P(4,26,24,4,'rgba(30,60,20,.3)');P(4,10,24,18,'#4f8f3a');P(6,6,20,6,'#5fa646');P(8,4,6,2,'#6fb854');P(18,4,6,2,'#6fb854');P(6,12,4,4,'#7cc25e');P(16,8,4,4,'#7cc25e');P(22,16,4,4,'#7cc25e');P(10,20,4,4,'#3f7a2e');P(20,22,4,4,'#3f7a2e')}
 function drawLeafPrev(){if(!LEAFDRAG||!LEAFDRAG.length)return;ctx.save();ctx.globalAlpha=.55;for(const j of LEAFDRAG){ctx.fillStyle='#7cc25e';ctx.fillRect((j%W)*TS+2,((j/W)|0)*TS+2,TS-4,TS-4)}ctx.restore()}
@@ -75,7 +75,6 @@ const skillOn=k=>skillSetOf().includes(k);
 function skillToggle(k){let L=skillSetOf().slice();if(L.includes(k))L=L.filter(x=>x!==k);else{if(L.length>=SKILLMAX)return toast('わざは3つまで');L.push(k)}S.skillSet=L;sfx('tap')}
 function skillSec(body){const sec=el('<div class="sec"><h3>わざの枠（3つまで）</h3><div class="rows"></div></div>'),rw=sec.querySelector('.rows');const on=skillSetOf();
   for(const[k,n,ok]of SKILLS){if(!ok())continue;const r=el('<button class="row" style="text-align:left;width:100%"><div class="tx"><b></b><small></small></div></button>');ckSet(r.querySelector('b'),(on.includes(k)?'✓ ':'')+n);r.querySelector('small').textContent=on.includes(k)?'セットしている':'セットしていない';r.onclick=()=>{skillToggle(k);renderSheet()};rw.appendChild(r)}
-  if(!leafOK()){const r=rowEl('葉のかべ','夜、地面をなぞると、葉のかべが生える。コワイノの道をふさぐ');const b=el('<button class="btn pri" style="flex:none"></button>');b.textContent='おぼえる　'+SP(LEAFLEARN);lackOn(b,lackPt(LEAFLEARN));b.onclick=()=>{if(S.pt<LEAFLEARN){sfx('tap');return toast(lackPt(LEAFLEARN),'warn')}leafLearn();renderSheet()};r.appendChild(b);rw.appendChild(r)}
   body.appendChild(sec)}
 /* ---------- 見張り台のねらう順（S.dyn[j].to：near・hp・fast・vill） ---------- */
 const TORDER=[['near','近い','いちばん近いコワイノ'],['hp','強い','体力がいちばん多いコワイノ'],['fast','速い','足がいちばん速いコワイノ'],['vill','村に近い','村のまん中にいちばん近いコワイノ']];

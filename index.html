@@ -92,6 +92,10 @@ button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 @keyframes uprays{from{transform:rotate(0)}to{transform:rotate(60deg);opacity:.4}}
 @keyframes shk{0%,100%{transform:translate(0,0)}15%{transform:translate(-7px,3px)}35%{transform:translate(6px,-4px)}55%{transform:translate(-4px,2px)}75%{transform:translate(3px,-2px)}}
 #cv.shk{animation:shk .5s}
+@keyframes shk2{0%,100%{transform:translate(0,0)}25%{transform:translate(-3px,2px)}50%{transform:translate(3px,-2px)}75%{transform:translate(-2px,1px)}}
+#cv.shk2{animation:shk2 .25s steps(1)}
+@keyframes shk3{0%,100%{transform:translate(0,0)}20%{transform:translate(-4px,2px)}40%{transform:translate(4px,-3px)}60%{transform:translate(-3px,2px)}80%{transform:translate(2px,-1px)}}
+#cv.shk3{animation:shk3 .35s steps(1)}
 @keyframes uphop{0%,100%{transform:translateY(0)}50%{transform:translateY(-16px)}}
 @keyframes upsp{from{transform:translate(-50%,-50%) scale(.4);opacity:1}to{transform:translate(calc(-50% + var(--dx)),calc(-50% + var(--dy))) scale(1.1);opacity:0}}
 #rlv{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(40,28,14,.45);z-index:31;pointer-events:auto}#rlv[hidden]{display:none}
@@ -485,6 +489,7 @@ svg.pxi.prev{width:14px;height:14px;transform:rotate(90deg)}
 svg.pxi.nexti{width:16px;height:16px;margin-left:2px;vertical-align:-3px;animation:nbob .8s steps(2) infinite}@keyframes nbob{50%{transform:translateY(2px)}}
 .dlg .btns .btn{display:inline-flex;align-items:center}
 svg.pxi.ck{width:14px;height:12px;display:inline-block;vertical-align:-1px;margin-right:4px;color:#4f9e4c}svg.pxi.oi{width:18px;height:18px;display:inline-block;vertical-align:-4px;margin-right:4px}.stockEmo svg.pxi{width:32px;height:32px;color:#c4ad86;display:block;margin:4px auto}
+.stree .tline{position:absolute;display:block;background:#8a6a44}.stree .tlbl{position:absolute;transform:translateX(-50%);font-size:12px;line-height:14px;color:var(--muted);white-space:nowrap}.stree .tlbl.hub{color:var(--ink)}.stree .tlbl.side{transform:none;margin-left:8px}.stree .tnode{position:absolute;width:36px;height:36px;margin:-18px 0 0 -18px}.stree .tnode svg.tdisc{position:absolute;left:0;top:0;width:36px;height:36px}.stree .tnode b{position:relative;display:flex;align-items:center;justify-content:center;width:36px;height:36px;font-size:12px;font-weight:400;color:#5b3f24}.stree .tnode[data-st=done] b{color:#fff}.stree .tnode[data-st=lock] b,.stree .tnode[data-st=hid] b{color:#9a8c72}.stree .tnode b svg.pxi.ck{margin:0;color:#fff}
 /* せいれいの画面のタブ：同じ大きさ・同じすきま */
 .recsw{flex-basis:100%;width:100%;margin:2px 0 8px}.recsw .ctab{flex:1 1 0;text-align:center}#sheetBody>.ctabs{gap:6px}#sheetBody>.ctabs .ctab{flex:1 1 0;min-width:0;text-align:center;padding:6px 4px;white-space:nowrap}#sheetBody>.ctabs .ctab.ctabi svg.pxi{width:24px;height:24px;display:block;margin:0 auto}
 /* おくのパネルを開いているあいだ、スマホのたて画面では守りの光のボタンをかくす（パネルにかさなる） */
