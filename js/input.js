@@ -87,11 +87,11 @@ function onTap(sx,sy){if(GIFT_ACTIVE&&camAnim&&camAnim.done)return;if(typeof sta
   if(mode==='look'){
     if(fieldStoryTap(tx,ty))return;
     const en=enemyAtTap(w0.x,w0.y);
-    if(en){sfx('tap');return toast(EN[en.type].name+'（体力 '+Math.max(0,Math.ceil(en.hp))+'/'+(en.max||EN[en.type].hp)+'）')}/* 「コワイノ」に守りの光をあてるのは、アイコンをえらんでから。「しらべる」では、名前と体力を出す（何も起きないタップにしない） */
-    {const st=festStalls().find(t=>Math.abs(w.x/TS-(t.x+.5))<1.3&&w.y/TS>t.y-2.6&&w.y/TS<t.y+1);if(st){sfx('tap');openSheet('stall',st.x);return}}/* 屋台をタップすると、その屋台の品物 */
+    if(en){sfx('mtap');return toast(EN[en.type].name+'（体力 '+Math.max(0,Math.ceil(en.hp))+'/'+(en.max||EN[en.type].hp)+'）')}/* 「コワイノ」に守りの光をあてるのは、アイコンをえらんでから。「しらべる」では、名前と体力を出す（何も起きないタップにしない） */
+    {const st=festStalls().find(t=>Math.abs(w.x/TS-(t.x+.5))<1.3&&w.y/TS>t.y-2.6&&w.y/TS<t.y+1);if(st){sfx('mtap');openSheet('stall',st.x);return}}/* 屋台をタップすると、その屋台の品物 */
     if(visitTap(w.x/TS,w.y/TS))return;/* 温泉宿のお客さん */
     if(godHere()&&Math.hypot(w.x/TS-godX(),w.y/TS-godY())<1.1){if(TALKW===GOD&&mainStoryBubbleReady())return startTalk();if(SUBW[GOD])return subTalk(SUBW[GOD]);if(S.feat.shop){const ln=pick(S.pt<2?GOD_POOR:GOD_SHOP);return dialog([[GOD,ln]],()=>{openSheet('shop');shopSay=ln;renderSheet()},'交換する')}toast('カミサマ「'+pick(GOD_IDLE)+'」');return}
-    if(S.nushi&&Math.hypot(w.x/TS-S.nushi.x,w.y/TS-(S.nushi.y-.6))<1.4){sfx('tap');return nushiTalk()}/* ヌシ様と話す */
+    if(S.nushi&&Math.hypot(w.x/TS-S.nushi.x,w.y/TS-(S.nushi.y-.6))<1.4){sfx('mtap');return nushiTalk()}/* ヌシ様と話す */
     if(S.cleared){const tw=S.obj.indexOf('tower');if(tw>=0&&Math.hypot(w.x/TS-storyTreeX(tw),w.y/TS-(storyTreeY(tw)-.4))<1.4)return openSheet('travel')}/* クリア後は、台座から次の土地へ */
     if(sumHit(w.x/TS,w.y/TS))return doSummon();
     if(TALKW===GOD&&mainStoryBubbleReady()&&godHere()&&Math.hypot(w.x/TS-godX(),w.y/TS-(godY()-1.6))<1.2)return startTalk();
@@ -101,7 +101,7 @@ function onTap(sx,sy){if(GIFT_ACTIVE&&camAnim&&camAnim.done)return;if(typeof sta
     {const tr=S.res.find(r=>SUBW[r.name]&&!r.hidden&&!(r.act&&r.act.type==='sleep')&&(Math.hypot(r.x-w.x/TS,(tapY(r)-1)-w.y/TS)<1.4||bubHit(r,w)));if(tr){panTo(tr.x*TS,(tr.y-.7)*TS);return subTalk(SUBW[tr.name])}}
     let best=null,bd=1.1;for(const r of S.res){if(r.hidden&&!peekH(r))continue;const d=Math.hypot(r.x-w.x/TS,(tapY(r)-.5)-w.y/TS);if(d<bd){bd=d;best=r}}
     if(best&&best.act&&(best.act.type==='chat'||best.act.type==='rest')&&best.act.stage==='do'&&best.act.topic!=null&&best.act.seen!==best.act.topic){const p=S.res.find(q=>q.id===best.act.partner);if(p){const A=best.act.sub?p:best,B=best.act.sub?best:p;const ti=best.act.topic,C=CHATS[ti];for(const q of [A,B])if(q.act&&q.act.topic===best.act.topic)q.act.seen=best.act.topic;/* 一度見たおしゃべりは、もう一度タップしても出さない（ようすを出す） */return dialog(C.map((l,i)=>{const sp=l[0]?B:A;return [sp.name,((C.el&&!l[0])?l[1]:chatTone(l[1],sp,i)).replace(/@([HMK])/g,(m,c)=>sevName(c)).replace(/@G/g,goneTalkName()||'あの子')]}),()=>{if(C.wave){A.waveU=B.waveU=S.t+4}if(C.mem)bondMemNote(A,B,ti)})}}/* なかよしの雑談は、さいごまで見たら思い出になる（消えたときに話す） *//* おしゃべり中の子をタップすると、会話が見られる */
-    if(!best){const an=typeof aniAtTap==='function'&&aniAtTap(w.x/TS,w.y/TS);if(an){sfx('tap');return aniPop(an)}}/* 飼う生き物：物のタップの前に、足もとのまわりを見る */
+    if(!best){const an=typeof aniAtTap==='function'&&aniAtTap(w.x/TS,w.y/TS);if(an){sfx('mtap');return aniPop(an)}}/* 飼う生き物：物のタップの前に、足もとのまわりを見る */
     if(best){if(!S.flags.tapped&&S.flags.tapAsk){S.flags.tapPend=true}voiceHmm(best);return openSheet('res',best.id)}// ステータスを見て閉じたら、会話に進む
     if(tx<0||ty<0||tx>=W||ty>=H)return;
     if(RUINT>=0&&S.obj[RUINT]==='statueb'){const px=w.x/TS-RUINT%W,py=w.y/TS-((RUINT/W)|0);if(px>=-.9&&px<1.9&&py>=-2.6&&py<2){templeRuinTap(RUINT);return}}/* こわれた神殿は、絵のどこをタップしても */
@@ -119,7 +119,7 @@ function onTap(sx,sy){if(GIFT_ACTIVE&&camAnim&&camAnim.done)return;if(typeof sta
       if(o==='heatv')return openSheet('heatv',j);
       if(o==='boulder')return toast('大岩：のこり '+Math.max(0,4-(S.hp['n'+j]||0))+'/4');
       if(o==='crack'){const t=st2();if(!(t.hai>0))return toast('ひびわれ：ハイカゲの灰でうめられる（灰'+(t.hai||0)+'）');t.hai--;clearObj(j);S.floor[j]='path';burst(j,'block');sfx('level');recount();dirty=true;toast('ひびわれを、灰でうめた（灰-1）','good');return checkQuest()}}
-    {const g=ty*W+tx,dp=(S.drops||[]).find(q=>q.y*W+q.x===g&&q.id!=='shard');if(WEEDS.has(o)||dp){if(o==='kinoko'&&foodCap()-S.food<=0)return toast('箱に入りません');if((WEEDS.has(o)&&o!=='kinoko'||dp&&dp.id.startsWith('mat:'))&&matCap()-matTot()<=0)return toast('箱に入りません');if(dp&&dp.id.startsWith('food:')&&foodCap()-S.food<=0)return toast('箱に入りません');let nm;if(WEEDS.has(o)){(S.wreq||(S.wreq={}))[j]=1;nm=BL[o].name}else{dp.tap=1;nm=dp.id.startsWith('mat:')?(MATN[dp.id.slice(4)]||'おとしもの'):'おとしもの'}sfx('tap');return toast(nm+'：せいれいがとりにいく'+'')}}/* 草・きのこ・枝などの落とし物は、タップすると、せいれいがとりにいく */
+    {const g=ty*W+tx,dp=(S.drops||[]).find(q=>q.y*W+q.x===g&&q.id!=='shard');if(WEEDS.has(o)||dp){if(o==='kinoko'&&foodCap()-S.food<=0)return toast('箱に入りません');if((WEEDS.has(o)&&o!=='kinoko'||dp&&dp.id.startsWith('mat:'))&&matCap()-matTot()<=0)return toast('箱に入りません');if(dp&&dp.id.startsWith('food:')&&foodCap()-S.food<=0)return toast('箱に入りません');let nm;if(WEEDS.has(o)){(S.wreq||(S.wreq={}))[j]=1;nm=BL[o].name}else{dp.tap=1;nm=dp.id.startsWith('mat:')?(MATN[dp.id.slice(4)]||'おとしもの'):'おとしもの'}sfx('mtap');return toast(nm+'：せいれいがとりにいく'+'')}}/* 草・きのこ・枝などの落とし物は、タップすると、せいれいがとりにいく */
     if(HOME_WALLS.has(o)||HOME_DOORS.has(o)){const w=houseWhy(j);if(w)toast(w)}/* 家にならないかべ・ドアをタップすると、理由を出す */
     if(o&&rangeOf(o,j))SHOWR={j,o,until:performance.now()+4000};
     if(o==='farm')return openSheet('farm',j);
@@ -135,7 +135,7 @@ function onTap(sx,sy){if(GIFT_ACTIVE&&camAnim&&camAnim.done)return;if(typeof sta
     if(fw&&breakable(o)&&BL[o].brk)return toast(BL[o].name+'：'+withAttr(o,BL[o].desc||'')+'（じょうぶさ '+Math.floor(S.hp[j]??BL[o].hp)+'/'+BL[o].hp+'）');
     if(fw&&breakable(o))return toast(BL[o].name+'：じょうぶさ '+Math.floor(S.hp[j]??BL[o].hp)+'/'+BL[o].hp);
     if(o==='kagenest'&&nestTap(j))return;/* かげの巣：せいれいがこわしにいく（defense.js） */
-    if(VEINS[o]&&WD===1){if(matCap()-matTot()<=0)return toast('箱に入りません');(S.vreq||(S.vreq={}))[j]=1;sfx('tap');return toast(BL[o].name+'：せいれいがほりにいく')}/* 鉱脈は、タップすると、せいれいがほりにいく */
+    if(VEINS[o]&&WD===1){if(matCap()-matTot()<=0)return toast('箱に入りません');(S.vreq||(S.vreq={}))[j]=1;sfx('mtap');return toast(BL[o].name+'：せいれいがほりにいく')}/* 鉱脈は、タップすると、せいれいがほりにいく */
     if(o==='rock'||VEINS[o]||o==='deadtree'||o==='ntree'||o==='bamboo')return toast(iname(o)+'：のこり '+Math.max(0,10-(S.hp['n'+j]||0))+'/10');
     if(o==='takenoko')return toast('たけのこ：あと '+Math.max(1,3-((S.dyn[j]||{}).age||0))+'日で竹になる');
     if(o==='watch'||o==='yogan')return openSheet('watch',j);
@@ -158,7 +158,7 @@ function onTap(sx,sy){if(GIFT_ACTIVE&&camAnim&&camAnim.done)return;if(typeof sta
     return toast(REV.has(j)?'よみがえった土地':'荒れた土地。まわりに何か置くと、よみがえる');
   }
   if((mode==='build'||mode==='remove'||mode==='bulk')&&nightLock())return toast('夜のあいだは、置くことも、こわすこともできません');
-  if(mode==='build'){if(BL[sel]&&['furn','build','deco'].includes(BL[sel].kind)&&!BL[sel].trap){/* ワナは柵と同じで、タップするたびにそのまま置く */if(!usable(sel))return place(sel,tx,ty);const ok=canPlace(sel,tx,ty,true);pending={kind:'one',id:sel,x:tx,y:ty,ok};confirmOne();($('#cRot').hidden=!(pending&&pending.kind==='one'&&ROTS[pending.id]),$('#confirm').hidden=false);sfx('tap');return}return place(sel,tx,ty)}
+  if(mode==='build'){if(BL[sel]&&['furn','build','deco'].includes(BL[sel].kind)&&!BL[sel].trap){/* ワナは柵と同じで、タップするたびにそのまま置く */if(!usable(sel))return place(sel,tx,ty);const ok=canPlace(sel,tx,ty,true);pending={kind:'one',id:sel,x:tx,y:ty,ok};confirmOne();($('#cRot').hidden=!(pending&&pending.kind==='one'&&ROTS[pending.id]),$('#confirm').hidden=false);sfx('mtap');return}return place(sel,tx,ty)}
   if(mode==='remove')return removeAt(tx,ty);
   if(mode==='bulk'){if(selStamp==='move')return moveTap(tx,ty);if(selStamp&&selStamp.startsWith('bp:'))return askBp(+selStamp.slice(3),tx,ty);if(selStamp)return selStamp.startsWith('swap:')?askSwap(selStamp.slice(5),tx,ty):askStamp(selStamp,tx,ty);if(!S.bulk)return toast('下から道具をえらんでください');return toast('ハケで、なぞった範囲をぬれます')}
 }
