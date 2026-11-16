@@ -44,10 +44,10 @@ CFG.update({   # 色は、いまのゲームの絵（ない物は、night.js の
     'rockc': mk('rockc', 1.3, '#6c5e70', '#211a2a', '#9b888c', '#c2afae', hand='#8a7a80', mats={'deco': 'rock', 'hand': 'rock'}),
     'armor': mk('armor', 1.3, '#4e4e60', '#1a1a24', '#8c92a2', '#9fe0ff', mats={'deco': 'metal'}),
     'shiny': mk('shiny', .8, '#e2d498', '#5a4f2a', '#fff2b0', '#ffffff', edge='#f0e6c0'),
-    'hana': mk('hana', 1, '#8a5a7a', '#2e1a28', '#eaa6c8', '#ffc6e0', mats={'deco': 'gloss'}, gloss=([(0.12, 0.18), (0.36, 0.42), (0.66, 0.72), (0.86, 0.9)], [(-38, 8), (-20, 5), 0, (12, -4), (22, -10)])),   # 花びら・落ち葉：ハイライトとかげを強く（持ち主）
-    'hoteri': mk('hoteri', 1, '#7c4232', '#2a1410', '#f0905a', '#ffb36b', mats={'deco': 'gloss'}, gloss=([(0.0, 0.06), (0.2, 0.26), (0.5, 0.56), (0.7, 0.76)], [3, 2, 0, (14, -8), (32, -28)])),   # 細いので、つやの光を広く,
-    'ochiba': mk('ochiba', .8, '#7a5a3a', '#291a10', '#d9a05a', '#ffd38a', mats={'deco': 'gloss'}, gloss=([(0.12, 0.18), (0.36, 0.42), (0.66, 0.72), (0.86, 0.9)], [(-38, 8), (-20, 5), 0, (12, -4), (22, -10)])),   # 花びら・落ち葉：ハイライトとかげを強く（持ち主）
-    'yuki': mk('yuki', 1.3, '#8494a8', '#26303c', '#dff1ff', '#e0f4ff', pom='#f4faff', pomh=0.0, mats={'deco': 'ice'}),
+    'hana': mk('hana', 1, '#806a78', '#2c2229', '#d9b0c4', '#f2d2e0', mats={'deco': 'gloss'}, gloss=([(0.12, 0.18), (0.36, 0.42), (0.66, 0.72), (0.86, 0.9)], [(-38, 8), (-20, 5), 0, (12, -4), (22, -10)])),   # 花びら・落ち葉：ハイライトとかげを強く（持ち主）
+    'hoteri': mk('hoteri', 1, '#74503f', '#281a14', '#d99a72', '#f0bb88', mats={'deco': 'gloss'}, gloss=([(0.0, 0.06), (0.2, 0.26), (0.5, 0.56), (0.7, 0.76)], [3, 2, 0, (14, -8), (32, -28)])),   # 細いので、つやの光を広く,
+    'ochiba': mk('ochiba', .8, '#73604a', '#271e15', '#c8a378', '#f0d4a0', mats={'deco': 'gloss'}, gloss=([(0.12, 0.18), (0.36, 0.42), (0.66, 0.72), (0.86, 0.9)], [(-38, 8), (-20, 5), 0, (12, -4), (22, -10)])),   # 花びら・落ち葉：ハイライトとかげを強く（持ち主）
+    'yuki': mk('yuki', 1.3, '#8a939e', '#272d34', '#e4ecf2', '#e6f0f6', pom='#f4faff', pomh=0.0, mats={'deco': 'ice'}),
 })
 
 def load_labeled(path):
@@ -210,12 +210,13 @@ def eyepos(P, F, lab, H, e):
         out.append(np.array([x, y, z]))
     return out
 
-def stamp(im, pts, col, edge=None):
-    """目：きめたドットの形を、その場所におす（左右でまったく同じ形）"""
-    a = np.array(im); c = list(hx(col).astype(int))+[255]; ce = list(hx(edge or col).astype(int))+[255]; h, w = len(EYEPX), len(EYEPX[0])
+def stamp(im, pts, col, edge=None, side=False):
+    """目：きめたドットの形を、その場所におす（左右でまったく同じ形）。side：体がよこにたおれた（両目のならびが たて）ときは、よこながの形"""
+    PX = [''.join(r[i] for r in EYEPX) for i in range(len(EYEPX[0]))] if side else EYEPX
+    a = np.array(im); c = list(hx(col).astype(int))+[255]; ce = list(hx(edge or col).astype(int))+[255]; h, w = len(PX), len(PX[0])
     for X, Y in pts:
         x0, y0 = int(round(X-w/2)), int(round(Y-h/2))
-        for r, row in enumerate(EYEPX):
+        for r, row in enumerate(PX):
             for q, ch in enumerate(row):
                 if ch in '#+' and 0 <= y0+r < a.shape[0] and 0 <= x0+q < a.shape[1] and a[y0+r, x0+q, 3]: a[y0+r, x0+q] = c if ch == '#' else ce
     return Image.fromarray(a)
@@ -327,8 +328,13 @@ def shoot(name, cfg, src, yaw=0.0):
     if cfg.get('thin'): P = thin(P, F, lab, k=cfg['thin'])
     if cfg.get('tip'): P = tipthin(P, F, lab, H, cfg['tip'])
     if cfg.get('cone') and POMC: P = cone(P, F, lab, H, cfg['cone'])
+    EYES = None
     if cfg.get('pose'):   # モーション（kw_skel.py）。部品は、色わけ（lab）と つながった かたまり（comp0）でえらぶ
-        import kw_skel; P = kw_skel.Skel(name, P, F, lab, comp0, H).pose(P, **cfg['pose'])   # ボーンを入れて、ポーズをつける
+        import kw_skel
+        EY0 = eyepos(P, F, lab, H, cfg['eyes']); from scipy.spatial import cKDTree; EYI = cKDTree(P).query(EY0)[1]; EYO = [e-P[i] for e, i in zip(EY0, EYI)]   # 目：休みのポーズで きめて、近い点といっしょに動かす
+        P = kw_skel.Skel(name, P, F, lab, comp0, H).pose(P, **cfg['pose'])   # ボーンを入れて、ポーズをつける
+        EYES = [P[i]+o for i, o in zip(EYI, EYO)]
+    else: EYES = None
     HD = hands(P, F, lab, H, cfg.get('apart', 0)) if cfg.get('fingers') and not cfg.get('model') else []
     if HD:   # もらったモデルの手は、まん中へちぢめてかくす（新しい手を組む）
         P = P.copy(); other = set(F[(lab != 'handL') & (lab != 'handR')].ravel())
@@ -412,12 +418,15 @@ def shoot(name, cfg, src, yaw=0.0):
             ln |= (lb >= 0) & (nb >= 0) & (nb != lb) & (nz > zs)
         o = o.copy(); o[ln, :3] = o[ln, :3]*PARTK
     im = (lambda x: x if DITH else despeckle(x))(quant((lambda x: x if HULL else rim(x))(Image.fromarray(o.round().astype(np.uint8), 'RGBA')), NCOL, cfg.get('hem', (None,))[0]))
-    idbH, _ = O.LAST; fpid = {p_ for p_, l_ in PL.items() if l_ == 'face'}
-    def eyevis(q, ext):   # 目の場所（大きな絵の上）に、顔の部品が見えているか（まわりのドットの半分より多く）
-        x, y = int((q[0]-ext[0])*BIG), int((q[1]-ext[2])*BIG); blk = idbH[max(0, y-BIG):y+BIG, max(0, x-BIG):x+BIG]
-        return blk.size and np.isin(blk, list(fpid)).mean() > 0.5
+    idbH, zbH = O.LAST; fpid = {p_ for p_, l_ in PL.items() if l_ == 'face'}
+    def eyevis(q, ext, dep):   # 目の場所（大きな絵の上）に、顔の部品が見えていて（まわりのドットの半分より多く）、目より手前に物がない
+        x, y = int((q[0]-ext[0])*BIG), int((q[1]-ext[2])*BIG); sl = (slice(max(0, y-BIG), y+BIG), slice(max(0, x-BIG), x+BIG)); blk = idbH[sl]
+        if not blk.size or np.isin(blk, list(fpid)).mean() <= 0.5: return False
+        return float(np.median(zbH[sl])) <= dep+EYETOL*H
     if abs(math.cos(yaw)-1) < 1e-6:   # 正面だけ、目をおす
-        im = stamp(im, [(proj(R(p))[0]-ext[0], proj(R(p))[1]-ext[2]) for p in eyepos(P, F, lab, H, cfg['eyes']) if eyevis(proj(R(p)), ext)], cfg['eyes']['col'], cfg['eyes'].get('edge'))   # 顔が見えている所だけ、目をおす（まわる・うつむくと、かくれる）
+        ey = EYES if EYES is not None else eyepos(P, F, lab, H, cfg['eyes'])
+        q2 = [proj(R(p)) for p in ey]; side = abs(q2[1][1]-q2[0][1]) > abs(q2[1][0]-q2[0][0])   # 両目のならびが たて：よこにたおれている
+        im = stamp(im, [(proj(R(p))[0]-ext[0], proj(R(p))[1]-ext[2]) for p in ey if eyevis(proj(R(p)), ext, float(np.dot(R(p), V)))], cfg['eyes']['col'], cfg['eyes'].get('edge'), side)   # 見えている目だけ、おす（まわる・うつむく・前に物があると、かくれる）
     return im, ext
 
 BACKEL = 15.0
@@ -427,7 +436,7 @@ POMANG = 50.0
 PALMW = 0.45   # 手のひらのあつみ（左右の半径。手の大きさ r に対して）   # ぽんぽん：ずきんの先がつながる向きから、この角度までは、ずきん
 KWLV = (0.72, 0.5, 0.22)   # 光・うすいかげ（あみ1/4）・半かげ（あみ2/4）・かげ のさかい目（光の向きとの内積）
 KWSHADE = [(9, -2.5), (16, -4), (34, -4)]   # かげの色（3つめ。明るさ・あざやかさを引く）
-KWT = ([(0.08, 0.14), (0.4, 0.47), (0.9, 0.96)], [3, 2, 0, (7, -4)])   # 色の段：こいかげ・かげ・光・ハイライト（持ち主：かげと光は2段ずつ）。さかい目のあいだだけ、あみ
+KWT = ([(0.07, 0.11), (0.22, 0.26), (0.4, 0.44), (0.58, 0.62), (0.9, 0.94)], [3, (-25, 4), 2, (-7, 2), 0, (5, -2)])   # 色の段：こいかげ・かげ2つ・光2つ・ハイライト（うすく）。となりの段の色の差を小さくして、さかいの あみを目立たなくする（持ち主）
 KWG = ([(0.08, 0.14), (0.35, 0.42), (0.68, 0.74), (0.86, 0.9)], [3, 2, 0, (12, -6), (30, -25)])   # つやつや（牙・ばちばち）：こいかげ・かげ・光・明るい光・白っぽい つや
 KWMSPEC = 0.9   # 金属のつやが出る向きの近さ（コワイノ。光沢・反射で金属をあらわす）
 KWDR = (0.4, 0.47)   # あみ：光の向きとの内積がこのあいだだけ（光とかげのさかいの細い帯。ほかは光かかげの1色。あみを多用しない、持ち主がきめた）
@@ -438,6 +447,7 @@ GLOSSKEEP = 0.12   # つやの光のドットが、マスのこのわりより�
 PARTLINE = False   # 部品のさかいの線
 PARTK = 0.62   # 部品のさかいの線の色（そのドットの色にかける）
 PARTG = {'red': 'base', 'under': 'base', 'rim': 'base', 'foot': 'face'}   # 同じ部品とみなす色わけ（表と裏地・顔と足には線を引かない）
+EYETOL = 0.05   # 目より手前に、これ（高さのうち）より前に出た物があると、目をかくす
 DITH = True   # かげを1色＋あみ（ドットの密度）にする
 BIG = 8; NCOL = 15   # 大きく写す倍・色の数（目の色を足して16）
 
