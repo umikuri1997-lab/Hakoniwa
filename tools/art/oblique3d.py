@@ -244,6 +244,7 @@ SHADE = [(17.5, -5), (35, -10)]   # かげの色：ベースの色の HSV（100�
 SHINE = (12, -8)                # 金属のつや：明るさを足し、あざやかさを引く（白っぽく）
 DITHER = 0   # 0 でなければ、かげを1色にして、うすいかげをあみ（できあがりの1ドットごと。この数は1ドットの大きさ）であらわす
 DITHERR = (0.22, 0.72)   # あみ：かげになりはじめる・ぜんぶかげになる、光の向きとの内積
+DITHERT = None   # あみの色の段（DITHER のとき。None なら DITHERR・DITHERHL の2色＋ハイライト）
 DITHERHL = None   # あみのハイライト：(はじまる・ぜんぶになる 光の向きとの内積, 明るさを足す, あざやかさを引く)（100段階）
 DITHERLV = 3   # あみのときの、かげの色（toon の段）
 METALSPEC = 0.97                # 金属のつやが出る向きの近さ
@@ -411,16 +412,27 @@ def render_px(sc, proj, ext, depth, k=0.72, outer=True, merge=12, lw=1, k2=0.86,
     if DITHER:   # かげを1色にして、うすいかげはかげのドットの密度（あみ）であらわす。あみは、できあがりの1ドット（DITHER ドット四方）ごと
         BY = np.array([[0, 8, 2, 10], [12, 4, 14, 6], [3, 11, 1, 9], [15, 7, 13, 5]])/16+1/32   # 4×4 のならび（16だん）
         yy_, xx_ = np.mgrid[0:Hp, 0:Wp]; th = BY[(yy_//DITHER) % 4, (xx_//DITHER) % 4]
-        lo, hi = DITHERR; den = np.clip((hi-dlb)/(hi-lo), 0, 1)   # かげのこさ：光の向きとの内積が hi で0、lo で1（そのあいだは、なめらか）
         m_ = (idb >= 0) & (lvb >= 0)
-        for q in np.unique(ccb[m_].reshape(-1, 3), axis=0):
-            k_ = m_ & np.all(ccb == q, axis=2); lt = toon(q, 0); dk = toon(q, DITHERLV)
-            sh = k_ & (den > th)
-            col[k_ & ~sh] = lt; col[sh] = dk
-            if DITHERHL:   # ハイライト：光のよく当たる所に、明るい1色を、同じあみで
-                import colorsys
-                h_, s2, v2 = colorsys.rgb_to_hsv(*(np.array(q)/255)); hl = np.array(colorsys.hsv_to_rgb(h_, max(0, s2-DITHERHL[3]/100), min(1, v2+DITHERHL[2]/100)))*255
-                dh = np.clip((dlb-DITHERHL[0])/(DITHERHL[1]-DITHERHL[0]), 0, 1); col[k_ & (dh > th)] = hl
+        if DITHERT:   # 色の段（こい かげ・かげ・光・ハイライト）と、そのさかいのあみ。DITHERT：段のさかい目ごとの（はじまる・おわる 光の向きとの内積）、段の色（toon の段か、(明るさ, あざやかさ) を足す）
+            bd, tones = DITHERT; idx = np.zeros((Hp, Wp), int)
+            for lo, hi in bd: idx += (np.clip((dlb-lo)/(hi-lo), 0, 1) > th) | (dlb >= hi)
+            import colorsys
+            def tone(q, t):
+                if not isinstance(t, tuple): return toon(q, t)
+                h_, s2, v2 = colorsys.rgb_to_hsv(*(np.array(q)/255)); return np.array(colorsys.hsv_to_rgb(h_, min(1, max(0, s2+t[1]/100)), min(1, max(0, v2+t[0]/100))))*255
+            for q in np.unique(ccb[m_].reshape(-1, 3), axis=0):
+                k_ = m_ & np.all(ccb == q, axis=2)
+                for i_, t_ in enumerate(tones): col[k_ & (idx == i_)] = tone(q, t_)
+        else:
+            lo, hi = DITHERR; den = np.clip((hi-dlb)/(hi-lo), 0, 1)   # かげのこさ：光の向きとの内積が hi で0、lo で1（そのあいだは、なめらか）
+            for q in np.unique(ccb[m_].reshape(-1, 3), axis=0):
+                k_ = m_ & np.all(ccb == q, axis=2); lt = toon(q, 0); dk = toon(q, DITHERLV)
+                sh = k_ & (den > th)
+                col[k_ & ~sh] = lt; col[sh] = dk
+                if DITHERHL:   # ハイライト：光のよく当たる所に、明るい1色を、同じあみで
+                    import colorsys
+                    h_, s2, v2 = colorsys.rgb_to_hsv(*(np.array(q)/255)); hl = np.array(colorsys.hsv_to_rgb(h_, max(0, s2-DITHERHL[3]/100), min(1, v2+DITHERHL[2]/100)))*255
+                    dh = np.clip((dlb-DITHERHL[0])/(DITHERHL[1]-DITHERHL[0]), 0, 1); col[k_ & (dh > th)] = hl
     col0 = col.copy()   # 木目をつける前の色（輪郭線はこの色から作る。木目ごとに線の色がわかれない）
     for pid, tx in sc.tx.items():   # 部品ののびる向き（いちばん長い向き）にそって、木目をはる
         m = idb == pid
