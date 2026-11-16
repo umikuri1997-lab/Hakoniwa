@@ -60,13 +60,14 @@ class Hand:
         w = s.thumbw[:, None]; R = rotm(np.cross(u, [0, 1.0, 0]), thumb); V = V*(1-w)+((V-tb)@R.T+tb)*w   # 親指を手のひらへよせる
         return V
 
-def place(V, c0, size, inward, tilt=0.0):
+def place(V, c0, size, inward, tilt=0.0, roll=0.0):
     """ポーズをつけた手を、コワイノの手の場所へ。指先→前（+z）、親指→上（+y）、手のひら→ inward（+1 で +x、−1 で −x）。
-    size：手首から指先までの長さ。tilt：指先を下へむける角度"""
+    size：手首から指先までの長さ。tilt：指先を下へむける角度。roll：指先の向きを軸に手をひねり、手のひらを下へむける角度"""
     P = (V-PALMC)*(size/LENGTH)
     # 手のモデルの向き：指先 a=(0,0,-1)・親指 b=(-1,0,0)・手のひら n=(0,1,0) → a→前 (0,0,1)・b→上 (0,1,0)・n→(-1,0,0)
     M = np.array([[0, -1, 0], [-1, 0, 0], [0, 0, -1]], float)   # 行：もとの x,y,z が行く先
     P = P@M
+    P = P@rotm((0, 0, 1), roll).T   # 手のひら（−x）を下へ。左右をうつす前なので、もう片方の手も同じく下へむく
     if inward > 0: P[:, 0] *= -1   # 手のひらを +x へ：左右をうつす（もう片方の手。三角形のうら表は、呼ぶ所でかえす）
     P = P@rotm((1, 0, 0), tilt).T
     return P+np.asarray(c0, float)

@@ -14,7 +14,7 @@ MATLAB = [((204, 204, 204), 'cloth'), ((3, 0, 204), 'face'), ((10, 204, 0), 'dec
 LABCOL = {'cloth': (204, 204, 204), 'face': (3, 0, 204), 'deco': (10, 204, 0), 'pom': (204, 0, 1), 'under': (150, 0, 60), 'hand': (230, 200, 60)}   # 書き出すときのマテリアルの色（見分ける用）
 # 手：もとのモデル（split18 でそろえた場所）での、手のまん中（高さ1あたり）と大きさ。左右はなす量 APART
 HANDS = {'basic': dict(c=[(-0.126, 0.352, 0.358), (-0.006, 0.35, 0.36)],   # 手のひらのまん中 (よこ, 前, 上)
-                        apart=0.07, size=0.155, curl=(40, 65, 45), thumb=20, tilt=20)}   # size：手首から指先（高さ1あたり）・curl：指の関節をまげる角度・thumb：親指をよせる・tilt：指先を下へ
+                        apart=0.07, size=0.155, curl=(40, 65, 45), thumb=20, tilt=20, roll=20)}   # size：手首から指先（高さ1あたり）・curl：指の関節をまげる角度・thumb：親指をよせる・tilt：指先を下へ・roll：手のひらを下へ
 
 def lab_of(col):
     col = np.array(col[:3], float)
@@ -50,7 +50,7 @@ def hands(name, H):
     mid = (cs[0][0]+cs[1][0])/2; hd = kw_hand.Hand(); PV = hd.pose(curl=h['curl'], thumb=h['thumb']); V = []; F = []; o = 0
     for c0 in cs:
         si = 1 if c0[0] < mid else -1; c0 = c0+np.array([-si*h['apart']*H, 0, 0])
-        v = kw_hand.place(PV, c0, h['size']*H, si, h['tilt']); f = hd.F if si < 0 else hd.F[:, ::-1]   # 左右をうつした手は、三角形のうら表をかえす
+        v = kw_hand.place(PV, c0, h['size']*H, si, h['tilt'], h['roll']); f = hd.F if si < 0 else hd.F[:, ::-1]   # 左右をうつした手は、三角形のうら表をかえす
         V.append(v); F.append(f+o); o += len(v)
     return np.vstack(V), np.vstack(F)
 
