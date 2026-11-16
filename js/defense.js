@@ -54,7 +54,7 @@ function bossPhase(e){const t=e.type;if(t!=='boss'&&t!=='boss2'||e.dead)return;
 function bossLeap(e){/* いちばん近い柵・塀を1つとびこえる（むこうがわが歩ける所だけ） */let best=null,bd=1e9;const x0=e.x|0,y0=e.y|0;for(let dy=-4;dy<=4;dy++)for(let dx=-4;dx<=4;dx++){const j=(y0+dy)*W+x0+dx;if(j<0||j>=W*H||!breakable(typeAt(j)))continue;const d=Math.hypot(dx,dy);if(d>=bd||d<.5)continue;const ux=Math.sign(dx),uy=Math.sign(dy),k=j+uy*W+ux;if(!walk(k))continue;bd=d;best=k}
   if(best==null)return;e.x=best%W+.5;e.y=((best/W)|0)+.5;e.path=[];e.repath=0;sfxAt('bonk',e.x,e.y);fxSpr('shock',e.x*TS,e.y*TS,'#120a24');toast(EN[e.type].name+'が柵をとびこえた！','warn')}
 const rageMul=e=>e.rage>S.t?RAGESP:1;
-/* ---------- 葉のかべ（守り神のわざ。守り神のちからでパワー300でおぼえる S.flags.leafSkill） ----------
+/* ---------- 葉のかべ（守り神のわざ。むらのちからの木でパワー300でおぼえる S.flags.leafSkill） ----------
    夜、地面をなぞると、葉のかべ（leafwall、せいれいは通れる・コワイノはこわして通る、じょうぶさ30）が生える。パワー5。のこる時間・つかえない時間は時計の時間（GUP の leaf）。 */
 const LEAFLEARN=300,LEAFPT=5;let LEAFARM=false,LEAFDRAG=null,LEAFT=0;
 const leafLv=()=>gupLv('leaf'),leafG=()=>gupOf('leaf');
@@ -75,7 +75,6 @@ const skillOn=k=>skillSetOf().includes(k);
 function skillToggle(k){let L=skillSetOf().slice();if(L.includes(k))L=L.filter(x=>x!==k);else{if(L.length>=SKILLMAX)return toast('わざは3つまで');L.push(k)}S.skillSet=L;sfx('tap')}
 function skillSec(body){const sec=el('<div class="sec"><h3>わざの枠（3つまで）</h3><div class="rows"></div></div>'),rw=sec.querySelector('.rows');const on=skillSetOf();
   for(const[k,n,ok]of SKILLS){if(!ok())continue;const r=el('<button class="row" style="text-align:left;width:100%"><div class="tx"><b></b><small></small></div></button>');ckSet(r.querySelector('b'),(on.includes(k)?'✓ ':'')+n);r.querySelector('small').textContent=on.includes(k)?'セットしている':'セットしていない';r.onclick=()=>{skillToggle(k);renderSheet()};rw.appendChild(r)}
-  if(!leafOK()){const r=rowEl('葉のかべ','夜、地面をなぞると、葉のかべが生える。コワイノの道をふさぐ');const b=el('<button class="btn pri" style="flex:none"></button>');b.textContent='おぼえる　'+SP(LEAFLEARN);lackOn(b,lackPt(LEAFLEARN));b.onclick=()=>{if(S.pt<LEAFLEARN){sfx('tap');return toast(lackPt(LEAFLEARN),'warn')}leafLearn();renderSheet()};r.appendChild(b);rw.appendChild(r)}
   body.appendChild(sec)}
 /* ---------- 見張り台のねらう順（S.dyn[j].to：near・hp・fast・vill） ---------- */
 const TORDER=[['near','近い','いちばん近いコワイノ'],['hp','強い','体力がいちばん多いコワイノ'],['fast','速い','足がいちばん速いコワイノ'],['vill','村に近い','村のまん中にいちばん近いコワイノ']];
