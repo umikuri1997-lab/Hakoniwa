@@ -15,6 +15,11 @@ const o=await run(`(()=>{cam.z=2;centerOn(CX*TS,(CY+.5)*TS);const ks=new Set();f
   /* 夜は出ない */S.t=1440*3+60;CRIT=[];for(let i=0;i<100;i++)critTick(.5);const night=CRIT.length;
   return {kinds,flew,ok,gain,night}})()`);
 assert.ok(o.kinds.some(k=>['fly','mitsubachi','tentoumushi'].includes(k))&&o.kinds.some(k=>['bird','risu'].includes(k)),'昼：花のそばの虫と、木のそばの生き物 '+o.kinds);assert.ok(o.flew,'小鳥は飛びたつ');assert.ok(o.ok,'見にいく');assert.ok(o.gain>=1.5,'たのしさ+2 '+o.gain);assert.equal(o.night,0,'夜は出ない');
+/* よく出る（小鳥・ちょう・とんぼ）と、あまり出ない（ほか）：昼に出た回数をかぞえる */
+const cnt=await run(`(()=>{S.t=1440*2+600;S.res=[];const n={};const sp=critSpawn;for(let i=0;i<3000;i++){CRIT=[];critSpawn();for(const c of CRIT)n[c.k]=(n[c.k]||0)+1}return n})()`);
+const often=(cnt.fly||0)+(cnt.bird||0)+(cnt.tonbo||0),rare=Object.entries(cnt).filter(([k])=>!['fly','bird','tonbo'].includes(k)).reduce((t,[,v])=>t+v,0);
+assert.ok(often>rare*4,'小鳥・ちょう・とんぼが多く出る '+JSON.stringify(cnt));console.log('出た回数',JSON.stringify(cnt));
+assert.equal(await run(`[CK.fly.n,CK.bird.n,CK.tonbo.n,CK.usagi.n||1].join()`),'2,2,2,1','同時に出る数');
 const ev=await run(`(()=>{S.t=1440*4+1080;for(let n=0;n<15;n++){CRIT=[];for(let i=0;i<120;i++)critTick(.5);if(CRIT.some(c=>c.k==='frog'))return true}return false})()`);assert.ok(ev,'夕方の水べに、かえる');
 /* モデルの生き物：出る所 */
 const sp=await run(`(()=>{S.obj[(CY-3)*W+CX-6]='crate';S.obj[(CY+2)*W+CX+6]='berry';S.obj[(CY+3)*W+CX+3]='farm';S.res=[];recount();REV.add((CY+1)*W+CX+1);
