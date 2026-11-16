@@ -192,7 +192,7 @@ class Skel:
         c = Q[core, :2].mean(0); d = Q[:, :2]-c; nn = np.maximum(np.linalg.norm(d, axis=1), 1e-9); Q[:, :2] += d/nn[:, None]*(b*0.6)[:, None]
         Q[:, 2] = zn; return Q
 
-    def pose(s, P, move=(0, 0, 0), spread=1.0, orbit=0.0, melt=0.0, scale=1.0, flutter=(0, 0), look=(0, 0), fx=(), wave=(0, 0), lag=(0, 0, 0), hlag=(0, 0, 0), sq=1.0, flare=0.0, collapse=0.0, cz=0.45, ground=False, ghost=0, dead=False, sacksq=1.0, **bones):
+    def pose(s, P, move=(0, 0, 0), spread=1.0, orbit=0.0, melt=0.0, scale=1.0, flutter=(0, 0), look=(0, 0), fx=(), wave=(0, 0), lag=(0, 0, 0), hlag=(0, 0, 0), sq=1.0, flare=0.0, collapse=0.0, cz=0.45, ground=False, ghost=0, dead=False, sacksq=1.0, fade=0.0, pool=0.6, **bones):
         H = s.H; Ms = {}
         if collapse: P = s.collapse(P, collapse, cz)
         for n, par, _ in BONES:
@@ -237,7 +237,8 @@ class Skel:
         if sq != 1.0:   # ため（ちぢむ）・のび：足もとを もとに、たてに sq、よこは体積をたもつ
             Q[:, 2] *= sq; Q[:, :2] *= 1/math.sqrt(sq)
         if melt:   # とける（ユキカゲのたおれ方）：上ほど下へ、下ほどよこへ広がる
-            z = Q[:, 2]/H; Q[:, 2] *= (1-melt*np.clip(z, 0, 1)); Q[:, :2] *= (1+melt*0.6*(1-np.clip(z, 0, 1)))[:, None]
+            z = np.clip(Q[:, 2]/H, 0, 1); Q[:, 2] *= (1-melt*z); c = Q[:, :2].mean(0)   # 下ほど よこへ ひろがって 水たまりに（ふちは 波うつ）
+            Q[:, :2] = c+(Q[:, :2]-c)*(1+melt*pool*(1-z)**2*(1+0.12*np.sin(s.ang*5)))[:, None]
         if scale != 1.0: Q = Q*scale
         lo = Q[:, 2].min()
         if ground: Q = s.drop(Q)
@@ -357,13 +358,17 @@ MOVES = {
                       dict(hip=(16, 0, 0), chest=(18, 0, 0), armL=(15, 10, 0), armR=(15, 10, 0), move=(0, 0.04, -0.02), fx=[('snow', (0, 0.35, 0.05), 9, 0.3, 0.04), ('impact', (0, 0.35, 0.12), 1, 0, 0.15)]),
                       dict(chest=(4, 0, 0), armL=(20, 10, 0), armR=(20, 10, 0))],
                  hurt=[dict(root=(0, 4, 0), chest=(0, -6, 0), head=(0, 8, 0), armL=(20, 40, 0), armR=(20, 40, 0), fx=[('snow', (0, 0, 0.7), 6, 0.35, 0.03)]),
-                       dict(root=(0, -4, 0), chest=(6, 6, 0), head=(8, -8, 0), armL=(10, 30, 0), armR=(10, 30, 0), melt=0.3, collapse=0.1, fx=[('snow', (0, 0.1, 0.5), 4, 0.35, 0.03), ('sweat', (0, 0.15, 0.4), 4, 0.3, 0.03)]),
-                       dict(hip=(2, 8, 0), chest=(2, 8, 0), head=(2, 6, 0), armL=(-30, 70, 0), armR=(-30, 70, 0), melt=0.85, collapse=0.3, ground=True, fx=[('sweat', (0, 0.2, 0.05), 7, 0.45, 0.035), ('snow', (0, 0.1, 0.1), 4, 0.35, 0.03)])]),
+                       dict(root=(0, -4, 0), chest=(6, 6, 0), head=(8, -8, 0), armL=(10, 30, 0), armR=(10, 30, 0), melt=0.4, pool=0.7, collapse=0.12, fx=[('snow', (0, 0.1, 0.5), 4, 0.35, 0.03), ('sweat', (0, 0.15, 0.4), 6, 0.35, 0.03)]),
+                       dict(hip=(2, 8, 0), chest=(2, 8, 0), head=(2, 6, 0), armL=(-30, 70, 0), armR=(-30, 70, 0), melt=0.9, pool=0.9, collapse=0.3, ground=True, fx=[('sweat', (0, 0.2, 0.05), 7, 0.45, 0.035), ('snow', (0, 0.1, 0.1), 4, 0.35, 0.03)])]),
 }
 
 NECK = 0.85   # 攻撃：首が、体の かたむきの このわりを うちけす（頭は大きく うごかさない。持ち主）
 ATKSQ = (0.92, 1.06, 0.9, 1.02)   # 攻撃のため・のび：ためる（ちぢむ）→ ふりかぶる（のびる）→ うつ（ちぢむ）→ もどる
-HURTSQ = (0.94, 1.0, 1.0)   # やられ：うけた しゅんかんだけ、少しちぢむ
+ATKLUNGE = ((-0.06, -6), (-0.04, -4), (0.22, 8), (0.1, 2))   # 攻撃のコマごと：前（こちら）へ うごく長さ・こしの前への かたむき（ため → ふりかぶる → とびこむ → もどる）
+HURTKB = ((-0.12, -14), (-0.05, -6))   # やられのコマごと：うしろへ はじかれる長さ・むねが うしろへ そる角度
+DEADSMOKE = {'yuki': 'steam'}   # きえる けむりの しゅるい（ユキカゲは、とけた水が 湯気になる）
+DEADFADE = (0.45, 0.9)   # たおれたあと、けむりになって きえる コマ：きえた わり（あみで うすく）
+HURTSQ = (0.94, 1.0, 1.0)  # やられ：うけた しゅんかんだけ、少しちぢむ
 HLAGK = 0.7; HLAGMAX = 0.07   # すその おくれ：足もとが うごいた分の このわり・いちばん大きい長さ
 DEADROLL = 12  # いきたえるコマの、よこへの かたむきの いちばん大きい角度
 DEADCOL = 0.82  # いきたえたときの、くずれる強さ（これより小さい物は、ここまで）
@@ -404,4 +409,10 @@ def poses(name):
     fl = dict(hurt[-1]); r = tuple(fl.get('root', ()))+(0,)*6
     fl['root'] = (r[0], max(-DEADROLL, min(DEADROLL, r[1])))+r[2:]   # いきたえるコマ：よこへ たおれこまず、その場で下へ グチャっと くずれる（横から見て。持ち主）
     hurt[-1] = dict(fl, dead=True, ground=True, collapse=max(fl.get('collapse', 0), DEADCOL), cz=max(fl.get('cz', 0.45), 0.6))   # さいごのコマ：いきたえる（力がぬけて、布が重さで くずれ、体が地面について、目の光がきえる）
+    add = lambda f, k, v: tuple(a+b for a, b in zip(tuple(f.get(k, ()))+(0,)*6, v+(0,)*(6-len(v))))
+    for i, (dm, dl) in enumerate(ATKLUNGE):   # 攻撃：大きく ためて（うしろへ さがる）→ うつ しゅんかん、こちら（前）へ とびこむ
+        if i < len(atk): atk[i] = dict(atk[i], move=add(atk[i], 'move', (0, dm, 0))[:3], hip=add(atk[i], 'hip', (dl,)))
+    for i, (dm, dl) in enumerate(HURTKB):   # やられ：うけた しゅんかん、うしろへ はじかれて のけぞる（うしろへ そるのは −16度まで）
+        if i < len(hurt)-1: hurt[i] = dict(hurt[i], move=add(hurt[i], 'move', (0, dm, 0))[:3], chest=(lambda c: (max(-16, c[0]),)+c[1:])(add(hurt[i], 'chest', (dl,))))
+    hurt += [dict(hurt[-1], fade=fd, fx=[(DEADSMOKE.get(name, 'smoke'), (0, 0.05, 0.15+0.15*k), 6+3*k, 0.35, 0.05)], lag=(0, 0, 0), hlag=(0, 0, 0)) for k, fd in enumerate(DEADFADE)]   # たおれたあと：むらさきの けむりに なって きえる
     return dict(idle=_lag(IDLE, True), walk=_lag(walk, True), atk=_lag(wv(atk), False), hurt=_lag(wv(hurt), False))

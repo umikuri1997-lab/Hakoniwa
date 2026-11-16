@@ -85,9 +85,11 @@ def _arc(R, th, a0, a1, dots=False):
 FXBMP['swipe'] = [_arc(15, 4.5, 200, 20), _arc(16, 2.6, 190, 30), _arc(17, 1.2, 180, 40, True)]   # 大きな ひっかき・なぎはらいの すじ（右下から右上へ）
 FXBMP['swipeL'] = ['|'.join(r[::-1] for r in b.split('|')) for b in FXBMP['swipe']]   # 左へ
 FXCOL['swipe'] = FXCOL['swipeL'] = ('#ffffff', '#e4defc', '#b8acdc')
-FXSHAPE = {'swipe': 'swipe', 'swipeL': 'swipeL', 'dust': 'puff', 'ash': 'puff', 'spark': 'spark', 'ember': 'ember', 'snow': 'snow', 'leaf': 'leaf', 'petal': 'petal', 'sweat': 'sweat', 'star': 'star', 'slash': 'slash', 'impact': 'impact'}
+FXBMP['smoke'] = ['..bbb..|.baaab.|baaaaab|baaaaab|baaaaab|.bcccb.|..ccc..', '.b.b.b.|b.aaa.b|.aaaaa.|baaaaab|.aaaaa.|b.ccc.b|.b.c.b.', '.b...b.|.......|b..a..b|...a...|b..a..b|.......|.b...b.']   # けむり：まるい もくもく → ほどけて → 点になって きえる
+FXCOL['smoke'] = ('#cdb8e0', '#9e88b8', '#7a6696'); FXBMP['steam'] = FXBMP['smoke']; FXCOL['steam'] = ('#ffffff', '#e4f0fa', '#b8cee0')
+FXSHAPE = {'steam': 'steam', 'smoke': 'smoke', 'swipe': 'swipe', 'swipeL': 'swipeL', 'dust': 'puff', 'ash': 'puff', 'spark': 'spark', 'ember': 'ember', 'snow': 'snow', 'leaf': 'leaf', 'petal': 'petal', 'sweat': 'sweat', 'star': 'star', 'slash': 'slash', 'impact': 'impact'}
 FXMOVE = {'dust': (0, 0, 0.05, 0.6), 'ash': (0, 0, 0.06, 0.8), 'spark': (0, 0, 0.02, 1.2), 'ember': (0, 0, 0.1, 0.6), 'snow': (0, 0, -0.06, 0.6), 'leaf': (0, 0, -0.05, 0.9),
-          'petal': (0, 0, -0.04, 1.0), 'sweat': (0, 0, -0.05, 0.3), 'star': (0, 0, 0, 0.0), 'slash': (0, 0, 0, 0), 'impact': (0, 0, 0, 0), 'swipe': (0, 0, 0, 0), 'swipeL': (0, 0, 0, 0)}   # (…, …, 上へ（コマごと）, ひろがる速さ（コマごと、ひろがりの倍）)
+          'petal': (0, 0, -0.04, 1.0), 'sweat': (0, 0, -0.05, 0.3), 'star': (0, 0, 0, 0.0), 'slash': (0, 0, 0, 0), 'impact': (0, 0, 0, 0), 'swipe': (0, 0, 0, 0), 'swipeL': (0, 0, 0, 0), 'smoke': (0, 0, 0.08, 0.5), 'steam': (0, 0, 0.1, 0.5)}   # (…, …, 上へ（コマごと）, ひろがる速さ（コマごと、ひろがりの倍）)
 FXLIFE = 3   # パーティクルは 3コマ のこる（年れい 0・1・2）
 
 def fxparts(frames, name):
@@ -501,6 +503,9 @@ def shoot(name, cfg, src, yaw=0.0):
         ey = EYES if EYES is not None else eyepos(P, F, lab, H, cfg['eyes'])
         q2 = [proj(R(p)) for p in ey]; side = abs(q2[1][1]-q2[0][1]) > abs(q2[1][0]-q2[0][0])   # 両目のならびが たて：よこにたおれている
         im = stamp(im, [(proj(R(p))[0]-ext[0], proj(R(p))[1]-ext[2]) for p in ey if eyevis(proj(R(p)), ext, float(np.dot(R(p), V)))], cfg['eyes']['col'], cfg['eyes'].get('edge'), side, cfg.get('pose', {}).get('dead', False))   # 見えている目だけ、おす（まわる・うつむく・前に物があると、かくれる）
+    if cfg.get('pose', {}).get('fade'):   # けむりになって きえる：体を あみで うすく（あみは 足もとの点が もと。けむりは このあとで おす）
+        a = np.array(im); yy, xx = np.indices(a.shape[:2]); B4 = np.array([[0, 8, 2, 10], [12, 4, 14, 6], [3, 11, 1, 9], [15, 7, 13, 5]])/16
+        a[B4[(yy+ext[2]) % 4, (xx+ext[0]) % 4] < cfg['pose']['fade'], 3] = 0; im = Image.fromarray(a)
     if cfg.get('fxp'):   # パーティクル（色の数をへらしたあとに おす。絵のわくの外に出る分は、わくを広げて入れる）
         q = [(k, proj(R(np.asarray(p)*H))) for k, p, ag in cfg['fxp']]; ages = [ag for _, _, ag in cfg['fxp']]
         x0 = min([ext[0]]+[int(math.floor(v[0]))-5 for _, v in q]); y0 = min([ext[2]]+[int(math.floor(v[1]))-5 for _, v in q])
