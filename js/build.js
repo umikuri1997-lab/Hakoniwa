@@ -306,7 +306,7 @@ function manMet(t){if(S.free||!MANMET[t])return true;const F=S.flags.man||(S.fla
 const boardMax=()=>S.flags.board5?5:3;
 /* 依頼をやめる：パワーと素材はもどる。作っていた子は手をとめる */
 function cancelOrder(oid){const k=S.orders.findIndex(q=>q.id===oid);if(k<0)return;const o=S.orders[k],b=BL[o.type];S.orders.splice(k,1);
-  S.pt+=b.pc;if(o.mat||o.food)siteRefund(o,BOARD);else for(const m in b.mat||{})S.mat[m]=(S.mat[m]||0)+b.mat[m];if(b.sand)S.sand=(S.sand||0)+b.sand;/* とっておいた素材はもどし、運んだ分は依頼ボードのまえに置く */
+  S.pt+=b.pc;if(o.mat||o.food)siteRefund(o,o.cs!=null?o.cs:BOARD);else for(const m in b.mat||{})S.mat[m]=(S.mat[m]||0)+b.mat[m];if(b.sand)S.sand=(S.sand||0)+b.sand;/* とっておいた素材はもどし、運んだ分は作る場所（なければ依頼ボードのまえ）に置く */
   for(const r of S.res)if(r.act&&r.act.type==='craft'&&r.act.order===oid){endAct(r);r.act=null;r.path=[]}
   toast(b.name+'の依頼をやめた');sfx('post');renderSheet()}
 const ORDER_LOCK={'stor':'crate'};

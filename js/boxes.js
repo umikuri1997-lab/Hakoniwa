@@ -62,6 +62,11 @@ const carryKeys=r=>Object.keys(r.carry&&typeof r.carry==='object'?r.carry:r.carr
 const anyBox=j=>adjOf(j,k=>!!boxTypeAt(k)&&boxSide(j,k));
 /* ---- 建てる・作るために、とっておいた素材を運ぶ ---- */
 function needLeft(t){/* t：建てる所の S.dyn か、依頼。まだ運んでいない素材 {key:数} */const m={};const need=t.mat||{},got=t.got||{};for(const k in need){const n=need[k]-(got[k]||0)-carryFor(t,k);if(n>0)m[k]=n}const fn=t.food||{};for(const k in fn){const key=fkey(k),n=fn[k]-(got[key]||0)-carryFor(t,key);if(n>0)m[key]=n}return m}
+function gotList(t){/* 建てる所・依頼の、運んだ素材 [[key,運んだ数,いる数]] */const L=[],g=t.got||{};for(const k in t.mat||{})if(t.mat[k]>0)L.push([k,Math.min(t.mat[k],g[k]||0),t.mat[k]]);for(const k in t.food||{})if(t.food[k]>0){const key=fkey(k);L.push([key,Math.min(t.food[k],g[key]||0),t.food[k]])}return L}
+const gotTxt=t=>gotList(t).map(([k,n,m])=>itemKeyName(k)+'（'+n+'/'+m+'）');/* 「木材（2/5）」 */
+function drawGotPile(c,t,cx,by){/* 運んだ素材を、地面に積んで見せる（素材ごとに1列。運んだわりあいで、4こまで上へ積む） */const L=gotList(t).filter(e=>e[1]>0);if(!L.length)return;const SZ=14,GAP=13,x0=cx-(L.length-1)*GAP/2;
+  c.fillStyle='rgba(40,25,10,.18)';c.beginPath();c.ellipse(cx,by,L.length*GAP/2+5,2.6,0,0,7);c.fill();
+  L.forEach(([k,n,m],i)=>{const h=Math.max(1,Math.min(4,Math.round(n/m*4))),x=x0+i*GAP;for(let q=0;q<h;q++){const y=by-SZ/2-q*5,ox=q%2?1.5:-1.5;if(isFK(k)){const ei=emoImg(foodEmo(k.slice(2)));if(ei){const s=SZ/Math.max(ei.width,ei.height);c.drawImage(ei,x+ox-ei.width*s/2,y-ei.height*s/2,ei.width*s,ei.height*s)}}else{const ei=emoImg(matIc(k));if(ei){const s=SZ/Math.max(ei.width,ei.height);c.drawImage(ei,x+ox-ei.width*s/2,y-ei.height*s/2,ei.width*s,ei.height*s)}else drawMatIc(c,k,x+ox,y,SZ)}}})}
 function carryFor(t,key){let n=0;for(const r of S.res)if(r.bm&&r.bm.t===t.bid&&r.bm.m[key])n+=r.bm.m[key];return n}
 const needKeys=t=>Object.keys(needLeft(t)),hasNeed=t=>needKeys(t).length>0;
 const bmN=r=>r.bm?Object.values(r.bm.m).reduce((a,b)=>a+b,0):0;/* 建てる所・依頼へ運んでいる素材の数 */

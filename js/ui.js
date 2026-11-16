@@ -334,7 +334,7 @@ function renderSheet(){
       const w=S.res.find(r=>r.id===o.worker);const p=el(`<div class="paper" style="--r:${[-2,1.5,-1,1,-1.5][n]}deg"><img alt=""><b></b><small></small><div class="bar"><i></i></div></div>`);p.dataset.oid=o.id;
       p.querySelector('img').src=iconURL(o.type);p.querySelector('b').textContent=BL[o.type].name+'をつくって';p.querySelector('small').textContent=w?w.name+'が作っています':jobBlocked('board')?'依頼ボードへ行けません':makerOf(o.type)?ELEM[BL[o.type].maker].name+'のせいれいを待っています':'作り手を待っています';
       {const cx=el('<button class="cx" aria-label="やめる">×</button>');cx.onclick=e=>{e.stopPropagation();cancelOrder(o.id)};p.appendChild(cx)}/* 依頼をやめる */
-      const bi=p.querySelector('.bar i');bi.style.width=Math.min(100,o.prog/o.need*100)+'%';bi.style.background='#e0a43a';bd.appendChild(p)}
+      for(const t of gotTxt(o)){const g=el('<small class="gm"></small>');g.textContent=t;p.insertBefore(g,p.querySelector('.bar'))}/* 作る場所へ運んだ素材の数 */const bi=p.querySelector('.bar i');bi.style.width=Math.min(100,o.prog/o.need*100)+'%';bi.style.background='#e0a43a';bd.appendChild(p)}
     body.appendChild(bd);if(typeof boardPinFx==='function')boardPinFx(bd);/* 草原：新しい依頼の紙は、ぺたっとおかれて、ピンがささる */
     const s2=el('<div class="sec"><h3>依頼を書く</h3><div class="cfind"><input id="craftQ" type="search" placeholder="名前でさがす" autocomplete="off"><button class="ctab cnow">いま作れる</button><button class="ctab cflt"></button></div><div class="ctabs"></div><div class="rows"></div></div>');
     const CIDS=CRAFT_TABS.flatMap(([,ids])=>ids),cShow=id=>recipeKnown(id)&&(lvOK(id)||S.recipes[id])&&recShown(id);

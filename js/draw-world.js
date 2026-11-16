@@ -322,6 +322,7 @@ function render(now){RFN++;
   waterShimmer(now,x0,y0,x1,y1);drawFords(x0,y0,x1,y1);drawRugsLive(x0,y0,x1,y1);
   drawSacredRoot(now);drawFieldStory(now);if(typeof drawTreasure==='function')drawTreasure(now);
   for(const[j,t0]of pops){const a=1-(now-t0)/350;if(a<=0){pops.delete(j);continue}ctx.fillStyle='rgba(255,255,240,'+a*.6+')';const s=4*(1-a);rr(ctx,(j%W)*TS-s,((j/W)|0)*TS-s,TS+s*2,TS+s*2,6)}
+  for(const o of S.orders||[])if(o.cs!=null&&o.got){const x=o.cs%W,y=(o.cs/W)|0;if(x>=x0&&x<=x1&&y>=y0&&y<=y1)drawGotPile(ctx,o,x*TS+38,y*TS+29-hiAt(o.cs)*LIFT)}/* 依頼の作る場所：運んだ素材の山（作るせいれいの右どなり） */
   for(const d of S.drops||[]){const dz=hiAt(d.y*W+d.x)*LIFT,cx=d.x*TS+16,cy=d.y*TS+19-dz,tw=Math.sin(now/260+d.x*1.7)*.5+.5;
     if(d.id==='mat:eda'||d.id==='mat:can'){const ch=window.CHIPS&&CHIPS['drop:'+d.id.slice(4)];if(ch&&drawChip(ctx,ch,d.id,d.x*TS,d.y*TS-dz,0))continue;ctx.fillStyle='rgba(40,25,10,.18)';ctx.beginPath();ctx.ellipse(cx,cy+8,7,2.2,0,0,7);ctx.fill();drawMatIc(ctx,d.id.slice(4),cx,cy+2,18);continue}/* 枝・空き缶の落とし物 */
     if(d.id==='hai'){/* ハイカゲの灰：灰色の小さな山（仮の絵） */ctx.fillStyle='rgba(40,25,10,.18)';ctx.beginPath();ctx.ellipse(cx,cy+8,9,2.6,0,0,7);ctx.fill();ctx.fillStyle='#9a948e';ctx.beginPath();ctx.ellipse(cx,cy+4,9,5,0,Math.PI,0);ctx.fill();ctx.fillStyle='#bdb7b0';ctx.beginPath();ctx.ellipse(cx-2,cy+2,5,3,0,Math.PI,0);ctx.fill();ctx.fillStyle='rgba(255,170,90,'+(.35+tw*.35)+')';ctx.fillRect(cx+2,cy+1,2,2);continue}
