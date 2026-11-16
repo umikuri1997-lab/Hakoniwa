@@ -413,7 +413,7 @@ def shoot(name, cfg, src, yaw=0.0):
         o = o.copy(); o[ln, :3] = o[ln, :3]*PARTK
     im = (lambda x: x if DITH else despeckle(x))(quant((lambda x: x if HULL else rim(x))(Image.fromarray(o.round().astype(np.uint8), 'RGBA')), NCOL, cfg.get('hem', (None,))[0]))
     if abs(math.cos(yaw)-1) < 1e-6:   # 正面だけ、目をおす
-        im = stamp(im, [(proj(R(p))[0]-ext[0], proj(R(p))[1]-ext[2]) for p in eyepos(P, F, lab, H, cfg['eyes']) if p[1] > 0.05*H]   # まわって うしろを向いた目は、おさない, cfg['eyes']['col'], cfg['eyes'].get('edge'))
+        im = stamp(im, [(proj(R(p))[0]-ext[0], proj(R(p))[1]-ext[2]) for p in eyepos(P, F, lab, H, cfg['eyes']) if p[1] > 0.05*H], cfg['eyes']['col'], cfg['eyes'].get('edge'))   # まわって うしろを向いた目は、おさない
     return im, ext
 
 BACKEL = 15.0
