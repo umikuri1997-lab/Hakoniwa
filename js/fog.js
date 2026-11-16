@@ -106,8 +106,8 @@ function fogClear(a,quiet){if(!S.fog[a])return;S.fog[a]=0;S.fogV=(S.fogV||0)+1;i
   dirty=true}
 function fogTap(tx,ty){/* 「しらべる」のタップ：霧の所・見つける物 */if(!fogOn())return false;let j=ty*W+tx;if(fogAt(j)){toast('霧で見えない');return true}j=anc(j);
   const o=S.obj[j],f=fogFind(j);if(!f)return false;
-  if(o==='fogbox'){if(!S.fogReq.includes(j))S.fogReq.push(j);sfx('mtap');toast('古い宝箱：せいれいがあけにいく');return true}
-  if(o==='nushiprint'){if(f.done&&!(printOn()&&!printTraced(j))){toast(BL.nushiprint.name);return true}/* たどる依頼のあいだは、見たあしあとも、もう一度見にいく */if(!S.res.some(r=>r.name===POKO&&!r.hidden)){toast('フタバがいません');return true}if(!S.fogReq.includes(j))S.fogReq.push(j);sfx('mtap');toast('ヌシ様のあしあと：フタバが見にいく');return true}
+  if(o==='fogbox'){if(!S.fogReq.includes(j))S.fogReq.push(j);sfx('twood');toast('古い宝箱：せいれいがあけにいく');return true}
+  if(o==='nushiprint'){if(f.done&&!(printOn()&&!printTraced(j))){toast(BL.nushiprint.name);return true}/* たどる依頼のあいだは、見たあしあとも、もう一度見にいく */if(!S.res.some(r=>r.name===POKO&&!r.hidden)){toast('フタバがいません');return true}if(!S.fogReq.includes(j))S.fogReq.push(j);sfx('tgrass');toast('ヌシ様のあしあと：フタバが見にいく');return true}
   if(o==='fogspring'){toast(BL.fogspring.name+'：'+BL.fogspring.desc);return true}return false}
 const FOGBUSY=new Set(['sleep','eat','flee','watchpost','patrol','bury','faint','shiver','reunion','nmeet','fogopen','foglook','bathe','cook','offer','otaki','otakiget']);
 function fogFree(r){return !r.hidden&&!r.coffin&&!(r.act&&(FOGBUSY.has(r.act.type)||/^(story|field)/.test(r.act.type)))}
@@ -178,7 +178,7 @@ function printScene(r,f,mem){const k=Math.min(PRINT_TRACE.length-1,printT().leng
   dialog([...(fuu?[[POKO,'フウが見たのは、きっとここだね。']]:[]),...mem,...(fuu?PRINT_FUU_TRACE:PRINT_TRACE[k])],()=>{if(S!==owner||VILLAGE_SESSION!==session)return;f.done=1;release();if(!printOn()||printTraced(f.j))return;S.flags.printT=[...printT(),f.j];logEv('ヌシ様の足あとをたどった（'+printN()+'/'+PRINT_N+'）');dirty=true;renderQuest();checkQuest()})}
 function printCue(c){const P=PRINTSC;if(!P||P.state!==S||P.session!==VILLAGE_SESSION||!S.res.includes(P.r))return;const r=P.r,d=sacredDirection(true);if(!d)return;const now=performance.now();
   if(c==='point'){const nx=printNext(P.j);if(nx<0)return;const tx=nx%W+.5,ty=((nx/W)|0)+.5,dist=Math.hypot(tx-r.x,ty-r.y)||1,u=Math.min(dist,6)/dist,ex=r.x+(tx-r.x)*u,ey=r.y+(ty-r.y)*u;
-    r.face=tx>=r.x?1:-1;sacredScenePose(r,'point',600000,{side:true,face:r.face});sfx('mtap');
+    r.face=tx>=r.x?1:-1;sacredScenePose(r,'point',600000,{side:true,face:r.face});sfx('twood');
     for(let i=1;i<=12;i++)villageTimeout(()=>{const q=i/12,px=r.x+(ex-r.x)*q,py=r.y+(ey-r.y)*q;fx.push({k:'p',x:px*TS,y:py*TS-8-hiAt((py|0)*W+(px|0))*LIFT,vx:0,vy:-18,life:1,col:i%2?'#fff6c8':'#d8f3c0',r:2})},300+i*90);/* 光の点々が、つぎの足あとのほうへ */
     {const fx0=P.j%W+.5,fy0=((P.j/W)|0)+.5,L=Math.hypot(ex-fx0,ey-fy0),n=Math.max(4,Math.min(9,Math.round(L/.7))),pts=[];for(let i=1;i<=n;i++)pts.push([fx0+(ex-fx0)*i/n,fy0+(ey-fy0)*i/n]);hoofTrail(pts,230,1500,700);hoofBlooms(fx0,fy0,6,300)}/* むかしヌシ様が歩いた、光るひづめのあとが、1歩ずつあらわれては消える。足あとのまわりに、光の花 */
     storyShot([[r.x*TS-24,r.y*TS-55-uLift(r)],[r.x*TS+24,r.y*TS+10-uLift(r)],[ex*TS-22,ey*TS-34],[ex*TS+22,ey*TS+12]],{limit:2.2,seconds:1.3});d.waitUntil=Math.max(d.waitUntil||0,now+PRINT_BEAT_MS.point)}
@@ -198,7 +198,7 @@ function printCue(c){const P=PRINTSC;if(!P||P.state!==S||P.session!==VILLAGE_SES
     d.waitUntil=Math.max(d.waitUntil||0,now+PRINT_BEAT_MS.take)}}
 ACT_LBL.fogopen='宝箱をあけている';ACT_LBL.foglook='ヌシ様のあしあとを見ている';
 /* クモの巣（S.web：マス→0 左の角・1 右の角）：お屋敷の中だけ。プレイヤーはこわせない。「しらべる」でタップすると、せいれいがそうじする（S.webq）。家の中の1つで住み心地-5（houseComfort） */
-function webTap(tx,ty){if(!S.web)return false;let j=ty*W+tx;if(S.web[j]==null&&S.web[j+W]!=null&&(HOME_WALLS.has(S.obj[j])||HOME_DOORS.has(S.obj[j])))j+=W;/* 壁の上にかかった所をタップしても */if(S.web[j]==null)return false;if(isNight()){toast('夜のあいだは、そうじできません');return true}(S.webq||(S.webq={}))[j]=1;sfx('mtap');toast('クモの巣：せいれいがそうじにいく');return true}
+function webTap(tx,ty){if(!S.web)return false;let j=ty*W+tx;if(S.web[j]==null&&S.web[j+W]!=null&&(HOME_WALLS.has(S.obj[j])||HOME_DOORS.has(S.obj[j])))j+=W;/* 壁の上にかかった所をタップしても */if(S.web[j]==null)return false;if(isNight()){toast('夜のあいだは、そうじできません');return true}(S.webq||(S.webq={}))[j]=1;sfx('tweb');toast('クモの巣：せいれいがそうじにいく');return true}
 function webReqFor(r){if(isNight()||!S.webq||!S.web)return -1;for(const k in S.webq){const j=+k;if(S.web[j]==null){delete S.webq[k];continue}if(free('b'+j,1))return j}return -1}
 const webWant=r=>fogFree(r)&&webReqFor(r)>=0;
 function webJob(r,G){const j=webReqFor(r);if(j<0)return false;const st=walk(j)&&!S.obj[j]&&G.dist[j]>=0?j:nearest(G,k=>[1,-1,W].some(d=>k===j+d)&&walk(k)&&!S.obj[k],9999);/* クモの巣の下に立つ（ふさがっていれば、となり） */if(st<0)return false;startAct(r,G,'sweep',st,{key:'b'+j,obj:j});return true}
