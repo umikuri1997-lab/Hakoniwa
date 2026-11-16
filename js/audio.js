@@ -135,7 +135,9 @@ let SFXV=1,SFXP=0,SFXL=0,SFXO=null,SFXR=1,SFXTAB=0,SFXTABD=0;/* SFXP：左右（
 /* マップの音の出口：大きさ → 左右 → 遠いほど高い音がへる（空気の中で、遠くの音はこもって聞こえる） */
 function sfxOut(){let n=AC.createGain(),h=n;n.gain.value=SFXV;if(SFXP&&AC.createStereoPanner){const p=AC.createStereoPanner();p.pan.value=SFXP;h.connect(p);h=p}if(SFXL){const f=AC.createBiquadFilter();f.type='lowpass';f.frequency.value=SFXL;f.Q.value=.5;h.connect(f);h=f}h.connect(sfxG);return n}
 let XYLN=0;
+let TAPOBJ=0;const TAPK=new Set(['twood','tgrass','tcan','tstone','tfoe','tweb','tani','tbell','tplace']);
 function sfx(k){
+  if(k==='open'||k==='crit'||TAPK.has(k))TAPOBJ=performance.now();/* 地図の物にさわった音が鳴ったら、葉・火の粉の音は出さない（tapFx） */
   if(!AC||!SND.sfx||AC.state!=='running')return;const now=AC.currentTime;if(lastSfx[k]&&now-lastSfx[k]<.07)return;lastSfx[k]=now;
   const t=now+.01,o=SFXV!==1||SFXP||SFXL?sfxOut():sfxG,seq=(ns,gap,type,v,d)=>ns.forEach((m,i)=>tone(m,t+i*gap,d||gap*1.6,type,v,o));
   SFXO=o===sfxG?null:o;if(SFXTAB&&(k==='tap'||k==='next')){SFXTABD=1;if(SFXTAB===2)return;k='tab'}/* タブをおしたときのボタンの音は、めくる音に */
@@ -147,6 +149,15 @@ function sfx(k){
   case'matDrop':if(playS('matDrop',.8))break;tone(520,t,.06,'triangle',.06,o,260);break;
   case'power':seq([79,84,88,91],.055,'sine',.07);tone(1568,t+.24,.35,'triangle',.03,o,2093);break;/* パワーをカミサマにわたした：きらっとした音 */
   case'tap':if(playS('click',.6))break;tone(1300,t,.03,'square',.07,o);tone(1950,t+.025,.03,'triangle',.05,o);break;/* ボタン：もらった音（click） */
+  case'twood':{const r=.93+Math.random()*.14;knock(640*r,t,.07,o,.07);knock(980*r,t+.018,.025,o,.04)}break;/* 地図の物をタップ（ボタンの音とはべつ）。枝・木の物・宝箱：こつっ */
+  case'tgrass':{const r=.92+Math.random()*.16;rustle(t,.08,.05,o,2600*r,1800*r,.9);rustle(t+.035,.06,.03,o,3400*r,2400*r,.9)}break;/* 草・きのこ：かさっ */
+  case'tcan':{const r=.95+Math.random()*.1;knock(1700*r,t,.05,o,.03);tone(3200*r,t,.09,'sine',.02,o,3050*r)}break;/* 空き缶：かちっ */
+  case'tstone':{const r=.94+Math.random()*.12;knock(900*r,t,.08,o,.04);knock(1500*r,t+.004,.03,o,.025);noise(t,.02,.015,o,3000)}break;/* 鉱脈・石：こんっ */
+  case'tfoe':{const r=.92+Math.random()*.16;knock(160*r,t,.09,o,.12);rustle(t,.1,.03,o,500,300,.7)}break;/* コワイノ・かげの巣：ぽふっ */
+  case'tweb':rustle(t,.12,.025,o,5200,4200,1.5);rustle(t+.04,.08,.015,o,6000,5000,1.5);break;/* クモの巣：さらっ */
+  case'tani':{const r=.93+Math.random()*.14;tone(380*r,t,.12,'sine',.05,o,620*r)}break;/* 生き物：ぽよっ */
+  case'tbell':{const r=.97+Math.random()*.06;knock(880*r,t,.06,o,.22);knock(1320*r,t+.07,.04,o,.18)}break;/* ヌシ様・お客さん・屋台：ころん */
+  case'tplace':{const r=.93+Math.random()*.14;knock(300*r,t,.09,o,.1);rustle(t,.05,.02,o,900,500,.7)}break;/* 置く場所・ひっこしミトン：とんっ */
   case'next':{const r=.96+Math.random()*.08;knock(470*r,t,.09,o,.08);rustle(t+.01,.07,.025,o,3600,2600,.6)}break;/* 会話の「つぎへ」：コトッと、紙をめくる音 */
   case'open':rustle(t,.15,.06,o,900,2600,.7);knock(340,t+.11,.06,o,.1);break;/* 画面をひらく：さらっ…コトッ */
   case'close':rustle(t,.12,.05,o,2400,800,.7);knock(270,t+.08,.06,o,.1);break;/* 画面をとじる */

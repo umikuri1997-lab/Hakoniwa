@@ -9,7 +9,7 @@ await p.waitForFunction(()=>sacredEval('stageReady()'),{},{timeout:60000});
 const click=t=>run(`(()=>{const b=[...document.querySelectorAll('#sheetWrap button.btn')].find(x=>x.textContent===${JSON.stringify(t)});if(!b)return false;b.click();return true})()`);
 await run(`resTab=2;openSheet('res',S.res[0].id)`);
 const st0=await run(`(()=>{const r=S.res[0];return [r.fun,r.hunger,S.food]})()`);
-assert.ok(await click('なでる'),'なでるボタン');await click('なでる');
+assert.ok(await click('なでる'),'なでるボタン');assert.equal(await run(`sheet`),null,'なでたら、とじて反応を見せる');await run(`resTab=2;openSheet('res',S.res[0].id)`);await click('なでる');
 const st1=await run(`(()=>{const r=S.res[0];return [r.fun,r.hunger,S.food,![...document.querySelectorAll('#sheetWrap button.btn')].some(x=>x.textContent==='毛布をかける')]})()`);
 assert.equal(st1[0],st0[0]+10,'なでる+10（2回目はなし）');assert.ok(st1[3],'起きているときは毛布なし');
 /* 外で寝ている子に毛布 */
@@ -21,4 +21,7 @@ assert.ok(tl.dl===1&&tl.L.length>=3,'お話の行 '+JSON.stringify(tl));
 const talk=async()=>{await run(`(()=>{resTab=2;openSheet('res',S.res[0].id);[...document.querySelectorAll('#sheetWrap button.btn')].find(x=>x.textContent==='お話する').click()})()`);for(let i=0;i<40&&!(await run(`$('#dialog').hidden`));i++){await run(`(()=>{const b=document.querySelector('#dlgBtns .btn[data-nx]');if(b){b.disabled=false;DLGA.holdUntil=0;b.click();b.click()}})()`);await p.waitForTimeout(60)}return run(`[S.res[0].fun,!!S.flags.talkQ,sheet]`)};
 const t1=await talk(),t2=await talk();
 assert.equal(t1[0],50,'お話+10');assert.ok(t1[1],'お話の依頼');assert.equal(t1[2],'res','お話のあと、せいれいの画面にもどる');assert.equal(t2[0],50,'2回目はたのしさ+0');
+/* お話のあいだは、歩くとちゅうでも、立ちどまって正面を向く */
+const fr=await run(`(()=>{closeSheet();S.t=1440*5+600;const r=S.res[0];const j=(r.y|0)*W+(r.x|0);let t=-1;for(let k=3;k<8;k++)if(walk(j-k*W))t=j-k*W;endAct(r);startAct(r,bfs(r.x|0,r.y|0),'wander',t);if(!r.path||!r.path.length)return 'nopath';let op=null;const o=drawSpirit;drawSpirit=function(c,e,x,y,s,d,q){if(q&&q.dot&&Math.abs(x-r.x*TS)<40)op=q;return o.apply(this,arguments)};talkTo(r);drawRes0(r,performance.now());drawSpirit=o;const w=op&&{walk:op.walk,back:op.back,turn:op.turn};$('#dialog').hidden=true;DLGN.clear();TALKID=null;return w})()`);
+assert.deepEqual(fr,{walk:false,back:false,turn:0},'お話のあいだは正面 '+JSON.stringify(fr));
 assert.deepEqual(errors,[]);console.log('care ok',JSON.stringify({st0,st1,bl,t1,t2}));await browser.close()})();
