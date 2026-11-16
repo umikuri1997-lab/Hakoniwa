@@ -10,7 +10,7 @@ import numpy as np
 from PIL import Image
 
 TEX = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'textures')
-MATS = ('fabric', 'rock', 'metal', 'ice')
+MATS = ('fabric', 'rock', 'metal', 'ice', 'gloss')   # gloss：つやつや（でこぼこなし。つやは material('metal') のつやのすじ）
 # 布：(ノーマルマップ, 1まいがおおう長さ（体の高さのうち）, 織り目の強さ, ちぢめる大きさ)
 FABRIC = ('fabric026_n.png', 1.6, 0.07, 48)
 FOLD = (5, 0.7, 0.5)    # 布のしわ：まわりにいくつ・強さ（すそほど強い）・ゆらぎ（高さでひだがうねる）
@@ -64,6 +64,8 @@ def bump(mat, H, seed=0):
                 d += w[:, i:i+1]*(t[:, 0:1]*Tu+t[:, 1:2]*Tv)*ROCK[3]; l += w[:, i]*_sample(CM, Q[:, a]+off[i, 0], Q[:, b]+off[i, 1]).mean(1)
             return _flat(d, N), np.where((l-cm)/max(cs, 1e-6) < -CRACK, 1-MULQ, 1.0)   # ひびだけ暗く
         return f
+    if mat == 'gloss':   # つやつや：面の向きはそのまま、上向きの所を少し明るく（つやは render のつやのすじ）
+        return lambda P, N: (N, np.where(N[:, 2] > METAL[0], 1+METAL[3]*0.5, 1.0))
     if mat in ('metal', 'ice'):
         def f(P, N):
             nz = N[:, 2]; mul = np.where(nz > METAL[0], 1+METAL[3], np.where((nz > METAL[1]) & (nz < METAL[2]), 1-METAL[3], 1.0))

@@ -245,6 +245,7 @@ SHINE = (12, -8)                # 金属のつや：明るさを足し、あざ�
 DITHER = 0   # 0 でなければ、かげを1色にして、うすいかげをあみ（できあがりの1ドットごと。この数は1ドットの大きさ）であらわす
 DITHERR = (0.22, 0.72)   # あみ：かげになりはじめる・ぜんぶかげになる、光の向きとの内積
 LAST = None
+DITHERG = None   # つやつやの部品の、色の段（DITHERT と同じ形。段は1つ多くてよい）
 DITHERT = None   # あみの色の段（DITHER のとき。None なら DITHERR・DITHERHL の2色＋ハイライト）
 DITHERHL = None   # あみのハイライト：(はじまる・ぜんぶになる 光の向きとの内積, 明るさを足す, あざやかさを引く)（100段階）
 DITHERLV = 3   # あみのときの、かげの色（toon の段）
@@ -423,9 +424,16 @@ def render_px(sc, proj, ext, depth, k=0.72, outer=True, merge=12, lw=1, k2=0.86,
             def tone(q, t):
                 if not isinstance(t, tuple): return toon(q, t)
                 h_, s2, v2 = colorsys.rgb_to_hsv(*(np.array(q)/255)); return np.array(colorsys.hsv_to_rgb(h_, min(1, max(0, s2+t[1]/100)), min(1, max(0, v2+t[0]/100))))*255
+            GLS = np.isin(idb, [p_ for p_, m2 in sc.mt.items() if m2 == 'gloss'])
+            if GLS.any() and DITHERG:   # つやつや（material 'gloss'）：光の段を広くして、白っぽい つやの光を足す
+                bg, tg = DITHERG; ig = np.zeros((Hp, Wp), int)
+                for lo, hi in bg: ig += (np.clip((dlb-lo)/(hi-lo), 0, 1) > th) | (dlb >= hi)
+                idx = np.where(GLS, ig, idx)
             for q in np.unique(ccb[m_].reshape(-1, 3), axis=0):
                 k_ = m_ & np.all(ccb == q, axis=2)
-                for i_, t_ in enumerate(tones): col[k_ & (idx == i_)] = tone(q, t_)
+                for i_, t_ in enumerate(tones): col[k_ & (idx == i_) & ~GLS] = tone(q, t_)
+                if GLS.any() and DITHERG:
+                    for i_, t_ in enumerate(DITHERG[1]): col[k_ & (idx == i_) & GLS] = tone(q, t_)
         else:
             lo, hi = DITHERR; den = np.clip((hi-dlb)/(hi-lo), 0, 1)   # かげのこさ：光の向きとの内積が hi で0、lo で1（そのあいだは、なめらか）
             for q in np.unique(ccb[m_].reshape(-1, 3), axis=0):

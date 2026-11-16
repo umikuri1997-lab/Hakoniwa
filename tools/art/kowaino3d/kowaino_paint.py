@@ -39,13 +39,13 @@ CFG.update({   # 色は、いまのゲームの絵（ない物は、night.js の
     'thief': mk('thief', .9, '#6a5468', '#231a2c', '#8f7a56', '#e0cc94', mats={'deco': 'fabric'}),
     'brute': mk('brute', 1.25, '#4a4262', '#1b1628', '#968a9e', '#c2afae', hand='#8c80a0', mats={'deco': 'rock'}),
     'breaker': mk('breaker', 1.1, '#5e5474', '#1d1729', '#8c8496', '#c2afae', hand='#8c80a0', mats={'deco': 'metal'}),
-    'trapper': mk('trapper', .95, '#3e3654', '#171223', '#c4b2b0', '#c2afae'),
+    'trapper': mk('trapper', .95, '#3e3654', '#171223', '#c4b2b0', '#c2afae', mats={'deco': 'gloss'}),
     'ash': mk('ash', .9, '#7a6a7a', '#251c2e', '#a09098', '#d8c8c8', mats={'deco': 'rock'}),
     'rockc': mk('rockc', 1.3, '#6c5e70', '#211a2a', '#9b888c', '#c2afae', hand='#8a7a80', mats={'deco': 'rock', 'hand': 'rock'}),
     'armor': mk('armor', 1.3, '#4e4e60', '#1a1a24', '#8c92a2', '#9fe0ff', mats={'deco': 'metal'}),
     'shiny': mk('shiny', .8, '#e2d498', '#5a4f2a', '#fff2b0', '#ffffff', edge='#f0e6c0'),
     'hana': mk('hana', 1, '#8a5a7a', '#2e1a28', '#eaa6c8', '#ffc6e0'),
-    'hoteri': mk('hoteri', 1, '#7c4232', '#2a1410', '#f0905a', '#ffb36b'),
+    'hoteri': mk('hoteri', 1, '#7c4232', '#2a1410', '#f0905a', '#ffb36b', mats={'deco': 'gloss'}, gloss=([(0.0, 0.06), (0.2, 0.26), (0.5, 0.56), (0.7, 0.76)], [3, 2, 0, (14, -8), (32, -28)])),   # 細いので、つやの光を広く,
     'ochiba': mk('ochiba', .8, '#7a5a3a', '#291a10', '#d9a05a', '#ffd38a'),
     'yuki': mk('yuki', 1.3, '#8494a8', '#26303c', '#dff1ff', '#e0f4ff', pom='#f4faff', pomh=0.0, mats={'deco': 'ice'}),
 })
@@ -352,7 +352,7 @@ def shoot(name, cfg, src, yaw=0.0):
         if lab[k] != last:
             sc.decal(hemf if lab[k] == 'base' else pomf if lab[k] in ('hood', 'pom') else None); sc.group('hoodpom' if lab[k] in ('hood', 'pom') else None)   # ずきんとぽんぽんは、三角形のさかいに線を引かない（さかい目の線は pomf）
             if cfg.get('mats'):   # 材質：でこぼこ・色のむら（kw_tex.py）と、金属のつや
-                mt_ = cfg['mats'].get(lab[k]); sc.bump(kw_tex.bump(mt_, H, seed=len(sc.bm)) if mt_ in kw_tex.MATS else None); sc.material('metal' if mt_ in ('metal', 'ice') else None)
+                mt_ = cfg['mats'].get(lab[k]); sc.bump(kw_tex.bump(mt_, H, seed=len(sc.bm)) if mt_ in kw_tex.MATS else None); sc.material('metal' if mt_ in ('metal', 'ice') else 'gloss' if mt_ == 'gloss' else None)
             sc.part(); last = lab[k]; PL[sc.pid] = lab[k]
         sc.tri(R(P[f[0]]), R(P[f[1]]), R(P[f[2]]), col[k])
     sc.decal(None); sc.group(None); sc.bump(None); sc.material(None)
@@ -376,12 +376,22 @@ def shoot(name, cfg, src, yaw=0.0):
         return (q[0]*sc_*k, -(cz+float(q@U)*sc_)*k)
     Q = np.array([proj(p) for tr in sc.t for p in tr[:3]]); ext = (math.floor(Q[:, 0].min())-2, math.ceil(Q[:, 0].max())+2, math.floor(Q[:, 1].min())-2, math.ceil(Q[:, 1].max())+2)
     O.S = BIG; O.GRAD = True; O.DITHER = BIG if DITH else 0   # かげは1色、うすいかげは、かげのドットの密度（持ち主がきめた）
-    sv = (O.LV4, O.SHADE4); O.LV4 = KWLV; O.SHADE4 = KWSHADE; O.DITHERT = KWT; sv2 = O.METALSPEC; O.METALSPEC = KWMSPEC   # 立体感：かげの所を広く・かげの色をこく（コワイノだけ）
-    hi = O.render_px(sc, proj, ext, V, k=0.80, lw=2, k2=0.90, merge=0); O.LV4, O.SHADE4 = sv; O.METALSPEC = sv2; O.DITHERT = None
+    sv = (O.LV4, O.SHADE4); O.LV4 = KWLV; O.SHADE4 = KWSHADE; O.DITHERT = KWT; O.DITHERG = cfg.get('gloss', KWG); sv2 = O.METALSPEC; O.METALSPEC = KWMSPEC   # 立体感：かげの所を広く・かげの色をこく（コワイノだけ）
+    hi = O.render_px(sc, proj, ext, V, k=0.80, lw=2, k2=0.90, merge=0); O.LV4, O.SHADE4 = sv; O.METALSPEC = sv2; O.DITHERT = None; O.DITHERG = None
     if os.environ.get('KWDBG'): hi.save(os.path.join(os.environ['KWDBG'], 'hi_%s_%d.png' % (name, round(math.degrees(yaw)))))   # たしかめ用：ちぢめる前の大きな絵
     import pixdown
     W0, H0 = (ext[1]-ext[0]), (ext[3]-ext[2])
     o = pixdown.shrink(np.asarray(hi).astype(float), W0, H0); o = pixdown.lines(o, np.asarray(hi).astype(float)); o = pixdown.outline(o, np.asarray(hi).astype(float))
+    gp = [p_ for p_, m_ in sc.mt.items() if m_ == 'gloss']
+    if gp:   # つやつやの部品は細いので、ちぢめるとつやの光が消える：つやの光のドットが GLOSSKEEP より多いマスは、その光の色にする
+        idb_, _ = O.LAST; HA = np.asarray(hi).astype(float); gm = np.isin(idb_, gp); lum = HA[..., :3]@[0.3, 0.59, 0.11]
+        o = o.copy(); Hs, Ws = o.shape[:2]
+        for y in range(Hs):
+            for x in range(Ws):
+                sl = (slice(y*BIG, (y+1)*BIG), slice(x*BIG, (x+1)*BIG)); g_ = gm[sl]
+                if g_.sum() < 4: continue
+                L_ = lum[sl][g_]; top = L_ >= np.percentile(lum[gm], 85)
+                if top.sum() >= GLOSSKEEP*BIG*BIG: o[y, x, :3] = HA[sl][g_][top][:, :3].mean(0); o[y, x, 3] = 255
     if PARTLINE:   # 部品のさかい（布・かざり・手・顔・ぽんぽん）に、できあがりの1ドットの線。奥のがわのドットに引く（持ち主）
         idb, zb = O.LAST; grp = lambda l: PARTG.get(l, l)
         GL = np.full(max(PL)+2 if PL else 2, -1); names = sorted(set(grp(v) for v in PL.values()))
@@ -411,11 +421,13 @@ PALMW = 0.45   # 手のひらのあつみ（左右の半径。手の大きさ r 
 KWLV = (0.72, 0.5, 0.22)   # 光・うすいかげ（あみ1/4）・半かげ（あみ2/4）・かげ のさかい目（光の向きとの内積）
 KWSHADE = [(9, -2.5), (16, -4), (34, -4)]   # かげの色（3つめ。明るさ・あざやかさを引く）
 KWT = ([(0.08, 0.14), (0.4, 0.47), (0.9, 0.96)], [3, 2, 0, (7, -4)])   # 色の段：こいかげ・かげ・光・ハイライト（持ち主：かげと光は2段ずつ）。さかい目のあいだだけ、あみ
+KWG = ([(0.08, 0.14), (0.35, 0.42), (0.68, 0.74), (0.86, 0.9)], [3, 2, 0, (12, -6), (30, -25)])   # つやつや（牙・ばちばち）：こいかげ・かげ・光・明るい光・白っぽい つや
 KWMSPEC = 0.9   # 金属のつやが出る向きの近さ（コワイノ。光沢・反射で金属をあらわす）
 KWDR = (0.4, 0.47)   # あみ：光の向きとの内積がこのあいだだけ（光とかげのさかいの細い帯。ほかは光かかげの1色。あみを多用しない、持ち主がきめた）
 KWHL = (0.92, 0.97, 14, 6)   # ハイライト：光の向きとの内積がこのあいだで、あみがふえる。明るさ+14・あざやかさ−6
 HULL = 0.9   # 背面法の輪郭のふとさ（できあがりのドット。0 で引かない）
 HULLK = 0.45   # 背面法の輪郭の色（部品の色にかける）
+GLOSSKEEP = 0.12   # つやの光のドットが、マスのこのわりより多ければ、のこす
 PARTLINE = False   # 部品のさかいの線
 PARTK = 0.62   # 部品のさかいの線の色（そのドットの色にかける）
 PARTG = {'red': 'base', 'under': 'base', 'rim': 'base', 'foot': 'face'}   # 同じ部品とみなす色わけ（表と裏地・顔と足には線を引かない）
