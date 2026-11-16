@@ -378,9 +378,9 @@ def shoot(name, cfg, src, yaw=0.0):
         sc.material('flat'); sc.smooth(False)
         if kind in ('slash', 'impact'):   # 弧（ひっかき・なぎはらい）／星がた（うつ所）
             pts = [c0+np.array([math.cos(t)*sz*H*2, 0, math.sin(t)*sz*H*2]) for t in (np.linspace(-1.2, 1.2, 7) if kind == 'slash' else np.linspace(0, 2*math.pi, 9)[:-1])]
-            for i_, q in enumerate(pts): sc.part(); octa(sc, R(q), sz*H*(0.35 if kind == 'slash' else 0.3)*(1 if kind == 'impact' else 1-abs(i_-3)/5), col_)
+            for i_, q in enumerate(pts): sc.part(); octa(sc, R(q), sz*H*(0.6 if kind == 'slash' else 0.5)*(1 if kind == 'impact' else 1-abs(i_-3)/5), col_)
         else:
-            for i_ in range(n): q = c0+(rs.rand(3)*2-1)*spr*H*np.array([1, 0.6, 0.8]); sc.part(); octa(sc, R(q), sz*H*(0.6+0.6*rs.rand()), col_)
+            for i_ in range(n): q = c0+(rs.rand(3)*2-1)*spr*H*np.array([1, 0.6, 0.8]); sc.part(); octa(sc, R(q), sz*H*(1.2+0.8*rs.rand()), col_)
         sc.material(None); sc.smooth(True)
     sc.smooth(False)
     if HULL:   # 背面法の輪郭：点を面の向きへ HULL ドットぶん ふくらませた うら返しの皮を、こい色で（うらを向いた面だけ描く）。物のふち・かさなる所・部品のさかいに線が出る
