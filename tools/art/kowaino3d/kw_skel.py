@@ -12,7 +12,8 @@
   spread：とびちる かざり（体とはなれた かたまりだけ）を、むねからはなす倍。orbit：とびちる かざりを、体のまわりにまわす（度）。
   fx：パーティクル [(しゅるい, (x,y,z), 数, ひろがり, 大きさ)]（しゅるいは kowaino_paint.FXCOL）。melt：とける・scale：大きさ。
 コマ数：待機4（体はうごかさず、布だけ なびく）・歩き4（右足 → すれちがい → 左足 → すれちがい）・攻撃4（ためる → ふりかぶる → うつ → もどる）・やられ3（ひるむ → とちゅう → さいご＝たおされたとき）。
-攻撃とやられは、コワイノごと（MOVES。持ち主とえらんだ案）。体をうしろへそるのは −16度まで（すその裏が見えて暗くなる）。たてにつぶす動きは使わない。"""
+攻撃とやられは、コワイノごと（MOVES。持ち主とえらんだ案）。体をうしろへそるのは −16度まで（すその裏が見えて暗くなる）。
+攻撃は、頭を大きく うごかさない（首で うちけす NECK）。ため・のび（ATKSQ）と、布のおくれ（LAGK）を、どのコワイノにも入れる。"""
 import math
 import numpy as np
 
@@ -121,7 +122,7 @@ class Skel:
                 if P[vs, 2].mean()/H > SPREADZ.get(name, 9): continue
                 s.sprc.append(vs)
 
-    def pose(s, P, move=(0, 0, 0), spread=1.0, orbit=0.0, melt=0.0, scale=1.0, flutter=(0, 0), look=(0, 0), fx=(), wave=(0, 0), **bones):
+    def pose(s, P, move=(0, 0, 0), spread=1.0, orbit=0.0, melt=0.0, scale=1.0, flutter=(0, 0), look=(0, 0), fx=(), wave=(0, 0), lag=(0, 0, 0), sq=1.0, **bones):
         H = s.H; Ms = {}
         for n, par, _ in BONES:
             p = s.piv[n]; a = tuple(bones.get(n, ())) + (0,)*6
@@ -139,15 +140,21 @@ class Skel:
             wv = np.sin(s.ang*3+flutter[1])*flutter[0]*H*s.hem; d = np.stack([np.cos(s.ang), np.sin(s.ang), 0*s.ang], 1)
             Q += wv[:, None]*d; Q[:, 2] += np.abs(wv)*0.6
         if wave[0]:   # なびく：はしほど大きく、先へ すすむ波（位相＝コマ。くりかえすと つながる）。うごいた向きと はんたいへ おくれる
-            amp, ph = wave; lag = -np.array(move, float)*H*0.6
+            amp, ph = wave
             if s.tw.any():
-                w = s.tw; ah = amp+HOODAMP; Q[:, 0] += w*ah*H*np.sin(ph-w*2.2); Q[:, 2] += w*ah*H*0.5*np.cos(ph-w*2.2); Q += (w**2)[:, None]*lag   # フードの先は、マフラーより大きく なびく
+                w = s.tw; ah = amp+HOODAMP; Q[:, 0] += w*ah*H*np.sin(ph-w*2.2); Q[:, 2] += w*ah*H*0.5*np.cos(ph-w*2.2)   # フードの先は、マフラーより大きく なびく
             if s.sw.any():
-                w = s.sw; Q[:, 2] += w*amp*H*1.6*np.sin(ph-w*3.5); Q[:, 1] += w*amp*H*0.8*np.cos(ph-w*3.5); Q += (w**2)[:, None]*lag
+                w = s.sw; Q[:, 2] += w*amp*H*1.6*np.sin(ph-w*3.5); Q[:, 1] += w*amp*H*0.8*np.cos(ph-w*3.5)
+        if any(lag):   # 布のおくれ：体が うごいた向きと はんたいへ、はしほど大きく のこる（すそは半分）
+            lg = np.array(lag, float)*H
+            for w in (s.tw**2, s.sw**2, s.hem*0.5):
+                if w.any(): Q += w[:, None]*lg
         if s.sprc:   # とびちる かざり：むねのまわりで はなす・まわす
             c0 = Ms['chest'][0]@(np.array([0, 0, 0.45])*H)+Ms['chest'][1]; Ro = _r((0, 0, 1), orbit)
             for vs in s.sprc:
                 c = Q[vs].mean(0); nc = c0+Ro@(c-c0)*spread; Q[vs] += nc-c
+        if sq != 1.0:   # ため（ちぢむ）・のび：足もとを もとに、たてに sq、よこは体積をたもつ
+            Q[:, 2] *= sq; Q[:, :2] *= 1/math.sqrt(sq)
         if melt:   # とける（ユキカゲのたおれ方）：上ほど下へ、下ほどよこへ広がる
             z = Q[:, 2]/H; Q[:, 2] *= (1-melt*np.clip(z, 0, 1)); Q[:, :2] *= (1+melt*0.6*(1-np.clip(z, 0, 1)))[:, None]
         if scale != 1.0: Q = Q*scale
@@ -260,8 +267,35 @@ MOVES = {
                        dict(hip=(20, 0, 0), chest=(20, 0, 0), head=(20, 0, 0), armL=(-20, 60, 0), armR=(-20, 60, 0), melt=0.55, fx=[('snow', (0, 0.1, 0.05), 6, 0.35, 0.035)])]),
 }
 
+NECK = 0.85   # 攻撃：首が、体の かたむきの このわりを うちけす（頭は大きく うごかさない。持ち主）
+ATKSQ = (0.92, 1.06, 0.9, 1.02)   # 攻撃のため・のび：ためる（ちぢむ）→ ふりかぶる（のびる）→ うつ（ちぢむ）→ もどる
+HURTSQ = (0.94, 1.0, 1.0)   # やられ：うけた しゅんかんだけ、少しちぢむ
+LAGK = 0.8   # 布のおくれ：頭のてっぺんが うごいた分の、このわり
+BODY = ('root', 'hip', 'chest')
+
+def _steady(f):
+    """攻撃のコマ：頭は、体（足もと・こし・むね）の かたむきを、首でうちけす"""
+    f = dict(f); a = [sum(tuple(f.get(b, ()))[k] if len(tuple(f.get(b, ()))) > k else 0 for b in BODY) for k in range(3)]
+    h = tuple(f.get('head', ()))+(0,)*6; f['head'] = (h[0]-NECK*a[0], h[1]-NECK*a[1], h[2]-NECK*a[2]*0.5)+h[3:6]; return f
+
+def _top(f):
+    """頭のてっぺんの だいたいの場所（布のおくれを きめるため）"""
+    a = [sum(tuple(f.get(b, ()))[k] if len(tuple(f.get(b, ()))) > k else 0 for b in BODY+('head',)) for k in range(2)]
+    m = np.array(f.get('move', (0, 0, 0)), float); return m+np.array([math.sin(math.radians(a[1]))*0.8, math.sin(math.radians(a[0]))*0.8, 0])
+
+def _lag(L, loop):
+    """コマごとの布のおくれ：まえのコマからの頭のてっぺんの うごきと、はんたいへ"""
+    out = []
+    for i, f in enumerate(L):
+        pv = L[i-1] if (i or loop) else {}; d = _top(f)-_top(pv); f = dict(f)
+        if 'lag' not in f: f['lag'] = tuple(-d*LAGK)
+        out.append(f)
+    return out
+
 def poses(name):
     m = MOVES[name]; wx = WALKX.get(name)
     walk = [dict(f, **wx[i]) for i, f in enumerate(WALK)] if wx else WALK
     wv = lambda L: [dict({'wave': (0.06, i*math.pi/2)}, **f) for i, f in enumerate(L)]   # 攻撃・やられも、なびく
-    return dict(idle=IDLE, walk=walk, atk=wv(m['atk']), hurt=wv(m['hurt']))
+    atk = [dict({'sq': ATKSQ[i]}, **_steady(f)) for i, f in enumerate(m['atk'])]
+    hurt = [dict({'sq': HURTSQ[i]}, **f) for i, f in enumerate(m['hurt'])]
+    return dict(idle=_lag(IDLE, True), walk=_lag(walk, True), atk=_lag(wv(atk), False), hurt=_lag(wv(hurt), False))
