@@ -1,0 +1,22 @@
+/* せいれいの手紙：なかよし・記念日・こまりごとがなおった → つぎの朝にとどく・その子の言いかた・くりかえさない・もちもの・思い出帳 */
+const assert=require('node:assert/strict');
+(async()=>{const {browser,run,errors}=await require('../sim/boot.cjs')({world:0});
+  const r=JSON.parse(await run(`(()=>{document.querySelector('#dialog').hidden=true;S.introSeen=true;S.flags.tapped=1;USERPAUSE=true;const out={};const a=S.res[0];
+    S.letters=[];S.letterQ=[];letterQ(a,'mate','ホノ');letterQ(a,'mate','ホノ');out.q=S.letterQ.length;out.mateTx=S.letterQ[0].tx.join('');
+    letterMorning();out.sameDay=(S.letters||[]).length;S.t+=1440;letterMorning();out.got=S.letters.length;out.unread=letterUnread();out.qLeft=S.letterQ.length;
+    /* 同じ子・同じしゅるいは、ちがう文から */const seen=new Set();for(let i=0;i<3;i++){S.letterQ=[];letterQ(a,'anniv',30);seen.add(S.letterQ[0].tx[0])}out.fresh=seen.size;
+    /* こまりごとがなおった・記念日のきっかけ */S.letterQ=[];S.trouble={id:a.id,k:'dark',d:dayNo()};const D=TROUBLE.dark,ok0=D.ok;D.ok=()=>false;/* ok は「まだこまっている」 */TRBT=4;troubleTick();D.ok=ok0;out.thx=S.letterQ.some(q=>q.k==='thx'&&q.id===a.id);
+    /* もちもの：手紙のわく、タップで読む */openSheet('inv');const slot=[...document.querySelectorAll('.sheet .slot')].find(b=>b.textContent.includes('手紙'));out.slot=!!slot;slot.click();const pc=document.querySelector('.pxcard');out.paper=pc&&pc.textContent;pc.querySelector('.x').click();out.read=S.letters[0].read;closeSheet();
+    /* 思い出帳 */openSheet('menu','record');out.rec=[...document.querySelectorAll('.sheet h3')].some(e=>e.textContent==='手紙');closeSheet();
+    /* 思い出の場面では書かない */const Q0=S.letterQ.length;S.free=true;letterQ(a,'thx','');S.free=false;out.free=S.letterQ.length-Q0;
+    /* お礼の品：お礼の手紙だけ。はじめて読んだときに1回うけとる */S.letters=[];S.letterQ=[];a.elem='earth';letterQ(a,'thx');const b=S.res.find(q=>q!==a)||a;letterQ(b,'season','夏');S.t+=1440;letterMorning();const th=S.letters.find(l=>l.k==='thx'),se=S.letters.find(l=>l.k==='season');out.gift=th&&th.g&&th.g.k;out.seasonGift=se?se.g:'none';out.seasonTx=se?se.tx.join(''):'';const st0=S.mat.stone||0;letterRead(th);document.querySelector('.pxcard .x').click();out.stone=(S.mat.stone||0)-st0;letterRead(th);out.paper2=document.querySelector('.pxcard').textContent;document.querySelector('.pxcard .x').click();out.stone2=(S.mat.stone||0)-st0;
+    /* 7しゅるい・5通ずつ */out.kinds=Object.keys(LETTERT).length;out.each=Object.values(LETTERT).every(L=>L.length===5);out.long=Object.values(LETTERT).flat(2).filter(t=>t.length>60).length;
+    /* きっかけ：ゆめ・よみがえり・レベル */S.letterQ=[];letterQ(a,'dream','ベンチ');out.dreamTx=S.letterQ[0].tx.join('');out.dreamGift=!!S.letterQ[0].g;
+    return JSON.stringify(out)})()`));
+  console.log(JSON.stringify(r));
+  assert.equal(r.q,1,'同じきっかけは1通');assert.ok(r.mateTx.includes('ホノ'),r.mateTx);assert.equal(r.sameDay,0,'その日にはとどかない');assert.equal(r.got,1);assert.equal(r.unread,1);assert.equal(r.qLeft,0);
+  assert.equal(r.fresh,3);assert.equal(r.thx,true);assert.equal(r.slot,true);assert.ok(r.paper.includes('守り神さまへ')&&r.paper.includes('より'),r.paper);assert.equal(r.read,1);assert.equal(r.rec,true);assert.equal(r.free,0);
+  assert.equal(r.gift,'mat:stone');assert.equal(r.seasonGift,null);assert.ok(r.seasonTx.includes('夏'),r.seasonTx);assert.equal(r.stone,8);assert.equal(r.stone2,8,'2回めはもらえない');assert.ok(r.paper2.includes('石材×8'),r.paper2);
+  assert.equal(r.kinds,7);assert.equal(r.each,true);assert.equal(r.long,0);assert.ok(r.dreamTx.includes('ベンチ'),r.dreamTx);assert.equal(r.dreamGift,true);
+  assert.deepEqual(errors,[]);await browser.close();console.log('OK');
+})().catch(e=>{console.error(e);process.exit(1)});

@@ -147,7 +147,7 @@ def ITEMS():
     L=[]
     for ci in range(4):
         for fr in(0,1):L.append(('critfly:%d#%d'%(ci,fr),fly(ci,fr)))
-    L+= [('critbird#0',bird()),('critbird#f0',bird(0)),('critbird#f1',bird(1)),('critfrog#0',frog(0)),('critfrog#1',frog(1))]
+    L+= [('critbird#0',bird()),('critbird#f0',bird(0)),('critbird#f1',bird(1))]   # かえるは、持ち主のモデルから写した critkaeru（crit_build.py）
     return L
 
 def shot(M):
@@ -181,7 +181,7 @@ def run(out,chips=False):
         im.save(os.path.join(out,fn+'.png'));im.resize((im.width*10,im.height*10),Image.NEAREST).save(os.path.join(out,fn+'_x10.png'))
         print('%s %dx%d ax %d ay %d'%(nm,im.width,im.height,ax,ay))
     # 前の絵とならべる（4倍。上の列が前の絵、下の列が3Dの絵。足もとの線をそろえる）
-    olds=[old('fly',ci,fr) for ci in range(4) for fr in(0,1)]+[old('bird',0,0),old('bird',0,1),old('bird',0,1),old('frog'),old('frog')]
+    olds=[old('fly',ci,fr) for ci in range(4) for fr in(0,1)]+[old('bird',0,0),old('bird',0,1),old('bird',0,1)]
     news=list(CH.values());cw=max(i.width for i,_,_ in olds+news)+12;top=-min(a for _,_,a in olds+news)+6;HH=top+12
     can=Image.new('RGBA',(cw*len(news),HH*2),(150,190,120,255))
     for r,row in enumerate((olds,news)):
