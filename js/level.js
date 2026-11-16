@@ -20,7 +20,7 @@ const wkUp=r=>r.wkB>S.t?(r.wkM||0):0,mvUp=r=>r.mvT>S.t?(r.mvM||0):0;/* 料理で
 const RSC=new WeakMap();function rMul(r,k){const lv=rLv(r);let c=RSC.get(r);if(!c||c.lv!==lv||c.vr!==r.vr||c.b!==r.boost||c.g!==(r.gv||0)||c.wu!==wkUp(r)||c.mu!==mvUp(r)||c.ev!==(r.estV||0)){c={lv,vr:r.vr,b:r.boost,ev:r.estV||0,g:r.gv||0,wu:wkUp(r),mu:mvUp(r),s:rStat(r,lv)};RSC.set(r,c)}return c.s[k]/100*(k==='work'&&BOND5.has(r)?1.05:1)}/* 100がふつうの速さ。なかよし100が3マス以内：はたらく速さ+5% */
 function ovenMul(j){if(j==null)return 1;const x0=j%W,y0=(j/W)|0;const kinds=new Set();for(let y=y0-3;y<=y0+3;y++)for(let x=x0-3;x<=x0+3;x++){if(x<0||y<0||x>=W||y>=H)continue;const o=S.obj[y*W+x];if(o&&o!==S.obj[j]&&BL[o]&&BL[o].cat==='cook')kinds.add(o)}return OVENM[Math.min(kinds.size,OVENM.length-1)]}/* 調理の家具がそばにあると、料理が早い（同じ家具は1つ分だけ。下限はなし） */
 const fAtk=(r,lv)=>(EL_ATK[r.elem]||0)+lvGain(r,'atk',lv);/* 攻撃力：Lv1は EL_ATK、上がるたびに EL_GROW のはばでふえる */
-function staOf(r){const V=vrInt(r.vr)||{},B=EL_BASE[r.elem]||EL_BASE.wood;return Math.max(1,B.sta+(V.sta||0)+(trt(r,'tafu')||trt(r,'nebari')?30:0)+evSt(r,'sta'))}/* スタミナ */
+function staOf(r){const V=vrInt(r.vr)||{},B=EL_BASE[r.elem]||EL_BASE.wood;return Math.max(1,B.sta+(V.sta||0)+(trt(r,'tafu')||trt(r,'nebari')?30:0)+evSt(r,'sta')+(typeof pathA==='function'?pathA('sta'):0))}/* スタミナ */
 function rStat(r,lv){const V=vrInt(r.vr)||{},fire=r.elem==='fire',G=gearStat(r),B=EL_BASE[r.elem]||EL_BASE.wood;/* G：そうび。どれも、たし算の整数 */return{
   atk:fAtk(r,lv)+((r.bst&&r.bst.atk)||0)+((r.sst&&r.sst.atk)||0)+G.atk+evSt(r,'atk')+(typeof pathA==='function'?pathA('atk'):0),
   work:Math.max(1,B.work+(V.pow||0)+(trt(r,'hataraki')?30:0)+G.work+wkUp(r)+lvGain(r,'work',lv)+evSt(r,'work')+(typeof pathA==='function'?pathA('work'):0)+(typeof streakWork==='function'?streakWork():0)),
