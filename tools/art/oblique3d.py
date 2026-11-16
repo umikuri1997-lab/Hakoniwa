@@ -18,7 +18,7 @@ OUT = 0.0        # 輪郭線のふとさ（マス）。0は輪郭線なし
 OUTK = 0.5       # 輪郭線の色（もとの色にかける数。1に近いほどうすい線）
 BEVEL = 0.022    # 箱の角の面取り（マス）
 class Scene:
-    def __init__(self): self.t = []; self.pid = 0; self.ol = {}; self.cur = None; self.grp = {}; self.gcur = None; self.tx = {}; self.tcur = None; self.mt = {}; self.mcur = None; self.tg = {}; self.tcur2 = None; self.joins = set(); self.dc = {}; self.dcur = None; self.sm = set(); self.scur = False; self.cv = set(); self.ccur = False; self.txax = {}
+    def __init__(self): self.t = []; self.pid = 0; self.ol = {}; self.cur = None; self.grp = {}; self.gcur = None; self.tx = {}; self.tcur = None; self.mt = {}; self.mcur = None; self.tg = {}; self.tcur2 = None; self.joins = set(); self.dc = {}; self.dcur = None; self.sm = set(); self.scur = False; self.cv = set(); self.ccur = False; self.txax = {}; self.bm = {}; self.bcur = None
     def outline(self, w=None, k=None):
         """これから足す部品の輪郭線の太さ w（マス）・色 k（もとの色にかける数）。None は render の値"""
         self.cur = None if w is None and k is None else (w, k)
@@ -40,6 +40,10 @@ class Scene:
     def decal(self, f=None):
         """これから足す部品の、もよう（3Dの面にのる柄）。f(x, y, z) → その場所の色（もようでない所は None）。render_px で、ドットごとに、見える面の場所から色をきめ、その場所のかげ（3だん）をつける"""
         self.dcur = f
+    def bump(self, f=None):
+        """これから足す部品の、でこぼこ（ノーマルマップ）と色のむら。f(P, N) → (N2, mul)：ドットごとの見える面の場所 P・なめらかな面の向き N から、
+        でこぼこをつけた面の向き N2 と、色にかける数 mul（なければ None）。スムーズシェードの部品だけ。かげの段は N2 できめる（段のままなので、ドットらしいかげ）"""
+        self.bcur = f
     def tag(self, t=None):
         """これから足す部品の名札。join(a, b) した名札の部品どうしのさかいには、render_px で線を引かない（つづいている1まいの板など）"""
         self.tcur2 = t
@@ -50,6 +54,7 @@ class Scene:
         if self.mcur: self.mt[self.pid] = self.mcur
         if self.tcur is not None: self.tx[self.pid] = self.tcur
         if self.dcur is not None: self.dc[self.pid] = self.dcur
+        if self.bcur is not None: self.bm[self.pid] = self.bcur
         if self.scur: self.sm.add(self.pid)
         if self.ccur: self.cv.add(self.pid)
         if self.cur: self.ol[self.pid] = self.cur
@@ -378,6 +383,9 @@ def render_px(sc, proj, ext, depth, k=0.72, outer=True, merge=12, lw=1, k2=0.86,
         if pid in sc.sm and sc.mt.get(pid) != 'flat' and vis.any():   # スムーズシェード：ドットごとに、角の向きをまぜた面の向きで段をきめる（金属は、つやのすじも）
             na, nb, nc = vnorm(pid, a, n), vnorm(pid, b, n), vnorm(pid, c, n)
             NN = w0[vis, None]*na+w1[vis, None]*nb+w2[vis, None]*nc; NN /= np.maximum(np.linalg.norm(NN, axis=1, keepdims=True), 1e-9)
+            BMUL = None
+            if pid in sc.bm:   # でこぼこ（ノーマルマップ）：見える面の場所から、面の向きをかえる
+                NN, BMUL = sc.bm[pid](w0[vis, None]*a+w1[vis, None]*b+w2[vis, None]*c, NN)
             dd = NN@LIGHT; mt_ = sc.mt.get(pid); L2 = np.array([_lvof(float(x), 'curve' if pid in sc.cv else (None if mt_ == 'metal' else 'soft' if mt_ == 'satin' else mt_)) for x in dd])
             if mt_ == 'metal':
                 hv = LIGHT+depth/np.linalg.norm(depth); hv /= np.linalg.norm(hv); hh = np.array([hv[0], hv[1], 0]); hh /= max(1e-9, np.linalg.norm(hh))
@@ -388,7 +396,7 @@ def render_px(sc, proj, ext, depth, k=0.72, outer=True, merge=12, lw=1, k2=0.86,
             if mt_ == 'satin':
                 hv = LIGHT+depth/np.linalg.norm(depth); hv /= np.linalg.norm(hv); L2[NN@hv > SATINSPEC] = -2
             TC = {q: toon(cc, q) for q in set(L2.tolist())}
-            col[s][vis] = np.array([TC[q] for q in L2]); lvb[s][vis] = L2
+            col[s][vis] = np.array([TC[q] for q in L2])*(1 if BMUL is None else BMUL[:, None]); lvb[s][vis] = L2
         if pid in sc.tx or pid in sc.dc:
             wp[s][vis] = (w0[vis, None]*a+w1[vis, None]*b+w2[vis, None]*c); wn[s][vis] = n
     for pid, f in sc.dc.items():   # もよう：ドットごとに、見える面の場所の色（かげは、そのドットの3だん）

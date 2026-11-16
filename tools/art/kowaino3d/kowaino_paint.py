@@ -16,6 +16,7 @@ FOCAL = 50.0; ANG = 40   # 前向きも後ろ向きも、まっすぐ正面か�
 hx = lambda h: np.array([int(h[i:i+2], 16) for i in (1, 3, 5)], float)
 
 # しゅるいごとの色と目じるし。場所は高さ1のときの (よこ x, 高さ z)。front：前からのたね
+import kw_tex
 CFG = {
     'basic': dict(model=os.path.join(HERE, 'models', 'kg_basic.glb'),   # 持ち主が直したモデル＋手（kw_model.py）
                   labcol={'base': '#6f6487', 'rim': '#2c2440', 'under': '#2c2440', 'face': '#241c33', 'deco': '#b9aab6', 'pom': '#c8bcc8', 'hand': '#a597ba'},
@@ -27,25 +28,26 @@ CFG = {
                   pom=((0.36, 0.5), '#c8bcc8'), tip=0, cone=((0.136, -0.292, 0.883), (-0.013, -0.231, 0.808)), fingers=True, apart=0.07),
 }
 
-def mk(name, size, cloth, dark, deco, eye, pom=None, edge=None, **kw):
+def mk(name, size, cloth, dark, deco, eye, pom=None, edge=None, hand=None, mats=None, **kw):
     """持ち主が直したモデル（models/kg_<名前>.glb）の色わけで写すときの色。布・裏地と顔（こい色）・かざり・目。大きさはゲームの size（コカゲが1）"""
     return dict(model=os.path.join(HERE, 'models', 'kg_%s.glb' % name), HPX=round(54*size), base=cloth,
-                labcol={'base': cloth, 'under': dark, 'red': dark, 'face': dark, 'deco': deco, 'pom': pom or deco},
+                labcol={'base': cloth, 'under': dark, 'red': dark, 'face': dark, 'deco': deco, 'pom': pom or deco, 'hand': hand or dark},
+                mats=dict({'base': 'fabric', 'red': 'fabric', 'pom': 'fabric'}, **(mats or {})),
                 eyes=dict(x=0.085, rx=0.03, rz=0.075, col=eye, edge=edge or eye), **kw)
 CFG.update({   # 色は、いまのゲームの絵（ない物は、night.js の col・eye・tint）から
-    'fast': mk('fast', .8, '#5e5480', '#1f1a33', '#5b7fae', '#a9c4e0'),
-    'thief': mk('thief', .9, '#6a5468', '#231a2c', '#8f7a56', '#e0cc94'),
-    'brute': mk('brute', 1.25, '#4a4262', '#1b1628', '#968a9e', '#c2afae'),
-    'breaker': mk('breaker', 1.1, '#5e5474', '#1d1729', '#8c8496', '#c2afae'),
+    'fast': mk('fast', .8, '#5e5480', '#1f1a33', '#5b7fae', '#a9c4e0', mats={'deco': 'fabric'}),
+    'thief': mk('thief', .9, '#6a5468', '#231a2c', '#8f7a56', '#e0cc94', mats={'deco': 'fabric'}),
+    'brute': mk('brute', 1.25, '#4a4262', '#1b1628', '#968a9e', '#c2afae', hand='#8c80a0', mats={'deco': 'rock'}),
+    'breaker': mk('breaker', 1.1, '#5e5474', '#1d1729', '#8c8496', '#c2afae', hand='#8c80a0', mats={'deco': 'metal'}),
     'trapper': mk('trapper', .95, '#3e3654', '#171223', '#c4b2b0', '#c2afae'),
-    'ash': mk('ash', .9, '#7a6a7a', '#251c2e', '#a09098', '#d8c8c8'),
-    'rockc': mk('rockc', 1.3, '#6c5e70', '#211a2a', '#9b888c', '#c2afae'),
-    'armor': mk('armor', 1.3, '#4e4e60', '#1a1a24', '#8c92a2', '#9fe0ff'),
+    'ash': mk('ash', .9, '#7a6a7a', '#251c2e', '#a09098', '#d8c8c8', mats={'deco': 'rock'}),
+    'rockc': mk('rockc', 1.3, '#6c5e70', '#211a2a', '#9b888c', '#c2afae', hand='#8a7a80', mats={'deco': 'rock', 'hand': 'rock'}),
+    'armor': mk('armor', 1.3, '#4e4e60', '#1a1a24', '#8c92a2', '#9fe0ff', mats={'deco': 'metal'}),
     'shiny': mk('shiny', .8, '#e2d498', '#5a4f2a', '#fff2b0', '#ffffff', edge='#f0e6c0'),
     'hana': mk('hana', 1, '#8a5a7a', '#2e1a28', '#eaa6c8', '#ffc6e0'),
     'hoteri': mk('hoteri', 1, '#7c4232', '#2a1410', '#f0905a', '#ffb36b'),
     'ochiba': mk('ochiba', .8, '#7a5a3a', '#291a10', '#d9a05a', '#ffd38a'),
-    'yuki': mk('yuki', 1.3, '#8494a8', '#26303c', '#dff1ff', '#e0f4ff', pom='#f4faff', pomh=0.0),
+    'yuki': mk('yuki', 1.3, '#8494a8', '#26303c', '#dff1ff', '#e0f4ff', pom='#f4faff', pomh=0.0, mats={'deco': 'ice'}),
 })
 
 def load_labeled(path):
@@ -78,7 +80,22 @@ def paint_labeled(m, comp, lab0, cfg):
         vf = set(F[lab == 'face'].ravel())
         for k in range(len(F)):
             if lab[k] == 'base' and vf & set(F[k]) and cen[k, 1] > 0: lab[k] = 'rim'
-    COLS = cfg['labcol']; col = np.array([hx(COLS.get(l, cfg['base'])) for l in lab])
+    fc = np.nonzero(lab == 'face')[0]
+    if len(fc) and cfg.get('model'):   # 顔の色（青）のかたまりを、顔・足・手にわける：地面にとどくのが足、のこりのうち上のほうでいちばん大きいのが顔、ほかは手
+        from scipy.sparse import coo_matrix
+        from scipy.sparse.csgraph import connected_components
+        A = coo_matrix((np.ones(len(fc)*3), (np.repeat(np.arange(len(fc)), 3), F[fc].ravel())), shape=(len(fc), len(V))).tocsr()
+        _, fl = connected_components(A@A.T, directed=False); ar = m.area_faces; best = None
+        for q in np.unique(fl):
+            ks = fc[fl == q]
+            if V[F[ks], 1].min() < 0.05*H:   # 地面にとどくかたまり：すその広さの FOOTR より内がわの下のほうが足、ほかは（足にくっついた）手
+                rr = np.hypot(cen[ks, 0], cen[ks, 1]); lo = (m.vertices[:, 1] < 0.25*H); rs = np.percentile(np.hypot(V[lo, 0], V[lo, 2]), 95)/H
+                ft = (rr < FOOTR*rs) & (cen[ks, 2] < 0.25); lab[ks[ft]] = 'foot'; lab[ks[~ft]] = 'hand'; continue
+            if best is None or cen[ks, 2].mean() > cen[best, 2].mean(): best = ks   # 顔は、いちばん高い所のかたまり
+        for q in np.unique(fl):
+            ks = fc[fl == q]
+            if lab[ks[0]] == 'face' and (best is None or ks[0] not in set(best.tolist())): lab[ks] = 'hand'
+    COLS = cfg['labcol']; col = np.array([hx(COLS.get(l, COLS.get('face' if l in ('foot', 'hand') else l, cfg['base']))) for l in lab])
     return P, F, col, lab, H, cen
 
 def load(path):
@@ -334,9 +351,11 @@ def shoot(name, cfg, src, yaw=0.0):
     for k, f in enumerate(F):
         if lab[k] != last:
             sc.decal(hemf if lab[k] == 'base' else pomf if lab[k] in ('hood', 'pom') else None); sc.group('hoodpom' if lab[k] in ('hood', 'pom') else None)   # ずきんとぽんぽんは、三角形のさかいに線を引かない（さかい目の線は pomf）
+            if cfg.get('mats'):   # 材質：でこぼこ・色のむら（kw_tex.py）と、金属のつや
+                mt_ = cfg['mats'].get(lab[k]); sc.bump(kw_tex.bump(mt_, H, seed=len(sc.bm)) if mt_ in kw_tex.MATS else None); sc.material('metal' if mt_ in ('metal', 'ice') else None)
             sc.part(); last = lab[k]
         sc.tri(R(P[f[0]]), R(P[f[1]]), R(P[f[2]]), col[k])
-    sc.decal(None); sc.group(None)
+    sc.decal(None); sc.group(None); sc.bump(None); sc.material(None)
     if HD: fingers(sc, HD, R, hx(cfg.get('hand', '#a597ba')))
     sc.smooth(False)
     # 大きく（BIG 倍）写してから、色の平均（pixdown）でちぢめる：三角形ごとのかげのむらが、ならされる
@@ -360,6 +379,7 @@ def shoot(name, cfg, src, yaw=0.0):
     return im, ext
 
 BACKEL = 15.0
+FOOTR = 0.6   # 足：すその広さ（95%の半径）のこのわりより内がわ
 POMH = 0.45   # ぽんぽん：赤のかたまりのまん中が、この高さ（高さのうち）より上
 POMANG = 50.0
 PALMW = 0.45   # 手のひらのあつみ（左右の半径。手の大きさ r に対して）   # ぽんぽん：ずきんの先がつながる向きから、この角度までは、ずきん
