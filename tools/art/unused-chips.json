@@ -123,6 +123,13 @@
       "ids": [
         "fruit#mi"
       ]
+    },
+    {
+      "reason": "かえるの絵は、持ち主のモデル（animals/kaeru.glb）にボーンを入れて写した critkaeru（tools/art/critter3d/crit_build.py）にかえた。前のかえる（critter3d.py の frog）はけした。",
+      "ids": [
+        "critfrog#0",
+        "critfrog#1"
+      ]
     }
   ]
 }
