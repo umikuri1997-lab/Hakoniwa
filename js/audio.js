@@ -115,7 +115,7 @@ function sched(){
 }
 /* 大きな場面の前の「間」：曲と環境音をしずかにして（ms ミリ秒）、少しまってから音 k を鳴らす */
 let DUCKT=0;
-function musicDuck(ms){if(!AC||AC.state!=='running')return;const t=AC.currentTime,end=t+ms/1000;DUCKT=Math.max(DUCKT,end);for(const g of[bgmG,ambG])if(g){const v=g===ambG?.12:gainB();g.gain.cancelScheduledValues(t);g.gain.setValueAtTime(g.gain.value,t);g.gain.linearRampToValueAtTime(v*.2,t+.35);g.gain.setValueAtTime(v*.2,DUCKT);g.gain.linearRampToValueAtTime(v,DUCKT+1.2)}}
+function musicDuck(ms){if(!AC||AC.state!=='running')return;const t=AC.currentTime,end=t+ms/1000;DUCKT=Math.max(DUCKT,end);for(const g of[bgmG,ambG])if(g){const v=g===ambG?.09:gainB();g.gain.cancelScheduledValues(t);g.gain.setValueAtTime(g.gain.value,t);g.gain.linearRampToValueAtTime(v*.2,t+.35);g.gain.setValueAtTime(v*.2,DUCKT);g.gain.linearRampToValueAtTime(v,DUCKT+1.2)}}
 function quietBeat(ms,k){musicDuck(ms);if(k)setTimeout(()=>sfx(k),380)}
 let ambG=null;const AMB={};
 /* 夕方の虫の声：短い高い音を2回ずつ（のこした音の素材はつかわず、その場でつくる）。夕方（17.5〜20時）だけ、ときどき */
@@ -125,7 +125,7 @@ let ambF=null,AMBIN=false;
 /* 家の中を映しているか：画面のまん中のマスが、屋根をはずした家の中（ふだんの拡大より、ちぢめていないとき） */
 function ambIndoor(){if(!S||!started||typeof HOUSES==='undefined'||!HOUSES.length||typeof cam==='undefined')return false;const vw=VW/cam.z,vh=VH/cam.z,cx=((cam.x+vw/2)/TS)|0,cy=((cam.y+vh/2)/TS)|0;if(cx<0||cy<0||cx>=W||cy>=H)return false;
   if(cam.z<homeZ()*.95)return false;const h=HOUSES.find(q=>q.set.has(cy*W+cx));return !!h&&roofAOf(h)<.5}
-function ambTick(){if(!AC||AC.state!=='running')return;if(!ambG){ambG=AC.createGain();ambG.gain.value=.12;ambF=AC.createBiquadFilter();ambF.type='lowpass';ambF.frequency.value=18000;ambF.Q.value=.4;ambG.connect(ambF);ambF.connect(AC.destination)}
+function ambTick(){if(!AC||AC.state!=='running')return;if(!ambG){ambG=AC.createGain();ambG.gain.value=.09;ambF=AC.createBiquadFilter();ambF.type='lowpass';ambF.frequency.value=18000;ambF.Q.value=.4;ambG.connect(ambF);ambF.connect(AC.destination)}
   {const inn=ambIndoor();if(inn!==AMBIN){AMBIN=inn;ambF.frequency.setTargetAtTime(inn?700:18000,AC.currentTime,inn?.25:.4)}}/* 家の中を映すと、外の雨・鳥・虫の音が、壁ごしにやわらかくこもる */
   const want={birds:0,rain:0,night:0};let h=12,on=false;if(S&&started&&SND.sfx&&$('#title').hidden&&$('#maps').hidden){on=true;h=hour();if(S.rain)want.rain=.45;else{/* 朝と夕方は、ゆっくり入れかわる（夜あけは鳥が少しにぎやか） */const cl=v=>Math.max(0,Math.min(1,v));want.birds=h<5||h>=18.5?0:h<6.5?cl((h-5)/1.5)*1.3:h<7.5?1.3-(h-6.5)*.3:h<17?1:cl((18.5-h)/1.5);want.night=h>=17.5?cl((h-17.5)/1.5)*6:h<5.5?cl((5.5-h)/1)*6:0/* 夜の環境音（もらった音）：大きさ6 */}}
   ambAccent(on&&!S.rain&&!(typeof paused!=='undefined'&&paused),h);
@@ -147,6 +147,7 @@ function sfx(k){
   case'matDrop':if(playS('matDrop',.8))break;tone(520,t,.06,'triangle',.06,o,260);break;
   case'power':seq([79,84,88,91],.055,'sine',.07);tone(1568,t+.24,.35,'triangle',.03,o,2093);break;/* パワーをカミサマにわたした：きらっとした音 */
   case'tap':if(playS('click',.6))break;tone(1300,t,.03,'square',.07,o);tone(1950,t+.025,.03,'triangle',.05,o);break;/* ボタン：もらった音（click） */
+  case'mtap':{const r=.93+Math.random()*.14;knock(640*r,t,.07,o,.07);knock(980*r,t+.018,.025,o,.04)}break;/* 地図の物をタップ：こつっ（ボタンの音とはべつ） */
   case'next':{const r=.96+Math.random()*.08;knock(470*r,t,.09,o,.08);rustle(t+.01,.07,.025,o,3600,2600,.6)}break;/* 会話の「つぎへ」：コトッと、紙をめくる音 */
   case'open':rustle(t,.15,.06,o,900,2600,.7);knock(340,t+.11,.06,o,.1);break;/* 画面をひらく：さらっ…コトッ */
   case'close':rustle(t,.12,.05,o,2400,800,.7);knock(270,t+.08,.06,o,.1);break;/* 画面をとじる */
@@ -156,6 +157,7 @@ function sfx(k){
     const pt=(fr,d,v,f0)=>{const s=AC.createOscillator(),g=AC.createGain();s.type='sine';s.frequency.setValueAtTime(f0||fr,t);if(f0)s.frequency.exponentialRampToValueAtTime(fr,t+.012);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(v,t+.002);g.gain.exponentialRampToValueAtTime(.0001,t+d);s.connect(g);g.connect(lp);s.start(t);s.stop(t+d+.02)};
     pt(f,.42,.03,f*1.03);pt(f*3.93,.07,.007);pt(f*9.2,.025,.002);rustle(t,.015,.015,lp,f*4,f*4,1.2)}break;
   case'pin':rustle(t,.05,.05,o,1200,600,.7);knock(300,t+.03,.06,o,.08);knock(1500,t+.16,.03,o,.03);break;/* 紙をぺたっ、ピンをぷすっ */
+  case'crit':{const r=.94+Math.random()*.12;rustle(t,.08,.03,o,2600*r,4200*r,.7);knock(900*r,t+.05,.03,o,.04)}break;/* 小さな生き物をタップ：かさっ、と小さく */
   case'tile':{const r=.94+Math.random()*.12;knock(520*r,t,.045,o,.06)}break;/* 板が1まいずつ置かれる：とん、とん */
   case'flip':rustle(t,.06,.035,o,1800,3400,.8);knock(380,t+.07,.05,o,.07);break;/* 札を裏返す：ぱたっ */
   case'sizzle':rustle(t,.32,.07,o,5200,2400,1.2);rustle(t+.02,.22,.04,o,1800,900,.8);knock(210,t,.07,o,.12);break;/* 焼き印：じゅっ */
@@ -239,5 +241,5 @@ function sfxAt(k,x,y,m=1){if(!S)return;if(SFXGAP[k]){const n=performance.now()/1
   const zr=Math.max(.6,Math.min(1.4,cam.z/(typeof homeZ==='function'?homeZ():cam.z))),dx=(x*TS-(cam.x+vw/2))/(vw/2);/* 拡大すると近くで聞こえる（少し大きく、高い音までくっきり） */
   SFXV=v*m*(.85+.15*zr);SFXP=Math.max(-.75,Math.min(.75,dx*.75));SFXL=Math.min(18000,1100*Math.pow(15,v)*zr);/* 画面の左の音は左から。遠いほどこもる */
   try{sfx(k)}finally{SFXV=1;SFXP=0;SFXL=0;SFXO=null}}
-const gainB=()=>SND.bgm?.385*(SND.bv??1):0,gainS=()=>SND.sfx?.15*(SND.sv??1):0;/* 音楽・効果音の音量（0〜1） */
+const gainB=()=>SND.bgm?.289*(SND.bv??1):0,gainS=()=>SND.sfx?.15*(SND.sv??1):0;/* 音楽・効果音の音量（0〜1） */
 function setSnd(k,v){SND[k]=v;saveSnd();if(AC){bgmG.gain.setTargetAtTime(gainB(),AC.currentTime,.1);sfxG.gain.setTargetAtTime(gainS(),AC.currentTime,.1)}}
