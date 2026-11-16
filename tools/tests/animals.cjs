@@ -16,7 +16,7 @@ const assert=require('node:assert/strict');
     S.obj[y0*W+x0+1]='';recount();out.open=PENS.get(coop);S.obj[y0*W+x0+1]='fence';recount();
     {const R=Math.random;Math.random=()=>.99;animalMorning();out.noStray=S.ani.length;Math.random=()=>0;animalMorning();Math.random=R}/* 5%：来ない日・来る日 */
     {const a=S.ani[0];out.stray=!!(a&&a.stray);out.strayOut=a?!VILL[(a.y|0)*W+(a.x|0)]:false;
-      document.querySelectorAll('.pxcard').forEach(c=>c.parentNode.remove());out.atTap=aniAtTap(a.x,a.y-.3)===a;aniPop(a);const card=document.querySelector('.pxcard');out.spop=card?card.textContent:'';if(card)card.querySelector('.go').click();out.going=!!(f.act&&f.act.type==='astray');
+      document.querySelectorAll('.pxcard').forEach(c=>c.parentNode.remove());out.atTap=aniAtTap(a.x,a.y-.3)===a;S.flags.aniMet={hane:1,moko:1,tsuno:1};/* はじめて会う演出は animal-meet.cjs */aniPop(a);const card=document.querySelector('.pxcard');out.spop=card?card.textContent:'';if(card)card.querySelector('.go').click();out.going=!!(f.act&&f.act.type==='astray');
       let led=-1,home=-1;for(let i=0;i<30000;i++){S.food=100;f.hunger=hMax(f);f.energy=100;f.fun=100;S.t=Math.min(S.t,1440*3+12*60);stepWorld(.1);if(led<0&&f.act&&f.act.type==='alead')led=i;if(!a.stray){home=i;break}}
       out.led=led;out.home=home;out.inPen0=(PENS.get(coop)||[]).includes((a.y|0)*W+(a.x|0));out.h=a.h===coop}
     out.ani=S.ani.map(a=>a.k);out.inPen=S.ani.length?(PENS.get(coop)||[]).includes((S.ani[0].y|0)*W+(S.ani[0].x|0)):false;
