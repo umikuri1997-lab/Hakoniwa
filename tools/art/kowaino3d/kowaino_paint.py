@@ -35,7 +35,7 @@ def mk(name, size, cloth, dark, deco, eye, pom=None, edge=None, hand=None, mats=
                 mats=dict({'base': 'fabric', 'red': 'fabric', 'pom': 'fabric'}, **(mats or {})),
                 eyes=dict(x=0.085, rx=0.03, rz=0.075, col=eye, edge=edge or eye), **kw)
 CFG.update({   # 色は、いまのゲームの絵（ない物は、night.js の col・eye・tint）から
-    'fast': mk('fast', .8, '#5e5480', '#1f1a33', '#5b7fae', '#a9c4e0', mats={'deco': 'fabric'}),
+    'fast': mk('fast', .8, '#5e5480', '#1f1a33', '#5b7fae', '#a9c4e0', hand='#8a84b4', mats={'deco': 'fabric'}),
     'thief': mk('thief', .9, '#6a5468', '#231a2c', '#8f7a56', '#e0cc94', mats={'deco': 'fabric'}),
     'brute': mk('brute', 1.25, '#4a4262', '#1b1628', '#968a9e', '#c2afae', hand='#8c80a0', mats={'deco': 'rock'}),
     'breaker': mk('breaker', 1.1, '#5e5474', '#1d1729', '#8c8496', '#c2afae', hand='#8c80a0', mats={'deco': 'metal'}),
@@ -159,6 +159,7 @@ def paint_labeled(m, comp, lab0, cfg):
                 rr = np.hypot(cen[ks, 0], cen[ks, 1]); lo = (m.vertices[:, 1] < 0.25*H); rs = np.percentile(np.hypot(V[lo, 0], V[lo, 2]), 95)/H
                 ft = (rr < FOOTR*rs) & (cen[ks, 2] < 0.25)
                 if ft.mean() < 0.2 and not NOFIST: ft[:] = False   # 足から切りはなした大きなこぶし（地面にとどく）は、ぜんぶ手
+                if (lab0 == 'hand').any(): ft[:] = True   # 手を べつの部品（マテリアル「手」）で足したモデル：地面にとどく 顔の色の かたまりは、ぜんぶ足
                 lab[ks[ft]] = 'foot'; lab[ks[~ft]] = 'hand'; continue
             if best is None or cen[ks, 2].mean() > cen[best, 2].mean(): best = ks   # 顔は、いちばん高い所のかたまり
         for q in np.unique(fl):
