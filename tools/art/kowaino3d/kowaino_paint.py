@@ -17,10 +17,10 @@ hx = lambda h: np.array([int(h[i:i+2], 16) for i in (1, 3, 5)], float)
 
 # しゅるいごとの色と目じるし。場所は高さ1のときの (よこ x, 高さ z)。front：前からのたね
 CFG = {
-    'basic': dict(HPX=54, thin=0, hem=('#c9b072', 0.03), under='#3a3150', lining='#3a3150', base='#685d7f', parts='#b9aab6', legs=('#342b44', 0.1), eyes=dict(x=0.085, z=0.52, rx=0.03, rz=0.075, col='#e6d8de'),
+    'basic': dict(HPX=54, thin=0, hem=('#ac9776', 0.03), under='#3a3150', lining='#3a3150', base='#685d7f', parts='#b9aab6', legs=('#342b44', 0.1), eyes=dict(x=0.085, z=0.52, rx=0.03, rz=0.075, col='#c2afae', edge='#9e8a92'),
                   seeds=[('hood', 0.0, 0.85, '#6f6487', 0), ('face', 0.0, 0.52, '#241c33', 1),
                          ('handL', -0.1, 0.37, '#8e83a2', 1), ('handR', 0.06, 0.37, '#8e83a2', 1)],
-                  boxes=[('pom', lambda c: c[0] > 0.28 and c[2] < 0.62, 'hood', '#c8bcc8')]),
+                  pom=((0.36, 0.5), '#c8bcc8'), tip=0.35, fingers=True),
 }
 
 def load(path):
@@ -53,6 +53,13 @@ def paint(m, comp, cfg):
         hz = max(cen[k, 2] for k in range(len(F)) if lab[k].startswith('hand')) if any(l.startswith('hand') for l in lab) else 0.4
         for k in range(len(F)):
             if comp[k] == 0 and lab[k] == 'base' and cen[k, 2] > hz-0.02 and cen[k, 1] > 0: col[k] = hx(cfg['lining']); lab[k] = 'rim'
+    if cfg.get('pom'):   # ぽんぽん：玉の形（ずきんの面のうち、目じるしの近くの点のまん中から、玉の半径の中にある三角形）
+        (px_, pz_), pc = cfg['pom']; vh = np.unique(F[lab == 'hood']); Q = P[vh]/H
+        near = vh[((Q[:, 0]-px_)**2+(Q[:, 2]-pz_)**2) < 0.1**2]
+        if len(near):
+            c0 = P[near].mean(0); r0 = np.percentile(np.linalg.norm(P[near]-c0, axis=1), 70)
+            for k in np.nonzero(lab == 'hood')[0]:
+                if np.linalg.norm(P[F[k]]-c0, axis=1).max() < r0*1.15: col[k] = hx(pc); lab[k] = 'pom'
     for nm, f, inside, c in cfg.get('boxes', []):
         for k in range(len(F)):
             if lab[k] == inside and f(cen[k]): col[k] = hx(c); lab[k] = nm
@@ -67,6 +74,16 @@ def paint(m, comp, cfg):
         if comp[k] > 0: col[k] = hx(cfg['parts']); lab[k] = 'part'
     return P, F, col, lab, H, cen
 
+def tipthin(P, F, lab, H, k):
+    """ずきんの先（ぽんぽんへのびる所）を細く：ずきんの点を、まわり（TIPR）のずきんの点のまん中へよせる。顔の中心から右へいくほど強く（ずきんの頭の所はかえない）"""
+    from scipy.spatial import cKDTree
+    vh = np.unique(F[(lab == 'hood') | (lab == 'pom')]); vp = set(F[lab == 'pom'].ravel()); Q = P[vh]; t = cKDTree(Q); P = P.copy()
+    for i, v in enumerate(vh):
+        w = min(1, max(0, (Q[i, 0]/H-0.12)/0.16))
+        if w <= 0 or v in vp: continue
+        nb = t.query_ball_point(Q[i], 0.07*H); c0 = Q[nb].mean(0); P[v] = Q[i]+(c0-Q[i])*k*w
+    return P
+
 def thin(P, F, lab, inner='face', band='rim', outer='hood', k=0.6):
     """布をうすく：ふち（band）の点のうち、内がわ（inner）にふれる点を、外がわ（outer）にふれる、いちばん近い点へ k だけよせる（帯がほそくなる。顔の面もいっしょにのびる）"""
     vi = set(F[lab == inner].ravel()); vb = set(F[lab == band].ravel()); vo = np.array(sorted(set(F[lab == outer].ravel()) & vb))
@@ -76,7 +93,7 @@ def thin(P, F, lab, inner='face', band='rim', outer='hood', k=0.6):
         j = np.argmin(((Q[:, [0, 2]]-P[v, [0, 2]])**2).sum(1)); P[v] = P[v]+(Q[j]-P[v])*k
     return P
 
-EYEPX = ['.##.', '####', '####', '####', '####', '####', '.##.']   # 目のドット（はば4・高さ7の だ円）
+EYEPX = ['+##+', '####', '####', '####', '####', '####', '+##+']   # 目のドット（はば4・高さ7の だ円。+ は、ふちの色。いまの絵の目と同じ色）
 
 def eyepos(P, F, lab, H, e):
     """目のまん中（3D）：顔の面のまん中を中心に、左右そろえて、顔の面のいちばん前"""
@@ -88,14 +105,14 @@ def eyepos(P, F, lab, H, e):
         out.append(np.array([x, y, z]))
     return out
 
-def stamp(im, pts, col):
+def stamp(im, pts, col, edge=None):
     """目：きめたドットの形を、その場所におす（左右でまったく同じ形）"""
-    a = np.array(im); c = list(hx(col).astype(int))+[255]; h, w = len(EYEPX), len(EYEPX[0])
+    a = np.array(im); c = list(hx(col).astype(int))+[255]; ce = list(hx(edge or col).astype(int))+[255]; h, w = len(EYEPX), len(EYEPX[0])
     for X, Y in pts:
         x0, y0 = int(round(X-w/2)), int(round(Y-h/2))
         for r, row in enumerate(EYEPX):
             for q, ch in enumerate(row):
-                if ch == '#' and 0 <= y0+r < a.shape[0] and 0 <= x0+q < a.shape[1] and a[y0+r, x0+q, 3]: a[y0+r, x0+q] = c
+                if ch in '#+' and 0 <= y0+r < a.shape[0] and 0 <= x0+q < a.shape[1] and a[y0+r, x0+q, 3]: a[y0+r, x0+q] = c if ch == '#' else ce
     return Image.fromarray(a)
 
 SMIT = 12   # 面の向きをならす回数
@@ -132,11 +149,11 @@ def hemdecal(P, F, lab, comp, H, cfg, yaw):
     さかい目は1本につながっているので、どの向きから見ても、とぎれない"""
     from scipy.spatial import cKDTree
     hc, hh = cfg['hem']; vb = set(F[lab == 'base'].ravel()); vu = set(F[lab == 'under'].ravel()); bd = vb & vu
-    pts = []
+    pts = []; zb = P[np.unique(F[lab == 'base']), 2].min()
     for f in F[lab == 'base']:   # さかい目の辺を、こまかい点にする
         for i in range(3):
             a, b = f[i], f[(i+1) % 3]
-            if a in bd and b in bd:
+            if a in bd and b in bd and max(P[a, 2], P[b, 2]) < zb+HEMTOP*H:   # すそのいちばん下のあたりの さかい目だけ（横のふちを上へのぼらない）
                 for t in np.linspace(0, 1, 8): pts.append(P[a]+(P[b]-P[a])*t)
     if not pts: return None
     c, s_ = math.cos(yaw), math.sin(yaw); Q = np.array(pts); Qr = np.stack([Q[:, 0]*c-Q[:, 1]*s_, Q[:, 0]*s_+Q[:, 1]*c, Q[:, 2]], 1)
@@ -146,11 +163,37 @@ def hemdecal(P, F, lab, comp, H, cfg, yaw):
         return col if d < hh*H and z >= Qr[i, 2]-0.002*H else None
     return f
 
-HEMR, HEMTOP = 0.07, 0.12
+HEMR, HEMTOP = 0.07, 0.18
+
+def fingers(sc, P, F, lab, R):
+    """手：まるい手（handL・handR）の前がわに、4本の指（下へまるめる）と、内がわの親指を足す（もらったモデルの手はミトンの形）"""
+    for nm, si in (('handL', 1), ('handR', -1)):
+        vs = np.unique(F[lab == nm])
+        if not len(vs): continue
+        c0 = P[vs].mean(0); r = np.percentile(np.linalg.norm(P[vs]-c0, axis=1), 80); col = hx('#8e83a2')
+        for j, fx in enumerate((-0.6, -0.2, 0.2, 0.6)):
+            L = 1-0.12*abs(fx)/0.6
+            pts = [c0+np.array([fx*r, 0.78*r, -0.05*r]), c0+np.array([fx*r*1.05, 1.0*r, -0.45*r*L]), c0+np.array([fx*r*1.05, 0.9*r, -0.85*r*L])]
+            tube(sc, [R(p) for p in pts], [0.22*r, 0.21*r, 0.18*r], col)
+        pts = [c0+np.array([si*0.75*r, 0.55*r, 0.1*r]), c0+np.array([si*1.05*r, 0.85*r, 0.2*r]), c0+np.array([si*1.0*r, 1.0*r, -0.05*r])]
+        tube(sc, [R(p) for p in pts], [0.23*r, 0.22*r, 0.19*r], col)
+
+def tube(sc, pts, rs, col, n=10):
+    sc.part(); pts = [np.array(q, float) for q in pts]; rings = []
+    for k in range(len(pts)):
+        d = pts[min(k+1, len(pts)-1)]-pts[max(k-1, 0)]; d /= np.linalg.norm(d)
+        u = np.cross(d, [0, 1.0, 0]);
+        if np.linalg.norm(u) < 1e-6: u = np.array([1.0, 0, 0])
+        u /= np.linalg.norm(u); v = np.cross(d, u)
+        rings.append([pts[k]+rs[k]*(math.cos(t)*u+math.sin(t)*v) for t in np.linspace(0, 2*math.pi, n+1)[:-1]])
+    for k in range(len(pts)-1):
+        for i in range(n): sc.quad(rings[k][i], rings[k+1][i], rings[k+1][(i+1) % n], rings[k][(i+1) % n], col)
+    for i in range(n): sc.tri(pts[-1], rings[-1][i], rings[-1][(i+1) % n], col)
 
 def shoot(name, cfg, src, yaw=0.0):
     m, comp = load(os.path.join(src, 'kg_%s.glb' % name)); P, F, col, lab, H, cen = paint(m, comp, cfg)
     if cfg.get('thin'): P = thin(P, F, lab, k=cfg['thin'])
+    if cfg.get('tip'): P = tipthin(P, F, lab, H, cfg['tip'])
     c, s = math.cos(yaw), math.sin(yaw); R = lambda p: np.array([p[0]*c-p[1]*s, p[0]*s+p[1]*c, p[2]])
     O.LIGHT[:] = np.array([-0.45, 0.65, 0.65])/np.linalg.norm([-0.45, 0.65, 0.65])
     sc = O.Scene(); last = None; sc.smooth(True)
@@ -158,11 +201,17 @@ def shoot(name, cfg, src, yaw=0.0):
     for k, f in enumerate(F):
         if lab[k] != last: sc.decal(hemf if lab[k] == 'base' else None); sc.part(); last = lab[k]
         sc.tri(R(P[f[0]]), R(P[f[1]]), R(P[f[2]]), col[k])
-    sc.decal(None); sc.smooth(False)
+    sc.decal(None)
+    if cfg.get('fingers'): fingers(sc, P, F, lab, R)
+    sc.smooth(False)
     # 大きく（BIG 倍）写してから、色の平均（pixdown）でちぢめる：三角形ごとのかげのむらが、ならされる
     # カメラ：たての画角は、焦点距離 FOCAL の 35mm判（たて24mm）。体の高さの1.15倍がちょうど入るきょりに置く。体のまん中の奥行きで、高さ HPX ドット
-    fov = 2*math.atan(12/FOCAL); Dc = 1.15*H/(2*math.tan(fov/2)); cz = H/2; k = cfg['HPX']/H; V = np.array([0, 1.0, 0])
-    proj = lambda p: (p[0]*k*Dc/(Dc-p[1]), -(cz+(p[2]-cz)*Dc/(Dc-p[1]))*k)
+    # うしろ向きは、BACKEL 度 上から見おろす（持ち主がきめた）
+    t = math.radians(BACKEL if abs(math.cos(yaw)+1) < 1e-6 else 0.0); V = np.array([0, math.cos(t), math.sin(t)]); U = np.array([0, -math.sin(t), math.cos(t)])
+    fov = 2*math.atan(12/FOCAL); Dc = 1.15*H/(2*math.tan(fov/2)); cz = H/2; k = cfg['HPX']/H; C0 = np.array([0, 0, cz])
+    def proj(p):
+        q = np.asarray(p)-C0; d = float(q@V); sc_ = Dc/(Dc-d)
+        return (q[0]*sc_*k, -(cz+float(q@U)*sc_)*k)
     Q = np.array([proj(p) for tr in sc.t for p in tr[:3]]); ext = (math.floor(Q[:, 0].min())-2, math.ceil(Q[:, 0].max())+2, math.floor(Q[:, 1].min())-2, math.ceil(Q[:, 1].max())+2)
     O.S = BIG; O.GRAD = True
     hi = O.render_px(sc, proj, ext, V, k=0.80, lw=2, k2=0.90, merge=0)
@@ -171,9 +220,10 @@ def shoot(name, cfg, src, yaw=0.0):
     o = pixdown.shrink(np.asarray(hi).astype(float), W0, H0); o = pixdown.lines(o, np.asarray(hi).astype(float)); o = pixdown.outline(o, np.asarray(hi).astype(float))
     im = despeckle(quant(rim(Image.fromarray(o.round().astype(np.uint8), 'RGBA')), NCOL, cfg.get('hem', (None,))[0]))
     if abs(math.cos(yaw)-1) < 1e-6:   # 正面だけ、目をおす
-        im = stamp(im, [(proj(R(p))[0]-ext[0], proj(R(p))[1]-ext[2]) for p in eyepos(P, F, lab, H, cfg['eyes'])], cfg['eyes']['col'])
+        im = stamp(im, [(proj(R(p))[0]-ext[0], proj(R(p))[1]-ext[2]) for p in eyepos(P, F, lab, H, cfg['eyes'])], cfg['eyes']['col'], cfg['eyes'].get('edge'))
     return im, ext
 
+BACKEL = 30.0
 BIG = 8; NCOL = 15   # 大きく写す倍・色の数（目の色を足して16）
 
 def rim(im, k=0.62):
