@@ -3,58 +3,58 @@
    1つずつの部品は「建てる所」（S.obj='site'、S.dyn[j].bp）で、素材はせいれいが箱から運ぶ。置く所の木・岩は、せいれいが先に切る・ほる。
    できたら、家に名前がつき（S.hname：家の中のマス→名前）、住み心地+10（BPCOMF）。くれたせいれいはよろこび、その家のベッドをつかう。 */
 const BPS={/* 設計図。rows の字：「.」床（fl、なければフローリング）・「W」壁（wl、なければ草原は木の壁・火山は竹の壁）・「O」窓・「D」ドア・「p」道（pa、なければあぜ道）・「F」柵（草原は板の柵・火山は御簾垣）・「G」柵のドア・「f」畑・「e」花壇のふち・「 」なにも置かない所。
-   furn：[よこ,たて,id,向き]（家具・建物・花・木。2マスより大きい物は左上）。cat：house 家・garden 庭と花畑・farm 畑・play 遊び場・guard 守り。el：くれやすいせいれいの属性。
+   furn：[よこ,たて,id,向き]（家具・建物・花・木。2マスより大きい物は左上）。cat：house 家・garden 庭と花畑・farm 畑・play 遊び場・guard 守り。el：くれやすいせいれいの属性。rw：設計図の依頼（bpreq）のごほうびのパワー（置くパワー25まで15・45まで30・それより上50）。
    空いたマスは、ぜんぶ外（家はドアの前）までつながるようにならべる（とじこめられる所を作らない。tools/tests/blueprint.cjs でたしかめる） */
-  small:{name:'ちいさなおうち',cat:'house',el:'earth',pc:20,rows:['WWOWW','W...W','W...W','WWDWW'],furn:[[1,1,'bed'],[3,1,'stool']]},
-  mono:{name:'ものおきごや',cat:'house',el:'earth',pc:20,rows:['WWWWW','W...W','W...W','WWDWW'],furn:[[1,1,'crate'],[2,1,'taru'],[3,1,'asabukuro']]},
-  hana:{name:'はなのいえ',cat:'house',el:'wood',pc:35,rows:['WWOOWW','W....W','W....W','W....W','WWWDWW'],furn:[[1,1,'bed'],[4,1,'monstera'],[4,2,'lantern'],[3,2,'ltable'],[1,3,'monstera']]},
-  futari:{name:'ふたりのいえ',cat:'house',el:'water',pc:45,rows:['WWOWOWW','W.....W','W.....W','W.....W','WWWDWWW'],furn:[[1,1,'chair',1],[2,1,'table'],[3,1,'chair',3],[5,1,'lantern'],[1,3,'bed'],[5,3,'bed']]},
-  nemuri:{name:'ねむりのいえ',cat:'house',el:'water',pc:30,rows:['WWOWW','W...W','W...W','WWDWW'],furn:[[1,1,'bed'],[3,1,'shelf1'],[1,2,'lantern']]},
-  gohan:{name:'ごはんのいえ',cat:'house',el:'fire',pc:40,rows:['WWOOWW','W....W','W....W','W....W','WWWDWW'],furn:[[1,1,'chair',1],[2,1,'table'],[3,1,'chair',3],[4,1,'lantern'],[1,3,'bed']]},
-  daidoko:{name:'だいどころのいえ',cat:'house',el:'fire',pc:35,rows:['WWOOWW','W....W','W....W','WWDWWW'],furn:[[1,1,'cooktable'],[2,1,'sink'],[3,1,'tub'],[4,1,'taru']]},
-  kamado:{name:'かまどのいえ',cat:'house',el:'fire',pc:40,rows:['WWOOWW','W....W','W....W','W....W','WWWDWW'],furn:[[1,1,'oven'],[2,1,'tub'],[3,1,'taru'],[4,1,'crate'],[1,3,'table'],[2,3,'chair',3]]},
-  kura:{name:'たくわえのくら',cat:'house',el:'earth',pc:25,rows:['WWWWW','W...W','W...W','WWDWW'],furn:[[1,1,'crate'],[2,1,'taru'],[3,1,'taru']]},
-  monoheya:{name:'ものおきのいえ',cat:'house',el:'earth',pc:30,rows:['WWWWWW','W....W','W....W','WWDWWW'],furn:[[1,1,'crate'],[2,1,'asabukuro'],[3,1,'makidana'],[4,1,'crate']]},
-  hataori:{name:'はたおりのいえ',cat:'house',el:'wind',pc:35,rows:['WWOWW','W...W','W...W','WWDWW'],furn:[[1,1,'loom'],[3,1,'asabukuro'],[1,2,'bed'],[3,2,'lantern']]},
-  hon:{name:'ほんのいえ',cat:'house',el:'water',pc:45,rows:['WWOOWW','W....W','W....W','W....W','WWDWWW'],furn:[[1,1,'achair'],[2,1,'shelf1'],[3,1,'shelf1'],[4,1,'bed'],[3,3,'ltable'],[1,3,'lantern']]},
-  kodomo:{name:'こどものいえ',cat:'house',el:'wind',pc:30,rows:['WWOWW','W...W','W...W','WWDWW'],furn:[[1,1,'bed'],[3,1,'pouf'],[3,2,'ltable']]},
-  logh:{name:'ログハウス',cat:'house',el:'wood',pc:50,wl:'logwall',rows:['WWOWOWW','W.....W','W.....W','W.....W','WWWDWWW'],furn:[[1,1,'bed'],[2,1,'chair',1],[3,1,'table'],[4,1,'chair',3],[5,1,'bed'],[1,3,'lantern'],[5,3,'taru']]},
-  shikkui:{name:'しっくいのいえ',cat:'house',el:'earth',pc:45,wl:'plasterwall',rows:['WWOOWW','W....W','W....W','W....W','WWWDWW'],furn:[[1,1,'bed'],[2,1,'shelf1'],[4,1,'monstera'],[4,2,'ltable'],[1,3,'lantern']]},
-  renga:{name:'レンガのいえ',cat:'house',el:'fire',pc:50,wl:'brickwall',fl:'brickfloor',rows:['WWOOWW','W....W','W....W','W....W','WWDWWW'],furn:[[1,1,'oven'],[2,1,'sink'],[3,1,'tub'],[4,1,'taru'],[1,3,'lantern'],[4,3,'bed']]},
-  ishi:{name:'いしのゆかのいえ',cat:'house',el:'earth',pc:40,fl:'stonefloor',rows:['WWOWW','W...W','W...W','W...W','WWDWW'],furn:[[1,1,'bed'],[3,1,'crate'],[1,3,'stool'],[3,3,'table']]},
-  hidamari:{name:'ひだまりのいえ',cat:'house',el:'wood',pc:35,rows:['WWOOWW','W....W','W....W','WWDWWW'],furn:[[1,1,'achair'],[2,1,'ltable'],[4,1,'monstera'],[4,2,'bed']]},
-  minna:{name:'みんなのいえ',cat:'house',el:'water',pc:70,rows:['WWOWWOWW','W......W','W......W','W......W','W......W','WWDWWWWW'],furn:[[1,1,'bed'],[2,1,'bed'],[5,1,'bed'],[6,1,'bed'],[2,3,'chair',1],[3,3,'dtable'],[5,3,'chair',3],[5,4,'lantern']]},
-  yozora:{name:'よぞらのいえ',cat:'house',el:'wind',pc:50,wl:'yozorawall',dr:'yozoradoor',rows:['WWOWW','W...W','W...W','WWDWW'],furn:[[1,1,'yorubed'],[3,1,'lantern']]},
-  hanabench:{name:'はなのベンチ',cat:'garden',el:'wood',pc:15,rows:['eeee','    '],furn:[[0,0,'clover'],[1,0,'bellf'],[2,0,'salvia'],[3,0,'lily'],[1,1,'bench']]},
-  funsui:{name:'ふんすいひろば',cat:'garden',el:'water',pc:40,pa:'gravel',rows:['pppppp','pe  ep','p    p','p    p','pppppp'],furn:[[1,1,'lily'],[4,1,'bellf'],[2,1,'fountain'],[2,3,'bench']]},
-  yasumiba:{name:'こかげのやすみば',cat:'garden',el:'wind',pc:25,rows:['     ','     ','ppppp'],furn:[[0,0,'hedge'],[1,0,'hedge'],[2,0,'parasol'],[3,0,'hedge'],[4,0,'hedge'],[1,1,'bench']]},
-  terrace:{name:'よるのテラス',cat:'garden',el:'fire',pc:25,pa:'woodpath',rows:['ppppp','ppppp'],furn:[[0,0,'lamp'],[1,0,'bench'],[3,0,'lantern'],[4,0,'lamp']]},
-  wanoniwa:{name:'わのにわ',cat:'garden',el:'water',pc:35,pa:'gravel',rows:['     ','     ','ppppp'],furn:[[0,0,'toro'],[4,0,'shishiodoshi'],[1,1,'bench']]},
-  takemichi:{name:'たけあかりのこみち',cat:'garden',el:'fire',pc:30,pa:'stone',rows:[' p ',' p ',' p ',' p ',' p '],furn:[[0,0,'takeakari'],[2,0,'takeakari'],[0,2,'takeakari'],[2,2,'takeakari'],[0,4,'takeakari'],[2,4,'takeakari']]},
-  ringo:{name:'りんごのにわ',cat:'garden',el:'wood',pc:30,rows:['     ','     ','     '],furn:[[0,0,'fruit'],[2,0,'fruit'],[4,0,'fruit'],[1,2,'bench']]},
-  kokage:{name:'こかげのにわ',cat:'garden',el:'wood',pc:20,rows:['    ','    '],furn:[[0,0,'tree'],[3,0,'tree'],[1,1,'bench']]},
-  kadan:{name:'かだんのにわ',cat:'garden',el:'wood',pc:30,rows:['eeeee','eeeee','     '],furn:[[0,0,'clover'],[1,0,'salvia'],[2,0,'lily'],[3,0,'salvia'],[4,0,'clover'],[0,1,'bellf'],[1,1,'clover'],[2,1,'bellf'],[3,1,'clover'],[4,1,'bellf'],[2,2,'signpost']]},
-  hatake1:{name:'ちいさなはたけ',cat:'farm',el:'wood',pc:10,rows:['fff','fff','fff'],furn:[]},
-  idohatake:{name:'いどのはたけ',cat:'farm',el:'water',pc:40,rows:['fff','f f','fff'],furn:[[1,1,'well']]},
-  kamehatake:{name:'みずがめのはたけ',cat:'farm',el:'water',pc:25,rows:['ffff','ffff','    '],furn:[[0,2,'jar'],[3,2,'composter']]},
-  komugi:{name:'こむぎのはたけ',cat:'farm',el:'earth',pc:50,rows:['ffff','ffff','    ','    '],furn:[[1,2,'mill']]},
-  sakuhatake:{name:'さくのはたけ',cat:'farm',el:'earth',pc:30,rows:['FFFFF','FfffF','FfffF','FFGFF'],furn:[]},
-  toriniwa:{name:'とりのまきば',cat:'farm',el:'wood',pc:40,rows:['FFFFFF','F    F','F    F','F    F','FFGFFF'],furn:[[1,1,'coop'],[4,1,'tub'],[4,3,'crate']]},
-  makiba:{name:'まきばのこや',cat:'farm',el:'earth',pc:70,rows:['FFFFFFF','F     F','F     F','F     F','F     F','FFFGFFF'],furn:[[1,1,'barn'],[5,1,'makidana'],[5,3,'tub']]},
-  kouen:{name:'ちかばのこうえん',cat:'play',el:'wind',pc:35,rows:['     ','     ','     '],furn:[[0,0,'swing'],[3,0,'sandbox'],[1,2,'bench']]},
-  burankoniwa:{name:'ぶらんこのにわ',cat:'play',el:'wind',pc:30,rows:['e  e','    ','    '],furn:[[0,0,'salvia'],[3,0,'lily'],[1,0,'swing'],[1,2,'bench']]},
-  doronko:{name:'どろんこひろば',cat:'play',el:'earth',pc:20,rows:['    ','    '],furn:[[0,0,'sandbox'],[3,0,'tub'],[0,1,'stool']]},
-  camp:{name:'キャンプじょう',cat:'play',el:'fire',pc:30,pa:'gravel',rows:['     ','     ','  p  ','     ','     '],furn:[[1,0,'bench'],[2,2,'campfire'],[2,4,'bench']]},
-  picnic:{name:'ピクニックのにわ',cat:'play',el:'water',pc:30,rows:['     ','     ','     '],furn:[[0,0,'picnic'],[3,0,'table'],[4,0,'chair',3],[3,1,'parasol']]},
-  matoba:{name:'まとあてば',cat:'play',el:'fire',pc:25,rows:['     ','     ','     ','     '],furn:[[0,0,'mato'],[4,0,'mato'],[1,3,'bench']]},
-  oshaberi:{name:'おしゃべりひろば',cat:'play',el:'wind',pc:25,rows:['  p  ','  p  ','ppppp','  p  ','  p  '],furn:[[0,0,'bench'],[1,1,'signpost'],[3,4,'bench']]},
-  toride:{name:'みはりのとりで',cat:'guard',el:'fire',pc:60,rows:['FFFFFF','F    F','F    F','F    F','FFGFFF'],furn:[[2,1,'watch'],[1,1,'torch'],[4,1,'torch']]},
-  togemichi:{name:'とげのみち',cat:'guard',el:'earth',pc:15,rows:['ppppp','     '],furn:[[0,1,'spike'],[1,1,'spike'],[2,1,'spike'],[3,1,'spike'],[4,1,'spike']]},
-  wananiwa:{name:'わなのにわ',cat:'guard',el:'wind',pc:20,rows:['    '],furn:[[0,0,'sticky'],[1,0,'puddle'],[2,0,'firetrap'],[3,0,'gust']]},
-  kagaribi:{name:'かがりびのみち',cat:'guard',el:'fire',pc:20,rows:['ppppp','     '],furn:[[0,1,'lamp'],[2,1,'lamp'],[4,1,'lamp']]},
-  taikoba:{name:'あいずのたいこ',cat:'guard',el:'earth',pc:20,rows:['   '],furn:[[0,0,'torch'],[1,0,'drum'],[2,0,'torch']]},
-  sakumamori:{name:'さくのまもり',cat:'guard',el:'earth',pc:20,rows:['FFFFFGFFFFF'],furn:[]},
-  otoshiana:{name:'おとしあなのみち',cat:'guard',el:'earth',pc:20,rows:['     '],furn:[[0,0,'pit'],[1,0,'spike'],[2,0,'pit'],[3,0,'spike'],[4,0,'pit']]},
+  small:{name:'ちいさなおうち',cat:'house',el:'earth',pc:20,rw:15,rows:['WWOWW','W...W','W...W','WWDWW'],furn:[[1,1,'bed'],[3,1,'stool']]},
+  mono:{name:'ものおきごや',cat:'house',el:'earth',pc:20,rw:15,rows:['WWWWW','W...W','W...W','WWDWW'],furn:[[1,1,'crate'],[2,1,'taru'],[3,1,'asabukuro']]},
+  hana:{name:'はなのいえ',cat:'house',el:'wood',pc:35,rw:30,rows:['WWOOWW','W....W','W....W','W....W','WWWDWW'],furn:[[1,1,'bed'],[4,1,'monstera'],[4,2,'lantern'],[3,2,'ltable'],[1,3,'monstera']]},
+  futari:{name:'ふたりのいえ',cat:'house',el:'water',pc:45,rw:30,rows:['WWOWOWW','W.....W','W.....W','W.....W','WWWDWWW'],furn:[[1,1,'chair',1],[2,1,'table'],[3,1,'chair',3],[5,1,'lantern'],[1,3,'bed'],[5,3,'bed']]},
+  nemuri:{name:'ねむりのいえ',cat:'house',el:'water',pc:30,rw:30,rows:['WWOWW','W...W','W...W','WWDWW'],furn:[[1,1,'bed'],[3,1,'shelf1'],[1,2,'lantern']]},
+  gohan:{name:'ごはんのいえ',cat:'house',el:'fire',pc:40,rw:30,rows:['WWOOWW','W....W','W....W','W....W','WWWDWW'],furn:[[1,1,'chair',1],[2,1,'table'],[3,1,'chair',3],[4,1,'lantern'],[1,3,'bed']]},
+  daidoko:{name:'だいどころのいえ',cat:'house',el:'fire',pc:35,rw:30,rows:['WWOOWW','W....W','W....W','WWDWWW'],furn:[[1,1,'cooktable'],[2,1,'sink'],[3,1,'tub'],[4,1,'taru']]},
+  kamado:{name:'かまどのいえ',cat:'house',el:'fire',pc:40,rw:30,rows:['WWOOWW','W....W','W....W','W....W','WWWDWW'],furn:[[1,1,'oven'],[2,1,'tub'],[3,1,'taru'],[4,1,'crate'],[1,3,'table'],[2,3,'chair',3]]},
+  kura:{name:'たくわえのくら',cat:'house',el:'earth',pc:25,rw:15,rows:['WWWWW','W...W','W...W','WWDWW'],furn:[[1,1,'crate'],[2,1,'taru'],[3,1,'taru']]},
+  monoheya:{name:'ものおきのいえ',cat:'house',el:'earth',pc:30,rw:30,rows:['WWWWWW','W....W','W....W','WWDWWW'],furn:[[1,1,'crate'],[2,1,'asabukuro'],[3,1,'makidana'],[4,1,'crate']]},
+  hataori:{name:'はたおりのいえ',cat:'house',el:'wind',pc:35,rw:30,rows:['WWOWW','W...W','W...W','WWDWW'],furn:[[1,1,'loom'],[3,1,'asabukuro'],[1,2,'bed'],[3,2,'lantern']]},
+  hon:{name:'ほんのいえ',cat:'house',el:'water',pc:45,rw:30,rows:['WWOOWW','W....W','W....W','W....W','WWDWWW'],furn:[[1,1,'achair'],[2,1,'shelf1'],[3,1,'shelf1'],[4,1,'bed'],[3,3,'ltable'],[1,3,'lantern']]},
+  kodomo:{name:'こどものいえ',cat:'house',el:'wind',pc:30,rw:30,rows:['WWOWW','W...W','W...W','WWDWW'],furn:[[1,1,'bed'],[3,1,'pouf'],[3,2,'ltable']]},
+  logh:{name:'ログハウス',cat:'house',el:'wood',pc:50,rw:50,wl:'logwall',rows:['WWOWOWW','W.....W','W.....W','W.....W','WWWDWWW'],furn:[[1,1,'bed'],[2,1,'chair',1],[3,1,'table'],[4,1,'chair',3],[5,1,'bed'],[1,3,'lantern'],[5,3,'taru']]},
+  shikkui:{name:'しっくいのいえ',cat:'house',el:'earth',pc:45,rw:30,wl:'plasterwall',rows:['WWOOWW','W....W','W....W','W....W','WWWDWW'],furn:[[1,1,'bed'],[2,1,'shelf1'],[4,1,'monstera'],[4,2,'ltable'],[1,3,'lantern']]},
+  renga:{name:'レンガのいえ',cat:'house',el:'fire',pc:50,rw:50,wl:'brickwall',fl:'brickfloor',rows:['WWOOWW','W....W','W....W','W....W','WWDWWW'],furn:[[1,1,'oven'],[2,1,'sink'],[3,1,'tub'],[4,1,'taru'],[1,3,'lantern'],[4,3,'bed']]},
+  ishi:{name:'いしのゆかのいえ',cat:'house',el:'earth',pc:40,rw:30,fl:'stonefloor',rows:['WWOWW','W...W','W...W','W...W','WWDWW'],furn:[[1,1,'bed'],[3,1,'crate'],[1,3,'stool'],[3,3,'table']]},
+  hidamari:{name:'ひだまりのいえ',cat:'house',el:'wood',pc:35,rw:30,rows:['WWOOWW','W....W','W....W','WWDWWW'],furn:[[1,1,'achair'],[2,1,'ltable'],[4,1,'monstera'],[4,2,'bed']]},
+  minna:{name:'みんなのいえ',cat:'house',el:'water',pc:70,rw:50,rows:['WWOWWOWW','W......W','W......W','W......W','W......W','WWDWWWWW'],furn:[[1,1,'bed'],[2,1,'bed'],[5,1,'bed'],[6,1,'bed'],[2,3,'chair',1],[3,3,'dtable'],[5,3,'chair',3],[5,4,'lantern']]},
+  yozora:{name:'よぞらのいえ',cat:'house',el:'wind',pc:50,rw:50,wl:'yozorawall',dr:'yozoradoor',rows:['WWOWW','W...W','W...W','WWDWW'],furn:[[1,1,'yorubed'],[3,1,'lantern']]},
+  hanabench:{name:'はなのベンチ',cat:'garden',el:'wood',pc:15,rw:15,rows:['eeee','    '],furn:[[0,0,'clover'],[1,0,'bellf'],[2,0,'salvia'],[3,0,'lily'],[1,1,'bench']]},
+  funsui:{name:'ふんすいひろば',cat:'garden',el:'water',pc:40,rw:30,pa:'gravel',rows:['pppppp','pe  ep','p    p','p    p','pppppp'],furn:[[1,1,'lily'],[4,1,'bellf'],[2,1,'fountain'],[2,3,'bench']]},
+  yasumiba:{name:'こかげのやすみば',cat:'garden',el:'wind',pc:25,rw:15,rows:['     ','     ','ppppp'],furn:[[0,0,'hedge'],[1,0,'hedge'],[2,0,'parasol'],[3,0,'hedge'],[4,0,'hedge'],[1,1,'bench']]},
+  terrace:{name:'よるのテラス',cat:'garden',el:'fire',pc:25,rw:15,pa:'woodpath',rows:['ppppp','ppppp'],furn:[[0,0,'lamp'],[1,0,'bench'],[3,0,'lantern'],[4,0,'lamp']]},
+  wanoniwa:{name:'わのにわ',cat:'garden',el:'water',pc:35,rw:30,pa:'gravel',rows:['     ','     ','ppppp'],furn:[[0,0,'toro'],[4,0,'shishiodoshi'],[1,1,'bench']]},
+  takemichi:{name:'たけあかりのこみち',cat:'garden',el:'fire',pc:30,rw:30,pa:'stone',rows:[' p ',' p ',' p ',' p ',' p '],furn:[[0,0,'takeakari'],[2,0,'takeakari'],[0,2,'takeakari'],[2,2,'takeakari'],[0,4,'takeakari'],[2,4,'takeakari']]},
+  ringo:{name:'りんごのにわ',cat:'garden',el:'wood',pc:30,rw:30,rows:['     ','     ','     '],furn:[[0,0,'fruit'],[2,0,'fruit'],[4,0,'fruit'],[1,2,'bench']]},
+  kokage:{name:'こかげのにわ',cat:'garden',el:'wood',pc:20,rw:15,rows:['    ','    '],furn:[[0,0,'tree'],[3,0,'tree'],[1,1,'bench']]},
+  kadan:{name:'かだんのにわ',cat:'garden',el:'wood',pc:30,rw:30,rows:['eeeee','eeeee','     '],furn:[[0,0,'clover'],[1,0,'salvia'],[2,0,'lily'],[3,0,'salvia'],[4,0,'clover'],[0,1,'bellf'],[1,1,'clover'],[2,1,'bellf'],[3,1,'clover'],[4,1,'bellf'],[2,2,'signpost']]},
+  hatake1:{name:'ちいさなはたけ',cat:'farm',el:'wood',pc:10,rw:15,rows:['fff','fff','fff'],furn:[]},
+  idohatake:{name:'いどのはたけ',cat:'farm',el:'water',pc:40,rw:30,rows:['fff','f f','fff'],furn:[[1,1,'well']]},
+  kamehatake:{name:'みずがめのはたけ',cat:'farm',el:'water',pc:25,rw:15,rows:['ffff','ffff','    '],furn:[[0,2,'jar'],[3,2,'composter']]},
+  komugi:{name:'こむぎのはたけ',cat:'farm',el:'earth',pc:50,rw:50,rows:['ffff','ffff','    ','    '],furn:[[1,2,'mill']]},
+  sakuhatake:{name:'さくのはたけ',cat:'farm',el:'earth',pc:30,rw:30,rows:['FFFFF','FfffF','FfffF','FFGFF'],furn:[]},
+  toriniwa:{name:'とりのまきば',cat:'farm',el:'wood',pc:40,rw:30,rows:['FFFFFF','F    F','F    F','F    F','FFGFFF'],furn:[[1,1,'coop'],[4,1,'tub'],[4,3,'crate']]},
+  makiba:{name:'まきばのこや',cat:'farm',el:'earth',pc:70,rw:50,rows:['FFFFFFF','F     F','F     F','F     F','F     F','FFFGFFF'],furn:[[1,1,'barn'],[5,1,'makidana'],[5,3,'tub']]},
+  kouen:{name:'ちかばのこうえん',cat:'play',el:'wind',pc:35,rw:30,rows:['     ','     ','     '],furn:[[0,0,'swing'],[3,0,'sandbox'],[1,2,'bench']]},
+  burankoniwa:{name:'ぶらんこのにわ',cat:'play',el:'wind',pc:30,rw:30,rows:['e  e','    ','    '],furn:[[0,0,'salvia'],[3,0,'lily'],[1,0,'swing'],[1,2,'bench']]},
+  doronko:{name:'どろんこひろば',cat:'play',el:'earth',pc:20,rw:15,rows:['    ','    '],furn:[[0,0,'sandbox'],[3,0,'tub'],[0,1,'stool']]},
+  camp:{name:'キャンプじょう',cat:'play',el:'fire',pc:30,rw:30,pa:'gravel',rows:['     ','     ','  p  ','     ','     '],furn:[[1,0,'bench'],[2,2,'campfire'],[2,4,'bench']]},
+  picnic:{name:'ピクニックのにわ',cat:'play',el:'water',pc:30,rw:30,rows:['     ','     ','     '],furn:[[0,0,'picnic'],[3,0,'table'],[4,0,'chair',3],[3,1,'parasol']]},
+  matoba:{name:'まとあてば',cat:'play',el:'fire',pc:25,rw:15,rows:['     ','     ','     ','     '],furn:[[0,0,'mato'],[4,0,'mato'],[1,3,'bench']]},
+  oshaberi:{name:'おしゃべりひろば',cat:'play',el:'wind',pc:25,rw:15,rows:['  p  ','  p  ','ppppp','  p  ','  p  '],furn:[[0,0,'bench'],[1,1,'signpost'],[3,4,'bench']]},
+  toride:{name:'みはりのとりで',cat:'guard',el:'fire',pc:60,rw:50,rows:['FFFFFF','F    F','F    F','F    F','FFGFFF'],furn:[[2,1,'watch'],[1,1,'torch'],[4,1,'torch']]},
+  togemichi:{name:'とげのみち',cat:'guard',el:'earth',pc:15,rw:15,rows:['ppppp','     '],furn:[[0,1,'spike'],[1,1,'spike'],[2,1,'spike'],[3,1,'spike'],[4,1,'spike']]},
+  wananiwa:{name:'わなのにわ',cat:'guard',el:'wind',pc:20,rw:15,rows:['    '],furn:[[0,0,'sticky'],[1,0,'puddle'],[2,0,'firetrap'],[3,0,'gust']]},
+  kagaribi:{name:'かがりびのみち',cat:'guard',el:'fire',pc:20,rw:15,rows:['ppppp','     '],furn:[[0,1,'lamp'],[2,1,'lamp'],[4,1,'lamp']]},
+  taikoba:{name:'あいずのたいこ',cat:'guard',el:'earth',pc:20,rw:15,rows:['   '],furn:[[0,0,'torch'],[1,0,'drum'],[2,0,'torch']]},
+  sakumamori:{name:'さくのまもり',cat:'guard',el:'earth',pc:20,rw:15,rows:['FFFFFGFFFFF'],furn:[]},
+  otoshiana:{name:'おとしあなのみち',cat:'guard',el:'earth',pc:20,rw:15,rows:['     '],furn:[[0,0,'pit'],[1,0,'spike'],[2,0,'pit'],[3,0,'spike'],[4,0,'pit']]},
 };
 const BPCAT={house:'家',garden:'庭',farm:'畑',play:'遊び場',guard:'守り'},BPCOMF=10,BPGIVEFUN=30,BPFISH=.02,BPCHEST=.5,BPTALK=.15,BPTALKCD=3,BPELW=3;/* つり2%・霧の宝箱50%・お話15%（3日に1回まで）。くれるせいれいと同じ属性の設計図は、えらばれやすさ3 */
 const BPT={floor:8,wall:12,door:15,win:18,furn:40,path:8,farm:8,edge:8,fence:12,gate:15,plant:10};/* 1つずつの部品を建てる時間（建物は BL の time） */
@@ -96,7 +96,7 @@ function askBp(i,x,y){const it=(S.bpInv||[])[i];if(!it)return;const k=it.k,[ok,w
 function bpPlace(i,x,y){const it=(S.bpInv||[])[i];if(!it)return;const k=it.k,[ok,why]=bpCheck(k,x,y);if(!ok)return toast(why);const pc=BPS[k].pc,m=bpCost(k);
   if(S.pt<pc)return toast('パワーが足りません（'+SP(pc)+'）');if(!matOK(m))return toast('素材が足りません（'+matTxt(m)+'）');
   S.pt-=pc;S.bpInv.splice(i,1);const {w,h}=bpSize(k),cells=[];for(let b=0;b<h;b++)for(let a=0;a<w;a++){const j=(y+b)*W+x+a;cells.push(j);if(bpSoft(S.obj[j])){S.obj[j]='';delete S.dyn[j]}}
-  const e={id:(S.bpId=(S.bpId||0)+1),k,x,y,g:it.g==null?null:it.g,cells,ps:bpPieces(k).map(([dx,dy,t,id,rot,ph])=>({j:(y+dy)*W+x+dx,t,id,rot,ph,s:0}))};
+  const e={id:(S.bpId=(S.bpId||0)+1),k,x,y,g:it.g==null?null:it.g,req:it.req?1:0,cells,ps:bpPieces(k).map(([dx,dy,t,id,rot,ph])=>({j:(y+dy)*W+x+dx,t,id,rot,ph,s:0}))};
   (S.bp||(S.bp=[])).push(e);toast('せいれいが'+BPS[k].name+'を建てにきてくれる','good');sfx('power');bpAdvance(e);recount();dirty=true;renderPalette()}
 const bpNatLeft=e=>e.cells.filter(j=>BPNAT.has(S.obj[j])||VEINS[S.obj[j]]);
 function bpAdvance(e){/* つぎの段の部品を「建てる所」にする */if(bpNatLeft(e).length)return;const left=e.ps.filter(p=>p.s<2);if(!left.length)return bpComplete(e);const ph=Math.min(...left.map(p=>p.ph));
@@ -125,11 +125,12 @@ function bpComplete(e){S.bp=S.bp.filter(q=>q!==e);const b=BPS[e.k],cat=b.cat||'h
   if(S.bpHouse==null)S.bpHouse=S.bpDone||0;if(h){(S.hname||(S.hname={}))[inner.j]=b.name;S.bpHouse++}S.bpDone=(S.bpDone||0)+1;
   toast(b.name+'ができた！','good');if(typeof memo==='function')memo(b.name+'ができた');
   const r=e.g!=null?S.res.find(q=>q.id===e.g&&!q.hidden):null;
+  if(e.req&&S.bpReq&&S.bpReq.k===e.k)S.bpReq.done=1;/* 設計図の依頼：お礼の会話は、サブクエストの報告で */
   if(r){r.fun=Math.min(100,(r.fun||0)+BPGIVEFUN);if(h){const bed=e.ps.find(p=>p.t==='furn'&&BEDSET.has(p.id));if(bed)(S.bedOwn||(S.bedOwn={}))[bed.j]=r.id}/* くれたせいれいが、その家のベッドをつかう */
-    dialog(pickFresh('bpdone:'+cat,BPDONE[cat]).map(l=>[r.name,l[0]]))}
+    if(!e.req)dialog(pickFresh('bpdone:'+cat,BPDONE[cat]).map(l=>[r.name,l[0]]))}
   checkQuest()}
 function bpCancel(e){/* 建てている部品をやめた：設計図ごとやめる（できた部品はのこす） */for(const p of e.ps)if(p.s===1&&S.obj[p.j]==='site'&&S.dyn[p.j]&&S.dyn[p.j].bp===e.id){siteRefund(S.dyn[p.j],p.j);clearObj(p.j)}
-  S.bp=S.bp.filter(q=>q!==e);toast(BPS[e.k].name+'を建てるのをやめた');recount()}
+  S.bp=S.bp.filter(q=>q!==e);toast(BPS[e.k].name+'を建てるのをやめた');if(e.req)(S.bpInv||(S.bpInv=[])).push({k:e.k,g:e.g,req:1});/* 設計図の依頼の物は、設計図がもどる（もどらないと、依頼がおわらない） */recount()}
 const bpOfSite=j=>{const d=S.dyn[j];return d&&d.bp!=null?(S.bp||[]).find(q=>q.id===d.bp)||null:null};
 function bpTick(){/* 1秒ごと：木・岩をかたづけおわったら、つぎの段へ。だれかがどけた物のあとも */for(const e of (S.bp||[]).slice()){if(e.ps.some(p=>p.s===1))continue;bpAdvance(e)}}
 function bpJob(r,G,dry){/* 置く所の木・岩を、切る・ほる */if(isNight()||!S.bp||!S.bp.length)return false;
@@ -153,3 +154,32 @@ function bpGhostDraw(ctx){const L=[];if(pending&&pending.kind==='bp'){const {w,h
 const BPTALKL={house:'こんな家に、すんでみたいなって',garden:'こんな庭があったら、すてきだなって',farm:'こんな畑があったら、いいなって',play:'こんな遊び場があったら、みんなで遊べるなって',guard:'こんなふうに守れたら、夜もこわくないなって'};
 function bpTalkGift(r){/* お話のあと：ときどき、えがいた設計図をくれる */if(S.free||Math.random()>=BPTALK)return;const d=callDay();if(S.bpTalkD!=null&&d-S.bpTalkD<BPTALKCD)return;const k=bpNext(null,r.elem);if(!k)return;S.bpTalkD=d;const id=r.id;
   dialog([[r.name,'#think|ねえ、守り神さま……'+BPTALKL[BPS[k].cat]+'、ずっと考えてたんだ。'],[r.name,'#joy|えがいてみたの。よかったら、もらって！']],()=>{const q=S.res.find(x=>x.id===id);if(!(S.bpInv||[]).some(z=>z.k===k)&&!(S.bpGot||{})[k])bpGiveK(k,q?q.id:null)})}
+
+/* ---------- 設計図の依頼（サブクエスト bpreq）：bphome のあと、朝に5%、せいれいが設計図をわたして「建ててほしい」とたのむ。建てたらクリア、ごほうびは設計図の rw ---------- */
+const BPREQP=.05;
+function bpMorning(){if(S.free||!bpOpen())return;const D=S.subDone||(S.subDone={}),St=S.subSt||(S.subSt={});
+  if(S.bpReq&&D.bpreq){S.bpReq=null;delete D.bpreq;delete St.bpreq;if(S.subSeen)delete S.subSeen.bpreq;return}/* おえた依頼は、つぎの朝にかたづける（また出るように） */
+  if(S.bpReq||Math.random()>=BPREQP)return;const L=S.res.filter(r=>!r.hidden);if(!L.length)return;const r=pick(L),k=bpNext(null,r.elem);if(!k)return;S.bpReq={k,who:r.name}}
+const bpReqQ=()=>S&&S.bpReq&&BPS[S.bpReq.k];
+SUBQ.push({k:'bpreq',
+  get g(){const n=S&&S.bpReq&&S.bpReq.who,r=n&&S.res.find(q=>q.name===n);return r?r.elem:'earth'},get who(){return S&&S.bpReq?S.bpReq.who:''},
+  get t(){const b=bpReqQ();return b?'「'+b.name+'」を建てよう':'設計図をたのまれた'},
+  get how(){const b=bpReqQ();return '「おく」→「どうぐ」→「設計図」で「'+(b?b.name:'')+'」をえらび、建てたい場所の左上をタップ'},
+  get L(){const b=bpReqQ(),c=b?b.cat:'house';return [['K','#think|ねえ、守り神さま……'+BPTALKL[c]+'、ずっと考えてたんだ。'],['K','#joy|えがいてみたの。いっしょに建ててくれる？']]},
+  X:()=>{const b=bpReqQ();return pickFresh('bpdone:'+(b?b.cat:'house'),BPDONE[b?b.cat:'house']).map(l=>['K',l[0]])},
+  get rw(){const b=bpReqQ();return b?b.rw:0},
+  at:()=>!!S.bpReq&&!S.bpReq.done&&S.res.some(r=>!r.hidden&&r.name===S.bpReq.who),ok:()=>!!(S.bpReq&&S.bpReq.done),n:1,now:()=>S.bpReq&&S.bpReq.done?1:0,
+  onAccept(){const q=S.bpReq;if(!q||(S.bpInv||[]).some(z=>z.k===q.k&&z.req))return;const r=S.res.find(x=>x.name===q.who);(S.bpGot||(S.bpGot={}))[q.k]=1;(S.bpInv||(S.bpInv=[])).push({k:q.k,g:r?r.id:null,req:1});toast('設計図「'+BPS[q.k].name+'」をもらった','good')}});
+/* ---------- 設計図のプレビュー：「どうぐ」で設計図をえらぶと、できあがりの絵・むずかしさ・パワー・素材を出す ---------- */
+const BPDIFF={15:'かんたん',30:'ふつう',50:'むずかしい'};
+function bpPreview(k,cv){const b=BPS[k],{w,h}=bpSize(k),cs=Math.max(12,Math.min(32,Math.floor(264/Math.max(w,h)))),c=cv.getContext('2d');cv.width=w*cs;cv.height=h*cs;cv.style.width=cv.width+'px';cv.style.height=cv.height+'px';
+  const L=[];for(const p of bpPieces(k)){const[dx,dy,t,id,rot]=p;let a=1,bh=1;if(t==='furn'||t==='build'){const z=szR(id,rot||0)||[1,1];a=z[0];bh=z[1]}L.push({x:dx,y:dy,w:a,h:bh,id:t==='win'?'window':t==='farm'?'farm':id,t})}
+  const ord={floor:0,path:0,farm:0,edge:1,wall:2,win:2,fence:2,door:3,gate:3,plant:4,furn:5,build:5},img={};
+  const draw=()=>{c.imageSmoothingEnabled=true;c.fillStyle='#a9cf86';c.fillRect(0,0,cv.width,cv.height);c.fillStyle='rgba(60,90,40,.18)';for(let y=0;y<h;y++)for(let x=0;x<w;x++)if((x+y)&1)c.fillRect(x*cs,y*cs,cs,cs);
+    for(const q of L.slice().sort((a,b)=>ord[a.t]-ord[b.t])){const im=img[q.id];if(q.t==='floor'||q.t==='path'||q.t==='wall'||q.t==='win'||q.t==='door'){c.fillStyle=q.t==='floor'?'#e3c79a':q.t==='path'?'#d9c39a':'#9c7650';c.fillRect(q.x*cs,q.y*cs,cs,cs)}if(im&&im.complete&&im.naturalWidth)c.drawImage(im,q.x*cs,q.y*cs,q.w*cs,q.h*cs)}};
+  for(const q of L)if(!img[q.id]){const u=iconURL(q.id);if(!u)continue;const im=new Image();im.onload=draw;im.src=u;img[q.id]=im}draw()}
+function bpPop(i){const it=(S.bpInv||[])[i];if(!it)return;const k=it.k,b=BPS[k],m=bpCost(k);
+  const o=el('<div style="position:fixed;inset:0;z-index:45;display:flex;align-items:center;justify-content:center;background:rgba(30,24,16,.45);padding:24px"><div class="pxcard" style="background:var(--panel);padding:16px 18px;max-width:320px;width:100%;color:var(--ink);max-height:86vh;overflow:auto"><b class="t" style="font-size:16px;display:block;margin-bottom:4px"></b><p class="note n" style="margin:0 0 8px"></p><div style="display:flex;justify-content:center;margin-bottom:8px"><canvas class="pv" style="image-rendering:pixelated"></canvas></div><p class="note c" style="margin:0 0 10px"></p><div class="bt" style="display:flex;gap:8px;justify-content:flex-end"><button class="btn x">とじる</button><button class="btn pri go">置く場所をえらぶ</button></div></div></div>');
+  o.querySelector('.t').textContent=b.name;o.querySelector('.n').textContent=BPCAT[b.cat]+'の設計図・むずかしさ：'+BPDIFF[b.rw];o.querySelector('.c').textContent='パワー'+b.pc+'・'+matTxt(m);bpPreview(k,o.querySelector('.pv'));
+  const close=()=>o.remove();o.querySelector('.x').onclick=()=>{sfx('tap');close()};o.onclick=e=>{if(e.target===o)close()};
+  o.querySelector('.go').onclick=()=>{sfx('tap');close();selStamp='bp:'+i;palOpen=false;renderPalette();toast('建てたい場所の左上をタップ')};document.body.appendChild(o)}
