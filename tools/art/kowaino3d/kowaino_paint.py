@@ -279,9 +279,11 @@ def eyepos(P, F, lab, H, e):
         out.append(np.array([x, y, z]))
     return out
 
-def stamp(im, pts, col, edge=None, side=False):
-    """目：きめたドットの形を、その場所におす（左右でまったく同じ形）。side：体がよこにたおれた（両目のならびが たて）ときは、よこながの形"""
-    PX = [''.join(r[i] for r in EYEPX) for i in range(len(EYEPX[0]))] if side else EYEPX
+EYESHUT = ['++++']   # たおされた（いきたえた）目：光がきえて、ほそい線だけ（ふちの色）
+def stamp(im, pts, col, edge=None, side=False, shut=False):
+    """目：きめたドットの形を、その場所におす（左右でまったく同じ形）。side：体がよこにたおれた（両目のならびが たて）ときは、よこながの形。shut：いきたえた目"""
+    E = EYESHUT if shut else EYEPX
+    PX = [''.join(r[i] for r in E) for i in range(len(E[0]))] if side else E
     a = np.array(im); c = list(hx(col).astype(int))+[255]; ce = list(hx(edge or col).astype(int))+[255]; h, w = len(PX), len(PX[0])
     for X, Y in pts:
         x0, y0 = int(round(X-w/2)), int(round(Y-h/2))
@@ -497,7 +499,7 @@ def shoot(name, cfg, src, yaw=0.0):
     if abs(math.cos(yaw)-1) < 1e-6:   # 正面だけ、目をおす
         ey = EYES if EYES is not None else eyepos(P, F, lab, H, cfg['eyes'])
         q2 = [proj(R(p)) for p in ey]; side = abs(q2[1][1]-q2[0][1]) > abs(q2[1][0]-q2[0][0])   # 両目のならびが たて：よこにたおれている
-        im = stamp(im, [(proj(R(p))[0]-ext[0], proj(R(p))[1]-ext[2]) for p in ey if eyevis(proj(R(p)), ext, float(np.dot(R(p), V)))], cfg['eyes']['col'], cfg['eyes'].get('edge'), side)   # 見えている目だけ、おす（まわる・うつむく・前に物があると、かくれる）
+        im = stamp(im, [(proj(R(p))[0]-ext[0], proj(R(p))[1]-ext[2]) for p in ey if eyevis(proj(R(p)), ext, float(np.dot(R(p), V)))], cfg['eyes']['col'], cfg['eyes'].get('edge'), side, cfg.get('pose', {}).get('dead', False))   # 見えている目だけ、おす（まわる・うつむく・前に物があると、かくれる）
     if cfg.get('fxp'):   # パーティクル（色の数をへらしたあとに おす。絵のわくの外に出る分は、わくを広げて入れる）
         q = [(k, proj(R(np.asarray(p)*H))) for k, p, ag in cfg['fxp']]; ages = [ag for _, _, ag in cfg['fxp']]
         x0 = min([ext[0]]+[int(math.floor(v[0]))-5 for _, v in q]); y0 = min([ext[2]]+[int(math.floor(v[1]))-5 for _, v in q])
