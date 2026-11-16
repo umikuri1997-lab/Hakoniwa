@@ -586,7 +586,12 @@ CHATS.push(
 CHATS.push(
  Object.assign([[0,"木を切ってから、箱まで、とおいなあ。"],[1,"切る所のそばに、木や石を入れる箱があったら、すぐしまえるのにね。"]],{hint:'shigotoba',ok:()=>spotHintOK('shigotoba','crate')}),
  Object.assign([[0,"ごはんをとってから、食卓まで歩くうちに、おなかがなっちゃう。"],[1,"ごはんの箱が食卓のそばにあったら、すぐ食べられるね。"]],{hint:'gohan',ok:()=>spotHintOK('gohan',['crate','table'])}),
- Object.assign([[0,"おきたら、そのまま家の中でごはんにしたいな。"],[1,"ベッドのある家に、食卓もあったらいいね。"]],{hint:'nedoko',ok:()=>spotHintOK('nedoko',['bed','yorubed'])}));
+ Object.assign([[0,"おきたら、そのまま家の中でごはんにしたいな。"],[1,"ベッドのある家に、食卓もあったらいいね。"]],{hint:'nedoko',ok:()=>spotHintOK('nedoko',['bed','yorubed'])}),
+ Object.assign([[0,"生き物の小屋へ、草と水を運ぶの、けっこう遠いんだよね。"],[1,"小屋のそばに、水おけと箱があったら、らくなのにね。"]],{hint:'makiba',ok:()=>spotHintOK('makiba',['coop','barn'])}),
+ Object.assign([[0,"村の外の生き物、小屋がどこにあるか、わかるかなあ。"],[1,"道しるべと生垣があったら、まよわずに来られそうだね。"]],{hint:'norakomichi',ok:()=>spotHintOK('norakomichi',['coop','barn'])}),
+ Object.assign([[0,"小屋の生き物を、すわって、ゆっくりながめたいな。"],[1,"小屋のそばに、ベンチがふたつあったらいいね。"]],{hint:'fureai',ok:()=>spotHintOK('fureai',['coop','barn'])}),
+ Object.assign([[0,"ハネマリって、お花のそばだと、うれしそうなんだよ。"],[1,"とり小屋のまわりに、花がさいてたら、いいね。"]],{hint:'hidamari',ok:()=>spotHintOK('hidamari','coop')}),
+ Object.assign([[0,"家畜小屋のえさの草、かわかしておく所があったらなあ。"],[1,"小屋のそばに、まき棚があったら、草もおいておけそう。"]],{hint:'hoshikusa',ok:()=>spotHintOK('hoshikusa','barn')}));
 
 const CHATSEENKEY='hakoniwa-chat-v1';let CHATSEEN=null;/* 出た雑談は、ステージをこえておぼえる（ほかのステージで出た話は出にくい） */
 function chatSeen(){if(!CHATSEEN){try{CHATSEEN=new Set(JSON.parse(KV.getItem(CHATSEENKEY)||'[]'))}catch(e){CHATSEEN=new Set()}}return CHATSEEN}
