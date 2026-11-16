@@ -118,9 +118,9 @@ document.addEventListener('wheel',e=>{const el=e.target&&e.target.closest&&e.tar
 /* 村レベルのゲージがたまると、とくとく */
 function uiGaugeWatch(){const e=document.getElementById('xpBar');if(!e)return;let pv=parseFloat(e.style.width)||0,lt=0;new MutationObserver(()=>{const v=parseFloat(e.style.width)||0,p=pv;pv=v;if(!(v>p)||!started)return;const n=performance.now();if(n-lt<600)return;lt=n;sfx('glug')}).observe(e,{attributes:true,attributeFilter:['style']})}
 uiNumWatch();uiGaugeWatch();
-/* 草原：メニュー・一覧をひらくと、ボタンの板が1まいずつ「とん、とん」と置かれる（kotonn と同じ動き。CSS の tontile と、おくれ --ti）。音は板が置かれる瞬間に */
-document.addEventListener('animationstart',e=>{if(e.animationName==='tontile'&&!uiReduced())setTimeout(()=>sfx('tile'),90)});
-function tileStagger(root){if(!document.body.classList.contains('wd0')||uiReduced()||!root)return;const L=root.querySelectorAll('.mtile');let i=0;for(const b of L){if(i>=12)break;b.style.setProperty('--ti',(i*45)+'ms');b.classList.remove('utile');void b.offsetWidth;b.classList.add('utile');i++}}
+/* 草原：メニュー・一覧をひらくと、ボタンの板が1まいずつ「とん、とん」と置かれる（CSS の tontile・tontileR（ゆれる向きが1まいごとに左右こうご）と、おくれ --ti。下のはしを軸に、つぶれて、小さく左右にゆれる）。音は板が置かれる瞬間に */
+document.addEventListener('animationstart',e=>{if((e.animationName==='tontile'||e.animationName==='tontileR')&&!uiReduced())setTimeout(()=>sfx('tile'),65)});
+function tileStagger(root){if(!document.body.classList.contains('wd0')||uiReduced()||!root)return;const L=root.querySelectorAll('.mtile');let i=0;for(const b of L){if(i>=12)break;b.style.setProperty('--ti',(i*50)+'ms');b.classList.remove('utile');void b.offsetWidth;b.classList.add('utile');i++}}
 function tileWatch(){const b=document.getElementById('sheetBody');if(!b)return;new MutationObserver(()=>{const n=b.querySelectorAll('.mtile').length,k=n?n+'|'+(b.firstElementChild?b.firstElementChild.textContent.slice(0,20):''):0;if(k!==b._tileN){b._tileN=k;if(n)tileStagger(b)}}).observe(b,{childList:true})}/* 下のシートの中身がかわったときだけ */
 /* 草原：タブをかえると、中の板が、札をひっくり返すように、くるっとまわって中身がかわる（タブのならび .ctabs のあとの物。図鑑の本はのぞく） */
 document.addEventListener('click',e=>{const t=e.target&&e.target.closest&&e.target.closest('.ctabs .ctab');if(!t||!document.body.classList.contains('wd0')||uiReduced()||t.closest('.pxcard')||t.closest('.sheet[data-k="zukan"]'))return;
