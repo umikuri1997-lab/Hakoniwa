@@ -42,7 +42,7 @@ function toast(msg,kind){kind=kind||'';const box=$('#toasts');
   TOASTQ.push({msg,kind,n:1});toastNext()}
 const FEATS={inv:'#dockInv',build:'[data-mode="build"]',remove:'[data-mode="remove"]',craft:'[data-sheet="craft"]',people:'[data-sheet="people"]'};
 function applyFeats(){
-  if(S.glassT==null&&glassUnlocked())S.glassT=600;/* はじめの10分は無料 */$('#speedBtn').hidden=!(glassUnlocked()||TESTSPD||TESTM);if(!(hasGlass()||TESTM))S.speed=1;if(!TESTM&&S.speed>2)S.speed=1;glassUI();
+  if(S.glassT==null&&glassUnlocked())S.glassT=600;/* はじめの10分は無料 */$('#speedBtn').hidden=!(glassUnlocked()||TESTSPD||TESTM);if(!(hasGlass()||TESTM))S.speed=1;if(!TESTM&&S.speed>3)S.speed=1;glassUI();
   for(const k in FEATS)document.querySelector(k==='inv'?FEATS[k]:'#dock '+FEATS[k]).hidden=!S.feat[k]||k==='craft';/* 依頼は依頼ボードから。おそなえ箱は下のバーにも出す */
   document.querySelector('#dock [data-mode="bulk"]').hidden=true;/* 道具は「おく」の中からえらぶ（下のバーには出さない） *//* おそなえ箱のボタン */
   const n=[...document.querySelectorAll('#dock button')].filter(b=>!b.hidden).length;
