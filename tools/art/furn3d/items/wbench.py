@@ -5,7 +5,7 @@ from blueprint import Part as P
 from common import *
 ID='wbench';BOTTOM=64;GRAD=True
 VIEWS=[('wbench',0)]
-X0,X1,Y0,Y1=0.02,0.98,0.30,0.86;H=0.70;TT=0.08;LG=0.10;IN=0.05;AP=0.06;LZ=0.13;LT=0.05
+X0,X1,Y0,Y1=0.02,0.98,0.30,0.86;H=0.32;TT=0.08;LG=0.10;IN=0.05;AP=0.06;LZ=0.06;LT=0.05   # 天板の高さ0.32：せいれいの手（もの作りの動き）がとどく高さ
 def PARTS():
     L=[];xs=(X0+IN,X1-IN-LG);ys=(Y0+IN,Y1-IN-LG)
     for nx,x in zip('左右',xs):
@@ -25,10 +25,10 @@ def PARTS():
         y=Y0+k*(pw+g);L.append(P('天板%d'%(k+1),'box',(X0,y,H-TT,X1,y+pw,H),WOOD,on=('幕板（左）','幕板（右）'),bevel=0,note='幕板と脚の上にのせて、くぎでとめる'))
     # 万力：天板の左手前、天板のふちの下にあご板。鉄のねじと、まわす棒
     vx0,vx1=X0+0.10,X0+0.34
-    L.append(P('万力のあご板','box',(vx0,Y1+0.002,H-TT-0.12,vx1,Y1+0.05,H-0.004),WOOD,on=('天板3',),bevel=0,note='天板の手前のふちにそわせる'))
+    L.append(P('万力のあご板','box',(vx0,Y1+0.002,H-TT-0.06,vx1,Y1+0.05,H-0.004),WOOD,on=('天板3',),bevel=0,note='天板の手前のふちにそわせる'))
     cx=(vx0+vx1)/2
-    L.append(P('万力のねじ','box',(cx-0.015,Y1+0.05,H-TT-0.06,cx+0.015,Y1+0.10,H-TT-0.03),METAL,on=('万力のあご板',),bevel=0,note='あご板をつらぬく'))
-    L.append(P('万力の棒','box',(cx-0.09,Y1+0.085,H-TT-0.055,cx+0.09,Y1+0.105,H-TT-0.035),METAL,on=('万力のねじ',),bevel=0,note='ねじのはしにさす'))
+    L.append(P('万力のねじ','box',(cx-0.015,Y1+0.05,H-TT-0.045,cx+0.015,Y1+0.10,H-TT-0.015),METAL,on=('万力のあご板',),bevel=0,note='あご板をつらぬく'))
+    L.append(P('万力の棒','box',(cx-0.07,Y1+0.085,H-TT-0.04,cx+0.07,Y1+0.105,H-TT-0.02),METAL,on=('万力のねじ',),bevel=0,note='ねじのはしにさす'))
     return L
 
 TONE5=True   # かげは木と同じ5色（furntone。持ち主がきめた）
