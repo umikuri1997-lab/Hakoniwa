@@ -47,7 +47,7 @@ B.boxTick=()=>{if(isNight())return;const cap=boxCapTot(),tot=(()=>{let n=0;for(c
   if(!B.uc||B.ucD!==dayNo()){B.uc=B.usedMats();B.ucD=dayNo()}const Q=S.otakiQ||(S.otakiQ={});B.qneed={};{const q=QUESTS[S.quest];if(q&&FIELD_PREP&&FIELD_PREP[q.id])for(const id of (FIELD_PREP[q.id].build||{}).ids||[])Object.assign(B.qneed,(BL[id]||{}).mat||{})}
   for(const k in MATTRADE){const n=S.mat[k]||0,tr=MATTRADE[k],keep=tight?((k==='wood'||k==='stone')?99:(B.qneed&&B.qneed[k])||0):Math.max(5,B.uc[k]||0);if(tot<cap*.8)continue;if(n<keep+tr||Q[k])continue;const v=Math.floor((n-keep)/tr)*tr;if(v>0){rsvAdd({[k]:v});Q[k]=v;B.lg('OTAKI '+k+' '+v)}}
   const want=BOXL.length+1;if(B.have('crate')<want&&!B.ordered('crate')&&inv('crate')<1){if(recipeKnown('crate')&&(S.mat.wood||0)>=8){orderFurn('crate');if(B.ordered('crate'))B.lg('ORDER crate')}}
-  if(inv('crate')>0){const inRing=(x,y)=>x>41&&x<63&&y>42&&y<60;if(B.put('crate',51,51,inHouse)||B.put('crate',52,56,inRing))B.lg('PUT crate')}};
+  if(inv('crate')>0){const inRing=(x,y)=>x>41&&x<63&&y>42&&y<60;if(B.put('crate',51,51,crateIn)||B.put('crate',52,56,inRing))B.lg('PUT crate')}};
 /* サブクエスト：受けたものを、ぜんぶクリアしにいく */
 B.subTick=()=>{if(isNight())return;const st=S.subSt||{},done=S.subDone||{};
   for(const q of SUBQ){if(done[q.k]||st[q.k]!==2)continue;let ok=false;try{ok=q.ok&&q.ok()}catch(e){}if(ok)continue;const f=B.SUB[q.k];if(f){try{f(q)}catch(e){B.lg('sub err '+q.k+' '+e.message)}}else if(!B.subMiss||!B.subMiss[q.k]){(B.subMiss=B.subMiss||{})[q.k]=1;B.lg('SUB NOHANDLER '+q.k)}}};
@@ -105,10 +105,10 @@ B.tick=()=>{ if(!B.on||!S)return; try{
   const q=QUESTS[S.quest];if(q&&B.H[q.id])B.H[q.id](q);
   B.H._all();
 }catch(e){B.lg('BOT ERR '+e.message+' '+(e.stack||'').split('\n')[1])}};
-const H=B.H,inHouse=(x,y)=>x>=48&&x<=51&&y>=49&&y<=51,SR=()=>{const j=S.sacredRoot;return [j%W,(j/W)|0]};
+const H=B.H,inHouse=(x,y)=>x>=48&&x<=51&&y>=49&&y<=51,crateIn=(x,y)=>y===51&&x>=48&&x<=51/* 木箱は、家のいちばん下の列だけ（ドアの内がわ・家の中の通り道をふさがない。ふさぐと、せいれいが箱へ行けなくなる） */,SR=()=>{const j=S.sacredRoot;return [j%W,(j/W)|0]};
 B.plantAll=(id,nx,ny)=>{let n=0;while(inv(id)>0&&cnt('sprout')<10&&n++<10){if(!B.put(id,nx||58,ny||58))break}};
 B.sow=k=>{let n=0;for(let j=0;j<S.obj.length;j++){if(S.obj[j]!=='farm')continue;const d=S.dyn[j];if(!d||d.crop)continue;if(cseed(k)<1)break;place('seed:'+k,j%W,(j/W)|0);n++}return n};
-H.statue=()=>{if(RUINT>=0&&S.obj[RUINT]==='statueb')templeRuinTap(RUINT);else B.ensure('statue',1,54,57)};/* こわれた神殿を「しらべる」でタップ */H.stor=()=>B.ensure('crate',1,51,51,inHouse);H.mbox=()=>{};
+H.statue=()=>{if(RUINT>=0&&S.obj[RUINT]==='statueb')templeRuinTap(RUINT);else B.ensure('statue',1,54,57)};/* こわれた神殿を「しらべる」でタップ */H.stor=()=>B.ensure('crate',1,51,51,crateIn);H.mbox=()=>{};
 H.wall=()=>{for(const [x,y] of [[49,52],[50,52],[51,52]])if(!S.obj[y*W+x])place('hwall',x,y)};
 B.weave=n=>{/* はたおり機で、布を n こまで（はたおり機がなければ、置く・たのむ） */if(B.have('loom')<1){if(inv('loom')>0)B.put('loom',56,52);else if(!B.ordered('loom')&&recipeKnown('loom'))orderFurn('loom');return}const j=S.obj.indexOf('loom');if(j<0||(S.mat.nuno||0)+prCount(j)>=n)return;for(const k of GRASSKEYS){const c=Math.min(Math.floor((S.mat[k]||0)/3),n-(S.mat.nuno||0)-prCount(j),PROC.loom.cap-prCount(j));if(c>0){const Q=(S.prQ||(S.prQ={}))[j]||(S.prQ[j]={});rsvAdd({[k]:c*3});Q[k]=(Q[k]||0)+c*3;return}}};
 H.bed=()=>{if(houseBedCount()+inv('bed')+B.sites('bed')<1&&!B.ordered('bed'))B.weave(1);B.ensure('bed',1,48,49,inHouse)};

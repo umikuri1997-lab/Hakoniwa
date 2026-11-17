@@ -6,7 +6,7 @@ const assert=require('node:assert/strict');
     const f=S.res[0],out={};const a={id:901,k:'hane',h:-1,stray:1,x:f.x+3,y:f.y,face:1,wt:0};S.ani.push(a);
     const z0=cam.z,c0=[cam.x+VW/cam.z/2,cam.y+VH/cam.z/2];
     aniPop(a);out.meet=!!AMEET;out.paused=paused();out.noPopYet=!document.querySelector('.pxcard');
-    out.card=await wait(()=>!!document.querySelector('.anim-meet'),6000);out.zoomed=cam.z>z0;out.q=SCN.some(e=>e.k==='aniq');
+    let q=false;out.card=await wait(()=>{q=q||SCN.some(e=>e.k==='aniq');return !!document.querySelector('.anim-meet')},6000);out.zoomed=cam.z>z0;out.q=q||SCN.some(e=>e.k==='aniq');/* 「？」は、カードが出る前に消えることがあるので、待っているあいだに出たかを見る */
     const ov=document.querySelector('.anim-meet');out.text=ov?ov.textContent:'';out.pic=!!(ov&&ov.querySelector('canvas.ampic'));
     await new Promise(r=>setTimeout(r,900));ov&&ov.querySelector('button').click();out.met=!!(S.flags.aniMet||{}).hane;
     out.pop=await wait(()=>!!document.querySelector('.pxcard'),5000);out.popText=(document.querySelector('.pxcard')||{}).textContent||'';

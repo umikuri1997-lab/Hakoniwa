@@ -127,7 +127,7 @@ function spawnWave(list){SKIP=false;/* コワイノが来たら、早送りを�
   else if(list.includes('hino'))dialog(['火山のほうから、熱い風がふいてくる…！','「ヒノオオカゲ」が来るよ！ 熱の装置をねらってる！ みんなで追いはらって！'],null,null,LEAD());
   else if(list.filter(t=>t==='ash').length>=6)dialog(['空から、灰がふってきた…！','ハイカゲがたくさん来るよ！ かまどやベンチをまもって！'],null,null,LEAD());
   else if(list.includes('boss2'))dialog(WD===1?[[HOMURA,'守り神！ 山の上にのこってた影が、おりてくるよ…！'],[HOMURA,'今夜は「ヤマノオオカゲ」さ。みんな、気をつけな！']]:['守り神さま…！ いつもより、ずっと空気が重い…！','あれ……オオカゲより、ずっと大きい……！ みんな、家の中にかくれて！'],null,null,LEAD());
-  else if(list.includes('boss')&&!WD&&!S.flags.bossTold&&S.res.some(r=>r.name===POKO)){S.flags.bossTold=1;dialog([[POKO,'#worry|守り神さま…！ ……この感じ。空気が、ずっしり重い。'],[POKO,'#alarm big|「オオカゲ」……コワイノがあつまった大きな影が、来るんだ。'],[POKO,'#sigh|思い出すと、今でも足がすくむ……。'],[POKO,'#think|でも、もう、にげない。みんなで、朝まで守りきろう。']],null,null,LEAD())}
+  else if(list.includes('boss')&&!WD&&!S.flags.bossTold&&S.res.some(r=>r.name===POKO)){S.flags.bossTold=1;dialog([[POKO,'#worry|守り神さま…！ ……この感じ。空気が、ずっしり重い。'],[POKO,'#alarm big|「オオカゲ」……「コワイノ」があつまった大きな影が、来るんだ。'],[POKO,'#sigh|思い出すと、今でも足がすくむ……。'],[POKO,'#think|でも、もう、にげない。みんなで、朝まで守りきろう。']],null,null,LEAD())}
   /* 火山では、オオカゲが来ることは知らせない（草原で話したので、くりかえさない） *//* 草原は、はじめての夜のフタバの知らせだけ。2回目からは知らせない */
 }
 // 出現場所：マップの南のはし（いちばん下の行）から。水・障害物・明かりの中はさける
@@ -339,7 +339,7 @@ function gupMigrate(){/* 前は村レベルでチャージがみじかくなっ�
 function guardLight(e){PTW.q=true;if(LIGHTCD>0){toast('まもりの光は、あと'+Math.ceil(LIGHTCD/(S.speed||1))+'秒');return}if(S.pt<1){toast('パワーが足りません');return}S.pt-=1;LIGHTCD=lightCdMax();
   const D=EN[e.type],G=gupOf('stun'),gs=gupLv('stun');hurtEn(e,gupOf('pow').v[gupLv('pow')],{flash:8,k:'light'});/* 威力・とめる時間は、守り神のちから（GUP）の段階 */e.stun=D.boss?G.vb[gs]:G.v[gs];e.path=[];e.repath=0;
   const cx=e.x*TS,cy=e.y*TS-18;fxSpr('godlight',cx,cy);skillFx('light');sfxAt('shoot',e.x,e.y);
-  if(e.hp<=0)return defeat(e,'守り神の光で'+D.name+'を追いはらった！')}
+  if(e.hp<=0)return defeat(e,'まもりの光で'+D.name+'を追いはらった！')}
 let AREACD=0,AREAARM=false;/* こもれびのまもり（フタバから受けついだ守り神の技）：タップした場所のまわりのせいれいに、葉のまもり・パワー3。まわりのマス・葉のまもりの時間・チャージは GUP の area */
 function areaBlast(cx,cy){
   const A=gupOf('area'),ga=gupLv('area'),L=S.res.filter(r=>!r.hidden&&Math.hypot(r.x-cx,r.y-cy)<=A.r[ga]);

@@ -405,8 +405,11 @@ function bambooIdea(){/* はじめて竹を手に入れたら、竹の家具を�
 function useNat(j){const o=S.obj[j];if(!o)return;const n=(S.hp['n'+j]||0)+1;if(n<(o==='boulder'?4:10)){S.hp['n'+j]=n;return}
   delete S.hp['n'+j];const x=j%W,y=(j/W)|0;if(o==='boulder'){clearObj(j);burst(j,'block');recount();checkQuest();return}if(!VILL[j]&&!(S.dyn[j]&&S.dyn[j].vg))(S.regrow||(S.regrow=[])).push({j,id:o,day:dayNo()+3})/* 3日後の朝に生えなおす（毎朝ふえた鉱脈は、生えなおさない） */;clearObj(j);burst(j,'block');recount()}
 function ovenStand(G,q){let b=-1,bd=1e9;for(const[k,pen]of[[q-1,0],[q+1,0],[q+W,2],[q-W,40]]){const d=G.dist[k];if(d<0||!walk(k))continue;if(d+pen<bd){bd=d+pen;b=k}}return b}
-function goStoreMat(r,G){const ks=cmatKeys(r),j=nearest(G,j=>putAdj(j,ks)>=0,200);if(j>=0)return startAct(r,G,'smat',j);if(evIn(r)&&evAct(r,G))return;/* しまう所がないときは、イベントを先に */return startAct(r,G,'idle',-1,{dur:15})}
-function goStore(r,G){const ks=carryKeys(r),j=nearest(G,j=>putAdj(j,ks)>=0,90);if(j>=0)return startAct(r,G,'store',j);if(evIn(r)&&evAct(r,G))return;/* しまう所がないときは、イベントを先に */return startAct(r,G,'idle',-1,{dur:15})}
+let BOXFAR=0;/* 「箱へ行けません」を知らせた（セーブしない。しまえたら、また知らせる） */
+function boxFarNote(G,ks){/* 空きのある箱はあるのに、どの箱へも歩いて行けないとき、1回だけ知らせる（ドアの内がわを物でふさいだ など） */
+  if(BOXFAR||IS_STORY_REPLAY||MEMRUN||!BOXL.some(k=>ks.some(key=>boxRoom(k,key)>0)))return;if(nearest(G,j=>putAdj(j,ks)>=0,1e9)>=0)return;BOXFAR=1;toast('箱へ行けません','warn')}
+function goStoreMat(r,G){const ks=cmatKeys(r),j=nearest(G,j=>putAdj(j,ks)>=0,200);if(j>=0){BOXFAR=0;return startAct(r,G,'smat',j)}boxFarNote(G,ks);if(evIn(r)&&evAct(r,G))return;/* しまう所がないときは、イベントを先に */return startAct(r,G,'idle',-1,{dur:15})}
+function goStore(r,G){const ks=carryKeys(r),j=nearest(G,j=>putAdj(j,ks)>=0,90);if(j>=0){BOXFAR=0;return startAct(r,G,'store',j)}boxFarNote(G,ks);if(evIn(r)&&evAct(r,G))return;/* しまう所がないときは、イベントを先に */return startAct(r,G,'idle',-1,{dur:15})}
 function goEatSafe(r,any){/* コワイノのすぐそばを通らずに行けて、家の中・柵や壁でかこまれた所（コワイノが中にいない）・コワイノから4マス以上はなれた所の箱へ、走って食べにいく */if(!(S.food>0))return false;const Gf=fleeGraph(r),fo=fenceOut(),al=S.enemies.filter(e=>e.spawned&&!e.dead),encl=al.every(e=>fo[(e.y|0)*W+(e.x|0)]),safe=j=>!!roomOf(j)||(encl&&!fo[j])||!al.some(e=>Math.hypot(e.x-(j%W+.5),e.y-(((j/W)|0)+.5))<(encl?4:8));/* 柵がやぶられて中にコワイノがいるときは、8マスはなれた所だけ */
   const j=nearest(Gf,j=>(any||safe(j))&&eatAdj(j)>=0,200);if(j<0)return false;r.refill=S.t+60;startAct(r,Gf,'fetch',j,{run:true});return !!r.act}
 const hungry=r=>r.hunger<500&&S.food>0&&!(r.noEatU>S.t);/* おなかが50より少なく、食べにいける（どんなときも、食べにいく） */
