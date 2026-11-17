@@ -196,22 +196,23 @@ function drawHandItem(c,cx,cy,D,it){/* 手に持つ小物（1ドット＝ゲー�
   if(it==='stone'){R(-2,-1,4,3,'#c4beb1');R(-1,-2,2,1,'#c4beb1');R(-2,1,4,1,'#9c968a');R(-1,-1,1,1,'#ece8de')}
   else if(it==='hstone'){R(-2,-2,2,2,'#d9c4c2');R(0,-2,2,2,'#d9c4c2');R(-2,0,4,1,'#c9b2b0');R(-1,1,2,1,'#b39b99');R(-2,-2,1,1,'#f0e4e2')}
   else if(it==='water'){R(-2,-2,4,4,'#c9a27a');R(-2,-2,4,1,'#9fd3ef');R(-1,-2,1,1,'#d8f0fb');R(-2,1,4,1,'#a57f5a')}}
-function drawCrown(c,cx,cy,D,n,rx,ry){/* 1ドット＝ゲームの1ドット（チップの2ドット）。つながった葉の輪（奥はこい緑）に、十字の5ドットの花（まん中・花びら・下の花びらはかげ）。n は7で一周（あんでいるとちゅうは少ない） */
+function drawCrown(c,cx,cy,D,n,rx,ry,pt){/* pt：'b' は奥の半分だけ（頭より先に描いて、頭にかくす）・'f' は手前の半分だけ。1ドット＝ゲームの1ドット（チップの2ドット）。つながった葉の輪（奥はこい緑）に、十字の5ドットの花（まん中・花びら・下の花びらはかげ）。n は7で一周（あんでいるとちゅうは少ない） */
   const g=2*D;n=n==null?7:Math.min(7,n);rx=rx||11;ry=ry||3;const fr=n/7,A0=Math.PI/2,R=(x,y,col)=>{c.fillStyle=col;c.fillRect(cx+x*g,cy+y*g,g,g)},seen=new Set(),band=[];
   for(let k=0;k<=96*fr;k++){const a=A0+Math.PI*2*k/96,x=Math.round(Math.cos(a)*rx),y=Math.round(Math.sin(a)*ry);if(!seen.has(x+','+y)){seen.add(x+','+y);band.push([x,y])}}
   const fl=[];for(let k=0;k<10;k++){if(k/10>=fr)break;const a=A0+Math.PI*2*(k+.5)/10;fl.push([Math.round(Math.cos(a)*rx),Math.round(Math.sin(a)*ry),k])}
   const flower=([x,y,k])=>{const col=k%4,P=y<0?CROWNFD[col]:CROWNF[col];R(x-1,y,P);R(x+1,y,P);R(x,y-1,P);R(x,y+1,CROWNFD[col]);R(x,y,col===2?'#fff4ee':'#f6dc7a')};
-  for(const[x,y]of band)if(y<0)R(x,y,'#5e9a3e');for(const f of fl)if(f[1]<0)flower(f);/* 奥の半分 */
-  for(const[x,y]of band)if(y>=0)R(x,y,y>0?'#8fcf6a':'#6fae52');for(const f of fl)if(f[1]>=0)flower(f)}/* 手前の半分 */
+  if(pt!=='f'){for(const[x,y]of band)if(y<0)R(x,y,'#5e9a3e');for(const f of fl)if(f[1]<0)flower(f)}/* 奥の半分 */
+  if(pt==='b')return;for(const[x,y]of band)if(y>=0)R(x,y,y>0?'#8fcf6a':'#6fae52');for(const f of fl)if(f[1]>=0)flower(f)}/* 手前の半分 */
 const WHAND={cookprep:{s:30,dy:-6},cookplate:{s:28,at:'tip',dy:-8},cookfry:{s:22,at:'tip',dy:-6},raise:{s:36,dy:0}};/* 手に持つ物の大きさ・場所（at:'tip' は道具の先。raise は頭の上） */
 function spmDraw(c,el,x,y,s,f,o,nm,t,back,tr,spr,D){/* 3Dの動きの1コマを描いて、目・ほっぺ・まつげをかさね、その上に、ずきん・顔の手前にある、うで・手・道具（G[4]・G[5]）をかさねる */
   const m=SPM[nm],G=m.g[el];if(!G)return false;const dir=back?2:tr?1:0,ph=m.r==='ph'?(o.ph==null?0:o.ph):((t*m.r)%1+1)%1,i=Math.floor(ph*m.n)%m.n,cell=spmCell(nm,el,o.vr,dir,i);if(!cell)return false;
   const vr=o.vr,e=m.e[el][dir][i];c.save();c.translate(x,y);c.scale(s*f,s);const sm=c.imageSmoothingEnabled;c.imageSmoothingEnabled=false;
+  const cwx=((tr?-4:0)+e[0])*D,cwy=((CROWNY[el]||-66)+e[1])*D;if(o.crown&&e[2]<2)drawCrown(c,cwx,cwy,D,null,0,0,'b');/* 花かんむりの奥の半分は、頭より先（頭にかくれる） */
   c.drawImage(cell[0],cell[1],cell[2],G[0],G[1],G[2]*D,G[3]*D,G[0]*D,G[1]*D);
   if(e[2]<2){const S2=e[2]===1?'S':'',md=o.mood==='cry'?'teary':o.mood||'',fm=o.blink&&!md?'shut':md==='smile'||md==='joy'||md==='eat'?'hap':['teary','tear','shock','strain','sad','brave','tired','hungry'].includes(md)?md:'n',ex=e[0]*D,ey=e[1]*D+(el==='wind'?-3*D:0);
     if(e[3]){c.scale(-1,1)}
     if(vr&&vr.cheek)spr('sp:cheek'+S2,e[3]?-ex:ex,ey);spr('sp:face'+S2+'#'+fm,e[3]?-ex:ex,ey);if(vr&&vr.lash&&fm!=='strain')spr('sp:lash'+S2+'#'+fm,e[3]?-ex:ex,ey)
-    if(e[3])c.scale(-1,1);if(o.crown)drawCrown(c,((tr?-4:0)+e[0])*D,((CROWNY[el]||-66)+e[1])*D,D);if(G[5]){const ov=spmCell(nm,el,vr,dir+3,i);if(ov)c.drawImage(ov[0],ov[1],ov[2],G[0],G[5],G[2]*D,(G[3]+G[4])*D,G[0]*D,G[5]*D)}}/* 目の上に、手前のうで・手・道具をもう1回 */
+    if(e[3])c.scale(-1,1);if(o.crown)drawCrown(c,cwx,cwy,D,null,0,0,'f');if(G[5]){const ov=spmCell(nm,el,vr,dir+3,i);if(ov)c.drawImage(ov[0],ov[1],ov[2],G[0],G[5],G[2]*D,(G[3]+G[4])*D,G[0]*D,G[5]*D)}}/* 目の上に、手前のうで・手・道具をもう1回 */
   const h=m.h[dir][i];/* 手前の手・奥の手・道具の先（チップのドット） */
   if(o.handItem&&!o.crownHand&&dir!==2){const hx=(h[0]+h[2])/2*D,hy=(h[1]+h[3])/2*D;drawHandItem(c,hx+(dir===1&&nm==='offer2'?6*D:0),hy-2*D,D,o.handItem)}/* 手に持つ小物：両手のあいだ（さしだすときは前へ） */
   if(o.crownHand){const hx=(h[0]+h[2])/2*D,hy=(h[1]+h[3])/2*D;if(nm==='crownput'&&dir===1)drawCrown(c,hx+14*D,hy-6*D,D,o.crownN,8,3);else drawCrown(c,hx,hy-2*D,D,o.crownN,8,3)}/* 手に持つ花かんむり：両手のあいだ（のせるときは、前へさしだした所） */
@@ -274,6 +275,7 @@ function drawSpiritDot(c,el,x,y,s,f,o){
   // 頭巾だけ属性ごと。顔の丸は共通（風の子は頭巾のかわりに、まるい頭とつる）。小さく動く所（頭巾の先・芽・火の玉・つる）は別のパーツ
   const H=TUNE.head,hs=tr&&!back?'S':'',hp=(lx,ly)=>[(hs?-TUNE.sHoodX+lx*TUNE.sHead:lx)*H,-30*TUNE.bodyH+H*(ly+36)],/* 頭の中の位置→体の位置 */
     rot=(k,lx,ly,a)=>{const[px,py]=hp(lx,ly);c.save();c.translate(px,py);c.rotate(a);c.translate(-px,-py);spr(k);c.restore()},dd=v=>Math.round(v*H*.87)*D;
+  if(o.crown&&!o.bed)drawCrown(c,tr?-4*D:0,(CROWNY[el]||-66)*D,D,null,0,0,'b');/* 花かんむりの奥の半分は、頭巾より先（頭にかくれる） */
   if(el==='wind'){const[px,py]=[(back?1:-1)*tr*4*H,-30*TUNE.bodyH+H*(-79+36)];c.save();c.translate(px,py);c.rotate(Math.sin(t*2)*.15);c.translate(-px,-py);spr(E0+'vine'+hs);c.restore()}
   spr(E0+'hood'+hs);
   if(el==='wood'||el==='fire'){const v=dd(Math.sin(t*(el==='fire'?7:2.2))*(el==='fire'?2.5:1.4));spr(E0+'tip'+hs,v,0)}/* 頭巾の先が左右にゆれる */
@@ -287,7 +289,7 @@ function drawSpiritDot(c,el,x,y,s,f,o){
     if(vr&&vr.cheek)spr('sp:cheek'+S,0,fy);
     spr('sp:face'+S+'#'+fm,0,fy);
     if(vr&&vr.lash&&fm!=='strain')spr('sp:lash'+S+'#'+fm,0,fy)}/* まつげは、表情ごとの目に合わせた絵 */
-  if(o.crown&&!o.bed)drawCrown(c,tr?-4*D:0,(CROWNY[el]||-66)*D,D);/* 花かんむり（頭といっしょにうごく） */
+  if(o.crown&&!o.bed)drawCrown(c,tr?-4*D:0,(CROWNY[el]||-66)*D,D,null,0,0,'f');/* 花かんむりの手前の半分（頭といっしょにうごく） */
   c.restore();
   if(bothF)armD(farA,aA(farA));if(frontArm)armD(-farA,aA(-farA));
   if(sitF){const si=soleImg(el,vr);if(si)for(const sx of[-1,1]){c.save();c.translate(sx*9*D,(-SITF-12)*D);c.scale(-sx,1);c.drawImage(si,-7*D,0,15*D,16*D);c.restore()}}/* 足のうら：左右で鏡うつし（つまさきが外がわ） */
