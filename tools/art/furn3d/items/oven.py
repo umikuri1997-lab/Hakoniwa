@@ -17,7 +17,7 @@ from common import *
 import math
 from shapely.geometry import Polygon,box as sbox,Point
 from shapely.ops import unary_union
-ID='oven';BOTTOM=43;GRAD=True;FRAMES=8
+ID='oven';BOTTOM=43;GRAD=True;FRAMES=8;TREESHADE=True   # かげは木の幹と同じ付け方（持ち主がきめた）
 BEV=0.02   # 石・レンガの角の面取り
 VIEWS=[('oven',0)]
 PFIRE=[(0.50,0.90-0.12-0.03,0.05,0.30,0.10,90,5,{'smoke':False,'sparks':False})]   # 粒の火（火のへやの中、まきの上）

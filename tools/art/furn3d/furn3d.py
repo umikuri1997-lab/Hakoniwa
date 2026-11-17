@@ -48,7 +48,13 @@ def scene(M,k,only=None,filt=None,foot=None):
     sc.texture(None)
     if foot is None:V=np.array([v for t in sc.t for v in t[:3]]);foot=(V[:,0].min(),V[:,1].min(),V[:,0].max(),V[:,1].max())
     sc.turn(k,foot);sc.foot=foot;return sc,keep
+TREET=([(-0.62,-0.56),(0.47,0.52),(0.60,0.66),(0.84,0.90)],[(-28,8),(-15,4),0,(10,-4),(19,-8)])   # 木の幹と同じかげ（natcommon.tone5）：色は5つ（こいかげ・かげ・もとの色・ハイライト2つ）、さかいめは あみ
+TREELIGHT=(-0.6,0.5,0.8)   # 光は左上・手前から（木・コワイノと同じ）
 def shot(M,k,only=None,S_=64,filt=None,info=None):
+    if getattr(M,'TREESHADE',False) and not getattr(M,'_ts',False):   # TREESHADE=True：木の幹と同じかげの付け方（料理の家具など）
+        sv=(O.DITHER,O.DITHERT,O.LIGHT,O.GRAD);O.DITHER=1;O.DITHERT=getattr(M,'TREET',TREET);_l=np.array(TREELIGHT,float);O.LIGHT=_l/np.linalg.norm(_l);O.GRAD=True;M._ts=True
+        try:return shot(M,k,only,S_,filt,info)
+        finally:O.DITHER,O.DITHERT,O.LIGHT,O.GRAD=sv;M._ts=False
     sc,keep=scene(M,k,only);V=np.array([v for t in sc.t for v in t[:3]])   # 見え方（中心・はんい）は、いつも、ぜんぶの部品からきめる（動く部品と本体の絵の場所をそろえる）
     if filt:sc,keep=scene(M,k,only,filt,foot=sc.foot)   # まわす中心も、ぜんぶの部品の床の範囲で
     c=getattr(M,'CENTER',None) or ((V[:,0].min()+V[:,0].max())/2,(V[:,1].min()+V[:,1].max())/2,V[:,2].max()/2)   # CENTER：見え方の中心をきめる（中身のちがう絵どうしで、台の写り方をそろえる）

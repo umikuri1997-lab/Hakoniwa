@@ -7,7 +7,7 @@
 from blueprint import Part as P
 from common import *
 def MT(p):p.metal=True;return p
-ID='cooktable';BOTTOM=45
+ID='cooktable';BOTTOM=45;TREESHADE=True   # かげは木の幹と同じ付け方（持ち主がきめた）
 VIEWS=[('cooktable',0),('cooktable>1',1),('cooktable>2',2)]   # 前・右・後ろ（左は右の反転）
 X0,X1,Y0,Y1=0.03,0.97,0.30,0.88;PS=0.07;H=0.54;TT=0.06;BW=0.04
 def PARTS():
