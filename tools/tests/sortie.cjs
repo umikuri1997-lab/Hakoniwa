@@ -6,10 +6,11 @@ const assert=require('node:assert/strict');
     const before=fighter(h);S.flags.sortie=1;h.sortie=true;const after=fighter(h);
     S.enemyOn=true;S.t=1440*2+23.5*60;S.nightHad=1;
     const out={before,after};
-    for(const el of ['wood','earth','wind','water']){h.elem=el;h.fatk=0;endAct(h);h.act=null;
+    for(const el of ['wood','earth','wind','water']){h.elem=el;h.gv=(h.gv||0)+1;h.fatk=0;endAct(h);h.act=null;
       const e={id:900,type:'basic',x:h.x+1.0,y:h.y,hp:EN.basic.hp,max:EN.basic.hp,spawned:true,path:[]};S.enemies=[e];const hp0=e.hp;
       for(let i=0;i<200;i++){S.t+=.05;e.x=h.x+1.0;e.y=h.y;updRes(h,.05)}
       out[el]={dmg:hp0-e.hp,stun:e.stun||0}}
+    {h.elem='water';h.gv=(h.gv||0)+1;const e={type:'basic'},b={type:'boss'},a0=Math.round(rMul(h,'atk')*100);out.ws={a0,s0:waterStop(h,e)};const sv=h.sst;h.sst=Object.assign({},sv,{atk:((sv&&sv.atk)||0)+20});h.gv=(h.gv||0)+1;out.ws.a1=Math.round(rMul(h,'atk')*100);out.ws.s1=waterStop(h,e);out.ws.b1=waterStop(h,b);h.sst=sv;h.gv++}/* 止める時間：1分＋攻撃力1につき30秒（時計の1分は1.5）、オオカゲなどは半分 */
     out.hit=!!S.flags.sortieHit;
     /* 火のせいれいが見張り台：延焼・矢2本 */
     h.elem='fire';h.sortie=false;out.fireFighter=fighter(h);
@@ -21,7 +22,7 @@ const assert=require('node:assert/strict');
     return JSON.stringify(out)})()`));
   console.log(r);
   assert.equal(r.before,false,'not learned: non-fire does not fight');assert.equal(r.after,true);
-  assert(r.wood.dmg>0&&r.earth.dmg>0&&r.wind.dmg>0,'non-fire melee damages');assert.equal(r.water.dmg,0,'water no damage');assert(r.water.stun>=3,'water stops');
+  assert(r.wood.dmg>0&&r.earth.dmg>0&&r.wind.dmg>0,'non-fire melee damages');assert.equal(r.water.dmg,0,'water no damage');assert.equal(r.water.stun,r.ws.s0,'water stops');assert.equal(r.ws.s0,1.5+r.ws.a0*.75);assert.equal(r.ws.a1,r.ws.a0+20);assert.equal(r.ws.s1,r.ws.s0+15,'atk+20 -> +10 min');assert.equal(r.ws.b1,r.ws.s1/2,'boss half');
   assert.equal(r.hit,true,'quest flag');assert.equal(r.fireFighter,false);
   assert.equal(r.arrows,8,'fire on tower uses 2 arrows');assert.equal(r.brn,3,'burn applied');assert.equal(r.burnDmg,9,'burn 3x3');assert.equal(r.brnLeft,0);
   /* 夜は切りかえられない */
