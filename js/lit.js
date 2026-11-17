@@ -31,7 +31,7 @@ const LGL={ok:false};{try{const c=document.createElement('canvas'),g=c.getContex
 void main(){bool br=v.x>=.5;vec2 u=vec2(fract(v.x*2.),v.y);vec4 n=texture2D(N,u);vec3 f=vec3(1.);
  if(n.a>.01){vec3 nn=normalize(mix(vec3(0.,0.,1.),n.rgb*2.-1.,n.a));
   const vec3 V=vec3(0.,.6247,.7809);/* カメラを向いた面（もとの絵の明るさ）を基準にする */
-  if(Sk>0.){float d=dot(nn,Ls)-dot(V,Ls);f*=1.+Sk*d*(d>0.?Sc:vec3(.92,.96,1.08));}
+  if(Sk>0.){float d=dot(nn,Ls)-dot(V,Ls);f*=d>0.?1.+Sk*d*Sc:1.+Sk*.5*max(d,-.6)*vec3(.92,.96,1.08);/* そむけた面は、くらくしすぎない */}
   if(Ln>0.){vec2 P=vec2(u.x,1.-u.y)*R;float ws=0.,rs=0.;
    for(int i=0;i<${LITMAX};i++){if(float(i)>=Ln)break;vec4 q=L[i];vec2 dd=(q.xy-P)/Kz;float r=length(dd);if(r>q.z)continue;float w=1.-r/q.z;vec3 ld=normalize(vec3(dd.x,max(dd.y,0.),q.w));/* 画面で上にある明かりは、奥ではなく高い所とみる */ws+=w;rs+=w*mix(1.,clamp((dot(nn,ld)+.5)/(dot(V,ld)+.5),.6,1.6),clamp(r/14.,0.,1.));}
    if(ws>0.)f*=mix(1.,rs/ws,clamp(ws*1.5,0.,1.));}}
