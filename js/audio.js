@@ -231,6 +231,8 @@ case'bossKO':noise(t,.5,.3,o,200);tone(70,t,1.4,'sine',.2,o,30);tone(900,t,.35,'
   case'catch':playS('catch',.35);break;
   case'bubble':playS('bubble',.35);break;
   case'box':playS('box',.8);break;
+  case'put':playU('knockw',.55,.9);break;/* 箱などに置く：ことっ */
+  case'take':playU('cloth',.5,1.05);break;/* 箱などから取る：ごそっ */
   case'cookfire':playSeg('fire',.55,2.5);break;/* 焚き火・かまど：ぱちぱち（長い音のどこかを2.5秒） */
   case'door':playS('door',.25);break;
   case'wave':playWave(.2);break;
