@@ -189,7 +189,8 @@ const BL={
   plot:{name:'耕す前の畑',job:1,dyn:1},
   sprout:{name:'植える場所',job:1,dyn:1},
   site:{name:'建てている場所',job:1,dyn:1,solid:1},
-  wbench:{name:'作業台',job:1,dyn:1,solid:1},/* 依頼のあいだだけ、依頼ボードのそばに出る（S.dyn[j].order、build.js の wbenchPut） */
+  wbench:{name:'作業台',job:1,dyn:1,solid:1},
+  matyard:{name:'材料置き場',job:1,dyn:1,solid:1},/* 素材を運ぶ依頼・建てる所・設計図のとなりに出る（S.dyn[j].yt、build.js の yardTick）。絵は運んだわりあいで matyard#0〜3 *//* 依頼のあいだだけ、依頼ボードのそばに出る（S.dyn[j].order、build.js の wbenchPut） */
 
   'seed:mugi':{name:'こむぎのたね',kind:'seed',desc:'2日で育つ。食料+1。パンの材料'},'seed:tomato':{name:'キャベツのたね',kind:'seed',desc:'2日で育つ。食料+1'},'seed:imo':{name:'いものたね',kind:'seed',desc:'3日で育つ。食料+2'}
 };

@@ -15,7 +15,8 @@ const assert=require('node:assert/strict');
     const run=(n,cond)=>{for(let i=0;i<n;i++){S.food=100;f.hunger=hMax(f);f.energy=100;f.fun=100;if(hour()>=19||hour()<7)S.t=(Math.floor(S.t/1440)+1)*1440+7*60;stepWorld(.1);if(cond())return i}return -1};
     out.treeAt=run(20000,()=>S.obj[(y0+1)*W+x0+2]!=='ntree');
     out.floorFirst=e.ps.filter(p=>p.t==='floor').every(p=>p.s>=1)&&e.ps.filter(p=>p.t!=='floor').every(p=>p.s===0);
-    out.doneAt=run(120000,()=>!S.bp.length);
+    yardTick();out.yards=S.obj.filter(o=>o==='matyard').length;out.yardIn=e.cells.includes(yardAt('b'+e.id));out.ySt=[];{let last=-1;run(120000,()=>{const st=yardStage('b'+e.id);if(st!==last){out.ySt.push(st);last=st}return st===3||!S.bp.length})}/* 材料置き場は設計図ごとに1つ、建てる所の外。運ぶと絵がかわる */
+    out.doneAt=run(120000,()=>!S.bp.length);yardTick();out.yardsEnd=S.obj.filter(o=>o==='matyard').length;
     const fl=e.ps.filter(p=>p.t==='floor');out.floors=fl.every(p=>S.floor[p.j]==='floor');
     out.walls=e.ps.filter(p=>p.t==='wall'||p.t==='win').every(p=>S.obj[p.j]==='hwall');out.door=e.ps.filter(p=>p.t==='door').every(p=>S.obj[p.j]==='door');
     out.win=e.ps.filter(p=>p.t==='win').every(p=>S.win&&S.win[p.j]===1);
@@ -30,6 +31,7 @@ const assert=require('node:assert/strict');
   assert.ok(r.treeAt>=0,'tree cleared first');assert.ok(r.doneAt>=0,'house finished');
   assert.equal(r.floors,true);assert.equal(r.walls,true);assert.equal(r.door,true);assert.equal(r.win,true);assert.equal(r.bed,true);assert.equal(r.bedOwn,true,'giver uses the bed');
   assert.equal(r.house,true,'it is a house');assert.equal(r.name,'ちいさなおうち');assert.ok(r.comfDiff>=9&&r.comfDiff<=11,'comfort +10: '+r.comfDiff);assert.equal(r.done,1);
+  assert.equal(r.yards,1,'設計図の置き場は1つ');assert.equal(r.yardIn,false,'置き場は建てる所の外');assert.ok(r.ySt.includes(1)&&r.ySt.includes(2),'運ぶと置き場の絵がかわる: '+r.ySt);assert.equal(r.yardsEnd,0,'できたら置き場はかたづく');
   /* とちゅうでやめる */
   const c=JSON.parse(await run(`(()=>{const f=S.res[0];let x0=-1,y0=-1;for(const[ox,oy]of[[10,2],[-12,2],[3,-10],[3,9],[-12,-10]]){const X=(f.x|0)+ox,Y=(f.y|0)+oy;for(let y=Y;y<Y+5;y++)for(let x=X;x<X+5;x++){const j=y*W+x;if(S.obj[j]==='site'||(S.bp||[]).some(e=>e.cells.includes(j)))continue;S.obj[j]='';delete S.ref[j];delete S.dyn[j];S.floor[j]='';S.ground[j]=0;if(S.hi)S.hi[j]=0;if(S.fog)S.fog[j]=0}recount();if(bpCheck('mono',X,Y)[0]){x0=X;y0=Y;break}}
     S.mat.wood=(S.mat.wood||0)+80;S.mat.funba=(S.mat.funba||0)+10;boxSync();bpGive('mono',null);const i=S.bpInv.findIndex(q=>q.k==='mono');S.t=Math.floor(S.t/1440)*1440+1440+9*60;askBp(i,x0,y0);const why=$('#confirmTxt').textContent;confirmYes();
