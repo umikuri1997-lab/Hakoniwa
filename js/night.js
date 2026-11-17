@@ -176,7 +176,7 @@ const ZURA={/* クリア後に図鑑で読める「もとのすがた」（STORY
 const HIT_LAG=150,SHOT_LAG=300,HIT_STOP=70,KO_HOLD=180;/* ミリ秒。火のせいれいがふりはじめてから当たるまで・矢がとどくまで・当たった瞬間に止まる長さ・たおれる前に白く止まる長さ */
 const DMGN=[],SPKS=[],HITV=new WeakMap(),ATKV=new WeakMap();/* 数字・火花・たたかれた時刻と向き・たたいた時刻と向き */
 /* コワイノへのダメージは、ここを通す：整数にして体力をへらし、数字・火花・のけぞりを出す。o：lag 当たるまで・sx,sy たたいた所・flash 光る長さ・keep 光らせない・nokb のけぞらない */
-function hurtEn(e,dmg,o){o=o||{};if((o.k==='trap'||o.trap)&&typeof pathA==='function')dmg+=pathA('trap');/* むらのちから：罠のダメージ */dmg=Math.max(1,Math.round(dmg*armorMul(e,o)*weakMul(e,o)));/* 弱点の属性 o.el（defense.js） *//* ヨロイカゲ：o.dt（arrow・fire・poison・burn） */e.hp-=dmg;if(e.hp>0)bossPhase(e);/* オオカゲの段階（defense.js） */if(!o.keep)e.flash=o.flash||6;hitFx(e,dmg,Object.assign({big:dmg*4>=e.max},o));return dmg}
+function hurtEn(e,dmg,o){o=o||{};if((o.k==='trap'||o.trap)&&typeof pathA==='function')dmg+=pathA('trap');/* むらのちから：罠のダメージ */dmg=Math.max(1,Math.round(dmg*armorMul(e,o)*weakMul(e,o)));/* 弱点の属性 o.el（defense.js） *//* ヨロイカゲ：o.dt（arrow・fire・poison・burn） */e.hp-=dmg;if(e.hp>0)bossPhase(e);/* オオカゲの段階（defense.js） */if(!o.keep)e.flash=e.fl0=o.flash||6;/* いたがるコマは、この時間の半分で出す（e.fl0） */hitFx(e,dmg,Object.assign({big:dmg*4>=e.max},o));return dmg}
 function hitFx(t,n,o){o=o||{};n=Math.max(1,Math.round(n));/* 画面の数字には小数点を出さない */const en=!!(t.type&&EN[t.type]),z=en?EN[t.type].size:1,now=performance.now()+(o.lag||0);let dx=0,dy=0;if(o.sx!=null){dx=t.x-o.sx;dy=t.y-o.sy;const l=Math.hypot(dx,dy)||1;dx/=l;dy/=l}
   if(!o.nokb)HITV.set(t,{t:now,dx,dy});
   const lift=typeof uLift==='function'?uLift(t):0,near=DMGN.filter(d=>d.who===t&&Math.abs(d.t0-now)<260).length;/* つづけて当たった数字は、上へずらす */
@@ -234,7 +234,7 @@ function updEnemy(e,dt){
   if(e.stun>0){e.stun-=dt;return}if(e.rest>0){e.rest-=dt;return}
   e.slow=e.slowU>S.t?.5:1;/* おそくする（そうび） */{const tj=(e.y|0)*W+(e.x|0),to=S.obj[tj];if(to!=='puddle')e.slipJ=-1;/* 水たまりから出たら、つぎにふんだとき、またすべる */if(to&&BL[to]&&BL[to].trap){e.busyT=S.t;const cd=S.trapCd||(S.trapCd={}),rdy=!(cd[tj]>S.t);
     if(to==='spike'){e.spk=(e.spk||0)+dt;if(e.spk>=15){e.spk-=15;hurtEn(e,5,{flash:4,k:'trap'});sfxAt('spike',e.x,e.y)}/* とげの罠：10分（15）ごとに5ダメージ */if(e.hp<=0)return defeat(e,EN[e.type].name+'をとげの罠で追いはらった！')}
-    else if(to==='sticky'){if(!(e.poi>0)){e.poi=6;e.poT=0;e.flash=4;sfxAt('poison',e.x,e.y);fxSpr('poison',e.x*TS,e.y*TS)}}/* どく：みどりのあわ（tools/fx-trap.py） */
+    else if(to==='sticky'){if(!(e.poi>0)){e.poi=6;e.poT=0;e.flash=e.fl0=4;sfxAt('poison',e.x,e.y);fxSpr('poison',e.x*TS,e.y*TS)}}/* どく：みどりのあわ（tools/fx-trap.py） */
     else if(to==='puddle'&&e.slipJ!==tj){e.slipJ=tj;e.stun=D.boss?3:15;e.path=[];sfxAt('bonk',e.x,e.y);fxSpr('slip',e.x*TS,e.y*TS);return}/* すべる：水しぶきと星（tools/fx-trap.py） */
     else if(to==='firetrap'&&rdy){cd[tj]=S.t+180;const fx0=tj%W,fy0=(tj/W)|0;for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++)burstAt(fx0+dx+.5,fy0+dy+.5,'furn');sfxAt('cookfire',e.x,e.y);for(const o of S.enemies||[]){if(o===e||o.dead||!o.spawned||Math.abs((o.x|0)-fx0)>1||Math.abs((o.y|0)-fy0)>1)continue;hurtEn(o,fireTrapDmg(),{trap:1,flash:8,sx:fx0+.5,sy:fy0+.5,dt:'fire'});if(o.hp<=0)defeat(o,EN[o.type].name+'をほのおの罠で追いはらった！')}/* まわり1マスのコワイノにも */hurtEn(e,fireTrapDmg(),{trap:1,flash:8,dt:'fire'});if(e.hp<=0)return defeat(e,EN[e.type].name+'をほのおの罠で追いはらった！')}
     else if(to==='pit'){if(pitStep(e,tj))return}/* 落とし穴（defense.js） */
