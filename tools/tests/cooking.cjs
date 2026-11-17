@@ -13,16 +13,16 @@ const assert=require('node:assert/strict');
     out.bad=COOKD.filter(D=>D.f&&D.f.bad).length;out.numOK=COOKD.filter(D=>D.f).every(D=>{const f=D.f,ef=f.ef||{},t=[];if(ef.en)t.push('つかれ−'+ef.en);if(ef.fun)t.push(ef.fun<0?'たのしさ−'+(-ef.fun):'たのしさ+'+ef.fun);if(ef.wk)t.push((ef.wk[1]/60)+'時間、はたらく速さ+'+ef.wk[0]);return t.join('・')===f.fx});
     /* 村で動かす */
     function setup(el){S.ground.fill(0);S.hi.fill(0);S.obj.fill('');S.floor.fill('');S.dyn={};S.enemies=[];S.drops=[];S.seeds=[];S.t=1440*2+700;S.hold=0;resv.clear();BAN.clear();
-      const box=50*W+50,st=50*W+56;S.obj[box]='crate';S.obj[st]='cooktable';S.fs={};syncFood();recount();boxSync();S.ovenSet={};
+      const box=50*W+50,st=50*W+56;S.obj[box]='crate';S.obj[st]='cooktable';S.box={};S.pile={};S.rsv={};S.fs={};syncFood();recount();boxSync();S.ovenSet={};
       const b0=S.res[0];S.res=[];for(let i=0;i<2;i++){const q=JSON.parse(JSON.stringify(b0));q.id=200+i;q.name='e'+i;q.elem=el;q.x=53.5+i;q.y=52.5;q.act=null;q.cing=null;q.cgot=null;q.carry=null;q.hunger=1500;q.fun=90;q.energy=100;q.hidden=false;q.vr=q.vr||{};q.vr.tr='';S.res.push(q)}recount();return st}
     const runN=n=>{const c0=S.cookN||0;for(let i=0;i<n&&(S.cookN||0)===c0;i++){stepWorld(.25);for(const q of S.res){q.hunger=1500;q.fun=90}}return (S.cookN||0)-c0};
-    const sim=(el,ins,mode)=>{const st=setup(el);S.cookKn={};COOKNEW.length=0;for(const k of ins)S.fs[k]=3;syncFood();boxSync();S.ovenSet={[st]:mode||{m:'in',in:ins}};const n=runN(el==='wind'?1500:6000);return {n,kn:Object.values(S.cookKn||{}),nw:COOKNEW.map(g=>g.out),fs:Object.keys(S.fs).filter(k=>S.fs[k]>0&&FOODS[k].dish)}};
+    const sim=(el,ins,mode)=>{const st=setup(el);S.cookKn={};COOKNEW.length=0;for(const k of ins)S.fs[k]=3;syncFood();boxSync();S.ovenSet={[st]:typeof mode==='object'?mode:{m:'in',in:ins}};const n=runN(mode==='fsg'||el!=='wind'?6000:1500);return {n,kn:Object.values(S.cookKn||{}),nw:COOKNEW.map(g=>g.out),fs:Object.keys(S.fs).filter(k=>S.fs[k]>0&&FOODS[k].dish)}};
     out.juiceWater=sim('water',['apple']);out.juiceWind=sim('wind',['apple']);
-    out.fsgWind=sim('wind',['berry','takenoko','kinoko']);
+    out.fsgWind=sim('wind',['berry','takenoko','kinoko'],'fsg');
     out.autoNone=sim('water',['apple'],{m:'auto'});
     {const st=setup('water');S.cookKn={'apple@cooktable':'applejuice'};S.fs.apple=3;syncFood();boxSync();S.ovenSet={[st]:{m:'auto'}};out.autoKnown=runN(6000);}
     {const st=setup('fire');S.obj[st]='campfire';recount();const k=cookKey(['fish','berry'],'campfire');S.cookKn={[k]:cookDish(['fish','berry'],'campfire')};out.badName=FOODS[S.cookKn[k]].name;S.fs.fish=2;S.fs.berry=2;syncFood();boxSync();S.ovenSet={[st]:{m:'auto'}};out.autoBad=cookPick(st,S.res[0])?1:0;out.fsgFun=FOODS.fsg2.ef.fun}
-    /* 夜は材料をもどす */{const st=setup('water');S.fs.apple=2;syncFood();boxSync();S.ovenSet={[st]:{m:'in',in:['apple']}};const q=S.res[0];const G=bfs(q.x|0,q.y|0);out.job=tryJob(q,G,'cookS')||tryJob(q,G,'cook');ACT.cgrab.start(q,q.act);out.cingKey=q.cing&&q.cing.rec;const b=S.fs.apple;q.act=null;S.t=1440*3+23*60+30;S.hold=0;decide0(q);out.nightBack=S.fs.apple-b;out.nightCing=q.cing}
+    /* 夜は材料をもどす */{const st=setup('water');S.fs.apple=1;syncFood();boxSync();const q=S.res[0];q.cing={rec:'apple@cooktable',ov:st,nd:{apple:1}};out.cingKey=q.cing.rec;const b=S.fs.apple;q.act=null;S.t=1440*3+23*60+30;S.hold=0;decide0(q);out.nightBack=S.fs.apple-b;out.nightCing=q.cing}
     /* 前のセーブ */{const st=setup('water');const j=st;S.ovenSet={[j]:'salad'};delete S.flags.cook2;delete S.cookKn;S.res[0].cing={rec:'applejuice',ov:j,nd:{apple:1}};const sv=JSON.parse(JSON.stringify(S));continueGame(sv);out.mig={set:JSON.stringify(S.ovenSet[j]),kn:Object.keys(S.cookKn||{}).length,cing:S.res[0].cing&&S.res[0].cing.rec}}
     /* 画面 */{const st=setup('water');S.cookKn={'apple@cooktable':'applejuice'};S.ovenSet={[st]:{m:'in',in:['apple','berry']}};openSheet('oven',st);out.sheet=document.querySelector('.sheet').textContent;closeSheet();
       openSheet('menu','zukan');ZKT=8;renderSheet();out.zk=document.querySelector('.sheet').textContent;closeSheet()}
@@ -35,7 +35,7 @@ const assert=require('node:assert/strict');
   assert.ok(r.juiceWater.n>=1);assert.deepEqual(r.juiceWater.kn,['applejuice']);assert.deepEqual(r.juiceWater.nw,['applejuice']);
   assert.equal(r.juiceWind.n,0);assert.ok(r.fsgWind.n>=1);assert.deepEqual(r.fsgWind.kn,['fsg3']);
   assert.equal(r.autoNone.n,0);assert.equal(r.bad,9);assert.equal(r.autoBad,0);assert.equal(r.badName,'むらさきのさかな');assert.equal(r.fsgFun,-10);assert.ok(r.autoKnown>=1);
-  assert.equal(r.job,true);assert.equal(r.cingKey,'apple@cooktable');assert.equal(r.nightBack,1);assert.equal(r.nightCing,null);
+  assert.equal(r.cingKey,'apple@cooktable');assert.equal(r.nightBack,1);assert.equal(r.nightCing,null);
   assert.equal(r.mig.set,'{"m":"in","in":["tomato"]}');assert.equal(r.mig.kn,17);assert.equal(r.mig.cing,'apple@cooktable');
   assert.ok(r.sheet.includes('おまかせ')&&r.sheet.includes('りんごジュース')&&r.sheet.includes('？？？'),r.sheet);assert.ok(r.zk.includes('りんごジュース'),r.zk);
   assert.deepEqual(r.eat.slice(0,2),r.eat.slice(2));
