@@ -2,7 +2,7 @@
    動きの絵は spirit3d（cookprep・cookcut・cookmix・cook・cookfry・cookfan・cookgrill・cookplate・raise・craftprep・saw・craft・polish、作業台の上では wbprep・wbsaw・wbham・wbpolish）。
    音と粒は、描くときの時刻（drawSpiritDot の t）と同じ時刻で、動きの決まった所（WBEAT）をこえたときに出す（手の動きとずれない）。 */
 const WORKSHOW=4;
-const WBWORKZ=16;/* 作業台の天板の高さ（wbwork の絵は天板の上に置く形。地面に置くときは、このぶん下げる） *//* できたらかかげる時間（せいれいの時間。1倍で約1.6秒） */
+const WBWORKZ=8;/* wbwork の絵は作業台の天板の上（絵の下のはしが g64 の41）。地面に置くときは、マスの奥行き0.72（g64 の56）まで下げる：(56−41)÷2 *//* できたらかかげる時間（せいれいの時間。1倍で約1.6秒） */
 /* 料理の作り方（かまど・たき火）。調理台の料理は、ぜんぶ「まぜる」。はじめの料理は KSTYLE、ほかは料理の絵のしゅるい（COOKD の ic）と家具できめる（KSTYIC） */
 const KSTYLE={soup:'pot',fishsoup:'pot',pancake:'pan',yakizakana:'pan',kabayaki:'pan',bread:'bake',yakiimo:'bake',foil:'bake',kushiyaki:'grill'};
 const KSTYIC={bowl:'pot',cup:'pot',skewer:'grill',bread:'bake',cake:'pan',plate:'pan',dango:'pan',salad:'pot',sand:'pan'};
