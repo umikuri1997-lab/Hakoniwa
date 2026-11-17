@@ -26,7 +26,7 @@ JAWCLOTH = {'trapper': ((0.08, 0.22), (0.12, 0.26, 0.4, 0.56))}   # あごの布
 ARMRN = {'thief': 0.2}   # 手を大きくうごかすコワイノ：そでを広く なめらかに腕へ（せまいと、そでが1本のすじに のびる）
 SLEEVE = ((0.24, 0.36), (0.2, 0.46))   # 手がないとき：そで（よこのはしのきょり・高さ）。すその横まで ひろげない（すそが ひっぱられて裏地が見える）
 SLEEVEW = 0.7   # 手がないとき：そでの重みの いちばん大きい わり
-HIDDEN = {'basic': dict(c=((-0.17, 0.3, 0.3), (0.09, 0.3, 0.3)), r=0.22, w=0.85)}   # 布の下にかくれた手（コカゲ。持ち主）：手のまわりの前の布を、腕の骨へ（腕をうごかすと、布の下から手でおしだしたように ふくらむ）。c：(よこ, 前, 上)
+HIDDEN = {'basic': dict(c=((-0.15, 0.32, 0.04), (0.07, 0.32, 0.04)), r=0.3, w=0.9, z=0.3)}   # 布の下にかくれた手（コカゲ。持ち主）：前の すそを、腕の骨へ（すその下から手が出て、すそから うごく。フードの まん中は うごかさない）。c：(よこ, 前, 上)・z：この高さより上は うごかさない
 HEM = 0.3
 
 ATTACH = {
@@ -42,7 +42,7 @@ TAILL = {'yuki': 0.9}   # 長くたれた フードのしっぽ：先からこ�
 HOODAMP = 0.03   # フードの先が なびく大きさに、たす（高さのうち）
 TIPL = 0.35   # フードの先から、なびく はんい（メッシュの辺をたどった きょり）
 SCARF = {'fast': True}   # マフラー（体とはなれた かざり）が なびく
-PIVOT = {'armor': {'armL': (0, 0, 0.3)}, 'breaker': {'armL': (-0.2, 0.02, 0.5)}, 'basic': {'armL': (-0.36, 0.12, 0.52), 'armR': (0.3, 0.12, 0.52)}, 'fast': {'armL': (-0.27, 0.04, 0.42), 'armR': (0.18, 0.04, 0.42)}}   # 腕の支点を、かたにする（手を支点にすると、ハンマーが手のまわりで まわるだけで、ふりおろしても下までとどかない）
+PIVOT = {'armor': {'armL': (0, 0, 0.3)}, 'breaker': {'armL': (-0.2, 0.02, 0.5)}, 'basic': {'armL': (-0.15, 0.12, 0.32), 'armR': (0.07, 0.12, 0.32)}, 'fast': {'armL': (-0.27, 0.04, 0.42), 'armR': (0.18, 0.04, 0.42)}}   # 腕の支点を、かたにする（手を支点にすると、ハンマーが手のまわりで まわるだけで、ふりおろしても下までとどかない）
 SPREAD = {'ash': ['deco'], 'hana': ['deco']}
 SPREADZ = {'hana': 0.5}
 
@@ -89,7 +89,7 @@ class Skel:
         elif name in HIDDEN:
             hd = HIDDEN[name]; cl = np.zeros(V, bool); cl[np.unique(F[np.isin(lab, ['base', 'under', 'rim'])])] = True
             for c, bone in zip(hd['c'], ('armL', 'armR')):
-                d = np.linalg.norm(P-np.array(c, float)*H, axis=1); w = (1-smooth(0, hd['r']*H, d))*hd['w']*cl*smooth(0.05, 0.2, P[:, 1]/H)
+                d = np.linalg.norm(P-np.array(c, float)*H, axis=1); w = (1-smooth(0, hd['r']*H, d))*hd['w']*cl*smooth(0.05, 0.2, P[:, 1]/H)*(1-smooth(hd['z']*0.5, hd['z'], z))
                 put(np.nonzero(w > 0)[0], bone, w[w > 0])
         else:
             bodyv0 = np.zeros(V, bool); bodyv0[np.unique(F[comp == big])] = True   # 体のかたまりだけ（マフラーなど、はなれた物は腕にしない）
@@ -167,6 +167,12 @@ class Skel:
                 vs = np.unique(F[comp == q])
                 if P[vs, 2].mean()/H > SPREADZ.get(name, 9): continue
                 s.sprc.append(vs)
+        from scipy.spatial import cKDTree
+        for dst, srcl in ((['pat'], ['base', 'rim', 'under', 'red']), (['eye', 'eyee'], ['face'])):   # 面にはった模様・目（kowaino_paint の ornament）：近い布・顔の点と同じに うごく
+            dv = np.unique(F[np.isin(lab, dst)]); sv = np.setdiff1d(np.unique(F[np.isin(lab, srcl)]), dv)
+            if not len(dv) or not len(sv): continue
+            nn = sv[cKDTree(P[sv]).query(P[dv])[1]]
+            s.W[dv] = s.W[nn]; s.tw[dv] = s.tw[nn]; s.hem[dv] = s.hem[nn]; s.sw[dv] = s.sw[nn]; s.rig[dv] = s.rig[nn]; s.vcloth[dv] = s.vcloth[nn]
 
     def collapse(s, P, k, zc):
         """くずれる（重さで下へ）：こしより下（zc より下）の布が、つぶれて しわになり、地面に ひろがる。その上（頭・フード）は、形のまま下へ おちる。
