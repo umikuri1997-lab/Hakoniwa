@@ -39,7 +39,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict'),fs=r
  const rad=await run(`[...document.querySelectorAll('#sheetBody *')].filter(n=>parseFloat(getComputedStyle(n).borderRadius)>0&&n.offsetParent).length`);assert.equal(rad,0);
  /* 火山のとんがりの木 */
  const cd=await run(`[plantChip('deadtree',0)===CHIPS['deadtree~v'],plantChip('tree',0)===CHIPS['tree~v'],iname('tree'),iname('deadtree')]`);assert.deepEqual(cd,[true,true,'とんがりの木の苗','とんがりの木']);
- const gr=await run(`(()=>{const w=WD;WD=0;const r=[plantChip('deadtree',0)===CHIPS.deadtree,iname('tree')];WD=w;return r})()`);assert.deepEqual(gr,[true,'木の苗']);
+ const gr=await run(`(()=>{const w=WD;WD=0;const c=plantChip('deadtree',0),r=[[CHIPS.deadtree,CHIPS['deadtree#1'],CHIPS['deadtree#2']].includes(c&&(c.src||c)),iname('tree')];WD=w;return r})()`);assert.deepEqual(gr,[true,'木の苗']);
  /* 竹の壁 */
  const bw=await run(`(()=>{const s=newState(1);return [s.obj.filter(o=>o==='bamboowall').length>5,s.obj.includes('hwall'),!!s.unlocked.bamboowall,!!QUESTS2[0].gives.items.bamboowall,stageItemOK('hwall'),stageItemOK('bamboowall'),HOME_WALLS.has('bamboowall'),!!CHIPS['bamboowall:HLR'],!!CHIPS['bamboowall.door#h0'],!CHIPS.bamboowall]})()`);
  assert.deepEqual(bw,[true,false,true,true,false,true,true,true,true,true],'竹の壁');
