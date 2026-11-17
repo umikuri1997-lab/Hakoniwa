@@ -112,6 +112,7 @@ const BL={
   takeakari:{hp:5,brk:1,fix:2,fixm:{bamboo:2},name:'竹あかり',kind:'furn',cat:'light',lv:4,pc:4,time:90,maker:'fire',solid:1,anim:1,attr:{fire:1,wood:1},mat:{bamboo:4},desc:'まわり3.5マスを照らす。住み心地+5'},
   shishiodoshi:{hp:5,brk:1,fix:2,fixm:{bamboo:2,stone:1},name:'ししおどし',kind:'furn',cat:'env',lv:5,pc:6,time:110,maker:'water',solid:1,anim:1,attr:{water:1,wood:1},mat:{bamboo:5,stone:3},desc:'水でうごく竹のかざり。住み心地+6'},
   bench:{name:'ベンチ',sz:[2,1],kind:'furn',pc:3,time:100,maker:'wood',attr:{wood:1},mat:{wood:5},desc:'2人すわれる。昼につかれたら、ここで休む。つかれ −30／1時間。住み心地+5'},
+  wbench:{hp:5,brk:1,fix:2,fixm:{wood:4},name:'作業台',kind:'furn',cat:'other',pc:3,time:80,maker:'earth',attr:{earth:1},mat:{wood:8,stone:2},solid:1,dyn:1,desc:'依頼の物を作る台。となりの箱の素材は、運ばずに使う'},/* 依頼は、空いた作業台で1つずつ作る（S.dyn[j].order、build.js の wbenchTick） */
   loom:{hp:5,brk:1,fix:2,fixm:{wood:2},name:'はたおり機',kind:'furn',cat:'other',pc:3,time:80,maker:'wood',attr:{wind:1},mat:{wood:6},solid:1,desc:'草3こか、わた毛2こで、布1こをおる'},
   bed:{name:'ベッド',kind:'furn',pc:10,time:200,maker:'wood',sleep:{cap:1,pt:5,rate:.1},attr:{wood:2},mat:{wood:6,nuno:1},desc:'1人眠れる。つかれ −9／1時間'},
   yorubed:{name:'よぞらのベッド',kind:'furn',pc:10,time:200,maker:'wood',sleep:{cap:1,pt:5,rate:.1},attr:{wood:2},mat:{wood:8},kwr:1,desc:'夜空の色のふとんのベッド。1人眠れる。つかれ −9／1時間'},/* コワイノのレシピ（落とし物でまれに手に入る）。ふつうのベッドと同じはたらき */
@@ -189,8 +190,7 @@ const BL={
   plot:{name:'耕す前の畑',job:1,dyn:1},
   sprout:{name:'植える場所',job:1,dyn:1},
   site:{name:'建てている場所',job:1,dyn:1,solid:1},
-  wbench:{name:'作業台',job:1,dyn:1,solid:1},
-  matyard:{name:'材料置き場',job:1,dyn:1,solid:1},/* 素材を運ぶ依頼・建てる所・設計図のとなりに出る（S.dyn[j].yt、build.js の yardTick）。絵は運んだわりあいで matyard#0〜3 *//* 依頼のあいだだけ、依頼ボードのそばに出る（S.dyn[j].order、build.js の wbenchPut） */
+  matyard:{name:'材料置き場',job:1,dyn:1,solid:1},/* 素材を運ぶ依頼・建てる所・設計図のとなりに出る（S.dyn[j].yt、build.js の yardTick）。絵は運んだわりあいで matyard#0〜3 */
 
   'seed:mugi':{name:'こむぎのたね',kind:'seed',desc:'2日で育つ。食料+1。パンの材料'},'seed:tomato':{name:'キャベツのたね',kind:'seed',desc:'2日で育つ。食料+1'},'seed:imo':{name:'いものたね',kind:'seed',desc:'3日で育つ。食料+2'}
 };
@@ -198,7 +198,7 @@ const BLOCKS=['path','gravel','woodpath','stone','brick','floor','brickfloor','s
 const TOWER_STONE={...BL.tower};
 const TOWER_TREE={...BL.tower,sz:[4,4],name:'御神木',pc:0,mat:{},maker:'wood',desc:'みんなで育てた木。土地に散らばったヌシ様の力を結ぶ。まわり7マスを照らす'};
 const PLANTDEF=new Set(['nebari','hotaru'])/* 守りの草：草原のサブクエストでおぼえる */,PLANTS=['clover','bellf','salvia','lily','lotus','nebari','hotaru','tree','fruit'],FLOWERS=new Set(['clover','bellf','salvia','lily','lotus','nebari']),ATTRFL=new Set(['clover','bellf','salvia','lily','lotus','nebari','hotaru']),plantOK=id=>!ATTRFL.has(id)||!!S.unlocked[id]/* 属性の花はクエストで解放 */,isBud=j=>!!(S&&S.bud&&S.bud[j]>callDay())/* 植えた日の次の朝6時まで、花と木は芽（夜中の0時ではかわらない） */,flowerN=()=>S.obj.reduce((a,o,j)=>a+(FLOWERS.has(o)&&!isBud(j)?1:0),0),BREQ={windmill:'wind',fountain:'water',well:'water',lighthouse:'fire',stele:'earth'}/* 属性の子がいないと建てられない */;
-function bedStep(){/* はじめのベッド：はたおり機 → 布 → ベッドの、いまの所 */const lm=cnt('loom')>0,nu=(S.mat.nuno||0)>0||(S.orders||[]).some(o=>o.type==='bed')||cnt('bed')>0||(S.inv||{}).bed>0;return 'はたおり機 '+(lm?'1':'0')+'/1・布 '+(nu?'1':'0')+'/1・ベッド '+Math.min(1,houseBedCount())+'/1'}
+function bedStep(){/* はじめのベッド：はたおり機 → 布 → ベッドの、いまの所 */const lm=cnt('loom')>0,nu=(S.mat.nuno||0)>0||(S.orders||[]).some(o=>o.type==='bed')||cnt('bed')>0||(S.inv||{}).bed>0;return 'はたおり機 '+(lm?'1':'0')+'/1・布 '+(nu?'1':'0')+'/1・ベッド '+Math.min(1,houseBedCount())+'/1'+((S.orders||[]).some(o=>o.type==='bed')&&!S.obj.includes('wbench')?'・作業台がありません':'')}/* 作業台がないと、ベッドの依頼は作れない */
 const bloomCount=id=>S.obj.reduce((n,o,j)=>n+(o===id&&!isBud(j)?1:0),0);
 const FLOWER_QUESTS=new Set(['salvia3','lotus3','lily5','clover3']);
 const BEDSET=new Set(['bed','yorubed']);/* ねむれるベッド（よぞらのベッドも同じはたらき） */const KWR=['yozorawall','yozoradoor','yorubed','hoshirug','herrfloor'];const KWRKEY='hakoniwa-kwr-v1';/* コワイノのレシピは、どのステージでもおぼえたまま（ステージべつのセーブとはべつにしまう） */
@@ -226,7 +226,7 @@ function grecForget(w){/* 「はじめから」：そのステージでおぼえ
 const grec=id=>!!S&&!S.free&&grecOf().get(id)<WD;/* 前のステージでおぼえたか */
 function recSync(){if(!S||S.free)return;const G=grecOf();let add=false;for(const[id,o2]of[...G]){const b=BL[id];if(b&&b.lv&&STAGEONLY[id]==null&&!matHere(b,o2)){G.delete(id);add=true;if(o2===WD){if(S.recipes)delete S.recipes[id];if(S.unlocked)delete S.unlocked[id];if(S.guardianIdeas)delete S.guardianIdeas[id]}}}/* 前に、手に入らない素材の物をおぼえていたら、わすれる（草原の竹のハシゴ） */for(const id of learnedIn(S,WD))if(!G.has(id)){G.set(id,WD);add=true}for(const[id,o]of G){const b=BL[id];if(!b||!(o<WD))continue;/* 使えるのは、前のステージでおぼえた物だけ（いまのステージ・この先のステージでおぼえた物は使えない） */if(b.kind==='block'||b.kind==='plant')(S.unlocked||(S.unlocked={}))[id]=true;else{(S.recipes||(S.recipes={}))[id]=true;(S.guardianIdeas||(S.guardianIdeas={}))[id]=true}}if(add||!KV.getItem(GRECKEY2))grecSave()}/* このステージでおぼえた物を足して（おぼえたステージもしまう）、ほかのステージでおぼえた物をもらう */
 const CRAFTB=['floor','brickfloor','stonefloor','herrfloor','carpet','path','gravel','woodpath','stone','brick','hwall','bamboowall','logwall','plasterwall','brickwall','yozorawall','door','yozoradoor','fence','misugaki','bedge','logfence','bamboofence','gate','stonegate','logdoor','loggate','wall','sdoor','window','yozorawin'];
-const CRAFT_TABS=[["家具", ["table", "dtable", "chair", "stool", "pouf", "achair", "ltable", "rug1", "rug2", "hoshirug", "bed", "yorubed", "sofa1", "monstera", "wreath", "curtain1", "curtain2", "paint1", "paint2", "paint3", "bathtub", "loom"]], ["収納", ["crate", "taru", "asabukuro", "makidana", "niguruma", "kabebukuro", "shelf1", "wshelf", "cabinet", "shelf2"]], ["遊び", ["swing", "slide", "sandbox", "seesaw", "campfire", "mato", "picnic", "taiko", "chadogu", "hokora"]], ["庭", ["bench", "takebench", "shishiodoshi", "hedge", "birdbath", "parasol", "noren", "arch", "kamizo", "jar", "joro", "composter", "rockart", "signpost", "vane"]], ["あかり", ["torch", "takeakari", "andon", "candle", "lantern", "flamp", "toro", "lamp"]], ["ごはん", ["oven", "cooktable", "tub", "sink"]], ["ワナ", ["arrow", "arrow2", "drum", "pit", "gar01", "gar02", "gar03", "gar04", "gar05", "gar06", "gar07", "gar08", "gar09", "gar10", "gar11", "gar12", "gar13", "gar14", "gar15", "gar16", "gar17", "gar18", "gar19", "gar20", "gar21", "gar22", "gar23", "gar24", "gar25", "gar26", "spike", "puddle", "sticky", "firetrap", "gust"]], ["そうび", ["gw01", "gw02", "gw03", "gw04", "gw05", "gw06", "gw07", "gw08", "gw09", "gw10", "gw11", "gw12", "gw13", "gw14", "gw15", "gw16", "gw17", "gw18", "gw19", "gw20", "gw21", "gw22", "gw23", "gw24", "gw25", "gw26", "gw27", "gw28", "gw29", "gw30", "gw31", "gw32", "gw33", "gw34", "gw35", "gw36", "ga01", "ga02", "ga03", "ga04", "ga05", "ga06", "ga07", "ga08", "ga09", "ga10", "ga11", "ga12", "ga13", "ga14", "ga15", "ga16", "ga17", "ga18", "ga19", "ga20", "ga21", "ga22", "ga23", "ga24", "ga25", "ga26", "gc01", "gc02", "gc03", "gc04", "gc05", "gc06", "gc07", "gc08", "gc09", "gc10", "gc11", "gc12", "gc13", "gc14", "gt01", "gt02", "gt03", "gt04", "gt05", "gt06", "gt07", "gt08", "gt09", "gt10", "gt11", "gt12", "gt13", "gt14", "gt15"]], ["家づくり", ["floor", "brickfloor", "stonefloor", "herrfloor", "carpet", "hwall", "bamboowall", "logwall", "plasterwall", "brickwall", "yozorawall", "door", "yozoradoor", "window"]], ["道・囲い", ["path", "gravel", "woodpath", "stone", "brick", "fence", "misugaki", "logfence", "bamboofence", "bedge", "gate", "stonegate", "logdoor", "loggate", "wall", "sdoor"]], ["クエスト", ["board"]]];let craftTags=[],craftQ='',craftCan=false;/* 依頼ボードでえらんでいるタグ（ぜんぶ合う物を出す）・さがす名前・いま作れる物だけ *//* 依頼ボードでえらんでいるタグ・さがす名前・しぼりこみを開いているか */
+const CRAFT_TABS=[["家具", ["wbench", "table", "dtable", "chair", "stool", "pouf", "achair", "ltable", "rug1", "rug2", "hoshirug", "bed", "yorubed", "sofa1", "monstera", "wreath", "curtain1", "curtain2", "paint1", "paint2", "paint3", "bathtub", "loom"]], ["収納", ["crate", "taru", "asabukuro", "makidana", "niguruma", "kabebukuro", "shelf1", "wshelf", "cabinet", "shelf2"]], ["遊び", ["swing", "slide", "sandbox", "seesaw", "campfire", "mato", "picnic", "taiko", "chadogu", "hokora"]], ["庭", ["bench", "takebench", "shishiodoshi", "hedge", "birdbath", "parasol", "noren", "arch", "kamizo", "jar", "joro", "composter", "rockart", "signpost", "vane"]], ["あかり", ["torch", "takeakari", "andon", "candle", "lantern", "flamp", "toro", "lamp"]], ["ごはん", ["oven", "cooktable", "tub", "sink"]], ["ワナ", ["arrow", "arrow2", "drum", "pit", "gar01", "gar02", "gar03", "gar04", "gar05", "gar06", "gar07", "gar08", "gar09", "gar10", "gar11", "gar12", "gar13", "gar14", "gar15", "gar16", "gar17", "gar18", "gar19", "gar20", "gar21", "gar22", "gar23", "gar24", "gar25", "gar26", "spike", "puddle", "sticky", "firetrap", "gust"]], ["そうび", ["gw01", "gw02", "gw03", "gw04", "gw05", "gw06", "gw07", "gw08", "gw09", "gw10", "gw11", "gw12", "gw13", "gw14", "gw15", "gw16", "gw17", "gw18", "gw19", "gw20", "gw21", "gw22", "gw23", "gw24", "gw25", "gw26", "gw27", "gw28", "gw29", "gw30", "gw31", "gw32", "gw33", "gw34", "gw35", "gw36", "ga01", "ga02", "ga03", "ga04", "ga05", "ga06", "ga07", "ga08", "ga09", "ga10", "ga11", "ga12", "ga13", "ga14", "ga15", "ga16", "ga17", "ga18", "ga19", "ga20", "ga21", "ga22", "ga23", "ga24", "ga25", "ga26", "gc01", "gc02", "gc03", "gc04", "gc05", "gc06", "gc07", "gc08", "gc09", "gc10", "gc11", "gc12", "gc13", "gc14", "gt01", "gt02", "gt03", "gt04", "gt05", "gt06", "gt07", "gt08", "gt09", "gt10", "gt11", "gt12", "gt13", "gt14", "gt15"]], ["家づくり", ["floor", "brickfloor", "stonefloor", "herrfloor", "carpet", "hwall", "bamboowall", "logwall", "plasterwall", "brickwall", "yozorawall", "door", "yozoradoor", "window"]], ["道・囲い", ["path", "gravel", "woodpath", "stone", "brick", "fence", "misugaki", "logfence", "bamboofence", "bedge", "gate", "stonegate", "logdoor", "loggate", "wall", "sdoor"]], ["クエスト", ["board"]]];let craftTags=[],craftQ='',craftCan=false;/* 依頼ボードでえらんでいるタグ（ぜんぶ合う物を出す）・さがす名前・いま作れる物だけ *//* 依頼ボードでえらんでいるタグ・さがす名前・しぼりこみを開いているか */
 const craftInTag=id=>{if(!craftTags.length)return true;const t=tagsOf(id);return craftTags.every(g=>t.includes(g))};
 const GIFTF=['furin','ema','kadomatsu','komainu','chochin','mimamori','yomawari','oyasumi','yonaka'];/* 交換・おみやげ・コワイノの落とし物でもらう家具 */
 function furnitureGroups(ids){const wanted=new Set(ids);return CRAFT_TABS.map(([name,items])=>[name,items.filter(id=>wanted.has(id))]).filter(([,items])=>items.length)}
@@ -334,6 +334,16 @@ const QUESTS1=[
     [GOD,'じょうぶな木の壁を、おそなえ箱に用意しておいたぞい。すきまをふさいで、フタバが安心して眠れる家にしてやっておくれ。']],gives:{feat:['people'],items:{hwall:3}}},
    story:[
     [POKO,'#scared|前に、夜に壁をこわされたことがあったんだ。'],[POKO,'#joy|でも、もうすきまはないね。壁があると、なんだかほっとする！']]},
+  {id:'wbench',text:'作業台を置こう',how:'「おく」→「作業台」をえらんで置く',check:()=>cnt('wbench')>=1,/* はじめての依頼（ベッド）の前に。古いセーブの番号は wbQuestIn */
+   talk:{who:POKO,when:()=>true,lines:[
+    [POKO,'#think|ねえ、守り神さま。家の中にそろえたい物、いっぱいあるんだ。'],
+    [POKO,'#worry|でも、草の上で木をけずると、でこぼこで、うまくいかなくて……。'],
+    ['@idea'],[GOD,'#think|ほっほ。物をこしらえる、たいらでがんじょうな台じゃな。「作業台」と呼ぼうかの。'],
+    [GOD,'ひとつこしらえて、おそなえ箱に入れておいたぞい。木箱のそばなら、材料をすぐ手にとれるのう。'],
+    [POKO,'#joy|作業台！ これで、いろんな物が作れるね！']],gives:{items:{wbench:1}}},
+   story:[
+    [POKO,'#joy|わあ、たいらで、がたがたしない！ ここなら、きれいに作れそう！'],
+    [GOD,'#nod|うむ。これからは、作ってほしい物を、ここで形にしてもらうんじゃ。']]},
   {id:'bed',text:'家にベッドを置こう',how:'「おく」→「はたおり機」を置き、はたおり機をタップして布をたのむ。布ができたら、神殿の依頼ボードをタップ →「家具」→「ベッド」をはり、できたら壁で囲まれた家の中に置く。夜は、まもりの光のアイコンをタップしてから「コワイノ」をタップすると、光をあてておどかせる',check:()=>houseBedCount()>=1,prog:()=>bedStep(),
    talk:{who:POKO,when:()=>true,lines:[
     [POKO,'#think|草の上はごつごつするし、ゆっくり休めなくて……。休める場所があったらいいな。'],
@@ -688,6 +698,11 @@ function migrateWarmIns(state,pre){
   if(pre){if((state.quest||0)>=w)state.quest=(state.quest||0)+1;if(state.qStory!=null&&state.qStory>=w)state.qStory++}
   if(state.qStory===w-1&&(state.quest||0)>w){state.quest=w;state.qTalked=false}/* 燃やさない火のお礼を待っていた：お礼のあと「あたたかいごはん」へ */
 }
+/* 「作業台を置こう」（wbench）を、家の壁（wall）のあとに足した（wbIns1）。読みこむとき、ほかの読みかえは足す前のならびでして（wbQuestOut）、そのあと番号をずらす（wbQuestIn） */
+function wbQuestOut(state){if(state.flags.wbIns1)return null;const i=QUESTS1.findIndex(q=>q.id==='wbench');return i<0?null:{i,q:QUESTS1.splice(i,1)[0]}}
+function wbQuestIn(state,t){if(!t)return;QUESTS1.splice(t.i,0,t.q);state.flags.wbIns1=1;if(state.free||(state.world||0)!==0)return;const w=t.i;
+  if((state.quest||0)>=w)state.quest=(state.quest||0)+1;if(state.qStory!=null&&state.qStory>=w)state.qStory++;
+  if(state.qStory===w-1&&state.quest===w+1&&!state.qTalked)state.quest=w}/* 家の壁のお礼を待っていて、ベッドの話はまだ：お礼のあと、作業台の目標へ */
 /* 「なかよしの想い」（omoi）を、かけらさがし（lv5）のあとに足した（omoiIns1）。pre：読みこんだときに、もう今のならび（farmFirst1）の番号だったセーブ */
 function migrateOmoiIns(state,pre){
   if(state.flags.omoiIns1)return;state.flags.omoiIns1=1;

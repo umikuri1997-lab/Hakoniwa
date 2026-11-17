@@ -21,7 +21,7 @@ const boot=require('../sim/boot.cjs'),assert=require('node:assert/strict');
     return JSON.stringify({at,bmMax,trips,ico:ico>0,cap,done:S.obj[j],wood:S.mat.wood,rsv:S.rsv.wood||0,box:(S.box[A].wood||0)+(S.box[B].wood||0)})})()`));
   assert.deepEqual(d.at,{wood:95,rsv:5,box:100},'reserved, still in the box');assert.equal(d.done,'torch');assert.ok(d.bmMax<=Math.max(1,d.cap),'carries up to the carry count: '+JSON.stringify(d));assert.equal(d.trips,Math.ceil(5/Math.max(1,d.cap)),'one trip per carry count');assert.ok(d.ico,'materials stacked on the head');assert.equal(d.box,95,'taken out of the box');assert.equal(d.rsv,0);assert.equal(d.wood,95);
   /* 依頼のものづくりも、素材を運んでから作る */
-  const e=JSON.parse(await run(`(()=>{const A=window.BA,B=window.BB;const r=S.res[0],bj=(r.y|0)*W+(r.x|0)+10;S.obj[bj]='board';S.obj[bj+1]='part';S.ref[bj+1]=bj;recount();BL.crate.maker=null;
+  const e=JSON.parse(await run(`(()=>{const A=window.BA,B=window.BB;const r=S.res[0],bj=(r.y|0)*W+(r.x|0)+10;S.obj[bj]='board';S.obj[bj+1]='part';S.ref[bj+1]=bj;S.obj[bj+2*W]='wbench';recount();BL.crate.maker=null;/* 依頼は作業台で作る */
     S.orders.push({id:S.nid++,type:'crate',prog:0,need:20,worker:null,mat:{wood:8},food:{},got:{}});rsvAdd({wood:8});const n0=inv('crate');/* できるまで進める（重いときは、道さがしなどに時間がかかって、決まった回数ではおわらないことがある） */for(let k=0;k<12&&inv('crate')<=n0;k++){${step(800)}}
     return JSON.stringify({made:inv('crate')-n0,wood:S.mat.wood,orders:S.orders.length,box:(S.box[A].wood||0)+(S.box[B].wood||0)})})()`));
   assert.equal(e.made,1,'order crafted: '+JSON.stringify(e));assert.equal(e.box,87);assert.equal(e.wood,87);

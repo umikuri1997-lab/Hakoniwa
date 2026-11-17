@@ -57,7 +57,7 @@ for(let i=0;i<=V2.length;i++)for(const talked of [false,true])for(const pending 
   const snap=run('JSON.stringify(S)');run('migrateQuestSplit(S)');assert.equal(run('JSON.stringify(S)'),snap,'idempotent v2 '+id);
 }
 for(const state of [{world:1},{world:0,free:true}]){run(`S=${JSON.stringify({...state,flags:{qmerge1:1},quest:8,qStory:7})};migrateQuestSplit(S)`);assert.equal(run('S.quest'),8);assert.equal(run('S.qStory'),7);}
-assert.deepEqual(JSON.parse(run('JSON.stringify(QUESTS1.slice(0,QUESTS1.findIndex(q=>q.id==="fire")).map(q=>q.id))')),(L=>{L.splice(L.indexOf('earthListen'),1);L.push('earthListen');return L})(V1.slice(0,V1.indexOf('fire')).filter(id=>!['earthRoot','trade','oracle'].includes(id))),'early quests are one at a time; the farm goals come before the stump (farmFirst1)');
+assert.deepEqual(JSON.parse(run('JSON.stringify(QUESTS1.slice(0,QUESTS1.findIndex(q=>q.id==="fire")).map(q=>q.id))')),(L=>{L.splice(L.indexOf('earthListen'),1);L.push('earthListen');L.splice(L.indexOf('wall')+1,0,'wbench');return L})(V1.slice(0,V1.indexOf('fire')).filter(id=>!['earthRoot','trade','oracle'].includes(id))),'early quests are one at a time; the farm goals come before the stump (farmFirst1)');
 assert(run('QUESTS1.slice(0,QUESTS1.findIndex(q=>q.id==="fire")).every(q=>!q.steps)'));
 console.log('Split goals: every merged index, heard talk, pending thanks, idempotence, other modes');
 /* 切り株の下で・傷つけないようにを分けていたころ（qsplit1）から、1つの依頼へ（earthMerge1）。名前で読みかえ、2回読みこんでもずれない */
