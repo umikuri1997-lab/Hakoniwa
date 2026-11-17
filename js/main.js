@@ -174,13 +174,23 @@ function updTut(){
       else if(!sheet){if(mode!=='look'){el=document.querySelector('#dock [data-mode="look"]');lbl='「しらべる」をタップ'}else if(BOARD>=0){wp=[(BOARD%W+1.9)*TS,((BOARD/W)|0)*TS-4];lbl='依頼ボードをタップ'}}}}
   else if(qt==='fence4'){if(inv('fence')>0)placeHint('fence')}
   else if(qt==='wall'){if(inv('hwall')>0)placeHint('hwall')}
-  else if(qt==='bed'){if(inv('bed')>0)placeHint('bed')}
+  else if(qt==='bed'){/* はじめのベッド：はたおり機を置く → はたおり機をタップして布をたのむ → 依頼ボードでベッドをはる → 家の中に置く */
+    const pp=document.getElementById('prPop'),L=S.obj.indexOf('loom'),busy=L>=0&&(prCount(L)>0||!!(S.prOut||{})[L]);
+    if(inv('bed')>0){if(pp){el=pp.querySelector('.x');lbl='とじる'}else placeHint('bed')}
+    else if(S.orders.some(o=>o.type==='bed')){if(sheet==='craft'){el=$('#sheetX');lbl='依頼ボードをとじる'}}
+    else if((S.mat.nuno||0)>0){const g=orderTut('bed');if(pp){el=pp.querySelector('.x');lbl='とじる'}else if(g&&g.kind==='close'){el=$('#sheetX');lbl='とじる'}else if(g&&g.kind==='look'){el=document.querySelector('#dock [data-mode="look"]');lbl='「しらべる」をタップ'}else if(g&&g.kind==='board'){wp=[(BOARD%W+1.9)*TS,((BOARD/W)|0)*TS-4];lbl='依頼ボードをタップ'}else if(g&&g.kind==='tab'){[el,lbl]=craftHintEl()}else if(g&&g.kind==='row'){const row=[...document.querySelectorAll('#sheetBody .row')].find(r=>r.textContent.includes(BL.bed.name));el=row&&([...row.querySelectorAll('button')].find(b=>b.textContent.includes('はる'))||[...row.querySelectorAll('button')].pop());lbl=el&&el.disabled?'パワーや素材が集まるまで待とう':'ベッドの「はる」をタップ'}}
+    else if(L<0){if(inv('loom')>0)placeHint('loom')}
+    else if(busy){if(pp){el=pp.querySelector('.x');lbl='布ができるまで待とう'}}/* 布をおっているあいだは待つ */
+    else if(pp){const go=pp.querySelector('.go'),pl=pp.querySelector('.ks .p');if(!pl){el=pp.querySelector('.x');lbl='草が集まるまで待とう'}else if(go.disabled){el=pl;lbl='「＋」で数をえらぶ'}else{el=go;lbl='「おる」をタップ'}}
+    else if(sheet){el=$('#sheetX');lbl='とじる'}
+    else lookAt([(L%W+.5)*TS,((L/W)|0)*TS+8],'はたおり機をタップ')}
   else if(qt==='watch1'){if(watchQ())placeHint('watch');else if(inv('spike')>0&&(S.placed.spike||0)<2)placeHint('spike')}
   else if(qt==='trade'){if(sheet==='shop'){if(S.flags.traded){el=$('#shopEnd');lbl='交換がおわったら「交換をおわる」'}else{el=[...document.querySelectorAll('#sheetBody .btn.pri')].find(b=>!b.disabled);lbl='交換してみよう'}}else if(!sheet&&godHere()){if(mode!=='look'){el=document.querySelector('#dock [data-mode="look"]');lbl='「しらべる」をタップ'}else{wp=[godX()*TS,(godY()-.2)*TS];lbl='カミサマをタップ'}}}
   let x,y,elT=0;
   if(el){const r=el.getBoundingClientRect(),ar=$('#app').getBoundingClientRect();if(!r.width)return hide();x=r.left-ar.left+r.width/2;y=r.top-ar.top+r.height/2;const nb=r.top-ar.top>ar.height-120,sd=!nb&&r.right-ar.left+170<ar.width;elT=sd?2:r.top-ar.top<140?1:-1;if(sd){x=r.right-ar.left-2}else y=elT<0?r.top-ar.top+2:r.bottom-ar.top-2}/* ボタンは、指と文字をボタンの上（上のほうなら下）に出して、ボタンの文字をかくさない */
   else if(wp){const ar=$('#app').getBoundingClientRect(),cr=cv.getBoundingClientRect();x=cr.left-ar.left+(wp[0]-cam.x)*cam.z*(cr.width/VW);y=cr.top-ar.top+(wp[1]-cam.y)*cam.z*(cr.height/VH);if(x<0||y<0||x>ar.width||y>ar.height)return hide()}
   else return hide();
+  hand.style.zIndex=el&&el.closest&&el.closest('#prPop')?'46':'';/* はたおり機などのポップアップの中をさすときは、その上に出す */
   hand.hidden=false;hand.style.transform='translate('+x+'px,'+y+'px)';hand.classList.toggle('up',elT?elT>0:y<120);hand.classList.toggle('down',!swipe&&(elT?elT<0:y>innerHeight-110));hand.classList.toggle('elt',!!elT);hand.classList.toggle('side',elT===2);if(elT===2)hand.classList.remove('up','down');// 画面の下のほうは指を上から向ける
   hand.classList.toggle('swipe',!!swipe);hand.classList.toggle('rev',swipe<0);hand.querySelector('.lbl').textContent=lbl;{const L=hand.querySelector('.lbl');L.style.marginLeft='0px';const lr=L.getBoundingClientRect();let sh=0;if(lr.right>innerWidth-8)sh=innerWidth-8-lr.right;else if(lr.left<8)sh=8-lr.left;L.style.marginLeft=sh+'px'}// ラベルが画面からはみ出さないように
 }
