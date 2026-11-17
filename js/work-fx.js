@@ -8,7 +8,7 @@ const KSTYLE={soup:'pot',fishsoup:'pot',pancake:'pan',yakizakana:'pan',kabayaki:
 const KSTYIC={bowl:'pot',cup:'pot',skewer:'grill',bread:'bake',cake:'pan',plate:'pan',dango:'pan',salad:'pot',sand:'pan'};
 const KMAIN={pot:'cook',pan:'cookfry',bake:'cookfan',grill:'cookgrill',mix:'cookmix'};
 /* 動きの名前 → [音を出す所（1回の動きの中の0〜1）, 音, 粒] */
-const WBEAT={cookcut:[[0,'tonton']],cook:[[0,'potclk']],cookmix:[[.25,'tink']],cookfry:[[.47,'fry'],[.62,'fry']],cookfan:[[.25,'fanw','embers']],cookgrill:[[0,'grill','embers']],cookplate:[[.5,'plate']],
+const WBEAT={cookcut:[[0,'tonton']],cook:[[0,'potclk']],cookmix:[[.25,'tink']],cookstir:[[.25,'tink']],cookfry:[[.47,'fry'],[.62,'fry']],cookfan:[[.25,'fanw','embers']],cookgrill:[[0,'grill','embers']],cookplate:[[.5,'plate']],
   saw:[[.25,'saw','chips'],[.75,'saw']],craft:[[0,'nail','chips']],polish:[[0,'cloth'],[.5,'cloth']]};
 function cookStyle(r){const a=r.act;if(!a||!r.cing)return'mix';if(a.tb)return'mix';const R=typeof recOf==='function'?recOf(r.cing.rec):null,out=R?R.out:r.cing.rec;if(KSTYLE[out])return KSTYLE[out];const D=typeof COOKDI!=='undefined'&&COOKDI[out],t=D&&D.ic&&D.ic[0];let st=KSTYIC[t]||'pot';if(st==='bake'&&S.obj[a.obj]==='campfire')st='pan';return st}/* ふしぎな料理は、なべ */
 function cookP(r){const a=r.act;if(!a||a.obj==null)return 0;return Math.min(1,(a.t||0)/Math.max(1,cookTime(r,a.obj)))}
@@ -16,14 +16,31 @@ function craftOrder(r){return r.act&&r.act.type==='craft'?S.orders.find(q=>q.id=
 function craftP(r){const o=craftOrder(r);return o?Math.min(1,o.prog/Math.max(1,o.need)):0}
 /* いまの動き（料理・もの作りでないときは、行動の名前のまま） */
 function workAnim(r){const a=r.act;if(!a)return'';
-  if(a.type==='cook'){if(a.sh!=null)return'raise';const p=cookP(r),st=cookStyle(r);if(p<.12)return'cookprep';if(a.tb&&p<.45)return'cookcut';return p<.88?KMAIN[st]:'cookplate'}
+  if(a.type==='cook'){const ph=cookPh(r);if(ph==='raise')return'raise';if(ph!=='work')return'cookprep';/* 材料をならべる・できた料理を台にととのえる */const t=cookTool(r);return t==='board'?'cookcut':t==='pot'?'cook':CKSTIR.has(t)?(typeof SPM!=='undefined'&&SPM.cookstir?'cookstir':'cookmix'):'cookfan'}/* 置いた道具にあわせた動き（なべは、おたまでまぜる。フライパン・天板・網・くしは、うちわであおぐ） */
   if(a.type==='craft'){if(a.sh!=null)return'raise';const p=craftP(r);return p<.1?'craftprep':p<.45?'saw':p<.85?'craft':'polish'}
   return a.type}
 /* 手に持つ物の絵（材料・できた料理・作った物） */
 function workFood(r){const a=r.act;if(!a||a.stage!=='do')return'';
-  if(a.type==='cook'&&r.cing){const nm=workAnim(r),R=recOf(r.cing.rec);if(!R)return'';if(nm==='cookprep')return foodEmo(Object.keys(R.need)[0]);if(nm==='cookplate'||nm==='raise'||nm==='cookfry')return FOODS[R.out]?foodEmo(R.out):'';return''}
+  if(a.type==='cook'&&r.cing){const ph=cookPh(r),R=recOf(r.cing.rec);if(!R)return'';if(ph==='prep')return foodEmo(Object.keys(R.need)[0]);if(ph==='raise')return FOODS[R.out]?foodEmo(R.out):'';return''}/* もりつけた料理は台の上。かかげるときに持ち上げる */
   if(a.type==='craft'&&a.sh!=null){const o=craftOrder(r)||a.made;return o?itemIc(o.type||o):''}
   return''}
+/* 料理の家具の上の物（絵は tools/art/furn3d/cooktop.py、場所は cook-top-data.js の CKTOP）
+   材料をならべる（prep）→ 作る（work：道具と材料）→ もりつける（plate：できた料理が家具の上）→ かかげる（raise：せいれいが持ち上げる。家具の上はなし） */
+const CKTB={salad:'board',sand:'board',plate:'board',bowl:'bowl',cup:'pitcher',dango:'knead',marine:'board',salad0:'board',tamasand:'board',berryjuice:'pitcher',applejuice:'pitcher',milkshake:'pitcher',berrymilk:'pitcher'},CKSTIR=new Set(['bowl','pitcher','knead']);
+const CKING=new Set(['mugi','imo','tomato','berry','apple','egg','milk','fish','takenoko','kinoko','komugiko']);
+function cookPh(r){const a=r.act;if(!a||!r.cing)return'';if(a.sh!=null)return'raise';const p=cookP(r);return p<.12?'prep':p<.88?'work':'plate'}
+function cookTool(r){/* 家具に置く道具：調理台は料理のしゅるい、かまど・たき火は作り方（cookStyle） */const a=r.act,id=a&&S.obj[a.obj],R=r.cing&&recOf(r.cing.rec);if(!R)return'';
+  if(id==='cooktable'){const D=COOKDI[R.out],t=D&&D.ic?D.ic[0]:R.out==='salad'?'salad0':R.out;return CKTB[t]||'board'}
+  const st=cookStyle(r);if(id==='oven')return st==='pot'?'pot':st==='pan'?'pan':'tray';return st==='pot'?'pot':st==='grill'?'K':'net'}
+function cookAt(i){for(const r of S.res){const a=r.act;if(a&&a.type==='cook'&&a.obj===i&&a.stage==='do'&&r.cing)return r}return null}
+function cookTopDraw(c,id,x,y,i,now){/* 家具の絵のあとに、上の物をかさねる */const r=cookAt(i);if(!r||!window.CHIPS||typeof CKTOP==='undefined')return;const ph=cookPh(r),R=recOf(r.cing.rec);if(!R||ph==='raise')return;
+  const rot=id==='campfire'?0:rotAt(i),fl=id==='cooktable'?rot===3:id==='oven'&&rot!==0,v=id==='cooktable'?(rot===3?1:rot):0,T=(CKTOP[id]||[])[v];if(!T)return;
+  const put=(nm,px,py)=>{const ch=CHIPS[nm];if(ch)drawChip(c,ch,nm,x+(fl?64-px:px)/2,y+py/2,now,i)},sf=v?'>'+v:'';
+  if(ph==='plate'){const p=T.D[0];put('ckdish_'+(/^fsg/.test(R.out)?'fsg':R.out),p[0],p[1]);return}
+  const t=cookTool(r);if(t!=='K'){const ch=CHIPS['cktool_'+id+'_'+(t==='board'&&ph==='prep'?'boardk':t)+sf];if(ch)drawChip(c,fl?{src:ch,ax:ch.ax,ay:ch.ay,w:ch.w,h:ch.h,f:ch.f,flip:1,fw:32}:ch,'cktool',x,y,now,i)}
+  const ks=Object.keys(R.need).map(k=>CKING.has(k)?k:'fish'),hold=ph==='prep'?0:-1,sl=id==='cooktable'?'L':t,P=T[sl];if(!P||!ks.length)return;const sz=sl==='L'?'L':sl==='K'?'K':'S',L=[];
+  for(let q=0;q<P.length;q++){if(sl!=='K'&&(q>=ks.length||q===hold))continue;L.push([P[q],ks[q%ks.length]])}/* くしは3本（材料を順に） */
+  L.sort((a,b)=>a[0][1]-b[0][1]);for(const[p,k]of L)put('ckin_'+k+'.'+sz,p[0],p[1])}
 /* 作業台の上の形（0 板の山・1 木のわく・2 布をかけた形）。素材がそろうまでは、なし（運んだ素材の山） */
 function wbworkStage(o){if(!o||hasNeed(o))return -1;const p=o.prog/Math.max(1,o.need);return p<.45?0:p<.85?1:2}
 /* 音と粒：描くたびに、動きの決まった所をこえたら出す */

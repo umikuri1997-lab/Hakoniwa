@@ -53,6 +53,42 @@
   "tris": 1766,
   "catalog_h": 2.6
  },
+ "ck_berry": {
+  "w_per_h": 1.533,
+  "d_per_h": 1.392,
+  "tris": 3000,
+  "catalog_h": 0.12
+ },
+ "ck_imo": {
+  "w_per_h": 1.401,
+  "d_per_h": 1.825,
+  "tris": 1042,
+  "catalog_h": 0.06
+ },
+ "ck_milk": {
+  "w_per_h": 0.535,
+  "d_per_h": 0.54,
+  "tris": 3000,
+  "catalog_h": 0.2
+ },
+ "ck_mugi": {
+  "w_per_h": 1.984,
+  "d_per_h": 2.836,
+  "tris": 3000,
+  "catalog_h": 0.05
+ },
+ "ck_salad": {
+  "w_per_h": 1.443,
+  "d_per_h": 1.489,
+  "tris": 3000,
+  "catalog_h": 0.12
+ },
+ "ck_sashimi": {
+  "w_per_h": 3.306,
+  "d_per_h": 3.446,
+  "tris": 1904,
+  "catalog_h": 0.04
+ },
  "clover": {
   "w_per_h": 0.967,
   "d_per_h": 0.398,
@@ -124,6 +160,54 @@
   "d_per_h": 0.713,
   "tris": 2624,
   "catalog_h": 0.3
+ },
+ "nat_bush": {
+  "w_per_h": 1.414,
+  "d_per_h": 1.21,
+  "tris": 758,
+  "catalog_h": 0.62
+ },
+ "nat_cedar": {
+  "w_per_h": 0.602,
+  "d_per_h": 0.596,
+  "tris": 12843,
+  "catalog_h": 2.0
+ },
+ "nat_cedar2": {
+  "w_per_h": 0.548,
+  "d_per_h": 0.562,
+  "tris": 12747,
+  "catalog_h": 2.6
+ },
+ "nat_deadtree": {
+  "w_per_h": 0.965,
+  "d_per_h": 0.695,
+  "tris": 2091,
+  "catalog_h": 1.4
+ },
+ "nat_kinoko0": {
+  "w_per_h": 1.303,
+  "d_per_h": 0.921,
+  "tris": 1468,
+  "catalog_h": 0.55
+ },
+ "nat_kinoko1": {
+  "w_per_h": 0.987,
+  "d_per_h": 0.974,
+  "tris": 734,
+  "catalog_h": 0.42
+ },
+ "nat_kinoko2": {
+  "w_per_h": 1.17,
+  "d_per_h": 0.953,
+  "tris": 1468,
+  "catalog_h": 0.55
+ },
+ "nat_tree": {
+  "w_per_h": 0.979,
+  "d_per_h": 0.842,
+  "tris": 1961,
+  "catalog_h": 1.9
  },
  "oak": {
   "w_per_h": 1.064,
@@ -214,6 +298,12 @@
   "d_per_h": 1.013,
   "tris": 5040,
   "catalog_h": 0.6
+ },
+ "sacred_stump": {
+  "w_per_h": 1.881,
+  "d_per_h": 2.085,
+  "tris": 45754,
+  "catalog_h": 0.5
  },
  "salvia": {
   "w_per_h": 0.827,

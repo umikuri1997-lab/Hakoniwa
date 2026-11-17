@@ -182,6 +182,10 @@ def cookmix(w, face):
     """ボウルを奥の手で持ち、あわだて器でくるくるまぜる"""
     return breathe(dict(sN=1.55+0.12*S(w), bN=-1.0+0.12*C(w), prop='whisk', sF=1.1, bF=-1.05, propF='bowl', lean=0.1, hp=0.18, yaw=0.06*S(w), hr=0.05*S(w)), w)
 M('cookmix', 8, 7/(2*PI), cookmix)
+def cookstir(w, face):
+    """台・かまど・たき火に置いたボウル・ピッチャー・こねばちを、あわだて器でくるくるまぜる（ボウルは持たない。奥の手は台にそえる）"""
+    return breathe(dict(sN=1.4+0.12*S(w), bN=-1.0+0.12*C(w), prop='whisk', sF=0.95, bF=-0.85, lean=0.18, hp=0.22, yaw=0.06*S(w), hr=0.05*S(w)), w)
+M('cookstir', 8, 7/(2*PI), cookstir)
 def cookfry(w, face):
     """フライパンを前へ持ち、ゆすって、ひょいっと上へふって中身をかえす（中身の絵は、ゲームがフライパンの上に）"""
     u = (w/(2*PI)) % 1

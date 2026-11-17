@@ -145,3 +145,18 @@ Row 3: 6 fish dishes, upright, flat, each about one fish in size:
 18 two glazed amber eel fillets on a rectangular white plate
 Style: stylized, slightly chunky, clean simple smooth shapes; pale, light, soft colors, no dark or heavily saturated colors; clean flat colors with soft shading, no texture noise, no grain, no scales texture, no baked shadows, no steam. No base, no ground, no water, no table, no background.
 ```
+
+## 6回め：料理の家具の上の材料・料理（6こを1つのモデルに。`tools/art/furn3d/cooktop.py` の仮の形とかえる）
+
+もらったモデルは `tripo_split.py` で切りわけ、左から順に `ck_mugi.glb`・`ck_imo.glb`・`ck_berry.glb`・`ck_milk.glb`・`ck_sashimi.glb`・`ck_salad.glb` にする。
+
+```
+6 separate cozy-game food objects in one model, in a neat single row with clear space between them, no two touching, all resting on the same flat level floor, upright and level, not tilted:
+1 small bundle of ripe wheat ears tied with a straw band, lying flat
+2 one plump sweet potato, purple-pink skin, lying flat
+3 small cluster of round blueberries with two tiny leaves
+4 small glass milk bottle filled with white milk, short round shape, paper cap
+5 four thick fish slices neatly fanned out, light pink
+6 small shallow wooden bowl filled with fresh leafy green salad
+Style: stylized, slightly chunky, clean simple smooth shapes; pale, light, soft colors, no dark or heavily saturated colors; clean flat colors with soft shading, no texture noise, no grain, no baked shadows. No base, no ground, no table, no background.
+```
