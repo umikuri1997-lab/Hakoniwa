@@ -123,7 +123,7 @@ function spPose(o,t,tr,back){/* せいれいの動きの計算：腕の角度・
   else if(A==='fish'){aN=-.95+Math.sin(t*1.4)*.05;aF=-.15;prop='rod';frontArm=true}
   else if(A==='weed'){const p=cyc(1.1),pull=p<.6?p/.6:1-(p-.6)/.4;sq=.12-pull*.06;aN=aF=.75-pull*.35;lean2=.14-pull*.3;frontArm=bothF=true}/* 雑草：しゃがんで両手でつかみ、うしろへひっぱって抜く */
   else if(A==='plant'||A==='sow'||A==='harvest'||A==='gather'||A==='forage'||A==='pickseed'||A==='pickdrop'){sq=.09+Math.sin(t*5)*.025;aN=.6+Math.sin(t*6)*.35;aF=.6-Math.sin(t*6)*.35;lean2=.1;frontArm=bothF=true}
-  else if(A==='store'||A==='smat'||A==='fetch'||A==='cgrab'){sq=.05;aN=.4+Math.sin(t*5)*.2;aF=aN;frontArm=bothF=true}
+  else if(A==='store'||A==='smat'||A==='fetch'||A==='cgrab'||A==='ydrop'){sq=.05;aN=.4+Math.sin(t*5)*.2;aF=aN;frontArm=bothF=true}
   else if(A==='offer'){aN=aF=-1.5+Math.sin(t*3)*.1;frontArm=bothF=true}
   else if(A==='play'){aN=aF=-1.7+Math.sin(t*7)*.35;frontArm=bothF=true}
   else if(A==='qstone'){sq=.12;lean2=.13;aN=.7+Math.max(0,Math.sin(t*3))*.35;aF=.55;frontArm=bothF=true}/* しゃがんで、小石をならべる */
@@ -186,6 +186,7 @@ function spMotion(o,A){/* いまの動きの名前（3Dの絵がない動きは 
   if(o.walk)return o.carry?(SPM.carry?'carry':''):o.chase&&SPM.chase?'chase':SPM.walk?'walk':'';
   if(o.carry)return'';
   if(A==='play'&&o.toy&&SPM['play_'+o.toy])return'play_'+o.toy;
+  if(A==='ydrop'&&SPM.store)return'store';/* 材料置き場に置くのは、箱にしまうのと同じ動き */
   return SPM[A]?A:''}
 function spToyPh(r,now){/* 遊具のゆれ・進みぐあい（0〜1）：toyPose0 と同じ時刻の式 */
   const a=toyR(r);if(!a)return null;const j=a.obj,T=now/1000,us=toyUsers(j),k=Math.max(0,us.indexOf(r)),fr=v=>(v%1+1)%1;
@@ -404,7 +405,7 @@ const MATIC={wood:'🪵',stone:'🪨',bamboo:'🎋',eda:'chip:drop:eda',kinoko:'
 function matIc(k){return MATIC[k]||'ic:'+k}
 function carryIcon(r){
   if(r.coffin)return r.act&&r.act.type==='pray'&&r.act.stage==='do'?'':'⚰️';/* おいのりのあいだは、棺はおろしている */
-  if(r.act&&r.act.stage==='do'&&r.act.type==='cook')return null;
+  if(r.act&&r.act.stage==='do'&&(r.act.type==='cook'||r.act.type==='ydrop'))return null;/* 置き場に置くあいだは、頭からおろしている */
   if(r.carry&&carryN(r)>0){if(typeof r.carry==='number')return FOODS.mugi.e;const k=r.carryLast&&r.carry[r.carryLast]>0?r.carryLast:Object.keys(r.carry).find(k=>r.carry[k]>0);return foodEmo(k)}
   if(r.cpk){const k=GRASSK.find(k=>(r.cpk.m[k]||0)>0);if(k)return'ic:'+k}if(r.fert>0)return'ic:hiryo';/* 運んでいる草・肥料 */
   if(r.cmat){const k=Object.keys(r.cmat).find(k=>r.cmat[k]>0);if(k)return matIc(k)}
@@ -419,7 +420,7 @@ function itemIc(id){if(id.startsWith('set:'))return itemIc(id.slice(4));return i
 function carryIcons(r){/* 持っているものを、そのまま1つずつ並べる（上に積むほど新しい） */
   const em=foodEmo,out=[];
   if(r.coffin)return['⚰️'];/* 棺を持っているときは、それだけ */
-  if(r.act&&r.act.stage==='do'&&r.act.type==='cook')return out;
+  if(r.act&&r.act.stage==='do'&&(r.act.type==='cook'||r.act.type==='ydrop'))return out;
   if(typeof r.carry==='number')for(let i=0;i<r.carry;i++)out.push(FOODS.mugi.e);
   else if(r.carry){const ks=Object.keys(r.carry).filter(k=>r.carry[k]>0);if(r.carryLast&&ks.includes(r.carryLast)){ks.splice(ks.indexOf(r.carryLast),1);ks.push(r.carryLast)}for(const k of ks)for(let i=0;i<r.carry[k];i++)out.push(em(k))}
   if(r.apk){for(const k of GRASSK)for(let i=0;i<(r.apk.m[k]||0);i++)out.push('ic:'+k)}/* 生き物のえさの草 */
@@ -470,7 +471,7 @@ function drawRes0(r,now){
   if(!SPV.has(r))SPV.set(r,{x:r.x,y:r.y,back:false,turn:0,bl:now+2000+Math.random()*3000});const v=SPV.get(r),dx=r.x-v.x,dy=r.y-v.y;
   if(!walking){v.back=false;v.turn=r.act&&r.act.stage==='do'&&((r.act.type==='chop'||r.act.type==='mine')&&!objBelow(r)&&!objAbove(r)||WORKFACE.has(r.act.type)&&objSide(r))||benchV||r.act&&(r.act.type==='quirk'||r.act.type==='critwatch'||r.act.type==='admire')&&r.act.stage==='do'?1:0;/* しぐさは、横を向く */if(!benchV&&r.act&&r.act.stage==='do'&&WORKFACE.has(r.act.type)&&objAbove(r)){v.back=true;v.turn=0}}/* 上（北）の物の作業は、うしろ向き・よこの物は、よこ向き・下の物は正面 *//* 木・岩は横向きで、そちらを向いて切る */else if(Math.abs(dx)+Math.abs(dy)>.002){const ax=Math.abs(dx),ay=Math.abs(dy);v.turn=ax>ay*1.2?1:0;v.back=!v.turn&&dy<0}{const cj=(r.y|0)*W+(r.x|0),n=r.path&&r.path.length?r.path[0]:-1;if(n>=0&&n===cj-W&&(jumpEdge(cj,n)&&hiAt(n)>hiAt(cj)||ladderLink(n,cj))||LADDERS.has(S.obj[cj])&&ladderDir(cj)===0&&n>=0){v.back=true;v.turn=0}}/* 正面のがけをよじのぼるときは、うしろ向き */v.x=r.x;v.y=r.y;
   v.side=false;if(r.nap){v.back=false;v.turn=0;v.side=false;r.face=1}/* はじめの場面：正面を向いて眠る */{const sj=(r.y|0)*W+(r.x|0),so=S.obj[sj];if(!walking&&r.act&&r.act.stage==='do'&&so&&ROTS[so]===4&&SEATS.includes(so)){const ro=rotAt(sj);v.back=ro===2;v.turn=ro===1||ro===3?1:0;if(v.turn)r.face=ro===1?1:-1;v.side=!!v.turn}if(!walking&&benchJ>=0)v.back=benchR===2;{const ta=toyR(r);if(ta&&ta.what==='swing'&&rotAt(ta.obj)===1){v.back=false;v.turn=1;v.side=true;r.face=1}}}/* 縦のブランコ：横を向いてすわる *//* ベンチで「後ろ」向きなら、せなかが見える *//* いすにすわっている子は、いすの向きにすわる（うしろ向きのいすなら、うしろ向き） */
-  if(!walking&&r.act&&r.act.stage==='do'){const a=r.act,j=(r.y|0)*W+(r.x|0);if((a.type==='eat'||a.type==='evt')&&a.tdir!=null){v.back=a.tdir===-W;v.turn=Math.abs(a.tdir)===1?1:0;v.side=!!v.turn;px=(j%W+.5)*TS;py=((j/W|0)+.5)*TS+1;if(v.turn)r.face=a.tdir}else if((a.type==='store'||a.type==='smat'||['fieldstory','fieldassist','fieldgather','fieldintro','storywait'].includes(a.type))&&(a.box??a.obj)>=0&&!a.front){const target=a.box??a.obj,dx=target%W-j%W,dy=(target/W|0)-(j/W|0);v.back=dy<0;v.turn=dy===0?1:0;if(v.turn)r.face=dx<0?-1:1}}
+  if(!walking&&r.act&&r.act.stage==='do'){const a=r.act,j=(r.y|0)*W+(r.x|0);if((a.type==='eat'||a.type==='evt')&&a.tdir!=null){v.back=a.tdir===-W;v.turn=Math.abs(a.tdir)===1?1:0;v.side=!!v.turn;px=(j%W+.5)*TS;py=((j/W|0)+.5)*TS+1;if(v.turn)r.face=a.tdir}else if((a.type==='store'||a.type==='smat'||a.type==='ydrop'||['fieldstory','fieldassist','fieldgather','fieldintro','storywait'].includes(a.type))&&(a.box??a.obj)>=0&&!a.front){const target=a.box??a.obj,dx=target%W-j%W,dy=(target/W|0)-(j/W|0);v.back=dy<0;v.turn=dy===0?1:0;if(v.turn)r.face=dx<0?-1:1}}
   if(!walking&&r.act&&r.act.stage==='do'){const oj=benchJ>=0?r.act.obj:(r.y|0)*W+(r.x|0),so=S.obj[oj],d=SEATOFF[so]&&(benchJ>=0||SEATS.includes(so))?SEATOFF[so][rotAt(oj)]:null;if(d){px+=d[0];py+=d[1]}}/* すわる家具の上での位置のずれ（SEATOFF：家具ごと・向きごと。持ち主が「すわる位置」のページできめた数） */
   if(!walking&&sacredPose(r)?.sit){v.turn=1;v.back=false;r.face=sacredPose(r).face||(S.sacredRoot!=null&&r.x>storyTreeX(S.sacredRoot)?-1:1);}
   const storyPose=walking?null:sacredPose(r);/* 歩いているあいだは、場面の姿勢（横向き・向きのこてい・聞く姿勢）をつかわず、歩く向きのまま。会話のあとに歩きだしても、すべらない */if(storyPose?.side){v.turn=1;v.back=false;if(storyPose.face)r.face=storyPose.face;else if(storyPose.target!=null)r.face=r.x>storyTreeX(storyPose.target)?-1:1;}else if(storyPose&&storyPose.side===false&&!storyPose.back){v.turn=0;v.back=false}/* 会話で上下にならんだ子：上の子は正面（下のあいて）を向く */
