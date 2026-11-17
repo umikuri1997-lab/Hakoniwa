@@ -18,6 +18,7 @@
 #   OUTERK=True か数（まわりのふちの輪郭線は、部品の olk でうすくしない。目地の線だけうすくするとき。数なら、まわりの線の色＝となりの色×その数）
 #   POUT=k（粒（PWATER）のかたまりのまわりに、粒の色×k の1ドットの輪郭線を引く）
 #   CONTRAST=c（ぬった色のコントラストを c 倍に上げる。輪郭線は、そのあとの色から作るので、線はこくならない）
+#   CENTER=(x,y,z)（見え方の中心。VIEWS の3つめで中身をかえる絵で、のこりの所の写り方を同じにする）
 #   FULLPERSP=True（左右にも、上下と同じ遠近をかける。まるい池など、奥行きだけの遠近ではたまごの形になる物）
 #   MOVE={チップの名前: {'sel':部品の名前を見る関数, 'pivot':(x,y,z)}}（動く部品より手前の本体は、奥行きをくらべて、動く部品の上に重ねる絵を自動で作る）（動く部品。本体の絵からのぞいて、べつの絵 parts にし、のびちぢみ・回る支点 px・py をつける。ゲームの PARTMV で動かす）
 #   POST=関数（写した絵 → なおした絵。葉の中の小さな点をまわりの色に など）
@@ -50,7 +51,7 @@ def scene(M,k,only=None,filt=None,foot=None):
 def shot(M,k,only=None,S_=64,filt=None,info=None):
     sc,keep=scene(M,k,only);V=np.array([v for t in sc.t for v in t[:3]])   # 見え方（中心・はんい）は、いつも、ぜんぶの部品からきめる（動く部品と本体の絵の場所をそろえる）
     if filt:sc,keep=scene(M,k,only,filt,foot=sc.foot)   # まわす中心も、ぜんぶの部品の床の範囲で
-    c=((V[:,0].min()+V[:,0].max())/2,(V[:,1].min()+V[:,1].max())/2,V[:,2].max()/2)
+    c=getattr(M,'CENTER',None) or ((V[:,0].min()+V[:,0].max())/2,(V[:,1].min()+V[:,1].max())/2,V[:,2].max()/2)   # CENTER：見え方の中心をきめる（中身のちがう絵どうしで、台の写り方をそろえる）
     PROJ,DEPTH=O.persp(getattr(M,'ELEV',ELEV),getattr(M,'FOV',FOV),None if getattr(M,'PARALLEL',False) else FRAME,c,full=getattr(M,'FULLPERSP',False))   # FULLPERSP：左右にも上下と同じ遠近   # PARALLEL：奥行きのない物（リース・のれんなど）は、遠近をかけない（平行投影）
     PX=getattr(M,'PX',None);K=1
     if PX:K=S_//PX;S_=PX   # PX：1マスのドット数（あらいドット）。PX で写して、K 倍（NEAREST）にのばす。ゲームのチップは g64 のまま
