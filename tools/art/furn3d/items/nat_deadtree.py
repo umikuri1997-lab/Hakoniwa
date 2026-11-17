@@ -4,6 +4,7 @@ from natcommon import nat,deep,barktexdecal,post_clean,tone5
 POST=lambda im:tone5(post_clean(im),(198,138,103))
 ID='deadtree';GRAD=True;SHADE4=[(10,-2),(21,-4),(33,-6)];ELEV=4;WIDE=1.3;BOTTOM=56
 LIGHT=(-0.6,0.5,0.8)   # 光は左上・手前から（コワイノの絵と同じ）
-VIEWS=[('deadtree',0)]
+VIEWS=[('deadtree',0,0),('deadtree#1',0,45),('deadtree#2',0,180)]   # 3つ目は、同じ木をまわした角度（マスごとにえらんで、ならんだ木が同じ形に見えないように）
 BARK=deep((200,138,104))
-def PARTS():return[barktexdecal(nat('枯れ木','nat_deadtree.glb',1.4,BARK,'bark',wide=WIDE),[(212,150,113),(198,138,103),(186,127,96),(170,114,86)],axis='screen')]
+VAR=0
+def PARTS():return[barktexdecal(nat('枯れ木','nat_deadtree.glb',1.4,BARK,'bark',rot=VAR or 0,wide=WIDE),[(212,150,113),(198,138,103),(186,127,96),(170,114,86)],axis='screen')]
