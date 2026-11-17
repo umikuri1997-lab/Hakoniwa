@@ -1,4 +1,4 @@
-/* 料理・もの作りの動き（work-fx.js）：進みぐあいで動きがかわる・作り方ごとの動き・できたらかかげてから終わる・作業台の上の形・手に持つ物 */
+/* 料理・もの作りの動き（work-fx.js）：進みぐあいで動きがかわる・置いた道具にあわせた動き・家具の上の物（道具・材料・できた料理）・できたらかかげてから終わる・作業台の上の形・手に持つ物 */
 const boot=require('../sim/boot.cjs'),assert=require('node:assert/strict');
 (async()=>{const {browser,run,errors}=await boot();
 const out=await run(`(()=>{const out={};const cx=54,cy=64;for(let y=cy-4;y<cy+6;y++)for(let x=cx-10;x<cx+12;x++){const j=y*W+x;S.obj[j]='';S.floor[j]='';S.hi[j]=0;S.ground[j]=0}
@@ -8,9 +8,13 @@ const out=await run(`(()=>{const out={};const cx=54,cy=64;for(let y=cy-4;y<cy+6;
  const at=(r,p)=>{r.act.t=p*cookTime(r,r.act.obj);return workAnim(r)};
  const a=go(mk('wood',cx-9),'salad',tb),b=go(mk('fire',cx-4),'pancake',ov),c=go(mk('fire',cx+1),'kushiyaki',cf),s=go(mk('water',cx-2),'soup',ov),br=go(mk('earth',cx-5),'bread',ov);
  out.table=[.05,.3,.6,.95].map(p=>at(a,p));out.pan=[.05,.3,.6,.95].map(p=>at(b,p));out.grill=at(c,.5);out.pot=at(s,.5);out.bake=at(br,.5);
- out.foods=[at(a,.05)&&workFood(a),at(b,.5)&&workFood(b),at(b,.95)&&workFood(b)];
- /* 組み合わせでできる、あたらしい料理（COOKD の ic で作り方をきめる） */const nd={};for(const D of COOKD){if(!D.ic||D.st[0]==='cooktable')continue;const t=D.ic[0];if(nd[t])continue;const r=go(mk(D.el||'fire',cx-1),D.id,D.st[0]==='campfire'?cf:ov);r.act.t=.5*cookTime(r,r.act.obj);const f=(r.act.t=.95*cookTime(r,r.act.obj),workFood(r));nd[t]={st:(r.act.t=.5*cookTime(r,r.act.obj),cookStyle(r)),img:!!emoImg(f)};S.res.pop()}out.newDish=nd;
- out.motions=['cookprep','cookcut','cookmix','cook','cookfry','cookfan','cookgrill','cookplate','raise','craftprep','saw','craft','polish'].filter(k=>!SPM[k]);
+ out.foods=[at(a,.05)&&workFood(a),(at(b,.95),b.act.sh=0,workFood(b))];b.act.sh=null;out.noHold=[at(b,.5)&&workFood(b),at(b,.95)&&workFood(b)];/* 作るあいだ・もりつけた料理は、家具の上（手に持たない） */
+ out.tools=[a,b,c,s,br].map(r=>(at(r,.5),cookTool(r)));out.ph=[.05,.5,.95].map(p=>(at(b,p),cookPh(b)));
+ /* 家具の上の絵：どの料理・材料・道具にもある */out.topMiss=[...COOKD.map(D=>'ckdish_'+D.id),'ckdish_fsg',...[...CKING].flatMap(k=>['L','S','K'].map(z=>'ckin_'+k+'.'+z)),...['board','boardk','bowl','pitcher','knead'].flatMap(t=>['','>1','>2'].map(v=>'cktool_cooktable_'+t+v)),'cktool_oven_pot','cktool_oven_pan','cktool_oven_tray','cktool_campfire_pot','cktool_campfire_net'].filter(k=>!CHIPS[k]);
+ out.topPos=['cooktable','oven','campfire'].map(f=>!!(CKTOP[f]&&CKTOP[f][0]&&CKTOP[f][0].D));
+ /* 描いてもエラーにならない（どの段階でも） */const cv=document.createElement('canvas').getContext('2d');for(const r of [a,b,c,s,br])for(const p of[.05,.5,.95]){at(r,p);cookTopDraw(cv,S.obj[r.act.obj],0,0,r.act.obj,0)}
+ /* 組み合わせでできる、あたらしい料理（COOKD の ic で作り方をきめる） */const nd={};for(const D of COOKD){if(!D.ic||D.st[0]==='cooktable')continue;const t=D.ic[0];if(nd[t])continue;const r=go(mk(D.el||'fire',cx-1),D.id,D.st[0]==='campfire'?cf:ov);r.act.t=.5*cookTime(r,r.act.obj);const f=(r.act.t=.95*cookTime(r,r.act.obj),r.act.sh=0,workFood(r));r.act.sh=null;nd[t]={st:(r.act.t=.5*cookTime(r,r.act.obj),cookStyle(r)),img:!!emoImg(f)};S.res.pop()}out.newDish=nd;
+ out.motions=['cookprep','cookcut','cookstir','cook','cookfan','raise','craftprep','saw','craft','polish'].filter(k=>!SPM[k]);
  /* できたら、かかげてから終わる */
  b.act.t=cookTime(b,b.act.obj)-.1;let n=0;const c0=S.cookN||0;while(b.act&&b.act.type==='cook'&&n<200){const a0=b.act;a0.t+=.25;ACT.cook.tick(b,a0,.25);if(n===2)out.raiseAnim=workAnim(b);if(ACT.cook.done(b,a0)){ACT.cook.end(b,a0);b.act=null}n++}
  out.cookShowSteps=n;out.cooked=(S.cookN||0)-c0;
@@ -21,9 +25,9 @@ const out=await run(`(()=>{const out={};const cx=54,cy=64;for(let y=cy-4;y<cy+6;
  out.craftShowSteps=m;out.made=S.orders.length===0&&!!S.unlocked.chair;out.chips=['wbwork#0','wbwork#1','wbwork#2'].filter(k=>!CHIPS[k]);
  return out})()`);
 console.log(out);
-assert.deepEqual(out.table,['cookprep','cookcut','cookmix','cookplate']);
-assert.deepEqual(out.pan,['cookprep','cookfry','cookfry','cookplate']);
-assert.equal(out.grill,'cookgrill');for(const t in out.newDish){assert.ok(['pot','pan','bake','grill'].includes(out.newDish[t].st),t);assert.ok(out.newDish[t].img,t+' の絵')}assert.equal(out.pot,'cook');assert.equal(out.bake,'cookfan');
+assert.deepEqual(out.table,['cookprep','cookcut','cookcut','cookprep']);
+assert.deepEqual(out.pan,['cookprep','cookfan','cookfan','cookprep']);
+assert.equal(out.grill,'cookfan');assert.deepEqual(out.tools,['board','pan','K','pot','tray']);assert.deepEqual(out.ph,['prep','work','plate']);assert.deepEqual(out.noHold,['','']);assert.deepEqual(out.topMiss,[]);assert.deepEqual(out.topPos,[true,true,true]);for(const t in out.newDish){assert.ok(['pot','pan','bake','grill'].includes(out.newDish[t].st),t);assert.ok(out.newDish[t].img,t+' の絵')}assert.equal(out.pot,'cook');assert.equal(out.bake,'cookfan');
 assert.ok(out.foods.every(Boolean),'手に持つ物');assert.deepEqual(out.motions,[]);
 assert.equal(out.raiseAnim,'raise');assert.ok(out.cookShowSteps>=15,'かかげてから終わる');assert.equal(out.cooked,1);
 assert.deepEqual(out.craft,['craftprep','saw','craft','polish']);assert.deepEqual(out.wb,[0,1,2]);assert.equal(out.faceBench,1);
