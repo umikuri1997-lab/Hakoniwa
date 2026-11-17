@@ -26,3 +26,5 @@ def PARTS():
     for nm,y0,y1 in(('おくの皮',Y0,Y0+0.012),('前の皮',Y1-0.012,Y1)):
         h=notex(P(nm,'prism',(circ(R+0.012),y0,y1),HIDE,on=('胴',),note='胴の口にはる'));h.decal=tacks;L.append(h)
     return L
+
+TONE5=True   # かげは木と同じ5色（furntone。持ち主がきめた）

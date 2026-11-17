@@ -28,3 +28,5 @@ def PARTS():
     for k,xt in enumerate((0.035,0.30,0.62,0.945)):   # 輪：お手本と同じ所に4つ（はば0.10）
         L.append(notex(P('輪%d'%(k+1),'box',(xt-0.05,CY-0.04,ZT-0.06,xt+0.05,CY+0.052,ZT+0.05),CLOTH,bevel=0.01,on=('竿',),note='布の上のはしをおり返して竿に通す輪')))
     return L
+
+TONE5=True   # かげは木と同じ5色（furntone。持ち主がきめた）

@@ -59,3 +59,5 @@ def EXTRA(sc):
         mid=np.array([CX+(t[0]-CX)*0.25,CY+(t[1]-CY)*0.25,soil+(t[2]-soil)*0.55])
         sc.part();sc.tube([(CX+(t[0]-CX)*0.08,CY+(t[1]-CY)*0.08,soil),tuple(mid),tuple(t)],0.014,STEM,n=6)
     sc.smooth(False)
+
+TONE5=True   # かげは木と同じ5色（furntone。持ち主がきめた）

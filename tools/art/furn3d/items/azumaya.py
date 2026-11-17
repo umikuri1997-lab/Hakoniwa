@@ -61,3 +61,5 @@ def EXTRA(sc):
             a=A+(B-A)*i/n;b=A+(B-A)*min(1,(i+1)/n+0.012/Lh)
             sc.smooth(True);h,up,ax=halfpipe(sc,a,b,RR,RR*0.86,RIDGE);sc.smooth(False)
             if i==0:disc(sc,a-ax*0.004,ax,h,up,RR*1.25,CAP)
+
+TONE5=True   # かげは木と同じ5色（furntone。持ち主がきめた）

@@ -13,3 +13,5 @@ def PARTS():
     BV=0.03;o=rrect(X0,Y0,X1,Y1,0.08);i_=rrect(X0+BV,Y0+BV,X1-BV,Y1-BV,0.06)
     L.append(P('座板','loft',[(o,ZS),(o,ZS+TS-BV*0.7),(i_,ZS+TS)],WOOD,on=('脚（左うしろ）','脚（右前）'),note='脚の上。角を丸め、上のふちをななめにけずる'))
     return L
+
+TONE5=True   # かげは木と同じ5色（furntone。持ち主がきめた）

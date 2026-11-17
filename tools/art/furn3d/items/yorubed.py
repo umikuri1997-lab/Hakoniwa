@@ -38,3 +38,5 @@ def PARTS():
         if tuple(p.col)==tuple(WOOD):p.col=CHERRY
     return L
 EXTRA=B.EXTRA
+
+TONE5=True   # かげは木と同じ5色（furntone。持ち主がきめた）

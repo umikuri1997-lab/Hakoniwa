@@ -55,3 +55,5 @@ def EXTRA(sc):
     def disk(u,v):U,V=2*u-1,2*v-1;return (CX+r*U*math.sqrt(max(0,1-V*V/2)),CY+r*V*math.sqrt(max(0,1-U*U/2)))
     top=lambda x,y:zw+0.003*math.sin(x*25+y*8)
     sc.material('clear');hfield(sc,CX-r,CY-r,CX+r,CY+r,top,lambda x,y:col(*disk((x-(CX-r))/(2*r),(y-(CY-r))/(2*r))),n=(32,32),shape=disk);sc.material(None)
+
+TONE5=True   # かげは木と同じ5色（furntone。持ち主がきめた）

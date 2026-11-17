@@ -39,3 +39,5 @@ def EXTRA(sc):
     def col(x,y):t=max(0,min(1,(b0+(b1-b0)*0.6-y)/((b1-b0)*0.8)))**1.4;return tuple(WATER[k]*(1-t)+SKY[k]*t for k in range(3))
     top=lambda x,y:zw+0.004*math.sin(x*23+y*7)+0.003*math.sin(y*31-x*9)
     sc.material('clear');hfield(sc,a0,b0,a1,b1,top,col,n=(36,28));sc.material(None)
+
+TONE5=True   # かげは木と同じ5色（furntone。持ち主がきめた）

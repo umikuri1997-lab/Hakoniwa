@@ -51,3 +51,5 @@ def PARTS():
         L.append(rock('小石','pebbles3a.glb',0.52,0.84,0.05,10))
     if st>=2:L.append(sack('ふくろ',0.72,0.36,0.30 if st==2 else 0.40,20))
     return L
+
+TONE5=True   # かげは木と同じ5色（furntone。持ち主がきめた）

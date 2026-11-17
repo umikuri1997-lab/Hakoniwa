@@ -48,3 +48,5 @@ def EXTRA(sc):   # 草：ふんわりもった草の山。細いすじが、ば�
                     if abs(along)<SL_ and abs(acr)<SW*(1-abs(along)/(SL_+0.02)):return B_ if lt else Cc
         return A
     sc.decal(col);sc.smooth(True);hfield(sc,X0+0.003,Y0+0.003,X1-0.003,Y1-0.003,top,A,bot=lambda x,y:0.0,n=(40,30));sc.smooth(False);sc.decal(None)
+
+TONE5=True   # かげは木と同じ5色（furntone。持ち主がきめた）

@@ -336,7 +336,7 @@ def render_px(sc, proj, ext, depth, k=0.72, outer=True, merge=12, lw=1, k2=0.86,
     lw：輪郭線のはば（1か2）。2のときは、さかい目にふれる1ドットめが こい線（×k）、そのとなりの2ドットめが まわりになじむ うすい線（×k2）。まわりのふちは、外がわ1ドットがこい線・物の内がわ1ドットがうすい線。"""
     x0, x1, y0, y1 = ext; Wp = int(round((x1-x0)*S)); Hp = int(round((y1-y0)*S))
     col = np.zeros((Hp, Wp, 3)); ccb = np.zeros((Hp, Wp, 3)); dlb = np.zeros((Hp, Wp)); zb = np.full((Hp, Wp), -1e9); idb = np.full((Hp, Wp), -1); lvb = np.zeros((Hp, Wp), int)
-    wp = np.zeros((Hp, Wp, 3)); wn = np.zeros((Hp, Wp, 3))   # ドットごとの、せかいの場所と面の向き（テクスチャ用）
+    wp = np.zeros((Hp, Wp, 3)); wn = np.zeros((Hp, Wp, 3)); nrm = np.zeros((Hp, Wp, 3))   # nrm：ドットごとの面の向き（スムーズシェードの部品は、まぜた向き。5色のかげ用）   # ドットごとの、せかいの場所と面の向き（テクスチャ用）
     CLR = []   # すけて見える部品の三角形
     RAY = getattr(proj, 'ray', None)   # persp の写し方：ドットごとに、見える面の場所を式でとく（三角形を分けない）
     VN = {}   # スムーズシェード：部品ごと・点ごとの、まわりの面の向き
@@ -394,6 +394,7 @@ def render_px(sc, proj, ext, depth, k=0.72, outer=True, merge=12, lw=1, k2=0.86,
             m = (w0 >= -1e-6) & (w1 >= -1e-6) & (w2 >= -1e-6)
             z = w0*D[0]+w1*D[1]+w2*D[2]
         s = (slice(by0, by1+1), slice(bx0, bx1+1)); vis = m & (z > zb[s])
+        nrm[s][vis] = n
         zb[s][vis] = z[vis]; col[s][vis] = shc; ccb[s][vis] = cc; dlb[s][vis] = d; idb[s][vis] = pid; lvb[s][vis] = lv
         if pid in sc.sm and sc.mt.get(pid) != 'flat' and vis.any():   # スムーズシェード：ドットごとに、角の向きをまぜた面の向きで段をきめる（金属は、つやのすじも）
             na, nb, nc = vnorm(pid, a, n), vnorm(pid, b, n), vnorm(pid, c, n)
@@ -412,6 +413,7 @@ def render_px(sc, proj, ext, depth, k=0.72, outer=True, merge=12, lw=1, k2=0.86,
                 hv = LIGHT+depth/np.linalg.norm(depth); hv /= np.linalg.norm(hv); L2[NN@hv > SATINSPEC] = -2
             if mt_ in ('shiny', 'shinym'):
                 hv = LIGHT+depth/np.linalg.norm(depth); hv /= np.linalg.norm(hv); sp_ = NN@hv; L2[sp_ > SHINYSPEC[1]] = -1; L2[sp_ > SHINYSPEC[0]] = -3
+            nrm[s][vis] = NN
             TC = {q: toon(cc, q) for q in set(L2.tolist())}
             col[s][vis] = np.array([TC[q] for q in L2])*(1 if BMUL is None else BMUL[:, None]); lvb[s][vis] = L2; dlb[s][vis] = dd; ccb[s][vis] = np.clip(np.array(cc, float)*(1 if BMUL is None else BMUL[:, None]), 0, 255)
         if pid in sc.tx or pid in sc.dc:
@@ -526,6 +528,7 @@ def render_px(sc, proj, ext, depth, k=0.72, outer=True, merge=12, lw=1, k2=0.86,
                 inner &= ~e | ((np.roll(np.roll(idb, dy, 0), dx, 1) == idb) & (np.roll(np.roll(idb, 2*dy, 0), 2*dx, 1) == idb))
             edge &= inner
             out[edge] = _ol(col0[edge], (np.full(int(edge.sum()), k2 if outerk is True else (outerk+1)/2) if outerk else KP2[idb[edge]])[:, None])
+    clrm = np.zeros((Hp, Wp), bool)   # すけて見える部品をかさねたドット
     for a, b, c, cc, n in CLR:   # すけて見える部品：手前にあるドットだけ、下の色に CLEARA のこさでまぜる（線は引かない・下の部品の線はのこす）
         d = float(np.dot(n, LIGHT)); lv = (0 if d > LV4[0] else 1 if d > LV4[1] else 2 if d > LV4[2] else 3) if GRAD else (0 if d > 0.55 else 1 if d > 0.1 else 2); shc = np.array(toon(cc, lv), float); al = CLEARA
         hv = LIGHT+depth/np.linalg.norm(depth); hv = hv/np.linalg.norm(hv); sp = float(np.dot(n, hv))   # つや：光と目のあいだの向きを向く面（さざなみの山）は、白く光って、こく見える
@@ -548,7 +551,8 @@ def render_px(sc, proj, ext, depth, k=0.72, outer=True, merge=12, lw=1, k2=0.86,
             w0 = ((by_-cy_)*(gx-cx_)+(cx_-bx_)*(gy-cy_))/den; w1 = ((cy_-ay_)*(gx-cx_)+(ax_-cx_)*(gy-cy_))/den; w2 = 1-w0-w1
             m = (w0 >= -1e-6) & (w1 >= -1e-6) & (w2 >= -1e-6); z = w0*D[0]+w1*D[1]+w2*D[2]
         s_ = (slice(by0, by1+1), slice(bx0, bx1+1)); vis = m & (z > zb[s_]) & (alpha[s_] > 0)
-        o = out[s_]; o[vis] = o[vis]*(1-al)+shc*al; out[s_] = o
+        o = out[s_]; o[vis] = o[vis]*(1-al)+shc*al; out[s_] = o; clrm[s_] |= vis
+    global LAST_IDS, LAST_ZB, LAST_CC, LAST_LINE, LAST_LINE2, LAST_MT, LAST_TX, LAST_N, LAST_CLR, LAST_DEPTH; LAST_CC = ccb.copy(); LAST_LINE = line.copy(); LAST_LINE2 = (line2 & ~line).copy(); LAST_MT = dict(sc.mt); LAST_TX = set(sc.tx); LAST_N = nrm; LAST_CLR = clrm; LAST_DEPTH = np.asarray(depth, float)   # 5色のかげ（furntone）用：ドットごとの部品のもとの色・部品のさかいの線・2ドットめの線・部品ごとの材質
     global LAST_IDS, LAST_ZB; LAST_IDS = idb; LAST_ZB = zb   # ドットごとの部品の番号（その部品だけをとり出すとき用）・奥行き（大きいほど手前。粒の火をかさねるとき用）
     img = np.dstack([np.round(out), alpha]).astype(np.uint8)
     if merge > 0:   # にた色をまとめる（多い色から順に、近い色をよせる）

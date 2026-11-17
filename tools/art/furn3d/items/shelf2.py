@@ -29,3 +29,5 @@ def PARTS():
         L.append(notex(P(nm+'（上の表紙）','box',(x0,cy-0.08,z+0.037,x0+0.22,cy+0.08,z+0.045),col,on=(nm+'（中の紙）',),bevel=0,grp=g)))
         L.append(notex(P(nm+'（背）','box',(x0,cy-0.08,z,x0+0.012,cy+0.08,z+0.045),col,on=(nm+'（下の表紙）',),bevel=0,grp=g)))
     return L
+
+TONE5=True   # かげは木と同じ5色（furntone。持ち主がきめた）

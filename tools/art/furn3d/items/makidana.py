@@ -27,3 +27,5 @@ def PARTS():
                 on=('すのこ板（%s）'%n,) if r_==0 else tuple('まき（%s%d列%d）'%(n,r_,q+1) for q in (k,k+1) if 0<=q<len(rows[r_-1]))
                 L.append(notex(P('まき（%s%d列%d）'%(n,r_+1,k+1),'maki',(x,Y0+0.02,yf,zc,R,sh,rot,fr),LOG,on=on,grp='まき%s%d列%d'%(n,r_,k))))
     return L
+
+TONE5=True   # かげは木と同じ5色（furntone。持ち主がきめた）

@@ -30,3 +30,5 @@ def PARTS():
     L.append(MT(P('取っ手','tube',(ring,0.02),IRON,on=('筒',),note='筒の上')))
     L.append(flame('火',CX,CY+0.17,0.11,0.165,0.05,('台',),'前のガラスにすけて見える所（ガラスの面のすぐうしろ）'))
     return L
+
+TONE5=True   # かげは木と同じ5色（furntone。持ち主がきめた）

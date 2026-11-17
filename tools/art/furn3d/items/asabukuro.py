@@ -10,3 +10,5 @@ def PARTS():
     for nm,cx,cy,h,rot,tilt in(('大きいふくろ',0.33,0.52,0.70,20,0),('小さいふくろ',0.70,0.74,0.54,-25,6)):
         p=P(nm,'model',('tripo/sack.glb',cx,cy,0,h,rot,tilt),on=('ground',),note='地面に置く');p.recol2=(0.965,TIE,SACKW);p.recolk=0.3;L.append(notex(p))
     return L
+
+TONE5=True   # かげは木と同じ5色（furntone。持ち主がきめた）

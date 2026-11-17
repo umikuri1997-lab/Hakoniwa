@@ -36,3 +36,5 @@ def PARTS():
     c=P('布','loft',soft(x0-0.03,y0-0.03,x1+0.03,y1+0.03,Z,Z+h+0.02,rc=0.06,re=0.07,n=6,bottom=False,bulge=-0.015),CLOTHW,on=('わく（おく）','わく（前）'),note='わくの上にかける')
     L.append(SOFT(notex(c)))
     return L
+
+TONE5=True   # かげは木と同じ5色（furntone。持ち主がきめた）

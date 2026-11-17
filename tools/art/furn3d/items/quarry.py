@@ -51,3 +51,5 @@ def PARTS():
         p=P('ツルハシのうで（のみ%d）'%(i+1),'frust',(tuple(arm(sc[i],-1)),tuple(arm(sc[i+1],-1)),r(sc[i]),r(sc[i+1])),IRON,on=('ツルハシの目',) if i==0 else ('ツルハシのうで（のみ%d）'%i,),note='目から外へ、ひとつ前につづける',grp='ツルハシの頭');p.detail=12;p.metal=True;L.append(notex(p))
     p=P('ツルハシののみの刃','plate',(tuple(arm(0.21,-1)),tuple(arm(0.30,-1)),0.060,0.014),IRON,on=('ツルハシのうで（のみ4）',),note='うでのさきに、平たい刃（はばは柄とちょっかくの向き）',grp='ツルハシの頭');p.metal=True;L.append(notex(p))
     return L
+
+TONE5=True   # かげは木と同じ5色（furntone。持ち主がきめた）

@@ -37,3 +37,5 @@ def PARTS():
     L.append(P('柄のはしの横木','box',(XH-0.06,Y0+FW,ZB-0.06,XH,Y1-FW,ZB),WOOD,on=('長い材（前）','長い材（うしろ）'),bevel=0,note='柄の右のはしをつなぐ'))
     p=P('あさぶくろ','model',('tripo/sack.glb',0.40,(Y0+Y1)/2,ZT,0.38,0,0),on=('床板1','床板2'),note='荷台にのせる',deco=True);p.recol=SACK;p.recolk=0.25;L.append(notex(p))
     return L
+
+TONE5=True   # かげは木と同じ5色（furntone。持ち主がきめた）

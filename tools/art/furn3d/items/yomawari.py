@@ -59,3 +59,5 @@ def PARTS():
     for i in range(10):a=math.radians(90+36*i);rr=0.065 if i%2==0 else 0.028;st.append((CX+rr*math.cos(a),zc+rr*math.sin(a)))
     s=P('星','prism',(st,CY-0.0125,CY+0.0125,'y'),GOLD,on=('星の軸',),note='軸のさき');s.glow=True;s.tex=False;L.append(s)
     return L
+
+TONE5=True   # かげは木と同じ5色（furntone。持ち主がきめた）
