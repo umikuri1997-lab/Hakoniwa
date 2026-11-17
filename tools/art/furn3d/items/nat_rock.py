@@ -1,8 +1,9 @@
 # 岩（rock）：お手本（いまのチップ、32×25・g32）と同じ大きさ・形・ならび：
 #   まん中おくに、てっぺんのとがった大きな岩（はば0.76・高さ0.45マス）。絵のはばは1マス（64）以下、左手前に中くらいの岩、右手前に小さな岩。
 # 形は、点をつつむ角ばった形（hullrock）。面ごとに、光の向きで、お手本の岩の色（5だん）をつける。
-from natcommon import hullrock
+from natcommon import hullrock,SUN
 ID='rock';GRAD=False;SHADE=[(9,-2.5),(18,-5)];ELEV=25;BOTTOM=60
+LIGHT=SUN   # 光は木と同じ太陽（natcommon.SUN）
 VIEWS=[('rock',0)]
 PAL=[(212,208,212),(197,193,204),(174,175,194),(159,164,186),(146,152,177)]   # お手本の岩の色（明るい→暗い）
 def PARTS():return[]

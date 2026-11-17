@@ -1,6 +1,7 @@
 # きのこ（kinoko#0、ベニテングタケ）：トリポのきのこ2本（nat_kinoko0.glb）。赤いかさ（上ほど明るく、ふちは暗い）に白いいぼ、白いじく（たてのせんい）、かさのうらのひだ（mushdecal）。
-from natcommon import nat,flat,mushdecal
+from natcommon import nat,flat,mushdecal,SUN
 ID='kinoko0';GRAD=False;SHADE=[(9,-2.5),(18,-5)];ELEV=25;BOTTOM=60
+LIGHT=SUN   # 光は木と同じ太陽（natcommon.SUN）
 VIEWS=[('kinoko#0',0)]
 F='nat_kinoko0.glb';H=0.55
 def PARTS():return[flat(mushdecal(nat('かさ',F,H,(226,72,58),'cap'),('cap','warts'),[(240,96,74),(222,68,56),(184,48,44),(252,246,236)],seed=2)),

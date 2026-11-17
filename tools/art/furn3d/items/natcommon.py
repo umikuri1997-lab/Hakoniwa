@@ -289,6 +289,13 @@ def rimshade(im,dark=(16,4),light=(9,-3),vmin=45):
     for y,x in zip(*np.nonzero(A&(a[...,:3].max(-1)<vmin*2.55))):   # 輪郭・かげの黒っぽい色
         h,s,v=colorsys.rgb_to_hsv(*(a[y,x,:3]/255.0));a[y,x,:3]=[round(q*255) for q in colorsys.hsv_to_rgb(h,s,vmin/100)]
     return Image.fromarray(a)
+TONE5L=(-0.6,-0.5,0.8)   # 木（見おろし4度）の tone5 の光（画面の 右・下・手前 の成分）
+def _sun():
+    e=np.radians(4);lx,ly,lz=TONE5L;L=np.array([lx,ly*np.sin(e)+lz*np.cos(e),-ly*np.cos(e)+lz*np.sin(e)]);return L/np.linalg.norm(L)
+SUN=tuple(float(v) for v in _sun())   # 自然の物の光（太陽）：3Dの向き（x 右・y 手前・z 上）。木の絵のかげの光を3Dの向きにもどした物。岩・きのこ（LIGHT）・落ち影（castshadow.py）も、この光（持ち主がきめた：太陽は1つ）
+def sunscreen(elev):
+    """SUN を、見おろし elev 度のカメラの、画面の 右・下・手前 の成分にする（tone5 の light）。画面の下＝(0,sin e,−cos e)・手前＝(0,cos e,sin e)"""
+    e=np.radians(elev);L=np.array(SUN);return (float(L[0]),float(L[1]*np.sin(e)-L[2]*np.cos(e)),float(L[1]*np.cos(e)+L[2]*np.sin(e)))
 def tone5(im,base,hi=((10,-4),(19,-8)),sh=((15,4),(28,8)),ol=(38,10),cuts=(12,35,72,92),dw=0.12,rim=0.7,streak=(0.14,0.07),blur=1.4,vmin=45,light=(-0.6,-0.5,0.8),mask=None,thin=True,mix=0.0,under=None,pal=None,olc=None):
     """コワイノの絵のようなかげ（持ち主がきめた）：色は5つだけ（こいかげ・かげ・base・ハイライト・明るいハイライト）と輪郭。
     写したときの奥行き（oblique3d.LAST_ZB）から面の向きを出し、光（light：画面の左・下・手前の向き）とのなめらかな明るさを5だんにわける。だんのさかいめ（dw のはば）は、2色を市松もようのあみかけでまぜる。

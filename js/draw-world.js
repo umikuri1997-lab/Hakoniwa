@@ -412,6 +412,7 @@ function render(now){RFN++;
   if(S.nushi){const n=S.nushi,px=n.x*TS,py=n.y*TS;add(n.y+.2,2,[px-100,py-150,px+100,py+20],()=>drawNushi(now),-1)}
   for(let y=Math.max(0,y0-2);y<Math.min(H,y1+4);y++)for(let x=Math.max(0,x0-4);x<x1;x++){const i=y*W+x,o=S.obj[i];if(!o||o==='part'||!BL[o]||S.ground[i]===1&&o!=='lotus'&&o!=='sprout'&&o!=='bridge'||(FLAT.has(o)||BL[o].floor)&&!(BL[o].dyn||BL[o].anim||TREES.has(o)))continue;/* 立っている物は、動く物も動かない物も、毎コマ足もとの順に描く */
     if(o==='door'||o==='yozoradoor')add((i/W|0)+.01,0,null,()=>{ctx._doorBack=1;drawObj(ctx,o,x*TS,y*TS-hiAt(i)*LIFT,i);ctx._doorBack=0},i);/* ドアの奥の面 */
+    {const sh=castShadowChip(o,i);if(sh)add(y+.0015,0,null,()=>drawChip(ctx,sh,o,x*TS,y*TS-hiAt(i)*LIFT,0,i),-1)}/* 落ち影：その行の段差のあと・その行の物より先（右の物の下になる） */
     add(objectDepth(o,i),BL[o].kind==='block'?0:1,null,()=>sideClip(i,()=>dropIn(ctx,i,x*TS,y*TS-hiAt(i)*LIFT,now,()=>drawObj(ctx,o,x*TS,y*TS-hiAt(i)*LIFT,i,S.dyn[i]?(S.dyn[i].g!=null?S.dyn[i].g:S.dyn[i].p):0,now),o)),i)}
   drawWebs(add,vis);/* クモの巣 */
   for(const k in S.edge||{}){const j=+k,x=j%W,y=(j/W)|0;if(!vis({x:x+.5,y:y+.5}))continue;add(objectDepth('bedge',j),0,null,()=>sideClip(j,()=>drawBedge(ctx,x*TS,y*TS-hiAt(j)*LIFT,j,false,now)),j);add(objectDepth('bedge',j),1.5,null,()=>sideClip(j,()=>drawBedge(ctx,x*TS,y*TS-hiAt(j)*LIFT,j,true,now)),j)}/* 花壇のふち：同じマスの花より手前 */
