@@ -52,7 +52,7 @@ function doSummon(){
 
 /* ---------- 敵（「コワイノ」） ---------- */
 const EN={
-  basic:{xp:5,pw:4,name:'コカゲ',hp:100,sp:.80,atk:25,hit:20,hitF:38,hitN:60,hitFS:23,hitNS:30,hitFN:90,hitFNS:45,col:'#2a1d46',eye:'#ff6b8a',size:1},
+  basic:{xp:5,pw:4,name:'コカゲ',hp:100,sp:.80,atk:25,hit:20,hitF:38,hitN:60,hitFS:23,hitNS:30,hitFN:90,hitFNS:45,col:'#2a1d46',eye:'#ff6b8a',size:.75},
   fast:{xp:4,pw:3,name:'ハヤカゲ',hp:50,sp:1.6,atk:16.7,/* コカゲの足2倍・攻撃1.5倍の速さ */hit:14,hitF:30,hitN:40,hitFS:15,hitNS:20,hitFN:60,hitFNS:30,col:'#1d3446',eye:'#7ff0ff',size:.8},
   thief:{xp:2,pw:2,name:'カゲドロボウ',hp:30,sp:.88,atk:25,hit:10,hitF:23,hitN:30,hitFS:15,hitNS:15,hitFN:45,hitFNS:23,col:'#3b2a14',eye:'#ffd35c',size:.9,thief:1},
   brute:{xp:8,pw:6,rng:1.2,name:'カタカゲ',hp:100,sp:.76,atk:9,hit:28,hitF:53,hitN:85,hitFS:30,hitNS:40,hitFN:128,hitFNS:60,col:'#3a1a1a',eye:'#ff8a3d',size:1.25,hs:1}/* 当たり判定は1マス */,
