@@ -173,11 +173,56 @@ def cookcut(w, face):
     u = (w/(2*PI)) % 1; k = S(PI*u)
     return breathe(dict(sN=1.0+0.35*k, bN=-0.55, tN=-0.2, prop='knife', sF=0.95, bF=-0.85, lean=0.15, hp=0.2), w, 0.5)
 M('cookcut', 6, 2.6, cookcut)
+def cookprep(w, face):
+    """材料をならべる：両手で材料を胸の前に持って見て、前へそっと置く（材料の絵は、ゲームが両手のあいだに）"""
+    u = (w/(2*PI)) % 1; k = S(PI*min(1, u/0.6)) if u < 0.6 else 0
+    return breathe(dict(sN=1.35-0.45*k, sF=1.35-0.45*k, bN=-0.9, bF=-0.9, lean=0.05+0.2*k, z=-0.8*k, legz=-0.3*k, hp=0.05+0.2*k, hr=0.08*S(PI*max(0, u-0.6)/0.4)), w, 0.5)
+M('cookprep', 8, 0.55, cookprep)
+def cookmix(w, face):
+    """ボウルを奥の手で持ち、あわだて器でくるくるまぜる"""
+    return breathe(dict(sN=1.55+0.12*S(w), bN=-1.0+0.12*C(w), prop='whisk', sF=1.1, bF=-1.05, propF='bowl', lean=0.1, hp=0.18, yaw=0.06*S(w), hr=0.05*S(w)), w)
+M('cookmix', 8, 7/(2*PI), cookmix)
+def cookfry(w, face):
+    """フライパンを前へ持ち、ゆすって、ひょいっと上へふって中身をかえす（中身の絵は、ゲームがフライパンの上に）"""
+    u = (w/(2*PI)) % 1
+    if u < 0.3: k = u/0.3; s = 1.0+0.05*S(2*PI*k*2); z = 0.0                        # ゆする
+    elif u < 0.42: k = (u-0.3)/0.12; s = 1.0-0.12*S(PI/2*k); z = -0.6*k                 # ため
+    elif u < 0.52: k = (u-0.42)/0.1; s = 0.88+0.42*k; z = -0.6+1.4*k                     # ひょいっ
+    else: k = (u-0.52)/0.48; s = 1.3-0.3*min(1, k*2); z = 0.8*(1-min(1, k*2))           # もどして待つ
+    return breathe(dict(sN=s, bN=-0.55, prop='pan', sF=0.9, bF=-0.8, lean=0.08, z=z, legz=z*0.3, hp=0.12-0.1*max(0, z), top=0.1*z), w, 0.4)
+M('cookfry', 10, 0.75, cookfry)
+def cookfan(w, face):
+    """うちわで、火をぱたぱたあおぐ（少しかがむ）"""
+    return breathe(dict(sN=0.95+0.12*S(w), bN=-0.35, tN=0.55*S(w), prop='fan', sF=0.6, bF=-0.5, lean=0.25, z=-1.5, legz=-0.6, legM=0.25, legP=0.25, hp=0.2, top=0.08*S(w)), w, 0.4)
+M('cookfan', 8, 9/(2*PI), cookfan)
+def cookgrill(w, face):
+    """くしを火の上に出して、くるくるまわして焼く（しゃがむ）"""
+    p = dict(z=-3.0, legz=-1.5, legM=0.55, legP=0.55, lean=0.2, sN=1.0, bN=-0.5, tN=0.6*S(w), prop='skewer', sF=1.05, bF=-0.75, hp=0.12+0.05*S(w), hr=0.06*S(w*0.5))
+    return breathe(p, w, 0.4)
+M('cookgrill', 8, 0.5, cookgrill)
+def cookplate(w, face):
+    """お皿を持って、料理をきれいにもりつける：お皿をのぞきこみ、奥の手でととのえる（料理の絵は、ゲームがお皿の上に）"""
+    k = S(w*2)
+    return breathe(dict(sN=1.2, bN=-0.6, prop='plate', sF=1.45+0.15*k, bF=-0.95, tF=0.2*k, lean=0.12, hp=0.25, hr=0.07*S(w)), w, 0.5)
+M('cookplate', 8, 0.45, cookplate)
+def raise_(w, face):
+    """できた物をかかげる：両手を顔の横まで上げて、ぴょんとはねる（せいれいは手が短く、上げた手は頭巾にかくれるので、顔の横まで。物の絵は、ゲームが頭の上に）"""
+    u = (w/(2*PI)) % 1; j = 3.5*S(PI*min(1, u/0.35)) if u < 0.35 else 0
+    return dict(z=j, legz=j, legM=0.15*j/3.5, legP=0.15*j/3.5, sN=2.05, sF=2.05, bN=-0.45, bF=-0.45, hp=-0.15, top=-0.12*j/3.5, tail=0.3*S(w), wing=0.2*S(w*2))
+M('raise', 8, 0.7, raise_)
+def saw(w, face):
+    """のこぎり：奥の手で材料をおさえ、手前の手で前後にひく"""
+    return breathe(dict(sN=0.85+0.32*S(w), bN=-0.45, prop='saw', sF=0.75, bF=-0.75, lean=0.18+0.05*S(w), yaw=0.08*S(w), z=-0.8, legz=-0.3, legM=0.2, legP=-0.2, hp=0.18), w, 0.4)
+M('saw', 8, 8/(2*PI), saw)
+def polish(w, face):
+    """しあげ：ぬので、くるくるみがく（奥の手でささえる）"""
+    return breathe(dict(sN=0.95+0.14*S(w), bN=-0.55+0.2*C(w), prop='cloth', sF=0.8, bF=-0.7, lean=0.2, hp=0.2, yaw=0.05*C(w), hr=0.05*S(w)), w, 0.4)
+M('polish', 8, 6/(2*PI), polish)
 def grab(w, face):
     """箱から材料をとる・しまう：前かがみで手をのばして、もどす"""
     u = (w/(2*PI)) % 1; k = S(PI*u)
     return dict(lean=0.1+0.3*k, z=-1.5*k, legz=-0.5*k, legM=0.2*k, legP=0.2*k, sN=0.6+0.7*k, sF=0.6+0.7*k, bN=-0.4, bF=-0.4, hp=0.1+0.15*k)
-for nm in ('cgrab', 'store', 'smat', 'fetch'): M(nm, 8, 0.6, grab)
+for nm in ('cgrab', 'store', 'smat', 'fetch', 'craftprep'): M(nm, 8, 0.6, grab)
 def eat(w, face):
     """両手で持って、口もとで食べる（食べ物の絵は、ゲームで手の所にかさねる）"""
     k = max(0, S(w)); return dict(sN=1.95, sF=1.95, bN=-1.05, bF=-1.05, hp=0.12*k, z=-0.3*k, top=0.08*S(w), tail=0.15*S(w))

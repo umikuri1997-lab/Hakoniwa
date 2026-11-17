@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
-"""UIの手ざわりの音（ASMRのような、近くで小さく鳴る本物の音）を作る。
+"""UIの手ざわりの音と、料理・もの作りの手もとの音（ASMRのような、近くで小さく鳴る本物の音）を作る。
 元の音：Kenney の音のセット（どれも CC0。https://kenney.nl/assets/ の rpg-audio・impact-sounds・ui-audio）。
-使いかた：python3 tools/sound/ui_asmr.py <Kenneyのzipをひらいたフォルダ>
+使いかた：python3 tools/sound/ui_asmr.py <Kenneyのzipをひらいたフォルダ> [名前,名前...]
   そのフォルダの中に rpg-audio/ impact-sounds/ ui-audio/ がある形。
 やること：音の前後の無音を切る → 出だし2ms・終わりをなめらかに → 低いゴロゴロ・耳にささる高い音をけずる
  → 大きさをそろえる（いちばん大きい所 -3dB）→ assets/g/<中身のsha1の先10字>.mp3。
 さいごに js/audio.js にはる SAMPLES の行を出す。"""
 import sys, os, glob, hashlib, subprocess, tempfile, json
 SRC = sys.argv[1]
+ONLY = sys.argv[2].split(',') if len(sys.argv) > 2 else None   # 名前をしぼって作る（例：tonton,plate）
 OUT = os.path.join(os.path.dirname(__file__), '..', '..', 'assets', 'g')
 # 名前: (元のファイルのならび, 低い所を切る Hz, 高い所を切る Hz, 長さの上限 秒, 高さのずらし（1=そのまま）)
 SET = {
@@ -18,10 +19,17 @@ SET = {
   'tab':    (['rpg-audio/*/bookFlip3.ogg', 'rpg-audio/*/bookFlip2.ogg'], 300, 9000, .26, 1),  # タブ：ぱたっ（めくる）
   'knockw': (['impact-sounds/*/impactGeneric_light_00%d.ogg' % i for i in range(5)], 120, 6000, .14, 1),  # 行が置かれる・木札：ことっ
   'notch':  (['ui-audio/*/switch12.ogg', 'ui-audio/*/switch13.ogg', 'ui-audio/*/switch14.ogg'], 600, 6500, .06, 1),  # ±：かちっ
+  # ---- 料理・もの作り（マップの音。sfxAt で鳴らす） ----
+  'tonton': (['impact-sounds/*/impactWood_light_00%d.ogg' % i for i in range(4)], 250, 7000, .10, 1),  # 包丁でまな板：とん
+  'potclk': (['rpg-audio/*/metalPot1.ogg', 'rpg-audio/*/metalPot2.ogg', 'rpg-audio/*/metalPot3.ogg'], 300, 6000, .22, 1),  # おたまがなべにあたる：かちゃ
+  'tink':   (['impact-sounds/*/impactGlass_light_00%d.ogg' % i for i in range(3)], 500, 9000, .12, 1),  # あわだて器がボウルにあたる：ちん
+  'plate':  (['impact-sounds/*/impactPlate_light_00%d.ogg' % i for i in range(3)], 300, 8000, .22, 1),  # お皿：ことっ
+  'cloth':  (['rpg-audio/*/cloth1.ogg', 'rpg-audio/*/cloth2.ogg', 'rpg-audio/*/cloth3.ogg', 'rpg-audio/*/cloth4.ogg'], 300, 8000, .30, 1),  # ぬので、みがく：しゅっ
 }
 def run(a): subprocess.run(a, check=True, capture_output=True)
 res = {}
 for k, (pats, hp, lp, mx, rt) in SET.items():
+  if ONLY and k not in ONLY: continue
   res[k] = []
   for pat in pats:
     fs = glob.glob(os.path.join(SRC, pat))

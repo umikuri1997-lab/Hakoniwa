@@ -141,7 +141,7 @@ function drawRoofItem(c,id,x,y){/* ガゼボ・東屋：2×2マス（左上が x
   if(gz){c.fillStyle='#efe7da';c.fillRect(x+30,y-38,4,9);c.beginPath();c.arc(x+32,y-39,3,0,7);c.fill()}else{c.fillStyle=R[1];c.fillRect(x+22,y-33,20,4)}}
 const DOKU_PX=['..................rrrr....','................rrwrrdr...','...............rrrrrwrdd..','...............ddrrrrddd..','..................ss......','.....aaaaaaaaa....st......','...aabbbbbbbbbaa..st.aa...','..abbhhbbbbbbbbbaaststbba.','.abbhbbbbbbhhbbbbbtttbbba.','.abbbbbbbbbhbbbbbbbbbhbba.','.abbbbhhbbbbbbbbbbbbbbbba.','..abbbbbbbbbbbbhhbbbbbba..','...aabbbbbbbbbbbbbbbbaa...','.....aaaaaaaaaaaaaaaaa....'];/* どくの罠の絵（24×14） */
 function drawObj(c,id,x,y,i,g,now){
-  if(id==='wbench'){const ch=window.CHIPS&&CHIPS.wbench;if(ch)drawChip(c,ch,id,x,y,now,i);return}/* 作業台 */
+  if(id==='wbench'){const ch=window.CHIPS&&CHIPS.wbench;if(ch)drawChip(c,ch,id,x,y,now,i);const d=ICON||i==null?null:S.dyn[i],o=d&&(S.orders||[]).find(q=>q.id===d.order),st=o&&typeof wbworkStage==='function'?wbworkStage(o):-1,wc=st>=0&&CHIPS['wbwork#'+st];if(wc)drawChip(c,wc,'wbwork',x,y,now,i);return}/* 作業台。素材がそろったら、天板の上に作っている形（板の山・木のわく・布をかけた形） */
   if(id==='matyard'){const d=ICON||i==null?null:S.dyn[i],k='matyard#'+(d?yardStage(d.yt):0),ch=window.CHIPS&&CHIPS[k];if(ch)drawChip(c,ch,'matyard',x,y,now,i);return}/* 材料置き場：運んだ素材のわりあいで4まい */
   if(id==='statueb'){const ch=window.CHIPS&&CHIPS.statueb;if(ch)drawChip(c,ch,id,x,y,now,i);return}/* こわれた神殿 */
   if(id==='fogbox'||id==='nushiprint'||id==='fogspring'){drawFogObj(c,id,x,y,i,now);return}
