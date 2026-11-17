@@ -41,3 +41,5 @@ def PARTS():
         p=notex(P('こむぎこのふくろ%d'%(k+1),'egg',(sx,sy,0.14,0.11,0.10,0.14,0),SACKC,on=('ground',),note='地面におく'));p.soft1=True;L.append(p)
         L.append(notex(P('ふくろのひも%d'%(k+1),'cyl',(sx,sy,0.065,0.25,0.28),TIE,on=('こむぎこのふくろ%d'%(k+1),),detail=16,note='ふくろの口をしばる')))
     return L
+
+TONE5=True   # かげは木と同じ5色（furntone。持ち主がきめた）

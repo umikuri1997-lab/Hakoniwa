@@ -77,3 +77,5 @@ def PARTS():
         c=notex(P(n+'の布','prism',(quad(0.25,0.91,0.01,0.23,a),y0,y0+0.012),CLOTH_,on=(n+'のわく（外）',),note='わくのうしろにはる'));c.flat=True;L.append(c)   # 布はかげなし（回るので、どの向きでも同じ明るさ）
     return L
 MOVE={'windmill':{'sel':lambda n:n.startswith('羽'),'pivot':(CX,HY,HZ)}}
+
+TONE5=True   # かげは木と同じ5色（furntone。持ち主がきめた）

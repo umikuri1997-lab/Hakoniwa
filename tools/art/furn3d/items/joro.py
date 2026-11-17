@@ -48,3 +48,5 @@ def EXTRA(sc):   # 芽の葉：さきのとがった葉5まい。くきのさき
                 p0,p1=mid[i],mid[i+1];e0=(p0[0]+sg*px*wid[i],p0[1]+sg*py*wid[i],p0[2]-0.012*wid[i]/W);e1=(p1[0]+sg*px*wid[i+1],p1[1]+sg*py*wid[i+1],p1[2]-0.012*wid[i+1]/W)
                 sc.quad(p0,p1,e1,e0,col)
     sc.smooth(False)
+
+TONE5=True   # かげは木と同じ5色（furntone。持ち主がきめた）

@@ -21,3 +21,5 @@ def PARTS():
         x=X0+LG+gap*(i+1)+w*i
         L.append(P('背もたれの桟%d'%(i+1),'box',(x,Y0+0.03,ZS+TS,x+w,Y0+LG-0.03,ZTOP-RL),WOOD,on=('座面','背もたれの横木'),bevel=0,note='座面と横木のあいだ'))
     return L
+
+TONE5=True   # かげは木と同じ5色（furntone。持ち主がきめた）

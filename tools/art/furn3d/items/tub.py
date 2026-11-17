@@ -26,3 +26,5 @@ def EXTRA(sc):   # 水：おけの中、ふちの0.15下。すけて見える・
     def top(x,y):   # さざなみ（ます目の場所で、ゆるい波を2つかさねる）
         u=(x-(CX-r))/(2*r);v=(y-(CY-r))/(2*r);return zw+0.006*math.sin(u*13.0+v*4.0)+0.004*math.sin(v*17.0-u*6.0+1.3)
     sc.material('clear');hfield(sc,CX-r,CY-r,CX+r,CY+r,top,lambda x,y:col(*disk((x-(CX-r))/(2*r),(y-(CY-r))/(2*r))),n=(40,40),shape=disk);sc.material(None)
+
+TONE5=True   # かげは木と同じ5色（furntone。持ち主がきめた）

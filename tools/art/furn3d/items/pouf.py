@@ -20,3 +20,5 @@ def EXTRA(sc):
         return 0.02+(H-0.02-0.025)*side+0.025*side*puff*min(1,r*4)-mid if r<1 else 0.02
     f=lambda x,y:top(*disk((x-(CX-R))/(2*R),(y-(CY-R))/(2*R)))
     sc.material('soft1');hfield(sc,CX-R,CY-R,CX+R,CY+R,f,POUF,bot=lambda x,y:0.0,n=(56,56),shape=disk);sc.material(None)
+
+TONE5=True   # かげは木と同じ5色（furntone。持ち主がきめた）

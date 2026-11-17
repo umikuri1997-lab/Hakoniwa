@@ -28,3 +28,5 @@ def PARTS():
         L.append(MT(P('座面の金具（%s）'%nx,'box',(x-0.035,CY-0.035,0.27,x+0.035,CY+0.035,0.44),IRON,bevel=0.008,on=('ロープ（%s）'%nx,),note='ロープのはしをとめる')))
     L.append(P('座面','box',(0.57,CY-0.11,0.30,1.43,CY+0.11,0.40),WOOD,bevel=0.012,on=('座面の金具（左）','座面の金具（右）'),note='両はしの穴にロープを通す'))
     return L
+
+TONE5=True   # かげは木と同じ5色（furntone。持ち主がきめた）

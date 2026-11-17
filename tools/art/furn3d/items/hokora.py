@@ -27,3 +27,5 @@ def EXTRA(sc):
     sc.quad((x0,ye1,ze),(x1,ye1,ze),(x1,yr,zt),(x0,yr,zt),ROOF)
     sc.quad((x0,yr,zt),(x1,yr,zt),(x1,ye0,ze),(x0,ye0,ze),ROOF)
     sc.quad((x0,ye1,ze-th),(x1,ye1,ze-th),(x1,ye1,ze),(x0,ye1,ze),(120,160,136))
+
+TONE5=True   # かげは木と同じ5色（furntone。持ち主がきめた）

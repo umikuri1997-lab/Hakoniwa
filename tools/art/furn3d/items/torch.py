@@ -21,3 +21,5 @@ def PARTS():
     L.append(MT(P('たが','ring',(CX,CY,0.18,0.192,0.71,0.735),IRON,detail=28,on=('おわん',),note='おわんのまわり')))
     L.append(notex(P('すみ','lathe',(CX,CY,[(0.0,0.78),(0.17,0.78),(0.12,0.80),(0.0,0.81)]),COAL,detail=20,on=('おわん',),note='おわんの中')))
     return L
+
+TONE5=True   # かげは木と同じ5色（furntone。持ち主がきめた）

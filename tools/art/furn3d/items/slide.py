@@ -59,3 +59,5 @@ def EXTRA(sc):   # すべる面と両がわのふち：まげた1まいの板（
     for ny,y in(('前',CY+0.245),('うしろ',CY-0.245)):
         sc.group('ふち'+ny);sc.material(None);sc.part();sweep(sc,pr,y-0.015,y+0.015,-0.02,0.12,WOOD)
     sc.smooth(False);sc.material(None);sc.group(None)
+
+TONE5=True   # かげは木と同じ5色（furntone。持ち主がきめた）

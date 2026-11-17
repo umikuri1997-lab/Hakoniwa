@@ -24,3 +24,5 @@ def PARTS():
     pts=[(CX+R*math.cos(2*math.pi*k/48),CZ+R*math.sin(2*math.pi*k/48)) for k in range(48)]
     t=notex(P('的','prism',(pts,YF,YB),STRAW,on=('横木（下）','横木（上）'),note='横木のあいだに、柱にしばってかける'));t.decal=ring;L.append(t)
     return L
+
+TONE5=True   # かげは木と同じ5色（furntone。持ち主がきめた）

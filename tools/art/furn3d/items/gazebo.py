@@ -16,3 +16,5 @@ def PARTS():
     for p in L:
         if p.name.startswith(('柱','台座','桁','貫','方杖','鼻かくし')):p.tex=False;p.soft1=True   # 白くぬった木：木目なし・うすいかげだけ
     return L
+
+TONE5=True   # かげは木と同じ5色（furntone。持ち主がきめた）

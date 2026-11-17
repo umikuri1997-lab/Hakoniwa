@@ -91,3 +91,5 @@ def PARTS():
         t=(k+0.6)/4.4;y=ya+(yb-ya)*t;z=za*(1-t)+BT
         L.append(P('桟%d'%(k+1),'box',(0.43,y-0.011,z,0.57,y+0.011,z+0.016),WOOD,on=('はしご板',),bevel=0,note='はしご板にくぎでとめる'))
     return L
+
+TONE5=True   # かげは木と同じ5色（furntone。持ち主がきめた）

@@ -17,3 +17,5 @@ def PARTS():
     L.append(P('棚板','box',(X0,YW,ZB-BT,X1,YW+D,ZB),WOOD,on=('ささえ（左）','ささえ（右）','受け木'),bevel=0,note='ささえの上'))
     g=P('つる草','model',('quaternius/Houseplant_7.obj',0.48,YW+0.10,ZB,0.30,0,0),on=('棚板',),deco=True);g.recol2=(2.0,LEAF,POTCOL);L.append(g)   # 葉（暗い所）を明るい緑に
     return L
+
+TONE5=True   # かげは木と同じ5色（furntone。持ち主がきめた）

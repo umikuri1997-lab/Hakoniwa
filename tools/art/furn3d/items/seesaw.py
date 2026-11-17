@@ -21,3 +21,5 @@ def PARTS():
     for k,dx in enumerate((-0.62,0.62)):
         L.append(P('取っ手%d'%(k+1),'lathe',(CX+dx,CY,[(0.0,0.48),(0.045,0.48),(0.045,0.62),(0.036,0.64),(0.0,0.65)]),WOOD,detail=12,on=('板',),note='板の穴にさしこむ'))
     return L
+
+TONE5=True   # かげは木と同じ5色（furntone。持ち主がきめた）

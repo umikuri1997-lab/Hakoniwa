@@ -72,3 +72,5 @@ def PARTS():
     for k,(x,y,sz,rot) in enumerate(((-0.22,0.56,0.20,0),(0.74,0.92,0.17,70))):
         g,_=model('葉の小枝%d'%(k+1),'sprig.glb',x,y,sz,rot,LEAF,k=0.6);g.deco=True;g.olk=0.86;L.append(g)
     return L
+
+TONE5=True   # かげは木と同じ5色（furntone。持ち主がきめた）

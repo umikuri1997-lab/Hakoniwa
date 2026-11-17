@@ -53,3 +53,5 @@ def PARTS():
 GSP=((XA+0.02,Y1+0.02),(XA+0.13,Y1+0.03),(XB-0.11,Y1+0.02),(XB,Y1+0.03),(2.66,0.69))
 PBOX=gbox(GSP)
 def PWATER():return grass(GSP,6,flowers=((XA+0.07,Y1+0.10,0.16),(XB-0.05,Y1+0.10,0.17)))   # 足もとの草むらと白い花は粒
+
+TONE5=True   # かげは木と同じ5色（furntone。持ち主がきめた）

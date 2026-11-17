@@ -90,3 +90,5 @@ def PWATER():
             ph=rnd.random();an=rnd.uniform(0,2*math.pi);age=(t+ph)%1.0;up=rnd.uniform(0.03,0.06);v=math.sqrt(2*up);T=2*v;tau=age*T;rr=rnd.uniform(0.02,0.06)*age
             P.append((lx+rr*math.cos(an),ly+rr*math.sin(an),WZ+v*tau-tau*tau/2,0.009,JETL,0))
     return P
+
+TONE5=True   # かげは木と同じ5色（furntone。持ち主がきめた）
