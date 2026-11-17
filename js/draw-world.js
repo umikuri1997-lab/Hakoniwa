@@ -34,6 +34,7 @@ function enemyHidden(e,x0,y0,x1,y1){const ex=e.x|0,ey=e.y|0;
   for(let dy=0;dy<=4;dy++)for(let dx=-3;dx<=3;dx++){const x=ex+dx,y=ey+dy;if(x<0||y<0||x>=W||y>=H)continue;const a=anc(y*W+x),o=S.obj[a];if(!o||o==='part'||FLAT.has(o)||!BL[o])continue;
     const ay=(a/W)|0;if(ay<ey&&!(BL[o].sz&&ay+szAt(o,a)[1]-1>=ey))continue;const b=objBox(o,a);if(b[0]<x1&&b[2]>x0&&b[1]<y1&&b[3]>y0&&(ay>ey||dy>0||TREES.has(o)||BIG2.has(o)||BL[o].kind==='build'))return true}
   for(const h of HOUSES)if(h.set.has(ey*W+ex)||h.set.has((ey+1)*W+ex))return true;return false}
+function enFace(e,v,now){/* 攻撃している相手のほうを向く：よこ（R・L）・うしろ（B）・正面（F）。歩いているあいだは、歩く向きのまま */const a=AIMV.get(e);if(!a||S.t-a.t>8||S.t<a.t||now-v.mv<200)return null;const dx=a.x-e.x,dy=a.y-e.y;if(Math.abs(dx)<.05&&Math.abs(dy)<.05)return null;return Math.abs(dx)>=Math.abs(dy)?(dx>0?'R':'L'):dy<0?'B':'F'}
 function drawEnemy(e,now){
   if(!e.spawned)return;const D=EN[e.type],z=D.size*2;let px=e.x*TS,py=e.y*TS;
   if(!EV.has(e))EV.set(e,{x:e.x,y:e.y,back:false,f:1,mv:0});const v=EV.get(e),dx=e.x-v.x,dy=e.y-v.y;
@@ -44,7 +45,7 @@ function drawEnemy(e,now){
    const R=36*z,ox=px-R,oy=py+8-R*1.7,ww=R*2,hh=R*2.2,k=dpr*cam.z,cw=Math.ceil(ww*k)+2,ch=Math.ceil(hh*k)+2;
    if(EOC.width<cw||EOC.height<ch){EOC.width=EOS.width=Math.max(EOC.width,cw);EOC.height=EOS.height=Math.max(EOC.height,ch)}
    eox.setTransform(1,0,0,1,0,0);eox.clearRect(0,0,cw,ch);eox.setTransform(k,0,0,k,-ox*k,-oy*k);
-   drawShade(eox,e.type,px,py+8,.27*z,v.f,{dot:1,t:now/1000+e.id*1.3,back:v.back,walk:now-v.mv<200,flash:ho[2],hurt:hurtFrame(e,now),atk:now-(e.swing||-1e9)<150?.95+(now-e.swing)/150*.045:now-v.mv<200?0:(e.atk||0)/D.atk});
+   const fc=enFace(e,v,now);drawShade(eox,e.type,px,py+8,.27*z,v.f,{dot:1,t:now/1000+e.id*1.3,back:fc?fc==='B':v.back,side:fc==='R'||fc==='L'?fc:'',walk:now-v.mv<200,flash:ho[2],hurt:hurtFrame(e,now),atk:now-(e.swing||-1e9)<150?.95+(now-e.swing)/150*.045:now-v.mv<200?0:(e.atk||0)/D.atk});
    eos.globalCompositeOperation='copy';eos.drawImage(EOC,0,0);eos.globalCompositeOperation='source-in';eos.fillStyle='#fff';eos.fillRect(0,0,cw,ch);eos.globalCompositeOperation='source-over';
    const sw=cw/k,sh=ch/k,o=1.3;ctx.globalAlpha=e.stun>0?.5:.95;
    const OFF=[[o,0],[-o,0],[0,o],[0,-o],[o*.7,o*.7],[-o*.7,o*.7],[o*.7,-o*.7],[-o*.7,-o*.7]];for(const[dx,dy]of OFF)ctx.drawImage(EOS,0,0,cw,ch,ox+dx,oy+dy,sw,sh);

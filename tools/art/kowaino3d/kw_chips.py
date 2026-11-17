@@ -3,7 +3,7 @@
   python3 kowaino_paint.py --sheets <フォルダ> basic fast ...   # 絵を作る
   python3 kw_chips.py <フォルダ> basic fast ...                  # チップに入れる（名前がなければ、フォルダの kg_*.json ぜんぶ）
 
-チップは kg_<名前>:<動き>（idle・idleB・walk・walkB・atk・atkB・hurt）。1まいの絵にコマをたてにならべ、h は1コマの高さ、n はコマ数（ゲームの drawShadeDot）。
+チップは kg_<名前>:<動き>（idle・idleB・idleR・idleL・walk・walkB・atk・atkB・atkR・atkL・hurt。R・L は右むき・左むき）。1まいの絵にコマをたてにならべ、h は1コマの高さ、n はコマ数（ゲームの drawShadeDot）。
 """
 import sys, os, json, glob
 from PIL import Image
