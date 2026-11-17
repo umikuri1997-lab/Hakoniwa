@@ -412,14 +412,17 @@ def tube(sc, pts, rs, col, n=10):
 PATD = 0.07   # 布の模様（体とはなれた かざりで、布の面から このきょり（高さのうち）より近い物）：布の面に はりつける
 PATOFF = 0.004   # 模様・目を、面から このきょりだけ 外へ（面とかさならないように）
 EYEEDGE = 0.014   # 目のふち（ふちの色）のはば（高さのうち）
-def ornament(P, F, col, lab, comp, H, cfg, dead=False):
+def ornament(P, F, col, lab, comp, H, cfg, dead=False, name=None):
     """布の模様と目を、3Dの面にはる（写したあとに2Dで おさない。持ち主）。
     模様：布の面から PATD より近い かざりの かたまりを、布の面の いちばん近い所へ うつす（うき上がって べつの物に見えない）。色わけ 'pat'。
     目：顔の面の上に、だ円（たて rz・よこ rx）を2まい（ふちの色・目の色）。色わけ 'eyee'・'eye'。たおされた目は、ほそい線だけ。
     ボーンの重みは、近い布・顔の点と同じ（kw_skel）"""
     P = P.copy(); lab = lab.copy(); big = np.bincount(comp).argmax()
     cl = np.isin(lab, ['base', 'rim', 'under', 'red']); T = trimesh.Trimesh(P, F[cl], process=False)
+    import kw_skel
     dec = lab == 'deco'
+    if name in kw_skel.SPREAD or name in kw_skel.SCARF: dec[:] = False   # とびちる かざり・マフラーは、模様ではない
+    for labels, sel, _ in kw_skel.ATTACH.get(name, []): dec &= ~kw_skel._sel_faces(P, F, lab, comp, H, labels, sel)   # 骨につける持ち物（ハンマー・牙・つの など）も
     for q in np.unique(comp[dec]):
         if q == big: continue
         k = dec & (comp == q); vs = np.unique(F[k]); cp, d, _ = trimesh.proximity.closest_point(T, P[vs])
@@ -443,7 +446,7 @@ def ornament(P, F, col, lab, comp, H, cfg, dead=False):
 def shoot(name, cfg, src, yaw=0.0):
     if cfg.get('model'):   # マテリアルつきのモデル（持ち主が直した物・kw_model.py で手を足した物）：色わけはマテリアルのまま
         m, comp, lab0 = load_labeled(cfg['model']); P, F, col, lab, H, cen = paint_labeled(m, comp, lab0, cfg); POMC[:] = []
-        P, F, col, lab, comp = ornament(P, F, col, lab, comp, H, cfg, cfg.get('pose', {}).get('dead', False))   # 模様と目を、3Dの面に
+        P, F, col, lab, comp = ornament(P, F, col, lab, comp, H, cfg, cfg.get('pose', {}).get('dead', False), name)   # 模様と目を、3Dの面に
         comp0 = comp.copy()
         comp = np.where(np.isin(lab, ['base', 'under', 'rim', 'face', 'pat', 'eye', 'eyee']), 0, comp+1)   # すそのライン・目は、布・顔の所で見る
     else:
