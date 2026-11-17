@@ -3,7 +3,7 @@
 /* ---------- 描画 ---------- */
 const cv=$('#cv'),ctx=cv.getContext('2d');
 let dpr=1,VW=0,VH=0;const cam={x:0,y:0,z:1};let camAnim=null;
-const GCS=16,GPX=GCS*TS,GFULL=64,GBUD=8,GPAD=2;/* 区画の絵のまわりに、となりの地面を GPAD ドット（半分の絵は1ドット）よけいに描いておく。拡大するとき Safari は絵のはしの外（透明）までまぜるので、のりしろがないと区画のさかいめにうすい線が出る *//* 地面の下絵の区画：16×16マス（512ドット）。くわしい区画は、ステージを開くときにぜんぶ作って、すてない（64こまで。マップは7×7＝49こ）。半分の細かさの区画（ちぢめたとき用、1こ約0.25MB）は、ぜんぶとっておく。区画を作る時間は1コマ8ミリ秒まで（少なくとも1こ） */
+const GCS=16,GPX=GCS*TS,GFULL=64,GBUD=8,GPAD=2;/* 区画の絵のまわりに、となりの地面を GPAD ドット（半分の絵は1ドット）よけいに描いておき、画面には、のりしろごと描いて、となりの区画とかさねる。Safari は拡大するとき、描く絵（切りとった所）のはしを透明とまぜるので、ぴったりならべると区画のさかいめにうすい線が出る *//* 地面の下絵の区画：16×16マス（512ドット）。くわしい区画は、ステージを開くときにぜんぶ作って、すてない（64こまで。マップは7×7＝49こ）。半分の細かさの区画（ちぢめたとき用、1こ約0.25MB）は、ぜんぶとっておく。区画を作る時間は1コマ8ミリ秒まで（少なくとも1こ） */
 const GRD={s:null,c:new Map(),bt:0,any:false,pre:null,busy:false,n:0};/* key → {f:くわしい絵, l:半分の絵, u:さいごに使ったコマ, st:作りなおすしるし} */
 function gq(cx,cy){const k=cy*64+cx;let q=GRD.c.get(k);if(!q){q={f:null,l:null,u:0,st:false};GRD.c.set(k,q)}return q}
 function gbuild(cx,cy,q){/* 区画 (cx,cy) のくわしい絵を作る（まわり4マス・下へ6マスもいっしょに描いて、区画の中だけをのこす：となりのマスからはみ出す平らな物・水のふち・草のふち）。半分の細かさの絵も、ここから作る */const t0=performance.now(),X0=cx*GCS,Y0=cy*GCS,X1=Math.min(W,X0+GCS)-1,Y1=Math.min(H,Y0+GCS)-1,w=(X1-X0+1)*TS+2*GPAD,h=(Y1-Y0+1)*TS+2*GPAD;
@@ -29,7 +29,8 @@ function gblit(c,sx,sy,sw,sh,dx,dy,dw,dh,lod){/* 地面の下絵の (sx,sy,sw,sh
   for(let cy=Math.max(0,Math.floor(sy/GPX));cy<=Math.min((H-1)>>4,Math.floor((sy+sh-.001)/GPX));cy++)for(let cx=Math.max(0,Math.floor(sx/GPX));cx<=Math.min((W-1)>>4,Math.floor((sx+sw-.001)/GPX));cx++){
     const ox=cx*GPX,oy=cy*GPX,a=Math.max(sx,ox),b=Math.max(sy,oy),a2=Math.min(sx+sw,ox+GPX,W*TS),b2=Math.min(sy+sh,oy+GPX,H*TS);if(a2<=a||b2<=b)continue;
     const q=GRD.s===S&&GRD.c.get(cy*64+cx);if(!q)continue;let im=lod?q.l:(q.f||q.l),s=im===q.l?.5:1;if(!im)continue;q.u=RFN;/* できていない区画はとばす（つぎのコマ以降に、見えている区画から作る）。くわしい絵をすてた区画は、半分の絵で */
-    c.drawImage(im,(a-ox+GPAD)*s,(b-oy+GPAD)*s,(a2-a)*s,(b2-b)*s,dx+(a-sx)*kx,dy+(b-sy)*ky,(a2-a)*kx,(b2-b)*ky)}}
+    const e1=a===ox&&a>sx?GPAD:0,e2=a2===ox+GPX&&a2<sx+sw?GPAD:0,f1=b===oy&&b>sy?GPAD:0,f2=b2===oy+GPX&&b2<sy+sh?GPAD:0,A=a-e1,B=b-f1,A2=a2+e2,B2=b2+f2;/* 区画のさかいでは、のりしろの分だけ、となりの区画にかさねて描く（Safari は切りとった所のはしを透明とまぜるので、さかいめに線が出る） */
+    c.drawImage(im,(A-ox+GPAD)*s,(B-oy+GPAD)*s,(A2-A)*s,(B2-B)*s,dx+(A-sx)*kx,dy+(B-sy)*ky,(A2-A)*kx,(B2-B)*ky)}}
 let dirty=true,STATICFULL=false,ICON=false,VIG=null;
 function artLoaded(){for(const q in iconCache)delete iconCache[q];STATICFULL=true;dirty=true}/* 絵が読みこまれたら、次に描くときに1回だけ地面を全部描きなおす */
 

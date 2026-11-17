@@ -353,8 +353,8 @@ function render(now){RFN++;
   ctx.setTransform(k,0,0,k,-cam.x*k,-cam.y*k);
   {GLOD=k<1.2;GRD.bt=0;if(GRD.s!==S)gclear();const fresh=!GRD.any;let built=0;/* 地面の下絵：見えている区画をならべる（ちぢめたときは半分の細かさ）。区画を作るのは1コマ GBUD ミリ秒まで（少なくとも1こ。はじめのコマは、見えている分をぜんぶ） */
     const SXg=v=>cam.x+Math.round((v-cam.x)*k)/k,SYg=v=>cam.y+Math.round((v-cam.y)*k)/k,cx0=Math.max(0,Math.floor(cam.x/GPX)),cy0=Math.max(0,Math.floor(cam.y/GPX)),cx1=Math.min((W-1)>>4,Math.floor((cam.x+VW/cam.z)/GPX)),cy1=Math.min((H-1)>>4,Math.floor((cam.y+VH/cam.z)/GPX));
-    for(let cy=cy0;cy<=cy1;cy++)for(let cx=cx0;cx<=cx1;cx++){const q=gq(cx,cy),need=GLOD?(!q.l||q.st):(!q.f||q.st);if(need&&(fresh||built===0||GRD.bt<GBUD)){gbuild(cx,cy,q);built++}q.u=RFN;const im=GLOD?q.l:(q.f||q.l),s=im===q.l?.5:1;if(!im)continue;/* まだ作っていない区画は、地面の色のまま（つぎのコマで作る） */
-      const ox=cx*GPX,oy=cy*GPX,w=Math.min(GPX,W*TS-ox),h=Math.min(GPX,H*TS-oy),a=SXg(ox),b=SYg(oy);ctx.drawImage(im,GPAD*s,GPAD*s,w*s,h*s,a,b,SXg(ox+w)-a,SYg(oy+h)-b)}GRD.any=true}/* のりしろ（GPAD）の内がわだけを描く *//* 区画は、画面のドットのさかいに合わせておく（さかいめに線が出ないように） */
+    for(let cy=cy0;cy<=cy1;cy++)for(let cx=cx0;cx<=cx1;cx++){const q=gq(cx,cy),need=GLOD?(!q.l||q.st):(!q.f||q.st);if(need&&(fresh||built===0||GRD.bt<GBUD)){gbuild(cx,cy,q);built++}q.u=RFN;const im=GLOD?q.l:(q.f||q.l);if(!im)continue;/* まだ作っていない区画は、地面の色のまま（つぎのコマで作る） */
+      const ox=cx*GPX,oy=cy*GPX,w=Math.min(GPX,W*TS-ox),h=Math.min(GPX,H*TS-oy),a=SXg(ox),b=SYg(oy),kx=(SXg(ox+w)-a)/w,ky=(SYg(oy+h)-b)/h;ctx.drawImage(im,a-GPAD*kx,b-GPAD*ky,(w+2*GPAD)*kx,(h+2*GPAD)*ky)}GRD.any=true}/* 絵は切りとらず、のりしろ（GPAD）ごと描いて、となりの区画にかさねる *//* 区画は、画面のドットのさかいに合わせておく（さかいめに線が出ないように） */
   const x0=Math.max(0,Math.floor(cam.x/TS)-1),y0=Math.max(0,Math.floor(cam.y/TS)-2),x1=Math.min(W,Math.ceil((cam.x+VW/cam.z)/TS)+1),y1=Math.min(H,Math.ceil((cam.y+VH/cam.z)/TS)+2);
   waterShimmer(now,x0,y0,x1,y1);drawFords(x0,y0,x1,y1);drawRugsLive(x0,y0,x1,y1);
   drawSacredRoot(now);drawFieldStory(now);if(typeof drawTreasure==='function')drawTreasure(now);
