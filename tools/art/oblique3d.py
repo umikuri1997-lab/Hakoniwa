@@ -253,6 +253,8 @@ DITHERLV = 3   # あみのときの、かげの色（toon の段）
 METALSPEC = 0.97                # 金属のつやが出る向きの近さ
 SATINSPEC = 0.80                # サテンの布（material 'satin'）のつやが出る向きの近さ（光と目のあいだの向きとの内積）
 SATINSHINE = (24, -6)           # サテンのつや（lv −2）：明るさを足し、あざやかさを引く
+SHINYSPEC = (0.95, 0.86)       # つやつや（material 'shiny'・金属は 'shinym'）：光と目のあいだの向きとの内積が、1つめより大きい所に白い光（lv −3）、2つめより大きい所に うすい光（lv −1）
+SHINYSHINE = (34, -40)          # つやつやの白い光（lv −3）：明るさを足し、あざやかさを大きく引く
 CLEARSPEC = (0.06, 0.035, 0.45, 0.15)   # すけて見える部品のつや：平らな面より、光と目のあいだの向きへかたむいた量（内積の差）が、これより大きい所につよいつや・よわいつや・白くする量・こさに足す量
 CLEARA = 0.66   # すけて見える部品（material 'clear'。水）のこさ
 SOFTLV = (0.86, 0.62)
@@ -274,7 +276,7 @@ def toon(cc, lv):
     import colorsys
     h, s_, v = colorsys.rgb_to_hsv(*[c/255 for c in cc])
     if lv == 0: return np.array(cc, float)
-    dv, ds = (-SATINSHINE[0], -SATINSHINE[1]) if lv == -2 else (-SHINE[0], -SHINE[1]) if lv < 0 else (SHADE4 if GRAD else SHADE)[lv-1]
+    dv, ds = (-SHINYSHINE[0], -SHINYSHINE[1]) if lv == -3 else (-SATINSHINE[0], -SATINSHINE[1]) if lv == -2 else (-SHINE[0], -SHINE[1]) if lv < 0 else (SHADE4 if GRAD else SHADE)[lv-1]
     if lv > 0 and v < 0.85: dv *= v/0.85   # くらい色は、かげで引く明るさを、色の明るさに合わせてへらす（黒っぽいかげにしない。持ち主がきめた）
     v = min(1, max(0, v-dv/100)); s_ = min(1, max(0, s_-ds/100))
     return np.array(colorsys.hsv_to_rgb(h, s_, v))*255
@@ -362,7 +364,10 @@ def render_px(sc, proj, ext, depth, k=0.72, outer=True, merge=12, lw=1, k2=0.86,
         if sc.mt.get(pid) == 'soft': lv = (0 if d > SOFTLV4[0] else 1 if d > SOFTLV4[1] else 2 if d > SOFTLV4[2] else 3) if GRAD else (0 if d > SOFTLV[0] else 1 if d > SOFTLV[1] else 2)
         if sc.mt.get(pid) == 'soft1': lv = 0 if d > SOFTLV[0] else 1   # 布（うすいかげだけ。まくらなど、かげをこくしない物）
         if sc.mt.get(pid) in ('flat', 'ink'): lv = 0   # かげを自分でつけた部品（場所ごとの色。まくら）：3だんのかげをつけない   # 布・砂：なだらかなふくらみにも、かげがつく（さかい目の向きを光に近くする）
-        if sc.mt.get(pid) == 'metal':   # 金属：光と目のあいだの向き（ハーフベクトル）を向く面に、つやのすじ
+        if sc.mt.get(pid) in ('shiny', 'shinym'):   # つやつや：光と目のあいだの向きを向く所に、白い光とまわりのうすい光（金属は、すじの上に）
+            hv = LIGHT+depth/np.linalg.norm(depth); hv /= np.linalg.norm(hv); sp = float(np.dot(n, hv))
+            lv = -3 if sp > SHINYSPEC[0] else -1 if sp > SHINYSPEC[1] else lv
+        if sc.mt.get(pid) in ('metal', 'shinym') and lv != -3:   # 金属：光と目のあいだの向き（ハーフベクトル）を向く面に、つやのすじ
             hv = LIGHT+depth/np.linalg.norm(depth); hv /= np.linalg.norm(hv); hh = np.array([hv[0], hv[1], 0]); nh = np.array([n[0], n[1], 0])
             sp = float(np.dot(nh/(np.linalg.norm(nh) or 1), hh/(np.linalg.norm(hh) or 1))) if np.linalg.norm(nh) > .3 else float(np.dot(n, hv))
             lv = -1 if sp > METALSPEC else lv
@@ -396,8 +401,8 @@ def render_px(sc, proj, ext, depth, k=0.72, outer=True, merge=12, lw=1, k2=0.86,
             BMUL = None
             if pid in sc.bm:   # でこぼこ（ノーマルマップ）：見える面の場所から、面の向きをかえる
                 NN, BMUL = sc.bm[pid](w0[vis, None]*a+w1[vis, None]*b+w2[vis, None]*c, NN)
-            dd = NN@LIGHT; mt_ = sc.mt.get(pid); L2 = np.array([_lvof(float(x), 'curve' if pid in sc.cv else (None if mt_ == 'metal' else 'soft' if mt_ == 'satin' else mt_)) for x in dd])
-            if mt_ == 'metal':
+            dd = NN@LIGHT; mt_ = sc.mt.get(pid); L2 = np.array([_lvof(float(x), 'curve' if pid in sc.cv else (None if mt_ in ('metal', 'shiny', 'shinym') else 'soft' if mt_ == 'satin' else mt_)) for x in dd])
+            if mt_ in ('metal', 'shinym'):
                 hv = LIGHT+depth/np.linalg.norm(depth); hv /= np.linalg.norm(hv); hh = np.array([hv[0], hv[1], 0]); hh /= max(1e-9, np.linalg.norm(hh))
                 for i_, q in enumerate(NN):
                     nh = np.array([q[0], q[1], 0]); ln_ = np.linalg.norm(nh)
@@ -405,6 +410,8 @@ def render_px(sc, proj, ext, depth, k=0.72, outer=True, merge=12, lw=1, k2=0.86,
                     if sp > METALSPEC: L2[i_] = -1
             if mt_ == 'satin':
                 hv = LIGHT+depth/np.linalg.norm(depth); hv /= np.linalg.norm(hv); L2[NN@hv > SATINSPEC] = -2
+            if mt_ in ('shiny', 'shinym'):
+                hv = LIGHT+depth/np.linalg.norm(depth); hv /= np.linalg.norm(hv); sp_ = NN@hv; L2[sp_ > SHINYSPEC[1]] = -1; L2[sp_ > SHINYSPEC[0]] = -3
             TC = {q: toon(cc, q) for q in set(L2.tolist())}
             col[s][vis] = np.array([TC[q] for q in L2])*(1 if BMUL is None else BMUL[:, None]); lvb[s][vis] = L2; dlb[s][vis] = dd; ccb[s][vis] = np.clip(np.array(cc, float)*(1 if BMUL is None else BMUL[:, None]), 0, 255)
         if pid in sc.tx or pid in sc.dc:

@@ -17,7 +17,8 @@ SIZE={'nat_tree':1.9,'nat_deadtree':1.4,'nat_bush':0.62,'nat_cedar':2.0,'nat_ced
       'mushrooms':0.3,'grass':0.35,'grass2':0.35,'plant':0.6,'sack':0.5,'sacks2':0.6,'jar_band':0.5,'terracotta':0.5,'candle':0.3,
       'lantern':0.45,'wateringcan':0.35,'veggies':0.3,'bathtub':0.6,'cutboard':0.2,'bird':0.2,
       'stump':0.43,'stone_big':0.38,'stone_mid':0.3,'stone_round':0.32,'stone_slab':0.1,'stone_chunk':0.25,'pebbles2':0.08,'pebbles3a':0.08,'pebbles3b':0.08,
-      'pebble_a':0.06,'pebble_b':0.04,'pebble_c':0.06,'log_lying':0.22,'firewood':0.12,'sprig':0.18}
+      'pebble_a':0.06,'pebble_b':0.04,'pebble_c':0.06,'log_lying':0.22,'firewood':0.12,'sprig':0.18,
+      'ck_mugi':0.05,'ck_imo':0.06,'ck_berry':0.12,'ck_milk':0.2,'ck_sashimi':0.04,'ck_salad':0.12}
 def shot1(f,h):
     M=types.SimpleNamespace(ID=f,GRAD=True,VIEWS=[(f,0)])
     def PARTS():
