@@ -12,6 +12,9 @@ function capTxt(n,c){return c>0?'（'+n+'/'+c+'）':n>0?'（'+n+'）':''}
 /* できた印（✓）は、ドットのチェックにする */
 const CKD='M6 0h1v1h-1zM5 1h1v1h-1zM6 1h1v1h-1zM0 2h1v1h-1zM4 2h1v1h-1zM5 2h1v1h-1zM0 3h1v1h-1zM1 3h1v1h-1zM3 3h1v1h-1zM4 3h1v1h-1zM1 4h1v1h-1zM2 4h1v1h-1zM3 4h1v1h-1zM2 5h1v1h-1z';/* 7×6ドットのチェック（1ドット＝2px。32のマス目をちぢめると、ドットがにじむ） */
 function ckSet(b,t){if(t.startsWith('✓ ')){b.innerHTML='<svg class="pxi ck" viewBox="0 0 7 6" aria-hidden="true"><path d="'+CKD+'"/></svg>';b.appendChild(document.createTextNode(t.slice(2)))}else b.textContent=t}
+const MEMOIC={'💡':'bulb','🌑':'moonn','💎':'power','🍃':'leaf','🎯':'target','🌳':'grass','🦌':'heart','🤝':'heart','📜':'paper','📖':'book','📌':'memo','💕':'heart','🏮':'bulb','🏡':'house','🏆':'cup','🎉':'ball','🌼':'grass','🌱':'leaf','🌟':'spirit','🌙':'moon','🌋':'rock','🌀':'rain','⬆️':'chart','✨':'power','⚔️':'sword','♨️':'sun','🌾':'rice','💬':'spirit','⛩️':'house','🎁':'box','🐟':'fish'};/* 思い出のメモ・日のできごとの印（前のセーブには絵文字で入っている）→ ドットのアイコンの名前 */
+function memoIc(e){return e?(PXI[e]?e:MEMOIC[e]||'memo'):''}
+function memoRow(e,t){if(t==null){t=e;e=''}const r=rowEl(t,''),k=memoIc(e);if(k)r.querySelector('b').insertAdjacentHTML('afterbegin',pxi(k,'wx'));return r}/* 思い出の1行：絵文字は出さず、ドットのアイコンにする。t のない前のメモは、文だけ */
 function pxi(k,c){return '<svg class="pxi'+(c?' '+c:'')+'" viewBox="0 0 32 32" aria-hidden="true"><path d="'+(PXI[k]||'')+'"/></svg>'}
 
 /* ---------- UI ---------- */
@@ -383,7 +386,7 @@ function renderSheet(){
     const tile=(icon,lb,v,sub,br)=>'<div class="vlT"><div class="hd">'+icon+'<span>'+lb+'</span></div><div class="v">'+v+'</div>'+(br||'')+(sub?'<small>'+sub+'</small>':'')+'</div>';
     const fc=foodCap(),mc=matCap();
     V.appendChild(el('<div class="vlGrid">'+tile(ic('.stk[title="食料"] svg'),'食料',S.food+'<small> / '+fc+'</small>','',bar(fc?S.food/fc:0,'#f3d27a'))+tile('','素材',(()=>{const im=[...document.querySelectorAll('.hud .stk[title="素材"] .ic')].map(n=>{const c=n.cloneNode(true);c.classList.add('vlMi');return c.outerHTML});return (im[0]||'')+(S.mat.wood||0)+'<span style="display:inline-block;width:10px"></span>'+(im[1]||'')+(S.mat.stone||0)+(bambooOn()?'<span style="display:inline-block;width:10px"></span>'+(im[2]||'')+(S.mat.bamboo||0):'')})(),'素材 '+matTot()+' / '+mc,bar(mc?matTot()/mc:0,'#c9a27a'))+tile(ic('.stat[title="パワー"] svg'),'パワー',S.pt,'ためた合計 '+Math.floor(S.totalPt))+tile(ic('.stat[title="せいれい"] svg'),'せいれい',S.res.length+'<small> 人</small>','')+'</div>'));
-    V.appendChild(el('<div class="vlDay"><span>きょう</span><b>'+(S.today?DAYEV[S.today][0]+' '+DAYEV[S.today][1]:(S.rain?pxi('rain','wx wx-rain')+(typeof stormNow==='function'&&stormNow()?'あらし':'雨'):rainbowToday()?pxi('rainbow','wx wx-bow')+'虹':pxi('sun','wx wx-sun')+'ふつうの日'))+'</b></div>'));
+    V.appendChild(el('<div class="vlDay"><span>きょう</span><b>'+(S.today?pxi(memoIc(DAYEV[S.today][0]),'wx')+DAYEV[S.today][1]:(S.rain?pxi('rain','wx wx-rain')+(typeof stormNow==='function'&&stormNow()?'あらし':'雨'):rainbowToday()?pxi('rainbow','wx wx-bow')+'虹':pxi('sun','wx wx-sun')+'ふつうの日'))+'</b></div>'));
     body.appendChild(V);
   }else if(sheet==='attrdetail'){
     T.textContent='属性の内訳';
@@ -622,17 +625,17 @@ function renderSheet(){
           r.querySelector('small').textContent=e.came+'日めから'+e.day+'日めまで、'+Math.max(1,e.day-e.came+1)+'日いっしょにいた'+(e.back?'。'+e.back+'日めに、もどってきた':'')+(e.mem?'\n'+e.mate+'との思い出：「'+e.mem+'」':'');r.querySelector('small').style.whiteSpace='pre-line';rw2.appendChild(r)}
         body.appendChild(sec)}
       /* 思い出帳ときろくをひとつに：日ごとのできごと */
-      const E=[];(S.memo||[]).forEach(([d,e,t],i)=>E.push([d,i,e+' '+t]));(S.log||[]).forEach(([d,t],i)=>E.push([d,1e4+i,t]));E.sort((a,b)=>b[0]-a[0]||b[1]-a[1]);
+      const E=[];(S.memo||[]).forEach(([d,e,t],i)=>E.push([d,i,t,e]));(S.log||[]).forEach(([d,t],i)=>E.push([d,1e4+i,t,'']));E.sort((a,b)=>b[0]-a[0]||b[1]-a[1]);
       if(!E.length)body.appendChild(el('<p class="note">はじめての出来事が、ここにのこります。</p>'));
-      let cur=null,rows=null;for(const[d,,t]of E){if(d!==cur){cur=d;const sc=el('<div class="sec"><h3></h3><div class="rows"></div></div>');sc.querySelector('h3').textContent=d+'日め';rows=sc.querySelector('.rows');body.appendChild(sc)}rows.appendChild(rowEl(t,''))}
+      let cur=null,rows=null;for(const[d,,t,e]of E){if(d!==cur){cur=d;const sc=el('<div class="sec"><h3></h3><div class="rows"></div></div>');sc.querySelector('h3').textContent=d+'日め';rows=sc.querySelector('.rows');body.appendChild(sc)}rows.appendChild(e===''?rowEl(t,''):memoRow(e,t))}
     }else if(sheetArg==='talks'){
       const H=(S.dlog||[]).slice().reverse();if(!H.length)body.appendChild(el('<p class="note">まだありません</p>'));
       const rows=el('<div class="rows"></div>');for(const[w,t]of H){const r=el('<div class="row"><div class="tx"><b></b><small style="white-space:normal"></small></div></div>');r.querySelector('b').textContent=w||'';r.querySelector('small').textContent=t;rows.appendChild(r)}body.appendChild(rows);
     }else if(sheetArg==='memo'){
       const M=(S.memo||[]).slice().reverse();if(!M.length)body.appendChild(el('<p class="note">はじめての出来事が、ここにのこります。</p>'));
-      let cur=null,rows=null;for(const[d,e,t]of M){if(d!==cur){cur=d;const sc=el('<div class="sec"><h3></h3><div class="rows"></div></div>');sc.querySelector('h3').textContent=d+'日め';rows=sc.querySelector('.rows');body.appendChild(sc)}rows.appendChild(rowEl(e+' '+t,''))}
+      let cur=null,rows=null;for(const[d,e,t]of M){if(d!==cur){cur=d;const sc=el('<div class="sec"><h3></h3><div class="rows"></div></div>');sc.querySelector('h3').textContent=d+'日め';rows=sc.querySelector('.rows');body.appendChild(sc)}rows.appendChild(memoRow(e,t))}
     }else if(sheetArg==='support'){/* 広告とコーヒー（まだ準備中） */
-      {const sec=el('<div class="sec"><div style="display:flex;flex-direction:column;gap:8px"></div></div>');for(const t of['📺 広告をみる','☕ 作者にコーヒーをおごる']){const b=el('<button class="btn"></button>');b.textContent=t;b.onclick=()=>toast('準備中です');sec.firstChild.appendChild(b)}body.appendChild(sec)}
+      {const sec=el('<div class="sec"><div style="display:flex;flex-direction:column;gap:8px"></div></div>');for(const t of['広告をみる','作者にコーヒーをおごる']){const b=el('<button class="btn"></button>');b.innerHTML=pxi('heart','wx')+t;b.onclick=()=>toast('準備中です');sec.firstChild.appendChild(b)}body.appendChild(sec)}
     }else if(sheetArg==='settings'){
       {const t=el('<div class="sec"><h3>テスト用</h3></div>'),b=el('<button class="btn"></button>');b.textContent='5倍速：'+(TESTM?'オン':'オフ');b.onclick=()=>{TESTM=!TESTM;try{KV.setItem('hk-test',TESTM?'1':'')}catch(_){}if(!TESTM&&S.speed>3)S.speed=1;renderSheet();applyFeats()};t.appendChild(b);body.appendChild(t)}/* テストのときだけ5倍速 */
       const so=el('<div class="sec"><h3>おと</h3><div style="display:flex;gap:8px;flex-wrap:wrap"></div></div>');

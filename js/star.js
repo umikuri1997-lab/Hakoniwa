@@ -20,7 +20,7 @@ function starMorning(){/* 朝6時：ゆうべのおねがいが、かなう */co
   if(k==='yutaka'){const L=WD===1?['wood','stone','bamboo','kuru','chiri']:['wood','stone','shina','kasa','eda'],a=pick(L);let b=pick(L);if(b===a)b=L[(L.indexOf(a)+1)%L.length];const na=8,nb=STARMAT-na;S.mat[a]=(S.mat[a]||0)+na;S.mat[b]=(S.mat[b]||0)+nb;got.push(MATN[a]+'×'+na,MATN[b]+'×'+nb)}
   else if(k==='minori'){const L=Object.keys(CROPS).filter(c=>cropOn(c));const c=L.length?pick(L):null;if(c){giveItem('seed:'+c,STARSEED);got.push(CROPS[c].name+'のたね×'+STARSEED)}}
   else if(k==='genki'){for(const r of S.res)if(!r.hidden)r.fun=Math.min(100,r.fun+STARFUN);got.push('みんなのたのしさ+'+STARFUN)}
-  if(got.length){toast('流れ星のおねがいが、かなった：'+got.join('・'),'good');memo('流れ星のおねがいが、かなった')}}
+  if(got.length){toast('流れ星のおねがいが、かなった：'+got.join('・'),'good');memo('power','流れ星のおねがいが、かなった')}}
 function drawStar(now){/* 空を流れる星（3点のドットの段々と、うすれる尾） */if(!STAR)return;const p=(now-STAR.t0)/STARMS;if(p>=1.4){STAR=null;return}if(p>=1)return;const e=p<.15?p/.15:1,u=3;
   const hx=(STAR.x0+(STAR.x1-STAR.x0)*p)*VW,hy=(STAR.y0+(STAR.y1-STAR.y0)*p)*VH,dx=(STAR.x0-STAR.x1)*VW,dy=(STAR.y0-STAR.y1)*VH,L=Math.hypot(dx,dy)||1;
   for(let i=18;i>=0;i--){const q=i*u*1.6,x=Math.round((hx+dx/L*q)/u)*u,y=Math.round((hy+dy/L*q)/u)*u,a=(1-i/19)*e*(p>.85?(1-p)/.15:1);ctx.fillStyle='rgba(255,246,214,'+(a*.85).toFixed(3)+')';ctx.fillRect(x,y,u,u)}

@@ -11,7 +11,7 @@ function dyCur(){if(dyOff())return null;if(!S.dy)S.dy={d:dayNo(),w:{},m:[],k:{},
 function dyWork(r,t,v){if(!DYWORK.has(t)||!r||!r.name)return;const D=dyCur();if(!D)return;const k=r.name+'|'+t+'|'+v,e=D.w[k];if(e)e[5]++;else D.w[k]=[r.name,r.elem,r.vr||null,t,v,1]}
 function dyEv(t){const D=dyCur();if(!D||!t)return;if(!D.m.includes(t))D.m.push(t);if(D.m.length>30)D.m.shift()}
 function dyKill(by,msg){const D=dyCur();if(!D)return;if(by&&by.name){const e=D.k[by.name]||(D.k[by.name]=[by.elem,by.vr||null,0]);e[2]++;return}
-  const m=String(msg||''),k=m.includes('罠')?'罠':m.includes('守り神の光')?'守り神の光':'そのほかの守り';D.o[k]=(D.o[k]||0)+1}
+  const m=String(msg||''),k=m.includes('罠')?'罠':m.includes('まもりの光')?'まもりの光':'そのほかの守り';D.o[k]=(D.o[k]||0)+1}
 function dyText(t,v){const n=t==='build'?(BL[v]?BL[v].name+'を建てた':''):t==='craft'?(BL[v]?BL[v].name+'を作った':''):t==='cook'?(fName(v)?fName(v)+'を作った':''):t==='harvest'?(fName(v)?fName(v)+'をしゅうかくした':''):t==='plant'?(tName(v)?tName(v)+'を植えた':''):t==='fish'?'つりをした':'';return n}
 /* 朝：きのうの日記をしめる。書くことがあれば、紙を出す */
 function diaryClose(){if(dyOff())return;const D=S.dy;S.dy={d:dayNo(),w:{},m:[],k:{},o:{}};if(!D)return;

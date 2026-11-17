@@ -126,7 +126,7 @@ const PRINT_N=3,PRINT_BEAT_MS={point:3400,glow:2000,circle:4600,pat:2400,take:30
 const PRINT_TRACE=[
  [[POKO,'#think|ヌシ様の足あと……。もういちど、よく見てみるね。'],[POKO,'……あっ。つま先が、あっちを向いてる。','print:point'],[POKO,'#joy|ヌシ様が歩いていったほうへ、ついていってみよう！']],
  [[POKO,'ここにも、足あと。……さっきより、ふかいね。'],[POKO,'#think|つぎは、あっちだ。','print:point']],
- [[POKO,'#think|ここで、足あとが止まってる……。'],[POKO,'#surprise|足あとの中が、ぽうっと光ってる……！','print:glow'],[POKO,'#surprise|……え？　光る足あとが、ぼくのまわりを、歩いてる……。','print:circle'],[POKO,'#teary|……いま、頭の葉っぱが、ふわってした。……なでて、くれたの？','print:pat'],[POKO,'……あったかい。','print:take']]];
+ [[POKO,'#think|ここで、足あとが止まってる……。'],[POKO,'#surprise|足あとの中が、ぽうっと光ってる……！','print:glow'],[POKO,'#surprise|……え？ 光る足あとが、ぼくのまわりを、歩いてる……。','print:circle'],[POKO,'#teary|……いま、頭の葉っぱが、ふわってした。……なでて、くれたの？','print:pat'],[POKO,'……あったかい。','print:take']]];
 function printOn(){return !!S&&WD===0&&!S.free&&!IS_STORY_REPLAY&&typeof QUESTS!=='undefined'&&QUESTS[S.quest]?.id==='lv5'&&S.qTalked&&S.qStory==null}
 const printT=()=>S&&S.flags.printT||[],printTraced=j=>printT().includes(j),printN=()=>Math.min(PRINT_N,printT().length);
 const printList=()=>(S.fogF||[]).filter(f=>f.t==='print'&&S.obj[f.j]==='nushiprint');
