@@ -516,10 +516,27 @@ def shoot(name, cfg, src, yaw=0.0):
         x, y = int((q[0]-ext[0])*BIG), int((q[1]-ext[2])*BIG); sl = (slice(max(0, y-BIG), y+BIG), slice(max(0, x-BIG), x+BIG)); blk = idbH[sl]
         if not blk.size or np.isin(blk, list(fpid)).mean() <= 0.5: return False
         return float(np.median(zbH[sl])) <= dep+EYETOL*H
-    if abs(math.cos(yaw)-1) < 1e-6:   # 正面だけ、目をおす
+    if math.cos(yaw) > 0.05:   # 前を向いている絵（正面・ななめ横）だけ、目をおす
         ey = EYES if EYES is not None else eyepos(P, F, lab, H, cfg['eyes'])
         q2 = [proj(R(p)) for p in ey]; side = abs(q2[1][1]-q2[0][1]) > abs(q2[1][0]-q2[0][0])   # 両目のならびが たて：よこにたおれている
         im = stamp(im, [(proj(R(p))[0]-ext[0], proj(R(p))[1]-ext[2]) for p in ey if eyevis(proj(R(p)), ext, float(np.dot(R(p), V)))], cfg['eyes']['col'], cfg['eyes'].get('edge'), side, cfg.get('pose', {}).get('dead', False))   # 見えている目だけ、おす（まわる・うつむく・前に物があると、かくれる）
+    elif abs(math.cos(yaw)) < 0.2 and not cfg.get('pose', {}).get('dead'):   # よこ向き：顔はフードにかくれるので、手前の目を1つ、前のはし（顔の向き）から SIDEEYE ドット内がわに おす
+        ey = EYES if EYES is not None else eyepos(P, F, lab, H, cfg['eyes']); p = max(ey, key=lambda q: float(np.dot(R(q), V)))   # カメラに近いほうの目
+        X, Y = proj(R(p)); Y -= ext[2]; a_ = np.array(im); fw = -math.sin(yaw); ry = int(round(Y)); w_ = len(EYEPX[0])
+        if 0 <= ry < a_.shape[0]:
+            xs = np.nonzero(a_[max(0, ry-2):ry+3, :, 3].max(0) > 0)[0]
+            if len(xs):
+                fe = xs.max() if fw > 0 else xs.min(); dk = list(hx(cfg['labcol']['face']).astype(int))+[255]; rim_ = (hx(cfg['labcol']['face'])*0.75).astype(int).tolist()+[255]
+                for r_, row in enumerate(SIDEFACE):   # 顔：フードのふちの下に、こい顔の色（前のはしの1ドットは、フードのふち）
+                    yy_ = ry-len(SIDEFACE)//2+r_
+                    if not 0 <= yy_ < a_.shape[0]: continue
+                    rx_ = np.nonzero(a_[yy_, :, 3] > 0)[0]
+                    if not len(rx_): continue
+                    f0 = rx_.max() if fw > 0 else rx_.min()
+                    for q_, ch in enumerate(row):
+                        xx_ = f0-1-q_ if fw > 0 else f0+1+q_
+                        if ch in '#+' and 0 <= xx_ < a_.shape[1] and a_[yy_, xx_, 3]: a_[yy_, xx_] = dk if ch == '#' else rim_
+                im = stamp(Image.fromarray(a_), [((fe-SIDEEYE-w_/2+1) if fw > 0 else (fe+SIDEEYE+w_/2), Y)], cfg['eyes']['col'], cfg['eyes'].get('edge'))
     if cfg.get('pose', {}).get('fade'):   # きえる：体が 上から ばらばらに ほどけ、ほどけた ドットの いくつかが、体の色の つぶになって 上へ のぼる
         fd = cfg['pose']['fade']; a = np.array(im); yy, xx = np.indices(a.shape[:2]); 
         gx, gy = xx+ext[0], yy+ext[2]; hs = (gx*73856093 ^ gy*19349663) & 1023; on = a[..., 3] > 0; ys = yy[on]; y0_, y1_ = (ys.min(), ys.max()) if len(ys) else (0, 1)
@@ -530,9 +547,10 @@ def shoot(name, cfg, src, yaw=0.0):
         pad = max(0, -int(sy.min())) if len(sy) else 0
         if pad: a = np.concatenate([np.zeros((pad,)+a.shape[1:], a.dtype), a]); sy = sy+pad; ext = (ext[0], ext[1], ext[2]-pad, ext[3])
         ok = (sx >= 0) & (sx < a.shape[1]); a[sy[ok], sx[ok]] = col[ok]; im = Image.fromarray(a)
-    if cfg.get('fxp') and abs(math.cos(yaw)-1) > 1e-6:   # うしろ向き：体の前がわ（体の むこう）の パーティクルは、体に かくれるので おさない
+    if cfg.get('fxp') and math.cos(yaw) < -0.5:   # うしろ向き（よこ向きは のぞく）：体の前がわ（体の むこう）の パーティクルは、体に かくれるので おさない
         cfg = dict(cfg, fxp=[q for q in cfg['fxp'] if q[1][1] < 0.08])
     if cfg.get('fxp'):   # パーティクル（色の数をへらしたあとに おす。絵のわくの外に出る分は、わくを広げて入れる）
+        if -math.sin(yaw) < -0.5: cfg = dict(cfg, fxp=[({'swipe': 'swipeL', 'swipeL': 'swipe'}.get(k, k), p, ag) for k, p, ag in cfg['fxp']])   # 左むき：ひっかきの すじも 左へ
         q = [(k, proj(R(np.asarray(p)*H))) for k, p, ag in cfg['fxp']]; ages = [ag for _, _, ag in cfg['fxp']]
         x0 = min([ext[0]]+[int(math.floor(v[0]))-5 for _, v in q]); y0 = min([ext[2]]+[int(math.floor(v[1]))-5 for _, v in q])
         x1 = max([ext[0]+im.width]+[int(math.ceil(v[0]))+5 for _, v in q]); y1 = max([ext[2]+im.height]+[int(math.ceil(v[1]))+5 for _, v in q])
@@ -541,6 +559,8 @@ def shoot(name, cfg, src, yaw=0.0):
     return im, ext
 
 BACKEL = 15.0
+SIDEEYE = 2   # よこ向きの目：前のはしから、このドット内がわ
+SIDEFACE = ['++', '##+', '###+', '####+', '####+', '####+', '####+', '####+', '####+', '####+', '###+', '##+', '++']   # よこ向きの顔（前のはしから内がわへ。+ は顔のふち）
 NOFIST = False   # 足とつながったこぶしを切りはなすとき（glb を直す道具）だけ True
 FOOTR = 0.6   # 足：すその広さ（95%の半径）のこのわりより内がわ
 POMH = 0.45   # ぽんぽん：赤のかたまりのまん中が、この高さ（高さのうち）より上
@@ -613,11 +633,13 @@ def despeckle(im, n=2):
 
 def sheets(name, out):
     """モーションのコマ（kw_skel.poses）を写して、モーションごとに、たてにならべた1まいの絵にする（いまのゲームと同じ形：w・h・ax・ay・n）。
-    正面と、うしろ（B。やられはなし）。コマの大きさは、そのモーションのコマぜんぶが入る大きさ（足もとの点をそろえる）"""
+    正面と、うしろ（B。やられはなし）・右むき（R）・左むき（L。待機と攻撃だけ）。コマの大きさは、そのモーションのコマぜんぶが入る大きさ（足もとの点をそろえる）"""
     import kw_skel, json; info = {}
-    for mo, ps in kw_skel.poses(name).items():
-        for B, yaw in (('', 0.0), ('B', math.pi)):
-            if mo == 'hurt' and B: continue
+    PS = {False: kw_skel.poses(name), True: kw_skel.poses(name, side=True)}
+    for mo in PS[False]:
+        for B, yaw in (('', 0.0), ('B', math.pi), ('R', -math.pi/2), ('L', math.pi/2)):   # 正面・うしろ・右むき・左むき（よこは 待機と攻撃だけ。攻撃する相手のほうを向く）
+            if mo == 'hurt' and B or B in ('R', 'L') and mo not in ('idle', 'atk'): continue
+            ps = PS[B in ('R', 'L')][mo]
             fr = []
             fxp = fxparts(ps, name)
             for p, fp in zip(ps, fxp): im, e = shoot(name, dict(CFG[name], pose=p, fxp=fp), None, yaw); fr.append((im, e))

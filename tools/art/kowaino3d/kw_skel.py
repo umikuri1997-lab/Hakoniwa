@@ -26,6 +26,7 @@ JAWCLOTH = {'trapper': ((0.08, 0.22), (0.12, 0.26, 0.4, 0.56))}   # あごの布
 ARMRN = {'thief': 0.2}   # 手を大きくうごかすコワイノ：そでを広く なめらかに腕へ（せまいと、そでが1本のすじに のびる）
 SLEEVE = ((0.24, 0.36), (0.2, 0.46))   # 手がないとき：そで（よこのはしのきょり・高さ）。すその横まで ひろげない（すそが ひっぱられて裏地が見える）
 SLEEVEW = 0.7   # 手がないとき：そでの重みの いちばん大きい わり
+HIDDEN = {'basic': dict(c=((-0.17, 0.3, 0.3), (0.09, 0.3, 0.3)), r=0.22, w=0.85)}   # 布の下にかくれた手（コカゲ。持ち主）：手のまわりの前の布を、腕の骨へ（腕をうごかすと、布の下から手でおしだしたように ふくらむ）。c：(よこ, 前, 上)
 HEM = 0.3
 
 ATTACH = {
@@ -85,6 +86,11 @@ class Skel:
                 if len(hs): hc = P[hs].mean(0); s.piv[bone] = np.array([hc[0]-side*0.1*H, hc[1]*0.4, max(hc[2]+0.14*H, 0.38*H)])   # 腕の支点：手の内がわ・上（かたの高さ）
                 if len(hs) and not np.isin(hs, np.unique(F[comp == big])).any(): m &= d < 1e-9   # 体からはなれた手（こぶし）：体の布は うごかさない（のびて見えた）
                 put(np.nonzero(m)[0], bone, wa[m])
+        elif name in HIDDEN:
+            hd = HIDDEN[name]; cl = np.zeros(V, bool); cl[np.unique(F[np.isin(lab, ['base', 'under', 'rim'])])] = True
+            for c, bone in zip(hd['c'], ('armL', 'armR')):
+                d = np.linalg.norm(P-np.array(c, float)*H, axis=1); w = (1-smooth(0, hd['r']*H, d))*hd['w']*cl*smooth(0.05, 0.2, P[:, 1]/H)
+                put(np.nonzero(w > 0)[0], bone, w[w > 0])
         else:
             bodyv0 = np.zeros(V, bool); bodyv0[np.unique(F[comp == big])] = True   # 体のかたまりだけ（マフラーなど、はなれた物は腕にしない）
             wa = smooth(*SLEEVE[0], ax)*smooth(SLEEVE[1][0], SLEEVE[1][0]+0.06, z)*(1-smooth(SLEEVE[1][1]-0.06, SLEEVE[1][1], z))*(P[:, 1] > -0.1*H)*bodyv0*SLEEVEW
@@ -286,10 +292,10 @@ WALKX = {'hana': [dict(orbit=12), dict(orbit=24), dict(orbit=36), dict(orbit=48)
 
 MOVES = {
     # りょう手を ふりあげて、とびついて ひっかく / びくっとして、よろけて、その場で くずれる
-    'basic': dict(atk=[dict(hip=(-6, 0, 0), chest=(-10, 0, 0), armL=(-30, 20, 0), armR=(-30, 20, 0), move=(0, -0.02, -0.01)),
-                       dict(hip=(-6, 0, 0), chest=(-12, 0, 0), armL=(40, 100, 0), armR=(40, 100, 0), move=(0, 0.04, 0.06), ghost=1),
-                       dict(hip=(2, 0, 0), chest=(6, 0, 0), armL=(75, 15, 0), armR=(75, 15, 0), move=(0, 0.12, 0), ghost=1, fx=[('swipe', (0.15, 0.5, 0.4), 1, 0, 0), ('impact', (0, 0.55, 0.3), 1, 0, 0.1)]),
-                       dict(chest=(4, 0, 0), armL=(10, 0, 0), armR=(10, 0, 0), move=(0, 0.05, 0))],
+    'basic': dict(atk=[dict(hip=(-6, 0, 0), chest=(-10, 0, 0), armL=(-25, 0, 0), armR=(-25, 0, 0), move=(0, -0.02, -0.01)),   # 手は布の下（持ち主）：布の下で手を ひいて ためる
+                       dict(hip=(-6, 0, 0), chest=(-12, 0, 0), armL=(35, 8, 0), armR=(35, 8, 0), move=(0, 0.04, 0.06), ghost=1),   # 布ごと 手を ふりあげる
+                       dict(hip=(2, 0, 0), chest=(6, 0, 0), armL=(60, 4, 0), armR=(60, 4, 0), move=(0, 0.12, 0), ghost=1, fx=[('swipe', (0.15, 0.5, 0.4), 1, 0, 0), ('impact', (0, 0.55, 0.3), 1, 0, 0.1)]),   # 布の下の手で ひっかく（前の布が つきでる）
+                       dict(chest=(4, 0, 0), armL=(15, 0, 0), armR=(15, 0, 0), move=(0, 0.05, 0))],
                   hurt=[dict(chest=(-6, 0, 0), head=(0, 10, 0), armL=(40, 40, 0), armR=(40, 40, 0), fx=[('sweat', (0.15, 0.1, 0.7), 2, 0.05, 0.025)]),
                         dict(root=(0, 14, 0), hip=(4, 6, 0), chest=(4, -6, 0), armL=(-10, 30, 0), armR=(-10, 30, 0), move=(0.04, 0, 0), collapse=0.25),
                         dict(hip=(4, 10, 0), chest=(2, -6, 0), head=(4, 12, 0), armL=(-30, 50, 0), armR=(-30, 50, 0), fx=[('dust', (0, 0.1, 0.02), 6, 0.3, 0.035)])]),
@@ -411,6 +417,7 @@ DROPG = 0.15  # たおれたとき、布（すそ・フードの先・マフラ�
 ENVH = 0.42   # いきたえた体の布の山の、いちばん高い所（高さのうち）
 DROPCELL = 0.04  # 体の芯の上の面をしらべる ます目の大きさ（高さのうち）
 LAGMAXN = {'fast': 0.16}; LAGKN = {'fast': 1.6}; WAVEN = {'fast': 0.12}   # フードが大きく なびく コワイノ（はやい うごきに 大きく おくれる）
+SIDELUNGE = 0.5   # よこ向きの攻撃：前へ とびこむ長さの わり（絵の中で よこに うごく。ゲームでも ふみこむ）
 SMEARK = 0.8; SMEARMIN = 0.06   # ぶれ：うごいた長さの このわりだけ、うしろへ のばす（この長さより はやいとき）
 LAGMAX = 0.05  # 布のおくれの いちばん大きい長さ
 LAGK = 0.8   # 布のおくれ：頭のてっぺんが うごいた分の、このわり
@@ -441,7 +448,8 @@ def _lag(L, loop, name=None, smear=False):
         out.append(f)
     return out
 
-def poses(name):
+def poses(name, side=False):
+    """side：よこ向きの絵（kowaino_paint の S）。ななめに まわらない・ぶれ（smear）で のばさない（よこから見ると、体がよこに のびて くずれる）・とびこむ長さは SIDELUNGE ばい"""
     m = MOVES[name]; wx = WALKX.get(name)
     walk = [dict(f, **wx[i]) for i, f in enumerate(WALK)] if wx else WALK
     wv = lambda L: [dict({'wave': (WAVEN.get(name, 0.06), i*math.pi/2)}, **f) for i, f in enumerate(L)]   # 攻撃・やられも、なびく
@@ -452,12 +460,12 @@ def poses(name):
     hurt[-1] = dict(fl, dead=True, ground=True, collapse=max(fl.get('collapse', 0), DEADCOL), cz=max(fl.get('cz', 0.45), 0.6))   # さいごのコマ：いきたえる（力がぬけて、布が重さで くずれ、体が地面について、目の光がきえる）
     add = lambda f, k, v: tuple(a+b for a, b in zip(tuple(f.get(k, ()))+(0,)*6, v+(0,)*(6-len(v))))
     if len(atk) > 2: atk[2] = dict(atk[2], ghost=max(1, atk[2].get('ghost', 0)))   # とびこむ コマは、残像（ぶれ）を のこす
-    for i, (dm, dl) in enumerate(ATKLUNGE):   # 攻撃：大きく ためて（うしろへ さがる）→ うつ しゅんかん、こちら（前）へ とびこむ
+    for i, (dm, dl) in enumerate(ATKLUNGE if not side else [(a*SIDELUNGE, b) for a, b in ATKLUNGE]):   # 攻撃：大きく ためて（うしろへ さがる）→ うつ しゅんかん、こちら（前）へ とびこむ
         if i < len(atk): atk[i] = dict(atk[i], move=add(atk[i], 'move', (0, dm, 0))[:3], hip=add(atk[i], 'hip', (dl,)))
     for i, f in enumerate(atk):   # ななめ前へ：体ごと まわし、うごき・パーティクルも 同じだけ まわす（正面に来る パーティクルも よこへ ずれる）
-        t = ATKTURNN.get(name, ATKTURN)*ATKSIDE.get(name, 1)*ATKTURNK[min(i, 3)]; Rt = _r((0, 0, 1), t); rot = lambda v: tuple(Rt@np.array(v, float))
+        t = 0 if side else ATKTURNN.get(name, ATKTURN)*ATKSIDE.get(name, 1)*ATKTURNK[min(i, 3)]; Rt = _r((0, 0, 1), t); rot = lambda v: tuple(Rt@np.array(v, float))
         atk[i] = dict(f, root=add(f, 'root', (0, 0, t)), move=rot(f.get('move', (0, 0, 0))), fx=[(k, rot(at))+tuple(r) for k, at, *r in f.get('fx', ())])
     for i, (dm, dl) in enumerate(HURTKB):   # やられ：うけた しゅんかん、うしろへ はじかれて のけぞる（うしろへ そるのは −16度まで）
         if i < len(hurt)-1: hurt[i] = dict(hurt[i], move=add(hurt[i], 'move', (0, dm, 0))[:3], chest=(lambda c: (max(-16, c[0]),)+c[1:])(add(hurt[i], 'chest', (dl,))))
     hurt += [dict(hurt[-1], fade=fd, fx=[], lag=(0, 0, 0), hlag=(0, 0, 0)) for k, fd in enumerate(DEADFADE)]   # たおれたあと：体が つぶに ほどけて、上へ きえる（kowaino_paint の fade）
-    return dict(idle=_lag(IDLE, True), walk=_lag(walk, True), atk=_lag(wv(atk), False, name, True), hurt=_lag(wv(hurt), False, name))
+    return dict(idle=_lag(IDLE, True), walk=_lag(walk, True), atk=_lag(wv(atk), False, name, not side), hurt=_lag(wv(hurt), False, name))
