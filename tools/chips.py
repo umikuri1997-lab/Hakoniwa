@@ -154,6 +154,7 @@ def pack_imgs(head, C):
     js = head + 'window.CHIPA=' + json.dumps(names) + ';\nwindow.CHIPS=' + json.dumps(C, ensure_ascii=False, separators=(',', ':')) + ';\n'
     open(os.path.join(ROOT, 'chips.js'), 'w', encoding='utf8').write(js)
     print('pages', len(pages), 'frames', len(frames), 'chips.js', len(js))
+    import normals; normals.build()  # ノーマルマップも、同じならびで作りなおす
 
 def replace(repf):
     """工房で書き出した replace.json（{replace:{id:{"j,i":{u,w,h}}}}、j=-1 は本体、それ以外は部品の番号）を入れる。絵の大きさがかわったら w・h もかえる（ax・ay はそのまま）。

@@ -2,7 +2,7 @@
 
 
 /* ---------- おと（BGM・効果音はWeb Audioで鳴らすオリジナル） ---------- */
-const SND={bgm:true,sfx:true,vib:true};try{Object.assign(SND,JSON.parse(KV.getItem('hakoniwa-sound')||'{}'))}catch(e){}
+const SND={bgm:true,sfx:true,vib:true,lit:true};try{Object.assign(SND,JSON.parse(KV.getItem('hakoniwa-sound')||'{}'))}catch(e){}
 const saveSnd=()=>{try{KV.setItem('hakoniwa-sound',JSON.stringify(SND))}catch(e){}};
 let bgmF=null,bgmSw=0,AC=null,bgmG=null,sfxG=null,noiseBuf=null,curSong='day',wantSong='day',nextT=0,step=0;
 const mf=m=>440*Math.pow(2,(m-69)/12);
