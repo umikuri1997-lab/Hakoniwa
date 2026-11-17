@@ -19,7 +19,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict');
       if(q.field){for(const p of q.fieldParts)S.fieldStories[p]={step:FIELD_STORIES[p].length}}const c=q.check;q.check=()=>true;try{checkQuest()}finally{q.check=c}
       if(S.qStory===i)startTalk();if(S.quest===i)throw Error('stuck at '+q.id);inv.push(q.id+':'+(S.inv.bed||0)+'/'+(S.inv.path||0))}
     dialog=realDialog;return JSON.stringify({ids,inv,godGone:!!S.godGone,mat:S.mat})})()`));
-  assert.deepEqual(seq.ids,['statue','stor','wall','bed','path','lv2','fence4','watch1','kikyo','summon','farm6','imoseed','earthListen']);
+  assert.deepEqual(seq.ids,['statue','stor','wall','wbench','bed','path','lv2','fence4','watch1','kikyo','summon','farm6','imoseed','earthListen']);
   assert.equal(seq.godGone,false,'the farewell is now in the trade sub quest');
   /* まとめた目標のとちゅう（会話は聞いた・食料箱はもう置いた）から：はじめのできていない目標へ。もらった物をかさねない */
   const mig=JSON.parse(await run(`(()=>{const s=JSON.parse(JSON.stringify(S));s.flags.qsplit1=0;s.quest=1;s.qStory=null;s.qTalked=true;s.inv={};s.mat.wood=0;s.mat.stone=0;s.obj=s.obj.map(o=>o==='crate'||o==='table'?'':o);
