@@ -52,6 +52,20 @@ INGC={'tomato':(224,44,24),'apple':(232,96,84),'berry':(138,122,224),'egg':(250,
 INGS=list(INGC)
 SHINYING={'tomato','apple','berry','egg','milk'}   # 皮・びんが、つやつやの材料
 SHINYN=('うつわ','コップ','のみもの','中身','スープ','もり','具','そえ','おさら','かざり','とって','ボウル','ピッチャー','なべ','フライパン','天板','網','つる','包丁の刃','のせ','きじ')   # つやつやの部品（名前のはじめ）：金属・やきもの・ガラス・たれ・スープ・のみもの
+import colorsys
+def viv(c):   # 食べ物の色を、あざやかに（あざやかさを上げ、明るさはほとんどそのまま）
+    h,s_,v=colorsys.rgb_to_hsv(*[min(255,max(0,q))/255 for q in c])
+    if s_<0.08:return tuple(float(q) for q in c)   # 白・クリーム色の物（たまご・ミルク）は、そのまま
+    s_=min(1.0,s_*1.45+0.10);v=min(1.0,v*1.02);return tuple(q*255 for q in colorsys.hsv_to_rgb(h,s_,v))
+NONFOOD=('うつわ','コップ','グラス','おさら','くし','ストロー','つやの光','ホイル','サラダ2','なべ','フライパン')   # 食べ物でない部品（あざやかにしない）
+def vivid(L):
+    for p in L:
+        if p.name.startswith(NONFOOD) or p.name=='サラダ2':continue
+        if getattr(p,'novivid',False):p.vivid=lambda c:c;continue
+        if p.kind!='model':p.col=viv(p.col)
+        elif getattr(p,'recol',None) is not None:p.recol=viv(p.recol);p.vivid=lambda c:c   # 色をかえるモデル：かえる色をあざやかに（白はまぜない）
+        else:p.vivid=viv
+    return L
 def shine(L):
     for p in L:
         if p.name.startswith(SHINYN):p.shiny=True
@@ -64,7 +78,7 @@ def ing(k,x,y,z,s,nm='材料'):
         L.append(NT(P(nm+'へた','prism',(st,z+t-0.004,z+t+0.006,'z'),(118,178,74))))
     elif k=='apple':L.append(model(nm,K+'apple.glb',x,y,z,s))
     elif k=='egg':L.append(model(nm,K+'egg.glb',x-s*0.2,y,z,s*0.55,tilt=90,col=(250,244,226),k=0.4));L.append(model(nm+'2',K+'egg.glb',x+s*0.22,y+s*0.12,z,s*0.52,rot=40,tilt=90,col=(250,244,226),k=0.4))
-    elif k=='fish':L.append(model(nm,K+'fish.glb',x,y,z,s*1.3,rot=90,tilt=90))
+    elif k=='fish':L.append(model(nm,K+'fish.glb',x,y,z,s*1.3,rot=90,tilt=90));L[-1].novivid=True   # さかなは、ぎん色とひれの色のまま（あざやかにすると、赤い魚になった）
     elif k=='berry':L+=model2(nm,'tripo/ck_berry.glb',x,y,z,s,lambda u,dx,dy:u>0.55 and dy<0.0,(150,204,104),(124,128,214))   # ブルーベリー：上のおくの葉は緑
     elif k=='mugi':L.append(model(nm,'tripo/ck_mugi.glb',x,y,z,s*1.2,rot=-60,col=(226,180,88),k=0.6))
     elif k=='imo':L.append(model(nm,'tripo/ck_imo.glb',x,y,z,s,rot=-20,col=(196,112,164),k=0.35))
@@ -72,7 +86,7 @@ def ing(k,x,y,z,s,nm='材料'):
     elif k=='komugiko':L.append(model(nm,'tripo/sack.glb',x,y,z,s,col=(244,236,216),k=0.5))
     elif k=='kinoko':L.append(model(nm,'tripo/nat_kinoko0.glb',x,y,z,s))
     elif k=='takenoko':L.append(model(nm,'tripo/takenoko.glb',x,y,z,s*0.8))
-    L=[p for p in L if p]
+    L=vivid([p for p in L if p])
     if k in SHINYING:
         for p in L:
             if not (k=='berry' and p.name==nm) and not p.name.endswith('へた') and not (k=='milk' and p.name==nm):p.shiny=True   # ベリーの葉・トマトのへた・ミルクのびんの紙のふたは、つやなし
@@ -87,6 +101,7 @@ def skewer(k,x,y,z,s):   # くし：灰にさして、火のほうへ少した�
     for q,u in enumerate((0.45,0.65,0.85)):
         L.append(piece(k,x,y-0.12*s*u,z+1.15*s*u,0.11*s,'きれ%d'%q))
         if k in SHINYING:L[-1].shiny=True
+    vivid(L)
     return L
 
 # ---- できた料理（足もとのまん中が (x,y,z)。s：大きさ）。色は料理の表の ic（[しゅるい, 色A, 色B, 色C]）
@@ -201,7 +216,7 @@ def dish(out,ic,ins,x,y,z,s):
         L.append(NT(P('レタス','box',(x-w-0.03*s,y-d-0.03*s,zz,x+w+0.03*s,y+d+0.03*s,zz+0.03*s),(150,206,96),bevel=0)));zz+=0.03*s
         for k in [k for k in ks if k!='komugiko'] or ['egg']:L.append(NT(P('具'+k,'box',(x-w+0.01*s,y-d+0.01*s,zz,x+w-0.01*s,y+d-0.01*s,zz+0.045*s),{'egg':(250,220,110),'tomato':(228,80,58)}.get(k,BASEC.get(k,A)),bevel=0)));zz+=0.045*s
         L+=bread('パン2',zz)
-    return shine(L)
+    return shine(vivid(L))
 
 # ---- 道具（家具の場所で）
 def tools_cooktable():

@@ -104,7 +104,9 @@ def build(sc,parts):
             if r2 is not None:   # 2つの色にわける：モデルの明るさが、まん中の明るさ×sep より暗い所は dark の色、ほかは light の色（ふくろとひも など）。明るさのちがいは recolk の分だけのこす
                 sep,cd,cl=r2;L_=C.mean(1);md=np.median(L_);kk=getattr(p,'recolk',1.0);lo=L_<md*sep
                 C=np.array([np.array(cd if q else cl,float)*(1+(l/max(1.0,(L_[lo].mean() if q and lo.any() else L_[~lo].mean()))-1)*kk) for q,l in zip(lo,L_)]);C=np.clip(C,0,255)
-            for f,cc in zip(F,C):sc.tri(V[f[0]],V[f[1]],V[f[2]],tuple(cc*(1-MODEL_SOFT)+255*MODEL_SOFT))   # モデルの色は、ゲームに合わせて少しうすく
+            vv=getattr(p,'vivid',None);ms=0 if vv else MODEL_SOFT
+            if vv:C=np.array([vv(c_) for c_ in C],float)   # vivid：食べ物など、白をまぜず、あざやかにする関数
+            for f,cc in zip(F,C):sc.tri(V[f[0]],V[f[1]],V[f[2]],tuple(cc*(1-ms)+255*ms))   # モデルの色は、ゲームに合わせて少しうすく
         elif k=='cyl':   # plainwall：まわりのかべには木目をはらない（まるいかべの木目は、ドットでは、ぶつぶつのすじになる）
             cx,cy,r,z0,z1=d;t=sc.tcur
             if getattr(p,'plainwall',False):sc.texture(None)
