@@ -102,7 +102,7 @@ function waterShimmer(now,x0,y0,x1,y1){/* 水面（ふつうのタイルのや�
   const kz=dpr*cam.z,SX=v=>cam.x+Math.round((v-cam.x)*kz)/kz,SY=v=>cam.y+Math.round((v-cam.y)*kz)/kz;
   for(const[cx,cy,q]of qs){const a=SX(cx*16*TS),b=SY(cy*16*TS);ctx.drawImage(q.o,a,b,SX(cx*16*TS+q.o.width)-a,SY(cy*16*TS+q.o.height)-b)}}/* 区画の絵は、画面のドットのさかいに合わせておく */
 function sideClip(i,f){/* 低いマスの物が、となりの高いマスの上へはみ出さないように：となりのマスが高ければ、そのマスの高い面（上の面のてっぺんより下）には描かない */const x=i%W,y=(i/W)|0,h=hiAt(i),L=x>0&&hiAt(i-1)>h?hiAt(i-1):0,R=x<W-1&&hiAt(i+1)>h?hiAt(i+1):0;if(!L&&!R){f();return}
-  const N=NLIVE?[ctx,nx]:[ctx],T=ctx.getTransform();for(const c of N){c.save();if(c===nx)c.setTransform(T.a,T.b,T.c,T.d,T.e,T.f);c.beginPath();c.rect(x*TS-200,y*TS-400,TS+400,600);if(L)c.rect(x*TS-200,y*TS-L*LIFT,200,TS+L*LIFT+200);if(R)c.rect((x+1)*TS,y*TS-R*LIFT,200,TS+R*LIFT+200);c.clip('evenodd')}f();for(const c of N)c.restore()}/* 光と影の向きの絵（NC）にも、同じ所だけ */
+  const N=NLIVE?[ctx,nx]:[ctx],T=ctx.getTransform();for(const c of N){c.save();if(c===nx)litT(T);c.beginPath();c.rect(x*TS-200,y*TS-400,TS+400,600);if(L)c.rect(x*TS-200,y*TS-L*LIFT,200,TS+L*LIFT+200);if(R)c.rect((x+1)*TS,y*TS-R*LIFT,200,TS+R*LIFT+200);c.clip('evenodd')}f();for(const c of N)c.restore()}/* 光と影の向きの絵（NC）にも、同じ所だけ */
 function liftDraw(z,f){if(!z){f();return}ctx.save();ctx.translate(0,-z);f();ctx.restore()}
 const WPLIFT=108;/* 見張り台の上に立つ高さ */const CLIMB=new Set();/* いま段差をよじのぼっている・おりているせいれい（uLift で入れる） */
 function uLift(o){if(o&&o.act&&o.act.type==='watchpost'&&o.act.stage==='do'){const k=Math.min(1,o.act.cl||0);if(k<1)CLIMB.add(o);else CLIMB.delete(o);return (S.hi?hiAt(o.act.obj+W)*LIFT:0)+WPLIFT*k}/* 見張り台の上に立つ（ハシゴを少しずつのぼる） */if(o&&o.elem){CLIMB.delete(o);if(S&&LADDERS.has(S.obj[(o.y|0)*W+(o.x|0)])&&o.path&&o.path.length)CLIMB.add(o)}/* ハシゴの上を動いている子も、よじのぼる動き *//* 段差の上にいる子・コワイノは、LIFT だけ上に。段差を飛んでいる間は、高さを少しずつかえて、ぴょんと弧をえがく */
@@ -434,23 +434,22 @@ function render(now){RFN++;
   for(const f of floats){ctx.globalAlpha=Math.min(1,f.life*2);const yy=(f.y-(1-f.life)*1.2)*TS;ctx.lineJoin='round';ctx.lineWidth=3;ctx.strokeStyle='rgba(176,138,100,.9)';{const fi=BUBI[bubKey(f.text)]?null:emoImg(f.text);if(BUBI[bubKey(f.text)])bubIcon(ctx,f.text,f.x*TS,yy-6,1.5);else if(fi){const ih=20,iw=ih*fi.width/fi.height;ctx.drawImage(fi,f.x*TS-iw/2,yy-ih+4,iw,ih)}else{ctx.strokeText(f.text,f.x*TS,yy);ctx.fillStyle='#fff3d6';ctx.fillText(f.text,f.x*TS,yy)}}}/* 文字はぜんぶクリーム色 *//* 文字のふちどりはうすい茶色 */
   ctx.globalAlpha=1;ctx.textAlign='start';
   drawFog(ctx,x0,y0,x1,y1,now);/* 霧（夜の暗さより下） */drawPrintMarks(now,true);/* 霧の中の足あとの印は、霧の上 */
-  litEnd();const dk=darkness();
+  litEnd();const dk=darkness();litApply(dk,k,x0,y0,x1,y1);/* 光と影：日ざし・明かりのほうを向いた面の明るさ（夜の暗さより下） */
   ctx.setTransform(dpr,0,0,dpr,0,0);
   if(BOSSEVE){const h=hour(),a=Math.min(1,Math.max(0,(h-15)/2))*.16;if(a>0){ctx.fillStyle='rgba(110,30,70,'+a+')';ctx.fillRect(0,0,VW,VH)}}/* オオカゲが来る日の夕方：空があやしい色に */
   if(dk>0){/* 夜の明かり：暗さを別の絵（DMK）にぬり、明かりの所の暗さをけずる（光の色をかぶせず、地面そのものが明るく見える） */const cv=ctx.canvas;if(DMK.width!==cv.width||DMK.height!==cv.height){DMK.width=cv.width;DMK.height=cv.height}
-    dmx.globalCompositeOperation='source-over';dmx.globalAlpha=1;dmx.setTransform(1,0,0,1,0,0);dmx.clearRect(0,0,DMK.width,DMK.height);dmx.setTransform(dpr,0,0,dpr,0,0);const DC=BOSSEVE||!WD&&S.ns&&(S.ns.final||S.ns.rush)&&!S.cleared?[46,10,52]:[14,20,58];dmx.fillStyle='rgba('+DC+','+dk+')';dmx.fillRect(0,0,VW,VH);
+    dmx.globalCompositeOperation='source-over';dmx.globalAlpha=1;dmx.setTransform(1,0,0,1,0,0);dmx.clearRect(0,0,DMK.width,DMK.height);dmx.setTransform(dpr,0,0,dpr,0,0);dmx.fillStyle=(BOSSEVE||!WD&&S.ns&&(S.ns.final||S.ns.rush)&&!S.cleared?'rgba(46,10,52,':'rgba(14,20,58,')+dk+')';dmx.fillRect(0,0,VW,VH);
     dmx.setTransform(k,0,0,k,-cam.x*k,-cam.y*k);dmx.globalCompositeOperation='destination-out';
     for(const j of LITP){const o=S.obj[j],L=litP(j,o);if(!L)continue;const x=j%W,y=(j/W)|0;if(x<x0-5||x>=x1+5||y<y0-5||y>=y1+5)continue;/* 画面の外5マスの明かりも、光がとどくので描く */if(INDL.has(o)&&roomOf(j))continue;/* 家の中の灯りは、灯りそのものは光らせず、家ぜんたいを光らせる（下） */
       const R=L.R;dmx.drawImage(lightSpr(R),x*TS+L.dx-R,y*TS+L.dy-R,R*2,R*2)}
     gearLights(dmx);/* そうびの明かり */heatGlow(dmx,x0,x1,y0,y1,1);/* 熱の道は、夜ほんのり光る */
     const litH=new Set();for(const j of LIGHTS){if(INDL.has(S.obj[j])){const h=roomOf(j);if(h)litH.add(h)}}/* 灯りのある家 */
     {dmx.imageSmoothingEnabled=true;dmx.globalAlpha=.75;for(const h of litH)dmx.drawImage(houseGlow(h),h.x0*TS-GLOWM,h.y0*TS-GLOWM);dmx.globalAlpha=1}/* 灯りのある家は、家ぜんたいを同じ明るさで照らす（ふちはぼかす） */
-    ctx.setTransform(1,0,0,1,0,0);if(!litComposite(dk,k,x0,y0,x1,y1,DC))ctx.drawImage(DMK,0,0);/* 光と影：明かりのほうを向いた面は明るく */if(nightVarNow()==='kiri'){ctx.globalAlpha=Math.min(1,dk*1.6);ctx.fillStyle=fogPat(ctx);const ox=-(cam.x*k*.6+performance.now()*.006)%256,oy=-(cam.y*k*.6)%256;ctx.translate(ox,oy);ctx.fillRect(-ox,-oy,ctx.canvas.width,ctx.canvas.height);ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=1}/* 霧の夜：うすい霧（1回作った絵をならべて、ゆっくり流す） *//* けずったところは重なっても、暗さがなくなるだけ（明るくなりすぎない） */
+    ctx.setTransform(1,0,0,1,0,0);ctx.drawImage(DMK,0,0);if(nightVarNow()==='kiri'){ctx.globalAlpha=Math.min(1,dk*1.6);ctx.fillStyle=fogPat(ctx);const ox=-(cam.x*k*.6+performance.now()*.006)%256,oy=-(cam.y*k*.6)%256;ctx.translate(ox,oy);ctx.fillRect(-ox,-oy,ctx.canvas.width,ctx.canvas.height);ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=1}/* 霧の夜：うすい霧（1回作った絵をならべて、ゆっくり流す） *//* けずったところは重なっても、暗さがなくなるだけ（明るくなりすぎない） */
     ctx.setTransform(k,0,0,k,-cam.x*k,-cam.y*k);ctx.globalCompositeOperation='lighter';ctx.globalAlpha=dk*.18;for(const j of LITP){const o=S.obj[j],L=litP(j,o);if(!L)continue;const x=j%W,y=(j/W)|0;if(x<x0-5||x>=x1+5||y<y0-5||y>=y1+5)continue;if(INDL.has(o)&&roomOf(j))continue;const R=L.R;ctx.drawImage(lightSpr(R),x*TS+L.dx-R,y*TS+L.dy-R,R*2,R*2)}heatGlow(ctx,x0,x1,y0,y1,0);ctx.globalAlpha=1;/* 火のあたたかさを、ほんの少しだけ */
     ctx.globalCompositeOperation='source-over';
     {const wl=HOUSEART['wall-window-lit'];if(wl&&wl.complete&&wl.naturalWidth&&isDark()){ctx.globalAlpha=1;for(const h of litH)for(const q of h.set){if(((q/W)|0)===h.y0)continue;/* 上がわの壁の窓は、昼も夜も同じ色 */if(!S.win||S.win[q]!==1||!(HOME_WALLS.has(S.obj[q])||S.obj[q]==='window'))continue;const qx=q%W,qy=(q/W)|0;if(qx<x0-1||qx>x1||qy<y0-1||qy>y1)continue;if(winCovered(qx,qy))continue;/* 手前に背の高い物があれば、窓の光はかさねない */{const lk='window:lit',lc=window.CHIPS&&CHIPS[lk];if(!(lc&&drawChip(ctx,lc,lk,qx*TS,qy*TS-1.5,0,q)))ctx.drawImage(wl,qx*TS+3.625,qy*TS+1.5,24.75,21.7125)}}/* 明かりの絵もチップの大きさのまま */ctx.globalAlpha=1}}/* 夜（21時〜6時）だけ、灯りのある家の窓ガラスは中が明るい色に（暗さの上にかく） */
     ctx.setTransform(dpr,0,0,dpr,0,0)}
-  else if(litComposite(0,k,x0,y0,x1,y1))ctx.setTransform(dpr,0,0,dpr,0,0);/* 昼の日ざし */
   if(GLWN){ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=Math.min(1,dk*1.5);ctx.globalCompositeOperation='lighter';ctx.drawImage(GLW,0,0);ctx.globalCompositeOperation='source-over';ctx.globalAlpha=1;ctx.setTransform(dpr,0,0,dpr,0,0);GLWN=0}
   ctx.setTransform(k,0,0,k,-cam.x*k,-cam.y*k);drawArrowTags(x0,y0,x1,y1);drawCritGlow(ctx,now);if(bubLate)for(const f of bubs)f();drawTopFx();drawBattleFx(now);drawLeafPrev();ctx.setTransform(dpr,0,0,dpr,0,0);
   // 空気の粒（昼は花粉、夜はホタル）

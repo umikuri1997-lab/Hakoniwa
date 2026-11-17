@@ -132,7 +132,7 @@ def pfire(M,im,inf,zb,f,NF):
                 if a[yy,xx,3]>0 and zb[yy,xx]>zp and hide(ids[yy,xx]):continue   # 3Dの物のうしろ（PFIRE_HIDE の部品だけ。ほかの部品には、火を上にかさねる）
                 a[yy,xx]=(*c,255)
     return Image.fromarray(a)
-def run(iid,out,chips=False):
+def run(iid,out,chips=False,normals=False):
     M=load(iid);os.makedirs(out,exist_ok=True);O.GRAD=getattr(M,'GRAD',False);O.SHADE=getattr(M,'SHADE',[(17.5,-5),(35,-10)]);O.OSAT=getattr(M,'OSAT',0);O.SHADE4=getattr(M,'SHADE4',[(9,-2.5),(18,-5),(30,-9)]);_l=np.array(getattr(M,'LIGHT',(-0.35,0.25,1.0)),float);O.LIGHT=_l/np.linalg.norm(_l)   # SHADE4：GRAD のときの、うすいかげ・半かげ・かげで引く数（なければ oblique3d.SHADE4）
     # GRAD=True の家具は、かげを4だんに。OSAT：輪郭線のあざやかさに足す量
     L=M.PARTS();bad=check(L);print(iid,'ささえのたしかめ',bad or 'まちがいなし')
@@ -212,5 +212,28 @@ def run(iid,out,chips=False):
             im,ax,ay=CH[nm];a=np.array(im);col=a[:,a.shape[1]//2,3];t0=next(i for i in range(len(col)) if col[i]>0);row=next(i for i in range(max(10,t0+10),len(col)) if col[i]==0)   # 上のすきとおった所（ひじかけのあいだ など）はとばす
             CC[nm]['cut']=(ay+row)/2;print(nm,'cut',CC[nm]['cut'])
         CHP.pack_imgs(head,CC);open(os.path.join(ROOT,'.chips_changed'),'w').write('\n'.join(CH));print('チップに入れた',len(CH))
+    if normals:save_normals(M,CH,PARTS_OUT)
     run.parts=PARTS_OUT;return CH   # run.parts：動く部品の絵（たしかめ用）
-if __name__=='__main__':run(sys.argv[1],sys.argv[2],'--chips' in sys.argv)
+NDIR=os.path.join(ROOT,'tools','art','normals')
+def nfile(nm):return os.path.join(NDIR,nm.replace(':','_').replace('#','~').replace('>','^')+'.png')   # tools/normals.py と同じ名前
+def save_normals(M,CH,PARTS_OUT):
+    """ゲームの光と影のノーマルマップ（tools/normals.py が使う）：向きごとに、もう1回写して、ドットごとの面の向きを絵にする。
+    輪郭線のドット（部品のない所）は、となりの部品の向き。動く部品のある向き・手前にかさねる絵（FRONT）は作らない（形からおしはかる向きのまま）"""
+    from scipy.ndimage import distance_transform_edt
+    os.makedirs(NDIR,exist_ok=True)
+    for v_ in M.VIEWS:
+        nm,k=v_[:2];M.VAR=v_[2] if len(v_)>2 else None;M.FR=0
+        if nm in PARTS_OUT or nm not in CH:continue
+        im,_,_,_=shot(M,k);N=O.LAST_N;ids=O.LAST_IDS
+        if N.shape[:2]!=ids.shape:K=ids.shape[0]//N.shape[0];N=np.repeat(np.repeat(N,K,0),K,1)
+        if N.shape[:2]!=(im.height,im.width):print(nm,'ノーマルマップの大きさがあわない');continue
+        has=ids>=0
+        if not has.any():continue
+        _,(iy,ix)=distance_transform_edt(~has,return_indices=True);N=N[iy,ix]   # 輪郭線のドットは、いちばん近い部品の向き
+        N=N/np.maximum(np.linalg.norm(N,axis=2,keepdims=True),1e-9)
+        enc=np.clip(np.round((N*.5+.5)*31)*255/31,0,255).astype(np.uint8)
+        cim,ax,ay=CH[nm];full=np.array(im);bb=Image.fromarray(full).getbbox()
+        a=np.dstack([enc,full[...,3]]);a=a[bb[1]:bb[3],bb[0]:bb[2]]
+        if a.shape[:2]!=(cim.height,cim.width):print(nm,'ノーマルマップの大きさがあわない',a.shape[:2],cim.size);continue
+        a[...,3]=np.array(cim)[...,3];Image.fromarray(a,'RGBA').save(nfile(nm));print(nm,'ノーマルマップ')
+if __name__=='__main__':run(sys.argv[1],sys.argv[2],'--chips' in sys.argv,'--normals' in sys.argv)

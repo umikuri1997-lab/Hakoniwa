@@ -69,27 +69,34 @@ def auto_normal(im, g64):
     out[..., 3] = (np.asarray(im)[..., 3]).astype(np.uint8)
     return out
 
+def agree(a, b):
+    """3Dから写した向きの絵の形が、いまのチップの形と同じか（設計図があとでかわったチップには使わない）"""
+    ma = np.asarray(a)[..., 3] > 0; mb = np.asarray(b)[..., 3] > 0
+    return (ma == mb).mean() > 0.97
+
 def build():
     from chips import load_js
     head, A, C = load_js()
     pages = [Image.open(os.path.join(ROOT, p)).convert('RGBA') for p in A]
     npg = [Image.new('RGBA', pg.size, (128, 128, 255, 0)) for pg in pages]
-    done = set(); n = 0; ov = 0
+    done = set(); n = 0; ov = 0; miss = []
     for k, c in C.items():
         g64 = c.get('g') == 64
         fl = [(r, k) for r in c['f']] + [(r, k) for p in (c.get('parts') or []) for r in p['f']]
         op = os.path.join(OVR, k.replace(':', '_').replace('#', '~').replace('>', '^') + '.png')
         oim = Image.open(op).convert('RGBA') if os.path.exists(op) else None
+        if oim is not None: miss.append(k)
         for r, _ in fl:
             if isinstance(r, str): continue
             pn, x, y, w, h = r
             key = (pn, x, y)
             if key in done: continue
             done.add(key)
-            if oim is not None and oim.size == (w, h):
-                nm = np.asarray(oim).copy(); ov += 1
+            crop = pages[pn].crop((x, y, x + w, y + h))
+            if oim is not None and oim.size == (w, h) and agree(oim, crop):
+                nm = np.asarray(oim).copy(); nm[..., 3] = np.asarray(crop)[..., 3]; ov += 1
             else:
-                nm = auto_normal(pages[pn].crop((x, y, x + w, y + h)), g64)
+                nm = auto_normal(crop, g64)
             npg[pn].paste(Image.fromarray(nm, 'RGBA'), (x, y)); n += 1
     os.makedirs(os.path.join(ROOT, 'assets', 'chipn'), exist_ok=True)
     old = set(os.listdir(os.path.join(ROOT, 'assets', 'chipn')))
@@ -104,6 +111,7 @@ def build():
     js = js.rstrip('\n') + '\nwindow.CHIPN=' + json.dumps(names) + ';\n'
     open(p, 'w', encoding='utf8').write(js)
     print('normals frames', n, 'from 3D', ov, 'pages', len(names))
+    return ov
 
 if __name__ == '__main__':
     build()

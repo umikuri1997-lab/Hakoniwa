@@ -738,7 +738,8 @@
 - ふきだしの絵は、もらった96×96の絵30こ（`assets/g` の1まい、`BUBSPR`・`BUBS`。元は `tools/art/bubble/`、`build.py` で作る）を描く。ふきだしは40.5×38.25（話したそうなふきだしは45×42）。読みこむまで・表にない物は、11×11のコードの絵（`BUBART`・`BUBI`）。絵文字の字は `r.bubble` のキーとしてだけ使い、絵文字のフォントでは描かない。表にない字は「？」の絵（`bubIcon`）。新しい絵文字をふきだしに使うときは、`BUBART` に絵を、`BUBI` に字を足す。
 
 ## 光と影（ノーマルマップ）
-- 昼の日ざし（朝は東・昼は南の高い所・夕方は西）と夜の明かりの当たり方は `js/lit.js`（WebGL）。上向きの面（地面など）の明るさはかえず、かたむいた面だけ、光のほうを向けば明るく、そむけば暗くする。夜は `DMK` をそのまま使い、明かりの向きで物の面だけかえる（`litComposite`、夜の暗さの所で画面にもどす）。
-- チップのノーマルマップは `tools/normals.py` が色のアトラスと同じならびで作る（`assets/chipn`・`window.CHIPN`。形のふちと明るさからおしはかる）。`chips.py pack`・`replace` のさいごに作りなおす。3Dから写した本当の向きは `tools/art/normals/<id>.png`（あれば、それを使う）。
-- 向きの絵（`NC`）には、`drawChip` で描いたチップだけノーマルマップを描き（`litN`）、ほかの `ctx.drawImage` は、その形で消す（上向き＝いままでどおり）。`ctx` に `clip` をかける所は `nx` にも同じ `clip`（`sideClip`）。
-- GPU のない WebGL（`LGL.soft`）と、はじめの40コマの平均が10ミリ秒より重い端末（`LITSLOW`）では使わない。設定の「光と影」（`SND.lit`）。たしかめは `tools/tests/lit.cjs`、見た目を写すときは `LGL.soft=false`。メモリは、画面と同じ大きさのキャンバス2まい（`NC`・WebGL）と、ノーマルマップのアトラス4まい。
+- 昼の日ざし（朝は東・昼は南の高い所・夕方は西）と夜の明かりの当たり方は `js/lit.js`。ノーマルマップのない所（地面など）の明るさはかえない。物は、カメラを向いた面を基準に、光のほうを向いた面を明るく、そむけた面を暗くする。画面で上にある明かりは、奥ではなく高い所とみる（たいまつの柱が暗くならないように）。
+- 軽い作り（持ち主がえらんだ）：向きの絵（`NC`）は画面の半分の細かさ（`LITNS`）。画面の色の絵は WebGL に送らない。WebGL は `NC` から「暗くする絵」と「明るくする絵」をとなりあわせに作り、画面に multiply と color-dodge でかさねる（`litApply`、夜の暗さ `DMK` より前）。
+- チップのノーマルマップは `tools/normals.py` が色のアトラスと同じならびで作る（`assets/chipn`・`window.CHIPN`）。`chips.py pack`・`replace` のさいごに作りなおす。3Dから写したチップは `furn3d.py <id> <フォルダ> --normals` で本当の向き（`tools/art/normals/<id>.png`、`oblique3d.LAST_N`）を書き出し、形がいまのチップと同じときだけ使う（`agree`）。ほかは形と明るさからおしはかる。
+- `NC` には、`drawChip` で描いたチップだけノーマルマップを描き（`litN`）、ほかの `ctx.drawImage` は、その形で消す。`ctx` に `clip` をかける所は `nx` にも同じ `clip`（`sideClip`、`litT`）。
+- GPU のない WebGL（`LGL.soft`）と、はじめの40コマの平均が4ミリ秒より重い端末（`LITSLOW`）では使わない。設定の「光と影」（`SND.lit`）。たしかめは `tools/tests/lit.cjs`、見た目を写すときは `LGL.soft=false`。

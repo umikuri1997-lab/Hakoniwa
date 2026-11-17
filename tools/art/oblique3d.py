@@ -335,6 +335,7 @@ def render_px(sc, proj, ext, depth, k=0.72, outer=True, merge=12, lw=1, k2=0.86,
     x0, x1, y0, y1 = ext; Wp = int(round((x1-x0)*S)); Hp = int(round((y1-y0)*S))
     col = np.zeros((Hp, Wp, 3)); ccb = np.zeros((Hp, Wp, 3)); dlb = np.zeros((Hp, Wp)); zb = np.full((Hp, Wp), -1e9); idb = np.full((Hp, Wp), -1); lvb = np.zeros((Hp, Wp), int)
     wp = np.zeros((Hp, Wp, 3)); wn = np.zeros((Hp, Wp, 3))   # ドットごとの、せかいの場所と面の向き（テクスチャ用）
+    nrm = np.zeros((Hp, Wp, 3))   # ドットごとの面の向き（ゲームの光と影のノーマルマップ、LAST_N）
     CLR = []   # すけて見える部品の三角形
     RAY = getattr(proj, 'ray', None)   # persp の写し方：ドットごとに、見える面の場所を式でとく（三角形を分けない）
     VN = {}   # スムーズシェード：部品ごと・点ごとの、まわりの面の向き
@@ -389,7 +390,7 @@ def render_px(sc, proj, ext, depth, k=0.72, outer=True, merge=12, lw=1, k2=0.86,
             m = (w0 >= -1e-6) & (w1 >= -1e-6) & (w2 >= -1e-6)
             z = w0*D[0]+w1*D[1]+w2*D[2]
         s = (slice(by0, by1+1), slice(bx0, bx1+1)); vis = m & (z > zb[s])
-        zb[s][vis] = z[vis]; col[s][vis] = shc; ccb[s][vis] = cc; dlb[s][vis] = d; idb[s][vis] = pid; lvb[s][vis] = lv
+        zb[s][vis] = z[vis]; nrm[s][vis] = n; col[s][vis] = shc; ccb[s][vis] = cc; dlb[s][vis] = d; idb[s][vis] = pid; lvb[s][vis] = lv
         if pid in sc.sm and sc.mt.get(pid) != 'flat' and vis.any():   # スムーズシェード：ドットごとに、角の向きをまぜた面の向きで段をきめる（金属は、つやのすじも）
             na, nb, nc = vnorm(pid, a, n), vnorm(pid, b, n), vnorm(pid, c, n)
             NN = w0[vis, None]*na+w1[vis, None]*nb+w2[vis, None]*nc; NN /= np.maximum(np.linalg.norm(NN, axis=1, keepdims=True), 1e-9)
@@ -406,7 +407,7 @@ def render_px(sc, proj, ext, depth, k=0.72, outer=True, merge=12, lw=1, k2=0.86,
             if mt_ == 'satin':
                 hv = LIGHT+depth/np.linalg.norm(depth); hv /= np.linalg.norm(hv); L2[NN@hv > SATINSPEC] = -2
             TC = {q: toon(cc, q) for q in set(L2.tolist())}
-            col[s][vis] = np.array([TC[q] for q in L2])*(1 if BMUL is None else BMUL[:, None]); lvb[s][vis] = L2; dlb[s][vis] = dd; ccb[s][vis] = np.clip(np.array(cc, float)*(1 if BMUL is None else BMUL[:, None]), 0, 255)
+            nrm[s][vis] = NN; col[s][vis] = np.array([TC[q] for q in L2])*(1 if BMUL is None else BMUL[:, None]); lvb[s][vis] = L2; dlb[s][vis] = dd; ccb[s][vis] = np.clip(np.array(cc, float)*(1 if BMUL is None else BMUL[:, None]), 0, 255)
         if pid in sc.tx or pid in sc.dc:
             wp[s][vis] = (w0[vis, None]*a+w1[vis, None]*b+w2[vis, None]*c); wn[s][vis] = n
     for pid, f in sc.dc.items():   # もよう：ドットごとに、見える面の場所の色（かげは、そのドットの3だん）
@@ -542,7 +543,7 @@ def render_px(sc, proj, ext, depth, k=0.72, outer=True, merge=12, lw=1, k2=0.86,
             m = (w0 >= -1e-6) & (w1 >= -1e-6) & (w2 >= -1e-6); z = w0*D[0]+w1*D[1]+w2*D[2]
         s_ = (slice(by0, by1+1), slice(bx0, bx1+1)); vis = m & (z > zb[s_]) & (alpha[s_] > 0)
         o = out[s_]; o[vis] = o[vis]*(1-al)+shc*al; out[s_] = o
-    global LAST_IDS, LAST_ZB; LAST_IDS = idb; LAST_ZB = zb   # ドットごとの部品の番号（その部品だけをとり出すとき用）・奥行き（大きいほど手前。粒の火をかさねるとき用）
+    global LAST_IDS, LAST_ZB, LAST_N; LAST_IDS = idb; LAST_ZB = zb; LAST_N = nrm   # ドットごとの部品の番号（その部品だけをとり出すとき用）・奥行き（大きいほど手前。粒の火をかさねるとき用）
     img = np.dstack([np.round(out), alpha]).astype(np.uint8)
     if merge > 0:   # にた色をまとめる（多い色から順に、近い色をよせる）
         m = img[..., 3] > 0; px = img[m][:, :3].astype(int)
