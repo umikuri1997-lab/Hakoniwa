@@ -32,8 +32,15 @@ def posed(sp, face, p):
         anchors['hand'+k] = body(f(HANDU))[0]
         pn = p.get('prop' if near else 'propF')
         if pn:
-            (P, C), fx = PR.prop(pn); out['prop'+k] = (body(f(P)), C, 'p')
-            for a, v in fx.items(): anchors[a+k] = body(f(v[None]))[0]
+            (P, C), fx = PR.prop(pn); Pw = body(f(P)); fw = {a: body(f(v[None]))[0] for a, v in fx.items() if a != 'up'}
+            if 'up' in fx:   # たいらに持つ道具（フライパン・ボウル・お皿）：道具の「上」が、まうえを向くように、手のまわりで回す
+                hc0 = body(f(HANDU))[0]; u0 = body(f((HANDU[0]+fx['up'])[None]))[0]-hc0; u0 = u0/np.linalg.norm(u0); z = np.array([0, 0, 1.0])
+                ax = np.cross(u0, z); sn = np.linalg.norm(ax); cs = float(u0@z)
+                if sn > 1e-6:
+                    ax = ax/sn; K = np.array([[0, -ax[2], ax[1]], [ax[2], 0, -ax[0]], [-ax[1], ax[0], 0]]); R = np.eye(3)+sn*K+(1-cs)*K@K
+                    Pw = (Pw-hc0)@R.T+hc0; fw = {a: (v-hc0)@R.T+hc0 for a, v in fw.items()}
+            out['prop'+k] = (Pw, C, 'p')
+            for a, v in fw.items(): anchors[a+k] = v
     # 頭の色：カメラに近い向き（前・横・うしろ）の、いまの絵の色
     R0 = rz(-face*math.pi/2+g('spin')); v = rz(-(g('yaw')+g('hy')))@(R0.T@np.array([0, 1., 0]))
     ti = 0 if v[1] >= abs(v[0]) else 2 if -v[1] >= abs(v[0]) else 1
