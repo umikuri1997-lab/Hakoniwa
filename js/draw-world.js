@@ -81,16 +81,49 @@ function drawFords(x0,y0,x1,y1){/* 浅瀬（仮の絵）：水の底の砂がす
   for(let y=Math.max(0,y0);y<Math.min(H,y1);y++)for(let x=Math.max(0,x0);x<Math.min(W,x1);x++){const j=y*W+x;if(S.ground[j]!==2)continue;const px=x*TS,py=y*TS;ctx.drawImage(fordStones(j),px,py,TS,TS);
     ctx.strokeStyle='rgba(255,255,255,.45)';ctx.lineWidth=.8;for(let k=0;k<2;k++){const ph=((now/2600+hash(j*29+k))%1),sx=px+6+hash(j*31+k)*20,sy=py+8+k*12+ph*4;ctx.globalAlpha=Math.sin(ph*Math.PI);ctx.beginPath();ctx.moveTo(sx-4,sy);ctx.quadraticCurveTo(sx,sy-1.6,sx+4,sy);ctx.stroke()}ctx.globalAlpha=1}}/* 石のあいだを流れるさざなみ（動くので毎コマ） */
 const WCK={s:null,c:new Map(),pt:null};/* 水面の区画（16×16マス）：水ぎわの陸の地面と水のふちの絵（上にかさねる）と、水の模様をぬる所の形。区画の地面が変わったときだけ作りなおす */
-function waterDirty(R){if(!R){for(const q of WCK.c.values())if(q&&q.o)q.o.width=q.o.height=0;WCK.c.clear();return}for(const r of R)for(let cy=Math.max(0,(r[1]-1)>>4);cy<=Math.min((H-1)>>4,(r[3]+1)>>4);cy++)for(let cx=Math.max(0,(r[0]-1)>>4);cx<=Math.min((W-1)>>4,(r[2]+1)>>4);cx++){const k=cy*64+cx,q=WCK.c.get(k);if(q&&q.o)q.o.width=q.o.height=0;WCK.c.delete(k)}}/* 下絵がかわった所の区画を作りなおす（R がなければ、ぜんぶ） */
+function waterDirty(R){if(!R){for(const q of WCK.c.values())if(q&&q.o)q.o.width=q.o.height=0;WCK.c.clear();return}for(const r of R)for(let cy=Math.max(0,(r[1]-2)>>4);cy<=Math.min((H-1)>>4,(r[3]+2)>>4);cy++)for(let cx=Math.max(0,(r[0]-2)>>4);cx<=Math.min((W-1)>>4,(r[2]+2)>>4);cx++){const k=cy*64+cx,q=WCK.c.get(k);if(q&&q.o)q.o.width=q.o.height=0;WCK.c.delete(k)}}/* 下絵がかわった所の区画を作りなおす（R がなければ、ぜんぶ） */
+const WNIGHT=.35;/* 夜の水を、夜の暗さの何わりぶん、よけいに暗くするか */
+const WRND={s:12,t:.72,m:8};/* 池・川のふちを丸める：水のマスの形をぼかして（s：ぼかしのはば、世界のドット）、こさ t でくぎる。まっすぐなふちは、前の水のふちの絵と同じく、水のマスの7ドット内がわ。出た角は大きく、へこんだ角は少しだけ丸くなる。m：区画のまわりをしらべるはば（ふちの帯の5ドットより広く） */
+const WBAND=[[79,166,221],[134,173,95],[134,173,95],[159,196,112],[159,196,112],[159,196,112]];/* 水のふちの色：水がわの1ドット（0）と、陸がわの水からの道のり1〜5ドット（前の水のふちの絵 water:b と同じ色） */
+let WKER=null;function wKer(){/* ぼかし（箱のぼかしを3回）の、マス1つぶん（TSドット）のおもみの表：u ドットはなれた所に、マスがどれだけきくか */if(WKER)return WKER;const r=Math.round((Math.sqrt(4*WRND.s*WRND.s+1)-1)/2),R3=3*r;let k=[1];for(let p=0;p<3;p++){const o=new Array(k.length+2*r).fill(0);for(let i=0;i<k.length;i++)for(let j=0;j<=2*r;j++)o[i+j]+=k[i]/(2*r+1);k=o}
+  const C=new Float64Array(2*R3+TS);for(let u=-R3;u<=R3+TS-1;u++){/* マスの左はしから u ドットの所のおもみ＝K(u-TS+1)〜K(u) の合計 */let v=0;for(let q=u-TS+1;q<=u;q++)if(q>=-R3&&q<=R3)v+=k[q+R3];C[u+R3]=v}WKER={R3,C};return WKER}
+function waterRound(X0,Y0,X1,Y1,isW){/* 区画（とまわり m）の水の形 f（1＝水）と、陸の、水からの道のり d（1ドット＝世界の1ドット）。水の形はマスの形なので、ぼかしはマスごとのおもみの表（wKer）で足すだけ。まわりがぜんぶ水か、ぜんぶ陸のマス（ut：1か0。まざるマスは −1）は、ぼかしても同じなので計算しない */
+  const M=WRND.m,w=(X1-X0)*TS+2*M,h=(Y1-Y0)*TS+2*M,ox=X0*TS-M,oy=Y0*TS-M,n=w*h,{R3,C}=wKer(),N=Math.ceil((2*R3+TS)/TS)+1,wt=u=>u<-R3||u>R3+TS-1?0:C[u+R3],G=Math.ceil(R3/TS)+1;
+  const ax=(o,len)=>{const t0=new Int32Array(len),wv=new Float32Array(len*N);for(let p=0;p<len;p++){const g=o+p,a=Math.floor((g-R3-TS+1)/TS);t0[p]=a;for(let k=0;k<N;k++)wv[p*N+k]=wt(g-(a+k)*TS)}return {t0,wv}};/* ドットごとに、きくマス（はじめのマスから N こ）とおもみ */
+  const tx0=Math.floor(ox/TS),ty0=Math.floor(oy/TS),ntx=Math.ceil((ox+w)/TS)-tx0,nty=Math.ceil((oy+h)/TS)-ty0,ut=new Int8Array(ntx*nty);
+  for(let b=0;b<nty;b++)for(let a=0;a<ntx;a++){const x=tx0+a,y=ty0+b,c=isW(x,y);let v=c?1:0;for(let q=-G;q<=G&&v>=0;q++)for(let p=-G;p<=G;p++)if(isW(x+p,y+q)!==c){v=-1;break}ut[b*ntx+a]=v}
+  const X=ax(ox,w),Y=ax(oy,h),bx0=X.t0[0],nb=X.t0[w-1]+N-bx0,f=new Uint8Array(n),d=new Float32Array(n).fill(1e9),row=new Float32Array(nb),rg=[];
+  for(let y=0;y<h;y++){const ty=Math.floor((oy+y)/TS)-ty0,a=Y.t0[y],r=[];let rd=false;
+    for(let tx=0;tx<ntx;tx++){const xa=Math.max(0,(tx0+tx)*TS-ox),xb=Math.min(w,(tx0+tx+1)*TS-ox),u=ut[ty*ntx+tx],i0=y*w;
+      if(u>=0){if(u){f.fill(1,i0+xa,i0+xb);d.fill(0,i0+xa,i0+xb)}continue}
+      if(!rd){rd=true;for(let t=0;t<nb;t++){let v=0;for(let k=0;k<N;k++){const q=Y.wv[y*N+k];if(q&&isW(bx0+t,a+k))v+=q}row[t]=v}}/* その行に、マスの列ごとに、たての重みをかけておく */
+      for(let x=xa;x<xb;x++){const b=X.t0[x]-bx0;let v=0;for(let k=0;k<N;k++)v+=X.wv[x*N+k]*row[b+k];if(v>WRND.t){f[i0+x]=1;d[i0+x]=0}}
+      if(r.length&&r[r.length-1]===xa)r[r.length-1]=xb;else r.push(xa,xb)}
+    rg.push(r)}
+  const S2=Math.SQRT2;/* 水からの道のり（2回でしらべる）。まざるマスの所だけ（まわりがぜんぶ陸なら、水はとおい） */
+  for(let y=0;y<h;y++){const r=rg[y];for(let p=0;p<r.length;p+=2)for(let x=r[p];x<r[p+1];x++){const i=y*w+x;if(!d[i])continue;let v=d[i];if(x>0)v=Math.min(v,d[i-1]+1);if(y>0){v=Math.min(v,d[i-w]+1);if(x>0)v=Math.min(v,d[i-w-1]+S2);if(x<w-1)v=Math.min(v,d[i-w+1]+S2)}d[i]=v}}
+  for(let y=h-1;y>=0;y--){const r=rg[y];for(let p=r.length-2;p>=0;p-=2)for(let x=r[p+1]-1;x>=r[p];x--){const i=y*w+x;if(!d[i])continue;let v=d[i];if(x<w-1)v=Math.min(v,d[i+1]+1);if(y<h-1){v=Math.min(v,d[i+w]+1);if(x<w-1)v=Math.min(v,d[i+w+1]+S2);if(x>0)v=Math.min(v,d[i+w-1]+S2)}d[i]=v}}
+  return {w,f,d,ut:(x,y)=>ut[(y-ty0)*ntx+x-tx0]}}
+function waterCorner(g,R,X0,Y0,X1,Y1,isW){/* 丸めて陸になった、水のマスの角：下絵には前の四角い水のふち（こい緑の線）がのこっているので、その所だけ、まわりの陸と同じ地面（あれ地か草地。マップの位置どおり）でぬりなおす */
+  const M=WRND.m,gw=R.w,F=R.f,w=(X1-X0)*TS,h=(Y1-Y0)*TS,C=window.CHIPS,gt=chipImgs(C['tex:grass'],'ground')[0];let L=null,lg=null,id=null;
+  for(let ty=Y0;ty<Y1;ty++)for(let tx=X0;tx<X1;tx++){if(!isW(tx,ty)||R.ut(tx,ty)!==-1)continue;const xa=(tx-X0)*TS,ya=(ty-Y0)*TS;let any=false;
+    for(let y=ya;y<ya+TS;y++)for(let x=xa;x<xa+TS;x++)if(!F[(y+M)*gw+x+M]){any=true;if(!L){L=TMPC();L.width=w;L.height=h;lg=L.getContext('2d');id=lg.createImageData(w,h)}id.data[(y*w+x)*4+3]=255}
+    if(!any)continue;let gr=0,dr=0;for(let b=-1;b<=1;b++)for(let a=-1;a<=1;a++){if(!a&&!b||isW(tx+a,ty+b))continue;const j=(ty+b)*W+tx+a;if(REV.has(j))gr++;else dr++}/* まわりの陸が草地か、あれ地か */
+    const px=tx*TS,py=ty*TS;if(gr>dr&&gt.ok)lg.drawImage(gt,px%96,py%96,TS,TS,xa,ya,TS,TS);else lg.drawImage(dryTex(px,py),px%288,py%288,TS,TS,xa,ya,TS,TS)}
+  if(!L)return;const m=TMPC();m.width=w;m.height=h;m.getContext('2d').putImageData(id,0,0);lg.globalCompositeOperation='destination-in';lg.drawImage(m,0,0);g.drawImage(L,0,0);L.width=L.height=m.width=m.height=0}
 function waterChunk(cx,cy){const k=cy*64+cx;if(WCK.c.has(k))return WCK.c.get(k);{const g0=GRD.c.get(k);if(GRD.s!==S||!g0||!g0.f||g0.st)return null}/* 地面の区画（くわしい絵）ができてから作る */const C=window.CHIPS,X0=cx*16,Y0=cy*16,X1=Math.min(W,X0+16),Y1=Math.min(H,Y0+16),isW=(x,y)=>x>=0&&y>=0&&x<W&&y<H&&S.ground[y*W+x]>=1,near=(x,y)=>{for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++)if(isW(x+dx,y+dy))return true;return false};
   const P=new Path2D();let any=false;for(let y=Y0;y<Y1;y++){let x=X0;while(x<X1){if(!near(x,y)){x++;continue}let e=x;while(e+1<X1&&near(e+1,y))e++;P.rect(x*TS,y*TS,(e-x+1)*TS,TS);any=true;x=e+1}}/* 水の模様をぬる所：水のマスと、そのまわり1マス */
   if(!any){WCK.c.set(k,null);return null}
-  const w=(X1-X0)*TS,h=(Y1-Y0)*TS,put=(c,ch,x,y)=>{const src=ch.src||ch,i=chipImgs(src,'water')[0];if(!i.ok)return false;if(src.g===64)c.drawImage(i,x+src.ax/2,y+src.ay/2,src.w/2,src.h/2);else c.drawImage(i,x+src.ax,y+src.ay);return true};
-  const m=TMPC();m.width=w;m.height=h;const gm=m.getContext('2d');gm.translate(-X0*TS,-Y0*TS);const o=document.createElement('canvas');o.width=w;o.height=h;const g=o.getContext('2d');
-  for(let y=Y0-1;y<=Y1+1;y++)for(let x=X0-1;x<=X1+1;x++){const b=(isW(x-1,y-1)?1:0)|(isW(x,y-1)?2:0)|(isW(x-1,y)?4:0)|(isW(x,y)?8:0);if(!b)continue;const ch=C['waterm:'+b];if(ch)put(gm,ch,x*TS,y*TS)}
-  g.drawImage(gq(cx,cy).f,0,0);g.globalCompositeOperation='destination-out';g.drawImage(m,0,0);g.globalCompositeOperation='source-over';g.translate(-X0*TS,-Y0*TS);/* 陸の地面（下絵）のうち、水でない所（区画ぜんぶ。水の模様をぬった所のふちの、うすい線もかくれる） */
-  for(let y=Y0-1;y<=Y1+1;y++)for(let x=X0-1;x<=X1+1;x++){const b=(isW(x-1,y-1)?1:0)|(isW(x,y-1)?2:0)|(isW(x-1,y)?4:0)|(isW(x,y)?8:0);if(!b)continue;const ce=C['water:'+b];if(ce)put(g,ce,x*TS,y*TS)}/* 水のふち */
-  m.width=m.height=0;const q={o,P};WCK.c.set(k,q);return q}
+  const w=(X1-X0)*TS,h=(Y1-Y0)*TS,R=waterRound(X0,Y0,X1,Y1,isW),M=WRND.m,gw=R.w,F=R.f,D=R.d,o=document.createElement('canvas');o.width=w;o.height=h;const g=o.getContext('2d');
+  const m=TMPC();m.width=w;m.height=h;const gm=m.getContext('2d'),mi=gm.createImageData(w,h),e=TMPC();e.width=w;e.height=h;const ge=e.getContext('2d'),ei=ge.createImageData(w,h),md=mi.data,ed=ei.data;
+  for(let ty=Y0;ty<Y1;ty++)for(let tx=X0;tx<X1;tx++){const u=R.ut(tx,ty),xa=(tx-X0)*TS,ya=(ty-Y0)*TS;if(u===0)continue;/* まわりがぜんぶ陸のマスは、ふちも水もない */
+    for(let y=ya;y<ya+TS;y++)for(let x=xa;x<xa+TS;x++){const i=(y+M)*gw+x+M,p=(y*w+x)*4;let c=null;
+      if(F[i]){md[p+3]=255;if(u<0&&(!F[i-1]||!F[i+1]||!F[i-gw]||!F[i+gw]))c=WBAND[0]}/* 水：陸にとなる1ドットは、こい水の線 */
+      else{const k=Math.round(D[i]);if(k>=1&&k<WBAND.length)c=WBAND[k]}/* 陸：水からの道のりで、ふちの草の帯 */
+      if(c){ed[p]=c[0];ed[p+1]=c[1];ed[p+2]=c[2];ed[p+3]=255}}}
+  gm.putImageData(mi,0,0);ge.putImageData(ei,0,0);
+  g.drawImage(gq(cx,cy).f,0,0);waterCorner(g,R,X0,Y0,X1,Y1,isW);g.globalCompositeOperation='destination-out';g.drawImage(m,0,0);g.globalCompositeOperation='source-over';g.drawImage(e,0,0);/* 陸の地面（下絵）のうち、水でない所と、水のふち */
+  m.width=m.height=e.width=e.height=0;const q={o,P};WCK.c.set(k,q);return q}
 function waterShimmer(now,x0,y0,x1,y1){/* 水面（ふつうのタイルのやり方）：水の模様（tex:water）を、水のマスとまわり1マスに、世界の座標でしきつめてぬる（ゆっくりスクロール）。その上に、区画ごとに作っておいた「水ぎわの陸の地面と水のふち」の絵をかさねる */
   if(WD===1||!waterChipsOK())return;const C=window.CHIPS,im=chipImgs(C['tex:water'],'water')[0];if(!im.ok)return;
   if(WCK.s!==S){waterDirty(null);WCK.s=S;WCK.pt=null}
@@ -98,7 +131,7 @@ function waterShimmer(now,x0,y0,x1,y1){/* 水面（ふつうのタイルのや�
   const qs=[];for(let cy=Math.max(0,(y0-1)>>4);cy<=Math.min((H-1)>>4,(y1+1)>>4);cy++)for(let cx=Math.max(0,(x0-1)>>4);cx<=Math.min((W-1)>>4,(x1+1)>>4);cx++){const q=waterChunk(cx,cy);if(q)qs.push([cx,cy,q])}
   if(!qs.length)return;
   const P=new Path2D();for(const[,,q]of qs)P.addPath(q.P);/* 見えている区画の形を1つにして、1回でぬる（区画のさかいに線が出ないように） */
-  const pt=WCK.pt||(WCK.pt=ctx.createPattern(im,'repeat'));pt.setTransform(new DOMMatrix().translate(sx,sy));ctx.fillStyle=pt;ctx.fill(P);
+  const pt=WCK.pt||(WCK.pt=ctx.createPattern(im,'repeat'));pt.setTransform(new DOMMatrix().translate(sx,sy));ctx.fillStyle=pt;ctx.fill(P);{const dk=darkness();if(dk>0){ctx.fillStyle='rgba(52,50,64,'+(dk*WNIGHT)+')';ctx.fill(P)}}/* 夜は、水をもう少し暗く（青があざやかなまま、うかんで見えないように）。陸の絵を上にかさねるので、水の所だけ */
   const kz=dpr*cam.z,SX=v=>cam.x+Math.round((v-cam.x)*kz)/kz,SY=v=>cam.y+Math.round((v-cam.y)*kz)/kz;
   for(const[cx,cy,q]of qs){const a=SX(cx*16*TS),b=SY(cy*16*TS);ctx.drawImage(q.o,a,b,SX(cx*16*TS+q.o.width)-a,SY(cy*16*TS+q.o.height)-b)}}/* 区画の絵は、画面のドットのさかいに合わせておく */
 function sideClip(i,f){/* 低いマスの物が、となりの高いマスの上へはみ出さないように：となりのマスが高ければ、そのマスの高い面（上の面のてっぺんより下）には描かない */const x=i%W,y=(i/W)|0,h=hiAt(i),L=x>0&&hiAt(i-1)>h?hiAt(i-1):0,R=x<W-1&&hiAt(i+1)>h?hiAt(i+1):0;if(!L&&!R){f();return}
