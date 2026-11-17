@@ -44,7 +44,7 @@ function drawEnemy(e,now){
    const R=36*z,ox=px-R,oy=py+8-R*1.7,ww=R*2,hh=R*2.2,k=dpr*cam.z,cw=Math.ceil(ww*k)+2,ch=Math.ceil(hh*k)+2;
    if(EOC.width<cw||EOC.height<ch){EOC.width=EOS.width=Math.max(EOC.width,cw);EOC.height=EOS.height=Math.max(EOC.height,ch)}
    eox.setTransform(1,0,0,1,0,0);eox.clearRect(0,0,cw,ch);eox.setTransform(k,0,0,k,-ox*k,-oy*k);
-   drawShade(eox,e.type,px,py+8,.27*z,v.f,{dot:1,t:now/1000+e.id*1.3,back:v.back,walk:now-v.mv<200,flash:ho[2],hurt:e.flash>0?Math.max(0,1-e.flash/6):null,atk:now-(e.swing||-1e9)<300?.95+(now-e.swing)/300*.045:now-v.mv<200?0:(e.atk||0)/D.atk});
+   drawShade(eox,e.type,px,py+8,.27*z,v.f,{dot:1,t:now/1000+e.id*1.3,back:v.back,walk:now-v.mv<200,flash:ho[2],hurt:hurtFrame(e,now),atk:now-(e.swing||-1e9)<150?.95+(now-e.swing)/150*.045:now-v.mv<200?0:(e.atk||0)/D.atk});
    eos.globalCompositeOperation='copy';eos.drawImage(EOC,0,0);eos.globalCompositeOperation='source-in';eos.fillStyle='#fff';eos.fillRect(0,0,cw,ch);eos.globalCompositeOperation='source-over';
    const sw=cw/k,sh=ch/k,o=1.3;ctx.globalAlpha=e.stun>0?.5:.95;
    const OFF=[[o,0],[-o,0],[0,o],[0,-o],[o*.7,o*.7],[-o*.7,o*.7],[o*.7,-o*.7],[-o*.7,-o*.7]];for(const[dx,dy]of OFF)ctx.drawImage(EOS,0,0,cw,ch,ox+dx,oy+dy,sw,sh);
@@ -359,7 +359,7 @@ function render(now){RFN++;
   waterShimmer(now,x0,y0,x1,y1);drawFords(x0,y0,x1,y1);drawRugsLive(x0,y0,x1,y1);
   drawSacredRoot(now);drawFieldStory(now);if(typeof drawTreasure==='function')drawTreasure(now);
   for(const[j,t0]of pops){const a=1-(now-t0)/350;if(a<=0){pops.delete(j);continue}ctx.fillStyle='rgba(255,255,240,'+a*.6+')';const s=4*(1-a);rr(ctx,(j%W)*TS-s,((j/W)|0)*TS-s,TS+s*2,TS+s*2,6)}
-  for(const o of S.orders||[])if(o.cs!=null&&S.obj[o.cs]!=='wbench'){const x=o.cs%W,y=(o.cs/W)|0;if(x>=x0&&x<=x1&&y>=y0&&y<=y1){const st=typeof wbworkStage==='function'?wbworkStage(o):-1,wc=st>=0&&window.CHIPS&&CHIPS['wbwork#'+st];if(wc)drawChip(ctx,wc,'wbwork',x*TS+22,y*TS+WBWORKZ-hiAt(o.cs)*LIFT,now)}}/* 作業台を置けなかった依頼：素材がそろったら、作っている形を地面に（作業台の天板の高さ WBWORKZ だけ下げる） */
+  for(const o of S.orders||[])if(o.cs!=null&&S.obj[o.cs]!=='wbench'){const x=o.cs%W,y=(o.cs/W)|0;if(x>=x0&&x<=x1&&y>=y0&&y<=y1){const st=typeof wbworkStage==='function'?wbworkStage(o):-1,wc=st>=0&&window.CHIPS&&CHIPS['wbwork#'+st];if(wc)drawChip(ctx,wc,'wbwork',x*TS,y*TS+WBWORKZ-hiAt(o.cs)*LIFT,now)}}/* 作業台を置けなかった依頼：素材がそろったら、作っている形を地面に（天板の上にのせる絵を、WBWORKZ だけ下げる） */
   for(const d of S.drops||[]){const dz=hiAt(d.y*W+d.x)*LIFT,cx=d.x*TS+16,cy=d.y*TS+19-dz,tw=Math.sin(now/260+d.x*1.7)*.5+.5;
     if(d.id==='mat:eda'||d.id==='mat:can'){const ch=window.CHIPS&&CHIPS['drop:'+d.id.slice(4)];if(ch&&drawChip(ctx,ch,d.id,d.x*TS,d.y*TS-dz,0))continue;ctx.fillStyle='rgba(40,25,10,.18)';ctx.beginPath();ctx.ellipse(cx,cy+8,7,2.2,0,0,7);ctx.fill();drawMatIc(ctx,d.id.slice(4),cx,cy+2,18);continue}/* 枝・空き缶の落とし物 */
     if(d.id==='hai'){/* ハイカゲの灰：灰色の小さな山（仮の絵） */ctx.fillStyle='rgba(40,25,10,.18)';ctx.beginPath();ctx.ellipse(cx,cy+8,9,2.6,0,0,7);ctx.fill();ctx.fillStyle='#9a948e';ctx.beginPath();ctx.ellipse(cx,cy+4,9,5,0,Math.PI,0);ctx.fill();ctx.fillStyle='#bdb7b0';ctx.beginPath();ctx.ellipse(cx-2,cy+2,5,3,0,Math.PI,0);ctx.fill();ctx.fillStyle='rgba(255,170,90,'+(.35+tw*.35)+')';ctx.fillRect(cx+2,cy+1,2,2);continue}

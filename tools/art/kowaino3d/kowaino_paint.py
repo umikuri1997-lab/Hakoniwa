@@ -20,7 +20,7 @@ import kw_tex
 CFG = {
     'basic': dict(model=os.path.join(HERE, 'models', 'kg_basic.glb'),   # 持ち主が直したモデル＋手（kw_model.py）
                   labcol={'base': '#6f6487', 'rim': '#2c2440', 'under': '#2c2440', 'face': '#241c33', 'deco': '#b9aab6', 'pom': '#c8bcc8', 'hand': '#241c33'},
-                  HPX=54, base='#6f6487', lining=True, hem=('#ac9776', 0.03), under='#2c2440', legs=('#342b44', 0.1),
+                  HPX=41, base='#6f6487', lining=True, hem=('#ac9776', 0.03), under='#2c2440', legs=('#342b44', 0.1),
                   eyes=dict(x=0.085, z=0.52, rx=0.03, rz=0.075, col='#c2afae', edge='#9e8a92')),
     'basic_old': dict(HPX=54, thin=0, hem=('#ac9776', 0.03), under='#2c2440', lining='#2c2440', base='#685d7f', parts='#b9aab6', legs=('#342b44', 0.1), eyes=dict(x=0.085, z=0.52, rx=0.03, rz=0.075, col='#c2afae', edge='#9e8a92'),
                   seeds=[('hood', 0.0, 0.85, '#6f6487', 0), ('face', 0.0, 0.52, '#241c33', 1),
@@ -29,7 +29,7 @@ CFG = {
 }
 
 def mk(name, size, cloth, dark, deco, eye, pom=None, edge=None, hand=None, mats=None, **kw):
-    """持ち主が直したモデル（models/kg_<名前>.glb）の色わけで写すときの色。布・裏地と顔（こい色）・かざり・目。大きさはゲームの size（コカゲが1）"""
+    """持ち主が直したモデル（models/kg_<名前>.glb）の色わけで写すときの色。布・裏地と顔（こい色）・かざり・目。大きさはゲームの size（1で54ドット。コカゲは HPX=41・size .75）"""
     return dict(model=os.path.join(HERE, 'models', 'kg_%s.glb' % name), HPX=round(54*size), base=cloth,
                 labcol={'base': cloth, 'under': dark, 'red': dark, 'face': dark, 'deco': deco, 'pom': pom or deco, 'hand': hand or dark},
                 mats=dict({'base': 'fabric', 'red': 'fabric', 'pom': 'fabric'}, **(mats or {})),
