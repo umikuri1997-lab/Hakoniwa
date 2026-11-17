@@ -132,6 +132,10 @@ NEW = [
  ('きのこキッシュ', 'komugiko kinoko egg', [O], F, 'cake'),
  ('うなぎのまぜむぎ', 'unagi mugi egg', [C, O], F, 'bowl'),
 ]
+# おいしくなさそうな料理：名前をかえ、効果はたのしさ−15だけ
+BAD = {'さかなのベリーソース': 'むらさきのさかな', 'あまずっぱいたけのこ': 'すっぱいたけのこ', 'きのこのベリーやき': 'むらさききのこ',
+       'さかなのりんごやき': 'あまいさかな', 'たけのこのりんごに': 'ぐにゃっとたけのこ', 'きのことりんごのいため': 'べちゃっときのこ',
+       'キャベツのベリーに': 'むらさきキャベツに', 'キャベツのりんごに': 'あまったるいキャベツ', 'ベリーのたまごやき': 'むらさきたまごやき'}
 BASE = ['mugi', 'imo', 'tomato', 'berry', 'apple', 'egg', 'milk', 'fish', 'takenoko', 'kinoko', 'komugiko']
 PT = {1: (2, .9), 2: (3, 1.35), 3: (4, 1.8)}
 
@@ -167,10 +171,12 @@ def main():
         hard = len(ins) + (1 if O in st else 0)
         tm = {1: 35, 2: 49, 3: 63, 4: 77}[min(4, hard)]
         ef, fx = eff(ins, st[0], typ)
+        if nm in BAD: nm = BAD.pop(nm); ef, fx = {'fun': -15}, 'たのしさ−15'
         pt, pw = PT[min(3, max(1, (v + 1) // 2))]
         out.append(dict(id=k, i=ins, st=st, el=el, time=tm,
-                        f=dict(name=nm, v=v, pt=pt, pw=pw, dish=1, e='ic:' + k, fx=fx, ef=ef),
+                        f=dict(name=nm, v=v, pt=pt, pw=pw, dish=1, e='ic:' + k, fx=fx, ef=ef, **({'bad': 1} if ef.get('fun', 0) < 0 else {})),
                         ic=[typ] + [COL[x] for x in ins]))
+    assert not BAD, BAD
     # 材料1・2しゅるいは、どれも調理台かたき火で作れる
     miss = []
     for a in range(len(BASE)):

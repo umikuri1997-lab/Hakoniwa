@@ -2,9 +2,9 @@
    家具ごとに「おまかせ」（作ったことのある料理を、せいれいが箱の材料からえらぶ）か「入れる」（えらんだ材料を作りつづける）。
    表にない組み合わせは、ふしぎな料理。作るまで名前はわからない（S.cookKn：作った組み合わせ→料理）。 */
 for(const D of COOKD)if(D.f)FOODS[D.id]=D.f;
-FOODS.fsg1={name:'ふしぎな料理',v:1,pt:1,pw:.45,dish:1,e:'ic:fsg',fx:'たのしさ+5',ef:{fun:5}};
-FOODS.fsg2={name:'ふしぎな料理',v:2,pt:2,pw:.9,dish:1,e:'ic:fsg',fx:'たのしさ+5',ef:{fun:5}};
-FOODS.fsg3={name:'ふしぎな料理',v:3,pt:3,pw:1.35,dish:1,e:'ic:fsg',fx:'たのしさ+5',ef:{fun:5}};
+FOODS.fsg1={name:'ふしぎな料理',v:1,pt:1,pw:.45,dish:1,e:'ic:fsg',fx:'たのしさ−10',ef:{fun:-10},bad:1};
+FOODS.fsg2={name:'ふしぎな料理',v:2,pt:2,pw:.9,dish:1,e:'ic:fsg',fx:'たのしさ−10',ef:{fun:-10},bad:1};
+FOODS.fsg3={name:'ふしぎな料理',v:3,pt:3,pw:1.35,dish:1,e:'ic:fsg',fx:'たのしさ−10',ef:{fun:-10},bad:1};
 const COOKBY=new Map(),COOKDI={};for(const D of COOKD){COOKDI[D.id]=D;for(const s of D.st)COOKBY.set(D.i.join('+')+'@'+s,D.id)}/* 組み合わせ→料理（さがすための一覧） */
 const COOKIN=['mugi','imo','tomato','berry','apple','egg','milk','fish','takenoko','kinoko','komugiko','unagi','ayu','koi','namazu','yumasu'];/* 入れられる材料（さかなは、どの魚でも） */
 const SPFISH=new Set(['unagi','ayu','koi','namazu','yumasu']);/* とくべつな料理のある魚 */
@@ -25,7 +25,7 @@ function cookHas(R,r){/* 箱の材料（持っている分も）で作れるか 
 function cookKnownAt(st){/* その家具で作ったことのある組み合わせ */const K=S.cookKn||{},o=[];for(const k in K)if(k.endsWith('@'+st)){const R=recOf(k);if(R)o.push(R)}return o}
 function cookPick(q,r){/* その家具で、そのせいれいがいま作る料理 */const M=ovenMode(q);if(!M)return null;const st=S.obj[q];
   if(M.m==='in'){const R=M.in&&M.in.length?recOf(cookKey(M.in,st)):null;return R&&cookElOK(R,r)&&cookHas(R,r)?R:null}
-  if(M.m==='auto'){const L=cookKnownAt(st).filter(R=>R.dish&&cookElOK(R,r)&&cookHas(R,r));if(!L.length)return null;const h=r.cgot&&L.find(R=>R.key===r.cgot.rec);return h||pick(L)}return null}/* おまかせは、作ったことのある料理だけ（ふしぎな料理はえらばない） */
+  if(M.m==='auto'){const L=cookKnownAt(st).filter(R=>R.dish&&!FOODS[R.out].bad&&cookElOK(R,r)&&cookHas(R,r));if(!L.length)return null;const h=r.cgot&&L.find(R=>R.key===r.cgot.rec);return h||pick(L)}return null}/* おまかせは、作ったことのある料理だけ（ふしぎな料理・おいしくなさそうな料理はえらばない） */
 const COOKNEW=[];
 function cookLearn(R){/* 作った組み合わせをおぼえる。はじめての料理は、大きな知らせ */if(!R||MEMRUN)return;const K=S.cookKn||(S.cookKn={});if(K[R.key])return;const fresh=!Object.values(K).includes(R.out);K[R.key]=R.out;if(fresh)COOKNEW.push({state:S,out:R.out,key:R.key})}
 function cookNewTick(){while(COOKNEW.length&&COOKNEW[0].state!==S)COOKNEW.shift();if(!COOKNEW.length||GIFT_ACTIVE)return;const g=COOKNEW.shift(),F=FOODS[g.out];if(!F)return;
