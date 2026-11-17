@@ -22,3 +22,5 @@ def PARTS():
     L.append(GL(notex(P('ろうそく','cyl',(CX,CY,0.075,0.12,0.50),WAX,detail=20,on=('台',),note='台にさす'))))
     L.append(notex(P('しん','cyl',(CX,CY,0.01,0.50,0.53),(120,96,80),detail=6,on=('ろうそく',),note='ろうそくのてっぺん')))
     return L
+
+TONE5=True   # かげは木と同じ5色（furntone。持ち主がきめた）

@@ -72,3 +72,5 @@ def duvet(sc):   # かけぶとんと、うわシーツの折り返し（たれ�
         return top(x,YQ)+0.012-(YQ-y)/0.014*(QT+0.012)*0.5   # 頭のはしで、まるくまわりこむ
     sb=lambda x,y:(top(x,max(y,YQ))+0.002) if y>=YQ else ZM
     sc.material('soft');hfield(sc,X0+0.01,YQ-0.012,X1-0.01,YQ+0.10,stop,SHEET,bot=sb,n=(40,10));sc.material(None)
+
+TONE5=True   # かげは木と同じ5色（furntone。持ち主がきめた）

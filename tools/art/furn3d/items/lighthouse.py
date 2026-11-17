@@ -107,3 +107,5 @@ def PARTS():
     L.append(RF(P('換気の玉','ball',(CX,CY,RT+0.06,0.07),ROOF,on=('屋根',),note='屋根のてっぺん')))
     L.append(MT(P('避雷針','rope',((CX,CY,RT+0.12),(CX,CY,RT+0.32),0.012),IRON,on=('換気の玉',),note='玉にさしこむ')))
     return L
+
+TONE5=True   # かげは木と同じ5色（furntone。持ち主がきめた）

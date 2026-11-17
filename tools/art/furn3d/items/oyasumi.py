@@ -37,3 +37,5 @@ def PARTS():
     L.append(ST(P('たれ 左','prism',([(BX-0.01,0.84),(BX-0.075,0.765),(BX-0.04,0.765)],yr+0.02,yr+0.036,'y'),NAVY,bevel=0,on=('むすび目',),note='たれる')))
     L.append(ST(P('たれ 右','prism',([(BX+0.01,0.84),(BX+0.075,0.765),(BX+0.04,0.765)],yr+0.02,yr+0.036,'y'),NAVY,bevel=0,on=('むすび目',),note='たれる')))
     return L
+
+TONE5=True   # かげは木と同じ5色（furntone。持ち主がきめた）

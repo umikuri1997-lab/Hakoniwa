@@ -32,3 +32,5 @@ def EXTRA(sc):   # ひだ：かさのふちから下へたれる布。布1まい
         t0,t1=P_(a0,Z0,R0),P_(a1,Z0,R0);b0,b1=P_(a0,Z0-drop(a0),R0+0.012),P_(a1,Z0-drop(a1),R0+0.012)
         m=P_((a0+a1)/2,Z0,R0);c=shade(stripe(*m[:2]),m[0],0.97);sc.quad(t0,t1,b1,b0,c)   # ひだは、かさより少しだけ暗く（0.97倍）
     sc.smooth(False);sc.material(None);sc.group(None)
+
+TONE5=True   # かげは木と同じ5色（furntone。持ち主がきめた）

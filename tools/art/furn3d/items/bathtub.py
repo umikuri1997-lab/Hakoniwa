@@ -39,3 +39,5 @@ def EXTRA(sc):   # 水：おけの中、ふちの0.10下。すけて見える・
         return (CX+a*U/max(r,1e-9),CY+b*V/max(r,1e-9))
     top=lambda x,y:zw+0.004*math.sin(x*21+y*7)+0.003*math.sin(y*29-x*9)
     sc.material('clear');hfield(sc,CX-a,CY-b,CX+a,CY+b,top,col,n=(48,24),shape=shp);sc.material(None)
+
+TONE5=True   # かげは木と同じ5色（furntone。持ち主がきめた）

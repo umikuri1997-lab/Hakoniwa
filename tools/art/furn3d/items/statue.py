@@ -5,3 +5,5 @@ VIEWS=[('statue',0)]
 def PARTS():return PARTS_T(False)
 def EXTRA(sc):stars(sc)
 def PWATER():return moss(False)   # コケ・つたは粒（pdraw）
+
+TONE5=True   # かげは木と同じ5色（furntone。持ち主がきめた）

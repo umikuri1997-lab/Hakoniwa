@@ -19,3 +19,5 @@ def PARTS():
     L.append(P('上の板','prism',(arrow(CX-0.42,CX+0.07,0.86,1.06,True),yf,yf+0.05,'y'),WOOD,on=('柱',),note='柱の前にくぎでとめる。左むき'))
     L.append(P('下の板','prism',(arrow(CX-0.07,CX+0.42,0.60,0.80,False),yf,yf+0.05,'y'),WOOD,on=('柱',),note='柱の前にくぎでとめる。右むき'))
     return L
+
+TONE5=True   # かげは木と同じ5色（furntone。持ち主がきめた）

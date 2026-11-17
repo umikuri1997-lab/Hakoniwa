@@ -25,3 +25,5 @@ def PARTS():
     L.append(notex(P('茶せん','lathe',(0.76,0.66,[(0.0,H),(0.032,H),(0.026,H+0.05),(0.012,H+0.075),(0.0,H+0.075)]),BAMBOO,detail=24,on=('天板',),note='茶わんのとなり')))
     L.append(notex(P('なつめ','lathe',(0.70,0.44,[(0.0,H),(0.04,H),(0.046,H+0.035),(0.04,H+0.07),(0.0,H+0.072)]),NATSUME,detail=24,on=('天板',),note='天板の右おく')))
     return L
+
+TONE5=True   # かげは木と同じ5色（furntone。持ち主がきめた）

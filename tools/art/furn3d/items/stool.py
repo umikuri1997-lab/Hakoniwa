@@ -14,3 +14,5 @@ def PARTS():
         L.append(P('貫（%s・%s）'%(n1,n2),'beam',((x1,y1,ZN),(x2,y2,ZN),0.022),WOOD,on=('脚（%s）'%n1,'脚（%s）'%n2),note='脚と脚のあいだ'))
     L.append(P('座面','cyl',(CX,CY,R,ZS,ZS+TS),WOOD,on=tuple('脚（%s）'%n for n,_,_ in pos),detail=64,note='4本の脚の上'));L[-1].plainwall=True;L[-1].grp='top'
     return L
+
+TONE5=True   # かげは木と同じ5色（furntone。持ち主がきめた）

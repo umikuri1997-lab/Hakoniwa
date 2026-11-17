@@ -31,3 +31,5 @@ def PARTS():
         L.append(P('とびら（%s）鏡板'%nd,'box',(x0+FR,yd,z0+FR,x1-FR,Y1-0.012,z1-FR),WOOD,on=('とびら（%s）横框（下）'%nd,),bevel=0,note='わくのみぞにはめる。わくより少しひっこめる'))
         L.append(P('とびら（%s）つまみ'%nd,'ball',(ax_+FR/2,Y1+0.012,(z0+z1)/2,0.022),WOOD,on=('とびら（%s）たて框（あわせ）'%nd,),note='まるい木のつまみ'))
     return L
+
+TONE5=True   # かげは木と同じ5色（furntone。持ち主がきめた）

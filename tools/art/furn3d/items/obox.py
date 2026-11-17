@@ -39,3 +39,5 @@ def EXTRA(sc):star3d(sc,0.5,Y1-0.03,0.34,0.18,0.065,0.08,GOLD)
 GSP=((X0-0.01,Y1-0.01),(X0+0.0,Y1-0.14),(X1+0.01,Y1-0.01),(X1-0.0,Y1-0.14))
 PBOX=gbox(GSP)
 def PWATER():return grass(GSP,4)   # 足もとの草むらは粒
+
+TONE5=True   # かげは木と同じ5色（furntone。持ち主がきめた）

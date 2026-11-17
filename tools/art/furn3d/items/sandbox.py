@@ -28,3 +28,5 @@ def EXTRA(sc):   # 砂：わくの内がわを、なだらかな小山が1つあ
         for cu,cv,h,r in((0.50,0.50,0.24,0.24),):z+=h*math.exp(-(((u-cu)*(xb-xa))**2+((v-cv)*(yb-ya))**2)/(2*(r*(yb-ya)*1.6)**2))   # なだらかな、まるい小山（ガウスの形）
         return z
     sc.group('砂');sc.material('soft');hfield(sc,xa,ya,xb,yb,top,SAND,bot=lambda x,y:0.0,n=(96,36));sc.material(None);sc.group(None)
+
+TONE5=True   # かげは木と同じ5色（furntone。持ち主がきめた）

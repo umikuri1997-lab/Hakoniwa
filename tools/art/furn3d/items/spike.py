@@ -15,3 +15,5 @@ def PARTS():
         k=P('くい%d'%(i+1),'cyl',(x,CY,R,ZB-0.002,ZT),LOG,on=('台',),detail=8,note='台の穴にさしこむ');k.plainwall=True;k.tex=False;L.append(k)
         t=P('先%d'%(i+1),'cone',(x,CY,R,ZT,ZP),WOOD,on=('くい%d'%(i+1),),detail=8,note='くいの先をけずる');t.tex=False;L.append(t)
     return L
+
+TONE5=True   # かげは木と同じ5色（furntone。持ち主がきめた）

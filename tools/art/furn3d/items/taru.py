@@ -41,3 +41,5 @@ def EXTRA(sc):
             sc.quad(q(a0,z0),q(a1,z0),q(a1,z1),q(a0,z1),METAL)
             sc.quad(q(a0,z1),q(a1,z1),(CX+R(z1)*math.cos(a1),CY+R(z1)*math.sin(a1),z1),(CX+R(z1)*math.cos(a0),CY+R(z1)*math.sin(a0),z1),METAL)   # 輪の上の面（あつみ）
     sc.material(None)
+
+TONE5=True   # かげは木と同じ5色（furntone。持ち主がきめた）

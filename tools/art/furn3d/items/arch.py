@@ -40,3 +40,5 @@ def PARTS():
         for a in range(5):
             r_=a*2*math.pi/5+k;q=notex(P('花びら%d-%d'%(k+1,a+1),'ball',(x+0.04*math.cos(r_),y+0.01+0.04*math.sin(r_),z+0.03,0.028,0.7),ROSE,deco=True,note='花びら'));q.olk=0.84;q.soft1=True;q.grp='花%d'%(k+1);L.append(q)
     return L
+
+TONE5=True   # かげは木と同じ5色（furntone。持ち主がきめた）

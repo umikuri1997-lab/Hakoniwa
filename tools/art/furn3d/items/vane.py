@@ -27,3 +27,5 @@ def PARTS():
     L.append(P('鳥（しっぽ）','plate',((bx+0.18,by,bz+0.03),(bx+0.42,by,bz+0.18),0.17,0.04),WOOD,on=('鳥（からだ）',),note='上へはねたしっぽ'))
     for sy in(1,-1):L.append(notex(P('鳥（目%d）'%(sy+2),'ball',(bx-0.26,by+sy*0.085,bz+0.12,0.018),EYE,on=('鳥（頭）',),note='目')))
     return L
+
+TONE5=True   # かげは木と同じ5色（furntone。持ち主がきめた）

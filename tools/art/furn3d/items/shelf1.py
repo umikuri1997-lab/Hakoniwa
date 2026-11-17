@@ -25,3 +25,5 @@ def PARTS():
             L.append(notex(P(nm+'中の紙','box',(x+CV,ya,z0,x+w-CV,yb-SP,z0+h-0.012),PAGE,on=on,bevel=0,grp=g)))
             x+=w+rd.choice((0,0,0.005))
     return L
+
+TONE5=True   # かげは木と同じ5色（furntone。持ち主がきめた）

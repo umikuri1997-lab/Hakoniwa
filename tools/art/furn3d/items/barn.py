@@ -94,3 +94,5 @@ def PARTS():
         L.append(P('棟包み（%s）'%nx,'prism',([pt(-0.002,bt),pt(0.07,bt),pt(0.07,bt*1.9),pt(-0.002,bt*1.9)],RY0,RY1),WOOD,on=('棟木',),note='棟の上にかぶせる'))
         L.append(P('破風板（%s）'%nx,'prism',([pt(0,bt+0.002),pt(L0,bt+0.002),pt(L0,-0.05),pt(0,-0.05)],RY1,RY1+0.025),WOOD,on=('屋根板（%s1）'%nx,),note='屋根のふちにくぎでとめる'))
     return L
+
+TONE5=True   # かげは木と同じ5色（furntone。持ち主がきめた）

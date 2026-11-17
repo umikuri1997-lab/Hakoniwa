@@ -229,3 +229,5 @@ def PARTS():
                     bx=((cx+w-0.010,cx+w) if sx>0 else (cx-w,cx-w+0.010))+((ly+w-0.010,ly+w) if sy2>0 else (ly-w,ly-w+0.010))
                     L.append(MT(P('ランタンのわく（%s%d%d）'%(nm,sx,sy2),'box',(bx[0],bx[2],zl+0.02,bx[1],bx[3],zl+h),IRON,on=('ランタンの台（%s）'%nm,),note='わくの柱')))
     return L
+
+TONE5=True   # かげは木と同じ5色（furntone。持ち主がきめた）

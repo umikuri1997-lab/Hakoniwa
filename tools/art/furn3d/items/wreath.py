@@ -24,3 +24,5 @@ def PARTS():
         L.append(notex(P('花%d'%(k+1),'ball',(*p,0.05),FLW,on=('輪',),note='輪にさす白い花')))
         L.append(notex(P('花のまん中%d'%(k+1),'ball',(*q,0.017),FLC,on=('花%d'%(k+1),),note='花のまん中')))
     return L
+
+TONE5=True   # かげは木と同じ5色（furntone。持ち主がきめた）

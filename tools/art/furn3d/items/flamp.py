@@ -33,3 +33,5 @@ def PLEAT(p):   # ひだ：まわりの角度で、24本のこい・うすいの
         if int((math.atan2(y-CY,x-CX)/(2*math.pi)+1)*48)%2:c=[v*0.96 for v in c]
         return tuple(c)
     p.decal=f;return p
+
+TONE5=True   # かげは木と同じ5色（furntone。持ち主がきめた）

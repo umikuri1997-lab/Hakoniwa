@@ -30,3 +30,5 @@ def PARTS():
     L.append(P('万力のねじ','box',(cx-0.015,Y1+0.05,H-TT-0.06,cx+0.015,Y1+0.10,H-TT-0.03),METAL,on=('万力のあご板',),bevel=0,note='あご板をつらぬく'))
     L.append(P('万力の棒','box',(cx-0.09,Y1+0.085,H-TT-0.055,cx+0.09,Y1+0.105,H-TT-0.035),METAL,on=('万力のねじ',),bevel=0,note='ねじのはしにさす'))
     return L
+
+TONE5=True   # かげは木と同じ5色（furntone。持ち主がきめた）

@@ -33,3 +33,5 @@ def PARTS():
     xa,xb=X0+0.01+LG,X1-0.01-LG;ya=Y0+0.10   # 背のクッション：あつさ CT。10度うしろへ反らせ、うしろの板にもたせる
     L.append(notex(P('背のクッション','loft',soft(xa,ya,xb,ya+CT,0.18,ZC,0.06,0.05,10),CLOTH,on=('座板','うしろの板'),note='座板にのせ、うしろの板にもたせる。10度反らせる')))
     return L
+
+TONE5=True   # かげは木と同じ5色（furntone。持ち主がきめた）

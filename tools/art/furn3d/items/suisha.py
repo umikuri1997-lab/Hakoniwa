@@ -34,3 +34,5 @@ def PARTS():
         L.append(P('輪のふち%d'%(k+1),'prism',(ring(0.33,0.38,a0,a1),y0,y0+0.050),WOOD,on=('輪のうで%d'%(k//2+1),),note='うでのさきに、くぎでとめる',grp='輪ふち'))
     return L
 MOVE={'suisha':{'sel':lambda n:n.startswith('輪'),'pivot':(CX,HY,HZ)}}
+
+TONE5=True   # かげは木と同じ5色（furntone。持ち主がきめた）

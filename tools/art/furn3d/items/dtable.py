@@ -26,3 +26,5 @@ def PARTS():
             for k in range(6):a=math.radians(a0+90*k/5);pts.append((cx+ox+RC*math.cos(a),cy+oy+RC*math.sin(a)))
         L.append(P('天板の板%d'%(i+1),'prism',(pts,H-TT,H,'z'),WOOD,on=('幕板（左）','幕板（右）'),note='両はしを、左・右の幕板の上にのせてとめる。そとの角を丸める'))
     return L
+
+TONE5=True   # かげは木と同じ5色（furntone。持ち主がきめた）
