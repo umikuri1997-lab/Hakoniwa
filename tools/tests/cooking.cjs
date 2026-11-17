@@ -1,34 +1,41 @@
-const {chromium}=require('playwright'),assert=require('node:assert/strict'),fs=require('node:fs');
-/* 料理：その料理の属性のせいれいだけが作る・時間は料理の time・サラダは調理台・夜は材料をもどす・古いセーブ（料理じょうず） */
-(async()=>{const browser=await chromium.launch({executablePath:process.env.CHROME_PATH||(fs.existsSync('/usr/bin/chromium')?'/usr/bin/chromium':undefined),args:['--no-sandbox']});const page=await browser.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));await page.route('**/js/main.js*',async route=>{const r=await route.fetch();await route.fulfill({response:r,body:(await r.text())+'\nwindow.cookEval=s=>eval(s);'});});await page.goto(process.env.GAME_URL||'http://127.0.0.1:8000');await page.waitForFunction(()=>!!window.cookEval);
-const out=await page.evaluate(()=>cookEval(`(()=>{const out={};
-function setup(){S=newState(0);setWorld(0);S.ground.fill(0);S.hi.fill(0);S.obj.fill('');S.floor.fill('');S.dyn={};S.enemies=[];S.t=1440*2+600;USERPAUSE=true;
-  const box=50*W+50,tb=50*W+56,ov=50*W+62;S.obj[box]='crate';S.obj[tb]='cooktable';S.obj[ov]='oven';S.fs={tomato:4,mugi:4,komugiko:4};syncFood();recount();boxSync();S.ovenSet={};
-  const base=S.res[0];S.res=[];const mk=(el,x)=>{const r=JSON.parse(JSON.stringify(base));r.id=100+x;r.name='t'+x;r.elem=el;r.x=x+.5;r.y=52.5;r.act=null;r.cing=null;r.hunger=2000;r.hidden=false;r.vr=r.vr||{};r.vr.tr='hayaashi';S.res.push(r);return r};recount();return {box,tb,ov,mk}}
-out.times=Object.fromEntries(ALLRECIPES.map(R=>[R.out,R.time]));out.hasTimeR=ALLRECIPES.some(R=>'timeR' in R);out.noTrait=!('ryouri' in TRAITS);
-let E=setup();const wood=E.mk('wood',55);S.ovenSet[E.tb]='salad';S.ovenSet[E.ov]='bread';
-let G=bfs(wood.x|0,wood.y|0);out.woodJob=tryJob(wood,G,'cookS');out.woodAct=wood.act&&{type:wood.act.type,rec:wood.act.rec,ov:wood.act.ov===E.tb};
-ACT.cgrab.start(wood,wood.act);out.cing=wood.cing&&wood.cing.rec;const a={obj:E.tb};out.cookStart=ACT.cook.start(wood,a)!==false;out.tableNoFire=a.tb===true;out.woodTime=cookTime(wood,E.tb);
-out.els=Object.fromEntries(ALLRECIPES.map(R=>[R.out,R.el]));out.ovenListHasSalad=RECIPES.filter(R=>dishSt(R)==='oven').some(R=>R.out==='salad');
-E=setup();const water=E.mk('water',60);S.ovenSet[E.ov]='bread';G=bfs(water.x|0,water.y|0);out.waterBread=tryJob(water,G,'cook')||tryJob(water,G,'cookS');
-const fire=E.mk('earth',64);out.fireTakes=tryJob(fire,bfs(fire.x|0,fire.y|0),'cookS')&&fire.act.rec;ACT.cgrab.start(fire,fire.act);out.fireTime=cookTime(fire,E.ov);
-fire.act=null;const fb=S.fs.komugiko;S.t=1440*3+23*60+30;decide0(fire);out.nightReturned=S.fs.komugiko-fb;out.nightCing=fire.cing;
-S=newState(0);setWorld(0);const j=60*W+60;S.obj[j]='oven';S.ovenSet={[j]:'salad'};delete S.flags.cookfit1;S.mig=9;S.res[0].vr.tr='ryouri';const saved=JSON.parse(JSON.stringify(S));continueGame(saved);out.oldSalad=S.ovenSet[j]||null;out.flag=S.flags.cookfit1;out.oldTrait=S.res[0].vr.tr;
-/* 村の中で動かす：ほかの属性だけでは作らない、その属性の子は作る */
-const sim={};for(const R of ALLRECIPES)for(const el of[R.el,'wind']){S=newState(0);resv.clear();BAN.clear();/* 前の料理で「行けなかった所」が、つぎの村にのこらないように（読みこみと同じ） */setWorld(R.out==='soup'?1:0);soupFilter();S.ground.fill(0);S.hi.fill(0);S.obj.fill('');S.floor.fill('');S.dyn={};S.enemies=[];S.drops=[];S.seeds=[];S.t=1440*2+540;USERPAUSE=true;
-  const box=50*W+50,st=50*W+56;S.obj[box]='crate';S.obj[st]=dishSt(R);S.fs={};for(const k in R.need)S.fs[k]=R.need[k]*3;syncFood();recount();boxSync();S.ovenSet={[st]:R.out};
-  const base=S.res[0];S.res=[];for(let i=0;i<2;i++){const q=JSON.parse(JSON.stringify(base));q.id=200+i;q.name='e'+i;q.elem=el;q.x=53.5+i;q.y=52.5;q.act=null;q.cing=null;q.hunger=1500;q.fun=90;q.energy=100;q.hidden=false;q.vr=q.vr||{};q.vr.tr='';S.res.push(q)}recount();
-  const c0=S.cookN||0;let n=0;for(;n<(el==='wind'?1500:6000)&&(S.cookN||0)===c0;n++)/* 作れる子は、遊び・おしゃべりをはさんでもできるまで長めに待つ（たまたま遊びに行くと1500では足りない） */{stepWorld(.25);for(const q of S.res){q.hunger=1500;q.fun=90}}sim[R.out+':'+el]=(S.cookN||0)-c0}out.sim=sim;
-const txt=JSON.stringify(MANUAL)+ALLRECIPES.map(DISHD).join()+Object.values(ELEM).map(e=>e.can).join();out.tokui=/とくい|焼きりんご|焼きベリー/.test(txt);out.juiceIcons=['berryjuice','applejuice'].map(k=>!!icURL(FOODS[k].e));out.juiceSt=['berryjuice','applejuice'].map(k=>dishSt(ALLRECIPES.find(R=>R.out===k)));
-S=newState(0);setWorld(0);const ov2=61*W+61;S.obj[ov2]='oven';S.ovenSet={[ov2]:'yakiapple'};S.fs.yakiberry=2;S.seenIt={'f:yakiapple':1};delete S.flags.juice1;S.res[0].elem='fire';S.res[0].cing={rec:'bread',ov:ov2};S.fs.mugi=0;continueGame(JSON.parse(JSON.stringify(S)));out.mig={fs:S.fs.berryjuice||0,old:'yakiberry' in S.fs,oven:S.ovenSet[ov2]||null,seen:Object.keys(S.seenIt).filter(k=>/juice|yaki(apple|berry)/.test(k)),cing:S.res[0].cing,mugi:S.fs.mugi};out.dishd=DISHD(ALLRECIPES[1]);
-/* たまご・ミルクの料理：材料・作る所・食べたときの効果・アイコン */
-const NEW=['tamasand','milkshake','berrymilk','pancake'];out.nw={};for(const k of NEW){const R=ALLRECIPES.find(x=>x.out===k);S=newState(0);setWorld(0);const r=S.res[0];r.energy=10;r.fun=10;r.wkB=0;r.wkM=0;const a={items:[k],pt:0,pw:0};ACT.eat.end(r,a);out.nw[k]={need:R.need,st:dishSt(R),v:FOODS[k].v,pt:FOODS[k].pt,pw:FOODS[k].pw,en:r.energy-10,fun:r.fun-10,wkM:r.wkM||0,wkH:r.wkB>S.t?Math.round((r.wkB-S.t)/60):0,ic:!!icURL(FOODS[k].e),fl:!!DISHFL[k],fx:FOODS[k].fx}}
-return out})()`));
-console.log(out);
-assert.deepEqual(out.times,{soup:107.1,bread:84,yakizakana:42,yakiimo:35,marine:42,kushiyaki:35,foil:63,fishsoup:84,kabayaki:63,berryjuice:42,applejuice:42,salad:63,dango:42,tamasand:49,milkshake:42,berrymilk:42,pancake:63});assert.equal(out.hasTimeR,false);assert.equal(out.noTrait,true);
-assert.equal(out.woodJob,true);assert.deepEqual(out.woodAct,{type:'cgrab',rec:'salad',ov:true});assert.equal(out.cing,'salad');assert.equal(out.cookStart,true);assert.equal(out.tableNoFire,true);assert.equal(out.woodTime,63);assert.equal(out.ovenListHasSalad,false);assert.deepEqual(out.els,{soup:'water',bread:'earth',yakizakana:'fire',yakiimo:'fire',marine:'wood',kushiyaki:'fire',foil:'fire',fishsoup:'water',kabayaki:'fire',berryjuice:'water',applejuice:'water',salad:'wood',dango:'earth',tamasand:'earth',milkshake:'water',berrymilk:'water',pancake:'fire'});
-assert.equal(out.waterBread,false);assert.equal(out.fireTakes,'bread');assert.equal(out.fireTime,84);assert.equal(out.nightReturned,1);assert.equal(out.nightCing,null);
-assert.equal(out.oldSalad,null);assert.equal(out.flag,1);assert.notEqual(out.oldTrait,'ryouri');
-for(const R of Object.keys(out.els)){assert.ok(out.sim[R+':'+out.els[R]]>=1,R+' by '+out.els[R]);assert.equal(out.sim[R+':wind'],0,R+' by wind')}
-assert.equal(out.tokui,false);assert.deepEqual(out.juiceIcons,[true,true]);assert.deepEqual(out.juiceSt,['cooktable','cooktable']);assert.deepEqual(out.mig,{fs:2,old:false,oven:null,seen:['f:applejuice'],cing:null,mugi:2});assert.ok(out.dishd.includes('作る:土'));assert.deepEqual(out.nw,{tamasand:{need:{komugiko:1,egg:1},st:'cooktable',v:3,pt:3,pw:1.35,en:30,fun:0,wkM:20,wkH:10,ic:true,fl:true,fx:'つかれ−30・10時間、はたらく速さ+20'},milkshake:{need:{milk:1,egg:1},st:'cooktable',v:2,pt:2,pw:.9,en:20,fun:40,wkM:0,wkH:0,ic:true,fl:true,fx:'つかれ−20・たのしさ+40'},berrymilk:{need:{milk:1,berry:1},st:'cooktable',v:2,pt:2,pw:.9,en:0,fun:50,wkM:0,wkH:0,ic:true,fl:true,fx:'たのしさ+50'},pancake:{need:{komugiko:1,egg:1,milk:1},st:'oven',v:4,pt:4,pw:1.8,en:0,fun:40,wkM:20,wkH:12,ic:true,fl:true,fx:'たのしさ+40・12時間、はたらく速さ+20'}});assert.deepEqual(errors,[]);
-console.log('Cooking: bread=earth, juices=water at the cooking table, old yakiapple/yakiberry saves migrated, each dish is made only by its element (wind-only village cooks nothing; the element cooks each dish in a running village), times are the real dish times, no とくい wording, salad at the cooking table, night returns ingredients, old oven salad cleared, old 料理じょうず trait migrated. Browser errors: none');await browser.close()})().catch(e=>{console.error(e);process.exit(1)});
+/* 料理：材料を入れると、その組み合わせの料理ができる（cook.js・cook-table.js）。
+   表：材料1・2しゅるいは、どれも調理台かたき火で作れる・家具で料理がかわる・とくべつな魚・表にない組み合わせはふしぎな料理。
+   入れる：その料理の属性のせいれいだけが作る（ふしぎな料理はだれでも）・できたら、おぼえて「あたらしい料理！」。
+   おまかせ：作ったことのある料理だけ。夜は材料をもどす。前のセーブ：17の料理をおぼえ、えらんであった料理は「入れる」に。画面・図鑑・アイコン。 */
+const assert=require('node:assert/strict');
+(async()=>{const {browser,run,errors}=await require('../sim/boot.cjs')({world:0});
+  const r=JSON.parse(await run(`(()=>{document.querySelector('#dialog').hidden=true;S.introSeen=true;S.flags.tapped=1;USERPAUSE=true;const out={};
+    /* 表 */const base=['mugi','imo','tomato','berry','apple','egg','milk','fish','takenoko','kinoko','komugiko'];out.miss=[];
+    for(let a=0;a<base.length;a++)for(let b=a;b<base.length;b++){const ins=[...new Set([base[a],base[b]])];if(!['cooktable','campfire'].some(s=>cookDish(ins,s)))out.miss.push(ins.join('+'))}
+    out.n=COOKD.length;out.byStation=[cookDish(['apple'],'cooktable'),cookDish(['apple'],'campfire'),cookDish(['apple'],'oven')].map(k=>FOODS[k].name);
+    out.unagi=FOODS[cookDish(['unagi'],'campfire')].name;out.unagiTomato=cookDish(['unagi','tomato'],'cooktable');out.fsg=recOf(cookKey(['berry','fish','kinoko'],'cooktable')).out;
+    out.noIcon=COOKD.filter(D=>!foodIc(D.id)).map(D=>D.id);out.fsgIc=!!foodIc('fsg2');out.legacy=recOf('salad').key;
+    out.numOK=COOKD.filter(D=>D.f).every(D=>{const f=D.f,ef=f.ef||{},t=[];if(ef.en)t.push('つかれ−'+ef.en);if(ef.fun)t.push('たのしさ+'+ef.fun);if(ef.wk)t.push((ef.wk[1]/60)+'時間、はたらく速さ+'+ef.wk[0]);return t.join('・')===f.fx});
+    /* 村で動かす */
+    function setup(el){S.ground.fill(0);S.hi.fill(0);S.obj.fill('');S.floor.fill('');S.dyn={};S.enemies=[];S.drops=[];S.seeds=[];S.t=1440*2+700;S.hold=0;resv.clear();BAN.clear();
+      const box=50*W+50,st=50*W+56;S.obj[box]='crate';S.obj[st]='cooktable';S.fs={};syncFood();recount();boxSync();S.ovenSet={};
+      const b0=S.res[0];S.res=[];for(let i=0;i<2;i++){const q=JSON.parse(JSON.stringify(b0));q.id=200+i;q.name='e'+i;q.elem=el;q.x=53.5+i;q.y=52.5;q.act=null;q.cing=null;q.cgot=null;q.carry=null;q.hunger=1500;q.fun=90;q.energy=100;q.hidden=false;q.vr=q.vr||{};q.vr.tr='';S.res.push(q)}recount();return st}
+    const runN=n=>{const c0=S.cookN||0;for(let i=0;i<n&&(S.cookN||0)===c0;i++){stepWorld(.25);for(const q of S.res){q.hunger=1500;q.fun=90}}return (S.cookN||0)-c0};
+    const sim=(el,ins,mode)=>{const st=setup(el);S.cookKn={};COOKNEW.length=0;for(const k of ins)S.fs[k]=3;syncFood();boxSync();S.ovenSet={[st]:mode||{m:'in',in:ins}};const n=runN(el==='wind'?1500:6000);return {n,kn:Object.values(S.cookKn||{}),nw:COOKNEW.map(g=>g.out),fs:Object.keys(S.fs).filter(k=>S.fs[k]>0&&FOODS[k].dish)}};
+    out.juiceWater=sim('water',['apple']);out.juiceWind=sim('wind',['apple']);
+    out.fsgWind=sim('wind',['berry','takenoko','kinoko']);
+    out.autoNone=sim('water',['apple'],{m:'auto'});
+    {const st=setup('water');S.cookKn={'apple@cooktable':'applejuice'};S.fs.apple=3;syncFood();boxSync();S.ovenSet={[st]:{m:'auto'}};out.autoKnown=runN(6000);}
+    /* 夜は材料をもどす */{const st=setup('water');S.fs.apple=2;syncFood();boxSync();S.ovenSet={[st]:{m:'in',in:['apple']}};const q=S.res[0];const G=bfs(q.x|0,q.y|0);out.job=tryJob(q,G,'cookS')||tryJob(q,G,'cook');ACT.cgrab.start(q,q.act);out.cingKey=q.cing&&q.cing.rec;const b=S.fs.apple;q.act=null;S.t=1440*3+23*60+30;S.hold=0;decide0(q);out.nightBack=S.fs.apple-b;out.nightCing=q.cing}
+    /* 前のセーブ */{const st=setup('water');const j=st;S.ovenSet={[j]:'salad'};delete S.flags.cook2;delete S.cookKn;S.res[0].cing={rec:'applejuice',ov:j,nd:{apple:1}};const sv=JSON.parse(JSON.stringify(S));continueGame(sv);out.mig={set:JSON.stringify(S.ovenSet[j]),kn:Object.keys(S.cookKn||{}).length,cing:S.res[0].cing&&S.res[0].cing.rec}}
+    /* 画面 */{const st=setup('water');S.cookKn={'apple@cooktable':'applejuice'};S.ovenSet={[st]:{m:'in',in:['apple','berry']}};openSheet('oven',st);out.sheet=document.querySelector('.sheet').textContent;closeSheet();
+      openSheet('menu','zukan');ZKT=8;renderSheet();out.zk=document.querySelector('.sheet').textContent;closeSheet()}
+    /* 食べたときの効果 */{const q=S.res[0];const D=COOKD.find(D=>D.f&&D.f.ef&&D.f.ef.en&&D.f.ef.fun);q.energy=10;q.fun=10;ACT.eat.end(q,{items:[D.id],pt:0,pw:0});out.eat=[q.energy-10,q.fun-10,D.f.ef.en,D.f.ef.fun]}
+    return JSON.stringify(out)})()`));
+  console.log(JSON.stringify(r));
+  assert.deepEqual(r.miss,[]);assert.ok(r.n>=130,r.n);assert.deepEqual(r.byStation,['りんごジュース','やきりんご','やきりんご']);
+  assert.equal(r.unagi,'かば焼き');assert.ok(r.unagiTomato,'unagi+tomato falls back to fish+tomato');assert.equal(r.fsg,'fsg3');
+  assert.deepEqual(r.noIcon,[]);assert.equal(r.fsgIc,true);assert.equal(r.legacy,'tomato@cooktable');assert.equal(r.numOK,true);
+  assert.ok(r.juiceWater.n>=1);assert.deepEqual(r.juiceWater.kn,['applejuice']);assert.deepEqual(r.juiceWater.nw,['applejuice']);
+  assert.equal(r.juiceWind.n,0);assert.ok(r.fsgWind.n>=1);assert.deepEqual(r.fsgWind.kn,['fsg3']);
+  assert.equal(r.autoNone.n,0);assert.ok(r.autoKnown>=1);
+  assert.equal(r.job,true);assert.equal(r.cingKey,'apple@cooktable');assert.equal(r.nightBack,1);assert.equal(r.nightCing,null);
+  assert.equal(r.mig.set,'{"m":"in","in":["tomato"]}');assert.equal(r.mig.kn,17);assert.equal(r.mig.cing,'apple@cooktable');
+  assert.ok(r.sheet.includes('おまかせ')&&r.sheet.includes('りんごジュース')&&r.sheet.includes('？？？'),r.sheet);assert.ok(r.zk.includes('りんごジュース'),r.zk);
+  assert.deepEqual(r.eat.slice(0,2),r.eat.slice(2));
+  assert.deepEqual(errors,[]);console.log('cooking ok');await browser.close()})().catch(e=>{console.error(e);process.exit(1)});

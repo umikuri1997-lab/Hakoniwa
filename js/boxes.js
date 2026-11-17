@@ -79,7 +79,7 @@ function siteRefund(t,j){/* 建てる所・依頼をやめた：とっておい�
 function eatAdj(j){/* マス j のとなりの、食べ物が入っている箱（神殿のまえもふくむ） */return adjOf(j,k=>{const a=anc(k),t=boxTypeAt(k),b=t?(boxSide(j,k)?BOX()[a]:null):a>=0&&a===pileJ()?PIL():null;if(!b)return false;for(const key in b)if(b[key]>0&&isFK(key))return true;return false})}
 function boxEat(j){/* 箱 j の食べ物 {id:数}（食べられる数） */const b=j===PILE?PIL():BOX()[j],o={};if(b)for(const key in b)if(isFK(key)&&b[key]>0){const k=key.slice(2),n=Math.min(b[key],S.fs[k]||0);if(n>0)o[k]=n}return o}
 function keysAdj(j,keys){/* マス j のとなりの、keys のどれかが入っている箱（神殿のまえもふくむ） */return adjOf(j,k=>{const a=anc(k),t=boxTypeAt(k),b=t?(boxSide(j,k)?BOX()[a]:null):a>=0&&a===pileJ()?PIL():null;if(!b)return false;for(const key of keys)if(b[key]>0)return true;return false})}
-function cgLeft(r,R){/* 料理の材料で、まだ持っていない分 {id:数} */const g=r.cgot&&r.cgot.rec===R.out?r.cgot.m:{},m={},N=needR(R,r);for(const k in N){const n=N[k]-(g[k]||0);if(n>0)m[k]=n}return m}
+function cgLeft(r,R){/* 料理の材料で、まだ持っていない分 {id:数} */const g=r.cgot&&r.cgot.rec===R.key?r.cgot.m:{},m={},N=needR(R,r);for(const k in N){const n=N[k]-(g[k]||0);if(n>0)m[k]=n}return m}
 function cgBack(r){/* 料理をやめた：持っていた材料は、箱へもどす */if(!r.cgot)return;for(const k in r.cgot.m)addFood(k,r.cgot.m[k]);r.cgot=null}
 function toHand(r,m){/* 運んでいた素材の行き先がなくなった：せいれいが持ったまま、箱へしまいにいく */for(const k in m||{})if(m[k]>0){r.cmat=r.cmat||{};r.cmat[k]=(r.cmat[k]||0)+m[k]}}
 function qPick(Q,j){/* たのまれた分（とっておいた素材）を、箱 j からとる。とれた分をかえし、Q からへらす */const got={};for(const k of Object.keys(Q)){const n=boxOutR(j,k,Q[k]);if(n>0){got[k]=n;Q[k]-=n;if(Q[k]<=0)delete Q[k]}}return got}
