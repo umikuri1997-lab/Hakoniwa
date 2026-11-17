@@ -411,6 +411,9 @@ def tube(sc, pts, rs, col, n=10):
 
 PATD = 0.07   # 布の模様（体とはなれた かざりで、布の面から このきょり（高さのうち）より近い物）：布の面に はりつける
 PATOFF = 0.004   # 模様・目を、面から このきょりだけ 外へ（面とかさならないように）
+EYEV = []   # いま写している目の点（目ごと）
+EYEW, EYEH = 4, 7   # 正面の目のドットの大きさ（EYEPX と同じ）
+EYEWS = ((0.7, 4), (0.45, 3), (0.25, 2), (-1, 1)); EYEHS = ((0.7, 7), (0.5, 5), (0.3, 3), (-1, 1))   # 写した大きさの わり → 目の はば・高さ（ドット）
 EYEEDGE = 0.014   # 目のふち（ふちの色）のはば（高さのうち）
 def ornament(P, F, col, lab, comp, H, cfg, dead=False, name=None):
     """布の模様と目を、3Dの面にはる（写したあとに2Dで おさない。持ち主）。
@@ -428,7 +431,7 @@ def ornament(P, F, col, lab, comp, H, cfg, dead=False, name=None):
         k = dec & (comp == q); vs = np.unique(F[k]); cp, d, _ = trimesh.proximity.closest_point(T, P[vs])
         if d.max() > PATD*H: continue
         u = P[vs]-cp; u /= np.maximum(np.linalg.norm(u, axis=1), 1e-9)[:, None]; P[vs] = cp+u*PATOFF*H; lab[k] = 'pat'
-    e = cfg.get('eyes')
+    e = cfg.get('eyes'); EYEV[:] = []
     if not e or not (lab == 'face').any(): return P, F, col, lab, comp
     fcm = trimesh.Trimesh(P, F[lab == 'face'], process=False); NP, NF, NC, NL = [], [], [], []; o = len(P)
     for c in eyepos(P, F, lab, H, e):
@@ -439,9 +442,42 @@ def ornament(P, F, col, lab, comp, H, cfg, dead=False, name=None):
             rx, rz = e['rx']+k_, (e['rz']*0.18 if dead else e['rz'])+k_
             if dead and lb == 'eye': continue
             m_ = 24; ctr = cp[0]+n*off*H; ring = [ctr+(u*math.cos(t)*rx+v*math.sin(t)*rz)*H for t in np.linspace(0, 2*math.pi, m_, endpoint=False)]
+            if lb == 'eyee': EYEV.append(list(range(o, o+m_+1)))   # 目のだ円（ふち）の点：写したあと、ドットの形をそろえる（eyeclean）
             NP += [ctr]+ring; NF += [(o, o+1+i, o+1+(i+1) % m_) for i in range(m_)]; NC += [hx(cc)]*m_; NL += [lb]*m_; o += m_+1
     return (np.vstack([P, np.array(NP)]), np.vstack([F, np.array(NF)]), np.vstack([col, np.array(NC)]), np.concatenate([lab, np.array(NL, object)]),
             np.concatenate([comp, np.full(len(NF), comp.max()+1)]))
+
+def eyeset(W, H):
+    """だ円のドット（左右・上下 対称）。ふち：上か下が だ円の外の ドット（持ち主がきめた目の形 EYEPX と同じ きまり。4×7 で EYEPX になる）"""
+    S = np.zeros((H, W), bool)
+    for j in range(H):
+        for i in range(W):
+            x = (i+0.5-W/2)/(W/2); y = (j+0.5-H/2)/(H/2); S[j, i] = x*x+y*y <= 1.0 or W <= 2 or H <= 2
+    up = np.vstack([np.zeros((1, W), bool), S[:-1]]); dn = np.vstack([S[1:], np.zeros((1, W), bool)])
+    return S, S & ~(up & dn)
+
+def eyeclean(im, P, F, lab, PL, R, proj, ext, cfg):
+    """3Dで写した目（小さな だ円は、ドットに すると 左右で形が かわり、ガタガタになる）を、きれいな だ円の ドットに おきかえる。
+    場所・はば・高さは、その目の3Dの だ円を 写した大きさ（向きで ほそくなる・たおれると ねる）。見えていた所（前に物があれば かくれる）だけに描く"""
+    e = cfg['eyes']; a = np.array(im); idb, _ = O.LAST; ep = [p_ for p_, l_ in PL.items() if l_ in ('eye', 'eyee')]
+    Hs, Ws = a.shape[:2]; m = np.isin(idb, ep)[:Hs*BIG, :Ws*BIG].reshape(Hs, BIG, Ws, BIG).mean((1, 3)) > 0.2   # 目が見えている ドット
+    if not m.any(): return im
+    fc = list(hx(cfg['labcol'].get('face', '#241c33')).astype(int))+[255]; ce = list(hx(e.get('edge', e['col'])).astype(int))+[255]; cc = list(hx(e['col']).astype(int))+[255]
+    a[m & (a[..., 3] > 0)] = fc   # 写した目は いったん 顔の色に
+    from scipy.ndimage import binary_dilation
+    vis = binary_dilation(m, iterations=1)
+    for vs in EYEV:
+        q = np.array([proj(R(P[v])) for v in vs[1:]]); q[:, 0] -= ext[0]; q[:, 1] -= ext[2]
+        x0, x1 = q[:, 0].min(), q[:, 0].max(); y0, y1 = q[:, 1].min(), q[:, 1].max()
+        nw, nh = 2*(e['rx']+EYEEDGE)*cfg['HPX'], 2*(e['rz']+EYEEDGE)*cfg['HPX']   # 正面から見た大きさ（ドット）
+        rw, rh = (x1-x0)/nw, (y1-y0)/nh; step = lambda r, L: next(v for t, v in L if r > t)
+        Wd = step(rw, EYEWS); Hd = step(rh, EYEHS)   # 正面で EYEW×EYEH（持ち主がきめた目の大きさ）。よこを向く・たおれて 写した大きさが へったときだけ、段で ほそく・ひくく（コマごとに 大きさが ゆれない）
+        S, Ed = eyeset(Wd, Hd); L = int(round((x0+x1)/2-Wd/2)); T = int(round((y0+y1)/2-Hd/2))
+        for j in range(Hd):
+            for i in range(Wd):
+                y, x = T+j, L+i
+                if S[j, i] and 0 <= y < Hs and 0 <= x < Ws and vis[y, x] and a[y, x, 3]: a[y, x] = ce if Ed[j, i] else cc
+    return Image.fromarray(a)
 
 def shoot(name, cfg, src, yaw=0.0):
     if cfg.get('model'):   # マテリアルつきのモデル（持ち主が直した物・kw_model.py で手を足した物）：色わけはマテリアルのまま
@@ -548,7 +584,7 @@ def shoot(name, cfg, src, yaw=0.0):
             ln |= (lb >= 0) & (nb >= 0) & (nb != lb) & (nz > zs)
         o = o.copy(); o[ln, :3] = o[ln, :3]*PARTK
     im = (lambda x: x if DITH else despeckle(x))(quant((lambda x: x if HULL else rim(x))(Image.fromarray(o.round().astype(np.uint8), 'RGBA')), NCOL, cfg.get('hem', (None,))[0], pal=PALS.setdefault((name, round(yaw, 3)), [None]) if cfg.get('pose') is not None else None))
-    # 目は3Dで顔にはってある（ornament）。写したあとに おさない
+    if EYEV: im = eyeclean(im, P, F, lab, PL, R, proj, ext, cfg)   # 目：3Dのだ円の 場所・大きさ・かくれ方のまま、ドットの形を そろえる
     if cfg.get('pose', {}).get('fade'):   # きえる：体が 上から ばらばらに ほどけ、ほどけた ドットの いくつかが、体の色の つぶになって 上へ のぼる
         fd = cfg['pose']['fade']; a = np.array(im); yy, xx = np.indices(a.shape[:2]); 
         gx, gy = xx+ext[0], yy+ext[2]; hs = (gx*73856093 ^ gy*19349663) & 1023; on = a[..., 3] > 0; ys = yy[on]; y0_, y1_ = (ys.min(), ys.max()) if len(ys) else (0, 1)
