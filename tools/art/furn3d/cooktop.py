@@ -4,6 +4,7 @@
 #   材料（ckin_<材料>.<大きさ>）・できた料理（ckdish_<料理>）：1つずつ写し、足もとの点を (0,0) にした絵。ゲームは、家具の上の場所（js/cook-top-data.js の CKTOP）に描く。
 #   大きさ：L 台の上（調理台のおく）・S なべ・フライパン・天板・網の上・K くしにさした形。
 #   js/cook-top-data.js（CKTOP：家具・向きごとの道具の名前と、材料・料理を置く場所（g64 のドット、マスの左上から））も書く。
+#   料理は、料理の表の材料（i）から：スープ・のみもののもとの色（BASEC）、のせる具の本物の形（topping）、焼き色・たれ・バター・シロップ・焼き目、かざりの葉（herb）。
 # 設計図（単位はマス。台の上の面：調理台 0.60・かまどの口の床 0.0・たき火の石の上 0.13）
 #   調理台：まな板（0.60×0.30・あつさ0.03、ななめ14度）・ボウル（半径0.15・高さ0.09、うすいクリーム色のやきもの）・ピッチャー（半径0.08・高さ0.22、取っ手）・こねばち（木、半径0.17・高さ0.07）とめんぼう（長さ0.40・半径0.025）。
 #     材料は、台のおく（y 0.40）に3つ（x 0.20・0.80・0.50 の順）。できた料理は、台のまん中（0.50, 0.62）。
@@ -103,40 +104,103 @@ def bits(nm,x,y,z,r,cols,n=5,seed=1):
         a=R.uniform(-0.6,2.6);d=R.uniform(0.15,0.7)*r;c=cols[q%len(cols)]   # 左おく（つやの光の所）にはのせない
         L.append(NT(P(nm+str(q),'ball',(x+d*math.cos(a),y+d*math.sin(a)*0.8,z,0.17*r,0.7),c)))
     return L
-def dish(out,ic,x,y,z,s):
-    t=ic[0];C=[H(c) for c in ic[1:]] or [(230,200,150)];A=C[0];B=C[1] if len(C)>1 else A;Cc=C[2] if len(C)>2 else B;L=[]
+# ---- おいしそうに：料理の材料（料理の表の i）から、もとの色と、のせる具の形をきめる
+FISHK=('fish','unagi','ayu','koi','namazu','yumasu')
+def ik(k):return 'fish' if k in FISHK else k
+BASEC={'milk':(248,242,228),'tomato':(234,104,66),'berry':(178,128,214),'apple':(246,202,112),'imo':(244,206,118),'mugi':(238,208,142),'egg':(250,214,104),
+       'fish':(242,224,186),'kinoko':(210,164,120),'takenoko':(240,224,172),'komugiko':(248,238,214)}   # スープ・のみもの・たれのもとの色
+SOUPP=['tomato','milk','imo','berry','egg','kinoko','apple','fish','mugi','takenoko','komugiko']   # スープのもとになる、えらぶ順
+HERB=(126,192,92)   # かざりの葉
+GRILLC={'fish':(214,140,80),'kinoko':(186,118,74),'imo':(200,110,150),'tomato':(214,80,50),'takenoko':(220,188,110),'berry':(130,96,190),'apple':(220,110,80),'egg':(240,196,90)}   # 焼いた具の色
+def topping(k,x,y,z,s,nm,seed=0):   # のせる具（本物の形）。s：料理の大きさ。足もとが z
+    k=ik(k);L=[];P_=lambda n,kind,d,c:NT(P(nm+n,kind,d,c))
+    if k=='tomato':L+=[P_('','ball',(x,y,z+0.07*s,0.075*s,0.85),(228,66,46)),P_('へた','ball',(x,y,z+0.13*s,0.025*s,0.4),(110,176,72))]
+    elif k=='berry':L+=[P_(str(q),'ball',(x+dx*s,y+dy*s,z+0.045*s,0.048*s),(112,108,212)) for q,(dx,dy) in enumerate(((-0.04,0),(0.04,0.01),(0,-0.04)))]
+    elif k=='apple':L+=[P_('かわ','egg',(x,y-0.01*s,z+0.03*s,0.1*s,0.045*s,0.03*s,-20),(222,72,60)),P_('み','egg',(x+0.005*s,y+0.008*s,z+0.035*s,0.088*s,0.032*s,0.028*s,-20),(250,234,190))]
+    elif k=='egg':L+=[P_('しろみ','cyl',(x,y,0.085*s,z,z+0.02*s),(252,250,242)),P_('きみ','ball',(x,y,z+0.025*s,0.045*s,0.6),(250,190,52))]
+    elif k=='fish':L+=[P_('','egg',(x,y,z+0.03*s,0.11*s,0.055*s,0.032*s,-15),(242,150,118)),P_('すじ','egg',(x,y,z+0.058*s,0.09*s,0.012*s,0.006*s,-15),(252,214,196))]
+    elif k=='mugi':L+=[P_(str(q),'egg',(x+dx*s,y+dy*s,z+0.02*s,0.035*s,0.02*s,0.018*s,a),(232,186,96)) for q,(dx,dy,a) in enumerate(((-0.04,0,20),(0.03,0.02,-30),(0,-0.03,60),(0.04,-0.03,10)))]
+    elif k=='imo':L+=[P_('かわ','egg',(x,y,z+0.04*s,0.09*s,0.07*s,0.04*s,10),(186,96,152)),P_('み','cyl',(x,y,0.06*s,z+0.06*s,z+0.075*s),(246,212,112))]
+    elif k=='milk':L+=[P_('','ball',(x,y,z+0.04*s,0.07*s,0.7),(253,250,242)),P_('2','ball',(x,y,z+0.09*s,0.045*s,0.8),(253,250,242))]
+    elif k=='komugiko':L+=[P_('','ball',(x,y,z+0.05*s,0.065*s,0.85),(246,232,200))]
+    elif k=='kinoko':L+=[P_('じく','cyl',(x,y,0.028*s,z,z+0.06*s),(246,236,214)),P_('かさ','ball',(x,y,z+0.065*s,0.07*s,0.55),(200,118,78))]
+    elif k=='takenoko':L+=[P_('','cone',(x,y,0.055*s,z,z+0.13*s),(238,212,136))]
+    return L
+def herb(x,y,z,s):return [NT(P('葉%d'%q,'egg',(x+dx*s,y+dy*s,z+0.012*s,0.05*s,0.022*s,0.01*s,a),HERB)) for q,(dx,dy,a) in enumerate(((0,0,30),(0.04,0.02,-40)))]
+def spots(r,n):   # 具をのせる場所（左おくは、つやの光のためあける）
+    P0=[(0.35,0.25),(-0.25,0.35),(0.4,-0.2),(0.05,0.0),(-0.4,0.05),(0.15,0.45)];return [(u*r,v*r) for u,v in P0[:n]]
+def mixc(cs):return tuple(int(sum(c[i] for c in cs)/len(cs)) for i in range(3))
+def dish(out,ic,ins,x,y,z,s):
+    t=ic[0];C=[H(c) for c in ic[1:]] or [(230,200,150)];A=C[0];ks=[ik(k) for k in ins] or ['fsg'];L=[]
+    tops=lambda pts,zz,keys:[q for i,(dx,dy) in enumerate(pts) for q in topping(keys[i%len(keys)],x+dx,y+dy,zz,s,'具%d'%i)]
     if t=='salad':
-        GR=(159,212,108);tp=[c for c in C if c!=GR] or [(224,80,64)]   # 葉はいつも緑。ほかの色は、のせる具
-        L+=model2('サラダ','tripo/ck_salad.glb',x,y,z,s,lambda u,dx,dy:u>0.55 and (dx*dx+dy*dy)<0.16,GR,(214,170,112));L+=bits('具',x,y,z+0.36*s,0.3*s,tp,4,3)
-    elif t=='bowl':
+        L+=model2('サラダ','tripo/ck_salad.glb',x,y,z,s,lambda u,dx,dy:u>0.55 and (dx*dx+dy*dy)<0.16,(150,206,96),(214,170,112))
+        kk=[k for k in ks if k!='tomato' or len(ks)==1] or ['tomato'];L+=tops(spots(0.22*s,4),z+0.3*s,kk)
+    elif t=='bowl':   # スープ・シリアル：もとの色（ミルクとむぎはシリアル）・具・葉・つや
         r=0.5*s;h=0.42*s;L.append(bowlshape('うつわ',x,y,z,r,h,CER))
-        L.append(NT(P('中身','cyl',(x,y,r*0.86,z+h*0.6,z+h*0.86),A)));L.append(glint(x,y,z+h*0.86,r*0.86));L+=bits('具',x,y,z+h*0.9,r*0.75,[B,Cc],5,2)
-    elif t=='cup':
-        r=0.3*s;h=0.85*s;L.append(NT(P('コップ','lathe',(x,y,[(0,z),(r*0.92,z),(r,z+h),(r*0.86,z+h),(r*0.8,z+0.06*s),(0,z+0.06*s)]),CER,detail=28)))
-        L.append(NT(P('のみもの','cyl',(x,y,r*0.84,z+0.06*s,z+h*0.86),A)));L.append(glint(x,y,z+h*0.86,r*0.84))
-        L.append(NT(P('とって','tube',([(x+r*0.95,y,z+h*0.75),(x+r*1.5,y,z+h*0.6),(x+r*1.5,y,z+h*0.3),(x+r*0.95,y,z+h*0.2)],0.035*s),CER)))
-        if B!=A:L.append(NT(P('かざり','ball',(x+r*0.35,y+r*0.2,z+h*0.9,0.2*r),B)))
-    elif t in('plate',):
-        r=0.55*s;L.append(NT(P('おさら','cyl',(x,y,r,z,z+0.05*s),CER)))
-        if out=='ck12':L.append(model('さしみ','tripo/ck_sashimi.glb',x,y,z+0.05*s,s*0.85,rot=10,col=(244,150,130),k=0.4))
-        elif out in FISHY:L.append(model('さかな',K+'fish.glb',x,y,z+0.05*s,s*0.9,rot=90,tilt=90,col=A,k=0.35));L+=bits('そえ',x+0.25*s,y+0.15*s,z+0.1*s,r*0.4,[B],2,4)
-        else:L.append(NT(P('もり','egg',(x,y,z+0.12*s,0.38*s,0.3*s,0.14*s),A)));L+=bits('具',x,y,z+0.24*s,r*0.55,[B,Cc],4,5)
-    elif t=='bread':L.append(NT(P('おさら','cyl',(x,y,0.55*s,z,z+0.05*s),CER)));L.append(model('パン',K+'loaf.glb',x,y,z+0.05*s,s*0.75,rot=20,col=A,k=0.4))
-    elif t=='cake':
-        r=0.42*s;L.append(NT(P('おさら','cyl',(x,y,0.55*s,z,z+0.05*s),CER)))
-        for q in range(3):L.append(NT(P('きじ%d'%q,'cyl',(x,y,r,z+0.05*s+q*0.11*s,z+0.05*s+q*0.11*s+0.09*s),A)))
-        L.append(NT(P('のせ','ball',(x,y,z+0.42*s,0.17*s,0.6),B)))
-    elif t in('dango','skewer'):
+        base=('milk' if 'milk' in ks else next((k for k in SOUPP if k in ks),None)) if 'mugi' in ks else next((k for k in SOUPP if k in ks),None)
+        L.append(NT(P('中身','cyl',(x,y,r*0.86,z+h*0.6,z+h*0.86),BASEC.get(base,A))));L.append(glint(x,y,z+h*0.86,r*0.86))
+        kk=[k for k in ks if k!=base] or ks;L+=tops(spots(r*0.62,4 if len(kk)>1 else 3),z+h*0.82,kk)
+        if 'mugi' not in ks:L+=herb(x-0.12*s,y+0.2*s,z+h*0.86,s)
+    elif t=='cup':   # のみもの：すけたグラス・まぜた色・ふちの具（ミルクとたまごはクリーム）
+        r=0.27*s;h=0.9*s;liq=[BASEC[k] for k in ks if k in ('milk','berry','apple','tomato','egg')] or [A];col=mixc(liq)
+        if 'milk' in ks and len(liq)>1:col=mixc([col,col,BASEC['milk']])
+        L.append(NT(P('のみもの','cyl',(x,y,r*0.92,z,z+h*0.82),col)));L.append(glint(x,y,z+h*0.82,r*0.84))   # グラスは、うすい ふちの輪だけ（すけたかべは灰色に見えた）
+        L.append(NT(P('グラスのふち','ring',(x,y,r*0.86,r,z+h*0.82,z+h*0.86),(236,246,250))));L.append(NT(P('グラスのそこ','cyl',(x,y,r,z,z+0.03*s),(236,246,250))))
+        if 'egg' in ks or ('milk' in ks and len(ks)>1):L+=[NT(P('クリーム','ball',(x,y,z+h*0.86,r*0.7,0.6),(253,250,242))),NT(P('クリーム2','ball',(x,y,z+h*1.0,r*0.4,0.8),(253,250,242)))]
+        fr=[k for k in ks if k in ('berry','apple','tomato')]
+        if fr:L+=topping(fr[0],x+r*0.75,y+r*0.3,z+h*0.86,s,'ふち')
+        L.append(NT(P('ストロー','rope',((x-r*0.2,y,z+0.2*s),(x-r*0.65,y-r*0.2,z+h*1.25),0.018*s),(240,128,120))))
+    elif t=='plate':
+        r=0.55*s;zp=z+0.05*s;L.append(NT(P('おさら','cyl',(x,y,r,z,zp),CER)))
+        if out=='ck12':L.append(model('さしみ','tripo/ck_sashimi.glb',x,y,zp,s*0.85,rot=10,col=(244,150,130),k=0.4));L+=herb(x-0.25*s,y+0.15*s,zp,s)
+        elif out=='foil':
+            f=MT(NT(P('ホイル','egg',(x,y,zp+0.04*s,0.36*s,0.28*s,0.07*s),(222,226,234))));L.append(f);L+=tops(spots(0.15*s,3),zp+0.08*s,['fish','imo'])
+        elif any(k=='fish' for k in ks):   # 焼き魚：こんがりの色、たれのつや、焼き目
+            gl=out=='kabayaki' or 'unagi' in ins
+            f=model('さかな',K+'fish.glb',x,y,zp,s*0.95,rot=90,tilt=90,col=(160,78,28) if gl else (196,118,52),k=0.12);L.append(f)
+            if gl:L.append(glint(x+0.02*s,y-0.02*s,zp+0.1*s,0.2*s))   # たれのつや（魚の平らな面がぜんぶ光らないよう、光は小さく）
+            for q in range(3):L.append(NT(P('焼き目%d'%q,'box',(x-0.14*s+q*0.1*s,y-0.06*s,zp+0.055*s,x-0.125*s+q*0.1*s,y+0.04*s,zp+0.062*s),(150,92,48),bevel=0)))
+            kk=[k for k in ks if k!='fish'];L+=tops([(0.3*s,0.2*s),(-0.3*s,0.22*s)],zp,kk or ['tomato']) if kk else [];L+=herb(x+0.25*s,y-0.15*s,zp,s)
+        elif 'egg' in ks:   # 目玉やき
+            L+=[NT(P('しろみ','egg',(x-0.05*s,y,zp+0.012*s,0.26*s,0.22*s,0.015*s,10),(252,250,242))),NT(P('きみ','ball',(x-0.05*s,y,zp+0.03*s,0.09*s,0.55),(250,184,44)))]
+            kk=[k for k in ks if k!='egg'];L+=tops([(0.3*s,0.18*s),(0.28*s,-0.12*s)],zp,kk) if kk else herb(x+0.28*s,y+0.15*s,zp,s)
+        elif out=='fsg':L+=[NT(P('もり','egg',(x,y,zp+0.07*s,0.36*s,0.28*s,0.1*s),(156,140,176))),NT(P('あわ','ball',(x+0.1*s,y-0.05*s,zp+0.15*s,0.05*s),(186,176,200))),NT(P('あわ2','ball',(x-0.12*s,y+0.06*s,zp+0.14*s,0.035*s),(186,176,200)))]
+        else:   # 焼いた具をならべ、たれをかける
+            L.append(NT(P('たれ','egg',(x,y,zp+0.004*s,0.32*s,0.25*s,0.006*s),mixc([BASEC.get(k,A) for k in ks]+[(200,130,70)]))))
+            L+=tops(spots(0.3*s,5),zp,ks);L+=herb(x-0.3*s,y+0.2*s,zp,s)
+    elif t=='bread':   # パン：こんがりの焼き色。具を上に
+        L.append(NT(P('おさら','cyl',(x,y,0.55*s,z,z+0.05*s),CER)));L.append(model('パン',K+'loaf.glb',x,y,z+0.05*s,s*0.78,rot=20,col=(196,116,50),k=0.5))
+        kk=[k for k in ks if k!='komugiko'];L+=tops([(-0.08*s,-0.02*s),(0.08*s,0.02*s)],z+0.36*s,kk) if kk else []
+    elif t=='cake':   # パンケーキ：やき色の面とクリームのよこ・バター・シロップ・具
+        r=0.4*s;L.append(NT(P('おさら','cyl',(x,y,0.55*s,z,z+0.05*s),CER)));zz=z+0.05*s
+        for q in range(3):L+=[NT(P('きじ%d'%q,'cyl',(x,y,r,zz,zz+0.075*s),(246,214,150))),NT(P('やき色%d'%q,'cyl',(x,y,r*0.97,zz+0.075*s,zz+0.09*s),(206,136,66)))];zz+=0.09*s
+        sy=NT(P('シロップ','egg',(x,y,zz+0.005*s,r*0.8,r*0.75,0.012*s),(196,112,40)));sy.shiny=True;L.append(sy)
+        L.append(NT(P('バター','box',(x-0.06*s,y-0.05*s,zz,x+0.06*s,y+0.05*s,zz+0.07*s),(252,232,140),bevel=0)))
+        kk=[k for k in ks if k not in ('komugiko','egg','milk')];L+=tops([(0.2*s,0.12*s),(-0.18*s,0.15*s)],zz,kk) if kk else []
+    elif t=='dango':   # だんご：やいたおもちの色に、材料のたれ（むぎは きなこ、ほかはみたらし）
         r=0.55*s;L.append(NT(P('おさら','cyl',(x,y,r,z,z+0.05*s),CER)))
         a=(x-0.48*s,y+0.06*s,z+0.14*s);b=(x+0.48*s,y-0.06*s,z+0.14*s);L.append(NT(P('くし','rope',(a,b,0.025*s),(214,176,120))))
-        for q,c in enumerate((A,B,Cc)):
-            u=0.28+0.24*q;px,py=a[0]+(b[0]-a[0])*u,a[1]+(b[1]-a[1])*u
-            L.append(NT(P('たま%d'%q,'ball',(px,py,z+0.15*s,0.15*s),c)) if t=='dango' else piece('fish' if out=='kushiyaki' else 'tomato',px,py,z+0.15*s,0.12*s,'きれ%d'%q))
-            if t=='skewer':L[-1].col=c
-    elif t=='sand':
+        sauce=[k for k in ks if k in ('berry','apple','milk','mugi','tomato')]
+        for q in range(3):
+            u=0.28+0.24*q;px,py=a[0]+(b[0]-a[0])*u,a[1]+(b[1]-a[1])*u;k=sauce[q%len(sauce)] if sauce else None
+            L.append(NT(P('たま%d'%q,'ball',(px,py,z+0.15*s,0.15*s),(244,228,196))))
+            gc={'berry':(150,104,200),'apple':(236,128,112),'milk':(253,250,242),'mugi':(222,186,110),'tomato':(228,96,70)}.get(k,(196,124,52))
+            g=NT(P('たれ%d'%q,'ball',(px,py,z+0.185*s,0.152*s,0.9),gc));g.shiny=k!='mugi';L.append(g)
+    elif t=='skewer':   # くしやき：材料を焼き色にして、焼き目
+        r=0.55*s;L.append(NT(P('おさら','cyl',(x,y,r,z,z+0.05*s),CER)))
+        a=(x-0.5*s,y+0.06*s,z+0.14*s);b=(x+0.5*s,y-0.06*s,z+0.14*s);L.append(NT(P('くし','rope',(a,b,0.025*s),(214,176,120))))
+        for q in range(3):
+            u=0.25+0.25*q;px,py=a[0]+(b[0]-a[0])*u,a[1]+(b[1]-a[1])*u;k=ks[q%len(ks)]
+            c=GRILLC.get(k) or tuple(int(v*0.82) for v in BASEC.get(k,A));L.append(NT(P('きれ%d'%q,'egg',(px,py,z+0.15*s,0.13*s,0.11*s,0.11*s),c)))
+            L.append(NT(P('焼き目%d'%q,'box',(px-0.012*s,py-0.07*s,z+0.235*s,px+0.012*s,py+0.07*s,z+0.243*s),(150,92,48),bevel=0)))
+    elif t=='sand':   # サンド：耳のある食パン・レタス・材料の具
         w,d=0.42*s,0.3*s;L.append(NT(P('おさら','cyl',(x,y,0.55*s,z,z+0.05*s),CER)));zz=z+0.05*s
-        for nm,c,hh in(('パン1',(242,226,188),0.08),('具1',A,0.05),('具2',B if B!=A else A,0.05),('パン2',(242,226,188),0.08)):
-            L.append(NT(P(nm,'box',(x-w,y-d,zz,x+w,y+d,zz+hh*s),c,bevel=0)));zz+=hh*s
+        def bread(n,zb):return [NT(P(n+'耳','box',(x-w,y-d,zb,x+w,y+d,zb+0.07*s),(218,170,104),bevel=0)),NT(P(n,'box',(x-w+0.02*s,y-d+0.02*s,zb+0.069*s,x+w-0.02*s,y+d-0.02*s,zb+0.075*s),(248,232,196),bevel=0))]
+        L+=bread('パン1',zz);zz+=0.075*s
+        L.append(NT(P('レタス','box',(x-w-0.03*s,y-d-0.03*s,zz,x+w+0.03*s,y+d+0.03*s,zz+0.03*s),(150,206,96),bevel=0)));zz+=0.03*s
+        for k in [k for k in ks if k!='komugiko'] or ['egg']:L.append(NT(P('具'+k,'box',(x-w+0.01*s,y-d+0.01*s,zz,x+w-0.01*s,y+d-0.01*s,zz+0.045*s),{'egg':(250,220,110),'tomato':(228,80,58)}.get(k,BASEC.get(k,A)),bevel=0)));zz+=0.045*s
+        L+=bread('パン2',zz)
     return shine(L)
 
 # ---- 道具（家具の場所で）
@@ -231,7 +295,7 @@ def gen_dishes(res):
     js=open(os.path.join(ROOT,'js','cook-table.js'),encoding='utf8').read();L=json.loads('['+js[js.index('['):].split('];')[0].strip()[1:]+']')
     for D in L+[{'id':'fsg'}]:
         out=D['id'];ic=D.get('ic') or ORIG.get(out)
-        im,x,y=solo(dish(out,ic,0,0,0,SIZE['D']));res['ckdish_'+out]=(im,x,y)
+        im,x,y=solo(dish(out,ic,D.get('i',[]),0,0,0,SIZE['D']));res['ckdish_'+out]=(im,x,y)
     print('料理',len(L)+1)
 def write_js(data):
     s='/* 料理の家具の上にかさねる絵の場所（tools/art/furn3d/cooktop.py で書いた）。CKTOP[家具][向き]：L/S/pot/pan/tray/net/K は材料を置く3つの場所、D はできた料理の場所。どれも g64 のドット、マスの左上から */\nconst CKTOP='+json.dumps(data,separators=(',',':'))+';\n'
