@@ -656,13 +656,13 @@ function kgTint(key,col){const k=key+'|'+col;if(KGDOT[k])return KGDOT[k];const i
 function drawShadeDot(c,ty,x,y,s,f,o){
   const K='kg_'+(EN[ty]&&EN[ty].art||ty)+':';if(!window.CHIPS||!CHIPS[K+'idle'])return false;/* art：ほかのコワイノの絵をかりる */
   if(!KGDOK[ty]){for(const k in CHIPS)if(k.startsWith(K)&&!chipImgs(CHIPS[k],k)[0].ok)return false;KGDOK[ty]=1}
-  const t=o.t||0,B=o.back?'B':'',p=o.atk||0,sc=s/(.27*EN[ty].size*2);
+  const t=o.t||0,B=o.side||(o.back?'B':''),p=o.atk||0,sc=s/(.27*EN[ty].size*2);/* side：攻撃している相手のほうを向く よこの絵（R 右・L 左。待機と攻撃だけ） */
   // どのモーションの、何コマ目か
   let mo='idle',fi=Math.floor(t*1.6);
   if(o.die!=null){mo='hurt';fi=o.die}/* たおされたとき：たおれる（3コマ目）→ つぶにほどけて きえる（4・5コマ目） */else if(o.hurt!=null){mo='hurt';fi=o.hurt<.5?0:1}/* 攻撃をうけただけのときは、いたがる2コマだけ（たおれない） */
   else if(o.walk){mo='walk';fi=Math.floor(t*6)}
   else if(p>=.84){mo='atk';const n=(CHIPS[K+'atk'+B]||CHIPS[K+'atk']).n||3;fi=p<.95?0:Math.min(n-1,1+Math.floor((p-.95)/.05*(n-1)))}/* ふりかぶる → ふりおろす → もどる */
-  const key=mo==='hurt'||!CHIPS[K+mo+B]?K+mo:K+mo+B,ch=CHIPS[key];fi=mo==='hurt'?Math.min(fi,ch.n-1):fi%(ch.n||1);
+  const key=mo==='hurt'||!CHIPS[K+mo+B]?K+mo:K+mo+B,ch=CHIPS[key];if(key.endsWith('R')||key.endsWith('L'))f=1;/* よこの絵は右・左べつに写してあるので、反転しない */fi=mo==='hurt'?Math.min(fi,ch.n-1):fi%(ch.n||1);
   const sm=c.imageSmoothingEnabled;c.imageSmoothingEnabled=sc<.9;/* 図鑑などで小さく描くときだけ、なめらかに縮める */
   c.save();c.translate(x,y);c.scale(sc*f,sc);c.drawImage(kgDot(key,!!o.flash),0,fi*ch.h,ch.w,ch.h,ch.ax,ch.ay,ch.w,ch.h);if(EN[ty]&&EN[ty].tint&&!o.flash){c.globalAlpha=.45;c.drawImage(kgTint(key,EN[ty].tint),0,fi*ch.h,ch.w,ch.h,ch.ax,ch.ay,ch.w,ch.h);c.globalAlpha=1}/* 季節のコワイノ：色をかさねる（仮の絵） */if(EN[ty]&&EN[ty].glow&&!o.flash){c.globalAlpha=.45+.15*Math.sin(t*6);c.drawImage(kgDot(key,true),0,fi*ch.h,ch.w,ch.h,ch.ax,ch.ay,ch.w,ch.h);c.globalAlpha=1}/* ヒカリカゲ：白い光をかさねる */c.restore();
   c.imageSmoothingEnabled=sm;return true}

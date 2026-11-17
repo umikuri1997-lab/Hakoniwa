@@ -64,6 +64,14 @@ def export(V, F, L, path):
         sc.add_geometry(m, node_name=lb, geom_name=lb)
     sc.export(path)
 
+def strip(src, out, labels):
+    """glb から、その色わけ（マテリアル）の部品を消す（コカゲの手・そでを消したとき）"""
+    sc = trimesh.load(src)
+    for n in [n for n, g in sc.geometry.items() if g.visual.material.name in labels]: sc.delete_geometry(n)
+    sc.export(out)
+
+if __name__ == '__main__' and sys.argv[1] == '--strip':   # python3 kw_model.py --strip <in.glb> <out.glb> hand sleeve
+    strip(sys.argv[2], sys.argv[3], sys.argv[4:]); sys.exit()
 if __name__ == '__main__':
     a = [x for x in sys.argv[1:] if not x.startswith('--')]; fixed, sheet, out = a[:3]
     V, F, L, H = load(fixed, sheet)
