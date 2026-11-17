@@ -222,6 +222,25 @@ def polish(w, face):
     """しあげ：ぬので、くるくるみがく（奥の手でささえる）"""
     return breathe(dict(sN=0.95+0.14*S(w), bN=-0.55+0.2*C(w), prop='cloth', sF=0.8, bF=-0.7, lean=0.2, hp=0.2, yaw=0.05*C(w), hr=0.05*S(w)), w, 0.4)
 M('polish', 8, 6/(2*PI), polish)
+# 作業台（天板の高さ0.32＝せいれいの手の高さ）の上でする、もの作り。作業台のないときは、上の地面の動き（saw・polish・craftprep・craft）
+def wbsaw(w, face):
+    """のこぎり：天板の上で、奥の手で材料をおさえ、手前の手で前後にひく"""
+    return breathe(dict(sN=1.5+0.12*S(w), bN=-0.45, tN=0.6, prop='saw', sF=1.55, bF=-0.7, lean=0.2+0.05*S(w), yaw=0.08*S(w), z=-0.4, legM=0.2, legP=-0.2, hp=0.22), w, 0.4)
+M('wbsaw', 8, 8/(2*PI), wbsaw)
+def wbpolish(w, face):
+    """しあげ：天板の上で、ぬので、くるくるみがく（奥の手でささえる）"""
+    return breathe(dict(sN=1.55+0.12*S(w), bN=-0.55+0.2*C(w), prop='cloth', sF=1.5, bF=-0.7, lean=0.2, hp=0.22, yaw=0.05*C(w), hr=0.05*S(w)), w, 0.4)
+M('wbpolish', 8, 6/(2*PI), wbpolish)
+def wbham(w, face):
+    """トンカチ：ふり上げて、天板の上の材料へふりおろす"""
+    u = (w/(2*PI)) % 1; v = math.sin(PI/2*u/0.6) if u < 0.6 else 1-(u-0.6)/0.4
+    return breathe(dict(sN=1.5+0.8*v, bN=-0.4, tN=0.9-0.9*v, prop='hammer', sF=1.5, bF=-0.7, lean=0.22-0.1*v, hp=0.2-0.1*v), w, 0.5)
+M('wbham', 8, 2.6/2, wbham)
+def wbprep(w, face):
+    """材料をならべる：前かがみで、天板の高さへ手をのばして、もどす"""
+    u = (w/(2*PI)) % 1; k = S(PI*u)
+    return dict(lean=0.1+0.2*k, z=-0.8*k, legz=-0.3*k, legM=0.2*k, legP=0.2*k, sN=0.9+0.65*k, sF=0.9+0.65*k, bN=-0.4, bF=-0.4, hp=0.12+0.1*k)
+M('wbprep', 8, 0.6, wbprep)
 def grab(w, face):
     """箱から材料をとる・しまう：前かがみで手をのばして、もどす"""
     u = (w/(2*PI)) % 1; k = S(PI*u)
