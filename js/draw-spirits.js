@@ -539,10 +539,12 @@ const godHere=()=>S.godShown&&(!S.godGone||S.godVisit)&&!GODOUT;
 const BUBR=[];let BUBF=-1;
 function bubLift(px,by,now){if(BUBF!==now){BUBF=now;BUBR.length=0}for(let k=0;k<3;k++){const hit=BUBR.some(b=>Math.abs(b[0]-px)<45&&Math.abs(b[1]-by)<40.5);if(!hit)break;by-=42.75}return by}
 function pxStep(c,x,y,w,h,ins,col,d){/* 段々の角の四角 */const k=ins.length;c.fillStyle=col;c.fillRect(x,y+k*d,w,h-2*k*d);for(let i=0;i<k;i++){const a=ins[i]*d;c.fillRect(x+a,y+i*d,w-2*a,d);c.fillRect(x+a,y+h-(i+1)*d,w-2*a,d)}}
-function pxBub(c,cx,top,w,h,fill,line){{const T0=c.getTransform(),k=Math.min(1,homeZ()*dpr/Math.abs(T0.a||1));if(k<1){top+=h*(1-k);w*=k;h*=k}}/* 画面を大きくしても、ふきだしは、ふだんの大きさより大きくしない（しっぽの先はそのまま） *//* ドットのふきだし：段々の角（4・2・1・1ドット）と、段々のしっぽ。cx は、しっぽのまん中。画面のドットにそろえて描く（1ドット＝1、画面の整数ピクセル） */
-  const T=c.getTransform(),kk=Math.min(1,homeZ()*dpr/Math.abs(T.a||1)),d=Math.max(1,Math.round(T.a*kk)),n=Math.round(w*T.a/d/2),m=Math.round(h*T.a/d),tx=Math.round(T.a*cx+T.e),y=Math.round(T.d*top+T.f),x=tx-n*d;w=(2*n+1)*d;h=m*d;const t=Math.max(1,Math.round(2.25*T.a*kk));
-  c.save();c.setTransform(1,0,0,1,0,0);pxStep(c,x,y,w,h,[4,2,1,1],line,d);pxStep(c,x+d,y+d,w-2*d,h-2*d,[3,1,1],fill,d);
-  const cxp=tx+d/2,R=(a,yy,ww,hh)=>c.fillRect(Math.round(cxp-ww/2),yy,ww,hh);c.fillStyle=line;R(0,y+h,5*t,t);R(0,y+h+t,3*t,t);R(0,y+h+2*t,t,t);c.fillStyle=fill;R(0,y+h-d,3*t,d+t);R(0,y+h+t,t,t);c.restore();return {x:cxp,y:y+h/2,s:(Math.min(2*n+1,m)-7)*d,f:(Math.min(2*n+1,m)-2)*d}}/* f：わくの内がわの大きさ *//* 中のまん中と、アイコンの大きさ（わくから2ドットあける） */
+function pxBub(c,cx,top,w,h,fill,line){{const T0=c.getTransform(),k=Math.min(1,homeZ()*dpr/Math.abs(T0.a||1));if(k<1){top+=h*(1-k);w*=k;h*=k}}/* 画面を大きくしても、ふきだしは、ふだんの大きさより大きくしない（しっぽの先はそのまま） *//* ドットのふきだし：段々の角と、段々のしっぽ。cx は、しっぽのまん中。画面のドットにそろえて描く（1ドット＝ゲームの半分の点、画面の整数ピクセル） */
+  const T=c.getTransform(),kk=Math.min(1,homeZ()*dpr/Math.abs(T.a||1)),D=Math.max(1,Math.round(T.a*kk)),e=Math.max(1,Math.round(T.a*kk/2)),n=Math.round(w*T.a/e/2),m=Math.round(h*T.a/e),tx=Math.round(T.a*cx+T.e),y=Math.round(T.d*top+T.f),x=tx-n*e;w=(2*n+1)*e;h=m*e;/* 1ドット e は、ゲームの半分の点（画面の整数ピクセル） */
+  c.save();c.setTransform(1,0,0,1,0,0);pxStep(c,x,y,w,h,[5,3,2,1,1],line,e);pxStep(c,x+e,y+e,w-2*e,h-2*e,[4,3,2,1,1],fill,e);/* 角は、まるみの段々（5・3・2・1・1）。わくの線は1ドット */
+  const cxp=tx+e/2,R=(i,hw)=>c.fillRect(cxp-e/2-hw*e,y+h+i*e,(2*hw+1)*e,e),rows=Math.round(6.75*T.a*kk/e),hw0=Math.round(5*T.a*kk/e),HW=i=>Math.round(hw0*(1-i/rows));
+  c.fillStyle=line;for(let i=0;i<rows;i++)R(i,HW(i));c.fillStyle=fill;for(let i=-1;i<rows;i++){const v=HW(i)-2;if(v<0)break;R(i,v)}/* しっぽ：1行ずつ細くなる段々。中の色で、わくの下の線をあける */
+  c.restore();const M=Math.min(w,h);return {x:cxp,y:y+h/2,s:M-7*D,f:M-2*e}}/* f：わくの内がわの大きさ *//* 中のまん中と、アイコンの大きさ（わくから2ドットあける） */
 function talkBub(px,by,now,col){if(BUBF!==now){BUBF=now;BUBR.length=0}BUBR.push([px,by]);const bw=45,bb=Math.round((by-Math.abs(Math.sin(now/260))*3)/1.5)*1.5,B=pxBub(ctx,px,bb-63,bw,42,col||'#9fdcff','#fff');
     ctx.save();ctx.setTransform(1,0,0,1,0,0);ctx.fillStyle='#1f5f86';const q=Math.max(2,Math.round(B.s/6));for(let d=-1;d<=1;d++)ctx.fillRect(Math.round(B.x-q/2)+d*q*2,Math.round(B.y-q/2),q,q);ctx.restore()}/* 点々も、四角いドット */
 const HB={t:0,rk:[],ps:[],fl:[]};
