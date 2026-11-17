@@ -298,7 +298,9 @@ def gen_tools(out,CC,res,data):
             for sk,pts in SLOTS[fid].items():D[sk]=[[round(c,1) for c in proj(p)] for p in pts]
         M.PARTS=M._BASE
 
-class _Solo:GRAD=True;BOTTOM=0
+class _Solo:   # 食べ物も、木の幹と同じかげの付け方。小さいので、かげをこく・あみを広く（持ち主がえらんだ）
+    GRAD=True;BOTTOM=0;TREESHADE=True
+    TREET=([(-0.25,-0.05),(0.20,0.40),(0.58,0.74),(0.82,0.94)],[(-36,12),(-20,6),0,(14,-8),(28,-16)])
 def solo(parts):   # 1つだけ写す。足もとの点 (0,0,0) をマスの点にした ax・ay
     M=_Solo();M.PARTS=lambda:parts;O.GRAD=True;inf={};im=F.shot(M,0,info=inf)[0];bb=im.getbbox();u,v=inf['PROJ'](inf['fwd']((0,0,0)))
     px,py=(u-inf['ext'][0])*inf['S'],(v-inf['ext'][2])*inf['S'];return im.crop(bb),round(bb[0]-px),round(bb[1]-py)

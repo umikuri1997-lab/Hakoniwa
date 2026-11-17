@@ -8,7 +8,7 @@
 from blueprint import Part as P
 from common import *
 import math
-ID='campfire';GRAD=True;BOTTOM=63;FRAMES=8
+ID='campfire';GRAD=True;BOTTOM=63;FRAMES=8;TREESHADE=True   # かげは木の幹と同じ付け方（持ち主がきめた）
 VIEWS=[('campfire',0)]
 FR=0
 CX,CY=0.50,0.52
