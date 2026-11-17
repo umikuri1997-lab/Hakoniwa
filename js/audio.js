@@ -211,6 +211,9 @@ case'bossKO':noise(t,.5,.3,o,200);tone(70,t,1.4,'sine',.2,o,30);tone(900,t,.35,'
   case'fry':rustle(t,.42,.055,o,5600,3200,1.1);rustle(t+.03,.3,.03,o,2300,1600,.8);break;/* フライパン：じゅっ */
   case'grill':rustle(t,.3,.035,o,4200,2600,1);break;/* くしやき：ちりちり */
   case'fanw':rustle(t,.07,.045,o,900,500,1.2);break;/* うちわ：ぱた */
+  case'shuttle':rustle(t,.16,.035,o,2200,3400,1.6);break;/* はたおり：ひがよこへすべる、さらっ */
+  case'loombeat':{const r=.94+Math.random()*.12;knock(420*r,t,.08,o,.08);knock(700*r,t+.015,.03,o,.05)}break;/* はたおり：おさをとんっ */
+  case'grind':{const r=.93+Math.random()*.14;rustle(t,.32,.05,o,260*r,420*r,1.2);knock(110*r,t,.03,o,.12)}break;/* 粉ひき：石うすが、ごりごり */
   case'saw':rustle(t,.2,.07,o,1500,2600,2.4);knock(160,t+.02,.03,o,.06);break;/* のこぎり：ごりっ */
   case'workdone':knock(420,t,.1,o,.07);seq([79,86,91],.07,'sine',.045);break;/* できた：ぽん、きらん */
   case'cook':if(playS('boil',.35))break;noise(t,.35,.025,o,3000);tone(180,t,.08,'triangle',.03,o,140);break;
