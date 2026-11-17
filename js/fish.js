@@ -21,8 +21,8 @@ function fishPick(stand){/* その場所・いまの時間・天気でつれる�
   const L=FISHK.filter(k=>FISHI[k].w===st&&fishOK(k,at,tm,rain));if(L.length)return pick(L);const b=FISHBASE[st];return b[at]||b.river}
 function fishGot(k){/* つった魚を数える（図鑑） */const R=S.fishRec||(S.fishRec={});R[k]=(R[k]||0)+1;(S.seenIt||(S.seenIt={}))['f:'+k]=1}
 function needR(R,r){/* 料理の材料（「さかな」は、どの魚でもよい）：持っている魚・とりかけの魚があれば、その魚。なければ、いちばん多い魚 */if(!R||!R.need||!R.need.fish)return R?R.need:{};const o={};for(const k in R.need)if(k!=='fish')o[k]=R.need[k];
-  let sp=null;const held=r&&r.cing&&r.cing.rec===R.out&&r.cing.nd?r.cing.nd:r&&r.cgot&&r.cgot.rec===R.out?r.cgot.m:null;if(held)for(const k in held)if((k==='fish'||isFish(k))&&held[k]>0){sp=k;break}
-  if(!sp){let bn=0;for(const k of ['fish',...FISHK]){const n=S.fs[k]||0;if(n>bn){bn=n;sp=k}}}
+  let sp=null;const held=r&&r.cing&&r.cing.rec===R.key&&r.cing.nd?r.cing.nd:r&&r.cgot&&r.cgot.rec===R.key?r.cgot.m:null;if(held)for(const k in held)if((k==='fish'||isFish(k))&&held[k]>0){sp=k;break}
+  if(!sp){let bn=0;for(const k of ['fish',...FISHK]){const n=(S.fs[k]||0)-(SPFISH.has(k)?1e4:0);if((S.fs[k]||0)>0&&(sp==null||n>bn)){bn=n;sp=k}}}/* とくべつな魚は、ほかの魚がないときだけ */
   o[sp||'fish']=R.need.fish;return o}
 /* 絵：もらった絵をちぢめたドット絵（tools/art/fishfood/fishfood_art.py）。ICONS（js/draw-spirits.js）にある。 */
 function fishZukan(d,add){/* 図鑑の「さかな」：つった魚だけ */const R=d.fishRec||{};for(const k of FISHK){if(!(R[k]>0))continue;const F=FOODS[k];add(F.name,fishWhen(k)+'・おなか'+F.v+(F.fx?'・'+F.fx:'')+'・つった数 '+R[k],ICONS[k]||null)}}

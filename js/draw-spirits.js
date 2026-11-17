@@ -42,6 +42,7 @@ const ICONS={kabayaki:'assets/g/b6dea7239e.webp',fishsoup:'assets/g/a01a44a7e0.w
 /* 表情アイコン（いただいた絵） */
 /* メニューと吹き出しのアイコン */
 const EMO_IC={'🎋':'bamboo','🎍':'takenoko','🍧':'kakigori','🍬':'wataame','🍝':'yakisoba','🐙':'takoyaki','🍭':'ringoame','😊':'f_smile','😌':'f_smile','😆':'f_laugh','😠':'f_angry','😤':'f_angry','💤':'f_sleep','😴':'f_sleep','🌾':'mugi','🫐':'berry','🍎':'apple','🐟':'fish','🐠':'yakizakana','🍞':'bread','🍠':'yakiimo','🥤':'berryjuice','🧃':'applejuice','🍲':'soup','🪵':'wood','🪨':'stone','🔥':'fire','🍳':'pan','📦':'m_box','💬':'m_chat','🥔':'potato','🥗':'salad','☕':'m_support'};
+cookIconsAdd(ICONS);/* 料理のアイコン（cook.js） */
 const ICI={};for(const k in ICONS){const im=new Image();im.onload=()=>{im.ok=1;dirty=true};im.onerror=()=>{im.bad=1};im.src=ICONS[k];ICI[k]=im}
 const icURL=t=>EMO_IC[t]?ICONS[EMO_IC[t]]:typeof t==='string'&&t.startsWith('ic:')?ICONS[t.slice(3)]||null:null;/* ic:<名前> は ICONS の絵 */
 const OBJIC=new Map();/* 'obj:<id>'：その物の絵のアイコン */const emoImg=t=>{if(typeof t==='string'&&t.startsWith('chip:')){const k=t.slice(5),C=window.CHIPS;if(!C||!C[k])return null;const im=chipImgs(C[k],k)[0];return im&&im.ok?im:null}if(typeof t==='string'&&t.startsWith('ic:')){const q=ICI[t.slice(3)];return q&&q.ok?q:null}if(typeof t==='string'&&(t.startsWith('obj:')||t.startsWith('crop:'))){let im=OBJIC.get(t);if(!im){const u=t.startsWith('crop:')?cropIcon(t.slice(5)):iconURL(t.slice(4));/* crop:<作物>：もらった絵のない作物（キャベツ）は、作物の絵 */if(!u)return null;im=new Image();im.src=u;OBJIC.set(t,im)}return im.complete&&im.naturalWidth?im:null}const ic=EMO_IC[t];if(ic&&ICI[ic].ok)return ICI[ic];if(t==='🪨')return rockImg();const k=EMO_OF[t];if(k&&EMOI[k].ok)return EMOI[k];const e=typeof EIMGI==='undefined'?null:EIMGI[nfe(t)];return e&&e.ok?e:null};
@@ -408,7 +409,7 @@ function carryIcon(r){
   if(r.bm){const k=Object.keys(r.bm.m).find(k=>r.bm.m[k]>0);if(k)return isFK(k)?foodEmo(k.slice(2)):matIc(k)}/* 建てる所・依頼へ運ぶ素材 */
   if(r.citem){const id=Object.keys(r.citem).find(k=>r.citem[k]>0);if(id)return itemIc(id)}
   if(r.meal)return typeof r.meal==='number'?'🍙':(r.meal.e||'🍙');
-  if(r.cing&&!isNight()){const R=RECIPES.find(x=>x.out===r.cing.rec);return R?FOODS[Object.keys(R.need)[0]].e:'🧺'}/* 夜は料理ができないので、材料を持っている絵は出さない */
+  if(r.cing&&!isNight()){const R=recOf(r.cing.rec);return R?FOODS[Object.keys(R.need)[0]].e:'🧺'}/* 夜は料理ができないので、材料を持っている絵は出さない */
   return null}
 let COFFIN=null;function coffinBmp(){/* 棺の絵文字を一度だけ描いて、見えている部分だけ切り出す（機種で絵文字の位置がちがっても、まんなかに置ける） */if(COFFIN)return COFFIN.w?COFFIN:null;const N=288,c=document.createElement('canvas');c.width=c.height=N;const x=c.getContext('2d');x.font='117px sans-serif';x.textAlign='center';x.textBaseline='middle';x.fillText('⚰️',N/2,N/2);let d;try{d=x.getImageData(0,0,N,N).data}catch(e){return null}let x0=N,y0=N,x1=-1,y1=-1;for(let y=0;y<N;y++)for(let i=0;i<N;i++)if(d[(y*N+i)*4+3]>20){if(i<x0)x0=i;if(i>x1)x1=i;if(y<y0)y0=y;if(y>y1)y1=y}
   if(x1<0){COFFIN={};return null}const w=x1-x0+1,h=y1-y0+1,o=document.createElement('canvas');o.width=w;o.height=h;o.getContext('2d').drawImage(c,x0,y0,w,h,0,0,w,h);COFFIN={c:o,w:w/3,h:h/3};return COFFIN}/* 3倍の大きさで描いて、くっきりさせる（表示は39pxぶん） */
@@ -426,7 +427,7 @@ function carryIcons(r){/* 持っているものを、そのまま1つずつ並�
   if(r.bm)for(const k in r.bm.m)for(let i=0;i<(r.bm.m[k]||0);i++)out.push(isFK(k)?em(k.slice(2)):matIc(k));/* 建てる所・依頼へ運ぶ素材 */
   if(r.citem)for(const id in r.citem)for(let i=0;i<(r.citem[id]||0);i++)out.push(itemIc(id));/* ひろった物（砂・角笛・家具など） */
   if(r.meal){if(r.meal.items&&r.meal.items.length)for(const k of r.meal.items)out.push(em(k));else for(let i=0,n=Math.ceil(typeof r.meal==='number'?r.meal:r.meal.u||1);i<n;i++)out.push(typeof r.meal==='number'?'🍙':(r.meal.e||'🍙'))}
-  if(!out.length&&r.cing&&!isNight()){const R=RECIPES.find(x=>x.out===r.cing.rec);out.push(R?em(Object.keys(R.need)[0]):'🧺')}
+  if(!out.length&&r.cing&&!isNight()){const R=recOf(r.cing.rec);out.push(R?em(Object.keys(R.need)[0]):'🧺')}
   return out}
 const NOFACE={'😊':'🎵','😌':'🎵','😆':'✨','😋':'🍴','😣':'💦','😩':'💤','😴':'💤','😭':'💧','😢':'💧','😨':'💦','😱':'❗','😵':'💫','😠':'💢','😤':'💢'};/* 吹き出しに顔の絵文字は出さない（かわりの絵） */
 let BUBQ=null;

@@ -9,6 +9,7 @@ const out=await run(`(()=>{const out={};const cx=54,cy=64;for(let y=cy-4;y<cy+6;
  const a=go(mk('wood',cx-9),'salad',tb),b=go(mk('fire',cx-4),'pancake',ov),c=go(mk('fire',cx+1),'kushiyaki',cf),s=go(mk('water',cx-2),'soup',ov),br=go(mk('earth',cx-5),'bread',ov);
  out.table=[.05,.3,.6,.95].map(p=>at(a,p));out.pan=[.05,.3,.6,.95].map(p=>at(b,p));out.grill=at(c,.5);out.pot=at(s,.5);out.bake=at(br,.5);
  out.foods=[at(a,.05)&&workFood(a),at(b,.5)&&workFood(b),at(b,.95)&&workFood(b)];
+ /* 組み合わせでできる、あたらしい料理（COOKD の ic で作り方をきめる） */const nd={};for(const D of COOKD){if(!D.ic||D.st[0]==='cooktable')continue;const t=D.ic[0];if(nd[t])continue;const r=go(mk(D.el||'fire',cx-1),D.id,D.st[0]==='campfire'?cf:ov);r.act.t=.5*cookTime(r,r.act.obj);const f=(r.act.t=.95*cookTime(r,r.act.obj),workFood(r));nd[t]={st:(r.act.t=.5*cookTime(r,r.act.obj),cookStyle(r)),img:!!emoImg(f)};S.res.pop()}out.newDish=nd;
  out.motions=['cookprep','cookcut','cookmix','cook','cookfry','cookfan','cookgrill','cookplate','raise','craftprep','saw','craft','polish'].filter(k=>!SPM[k]);
  /* できたら、かかげてから終わる */
  b.act.t=cookTime(b,b.act.obj)-.1;let n=0;const c0=S.cookN||0;while(b.act&&b.act.type==='cook'&&n<200){const a0=b.act;a0.t+=.25;ACT.cook.tick(b,a0,.25);if(n===2)out.raiseAnim=workAnim(b);if(ACT.cook.done(b,a0)){ACT.cook.end(b,a0);b.act=null}n++}
@@ -22,7 +23,7 @@ const out=await run(`(()=>{const out={};const cx=54,cy=64;for(let y=cy-4;y<cy+6;
 console.log(out);
 assert.deepEqual(out.table,['cookprep','cookcut','cookmix','cookplate']);
 assert.deepEqual(out.pan,['cookprep','cookfry','cookfry','cookplate']);
-assert.equal(out.grill,'cookgrill');assert.equal(out.pot,'cook');assert.equal(out.bake,'cookfan');
+assert.equal(out.grill,'cookgrill');for(const t in out.newDish){assert.ok(['pot','pan','bake','grill'].includes(out.newDish[t].st),t);assert.ok(out.newDish[t].img,t+' の絵')}assert.equal(out.pot,'cook');assert.equal(out.bake,'cookfan');
 assert.ok(out.foods.every(Boolean),'手に持つ物');assert.deepEqual(out.motions,[]);
 assert.equal(out.raiseAnim,'raise');assert.ok(out.cookShowSteps>=15,'かかげてから終わる');assert.equal(out.cooked,1);
 assert.deepEqual(out.craft,['craftprep','saw','craft','polish']);assert.deepEqual(out.wb,[0,1,2]);assert.equal(out.faceBench,1);
