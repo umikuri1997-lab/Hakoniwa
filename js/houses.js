@@ -181,9 +181,9 @@ function groundChipsOK(){const C=window.CHIPS;return !!C&&GCH.every(k=>C[k]&&chi
 function drawGroundChips(sc,X0,Y0,X1,Y1){const inR=i=>{const x=i%W,y=(i/W)|0;return x>=X0&&x<=X1&&y>=Y0&&y<=Y1};const C=window.CHIPS,r=WD===1?'r':'',dc=(k,x,y,i)=>{const ch=C[k];if(ch)drawChip(sc,ch,'ground',x,y,0,i)};
   if(WD===0){for(let y=Y0;y<=Y1;y++)for(let x=X0;x<=X1;x++){const px=x*TS,py=y*TS;sc.drawImage(dryTex(px,py),px%288,py%288,TS,TS,px,py,TS,TS)}}/* 草原のあれ地：288×288のテクスチャを、マップの位置どおりにしきつめる */
   else for(let y=Y0;y<=Y1;y++)for(let x=X0;x<=X1;x++){const i=y*W+x;dc('ground'+r+'#'+((hash(i*7+1)*8)|0),x*TS,y*TS,i)}/* 火山のあれ地：8しゅるい */
-  const gt=chipImgs(C['tex:grass'],'ground')[0];for(const i of REV){if(!inR(i))continue;const x=i%W*TS,y=((i/W)|0)*TS;sc.drawImage(gt,x%96,y%96,TS,TS,x,y,TS,TS)}
+  const gt=chipImgs(C['tex:grass'],'ground')[0];for(const i of REV){if(!inR(i))continue;const x=i%W*TS,y=((i/W)|0)*TS;sc.drawImage(gt,x%gt.width,y%gt.height,TS,TS,x,y,TS,TS)}
   {/* 水のマスの下（水のふちのすきまに見える所）：となりの陸の地面（草地・乾いた地面）を、そのマスのがわの半マスに、同じもようでしきつめる（鏡うつしはしない）。ななめだけ陸なら、その角の4分の1 */
-    const land=k=>S.ground[k]===0,dpt0=WD===0?chipImgs(C['tex:dry'],'ground')[0]:null,put=(n,rx,ry,rw,rh)=>{if(REV.has(n))sc.drawImage(gt,rx%96,ry%96,rw,rh,rx,ry,rw,rh);else if(dpt0)sc.drawImage(dryTex(rx,ry),rx%288,ry%288,rw,rh,rx,ry,rw,rh);else{sc.save();sc.beginPath();sc.rect(rx,ry,rw,rh);sc.clip();dc('ground'+r+'#'+((hash(n*7+1)*8)|0),Math.floor(rx/TS)*TS,Math.floor(ry/TS)*TS,n);sc.restore()}},h2=TS/2;
+    const land=k=>S.ground[k]===0,dpt0=WD===0?chipImgs(C['tex:dry'],'ground')[0]:null,put=(n,rx,ry,rw,rh)=>{if(REV.has(n))sc.drawImage(gt,rx%gt.width,ry%gt.height,rw,rh,rx,ry,rw,rh);else if(dpt0)sc.drawImage(dryTex(rx,ry),rx%288,ry%288,rw,rh,rx,ry,rw,rh);else{sc.save();sc.beginPath();sc.rect(rx,ry,rw,rh);sc.clip();dc('ground'+r+'#'+((hash(n*7+1)*8)|0),Math.floor(rx/TS)*TS,Math.floor(ry/TS)*TS,n);sc.restore()}},h2=TS/2;
     for(let y=Y0;y<=Y1;y++)for(let x=X0;x<=X1;x++){const i=y*W+x;if(S.ground[i]<1)continue;const px=x*TS,py=y*TS;/* 水のマスそのものが緑のマスでも、草はしかない（はしに見える所は、となりの陸の地面） */
       const L=x>0&&land(i-1),R=x<W-1&&land(i+1),U=y>0&&land(i-W),D=y<H-1&&land(i+W);
       if(L)put(i-1,px,py,h2,TS);if(R)put(i+1,px+h2,py,h2,TS);if(U)put(i-W,px,py,TS,h2);if(D)put(i+W,px,py+h2,TS,h2);
