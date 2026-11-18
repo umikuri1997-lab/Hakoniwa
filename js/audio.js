@@ -137,7 +137,6 @@ const lastSfx={};
 let SFXV=1,SFXP=0,SFXL=0,SFXO=null,SFXR=1,SFXTAB=0,SFXTABD=0;/* SFXP：左右（-1左〜1右）・SFXL：空気でこもる高さ（Hz、0はそのまま）・SFXR：音の高さ */
 /* マップの音の出口：大きさ → 左右 → 遠いほど高い音がへる（空気の中で、遠くの音はこもって聞こえる） */
 function sfxOut(){let n=AC.createGain(),h=n;n.gain.value=SFXV;if(SFXP&&AC.createStereoPanner){const p=AC.createStereoPanner();p.pan.value=SFXP;h.connect(p);h=p}if(SFXL){const f=AC.createBiquadFilter();f.type='lowpass';f.frequency.value=SFXL;f.Q.value=.5;h.connect(f);h=f}h.connect(sfxG);return n}
-let XYLN=0;
 let TAPOBJ=0,TAPMAT=0;const TAPK=new Set(['twood','tgrass','tcan','tstone','tfoe','tweb','tani','tbell','tplace','tcloth','tsoil','twater']);
 function sfx(k){
   if(k==='open'||k==='crit'||TAPK.has(k))TAPOBJ=performance.now();if(TAPK.has(k))TAPMAT=TAPOBJ;else if(k==='open'&&(TAPOBJ-TAPMAT<120||typeof TAPPEND!=='undefined'&&TAPPEND&&TAPOBJ-TAPPEND<120))return;/* 「みる」で物の音が鳴ったタップは、画面がひらく音をかさねない *//* 地図の物にさわった音が鳴ったら、葉・火の粉の音は出さない（tapFx） */
@@ -169,10 +168,10 @@ function sfx(k){
   case'open':rustle(t,.15,.06,o,900,2600,.7);knock(340,t+.11,.06,o,.1);break;/* 画面をひらく：さらっ…コトッ */
   case'close':rustle(t,.12,.05,o,2400,800,.7);knock(270,t+.08,.06,o,.1);break;/* 画面をとじる */
   case'count':{const r=.98+Math.random()*.04;tone(2093*r,t,.07,'sine',.03,o);tone(3136*r,t+.035,.09,'sine',.018,o)}break;/* 数がふえた：小さなガラスの「チリッ」 */
-  case'xyl':{/* 一覧をなでる：マリンバの「ぽろん」（XYLN が音の高さ。ドレミソラの5音なので、つづけて鳴らしてもにごらない）。木の板の音は、もとの音の3.93倍・9.2倍の音が、すぐ消える */
-    const f=[262,294,330,392,440,523,587,659][XYLN&7],lp=AC.createBiquadFilter();lp.type='lowpass';lp.frequency.value=2600;lp.connect(o);
-    const pt=(fr,d,v,f0)=>{const s=AC.createOscillator(),g=AC.createGain();s.type='sine';s.frequency.setValueAtTime(f0||fr,t);if(f0)s.frequency.exponentialRampToValueAtTime(fr,t+.012);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(v,t+.002);g.gain.exponentialRampToValueAtTime(.0001,t+d);s.connect(g);g.connect(lp);s.start(t);s.stop(t+d+.02)};
-    pt(f,.42,.03,f*1.03);pt(f*3.93,.07,.007);pt(f*9.2,.025,.002);rustle(t,.015,.015,lp,f*4,f*4,1.2)}break;
+  case'xyl':{/* 一覧をなでる：木の歯車の「カラッ」。歯がはじかれる短い音と、木の胴の小さな鳴り。高さは毎回すこしだけかえる */
+    const q=.94+Math.random()*.12,s=AC.createBufferSource(),bp=AC.createBiquadFilter(),g=AC.createGain();s.buffer=noiseBuf;bp.type='bandpass';bp.frequency.value=2300*q;bp.Q.value=6;g.gain.setValueAtTime(.15,t);g.gain.exponentialRampToValueAtTime(.0001,t+.018);s.connect(bp);bp.connect(g);g.connect(o);s.start(t);s.stop(t+.04);
+    const pt=(fr,d,v,ty)=>{const s=AC.createOscillator(),g=AC.createGain();s.type=ty;s.frequency.setValueAtTime(fr,t);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(v,t+.001);g.gain.exponentialRampToValueAtTime(.0001,t+d);s.connect(g);g.connect(o);s.start(t);s.stop(t+d+.02)};
+    pt(1250*q,.03,.036,'triangle');pt(2900*q,.012,.015,'sine')}break;
   case'pin':rustle(t,.05,.05,o,1200,600,.7);knock(300,t+.03,.06,o,.08);knock(1500,t+.16,.03,o,.03);break;/* 紙をぺたっ、ピンをぷすっ */
   case'crit':{const r=.94+Math.random()*.12;rustle(t,.08,.03,o,2600*r,4200*r,.7);knock(900*r,t+.05,.03,o,.04)}break;/* 小さな生き物をタップ：かさっ、と小さく */
   case'tile':{const r=.94+Math.random()*.12;knock(520*r,t,.045,o,.06)}break;/* 板が1まいずつ置かれる：とん、とん */
