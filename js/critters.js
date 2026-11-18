@@ -130,13 +130,14 @@ const CRITN={fly:'ちょう',mitsubachi:'みつばち',bird:'小鳥',risu:'り�
 const CRITD={fly:'花から花へ、ひらひらとぶ虫。',mitsubachi:'花のみつをあつめる、はたらきものの虫。',bird:'木のそばで、えさをさがす小さな鳥。',risu:'木の実が好きな、しっぽのふさふさした生き物。',
   usagi:'みどりの草地を、ぴょんぴょんはねる生き物。',harinezumi:'夕方、茂みのそばを歩く、せなかがとげとげの生き物。',nezumi:'箱のそばに、こっそりあらわれる小さな生き物。',mogura:'土の中にすむ生き物。',
   katatsumuri:'雨の日に出てくる、からをせおった生き物。',tentoumushi:'赤い羽に点のある、小さな虫。',tonbo:'水の上を、すいすいとぶ虫。',hotaru:'夜のはじめの水べで、おしりが光る虫。',frog:'水べにすむ、よくはねる生き物。'};
+const CRITV={bird:'cv_bird',risu:'cv_risu',nezumi:'cv_nezumi',usagi:'cv_usagi',harinezumi:'cv_hari',mogura:'cv_mogura',frog:'cv_frog',mitsubachi:'cv_bee',fly:'cv_bug',tentoumushi:'cv_bug',tonbo:'cv_tonbo',hotaru:'cv_hotaru',katatsumuri:'cv_snail'};/* タップしたときの鳴き声（本物の録音） */
 const CRITPK=1.2;/* 反応の見た目の長さ（秒、実時間） */
 /* タップした所（マス）にいる生き物。絵の足もとから上へ。いちばん近い物と、そのきょり */
 function critTap(px,py){let best=null,bd=1e9;for(const c of CRIT){if(c.dead||c.go||c.fade!=null)continue;const L=(typeof uLift==='function'?uLift(c):0)/TS,cy=c.y-(c.z||0)/TS-L,dx=px-c.x,dy=py-cy;
     if(Math.abs(dx)>.5||dy>.3||dy<-.7)continue;const d=Math.hypot(dx,dy+.2);if(d<bd){bd=d;best=c}}return best?{c:best,d:bd}:null}
 function critPoke(c,px,py){const K=CK[c.k],now=performance.now();if(c.pk&&now-c.pk<CRITPK*1000*.6)return;c.pk=now;
   if(!c.rec){c.rec=1;const R=S.critRec||(S.critRec={});R[c.k]=(R[c.k]||0)+1}
-  addFloat(c.x,c.y-(c.z||0)/TS-.7,CRITN[c.k]||'','#f4ead2');sfx('crit');
+  addFloat(c.x,c.y-(c.z||0)/TS-.7,CRITN[c.k]||'','#f4ead2');sfx('crit');if(CRITV[c.k])sfxAt(CRITV[c.k],c.x,c.y);
   const ax=c.x-px,ay=c.y-py,L=Math.hypot(ax,ay),vx=L>.05?ax/L:(Math.random()<.5?-1:1),vy=L>.05?ay/L:0;
   if(c.k==='bird'){c.fl=1;critLeave(c,vx,Math.min(0,vy))}
   else if(K.flee){c.fl=1;c.hop=0;critLeave(c,vx,vy)}
@@ -146,9 +147,9 @@ function critPoke(c,px,py){const K=CK[c.k],now=performance.now();if(c.pk&&now-c.
   else if(c.k==='mogura'){c.go=1;c.gt=0;c.fade=1}
   else if(c.k!=='hotaru'){c.act=1.6;c.tx=c.ty=null;c.mv=0;c.wait=2}
   critDrop(c)}
-/* 小鳥はベリー・りすはどんぐりを、1ぴき1回だけ、50%で1こ落とす（CRITDROP）。落ちた物は、せいれいがどこからでもひろいに行く（tap） */
-const CRITDROP={bird:'berry',risu:'donguri'},CRITDROPP=.5;
-function critDrop(c){const k=CRITDROP[c.k];if(!k||c.dr)return;c.dr=1;if(Math.random()>=CRITDROPP)return;const n0=(S.drops||[]).length;dropAt(c.x,c.y,'food:'+k,1);if(!(S.drops&&S.drops.length>n0))return;
+/* 小鳥はベリー・りすはどんぐり・うさぎはわた毛を、1ぴき1回だけ、50%で1こ落とす（CRITDROP）。落ちた物は、せいれいがどこからでもひろいに行く（tap） */
+const CRITDROP={bird:'food:berry',risu:'food:donguri',usagi:'mat:wool'},CRITDROPP=.5;
+function critDrop(c){const k=CRITDROP[c.k];if(!k||c.dr)return;c.dr=1;if(Math.random()>=CRITDROPP)return;const n0=(S.drops||[]).length;dropAt(c.x,c.y,k,1);if(!(S.drops&&S.drops.length>n0))return;
   const d=S.drops[S.drops.length-1];d.tap=1;d.cr=1;DROPFX.set(d,{sx:c.x*TS,sy:(c.y-.2)*TS-(c.z||0)-hiAt(d.y*W+d.x)*LIFT,t0:performance.now()})}
 /* どんぐりのアイコン（コードのドット絵。もらった絵があれば、かえる） */
 const DONGURI=['................','................','.......oo.......','.......wo.......','....oooooooo....','...owwwwwwwwo...','..owwwwwwwwwwo..','..oooooooooooo..','...ohmmmmmmdo...','...ohmmmmmmdo...','...ohmmmmmmdo...','....ohmmmmdo....','....ommmmddo....','.....oddddo.....','......oooo......','................'];

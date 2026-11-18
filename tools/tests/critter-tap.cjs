@@ -22,8 +22,9 @@ const o=await run(`(()=>{cam.z=2;centerOn(CX*TS,CY*TS);setMode('look');const out
   {const {c,name}=one('tentoumushi',CX-1.5,CY+1.5);out.ten=[name,c.act]}
   /* 同じ1ぴきは1回だけ数える */{const c=mk('tentoumushi',CX-1.5,CY+1.5);CRIT=[c];c.pk=0;tap(c);c.pk=0;tap(c);out.tenN=S.critRec.tentoumushi}
   /* せいれいのほうが近い：せいれいの画面 */{const c=mk('usagi',CX+4.5,CY+1.5);CRIT=[c];const r=mkRes(S,'a','wood',CX+4.5,CY+1.4);S.res=[r];closeSheet&&closeSheet();const q=scr(r.x,tapY(r)-.5);onTap(q.sx,q.sy);out.resWins=sheet==='res';closeSheet();S.res=[]}
-  /* 小鳥はベリー・りすはどんぐりを、1ぴき1回だけ、50%で1こ落とす */{const R0=Math.random,CR0=JSON.stringify(S.critRec);S.drops=[];Math.random=()=>0;const b=mk('bird',CX+.5,CY-1.4);CRIT=[b];tap(b);b.pk=0;b.fl=0;b.go=0;b.fade=null;tap(b);const r=mk('risu',CX+1.5,CY+1.5);CRIT=[r];tap(r);Math.random=()=>.9;const r2=mk('risu',CX+2.5,CY+1.5);CRIT=[r2];tap(r2);Math.random=R0;
+  /* 小鳥はベリー・りすはどんぐり・うさぎはわた毛を、1ぴき1回だけ、50%で1こ落とす */{const R0=Math.random,CR0=JSON.stringify(S.critRec);S.drops=[];Math.random=()=>0;const b=mk('bird',CX+.5,CY-1.4);CRIT=[b];tap(b);b.pk=0;b.fl=0;b.go=0;b.fade=null;tap(b);const r=mk('risu',CX+1.5,CY+1.5);CRIT=[r];tap(r);const u=mk('usagi',CX+3.5,CY+1.5);CRIT=[u];tap(u);Math.random=()=>.9;const r2=mk('risu',CX+2.5,CY+1.5);CRIT=[r2];tap(r2);Math.random=R0;
     out.drops=S.drops.map(d=>d.id+':'+d.n+':'+!!d.tap);out.dIcon=!!ICONS.donguri&&FOODS.donguri.name;S.drops=[];S.critRec=JSON.parse(CR0)}
+  /* どの生き物にも鳴き声がある */out.noVoice=CRITKINDS.filter(k=>!CRITV[k]||!SAMPLES[CRITV[k]]);
   /* 図鑑の「いきもの」 */openSheet('menu','zukan');ZKT=ZKTABS.indexOf('いきもの');renderSheet();const rows=[...document.querySelectorAll('#sheetBody .rows > *')].map(e=>e.textContent);out.zk=rows;out.zkImg=document.querySelectorAll('#sheetBody .rows img').length;closeSheet();
   /* 動かしてもエラーがない */CRIT=[mk('bird',CX+.5,CY-1.4),mk('fly',CX-2.5,CY+.6,12)];for(const c of CRIT){c.pk=0;tap(c)}for(let i=0;i<60;i++){critTick(.05);for(const c of CRIT)drawCritter(ctx,c,performance.now()+i*20)}drawCritGlow(ctx,performance.now());
   out.rec=S.critRec;return out})()`);
@@ -36,7 +37,8 @@ assert.ok(o.hotaru[0]==='ほたる'&&o.hotaru[1],'ほたるは光る');
 assert.ok(o.mogura[0]==='もぐら'&&o.mogura[2]&&o.mogura[1]===1,'もぐらはもぐる');
 assert.ok(o.ten[0]==='てんとうむし'&&o.ten[1]>0,'てんとうむしは何かする');
 assert.equal(o.tenN,2,'1ぴきは1回だけ（さきの1ぴき＋この1ぴき）');
-assert.deepEqual(o.drops,['food:berry:1:true','food:donguri:1:true'],'小鳥はベリー・りすはどんぐり、1ぴき1回 '+o.drops);assert.equal(o.dIcon,'どんぐり');
+assert.deepEqual(o.drops,['food:berry:1:true','food:donguri:1:true','mat:wool:1:true'],'小鳥はベリー・りすはどんぐり・うさぎはわた毛、1ぴき1回 '+o.drops);assert.equal(o.dIcon,'どんぐり');
+assert.deepEqual(o.noVoice,[],'鳴き声のない生き物');
 assert.ok(o.resWins,'せいれいのほうが近ければ、せいれいの画面');
 assert.equal(o.zk.length,7,'図鑑に7しゅるい '+o.zk);assert.ok(o.zk.some(t=>/小鳥/.test(t)&&/見つけた数 1/.test(t)),'図鑑の行');assert.ok(o.zkImg>=7,'図鑑の絵 '+o.zkImg);
 assert.deepEqual(errors,[]);console.log('critter-tap ok');await browser.close()})();

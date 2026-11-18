@@ -136,9 +136,9 @@ document.addEventListener('click',e=>{const b=e.target&&e.target.closest&&e.targ
 function gaugeWatch(){for(const id of['xpBar','foodBar','matBar']){const i=document.getElementById(id);if(!i)continue;let p=parseFloat(i.style.width)||0;
   new MutationObserver(()=>{const v=parseFloat(i.style.width)||0;if(v>p+.5&&document.body.classList.contains('wd0')&&!uiReduced()){const g=i.parentElement;g.classList.remove('gwob');void g.offsetWidth;g.classList.add('gwob');clearTimeout(g._gT);g._gT=setTimeout(()=>g.classList.remove('gwob'),1400)}p=v}).observe(i,{attributes:true,attributeFilter:['style']})}}
 
-/* 草原：一覧を指でなでると、行の板が通りすぎるたびに、マリンバの音（行ごとに音の高さがかわる。1行は約40px） */
+/* 草原：一覧を指でなでると、行の板が通りすぎるたびに、木の歯車の「カラッ」（1行は約40px） */
 document.addEventListener('scroll',e=>{const el=e.target;if(!el||!el.closest||!el.closest('#sheetWrap')||!document.body.classList.contains('wd0'))return;const k=Math.floor(el.scrollTop/40);if(el._xyl===undefined)el._xyl=0;
-  if(k!==el._xyl){XYLN=((k%8)+8)%8;el._xyl=k;sfx('xyl')}},true);
+  if(k!==el._xyl){el._xyl=k;sfx('xyl')}},true);
 /* 草原：村レベルが上がったら、上の欄の数に、新しい数が焼き印で「じゅっ」とおされて、けむりがたつ */
 function smoke(x,y,n){if(uiReduced())return;let box=document.getElementById('tapFx');if(!box){box=document.createElement('div');box.id='tapFx';document.body.appendChild(box)}
   const cols=['#d8cfc0','#c4baa9','#ece4d6'];for(let i=0;i<n&&UIFX.parts.length<40;i++){const d=document.createElement('i'),sz=(i%2?3:1.5);d.style.width=d.style.height=sz+'px';d.style.background=cols[i%3];box.appendChild(d);
