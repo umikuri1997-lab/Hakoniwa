@@ -70,7 +70,7 @@ C={
        'e0':dict(puff=.4),'e1':dict(puff=.9),'e2':dict(puff=.25)}),   # のどをふくらませる
 }
 VIEWD={'d':1,'u':-1}   # 正面（d：手前へ歩く）・うしろ（u：奥へ歩く）
-FRONT={'usagi':(70,-80),'risu':(53,-95),'harinezumi':(57,-110),'nezumi':(-12,132),'mogura':(-85,65),'katatsumuri':(57,-93),'tentoumushi':(55,-95),'kaeru':(50,-100)}
+FRONT={'usagi':(70,-80),'risu':(53,-95),'harinezumi':(57,-110),'nezumi':(-12,132),'mogura':(65,-110),'katatsumuri':(57,-93),'tentoumushi':(55,-95),'kaeru':(50,-100)}
 # 横の絵から何度まわすと、正面（d）・うしろ（u）か。まっすぐより少し右（顔が見える、少しななめ。ゲームで左右反転する）。生き物ごとに絵を見てきめた（ねずみは、しっぽの玉が顔の前にくるので、横に近い）
 def vturn(name,vw):return FRONT[name][0 if vw=='d' else 1] if vw else 0
 GROUND=tuple(FRONT)   # 地面を歩く・はねる物：正面・うしろの絵もある（上下へ動くとき、横を向いたまますべらないように）
