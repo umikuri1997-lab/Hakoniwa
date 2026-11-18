@@ -550,8 +550,8 @@ function morning(){sfx('morning');diaryClose();if(typeof paceMorning==='function
   for(const k in S.dyn){const o=S.obj[k],d=S.dyn[k];if((o==='berry'||o==='fruit')&&d&&d.g<100){d.g=Math.min(100,d.g+25);continue}/* ベリー・りんごは4日（朝ごとに25） */if(o!=='farm')continue;if(d.sown===false){d.wet=0;continue}if(d.g<100&&!(d.wet>0))d.dry=1;/* 朝に水が切れていた：つやつやにならない */if(d.wet>0&&d.g<100)d.g=Math.min(100,d.g+100/((CROPS[d.crop]||CROPS.mugi).days)*(warmSet().has(+k)?1.5:1)*(d.gw||1));/* あたたかい畑：育つ速さ+50% */delete d.gw;d.wet=0}
   if(WD===1){takenokoMorning();eruptMorning();gearMorning();veinMorning();visitMorning()}weedMorning();webMorning();if(typeof animalMorning==='function')animalMorning();
   if(cnt('bell')>0){BELLRING=performance.now();{const j=S.obj.indexOf('bell');if(j>=0)bellRing(j%W+1,((j/W)|0)+1)}for(const r of S.res)if(!r.hidden)funAdd(r,15,'bell')}/* 村の鐘：朝に鳴って、たのしさ+15（いくつあっても1回） */
-  {const wr=S.rain;if(wr)S.wetD=dayNo();/* 雨のつぎの日：水たまりがのこる（feel.js） */S.rain=Math.random()<.22;weatherMorning(wr)}if(typeof stormMorning==='function')stormMorning();/* あらしの日 *//* 雨のつぎの朝は、虹が出ることがある */
-  S.today=null;if(S.enemyOn&&dayNo()>=3&&Math.random()<.4){const ks=Object.keys(DAYEV).filter(k=>k!=='kami');const k=pick(ks),E=DAYEV[k];S.today=k;/* 日替わりのできごと */
+  const wxE=wxMorning();/* 天気：前もってきめた日（weather.js。雨・虹・あらし） */
+  S.today=null;if(S.enemyOn&&dayNo()>=3&&wxE&&wxE.t&&DAYEV[wxE.t]){const k=wxE.t,E=DAYEV[k];S.today=k;/* 日替わりのできごと（前もってきめた日 wxE.t） */
     setTimeout(()=>toast('きょうは「'+E[1]+'」：'+E[2],'good'),1200);memo(E[0],'きょうは「'+E[1]+'」');
     if(k==='kami'){S.godVisit=true;S.godNextVisitDay=dayNo()+2;}
     if(k==='mono')monoDrops(4)}
@@ -566,8 +566,6 @@ function morning(){sfx('morning');diaryClose();if(typeof paceMorning==='function
 /* 虹：雨のつぎの朝に出ることがある。S.rbDay：虹の日 */
 const rainbowToday=()=>!!S&&S.rbDay===dayNo()&&!S.rain;
 const RB_FUN=.5;/* 虹の日：たのしさのへりかた0.5倍 */
-function weatherMorning(wasRain){/* morning() の雨を決めたあと */
-  if(!IS_STORY_REPLAY&&wasRain&&Math.random()<.5){S.rain=false;S.rbDay=dayNo();setTimeout(()=>toast('雨あがりの空に、虹が出ている','good'),900)}}
 /* 草原のメイン「木のなかまと花畑」（wood6）：えらんだ「ヌシ様に見せたい花」（S.flags.choice.nushiFlower）を、御神木のそば（FIELD_NEAR_R）に5本咲かせる。
    咲いたら、木のせいれいが1人ずつ世話をしにいく（S.flags.flTend：世話をした子の id。この依頼のあいだにした世話だけ）。5人が世話をおえたら、花畑が満開になる */
 const WFL_N=5,WFL_TEND=5,WFL_AT=3,WFL_NAME={bellf:'ききょう',lily:'ゆり',clover:'シロツメクサ'};
