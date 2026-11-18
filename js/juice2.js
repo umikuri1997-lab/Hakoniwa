@@ -48,7 +48,7 @@ function juiceWaveDraw(now){const R=waveR(now);if(R<0)return;const e=now-JWAVE.t
     for(let i=0;i<n;i++){const a=i/n*Math.PI*2,x=cx+Math.cos(a)*r2,y=cy+Math.sin(a)*r2*.62;ctx.fillRect(Math.round(x/P)*P,Math.round(y/P)*P,P*(b?1:2),P)}}
   ctx.globalAlpha=1}
 
-function juice2Frame(now){juiceHouseWatch(now)}
+function juice2Frame(now){juiceHouseWatch(now);if(typeof zkMsTick==='function')zkMsTick(now);if(typeof orgelTick==='function')orgelTick(now)}
 function juice2Draw(now){if(JGLOW.length)juiceGlowDraw(now);if(!JHS.length&&!JWAVE)return;juiceWaveDraw(now);juiceHouseDraw(now)}
 function juice2Reset(){JHS.length=0;JHREF=null;JHSIG=null;JWAVE=null;JSTORE.n=0;if(typeof JGLOW!=='undefined')JGLOW.length=0}
 
@@ -61,3 +61,11 @@ function juiceGlowDraw(now){const P=2;for(let i=JGLOW.length-1;i>=0;i--){const g
     for(let b=0;b<3;b++){ctx.globalAlpha=Math.max(0,a*(.45-b*.13));ctx.fillStyle=b?C[0]:C[1];const ww=Math.round((w+b*8)/P)*P;ctx.fillRect(Math.round((cx-ww/2)/P)*P,Math.round((cy-h)/P)*P,ww,Math.round(h/P)*P)}/* 光の柱（3だんの四角） */
     ctx.fillStyle=C[1];for(let k=0;k<8;k++){const ph=(e/900+k/8)%1;ctx.globalAlpha=Math.max(0,a*(1-ph));ctx.fillRect(Math.round((cx+(hash(k*7+g.x)-.5)*w*2)/P)*P,Math.round((cy-ph*h)/P)*P,P,P)}}/* のぼる光の粒 */
   ctx.globalAlpha=1}
+
+/* ---------- 6. 古いオルゴール：夕方（17〜20時）に、音の粒がたちのぼり、小さく鳴る（画面に見えているときだけ） ---------- */
+let JORG=0;const JORGMS=1700,JORGN=[0,4,7,12,7,4];let JORGI=0;
+function orgelTick(now){if(now-JORG<JORGMS||!juice2OK()||sheet!=null)return;JORG=now;const h=hour();if(h<17||h>=20)return;const vw=VW/cam.z,vh=VH/cam.z,x0=cam.x/TS,y0=cam.y/TS;
+  for(let j=0;j<S.obj.length;j++){if(S.obj[j]!=='orgel')continue;const x=j%W+.5,y=((j/W)|0)+.2;if(x<x0||y<y0||x>x0+vw/TS||y>y0+vh/TS)continue;
+    for(let k=0;k<3;k++)fx.push({k:'p',x:x*TS+(Math.random()-.5)*10,y:y*TS-20,vx:(Math.random()-.5)*14,vy:-36-Math.random()*20,life:1.2,col:['#ffe58a','#f3aec5','#cfeaff'][k],r:3});
+    if(typeof playU==='function')try{playU('tink',.18,Math.pow(2,JORGN[JORGI++%JORGN.length]/12))}catch(e){}/* 小さな「チン」を、ドミソの高さで（もらった録音） */
+    break}}

@@ -700,6 +700,7 @@ function zukanBody(body){
   else{const it=Object.assign({},d.seenIt||{});for(const k in d.mat||{})if(d.mat[k]>0)it['m:'+k]=1;for(const k in d.fs||{})if(d.fs[k]>0)it['f:'+k]=1;
     for(const k in MATN)if(it['m:'+k])add(MATN[k],'素材',ICONS[k]||null);for(const k in FOODS)if(it['f:'+k])add(FOODS[k].name,FOODS[k].fx||'食べ物',foodIc(k));if(it['x:horn'])add('よびごえの角笛',HORNDESC,hornIco());if(it['x:herb'])add('まよけのハーブ',HERBDESC,herbIco())}
   body.appendChild(el('<p class="story">'+list.length+'こ</p>'));
+  if(ZKW===WD&&!S.free&&typeof zkNext==='function'){const q=zkNext(ZKT),p=el('<p class="note" style="position:relative"></p>');p.textContent=q?(q.all?'ぜんぶまで':'つぎの節目まで')+' あと'+q.left+'こ':'ぜんぶ見つけた';body.appendChild(p);const M=S.flags.zkMs||{},V=S.flags.zkMsV||(S.flags.zkMsV={});if((M[ZKT]||0)>(V[ZKT]||0)){V[ZKT]=M[ZKT];setTimeout(()=>{if(typeof uiStamp==='function')uiStamp(p)},250)}}/* 図鑑の節目（zukanms.js）：とどいたら、はじめて見たときにハンコ */
   const zs=S.flags.zkSeen||(S.flags.zkSeen={});let zn=0;const zNew=(name,e)=>{const k=ZKW+':'+ZKT+':'+name;if(zs[k]||!e)return;zs[k]=1;e.classList.add('stknew');e.style.animationDelay=(Math.min(zn++,8)*.06)+'s'};/* 新しく見つけた物のシールは、ぺたっとはる（1回だけ） */
   for(const q of list){if(!q)continue;const r=rowEl(q[0],q[1],q[2]);zNew(q[0],r.querySelector('img'));rows.appendChild(r)}
   for(const z of rows.querySelectorAll('.zk'))zNew(z.querySelector('b').textContent,z.querySelector('canvas'));
