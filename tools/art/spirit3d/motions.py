@@ -243,10 +243,17 @@ def wbpolish(w, face):
     """しあげ：天板の上で、ぬので、くるくるみがく（奥の手でささえる）"""
     return breathe(dict(sN=1.55+0.12*S(w), bN=-0.55+0.2*C(w), prop='cloth', sF=1.5, bF=-0.7, lean=0.2, hp=0.22, yaw=0.05*C(w), hr=0.05*S(w)), w, 0.4)
 M('wbpolish', 8, 6/(2*PI), wbpolish)
+def hamcurve(u, s0, s1, a0, a1):
+    """トンカチ：u 0＝打つ（WBEAT の 0）・〜.15 はねかえる・〜.7 頭の上へふり上げる・〜1 速くふりおろす。
+    s うで（前へふる）、a 柄の角度（水平の前から上へ）。手首 k＝s−a で、柄の角度をうでとべつに動かす（打つときは柄がほぼ水平で、頭の面が下）"""
+    if u < .15: k = u/.15; s = s0+0.25*S(PI*k); a = a0+0.35*S(PI*k)
+    elif u < .7: k = (u-.15)/.55; k = k*k*(3-2*k); s = s0+(s1-s0)*k; a = a0+(a1-a0)*k
+    else: k = ((u-.7)/.3)**1.6; s = s1+(s0-s1)*k; a = a1+(a0-a1)*min(1, k*1.15)
+    return s, a, s-a
 def wbham(w, face):
-    """トンカチ：ふり上げて、天板の上の材料へふりおろす"""
-    u = (w/(2*PI)) % 1; v = math.sin(PI/2*u/0.6) if u < 0.6 else 1-(u-0.6)/0.4
-    return breathe(dict(sN=1.5+0.8*v, bN=-0.4, tN=0.9-0.9*v, prop='hammer', sF=1.5, bF=-0.7, lean=0.22-0.1*v, hp=0.2-0.1*v), w, 0.5)
+    """トンカチ：頭の上へふり上げて、天板の上の材料へふりおろす"""
+    s, a, k = hamcurve((w/(2*PI)) % 1, 1.35, 2.45, -0.1, 2.6); up = (s-1.35)/1.1
+    return breathe(dict(sN=s, bN=-0.4, tN=0.0, kN=k, prop='hammer', sF=1.5, bF=-0.7, lean=0.22-0.1*up, hp=0.2-0.1*up), w, 0.5)
 M('wbham', 8, 2.6/2, wbham)
 def wbprep(w, face):
     """材料をならべる：前かがみで、天板の高さへ手をのばして、もどす"""
@@ -283,8 +290,9 @@ def swingdown(prop):
     return f
 M('chop', 10, 1.4, swingdown('axe')); M('mine', 10, 1.4, swingdown('pick')); M('till', 10, 1.4, swingdown('hoe'))
 def hammer(w, face):
-    u = (w/(2*PI)) % 1; v = math.sin(PI/2*u/0.6) if u < 0.6 else 1-(u-0.6)/0.4
-    return breathe(dict(sN=0.7+1.2*v, bN=-0.35, tN=0.0, prop='hammer', sF=0.9, bF=-0.6, lean=0.18-0.1*v, hp=0.15), w, 0.5)
+    """トンカチ：頭の上へふり上げて、足もとの物へふりおろす"""
+    s, a, k = hamcurve((w/(2*PI)) % 1, 0.55, 2.3, -0.15, 2.5); up = (s-0.55)/1.75
+    return breathe(dict(sN=s, bN=-0.35, tN=0.0, kN=k, prop='hammer', sF=0.9, bF=-0.6, lean=0.2-0.12*up, hp=0.15-0.08*up), w, 0.5)
 for nm in ('build', 'repair', 'craft'): M(nm, 8, 2.6/2, hammer)
 def watering(w, face):
     """じょうろをかたむけて、水をやる（水のつぶは、ゲームでじょうろの先から）"""

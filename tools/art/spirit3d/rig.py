@@ -6,13 +6,18 @@
   頭  hp（うなずく、+で下）・hr（かたむく）・hy（左右を向く）。回す中心は首 (0,0,26)
   上の物 top（左右にゆれる）・topz（上下）／しっぽ tail・風のはね wing（板の面の中で回す）
   spin（ぜんぶを、まうえから見て回す。くるくるまわる）
-  道具 prop（手前の手に持つ道具の名前）・propF（奥の手）"""
+  道具 prop（手前の手に持つ道具の名前）・propF（奥の手）・kN・kF（手首：道具を、にぎる所のまわりで、うでのふる向きに回す。+で道具の先が、かたから手への向きへたおれる）"""
 import math
 import numpy as np
 from core import (Q, QH, SSN, DZ, EXT, CREAM, rx, ry, rz, view, arm_xf, SH)
 import props as PR
 
 PIVB = np.array([0., 0, 11]); PIVH = np.array([0., 0, 26]); EYEP = np.array([0., 22, 40.5]); HANDU = np.array([[13.0, 0, 0]])
+
+def wrist(P, k):
+    """手首：うでの座標の点を、にぎる所（HANDU）のまわりで、u（かたから手）と w（前）の面の中で k だけ回す（+で w の先が u へ）"""
+    P = np.array(P, float); u = P[:, 0]-HANDU[0, 0]; w = P[:, 2].copy(); c, sn = math.cos(k), math.sin(k)
+    P[:, 0] = HANDU[0, 0]+u*c+w*sn; P[:, 2] = -u*sn+w*c; return P
 
 def posed(sp, face, p):
     """部品の名前 → (キャラの座標の点, 色 or 'cream'/'hand', 種類)。種類：'c' 体の色の部品・'h' 手・'t' 絵の色の部品・'p' 道具"""
@@ -32,7 +37,9 @@ def posed(sp, face, p):
         anchors['hand'+k] = body(f(HANDU))[0]
         pn = p.get('prop' if near else 'propF')
         if pn:
-            (P, C), fx = PR.prop(pn); Pw = body(f(P)); fw = {a: body(f(v[None]))[0] for a, v in fx.items() if a != 'up'}
+            (P, C), fx = PR.prop(pn); kw = g('k'+k)
+            if kw: P = wrist(P, kw); fx = {a: (v if a == 'up' else wrist(v[None], kw)[0]) for a, v in fx.items()}
+            Pw = body(f(P)); fw = {a: body(f(v[None]))[0] for a, v in fx.items() if a != 'up'}
             if 'up' in fx:   # たいらに持つ道具（フライパン・ボウル・お皿）：道具の「上」が、まうえを向くように、手のまわりで回す
                 hc0 = body(f(HANDU))[0]; u0 = body(f((HANDU[0]+fx['up'])[None]))[0]-hc0; u0 = u0/np.linalg.norm(u0); z = np.array([0, 0, 1.0])
                 ax = np.cross(u0, z); sn = np.linalg.norm(ax); cs = float(u0@z)
