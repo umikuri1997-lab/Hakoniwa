@@ -215,7 +215,7 @@ function freeSetup(s){const used=new Set(['フタバ','ノドカ']);const nm=()=
   s.fs={berry:12};s.food=12;s.mat={wood:20,stone:20};s.pt=40;
   for(let j=0;j<W*H;j++)if(s.obj[j]==='deadtree')s.obj[j]=Math.random()<.5?'ntree':'';
   for(let d=3;d<=5;d++){const j=(CY-2)*W+CX-d;s.obj[j]='hwall';s.floor[j]='';s.hp[j]=BL.hwall.hp}/* 家はこわれていない */
-  putNear(s,'crate',CX+3,CY+1);putNear(s,'wbench',CX+4,CY+1);putNear(s,'crate',CX+5,CY+1);/* 作業台は、木箱のあいだ */
+  {const fr=k=>!s.obj[k]&&s.ground[k]!==1&&!s.floor[k];let p=-1;for(let r=0;r<8&&p<0;r++)for(let dy=-r;dy<=r&&p<0;dy++)for(let dx=-r;dx<=r;dx++){const k=(CY+1+dy)*W+CX+3+dx;if([0,1,2,3].every(c=>fr(k+c))){p=k;break}}if(p>=0){s.obj[p]='crate';wbenchAt(s,p+1,0);s.obj[p+3]='crate'}}/* 作業台（材料置き場つき）は、木箱のあいだ */
   for(const k of ['tree','bellf','salvia','lily','lotus','clover'])if(BL[k]){s.unlocked[k]=true}
   s.inv=Object.assign(s.inv||{},{bellf:3,salvia:3,lily:3,lotus:3,clover:9});
   let c2=false;try{const t=KV.getItem(SAVE_KEYS[1]);c2=!!(t&&JSON.parse(t).cleared)}catch(e){}if(c2){s.inv.hotstone=(s.inv.hotstone||0)+2;s.flags.giftV=1}/* 火山の村をクリアしていたら、ほのお石もとどく */syncQuestRecipes(s)}

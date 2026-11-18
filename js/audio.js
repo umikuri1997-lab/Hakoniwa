@@ -56,6 +56,19 @@ function voiceHmm(r){voiceStop();if(!AC||!SND.sfx||AC.state!=='running')return;c
   const src=AC.createBufferSource(),g=AC.createGain();src.buffer=b;src.playbackRate.setValueAtTime(vo*.95,t);src.playbackRate.setValueAtTime(vo*.95,t+.16);src.playbackRate.linearRampToValueAtTime(vo*1.35,t+.36);
   g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.7*(SND.vv??1),t+.03);g.gain.setValueAtTime(.7*(SND.vv??1),t+.3);g.gain.linearRampToValueAtTime(0,t+.42);src.connect(g);g.connect(voxC);src.start(t,Math.random()*b.duration*.5);src.stop(t+.45);VOICE={src,g}}
 function voiceStop(){if(!VOICE)return;const v=VOICE;VOICE=null;clearTimeout(v.end);try{const t=AC.currentTime;v.g.gain.setTargetAtTime(0,t,.04);v.src.stop(t+.2)}catch(e){}}
+/* せいれいどうしのおしゃべりの、小さな話し声：会話の声（SAMPLES.voice）を、話す子の声の高さで、短く切って鳴らす。
+   声の作り（コンプレッサー）は会話の声と同じで、大きさは会話の声の CHATK。マップの場所の音と同じく、左右・遠いほど小さく・こもる（sfxPos）。
+   2人で、かわりばんこに話す（ときどき同じ子がつづける）。時間は実時間（早送りでも、しゃべる速さはかわらない） */
+const CHATK=.3,CHATGAP=.35,CHATVT=new WeakMap();let CHATLAST=0;
+function chatMurmur(r,p){if(!p||!AC||!SND.sfx||AC.state!=='running'||VOICE||(typeof SKIP!=='undefined'&&SKIP))return;const now=performance.now()/1000,st=CHATVT.get(r)||{n:0,who:0};if(now<st.n)return;CHATVT.set(r,st);
+  const b=(SBUF.voice||[])[0];if(!b)return;const q=sfxPos((r.x+p.x)/2,(r.y+p.y)/2);if(!q){st.n=now+1;return}if(now-CHATLAST<CHATGAP)return;CHATLAST=now;
+  const sp=st.who?p:r;if(Math.random()<.75)st.who=1-st.who;const vo=(sp.vr&&sp.vr.vo)||(KEYVR[sp.name]&&KEYVR[sp.name].vo)||1.12,dur=.35+Math.random()*.6,t=AC.currentTime;
+  const src=AC.createBufferSource(),env=AC.createGain(),cp=AC.createDynamicsCompressor(),g=AC.createGain();src.buffer=b;
+  src.playbackRate.setValueAtTime(vo,t);for(let x=t;x<t+dur;){x+=.08+Math.random()*.08;src.playbackRate.linearRampToValueAtTime(vo*(.92+Math.random()*.18),x)}/* ひと言ずつ、少し上がり下がり */
+  env.gain.setValueAtTime(0,t);env.gain.linearRampToValueAtTime(.8,t+.04);env.gain.setValueAtTime(.8,t+dur-.08);env.gain.linearRampToValueAtTime(0,t+dur);
+  cp.threshold.value=-38;cp.ratio.value=12;cp.knee.value=4;cp.attack.value=.003;cp.release.value=.1;g.gain.value=.5*CHATK*q.v*(SND.vv??1);
+  src.connect(env);env.connect(cp);cp.connect(g);let h=g;if(AC.createStereoPanner){const pn=AC.createStereoPanner();pn.pan.value=q.p;h.connect(pn);h=pn}{const f=AC.createBiquadFilter();f.type='lowpass';f.frequency.value=Math.min(q.l,2600);f.Q.value=.5;h.connect(f);h=f}h.connect(sfxG);
+  src.start(t,Math.random()*Math.max(0,b.duration-dur-.1));src.stop(t+dur+.05);st.n=now+dur+.15+Math.random()*.5}
 function playSeg(k,vol,dur){if(!AC||!SND.sfx||AC.state!=='running')return false;const L=(SBUF[k]||[]).filter(Boolean);if(!L.length)return false;const b=pick(L),src=AC.createBufferSource(),g=AC.createGain(),t=AC.currentTime;src.buffer=b;const v=vol*(SFXO?1:SFXV);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(v,t+.15);g.gain.setValueAtTime(v,t+dur-.3);g.gain.linearRampToValueAtTime(0,t+dur);src.connect(g);g.connect(SFXO||sfxG);src.start(t,Math.random()*Math.max(0,b.duration-dur));src.stop(t+dur+.05);return true}
 let WAVE=null;/* 水浴びの音は1つだけ。水浴びが終わったら止める */
 function playWave(vol){if(WAVE||!AC)return;const L=(SBUF.wave||[]).filter(Boolean);if(!L.length)return;const src=AC.createBufferSource(),g=AC.createGain();src.buffer=pick(L);g.gain.value=vol*SFXV;src.connect(g);g.connect(sfxG);const w={src,g};src.onended=()=>{if(WAVE===w)WAVE=null};WAVE=w;src.start()}
@@ -104,6 +117,7 @@ function sched(){
   {const now=AC.currentTime;if(wantSong!==curSong&&!bgmSw){bgmSw=now+2.4;bgmF.gain.cancelScheduledValues(now);bgmF.gain.setValueAtTime(bgmF.gain.value,now);bgmF.gain.linearRampToValueAtTime(0,now+2.2)}
    else if(bgmSw&&now>=bgmSw){bgmSw=0;curSong=wantSong;step=0;nextT=now+.05;bgmF.gain.cancelScheduledValues(now);bgmF.gain.setValueAtTime(0,now);bgmF.gain.linearRampToValueAtTime(1,now+3)}}
   while(nextT<AC.currentTime+.3){
+    if(curSong!=='opening'){nextT+=60/SONGS[curSong].bpm/2;step=(step+1)%64;continue}/* 曲はオープニング（タイトル・マップえらび・プロローグ）だけ。遊んでいるあいだは曲なし（効果音・環境音はそのまま） */
     const g=SONGS[curSong],e=60/g.bpm/2,t=nextT,bar=(step/8)|0,ch=g.chords[bar%4],night=curSong.indexOf('night')===0,bossArr=night&&curSong.slice(-1)==='B',opening=curSong==='opening',battle=curSong==='battle',hinoS=curSong==='hino';
     const n=g.at[step];if(n)tone(n[0],t,n[1]*e*.95,g.lead,battle?.045:opening?.16:night?.09:.075,bgmG);
     if(hinoS){if(n)tone(n[0]-12,t,n[1]*e*.9,'sawtooth',.018,bgmG);/* メロディに、ひくいざらついた音をかさねる */if(step%4===0)tone(ch[0],t,e*3.6,'triangle',.14,bgmG);if(step%8===0)for(const c of ch[1])tone(c,t,e*7.6,'sine',.03,bgmG);if(step%8===0||step%8===3||step%8===5)tone(45,t,.22,'sine',step%8===0?.2:.13,bgmG,36);/* たいこ：ドン・ドドン */if(step%8===6)noise(t,.06,.04,bgmG,1500);if(step%2===1&&Math.random()<.5)noise(t,.02,.012+Math.random()*.012,bgmG,4000);/* 火のはぜる音 */nextT+=e;step=(step+1)%64;continue}
@@ -124,14 +138,14 @@ function quietBeat(ms,k){musicDuck(ms);if(k)setTimeout(()=>sfx(k),380)}
 let ambG=null;const AMB={};
 /* 夕方の虫の声：短い高い音を2回ずつ（のこした音の素材はつかわず、その場でつくる）。夕方（17.5〜20時）だけ、ときどき */
 let AMBNEXT=0;
-function ambAccent(on,h){if(!on||!ambG||!(h>=17.5&&h<20))return;const t=AC.currentTime;if(t<AMBNEXT||DUCKT>t)return;AMBNEXT=t+2.5+Math.random()*4;const f=3800+Math.random()*900;for(let i=0;i<2+(Math.random()*2|0);i++){tone(f,t+i*.11,.06,'sine',.05,ambG,f*.97)}}
+function ambAccent(on,h){if(!on||!ambG||!(h>=17.5&&h<20))return;const t=AC.currentTime;if(t<AMBNEXT||DUCKT>t)return;AMBNEXT=t+2.5+Math.random()*4;const f=3800+Math.random()*900;for(let i=0;i<2+(Math.random()*2|0);i++){tone(f,t+i*.11,.06,'sine',.02,ambG,f*.97)}}
 let ambF=null,AMBIN=false;
 /* 家の中を映しているか：画面のまん中のマスが、屋根をはずした家の中（ふだんの拡大より、ちぢめていないとき） */
 function ambIndoor(){if(!S||!started||typeof HOUSES==='undefined'||!HOUSES.length||typeof cam==='undefined')return false;const vw=VW/cam.z,vh=VH/cam.z,cx=((cam.x+vw/2)/TS)|0,cy=((cam.y+vh/2)/TS)|0;if(cx<0||cy<0||cx>=W||cy>=H)return false;
   if(cam.z<homeZ()*.95)return false;const h=HOUSES.find(q=>q.set.has(cy*W+cx));return !!h&&roofAOf(h)<.5}
 function ambTick(){if(!AC||AC.state!=='running')return;if(!ambG){ambG=AC.createGain();ambG.gain.value=.09;ambF=AC.createBiquadFilter();ambF.type='lowpass';ambF.frequency.value=18000;ambF.Q.value=.4;ambG.connect(ambF);ambF.connect(AC.destination)}
   {const inn=ambIndoor();if(inn!==AMBIN){AMBIN=inn;ambF.frequency.setTargetAtTime(inn?700:18000,AC.currentTime,inn?.25:.4)}}/* 家の中を映すと、外の雨・鳥・虫の音が、壁ごしにやわらかくこもる */
-  const want={birds:0,rain:0,night:0};let h=12,on=false;if(S&&started&&SND.sfx&&$('#title').hidden&&$('#maps').hidden){on=true;h=hour();if(S.rain)want.rain=.45;else{/* 朝と夕方は、ゆっくり入れかわる（夜あけは鳥が少しにぎやか） */const cl=v=>Math.max(0,Math.min(1,v));want.birds=h<5||h>=18.5?0:h<6.5?cl((h-5)/1.5)*1.3:h<7.5?1.3-(h-6.5)*.3:h<17?1:cl((18.5-h)/1.5);want.night=h>=17.5?cl((h-17.5)/1.5)*3:h<5.5?cl((5.5-h)/1)*3:0/* 夜の環境音（もらった音）：大きさ3 */}}
+  const want={birds:0,rain:0,night:0};let h=12,on=false;if(S&&started&&SND.sfx&&$('#title').hidden&&$('#maps').hidden){on=true;h=hour();if(S.rain)want.rain=.45;else{/* 朝と夕方は、ゆっくり入れかわる（夜あけは鳥が少しにぎやか） */const cl=v=>Math.max(0,Math.min(1,v));want.birds=h<5||h>=18.5?0:h<6.5?cl((h-5)/1.5)*1.3:h<7.5?1.3-(h-6.5)*.3:h<17?1:cl((18.5-h)/1.5);want.night=h>=17.5?cl((h-17.5)/1.5)*1:h<5.5?cl((5.5-h)/1)*1:0/* 夜の環境音（もらった音・虫の声）：大きさ1 */}}
   ambAccent(on&&!S.rain&&!(typeof paused!=='undefined'&&paused),h);
   for(const k in want){let a=AMB[k];if(!a){if(!want[k])continue;const b=(SBUF[k]||[])[0];if(!b)continue;const src=AC.createBufferSource(),g=AC.createGain();src.buffer=b;src.loop=true;src.loopStart=.06;src.loopEnd=b.duration-.06;g.gain.value=0;src.connect(g);g.connect(ambG);src.start();a=AMB[k]={src,g}}a.g.gain.setTargetAtTime(want[k],AC.currentTime,.8)}}
 const lastSfx={};
