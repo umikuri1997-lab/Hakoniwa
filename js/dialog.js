@@ -8,7 +8,7 @@ function dlgNext(){const d=$('#dialog');if(!d.hidden||!DLGQ.length)return;const 
 /* 会話の演出：shake=画面がゆれる／flash=白く光る／dim=少し暗くなる／beat=ひと呼吸おく */
 function dashDemo(){/* フタバが、ヨルノオオカゲのほうへ飛び出す（会話中は世界が止まるので、ここで動かす） */const f=S.res.find(r=>r.name===POKO),e=S.enemies.find(q=>q.type==='boss2'&&q.spawned&&!q.dead);if(!f||!e||(f.dashAt!=null&&performance.now()-f.dashAt<30000))return;f.dashAt=performance.now();
   const dx=e.x-f.x,dy=e.y-f.y,d=Math.hypot(dx,dy)||1,len=Math.min(4,Math.max(0,d-3)),sx=f.x,sy=f.y;let tx=sx+dx/d*len,ty=sy+dy/d*len;
-  if(!walk((ty|0)*W+(tx|0))){tx=sx;ty=sy}f.face=dx>=0?1:-1;f.path=[];JUMP.set(f,performance.now());sfx('hit');
+  if(!walkR((ty|0)*W+(tx|0))){tx=sx;ty=sy}f.face=dx>=0?1:-1;f.path=[];JUMP.set(f,performance.now());sfx('hit');
   const t0=performance.now(),step=now=>{const p=Math.min(1,(now-t0)/450),k=1-Math.pow(1-p,3);f.x=sx+(tx-sx)*k;f.y=sy+(ty-sy)*k;if(p<1)requestAnimationFrame(step)};requestAnimationFrame(step)}
 function stageMotion(c){/* 会話のあいだ、世界は止まっているので、ここで動きを出す：hop＝話している子がとびはねる／cheer＝みんなが、とびはねて、よろこぶ */const now=performance.now();if(c==='hop'||c==='cheer'||c==='cheerflash'){const L=c==='hop'?S.res.filter(r=>r.name===DLGA.who):S.res.filter(r=>!r.hidden);L.forEach((r,i)=>{setTimeout(()=>{if(r&&S&&S.res.includes(r)){JUMP.set(r,performance.now());if(c!=='hop')JOYU.set(r,performance.now()+2600)}},c==='hop'?0:i*120)});if(c!=='hop')sfx('level')}}
 function nushiFace(c){/* ヌシ様のむき：nfF＝フタバのほう（よこむき）／nfG＝守り神（正面） */const n=S&&S.nushi;if(!n)return;n.mv=0;n.path=[];if(c==='nfG'){n.dir=1}else{const f=S.res.find(r=>r.name===POKO);n.dir=0;if(f)n.face=f.x>=n.x?1:-1}}
