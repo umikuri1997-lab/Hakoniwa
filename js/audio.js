@@ -56,6 +56,19 @@ function voiceHmm(r){voiceStop();if(!AC||!SND.sfx||AC.state!=='running')return;c
   const src=AC.createBufferSource(),g=AC.createGain();src.buffer=b;src.playbackRate.setValueAtTime(vo*.95,t);src.playbackRate.setValueAtTime(vo*.95,t+.16);src.playbackRate.linearRampToValueAtTime(vo*1.35,t+.36);
   g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.7*(SND.vv??1),t+.03);g.gain.setValueAtTime(.7*(SND.vv??1),t+.3);g.gain.linearRampToValueAtTime(0,t+.42);src.connect(g);g.connect(voxC);src.start(t,Math.random()*b.duration*.5);src.stop(t+.45);VOICE={src,g}}
 function voiceStop(){if(!VOICE)return;const v=VOICE;VOICE=null;clearTimeout(v.end);try{const t=AC.currentTime;v.g.gain.setTargetAtTime(0,t,.04);v.src.stop(t+.2)}catch(e){}}
+/* せいれいどうしのおしゃべりの、小さな話し声：会話の声（SAMPLES.voice）を、話す子の声の高さで、短く切って鳴らす。
+   声の作り（コンプレッサー）は会話の声と同じで、大きさは会話の声の CHATK。マップの場所の音と同じく、左右・遠いほど小さく・こもる（sfxPos）。
+   2人で、かわりばんこに話す（ときどき同じ子がつづける）。時間は実時間（早送りでも、しゃべる速さはかわらない） */
+const CHATK=.3,CHATGAP=.35,CHATVT=new WeakMap();let CHATLAST=0;
+function chatMurmur(r,p){if(!p||!AC||!SND.sfx||AC.state!=='running'||VOICE||(typeof SKIP!=='undefined'&&SKIP))return;const now=performance.now()/1000,st=CHATVT.get(r)||{n:0,who:0};if(now<st.n)return;CHATVT.set(r,st);
+  const b=(SBUF.voice||[])[0];if(!b)return;const q=sfxPos((r.x+p.x)/2,(r.y+p.y)/2);if(!q){st.n=now+1;return}if(now-CHATLAST<CHATGAP)return;CHATLAST=now;
+  const sp=st.who?p:r;if(Math.random()<.75)st.who=1-st.who;const vo=(sp.vr&&sp.vr.vo)||(KEYVR[sp.name]&&KEYVR[sp.name].vo)||1.12,dur=.35+Math.random()*.6,t=AC.currentTime;
+  const src=AC.createBufferSource(),env=AC.createGain(),cp=AC.createDynamicsCompressor(),g=AC.createGain();src.buffer=b;
+  src.playbackRate.setValueAtTime(vo,t);for(let x=t;x<t+dur;){x+=.08+Math.random()*.08;src.playbackRate.linearRampToValueAtTime(vo*(.92+Math.random()*.18),x)}/* ひと言ずつ、少し上がり下がり */
+  env.gain.setValueAtTime(0,t);env.gain.linearRampToValueAtTime(.8,t+.04);env.gain.setValueAtTime(.8,t+dur-.08);env.gain.linearRampToValueAtTime(0,t+dur);
+  cp.threshold.value=-38;cp.ratio.value=12;cp.knee.value=4;cp.attack.value=.003;cp.release.value=.1;g.gain.value=.5*CHATK*q.v*(SND.vv??1);
+  src.connect(env);env.connect(cp);cp.connect(g);let h=g;if(AC.createStereoPanner){const pn=AC.createStereoPanner();pn.pan.value=q.p;h.connect(pn);h=pn}{const f=AC.createBiquadFilter();f.type='lowpass';f.frequency.value=Math.min(q.l,2600);f.Q.value=.5;h.connect(f);h=f}h.connect(sfxG);
+  src.start(t,Math.random()*Math.max(0,b.duration-dur-.1));src.stop(t+dur+.05);st.n=now+dur+.15+Math.random()*.5}
 function playSeg(k,vol,dur){if(!AC||!SND.sfx||AC.state!=='running')return false;const L=(SBUF[k]||[]).filter(Boolean);if(!L.length)return false;const b=pick(L),src=AC.createBufferSource(),g=AC.createGain(),t=AC.currentTime;src.buffer=b;const v=vol*(SFXO?1:SFXV);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(v,t+.15);g.gain.setValueAtTime(v,t+dur-.3);g.gain.linearRampToValueAtTime(0,t+dur);src.connect(g);g.connect(SFXO||sfxG);src.start(t,Math.random()*Math.max(0,b.duration-dur));src.stop(t+dur+.05);return true}
 let WAVE=null;/* 水浴びの音は1つだけ。水浴びが終わったら止める */
 function playWave(vol){if(WAVE||!AC)return;const L=(SBUF.wave||[]).filter(Boolean);if(!L.length)return;const src=AC.createBufferSource(),g=AC.createGain();src.buffer=pick(L);g.gain.value=vol*SFXV;src.connect(g);g.connect(sfxG);const w={src,g};src.onended=()=>{if(WAVE===w)WAVE=null};WAVE=w;src.start()}
