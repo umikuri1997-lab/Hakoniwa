@@ -289,10 +289,8 @@ def rimshade(im,dark=(16,4),light=(9,-3),vmin=45):
     for y,x in zip(*np.nonzero(A&(a[...,:3].max(-1)<vmin*2.55))):   # 輪郭・かげの黒っぽい色
         h,s,v=colorsys.rgb_to_hsv(*(a[y,x,:3]/255.0));a[y,x,:3]=[round(q*255) for q in colorsys.hsv_to_rgb(h,s,vmin/100)]
     return Image.fromarray(a)
-TONE5L=(-0.6,-0.5,0.8)   # 木（見おろし4度）の tone5 の光（画面の 右・下・手前 の成分）
-def _sun():
-    e=np.radians(4);lx,ly,lz=TONE5L;L=np.array([lx,ly*np.sin(e)+lz*np.cos(e),-ly*np.cos(e)+lz*np.sin(e)]);return L/np.linalg.norm(L)
-SUN=tuple(float(v) for v in _sun())   # 自然の物の光（太陽）：3Dの向き（x 右・y 手前・z 上）。木の絵のかげの光を3Dの向きにもどした物。岩・きのこ（LIGHT）・落ち影（castshadow.py）も、この光（持ち主がきめた：太陽は1つ）
+SUNEL=30;SUNAZ=20   # 太陽：高さの角（度）・正面から左へのかたむき（度）。持ち主がきめた（左からを弱めて、正面よりに）
+SUN=(-float(np.cos(np.radians(SUNEL))*np.sin(np.radians(SUNAZ))),float(np.cos(np.radians(SUNEL))*np.cos(np.radians(SUNAZ))),float(np.sin(np.radians(SUNEL))))   # 自然の物の光（太陽）：3Dの向き（x 右・y 手前・z 上）。木・茂み（tone5 の light=sunscreen(ELEV)）・岩・きのこ（LIGHT）・落ち影（castshadow.py）も、この光（持ち主がきめた：太陽は1つ）
 def sunscreen(elev):
     """SUN を、見おろし elev 度のカメラの、画面の 右・下・手前 の成分にする（tone5 の light）。画面の下＝(0,sin e,−cos e)・手前＝(0,cos e,sin e)"""
     e=np.radians(elev);L=np.array(SUN);return (float(L[0]),float(L[1]*np.sin(e)-L[2]*np.cos(e)),float(L[1]*np.cos(e)+L[2]*np.sin(e)))
