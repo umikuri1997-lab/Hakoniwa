@@ -53,7 +53,7 @@ function godFix(j){/* 守り神の修理：タップして、パワーと素材�
   const m=BL[id].fixm||{};askYesNo(BL[id].name,(b?'建てなおす':'直す')+'？（'+SP(c)+'・'+matTxt(m)+'）',()=>{if(isNight())return toast('夜のあいだは、直せません');if(S.pt<c)return toast('パワーが足りません');if(!matOK(m))return toast('素材が足りません');
     if(b){const a={re:b.id,obj:b.j};if(!repairFree(a)||fp(b.id,b.j%W,(b.j/W)|0,b.rot||0).some(([x,y])=>S.obj[y*W+x]))return toast('じゃまな物があって、建てなおせません');S.obj[b.j]=b.id;setRot(b.j,b.rot);setParts(b.id,b.j,'part');delete S.hp[b.j];if(BL[b.id].dyn)S.dyn[b.j]={g:0};if(b.L)S.hp['L'+b.j]=b.L;S.broken=S.broken.filter(q=>q.j!==b.j);recount();burst(b.j,'block')}
     else{if(S.obj[j]!==o)return;if(DEFS.has(o))delete S.hp[j];else S.hp[j]=BL[o].hp;if(DECAYW.has(o))recount()}
-    S.pt-=c;for(const k in m)S.mat[k]-=m[k];dirty=true;sfx('repair');toast(BL[id].name+'を直した','good')},()=>{});return true}
+    S.pt-=c;for(const k in m)S.mat[k]-=m[k];dirty=true;sfx('repair');toast(BL[id].name+'を直した','good')},()=>{},b?'建てなおす':'直す');return true}
 /* 防衛設備：「コワイノ」はまずこれをこわしにくる */
 const DEFS=new Set(['watch','yogan','spike','puddle','sticky','firetrap','gust']),DEFHP={watch:30,yogan:30,spike:5},defHp=o=>DEFHP[o]||4;
 let DEFC={t:0,l:[]};function defList(){const now=performance.now();if(now-DEFC.t>1000){DEFC.l=[];for(let j=0;j<W*H;j++)if(DEFS.has(S.obj[j]))DEFC.l.push(j);DEFC.t=now}return DEFC.l}

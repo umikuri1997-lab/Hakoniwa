@@ -125,7 +125,7 @@ const J3F=[],J3FMS=3200,J3FPEEL=450;let J3FC=null;
 function juiceFirst(j,id){if(!j3OK()||!BL[id]||BL[id].kind!=='furn'||J3F.length>3)return;J3F.push({j,t0:performance.now()+450,s:0})}
 function j3Sticker(){if(J3FC)return J3FC;const tx='はじめて！',W0=58,H0=16,c=document.createElement('canvas');c.width=W0;c.height=H0;const g=c.getContext('2d');
   g.fillStyle='#ffffff';g.fillRect(1,0,W0-2,H0);g.fillRect(0,1,W0,H0-2);g.fillStyle='#fff3c2';g.fillRect(2,2,W0-4,H0-4);g.fillStyle='#e8d29a';g.fillRect(2,H0-3,W0-4,1);/* 白いふち・クリーム色・下にうすいかげ */
-  const t=document.createElement('canvas');t.width=W0;t.height=H0;const h=t.getContext('2d');h.font='10px PixelMplus10';h.textAlign='center';h.textBaseline='middle';h.fillStyle='#c0503a';h.fillText(tx,W0/2,H0/2);
+  const t=document.createElement('canvas');t.width=W0;t.height=H0;const h=t.getContext('2d');h.font='10px PixelMplus10';h.textAlign='center';h.textBaseline='middle';h.fillStyle='#c0392b';h.fillText(tx,W0/2,H0/2);
   const d=h.getImageData(0,0,W0,H0);for(let i=3;i<d.data.length;i+=4)d.data[i]=d.data[i]>110?255:0;h.putImageData(d,0,0);g.drawImage(t,0,0);t.width=t.height=0;return J3FC=c}
 function juiceFirstDraw(now){if(!J3F.length)return;const c=ctx,sm=c.imageSmoothingEnabled;c.imageSmoothingEnabled=false;const Z=j3Sticker();
   for(let i=J3F.length-1;i>=0;i--){const f=J3F[i],e=now-f.t0;if(e<0)continue;if(e>J3FMS+J3FPEEL){J3F.splice(i,1);continue}
