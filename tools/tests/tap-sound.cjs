@@ -14,14 +14,15 @@ const o=await run(`(async()=>{cam.z=2;centerOn(CX*TS,CY*TS);setMode('look');CRIT
   const scr=(x,y)=>({sx:(x*TS-cam.x)*cam.z,sy:(y*TS-cam.y)*cam.z});
   const tap=async(x,y)=>{log.length=0;closeSheet();const q=scr(CX+x+.5,CY+y+.6);onTap(q.sx,q.sy);await new Promise(r=>setTimeout(r,20));closeSheet();return log.filter(k=>k!=='close'&&k!=='tap'&&k!=='dust').join(',')};
   for(const [n,x,y] of [['chair',-6,-4],['bed',-4,-4],['flower',-2,-4],['rock',0,-4],['tree',2,-4],['farm',4,-4],['wall',6,-4],['fence',-6,0],['joro',-4,0],['ground',2,3],['water',-6,3],['stonefloor',-2,3]])out[n]=await tap(x,y);
-  out.mat=['statue','tower','takenoko','pouf','curtain','dtable','stonegate'].map(id=>BL[id]?id+':'+tapMatOf(id):id+':-').join(' ');
+  out.mat=['statue','statueb','altar','tower','takenoko','pouf','curtain','dtable','stonegate'].map(id=>BL[id]?id+':'+tapMatOf(id):id+':-').join(' ');
   sfx=sfx0;return out})()`);
 console.log(JSON.stringify(o));
 const want={chair:'twood',bed:'tcloth',flower:'tgrass',rock:'tstone',tree:'twood',farm:'tsoil',wall:'tstone',fence:'twood',joro:'tcan',ground:'tsoil',water:'twater',stonefloor:'tstone'};
-const rec=await run(`(async()=>{audioInit();if(typeof loadSamples==='function'&&!SBUF.twood)loadSamples();const K=['twood','tstone','tcan','tcloth','tgrass','tsoil','twater','tbell','tfoe','tweb','tani','tplace'];
+const rec=await run(`(async()=>{audioInit();if(typeof loadSamples==='function'&&!SBUF.twood)loadSamples();const K=['twood','tstone','tcan','tcloth','tgrass','tsoil','twater','tbell','tfoe','tweb','tani','tplace','tsacred'];
   for(let i=0;i<100&&K.some(k=>!(SBUF[k]||[]).filter(Boolean).length);i++)await new Promise(r=>setTimeout(r,100));
   if(AC.state!=='running')await AC.resume();const out={};for(const k of K)out[k]=[(SAMPLES[k]||[]).length,(SBUF[k]||[]).filter(Boolean).length,playU(k,.3)];return out})()`);
 console.log(JSON.stringify(rec));
 for(const k in rec)assert.ok(rec[k][0]>0&&rec[k][1]===rec[k][0]&&rec[k][2],k+' の録音が読みこめて鳴る（本物の音）');
 for(const k in want)assert.equal(o[k],want[k],k+' の音（open・leaf はかさねない）');
+assert.ok(/statue:tstone statueb:tstone altar:tstone tower:tsacred /.test(o.mat),'神殿・台座は石、草原の御神木は太い木の音 '+o.mat);
 assert.deepEqual(errors,[]);console.log('tap-sound ok');await browser.close()})();

@@ -318,14 +318,16 @@ const boardMax=()=>S.flags.board5?5:3;
    作業台が1つもないときは、作業台そのものの依頼だけ、いままでどおり依頼ボードのそばの地面で作る（o.gnd） */
 const isBench=(o,j)=>j!=null&&j>=0&&S.obj[j]==='wbench'&&S.dyn[j]&&S.dyn[j].order===o.id;
 const benchOf=o=>o&&isBench(o,o.cs)?o.cs:-1;
-function benchBoxes(cs){/* 作業台のとなり（たて・よこ）の箱（かべかけの物は、すぐ上の壁だけ） */const L=[];if(cs==null||cs<0)return L;for(const k of[cs+1,cs-1,cs+W,cs-W]){if(k<0||k>=W*H||Math.abs(k%W-cs%W)>1)continue;if(!boxTypeAt(k)||!boxSide(cs,k))continue;const a=anc(k);if(!L.includes(a))L.push(a)}return L}
+function wbCells(j,s){/* 作業台（よこ2マス・向き4つ）の、作業台のマス b と材料置き場のマス y。向き0：左が作業台・1：上が作業台・2：右が作業台・3：下が作業台 */s=s||S;const r=(s.rot&&s.rot[j])||0,d=r%2?W:1;return r>=2?{b:j+d,y:j}:{b:j,y:j+d}}
+function wbenchAt(s,j,r){/* 作業台をマス j（左上）に向き r で置く（置けるかは見ない） */const d=r%2?W:1;s.obj[j]='wbench';s.obj[j+d]='part';(s.ref||(s.ref={}))[j+d]=j;(s.rot||(s.rot={}))[j]=r;(s.dyn||(s.dyn={}))[j]=s.dyn[j]||{}}
+function benchBoxes(cs){/* 作業台・材料置き場のとなり（たて・よこ）の箱（かべかけの物は、すぐ上の壁だけ） */const L=[];if(cs==null||cs<0)return L;const c=wbCells(cs),me=[c.b,c.y];for(const p of me)for(const k of[p+1,p-1,p+W,p-W]){if(k<0||k>=W*H||Math.abs(k%W-p%W)>1||me.includes(k))continue;if(!boxTypeAt(k)||!boxSide(p,k))continue;const a=anc(k);if(!L.includes(a))L.push(a)}return L}
 function benchHas(cs,key){let n=0;for(const a of benchBoxes(cs))n+=boxHas(a,key);return n}
 function benchLeft(t){/* まだ運んでいない素材のうち、作業台のとなりの箱にない分（運ぶ分） */const m=needLeft(t),cs=(S.orders||[]).includes(t)?benchOf(t):-1;if(cs<0)return m;for(const k in m){m[k]-=Math.min(m[k],benchHas(cs,k));if(m[k]<=0)delete m[k]}return m}
 const benchEx=t=>{const cs=(S.orders||[]).includes(t)?benchOf(t):-1;return cs<0?null:new Set(benchBoxes(cs))};
 const benchDone=t=>hasNeed(t)&&!Object.keys(benchLeft(t)).length;/* のこりの素材は、ぜんぶとなりの箱にある */
 function benchPull(o){/* 作業台のとなりの箱から、いる素材をとる（運ばない） */const cs=benchOf(o);if(cs<0)return 0;const m=needLeft(o),g=o.got||(o.got={});let n=0;for(const key in m)for(const a of benchBoxes(cs)){if(m[key]<=0)break;const t=boxOutR(a,key,m[key]);if(t>0){g[key]=(g[key]||0)+t;m[key]-=t;n+=t}}return n}
 function wbenchLost(o){/* 作業台がなくなった・うつした：運びこんだ素材は、そこに落とし、作っていた子は手をとめる */const j=o.cs;o.cs=null;o.worker=null;if(j!=null&&o.got&&Object.keys(o.got).length)gotDrop(o,j);for(const r of S.res)if(r.act&&r.act.type==='craft'&&r.act.order===o.id){endAct(r);r.act=null;r.path=[]}}
-function wbenchScore(o,j){let n=0;const m=needLeft(o);for(const k in m)n+=Math.min(m[k],benchHas(j,k));return n}
+function wbenchScore(o,j){/* となりの箱にある、いる素材の数 */let n=0;const m=needLeft(o);for(const k in m)n+=Math.min(m[k],benchHas(j,k));return n}
 function wbenchTick(){/* 1秒ごと（と、依頼をはったとき）：依頼に空いた作業台をわりあてる */if(!S)return;const L=S.orders||(S.orders=[]),ids=new Set(L.map(o=>o.id));const B=[];
   for(let j=0;j<W*H;j++){if(S.obj[j]!=='wbench')continue;const d=S.dyn[j];if(d&&d.order!=null&&!(ids.has(d.order)&&L.some(o=>o.id===d.order&&o.cs===j)))delete d.order;B.push(j)}
   for(const o of L){if(o.gnd){if(B.length&&!(o.got&&Object.keys(o.got).length)&&!S.res.some(r=>r.act&&r.act.type==='craft'&&r.act.order===o.id)){delete o.gnd;o.cs=null}continue}/* 地面で作っていた作業台の依頼：作業台ができたら、そちらで */if(o.cs!=null&&!isBench(o,o.cs))wbenchLost(o)}
@@ -338,8 +340,14 @@ function wbenchFix(){/* 読みこんだとき */if(!S.flags.wbFurn1){S.flags.wbF
     const w=qsIx('wbench'),past=S.free||((S.world||0)!==0?(S.quest||0)>0:S.cleared||(S.quest||0)>w||(S.quest||0)===w&&S.qTalked);/* 火山は、神殿を直したときにもらう */
     if(past&&!S.obj.includes('wbench')&&!((S.inv||{}).wbench>0)){S.unlocked=S.unlocked||{};S.unlocked.wbench=true;giveItem('wbench',1,1);villageTimeout(()=>toast('カミサマが、作業台をおそなえ箱に入れてくれた','good'),1800)}
     if(past&&!S.free)(S.recipes||(S.recipes={})).wbench=true}
+  if(!S.flags.wbYard1){S.flags.wbYard1=1;/* 作業台に材料置き場がついて、よこ2マスになった：まわりが空いていれば広げ、空いていなければ、もちものにもどす */
+    for(let j=0;j<S.obj.length;j++){if(S.obj[j]!=='wbench')continue;const d=S.dyn[j];let ok=false;S.obj[j]='';
+      for(const [r,a] of [[0,j],[1,j],[2,j-1],[3,j-W]]){if(a<0)continue;const pr=PLROTS.wbench;PLROTS.wbench=r;let c=false;try{c=canPlace('wbench',a%W,(a/W)|0,true)}catch(e){}finally{if(pr==null)delete PLROTS.wbench;else PLROTS.wbench=pr}
+        if(!c)continue;delete S.dyn[j];wbenchAt(S,a,r);S.dyn[a]=d||{};for(const o of S.orders||[])if(o.cs===j)o.cs=a;ok=true;break}
+      if(!ok){delete S.dyn[j];giveItem('wbench',1,1)}}
+    recount()}
   wbenchTick()}
-function wbenchStand(cs,G){for(const k of[cs+1,cs-1,cs+W,cs-W]){if(k<0||k>=W*H||Math.abs(k%W-cs%W)>1)continue;if(walk(k)&&G.dist[k]>=0)return k}return -1}/* 作業台の横（なければ前・うしろ）に立って作る（台の上の素材がかくれないように） */
+function wbenchStand(cs,G){const c=wbCells(cs),b=c.b;for(const k of[b+1,b-1,b+W,b-W]){if(k===c.y||k<0||k>=W*H||Math.abs(k%W-b%W)>1)continue;if(walk(k)&&G.dist[k]>=0)return k}return -1}/* 作業台の横（なければ前・うしろ）に立って作る（台の上の素材がかくれないように） */
 /* 材料置き場（matyard）：素材のいる依頼・建てる所・設計図のとなりに1マス（S.dyn[j].yt：'o'+依頼・'s'+建てる所・'b'+設計図）。せいれいは運んだ素材をここへ置く（ydrop）。
    絵は、運んだ素材の合計のわりあいで4まい（matyard#0 空・#1 半分より少ない・#2 半分から・#3 ぜんぶ）。1秒ごとに出す・かたづける（yardTick） */
 function yardOwner(yt){/* {ts:運ぶ先の一覧, an:となりにするマス, g:運んだ数, n:いる数}（なければ null） */if(typeof yt!=='string')return null;const id=+yt.slice(1);let ts=[],an=[],g=0,n=0;
@@ -350,7 +358,7 @@ function yardOwner(yt){/* {ts:運ぶ先の一覧, an:となりにするマス, g
   else return null;return{ts,an,g:Math.min(g,n),n}}
 const yardStage=yt=>{const w=yardOwner(yt);if(!w||!w.n||w.g<=0)return 0;return w.g>=w.n?3:w.g*2<w.n?1:2};
 const yardKey=bid=>{if(typeof bid!=='string')return null;if(bid[0]==='s'){const d=S.dyn[+bid.slice(1)];return d&&d.bp!=null?'b'+d.bp:bid}return bid};/* 運ぶ先（bid：建てる所・依頼）の置き場のキー（設計図の部品は、設計図の置き場） */
-function yardAt(yt){if(!yt)return -1;const L=YARDS[yt];return L!=null&&S.obj[L]==='matyard'&&S.dyn[L]&&S.dyn[L].yt===yt?L:-1}
+function yardAt(yt){if(!yt)return -1;if(yt[0]==='o'){const o=(S.orders||[]).find(q=>q.id===+yt.slice(1)),cs=benchOf(o);if(cs>=0)return wbCells(cs).y}/* 作業台の依頼は、作業台についた材料置き場 */const L=YARDS[yt];return L!=null&&S.obj[L]==='matyard'&&S.dyn[L]&&S.dyn[L].yt===yt?L:-1}
 let YARDS={};/* yt → マス（yardTick で作りなおす。セーブには S.dyn[j].yt だけ） */
 function yardPut(yt,w,G){/* となり（たて・よこ → ななめ → 2マス先）の空いたマスに置く。せいれいが行けて、置き場のとなりに立てる所 */const ex=new Set();for(const e of S.bp||[]){for(const c of e.cells)ex.add(c);for(const p of e.ps)if(p.t==='door'||p.t==='gate')for(const k of[p.j+1,p.j-1,p.j+W,p.j-W])ex.add(k)}/* これから建つドア・柵のドアの前も、あけておく */for(const o of S.orders||[])if(o.cs!=null)ex.add(o.cs)
   const door=k=>HOME_DOORS.has(typeAt(k))||GATE_IDS.has(typeAt(k)),inH=k=>HOUSES.some(h=>h.inside.has(k));
@@ -361,8 +369,8 @@ function yardPut(yt,w,G){/* となり（たて・よこ → ななめ → 2マ�
   for(const ds of[rings.slice(0,4),rings.slice(4),r2])for(const a of w.an)for(const [dx,dy] of ds){const x=a%W+dx,y=((a/W)|0)+dy;if(x<0||y<0||x>=W||y>=H)continue;const j=y*W+x;if(ok(j)){S.obj[j]='matyard';S.dyn[j]={yt};YARDS[yt]=j;return j}}
   return -1}
 function yardTick(){/* 1秒ごと：運ぶ先のなくなった置き場をかたづけ、素材のいる所に置き場を出す */if(!S||typeof MEMRUN!=='undefined'&&MEMRUN)return;wbenchTick();let ch=false;YARDS={};
-  for(let j=0;j<W*H;j++){if(S.obj[j]!=='matyard')continue;const d=S.dyn[j],yt=d&&d.yt;if(!yt||YARDS[yt]!=null||!yardOwner(yt)){S.obj[j]='';delete S.dyn[j];ch=true;continue}YARDS[yt]=j}
-  const want=[];for(const o of S.orders||[])if((o.gnd||benchOf(o)>=0)&&Object.keys(benchLeft(o)).length)want.push('o'+o.id);/* 作業台のある依頼で、運ぶ素材があるときだけ（となりの箱にある分は運ばない） */
+  for(let j=0;j<W*H;j++){if(S.obj[j]!=='matyard')continue;const d=S.dyn[j],yt=d&&d.yt;if(!yt||YARDS[yt]!=null||!yardOwner(yt)||yt[0]==='o'&&benchOf((S.orders||[]).find(q=>q.id===+yt.slice(1)))>=0){S.obj[j]='';delete S.dyn[j];ch=true;continue}YARDS[yt]=j}/* 作業台の依頼の置き場は、作業台についている */
+  const want=[];for(const o of S.orders||[])if(o.gnd&&Object.keys(benchLeft(o)).length)want.push('o'+o.id);/* 地面で作る作業台の依頼だけ（作業台には材料置き場がついている） */
   for(let j=0;j<W*H;j++)if(S.obj[j]==='site'&&S.dyn[j]&&S.dyn[j].bp==null&&S.dyn[j].mat&&Object.values(S.dyn[j].mat).some(v=>v>0))want.push('s'+j);
   for(const e of S.bp||[])want.push('b'+e.id);
   let G=null;for(const yt of want){if(YARDS[yt]!=null)continue;const w=yardOwner(yt);if(!w||!w.n)continue;if(!G){const r0=S.res.find(q=>!q.hidden);if(!r0)break;G=bfs(r0.x|0,r0.y|0)}if(yardPut(yt,w,G)>=0)ch=true}
@@ -373,7 +381,7 @@ function yardTxt(yt){/* タップの知らせ：素材ごとの「木材（2/5�
   return Object.keys(n).map(k=>itemKeyName(k)+'（'+g[k]+'/'+n[k]+'）').join('　')}
 /* 依頼をやめる：パワーと素材はもどる。作っていた子は手をとめる */
 function cancelOrder(oid){const k=S.orders.findIndex(q=>q.id===oid);if(k<0)return;const o=S.orders[k],b=BL[o.type];S.orders.splice(k,1);
-  S.pt+=b.pc;const cs=o.cs;wbenchDel(o);if(o.mat||o.food)siteRefund(o,cs!=null?cs:BOARD);else for(const m in b.mat||{})S.mat[m]=(S.mat[m]||0)+b.mat[m];if(b.sand)S.sand=(S.sand||0)+b.sand;/* とっておいた素材はもどし、運んだ分は作る場所（なければ依頼ボードのまえ）に置く */
+  S.pt+=b.pc;const cs=benchOf(o)>=0?wbCells(o.cs).y:o.cs;wbenchDel(o);if(o.mat||o.food)siteRefund(o,cs!=null?cs:BOARD);/* 作業台なら、材料置き場のところに */else for(const m in b.mat||{})S.mat[m]=(S.mat[m]||0)+b.mat[m];if(b.sand)S.sand=(S.sand||0)+b.sand;/* とっておいた素材はもどし、運んだ分は作る場所（なければ依頼ボードのまえ）に置く */
   for(const r of S.res)if(r.act&&r.act.type==='craft'&&r.act.order===oid){endAct(r);r.act=null;r.path=[]}
   toast(b.name+'の依頼をやめた');sfx('post');renderSheet()}
 const ORDER_LOCK={'stor':'crate'};

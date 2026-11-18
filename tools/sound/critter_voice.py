@@ -13,6 +13,7 @@
   insect.zip（insect0〜5.ogg）        https://opengameart.org/content/insect-sounds
   grasshopper.zip                    https://opengameart.org/content/grasshopper
   im.mp3                             https://opengameart.org/content/8-wet-squish-slurp-impacts
+  80-CC0-creature-SFX_0.zip（人の声で作った生き物の声） https://opengameart.org/content/80-cc0-creature-sfx
   bee.zip（bee.wav。IMadeIt「Single Bee Sound」CC-BY 3.0。設定の画面に作者名をのせる） https://opengameart.org/content/single-bee-sound
 使いかた：python3 tools/sound/critter_voice.py <上の物をおとして、zipをひらいたフォルダ> [名前,名前...]
 やること：切る（はじめ・長さ）→ 高さをずらす → 低い所・高い所をけずる → 出だし・終わりをなめらかに
@@ -27,28 +28,34 @@ SET = {
                ('birds-isaiah658.ogg', 11.40, .40, 1, 1200, 12000), ('birds-isaiah658.ogg', 14.90, .42, 1, 1200, 12000)],  # 小鳥：ちゅん・ぴぴっ（本物の小鳥の録音）
   'cv_risu':  [('montage-sfx-*.ogg', .50, .22, 1.35, 500, 11000), ('montage-sfx-*.ogg', 1.20, .27, 1.35, 500, 11000)],  # りす：ねずみの声を高くした、きゅきゅっ
   'cv_nezumi':[('mouse-2.wav', 0, .28, 1, 500, 11000), ('mouse-2.wav', .40, .28, 1, 500, 11000)],  # ねずみ：ちゅっ
-  'cv_usagi': [('RabbitEating.wav', 2.30, .30, 1, 200, 9000), ('RabbitEating.wav', 2.85, .30, 1, 200, 9000)],  # うさぎ：もぐもぐ（うさぎは、ほとんど鳴かない）
-  'cv_hari':  [('**/ex4.mp3', .08, .50, 1, 150, 8000), ('**/ex3.mp3', .25, .45, 1, 150, 8000)],  # はりねずみ：ふんふん
-  'cv_mogura':[('dig_underground_1.mp3', .80, .45, 1, 120, 6000)],  # もぐら：ざくざく（土をほる）
+  'cv_usagi': [('**/cute_05.ogg', 0, .51, 1.4, 400, 9000, 'v')],  # うさぎ：ぷぅ（小さな声を高く。持ち主がえらんだ）
+  'cv_hari':  [('**/cute_07.ogg', 0, .29, 1.7, 400, 9000, 'v')],  # はりねずみ：きゅっ（持ち主がえらんだ）
+  'cv_mogura':[('**/cute_04.ogg', 0, .51, 1.5, 300, 8000, 'v')],  # もぐら：むぅ（持ち主がえらんだ）
   'cv_frog':  [('ribbit_02.mp3', 0, .45, 1, 150, 8000), ('ribbit_03.mp3', .15, .45, 1, 150, 8000)],  # かえる：けろっ
   'cv_bee':   [('bee/bee.wav', 1.55, .55, 1, 120, 9000), ('bee/bee.wav', .30, .50, 1, 120, 9000)],  # みつばち：ぶーん（本物のハチの羽音、CC-BY 3.0）
   'cv_bug':   [('insect/insect1.ogg', 0, .20, .8, 800, 11000), ('insect/insect4.ogg', 0, .20, .8, 800, 11000)],  # ちょう・てんとうむし：ぱたっ（虫の羽の音）
   'cv_tonbo': [('grasshopper/grasshopper.ogg', 1.25, .30, .7, 400, 10000)],  # とんぼ：はたはた
   'cv_hotaru':[('cricketsounds090613.wav', 7.98, .45, 1, 1500, 11000), ('cricketsounds090613.wav', 8.73, .40, 1, 1500, 11000), ('cricketsounds090613.wav', 19.20, .45, 1, 1500, 11000)],  # ほたる：りりっ（夜の虫の声。本物のコオロギの録音）
-  'cv_snail': [('im.mp3', 1.85, .30, 1.3, 300, 6000)],  # かたつむり：ぬるっ
+  'cv_snail': [('**/burble_02.ogg', 0, .50, 1.5, 150, 1200, 's')],  # かたつむり：ぽこぽこ（あわの音を、うんとこもらせ、出だしをゆっくり。持ち主がえらんだ）
 }
 def run(a): subprocess.run(a, check=True, capture_output=True)
 res = {}
 for k, L in SET.items():
   if ONLY and k not in ONLY: continue
   res[k] = []
-  for pat, st, ln, rt, hp, lp in L:
+  for pat, st, ln, rt, hp, lp, *md in L:
+    md = md[0] if md else ''
     fs = glob.glob(os.path.join(SRC, pat), recursive=True)
     if not fs: sys.exit('みつからない: ' + pat)
     with tempfile.TemporaryDirectory() as td:
       w = os.path.join(td, 'a.wav')
-      af = (f'aresample=44100,atrim={st}:{st+ln},asetpts=PTS-STARTPTS,asetrate={44100*rt},aresample=44100,'
-            f'highpass=f={hp},lowpass=f={lp},afade=t=in:d=0.004,afade=t=out:st={max(0,ln/rt-.06)}:d=0.06')
+      if md:  # 前の無音を切り、出だし（v 0.006秒・s 0.07秒）と終わり（v 0.06秒・s 0.12秒）をなめらかに
+        fi, fo = (.07, .12) if md == 's' else (.006, .06)
+        af = (f'aresample=44100,atrim={st}:{st+ln},asetpts=PTS-STARTPTS,silenceremove=start_periods=1:start_threshold=-60dB,asetrate={44100*rt},aresample=44100,'
+              f'highpass=f={hp},lowpass=f={lp},afade=t=in:d={fi},areverse,afade=t=in:d={fo},areverse')
+      else:
+        af = (f'aresample=44100,atrim={st}:{st+ln},asetpts=PTS-STARTPTS,asetrate={44100*rt},aresample=44100,'
+              f'highpass=f={hp},lowpass=f={lp},afade=t=in:d=0.004,afade=t=out:st={max(0,ln/rt-.06)}:d=0.06')
       run(['ffmpeg', '-v', 'quiet', '-y', '-i', fs[0], '-ac', '1', '-af', af, w])
       v = subprocess.run(['ffmpeg', '-i', w, '-af', 'volumedetect', '-f', 'null', '-'], capture_output=True, text=True).stderr
       pk = float(v.split('max_volume:')[1].split('dB')[0])

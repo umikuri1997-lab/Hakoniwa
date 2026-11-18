@@ -112,7 +112,7 @@ const BL={
   takeakari:{hp:5,brk:1,fix:2,fixm:{bamboo:2},name:'竹あかり',kind:'furn',cat:'light',lv:4,pc:4,time:90,maker:'fire',solid:1,anim:1,attr:{fire:1,wood:1},mat:{bamboo:4},desc:'まわり3.5マスを照らす。住み心地+5'},
   shishiodoshi:{hp:5,brk:1,fix:2,fixm:{bamboo:2,stone:1},name:'ししおどし',kind:'furn',cat:'env',lv:5,pc:6,time:110,maker:'water',solid:1,anim:1,attr:{water:1,wood:1},mat:{bamboo:5,stone:3},desc:'水でうごく竹のかざり。住み心地+6'},
   bench:{name:'ベンチ',sz:[2,1],kind:'furn',pc:3,time:100,maker:'wood',attr:{wood:1},mat:{wood:5},desc:'2人すわれる。昼につかれたら、ここで休む。つかれ −30／1時間。住み心地+5'},
-  wbench:{hp:5,brk:1,fix:2,fixm:{wood:4},name:'作業台',kind:'furn',cat:'other',pc:3,time:80,maker:'earth',attr:{earth:1},mat:{wood:8,stone:2},solid:1,dyn:1,desc:'依頼の物を作る台。となりの箱の素材は、運ばずに使う'},/* 依頼は、空いた作業台で1つずつ作る（S.dyn[j].order、build.js の wbenchTick） */
+  wbench:{hp:5,brk:1,fix:2,fixm:{wood:4},name:'作業台',kind:'furn',cat:'other',sz:[2,1],pc:3,time:80,maker:'earth',attr:{earth:1},mat:{wood:8,stone:2},solid:1,dyn:1,desc:'依頼の物を作る台と、材料置き場。となりの箱の素材は、運ばずに使う'},/* 依頼は、空いた作業台で1つずつ作る（S.dyn[j].order、build.js の wbenchTick） */
   loom:{hp:5,brk:1,fix:2,fixm:{wood:2},name:'はたおり機',kind:'furn',cat:'other',pc:3,time:80,maker:'wood',attr:{wind:1},mat:{wood:6},solid:1,desc:'草3こか、わた毛2こで、布1こをおる'},
   bed:{name:'ベッド',kind:'furn',pc:10,time:200,maker:'wood',sleep:{cap:1,pt:5,rate:.1},attr:{wood:2},mat:{wood:6,nuno:1},desc:'1人眠れる。つかれ −9／1時間'},
   yorubed:{name:'よぞらのベッド',kind:'furn',pc:10,time:200,maker:'wood',sleep:{cap:1,pt:5,rate:.1},attr:{wood:2},mat:{wood:8},kwr:1,desc:'夜空の色のふとんのベッド。1人眠れる。つかれ −9／1時間'},/* コワイノのレシピ（落とし物でまれに手に入る）。ふつうのベッドと同じはたらき */
@@ -339,7 +339,7 @@ const QUESTS1=[
     [POKO,'#think|ねえ、守り神さま。家の中にそろえたい物、いっぱいあるんだ。'],
     [POKO,'#worry|でも、草の上で木をけずると、でこぼこで、うまくいかなくて……。'],
     ['@idea'],[GOD,'#think|ほっほ。物をこしらえる、たいらでがんじょうな台じゃな。「作業台」と呼ぼうかの。'],
-    [GOD,'ひとつこしらえて、おそなえ箱に入れておいたぞい。木箱のそばなら、材料をすぐ手にとれるのう。'],
+    [GOD,'となりに材料を置ける場所もつけて、ひとつこしらえたぞい。おそなえ箱に入れてある。木箱のそばなら、材料をすぐ手にとれるのう。'],
     [POKO,'#joy|作業台！ これで、いろんな物が作れるね！']],gives:{items:{wbench:1}}},
    story:[
     [POKO,'#joy|わあ、たいらで、がたがたしない！ ここなら、きれいに作れそう！'],
