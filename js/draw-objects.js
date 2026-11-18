@@ -56,7 +56,7 @@ function chipOf(id,i,rot,sf=''){const C=window.CHIPS;if(!C)return null;if(id==='
   const t=ROTS[id];if(!t||t===5)return ch;const r=rot!=null?rot:i==null||!S?0:RUGS.has(id)&&S.rug&&S.rug[i]===id&&S.obj[i]!==id?((S.rugRot||{})[i]||0):S.obj[i]===id?rotAt(i):0;if(!r)return ch;
   let fl=false;if(t===1)fl=true;else if(C[id+'>'+r+sf])ch=C[id+'>'+r+sf];else if((t===4&&r===3||t===3&&r===2)&&C[id+'>1'+sf]){ch=C[id+'>1'+sf];fl=true}else if(sf)return null;/* sf='.front'：せいれいの手前に重ねる絵 */
   if(!ch||!fl)return ch;const fw=((szR(id,r)||[1,1])[0])*32;return ch._fl&&ch._fl.fw===fw?ch._fl:(ch._fl={src:ch,ax:ch.ax,ay:ch.ay,w:ch.w,h:ch.h,f:ch.f,flip:1,fw})}/* 向きのある家具は「id>向き」の絵。左向きは右向きの反転。左右反転だけの物は、もとの絵を反転 */
-const CRATEACT=new Set(['store','smat','sitem','fetch','cpick','cgrab','otakiget','bfetch','spick']),CRATEO={},CRATESP=.3;/* 木箱のふた：箱をつかう動き・開くのにかかる秒（実時間） */
+const CRATEACT=new Set(['store','smat','sitem','fetch','cpick','cgrab','otakiget','sasaget','bfetch','spick']),CRATEO={},CRATESP=.3;/* 木箱のふた：箱をつかう動き・開くのにかかる秒（実時間） */
 function crateUsing(i){const x=i%W,y=(i/W)|0;return S.res.some(r=>{const a=r.act;if(!a||a.stage!=='do'||!CRATEACT.has(a.type))return false;if(a.box!=null&&a.box>=0)return a.box===i;return Math.abs((r.x|0)-x)+Math.abs((r.y|0)-y)===1})}/* その木箱で、しまう・とりだすをしている子がいるか（箱がきまっていない動きは、となりのマスにいるか） */
 const CRATEFILL=[.4,.8];/* 木箱の中身の絵のさかい（しまえる数にたいする、入っている数のわりあい）：0 空・それより少ない 少し・.4から 半分・.8から いっぱい */
 function crateFill(i){if(typeof boxCap!=='function')return 0;const c=boxCap(i),n=boxUsed(i);if(!c||n<=0)return 0;const r=n/c;return r<CRATEFILL[0]?1:r<CRATEFILL[1]?2:3}
