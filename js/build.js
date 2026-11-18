@@ -4,7 +4,7 @@ const hudIc=id=>{const b=$('#'+id),im=b&&b.previousElementSibling;return im&&im.
 function natWork(a,dt){if(a.camp||!NATG[S.obj[a.obj]])return;const o=S.obj[a.obj],k='lp'+a.obj;S.hp[k]=(S.hp[k]||0)+dt*(1+(spotNear(a.obj,o==='rock'?'ishikiri':o==='bamboo'?'takeyabu':'kikori')?.1:0)+(spotNear(a.obj,'shigotoba')?.1:0));/* きこり小屋・いしきり小屋・竹やぶの小道：+10%、しごとば：+10%（ちがうスポットは、たし算で重なる） */NATHIT.set(a.obj,performance.now())}/* せいれいが木を切る・岩をほると、守りの光と同じゲージがへる */
 const natDone=a=>(S.hp['lp'+a.obj]||0)>=(NATG[S.obj[a.obj]]||30);
 function natLight(j){PTW.q=true;const o=S.obj[j],k=LIGHTNAT[o];if(LIGHTCD>0){toast('まもりの光は、あと'+Math.ceil(LIGHTCD/(S.speed||1))+'秒');return}if(S.pt<1){toast('パワーが足りません');return}S.pt-=1;LIGHTCD=lightCdMax();/* 1回パワー1。コワイノと同じ待ち時間 */
-  const x=j%W,y=(j/W)|0,n=(S.hp['lp'+j]||0)+LIGHTHIT[o],cx=x*TS+16,cy=y*TS+8;delete S.hp['lt'+j];fxSpr('godlight',cx,y*TS+26);skillFx('light');lightSnd(x,y);
+  const x=j%W,y=(j/W)|0,n=(S.hp['lp'+j]||0)+LIGHTHIT[o],cx=x*TS+16,cy=y*TS+8;delete S.hp['lt'+j];fxSpr('godlight',cx,y*TS+26);lightSnd(x,y);
   NATHIT.set(j,performance.now());if(n<NATG[o]){S.hp['lp'+j]=n;return}/* ゲージがなくなると、木材・石材が1こ落ちる。のこりは、たいきゅうバーで見せる */
   delete S.hp['lp'+j];fxSpr(o==='rock'||VEINS[o]?'rockbreak':'treefall',cx,y*TS+26);useNat(j);S.flags.lightBroke=1;/* サブクエスト「守り神の光で木や岩をこわそう」 */const n0=(S.drops||[]).length;dropAt(x,y,'mat:'+k,1);if(S.drops&&S.drops.length>n0){sfxAt('matDrop',x,y);const d=S.drops[S.drops.length-1];d.lt=1;DROPFX.set(d,{sx:x*TS+16,sy:y*TS+4,t0:performance.now()})}}/* 何も言わずに、木材・石材のアイコンを落とす *//* 落ちた物は、せいれいがひろう。木や岩は、せいれいが切ったときと同じようにへる */
 /* 守り神の光は、はじめから木や岩にも使える。フタバの「やってみて」は、はじめての夜のあとのサブクエスト（lighttry） */
