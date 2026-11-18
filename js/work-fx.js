@@ -11,7 +11,8 @@ const KMAIN={pot:'cook',pan:'cookfry',bake:'cookfan',grill:'cookgrill',mix:'cook
 const WBEAT={cookcut:[[0,'tonton']],cook:[[0,'potclk']],cookmix:[[.25,'tink']],cookstir:[[.25,'tink']],cookfry:[[.47,'fry'],[.62,'fry']],cookfan:[[.25,'fanw','embers']],cookgrill:[[0,'grill','embers']],cookplate:[[.5,'plate']],
   loomweave:[[.3,'shuttle'],[.8,'loombeat']],millgrind:[[0,'grind'],[.5,'grind']],saw:[[.37,'saw','chips'],[.87,'saw']],craft:[[0,'nail','chips']],polish:[[0,'cloth'],[.5,'cloth']],
   wbsaw:[[.37,'saw','chips'],[.87,'saw']],wbham:[[0,'nail','chips']],build:[[0,'bnail']],repair:[[0,'nail']],
-  chop:[[.8,'chop','chips']],mine:[[.59,'mine1','pebbles']],draw:[[.05,'dpour','splash']],water:[[0,'pour']],tend:[[0,'pour']],wbpolish:[[0,'cloth'],[.5,'cloth']]};
+  chop:[[.8,'chop','chips']],mine:[[.59,'mine1','pebbles']],draw:[[.4,'dscoop','splash'],[.56,'dlift']],/* 水くみは1回だけ：バケツが水に入る所・ひき上げる所（draw の動きは、くむ行動の進みぐあい 'ph'） */
+  eat_drink:[[.32,'@eat']],eat_bread:[[.3,'@eat']],eat_fruit:[[.3,'@eat']],eat_meal:[[.3,'@eat']],/* 食べる・のむ：かじる・のむ所で、食べている物の音（@eat → eatSnd） */water:[[0,'pour']],tend:[[0,'pour']],wbpolish:[[0,'cloth'],[.5,'cloth']]};
 const WBMO={craftprep:'wbprep',saw:'wbsaw',craft:'wbham',polish:'wbpolish'};/* 作業台の上でする、もの作りの動き */
 function cookStyle(r){const a=r.act;if(!a||!r.cing)return'mix';if(a.tb)return'mix';const R=typeof recOf==='function'?recOf(r.cing.rec):null,out=R?R.out:r.cing.rec;if(KSTYLE[out])return KSTYLE[out];const D=typeof COOKDI!=='undefined'&&COOKDI[out],t=D&&D.ic&&D.ic[0];let st=KSTYIC[t]||'pot';if(st==='bake'&&S.obj[a.obj]==='campfire')st='pan';return st}/* ふしぎな料理は、なべ */
 function cookP(r){const a=r.act;if(!a||a.obj==null)return 0;return Math.min(1,(a.t||0)/Math.max(1,cookTime(r,a.obj)))}
@@ -82,7 +83,45 @@ function boxLoopTick(){if(!GOSOL.size)return;const now=performance.now(),ok=type
     e.g.gain.setTargetAtTime(q.v*BOXLOOPV,t,.08);if(e.p)e.p.pan.setTargetAtTime(q.p,t,.08);e.f.frequency.setTargetAtTime(q.l,t,.08)}}
 setInterval(boxLoopTick,100);
 const WBEATP=new WeakMap();
-function workBeat(r,nm,t){const B=WBEAT[nm],m=typeof SPM!=='undefined'&&SPM[nm];if(!B||!m||typeof m.r!=='number')return;const ph=((t*m.r)%1+1)%1,last=WBEATP.get(r);WBEATP.set(r,{nm,ph});if(!last||last.nm!==nm)return;
-  for(const[b,snd,fx]of B){const crossed=last.ph<=ph?(last.ph<b&&b<=ph):(b>last.ph||b<=ph);if(!crossed)continue;sfxAt(snd,r.x,r.y);if(fx&&Math.random()<.5){const j=r.act&&r.act.type==='draw'&&r.act.src!=null?r.act.src:r.act&&r.act.type==='craft'?((craftOrder(r)||{}).cs??null):r.act&&r.act.obj!=null?r.act.obj:null,x=j!=null?(j%W+.5)*TS:r.x*TS+(r.face<0?-14:14),y=j!=null?((j/W|0)+.4)*TS:r.y*TS;fxSpr(fx,x,y)}}}
+function workBeat(r,nm,t,p){const B=WBEAT[nm],m=typeof SPM!=='undefined'&&SPM[nm];if(!B||!m||typeof m.r!=='number'&&p==null)return;const ph=typeof m.r==='number'?((t*m.r)%1+1)%1:p,/* 'ph' の動き（水くみ）は、わたされた進みぐあい p */last=WBEATP.get(r);WBEATP.set(r,{nm,ph});if(!last||last.nm!==nm||m.r==='ph'&&ph<last.ph)return;/* 'ph' の動きは、もどらない（1回だけ） */
+  for(const[b,snd,fx]of B){const crossed=last.ph<=ph?(last.ph<b&&b<=ph):(b>last.ph||b<=ph);if(!crossed)continue;sfxAt(snd==='@eat'?eatSnd(r.act&&r.act.items):snd,r.x,r.y);if(fx&&Math.random()<.5){const j=r.act&&r.act.type==='draw'&&r.act.src!=null?r.act.src:r.act&&r.act.type==='craft'?((craftOrder(r)||{}).cs??null):r.act&&r.act.obj!=null?r.act.obj:null,x=j!=null?(j%W+.5)*TS:r.x*TS+(r.face<0?-14:14),y=j!=null?((j/W|0)+.4)*TS:r.y*TS;fxSpr(fx,x,y)}}}
 /* できあがり：1回だけ、ぽん・きらきら */
 function workShowStart(r,a){a.sh=0;r.bubble='';/* 頭の上の物とかさならないように */sfxAt('workdone',r.x,r.y);fxSpr('twinkle',r.x*TS,(r.y-.9)*TS)}
+
+/* ---------- 食べる物ごとの食べ方（動き eat_drink・eat_bread・eat_fruit・eat_meal と、かじる・のむ所の音 WBEAT） ---------- */
+const EATDRINK=new Set(['milk','berryjuice','applejuice','milkshake','berrymilk','soup','fishsoup']),EATBREAD=new Set(['bread','pancake','tamasand','komugiko']),EATFRUIT=new Set(['apple','berry','donguri','ringoame','tomato','takenoko']);
+const EATIC={cup:'drink',bread:'bread',cake:'bread',sand:'bread'};
+function eatKind(items){const k=(items||[])[0];if(!k)return'meal';if(EATDRINK.has(k))return'drink';if(EATBREAD.has(k))return'bread';if(EATFRUIT.has(k))return'fruit';const D=typeof COOKDI!=='undefined'&&COOKDI[k],ic=D&&D.ic&&D.ic[0];return EATIC[ic]||'meal'}
+/* 食べる・のむ音（SAMPLES.ea_〜、tools/sound/eat_asmr.py）：食べ物ごとに、いちばん近い録音。表にない料理は、料理の絵のしゅるい（COOKD の ic）で */
+const EATSND={apple:'ea_apple',ringoame:'ea_apple',berry:'ea_pine',donguri:'ea_nut',tomato:'ea_melon',takenoko:'ea_veg',salad:'ea_veg',kinoko:'ea_pickle',mugi:'ea_cereal',komugiko:'ea_cereal',kakigori:'ea_cracker',
+  imo:'ea_egg',yakiimo:'ea_egg',egg:'ea_egg',pancake:'ea_egg',takoyaki:'ea_egg',yakizakana:'ea_egg',kabayaki:'ea_egg',kushiyaki:'ea_egg',foil:'ea_egg',bread:'ea_toast',tamasand:'ea_toast',
+  milk:'ea_water',berryjuice:'ea_water',applejuice:'ea_water',milkshake:'ea_shake',berrymilk:'ea_shake',soup:'ea_sip',fishsoup:'ea_sip',wataame:'ea_choco',yakisoba:'ea_noodle',marine:'ea_noodle'},
+  EATSNDIC={cup:'ea_tea',bowl:'ea_noodle',plate:'ea_noodle',skewer:'ea_egg',bread:'ea_toast',cake:'ea_cookie',dango:'ea_choco',salad:'ea_veg',sand:'ea_toast'};
+function eatSnd(items){const k=(items||[])[0];if(!k)return'ea_egg';if(EATSND[k])return EATSND[k];if(FOODS[k]&&FOODS[k].fish)return'ea_egg';const D=typeof COOKDI!=='undefined'&&COOKDI[k],ic=D&&D.ic&&D.ic[0];return EATSNDIC[ic]||'ea_noodle'}
+function eatAnim(r){const a=r.act;return typeof SPM!=='undefined'&&a&&a.type==='eat'&&SPM['eat_'+eatKind(a.items)]?'eat_'+eatKind(a.items):'eat'}
+/* ---------- その場でのよろこび・がっかり・ふしぎ（つりの結果・なでたあと・できあがり）：正面を向いて、その動きと顔 ---------- */
+const REACTU=new WeakMap(),PETU=new WeakMap();
+const REACTA={joy:'talkjoy',sad:'talksad',think:'talktilt'},REACTM={joy:'joy',sad:'sad',think:''};
+function spReact(r,k,ms){/* k：joy・sad・think。ms のあいだ（1倍の速さで）、手をとめて正面を向く。とめるのは村の時間（r.reactT。実時間の RHOLD だと、早送り・自動のテストで止まりつづける） */const now=performance.now();REACTU.set(r,{k,u:now+ms});r.reactT=S.t+ms/1000*MIN_PER_SEC;if(k==='joy'){JOYU.set(r,now+ms);JUMP.set(r,now)}if(k==='think')r.bubble='❓'}
+function spReactNow(r,now){const e=REACTU.get(r);return e&&e.u>now&&(r.reactT||0)>S.t?e.k:''}
+function spPetNow(r,now){return (PETU.get(r)||0)>now}
+/* なでる手（守り神の手）：頭の上で、左右にゆっくり行き来する。ドットの四角（1ドット＝ゲームの1.5点）。手の色はやわらかい光の色 */
+const PETHAND=['..oooo..','.ohhhho.','ohhhhhho','ohhhhhho','.ohhhhho','..oohhho','....ooo.'];
+function drawPetHand(c,px,top,now){const g=1.5,sw=Math.round(Math.sin(now/260)*3),x0=Math.round(px/g+sw-4)*g,y0=Math.round(top/g)*g;
+  c.save();c.globalAlpha=.92;PETHAND.forEach((row,y)=>{for(let x=0;x<row.length;x++){const ch=row[x];if(ch==='.')continue;c.fillStyle=ch==='o'?'#e7c99a':'#fff3dc';c.fillRect(x0+x*g,y0+y*g,g,g)}});c.restore()}
+function spFrontNow(r,now){return spPetNow(r,now)||!!spReactNow(r,now)}
+/* いまの動きの名前を、その子のようすで、さしかえる（drawRes0）：床で寝る・なでられる・つりの結果など・食べる物ごとの食べ方・生き物をなでる */
+function spAnimFix(r,now,flSl,front,an){if(typeof SPM==='undefined')return an;if(flSl)return'sleepcurl';if(front&&spPetNow(r,now)&&SPM.petted)return'petted';const k=front&&spReactNow(r,now);if(k&&SPM[REACTA[k]])return REACTA[k];
+  if(an==='eat')return eatAnim(r);if((an==='apet'||an==='apetq')&&SPM.anipat)return'anipat';return an}
+/* ---------- もやもや（たのしさが低いとき）・鼻歌（ごきげんなとき） ---------- */
+/* もやもや：頭の上に、むらさきの うずまき（ドットの絵、1ドット＝ゲームの1.5点）。2まいのコマを、ゆっくり入れかえて、ふわふわ上下する */
+const MOYA=['..ooooo..','.o.....o.','o..ooo..o','o.o...o.o','o.o.o.o.o','o.o..oo.o','o..o....o','.o..oooo.','..o......'];
+function drawMoya(c,px,top,now,id){/* 2コマ：うずまきを左右反対にして入れかえ、くるくるまわって見える */const g=1.5,fl=Math.floor(now/450+id)%2,x0=Math.round(px/g-4.5)*g,y0=Math.round((top+Math.sin(now/500+id)*1.5)/g)*g;
+  c.save();c.fillStyle='#8a6bb8';MOYA.forEach((row,y)=>{for(let x=0;x<row.length;x++)if(row[fl?row.length-1-x:x]==='o')c.fillRect(x0+x*g,y0+y*g,g,g)});c.restore()}
+/* 鼻歌：ごきげん（たのしさ FUNF 以上）で、ひまなとき、ときどき。音符のドットが ふわっと上へ。人の声の録音（SAMPLES.hum）を、その子の声の高さで小さく（会話の声が出ているあいだは鳴らさない） */
+const HUMCD=40,HUMDUR=3200,HUMP=.04,HUMU=new WeakMap();
+const NOTE=['..oo','..oo','..o.','..o.','ooo.','ooo.','.o..'];
+function humTick(r,now){/* drawRes0 から：ひまで、ごきげんな子が、ときどき鼻歌をはじめる */const u=HUMU.get(r);if(u&&now<u.u)return true;if(!r.act||!['idle','wander','quirk','rest','ownseat','sunset'].includes(r.act.type)||r.fun<FUNF||isDark()||(r.humT||0)>S.t)return false;
+  if(Math.random()>HUMP/60)return false;r.humT=S.t+HUMCD+Math.random()*HUMCD;HUMU.set(r,{u:now+HUMDUR,t0:now});if(typeof humVoice==='function')humVoice(r);return true}
+function drawHum(c,px,top,now,r){const u=HUMU.get(r);if(!u||now>=u.u)return;const g=1.5;for(let i=0;i<3;i++){const k=(now-u.t0-i*700)/1600;if(k<0||k>1)continue;const x0=Math.round((px+8+i*4+Math.sin(k*6+i)*3)/g)*g,y0=Math.round((top-k*16)/g)*g;
+  c.save();c.globalAlpha=k<.8?1:(1-k)/.2;NOTE.forEach((row,y)=>{for(let x=0;x<row.length;x++)if(row[x]==='o'){c.fillStyle=i%2?'#e98fb0':'#7aa6e0';c.fillRect(x0+x*g,y0+y*g,g,g)}});c.restore()}}

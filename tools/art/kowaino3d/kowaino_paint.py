@@ -679,12 +679,12 @@ def despeckle(im, n=2):
 
 def sheets(name, out):
     """モーションのコマ（kw_skel.poses）を写して、モーションごとに、たてにならべた1まいの絵にする（いまのゲームと同じ形：w・h・ax・ay・n）。
-    正面と、うしろ（B。やられはなし）・右むき（R）・左むき（L。待機と攻撃だけ）。コマの大きさは、そのモーションのコマぜんぶが入る大きさ（足もとの点をそろえる）"""
+    正面と、うしろ（B。やられはなし）・右むき（R）・左むき（L。待機・歩く・攻撃）。コマの大きさは、そのモーションのコマぜんぶが入る大きさ（足もとの点をそろえる）"""
     import kw_skel, json; info = {}
     PS = {False: kw_skel.poses(name), True: kw_skel.poses(name, side=True)}
     for mo in PS[False]:
-        for B, yaw in (('', 0.0), ('B', math.pi), ('R', -math.pi/2), ('L', math.pi/2)):   # 正面・うしろ・右むき・左むき（よこは 待機と攻撃だけ。攻撃する相手のほうを向く）
-            if mo == 'hurt' and B or B in ('R', 'L') and mo not in ('idle', 'atk'): continue
+        for B, yaw in (('', 0.0), ('B', math.pi), ('R', -math.pi/2), ('L', math.pi/2)):   # 正面・うしろ・右むき・左むき（よこは 待機・歩く・攻撃。よこへ歩くとき・攻撃する相手のほうを向く）
+            if mo == 'hurt' and B or B in ('R', 'L') and mo not in ('idle', 'atk', 'walk'): continue
             ps = PS[B in ('R', 'L')][mo]
             fr = []
             fxp = fxparts(ps, name)

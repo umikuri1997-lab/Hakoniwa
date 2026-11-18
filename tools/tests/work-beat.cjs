@@ -1,15 +1,16 @@
-/* 作業の音（work-fx.js の WBEAT）：トンカチ・おの・つるはし・水くみ・水やり・のこぎりの音が、動きの決まった所で1回ずつ鳴る。村の時間ごとには鳴らない */
+/* 作業の音（work-fx.js の WBEAT）：トンカチ・おの・つるはし・水くみ（1回だけ）・水やり・のこぎりの音が、動きの決まった所で1回ずつ鳴る。村の時間ごとには鳴らない */
 const boot=require('../sim/boot.cjs'),assert=require('node:assert/strict');
 (async()=>{const {browser,run,errors}=await boot();
 const out=await run(`(()=>{const out={};const log=[];const sa=sfxAt;sfxAt=(k,x,y)=>{log.push(k)};
  const r=JSON.parse(JSON.stringify(S.res[0]));r.id=901;r.nap=false;r.act={type:'build',stage:'do',obj:0,t:0};
- for(const nm of ['build','repair','craft','wbham','chop','mine','draw','water','saw','wbsaw']){log.length=0;const m=SPM[nm],per=1/m.r,ph=[];for(let i=0;i<=Math.round(per*3.5*60);i++){const t=i/60,n=log.length;workBeat(r,nm,t);if(log.length>n)ph.push(Math.floor(((t*m.r)%1)*m.n))}out[nm]={n:log.length,snd:[...new Set(log)],frame:[...new Set(ph)]}}
+ for(const nm of ['build','repair','craft','wbham','chop','mine','water','saw','wbsaw']){log.length=0;const m=SPM[nm],per=1/m.r,ph=[];for(let i=0;i<=Math.round(per*3.5*60);i++){const t=i/60,n=log.length;workBeat(r,nm,t);if(log.length>n)ph.push(Math.floor(((t*m.r)%1)*m.n))}out[nm]={n:log.length,snd:[...new Set(log)],frame:[...new Set(ph)]}}
+ /* 水くみは1回だけ：くむ行動の進みぐあい（'ph'）で、水に入る所・ひき上げる所に1回ずつ */log.length=0;for(let i=0;i<=100;i++)workBeat(r,'draw',0,Math.min(.999,i/100));for(let i=0;i<=100;i++)workBeat(r,'draw',0,.999);out.draw={snd:log.slice()};
  /* 木を切る・石をほる・水くみ・水やりの tick でも鳴らさない */for(const[ty,o]of[['chop','tree'],['mine','rock'],['draw',''],['water','']]){log.length=0;const q={type:ty,stage:'do',obj:1,src:2,t:0};S.obj[1]=o;for(let i=0;i<50;i++){try{ACT[ty].tick(r,q,.5)}catch(e){}}out['t_'+ty]=log.length}
  /* 建てる・直すの tick では鳴らさない */log.length=0;S.obj[0]='site';S.dyn[0]={p:0,need:{},got:{}};for(let i=0;i<100;i++)ACT.build.tick(r,r.act,.5);out.tick=log.length;sfxAt=sa;
  out.hit=typeof playHit==='function'&&NAILHIT.length===4;return out})()`);
 console.log(out);
 for(const nm of ['build','repair','craft','wbham']){assert.equal(out[nm].n,3,nm+' 3回ふって3回');assert.deepEqual(out[nm].frame,[0],nm+' 打つコマで')}
-const one=k=>assert.ok(out[k].n>=3&&out[k].n<=4,k+' 1回の動きに1回');one('chop');assert.deepEqual(out.chop.frame,[8],'おのは、ふりおろしたコマ');one('mine');assert.deepEqual(out.mine.snd,['mine1']);one('draw');assert.deepEqual(out.draw.snd,['dpour']);assert.ok(out.water.n>=1);
+const one=k=>assert.ok(out[k].n>=3&&out[k].n<=4,k+' 1回の動きに1回');one('chop');assert.deepEqual(out.chop.frame,[8],'おのは、ふりおろしたコマ');one('mine');assert.deepEqual(out.mine.snd,['mine1']);assert.deepEqual(out.draw.snd,['dscoop','dlift'],'水くみは1回だけ');assert.ok(out.water.n>=1);
 for(const k of ['saw','wbsaw'])assert.ok(out[k].n>=6&&out[k].n<=7,k+' 1回の動きに2回');for(const ty of ['chop','mine','draw','water'])assert.equal(out['t_'+ty],0,ty+' の tick')
 assert.deepEqual(out.build.snd,['bnail']);assert.deepEqual(out.repair.snd,['nail']);assert.equal(out.tick,0);assert.ok(out.hit);
 assert.deepEqual(errors,[]);console.log('Work beat: one sound per swing/stroke, on the motion beat. Browser errors: none');
