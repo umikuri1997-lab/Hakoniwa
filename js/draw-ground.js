@@ -3,6 +3,20 @@
 /* ---------- 描画 ---------- */
 const cv=$('#cv'),ctx=cv.getContext('2d');
 let dpr=1,VW=0,VH=0;const cam={x:0,y:0,z:1};let camAnim=null;
+const RCAM={x:0,y:0,k:1};/* 描くときのカメラ：cam を画面のピクセルに丸めた場所（render で作る）。動く物も snapP で同じように丸める（カメラと物がずれてガクガクしない） */
+function snapP(v){return Math.round(v*RCAM.k)/RCAM.k}
+function pxSm(c,s){/* 絵をのばして描く（1ドットが画面の1ピクセルより大きい）ときは、なめらかにしない（にじまない）。ちぢめるときは、なめらかに（ドットがとばない）。s：画面のピクセル÷絵のドット */const v=!(s>=.999);if(c.imageSmoothingEnabled!==v)c.imageSmoothingEnabled=v}
+/* ドット絵を回すとき：描くときに回さない。角度を ROTSTEP ごとにそろえ、回したコマを1回だけ作ってとっておく（rotDot）。1ドットずつ、もとの絵のいちばん近い1ドットをとる（にじまない）。とっておくのは ROTMAX まで（こえたら、ぜんぶ手ばなして作りなおす。小さな部品なので1つ数KB〜数十KB）。動く物の絵（立ち絵など）は rotNear で、そのたびに回す */
+const ROTSTEP=Math.PI/48,ROTMAX=400,ROTC=new WeakMap();let ROTCNT=0,ROTGEN=0;
+function rotPx(im){/* 絵のドット（ImageData）。読みこみ中なら null */const w=im.naturalWidth||im.width,h=im.naturalHeight||im.height;if(!w||!h)return null;const t=document.createElement('canvas');t.width=w;t.height=h;const g=t.getContext('2d');g.drawImage(im,0,0);const d=g.getImageData(0,0,w,h);t.width=t.height=0;return d}
+function rotMake(d,a,px,py,out){/* d を (px,py) のまわりに a だけ回した絵と、回した絵の中での (px,py) */const w=d.width,h=d.height,co=Math.cos(a),si=Math.sin(a);let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;for(const[X,Y]of[[0,0],[w,0],[0,h],[w,h]]){const dx=X-px,dy=Y-py,rx=dx*co-dy*si,ry=dx*si+dy*co;x0=Math.min(x0,rx);y0=Math.min(y0,ry);x1=Math.max(x1,rx);y1=Math.max(y1,ry)}
+  x0=Math.floor(x0);y0=Math.floor(y0);const W2=Math.max(1,Math.ceil(x1)-x0),H2=Math.max(1,Math.ceil(y1)-y0),c=out||document.createElement('canvas');if(c.width!==W2||c.height!==H2){c.width=W2;c.height=H2}/* out：使いまわす絵（そのたびに回すとき） */const g=c.getContext('2d'),o=g.createImageData(W2,H2),S0=d.data,O=o.data;
+  for(let y=0;y<H2;y++)for(let x=0;x<W2;x++){const rx=x0+x+.5,ry=y0+y+.5,sx=Math.floor(rx*co+ry*si+px),sy=Math.floor(-rx*si+ry*co+py);if(sx<0||sy<0||sx>=w||sy>=h)continue;const s=(sy*w+sx)*4,t=(y*W2+x)*4;O[t]=S0[s];O[t+1]=S0[s+1];O[t+2]=S0[s+2];O[t+3]=S0[s+3]}
+  g.putImageData(o,0,0);return{c,ox:-x0,oy:-y0}}
+function rotDot(im,a,px,py){/* im を (px,py)（絵のドット）のまわりに a だけ回した、とっておく絵 {c,ox,oy}。角度は ROTSTEP にそろえる */const q=Math.round(a/ROTSTEP);if(!q)return{c:im,ox:px,oy:py};let m=ROTC.get(im);if(!m||m.gen!==ROTGEN){m={gen:ROTGEN,d:undefined,k:new Map()};ROTC.set(im,m)}const key=q+'|'+px+'|'+py;let r=m.k.get(key);if(r)return r;
+  if(m.d===undefined)m.d=rotPx(im);if(!m.d){m.d=undefined;return{c:im,ox:px,oy:py,miss:1}}if(ROTCNT>=ROTMAX){ROTGEN++;ROTCNT=0}r=rotMake(m.d,q*ROTSTEP,px,py);m.k.set(key,r);ROTCNT++;return r}
+function drawRot(c,im,a,px,py,dx,dy,s){/* im の (px,py) が (dx,dy) にくるように、a だけ回して描く。s：絵の1ドットの大きさ */const r=rotDot(im,a,px,py),sm=c.imageSmoothingEnabled;c.imageSmoothingEnabled=false;c.drawImage(r.c,dx-r.ox*s,dy-r.oy*s,r.c.width*s,r.c.height*s);c.imageSmoothingEnabled=sm}
+function rotNear(src,a,px,py,out){/* そのたびに回す（動く絵）。角度は ROTSTEP にそろえる。out：回した絵を入れる、使いまわすキャンバス */const q=Math.round(a/ROTSTEP);if(!q)return{c:src,ox:px,oy:py};const d=src.getContext('2d').getImageData(0,0,src.width,src.height);return rotMake(d,q*ROTSTEP,px,py,out)}
 const GCS=16,GPX=GCS*TS,GFULL=64,GBUD=8,GPAD=2;/* 区画の絵のまわりに、となりの地面を GPAD ドット（半分の絵は1ドット）よけいに描いておき、画面には、のりしろごと描いて、となりの区画とかさねる。Safari は拡大するとき、描く絵（切りとった所）のはしを透明とまぜるので、ぴったりならべると区画のさかいめにうすい線が出る *//* 地面の下絵の区画：16×16マス（512ドット）。くわしい区画は、ステージを開くときにぜんぶ作って、すてない（64こまで。マップは7×7＝49こ）。半分の細かさの区画（ちぢめたとき用、1こ約0.25MB）は、ぜんぶとっておく。区画を作る時間は1コマ8ミリ秒まで（少なくとも1こ） */
 const GRD={s:null,c:new Map(),bt:0,any:false,pre:null,busy:false,n:0};/* key → {f:くわしい絵, l:半分の絵, u:さいごに使ったコマ, st:作りなおすしるし} */
 function gq(cx,cy){const k=cy*64+cx;let q=GRD.c.get(k);if(!q){q={f:null,l:null,u:0,st:false};GRD.c.set(k,q)}return q}
