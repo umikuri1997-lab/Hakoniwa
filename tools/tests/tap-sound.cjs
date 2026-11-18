@@ -1,7 +1,7 @@
 /* 「みる」でタップした物の音：材質で分ける（木 twood・石 tstone・金物 tcan・布 tcloth・植物 tgrass・畑と地面 tsoil・水 twater・神殿と御神木 tbell）。
    物の音が鳴ったタップでは、画面がひらく音（open）と葉の音（leaf）をかさねない。ほかの物の音（宝箱・神殿を直す など）が鳴ったら、そちらだけ */
 const {chromium}=require('playwright'),assert=require('node:assert/strict');
-(async()=>{const browser=await chromium.launch({executablePath:process.env.CHROME_PATH||'/opt/pw-browsers/chromium',args:['--no-sandbox']});const p=await browser.newPage({viewport:{width:900,height:600}}),errors=[];p.on('pageerror',e=>errors.push(e.message));
+(async()=>{const browser=await chromium.launch({executablePath:process.env.CHROME_PATH||'/opt/pw-browsers/chromium',args:['--no-sandbox','--autoplay-policy=no-user-gesture-required']});const p=await browser.newPage({viewport:{width:900,height:600}}),errors=[];p.on('pageerror',e=>errors.push(e.message));
 await p.route('**/js/main.js*',async route=>{const r=await route.fetch();await route.fulfill({response:r,body:(await r.text())+'\nwindow.sacredEval=s=>eval(s);'});});
 await p.goto(process.env.GAME_URL||'http://127.0.0.1:8000');await p.waitForFunction(()=>window.sacredEval);const run=s=>p.evaluate(s=>sacredEval(s),s);
 await run(`(()=>{setWorld(0);S=newState(0);LIVE[0]=S;started=true;USERPAUSE=true;NOSAVE=true;S.introSeen=true;S.enemyOn=false;S.hold=0;S.food=100;S.rain=false;S.t=1440*2+600;
@@ -18,5 +18,10 @@ const o=await run(`(async()=>{cam.z=2;centerOn(CX*TS,CY*TS);setMode('look');CRIT
   sfx=sfx0;return out})()`);
 console.log(JSON.stringify(o));
 const want={chair:'twood',bed:'tcloth',flower:'tgrass',rock:'tstone',tree:'twood',farm:'tsoil',wall:'tstone',fence:'twood',joro:'tcan',ground:'tsoil',water:'twater',stonefloor:'tstone'};
+const rec=await run(`(async()=>{audioInit();if(typeof loadSamples==='function'&&!SBUF.twood)loadSamples();const K=['twood','tstone','tcan','tcloth','tgrass','tsoil','twater','tbell','tfoe','tweb','tani','tplace'];
+  for(let i=0;i<100&&K.some(k=>!(SBUF[k]||[]).filter(Boolean).length);i++)await new Promise(r=>setTimeout(r,100));
+  if(AC.state!=='running')await AC.resume();const out={};for(const k of K)out[k]=[(SAMPLES[k]||[]).length,(SBUF[k]||[]).filter(Boolean).length,playU(k,.3)];return out})()`);
+console.log(JSON.stringify(rec));
+for(const k in rec)assert.ok(rec[k][0]>0&&rec[k][1]===rec[k][0]&&rec[k][2],k+' の録音が読みこめて鳴る（本物の音）');
 for(const k in want)assert.equal(o[k],want[k],k+' の音（open・leaf はかさねない）');
 assert.deepEqual(errors,[]);console.log('tap-sound ok');await browser.close()})();
