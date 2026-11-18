@@ -6,7 +6,7 @@
    - 見せ場（なかまが来る・オオカゲの登場・御神木が育つ、hdBig）は、ピントをせまく、にじみを強く
    - かげの向きと長さ（朝は西・夕方は東へかたむき、朝・夕方は長く、昼は短い。shadow() と落ち影が sunLen・sunLean を見る）
    - 重いとき（1コマが長いとき）は、自動で軽くする（HDQ：1 にじみなし・小さくする回数をへらす、2 ぼかしもなし）
-   作業用のキャンバスは画面の1/4・1/8の大きさ（iPhone の縦画面で約1MB） */
+   作業用のキャンバスは画面の1/6・1/12の大きさ（iPhone の縦画面で約0.5MB）。小さくした絵（ぼかし・にじみのもと）は2コマに1回だけ作りなおす（HDEVERY） */
 let HD2D=true;try{if(KV.getItem('hakoniwa-hd2d')==='0')HD2D=false}catch(e){}
 function setHd2d(v){HD2D=!!v;try{KV.setItem('hakoniwa-hd2d',HD2D?'1':'0')}catch(e){}HDQ=0;HDQT=0}
 const HDBAND=.15,HDBANDBIG=.09;/* ピントの帯のはば（帯のまん中から上と下へ、画面の高さのわりあい）。見せ場はせまく */
@@ -16,7 +16,9 @@ const HDAIR=.16;/* 空気の遠近：画面のいちばん上のこさ */
 const HDLONG=.8;/* かげの長さ：朝6時・夕方18時に、昼より 0.8 ぶん長い */
 const HDLEAN=.6;/* 落ち影のかたむき：朝6時・夕方18時に、根もとから1上がるごとに、よこへ 0.6 */
 const HDSLOW=26,HDFAST=19;/* 1コマの時間（ミリ秒）：これより長いのが3秒つづいたら軽く・これより短いのが10秒つづいたら1つもどす */
-const HDC={a:null,b:null,c:null,d:null};
+const HDC={a:null,b:null,c:null,d:null,n:0};
+const HDA=6,HDB=12;/* 小さくした絵の大きさ：画面の1/6・1/12 */
+const HDEVERY=2;/* 小さくした絵を作りなおすのは、このコマ数に1回（あいだのコマは前の絵を使う） */
 let TUTWP=null;/* タップの案内がさしているマップの場所（main.js の updTut） */
 let HDBIG=0,HDFY=HDFY0,HDQ=0,HDQT=0,HDLT=0,HDMS=16.7,HDLEN=1,HDSUN=0;
 function hdCv(c,w,h){if(!c)c=document.createElement('canvas');if(c.width!==w||c.height!==h){c.width=w;c.height=h}return c}
@@ -54,15 +56,15 @@ function hdPost(dk,now){/* 夜の暗さのあと・ふきだしの前に、画�
   c.globalCompositeOperation='source-over';
   {const a=HDAIR*(1-Math.min(1,dk/.4));if(a>0){const g=c.createLinearGradient(0,0,0,H0*.55);g.addColorStop(0,'rgba(200,216,236,'+a+')');g.addColorStop(1,'rgba(200,216,236,0)');c.fillStyle=g;c.fillRect(0,0,W0,H0*.55)}}/* 空気の遠近：奥ほど少し青く・うすく（夜はなし） */
   if(HDQ>=2){c.restore();return}/* とても重いとき：色だけ */
-  const aw=Math.max(1,Math.round(W0/4)),ah=Math.max(1,Math.round(H0/4)),bw=Math.max(1,Math.round(W0/8)),bh=Math.max(1,Math.round(H0/8));
+  const aw=Math.max(1,Math.round(W0/HDA)),ah=Math.max(1,Math.round(H0/HDA)),bw=Math.max(1,Math.round(W0/HDB)),bh=Math.max(1,Math.round(H0/HDB));const fresh=!HDC.b||HDC.b.width!==bw||HDC.b.height!==bh||HDC.q!==HDQ||++HDC.n>=HDEVERY;if(fresh){HDC.n=0;HDC.q=HDQ}
   const B=HDC.b=hdCv(HDC.b,bw,bh),C=HDC.c=hdCv(HDC.c,bw,bh),D=HDC.d=hdCv(HDC.d,bw,bh),gb=B.getContext('2d'),gc=C.getContext('2d'),gd=D.getContext('2d');
   for(const g of[gb,gc,gd]){g.imageSmoothingEnabled=true;g.imageSmoothingQuality='high';g.globalCompositeOperation='source-over';g.globalAlpha=1}
-  gb.clearRect(0,0,bw,bh);
+  if(fresh){gb.clearRect(0,0,bw,bh);
   if(HDQ===0){const A=HDC.a=hdCv(HDC.a,aw,ah),ga=A.getContext('2d');ga.imageSmoothingEnabled=true;ga.imageSmoothingQuality='high';ga.drawImage(cv,0,0,aw,ah);gb.drawImage(A,0,0,bw,bh)}/* 2だんでちぢめると、なめらかなぼかしになる */
-  else{if(HDC.a){HDC.a.width=HDC.a.height=0;HDC.a=null}gb.drawImage(cv,0,0,bw,bh)}/* 軽くするときは1回で */
+  else{if(HDC.a){HDC.a.width=HDC.a.height=0;HDC.a=null}gb.drawImage(cv,0,0,bw,bh)}}/* 軽くするときは1回で */
   c.imageSmoothingEnabled=true;
   if(HDQ===0){/* にじみ：明るい所だけ（かけ算を2回で、暗い所はほぼ黒） */
-    gc.clearRect(0,0,bw,bh);gc.drawImage(B,0,0);gc.globalCompositeOperation='multiply';gc.drawImage(B,0,0);gc.drawImage(B,0,0);gc.globalCompositeOperation='source-over';
+    if(fresh){gc.clearRect(0,0,bw,bh);gc.drawImage(B,0,0);gc.globalCompositeOperation='multiply';gc.drawImage(B,0,0);gc.drawImage(B,0,0);gc.globalCompositeOperation='source-over'}
     c.globalCompositeOperation='screen';c.globalAlpha=Math.min(1,(dk>.05?.7:.48)*(1+.35*big));c.drawImage(C,0,0,W0,H0);c.globalCompositeOperation='source-over';c.globalAlpha=1}
   /* ピント：帯のまん中は、ピントを合わせる物へゆっくり動く */
   {const t=hdFocusTarget(),fy=t?Math.max(.25,Math.min(.75,hdScreenY(t[1]))):HDFY0;HDFY+=(fy-HDFY)*.08}
