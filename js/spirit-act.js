@@ -414,8 +414,9 @@ function boxFarNote(G,ks,r){/* 空きのある箱はあるのに、どの箱へ�
   if(BOXFAR||IS_STORY_REPLAY||MEMRUN)return;const L=BOXL.filter(k=>ks.some(key=>boxRoom(k,key)>0));if(!L.length)return;
   {const T=TAKEN;TAKEN=null;let j=-1;try{j=nearest(G,j=>putAdj(j,ks)>=0,1e9)}finally{TAKEN=T}if(j>=0)return}
   BOXFAR=1;toast(boxNearName(r,L)+'へ行けません','warn')}
-function goStoreMat(r,G){const ks=cmatKeys(r),j=nearest(G,j=>putAdj(j,ks)>=0,200);if(j>=0){BOXFAR=0;return startAct(r,G,'smat',j)}boxFarNote(G,ks,r);if(evIn(r)&&evAct(r,G))return;/* しまう所がないときは、イベントを先に */return startAct(r,G,'idle',-1,{dur:15})}
-function goStore(r,G){const ks=carryKeys(r),j=nearest(G,j=>putAdj(j,ks)>=0,90);if(j>=0){BOXFAR=0;return startAct(r,G,'store',j)}boxFarNote(G,ks,r);if(evIn(r)&&evAct(r,G))return;/* しまう所がないときは、イベントを先に */return startAct(r,G,'idle',-1,{dur:15})}
+function stkNote(r,ks,G){/* しまう箱へ行けなかった：しごと一覧（work-list.js）にわけを出す印。しまえる箱がひとつもないときは、つけない */const L=BOXL.filter(k=>ks.some(key=>boxRoom(k,key)>0));if(!L.length)return;if(G){const T=TAKEN;TAKEN=null;let j=-1;try{j=nearest(G,j=>putAdj(j,ks)>=0,1e9)}finally{TAKEN=T}if(j>=0)return}/* ほかの子が箱のそばで作業しているだけなら、つけない */r.stk={t:S.t,n:boxNearName(r,L)}}
+function goStoreMat(r,G){const ks=cmatKeys(r),j=nearest(G,j=>putAdj(j,ks)>=0,200);if(j>=0){BOXFAR=0;delete r.stk;return startAct(r,G,'smat',j)}boxFarNote(G,ks,r);stkNote(r,ks,G);if(evIn(r)&&evAct(r,G))return;/* しまう所がないときは、イベントを先に */return startAct(r,G,'idle',-1,{dur:15})}
+function goStore(r,G){const ks=carryKeys(r),j=nearest(G,j=>putAdj(j,ks)>=0,90);if(j>=0){BOXFAR=0;delete r.stk;return startAct(r,G,'store',j)}boxFarNote(G,ks,r);stkNote(r,ks,G);if(evIn(r)&&evAct(r,G))return;/* しまう所がないときは、イベントを先に */return startAct(r,G,'idle',-1,{dur:15})}
 function goEatSafe(r,any){/* コワイノのすぐそばを通らずに行けて、家の中・柵や壁でかこまれた所（コワイノが中にいない）・コワイノから4マス以上はなれた所の箱へ、走って食べにいく */if(!(S.food>0))return false;const Gf=fleeGraph(r),fo=fenceOut(),al=S.enemies.filter(e=>e.spawned&&!e.dead),encl=al.every(e=>fo[(e.y|0)*W+(e.x|0)]),safe=j=>!!roomOf(j)||(encl&&!fo[j])||!al.some(e=>Math.hypot(e.x-(j%W+.5),e.y-(((j/W)|0)+.5))<(encl?4:8));/* 柵がやぶられて中にコワイノがいるときは、8マスはなれた所だけ */
   const j=nearest(Gf,j=>(any||safe(j))&&eatAdj(j)>=0,200);if(j<0)return false;r.refill=S.t+60;startAct(r,Gf,'fetch',j,{run:true});return !!r.act}
 const hungry=r=>r.hunger<500&&S.food>0&&!(r.noEatU>S.t);/* おなかが50より少なく、食べにいける（どんなときも、食べにいく） */

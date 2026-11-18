@@ -21,7 +21,7 @@ function gearStat(r){if(!r||!r.gear)return GNONE;let c=GSC.get(r);if(c&&c.v===(r
     for(const m of['fear','rain','tburn','fburn','nob','glow','burn','kb','slow','stun','steal','aoe','side','crop','stone','dish','pw'])if(g[m])s[m]=1;
     for(const j in g.job||{})s.job[j]=(s.job[j]||1)*g.job[j]}
   if(s.fburn)s.burn=1;GSC.set(r,{v:r.gv||0,s});return s}
-function gJob(r,t){return(r&&r.gear?gearStat(r).job[t]||1:1)*titleMul(r,t)}/* 作業ごとの速さ（専用品・しごとの称号） */
+function gJob(r,t){return(r&&r.gear?gearStat(r).job[t]||1:1)*titleMul(r,t)}/* 作業ごとの速さ（専用品・得意な仕事の★） */
 function gearOK(r,id){const g=BL[id].g;if(g.s==='w'&&r.elem!=='fire')return '武器は火のせいれいだけ';if(g.s==='t'&&g.el!==r.elem)return ELEM[g.el].name+'のせいれいだけ';if(g.s==='ar')return '矢は見張り台で使う';return ''}
 function gearChanged(r){r.gv=(r.gv||0)+1;RSC.delete(r)}
 function gearEquip(r,i){const L=gearList(),q=L[i];if(!q)return false;const why=gearOK(r,q.id);if(why){toast(why,'warn');return false}const k=BL[q.id].g.s;r.gear=r.gear||{};L.splice(i,1);if(r.gear[k])L.push(r.gear[k]);r.gear[k]={id:q.id,lv:q.lv||0};gearChanged(r);return true}
