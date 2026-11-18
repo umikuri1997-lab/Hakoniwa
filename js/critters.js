@@ -144,7 +144,15 @@ function critPoke(c,px,py){const K=CK[c.k],now=performance.now();if(c.pk&&now-c.
   else if(c.k==='tonbo'){c.wait=0}
   else if(c.k==='frog'){c.act=0;c.hop=0}
   else if(c.k==='mogura'){c.go=1;c.gt=0;c.fade=1}
-  else if(c.k!=='hotaru'){c.act=1.6;c.tx=c.ty=null;c.mv=0;c.wait=2}}
+  else if(c.k!=='hotaru'){c.act=1.6;c.tx=c.ty=null;c.mv=0;c.wait=2}
+  critDrop(c)}
+/* 小鳥はベリー・りすはどんぐりを、1ぴき1回だけ、50%で1こ落とす（CRITDROP）。落ちた物は、せいれいがどこからでもひろいに行く（tap） */
+const CRITDROP={bird:'berry',risu:'donguri'},CRITDROPP=.5;
+function critDrop(c){const k=CRITDROP[c.k];if(!k||c.dr)return;c.dr=1;if(Math.random()>=CRITDROPP)return;const n0=(S.drops||[]).length;dropAt(c.x,c.y,'food:'+k,1);if(!(S.drops&&S.drops.length>n0))return;
+  const d=S.drops[S.drops.length-1];d.tap=1;d.cr=1;DROPFX.set(d,{sx:c.x*TS,sy:(c.y-.2)*TS-(c.z||0)-hiAt(d.y*W+d.x)*LIFT,t0:performance.now()})}
+/* どんぐりのアイコン（コードのドット絵。もらった絵があれば、かえる） */
+const DONGURI=['................','................','.......oo.......','.......wo.......','....oooooooo....','...owwwwwwwwo...','..owwwwwwwwwwo..','..oooooooooooo..','...ohmmmmmmdo...','...ohmmmmmmdo...','...ohmmmmmmdo...','....ohmmmmdo....','....ommmmddo....','.....oddddo.....','......oooo......','................'];
+ICONS.donguri=pixURL('food:donguri',DONGURI,'#b9773f');{const im=new Image();im.onload=()=>{im.ok=1;dirty=true};im.src=ICONS.donguri;ICI.donguri=im}
 /* 反応の見た目の高さ（ドット）：ちょう・みつばちは高くまう、かえるは大きくはねる、もぐらは少ししずむ */
 function critPokeZ(c,now){if(!c.pk)return 0;const q=(now-c.pk)/(CRITPK*1000);if(q<0||q>=1)return 0;
   if(c.k==='fly'||c.k==='mitsubachi')return Math.round(Math.sin(q*Math.PI)*16);
