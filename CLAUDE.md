@@ -739,6 +739,7 @@
 - 曲（BGM）は、オープニング（タイトル・マップえらび・プロローグ）だけ。タイトルでは、はじめてさわったとき（どこでも）から鳴らす（ブラウザは、さわるまで音を出させない）。遊んでいるあいだは曲を鳴らさない（`sched` の `opening` のほか。持ち主がきめた）。ボスが出たときなどの効果音・環境音はそのまま。昼・夜・ボスの曲のデータ（`stageSong`・`SONGS`）は、のこしてある。朝6時・夜12時には、短い和音を1回だけ鳴らす（`dayChimeTick`、`SAMPLES.dawn`・`midnight`。ARK の日の出・日の入りのように。作り方は `tools/sound/day_chime.py`。持ち主がえらんだ。たしかめは `tools/tests/day-chime.cjs`）。
 - iPhone は、さわったとき（touchend・click）の中で音を1つ鳴らさないと、タイマーであとから鳴らす音（曲）が出ない（効果音だけ鳴る）。pointerdown では音がひらかない。さわったときに、だまった短い音を鳴らす（`audioUnlock`）。
 - 夜の環境音（虫の声）は大きさ0.5（`ambTick` の `want.night`）。
+- 季節・時間の環境音（`ambTick`、効果音ラボの録音を `tools/sound/season_amb.py` で作る）：朝5時〜7時半は朝の音 `amb_morn`（どの季節も）。昼は春 `amb_spr`・夏 `amb_sum`、秋・冬は鳥の声 `birds`。夜は夏 `amb_snight`、ほかは虫の声 `night`。雨の日は雨の音だけ。
 - 夜のコワイノをぜんぶ追いはらって、さいごの子が倒れおわったら、起きている子がよろこぶ（`nightClearJoy`、1晩1回 `S.ns.clr`）。
 - 村のようすに、つぎの村レベルでおぼえる物を出す（`nextLevelItems`：`learnedIn` と同じ決まり。おぼえた物・このステージで出ない物はのぞく）。
 - きのうの日記（`diary.js`）：朝6時から朝6時までの1日（`S.dy`）に、作業（`dayNote`→`dyWork`）・できごと（`memo`・`logEv`→`dyEv`）・追いはらったコワイノ（`defeat`→`dyKill`。見張り台は上の子）を書き、朝（`morning` の `diaryClose`）に `S.diary` へしまって紙を出す（会話・画面が出ていれば知らせだけ）。ゆうべの守り（前の「ゆうべの守り」の画面）も日記の中。思い出帳の「日記」から読める。
