@@ -200,7 +200,7 @@ function goAdmire(r,G){if(ADMS!==S||!ADMQ.length)return false;ADMQ=ADMQ.filter(q
   for(const q of ADMQ){if(q.who.length>=ADMN||q.who.includes(r.id))continue;const ox=q.j%W,oy=(q.j/W)|0,pr=(q.pref||[]).includes(r.id);if(!pr&&Math.hypot(ox-r.x,oy-r.y)>ADMR)continue;
     const st=nearest(G,j=>walk(j)&&!S.obj[j]&&adjOf(j,k=>anc(k)===q.j)>=0&&!(TAKEN&&TAKEN.has(j)),pr?80:20);if(st<0)continue;q.who.push(r.id);startAct(r,G,'admire',st,{obj:q.j,id:q.id,dur:12,own:pr});return true}return false}
 ACT.admire={start(r,a){const x=a.obj%W+.5;r.face=x>=r.x?1:-1;r.bubble='❗'},
-  tick(r,a){if(a.t>=3&&!a.said){a.said=1;const k=elemKey(r),L=ADML[k]||ADML.wood,ln=pickFresh('adm:'+k,L);r.bubble='';addFloat(r.x,r.y-1.6,ln,'#fff3d6');if(a.own||likeF(r)===a.id||(FAVTOY[r.elem]||[]).includes(a.id)){JOYU.set(r,performance.now()+2500);r.bubble='💕'}}},
+  tick(r,a){if(a.t>=3&&!a.said){a.said=1;const k=elemKey(r),L=ADML[k]||ADML.wood,ln=pickFresh('adm:'+k,L);r.bubble='';addFloat(r.x,r.y-1.6,ln,'#fff3d6');if(likeF(r)===a.id&&typeof prefKnown==='function'&&!prefKnown(r,'lf'))prefMeet(r,'lf');/* はじめて好きな家具 */else if(a.own||likeF(r)===a.id||(FAVTOY[r.elem]||[]).includes(a.id)){JOYU.set(r,performance.now()+2500);r.bubble='💕'}}},
   done:(r,a)=>a.t>=a.dur||S.obj[a.obj]!==a.id,end(r){r.fun=Math.min(100,r.fun+ADMFUN);r.wanderRestUntil=S.t+30;r.bubble=''}};
 ACT_LBL.admire='新しい物を見にきた';
 /* ---------- じぶんの場所：つかうせいれいをきめたいす・ベンチ（useOwn）で、ひまなときによく休む。まわり3マスのかざり1つにつき、たのしさ+2（10まで） ---------- */
