@@ -57,6 +57,7 @@ CHICK={'0':dict(),'1':dict(sq=.92),'w0':dict(swing=44,roll=11,bob=.08),'w1':dict
  'e0':dict(pitch=30),'e1':dict(pitch=48),'e2':dict(pitch=36),
  'j0':dict(sq=.84),'j1':dict(sq=1.07,pitch=-12),'j2':dict(sq=.96,pitch=-5)}   # まんまるの鳥：体ごと、ころがって歩き、かたむいてついばむ。よろこぶと、ちぢんで、のびて、うしろへそる
 ROT=-90   # 右むき（少し手前）。歩く足が見えるように
+VROT={'d':-35,'u':-185}   # 正面（d：手前へ歩く）・うしろ（u：奥へ歩く）。まっすぐ正面は −20、そこから15度右へ（顔が見える。ゲームで左右反転する）。ani_build.py
 def warp(name,frame,rot=None):
     """blueprint の Part.warp にわたす関数：点（ゲームの向き）→ ポーズをつけて rot 度まわした点"""
     from blueprint import model_tris
