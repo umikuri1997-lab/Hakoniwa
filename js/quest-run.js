@@ -34,7 +34,7 @@ function checkQuest(){
     if(!wait&&!q.field){const visit=queueQuestVisit(q,storyWho(q));if(visit){QUEST_CLEAR_WAIT=Object.assign({quest:S.quest,done:false},visit);renderQuest();return}}
     PAYOK=false;
     if(q.pay)for(const k in q.pay)S.mat[k]=Math.max(0,(S.mat[k]||0)-q.pay[k]);/* 材料を使うクエスト */
-    S.quest++;S.qTalked=false;sfx('quest');logEv('目標「'+q.text+'」をたっせい');if(typeof uiStamp==='function')uiStamp(document.getElementById('questChip'));/* 目標の札に、たっせいのハンコ */
+    S.quest++;S.qTalked=false;sfx('quest');logEv('目標「'+q.text+'」をたっせい');if(typeof uiStamp==='function')uiStamp(document.getElementById('questChip'));if(typeof juiceCheer==='function')juiceCheer('quest');/* 紙ふぶきと、よろこぶ動き *//* 目標の札に、たっせいのハンコ */
     if(q.story){S.qStory=S.quest-1;TALKW=storyWho(q);QUESTCLEARW=TALKW;if(/^lv\d/.test(q.id))focusQuestSpeaker(TALKW);renderQuest();renderPalette();/* お礼は吹き出しをタップしてから。自動では会話を開かない */return}
     const after=questGives(q);inspireQuest(q,'clear');if(after)after();
     renderQuest();renderPalette();
