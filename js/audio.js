@@ -81,6 +81,7 @@ function bellRing(x,y){/* 村の鐘：教会の鐘の音を、間をあけて3�
 function playS(k,vol,dl,rt){const L=(SBUF[k]||[]).filter(Boolean);if(!L.length)return false;const src=AC.createBufferSource(),g=AC.createGain();src.buffer=pick(L);src.playbackRate.value=(rt||1)*(.92+Math.random()*.16);g.gain.value=vol*(SFXO?1:SFXV);src.connect(g);g.connect(SFXO||sfxG);src.start(AC.currentTime+(dl||0));return true}
 /* UIの本物の音：鳴らすたびに、ちがう録音（3〜5しゅるい）と、少しちがう高さ・大きさ（同じ音のくりかえしは機械っぽく聞こえる） */
 function playU(k,vol,rt,dl){return playS(k,vol*(.85+Math.random()*.3),dl,rt||1)}
+let AUNLK=0;function audioUnlock(){/* iPhone は、さわったとき（touchend・click）の中で音を1つ鳴らさないと、あとから鳴らす音（タイトルの曲など）が出ない。だまった短い音を1回鳴らしてひらく */if(!AC||AUNLK&&AC.state==='running')return;try{const s=AC.createBufferSource();s.buffer=AC.createBuffer(1,1,22050);s.connect(AC.destination);s.start(0);AUNLK=1}catch(e){}}
 function audioInit(){
   if(AC){if(AC.state==='suspended')AC.resume().catch(()=>{});return}
   try{AC=new (window.AudioContext||window.webkitAudioContext)();if(AC.state==='suspended')AC.resume().catch(()=>{})}catch(e){return}
