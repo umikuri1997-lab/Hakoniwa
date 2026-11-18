@@ -20,14 +20,14 @@ const assert=require('node:assert/strict');
     const gain=r.est.map((e,i)=>{const o2={};for(const k in e)if(e[k]!==(before[i][k]||0))o2[k]=e[k]-(before[i][k]||0);return o2});
     console.log(id,'paid',o.pt,o.f,'gain',JSON.stringify(gain));return gain};
   const base=JSON.parse(await run(`JSON.stringify(S.res.map(r=>Math.round(rMul(r,'move')*100)))`));
-  const t=await go('taiso',0);assert.ok(t.every(g=>g.sta===3),'taiso');
+  const t=await go('taiso',0);assert.ok(t.every(g=>g.sta===1),'taiso');
   assert.equal(await run(`!!evOpen('taiso',[S.res[0].id])`),false,'once per season');
-  const a=await go('oni',3);assert.ok(a.slice(0,3).every(e=>e.move===5),'oni gives move');
+  const a=await go('oni',3);assert.ok(a.slice(0,3).every(e=>e.move===1),'oni gives move');
   const after=JSON.parse(await run(`JSON.stringify(S.res.map(r=>Math.round(rMul(r,'move')*100)))`));assert.ok(after[0]>=base[0]+5,'rMul uses est');
   await go('ensoku',4);
   await go('gochi',2,"{const j=(CY+5)*W+CX-6;S.obj[j]='table';S.obj[j+1]='part';S.ref[j+1]=j;}");
   await go('soji',0,"for(let i=0;i<6;i++){const j=(CY+4)*W+CX+4+i;if(!S.obj[j])S.obj[j]='weed0g'}");
-  const tk=await go('takara',4);assert.ok(tk.slice(0,4).every(g=>g.move>=3&&g.move<=8),'takara 3..8');
+  const tk=await go('takara',4);assert.ok(tk.slice(0,4).every(g=>g.move>=1&&g.move<=2),'takara 1..2');
   await go('yomi',0,"{const j=(CY+6)*W+CX+6;S.obj[j]='shelf1';}");
   assert.equal(await run(`!!evOpen('mizu',[S.res[0].id])`),false,'summer only');
   await go('mizu',0,"{const j=(CY+6)*W+CX-8;S.obj[j]='fountain';for(const k of[j+1,j+W,j+W+1]){S.obj[k]='part';S.ref[k]=j}}",9);
@@ -58,17 +58,17 @@ const assert=require('node:assert/strict');
   await run(`for(const id of ['salvia','lily'])S.inv[id]=(S.inv[id]||0)+6;S.mat.shina=(S.mat.shina||0)+30;S.mat.wood=(S.mat.wood||0)+40;addFood('mugi',20);addFood('imo',15);for(let i=0;i<60;i++)addFood('apple',1);S.pt+=3000`);
   const fl="{let n=0;for(let y=CY-14;y<CY-8&&n<30;y++)for(let x=CX-12;x<CX+12&&n<30;x++){const j=y*W+x;if(!S.obj[j]&&!S.ground[j]&&walk(j)){S.obj[j]='salvia';n++}}}";
   const h0=await run(`S.inv.salvia+S.inv.lily`);
-  const hg=await go('hana',0,fl,58);assert.ok(hg.every(g=>g.sta===8),'hana sta+8');assert.equal(await run(`S.inv.salvia+S.inv.lily`),h0-10,'10 flower seeds used');
-  const ug=await go('undo',0,'',72);const big=ug.filter(g=>g.work===10).length,small=ug.filter(g=>g.work===5).length;assert.ok(big>=1&&big+small===ug.length,'undo +5 / winners +10 '+JSON.stringify(ug));
+  const hg=await go('hana',0,fl,58);assert.ok(hg.every(g=>g.sta===2),'hana sta+2');assert.equal(await run(`S.inv.salvia+S.inv.lily`),h0-10,'10 flower seeds used');
+  const ug=await go('undo',0,'',72);const big=ug.filter(g=>g.work===2).length,small=ug.filter(g=>g.work===1).length;assert.ok(big>=1&&big+small===ug.length,'undo +1 / winners +2 '+JSON.stringify(ug));
   const farm="{let n=0;for(let y=CY+9;y<CY+12&&n<10;y++)for(let x=CX-4;x<CX+4&&n<10;x++){const j=y*W+x;if(!S.obj[j]&&!S.ground[j]&&walk(j)){S.obj[j]='plot';S.dyn[j]={p:0};n++}}}";
   await run(`addFood('mugi',20);addFood('imo',15)`);/* 運動会の食料で作物がへっているので、たす */
   const cr0=await run(`(S.fs.mugi||0)+(S.fs.imo||0)+(S.fs.tomato||0)`);
   const sg=await go('shukaku',0,farm,73);assert.ok(sg.every(g=>g.cap===1),'shukaku cap+1');assert.equal(await run(`(S.fs.mugi||0)+(S.fs.imo||0)+(S.fs.tomato||0)`),cr0-30,'30 crops used');
-  const lg=await go('lantern',0,'',79);assert.ok(lg.every(g=>g.work===8),'lantern work+8');
+  const lg=await go('lantern',0,'',79);assert.ok(lg.every(g=>g.work===2),'lantern work+2');
   assert.equal(await run(`evOn('himatsuri')||evOn('utage')`),false,'volcano only');
-  /* しごとの称号：同じ仕事を100回で称号、その仕事だけ はたらく速さ+10 */
+  /* しごとの称号：同じ仕事を100回で称号、その仕事だけ はたらく速さ+2 */
   const tt=JSON.parse(await run(`(()=>{const r=S.res[1];r.jc={kikori:98};const g0=gJob(r,'chop');titleNote(r,{type:'chop',stage:'do'});const t1=!!(r.ttl||{}).kikori;titleNote(r,{type:'chop',stage:'do'});const w=rStat(r,rLv(r)).work;return JSON.stringify({t1,t2:!!r.ttl.kikori,g0,g1:gJob(r,'chop'),gm:gJob(r,'mine'),w})})()`));
-  assert.ok(!tt.t1&&tt.t2,'title at 100');assert.equal(tt.g0,1);assert.ok(Math.abs(tt.g1-(tt.w+10)/tt.w)<1e-9,'chop +10');assert.equal(tt.gm,1,'other jobs unchanged');
+  assert.ok(!tt.t1&&tt.t2,'title at 100');assert.equal(tt.g0,1);assert.ok(Math.abs(tt.g1-(tt.w+2)/tt.w)<1e-9,'chop +2');assert.equal(tt.gm,1,'other jobs unchanged');
   await run(`openSheet('res',S.res[1].id)`);await page.waitForTimeout(400);
   const shown=await run(`document.querySelector('#sheetBody').textContent.includes('きこりの名人')`);await run(`closeSheet()`);
   assert.ok(shown,'title shown on spirit sheet');
@@ -81,7 +81,7 @@ const assert=require('node:assert/strict');
   const d=JSON.parse(await run(`(()=>{S.evDone={};evOpen('oni',S.res.slice(0,2).map(r=>r.id));S.t=(${dd})*1440+13*60;evTick();const ph=S.ev.ph;S.t=(${dd})*1440+21*60+5;evTick();return JSON.stringify({ph,after:S.ev.ph,day:S.ev.day})})()`));
   assert.equal(d.ph,'go');assert.equal(d.after,null);assert.equal(d.day,dd+2);
   /* 上限 */
-  const cap=await run(`(()=>{S.ev=null;const r=S.res[0];r.est={move:58};S.ev={id:'oni',who:[r.id],ph:'do',t0:S.t,at:{[r.id]:1},got:{},backed:[],paid:{pt:0,food:[]}};evEnd();return r.est.move})()`);assert.equal(cap,60,'capped at 60');
+  const cap=await run(`(()=>{S.ev=null;const r=S.res[0];r.est={move:11};S.ev={id:'oni',who:[r.id],ph:'do',t0:S.t,at:{[r.id]:1},got:{},backed:[],paid:{pt:0,food:[]}};evEnd();return r.est.move})()`);assert.equal(cap,12,'capped at 12');
   /* 画面 */
   await run(`S.ev=null;S.evDone={};S.t=(dayNo())*1440+7*60;while(seasonDay(dayNo()+1)===CUPDAY)S.t+=1440;S.pt+=500;openSheet('craft')`);await page.waitForTimeout(300);await run(`document.querySelector('#evBtn').click()`);await page.waitForTimeout(400);
   const rows=await run(`document.querySelectorAll('#sheetBody .row').length`);assert.ok(rows>=12,'event rows '+rows);

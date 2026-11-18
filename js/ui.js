@@ -531,7 +531,7 @@ function renderSheet(){
      else{
      const st=el('<div class="sec"><div class="stats sgrid"></div></div>'),g=st.querySelector('.stats');
      for(const tk of[(r.vr||{}).tr,isKey(r.name)?'kizuna':null]){const T2=TRAITS[tk];if(T2){const d=el('<div class="stat" style="display:block"><span style="display:block">特性</span><b style="display:block;text-align:left;margin-top:2px"></b><small style="display:block;color:var(--sub,#888);margin-top:2px"></small></div>');d.querySelector('b').textContent=T2[0];d.querySelector('small').textContent=T2[1];g.appendChild(d)}}/* キーキャラは「きずな」も持つ */titleSec(r,g);/* しごとの称号 */
-     const Z=rStat(r,lv);for(const[k,v,ic]of[['攻撃力',Z.atk?String(Math.floor(Z.atk+1e-9)):'なし','sword'],['はたらく速さ',String(Math.floor(Z.work)),'hammer'],['移動速度',String(Math.floor(Z.move)),'boot'],['スタミナ',String(Math.floor(Z.sta)),'heart'],['持てる数',heldN(r)+' / '+Z.cap,'box']])g.appendChild(el('<div class="stat sti">'+pxi(ic)+'<span>'+k+'</span><b>'+v+'</b></div>'));/* アイコンつきの2列 */
+     const Z=rStat(r,lv);for(const[k,v,ic]of[['攻撃力',Z.atk?String(Math.floor(Z.atk+1e-9)):'なし','sword'],['はたらく速さ',seaTxt(r,'work',Z.work),'hammer'],['移動速度',seaTxt(r,'move',Z.move),'boot'],['スタミナ',seaTxt(r,'sta',Z.sta),'heart'],['持てる数',heldN(r)+' / '+Z.cap,'box']])g.appendChild(el('<div class="stat sti">'+pxi(ic)+'<span>'+k+'</span><b>'+v+'</b></div>'));/* アイコンつきの2列 */
      body.appendChild(st)}}
     if(isNew){const nb=el('<button class="btn pri">つぎへ</button>');nb.onclick=()=>{sfx('next');closeSheet()};/* 来た子が、ひとことあいさつ（closeSheet の中で。×でとじても同じ） */body.appendChild(nb);return}
   }else if(sheet==='diary'){diaryBody(T,body,sheetArg);

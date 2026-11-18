@@ -47,7 +47,7 @@ function drawNest(c,x,y,now){/* かげの巣（コードのドット絵、仮の
 /* ---------- オオカゲの段階 ----------
    オオカゲ：体力が半分で、1回だけほえて、そばにコカゲ2ひき・時計の10分だけ速さ1.3倍。ヨルノオオカゲ：半分でコカゲ3びき、4分の1で、いちばん近い柵を1つとびこえる。 */
 const RAGET=15,RAGESP=1.3;
-function bossCall(e,n){let k=0;for(let i=0;i<12&&k<n;i++){const a=i/12*Math.PI*2,x=e.x+Math.cos(a)*1.5,y=e.y+Math.sin(a)*1.5,j=(y|0)*W+(x|0);if(!walk(j))continue;const hp=EN.basic.hp;S.enemies.push({id:S.nid++,type:'basic',x:(x|0)+.5,y:(y|0)+.5,hp,max:hp,spawned:true,path:[],repath:0,atk:0,stun:0,flash:0,flee:false});fxSpr('shock',((x|0)+.5)*TS,((y|0)+.5)*TS,'#5b3f8a');k++}if(S.ns)S.ns.n+=k;return k}
+function bossCall(e,n){let k=0;for(let i=0;i<12&&k<n;i++){const a=i/12*Math.PI*2,x=e.x+Math.cos(a)*1.5,y=e.y+Math.sin(a)*1.5,j=(y|0)*W+(x|0);if(!walk(j))continue;const hp=EN.basic.hp;S.enemies.push({id:S.nid++,type:'basic',x:(x|0)+.5,y:(y|0)+.5,hp,max:hp,spawned:true,path:[],repath:0,atk:0,stun:0,flash:0,flee:false});if(typeof seaFoeInit==='function')seaFoeInit(S.enemies[S.enemies.length-1]);fxSpr('shock',((x|0)+.5)*TS,((y|0)+.5)*TS,'#5b3f8a');k++}if(S.ns)S.ns.n+=k;return k}
 function bossPhase(e){const t=e.type;if(t!=='boss'&&t!=='boss2'||e.dead)return;
   if(!e.ph1&&e.hp<=e.max/2){e.ph1=1;sfx('night');if(typeof shakeScreen==='function')try{shakeScreen(6,400)}catch(_){}bossCall(e,t==='boss2'?3:2);if(t==='boss')e.rage=S.t+RAGET;toast(EN[t].name+'がほえた！','warn')}
   if(t==='boss2'&&!e.ph2&&e.hp<=e.max/4){e.ph2=1;bossLeap(e)}}
@@ -101,6 +101,6 @@ function ultHit(r,en,dmg){r.ult=(r.ult||0)+1;if(r.ult<=ULTN)return;r.ult=0;const
   else if(r.elem==='wind'){for(const e of near(2)){let dx=e.x-r.x,dy=e.y-r.y;const l=Math.hypot(dx,dy)||1;dx/=l;dy/=l;let bx=null,by=null;for(let k=1;k<=3;k++){const nx=e.x+dx*k,ny=e.y+dy*k,q=(ny|0)*W+(nx|0);if(!(nx>1&&ny>1&&nx<W-1&&ny<H-1)||!walk(q)||HOME_DOORS.has(typeAt(q))||GATE_IDS.has(typeAt(q)))break;bx=nx;by=ny}if(bx!=null){e.x=bx;e.y=by;e.path=[];e.repath=0}}}
   else if(r.elem==='wood'){for(const q of S.res)if(!q.hidden&&Math.hypot(q.x-r.x,q.y-r.y)<=2)q.hunger=Math.min(hMax(q),q.hunger+100)}}
 /* ---------- 守りつづけた夜：けがもこわされた物もない夜がつづくと、はたらく速さ+（S.streak） ---------- */
-const STREAKN=[3,7,14],STREAKW=[5,10,15];
+const STREAKN=[3,7,14],STREAKW=[1,2,3];
 function streakWork(){const n=(S&&S.streak)||0;let b=0;for(let i=0;i<STREAKN.length;i++)if(n>=STREAKN[i])b=STREAKW[i];return b}
 function streakMorning(){if(!S.ns||!(S.ns.n>0))return;if(!S.nightHurt&&!S.ns.broke){const b0=streakWork();S.streak=(S.streak||0)+1;const b1=streakWork();if(b1>b0)toast('守りつづけて'+S.streak+'晩：はたらく速さ+'+b1,'good')}else S.streak=0}

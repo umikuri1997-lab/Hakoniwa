@@ -31,7 +31,7 @@ const assert=require('node:assert/strict');
   console.log('Stump inside a house: the goal says why the tree cannot grow');
   /* 5. かげのあとが家の中でも、調べられる */
   const e=await J(`(()=>{S.quest=questIndexOf('kagemark');S.qTalked=true;S.bossKills=0;const x=70,y=70;for(let b=-3;b<=3;b++)for(let a2=-3;a2<=3;a2++){const k=(y+b)*W+x+a2;S.obj[k]='';S.ground[k]=0;if(S.fog)S.fog[areaOf(k)]=0}
-    for(let a2=-3;a2<=3;a2++){S.obj[(y-3)*W+x+a2]='hwall';S.obj[(y+3)*W+x+a2]='hwall';S.obj[(y+a2)*W+x-3]='hwall';S.obj[(y+a2)*W+x+3]='hwall'}S.obj[(y+3)*W+x]='door';recount();S.flags.kgMark=y*W+x;S.flags.kgLook=false;
+    for(let a2=-3;a2<=3;a2++){S.obj[(y-3)*W+x+a2]='hwall';S.obj[(y+3)*W+x+a2]='hwall';S.obj[(y+a2)*W+x-3]='hwall';S.obj[(y+a2)*W+x+3]='hwall'}S.obj[(y+3)*W+x]='door';recount();spotSceneReset();/* 前の段の家でできたスポットの場面（カメラの演出のあいだはタップをうけない）を、ここでおえる */S.flags.kgMark=y*W+x;S.flags.kgLook=false;
     const inHouse=HOUSES.some(h=>h.set.has(y*W+x));setMode('look');cam.z=2;centerOn((x+.5)*TS,(y+.5)*TS);onTap(VW/2,VH/2);const first=!!S.flags.kgLook;if(!first)onTap(VW/2,VH/2);return JSON.stringify({inHouse,look:!!S.flags.kgLook})})()`);
   assert.deepEqual(e,{inHouse:true,look:true},'the shadow mark inside a house can still be examined');
   console.log('Shadow mark inside a house: it can still be examined');

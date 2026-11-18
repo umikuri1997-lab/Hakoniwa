@@ -17,7 +17,7 @@ const assert=require('node:assert/strict');
   console.log(JSON.stringify(r));
   assert.equal(r.pa0,0);assert.equal(r.lock,false);assert.equal(r.poor,false);assert.equal(r.pt0,10);
   assert.equal(r.n,26);assert.equal(r.all,26);assert.equal(r.pt,10000-r.tot);
-  assert.deepEqual(r.d,{work:5,move:5,cap:1,atk:2,sta:10});assert.equal(r.rec,1.1);
+  assert.deepEqual(r.d,{work:2,move:2,cap:1,atk:2,sta:2});assert.equal(r.rec,1.1);
   assert.equal(r.box,.1);assert.equal(r.fun,.9);assert.equal(r.wdmg,2);assert.equal(r.wrng,1);assert.equal(r.comf,10);assert.equal(r.cook,20);assert.equal(r.fish,5);assert.equal(r.hun,5);assert.equal(r.wcd,5);assert.equal(r.trap,2);assert.equal(r.kpt,1);
   assert.deepEqual(r.mig,[400,0],'前の木の点はとじて、パワーをもどす');assert.equal(r.mig2,400,'1回だけ');
   assert.equal(r.st0,'kb1=can,sw1=can,md1=can','いちばん下の点だけひらける');assert.equal(r.pop,'しごと');

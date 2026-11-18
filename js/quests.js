@@ -412,7 +412,7 @@ function departScene(){const owner=S,session=VILLAGE_SESSION,alive=()=>S===owner
   DEPART_RUN=true;centerOn(TX*TS,TY*TS);gatherAt(TX,TY,()=>{if(!alive())return;if(isNight()){stop();DEPART_RETRY=performance.now()+5000;return}hold(true);villageTimeout(talk,400)},null,()=>{stop();DEPART_RETRY=performance.now()+20000})}/* 集まれなかったら、しばらくして集まるところから */
 /* ふしぎな種：せいれいにあげると、能力のどれかが上がる（パワーの強化とは別） */
 const UPK=[['atk','攻撃力'],['pow','はたらく速さ'],['spd','移動速度'],['sta','スタミナ'],['cap','持てる数']];
-const UPINC={atk:[10,20],pow:[10,20],spd:[10,20],sta:[10,20],cap:[1,2]},SEEDMAX={atk:60,pow:60,spd:60,sta:60,cap:6};/* ふしぎな種で1回にふえる数：[75%で,25%で]。ふしぎな種でふやせる上限 */
+const UPINC={atk:[10,20],pow:[2,4],spd:[2,4],sta:[2,4],cap:[1,2]},SEEDMAX={atk:60,pow:12,spd:12,sta:12,cap:6};/* ふしぎな種で1回にふえる数：[75%で,25%で]。ふしぎな種でふやせる上限 */
 function giveSeed(r){if((S.mseed||0)<1)return;const T=r.sst||(r.sst={}),L=UPK.filter(([k])=>(T[k]||0)<SEEDMAX[k]&&(k!=='atk'||r.elem==='fire'));/* 攻撃力は火の子だけ */if(!L.length)return toast(r.name+'は、これ以上ふしぎな種で強くならない');
   S.mseed--;const[k,nm]=pick(L),n=T[k]||0,U=UPINC[k],inc=Math.min(Math.random()<.75?U[0]:U[1],SEEDMAX[k]-n);T[k]=n+inc;
   if(k==='pow'||k==='spd'||k==='sta'){vrInt(r.vr);r.vr[k]=(r.vr[k]||0)+inc}
