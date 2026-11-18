@@ -91,7 +91,7 @@ function onTap(sx,sy){if(GIFT_ACTIVE&&camAnim&&camAnim.done)return;if(typeof sta
   const si=S.seeds.findIndex(s=>s.x===tx&&s.y===ty);
   if(tx>=0&&ty>=0&&tx<W&&ty<H){const hh=HOUSES.find(h=>h.set.has(ty*W+tx));/* 開けた屋根は、壁をタップするまでそのまま */
     if(hh&&mode!=='look'&&!OPENH.has(hKey(hh))){OPENH.add(hKey(hh));dirty=true;return}}/* 置く・こわすときも、まず家をタップして中を見る */
-  if(si>=0){sfx('seed');S.seeds.splice(si,1);S.mseed=(S.mseed||0)+1;S.mseedGot=(S.mseedGot||0)+1;addFloat(tx+.5,ty,'ふしぎな種+1','#d8f5c0');burstAt(tx,ty,'plant');toast('ふしぎな種をひろった','good');return}
+  if(si>=0){sfx('pick_tsoil');S.seeds.splice(si,1);S.mseed=(S.mseed||0)+1;S.mseedGot=(S.mseedGot||0)+1;addFloat(tx+.5,ty,'ふしぎな種+1','#d8f5c0');burstAt(tx,ty,'plant');toast('ふしぎな種をひろった','good');return}
   if(mode==='look'){
     if(fieldStoryTap(tx,ty))return;
     const en=enemyAtTap(w0.x,w0.y);
@@ -129,7 +129,7 @@ function onTap(sx,sy){if(GIFT_ACTIVE&&camAnim&&camAnim.done)return;if(typeof sta
       if(o==='heatv')return openSheet('heatv',j);
       if(o==='boulder')return toast('大岩：のこり '+Math.max(0,4-(S.hp['n'+j]||0))+'/4');
       if(o==='crack'){const t=st2();if(!(t.hai>0))return toast('ひびわれ：ハイカゲの灰でうめられる（灰'+(t.hai||0)+'）');t.hai--;clearObj(j);S.floor[j]='path';burst(j,'block');sfx('level');recount();dirty=true;toast('ひびわれを、灰でうめた（灰-1）','good');return checkQuest()}}
-    {const g=ty*W+tx,dp=(S.drops||[]).find(q=>q.y*W+q.x===g&&q.id!=='shard');if(WEEDS.has(o)||dp){if(o==='kinoko'&&foodCap()-S.food<=0)return toast('箱に入りません');if((WEEDS.has(o)&&o!=='kinoko'||dp&&dp.id.startsWith('mat:'))&&matCap()-matTot()<=0)return toast('箱に入りません');if(dp&&dp.id.startsWith('food:')&&foodCap()-S.food<=0)return toast('箱に入りません');let nm;if(WEEDS.has(o)){(S.wreq||(S.wreq={}))[j]=1;nm=BL[o].name}else{dp.tap=1;nm=dp.id.startsWith('mat:')?(MATN[dp.id.slice(4)]||'おとしもの'):'おとしもの'}sfx(WEEDS.has(o)?'tgrass':dp.id==='mat:can'?'tcan':'twood');return toast(nm+'：せいれいがとりにいく'+'')}}/* 草・きのこ・枝などの落とし物は、タップすると、せいれいがとりにいく */
+    {const g=ty*W+tx,dp=(S.drops||[]).find(q=>q.y*W+q.x===g&&q.id!=='shard');if(WEEDS.has(o)||dp){if(o==='kinoko'&&foodCap()-S.food<=0)return toast('箱に入りません');if((WEEDS.has(o)&&o!=='kinoko'||dp&&dp.id.startsWith('mat:'))&&matCap()-matTot()<=0)return toast('箱に入りません');if(dp&&dp.id.startsWith('food:')&&foodCap()-S.food<=0)return toast('箱に入りません');let nm;if(WEEDS.has(o)){(S.wreq||(S.wreq={}))[j]=1;nm=BL[o].name}else{dp.tap=1;nm=dp.id.startsWith('mat:')?(MATN[dp.id.slice(4)]||'おとしもの'):'おとしもの'}sfx(o==='kinoko'?'tpuni':WEEDS.has(o)?'tgrass':dp.id==='mat:can'?'tcan':'twood');return toast(nm+'：せいれいがとりにいく'+'')}}/* 草・きのこ・枝などの落とし物は、タップすると、せいれいがとりにいく */
     if(HOME_WALLS.has(o)||HOME_DOORS.has(o)){const w=houseWhy(j);if(w)toast(w)}/* 家にならないかべ・ドアをタップすると、理由を出す */
     if(o&&rangeOf(o,j))SHOWR={j,o,until:performance.now()+4000};
     if(o==='farm')return openSheet('farm',j);

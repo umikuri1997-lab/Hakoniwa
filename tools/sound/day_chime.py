@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """朝6時・夜12時に鳴らす短い音（ARK の日の出・日の入りのように。持ち主がききくらべのページでえらんだ、作った音）。
   dawn：やわらかい和音がふくらむ（ドミソ→ファラド→ドミソ）に、上へのぼる小さなベル（7秒）
-  midnight：ひくい短調の和音がゆっくり（ラドミラ）に、遠い鐘を3回（8秒）
+  midnight：前は作った音だったが、いまは本物のジングル（tools/sound/midnight_jingle.py）にかえた。ここの midnight は使わない
   どの音も、きえるまで（d の5.5倍）鳴らし、さいごは FADE 秒かけて小さくする（とちゅうで切れて聞こえないように）。
 使いかた：python3 tools/sound/day_chime.py  → assets/g/<中身のsha1の先10字>.mp3 と、js/audio.js にはる SAMPLES の行を出す。"""
 import os,hashlib,subprocess,json,numpy as np

@@ -150,7 +150,7 @@ function attrPop(k){
   card.appendChild(el('<p class="note">マップにあるものを集計。花と木は育ってから加算されます。</p>'));
   ov.appendChild(card);ov.onclick=()=>ov.remove();$('#app').appendChild(ov)}/* 属性の内訳ポップアップ */
 function placeFromInv(id){/* もちものから「置く」：ウィンドウをとじて、「おく」でえらんだときと同じにする */closeSheet();setMode('build');sel=id;selStamp=null;palOpen=false;renderPalette();}
-const CREDIT_TXT='音楽：このゲームのオリジナル<br>マップの読みこみ中の曲：joth「JRPG Piano」（OpenGameArt、CC0）<br>効果音・鳥の声・雨の音・朝と季節の環境音：効果音ラボ<br>手ざわりの音（ハンコ・木くず・きしみ・めくる音など）・せいれいの足音：Kenney（CC0）<br>生き物の鳴き声・かれ葉・水・スコップの音・川・池・温泉の水の音・カエルの声：OpenGameArt（CC0）<br>みつばちの羽音：IMadeIt「Single Bee Sound」（OpenGameArt、CC-BY 3.0 https://creativecommons.org/licenses/by/3.0/ 、短く切って大きさをそろえた）<br>出典を確認中：村の鐘・夜の環境音・ヌシのかけらをはめる音・家具を置く音・素材が落ちる音';
+const CREDIT_TXT='音楽：このゲームのオリジナル<br>マップの読みこみ中の曲：joth「JRPG Piano」（OpenGameArt、CC0）<br>効果音・鳥の声・雨の音・朝と季節の環境音：効果音ラボ<br>手ざわりの音（ハンコ・木くず・きしみ・めくる音など）・せいれいとコワイノの足音・はしご・弓・きのこ・はたおり機の音：Kenney（CC0）<br>生き物の鳴き声・ちょうの羽音（猫の耳の音・michaelvanham「Large Wings Flap」）・かれ葉・水・スコップの音・川・池・温泉の水の音・カエルの声：OpenGameArt（CC0）<br>夜12時のジングル：Snabisch「Short Jingle」（OpenGameArt、CC0）<br>みつばちの羽音：IMadeIt「Single Bee Sound」（OpenGameArt、CC-BY 3.0 https://creativecommons.org/licenses/by/3.0/ 、短く切って大きさをそろえた）<br>出典を確認中：村の鐘・夜の環境音・ヌシのかけらをはめる音・家具を置く音・素材が落ちる音';
 function creditPop(){/* 設定：音のクレジット（出どころ）を、べつのポップアップで */const o=el('<div style="position:fixed;inset:0;z-index:45;display:flex;align-items:center;justify-content:center;background:rgba(30,24,16,.45);padding:24px"><div class="pxcard" style="background:var(--panel);padding:16px 18px;max-width:360px;width:100%;color:var(--ink);max-height:80vh;overflow:auto"><b style="font-size:16px">音のクレジット</b><p class="note" style="margin:8px 0 12px;line-height:1.7"></p><div style="display:flex;justify-content:flex-end"><button class="btn x">とじる</button></div></div></div>');
   o.querySelector('p').innerHTML=CREDIT_TXT;const close=()=>o.remove();o.querySelector('.x').onclick=()=>{sfx('tap');close()};o.onclick=e=>{if(e.target===o)close()};document.body.appendChild(o)}
 function itemPop(id){/* もちもの：おそなえ箱の物・たね・ふしぎな種をタップしたときのメニュー */const o=el('<div style="position:fixed;inset:0;z-index:45;display:flex;align-items:center;justify-content:center;background:rgba(30,24,16,.45);padding:24px"><div class="pxcard" style="background:var(--panel);padding:16px 18px;max-width:320px;width:100%;color:var(--ink);max-height:80vh;overflow:auto"><div style="display:flex;gap:10px;align-items:center;margin-bottom:6px"><img alt="" style="width:44px;height:44px"><b class="t" style="font-size:16px"></b></div><p class="note n" style="margin:0 0 12px"></p><div class="rows"></div><div class="bt" style="display:flex;gap:8px;justify-content:flex-end;margin-top:10px"><button class="btn x">とじる</button></div></div></div>');
@@ -679,6 +679,7 @@ function renderSheet(){
 
 /* 図鑑：マップごとに、見つけた・おぼえた物だけ（スポット・家具・建物・レシピ・コワイノ・アイテム） */
 let ZKW=null,ZKT=0;const ZKTABS=['スポット','家具','建物','レシピ','コワイノ','アイテム','さかな','いきもの','りょうり'];
+function zkSnd(s){/* 図鑑のアイコンをタップしたときの音（i:物のid → その物の材質の録音・k:音の名前） */if(s.startsWith('i:'))itemSnd(s.slice(2));else if(s.startsWith('k:'))sfx(s.slice(2))}
 function zukanBody(body){
   const ws=[0,1,2,3,4,5].filter(w=>(w===WD&&!S.free)||savedStage(w));if(!ws.length){body.appendChild(el('<p class="note">まだありません</p>'));return}
   if(ZKW==null||!ws.includes(ZKW))ZKW=ws.includes(WD)?WD:ws[0];
@@ -687,20 +688,20 @@ function zukanBody(body){
   const d=ZKW===WD?S:savedStage(ZKW);if(!d)return;
   const G=grecOf(),here=id=>G.get(id)===ZKW,placed=new Set((d.obj||[]).filter(o=>o&&BL[o])),has=id=>placed.has(id)||((d.inv||{})[id]||0)>0;
   const rows=el('<div class="rows"></div>'),list=[];
-  const add=(nm,desc,img)=>list.push([nm,desc,img]);
+  const add=(nm,desc,img,snd)=>list.push([nm,desc,img,snd]);/* snd：アイコンをタップしたときの音（'i:<物のid>'＝ひろったときと同じ材質の録音・'k:<音の名前>'） */
   if(ZKT===0){for(const sp of SPOTS)if((d.spotSeen||{})[sp.k])add(sp.n,'条件：'+spotCond(sp)+'　'+sp.eff,null)}
   else if(ZKT===1||ZKT===2||ZKT===3){const kd=ZKT===1?'furn':ZKT===2?'build':null;
-    for(const id in BL){const b=BL[id];if(!b||!b.name||b.hidden)continue;if(kd?b.kind!==kd:(b.kind==='furn'||b.kind==='build'||b.kind==='nat'))continue;if(!(here(id)||(ZKT!==3&&has(id))))continue;add(b.name,b.desc||'',iconURL(id))}}
+    for(const id in BL){const b=BL[id];if(!b||!b.name||b.hidden)continue;if(kd?b.kind!==kd:(b.kind==='furn'||b.kind==='build'||b.kind==='nat'))continue;if(!(here(id)||(ZKT!==3&&has(id))))continue;add(b.name,b.desc||'',iconURL(id),'i:'+id)}}
   else if(ZKT===4){const seen=d.seenEn||{},K=d.enKills||{};for(const k of Object.keys(EN).filter(k=>ZUKAN[k]&&seen[k])){const D=EN[k],row=el('<div class="zk"><canvas width="144" height="144"></canvas><div class="zt"><b></b><p></p><small></small></div></div>');
-      const c=row.querySelector('canvas').getContext('2d');c.scale(2,2);try{drawShade(c,k,36,64,(k==='boss'||k==='hino'||k==='yama'||k==='boss2'?.46:.56),1,{t:0,dot:1})}catch(_){}
+      row.querySelector('canvas').onclick=()=>sfx('tfoe');/* 図鑑のコワイノ：タップすると、ぽふっ */const c=row.querySelector('canvas').getContext('2d');c.scale(2,2);try{drawShade(c,k,36,64,(k==='boss'||k==='hino'||k==='yama'||k==='boss2'?.46:.56),1,{t:0,dot:1})}catch(_){}
       row.querySelector('b').textContent=D.name;row.querySelector('p').textContent=ZUKAN[k];row.querySelector('small').textContent='体力 '+D.hp+'・はやさ '+D.sp+(WEAK[k]?'・弱点 '+ELEM[WEAK[k]].name:'')+'・追いはらった '+(K[k]||0)+'回・たおしたときのけいけん +'+xpText(spiritXpGain(D.xp,1))+'（Lv1・2）';if(d.cleared&&ZURA[k]){const u=el('<p class="note"></p>');u.textContent='もとのすがた：'+ZURA[k];row.querySelector('.zt').appendChild(u)}rows.appendChild(row);list.push(null)}}
   else if(ZKT===6)fishZukan(d,add);
   else if(ZKT===7)critZukan(d,add);
   else if(ZKT===8)cookZukan(d,add);
   else{const it=Object.assign({},d.seenIt||{});for(const k in d.mat||{})if(d.mat[k]>0)it['m:'+k]=1;for(const k in d.fs||{})if(d.fs[k]>0)it['f:'+k]=1;
-    for(const k in MATN)if(it['m:'+k])add(MATN[k],'素材',ICONS[k]||null);for(const k in FOODS)if(it['f:'+k])add(FOODS[k].name,FOODS[k].fx||'食べ物',foodIc(k));if(it['x:horn'])add('よびごえの角笛',HORNDESC,hornIco());if(it['x:herb'])add('まよけのハーブ',HERBDESC,herbIco())}
+    for(const k in MATN)if(it['m:'+k])add(MATN[k],'素材',ICONS[k]||null,'i:mat:'+k);for(const k in FOODS)if(it['f:'+k])add(FOODS[k].name,FOODS[k].fx||'食べ物',foodIc(k),'i:food:'+k);if(it['x:horn'])add('よびごえの角笛',HORNDESC,hornIco(),'i:horn');if(it['x:herb'])add('まよけのハーブ',HERBDESC,herbIco(),'i:herb')}
   body.appendChild(el('<p class="story">'+list.length+'こ</p>'));
   const zs=S.flags.zkSeen||(S.flags.zkSeen={});let zn=0;const zNew=(name,e)=>{const k=ZKW+':'+ZKT+':'+name;if(zs[k]||!e)return;zs[k]=1;e.classList.add('stknew');e.style.animationDelay=(Math.min(zn++,8)*.06)+'s'};/* 新しく見つけた物のシールは、ぺたっとはる（1回だけ） */
-  for(const q of list){if(!q)continue;const r=rowEl(q[0],q[1],q[2]);zNew(q[0],r.querySelector('img'));rows.appendChild(r)}
+  for(const q of list){if(!q)continue;const r=rowEl(q[0],q[1],q[2]);zNew(q[0],r.querySelector('img'));if(q[3]){const im=r.querySelector('img');if(im){im.style.cursor='pointer';im.onclick=()=>zkSnd(q[3])}}rows.appendChild(r)}
   for(const z of rows.querySelectorAll('.zk'))zNew(z.querySelector('b').textContent,z.querySelector('canvas'));
   if(!list.length)body.appendChild(nodata('zukan','まだ見つけていないよ'));body.appendChild(rows)}

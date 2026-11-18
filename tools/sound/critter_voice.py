@@ -14,6 +14,8 @@
   grasshopper.zip                    https://opengameart.org/content/grasshopper
   im.mp3                             https://opengameart.org/content/8-wet-squish-slurp-impacts
   80-CC0-creature-SFX_0.zip（人の声で作った生き物の声） https://opengameart.org/content/80-cc0-creature-sfx
+  cat flap ears.wav（猫が耳をぱたぱたさせる音。CC0）  https://opengameart.org/content/cat-flapping-ears-sound
+  wings_flap_large.zip（大きな羽ばたき。CC0）       https://opengameart.org/content/large-wings-flap
   bee.zip（bee.wav。IMadeIt「Single Bee Sound」CC-BY 3.0。設定の画面に作者名をのせる） https://opengameart.org/content/single-bee-sound
 使いかた：python3 tools/sound/critter_voice.py <上の物をおとして、zipをひらいたフォルダ> [名前,名前...]
 やること：切る（はじめ・長さ）→ 高さをずらす → 低い所・高い所をけずる → 出だし・終わりをなめらかに
@@ -34,6 +36,7 @@ SET = {
   'cv_frog':  [('ribbit_02.mp3', 0, .45, 1, 150, 8000), ('ribbit_03.mp3', .15, .45, 1, 150, 8000)],  # かえる：けろっ
   'cv_bee':   [('bee/bee.wav', 1.55, .55, 1, 120, 9000), ('bee/bee.wav', .30, .50, 1, 120, 9000)],  # みつばち：ぶーん（本物のハチの羽音、CC-BY 3.0）
   'cv_bug':   [('insect/insect1.ogg', 0, .20, .8, 800, 11000), ('insect/insect4.ogg', 0, .20, .8, 800, 11000)],  # ちょう・てんとうむし：ぱたっ（虫の羽の音）
+  'cv_chou':  [('catflap.wav', 0, .4, 1.3, 1200, 11000), ('wings/wings_flap_large.ogg', .05, .6, 1.8, 800, 10000)],  # ちょう：ひらひら（耳をぱたぱたする音と、羽ばたきを高く。どちらも CC0）
   'cv_tonbo': [('grasshopper/grasshopper.ogg', 1.25, .30, .7, 400, 10000)],  # とんぼ：はたはた
   'cv_hotaru':[('cricketsounds090613.wav', 7.98, .45, 1, 1500, 11000), ('cricketsounds090613.wav', 8.73, .40, 1, 1500, 11000), ('cricketsounds090613.wav', 19.20, .45, 1, 1500, 11000)],  # ほたる：りりっ（夜の虫の声。本物のコオロギの録音）
   'cv_snail': [('**/burble_02.ogg', 0, .50, 1.5, 150, 1200, 's')],  # かたつむり：ぽこぽこ（あわの音を、うんとこもらせ、出だしをゆっくり。持ち主がえらんだ）
