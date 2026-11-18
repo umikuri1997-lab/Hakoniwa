@@ -12,7 +12,8 @@ const WBEAT={cookcut:[[0,'tonton']],cook:[[0,'potclk']],cookmix:[[.25,'tink']],c
   loomweave:[[.3,'shuttle'],[.8,'loombeat']],millgrind:[[0,'grind'],[.5,'grind']],saw:[[.37,'saw','chips'],[.87,'saw']],craft:[[0,'nail','chips']],polish:[[0,'cloth'],[.5,'cloth']],
   wbsaw:[[.37,'saw','chips'],[.87,'saw']],wbham:[[0,'nail','chips']],build:[[0,'bnail']],repair:[[0,'nail']],
   chop:[[.8,'chop','chips']],mine:[[.59,'mine1','pebbles']],draw:[[.4,'dscoop','splash'],[.56,'dlift']],/* 水くみは1回だけ：バケツが水に入る所・ひき上げる所（draw の動きは、くむ行動の進みぐあい 'ph'） */
-  eat_drink:[[.32,'@eat']],eat_bread:[[.3,'@eat']],eat_fruit:[[.3,'@eat']],eat_meal:[[.3,'@eat']],/* 食べる・のむ：かじる・のむ所で、食べている物の音（@eat → eatSnd） */water:[[0,'pour']],tend:[[0,'pour']],wbpolish:[[0,'cloth'],[.5,'cloth']]};
+  eat_drink:[[.32,'@eat']],eat_bread:[[.3,'@eat']],eat_fruit:[[.3,'@eat']],eat_meal:[[.3,'@eat']],/* 食べる・のむ：かじる・のむ所で、食べている物の音（@eat → eatSnd） */wbpolish:[[0,'cloth'],[.5,'cloth']],
+  till:[[.85,'wtill']],sow:[[.12,'wsoil'],[.62,'wsoil']],plant:[[.12,'wsoil'],[.62,'wsoil']],harvest:[[.12,'wleaf'],[.62,'wleaf']],gather:[[.12,'wleaf'],[.62,'wleaf']],weed:[[.6,'wweed']],sweep:[[.25,'wsweep'],[.75,'wsweep']]};/* 水やり（water・tend）は、とぎれない音（pourKeep） */
 const WBMO={craftprep:'wbprep',saw:'wbsaw',craft:'wbham',polish:'wbpolish'};/* 作業台の上でする、もの作りの動き */
 function cookStyle(r){const a=r.act;if(!a||!r.cing)return'mix';if(a.tb)return'mix';const R=typeof recOf==='function'?recOf(r.cing.rec):null,out=R?R.out:r.cing.rec;if(KSTYLE[out])return KSTYLE[out];const D=typeof COOKDI!=='undefined'&&COOKDI[out],t=D&&D.ic&&D.ic[0];let st=KSTYIC[t]||'pot';if(st==='bake'&&S.obj[a.obj]==='campfire')st='pan';return st}/* ふしぎな料理は、なべ */
 function cookP(r){const a=r.act;if(!a||a.obj==null)return 0;return Math.min(1,(a.t||0)/Math.max(1,cookTime(r,a.obj)))}
@@ -37,10 +38,10 @@ function cookPh(r){const a=r.act;if(!a||!r.cing)return'';if(a.sh!=null)return'ra
 function cookTool(r){/* 家具に置く道具：調理台は料理のしゅるい、かまど・たき火は作り方（cookStyle） */const a=r.act,id=a&&S.obj[a.obj],R=r.cing&&recOf(r.cing.rec);if(!R)return'';
   if(id==='cooktable'){const D=COOKDI[R.out],t=D&&D.ic?D.ic[0]:R.out==='salad'?'salad0':R.out;return CKTB[t]||'board'}
   const st=cookStyle(r);if(id==='oven')return st==='pot'?'pot':st==='pan'?'pan':'tray';return st==='pot'?'pot':st==='grill'?'K':'net'}
-function cookTopD(i){/* できた料理を置く所（世界のドット）。湯気を出す所 */const id=S.obj[i],v=id==='cooktable'?(rotAt(i)===3?1:rotAt(i)):0,T=typeof CKTOP!=='undefined'&&(CKTOP[id]||[])[v];if(!T||!T.D)return null;const p=T.D[0];return [(i%W)*TS+p[0]/2,((i/W)|0)*TS+p[1]/2-hiAt(i)*LIFT]}
+function cookTopD(i){/* できた料理を置く所（世界のドット）。湯気を出す所 */if(S.obj[i]==='oven'&&rotAt(i))return null;const id=S.obj[i],v=id==='cooktable'?(rotAt(i)===3?1:rotAt(i)):0,T=typeof CKTOP!=='undefined'&&(CKTOP[id]||[])[v];if(!T||!T.D)return null;const p=T.D[0];return [(i%W)*TS+p[0]/2,((i/W)|0)*TS+p[1]/2-hiAt(i)*LIFT]}
 function cookAt(i){for(const r of S.res){const a=r.act;if(a&&a.type==='cook'&&a.obj===i&&a.stage==='do'&&r.cing)return r}return null}
 function cookTopDraw(c,id,x,y,i,now){/* 家具の絵のあとに、上の物をかさねる */const r=cookAt(i);if(!r||!window.CHIPS||typeof CKTOP==='undefined')return;const ph=cookPh(r),R=recOf(r.cing.rec);if(!R||ph==='raise')return;
-  const rot=id==='campfire'?0:rotAt(i),fl=id==='cooktable'?rot===3:id==='oven'&&rot!==0,v=id==='cooktable'?(rot===3?1:rot):0,T=(CKTOP[id]||[])[v];if(!T)return;
+  const rot=id==='campfire'?0:rotAt(i);if(id==='oven'&&rot)return;/* かまどの道具・材料の場所は、前向きの口だけ（ほかの向きは口が見えない・横を向く） */const fl=id==='cooktable'&&rot===3,v=id==='cooktable'?(rot===3?1:rot):0,T=(CKTOP[id]||[])[v];if(!T)return;
   const put=(nm,px,py)=>{const ch=CHIPS[nm];if(ch)drawChip(c,ch,nm,x+(fl?64-px:px)/2,y+py/2,now,i)},sf=v?'>'+v:'';
   if(ph==='plate'){const p=T.D[0];put('ckdish_'+(/^fsg/.test(R.out)?'fsg':R.out),p[0],p[1]);return}
   const t=cookTool(r);if(t!=='K'){const ch=CHIPS['cktool_'+id+'_'+(t==='board'&&ph==='prep'?'boardk':t)+sf];if(ch)drawChip(c,fl?{src:ch,ax:ch.ax,ay:ch.ay,w:ch.w,h:ch.h,f:ch.f,flip:1,fw:32}:ch,'cktool',x,y,now,i)}
@@ -65,7 +66,7 @@ function boxFace(r,a){/* 向く先のとなりのマスの向き（-W・-1・1�
    見えなくなった・おわった・村の時間が止まったら、すっと小さくして止める。音のファイルは1まわり（BOXLOOPL 秒）を3つならべた形。
    同じ1まわりをくりかえすと、くりかえしがすぐわかるので、録音のどこかから短く切った所（BOXGR 秒）を、高さ・大きさを少しずつかえて、
    かさねながらつなげて鳴らす（前と近い所はえらばない）。ときどき、手を止めたような小さな間（BOXGAPP）をはさむ */
-const BOXLOOPL=1.0337,BOXLOOPN=2,BOXLOOPV=.09,BOXGR=[.28,.72],BOXGF=.07,BOXGAPP=.18,BOXGAP=[.08,.3],GOSOL=new Map();
+const BOXLOOPL=1.0337,BOXLOOPN=2,BOXLOOPV=.0675,BOXGR=[.28,.72],BOXGF=.07,BOXGAPP=.18,BOXGAP=[.08,.3],GOSOL=new Map();
 function boxBeat(r,t){const a=boxAct(r);if(!a||t==null)return;let e=GOSOL.get(r);if(!e||e.a!==a){if(e)e.a=a;else{e={a,seen:0};GOSOL.set(r,e)}}e.seen=performance.now();e.x=r.x;e.y=r.y}
 function boxLoopStop(e,t){if(!e.src)return;e.g.gain.cancelScheduledValues(t);e.g.gain.setTargetAtTime(0,t,.06);for(const s of e.src.gr){try{s.stop(t+.4)}catch(_){}}e.src=null}
 function boxGrain(e,buf){/* 1つぶんを e.nt から鳴らし、つぎの時刻を e.nt に */const len=buf.duration,d=BOXGR[0]+Math.random()*(BOXGR[1]-BOXGR[0]),rate=.9+Math.random()*.2,lo=.05,hi=Math.max(lo,len-d-.05);
@@ -83,7 +84,9 @@ function boxLoopTick(){if(!GOSOL.size)return;const now=performance.now(),ok=type
     e.g.gain.setTargetAtTime(q.v*BOXLOOPV,t,.08);if(e.p)e.p.pan.setTargetAtTime(q.p,t,.08);e.f.frequency.setTargetAtTime(q.l,t,.08)}}
 setInterval(boxLoopTick,100);
 const WBEATP=new WeakMap();
-function workBeat(r,nm,t,p){const B=WBEAT[nm],m=typeof SPM!=='undefined'&&SPM[nm];if(!B||!m||typeof m.r!=='number'&&p==null)return;const ph=typeof m.r==='number'?((t*m.r)%1+1)%1:p,/* 'ph' の動き（水くみ）は、わたされた進みぐあい p */last=WBEATP.get(r);WBEATP.set(r,{nm,ph});if(!last||last.nm!==nm||m.r==='ph'&&ph<last.ph)return;/* 'ph' の動きは、もどらない（1回だけ） */
+const POURU=new WeakMap();/* 水やり：1回3秒の音（pourl）を、おわる0.4秒まえに、つぎをかさねて、とぎれずにつづける */
+function pourKeep(r){const now=performance.now(),u=POURU.get(r)||0;if(now<u-400&&u-now<=3000)return;POURU.set(r,now+3000);sfxAt('pourl',r.x,r.y)}
+function workBeat(r,nm,t,p){if(nm==='water'||nm==='tend'){pourKeep(r);return}const B=WBEAT[nm],m=typeof SPM!=='undefined'&&SPM[nm];if(!B||!m||typeof m.r!=='number'&&p==null)return;const ph=typeof m.r==='number'?((t*m.r)%1+1)%1:p,/* 'ph' の動き（水くみ）は、わたされた進みぐあい p */last=WBEATP.get(r);WBEATP.set(r,{nm,ph});if(!last||last.nm!==nm||m.r==='ph'&&ph<last.ph)return;/* 'ph' の動きは、もどらない（1回だけ） */
   for(const[b,snd,fx]of B){const crossed=last.ph<=ph?(last.ph<b&&b<=ph):(b>last.ph||b<=ph);if(!crossed)continue;sfxAt(snd==='@eat'?eatSnd(r.act&&r.act.items):snd,r.x,r.y);if(fx&&Math.random()<.5){const j=r.act&&r.act.type==='draw'&&r.act.src!=null?r.act.src:r.act&&r.act.type==='craft'?((craftOrder(r)||{}).cs??null):r.act&&r.act.obj!=null?r.act.obj:null,x=j!=null?(j%W+.5)*TS:r.x*TS+(r.face<0?-14:14),y=j!=null?((j/W|0)+.4)*TS:r.y*TS;fxSpr(fx,x,y)}}}
 /* できあがり：1回だけ、ぽん・きらきら */
 function workShowStart(r,a){a.sh=0;r.bubble='';/* 頭の上の物とかさならないように */sfxAt('workdone',r.x,r.y);fxSpr('twinkle',r.x*TS,(r.y-.9)*TS)}

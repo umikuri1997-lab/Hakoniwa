@@ -1,6 +1,7 @@
 """紙のUIの絵（わく・依頼ボードの板・図鑑の本の背としおり）を作って、index.html の
 /* paper-ui:begin */ 〜 /* paper-ui:end */ のあいだに書きこむ。
   python3 tools/ui/paper_ui.py
+  python3 tools/ui/paper_ui.py --part paper_css,dlg_css   # その物の行だけを入れかえる（手で直した行をのこす）
 - 紙のわく：角は段々（4・2・1・1）、辺は1ドットずつゆるくでこぼこ（border-image の round でくりかえす）、いちばん下の行は紙のかげ。
 - 依頼ボードの板：よこの板が3まい（1まい8ドット）の、くりかえすドットの絵。
 - 図鑑：左の本の背（とじ糸つき）と、上からたれる、しおりのリボン。
@@ -88,7 +89,7 @@ PAPER = paper_rows()
 PSLICE = f'{S} {S} {S+1} {S}'
 PWIDTH = f'calc(var(--pp)*{S}) calc(var(--pp)*{S}) calc(var(--pp)*{S+1}) calc(var(--pp)*{S})'
 
-PAPER_SEL = ('.hud,.dock,.quest,.sheet,.dlg::before,.toast,.paper,#helpPop .hc,.idea-card,.askyn .ak,'
+PAPER_SEL = ('.hud,.dock,.quest,.sheet,.toast,.paper,#helpPop .hc,.idea-card,.askyn .ak,'
              '#rlv .rcard,.iinfo,#confirm,#palette,.wcard,.idea-item,.pxcard,#idle .card,#lvup .pw')
 SHADOW = '#8a6a4559'
 
@@ -342,7 +343,7 @@ def wood_rows():
     return rows
 
 
-WOOD_SEL = ('.hud,.dock,.quest,.sheet,.dlg::before,.toast,#helpPop .hc,.idea-card,.askyn .ak,'
+WOOD_SEL = ('.hud,.dock,.quest,.sheet,.toast,#helpPop .hc,.idea-card,.askyn .ak,'
             '#rlv .rcard,.iinfo,#confirm,#palette,.wcard,.idea-item,.pxcard,#idle .card,#lvup .pw,#lvup .card')
 
 
@@ -537,8 +538,135 @@ def deco_css():
     ])
 
 
+# ---- 会話のわく：木のわくに、中は紙（草原も火山も同じ）。.dlg::before に描く（立ち絵を切らない） ----
+DF = 6    # 木のわくのはば（ドット）
+DM = 48   # 辺のまん中（くりかえす所）
+
+
+def dlgframe_rows():
+    """木のわく：角は段々（4・2・1・1）、外の1ドットはこい木のふち、上・左は光・下・右はかげ、いちばん内がわは紙をはさむみぞ。
+    木目は辺ののびる向き（上下の辺はよこ、左右の辺はたて）。まん中は透明（紙は背景の色と柄で）。いちばん下の1行はかげ"""
+    NW = 2 * DF + DM
+    cp = lambda d: PR[d] if d < 4 else 0
+    tI = lambda x: cp(min(x, NW - 1 - x))
+    lI = lambda y: cp(min(y, NW - 1 - y))
+    ins = lambda x, y: 0 <= x < NW and 0 <= y < NW and tI(x) <= y <= NW - 1 - tI(x) and lI(y) <= x <= NW - 1 - lI(y)
+    t = tex_tones(DM)
+    rows = []
+    for y in range(NW + 1):
+        r = ''
+        for x in range(NW):
+            if not ins(x, y):
+                r += 's' if (y >= NW - DF and ins(x, y - 1)) else '.'
+                continue
+            dt, db, dl, dr = y, NW - 1 - y, x, NW - 1 - x
+            d = min(dt, db, dl, dr)
+            if d >= DF:
+                r += '.'; continue  # 紙の所
+            if not (ins(x - 1, y) and ins(x + 1, y) and ins(x, y - 1) and ins(x, y + 1)) or d == 0:
+                r += 'o'; continue  # 外のふち
+            if d == DF - 1:
+                r += 'i'; continue  # 紙をはさむみぞ
+            near = min((dt, 't'), (db, 'b'), (dl, 'l'), (dr, 'r'))[1]
+            if d == 1:
+                r += 'h' if near in 'tl' else 'w'; continue  # 光とかげ
+            if d == DF - 2:
+                r += 'k' if near in 'br' else 'w'; continue  # みぞの手前：下・右は光（みぞのかげ）、上・左はかげ
+            r += t[(y - DF) % DM][(x - DF) % DM] if near in 'tb' else t[(x - DF) % DM][(y - DF) % DM]
+        rows.append(r)
+    return rows
+
+
+def dlg_css():
+    fr = svg(dlgframe_rows(), {'a': '#b88552', 'g': '#ae7b49', 'D': '#a47141', 'l': '#c4915c', 'h': '#dcab72', 'k': '#c99862',
+                               'w': '#93602f', 'o': '#6f4525', 'i': '#7a4d28', 's': SHADOW})
+    fib = svg(ptex_rows(), {'d': '#8a6a3a20', 'm': '#8a6a3a0e', 'l': '#ffffff60'})
+    w = f'calc(var(--pp)*{DF}) calc(var(--pp)*{DF}) calc(var(--pp)*{DF + 1}) calc(var(--pp)*{DF})'
+    sel = '.dlg::before,body.wd0 .dlg::before'
+    return '\n'.join([
+        '/* 会話のわく：木のわくに、中は紙（dlgframe_rows・紙の柄は ptex_rows）。草原も火山も同じ。.dlg::before に描く */',
+        f'{sel}{{border-style:solid!important;border-color:transparent!important;border-width:{w}!important;border-image:{fr} {DF} {DF} {DF + 1} {DF}/{w} round!important;'
+        f'background:{fib} 0 0/96px 96px repeat padding-box,#f6ecd5 padding-box!important;box-shadow:inset 0 calc(var(--pp)*2) 0 #c9a87638,inset calc(var(--pp)*1) 0 0 #c9a87628!important;image-rendering:pixelated}}',
+    ])
+
+
+# ---- ひでんのしょ：巻物（紙は少し黄ばんだ和紙、上と下に木の軸） ----
+def rod_rows(W=12):
+    """巻物の軸の、まん中（よこにくりかえす）：丸い棒（上から 光・地・かげ）と、外のふち。高さ8"""
+    t = tex_tones(48)
+    rows = []
+    for y in range(8):
+        r = ''
+        for x in range(W):
+            if y in (0, 7): r += 'o'
+            elif y == 1: r += 'h'
+            elif y == 2: r += 'l'
+            elif y == 6: r += 'w'
+            elif y == 5: r += 'D'
+            else: r += t[y * 5][x]
+        rows.append(r)
+    return rows
+
+
+def knob_rows():
+    """巻物の軸のはしの玉（10×10）：まるい木の玉。左上が光・右下がかげ"""
+    N = 10
+    rows = []
+    for y in range(N):
+        r = ''
+        for x in range(N):
+            dx, dy = x + .5 - N / 2, y + .5 - N / 2
+            d = (dx * dx + dy * dy) ** .5
+            if d > N / 2: r += '.'; continue
+            if d > N / 2 - 1: r += 'o'; continue
+            lt = -dx - dy
+            r += 'h' if lt > 4.5 else 'l' if lt > 1.5 else 'a' if lt > -2.5 else 'w'
+        rows.append(r)
+    return rows
+
+
+def scroll_css():
+    sp = svg(PAPER, {'a': '#f5e6c3', 'o': '#b48a52', 's': SHADOW})
+    fib = svg(ptex_rows(), {'d': '#8a6a3a22', 'm': '#8a6a3a10', 'l': '#ffffff55'})
+    pal = {'a': '#a86f3c', 'g': '#9e6936', 'D': '#8f5c2e', 'l': '#bf8550', 'h': '#d9a46a', 'w': '#7a4c26', 'o': '#5e3a1e'}
+    rod = svg(rod_rows(), pal)
+    kn = svg(knob_rows(), {'a': '#8a5a30', 'l': '#a8743f', 'h': '#c99257', 'w': '#6e4424', 'o': '#4f3018'})
+    pp = 'var(--pp)'
+    rodbg = (f'{kn} 0 50%/calc({pp}*10) calc({pp}*10) no-repeat,{kn} 100% 50%/calc({pp}*10) calc({pp}*10) no-repeat,'
+             f'{rod} 0 50%/calc({pp}*12) calc({pp}*8) repeat-x')
+    k = '.sheet[data-k="manual"]'
+    return '\n'.join([
+        '/* ひでんのしょ：巻物（少し黄ばんだ紙と、上と下の木の軸。rod_rows・knob_rows） */',
+        f'{k},body.wd0 {k}{{border-image-source:{sp}!important;border-image-slice:{S} {S} {S + 1} {S} fill!important;background:none!important;overflow:visible;margin-top:calc({pp}*6);padding-bottom:calc({pp}*10 + env(safe-area-inset-bottom,0px))!important}}',
+        f'{k} #sheetBody{{background:{fib} 0 0/96px 96px repeat;image-rendering:pixelated}}',
+        f'{k}::before,{k}::after{{content:"";position:absolute;left:calc({pp}*-2);right:calc({pp}*-2);height:calc({pp}*10);background:{rodbg};image-rendering:pixelated;pointer-events:none;z-index:2}}',
+        f'{k}::before{{top:calc({pp}*-6)}}{k}::after{{bottom:env(safe-area-inset-bottom,0px)}}',
+    ])
+
+
+# ---- 思い出帳：ページをめくる本（紙のページ・右に重なったページのふち） ----
+def edge_rows():
+    """ページのふち（小口）：右に重なった紙のはし（はば6・たてにくりかえす高さ4）"""
+    return ['aoboco', 'aoboco', 'aoboco', 'aoboco']
+
+
+def mbook_css():
+    pg = svg(PAPER, {'a': '#f7eedb', 'o': '#a8743f', 's': SHADOW})
+    fib = svg(ptex_rows(), {'d': '#8a6a3a1c', 'm': '#8a6a3a0c', 'l': '#ffffff60'})
+    ed = svg(edge_rows(), {'a': '#efe2c4', 'b': '#e6d6b2', 'c': '#ddc9a0', 'o': '#b8955e'})
+    pp = 'var(--pp)'
+    k = '.sheet[data-k="record"]'
+    return '\n'.join([
+        '/* 思い出帳：ページをめくる本（紙のページ・右に重なったページのふち edge_rows） */',
+        f'{k},body.wd0 {k}{{border-image-source:{pg}!important;padding-right:calc({pp}*6)}}',
+        f'{k} #sheetBody{{position:relative;background:{fib} 0 0/96px 96px repeat;image-rendering:pixelated}}',
+        f'{k}::after{{content:"";position:absolute;right:calc({pp}*1);top:calc({pp}*8);bottom:calc({pp}*4);width:calc({pp}*6);background:{ed} 0 0/calc({pp}*6) calc({pp}*4) repeat-y;image-rendering:pixelated;pointer-events:none}}',
+        f'.mflip{{background:{fib} 0 0/96px 96px repeat,#f7eedb;image-rendering:pixelated;box-shadow:calc({pp}*2) 0 0 #8a6a4540}}',
+    ])
+
+
 def main():
-    css = '\n'.join([paper_css(), wood_css(), wbtn_css(), disk_css(), deco_css(), board_css(), note_css(), book_css()])
+    css = '\n'.join([paper_css(), wood_css(), wbtn_css(), disk_css(), deco_css(), board_css(), note_css(), book_css(), dlg_css(), scroll_css(), mbook_css()])
     s = HTML.read_text()
     b, e = '/* paper-ui:begin */', '/* paper-ui:end */'
     if b not in s:
@@ -548,5 +676,26 @@ def main():
     print('wrote', len(css), 'chars')
 
 
+def part(names):
+    """道具で作った行のうち、名前の物（paper_css など）の行だけを入れかえる（はじめのコメントの行でさがす。なければ end の前に足す）。
+    手で直した行（なわ・下のバーの札など）は、そのまま"""
+    s = HTML.read_text()
+    b, e = '/* paper-ui:begin */', '/* paper-ui:end */'
+    i, j = s.index(b) + len(b) + 1, s.index(e)
+    L = s[i:j].rstrip('\n').split('\n')
+    for nm in names:
+        new = globals()[nm]().split('\n')
+        if new[0] in L:
+            k = L.index(new[0]); L[k:k + len(new)] = new
+        else:
+            L += new
+        print('part', nm, len(new), 'lines')
+    HTML.write_text(s[:i] + '\n'.join(L) + '\n' + s[j:])
+
+
 if __name__ == '__main__':
-    main()
+    import sys
+    if len(sys.argv) > 2 and sys.argv[1] == '--part':
+        part(sys.argv[2].split(','))
+    else:
+        main()

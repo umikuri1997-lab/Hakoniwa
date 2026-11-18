@@ -61,6 +61,7 @@ function enemyAtTap(wx,wy){/* 守りの光：コワイノの絵が描いてあ�
     if(wx<px+b.l-M||wx>px+b.r+M||wy<py+b.t-M||wy>py+b.b+M)continue;
     const sc=e.y*1000-Math.hypot(wx-px,wy-(py+(b.t+b.b)/2))*.01;if(sc>bs){bs=sc;best=e}}
   return best}
+function sacredTapHit(b,px,py){/* 御神木・切り株の、タップをひろう所（切り株の絵のわく。育った木は根もと）。b は左上のマス。根もと（storyTreeX・storyTreeY+26）から、切り株の絵のわく（左35・右40・上79・下2 の点） */const dx=px*TS-storyTreeX(b)*TS,dy=py*TS-(storyTreeY(b)*TS+26);return dx>=-35&&dx<40&&dy>=-79&&dy<2||typeof omoiBubHit==='function'&&omoiBubHit(px,py)}/* 青いふきだしも */
 function sacredTreeTap(j){/* 御神木をタップ：かけらの光をとどける・目標のじょうけんを見る */
   const av=(S.shards||0)-(S.setSh||0);
   if(av>0&&(S.setSh||0)>=2){
@@ -87,13 +88,13 @@ function onTap(sx,sy){if(GIFT_ACTIVE&&camAnim&&camAnim.done)return;if(typeof sta
   let w=toWorld(sx,sy);const w0=w,tx=Math.floor(w.x/TS);{const tl=tapLv(w.x,w.y);if(tl)w={x:w.x,y:w.y+tl*LIFT}}const ty=Math.floor(w.y/TS);/* 高い段のマス・物・せいれい・コワイノは上にずらして描くので、タップの場所も高さの分だけ下へもどす */
   if(AREAARM){AREAARM=false;return areaBlast(w.x/TS,w.y/TS)}
   if(LEAFARM){const tl=tapLv(w.x,w.y),wy=w.y+(tl?tl*LIFT:0);LEAFDRAG=[];leafAdd(Math.floor(wy/TS)*W+Math.floor(w.x/TS));const c=LEAFDRAG;LEAFDRAG=null;return leafPlace(c)}/* 葉のかべ：タップは1マス *//* こもれびのまもり：タップした場所のまわり */
-  if(LIGHTARM){const en=enemyAtTap(w0.x,w0.y);if(en)return guardLight(en);const tj=ty*W+tx;if(tx>=0&&ty>=0&&tx<W&&ty<H&&LIGHTNAT[S.obj[tj]]&&!isBud(tj)&&!(S.fog&&fogAt(tj)))return natLight(tj);return}/* 守りの光：えらんでいるあいだにタップした「コワイノ」・木・岩にあてる（えらんだまま）。ほかの所のタップでは、なにもしない（しらべる・おく・こわすと同時にはしない） */
+  if(LIGHTARM){const en=enemyAtTap(w0.x,w0.y);if(en)return guardLight(en);if(tx>=0&&ty>=0&&tx<W&&ty<H)glCast(tx,ty);return}/* 守りの光：えらんでいるあいだにタップした所に落とす（えらんだまま）。コワイノをタップしたら、そのコワイノに。地図のどこでも（範囲のコワイノ・木・岩に当たる）。しらべる・おく・こわすと同時にはしない */
   const si=S.seeds.findIndex(s=>s.x===tx&&s.y===ty);
   if(tx>=0&&ty>=0&&tx<W&&ty<H){const hh=HOUSES.find(h=>h.set.has(ty*W+tx));/* 開けた屋根は、壁をタップするまでそのまま */
     if(hh&&mode!=='look'&&!OPENH.has(hKey(hh))){OPENH.add(hKey(hh));dirty=true;return}}/* 置く・こわすときも、まず家をタップして中を見る */
-  if(si>=0){sfx('seed');S.seeds.splice(si,1);S.mseed=(S.mseed||0)+1;S.mseedGot=(S.mseedGot||0)+1;addFloat(tx+.5,ty,'ふしぎな種+1','#d8f5c0');burstAt(tx,ty,'plant');toast('ふしぎな種をひろった','good');return}
+  if(si>=0){sfx('pick_tsoil');S.seeds.splice(si,1);S.mseed=(S.mseed||0)+1;S.mseedGot=(S.mseedGot||0)+1;addFloat(tx+.5,ty,'ふしぎな種+1','#d8f5c0');burstAt(tx,ty,'plant');toast('ふしぎな種をひろった','good');return}
   if(mode==='look'){
-    if(fieldStoryTap(tx,ty))return;
+    if(fieldStoryTap(tx,ty,w.x/TS,w.y/TS))return;
     const en=enemyAtTap(w0.x,w0.y);
     if(en){sfx('tfoe');return toast(EN[en.type].name+'（体力 '+Math.max(0,Math.ceil(en.hp))+'/'+(en.max||EN[en.type].hp)+'）')}/* 「コワイノ」に守りの光をあてるのは、アイコンをえらんでから。「しらべる」では、名前と体力を出す（何も起きないタップにしない） */
     {const st=festStalls().find(t=>Math.abs(w.x/TS-(t.x+.5))<1.3&&w.y/TS>t.y-2.6&&w.y/TS<t.y+1);if(st){sfx('tbell');openSheet('stall',st.x);return}}/* 屋台をタップすると、その屋台の品物 */
@@ -119,7 +120,7 @@ function onTap(sx,sy){if(GIFT_ACTIVE&&camAnim&&camAnim.done)return;if(typeof sta
     {const hw=HOUSES.find(h=>h.set.has(ty*W+tx));if((!hw||OPENH.has(hKey(hw)))&&webTap(tx,ty))return}/* クモの巣：せいれいがそうじする（屋根のある家は、屋根を外してから） */
     {const j=anc(ty*W+tx);if(!isNight()&&godFix(S.obj[j]?j:ty*W+tx))return}/* こわれかけ・こわれた物は、守り神がパワーで直せる */
     {const kg=WD===0&&S.flags.kgMark!=null&&!(S.bossKills&&S.flags.kgLook)&&!S.flags.kgLook&&Math.abs(tx-S.flags.kgMark%W)<=1&&Math.abs(ty-((S.flags.kgMark/W)|0))<=1/* かげのあとは、家の中にあっても調べられる */,hi=kg?-1:HOUSES.findIndex(h=>h.set.has(ty*W+tx));if(hi>=0){const hk=hKey(HOUSES[hi]);if(!OPENH.has(hk)){OPENH.add(hk);dirty=true;return}/* 1回目のタップで屋根を外す */const o0=S.obj[anc(ty*W+tx)];if(HOME_WALLS.has(o0)||HOME_DOORS.has(o0)){OPENH.delete(hk);dirty=true;return}/* 壁をタップすると屋根がもどる */if(!o0)return openSheet('house',hi)}}// 中が見えているときは、家具やせいれいもタップできる
-    if(WD===0&&!S.free&&!S.cleared){const rt=S.obj.indexOf('tower'),b=rt>=0?rt:S.sacredRoot;if(b!=null){const bx=b%W,by=b/W|0,n=sacredSpan(),px=w.x/TS,py=w.y/TS;if(px>=bx-.5&&px<bx+n+.5&&py>=by-(rt>=0?2:0)&&py<by+n){sfx('tsacred');return rt>=0?sacredTreeTap(rt):openSheet('clear')}}}/* 御神木・切り株：絵の上（育った木は上へはみ出す葉の所も）をタップすると、じょうけんを見る */
+    if(WD===0&&!S.free&&!S.cleared){const rt=S.obj.indexOf('tower'),b=rt>=0?rt:S.sacredRoot;if(b!=null&&sacredTapHit(b,w.x/TS,w.y/TS)){sfx('tsacred');return rt>=0?sacredTreeTap(rt):openSheet('clear')}}/* 御神木・切り株：切り株（育った木は根もと）の絵の所だけをタップすると、じょうけんを見る（葉の所・4×4のほかのマスはひろわない） */
     if(BOARD>=0){const bx=(w.x/TS-BOARD%W),by=(w.y/TS-(BOARD/W|0));if(bx>=.85&&bx<3.15&&by>=-.9&&by<.95){sfx('twood');return S.feat.craft?openSheet('craft'):toast('依頼ボード。もう少ししたら使えるようになる')}}/* 依頼ボード：絵（2マスはば・上へはみ出す）のどこをタップしても */
     const j=anc(ty*W+tx),o=S.obj[j];
     if(WD===0&&S.flags.kgMark!=null&&!(S.bossKills&&S.flags.kgLook)&&!S.flags.kgLook&&Math.abs(tx-S.flags.kgMark%W)<=1&&Math.abs(ty-((S.flags.kgMark/W)|0))<=1){S.flags.kgLook=true;checkQuest();toast('大きなかげのあと：草がしおれて、つめたい');if(S.res.some(r=>r.name===POKO))dialog([[POKO,'#sigh|……このつめたさ、知ってる気がする。守り神さま、夕方になったら、ちょっとだけ、ぼくの話を聞いてくれる？']]);return}/* 大きなかげのあとを調べる */
@@ -129,7 +130,7 @@ function onTap(sx,sy){if(GIFT_ACTIVE&&camAnim&&camAnim.done)return;if(typeof sta
       if(o==='heatv')return openSheet('heatv',j);
       if(o==='boulder')return toast('大岩：のこり '+Math.max(0,4-(S.hp['n'+j]||0))+'/4');
       if(o==='crack'){const t=st2();if(!(t.hai>0))return toast('ひびわれ：ハイカゲの灰でうめられる（灰'+(t.hai||0)+'）');t.hai--;clearObj(j);S.floor[j]='path';burst(j,'block');sfx('level');recount();dirty=true;toast('ひびわれを、灰でうめた（灰-1）','good');return checkQuest()}}
-    {const g=ty*W+tx,dp=(S.drops||[]).find(q=>q.y*W+q.x===g&&q.id!=='shard');if(WEEDS.has(o)||dp){if(o==='kinoko'&&foodCap()-S.food<=0)return toast('箱に入りません');if((WEEDS.has(o)&&o!=='kinoko'||dp&&dp.id.startsWith('mat:'))&&matCap()-matTot()<=0)return toast('箱に入りません');if(dp&&dp.id.startsWith('food:')&&foodCap()-S.food<=0)return toast('箱に入りません');let nm;if(WEEDS.has(o)){(S.wreq||(S.wreq={}))[j]=1;nm=BL[o].name}else{dp.tap=1;nm=dp.id.startsWith('mat:')?(MATN[dp.id.slice(4)]||'おとしもの'):'おとしもの'}sfx(WEEDS.has(o)?'tgrass':dp.id==='mat:can'?'tcan':'twood');return toast(nm+'：せいれいがとりにいく'+'')}}/* 草・きのこ・枝などの落とし物は、タップすると、せいれいがとりにいく */
+    {const g=ty*W+tx,dp=(S.drops||[]).find(q=>q.y*W+q.x===g&&q.id!=='shard');if(WEEDS.has(o)||dp){if(o==='kinoko'&&foodCap()-S.food<=0)return toast('箱に入りません');if((WEEDS.has(o)&&o!=='kinoko'||dp&&dp.id.startsWith('mat:'))&&matCap()-matTot()<=0)return toast('箱に入りません');if(dp&&dp.id.startsWith('food:')&&foodCap()-S.food<=0)return toast('箱に入りません');let nm;if(WEEDS.has(o)){(S.wreq||(S.wreq={}))[j]=1;nm=BL[o].name}else{dp.tap=1;nm=dp.id.startsWith('mat:')?(MATN[dp.id.slice(4)]||'おとしもの'):'おとしもの'}sfx(o==='kinoko'?'tpuni':WEEDS.has(o)?'tgrass':dp.id==='mat:can'?'tcan':'twood');return toast(nm+'：せいれいがとりにいく'+'')}}/* 草・きのこ・枝などの落とし物は、タップすると、せいれいがとりにいく */
     if(HOME_WALLS.has(o)||HOME_DOORS.has(o)){const w=houseWhy(j);if(w)toast(w)}/* 家にならないかべ・ドアをタップすると、理由を出す */
     if(o&&rangeOf(o,j))SHOWR={j,o,until:performance.now()+4000};
     if(o==='farm')return openSheet('farm',j);
@@ -155,7 +156,7 @@ function onTap(sx,sy){if(GIFT_ACTIVE&&camAnim&&camAnim.done)return;if(typeof sta
     if(PROC[o])return prPop(j);/* 粉ひき小屋・はたおり機 */
     if(o==='obox')return S.feat.inv?openSheet('inv'):toast('おそなえ箱');
     if(o==='grave'){const d=S.dyn[j]||{};if(!d.buried)return toast((d.name||'せいれい')+'のお墓。なかまが神殿へはこんで、おみおくりしてくれる');/* 守り神は埋葬できない */return toast((d.name||'せいれい')+'のお墓')}
-    if(o==='tower'&&!WD&&!S.cleared)return sacredTreeTap(j);
+    if(o==='tower'&&!WD&&!S.cleared){if(sacredTapHit(j,w.x/TS,w.y/TS))return sacredTreeTap(j);return}/* 御神木は、根もとの所だけ */
     if(o==='board')return S.feat.craft?openSheet('craft'):toast('依頼ボード。もう少ししたら使えるようになる');
     if(o==='statue')return toast('女神像。守り神の居場所');
     if(o==='statueb'){templeRuinTap(j);return}

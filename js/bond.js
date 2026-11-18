@@ -62,7 +62,9 @@ function omoiScene(j){
   villageTimeout(()=>{if(begun||OMOI_RUN!==run)return;if(pr.every(near)){n=2;arrive()}else stop('御神木に、ふたりがそろいませんでした')},Math.max(20000,2000+Math.max(...pr.map(r=>(r.path||[]).length))*900));/* 歩くのをじゃまされたら、遠くのまま始めずに、やめる（待つ時間は道のりに合わせる） */
   return true}
 function shardOfferReady(){/* 御神木にかけらをささげられる（sacredTreeTap と同じ条件） */if(!S||WD!==0||S.free||S.cleared||isNight())return false;if((S.shards||0)-(S.setSh||0)<=0)return false;if((S.setSh||0)>=2)return !!S.flags.finalWon&&!!(S.sev&&S.sev.e09)&&clearReady();return true}
-function drawOmoiBub(now){/* なかよしの2人が待っている・かけらをささげられるときは、御神木に青いふきだし */if(!S||WD!==0||!(omoiWait()||shardOfferReady())||OMOI_RUN&&OMOI_RUN.state===S&&OMOI_RUN.session===VILLAGE_SESSION||SHARD_OFFER&&SHARD_OFFER.state===S||!$('#dialog').hidden)return;const j=S.sacredRoot;if(j==null||S.obj[j]!=='tower')return;talkBub(storyTreeX(j)*TS,sacredTopY(j)+34,now)}
+function omoiBubOn(){/* 御神木の青いふきだしが出ている（出ていれば、そのマス） */if(!S||WD!==0||!(omoiWait()||shardOfferReady())||OMOI_RUN&&OMOI_RUN.state===S&&OMOI_RUN.session===VILLAGE_SESSION||SHARD_OFFER&&SHARD_OFFER.state===S||!$('#dialog').hidden)return -1;const j=S.sacredRoot;return j==null||S.obj[j]!=='tower'?-1:j}
+function drawOmoiBub(now){/* なかよしの2人が待っている・かけらをささげられるときは、御神木に青いふきだし */const j=omoiBubOn();if(j<0)return;talkBub(storyTreeX(j)*TS,sacredTopY(j)+34,now)}
+function omoiBubHit(wx,wy){/* 青いふきだし（talkBub：はば45・高さ42、根もとの上 63〜21 の点）をタップした */const j=omoiBubOn();if(j<0)return false;const px=storyTreeX(j)*TS,by=sacredTopY(j)+34;return Math.abs(wx*TS-px)<=26&&wy*TS>=by-68&&wy*TS<=by-14}
 function sacredTopY(j,st){/* 御神木の絵のてっぺん（世界の座標）。育ちぐあい（st。なければ、いま）で絵がかわる */const a=window.CHIPS&&CHIPS[SACRED_ART[Math.floor(st==null?sacredStage():st)]];return (j/W|0)*TS+(sacredSpan()-4)*TS-hiAt(j)*LIFT+(a?a.ay/2:-60)}
 /* いちばんなかよしの子（村にいる子だけ）。{q,v} */
 function bondBest(r){let q=null,v=0;if(!S||!S.bond)return null;for(const o of S.res){if(o===r)continue;const b=S.bond[bondKey(r,o)]||0;if(b>v){v=b;q=o}}return q?{q,v}:null}

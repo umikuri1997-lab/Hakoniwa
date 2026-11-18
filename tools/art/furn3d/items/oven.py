@@ -19,7 +19,7 @@ from shapely.geometry import Polygon,box as sbox,Point
 from shapely.ops import unary_union
 ID='oven';BOTTOM=43;GRAD=True;FRAMES=8;TONE5=True   # かげは木と同じ5色（furntone。持ち主がきめた）
 BEV=0.02   # 石・レンガの角の面取り
-VIEWS=[('oven',0)]
+VIEWS=[('oven',0),('oven>1',1),('oven>2',2)]   # 前・右・後ろ（左は右の反転）
 PFIRE=[(0.50,0.90-0.12-0.03,0.05,0.30,0.10,90,5,{'smoke':False,'sparks':False})]   # 粒の火（火のへやの中、まきの上）
 PSMOKE=[(0.50,0.50,0.86,0.55,0.08,18,6)]   # 煙突から出るけむり
 PFIRE_HIDE=lambda n:not n.startswith('まき') and n!='火のへやの床'   # 火は、まき・床の上にかさね、かべ・屋根・アーチのうしろにかくれる

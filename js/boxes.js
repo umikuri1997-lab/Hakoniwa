@@ -45,6 +45,10 @@ function boxSync(){if(!S)return;S.box=S.box||{};S.pile=S.pile||{};S.rsv=S.rsv||{
 function boxSpill(j){/* 箱がなくなった：中身は、その場所の地面に落とす（せいれいが、ほかの箱へ運ぶ） */const b=BOX()[j];delete BOX()[j];if(!b)return;const x=j%W,y=(j/W)|0;
   for(const key in b){const n=b[key];if(!(n>0))continue;let a=Math.min(n,availOf(key));availAdd(key,-a);const r=n-a;if(r>0&&S.rsv[key])S.rsv[key]=Math.max(0,S.rsv[key]-r);
     const before=(S.drops||[]).length;dropAt(x,y,(isFK(key)?'food:'+key.slice(2):'mat:'+key),n);if(S.drops&&S.drops.length>before)S.drops[S.drops.length-1].tap=1}}
+function boxStash(j,id){/* しまう家具をこわして、もちものにもどす：中身は散らさず、神殿のまえへ（数はそのまま）。つぎにその家具を置いたら、その箱へもどす（boxUnstash、S.boxKeep） */const b=BOX()[j],f=S.boxF&&S.boxF[j];delete BOX()[j];if(S.boxF)delete S.boxF[j];const m={};for(const key in b||{})if(b[key]>0){bput(PILE,key,b[key]);m[key]=b[key]}
+  if(!Object.keys(m).length&&!f)return;const K=S.boxKeep||(S.boxKeep={});(K[id]||(K[id]=[])).push(f?{m,f}:{m})}
+function boxUnstash(j,id){/* しまう家具を置いた：前にこわした同じ家具の中身を、神殿のまえ（なければ、ほかの箱）から、この箱へ */const L=S.boxKeep&&S.boxKeep[id];if(!L||!L.length||!boxTypeAt(j))return;const a=anc(j),e=L.pop();if(!L.length)delete S.boxKeep[id];if(!Object.keys(S.boxKeep).length)delete S.boxKeep;
+  if(e.f)(S.boxF||(S.boxF={}))[a]=e.f;for(const key in e.m){let n=Math.min(e.m[key],boxRoom(a,key));if(n<=0)continue;let t=btake(PILE,key,n);n-=t;for(const k of BOXL){if(n<=0)break;if(k===a)continue;const u=btake(k,key,n);t+=u;n-=u}bput(a,key,t)}}
 function boxMove(from,to){/* ひっこしミトン：中身と入れる物もいっしょに */if(from===to)return;if(S.box&&BOX()[from]){BOX()[to]=BOX()[from];delete BOX()[from]}if(S.boxF&&S.boxF[from]){S.boxF[to]=S.boxF[from];delete S.boxF[from]}}
 /* ---- せいれいが、箱にしまう・箱から出す（箱とその数を、いっしょにかえる） ---- */
 function boxIn(j,key,n){/* 箱 j にしまう。入った数をかえす */const t=Math.min(n,boxRoom(j,key));if(t<=0)return 0;bput(j,key,t);availAdd(key,t);return t}
@@ -79,7 +83,7 @@ function keysAdj(j,keys,ex){/* マス j のとなりの、keys のどれかが�
 function cgLeft(r,R){/* 料理の材料で、まだ持っていない分 {id:数} */const g=r.cgot&&r.cgot.rec===R.key?r.cgot.m:{},m={},N=needR(R,r);for(const k in N){const n=N[k]-(g[k]||0);if(n>0)m[k]=n}return m}
 function cgBack(r){/* 料理をやめた：持っていた材料は、箱へもどす */if(!r.cgot)return;for(const k in r.cgot.m)addFood(k,r.cgot.m[k]);r.cgot=null}
 function toHand(r,m){/* 運んでいた素材の行き先がなくなった：せいれいが持ったまま、箱へしまいにいく */for(const k in m||{})if(m[k]>0){r.cmat=r.cmat||{};r.cmat[k]=(r.cmat[k]||0)+m[k]}}
-function qPick(Q,j){/* たのまれた分（とっておいた素材）を、箱 j からとる。とれた分をかえし、Q からへらす */const got={};for(const k of Object.keys(Q)){const n=boxOutR(j,k,Q[k]);if(n>0){got[k]=n;Q[k]-=n;if(Q[k]<=0)delete Q[k]}}return got}
+function qPick(Q,j,mx=Infinity){/* たのまれた分（とっておいた素材）を、箱 j からとる（mx：1回に持てる数まで）。とれた分をかえし、Q からへらす */const got={};for(const k of Object.keys(Q)){if(mx<=0)break;const n=boxOutR(j,k,Math.min(Q[k],mx));if(n>0){got[k]=n;mx-=n;Q[k]-=n;if(Q[k]<=0)delete Q[k]}}return got}
 function qStale(Q){/* たのまれた素材が、もうどの箱にもない：とっておくのをやめる */if(!Q)return true;for(const k in Q)if(totKey(k)>0)return false;rsvFree(Q);return true}
 function bmTarget(bid){/* 運ぶ先（建てる所の S.dyn か、依頼） */if(typeof bid!=='string')return null;if(bid[0]==='s'){const j=+bid.slice(1);return S.obj[j]==='site'&&S.dyn[j]?S.dyn[j]:null}const id=+bid.slice(1);return (S.orders||[]).find(o=>o.id===id)||null}
 const bmFetching=bid=>S.res.some(q=>q.act&&q.act.type==='bfetch'&&q.act.tb===bid);

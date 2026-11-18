@@ -4,6 +4,9 @@
      w は、作業がおわったとき（dayNote）。m は、思い出帳のメモ・きろく（memo・logEv）。k・o は、コワイノを追いはらったとき（defeat）。
    朝に S.dy をしめて、S.diary（古い順、DIARYMAX 日ぶん）に入れる。ゆうべの守り（S.ns）も、いっしょにしまう（S.ns.dd）。
    なにか書くことがあれば、紙（openSheet('diary')）を出す。思い出帳からも読める（openSheet('diary',日)）。
+   フタバのひとこと（dyNote、文は diary-data.js）と、その日の昼12時の村の写真（photo.js の phNoonTick → S.dy.ph）も、しまう（e.ft・e.ph）。
+     書くのは章のはじめからいる子（草原はフタバ、火山はホムラ。言いかたは chatTone）。その子が村にいない（いなくなった）朝は、ひとことも写真ものせない（DYWRITER）。
+     ひとことの文は、しゅるいごとに、ぜんぶ使うまで同じ文を出さない（S.dyU）。できた文がまったく同じ日記は作らない（S.dyTx）。
    思い出帳の再生（IS_STORY_REPLAY・MEMRUN）では、書かない。 */
 const DYJ=new WeakSet(),DIARYMAX=60,DYWORK=new Set(['build','craft','harvest','plant','fish','cook']),DYPER=4;
 function dyOff(){return !S||IS_STORY_REPLAY||typeof MEMRUN!=='undefined'&&MEMRUN}
@@ -13,19 +16,64 @@ function dyEv(t){const D=dyCur();if(!D||!t)return;if(!D.m.includes(t))D.m.push(t
 function dyKill(by,msg){const D=dyCur();if(!D)return;if(by&&by.name){const e=D.k[by.name]||(D.k[by.name]=[by.elem,by.vr||null,0]);e[2]++;return}
   const m=String(msg||''),k=m.includes('罠')?'罠':m.includes('まもりの光')?'まもりの光':'そのほかの守り';D.o[k]=(D.o[k]||0)+1}
 function dyText(t,v){const n=t==='build'?(BL[v]?BL[v].name+'を建てた':''):t==='craft'?(BL[v]?BL[v].name+'を作った':''):t==='cook'?(fName(v)?fName(v)+'を作った':''):t==='harvest'?(fName(v)?fName(v)+'をしゅうかくした':''):t==='plant'?(tName(v)?tName(v)+'を植えた':''):t==='fish'?'つりをした':'';return n}
+/* 昼のようす（photo.js の phNoonTick から毎コマ）：その日の天気・できごとの日を1回だけおぼえる */
+function dyNoon(h){if(h<9||h>=18)return;const D=dyCur();if(D&&D.wx==null)D.wx=dyWx()}
+function dyWx(){return typeof stormNow==='function'&&stormNow()?'storm':S.today&&DYOPEN[S.today]?S.today:festOn()?'fest':snowNow()?'snow':S.rain?'rain':rainbowToday()?'rainbow':'sun'+seasonNow()}
+const DYWRITER=()=>WD===1?HOMURA:POKO;/* ひとことを書くせいれい：章のはじめからいる子 */
+const dyWriter=()=>{if(!S)return null;const n=DYWRITER();return S.res.find(r=>r.name===n)||null};
+/* しゅるい k の文 A から、まだ出していない文の番号をえらぶ（きめるのは dyUse） */
+function dyIdx(k,A,no){const u=(S.dyU||{})[k]||[];let C=[];for(let i=0;i<A.length;i++)if(!u.includes(i)&&!(no&&no.has(k+i)))C.push(i);
+  if(!C.length)for(let i=0;i<A.length;i++)if(i!==u[u.length-1]&&!(no&&no.has(k+i)))C.push(i);/* ぜんぶ出したら、さいごに出した文のほかから */
+  if(!C.length)C=A.map((_,i)=>i);return C[Math.random()*C.length|0]}
+function dyUse(k,i,n){const U=S.dyU||(S.dyU={});let u=U[k]||(U[k]=[]);if(u.length>=n)u=U[k]=u.slice(-1);if(!u.includes(i))u.push(i)}
+const dyHash=t=>{let h=0;for(let i=0;i<t.length;i++)h=(h*31+t.charCodeAt(i))|0;return h};
+/* その日のできごとから、ひとことの話題をあつめる：[しゅるい, @N, @W] */
+function dyTopics(e,f){const M=[],O=[],N=e.ns;
+  const gone=(S.gone||[]).filter(g=>g.day>=e.d&&g.day<=dayNo()&&g.name!==f.name);if(gone.length)M.push(['gone',gone[gone.length-1].name]);
+  const nw=S.res.filter(r=>r.came===e.d&&r!==f&&!r.back);if(nw.length)M.push(['new',nw[nw.length-1].name]);
+  if(N&&N.trial)M.push([N.trialOK?'trialOK':'trial']);else if(N&&N.boss)M.push([N.boss===1?'bossLose':'bossWin']);
+  if(N&&!N.trial){const best=dyBest(e);O.push(N.hurt?['nightHurt']:N.lost&&N.lost.length?['nightLost']:N.broke?['nightBroke']:best&&best!==f.name?['nightBest',best]:N.kill>=6?['nightBig']:N.kill?['nightSome']:['nightQuiet'])}
+  else if(!N&&!Object.keys(e.k||{}).length&&!Object.keys(e.o||{}).length)O.push(['nightQuiet']);
+  const mine=e.w.filter(x=>x[0]===f.name).sort((a,b)=>b[5]-a[5]);if(mine.length)O.push(['self',dyText(mine[0][3],mine[0][4])]);
+  for(const t of['build','craft','harvest','cook','plant','fish']){const L=e.w.filter(x=>x[3]===t&&x[0]!==f.name).sort((a,b)=>b[5]-a[5]);if(!L.length)continue;const v=L[0][4],n=t==='build'||t==='craft'?(BL[v]&&BL[v].name):t==='plant'?tName(v):t==='fish'?'':fName(v);if(n!=null&&(n||t==='fish'))O.push([t,n,L[0][0]])}
+  if(new Set(e.w.map(x=>x[0])).size>=3)O.push(['busy']);if(e.m.length>=2)O.push(['events']);
+  {const m=bestMate(f);if(m)O.push(['mate',m.name])}
+  O.push(['calm']);return{M,O}}
+/* フタバのひとこと（3〜4行） */
+function dyNote(e,f){const{M,O}=dyTopics(e,f),sad=M.some(t=>t[0]==='gone'||t[0]==='bossLose'||t[0]==='trial');
+  const cr=S.dyCat||[],old=k=>{const i=cr.lastIndexOf(k);return i<0?-1:i};/* 前に書いた話題は、あとまわし */
+  const rest=O.slice().sort((a,b)=>old(a[0])-old(b[0])||(a[0]==='calm')-(b[0]==='calm')||Math.random()-.5);
+  const top=M.slice(0,1).concat(rest.filter(t=>t[0]!=='calm'||!M.length).slice(0,M.length?1:2));if(top.length>1&&top.some(t=>t[0]==='calm'))top.splice(top.findIndex(t=>t[0]==='calm'),1);
+  const wx=e.wx&&DYOPEN[e.wx]?e.wx:'sun'+seasonOf(e.d),sd=sad||top.some(t=>/^night(Hurt|Lost|Broke)$/.test(t[0])),CL=sd?DYCLOSE_SAD:DYCLOSE,clk=sd?'cs':'c',/* かなしい日・こまった夜のあとは、しずかなおわり */sub=(t,x)=>t.split('@N').join(x[1]||'').split('@W').join(x[2]||'');
+  const seen=new Set(S.dyTx||[]);let best=null;
+  for(let n=0;n<16;n++){const P=[['o:'+wx,DYOPEN[wx]]].concat(top.map(x=>['b:'+x[0],DYBODY[x[0]],x])).concat([[clk,CL]]);
+    const I=P.map(p=>dyIdx(p[0],p[1])),L=P.map((p,i)=>chatTone(p[2]?sub(p[1][I[i]],p[2]):p[1][I[i]],f,i)),h=dyHash(L.join('\n'));
+    best={P,I,L,h};if(!seen.has(h))break}
+  best.P.forEach((p,i)=>dyUse(p[0],best.I[i],p[1].length));
+  const tx=S.dyTx||(S.dyTx=[]);tx.push(best.h);if(tx.length>2000)tx.splice(0,tx.length-2000);
+  const c=S.dyCat||(S.dyCat=[]);for(const t of top){const i=c.indexOf(t[0]);if(i>=0)c.splice(i,1);c.push(t[0])}
+  return best.L}
 /* 朝：きのうの日記をしめる。書くことがあれば、紙を出す */
 function diaryClose(){if(dyOff())return;const D=S.dy;S.dy={d:dayNo(),w:{},m:[],k:{},o:{}};if(!D)return;
   const N=S.ns&&!S.ns.dd?S.ns:null;if(N)N.dd=1;
   const w=Object.values(D.w).filter(e=>dyText(e[3],e[4])),e={d:D.d,w,m:D.m.slice(),k:D.k,o:D.o};
   if(N)e.ns={n:N.n,kill:N.kill,hurt:N.hurt,broke:N.broke,lost:(N.lost||[]).slice(),rw:N.rw||0,trial:!!N.trial,trialOK:!!N.trialOK,boss:N.boss||0,left:N.left||0};
-  if(!w.length&&!e.m.length&&!e.ns)return;
+  e.wx=D.wx||null;const f=dyWriter();if(f&&D.ph)e.ph=D.ph;/* フタバがいないときは、写真ものせない */
+  if(!w.length&&!e.m.length&&!e.ns&&!e.ph)return;
+  if(f){e.ft=dyNote(e,f);e.fw=[f.name,f.elem,f.vr||null]}
   const L=S.diary||(S.diary=[]);L.push(e);while(L.length>DIARYMAX)L.shift();
   if(!sheet&&$('#dialog').hidden)openSheet('diary','m');else toast('きのうの日記を、思い出帳にのこした')}
 function dyBest(e){let b=null,n=0;for(const k in e.k||{})if(e.k[k][2]>n){n=e.k[k][2];b=k}return n>=2?b:null}
+/* 日記の写真の URL：とじるときの写しの板（sheetGhost）も同じ絵を読むので、すぐには手ばなさない（さいごの DYPHN まいだけ） */
+const DYPHU=new Map(),DYPHN=6;
+function dyPhUrl(id,b){let u=DYPHU.get(id);if(u)return u;u=URL.createObjectURL(b);DYPHU.set(id,u);if(DYPHU.size>DYPHN){const[k,v]=DYPHU.entries().next().value;DYPHU.delete(k);setTimeout(()=>URL.revokeObjectURL(v),3000)}return u}
 /* 日記の紙（renderSheet から）。arg：'m' は朝に出したとき、数は思い出帳から読む日 */
 function diaryBody(T,body,arg){const L=S.diary||[];const e=arg==='m'||arg==null?L[L.length-1]:L.find(q=>q.d===arg);if(!e)return closeSheet();
   T.textContent=e.d+'日めの日記';
   if(arg!=='m'){const bk=el('<button class="btn back" aria-label="思い出帳にもどる">'+pxi('next','prev')+'もどる</button>');bk.onclick=()=>{sfx('tap');openSheet('menu','record')};T.before(bk)}
+  if(e.ph){const sec=el('<div class="sec dyPh"><img alt="" style="display:block;width:100%;aspect-ratio:4/3;object-fit:cover"></div>'),im=sec.querySelector('img'),st=S;body.appendChild(sec);/* その日の昼12時の村の写真（けしたあとなら、出さない） */
+    phGet(e.ph).then(p=>{if(!sec.isConnected||S!==st)return;if(!p||!p.b){sec.remove();return}im.src=dyPhUrl(e.ph,p.b)},()=>sec.remove())}
+  if(e.ft&&e.ft.length&&e.fw){const sec=el('<div class="sec"><h3></h3><div class="rows"></div></div>');sec.querySelector('h3').textContent=e.fw[0]+'のひとこと';const r=rowEl(e.fw[0],e.ft.map(t=>t.replace(LOOKRX,'')).join('\n'),ELEM[e.fw[1]]?spiritPort(e.fw[1],96,e.fw[2]):null);r.querySelector('small').style.whiteSpace='pre-line';sec.querySelector('.rows').appendChild(r);body.appendChild(sec)}
   const N=e.ns;if(N){const sec=el('<div class="sec"><h3></h3></div>');sec.querySelector('h3').textContent=N.trial?(N.trialOK?'試練をのりこえた！':'試練の夜'):N.rw?'夜をぶじに守りきった！':'ゆうべの守り';
     const g=el('<div class="stats"></div>');
     for(const[k,v]of[['来た「コワイノ」',N.n+'体'],['追いはらった',N.kill+'体'],['おそわれたせいれい',N.hurt?N.hurt+'回':'なし'],['こわされた柵・設備',N.broke?N.broke+'こ':'なし'],['ぬすまれたもの',N.lost.length?lostSum(N.lost):'なし']].concat(N.rw?[['ごほうび','パワー+'+N.rw+'・みんなのたのしさ+10']]:[]).concat(N.trialOK?[['試練のごほうび','パワー+60・めぶきのしずく']]:[])){const d=el('<div class="stat"><span></span><b></b></div>');d.firstChild.textContent=k;d.lastChild.textContent=v;g.appendChild(d)}

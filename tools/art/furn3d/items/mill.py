@@ -12,7 +12,7 @@ from blueprint import Part as P
 from common import *
 import math
 ID='mill';SZ=(2,2);BOTTOM=128;GRAD=True
-VIEWS=[('mill',0)]
+VIEWS=[('mill',0),('mill>1',1),('mill>2',2)]   # 前・右・後ろ（左は右の反転）
 X0,X1=0.16,1.84;YB,YF=0.62,1.12;PS=0.08;ZB,ZF=1.10,0.86
 STONE=(220,216,210);HOLE=(150,140,130);SACKC=(246,242,232);TIE=(196,160,120)
 def PARTS():
