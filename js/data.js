@@ -36,7 +36,7 @@ const BL={
   bellf:{sp:9,name:'ききょう',item:'ききょうの種',kind:'plant',cost:3,attr:{earth:1},desc:'まわり3マスで、たのしさ+0.2／1時間'},
   salvia:{sp:9,name:'サルビア',item:'サルビアの種',kind:'plant',cost:3,attr:{fire:1},desc:'まわり3マスで、たのしさ+0.2／1時間'},
   nebari:{sp:9,name:'ねばり草',item:'ねばり草の種',kind:'plant',cost:3,attr:{wood:1},desc:'上を歩く「コワイノ」の速さ0.5倍。まわり3マスで、たのしさ+0.2／1時間'},
-  hotaru:{sp:9,name:'ほたるの草むら',item:'ほたるの草むらの苗',kind:'plant',cost:3,attr:{water:1},desc:'夜、まわり2マスをてらすあかり。はじめて光に入った「コワイノ」が2分止まる'},
+  hotaru:{sp:9,name:'ヨルボシの草むら',item:'ヨルボシの草むらの苗',kind:'plant',cost:3,attr:{water:1},desc:'夜、まわり2マスをてらすあかり。はじめて光に入った「コワイノ」が2分止まる'},
   lily:{sp:9,name:'ゆり',item:'ゆりの種',kind:'plant',cost:3,attr:{wind:1},desc:'まわり3マスで、たのしさ+0.2／1時間'},
   lotus:{sp:9,name:'ハス',item:'ハスの種',kind:'plant',cost:3,attr:{water:1},desc:'池にうかぶ花。まわり3マスで、たのしさ+0.2／1時間。まわり2マスで水浴びすると、たのしさ×1.5 / つかれ −9／1時間'},
   tree:{hp:5,brk:1,fix:1,fixm:{},name:'木',item:'木の苗',kind:'plant',cost:4,lv:3,solid:1,env:1,attr:{wood:3},desc:'まわり5マスを緑にする。まわり3マスで、たのしさ+0.4／1時間'},

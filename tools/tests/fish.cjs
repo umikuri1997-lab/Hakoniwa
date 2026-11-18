@@ -28,7 +28,7 @@ const assert=require('node:assert/strict');
   assert.deepEqual(r.wants,[true,false]);
   assert.equal(r.fun,60);assert.equal(r.en,70);assert.equal(r.wkM,4);assert.equal(r.wkD,480);
   assert.ok(r.camp.includes('魚のくしやき')&&r.camp.includes('ホイル焼き')&&!r.camp.includes('焼き魚'),r.camp);
-  assert.ok(r.zk.includes(r.carry[0]==='koi'?'コイ':'フナ')&&r.zk.includes('つった数 1'),r.zk.slice(0,300));
+  assert.ok(r.zk.includes(r.carry[0]==='koi'?'キンヒレ':'ヌマコ')&&r.zk.includes('つった数 1'),r.zk.slice(0,300));
   assert.deepEqual(r.ico,[]);assert.deepEqual(r.emoName,[]);
   assert.deepEqual(errors,[]);await browser.close();console.log('OK');
 })().catch(e=>{console.error(e);process.exit(1)});
