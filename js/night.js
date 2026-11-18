@@ -94,7 +94,7 @@ function waveFor(day){
   return list;
 }
 const NIGHTVAR={kiri:'霧の夜',mure:'群れの夜',wana:'ワナクイのうたげ',doro:'かげのどろぼう市',ushio:'かげのうしお'};/* 防衛の夜の変化：霧の夜（見張り台のとどく所が半分）・群れの夜（コワイノがみんな同じ所から来る）・ワナクイのうたげ（ふつうのコワイノがワナクイだけ、数は半分）・かげのどろぼう市（カゲドロボウだけ）・かげのうしお（コカゲだけ、来る間かくを半分に） */
-const MOON={full:['moonf','満月','wx-full'],new:['moonn','新月','wx-new']},MOONSP={full:.9,new:1.1},MOONDK={full:.46,new:.70};/* 満月と新月：8日ごとにめぐる（満月の4日あとに新月）。ほかの夜の変化とかさなる。コワイノの歩く速さ（満月0.9倍・新月1.1倍）と、夜の暗さ（ふだんは .58） */
+const MOON={full:['moonf','満月','wx-full'],new:['moonn','新月','wx-new']},MOONSP={full:.9,new:1.1},MOONDK={full:.54,new:.78};/* 満月と新月：8日ごとにめぐる（満月の4日あとに新月）。ほかの夜の変化とかさなる。コワイノの歩く速さ（満月0.9倍・新月1.1倍）と、夜の暗さ（ふだんは .66） */
 function moonOf(d){return d%8===0?'full':d%8===4?'new':null}
 function moonNow(){const h=hour(),d=dayNo();return h>=20?moonOf(d):h<6?moonOf(d-1):null}/* 今夜の月（夕方20時から朝6時まで） */
 function moonSp(){const k=moonNow();return k?MOONSP[k]:1}
@@ -358,7 +358,7 @@ function defeat(e,msg,r,by){if(e.dead)return;if(typeof pathA==='function'&&pathA
   if(D.boss&&typeof letterQ==='function'){const L=S.res.filter(q=>!q.hidden);if(L.length)letterQ(pick(L),'boss',null,'',hour()<6?dayNo()-1:dayNo())}/* あの大きな影を追いはらった朝の手紙 */if(D.boss){S.bossKills=(S.bossKills||0)+1;if(!S.bossDay)S.bossDay=dayNo();if(e.type==='boss'&&!S.ookDay)S.ookDay=dayNo();if(S.bossKills>=2&&e.type==='boss')S.flags.winMorn=dayNo();/* 2回めからは、つぎの朝にみんなでよろこぶ（はじめての夜は、その場の会話） */logEv('オオカゲを追いはらった');omo('boss');memo('⚔️','オオカゲを追いはらった')}
   if(D.boss&&!S.flags.sh_boss&&!S.flags.bossShake&&!WD&&S.res.some(r=>r.name===POKO)){S.flags.bossShake=1;{const go=()=>performance.now()<BOSSHOLD?setTimeout(go,300):dialog([[POKO,'#joy big|……やった！ オオカゲを、追いはらったよ！','cheer'],[POKO,'#surprise|……あれ？ 手が、まだふるえてる……。'],...(S.res.some(r=>r.name===MINA)?[[MINA,'#joy|フタバ、すごかったねぇ。みんなで、村を守れたよぉ。'],[MINA,'ふるえるのは、それだけがんばったからだよぉ。こわかったのに、にげなかったもんねぇ。'],[POKO,'#cry|……うん。ノドカがいてくれたから、がんばれたんだ。'],[MINA,'#joy|今夜は、みんなでゆっくり休もうねぇ。'],[POKO,'#joy|うん！ みんな、ありがとう！']]:[[GOD,(GVOICE()||'#nod|')+'……ようやったのう、フタバ。ちゃんと見とったぞい。'],[GOD,'ふるえるのは、こわいのをこらえて、さいごまでふんばったしるしじゃ。'],[POKO,'#cry|……うん。こわかったけど、にげなかったよ。'],[GOD,'#joy|えらいぞ。今夜は、ゆっくり休むんじゃ。']])]);setTimeout(go,1200)}}/* 戦闘のあと：フタバのふるえ（かけらの話とは別）。追いはらいの演出で「進む」をおしてから */
   if(D.boss&&WD&&!S.flags.sh_boss&&!S.drops.some(d=>d.id==='shard'))dropAt(e.x,e.y,'shard');/* 草原では、最後のバトルに勝ったときだけかけらが出る *//* オオカゲが落とすかけらは1つだけ */
-  if(D.boss&&Math.random()<.5)dropAt(e.x,e.y,'mebuki');/* 半分の確率で「めぶきのしずく」 */
+  if(D.boss&&Math.random()<.25)dropAt(e.x,e.y,'mebuki');/* 25%で「めぶきのしずく」（カミサマからは買えない） */
   if(e.loot){for(const id in e.loot)dropAt(e.x,e.y,id,e.loot[id]);if(S.ns)for(const g of e.lootN||[]){const i=S.ns.lost.indexOf(g);if(i>=0)S.ns.lost.splice(i,1)}toast('カゲドロボウが、ぬすんだ物を落とした','good');e.loot=null}/* カゲドロボウをたおすと、ぬすんだ物を落とす（せいれいがひろって箱へ） */
   for(const[id,n,pr]of dropRolls(e.type))if(Math.random()<pr)dropAt(e.x,e.y,id,n);/* 落とし物は1つずつ、べつべつにくじを引く（いくつも落とすことがある） */
   S.pt+=n;S.totalPt+=n;addFloat(e.x,e.y-1,'+'+n,'#ecdcbc');/* 追いはらいは表示どおり */toast((msg||D.name+'を追いはらった！')+' パワー+'+n,'good');

@@ -121,7 +121,8 @@ function goWork(r,G,nw){boxFullReset();
   if(r.elem==='wind')for(const k of['drop','seed','weed'])if(tryJob(r,G,k))return true;/* 風のせいれいは、落ちている物（落とし物・枝・ふしぎな種・雑草・きのこ）を、畑の世話・おつげ・木・石より先にひろう */
   if(pitJob(r,G))return true;/* 落とし穴をほりなおす（土のせいれい、defense.js） */
   if(nestJob(r,G))return true;/* 「しらべる」でタップしたかげの巣（defense.js） */
-  if((S.drops||[]).some(q=>q.lt||q.tap)||wreqList().length){for(const k of FARMJ)if(tryJob(r,G,k))return true;if(tryJob(r,G,'drop'))return true;if(wreqList().length&&tryJob(r,G,'weed'))return true}if(vreqList().length&&tryJob(r,G,'mine'))return true;/* タップした鉱脈 */if(typeof txJob==='function'&&txJob(r,G))return true;/* 宝の場所をほる *//* 「しらべる」でタップした草・きのこ・落とし物も、ここでとりにいく *//* 守り神の光でこわした物（落ちた木材・石材）は、おつげ・木を切る・石をほるより先にひろう。畑の世話よりはあと */
+  if(wreqList().length&&tryJob(r,G,'weed'))return true;/* 「しらべる」でタップした草・きのこは、畑の世話より先（畑の多い村では、畑の世話がおわらず、いつまでもとりに行かなかった） */
+  if((S.drops||[]).some(q=>q.lt||q.tap)){for(const k of FARMJ)if(tryJob(r,G,k))return true;if(tryJob(r,G,'drop'))return true}if(vreqList().length&&tryJob(r,G,'mine'))return true;/* タップした鉱脈 */if(typeof txJob==='function'&&txJob(r,G))return true;/* 宝の場所をほる *//* 「しらべる」でタップした草・きのこ・落とし物も、ここでとりにいく *//* 守り神の光でこわした物（落ちた木材・石材）は、おつげ・木を切る・石をほるより先にひろう。畑の世話よりはあと */
   if(r.elem==='earth'&&tryJob(r,G,'till'))return true;/* 土のせいれいは、おつげがあっても、畑づくりを先にする */
   if(S.oracle&&ORACLE[S.oracle])for(const k of ORACLE[S.oracle].jobs){if((k==='chop'||k==='mine')&&tryJob(r,G,'drop'))return true;if(tryJob(r,G,k))return true}/* 落とし物は、木を切る・石をほるより先にひろう */
   // 建てる・家具づくりがいちばん先。そのつぎに得意な仕事をする
