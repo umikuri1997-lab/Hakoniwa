@@ -39,6 +39,8 @@ function tryJob(r,G,k){
     if(!S.obj.some((o,q)=>o==='farm'&&need(q)))return false;const cj=COMPS.find(c=>(S.dyn[c]||{}).c>0);if(cj==null)return false;j=nearest(G,q=>adjOf(q,k=>k===cj)>=0,200);if(j>=0){startAct(r,G,'cget',j,{obj:cj});return true}return false}/* 肥料やり：コンポスターから肥料をもっていって、畑にまく（1日1回） */
   case'otaki':{if(isNight()||STATUE<0)return false;if(r.otaki){j=nearest(G,j=>adjOf(j,k=>k===STATUE||k===STATUE+W)>=0,300);if(j>=0){startAct(r,G,'otaki',j,{});return true}return false}
     if(!S.otakiQ||!Object.keys(S.otakiQ).length||S.res.some(q=>q!==r&&q.act&&q.act.type==='otakiget'))return false;if(qStale(S.otakiQ)){S.otakiQ={};return false}const ok=Object.keys(S.otakiQ);j=nearest(G,j=>keysAdj(j,ok)>=0,200);if(j>=0){startAct(r,G,'otakiget',j,{});return true}return false}/* おたきあげ：箱から素材をとって、神殿へ */
+  case'sasa':{if(isNight()||STATUE<0)return false;if(r.sasa){j=nearest(G,j=>adjOf(j,k=>k===STATUE||k===STATUE+W)>=0,300);if(j>=0){startAct(r,G,'sasa',j,{});return true}return false}
+    if(!S.sasaQ||!Object.keys(S.sasaQ).length||S.res.some(q=>q!==r&&q.act&&q.act.type==='sasaget'))return false;if(qStale(S.sasaQ)){S.sasaQ={};return false}const ok=Object.keys(S.sasaQ);j=nearest(G,j=>keysAdj(j,ok)>=0,200);if(j>=0){startAct(r,G,'sasaget',j,{});return true}return false}/* 季節のささげもの：箱から物をとって、神殿へ（sasage.js） */
   case'weed':{const mF=matTot()+matN(r)>=matCap(),fF=foodCap()-S.food<=0,okW=k=>S.obj[k]==='kinoko'?!fF:!mF;/* きのこは箱、草は箱 */if(isNight()||mF&&fF||roomN(r)<1)return false;{const RQ=wreqList();j=RQ.length?nearest(G,j=>RQ.includes(j)&&okW(j)&&free('o'+j,1),9999):-1}if(j<0){const GN=grassNeed();if(GN)j=nearest(G,j=>GN[(BL[S.obj[j]]||{}).weed]>0&&okW(j)&&free('o'+j,1),GRASSFAR)}/* 目標に足りない草は、遠くてもとりに行く */if(j<0){const R=WEEDNEAR||seekR(r);j=nearest(G,j=>WEEDS.has(S.obj[j])&&Math.hypot(j%W+.5-r.x,(j/W|0)+.5-r.y)<=R&&okW(j)&&free('o'+j,1))}/* 雑草・きのこは、まわり15マス（風の子は20マス） *//* 「しらべる」でタップした草は、遠くてもさきに */if(j>=0){startAct(r,G,'weed',j,{key:'o'+j,obj:j});return true}return false}
       case'seed':if(!S.seeds.length||isNight())return false;j=nearest(G,j=>S.seeds.some(q=>q.y*W+q.x===j)&&free('s'+j,1),90);if(j>=0){startAct(r,G,'pickseed',j,{key:'s'+j,obj:j});return true}return false;
   }
@@ -67,6 +69,7 @@ function hasUrgent(r){/* 建てる場所か、だれも受けていない依頼�
 function hasWork(r){
   if(r.bm||haulWant()&&!heldN(r))return true;
   if(!isNight()&&STATUE>=0&&(r.otaki||S.otakiQ&&Object.keys(S.otakiQ).length))return true;
+  if(!isNight()&&STATUE>=0&&(r.sasa||S.sasaQ&&Object.keys(S.sasaQ).length))return true;
   if(!isNight()&&(r.cpk||S.cmpQ&&Object.keys(S.cmpQ).length))return true;
   if(smeltWant(r))return true;
   if(!isNight()&&S.tx!=null&&free('tx',1))return true;/* 宝の場所 */
@@ -114,6 +117,7 @@ function goWork(r,G,nw){boxFullReset();
   if(jobWork(r,G))return true;/* しごと場の担当は、ふだんの仕事（植える・ひろう・畑・木・石・草）より先に、そのしごと場で働く */
   if(tryJob(r,G,'plant'))return true;
   if(tryJob(r,G,'otaki'))return true;
+  if(tryJob(r,G,'sasa'))return true;
   if(haulJob(r,G))return true;/* 神殿のまえの物を、箱へ運ぶ */
   if(tryJob(r,G,'cfill'))return true;
   if(typeof aniJob==='function'&&aniJob(r,G))return true;/* 飼う生き物：えさ・水・とれた物 */
@@ -345,7 +349,7 @@ function goBurial(r,G){/* 消えてしまった子のお墓へ行き、棺を神
   const ok=j=>{if(S.obj[j]!=='grave')return false;const d=S.dyn[j];if(!d||d.buried||!free('bury'+j,1))return false;const by=buryWho(d);if(by&&by!==r&&S.t-(d.t0||0)<BURYWAIT)return false;return true};
   const gs=[];for(let j=0;j<W*H;j++)if(S.obj[j]==='grave'&&ok(j))gs.push(j);if(!gs.length)return false;
   const st=nearest(G,k=>adjOf(k,q=>gs.includes(q))>=0,200);if(st<0)return false;const g=adjOf(st,q=>gs.includes(q));startAct(r,G,'bury',st,{key:'bury'+g,obj:g});return true}
-function die(r){if(r.kdst&&typeof kdStoneBack==='function')kdStoneBack(r);/* もりのこだまへはこぶ石材は、箱へもどす */if(r.coffin&&r.coffin.name){const nm=r.coffin.name;r.coffin=null;for(const L of[S.buried||[],S.lost||[]])for(const q of L)if(q.name===nm)delete q.unb}/* 棺をはこんでいる子が消えたら、棺の子は、おみおくりがすんだことにする（unb がのこると、二度と呼びもどせない） */if(r.cpk){cmpRefund(r.cpk.m);r.cpk=null}if(r.spk){smRefund(r.spk.m);r.spk=null}/* 運んでいた草は、箱へもどす */if(r.otaki){const Q=S.otakiQ||(S.otakiQ={});for(const k in r.otaki)Q[k]=(Q[k]||0)+r.otaki[k];r.otaki=null}/* 持っていたおたきあげの素材は、まちにもどす */
+function die(r){if(r.kdst&&typeof kdStoneBack==='function')kdStoneBack(r);if(r.sasa&&typeof sasaBack==='function')sasaBack(r);/* ささげものは、箱へもどす *//* もりのこだまへはこぶ石材は、箱へもどす */if(r.coffin&&r.coffin.name){const nm=r.coffin.name;r.coffin=null;for(const L of[S.buried||[],S.lost||[]])for(const q of L)if(q.name===nm)delete q.unb}/* 棺をはこんでいる子が消えたら、棺の子は、おみおくりがすんだことにする（unb がのこると、二度と呼びもどせない） */if(r.cpk){cmpRefund(r.cpk.m);r.cpk=null}if(r.spk){smRefund(r.spk.m);r.spk=null}/* 運んでいた草は、箱へもどす */if(r.otaki){const Q=S.otakiQ||(S.otakiQ={});for(const k in r.otaki)Q[k]=(Q[k]||0)+r.otaki[k];r.otaki=null}/* 持っていたおたきあげの素材は、まちにもどす */
   endAct(r);const dm=bestMate(r),dmN=dm?dm.name:null;goneNote(r,dm&&!dm.hidden?dm:null);/* 思い出帳の「いなくなったなかま」 */{const t0=(r.y|0)*W+(r.x|0);let gj=-1;for(let rad=0;rad<4&&gj<0;rad++)for(let dy=-rad;dy<=rad&&gj<0;dy++)for(let dx=-rad;dx<=rad;dx++){const k=t0+dy*W+dx;if(k>=0&&k<W*H&&!S.obj[k]&&S.ground[k]!==1){gj=k;break}}
     if(gj>=0){S.obj[gj]='grave';S.dyn[gj]={name:r.name,buried:false,mate:dmN,t0:S.t};recount()}}S.res=S.res.filter(q=>q!==r);S.deaths++;for(const q of S.res)if(q===dm||Math.hypot(q.x-r.x,q.y-r.y)<14)q.cryU=S.t+90;/* なかよしは、はなれていても泣く *//* 近くのせいれいは、しばらく泣く */logEv(r.name+'が消えてしまった');
   if(!S.buried)S.buried=[];if(isKey(r.name)&&r.elem==='fire'&&!S.flags.guard&&S.ns&&S.ns.boss&&isNight())S.flags.hDied=1;/* こもれびのまもりをおぼえる前に、オオカゲの夜に火の子がいなくなった */gearDropAll(r);/* そうびは、もちものにもどる */if(isKey(r.name))S.buried.push({name:r.name,elem:r.elem,vr:r.vr,xp:r.xp||0,xpf:r.xpf||0,like:r.like,came:r.came,made:r.made,beat:r.beat,bst:r.bst,sst:r.sst,tst:r.tst,est:r.est,jc:r.jc,ttl:r.ttl,boost:r.boost,mate:dmN,unb:true});else{if(!S.lost)S.lost=[];S.lost.push({name:r.name,elem:r.elem,vr:r.vr,xp:r.xp||0,xpf:r.xpf||0,like:r.like,came:r.came,made:r.made,beat:r.beat,bst:r.bst,sst:r.sst,tst:r.tst,est:r.est,jc:r.jc,ttl:r.ttl,boost:r.boost,mate:dmN,unb:true})}/* 埋葬されるまでは、よみがえらせない（unb） *//* キーキャラは特性「きずな」でレベルそのまま。ふつうのせいれいは「めぶきのしずく」がないともどらない *//* もどってくるのはキーキャラだけ *//* 次の朝の召喚で、いちばんにもどってくる */
