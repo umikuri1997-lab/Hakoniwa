@@ -31,6 +31,50 @@ def pop(o):
     c = m + (c - m) * CON  # コントラスト
     o[..., :3] = np.where(A[..., None], np.clip(c, 0, 255).round(), o[..., :3]); return o
 
+# ---- 手で直す所（ちぢめると消える細い線・小さな物）。ちぢめたあとの絵（左上が0,0）のドットに描く ----
+def _line(a, p0, p1, col, on=None):
+    """ブレゼンハムの1ドットの線。on='o' なら物の上だけ、'e' なら空いた所だけ"""
+    (x0, y0), (x1, y1) = p0, p1; dx, dy = abs(x1 - x0), -abs(y1 - y0); sx, sy = (1 if x0 < x1 else -1), (1 if y0 < y1 else -1); e = dx + dy
+    while True:
+        if 0 <= y0 < a.shape[0] and 0 <= x0 < a.shape[1] and (on is None or (on == 'o') == (a[y0, x0, 3] > 0)): a[y0, x0] = (*col, 255)
+        if (x0, y0) == (x1, y1): break
+        e2 = 2 * e
+        if e2 >= dy: e += dy; x0 += sx
+        if e2 <= dx: e += dx; y0 += sy
+def _dots(a, pts, col):
+    for x, y in pts: a[y, x] = (*col, 255)
+def _pad(im, l=0, t=0, r=0, b=0):
+    o = Image.new('RGBA', (im.width + l + r, im.height + t + b)); o.paste(im, (l, t)); return o
+def _clear(a, x0, y0, x1, y1): a[y0:y1 + 1, x0:x1 + 1] = 0
+SIL, SILD, SILL, PRL = (176, 178, 196), (132, 134, 154), (228, 230, 238), (242, 238, 228)
+def h_bow_bamboo(im):
+    a = np.array(im); _line(a, (22, 3), (3, 26), (190, 160, 110), 'e'); return Image.fromarray(a)
+def h_bow_silver(im):
+    a = np.array(im); _line(a, (23, 4), (3, 26), (190, 160, 110), 'e'); return Image.fromarray(a)
+def h_pendant(im):
+    im = _pad(im, l=1, r=1, t=10); a = np.array(im)
+    _line(a, (6, 10), (1, 0), SILD); _line(a, (7, 10), (12, 0), SILD); return Image.fromarray(a)
+def h_hat(im):
+    a = np.array(im); _clear(a, 0, 15, a.shape[1] - 1, a.shape[0] - 1); c = (150, 140, 70)
+    _line(a, (11, 14), (14, 19), c); _line(a, (18, 14), (15, 19), c)
+    _dots(a, [(12, 19), (13, 18), (16, 18), (17, 19), (13, 20), (16, 20), (13, 21), (16, 21)], c); return Image.fromarray(a)
+def h_fan(im):
+    im = _pad(im, l=2, t=2, r=2); a = np.array(im); rib = (210, 116, 56)
+    for e in [(4, 14), (6, 8), (10, 4), (15, 2), (20, 2), (25, 5), (28, 9), (29, 13)]: _line(a, (17, 18), e, rib, 'o')
+    _dots(a, [(1, 4), (0, 18), (30, 1), (31, 18), (2, 1)], (255, 168, 56)); return Image.fromarray(a)
+def h_kamikazari(im):
+    a = np.array(im); _clear(a, 11, 15, a.shape[1] - 1, a.shape[0] - 1)
+    _line(a, (13, 15), (13, 23), SILD); _line(a, (18, 15), (18, 20), SILD)
+    for x, y in [(12, 24), (17, 21)]:
+        _dots(a, [(x, y), (x + 1, y), (x, y + 1), (x + 1, y + 1)], PRL); _dots(a, [(x + 1, y + 1)], (198, 192, 180))
+    return Image.fromarray(a)
+def h_feather(im):
+    a = np.array(im).astype(float); g = (a[..., 3] > 0) & (a[..., 1] > a[..., 2] + 30); g[:18] = False; g[:, 12:] = False  # 左下のリボン（みどり）だけ
+    L = a[..., :3] @ (.3, .59, .11); pal = np.array([(126, 168, 72), (160, 200, 96), (196, 226, 132)])
+    k = np.clip(((L - L[g].min()) / max(1, np.ptp(L[g])) * 3).astype(int), 0, 2)
+    a[g, :3] = pal[k[g]]; return Image.fromarray(a.astype('uint8'))
+HAND = {'gw20': h_bow_bamboo, 'gw31': h_bow_silver, 'gc03': h_pendant, 'ga13': h_hat, 'gw07': h_fan, 'gc12': h_kamikazari, 'gt14': h_feather}
+
 def runs(p, n, cells=0):
     """1次元の、物のある所のまとまり（start,stop）を n こにする：cells があれば、まん中の入るます目（はばを cells にわけた）ごとにまとめる（ならんだ肩あてが、となりの物にくっつかない）。のこりは、いちばんせまい空きのとなりどうしをまとめる"""
     on = p > 0; R0 = []; i = 0
@@ -70,6 +114,7 @@ def build(dst, game=False):
         for k, b in bx.items():
             w, h = b[2] - b[0], b[3] - b[1]
             im = pixdown.make(src, b, w=S if w >= h else None, h=S if h > w else None, fix=lambda o, k=k: fishfood_art.tidy(pop(o), k))
+            if k in HAND: im = HAND[k](im)
             im.save(os.path.join(dst, k + '.png')); pixdown.compare(src, b, im).save(os.path.join(dst, k + '_cmp.png')); made[k] = im
     if game: put(made)
     return made
