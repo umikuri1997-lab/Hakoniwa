@@ -46,7 +46,7 @@ function tryJob(r,G,k){
 }
 const JOBCAT=[['build','repair'],['craft'],['harvest','water','tend','till','sow','plant'],['cook','chop','mine','drop','weed','seed','offer','gather']];
 const ALLJOB=['harvest','sow','offer','gather'],FARMJ=['harvest','water','tend','till','sow'];/* 畑の世話 */
-const IDLE_ACTS=['fish','play','wander','idle','quirk','critwatch','sunset','rainjoy','admire','ownseat'];
+const IDLE_ACTS=['fish','play','wander','idle','quirk','critwatch','sunset','rainjoy','admire','ownseat','trlook'];
 // 種まき・植える・依頼・建築があるか（いつもの作業を中断してでも向かう仕事）
 function hasHighWork(r){
   if(!isNight()&&typeof fogWant==='function'&&fogWant(r))return true;if(!isNight()&&webWant(r))return true;/* たのまれたクモの巣 *//* たのまれた宝箱・あしあと */
@@ -154,6 +154,7 @@ function goWander(r,G){
   if(!isNight()&&!enemyLive()&&Math.random()<OWNSEATP&&goOwnSeat(r,G))return;/* じぶんのいすで休む */
   if(!isNight()&&!enemyLive()&&goWeather(r,G))return;/* 雨・夕焼け */
   if(!isNight()&&!enemyLive()&&Math.random()<.3&&goCritter(r,G))return;if(!isNight()&&!enemyLive()&&Math.random()<.25&&typeof goPetAnimal==='function'&&goPetAnimal(r,G))return;/* 飼う生き物をなでにいく *//* 小さな生き物を見つけたら、見にいく */
+  if(!isNight()&&!enemyLive()&&typeof goOuting==='function'&&goOuting(r,G))return;/* なかよしと、おでかけ（outing.js） */if(!isNight()&&!enemyLive()&&typeof goTreasure==='function'&&goTreasure(r,G))return;/* たからものをながめる（gifts.js） */
   if(!isNight()&&!enemyLive()&&(r.quirkT||0)<=S.t&&Math.random()<QUIRKP&&goQuirk(r,G))return;/* ひとりのときのしぐさ */
   const c=[];for(let j=0;j<W*H;j++){const d=G.dist[j];if(d>=2&&d<=7&&walk(j)&&!(TAKEN&&TAKEN.has(j))&&!((r.routeAvoid||{})[j]>S.t)){const x=j%W,y=(j/W)|0;if(isNight()&&!VILL[j])continue;c.push(j)}}
   if(!c.length)return startAct(r,G,'idle',-1,{dur:15});
