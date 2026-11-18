@@ -271,5 +271,5 @@ function sfxAt(k,x,y,m=1){if(!S)return;if(SFXGAP[k]){const n=performance.now()/1
   const zr=Math.max(.6,Math.min(1.4,cam.z/(typeof homeZ==='function'?homeZ():cam.z))),dx=(x*TS-(cam.x+vw/2))/(vw/2);/* 拡大すると近くで聞こえる（少し大きく、高い音までくっきり） */
   SFXV=v*m*(.85+.15*zr);SFXP=Math.max(-.75,Math.min(.75,dx*.75));SFXL=Math.min(18000,1100*Math.pow(15,v)*zr);/* 画面の左の音は左から。遠いほどこもる */
   try{sfx(k)}finally{SFXV=1;SFXP=0;SFXL=0;SFXO=null}}
-const gainB=()=>SND.bgm?.217*(SND.bv??1):0,gainS=()=>SND.sfx?.15*(SND.sv??1):0;/* 音楽・効果音の音量（0〜1） */
+const gainB=()=>SND.bgm?.1085*(SND.bv??1):0,gainS=()=>SND.sfx?.15*(SND.sv??1):0;/* 音楽・効果音の音量（0〜1） */
 function setSnd(k,v){SND[k]=v;saveSnd();if(AC){bgmG.gain.setTargetAtTime(gainB(),AC.currentTime,.1);sfxG.gain.setTargetAtTime(gainS(),AC.currentTime,.1)}}
