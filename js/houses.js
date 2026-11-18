@@ -237,6 +237,7 @@ const iconCache={};
 let ICONTMP=null;
 function iconURL(id){/* アイコンは、大きなキャンバスに2倍の細かさで描いてから、絵のある範囲だけを切り出して、144×144にきちんと入れる（全体がうつる） */
   if(typeof id==='string'&&id.startsWith('seed:'))return seedIcon(id.slice(5));
+  if(BL[id]&&BL[id].kind==='gift'&&typeof giftIco==='function')return giftIco(id);/* おくりもの（gifts.js） */
   if(BL[id]&&BL[id].g)return gearIcon(id);/* そうび・矢：ドット絵 */
   if(iconCache[id])return iconCache[id];
   const N=576,T=ICONTMP||(ICONTMP=document.createElement('canvas'));T.width=T.height=N;const t=T.getContext('2d');t.setTransform(1,0,0,1,0,0);t.clearRect(0,0,N,N);t.setTransform(2,0,0,2,0,0);/* 2倍の細かさで描く（1マス64ドットの絵が、そのままの細かさで入る） */

@@ -19,6 +19,8 @@ function waveNote(){/* 目標の欄：つぎの波まで */
   const wait=L.filter(e=>!e.spawned);if(!wait.length)return '';const g=Math.min(...wait.map(e=>e.wv));
   if(L.some(e=>e.wv===g&&e.spawned))return '影の波 '+(g+1)+'/'+WAVES.length;
   const m=Math.max(1,Math.ceil(Math.min(...wait.filter(e=>e.wv===g).map(e=>e.delay))/DAYLEN));return 'つぎの波まで：あと'+(m>=60?Math.floor(m/60)+'時間'+(m%60?m%60+'分':''):m+'分')}
+function nightLeftNote(){/* 目標の欄：今夜のコワイノの、のこり（まだ来ていない分もふくむ。先ぶれ・にげていく子・たおれた子はのぞく） */
+  if(!S||!S.enemies||!S.enemies.length||!isNight())return '';const n=S.enemies.filter(e=>!e.dead&&!e.scout&&!e.flee&&!(e.spawned&&e.hp<=0)).length;return n>0?'今夜のコワイノ：のこり'+n+'ひき':''}
 /* ---------- 先ぶれ ---------- */
 function scoutTick(e){/* 先ぶれは、村に入ったら、のぞいて南へ帰る（たたかわない）。帰る道は、にげるコワイノと同じ */
   if(!e.scout||e.flee)return false;const c=(e.y|0)*W+(e.x|0);

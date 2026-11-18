@@ -70,7 +70,7 @@ function sacredPlayWin(){const P=SPLAY;if(!P)return;sacredPlayClose();if(P.owner
 /* うまくできたときのごほうび（その出番で1回だけ。思い出帳ではなし） */
 function sacredPlayBonus(P){const b=FIELD_PLAY[P.id]?.bonus;if(!b||IS_STORY_REPLAY)return;const F=S.flags.playWon||(S.flags.playWon={});if(F[P.id])return;F[P.id]=true;dirty=true;
   if(b.word)addFloat(P.cx/TS,P.cy/TS-1.6,b.word,'#fff3c4');/* 木のようすが、うれしそうにかわる（物はもらわない） */
-  if(b.fun)for(const r of S.res){if(r.hidden||r.coffin)continue;r.fun=Math.min(100,r.fun+b.fun);addFloat(r.x,r.y-1.4,'たのしさ+'+b.fun)}}/* 村のみんなが、うれしくなる */
+  if(b.fun)for(const r of S.res){if(r.hidden||r.coffin)continue;funAdd(r,b.fun,'tree');addFloat(r.x,r.y-1.4,'たのしさ+'+b.fun)}}/* 村のみんなが、うれしくなる */
 /* しっぱい：数えて、3回でおわり（つぎの日に、もう一度） */
 function sacredPlayMiss(t){const P=SPLAY;if(!P)return;P.fails=(P.fails||0)+1;sacredPlayMsg(t);if(P.fails<PLAY_MISS){sacredPlayHint(P.hint+sacredPlayCount());return}sacredPlayClose();if(P.owner!==S||P.session!==VILLAGE_SESSION)return;sfx('next');(P.fail||P.done)()}
 function sacredPlayClose(){SPLAY=null;sacredPlayHint('');pxTextFree();pxLayerFree();sacredPlayPopFree()}
@@ -212,7 +212,7 @@ function drawSacredPlay(now){const P=SPLAY;if(!sacredPlayActive())return;if(P.po
   PXG.restore();if(PX.c){ctx.save();ctx.imageSmoothingEnabled=false;ctx.drawImage(PX.c,ox,oy);ctx.restore()}}/* とちゅうで出番がおわったら（PX.c をすてたあと）、かかない */
 /* ポップアップの出番：わくつきのパネルに、切り株とその出番だけをかく（世界の1を1ドット。切り株の絵は2倍の細かさ） */
 const PLAYW=128,PLAYH=96,PLAYBASE=68,PLAYK=2;
-function sacredPlayPopOpen(P,title){sacredPlayPopFree();const o=el('<div id="playPop" style="position:fixed;inset:0;z-index:45;display:flex;align-items:center;justify-content:center;background:rgba(30,24,16,.35);padding:16px"><div class="pxcard" style="background:var(--panel);padding:14px 14px 12px;max-width:min(420px,calc((100dvh - 120px) * 4 / 3 + 28px));width:100%;color:var(--ink);text-align:center"><b class="t" style="display:block;font-size:15px;margin-bottom:4px"></b><p class="note h" style="margin:0 0 8px"></p><canvas style="display:block;width:100%;image-rendering:pixelated;touch-action:none"></canvas></div></div>');
+function sacredPlayPopOpen(P,title){sacredPlayPopFree();const o=el('<div id="playPop" style="position:fixed;inset:0;z-index:45;display:flex;align-items:center;justify-content:center;background:rgba(40,30,15,.35);padding:16px"><div class="pxcard" style="background:var(--panel);padding:14px 14px 12px;max-width:min(420px,calc((100dvh - 120px) * 4 / 3 + 28px));width:100%;color:var(--ink);text-align:center"><b class="t" style="display:block;font-size:15px;margin-bottom:4px"></b><p class="note h" style="margin:0 0 8px"></p><canvas style="display:block;width:100%;image-rendering:pixelated;touch-action:none"></canvas></div></div>');
   o.querySelector('.t').textContent=title;const cvs=o.querySelector('canvas');cvs.width=PLAYW*PLAYK;cvs.height=PLAYH*PLAYK;P.popEl=o;P.popCv=cvs;P.popHint=o.querySelector('.h');document.body.appendChild(o);
   const at=e=>{const r=cvs.getBoundingClientRect();return {x:(e.clientX-r.left)/r.width*PLAYW,y:(e.clientY-r.top)/r.height*PLAYH}};
   for(const [ev,fn] of [['pointerdown',sacredPlayDown],['pointermove',sacredPlayMove],['pointerup',sacredPlayUp],['pointercancel',sacredPlayUp]])cvs.addEventListener(ev,e=>{if(SPLAY!==P||!sacredPlayActive()||!$('#dialog').hidden)return;e.preventDefault();if(ev==='pointerdown')cvs.setPointerCapture(e.pointerId);fn(at(e),performance.now())});

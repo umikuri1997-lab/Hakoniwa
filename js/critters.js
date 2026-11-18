@@ -139,7 +139,7 @@ function goCritter(r,G){if(!CRIT.length)return false;let best=null,bd=1e9;for(co
 ACT.critwatch={start(r,a){const c=critById(a.cid);if(c)r.face=c.x>=r.x?1:-1;r.bubble='❗'},
   tick(r,a,dt){const c=critById(a.cid);if(c&&!c.fl)r.face=c.x>=r.x?1:-1;if(a.t>3)r.bubble=c?'🎵':'';
     if(a.chase&&c&&!c.fl&&!c.go&&Math.hypot(c.x-r.x,c.y-r.y)>2.2&&a.t>4){a.chase--;const G=bfs(r.x|0,r.y|0),cj=(c.y|0)*W+(c.x|0),st=nearest(G,j=>walk(j)&&!S.obj[j]&&Math.abs(j%W-cj%W)<=1&&Math.abs(((j/W)|0)-((cj/W)|0))<=1&&j!==cj,10);if(st>=0){r.path=avoidPath(r,G,st);a.stand=st;a.stage='walk';a.t=0}}},
-  done:(r,a)=>a.t>=a.dur||!critById(a.cid)&&a.t>2,end(r,a){r.fun=Math.min(100,r.fun+CRITFUN);r.wanderRestUntil=S.t+45;r.bubble=''}};
+  done:(r,a)=>a.t>=a.dur||!critById(a.cid)&&a.t>2,end(r,a){funAdd(r,CRITFUN,'solo');r.wanderRestUntil=S.t+45;r.bubble=''}};
 ACT_LBL.critwatch='小さな生き物を見ている';
 /* ---------- タップしたとき（「しらべる」）：その場で反応する・図鑑の「いきもの」に入る ----------
    反応は見た目と音だけ（数字はかえない）：小鳥は飛びたつ・うさぎ/りす/ねずみはにげる・ちょう/みつばちは高くまってべつの花へ・とんぼはべつの所へ・

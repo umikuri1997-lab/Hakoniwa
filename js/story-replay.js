@@ -35,7 +35,7 @@ let STORY_REPLAY_SHELL=null;
 function openStoryReplay(key){if(typeof followEnd==='function')followEnd();/* 見守るは、もとの村にのこさない */
   const episode=availableStoryReplays().find(e=>e.key===key);if(!episode||STORY_REPLAY_SHELL)return false;
   const owner=S,nonce=(crypto.randomUUID?crypto.randomUUID():String(Date.now())+Math.random()),/* randomUUID は、古い iPhone にない */oldFocus=document.activeElement,audio=AC?.state==='running';
-  const shell=el('<div role="dialog" aria-modal="true" aria-label="物語の再生" style="position:fixed;inset:0;z-index:100;background:#faf3e3;display:flex;flex-direction:column;overflow:clip"><div style="min-height:54px;flex-shrink:0;padding:8px 12px;display:flex;align-items:center;justify-content:space-between;gap:8px;box-sizing:border-box"><b></b><button class="btn">思い出帳へ戻る</button></div><iframe title="物語の再生" style="border:0;width:100%;flex:1;min-height:0" allow="autoplay"></iframe></div>');
+  const shell=el('<div role="dialog" aria-modal="true" aria-label="物語の再生" style="position:fixed;inset:0;z-index:100;background:#faf3e3;display:flex;flex-direction:column;overflow:clip"><div style="min-height:54px;flex-shrink:0;padding:8px 12px;display:flex;align-items:center;justify-content:space-between;gap:8px;box-sizing:border-box"><b></b><button class="btn" aria-label="思い出帳へもどる">もどる</button></div><iframe title="物語の再生" style="border:0;width:100%;flex:1;min-height:0" allow="autoplay"></iframe></div>');
   shell.querySelector('b').textContent=storyReplayTitle(episode);const frame=shell.querySelector('iframe'),actors=[...(S.res||[]),...(S.lost||[]),...(S.buried||[])].map(r=>({name:r.name,elem:r.elem,vr:r.vr}));
   const close=()=>{if(STORY_REPLAY_SHELL!==shell)return;window.removeEventListener('message',message);window.removeEventListener('keydown',escape);frame.src='about:blank';shell.remove();STORY_REPLAY_SHELL=null;if(audio&&AC&&!document.hidden)AC.resume().catch(()=>{});if(oldFocus?.isConnected)oldFocus.focus({preventScroll:true});};
   const escape=e=>{if(e.key==='Escape'){e.preventDefault();close();}};
@@ -48,7 +48,7 @@ function openStoryReplay(key){if(typeof followEnd==='function')followEnd();/* �
 }
 let STORY_REPLAY_RUN=null;
 function replayControls(run){
-  const bar=el('<div style="position:fixed;bottom:12px;left:12px;right:12px;z-index:60;display:flex;justify-content:space-between;gap:8px"><button class="btn" aria-pressed="false">自動送り：オフ</button><button class="btn">再生を終える</button></div>');
+  const bar=el('<div style="position:fixed;bottom:12px;left:12px;right:12px;z-index:60;display:flex;justify-content:space-between;gap:8px"><button class="btn" aria-pressed="false">自動送り：オフ</button><button class="btn">おわる</button></div>');
   const [auto,close]=bar.querySelectorAll('button');auto.onclick=()=>{run.auto=!run.auto;auto.textContent='自動送り：'+(run.auto?'オン':'オフ');auto.setAttribute('aria-pressed',String(run.auto));};close.onclick=()=>parent.postMessage({type:'story-replay-close',token:run.token},location.origin);document.body.appendChild(bar);
 }
 function prepareStoryReplay(run,payload){
@@ -147,7 +147,7 @@ async function playStoryReplay(run){
       await waitStoryReplay(run,()=>S.sev[e.id]===1);
     }
     run.finished=true;run.running=false;clearInterval(run.tick);
-    const end=el('<div class="replay-end" style="position:fixed;inset:20% 10%;z-index:61;background:#fff8e9;border:2px solid #d4c29a;border-radius:18px;padding:22px;display:flex;flex-direction:column;justify-content:center;gap:16px;text-align:center"><b>再生がおわりました</b><button class="btn">もう一度</button><button class="btn">思い出帳へ戻る</button></div>');
+    const end=el('<div class="replay-end" style="position:fixed;inset:20% 10%;z-index:61;background:#fff8e9;border:2px solid #d4c29a;border-radius:18px;padding:22px;display:flex;flex-direction:column;justify-content:center;gap:16px;text-align:center"><b>再生がおわりました</b><button class="btn">もういちどみる</button><button class="btn" aria-label="思い出帳へもどる">もどる</button></div>');
     const [again,close]=end.querySelectorAll('button');again.onclick=()=>location.reload();close.onclick=()=>parent.postMessage({type:'story-replay-close',token:run.token},location.origin);document.body.appendChild(end);
   }catch(error){run.running=false;clearInterval(run.tick);if(!run.cancelled){run.error=String(error);toast('再生を続けられませんでした。思い出帳へ戻れます','warn');}}
 }
@@ -158,7 +158,7 @@ function bootStoryReplayPage(){
     if(event.origin!==location.origin||event.source!==parent||event.data?.type!=='story-replay-start'||event.data.token!==token||event.data.key!==key||STORY_REPLAY_RUN)return;
     const run={token,episode,auto:false,running:false,cancelled:false,finished:false};STORY_REPLAY_RUN=run;prepareStoryReplay(run,event.data);
     await waitStoryReplay(run,()=>stageReady());
-    const start=el('<div class="replay-start" style="position:fixed;inset:12% 8%;z-index:62;border:2px solid #d4c29a;border-radius:18px;background:#fff8e9;padding:24px;display:flex;flex-direction:column;justify-content:center;text-align:center;gap:18px"><b></b><p>村の進行を変えずに、物語を見返します。</p><button class="btn pri">再生をはじめる</button></div>');start.querySelector('b').textContent=storyReplayTitle(episode);start.querySelector('button').onclick=()=>{audioInit();start.remove();playStoryReplay(run);};document.body.appendChild(start);
+    const start=el('<div class="replay-start" style="position:fixed;inset:12% 8%;z-index:62;border:2px solid #d4c29a;border-radius:18px;background:#fff8e9;padding:24px;display:flex;flex-direction:column;justify-content:center;text-align:center;gap:18px"><b></b><p>村の進行を変えずに、物語を見返します。</p><button class="btn pri">みる</button></div>');start.querySelector('b').textContent=storyReplayTitle(episode);start.querySelector('button').onclick=()=>{audioInit();start.remove();playStoryReplay(run);};document.body.appendChild(start);
   };
   window.addEventListener('message',receive);window.addEventListener('pagehide',()=>{if(STORY_REPLAY_RUN){STORY_REPLAY_RUN.cancelled=true;clearInterval(STORY_REPLAY_RUN.tick);}});
   parent.postMessage({type:'story-replay-ready',token},location.origin);

@@ -426,6 +426,7 @@ function foodEmo(k){/* 運ぶ食べ物の頭の上のアイコン：もらった
 const MATIC={wood:'🪵',stone:'🪨',bamboo:'🎋',eda:'chip:drop:eda',kinoko:'obj:kinoko',can:'chip:drop:can'};/* 素材の、頭の上のアイコン（枝・空き缶は落ちているときと同じ絵。草・鉱石などは、その物の絵） */
 function matIc(k){return MATIC[k]||'ic:'+k}
 function carryIcon(r){
+  if(r.act&&r.act.type==='trlook'&&r.act.stage==='do'&&BL[r.act.g])return 'ic:'+r.act.g;/* たからものを、頭の上にかかげてながめる（gifts.js） */
   if(r.coffin)return r.act&&r.act.type==='pray'&&r.act.stage==='do'?'':'⚰️';/* おいのりのあいだは、棺はおろしている */
   if(r.act&&r.act.stage==='do'&&(r.act.type==='cook'||typeof boxAct==='function'&&boxAct(r)))return null;/* 箱などから取る・置くあいだは、頭からおろしている */
   if(r.carry&&carryN(r)>0){if(typeof r.carry==='number')return FOODS.mugi.e;const k=r.carryLast&&r.carry[r.carryLast]>0?r.carryLast:Object.keys(r.carry).find(k=>r.carry[k]>0);return foodEmo(k)}
@@ -439,7 +440,7 @@ function carryIcon(r){
   return null}
 let COFFIN=null;function coffinBmp(){/* 棺の絵文字を一度だけ描いて、見えている部分だけ切り出す（機種で絵文字の位置がちがっても、まんなかに置ける） */if(COFFIN)return COFFIN.w?COFFIN:null;const N=288,c=document.createElement('canvas');c.width=c.height=N;const x=c.getContext('2d');x.font='117px sans-serif';x.textAlign='center';x.textBaseline='middle';x.fillText('⚰️',N/2,N/2);let d;try{d=x.getImageData(0,0,N,N).data}catch(e){return null}let x0=N,y0=N,x1=-1,y1=-1;for(let y=0;y<N;y++)for(let i=0;i<N;i++)if(d[(y*N+i)*4+3]>20){if(i<x0)x0=i;if(i>x1)x1=i;if(y<y0)y0=y;if(y>y1)y1=y}
   if(x1<0){COFFIN={};return null}const w=x1-x0+1,h=y1-y0+1,o=document.createElement('canvas');o.width=w;o.height=h;o.getContext('2d').drawImage(c,x0,y0,w,h,0,0,w,h);COFFIN={c:o,w:w/3,h:h/3};return COFFIN}/* 3倍の大きさで描いて、くっきりさせる（表示は39pxぶん） */
-function itemIc(id){if(id.startsWith('set:'))return itemIc(id.slice(4));return id==='mapPc'||id==='tmap'||id==='fukuro'?'ic:'+id:id==='sand'?'chip:sand':id.startsWith('seed:')||BL[id]&&BL[id].kind==='furn'?'obj:'+id:'chip:drop:bag'}/* ひろった物の、頭の上のアイコン（地面に落ちていたときの絵。家具・たねは、その絵） */
+function itemIc(id){if(id.startsWith('set:'))return itemIc(id.slice(4));if(BL[id]&&BL[id].kind==='gift')return 'ic:'+id;/* おくりもの */return id==='mapPc'||id==='tmap'||id==='fukuro'?'ic:'+id:id==='sand'?'chip:sand':id.startsWith('seed:')||BL[id]&&BL[id].kind==='furn'?'obj:'+id:'chip:drop:bag'}/* ひろった物の、頭の上のアイコン（地面に落ちていたときの絵。家具・たねは、その絵） */
 function carryIcons(r){/* 持っているものを、そのまま1つずつ並べる（上に積むほど新しい） */
   const em=foodEmo,out=[];
   if(r.coffin)return['⚰️'];/* 棺を持っているときは、それだけ */
@@ -450,6 +451,7 @@ function carryIcons(r){/* 持っているものを、そのまま1つずつ並�
   if(r.cpk){for(const k of GRASSK)for(let i=0;i<(r.cpk.m[k]||0);i++)out.push('ic:'+k)}/* コンポスターへ運ぶ草 */
   if(r.fert>0)for(let i=0;i<r.fert;i++)out.push('ic:hiryo');/* 畑へ運ぶ肥料 */
   if(r.cmat)for(const k in r.cmat)for(let i=0;i<(r.cmat[k]||0);i++)out.push(matIc(k));
+  if(r.sasa)for(const k in r.sasa)for(let i=0;i<(r.sasa[k]||0);i++)out.push(sasaKeyIc(k));/* 神殿へはこぶ、ささげもの */
   if(r.kdst)out.push(matIc('stone'));/* もりのこだまの石の輪へはこぶ石材 */
   if(r.bm)for(const k in r.bm.m)for(let i=0;i<(r.bm.m[k]||0);i++)out.push(isFK(k)?em(k.slice(2)):matIc(k));/* 建てる所・依頼へ運ぶ素材 */
   if(r.citem)for(const id in r.citem)for(let i=0;i<(r.citem[id]||0);i++)out.push(itemIc(id));/* ひろった物（砂・角笛・家具など） */
@@ -558,7 +560,7 @@ function drawRes0(r,now){
     else if(t==='🪓'&&!BUBS.ok&&PSPR.axe&&PSPR.axe.ok){const g=PSPR.axe.img,ih=12.75,iw=ih*g.width/g.height;ctx.save();ctx.translate(px,by-31.5);ctx.rotate(-Math.PI/4);ctx.drawImage(g,-iw/2,-ih/2,iw,ih);ctx.restore()}else if(!pic&&BUBI[bubKey(t)])bubIcon(ctx,t,Math.round(px/1.5)*1.5,by-31.5,1.125,BB);/* 絵文字は、ドットの絵（BUBI）で描く */else{const ei=emoImg(t);if(ei){const k=Math.min(BB.f,BB.s*.85*1.5)/Math.max(ei.width,ei.height),iw=Math.round(ei.width*k),ih=Math.round(ei.height*k);ctx.save();ctx.setTransform(1,0,0,1,0,0);ctx.drawImage(ei,Math.round(BB.x-iw/2),Math.round(BB.y-ih/2),iw,ih);ctx.restore()}/* 絵のアイコンも、ふきだしの中のまん中（画面のピクセル）に */else if(!pic&&!emoSrc(t))bubIcon(ctx,'?',Math.round(px/1.5)*1.5,by-31.5,1.125,BB)}}};
   if(BUBQ){const T=ctx.getTransform();BUBQ.push(()=>{ctx.save();ctx.setTransform(T);over();ctx.restore()})}else over();/* あとで描くふきだしも、見張り台・段差の上の高さのまま */
 }
-const WORKBUB=new Set(['eat','forage','fetch','eatwait','bathe','otaki','smelt','nest','pitfix','plant','pickdrop','pickseed','awater','apick','aput','acol','douse','sweep','tdig','cpick','ppick','spick','pget','sput','pput','cget','cput']);/* WORKFACE のほかに、ふきだしを出さない作業 */
+const WORKBUB=new Set(['eat','forage','fetch','eatwait','bathe','otaki','sasa','smelt','nest','pitfix','plant','pickdrop','pickseed','awater','apick','aput','acol','douse','sweep','tdig','cpick','ppick','spick','pget','sput','pput','cget','cput']);/* WORKFACE のほかに、ふきだしを出さない作業 */
 let GODP=[-.82,-.6];const godX=()=>STATUE>=0?STATUE%W+.5+GODP[0]:RUINT>=0?RUINT%W+.5:CX+.5,godY=()=>STATUE>=0?((STATUE/W)|0)+(S.obj[STATUE+W]==='altar'?GODP[1]:1.9):RUINT>=0?((RUINT/W)|0)+2.4:CY-6.4;/* 神殿を直す前は、こわれた神殿の前 *//* カミサマは神殿の左の柱の前（おそなえ箱のうしろ）に立つ */
 let GODOUT=false;/* お見送りのあと、カミサマが光になって消える */
 const godHere=()=>S.godShown&&(!S.godGone||S.godVisit)&&!GODOUT;

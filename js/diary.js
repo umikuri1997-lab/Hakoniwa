@@ -63,7 +63,7 @@ function diaryClose(){if(dyOff())return;const D=S.dy;S.dy={d:dayNo(),w:{},m:[],k
   e.wx=D.wx||null;const f=dyWriter();if(f&&D.ph)e.ph=D.ph;/* フタバがいないときは、写真ものせない */
   if(!w.length&&!e.m.length&&!e.ns&&!e.ph)return;
   if(f){e.ft=dyNote(e,f);e.fw=[f.name,f.elem,f.vr||null]}
-  {const b=dyBest(e),r=b&&S.res.find(q=>q.name===b.nm);if(b){e.mvp=b;if(r){r.fun=Math.min(100,(r.fun||0)+MVPFUN);{const M=S.memo||(S.memo=[]);M.push([dayNo(),'cup',b.nm+'が、ゆうべのかつやくにえらばれた']);if(M.length>200)M.shift()}/* memo() だと、つぎの日の日記のできごとにも入るので、思い出帳だけに書く */}}}/* ゆうべのかつやく：たのしさ+10・思い出帳 */
+  {const b=dyBest(e),r=b&&S.res.find(q=>q.name===b.nm);if(b){e.mvp=b;if(r){funAdd(r,MVPFUN,'mvp');{const M=S.memo||(S.memo=[]);M.push([dayNo(),'cup',b.nm+'が、ゆうべのかつやくにえらばれた']);if(M.length>200)M.shift()}/* memo() だと、つぎの日の日記のできごとにも入るので、思い出帳だけに書く */}}}/* ゆうべのかつやく：たのしさ+10・思い出帳 */
   const L=S.diary||(S.diary=[]);L.push(e);while(L.length>DIARYMAX)L.shift();
   if(!sheet&&$('#dialog').hidden)openSheet('diary','m');else toast('きのうの日記を、思い出帳にのこした')}
 /* ゆうべのかつやく：追いはらった数＋守った数が MVPMIN 点以上で、いちばん多い子（おなじ点なら、追いはらった数が多い子）。{nm,el,vr,k,g} */
@@ -94,10 +94,12 @@ function diaryBody(T,body,arg){const L=S.diary||[];const e=arg==='m'||arg==null?
     if(N.boss===1&&!N.trial)sec.appendChild(el('<p class="note">オオカゲは、追いはらえないまま朝になった。</p>'));
     body.appendChild(sec)}
   if(e.m.length){const sec=el('<div class="sec"><h3>できごと</h3><div class="rows"></div></div>'),rw=sec.querySelector('.rows');for(const t of e.m)rw.appendChild(rowEl(t,''));body.appendChild(sec)}
+  let secW=null;{const T=typeof dyWorkSum==='function'?dyWorkSum(e):[];if(T.length){secW=el('<div class="sec"><h3>きのうのしごと</h3></div>');const g=el('<div class="stats"></div>');for(const[k,v]of T){const d=el('<div class="stat"><span></span><b></b></div>');d.firstChild.textContent=k;d.lastChild.textContent=v;g.appendChild(d)}secW.appendChild(g);body.appendChild(secW)}}/* きのうのしごと：みんなのしたことの、種類ごとの合計 */
   if(e.w.length){const sec=el('<div class="sec"><h3>みんなのしたこと</h3><div class="rows"></div></div>'),rw=sec.querySelector('.rows');const by=new Map();
     for(const x of e.w){if(!by.has(x[0]))by.set(x[0],{el:x[1],vr:x[2],L:[]});by.get(x[0]).L.push(x)}
     for(const[nm,g]of by){g.L.sort((a,b)=>b[5]-a[5]);const tx=g.L.slice(0,DYPER).map(x=>dyText(x[3],x[4])+(x[5]>1?'（'+x[5]+'回）':'')).join('\n');const r=rowEl(nm,tx,ELEM[g.el]?spiritPort(g.el,96,g.vr):null);r.querySelector('small').style.whiteSpace='pre-line';rw.appendChild(r)}
     body.appendChild(sec)}
+  if(arg==='m'&&typeof juiceDiaryCount==='function')juiceDiaryCount(body,secW);/* 朝の紙だけ、数え上げてハンコ */
   if(arg==='m'){const best=dyBest(e),r=best&&S.res.find(q=>q.name===best.nm&&!q.hidden);if(r&&!DYJ.has(r)){DYJ.add(r);JUMP.set(r,performance.now());villageTimeout(()=>JUMP.set(r,performance.now()),650);addFloat(r.x,r.y-1.4,'がんばった！','#ffe7a8')}}}
 /* 思い出帳の「日記」：日ごとの紙の一覧 */
 function diaryList(body){const L=S.diary||[];if(!L.length)return;const sec=el('<div class="sec"><h3>日記</h3><div class="rows"></div></div>'),rw=sec.querySelector('.rows');
