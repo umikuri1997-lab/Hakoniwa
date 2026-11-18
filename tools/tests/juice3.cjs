@@ -49,6 +49,19 @@ const assert=require('node:assert/strict');
   await run(`(()=>{const e=$('#lvLbl');JLVL=+e.textContent;JLVW=80;$('#lvup').hidden=false;e.textContent=+e.textContent+1;return 1})()`);await W8(100);
   const l0=await run(`$('#lvLbl').style.visibility`);await run(`$('#lvup').hidden=true;true`);await W8(2500);const l1=await run(`$('#lvLbl').style.visibility+'|'+$('#xpBar').className`);
   console.log('lv',l0,l1);assert.equal(l0,'hidden');assert.equal(l1,'|');
+  /* なかまがふえた数：紹介のあいだは前の数、とじたら新しい数と +1 */
+  const rn=JSON.parse(await run(`(()=>{J3RN=null;updHUD();const n0=+$('#resN').textContent;const c=Object.assign({},S.res[0],{id:9901,name:'あたらし',x:S.res[0].x+1,act:null});S.res.push(c);NEWRES=c.id;updHUD();const mid=+$('#resN').textContent;NEWRES=null;juiceResTick();const end=+$('#resN').textContent;const f=floats.some(q=>q.text==='+1');S.res.pop();updHUD();return JSON.stringify({n0,mid,end,f})})()`));
+  console.log('res',JSON.stringify(rn));assert.equal(rn.mid,rn.n0);assert.equal(rn.end,rn.n0+1);assert.ok(rn.f);
+  /* はじめて置いた家具 */
+  const fp=JSON.parse(await run(`(()=>{const id='stool',j=(CY+3)*W+CX+3;J3F.length=0;delete S.placed[id];S.placed[id]=1;juiceFirst(j,id);juiceFirst(j,'fence');return JSON.stringify({n:J3F.length})})()`));
+  console.log('first',JSON.stringify(fp));assert.equal(fp.n,1,'家具だけ');
+  /* ゆめ */
+  await run(`(()=>{J3D.length=0;juiceDream(S.res[0],'stool');return 1})()`);await W8(300);assert.equal(+await run(`J3D.length`),1);await W8(1300);assert.equal(+await run(`J3D.length`),0);
+  /* 雪だるま */
+  const sn=JSON.parse(await run(`(()=>{const j=(CY+4)*W+CX+4;juiceSnowman(j,S.res[0]);return JSON.stringify({h:[0,1].map(()=>snowHop(j))})})()`));await W8(150);const sh=+await run(`snowHop((CY+4)*W+CX+4)`);console.log('snow',sh);assert.ok(sh>0);
+  /* 図鑑のバー */
+  await run(`(()=>{S.flags.zkBar={6:0};S.fishRec={funa:1,koi:1};ZKT=6;openSheet('menu','zukan');return 1})()`);await W8(100);const z0=await run(`(document.querySelector('.zkbar i')||{}).style?.width||'none'`);await W8(1300);const z1=await run(`document.querySelector('.zkbar i').style.width`);
+  console.log('zukan',z0,z1);assert.equal(z0,'0%');assert.ok(parseFloat(z1)>0);await run(`closeSheet();true`);
   /* 音：本物の録音（playU）だけを鳴らす */
   await run(`audioInit();true`);await page.waitForFunction(()=>sacredEval(`['notch','tink','tab','page','twood'].every(k=>SBUF[k]&&SBUF[k].filter(Boolean).length)`),{},{timeout:30000}).catch(()=>{});
   const snd=JSON.parse(await run(`(()=>{const L=[];const pu=playU,ok=typeof AC!=='undefined'&&AC;window.__k=[];playU=(k,...a)=>{L.push(k);return true};const st=AC&&AC.state;try{Object.defineProperty(AC,'state',{get:()=>'running',configurable:true})}catch(e){}SND.sfx=true;
