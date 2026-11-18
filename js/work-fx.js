@@ -46,20 +46,22 @@ function cookTopDraw(c,id,x,y,i,now){/* 家具の絵のあとに、上の物を�
   for(let q=0;q<P.length;q++){if(sl!=='K'&&(q>=ks.length||q===hold))continue;L.push([P[q],ks[q%ks.length]])}/* くしは3本（材料を順に） */
   L.sort((a,b)=>a[0][1]-b[0][1]);for(const[p,k]of L)put('ckin_'+k+'.'+sz,p[0],p[1])}
 /* 作業台の上の形（0 板の山・1 木のわく・2 布をかけた形）。素材がそろうまでは、なし（運んだ素材の山） */
-function wbworkStage(o){if(!o||hasNeed(o))return -1;const p=o.prog/Math.max(1,o.need);return p<.45?0:p<.85?1:2}
+function wbworkStage(o){if(!o||hasNeed(o))return -1;if(S.res.some(r=>r.act&&r.act.type==='craft'&&r.act.sh!=null&&r.act.order===o.id))return -1;/* できてかかげているあいだは、台の上の物をなくす（手に持っているので） */const p=o.prog/Math.max(1,o.need);return p<.45?0:p<.85?1:2}
 /* 音と粒：描くたびに、動きの決まった所をこえたら出す */
 /* 箱などから取り出す・置く：その物のほうを向き（boxFace）、しゃがんで手をのばす動き（spirit3d の store）。
    動きは行動のはじめから（boxActT：せいれいの時間 a.t。1倍で1秒＝2.5）。音は、取る・置くのあいだ、ゴソゴソ（SAMPLES.goso）をつなげて鳴らす（boxLoop）。 */
 const TAKEACT=new Set(['bfetch','fetch','cgrab','cpick','otakiget','spick','apick','ppick','haul','cget','acol','pget']);
 const PUTACT=new Set(['store','smat','sitem','ydrop','cput','aput','sput','pput']);
 
-function boxAct(r){const a=r.act;return a&&a.stage==='do'&&(TAKEACT.has(a.type)||PUTACT.has(a.type))?a:null}
+/* 寝ている（nap）・場面で止められている（onHold）子は、動きが進まないので、取る・置くの動きと音にしない（寝ているあいだ、ゴソゴソが鳴りつづけた） */
+function boxAct(r){const a=r.act;return a&&!r.nap&&!(typeof onHold==='function'&&onHold(r))&&a.stage==='do'&&(TAKEACT.has(a.type)||PUTACT.has(a.type))?a:null}
+/* 寝ている（nap）・場面で止められている（onHold）子は、動きが進まないので、取る・置くの動きと音にしない（寝ているあいだ、ゴソゴソが鳴りつづけた） */
 function boxActT(r){const a=boxAct(r);return a?(a.t||0)/MIN_PER_SEC:null}
 function boxTarget(a){return a.box!=null&&a.box>=0?a.box:a.obj!=null&&a.obj>=0?a.obj:-1}
 function boxFace(r,a){/* 向く先のとなりのマスの向き（-W・-1・1・W）。なければ 0 */const t=boxTarget(a);if(t<0)return 0;const c=(r.y|0)*W+(r.x|0),at=anc(t);for(const d of[-W,-1,1,W]){const k=c+d;if(k<0||k>=W*H||Math.abs(k%W-c%W)>1)continue;if(k===t||anc(k)===at&&S.obj[k])return d}const dx=t%W-c%W,dy=(t/W|0)-(c/W|0);return Math.abs(dx)>=Math.abs(dy)?(dx<0?-1:dx>0?1:0):(dy<0?-W:W)}
 /* ゴソゴソをつなげて鳴らす：描くたびに boxBeat が、その子を見たことにする。boxLoopTick が、近い子から BOXLOOPN 人ぶんだけ鳴らし、
    見えなくなった・おわった・村の時間が止まったら、すっと小さくして止める。音のファイルは1まわり（BOXLOOPL 秒）を3つならべた形で、まん中をくりかえす */
-const BOXLOOPL=1.0337,BOXLOOPN=3,BOXLOOPV=.5,GOSOL=new Map();
+const BOXLOOPL=1.0337,BOXLOOPN=2,BOXLOOPV=.18,GOSOL=new Map();
 function boxBeat(r,t){const a=boxAct(r);if(!a||t==null)return;let e=GOSOL.get(r);if(!e||e.a!==a){if(e)e.a=a;else{e={a,seen:0};GOSOL.set(r,e)}}e.seen=performance.now();e.x=r.x;e.y=r.y}
 function boxLoopStop(e,t){if(!e.src)return;e.g.gain.cancelScheduledValues(t);e.g.gain.setTargetAtTime(0,t,.06);try{e.src.stop(t+.4)}catch(_){}e.src=null}
 function boxLoopTick(){if(!GOSOL.size)return;const now=performance.now(),ok=typeof AC!=='undefined'&&AC&&AC.state==='running'&&SND.sfx&&typeof S!=='undefined'&&S&&!(typeof paused==='function'&&paused()),buf=ok&&(SBUF.goso||[]).find(Boolean),t=ok?AC.currentTime:0,L=[];
