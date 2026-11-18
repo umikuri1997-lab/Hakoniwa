@@ -110,8 +110,10 @@ function aniJoyF(a,now){const t0=AJOY.get(a);if(t0==null)return null;let e=now-t
 function aniChip(a,now){/* ボーンで動かして写したコマ（tools/art/animals/ani_rig.py）：歩く4コマ（150ミリ秒ごと）・食べる（220ミリ秒ごと）・立つ（息をする2コマ、700ミリ秒ごと。生き物ごとにずらす） */const k=a.k,C=window.CHIPS||{};if(a.in)return null;
   const jf=aniJoyF(a,now);if(jf)return a.vw&&C['ani:'+k+'#'+a.vw+jf[0]]||C['ani:'+k+'#'+jf[0]]||C['ani:'+k+'#0']||null;
   const f=a.eat>0?ANIEAT[(now/220|0)%4]:a.mv?'w'+((now/150|0)%4):String(((now+a.id*337)/700|0)%2);return a.vw&&C['ani:'+k+'#'+a.vw+f]||C['ani:'+k+'#'+f]||C['ani:'+k+'#0']||null}
+const ANISHW=.9,ANISHH=.3;/* 飼う生き物のかげ：足もとのはばに対する、だ円のよこの半径・たての半径の比 */
 function drawAnimal(g,a,now){/* 足もと（a.x, a.y）に、チップの足（下のはし58/64）をそろえる。左むきは、足もとのまん中で反転 */const ch=aniChip(a,now);if(!ch)return;const im=chipImgs(ch,'ani'+a.k)[0];if(!im.ok)return;
-  const x=Math.round(a.x*TS),y=Math.round(a.y*TS),sz=a.k==='hane'?6:10;g.fillStyle='rgba(60,50,30,.18)';g.fillRect(x-sz,y-1,sz*2,2);g.fillRect(x-sz+2,y+1,sz*2-4,1);/* かげ（ドット） */
+  const x=Math.round(a.x*TS),y=Math.round(a.y*TS);{const ft=chipFoot(ch,im),sz=a.k==='hane'?6:10;/* かげ：足もとのはばに合わせた、ドットのだ円（1ドットはチップと同じ、ゲームの半分の点） */
+    if(ft){const l=ft.l+ch.ax-TS,r=ft.r+ch.ax-TS,m=(l+r)/4,hw=(r-l)/4*ANISHW+1;dotShadow(g,x+(a.face<0?-m:m),y,hw,Math.max(1.5,hw*ANISHH),1,.5)}else dotShadow(g,x,y,sz,2,1,.5)}
   const jf=aniJoyF(a,now);g.save();g.translate(x,y-(jf?jf[2]:0));if(a.face<0)g.scale(-1,1);g.imageSmoothingEnabled=false;g.drawImage(im,ch.ax/2-TS/2,ch.ay/2-29,ch.w/2,ch.h/2);g.restore()}
 function aniDraw(add,vis,now,ctx){for(const a of S.ani||[]){if(a.in||!vis(a))continue;const px=a.x*TS,fy=a.y*TS;add(a.y,2,[px-20,fy-34,px+20,fy+4],()=>liftDraw(uLift(a),()=>drawAnimal(ctx,a,now)),(a.y|0)*W+(a.x|0))}}
 /* ---------- とれる物のアイコン（16×16のドット） ---------- */

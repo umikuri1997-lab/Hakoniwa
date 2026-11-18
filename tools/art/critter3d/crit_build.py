@@ -18,7 +18,7 @@ from natcommon import notex,flat
 ID='crit{name}#{fr}';PX=32;LW=1;GRAD=False;SHADE=[(4.5,-1.2),(9,-2.5)];ELEV=15;BOTTOM=58
 VIEWS=[('crit{name}#{fr}',0)]
 def PARTS():
-    p=P('{name}','model',('animals/{name}.glb',0.5,0.5,0,{size},0,0),(255,255,255),on=('ground',),note='地面に立つ');p.warp=crit_rig.warp('{name}','{fr}')
+    p=P('{name}','model',('animals/{name}.glb',0.5,0.5,0,{size},0,0),(255,255,255),on=('ground',),note='地面に立つ');p.warp=crit_rig.warp('{name}','{fr}');p.paint=crit_rig.paint('{name}')
     return[flat(notex(p))]+[notex(P('小物',k,d,c,on=('ground',),note='手にもつ')) for k,d,c in crit_rig.props('{name}','{fr}')]
 '''
 def gen(name):
