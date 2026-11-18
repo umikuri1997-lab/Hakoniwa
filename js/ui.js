@@ -240,7 +240,7 @@ function careSec(body,r){/* お世話のタブ：お話・なでる・毛布・�
   const sl=r.act&&r.act.type==='sleep'&&r.act.stage==='do',outS=sl&&r.act.ground&&!roomOf((r.y|0)*W+(r.x|0));
   {const b=el('<button class="btn pri">お話する</button>');lackOn(b,sl?'ねているので、おこさない':'');b.onclick=()=>{if(sl)return;sfx('tap');talkTo(r)};bw.appendChild(b)}
   const mk=(k,t,why,f,cl)=>{const b=el('<button class="btn"></button>');b.textContent=t;const done=c[k]===d;lackOn(b,done?'きょうは、もうした':why||'');b.onclick=()=>{if(done||why)return;f();(r.care||(r.care={}))[k]=d;sfx('tap');if(cl)closeSheet();else renderSheet()};bw.appendChild(b)};/* cl：とじて、マップで反応を見せる */
-  mk('pat','なでる',sl?'ねているので、おこさない':'',()=>{r.fun=Math.min(100,r.fun+CAREPAT);patJoy(r);addFloat(r.x,r.y-1.6,'たのしさ+'+CAREPAT,'#ffd7e8')},1);
+  mk('pat','なでる',sl?'ねているので、おこさない':'',()=>{funAdd(r,CAREPAT,'care');patJoy(r);addFloat(r.x,r.y-1.6,'たのしさ+'+CAREPAT,'#ffd7e8')},1);
   if(outS||c.blanket===d)mk('blanket','毛布をかける','',()=>{r.act.blanket=1;r.bubble='💤'});
   {const b=el('<button class="btn">おやつをあげる</button>');lackOn(b,S.food<1?'食料が足りません':'');b.onclick=()=>{if(S.food<1)return;sfx('tap');snackPop(r,closeSheet)};bw.appendChild(b)}/* おやつ：ポップアップで食べ物をえらぶと、その場で食べる。反応で好き・きらいがわかる（food-like.js） */
   body.appendChild(bw)}
@@ -519,7 +519,7 @@ function renderSheet(){
     box.querySelector('.dot').style.cssText='background:#f6f1e6 url('+spiritPort(r.elem,96,r.vr)+') center/86% no-repeat;box-shadow:inset 0 0 0 2px '+ELEM[r.elem].col;
     box.querySelector('b').textContent=ELEM[r.elem].name+'のせいれい・'+(r.act?(r.act.shade?'すずしい所で休んでいる':ACT_LBL[r.act.type])||'':'考え中');
     box.querySelector('small').textContent=r.hunger<200?'おなか：危険！':r.hunger<500?'おなか：少なめ':'';
-    box.querySelector('.tx').insertAdjacentHTML('beforeend',gaugeHTML(r)+spiritXpGaugeHTML(r));body.appendChild(box);if(isNew)nickSec(body,r);/* 来たときだけ、名前をかえられる（nick.js） */
+    box.querySelector('.tx').insertAdjacentHTML('beforeend',gaugeHTML(r)+spiritXpGaugeHTML(r));{const sp=box.querySelectorAll('.gauges>span')[1];if(sp){const tp=()=>{sfx('tap');funPop(r)};for(const e of[sp,sp.nextElementSibling]){e.classList.add('comfyTap');e.setAttribute('role','button');e.tabIndex=0;e.onclick=tp;e.onkeydown=ev=>{if(ev.key==='Enter'||ev.key===' '){ev.preventDefault();tp()}}}}}/* たのしさをタップすると、わけの一覧（fun-why.js） */body.appendChild(box);if(isNew)nickSec(body,r);/* 来たときだけ、名前をかえられる（nick.js） */
     if(!isNew){const sy=el('<p class="story" style="margin:6px 0 2px"></p>');sy.textContent='「'+sayLine(r)+'」';body.appendChild(sy);if(SAYPK&&!prefKnown(r,SAYPK)){const k=SAYPK;setTimeout(()=>{if(S.res.includes(r)&&prefKnow(r,k)&&sheet==='res'&&sheetArg===r.id)renderSheet()},0)}}/* ひとことで好みを言ったら、わかる */if(!isNew&&S.res.includes(r)){const fb=el('<button class="btn" style="width:100%;margin:2px 0 6px">見守る</button>');fb.onclick=()=>{sfx('tap');followStart(r)};body.appendChild(fb)}/* 見守る：この子をカメラで追う（follow.js） */if(!isNew&&!r.hidden&&sortieOK(r))sortieSec(body,r);/* 出撃 */
     {const lv=rLv(r);
      const gOn=WD===1||!!(r.gear&&GSLOTK.some(k=>r.gear[k]))||gearList().length>0,cOn=!isNew&&!r.hidden;if(!gOn&&resTab===3||!cOn&&resTab===2)resTab=0;/* そうびは火山から。お世話は、村にいる子だけ */const tb=el('<div class="ctabs"></div>');[['のうりょく',0],['プロフィール',1],...(cOn?[['お世話',2]]:[]),...(gOn?[['そうび',3]]:[])].forEach(([nm,i])=>{const t=el('<button class="ctab'+(i===resTab?' on':'')+'"></button>');t.textContent=nm;t.onclick=()=>{resTab=i;sfx('next');renderSheet()};tb.appendChild(t)});body.appendChild(tb);/* タブは短い言葉 */

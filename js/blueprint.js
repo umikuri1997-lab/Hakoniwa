@@ -126,7 +126,7 @@ function bpComplete(e){S.bp=S.bp.filter(q=>q!==e);const b=BPS[e.k],cat=b.cat||'h
   toast(b.name+'ができた！','good');if(typeof memo==='function')memo(b.name+'ができた');
   const r=e.g!=null?S.res.find(q=>q.id===e.g&&!q.hidden):null;
   if(e.req&&S.bpReq&&S.bpReq.k===e.k)S.bpReq.done=1;/* 設計図の依頼：お礼の会話は、サブクエストの報告で */
-  if(r){r.fun=Math.min(100,(r.fun||0)+BPGIVEFUN);if(h){const bed=e.ps.find(p=>p.t==='furn'&&BEDSET.has(p.id));if(bed)(S.bedOwn||(S.bedOwn={}))[bed.j]=r.id}/* くれたせいれいが、その家のベッドをつかう */
+  if(r){funAdd(r,BPGIVEFUN,'bp');if(h){const bed=e.ps.find(p=>p.t==='furn'&&BEDSET.has(p.id));if(bed)(S.bedOwn||(S.bedOwn={}))[bed.j]=r.id}/* くれたせいれいが、その家のベッドをつかう */
     if(!e.req)dialog(pickFresh('bpdone:'+cat,BPDONE[cat]).map(l=>[r.name,l[0]]))}
   checkQuest()}
 function bpCancel(e){/* 建てている部品をやめた：設計図ごとやめる（できた部品はのこす） */for(const p of e.ps)if(p.s===1&&S.obj[p.j]==='site'&&S.dyn[p.j]&&S.dyn[p.j].bp===e.id){siteRefund(S.dyn[p.j],p.j);clearObj(p.j)}

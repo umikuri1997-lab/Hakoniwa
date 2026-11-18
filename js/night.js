@@ -320,7 +320,7 @@ function hitRes(e,r,D){if(onTower(r))return;{const g=escGuard(r);if(g)r=g}/* 助
   if(r.act&&['sleep','stay','rest','idle'].includes(r.act.type)&&r.act.stage==='do')endAct(r);/* 攻撃されたら、寝ていても起きる */
   const adj=Math.hypot(e.x-r.x,e.y-r.y)<=Math.max(1.1,reachOf(D)+.05);/* せいれいの攻撃は、となりにいる相手だけ（遠くから攻撃してくる大きいコワイノには、その距離でもやり返せる） */if(fighter(r)&&adj){/* 戦える子（火のせいれい・出撃した子）。受けるダメージは、火は hitF、ほかは hitN *//* やり返しはしない（攻撃されたときの受けるダメージの軽さだけ、戦える子は今までどおり） */
     r.hunger=Math.max(0,r.hunger-hu(fire?(sh?D.hitFS:D.hitF):(sh?D.hitNS:D.hitN)));r.hurt=40;if(r.hunger<500)r.fleeNow=true;/* 体力（おなか）がへったら逃げる（オオカゲが相手でも同じ） */}
-  else{r.hunger=Math.max(0,r.hunger-hu(fire?(sh?D.hitFNS:D.hitFN):(sh?D.hitNS:D.hitN)));/* 火の子は hitFN・hitFNS（はなれているときに受ける数） */r.fun=Math.max(0,r.fun-20);r.hurt=40;r.fleeNow=true;/* 戦えない子は、オオカゲが相手でも逃げる */
+  else{r.hunger=Math.max(0,r.hunger-hu(fire?(sh?D.hitFNS:D.hitFN):(sh?D.hitNS:D.hitN)));/* 火の子は hitFN・hitFNS（はなれているときに受ける数） */funAdd(r,-(20),'foe');r.hurt=40;r.fleeNow=true;/* 戦えない子は、オオカゲが相手でも逃げる */
     if(D.boss&&Math.random()<.25*G.ns){endAct(r);r.act={type:'faint',stage:'do',t:0};r.bubble='😵'}/* ボスの攻撃で気絶するのは、4回に1回くらい */}r.alarm=S.t;
   if(h0>=120&&r.hunger<30)r.hunger=30;/* 一撃では消えない */
   {const lost=h0-r.hunger;if(lost>0)hitFx(r,lost,{sx:e.x,sy:e.y,big:lost>=100})}/* へったおなかの数字・火花・のけぞり */
