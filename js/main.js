@@ -67,7 +67,7 @@ function lastFirst(list){/* さいごにあそんだステージを、いちば�
   const card=list.querySelector('.wcard[data-k="'+top[0]+'"]');if(card===list.firstElementChild)return;
   const pv=card.previousElementSibling,nx=card.nextElementSibling;if(pv&&pv.classList.contains('wlink'))pv.remove();else if(nx&&nx.classList.contains('wlink'))nx.remove();/* 道の線は、となりのステージどうしでつなぎなおす */
   card.classList.add('wtop');list.insertBefore(card,list.firstElementChild)}
-const APP_VER=1835;/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER=1836;/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
@@ -105,6 +105,7 @@ function lastPlayed(){/* さいごにあそんだステージ（なければ nul
 function titleCont(){/* タイトルの「つづきから」：前にあそんだステージがあるときだけ出す */const t0=Date.now(),go=()=>{if(!KV.ready()&&Date.now()-t0<5000)return setTimeout(go,150);let w=null;try{w=lastPlayed()}catch(e){}const c=$('#tCont'),on=w!=null;if(c.hidden===on){c.hidden=!on;$('#tStart').classList.toggle('pri',!on);window.dispatchEvent(new Event('resize'))}};go()}
 $('#tCont').onclick=()=>{audioInit();sfx('tap');const w=lastPlayed();if(w==null)return titleCont();const L=loadStage(w);if(!L)return titleCont();continueGame(L)};/* 前にあそんだマップを、そのまま開く */
 titleCont();
+{const f=()=>{if($('#title').hidden&&$('#maps').hidden)return;audioInit();if(curSong!=='opening'){curSong=wantSong='opening';step=0;bgmSw=0;nextT=AC?AC.currentTime+.15:0}};addEventListener('pointerdown',f,true);addEventListener('keydown',f,true)}/* タイトルでは、はじめてさわったときから曲を鳴らす（ブラウザは、さわるまで音を出させない） */
 window.__ldDone=1;clearInterval(window.__ldT);$('#tLoad').hidden=true;{const d=document.getElementById('stageLd');if(d&&!d.hidden)stageLoading(true)}/* 思い出帳の再生：つづけて、マップを読みこみ中と出す */if(window.__ldWant&&window.__ldWant())$('#tStart').onclick()/* 読みこみ中に「はじめる」をおしていたら、そのまま進む */
 
 /* ---------- ループ ---------- */
@@ -132,7 +133,6 @@ function tutSpot(id){const sz=BL[id].sz||[1,1],V=tutView(),vc=[Math.floor((cam.x
   tutCache={k,t:performance.now(),v,pan:tutCache.pan};return v}
 function palArrows(){const b=$('#palItems');if(!b)return;const m=b.scrollWidth-b.clientWidth;$('#palL').hidden=!(m>4&&b.scrollLeft>4);$('#palR').hidden=!(m>4&&b.scrollLeft<m-4)}
 function updTut(){
-  TUTWP=null;
   const hand=$('#tutHand');const hide=()=>{hand.hidden=true};
   if(!S||GIFT_ACTIVE||!$('#dialog').hidden||!$('#lvup').hidden||!$('#rlv').hidden||!$('#title').hidden||!$('#maps').hidden||!$('#pro').hidden||!S.introSeen||S.cleared||questGuideBlockedNow())return hide();/* はじめのカミサマの話を聞きおえるまでは、案内を出さない */
   const q=QUESTS[S.quest];if(!q)return hide();let qt=q.steps&&S.qTalked?questStep(q):q.id;if(WD===0&&!S.free){const st=S.subSt||{};if(st.oracle===2&&!S.flags.oracleSeen&&(sheet==null||sheet==='menu'))qt='oracle';else if(st.trade===2&&!S.flags.tradedSeen&&(sheet==null||sheet==='shop'))qt='trade'}/* 交換・おつげのサブクエストを受けているあいだは、その手順を案内する *//* まとめた目標は、いまの小さな目標を案内する */
@@ -189,7 +189,7 @@ function updTut(){
   else if(qt==='trade'){if(sheet==='shop'){if(S.flags.traded){el=$('#shopEnd');lbl='交換がおわったら「交換をおわる」'}else{el=[...document.querySelectorAll('#sheetBody .btn.pri')].find(b=>!b.disabled);lbl='交換してみよう'}}else if(!sheet&&godHere()){if(mode!=='look'){el=document.querySelector('#dock [data-mode="look"]');lbl='「しらべる」をタップ'}else{wp=[godX()*TS,(godY()-.2)*TS];lbl='カミサマをタップ'}}}
   let x,y,elT=0;
   if(el){const r=el.getBoundingClientRect(),ar=$('#app').getBoundingClientRect();if(!r.width)return hide();x=r.left-ar.left+r.width/2;y=r.top-ar.top+r.height/2;const nb=r.top-ar.top>ar.height-120,sd=!nb&&r.right-ar.left+170<ar.width;elT=sd?2:r.top-ar.top<140?1:-1;if(sd){x=r.right-ar.left-2}else y=elT<0?r.top-ar.top+2:r.bottom-ar.top-2}/* ボタンは、指と文字をボタンの上（上のほうなら下）に出して、ボタンの文字をかくさない */
-  else if(wp){TUTWP=wp;/* HD-2D：案内のさす所はぼかさない */const ar=$('#app').getBoundingClientRect(),cr=cv.getBoundingClientRect();x=cr.left-ar.left+(wp[0]-cam.x)*cam.z*(cr.width/VW);y=cr.top-ar.top+(wp[1]-cam.y)*cam.z*(cr.height/VH);if(x<0||y<0||x>ar.width||y>ar.height)return hide()}
+  else if(wp){const ar=$('#app').getBoundingClientRect(),cr=cv.getBoundingClientRect();x=cr.left-ar.left+(wp[0]-cam.x)*cam.z*(cr.width/VW);y=cr.top-ar.top+(wp[1]-cam.y)*cam.z*(cr.height/VH);if(x<0||y<0||x>ar.width||y>ar.height)return hide()}
   else return hide();
   hand.style.zIndex=el&&el.closest&&el.closest('#prPop')?'46':'';/* はたおり機などのポップアップの中をさすときは、その上に出す */
   hand.hidden=false;hand.style.transform='translate('+x+'px,'+y+'px)';hand.classList.toggle('up',elT?elT>0:y<120);hand.classList.toggle('down',!swipe&&(elT?elT<0:y>innerHeight-110));hand.classList.toggle('elt',!!elT);hand.classList.toggle('side',elT===2);if(elT===2)hand.classList.remove('up','down');// 画面の下のほうは指を上から向ける
