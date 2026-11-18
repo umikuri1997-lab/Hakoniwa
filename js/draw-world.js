@@ -459,11 +459,12 @@ function render(now){RFN++;hdFrame();
   if(WD===1&&S.st2)for(let y=Math.max(0,y0-1);y<Math.min(H,y1+2);y++)for(let x=Math.max(0,x0-1);x<Math.min(W,x1+1);x++){const i=y*W+x;if(S.ground[i]!==1||hash(i*7)>.45||!hotW(i))continue;const ph=((now/2600+hash(i*3))%1),sx=(i%W)*TS+8+hash(i*5)*16+Math.sin(now/700+i)*3,sy=((i/W)|0)*TS+14-ph*26;/* 温泉の湯気 */
     ctx.fillStyle='rgba(255,255,255,'+(.5*(1-ph))+')';ctx.beginPath();ctx.arc(sx,sy,5+ph*7,0,7);ctx.fill()}
   drawSpotFx(now);/* スポットのかこみ・キラキラは、物より上に */
-  for(const f of fx){ctx.globalAlpha=Math.max(0,Math.min(1,f.life));
-    if(f.k==='spr'){if(TOPFX.has(f.n))continue;const g=FXS[f.n];if(g.ok){ctx.globalAlpha=1;const im=fxTint(f.n,f.col),i=Math.min(g.n-1,Math.floor((1-f.life)*g.n)),sm=ctx.imageSmoothingEnabled;ctx.imageSmoothingEnabled=false;ctx.save();ctx.translate(Math.round(f.x),Math.round(f.y));ctx.scale(f.fl,1);ctx.drawImage(im,i*g.w,0,g.w,g.h,-g.ax,-g.ay,g.w,g.h);ctx.restore();ctx.imageSmoothingEnabled=sm}continue}
+  for(const f of fx){ctx.globalAlpha=Math.max(0,Math.min(1,f.life));if(f.w0!=null&&now<f.w0&&f.k!=='spr')continue;/* ヒットストップのあいだ、粒はまだ出さない */
+    if(f.k==='spr'){if(TOPFX.has(f.n))continue;const g=FXS[f.n];if(g.ok){ctx.globalAlpha=1;const im=fxTint(f.n,f.col),i=Math.min(g.n-1,Math.floor((1-f.life)*g.n)),sm=ctx.imageSmoothingEnabled;ctx.imageSmoothingEnabled=false;ctx.save();ctx.translate(Math.round(f.x)+(f.jit&&f.w0!=null&&now<f.w0?(Math.floor(now/30)%2?2:-2):0),Math.round(f.y));ctx.scale(f.fl,1);ctx.drawImage(im,i*g.w,0,g.w,g.h,-g.ax,-g.ay,g.w,g.h);ctx.restore();ctx.imageSmoothingEnabled=sm}continue}/* ヒットストップのあいだは、はじめのコマで、ふるえる */
     if(f.k==='ring'){ctx.strokeStyle=f.col||'rgba(255,250,220,.9)';ctx.lineWidth=2.5*f.life;ctx.beginPath();{const rr=Math.max(0,1-f.life)*(f.col?56:30)+6;ctx.ellipse(f.x,f.y+6,rr,rr*.5,0,0,7)};ctx.stroke()}
     else if(f.k==='p'){ctx.fillStyle=f.col;ctx.fillRect(f.x-f.r/2,f.y-f.r/2,f.r,f.r)}}
   ctx.globalAlpha=1;
+  if(typeof juice2Draw==='function')juice2Draw(now);/* 家ができた光・村レベルの光のなみ（juice2.js） */
   ctx.strokeStyle='#fff6b0';ctx.lineWidth=2;
   /* 見張り台の木の矢・守護の台座の光の矢：塔から敵へ飛ぶ */
   for(const s of shots){const p=1-s.life,h=Math.min(1,p*2.4),tl=Math.max(0,h-.35),X=v=>(s.x1+(s.x2-s.x1)*v)*TS,Y=v=>(s.y1+(s.y2-s.y1)*v)*TS-Math.sin(v*Math.PI)*14;
