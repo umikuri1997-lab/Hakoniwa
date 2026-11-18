@@ -3,7 +3,7 @@ const assert=require('node:assert/strict');
 (async()=>{const {browser,page,run,errors}=await require('../sim/boot.cjs')({viewport:{width:900,height:700}});
   await run(`(()=>{document.querySelector('#dialog').hidden=true;S.introSeen=true;S.flags.tapped=1;S.hold=0;S.t=1440+720;S.enemyOn=false;
     for(let y=CY-4;y<CY+4;y++)for(let x=CX-4;x<CX+6;x++){const j=y*W+x;S.obj[j]='';S.floor[j]='';S.hi[j]=0}
-    S.res=[mkRes(S,POKO,'wood',CX+.5,CY+.5),mkRes(S,MINA,'earth',CX+1.5,CY+.5),mkRes(S,FIXK0.water,'water',CX+.5,CY+1.5)];for(const r of S.res){r.hunger=hMax(r);r.energy=100;r.fun=90;r.act={type:'idle',stage:'do',t:0,dur:9999}}recount();})()`);
+    S.res=[mkRes(S,POKO,'wood',CX+.5,CY+.5),mkRes(S,MINA,'earth',CX+1.5,CY+.5),mkRes(S,FIXK0.water,'water',CX+.5,CY+1.5)];for(const r of S.res){r.hunger=hMax(r);r.energy=100;r.fun=90;r.act={type:'idle',stage:'do',t:0,dur:9999}}for(const k in S.dyn)if(S.dyn[k]&&S.dyn[k].g!=null)S.dyn[k].g=0;/* 実った物をなくす：会話のあいだに、食べ物をあつめに歩き出さないように（foodLow） */recount();})()`);
   const next=async()=>{await page.waitForFunction(()=>sacredEval(`(()=>{const b=document.querySelector('#dlgBtns button[data-nx]');return !!b&&!b.disabled&&performance.now()>=DLGA.holdUntil&&!sacredMotionPending()})()`),{},{timeout:8000});
     const t0=await run('DLGA.lineT');for(let k=0;k<12;k++){await run(`(()=>{const b=document.querySelector('#dlgBtns button[data-nx]');if(b)b.click()})()`);await page.waitForTimeout(260);if(await run(`DLGA.lineT!==${t0}||document.querySelector('#dialog').hidden`))break}};/* 文字が出おわっていなければ、1回めは文字をぜんぶ出すだけ */
   const POKO=await run('POKO'),MINA=await run('MINA');

@@ -10,12 +10,14 @@ const out=JSON.parse(await run(`(()=>{const out={};USERPAUSE=true;S.t=1440*2+12*
  JCOMBO.t=0;const d=[];for(let k=0;k<4;k++)d.push(juicePlace(j+k,'block'));out.stag=d;out.combo=JCOMBO.n;JCOMBO.t=performance.now()-5000;juicePlace(j,'furn');out.comboReset=JCOMBO.n;out.other=juicePlace(j,'chop');
  /* 4. 紙ふぶきと、よろこぶ動き */
  JCONF.length=0;juiceCheer('quest');out.conf=JCONF.length;out.joy=(JOYU.get(r)||0)>performance.now();juiceCheer('lv');out.conf2=JCONF.length;
+ /* なかまの紹介をとじたとき */
+ JCONF.length=0;NEWRES=r.id;HOLD.add(r.id);unhold();out.newc=[JCONF.length,NEWRES,HOLD.has(r.id)];unhold();out.newc.push(JCONF.length);
  return JSON.stringify(out)})()`));
 console.log(out);
 assert.equal(out.fly,3);assert.equal(out.fly2,8);assert.equal(out.flyOff,8);assert.equal(out.flyEnd,0);assert.equal(out.dom,0);
 assert.deepEqual(out.brk,[true,true,true]);assert.ok(out.crop);
 assert.deepEqual(out.stag,[0,45,90,135]);assert.equal(out.combo,3);assert.equal(out.comboReset,0);assert.equal(out.other,0);
-assert.equal(out.conf,44);assert.ok(out.joy);assert.equal(out.conf2,114);
+assert.equal(out.conf,44);assert.ok(out.joy);assert.equal(out.conf2,114);assert.deepEqual(out.newc,[44,null,false,44]);
 /* 描いても、エラーが出ない（紙ふぶき・粒） */
 await run(`window.__fe=null;const fe0=frameErr;frameErr=function(w,e){window.__fe=w+':'+(e&&e.message);return fe0(w,e)};juiceFly(S.res[0].x,S.res[0].y,'mat',3);void 0`);await page.waitForTimeout(900);assert.equal(await run(`window.__fe`),null);
 assert.deepEqual(errors,[]);
