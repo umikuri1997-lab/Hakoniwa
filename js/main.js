@@ -67,7 +67,7 @@ function lastFirst(list){/* さいごにあそんだステージを、いちば�
   const card=list.querySelector('.wcard[data-k="'+top[0]+'"]');if(card===list.firstElementChild)return;
   const pv=card.previousElementSibling,nx=card.nextElementSibling;if(pv&&pv.classList.contains('wlink'))pv.remove();else if(nx&&nx.classList.contains('wlink'))nx.remove();/* 道の線は、となりのステージどうしでつなぎなおす */
   card.classList.add('wtop');list.insertBefore(card,list.firstElementChild)}
-const APP_VER=1869;/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER=1870;/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
@@ -95,10 +95,10 @@ function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
     card.dataset.k=k;list.appendChild(card);thumb(card.querySelector('canvas'),k,open,hide);
   });
   lastFirst(list);
-  $('#mSnd').textContent=SND.bgm||SND.sfx?'♪ おと オン':'♪ おと オフ';
+  $('#mSnd').textContent=SND.bgm?'♪ 曲 オン':'♪ 曲 オフ';$('#mSfx').textContent=SND.sfx?'効果音 オン':'効果音 オフ';/* 曲と効果音は、べつべつに出す（まとめて出すと、曲がオフでも「オン」に見えた） */
 }
 const dayNoOf=s=>Math.floor((s.t-(s.hold||0))/1440)+1;
-$('#mSnd').onclick=()=>{const on=!(SND.bgm||SND.sfx);setSnd('bgm',on);setSnd('sfx',on);showMaps()};
+$('#mSnd').onclick=()=>{audioInit();setSnd('bgm',!SND.bgm);showMaps()};$('#mSfx').onclick=()=>{audioInit();setSnd('sfx',!SND.sfx);showMaps()};
 $('#mBack').onclick=()=>{$('#maps').hidden=true;$('#title').hidden=false;titleCont()};
 $('#tStart').onclick=()=>{audioInit();curSong=wantSong='opening';step=0;nextT=AC?AC.currentTime+.15:0;sfx('furn');const t0=Date.now(),go=()=>{if(KV.ready()||Date.now()-t0>5000)showMaps();else setTimeout(go,150)};if(!KV.ready())toast('セーブを読みこみ中…');go()};/* クラウドのセーブを待ってから、土地をえらぶ */
 function lastPlayed(){/* さいごにあそんだステージ（なければ null） */refreshStageInfo();const top=[0,1,FREE].map(w=>[w,LIVE[w]&&LIVE[w].introSeen?coverLast(w):0]).filter(a=>a[1]>0).sort((a,b)=>b[1]-a[1])[0];return top?top[0]:null}
@@ -106,7 +106,6 @@ function titleCont(){/* タイトルの「つづきから」：前にあそん�
 $('#tCont').onclick=()=>{audioInit();sfx('tap');const w=lastPlayed();if(w==null)return titleCont();const L=loadStage(w);if(!L)return titleCont();continueGame(L)};/* 前にあそんだマップを、そのまま開く */
 titleCont();
 {const f=()=>{if($('#title').hidden&&$('#maps').hidden)return;audioInit();if(curSong!=='opening'){curSong=wantSong='opening';step=0;bgmSw=0;nextT=AC?AC.currentTime+.15:0}};for(const ev of ['pointerdown','touchend','click','keydown'])addEventListener(ev,f,true)}/* タイトルでは、はじめてさわったときから曲を鳴らす（ブラウザは、さわるまで音を出させない） */
-{/* 曲のようすのたしかめ（iPhone で曲が鳴らないのをしらべる。わかったらけす） */let ER='';addEventListener('error',e=>{ER=String(e.message||'').slice(0,60)});const d=document.createElement('div');d.style.cssText='position:fixed;left:4px;bottom:4px;z-index:9999;background:rgba(255,255,255,.85);color:#333;font:11px monospace;padding:3px 5px;pointer-events:none;white-space:pre;line-height:1.3';document.body.appendChild(d);const f2=v=>typeof v==='number'?v.toFixed(3):String(v);setInterval(()=>{const on=!$('#title').hidden||!$('#maps').hidden||!$('#pro').hidden;d.style.display=on?'':'none';if(!on)return;d.textContent='AC '+(AC?AC.state+' t'+AC.currentTime.toFixed(1)+' '+AC.sampleRate:'none')+'\nsong '+curSong+'>'+wantSong+' sw'+f2(bgmSw)+' next'+f2(nextT)+'\nbgm '+SND.bgm+' bv'+f2(SND.bv)+' G'+(bgmG?f2(bgmG.gain.value):'-')+' F'+(bgmF?f2(bgmF.gain.value):'-')+'\nsched '+BGMDBG.c+'/'+BGMDBG.r+' notes '+BGMDBG.n+(BGMDBG.err?'\nerr '+BGMDBG.err:'')+(ER?'\njs '+ER:'')},500)}
 window.__ldDone=1;clearInterval(window.__ldT);$('#tLoad').hidden=true;$('#tBtns').hidden=false;window.dispatchEvent(new Event('resize'));/* 読みこみがおわってから、ボタンを出す */{const d=document.getElementById('stageLd');if(d&&!d.hidden)stageLoading(true)}/* 思い出帳の再生：つづけて、マップを読みこみ中と出す */{const lw=window.__ldWant&&window.__ldWant();if(lw===2)$('#tCont').onclick();else if(lw)$('#tStart').onclick()}/* 読みこみ中に「はじめる」「つづきから」をおしていたら、そのまま進む */
 
 /* ---------- ループ ---------- */
