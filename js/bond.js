@@ -336,7 +336,7 @@ const LASTW={wood:['#teary hush|……$M……ごめんね……。','#teary hus
  wind:['#teary hush|……フッ…$M……そんな顔、しないでおくれ……。','#teary hush|……$M……風に、なっても……そばに、いるよ……。','#teary hush|……$M……ありがとう……。']};
 const LASTW0={wood:'#teary hush|……みんな……ごめんね……。',earth:'#teary hush|……みんな……ごめんねぇ……。',fireA:'#teary hush|……みんな……わるいね……。',fireB:'#teary hush|……みんな……わりい……。',water:'#teary hush|……みなさん……ごめんなさい……。',wind:'#teary hush|……フッ…みんな……すまないね……。'};
 function lastWord(r,m){const k=elemKey(r),a=LASTW[k]?k:'wood';return [r.name,m?pickFresh('lw:'+a,LASTW[a]).replace(/\$M/g,m.name):LASTW0[a]]}
-function bondTick(){if(!S||IS_STORY_REPLAY)return;omoiSeed();bondNightTick();bondNearTick();if(typeof supportTick==='function')supportTick();/* なかよしと夜の戦い（support.js） */bondTalkTick();griefTick()}
+function bondTick(){if(!S||IS_STORY_REPLAY)return;if(typeof bdayEveTick==='function')bdayEveTick();/* 誕生日の前の日のないしょ話（birthday.js） */omoiSeed();bondNightTick();bondNearTick();if(typeof supportTick==='function')supportTick();/* なかよしと夜の戦い（support.js） */bondTalkTick();griefTick()}
 
 /* ---------- いっしょに遊ぶ ---------- */
 /* 同じ遊び家具で遊びはじめたら、先に遊んでいる子と+2（1回の遊びで1回） */

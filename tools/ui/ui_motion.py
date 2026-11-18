@@ -47,6 +47,16 @@ SRC = {
  'tpop': (.5, "0%{transform:scale(.6)}35%{transform:scale(1.25)}60%{transform:scale(.94)}80%{transform:scale(1.04)}100%{transform:none}"),
  'mflipF': (.42, "0%{transform:none;filter:brightness(1)}15%{transform:scaleX(.96) translateY(-1.5px);filter:brightness(.98)}35%{transform:scaleX(.8) translateY(-3px);filter:brightness(.94)}55%{transform:scaleX(.55) translateY(-3px);filter:brightness(.88)}75%{transform:scaleX(.28) translateY(-1.5px);filter:brightness(.82)}90%{transform:scaleX(.08);filter:brightness(.78)}100%{transform:scaleX(0);filter:brightness(.76)}"),
  'mflipB': (.42, "0%{transform:scaleX(0);filter:brightness(.76)}10%{transform:scaleX(.08);filter:brightness(.78)}25%{transform:scaleX(.28) translateY(-1.5px);filter:brightness(.82)}45%{transform:scaleX(.55) translateY(-3px);filter:brightness(.88)}65%{transform:scaleX(.8) translateY(-3px);filter:brightness(.94)}85%{transform:scaleX(.96) translateY(-1.5px);filter:brightness(.98)}100%{transform:none;filter:brightness(1)}"),
+ # 草原でも火山でもつかう、くりかえす動き（もとは ease のなめらかな動き。ease は、とおる所をふやしてまねる）
+ 'tswipe': (1.2, "0%{transform:translateX(34.5px);opacity:0}15%{opacity:1}25%{transform:translateX(25.5px)}50%{transform:none}75%{transform:translateX(-25.5px)}85%{opacity:1}100%{transform:translateX(-34.5px);opacity:0}"),
+ 'tring': (1.1, "0%{transform:scale(.6);opacity:1}25%{transform:scale(.89);opacity:.6}50%{transform:scale(1.08);opacity:.3}75%{transform:scale(1.24);opacity:.1}100%{transform:scale(1.3);opacity:0}"),
+ 'tfing': (.9, "0%{transform:none}12.5%{transform:translateY(-1.5px)}25%{transform:translateY(-4.5px)}37.5%{transform:translateY(-6px)}50%{transform:translateY(-7.5px)}62.5%{transform:translateY(-6px)}75%{transform:translateY(-4.5px)}87.5%{transform:translateY(-1.5px)}100%{transform:none}"),
+ 'palAR': (1, "0%{transform:none}25%{transform:translateX(1.5px)}50%{transform:translateX(3px)}75%{transform:translateX(1.5px)}100%{transform:none}"),
+ 'palAL': (1, "0%{transform:none}25%{transform:translateX(-1.5px)}50%{transform:translateX(-3px)}75%{transform:translateX(-1.5px)}100%{transform:none}"),
+ 'ideaFloat': (2, "0%{transform:none}12.5%{transform:translateY(-1.5px) rotate(.6deg)}25%{transform:translateY(-3px) rotate(2.5deg)}37.5%{transform:translateY(-4.5px) rotate(4.4deg)}50%{transform:translateY(-6px) rotate(5deg)}62.5%{transform:translateY(-4.5px) rotate(4.4deg)}75%{transform:translateY(-3px) rotate(2.5deg)}87.5%{transform:translateY(-1.5px) rotate(.6deg)}100%{transform:none}"),
+ # 光の帯は40度ごとに同じもよう（repeating-conic-gradient のくりかえし）なので、40度まわって、はじめのコマにもどる
+ 'ideaTurn': (24 * 40 / 360, "0%{transform:none}100%{transform:rotate(40deg)}"),
+ 'nbob': (.8, "0%{transform:none}50%{transform:translateY(1.5px)}100%{transform:none}"),
  'lvpop': (.45, "0%{transform:scale(.3);opacity:0}60%{transform:scale(1.08);opacity:1}100%{transform:scale(1);opacity:1}"),
 }
 SRC['tontileR'] = (.4, SRC['tontile'][1].replace('rotate(', 'rotate(-').replace('rotate(--', 'rotate('))
