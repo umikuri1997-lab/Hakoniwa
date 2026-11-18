@@ -63,7 +63,7 @@ function diaryClose(){if(dyOff())return;const D=S.dy;S.dy={d:dayNo(),w:{},m:[],k
   e.wx=D.wx||null;const f=dyWriter();if(f&&D.ph)e.ph=D.ph;/* フタバがいないときは、写真ものせない */
   if(!w.length&&!e.m.length&&!e.ns&&!e.ph)return;
   if(f){e.ft=dyNote(e,f);e.fw=[f.name,f.elem,f.vr||null]}
-  {const b=dyBest(e),r=b&&S.res.find(q=>q.name===b.nm);if(b){e.mvp=b;if(r){r.fun=Math.min(100,(r.fun||0)+MVPFUN);{const M=S.memo||(S.memo=[]);M.push([dayNo(),'cup',b.nm+'が、ゆうべのかつやくにえらばれた']);if(M.length>200)M.shift()}/* memo() だと、つぎの日の日記のできごとにも入るので、思い出帳だけに書く */}}}/* ゆうべのかつやく：たのしさ+10・思い出帳 */
+  {const b=dyBest(e),r=b&&S.res.find(q=>q.name===b.nm);if(b){e.mvp=b;if(r){funAdd(r,MVPFUN,'mvp');{const M=S.memo||(S.memo=[]);M.push([dayNo(),'cup',b.nm+'が、ゆうべのかつやくにえらばれた']);if(M.length>200)M.shift()}/* memo() だと、つぎの日の日記のできごとにも入るので、思い出帳だけに書く */}}}/* ゆうべのかつやく：たのしさ+10・思い出帳 */
   const L=S.diary||(S.diary=[]);L.push(e);while(L.length>DIARYMAX)L.shift();
   if(!sheet&&$('#dialog').hidden)openSheet('diary','m');else toast('きのうの日記を、思い出帳にのこした')}
 /* ゆうべのかつやく：追いはらった数＋守った数が MVPMIN 点以上で、いちばん多い子（おなじ点なら、追いはらった数が多い子）。{nm,el,vr,k,g} */
