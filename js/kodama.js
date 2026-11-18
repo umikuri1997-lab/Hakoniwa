@@ -5,7 +5,7 @@
    S.kd：[{id,k,a,j,gap,fl,st,ws}]（st 0 まだ・1 せいれいが見にいく・2 見つけた。ws 1 石材をとりにいく・2 はこんでいる）。エリアに3こ置けなかったら、つぎの朝にまた置く。S.kodama：見つけた数。S.kdOwe：まだわたしていない設計図。
    見つけたら：もりのこだま1こ・パワー5（KDPT）・小さな物1こ（KDLOOT。せいれいが頭の上につんで箱へはこぶ）。10・20・30・40こで、まだない設計図（KDBP）。 */
 const KDK={kusa:{n:'ゆれる草むら',o:'kdkusa'},kabu:{n:'ふしぎな切り株',o:'kdkabu'},ishi:{n:'欠けた石の輪',o:'kdishi'},hana:{n:'1本たりない花の輪',o:'kdhana'}};
-const KDIDS=new Set(['kdkusa','kdkabu','kdishi','kdhana']),KDPER=3,KDPT=5,KDBP=[10,20,30,40],KDFL=['clover','bellf','salvia','lily'];
+const KDIDS=new Set(['kdkusa','kdkabu','kdishi','kdhana']),KDPER=3,KDMID=12,KDPT=5,KDBP=[10,20,30,40],KDFL=['clover','bellf','salvia','lily'];
 const KDLOOT=[['mat:eda',2,30],['seed',2,25],['food:apple',2,25],['mapPc',1,12],['fukuro',1,8]];/* [物,数,えらばれやすさ] */
 const KDRING=[[-1,-1],[0,-1],[1,-1],[-1,0],[1,0],[-1,1],[0,1],[1,1]],KDGAP=[[0,-1],[-1,0],[1,0],[0,1]];/* 輪のマス（まん中のまわり8マス）・すきまにする所（上下左右のまん中） */
 const KDLINE=['こんな所に、かくれてた！','見つけた！ 小さな声がしたんだ。','わあ、ひかってる……！','ここにいたんだね。','ふふ、くすぐったいよ。','森の声みたい。きれいだね。'];
@@ -21,7 +21,7 @@ function kdGenArea(a,G){/* エリア a に、3こになるまで置く（行け�
   if(!G){const r0=S.res.find(q=>!q.hidden);G=r0?bfs(r0.x|0,r0.y|0):null}
   let put=0;for(const k of ks){if(have>=KDPER)break;for(let tr=0;tr<600;tr++){const x=x0+2+((Math.random()*(AREAW-4))|0),y=y0+2+((Math.random()*(AREAW-4))|0),j=y*W+x,hi=S.hi?S.hi[j]||0:0,e={id:0,k,a,j,st:0};
       if(k==='ishi'||k==='hana'){const[gx,gy]=KDGAP[(Math.random()*4)|0];e.gap=j+gy*W+gx;if(k==='hana')e.fl=KDFL[(Math.random()*KDFL.length)|0]}
-      if(!kdNeed(e,hi))continue;const st=e.gap!=null?e.gap+(e.gap-e.j):e.j+W;if(G&&G.dist[st]<0&&G.dist[e.j]<0)continue;/* せいれいが行ける所 */
+      if(Math.abs(x-CX)<=KDMID&&Math.abs(y-CY)<=KDMID||!kdNeed(e,hi))continue;/* はじめに建てるまん中はあけておく */const st=e.gap!=null?e.gap+(e.gap-e.j):e.j+W;if(G&&G.dist[st]<0&&G.dist[e.j]<0)continue;/* せいれいが行ける所 */
       e.id=S.kdN=(S.kdN||0)+1;for(const c of kdCells(e)){if(WEEDS.has(S.obj[c]))S.obj[c]='';if(c!==e.gap)S.obj[c]=KDK[k].o}if(e.gap!=null&&WEEDS.has(S.obj[e.j]))S.obj[e.j]='';
       S.kd.push(e);KDMN=-1;put++;have++;break}}
   if(put)dirty=true;return put}
