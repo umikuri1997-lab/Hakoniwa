@@ -1,6 +1,6 @@
 """そうびのアイコン（もちもの・そうびの画面・依頼ボード）。もらった絵 src/<シート>.webp（透過・7まい）から作る。
 1まいの中の物は、たての空き → 行、行の中のよこの空き → 物、でわける（数が多ければ、いちばんせまい空きからまとめる：ならんだ手ぶくろ・火の粉など）。
-どれも、長いほうの辺が S ドットになるようにちぢめ（pixdown.py の make）、fishfood_art の tidy でととのえる。
+どれも、長いほうの辺が S ドットになるようにちぢめ（pixdown.py の make）、コントラスト・あざやかさを上げて（pop）、fishfood_art の tidy でととのえる。
 ゲームでは、ドットを3つずつにのばした絵を assets/g に入れ、js/draw-spirits.js の ICONS に 'g_<id>' で書く（gearIcon がつかう）。
   python3 tools/art/gear/gear_art.py <出力フォルダ>          # ちぢめた絵と見くらべ
   python3 tools/art/gear/gear_art.py <出力フォルダ> --game   # ゲームに入れる"""
@@ -22,6 +22,14 @@ SHEETS = {  # シート：行ごとの id（左から）
   'charm': [['gc%02d' % i for i in range(1, 6)], ['gc%02d' % i for i in range(6, 11)], ['gc%02d' % i for i in range(11, 15)] + ['gg07'], ['gg08', 'ga27', 'ga28', 'ga29']],
   'tool': [['gt01', 'gt02', 'gt03', 'gt04', 'gt16'], ['gt17', 'gt05', 'gt06', 'gt07', 'gt08'], ['gt09', 'gt10', 'gt11', 'gt12', 'gt13'], ['gt14', 'gt15']]}
 TH = 128  # これより こい所を物とみる（うしろのうすいもやは、のぞく）
+CON, SAT = 1.3, 1.4  # コントラスト（物の明るさの平均を中心に）・あざやかさ（持ち主のたのみで上げた）
+def pop(o):
+    A = o[..., 3] > 0
+    if not A.any(): return o
+    c = o[..., :3].astype(float); L = c @ (.3, .59, .11); m = L[A].mean()
+    c = L[..., None] + (c - L[..., None]) * SAT  # あざやかさ
+    c = m + (c - m) * CON  # コントラスト
+    o[..., :3] = np.where(A[..., None], np.clip(c, 0, 255).round(), o[..., :3]); return o
 
 def runs(p, n, cells=0):
     """1次元の、物のある所のまとまり（start,stop）を n こにする：cells があれば、まん中の入るます目（はばを cells にわけた）ごとにまとめる（ならんだ肩あてが、となりの物にくっつかない）。のこりは、いちばんせまい空きのとなりどうしをまとめる"""
@@ -61,7 +69,7 @@ def build(dst, game=False):
         src, bx = boxes(name)
         for k, b in bx.items():
             w, h = b[2] - b[0], b[3] - b[1]
-            im = pixdown.make(src, b, w=S if w >= h else None, h=S if h > w else None, fix=lambda o, k=k: fishfood_art.tidy(o, k))
+            im = pixdown.make(src, b, w=S if w >= h else None, h=S if h > w else None, fix=lambda o, k=k: fishfood_art.tidy(pop(o), k))
             im.save(os.path.join(dst, k + '.png')); pixdown.compare(src, b, im).save(os.path.join(dst, k + '_cmp.png')); made[k] = im
     if game: put(made)
     return made
