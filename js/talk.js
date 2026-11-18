@@ -120,14 +120,15 @@ const TALKHI={mo:['あ、守り神さま。おはよう！','#joy|おはよう�
 function hiLine(r){const n=hour(),k=n>=5&&n<10?'mo':n>=17&&n<20?'ev':isNight()?'nt':'day',A=TALKHI[k],C=A.filter(t=>t!==r.thi),t=pick(C.length?C:A);r.thi=t;return t}
 const TALKBYE=['お話できて、うれしかったよ。','また、お話しようね。','#joy|えへへ、たのしかった！','聞いてくれて、ありがとう。','じゃあ、ぼく、もう行くね。','またね、守り神さま！'];
 const evPick=(r,L)=>{const k=e=>e[0]+':'+e[1],C=L.filter(e=>k(e)!==r.tle),e=pick(C.length?C:L);r.tle=k(e);return e};/* 前に話したことは、つづけて話さない */
-function talkLines(r){const now=nowTopic(r),E=dlToday(r);let L=null;
+function talkLines(r){const now=nowTopic(r),E=dlToday(r);let L=null,pk=null;TALKPK=null;
   if(now&&now.u)L=now.L;
   else{const C=[];if(now)C.push('now');const fun=E.filter(e=>DLFUN.has(e[0])),work=E.filter(e=>!DLFUN.has(e[0]));if(fun.length)C.push('fun');if(work.length)C.push('day');C.push('chat','chat');
     const C2=C.filter(c=>c!==r.tlk),k=pick(C2.length?C2:C);r.tlk=k;/* 前と同じ種類の話題は、つづけない */
-    if(k==='now')L=talkFresh(r,now.P);else if(k==='fun'){const e=evPick(r,fun),d=dayLine(r,e);if(d)L=e[0]==='rainjoy'||e[0]==='sunset'||Math.random()<.5?d:[pick(['きょう、いちばんたのしかったのはね……','きょうのいちばんはね……','ねえ、聞いて。きょうね、']),d[0].replace(/^(#[^|]*\|)?きょう(は|も)?、/,'$1'),d[1]]}else if(k==='day'){L=dayLine(r,evPick(r,work))}
-    if(!L)L=smallTalk(r)}
+    if(k==='now'){L=talkFresh(r,now.P);pk=prefOfTopic(r.tlast)}else if(k==='fun'){const e=evPick(r,fun),d=dayLine(r,e);if(d)L=e[0]==='rainjoy'||e[0]==='sunset'||Math.random()<.5?d:[pick(['きょう、いちばんたのしかったのはね……','きょうのいちばんはね……','ねえ、聞いて。きょうね、']),d[0].replace(/^(#[^|]*\|)?きょう(は|も)?、/,'$1'),d[1]]}else if(k==='day'){L=dayLine(r,evPick(r,work))}
+    if(!L){L=smallTalk(r);pk=prefOfTopic(r.tlast)}}
+  TALKPK=pk;/* 好みを話した話：さいごまで読んだら、わかる（prefs.js） */
   const out=[hiLine(r),...L];if(Math.random()<.35)out.push(pick(TALKBYE));
   return out.map((t,i)=>[r.name,chatTone(t,r,i)])}
-let TALKID=null;/* お話しているせいれい：会話のあいだは、歩くとちゅうでも、立ちどまって正面を向く（draw-spirits の walking） */
+let TALKID=null,TALKPK=null;/* お話しているせいれい：会話のあいだは、歩くとちゅうでも、立ちどまって正面を向く（draw-spirits の walking） */
 function talkTo(r){if(!r||r.hidden||!S.res.includes(r))return;const owner=S,id=r.id,d=callDay();DLGTAP=performance.now();TALKID=id;
-  dialog(talkLines(r),()=>{if(TALKID===id)TALKID=null;if(S!==owner)return;const q=S.res.find(x=>x.id===id);if(!q)return;const c=q.care||(q.care={});if(c.talk!==d){c.talk=d;q.fun=Math.min(100,q.fun+TALKFUN);addFloat(q.x,q.y-1.6,'たのしさ+'+TALKFUN,'#ffd7e8')}JOYU.set(q,performance.now()+2000);q.bubble='💕';if(typeof bpTalkGift==='function')bpTalkGift(q);if((S.subSt||{}).talk1===2)S.flags.talkQ=1;dirty=true;resTab=2;openSheet('res',id)})}
+  const TL=talkLines(r),pk=TALKPK;dialog(TL,()=>{if(TALKID===id)TALKID=null;if(S!==owner)return;const q=S.res.find(x=>x.id===id);if(!q)return;if(pk)prefKnow(q,pk);const c=q.care||(q.care={});if(c.talk!==d){c.talk=d;q.fun=Math.min(100,q.fun+TALKFUN);addFloat(q.x,q.y-1.6,'たのしさ+'+TALKFUN,'#ffd7e8')}JOYU.set(q,performance.now()+2000);q.bubble='💕';if(typeof bpTalkGift==='function')bpTalkGift(q);if((S.subSt||{}).talk1===2)S.flags.talkQ=1;dirty=true;resTab=2;openSheet('res',id)})}

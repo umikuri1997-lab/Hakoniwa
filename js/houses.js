@@ -69,10 +69,11 @@ function sayLine(r){const L=[],fav=FOODS[favDish(r)],m=bestMate(r);
   if(!HOUSES.length)L.push('みんなの家、ほしいなぁ');
   if(GRASSN>=450)L.push('みどりがいっぱいで、うれしいな');else if(GRASSN<60)L.push('もっと草花がふえるといいな');
   if(m)L.push(m.name+'とあそぶの、たのしい！');
-  if((S.fs[favDish(r)]||0)>0)L.push('箱に'+fav.name+'がある！ たのしみ');else L.push(fav.name+'が食べたいなぁ');
+  const fi=L.length;if((S.fs[favDish(r)]||0)>0)L.push('箱に'+fav.name+'がある！ たのしみ');else L.push(fav.name+'が食べたいなぁ');
   if(r.fun>=80)L.push('ここでのくらし、たのしいよ');
-  L.push(LIKES[r.like]+'がすき！');
-  return L[(Math.floor(S.t/30)+r.id)%L.length]}/* 村のようすで、ひとことが変わる */
+  const li=L.length;L.push(LIKES[r.like]+'がすき！');
+  const i=(Math.floor(S.t/30)+r.id)%L.length;SAYPK=i===fi?'fd':i===li?'lk':null;/* 好みを言ったひとこと（prefs.js） */return L[i]}
+let SAYPK=null;/* 村のようすで、ひとことが変わる */
 function helloLine(r){const k=elemKey(r);
   if(r.back)return pickFresh('back:'+r.name,KEYBACK[r.name]||BACKL[k]);/* もどったときのひとことは、ぜんぶ出しおわるまで同じ物を出さない */if(KEYHELLO[r.name])return KEYHELLO[r.name];return pick(HELLO[k]).replace('$',r.name)}
 const likeF=r=>{if(r.lf&&BL[r.lf])return r.lf;let h=2166136261;for(const ch of r.name+(r.id||0))h=Math.imul(h^ch.charCodeAt(0),16777619)>>>0;h^=h>>>13;h=Math.imul(h,2246822507)>>>0;h^=h>>>16;r.lf=LIKEF[(h>>>0)%LIKEF.length];return r.lf};/* 好きな家具：ひとりずつちらばる（一度決まったら変わらない） */
