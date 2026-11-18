@@ -126,9 +126,9 @@ function tileWatch(){const b=document.getElementById('sheetBody');if(!b)return;n
 /* 草原：タブをかえると、中の板が、札をひっくり返すように、くるっとまわって中身がかわる（タブのならび .ctabs のあとの物。図鑑の本はのぞく） */
 document.addEventListener('click',e=>{const t=e.target&&e.target.closest&&e.target.closest('.ctabs .ctab');if(!t||!document.body.classList.contains('wd0')||uiReduced()||t.closest('.pxcard')||t.closest('.sheet[data-k="zukan"]'))return;
   sfx('flip');requestAnimationFrame(()=>{const tb=document.querySelector('#sheetBody .ctabs');if(!tb)return;let n=tb.nextElementSibling;while(n){n.classList.remove('uflip');void n.offsetWidth;n.classList.add('uflip');n=n.nextElementSibling}})},true);
-/* 草原：もどせない決定（data-hold のボタン）は、おしつづけると、焼き印のこげ色がたまって「じゅっ」と決まる（0.7秒）。ふつうのタップでは決まらない */
+/* もどせない決定（data-hold のボタン）は、どのステージでも、おしつづけると、焼き印のこげ色がたまって「じゅっ」と決まる（0.7秒）。ふつうのタップでは決まらない */
 const HOLDMS=700;
-function holdOn(b){return b&&b.dataset&&b.dataset.hold&&document.body.classList.contains('wd0')}
+function holdOn(b){return !!(b&&b.dataset&&b.dataset.hold)}
 document.addEventListener('pointerdown',e=>{const b=e.target&&e.target.closest&&e.target.closest('[data-hold]');if(!holdOn(b)||b.disabled)return;b.classList.add('holding');b.style.setProperty('--hold',HOLDMS+'ms');
   clearTimeout(b._hT);b._hT=setTimeout(()=>{b.classList.remove('holding');b._held=1;sfx('sizzle');b.classList.add('branded');setTimeout(()=>b.classList.remove('branded'),400);b.click();b._held=0},HOLDMS)},true);
 for(const ev of['pointerup','pointercancel','pointerleave'])document.addEventListener(ev,e=>{const b=e.target&&e.target.closest&&e.target.closest('[data-hold]');if(!b||!b._hT)return;if(b.classList.contains('holding')){clearTimeout(b._hT);b._hT=0;b.classList.remove('holding')}},true);

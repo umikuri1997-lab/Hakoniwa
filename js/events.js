@@ -152,7 +152,7 @@ function evSheet(body){$('#sheetTitle').textContent='イベント';
   for(const id of EVORDER.filter(k=>!EVENTS[k].grand).concat(['@g'],EVORDER.filter(k=>EVENTS[k].grand))){if(id==='@g'){const h=el('<div class="sec"><h3>豪華なイベント</h3><div class="rows"></div></div>');body.appendChild(h);rows2=h.querySelector('.rows');continue}if(!evOn(id))continue;const D=EVENTS[id],r=rowEl(D.n,D.d,null,'<b style="font-weight:400">'+esc(evGainTxt(id))+'</b><br>'+esc((D.sea!=null?EVSEA[D.sea]+'だけ・':'')+(D.need?EVNEED[D.need].n+'・':'')+EVAT(D)+'から・'+evCostTxt(id))+'<br>'),b=el('<button class="btn pri">ひらく</button>');
     const why=evWhy(id);if(evDoneNow(id))r.classList.add('done');lackOn(b,why);b.onclick=()=>{if(why)return;sfx('tap');evPop(id)};r.appendChild(b);(rows2||rows).appendChild(r)}}
 function evPop(id){/* 出る子をえらぶ */const D=EVENTS[id],mx=evMax(id),L=S.res.filter(evHere),pick0=new Set(L.slice(0,mx).map(r=>r.id));
-  const o=el('<div style="position:fixed;inset:0;z-index:45;display:flex;align-items:center;justify-content:center;background:rgba(30,24,16,.45);padding:24px"><div class="pxcard" style="background:var(--panel);padding:16px 18px;max-width:340px;width:100%;color:var(--ink)"><b class="t" style="display:block;font-size:15px;margin-bottom:4px"></b><p class="note n" style="margin:0 0 8px"></p><div class="ks" style="display:flex;flex-wrap:wrap;gap:6px"></div><p class="note c" style="margin:10px 0 0"></p><div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px"><button class="btn x">とじる</button><button class="btn pri go">ひらく</button></div></div></div>');
+  const o=el('<div style="position:fixed;inset:0;z-index:45;display:flex;align-items:center;justify-content:center;background:rgba(40,30,15,.35);padding:24px"><div class="pxcard" style="background:var(--panel);padding:16px 18px;max-width:340px;width:100%;color:var(--ink)"><b class="t" style="display:block;font-size:15px;margin-bottom:4px"></b><p class="note n" style="margin:0 0 8px"></p><div class="ks" style="display:flex;flex-wrap:wrap;gap:6px"></div><p class="note c" style="margin:10px 0 0"></p><div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px"><button class="btn x">とじる</button><button class="btn pri go">ひらく</button></div></div></div>');
   o.querySelector('.t').textContent=D.n;o.querySelector('.n').textContent=evGainTxt(id)+'（'+mx+'人まで）';
   const bs=L.map(r=>{const b=el('<button class="btn"></button>');b.textContent=r.name;b.onclick=()=>{sfx('notch');if(pick0.has(r.id))pick0.delete(r.id);else if(pick0.size<mx)pick0.add(r.id);upd()};o.querySelector('.ks').appendChild(b);return[r,b]});
   const upd=()=>{for(const[r,b]of bs)b.classList.toggle('pri',pick0.has(r.id));const c=evCost(id,pick0.size);o.querySelector('.c').textContent=pick0.size+'人・パワー（'+Math.floor(S.pt)+'/'+c.pt+'）'+(c.wood?'・木材（'+(S.mat.wood||0)+'/'+c.wood+'）':'')+(c.food?'・食料（'+S.food+'/'+c.food+'）':'')+(D.set?'・'+setTxt(D):'');lackOn(o.querySelector('.go'),!pick0.size?'出るせいれいがいません':cupKind(id)&&pick0.size<CUPMIN?'せいれいが'+CUPMIN+'人からです':lackPt(c.pt)||lackMat('wood',c.wood)||lackMat('bamboo',c.bamboo)||((S.inv.arrow||0)<c.arrow?'木の矢が足りません':'')||(S.food<c.food?'食料が足りません':''))};
@@ -200,16 +200,27 @@ function cupMove(r,a,dt){const E=S.ev;/* 毎コマ：走る・はこぶ・作る
   if(E.id==='cup0'){if(E.order.includes(r.id))return;const end=E.tk.x+E.tk.len-.5,v=dt*.55*rMul(r,'move')*(.85+.3*Math.random());r.face=1;r.x=Math.min(end,r.x+v);if(r.x>=end){E.order.push(r.id);addFloat(r.x,r.y-1.5,E.order.length+'着！','#ffe7a8');JUMP.set(r,performance.now())}return}
   if(E.id==='cup3'){const x0=E.tk.x+.5,x1=E.tk.x+E.tk.len-.5;if(a.dir==null)a.dir=1;const v=dt*.45*rMul(r,'move');r.face=a.dir;r.x+=a.dir*v;if(a.dir>0&&r.x>=x1){r.x=x1;a.dir=-1;E.sc[r.id]=(E.sc[r.id]||0)+capOf(r);addFloat(r.x,r.y-1.5,'+'+capOf(r),'#ffe7a8')}else if(a.dir<0&&r.x<=x0){r.x=x0;a.dir=1}return}
   if(E.id==='cup2'){E.sc[r.id]=(E.sc[r.id]||0)+dt*rMul(r,'work')*(.8+.4*Math.random())}}
-/* しごとの称号：同じ仕事を TITLEN 回すると称号。その仕事のはたらく速さ+2（gJob が、はたらく速さに2をたした速さにする）。r.jc：仕事ごとの回数、r.ttl：もっている称号 */
-const TITLEN=100,TITLEUP=2;
-const TITLES={kikori:{n:'きこりの名人',d:'木を切るとき、はたらく速さ+2',jobs:['chop']},ishi:{n:'石ほりの名人',d:'石をほるとき、はたらく速さ+2',jobs:['mine']},
-  hata:{n:'畑の名人',d:'畑の仕事のとき、はたらく速さ+2',jobs:['till','sow','plant','water','tend','harvest','fert']},ryori:{n:'料理の名人',d:'料理のとき、はたらく速さ+2',jobs:['cook']},
-  daiku:{n:'大工の名人',d:'建てる・作る・直すとき、はたらく速さ+2',jobs:['build','craft','repair']},tsuri:{n:'つりの名人',d:'つりのとき、はたらく速さ+2',jobs:['fish']}};
-const TJOB={};for(const k in TITLES)for(const j of TITLES[k].jobs)TJOB[j]=k;/* 仕事 → 称号（さがす表） */
-function titleNote(r,a){const k=TJOB[a&&a.type];if(!k||!r||IS_STORY_REPLAY||a.stage!=='do')return;const C=r.jc||(r.jc={});C[k]=(C[k]||0)+1;if(C[k]<TITLEN||(r.ttl||{})[k])return;
-  (r.ttl||(r.ttl={}))[k]=1;const T=TITLES[k];memo('',r.name+'が「'+T.n+'」になった');villageTimeout(()=>{if(!S.res.includes(r))return;toast(r.name+'が「'+T.n+'」になった！','good');JOYU.set(r,performance.now()+3000);addFloat(r.x,r.y-1.6,T.n,'#ffe7a8');sfx('level')},400)}
-function titleMul(r,t){const k=TJOB[t];if(!k||!r||!r.ttl||!r.ttl[k])return 1;const w=rStat(r,rLv(r)).work;return(w+TITLEUP)/w}/* その仕事は、はたらく速さに2をたした速さ */
-function titleSec(r,g){for(const k in TITLES){if(!(r.ttl||{})[k])continue;const T=TITLES[k],d=el('<div class="stat" style="display:block"><span style="display:block">称号</span><b style="display:block;text-align:left;margin-top:2px"></b><small style="display:block;color:var(--sub,#888);margin-top:2px"></small></div>');d.querySelector('b').textContent=T.n;d.querySelector('small').textContent=T.d;g.appendChild(d)}}
+/* 得意な仕事（★）：仕事は TOKUI の6つ。せいれいごとに、はじめから★1の仕事が1〜2つ（r.vr.tk、tokuiPick）。同じ仕事をした回数（r.jc）が TKN の数で★1・2・3（はじめから★1の仕事も、100回で★2）。
+   その仕事は、はたらく速さ+★の数（TKUP、gJob が titleMul でたす）。前のセーブの称号（r.ttl）は★2。木を切る・石をほるをえらぶとき、★の多いほうを先にする（goWork） */
+const TKN=[30,100,300],TKUP=1,TKMAX=3;
+const TOKUI={kikori:{n:'木を切る',jobs:['chop']},ishi:{n:'石をほる',jobs:['mine']},hata:{n:'畑',jobs:['till','sow','plant','water','tend','harvest','fert']},ryori:{n:'料理',jobs:['cook']},
+  daiku:{n:'大工',jobs:['build','craft','repair']},tsuri:{n:'つり',jobs:['fish']}};
+const TJOB={};for(const k in TOKUI)for(const j of TOKUI[k].jobs)TJOB[j]=k;/* 仕事 → 得意な仕事のしゅるい（さがす表） */
+const tokuiCan=el=>Object.keys(TOKUI).filter(k=>k!=='ryori'||el!=='wind');/* 風のせいれいの料理はない */
+function tokuiPick(el){const L=tokuiCan(el),out=[];const n=Math.random()<.4?2:1;while(out.length<n&&L.length)out.push(L.splice((Math.random()*L.length)|0,1)[0]);return out}
+function tokuiBase(r){const v=r&&r.vr;if(!v)return[];if(!v.tk)v.tk=tokuiPick(r.elem);return v.tk}
+function tokuiLv(r,k){if(!r)return 0;const c=(r.jc||{})[k]||0;let lv=0;for(let i=0;i<TKN.length;i++)if(c>=TKN[i])lv=i+1;if(tokuiBase(r).includes(k))lv=Math.max(lv,1);if((r.ttl||{})[k])lv=Math.max(lv,2);return Math.min(TKMAX,lv)}
+function tokuiList(r){return Object.keys(TOKUI).map(k=>[k,tokuiLv(r,k)]).filter(x=>x[1]>0).sort((a,b)=>b[1]-a[1])}
+const tokuiStars=n=>{let h='';for(let i=0;i<TKMAX;i++)h+=pxi(i<n?'star':'stare','tks'+(i<n?'':' off'));return h};/* ドットの星のアイコン（★の字は絵文字のフォントになる） */
+function tokuiHtml(r){const L=tokuiList(r);return L.length?L.map(([k,n])=>'<span style="white-space:nowrap">'+TOKUI[k].n+tokuiStars(n)+'</span>').join('　'):'まだない'}
+function titleNote(r,a){const k=TJOB[a&&a.type];if(!k||!r||IS_STORY_REPLAY||a.stage!=='do')return;const l0=tokuiLv(r,k),C=r.jc||(r.jc={});C[k]=(C[k]||0)+1;const l1=tokuiLv(r,k);if(l1<=l0)return;
+  memo('',r.name+'の「'+TOKUI[k].n+'」の得意が'+l1+'になった');villageTimeout(()=>{if(!S.res.includes(r))return;toast(r.name+'：「'+TOKUI[k].n+'」の得意 '+l1,'good');JOYU.set(r,performance.now()+3000);addFloat(r.x,r.y-1.6,TOKUI[k].n+' 得意'+l1,'#ffe7a8');sfx('level')},400)}
+function titleMul(r,t){const k=TJOB[t];if(!k||!r)return 1;const n=tokuiLv(r,k);if(!n)return 1;const w=rStat(r,rLv(r)).work;return(w+n*TKUP)/w}/* その仕事は、はたらく速さに★の数をたした速さ */
+function titleSec(r,g){const d=el('<div class="stat" style="display:block"><span style="display:block">得意な仕事</span><div class="tkl" style="margin-top:2px"></div><small class="tkn" style="display:block;color:var(--muted);margin-top:2px"></small></div>'),box=d.querySelector('.tkl');
+  for(const k in TOKUI){const n=tokuiLv(r,k),c=(r.jc||{})[k]||0,row=el('<div style="display:flex;justify-content:space-between;gap:8px"><b></b><small style="color:var(--muted)"></small></div>');
+    row.querySelector('b').innerHTML=TOKUI[k].n+' '+tokuiStars(n);row.querySelector('small').textContent=n<TKMAX?c+'/'+TKN[n]+'回':c+'回';box.appendChild(row)}
+  d.querySelector('.tkn').innerHTML=pxi('star','tks')+'1つで、その仕事のはたらく速さ+'+TKUP;g.appendChild(d)}
+function tokuiMig(s){if(s.flags.tokui1)return;s.flags.tokui1=1;for(const q of[...(s.res||[]),...(s.buried||[]),...(s.lost||[])])if(q.vr&&!q.vr.tk)q.vr.tk=tokuiPick(q.elem)}/* 前のセーブのせいれいにも、はじめからの得意な仕事を1回だけ */
 /* 豪華なイベント（grand）：1季節に1回、みんなが出る。かかる物は人数によらず決まった数（D.set：食料・木材・竹・草・花・作物）。 */
 const EVGRASS=()=>WD===1?'kuru':'shina';
 Object.assign(EVENTS,{

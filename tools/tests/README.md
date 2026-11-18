@@ -6,7 +6,9 @@
 ```
 node tools/tests/run-all.cjs            # ぜんぶ
 node tools/tests/run-all.cjs fog story  # 名前に fog か story が入るテストだけ
+node tools/tests/run-all.cjs --changed  # origin/main からかえた所にかかわるテストだけ（PRごとはこれ）
 ```
+- `--changed`：かえた `js/*.js` の行の関数・変数の名前（その行で作る名前と、その行をふくむ関数の名前）が出てくるテストと、かえたテストそのものをえらぶ。20本より多くのテストに出てくる名前は見ない（`CHMANY`）。えらんだテストと、そのわけ（名前）を出す。`--changed <くらべる先>` で、くらべる先をかえられる。
 - サーバーは自分で立てる（`GAME_URL` があれば、それを使う）。
 - ブラウザは `CHROME_PATH`（なければ `/opt/pw-browsers/chromium`）。
 - 落ちたテストは、1本だけでもう1回動かす。それで通れば「2回めで通った」と出る。

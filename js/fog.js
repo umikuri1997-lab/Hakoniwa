@@ -207,7 +207,7 @@ function webTap(tx,ty){if(!S.web)return false;let j=ty*W+tx;if(S.web[j]==null&&S
 function webReqFor(r){if(isNight()||!S.webq||!S.web)return -1;for(const k in S.webq){const j=+k;if(S.web[j]==null){delete S.webq[k];continue}if(free('b'+j,1))return j}return -1}
 const webWant=r=>fogFree(r)&&webReqFor(r)>=0;
 function webJob(r,G){const j=webReqFor(r);if(j<0)return false;const st=walk(j)&&!S.obj[j]&&G.dist[j]>=0?j:nearest(G,k=>[1,-1,W].some(d=>k===j+d)&&walk(k)&&!S.obj[k],9999);/* クモの巣の下に立つ（ふさがっていれば、となり） */if(st<0)return false;startAct(r,G,'sweep',st,{key:'b'+j,obj:j});return true}
-ACT.sweep={start(r,a){if(!S.web||S.web[a.obj]==null)return false;r.bubble='';if((r.x|0)!==a.obj%W)r.face=(a.obj%W+.5)<r.x?-1:1},done:(r,a)=>a.t>=2,end(r,a){if(S.webq)delete S.webq[a.obj];if(!S.web||S.web[a.obj]==null)return;delete S.web[a.obj];burst(a.obj,'block');sfxAt('tap',r.x,r.y);addFloat(r.x,r.y-1.6,'ぴかぴか');addSpiritXp(1,r);dirty=true}};
+ACT.sweep={start(r,a){if(!S.web||S.web[a.obj]==null)return false;r.bubble='';if((r.x|0)!==a.obj%W)r.face=(a.obj%W+.5)<r.x?-1:1},done:(r,a)=>a.t>=2,end(r,a){if(S.webq)delete S.webq[a.obj];if(!S.web||S.web[a.obj]==null)return;if(typeof juiceWeb==='function')juiceWeb(a.obj,S.web[a.obj]);/* 糸がちる（juice4.js） */delete S.web[a.obj];burst(a.obj,'block');sfxAt('tap',r.x,r.y);addFloat(r.x,r.y-1.6,'ぴかぴか');addSpiritXp(1,r);dirty=true}};
 ACT_LBL.sweep='クモの巣をそうじしている';
 const WEBDAY=.1,WEBMAX=3;/* 毎朝、家ごとに10%で、クモの巣が1つふえる（1つの家に3つまで） */
 function webMorning(){if(typeof MEMRUN!=='undefined'&&MEMRUN||typeof NOSAVE!=='undefined'&&NOSAVE)return;findHouses();for(const h of HOUSES){let n=0;for(const j of h.inside)if(S.web&&S.web[j]!=null)n++;if(n>=WEBMAX||Math.random()>=WEBDAY)continue;
@@ -269,6 +269,6 @@ function fogRevealTick(){while(FOGREV.length&&FOGREV[0].state!==S)FOGREV.shift()
   musicDuck(2600);camAnim=FOGREVCAM={fz:cam.z,tz,fx:back.x,fy:back.y,tx,ty,t:0,dur:1.6,done:()=>{if(!ok())return finish();FOGA.set(a,performance.now());sfx('level');dirty=true;
     setTimeout(()=>{if(!ok())return finish();const overlay=el('<div class="idea-reveal gift-reveal" role="dialog" aria-modal="true" aria-label="霧が晴れた"></div>'),card=el('<div class="idea-card"><h2>霧が晴れた！</h2><div class="spotpop"><p></p></div></div>');
       card.querySelector('p').textContent='あたらしい土地に行けるようになった';/* 見つけた物は書かない（行ってみてのおたのしみ） */
-      const button=el('<button class="btn pri" type="button">OK</button>');button.disabled=true;card.append(button);overlay.append(card);document.body.append(overlay);sfx('good');setTimeout(()=>{if(overlay.isConnected)button.disabled=false},650);
+      const button=el('<button class="btn pri" type="button">とじる</button>');button.disabled=true;card.append(button);overlay.append(card);document.body.append(overlay);sfx('good');setTimeout(()=>{if(overlay.isConnected)button.disabled=false},650);
       button.onclick=()=>{if(button.disabled)return;overlay.remove();if(!ok())return finish();camAnim=FOGREVCAM={fz:cam.z,tz:back.z,fx:cam.x+VW/cam.z/2,fy:cam.y+VH/cam.z/2,tx:back.x,ty:back.y,t:0,dur:1.2,done:finish}}},FOG_FADE+200)}}}
 function fogRevealReset(){FOGREV=[];if(FOGREVON){if(FOGREVCAM&&camAnim===FOGREVCAM)camAnim=null;FOGREVCAM=null;FOGREVON=false;GIFT_ACTIVE=false;document.querySelectorAll('.idea-reveal[aria-label="霧が晴れた"]').forEach(e=>e.remove())}}/* 村を切りかえたとき */

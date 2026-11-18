@@ -33,14 +33,14 @@ function sasaGive(r){/* 神殿にとどけた：はじめの束から順にう�
 function sasaBack(r){/* はこんでいる子がいなくなった：箱へもどす */for(const k in r.sasa||{})availAdd(k,r.sasa[k]);r.sasa=null}
 function sasaTick(){if(!sasaOn())return;sasaEnsure()}
 function sasaPop(){/* 神殿をタップ：いまの季節のささげもの */const s=sasaEnsure();if(!s)return toast('女神像。守り神の居場所');
-  const o=el('<div style="position:fixed;inset:0;z-index:45;display:flex;align-items:center;justify-content:center;background:rgba(30,24,16,.45);padding:24px"><div class="pxcard" style="background:var(--panel);padding:16px 18px;max-width:340px;width:100%;max-height:86vh;overflow:auto;color:var(--ink)"><b class="t" style="display:block;font-size:15px;margin-bottom:4px"></b><p class="note n" style="margin:0 0 10px"></p><div class="ks"></div><div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px"><button class="btn x">とじる</button></div></div></div>');
+  const o=el('<div style="position:fixed;inset:0;z-index:45;display:flex;align-items:center;justify-content:center;background:rgba(40,30,15,.35);padding:24px"><div class="pxcard" style="background:var(--panel);padding:16px 18px;max-width:340px;width:100%;max-height:86vh;overflow:auto;color:var(--ink)"><b class="t" style="display:block;font-size:15px;margin-bottom:4px"></b><p class="note n" style="margin:0 0 10px"></p><div class="ks"></div><div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px"><button class="btn x">とじる</button></div></div></div>');
   const upd=()=>{const C=sasaComing(),ks=o.querySelector('.ks');ks.innerHTML='';o.querySelector('.t').textContent=SEASONS[seasonOf(dayNo())]+'のささげもの';
     o.querySelector('.n').textContent=(s.all?'ぜんぶそろった。':typeof bpOpen==='function'&&bpOpen()?'ぜんぶそろうと、設計図。':'ぜんぶそろうと、パワー+'+SASAALL+'。')+s.L.filter(b=>b.done).length+'/'+s.L.length;
     for(const b of s.L){const B=SASA[b.i],row=el('<div class="sasab" style="margin-bottom:10px"><div style="display:flex;gap:8px;align-items:center;justify-content:space-between"><b class="bn"></b><span class="bp note"></span></div><div class="its note" style="margin:2px 0 4px"></div></div>');
       ckSet(row.querySelector('.bn'),(b.done?'✓ ':'')+B.n);row.querySelector('.bp').textContent='パワー+'+B.pt;
       row.querySelector('.its').textContent=Object.keys(B.need).map(k=>sasaKeyN(k)+'（'+Math.min(B.need[k],b.got[k]||0)+'/'+B.need[k]+'）').join('・');
       if(!b.done){const L=sasaLeft(b),wait=Object.keys(L).reduce((a,k)=>a+Math.min(L[k],C[k]||0),0),can=Object.keys(L).some(k=>L[k]-(C[k]||0)>0&&availOf(k)>0),bt=el('<button class="btn" style="width:100%"></button>');
-        bt.textContent=wait?'とどける（はこんでいる'+wait+'）':'とどける';lackOn(bt,can?'':'とどけられる物がありません');
+        bt.textContent='とどける';if(wait)row.querySelector('.its').textContent+='　はこんでいる'+wait;/* 運んでいる数は、ボタンでなく行に出す */lackOn(bt,can?'':'とどけられる物がありません');
         bt.onclick=()=>{if(!can)return;const n=sasaAsk(b);if(n){sfx('quest');toast('ささげものをたのんだ','good')}upd()};row.appendChild(bt)}
       ks.appendChild(row)}};
   o.querySelector('.x').onclick=()=>{sfx('tap');o.remove()};o.onclick=e=>{if(e.target===o)o.remove()};upd();document.body.appendChild(o)}

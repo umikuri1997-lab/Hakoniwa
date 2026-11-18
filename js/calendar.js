@@ -9,7 +9,7 @@ function calEvents(d){/* その日の予定：[アイコン,文,顔のせいれ�
   if(calBossOn()){const b=bossDayNo();if(b!=null&&b>0&&b===d)L.push(['sword','オオカゲが来る夜'])}
   if(d>1&&seasonDay(d)===1)L.push(['leaf',SEASONS[seasonOf(d)]+'になる']);
   if(seasonDay(d)===CUPDAY&&!cupFew()&&!(d===t&&evDoneNow(cupOf(d))))L.push(['cup',EVENTS[cupOf(d)].n]);
-  if(S.storm===d||S.stormNext===d&&S.stormWarn)L.push(['rain','あらしの日']);
+  if(S.storm===d||S.stormNext===d&&S.stormWarn||d>t&&S.wxQ&&S.wxQ[d]&&S.wxQ[d].s)L.push(['rain','あらしの日']);/* 天気のよほうで、きまっている日（weather.js） */
   const m=moonOf(d);if(m)L.push([m==='full'?'moonf':'moonn',m==='full'?'満月の夜':'新月の夜']);
   for(const r of S.res){if(r.hidden||r.came==null||r.back)continue;const n=d-r.came;if(ANNIV.includes(n))L.push(['heart',r.name+'が村に来て'+n+'日',r])}
   return L}

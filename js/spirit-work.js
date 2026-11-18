@@ -134,7 +134,7 @@ function goWork(r,G,nw){boxFullReset();
   // 建てる・家具づくりがいちばん先。そのつぎに得意な仕事をする
   for(const k of[...(SPEC[r.elem]||[])])if(tryJob(r,G,k))return true;
   for(const cat of JOBCAT)for(const k of cat){
-    if(['chop','mine','drop','weed'].includes(k)){if(gd)continue;gd=true;if(grassNeed()&&tryJob(r,G,'weed'))return true;/* 目標に足りない草が先 */if((S.mat.wood||0)<WOODLOW&&tryJob(r,G,'chop'))return true;/* 木材が少ないときは、雑草・枝より先に木を切る */if(tryJob(r,G,'weed'))return true;/* まわり15マスの雑草・きのこは、木・石より先にむしる */if(tryJob(r,G,'drop'))return true;/* 落とし物（枝など）は、木・石より先にひろう */const jobs=[...mo];for(let i=jobs.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[jobs[i],jobs[j]]=[jobs[j],jobs[i]]}for(const m of jobs)if(tryJob(r,G,m))return true;continue}/* 木・石は、同じ優先度でえらぶ */
+    if(['chop','mine','drop','weed'].includes(k)){if(gd)continue;gd=true;if(grassNeed()&&tryJob(r,G,'weed'))return true;/* 目標に足りない草が先 */if((S.mat.wood||0)<WOODLOW&&tryJob(r,G,'chop'))return true;/* 木材が少ないときは、雑草・枝より先に木を切る */if(tryJob(r,G,'weed'))return true;/* まわり15マスの雑草・きのこは、木・石より先にむしる */if(tryJob(r,G,'drop'))return true;/* 落とし物（枝など）は、木・石より先にひろう */const jobs=[...mo];for(let i=jobs.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[jobs[i],jobs[j]]=[jobs[j],jobs[i]]}if(typeof tokuiLv==='function')jobs.sort((p,q)=>tokuiLv(r,TJOB[q])-tokuiLv(r,TJOB[p]));/* 得意な仕事（★）の多いほうを先に（events.js） */for(const m of jobs)if(tryJob(r,G,m))return true;continue}/* 木・石は、同じ優先度でえらぶ */
     if(tryJob(r,G,k))return true}
   if(nw)return false;goWander(r,G);return true;
 }
@@ -351,7 +351,7 @@ function updRes(r,dt){rescueStuck(r);if((RHOLD.get(r)||0)>performance.now())retu
   const wdt=(WORKT.has(a.type)&&a.type!=='cook'?dt*(rMul(r,'work')+nareAdd(r,a)+(typeof inspWork==='function'?inspWork(r,a):0)):dt)*gJob(r,a.type);nareTick(r,a,dt);/* 担当のしごと場では、なれのぶん速い *//* 専用品：作業ごとの速さ *//* 料理は、力に関係なく、説明どおりの時間 *//* 力があるほど作業が速い */
   a.t+=wdt;const A=ACT[a.type];
   if(A.tick)A.tick(r,a,wdt);
-  if(A.done(r,a)){a.fin=1;dayNote(r,a);if(typeof vrecNote==='function')vrecNote(r,a);/* 村の記録 */titleNote(r,a);/* しごとの称号 *//* きょうしたことをおぼえる（お話で話す） */if(A.end)A.end(r,a);endAct(r)}
+  if(A.done(r,a)){a.fin=1;dayNote(r,a);if(typeof vrecNote==='function')vrecNote(r,a);/* 村の記録 */titleNote(r,a);/* 得意な仕事の回数・★ *//* きょうしたことをおぼえる（お話で話す） */if(A.end)A.end(r,a);endAct(r)}
 }
 function reunite(r,sp){/* もどってきた子の、もとのなかよしは、神殿へかけつけてよろこぶ */const m=r.reMate&&S.res.find(q=>q.name===r.reMate&&!q.hidden&&q!==r);r.reMate=null;if(m&&!IS_STORY_REPLAY)r.reTalk=m.name;/* 再会の会話（griefTick。紹介のあと・昼に） */if(!m||isNight()&&!m.act)return;const G=bfs(m.x|0,m.y|0),st=nearest(G,j=>Math.abs(j%W-sp[0])+Math.abs(((j/W)|0)-sp[1])===1&&walk(j),300);if(st<0)return;endAct(m);startAct(m,G,'reunion',st,{who:r.id})}
 function finishBurial(r){const nm=r.coffin&&r.coffin.name;r.coffin=null;if(!nm)return;for(const L of[S.buried||[],S.lost||[]])for(const q of L)if(q.name===nm)delete q.unb;/* 埋葬してから、よみがえらせられる */S.pt+=1;S.totalPt+=1;if(typeof juiceFly==='function'&&1)juiceFly(r.x,r.y,'pt',1);toast(r.name+'が'+nm+'をおみおくりした。'+((S.buried||[]).some(q=>q.name===nm)?(backFirst(nm)?'次の朝、神殿で呼びもどせる':'神殿で、じゅんばんに呼びもどせる'):'パワー+1'),'good');logEv(r.name+'が'+nm+'をおみおくりした')}
