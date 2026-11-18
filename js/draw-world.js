@@ -7,7 +7,8 @@ function skillFx(k){/* 守り神のわざ：画面を少しゆらして、一瞬
 const TOPFX=new Set(['godlight','areaguard','arealeaf','leafsprout']);/* 守り神のわざは、コワイノ・せいれい・夜の暗さより上に描く（drawTopFx） */
 function drawTopFx(){let sm=null;for(const f of fx){if(f.k!=='spr'||!TOPFX.has(f.n))continue;const g=FXS[f.n];if(!g.ok)continue;if(sm===null){sm=ctx.imageSmoothingEnabled;ctx.imageSmoothingEnabled=false}const i=Math.min(g.n-1,Math.floor((1-f.life)*g.n));ctx.globalAlpha=1;ctx.drawImage(g.img,i*g.w,0,g.w,g.h,Math.round(f.x)-g.ax,Math.round(f.y)-g.ay,g.w,g.h)}if(sm!==null)ctx.imageSmoothingEnabled=sm}
 const GLHIT=460;/* まもりの光の音は、光の槌が地面に当たるコマ（0.6秒）に、音のいちばん大きい所（0.14秒）をそろえる */
-function lightSnd(x,y){villageTimeout(()=>sfxAt('glight',x,y),GLHIT)}
+const GLFX=600;/* 画面のゆれと光も、光の槌が地面に当たるコマ（0.6秒）に合わせる */
+function lightSnd(x,y){villageTimeout(()=>sfxAt('glight',x,y),GLHIT);villageTimeout(()=>skillFx('light'),GLFX)}
 function fxSpr(n,x,y,col,fl){const g=FXS[n];if(!g)return;fx.push({k:'spr',n,x,y,col,fl:fl||1,life:1,dur:g.n/g.fps})}/* エフェクトを1回ながす（x,y は世界の座標） */
 'use strict';
 const EV=new WeakMap();let EVAP=[];/* 朝日で消える「コワイノ」：じゅわっと蒸発させる */
