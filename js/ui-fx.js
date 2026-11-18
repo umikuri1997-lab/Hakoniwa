@@ -29,7 +29,7 @@ function tapFx(x,y){if(uiReduced())return;const fire=WD===1,n=fire?6:5;let box=d
   const cols=fire?['#f2a43a','#f7d067','#e0663a']:['#6aa857','#8fca6b','#4f8a40'];
   for(let i=0;i<n&&UIFX.parts.length<30;i++){const d=document.createElement('i'),sz=(fire?(i%3?1:2):(i%2?2:3))*1.5;d.style.width=d.style.height=sz+'px';d.style.background=cols[i%3];box.appendChild(d);
     const a=Math.PI*2*i/n+Math.random()*.6,sp=1+Math.random()*1.4;UIFX.parts.push({d,x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-(fire?1.8:1.2),t:0,fire,ph:i})}
-  {const t0=performance.now();setTimeout(()=>{if(TAPOBJ<t0)sfx(fire?'crackle':'leaf')},0)}/* 物にさわったときは、その物の音だけ */if(!UIFX.raf)UIFX.raf=requestAnimationFrame(tapFxStep)}
+  {const t0=performance.now();setTimeout(()=>{if(TAPOBJ<t0&&!(typeof TAPPEND!=='undefined'&&TAPPEND>=t0))sfx(fire?'crackle':'leaf')},0)}/* 物にさわったときは、その物の音だけ */if(!UIFX.raf)UIFX.raf=requestAnimationFrame(tapFxStep)}
 function tapFxStep(){UIFX.raf=0;const P=UIFX.parts;for(let i=P.length-1;i>=0;i--){const p=P[i];p.t++;p.x+=p.vx;p.y+=p.vy;
     if(p.smoke){p.vy*=.97;p.vx+=Math.sin(p.t*.25+p.ph)*.04}else if(p.dust){p.vy+=.14;p.vx*=.94}else if(p.fire){p.vy-=.03;p.vx*=.97}else{p.vy+=.05;p.vx*=.96;p.x+=Math.sin(p.t*.2+p.ph)*.5}/* 火の粉はのぼり、葉はゆれながら落ちる */
     p.d.style.transform='translate('+Math.round(p.x/1.5)*1.5+'px,'+Math.round(p.y/1.5)*1.5+'px)';if(p.t>32)p.d.style.opacity=String(Math.max(0,(48-p.t)/16));if(p.t>=48){p.d.remove();P.splice(i,1)}}
