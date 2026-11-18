@@ -5,7 +5,7 @@
    朝に S.dy をしめて、S.diary（古い順、DIARYMAX 日ぶん）に入れる。ゆうべの守り（S.ns）も、いっしょにしまう（S.ns.dd）。
    なにか書くことがあれば、紙（openSheet('diary')）を出す。思い出帳からも読める（openSheet('diary',日)）。
    フタバのひとこと（dyNote、文は diary-data.js）と、その日の昼12時の村の写真（photo.js の phNoonTick → S.dy.ph）も、しまう（e.ft・e.ph）。
-     フタバが村にいない（いなくなった）朝は、ひとことも写真ものせない（DYWRITER）。
+     書くのは章のはじめからいる子（草原はフタバ、火山はホムラ。言いかたは chatTone）。その子が村にいない（いなくなった）朝は、ひとことも写真ものせない（DYWRITER）。
      ひとことの文は、しゅるいごとに、ぜんぶ使うまで同じ文を出さない（S.dyU）。できた文がまったく同じ日記は作らない（S.dyTx）。
    思い出帳の再生（IS_STORY_REPLAY・MEMRUN）では、書かない。 */
 const DYJ=new WeakSet(),DIARYMAX=60,DYWORK=new Set(['build','craft','harvest','plant','fish','cook']),DYPER=4;
@@ -19,8 +19,8 @@ function dyText(t,v){const n=t==='build'?(BL[v]?BL[v].name+'を建てた':''):t=
 /* 昼のようす（photo.js の phNoonTick から毎コマ）：その日の天気・できごとの日を1回だけおぼえる */
 function dyNoon(h){if(h<9||h>=18)return;const D=dyCur();if(D&&D.wx==null)D.wx=dyWx()}
 function dyWx(){return typeof stormNow==='function'&&stormNow()?'storm':S.today&&DYOPEN[S.today]?S.today:festOn()?'fest':snowNow()?'snow':S.rain?'rain':rainbowToday()?'rainbow':'sun'+seasonNow()}
-const DYWRITER=POKO;/* ひとことを書くせいれい */
-const dyWriter=()=>S&&S.res.find(r=>r.name===DYWRITER)||null;
+const DYWRITER=()=>WD===1?HOMURA:POKO;/* ひとことを書くせいれい：章のはじめからいる子 */
+const dyWriter=()=>{if(!S)return null;const n=DYWRITER();return S.res.find(r=>r.name===n)||null};
 /* しゅるい k の文 A から、まだ出していない文の番号をえらぶ（きめるのは dyUse） */
 function dyIdx(k,A,no){const u=(S.dyU||{})[k]||[];let C=[];for(let i=0;i<A.length;i++)if(!u.includes(i)&&!(no&&no.has(k+i)))C.push(i);
   if(!C.length)for(let i=0;i<A.length;i++)if(i!==u[u.length-1]&&!(no&&no.has(k+i)))C.push(i);/* ぜんぶ出したら、さいごに出した文のほかから */
