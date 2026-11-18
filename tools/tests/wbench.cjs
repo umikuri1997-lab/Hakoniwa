@@ -31,6 +31,12 @@ const assert=require('node:assert/strict');
   const part=JSON.parse(await run(`(()=>{const far=P+11;S.obj[far]='crate';recount();boxSync();const B=BOX();B[far]={wood:B[P].wood};delete B[P].wood;boxSync();FETCH=0;window.FT=[];{const e=ACT.bfetch.end;ACT.bfetch.end=(r,a)=>{FT.push(boxIdOf(a.box));return e(r,a)}}
     const nd=BL.chair.mat;window.AL=[];orderFurn('chair');{const a=S.res[0];for(let i=0;i<40000&&S.orders.length;i++){stepWorld(.25);a.hunger=hMax(a);a.fun=90;a.energy=90;const t=a.act&&a.act.type;if(t&&AL[AL.length-1]!==t)AL.push(t)}}return JSON.stringify({AL,far,nd,left:S.orders.length,ft:[...new Set(FT)],B:B[P],F:B[far]})})()`));
   console.log(JSON.stringify(part));assert.equal(part.left,0);assert.ok(part.ft.every(j=>j!==st.p),'となりの箱からは運ばない');assert.ok(part.ft.length===0||part.ft.every(j=>j===part.far),'ない分は、ほかの箱から運ぶ');
+  /* 箱のとなりの作業台と、箱のない作業台：箱のない作業台の依頼は、素材を運ぶ（となりに箱のある作業台があっても、ほかの作業台は運ばずにすまない） */
+  const mix=JSON.parse(await run(`(()=>{const far=P+11;bput(P,'wood',btake(far,'wood',999));boxSync();const nb=P+5;wbenchAt(S,nb,0);recount();FT=[];orderFurn('chair');orderFurn('chair');wbenchTick();
+    const L=S.orders.map(o=>({cs:o.cs,bx:benchBoxes(o.cs),left:benchLeft(o),bid:'o'+o.id}));{const a=S.res[0];for(let i=0;i<60000&&S.orders.length;i++){stepWorld(.25);a.hunger=hMax(a);a.fun=90;a.energy=90}}
+    const r=JSON.stringify({L,nb,left:S.orders.length,ft:FT});clearObj(nb);recount();return r})()`));
+  console.log(JSON.stringify(mix));{const A=mix.L.find(o=>o.cs===st.p+1),N=mix.L.find(o=>o.cs===mix.nb);assert.ok(A&&N,'2つの作業台にわりあてる');assert.deepEqual(A.bx,[st.p]);assert.deepEqual(A.left,{},'箱のとなりの作業台は運ばない');
+    assert.deepEqual(N.bx,[]);assert.ok(Object.keys(N.left).length>0,'箱のない作業台は運ぶ');assert.equal(mix.left,0);assert.ok(mix.ft.length>0&&mix.ft.every(f=>f===st.p),'運ぶのは、箱のない作業台の分だけ')}
   /* 作業台が2つ：依頼を2つ、いっしょに */
   const two=JSON.parse(await run(`(()=>{wbenchAt(S,P-2,0);recount();orderFurn('chair');orderFurn('chair');wbenchTick();const r=S.orders.map(o=>o.cs);const cs0=r[0];cancelOrder(S.orders[1].id);wbenchTick();
     const r0=S.rot[cs0];clearObj(cs0);recount();wbenchTick();const lost=S.orders[0].cs;wbenchAt(S,cs0,r0);recount();cancelOrder(S.orders[0].id);return JSON.stringify({r,lost})})()`));

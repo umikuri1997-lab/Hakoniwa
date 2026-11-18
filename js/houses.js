@@ -8,18 +8,19 @@ const COMFY={cooktable:4,joro:3,taru:3,asabukuro:3,makidana:3,kabebukuro:3,takeb
 const DECAYW=new Set(['hwall','bamboowall','logwall','plasterwall','brickwall','yozorawall']),WEBCOMF=5;/* 朽ちた壁になる家の壁（石の塀はならない）。クモの巣1つで住み心地-5 */
 const decayed=j=>{const o=S.obj[j];return DECAYW.has(o)&&S.hp[j]!=null&&S.hp[j]<=BL[o].hp/2};/* 朽ちた壁：じょうぶさが半分以下の家の壁（家の壁にならない） */
 function decayCheck(j){/* コワイノにたたかれて朽ちたら、その家は家でなくなる */if(!(S.hp[j]>0)||!decayed(j))return;const hb=HOUSES.find(h=>h.set.has(j));if(hb){recount();if(typeof houseBreakFlee==='function')houseBreakFlee(hb)}}
-function houseComfort(h){let bed=0,furn=0,fl=0,n=0;const seen=new Set();
-  const kc={};for(const j of h.inside){n++;if(S.floor[j])fl++;const o=S.obj[j];if(!o)continue;if(BEDSET.has(o)){bed++;continue}/* ベッド（よぞらのベッドも）は数だけ */if(!COMFY[o])continue;{kc[o]=(kc[o]||0)+1;furn+=COMFY[o]*(kc[o]>2?.5:1);seen.add(o)}}/* 同じ家具は2つまで。3つ目からは半分 */
-  for(const o of rugsIn(h.inside)){if(!COMFY[o])continue;kc[o]=(kc[o]||0)+1;furn+=COMFY[o]*(kc[o]>2?.5:1);seen.add(o)}/* ラグ（家の中に1マスでもかかっていれば） */
-  {const M=2;for(let y=h.y0-M;y<=h.y1+M;y++)for(let x=h.x0-M;x<=h.x1+M;x++){if(x<0||y<0||x>=W||y>=H)continue;const j=y*W+x;if(h.set.has(j))continue;const o=S.obj[j],rg=COMFR[o];if(!rg||!COMFY[o])continue;const d=Math.max(h.x0-x,x-h.x1,h.y0-y,y-h.y1,0);if(d>rg)continue;kc[o]=(kc[o]||0)+1;furn+=COMFY[o]*(kc[o]>2?.5:1);seen.add(o)}}/* かざりは、家のそば（ものごとの範囲）にあっても住み心地に入る */
-  {let wn=0;for(const j of h.set)if(S.win&&(S.win[j]===1||S.win[j]==='curtain1'||S.win[j]==='curtain2'))wn++;/* カーテンの下にも窓がある */if(wn){furn+=COMFY.window*Math.min(wn,2)+COMFY.window*.5*Math.max(0,wn-2);seen.add('window')}}/* 窓 */
-  for(const j of h.set){const p=S.win&&S.win[j];if(p&&p!==1&&COMFY[p]){kc[p]=(kc[p]||0)+1;furn+=COMFY[p]*(kc[p]>2?.5:1);seen.add(p)}}/* 壁にかけた絵 */
+function houseComfort(h){let bed=0,furn=0,fl=0,n=0;const seen=new Set(),PT={},pa=(o,v)=>{PT[o]=(PT[o]||0)+v};/* PT：家具ごとの点（住み心地のくわしい計算 comfyPop で出す） */
+  const kc={};for(const j of h.inside){n++;if(S.floor[j])fl++;const o=S.obj[j];if(!o)continue;if(BEDSET.has(o)){bed++;continue}/* ベッド（よぞらのベッドも）は数だけ */if(!COMFY[o])continue;{kc[o]=(kc[o]||0)+1;const v=COMFY[o]*(kc[o]>2?.5:1);furn+=v;pa(o,v);seen.add(o)}}/* 同じ家具は2つまで。3つ目からは半分 */
+  for(const o of rugsIn(h.inside)){if(!COMFY[o])continue;kc[o]=(kc[o]||0)+1;const v=COMFY[o]*(kc[o]>2?.5:1);furn+=v;pa(o,v);seen.add(o)}/* ラグ（家の中に1マスでもかかっていれば） */
+  {const M=2;for(let y=h.y0-M;y<=h.y1+M;y++)for(let x=h.x0-M;x<=h.x1+M;x++){if(x<0||y<0||x>=W||y>=H)continue;const j=y*W+x;if(h.set.has(j))continue;const o=S.obj[j],rg=COMFR[o];if(!rg||!COMFY[o])continue;const d=Math.max(h.x0-x,x-h.x1,h.y0-y,y-h.y1,0);if(d>rg)continue;kc[o]=(kc[o]||0)+1;const v=COMFY[o]*(kc[o]>2?.5:1);furn+=v;pa(o,v);seen.add(o)}}/* かざりは、家のそば（ものごとの範囲）にあっても住み心地に入る */
+  {let wn=0;for(const j of h.set)if(S.win&&(S.win[j]===1||S.win[j]==='curtain1'||S.win[j]==='curtain2'))wn++;/* カーテンの下にも窓がある */if(wn){const v=COMFY.window*Math.min(wn,2)+COMFY.window*.5*Math.max(0,wn-2);furn+=v;pa('window',v);seen.add('window')}}/* 窓 */
+  for(const j of h.set){const p=S.win&&S.win[j];if(p&&p!==1&&COMFY[p]){kc[p]=(kc[p]||0)+1;const v=COMFY[p]*(kc[p]>2?.5:1);furn+=v;pa(p,v);seen.add(p)}}/* 壁にかけた絵 */
   const cap=houseCap(h),over=Math.max(0,bed-cap);/* きゅうくつかどうかは、ベッドの数で決まる */
   let lit=false;for(let y=h.y0-1;y<=h.y1+1&&!lit;y++)for(let x=h.x0-1;x<=h.x1+1;x++){if(x<0||y<0||x>=W||y>=H)continue;if(LIGHTF.has(S.obj[y*W+x])){lit=true;break}}/* 家の中か、すぐそばに灯り */
-  let rs=0;for(const[k,p]of[['shosai',.1],['living',.1],['dinroom',.05],['daidokoro',.05],['nedoko',.05]])if(SPOTI.some(t=>t.sp.k===k&&h.inside.has(t.j)&&t.sp.need.every((nd,i)=>t.found[i].filter(q=>h.inside.has(q)).length>=nd[1])))rs+=p;/* そろった物が、ぜんぶその家の中にあるときだけ *//* しょさい・リビング：住み心地+10%、ダイニング・だいどころ・ねどこ：+5% */
+  let rs=0;const RS=[];for(const[k,p]of[['shosai',.1],['living',.1],['dinroom',.05],['daidokoro',.05],['nedoko',.05]])if(SPOTI.some(t=>t.sp.k===k&&h.inside.has(t.j)&&t.sp.need.every((nd,i)=>t.found[i].filter(q=>h.inside.has(q)).length>=nd[1]))){rs+=p;RS.push([k,p])}/* そろった物が、ぜんぶその家の中にあるときだけ *//* しょさい・リビング：住み心地+10%、ダイニング・だいどころ・ねどこ：+5% */
   let webs=0;if(S.web)for(const j of h.inside)if(S.web[j]!=null)webs++;/* クモの巣 */
-  const v=Math.round(Math.max(0,Math.min(COMFMAX,(15+(typeof bpHouseName==='function'&&bpHouseName(h)?BPCOMF:0)+(typeof pathA==='function'?pathA('comf'):0)+Math.min(210,furn)+(n?fl/n:0)*45-over*105-(lit?0:60))*(1+rs)-webs*WEBCOMF)));/* 上限は300 */
-  return{v,bed,cap,lit,kinds:seen.size,floorPct:n?Math.round(fl/n*100):0,over,webs}}
+  const bp=typeof bpHouseName==='function'&&bpHouseName(h)?BPCOMF:0,pc=typeof pathA==='function'?pathA('comf'):0,flp=(n?fl/n:0)*45;
+  const v=Math.round(Math.max(0,Math.min(COMFMAX,(15+bp+pc+Math.min(210,furn)+flp-over*105-(lit?0:60))*(1+rs)-webs*WEBCOMF)));/* 上限は300 */
+  return{v,bed,cap,lit,kinds:seen.size,floorPct:n?Math.round(fl/n*100):0,over,webs,why:{bp,pc,furn,PT,kc,fl,n,flp,rs,RS}}}
 
 
 

@@ -69,12 +69,12 @@ function leafTick(){/* のこる時間がすぎた葉のかべを消す。こわ
 function drawLeafWall(c,x,y,i,now){/* 葉のかべ（コードのドット絵、仮の絵）：こんもりした葉のかたまり */const P=(dx,dy,w,h,col)=>{c.fillStyle=col;c.fillRect(x+dx,y+dy,w,h)};P(4,26,24,4,'rgba(30,60,20,.3)');P(4,10,24,18,'#4f8f3a');P(6,6,20,6,'#5fa646');P(8,4,6,2,'#6fb854');P(18,4,6,2,'#6fb854');P(6,12,4,4,'#7cc25e');P(16,8,4,4,'#7cc25e');P(22,16,4,4,'#7cc25e');P(10,20,4,4,'#3f7a2e');P(20,22,4,4,'#3f7a2e')}
 function drawLeafPrev(){if(!LEAFDRAG||!LEAFDRAG.length)return;ctx.save();ctx.globalAlpha=.55;for(const j of LEAFDRAG){ctx.fillStyle='#7cc25e';ctx.fillRect((j%W)*TS+2,((j/W)|0)*TS+2,TS-4,TS-4)}ctx.restore()}
 /* ---------- わざの枠（3つまで）：S.skillSet。まもりの光もはずせる ---------- */
-const SKILLS=[['light','まもりの光',()=>true],['area','こもれびのまもり',()=>!!(S.flags&&S.flags.areaSkill)],['leaf','葉のかべ',leafOK]],SKILLMAX=3;
+const SKILLS=[['light','まもりの光',()=>true,'glight'],['area','こもれびのまもり',()=>!!(S.flags&&S.flags.areaSkill),'shield'],['leaf','葉のかべ',leafOK,'lwall']],SKILLMAX=3;/* 4つめはアイコン（PXI。むらのちからの木の点と同じ） */
 function skillSetOf(){const have=SKILLS.filter(s=>s[2]()).map(s=>s[0]);if(!S.skillSet)return have.slice(0,SKILLMAX);return S.skillSet.filter(k=>have.includes(k))}
 const skillOn=k=>skillSetOf().includes(k);
 function skillToggle(k){let L=skillSetOf().slice();if(L.includes(k))L=L.filter(x=>x!==k);else{if(L.length>=SKILLMAX)return toast('わざは3つまで');L.push(k)}S.skillSet=L;sfx('tap')}
 function skillSec(body){const sec=el('<div class="sec"><h3>わざの枠（3つまで）</h3><div class="rows"></div></div>'),rw=sec.querySelector('.rows');const on=skillSetOf();
-  for(const[k,n,ok]of SKILLS){if(!ok())continue;const r=el('<button class="row" style="text-align:left;width:100%"><div class="tx"><b></b><small></small></div></button>');ckSet(r.querySelector('b'),(on.includes(k)?'✓ ':'')+n);r.querySelector('small').textContent=on.includes(k)?'セットしている':'セットしていない';r.onclick=()=>{skillToggle(k);renderSheet()};rw.appendChild(r)}
+  for(const[k,n,ok,ic]of SKILLS){if(!ok())continue;const r=el('<button class="row" style="text-align:left;width:100%">'+pxi(ic,'skic')+'<div class="tx"><b></b><small></small></div></button>');ckSet(r.querySelector('b'),(on.includes(k)?'✓ ':'')+n);r.querySelector('small').textContent=on.includes(k)?'セットしている':'セットしていない';r.onclick=()=>{skillToggle(k);renderSheet()};rw.appendChild(r)}
   body.appendChild(sec)}
 /* ---------- 見張り台のねらう順（S.dyn[j].to：near・hp・fast・vill） ---------- */
 const TORDER=[['near','近い','いちばん近いコワイノ'],['hp','強い','体力がいちばん多いコワイノ'],['fast','速い','足がいちばん速いコワイノ'],['vill','村に近い','村のまん中にいちばん近いコワイノ']];
@@ -95,7 +95,7 @@ function seasonFoes(list){const t=SEASONEN[seasonNow()];if(!t)return;const n=1+(
 /* ---------- せいれいの大わざ：攻撃を10回あてると、つぎの1回が大わざ（r.ult） ---------- */
 const ULTN=10;
 function ultHit(r,en,dmg){r.ult=(r.ult||0)+1;if(r.ult<=ULTN)return;r.ult=0;const near=R=>S.enemies.filter(e=>e.spawned&&!e.dead&&Math.hypot(e.x-r.x,e.y-r.y)<=R);addFloat(r.x,r.y-1.4,'大わざ！','#ffd38a');sfxAt('kankan',r.x,r.y);fxSpr('shock',r.x*TS,r.y*TS,ELEM[r.elem].col);
-  if(r.elem==='fire'){for(const e of near(1.5)){hurtEn(e,dmg*2,{lag:HIT_LAG,sx:r.x,sy:r.y,dt:'fire',el:'fire'});if(e.hp<=0)defeat(e,r.name+'が'+EN[e.type].name+'を追いはらった！',r)}}
+  if(r.elem==='fire'){for(const e of near(1.5)){hurtEn(e,dmg*2,{lag:HIT_LAG,sx:r.x,sy:r.y,dt:'fire',el:'fire',skill:1});if(e.hp<=0)defeat(e,r.name+'が'+EN[e.type].name+'を追いはらった！',r)}}
   else if(r.elem==='earth'){for(const e of near(2)){e.stun=Math.max(e.stun||0,3);e.path=[]}}
   else if(r.elem==='water'){for(const e of near(2)){e.stun=Math.max(e.stun||0,4.5);e.path=[]}}
   else if(r.elem==='wind'){for(const e of near(2)){let dx=e.x-r.x,dy=e.y-r.y;const l=Math.hypot(dx,dy)||1;dx/=l;dy/=l;let bx=null,by=null;for(let k=1;k<=3;k++){const nx=e.x+dx*k,ny=e.y+dy*k,q=(ny|0)*W+(nx|0);if(!(nx>1&&ny>1&&nx<W-1&&ny<H-1)||!walk(q)||HOME_DOORS.has(typeAt(q))||GATE_IDS.has(typeAt(q)))break;bx=nx;by=ny}if(bx!=null){e.x=bx;e.y=by;e.path=[];e.repath=0}}}

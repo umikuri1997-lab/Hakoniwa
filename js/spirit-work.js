@@ -121,7 +121,8 @@ function goWork(r,G,nw){boxFullReset();
   if(r.elem==='wind')for(const k of['drop','seed','weed'])if(tryJob(r,G,k))return true;/* 風のせいれいは、落ちている物（落とし物・枝・ふしぎな種・雑草・きのこ）を、畑の世話・おつげ・木・石より先にひろう */
   if(pitJob(r,G))return true;/* 落とし穴をほりなおす（土のせいれい、defense.js） */
   if(nestJob(r,G))return true;/* 「しらべる」でタップしたかげの巣（defense.js） */
-  if((S.drops||[]).some(q=>q.lt||q.tap)||wreqList().length){for(const k of FARMJ)if(tryJob(r,G,k))return true;if(tryJob(r,G,'drop'))return true;if(wreqList().length&&tryJob(r,G,'weed'))return true}if(vreqList().length&&tryJob(r,G,'mine'))return true;/* タップした鉱脈 */if(typeof txJob==='function'&&txJob(r,G))return true;/* 宝の場所をほる *//* 「しらべる」でタップした草・きのこ・落とし物も、ここでとりにいく *//* 守り神の光でこわした物（落ちた木材・石材）は、おつげ・木を切る・石をほるより先にひろう。畑の世話よりはあと */
+  if(wreqList().length&&tryJob(r,G,'weed'))return true;/* 「しらべる」でタップした草・きのこは、畑の世話より先（畑の多い村では、畑の世話がおわらず、いつまでもとりに行かなかった） */
+  if((S.drops||[]).some(q=>q.lt||q.tap)){for(const k of FARMJ)if(tryJob(r,G,k))return true;if(tryJob(r,G,'drop'))return true}if(vreqList().length&&tryJob(r,G,'mine'))return true;/* タップした鉱脈 */if(typeof txJob==='function'&&txJob(r,G))return true;/* 宝の場所をほる *//* 「しらべる」でタップした草・きのこ・落とし物も、ここでとりにいく *//* 守り神の光でこわした物（落ちた木材・石材）は、おつげ・木を切る・石をほるより先にひろう。畑の世話よりはあと */
   if(r.elem==='earth'&&tryJob(r,G,'till'))return true;/* 土のせいれいは、おつげがあっても、畑づくりを先にする */
   if(S.oracle&&ORACLE[S.oracle])for(const k of ORACLE[S.oracle].jobs){if((k==='chop'||k==='mine')&&tryJob(r,G,'drop'))return true;if(tryJob(r,G,k))return true}/* 落とし物は、木を切る・石をほるより先にひろう */
   // 建てる・家具づくりがいちばん先。そのつぎに得意な仕事をする
@@ -316,7 +317,7 @@ function updRes(r,dt){rescueStuck(r);if((RHOLD.get(r)||0)>performance.now())retu
   if(A.done(r,a)){a.fin=1;dayNote(r,a);if(typeof vrecNote==='function')vrecNote(r,a);/* 村の記録 */titleNote(r,a);/* しごとの称号 *//* きょうしたことをおぼえる（お話で話す） */if(A.end)A.end(r,a);endAct(r)}
 }
 function reunite(r,sp){/* もどってきた子の、もとのなかよしは、神殿へかけつけてよろこぶ */const m=r.reMate&&S.res.find(q=>q.name===r.reMate&&!q.hidden&&q!==r);r.reMate=null;if(m&&!IS_STORY_REPLAY)r.reTalk=m.name;/* 再会の会話（griefTick。紹介のあと・昼に） */if(!m||isNight()&&!m.act)return;const G=bfs(m.x|0,m.y|0),st=nearest(G,j=>Math.abs(j%W-sp[0])+Math.abs(((j/W)|0)-sp[1])===1&&walk(j),300);if(st<0)return;endAct(m);startAct(m,G,'reunion',st,{who:r.id})}
-function finishBurial(r){const nm=r.coffin&&r.coffin.name;r.coffin=null;if(!nm)return;for(const L of[S.buried||[],S.lost||[]])for(const q of L)if(q.name===nm)delete q.unb;/* 埋葬してから、よみがえらせられる */S.pt+=1;S.totalPt+=1;toast(r.name+'が'+nm+'をおみおくりした。'+((S.buried||[]).some(q=>q.name===nm)?(backFirst(nm)?'次の朝、神殿で呼びもどせる':'神殿で、じゅんばんに呼びもどせる'):'パワー+1'),'good');logEv(r.name+'が'+nm+'をおみおくりした')}
+function finishBurial(r){const nm=r.coffin&&r.coffin.name;r.coffin=null;if(!nm)return;for(const L of[S.buried||[],S.lost||[]])for(const q of L)if(q.name===nm)delete q.unb;/* 埋葬してから、よみがえらせられる */S.pt+=1;S.totalPt+=1;if(typeof juiceFly==='function'&&1)juiceFly(r.x,r.y,'pt',1);toast(r.name+'が'+nm+'をおみおくりした。'+((S.buried||[]).some(q=>q.name===nm)?(backFirst(nm)?'次の朝、神殿で呼びもどせる':'神殿で、じゅんばんに呼びもどせる'):'パワー+1'),'good');logEv(r.name+'が'+nm+'をおみおくりした')}
 const BURYWAIT=720;/* なかよし（いなければ、章のはじめからいる子）が行けないまま、時計の8時間たったら、ほかの子がおみおくりする */
 function buryWho(d){/* 棺を神殿へはこぶ子：なかよし → いなければ、章のはじめからいる子（草原はフタバ。特性「ねばりづよい」） → いなければ、だれでも（null） */const m=d.mate&&S.res.find(q=>q.name===d.mate&&!q.hidden);if(m)return m;return S.res.find(q=>trt(q,'nebari')&&!q.hidden&&q.name!==d.name)||null}
 function goBurial(r,G){/* 消えてしまった子のお墓へ行き、棺を神殿へはこぶ。なかよしがいれば、その子がする */

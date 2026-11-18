@@ -123,9 +123,11 @@ function critChip(c,now){const C=window.CHIPS;if(!C)return null;
   if(c.k==='fly'){const op=Math.floor(now/120+c.id)%2===0;return C['critfly:'+(c.ci||0)+'#'+(op?0:1)]}
   if(c.k==='bird')return C[c.fl?'critbird#f'+(Math.floor(now/90)%2):'critbird#0'];
   const n='crit'+(CK[c.k].ch||c.k)+'#',f=critFrame(c,now);return c.vw&&C[n+c.vw+f]||C[n+f]||C[n+'0']}
+const CRITSHZ=40;/* とぶ高さ（ゲームの点）がこれくらいで、かげがいちばん小さく */
 function drawCritter(g,c,now){const x=Math.round(c.x*TS),y=Math.round(c.y*TS),z=Math.round(c.z||0)+critPokeZ(c,now),f=c.face<0?-1:1,ch=critChip(c,now),sw=CK[c.k].sw;
-  const al=critAlpha(c);if(al<=0)return;if(al>0){g.fillStyle='rgba(40,30,20,'+(.18*al).toFixed(3)+')';g.fillRect(x-(sw>>1),y,sw,2)}
-  if(!ch)return;const im=chipImgs(ch,'crit'+c.k)[0];if(!im.ok)return;const sm=g.imageSmoothingEnabled;g.imageSmoothingEnabled=false;g.save();g.globalAlpha=al;g.translate(x,y-z);if(f<0)g.scale(-1,1);g.drawImage(im,ch.ax/2,ch.ay/2,ch.w/2,ch.h/2);g.restore();g.imageSmoothingEnabled=sm}
+  const al=critAlpha(c);if(al<=0)return;const im=ch?chipImgs(ch,'crit'+c.k)[0]:null,ft=im&&im.ok?chipFoot(ch,im):null,zk=Math.max(.45,1-Math.max(0,z)/CRITSHZ);/* かげ：足もとのはばのドットのだ円。高くとぶほど小さく・うすく */
+  if(ft){const l=ft.l+ch.ax,r=ft.r+ch.ax,m=(l+r)/4,hw=((r-l)/4*.85+.5)*zk;dotShadow(g,x+Math.round(f*m),y,hw,Math.max(1,hw*.32),al*zk,1)}else dotShadow(g,x,y,(sw>>1)*zk,1,al*zk,1);
+  if(!ch||!im.ok)return;const sm=g.imageSmoothingEnabled;g.imageSmoothingEnabled=false;g.save();g.globalAlpha=al;g.translate(x,y-z);if(f<0)g.scale(-1,1);g.drawImage(im,ch.ax/2,ch.ay/2,ch.w/2,ch.h/2);g.restore();g.imageSmoothingEnabled=sm}
 /* ほたるの光：夜の暗さより上に、おしりのドットの光（ゆっくり明るく・暗く）。draw-world.js が暗さのあとでよぶ */
 function drawCritGlow(g,now){for(const c of CRIT){if(c.k!=='hotaru')continue;const pq=c.pk?(now-c.pk)/(CRITPK*1000):1,pb=pq>=0&&pq<1?Math.sin(pq*Math.PI):0,a=Math.max(.55+.45*Math.sin(now/520+c.id*1.7),pb)*critAlpha(c);if(a<.15)continue;/* タップすると、ぽっと明るく（pb） */
   const x=Math.round(c.x*TS)-(c.face<0?-2:2),y=Math.round(c.y*TS-(c.z||0))-4;/* お尻の黄色の所（チップ crithotaru のまん中） */
@@ -147,7 +149,7 @@ const CRITN={fly:'ちょう',mitsubachi:'みつばち',bird:'小鳥',risu:'り�
 const CRITD={fly:'花から花へ、ひらひらとぶ虫。',mitsubachi:'花のみつをあつめる、はたらきものの虫。',bird:'木のそばで、えさをさがす小さな鳥。',risu:'木の実が好きな、しっぽのふさふさした生き物。',
   usagi:'みどりの草地を、ぴょんぴょんはねる生き物。',harinezumi:'夕方、茂みのそばを歩く、せなかがとげとげの生き物。',nezumi:'箱のそばに、こっそりあらわれる小さな生き物。',mogura:'土の中にすむ生き物。',
   katatsumuri:'雨の日に出てくる、からをせおった生き物。',tentoumushi:'赤い羽に点のある、小さな虫。',tonbo:'水の上を、すいすいとぶ虫。',hotaru:'夜のはじめの水べで、おしりが光る虫。',frog:'水べにすむ、よくはねる生き物。'};
-const CRITV={bird:'cv_bird',risu:'cv_risu',nezumi:'cv_nezumi',usagi:'cv_usagi',harinezumi:'cv_hari',mogura:'cv_mogura',frog:'cv_frog',mitsubachi:'cv_bee',fly:'cv_bug',tentoumushi:'cv_bug',tonbo:'cv_tonbo',hotaru:'cv_hotaru',katatsumuri:'cv_snail'};/* タップしたときの鳴き声（本物の録音） */
+const CRITV={bird:'cv_bird',risu:'cv_risu',nezumi:'cv_nezumi',usagi:'cv_usagi',harinezumi:'cv_hari',mogura:'cv_mogura',frog:'cv_frog',mitsubachi:'cv_bee',fly:'cv_chou',tentoumushi:'cv_bug',tonbo:'cv_tonbo',hotaru:'cv_hotaru',katatsumuri:'cv_snail'};/* タップしたときの鳴き声（本物の録音） */
 const CRITPK=1.2;/* 反応の見た目の長さ（秒、実時間） */
 /* タップした所（マス）にいる生き物。絵の足もとから上へ。いちばん近い物と、そのきょり */
 function critTap(px,py){let best=null,bd=1e9;for(const c of CRIT){if(c.dead||c.go||c.fade!=null)continue;const L=(typeof uLift==='function'?uLift(c):0)/TS,cy=c.y-(c.z||0)/TS-L,dx=px-c.x,dy=py-cy;
@@ -181,4 +183,4 @@ const CRITICO={};
 function critIcon(k){if(CRITICO[k])return CRITICO[k];const C=window.CHIPS;if(!C)return null;const ch=k==='fly'?C['critfly:0#0']:k==='bird'?C['critbird#0']:(C['crit'+(CK[k].ch||k)+'#0']||C['crit'+(CK[k].ch||k)+'#w0']);if(!ch)return null;/* みつばち・とんぼ・ほたるは、とんでいるコマ */
   const im=chipImgs(ch,'crit'+k)[0];if(!im||!im.ok)return null;const n=Math.max(1,Math.floor(120/Math.max(ch.w,ch.h))),cv=document.createElement('canvas');cv.width=cv.height=144;const g=cv.getContext('2d');g.imageSmoothingEnabled=false;
   const w=ch.w*n,h=ch.h*n;g.drawImage(im,Math.round((144-w)/2),Math.round((144-h)/2),w,h);try{CRITICO[k]=cv.toDataURL()}catch(_){CRITICO[k]=null}cv.width=cv.height=0;return CRITICO[k]}
-function critZukan(d,add){const R=d.critRec||{};for(const k of CRITKINDS)if(R[k]>0)add(CRITN[k],CRITD[k]+'見つけた数 '+R[k],critIcon(k))}
+function critZukan(d,add){const R=d.critRec||{};for(const k of CRITKINDS)if(R[k]>0)add(CRITN[k],CRITD[k]+'見つけた数 '+R[k],critIcon(k),CRITV[k]?'k:'+CRITV[k]:'k:crit')}

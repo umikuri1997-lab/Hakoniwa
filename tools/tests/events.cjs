@@ -10,7 +10,7 @@ const assert=require('node:assert/strict');
   const to=(d,h)=>run(`(()=>{const t=(${d}-1)*1440+(${h})*60;if(t>S.t)S.t=t;return dayNo()})()`);
   const go=async(id,n,needs,minDay=0)=>{
     let d=await run(`dayNo()`);if(minDay&&d<minDay-1)d=minDay-1;await to(d,15);
-    while(await run(`seasonDay(dayNo()+1)===CUPDAY`)){d=await run(`dayNo()`)+1;await to(d,15)}
+    while(await run(`seasonDay(dayNo()+1)===CUPDAY||EVENTS['${id}'].sea!=null&&seasonOf(dayNo()+1)!==EVENTS['${id}'].sea`)){d=await run(`dayNo()`)+1;await to(d,15)}/* 大会の日・季節のちがう日は、とばす */
     const o=JSON.parse(await run(`(()=>{${needs||''}recount();const who=S.res.slice(0,${n||99}).map(r=>r.id);const pt=S.pt,f=S.food;const ok=evOpen('${id}',who);return JSON.stringify({ok,pt:pt-S.pt,f:f-S.food,ev:!!S.ev,day:S.ev&&S.ev.day,now:dayNo()})})()`));
     assert.ok(o.ok&&o.ev,id+' opened '+JSON.stringify(o));
     const before=JSON.parse(await run(`JSON.stringify(S.res.map(r=>Object.assign({},r.est)))`));
@@ -38,8 +38,9 @@ const assert=require('node:assert/strict');
   await go('hoshi',0,'',23);
   assert.equal(await run(`evOn('onsen')`),false,'onsen is volcano only');
   /* 季節の大会：5日めの朝にきまり、みんなが出る。順位で上がる数がかわる。4日めには、5日めのイベントをひらけない */
-  await to(32,12);assert.equal(await run(`(S.ev=null,evWhy('oni'))`),'あしたはかけっこ大会です');
-  for(const [id,d] of [['cup0',33],['cup1',40],['cup2',47],['cup3',54]]){
+  const c0=await run(`(()=>{let d=dayNo()+1;while(!(seasonOf(d)===0&&seasonDay(d)===CUPDAY))d++;return d})()`),SDn=await run(`SEASONDAYS`);/* つぎの春の大会の日 */
+  await to(c0-1,12);assert.equal(await run(`(S.ev=null,evWhy('oni'))`),'あしたはかけっこ大会です');
+  for(const [id,d] of [['cup0',c0],['cup1',c0+SDn],['cup2',c0+SDn*2],['cup3',c0+SDn*3]]){
     const before=JSON.parse(await run(`JSON.stringify(S.res.map(r=>Object.assign({},r.est)))`));
     await to(d,6.02);await run(`S.ev=null;evMorning();`);assert.equal(await run(`S.ev&&S.ev.id`),id,id+' scheduled');
     await sim(60*12,'!S.ev');
@@ -75,6 +76,7 @@ const assert=require('node:assert/strict');
   const c2=JSON.parse(await run(`(()=>{const p=S.pt,f=S.food,w=S.mat.wood;const ok=evOpen('camp',[S.res[0].id]);const p1=S.pt;evCancel();return JSON.stringify({ok,back:S.pt===p&&S.food===f&&S.mat.wood===w,paid:p-p1,ev:S.ev,why:evWhy('camp')})})()`));
   assert.ok(c2.back&&c2.ev===null,'cancel refunds '+JSON.stringify(c2));
   /* とちゅうで暗くなったら、つぎの日に */
+  while(await run(`seasonDay(dayNo()+1)===CUPDAY`))await to(await run(`dayNo()`)+1,12);/* あしたが大会の日なら、ひらけない */
   const dd=await run(`dayNo()`);
   const d=JSON.parse(await run(`(()=>{S.evDone={};evOpen('oni',S.res.slice(0,2).map(r=>r.id));S.t=(${dd})*1440+13*60;evTick();const ph=S.ev.ph;S.t=(${dd})*1440+21*60+5;evTick();return JSON.stringify({ph,after:S.ev.ph,day:S.ev.day})})()`));
   assert.equal(d.ph,'go');assert.equal(d.after,null);assert.equal(d.day,dd+2);
@@ -90,7 +92,7 @@ const assert=require('node:assert/strict');
   if(process.env.SHOT_DIR)await page.screenshot({path:process.env.SHOT_DIR+'/event-sheet.png'});
   const rad=await run(`[...document.querySelectorAll('*')].filter(e=>parseFloat(getComputedStyle(e).borderRadius)>0).length`);assert.equal(rad,0);
   /* 大会（季節の大会・運動会）は、せいれいが3人から：2人だと知らせもなく、ひらかない */
-  await run(`if(sheet)closeSheet()`);const dn=await run(`dayNo()`);await to(dn+((5-((dn-1)%7+1))+7)%7||7,6.02);{const o=JSON.parse(await run(`(()=>{const keep=S.res.slice();S.res=keep.slice(0,2);S.ev=null;const sd=seasonDay(dayNo());evMorning();const ev=S.ev;S.ev=null;const w=evWhy('undo');S.res=keep;return JSON.stringify({sd,ev:!!ev,w})})()`));
+  await run(`if(sheet)closeSheet()`);const dn=await run(`dayNo()`),SD=await run(`SEASONDAYS`),CUPD=await run(`CUPDAY`);await to(dn+((CUPD-((dn-1)%SD+1))+SD)%SD||SD,6.02);{const o=JSON.parse(await run(`(()=>{const keep=S.res.slice();S.res=keep.slice(0,2);S.ev=null;const sd=seasonDay(dayNo());evMorning();const ev=S.ev;S.ev=null;const w=evWhy('undo');S.res=keep;return JSON.stringify({sd,ev:!!ev,w})})()`));
     assert.equal(o.sd,5,'cup day');    assert.equal(o.ev,false,'no cup with 2 spirits');assert.equal(o.w,'せいれいが3人からです','undo needs 3')}
   await page.waitForTimeout(500);assert.deepEqual(errors,[]);await browser.close();console.log('Events: ok');
 })().catch(e=>{console.error(e);process.exit(1)});
