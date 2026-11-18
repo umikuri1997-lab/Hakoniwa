@@ -19,6 +19,7 @@ SET = {
   'creak':  (['rpg-audio/*/creak3.ogg', 'rpg-audio/*/creak1.ogg'], 400, 7000, .40, 1),  # なわのきしみ：きゅ…
   'bend':   (['rpg-audio/*/creak2.ogg'], 150, 5000, .55, 1),  # 板がしなる：ぎぃ
   'tab':    (['rpg-audio/*/bookFlip3.ogg', 'rpg-audio/*/bookFlip2.ogg'], 300, 9000, .26, 1),  # タブ：ぱたっ（めくる）
+  'page':   (['rpg-audio/*/bookFlip1.ogg', 'rpg-audio/*/bookFlip2.ogg', 'rpg-audio/*/bookFlip3.ogg'], 200, 9000, .55, 1),  # 思い出帳のページをめくる：ぺらっ（さいごまで）
   'knockw': (['impact-sounds/*/impactGeneric_light_00%d.ogg' % i for i in range(5)], 120, 6000, .14, 1),  # 行が置かれる・木札：ことっ
   'notch':  (['ui-audio/*/switch12.ogg', 'ui-audio/*/switch13.ogg', 'ui-audio/*/switch14.ogg'], 600, 6500, .06, 1),  # ±：かちっ
   # ---- 料理・もの作り（マップの音。sfxAt で鳴らす） ----

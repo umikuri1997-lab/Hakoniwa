@@ -20,7 +20,7 @@ const assert=require('node:assert/strict');
   await page.waitForTimeout(1500);
   const n=await page.evaluate(()=>sacredEval('phList(WD)').then(L=>L.map(p=>({d:p.d,vn:p.vn,size:p.b.size,type:p.b.type}))));
   assert.equal(n.length,1,'one photo stored');assert.equal(n[0].vn,'こもれびABC1');assert.ok(n[0].size>2000,'photo has content');
-  await run(`openSheet('menu','record')`);await page.waitForSelector('#sheetBody .phT img');
+  await run(`MEMPG=0;openSheet('menu','record');[...document.querySelectorAll('#sheetBody .mtocr')].find(b=>/村の写真/.test(b.textContent)).click()`);/* 思い出帳は本：目次から「村の写真」のページへめくる */await page.waitForSelector('#sheetBody .mpg:not([hidden]):not(.mflip) .phT img');
   if(process.env.SHOT_DIR)await page.screenshot({path:process.env.SHOT_DIR+'/record.png'});
   await run(`document.querySelector('#sheetBody .phT').click()`);await page.waitForSelector('.ph-reveal img');
   const cap=await run(`document.querySelector('.ph-reveal p').textContent`);assert.ok(cap.startsWith('こもれびABC1村・'),cap);
