@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """もらった白背景のアイコンのシート（3まい）を、1こずつ 32×32 のドット絵にする。
-白い背景は、ふちからつながる白だけを透明にする。ちぢめるのは pixdown（セルの多いほうの色・中の線・外の輪郭）、そのまわりに1ドットの輪郭（となりの色を少し暗く）。
+白い背景は、ふちからつながる白だけを透明にする。ちぢめるのは pixdown（セルの多いほうの色・中の線・外の輪郭）、そのまわりに1ドットの輪郭（となりの色を少し暗く）。さいごに1こ NCOL 色まで（chips の cap_colors：メディアンカット＋k-means、ディザなし）。
 使い方：python3 tools/art/icons32/icons32.py <出力フォルダ> <シート1> <シート2> <シート3>"""
 import sys, os
 import numpy as np
@@ -8,6 +8,8 @@ from PIL import Image
 from scipy.ndimage import label, binary_dilation, find_objects
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 import pixdown as pd
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
+from chips import cap_colors
 
 SHEETS = [  # (列, 行, 名前)
  (4, 4, 'bell_copper medal_iron necklace hairpin_flower crystal_pink pouch bell_leaf flute '
@@ -18,6 +20,7 @@ SHEETS = [  # (列, 行, 名前)
         'lucky_bag letter ingot ore'),
 ]
 N, IN = 32, 30  # できあがりの大きさ・中身の長い辺（まわり1ドットあけ）
+NCOL = 16  # 1この色の数（輪郭もふくめる）
 
 def cutout(im):
     a = np.asarray(im.convert('RGB')).astype(int)
@@ -61,7 +64,7 @@ def main(dst, paths):
             sc = IN / max(bw, bh)
             o = pd.make(src, box, sc=sc)
             c = Image.new('RGBA', (N, N)); c.alpha_composite(o, ((N - o.width) // 2, N - 1 - o.height if bh > bw else (N - o.height) // 2))
-            c = rim(c); c.save(os.path.join(dst, nm + '.png')); allims.append((nm, c)); print(nm, o.size)
+            c = cap_colors([rim(c)], NCOL)[0]; c.save(os.path.join(dst, nm + '.png')); allims.append((nm, c)); print(nm, o.size)
     # 一覧（8倍）
     k = 8; cols = 8; rows = (len(allims) + cols - 1) // cols
     sh = Image.new('RGBA', (cols * (N * k + 8) + 8, rows * (N * k + 8) + 8), (236, 236, 236, 255))
