@@ -49,4 +49,9 @@ const assert=require('node:assert/strict');
   await run(`(()=>{const e=$('#lvLbl');JLVL=+e.textContent;JLVW=80;$('#lvup').hidden=false;e.textContent=+e.textContent+1;return 1})()`);await W8(100);
   const l0=await run(`$('#lvLbl').style.visibility`);await run(`$('#lvup').hidden=true;true`);await W8(2500);const l1=await run(`$('#lvLbl').style.visibility+'|'+$('#xpBar').className`);
   console.log('lv',l0,l1);assert.equal(l0,'hidden');assert.equal(l1,'|');
+  /* 音：本物の録音（playU）だけを鳴らす */
+  await run(`audioInit();true`);await page.waitForFunction(()=>sacredEval(`['notch','tink','tab','page','twood'].every(k=>SBUF[k]&&SBUF[k].filter(Boolean).length)`),{},{timeout:30000}).catch(()=>{});
+  const snd=JSON.parse(await run(`(()=>{const L=[];const pu=playU,ok=typeof AC!=='undefined'&&AC;window.__k=[];playU=(k,...a)=>{L.push(k);return true};const st=AC&&AC.state;try{Object.defineProperty(AC,'state',{get:()=>'running',configurable:true})}catch(e){}SND.sfx=true;
+    j3U('notch',.3,2);j3Ding(4);juiceNameFlip(document.createElement('span'),'あ');const r=S.res[0];J3M.length=0;juiceMadeCount(r,3);juiceMadeDraw(performance.now()+500);playU=pu;return JSON.stringify({L,have:['notch','tink','tab','page','twood'].map(k=>!!(SBUF[k]&&SBUF[k].filter(Boolean).length))})})()`));
+  console.log('sound',JSON.stringify(snd));assert.ok(snd.L.includes('notch')&&snd.L.includes('tink')&&snd.L.includes('twood'));assert.ok(snd.have.every(Boolean),'録音が読みこめている');
   console.log('errors',errors);assert.equal(errors.length,0);await browser.close();console.log('ok')})().catch(e=>{console.error(e);process.exit(1)});
