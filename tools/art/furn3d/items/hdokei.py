@@ -8,17 +8,20 @@
 #   葉のかざり：頭の左右の上に、木を彫った葉（みどりは、ぬらない）。
 from blueprint import Part as P
 from common import *
-import math
+import math,os
+import oblique3d as O
 ID='hdokei';BOTTOM=63;GRAD=True;PARALLEL=True
 VIEWS=[('hdokei',0)]
 CX,CY=0.50,0.60
 FACE=(250,244,226);GOLD=(236,200,112);GLASS=(208,230,242);HAND=(96,74,64)
+GRAIN=O.Tex(os.path.join(os.path.dirname(__file__),'..','..','textures','wood049.png'),span=1.2,flow=8,minrun=3,dark=(0.30,0.84),light=(0.22,1.08))   # 木目をはっきり（持ち主のたのみ）
+def W(p):p.texobj=GRAIN;return p
 def M(p):p.tex=False;p.shiny=True;return p
 def PARTS():
-    L=[P('台','box',(CX-0.23,CY-0.15,0.0,CX+0.23,CY+0.15,0.10),WOOD,note='地面におく')]
-    L.append(P('胴','box',(CX-0.19,CY-0.12,0.10,CX+0.19,CY+0.12,1.10),WOOD,on=('台',),note='台の上'))
-    L.append(P('頭','box',(CX-0.23,CY-0.15,1.10,CX+0.23,CY+0.15,1.46),WOOD,on=('胴',),note='胴の上'))
-    L.append(P('かざり屋根','prism',([(CX-0.24,1.46),(CX+0.24,1.46),(CX,1.58)],CY-0.16,CY+0.16),WOOD,on=('頭',),note='頭のてっぺん'))
+    L=[W(P('台','box',(CX-0.23,CY-0.15,0.0,CX+0.23,CY+0.15,0.10),WOOD,note='地面におく'))]
+    L.append(W(P('胴','box',(CX-0.19,CY-0.12,0.10,CX+0.19,CY+0.12,1.10),WOOD,on=('台',),note='台の上')))
+    L.append(W(P('頭','box',(CX-0.23,CY-0.15,1.10,CX+0.23,CY+0.15,1.46),WOOD,on=('胴',),note='胴の上')))
+    L.append(W(P('かざり屋根','prism',([(CX-0.24,1.46),(CX+0.24,1.46),(CX,1.58)],CY-0.16,CY+0.16),WOOD,on=('頭',),note='頭のてっぺん')))
     fy=CY+0.152
     L.append(M(P('金の輪','prism',([(CX+0.155*math.cos(2*math.pi*k/32),1.28+0.155*math.sin(2*math.pi*k/32)) for k in range(32)],fy-0.004,fy+0.002),GOLD,on=('頭',),note='文字ばんのまわり')))
     face=notex(P('文字ばん','prism',([(CX+0.135*math.cos(2*math.pi*k/32),1.28+0.135*math.sin(2*math.pi*k/32)) for k in range(32)],fy,fy+0.004),FACE,on=('金の輪',),note='頭の正面'))
@@ -40,4 +43,4 @@ def PARTS():
         L.append(P('葉のかざり','ball',(CX+s*0.19,CY+0.12,1.46,0.05,0.5),WOOD,on=('頭',),note='頭の上の角'))
     return L
 def EXTRA(sc):pass
-TONE5=True
+TONE5=True;STREAK=(0.45,0.30)   # 木目のすじを、はっきり（持ち主のたのみ）
