@@ -4,7 +4,7 @@
    - 明るい所のにじみ（画面を小さくして、明るい所だけをのこし、なめらかに大きくして screen でかさねる。あかりに色はかぶせない）
    - 上下のぼかし（ピントの帯の外をぼかす。帯は会話の話す子・見守る子に合わせて動く。案内の場所・置く場所・画面をひらいた子のまわりはぼかさない）
    - 見せ場（なかまが来る・オオカゲの登場・御神木が育つ、hdBig）は、ピントをせまく、にじみを強く
-   - かげの長さ（太陽は1つで向きはかえない。朝・夕方は長く、昼は短い。shadow() と落ち影が sunLen を見る）
+   - かげの向きと長さ（朝は西・夕方は東へかたむき、朝・夕方は長く、昼は短い。shadow() と落ち影が sunLen・sunLean を見る）
    - 重いとき（1コマが長いとき）は、自動で軽くする（HDQ：1 にじみなし・小さくする回数をへらす、2 ぼかしもなし）
    作業用のキャンバスは画面の1/4・1/8の大きさ（iPhone の縦画面で約1MB） */
 let HD2D=true;try{if(KV.getItem('hakoniwa-hd2d')==='0')HD2D=false}catch(e){}
@@ -14,15 +14,17 @@ const HDFY0=.55;/* ふだんのピントの帯のまん中（画面の高さの�
 const HDHOLE=1.8;/* ぼかさない所の半径（マス） */
 const HDAIR=.16;/* 空気の遠近：画面のいちばん上のこさ */
 const HDLONG=.8;/* かげの長さ：朝6時・夕方18時に、昼より 0.8 ぶん長い */
+const HDLEAN=.6;/* 落ち影のかたむき：朝6時・夕方18時に、根もとから1上がるごとに、よこへ 0.6 */
 const HDSLOW=26,HDFAST=19;/* 1コマの時間（ミリ秒）：これより長いのが3秒つづいたら軽く・これより短いのが10秒つづいたら1つもどす */
 const HDC={a:null,b:null,c:null,d:null};
 let TUTWP=null;/* タップの案内がさしているマップの場所（main.js の updTut） */
-let HDBIG=0,HDFY=HDFY0,HDQ=0,HDQT=0,HDLT=0,HDMS=16.7,HDLEN=1;
+let HDBIG=0,HDFY=HDFY0,HDQ=0,HDQT=0,HDLT=0,HDMS=16.7,HDLEN=1,HDSUN=0;
 function hdCv(c,w,h){if(!c)c=document.createElement('canvas');if(c.width!==w||c.height!==h){c.width=w;c.height=h}return c}
 function hdBig(ms){HDBIG=Math.max(HDBIG,performance.now()+ms)}/* 見せ場：そのあいだ、ピントをせまく・にじみを強く */
 function sunLen(){return HDLEN}/* かげの長さ（昼1） */
+function sunLean(){return HDSUN}/* かげのかたむき：−1 朝（かげは西へ）・0 昼・+1 夕方（東へ） */
 function hdFrame(){/* 1コマに1回（render のはじめ） */const now=performance.now();
-  if(!HD2D){HDLEN=1;HDLT=now;return}const h=hour();HDLEN=h<6||h>18?1:1+HDLONG*Math.abs(h-12)/6;
+  if(!HD2D){HDLEN=1;HDSUN=0;HDLT=now;return}const h=hour();HDLEN=h<6||h>18?1:1+HDLONG*Math.abs(h-12)/6;HDSUN=h<6||h>18?0:(h-12)/6;
   {const dt=now-HDLT;HDLT=now;if(dt>0&&dt<200){HDMS+=(dt-HDMS)*.05;/* 1コマの時間をならす */
     if(HDMS>HDSLOW&&HDQ<2){HDQT+=dt;if(HDQT>3000){HDQ++;HDQT=0;HDMS=16.7}}else if(HDMS<HDFAST&&HDQ>0){HDQT-=dt;if(HDQT<-10000){HDQ--;HDQT=0}}else HDQT=0}}}
 function hdTint(h){/* 時間の光の色（soft-light でかさねる色と、こさ） */
@@ -72,4 +74,4 @@ function hdPost(dk,now){/* 夜の暗さのあと・ふきだしの前に、画�
   gd.globalCompositeOperation='source-over';
   c.drawImage(D,0,0,W0,H0);
   c.restore()}
-function hdCastStretch(by,fn){/* 落ち影：根もと（by）から、かげの長さぶん奥へのばす */if(HDLEN===1)return fn();ctx.save();ctx.translate(0,by);ctx.scale(1,HDLEN);ctx.translate(0,-by);fn();ctx.restore()}
+function hdCastStretch(bx,by,fn){/* 落ち影：根もと（bx,by）から、かげの長さぶん奥へのばし、太陽の向きへかたむける */if(HDLEN===1&&!HDSUN)return fn();ctx.save();ctx.translate(bx,by);ctx.transform(1,0,-HDSUN*HDLEAN,1,0,0);ctx.scale(1,HDLEN);ctx.translate(-bx,-by);fn();ctx.restore()}
