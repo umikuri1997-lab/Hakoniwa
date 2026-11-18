@@ -50,10 +50,10 @@ function tgtPoint(e){const t=e.tg;if(t==null)return null;
   if(t==='sc')return tgtCell(e.sg);if(t==='tw')return tgtCell(S.obj.indexOf('tower'));
   if(/^[asd]\d+$/.test(t))return tgtCell(+t.slice(1));return null}
 function drawTgtLine(now){const L=TGTL;if(!L)return;const e=L.e;if(L.S!==S||now>L.until||!e||e.dead||!e.spawned||!(S.enemies||[]).includes(e)){TGTL=null;return}
-  const p=tgtPoint(e);if(!p)return;const hz=j=>j>=0&&j<W*H?hiAt(j)*LIFT:0,x0=e.x*TS,y0=e.y*TS-hz((e.y|0)*W+(e.x|0))-10,x1=p.x*TS,y1=p.y*TS-hz(p.j)-10;
+  const p=tgtPoint(e);if(!p)return;const hz=j=>j>=0&&j<W*H?hiAt(j)*LIFT:0,x0=e.x*TS,y0=e.y*TS-hz((e.y|0)*W+(e.x|0))+10,x1=p.x*TS,y1=p.y*TS-hz(p.j)-2;/* 足もとから足もとへ（顔にかけない） */
   const d=Math.hypot(x1-x0,y1-y0);if(d<8)return;const a=Math.min(1,(L.until-now)/500),sm=ctx.imageSmoothingEnabled;ctx.imageSmoothingEnabled=false;ctx.globalAlpha=a;
   const ph=Math.floor(now/120)%3,n=Math.floor(d/6);/* 2ドットの点を6ドットおき。コワイノからねらう物へ、ながれる */
   for(let i=1;i<n;i++){if((i+3-ph)%3===0)continue;const q=i/n,x=Math.round(x0+(x1-x0)*q),y=Math.round(y0+(y1-y0)*q);ctx.fillStyle='#5a1f2a';ctx.fillRect(x-1,y,3,2);ctx.fillStyle='#ff8a8a';ctx.fillRect(x-1,y-1,2,2)}
-  const X=Math.round(x1),Y=Math.round(y1),R=7+(Math.floor(now/250)%2);/* ねらう物のまわりの、四すみのかぎ（下に1ドットのかげ） */
-  for(const[col,oy]of[['#5a1f2a',1],['#ff8a8a',0]]){ctx.fillStyle=col;for(const[sx,sy]of[[-1,-1],[1,-1],[-1,1],[1,1]]){const cx=X+sx*R,cy=Y+sy*R+oy;ctx.fillRect(sx<0?cx:cx-2,cy,3,1);ctx.fillRect(cx,sy<0?cy:cy-2,1,3)}}
+  const X=Math.round(x1),Y=Math.round(y1),b=Math.floor(now/250)%2,RX=11+b,RY=5+b;/* ねらう物の足もとの、四すみのかぎ（下に1ドットのかげ） */
+  for(const[col,oy]of[['#5a1f2a',1],['#ff8a8a',0]]){ctx.fillStyle=col;for(const[sx,sy]of[[-1,-1],[1,-1],[-1,1],[1,1]]){const cx=X+sx*RX,cy=Y+sy*RY+oy;ctx.fillRect(sx<0?cx:cx-2,cy,3,1);ctx.fillRect(cx,sy<0?cy:cy-2,1,3)}}
   ctx.globalAlpha=1;ctx.imageSmoothingEnabled=sm}

@@ -46,6 +46,13 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict');
     /* とどいた */w.x=st%W+.5;w.y=((st/W)|0)+.5;w.path=[];w.act.stage='do';g.x=w.x+1;g.y=w.y;const b0=bondOf(w,g);escTick();if(bondOf(w,g)!==b0+2)throw Error('no bond '+bondOf(w,g));if(g.act&&g.act.type==='escort')throw Error('still escort');if(w.escBy!=null)throw Error('ward keeps');
     /* なかよしが低いと助けない */endAct(w);endAct(g);S.bond={};bondAdd(w,g,20);g.x=w.x+1;startAct(w,bfs(w.x|0,w.y|0),'flee',(w.y|0)*W+(w.x|0)+6,{run:true});escTick();if(g.act&&g.act.type==='escort')throw Error('helped at 20');
     endAct(w);endAct(g);S.res.pop();S.enemies=[];S.enemyOn=false;S.t=720;w.hunger=hMax(w);return 'escort, covers hits within 2, bond+2 on arrival, not under 30'})()`));
+  /* 時間をすすめても、助ける子は、にげる子のとなりのまま、にげる先までつく（火のせいれいの「コワイノが来たらたたかいに行く」でやめない） */
+  console.log('escort live',await run(`(()=>{const [f,n,h]=S.res;const x0=CX-12,y0=CY-3;for(let y=y0;y<y0+5;y++)for(let x=x0;x<x0+5;x++){if(x===x0||x===x0+4||y===y0||y===y0+4)S.obj[y*W+x]='hwall'}S.obj[(y0+4)*W+x0+2]='door';
+    recount();const g=mkRes(S,'テスト火','fire',h.x+1,h.y);S.res.push(g);S.bond={};bondAdd(h,g,50);S.t=1440*2+60;S.enemyOn=true;S.ns={};
+    S.enemies=[{type:'basic',x:h.x+3,y:h.y+.4,hp:999,max:999,spawned:true,path:[]}];h.hunger=420;h.fleeNow=true;let esc=0,maxd=0;
+    for(let i=0;i<240;i++){for(const r of S.res)updRes(r,.25);supportTick();if(g.act&&g.act.type==='escort'){esc++;maxd=Math.max(maxd,Math.hypot(g.x-h.x,g.y-h.y))}}
+    const b=bondOf(h,g);for(let y=y0;y<y0+5;y++)for(let x=x0;x<x0+5;x++)S.obj[y*W+x]='';S.res.pop();S.enemies=[];S.enemyOn=false;S.t=720;h.hunger=hMax(h);endAct(h);recount();
+    if(esc<20)throw Error('escort ended early '+esc);if(maxd>2.5)throw Error('fell behind '+maxd.toFixed(1));if(b!==52)throw Error('no bond on arrival '+b);return 'beside (max '+maxd.toFixed(1)+'), arrived, bond 50→52'})()`));
   /* ねらい線：タップしたコワイノのねらいへ、4秒だけ */
   console.log('target',await run(`(()=>{const [f,n,h]=S.res;const e={type:'basic',x:h.x+4,y:h.y,hp:EN.basic.hp,spawned:true,path:[],tg:h.id};S.enemies=[e];
     tgtShow(e);const p=tgtPoint(e);if(!p||Math.abs(p.x-h.x)>1e-9)throw Error('point');e.tg='d'+((h.y|0)*W+(h.x|0)+2);if(tgtPoint(e).j!==(h.y|0)*W+(h.x|0)+2)throw Error('cell');
