@@ -19,7 +19,7 @@ function lvGain(r,k,lv){const P=(EL_GROW[r.elem]||EL_GROW.wood)[k];if(P==null)re
 /* レベルアップのごほうびで、えらんでふやした分（r.lvb：work・move・sta。実数のたし算） */
 const LVB=5,lvbOf=(r,k)=>(r.lvb&&r.lvb[k])||0,lvbSum=r=>r.lvb?(r.lvb.work||0)*1e6+(r.lvb.move||0)*1e3+(r.lvb.sta||0):0;
 const wkUp=r=>r.wkB>S.t?(r.wkM||0):0,mvUp=r=>r.mvT>S.t?(r.mvM||0):0;/* 料理で、しばらくふえる分 */
-const RSC=new WeakMap();function rMul(r,k){const lv=rLv(r);let c=RSC.get(r);if(!c||c.lv!==lv||c.vr!==r.vr||c.b!==r.boost||c.g!==(r.gv||0)||c.wu!==wkUp(r)||c.mu!==mvUp(r)||c.ev!==(r.estV||0)||c.lb!==lvbSum(r)){c={lv,vr:r.vr,b:r.boost,ev:r.estV||0,lb:lvbSum(r),g:r.gv||0,wu:wkUp(r),mu:mvUp(r),s:rStat(r,lv)};RSC.set(r,c)}return c.s[k]/100*(k==='work'&&BOND5.has(r)?1.05:1)}/* 100がふつうの速さ。なかよし100が3マス以内：はたらく速さ+5% */
+const RSC=new WeakMap();function rMul(r,k){const lv=rLv(r);let c=RSC.get(r);if(!c||c.lv!==lv||c.vr!==r.vr||c.b!==r.boost||c.g!==(r.gv||0)||c.wu!==wkUp(r)||c.mu!==mvUp(r)||c.ev!==(r.estV||0)||c.lb!==lvbSum(r)){c={lv,vr:r.vr,b:r.boost,ev:r.estV||0,lb:lvbSum(r),g:r.gv||0,wu:wkUp(r),mu:mvUp(r),s:rStat(r,lv)};RSC.set(r,c)}return (c.s[k]+(k==='atk'&&typeof supAtk==='function'?supAtk(r):0))/100*(k==='work'&&BOND5.has(r)?1.05:1)}/* 100がふつうの速さ。なかよし100が3マス以内：はたらく速さ+5%。攻撃力は、ならんで戦う力（supAtk）をたす */
 function ovenMul(j){if(j==null)return 1;const x0=j%W,y0=(j/W)|0;const kinds=new Set();for(let y=y0-3;y<=y0+3;y++)for(let x=x0-3;x<=x0+3;x++){if(x<0||y<0||x>=W||y>=H)continue;const o=S.obj[y*W+x];if(o&&o!==S.obj[j]&&BL[o]&&BL[o].cat==='cook')kinds.add(o)}return OVENM[Math.min(kinds.size,OVENM.length-1)]}/* 調理の家具がそばにあると、料理が早い（同じ家具は1つ分だけ。下限はなし） */
 const fAtk=(r,lv)=>(EL_ATK[r.elem]||0)+lvGain(r,'atk',lv);/* 攻撃力：Lv1は EL_ATK、上がるたびに EL_GROW のはばでふえる */
 function staOf(r){const V=vrInt(r.vr)||{},B=EL_BASE[r.elem]||EL_BASE.wood;return Math.max(1,B.sta+(V.sta||0)+lvbOf(r,'sta')+(trt(r,'tafu')||trt(r,'nebari')?30:0)+evSt(r,'sta')+(typeof pathA==='function'?pathA('sta'):0))}/* スタミナ */
@@ -40,7 +40,7 @@ const RSTN=[['work','はたらく速さ'],['move','移動速度'],['cap','持て
 const fullN=r=>1+(r.elem==='fire'?1:0);/* 食べる量：1（火は2）。レベルではかわらない */
 let LVQ=null;
 function lvShow(l,bonus,opens){
-  if(typeof juiceCheer==='function')juiceCheer('lv');const o=$('#lvup');o.querySelector('.n').textContent=l;o.querySelector('.pw').hidden=true;/* まもりの光のチャージは、村レベルではかわらない（むらのちからで強化） */
+  if(typeof juiceCheer==='function')juiceCheer('lv');if(typeof juiceWave==='function')juiceWave();/* 神殿から光のなみ */const o=$('#lvup');o.querySelector('.n').textContent=l;o.querySelector('.pw').hidden=true;/* まもりの光のチャージは、村レベルではかわらない（むらのちからで強化） */
   const u=o.querySelector('.op');u.innerHTML='';u.hidden=!opens.length;
   const od=o.querySelector('.opd');od.hidden=true;
   if(opens.length){u.appendChild(el('<small>あたらしく使える</small>'));for(const id of [...new Set(opens)]){const b=el('<button class="lvic"><img alt=""><span></span></button>');b.querySelector('img').src=iconURL(id);b.querySelector('span').textContent=iname(id);b.onclick=e=>{e.stopPropagation();sfx('tap');u.querySelectorAll('.lvic').forEach(x=>x.classList.toggle('on',x===b));od.hidden=false;od.innerHTML='<b></b><p></p>';od.querySelector('b').textContent=iname(id);od.querySelector('p').textContent=withAttr(id,(BL[id]&&BL[id].desc)||'')};u.appendChild(b)}}/* 解放されたものはアイコン。タップで説明 */
