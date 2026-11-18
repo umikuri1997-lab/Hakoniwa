@@ -1,4 +1,4 @@
-/* きのうの日記：作業・できごと・ゆうべの守りが、朝にしめた日記に入り、紙が出る。フタバのひとこと（同じ日記はできない）と昼の写真ものる（フタバがいなければ、どちらもない）。思い出帳から読める。思い出帳の再生では書かない */
+/* きのうの日記：作業・できごと・ゆうべの守りが、朝にしめた日記に入り、紙が出る。章のはじめの子（草原フタバ・火山ホムラ）のひとこと（同じ日記はできない）と昼の写真ものる（その子がいなければ、どちらもない）。思い出帳から読める。思い出帳の再生では書かない */
 const assert=require('node:assert/strict');
 (async()=>{const {browser,page,run,errors}=await require('../sim/boot.cjs')();
   await run(`document.querySelector('#dialog').hidden=true;S.introSeen=true;S.flags.tapped=1;S.hold=0;if(sheet)closeSheet();`);
@@ -49,5 +49,16 @@ const assert=require('node:assert/strict');
   /* 思い出帳の再生（MEMRUN）では書かない */
   const z=await run(`(()=>{S.dy=null;MEMRUN=true;dyWork(S.res[0],'build','bench');const v=S.dy;MEMRUN=false;return JSON.stringify(v)})()`);
   assert.equal(z,'null');
-  assert.deepEqual(errors,[]);await browser.close();console.log('Diary: ok');
+  assert.deepEqual(errors,[]);
+  /* 火山：ホムラが、ホムラの言いかたで書く。いなければ、ひとことも写真もない */
+  {const V=await require('../sim/boot.cjs')({world:1});
+    const v=JSON.parse(await V.run(`(()=>{document.querySelector('#dialog').hidden=true;S.introSeen=true;const h=dyWriter();if(!h)return JSON.stringify({name:null});S.dyU={};S.dyTx=[];const out=[];
+      for(let i=0;i<30;i++)out.push(...dyNote({d:5,w:[[h.name,h.elem,null,'build','bench',1]],m:[],k:{},o:{},wx:'sun1'},h));
+      S.dy=null;dyEv('テスト');S.dy.ph=1;diaryClose();const L=S.diary[S.diary.length-1];
+      const keep=S.res.slice();S.res=S.res.filter(r=>r!==h);S.dy=null;dyEv('テスト2');S.dy.ph=2;diaryClose();const G=S.diary[S.diary.length-1];S.res=keep;
+      return JSON.stringify({name:h.name,boku:out.filter(t=>/ぼく/.test(t)).length,atai:out.filter(t=>/あたい/.test(t)).length,ft:!!L.ft,fw:L.fw&&L.fw[0],ph:L.ph,gft:G.ft||null,gph:G.ph||null})})()`));
+    assert.equal(v.name,'ホムラ','Homura writes in the volcano');assert.equal(v.boku,0,'Homura does not say ぼく');assert.ok(v.atai>0,'Homura says あたい');
+    assert.ok(v.ft&&v.fw==='ホムラ'&&v.ph===1,'note and photo');assert.equal(v.gft,null);assert.equal(v.gph,null,'no note or photo without Homura');
+    assert.deepEqual(V.errors,[]);await V.browser.close();console.log('Diary: Homura writes in the volcano')}
+  await browser.close();console.log('Diary: ok');
 })().catch(e=>{console.error(e);process.exit(1)});
