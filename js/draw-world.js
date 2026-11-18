@@ -113,7 +113,7 @@ function waterCorner(g,R,X0,Y0,X1,Y1,isW){/* 丸めて陸になった、水の�
   for(let ty=Y0;ty<Y1;ty++)for(let tx=X0;tx<X1;tx++){if(!isW(tx,ty)||R.ut(tx,ty)!==-1)continue;const xa=(tx-X0)*TS,ya=(ty-Y0)*TS;let any=false;
     for(let y=ya;y<ya+TS;y++)for(let x=xa;x<xa+TS;x++)if(!F[(y+M)*gw+x+M]){any=true;if(!L){L=TMPC();L.width=w;L.height=h;lg=L.getContext('2d');id=lg.createImageData(w,h)}id.data[(y*w+x)*4+3]=255}
     if(!any)continue;let gr=0,dr=0;for(let b=-1;b<=1;b++)for(let a=-1;a<=1;a++){if(!a&&!b||isW(tx+a,ty+b))continue;const j=(ty+b)*W+tx+a;if(REV.has(j))gr++;else dr++}/* まわりの陸が草地か、あれ地か */
-    const px=tx*TS,py=ty*TS;if(gr>dr&&gt.ok)lg.drawImage(gt,px%96,py%96,TS,TS,xa,ya,TS,TS);else lg.drawImage(dryTex(px,py),px%288,py%288,TS,TS,xa,ya,TS,TS)}
+    const px=tx*TS,py=ty*TS;if(gr>dr&&gt.ok)lg.drawImage(gt,px%GRTEX,py%GRTEX,TS,TS,xa,ya,TS,TS);else lg.drawImage(dryTex(px,py),px%DRTEX,py%DRTEX,TS,TS,xa,ya,TS,TS)}
   if(!L)return;const m=TMPC();m.width=w;m.height=h;m.getContext('2d').putImageData(id,0,0);lg.globalCompositeOperation='destination-in';lg.drawImage(m,0,0);g.drawImage(L,0,0);L.width=L.height=m.width=m.height=0}
 function waterChunk(cx,cy){const k=cy*64+cx;if(WCK.c.has(k))return WCK.c.get(k);{const g0=GRD.c.get(k);if(GRD.s!==S||!g0||!g0.f||g0.st)return null}/* 地面の区画（くわしい絵）ができてから作る */const C=window.CHIPS,X0=cx*16,Y0=cy*16,X1=Math.min(W,X0+16),Y1=Math.min(H,Y0+16),isW=(x,y)=>x>=0&&y>=0&&x<W&&y<H&&S.ground[y*W+x]>=1,near=(x,y)=>{for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++)if(isW(x+dx,y+dy))return true;return false};
   const P=new Path2D();let any=false;for(let y=Y0;y<Y1;y++){let x=X0;while(x<X1){if(!near(x,y)){x++;continue}let e=x;while(e+1<X1&&near(e+1,y))e++;P.rect(x*TS,y*TS,(e-x+1)*TS,TS);any=true;x=e+1}}/* 水の模様をぬる所：水のマスと、そのまわり1マス */
