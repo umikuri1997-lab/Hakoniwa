@@ -48,9 +48,9 @@ function juiceWaveDraw(now){const R=waveR(now);if(R<0)return;const e=now-JWAVE.t
     for(let i=0;i<n;i++){const a=i/n*Math.PI*2,x=cx+Math.cos(a)*r2,y=cy+Math.sin(a)*r2*.62;ctx.fillRect(Math.round(x/P)*P,Math.round(y/P)*P,P*(b?1:2),P)}}
   ctx.globalAlpha=1}
 
-function juice2Frame(now){juiceHouseWatch(now);if(typeof zkMsTick==='function')zkMsTick(now);if(typeof orgelTick==='function')orgelTick(now)}
-function juice2Draw(now){if(JGLOW.length)juiceGlowDraw(now);if(!JHS.length&&!JWAVE)return;juiceWaveDraw(now);juiceHouseDraw(now)}
-function juice2Reset(){JHS.length=0;JHREF=null;JHSIG=null;JWAVE=null;JSTORE.n=0;if(typeof JGLOW!=='undefined')JGLOW.length=0}
+function juice2Frame(now){if(typeof juice3Frame==='function')juice3Frame(now);juiceHouseWatch(now);if(typeof zkMsTick==='function')zkMsTick(now);if(typeof orgelTick==='function')orgelTick(now)}
+function juice2Draw(now){if(typeof juice3Draw==='function')juice3Draw(now);if(JGLOW.length)juiceGlowDraw(now);if(!JHS.length&&!JWAVE)return;juiceWaveDraw(now);juiceHouseDraw(now)}
+function juice2Reset(){if(typeof juice3Reset==='function')juice3Reset();JHS.length=0;JHREF=null;JHSIG=null;JWAVE=null;JSTORE.n=0;if(typeof JGLOW!=='undefined')JGLOW.length=0}
 
 /* ---------- 5. 宝の光（juiceGlowAt）：つりの当たり・宝の地図の宝。光の柱と、のぼる光の粒 ---------- */
 const JGLOW=[];const JGLOWMS=1800;const JGLOWC=[['#fffbe6','#e8f4ff'],['#ffe58a','#fffbe6'],['#ffd060','#fff3b0']];/* tier 0・1・2 の色 */

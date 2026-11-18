@@ -48,7 +48,7 @@ function tryJob(r,G,k){
 }
 const JOBCAT=[['build','repair'],['craft'],['harvest','water','tend','till','sow','plant'],['cook','chop','mine','drop','weed','seed','offer','gather']];
 const ALLJOB=['harvest','sow','offer','gather'],FARMJ=['harvest','water','tend','till','sow'];/* 畑の世話 */
-const IDLE_ACTS=['fish','play','wander','idle','quirk','critwatch','sunset','rainjoy','admire','ownseat'];
+const IDLE_ACTS=['fish','play','wander','idle','quirk','critwatch','sunset','rainjoy','admire','ownseat','trlook'];
 // 種まき・植える・依頼・建築があるか（いつもの作業を中断してでも向かう仕事）
 function hasHighWork(r){
   if(!isNight()&&typeof fogWant==='function'&&fogWant(r))return true;if(!isNight()&&webWant(r))return true;/* たのまれたクモの巣 *//* たのまれた宝箱・あしあと */
@@ -158,6 +158,7 @@ function goWander(r,G){
   if(!isNight()&&!enemyLive()&&Math.random()<OWNSEATP&&goOwnSeat(r,G))return;/* じぶんのいすで休む */
   if(!isNight()&&!enemyLive()&&goWeather(r,G))return;/* 雨・夕焼け */
   if(!isNight()&&!enemyLive()&&Math.random()<.3&&goCritter(r,G))return;if(!isNight()&&!enemyLive()&&Math.random()<.25&&typeof goPetAnimal==='function'&&goPetAnimal(r,G))return;/* 飼う生き物をなでにいく *//* 小さな生き物を見つけたら、見にいく */
+  if(!isNight()&&!enemyLive()&&typeof goOuting==='function'&&goOuting(r,G))return;/* なかよしと、おでかけ（outing.js） */if(!isNight()&&!enemyLive()&&typeof goTreasure==='function'&&goTreasure(r,G))return;/* たからものをながめる（gifts.js） */
   if(!isNight()&&!enemyLive()&&(r.quirkT||0)<=S.t&&Math.random()<QUIRKP&&goQuirk(r,G))return;/* ひとりのときのしぐさ */
   const c=[];for(let j=0;j<W*H;j++){const d=G.dist[j];if(d>=2&&d<=7&&walk(j)&&!(TAKEN&&TAKEN.has(j))&&!((r.routeAvoid||{})[j]>S.t)){const x=j%W,y=(j/W)|0;if(isNight()&&!VILL[j])continue;c.push(j)}}
   if(!c.length)return startAct(r,G,'idle',-1,{dur:15});
@@ -228,13 +229,25 @@ const TROUBLE={
   dark:{t:'夜、家のまわりが暗くてこわい',ok:r=>{const h=homeOf(r);return !!h&&!lightNear(h)},thx:['あかりがあると、夜もこわくないね。','ありがとう。夜が、ちょっとたのしみになったよ。']},
   fav:{t:r=>BL[likeF(r)].name+'がほしい',ok:r=>{const f=likeF(r);return !!f&&BL[f]&&BL[f].kind==='furn'&&!cnt(f)&&recipeKnown(f)&&lvOK(f)},thx:['ずっと、ほしかったんだ。ありがとう！','わあ、だいじにするね！']},
   want:{t:r=>{const f=S.trouble&&S.trouble.f;return (FOODS[f]?FOODS[f].name:'すきな物')+'が食べたい'},ok:r=>{const T=S.trouble;if(T&&T.id===r.id&&T.k==='want')return !!FOODS[T.f]&&!T.ate;return wantPick(r)!=null},thx:['食べたかったんだ。ありがとう！','おいしかった……しあわせ！']},/* おやつで、その食べ物をあげるとなおる（food-like.js の foodReact が T.ate） */
+  room:{t:r=>{const sp=S.trouble&&SPOTS.find(q=>q.k===S.trouble.f);return sp?'家に、'+sp.n+'がほしい。'+sp.how:'家に、部屋がほしい'},ok:r=>{const T=S.trouble,h=homeOf(r);if(T&&T.id===r.id&&T.k==='room')return !!h&&!!ROOMWANT[T.f]&&!roomIn(h,T.f);return roomPick(r)!=null},thx:['ずっと、こういう部屋がほしかったんだ。ありがとう！','わあ、家がもっとすきになったよ！']},/* 部屋のおねがい：その子の家に、まだない部屋（作れる家具だけでできる部屋） */
   far:{t:'食べ物の箱が遠い',ok:r=>{const b=myBed(r);if(b<0||!BOXL.length)return false;const G=bfs(b%W,(b/W)|0);const k=nearest(G,j=>eatAdj(j)>=0,200);return k<0||G.dist[k]>TROUBLEFAR},thx:['ごはんが近くなって、うれしいな。','これで、すぐ食べにいけるね。']}};
+const ROOMWANT={shinshitsu:['bed','shelf1'],ofuro:['bathtub','tub'],shosai:['achair','shelf1','flamp'],living:['sofa1','ltable','monstera'],dinroom:['table','chair'],daidokoro:['cooktable','tub','taru'],nedoko:['bed','table'],monoheya:['crate','asabukuro','makidana'],chozo:['crate','taru'],naya:['crate','taru','asabukuro']};/* 部屋のおねがいに出す部屋と、それを作れるかを見る家具 */
+const roomIn=(h,k)=>SPOTI.some(t=>t.sp.k===k&&h.inside.has(t.j)&&t.sp.need.every((nd,i)=>t.found[i].filter(q=>h.inside.has(q)).length>=nd[1]));/* その家に、その部屋がそろっているか（家の画面の「部屋」と同じ） */
+function roomPick(r){const h=homeOf(r);if(!h)return null;const L=Object.keys(ROOMWANT).filter(k=>!roomIn(h,k)&&ROOMWANT[k].every(id=>cnt(id)>0||(S.inv[id]||0)>0||bpKnown('furn',id)));return L.length?L[Math.floor(Math.random()*L.length)]:null}
+/* こまりごと・ゆめで作ってあげた物：たのんだ子が、すぐ見にきて（questjoy）、そのあと、その家具のふつうの使い方でつかう（tryGiftUse）。つかうせいれいも、その子にきめる */
+function giftVisit(r,j){if(!r||j==null||j<0||!S.res.includes(r)||IS_STORY_REPLAY||typeof MEMRUN!=='undefined'&&MEMRUN)return;j=anc(j);const id=S.obj[j];if(!id||!BL[id])return;const L=(QUEST_VISITS.get(r)||[]).filter(v=>v.obj!==j);L.push({obj:j,id,gift:1});QUEST_VISITS.set(r,L.slice(0,4));if(OWNABLE(id)&&useFor(j,r))(S.useOwn||(S.useOwn={}))[j]=r.id}
+const giftCell=(id,r)=>{const h=homeOf(r);let best=-1,bd=1e9;for(let j=0;j<W*H;j++){if(S.obj[j]!==id)continue;const d=h&&h.inside.has(j)?-1:Math.hypot(j%W-r.x,((j/W)|0)-r.y);if(d<bd){bd=d;best=j}}return best};/* その家具の、その子の家の中の物（なければ、いちばん近い物） */
+function tryGiftUse(r){const j=r.giftUseJ;if(j==null)return false;delete r.giftUseJ;if(isNight()||enemyLive()||r.hunger<300||hungry(r))return false;const o=S.obj[j];if(!o)return false;const G=bfs(r.x|0,r.y|0);
+  if(BENCHES.has(o)){if(!free('o'+j,1)||G.dist[j]<0)return false;endAct(r);startAct(r,G,'rest',j,{key:'o'+j,obj:j,seat:j,dur:30,own:1});return true}
+  if(SEATS.includes(o)){if(!free('o'+j,1)||!free('seat'+j,1)||G.dist[j]<0)return false;endAct(r);startAct(r,G,'ownseat',j,{key:'o'+j,obj:j,dur:30});return true}
+  const p=BL[o]&&BL[o].play;if(p&&!(o==='campfire'&&campOut(j))&&free('o'+j,p.cap)){const st=p.adj?nearest(G,k=>adjOf(k,q=>anc(q)===j)>=0&&walk(k)&&!S.obj[k],40):G.dist[j]>=0?j:-1;if(st<0)return false;endAct(r);startAct(r,G,'play',st,{key:'o'+j,obj:j,what:o,fun:p.fun,dur:p.dur,pt:p.pt,pw:p.pw});return true}
+  return false}
 const troubleText=r=>{const T=S.trouble&&S.trouble.id===r.id?TROUBLE[S.trouble.k]:null;return T?(typeof T.t==='function'?T.t(r):T.t):''};
 function troubleMorning(){if(!S||S.free||IS_STORY_REPLAY||typeof MEMRUN!=='undefined'&&MEMRUN)return;const d=dayNo(),T=S.trouble;
   if(T&&(!S.res.some(r=>r.id===T.id)||d-T.d>=TROUBLEDAYS))S.trouble=null;if(S.trouble)return;
-  const C=[];for(const r of S.res){if(r.hidden&&!homeOf(r))continue;for(const k in TROUBLE)if(TROUBLE[k].ok(r))C.push([r,k])}if(!C.length)return;const [r,k]=C[Math.floor(Math.random()*C.length)];S.trouble={id:r.id,k,d};if(k==='want')S.trouble.f=wantPick(r)}
+  const C=[];for(const r of S.res){if(r.hidden&&!homeOf(r))continue;for(const k in TROUBLE)if(TROUBLE[k].ok(r))C.push([r,k])}if(!C.length)return;const [r,k]=C[Math.floor(Math.random()*C.length)];S.trouble={id:r.id,k,d};if(k==='want')S.trouble.f=wantPick(r);if(k==='room')S.trouble.f=roomPick(r)}
 let TRBT=0;function troubleTick(){const T=S&&S.trouble;if(!T||(TRBT=(TRBT+1)%5))return;/* 5秒に1回 */const r=S.res.find(q=>q.id===T.id);if(!r){S.trouble=null;return}const D=TROUBLE[T.k];if(!D){S.trouble=null;return}
-  if(D.ok(r))return;S.trouble=null;funAdd(r,TROUBLEFUN,'trouble');if(!r.hidden){JOYU.set(r,performance.now()+3000);addFloat(r.x,r.y-1.6,pickFresh('trb:'+T.k,D.thx),'#fff3d6');r.bubble='💕'}toast(r.name+'のこまりごとが、なくなった','good');if(typeof letterQ==='function')letterQ(r,'thx',{f:T.k==='fav'&&typeof likeF==='function'&&BL[likeF(r)]?BL[likeF(r)].name:T.k==='want'&&FOODS[T.f]?FOODS[T.f].name:''},T.k)}ACT_LBL.rainjoy='雨をよろこんでいる';ACT_LBL.stretch='のびをしている';
+  if(D.ok(r))return;S.trouble=null;funAdd(r,TROUBLEFUN,'trouble');if(!r.hidden){JOYU.set(r,performance.now()+3000);addFloat(r.x,r.y-1.6,pickFresh('trb:'+T.k,D.thx),'#fff3d6');r.bubble='💕'}toast(r.name+'のこまりごとが、なくなった','good');{const id=T.k==='fav'?likeF(r):T.k==='room'?(SPOTI.find(t=>t.sp.k===T.f&&homeOf(r)&&homeOf(r).inside.has(t.j))||{}).j:null;const gj=T.k==='room'?id:id?giftCell(id,r):-1;if(gj!=null&&gj>=0)giftVisit(r,gj)}if(typeof letterQ==='function')letterQ(r,'thx',{f:T.k==='fav'&&typeof likeF==='function'&&BL[likeF(r)]?BL[likeF(r)].name:T.k==='want'&&FOODS[T.f]?FOODS[T.f].name:T.k==='room'&&SPOTS.find(q=>q.k===T.f)?SPOTS.find(q=>q.k===T.f).n:''},T.k)}ACT_LBL.rainjoy='雨をよろこんでいる';ACT_LBL.stretch='のびをしている';
 /* すわる家具（いす・ベンチ）：となりのマスから、すわる位置へ、ぴょんと乗る（in）。おりるときは、すわる位置から、となりのマスへ（out）。
    せいれいの場所（r.x・r.y）はすぐにうつし、絵だけを SEATMVMS のあいだに、はねながらうつす（drawRes0。家具にめりこんで見えない） */
 /* 箱の前の行列：箱から取る・箱へしまう子は、立つマスにほかの子がいて作業していれば、そのてまえで待つ。その子のうしろにならんでいる子がいれば、そのうしろで待つ（行列）。
@@ -331,6 +344,7 @@ function updRes(r,dt){rescueStuck(r);if((RHOLD.get(r)||0)>performance.now())retu
   if(tryMainStoryWait(r))return;
   if(tryEarthIntro(r))return;
   if(tryQuestVisit(r))return;
+  if(tryGiftUse(r))return;
   if(!r.act){decide(r);return}
   const a=r.act;
   if(a.stage==='walk'){if(a.whyW>S.t&&a.whyW-S.t<=WHYHOLD)return;moveR(r,dt);return}/* 行動のわけ：その物を見てから、むかう（whyNote） */
