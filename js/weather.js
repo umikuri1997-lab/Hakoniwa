@@ -1,13 +1,14 @@
 'use strict';
 /* 天気のよほう：天気を2日先まで前もってきめておき（S.wxQ：日→{r 雨・b 虹・s あらし・t その日のできごと}）、朝（morning）はそれを使う。
    画面の上の天気の札をタップすると、きょう・あした・あさっての天気（wxPop）。よほうはかならず当たる。
-   きめ方は前と同じ：あらしは5日めより後・前のあらしから STORMGAP 日で STORMP。雨は WXRAIN（あらしの日は雨）。雨のつぎの日は WXBOW で虹（その日は雨にしない）。
+   きめ方は前と同じ：あらしは5日めより後・前のあらしから STORMGAP 日で STORMP（できごとの間 pace.js：おだやかにする日はきめない・しずかな日がつづいた日は PACESTORM。もうきめた日はかえない）。雨は WXRAIN（あらしの日は雨）。雨のつぎの日は WXBOW で虹（その日は雨にしない）。
    その日のできごとは WXEV（DAYEV から。カミサマの訪問日はのぞく）。できごとが出るのは、その朝に「コワイノ」が来るようになっていて3日めから（前と同じ）。 */
 const WXAHEAD=2,WXRAIN=.22,WXBOW=.5,WXEV=.4;
 function wxQ(){if(!S.wxQ||typeof S.wxQ!=='object')S.wxQ={};return S.wxQ}
 function wxRoll(d){/* 日 d の天気をきめる（前の日がきまっていること） */const Q=wxQ(),p=Q[d-1];
   let last=S.storm!=null?S.storm:-99;for(const k in Q)if(Q[k].s&&+k<d)last=Math.max(last,+k);
-  const s=(S.stormNext===d)||(S.stormNext==null||S.stormNext<d)&&d>=6&&d-last>=STORMGAP&&Math.random()<STORMP;
+  const calm=typeof paceCalmNow==='function'&&paceCalmNow(dayNo()),spice=typeof paceSpiceNow==='function'&&paceSpiceNow();/* できごとの間（pace.js）：おだやかにする日には、新しいあらしをきめない。しずかな日がつづいた日にきめるあらしは PACESTORM */
+  const s=(S.stormNext===d)||(S.stormNext==null||S.stormNext<d)&&d>=6&&d-last>=STORMGAP&&!calm&&Math.random()<(spice?PACESTORM:STORMP);
   const prevRain=p?!!p.r:!!S.rain;let r=s||Math.random()<WXRAIN,b=false;
   if(!s&&prevRain&&Math.random()<WXBOW){b=true;r=false}/* 雨のつぎの日は、虹が出ることがある */
   let t=null;if(Math.random()<WXEV){const ks=Object.keys(DAYEV).filter(k=>k!=='kami');t=pick(ks)}

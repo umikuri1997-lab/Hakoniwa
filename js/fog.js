@@ -110,7 +110,7 @@ function fogTap(tx,ty){/* 「しらべる」のタップ：霧の所・見つけ
   if(o==='fogbox'){if(typeof fogBoxTap==='function')fogBoxTap(j,f);return true}/* 謎をといてから、せいれいがあけにいく（fogpuzzle.js） */
   if(o==='nushiprint'){if(f.done&&!(printOn()&&!printTraced(j))){toast(BL.nushiprint.name);return true}/* たどる依頼のあいだは、見たあしあとも、もう一度見にいく */if(!S.res.some(r=>r.name===POKO&&!r.hidden)){toast('フタバがいません');return true}if(!S.fogReq.includes(j))S.fogReq.push(j);sfx('tgrass');toast('ヌシ様のあしあと：フタバが見にいく');return true}
   if(o==='fogspring'){toast(BL.fogspring.name+'：'+BL.fogspring.desc);return true}return false}
-const FOGBUSY=new Set(['sleep','eat','flee','watchpost','patrol','bury','faint','shiver','reunion','nmeet','fogopen','foglook','bathe','cook','offer','otaki','otakiget']);
+const FOGBUSY=new Set(['sleep','eat','flee','watchpost','patrol','bury','faint','shiver','reunion','nmeet','fogopen','foglook','bathe','cook','offer','otaki','otakiget','sasa','sasaget']);
 function fogFree(r){return !r.hidden&&!r.coffin&&!(r.act&&(FOGBUSY.has(r.act.type)||/^(story|field)/.test(r.act.type)))}
 function fogReqFor(r){/* この子が行ける、たのまれた物 */if(!fogOn()||isNight()||!S.fogReq||!S.fogReq.length)return -1;for(const j of S.fogReq){const o=S.obj[j];if(o==='fogbox'&&(fogFind(j)||{}).unl||o==='nushiprint'&&r.name===POKO){if(free('o'+j,1))return j}}return -1}
 function fogWant(r){return fogFree(r)&&fogReqFor(r)>=0}

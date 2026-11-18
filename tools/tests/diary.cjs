@@ -12,9 +12,21 @@ const assert=require('node:assert/strict');
   assert.deepEqual(r.m,['はじめてのテスト'],'memo and log text merged once');
   assert.equal(r.k,2);assert.deepEqual(r.o,{'罠':1});assert.ok(r.ns&&r.dd,'last night is stored once');
   assert.equal(r.sheet,'diary');assert.equal(r.arg,'m');assert.equal(r.title,r.d+'日めの日記');
-  for(const t of['みんなのしたこと','ベンチを建てた（2回）','できごと','ゆうべの守り','2体を追いはらった','いちばんがんばったのは'])assert.ok(r.body.includes(t),'diary shows '+t);
-  {const b=r.body,i=['ゆうべの守り','できごと','みんなのしたこと'].map(t=>b.indexOf(t));assert.ok(i[0]<i[1]&&i[1]<i[2],'diary order: night, events, work '+i)}
+  for(const t of['みんなのしたこと','ベンチを建てた（2回）','できごと','ゆうべの守り','2体を追いはらった','ゆうべのかつやく'])assert.ok(r.body.includes(t),'diary shows '+t);
+  {const b=r.body,i=['ゆうべのかつやく','ゆうべの守り','できごと','みんなのしたこと'].map(t=>b.indexOf(t));assert.ok(i[0]<i[1]&&i[1]<i[2]&&i[2]<i[3],'diary order: mvp, night, events, work '+i)}
   console.log('Diary: work, events and last night are written and the paper opens in the morning');
+  /* ゆうべのかつやく：追いはらった数＋守った数が2点いじょうでいちばん。おなじ点なら追いはらった数。たのしさ+10・思い出帳・ハンコ */
+  const mv=JSON.parse(await run(`(()=>{closeSheet();while(S.res.length<3)S.res.push(mkRes(S,'テスト'+S.res.length,'fire',CX+S.res.length+.5,CY+.5));const [a,b,c]=S.res;S.dy=null;
+    dyKill(a,'');dyGuard(b);dyGuard(b);dyKill(c,'');const one=dyBest({k:S.dy.k,g:S.dy.g});/* a1点・b2点・c1点 → b */
+    S.dy=null;dyKill(a,'');dyKill(a,'');dyGuard(b);dyKill(b,'');const tie=dyBest({k:S.dy.k,g:S.dy.g});/* a2点(2体)・b2点(1体) → a */
+    S.dy=null;dyKill(a,'');dyGuard(c);const low=dyBest({k:S.dy.k,g:S.dy.g});/* だれも2点にとどかない */
+    S.dy=null;S.ns={n:2,kill:1,lost:[],hurt:0,broke:0,boss:0};dyKill(c,'');dyGuard(b);dyGuard(b);b.fun=50;const m0=(S.memo||[]).length;diaryClose();
+    const L=S.diary[S.diary.length-1],body=document.querySelector('#sheetBody');
+    return new Promise(res=>setTimeout(()=>res(JSON.stringify({one:one&&one.nm,tie:tie&&tie.nm,low,b:b.name,a:a.name,fun:b.fun,mvp:L.mvp&&L.mvp.nm,memo:(S.memo||[]).slice(m0).map(x=>x[2]),txt:body.querySelector('.dyMvp')&&body.querySelector('.dyMvp').textContent,first:body.firstElementChild&&body.firstElementChild.className,stamp:!!body.querySelector('.dyMvp .ustamp')})),700))})()`));
+  assert.equal(mv.one,mv.b,'guards count as points');assert.equal(mv.tie,mv.a,'tie goes to more kills');assert.equal(mv.low,null,'under 2 points: nobody');
+  assert.equal(mv.mvp,mv.b);assert.equal(mv.fun,60,'fun +10');assert.ok(mv.memo.some(t=>t.includes('ゆうべのかつやく')),'memo');
+  assert.ok(/2回まもった/.test(mv.txt),'mvp text '+mv.txt);assert.ok(/dyMvp/.test(mv.first),'mvp is at the top');assert.ok(mv.stamp,'stamp');
+  console.log('Diary: last night MVP');
   /* 2回めの朝：ゆうべの守りを2回しまわない。書くことがなければ、日記をふやさない */
   const n2=JSON.parse(await run(`(()=>{closeSheet();const n=S.diary.length;diaryClose();return JSON.stringify({n,m:S.diary.length,sheet})})()`));
   assert.equal(n2.m,n2.n,'empty day is not stored');assert.equal(n2.sheet,null);

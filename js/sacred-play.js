@@ -70,7 +70,7 @@ function sacredPlayWin(){const P=SPLAY;if(!P)return;sacredPlayClose();if(P.owner
 /* うまくできたときのごほうび（その出番で1回だけ。思い出帳ではなし） */
 function sacredPlayBonus(P){const b=FIELD_PLAY[P.id]?.bonus;if(!b||IS_STORY_REPLAY)return;const F=S.flags.playWon||(S.flags.playWon={});if(F[P.id])return;F[P.id]=true;dirty=true;
   if(b.word)addFloat(P.cx/TS,P.cy/TS-1.6,b.word,'#fff3c4');/* 木のようすが、うれしそうにかわる（物はもらわない） */
-  if(b.fun)for(const r of S.res){if(r.hidden||r.coffin)continue;r.fun=Math.min(100,r.fun+b.fun);addFloat(r.x,r.y-1.4,'たのしさ+'+b.fun)}}/* 村のみんなが、うれしくなる */
+  if(b.fun)for(const r of S.res){if(r.hidden||r.coffin)continue;funAdd(r,b.fun,'tree');addFloat(r.x,r.y-1.4,'たのしさ+'+b.fun)}}/* 村のみんなが、うれしくなる */
 /* しっぱい：数えて、3回でおわり（つぎの日に、もう一度） */
 function sacredPlayMiss(t){const P=SPLAY;if(!P)return;P.fails=(P.fails||0)+1;sacredPlayMsg(t);if(P.fails<PLAY_MISS){sacredPlayHint(P.hint+sacredPlayCount());return}sacredPlayClose();if(P.owner!==S||P.session!==VILLAGE_SESSION)return;sfx('next');(P.fail||P.done)()}
 function sacredPlayClose(){SPLAY=null;sacredPlayHint('');pxTextFree();pxLayerFree();sacredPlayPopFree()}

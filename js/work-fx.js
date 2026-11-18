@@ -53,7 +53,7 @@ function wbworkStage(o){if(!o||hasNeed(o))return -1;if(S.res.some(r=>r.act&&r.ac
 /* 音と粒：描くたびに、動きの決まった所をこえたら出す */
 /* 箱などから取り出す・置く：その物のほうを向き（boxFace）、しゃがんで手をのばす動き（spirit3d の store）。
    動きは行動のはじめから（boxActT：せいれいの時間 a.t。1倍で1秒＝2.5）。音は、取る・置くのあいだ、ゴソゴソ（SAMPLES.goso）を、切った所をかえながらつなげて鳴らす（boxLoop）。 */
-const TAKEACT=new Set(['bfetch','fetch','cgrab','cpick','otakiget','spick','apick','ppick','haul','cget','acol','pget']);
+const TAKEACT=new Set(['bfetch','fetch','cgrab','cpick','otakiget','sasaget','spick','apick','ppick','haul','cget','acol','pget']);
 const PUTACT=new Set(['store','smat','sitem','ydrop','cput','aput','sput','pput']);
 
 /* 寝ている（nap）・場面で止められている（onHold）子は、動きが進まないので、取る・置くの動きと音にしない（寝ているあいだ、ゴソゴソが鳴りつづけた） */
