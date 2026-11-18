@@ -46,6 +46,7 @@ Object.assign(SAMPLES,{"gravel":["assets/g/1367715265.mp3"],"wdon":["assets/g/6e
 Object.assign(SAMPLES,{"tonton":["assets/g/d659bed8d7.mp3","assets/g/b635eb8871.mp3","assets/g/5c204e10f1.mp3","assets/g/ba26bd4423.mp3"],"potclk":["assets/g/17e80015f2.mp3","assets/g/585623a7e1.mp3","assets/g/64ea90268e.mp3"],"tink":["assets/g/329095dca9.mp3","assets/g/d5c75b01cb.mp3","assets/g/77a6e1091e.mp3"],"plate":["assets/g/ec6e73db00.mp3","assets/g/094fbbae9e.mp3","assets/g/a35b4f6573.mp3"],"cloth":["assets/g/aee6f07e05.mp3","assets/g/8af3bc4e78.mp3","assets/g/d6540587a2.mp3","assets/g/5f2f5f0c54.mp3"]});/* 料理・もの作りの手もとの音（Kenney CC0、tools/sound/ui_asmr.py） */
 Object.assign(SAMPLES,{"glight":["assets/g/449e80d89c.mp3"]});/* まもりの光：持ち主がくれた音に、こだまをかさねて余韻を長くした（tools/sound/glight_tail.py） */
 Object.assign(SAMPLES,{"spike":["assets/g/5e814bb008.mp3"],"poison":["assets/g/1b43a21e56.mp3"]});/* 効果音ラボ（ユーザー提供）：とげの罠は「芝生の上を歩く」のひと足ぶん、どくの罠は「水中で息を吐く」 */
+Object.assign(SAMPLES,{"ldmusic":["assets/g/eeb443379e.mp3"]});/* マップの読みこみ中の曲：OpenGameArt「JRPG Piano」（joth、CC0。tools/sound/load_music.py。持ち主がえらんだ） */
 SAMPLES.shard=['assets/g/9464bc7161.mp3'];/* ヌシのかけらをはめる音（ユーザーの音） */
 SAMPLES.furniturePlace=['assets/g/e33cbd97b8.mp3'];/* 家具を置く音：ユーザー提供 */
 SAMPLES.matDrop=['assets/g/ef846d878d.mp3'];SAMPLES.fireatk=['assets/g/149bc0958c.mp3'];/* 火のせいれいの攻撃：ボッ（もらった音） *//* fire：焚き火のぱちぱち（もらった音。60秒のうち12秒を切り出し） */SAMPLES.click=['assets/g/dc1fab61b3.mp3'];/* ボタンをおす音（もらった音） *//* 守りの光で木・岩をこわして、素材が落ちたときの音（もらった音） */
@@ -91,7 +92,7 @@ let AUNLK=0;function audioUnlock(){/* iPhone は、さわったとき（touchend
 function audioInit(){
   if(AC){if(AC.state==='suspended')AC.resume().catch(()=>{});return}
   try{AC=new (window.AudioContext||window.webkitAudioContext)();if(AC.state==='suspended')AC.resume().catch(()=>{})}catch(e){return}
-  const comp=AC.createDynamicsCompressor();comp.connect(AC.destination);
+  const comp=ACOMP=AC.createDynamicsCompressor();comp.connect(AC.destination);
   bgmG=AC.createGain();bgmG.gain.value=gainB();bgmF=AC.createGain();bgmF.gain.value=1;bgmG.connect(bgmF);bgmF.connect(comp);
   sfxG=AC.createGain();sfxG.gain.value=gainS();sfxG.connect(comp);
   voxC=AC.createDynamicsCompressor();voxC.threshold.value=-38;voxC.ratio.value=12;voxC.knee.value=4;voxC.attack.value=.003;voxC.release.value=.1;{const vg=AC.createGain();vg.gain.value=.5;voxC.connect(vg);vg.connect(sfxG)}/* 声の大きさ（コンプレッサーのあとで、半分に） *//* 声は、大きいところをおさえて、音の大きさをそろえる（声の音の中に、ほかより大きい所があるため） */
@@ -120,10 +121,8 @@ function stageMusic(){
   bgmF.gain.cancelScheduledValues(AC.currentTime);bgmF.gain.setValueAtTime(1,AC.currentTime);
   nextT=AC.currentTime+.01;sched();
 }
-const BGMDBG={c:0,r:0,n:0,err:''};/* 曲のようすのたしかめ（iPhone で曲が鳴らないのをしらべる。わかったらけす） */
-function sched(){BGMDBG.c++;try{sched0()}catch(e){BGMDBG.err=String(e&&e.message||e)}}
-function sched0(){
-  if(!AC||AC.state!=='running')return;BGMDBG.r++;
+function sched(){
+  if(!AC||AC.state!=='running')return;
   if(nextT<AC.currentTime)nextT=AC.currentTime+.05;
   // 昼夜の曲は、フェードアウト→切り替え→フェードインでつなぐ
   {const now=AC.currentTime;if(wantSong!==curSong&&!bgmSw){bgmSw=now+2.4;bgmF.gain.cancelScheduledValues(now);bgmF.gain.setValueAtTime(bgmF.gain.value,now);bgmF.gain.linearRampToValueAtTime(0,now+2.2)}
@@ -131,7 +130,7 @@ function sched0(){
   while(nextT<AC.currentTime+.3){
     if(curSong!=='opening'){nextT+=60/SONGS[curSong].bpm/2;step=(step+1)%64;continue}/* 曲はオープニング（タイトル・マップえらび・プロローグ）だけ。遊んでいるあいだは曲なし（効果音・環境音はそのまま） */
     const g=SONGS[curSong],e=60/g.bpm/2,t=nextT,bar=(step/8)|0,ch=g.chords[bar%4],night=curSong.indexOf('night')===0,bossArr=night&&curSong.slice(-1)==='B',opening=curSong==='opening',battle=curSong==='battle',hinoS=curSong==='hino';
-    BGMDBG.n++;const n=g.at[step];if(n)tone(n[0],t,n[1]*e*.95,g.lead,battle?.045:opening?.16:night?.09:.075,bgmG);
+    const n=g.at[step];if(n)tone(n[0],t,n[1]*e*.95,g.lead,battle?.045:opening?.16:night?.09:.075,bgmG);
     if(hinoS){if(n)tone(n[0]-12,t,n[1]*e*.9,'sawtooth',.018,bgmG);/* メロディに、ひくいざらついた音をかさねる */if(step%4===0)tone(ch[0],t,e*3.6,'triangle',.14,bgmG);if(step%8===0)for(const c of ch[1])tone(c,t,e*7.6,'sine',.03,bgmG);if(step%8===0||step%8===3||step%8===5)tone(45,t,.22,'sine',step%8===0?.2:.13,bgmG,36);/* たいこ：ドン・ドドン */if(step%8===6)noise(t,.06,.04,bgmG,1500);if(step%2===1&&Math.random()<.5)noise(t,.02,.012+Math.random()*.012,bgmG,4000);/* 火のはぜる音 */nextT+=e;step=(step+1)%64;continue}
     if(battle){if(step%2===0)tone(ch[0]+(step%4===2?12:0),t,e*1.7,'triangle',.15,bgmG);if(step%8===0)for(const c of ch[1])tone(c,t,e*7.5,'sawtooth',.012,bgmG);if(step%4===0)tone(45,t,.14,'sine',.16,bgmG,40);if(step%4===2)noise(t,.09,.05,bgmG,1800);else if(step%2===1)noise(t,.03,.025,bgmG);nextT+=e;step=(step+1)%64;continue}/* たたかい：ベースを8分できざみ、たいこ *//* マップ画面の曲（opening）：サインだけだとスマホのスピーカーで聞こえないので、三角波でほかの曲と同じくらいの大きさに */
     if(step%8===0)tone(ch[0],t,e*(opening?6:night?7.5:3.6),'triangle',opening?.22:.13,bgmG);
@@ -155,7 +154,12 @@ let ambF=null,AMBIN=false;
 /* 家の中を映しているか：画面のまん中のマスが、屋根をはずした家の中（ふだんの拡大より、ちぢめていないとき） */
 function ambIndoor(){if(!S||!started||typeof HOUSES==='undefined'||!HOUSES.length||typeof cam==='undefined')return false;const vw=VW/cam.z,vh=VH/cam.z,cx=((cam.x+vw/2)/TS)|0,cy=((cam.y+vh/2)/TS)|0;if(cx<0||cy<0||cx>=W||cy>=H)return false;
   if(cam.z<homeZ()*.95)return false;const h=HOUSES.find(q=>q.set.has(cy*W+cx));return !!h&&roofAOf(h)<.5}
-function ambTick(){if(!AC||AC.state!=='running')return;if(!ambG){ambG=AC.createGain();ambG.gain.value=.09;ambF=AC.createBiquadFilter();ambF.type='lowpass';ambF.frequency.value=18000;ambF.Q.value=.4;ambG.connect(ambF);ambF.connect(AC.destination)}
+/* マップの読みこみ中（「マップを読みこみ中…」の画面 STLD）だけ、読みこみ中の曲をくりかえし鳴らす。おわったら1秒（LDMFADE）で消す */
+const LDMV=.27,LDMFADE=1;let LDM=null,ACOMP=null;/* bgmF は曲の切りかえで0になる（ゲームがはじまるときとかさなる）ので、つながない */
+function ldMusicTick(){const want=typeof STLD!=='undefined'&&STLD&&SND.bgm,now=AC.currentTime;
+  if(want&&!LDM){const b=(SBUF.ldmusic||[])[0];if(!b)return;const src=AC.createBufferSource(),g=AC.createGain();src.buffer=b;src.loop=true;src.loopStart=.06;src.loopEnd=b.duration-.06;g.gain.value=LDMV*(SND.bv??1);src.connect(g);g.connect(ACOMP);src.start(now,.06);LDM={src,g};return}
+  if(!want&&LDM){const{src,g}=LDM;LDM=null;g.gain.cancelScheduledValues(now);g.gain.setValueAtTime(g.gain.value,now);g.gain.linearRampToValueAtTime(0,now+LDMFADE);src.stop(now+LDMFADE+.05)}}
+function ambTick(){if(!AC||AC.state!=='running')return;ldMusicTick();if(!ambG){ambG=AC.createGain();ambG.gain.value=.09;ambF=AC.createBiquadFilter();ambF.type='lowpass';ambF.frequency.value=18000;ambF.Q.value=.4;ambG.connect(ambF);ambF.connect(AC.destination)}
   {const inn=ambIndoor();if(inn!==AMBIN){AMBIN=inn;ambF.frequency.setTargetAtTime(inn?700:18000,AC.currentTime,inn?.25:.4)}}/* 家の中を映すと、外の雨・鳥・虫の音が、壁ごしにやわらかくこもる */
   const want={birds:0,rain:0,night:0,amb_morn:0,amb_spr:0,amb_sum:0,amb_snight:0};let h=12,on=false;if(S&&started&&SND.sfx&&$('#title').hidden&&$('#maps').hidden){on=true;h=hour();if(S.rain)want.rain=.45;else{/* 朝と夕方は、ゆっくり入れかわる */const cl=v=>Math.max(0,Math.min(1,v)),se=typeof seasonNow==='function'?seasonNow():0;
     /* 昼：朝（5時〜7時半）は朝の音、そのあとは季節の音（春・夏はもらった音、秋・冬は鳥の声）。夜：夏はもらった夏の夜の音、ほかは虫の声（大きさ0.5） */
