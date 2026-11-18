@@ -354,7 +354,7 @@ function renderSheet(){
     body.appendChild(bd);if(typeof boardPinFx==='function')boardPinFx(bd);/* 草原：新しい依頼の紙は、ぺたっとおかれて、ピンがささる */
     const s2=el('<div class="sec"><h3>依頼を書く</h3><div class="cfind"><input id="craftQ" type="search" placeholder="名前でさがす" autocomplete="off"><button class="ctab cnow">いま作れる</button><button class="ctab cflt"></button></div><div class="ctabs"></div><div class="rows"></div></div>');
     const CIDS=CRAFT_TABS.flatMap(([,ids])=>ids),cShow=id=>recipeKnown(id)&&(lvOK(id)||S.recipes[id])&&recShown(id);
-    const gearOn=WD===1||GEAR_IDS.some(id=>S.recipes&&S.recipes[id]);/* そうびは火山から */
+    const gearOn=WD===1||GEAR_IDS.some(id=>S.recipes&&S.recipes[id]);/* そうびは、火山か、レシピをおぼえてから */
     const tagOn=t=>t==='ぜんぶ'||(t!=='そうび'||gearOn)&&CIDS.some(id=>cShow(id)&&tagsOf(id).includes(t));
     craftTags=craftTags.filter(tagOn);
     {const q=s2.querySelector('#craftQ'),fb=s2.querySelector('.cfind .cflt'),nb=s2.querySelector('.cfind .cnow');if(craftCan)nb.classList.add('on');nb.onclick=()=>{craftCan=!craftCan;renderSheet()};q.value=craftQ;
