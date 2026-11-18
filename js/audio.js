@@ -158,7 +158,7 @@ function sfxOut(){let n=AC.createGain(),h=n;n.gain.value=SFXV;if(SFXP&&AC.create
 let TAPOBJ=0,TAPMAT=0;const TAPK=new Set(['twood','tgrass','tcan','tstone','tfoe','tweb','tani','tbell','tplace','tcloth','tsoil','twater','tsacred']);
 function sfx(k){
   if(k==='open'||k==='crit'||TAPK.has(k))TAPOBJ=performance.now();if(TAPK.has(k))TAPMAT=TAPOBJ;else if(k==='open'&&(TAPOBJ-TAPMAT<120||typeof TAPPEND!=='undefined'&&TAPPEND&&TAPOBJ-TAPPEND<120))return;/* 「みる」で物の音が鳴ったタップは、画面がひらく音をかさねない *//* 地図の物にさわった音が鳴ったら、葉・火の粉の音は出さない（tapFx） */
-  if(!AC||!SND.sfx||AC.state!=='running')return;const now=AC.currentTime;if(lastSfx[k]&&now-lastSfx[k]<.07)return;lastSfx[k]=now;
+  if(!AC||!SND.sfx)return;if(AC.state!=='running'){/* iPhone などは、さわってすぐは音がまだ止まっている（resume があとで終わる）。ボタンの音は、うごきだしてから鳴らす（マップの場所の音はすてる） */if(AC.state==='suspended'&&SFXV===1&&!SFXP&&!SFXL&&!SFXTAB){const t0=performance.now();AC.resume().then(()=>{if(performance.now()-t0<600&&AC.state==='running')sfx(k)}).catch(()=>{})}return}const now=AC.currentTime;if(lastSfx[k]&&now-lastSfx[k]<.07)return;lastSfx[k]=now;
   const t=now+.01,o=SFXV!==1||SFXP||SFXL?sfxOut():sfxG,seq=(ns,gap,type,v,d)=>ns.forEach((m,i)=>tone(m,t+i*gap,d||gap*1.6,type,v,o));
   SFXO=o===sfxG?null:o;if(SFXTAB&&(k==='tap'||k==='next')){SFXTABD=1;if(SFXTAB===2)return;k='tab'}/* タブをおしたときのボタンの音は、めくる音に */
   if(k.startsWith('cv_')){playU(k,.3);return}/* 小さな生き物の鳴き声 */
