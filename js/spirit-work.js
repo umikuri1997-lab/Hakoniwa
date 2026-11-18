@@ -180,13 +180,14 @@ ACT_LBL.quirk='ひとりで、のんびりしている';
 /* ---------- 天気・時間への反応：雨の日の水のせいれい・夕焼け・朝ののび ---------- */
 const SUNSET0=17.5,SUNSET1=19.5,SUNFUN=2;
 function goWeather(r,G){const h=hour(),here=(r.y|0)*W+(r.x|0),out=!roomOf(here)&&!S.floor[here];
+  if(typeof feelRest==='function'&&feelRest(r,G))return true;/* 冬は火にあたる・夏はすずしい所で休む（feel.js） */
   if(S.rain&&r.elem==='water'&&out&&Math.random()<.4){startAct(r,G,'rainjoy',-1,{dur:10});return true}/* 雨の日、水のせいれいは、ばんざいしてよろこぶ */
   if(h>=SUNSET0&&h<SUNSET1&&!S.rain&&Math.random()<.4){/* 夕焼けを見る：見ている子がいれば、そのとなりにすわる */
     const m=S.res.find(q=>q!==r&&!q.hidden&&q.act&&q.act.type==='sunset'&&Math.hypot(q.x-r.x,q.y-r.y)<10);
     let st=-1;if(m){const mj=(m.act.stand>=0?m.act.stand:(m.y|0)*W+(m.x|0));st=nearest(G,j=>(j===mj-1||j===mj+1)&&walk(j)&&!S.obj[j]&&!(TAKEN&&TAKEN.has(j)),16)}
     if(st<0&&out&&!S.obj[here])st=here;if(st<0)return false;startAct(r,G,'sunset',st===here?-1:st,{dur:40});return true}
   return false}
-ACT.sunset={start(r,a){r.face=-1;r.bubble=''},tick(r,a){if(a.t>6&&a.t<12)r.bubble='✨';else if(a.t>=12)r.bubble=''},done:(r,a)=>a.t>=a.dur||hour()>=SUNSET1+.5||S.rain,end(r){r.fun=Math.min(100,r.fun+SUNFUN);r.wanderRestUntil=S.t+45}};
+ACT.sunset={start(r,a){r.face=-1;r.bubble=''},tick(r,a){if(a.shade)return;/* 夏のすずみ（feelRest）は、すわるだけ */if(a.t>6&&a.t<12)r.bubble='✨';else if(a.t>=12)r.bubble=''},done:(r,a)=>a.t>=a.dur||hour()>=SUNSET1+.5||S.rain,end(r){r.fun=Math.min(100,r.fun+SUNFUN);r.wanderRestUntil=S.t+45}};
 ACT.rainjoy={start(r){r.bubble='💧'},done:(r,a)=>a.t>=a.dur||!S.rain,end(r){r.fun=Math.min(100,r.fun+SUNFUN)}};
 ACT.stretch={start(r){r.bubble='✨'},done:(r,a)=>a.t>=a.dur,end(r){r.bubble=''}};
 ACT_LBL.sunset='夕焼けを見ている';

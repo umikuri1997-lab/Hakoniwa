@@ -343,7 +343,7 @@ def wood_rows():
 
 
 WOOD_SEL = ('.hud,.dock,.quest,.sheet,.dlg::before,.toast,#helpPop .hc,.idea-card,.askyn .ak,'
-            '#rlv .rcard,.iinfo,#confirm,#palette,.wcard,.idea-item,.pxcard,#idle .card,#lvup .pw')
+            '#rlv .rcard,.iinfo,#confirm,#palette,.wcard,.idea-item,.pxcard,#idle .card,#lvup .pw,#lvup .card')
 
 
 def wood_css():
@@ -352,7 +352,8 @@ def wood_css():
                           'k': '#f7e9cd', 'q': '#fffaf0', 'w': '#c9a46e', 'd': '#a8743f', 's': SHADOW})
     sel = ','.join('body.wd0 ' + x.strip() for x in WOOD_SEL.split(','))
     return ('/* 草原のパネルは、切りっぱなしの明るい板（わくなし・木目）。依頼ボードの紙はそのまま。body.wd0 は ui-fx.js の uiStageSync */\n'
-            f'{sel}{{border-image-source:{u}!important;border-image-repeat:round!important}}')
+            f'{sel}{{border-image-source:{u}!important;border-image-slice:{PSLICE} fill!important;'
+            f'border-image-width:{PWIDTH}!important;border-image-repeat:round!important}}')
 
 
 # ---- 草原のボタン：板と同じ、切りっぱなしの木（木目・ふちは切り口の色・下に2ドットのあつみ）。おしたときは、あつみがなくなって2ドット下がる ----

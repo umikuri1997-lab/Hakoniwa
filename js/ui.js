@@ -418,7 +418,7 @@ function renderSheet(){
     const rows=el('<div class="rows"></div>');
     for(const r of S.res){const row=el(`<button class="row" style="text-align:left;width:100%"><span class="dot"></span><div class="tx"><b></b><small></small></div></button>`);
       row.querySelector('.dot').style.cssText='background:#f6f1e6 url('+spiritPort(r.elem,96)+') center/86% no-repeat;box-shadow:inset 0 0 0 2px '+ELEM[r.elem].col;
-      row.querySelector('b').textContent=r.name+'  Lv'+rLv(r);row.querySelector('small').textContent=ELEM[r.elem].name+'のせいれい・'+(r.act?ACT_LBL[r.act.type]||'':'考え中');
+      row.querySelector('b').textContent=r.name+'  Lv'+rLv(r);row.querySelector('small').textContent=ELEM[r.elem].name+'のせいれい・'+(r.act?(r.act.shade?'すずしい所で休んでいる':ACT_LBL[r.act.type])||'':'考え中');
       row.querySelector('.tx').insertAdjacentHTML('beforeend',gaugeHTML(r));row.onclick=()=>{closeSheet();setMode('look');centerOn(r.x*TS,r.y*TS)};rows.appendChild(row)}
     body.appendChild(rows);
     lostSec(body);
@@ -442,7 +442,7 @@ function renderSheet(){
     const rows=el('<div class="rows"></div>');
     for(const r of L){const row=el(`<button class="row" style="text-align:left;width:100%"><span class="dot"></span><div class="tx"><b></b><small></small></div></button>`);
       row.querySelector('.dot').style.cssText='background:#f6f1e6 url('+spiritPort(r.elem,96)+') center/86% no-repeat;box-shadow:inset 0 0 0 2px '+ELEM[r.elem].col;
-      row.querySelector('b').textContent=r.name+'  Lv'+rLv(r);row.querySelector('small').textContent=ELEM[r.elem].name+'のせいれい・'+(r.act?ACT_LBL[r.act.type]||'':'考え中')+'・好きな家具：'+BL[likeF(r)].name+(hasLikeF(h,r)?' ♥あり'+(COMFY[likeF(r)]?'（その家具のポイント2倍）':''):'');
+      row.querySelector('b').textContent=r.name+'  Lv'+rLv(r);row.querySelector('small').textContent=ELEM[r.elem].name+'のせいれい・'+(r.act?(r.act.shade?'すずしい所で休んでいる':ACT_LBL[r.act.type])||'':'考え中')+'・好きな家具：'+BL[likeF(r)].name+(hasLikeF(h,r)?' ♥あり'+(COMFY[likeF(r)]?'（その家具のポイント2倍）':''):'');
       row.querySelector('.tx').insertAdjacentHTML('beforeend',gaugeHTML(r));row.onclick=()=>openSheet('res',r.id);rows.appendChild(row)}
     body.appendChild(rows);
   }else if(sheet==='clear'){T.textContent=storyTreeName();
@@ -462,7 +462,7 @@ function renderSheet(){
     const isNew=sheetArg===NEWRES;T.textContent=isNew&&r.back?r.name+'がもどってきた！  Lv'+rLv(r):(isNew?'あたらしいなかま！ ':'')+r.name+'  Lv'+rLv(r);
     const box=el(`<div class="row"><span class="dot"></span><div class="tx"><b></b><small></small></div></div>`);
     box.querySelector('.dot').style.cssText='background:#f6f1e6 url('+spiritPort(r.elem,96,r.vr)+') center/86% no-repeat;box-shadow:inset 0 0 0 2px '+ELEM[r.elem].col;
-    box.querySelector('b').textContent=ELEM[r.elem].name+'のせいれい・'+(r.act?ACT_LBL[r.act.type]||'':'考え中');
+    box.querySelector('b').textContent=ELEM[r.elem].name+'のせいれい・'+(r.act?(r.act.shade?'すずしい所で休んでいる':ACT_LBL[r.act.type])||'':'考え中');
     box.querySelector('small').textContent=r.hunger<200?'おなか：危険！':r.hunger<500?'おなか：少なめ':'';
     box.querySelector('.tx').insertAdjacentHTML('beforeend',gaugeHTML(r)+spiritXpGaugeHTML(r));body.appendChild(box);if(isNew)nickSec(body,r);/* 来たときだけ、名前をかえられる（nick.js） */
     if(!isNew){const sy=el('<p class="story" style="margin:6px 0 2px"></p>');sy.textContent='「'+sayLine(r)+'」';body.appendChild(sy)}if(!isNew&&S.res.includes(r)){const fb=el('<button class="btn" style="width:100%;margin:2px 0 6px">見守る</button>');fb.onclick=()=>{sfx('tap');followStart(r)};body.appendChild(fb)}/* 見守る：この子をカメラで追う（follow.js） */if(!isNew&&!r.hidden&&sortieOK(r))sortieSec(body,r);/* 出撃 */

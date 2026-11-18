@@ -64,8 +64,8 @@ function boxFace(r,a){/* 向く先のとなりのマスの向き（-W・-1・1�
 const BOXLOOPL=1.0337,BOXLOOPN=2,BOXLOOPV=.18,GOSOL=new Map();
 function boxBeat(r,t){const a=boxAct(r);if(!a||t==null)return;let e=GOSOL.get(r);if(!e||e.a!==a){if(e)e.a=a;else{e={a,seen:0};GOSOL.set(r,e)}}e.seen=performance.now();e.x=r.x;e.y=r.y}
 function boxLoopStop(e,t){if(!e.src)return;e.g.gain.cancelScheduledValues(t);e.g.gain.setTargetAtTime(0,t,.06);try{e.src.stop(t+.4)}catch(_){}e.src=null}
-function boxLoopTick(){if(!GOSOL.size)return;const now=performance.now(),ok=typeof AC!=='undefined'&&AC&&AC.state==='running'&&SND.sfx&&typeof S!=='undefined'&&S&&!(typeof paused==='function'&&paused()),buf=ok&&(SBUF.goso||[]).find(Boolean),t=ok?AC.currentTime:0,L=[];
-  for(const[r,e]of GOSOL){const live=now-e.seen<250&&r.act===e.a&&boxAct(r),q=live&&buf?sfxPos(e.x,e.y):null;if(q)L.push([e,q]);else if(!live){if(ok)boxLoopStop(e,t);GOSOL.delete(r)}}
+function boxLoopTick(){if(!GOSOL.size)return;const now=performance.now(),ok=typeof AC!=='undefined'&&AC&&AC.state==='running'&&SND.sfx&&typeof S!=='undefined'&&S&&!(typeof paused==='function'&&paused()),buf=ok&&(SBUF.goso||[]).find(Boolean),t=typeof AC!=='undefined'&&AC?AC.currentTime:0,L=[];
+  for(const[r,e]of GOSOL){const live=now-e.seen<250&&r.act===e.a&&boxAct(r),q=live&&buf?sfxPos(e.x,e.y):null;if(q)L.push([e,q]);else if(!live){boxLoopStop(e,t);GOSOL.delete(r)}/* 音を止めてから表からけす（止めずにけすと、鳴りつづける） */}
   L.sort((a,b)=>b[1].v-a[1].v);const on=new Set(L.slice(0,BOXLOOPN).map(p=>p[0]));
   for(const[r,e]of GOSOL){if(!on.has(e)&&e.src)boxLoopStop(e,t)}if(!buf)return;
   for(const[e,q]of L){if(!on.has(e))continue;if(!e.src){const s=AC.createBufferSource(),g=AC.createGain(),f=AC.createBiquadFilter();s.buffer=buf;s.loop=true;s.loopStart=BOXLOOPL;s.loopEnd=BOXLOOPL*2;s.playbackRate.value=.94+Math.random()*.12;g.gain.value=0;f.type='lowpass';f.Q.value=.5;let h=g;if(AC.createStereoPanner){e.p=AC.createStereoPanner();g.connect(e.p);h=e.p}else e.p=null;h.connect(f);f.connect(sfxG);s.connect(g);s.start(t,BOXLOOPL*(1+Math.random()));Object.assign(e,{src:s,g,f})}/* 1まわりのどこからか鳴らしはじめる（2人が同じ所から鳴らないように） */
