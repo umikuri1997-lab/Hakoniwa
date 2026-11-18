@@ -18,7 +18,7 @@ function foodReact(r,items,snack){if(!r||!items||!items.length)return;let hi=1,l
 function foodKnown(r,v){const K=r.fk||{};return Object.keys(K).filter(k=>FOODS[k]&&K[k]===v&&foodLike(r,k)===v)}
 function foodKnownText(r,v){const L=foodKnown(r,v).map(k=>FOODS[k].name);return L.length?[...new Set(L)].join('・'):'？？？'}
 /* おやつ：どれをあげるか、えらぶ */
-function snackPop(r,done){const o=el('<div style="position:fixed;inset:0;z-index:45;display:flex;align-items:center;justify-content:center;background:rgba(30,24,16,.45);padding:24px"><div class="pxcard" style="background:var(--panel);padding:16px 18px;max-width:340px;width:100%;color:var(--ink);max-height:80vh;overflow:auto"><b class="t" style="font-size:16px;display:block;margin-bottom:8px"></b><div class="rows"></div><div style="display:flex;justify-content:flex-end;margin-top:10px"><button class="btn x">とじる</button></div></div></div>');
+function snackPop(r,done){const o=el('<div style="position:fixed;inset:0;z-index:45;display:flex;align-items:center;justify-content:center;background:rgba(30,24,16,.45);padding:24px"><div class="pxcard" style="background:var(--panel);padding:16px 18px;max-width:340px;width:100%;color:var(--ink);max-height:80vh;overflow:auto"><b class="t" style="font-size:15px;display:block;margin-bottom:8px"></b><div class="rows"></div><div style="display:flex;justify-content:flex-end;margin-top:10px"><button class="btn x">とじる</button></div></div></div>');
   const close=()=>o.remove();o.querySelector('.x').onclick=()=>{sfx('tap');close()};o.onclick=e=>{if(e.target===o)close()};
   o.querySelector('.t').textContent=r.name+'に、なにをあげる？';const g=o.querySelector('.rows'),K=Object.keys(FOODS).filter(k=>(S.fs[k]||0)>0);
   if(!K.length)g.appendChild(el('<p class="note">食べ物が足りません</p>'));
