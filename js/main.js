@@ -30,7 +30,7 @@ function freeCard(list){if(!(LIVE[0]&&LIVE[0].cleared))return;let told=false;try
   card.querySelector('p').textContent=L&&L.introSeen?(L.summary?'':'せいれい '+L.res.length+'人・')+'村レベル '+L.lv+(L.cleared?'・お祭りをひらいた！':''):'自然の力が弱く、災いもほとんどない、しずかな土地。のんびり、自分だけの村をつくろう。';
   const bt=card.querySelector('.wbtns');
   if(L&&L.introSeen){const c=el('<button class="btn pri">つづきから</button>');c.onclick=()=>{sfx('tap');$('#maps').hidden=true;continueGame(L)};bt.appendChild(c);
-    const n=el('<button class="btn">はじめから</button>');n.onclick=()=>{if(n.dataset.ok){$('#maps').hidden=true;newGame(k)}else{n.dataset.ok=1;n.textContent='データを消してはじめる（もう一度タップ）';n.style.borderColor='var(--danger)'}};bt.appendChild(n)}
+    const n=el('<button class="btn" data-hold>はじめから</button>');n.onclick=()=>{if(n._held){$('#maps').hidden=true;newGame(k)}};/* データがきえるので、おしつづけて決める */bt.appendChild(n)}
   else{const n=el('<button class="btn pri">あそぶ</button>');n.onclick=()=>{sfx('tap');$('#maps').hidden=true;newGame(k)};bt.appendChild(n)}
   card.dataset.k=k;list.appendChild(card);thumb(card.querySelector('canvas'),k,true)}
 const WORLDS=[
@@ -90,7 +90,7 @@ function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
     const bt=card.querySelector('.wbtns');
     if(k<=1&&open){
       if(L&&L.introSeen){const c=el('<button class="btn pri">つづきから</button>');c.onclick=()=>{sfx('tap');$('#maps').hidden=true;continueGame(L)};bt.appendChild(c);
-        const n=el('<button class="btn">はじめから</button>');n.onclick=()=>{if(n.dataset.ok){$('#maps').hidden=true;newGame(k)}else{n.dataset.ok=1;n.textContent='データを消してはじめる（もう一度タップ）';n.style.borderColor='var(--danger)'}};bt.appendChild(n)}
+        const n=el('<button class="btn" data-hold>はじめから</button>');n.onclick=()=>{if(n._held){$('#maps').hidden=true;newGame(k)}};/* データがきえるので、おしつづけて決める */bt.appendChild(n)}
       else{const n=el('<button class="btn pri">あそぶ</button>');n.onclick=()=>{sfx('tap');$('#maps').hidden=true;newGame(k)};bt.appendChild(n)}
     }
     if(k===1&&!open){let n=0;card.onclick=()=>{if(++n>=5){try{KV.setItem('hakoniwa-w2open','1')}catch(e){}sfx('arrive');showMaps()}}}/* 確認用：とじたWORLD 2を5回タップでひらく */
@@ -141,7 +141,7 @@ function updTut(){
   let el=null,wp=null,lbl='ここをタップ',swipe=0;
   const placeHint=id=>{
     if(sheet)return;
-    if(pending&&pending.kind==='one'){el=$('#cYes');lbl='「置く」をタップ';return}
+    if(pending&&pending.kind==='one'){el=$('#cYes');lbl='「おく」をタップ';return}
     if(mode!=='build'){el=document.querySelector('#dock [data-mode="build"]');lbl='「おく」をタップ';return}
     if(sel!==id||palOpen){if(!palOpen){el=$('#palMore');lbl='「ほかをえらぶ」をタップ';return}const nm=BL[id].kind==='plant'?iname(id):BL[id].name;el=[...document.querySelectorAll('#palItems .chip')].find(c=>c.querySelector('.nm').textContent===nm);lbl=nm+'をえらぶ';
       if(el){const pr=$('#palItems').getBoundingClientRect(),cr=el.getBoundingClientRect();if(cr.top<pr.top-2||cr.bottom>pr.bottom+2)el.scrollIntoView({block:'nearest'})}return}
