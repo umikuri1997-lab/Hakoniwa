@@ -463,3 +463,29 @@ Row 3:
 17. A white bowl of wheat grains mixed with glazed eel pieces and scrambled egg.
 Each object: whole, three-quarter front view seen from slightly above (about 20 degrees down), upright and level, not tilted, resting on the same invisible flat floor at the same ground level. Stylized, slightly chunky, clean simple smooth shapes, meant to be turned into one 3D model and then separated. Pale, light, soft colors; no dark or heavily saturated colors, no black. Clean flat colors with soft shading only; no noise, no grain texture, no speckles, no dithering, no gritty texture, no fine lines. No thick or dark outlines; if an outline is used, it is a thin line only slightly darker than the color next to it, never black or near-black. Plain pure white background, no shadows, no ground, no table, no cutlery, no props, no steam, no glow effects, no text, no labels, no numbers.
 ```
+
+---
+
+## 17まいめ：草（マップの雑草7こ・草のアイコン5こ）（12こ）
+
+ファイル名：マップの雑草 `weed_shina`（しなやかな草 `weed0g`）・`weed_kasa`（かさかさ草 `weed0k`）・`weed_kuru`（くるくる草 `weed1g`）・`weed_chiri`（ちりちり草 `weed1k`）・`weed_funba0`〜`weed_funba2`（ふんばり草 `weedc#0〜2`）、草のアイコン `grass_shina`・`grass_kasa`・`grass_kuru`・`grass_chiri`・`grass_funba`（.glb）。
+いまの絵（もらった絵）と同じ形・色にしてある。草のアイコンは、むしった草の束（根つき）。
+
+```
+A sheet of twelve separate wild grass plants for a cozy farming game, arranged in two rows in one image (seven in the top row, five in the bottom row), with wide empty space between them so that no two objects touch or overlap. Draw all twelve at about the same size so every shape is clear.
+Row 1 (seven) are growing plants, each growing from one spot with its base flat on the ground:
+1. A tuft of supple grass: long fresh light-green blades arching outward, with three soft rounded pale yellow-green seed heads on tall stems.
+2. A tuft of dry rustling grass: thin dry pale tan-orange blades arching outward, with soft drooping pale tan seed plumes.
+3. A clump of curly fern: fresh light-green fern fronds with small leaflets, a few fronds curled at the tips into round spirals.
+4. A clump of dry crinkly fern: warm light orange-tan fern fronds with wavy crinkled leaflets, the tips curling over.
+5. A low wide tuft of goosegrass: many long light-green blades spreading low and wide, no flower spikes.
+6. A small low tuft of goosegrass: short light-green blades spreading low.
+7. A tuft of goosegrass with flowers: light-green blades and two upright stems, each ending in a few short pale yellow-green finger-like spikes spreading out like a small hand.
+Row 2 (five) are pulled-up bunches, each a small bundle of the same plant pulled out of the ground with a little clump of pale tan roots at the bottom, lying flat on the floor with the roots to the left:
+8. A bunch of supple grass: long light-green blades with soft rounded pale yellow-green seed heads.
+9. A bunch of dry rustling grass: pale tan-orange blades with drooping pale tan seed plumes.
+10. A bunch of curly fern: light-green fern fronds with round curled tips.
+11. A bunch of dry crinkly fern: light orange-tan crinkled fern fronds with curled tips.
+12. A bunch of goosegrass: light-green blades with a few short pale yellow-green finger-like spikes.
+Each object: whole, three-quarter front view seen from slightly above (about 20 degrees down), level, not tilted; growing plants stand upright, perfectly vertical, resting on the same invisible flat floor at the same ground level. Stylized, slightly chunky, clean simple smooth shapes with thick soft blades, meant to be turned into one 3D model and then separated. Pale, light, soft colors; no dark or heavily saturated colors, no black. Clean flat colors with soft shading only; no noise, no grain, no speckles, no dithering, no gritty texture, no fine vein lines. No thick or dark outlines; if an outline is used, it is a thin line only slightly darker than the color next to it, never black or near-black. Plain pure white background, no shadows, no ground, no soil, no pots, no props, no text, no labels, no numbers.
+```
