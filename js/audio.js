@@ -222,7 +222,7 @@ function sfx(k){
   case'close':rustle(t,.12,.05,o,2400,800,.7);knock(270,t+.08,.06,o,.1);break;/* 画面をとじる */
   case'count':{const r=.98+Math.random()*.04;tone(2093*r,t,.07,'sine',.03,o);tone(3136*r,t+.035,.09,'sine',.018,o)}break;/* 数がふえた：小さなガラスの「チリッ」 */
   case'xyl':{/* 一覧をなでる：木の歯車の「カラッ」。歯がはじかれる短い音と、木の胴の小さな鳴り。高さは毎回すこしだけかえる */
-    const q=.94+Math.random()*.12,s=AC.createBufferSource(),bp=AC.createBiquadFilter(),g=AC.createGain();s.buffer=noiseBuf;bp.type='bandpass';bp.frequency.value=2300*q;bp.Q.value=6;g.gain.setValueAtTime(.15,t);g.gain.exponentialRampToValueAtTime(.0001,t+.018);s.connect(bp);bp.connect(g);g.connect(o);s.start(t);s.stop(t+.04);
+    const q=(.94+Math.random()*.12)*(typeof XYLUP!=='undefined'&&XYLUP?Math.pow(2,XYLUP/12):1),s=AC.createBufferSource(),bp=AC.createBiquadFilter(),g=AC.createGain();s.buffer=noiseBuf;/* 数え上げのあいだは、だんだん高く（XYLUP） */bp.type='bandpass';bp.frequency.value=2300*q;bp.Q.value=6;g.gain.setValueAtTime(.15,t);g.gain.exponentialRampToValueAtTime(.0001,t+.018);s.connect(bp);bp.connect(g);g.connect(o);s.start(t);s.stop(t+.04);
     const pt=(fr,d,v,ty)=>{const s=AC.createOscillator(),g=AC.createGain();s.type=ty;s.frequency.setValueAtTime(fr,t);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(v,t+.001);g.gain.exponentialRampToValueAtTime(.0001,t+d);s.connect(g);g.connect(o);s.start(t);s.stop(t+d+.02)};
     pt(1250*q,.03,.036,'triangle');pt(2900*q,.012,.015,'sine')}break;
   case'pin':rustle(t,.05,.05,o,1200,600,.7);knock(300,t+.03,.06,o,.08);knock(1500,t+.16,.03,o,.03);break;/* 紙をぺたっ、ピンをぷすっ */
