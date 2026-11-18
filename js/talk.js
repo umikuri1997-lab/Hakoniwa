@@ -71,6 +71,7 @@ function nowTopic(r){const n=hour(),gn=goneTalkName(),T=S.trouble&&S.trouble.id=
   if(T==='cramped')tAll(P,'t:cr',[['#think|家が、ちょっとせまくて……。','もうすこし広かったら、のびのびできるのにな。'],['#think|ねがえりをうつと、となりにぶつかっちゃうんだ。','もうすこし、ひろびろしたいな。']]);
   if(T==='dark')tAll(P,'t:dk',[['#think|夜、家のまわりが暗くて、ちょっとこわいんだ。','あかりがあったら、安心できるのにな。'],['#think|夜、外に出るとね、','まっくらで、どきどきしちゃうんだ。']]);
   if(T==='fav'){const f=BL[likeF(r)].name;tAll(P,'t:fv',[[f+'が、ずっとほしいんだ。','あったら、毎日ながめちゃうな。'],['ねえ、'+f+'って、すてきだと思わない？','村にあったら、うれしいなあ。']])}
+  if(T==='want'&&FOODS[S.trouble.f]){const f=FOODS[S.trouble.f].name;tAll(P,'t:wt',[[f+'が、食べたいなあ。','思いうかべたら、おなかが鳴っちゃった。'],['ねえ、'+f+'って、おいしいよね。','ひとくちでいいから、食べたいなあ。']])}
   if(T==='far')tAll(P,'t:fa',[['ごはんの箱まで、ちょっと遠いんだ。','おなかがすくと、たどりつくまでがたいへん。'],['おきてすぐ、ごはんの箱まで歩くとね、','とちゅうで、おなかが鳴っちゃうんだ。']]);
   if(isNight())tAll(P,'n:nt',[['夜は、しずかだね。','みんな、ぐっすり眠れるといいな。'],['夜の空、見た？','星が、いっぱい出てたよ。'],['ねむれないときはね、','星を数えるんだ。すぐねむくなるよ。']]);
   else if(S.rain)tAll(P,'n:rn',r.elem==='water'?[['#joy|雨の日って、うれしくなっちゃう。','ぽつぽつって、だれかが歌ってるみたい。'],['#joy|雨のにおいって、いいにおいだね。','からだが、しゃきっとするんだ。']]:[['雨、なかなかやまないね。','でも、草や花は、よろこんでるみたい。'],['雨の日は、なんだかねむくなっちゃう。','ざあざあって音、子もり歌みたい。'],['雨のあとは、虹が出るかな。','出たら、いっしょに見ようね。']]);
@@ -126,17 +127,18 @@ const TALKHI={mo:['あ、守り神さま。おはよう！','#joy|おはよう�
 function hiLine(r){const n=hour(),k=n>=5&&n<10?'mo':n>=17&&n<20?'ev':isNight()?'nt':'day',t=tkFresh('hi:'+k,TALKHI[k]);r.thi=t;return t}
 const TALKBYE=['お話できて、うれしかったよ。','また、お話しようね。','#joy|えへへ、たのしかった！','聞いてくれて、ありがとう。','じゃあ、ぼく、もう行くね。','またね、守り神さま！'];
 const evPick=(r,L)=>{const k=e=>e[0]+':'+e[1],C=L.filter(e=>k(e)!==r.tle),e=pick(C.length?C:L);r.tle=k(e);return e};/* 前に話したことは、つづけて話さない */
-function talkLines(r){const now=nowTopic(r),E=dlToday(r);let L=null;
+function talkLines(r){const now=nowTopic(r),E=dlToday(r);let L=null,pk=null;TALKPK=null;
   if(now&&now.u)L=now.L;
   else{const C=[];if(now)C.push('now');const fun=E.filter(e=>DLFUN.has(e[0])),work=E.filter(e=>!DLFUN.has(e[0]));if(fun.length)C.push('fun');if(work.length)C.push('day');C.push('chat','chat');
     const C2=C.filter(c=>c!==r.tlk),k=pick(C2.length?C2:C);r.tlk=k;/* 前と同じ種類の話題は、つづけない */
-    if(k==='now')L=talkFresh(r,now.P);else if(k==='fun'){const e=evPick(r,fun),d=dayLine(r,e);if(d)L=e[0]==='rainjoy'||e[0]==='sunset'||Math.random()<.5?d:[tkFresh('funhd',TALKFUNHD),d[0].replace(/^(#[^|]*\|)?きょう(は|も)?、/,'$1'),d[1]]}else if(k==='day'){L=dayLine(r,evPick(r,work))}
-    if(!L)L=smallTalk(r)}
+    if(k==='now'){L=talkFresh(r,now.P);pk=prefOfTopic(r.tlast)}else if(k==='fun'){const e=evPick(r,fun),d=dayLine(r,e);if(d)L=e[0]==='rainjoy'||e[0]==='sunset'||Math.random()<.5?d:[tkFresh('funhd',TALKFUNHD),d[0].replace(/^(#[^|]*\|)?きょう(は|も)?、/,'$1'),d[1]]}else if(k==='day'){L=dayLine(r,evPick(r,work))}
+    if(!L){L=smallTalk(r);pk=prefOfTopic(r.tlast)}}
+  TALKPK=pk;/* 好みを話した話：さいごまで読んだら、わかる（prefs.js） */
   const out=[hiLine(r),...L];if(Math.random()<.35)out.push(tkFresh('bye',TALKBYE));
   return out.map((t,i)=>[r.name,chatTone(t,r,i)])}
-let TALKID=null;/* お話しているせいれい：会話のあいだは、歩くとちゅうでも、立ちどまって正面を向く（draw-spirits の walking） */
+let TALKID=null,TALKPK=null;/* お話しているせいれい：会話のあいだは、歩くとちゅうでも、立ちどまって正面を向く（draw-spirits の walking） */
 function talkTo(r){if(!r||r.hidden||!S.res.includes(r))return;const owner=S,id=r.id,d=callDay();DLGTAP=performance.now();TALKID=id;
-  dialog(talkLines(r),()=>{if(TALKID===id)TALKID=null;if(S!==owner)return;const q=S.res.find(x=>x.id===id);if(!q)return;const c=q.care||(q.care={});if(c.talk!==d){c.talk=d;q.fun=Math.min(100,q.fun+TALKFUN);addFloat(q.x,q.y-1.6,'たのしさ+'+TALKFUN,'#ffd7e8')}JOYU.set(q,performance.now()+2000);q.bubble='💕';if(typeof bpTalkGift==='function')bpTalkGift(q);if((S.subSt||{}).talk1===2)S.flags.talkQ=1;dirty=true;resTab=2;openSheet('res',id)})}
+  const TL=talkLines(r),pk=TALKPK;dialog(TL,()=>{if(TALKID===id)TALKID=null;if(S!==owner)return;const q=S.res.find(x=>x.id===id);if(!q)return;if(pk)prefKnow(q,pk);const c=q.care||(q.care={});if(c.talk!==d){c.talk=d;q.fun=Math.min(100,q.fun+TALKFUN);addFloat(q.x,q.y-1.6,'たのしさ+'+TALKFUN,'#ffd7e8')}JOYU.set(q,performance.now()+2000);q.bubble='💕';if(typeof bpTalkGift==='function')bpTalkGift(q);if((S.subSt||{}).talk1===2)S.flags.talkQ=1;dirty=true;resTab=2;openSheet('res',id)})}
 /* いまのようすのうち、ほかの話題より先に話すこと（tkFresh で、ぜんぶ出すまで同じ物を出さない）。@G は、いなくなったせいれいの名前 */
 const TALKU={
  foeF:[['#danger|「コワイノ」が来てる……！','だいじょうぶ、村はぼくたちが守るから。'],['#danger|みんな、気をつけて！','ぼくが、前に出るよ。'],['こわくなんか、ないよ。','守り神さまが、見ててくれるもん。'],['#danger|足音が、ちかづいてくる。','守り神さまは、うしろにいてね。'],['夜の影が、ゆれてる……。','だいじょうぶ。ぼくが、ここにいるよ。'],['みんなが寝てる家は、ぜったい守るんだ。','守り神さま、光をかしてね。'],['#danger|しっ……あっちに、なにかいる。','ぼく、見てくるよ。'],['夜明けまで、もうすこし。','それまで、みんなを守りきろうね。']],

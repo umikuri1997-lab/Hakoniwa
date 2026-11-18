@@ -19,6 +19,6 @@ const assert=require('node:assert/strict');
   assert.equal(r.q,1,'同じきっかけは1通');assert.ok(!r.mateTx.includes('{'),r.mateTx);assert.equal(r.sameDay,0,'その日にはとどかない');assert.equal(r.got,1);assert.equal(r.unread,1);assert.equal(r.qLeft,0);
   assert.equal(r.fresh,3);assert.equal(r.thx,true);assert.equal(r.slot,true);assert.ok(r.paper.includes('守り神さまへ')&&r.paper.includes('より'),r.paper);assert.equal(r.read,1);assert.equal(r.rec,true);assert.equal(r.free,0);
   assert.equal(r.gift,'mat:stone');assert.equal(r.seasonGift,null);assert.ok(!r.seasonTx.includes('{'),r.seasonTx);assert.equal(r.stone,8);assert.equal(r.stone2,8,'2回めはもらえない');assert.ok(r.paper2.includes('石材×8'),r.paper2);
-  assert.equal(r.kinds,12);assert.equal(r.cells,29);assert.equal(r.each,true);assert.equal(r.long,0);assert.deepEqual(r.meta,[]);assert.equal(r.mateSub,true);assert.equal(r.thxSub,true);assert.equal(r.band,'aabc');assert.equal(r.houseFirst,0,'前からある家は手紙なし');assert.equal(r.house,true);assert.ok(!r.dreamTx.includes('{'),r.dreamTx);assert.equal(r.dreamGift,true);
+  assert.equal(r.kinds,12);assert.equal(r.cells,30);assert.equal(r.each,true);assert.equal(r.long,0);assert.deepEqual(r.meta,[]);assert.equal(r.mateSub,true);assert.equal(r.thxSub,true);assert.equal(r.band,'aabc');assert.equal(r.houseFirst,0,'前からある家は手紙なし');assert.equal(r.house,true);assert.ok(!r.dreamTx.includes('{'),r.dreamTx);assert.equal(r.dreamGift,true);
   assert.deepEqual(errors,[]);await browser.close();console.log('OK');
 })().catch(e=>{console.error(e);process.exit(1)});

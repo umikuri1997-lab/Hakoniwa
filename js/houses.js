@@ -70,10 +70,11 @@ function sayLine(r){const L=[],fav=FOODS[favDish(r)],m=bestMate(r);
   if(!HOUSES.length)L.push('みんなの家、ほしいなぁ');
   if(GRASSN>=450)L.push('みどりがいっぱいで、うれしいな');else if(GRASSN<60)L.push('もっと草花がふえるといいな');
   if(m)L.push(m.name+'とあそぶの、たのしい！');
-  if((S.fs[favDish(r)]||0)>0)L.push('箱に'+fav.name+'がある！ たのしみ');else L.push(fav.name+'が食べたいなぁ');
+  const fi=L.length;if((S.fs[favDish(r)]||0)>0)L.push('箱に'+fav.name+'がある！ たのしみ');else L.push(fav.name+'が食べたいなぁ');
   if(r.fun>=80)L.push('ここでのくらし、たのしいよ');
-  L.push(LIKES[r.like]+'がすき！');
-  return L[(Math.floor(S.t/30)+r.id)%L.length]}/* 村のようすで、ひとことが変わる */
+  const li=L.length;L.push(LIKES[r.like]+'がすき！');
+  const i=(Math.floor(S.t/30)+r.id)%L.length;SAYPK=i===fi?'fd':i===li?'lk':null;/* 好みを言ったひとこと（prefs.js） */return L[i]}
+let SAYPK=null;/* 村のようすで、ひとことが変わる */
 function helloLine(r){const k=elemKey(r);
   if(r.back)return pickFresh('back:'+r.name,KEYBACK[r.name]||BACKL[k]);/* もどったときのひとことは、ぜんぶ出しおわるまで同じ物を出さない */if(KEYHELLO[r.name])return KEYHELLO[r.name];return pick(HELLO[k]).replace('$',r.name)}
 const likeF=r=>{if(r.lf&&BL[r.lf])return r.lf;let h=2166136261;for(const ch of r.name+(r.id||0))h=Math.imul(h^ch.charCodeAt(0),16777619)>>>0;h^=h>>>13;h=Math.imul(h,2246822507)>>>0;h^=h>>>16;r.lf=LIKEF[(h>>>0)%LIKEF.length];return r.lf};/* 好きな家具：ひとりずつちらばる（一度決まったら変わらない） */
@@ -172,19 +173,20 @@ function drawRoofs(c,now,hs,eo){if(!HOUSES.length)return;c.save();
     c.fillStyle='#9c9c9c';c.fillRect(cx-8.5,cy-14,17,5);c.fillStyle='#3a3a3a';c.fillRect(cx-5,cy-13,10,2.5);
     {const t=now/1000;for(let k=0;k<3;k++){const p=(t*.4+k/3)%1;c.fillStyle='rgba(240,240,240,'+(.5*(1-p)*A)+')';c.beginPath();c.arc(cx+Math.sin(p*6+k)*3,cy-16-p*18,3+p*4,0,7);c.fill()}}}
   c.restore()}
-const DRYT={i:null,v:[]};function dryTex(px,py){/* 草原のあれ地（288×288でつながるテクスチャ）：288ドットの区画の列ごとに左右、行ごとに上下を、ばらばらに反転して、くりかえしを見えにくくする。反転したさかいは、かがみうつしでつながる（90度まわすと、さかいでひびが切れるので、まわさない） */
-  const im=chipImgs(window.CHIPS['tex:dry'],'ground')[0];if(!im.ok)return im;if(DRYT.i!==im){DRYT.i=im;DRYT.v=[im];for(let f=1;f<4;f++){const c=document.createElement('canvas');c.width=c.height=288;const g=c.getContext('2d');g.translate(f&1?288:0,f&2?288:0);g.scale(f&1?-1:1,f&2?-1:1);g.drawImage(im,0,0,288,288);DRYT.v.push(c)}}
-  const bx=Math.floor(px/288),by=Math.floor(py/288);return DRYT.v[(hash(bx*131+17)<.5?1:0)|(hash(by*137+29)<.5?2:0)]}
+const GRTEX=224,DRTEX=224;/* 草地・あれ地のテクスチャの大きさ（tex:grass・tex:dry。tools/art/ground/ground_tex.py の SIZE） */
+const DRYT={i:null,v:[]};function dryTex(px,py){/* 草原のあれ地（224×224でつながるテクスチャ）：224ドットの区画の列ごとに左右、行ごとに上下を、ばらばらに反転して、くりかえしを見えにくくする。反転したさかいは、かがみうつしでつながる（90度まわすと、さかいでひびが切れるので、まわさない） */
+  const im=chipImgs(window.CHIPS['tex:dry'],'ground')[0];if(!im.ok)return im;if(DRYT.i!==im){DRYT.i=im;DRYT.v=[im];for(let f=1;f<4;f++){const c=document.createElement('canvas');c.width=c.height=DRTEX;const g=c.getContext('2d');g.translate(f&1?DRTEX:0,f&2?DRTEX:0);g.scale(f&1?-1:1,f&2?-1:1);g.drawImage(im,0,0,DRTEX,DRTEX);DRYT.v.push(c)}}
+  const bx=Math.floor(px/DRTEX),by=Math.floor(py/DRTEX);return DRYT.v[(hash(bx*131+17)<.5?1:0)|(hash(by*137+29)<.5?2:0)]}
 const GCH=['tex:grass','tex:dry',...Array.from({length:8},(_,i)=>'ground#'+i),...Array.from({length:8},(_,i)=>'groundr#'+i),...['U','D','L','R','c0','c1','c2','c3'].map(k=>'fringeg:'+k)];
 const WCH=[];for(const k of['water','waterr','waterh'])for(let b=1;b<16;b++)WCH.push(k+':'+b);for(let i=0;i<4;i++)WCH.push('wave#'+i);for(let b=1;b<16;b++)WCH.push('waterm:'+b);WCH.push('tex:water');
 function waterChipsOK(){const C=window.CHIPS;return !!C&&WCH.every(k=>C[k]&&chipImgs(C[k],'water')[0].ok)}/* 水のドット絵が読みこめたら使う */
 function groundChipsOK(){const C=window.CHIPS;return !!C&&GCH.every(k=>C[k]&&chipImgs(C[k],'ground')[0].ok)}/* 地面のドット絵が読みこめたら使う */
 function drawGroundChips(sc,X0,Y0,X1,Y1){const inR=i=>{const x=i%W,y=(i/W)|0;return x>=X0&&x<=X1&&y>=Y0&&y<=Y1};const C=window.CHIPS,r=WD===1?'r':'',dc=(k,x,y,i)=>{const ch=C[k];if(ch)drawChip(sc,ch,'ground',x,y,0,i)};
-  if(WD===0){for(let y=Y0;y<=Y1;y++)for(let x=X0;x<=X1;x++){const px=x*TS,py=y*TS;sc.drawImage(dryTex(px,py),px%288,py%288,TS,TS,px,py,TS,TS)}}/* 草原のあれ地：288×288のテクスチャを、マップの位置どおりにしきつめる */
+  if(WD===0){for(let y=Y0;y<=Y1;y++)for(let x=X0;x<=X1;x++){const px=x*TS,py=y*TS;sc.drawImage(dryTex(px,py),px%DRTEX,py%DRTEX,TS,TS,px,py,TS,TS)}}/* 草原のあれ地：224×224のテクスチャを、マップの位置どおりにしきつめる */
   else for(let y=Y0;y<=Y1;y++)for(let x=X0;x<=X1;x++){const i=y*W+x;dc('ground'+r+'#'+((hash(i*7+1)*8)|0),x*TS,y*TS,i)}/* 火山のあれ地：8しゅるい */
-  const gt=chipImgs(C['tex:grass'],'ground')[0];for(const i of REV){if(!inR(i))continue;const x=i%W*TS,y=((i/W)|0)*TS;sc.drawImage(gt,x%96,y%96,TS,TS,x,y,TS,TS)}
+  const gt=chipImgs(C['tex:grass'],'ground')[0];for(const i of REV){if(!inR(i))continue;const x=i%W*TS,y=((i/W)|0)*TS;sc.drawImage(gt,x%GRTEX,y%GRTEX,TS,TS,x,y,TS,TS)}
   {/* 水のマスの下（水のふちのすきまに見える所）：となりの陸の地面（草地・乾いた地面）を、そのマスのがわの半マスに、同じもようでしきつめる（鏡うつしはしない）。ななめだけ陸なら、その角の4分の1 */
-    const land=k=>S.ground[k]===0,dpt0=WD===0?chipImgs(C['tex:dry'],'ground')[0]:null,put=(n,rx,ry,rw,rh)=>{if(REV.has(n))sc.drawImage(gt,rx%96,ry%96,rw,rh,rx,ry,rw,rh);else if(dpt0)sc.drawImage(dryTex(rx,ry),rx%288,ry%288,rw,rh,rx,ry,rw,rh);else{sc.save();sc.beginPath();sc.rect(rx,ry,rw,rh);sc.clip();dc('ground'+r+'#'+((hash(n*7+1)*8)|0),Math.floor(rx/TS)*TS,Math.floor(ry/TS)*TS,n);sc.restore()}},h2=TS/2;
+    const land=k=>S.ground[k]===0,dpt0=WD===0?chipImgs(C['tex:dry'],'ground')[0]:null,put=(n,rx,ry,rw,rh)=>{if(REV.has(n))sc.drawImage(gt,rx%GRTEX,ry%GRTEX,rw,rh,rx,ry,rw,rh);else if(dpt0)sc.drawImage(dryTex(rx,ry),rx%DRTEX,ry%DRTEX,rw,rh,rx,ry,rw,rh);else{sc.save();sc.beginPath();sc.rect(rx,ry,rw,rh);sc.clip();dc('ground'+r+'#'+((hash(n*7+1)*8)|0),Math.floor(rx/TS)*TS,Math.floor(ry/TS)*TS,n);sc.restore()}},h2=TS/2;
     for(let y=Y0;y<=Y1;y++)for(let x=X0;x<=X1;x++){const i=y*W+x;if(S.ground[i]<1)continue;const px=x*TS,py=y*TS;/* 水のマスそのものが緑のマスでも、草はしかない（はしに見える所は、となりの陸の地面） */
       const L=x>0&&land(i-1),R=x<W-1&&land(i+1),U=y>0&&land(i-W),D=y<H-1&&land(i+W);
       if(L)put(i-1,px,py,h2,TS);if(R)put(i+1,px+h2,py,h2,TS);if(U)put(i-W,px,py,TS,h2);if(D)put(i+W,px,py+h2,TS,h2);
