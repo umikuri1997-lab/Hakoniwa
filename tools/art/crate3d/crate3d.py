@@ -40,7 +40,7 @@ def shot(k,ang=0,S_=64,lv=0):
     base=round((PROJ((0.5,C.Y1,0))[1]-ext[2])*S_)-bb[1]   # 置くマスの手前のはし（地面、y=1）の行
     ax=round(ext[0]*S_)+bb[0];return im,ax,base
 NAMES=['crate','crate>1','crate>2','crate>3'];VIEWS=['前','右','後ろ','左'];ims=[];CH={};B0={}
-# 中身の4だん（C.REST：ふたが山におされて開いている角度）。ふたの開く絵は、その角度から LIDANG のさいご（105度）まで。チップは、空がいままでの名前、ほかは #f<だん>・#f<だん>o<コマ>
+# 中身の4だん。ふたはしまったまま（C.REST）で、中身は開くコマだけ。チップは、空がいままでの名前、ほかは #f<だん>・#f<だん>o<コマ>
 for lv in range(4):
   for k,nm in enumerate(NAMES):
     row=[];r0=C.REST[lv]
@@ -51,6 +51,7 @@ for lv in range(4):
         b0,h0=B0[nm]
         ay=BOTTOM-h0-(base-b0)   # 空のしまった絵の下のはしを BOTTOM にそろえ、ほかの絵も同じ地面の所に
         cid=nm+('#f%d'%lv+('o%d'%f if f else '') if lv else ('#o%d'%f if f else ''))
+        if lv and not f:row.append((im,ay));continue   # 中身のあるしまった絵は、空のしまった絵と同じなので、チップにしない
         CH[cid]=(im,ax,ay);row.append((im,ay))
         fn=cid.replace('>','_').replace('#','_');im.save(os.path.join(out,fn+'.png'))
         print('%s（%s・中身%d・ふた%d度） %dx%d  ax %d  ay %d'%(cid,VIEWS[k],lv,ang,im.width,im.height,ax,ay))
@@ -62,6 +63,7 @@ for lv in range(4):
 if '--chips' in sys.argv:   # ゲームのチップ（chips.js とアトラス）に入れる
     sys.path.insert(0,os.path.join(ROOT,'tools'));import chips as CHP
     head,CC=CHP.load_imgs()
+    for k_ in [k_ for k_ in CC if k_.startswith('crate') and '#f' in k_ and 'o' not in k_.split('#f')[1]]:del CC[k_]   # 前の、中身のあるしまった絵（#f1〜#f3）はけす
     for cid,(im_,ax_,ay_) in CH.items():CC[cid]={'g':64,'ax':ax_,'ay':ay_,'w':im_.width,'h':im_.height,'f':[im_]}
     CHP.pack_imgs(head,CC);open(os.path.join(ROOT,'.chips_changed'),'w').write('\n'.join(CH));print('チップに入れた',len(CH))
 im=ims[0]
