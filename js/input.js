@@ -87,7 +87,7 @@ function onTap(sx,sy){if(GIFT_ACTIVE&&camAnim&&camAnim.done)return;if(typeof sta
   let w=toWorld(sx,sy);const w0=w,tx=Math.floor(w.x/TS);{const tl=tapLv(w.x,w.y);if(tl)w={x:w.x,y:w.y+tl*LIFT}}const ty=Math.floor(w.y/TS);/* 高い段のマス・物・せいれい・コワイノは上にずらして描くので、タップの場所も高さの分だけ下へもどす */
   if(AREAARM){AREAARM=false;return areaBlast(w.x/TS,w.y/TS)}
   if(LEAFARM){const tl=tapLv(w.x,w.y),wy=w.y+(tl?tl*LIFT:0);LEAFDRAG=[];leafAdd(Math.floor(wy/TS)*W+Math.floor(w.x/TS));const c=LEAFDRAG;LEAFDRAG=null;return leafPlace(c)}/* 葉のかべ：タップは1マス *//* こもれびのまもり：タップした場所のまわり */
-  if(LIGHTARM){const en=enemyAtTap(w0.x,w0.y);if(en)return guardLight(en);const tj=ty*W+tx;if(tx>=0&&ty>=0&&tx<W&&ty<H&&LIGHTNAT[S.obj[tj]]&&!isBud(tj)&&!(S.fog&&fogAt(tj)))return natLight(tj);return}/* 守りの光：えらんでいるあいだにタップした「コワイノ」・木・岩にあてる（えらんだまま）。ほかの所のタップでは、なにもしない（しらべる・おく・こわすと同時にはしない） */
+  if(LIGHTARM){const en=enemyAtTap(w0.x,w0.y);if(en)return guardLight(en);if(tx>=0&&ty>=0&&tx<W&&ty<H)glCast(tx,ty);return}/* 守りの光：えらんでいるあいだにタップした所に落とす（えらんだまま）。コワイノをタップしたら、そのコワイノに。地図のどこでも（範囲のコワイノ・木・岩に当たる）。しらべる・おく・こわすと同時にはしない */
   const si=S.seeds.findIndex(s=>s.x===tx&&s.y===ty);
   if(tx>=0&&ty>=0&&tx<W&&ty<H){const hh=HOUSES.find(h=>h.set.has(ty*W+tx));/* 開けた屋根は、壁をタップするまでそのまま */
     if(hh&&mode!=='look'&&!OPENH.has(hKey(hh))){OPENH.add(hKey(hh));dirty=true;return}}/* 置く・こわすときも、まず家をタップして中を見る */

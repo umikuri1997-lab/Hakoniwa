@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-# 守り神のわざのエフェクト（まもりの光 godlight・こもれびのまもり areaguard / arealeaf・葉のかべ leafsprout）を、
+# 守り神のわざのエフェクト（まもりの光 godlight・範囲のマス glspark・わざが当たったコワイノ skillhit・こもれびのまもり areaguard / arealeaf・葉のかべ leafsprout）と、
+# 見張り台の矢が当たったときのはじける粒（arrowburst）を、
 # pixelfx（tools/pixelfx）の効果から作る。pixelfx で書き出したコマ（1ドット＝世界の1点、1マス32点）を、ゲームのドット絵にととのえる：
 #   ・なめらかな光（グロー）は書き出さない（light 0）。のこったうすさは2だん（半分・ぜんぶ）にそろえる
 #   ・色は、その候補の色の段（opts の色）にそろえる。うすくて暗い色（けむり・もや）はのこさない
@@ -22,6 +23,16 @@ CANDS = {
     'godlight:A': dict(id='holy/smite', opts={'palette': GOLD, 'stone': '#f6ce6c'}, t1=1.3),
     'godlight:B': dict(id='pickups/collect-burst', opts={'palette': GOLD}, t1=1.2),
     'godlight:C': dict(id='impacts/crit-hit', opts={'palette': GOLD}, t1=.9),
+    # まもりの光（はやい）：A の、しるしの光る所を短くして（t0 から）、光の槌が 0.25 秒で地面に当たる（GLHIT・GLFX）
+    'godlight:F': dict(id='holy/smite', opts={'palette': GOLD, 'stone': '#f6ce6c'}, t0=.35, t1=1.3),
+    # まもりの光の範囲：まわりのマスに、光がはじける（ゲームでマスごとに少しずつおくらせてならべる）
+    'glspark:A': dict(id='pickups/collect-burst', opts={'palette': GOLD}, t1=.8),
+    # わざ（まもりの光など）が当たったコワイノ：金の十字の光と火花
+    'skillhit:A': dict(id='impacts/hit-spark', opts={'palette': ['#9a7442'] + GOLD[1:5] + ['#fff6c8', '#fffdf0'], 'height': 0}, t1=.5),
+    'skillhit:B': dict(id='impacts/crit-hit', opts={'palette': GOLD}, t1=.6),
+    # 見張り台の矢が当たった所：はじける粒
+    'arrowburst:A': dict(id='impacts/hit-spark', opts={'palette': ['#8a6a48', '#c8954e', '#e2b054', '#f6ce6c', '#ffe08a', '#fff6c8', '#fffdf0'], 'height': 0, 'aim': .5}, t1=.5),
+    'arrowburst:B': dict(id='impacts/parry', opts={'palette': GOLD}, t1=.7),
     # こもれびのまもり（まん中）
     'areaguard:A': dict(id='holy/heal-aoe', opts={'palette': GREEN, 'reach': 56}, t1=2.2),
     'areaguard:B': dict(id='nature/leaf-storm', opts={'palette': GREEN[2:], 'leaves': GREEN[:4] * 3}, t1=1.2, fade=6),
@@ -57,7 +68,7 @@ def render(c):
     fr = [sheet.crop((f['frame']['x'], f['frame']['y'], f['frame']['x'] + f['frame']['w'], f['frame']['y'] + f['frame']['h']))
           for f in meta['frames']]
     n = min(len(fr), int(round(c['t1'] * FPS)))
-    return fr[:n], meta['meta']['pixelfx']['pivot']
+    return fr[int(round(c.get('t0', 0) * FPS)):n], meta['meta']['pixelfx']['pivot']  # t0：はじめのコマをとばす（はやくする）
 
 BAYER = [[0, 8, 2, 10], [12, 4, 14, 6], [3, 11, 1, 9], [15, 7, 13, 5]]
 
