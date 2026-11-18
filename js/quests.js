@@ -147,8 +147,8 @@ function questIndexOf(id){return QUESTS.findIndex(q=>qHas(q,id))}
 function qNow(id){const q=S&&QUESTS[S.quest];return !!q&&!S.cleared&&S.qTalked&&S.qStory==null&&qHas(q,id)}/* いま受けている目標に、その小さな目標がある */
 function qAt(id){const qi=questIndexOf(id);if(qi<0)return false;return (S.quest>qi||S.quest===qi&&!!S.qTalked)}/* そのメインクエストを受けたあと */
 function qDone(id){const index=questIndexOf(id);if(index<0)return false;if(S.qStory===index)return false;return S.quest>index}
-const SUB_MAIN_AFTER={table1:'bed',chair2:'bed',farm10:'farm6',light3:'fire'};
-function subOfferReady(q){if(S.qStory!=null||QUEST_CLEAR_WAIT)return false;return WD!==0||!SUB_MAIN_AFTER[q.k]||qDone(SUB_MAIN_AFTER[q.k])}
+const SUB_MAIN_AFTER={table1:'bed',chair2:'bed',farm10:['farm6','fire'],light3:'fire'};/* 草原：このメインの目標（いくつかなら、ぜんぶ）がおわってから出す。畑を10は、ホノが来てから */
+function subOfferReady(q){if(S.qStory!=null||QUEST_CLEAR_WAIT)return false;const m=SUB_MAIN_AFTER[q.k];return WD!==0||!m||[].concat(m).every(id=>qDone(id))}
 const LEVEL_HELP={2:['benchbreak','chair2'],3:['bed3'],4:['farm10'],5:['toy2','deco3'],8:['room','paint','parasol']};
 function levelHelpKeys(){const out=[];for(const n in LEVEL_HELP){const main=qAt('lv'+n),side=SUBQ.some(q=>q.k.startsWith('lv_')&&q.n===+n&&(S.subSt||{})[q.k]>=2);if(main||side)out.push(...LEVEL_HELP[n])}return out}
 function subList(){const help=levelHelpKeys();if(waitingBellflowers())help.unshift('seedwait_gate','seedwait_food');return SUBQ.filter(q=>q.w==null||q.w===WD).sort((a,b)=>(help.includes(a.k)?0:1)-(help.includes(b.k)?0:1))}
@@ -556,9 +556,9 @@ function morning(){sfx('morning');diaryClose();if(typeof bpMorning==='function')
     if(k==='kami'){S.godVisit=true;S.godNextVisitDay=dayNo()+2;}
     if(k==='mono')monoDrops(4)}
   if(S.rain&&!(typeof stormNow==='function'&&stormNow()))toast(snowNow()?'今日は雪':'今日は雨');
-  {const d=dayNo(),ev={6:[[MINA,'#alarm|村が大きくなってきたねぇ。…でも、夜の「コワイノ」も、前より多い気がするよぉ。'],[POKO,'#nod|にぎやかになるほど、よってくるのかな…。']],
-}[d];
-   if(ev&&S.enemyOn&&!S.flags['day'+d]){const L=ev.filter(l=>S.res.some(r=>r.name===l[0]));if(L.length)talkOnce('day'+d,L)}/* さいごまで見てから「見た」に */}
+  {const d=dayNo(),EV={6:[[MINA,'#alarm|村が大きくなってきたねぇ。…でも、夜の「コワイノ」も、前より多い気がするよぉ。'],[POKO,'#nod|にぎやかになるほど、よってくるのかな…。']],
+};
+   for(const k in EV){const ev=EV[k];if(d<+k||!S.enemyOn||S.flags['day'+k]||S.res.length<3)continue;const L=ev.filter(l=>S.res.some(r=>r.name===l[0]));if(L.length){talkOnce('day'+k,L);break}}/* その日より後の朝で、せいれいが3人になってから。さいごまで見てから「見た」に */}
   checkFree();
   summonMorning();
 }

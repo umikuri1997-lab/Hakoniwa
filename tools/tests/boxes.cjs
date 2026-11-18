@@ -31,6 +31,12 @@ const boot=require('../sim/boot.cjs'),assert=require('node:assert/strict');
   /* 箱がなくなったら、中身はその場所に落ちる */
   const g=JSON.parse(await run(`(()=>{const A=window.BA,B=window.BB;const n=S.box[A].wood||0;S.obj[A]='';recount();boxSync();const dp=(S.drops||[]).find(q=>q.id==='mat:wood'&&q.tap);return JSON.stringify({n,drop:dp?dp.n:0,box:!!S.box[A],wood:S.mat.wood})})()`));
   assert.equal(g.drop,g.n);assert.equal(g.box,false);assert.equal(g.wood,87-g.n);
+  /* しまう家具をこわして、もちものにもどしたら：中身は散らさず、神殿のまえへ。つぎに置いた同じ家具へもどる（boxStash・boxUnstash） */
+  const sv=JSON.parse(await run(`(()=>{const B=window.BB;const free=j=>!S.obj[j]&&!S.floor[j]&&!hiAt(j)&&walk(j)&&!(S.fog&&S.fog[j]);let p=-1;for(let k=B+W*2;k<B+W*20;k++)if(free(k)){p=k;break}
+    S.obj[p]='crate';recount();S.mat.stone=(S.mat.stone||0)+10;boxSync();for(const k of [PILE,...BOXL.filter(k=>k!==p)]){const t=btake(k,'stone',999);bput(p,'stone',t)}boxSync();const n=(S.box[p]||{}).stone||0,d0=(S.drops||[]).length,st=S.mat.stone;
+    removeAt(p%W,(p/W)|0);boxSync();const mid={drops:(S.drops||[]).length-d0,stone:S.mat.stone,pile:PIL().stone||0,inv:S.inv.crate||0};
+    S.lv=Math.max(S.lv||1,5);place('crate',p%W,(p/W)|0);boxSync();return JSON.stringify({n,st,mid,box:(S.box[p]||{}).stone||0,pile:PIL().stone||0,stone:S.mat.stone,keep:!!S.boxKeep})})()`));
+  console.log(JSON.stringify(sv));assert.ok(sv.n>0);assert.deepEqual(sv.mid,{drops:0,stone:sv.st,pile:sv.n,inv:sv.mid.inv},'こわしても散らさない');assert.equal(sv.box,sv.n,'置いた箱へもどる');assert.equal(sv.pile,0);assert.equal(sv.stone,sv.st);assert.equal(sv.keep,false);
   /* まき棚：木材と枝だけ、200まで */
   const mk=JSON.parse(await run(`(()=>{const A=window.BA,j=A+W*3;S.obj[j]='makidana';recount();return JSON.stringify({cap:boxCap(j),wood:boxRoom(j,'wood'),eda:boxRoom(j,'eda'),stone:boxRoom(j,'stone'),food:boxRoom(j,'f:berry'),catMat:boxCat(j,false)})})()`));
   assert.deepEqual(mk,{cap:200,wood:200,eda:200,stone:0,food:0,catMat:false});
@@ -45,6 +51,6 @@ const boot=require('../sim/boot.cjs'),assert=require('node:assert/strict');
   assert.deepEqual(m.o1,{obj:['crate','crate'],crate:1,wood:70,rsv:6,stone:40,food:30,inBox:76,ord:'crate',got:{wood:8}});
   assert.deepEqual(m.o2,{wood:70,rsv:6,inBox:76,food:30});
   assert.deepEqual(errors,[]);
-  console.log('Boxes: per-box contents, filters, hauling from the temple, eating from a box, building and crafting fetch materials (up to the carry count, on the head), cancel refunds, spilled boxes, old saves migrated twice');
+  console.log('Boxes: per-box contents, filters, hauling from the temple, eating from a box, building and crafting fetch materials (up to the carry count, on the head), cancel refunds, spilled boxes, a removed box keeps its contents for the next one placed, old saves migrated twice');
   await browser.close();
 })().catch(e=>{console.error(e);process.exit(1)});

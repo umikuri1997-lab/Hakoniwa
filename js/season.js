@@ -1,10 +1,10 @@
 /* 季節と記念日（season.js）
-   季節：SEASONDAYS 日ごとに、春・夏・秋・冬（1日めから春。ひとめぐり28日）。見た目とセリフだけで、数字はかえない。
+   季節：SEASONDAYS 日ごとに、春・夏・秋・冬（1日めから春。ひとめぐり20日）。見た目とセリフだけで、数字はかえない。
      朝にかわったら知らせて、思い出帳にのこす（seasonMorning）。日の欄のはじめに季節の名前。
      画面：春は花びら・秋は落ち葉・冬は雪（雨の日は雪がたくさんで、日の欄は「雪」）。夏は、ふだんのホタル。
      色：秋はあたたかく、冬はつめたく、ほんのり（SEATINT）。粒はドットの四角（seasonDraw）。
    記念日：村に来てから ANNIV 日めの朝、その子と、なかよしがよろこぶ。その日のお話は、記念日の話（annivTopic）。 */
-const SEASONDAYS=7,SEASONS=['春','夏','秋','冬'],SEATINT=['rgba(255,214,232,.05)','','rgba(255,168,92,.07)','rgba(222,238,255,.11)'];
+const SEASONDAYS=5,SEASONS=['春','夏','秋','冬'],SEATINT=['rgba(255,214,232,.05)','','rgba(255,168,92,.07)','rgba(222,238,255,.11)'];
 const ANNIV=[10,30,50,100,200,365];
 function seasonOf(d){return Math.floor(Math.max(0,d-1)/SEASONDAYS)%4}
 function seasonNow(){return S?seasonOf(dayNo()):0}

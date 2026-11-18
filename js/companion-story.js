@@ -66,9 +66,9 @@ function tryEarthIntro(r){
 }
 ACT.fieldintro={start(r,a){if(!earthIntroValid(r,a))return false;faceTo(r,fieldStump(a.obj));r.bubble='';checkQuest();},done:(r,a)=>!earthIntroValid(r,a)||isNight()||hungry(r)||r.energy<10||!questVisitSafe(r,a.obj)};
 function fieldStoryFocus(id){const state=fieldStoryEnsure(id),step=FIELD_STORIES[id]?.[state?.step],j=step&&S.fieldSites?.[step.site];if(j!=null)panTo((j%W+sacredSpan()/2)*TS,((j/W|0)+sacredSpan()-1.4)*TS);}
-function fieldStoryTap(tx,ty){
+function fieldStoryTap(tx,ty,wx,wy){/* wx・wy（マスの小数）：画面のタップ。切り株の絵の所だけ（sacredTapHit）。なければ、マスで見る（テスト・思い出帳） */
   const q=fieldStoryCurrent();if(!q)return false;const state=fieldStoryEnsure(q.id),step=FIELD_STORIES[q.id][state.step],j=S.fieldSites?.[step.site];
-  if(j==null||tx<j%W||tx>j%W+sacredSpan()-1||ty<(j/W|0)-1||ty>(j/W|0)+sacredSpan()-1)return false;
+  if(j==null)return false;if(wx!=null?!sacredTapHit(j,wx,wy):tx<j%W||tx>j%W+sacredSpan()-1||ty<(j/W|0)-1||ty>(j/W|0)+sacredSpan()-1)return false;
   fieldStoryStart(q,false);return true;
 }
 /* 調べをはじめる。quiet：自動で続けるとき（知らせを出さない） */
