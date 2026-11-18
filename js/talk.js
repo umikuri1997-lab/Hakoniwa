@@ -138,7 +138,7 @@ function talkLines(r){const now=nowTopic(r),E=dlToday(r);let L=null,pk=null;TALK
   return out.map((t,i)=>[r.name,chatTone(t,r,i)])}
 let TALKID=null,TALKPK=null;/* お話しているせいれい：会話のあいだは、歩くとちゅうでも、立ちどまって正面を向く（draw-spirits の walking） */
 function talkTo(r){if(!r||r.hidden||!S.res.includes(r))return;const owner=S,id=r.id,d=callDay();DLGTAP=performance.now();TALKID=id;
-  const TL=talkLines(r),pk=TALKPK;dialog(TL,()=>{if(TALKID===id)TALKID=null;if(S!==owner)return;const q=S.res.find(x=>x.id===id);if(!q)return;if(pk)prefKnow(q,pk);const c=q.care||(q.care={});if(c.talk!==d){c.talk=d;q.fun=Math.min(100,q.fun+TALKFUN);addFloat(q.x,q.y-1.6,'たのしさ+'+TALKFUN,'#ffd7e8')}JOYU.set(q,performance.now()+2000);q.bubble='💕';if(typeof bpTalkGift==='function')bpTalkGift(q);if((S.subSt||{}).talk1===2)S.flags.talkQ=1;dirty=true;resTab=2;openSheet('res',id)})}
+  const TL=talkLines(r),pk=TALKPK;dialog(TL,()=>{if(TALKID===id)TALKID=null;if(S!==owner)return;const q=S.res.find(x=>x.id===id);if(!q)return;if(pk)prefKnow(q,pk);const c=q.care||(q.care={});if(c.talk!==d){c.talk=d;funAdd(q,TALKFUN,'care');addFloat(q.x,q.y-1.6,'たのしさ+'+TALKFUN,'#ffd7e8')}JOYU.set(q,performance.now()+2000);q.bubble='💕';if(typeof bpTalkGift==='function')bpTalkGift(q);if((S.subSt||{}).talk1===2)S.flags.talkQ=1;dirty=true;resTab=2;openSheet('res',id)})}
 /* いまのようすのうち、ほかの話題より先に話すこと（tkFresh で、ぜんぶ出すまで同じ物を出さない）。@G は、いなくなったせいれいの名前 */
 const TALKU={
  foeF:[['#danger|「コワイノ」が来てる……！','だいじょうぶ、村はぼくたちが守るから。'],['#danger|みんな、気をつけて！','ぼくが、前に出るよ。'],['こわくなんか、ないよ。','守り神さまが、見ててくれるもん。'],['#danger|足音が、ちかづいてくる。','守り神さまは、うしろにいてね。'],['夜の影が、ゆれてる……。','だいじょうぶ。ぼくが、ここにいるよ。'],['みんなが寝てる家は、ぜったい守るんだ。','守り神さま、光をかしてね。'],['#danger|しっ……あっちに、なにかいる。','ぼく、見てくるよ。'],['夜明けまで、もうすこし。','それまで、みんなを守りきろうね。']],

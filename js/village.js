@@ -31,7 +31,9 @@ const ITEMMAT=id=>id==='sand'||id==='hai'||id.startsWith('seed:');/* 箱にし�
 const itemDest=id=>ITEMMAT(id)||OBOX<0?'mat':'obox',itemBoxOK=()=>OBOX>=0||BOXL.length>0,itemAdj=(j,dest)=>dest==='obox'?adjOf(j,k=>OBOX>=0&&anc(k)===OBOX):anyBox(j);
 function addItem(r,id,n){n=Math.min(n,roomN(r));if(n<=0)return 0;r.citem=r.citem||{};r.citem[id]=(r.citem[id]||0)+n;return n}/* ひろった物（素材・食べ物でない物）を、頭の上につむ */
 function addMat(r,k,n){n=Math.min(n,roomN(r));if(n<=0)return;r.cmat=r.cmat||{};r.cmat[k]=(r.cmat[k]||0)+n}
-function hYield(j,def){const o=S.obj[j],d=S.dyn[j];const cr=o==='farm'?CROPS[(d&&d.crop)||'mugi']:null;return (cr?cr.yield:def)+(NEARMILL.has(j)?1:0)+(cr&&d?d.fb||0:0)}
+function tsuyaOf(j){/* つやつやの作物：たねをまいてから、どの朝も水が切れなかった畑。収穫+1（TSUYA） */const d=S.dyn[j];return S.obj[j]==='farm'&&d&&d.sown!==false&&d.ts===1&&!d.dry?TSUYA:0}
+const TSUYA=1;
+function hYield(j,def){const o=S.obj[j],d=S.dyn[j];const cr=o==='farm'?CROPS[(d&&d.crop)||'mugi']:null;return (cr?cr.yield:def)+(NEARMILL.has(j)?1:0)+(cr&&d?d.fb||0:0)+(cr?tsuyaOf(j):0)}
 function storageAt(j,type){/* マス j に、食べ物（素材）を入れられる箱がある */return !!boxTypeAt(j)&&boxCat(anc(j),type==='food')}
 const GRASSK=['shina','kasa','kuru','chiri','funba'];/* 草の素材 */
 const cmpOf=j=>S.dyn[j]||(S.dyn[j]={b:[],c:0}),cmpIn=j=>{const d=S.dyn[j];return d?(d.b||[]).reduce((a,x)=>a+x[1],0):0},cmpWait=j=>{const Q=(S.cmpQ||{})[j];let n=0;if(Q)for(const k in Q)n+=Q[k];for(const r of S.res)if(r.cpk&&r.cpk.j===j)for(const k in r.cpk.m)n+=r.cpk.m[k];return n};/* コンポスター：b＝入れた草（[入れた時刻, 数]）、c＝できた肥料 */
