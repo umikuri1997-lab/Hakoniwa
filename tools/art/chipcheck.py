@@ -12,6 +12,9 @@
   にた色      0組（色の差が10より小さい2色。まとめる）
   形          行ごとの左はし・右はしを出す（とちゅうで急にかわる段・とびだしを、数字で見つける）
   色の一覧    多い順に12色（描きなおすときの色は、ここからとる）
+めやすの数（NG にはしない。数が多ければ、印の所を8倍で見る。考え方は ink-studio の critic.js（MIT）から）：
+  ガタガタ    りんかく（形のふち）の段の長さが、となりの段と2ドット以上ちがう所（1・3・1のような段。2・2・2がきれい）。葉のでこぼこなど、わざとの形でも出る
+  ちらつき    コマが2つより多いチップ（たてにならべたコマ・コマの一覧）で、まわり8つがかわらないのに1ドットだけかわる所のわりあい（動かない所の色がコマでゆれていないか）
 --cmp のとき：形の重なり（前とあとの形が、どれだけ同じか）90%より上"""
 import sys, os, signal
 import numpy as np
@@ -20,13 +23,45 @@ from PIL import Image
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 GRASS = (150, 190, 120, 255)
 
+FR = {}
+def chip_frames(c):
+    """チップのコマ：コマの一覧（f）か、たてにならべたコマ（n）"""
+    if c.get('n') and len(c['f']) == 1:
+        a = np.asarray(c['f'][0].convert('RGBA')).astype(int); h = a.shape[0] // c['n']; return [a[i * h:(i + 1) * h] for i in range(c['n'])]
+    return [np.asarray(f.convert('RGBA')).astype(int) for f in c['f']]
+
+def jaggy_points(a):
+    """ガタガタ：形のふちを、行ごとの左はし・右はし、列ごとの上はし・下はしで見て、段の長さが、となりの段と2ドット以上ちがう所。かえすのは（数、段の数、所）"""
+    m = a[..., 3] > 127; pts = []; steps = 0
+    for M, tr in ((m, False), (m.T, True)):
+        for side in (0, 1):
+            ed = [(int(np.where(r)[0].max()) if side else int(np.where(r)[0].min())) if r.any() else -1 for r in M]
+            st = [(i, abs(ed[i] - ed[i - 1])) for i in range(1, len(ed)) if ed[i] >= 0 and ed[i - 1] >= 0 and ed[i] != ed[i - 1]]
+            for (i0, d0), (i1, d1) in zip(st, st[1:]):
+                if i1 - i0 > 3: continue   # はなれた段どうしは、くらべない
+                steps += 1
+                if abs(d1 - d0) >= 2: pts.append((i1, ed[i1]) if tr else (ed[i1], i1))   # （x,y）
+    pts = sorted(set(pts), key=lambda p: (p[1], p[0]))
+    return len(pts), steps, pts
+
+def flicker(frs):
+    """ちらつき：コマのあいだで、まわり8つがかわらないのに1ドットだけかわる所のわりあい（さいごのコマのつぎは、はじめのコマ）"""
+    n = tot = 0
+    for i in range(len(frs)):
+        A, B = frs[i], frs[(i + 1) % len(frs)]
+        if A.shape != B.shape: return None
+        ch = ((A[..., :3] != B[..., :3]).any(-1) & (A[..., 3] > 127)) | ((A[..., 3] > 127) != (B[..., 3] > 127))
+        P = np.pad(ch, 1); nb = sum(P[1 + dy:1 + dy + ch.shape[0], 1 + dx:1 + dx + ch.shape[1]].astype(int) for dy in (-1, 0, 1) for dx in (-1, 0, 1) if dy or dx)
+        n += int((ch & (nb == 0)).sum()); tot += int((A[..., 3] > 127).sum())
+    return n, tot
+
 def chip_imgs(ids):
     sys.path.insert(0, os.path.join(ROOT, 'tools')); import chips
     _, C = chips.load_imgs(); out = {}
     for k in ids:
         if k not in C: print('ないチップ:', k); continue
-        out[k] = C[k]['f'][0].convert('RGBA'); c = C[k]
-        print('%s: 大きさ %dx%d・置き方 ax %s ay %s・g %s・コマ %d・部品 %d' % (k, c['w'], c['h'], c['ax'], c['ay'], c.get('g', 32), len(c['f']), len(c.get('parts') or [])))
+        c = C[k]; FR[k] = chip_frames(c); out[k] = Image.fromarray(FR[k][0].astype(np.uint8), 'RGBA') if c.get('n') and len(c['f']) == 1 else c['f'][0].convert('RGBA')   # たてにならべたコマは、1コマめ
+        print('%s: 大きさ %dx%d・置き方 ax %s ay %s・g %s・コマ %d・部品 %d' % (k, c['w'], c['h'], c['ax'], c['ay'], c.get('g', 32), len(FR[k]), len(c.get('parts') or [])))
     return out
 
 def thick_points(a):
@@ -53,7 +88,7 @@ def runs(v):
     for x in v:
         if o and o[-1][0] == x: o[-1][1] += 1
         else: o.append([x, 1])
-    return ' '.join('%d' % a if n == 1 else '%dx%d' % (a, n) for a, n in o)
+    return ' '.join(('%d' % a if a >= 0 else '-') if n == 1 else ('%dx%d' % (a, n) if a >= 0 else '-x%d' % n) for a, n in o)
 
 def check(im, name=''):
     a = np.asarray(im.convert('RGBA')).astype(int); al = a[..., 3]; m = al > 127; ng = []
@@ -79,7 +114,13 @@ def check(im, name=''):
     if n > 16:
         q = np.minimum((a[m][:, :3] // 12) * 12 + 6, 255); u, cnt = np.unique(q, axis=0, return_counts=True); o = np.argsort(-cnt)[:12]
         print('  色の一覧（にた色をまとめて、多い順） ' + ' '.join('#%02x%02x%02x(%d%%)' % (tuple(u[i]) + (round(cnt[i] * 100 / m.sum()),)) for i in o))
-    le = [int(np.where(m[y])[0].min()) for y in range(ys.min(), ys.max() + 1)]; re = [int(np.where(m[y])[0].max()) for y in range(ys.min(), ys.max() + 1)]
+    jn, js, jp = jaggy_points(a)
+    print('  ガタガタ %d／段 %d（めやす）%s' % (jn, js, '：' + ' '.join('%d,%d' % p for p in jp[:12]) if jp else ''))
+    frs = FR.get(name)
+    if frs and len(frs) > 2:
+        f = flicker(frs)
+        if f: print('  ちらつき %.2f%%（%d ドット・コマ %d。めやす）' % (f[0] * 100 / max(1, f[1]), f[0], len(frs)))
+    le = [int(np.where(m[y])[0].min()) if m[y].any() else -1 for y in range(ys.min(), ys.max() + 1)]; re = [int(np.where(m[y])[0].max()) if m[y].any() else -1 for y in range(ys.min(), ys.max() + 1)]   # 何もない行は -1
     print('  形（行ごとの左はし、上から） ' + runs(le)); print('  形（行ごとの右はし、上から） ' + runs(re))
     print('  → ' + ('NG がある' if any(ng) else 'めやすは、ぜんぶ通った（このあと、8倍とゲームの中の絵を目で見る）'))
     return not any(ng)

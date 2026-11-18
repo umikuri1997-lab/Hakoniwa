@@ -10,7 +10,9 @@
    思い出帳の再生（IS_STORY_REPLAY・MEMRUN）では、書かない。 */
 const DYJ=new WeakSet(),DIARYMAX=60,DYWORK=new Set(['build','craft','harvest','plant','fish','cook']),DYPER=4;
 function dyOff(){return !S||IS_STORY_REPLAY||typeof MEMRUN!=='undefined'&&MEMRUN}
-function dyCur(){if(dyOff())return null;if(!S.dy)S.dy={d:dayNo(),w:{},m:[],k:{},o:{}};return S.dy}
+function dyCur(){if(dyOff())return null;if(!S.dy)S.dy={d:dayNo(),w:{},m:[],k:{},o:{},g:{}};return S.dy}
+/* 守った数（助けてにげる・こもれびのまもり）：ゆうべのかつやくの点にたす */
+function dyGuard(r){const D=dyCur();if(!D||!r||!r.name)return;const G=D.g||(D.g={}),e=G[r.name]||(G[r.name]=[r.elem,r.vr||null,0]);e[2]++}
 function dyWork(r,t,v){if(!DYWORK.has(t)||!r||!r.name)return;const D=dyCur();if(!D)return;const k=r.name+'|'+t+'|'+v,e=D.w[k];if(e)e[5]++;else D.w[k]=[r.name,r.elem,r.vr||null,t,v,1]}
 function dyEv(t){const D=dyCur();if(!D||!t)return;if(!D.m.includes(t))D.m.push(t);if(D.m.length>30)D.m.shift()}
 function dyKill(by,msg){const D=dyCur();if(!D)return;if(by&&by.name){const e=D.k[by.name]||(D.k[by.name]=[by.elem,by.vr||null,0]);e[2]++;return}
@@ -32,7 +34,7 @@ function dyTopics(e,f){const M=[],O=[],N=e.ns;
   const gone=(S.gone||[]).filter(g=>g.day>=e.d&&g.day<=dayNo()&&g.name!==f.name);if(gone.length)M.push(['gone',gone[gone.length-1].name]);
   const nw=S.res.filter(r=>r.came===e.d&&r!==f&&!r.back);if(nw.length)M.push(['new',nw[nw.length-1].name]);
   if(N&&N.trial)M.push([N.trialOK?'trialOK':'trial']);else if(N&&N.boss)M.push([N.boss===1?'bossLose':'bossWin']);
-  if(N&&!N.trial){const best=dyBest(e);O.push(N.hurt?['nightHurt']:N.lost&&N.lost.length?['nightLost']:N.broke?['nightBroke']:best&&best!==f.name?['nightBest',best]:N.kill>=6?['nightBig']:N.kill?['nightSome']:['nightQuiet'])}
+  if(N&&!N.trial){const best=dyBest(e);O.push(N.hurt?['nightHurt']:N.lost&&N.lost.length?['nightLost']:N.broke?['nightBroke']:best&&best.nm!==f.name?['nightBest',best.nm]:N.kill>=6?['nightBig']:N.kill?['nightSome']:['nightQuiet'])}
   else if(!N&&!Object.keys(e.k||{}).length&&!Object.keys(e.o||{}).length)O.push(['nightQuiet']);
   const mine=e.w.filter(x=>x[0]===f.name).sort((a,b)=>b[5]-a[5]);if(mine.length)O.push(['self',dyText(mine[0][3],mine[0][4])]);
   for(const t of['build','craft','harvest','cook','plant','fish']){const L=e.w.filter(x=>x[3]===t&&x[0]!==f.name).sort((a,b)=>b[5]-a[5]);if(!L.length)continue;const v=L[0][4],n=t==='build'||t==='craft'?(BL[v]&&BL[v].name):t==='plant'?tName(v):t==='fish'?'':fName(v);if(n!=null&&(n||t==='fish'))O.push([t,n,L[0][0]])}
@@ -54,16 +56,23 @@ function dyNote(e,f){const{M,O}=dyTopics(e,f),sad=M.some(t=>t[0]==='gone'||t[0]=
   const c=S.dyCat||(S.dyCat=[]);for(const t of top){const i=c.indexOf(t[0]);if(i>=0)c.splice(i,1);c.push(t[0])}
   return best.L}
 /* 朝：きのうの日記をしめる。書くことがあれば、紙を出す */
-function diaryClose(){if(dyOff())return;const D=S.dy;S.dy={d:dayNo(),w:{},m:[],k:{},o:{}};if(!D)return;
+function diaryClose(){if(dyOff())return;const D=S.dy;S.dy={d:dayNo(),w:{},m:[],k:{},o:{},g:{}};if(!D)return;
   const N=S.ns&&!S.ns.dd?S.ns:null;if(N)N.dd=1;
-  const w=Object.values(D.w).filter(e=>dyText(e[3],e[4])),e={d:D.d,w,m:D.m.slice(),k:D.k,o:D.o};
+  const w=Object.values(D.w).filter(e=>dyText(e[3],e[4])),e={d:D.d,w,m:D.m.slice(),k:D.k,o:D.o,g:D.g||{}};
   if(N)e.ns={n:N.n,kill:N.kill,hurt:N.hurt,broke:N.broke,lost:(N.lost||[]).slice(),rw:N.rw||0,trial:!!N.trial,trialOK:!!N.trialOK,boss:N.boss||0,left:N.left||0};
   e.wx=D.wx||null;const f=dyWriter();if(f&&D.ph)e.ph=D.ph;/* フタバがいないときは、写真ものせない */
   if(!w.length&&!e.m.length&&!e.ns&&!e.ph)return;
   if(f){e.ft=dyNote(e,f);e.fw=[f.name,f.elem,f.vr||null]}
+  {const b=dyBest(e),r=b&&S.res.find(q=>q.name===b.nm);if(b){e.mvp=b;if(r){r.fun=Math.min(100,(r.fun||0)+MVPFUN);{const M=S.memo||(S.memo=[]);M.push([dayNo(),'cup',b.nm+'が、ゆうべのかつやくにえらばれた']);if(M.length>200)M.shift()}/* memo() だと、つぎの日の日記のできごとにも入るので、思い出帳だけに書く */}}}/* ゆうべのかつやく：たのしさ+10・思い出帳 */
   const L=S.diary||(S.diary=[]);L.push(e);while(L.length>DIARYMAX)L.shift();
   if(!sheet&&$('#dialog').hidden)openSheet('diary','m');else toast('きのうの日記を、思い出帳にのこした')}
-function dyBest(e){let b=null,n=0;for(const k in e.k||{})if(e.k[k][2]>n){n=e.k[k][2];b=k}return n>=2?b:null}
+/* ゆうべのかつやく：追いはらった数＋守った数が MVPMIN 点以上で、いちばん多い子（おなじ点なら、追いはらった数が多い子）。{nm,el,vr,k,g} */
+const MVPMIN=2,MVPFUN=10;
+function dyBest(e){if(e.mvp!==undefined&&e.mvp!==null&&typeof e.mvp==='object')return e.mvp;const P={};
+  for(const[nm,x]of Object.entries(e.k||{})){P[nm]={nm,el:x[0],vr:x[1],k:x[2],g:0}}
+  for(const[nm,x]of Object.entries(e.g||{})){const p=P[nm]||(P[nm]={nm,el:x[0],vr:x[1],k:0,g:0});p.g=x[2]}
+  let b=null;for(const nm in P){const p=P[nm],s=p.k+p.g;if(s<MVPMIN)continue;if(!b||s>b.k+b.g||s===b.k+b.g&&p.k>b.k)b=p}return b}
+function mvpTxt(b){return [b.k?b.k+'体を追いはらった':'',b.g?b.g+'回まもった':''].filter(Boolean).join('・')}
 /* 日記の写真の URL：とじるときの写しの板（sheetGhost）も同じ絵を読むので、すぐには手ばなさない（さいごの DYPHN まいだけ） */
 const DYPHU=new Map(),DYPHN=6;
 function dyPhUrl(id,b){let u=DYPHU.get(id);if(u)return u;u=URL.createObjectURL(b);DYPHU.set(id,u);if(DYPHU.size>DYPHN){const[k,v]=DYPHU.entries().next().value;DYPHU.delete(k);setTimeout(()=>URL.revokeObjectURL(v),3000)}return u}
@@ -71,6 +80,8 @@ function dyPhUrl(id,b){let u=DYPHU.get(id);if(u)return u;u=URL.createObjectURL(b
 function diaryBody(T,body,arg){const L=S.diary||[];const e=arg==='m'||arg==null?L[L.length-1]:L.find(q=>q.d===arg);if(!e)return closeSheet();
   T.textContent=e.d+'日めの日記';
   if(arg!=='m'){const bk=el('<button class="btn back" aria-label="思い出帳にもどる">'+pxi('next','prev')+'もどる</button>');bk.onclick=()=>{sfx('tap');openSheet('menu','record')};T.before(bk)}
+  {const b=dyBest(e);if(b){const sec=el('<div class="sec dyMvp"><h3>ゆうべのかつやく</h3><div class="rows"></div></div>'),r=rowEl(b.nm,mvpTxt(b),ELEM[b.el]?spiritPort(b.el,96,b.vr):null);sec.querySelector('.rows').appendChild(r);body.appendChild(sec);
+    if(arg==='m')setTimeout(()=>uiStamp(r,true,'かつやく'),350);else{r.style.position='relative';const c=stampCanvas('かつやく'),k=document.createElement('canvas');k.width=k.height=32;k.getContext('2d').drawImage(c,0,0);k.className='ustamp s';k.style.animation='none';r.appendChild(k)}}}/* いちばん上に、その子の絵とハンコ */
   if(e.ph){const sec=el('<div class="sec dyPh"><img alt="" style="display:block;width:100%;aspect-ratio:4/3;object-fit:cover"></div>'),im=sec.querySelector('img'),st=S;body.appendChild(sec);/* その日の昼12時の村の写真（けしたあとなら、出さない） */
     phGet(e.ph).then(p=>{if(!sec.isConnected||S!==st)return;if(!p||!p.b){sec.remove();return}im.src=dyPhUrl(e.ph,p.b)},()=>sec.remove())}
   if(e.ft&&e.ft.length&&e.fw){const sec=el('<div class="sec"><h3></h3><div class="rows"></div></div>');sec.querySelector('h3').textContent=e.fw[0]+'のひとこと';const r=rowEl(e.fw[0],e.ft.map(t=>t.replace(LOOKRX,'')).join('\n'),ELEM[e.fw[1]]?spiritPort(e.fw[1],96,e.fw[2]):null);r.querySelector('small').style.whiteSpace='pre-line';sec.querySelector('.rows').appendChild(r);body.appendChild(sec)}
@@ -80,7 +91,6 @@ function diaryBody(T,body,arg){const L=S.diary||[];const e=arg==='m'||arg==null?
     sec.appendChild(g);
     const K=Object.entries(e.k||{}).sort((a,b)=>b[1][2]-a[1][2]),O=Object.entries(e.o||{});
     if(K.length||O.length){const rw=el('<div class="rows"></div>');for(const[nm,x]of K)rw.appendChild(rowEl(nm,x[2]+'体を追いはらった',ELEM[x[0]]?spiritPort(x[0],96,x[1]):null));for(const[nm,n]of O)rw.appendChild(rowEl(nm,n+'体を追いはらった'));sec.appendChild(rw)}
-    const best=dyBest(e);if(best){const p=el('<p class="note"></p>');p.textContent='いちばんがんばったのは、'+best+'。';sec.appendChild(p)}
     if(N.boss===1&&!N.trial)sec.appendChild(el('<p class="note">オオカゲは、追いはらえないまま朝になった。</p>'));
     body.appendChild(sec)}
   if(e.m.length){const sec=el('<div class="sec"><h3>できごと</h3><div class="rows"></div></div>'),rw=sec.querySelector('.rows');for(const t of e.m)rw.appendChild(rowEl(t,''));body.appendChild(sec)}
@@ -88,8 +98,8 @@ function diaryBody(T,body,arg){const L=S.diary||[];const e=arg==='m'||arg==null?
     for(const x of e.w){if(!by.has(x[0]))by.set(x[0],{el:x[1],vr:x[2],L:[]});by.get(x[0]).L.push(x)}
     for(const[nm,g]of by){g.L.sort((a,b)=>b[5]-a[5]);const tx=g.L.slice(0,DYPER).map(x=>dyText(x[3],x[4])+(x[5]>1?'（'+x[5]+'回）':'')).join('\n');const r=rowEl(nm,tx,ELEM[g.el]?spiritPort(g.el,96,g.vr):null);r.querySelector('small').style.whiteSpace='pre-line';rw.appendChild(r)}
     body.appendChild(sec)}
-  if(arg==='m'){const best=dyBest(e),r=best&&S.res.find(q=>q.name===best&&!q.hidden);if(r&&!DYJ.has(r)){DYJ.add(r);JUMP.set(r,performance.now());villageTimeout(()=>JUMP.set(r,performance.now()),650);addFloat(r.x,r.y-1.4,'がんばった！','#ffe7a8')}}}
+  if(arg==='m'){const best=dyBest(e),r=best&&S.res.find(q=>q.name===best.nm&&!q.hidden);if(r&&!DYJ.has(r)){DYJ.add(r);JUMP.set(r,performance.now());villageTimeout(()=>JUMP.set(r,performance.now()),650);addFloat(r.x,r.y-1.4,'がんばった！','#ffe7a8')}}}
 /* 思い出帳の「日記」：日ごとの紙の一覧 */
 function diaryList(body){const L=S.diary||[];if(!L.length)return;const sec=el('<div class="sec"><h3>日記</h3><div class="rows"></div></div>'),rw=sec.querySelector('.rows');
-  for(const e of L.slice().reverse()){const n=e.w.length+e.m.length,best=dyBest(e);const sub=(e.ns?'ゆうべ '+e.ns.kill+'体を追いはらった':'夜は、コワイノが来なかった')+(best?'・がんばった：'+best:'')+(n?'・できごと '+n:'');const r=rowEl(e.d+'日めの日記',sub);r.style.cursor='pointer';r.onclick=()=>{sfx('tap');openSheet('diary',e.d)};rw.appendChild(r)}
+  for(const e of L.slice().reverse()){const n=e.w.length+e.m.length,best=dyBest(e);const sub=(e.ns?'ゆうべ '+e.ns.kill+'体を追いはらった':'夜は、コワイノが来なかった')+(best?'・かつやく：'+best.nm:'')+(n?'・できごと '+n:'');const r=rowEl(e.d+'日めの日記',sub);r.style.cursor='pointer';r.onclick=()=>{sfx('tap');openSheet('diary',e.d)};rw.appendChild(r)}
   body.appendChild(sec)}

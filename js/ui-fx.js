@@ -69,13 +69,13 @@ document.addEventListener('pointerup',e=>{if(!document.body.classList.contains('
 /* 下のシートが「ことん」と置かれた瞬間（kotonn の55%）に、上の左右のはしから木くず */
 document.addEventListener('animationstart',e=>{if(e.animationName!=='kotonn')return;const el=e.target;setTimeout(()=>{const q=el.getBoundingClientRect();if(q.width&&document.body.classList.contains('wd0')){sawdust(q.left+12,q.top+2,4,16);sawdust(q.right-12,q.top+2,4,16)}},165)});
 /* ハンコ：たっせいした物（目標の札・知らせ）に、赤い「できた」をポンとおす。2.4秒でうすくなって消える */
-let STAMPC=null;
-function stampCanvas(){if(STAMPC)return STAMPC;const c=document.createElement('canvas');c.width=32;c.height=32;const g=c.getContext('2d'),cx=16,cy=16,R=15;g.fillStyle='#d6453a';
+const STAMPCS={};/* ハンコの絵：字ごと */
+function stampCanvas(tx){tx=tx||'できた';if(STAMPCS[tx])return STAMPCS[tx];const c=document.createElement('canvas');c.width=32;c.height=32;const g=c.getContext('2d'),cx=16,cy=16,R=15;g.fillStyle='#d6453a';
   for(let y=0;y<32;y++)for(let x=0;x<32;x++){const d=Math.hypot(x+.5-cx,y+.5-cy);if(d<=R&&d>R-2.2&&(x*7+y*3)%11)g.fillRect(x,y,1,1)}/* ふちは、ところどころインクがかすれる */
-  const t=document.createElement('canvas');t.width=32;t.height=32;const h=t.getContext('2d');h.font='10px PixelMplus10';h.textAlign='center';h.textBaseline='middle';h.fillStyle='#d6453a';h.fillText('でき',cx,cy-5);h.fillText('た',cx,cy+6);
+  const t=document.createElement('canvas');t.width=32;t.height=32;const h=t.getContext('2d');h.font='10px PixelMplus10';h.textAlign='center';h.textBaseline='middle';h.fillStyle='#d6453a';const a=tx.slice(0,Math.ceil(tx.length/2)),b=tx.slice(Math.ceil(tx.length/2));h.fillText(a,cx,cy-5);h.fillText(b,cx,cy+6);/* 2行に分ける（できた→でき・た、かつやく→かつ・やく） */
   const d=h.getImageData(0,0,32,32);for(let i=3;i<d.data.length;i+=4)d.data[i]=d.data[i]>110?255:0;h.putImageData(d,0,0);g.drawImage(t,0,0);t.width=t.height=0;/* 字はドットのまま（うすい所はけす） */
-  return STAMPC=c}
-function uiStamp(el,small){if(!el||!el.isConnected)return;const c=document.createElement('canvas');c.width=c.height=32;c.getContext('2d').drawImage(stampCanvas(),0,0);c.className='ustamp'+(small?' s':'');
+  return STAMPCS[tx]=c}
+function uiStamp(el,small,tx){if(!el||!el.isConnected)return;const c=document.createElement('canvas');c.width=c.height=32;c.getContext('2d').drawImage(stampCanvas(tx),0,0);c.className='ustamp'+(small?' s':'');
   if(getComputedStyle(el).position==='static')el.style.position='relative';el.appendChild(c);setTimeout(()=>{el.classList.remove('ushake');void el.offsetWidth;el.classList.add('ushake');sfx('stamp');buzz(18)},180);/* ポンとおされた瞬間に、ぽむっ */
   setTimeout(()=>c.classList.add('out'),2400);setTimeout(()=>c.remove(),2850)}
 /* ---- 手ざわりのつづき：ふるえ・長おし・タブの音・行がならぶ・板がしなる・ゲージの音 ---- */
@@ -162,3 +162,18 @@ if(document.readyState!=='loading'){gaugeWatch();tileWatch();lvWatch()}else docu
 addEventListener('click',e=>{try{let n=e.target;if(!n||!n.closest||n.closest('canvas')||!n.closest('#app'))return;
   for(;n&&n!==document.body;n=n.parentElement){const tg=n.tagName;if(tg==='BUTTON'||tg==='A'||tg==='INPUT'||tg==='SELECT'||tg==='TEXTAREA'||tg==='LABEL'||tg==='SUMMARY'||n.onclick||n.onpointerdown||n.hasAttribute('data-hold')||n.getAttribute('role')==='button')return}
   sfx('uknock')}catch(_){}},true);
+/* おせる所を広げる：小さなボタン・タブ（44pxより小さい）のまわりの、何もない所（パネルの地）をおしたら、
+   いちばん近いボタンをおしたことにする。ボタンの見た目の中・マップの上のタップはかえない。
+   ならんだボタンどうしで、となりの見えている所をうばわないよう、見えない「おせる所」を重ねずに、ここで決める */
+const TAPSLOP=44,TAPBOX='.sheet,.pxcard,.idea-card,.dlg,#dialog,#confirm,#palette,.paper,#topUI,.dock,.askyn,#helpPop,.wcard,#lvup,#rlv';
+function tapSlopPick(t,x,y){if(!t||!t.querySelectorAll||t.id==='cv'||t.closest('canvas,input,select,textarea'))return null;
+  if(t.closest('button,a[href],[role=button],[role=tab],label,[tabindex="0"]'))return null;/* もう何かをおしている */
+  const box=t.closest(TAPBOX)||t;let best=null,bd=1e9;/* おした所をふくむパネルの中のボタンから */
+  for(const b of box.querySelectorAll('button,[role=button],[role=tab]')){if(b.disabled||b.closest('[hidden]'))continue;
+    const r=b.getBoundingClientRect();if(!r.width||!r.height)continue;
+    const w=Math.max(r.width,TAPSLOP),h=Math.max(r.height,TAPSLOP),cx=r.left+r.width/2,cy=r.top+r.height/2;
+    if(Math.abs(x-cx)>w/2||Math.abs(y-cy)>h/2)continue;/* 44pxにのばした所の外 */
+    const dx=Math.max(r.left-x,0,x-r.right),dy=Math.max(r.top-y,0,y-r.bottom),d=dx*dx+dy*dy;if(d<bd){bd=d;best=b}}
+  return best}
+document.addEventListener('click',e=>{if(!e.isTrusted)return;const b=tapSlopPick(e.target,e.clientX,e.clientY);if(!b)return;
+  e.preventDefault();e.stopPropagation();b.click()},true);
