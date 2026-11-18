@@ -106,7 +106,7 @@ function titleCont(){/* タイトルの「つづきから」：前にあそん�
 $('#tCont').onclick=()=>{audioInit();sfx('tap');const w=lastPlayed();if(w==null)return titleCont();const L=loadStage(w);if(!L)return titleCont();continueGame(L)};/* 前にあそんだマップを、そのまま開く */
 titleCont();
 {const f=()=>{if($('#title').hidden&&$('#maps').hidden)return;audioInit();if(curSong!=='opening'){curSong=wantSong='opening';step=0;bgmSw=0;nextT=AC?AC.currentTime+.15:0}};addEventListener('pointerdown',f,true);addEventListener('keydown',f,true)}/* タイトルでは、はじめてさわったときから曲を鳴らす（ブラウザは、さわるまで音を出させない） */
-window.__ldDone=1;clearInterval(window.__ldT);$('#tLoad').hidden=true;{const d=document.getElementById('stageLd');if(d&&!d.hidden)stageLoading(true)}/* 思い出帳の再生：つづけて、マップを読みこみ中と出す */if(window.__ldWant&&window.__ldWant())$('#tStart').onclick()/* 読みこみ中に「はじめる」をおしていたら、そのまま進む */
+window.__ldDone=1;clearInterval(window.__ldT);$('#tLoad').hidden=true;{const d=document.getElementById('stageLd');if(d&&!d.hidden)stageLoading(true)}/* 思い出帳の再生：つづけて、マップを読みこみ中と出す */{const lw=window.__ldWant&&window.__ldWant();if(lw===2)$('#tCont').onclick();else if(lw)$('#tStart').onclick()}/* 読みこみ中に「はじめる」「つづきから」をおしていたら、そのまま進む */
 
 /* ---------- ループ ---------- */
 let last=performance.now(),frameT=0,tutT=0,saveT=0,questT=0,running=true;
