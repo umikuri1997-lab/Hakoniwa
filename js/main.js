@@ -95,10 +95,10 @@ function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
     card.dataset.k=k;list.appendChild(card);thumb(card.querySelector('canvas'),k,open,hide);
   });
   lastFirst(list);
-  $('#mSnd').textContent=SND.bgm||SND.sfx?'♪ おと オン':'♪ おと オフ';
+  $('#mSnd').textContent=SND.bgm?'♪ 曲 オン':'♪ 曲 オフ';$('#mSfx').textContent=SND.sfx?'効果音 オン':'効果音 オフ';/* 曲と効果音は、べつべつに出す（まとめて出すと、曲がオフでも「オン」に見えた） */
 }
 const dayNoOf=s=>Math.floor((s.t-(s.hold||0))/1440)+1;
-$('#mSnd').onclick=()=>{const on=!(SND.bgm||SND.sfx);setSnd('bgm',on);setSnd('sfx',on);showMaps()};
+$('#mSnd').onclick=()=>{audioInit();setSnd('bgm',!SND.bgm);showMaps()};$('#mSfx').onclick=()=>{audioInit();setSnd('sfx',!SND.sfx);showMaps()};
 $('#mBack').onclick=()=>{$('#maps').hidden=true;$('#title').hidden=false;titleCont()};
 $('#tStart').onclick=()=>{audioInit();curSong=wantSong='opening';step=0;nextT=AC?AC.currentTime+.15:0;sfx('furn');const t0=Date.now(),go=()=>{if(KV.ready()||Date.now()-t0>5000)showMaps();else setTimeout(go,150)};if(!KV.ready())toast('セーブを読みこみ中…');go()};/* クラウドのセーブを待ってから、土地をえらぶ */
 function lastPlayed(){/* さいごにあそんだステージ（なければ null） */refreshStageInfo();const top=[0,1,FREE].map(w=>[w,LIVE[w]&&LIVE[w].introSeen?coverLast(w):0]).filter(a=>a[1]>0).sort((a,b)=>b[1]-a[1])[0];return top?top[0]:null}

@@ -124,7 +124,7 @@ function drawCritter(g,c,now){const x=Math.round(c.x*TS),y=Math.round(c.y*TS),z=
   if(!ch)return;const im=chipImgs(ch,'crit'+c.k)[0];if(!im.ok)return;const sm=g.imageSmoothingEnabled;g.imageSmoothingEnabled=false;g.save();g.globalAlpha=al;g.translate(x,y-z);if(f<0)g.scale(-1,1);g.drawImage(im,ch.ax/2,ch.ay/2,ch.w/2,ch.h/2);g.restore();g.imageSmoothingEnabled=sm}
 /* ほたるの光：夜の暗さより上に、おしりのドットの光（ゆっくり明るく・暗く）。draw-world.js が暗さのあとでよぶ */
 function drawCritGlow(g,now){for(const c of CRIT){if(c.k!=='hotaru')continue;const pq=c.pk?(now-c.pk)/(CRITPK*1000):1,pb=pq>=0&&pq<1?Math.sin(pq*Math.PI):0,a=Math.max(.55+.45*Math.sin(now/520+c.id*1.7),pb)*critAlpha(c);if(a<.15)continue;/* タップすると、ぽっと明るく（pb） */
-  const x=Math.round(c.x*TS)-(c.face<0?-3:3),y=Math.round(c.y*TS-(c.z||0))-3;
+  const x=Math.round(c.x*TS)-(c.face<0?-2:2),y=Math.round(c.y*TS-(c.z||0))-4;/* お尻の黄色の所（チップ crithotaru のまん中） */
   liftDraw(uLift(c),()=>{g.globalAlpha=a*.3;g.fillStyle='#d6f27a';g.fillRect(x-2,y-1,4,3);g.fillRect(x-1,y-2,2,5);if(pb>.05){g.globalAlpha=pb*.22;g.fillRect(x-4,y-2,8,5);g.fillRect(x-3,y-3,6,7);g.fillRect(x-2,y-4,4,9)}g.globalAlpha=a;g.fillStyle='#f2ffa8';g.fillRect(x-1,y,2,1);g.globalAlpha=1})}}
 /* せいれいが見つけて、見る・追いかける */
 function goCritter(r,G){if(!CRIT.length)return false;let best=null,bd=1e9;for(const c of CRIT){if(c.fl||c.go)continue;const d=Math.hypot(c.x-r.x,c.y-r.y);if(d<7&&d<bd){bd=d;best=c}}if(!best)return false;
@@ -150,7 +150,7 @@ function critTap(px,py){let best=null,bd=1e9;for(const c of CRIT){if(c.dead||c.g
     if(Math.abs(dx)>.5||dy>.3||dy<-.7)continue;const d=Math.hypot(dx,dy+.2);if(d<bd){bd=d;best=c}}return best?{c:best,d:bd}:null}
 function critPoke(c,px,py){const K=CK[c.k],now=performance.now();if(c.pk&&now-c.pk<CRITPK*1000*.6)return;c.pk=now;
   if(!c.rec){c.rec=1;const R=S.critRec||(S.critRec={});R[c.k]=(R[c.k]||0)+1}
-  addFloat(c.x,c.y-(c.z||0)/TS-.7,CRITN[c.k]||'','#f4ead2');sfx('crit');if(CRITV[c.k])sfxAt(CRITV[c.k],c.x,c.y);
+  sfx('crit');if(CRITV[c.k])sfxAt(CRITV[c.k],c.x,c.y);
   const ax=c.x-px,ay=c.y-py,L=Math.hypot(ax,ay),vx=L>.05?ax/L:(Math.random()<.5?-1:1),vy=L>.05?ay/L:0;
   if(c.k==='bird'){c.fl=1;critLeave(c,vx,Math.min(0,vy))}
   else if(K.flee){c.fl=1;c.hop=0;critLeave(c,vx,vy)}

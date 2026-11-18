@@ -9,7 +9,7 @@ await p.waitForFunction(()=>sacredEval('stageReady()'),{},{timeout:60000});
 const click=t=>run(`(()=>{const b=[...document.querySelectorAll('#sheetWrap button.btn')].find(x=>x.textContent===${JSON.stringify(t)});if(!b)return false;b.click();return true})()`);
 await run(`resTab=2;openSheet('res',S.res[0].id)`);
 const st0=await run(`(()=>{const r=S.res[0];return [r.fun,r.hunger,S.food]})()`);
-assert.ok(await click('なでる'),'なでるボタン');assert.equal(await run(`sheet`),null,'なでたら、とじて反応を見せる');await run(`resTab=2;openSheet('res',S.res[0].id)`);await click('なでる');
+assert.ok(await click('なでる'),'なでるボタン');assert.equal(await run(`sheet`),null,'なでたら、とじて反応を見せる');const joy=await run(`(()=>{const r=S.res[0],n=performance.now();return {jump:JUMP.has(r),joy:(JOYU.get(r)||0)>n,hold:(RHOLD.get(r)||0)>n,bub:r.bubble}})()`);assert.deepEqual(joy,{jump:true,joy:true,hold:true,bub:'💕'},'なでたら、手をとめて、はねてよろこぶ '+JSON.stringify(joy));await run(`resTab=2;openSheet('res',S.res[0].id)`);await click('なでる');
 const st1=await run(`(()=>{const r=S.res[0];return [r.fun,r.hunger,S.food,![...document.querySelectorAll('#sheetWrap button.btn')].some(x=>x.textContent==='毛布をかける')]})()`);
 assert.equal(st1[0],st0[0]+10,'なでる+10（2回目はなし）');assert.ok(st1[3],'起きているときは毛布なし');
 /* 外で寝ている子に毛布 */

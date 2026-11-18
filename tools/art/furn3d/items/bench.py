@@ -3,7 +3,7 @@ from blueprint import Part as P
 from common import *
 ID='bench';SZ=(2,1);BOTTOM=64
 VIEWS=[('bench',0),('bench>1',1),('bench>2',2),('bench>3',3)]
-X0,X1,Y0,Y1=0.22,1.78,0.45,0.90;ZS=0.30;TS=0.09;LG=0.09;IN=0.10
+X0,X1,Y0,Y1=0.22,1.78,0.225,0.90;ZS=0.30;TS=0.09;LG=0.09;IN=0.10
 def PARTS():
     L=[]
     xs=(X0+IN,X1-IN-LG)

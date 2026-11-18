@@ -47,7 +47,7 @@ def model(nm,path,x,y,z,w,rot=0,tilt=0,col=None,k=0.3,up=None):   # up：モデ�
     return p
 
 # ---- 材料（足もとのまん中が (x,y,z)。s：大きさ（よこのはば、マス））
-INGC={'tomato':(224,44,24),'apple':(232,96,84),'berry':(138,122,224),'egg':(250,246,236),'milk':(248,246,240),'fish':(236,222,206),'mugi':(232,197,106),
+INGC={'tomato':(224,44,24),'apple':(232,96,84),'berry':(150,92,204),'egg':(250,246,236),'milk':(248,246,240),'fish':(236,222,206),'mugi':(232,197,106),
       'imo':(196,120,168),'komugiko':(244,236,216),'kinoko':(214,150,110),'takenoko':(236,214,150)}
 INGS=list(INGC)
 SHINYING={'tomato','apple','berry','egg','milk'}   # 皮・びんが、つやつやの材料
@@ -79,7 +79,7 @@ def ing(k,x,y,z,s,nm='材料'):
     elif k=='apple':L.append(model(nm,K+'apple.glb',x,y,z,s))
     elif k=='egg':L.append(model(nm,K+'egg.glb',x-s*0.2,y,z,s*0.55,tilt=90,col=(250,244,226),k=0.4));L.append(model(nm+'2',K+'egg.glb',x+s*0.22,y+s*0.12,z,s*0.52,rot=40,tilt=90,col=(250,244,226),k=0.4))
     elif k=='fish':L.append(model(nm,K+'fish.glb',x,y,z,s*1.3,rot=90,tilt=90));L[-1].novivid=True   # さかなは、ぎん色とひれの色のまま（あざやかにすると、赤い魚になった）
-    elif k=='berry':L+=model2(nm,'tripo/ck_berry.glb',x,y,z,s,lambda u,dx,dy:u>0.55 and dy<0.0,(150,204,104),(124,128,214))   # ブルーベリー：上のおくの葉は緑
+    elif k=='berry':L+=model2(nm,'tripo/ck_berry.glb',x,y,z,s,lambda u,dx,dy:u>0.55 and dy<0.0,(150,204,104),(146,84,196))   # ベリー（紫）：上のおくの葉は緑
     elif k=='mugi':L.append(model(nm,'tripo/ck_mugi.glb',x,y,z,s*1.2,rot=-60,col=(226,180,88),k=0.6))
     elif k=='imo':L.append(model(nm,'tripo/ck_imo.glb',x,y,z,s,rot=-20,col=(196,112,164),k=0.35))
     elif k=='milk':L+=model2(nm,'tripo/ck_milk.glb',x,y,z,s*0.6,lambda u,dx,dy:u>0.78,(232,212,176),(248,247,242))   # ミルクのびん：上の紙のふた
