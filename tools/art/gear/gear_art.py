@@ -1,0 +1,81 @@
+"""そうびのアイコン（もちもの・そうびの画面・依頼ボード）。もらった絵 src/<シート>.webp（透過・7まい）から作る。
+1まいの中の物は、たての空き → 行、行の中のよこの空き → 物、でわける（数が多ければ、いちばんせまい空きからまとめる：ならんだ手ぶくろ・火の粉など）。
+どれも、長いほうの辺が S ドットになるようにちぢめ（pixdown.py の make）、fishfood_art の tidy でととのえる。
+ゲームでは、ドットを3つずつにのばした絵を assets/g に入れ、js/draw-spirits.js の ICONS に 'g_<id>' で書く（gearIcon がつかう）。
+  python3 tools/art/gear/gear_art.py <出力フォルダ>          # ちぢめた絵と見くらべ
+  python3 tools/art/gear/gear_art.py <出力フォルダ> --game   # ゲームに入れる"""
+import os, sys
+import numpy as np
+from PIL import Image
+D = os.path.dirname(os.path.abspath(__file__)); R = os.path.abspath(os.path.join(D, '..', '..', '..'))
+sys.path.insert(0, os.path.join(D, '..')); sys.path.insert(0, os.path.join(D, '..', 'fishfood'))
+import pixdown, fishfood_art
+S = 30  # 長いほうの辺のドット数
+gw = lambda a, b: ['gw%02d' % i for i in range(a, b + 1)]
+ga = lambda a, b: ['ga%02d' % i for i in range(a, b + 1)]
+SHEETS = {  # シート：行ごとの id（左から）
+  'weapon1': [gw(1, 5), gw(6, 10), gw(11, 15), gw(16, 20)],
+  'weapon2': [gw(21, 25), gw(26, 30), gw(31, 35), ['gw36', 'gg01', 'gg02', 'gg03', 'gg09']],
+  'arrows': [['gar%02d' % i for i in range(a, min(a + 6, 27))] for a in (1, 7, 13, 19, 25)],
+  'armor1': [ga(1, 5), ga(6, 10), ga(11, 15)],
+  'armor2': [ga(16, 20), ga(21, 25), ['ga26', 'gg04', 'gg05', 'gg06', 'gg10']],
+  'charm': [['gc%02d' % i for i in range(1, 6)], ['gc%02d' % i for i in range(6, 11)], ['gc%02d' % i for i in range(11, 15)] + ['gg07'], ['gg08', 'ga27', 'ga28', 'ga29']],
+  'tool': [['gt01', 'gt02', 'gt03', 'gt04', 'gt16'], ['gt17', 'gt05', 'gt06', 'gt07', 'gt08'], ['gt09', 'gt10', 'gt11', 'gt12', 'gt13'], ['gt14', 'gt15']]}
+TH = 128  # これより こい所を物とみる（うしろのうすいもやは、のぞく）
+
+def runs(p, n, cells=0):
+    """1次元の、物のある所のまとまり（start,stop）を n こにする：cells があれば、まん中の入るます目（はばを cells にわけた）ごとにまとめる（ならんだ肩あてが、となりの物にくっつかない）。のこりは、いちばんせまい空きのとなりどうしをまとめる"""
+    on = p > 0; R0 = []; i = 0
+    while i < len(on):
+        if on[i]:
+            j = i
+            while j < len(on) and on[j]: j += 1
+            R0.append([i, j]); i = j
+        else: i += 1
+    if cells:
+        cw = len(p) / cells; G = {}
+        for r in R0: c = int((r[0] + r[1]) / 2 // cw); G[c] = [min(G[c][0], r[0]), max(G[c][1], r[1])] if c in G else r
+        R0 = [G[c] for c in sorted(G)]
+    while len(R0) > n:
+        g = [R0[k + 1][0] - R0[k][1] for k in range(len(R0) - 1)]; k = int(np.argmin(g)); R0[k:k + 2] = [[R0[k][0], R0[k + 1][1]]]
+    if len(R0) != n: raise SystemExit('わけられない %d/%d' % (len(R0), n))
+    return R0
+
+def boxes(name):
+    im = Image.open(os.path.join(D, 'src', name + '.webp')).convert('RGBA'); a = np.array(im); m = a[..., 3] >= TH
+    from scipy.ndimage import binary_opening
+    m = binary_opening(m, iterations=2)
+    out = {}
+    for (y0, y1), ids in zip(runs(m.sum(1), len(SHEETS[name])), SHEETS[name]):
+        band = m[y0:y1]
+        for (x0, x1), k in zip(runs(band.sum(0), len(ids), len(ids) if len(ids) == max(map(len, SHEETS[name])) else 0), ids):
+            ys = np.where(band[:, x0:x1].any(1))[0]
+            out[k] = (x0 - 2, y0 + ys[0] - 2, x1 + 2, y0 + ys[-1] + 3)
+    a[..., 3] = np.where(a[..., 3] >= TH, 255, 0)  # うすいもやをけす
+    return Image.fromarray(a, 'RGBA'), out
+
+def build(dst, game=False):
+    os.makedirs(dst, exist_ok=True); made = {}
+    for name in SHEETS:
+        if not os.path.exists(os.path.join(D, 'src', name + '.webp')): print('まだない', name); continue
+        src, bx = boxes(name)
+        for k, b in bx.items():
+            w, h = b[2] - b[0], b[3] - b[1]
+            im = pixdown.make(src, b, w=S if w >= h else None, h=S if h > w else None, fix=lambda o, k=k: fishfood_art.tidy(o, k))
+            im.save(os.path.join(dst, k + '.png')); pixdown.compare(src, b, im).save(os.path.join(dst, k + '_cmp.png')); made[k] = im
+    if game: put(made)
+    return made
+
+def put(made):
+    import hashlib, io, re
+    js = os.path.join(R, 'js', 'draw-spirits.js'); s = open(js, encoding='utf-8').read()
+    for k, im in made.items():
+        im = im.resize((im.width * 3, im.height * 3), Image.NEAREST); b = io.BytesIO(); im.save(b, 'WEBP', lossless=True, exact=True); data = b.getvalue()
+        name = 'assets/g/' + hashlib.sha1(data).hexdigest()[:10] + '.webp'; open(os.path.join(R, name), 'wb').write(data); key = 'g_' + k
+        m = re.search(r"%s:'assets/g/[0-9a-f]+\.webp'," % key, s)
+        if m: old = re.search(r"assets/g/[0-9a-f]+\.webp", m.group()).group(); s = s[:m.start()] + "%s:'%s'," % (key, name) + s[m.end():]; (old != name and os.path.exists(os.path.join(R, old)) and os.remove(os.path.join(R, old)))
+        else: s = s.replace("const ICONS={", "const ICONS={%s:'%s'," % (key, name), 1)
+    open(js, 'w', encoding='utf-8').write(s)
+
+if __name__ == '__main__':
+    build(sys.argv[1], '--game' in sys.argv)
