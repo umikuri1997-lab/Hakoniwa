@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """小さな生き物をタップしたときの鳴き声（本物の録音）を作る。
-元の音：OpenGameArt の CC0 の音（どれも CC0）
+元の音：OpenGameArt の音（みつばちの bee.wav だけ CC-BY 3.0、ほかは CC0）
   birdchirping071414.wav（庭で録った小鳥） https://opengameart.org/content/bird-chirping-sounds
   birds-isaiah658.ogg（外で録った小鳥）    https://opengameart.org/content/ambient-bird-sounds
-  birdsCrickets.zip（cricket.wav・distressedMosquito.wav。as3sfxr で作った音） https://opengameart.org/content/birdcricketfrog-and-mosquito-sounds
+  cricketsounds090613.wav（庭で録ったコオロギ） https://opengameart.org/content/cricket-sounds
   ribbit_01〜03.mp3・croak_01_0.mp3   https://opengameart.org/content/ribbit-frog-sounds ・ /frog-croaks
   mouse-2.wav                        https://opengameart.org/content/mouse-imitation
   montage-sfx-20130922@153659.ogg    https://opengameart.org/content/squeaky-rat
@@ -13,6 +13,7 @@
   insect.zip（insect0〜5.ogg）        https://opengameart.org/content/insect-sounds
   grasshopper.zip                    https://opengameart.org/content/grasshopper
   im.mp3                             https://opengameart.org/content/8-wet-squish-slurp-impacts
+  bee.zip（bee.wav。IMadeIt「Single Bee Sound」CC-BY 3.0。設定の画面に作者名をのせる） https://opengameart.org/content/single-bee-sound
 使いかた：python3 tools/sound/critter_voice.py <上の物をおとして、zipをひらいたフォルダ> [名前,名前...]
 やること：切る（はじめ・長さ）→ 高さをずらす → 低い所・高い所をけずる → 出だし・終わりをなめらかに
  → 大きさをそろえる（いちばん大きい所 -3dB）→ assets/g/<中身のsha1の先10字>.mp3。さいごに SAMPLES の行を出す。"""
@@ -30,10 +31,10 @@ SET = {
   'cv_hari':  [('**/ex4.mp3', .08, .50, 1, 150, 8000), ('**/ex3.mp3', .25, .45, 1, 150, 8000)],  # はりねずみ：ふんふん
   'cv_mogura':[('dig_underground_1.mp3', .80, .45, 1, 120, 6000)],  # もぐら：ざくざく（土をほる）
   'cv_frog':  [('ribbit_02.mp3', 0, .45, 1, 150, 8000), ('ribbit_03.mp3', .15, .45, 1, 150, 8000)],  # かえる：けろっ
-  'cv_bee':   [('**/distressedMosquito.wav', 0, .35, .6, 150, 6000)],  # みつばち：ぶーん（羽の音を低くした）
+  'cv_bee':   [('bee/bee.wav', 1.55, .55, 1, 120, 9000), ('bee/bee.wav', .30, .50, 1, 120, 9000)],  # みつばち：ぶーん（本物のハチの羽音、CC-BY 3.0）
   'cv_bug':   [('insect/insect1.ogg', 0, .20, .8, 800, 11000), ('insect/insect4.ogg', 0, .20, .8, 800, 11000)],  # ちょう・てんとうむし：ぱたっ（虫の羽の音）
   'cv_tonbo': [('grasshopper/grasshopper.ogg', 1.25, .30, .7, 400, 10000)],  # とんぼ：はたはた
-  'cv_hotaru':[('**/cricket.wav', 0, .20, 1.1, 1500, 11000)],  # ほたる：ちりっ（夜の虫の声）
+  'cv_hotaru':[('cricketsounds090613.wav', 7.98, .45, 1, 1500, 11000), ('cricketsounds090613.wav', 8.73, .40, 1, 1500, 11000), ('cricketsounds090613.wav', 19.20, .45, 1, 1500, 11000)],  # ほたる：りりっ（夜の虫の声。本物のコオロギの録音）
   'cv_snail': [('im.mp3', 1.85, .30, 1.3, 300, 6000)],  # かたつむり：ぬるっ
 }
 def run(a): subprocess.run(a, check=True, capture_output=True)
