@@ -6,7 +6,7 @@ const assert=require('node:assert/strict');
     const a=S.res[0];S.res=[a];endAct(a);a.act=null;S.t=1440*3+8*60;
     if(BOARD<0||OBOX<0){const free=(x,y,w,h)=>{for(let b=0;b<h;b++)for(let c=0;c<w;c++){const k=(y+b)*W+x+c;if(S.obj[k]||S.ground[k]||hiAt(k)||(S.fog&&S.fog[k]))return false}return true};let p=null;for(let y=CY-12;y<CY+20&&!p;y++)for(let x=CX-14;x<CX+14;x++)if(free(x,y,8,6)){p=[x,y];break}const j=p[1]*W+p[0]+1;S.obj[j]='statue';S.obj[j-1]='obox';S.obj[j+1]='board';S.obj[j+2]='part';S.ref[j+2]=j+1;S.obj[j+W*4+5]='crate';recount()}
     for(const k of Object.keys(S.mat))S.mat[k]=0;S.mat.wood=60;S.mat.stone=30;S.mat.eda=10;boxSync();S.pt=999;S.recipes.chair=1;S.unlocked.chair=1;S.recipes.arrow=1;S.lv=Math.max(S.lv||1,5);
-    {const G=bfs(a.x|0,a.y|0);for(let d=2;d<7;d++){const j=BOARD+d*W;if(!S.obj[j]&&walk(j)&&G.dist[j]>=0&&!benchBoxes(j).length){S.obj[j]='wbench';break}}recount()}/* 依頼は作業台で作る */
+    {const G=bfs(a.x|0,a.y|0);for(let d=2;d<7;d++){const j=BOARD+d*W;if(!S.obj[j]&&!S.obj[j+1]&&walk(j)&&walk(j+1)&&G.dist[j]>=0&&!benchBoxes(j).length){wbenchAt(S,j,0);break}}recount()}/* 依頼は作業台で作る */
     return JSON.stringify({board:BOARD,obox:OBOX,room:roomN(a)})})()`));
   console.log(JSON.stringify(st));assert.ok(st.board>=0&&st.obox>=0);
   const toasts=`(window.__T=[],(()=>{const o=toast;toast=(m,...x)=>{__T.push(m);return o(m,...x)}})(),1)`;await run(toasts);
