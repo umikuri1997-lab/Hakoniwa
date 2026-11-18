@@ -5,7 +5,9 @@
    とんぼ＝秋の昼〜夕方の水の上／ほたる＝夜のはじめ（19〜23時）の水べ、おしりが光る／かえる＝雨の日か夕方の水べ。
    うさぎ・りす・ねずみ・小鳥は、せいれいが近づくと、にげる（小鳥は飛びたつ）。いなくなるとき（寿命・にげる・雨・夜）は、画面の外へ去ってから消える（critLeave）。
    ひまなせいれいは、ときどき見つけて、そっと見る・追いかける（critwatch、おわると たのしさ+2）。 */
-const CRITMAX=6,CRITFUN=2;let CRIT=[],CRITS=null,CRITT=0,CRITID=1;
+const CRITMAX=6,CRITFUN=2,CRITIN=1.5,CRITOUT=1.2,CRITGOF=2.5;/* 出るときは CRITIN 秒でふわっと見えてくる。去るときは CRITGOF 秒すすんでから CRITOUT 秒でうすれて消える */
+function critAlpha(c){return Math.max(0,Math.min(1,c.t/CRITIN)*(c.fade!=null?c.fade:1))}
+let CRIT=[],CRITS=null,CRITT=0,CRITID=1;
 /* しゅるい：m 動き（fly 花へとぶ・hover とんで止まる・drift ふわふわ・hop はねる・walk 歩く・bird 小鳥）。ch チップの名前（crit<ch>#<コマ>、tools/art/critter3d/crit_build.py）。
    hop はねる長さ（マス）・sp 歩く速さ（マス/秒）・flee にげる・sw かげのはば・w えらばれやすさ（書いてなければ1）・n 同時に出る数（書いてなければ1）。
    小鳥・ちょう・とんぼはよく出て、ほかはあまり出ない（持ち主のきめ）。 */
@@ -43,7 +45,7 @@ function critLeave(c,vx,vy){if(vx==null){if(c.go)return;const [a,b,cc,d]=critVie
   c.go=1;c.gt=c.gt||0;c.stk=0;c.act=0;c.rest=0;c.vx=vx;c.vy=vy;if(Math.abs(vx)>.05)c.face=vx>0?1:-1}
 /* 地面の物が、去る向き（行けなければ、少しずらした向き）へ len だけ進めるか。進めたら、その向き */
 function critDir(c,len){for(const t of [0,.7,-.7,1.4,-1.4]){const cs=Math.cos(t),sn=Math.sin(t),dx=c.vx*cs-c.vy*sn,dy=c.vx*sn+c.vy*cs,L=Math.hypot(dx,dy)||1;if(critGround(c.x+dx/L*Math.max(len,.3),c.y+dy/L*Math.max(len,.3)))return [dx/L,dy/L]}return null}
-function critGo(c,dt,K,m){c.gt+=dt;if(c.fade!=null){c.fade-=dt/.6;return}
+function critGo(c,dt,K,m){c.gt+=dt;if(c.fade!=null){c.fade-=dt/CRITOUT;return}if(c.gt>CRITGOF)c.fade=1;
   if(m==='fly'||m==='hover'||m==='drift'||m==='bird'){if(m==='bird'){c.fl=1;c.jt=null;c.pre=0}
     const sp=m==='bird'?2.6:m==='hover'?2.4:m==='drift'?.6:1.4;c.x+=c.vx*sp*dt;c.y+=(c.vy-(m==='bird'?.25:0))*sp*dt;c.z=Math.min(m==='bird'?90:30,c.z+(m==='bird'?14:5)*dt);if(Math.abs(c.vx)>.05)c.face=c.vx>0?1:-1}
   else if(m==='walk'){const sp=K.sp*(c.fl?4:2)*dt,o=critDir(c,sp);if(o){c.x+=o[0]*sp;c.y+=o[1]*sp;c.ph+=sp/(c.fl?.08:Math.max(.03,K.sp*.18));c.mv=1;c.stk=0;if(Math.abs(o[0])>.05)c.face=o[0]>0?1:-1}else{c.mv=0;c.stk+=dt}}
@@ -107,10 +109,10 @@ function critChip(c,now){const C=window.CHIPS;if(!C)return null;
   if(c.k==='bird')return C[c.fl?'critbird#f'+(Math.floor(now/90)%2):'critbird#0'];
   return C['crit'+(CK[c.k].ch||c.k)+'#'+critFrame(c,now)]||C['crit'+(CK[c.k].ch||c.k)+'#0']}
 function drawCritter(g,c,now){const x=Math.round(c.x*TS),y=Math.round(c.y*TS),z=Math.round(c.z||0)+critPokeZ(c,now),f=c.face<0?-1:1,ch=critChip(c,now),sw=CK[c.k].sw;
-  if(c.fade==null||c.fade>0){g.fillStyle='rgba(40,30,20,.18)';g.fillRect(x-(sw>>1),y,sw,2)}
-  if(!ch)return;const im=chipImgs(ch,'crit'+c.k)[0];if(!im.ok)return;const sm=g.imageSmoothingEnabled;g.imageSmoothingEnabled=false;g.save();if(c.fade!=null)g.globalAlpha=Math.max(0,c.fade);g.translate(x,y-z);if(f<0)g.scale(-1,1);g.drawImage(im,ch.ax/2,ch.ay/2,ch.w/2,ch.h/2);g.restore();g.imageSmoothingEnabled=sm}
+  const al=critAlpha(c);if(al<=0)return;if(al>0){g.fillStyle='rgba(40,30,20,'+(.18*al).toFixed(3)+')';g.fillRect(x-(sw>>1),y,sw,2)}
+  if(!ch)return;const im=chipImgs(ch,'crit'+c.k)[0];if(!im.ok)return;const sm=g.imageSmoothingEnabled;g.imageSmoothingEnabled=false;g.save();g.globalAlpha=al;g.translate(x,y-z);if(f<0)g.scale(-1,1);g.drawImage(im,ch.ax/2,ch.ay/2,ch.w/2,ch.h/2);g.restore();g.imageSmoothingEnabled=sm}
 /* ほたるの光：夜の暗さより上に、おしりのドットの光（ゆっくり明るく・暗く）。draw-world.js が暗さのあとでよぶ */
-function drawCritGlow(g,now){for(const c of CRIT){if(c.k!=='hotaru')continue;const pq=c.pk?(now-c.pk)/(CRITPK*1000):1,pb=pq>=0&&pq<1?Math.sin(pq*Math.PI):0,a=Math.max(.55+.45*Math.sin(now/520+c.id*1.7),pb);if(a<.15)continue;/* タップすると、ぽっと明るく（pb） */
+function drawCritGlow(g,now){for(const c of CRIT){if(c.k!=='hotaru')continue;const pq=c.pk?(now-c.pk)/(CRITPK*1000):1,pb=pq>=0&&pq<1?Math.sin(pq*Math.PI):0,a=Math.max(.55+.45*Math.sin(now/520+c.id*1.7),pb)*critAlpha(c);if(a<.15)continue;/* タップすると、ぽっと明るく（pb） */
   const x=Math.round(c.x*TS)-(c.face<0?-3:3),y=Math.round(c.y*TS-(c.z||0))-3;
   liftDraw(uLift(c),()=>{g.globalAlpha=a*.3;g.fillStyle='#d6f27a';g.fillRect(x-2,y-1,4,3);g.fillRect(x-1,y-2,2,5);if(pb>.05){g.globalAlpha=pb*.22;g.fillRect(x-4,y-2,8,5);g.fillRect(x-3,y-3,6,7);g.fillRect(x-2,y-4,4,9)}g.globalAlpha=a;g.fillStyle='#f2ffa8';g.fillRect(x-1,y,2,1);g.globalAlpha=1})}}
 /* せいれいが見つけて、見る・追いかける */
