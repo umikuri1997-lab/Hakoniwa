@@ -7,7 +7,8 @@
 const SCD=1.5,SCMS=520,SCOVER=9;
 const SCP={hi:'#fbf3dc',li:'#efe0bb',ba:'#e0cb9e',sh:'#c9b080',dk:'#ad925f',ol:'#7e6340',ln:'#b39866'};/* まいた和紙（tools/ui/colors.md の「巻物」） */
 const SCW={hi:'#b98352',li:'#9c6a3e',ba:'#82552f',sh:'#674223',dk:'#4e311a',ol:'#3c2412'};/* 軸と軸先の木 */
-const SCCORD=['#6a5a8e','#4f4370','#8a7ab0'];/* 巻きひも（むらさき） */
+const SCCORD=['#c8505a','#94323e','#e88088'];/* ひもと房（あかね色） */
+const SCC={hi:'#f6c9c4',li:'#e9a8a6',ba:'#d98d8f',sh:'#c06f76',dk:'#9c5560',ol:'#6e3640',ln:'#fbe2d8'},SCG={hi:'#fff1b8',li:'#f0cf72',ba:'#d9aa4e',sh:'#b38532',dk:'#8a6224',ol:'#5e421a'};/* 布の表装（もも色の織り柄）と、金の帯 */
 let SC=null,SCSEEN=0;
 function scSheet(){const w=document.getElementById('sheetWrap');if(!w||w.hidden)return null;const sh=w.querySelector('.sheet');return sh&&sh.dataset.k==='manual'?sh:null}
 function scRods(){if(SC&&SC.top.isConnected)return SC;const mk=()=>{const c=document.createElement('canvas');c.className='scrod';c.setAttribute('aria-hidden','true');document.getElementById('sheetWrap').appendChild(c);return c};
@@ -18,14 +19,19 @@ function scCyl(c,x0,x1,cy,r,P,a,spk){for(let y=-r;y<r;y++){const n=(y+.5)/r,col=
   if(spk){/* まわると、紙のはしの線と、すき目の点が、上へ（前の面から上の面へ）うごいていく */const ph=a%(Math.PI*2),y=Math.round(Math.sin(-ph)*r*.92);if(Math.cos(ph)>.15){c.fillStyle=P.ln;c.fillRect(x0+1,cy+y,x1-x0-2,1)}
     for(let i=0;i<spk;i++){const q=(i*2.39996)%(Math.PI*2),ph2=q-a,xx=x0+2+Math.floor(((i*97)%1000)/1000*(x1-x0-4));if(Math.cos(ph2)<.2)continue;c.fillStyle=P.sh;c.fillRect(xx,cy+Math.round(Math.sin(-ph2)*r*.85),1,1)}}}
 /* 1本の軸：まいた紙（あつみ t）・はしの軸・軸先 */
-function scRodDraw(cv,wD,t,a,cord){const H=22+(cord?20:0),c=cv.getContext('2d');if(cv.width!==wD||cv.height!==H){cv.width=wD;cv.height=H}c.clearRect(0,0,wD,H);
+function scRodDraw(cv,wD,t,a,cord){const H=22+(cord?30:0),c=cv.getContext('2d');if(cv.width!==wD||cv.height!==H){cv.width=wD;cv.height=H}c.clearRect(0,0,wD,H);
   const cy=11,rc=4,rr=rc+t,K=7,st=3,x0=K+st,x1=wD-K-st;
   scCyl(c,K,wD-K,cy,rc,SCW,a,0);/* 軸（紙のはしから出た所） */
-  scCyl(c,x0,x1,cy,rr,SCP,a,Math.max(3,Math.floor((x1-x0)/14)));/* まいた紙 */c.fillStyle=SCP.ol;c.fillRect(x0,cy-rr,1,rr*2);c.fillRect(x1-1,cy-rr,1,rr*2);
-  /* まいた紙のはしの面：うずまきのすじ */c.fillStyle=SCP.ln;for(let k=1;k<t;k++){c.fillRect(x0+1,cy-rc-k,1,1);c.fillRect(x1-2,cy+rc+k-1,1,1)}
-  for(const xk of[0,wD-K]){/* 軸先：まるい木の頭（角を1ドットずつおとす） */scCyl(c,xk,xk+K,cy,7,SCW,a*.5,0);for(const[dx,dy,n]of[[0,-7,3],[1,-7,1],[0,5,2],[1,6,1]]){c.clearRect(xk+dx,cy+dy,1,n);c.clearRect(xk+K-1-dx,cy+dy,1,n)}c.fillStyle=SCW.hi;c.fillRect(xk+2,cy-5,2,1);c.fillRect(xk+1,cy-4,1,2)}
-  if(cord){/* 巻きひも：上の軸の右から下がる。よむ速さで少しゆれる */const cx=Math.round(wD*.78),sw=cord.sw;let x=cx;for(let i=0;i<14;i++){x=cx+Math.round(sw*Math.pow(i/13,1.4)*3);c.fillStyle=i%3===2?SCCORD[1]:SCCORD[0];c.fillRect(x,cy+rr+i,1,1)}
-    const ky=cy+rr+14;c.fillStyle=SCCORD[1];c.fillRect(x-1,ky,3,2);c.fillStyle=SCCORD[2];c.fillRect(x-1,ky,1,1);c.fillStyle=SCCORD[0];for(const dx of[-1,0,1])c.fillRect(x+dx,ky+2,1,3+(dx===0?1:0))}}
+  scCyl(c,x0,x1,cy,rr,SCC,a,0);/* まいた所：布の表装 */
+  /* 織り柄：ひし形が、筒といっしょにまわる */for(let k=0;k<6;k++){const ph=k*Math.PI/3-a,cs=Math.cos(ph);if(cs<.25)continue;const yy=cy+Math.round(Math.sin(-ph)*rr*.85),off=(k%2)*4;c.fillStyle=cs>.7?SCC.ln:SCC.hi;for(let x=x0+4+off;x<x1-4;x+=8){c.fillRect(x,yy,1,1);if(cs>.55){c.fillRect(x-1,yy,3,1);c.fillRect(x,yy-1,1,3)}}}
+  for(const gx of[x0,x0+2,x1-4,x1-2])scCyl(c,gx,gx+2,cy,rr,SCG,a,0);/* 金の帯 */c.fillStyle=SCC.ol;c.fillRect(x0,cy-rr,1,rr*2);c.fillRect(x1-1,cy-rr,1,rr*2);
+  
+  for(const xk of[0,wD-K]){/* 軸先：まるい木の頭（角を1ドットずつおとす） */scCyl(c,xk,xk+K,cy,7,SCW,a*.5,0);scCyl(c,xk===0?xk+K-2:xk,xk===0?xk+K:xk+2,cy,6,SCG,0,0);for(const[dx,dy,n]of[[0,-7,3],[1,-7,1],[0,5,2],[1,6,1]]){c.clearRect(xk+dx,cy+dy,1,n);c.clearRect(xk+K-1-dx,cy+dy,1,n)}c.fillStyle=SCW.hi;c.fillRect(xk+2,cy-5,2,1);c.fillRect(xk+1,cy-4,1,2)}
+  if(cord){/* ひもと房：上の軸の右から下がる。よむ速さで少しゆれる */const cx=wD-K-st-8,sw=cord.sw;let x=cx;
+    c.fillStyle=SCCORD[1];c.fillRect(cx-2,cy-rr-1,5,2);c.fillStyle=SCCORD[0];c.fillRect(cx-1,cy-rr-1,3,1);/* 軸にまいた結び目 */
+    for(let i=0;i<16;i++){x=cx+Math.round(sw*Math.pow(i/15,1.4)*3);c.fillStyle=(i>>1)%2?SCCORD[1]:SCCORD[0];c.fillRect(x,cy+rr+i,2,1);c.fillStyle=SCCORD[2];if(i%2===0)c.fillRect(x,cy+rr+i,1,1)}/* よったひも */
+    const ky=cy+rr+16;c.fillStyle=SCG.dk;c.fillRect(x-1,ky,4,3);c.fillStyle=SCG.li;c.fillRect(x,ky,2,2);c.fillStyle=SCG.hi;c.fillRect(x,ky,1,1);/* 金の玉 */
+    c.fillStyle=SCCORD[1];c.fillRect(x-2,ky+3,6,2);/* 房の頭 */for(let dx=-2;dx<4;dx++){const n=6+((dx+3)%3);c.fillStyle=dx%2?SCCORD[0]:SCCORD[2];c.fillRect(x+dx,ky+5,1,n)}c.fillStyle=SCCORD[1];c.fillRect(x-2,ky+6,6,1)}}
 /* 毎コマ：軸を紙の上と下にあわせて描く */
 function scTick(now){const sh=scSheet();if(!sh){if(SC)scDrop();SCSEEN=0;requestAnimationFrame(scTick);return}
   const R=scRods();if(!SCSEEN){SCSEEN=1;if(!(typeof uiReduced==='function'&&uiReduced()))scOpen(sh);else bkSnd('pslide',.2)}

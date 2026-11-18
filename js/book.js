@@ -15,8 +15,8 @@ function bkClone(n){/* 写し：キャンバス（図鑑のコワイノなど）
 function bkSpread(){return innerWidth>innerHeight&&innerWidth>=720}
 function bkEase(p){return p<.5?2*p*p:1-2*(1-p)*(1-p)}
 function bookMake(body,pages,o){o=o||{};const sp=bkSpread(),N=pages.length;let at=Math.max(0,Math.min(N-1,o.at|0));if(sp)at-=at%2;
-  const b=el('<div class="bk"><div class="bkin"><div class="bks l"></div><div class="bkp bkL"><div class="bkc"></div><span class="bkn"></span></div><div class="bkp bkR"><div class="bkc"></div><span class="bkn"></span></div><div class="bks r"></div><canvas class="bkfx" aria-hidden="true"></canvas></div><div class="mnav"><button class="btn mpv" type="button" aria-label="まえのページ">'+pxi('next','prev')+'</button><button class="btn mtc" type="button">もくじ</button><span class="mpn"></span><button class="btn mnx" type="button" aria-label="つぎのページ">'+pxi('next','nxr')+'</button></div></div>');
-  b.dataset.sp=sp?1:0;{const st=document.createElement('div');st.className='bkstore';st.hidden=true;for(const pg of pages)st.appendChild(pg);b.appendChild(st)}/* まだひらいていないページも、本の中にしまっておく（さがせる） */if(o.cls)b.classList.add(o.cls);body.appendChild(b);
+  const b=el('<div class="bk"><div class="bkin"><div class="bkboard"><i></i><i></i><i></i><i></i></div><div class="bkp bkL"><div class="bkc"></div><span class="bkn"></span></div><div class="bkp bkR"><div class="bkc"></div><span class="bkn"></span></div><i class="bkrib" aria-hidden="true"></i><canvas class="bkfx" aria-hidden="true"></canvas></div><div class="mnav"><button class="btn mpv" type="button" aria-label="まえのページ">'+pxi('next','prev')+'</button><button class="btn mtc" type="button">もくじ</button><span class="mpn"></span><button class="btn mnx" type="button" aria-label="つぎのページ">'+pxi('next','nxr')+'</button></div></div>');
+  b.dataset.sp=sp?1:0;if(o.cover&&o.cover.c)b.style.setProperty('--cv',o.cover.c);{const st=document.createElement('div');st.className='bkstore';st.hidden=true;for(const pg of pages)st.appendChild(pg);b.appendChild(st)}/* まだひらいていないページも、本の中にしまっておく（さがせる） */if(o.cls)b.classList.add(o.cls);body.appendChild(b);
   const B=BK={el:b,in:b.querySelector('.bkin'),L:b.querySelector('.bkL'),R:b.querySelector('.bkR'),cv:b.querySelector('.bkfx'),pages,N,sp,at,o,busy:0,q:null};
   if(!sp)B.L.hidden=true;b.querySelector('.mpv').onclick=()=>bkGo(B,B.at-(sp?2:1));b.querySelector('.mnx').onclick=()=>bkGo(B,B.at+(sp?2:1));b.querySelector('.mtc').onclick=()=>bkGo(B,0);
   if(!o.toc)b.querySelector('.mtc').remove();
@@ -29,7 +29,8 @@ function bkMount(B,at){B.at=at;const sp=B.sp,store=B.el.querySelector('.bkstore'
   if(sp){put(B.L,at);put(B.R,at+1)}else put(B.R,at);
   const b=B.el,last=sp?B.N-1-((B.N-1)%2):B.N-1;b.querySelector('.mpv').disabled=at<=0;b.querySelector('.mnx').disabled=at>=last;const tc=b.querySelector('.mtc');if(tc)tc.hidden=at===0;
   b.querySelector('.mpn').textContent=at===0&&B.o.toc?'もくじ':sp?(at||1)+(at+1<B.N?'-'+(at+1):'')+' / '+(B.N-1):at+' / '+(B.N-1);
-  /* 重なった紙のあつみ：よんだ分は左、のこりは右（1〜5ドット） */const th=n=>n<=0?0:Math.min(5,1+Math.floor(n/3));b.querySelector('.bks.l').style.width=th(at)*BKD+'px';b.querySelector('.bks.r').style.width=th(B.N-1-(sp?at+1:at))*BKD+'px';
+  /* 重なった紙のあつみ：ページの下と外がわに、紙の層を段々に（よんだ分は左のページ、のこりは右のページ。2〜7まい） */const th=n=>6+Math.min(8,Math.ceil(n/2)),stk=(n,dir)=>{const L=['inset 0 0 0 1.5px #d4bb8a','inset 0 0 0 3px #e2cc9f','inset 0 0 0 4.5px #ebdab4'];for(let k=1;k<=n;k++)L.push((dir*(k>>1)*BKD)+'px '+(k*BKD)+'px 0 '+(k%2?'#c9ad80':'#f4e8cb'));L.push((dir*((n+1)>>1)*BKD)+'px '+((n+1)*BKD)+'px 0 #9a7a4c');return L.join(',')};
+  B.R.style.boxShadow=stk(th(B.N-1-(sp?at+1:at)),1);B.L.style.boxShadow=stk(th(at),-1);B.el.style.setProperty('--stk',(th(B.N-1-(sp?at+1:at))+2)*BKD+'px');
   if(B.o.onAt)B.o.onAt(at)}
 function bkSnd(k,v,rt){if(typeof playU==='function'&&typeof AC!=='undefined'&&AC&&AC.state==='running'&&SND.sfx)playU(k,v,rt||1)}
 /* 本の中の場所（.bkin のなかの px）：とじ目 S・1ページのはば w・上と下 */

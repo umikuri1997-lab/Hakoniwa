@@ -572,15 +572,59 @@ def dlg_css():
 
 
 # ---- ひでんのしょ：巻物（紙は少し黄ばんだ和紙、上と下に木の軸） ----
+def torn_rows():
+    """巻物の和紙のわく（11×34）：左右のふちは、ちぎれたようにゆれる（24行でくりかえす）。上と下は軸がかくすので、まっすぐ"""
+    import math
+    T, M, W = 5, 24, 11
+    L = [round(1.4 + 1.1 * math.sin(i / M * 2 * math.pi * 2) + .8 * math.sin(i / M * 2 * math.pi * 5 + 1.3)) for i in range(M)]
+    R = [round(1.4 + 1.1 * math.sin(i / M * 2 * math.pi * 3 + 2.1) + .8 * math.sin(i / M * 2 * math.pi * 4 + .4)) for i in range(M)]
+    rows = []
+    for y in range(T + M + T):
+        i = (y - T) % M if T <= y < T + M else 0
+        l, r = (L[i], R[i]) if T <= y < T + M else (1, 1)
+        row = ''
+        for x in range(W):
+            xr = W - 1 - x
+            if x < l or xr < r: row += '.'
+            elif x == l or xr == r: row += 'o'
+            elif x == l + 1 or xr == r + 1: row += 'b'
+            elif (x == l + 2 or xr == r + 2) and (i + x) % 3 == 0: row += 'c'
+            else: row += 'a'
+        rows.append(row)
+    return rows
+
+
+def rib_rows():
+    """章の札・見出しのリボン（20×12。9スライスで横にのばす）：まん中の帯と、左右のはしの切りこみ、下に1ドットのかげ"""
+    rows = []
+    for y in range(12):
+        r = ''
+        for x in range(20):
+            d = min(x, 19 - x)
+            notch = abs(y - 5.5) < (3 - d) if d < 3 else False
+            if y >= 11 or notch: r += '.' if not (y == 11 and 3 <= x <= 16) else 's'
+            elif y == 0: r += 'h'
+            elif y == 10: r += 'd'
+            elif d == 0 or (d < 3 and abs(y - 5.5) < (4 - d)): r += 'd'
+            else: r += 'a'
+        rows.append(r)
+    return rows
+
+
+RIBPAL = {'a': '#b45b47', 'h': '#d88a72', 'd': '#7e3a2e', 's': '#00000033'}
+
+
 def scroll_css():
-    sp = svg(PAPER, {'a': '#f3e7c9', 'o': '#b9935c', 's': SHADOW})
+    sp = svg(torn_rows(), {'a': '#f3e7c9', 'b': '#e4d0a4', 'c': '#d9c08e', 'o': '#a88a5a'})
     fib = svg(ptex_rows(), {'d': '#8a6a3a26', 'm': '#a0804e14', 'l': '#fffaf066'})
+    rib = svg(rib_rows(), RIBPAL)
     pp = 'var(--pp)'
     k = '.sheet[data-k="manual"]'
     return '\n'.join([
-        '/* ひでんのしょ：巻物の和紙（少し黄ばんだ紙と、すき目のすじ）。上と下の軸は scroll.js がキャンバスで描く */',
-        f'{k},body.wd0 {k}{{border-image-source:{sp}!important;border-image-slice:{S} {S} {S + 1} {S} fill!important;background:none!important;overflow:visible;margin-top:calc({pp}*14);margin-bottom:calc({pp}*14);padding-bottom:env(safe-area-inset-bottom,0px)!important}}',
+        '/* ひでんのしょ：巻物の和紙（ちぎれたふち torn_rows・すき目）と章の札（rib_rows）。上と下の軸は scroll.js がキャンバスで描く */',
+        f'{k},body.wd0 {k}{{border-image-source:{sp}!important;border-image-slice:5 5 5 5 fill!important;border-image-width:calc({pp}*5)!important;border-image-repeat:stretch round!important;background:none!important;overflow:visible;margin-top:calc({pp}*14);margin-bottom:calc({pp}*14);padding-bottom:env(safe-area-inset-bottom,0px)!important}}',
         f'{k} #sheetBody{{background:{fib} 0 0/96px 96px repeat;image-rendering:pixelated}}',
+        f'{k}{{--rib:{rib}}}',
     ])
 
 
@@ -600,16 +644,53 @@ def pcorner_rows():
     return ['oooooo', 'oaaao.', 'oaao..', 'oao...', 'oo....', 'o.....']
 
 
+VINE = ['................', '..........ll....', '.........lLl....', '....p.p..ll.....', '...pPpPp.v......', '....pYp..v......', '...pPpPp.v..ll..', '....p.p..v.lLl..', '.........v..ll..', '........v.......', '...ll..v........', '..lLl.v.........', '...llv..........', '....v...........', '...v............', '..v.............']
+
+
+def stain_rows():
+    """古い紙のしみ（48×48）：ぽつぽつと、うすい茶色のかたまり"""
+    import random
+    rnd = random.Random(7)
+    g = [['.'] * 48 for _ in range(48)]
+    for _ in range(6):
+        cx, cy, r = rnd.randrange(48), rnd.randrange(48), rnd.randrange(3, 7)
+        for y in range(-r, r + 1):
+            for x in range(-r, r + 1):
+                d = (x * x + y * y) ** .5
+                if d <= r and ((x + y) % 2 == 0 or d < r * .55):
+                    g[(cy + y) % 48][(cx + x) % 48] = 'd' if d > r * .7 else 'm'
+    return [''.join(r) for r in g]
+
+
+def metal_rows():
+    """表紙の角の金具（10×10、左上の向き）：L字の金の板と、びょう"""
+    rows = []
+    for y in range(10):
+        r = ''
+        for x in range(10):
+            if x > 9 - y // 3 and y > 3 or (x >= 4 and y >= 4): r += '.'
+            elif x == 0 or y == 0: r += 'h'
+            elif x == 3 and y >= 3 or y == 3 and x >= 3: r += 'd'
+            elif (x, y) == (1, 1): r += 'w'
+            elif (x, y) in ((2, 6), (6, 2)): r += 'n'
+            else: r += 'a'
+        rows.append(r)
+    return rows
+
+
 def mbook_css():
     fib = svg(ptex_rows(), {'d': '#8a6a3a20', 'm': '#8a6a3a0e', 'l': '#ffffff60'})
     cloth = svg(cloth_rows(), {'a': '#ffffff1c', 'b': '#0000001c'})
     tape = svg(tape_rows(), {'a': '#efe2b4d0', 'b': '#e2d09cd0'})
     pc = svg(pcorner_rows(), {'o': '#7a5a3a', 'a': '#9a7650'})
-    pp = 'var(--pp)'
+    vine = svg(VINE, {'v': '#8fa86a', 'l': '#9fbe7a', 'L': '#7d9a5a', 'p': '#f6c8c8', 'P': '#e3a0a0', 'Y': '#f2cf6a'})
+    stain = svg(stain_rows(), {'d': '#9a6e3a0e', 'm': '#9a6e3a08'})
+    metal = svg(metal_rows(), {'a': '#d9aa4e', 'h': '#f3d48a', 'd': '#a77a2c', 'w': '#fff4cc', 'n': '#8a6224'})
+    rib = svg(rib_rows(), RIBPAL)
     return '\n'.join([
-        '/* 思い出帳・図鑑：本（book.js）。紙のすき目・表紙の布の織り目・紙テープ・写真の角どめ（cloth_rows・tape_rows・pcorner_rows） */',
+        '/* 思い出帳・図鑑：本（book.js）。紙のすき目・しみ・すみの花とつた・表紙の布の織り目・角の金具・見出しのリボン・紙テープ・写真の角どめ */',
         f'.sheet[data-k="record"],.sheet[data-k="zukan"]{{height:80%}}',
-        f'.bk{{--fib:{fib};--cloth:{cloth};--tape:{tape};--pcorner:{pc}}}',
+        f'.bk{{--fib:{fib};--cloth:{cloth};--tape:{tape};--pcorner:{pc};--vine:{vine};--stain:{stain};--metal:{metal};--rib:{rib}}}',
     ])
 
 
