@@ -1,4 +1,4 @@
-/* 箱にしまう・取るあいだのゴソゴソ（work-fx.js の boxLoop）：動きのあいだ、くりかえしの音が鳴り、おわったら止まる・近い子から3人まで・村の時間が止まったら止まる */
+/* 箱にしまう・取るあいだのゴソゴソ（work-fx.js の boxLoop）：動きのあいだ、くりかえしの音が鳴り、おわったら止まる・近い子から2人まで・村の時間が止まったら止まる */
 const boot=require('../sim/boot.cjs'),assert=require('node:assert/strict');
 (async()=>{const {browser,page,run,errors}=await boot();
 await page.mouse.click(450,350);await run(`(()=>{SND.sfx=true;audioInit();AC.resume()})()`);
@@ -13,10 +13,11 @@ const out=await run(`(()=>{const o={};const base=S.res[0];S.res=[];S.enemies=[];
  USERPAUSE=true;for(const r of R.slice(2))boxBeat(r,0);boxLoopTick();o.pausedPlay=[...GOSOL.values()].filter(e=>e.src).length;USERPAUSE=false;
  for(const r of R.slice(2))boxBeat(r,0);boxLoopTick();const E=[...GOSOL.values()];o.re=E.filter(e=>e.src).length;
  USERPAUSE=true;for(const r of R)r.act=null;boxLoopTick();o.orphan=E.filter(e=>e.src).length;USERPAUSE=false;/* 止まっているあいだにおわっても、音は止まる */
- for(const r of R)r.act=null;boxLoopTick();o.end=GOSOL.size;return o})()`);
+ for(const r of R)r.act=null;boxLoopTick();o.end=GOSOL.size;
+ const z=mk(9,'store');z.nap=true;boxBeat(z,0);boxLoopTick();o.nap=[...GOSOL.values()].filter(e=>e.src).length;z.nap=false;RHOLD.set(z,performance.now()+6e4);boxBeat(z,0);boxLoopTick();o.hold=[...GOSOL.values()].filter(e=>e.src).length;RHOLD.set(z,0);z.act=null;boxLoopTick();return o})()`);
 console.log(out);
-assert.equal(out.paused,false);assert.equal(out.n,5);assert.equal(out.playing,3,'近い子から3人まで');assert.ok(out.loop,'1まわりをくりかえす');
-assert.ok(out.len>3*1.0337-.01,'1まわりを3つならべた音');assert.equal(out.left,3);assert.equal(out.after,3,'おわった子の音は止まり、のこりの子が鳴る');
-assert.equal(out.pausedPlay,0,'村の時間が止まったら止まる');assert.equal(out.re,3);assert.equal(out.orphan,0,'村の時間が止まっているあいだにおわっても、鳴りのこらない');assert.equal(out.end,0,'みんなおわったら止まる');
-assert.deepEqual(errors,[]);console.log('Box loop: gosogoso plays while storing/taking, up to 3 nearest, stops on end and pause. Browser errors: none');
+assert.equal(out.paused,false);assert.equal(out.n,5);assert.equal(out.playing,2,'近い子から2人まで');assert.ok(out.loop,'1まわりをくりかえす');
+assert.ok(out.len>3*1.0337-.01,'1まわりを3つならべた音');assert.equal(out.left,3);assert.equal(out.after,2,'おわった子の音は止まり、のこりの子が鳴る');
+assert.equal(out.pausedPlay,0,'村の時間が止まったら止まる');assert.equal(out.re,2);assert.equal(out.orphan,0,'村の時間が止まっているあいだにおわっても、鳴りのこらない');assert.equal(out.end,0,'みんなおわったら止まる');assert.equal(out.nap,0,'寝ている子は鳴らさない');assert.equal(out.hold,0,'場面で止められた子は鳴らさない');
+assert.deepEqual(errors,[]);console.log('Box loop: gosogoso plays while storing/taking, up to 2 nearest, stops on end and pause. Browser errors: none');
 await browser.close()})().catch(e=>{console.error(e);process.exit(1)});

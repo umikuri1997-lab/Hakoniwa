@@ -612,6 +612,14 @@ body.wd0 :is(#topUI,.dock,.sheet,.toast,.pxcard,#confirm,.dlg,#helpPop,.idea-car
 body.wd0 :is(.btn.pri,.ctab.on,.chip.more,.palA,.dock button.on){color:#3e2614!important;text-shadow:0 1.5px 0 rgba(226,180,120,.75)!important}
 body.wd0 :is(.btn.pri,.ctab.on,.chip.more,.palA,.dock button.on) svg.pxi{fill:#3e2614!important;filter:drop-shadow(0 1.5px 0 rgba(226,180,120,.75))}
 /* 草原のゲージは、板に彫りこんだみぞ（上と左はかげでこい、下と右は光）。中の色も、みぞの中にしずんで見えるように上にかげ */
+input.vol{-webkit-appearance:none;appearance:none;height:12px;margin:0;border:0;border-radius:0;background:linear-gradient(to right,#a8743f var(--p,50%),#dccaa5 var(--p,50%));box-shadow:inset 0 1.5px 0 #9c7f5a,inset 1.5px 0 0 #b39672,inset 0 -1.5px 0 #f8eedb,inset -1.5px 0 0 #f1e3c6;cursor:pointer}/* 音量のバー：彫りこんだみぞに、こげ色の中身。つまみは小さな板 */
+input.vol::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:13.5px;height:22.5px;border:1.5px solid #7a5432;border-radius:0;background:#e8d9b9;box-shadow:inset 0 1.5px 0 #fff6e2,inset 0 -3px 0 #c9ad82}
+input.vol::-moz-range-thumb{width:10.5px;height:19.5px;border:1.5px solid #7a5432;border-radius:0;background:#e8d9b9;box-shadow:inset 0 1.5px 0 #fff6e2,inset 0 -3px 0 #c9ad82}
+input.vol::-moz-range-track{background:transparent;border:0}
+input.vol:focus-visible{outline:1.5px solid #7a5432;outline-offset:3px}
+body.wd0 input.vol{background:linear-gradient(to right,#b9803f var(--p,50%),#cfae7b var(--p,50%));box-shadow:inset 0 1.5px 0 #9c7444,inset 1.5px 0 0 #b08552,inset 0 -1.5px 0 #f7e9cd,inset -1.5px 0 0 #ecd6ae}
+body.wd0 input.vol::-webkit-slider-thumb{border-color:#6b4423;background:#c89a5e;box-shadow:inset 0 1.5px 0 #e9c48f,inset 1.5px 0 0 #dcb27a,inset 0 -3px 0 #8e6232}
+body.wd0 input.vol::-moz-range-thumb{border-color:#6b4423;background:#c89a5e;box-shadow:inset 0 1.5px 0 #e9c48f,inset 1.5px 0 0 #dcb27a,inset 0 -3px 0 #8e6232}
 body.wd0 :is(.xp,.gauge,.bar,.vlBar,.stockBar){background:#cfae7b!important;box-shadow:inset 0 1.5px 0 #9c7444,inset 1.5px 0 0 #b08552,inset 0 -1.5px 0 #f7e9cd,inset -1.5px 0 0 #ecd6ae!important;border-radius:0!important}
 body.wd0 :is(.xp,.gauge,.bar,.vlBar,.stockBar)>i{box-shadow:inset 0 1.5px 0 rgba(70,40,15,.28),inset 1.5px 0 0 rgba(70,40,15,.16)}
 /* 草原のボタンは、おしているあいだ、ぎゅっとつぶれる */
