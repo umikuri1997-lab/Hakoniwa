@@ -18,14 +18,14 @@ function houseSig(h){let m=1e9;for(const j of h.set)if(j<m)m=j;return m+':'+h.se
 function juiceHouseWatch(now){/* HOUSES が作りなおされたら、新しい家をさがす */if(typeof HOUSES==='undefined'||HOUSES===JHREF)return;JHREF=HOUSES;const sig=new Set(HOUSES.map(houseSig));
   if(JHSIG&&juice2OK()&&stageReady())for(const h of HOUSES){const k=houseSig(h);if(!JHSIG.has(k))juiceHouse(h,now)}JHSIG=sig}
 function juiceHouse(h,now){if(JHS.length>4)return;let sx=0,sy=0,n=0;for(const j of h.set){sx+=j%W+.5;sy+=((j/W)|0)+.5;n++}if(!n)return;const cx=sx/n,cy=sy/n,cells=[];
-  for(const j of h.set){const x=j%W+.5,y=((j/W)|0)+.5;cells.push({x,y,a:(Math.atan2(y-cy,x-cx)+Math.PI*2.5)%(Math.PI*2)})}/* 上から時計まわりに、壁のマスの角度 */
+  for(const j of h.set){if(h.inside&&h.inside.has(j))continue;const x=j%W+.5,y=((j/W)|0)+.5;cells.push({x,y,a:(Math.atan2(y-cy,x-cx)+Math.PI*2.5)%(Math.PI*2)})}/* 上から時計まわりに、壁のマスの角度 */
   let top=1e9;for(const c of cells)if(c.y<top)top=c.y;JHS.push({cells,cx,cy,top,t0:now,pop:0});
   for(let i=0;i<6;i++)jKnock(392*Math.pow(2,[0,4,7,12,16,19][i]/12),i*.11,.5);/* 光がまわるあいだ、音が上がっていく */
   if(typeof JOYU!=='undefined')for(const r of S.res){if(r.hidden||r.nap||r.act&&r.act.type==='sleep')continue;if(Math.hypot(r.x-cx,r.y-cy)>9)continue;JOYU.set(r,now+JHOUSEMS+1400);if(typeof JUMP!=='undefined')JUMP.set(r,now+JHOUSEMS+Math.random()*200)}}/* 近くのせいれいは、光がまわりおわったら、よろこぶ */
 function juiceHouseDraw(now){for(let i=JHS.length-1;i>=0;i--){const H=JHS[i],e=now-H.t0;if(e>JHOUSEMS+900){JHS.splice(i,1);continue}const P=2;
     const u=Math.min(1,e/JHOUSEMS),a0=u*Math.PI*2;
-    for(const c of H.cells){let d=a0-c.a;if(d<0)continue;/* まだ光がとどいていない壁 */const fade=e>JHOUSEMS?1-(e-JHOUSEMS)/900:1,hot=Math.max(0,1-d/.9);ctx.globalAlpha=Math.max(0,(.18+.6*hot)*fade);ctx.fillStyle=hot>.5?'#fffbe6':'#ffe58a';
-      const x=c.x*TS,y=c.y*TS-(typeof hiAt==='function'?hiAt((c.y|0)*W+(c.x|0))*LIFT:0);for(let k=0;k<4;k++){const ox=Math.round((hash(c.x*31+c.y*7+k)*TS-TS/2)/P)*P,oy=Math.round((hash(c.x*13+c.y*5+k*3)*TS*.6-TS*.5)/P)*P;ctx.fillRect(x+ox,y+oy,P*(hot>.5?2:1),P*(hot>.5?2:1))}}
+    for(const c of H.cells){let d=a0-c.a;if(d<0)continue;/* まだ光がとどいていない壁 */const fade=e>JHOUSEMS?1-(e-JHOUSEMS)/900:1,hot=Math.max(0,1-d/.9);ctx.globalAlpha=Math.max(0,(.10+.3*hot)*fade);ctx.fillStyle=hot>.5?'#fffbe6':'#ffe58a';
+      const x=c.x*TS,y=c.y*TS-(typeof hiAt==='function'?hiAt((c.y|0)*W+(c.x|0))*LIFT:0);const h=TS/2;ctx.fillRect(x-h+P,y-h+P,TS-2*P,TS-2*P);if(hot>.3){ctx.globalAlpha=Math.min(1,hot)*fade;ctx.fillStyle='#fffbe6';ctx.fillRect(x-h,y-h,TS,P);ctx.fillRect(x-h,y+h-P,TS,P);ctx.fillRect(x-h,y-h,P,TS);ctx.fillRect(x+h-P,y-h,P,TS)}}/* 光がとどいたマスは、ほんのり光り、いまの所は白いわくで光る */
     if(e>=JHOUSEMS&&!H.pop){H.pop=1;const x=H.cx*TS,y=(H.top-.6)*TS;fx.push({k:'ring',x,y,life:1,col:'rgba(255,240,180,.95)'});for(let k=0;k<14;k++){const a=-Math.PI*(k/13),sp=70+Math.random()*60;fx.push({k:'p',x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-50,life:.9+Math.random()*.3,col:['#ffe58a','#fffbe6','#f6a650','#8fd06a'][k%4],r:3})}jKnock(784,0,.6,.12);jKnock(1176,.06,.45,.1)}/* 家の上で、ぽん */}
   ctx.globalAlpha=1}
 
