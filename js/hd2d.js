@@ -2,14 +2,14 @@
    - 時間の光の色（明け方・昼・夕方。夜はいまの暗さのまま）と、天気の光（雨・あらし・雪）
    - 空気の遠近（画面の上＝奥ほど、少し青く・うすく）
    - 明るい所のにじみ（画面を小さくして、明るい所だけをのこし、なめらかに大きくして screen でかさねる。あかりに色はかぶせない）
-   - 上下のぼかし（ピントの帯の外をぼかす。帯は会話の話す子・見守る子に合わせて動く。案内の場所・置く場所・画面をひらいた子のまわりはぼかさない）
+   - 上下のぼかし（ピントの帯の外をぼかす。帯は見守る子に合わせて動く。案内の場所・置く場所・画面をひらいた子のまわりはぼかさない）
    - 見せ場（なかまが来る・オオカゲの登場・御神木が育つ、hdBig）は、ピントをせまく、にじみを強く
    - かげの向きと長さ（朝は西・夕方は東へかたむき、朝・夕方は長く、昼は短い。shadow() と落ち影が sunLen・sunLean を見る）
    - 重いとき（1コマが長いとき）は、自動で軽くする（HDQ：1 にじみなし・小さくする回数をへらす、2 ぼかしもなし）
    作業用のキャンバスは画面の1/6・1/12の大きさ（iPhone の縦画面で約0.5MB）。小さくした絵（ぼかし・にじみのもと）は2コマに1回だけ作りなおす（HDEVERY） */
 let HD2D=true;try{if(KV.getItem('hakoniwa-hd2d')==='0')HD2D=false}catch(e){}
 function setHd2d(v){HD2D=!!v;try{KV.setItem('hakoniwa-hd2d',HD2D?'1':'0')}catch(e){}HDQ=0;HDQT=0}
-const HDBAND=.22,HDBANDBIG=.12;/* ピントの帯のはば（帯のまん中から上と下へ、画面の高さのわりあい）。見せ場はせまく */
+const HDBAND=.28,HDBANDBIG=.16;/* ピントの帯のはば（帯のまん中から上と下へ、画面の高さのわりあい）。見せ場はせまく */
 const HDFY0=.55;/* ふだんのピントの帯のまん中（画面の高さのわりあい） */
 const HDHOLE=1.8;/* ぼかさない所の半径（マス） */
 const HDAIR=.16;/* 空気の遠近：画面のいちばん上のこさ */
@@ -39,9 +39,7 @@ function hdWx(){/* 天気の光（multiply でかさねる色と、こさ） */
   if(S.rain)return typeof snowNow==='function'&&snowNow()?['215,225,245',.3]:['185,198,222',.42];/* 雪：つめたい白・雨：青みの灰色 */
   return null}
 function hdScreenY(wy){return (wy-cam.y)*cam.z/VH}/* マップのたての場所 → 画面の高さのわりあい */
-function hdFocusTarget(){/* ピントを合わせる物（マップの場所）：会話の話す子 → 見守る子 */
-  const dl=document.getElementById('dialog');
-  if(dl&&!dl.hidden&&typeof DLGA!=='undefined'&&DLGA.who){if(DLGA.who===GOD&&godHere())return[godX()*TS,(godY()-.5)*TS];const r=S.res.find(q=>q.name===DLGA.who&&!q.hidden);if(r)return[r.x*TS,(r.y-.5)*TS-hiAt((r.y|0)*W+(r.x|0))*LIFT]}
+function hdFocusTarget(){/* ピントを合わせる物（マップの場所）：見守る子（会話のときは動かさない。持ち主がきめた） */
   if(typeof FOLLOW!=='undefined'&&FOLLOW){const r=S.res.find(q=>q.id===FOLLOW.id);if(r)return[r.x*TS,(r.y-.5)*TS-hiAt((r.y|0)*W+(r.x|0))*LIFT]}
   return null}
 function hdHoles(){/* ぼかさない所（マップの場所）：案内のさす所・置く場所・画面をひらいた子 */const L=[];
