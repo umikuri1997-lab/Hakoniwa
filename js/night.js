@@ -341,7 +341,7 @@ function gupBuy(k){const n=gupLv(k);if(n>=10)return false;const c=GUPC[n];if(S.p
 function gupMigrate(){/* 前は村レベルでチャージがみじかくなった。強化だけにしたので、古いセーブは、そのときのチャージより長くならない段階にする（1回だけ） */if(S.flags.gup1)return;S.flags.gup1=1;const old=LIGHTCDL[S.lv]||10,v=gupOf('cd').v;let i=0;while(i<10&&v[i]>old)i++;if(i>gupLv('cd'))(S.gup||(S.gup={})).cd=i}let LIGHTCD=0,LIGHTARM=false;/* 守りの光：アイコンをタップしてから、コワイノ・木・岩をタップする *//* のこり秒（倍速なら早くもどる） */
 function guardLight(e){PTW.q=true;if(LIGHTCD>0){toast('まもりの光は、あと'+Math.ceil(LIGHTCD/(S.speed||1))+'秒');return}if(S.pt<1){toast('パワーが足りません');return}S.pt-=1;LIGHTCD=lightCdMax();
   const D=EN[e.type],G=gupOf('stun'),gs=gupLv('stun');hurtEn(e,gupOf('pow').v[gupLv('pow')],{flash:8,k:'light'});/* 威力・とめる時間は、守り神のちから（GUP）の段階 */e.stun=D.boss?G.vb[gs]:G.v[gs];e.path=[];e.repath=0;
-  const cx=e.x*TS,cy=e.y*TS-18;fxSpr('godlight',cx,cy);skillFx('light');sfxAt('shoot',e.x,e.y);
+  const cx=e.x*TS,cy=e.y*TS+8;fxSpr('godlight',cx,cy);skillFx('light');lightSnd(e.x,e.y);/* 光の槌：足もとに落ちる */
   if(e.hp<=0)return defeat(e,'まもりの光で'+D.name+'を追いはらった！')}
 let AREACD=0,AREAARM=false;/* こもれびのまもり（フタバから受けついだ守り神の技）：タップした場所のまわりのせいれいに、葉のまもり・パワー3。まわりのマス・葉のまもりの時間・チャージは GUP の area */
 function areaBlast(cx,cy){
