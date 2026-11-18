@@ -679,7 +679,7 @@ function renderSheet(){
 }
 
 /* 図鑑：マップごとに、見つけた・おぼえた物だけ（スポット・家具・建物・レシピ・コワイノ・アイテム） */
-let ZKW=null,ZKT=0;const ZKTABS=['スポット','家具','建物','レシピ','コワイノ','アイテム','さかな','いきもの','りょうり'];
+let ZKW=null,ZKT=0;const ZKTABS=['スポット','家具','建物','レシピ','コワイノ','アイテム','さかな','いきもの','りょうり','こだま'];
 function zukanBody(body){
   const ws=[0,1,2,3,4,5].filter(w=>(w===WD&&!S.free)||savedStage(w));if(!ws.length){body.appendChild(el('<p class="note">まだありません</p>'));return}
   if(ZKW==null||!ws.includes(ZKW))ZKW=ws.includes(WD)?WD:ws[0];
@@ -698,6 +698,7 @@ function zukanBody(body){
   else if(ZKT===6)fishZukan(d,add);
   else if(ZKT===7)critZukan(d,add);
   else if(ZKT===8)cookZukan(d,add);
+  else if(ZKT===9){if(typeof kdZukan==='function')kdZukan(d,add)}
   else{const it=Object.assign({},d.seenIt||{});for(const k in d.mat||{})if(d.mat[k]>0)it['m:'+k]=1;for(const k in d.fs||{})if(d.fs[k]>0)it['f:'+k]=1;
     for(const k in MATN)if(it['m:'+k])add(MATN[k],'素材',ICONS[k]||null);for(const k in FOODS)if(it['f:'+k])add(FOODS[k].name,FOODS[k].fx||'食べ物',foodIc(k));if(it['x:horn'])add('よびごえの角笛',HORNDESC,hornIco());if(it['x:herb'])add('まよけのハーブ',HERBDESC,herbIco())}
   body.appendChild(el('<p class="story">'+list.length+'こ</p>'));

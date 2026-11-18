@@ -145,7 +145,7 @@ const storeDur=(r,sp)=>{const j=(r.y|0)*W+(r.x|0),nb=f=>[-1,1,-W,W].some(o=>f(j+
 const WORKP={store:(r,a)=>a.t/storeDur(r,'shokuryo'),sitem:(r,a)=>a.t/storeDur(r,'monooki'),smat:(r,a)=>a.t/storeDur(r,'monooki'),/* 作業の進み具合（0〜1）。足もとの進捗バーに出す（建てる・直す・料理は、その場所のバーだけ出す） */
 chop:(r,a)=>a.camp?a.t/20:null,mine:(r,a)=>a.camp?a.t/20:null,/* 木・岩は、その木・岩の上の「のこり」のバーだけ（足もとのバーと二重にしない） */
 tend:(r,a)=>a.t/20,water:(r,a)=>a.t/waterDur(r,a),sow:(r,a)=>a.t/10,harvest:(r,a)=>a.t/12,gather:(r,a)=>a.t/15,offer:(r,a)=>a.t/10,pickseed:(r,a)=>a.t/8,fish:(r,a)=>a.t/50,forage:(r,a)=>a.t/27,douse:(r,a)=>a.t/10,
-proc:(r,a)=>{const P=PROC[S.obj[a.obj]];return P?(a.p||0)/P.T:null},smelt:(r,a)=>(a.p||0)/SMELT_T,/* はたおり・粉ひき・精錬 */
+proc:(r,a)=>{const P=PROC[S.obj[a.obj]];return P?(a.p||0)/prT(P):null},smelt:(r,a)=>(a.p||0)/SMELT_T,/* はたおり・粉ひき・精錬 */
 till:(r,a)=>{const d=S.dyn[a.obj];return Math.max(a.t/45,d&&d.p!=null?d.p/30:0)},
 plant:(r,a)=>{const d=S.dyn[a.obj];return Math.max(a.t/40,d&&d.p!=null?d.p/20:0)}};
 const RESUME=new Set(['chop','mine','repair','water','tend','sow','harvest']);/* とちゅうでやめても、つぎは続きからする作業（建てる・家具づくり・耕す・植える・料理は、もとから続きから） */

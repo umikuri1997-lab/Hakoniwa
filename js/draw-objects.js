@@ -151,6 +151,8 @@ function drawObj(c,id,x,y,i,g,now){
   if(id==='matyard'){const d=ICON||i==null?null:S.dyn[i],k='matyard#'+(d?yardStage(d.yt):0),ch=window.CHIPS&&CHIPS[k];if(ch)drawChip(c,ch,'matyard',x,y,now,i);return}/* 材料置き場：運んだ素材のわりあいで4まい */
   if(id==='statueb'){const ch=window.CHIPS&&CHIPS.statueb;if(ch)drawChip(c,ch,id,x,y,now,i);return}/* こわれた神殿 */
   if(id==='fogbox'||id==='nushiprint'||id==='fogspring'){drawFogObj(c,id,x,y,i,now);return}
+  if(id==='campfire'&&!ICON&&i!=null&&campOut(i)){const ch=window.CHIPS&&CHIPS['campfire#off'];if(ch&&drawChip(c,ch,id,x,y,now,i))return}/* 雨で消えたたき火 */
+  if(typeof KDIDS!=='undefined'&&KDIDS.has(id)){drawKd(c,id,x,y,i,g,now);return}/* もりのこだまの見つかる所（kodama.js） */
   if(id==='kagenest'){drawNest(c,x,y,now||performance.now());return}if(id==='leafwall'){drawLeafWall(c,x,y,i,now);return}if(id==='pit'){drawPit(c,x,y,i);return}/* かげの巣・葉のかべ（defense.js、コードのドット絵） *//* 霧の中で見つける物 */
   if(VEINS[id]){drawVein(c,id,x,y,i);return}/* 鉱脈 */
   if(id==='tower'&&WD===0){drawStoryTree(c,x,y,i,now,ICON);return;}

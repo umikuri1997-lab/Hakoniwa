@@ -157,6 +157,7 @@ const STAYG=180;/* せいれいが、みんなの合計で時計の3時間（180
 function stayTick(dt){if(!S||WD===FREE||IS_STORY_REPLAY)return;const m=dt/DAYLEN,st=S.stay||(S.stay={}),g=S.grn||(S.grn={});
   for(const r of S.res){if(r.hidden)continue;const j=(r.y|0)*W+(r.x|0);if(j<0||j>=W*H||g[j]||S.ground[j]===1)continue;const v=(st[j]||0)+m;if(v>=STAYG){g[j]=1;delete st[j];STAYDIRTY=true}else st[j]=v}}
 function stayGreen(){if(!STAYDIRTY||!S)return;STAYDIRTY=false;recount()}/* 1秒に1回だけ、緑のマスを入れなおす */
+function campOut(j){/* 雨（雪・あらしもふくむ）の日、外のたき火は消える：あかり・遊び場にならない。家の中・屋根（ガゼボ・東屋）の下はそのまま */if(!S||!S.rain||S.obj[j]!=='campfire')return false;if(roomOf(j))return false;if(S.roof)for(const k of[j,j-1,j-W,j-W-1])if(S.roof[k]&&Math.abs(k%W-j%W)<=1)return false;return true}
 function revRadius(o){/* 緑が広がるのは、木や草を生やしたときだけ（家具・建物・道・畑では広がらない） */const b=BL[o];if(!b)return 0;if(o==='tower')return 7;if(o==='tree'||o==='fruit')return 5;if(b.kind==='plant')return 3;/* 植えた木はまわり5マス、花はまわり3マス */if(o==='ntree'||o==='berry'||o==='bamboo'||o==='takenoko')return 1;return 0}
 /* 属性の力の表示（例：属性 木+1・土+2） */
 function attrTxt(id){const b=BL[id];if(!b||!b.attr||b.kind==='block')return'';const a=Object.entries(b.attr).filter(e=>e[1]>0);return a.length?'属性 '+a.map(([k,v])=>ELEM[k].name+'+'+(+v.toFixed(2))).join('・'):''}
@@ -179,8 +180,8 @@ function recount(){if(S.fogF&&!S.flags.spring2)fogSpring2(S);if(S.fogF&&!S.flags
     if(o==='statue')STATUE=j;if(o==='statueb'||o==='site'&&S.dyn[j]&&S.dyn[j].ruin)RUINT=j;if(o==='obox')OBOX=j;if(o==='board')BOARD=j;
     if(o==='stele')STELES.push(j);
     if(o==='lurestatue')LURES.push(j);
-    if(o==='lamp'||o==='lighthouse'||o==='tower'||o==='campfire'||o==='statue'||o==='torch'||o==='candle'||o==='lantern'||o==='flamp'||o==='yomawari'||o==='toro'||o==='takeakari'||o==='andon'||o==='watch'&&watchLit(j)||o==='hotaru'&&!isBud(j))LIGHTS.push(j);if(o==='hotaru')HOTL.push(j);if(o==='drum')DRUMS.push(j);if(o==='watch'&&watchLit(j))counts.watchlight=(counts.watchlight||0)+1;/* 見張り台のあかり（Lv5〜）も、あかりとして数える */
-    if(LIGHTP[o]&&!(o==='hotaru'&&isBud(j))||o==='watch'&&watchLit(j))LITP.push(j);/* 夜に光をかく明かりの一覧 */
+    if(o==='lamp'||o==='lighthouse'||o==='tower'||o==='campfire'&&!campOut(j)||o==='statue'||o==='torch'||o==='candle'||o==='lantern'||o==='flamp'||o==='yomawari'||o==='toro'||o==='takeakari'||o==='andon'||o==='watch'&&watchLit(j)||o==='hotaru'&&!isBud(j))LIGHTS.push(j);if(o==='hotaru')HOTL.push(j);if(o==='drum')DRUMS.push(j);if(o==='watch'&&watchLit(j))counts.watchlight=(counts.watchlight||0)+1;/* 見張り台のあかり（Lv5〜）も、あかりとして数える */
+    if(LIGHTP[o]&&!(o==='hotaru'&&isBud(j))&&!(o==='campfire'&&campOut(j))||o==='watch'&&watchLit(j))LITP.push(j);/* 夜に光をかく明かりの一覧 */
     if(o==='watch'||o==='yogan'||o==='tower')TOWERS.push(j);
     if(FLOWERS.has(o)&&!isBud(j)){const el=Object.keys(BL[o].attr||{})[0],E=el&&(ENVE[el]||(ENVE[el]=new Float32Array(W*H)));for(let dy=-3;dy<=3;dy++)for(let dx=-3;dx<=3;dx++){const nx=x+dx,ny=y+dy;if(nx<0||ny<0||nx>=W||ny>=H)continue;const q=ny*W+nx;ENVG[q]+=.56;if(E)E[q]+=1.11}}/* 花：まわり3マスで、たのしさ+0.2／1時間、同じ属性のせいれいは+0.6／1時間 */
     if(o==='jar')JARS.push(j);
@@ -204,7 +205,7 @@ if(o==='vane')around(j,3,NEARVANE);if(o==='niguruma')around(j,3,NEARCART);if(o==
   {const st=WD===1?1:0,g='weed'+st+'g',k='weed'+st+'k';for(let j=0;j<W*H;j++){const o=S.obj[j];if(o===k&&REV.has(j))S.obj[j]=g;else if((o===g||o==='weedc')&&!REV.has(j))S.obj[j]=k}}/* 雑草は土地に合わせる：よみがえった土地（緑）は緑の草、荒れた土地は枯れた草（あとから緑になった所の枯れた草も、緑の草に） */
   for(let j=0;j<W*H;j++){if(S.ground[j]===1)continue;baseN++;if(REV.has(j))revN++}
   /* 属性値は、せいれいの依頼が出る前から基地にある対象物も含めて数える。依頼開始時の基準化・差し引きはしない。 */
-  BASEPCT=Math.round(revN/Math.max(1,baseN)*100);GRASSN=revN;if(typeof fogAfterRecount==='function')fogAfterRecount();/* 霧が晴れるか */// マップぜんぶの、みどりのマス
+  BASEPCT=Math.round(revN/Math.max(1,baseN)*100);GRASSN=revN;if(typeof fogAfterRecount==='function')fogAfterRecount();if(typeof kdHanaCheck==='function')kdHanaCheck();/* もりのこだまの花の輪 *//* 霧が晴れるか */// マップぜんぶの、みどりのマス
   if(typeof aniRecount==='function')aniRecount();/* 飼う生き物の小屋とかこい */
   dirty=true;
 }

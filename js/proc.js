@@ -5,7 +5,8 @@
    水車（suisha）のまわり5マス（NEARSUI）の加工の家具は、せいれいがいなくても動く（S.prW[j]：進みぐあい）。できた物は S.prOut[j] にたまり、せいれいが箱へ運ぶ。 */
 const GRASSKEYS=['shina','kasa','kuru','chiri','funba'];
 const PROC={mill:{ins:['f:mugi'],n:2,out:'f:komugiko',el:'earth',T:45,cap:10,verb:'ひく',ask:'粉ひきをたのんだ'},/* こむぎ2こで、こむぎこ1こ。1こ30分 */
-  loom:{ins:[...GRASSKEYS,'wool'],n:3,nk:{wool:2},out:'nuno',el:'wind',T:60,cap:10,verb:'おる',ask:'はたおりをたのんだ'}};/* 草3こか、わた毛2こで、布1こ。1こ40分 */
+  loom:{ins:[...GRASSKEYS,'wool'],n:3,nk:{wool:2},out:'nuno',el:'wind',T:60,Tk:40,cap:10,verb:'おる',ask:'はたおりをたのんだ'}};/* 草3こか、わた毛2こで、布1こ。1こ40分。風の強い日（S.today==='kaze'）は Tk：1こ27分 */
+const prT=P=>S&&S.today==='kaze'&&P.Tk?P.Tk:P.T;/* 1こ作る時間 */
 const prN=(P,k)=>P.nk&&P.nk[k]||P.n;/* その物を、1こ作るのに入れる数 */
 const prName=key=>itemKeyName(key);
 const prOf=f=>S[f]||(S[f]={});
@@ -17,7 +18,7 @@ function prRefund(m){for(const k in m||{})if(m[k]>0)availAdd(k,m[k])}
 function procTick(dt){/* 家具がなくなったら、運ぶまえ・入れた・できた物は箱へもどす。水車のそばは、ひとりでに加工する */
   for(const f of['prQ','prIn','prOut']){const Q=S[f];if(!Q)continue;for(const k in Q)if(!PROC[S.obj[k]]){if(f==='prQ')rsvFree(Q[k]);else prRefund(Q[k]);delete Q[k];if(S.prW)delete S.prW[k]}}
   if(!S.prIn||!NEARSUI.size)return;
-  for(const k in S.prIn){const j=+k,P=PROC[S.obj[j]];if(!P||!suiOn(j))continue;const key=prReady(j);if(!key){if(S.prW)delete S.prW[j];continue}const W0=prOf('prW');W0[j]=(W0[j]||0)+dt;if(W0[j]<P.T)continue;W0[j]-=P.T;
+  for(const k in S.prIn){const j=+k,P=PROC[S.obj[j]];if(!P||!suiOn(j))continue;const key=prReady(j);if(!key){if(S.prW)delete S.prW[j];continue}const W0=prOf('prW');W0[j]=(W0[j]||0)+dt;if(W0[j]<prT(P))continue;W0[j]-=prT(P);
     const d=S.prIn[j];d[key]-=prN(P,key);if(!d[key])delete d[key];if(!Object.keys(d).length){delete S.prIn[j];delete W0[j]}const o=prOf('prOut'),q=o[j]||(o[j]={});q[P.out]=(q[P.out]||0)+1;if(!MEMRUN)spawnFX(j%W+.5,((j/W)|0)+.8,'#cfe8ff')}}
 function prLit(j){return S.res.some(r=>r.act&&r.act.type==='proc'&&r.act.obj===j&&r.act.stage==='do')||!!((S.prW||{})[j]>0&&suiOn(j))}/* 加工しているあいだ */
 function prHand(r,m){/* できた物・運んでいた物を、せいれいが持つ（食べ物は carry、素材は cmat） */for(const key in m){const n=m[key];if(!(n>0))continue;if(isFK(key)){const k=key.slice(2);if(typeof r.carry==='number')r.carry={mugi:r.carry};r.carry=r.carry||{};r.carry[k]=(r.carry[k]||0)+n;r.carryLast=k}else{r.cmat=r.cmat||{};r.cmat[key]=(r.cmat[key]||0)+n}}}
@@ -31,8 +32,8 @@ const putAdjAny=key=>BOXL.some(b=>boxRoom(b,key)>0);/* どこかの箱に入る�
 Object.assign(ACT,{
   ppick:{start(r,a){if(!S.prQ||!S.prQ[a.sj])return false;a.box=keysAdj(a.stand,Object.keys(S.prQ[a.sj]));if(a.box<0)return false;faceTo(r,a.box);r.bubble='';},done:(r,a)=>a.t>=4,end(r,a){const Q=S.prQ&&S.prQ[a.sj];if(!Q)return;const m=qPick(Q,boxIdOf(a.box));if(!Object.keys(Q).length)delete S.prQ[a.sj];if(Object.keys(m).length)r.ppk={j:a.sj,m}}},/* 加工する物を、箱からとる */
   pput:{start(r,a){if(!r.ppk)return false;r.bubble='';faceTo(r,a.obj)},done:(r,a)=>a.t>=4,end(r,a){const p=r.ppk;r.ppk=null;if(!p)return;if(!PROC[S.obj[p.j]]){prHand(r,p.m);return}const d=prOf('prIn'),q=d[p.j]||(d[p.j]={});for(const k in p.m)q[k]=(q[k]||0)+p.m[k];}},/* 加工の家具に入れる */
-  proc:{start(r,a){const o=S.obj[a.obj],P=PROC[o];if(!P||suiOn(a.obj))return false;a.k=prReady(a.obj);if(!a.k)return false;r.bubble='';faceTo(r,a.obj)},tick(r,a,dt){work(r,dt);a.p=(a.p||0)+dt*(rMul(r,'work')+nareAdd(r,a));},done:(r,a)=>{const P=PROC[S.obj[a.obj]];return !P||a.p>=P.T},
-    end(r,a){const P=PROC[S.obj[a.obj]];if(!P||(a.p||0)<P.T)return;const d=(S.prIn||{})[a.obj];if(!d||(d[a.k]||0)<prN(P,a.k))return;d[a.k]-=prN(P,a.k);if(!d[a.k])delete d[a.k];if(!Object.keys(d).length)delete S.prIn[a.obj];prHand(r,{[P.out]:1});addFloat(r.x,r.y-1.6,prName(P.out)+'+1','#ffe8c0');sfxAt('good',r.x,r.y);addSpiritXp(1,r)}},/* せいれいが加工する（できた物は持って箱へ） */
+  proc:{start(r,a){const o=S.obj[a.obj],P=PROC[o];if(!P||suiOn(a.obj))return false;a.k=prReady(a.obj);if(!a.k)return false;r.bubble='';faceTo(r,a.obj)},tick(r,a,dt){work(r,dt);a.p=(a.p||0)+dt*(rMul(r,'work')+nareAdd(r,a));},done:(r,a)=>{const P=PROC[S.obj[a.obj]];return !P||a.p>=prT(P)},
+    end(r,a){const P=PROC[S.obj[a.obj]];if(!P||(a.p||0)<prT(P))return;const d=(S.prIn||{})[a.obj];if(!d||(d[a.k]||0)<prN(P,a.k))return;d[a.k]-=prN(P,a.k);if(!d[a.k])delete d[a.k];if(!Object.keys(d).length)delete S.prIn[a.obj];prHand(r,{[P.out]:1});addFloat(r.x,r.y-1.6,prName(P.out)+'+1','#ffe8c0');sfxAt('good',r.x,r.y);addSpiritXp(1,r)}},/* せいれいが加工する（できた物は持って箱へ） */
   pget:{start(r,a){const m=(S.prOut||{})[a.obj];if(!m)return false;r.bubble='';faceTo(r,a.obj)},done:(r,a)=>a.t>=4,end(r,a){const m=(S.prOut||{})[a.obj];if(!m)return;let n=roomN(r);const got={};for(const k of Object.keys(m)){const t=Math.min(n,m[k]);if(t<=0)continue;got[k]=t;m[k]-=t;n-=t;if(!m[k])delete m[k]}if(!Object.keys(m).length)delete S.prOut[a.obj];prHand(r,got);}}});/* 水車でできた物を、とる */
 Object.assign(ACT_LBL,{ppick:'加工する物をはこんでいる',pput:'加工する物を入れている',proc:'加工している',pget:'できた物をとっている'});
 function prPop(j){/* 粉ひき小屋・はたおり機：作る数を、入れる物の種類ごとにえらぶと、せいれいが箱から運んで加工する */j=anc(j);const o=S.obj[j],P=PROC[o];if(!P)return;const V={};
