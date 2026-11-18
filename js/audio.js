@@ -232,7 +232,7 @@ case'bossKO':noise(t,.5,.3,o,200);tone(70,t,1.4,'sine',.2,o,30);tone(900,t,.35,'
   case'water':if(playS('splash',.32))break;{const sr=AC.createBufferSource(),g=AC.createGain(),bp=AC.createBiquadFilter();sr.buffer=noiseBuf;sr.loop=true;bp.type='bandpass';bp.frequency.setValueAtTime(3200,t);bp.frequency.linearRampToValueAtTime(2200,t+.7);bp.Q.value=.8;
     g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.06,t+.1);g.gain.setValueAtTime(.06,t+.45);g.gain.linearRampToValueAtTime(0,t+.75);sr.connect(bp);bp.connect(g);g.connect(o);sr.start(t);sr.stop(t+.8);
     for(let n=0;n<4;n++){const d=t+.12+n*.13+Math.random()*.05;tone(1400+Math.random()*600,d,.05,'sine',.012,o,2600)}break}
-  case'chop':playS('nail2',.3);break;/* 木を切る音＝釘を打つ音 */
+  case'chop':playHit('nail2',.3);break;/* 木を切る音＝釘を打つ音 */
   case'tonton':playU('tonton',.38);break;/* 包丁でまな板 */
   case'potclk':playU('potclk',.22);break;/* おたまがなべに */
   case'tink':playU('tink',.2);break;/* あわだて器がボウルに */
@@ -249,6 +249,8 @@ case'bossKO':noise(t,.5,.3,o,200);tone(70,t,1.4,'sine',.2,o,30);tone(900,t,.35,'
   case'cook':if(playS('boil',.35))break;noise(t,.35,.025,o,3000);tone(180,t,.08,'triangle',.03,o,140);break;
   case'crack':if(playS('mine',.25))break;playS('place',.25);break;case'rm':if(playS('gravel',.6))break;noise(t,.18,.09,o,900);break;
   case'nail':playHit('nail2',.28);break;
+  case'mine1':playS('mine',.375);break;/* 石をほる（前の crack の1.5倍） */
+  case'dpour':playSeg('trickle',.4,.5);break;/* 水くみ：バケツを水に入れる音（1回ずつ） */
   case'bnail':playHit('nail2',.42);break;
   case'kankan':for(let i=0;i<3;i++)playS('nail2',.42,i*.22);break;/* 強化したとき：カンカンカン *//* 建てているときの音（ふつうの1.5倍） */
   case'evap':noise(t,1.4,.05,o,2500);seq([67,64,60],.18,'sine',.03,.4);break;
@@ -293,7 +295,7 @@ case'bossKO':noise(t,.5,.3,o,200);tone(70,t,1.4,'sine',.2,o,30);tone(900,t,.35,'
   }
 }
 // 画面の中心から遠いほど小さく鳴らす
-const SFXGAP={chop:1.3,cookfire:2,pour:2.5,crack:1.3,spike:.4,poison:.6},SFXLAST={};/* 同じ音が重ならないように */
+const SFXGAP={chop:.3,mine1:.3,cookfire:2,pour:2.5,crack:1.3,spike:.4,poison:.6},SFXLAST={};/* 同じ音が重ならないように */
 /* せいれいの足音（ひかえめ）：歩いた道のりが FOOTLEN マスになるたび、足もとの地面の音（footMat）を、とても小さく鳴らす。
    画面の近くの子だけ・1回（0.1秒）に FOOTN 歩まで・近い子から。村の時間が止まっている・会話・早送りのときは鳴らさない */
 const FOOTLEN=.5,FOOTV=.07,FOOTN=2,FOOTP=new WeakMap();
