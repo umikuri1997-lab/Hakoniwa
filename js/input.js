@@ -95,7 +95,7 @@ function onTap(sx,sy){if(GIFT_ACTIVE&&camAnim&&camAnim.done)return;if(typeof sta
   if(mode==='look'){
     if(fieldStoryTap(tx,ty))return;
     const en=enemyAtTap(w0.x,w0.y);
-    if(en){sfx('tfoe');return toast(EN[en.type].name+'（体力 '+Math.max(0,Math.ceil(en.hp))+'/'+(en.max||EN[en.type].hp)+'）')}/* 「コワイノ」に守りの光をあてるのは、アイコンをえらんでから。「しらべる」では、名前と体力を出す（何も起きないタップにしない） */
+    if(en){sfx('tfoe');tgtShow(en);/* ねらっている物へ点線（support.js） */return toast(EN[en.type].name+'（体力 '+Math.max(0,Math.ceil(en.hp))+'/'+(en.max||EN[en.type].hp)+'）')}/* 「コワイノ」に守りの光をあてるのは、アイコンをえらんでから。「しらべる」では、名前と体力を出す（何も起きないタップにしない） */
     {const st=festStalls().find(t=>Math.abs(w.x/TS-(t.x+.5))<1.3&&w.y/TS>t.y-2.6&&w.y/TS<t.y+1);if(st){sfx('tbell');openSheet('stall',st.x);return}}/* 屋台をタップすると、その屋台の品物 */
     if(visitTap(w.x/TS,w.y/TS))return;/* 温泉宿のお客さん */
     if(godHere()&&Math.hypot(w.x/TS-godX(),w.y/TS-godY())<1.1){if(TALKW===GOD&&mainStoryBubbleReady())return startTalk();if(SUBW[GOD])return subTalk(SUBW[GOD]);if(S.feat.shop){const ln=pick(S.pt<2?GOD_POOR:GOD_SHOP);return dialog([[GOD,ln]],()=>{openSheet('shop');shopSay=ln;renderSheet()},'交換する')}toast('カミサマ「'+pick(GOD_IDLE)+'」');return}
