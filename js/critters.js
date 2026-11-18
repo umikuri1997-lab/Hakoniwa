@@ -1,6 +1,6 @@
 /* ---------- 小さな生き物：見た目だけ（セーブしない） ----------
    画面の近くにだけ出す（ぜんぶで CRITMAX ひき、1しゅるい CK の n ひきまで）。夜（23時〜6時）・コワイノのいるときは出さない。
-   どこに・いつ（critOK）：ちょう・みつばち＝昼の花・雨でない／小鳥・りす＝昼の木のそば／うさぎ＝昼のみどりの草地／はりねずみ＝夕方の茂みのそば／
+   どこに・いつ（critOK）：ちょう・みつばち＝昼の花・雨でない（ちょうは、その日の数 critButterflies まで）／小鳥・りす＝昼の木のそば／うさぎ＝昼のみどりの草地／はりねずみ＝夕方の茂みのそば／
    ねずみ＝昼の箱のそば／もぐら＝土のステージ（WD 3）の昼の畑のそば／かたつむり＝雨の日の花・草のそば／てんとうむし＝昼の花のそば（地面）／
    とんぼ＝秋の昼〜夕方の水の上／ほたる＝夜のはじめ（19〜23時）の水べ、おしりが光る／かえる＝雨の日か夕方の水べ。
    うさぎ・りす・ねずみ・小鳥は、せいれいが近づくと、にげる（小鳥は飛びたつ）。いなくなるとき（寿命・にげる・雨・夜）は、画面の外へ去ってから消える（critLeave）。
@@ -12,7 +12,7 @@ let CRIT=[],CRITS=null,CRITT=0,CRITID=1;
    vw 正面・うしろの絵がある（crit<ch>#d<コマ>・#u<コマ>。上下へ動くときは、その絵 critTurn）。
    hop はねる長さ（マス）・sp 歩く速さ（マス/秒）・flee にげる・sw かげのはば・w えらばれやすさ（書いてなければ1）・n 同時に出る数（書いてなければ1）。
    小鳥・ちょう・とんぼはよく出て、ほかはあまり出ない（持ち主のきめ）。 */
-const CK={fly:{m:'fly',sw:8,w:10,n:2},bird:{m:'bird',sw:8,w:10,n:2},frog:{m:'hop',ch:'kaeru',hop:.35,sw:8,vw:1},usagi:{m:'hop',hop:.5,flee:1,sw:10,vw:1},risu:{m:'hop',hop:.4,flee:1,sw:10,vw:1},
+const CK={fly:{m:'fly',sw:8,w:10},/* ちょうの同時に出る数は、その日の数（critButterflies） */bird:{m:'bird',sw:8,w:10,n:2},frog:{m:'hop',ch:'kaeru',hop:.35,sw:8,vw:1},usagi:{m:'hop',hop:.5,flee:1,sw:10,vw:1},risu:{m:'hop',hop:.4,flee:1,sw:10,vw:1},
   harinezumi:{m:'walk',sp:.25,sw:9,vw:1},nezumi:{m:'walk',sp:.5,flee:1,sw:8,vw:1},mogura:{m:'walk',sp:.2,sw:10,vw:1},katatsumuri:{m:'walk',sp:.06,sw:8,vw:1},tentoumushi:{m:'walk',sp:.15,sw:5,vw:1},
   mitsubachi:{m:'fly',sw:5},tonbo:{m:'hover',sw:6,w:10,n:2},hotaru:{m:'drift',sw:4}};
 const CRITKINDS=Object.keys(CK),CRITW=CRITKINDS.reduce((t,k)=>t+(CK[k].w||1),0);
@@ -34,7 +34,11 @@ function critOK(k,j){if(j<0||j>=W*H)return false;const h=hour(),day=h>=7&&h<17,d
   if(k==='hotaru')return h>=19&&h<23&&dry&&critOpen(j)&&[1,-1,W,-W].some(d=>S.ground[j+d]===1);
   if(k==='frog')return (S.rain&&h>=6&&h<20||h>=17&&h<20)&&critOpen(j)&&[1,-1,W,-W].some(d=>S.ground[j+d]===1);
   return false}
-function critSpawn(){if(CRIT.length>=CRITMAX||isNight()||enemyLive())return;const [a,b,c,d]=critView(),k=critPick(),m=CK[k].m;if(CRIT.filter(q=>q.k===k).length>=(CK[k].n||1))return;
+/* ちょうの数：1日1回（朝）、咲いている花1本ごとに CRITBP で1ぴき。その日は、その数まで出る（マスと日で決まる hash なので、しまわない） */
+const CRITBP=.05;let CRITBD=-1,CRITBS=null,CRITBN=0;
+function critButterflies(){const d=callDay();if(d!==CRITBD||CRITBS!==S){CRITBD=d;CRITBS=S;let n=0;for(let j=0;j<W*H;j++)if(FLOWERS.has(S.obj[j])&&!isBud(j)&&hash(j*7919+d*104729+13)<CRITBP)n++;CRITBN=n}return CRITBN}
+const critN=k=>k==='fly'?critButterflies():(CK[k].n||1);/* 同時に出る数 */
+function critSpawn(){if(CRIT.length>=CRITMAX||isNight()||enemyLive())return;const [a,b,c,d]=critView(),k=critPick(),m=CK[k].m;if(CRIT.filter(q=>q.k===k).length>=critN(k))return;
   for(let n=0;n<40;n++){const x=Math.floor(a+Math.random()*(c-a)),y=Math.floor(b+Math.random()*(d-b)),j=y*W+x;if(x<0||y<0||x>=W||y>=H||!critOK(k,j))continue;
     CRIT.push({id:CRITID++,k,x:x+.5,y:y+.6,hx:x+.5,hy:y+.6,z:m==='fly'?12:m==='hover'?18:m==='drift'?10:0,vx:0,vy:0,face:Math.random()<.5?-1:1,t:0,life:60+Math.random()*60,hop:Math.random()*2,fl:0,ci:Math.floor(Math.random()*4),act:0,ph:0,wait:1+Math.random()*2});/* ci：ちょうの色（4しゅるい） */return}}
 /* 動いた向きで、横・正面（d）・うしろ（u）の絵をえらぶ（c.vw）。かわりめでちらつかないように、はっきり上下・左右になったときだけかえる */
@@ -67,7 +71,7 @@ function critGo(c,dt,K,m){c.gt+=dt;if(c.fade!=null){c.fade-=dt/CRITOUT;return}if
   if(c.stk>3||c.gt>25)c.fade=1}
 const critGround=(x,y)=>{const j=(y|0)*W+(x|0);return x>=0&&y>=0&&x<W&&y<H&&walk(j)&&!S.obj[j]&&S.ground[j]!==1};
 function critTick(dt){if(!S)return;if(CRITS!==S){CRIT=[];CRITS=S}if(IS_STORY_REPLAY){CRIT=[];return}
-  CRITT+=dt;if(CRITT>=2){CRITT=0;critSpawn()}
+  CRITT+=dt;if(CRITT>=2){CRITT=0;critButterflies();/* 朝（日がかわってはじめ）に、その日のちょうの数をきめる */critSpawn()}
   const night=isNight();
   for(const c of CRIT){c.t+=dt;const K=CK[c.k],m=K.m;if(c.act>0)c.act-=dt;if(c.lx!=null)critTurn(c,c.x-c.lx,c.y-c.ly);c.lx=c.x;c.ly=c.y;
     if(m==='walk'||m==='hop'||m==='bird')critFlee(c);if(!c.go&&c.t>=c.life)critLeave(c);if(c.go){critGo(c,dt,K,m);continue}

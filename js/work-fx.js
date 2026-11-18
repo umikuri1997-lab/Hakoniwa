@@ -36,10 +36,10 @@ function cookPh(r){const a=r.act;if(!a||!r.cing)return'';if(a.sh!=null)return'ra
 function cookTool(r){/* 家具に置く道具：調理台は料理のしゅるい、かまど・たき火は作り方（cookStyle） */const a=r.act,id=a&&S.obj[a.obj],R=r.cing&&recOf(r.cing.rec);if(!R)return'';
   if(id==='cooktable'){const D=COOKDI[R.out],t=D&&D.ic?D.ic[0]:R.out==='salad'?'salad0':R.out;return CKTB[t]||'board'}
   const st=cookStyle(r);if(id==='oven')return st==='pot'?'pot':st==='pan'?'pan':'tray';return st==='pot'?'pot':st==='grill'?'K':'net'}
-function cookTopD(i){/* できた料理を置く所（世界のドット）。湯気を出す所 */const id=S.obj[i],v=id==='cooktable'?(rotAt(i)===3?1:rotAt(i)):0,T=typeof CKTOP!=='undefined'&&(CKTOP[id]||[])[v];if(!T||!T.D)return null;const p=T.D[0];return [(i%W)*TS+p[0]/2,((i/W)|0)*TS+p[1]/2-hiAt(i)*LIFT]}
+function cookTopD(i){/* できた料理を置く所（世界のドット）。湯気を出す所 */if(S.obj[i]==='oven'&&rotAt(i))return null;const id=S.obj[i],v=id==='cooktable'?(rotAt(i)===3?1:rotAt(i)):0,T=typeof CKTOP!=='undefined'&&(CKTOP[id]||[])[v];if(!T||!T.D)return null;const p=T.D[0];return [(i%W)*TS+p[0]/2,((i/W)|0)*TS+p[1]/2-hiAt(i)*LIFT]}
 function cookAt(i){for(const r of S.res){const a=r.act;if(a&&a.type==='cook'&&a.obj===i&&a.stage==='do'&&r.cing)return r}return null}
 function cookTopDraw(c,id,x,y,i,now){/* 家具の絵のあとに、上の物をかさねる */const r=cookAt(i);if(!r||!window.CHIPS||typeof CKTOP==='undefined')return;const ph=cookPh(r),R=recOf(r.cing.rec);if(!R||ph==='raise')return;
-  const rot=id==='campfire'?0:rotAt(i),fl=id==='cooktable'?rot===3:id==='oven'&&rot!==0,v=id==='cooktable'?(rot===3?1:rot):0,T=(CKTOP[id]||[])[v];if(!T)return;
+  const rot=id==='campfire'?0:rotAt(i);if(id==='oven'&&rot)return;/* かまどの道具・材料の場所は、前向きの口だけ（ほかの向きは口が見えない・横を向く） */const fl=id==='cooktable'&&rot===3,v=id==='cooktable'?(rot===3?1:rot):0,T=(CKTOP[id]||[])[v];if(!T)return;
   const put=(nm,px,py)=>{const ch=CHIPS[nm];if(ch)drawChip(c,ch,nm,x+(fl?64-px:px)/2,y+py/2,now,i)},sf=v?'>'+v:'';
   if(ph==='plate'){const p=T.D[0];put('ckdish_'+(/^fsg/.test(R.out)?'fsg':R.out),p[0],p[1]);return}
   const t=cookTool(r);if(t!=='K'){const ch=CHIPS['cktool_'+id+'_'+(t==='board'&&ph==='prep'?'boardk':t)+sf];if(ch)drawChip(c,fl?{src:ch,ax:ch.ax,ay:ch.ay,w:ch.w,h:ch.h,f:ch.f,flip:1,fw:32}:ch,'cktool',x,y,now,i)}

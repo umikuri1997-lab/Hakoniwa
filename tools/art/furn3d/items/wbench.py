@@ -4,7 +4,7 @@
 from blueprint import Part as P
 from common import *
 ID='wbench';BOTTOM=64;GRAD=True
-VIEWS=[('wbench',0)]
+VIEWS=[('wbench',0),('wbench>1',1),('wbench>2',2)]   # 前・右・後ろ（左は右の反転）
 X0,X1,Y0,Y1=0.02,0.98,0.30,0.86;H=0.32;TT=0.08;LG=0.10;IN=0.05;AP=0.06;LZ=0.06;LT=0.05   # 天板の高さ0.32：せいれいの手（もの作りの動き）がとどく高さ
 def PARTS():
     L=[];xs=(X0+IN,X1-IN-LG);ys=(Y0+IN,Y1-IN-LG)

@@ -1,5 +1,5 @@
 'use strict';
-/* 火山のそうび（武器 gw・矢 gar・防具 ga・おまもり gc・専用品 gt）。数はそのままの実数。g：s=わく・atk=攻撃・rch=とどくきょり・hit=回数・iv=攻撃の間かく・dmg=矢の威力・rng=射程・n=本数・hun=たたかれたときのおなかのへり（マイナス）・sp=特（作れない）・nf=つりで出ない・ore=鉱脈をほったときの鉱石の数（たす） */
+/* 火山のそうび（武器 gw・矢 gar・防具 ga・おまもり gc・専用品 gt）。数はそのままの実数。g：s=わく・atk=攻撃・rch=とどくきょり・hit=回数・iv=攻撃の間かく・dmg=矢の威力・rng=射程・n=本数・hun=たたかれたときのおなかのへり（マイナス）・sp=特（作れない）・nf=つりで出ない・ore=鉱脈をほったときの鉱石の数（たす）・ic=アイコンの形（GPIX。なければ s）・col=アイコンの色（ORE_COL）。idea：はじめてその素材を手に入れたときに思いつく（どのステージでも。なければ火山の鉱石） */
 const GEARBL={
   gw01:{"name":"竹のぼう","kind":"gear","pc":3,"time":90,"maker":"fire","mat":{"bamboo":3},"g":{"s":"w","atk":10,"rch":0.5},"desc":"攻撃+10・とどくきょり+0.5マス"},
   gw02:{"name":"竹やり","kind":"gear","pc":3,"time":90,"maker":"fire","mat":{"bamboo":4},"g":{"s":"w","atk":10,"rch":1.0},"desc":"攻撃+10・とどくきょり+1マス"},
@@ -89,6 +89,9 @@ const GEARBL={
   ga24:{"name":"銀のマント","kind":"gear","pc":10,"time":90,"maker":"fire","mat":{"isilver":2,"kuru":2},"g":{"s":"a","hun":20,"mv":10},"desc":"たたかれたときのおなかのへり-20・移動速度+10"},
   ga25:{"name":"金のよろい","kind":"gear","pc":15,"time":90,"maker":"fire","mat":{"igold":3,"iiron":1},"g":{"s":"a","hun":40,"fun":0.9},"desc":"たたかれたときのおなかのへり-40・たのしさのへる速さ0.9倍"},
   ga26:{"name":"火山のよろい","kind":"gear","time":90,"maker":"fire","g":{"s":"a","hun":50,"nob":1,"refl":20,"sp":1},"desc":"たたかれたときのおなかのへり-50・やけどしない・たたかれたら20やり返す"},
+  ga27:{"name":"布のせおいぶくろ","kind":"gear","pc":3,"time":90,"mat":{"nuno":3,"wood":2},"g":{"s":"a","cap":1,"ic":"bag"},"idea":"nuno","desc":"持てる数+1"},
+  ga28:{"name":"竹のしょいかご","kind":"gear","pc":8,"time":90,"maker":"fire","mat":{"bamboo":4,"iiron":2},"g":{"s":"a","cap":2,"ic":"bag","col":"bamboo"},"desc":"持てる数+2"},
+  ga29:{"name":"鉄わくのしょいこ","kind":"gear","pc":12,"time":90,"maker":"fire","mat":{"iiron":4,"bamboo":3},"g":{"s":"a","cap":3,"ic":"bag"},"desc":"持てる数+3"},
   gc01:{"name":"銅のすず","kind":"gear","pc":5,"time":90,"maker":"fire","mat":{"icopper":1},"g":{"s":"c","flee":1.2},"desc":"にげる速さ1.2倍"},
   gc02:{"name":"鉄のおまもり","kind":"gear","pc":8,"time":90,"maker":"fire","mat":{"iiron":1,"kuru":1},"g":{"s":"c","hun":10},"desc":"たたかれたときのおなかのへり-10"},
   gc03:{"name":"銀のペンダント","kind":"gear","pc":10,"time":90,"maker":"fire","mat":{"isilver":1},"g":{"s":"c","rec":1.2},"desc":"つかれのとれる速さ1.2倍"},

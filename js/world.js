@@ -31,7 +31,7 @@ let S=null;
 const resv=new Map();
 let RUINT=-1/* こわれた神殿（直している途中もふくむ）のマス。recount で作る */,STATUE=-1,OBOX=-1,BOARD=-1,counts={},LIGHTS=[],HOTL=[]/* ほたるの草むらのマス */,DRUMS=[]/* 合図の太鼓のマス */,JARS=[],COMPS=[],LITP=[],STELES=[],LURES=[],TOWERS=[],ENVE={},NEARMILL=new Set(),NEARSUI=new Set(),STUMPB=new Set(),NEARVANE=new Set(),NEARCART=new Set(),NEARJORO=new Set(),NEARSIGN=new Set(),NEARPARA=new Set(),SPOTJ=new Map(),SPOTM=new Map(),SPOTI=[],RUGC=new Map(),RFC=new Map(),ENVG=null,REV=new Set(),ATTR={},BASEPCT=0,GRASSN=0;
 function newState(w){w=w||0;
-  const s={v:8,mig:10,box:{},pile:{},rsv:{},flags:{wbIns1:1,wbFurn1:1,wbYard1:1,cook2:1,tableSub1:1,bread2:1,talkq1:1,ovenW1:1,swingRot2:1,box1:1,gup1:1,stat10:1,trapSub1:1,board2x1:1,bondX2:1,spring2:1,juice1:1,berryHalf:1,berryHalf2:1,land2:1,land3:1,land4:1,arrow0:1,q3ins:1,qmerge1:1,qsplit1:1,earthMerge1:1,fieldMerge1:1,tutSub1:1,farmFirst1:1,omoiIns1:1,warmIns1:1,story3ins1:1,vgift1:1,companionStory:1,fieldStoryV2:1,sacredStoryV1:1,sacredFootprint3:1,sacredFootprint4:1,sacredLeft1:1,fieldBuild1:1,trfit1:1,cookfit1:1,watch5:1,xp12:1,veins1:1,ore2:1,noBerry1:1,yogan2:1,bwall1:1,misu1:1,fl2v1:1,no2f1:1,vq1:1,fog1:1,ruinGap1:1,festq2:1,shin3:1,shinGone1:1,noStable1:1,noTool1:1,rec3:1,ruinTemple1:1,vpath2:1},placed:{},feat:{build:true},inv:{},orders:[],enemyOn:false,nights:0,godGone:false,godShown:false,nushi:null,
+  const s={v:8,mig:10,box:{},pile:{},rsv:{},flags:{ovenRot4:1,wbIns1:1,wbFurn1:1,wbYard1:1,cook2:1,tableSub1:1,bread2:1,talkq1:1,ovenW1:1,swingRot2:1,box1:1,gup1:1,stat10:1,trapSub1:1,board2x1:1,bondX2:1,spring2:1,juice1:1,berryHalf:1,berryHalf2:1,land2:1,land3:1,land4:1,arrow0:1,q3ins:1,qmerge1:1,qsplit1:1,earthMerge1:1,fieldMerge1:1,tutSub1:1,farmFirst1:1,omoiIns1:1,warmIns1:1,story3ins1:1,vgift1:1,companionStory:1,fieldStoryV2:1,sacredStoryV1:1,sacredFootprint3:1,sacredFootprint4:1,sacredLeft1:1,fieldBuild1:1,trfit1:1,cookfit1:1,watch5:1,xp12:1,veins1:1,ore2:1,noBerry1:1,yogan2:1,bwall1:1,misu1:1,fl2v1:1,no2f1:1,vq1:1,fog1:1,ruinGap1:1,festq2:1,shin3:1,shinGone1:1,noStable1:1,noTool1:1,rec3:1,ruinTemple1:1,vpath2:1},placed:{},feat:{build:true},inv:{},orders:[],enemyOn:false,nights:0,godGone:false,godShown:false,nushi:null,
     lv:1,bossKills:0,nightHurt:0,nightHad:false,wave:null,lastWarn:0,
     ref:{},ground:new Array(W*H).fill(0),floor:new Array(W*H).fill(''),obj:new Array(W*H).fill(''),dyn:{},hp:{},
     res:[],enemies:[],pt:25,totalPt:0,food:0,fs:{},cseed:{imo:4},crops:{imo:true},mat:{wood:0,stone:0},regrow:[],t:w===0?15*60:12*60,/* 草原は15時からはじまる */speed:1,
@@ -266,7 +266,7 @@ const anc=j=>{if(S.obj[j]==='part'||(S.obj[j]==='site2'&&S.ref[j]!=null))return 
 const typeAt=j=>S.obj[anc(j)];
 
 const solidOf=j=>{const o=typeAt(j);return !!(o&&BL[o]&&BL[o].solid)};
-const FRONTS=new Set(['chair','achair','sofa1','bench']);/* 正面のある家具（置くときに矢印を出す） */const ROTS={chair:4,achair:4,sofa1:4,bench:4,bed:2,yorubed:2,sandbox:2,arch:2,ltable:2,bathtub:2,slide:1,seesaw:1,swing:2,signpost:1,vane:1,oven:1,stairs_wood:5,stairs_stone:5,stairs_brick:5,slope_earth:5,cabinet:3,shelf1:3,shelf2:3,makidana:3,crate:4,wbench:4,cooktable:4,sink:4};/* 向きをかえられる家具。4：前・右・後ろ・左　3：前・右・左（右は「id>1」の絵、左はその反転）　2：横・縦　1：左右反転だけ */
+const FRONTS=new Set(['chair','achair','sofa1','bench']);/* 正面のある家具（置くときに矢印を出す） */const ROTS={chair:4,achair:4,sofa1:4,bench:4,bed:2,yorubed:2,sandbox:2,arch:2,ltable:2,bathtub:2,slide:1,seesaw:1,swing:2,signpost:1,vane:1,oven:4,stairs_wood:5,stairs_stone:5,stairs_brick:5,slope_earth:5,cabinet:3,shelf1:3,shelf2:3,makidana:3,crate:4,wbench:4,cooktable:4,sink:4,loom:4,mill:4,smelter:4};/* 向きをかえられる家具。4：前・右・後ろ・左　3：前・右・左（右は「id>1」の絵、左はその反転）　2：横・縦　1：左右反転だけ */
 const BEDHX=31,BEDHY=-1,BEDVY=8.5,BEDHS=.85;/* 横のベッド：寝る子の足もと（x,y）。たてのベッド：寝る子の足もとのy。BEDHS：横向きで寝るときの、せいれいの横はば。ふとんは重ねない（ベッドの上に寝る子をかく） */
 const ROTN=id=>ROTS[id]===5?4:ROTS[id]===4?4:ROTS[id]===3?3:ROTS[id]?2:1,ROTL={5:[,'手前へ','右へ','左へ','奥へ'],4:['前','右','後ろ','左'],3:['前','右','左'],2:['横','縦'],1:['そのまま','反転']};/* 5：階段の下りる向き（S.rot は 1手前 2右 3左 4奥。0は古いセーブだけ） */
 let PLROTS={};/* 置くときにえらんでいる向き（家具ごと） */
@@ -275,6 +275,15 @@ const szR=(id,rot)=>{const z=id==='tower'&&WD===0&&S?.sacredLegacy2?[2,2]:id==='
 const szAt=(id,j)=>szR(id,j==null?0:(S.obj[j]===id||S.obj[j]==='site'?rotAt(j):(PLROTS[id]||0)));
 const fp=(id,x,y,rot)=>{const z=rot!=null?szR(id,rot):szAt(id,y*W+x);if(!z)return [[x,y]];const c=[];for(let b=0;b<z[1];b++)for(let a=0;a<z[0];a++)c.push([x+a,y+b]);return c};
 let GODJ=-1;/* カミサマの立つマス（stepWorld で毎回きめる）。だれも通れない */
+/* 作業する向きがきまっている家具（WORKF）：作業するマスは、その向きの前（向き0 前＝下・1 右・2 後ろ＝上・3 左）。2×2は前の2マス、作業台は台のマス（wbCells の b）の前。
+   せいれいは、そのマスに立って家具のほうを向く。どのマスも歩けない（物がある・水など）と作業できない。流し台は、せいれいの作業はないが、置くときに同じく出す */
+const WORKF=new Set(['loom','mill','cooktable','sink','oven','wbench','smelter']),WORKD=[[0,1],[1,0],[0,-1],[-1,0]];
+function workCells(j,id,rot){/* j：左上のマス。id・rot をわたすと、置く前の場所でも */id=id||S.obj[j];if(rot==null)rot=rotAt(j);rot&=3;const[dx,dy]=WORKD[rot];
+  const cells=id==='wbench'?[rot>=2?(rot%2?j+W:j+1):j].map(b=>[b%W,(b/W)|0]):fp(id,j%W,(j/W)|0,rot),own=new Set(cells.map(([x,y])=>y*W+x)),L=[];
+  for(const[x,y]of cells){const nx=x+dx,ny=y+dy,k=ny*W+nx;if(nx<0||ny<0||nx>=W||ny>=H||own.has(k)||(id==='wbench'&&own.size===1&&fp(id,j%W,(j/W)|0,rot).some(([a,b])=>b*W+a===k)))continue;L.push(k)}return L}
+const workOK=j=>workCells(j).some(k=>walk(k));
+let WORKBLOCKED=[];function workBlockedList(){/* 作業するマスが、どれもふさがっている家具（流し台はのぞく）の左上のマス */const L=[];for(let j=0;j<W*H;j++){const o=S.obj[j];if(o&&o!=='sink'&&WORKF.has(o)&&!workOK(j))L.push(j)}return L}/* 作業するマスが1つでも空いているか */
+function workStand(G,j){/* 作業するマスのうち、いちばん近い行ける所（なければ -1） */let b=-1,bd=1e9;for(const k of workCells(j)){const d=G.dist[k];if(d<0||!walk(k)||d>=bd)continue;b=k;bd=d}return b}
 function walk(j){if(j<0||j>=W*H||S.ground[j]===1&&S.obj[j]!=='bridge'||STUMPB.has(j)||j===GODJ||S.fog&&fogAt(j))return false;/* 霧の中は歩かない *//* 切り株の上は歩かない */return !solidOf(j)}/* 橋の上は歩ける。浅瀬（ground 2）は歩ける（ゆっくり） */
 const wetJ=j=>S.ground[j]===1&&S.obj[j]!=='bridge'||!!S.fog&&fogAt(j);/* 歩けない水 */
 const LIFT=26;/* 段差1だんの高さ（ドット）。高いマスの上の物は、これだけ上に描く */
