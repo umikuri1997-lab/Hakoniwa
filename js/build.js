@@ -19,7 +19,7 @@ const inv=id=>id.startsWith('seed:')?cseed(id.slice(5)):BL[id]&&BL[id].kind==='g
 const iname=id=>id.startsWith('seed:')?CROPS[id.slice(5)].name+'のたね':WD===1&&STAGEN[id]?STAGEN[id]:BL[id].item||BL[id].name;
 const STAGEN={tree:'とんがりの木の苗',deadtree:'とんがりの木'};/* 火山での名前（植えた木も自然の木も、とんがりの木） */
 const cseed=k=>(S.cseed||(S.cseed={}))[k]||0;
-function sowFarm(d){if(d.sown!==false)return true;if(d.paid){d.paid=false;d.sown=true;d.g=0;dirty=true;return true}const k=cropK(d);if(cseed(k)>0){S.cseed[k]--;d.sown=true;d.g=0;dirty=true;return true}return false}
+function sowFarm(d){if(d.sown!==false)return true;if(d.paid){d.paid=false;d.sown=true;d.g=0;d.ts=1;delete d.dry;dirty=true;return true}const k=cropK(d);if(cseed(k)>0){S.cseed[k]--;d.sown=true;d.g=0;d.ts=1;delete d.dry;dirty=true;return true}/* d.ts：まいてから、水が切れたか（d.dry）を見ている畑（つやつや tsuyaOf） */return false}
 function giveItem(id,n,back){if(!back)gotNote(id);/* back：こわした・もどした物は「最近もらった」にしない */if(BL[id]&&BL[id].kind==='gear'){gearGive(id,n);return}/* そうびは S.gear に1つずつ */if(id.startsWith('seed:')){const k=id.slice(5);S.cseed[k]=cseed(k)+n;return}S.inv[id]=inv(id)+n}
 const WIND_STAGE_TOYS=new Set(['slide','seesaw']);
 function usable(id){const b=BL[id];if(WIND_STAGE_TOYS.has(id)&&WD!==4&&inv(id)<=0)return false;/* もらって持っている物は、どのステージでも置ける */
