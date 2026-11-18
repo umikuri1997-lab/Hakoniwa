@@ -156,3 +156,9 @@ let PINMAX=null;function boardPinFx(bd){const ps=[...bd.querySelectorAll('.paper
   let hit=false;for(const p of ps)if(+p.dataset.oid>PINMAX&&document.body.classList.contains('wd0')&&!uiReduced()){p.classList.add('upin');hit=true}PINMAX=Math.max(PINMAX,...ids);if(hit)setTimeout(()=>sfx('pin'),60)}
 
 if(document.readyState!=='loading'){gaugeWatch();tileWatch();lvWatch()}else document.addEventListener('DOMContentLoaded',()=>{gaugeWatch();tileWatch();lvWatch()});
+
+/* ボタンでない所（文字・すきま・なにもない一覧の行）をタップしたら、木をそっとたたく音（uknock。やわらかく小さく）。
+   地図（キャンバス）のタップ・ボタン・入力・押せる物（onclick のある物とその中）は、それぞれの音があるので鳴らさない */
+addEventListener('click',e=>{try{let n=e.target;if(!n||!n.closest||n.closest('canvas')||!n.closest('#app'))return;
+  for(;n&&n!==document.body;n=n.parentElement){const tg=n.tagName;if(tg==='BUTTON'||tg==='A'||tg==='INPUT'||tg==='SELECT'||tg==='TEXTAREA'||tg==='LABEL'||tg==='SUMMARY'||n.onclick||n.onpointerdown||n.hasAttribute('data-hold')||n.getAttribute('role')==='button')return}
+  sfx('uknock')}catch(_){}},true);

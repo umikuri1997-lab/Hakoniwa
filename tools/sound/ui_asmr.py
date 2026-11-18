@@ -19,6 +19,7 @@ SET = {
   'creak':  (['rpg-audio/*/creak3.ogg', 'rpg-audio/*/creak1.ogg'], 400, 7000, .40, 1),  # なわのきしみ：きゅ…
   'bend':   (['rpg-audio/*/creak2.ogg'], 150, 5000, .55, 1),  # 板がしなる：ぎぃ
   'tab':    (['rpg-audio/*/bookFlip3.ogg', 'rpg-audio/*/bookFlip2.ogg'], 300, 9000, .26, 1),  # タブ：ぱたっ（めくる）
+  'page':   (['rpg-audio/*/bookFlip1.ogg', 'rpg-audio/*/bookFlip2.ogg', 'rpg-audio/*/bookFlip3.ogg'], 200, 9000, .55, 1),  # 思い出帳のページをめくる：ぺらっ（さいごまで）
   'knockw': (['impact-sounds/*/impactGeneric_light_00%d.ogg' % i for i in range(5)], 120, 6000, .14, 1),  # 行が置かれる・木札：ことっ
   'notch':  (['ui-audio/*/switch12.ogg', 'ui-audio/*/switch13.ogg', 'ui-audio/*/switch14.ogg'], 600, 6500, .06, 1),  # ±：かちっ
   # ---- 料理・もの作り（マップの音。sfxAt で鳴らす） ----
@@ -42,13 +43,13 @@ SET = {
   'tweb':   (['rpg-audio/*/cloth%d.ogg' % i for i in (1, 3)], 1500, 10000, .16, 1),  # クモの巣：さらっ（布を高い所だけ）
   'tani':   (['impact-sounds/*/impactSoft_medium_00%d.ogg' % i for i in (1, 3)], 250, 7000, .12, 1),  # 生き物：ぽよっ（高く鳴らす）
   'tplace': (['impact-sounds/*/impactPlank_medium_00%d.ogg' % i for i in range(4)], 120, 6000, .18, 1),  # 置く場所：とんっ
-  # ---- せいれいの足音（地面ごと。footTick。とても小さく鳴らす） ----
-  'fgrass': (['impact-sounds/*/footstep_grass_00%d.ogg' % i for i in range(5)], 200, 7000, .14, 1),  # 草：さく
-  'fsoil':  (['rpg-audio/*/footstep0%d.ogg' % i for i in range(6)], 120, 6000, .14, 1),  # 土・道：ざっ
-  'fwood':  (['impact-sounds/*/footstep_wood_00%d.ogg' % i for i in range(5)], 150, 6000, .14, 1),  # 木の床・橋：ことっ
-  'fstone': (['impact-sounds/*/footstep_concrete_00%d.ogg' % i for i in range(5)], 150, 7000, .12, 1),  # 石・レンガ：こつ
+  # ---- はしご・弓・きのこ・はたおり（見張り台・畑・もの作りの手もとの音） ----
+  'ladder': (['impact-sounds/*/impactWood_medium_00%d.ogg' % i for i in range(5)], 250, 5500, .14, 1),  # はしごの段に手をかける：こつっ（見張り台のハシゴ・ハシゴ）
+  'tpuni':  (['impact-sounds/*/impactSoft_heavy_00%d.ogg' % i for i in range(5)], 100, 3500, .20, 1),  # きのこをタップ：ぷにっ（やわらかい物をおす。高く鳴らす）
+  'loomk':  (['impact-sounds/*/impactWood_heavy_00%d.ogg' % i for i in range(3)], 150, 3500, .16, 1),  # はたおり機のおさをうつ：ごとん
+  'shutl':  (['rpg-audio/*/drawKnife%d.ogg' % i for i in range(1, 4)], 500, 7000, .30, 1),  # はたおり機のひ（シャトル）がすべる：すーっ
+  # ---- せいれいの足音（footTick）：じゅうたん・ラグだけ。草・土・木・石・雪・ぬれた地面は、持ち主の録音（footstep_rec.py） ----
   'fcloth': (['impact-sounds/*/footstep_carpet_00%d.ogg' % i for i in range(5)], 100, 3000, .14, 1),  # じゅうたん・ラグ：ぽす
-  'fsnow':  (['impact-sounds/*/footstep_snow_00%d.ogg' % i for i in range(5)], 150, 7000, .16, 1),  # 雪（冬の雪の日）：さく
 }
 def run(a): subprocess.run(a, check=True, capture_output=True)
 def clipnp(f, hp, lp, dur, o):

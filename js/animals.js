@@ -81,7 +81,7 @@ Object.assign(ACT,{
   acol:{start(r,a){const d=S.dyn[a.obj];if(!d||!d.pr||!Object.keys(d.pr).length)return false;r.bubble='';faceTo(r,a.obj)},done:(r,a)=>a.t>=4,
     end(r,a){const d=S.dyn[a.obj];if(!d||!d.pr)return;for(const k of Object.keys(d.pr)){const n=Math.min(d.pr[k],roomN(r));if(n<=0)break;if(FOODS[k])addCarry(r,k,n);else addMat(r,k,n);d.pr[k]-=n;if(d.pr[k]<=0)delete d.pr[k]}}},/* とれた物をとる（箱へは、いつものしまい方で） */
   apet:{start(r,a){const b=(S.ani||[]).find(q=>q.id===a.aid);if(!b||b.in)return false;b.pet=a.dur;b.face=r.x<b.x?-1:1;b.vw='';r.face=b.x<r.x?-1:1;r.bubble='❗'},tick(r,a){if(a.t>2)r.bubble='🎵'},done:(r,a)=>a.t>=a.dur,
-    end(r,a){const b=(S.ani||[]).find(q=>q.id===a.aid);if(a.t<a.dur){if(a.tap&&b){b.petD=null;b.pet=0}return}/* とちゅうでやめたら、たのんだなでるは、なかったことに */const n=Math.round((a.tap?ANIPET:ANIFUN)*(b&&spotNear((b.y|0)*W+(b.x|0),'fureai')?1.2:1)*10)/10;/* ふれあいひろば：+20% */r.fun=Math.min(100,r.fun+n);r.wanderRestUntil=S.t+45;r.bubble='';if(b){b.pet=0;aniJoy(b)}if(a.tap){addFloat(r.x,r.y-1.6,'たのしさ+'+n,'#ffd7e8');JOYU.set(r,performance.now()+1500)}}}});
+    end(r,a){const b=(S.ani||[]).find(q=>q.id===a.aid);if(a.t<a.dur){if(a.tap&&b){b.petD=null;b.pet=0}return}/* とちゅうでやめたら、たのんだなでるは、なかったことに */const n=Math.round((a.tap?ANIPET:ANIFUN)*(b&&spotNear((b.y|0)*W+(b.x|0),'fureai')?1.2:1)*10)/10;/* ふれあいひろば：+20% */r.fun=Math.min(100,r.fun+n);r.wanderRestUntil=S.t+45;r.bubble='';if(b){b.pet=0;aniJoy(b)}if(a.tap)addFloat(r.x,r.y-1.6,'たのしさ+'+n,'#ffd7e8');if(typeof spReact==='function')spReact(r,'joy',1500)/* なでおわったら、正面を向いて、よろこぶ */}}});
 const aniSpd=(h,box,k2)=>1+.1*spotN(h,'makiba')+(k2==='hidamari'?.1*spotN(h,'hidamari'):0)+(k2==='hoshikusa'&&box!=null&&box>=0&&spotNear(box,'hoshikusa')?.1:0);/* まきば・ひだまりのとや・ほしくさおき場：+10% */
 ACT.apetq=ACT.apet;/* 「しらべる」でたのんだ、なでる（とちゅうで仕事にうつらない） */KEEPC.add('apet');KEEPC.add('apetq');/* 荷物は持ったまま、なでにいく */
 ACT_LBL.apick='生き物のえさをとりにいく';ACT_LBL.aput='生き物にえさをあげている';ACT_LBL.awater='生き物に水をあげている';ACT_LBL.acol='生き物のとれた物をとっている';ACT_LBL.apet='生き物をなでている';ACT_LBL.apetq='生き物をなでにいく';
@@ -110,8 +110,10 @@ function aniJoyF(a,now){const t0=AJOY.get(a);if(t0==null)return null;let e=now-t
 function aniChip(a,now){/* ボーンで動かして写したコマ（tools/art/animals/ani_rig.py）：歩く4コマ（150ミリ秒ごと）・食べる（220ミリ秒ごと）・立つ（息をする2コマ、700ミリ秒ごと。生き物ごとにずらす） */const k=a.k,C=window.CHIPS||{};if(a.in)return null;
   const jf=aniJoyF(a,now);if(jf)return a.vw&&C['ani:'+k+'#'+a.vw+jf[0]]||C['ani:'+k+'#'+jf[0]]||C['ani:'+k+'#0']||null;
   const f=a.eat>0?ANIEAT[(now/220|0)%4]:a.mv?'w'+((now/150|0)%4):String(((now+a.id*337)/700|0)%2);return a.vw&&C['ani:'+k+'#'+a.vw+f]||C['ani:'+k+'#'+f]||C['ani:'+k+'#0']||null}
+const ANISHW=.9,ANISHH=.3;/* 飼う生き物のかげ：足もとのはばに対する、だ円のよこの半径・たての半径の比 */
 function drawAnimal(g,a,now){/* 足もと（a.x, a.y）に、チップの足（下のはし58/64）をそろえる。左むきは、足もとのまん中で反転 */const ch=aniChip(a,now);if(!ch)return;const im=chipImgs(ch,'ani'+a.k)[0];if(!im.ok)return;
-  const x=Math.round(a.x*TS),y=Math.round(a.y*TS),sz=a.k==='hane'?6:10;g.fillStyle='rgba(60,50,30,.18)';g.fillRect(x-sz,y-1,sz*2,2);g.fillRect(x-sz+2,y+1,sz*2-4,1);/* かげ（ドット） */
+  const x=Math.round(a.x*TS),y=Math.round(a.y*TS);{const ft=chipFoot(ch,im),sz=a.k==='hane'?6:10;/* かげ：足もとのはばに合わせた、ドットのだ円（1ドットはチップと同じ、ゲームの半分の点） */
+    if(ft){const l=ft.l+ch.ax-TS,r=ft.r+ch.ax-TS,m=(l+r)/4,hw=(r-l)/4*ANISHW+1;dotShadow(g,x+(a.face<0?-m:m),y,hw,Math.max(1.5,hw*ANISHH),1,.5)}else dotShadow(g,x,y,sz,2,1,.5)}
   const jf=aniJoyF(a,now);g.save();g.translate(x,y-(jf?jf[2]:0));if(a.face<0)g.scale(-1,1);g.imageSmoothingEnabled=false;g.drawImage(im,ch.ax/2-TS/2,ch.ay/2-29,ch.w/2,ch.h/2);g.restore()}
 function aniDraw(add,vis,now,ctx){for(const a of S.ani||[]){if(a.in||!vis(a))continue;const px=a.x*TS,fy=a.y*TS;add(a.y,2,[px-20,fy-34,px+20,fy+4],()=>liftDraw(uLift(a),()=>drawAnimal(ctx,a,now)),(a.y|0)*W+(a.x|0))}}
 /* ---------- とれる物のアイコン（16×16のドット） ---------- */

@@ -17,13 +17,6 @@ function foodReact(r,items,snack){if(!r||!items||!items.length)return;let hi=1,l
 /* わかった好み（すき・にがて。だいすきは prefs.js の fd） */
 function foodKnown(r,v){const K=r.fk||{};return Object.keys(K).filter(k=>FOODS[k]&&K[k]===v&&foodLike(r,k)===v)}
 function foodKnownText(r,v){const L=foodKnown(r,v).map(k=>FOODS[k].name);return L.length?[...new Set(L)].join('・'):'？？？'}
-/* おやつ：どれをあげるか、えらぶ */
-function snackPop(r,done){const o=el('<div style="position:fixed;inset:0;z-index:45;display:flex;align-items:center;justify-content:center;background:rgba(30,24,16,.45);padding:24px"><div class="pxcard" style="background:var(--panel);padding:16px 18px;max-width:340px;width:100%;color:var(--ink);max-height:80vh;overflow:auto"><b class="t" style="font-size:15px;display:block;margin-bottom:8px"></b><div class="rows"></div><div style="display:flex;justify-content:flex-end;margin-top:10px"><button class="btn x">とじる</button></div></div></div>');
-  const close=()=>o.remove();o.querySelector('.x').onclick=()=>{sfx('tap');close()};o.onclick=e=>{if(e.target===o)close()};
-  o.querySelector('.t').textContent=r.name+'に、なにをあげる？';const g=o.querySelector('.rows'),K=Object.keys(FOODS).filter(k=>(S.fs[k]||0)>0);
-  if(!K.length)g.appendChild(el('<p class="note">食べ物が足りません</p>'));
-  for(const k of K){const f=FOODS[k],kn=k===favDish(r)?(prefKnown(r,'fd')?3:null):(r.fk&&r.fk[k]!=null?r.fk[k]:null),row=rowEl(f.name+'　×'+S.fs[k],kn==null?'':FLNAME[kn],foodIc(k)),b=el('<button class="btn pri">あげる</button>');row.appendChild(b);
-    b.onclick=()=>{if(!((S.fs[k]||0)>0))return;S.fs[k]--;syncFood();endAct(r);r.meal={u:.3*fullN(r),pt:1,e:f.e,items:[k]};startAct(r,null,'eat',-1,{snack:1});sfx('eat');close();if(done)done()};g.appendChild(row)}
-  document.body.appendChild(o)}
+/* おやつのポップアップ（snackPop）は ui.js */
 /* 「〇〇が食べたい」のこまりごとの食べ物：すき・だいすきの物のうち、この村で一度でも持った物（S.seenIt）から */
 function wantPick(r){const seen=S.seenIt||{},L=Object.keys(FOODS).filter(k=>seen['f:'+k]&&!FOODS[k].bad&&foodLike(r,k)>=2);return L.length?L[Math.floor(Math.random()*L.length)]:null}

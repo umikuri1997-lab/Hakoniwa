@@ -269,6 +269,32 @@ def eat(w, face):
     """両手で持って、口もとで食べる（食べ物の絵は、ゲームで手の所にかさねる）"""
     k = max(0, S(w)); return dict(sN=1.95, sF=1.95, bN=-1.05, bF=-1.05, hp=0.12*k, z=-0.3*k, top=0.08*S(w), tail=0.15*S(w))
 M('eat', 6, 7/(2*PI), eat)
+# 食べる物ごとの食べ方（ゲームは、食べている物で えらぶ。音は、かじる・のむ所 u=.3 で鳴らす：work-fx.js の WBEAT）
+def bite(u, at=0.3):
+    """かじる：at で口へよせて、ぱくっ。そのあと、もぐもぐ（小さく2回）"""
+    k = math.exp(-((u-at)/0.07)**2); ch = 0.5*abs(S(2*PI*(u-at)*2.5)) if u > at+0.12 else 0
+    return k, ch
+def eat_drink(w, face):
+    """のみもの：両手でコップを口へもち、頭をそらして、ごくっ"""
+    u = (w/(2*PI)) % 1; k = S(PI*min(1, u/0.6)) if u < 0.6 else 0
+    return dict(sN=1.95+0.2*k, sF=1.95+0.2*k, bN=-1.05, bF=-1.05, hp=0.05-0.3*k, lean=-0.07*k, z=0.2*k, top=-0.08*k, tail=0.1*S(w))
+M('eat_drink', 10, 0.45, eat_drink)
+def eat_bread(w, face):
+    """パン：両手で持ち、顔を前へ出して、がぶっ。そのあと、もぐもぐ"""
+    u = (w/(2*PI)) % 1; k, ch = bite(u)
+    return dict(sN=1.85+0.12*k, sF=1.85+0.12*k, bN=-1.0, bF=-1.0, hp=0.08+0.22*k+0.06*ch, lean=0.06*k, z=-0.3*ch, top=0.08*k, tail=0.12*S(w))
+M('eat_bread', 10, 0.55, eat_bread)
+def eat_fruit(w, face):
+    """くだもの：手前の手で持って口へ、かりっ。奥の手はおなか"""
+    u = (w/(2*PI)) % 1; k, ch = bite(u)
+    return dict(sN=1.75+0.3*k, bN=-1.0-0.1*k, sF=0.7, bF=-0.75, hp=0.05+0.18*k+0.05*ch, hr=0.05*S(w), z=-0.3*ch, top=0.06*k, tail=0.12*S(w))
+M('eat_fruit', 10, 0.6, eat_fruit)
+def eat_meal(w, face):
+    """料理：奥の手で器をもち、手前の手で口へはこぶ"""
+    u = (w/(2*PI)) % 1; k, ch = bite(u)
+    up = S(PI*min(1, u/0.45)) if u < 0.45 else 0
+    return dict(sN=1.3+0.65*up, bN=-0.85-0.2*up, sF=1.45, bF=-0.95, hp=0.15+0.12*k+0.05*ch, lean=0.05, z=-0.3*ch, tail=0.12*S(w))
+M('eat_meal', 10, 0.55, eat_meal)
 def hold(w, face):
     return breathe(dict(sN=1.3, sF=1.3, bN=-0.9, bF=-0.9, hp=0.08), w)
 M('hold', 6, 3/(2*PI), hold)
@@ -296,13 +322,20 @@ def hammer(w, face):
 for nm in ('build', 'repair', 'craft'): M(nm, 8, 2.6/2, hammer)
 def watering(w, face):
     """じょうろをかたむけて、水をやる（水のつぶは、ゲームでじょうろの先から）"""
-    return breathe(dict(sN=1.0+0.08*S(w), bN=-0.2, tN=0.55+0.1*S(w), prop='can', sF=0.2, bF=0.0, lean=0.08, hp=0.15), w)
+    return breathe(dict(sN=1.0+0.08*S(w), bN=-0.35, tN=0.0, prop='can', sF=0.2, bF=0.0, lean=0.1, hp=0.18), w)
 M('water', 8, 2/(2*PI), watering); M('tend', 8, 2/(2*PI), watering)
 def drawwater(w, face):
-    """水くみ：かがんでバケツをおろし、両手でひき上げる"""
-    u = (w/(2*PI)) % 1; k = S(PI*min(1, u/0.5)) if u < 0.5 else 0; up = S(PI*(u-0.5)/0.5) if u >= 0.5 else 0
-    return dict(lean=0.35*k+0.05, z=-3*k, legz=-1.5*k, legM=0.4*k, legP=0.4*k, sN=0.7+0.4*k+1.2*up, sF=0.7+0.4*k+1.2*up, bN=-0.55, bF=-0.55, prop='bucket', hp=0.2*k)
-M('draw', 8, 1.5, drawwater)
+    """水くみ（1回だけ）：かがんでバケツを水へおろし（〜.4）、水に入れて少しまつ（〜.5）、両手でひき上げ（〜.75）、胸の前でかかえてひと息（〜1）。
+    ゲームは、くむ行動の進みぐあいでコマをえらぶ（'ph'）。音は、水に入る所（.4）と、水からぬける所（.55）"""
+    u = (w/(2*PI)) % 1; e = lambda k: k*k*(3-2*k)
+    if u < 0.4: k = e(u/0.4); dn = k; up = 0.0
+    elif u < 0.5: dn = 1.0; up = 0.0
+    elif u < 0.75: k = e((u-0.5)/0.25); dn = 1-k; up = k
+    else: dn = 0.0; up = 1.0
+    hold = up*(1-0.15*S(PI*max(0, u-0.75)/0.25))
+    return dict(lean=0.4*dn+0.05, z=-3.2*dn, legz=-1.6*dn, legM=0.45*dn, legP=0.45*dn, sN=0.7+0.3*dn+0.65*hold, sF=0.7+0.3*dn+0.65*hold,
+                bN=-0.55-0.35*hold, bF=-0.55-0.35*hold, prop='bucket', hp=0.22*dn-0.05*up, top=0.1*S(PI*u))
+M('draw', 16, 'ph', drawwater)
 def weed(w, face):
     """草むしり：しゃがんで両手でつかみ、うしろへひっぱる"""
     u = (w/(2*PI)) % 1; pull = u/0.6 if u < 0.6 else 1-(u-0.6)/0.4
@@ -451,3 +484,20 @@ def headpat(w, face):
     """なでる：手前の手を前の上へのばして、ゆっくりなでる"""
     return breathe(dict(sN=1.9+0.12*S(w*2), bN=-0.2+0.15*S(w*2), sF=0.3, bF=-0.3, lean=0.08, hp=-0.12), w, 0.4)
 M('headpat', 8, 0.5, headpat)
+
+# ---- なでられる・なでる ----
+def petted(w, face):
+    """なでられる：正面で、両手を胸の前に。頭を少しさげて、なでる手に合わせて、ゆらゆら（目はゲームが、にっこり）"""
+    return dict(sN=1.45, sF=1.45, bN=-1.0, bF=-1.0, hp=0.14+0.03*S(w*2), hr=0.1*S(w), roll=0.06*S(w), yaw=0.04*S(w), z=0.3*abs(S(w)), legz=0.1*abs(S(w)),
+                top=0.15*S(w), tail=0.25*S(w), wing=0.15*S(w*2))
+M('petted', 8, 0.8, petted)
+def anipat(w, face):
+    """生き物をなでる：しゃがんで、手前の手を前の下へのばし、ゆっくりなでる"""
+    p = dict(z=-4.0, legz=-2.2, legM=0.7, legP=0.7, lean=0.35, hp=0.2+0.03*S(w), sN=1.0+0.12*S(w), bN=-0.25+0.12*S(w), sF=0.55, bF=-0.55, hr=0.06*S(w))
+    return breathe(p, w, 0.4)
+M('anipat', 8, 0.7, anipat)
+# ---- 床で寝る ----
+def sleepcurl(w, face):
+    """床・地面で寝る：ひざをまげて、手を胸によせ、頭をまるめる（ゲームは絵をよこにたおして、横になって寝る形に）"""
+    return breathe(dict(legM=1.15, legP=1.0, legz=-1.0, sN=1.3, sF=1.15, bN=-1.05, bF=-0.95, hp=0.28, lean=0.12, z=0.0), w, 0.7)
+M('sleepcurl', 8, 0.25, sleepcurl)

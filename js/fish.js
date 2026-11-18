@@ -25,4 +25,4 @@ function needR(R,r){/* 料理の材料（「さかな」は、どの魚でもよ
   if(!sp){let bn=0;for(const k of ['fish',...FISHK]){const n=(S.fs[k]||0)-(SPFISH.has(k)?1e4:0);if((S.fs[k]||0)>0&&(sp==null||n>bn)){bn=n;sp=k}}}/* とくべつな魚は、ほかの魚がないときだけ */
   o[sp||'fish']=R.need.fish;return o}
 /* 絵：もらった絵をちぢめたドット絵（tools/art/fishfood/fishfood_art.py）。ICONS（js/draw-spirits.js）にある。 */
-function fishZukan(d,add){/* 図鑑の「さかな」：つった魚だけ */const R=d.fishRec||{};for(const k of FISHK){if(!(R[k]>0))continue;const F=FOODS[k];add(F.name,fishWhen(k)+'・おなか'+F.v+(F.fx?'・'+F.fx:'')+'・つった数 '+R[k],ICONS[k]||null)}}
+function fishZukan(d,add){/* 図鑑の「さかな」：つった魚だけ */const R=d.fishRec||{};for(const k of FISHK){if(!(R[k]>0))continue;const F=FOODS[k];add(F.name,fishWhen(k)+'・おなか'+F.v+(F.fx?'・'+F.fx:'')+'・つった数 '+R[k],ICONS[k]||null,'i:food:'+k)}}

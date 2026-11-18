@@ -66,7 +66,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict');
     const canvas=document.createElement('canvas');canvas.width=180;canvas.height=180;const c=canvas.getContext('2d'),original=c.drawImage.bind(c);
     for(const el of els)for(const anim of motions)for(const t of [0,.35,.8]){
       const hood=spDot('sp_'+el+':hood',el),hand=spDot('sp:hand',el),arms=[spDot('sp:arm',el),spDot('sp:armS',el)];const calls=[];c.clearRect(0,0,180,180);c.drawImage=(im,...args)=>{calls.push(im);return original(im,...args);};
-      drawSpirit(c,el,90,170,1,1,{dot:1,t,anim,back:true,turn:0,walk:anim==='walk',sceneP:t,sceneT:t});
+      drawSpiritDot(c,el,90,170,1,1,{dot:1,t,anim,back:true,turn:0,walk:anim==='walk',sceneP:t,sceneT:t});/* 輪郭線（drawSpiritOL）は、べつの画面にかさねるだけなので、描く順は drawSpiritDot で見る */
       {const nm=spMotion({walk:anim==='walk'},anim),g=nm&&SPM[nm]&&SPMI[SPM[nm].s[el]];if(g&&g.ok&&calls.some(im=>im===g.img||[...SPMC.values()].includes(im))){count++;continue}}/* 3Dから写した動きは1まいの絵（うでと頭のかさなりは3Dできまる） */
       const head=calls.lastIndexOf(hood),lastArm=Math.max(calls.lastIndexOf(hand),...arms.map(im=>calls.lastIndexOf(im)));if(head<0||lastArm>=head)throw Error(el+' '+anim+' paints arms over head');count++;
     }

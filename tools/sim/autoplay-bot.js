@@ -11,7 +11,7 @@ B.lg=m=>{B.log.push('D'+dayNo()+' '+hour().toFixed(1)+'h '+m)};
 const vis=id=>{const e=document.querySelector(id);return e&&!e.hidden&&e.offsetParent!==null};
 B.sites=id=>{let n=0;for(const j in S.dyn){const d=S.dyn[j];if(d&&d.build===id&&S.obj[j]==='site')n++}return n};
 B.have=id=>cnt(id)+B.sites(id);
-B.spot=(id,nx,ny,ok)=>{for(let r=0;r<30;r++)for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){if(Math.max(Math.abs(dx),Math.abs(dy))!==r)continue;const x=nx+dx,y=ny+dy;if(x<1||y<1||x>=W-1||y>=H-1)continue;if(ok&&!ok(x,y))continue;if(canPlace(id,x,y,false))return [x,y]}return null};
+B.spot=(id,nx,ny,ok)=>{for(let r=0;r<30;r++)for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){if(Math.max(Math.abs(dx),Math.abs(dy))!==r)continue;const x=nx+dx,y=ny+dy;if(x<1||y<1||x>=W-1||y>=H-1)continue;if(ok&&!ok(x,y))continue;if(typeof WORKF!=='undefined'&&WORKF.has(id)){/* 作業する向きがきまっている家具：前（作業するマス）があく向きで置く */for(const ro of[0,2,1,3]){PLROTS[id]=ro;if(canPlace(id,x,y,false)&&workCells(y*W+x,id,ro).some(k=>walk(k)))return [x,y]}PLROTS[id]=0;continue}if(canPlace(id,x,y,false))return [x,y]}return null};
 B.put=(id,nx,ny,ok)=>{const p=B.spot(id,nx,ny,ok);if(!p)return false;const a=B.have(id),i0=inv(id);place(id,p[0],p[1]);return B.have(id)>a||inv(id)<i0};
 B.ordered=id=>S.orders.some(o=>o.type===id);
 B.ensure=(id,n,nx,ny,ok)=>{if(B.have(id)>=n)return true;const b=BL[id];if(!b)return false;

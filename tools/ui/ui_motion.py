@@ -45,6 +45,8 @@ SRC = {
  'urow': (.24, "0%{transform:translateY(6px);opacity:0}25%{transform:translateY(3px);opacity:.6}50%{transform:translateY(-1.5px);opacity:1}75%,100%{transform:none;opacity:1}"),
  'tglow': (1.6, "0%{opacity:.3}50%{opacity:1}100%{opacity:.3}"),
  'tpop': (.5, "0%{transform:scale(.6)}35%{transform:scale(1.25)}60%{transform:scale(.94)}80%{transform:scale(1.04)}100%{transform:none}"),
+ 'mflipF': (.42, "0%{transform:none;filter:brightness(1)}15%{transform:scaleX(.96) translateY(-1.5px);filter:brightness(.98)}35%{transform:scaleX(.8) translateY(-3px);filter:brightness(.94)}55%{transform:scaleX(.55) translateY(-3px);filter:brightness(.88)}75%{transform:scaleX(.28) translateY(-1.5px);filter:brightness(.82)}90%{transform:scaleX(.08);filter:brightness(.78)}100%{transform:scaleX(0);filter:brightness(.76)}"),
+ 'mflipB': (.42, "0%{transform:scaleX(0);filter:brightness(.76)}10%{transform:scaleX(.08);filter:brightness(.78)}25%{transform:scaleX(.28) translateY(-1.5px);filter:brightness(.82)}45%{transform:scaleX(.55) translateY(-3px);filter:brightness(.88)}65%{transform:scaleX(.8) translateY(-3px);filter:brightness(.94)}85%{transform:scaleX(.96) translateY(-1.5px);filter:brightness(.98)}100%{transform:none;filter:brightness(1)}"),
  'lvpop': (.45, "0%{transform:scale(.3);opacity:0}60%{transform:scale(1.08);opacity:1}100%{transform:scale(1);opacity:1}"),
 }
 SRC['tontileR'] = (.4, SRC['tontile'][1].replace('rotate(', 'rotate(-').replace('rotate(--', 'rotate('))

@@ -42,6 +42,13 @@ assert.equal(out.pick3,'gar13');assert.deepEqual(out.shortRange,[1,3,2,10],'fall
 assert.deepEqual(out.up,[true,true,true,false]);assert.equal(out.upLv,3);assert.equal(out.upMat,0);assert.equal(out.upPt,10);assert.equal(out.atkStat,40);
 assert(out.saveGear>0);assert.equal(out.saveWorn,3);assert(out.returned>=2);
 assert.equal(out.grassVeins,0);assert.equal(out.grassGear,0);
+/* 草原：布をはじめて手に入れたら、持てる数+1の防具を思いつく（ほかのそうびは思いつかない）。作って、つけると持てる数+1。そうびのタブは持ってから */
+const gr=await page.evaluate(()=>gearEval(`(()=>{const o={};S=newState(0);setWorld(0);USERPAUSE=true;S.introSeen=true;gearIdea();o.before=!!S.recipes.ga27;S.mat.nuno=1;gearIdea();o.learn=GEAR_IDS.filter(id=>S.recipes[id]);
+  for(const k of['nuno','wood'])S.mat[k]=60;S.pt=500;S.orders=[];BOARD=1;const r=S.res[0];o.tabBefore=!!(r.gear&&GSLOTK.some(k=>r.gear[k]))||gearList().length>0;orderFurn('ga27');const od=S.orders[0];o.order=!!od;if(od){finishCraft(od,r);for(const k in r.citem||{})stowItem(k,r.citem[k],r);r.citem=null;r.cmade=null;S.drops=(S.drops||[]).filter(d=>!(d.made&&(giveItem(d.id,d.n,1),1)))}
+  o.tabAfter=gearList().length>0;const c0=capOf(r);o.equip=gearEquip(r,gearList().findIndex(q=>q.id==='ga27'));o.cap=capOf(r)-c0;o.caps=['ga27','ga28','ga29'].map(id=>BL[id].g.cap);return o})()`));
+console.log('grass',JSON.stringify(gr));assert.equal(gr.before,false);assert.deepEqual(gr.learn,['ga27']);assert.equal(gr.order,true);assert.equal(gr.tabBefore,false);assert.equal(gr.tabAfter,true);assert.equal(gr.equip,true);assert.equal(gr.cap,1);assert.deepEqual(gr.caps,[1,2,3]);
+/* 火山：鉄の延べ棒で+2・+3を思いつく */
+const vo=await page.evaluate(()=>gearEval(`(()=>{S=newState(1);setWorld(1);S.gotMat={iron:1};gearIdea();return ['ga28','ga29'].map(id=>!!S.recipes[id])})()`));assert.deepEqual(vo,[true,true]);
 /* 画面：そうびタブ・依頼ボード */
 await page.evaluate(()=>gearEval(`(()=>{document.getElementById('title').hidden=true;document.getElementById('title').style.display='none';const r=S.res.find(r=>r.elem==='fire');resTab=3;openSheet('res',r.id)})()`));await page.waitForTimeout(400);await page.screenshot({path:process.env.SHOT_DIR?process.env.SHOT_DIR+'/gear-tab.png':'/tmp/gear-tab.png'});
 const rad=await page.evaluate(()=>[...document.querySelectorAll('#sheet *')].filter(n=>parseFloat(getComputedStyle(n).borderRadius)>0&&n.offsetParent).map(n=>n.className).slice(0,5));

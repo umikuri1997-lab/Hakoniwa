@@ -8,18 +8,19 @@ const COMFY={cooktable:4,joro:3,taru:3,asabukuro:3,makidana:3,kabebukuro:3,takeb
 const DECAYW=new Set(['hwall','bamboowall','logwall','plasterwall','brickwall','yozorawall']),WEBCOMF=5;/* 朽ちた壁になる家の壁（石の塀はならない）。クモの巣1つで住み心地-5 */
 const decayed=j=>{const o=S.obj[j];return DECAYW.has(o)&&S.hp[j]!=null&&S.hp[j]<=BL[o].hp/2};/* 朽ちた壁：じょうぶさが半分以下の家の壁（家の壁にならない） */
 function decayCheck(j){/* コワイノにたたかれて朽ちたら、その家は家でなくなる */if(!(S.hp[j]>0)||!decayed(j))return;const hb=HOUSES.find(h=>h.set.has(j));if(hb){recount();if(typeof houseBreakFlee==='function')houseBreakFlee(hb)}}
-function houseComfort(h){let bed=0,furn=0,fl=0,n=0;const seen=new Set();
-  const kc={};for(const j of h.inside){n++;if(S.floor[j])fl++;const o=S.obj[j];if(!o)continue;if(BEDSET.has(o)){bed++;continue}/* ベッド（よぞらのベッドも）は数だけ */if(!COMFY[o])continue;{kc[o]=(kc[o]||0)+1;furn+=COMFY[o]*(kc[o]>2?.5:1);seen.add(o)}}/* 同じ家具は2つまで。3つ目からは半分 */
-  for(const o of rugsIn(h.inside)){if(!COMFY[o])continue;kc[o]=(kc[o]||0)+1;furn+=COMFY[o]*(kc[o]>2?.5:1);seen.add(o)}/* ラグ（家の中に1マスでもかかっていれば） */
-  {const M=2;for(let y=h.y0-M;y<=h.y1+M;y++)for(let x=h.x0-M;x<=h.x1+M;x++){if(x<0||y<0||x>=W||y>=H)continue;const j=y*W+x;if(h.set.has(j))continue;const o=S.obj[j],rg=COMFR[o];if(!rg||!COMFY[o])continue;const d=Math.max(h.x0-x,x-h.x1,h.y0-y,y-h.y1,0);if(d>rg)continue;kc[o]=(kc[o]||0)+1;furn+=COMFY[o]*(kc[o]>2?.5:1);seen.add(o)}}/* かざりは、家のそば（ものごとの範囲）にあっても住み心地に入る */
-  {let wn=0;for(const j of h.set)if(S.win&&(S.win[j]===1||S.win[j]==='curtain1'||S.win[j]==='curtain2'))wn++;/* カーテンの下にも窓がある */if(wn){furn+=COMFY.window*Math.min(wn,2)+COMFY.window*.5*Math.max(0,wn-2);seen.add('window')}}/* 窓 */
-  for(const j of h.set){const p=S.win&&S.win[j];if(p&&p!==1&&COMFY[p]){kc[p]=(kc[p]||0)+1;furn+=COMFY[p]*(kc[p]>2?.5:1);seen.add(p)}}/* 壁にかけた絵 */
+function houseComfort(h){let bed=0,furn=0,fl=0,n=0;const seen=new Set(),PT={},pa=(o,v)=>{PT[o]=(PT[o]||0)+v};/* PT：家具ごとの点（住み心地のくわしい計算 comfyPop で出す） */
+  const kc={};for(const j of h.inside){n++;if(S.floor[j])fl++;const o=S.obj[j];if(!o)continue;if(BEDSET.has(o)){bed++;continue}/* ベッド（よぞらのベッドも）は数だけ */if(!COMFY[o])continue;{kc[o]=(kc[o]||0)+1;const v=COMFY[o]*(kc[o]>2?.5:1);furn+=v;pa(o,v);seen.add(o)}}/* 同じ家具は2つまで。3つ目からは半分 */
+  for(const o of rugsIn(h.inside)){if(!COMFY[o])continue;kc[o]=(kc[o]||0)+1;const v=COMFY[o]*(kc[o]>2?.5:1);furn+=v;pa(o,v);seen.add(o)}/* ラグ（家の中に1マスでもかかっていれば） */
+  {const M=2;for(let y=h.y0-M;y<=h.y1+M;y++)for(let x=h.x0-M;x<=h.x1+M;x++){if(x<0||y<0||x>=W||y>=H)continue;const j=y*W+x;if(h.set.has(j))continue;const o=S.obj[j],rg=COMFR[o];if(!rg||!COMFY[o])continue;const d=Math.max(h.x0-x,x-h.x1,h.y0-y,y-h.y1,0);if(d>rg)continue;kc[o]=(kc[o]||0)+1;const v=COMFY[o]*(kc[o]>2?.5:1);furn+=v;pa(o,v);seen.add(o)}}/* かざりは、家のそば（ものごとの範囲）にあっても住み心地に入る */
+  {let wn=0;for(const j of h.set)if(S.win&&(S.win[j]===1||S.win[j]==='curtain1'||S.win[j]==='curtain2'))wn++;/* カーテンの下にも窓がある */if(wn){const v=COMFY.window*Math.min(wn,2)+COMFY.window*.5*Math.max(0,wn-2);furn+=v;pa('window',v);seen.add('window')}}/* 窓 */
+  for(const j of h.set){const p=S.win&&S.win[j];if(p&&p!==1&&COMFY[p]){kc[p]=(kc[p]||0)+1;const v=COMFY[p]*(kc[p]>2?.5:1);furn+=v;pa(p,v);seen.add(p)}}/* 壁にかけた絵 */
   const cap=houseCap(h),over=Math.max(0,bed-cap);/* きゅうくつかどうかは、ベッドの数で決まる */
   let lit=false;for(let y=h.y0-1;y<=h.y1+1&&!lit;y++)for(let x=h.x0-1;x<=h.x1+1;x++){if(x<0||y<0||x>=W||y>=H)continue;if(LIGHTF.has(S.obj[y*W+x])){lit=true;break}}/* 家の中か、すぐそばに灯り */
-  let rs=0;for(const[k,p]of[['shosai',.1],['living',.1],['dinroom',.05],['daidokoro',.05],['nedoko',.05]])if(SPOTI.some(t=>t.sp.k===k&&h.inside.has(t.j)&&t.sp.need.every((nd,i)=>t.found[i].filter(q=>h.inside.has(q)).length>=nd[1])))rs+=p;/* そろった物が、ぜんぶその家の中にあるときだけ *//* しょさい・リビング：住み心地+10%、ダイニング・だいどころ・ねどこ：+5% */
+  let rs=0;const RS=[];for(const[k,p]of[['shosai',.1],['living',.1],['dinroom',.05],['daidokoro',.05],['nedoko',.05]])if(SPOTI.some(t=>t.sp.k===k&&h.inside.has(t.j)&&t.sp.need.every((nd,i)=>t.found[i].filter(q=>h.inside.has(q)).length>=nd[1]))){rs+=p;RS.push([k,p])}/* そろった物が、ぜんぶその家の中にあるときだけ *//* しょさい・リビング：住み心地+10%、ダイニング・だいどころ・ねどこ：+5% */
   let webs=0;if(S.web)for(const j of h.inside)if(S.web[j]!=null)webs++;/* クモの巣 */
-  const v=Math.round(Math.max(0,Math.min(COMFMAX,(15+(typeof bpHouseName==='function'&&bpHouseName(h)?BPCOMF:0)+(typeof pathA==='function'?pathA('comf'):0)+Math.min(210,furn)+(n?fl/n:0)*45-over*105-(lit?0:60))*(1+rs)-webs*WEBCOMF)));/* 上限は300 */
-  return{v,bed,cap,lit,kinds:seen.size,floorPct:n?Math.round(fl/n*100):0,over,webs}}
+  const bp=typeof bpHouseName==='function'&&bpHouseName(h)?BPCOMF:0,pc=typeof pathA==='function'?pathA('comf'):0,flp=(n?fl/n:0)*45;
+  const v=Math.round(Math.max(0,Math.min(COMFMAX,(15+bp+pc+Math.min(210,furn)+flp-over*105-(lit?0:60))*(1+rs)-webs*WEBCOMF)));/* 上限は300 */
+  return{v,bed,cap,lit,kinds:seen.size,floorPct:n?Math.round(fl/n*100):0,over,webs,why:{bp,pc,furn,PT,kc,fl,n,flp,rs,RS}}}
 
 
 
@@ -84,13 +85,13 @@ const comfyStars=v=>'★'.repeat(Math.min(5,Math.max(1,Math.ceil(v/(60)))))+'☆
 /* 家の広さで、ちょうどいい人数が決まる（中のマス4つで1人） */
 const OWNABLE=o=>!!o&&(SEATS.includes(o)||!!(BL[o]&&BL[o].play)||o==='bathtub'||o==='onsen'||COOKST.has(o));/* つかうせいれいをきめられる家具：いす・ベンチ・遊び家具・おふろ・料理の家具（ベッド・見張り台はべつ） */
 /* しごと場の担当：伐採場・採石場は2人まで、炉は火のせいれい1人。担当がきまっていれば、担当だけが働く（村にいなければ、だれでも） */
-const JOBST={lumber:2,quarry:2,smelter:1,mill:1,loom:1},NARET=270,NAREMAX=5,NAREUP=10;/* なれは、時計の3時間（270）働くごとに1つ。1つで、そのしごと場でのはたらく速さ+10 */
+const JOBST={lumber:2,quarry:2,smelter:1,mill:1,loom:1},NARET=270,NAREMAX=5,NAREUP=2;/* なれは、時計の3時間（270）働くごとに1つ。1つで、そのしごと場でのはたらく速さ+2 */
 const jobOwners=j=>{const L=(S.jobOwn||{})[anc(j)];return L?S.res.filter(q=>L.includes(q.id)&&!q.hidden):[]},jobFor=(j,r)=>{const o=jobOwners(j);return !o.length||o.includes(r)};
 function jobOf(r){const J=S.jobOwn||{};for(const k in J)if(J[k].includes(r.id)&&JOBST[S.obj[k]])return +k;return -1}
 const jobOK=(r,o)=>!!JOBST[o]&&(o!=='smelter'||r.elem==='fire')&&(!PROC[o]||procOK(r,o));
 const nareLv=(r,o)=>Math.min(NAREMAX,Math.floor(((r.nare||{})[o]||0)/NARET));
 function jobAct(r,a){if(!a||a.obj==null)return null;if(!((a.camp&&(a.type==='chop'||a.type==='mine'))||a.type==='smelt'||a.type==='proc'))return null;const o=S.obj[a.obj];return JOBST[o]&&jobOwners(a.obj).includes(r)?o:null}/* 担当のしごと場で働いているか */
-const nareAdd=(r,a)=>{const o=jobAct(r,a);return o?nareLv(r,o)*NAREUP/100:0};
+const nareAdd=(r,a)=>{const o=jobAct(r,a);return o?nareLv(r,o)*NAREUP/STD:0};
 function nareTick(r,a,dt){const o=jobAct(r,a);if(!o)return;const N=r.nare||(r.nare={}),l0=nareLv(r,o);N[o]=(N[o]||0)+dt;const l1=nareLv(r,o);if(l1>l0){addFloat(r.x,r.y-1.6,'なれ '+l1,'#ffe08a');toast(r.name+'：'+BL[o].name+'のなれ '+l1,'good')}}
 function jobSet(j,r,on){const a=anc(j),J=S.jobOwn||(S.jobOwn={});if(on)for(const k in J){J[k]=J[k].filter(id=>id!==r.id);if(!J[k].length)delete J[k]}/* 担当は1人1か所 */const L=(J[a]||[]).filter(id=>id!==r.id&&S.res.some(q=>q.id===id));if(on)L.push(r.id);if(L.length)J[a]=L;else delete J[a]}
 const useOwner=j=>{const id=(S.useOwn||{})[anc(j)];return id!=null&&OWNABLE(S.obj[anc(j)])?S.res.find(q=>q.id===id)||null:null},useFor=(j,r)=>{const o=useOwner(j);return !o||o===r};/* きまったせいれいがいれば、その子だけ使う（いない子のは、だれでも） */

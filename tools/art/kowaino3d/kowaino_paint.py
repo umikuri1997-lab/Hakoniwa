@@ -36,7 +36,7 @@ def mk(name, size, cloth, dark, deco, eye, pom=None, edge=None, hand=None, mats=
                 eyes=dict(x=0.085, rx=0.03, rz=0.075, col=eye, edge=edge or eye), **kw)
 CFG.update({   # 色は、いまのゲームの絵（ない物は、night.js の col・eye・tint）から
     'fast': mk('fast', .8, '#5e5480', '#1f1a33', '#5b7fae', '#a9c4e0', hand='#8a84b4', mats={'deco': 'fabric'}),
-    'thief': mk('thief', .9, '#6a5468', '#231a2c', '#8f7a56', '#e0cc94', mats={'deco': 'fabric'}),
+    'thief': mk('thief', .9, '#6a5468', '#231a2c', '#8f7a56', '#e0cc94', mats={'deco': 'fabric'}, sack='#d4a86e'),   # sack：ふくろ（体とはなれた布のかたまり）の色。体の紫ととけこまないように、あかるい麻の色（持ち主のたのみ）
     'brute': mk('brute', 1.25, '#4a4262', '#1b1628', '#968a9e', '#c2afae', hand='#8c80a0', mats={'deco': 'rock'}),
     'breaker': mk('breaker', 1.1, '#5e5474', '#1d1729', '#8c8496', '#c2afae', hand='#8c80a0', mats={'deco': 'metal'}),
     'trapper': mk('trapper', .95, '#3e3654', '#171223', '#c4b2b0', '#c2afae', nohand=True, mats={'deco': 'gloss'}),
@@ -482,6 +482,7 @@ def eyeclean(im, P, F, lab, PL, R, proj, ext, cfg):
 def shoot(name, cfg, src, yaw=0.0):
     if cfg.get('model'):   # マテリアルつきのモデル（持ち主が直した物・kw_model.py で手を足した物）：色わけはマテリアルのまま
         m, comp, lab0 = load_labeled(cfg['model']); P, F, col, lab, H, cen = paint_labeled(m, comp, lab0, cfg); POMC[:] = []
+        if cfg.get('sack'): col[(lab == 'base') & (comp != 0)] = hx(cfg['sack'])   # ふくろ：布の色わけ（base）のうち、体（いちばん大きなかたまり）とはなれた所。色わけ（lab）はかえない（ボーンは lab で見る）
         P, F, col, lab, comp = ornament(P, F, col, lab, comp, H, cfg, cfg.get('pose', {}).get('dead', False), name)   # 模様と目を、3Dの面に
         comp0 = comp.copy()
         comp = np.where(np.isin(lab, ['base', 'under', 'rim', 'face', 'pat', 'eye', 'eyee']), 0, comp+1)   # すそのライン・目は、布・顔の所で見る
@@ -679,12 +680,12 @@ def despeckle(im, n=2):
 
 def sheets(name, out):
     """モーションのコマ（kw_skel.poses）を写して、モーションごとに、たてにならべた1まいの絵にする（いまのゲームと同じ形：w・h・ax・ay・n）。
-    正面と、うしろ（B。やられはなし）・右むき（R）・左むき（L。待機と攻撃だけ）。コマの大きさは、そのモーションのコマぜんぶが入る大きさ（足もとの点をそろえる）"""
+    正面と、うしろ（B。やられはなし）・右むき（R）・左むき（L。待機・歩く・攻撃）。コマの大きさは、そのモーションのコマぜんぶが入る大きさ（足もとの点をそろえる）"""
     import kw_skel, json; info = {}
     PS = {False: kw_skel.poses(name), True: kw_skel.poses(name, side=True)}
     for mo in PS[False]:
-        for B, yaw in (('', 0.0), ('B', math.pi), ('R', -math.pi/2), ('L', math.pi/2)):   # 正面・うしろ・右むき・左むき（よこは 待機と攻撃だけ。攻撃する相手のほうを向く）
-            if mo == 'hurt' and B or B in ('R', 'L') and mo not in ('idle', 'atk'): continue
+        for B, yaw in (('', 0.0), ('B', math.pi), ('R', -math.pi/2), ('L', math.pi/2)):   # 正面・うしろ・右むき・左むき（よこは 待機・歩く・攻撃。よこへ歩くとき・攻撃する相手のほうを向く）
+            if mo == 'hurt' and B or B in ('R', 'L') and mo not in ('idle', 'atk', 'walk'): continue
             ps = PS[B in ('R', 'L')][mo]
             fr = []
             fxp = fxparts(ps, name)

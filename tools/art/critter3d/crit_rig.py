@@ -11,6 +11,8 @@ sys.path.insert(0,os.path.join(os.path.dirname(os.path.abspath(__file__)),'..','
 from ani_rig import smooth,rotm
 TONBOB=-.3   # とんぼの胴体を小さくする（−0.3 で0.7倍）
 HOTB,HOTW,HOTMV=-.3,0,.3   # ほたるの胴体を小さく（0.7倍）・羽はモデルの大きさ（はばたくと0.45倍）・羽をお尻のほうへずらす（H。持ち主のきめ）
+BEEBANDS=((-.10,.05),(-.36,-.21))   # みつばちのしまの帯（u：前うしろ。からだは −0.52〜0.52、顔は前）
+BEEINK=(70,24,4)   # 帯のモデルの色（写すと白に0.3まざって、やわらかいこげ茶 (125,93,66) くらいになる）
 TURN=20   # 右むきから、手前へ何度（顔が少し見える）
 def band(x,a,b,e=.06):return smooth(a-e,a+e,x)*(1-smooth(b-e,b+e,x))   # a〜b のあいだ（ふちはなめらか）
 def near(c,col,t=24):return (np.abs(col-np.array(c,float)).max(1)<t).astype(float)   # その色の点
@@ -52,7 +54,9 @@ C={
      dict(k='wing',w=lambda u,v,z,c:np.maximum(near((216,31,16),c,40),near((242,222,176),c,10)*smooth(.38,.45,z)*(1-smooth(.4,.5,u))),p=(-.1,0,.95),ax='f',mir=1)],   # 赤いはね：左右にひらく。はねの上の白い点（足・おなかと同じクリーム色の、高い所の部品）もいっしょに（ないと、ひらいたとき点がからだの中にのこる）
    fr={'0':{},'1':dict(sq=.96),'w0':dict(swing=35),'w1':dict(sq=.97),'w2':dict(swing=-35),'w3':dict(sq=.97),
        'e0':dict(wing=22),'e1':dict(wing=40),'e2':dict(wing=22)}),
- 'mitsubachi':dict(size=.3,fly=1,legs=dict(zc=.06,hip=.2,rad=.12,col=(171,105,48)),bones=[
+ 'mitsubachi':dict(size=.3,fly=1,legs=dict(zc=.06,hip=.2,rad=.12,col=(171,105,48)),
+   stripes=dict(col=(248,211,68),t=20,bands=BEEBANDS,ink=BEEINK),   # しまもよう：黄色いからだの、おしりのほう（u がマイナス）に、こげ茶の帯（持ち主のたのみ）
+   bones=[
      dict(k='wing',w=lambda u,v,z,c:near((242,245,248),c,20),p=(-.1,0,.66),sc=1,root=1)],   # 羽：つけねへちぢむ（はばたいて見える。まわすと、うすい羽がとがった線になった）
    fr={'w0':dict(wing=0,dangle=12),'w1':dict(wing=-.55,dangle=-4),'e0':dict(wing=-.2,pitch=10,legF=-15,legB=15),'e1':dict(wing=0,pitch=10,legF=-15,legB=15)}),   # はばたく・花にとまる
  'hotaru':dict(size=.25,fly=1,legs=dict(zc=.12,hip=.22,rad=.14,col=(171,108,51)),bones=[
@@ -76,6 +80,16 @@ FRONT={'usagi':(70,-80),'risu':(53,-95),'harinezumi':(57,-110),'nezumi':(-12,132
 # 横の絵から何度まわすと、正面（d）・うしろ（u）か。まっすぐより少し右（顔が見える、少しななめ。ゲームで左右反転する）。生き物ごとに絵を見てきめた（ねずみは、しっぽの玉が顔の前にくるので、横に近い）
 def vturn(name,vw):return FRONT[name][0 if vw=='d' else 1] if vw else 0
 GROUND=tuple(FRONT)   # 地面を歩く・はねる物：正面・うしろの絵もある（上下へ動くとき、横を向いたまますべらないように）
+def paint(name):
+    """blueprint の Part.paint にわたす関数：ポーズの前の点で、面の色をかえる（stripes：その色の面のうち、u が bands の中の面を ink に）"""
+    D=C[name].get('stripes')
+    if not D:return None
+    def f(V,F,Cf):
+        rg=rig(name);u=rg.u[F].mean(1);m=(np.abs(Cf-np.array(D['col'],float)).max(1)<D['t'])
+        k=np.zeros(len(F),bool)
+        for a,b in D['bands']:k|=(u>=a)&(u<b)
+        Cf=Cf.copy();Cf[m&k]=D['ink'];return Cf
+    return f
 def frames(name):
     f=list(C[name]['fr']);return f+[v+x for v in VIEWD for x in f] if name in GROUND else f
 def view(frame):return (frame[0],frame[1:]) if frame[0] in VIEWD else ('',frame)   # 'dw0' → ('d','w0')

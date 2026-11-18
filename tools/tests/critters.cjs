@@ -16,17 +16,24 @@ const o=await run(`(()=>{cam.z=2;centerOn(CX*TS,(CY+.5)*TS);const ks=new Set();f
   return {kinds,flew,ok,gain,night}})()`);
 assert.ok(o.kinds.some(k=>['fly','mitsubachi','tentoumushi'].includes(k))&&o.kinds.some(k=>['bird','risu'].includes(k)),'昼：花のそばの虫と、木のそばの生き物 '+o.kinds);assert.ok(o.flew,'小鳥は飛びたつ');assert.ok(o.ok,'見にいく');assert.ok(o.gain>=1.5,'たのしさ+2 '+o.gain);assert.equal(o.night,0,'夜は出ない');
 /* よく出る（小鳥・ちょう・とんぼ）と、あまり出ない（ほか）：昼に出た回数をかぞえる */
-const cnt=await run(`(()=>{S.t=1440*15+600;/* 秋（とんぼが出る） */S.res=[];const n={};const sp=critSpawn;for(let i=0;i<3000;i++){CRIT=[];critSpawn();for(const c of CRIT)n[c.k]=(n[c.k]||0)+1}return n})()`);
+const cnt=await run(`(()=>{S.t=1440*12+600;/* 秋（とんぼが出る。季節は5日ごと：11〜15日め） */S.res=[];const n={};const sp=critSpawn;for(let i=0;i<3000;i++){CRIT=[];critSpawn();for(const c of CRIT)n[c.k]=(n[c.k]||0)+1}return n})()`);
 const often=(cnt.fly||0)+(cnt.bird||0)+(cnt.tonbo||0),rare=Object.entries(cnt).filter(([k])=>!['fly','bird','tonbo'].includes(k)).reduce((t,[,v])=>t+v,0);
 assert.ok(often>rare*4,'小鳥・ちょう・とんぼが多く出る '+JSON.stringify(cnt));console.log('出た回数',JSON.stringify(cnt));
-assert.equal(await run(`[CK.fly.n,CK.bird.n,CK.tonbo.n,CK.usagi.n||1].join()`),'2,2,2,1','同時に出る数');
+assert.equal(await run(`[CK.bird.n,CK.tonbo.n,CK.usagi.n||1].join()`),'2,2,1','同時に出る数');
+/* ちょう：朝、花1本ごとに5%。その日は、その数まで（花がなければ出ない・同じ日はかわらない） */
+const bf=await run(`(()=>{const sv=S.obj.slice();S.t=1440*20+600;for(let j=0;j<W*H;j++)if(FLOWERS.has(S.obj[j]))S.obj[j]=null;CRITBS=null;const none=critButterflies();let fly0=0;for(let i=0;i<500;i++){CRIT=[];critSpawn();fly0+=CRIT.filter(c=>c.k==='fly').length}
+  let k=0;for(let y=4;y<W-4&&k<400;y+=2)for(let x=4;x<W-4&&k<400;x+=2){const j=y*W+x;if(!S.obj[j]&&walk(j)){S.obj[j]='clover';k++}}CRITBS=null;const a=critButterflies(),b=critButterflies();let tot=0;for(let d=0;d<30;d++){S.t=1440*(30+d)+600;tot+=critButterflies()}
+  CRIT=[];for(let i=0;i<20;i++)CRIT.push({id:900+i,k:'fly',x:CX,y:CY,t:0,life:999});S.t=1440*20+600;CRITBS=null;const n=critButterflies(),cnt=CRIT.length;CRIT=CRIT.slice(0,Math.max(0,n));const before=CRIT.length;critSpawn();const over=CRIT.filter(c=>c.k==='fly').length<=n;
+  S.obj=sv;CRITBS=null;CRIT=[];return {none,fly0,k,a,b,avg:tot/30,over}})()`);
+assert.equal(bf.none,0,'花がなければ、ちょうは0');assert.equal(bf.fly0,0,'花がなければ出ない');assert.equal(bf.a,bf.b,'同じ日はかわらない');
+assert.ok(Math.abs(bf.avg-bf.k*.05)<bf.k*.05*.35,'花1本ごとに5% '+bf.avg+' / '+bf.k);assert.ok(bf.over,'その日の数まで');console.log('ちょう',JSON.stringify(bf));
 const ev=await run(`(()=>{S.t=1440*4+1080;for(let n=0;n<15;n++){CRIT=[];for(let i=0;i<120;i++)critTick(.5);if(CRIT.some(c=>c.k==='frog'))return true}return false})()`);assert.ok(ev,'夕方の水べに、かえる');
 /* モデルの生き物：出る所 */
 const sp=await run(`(()=>{S.obj[(CY-3)*W+CX-6]='crate';S.obj[(CY+2)*W+CX+6]='berry';S.obj[(CY+3)*W+CX+3]='farm';S.res=[];recount();REV.add((CY+1)*W+CX+1);
   const at=(k,h,rain,j,d)=>{S.t=1440*(d||5)+h*60;S.rain=!!rain;return critOK(k,j)};
   return {usagi:at('usagi',10,0,(CY+1)*W+CX+1),usagiRain:at('usagi',10,1,(CY+1)*W+CX+1),risu:at('risu',10,0,(CY-3)*W+CX+4),nezumi:at('nezumi',10,0,(CY-3)*W+CX-5),
     hari:at('harinezumi',18,0,(CY+2)*W+CX+5),hariDay:at('harinezumi',10,0,(CY+2)*W+CX+5),kata:at('katatsumuri',10,1,(CY+1)*W+CX-2),kataDry:at('katatsumuri',10,0,(CY+1)*W+CX-2),
-    ten:at('tentoumushi',10,0,(CY+1)*W+CX-2),bee:at('mitsubachi',10,0,CY*W+CX-2),tonbo:at('tonbo',12,0,(CY+3)*W+CX-5,15),tonboSpring:at('tonbo',12,0,(CY+3)*W+CX-5),hotaru:at('hotaru',20,0,(CY+2)*W+CX-6),hotaruDay:at('hotaru',12,0,(CY+2)*W+CX-6),
+    ten:at('tentoumushi',10,0,(CY+1)*W+CX-2),bee:at('mitsubachi',10,0,CY*W+CX-2),tonbo:at('tonbo',12,0,(CY+3)*W+CX-5,12),tonboSpring:at('tonbo',12,0,(CY+3)*W+CX-5,2),hotaru:at('hotaru',20,0,(CY+2)*W+CX-6),hotaruDay:at('hotaru',12,0,(CY+2)*W+CX-6),
     moguraGrass:at('mogura',10,0,(CY+3)*W+CX+4),frog:at('frog',18,0,(CY+2)*W+CX-6)}})()`);
 for(const [k,v] of Object.entries({usagi:true,usagiRain:false,risu:true,nezumi:true,hari:true,hariDay:false,kata:true,kataDry:false,ten:true,bee:true,tonbo:true,tonboSpring:false,hotaru:true,hotaruDay:false,moguraGrass:false,frog:true}))assert.equal(sp[k],v,'出る所 '+k);
 /* コマのチップ・動く・にげる・ほたるの光 */

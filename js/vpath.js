@@ -13,12 +13,12 @@ const VPATH=[/* 点：x・y は木の絵の上の場所（1ドット1.5px）、r
   {id:'kr1',c:150,t:'つかれのとれる速さ+10%',a:{rec:10},x:92,y:702,r:['kf1']},
   {id:'kf2',c:250,t:'たのしさのへりかた−5%',a:{fun:5},x:92,y:668,r:['kr1']}]},
  {k:'shigoto',n:'しごと',lx:194,ly:692,at:710,L:[
-  {id:'sw1',c:50,t:'はたらく速さ+2',a:{work:2},x:150,y:690,r:[]},
-  {id:'sw2',c:120,t:'はたらく速さ+3',a:{work:3},x:128,y:656,r:['sw1']},
+  {id:'sw1',c:50,t:'はたらく速さ+1',a:{work:1},x:150,y:690,r:[]},
+  {id:'sw2',c:120,t:'はたらく速さ+1',a:{work:1},x:128,y:656,r:['sw1']},
   {id:'sf1',c:100,t:'つりに行く確率+5%',a:{fish:5},x:128,y:622,r:['sw2']},
-  {id:'sm1',c:60,t:'移動速度+2',a:{move:2},x:162,y:656,r:['sw1']},
-  {id:'sm2',c:140,t:'移動速度+3',a:{move:3},x:162,y:622,r:['sm1']},
-  {id:'ss1',c:100,t:'スタミナ+10',a:{sta:10},x:196,y:656,r:['sw1']},
+  {id:'sm1',c:60,t:'移動速度+1',a:{move:1},x:162,y:656,r:['sw1']},
+  {id:'sm2',c:140,t:'移動速度+1',a:{move:1},x:162,y:622,r:['sm1']},
+  {id:'ss1',c:100,t:'スタミナ+2',a:{sta:2},x:196,y:656,r:['sw1']},
   {id:'sh1',c:150,t:'おなかのへりかた−5%',a:{hun:5},x:196,y:622,r:['ss1']},
   {id:'sc1',c:400,t:'持てる数+1',a:{cap:1},x:145,y:578,r:['sf1','sm2']}]},
  {k:'mamori',n:'まもり',lx:22,ly:602,at:620,L:[
@@ -37,18 +37,18 @@ const pathBox=()=>pathA('box')/100,pathFun=()=>1-pathA('fun')/100;
 const VPATH_OLD={k1:100,k2:200,k3:300,s1:100,s2:200,s3:400,m1:150,m2:250,m3:350};/* 前の木（1つの道に3つ）の点と、ひらくのにつかったパワー */
 function vpathMigrate(){/* 前の木でひらいた点は、とじて、つかったパワーをもどす（1回だけ） */if(S.flags.vpath2)return;S.flags.vpath2=1;let back=0;for(const k in S.vpath||{})if(VPATH_OLD[k])back+=VPATH_OLD[k];S.vpath={};if(back){S.pt+=back;toast('むらのちからの木が新しくなり、パワー'+back+'がもどった','good')}}
 function pathBuy(p){if(vpOn(p.id))return false;if(!p.r.every(vpOn))return false;if(S.pt<p.c){sfx('tap');toast(lackPt(p.c),'warn');return false}S.pt-=p.c;(S.vpath||(S.vpath={}))[p.id]=1;sfx('power');toast('むらのちから：'+p.t,'good');logEv('むらのちからをひらいた：'+p.t);recount();dirty=true;return true}
-/* 木（スキルツリー）：たてに長い大木。下は村の枝（くらし・しごと・まもり。枝わかれして上へひらく）、上は守り神の枝（まもりの光のチャージ・威力・とめる時間・こもれびのまもり・葉のかべ。1つの点が1つのLv。GUP は night.js）。点をタップすると、ポップアップでひらく・強化 */
+/* 木（スキルツリー）：たてに長い大木。下は村の枝（くらし・しごと・まもり。枝わかれして上へひらく）、上は守り神の枝（まもりの光のチャージ・威力・とめる時間・範囲は5段まで、こもれびのまもり・葉のかべは10段まで。1つの点が1つのLv。GUP は night.js）。点をタップすると、ポップアップでひらく・強化 */
 /* 木の絵（ドット）：1ドット1.5px のキャンバス（TRW×TRH） */
-const TRW=216,TRH=816,TRGY=798,TRFORK=410,TRG=[{k:'cd',x:24,n:'チャージ'},{k:'pow',x:66,n:'威力'},{k:'stun',x:108,n:'とめる時間'},{k:'area',x:150,n:'こもれび'},{k:'leaf',x:192,n:'葉のかべ'}],TRGY0=346,TRGD=34,TRLEARN=380;
+const TRW=216,TRH=816,TRGY=798,TRFORK=410,TRG=[{k:'cd',x:18,n:'チャージ'},{k:'pow',x:54,n:'威力'},{k:'stun',x:90,n:'とめる時間'},{k:'rng',x:126,n:'範囲'},{k:'area',x:162,n:'こもれび'},{k:'leaf',x:198,n:'葉のかべ'}],TRGY0=346,TRGD=34,TRLEARN=380;
 const TRPAL={1:['#a39377','#bcae92','#cbbfa4','#ddd3bf'],2:['#6b4428','#8a5a32','#a8743f','#d29a5a']};/* ふち・かげ・もと・光 */
-const TRICON={box:'box',cook:'rice',fun:'heart',comf:'house',rec:'moon',work:'hammer',fish:'fish',move:'boot',sta:'sun',hun:'apple',cap:'log',wdmg:'target',wcd:'clock',wrng:'compass',trap:'gear',atk:'sword',kpt:'power',cd:'bulb',pow:'sun',stun:'clock',area:'shield',leaf:'leaf'};
+const TRICON={box:'box',cook:'rice',fun:'heart',comf:'house',rec:'moon',work:'hammer',fish:'fish',move:'boot',sta:'sun',hun:'apple',cap:'log',wdmg:'target',wcd:'clock',wrng:'compass',trap:'gear',atk:'sword',kpt:'power',cd:'bulb',pow:'sun',stun:'clock',rng:'grng',area:'shield',leaf:'lwall'};
 let TREEPEND=null,TREESCR=null;/* ひらいたばかりの点（光がとどくまで、前のようすで描く）・描きなおす前のスクロール */
 function treeNodes(){const N=[],on=id=>vpOn(id)&&TREEPEND!=='v:'+id;
   for(const b of VPATH)for(const p of b.L){const o=on(p.id);N.push({k:'v:'+p.id,x:p.x,y:p.y,st:o?'done':p.r.every(on)?'can':'lock',p,b,cost:p.c,on:o,icon:TRICON[Object.keys(p.a)[0]],par:p.r.map(r=>'v:'+r),at:p.r.length?null:b.at})}
   const learned=leafOK()&&TREEPEND!=='learn';
   for(const G of TRG){const pend=TREEPEND&&TREEPEND.startsWith('g:'+G.k+':')?1:0,lv=Math.max(0,gupLv(G.k)-pend),hid=G.k==='area'&&!(S.flags&&S.flags.areaSkill),lock=G.k==='leaf'&&!learned;
     if(G.k==='leaf')N.push({k:'learn',x:G.x,y:TRLEARN,st:learned?'done':'can',cost:learned?0:LEAFLEARN,on:learned,icon:'leaf',par:[],crown:1});
-    for(let n=1;n<=10;n++){const o=lv>=n;N.push({k:'g:'+G.k+':'+n,x:G.x+(n%2?-3:3),/* すこしずつ左右にずらして、枝らしく */y:TRGY0-(n-1)*TRGD,st:hid?'hid':o?'done':!lock&&lv===n-1?'can':'lock',g:gupOf(G.k),G,n,cost:GUPC[n-1],on:o,icon:TRICON[G.k],par:n>1?['g:'+G.k+':'+(n-1)]:G.k==='leaf'?['learn']:[],crown:n===1&&G.k!=='leaf'?1:0})}}
+    for(let n=1,mx=gupOf(G.k).max;n<=mx;n++){const o=lv>=n;N.push({k:'g:'+G.k+':'+n,x:G.x+(n%2?-3:3),/* すこしずつ左右にずらして、枝らしく */y:TRGY0-(n-1)*TRGD,st:hid?'hid':o?'done':!lock&&lv===n-1?'can':'lock',g:gupOf(G.k),G,n,cost:gupOf(G.k).c[n-1],on:o,icon:TRICON[G.k],par:n>1?['g:'+G.k+':'+(n-1)]:G.k==='leaf'?['learn']:[],crown:n===1&&G.k!=='leaf'?1:0})}}
   return N}
 function treeDisc(st){/* 段々のドットの丸（26×26、1ドット1.5px）：ふち2ドット・上半分が明るい */const[a,b,e]=TREEC[st],R=13;let o='';const row=(y,r,col)=>{const w=Math.round(Math.sqrt(Math.max(0,r*r-(y+.5-R)**2)));if(w>0)o+='<rect x="'+(R-w)+'" y="'+y+'" width="'+2*w+'" height="1" fill="'+col+'"/>'};
   for(let y=0;y<26;y++)row(y,R,e);for(let y=2;y<24;y++)row(y,R-2,y<R?a:b);o+='<rect x="7" y="5" width="2" height="2" fill="#fff" opacity=".7"/>';return '<svg class="tdisc" viewBox="0 0 26 26" shape-rendering="crispEdges" aria-hidden="true">'+o+'</svg>'}
@@ -84,7 +84,7 @@ function treeBuild(){/* 木（1まい）：キャンバスの絵と、点のボ�
   const w=el('<div class="stree"><canvas class="tcv" width="'+TRW+'" height="'+TRH+'"></canvas><canvas class="tfx" width="'+TRW+'" height="'+TRH+'"></canvas></div>'),pc=(v,a)=>(v/a*100)+'%',
     txt=(x,y,t,cls)=>{const d=el('<span class="tlbl'+(cls?' '+cls:'')+'"></span>');d.textContent=t;d.style.left=pc(x,TRW);d.style.top=pc(y,TRH);w.appendChild(d)};
   const N=treeNodes();treeDraw(w.querySelector('.tcv'),N);
-  txt(66,6,'まもりの光','hub');TRG.forEach(G=>txt(G.x,TRGY0-9*TRGD-22,G.k==='area'&&!(S.flags&&S.flags.areaSkill)?'？？？':G.n));for(const b of VPATH)txt(b.lx,b.ly,b.n,'hub');
+  txt(72,TRGY0-4*TRGD-44,'まもりの光','hub');TRG.forEach(G=>txt(G.x,TRGY0-(gupOf(G.k).max-1)*TRGD-22,G.k==='area'&&!(S.flags&&S.flags.areaSkill)?'？？？':G.n));for(const b of VPATH)txt(b.lx,b.ly,b.n,'hub');
   for(const n of N){const b=el('<button class="tnode"></button>'),cost=n.st==='can'?n.cost:0,can=n.st==='can'&&S.pt>=cost;
     b.dataset.node=n.k;b.dataset.st=n.st;b.style.left=pc(n.x,TRW);b.style.top=pc(n.y,TRH);
     b.innerHTML=(can?treeRing():'')+treeDisc(n.st)+'<b>'+(n.st==='hid'?'？':pxi(n.icon,'tic'))+'</b>'+(cost?'<i class="tcost'+(S.pt<cost?' lack':'')+'">'+pxi('power')+cost+'</i>':'');

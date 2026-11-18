@@ -59,8 +59,8 @@ function cookInPop(j){/* 入れる材料をえらぶ（しゅるいごとに1こ
   o.querySelector('.x').onclick=()=>{sfx('tap');o.remove()};o.onclick=e=>{if(e.target===o)o.remove()};o.querySelector('.go').onclick=()=>{if(!V.size)return;S.ovenSet[j]={m:'in',in:[...V]};sfx('tap');o.remove();renderSheet()};
   document.body.appendChild(o);upd()}
 function cookZukan(d,add){/* 図鑑の「りょうり」：作った料理だけ */const K=d.cookKn||{},got=new Map();for(const k in K)if(!got.has(K[k]))got.set(K[k],k);
-  for(const D of COOKD){if(!got.has(D.id))continue;const F=FOODS[D.id];add(F.name,'材料：'+D.i.map(k=>FOODS[k].name).join('・')+'／作る所：'+cookStTxt(D)+(F.fx?'／'+F.fx:''),foodIc(D.id))}
-  for(const n of[1,2,3])if(got.has('fsg'+n)){add('ふしぎな料理',FOODS.fsg1.fx,foodIc('fsg1'));break}}
+  for(const D of COOKD){if(!got.has(D.id))continue;const F=FOODS[D.id];add(F.name,'材料：'+D.i.map(k=>FOODS[k].name).join('・')+'／作る所：'+cookStTxt(D)+(F.fx?'／'+F.fx:''),foodIc(D.id),'k:plate')}
+  for(const n of[1,2,3])if(got.has('fsg'+n)){add('ふしぎな料理',FOODS.fsg1.fx,foodIc('fsg1'),'k:plate');break}}
 /* 料理のアイコン：しゅるいごとの16×16のドット（A=1つめの材料の色・B=2つめ・C=3つめ）を、144×144 に9倍で描く */
 const CKICO={
 bowl:['................','................','......BB.C......','....AAAAAAAA....','...AAABAAAACA...','..kAAAAAAAAAAk..','..wwwwwwwwwwww..','..wWWWWWWWWWWw..','...wWWWWWWWWw...','....wWWWWWWw....','.....wwwwww.....','......dddd......','................','................','................','................'],

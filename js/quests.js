@@ -33,7 +33,7 @@ const DAILYG=[/* クリア後の「きょうの目標」：毎朝2つ。b＝そ�
 function dailyNow(g,d){return g.b?g.b()-(d.b0[g.k]||0):g.s()}
 const dailyHere=()=>DAILYG.filter(g=>g.w==null||g.w===WD);/* その土地の、きょうの目標 */
 function dailySet(){const D=dailyHere(),day=dayNo(),i=(day*2)%D.length,L=[D[i],D[(i+1)%D.length]];S.daily={d:day,k:L.map(g=>g.k),b0:Object.fromEntries(L.filter(g=>g.b).map(g=>[g.k,g.b()])),done:{}}}/* 毎朝、きょうの目標を2つ出す */
-function dailyCheck(){const d=S.daily;if(!d)return;for(const k of d.k){const g=DAILYG.find(x=>x.k===k);if(g&&!d.done[k]&&dailyNow(g,d)>=g.n){d.done[k]=1;S.pt+=g.rw;S.totalPt+=g.rw;toast('きょうの目標たっせい：'+g.t+'（パワー+'+g.rw+'）','good')}}}
+function dailyCheck(){const d=S.daily;if(!d)return;for(const k of d.k){const g=DAILYG.find(x=>x.k===k);if(g&&!d.done[k]&&dailyNow(g,d)>=g.n){d.done[k]=1;S.pt+=g.rw;S.totalPt+=g.rw;if(typeof STATUE!=='undefined'&&STATUE>=0&&typeof juiceFly==='function'&&1)juiceFly(STATUE%W+.5,(STATUE/W|0),'pt',g.rw);toast('きょうの目標たっせい：'+g.t+'（パワー+'+g.rw+'）','good')}}}
 function afterTick(){/* クリア後：新しいクエスト・きょうの目標・やりこみ（昼だけ。クリアした日のつぎの朝から） */if(isNight()||!$('#dialog').hidden||NEWRES!=null)return;if(WD===0&&S.flags.sacredReunion&&!S.flags.sacredQuietSeen)return;/* 草原：再会のあとの木陰の話を見てから */if(departTick())return;/* 草原：出発の場面を見おわってから */if(S.clearDay==null)S.clearDay=0;/* クリアした日をしまっていない古いセーブは、すぐ */if(dayNo()<=S.clearDay)return;if(!S.daily||S.daily.d!==dayNo())dailySet();dailyCheck();checkFree();
   const i=S.aq||0,q=AFTERQ[i];if(!q)return;if(q.w!=null&&q.w!==WD){S.aq=i+1;return}/* その土地のクエストではない */if(S.aqOn!==i){S.aqOn=-1;let once=0;dialog(q.L,()=>{if(once++)return;S.aqOn=i;S.aqB=q.now();sfx('quest');toast('クエスト：'+aqTitle(q),'good');renderQuest()});return}
   if(S.aqB==null)S.aqB=q.now();/* 前のセーブ：いまから数える */if(q.now()>=aqGoal(q)){let once=0;dialog(q.X,()=>{if(once++)return;S.aq=i+1;S.aqB=null;rewardPower(q.rw);memo('🎯',aqTitle(q));renderQuest()})}}
@@ -147,8 +147,8 @@ function questIndexOf(id){return QUESTS.findIndex(q=>qHas(q,id))}
 function qNow(id){const q=S&&QUESTS[S.quest];return !!q&&!S.cleared&&S.qTalked&&S.qStory==null&&qHas(q,id)}/* いま受けている目標に、その小さな目標がある */
 function qAt(id){const qi=questIndexOf(id);if(qi<0)return false;return (S.quest>qi||S.quest===qi&&!!S.qTalked)}/* そのメインクエストを受けたあと */
 function qDone(id){const index=questIndexOf(id);if(index<0)return false;if(S.qStory===index)return false;return S.quest>index}
-const SUB_MAIN_AFTER={table1:'bed',chair2:'bed',farm10:'farm6',light3:'fire'};
-function subOfferReady(q){if(S.qStory!=null||QUEST_CLEAR_WAIT)return false;return WD!==0||!SUB_MAIN_AFTER[q.k]||qDone(SUB_MAIN_AFTER[q.k])}
+const SUB_MAIN_AFTER={table1:'bed',chair2:'bed',farm10:['farm6','fire'],light3:'fire'};/* 草原：このメインの目標（いくつかなら、ぜんぶ）がおわってから出す。畑を10は、ホノが来てから */
+function subOfferReady(q){if(S.qStory!=null||QUEST_CLEAR_WAIT)return false;const m=SUB_MAIN_AFTER[q.k];return WD!==0||!m||[].concat(m).every(id=>qDone(id))}
 const LEVEL_HELP={2:['benchbreak','chair2'],3:['bed3'],4:['farm10'],5:['toy2','deco3'],8:['room','paint','parasol']};
 function levelHelpKeys(){const out=[];for(const n in LEVEL_HELP){const main=qAt('lv'+n),side=SUBQ.some(q=>q.k.startsWith('lv_')&&q.n===+n&&(S.subSt||{})[q.k]>=2);if(main||side)out.push(...LEVEL_HELP[n])}return out}
 function subList(){const help=levelHelpKeys();if(waitingBellflowers())help.unshift('seedwait_gate','seedwait_food');return SUBQ.filter(q=>q.w==null||q.w===WD).sort((a,b)=>(help.includes(a.k)?0:1)-(help.includes(b.k)?0:1))}
@@ -412,7 +412,7 @@ function departScene(){const owner=S,session=VILLAGE_SESSION,alive=()=>S===owner
   DEPART_RUN=true;centerOn(TX*TS,TY*TS);gatherAt(TX,TY,()=>{if(!alive())return;if(isNight()){stop();DEPART_RETRY=performance.now()+5000;return}hold(true);villageTimeout(talk,400)},null,()=>{stop();DEPART_RETRY=performance.now()+20000})}/* 集まれなかったら、しばらくして集まるところから */
 /* ふしぎな種：せいれいにあげると、能力のどれかが上がる（パワーの強化とは別） */
 const UPK=[['atk','攻撃力'],['pow','はたらく速さ'],['spd','移動速度'],['sta','スタミナ'],['cap','持てる数']];
-const UPINC={atk:[10,20],pow:[10,20],spd:[10,20],sta:[10,20],cap:[1,2]},SEEDMAX={atk:60,pow:60,spd:60,sta:60,cap:6};/* ふしぎな種で1回にふえる数：[75%で,25%で]。ふしぎな種でふやせる上限 */
+const UPINC={atk:[10,20],pow:[2,4],spd:[2,4],sta:[2,4],cap:[1,2]},SEEDMAX={atk:60,pow:12,spd:12,sta:12,cap:6};/* ふしぎな種で1回にふえる数：[75%で,25%で]。ふしぎな種でふやせる上限 */
 function giveSeed(r){if((S.mseed||0)<1)return;const T=r.sst||(r.sst={}),L=UPK.filter(([k])=>(T[k]||0)<SEEDMAX[k]&&(k!=='atk'||r.elem==='fire'));/* 攻撃力は火の子だけ */if(!L.length)return toast(r.name+'は、これ以上ふしぎな種で強くならない');
   S.mseed--;const[k,nm]=pick(L),n=T[k]||0,U=UPINC[k],inc=Math.min(Math.random()<.75?U[0]:U[1],SEEDMAX[k]-n);T[k]=n+inc;
   if(k==='pow'||k==='spd'||k==='sta'){vrInt(r.vr);r.vr[k]=(r.vr[k]||0)+inc}
@@ -540,7 +540,7 @@ function migrateVolcanoQuests(s){/* 火山のクエストを、草原とちが�
   if(oldQ==='heatPath'&&!s.qTalked&&!s.flags.ashOn)s.flags.ashOn=true;
   const St=s.subSt||{},D=s.subDone||(s.subDone={});for(const k of['chair2','light3','lv_toy2','toy2','deco3','tree5','food40','room','paint','compost','fish5','lv_parasol','parasol','trap4','fbench2','fbed2','twbox1','yoganup']){if(D[k])continue;if(St[k]===3){St[k]=4;D[k]=1;s.pt=(s.pt||0)+10;s.totalPt=(s.totalPt||0)+10}/* 報告まちだった物は、たっせいにする */else{delete St[k];if(s.subSeen)delete s.subSeen[k];if(s.subB)delete s.subB[k];if(s.subArrived)delete s.subArrived[k]}}}
 const freeHere=()=>FREEG.filter(g=>g.w==null||g.w===WD);/* その土地のやりこみ */
-function checkFree(){if(!S.cleared)return;const D=S.freeDone||(S.freeDone={});for(const g of freeHere())if(!D[g.k]&&g.ok()){D[g.k]=1;S.pt+=g.rw;S.totalPt+=g.rw;toast('目標たっせい：'+g.t+'（パワー+'+g.rw+'）','good');memo('🎯',g.t)}}
+function checkFree(){if(!S.cleared)return;const D=S.freeDone||(S.freeDone={});for(const g of freeHere())if(!D[g.k]&&g.ok()){D[g.k]=1;S.pt+=g.rw;S.totalPt+=g.rw;if(typeof STATUE!=='undefined'&&STATUE>=0&&typeof juiceFly==='function'&&1)juiceFly(STATUE%W+.5,(STATUE/W|0),'pt',g.rw);toast('目標たっせい：'+g.t+'（パワー+'+g.rw+'）','good');memo('🎯',g.t)}}
 const DAYEV={hosaku:['🌾','豊作の日','収穫がひとつ多い'],oshaberi:['💬','おしゃべりの日','おしゃべりがはずむ。おしゃべり1回のパワー+0.9'],odayaka:['🌙','おだやかな夜','今夜の「コワイノ」が半分'],kaze:['🍃','風の強い日','ふしぎな種が3〜6こ落ちてくる'],kami:['⛩️','カミサマの訪問日','カミサマが遊びにくる'],hoshi:['✨','星空の夜','3時に寝ているせいれいのたのしさ+15'],mono:['🎁','ものひろいの日','村のあちこちに落とし物がある']};
 function killsSince(){/* 「夜をこえて、つよくなろう」：クエストが出てから追いはらったコワイノの数 */if(S.flags.kb==null)S.flags.kb=S.kills||0;return (S.kills||0)-S.flags.kb}
 function kgOpen(j){/* かげのあとが見えるか：そのマスと、左右・手前の5マスに物がない（草・茂み・木の下にかくれない） */const x=j%W,y=(j/W)|0;if(x<1||x>=W-1||y>=H-1)return false;for(const k of[j,j-1,j+1,j+W-1,j+W,j+W+1])if(S.obj[k])return false;return !(S.floor&&S.floor[j])&&S.ground[j]===0&&walk(j)}
@@ -556,9 +556,9 @@ function morning(){sfx('morning');diaryClose();if(typeof kdMorning==='function')
     if(k==='kami'){S.godVisit=true;S.godNextVisitDay=dayNo()+2;}
     if(k==='mono')monoDrops(4)}
   if(S.rain&&!(typeof stormNow==='function'&&stormNow()))toast(snowNow()?'今日は雪':'今日は雨');
-  {const d=dayNo(),ev={6:[[MINA,'#alarm|村が大きくなってきたねぇ。…でも、夜の「コワイノ」も、前より多い気がするよぉ。'],[POKO,'#nod|にぎやかになるほど、よってくるのかな…。']],
-}[d];
-   if(ev&&S.enemyOn&&!S.flags['day'+d]){const L=ev.filter(l=>S.res.some(r=>r.name===l[0]));if(L.length)talkOnce('day'+d,L)}/* さいごまで見てから「見た」に */}
+  {const d=dayNo(),EV={6:[[MINA,'#alarm|村が大きくなってきたねぇ。…でも、夜の「コワイノ」も、前より多い気がするよぉ。'],[POKO,'#nod|にぎやかになるほど、よってくるのかな…。']],
+};
+   for(const k in EV){const ev=EV[k];if(d<+k||!S.enemyOn||S.flags['day'+k]||S.res.length<3)continue;const L=ev.filter(l=>S.res.some(r=>r.name===l[0]));if(L.length){talkOnce('day'+k,L);break}}/* その日より後の朝で、せいれいが3人になってから。さいごまで見てから「見た」に */}
   checkFree();
   summonMorning();
 }

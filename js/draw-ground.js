@@ -56,6 +56,22 @@ function drawMatIc(c,k,cx,cy,sz){/* 素材のアイコン（仮の絵）：草�
   else if(k==='can'){c.fillStyle='#b9c0c8';c.fillRect(-6,-8,12,16);c.fillStyle='#d9dee3';c.fillRect(-6,-8,12,2.5);c.fillStyle='#e7a07a';c.fillRect(-6,-2,12,5);c.fillStyle='#8f969e';c.fillRect(-6,6,12,2)}
   c.restore()}
 function shadow(c,x,y,w,h){/* 足もとのかげ。画面に毎コマ描くときだけ、時間で向き（sunLean：朝は西・夕方は東）と長さ（sunLen）をかえる（地面の下絵にやきつける物はそのまま） */const L=(c===ctx?sunLen():1)-1,S0=c===ctx?sunLean():0;c.fillStyle='rgba(30,20,10,.22)';c.beginPath();c.ellipse(x+w*.45*S0,y-h*.6*L,w*(1+.5*Math.abs(S0)),h*(1+L),0,0,7);c.fill()}
+/* 生き物（飼う生き物・小さな生き物）の足もとのかげ：ドットのだ円（d：1ドットの大きさ、ゲームの点）。まわり1ドットはうすく、中はこく（DSHA）。
+   画面に毎コマ描くときは、足もとのかげ（shadow）と同じく、時間で向き（sunLean）と長さ（sunLen）をかえる */
+const DSHA=[.10,.20];
+function dotShadow(c,cx,y,hw,hh,al,d){if(!(al>0)||hw<1)return;d=d||1;const L=(c===ctx?sunLen():1),S0=c===ctx?sunLean():0;hw*=1+.5*Math.abs(S0);hh=Math.max(d,hh*L);cx+=Math.round(hw*.45*S0/d)*d;
+  const n=Math.max(1,Math.round(hh*2/d)),y0=y-Math.round(n/2)*d+d,fs=c.fillStyle;
+  for(let r=0;r<n;r++){const t=((r+.5)/n)*2-1,ho=Math.round(hw*Math.sqrt(Math.max(0,1-t*t))/d)*d,hi=Math.round((hw-1.5*d)*Math.sqrt(Math.max(0,1-t*t*1.35))/d)*d,yy=y0+r*d;if(ho<=0)continue;
+    c.fillStyle='rgba(40,30,20,'+(DSHA[0]*al).toFixed(3)+')';c.fillRect(cx-ho,yy,2*ho,d);
+    if(hi>0){c.fillStyle='rgba(40,30,20,'+(DSHA[1]*al).toFixed(3)+')';c.fillRect(cx-hi,yy,2*hi,d)}}
+  c.fillStyle=fs}
+/* チップの足もとのはば：絵の下のほう（すきとおっていない所の、下から30%の行）の、左のはし・右のはし（g64のドット）。チップごとに1回だけしらべる */
+function chipFoot(ch,im){if(ch._ft!==undefined)return ch._ft;if(!im||!im.ok)return null;let r=null;
+  try{const w=im.width,h=im.height,a=im.getContext('2d').getImageData(0,0,w,h).data;let top=-1,bot=-1;
+    for(let y=0;y<h&&top<0;y++)for(let x=0;x<w;x++)if(a[(y*w+x)*4+3]>0){top=y;break}
+    for(let y=h-1;y>=0&&bot<0;y--)for(let x=0;x<w;x++)if(a[(y*w+x)*4+3]>0){bot=y;break}
+    if(top>=0){const y1=Math.floor(bot-(bot-top+1)*.3);let l=w,rr=-1;for(let y=Math.max(0,y1);y<=bot;y++)for(let x=0;x<w;x++)if(a[(y*w+x)*4+3]>0){if(x<l)l=x;if(x>rr)rr=x}if(rr>=l)r={l,r:rr+1}}}catch(e){r=null}
+  ch._ft=r;return r}
 function drawBarren(c,i,x,y){
   const h=hash(i);
   c.fillStyle=WD===1?'#a39280':'#b3a37c';c.fillRect(x,y,TS,TS);/* 火山のふもとは灰まじりの土 */

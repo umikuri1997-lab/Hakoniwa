@@ -66,9 +66,9 @@ function tryEarthIntro(r){
 }
 ACT.fieldintro={start(r,a){if(!earthIntroValid(r,a))return false;faceTo(r,fieldStump(a.obj));r.bubble='';checkQuest();},done:(r,a)=>!earthIntroValid(r,a)||isNight()||hungry(r)||r.energy<10||!questVisitSafe(r,a.obj)};
 function fieldStoryFocus(id){const state=fieldStoryEnsure(id),step=FIELD_STORIES[id]?.[state?.step],j=step&&S.fieldSites?.[step.site];if(j!=null)panTo((j%W+sacredSpan()/2)*TS,((j/W|0)+sacredSpan()-1.4)*TS);}
-function fieldStoryTap(tx,ty){
+function fieldStoryTap(tx,ty,wx,wy){/* wx・wy（マスの小数）：画面のタップ。切り株の絵の所だけ（sacredTapHit）。なければ、マスで見る（テスト・思い出帳） */
   const q=fieldStoryCurrent();if(!q)return false;const state=fieldStoryEnsure(q.id),step=FIELD_STORIES[q.id][state.step],j=S.fieldSites?.[step.site];
-  if(j==null||tx<j%W||tx>j%W+sacredSpan()-1||ty<(j/W|0)-1||ty>(j/W|0)+sacredSpan()-1)return false;
+  if(j==null)return false;if(wx!=null?!sacredTapHit(j,wx,wy):tx<j%W||tx>j%W+sacredSpan()-1||ty<(j/W|0)-1||ty>(j/W|0)+sacredSpan()-1)return false;
   fieldStoryStart(q,false);return true;
 }
 /* 調べをはじめる。quiet：自動で続けるとき（知らせを出さない） */
@@ -136,7 +136,7 @@ function fieldWaitKeep(r,a){
   return !!step&&fieldCast(step).includes(r);
 }
 ACT.fieldwait={start(r,a){r.bubble='';if(a.obj!=null)faceTo(r,fieldStump(a.obj));},done:(r,a)=>!fieldWaitKeep(r,a)};
-function fieldStoryAnim(r){const pose=sacredPose(r);if(pose)return pose.anim;return r.act?.type==='storywait'?'storyListen':r.act?.type==='fieldstory'?FIELD_STORIES[r.act.fieldId]?.[r.act.phase]?.anim||'talk':['fieldwait','fieldintro','fieldassist','fieldgather'].includes(r.act?.type)?'talkthink':(r.act?.type==='cook'||r.act?.type==='craft'||r.act?.type==='proc')&&typeof workAnim==='function'?workAnim(r):r.act?.type==='fltend'?'tend':r.act?.type==='quirk'?'q'+r.act.k:r.act?.type==='critwatch'?(r.act.t<4?'point':'crit_'+r.act.k):r.act?.type==='rainjoy'?'qrain':r.act?.type==='stretch'?'qstretch':r.act?.type==='evt'?evAnim(r):r.act?.type==='sunset'?'sunset':r.act?.type==='vgift'?(r.act.said?'talkjoy':'sow'):r.act?.type;}/* 料理・もの作りは、進みぐあいで動きをかえる（workAnim） */
+function fieldStoryAnim(r){const pose=sacredPose(r);if(pose)return pose.anim;return r.act?.type==='storywait'?'storyListen':r.act?.type==='fieldstory'?FIELD_STORIES[r.act.fieldId]?.[r.act.phase]?.anim||'talk':['fieldwait','fieldintro','fieldassist','fieldgather'].includes(r.act?.type)?'talkthink':(r.act?.type==='cook'||r.act?.type==='craft'||r.act?.type==='proc')&&typeof workAnim==='function'?workAnim(r):r.act?.type==='fltend'?'tend':r.act?.type==='quirk'?'q'+r.act.k:r.act?.type==='critwatch'?(r.act.t<4?'point':'crit_'+r.act.k):r.act?.type==='rainjoy'?'qrain':r.act?.type==='snowman'?(r.act.t<r.act.dur-6?'qstone':'talkjoy'):r.act?.type==='stretch'?'qstretch':r.act?.type==='evt'?evAnim(r):r.act?.type==='sunset'?'sunset':r.act?.type==='vgift'?(r.act.said?'talkjoy':'sow'):r.act?.type;}/* 料理・もの作りは、進みぐあいで動きをかえる（workAnim） */
 function drawFieldStory(now,labelsOnly=false){
   if(!$('#dialog').hidden)return;const q=fieldStoryCurrent();if(!q)return;const state=fieldStoryState(q.id),step=FIELD_STORIES[q.id][state?.step||0],j=S.fieldSites?.[step.site];if(j==null)return;
   const x=(j%W+sacredSpan()/2)*TS,y=((j/W|0)+sacredSpan()-.45)*TS-hiAt(j)*LIFT,t=now/600;

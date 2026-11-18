@@ -8,12 +8,12 @@ let STAR=null;/* いま流れている流れ星（実時間。セーブしない
 function starTick(){/* 1秒に1回 */if(!S||S.free||IS_STORY_REPLAY||(typeof NOSAVE!=='undefined'&&NOSAVE))return;const d=dayNo(),h=hour(),st=S.starN||(S.starN={});
   if(st.d!==d&&h>=STARH0&&h<STARH1){st.d=d;st.at=Math.random()<(S.obj.includes('telescope')?STARPT:STARP)?STARH0+.3+Math.random()*(STARH1-STARH0-.8):-1}/* 20時に、今夜流れるか・何時かをきめる */
   if(st.at>0&&st.shown!==d&&h>=st.at&&h<STARH1&&!S.rain&&!STAR&&$('#dialog').hidden&&!sheet){st.shown=d;starStart()}}
-function starStart(){const now=performance.now(),k=Math.random();STAR={t0:now,x0:.62+k*.3,y0:.06+Math.random()*.08,x1:.18+k*.25,y1:.3+Math.random()*.1,tap:false};sfx('chime');
+function starStart(){const now=performance.now(),k=Math.random();STAR={t0:now,x0:.62+k*.3,y0:.06+Math.random()*.08,x1:.18+k*.25,y1:.3+Math.random()*.1,tap:false};/* 流れているあいだは、音を出さない */
   for(const r of S.res)if(starIdle(r))r.bubble='✨'}
 function starIdle(r){if(!r||r.hidden)return false;const a=r.act;if(!a)return true;if(a.stage==='walk')return false;return ['idle','wander','rest','chat','chatwait','sunset','quirk','critwatch','admire','ownseat','fish','play','patrol'].includes(a.type)}
 function starLook(r,now){return !!STAR&&now<STAR.t0+STARMS+1500&&starIdle(r)}
 function starHit(sx,sy,now){/* 星そのもの（頭と、すぐうしろの尾）のまわり STARHIT の中か */const p=Math.min(1,(now-STAR.t0)/STARMS),q=Math.max(0,p-.08),ax=(STAR.x0+(STAR.x1-STAR.x0)*p)*VW,ay=(STAR.y0+(STAR.y1-STAR.y0)*p)*VH,bx=(STAR.x0+(STAR.x1-STAR.x0)*q)*VW,by=(STAR.y0+(STAR.y1-STAR.y0)*q)*VH,dx=bx-ax,dy=by-ay,L2=dx*dx+dy*dy,t=L2?Math.max(0,Math.min(1,((sx-ax)*dx+(sy-ay)*dy)/L2)):0;return Math.hypot(sx-(ax+dx*t),sy-(ay+dy*t))<=STARHIT}
-function starTap(sx,sy){/* 流れ星そのものをタップしたときだけ、おねがい（ほかの所のタップは、ふつうのタップ） */const now=performance.now();if(!STAR||STAR.tap||now>STAR.t0+STARMS||!starHit(sx,sy,now))return false;STAR.tap=true;starWishPop();return true}
+function starTap(sx,sy){/* 流れ星そのものをタップしたときだけ、おねがい（ほかの所のタップは、ふつうのタップ） */const now=performance.now();if(!STAR||STAR.tap||now>STAR.t0+STARMS||!starHit(sx,sy,now))return false;STAR.tap=true;sfx('starkira');starWishPop();return true}
 function starWishPop(){const ov=el('<div class="idea-reveal" role="dialog" aria-modal="true"></div>'),cd=el('<div class="idea-card"><h2>流れ星におねがい</h2><p class="note">ひとつえらぼう。</p><div class="mgopts"></div></div>'),bx=cd.querySelector('.mgopts');
   for(const k in STARWISH){const b=el('<button class="btn" type="button" style="width:100%;margin-top:6px"></button>');b.textContent=STARWISH[k].n+'（'+STARWISH[k].d.replace('つぎの朝、','')+'）';b.onclick=()=>{S.starW={d:dayNo(),k};sfx('quest');toast('流れ星に「'+STARWISH[k].n+'」とおねがいした','good');logEv('流れ星におねがいした');ov.remove()};bx.appendChild(b)}
   ov.appendChild(cd);document.body.appendChild(ov)}
