@@ -319,7 +319,7 @@ def sweep(w, face):
 M('sweep', 8, 7/(2*PI), sweep)
 def fish(w, face):
     """つり：すわって、さおを前へ出し、ときどき小さくひく"""
-    p = sit({}, 6.0, 1.3); p.update(sN=1.0+0.08*S(w), bN=-0.3, prop='rod', sF=0.9, bF=-0.7, lean=0.05, hp=0.05)
+    p = sit({}, 6.0, 1.3); p.update(sN=1.0+0.08*S(w), kN=0.7, bN=-0.3, prop='rod', sF=0.9, bF=-0.7, lean=0.05, hp=0.05)
     return breathe(p, w, 0.5)
 M('fish', 8, 1.4/(2*PI), fish)
 def carry(w, face):

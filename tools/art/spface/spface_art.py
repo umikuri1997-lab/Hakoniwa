@@ -1,6 +1,6 @@
-"""せいれいの顔：つかれた顔（tired）・おなかがすいた顔（hungry）を、いまの顔の絵と同じ作り（1色のドット）で足す。
+"""せいれいの顔：つかれた顔（tired）・おなかがすいた顔（hungry：しょんぼりの目だけ。口・よだれはかかない）を、いまの顔の絵と同じ作り（1色のドット）で足す。
 python3 tools/art/faces/faces_art.py で chips.js とアトラスに入れる（なんどやっても同じ）。
-A は顔の色（木の色。ゲームで属性の色にかわる）、b はよだれの色（かわらない）。"""
+A は顔の色（木の色。ゲームで属性の色にかわる）。せいれいの顔に口はかかない（持ち主のきめ）。"""
 import os, sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 import chips
@@ -25,20 +25,13 @@ def two(L, R, gap):
 TE = ['AAAAAAA', '.AAAAA.', '.AAAAA.', '..AAA..']
 TIRED = two(TE, TE, 12)
 TIRED_S = ['AAAAAA', 'AAAAA.', '.AAAA.', '..AA..']
-# おなかがすいた顔：しょんぼりした目と、小さくあいた口から、よだれ
+# おなかがすいた顔：しょんぼりした目（口・よだれはかかない）
 SAD = ['.....A................A.....', '....AAA..............AAA....', '...AAAA..............AAAA...', '.AAAAAA..............AAAAA..',
        'AAAAAAA..............AAAAAAA', 'AAAAAAA..............AAAAAAA', '.AAAAAA..............AAAAAA.', '..AAAA................AAAA..',
        '...AA..................AA...']
-E = '.' * 28
-HUNGRY = SAD + [E, E,
-                '.' * 13 + 'AA' + '.' * 13,
-                '.' * 12 + 'AAAA' + '.' * 12,
-                '.' * 13 + 'AAb' + '.' * 12,
-                '.' * 15 + 'b' + '.' * 12,
-                '.' * 15 + 'B' + '.' * 12]
+HUNGRY = SAD
 SAD_S = ['.....AA', '....AAA', '...AAAA', '.AAAAAA', 'AAAAAAA', '.AAAAAA', '..AAAAA', '..AAAAA', '...AAA.']
-HUNGRY_S = [r + '..' for r in SAD_S] + ['.........', '.........',
-            '...AA....', '..AAA....', '...AAb...', '.....b...', '.....B...']
+HUNGRY_S = SAD_S
 
 NEW = {
     'sp:face#tired':   (img(TIRED), -13, -42),
