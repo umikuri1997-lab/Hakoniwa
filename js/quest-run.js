@@ -82,7 +82,7 @@ function questGives(q,g){g=g||q.gives||{};
     const after=g.watchNow?(hadW?()=>{S.pt+=BL.watch.pc;for(const k in BL.watch.mat)S.mat[k]=(S.mat[k]||0)+BL.watch.mat[k];toast('見張り台の分のパワーと素材をカミサマが返してくれた','good');checkQuest()}:()=>{setMode('build');sel='watch';renderPalette();toast('見張り台を置く場所をタップ')}):null;
     return after}
 /* 草原のかけら：村の想い・土地の復興・最後の防衛。それぞれ、もとから土地に残っていた力が応える */
-function giveShard(src){if(S.flags['sh_'+src])return;S.flags['sh_'+src]=true;S.shards=Math.min(3,(S.shards||0)+1);sfx('level');const nm=SHN(),c=WD===1?'':'（'+S.shards+'/3）';toast('「'+nm+'」を手に入れた！'+c,'good');logEv(nm+'を手に入れた');memo('💎',nm+'を手に入れた'+c)}
+function giveShard(src){if(S.flags['sh_'+src])return;S.flags['sh_'+src]=true;S.shards=Math.min(3,(S.shards||0)+1);sfx('level');const nm=SHN(),c=WD===1?'':'（'+S.shards+'/3）';toast('「'+nm+'」を手に入れた！'+c,'good');logEv(nm+'を手に入れた');memo('power',nm+'を手に入れた'+c)}
 /* 吹き出しは、最初に話す人から出す */
 function spkOK(w){return w===GOD?godHere():!!w&&S.res.some(r=>r.name===w&&!r.hidden)}
 function firstSpk(lines,fb){const w=lines&&lines[0]&&lines[0][0];return spkOK(w)?w:fb}
@@ -122,7 +122,7 @@ function renderQuest(){const q=QUESTS[Math.min(S.quest,QUESTS.length-1)];let pr=
   const qt=$('#questTxt');if(qt.dataset.k!==t+'|'+pr){if(qt.dataset.t&&qt.dataset.t!==t){const c=$('#questChip');if(c){c.classList.remove('qbump');void c.offsetWidth;c.classList.add('qbump')}}/* 目標がかわったら、札をはねさせる */qt.dataset.t=t;qt.dataset.k=t+'|'+pr;qt.textContent='';const m=document.createElement('span'),g=document.createElement('span');m.className='qm';g.className='qp';m.textContent=t;if(pr)pr.split('　').forEach((x,i)=>{const w=document.createElement('i');w.textContent=(i?'　':'')+x;g.appendChild(w)});qt.append(m,g)}/* 進みぐあいは「　」の区切りごとにまとめて、ことばのとちゅうで行をかえない *//* 進み具合は2行目に */
   const h=$('#questHow'),how=ng?ng.how:q.how||'';if(!h.hidden&&h.dataset.q==S.quest&&h.dataset.text===how)return;h.dataset.q=S.quest;h.dataset.text=how;h.hidden=true;h.innerHTML='<b>やりかた</b>';h.appendChild(document.createTextNode(how))}
 const NUSHI_T=[
-  {"open":[["フタバ","みんな、一緒に。あの木の下へ帰ろう。"],["ノドカ","ゆっくりで、だいじょうぶだよぉ。"]],"name":"草原のヌシ","nushi":["……大きくなったな。"],"world":[],"reu":[["U","木も。おまえも。",0,"nfF"],["F","……あのとき。"],["F","よかった、って言ったの……ヌシ様だったんだね。"],["U","ああ。"],["F","……遅いよ。",0,"stree:hug"],["U","待たせてしまった。"],["F","……。"],["F","みんなが、手伝ってくれたんだ。",0,"stree:group"],["F","ぼく、ひとりじゃ、何もわからなかった。"],["N","ぼくも、ひとりじゃ土をよけただけだったよぉ。",1],["H","おれは、石を温めただけだな。",1],["M","その後に、水を通せました。",1],["K","そして、ようやく声が届いた。",1],["U","……よい仲間に会えたな。"],["F","うん。"],["F","#teary|おかえりなさい。"],["U","……ただいま。",0,"stree:group"]],"next":[],get after(){return [[GOD,'#joy|'+GVOICE()+'ほっほ……おかえり、じゃのう。']]},"toast":"ステージクリア！","last":"草原にもどる"},
+  {"open":[["フタバ","みんな、いっしょに。あの木の下へ帰ろう。"],["ノドカ","ゆっくりで、だいじょうぶだよぉ。"]],"name":"草原のヌシ","nushi":["……大きくなったな。"],"world":[],"reu":[["U","木も。おまえも。",0,"nfF"],["F","……あのとき。"],["F","よかった、って言ったの……ヌシ様だったんだね。"],["U","ああ。"],["F","……遅いよ。",0,"stree:hug"],["U","待たせてしまった。"],["F","……。"],["F","みんなが、手伝ってくれたんだ。",0,"stree:group"],["F","ぼく、ひとりじゃ、何もわからなかった。"],["N","ぼくも、ひとりじゃ土をよけただけだったよぉ。",1],["H","おれは、石を温めただけだな。",1],["M","その後に、水を通せました。",1],["K","そして、ようやく声が届いた。",1],["U","……よい仲間に会えたな。"],["F","うん。"],["F","#teary|おかえりなさい。"],["U","……ただいま。",0,"stree:group"]],"next":[],get after(){return [[GOD,'#joy|'+GVOICE()+'ほっほ……おかえり、じゃのう。']]},"toast":"ステージクリア！","last":"草原にもどる"},
   {open:[[HOMURA,'夜をこえたよ…！','cheer'],[SHIZUKU,'みなさん、力をそそいでください。']],
    nushi:['#think|……ふう。ようやく、体があたたまってきた。','守り神よ、せいれいたちよ。この地の熱を取りもどしてくれて、礼を言う。','わたしは、この火山の主。ここの子らを生み、この山を見守ってきた者だ。草原のヌシとは、むかしからの知り合いだ。','#think|……あの影たちは、わたしの熱をうばっても、すこしもあたたまれなかったようだ。','……のこって、この地の火を守ってくれた子がいたな。礼を言う。','もどった熱をたどると、次は霧につつまれた水べの村が見える。水の流れが止まり、霧がはれないままだという。'],
    after:[[HOMURA,'#think hush|……ヌシ様。あたい、村のみんなを守れなかった。','vol:kneelNushi'],[HOMURA,'#nod|でも、守り神とシズクたちが来てくれた。……本当に、ありがとう。'],[SHIZUKU,'#teary|……はじめて、ちゃんと言いましたね。','vol:bump'],[HOMURA,'#joy|うるさいよ。'],[GOD,'おつかれさん〜！ 見とったぞい。'],[GOD,'次は「霧のみずべの村」じゃ。…まだ道が通じておらんのじゃ。道が通じたら知らせるぞい。'],[HOMURA,'あたいたちは、この村と温泉をまもるよ。また入りにおいで！','cheer'],[SHIZUKU,'お気をつけて。…ときどき、温泉にいらしてくださいね。']],toast:'ステージクリア！ 「霧のみずべの村」は、ただいま準備中',last:'村にもどる'}];
@@ -210,7 +210,7 @@ const NTALK=[[/* 草原のヌシ：守り神に話す（ひとつずつ、順番
   '#think|夕やけを見ると、思い出すことがある。さいごまで光ろうとする者のことを。',
   '花が咲くたび、この地のどこかで、新しい命がめざめる。……おまえのおかげだ。',
   'むかし、ここには、もっと多くの子らがいた。……いまも、風のなかに、その声がまざっている気がする。',
-  '#joy|子らは、わたしの足あとに、花の種をうえてまわっている。……ありがたいが、少しくすぐったい。',
+  '#joy|子らは、わたしのあしあとに、花のたねをうえてまわっている。……ありがたいが、少しくすぐったい。',
   '#think|むかしは、昼と夜にも、それを見守るヌシがいたのだがな。',
   '#think|昼と夜は、ふたつでひとつ。どちらかが欠けると、もう一方も、すこしずつ弱っていく。',
   '雨の日は、葉がよろこぶ。わたしも、すこしだけ、背がのびた気がする。',
@@ -233,7 +233,7 @@ const NPLAY=[[/* 草原：遊びにきた子と、ヌシ様の会話（0：遊�
   [[0,'ヌシ様、かくれんぼしよう！'],['U','わたしは、どこにかくれても、角が見えてしまうのだが。'],[0,'#joy|あはは、ほんとだ！']],
   [[0,'ヌシ様がいないあいだ、さみしかった？'],['U','#think|……ああ。かけらのなかで、ずっと、子らの声を聞いていた。']],
   [[0,'ねえヌシ様、草原は、むかしもこんなだった？'],['U','もっと花が多かった。……だが、いまの草原も、わたしは好きだ。']],
-  [[0,'ヌシ様の足あとに、花が咲いてる！'],['U','#joy|ふふ。おまえたちが、うえてくれたのだろう？']],
+  [[0,'ヌシ様のあしあとに、花が咲いてる！'],['U','#joy|ふふ。おまえたちが、うえてくれたのだろう？']],
   [[0,'ヌシ様、夜はこわくないの？'],['U','#think|夜は、休むための時間だ。……こわいものでは、なかったはずなのだがな。']],
   [[0,'ヌシ様、なでてもいい？'],['U','#think pet|……かまわん。……そこだ。耳のうしろが、すこしかゆい。']],
   [[0,'ヌシ様の背中、あったかいね。'],['U','日なたに長くいたからな。おまえも、すこし休んでいけ。']]],[/* 火のヌシ */

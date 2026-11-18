@@ -71,7 +71,7 @@ function growStoryTree(){
   if(WD!==0||S.free||S.obj.includes('tower'))return true;
   const j=S.sacredRoot;if(j==null||!sacredRootFits(j))return false;
   S.obj[j]='tower';for(const k of sacredCells(j).slice(1)){S.obj[k]='part';S.ref[k]=j;}S.hp[j]=BL.tower.hp;S.flags.shrine=true;
-  S.flags.treeBlessed=true;noteQuestPlacement('tower',j);recount();dirty=true;burst(j,'plant','none');memo('🌳','みんなで世話をした木が、御神木になった');return true;
+  S.flags.treeBlessed=true;noteQuestPlacement('tower',j);recount();dirty=true;burst(j,'plant','none');memo('grass','みんなで世話をした木が、御神木になった');return true;
 }
 const SACRED_ART=['story:stump','story:bud','story:leaf','story:sapling','story:tree'];/* 育ちぐあいごとの絵 */
 function sacredPose(r){const q=SACRED_POSES.get(r);return q&&q.state===S&&q.session===VILLAGE_SESSION&&performance.now()<q.until?q:null;}

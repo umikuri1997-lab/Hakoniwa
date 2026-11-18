@@ -9,7 +9,7 @@ const BOND5=new Set();/* なかよし100の子が3マス以内にいる子（毎
 function bondKey(a,b){return a.id<b.id?a.id+'_'+b.id:b.id+'_'+a.id}
 function bondOf(a,b){return a&&b&&a!==b&&S&&S.bond?S.bond[bondKey(a,b)]||0:0}
 function bondAdd(a,b,n,kind){if(!S||!a||!b||a===b||IS_STORY_REPLAY)return;if(kind!=='qr'&&qrPair(a,b))return;/* けんかの日は、なかよしがふえない */if(kind)(S.bondDid||(S.bondDid={}))[bondKey(a,b)]=kind;/* 2人でさいごにしたこと（消えたときの思い出） */const B=S.bond||(S.bond={}),k=bondKey(a,b),v0=B[k]||0,v=Math.min(BOND_MAX,v0+n);if(v===v0)return;B[k]=v;
-  if(v0<BOND_TALK&&v>=BOND_TALK){for(const x of[a,b])addFloat(x.x,x.y-1.4,'なかよし！');memo('🤝',a.name+'と'+b.name+'がなかよしになった');if(typeof letterQ==='function'){const w=pick([a,b]);const o=w===a?b:a;letterQ(w,'mate',{m:o.name},o.elem)}/* なかよしになったことを、手紙に */logEv(a.name+'と'+b.name+'がなかよしになった');{const pop={bond:[a.name,b.name],pair:[a,b].map(r=>({el:r.elem,vr:r.vr})),state:S};if(typeof juiceBondHeart==='function'){juiceBondHeart(a,b,BOND_TALK);villageTimeout(()=>SPOT_POPS.push(pop),J3HEARTMS+J3POPMS)}else SPOT_POPS.push(pop)}/* ハートがはじけてから、ポップアップ */omoiNote(a,b,false)}
+  if(v0<BOND_TALK&&v>=BOND_TALK){for(const x of[a,b])addFloat(x.x,x.y-1.4,'なかよし！');memo('heart',a.name+'と'+b.name+'がなかよしになった');if(typeof letterQ==='function'){const w=pick([a,b]);const o=w===a?b:a;letterQ(w,'mate',{m:o.name},o.elem)}/* なかよしになったことを、手紙に */logEv(a.name+'と'+b.name+'がなかよしになった');{const pop={bond:[a.name,b.name],pair:[a,b].map(r=>({el:r.elem,vr:r.vr})),state:S};if(typeof juiceBondHeart==='function'){juiceBondHeart(a,b,BOND_TALK);villageTimeout(()=>SPOT_POPS.push(pop),J3HEARTMS+J3POPMS)}else SPOT_POPS.push(pop)}/* ハートがはじけてから、ポップアップ */omoiNote(a,b,false)}
   else if(v0<BOND_PLAY&&v>=BOND_PLAY){omoiNote(a,b,true);if(typeof juiceBondHeart==='function')juiceBondHeart(a,b,BOND_PLAY)}
   if(v0<BOND_MAX&&v>=BOND_MAX&&typeof juiceBondHeart==='function')juiceBondHeart(a,b,BOND_MAX)}
 function bondSet(a,b,n){if(bondOf(a,b)<n)bondAdd(a,b,n-bondOf(a,b))}
@@ -26,7 +26,7 @@ const OMOI_VOICE={[POKO]:['#joy|{P}と、いっしょに来たかったんだ。
  [MINA]:['ふたりで来るとねぇ、なんだか、あったかいねぇ。','{P}といるとねぇ、土まで、にこにこしてる気がするよぉ。','#joy|{P}のこと、この木にも、見せてあげたかったんだぁ。','いそがなくていいよぉ。{P}と、ゆっくり見ていこうねぇ。']};
 const OMOI_KEYV={fire:['#joy|へへっ、{P}となら、どこへだって行けるぜ。','{P}は、おれが守る。……木のまえで言うと、てれるな。','{P}は、いいやつだぜ。おれが言うんだ、まちがいねえ。','#joy|{P}がとなりにいると、火が、いつもよりあったけえんだ。'],
  water:['{P}さんといっしょに来られて、うれしいです。','{P}さんのそばは、しずかな水面みたいに、心がおちつきます。','#joy|この木に、{P}さんのことを、つたえたかったんです。','{P}さんと歩いた道は、ぜんぶ、おぼえています。'],
- wind:['フッ…{P}となら、悪くないね。','フッ…風は気まぐれだけど、{P}のそばには、よく吹くんだ。','{P}と来ると、葉ずれの音まで、やさしく聞こえるよ。','フッ…{P}。きみといると、どこへも行きたくなくなるね。']};
+ wind:['フッ……{P}となら、悪くないね。','フッ……風は気まぐれだけど、{P}のそばには、よく吹くんだ。','{P}と来ると、葉ずれの音まで、やさしく聞こえるよ。','フッ……{P}。きみといると、どこへも行きたくなくなるね。']};
 const OMOI_ELV={wood:['#joy|{P}といっしょだと、花がもっときれいに見えるね。','{P}とね、この木が大きくなるの、ずっと見ていたいな。','#joy|{P}と、なかよしになったんだよ。木にも、聞こえたかな。','{P}のとなりにいると、葉っぱが、ぴんってなるんだ。'],
  water:['お水、{P}とふたりで、あげたよ。','{P}といるとね、心が、すうっと、すんでいくんだ。','#joy|{P}と見る水たまりは、空がふたつ分、うつるよ。','この木も、{P}のこと、好きになってくれるかな。'],
  fire:['あったかい？ {P}がとなりにいるから、ぽかぽかなんだ。','#joy|{P}といると、むねの火が、ぱちぱちするよ。','{P}のことは、ぼくが、あっためるからね。','{P}って、すごくたのもしいんだよ。木にも、おしえたくて。'],
@@ -42,7 +42,7 @@ function omoiScene(j){
   const Q=S.flags.omoiW||[];if(!Q.length)return false;if(isNight()){toast('御神木へ行くのは、朝になってから');return true}
   const pk=Q[0],pr=bondPair(pk);if(!pr){S.flags.omoiW=Q.slice(1);renderQuest();dirty=true;return false}/* 2人のどちらかが、もういない：この組はやめて、つぎの組を待つ */
   const [A,B]=pr;for(const r of pr)if(r.hidden){toast(r.name+'が、村にいません');return true}
-  if(S.enemies.some(e=>e.spawned&&!e.dead&&pr.some(r=>Math.hypot(e.x-r.x,e.y-r.y)<6))){toast('コワイノが近くにいます','warn');return true}
+  if(S.enemies.some(e=>e.spawned&&!e.dead&&pr.some(r=>Math.hypot(e.x-r.x,e.y-r.y)<6))){toast('「コワイノ」が近くにいます','warn');return true}
   const owner=S,session=VILLAGE_SESSION,run={state:S,session};OMOI_RUN=run;const span=sacredSpan(),by=(j/W|0)+span-1+.5,tx=storyTreeX(j);
   const alive=()=>S===owner&&VILLAGE_SESSION===session&&pr.every(r=>S.res.includes(r)&&!r.hidden)&&S.obj[j]==='tower';
   const hold=r=>{endAct(r);r.path=[];r.act={type:'idle',stage:'do',t:0,dur:999,omoiHold:1};r.face=r.x<tx?1:-1};
@@ -78,13 +78,13 @@ const BOND_TALKS={
  'フタバ|ノドカ':[['フタバ','ノドカ、きょうも畑、いっしょに見てまわろうよ！'],['ノドカ','いいよぉ。フタバといると、時間があっというまだねぇ。'],['フタバ','#joy|えへへ。ぼくもね、ノドカのとなりだと、なんだか安心するんだ。'],['ノドカ','#joy|ふふ。じゃあ、これからも、となりにいようねぇ。']],
  'フタバ|ホノ':[['ホノ','おい、フタバ。ゆうべ、家の窓からずっとこっちを見てたろ。'],['フタバ','#surprise|えっ、気づいてたの？'],['ホノ','あたりめえだ。……見ててくれるやつがいると、なんだか力が出るんだよな。'],['フタバ','#joy|じゃあ、こんどの夜も、ずっと見てるね！']],
  'フタバ|アオ':[['アオ','フタバさん、さっきは、かわいた畑を教えてくれて助かりました。'],['フタバ','#joy|えへへ、葉っぱがしょんぼりしてたから、すぐわかったよ！'],['アオ','#joy|よく見ているんですね。……なんだか、うれしいです。'],['フタバ','こんどは、ぼくがアオに、花の冠の作りかたを教えてあげる！']],
- 'フタバ|フウ':[['フウ','フッ…フタバ、風が、きみの好きな花のにおいを運んできたよ。'],['フタバ','#surprise|ほんと？ どっちから？'],['フウ','日のあたる、あの丘のほうさ。……いっしょに行ってみるかい？'],['フタバ','#joy|行く行く！ フウと歩くと、どこでも楽しいんだ！']],
+ 'フタバ|フウ':[['フウ','フッ……フタバ、風が、きみの好きな花のにおいを運んできたよ。'],['フタバ','#surprise|ほんと？ どっちから？'],['フウ','日のあたる、あの丘のほうさ。……いっしょに行ってみるかい？'],['フタバ','#joy|行く行く！ フウと歩くと、どこでも楽しいんだ！']],
  'ノドカ|ホノ':[['ホノ','ノドカ、さっき運んでた石、重くなかったか？'],['ノドカ','へいきだよぉ。ホノこそ、ゆうべはおつかれさまぁ。'],['ホノ','#joy|へっ……おまえにそう言われると、つかれがとんでくぜ。'],['ノドカ','ふふ。じゃあ、きょうはいっしょに、ひなたぼっこしようねぇ。']],
  'ノドカ|アオ':[['アオ','ノドカさん、畑の土が、やわらかくなっていますね。'],['ノドカ','アオが水をあげてくれるから、土もよろこんでるんだよぉ。'],['アオ','#joy|土と水で、いっしょに畑をそだてているんですね。'],['ノドカ','そうだねぇ。アオとなら、もっといい畑になるよぉ。']],
- 'ノドカ|フウ':[['フウ','ノドカ、きみのそばは、風がやさしくなる気がするよ。'],['ノドカ','そうなのぉ？ ぼくは、のんびりしてるだけだよぉ。'],['フウ','フッ…そののんびりが、いいのさ。'],['ノドカ','#joy|じゃあ、きょうは、いっしょにのんびりしようかぁ。']],
+ 'ノドカ|フウ':[['フウ','ノドカ、きみのそばは、風がやさしくなる気がするよ。'],['ノドカ','そうなのぉ？ ぼくは、のんびりしてるだけだよぉ。'],['フウ','フッ……そののんびりが、いいのさ。'],['ノドカ','#joy|じゃあ、きょうは、いっしょにのんびりしようかぁ。']],
  'ホノ|アオ':[['ホノ','アオ、ゆうべのたき火、しずめてくれたのは、おまえだろ。'],['アオ','はい。風が出てきたので、念のためです。'],['ホノ','……たすかったぜ。おれ、つい火を大きくしちまうからな。'],['アオ','#joy|火と水で、ちょうどいいですね。これからも、よろしくおねがいします。']],
- 'ホノ|フウ':[['フウ','ホノ、きみの火は、風にのると、よく燃えるね。'],['ホノ','へっ、おまえの風がいいからだぜ。'],['フウ','フッ…それなら、夜の見まわりも、ふたりで行こうか。'],['ホノ','#joy|おう！ たのもしいぜ。']],
- 'アオ|フウ':[['フウ','アオ、池の水面が、きょうはとてもしずかだね。'],['アオ','はい。風がやさしいからだと思います。……フウさんのおかげですね。'],['フウ','フッ…ほめられると、てれるな。'],['アオ','#joy|ふふ。また、いっしょに池をながめましょう。']],
+ 'ホノ|フウ':[['フウ','ホノ、きみの火は、風にのると、よく燃えるね。'],['ホノ','へっ、おまえの風がいいからだぜ。'],['フウ','フッ……それなら、夜の見まわりも、ふたりで行こうか。'],['ホノ','#joy|おう！ たのもしいぜ。']],
+ 'アオ|フウ':[['フウ','アオ、池の水面が、きょうはとてもしずかだね。'],['アオ','はい。風がやさしいからだと思います。……フウさんのおかげですね。'],['フウ','フッ……ほめられると、てれるな。'],['アオ','#joy|ふふ。また、いっしょに池をながめましょう。']],
  'ホムラ|シズク':[['ホムラ','シズク、温泉の湯かげん、きょうもばっちりだったよ。'],['シズク','ホムラさんが、まきをくべてくれたからですよ。'],['ホムラ','#joy|へへっ。あんたとなら、どんな仕事も楽しいね。'],['シズク','#joy|わたしもです。これからも、よろしくおねがいしますね。']]
 };
 /* どの組でも：属性の組ごと。0・1 は ELEM_KEYS の順で前・うしろの子。@0・@1 は名前。言いかたは chatTone で属性に合わせる */
@@ -110,26 +110,26 @@ const BOND_TALKS2={
  'フタバ|ノドカ':[['ノドカ','フタバ、きょうの畑、実が赤くなってたよぉ。'],['フタバ','#surprise|ほんと！？ はじめに見つけたの、ノドカなんだね。'],['ノドカ','ふふ。となりで見てると、フタバの好きな物、わかってきちゃったぁ。'],['フタバ','#joy|えへへ。ぼくも、ノドカの好きな物、こっそりおぼえてるんだよ！']],
  'フタバ|ホノ':[['フタバ','ホノ、ゆうべも、ちゃんと窓から見てたよ。'],['ホノ','おう。……一回だけ、こっちに手をふったろ。'],['フタバ','#shy|あっ、見えてた？'],['ホノ','#joy|へっ。あれのおかげで、さいごまで立ってられたんだぜ。']],
  'フタバ|アオ':[['フタバ','アオ、花の冠、とちゅうまでできてるね！'],['アオ','はい。でも、ここの花のとめかたが、うまくいかなくて……。'],['フタバ','#point|ここはね、くきを二回まわすの。ほら、こう！'],['アオ','#joy|あっ、とまりました！ フタバさん、先生みたいです。']],
- 'フタバ|フウ':[['フウ','フタバ、あの丘の花、きょうもさいていたよ。'],['フタバ','#joy|また行こうよ！ こんどは、ぼくが道をあんないする！'],['フウ','フッ…きみが前を歩くと、風もついていきたくなるね。'],['フタバ','えへへ。じゃあ、フウはうしろで、風をふかせてね！']],
+ 'フタバ|フウ':[['フウ','フタバ、あの丘の花、きょうもさいていたよ。'],['フタバ','#joy|また行こうよ！ こんどは、ぼくが道をあんないする！'],['フウ','フッ……きみが前を歩くと、風もついていきたくなるね。'],['フタバ','えへへ。じゃあ、フウはうしろで、風をふかせてね！']],
  'ノドカ|ホノ':[['ホノ','ノドカ、こないだのひなたぼっこ、またやらねえか。'],['ノドカ','#surprise|ホノから言ってくれるなんて、めずらしいねぇ。'],['ホノ','……あれのあとは、夜もよくねむれたんだよ。'],['ノドカ','#joy|ふふ。じゃあ、きょうもいっしょに、ぽかぽかしようねぇ。']],
  'ノドカ|アオ':[['アオ','ノドカさん、畑のはしの土、少しかたくなっていました。'],['ノドカ','あそこは、水がとどきにくいんだよぉ。'],['アオ','では、わたしが水をもっていきます。ノドカさんは、たがやしてくれますか？'],['ノドカ','#joy|うん。アオとなら、どこでもいい畑になるねぇ。']],
- 'ノドカ|フウ':[['フウ','ノドカ、また、のんびりしにきたよ。'],['ノドカ','いらっしゃい。きょうは、雲がゆっくりだねぇ。'],['フウ','フッ…きみのとなりだと、雲の動きまでよく見える。'],['ノドカ','#joy|ふたりで見ると、ゆっくりなのも楽しいねぇ。']],
+ 'ノドカ|フウ':[['フウ','ノドカ、また、のんびりしにきたよ。'],['ノドカ','いらっしゃい。きょうは、雲がゆっくりだねぇ。'],['フウ','フッ……きみのとなりだと、雲の動きまでよく見える。'],['ノドカ','#joy|ふたりで見ると、ゆっくりなのも楽しいねぇ。']],
  'ホノ|アオ':[['アオ','ホノさん、ゆうべの火、ちょうどいい大きさでしたね。'],['ホノ','おう。おまえに言われてから、気をつけてるんだ。'],['アオ','#joy|うれしいです。でも、大きくなったら、また、わたしがしずめますね。'],['ホノ','へっ。たのんだぜ、相棒。']],
- 'ホノ|フウ':[['ホノ','フウ、ゆうべの見まわり、おまえが先に気づいたよな。'],['フウ','フッ…風が、あやしいにおいを運んできたのさ。'],['ホノ','おれは火で、おまえは風。ふたりなら、見のがさねえな。'],['フウ','#joy|ああ。こんどの夜も、ふたりで行こう。']],
- 'アオ|フウ':[['アオ','フウさん、きょうの池、さざなみが歌っているみたいです。'],['フウ','フッ…きみに聞かせたくて、すこしだけ風をふかせたのさ。'],['アオ','#shy|……そうだったんですね。'],['フウ','また、ふたりで聞きにこよう。']],
+ 'ホノ|フウ':[['ホノ','フウ、ゆうべの見まわり、おまえが先に気づいたよな。'],['フウ','フッ……風が、あやしいにおいを運んできたのさ。'],['ホノ','おれは火で、おまえは風。ふたりなら、見のがさねえな。'],['フウ','#joy|ああ。こんどの夜も、ふたりで行こう。']],
+ 'アオ|フウ':[['アオ','フウさん、きょうの池、さざなみが歌っているみたいです。'],['フウ','フッ……きみに聞かせたくて、すこしだけ風をふかせたのさ。'],['アオ','#shy|……そうだったんですね。'],['フウ','また、ふたりで聞きにこよう。']],
  'ホムラ|シズク':[['シズク','ホムラさん、きのうの温泉、お客さんがよろこんでいました。'],['ホムラ','#joy|ほんとかい？ あんたの湯かげんのおかげだよ。'],['シズク','ホムラさんの火があるから、湯がやわらかくなるんです。'],['ホムラ','へへっ。あたいたち、いい組だね。']]
 };
 const BOND_TALKS3={
  'フタバ|ノドカ':[['フタバ','ノドカ、ぼく、思いだしたんだ。はじめて畑を見てまわった日のこと。'],['ノドカ','ふふ。あの日から、ずうっととなりだねぇ。'],['フタバ','#heart|うん。これからも、となりにいてね。'],['ノドカ','#joy|やくそくだよぉ。ずうっと、だよぉ。']],
  'フタバ|ホノ':[['ホノ','フタバ。おれ、夜がこわくなくなったんだ。'],['フタバ','#surprise|ホノでも、こわかったの？'],['ホノ','……すこしな。でも、見ててくれるやつがいるって、わかってるからよ。'],['フタバ','#joy|ずっと見てる。それで、朝になったら、いちばんにおかえりって言うね！']],
  'フタバ|アオ':[['アオ','フタバさん、見てください。花の冠、ひとりで作れました。'],['フタバ','#joy|わあ……！ ぼくのより、きれいかも！'],['アオ','#shy|これは、フタバさんに。教えてくれたお礼です。'],['フタバ','#heart|えへへ……ぼく、ずっと、たいせつにするね。']],
- 'フタバ|フウ':[['フタバ','フウ、ぼくね、フウと行った場所、ぜんぶおぼえてるよ。'],['フウ','フッ…ぼくもさ。風は、なんでもわすれてしまうはずなのに。'],['フタバ','#surprise|そうなの？'],['フウ','#joy|きみと歩いた道だけは、どこへふいても、わすれないんだ。']],
+ 'フタバ|フウ':[['フタバ','フウ、ぼくね、フウと行った場所、ぜんぶおぼえてるよ。'],['フウ','フッ……ぼくもさ。風は、なんでもわすれてしまうはずなのに。'],['フタバ','#surprise|そうなの？'],['フウ','#joy|きみと歩いた道だけは、どこへふいても、わすれないんだ。']],
  'ノドカ|ホノ':[['ノドカ','ホノ、ゆうべも、おつかれさまぁ。'],['ホノ','おう。……なあ、ノドカ。おまえがいる村だから、守りたくなるんだぜ。'],['ノドカ','#surprise|えへへ、てれちゃうよぉ。'],['ホノ','#joy|朝になったら、またひなたぼっこな。それが、おれのごほうびだ。']],
  'ノドカ|アオ':[['ノドカ','アオ、見てぇ。畑ぜんぶ、ふかふかになったよぉ。'],['アオ','#joy|ほんとうです。水も、すみずみまでとどいています。'],['ノドカ','土と水で、ここまでできたんだねぇ。'],['アオ','#heart|はい。ノドカさんとだから、できたんだと思います。']],
- 'ノドカ|フウ':[['ノドカ','フウ、きょうは、どこにも行かないのぉ？'],['フウ','フッ…自由な風が、とまっていたくなる場所もあるのさ。'],['ノドカ','#surprise|それって……。'],['フウ','#joy|きみのとなりだよ、ノドカ。']],
+ 'ノドカ|フウ':[['ノドカ','フウ、きょうは、どこにも行かないのぉ？'],['フウ','フッ……自由な風が、とまっていたくなる場所もあるのさ。'],['ノドカ','#surprise|それって……。'],['フウ','#joy|きみのとなりだよ、ノドカ。']],
  'ホノ|アオ':[['ホノ','アオ。おれ、火が強すぎるって、ずっと言われてきたんだ。'],['アオ','……はい。'],['ホノ','でも、おまえがいると、思いきり燃えてもいいって思えるんだよ。'],['アオ','#joy|はい。ホノさんの火は、わたしが、ちょうどよくしますから。']],
- 'ホノ|フウ':[['フウ','ホノ、背中をあずけられる相手は、きみだけだよ。'],['ホノ','#surprise|……おまえ、そういうこと、さらっと言うよな。'],['フウ','フッ…風は、思ったことをかくさないのさ。'],['ホノ','#joy|へっ。おれもだぜ、フウ。どこまでもいっしょに行こうな。']],
- 'アオ|フウ':[['フウ','アオ、池をながめるの、きょうで何回めだろうね。'],['アオ','数えきれません。でも、いつも少しずつちがう池でした。'],['フウ','フッ…となりにいるきみも、いつも少しずつちがって見えたよ。'],['アオ','#shy|……これからも、いっしょにながめてください。']],
+ 'ホノ|フウ':[['フウ','ホノ、背中をあずけられる相手は、きみだけだよ。'],['ホノ','#surprise|……おまえ、そういうこと、さらっと言うよな。'],['フウ','フッ……風は、思ったことをかくさないのさ。'],['ホノ','#joy|へっ。おれもだぜ、フウ。どこまでもいっしょに行こうな。']],
+ 'アオ|フウ':[['フウ','アオ、池をながめるの、きょうで何回めだろうね。'],['アオ','数えきれません。でも、いつも少しずつちがう池でした。'],['フウ','フッ……となりにいるきみも、いつも少しずつちがって見えたよ。'],['アオ','#shy|……これからも、いっしょにながめてください。']],
  'ホムラ|シズク':[['シズク','ホムラさん、わたし、この村に来てよかったです。'],['ホムラ','#surprise|どうしたんだい、あらたまって。'],['シズク','ホムラさんがいたから、ここが、わたしの帰る場所になったんです。'],['ホムラ','#joy|……あたいもだよ。これからも、ずっといっしょだからね。']]
 };
 /* 属性の組ごと（BOND_GEN と同じ形） */
@@ -230,13 +230,13 @@ function deathMateLines(m,d){const n=d.name;
     fireA:['#danger hush|……$？ うそでしょ……！','#danger hush|$！ ……ねえ、目をあけなよ……！','#danger hush|……まさか。$が……？','#danger hush|……$？ じょうだんは、よしなよ……。'],
     fireB:['#danger hush|……$？ おい、うそだろ……！','#danger hush|$！ ……おい、へんじしろよ……！','#danger hush|……まさか。$が……？','#danger hush|……$？ じょうだんだろ、なあ……。'],
     water:['#worry hush|……$さん？ ……$さん！','#worry hush|……え？ $さんが……？','#worry hush|$さん……どこへ、行ってしまったんですか……？','#worry hush|……うそです。さっきまで、そこにいたのに……。'],
-    wind:['#worry hush|……$？ ……風に、まぎれてしまったのかい。','#worry hush|……$。きみの気配が、どこにもないんだ。','#worry hush|……フッ…じょうだんだろう？ $……。','#worry hush|あれ……？ $、かくれんぼかい……？','#worry hush|$……。さっきまで、わらっていたのに……。']},
+    wind:['#worry hush|……$？ ……風に、まぎれてしまったのかい。','#worry hush|……$。きみの気配が、どこにもないんだ。','#worry hush|……フッ……じょうだんだろう？ $……。','#worry hush|あれ……？ $、かくれんぼかい……？','#worry hush|$……。さっきまで、わらっていたのに……。']},
     C={wood:['#cry|……もっと、いっしょにいたかったよ……。','#cry|……まだ、いっしょにしたいこと、いっぱいあったのに……。','#cry|……ひとりにしないでよ……。','#cry|……ありがとうって、もっと、言えばよかった……。'],
     earth:['#cry|……もっと、いっしょにいたかったよぉ……。','#cry|……まだ、いっしょにしたいこと、いっぱいあったのにねぇ……。','#cry|……さみしいよぉ……。','#cry|……ゆっくりでいいから、もどってきてほしいよぉ……。'],
     fireA:['#cry|……もっと、いっしょにいたかったよ。','#cry|……守るって、決めてたのに……。','#cry|……泣かないつもりだったのにさ……。','#cry|……まだ、あんたに言ってないこと、あったのに。'],
     fireB:['#cry|……ちくしょう。もっと、いっしょにいたかったぜ……。','#cry|……守るって、決めてたのによ……。','#cry|……なんでだよ。なんで、おまえなんだよ……。','#cry|……まだ、言ってねえこと、あったのによ……。'],
     water:['#cry|……もっと、いっしょにいたかったです……。','#cry|……まだ、お礼も、ちゃんと言えていないのに……。','#cry|……こんなの、いやです……。','#cry|……となりが、こんなに、しずかなんて……。'],
-    wind:['#cry|……もっと、となりにいたかったよ。','#cry|……風は、いつか止むものだけど……こんなに早いなんてね。','#cry|……フッ…泣くのは、にあわないのにな……。','#cry|……きみのいない風は、つめたいね。','#cry|……まだ、いっしょに行きたい所、あったのにな……。']};
+    wind:['#cry|……もっと、となりにいたかったよ。','#cry|……風は、いつか止むものだけど……こんなに早いなんてね。','#cry|……フッ……泣くのは、にあわないのにな……。','#cry|……きみのいない風は、つめたいね。','#cry|……まだ、いっしょに行きたい所、あったのにな……。']};
   const k=elemKey(m),a=A[k]?k:'wood',c=C[k]?k:'wood';return [[m.name,pickFresh('dmA:'+a,A[a]).replace(/\$/g,n)],[m.name,bondMemLine(m,d)],[m.name,pickFresh('dmC:'+c,C[c])]]}
 
 /* ---------- 同じ夜にいっしょに守る（見張り台・夜の見まわり・こもれびのまもりについて行く） ---------- */
@@ -277,7 +277,7 @@ function reunionLines(q,m){const e=goneEntry(q.name)||{},k=bondKey(q,m),T=(r,t,i
   if(!back){const did=(S.bondDid||{})[k]||'';if(/^play:/.test(did)&&BL[did.slice(5)])back='#joy|また、いっしょに'+BL[did.slice(5)].name+'で遊ぼうね。';else back=RE_DIDL[did]||RE_DIDL.any}
   L.push(T(q,back,3),T(m,'#joy big|……うん！ おかえり、$！',4));return L}
 function reunionJoy(q,m){/* 会話のあと：2人で向かい合ってはねる。まわりの子も、はくしゅ */if(!S.res.includes(q)||!S.res.includes(m))return;const now=performance.now();q.face=m.x>=q.x?1:-1;m.face=-q.face;for(const r of[q,m]){JUMP.set(r,now);JOYU.set(r,now+3000);r.bubble='💕';fxSpr('hearts',r.x*TS,(r.y-.7)*TS);addFloat(r.x,r.y-1.3,'おかえり！','#ffd6e6')}
-  sfx('good');for(const r of S.res)if(r!==q&&r!==m&&!r.hidden&&Math.hypot(r.x-q.x,r.y-q.y)<8){JUMP.set(r,now+300);JOYU.set(r,now+2500);r.bubble='👏'}bondAdd(q,m,3,'tour');q.reWith={n:m.name,until:dayNo()+RE_DAYS};m.reWith={n:q.name,until:dayNo()+RE_DAYS};const ge=goneEntry(q.name);if(ge&&(ge.fl||[]).some(k=>FLOWERS.has(S.obj[k])||S.obj[k]==='sprout'))S.rvq={q:q.id,m:m.id,t:S.t+30};logEv(m.name+'と'+q.name+'が、また会えた');if(typeof letterQ==='function')letterQ(q,'back',{m:m.name});memo('🌱',m.name+'と'+q.name+'が、また会えた')}
+  sfx('good');for(const r of S.res)if(r!==q&&r!==m&&!r.hidden&&Math.hypot(r.x-q.x,r.y-q.y)<8){JUMP.set(r,now+300);JOYU.set(r,now+2500);r.bubble='👏'}bondAdd(q,m,3,'tour');q.reWith={n:m.name,until:dayNo()+RE_DAYS};m.reWith={n:q.name,until:dayNo()+RE_DAYS};const ge=goneEntry(q.name);if(ge&&(ge.fl||[]).some(k=>FLOWERS.has(S.obj[k])||S.obj[k]==='sprout'))S.rvq={q:q.id,m:m.id,t:S.t+30};logEv(m.name+'と'+q.name+'が、また会えた');if(typeof letterQ==='function')letterQ(q,'back',{m:m.name});memo('leaf',m.name+'と'+q.name+'が、また会えた')}
 function reunionTick(r,day){if(!r.reTalk||!day||sevBusy()||r.hidden)return;const m=S.res.find(x=>x.name===r.reTalk&&!x.hidden);delete r.reTalk;if(!m)return;const q=r,owner=S,key='ru'+q.id+'_'+dayNo();if(S.flags[key])return;
   const L=reunionLines(q,m),P=S.pendTalk||(S.pendTalk={});P[key]=L;dialog(L,()=>{if(S!==owner)return;S.flags[key]=1;delete P[key];reunionJoy(q,m)})}
 /* ---------- けんかと仲なおり ----------
@@ -312,7 +312,7 @@ function qrMakeTalk(g,a){const Q=S.qr;if(!Q)return;const t=S.res.find(x=>x.id===
   faceTo(g,(t.y|0)*W+(t.x|0));t.face=g.x>=t.x?1:-1;if(a.food){S.fs[a.food]=Math.max(0,(S.fs[a.food]||0)-1);syncFood()}
   const L=[T(g,a.food?'#sigh give|……これ、$の好きな'+FOODS[a.food].name+'。……あげる。':'#sigh give|……これ、$に、つんできたんだ。',0),T(g,ga?'……きのうは、言いすぎた。ごめんね。':QR_SORRY[Q.why],1),T(t,ga?'#teary|……ぼくも、ごめんね。……ありがとう。':'#teary|……ぼくも、言いすぎた。ごめん。',2),T(g,'#joy|……じゃあ、仲なおり、だね。',3)];
   dialog(L,()=>{if(S!==owner)return;a.fin=1;if(a.food&&typeof prefKnow==='function')prefKnow(t,'fd');/* なかよしが、好きな料理を言った */if(t.act&&t.act.type==='qwait')t.act.fin=1;const now=performance.now();for(const r of[g,t]){JUMP.set(r,now);JOYU.set(r,now+2500);r.bubble='💕';fxSpr('hearts',r.x*TS,(r.y-.7)*TS)}sfx('good');
-    (S.qMem||(S.qMem={}))[k]={why:Q.why,w:Q.w,d:dayNo()};delete S.qr;bondAdd(g,t,3,'qr');memo('💕',g.name+'と'+t.name+'が仲なおりした');if(typeof letterQ==='function'){const w=pick([g,t]);letterQ(w,'make',{m:(w===g?t:g).name})}/* 仲なおりの手紙 */logEv(g.name+'と'+t.name+'が仲なおりした')})}
+    (S.qMem||(S.qMem={}))[k]={why:Q.why,w:Q.w,d:dayNo()};delete S.qr;bondAdd(g,t,3,'qr');memo('heart',g.name+'と'+t.name+'が仲なおりした');if(typeof letterQ==='function'){const w=pick([g,t]);letterQ(w,'make',{m:(w===g?t:g).name})}/* 仲なおりの手紙 */logEv(g.name+'と'+t.name+'が仲なおりした')})}
 /* よみがえったあとの日常：お墓まいりの花を2人で見にいき、よみがえった子がお礼の花を植える（revisit）。RE_DAYS 日のあいだ、いっしょに遊ぶ・ごはん・となりで寝る（reWith） */
 const RE_DAYS=3;
 function reWithP(r){const w=r&&r.reWith;if(!w)return null;if(dayNo()>=w.until){delete r.reWith;return null}const p=S.res.find(x=>x.name===w.n&&!x.hidden);return p||null}
@@ -326,15 +326,15 @@ function revisitTick(day){const R=S.rvq;if(!R||!day||S.t<R.t||hour()<7||hour()>=
 function revisitTalk(q,m,a){const e=goneEntry(q.name)||{},n=(e.fl||[]).filter(k=>FLOWERS.has(S.obj[k])||S.obj[k]==='sprout').length,T=(r,t,i)=>[r.name,chatTone(t,r,i).replace(/\$/g,(r===m?q:m).name)],owner=S,end=()=>{for(const r of[q,m])if(r.act&&r.act.type==='rvisit')r.act.fin=1};
   dialog([T(q,'#surprise|……この花、もしかして……？',0),T(m,n>1?'……うん。$がいないあいだ、ここに植えにきてたんだ。':'……うん。$がいないあいだに、ここに植えたんだ。',1),T(q,'#teary|……ありがとう。……じゃあ、こんどは、ぼくが植えるね。',2)],()=>{if(S!==owner)return;
     const sp=mournSpot({elem:m.elem,j:a.obj});if(sp){faceTo(q,sp.k);S.obj[sp.k]=sp.id;(S.bud||(S.bud={}))[sp.k]=callDay()+1;recount();plantSparkle(sp.k,sp.id);(e.fl||(e.fl=[])).push(sp.k)}
-    villageTimeout(()=>{if(S!==owner)return;dialog([T(m,'#joy|……ならんで咲いたら、きっと、きれいだね。',3)],()=>{if(S!==owner)return;const now=performance.now();for(const r of[q,m]){JUMP.set(r,now);JOYU.set(r,now+2500);fxSpr('hearts',r.x*TS,(r.y-.7)*TS)}sfx('good');bondAdd(q,m,2,'tour');memo('🌼',q.name+'が、'+m.name+'にお礼の花を植えた');end()})},1600)})}
+    villageTimeout(()=>{if(S!==owner)return;dialog([T(m,'#joy|……ならんで咲いたら、きっと、きれいだね。',3)],()=>{if(S!==owner)return;const now=performance.now();for(const r of[q,m]){JUMP.set(r,now);JOYU.set(r,now+2500);fxSpr('hearts',r.x*TS,(r.y-.7)*TS)}sfx('good');bondAdd(q,m,2,'tour');memo('grass',q.name+'が、'+m.name+'にお礼の花を植えた');end()})},1600)})}
 /* さいごのひとこと（消える子が、なかよしの子へ。なかよしがいなければ、みんなへ）。$M はなかよしの名前 */
 const LASTW={wood:['#teary hush|……$M……ごめんね……。','#teary hush|……$M、ありがとう……。たのしかった、よ……。','#teary hush|……$M……また、あそぼうね……。'],
  earth:['#teary hush|……$M……ごめんねぇ……。','#teary hush|……$M……ありがとねぇ……。','#teary hush|……ちょっと、ねむいなぁ……。$M……またねぇ……。'],
  fireA:['#teary hush|……$M……わるいね、さきに……。','#teary hush|……泣くんじゃないよ、$M……。','#teary hush|……$M……ありがと、ね……。'],
  fireB:['#teary hush|……わりい、$M……。','#teary hush|……泣くなよ、$M……。','#teary hush|……$M……ありがとな……。'],
  water:['#teary hush|……$Mさん……ごめんなさい……。','#teary hush|……$Mさん、ありがとう……ございました……。','#teary hush|……$Mさん……わすれないで、くださいね……。'],
- wind:['#teary hush|……フッ…$M……そんな顔、しないでおくれ……。','#teary hush|……$M……風に、なっても……そばに、いるよ……。','#teary hush|……$M……ありがとう……。']};
-const LASTW0={wood:'#teary hush|……みんな……ごめんね……。',earth:'#teary hush|……みんな……ごめんねぇ……。',fireA:'#teary hush|……みんな……わるいね……。',fireB:'#teary hush|……みんな……わりい……。',water:'#teary hush|……みなさん……ごめんなさい……。',wind:'#teary hush|……フッ…みんな……すまないね……。'};
+ wind:['#teary hush|……フッ……$M……そんな顔、しないでおくれ……。','#teary hush|……$M……風に、なっても……そばに、いるよ……。','#teary hush|……$M……ありがとう……。']};
+const LASTW0={wood:'#teary hush|……みんな……ごめんね……。',earth:'#teary hush|……みんな……ごめんねぇ……。',fireA:'#teary hush|……みんな……わるいね……。',fireB:'#teary hush|……みんな……わりい……。',water:'#teary hush|……みなさん……ごめんなさい……。',wind:'#teary hush|……フッ……みんな……すまないね……。'};
 function lastWord(r,m){const k=elemKey(r),a=LASTW[k]?k:'wood';return [r.name,m?pickFresh('lw:'+a,LASTW[a]).replace(/\$M/g,m.name):LASTW0[a]]}
 function bondTick(){if(!S||IS_STORY_REPLAY)return;omoiSeed();bondNightTick();bondNearTick();if(typeof supportTick==='function')supportTick();/* なかよしと夜の戦い（support.js） */bondTalkTick();griefTick()}
 

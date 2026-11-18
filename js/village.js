@@ -76,16 +76,16 @@ const SPOTS=[
   {k:'park',n:'ちかばの公園',main:o=>o==='swing',need:[[o=>o==='sandbox',1]],how:'ブランコと、砂場',eff:'ここで遊ぶと、たのしさ+10%'},
   {k:'park2',n:'たのしい公園',main:o=>o==='swing',need:[[o=>o==='sandbox',1],[o=>o==='seesaw',1]],how:'ブランコと、砂場と、シーソー',eff:'ここで遊ぶと、たのしさ+20%'},
   {k:'kitchen',n:'すいじ場',main:o=>o==='oven'||o==='cooktable',need:[[o=>o==='sink',1],[o=>o==='tub',1]],how:'かまどか調理台と、流し台と、水おけ',eff:'料理の速さ+10%'},
-  {k:'yasumi',n:'やすみば',main:o=>BENCHES.has(o),need:[[o=>o==='parasol',1]],how:'ベンチと、パラソル',eff:'ベンチで休むと、つかれのとれ方+10%'},
+  {k:'yasumi',n:'やすみば',main:o=>BENCHES.has(o),need:[[o=>o==='parasol',1]],how:'ベンチと、パラソル',eff:'ベンチで休むと、つかれのとれる速さ+10%'},
   {k:'camp',n:'キャンプ場',main:o=>o==='campfire',need:[[o=>BENCHES.has(o),2]],how:'たき火と、ベンチ2つ',eff:'たき火で遊ぶと、たのしさ+10%'},
   {k:'funsui',n:'ふんすいひろば',main:o=>o==='fountain',need:[[o=>BENCHES.has(o),1],[(o,q)=>FLOWERS.has(o)&&!isBud(q),2]],how:'噴水と、ベンチと、花2つ',eff:'噴水で遊ぶと、たのしさ+10%'},
   {k:'monoheya',n:'ものおき部屋',room:1,main:o=>o==='crate',need:[[o=>o==='asabukuro',1],[o=>o==='makidana',1]],how:'家の中に、木箱と、あさぶくろと、まき棚',eff:'しまえる数+15%',cap:.15},
   {k:'chozo',n:'ちょぞう部屋',room:1,main:o=>o==='crate',need:[[o=>o==='taru',2]],how:'家の中に、木箱と、たる2つ',eff:'しまえる数+15%',cap:.15},
   {k:'naya',n:'なや',room:1,main:o=>o==='crate',need:[[o=>o==='taru',1],[o=>o==='asabukuro',1]],how:'家の中に、木箱と、たると、あさぶくろ',eff:'しまえる数+10%',cap:.1},
-  {k:'shinshitsu',n:'しんしつ',room:1,main:o=>BEDSET.has(o),need:[[o=>o==='shelf1'||o==='shelf2',1]],how:'家の中に、ベッドと、本棚かかざり棚',eff:'眠るときの、つかれのとれ方+10%'},
+  {k:'shinshitsu',n:'しんしつ',room:1,main:o=>BEDSET.has(o),need:[[o=>o==='shelf1'||o==='shelf2',1]],how:'家の中に、ベッドと、本棚かかざり棚',eff:'眠るときのつかれのとれる速さ+10%'},
   {k:'ofuro',n:'おふろば',room:1,main:o=>o==='bathtub',need:[[o=>o==='tub',1]],how:'家の中に、バスタブと、水おけ',eff:'おふろのたのしさ+10%'},
   {k:'hana',n:'花のベンチ',main:o=>BENCHES.has(o),need:[[(o,q)=>FLOWERS.has(o)&&!isBud(q),3]],how:'ベンチと、花3つ',eff:'ベンチで休むと、たのしさ+10%'},
-  {k:'wa',n:'和の庭',main:o=>BENCHES.has(o),need:[[o=>o==='shishiodoshi',1],[o=>o==='toro',1]],how:'ベンチと、ししおどしと、石どうろう',eff:'ベンチで休むと、つかれのとれ方+15%'},
+  {k:'wa',n:'和の庭',main:o=>BENCHES.has(o),need:[[o=>o==='shishiodoshi',1],[o=>o==='toro',1]],how:'ベンチと、ししおどしと、石どうろう',eff:'ベンチで休むと、つかれのとれる速さ+15%'},
   {k:'chaya',n:'茶屋',main:o=>o==='takebench',need:[[o=>o==='noren',1],[o=>o==='takeakari',1]],how:'竹のベンチと、のれんと、竹あかり',eff:'ベンチで休むと、たのしさ+15%'},
   {k:'monooki',n:'資材おき場',main:o=>o==='crate',need:[[o=>o==='asabukuro',1]],how:'木箱と、あさぶくろ',eff:'素材をしまう速さ+10%'},
   {k:'buranko',n:'ぶらんこの庭',main:o=>o==='swing',need:[[o=>BENCHES.has(o),1],[(o,q)=>FLOWERS.has(o)&&!isBud(q),2]],how:'ブランコと、ベンチと、花2つ',eff:'ブランコで遊ぶと、たのしさ+10%'},
@@ -96,7 +96,7 @@ const SPOTS=[
   {k:'party',n:'ガーデンパーティー',main:o=>TABLES.has(o),need:[[o=>SEATS.includes(o),1],[o=>o==='parasol',1]],how:'食卓と、いすと、パラソル',eff:'ここで食べたときのパワー+10%'},
   {k:'yoruzuri',n:'よるづり場',main:(o,j)=>SEATS.includes(o)&&spotW(j)>=0,need:[[o=>o==='toro',1]],how:'水べのいすと、石どうろう',eff:'つりをする確率+10%'},
   {k:'kotori',n:'小鳥の庭',main:o=>BENCHES.has(o),need:[[o=>o==='birdbath',1],[o=>o==='hedge',1]],how:'ベンチと、水飲み鳥と、生垣',eff:'ベンチで休むと、たのしさ+15%'},
-  {k:'terrace',n:'よるのテラス',main:o=>BENCHES.has(o),need:[[o=>o==='lantern',1],[o=>o==='lamp',1]],how:'ベンチと、ランタンと、かがり火',eff:'ベンチで休むと、つかれのとれ方+15%'},
+  {k:'terrace',n:'よるのテラス',main:o=>BENCHES.has(o),need:[[o=>o==='lantern',1],[o=>o==='lamp',1]],how:'ベンチと、ランタンと、かがり火',eff:'ベンチで休むと、つかれのとれる速さ+15%'},
   {k:'oshaberi',n:'おしゃべりひろば',main:o=>o==='signpost',need:[[o=>BENCHES.has(o),2]],how:'道しるべと、ベンチ2つ',eff:'まわり3マスでおしゃべりすると、たのしさ+10%'},
   {k:'hatake',n:'はたけの水場',main:o=>o==='well',need:[[o=>o==='farm',3]],how:'井戸と、畑3つ',eff:'まわり3マスの畑の、たねまき・収穫の速さ+10%'},
   {k:'kikori',n:'きこり小屋',main:o=>o==='lumber',need:[[o=>o==='crate',1]],how:'伐採場と、木箱',eff:'まわり3マスの木を切る速さ+10%'},
@@ -167,7 +167,7 @@ const withAttr=(id,t)=>{const a=attrTxt(id);return a?(t?t+'　':'')+'【'+a+'】
 let SUTEKI=null;const SUTEKI_STAR=[10,25,45,70,100],SUTEKI_FUN=[1,.96,.92,.88,.84,.8];/* すてき度：かざり・花・道・スポットの点数。★の数（0〜5）で、せいれいのたのしさのへりかたがかわる（★0で1倍〜★5で0.8倍） */
 function suteki(){if(SUTEKI)return SUTEKI;let p=0;for(const id of DECOQ)p+=cnt(id)*2;p+=flowerN();{let n=0;for(const f of S.floor)if(f==='path'||f==='gravel'||f==='woodpath'||f==='stone'||f==='brick')n++;p+=Math.floor(n/10)}p+=new Set((SPOTI||[]).map(x=>x.sp.k)).size*3;let st=0;while(st<5&&p>=SUTEKI_STAR[st])st++;SUTEKI={pt:p,st};return SUTEKI}/* かざり1つ2点・花1本1点・道10マスで1点・スポット1しゅるい3点 */
 function recount(){if(S.fogF&&!S.flags.spring2)fogSpring2(S);if(S.fogF&&!S.flags.mansion2)fogMansionAdd(S);if(S.sacredLegacy2||S.sacredLegacy3)tryExpandSacredLegacy(S);if(S.broken)S.broken=S.broken.filter(b=>!S.obj[b.j]);boxScan();calcSpots();/* こわれた物の場所に、なにか置いたら、こわれた物のリストからはずす */
-  for(const key in S.win||{}){const j=+key,wall=k=>HOME_WALLS.has(S.obj[k])||HOME_DOORS.has(S.obj[k]);if(S.win[j]==='wreath'&&HOME_DOORS.has(S.obj[j])&&(wall(j-W)||wall(j+W))&&!(wall(j-1)||wall(j+1))){S.inv.wreath=(S.inv.wreath||0)+1;delete S.win[j];toast('たてのドアのリースを、持ち物にもどしました')}}/* たてのドアにはリースをかけられない。まわりの壁が変わってたてになったら、知らせてもどす */
+  for(const key in S.win||{}){const j=+key,wall=k=>HOME_WALLS.has(S.obj[k])||HOME_DOORS.has(S.obj[k]);if(S.win[j]==='wreath'&&HOME_DOORS.has(S.obj[j])&&(wall(j-W)||wall(j+W))&&!(wall(j-1)||wall(j+1))){S.inv.wreath=(S.inv.wreath||0)+1;delete S.win[j];toast('たてのドアのリースを、もちものにもどした')}}/* たてのドアにはリースをかけられない。まわりの壁が変わってたてになったら、知らせてもどす */
   STATUE=-1;RUINT=-1;OBOX=-1;BOARD=-1;SUTEKI=null;counts={};LIGHTS=[];HOTL=[];DRUMS=[];JARS=[];COMPS=[];LITP=[];STELES=[];LURES=[];TOWERS=[];NEARMILL=new Set();NEARSUI=new Set();STUMPB=new Set();if(WD===0&&!S.free&&S.sacredRoot!=null&&!S.obj.includes('tower')&&typeof fieldStump==='function'){const st=fieldStump(S.sacredRoot);STUMPB.add(st);STUMPB.add(st-W)}/* 切り株と、そのうしろ */NEARVANE=new Set();NEARCART=new Set();NEARJORO=new Set();NEARMIZU=new Set();NEARSIGN=new Set();NEARPARA=new Set();RUGC=new Map();for(const k in S.rug||{})for(const c of rugCells(+k))RUGC.set(c,+k);RFC=new Map();for(const k in S.roof||{})for(const c of rugCells(+k))RFC.set(c,+k);/* 屋根の下のマス→屋根の左上 *//* ラグがしいてあるマス→ラグの左上 */ENVG=new Float32Array(W*H);ENVE={};REV=new Set();ATTR={};ELEM_KEYS.forEach(k=>ATTR[k]=0);
   const around=(j,r,set)=>{const x=j%W,y=(j/W)|0,h=set===REV?hiAt(j):-1;for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){if(dx*dx+dy*dy>r*r+1)continue;const nx=x+dx,ny=y+dy;if(nx>=0&&ny>=0&&nx<W&&ny<H&&!(h>=0&&hiAt(ny*W+nx)!==h))set.add(ny*W+nx)}};/* 緑の広がり（REV）は、段差をこえない */
   const addA=a=>{if(a)for(const k in a)ATTR[k]+=a[k]};

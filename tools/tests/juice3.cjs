@@ -21,7 +21,7 @@ const assert=require('node:assert/strict');
   console.log('diary start',JSON.stringify(d0));assert.ok(d0.h.includes('きのうのしごと'));assert.ok(d0.v.every(t=>/^0|なし/.test(t)),'はじめは0から');
   await W8(4500);
   const d1=JSON.parse(await run(`JSON.stringify({v:[...document.querySelectorAll('#sheetBody .stat b')].map(e=>e.textContent),st:!!document.querySelector('#sheetBody .ustamp.b')})`));
-  console.log('diary end',JSON.stringify(d1));assert.ok(d1.v.includes('7回'));assert.ok(d1.v.includes('5体'));assert.ok(d1.st,'大きなハンコ');
+  console.log('diary end',JSON.stringify(d1));assert.ok(d1.v.includes('7回'));assert.ok(d1.v.includes('5ひき'));assert.ok(d1.st,'大きなハンコ');
   /* タップでとばす */
   await run(`(()=>{closeSheet();S.dy={d:dayNo(),w:{},m:[],k:{},o:{},g:{}};for(let i=0;i<30;i++)dyWork(S.res[0],'build','fence');diaryClose();return 1})()`);await W8(600);
   await run(`(()=>{document.querySelector('#sheetBody').dispatchEvent(new PointerEvent('pointerdown',{bubbles:true}));return 1})()`);

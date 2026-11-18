@@ -22,9 +22,9 @@ const clearReady=()=>clearConds().every(c=>c[1]);
 const finalDefenseBegun=()=>!!(S.finalOn||S.finalNight||(S.rushN||0)>0||S.finalLost!=null||S.flags.finalWon);
 function acceptFinalDefense(){if(WD||finalDefenseBegun()||S.flags.finalReadyDay!=null)return;S.flags.finalReadyDay=dayNo()+3;S.finalDay=null;S.finalHint=null}
 function finalCheck(){if(WD||!S||S.cleared||S.finalNight||S.finalOn||!S.enemyOn||S.flags.finalWon)return;/* 勝ったあとは、もう来ない */if(S.finalLost!=null&&dayNo()-S.finalLost<3)return;if(S.res.length<5)return;if(!S.res.some(r=>r.name===POKO))return;/* フタバがいるときだけ *//* ヨルノオオカゲに負けたら3日あける。せいれいが5人以上になってから */if(!finalDefenseBegun()){if(!qAt('nushi')||!S.qTalked){S.finalDay=null;S.finalHint=null;return}acceptFinalDefense()}if(cnt('tower')>=1&&clearReady()){
-  if(S.finalDay==null){if(isNight())return;S.finalDay=Math.max(dayNo(),S.flags.finalReadyDay??dayNo()+3);S.finalHint=3;memo('🌑','夜の空気が、すこし重くなってきた');talkOnce('finalAnn'+S.finalDay,sevLines([['F','#think|……ねえ。なんだか、夜の風がつめたくなってきた気がする。'],['N','御神木の力に、なにかが気づいたのかもしれないねぇ……。',1]]),0);return}/* 予告：すぐには来ない。3日後の夜に来る */
+  if(S.finalDay==null){if(isNight())return;S.finalDay=Math.max(dayNo(),S.flags.finalReadyDay??dayNo()+3);S.finalHint=3;memo('moonn','夜の空気が、すこし重くなってきた');talkOnce('finalAnn'+S.finalDay,sevLines([['F','#think|……ねえ。なんだか、夜の風がつめたくなってきた気がする。'],['N','御神木の力に、なにかが気づいたのかもしれないねぇ……。',1]]),0);return}/* 予告：すぐには来ない。3日後の夜に来る */
   const left=S.finalDay-dayNo();if(left>0){if(left<S.finalHint&&!isNight()){S.finalHint=left;toast(left===2?'遠くの森が、いつもより静かだ……':'夜になると、影がざわめいている気がする……','warn')}return}/* 日ごとに、少しずつにおわせる */
-  S.finalNight=true;const rn=S.rushN||0;if(!rn)memo('🌑','御神木の力に、影たちがひきよせられてきた');setTimeout(()=>toast(rn===0?'御神木にあつまった力に、影たちがひきよせられている……。今夜、群れがやってくる':rn===1?'影の群れは、まだあきらめていない……。今夜も来る':'今夜は、もっと大きな影の気配がする……','warn'),900)}}/* 予告から3日後の夜から：影の群れの夜が2回、3回目の夜にヨルノオオカゲ（負けたあとは、ヨルノオオカゲの夜だけ） */
+  S.finalNight=true;const rn=S.rushN||0;if(!rn)memo('moonn','御神木の力に、影たちがひきよせられてきた');setTimeout(()=>toast(rn===0?'御神木にあつまった力に、影たちがひきよせられている……。今夜、群れがやってくる':rn===1?'影の群れは、まだあきらめていない……。今夜も来る':'今夜は、もっと大きな影の気配がする……','warn'),900)}}/* 予告から3日後の夜から：影の群れの夜が2回、3回目の夜にヨルノオオカゲ（負けたあとは、ヨルノオオカゲの夜だけ） */
 
 /* ---------- 状態 ---------- */
 let S=null;
@@ -74,7 +74,7 @@ function ensureStor(s){for(const id in BL){const b=BL[id];if(b&&(b.offerOnly||b.
   if(!s.lost)s.lost=[];syncQuestRecipes(s)}
 
 /* 特性：ひとりにひとつ。キーキャラは決まっている */
-const TRK=el=>Object.keys(TRAITS).filter(k=>k!=='kizuna'&&k!=='tane'&&k!=='nebari'&&(k!=='shukaku'||el==='wood'));/* しゅうかく上手は木の子だけ（収穫をするのは木の子） *//* たねはこびは風の子だけ（mkRes）。料理じょうずはなくした（料理は、その属性の子だけが作り、時間はいつも料理の time） */const TRAITS={hayaashi:['はやあし','移動速度+6'],hataraki:['はたらきもの','はたらく速さ+6'],shukaku:['しゅうかく上手','畑や木の実の収穫+1'],kikori:['木こり','木を切ると、木材+1'],ishiku:['石工','石をほると、石材+1'],chikara:['力もち','持てる数+2'],shoshoku:['小食','おなかのへる速さ0.8倍'],tafu:['タフ','スタミナ+6'],nebari:['ねばりづよい','スタミナ+10・つかれのとれる速さ2倍'],kizuna:['めぐり','消えても、次の朝にもどってくる'],/* ねばりづよい・めぐりは、キーキャラだけ（TRK でのぞく）。ねばりづよいは、章のはじめからいる子 */genki:['元気いっぱい','たのしさのへる速さ0.6倍'],tane:['たねはこび','外のふしぎな種を拾いに行く']};
+const TRK=el=>Object.keys(TRAITS).filter(k=>k!=='kizuna'&&k!=='tane'&&k!=='nebari'&&(k!=='shukaku'||el==='wood'));/* しゅうかく上手は木の子だけ（収穫をするのは木の子） *//* たねはこびは風の子だけ（mkRes）。料理じょうずはなくした（料理は、その属性の子だけが作り、時間はいつも料理の time） */const TRAITS={hayaashi:['はやあし','移動速度+6'],hataraki:['はたらきもの','はたらく速さ+6'],shukaku:['しゅうかく上手','畑や木の実の収穫+1'],kikori:['木こり','木を切ると、木材+1'],ishiku:['石工','石をほると、石材+1'],chikara:['力もち','持てる数+2'],shoshoku:['小食','おなかのへる速さ0.8倍'],tafu:['タフ','スタミナ+6'],nebari:['ねばりづよい','スタミナ+10・つかれのとれる速さ2倍'],kizuna:['めぐり','消えても、つぎの朝にもどってくる'],/* ねばりづよい・めぐりは、キーキャラだけ（TRK でのぞく）。ねばりづよいは、章のはじめからいる子 */genki:['元気いっぱい','たのしさのへる速さ0.6倍'],tane:['たねはこび','外のふしぎな種をひろいに行く']};
 const EL_BASE={wood:{work:20,move:20,sta:20,cap:1},water:{work:26,move:20,sta:14,cap:1},fire:{work:20,move:20,sta:20,cap:1},earth:{work:16,move:18,sta:26,cap:1},wind:{work:18,move:26,sta:16,cap:1}};/* Lv1の能力（属性ごと。はたらく速さ・移動速度・スタミナの合計は、どれも60）。20がふつうの速さ（STD） */
 const EL_GROW={fire:{atk:[1,20],work:80,move:80,cap:25},earth:{atk:[1,10],work:120,move:60,cap:45},wood:{atk:[1,8],work:90,move:80,cap:30},water:{atk:[1,4],work:110,move:70,cap:25},wind:{atk:[1,6],work:70,move:120,cap:25}};/* レベルが上がるたびに、[いちばん少ない,いちばん多い] のどれかだけふえる。数だけの物は、この%で+1（100をこえた分は、かならず+1。120なら+1と、20%でもう+1） */
 const EL_ATK={fire:10,earth:8,wood:5,water:0,wind:3};/* Lv1の攻撃力 */
@@ -207,7 +207,7 @@ function st2Place(s){
   const c=[];for(let y=CY-12;y<=CY-4;y++)for(let x=CX-13;x<=CX-3;x++){const j=y*W+x;if(s.ground[j]===1||s.floor[j])continue;if(s.obj[j]&&!NATK.includes(s.obj[j]))continue;if(![j-1,j+1,j-W,j+W].some(k=>s.ground[k]===1))continue;c.push([Math.hypot(x+.5-(CX-5.5),y+.5-(CY-8)),j])}
   c.sort((a,b)=>a[0]-b[0]);const bw=c.slice(0,3).map(q=>q[1]);bw.forEach(j=>{s.obj[j]='boulder';delete s.dyn[j]});/* 西の温泉の水路をふさぐ大岩 */
   s.st2={sp:{a:0,b:0,c:0},d1:1,d2:1,d2fix:0,hvb:{},ash:{},ashKills:0,bw}}
-function springFX(k){const[cx,cy]=HSPC[k];sfx('level');toast(SPN[k]+'に、あたたかい湯がもどった！','good');logEv(SPN[k]+'がよみがえった');memo('♨️',SPN[k]+'がよみがえった');
+function springFX(k){const[cx,cy]=HSPC[k];sfx('level');toast(SPN[k]+'に、あたたかい湯がもどった！','good');logEv(SPN[k]+'がよみがえった');memo('sun',SPN[k]+'がよみがえった');
   fxSpr('spring',cx*TS,cy*TS);}
 function st2Tick(){if(WD!==1||!S.st2)return;const t=S.st2;
   if(!t.sp.b&&t.d1===0&&t.bw.every(j=>S.obj[j]!=='boulder')&&!t.hvb[D1]){t.sp.b=1;dirty=true;springFX('b');checkQuest()}

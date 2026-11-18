@@ -89,7 +89,7 @@ function dlgLoop(now){if($('#dialog').hidden){DLGA.raf=0;dlgGestEnd();return}if(
     c.fillStyle='rgba(0,0,0,.18)';c.beginPath();c.ellipse(120,203,44*(1-Math.min(.3,-hop/60)),8,0,0,7);c.fill();
     drawSpirit(c,DLGA.el,120,Math.round(200+hop+bob),1.74,1,{dot:1,t,vr:DLGA.vr,mood:md,crown:DLGA.crown,crownHand:DLGA.crownHand,handItem:DLGA.handItem,blink:(t%3.4)<.13,anim:dialogueSpiritAnim(DLGA.motion,talking,now-DLGA.lineT,DLGA.holdUntil-DLGA.lineT,DLGA.wave,reduced),walk:false,work:false,lean:DLGA.mood==='sad'||DLGA.mood==='teary'||DLGA.mood==='tear'?.12:0})}/* 立ち絵は、ゲームの中と同じドットの絵（dot）。1.74（=.87×2）で、絵の1ドットがキャンバスの2ドットにそろう */
   c.restore()}
-function shards3(){if(!S||S.cleared)return;if(WD===0&&grassReunionBlockReason())return false;/* かけらが3つそろった会話。さいごまで見てから、ヌシ様が帰ってくる（とちゅうでとじたら、つづきからでもう一度） */dialog((L=>L&&L.length?L:[[GOD,GVOICE()+'かけらが3つそろったのう。……ヌシ様が、帰ってくるぞい。']])(sevLines([['F','#hush|御神木が、光ってる……！',1,'glow'],['N','みんなの力が、ひとつにつながったねぇ。……ヌシ様が、帰ってくるよぉ。',1]])),()=>{if(S.cleared)return;if(S.res.some(q=>q.name===POKO)){S.flags.nushiDue=1;nushiReturns()}else{S.flags.nushiWait=1;toast('フタバが帰ってきたら、ヌシ様がすがたをあらわす','warn')}})}
+function shards3(){if(!S||S.cleared)return;if(WD===0&&grassReunionBlockReason())return false;/* かけらが3つそろった会話。さいごまで見てから、ヌシ様が帰ってくる（とちゅうでとじたら、つづきからでもう一度） */dialog((L=>L&&L.length?L:[[GOD,GVOICE()+'かけらが3つそろったのう。……ヌシが、帰ってくるぞい。']])(sevLines([['F','#hush|御神木が、光ってる……！',1,'glow'],['N','みんなの力が、ひとつにつながったねぇ。……ヌシ様が、帰ってくるよぉ。',1]])),()=>{if(S.cleared)return;if(S.res.some(q=>q.name===POKO)){S.flags.nushiDue=1;nushiReturns()}else{S.flags.nushiWait=1;toast('フタバが帰ってきたら、ヌシ様がすがたをあらわす','warn')}})}
 function gameOver(){dialog(['せいれいたちが、みんな消えてしもうた…。土地もしずかになってしもうたのう。','もう一度、この土地に村をつくってみようかの。こんどは畑と食料を多めにな。'],()=>newGame(WD),'やりなおす',GOD)}/* いまのステージを、はじめから */
 
 let hudT=0;
@@ -116,7 +116,7 @@ function updHUD(){
   {const it=S.seenIt||(S.seenIt={});for(const k in S.mat)if(S.mat[k]>0)it['m:'+k]=1;for(const k in S.fs||{})if(S.fs[k]>0)it['f:'+k]=1}/* 図鑑のアイテム：一度でも持った素材・食べ物 */
   $('#pt').textContent=typeof juicePtShow==='function'?juicePtShow():S.pt;$('#food').textContent=S.food;$('#woodN').textContent=S.mat.wood||0;$('#matN').textContent=matTot();/* 素材は種類が多いので、上には総量だけ */$('#stoneN').textContent=S.mat.stone||0;{const bn=$('#bambooN'),bi=$('#bambooIc'),on=bambooOn();if(bn){bn.textContent=S.mat.bamboo||0;bn.hidden=!on;bi.hidden=!on;if(!bi.src)bi.src=ICONS.bamboo}}/* 上の欄は数だけ（しまえる数は、しまう家具をタップした画面のゲージで見る） */$('#resN').textContent=S.res.length;$('#revLbl').textContent='みどり '+GRASSN;
   const hungry=S.res.filter(r=>r.hunger<200).length,en=S.enemies.filter(e=>e.spawned).length;
-  const al=$('#alert');const msg=[];if(en)msg.push('「コワイノ」 '+en+'体');if(hungry)msg.push('おなかがすいたせいれい '+hungry+'人');if(S.food===0&&S.enemyOn)msg.push(BOXL.length?'食料ゼロ':'しまう箱がありません');/* 足りない理由もいっしょに出す */
+  const al=$('#alert');const msg=[];if(en)msg.push('「コワイノ」 '+en+'ひき');if(hungry)msg.push('おなかがすいたせいれい '+hungry+'人');if(S.food===0&&S.enemyOn)msg.push(BOXL.length?'食料ゼロ':'しまう箱がありません');/* 足りない理由もいっしょに出す */
   al.hidden=!msg.length;al.textContent=msg.join('・');
   if(PDOWN){}/* 押している最中に作りなおすと、タップが消えてしまう */
   else if(sheet==='craft'){const sig=S.orders.map(o=>o.id+':'+o.worker).join(',')+'|'+CRAFT_TABS.flatMap(([,ids])=>ids).filter(id=>craftInTag(id)).map(id=>(S.pt>=BL[id].pc?1:0)+''+(matOK(BL[id].mat)?1:0)+inv(id)+(lvOK(id)?1:0)).join('')+'|'+(S.mat.wood||0)+','+(S.mat.stone||0)+','+(S.mat.bamboo||0)+'|'+craftTags.join()+'|'+S.lv+'|'+Object.keys(S.recipes).length;

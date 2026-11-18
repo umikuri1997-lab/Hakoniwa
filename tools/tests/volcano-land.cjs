@@ -17,7 +17,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict'),fs=r
  assert.deepEqual(old,[0,false]);
  /* カミサマのお店 */
  await run(`(()=>{S.feat.plant=true;S.feat.shop=true;S.pt=500;S.lv=3;openSheet('shop');return 1})()`);
- const shopTxt=await page.textContent('#sheetBody');for(const n of ['りんごの苗','サルビアの種'])assert.ok(!shopTxt.includes(n),'カミサマが売る: '+n);assert.ok(shopTxt.includes('とんがりの木の苗'),'とんがりの木の苗');
+ const shopTxt=await page.textContent('#sheetBody');for(const n of ['りんごの苗','サルビアのたね'])assert.ok(!shopTxt.includes(n),'カミサマが売る: '+n);assert.ok(shopTxt.includes('とんがりの木の苗'),'とんがりの木の苗');
  await run(`closeSheet()`);
  /* 温泉宿のお客さん */
  await run(`(()=>{S.flags.guestDone=1;S.t=dayNo()*1440+600;visitMorning();return 1})()`);

@@ -78,7 +78,7 @@ function fieldStoryStart(q,quiet){
   {const prep=typeof fieldPrepNeed==='function'&&fieldPrepNeed(q.id);if(prep)return say(prep.label);}
   if(FIELD_SCENES.get(S)?.session===VILLAGE_SESSION||S.res.some(r=>r.act?.type==='fieldstory'))return say('なかまが調べにむかっている');
   const r=fieldStoryActor(step),group=fieldCast(step);
-  if(!r||group.length!==(step.cast||[step.who]).length){const missing=(step.cast||[step.who]).map(sevName).find(n=>!S.res.some(p=>p.name===n));return say(missing?missing+'がもどってから、一緒に世話をしよう':'なかまがそろったら、一緒に世話をしよう');}
+  if(!r||group.length!==(step.cast||[step.who]).length){const missing=(step.cast||[step.who]).map(sevName).find(n=>!S.res.some(p=>p.name===n));return say(missing?missing+'がもどってから、いっしょに世話をしよう':'なかまがそろったら、いっしょに世話をしよう');}
   if(group.some(p=>!fieldActorReady(p)||p.act?.type==='fieldgather'&&p.act.stage!=='do')){state.auto=true;/* 予定のある子がいても、とりやめない。予定がおわった子から、じゅんに木のそばへ集まる（tryFieldGather） */if(!quiet){const w=group.find(p=>!fieldActorReady(p));toast(w?storyWaitReason(w,j):'みんなが木のそばへ集まっている')}return !quiet;}
   const selected=new Set(),occupied=occTiles(r);for(const p of group)occupied.delete((p.y|0)*W+(p.x|0));const plans=[];
   const look=state.step===0&&typeof fieldBuiltCell==='function'?fieldBuiltCell(q.id):null;/* 作った物を、まず見にいく */

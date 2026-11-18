@@ -88,7 +88,7 @@ function bpCheck(k,x,y){/* 置けるか：[ok, わけ] */const {w,h}=bpSize(k);i
     if(S.floor[j]||S.rug&&S.rug[j]!=null||S.edge&&S.edge[j]||S.roof&&S.roof[j])return[false,'床や物のある所には置けません'];
     if(o&&!BPNAT.has(o)&&!bpSoft(o)&&!VEINS[o])return[false,'物のある所には置けません'];
     if(S.bp&&S.bp.some(e=>e.cells.includes(j)))return[false,'ほかの設計図とかさなっています']}
-  for(const[dx,dy,id]of BPS[k].furn)if(id==='watch'&&watchNear(x+dx,y+dy))return[false,'見張り台どうしは、あいだを5マスあけてください'];
+  for(const[dx,dy,id]of BPS[k].furn)if(id==='watch'&&watchNear(x+dx,y+dy))return[false,'見張り台は、5マスはなさないと置けません'];
   return[true,'']}
 function askBp(i,x,y){const it=(S.bpInv||[])[i];if(!it)return;const k=it.k,[ok,why]=bpCheck(k,x,y),pc=BPS[k].pc,m=bpCost(k);
   pending={kind:'bp',i,k,x,y,ok};$('#confirmTxt').textContent=ok?BPS[k].name+'をここに建てる？（'+SP(pc)+'・'+matTxt(m)+'）':why;

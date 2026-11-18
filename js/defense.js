@@ -77,7 +77,7 @@ function skillSec(body){const sec=el('<div class="sec"><h3>わざの枠（3つ�
   for(const[k,n,ok,ic]of SKILLS){if(!ok())continue;const r=el('<button class="row" style="text-align:left;width:100%">'+pxi(ic,'skic')+'<div class="tx"><b></b><small></small></div></button>');ckSet(r.querySelector('b'),(on.includes(k)?'✓ ':'')+n);r.querySelector('small').textContent=on.includes(k)?'セットしている':'セットしていない';r.onclick=()=>{skillToggle(k);renderSheet()};rw.appendChild(r)}
   body.appendChild(sec)}
 /* ---------- 見張り台のねらう順（S.dyn[j].to：near・hp・fast・vill） ---------- */
-const TORDER=[['near','近い','いちばん近いコワイノ'],['hp','強い','体力がいちばん多いコワイノ'],['fast','速い','足がいちばん速いコワイノ'],['vill','村に近い','村のまん中にいちばん近いコワイノ']];
+const TORDER=[['near','近い','いちばん近い「コワイノ」'],['hp','強い','体力がいちばん多い「コワイノ」'],['fast','速い','足がいちばん速い「コワイノ」'],['vill','村に近い','村のまん中にいちばん近い「コワイノ」']];
 const torderOf=j=>(j!=null&&S.dyn[j]&&S.dyn[j].to)||'near';
 function torderKey(j,e,d){const k=torderOf(j);return k==='hp'?-e.hp:k==='fast'?-EN[e.type].sp:k==='vill'?Math.hypot(e.x-CX,e.y-CY):d}
 function torderSet(j,k){(S.dyn[j]||(S.dyn[j]={})).to=k;sfx('tap')}
