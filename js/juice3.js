@@ -105,6 +105,6 @@ function j3Spill(x,y,n){/* 光のつぶ（UIFX の木くずと同じ動き。金
     UIFX.parts.push({d,x:x+(Math.random()-.5)*6,y,vx:.3+Math.random()*1.4,vy:-.8-Math.random()*1.2,t:0,dust:1,ph:i})}if(!UIFX.raf)UIFX.raf=requestAnimationFrame(tapFxStep)}
 
 /* juice2 から */
-function juice3Frame(now){juiceStreakTick();juiceLvTick(now)}
-function juice3Draw(now){if(J3H.length)juiceBondDraw(now);juiceMadeDraw(now)}
-function juice3Reset(){J3H.length=0;J3M.length=0;J3ST=null;if(J3LV){J3LV.e.style.visibility='';const x=document.getElementById('xpBar');if(x)x.classList.remove('ufx','uglow');J3LV=null}JLVW=null;JLVL=null;JLVP=null}
+function juice3Frame(now){juiceStreakTick();juiceLvTick(now);if(typeof juice4Frame==='function')juice4Frame(now)}
+function juice3Draw(now){if(typeof juice4Draw==='function')juice4Draw(now);if(J3H.length)juiceBondDraw(now);juiceMadeDraw(now)}
+function juice3Reset(){if(typeof juice4Reset==='function')juice4Reset();J3H.length=0;J3M.length=0;J3ST=null;if(J3LV){J3LV.e.style.visibility='';const x=document.getElementById('xpBar');if(x)x.classList.remove('ufx','uglow');J3LV=null}JLVW=null;JLVL=null;JLVP=null}
