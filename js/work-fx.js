@@ -10,7 +10,7 @@ const KMAIN={pot:'cook',pan:'cookfry',bake:'cookfan',grill:'cookgrill',mix:'cook
 /* 動きの名前 → [音を出す所（1回の動きの中の0〜1）, 音, 粒] */
 const WBEAT={cookcut:[[0,'tonton']],cook:[[0,'potclk']],cookmix:[[.25,'tink']],cookstir:[[.25,'tink']],cookfry:[[.47,'fry'],[.62,'fry']],cookfan:[[.25,'fanw','embers']],cookgrill:[[0,'grill','embers']],cookplate:[[.5,'plate']],
   loomweave:[[.3,'shuttle'],[.8,'loombeat']],millgrind:[[0,'grind'],[.5,'grind']],saw:[[.25,'saw','chips'],[.75,'saw']],craft:[[0,'nail','chips']],polish:[[0,'cloth'],[.5,'cloth']],
-  wbsaw:[[.25,'saw','chips'],[.75,'saw']],wbham:[[0,'nail','chips']],wbpolish:[[0,'cloth'],[.5,'cloth']]};
+  wbsaw:[[.25,'saw','chips'],[.75,'saw']],wbham:[[0,'nail','chips']],build:[[0,'bnail']],repair:[[0,'nail']],wbpolish:[[0,'cloth'],[.5,'cloth']]};
 const WBMO={craftprep:'wbprep',saw:'wbsaw',craft:'wbham',polish:'wbpolish'};/* 作業台の上でする、もの作りの動き */
 function cookStyle(r){const a=r.act;if(!a||!r.cing)return'mix';if(a.tb)return'mix';const R=typeof recOf==='function'?recOf(r.cing.rec):null,out=R?R.out:r.cing.rec;if(KSTYLE[out])return KSTYLE[out];const D=typeof COOKDI!=='undefined'&&COOKDI[out],t=D&&D.ic&&D.ic[0];let st=KSTYIC[t]||'pot';if(st==='bake'&&S.obj[a.obj]==='campfire')st='pan';return st}/* ふしぎな料理は、なべ */
 function cookP(r){const a=r.act;if(!a||a.obj==null)return 0;return Math.min(1,(a.t||0)/Math.max(1,cookTime(r,a.obj)))}

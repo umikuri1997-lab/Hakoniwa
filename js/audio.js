@@ -79,6 +79,9 @@ function playWave(vol){if(WAVE||!AC)return;const L=(SBUF.wave||[]).filter(Boolea
 function stopWave(){if(!WAVE)return;const{src,g}=WAVE;WAVE=null;try{g.gain.setTargetAtTime(0,AC.currentTime,.12);src.stop(AC.currentTime+.5)}catch(e){}}
 function bellRing(x,y){/* 村の鐘：教会の鐘の音を、間をあけて3回。少しずつ小さく、あとの2回は少しだけ低く。遠くても小さく聞こえる */if(!AC||!SND.sfx)return;const L=(SBUF.bell||[]).filter(Boolean);if(!L.length)return;const vw=VW/cam.z,vh=VH/cam.z,d=Math.hypot(x*TS-(cam.x+vw/2),y*TS-(cam.y+vh/2)),v=Math.max(.35,1-d/(Math.max(vw,vh)*1.5));
   [[0,1,1],[1.5,.97,.8],[3,.995,.65]].forEach(([t,rt,g0])=>{const src=AC.createBufferSource(),g=AC.createGain();src.buffer=L[0];src.playbackRate.value=rt;g.gain.value=1.6*g0*v;src.connect(g);g.connect(sfxG);src.start(AC.currentTime+t)})}
+/* nail2 の録音は4回打つ音。1回ふるあいだに1回だけ鳴らすので、どれか1つの打つ音だけを切って鳴らす（打つ所の時刻、秒） */
+const NAILHIT=[0,.308,.617,.930],NAILLEN=.28;
+function playHit(k,vol){const L=(SBUF[k]||[]).filter(Boolean);if(!L.length||!AC)return false;const b=pick(L),src=AC.createBufferSource(),g=AC.createGain(),t=AC.currentTime,o=pick(NAILHIT);src.buffer=b;src.playbackRate.value=.92+Math.random()*.16;const v=vol*(SFXO?1:SFXV);g.gain.setValueAtTime(v,t);g.gain.setValueAtTime(v,t+NAILLEN-.06);g.gain.linearRampToValueAtTime(0,t+NAILLEN);src.connect(g);g.connect(SFXO||sfxG);src.start(t,Math.min(o,Math.max(0,b.duration-NAILLEN)),NAILLEN);return true}
 function playS(k,vol,dl,rt){const L=(SBUF[k]||[]).filter(Boolean);if(!L.length)return false;const src=AC.createBufferSource(),g=AC.createGain();src.buffer=pick(L);src.playbackRate.value=(rt||1)*(.92+Math.random()*.16);g.gain.value=vol*(SFXO?1:SFXV);src.connect(g);g.connect(SFXO||sfxG);src.start(AC.currentTime+(dl||0));return true}
 /* UIの本物の音：鳴らすたびに、ちがう録音（3〜5しゅるい）と、少しちがう高さ・大きさ（同じ音のくりかえしは機械っぽく聞こえる） */
 function playU(k,vol,rt,dl){return playS(k,vol*(.85+Math.random()*.3),dl,rt||1)}
@@ -245,8 +248,8 @@ case'bossKO':noise(t,.5,.3,o,200);tone(70,t,1.4,'sine',.2,o,30);tone(900,t,.35,'
   case'workdone':knock(420,t,.1,o,.07);seq([79,86,91],.07,'sine',.045);break;/* できた：ぽん、きらん */
   case'cook':if(playS('boil',.35))break;noise(t,.35,.025,o,3000);tone(180,t,.08,'triangle',.03,o,140);break;
   case'crack':if(playS('mine',.25))break;playS('place',.25);break;case'rm':if(playS('gravel',.6))break;noise(t,.18,.09,o,900);break;
-  case'nail':playS('nail2',.28);break;
-  case'bnail':playS('nail2',.42);break;
+  case'nail':playHit('nail2',.28);break;
+  case'bnail':playHit('nail2',.42);break;
   case'kankan':for(let i=0;i<3;i++)playS('nail2',.42,i*.22);break;/* 強化したとき：カンカンカン *//* 建てているときの音（ふつうの1.5倍） */
   case'evap':noise(t,1.4,.05,o,2500);seq([67,64,60],.18,'sine',.03,.4);break;
   case'bush':playS('bush',.35);break;
