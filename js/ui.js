@@ -242,7 +242,7 @@ function careSec(body,r){/* お世話のタブ：お話・なでる・毛布・�
   const mk=(k,t,why,f,cl)=>{const b=el('<button class="btn"></button>');b.textContent=t;const done=c[k]===d;lackOn(b,done?'きょうは、もうした':why||'');b.onclick=()=>{if(done||why)return;f();(r.care||(r.care={}))[k]=d;sfx('tap');if(cl)closeSheet();else renderSheet()};bw.appendChild(b)};/* cl：とじて、マップで反応を見せる */
   mk('pat','なでる',sl?'ねているので、おこさない':'',()=>{r.fun=Math.min(100,r.fun+CAREPAT);patJoy(r);addFloat(r.x,r.y-1.6,'たのしさ+'+CAREPAT,'#ffd7e8')},1);
   if(outS||c.blanket===d)mk('blanket','毛布をかける','',()=>{r.act.blanket=1;r.bubble='💤'});
-  {const b=el('<button class="btn">おやつをあげる（食料1）</button>');lackOn(b,S.food<1?'食料が足りません':'');b.onclick=()=>{const it=takeFood(1,'raw')[0];endAct(r);r.meal={u:.3*fullN(r),pt:1,e:FOODS[it]?FOODS[it].e:'🍙',items:[it]};startAct(r,null,'eat',-1,{snack:1});addFloat(r.x,r.y-1.6,'わーい！','#ffd38a');sfx('eat');closeSheet()};bw.appendChild(b)}/* おやつ：よろこんで、その場で食べる */
+  {const b=el('<button class="btn">おやつをあげる（食料1）</button>');lackOn(b,S.food<1?'食料が足りません':'');b.onclick=()=>{if(S.food<1)return;sfx('tap');snackPop(r,closeSheet)};bw.appendChild(b)}/* おやつ：えらんだ物を、その場で食べる。反応で好き・きらいがわかる（food-like.js） */
   body.appendChild(bw)}
 function sortieSec(body,r){/* 出撃する・しない（6時〜23時だけ、かえられる。夜はそのまま） */const on=fighter(r),sec=el('<div class="sec"><h3>たたかう</h3><p class="note"></p><div class="btns" style="display:flex;gap:8px;flex-wrap:wrap;margin:4px 0 8px"></div></div>'),bw=sec.querySelector('.btns');
   sec.querySelector('p').textContent=on?(r.elem==='fire'?'夜、近くのコワイノとたたかう':'夜、近くのコワイノとたたかう'+(SORTIETXT[r.elem]?'（'+SORTIETXT[r.elem]+'）':'')):(r.elem==='fire'?'夜、見張り台に立つ（'+WPTXT.fire+'）':'夜、見張り台に立つ');
@@ -472,7 +472,7 @@ function renderSheet(){
      if(resTab===3)gearSheet(body,r);
      else if(resTab===2)careSec(body,r);/* お世話 */
      else if(resTab===1){if(S.trouble&&S.trouble.id===r.id&&S.trouble.k==='fav')prefKnow(r,'lf');/* こまりごとで、ほしい家具を言っている */const pf=el('<div class="sec"><div class="stats"></div></div>'),pg=pf.querySelector('.stats');
-       for(const[k,v]of[...(troubleText(r)?[['こまりごと',troubleText(r)]]:[]),...(typeof dreamText==='function'&&dreamText(r)?[['ゆめ',dreamText(r)]]:[]),...(jobOf(r)>=0?[['担当',(o=>BL[o].name+'（なれ '+nareLv(r,o)+'）')(S.obj[jobOf(r)])]]:[]),['好きな遊び',prefShow(r,'lk')],['にがてな遊び',prefShow(r,'ng')],['好きな家具',prefShow(r,'lf')],['好きな料理',prefShow(r,'fd')],['なかよし',(b=>b?b.q.name+'（'+b.v+'）':'まだいない')(bondBest(r))],['村に来た日',r.came?r.came+'日目':'はじめから'],['作ったもの',(r.made||0)+'こ'],['追いはらった「コワイノ」',(r.beat||0)+'体'],['ベッド',myBed(r)>=0?'じぶんのベッドがある':'きまっていない']]){const d=el('<div class="stat" style="display:block"><span style="display:block"></span><b style="display:block;text-align:left;margin-top:2px"></b></div>');d.firstChild.textContent=k;d.lastChild.textContent=v;pg.appendChild(d)}
+       for(const[k,v]of[...(troubleText(r)?[['こまりごと',troubleText(r)]]:[]),...(typeof dreamText==='function'&&dreamText(r)?[['ゆめ',dreamText(r)]]:[]),...(jobOf(r)>=0?[['担当',(o=>BL[o].name+'（なれ '+nareLv(r,o)+'）')(S.obj[jobOf(r)])]]:[]),['好きな遊び',prefShow(r,'lk')],['にがてな遊び',prefShow(r,'ng')],['好きな家具',prefShow(r,'lf')],['だいすきな料理',prefShow(r,'fd')],['すきな食べ物',foodKnownText(r,2)],['にがてな食べ物',foodKnownText(r,0)],['なかよし',(b=>b?b.q.name+'（'+b.v+'）':'まだいない')(bondBest(r))],['村に来た日',r.came?r.came+'日目':'はじめから'],['作ったもの',(r.made||0)+'こ'],['追いはらった「コワイノ」',(r.beat||0)+'体'],['ベッド',myBed(r)>=0?'じぶんのベッドがある':'きまっていない']]){const d=el('<div class="stat" style="display:block"><span style="display:block"></span><b style="display:block;text-align:left;margin-top:2px"></b></div>');d.firstChild.textContent=k;d.lastChild.textContent=v;pg.appendChild(d)}
        body.appendChild(pf)}
      else{
      const st=el('<div class="sec"><div class="stats sgrid"></div></div>'),g=st.querySelector('.stats');
@@ -585,7 +585,7 @@ function renderSheet(){
       body.appendChild(sec)}
   }else if(sheet==='menu'){
     T.textContent=WORLDS[WD].name;
-    const MI=[['oracle','leaf','おつげ'],['manual','book','ひでんのしょ'],['goal','target','目標'],['record','memo','思い出帳'],['maps','compass','マップ選択'],['zukan','zukan','図鑑'],['gup','power','むらのちから'],['settings','gear','設定'],['support','cup','応援する']];
+    const MI=[['oracle','leaf','おつげ'],['manual','book','ひでんのしょ'],['goal','target','目標'],['record','memo','思い出帳'],['maps','compass','マップ選択'],['zukan','zukan','図鑑'],['bondmap','heart','なかよし'],['gup','power','むらのちから'],['settings','gear','設定'],['support','cup','応援する']];
     const sub=MI.find(m=>m[0]===sheetArg);
     if(!sub){/* メニューはアイコンを並べるだけ。タップで中身を開く */
       body.appendChild(el(`<div class="mtags"><span class="mtag">${pxi('grass')}みどりのマス <b>${GRASSN}</b></span><span class="mtag">${pxi('house')}村レベル <b>${S.lv}</b></span><span class="mtag">${pxi('spirit')}せいれい <b>${S.res.length}</b>人</span></div>`));
@@ -618,6 +618,7 @@ function renderSheet(){
       tr.appendChild(el('<p class="note">のりこえた試練：'+(S.trials||0)+'回</p>'));body.appendChild(tr);subSec(body);/* クリア後は、新しい目標を上に。サブクエストは下に */
     }else if(sheetArg==='goal'){if(mainStoryFocusTarget()){const b=el('<button class="btn pri" style="width:100%">お話・調査の場所へ</button>');b.onclick=focusMainStoryPlace;body.appendChild(b);}subSec(body,true);
     }else if(sheetArg==='zukan'){zukanBody(body)
+    }else if(sheetArg==='bondmap'){bondMapSec(body);/* なかよしの図（bond-map.js） */
     }else if(sheetArg==='gup'){treeSec(body);/* むらのちから：村の枝（vpath.js）と守り神の枝（GUP・GUPC は night.js）の木 */
     }else if(sheetArg==='record'){reflectSec(body);appendStoryReplays(body);diaryList(body);vrecSec(body);if(typeof letterSec==='function')letterSec(body);photoSec(body);
       const st=el('<div class="sec"><h3>これまで</h3><div class="recs"></div></div>'),rw=st.querySelector('.recs');
