@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """もらった白背景のアイコンのシート（3まい）を、1こずつ 32×32 のドット絵にする。
-白い背景は、ふちからつながる白だけを透明にする。ちぢめるのは pixdown（セルの多いほうの色・中の線・外の輪郭）。
+白い背景は、ふちからつながる白だけを透明にする。ちぢめるのは pixdown（セルの多いほうの色・中の線・外の輪郭）、そのまわりに1ドットの輪郭（となりの色を少し暗く）。
 使い方：python3 tools/art/icons32/icons32.py <出力フォルダ> <シート1> <シート2> <シート3>"""
 import sys, os
 import numpy as np
@@ -31,6 +31,17 @@ def cutout(im):
     rgba = np.dstack([a, np.where(bg, 0, 255)]).astype(np.uint8)
     return Image.fromarray(rgba, 'RGBA')
 
+def rim(c, k=.72):
+    """外がわに1ドットの輪郭：となりの色を少し暗くした色（黒にしない）。輪の中のあなにも"""
+    a = np.asarray(c).astype(float); m = a[..., 3] > 0; h, w = m.shape; o = a.copy()
+    for y in range(h):
+        for x in range(w):
+            if m[y, x]: continue
+            nb = [a[y + dy, x + dx, :3] for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1))
+                  if 0 <= y + dy < h and 0 <= x + dx < w and m[y + dy, x + dx]]
+            if nb: o[y, x, :3] = np.mean(nb, 0) * k; o[y, x, 3] = 255
+    return Image.fromarray(o.round().astype(np.uint8), 'RGBA')
+
 def main(dst, paths):
     os.makedirs(dst, exist_ok=True); allims = []
     for (cols, rows, names), p in zip(SHEETS, paths):
@@ -50,7 +61,7 @@ def main(dst, paths):
             sc = IN / max(bw, bh)
             o = pd.make(src, box, sc=sc)
             c = Image.new('RGBA', (N, N)); c.alpha_composite(o, ((N - o.width) // 2, N - 1 - o.height if bh > bw else (N - o.height) // 2))
-            c.save(os.path.join(dst, nm + '.png')); allims.append((nm, c)); print(nm, o.size)
+            c = rim(c); c.save(os.path.join(dst, nm + '.png')); allims.append((nm, c)); print(nm, o.size)
     # 一覧（8倍）
     k = 8; cols = 8; rows = (len(allims) + cols - 1) // cols
     sh = Image.new('RGBA', (cols * (N * k + 8) + 8, rows * (N * k + 8) + 8), (236, 236, 236, 255))
