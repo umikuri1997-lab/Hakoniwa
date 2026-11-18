@@ -19,7 +19,7 @@ const inv=id=>id.startsWith('seed:')?cseed(id.slice(5)):BL[id]&&BL[id].kind==='g
 const iname=id=>id.startsWith('seed:')?CROPS[id.slice(5)].name+'のたね':WD===1&&STAGEN[id]?STAGEN[id]:BL[id].item||BL[id].name;
 const STAGEN={tree:'とんがりの木の苗',deadtree:'とんがりの木'};/* 火山での名前（植えた木も自然の木も、とんがりの木） */
 const cseed=k=>(S.cseed||(S.cseed={}))[k]||0;
-function sowFarm(d){if(d.sown!==false)return true;if(d.paid){d.paid=false;d.sown=true;d.g=0;dirty=true;return true}const k=cropK(d);if(cseed(k)>0){S.cseed[k]--;d.sown=true;d.g=0;dirty=true;return true}return false}
+function sowFarm(d){if(d.sown!==false)return true;if(d.paid){d.paid=false;d.sown=true;d.g=0;d.ts=1;delete d.dry;dirty=true;return true}const k=cropK(d);if(cseed(k)>0){S.cseed[k]--;d.sown=true;d.g=0;d.ts=1;delete d.dry;dirty=true;return true}/* d.ts：まいてから、水が切れたか（d.dry）を見ている畑（つやつや tsuyaOf） */return false}
 function giveItem(id,n,back){if(!back)gotNote(id);/* back：こわした・もどした物は「最近もらった」にしない */if(BL[id]&&BL[id].kind==='gear'){gearGive(id,n);return}/* そうびは S.gear に1つずつ */if(id.startsWith('seed:')){const k=id.slice(5);S.cseed[k]=cseed(k)+n;return}S.inv[id]=inv(id)+n}
 const WIND_STAGE_TOYS=new Set(['slide','seesaw']);
 function usable(id){const b=BL[id];if(WIND_STAGE_TOYS.has(id)&&WD!==4&&inv(id)<=0)return false;/* もらって持っている物は、どのステージでも置ける */
@@ -235,7 +235,7 @@ function craftCarry(o,r){/* できた物は、作ったせいれいが頭の上�
   toast(r.name+'が'+nm+'を作った！','good')}
 const setId=k=>String(k).startsWith('set:')?k.slice(4):k,setN=(k,n)=>String(k).startsWith('set:')?n*(BL[k.slice(4)].qty||1):n;/* ひとまとめ（'set:'+id）を、物と数に */
 function madeStow(id,n,r){/* 作った物をしまった：「ひろった」とは言わない。しまった数（のこりはふつうにしまう）をかえす */
-  const c=r&&r.cmade,m=c?Math.min(n,c[id]||0):0;if(m<=0)return 0;c[id]-=m;if(!(c[id]>0))delete c[id];const b=setId(id),k=setN(id,m);giveItem(b,k,1);toast((r.name?r.name+'が':'')+itemName(b)+(k>1?'×'+k:'')+'を'+(itemDest(id)==='obox'?'おそなえ箱':'箱')+'に入れた','good');return m}
+  const c=r&&r.cmade,m=c?Math.min(n,c[id]||0):0;if(m<=0)return 0;c[id]-=m;if(!(c[id]>0))delete c[id];const b=setId(id),k=setN(id,m);giveItem(b,k,1);if(typeof juiceMadeCount==='function')juiceMadeCount(r,k);/* せいれいの上で 1・2・3… */toast((r.name?r.name+'が':'')+itemName(b)+(k>1?'×'+k:'')+'を'+(itemDest(id)==='obox'?'おそなえ箱':'箱')+'に入れた','good');return m}
 function rectCells(a,b){const x0=Math.min(a.x,b.x),x1=Math.max(a.x,b.x),y0=Math.min(a.y,b.y),y1=Math.max(a.y,b.y);const c=[];for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++)c.push([x,y]);return c}
 let pending=null;
 const STAMPC10={farm:32,fence:16,stone:16,path:8};/* スタンプで足りない分を買うときの値段（1こあたり、パワーの10倍の数：畑3.2・柵1.6・石1.6・あぜ道0.8） */
