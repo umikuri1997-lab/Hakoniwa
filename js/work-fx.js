@@ -49,16 +49,26 @@ function cookTopDraw(c,id,x,y,i,now){/* 家具の絵のあとに、上の物を�
 function wbworkStage(o){if(!o||hasNeed(o))return -1;const p=o.prog/Math.max(1,o.need);return p<.45?0:p<.85?1:2}
 /* 音と粒：描くたびに、動きの決まった所をこえたら出す */
 /* 箱などから取り出す・置く：その物のほうを向き（boxFace）、しゃがんで手をのばす動き（spirit3d の store）。
-   動きは行動のはじめから（boxActT：せいれいの時間 a.t。1倍で1秒＝2.5）。手が物にとどく所（BOXBEAT）で、取るは「ごそっ」・置くは「ことっ」。 */
+   動きは行動のはじめから（boxActT：せいれいの時間 a.t。1倍で1秒＝2.5）。音は、取る・置くのあいだ、ゴソゴソ（SAMPLES.goso）をつなげて鳴らす（boxLoop）。 */
 const TAKEACT=new Set(['bfetch','fetch','cgrab','cpick','otakiget','spick','apick','ppick','haul','cget','acol','pget']);
 const PUTACT=new Set(['store','smat','sitem','ydrop','cput','aput','sput','pput']);
-const BOXBEAT=.5;
+
 function boxAct(r){const a=r.act;return a&&a.stage==='do'&&(TAKEACT.has(a.type)||PUTACT.has(a.type))?a:null}
 function boxActT(r){const a=boxAct(r);return a?(a.t||0)/MIN_PER_SEC:null}
 function boxTarget(a){return a.box!=null&&a.box>=0?a.box:a.obj!=null&&a.obj>=0?a.obj:-1}
 function boxFace(r,a){/* 向く先のとなりのマスの向き（-W・-1・1・W）。なければ 0 */const t=boxTarget(a);if(t<0)return 0;const c=(r.y|0)*W+(r.x|0),at=anc(t);for(const d of[-W,-1,1,W]){const k=c+d;if(k<0||k>=W*H||Math.abs(k%W-c%W)>1)continue;if(k===t||anc(k)===at&&S.obj[k])return d}const dx=t%W-c%W,dy=(t/W|0)-(c/W|0);return Math.abs(dx)>=Math.abs(dy)?(dx<0?-1:dx>0?1:0):(dy<0?-W:W)}
-const BOXBEATP=new WeakMap();
-function boxBeat(r,t){/* 手が物にとどく所をこえたら、音を1回 */const a=boxAct(r);if(!a||t==null)return;const m=typeof SPM!=='undefined'&&SPM.store,rt=m&&typeof m.r==='number'?m.r:.6,ph=t*rt,last=BOXBEATP.get(r);BOXBEATP.set(r,{a,ph});if(!last||last.a!==a)return;if(Math.floor(last.ph-BOXBEAT)<Math.floor(ph-BOXBEAT))sfxAt(PUTACT.has(a.type)?'put':'take',r.x,r.y)}
+/* ゴソゴソをつなげて鳴らす：描くたびに boxBeat が、その子を見たことにする。boxLoopTick が、近い子から BOXLOOPN 人ぶんだけ鳴らし、
+   見えなくなった・おわった・村の時間が止まったら、すっと小さくして止める。音のファイルは1まわり（BOXLOOPL 秒）を3つならべた形で、まん中をくりかえす */
+const BOXLOOPL=1.0337,BOXLOOPN=3,BOXLOOPV=.5,GOSOL=new Map();
+function boxBeat(r,t){const a=boxAct(r);if(!a||t==null)return;let e=GOSOL.get(r);if(!e||e.a!==a){if(e)e.a=a;else{e={a,seen:0};GOSOL.set(r,e)}}e.seen=performance.now();e.x=r.x;e.y=r.y}
+function boxLoopStop(e,t){if(!e.src)return;e.g.gain.cancelScheduledValues(t);e.g.gain.setTargetAtTime(0,t,.06);try{e.src.stop(t+.4)}catch(_){}e.src=null}
+function boxLoopTick(){if(!GOSOL.size)return;const now=performance.now(),ok=typeof AC!=='undefined'&&AC&&AC.state==='running'&&SND.sfx&&typeof S!=='undefined'&&S&&!(typeof paused==='function'&&paused()),buf=ok&&(SBUF.goso||[]).find(Boolean),t=ok?AC.currentTime:0,L=[];
+  for(const[r,e]of GOSOL){const live=now-e.seen<250&&r.act===e.a&&boxAct(r),q=live&&buf?sfxPos(e.x,e.y):null;if(q)L.push([e,q]);else if(!live){if(ok)boxLoopStop(e,t);GOSOL.delete(r)}}
+  L.sort((a,b)=>b[1].v-a[1].v);const on=new Set(L.slice(0,BOXLOOPN).map(p=>p[0]));
+  for(const[r,e]of GOSOL){if(!on.has(e)&&e.src)boxLoopStop(e,t)}if(!buf)return;
+  for(const[e,q]of L){if(!on.has(e))continue;if(!e.src){const s=AC.createBufferSource(),g=AC.createGain(),f=AC.createBiquadFilter();s.buffer=buf;s.loop=true;s.loopStart=BOXLOOPL;s.loopEnd=BOXLOOPL*2;s.playbackRate.value=.94+Math.random()*.12;g.gain.value=0;f.type='lowpass';f.Q.value=.5;let h=g;if(AC.createStereoPanner){e.p=AC.createStereoPanner();g.connect(e.p);h=e.p}else e.p=null;h.connect(f);f.connect(sfxG);s.connect(g);s.start(t,BOXLOOPL*(1+Math.random()));Object.assign(e,{src:s,g,f})}/* 1まわりのどこからか鳴らしはじめる（2人が同じ所から鳴らないように） */
+    e.g.gain.setTargetAtTime(q.v*BOXLOOPV,t,.08);if(e.p)e.p.pan.setTargetAtTime(q.p,t,.08);e.f.frequency.setTargetAtTime(q.l,t,.08)}}
+setInterval(boxLoopTick,100);
 const WBEATP=new WeakMap();
 function workBeat(r,nm,t){const B=WBEAT[nm],m=typeof SPM!=='undefined'&&SPM[nm];if(!B||!m||typeof m.r!=='number')return;const ph=((t*m.r)%1+1)%1,last=WBEATP.get(r);WBEATP.set(r,{nm,ph});if(!last||last.nm!==nm)return;
   for(const[b,snd,fx]of B){const crossed=last.ph<=ph?(last.ph<b&&b<=ph):(b>last.ph||b<=ph);if(!crossed)continue;sfxAt(snd,r.x,r.y);if(fx&&Math.random()<.5){const j=r.act&&r.act.type==='craft'?((craftOrder(r)||{}).cs??null):r.act&&r.act.obj!=null?r.act.obj:null,x=j!=null?(j%W+.5)*TS:r.x*TS+(r.face<0?-14:14),y=j!=null?((j/W|0)+.4)*TS:r.y*TS;fxSpr(fx,x,y)}}}
