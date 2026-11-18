@@ -27,7 +27,7 @@ function escTick(){
     if(!w||!isNight()||h.hunger<500||S.t-(a.t0||S.t)>ESCMAX||w.act&&w.act.type==='faint'){escEnd(h,w);continue}
     const there=w.hidden||!!w.act&&w.act.stage==='do'&&(w.act.type==='flee'||!!w.act.run);
     if(!there&&!escWard(w)){escEnd(h,w);continue}/* にげるのをやめた */
-    if(there&&Math.hypot(h.x-w.x,h.y-w.y)<=ESCR+.5){if(!a.ok){a.ok=1;bondAdd(h,w,ESCBOND,'save');toast(h.name+'が'+w.name+'をつれて、にげた','good');for(const r of[h,w])fxSpr('hearts',r.x*TS,(r.y-.7)*TS)}escEnd(h,w)}}
+    if(there&&Math.hypot(h.x-w.x,h.y-w.y)<=ESCR+.5){if(!a.ok){a.ok=1;bondAdd(h,w,ESCBOND,'save');if(typeof dyGuard==='function')dyGuard(h);/* ゆうべのかつやくの、守った数 */toast(h.name+'が'+w.name+'をつれて、にげた','good');for(const r of[h,w])fxSpr('hearts',r.x*TS,(r.y-.7)*TS)}escEnd(h,w)}}
   if(!S.enemies.some(e=>e.spawned&&!e.dead&&!e.flee))return;
   for(const w of S.res){if(!escWard(w))continue;if(w.escBy!=null){const h=resById(w.escBy);if(h&&h.act&&h.act.type==='escort'&&h.act.who===w.id)continue;w.escBy=null}
     if(!S.enemies.some(e=>e.spawned&&!e.dead&&!e.flee&&Math.hypot(e.x-w.x,e.y-w.y)<7))continue;
