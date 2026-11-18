@@ -19,6 +19,11 @@ assert.equal(sn.fk[sn.ng],0);assert.equal(sn.fk[sn.lk],2);assert.deepEqual(sn.tx
 /* 箱からとるとき：にがては、ふつうよりあと */
 const ord=await run(`(()=>{const r=S.res[0],K=Object.keys(FOODS).filter(k=>!FOODS[k].bad&&!FOODS[k].dish);const ng=K.find(k=>foodLike(r,k)===0),nm=K.find(k=>foodLike(r,k)===1&&FOODS[k].v===(FOODS[ng]||{}).v);return ng&&nm?[ng,nm].sort((a,b)=>foodLike(r,b)-foodLike(r,a))[0]===nm:'skip'})()`);
 assert.ok(ord===true||ord==='skip','にがてはあと');
+/* 「〇〇が食べたい」のこまりごと：すきな物（この村で持ったことのある物）。おやつでその物をあげると、なおる */
+const wt=await run(`(()=>{const r=S.res[2],K=Object.keys(FOODS).filter(k=>!FOODS[k].bad&&foodLike(r,k)>=2),nm=Object.keys(FOODS).find(k=>!FOODS[k].bad&&foodLike(r,k)===1);S.seenIt={};const none=wantPick(r);S.seenIt['f:'+K[0]]=1;const f=wantPick(r);S.trouble={id:r.id,k:'want',d:dayNo(),f};const txt=troubleText(r),ok0=TROUBLE.want.ok(r);
+  S.fs={};S.fs[f]=1;S.fs[nm]=1;syncFood();const give=k=>{snackPop(r);const row=[...document.querySelectorAll('.pxcard .row')].find(x=>x.querySelector('b').textContent.startsWith(FOODS[k].name+'　'));row.querySelector('button').click();ACT.eat.tick(r,r.act,999);ACT.eat.end(r,r.act);for(let i=0;i<6;i++)troubleTick()};
+  give(nm);const still=!!S.trouble;S.letterQ=[];r.fun=50;NOSAVE=false;give(f);NOSAVE=true;return {none,f,K0:K[0],txt,ok0,still,solved:S.trouble===null,fun:r.fun,letter:(S.letterQ||[]).some(q=>q.k==='thx'&&q.tx.join('').indexOf(FOODS[f].name)>=0)}})()`);
+assert.equal(wt.none,null,'持ったことがなければ出ない');assert.equal(wt.f,wt.K0);assert.ok(wt.ok0&&wt.txt.endsWith('が食べたい'),'こまりごと '+JSON.stringify(wt));assert.ok(wt.still,'ちがう物ではなおらない');assert.ok(wt.solved,'その物をあげるとなおる');assert.ok(wt.fun>=50+10+15,'たのしさ '+wt.fun);assert.ok(wt.letter,'お礼の手紙');
 /* レベルアップ：上がった数だけ、えらんで +5 */
 const lv=await run(`(()=>{const r=S.res[1],w0=rStat(r,rLv(r)).work,s0=staOf(r);addSpiritXp(LVXP[3]/.8+1,r);const n=r.lvPend;RLVQ.length=0;rlvShow({id:r.id,from:1,to:rLv(r)});const B=()=>[...document.querySelectorAll('#rlv .rpick button')];const okH=document.querySelector('#rlvOk').hidden,b0=B().length;B()[0].click();const mid=r.lvPend;B()[2]&&B()[2].click();return {n,lv:rLv(r),okH,b0,mid,pend:r.lvPend||0,lvb:r.lvb,dw:rStat(r,rLv(r)).work-w0-lvGain(r,'work',rLv(r))+lvGain(r,'work',1),ds:staOf(r)-s0,closed:document.querySelector('#rlv').hidden}})()`);
 assert.ok(lv.n>=2,'2レベル以上 '+JSON.stringify(lv));assert.ok(lv.okH&&lv.b0===3,'えらぶまでOKはない');assert.equal(lv.lvb.work,5);assert.ok(lv.ds>=5,'スタミナ+5 '+JSON.stringify(lv));assert.equal(lv.dw,5,'はたらく速さ+5');
@@ -28,4 +33,4 @@ await run(`document.querySelectorAll('#rlv .rpick button')[1].click()`);
 /* なかよしの図：顔3つ・なかよし30から線・けんかは赤 */
 const bm=await run(`(()=>{const[a,b,c]=S.res;S.bond={};S.bond[bondKey(a,b)]=40;S.bond[bondKey(a,c)]=10;S.qr=null;closeSheet();openSheet('menu','bondmap');const cv=document.querySelector('#sheetBody .bmap canvas'),faces=document.querySelectorAll('#sheetBody .bmface').length;const d=cv.getContext('2d').getImageData(0,0,cv.width,cv.height).data;let px=0;for(let i=3;i<d.length;i+=4)if(d[i])px++;document.querySelector('#sheetBody .bmface').click();return {faces,px,sheet,arg:sheetArg}})()`);
 assert.equal(bm.faces,3);assert.ok(bm.px>10,'線 '+JSON.stringify(bm));assert.equal(bm.sheet,'res','顔をタップでせいれいの画面');
-assert.deepEqual(errors,[]);console.log('likes ok',JSON.stringify({dist,sn,lv,bm}));await browser.close()})();
+assert.deepEqual(errors,[]);console.log('likes ok',JSON.stringify({dist,sn,wt,lv,bm}));await browser.close()})();
