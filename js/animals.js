@@ -111,7 +111,7 @@ function aniChip(a,now){/* ボーンで動かして写したコマ（tools/art/a
   const jf=aniJoyF(a,now);if(jf)return a.vw&&C['ani:'+k+'#'+a.vw+jf[0]]||C['ani:'+k+'#'+jf[0]]||C['ani:'+k+'#0']||null;
   const f=a.eat>0?ANIEAT[(now/220|0)%4]:a.mv?'w'+((now/150|0)%4):String(((now+a.id*337)/700|0)%2);return a.vw&&C['ani:'+k+'#'+a.vw+f]||C['ani:'+k+'#'+f]||C['ani:'+k+'#0']||null}
 function drawAnimal(g,a,now){/* 足もと（a.x, a.y）に、チップの足（下のはし58/64）をそろえる。左むきは、足もとのまん中で反転 */const ch=aniChip(a,now);if(!ch)return;const im=chipImgs(ch,'ani'+a.k)[0];if(!im.ok)return;
-  const x=Math.round(a.x*TS),y=Math.round(a.y*TS),sz=a.k==='hane'?6:10;g.fillStyle='rgba(60,50,30,.18)';g.fillRect(x-sz,y-1,sz*2,2);g.fillRect(x-sz+2,y+1,sz*2-4,1);/* かげ（ドット） */
+  const x=snapP(a.x*TS),y=snapP(a.y*TS),sz=a.k==='hane'?6:10;g.fillStyle='rgba(60,50,30,.18)';g.fillRect(x-sz,y-1,sz*2,2);g.fillRect(x-sz+2,y+1,sz*2-4,1);/* かげ（ドット） */
   const jf=aniJoyF(a,now);g.save();g.translate(x,y-(jf?jf[2]:0));if(a.face<0)g.scale(-1,1);g.imageSmoothingEnabled=false;g.drawImage(im,ch.ax/2-TS/2,ch.ay/2-29,ch.w/2,ch.h/2);g.restore()}
 function aniDraw(add,vis,now,ctx){for(const a of S.ani||[]){if(a.in||!vis(a))continue;const px=a.x*TS,fy=a.y*TS;add(a.y,2,[px-20,fy-34,px+20,fy+4],()=>liftDraw(uLift(a),()=>drawAnimal(ctx,a,now)),(a.y|0)*W+(a.x|0))}}
 /* ---------- とれる物のアイコン（16×16のドット） ---------- */

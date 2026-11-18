@@ -254,7 +254,8 @@ function drawSpiritDot(c,el,x,y,s,f,o){
   if(!spDotReady(el))return false;
   const TUNE=o.vr&&o.vr.key?KEYTUNE:BASETUNE,vr=o.vr,t=o.t||0,back=!!o.back,tr=(o.turn||0)>.5?1:0,D=1/.87;/* せいれいの絵は、ゲームの1ドットを2×2に分けた細かさ */
   let {br,st,arm,A,aN,aF,prop,lean2,sq,frontArm,bothF}=spPose(o,t,tr,back);
-  const spr=(key,X,Y)=>{const ch=CHIPS[key],im=spDot(key,el,vr);if(im)c.drawImage(im,(X||0)+ch.ax*D,(Y||0)+ch.ay*D,ch.w*D,ch.h*D)};
+  const spr=(key,X,Y)=>{const ch=CHIPS[key],im=spDot(key,el,vr);if(im)c.drawImage(im,(X||0)+ch.ax*D,(Y||0)+ch.ay*D,ch.w*D,ch.h*D)},
+    sprR=(key,a,px,py)=>{/* (px,py) のまわりに a だけ回した絵（rotDot。描くときに回さない） */px=px||0;py=py||0;const ch=CHIPS[key],im=spDot(key,el,vr);if(im)drawRot(c,im,a,px/D-ch.ax,py/D-ch.ay,px,py,D)};
   {const nm=spMotion(o,A);if(nm&&spmDraw(c,el,x,y,s,f,o,nm,t,back,tr,spr,D))return true}/* 3Dから写した動き */
   const E0='sp_'+el+':',S=tr?'S':'';
   // いきをする・しゃがむ・かたむくは、絵を回さずに、頭とうでをドット単位でずらす（ドットがくずれないように）
@@ -262,14 +263,14 @@ function drawSpiritDot(c,el,x,y,s,f,o){
   c.save();c.translate(x,y);c.scale(s*f,s);
   const sm=c.imageSmoothingEnabled;c.imageSmoothingEnabled=false;
   const sitF=!!o.sitF&&!tr&&!back;if(sitF)c.translate(0,SITF*D);/* 正面にすわって、足をこちらへのばす：体を下げて、足のかわりに足のうらを2つ前に描く */
-  const tail=(tx,ty,rot)=>{c.save();c.translate(tx,ty);c.rotate((rot||0)+Math.sin(t*3)*.18);spr(E0+'tail');c.restore()};
+  const tail=(tx,ty,rot)=>{c.save();c.translate(tx,ty);sprR(E0+'tail',(rot||0)+Math.sin(t*3)*.18);c.restore()};
   const wings=bk=>{if(o.bed)return;const fl=Math.sin(t*(o.walk?10:3.2))*.12,W=[[-16,-60,44,-2.5-fl],[16,-60,44,-.64+fl],[-18,-40,38,2.75+fl],[18,-40,38,.39-fl]];
-    const lf=(w,k)=>{c.save();c.translate(w[0],w[1]);c.rotate(w[3]);if(w[2]!==44)c.scale(w[2]/44,w[2]/44);spr(E0+k);c.restore()};
+    const lf=(w,k)=>{c.save();c.translate(w[0],w[1]);if(w[2]!==44)c.scale(w[2]/44,w[2]/44);sprR(E0+k,w[3]);c.restore()};
     for(const w of W)lf(w,'leaf');if(bk){c.globalAlpha=.25;lf(W[0],'leafW');lf(W[1],'leafW');c.globalAlpha=1}};/* うしろ向きは、上のはねを少し白っぽく */
   if(el==='wind'&&!back){c.save();c.translate(-tr*9+hDx,hDy);c.scale(1-tr*.3,1);wings();c.restore()}
   if(!back&&el!=='wind'&&tr)tail(-18,-16,-.85);
-  const armD=(sx,a)=>{c.save();c.translate(sx*14*TUNE.bodyW*(1-tr*.9)+(back?-1:1)*tr*2,-26*TUNE.bodyH+aDy);c.translate(aDx,0);c.rotate(sx*(.35+a));
-    c.save();c.scale(sx,1);spr('sp:arm'+S);c.restore();if(prop&&sx===-farA&&!back)spProp(c,prop,sx,a,t,o);c.save();c.scale(sx,1);spr('sp:hand');c.restore();c.restore()};
+  const armD=(sx,a)=>{c.save();c.translate(sx*14*TUNE.bodyW*(1-tr*.9)+(back?-1:1)*tr*2,-26*TUNE.bodyH+aDy);c.translate(aDx,0);/* うで・手は回したコマ（sprR）。左右反対のうでは、反対にしてから同じ向きに回す（回す→反対 と同じ形） */
+    c.save();c.scale(sx,1);sprR('sp:arm'+S,.35+a);c.restore();if(prop&&sx===-farA&&!back){c.save();c.rotate(sx*(.35+a));spProp(c,prop,sx,a,t,o);c.restore()}c.save();c.scale(sx,1);sprR('sp:hand',.35+a);c.restore();c.restore()};
   const farA=back?1:-1,aA0=sx=>o.carry?-1.85+Math.sin(t*9)*.08:tr?1.22+(o.walk?st*.6:Math.sin(t*1.7)*.05):(back?1:-1)*sx*arm+(back?0:.35),aA=sx=>sx===-farA?(aN!=null?aN:aA0(sx)):(aF!=null&&!o.carry?aF:aA0(sx));
   if(!bothF&&!tr)armD(farA,aA(farA));if(!tr&&!frontArm)armD(-farA,aA(-farA));
   {const ws=o.walk?st:0,up=v=>-Math.max(0,v)*3*D;/* 足：もとの体の下の部分を切り分けた絵。体より先にかいて、上のはしは体の下にもぐらせる（つけねに線を出さない）。止まっているときは、もとの形と同じ。歩くときは交互に上げる（横向きは前後にもふる） */
@@ -283,9 +284,9 @@ function drawSpiritDot(c,el,x,y,s,f,o){
   const nod=A==='eat'?Math.round(Math.max(0,Math.sin(t*7))*2.8)*D:0;c.save();c.translate(hDx,hDy+nod);
   // 頭巾だけ属性ごと。顔の丸は共通（風の子は頭巾のかわりに、まるい頭とつる）。小さく動く所（頭巾の先・芽・火の玉・つる）は別のパーツ
   const H=TUNE.head,hs=tr&&!back?'S':'',hp=(lx,ly)=>[(hs?-TUNE.sHoodX+lx*TUNE.sHead:lx)*H,-30*TUNE.bodyH+H*(ly+36)],/* 頭の中の位置→体の位置 */
-    rot=(k,lx,ly,a)=>{const[px,py]=hp(lx,ly);c.save();c.translate(px,py);c.rotate(a);c.translate(-px,-py);spr(k);c.restore()},dd=v=>Math.round(v*H*.87)*D;
+    rot=(k,lx,ly,a)=>{const[px,py]=hp(lx,ly);sprR(k,a,px,py)},dd=v=>Math.round(v*H*.87)*D;
   if(o.crown&&!o.bed)drawCrown(c,tr?-4*D:0,(CROWNY[el]||-66)*D,D,null,0,0,'b');/* 花かんむりの奥の半分は、頭巾より先（頭にかくれる） */
-  if(el==='wind'){const[px,py]=[(back?1:-1)*tr*4*H,-30*TUNE.bodyH+H*(-79+36)];c.save();c.translate(px,py);c.rotate(Math.sin(t*2)*.15);c.translate(-px,-py);spr(E0+'vine'+hs);c.restore()}
+  if(el==='wind'){const[px,py]=[(back?1:-1)*tr*4*H,-30*TUNE.bodyH+H*(-79+36)];sprR(E0+'vine'+hs,Math.sin(t*2)*.15,px,py)}
   spr(E0+'hood'+hs);
   if(el==='wood'||el==='fire'){const v=dd(Math.sin(t*(el==='fire'?7:2.2))*(el==='fire'?2.5:1.4));spr(E0+'tip'+hs,v,0)}/* 頭巾の先が左右にゆれる */
   if(el==='water'){const v=dd(Math.sin(t*2.2)*1.4);if(v<0)spr(E0+'tip'+hs);spr(E0+'tip'+hs,0,v)}/* 水の子は上下（上がるときは、すきまがあかないように元の位置にも描く） */
@@ -496,7 +497,7 @@ function drawRes0(r,now){
   const tubB=at==='bathe'&&ad&&r.act.tub!=null&&r.act.in>0,wade=at==='bathe'&&ad&&r.act.in>0?r.act.in:sacredPose(r)?.anim==='soak'&&!walking?1:0;/* 水浴び：水の中では下半分がかくれる */
   {const tp=toyPose(r,now);if(tp){px=tp.x;py=tp.y-9}}/* 遊具の上で遊ぶ */const seated=!walking&&r.act&&r.act.stage==='do'&&SEATS.includes(S.obj[(r.y|0)*W+(r.x|0)]);/* いすにすわっているときは、かげを出さない */if(sj<0&&!wade&&!toyR(r)&&!seated)shadow(ctx,px,py+8,12,3.6);
   const lvR=rLv(r);
-  const tt=now/1000+r.id*1.7,fy=py+9-bob;
+  px=snapP(px);const tt=now/1000+r.id*1.7,fy=snapP(py+9-bob);/* 描く場所は、カメラと同じく画面のピクセルに丸める */
   ctx.save();// 発熱対策：ぼかし影はなし
   if(bedH){ctx.translate(px,fy);ctx.rotate(-Math.PI/2);ctx.scale(BEDHS,1);ctx.translate(-px,-fy)}/* 横のベッドでは、頭をまくら（左）にして横になる */
   if(wade){ctx.beginPath();ctx.rect(px-40,fy-90,80,tubB?Math.max(0,fy+(((r.act.tub/W)|0)*TS+17-fy)*wade-(fy-90)):90-wade*11);ctx.clip()}
@@ -538,7 +539,7 @@ function drawRes0(r,now){
     const BB=pxBub(ctx,px,by-41.125,bw,19.125,warn?'#ffd2cc':'#fff',warn?'#c98a80':'#b8a587',3.375);/* ドットのふきだし */
     if(/^g:/.test(String(t)))goneBubPic(ctx,String(t).slice(2),BB);/* 消えた、なかよしの子の絵 */
     else if(t==='💬'){ctx.save();ctx.setTransform(1,0,0,1,0,0);ctx.fillStyle='#7a7064';const q=Math.max(2,Math.round(BB.s/9));for(let d=-1;d<=1;d++)ctx.fillRect(Math.round(BB.x-q/2)+d*q*2,Math.round(BB.y-q/2),q,q);ctx.restore()}/* おしゃべりは点々だけ */
-    else if(t==='🪓'&&!BUBS.ok&&PSPR.axe&&PSPR.axe.ok){const g=PSPR.axe.img,ih=12.75,iw=ih*g.width/g.height;ctx.save();ctx.translate(px,by-31.5);ctx.rotate(-Math.PI/4);ctx.drawImage(g,-iw/2,-ih/2,iw,ih);ctx.restore()}else if(!pic&&BUBI[bubKey(t)])bubIcon(ctx,t,Math.round(px/1.5)*1.5,by-31.5,1.125,BB);/* 絵文字は、ドットの絵（BUBI）で描く */else{const ei=emoImg(t);if(ei){const k=Math.min(BB.f,BB.s*.85*1.5)/Math.max(ei.width,ei.height),iw=Math.round(ei.width*k),ih=Math.round(ei.height*k);ctx.save();ctx.setTransform(1,0,0,1,0,0);ctx.drawImage(ei,Math.round(BB.x-iw/2),Math.round(BB.y-ih/2),iw,ih);ctx.restore()}/* 絵のアイコンも、ふきだしの中のまん中（画面のピクセル）に */else if(!pic&&!emoSrc(t))bubIcon(ctx,'?',Math.round(px/1.5)*1.5,by-31.5,1.125,BB)}}};
+    else if(t==='🪓'&&!BUBS.ok&&PSPR.axe&&PSPR.axe.ok){const g=PSPR.axe.img,ih=12.75,gw=g.naturalWidth||g.width,gh=g.naturalHeight||g.height;drawRot(ctx,g,-Math.PI/4,gw/2,gh/2,px,by-31.5,ih/gh)}else if(!pic&&BUBI[bubKey(t)])bubIcon(ctx,t,Math.round(px/1.5)*1.5,by-31.5,1.125,BB);/* 絵文字は、ドットの絵（BUBI）で描く */else{const ei=emoImg(t);if(ei){const k=Math.min(BB.f,BB.s*.85*1.5)/Math.max(ei.width,ei.height),iw=Math.round(ei.width*k),ih=Math.round(ei.height*k);ctx.save();ctx.setTransform(1,0,0,1,0,0);ctx.drawImage(ei,Math.round(BB.x-iw/2),Math.round(BB.y-ih/2),iw,ih);ctx.restore()}/* 絵のアイコンも、ふきだしの中のまん中（画面のピクセル）に */else if(!pic&&!emoSrc(t))bubIcon(ctx,'?',Math.round(px/1.5)*1.5,by-31.5,1.125,BB)}}};
   if(BUBQ){const T=ctx.getTransform();BUBQ.push(()=>{ctx.save();ctx.setTransform(T);over();ctx.restore()})}else over();/* あとで描くふきだしも、見張り台・段差の上の高さのまま */
 }
 const WORKBUB=new Set(['eat','forage','fetch','eatwait','bathe','otaki','smelt','nest','pitfix','plant','pickdrop','pickseed','awater','apick','aput','acol','douse','sweep','tdig','cpick','ppick','spick','pget','sput','pput','cget','cput']);/* WORKFACE のほかに、ふきだしを出さない作業 */
@@ -577,7 +578,7 @@ function drawGod(now){
   else if(SUBW[GOD]){const f=()=>talkBub(px,py-28,now,'#ffd56b');if(BUBQ)BUBQ.push(f);else f()}/* サブクエスト（交換）：黄色の吹き出し */
   else if(S.feat.shop){ctx.fillStyle='rgba(31,59,58,.9)';rr(ctx,px-17,py-58,34,13,6);ctx.fillStyle='#ecdcbc';ctx.font='9px \"PixelMplus10\",\"Hikomi\",\"Hiragino Maru Gothic ProN\",sans-serif';ctx.textAlign='center';ctx.fillText('こうかん',px,py-48.5);ctx.textAlign='start'}
   const g=ctx.createRadialGradient(px,py-12,4,px,py-12,36);g.addColorStop(0,'rgba(255,250,210,.4)');g.addColorStop(1,'rgba(255,250,210,0)');ctx.fillStyle=g;ctx.fillRect(px-36,py-48,72,72);
-  const G2=SPR.god,GC=window.CHIPS&&CHIPS.god,GI=GC&&chipImgs(GC,'god')[0];if(GI&&GI.ok){const sm=ctx.imageSmoothingEnabled;ctx.imageSmoothingEnabled=false;ctx.drawImage(GI,Math.round(px*2)/2+GC.ax/2,Math.round((py+16)*2)/2+GC.ay/2,GC.w/2,GC.h/2);ctx.imageSmoothingEnabled=sm}/* ドット絵（1ドットを2×2に分けた細かさ） */else if(G2.ok){const h=58,w=h*G2.w/G2.h;ctx.drawImage(G2.img,px-w/2,py+16-h,w,h)}else{
+  const G2=SPR.god,GC=window.CHIPS&&CHIPS.god,GI=GC&&chipImgs(GC,'god')[0];if(GI&&GI.ok){const sm=ctx.imageSmoothingEnabled;ctx.imageSmoothingEnabled=false;ctx.drawImage(GI,snapP(px+GC.ax/2),snapP(py+16+GC.ay/2),GC.w/2,GC.h/2);ctx.imageSmoothingEnabled=sm}/* ドット絵（1ドットを2×2に分けた細かさ） */else if(G2.ok){const h=58,w=h*G2.w/G2.h;ctx.drawImage(G2.img,px-w/2,py+16-h,w,h)}else{
   circ(ctx,px-10,py+6,7,'#fff');circ(ctx,px+10,py+6,7,'#fff');circ(ctx,px,py+4,9,'#fff');circ(ctx,px-4,py+9,6,'#eef4ff');circ(ctx,px+5,py+9,6,'#eef4ff');
   circ(ctx,px,py-7,8,'#f6d6b0');
   ctx.fillStyle='#fff';ctx.beginPath();ctx.moveTo(px-7,py-5);ctx.quadraticCurveTo(px,py+8,px+7,py-5);ctx.quadraticCurveTo(px,py-1,px-7,py-5);ctx.fill();
@@ -593,16 +594,16 @@ const NWALK={w:122,h:151,n:8,ms:130,img:new Image(),ok:false};NWALK.img.onload=(
 function drawNushi(now){
   const n=S.nushi;if(!n)return;const FIRE=WD!==0,SH=FIRE?NSHEET2:NSHEET;if(FIRE&&!SH.ok)return drawNushiOld(now);/* 火のヌシ */
   const T=NSPR.top;if(!FIRE&&!T.ok)return;
-  const px=n.x*TS,py=n.y*TS,f=n.face||1,mv=n.mv||0,K=.5,ph=now/150,st=Math.sin(ph)*mv*.3,bob=mv?Math.abs(Math.sin(ph))*-1.6:Math.sin(now/600)*.8;ctx.save();ctx.globalAlpha=n.app==null?1:n.app;const embrace=sacredEffect('embrace');if(embrace?.lord===n){const p=sacredEase((now-embrace.at)/900);ctx.translate(px,py);ctx.rotate((n.face<0?-.035:.035)*p);ctx.translate(-px,-py+3*p);}
+  const px=n.x*TS,py=n.y*TS,f=n.face||1,mv=n.mv||0,K=.5,ph=now/150,st=Math.sin(ph)*mv*.3,bob=mv?Math.abs(Math.sin(ph))*-1.6:Math.sin(now/600)*.8;ctx.save();ctx.globalAlpha=n.app==null?1:n.app;const embrace=sacredEffect('embrace');if(embrace?.lord===n){const p=sacredEase((now-embrace.at)/900);ctx.translate(0,3*p);}/* だきしめるときは、少し下へ（絵は回さない） */
   const g=ctx.createRadialGradient(px,py-60,8,px,py-60,100);g.addColorStop(0,FIRE?'rgba(255,200,140,.32)':'rgba(190,255,200,.32)');g.addColorStop(1,FIRE?'rgba(255,200,140,0)':'rgba(190,255,200,0)');ctx.fillStyle=g;ctx.fillRect(px-100,py-160,200,200);
   shadow(ctx,px,py+3,34,7);
   if(SH.ok){const fi=(n.dir>0?0:n.dir<0?1:2),F=SH.f[mv?3+fi*6+Math.floor(now/150)%6:fi];/* 0正面・1うしろ・2横（左向き）。歩くときは6コマ */
-    const WK=!FIRE&&mv&&fi===2&&NWALK.ok,[sx,sy,sw,sh,sc]=WK?[NWALK.w*(Math.floor(now/NWALK.ms)%NWALK.n),0,NWALK.w,NWALK.h,1,0,0]:F,dw=sw*sc,dh=sh*sc;ctx.save();ctx.imageSmoothingEnabled=false;const hp=n.hop&&now-n.hop<450?Math.sin(Math.PI*(now-n.hop)/450)*7:0;/* 遊びにきた子といっしょに、ぴょんとはねる */ctx.translate(Math.round(px),Math.round(py+4+(mv?0:bob)-hp));/* ドット絵（1ドット＝ゲームの1点）。ドットがくずれないように、整数の位置にかく */if(!n.dir&&f>0)ctx.scale(-1,1);/* 絵は左向き。右を向くときは反転 */ctx.drawImage(WK?NWALK.img:SH.img,sx,sy,sw,sh,-dw/2+(WK?0:F[5]||0)*sc,-dh+(WK?0:F[6]||0)*sc,dw,dh)/* 6・7番めは、からだの位置をそろえるずらし（ドット） */;if(!FIRE&&!mv&&fi!==1&&S.res.some(r=>r.act&&r.act.type==='npl')){/* 遊んでいるときは、目を細める（目のドットを毛の色でうめて、細い目をかく。笑顔にはしない） */const ox=-dw/2,oy=-dh;for(const[L,d]of fi===0?[[31,1],[48,-1]]:[[15,-1]]){ctx.fillStyle='#fbf3e0';ctx.fillRect(ox+L,oy+55,6,8);ctx.fillStyle='#4a5d46';for(let i=0;i<3;i++){const x=d>0?L+1+i:L+3-i;ctx.fillRect(ox+x,oy+57+i,2,1)}}/* 顔のまん中へ下がる、ななめの細い目 */}ctx.restore()}
+    const WK=!FIRE&&mv&&fi===2&&NWALK.ok,[sx,sy,sw,sh,sc]=WK?[NWALK.w*(Math.floor(now/NWALK.ms)%NWALK.n),0,NWALK.w,NWALK.h,1,0,0]:F,dw=sw*sc,dh=sh*sc;ctx.save();ctx.imageSmoothingEnabled=false;const hp=n.hop&&now-n.hop<450?Math.sin(Math.PI*(now-n.hop)/450)*7:0;/* 遊びにきた子といっしょに、ぴょんとはねる */ctx.translate(snapP(px),snapP(py+4+(mv?0:bob)-hp));/* ドット絵（1ドット＝ゲームの1点）。ドットがくずれないように、整数の位置にかく */if(!n.dir&&f>0)ctx.scale(-1,1);/* 絵は左向き。右を向くときは反転 */ctx.drawImage(WK?NWALK.img:SH.img,sx,sy,sw,sh,-dw/2+(WK?0:F[5]||0)*sc,-dh+(WK?0:F[6]||0)*sc,dw,dh)/* 6・7番めは、からだの位置をそろえるずらし（ドット） */;if(!FIRE&&!mv&&fi!==1&&S.res.some(r=>r.act&&r.act.type==='npl')){/* 遊んでいるときは、目を細める（目のドットを毛の色でうめて、細い目をかく。笑顔にはしない） */const ox=-dw/2,oy=-dh;for(const[L,d]of fi===0?[[31,1],[48,-1]]:[[15,-1]]){ctx.fillStyle='#fbf3e0';ctx.fillRect(ox+L,oy+55,6,8);ctx.fillStyle='#4a5d46';for(let i=0;i<3;i++){const x=d>0?L+1+i:L+3-i;ctx.fillRect(ox+x,oy+57+i,2,1)}}/* 顔のまん中へ下がる、ななめの細い目 */}ctx.restore()}
   else if(n.dir){drawNushiFB(ctx,px,py+4+bob,n.dir<0,now,mv)}else{
   ctx.save();ctx.translate(px,py+4+bob);ctx.scale(-f*K,K);ctx.translate(-117,-301);/* 絵は左向き。f=1で右を向く */
   /* 脚は、からだより先にかく（つけ根はからだにかくれる）。奥の脚は少し暗く */
   const LG=[['L5',154,201,1,1],['L3',77,203,1,-1],['L5',164,201,0,-1],['L0',68,203,0,1]];
-  for(const[k,x,y,dk,sg]of LG){const L=NSPR[k];if(!L.ok)continue;ctx.save();ctx.translate(x+15.2,y+13.5);ctx.rotate(st*sg);ctx.drawImage(dk&&L.dark?L.dark:L.img,-15.2,-13.5,L.w,L.h);ctx.restore()}
+  for(const[k,x,y,dk,sg]of LG){const L=NSPR[k];if(!L.ok)continue;const im=dk&&L.dark?L.dark:L.img,sc=L.w/(im.naturalWidth||im.width);drawRot(ctx,im,st*sg,15.2/sc,13.5/sc,x+15.2,y+13.5,sc)}/* 足は回したコマ（rotDot） */
   ctx.drawImage(T.img,0,0,T.w,T.h);
   ctx.restore()}
   // まう葉と光

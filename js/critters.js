@@ -119,7 +119,7 @@ function critChip(c,now){const C=window.CHIPS;if(!C)return null;
   if(c.k==='fly'){const op=Math.floor(now/120+c.id)%2===0;return C['critfly:'+(c.ci||0)+'#'+(op?0:1)]}
   if(c.k==='bird')return C[c.fl?'critbird#f'+(Math.floor(now/90)%2):'critbird#0'];
   const n='crit'+(CK[c.k].ch||c.k)+'#',f=critFrame(c,now);return c.vw&&C[n+c.vw+f]||C[n+f]||C[n+'0']}
-function drawCritter(g,c,now){const x=Math.round(c.x*TS),y=Math.round(c.y*TS),z=Math.round(c.z||0)+critPokeZ(c,now),f=c.face<0?-1:1,ch=critChip(c,now),sw=CK[c.k].sw;
+function drawCritter(g,c,now){const x=snapP(c.x*TS),y=snapP(c.y*TS),z=Math.round(c.z||0)+critPokeZ(c,now),f=c.face<0?-1:1,ch=critChip(c,now),sw=CK[c.k].sw;
   const al=critAlpha(c);if(al<=0)return;if(al>0){g.fillStyle='rgba(40,30,20,'+(.18*al).toFixed(3)+')';g.fillRect(x-(sw>>1),y,sw,2)}
   if(!ch)return;const im=chipImgs(ch,'crit'+c.k)[0];if(!im.ok)return;const sm=g.imageSmoothingEnabled;g.imageSmoothingEnabled=false;g.save();g.globalAlpha=al;g.translate(x,y-z);if(f<0)g.scale(-1,1);g.drawImage(im,ch.ax/2,ch.ay/2,ch.w/2,ch.h/2);g.restore();g.imageSmoothingEnabled=sm}
 /* ほたるの光：夜の暗さより上に、おしりのドットの光（ゆっくり明るく・暗く）。draw-world.js が暗さのあとでよぶ */

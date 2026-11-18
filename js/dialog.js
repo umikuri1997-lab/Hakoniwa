@@ -79,16 +79,18 @@ function dlgLoop(now){if($('#dialog').hidden){DLGA.raf=0;dlgGestEnd();return}if(
   const dt=Math.min(.1,(now-DLGA.last)/1000);DLGA.last=now;
   if(DLGFF){if(DLGA.n<DLGA.full.length&&now>=DLGA.holdUntil){DLGA.n=DLGA.full.length;dlgSet(DLGA.full,DLGA.n);DLGA.readReady=now+200;voiceStop()}else if(DLGA.n>=DLGA.full.length&&now>=DLGA.holdUntil&&now>=DLGA.readReady&&!sacredMotionPending()){const b=$('#dlgBtns button[data-nx]');if(b&&!b.disabled)b.click()}}
   if(DLGA.n<DLGA.full.length){let changed=false;while(DLGA.n<DLGA.full.length&&now>=DLGA.charAt){const previous=DLGA.full[DLGA.n-1],ch=DLGA.full[DLGA.n++];DLGA.charAt+=(1000/38+dialoguePause(ch,previous))*(DLGA.slow||1);changed=true}if(changed)dlgSet(DLGA.full,DLGA.n);if(DLGA.n>=DLGA.full.length)DLGA.readReady=now+200}
-  const cv=$('#dlgPort');if(cv.hidden)return;const c=cv.getContext('2d');c.clearRect(0,0,240,240);
+  const cv=$('#dlgPort');if(cv.hidden)return;const c0=cv.getContext('2d');c0.clearRect(0,0,240,240);const P=DLGPC||(DLGPC=document.createElement('canvas'));if(P.width!==240){P.width=240;P.height=240}const c=P.getContext('2d');c.setTransform(1,0,0,1,0,0);c.clearRect(0,0,240,240);/* 立ち絵は、べつの絵にかいてから、かたむける（rotNear：描くときに回さない） */
   const t=now/1000,ent=Math.min(1,(now-DLGA.enterT)/260),ee=1-Math.pow(1-ent,3),talking=DLGA.n<DLGA.full.length;
   const pose=dialoguePose(DLGA.motion,now-DLGA.lineT),reduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches,hop=reduced?0:pose.y;
   const shake=reduced?0:pose.x,bob=Math.sin(t*2.4)*3+(talking?Math.abs(Math.sin(t*14))*-3:0);
-  c.save();c.globalAlpha=ee;c.translate((1-ee)*-70+shake,0);if(!reduced){c.translate(120,190);c.rotate(pose.angle);c.translate(-120,-190)}
-  if(DLGA.who===GOD){const g=SPR.god;if(g&&g.ok){const h=200,w=h*g.w/g.h;c.translate(120,232+hop+bob);c.rotate(Math.sin(t*1.6)*.04+(talking?Math.sin(t*9)*.02:0));c.drawImage(g.img,-w/2,-h,w,h)}}
+  c.save();
+  if(DLGA.who===GOD){const g=SPR.god;if(g&&g.ok){const gh=g.img.naturalHeight||g.h,gw=g.img.naturalWidth||g.w;drawRot(c,g.img,Math.sin(t*1.6)*.04+(talking?Math.sin(t*9)*.02:0),gw/2,gh,120,232+hop+bob,200/gh)}}
   else if(DLGA.el){const md=talking?(Math.floor(now/110)%2?DLGA.mood:(DLGA.mood==='smile'?'joy':DLGA.mood==='joy'?'smile':DLGA.mood)):DLGA.mood;
     c.fillStyle='rgba(0,0,0,.18)';c.beginPath();c.ellipse(120,203,44*(1-Math.min(.3,-hop/60)),8,0,0,7);c.fill();
     drawSpirit(c,DLGA.el,120,Math.round(200+hop+bob),1.74,1,{dot:1,t,vr:DLGA.vr,mood:md,crown:DLGA.crown,crownHand:DLGA.crownHand,handItem:DLGA.handItem,blink:(t%3.4)<.13,anim:dialogueSpiritAnim(DLGA.motion,talking,now-DLGA.lineT,DLGA.holdUntil-DLGA.lineT,DLGA.wave,reduced),walk:false,work:false,lean:DLGA.mood==='sad'||DLGA.mood==='teary'||DLGA.mood==='tear'?.12:0})}/* 立ち絵は、ゲームの中と同じドットの絵（dot）。1.74（=.87×2）で、絵の1ドットがキャンバスの2ドットにそろう */
-  c.restore()}
+  c.restore();
+  const R=reduced?{c:P,ox:120,oy:190}:rotNear(P,pose.angle,120,190,DLGPR||(DLGPR=document.createElement('canvas')));c0.save();c0.globalAlpha=ee;c0.imageSmoothingEnabled=false;c0.drawImage(R.c,(1-ee)*-70+shake+120-R.ox,190-R.oy);c0.restore()}
+let DLGPC=null,DLGPR=null;
 function shards3(){if(!S||S.cleared)return;if(WD===0&&grassReunionBlockReason())return false;/* かけらが3つそろった会話。さいごまで見てから、ヌシ様が帰ってくる（とちゅうでとじたら、つづきからでもう一度） */dialog((L=>L&&L.length?L:[[GOD,GVOICE()+'かけらが3つそろったのう。……ヌシ様が、帰ってくるぞい。']])(sevLines([['F','#hush|御神木が、光ってる……！',1,'glow'],['N','みんなの力が、ひとつにつながったねぇ。……ヌシ様が、帰ってくるよぉ。',1]])),()=>{if(S.cleared)return;if(S.res.some(q=>q.name===POKO)){S.flags.nushiDue=1;nushiReturns()}else{S.flags.nushiWait=1;toast('フタバが帰ってきたら、ヌシ様がすがたをあらわす','warn')}})}
 function gameOver(){dialog(['せいれいたちが、みんな消えてしもうた…。土地もしずかになってしもうたのう。','もう一度、この土地に村をつくってみようかの。こんどは畑と食料を多めにな。'],()=>newGame(WD),'やりなおす',GOD)}/* いまのステージを、はじめから */
 
