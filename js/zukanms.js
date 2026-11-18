@@ -19,7 +19,7 @@ function zkReward(t,v,all){const nm=ZKTABS[t];if(all){const G=GEAR_IDS.filter(id
   if(v>=20){if(typeof bpNext==='function'&&bpNext()){bpGiveNext(null);toast('図鑑の「'+nm+'」が'+v+'こ：設計図をもらった','good');return}rewardPower(ZKMS20PT);toast('図鑑の「'+nm+'」が'+v+'こ','good');return}
   rewardPower(ZKMSPT[ZKMS.indexOf(v)]||50);toast('図鑑の「'+nm+'」が'+v+'こ','good')}
 let ZKMST=0;
-function zkMsTick(now){if(now-ZKMST<5000)return;ZKMST=now;if(!S||S.free||!started||IS_STORY_REPLAY||typeof MEMRUN!=='undefined'&&MEMRUN||typeof NOSAVE!=='undefined'&&NOSAVE)return;if(typeof GIFT_ACTIVE!=='undefined'&&GIFT_ACTIVE)return;
+function zkMsTick(now){if(now-ZKMST<5000)return;ZKMST=now;if(!S||S.free||!started||IS_STORY_REPLAY||typeof STORY_REPLAY_SHELL!=='undefined'&&STORY_REPLAY_SHELL||typeof MEMRUN!=='undefined'&&MEMRUN||typeof NOSAVE!=='undefined'&&NOSAVE)return;if(typeof GIFT_ACTIVE!=='undefined'&&GIFT_ACTIVE)return;
   const M=S.flags.zkMs||(S.flags.zkMs={});
   for(let t=0;t<ZKTABS.length;t++){const L=zkSteps(t),n=zkCount(t);let i=M[t]||0;if(M[t]==null){/* はじめて数える（前のセーブ）：いまとどいている節目は、ごほうびなしで、とどいたことにする */M[t]=L.filter(v=>n>=v).length;continue}
     if(i<L.length&&n>=L[i]){M[t]=i+1;zkReward(t,L[i],L[i]===zkTotal(t));if(typeof juiceCheer==='function')juiceCheer('zk');sfx('quest');memo('zukan','図鑑の「'+ZKTABS[t]+'」が'+L[i]+'こになった');return}}}/* 1回に1つずつ */
