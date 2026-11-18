@@ -2,14 +2,14 @@
 const assert=require('node:assert/strict');
 (async()=>{const {browser,page,run,errors}=await require('../sim/boot.cjs')({world:0});
   const r=JSON.parse(await run(`(()=>{document.querySelector('#dialog').hidden=true;S.introSeen=true;S.flags.tapped=1;USERPAUSE=true;S.enemyOn=false;const out={};S.fog=null;
-    S.t=1440*6+6*60;const R=Math.random;Math.random=()=>0.01;stormMorning();Math.random=R;out.next=S.stormNext===dayNo()+1;
+    S.t=1440*6+6*60;const R=Math.random;S.wxQ={};S.wxQ[dayNo()]={r:0,b:0,s:0,t:null};Math.random=()=>0.01;wxFill(dayNo());Math.random=R;/* あらしは天気のよほう（wxRoll）で前もってきめる */out.next=S.stormNext===dayNo()+1;
     S.t=1440*6+16*60;stormTick();out.w0=S.stormWarn;S.t=1440*6+17*60+5;stormTick();out.w1=S.stormWarn;
     const e0=(S.drops||[]).filter(d=>d.id==='mat:eda').length;S.t=1440*7+6*60;stormMorning();out.now=stormNow();out.rain=S.rain;out.eda=(S.drops||[]).filter(d=>d.id==='mat:eda').length-e0;
     const a=S.res[0];out.funOut=stormFun({x:-10,y:-10});
     /* 家の中ならふだんどおり */let inn=null;for(const h of HOUSES){const j=[...h.inside][0];if(j!=null){inn=j;break}}out.funIn=inn==null?1:stormFun({x:inn%W+.5,y:((inn/W)|0)+.5});
     updHUD();out.lbl=document.querySelector('#dayLbl').textContent;
     const d0=(S.drops||[]).length;S.t=1440*8+6*60;stormMorning();out.drift=(S.drops||[]).length-d0;out.after=stormNow();
-    /* つぎのあらしは7日あける */S.stormNext=null;Math.random=()=>0.01;S.t=1440*9+6*60;stormMorning();Math.random=R;out.gap=S.stormNext;
+    /* つぎのあらしは7日あける */S.stormNext=null;S.t=1440*9+6*60;S.wxQ={};S.wxQ[dayNo()]={r:0,b:0,s:0,t:null};Math.random=()=>0.01;wxFill(dayNo());Math.random=R;out.gap=S.stormNext;
     return JSON.stringify(out)})()`));
   console.log(JSON.stringify(r));
   assert.equal(r.next,true);assert.equal(r.w0,0);assert.equal(r.w1,1);
