@@ -4,7 +4,7 @@
    r.gear：せいれいがつけているそうび {w:武器, a:防具, c:おまもり, t:専用品}（それぞれ {id,lv}）
    矢は、いままでの矢と同じく S.inv（見張り台がうつ） */
 const GSLOT={w:'武器',a:'防具',c:'おまもり',t:'専用品'},GSLOTK=['w','a','c','t'];
-const ORE_COL={copper:'#e0a07a',iron:'#bcc4cc',obsidian:'#8f86a8',silver:'#e4eaf0',gold:'#f2d47a',crystal:'#f3a6ac',sulfur:'#ecdf86',bamboo:'#b3d48a',kuru:'#a8d494',chiri:'#d4bf8c',wood:'#d4a878',eda:'#c8a27c',sp:'#f4b06a',nuno:'#e6d2ae'};
+const ORE_COL={copper:'#e0a07a',iron:'#bcc4cc',obsidian:'#8f86a8',silver:'#e4eaf0',gold:'#f2d47a',crystal:'#f3a6ac',sulfur:'#ecdf86',bamboo:'#b3d48a',kuru:'#a8d494',chiri:'#d4bf8c',wood:'#d4a878',eda:'#c8a27c',stone:'#c4c0b8',shina:'#9ccf84',kasa:'#d8c48c',sp:'#f4b06a',nuno:'#e6d2ae'};
 const GEAR_ORES=['copper','iron','obsidian','silver','gold','sulfur','crystal'];
 const isGear=id=>!!(BL[id]&&BL[id].g);
 const gearMain=id=>{const b=BL[id];if(b.g.sp)return 'obsidian';return Object.keys(b.mat||{})[0]||'iiron'};/* 強化に使う素材（特の物は黒曜石） */
@@ -64,7 +64,8 @@ function towerVolley(j,x,y,st,g,shots0){/* 威力の大きい矢から、とど�
 function gearLightAt(x,y){if(!isNight())return false;for(const r of S.res){if(r.hidden||!r.gear)continue;const R=gearStat(r).light;if(R&&(r.x-x)**2+(r.y-y)**2<R*R)return true}return false}
 function gearLights(dmx){for(const r of S.res){if(r.hidden||!r.gear)continue;const R=gearStat(r).light;if(!R)continue;const P=R*TS+16;dmx.drawImage(lightSpr(P),r.x*TS-P,r.y*TS-12-P,P*2,P*2)}}
 /* ---------- 入手 ---------- */
-function gearGive(id,n){if(BL[id].kind==='ammo'){S.inv[id]=(S.inv[id]||0)+(n||1)*(BL[id].qty||10);return}for(let i=0;i<(n||1);i++)gearList().push({id,lv:0})}
+function gearGive(id,n){if(BL[id].kind==='ammo'){S.inv[id]=(S.inv[id]||0)+(n||1)*(BL[id].qty||10);return}for(let i=0;i<(n||1);i++)gearList().push({id,lv:0});gearIdeaGrass()}
+function gearIdeaGrass(){/* 草原ではじめてそうびを手に入れたら、草原の素材で作れるそうびを思いつく */if(!S||S.free||WD!==0||typeof IS_STORY_REPLAY!=='undefined'&&IS_STORY_REPLAY)return;S.recipes||(S.recipes={});S.guardianIdeas||(S.guardianIdeas={});const nw={};for(const id of GEAR_IDS){const g=BL[id].g;if(!g.gr||g.sp||S.recipes[id])continue;S.recipes[id]=true;S.guardianIdeas[id]=true;nw[id]=1}if(Object.keys(nw).length){sfx('level');queueItemGift(nw,'あたらしいレシピ！',true);memo('bulb','そうびのレシピ：'+Object.keys(nw).length+'こ')}}
 function gearRand(fish){const L=GEAR_IDS.filter(id=>!(fish&&BL[id].g.nf));return pick(L)}
 function gearFind(r,title){const id=gearRand(title==='つりあげた！');gearGive(id,1);if(r){r.bubble='✨';addFloat(r.x,r.y-1.8,BL[id].name)}queueItemGift({[id]:1},title);return id}
 function gearOffer(r){const L=GEAR_IDS.filter(id=>BL[id].g.sp);const id=pick(L);gearGive(id,1);toast(r.name+'が「'+BL[id].name+'」をおそなえした！','good');queueItemGift({[id]:1},'うけとった！');return true}
@@ -115,7 +116,7 @@ function veinMorning(){if(!S||WD!==1||S.free)return;if(IS_STORY_REPLAY||typeof M
 function vreqList(){const q=S.vreq;if(!q)return [];const L=[];for(const k in q){if(VEINS[S.obj[+k]])L.push(+k);else delete q[k]}return L}
 /* はじめての鉱石で、そうびのレシピを思いつく（火山だけ）。idea のある物は、はじめてその素材を手に入れたとき */
 function gearIdea(){if(!S||S.free)return;const got=k=>(S.gotMat&&S.gotMat[k]>0)||(S.mat[k]||0)>0,ore=WD===1&&GEAR_ORES.some(got);S.recipes||(S.recipes={});S.guardianIdeas||(S.guardianIdeas={});const nw={};
-  for(const id of GEAR_IDS){const b=BL[id];if(b.g.sp||S.recipes[id])continue;if(b.idea?got(b.idea):ore&&Object.keys(b.mat).map(k=>ORE_OF[k]||k).every(k=>!GEAR_ORES.includes(k)||got(k))){/* idea の物は、その素材を手に入れたら（どのステージでも。布のせおいぶくろは草原の布） *//* 延べ棒の物は、その鉱石を手に入れたら思いつく */S.recipes[id]=true;S.guardianIdeas[id]=true;nw[id]=1}}
+  for(const id of GEAR_IDS){const b=BL[id];if(b.g.sp||b.g.gr||S.recipes[id])continue;if(b.idea?got(b.idea):ore&&Object.keys(b.mat).map(k=>ORE_OF[k]||k).every(k=>!GEAR_ORES.includes(k)||got(k))){/* idea の物は、その素材を手に入れたら（どのステージでも。布のせおいぶくろは草原の布） *//* 延べ棒の物は、その鉱石を手に入れたら思いつく */S.recipes[id]=true;S.guardianIdeas[id]=true;nw[id]=1}}
   const ks=Object.keys(nw);if(ks.length){sfx('level');queueItemGift(nw,'あたらしいレシピ！',true);memo('💡','そうびのレシピ：'+ks.length+'こ')}}
 /* 毎朝：金のメダル */
 function gearMorning(){for(const r of S.res)if(r.gear&&gearStat(r).pw){S.pt+=1;S.totalPt=(S.totalPt||0)+1}}

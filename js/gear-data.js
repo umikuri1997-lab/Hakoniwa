@@ -123,5 +123,16 @@ const GEARBL={
   gt13:{"name":"竹のかご","kind":"gear","pc":3,"time":90,"maker":"fire","mat":{"bamboo":3},"g":{"s":"t","el":"wind","cap":2},"desc":"持てる数+2"},
   gt14:{"name":"銀の羽根かざり","kind":"gear","pc":10,"time":90,"maker":"fire","mat":{"isilver":1,"kuru":1},"g":{"s":"t","el":"wind","mv":4},"desc":"移動速度+4"},
   gt15:{"name":"つむじのマフラー","kind":"gear","time":90,"maker":"fire","g":{"s":"t","el":"wind","job":{"pickdrop":1.5,"weed":1.5},"prng":3,"sp":1},"desc":"ひろう速さ1.5倍・ひろいに行くきょり+3マス"},
+  /* 草原のそうび（gr：草原の物。草原ではじめてそうびを手に入れたときに、作れる8つを思いつく） */
+  gg01:{"name":"木のぼう","kind":"gear","pc":3,"time":90,"maker":"fire","mat":{"wood":3},"g":{"s":"w","atk":10,"rch":0.5,"gr":1},"desc":"攻撃+10・とどくきょり+0.5マス"},
+  gg02:{"name":"石のつち","kind":"gear","pc":3,"time":90,"maker":"fire","mat":{"stone":3,"wood":1},"g":{"s":"w","atk":20,"iv":1.2,"kb":1,"gr":1},"desc":"攻撃+20・攻撃の間かく1.2倍・のけぞらせる"},
+  gg03:{"name":"枝のやり","kind":"gear","pc":3,"time":90,"maker":"fire","mat":{"eda":4,"wood":1},"g":{"s":"w","atk":10,"rch":1.0,"gr":1},"desc":"攻撃+10・とどくきょり+1マス"},
+  gg04:{"name":"草あみのよろい","kind":"gear","pc":3,"time":90,"maker":"fire","mat":{"shina":4},"g":{"s":"a","hun":10,"gr":1},"desc":"たたかれたときのおなかのへり-10"},
+  gg05:{"name":"木のたて","kind":"gear","pc":3,"time":90,"maker":"fire","mat":{"wood":5},"g":{"s":"a","hun":20,"mv":-2,"gr":1},"desc":"たたかれたときのおなかのへり-20・移動速度-2"},
+  gg06:{"name":"かさかさ草のマント","kind":"gear","pc":3,"time":90,"maker":"fire","mat":{"kasa":4,"shina":2},"g":{"s":"a","hun":10,"mv":2,"gr":1},"desc":"たたかれたときのおなかのへり-10・移動速度+2"},
+  gg07:{"name":"石のおまもり","kind":"gear","pc":3,"time":90,"maker":"fire","mat":{"stone":2},"g":{"s":"c","hun":10,"gr":1},"desc":"たたかれたときのおなかのへり-10"},
+  gg08:{"name":"草ぶえ","kind":"gear","pc":3,"time":90,"maker":"fire","mat":{"shina":2},"g":{"s":"c","fear":1,"gr":1},"desc":"コワイノをこわがるきょり2マス"},
+  gg09:{"name":"ヌシ様の角のつるぎ","kind":"gear","time":90,"maker":"fire","g":{"s":"w","atk":30,"iv":0.9,"sp":1,"nf":1,"gr":1},"desc":"攻撃+30・攻撃の間かく0.9倍"},
+  gg10:{"name":"こもれびのマント","kind":"gear","time":90,"maker":"fire","g":{"s":"a","hun":30,"fun":0.9,"sp":1,"nf":1,"gr":1},"desc":"たたかれたときのおなかのへり-30・たのしさのへる速さ0.9倍"},
 };
 const GEAR_IDS=Object.keys(GEARBL),GEAR_ARROWS=GEAR_IDS.filter(id=>GEARBL[id].g.s==='ar');Object.assign(BL,GEARBL);/* BL にならべる（依頼ボード・アイコン・説明を、ほかの物と同じしくみで使う） */

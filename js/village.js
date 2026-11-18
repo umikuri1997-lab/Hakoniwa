@@ -157,6 +157,7 @@ const STAYG=180;/* せいれいが、みんなの合計で時計の3時間（180
 function stayTick(dt){if(!S||WD===FREE||IS_STORY_REPLAY)return;const m=dt/DAYLEN,st=S.stay||(S.stay={}),g=S.grn||(S.grn={});
   for(const r of S.res){if(r.hidden)continue;const j=(r.y|0)*W+(r.x|0);if(j<0||j>=W*H||g[j]||S.ground[j]===1)continue;const v=(st[j]||0)+m;if(v>=STAYG){g[j]=1;delete st[j];STAYDIRTY=true}else st[j]=v}}
 function stayGreen(){if(!STAYDIRTY||!S)return;STAYDIRTY=false;recount()}/* 1秒に1回だけ、緑のマスを入れなおす */
+function campOut(j){/* 雨（雪・あらしもふくむ）の日、外のたき火は消える：あかり・遊び場にならない。家の中・屋根（ガゼボ・東屋）の下はそのまま */if(!S||!S.rain||S.obj[j]!=='campfire')return false;if(roomOf(j))return false;if(S.roof)for(const k of[j,j-1,j-W,j-W-1])if(S.roof[k]&&Math.abs(k%W-j%W)<=1)return false;return true}
 function revRadius(o){/* 緑が広がるのは、木や草を生やしたときだけ（家具・建物・道・畑では広がらない） */const b=BL[o];if(!b)return 0;if(o==='tower')return 7;if(o==='tree'||o==='fruit')return 5;if(b.kind==='plant')return 3;/* 植えた木はまわり5マス、花はまわり3マス */if(o==='ntree'||o==='berry'||o==='bamboo'||o==='takenoko')return 1;return 0}
 /* 属性の力の表示（例：属性 木+1・土+2） */
 function attrTxt(id){const b=BL[id];if(!b||!b.attr||b.kind==='block')return'';const a=Object.entries(b.attr).filter(e=>e[1]>0);return a.length?'属性 '+a.map(([k,v])=>ELEM[k].name+'+'+(+v.toFixed(2))).join('・'):''}
@@ -165,7 +166,7 @@ let SUTEKI=null;const SUTEKI_STAR=[10,25,45,70,100],SUTEKI_FUN=[1,.96,.92,.88,.8
 function suteki(){if(SUTEKI)return SUTEKI;let p=0;for(const id of DECOQ)p+=cnt(id)*2;p+=flowerN();{let n=0;for(const f of S.floor)if(f==='path'||f==='gravel'||f==='woodpath'||f==='stone'||f==='brick')n++;p+=Math.floor(n/10)}p+=new Set((SPOTI||[]).map(x=>x.sp.k)).size*3;let st=0;while(st<5&&p>=SUTEKI_STAR[st])st++;SUTEKI={pt:p,st};return SUTEKI}/* かざり1つ2点・花1本1点・道10マスで1点・スポット1しゅるい3点 */
 function recount(){if(S.fogF&&!S.flags.spring2)fogSpring2(S);if(S.fogF&&!S.flags.mansion2)fogMansionAdd(S);if(S.sacredLegacy2||S.sacredLegacy3)tryExpandSacredLegacy(S);if(S.broken)S.broken=S.broken.filter(b=>!S.obj[b.j]);boxScan();calcSpots();/* こわれた物の場所に、なにか置いたら、こわれた物のリストからはずす */
   for(const key in S.win||{}){const j=+key,wall=k=>HOME_WALLS.has(S.obj[k])||HOME_DOORS.has(S.obj[k]);if(S.win[j]==='wreath'&&HOME_DOORS.has(S.obj[j])&&(wall(j-W)||wall(j+W))&&!(wall(j-1)||wall(j+1))){S.inv.wreath=(S.inv.wreath||0)+1;delete S.win[j];toast('たてのドアのリースを、持ち物にもどしました')}}/* たてのドアにはリースをかけられない。まわりの壁が変わってたてになったら、知らせてもどす */
-  STATUE=-1;RUINT=-1;OBOX=-1;BOARD=-1;SUTEKI=null;counts={};LIGHTS=[];HOTL=[];DRUMS=[];JARS=[];COMPS=[];LITP=[];STELES=[];LURES=[];TOWERS=[];NEARMILL=new Set();NEARSUI=new Set();STUMPB=new Set();if(WD===0&&!S.free&&S.sacredRoot!=null&&!S.obj.includes('tower')&&typeof fieldStump==='function'){const st=fieldStump(S.sacredRoot);STUMPB.add(st);STUMPB.add(st-W)}/* 切り株と、そのうしろ */NEARVANE=new Set();NEARCART=new Set();NEARJORO=new Set();NEARSIGN=new Set();NEARPARA=new Set();RUGC=new Map();for(const k in S.rug||{})for(const c of rugCells(+k))RUGC.set(c,+k);RFC=new Map();for(const k in S.roof||{})for(const c of rugCells(+k))RFC.set(c,+k);/* 屋根の下のマス→屋根の左上 *//* ラグがしいてあるマス→ラグの左上 */ENVG=new Float32Array(W*H);ENVE={};REV=new Set();ATTR={};ELEM_KEYS.forEach(k=>ATTR[k]=0);
+  STATUE=-1;RUINT=-1;OBOX=-1;BOARD=-1;SUTEKI=null;counts={};LIGHTS=[];HOTL=[];DRUMS=[];JARS=[];COMPS=[];LITP=[];STELES=[];LURES=[];TOWERS=[];NEARMILL=new Set();NEARSUI=new Set();STUMPB=new Set();if(WD===0&&!S.free&&S.sacredRoot!=null&&!S.obj.includes('tower')&&typeof fieldStump==='function'){const st=fieldStump(S.sacredRoot);STUMPB.add(st);STUMPB.add(st-W)}/* 切り株と、そのうしろ */NEARVANE=new Set();NEARCART=new Set();NEARJORO=new Set();NEARMIZU=new Set();NEARSIGN=new Set();NEARPARA=new Set();RUGC=new Map();for(const k in S.rug||{})for(const c of rugCells(+k))RUGC.set(c,+k);RFC=new Map();for(const k in S.roof||{})for(const c of rugCells(+k))RFC.set(c,+k);/* 屋根の下のマス→屋根の左上 *//* ラグがしいてあるマス→ラグの左上 */ENVG=new Float32Array(W*H);ENVE={};REV=new Set();ATTR={};ELEM_KEYS.forEach(k=>ATTR[k]=0);
   const around=(j,r,set)=>{const x=j%W,y=(j/W)|0,h=set===REV?hiAt(j):-1;for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){if(dx*dx+dy*dy>r*r+1)continue;const nx=x+dx,ny=y+dy;if(nx>=0&&ny>=0&&nx<W&&ny<H&&!(h>=0&&hiAt(ny*W+nx)!==h))set.add(ny*W+nx)}};/* 緑の広がり（REV）は、段差をこえない */
   const addA=a=>{if(a)for(const k in a)ATTR[k]+=a[k]};
   let baseN=0,revN=0;
@@ -179,15 +180,15 @@ function recount(){if(S.fogF&&!S.flags.spring2)fogSpring2(S);if(S.fogF&&!S.flags
     if(o==='statue')STATUE=j;if(o==='statueb'||o==='site'&&S.dyn[j]&&S.dyn[j].ruin)RUINT=j;if(o==='obox')OBOX=j;if(o==='board')BOARD=j;
     if(o==='stele')STELES.push(j);
     if(o==='lurestatue')LURES.push(j);
-    if(o==='lamp'||o==='lighthouse'||o==='tower'||o==='campfire'||o==='statue'||o==='torch'||o==='candle'||o==='lantern'||o==='flamp'||o==='yomawari'||o==='toro'||o==='takeakari'||o==='andon'||o==='watch'&&watchLit(j)||o==='hotaru'&&!isBud(j))LIGHTS.push(j);if(o==='hotaru')HOTL.push(j);if(o==='drum')DRUMS.push(j);if(o==='watch'&&watchLit(j))counts.watchlight=(counts.watchlight||0)+1;/* 見張り台のあかり（Lv5〜）も、あかりとして数える */
-    if(LIGHTP[o]&&!(o==='hotaru'&&isBud(j))||o==='watch'&&watchLit(j))LITP.push(j);/* 夜に光をかく明かりの一覧 */
+    if(o==='lamp'||o==='lighthouse'||o==='tower'||o==='campfire'&&!campOut(j)||o==='statue'||o==='torch'||o==='candle'||o==='lantern'||o==='flamp'||o==='yomawari'||o==='toro'||o==='takeakari'||o==='andon'||o==='watch'&&watchLit(j)||o==='hotaru'&&!isBud(j))LIGHTS.push(j);if(o==='hotaru')HOTL.push(j);if(o==='drum')DRUMS.push(j);if(o==='watch'&&watchLit(j))counts.watchlight=(counts.watchlight||0)+1;/* 見張り台のあかり（Lv5〜）も、あかりとして数える */
+    if(LIGHTP[o]&&!(o==='hotaru'&&isBud(j))&&!(o==='campfire'&&campOut(j))||o==='watch'&&watchLit(j))LITP.push(j);/* 夜に光をかく明かりの一覧 */
     if(o==='watch'||o==='yogan'||o==='tower')TOWERS.push(j);
     if(FLOWERS.has(o)&&!isBud(j)){const el=Object.keys(BL[o].attr||{})[0],E=el&&(ENVE[el]||(ENVE[el]=new Float32Array(W*H)));for(let dy=-3;dy<=3;dy++)for(let dx=-3;dx<=3;dx++){const nx=x+dx,ny=y+dy;if(nx<0||ny<0||nx>=W||ny>=H)continue;const q=ny*W+nx;ENVG[q]+=.56;if(E)E[q]+=1.11}}/* 花：まわり3マスで、たのしさ+0.2／1時間、同じ属性のせいれいは+0.6／1時間 */
     if(o==='jar')JARS.push(j);
     if(o==='composter')COMPS.push(j);
     if(o==='windmill')around(j,5,NEARMILL);
     if(o==='suisha')around(j,5,NEARSUI);/* 水車：まわり5マスの加工の家具は、ひとりでに動く */
-if(o==='vane')around(j,3,NEARVANE);if(o==='niguruma')around(j,3,NEARCART);if(o==='joro')around(j,5,NEARJORO);/* ブリキのじょうろ：まわり5マスの畑は、水やりが速い *//* にぐるま：まわり3マスの箱は、しまうのが速い */if(o==='signpost')around(j,3,NEARSIGN);/* 風見鶏：まわり3マスは足が速い */
+if(o==='vane')around(j,3,NEARVANE);if(o==='niguruma')around(j,3,NEARCART);if(o==='joro')around(j,5,NEARJORO);if(o==='mizubachi')around(j,5,NEARMIZU);/* ブリキのじょうろ：まわり5マスの畑は、水やりが速い *//* にぐるま：まわり3マスの箱は、しまうのが速い */if(o==='signpost')around(j,3,NEARSIGN);/* 風見鶏：まわり3マスは足が速い */
     const tbud=(o==='tree'||o==='fruit')&&isBud(j);/* 木も花と同じ。芽のあいだは、効果なし */
     if(o==='parasol')around(j,1,NEARPARA);/* パラソル：まわり1マス・かさならない */else if(!tbud&&BL[o]&&BL[o].env){const er=BL[o].er||3,z=BL[o].sz||[1,1];for(let dy=-er;dy<er+z[1];dy++)for(let dx=-er;dx<er+z[0];dx++){/* 2×2の物は、2×2のまわり3マス */const nx=x+dx,ny=y+dy;if(nx>=0&&ny>=0&&nx<W&&ny<H)ENVG[ny*W+nx]+=BL[o].env}}/* にわの家具：まわりの環境 */
     if(BL[o]&&BL[o].kind!=='block'&&(!FLOWERS.has(o)||!isBud(j))&&!tbud)addA(BL[o].attr);
@@ -204,7 +205,7 @@ if(o==='vane')around(j,3,NEARVANE);if(o==='niguruma')around(j,3,NEARCART);if(o==
   {const st=WD===1?1:0,g='weed'+st+'g',k='weed'+st+'k';for(let j=0;j<W*H;j++){const o=S.obj[j];if(o===k&&REV.has(j))S.obj[j]=g;else if((o===g||o==='weedc')&&!REV.has(j))S.obj[j]=k}}/* 雑草は土地に合わせる：よみがえった土地（緑）は緑の草、荒れた土地は枯れた草（あとから緑になった所の枯れた草も、緑の草に） */
   for(let j=0;j<W*H;j++){if(S.ground[j]===1)continue;baseN++;if(REV.has(j))revN++}
   /* 属性値は、せいれいの依頼が出る前から基地にある対象物も含めて数える。依頼開始時の基準化・差し引きはしない。 */
-  BASEPCT=Math.round(revN/Math.max(1,baseN)*100);GRASSN=revN;if(typeof fogAfterRecount==='function')fogAfterRecount();/* 霧が晴れるか */// マップぜんぶの、みどりのマス
+  BASEPCT=Math.round(revN/Math.max(1,baseN)*100);GRASSN=revN;if(typeof fogAfterRecount==='function')fogAfterRecount();if(typeof kdHanaCheck==='function')kdHanaCheck();/* もりのこだまの花の輪 *//* 霧が晴れるか */// マップぜんぶの、みどりのマス
   if(typeof aniRecount==='function')aniRecount();/* 飼う生き物の小屋とかこい */
   dirty=true;
 }

@@ -407,7 +407,7 @@ function renderSheet(){
     body.appendChild(bd);if(typeof boardPinFx==='function')boardPinFx(bd);/* 草原：新しい依頼の紙は、ぺたっとおかれて、ピンがささる */
     const s2=el('<div class="sec"><h3>依頼を書く</h3><div class="cfind"><input id="craftQ" type="search" placeholder="名前でさがす" autocomplete="off"><button class="ctab cnow">いま作れる</button><button class="ctab cflt"></button></div><div class="ctabs"></div><div class="rows"></div></div>');
     const CIDS=CRAFT_TABS.flatMap(([,ids])=>ids),cShow=id=>recipeKnown(id)&&(lvOK(id)||S.recipes[id])&&recShown(id);
-    const gearOn=WD===1||GEAR_IDS.some(id=>S.recipes&&S.recipes[id]);/* そうびは火山から */
+    const gearOn=WD===1||GEAR_IDS.some(id=>S.recipes&&S.recipes[id]);/* そうびは、火山か、レシピをおぼえてから */
     const tagOn=t=>t==='ぜんぶ'||(t!=='そうび'||gearOn)&&CIDS.some(id=>cShow(id)&&tagsOf(id).includes(t));
     craftTags=craftTags.filter(tagOn);
     {const q=s2.querySelector('#craftQ'),fb=s2.querySelector('.cfind .cflt'),nb=s2.querySelector('.cfind .cnow');if(craftCan)nb.classList.add('on');nb.onclick=()=>{craftCan=!craftCan;renderSheet()};q.value=craftQ;
@@ -734,7 +734,7 @@ function renderSheet(){
 }
 
 /* 図鑑：マップごとに、見つけた・おぼえた物だけ（スポット・家具・建物・レシピ・コワイノ・アイテム） */
-let ZKW=null,ZKT=0;const ZKTABS=['スポット','家具','建物','レシピ','コワイノ','アイテム','さかな','いきもの','りょうり'];
+let ZKW=null,ZKT=0;const ZKTABS=['スポット','家具','建物','レシピ','コワイノ','アイテム','さかな','いきもの','りょうり','こだま'];
 function zkSnd(s){/* 図鑑のアイコンをタップしたときの音（i:物のid → その物の材質の録音・k:音の名前） */if(s.startsWith('i:'))itemSnd(s.slice(2));else if(s.startsWith('k:'))sfx(s.slice(2))}
 function zukanBody(body){
   const ws=[0,1,2,3,4,5].filter(w=>(w===WD&&!S.free)||savedStage(w));if(!ws.length){body.appendChild(el('<p class="note">まだありません</p>'));return}
@@ -754,9 +754,11 @@ function zukanBody(body){
   else if(ZKT===6)fishZukan(d,add);
   else if(ZKT===7)critZukan(d,add);
   else if(ZKT===8)cookZukan(d,add);
+  else if(ZKT===9){if(typeof kdZukan==='function')kdZukan(d,add)}
   else{const it=Object.assign({},d.seenIt||{});for(const k in d.mat||{})if(d.mat[k]>0)it['m:'+k]=1;for(const k in d.fs||{})if(d.fs[k]>0)it['f:'+k]=1;
     for(const k in MATN)if(it['m:'+k])add(MATN[k],'素材',ICONS[k]||null,'i:mat:'+k);for(const k in FOODS)if(it['f:'+k])add(FOODS[k].name,FOODS[k].fx||'食べ物',foodIc(k),'i:food:'+k);if(it['x:horn'])add('よびごえの角笛',HORNDESC,hornIco(),'i:horn');if(it['x:herb'])add('まよけのハーブ',HERBDESC,herbIco(),'i:herb')}
   body.appendChild(el('<p class="story">'+list.length+'こ</p>'));
+  if(ZKW===WD&&!S.free&&typeof zkNext==='function'){const q=zkNext(ZKT),p=el('<p class="note" style="position:relative"></p>');p.textContent=q?(q.all?'ぜんぶまで':'つぎの節目まで')+' あと'+q.left+'こ':'ぜんぶ見つけた';body.appendChild(p);const M=S.flags.zkMs||{},V=S.flags.zkMsV||(S.flags.zkMsV={});if((M[ZKT]||0)>(V[ZKT]||0)){V[ZKT]=M[ZKT];setTimeout(()=>{if(typeof uiStamp==='function')uiStamp(p)},250)}}/* 図鑑の節目（zukanms.js）：とどいたら、はじめて見たときにハンコ */
   const zs=S.flags.zkSeen||(S.flags.zkSeen={});let zn=0;const zNew=(name,e)=>{const k=ZKW+':'+ZKT+':'+name;if(zs[k]||!e)return;zs[k]=1;e.classList.add('stknew');e.style.animationDelay=(Math.min(zn++,8)*.06)+'s'};/* 新しく見つけた物のシールは、ぺたっとはる（1回だけ） */
   for(const q of list){if(!q)continue;const r=rowEl(q[0],q[1],q[2]);zNew(q[0],r.querySelector('img'));if(q[3]){const im=r.querySelector('img');if(im){im.style.cursor='pointer';im.onclick=()=>zkSnd(q[3])}}rows.appendChild(r)}
   for(const z of rows.querySelectorAll('.zk'))zNew(z.querySelector('b').textContent,z.querySelector('canvas'));

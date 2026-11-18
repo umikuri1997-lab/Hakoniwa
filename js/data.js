@@ -113,12 +113,12 @@ const BL={
   shishiodoshi:{hp:5,brk:1,fix:2,fixm:{bamboo:2,stone:1},name:'ししおどし',kind:'furn',cat:'env',lv:5,pc:6,time:110,maker:'water',solid:1,anim:1,attr:{water:1,wood:1},mat:{bamboo:5,stone:3},desc:'水でうごく竹のかざり。住み心地+6'},
   bench:{name:'ベンチ',sz:[2,1],kind:'furn',pc:3,time:100,maker:'wood',attr:{wood:1},mat:{wood:5},desc:'2人すわれる。昼につかれたら、ここで休む。つかれ −30／1時間。住み心地+5'},
   wbench:{hp:5,brk:1,fix:2,fixm:{wood:4},name:'作業台',kind:'furn',cat:'other',sz:[2,1],pc:3,time:80,maker:'earth',attr:{earth:1},mat:{wood:8,stone:2},solid:1,dyn:1,desc:'依頼の物を作る台と、材料置き場。となりの箱の素材は、運ばずに使う'},/* 依頼は、空いた作業台で1つずつ作る（S.dyn[j].order、build.js の wbenchTick） */
-  loom:{hp:5,brk:1,fix:2,fixm:{wood:2},name:'はたおり機',kind:'furn',cat:'other',pc:3,time:80,maker:'wood',attr:{wind:1},mat:{wood:6},solid:1,desc:'草3こか、わた毛2こで、布1こをおる'},
+  loom:{hp:5,brk:1,fix:2,fixm:{wood:2},name:'はたおり機',kind:'furn',cat:'other',pc:3,time:80,maker:'wood',attr:{wind:1},mat:{wood:6},solid:1,desc:'草3こか、わた毛2こで、布1こをおる。風の強い日は、布1こ27分'},
   bed:{name:'ベッド',kind:'furn',pc:10,time:200,maker:'wood',sleep:{cap:1,pt:5,rate:.1},attr:{wood:2},mat:{wood:6,nuno:1},desc:'1人眠れる。つかれ −9／1時間'},
   yorubed:{name:'よぞらのベッド',kind:'furn',pc:10,time:200,maker:'wood',sleep:{cap:1,pt:5,rate:.1},attr:{wood:2},mat:{wood:8},kwr:1,desc:'夜空の色のふとんのベッド。1人眠れる。つかれ −9／1時間'},/* コワイノのレシピ（落とし物でまれに手に入る）。ふつうのベッドと同じはたらき */
   yozorawall:{name:'よぞらの壁',fix:5,fixm:{wood:1},kind:'block',cost:4,pc:11,time:90,maker:'earth',qty:10,lv:1,solid:1,hp:48,hpS:72.2,brk:1,attr:{},mat:{wood:6,stone:3},kwr:1,desc:'夜空の色の家の壁。じょうぶさ48'},
   lamp:{hp:5,brk:1,fix:3,fixm:{eda:2,stone:2},name:'かがり火',kind:'furn',pc:5,time:160,maker:'fire',solid:1,anim:1,attr:{fire:3},mat:{eda:3,stone:3},desc:'まわり3.5マスを照らす。住み心地+6'},
-  campfire:{hp:5,brk:1,fix:4,fixm:{wood:2,eda:4,stone:4},name:'たき火',kind:'furn',pc:7,time:160,maker:'fire',lv:6,solid:1,anim:1,attr:{fire:4},play:{pt:3,pw:1.35,fun:25,dur:40,cap:3,adj:1},mat:{wood:3,eda:8,stone:8},desc:'3人まで遊べる。たのしさ +25（26.7分）。まわり3.5マスを照らす'},
+  campfire:{hp:5,brk:1,fix:4,fixm:{wood:2,eda:4,stone:4},name:'たき火',kind:'furn',pc:7,time:160,maker:'fire',lv:6,solid:1,anim:1,attr:{fire:4},play:{pt:3,pw:1.35,fun:25,dur:40,cap:3,adj:1},mat:{wood:3,eda:8,stone:8},desc:'3人まで遊べる。たのしさ +25（26.7分）。まわり3.5マスを照らす。雨の日は、外では火が消える'},
   swing:{name:'ブランコ',sz:[2,1],kind:'furn',pc:9,time:160,maker:'wood',lv:4,play:{pt:4,pw:1.8,fun:40,dur:50,cap:1},attr:{wind:3},mat:{wood:12,shina:4},mat1:{bamboo:8,wood:4,kuru:4},desc:'1人で遊べる。たのしさ +40（33.3分）。遊ぶと10%の確率で、移動速度+2'},
   torch:{hp:5,brk:1,fix:1,fixm:{eda:2},name:'たいまつ',kind:'furn',lv:3,pc:1,time:100,maker:'fire',solid:1,anim:1,attr:{fire:2},mat:{eda:3},mat1:{bamboo:3},desc:'まわり3.5マスを照らす。住み心地+4'},
   composter:{hp:5,brk:1,fix:2,fixm:{wood:3},name:'コンポスター',kind:'furn',cat:'other',f2:1,pc:3,time:80,maker:'wood',solid:1,attr:{wood:1},mat:{wood:10},desc:'草を入れると、1日で肥料になる。草1こで肥料1こ'},
@@ -126,6 +126,10 @@ const BL={
   jar:{hp:5,brk:1,fix:2,fixm:{stone:3},name:'みずがめ',kind:'furn',lv:3,pc:3,time:120,maker:'water',solid:1,attr:{water:3},mat:{stone:5},desc:'水をためたかめ。雨の日に水がたまり、畑10マスぶんの水をくめる。住み心地+5'},
   basin:{hp:5,brk:1,fix:4,fixm:{stone:3},name:'水鉢',kind:'furn',pc:7,time:160,maker:'water',solid:1,anim:1,attr:{water:4,wood:.5},mat:{stone:5},desc:''},/* もう作れない（古いセーブ用） */
   kamizo:{hp:5,brk:1,fix:5,fixm:{stone:13},name:'カミサマの像',kind:'furn',lv:5,pc:10,time:160,maker:'earth',solid:1,attr:{earth:2},mat:{stone:25},desc:'カミサマが遊びにくる確率50%'},
+  orgel:{chest:1,shopOnly:1,name:'古いオルゴール',kind:'furn',cat:'env',pc:6,solid:1,attr:{},env:3,mat:{wood:4},desc:'まわり3マスで、たのしさ+1.1／1時間'},
+  telescope:{chest:1,shopOnly:1,name:'星見の望遠鏡',kind:'furn',pc:6,solid:1,attr:{},mat:{wood:3,stone:2},desc:'流れ星の夜が来るわりあい+10%（重複なし）'},
+  hdokei:{chest:1,shopOnly:1,name:'森の柱時計',kind:'furn',pc:15,solid:1,attr:{},mat:{wood:6},desc:'住み心地+15'},
+  mizubachi:{chest:1,shopOnly:1,name:'苔むした石の水ばち',kind:'furn',cat:'env',pc:5,solid:1,attr:{},mat:{stone:6},desc:'まわり5マスの花・木の芽が、植えたその日に育つ'},
   chochin:{w:1,name:'おまつりのちょうちん',kind:'furn',shopOnly:1,pc:6,solid:1,attr:{},desc:'おまつりのおみやげ。赤いちょうちん。住み心地+6'},
   furin:{w:1,name:'ふうりん',kind:'furn',shopOnly:1,pc:8,solid:1,anim:1,attr:{},desc:'カミサマのかざり。風がふくと、ちりんと鳴る。住み心地+8'},
   ema:{w:1,name:'えまかけ',kind:'furn',shopOnly:1,pc:8,solid:1,attr:{},desc:'カミサマのかざり。ねがいごとを書いた板をかける。住み心地+8'},
@@ -177,7 +181,7 @@ const BL={
   rock:{name:'岩',solid:1,natural:1},kagenest:{name:'かげの巣',solid:1,natural:1},leafwall:{name:'葉のかべ',natural:1,brk:1,hp:30},/* かげの巣・葉のかべ（defense.js） */vcopper:{name:'銅の鉱脈',solid:1,natural:1},viron:{name:'鉄の鉱脈',solid:1,natural:1},vobsid:{name:'黒曜石の鉱脈',solid:1,natural:1},vsilver:{name:'銀の鉱脈',solid:1,natural:1},vgold:{name:'金の鉱脈',solid:1,natural:1},/* 火山の鉱脈：ほると鉱石 */
   hotstone:{hp:5,brk:1,fix:1,fixm:{},name:'湯のわき岩',kind:'furn',pc:0,time:20,solid:1,anim:1,attr:{fire:3,water:1},desc:'水べに置くと、水があたたまって温泉になる'},
   volcano:{name:'火山',sz:[3,3],solid:1,anim:1},boulder:{name:'大岩',solid:1,natural:1},heatv:{name:'熱の切りかえ装置',solid:1,anim:1},crack:{name:'ひびわれ',anim:1},/* 火山のふもと */
-  fogbox:{name:'古い宝箱',solid:1,natural:1,anim:1},nushiprint:{name:'ヌシ様のあしあと',natural:1,anim:1},fogspring:{name:'きれいな泉',sz:[2,2],solid:1,natural:1,anim:1,env:1.4,desc:'まわり3マスで、たのしさ+0.5／1時間'},/* 霧の中で見つける物（草原） */
+  kdkusa:{name:'ゆれる草むら',natural:1},kdkabu:{name:'ふしぎな切り株',solid:1,natural:1},kdishi:{name:'小石',natural:1},kdhana:{name:'花',natural:1},/* もりのこだまの見つかる所（kodama.js） */fogbox:{name:'古い宝箱',solid:1,natural:1,anim:1},nushiprint:{name:'ヌシ様のあしあと',natural:1,anim:1},fogspring:{name:'きれいな泉',sz:[2,2],solid:1,natural:1,anim:1,env:1.4,desc:'まわり3マスで、たのしさ+0.5／1時間'},/* 霧の中で見つける物（草原） */
   deadtree:{name:'枯れ木',solid:1,natural:1},
   ntree:{name:'森の木',solid:1,natural:1},
   berry:{name:'ベリーの茂み',solid:1,natural:1,dyn:1},
@@ -197,7 +201,7 @@ const BL={
 const BLOCKS=['path','gravel','woodpath','stone','brick','floor','brickfloor','stonefloor','herrfloor','carpet','farm','fence','misugaki','logfence','bamboofence','bedge','gate','stonegate','logdoor','loggate','hwall','bamboowall','logwall','plasterwall','brickwall','yozorawall','door','yozoradoor','wall','sdoor','window'];const GATE_IDS=new Set(['gate','stonegate','logdoor','loggate','leafwall'])/* 葉のかべ：せいれいは通れる・コワイノはこわして通る */,FENCE_IDS=new Set(['fence','misugaki','logfence','bamboofence','gate','stonegate','logdoor','loggate']),HOME_WALLS=new Set(['hwall','bamboowall','logwall','plasterwall','brickwall','yozorawall','wall']),HOME_DOORS=new Set(['door','yozoradoor','sdoor']);
 const TOWER_STONE={...BL.tower};
 const TOWER_TREE={...BL.tower,sz:[4,4],name:'御神木',pc:0,mat:{},maker:'wood',desc:'みんなで育てた木。土地に散らばったヌシ様の力を結ぶ。まわり7マスを照らす'};
-const PLANTDEF=new Set(['nebari','hotaru'])/* 守りの草：草原のサブクエストでおぼえる */,PLANTS=['clover','bellf','salvia','lily','lotus','nebari','hotaru','tree','fruit'],FLOWERS=new Set(['clover','bellf','salvia','lily','lotus','nebari']),ATTRFL=new Set(['clover','bellf','salvia','lily','lotus','nebari','hotaru']),plantOK=id=>!ATTRFL.has(id)||!!S.unlocked[id]/* 属性の花はクエストで解放 */,isBud=j=>!!(S&&S.bud&&S.bud[j]>callDay())/* 植えた日の次の朝6時まで、花と木は芽（夜中の0時ではかわらない） */,flowerN=()=>S.obj.reduce((a,o,j)=>a+(FLOWERS.has(o)&&!isBud(j)?1:0),0),BREQ={windmill:'wind',fountain:'water',well:'water',lighthouse:'fire',stele:'earth'}/* 属性の子がいないと建てられない */;
+const PLANTDEF=new Set(['nebari','hotaru'])/* 守りの草：草原のサブクエストでおぼえる */,PLANTS=['clover','bellf','salvia','lily','lotus','nebari','hotaru','tree','fruit'],FLOWERS=new Set(['clover','bellf','salvia','lily','lotus','nebari']),ATTRFL=new Set(['clover','bellf','salvia','lily','lotus','nebari','hotaru']),plantOK=id=>!ATTRFL.has(id)||!!S.unlocked[id]/* 属性の花はクエストで解放 */,isBud=j=>!!(S&&S.bud&&S.bud[j]>callDay()&&!(typeof NEARMIZU!=='undefined'&&NEARMIZU.has(j)))/* 植えた日の次の朝6時まで、花と木は芽（夜中の0時ではかわらない） */,flowerN=()=>S.obj.reduce((a,o,j)=>a+(FLOWERS.has(o)&&!isBud(j)?1:0),0),BREQ={windmill:'wind',fountain:'water',well:'water',lighthouse:'fire',stele:'earth'}/* 属性の子がいないと建てられない */;
 function bedStep(){/* はじめのベッド：はたおり機 → 布 → ベッドの、いまの所 */const lm=cnt('loom')>0,nu=(S.mat.nuno||0)>0||(S.orders||[]).some(o=>o.type==='bed')||cnt('bed')>0||(S.inv||{}).bed>0;return 'はたおり機 '+(lm?'1':'0')+'/1・布 '+(nu?'1':'0')+'/1・ベッド '+Math.min(1,houseBedCount())+'/1'+((S.orders||[]).some(o=>o.type==='bed')&&!S.obj.includes('wbench')?'・作業台がありません':'')}/* 作業台がないと、ベッドの依頼は作れない */
 const bloomCount=id=>S.obj.reduce((n,o,j)=>n+(o===id&&!isBud(j)?1:0),0);
 const FLOWER_QUESTS=new Set(['salvia3','lotus3','lily5','clover3']);
