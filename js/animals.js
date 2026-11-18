@@ -35,12 +35,17 @@ function strayFollow(a,dt){/* つれているせいれいの、通った所を�
   const ok=r&&!r.hidden&&(r.alead&&r.alead.aid===a.id||r.act&&r.act.type==='astray'&&r.act.aid===a.id);if(!ok){a.lead=null;a.lh=null;a.tr=null;a.wt=2;return}
   if(!r.alead)return;/* まだ、むかえに来たところ */const T=a.tr||(a.tr=[]),L=T[T.length-1];if(!L||Math.hypot(r.x-L[0],r.y-L[1])>.35){T.push([r.x,r.y]);if(T.length>60)T.shift()}
   if(Math.hypot(r.x-a.x,r.y-a.y)<.9||!T.length)return;const p=T[0],dx=p[0]-a.x,dy=p[1]+.1-a.y,D=Math.hypot(dx,dy);if(D<.08){T.shift();return}
-  const sp=Math.min(D,ANI[a.k].spd*(Math.hypot(r.x-a.x,r.y-a.y)>2.5?2.4:1.5)*dt);a.x+=dx/D*sp;a.y+=dy/D*sp;if(Math.abs(dx)>.03)a.face=dx>0?1:-1;a.mv=1}
-function aniStep(a,dt){/* 道をたどって歩く */if(!a.path||!a.path.length)return false;const c=a.path[0],tx=c%W+.5,ty=((c/W)|0)+.6,dx=tx-a.x,dy=ty-a.y,L=Math.hypot(dx,dy);
-  if(L<.05){a.path.shift();return true}const sp=Math.min(L,ANI[a.k].spd*dt);a.x+=dx/L*sp;a.y+=dy/L*sp;if(Math.abs(dx)>.03)a.face=dx>0?1:-1;a.mv=1;return true}
+  const sp=Math.min(D,ANI[a.k].spd*(Math.hypot(r.x-a.x,r.y-a.y)>2.5?2.4:1.5)*dt);a.x+=dx/D*sp;a.y+=dy/D*sp;aniTurn(a,dx,dy);a.mv=1}
+/* 歩く向きで、横・正面（d）・うしろ（u）の絵をえらぶ（a.vw。チップ ani:<k>#d<コマ>・#u<コマ>、tools/art/animals/ani_build.py）。かわりめでちらつかないように、はっきり上下・左右になったときだけかえる */
+function aniTurn(a,dx,dy){const ax=Math.abs(dx),ay=Math.abs(dy);if(ax>.03)a.face=dx>0?1:-1;if(ay>ax*1.3)a.vw=dy>0?'d':'u';else if(ax>ay*1.3)a.vw=''}
+/* 道のかどを切って、まっすぐ・ななめに歩く：つぎのつぎのマスまで、通れるマスだけを通って行けるなら、つぎのマスをとばす */
+function aniSee(a,c){const ok=a.path.ok,tx=c%W+.5,ty=((c/W)|0)+.6,L=Math.hypot(tx-a.x,ty-a.y),n=Math.ceil(L/.2);let pj=(a.y|0)*W+(a.x|0);
+  for(let i=1;i<=n;i++){const q=i/n,x=a.x+(tx-a.x)*q,y=a.y+(ty-a.y)*q;for(const[ox,oy]of[[.25,0],[-.25,0],[0,.2],[0,-.2]]){const j=((y+oy)|0)*W+((x+ox)|0);if(!(ok?ok.has(j):aniPass(j))||j!==pj&&cliff2(pj,j))return false}pj=(y|0)*W+(x|0)}return true}
+function aniStep(a,dt){/* 道をたどって歩く */if(!a.path||!a.path.length)return false;while(a.path.length>1&&aniSee(a,a.path[1]))a.path.shift();const c=a.path[0],tx=c%W+.5,ty=((c/W)|0)+.6,dx=tx-a.x,dy=ty-a.y,L=Math.hypot(dx,dy);
+  if(L<.05){a.path.shift();return true}const sp=Math.min(L,ANI[a.k].spd*dt);a.x+=dx/L*sp;a.y+=dy/L*sp;aniTurn(a,dx,dy);a.mv=1;return true}
 function aniPath(a,to,cells){/* かこいの中だけを通る道（cells がなければ、歩けるマス） */const s=(a.y|0)*W+(a.x|0);if(s===to)return [to];const ok=cells?new Set(cells):null,prev=new Map([[s,-1]]),Q=[s];
   for(let i=0;i<Q.length&&i<600;i++){const c=Q[i];if(c===to)break;const x=c%W,y=(c/W)|0;for(const[dx,dy]of DIRS){const nx=x+dx,ny=y+dy;if(nx<0||ny<0||nx>=W||ny>=H)continue;const n=ny*W+nx;if(prev.has(n)||!(ok?ok.has(n):aniPass(n)))continue;prev.set(n,c);Q.push(n)}}
-  if(!prev.has(to))return null;const p=[];for(let c=to;c!==s&&c>=0;c=prev.get(c))p.unshift(c);return p}
+  if(!prev.has(to))return null;const p=[];for(let c=to;c!==s&&c>=0;c=prev.get(c))p.unshift(c);p.ok=ok;return p}
 function animalTick(dt){if(!S||!S.ani||!S.ani.length||IS_STORY_REPLAY)return;const night=isNight(),day=callDay(),h=hour();
   const sec=(ANISUB+=dt)>=1;if(sec)ANISUB=0;
   for(const a of S.ani.slice()){a.mv=0;if(a.eat>0)a.eat-=dt;
@@ -75,7 +80,7 @@ Object.assign(ACT,{
   awater:{start(r,a){if(!isHut(S.obj[a.obj])||!(r.wcan>0))return false;r.bubble='💦';faceTo(r,a.obj)},done:(r,a)=>a.t>=5/aniSpd(a.obj,null,'hidamari'),end(r,a){if(!isHut(S.obj[a.obj]))return;hutD(a.obj).wd=callDay();r.wcan=Math.max(0,(r.wcan||0)-1);r.bubble='';sfxAt('water',r.x,r.y)}},/* 水入れに水 */
   acol:{start(r,a){const d=S.dyn[a.obj];if(!d||!d.pr||!Object.keys(d.pr).length)return false;r.bubble='';faceTo(r,a.obj)},done:(r,a)=>a.t>=4,
     end(r,a){const d=S.dyn[a.obj];if(!d||!d.pr)return;for(const k of Object.keys(d.pr)){const n=Math.min(d.pr[k],roomN(r));if(n<=0)break;if(FOODS[k])addCarry(r,k,n);else addMat(r,k,n);d.pr[k]-=n;if(d.pr[k]<=0)delete d.pr[k]}}},/* とれた物をとる（箱へは、いつものしまい方で） */
-  apet:{start(r,a){const b=(S.ani||[]).find(q=>q.id===a.aid);if(!b||b.in)return false;b.pet=a.dur;b.face=r.x<b.x?-1:1;r.face=b.x<r.x?-1:1;r.bubble='❗'},tick(r,a){if(a.t>2)r.bubble='🎵'},done:(r,a)=>a.t>=a.dur,
+  apet:{start(r,a){const b=(S.ani||[]).find(q=>q.id===a.aid);if(!b||b.in)return false;b.pet=a.dur;b.face=r.x<b.x?-1:1;b.vw='';r.face=b.x<r.x?-1:1;r.bubble='❗'},tick(r,a){if(a.t>2)r.bubble='🎵'},done:(r,a)=>a.t>=a.dur,
     end(r,a){const b=(S.ani||[]).find(q=>q.id===a.aid);if(a.t<a.dur){if(a.tap&&b){b.petD=null;b.pet=0}return}/* とちゅうでやめたら、たのんだなでるは、なかったことに */const n=Math.round((a.tap?ANIPET:ANIFUN)*(b&&spotNear((b.y|0)*W+(b.x|0),'fureai')?1.2:1)*10)/10;/* ふれあいひろば：+20% */r.fun=Math.min(100,r.fun+n);r.wanderRestUntil=S.t+45;r.bubble='';if(b){b.pet=0;aniJoy(b)}if(a.tap){addFloat(r.x,r.y-1.6,'たのしさ+'+n,'#ffd7e8');JOYU.set(r,performance.now()+1500)}}}});
 const aniSpd=(h,box,k2)=>1+.1*spotN(h,'makiba')+(k2==='hidamari'?.1*spotN(h,'hidamari'):0)+(k2==='hoshikusa'&&box!=null&&box>=0&&spotNear(box,'hoshikusa')?.1:0);/* まきば・ひだまりのとや・ほしくさおき場：+10% */
 ACT.apetq=ACT.apet;/* 「しらべる」でたのんだ、なでる（とちゅうで仕事にうつらない） */KEEPC.add('apet');KEEPC.add('apetq');/* 荷物は持ったまま、なでにいく */
@@ -103,8 +108,8 @@ const ANIJOYF=[['j0',110,0],['j1',170,6],['j2',110,2],['j0',90,0],['j1',170,6],[
 function aniJoy(a){AJOY.set(a,performance.now());if(typeof sfxAt==='function')sfxAt('good',a.x,a.y)}
 function aniJoyF(a,now){const t0=AJOY.get(a);if(t0==null)return null;let e=now-t0;if(e<0||e>=ANIJOYT){AJOY.delete(a);return null}for(const f of ANIJOYF){if(e<f[1])return f;e-=f[1]}return null}
 function aniChip(a,now){/* ボーンで動かして写したコマ（tools/art/animals/ani_rig.py）：歩く4コマ（150ミリ秒ごと）・食べる（220ミリ秒ごと）・立つ（息をする2コマ、700ミリ秒ごと。生き物ごとにずらす） */const k=a.k,C=window.CHIPS||{};if(a.in)return null;
-  const jf=aniJoyF(a,now);if(jf)return C['ani:'+k+'#'+jf[0]]||C['ani:'+k+'#0']||null;
-  const f=a.eat>0?ANIEAT[(now/220|0)%4]:a.mv?'w'+((now/150|0)%4):String(((now+a.id*337)/700|0)%2);return C['ani:'+k+'#'+f]||C['ani:'+k+'#0']||null}
+  const jf=aniJoyF(a,now);if(jf)return a.vw&&C['ani:'+k+'#'+a.vw+jf[0]]||C['ani:'+k+'#'+jf[0]]||C['ani:'+k+'#0']||null;
+  const f=a.eat>0?ANIEAT[(now/220|0)%4]:a.mv?'w'+((now/150|0)%4):String(((now+a.id*337)/700|0)%2);return a.vw&&C['ani:'+k+'#'+a.vw+f]||C['ani:'+k+'#'+f]||C['ani:'+k+'#0']||null}
 function drawAnimal(g,a,now){/* 足もと（a.x, a.y）に、チップの足（下のはし58/64）をそろえる。左むきは、足もとのまん中で反転 */const ch=aniChip(a,now);if(!ch)return;const im=chipImgs(ch,'ani'+a.k)[0];if(!im.ok)return;
   const x=Math.round(a.x*TS),y=Math.round(a.y*TS),sz=a.k==='hane'?6:10;g.fillStyle='rgba(60,50,30,.18)';g.fillRect(x-sz,y-1,sz*2,2);g.fillRect(x-sz+2,y+1,sz*2-4,1);/* かげ（ドット） */
   const jf=aniJoyF(a,now);g.save();g.translate(x,y-(jf?jf[2]:0));if(a.face<0)g.scale(-1,1);g.imageSmoothingEnabled=false;g.drawImage(im,ch.ax/2-TS/2,ch.ay/2-29,ch.w/2,ch.h/2);g.restore()}
@@ -142,7 +147,7 @@ function aniLeadGo(r,G){/* むかえたあと：小屋の前まで歩く（生�
   let h=r.alead.h;if(!hutRoom(h,a.k)&&!(isHut(S.obj[h])&&PENS.get(h)&&a.lh===h&&aniOf(h).length<hutCap(h))){h=strayHut(a);if(h==null){r.alead=null;a.lead=null;a.lh=null;return false}r.alead.h=a.lh=h}
   const st=nearest(G,j=>hutFront(h).includes(j),400);if(st<0){r.alead=null;a.lead=null;a.lh=null;return false}startAct(r,G,'alead',st,{aid:a.id,h});return !!r.act&&r.act.type==='alead'}
 Object.assign(ACT,{
-  astray:{start(r,a){const b=(S.ani||[]).find(q=>q.id===a.aid);if(!b||!b.stray||b.lead!==r.id)return false;b.face=r.x<b.x?-1:1;r.face=b.x<r.x?-1:1;r.bubble='❗'},tick(r,a){if(a.t>1.5)r.bubble='🎵'},done:(r,a)=>a.t>=3,
+  astray:{start(r,a){const b=(S.ani||[]).find(q=>q.id===a.aid);if(!b||!b.stray||b.lead!==r.id)return false;b.face=r.x<b.x?-1:1;b.vw='';r.face=b.x<r.x?-1:1;r.bubble='❗'},tick(r,a){if(a.t>1.5)r.bubble='🎵'},done:(r,a)=>a.t>=3,
     end(r,a){const b=(S.ani||[]).find(q=>q.id===a.aid);if(!b||a.t<3)return;r.alead={aid:b.id,h:a.h};b.tr=[];r.bubble='';aniJoy(b)}},/* そばで声をかけると、ついてくる */
   alead:{start(r,a){const b=(S.ani||[]).find(q=>q.id===a.aid);if(!b||b.lead!==r.id)return false;faceTo(r,a.h)},done:(r,a)=>{const b=(S.ani||[]).find(q=>q.id===a.aid);return a.t>=1&&(!b||Math.hypot(b.x-r.x,b.y-r.y)<1.3||a.t>=8)},
     end(r,a){const b=(S.ani||[]).find(q=>q.id===a.aid);r.alead=null;if(!b||!b.stray||!isHut(S.obj[a.h])||!PENS.get(a.h)||aniOf(a.h).length>=hutCap(a.h)){if(b){b.lead=null;b.lh=null;b.tr=null}return}

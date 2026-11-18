@@ -69,10 +69,18 @@ C={
    fr={'0':{},'1':dict(sq=.96),'w0':dict(sq=.84,legF=-10,legB=-20),'w1':dict(st=1.14,sq=1.0,pitch=-12,legF=-35,legB=55),'w2':dict(st=1.06,pitch=6,legF=-25,legB=25),'w3':dict(sq=.88,legF=15,legB=-10),
        'e0':dict(puff=.4),'e1':dict(puff=.9),'e2':dict(puff=.25)}),   # のどをふくらませる
 }
-def frames(name):return list(C[name]['fr'])
+VIEWD={'d':1,'u':-1}   # 正面（d：手前へ歩く）・うしろ（u：奥へ歩く）
+FRONT={'usagi':(85,15),'risu':(78,25),'harinezumi':(72,15),'nezumi':(-60,15),'mogura':(72,15),'katatsumuri':(72,15),'tentoumushi':(70,15),'kaeru':(65,15)}   # 横の絵から、まっすぐ正面になるまで何度まわすか・そこから右へもどす度（顔が見える、少しななめ。ゲームで左右反転する）。絵を見てきめた
+def vturn(name,vw):
+    if not vw:return 0
+    S,q=FRONT[name];g=1 if S>0 else -1;return S-g*q if vw=='d' else S-g*180+g*q
+GROUND=tuple(FRONT)   # 地面を歩く・はねる物：正面・うしろの絵もある（上下へ動くとき、横を向いたまますべらないように）
+def frames(name):
+    f=list(C[name]['fr']);return f+[v+x for v in VIEWD for x in f] if name in GROUND else f
+def view(frame):return (frame[0],frame[1:]) if frame[0] in VIEWD else ('',frame)   # 'dw0' → ('d','w0')
 class Rig:
     def __init__(s,name,V,F,Cf):
-        D=C[name];s.D=D
+        D=C[name];s.D=D;s.name=name
         col=np.zeros((len(V),3));n=np.zeros(len(V))
         for k in range(3):np.add.at(col,F[:,k],Cf);np.add.at(n,F[:,k],1)
         col/=np.maximum(n,1)[:,None];s.col=col
@@ -154,21 +162,22 @@ def rig(name):
         if name not in _mc:load(name)
         V,F,Cf=_mc[name];_rigs[name]=Rig(name,V,F,Cf)
     return _rigs[name]
-def _turn(rg,W):
-    a=math.radians(rg.D['rot']) if 'rot' in rg.D else math.radians(TURN)-math.atan2(rg.f[1],rg.f[0]);Rm=np.array([[math.cos(a),-math.sin(a),0],[math.sin(a),math.cos(a),0],[0,0,1]]);c=np.array([rg.c[0],rg.c[1],0.])
+def _turn(rg,W,vw=''):
+    a=math.radians(rg.D['rot']) if 'rot' in rg.D else math.radians(TURN)-math.atan2(rg.f[1],rg.f[0]);a+=math.radians(vturn(rg.name,vw));Rm=np.array([[math.cos(a),-math.sin(a),0],[math.sin(a),math.cos(a),0],[0,0,1]]);c=np.array([rg.c[0],rg.c[1],0.])
     return (W-c)@Rm.T+c
 def props(name,frame):
     """小物（木の実・たね）：[(形,場所 u,v,z,半径 H,色)] → ゲームの向きの [('ball',(x,y,z,r),色)]。からだのかたむき・のびは、骨なしで同じようにつける"""
     pr=C[name].get('prop');out=[]
     if not pr:return out
-    rg=rig(name);q=C[name]['fr'][frame];base=np.array([rg.c[0],rg.c[1],0.])
+    vw,frame=view(frame);rg=rig(name);q=C[name]['fr'][frame];base=np.array([rg.c[0],rg.c[1],0.])
     for k,p,r,col in pr(frame):
         V=rg.P(p)[None,:].copy();V[:,2]*=q.get('sq',1);d=(V-base)@rg.f;V+=np.outer(d*(q.get('st',1)-1),rg.f)
         if q.get('pitch'):V=(V-base)@rotm(rg.s,q['pitch']).T+base
-        V=_turn(rg,V)[0];out.append((k,(V[0],V[1],V[2],r*rg.H),col))
+        V=_turn(rg,V,vw)[0];out.append((k,(V[0],V[1],V[2],r*rg.H),col))
     return out
 def warp(name,frame):
     """blueprint の Part.warp にわたす関数：点 → ポーズをつけて、前を右・少し手前へ向けた点"""
+    vw,fr=view(frame)
     def f(V):
-        rg=rig(name);return _turn(rg,rg.pose(V,**C[name]['fr'][frame]))
+        rg=rig(name);return _turn(rg,rg.pose(V,**C[name]['fr'][fr]),vw)
     return f
