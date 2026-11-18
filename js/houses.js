@@ -83,13 +83,13 @@ const comfyStars=v=>'★'.repeat(Math.min(5,Math.max(1,Math.ceil(v/(60)))))+'☆
 /* 家の広さで、ちょうどいい人数が決まる（中のマス4つで1人） */
 const OWNABLE=o=>!!o&&(SEATS.includes(o)||!!(BL[o]&&BL[o].play)||o==='bathtub'||o==='onsen'||COOKST.has(o));/* つかうせいれいをきめられる家具：いす・ベンチ・遊び家具・おふろ・料理の家具（ベッド・見張り台はべつ） */
 /* しごと場の担当：伐採場・採石場は2人まで、炉は火のせいれい1人。担当がきまっていれば、担当だけが働く（村にいなければ、だれでも） */
-const JOBST={lumber:2,quarry:2,smelter:1,mill:1,loom:1},NARET=270,NAREMAX=5,NAREUP=10;/* なれは、時計の3時間（270）働くごとに1つ。1つで、そのしごと場でのはたらく速さ+10 */
+const JOBST={lumber:2,quarry:2,smelter:1,mill:1,loom:1},NARET=270,NAREMAX=5,NAREUP=2;/* なれは、時計の3時間（270）働くごとに1つ。1つで、そのしごと場でのはたらく速さ+2 */
 const jobOwners=j=>{const L=(S.jobOwn||{})[anc(j)];return L?S.res.filter(q=>L.includes(q.id)&&!q.hidden):[]},jobFor=(j,r)=>{const o=jobOwners(j);return !o.length||o.includes(r)};
 function jobOf(r){const J=S.jobOwn||{};for(const k in J)if(J[k].includes(r.id)&&JOBST[S.obj[k]])return +k;return -1}
 const jobOK=(r,o)=>!!JOBST[o]&&(o!=='smelter'||r.elem==='fire')&&(!PROC[o]||procOK(r,o));
 const nareLv=(r,o)=>Math.min(NAREMAX,Math.floor(((r.nare||{})[o]||0)/NARET));
 function jobAct(r,a){if(!a||a.obj==null)return null;if(!((a.camp&&(a.type==='chop'||a.type==='mine'))||a.type==='smelt'||a.type==='proc'))return null;const o=S.obj[a.obj];return JOBST[o]&&jobOwners(a.obj).includes(r)?o:null}/* 担当のしごと場で働いているか */
-const nareAdd=(r,a)=>{const o=jobAct(r,a);return o?nareLv(r,o)*NAREUP/100:0};
+const nareAdd=(r,a)=>{const o=jobAct(r,a);return o?nareLv(r,o)*NAREUP/STD:0};
 function nareTick(r,a,dt){const o=jobAct(r,a);if(!o)return;const N=r.nare||(r.nare={}),l0=nareLv(r,o);N[o]=(N[o]||0)+dt;const l1=nareLv(r,o);if(l1>l0){addFloat(r.x,r.y-1.6,'なれ '+l1,'#ffe08a');toast(r.name+'：'+BL[o].name+'のなれ '+l1,'good')}}
 function jobSet(j,r,on){const a=anc(j),J=S.jobOwn||(S.jobOwn={});if(on)for(const k in J){J[k]=J[k].filter(id=>id!==r.id);if(!J[k].length)delete J[k]}/* 担当は1人1か所 */const L=(J[a]||[]).filter(id=>id!==r.id&&S.res.some(q=>q.id===id));if(on)L.push(r.id);if(L.length)J[a]=L;else delete J[a]}
 const useOwner=j=>{const id=(S.useOwn||{})[anc(j)];return id!=null&&OWNABLE(S.obj[anc(j)])?S.res.find(q=>q.id===id)||null:null},useFor=(j,r)=>{const o=useOwner(j);return !o||o===r};/* きまったせいれいがいれば、その子だけ使う（いない子のは、だれでも） */

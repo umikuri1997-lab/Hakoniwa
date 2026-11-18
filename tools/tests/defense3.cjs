@@ -17,7 +17,7 @@ assert.equal(out.near,1);assert.equal(out.hp,2,'強い：体力が多い');asser
 assert.ok(out.fell,'落ちる');assert.equal(out.used,false,'穴があいたら落ちない');assert.equal(out.boss,false,'オオカゲは落ちない');
 assert.equal(out.spring,'hana');assert.equal(out.winter,'yuki');assert.equal(out.hoteri,10,'ホテリカゲ：火は半分');assert.equal(out.ochiba,1);
 assert.equal(out.before,0);assert.equal(out.after,3,'土の大わざ：止める');assert.equal(out.ult,0);
-assert.equal(out.s3,3);assert.equal(out.w3,5);assert.equal(out.rw-out.rw0,5);assert.equal(out.reset,0);assert.equal(out.noFoe,5,'コワイノの来ない夜はそのまま');
+assert.equal(out.s3,3);assert.equal(out.w3,1);assert.equal(out.rw-out.rw0,1);assert.equal(out.reset,0);assert.equal(out.noFoe,5,'コワイノの来ない夜はそのまま');
 assert.ok(out.subq);assert.ok(out.z);
 assert.equal(errors.length,0,errors.join('\n'));
 console.log('Defense3 OK. Browser errors: none');await browser.close()})().catch(e=>{console.error(e);process.exit(1)});

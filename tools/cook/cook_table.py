@@ -150,7 +150,7 @@ def eff(ins, st, typ):
     if en: ef['en'] = en; fx.append('つかれ−%d' % en)
     if fun: ef['fun'] = fun; fx.append('たのしさ+%d' % fun)
     if wkn:
-        m = 20 if wkn == 1 else 30; h = 4 + 3 * len(ins) + (2 if st == O else 0)
+        m = 4 if wkn == 1 else 6; h = 4 + 3 * len(ins) + (2 if st == O else 0)
         ef['wk'] = [m, h * 60]; fx.append('%d時間、はたらく速さ+%d' % (h, m))
     return ef, '・'.join(fx)
 
