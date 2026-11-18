@@ -530,6 +530,7 @@ function drawRes0(r,now){
   if(!zzz&&SEVW[r.name]){r.bubX=px;r.bubY=by-42;talkBub(px,by,now,'#ffb3d1');return}
   if(!zzz&&SUBW[r.name]){r.bubX=px;r.bubY=by-42;talkBub(px,by,now,'#ffd56b');return}/* サブクエスト：黄色の吹き出し *//* 話したそうにしている：水色の吹き出し */
   if(CLAPON)return;/* 拍手中は吹き出しを出さない */
+  if(r.act&&r.act.stage==='do'&&(WORKFACE.has(r.act.type)||WORKBUB.has(r.act.type)))return;/* 作業中（しまう・作る・料理・ごはん・水あびなど）は、ふきだしを出さない（見ればわかる） */
   const warn=r.hunger<200;
   const trq=!r.bubble&&!warn&&S.trouble&&S.trouble.id===r.id&&r.act&&['idle','wander','quirk'].includes(r.act.type)?'❓':'';/* こまりごとのある子は、ひまなとき「？」 */if(!ci&&(r.bubble||warn||trq)){const t0=trq||(warn&&!r.bubble?'🍙':r.bubble),t=(BUBFACE[t0]?null:NOFACE[t0])||t0;/* 顔の絵文字は使わない */
     {const a=r.act;if(a&&a.stage==='do'&&(a.type==='mine'||a.type==='chop')&&NATHIT.has(a.obj)&&Math.abs((a.obj%W+.5)*TS-px)<TS+20){const yb=natBarY(a.obj);if(by-60<yb+7&&by-15>yb-2)by=yb+12}}/* 木・岩ののこりのバーと重なるときは、ふきだしをバーの上へ */
@@ -540,6 +541,7 @@ function drawRes0(r,now){
     else if(t==='🪓'&&!BUBS.ok&&PSPR.axe&&PSPR.axe.ok){const g=PSPR.axe.img,ih=25.5,iw=ih*g.width/g.height;ctx.save();ctx.translate(px,by-47);ctx.rotate(-Math.PI/4);ctx.drawImage(g,-iw/2,-ih/2,iw,ih);ctx.restore()}else if(!pic&&BUBI[bubKey(t)])bubIcon(ctx,t,Math.round(px/1.5)*1.5,by-47,2.25,BB);/* 絵文字は、ドットの絵（BUBI）で描く */else{const ei=emoImg(t);if(ei){const k=Math.min(BB.f,BB.s*.85*1.5)/Math.max(ei.width,ei.height),iw=Math.round(ei.width*k),ih=Math.round(ei.height*k);ctx.save();ctx.setTransform(1,0,0,1,0,0);ctx.drawImage(ei,Math.round(BB.x-iw/2),Math.round(BB.y-ih/2),iw,ih);ctx.restore()}/* 絵のアイコンも、ふきだしの中のまん中（画面のピクセル）に */else if(!pic&&!emoSrc(t))bubIcon(ctx,'?',Math.round(px/1.5)*1.5,by-47,2.25,BB)}}};
   if(BUBQ){const T=ctx.getTransform();BUBQ.push(()=>{ctx.save();ctx.setTransform(T);over();ctx.restore()})}else over();/* あとで描くふきだしも、見張り台・段差の上の高さのまま */
 }
+const WORKBUB=new Set(['eat','forage','fetch','eatwait','bathe','otaki','smelt','nest','pitfix','plant','pickdrop','pickseed','awater','apick','aput','acol','douse','sweep','tdig','cpick','ppick','spick','pget','sput','pput','cget','cput']);/* WORKFACE のほかに、ふきだしを出さない作業 */
 let GODP=[-.82,-.6];const godX=()=>STATUE>=0?STATUE%W+.5+GODP[0]:RUINT>=0?RUINT%W+.5:CX+.5,godY=()=>STATUE>=0?((STATUE/W)|0)+(S.obj[STATUE+W]==='altar'?GODP[1]:1.9):RUINT>=0?((RUINT/W)|0)+2.4:CY-6.4;/* 神殿を直す前は、こわれた神殿の前 *//* カミサマは神殿の左の柱の前（おそなえ箱のうしろ）に立つ */
 let GODOUT=false;/* お見送りのあと、カミサマが光になって消える */
 const godHere=()=>S.godShown&&(!S.godGone||S.godVisit)&&!GODOUT;
