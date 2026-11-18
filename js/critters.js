@@ -139,7 +139,7 @@ function critTap(px,py){let best=null,bd=1e9;for(const c of CRIT){if(c.dead||c.g
     if(Math.abs(dx)>.5||dy>.3||dy<-.7)continue;const d=Math.hypot(dx,dy+.2);if(d<bd){bd=d;best=c}}return best?{c:best,d:bd}:null}
 function critPoke(c,px,py){const K=CK[c.k],now=performance.now();if(c.pk&&now-c.pk<CRITPK*1000*.6)return;c.pk=now;
   if(!c.rec){c.rec=1;const R=S.critRec||(S.critRec={});R[c.k]=(R[c.k]||0)+1}
-  addFloat(c.x,c.y-(c.z||0)/TS-.7,CRITN[c.k]||'','#f4ead2');sfx('crit');if(CRITV[c.k])sfxAt(CRITV[c.k],c.x,c.y);
+  sfx('crit');if(CRITV[c.k])sfxAt(CRITV[c.k],c.x,c.y);
   const ax=c.x-px,ay=c.y-py,L=Math.hypot(ax,ay),vx=L>.05?ax/L:(Math.random()<.5?-1:1),vy=L>.05?ay/L:0;
   if(c.k==='bird'){c.fl=1;critLeave(c,vx,Math.min(0,vy))}
   else if(K.flee){c.fl=1;c.hop=0;critLeave(c,vx,vy)}
