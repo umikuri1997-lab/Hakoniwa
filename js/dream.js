@@ -21,4 +21,4 @@ function dreamTopic(r){/* お話の話題（1回だけ） */const D=S.dream;if(!
   if(D.k==='mate'){const m=S.res.find(q=>q.id===D.m);if(m)return{u:1,L:['ゆうべ、'+m.name+'のゆめを見たんだ。','#joy|ふたりで、どこまでも歩いていくゆめ。','あとで、会いにいこうかな。']}}
   return{u:1,L:DREAMSKY[D.sky||0]}}
 let DRMT=0;function dreamTick(){const D=S&&S.dream;if(!D||D.k!=='wish'||(DRMT=(DRMT+1)%5))return;/* 5秒に1回 */const r=S.res.find(q=>q.id===D.id);if(!r){S.dream=null;return}if(!BL[D.f]||!cnt(D.f))return;
-  S.dream=null;funAdd(r,DREAMWISH,'dream');if(!r.hidden){JOYU.set(r,performance.now()+3000);addFloat(r.x,r.y-1.6,'ゆめで見たのと、おなじだ！','#fff3d6');r.bubble='💕'}sfx('good');toast(r.name+'のゆめが、ほんとうになった','good');if(typeof letterQ==='function')letterQ(r,'dream',{f:BL[D.f].name});logEv(r.name+'のゆめが、ほんとうになった：'+BL[D.f].name)}
+  S.dream=null;funAdd(r,DREAMWISH,'dream');if(!r.hidden){JOYU.set(r,performance.now()+3000);addFloat(r.x,r.y-1.6,'ゆめで見たのと、おなじだ！','#fff3d6');r.bubble='💕'}sfx('good');toast(r.name+'のゆめが、ほんとうになった','good');if(typeof giftVisit==='function'){const gj=giftCell(D.f,r);if(gj>=0)giftVisit(r,gj)}if(typeof letterQ==='function')letterQ(r,'dream',{f:BL[D.f].name});logEv(r.name+'のゆめが、ほんとうになった：'+BL[D.f].name)}
