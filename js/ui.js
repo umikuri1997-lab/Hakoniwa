@@ -19,7 +19,7 @@ function pxi(k,c){return '<svg class="pxi'+(c?' '+c:'')+'" viewBox="0 0 32 32" a
 
 /* ---------- UI ---------- */
 /* クエストのごほうびのパワー：どのクエストも、この1つの形（大きな知らせ＋神殿の上に数字）でわたす */
-function rewardPower(n){if(!n)return;S.pt+=n;S.totalPt+=n;toast('ごほうび：パワー+'+n,'good');if(typeof STATUE!=='undefined'&&STATUE>=0)addFloat(STATUE%W+.5,(STATUE/W|0)-1,'+'+n,'#ecdcbc')}
+function rewardPower(n){if(!n)return;S.pt+=n;S.totalPt+=n;toast('ごほうび：パワー+'+n,'good');if(typeof STATUE!=='undefined'&&STATUE>=0){addFloat(STATUE%W+.5,(STATUE/W|0)-1,'+'+n,'#ecdcbc');if(typeof juiceFly==='function')juiceFly(STATUE%W+.5,(STATUE/W|0),'pt',n)}}
 /* 知らせ：同じ文はまとめて（数をつける）、出すのは2つまで、のこりは順番にまつ（TOASTQ）。大事な物（good・warn）は大きく長く、ほかは短く */
 const TOASTQ=[],TOASTMAX=2,TOASTMS={good:3200,warn:3200,'':2000};
 /* 知らせの木札のなわは、上にある板（上の欄・目標の札・ボタン・上の知らせ）のしたまでのばす。どこにもつながらない、なわを出さない */
