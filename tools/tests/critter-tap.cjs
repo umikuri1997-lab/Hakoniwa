@@ -1,4 +1,4 @@
-/* 小さな生き物をタップ（しらべる）：その場で反応する（小鳥は飛びたつ・うさぎはにげる・ちょうは高くまう・かえるははねる・ほたるは光る・もぐらはもぐる・てんとうむしは何かする）・名前が出る・
+/* 小さな生き物をタップ（しらべる）：その場で反応する（小鳥は飛びたつ・うさぎはにげる・ちょうは高くまう・かえるははねる・ほたるは光る・もぐらはもぐる・てんとうむしは何かする）・
    図鑑の「いきもの」に入る（1ぴきは1回だけ数える）。せいれいのほうが近ければ、せいれいの画面 */
 const {chromium}=require('playwright'),assert=require('node:assert/strict');
 (async()=>{const browser=await chromium.launch({executablePath:process.env.CHROME_PATH||'/opt/pw-browsers/chromium',args:['--no-sandbox']});const p=await browser.newPage({viewport:{width:900,height:600}}),errors=[];p.on('pageerror',e=>errors.push(e.message));
@@ -11,11 +11,11 @@ await p.waitForFunction(()=>sacredEval('stageReady()'),{},{timeout:60000});
 const o=await run(`(()=>{cam.z=2;centerOn(CX*TS,CY*TS);setMode('look');const out={};
   const mk=(k,x,y,z)=>({id:CRITID++,k,x,y,hx:x,hy:y,z:z||0,vx:0,vy:0,face:1,t:0,life:999,hop:9,fl:0,ci:0,act:0,ph:0,wait:3});
   const scr=(x,y)=>({sx:(x*TS-cam.x)*cam.z,sy:(y*TS-cam.y)*cam.z});/* マスの点 → 画面の点 */
-  const tap=c=>{const q=scr(c.x,c.y-(c.z||0)/TS-.2);floats.length=0;onTap(q.sx,q.sy);return floats.map(f=>f.text).join()};
+  const tap=c=>{const q=scr(c.x,c.y-(c.z||0)/TS-.2);floats.length=0;onTap(q.sx,q.sy);return c.pk&&!floats.length?CRITN[c.k]:'x'};/* 反応した・名前は出さない */
   const one=(k,x,y,z)=>{const c=mk(k,x,y,z);CRIT=[c];S.res=[];const name=tap(c);return {c,name}};
   {const {c,name}=one('bird',CX+.5,CY-1.4);out.bird=[name,!!c.fl,!!c.go]}
   {const {c,name}=one('usagi',CX+1.5,CY+1.5);out.usagi=[name,!!c.fl,!!c.go]}
-  /* 段差の上（高い段）のうさぎも、見えている所でタップできる */{for(let y=CY+6;y<CY+9;y++)for(let x=CX+5;x<CX+9;x++)S.hi[y*W+x]=1;const c=mk('usagi',CX+6.5,CY+7.6);CRIT=[c];S.res=[];const L=uLift(c)/TS,q=scr(c.x,c.y-L-.2);floats.length=0;onTap(q.sx,q.sy);out.usagiHi=[L>0,floats.map(f=>f.text).join()];for(let y=CY+6;y<CY+9;y++)for(let x=CX+5;x<CX+9;x++)S.hi[y*W+x]=0}
+  /* 段差の上（高い段）のうさぎも、見えている所でタップできる */{for(let y=CY+6;y<CY+9;y++)for(let x=CX+5;x<CX+9;x++)S.hi[y*W+x]=1;const c=mk('usagi',CX+6.5,CY+7.6);CRIT=[c];S.res=[];const L=uLift(c)/TS,q=scr(c.x,c.y-L-.2);floats.length=0;onTap(q.sx,q.sy);out.usagiHi=[L>0,c.pk&&!floats.length?CRITN[c.k]:'x'];for(let y=CY+6;y<CY+9;y++)for(let x=CX+5;x<CX+9;x++)S.hi[y*W+x]=0}
   {const {c,name}=one('fly',CX-2.5,CY+.6,12);const z=critPokeZ(c,performance.now()+500);out.fly=[name,z]}
   {const {c,name}=one('frog',CX-4.5,CY+2.5);out.frog=[name,c.hop,critPokeZ(c,performance.now()+250)]}
   {const {c,name}=one('hotaru',CX-6.5,CY+2.5,10);out.hotaru=[name,!!c.pk]}

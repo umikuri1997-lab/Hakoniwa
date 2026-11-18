@@ -121,8 +121,10 @@ function stageMusic(){
   bgmF.gain.cancelScheduledValues(AC.currentTime);bgmF.gain.setValueAtTime(1,AC.currentTime);
   nextT=AC.currentTime+.01;sched();
 }
-function sched(){
-  if(!AC||AC.state!=='running')return;
+const BGMDBG={c:0,r:0,n:0,err:''};/* 曲のようすのたしかめ（iPhone で曲が鳴らないのをしらべる。わかったらけす） */
+function sched(){BGMDBG.c++;try{sched0()}catch(e){BGMDBG.err=String(e&&e.message||e)}}
+function sched0(){
+  if(!AC||AC.state!=='running')return;BGMDBG.r++;
   if(nextT<AC.currentTime)nextT=AC.currentTime+.05;
   // 昼夜の曲は、フェードアウト→切り替え→フェードインでつなぐ
   {const now=AC.currentTime;if(wantSong!==curSong&&!bgmSw){bgmSw=now+2.4;bgmF.gain.cancelScheduledValues(now);bgmF.gain.setValueAtTime(bgmF.gain.value,now);bgmF.gain.linearRampToValueAtTime(0,now+2.2)}
@@ -130,7 +132,7 @@ function sched(){
   while(nextT<AC.currentTime+.3){
     if(curSong!=='opening'){nextT+=60/SONGS[curSong].bpm/2;step=(step+1)%64;continue}/* 曲はオープニング（タイトル・マップえらび・プロローグ）だけ。遊んでいるあいだは曲なし（効果音・環境音はそのまま） */
     const g=SONGS[curSong],e=60/g.bpm/2,t=nextT,bar=(step/8)|0,ch=g.chords[bar%4],night=curSong.indexOf('night')===0,bossArr=night&&curSong.slice(-1)==='B',opening=curSong==='opening',battle=curSong==='battle',hinoS=curSong==='hino';
-    const n=g.at[step];if(n)tone(n[0],t,n[1]*e*.95,g.lead,battle?.045:opening?.16:night?.09:.075,bgmG);
+    BGMDBG.n++;const n=g.at[step];if(n)tone(n[0],t,n[1]*e*.95,g.lead,battle?.045:opening?.16:night?.09:.075,bgmG);
     if(hinoS){if(n)tone(n[0]-12,t,n[1]*e*.9,'sawtooth',.018,bgmG);/* メロディに、ひくいざらついた音をかさねる */if(step%4===0)tone(ch[0],t,e*3.6,'triangle',.14,bgmG);if(step%8===0)for(const c of ch[1])tone(c,t,e*7.6,'sine',.03,bgmG);if(step%8===0||step%8===3||step%8===5)tone(45,t,.22,'sine',step%8===0?.2:.13,bgmG,36);/* たいこ：ドン・ドドン */if(step%8===6)noise(t,.06,.04,bgmG,1500);if(step%2===1&&Math.random()<.5)noise(t,.02,.012+Math.random()*.012,bgmG,4000);/* 火のはぜる音 */nextT+=e;step=(step+1)%64;continue}
     if(battle){if(step%2===0)tone(ch[0]+(step%4===2?12:0),t,e*1.7,'triangle',.15,bgmG);if(step%8===0)for(const c of ch[1])tone(c,t,e*7.5,'sawtooth',.012,bgmG);if(step%4===0)tone(45,t,.14,'sine',.16,bgmG,40);if(step%4===2)noise(t,.09,.05,bgmG,1800);else if(step%2===1)noise(t,.03,.025,bgmG);nextT+=e;step=(step+1)%64;continue}/* たたかい：ベースを8分できざみ、たいこ *//* マップ画面の曲（opening）：サインだけだとスマホのスピーカーで聞こえないので、三角波でほかの曲と同じくらいの大きさに */
     if(step%8===0)tone(ch[0],t,e*(opening?6:night?7.5:3.6),'triangle',opening?.22:.13,bgmG);
