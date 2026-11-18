@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """UIの手ざわりの音と、料理・もの作りの手もとの音（ASMRのような、近くで小さく鳴る本物の音）を作る。
 元の音：Kenney の音のセット（どれも CC0。https://kenney.nl/assets/ の rpg-audio・impact-sounds・ui-audio）。
+  水の音だけ OpenGameArt の CC0（https://opengameart.org/content/40-cc0-water-splash-slime-sfx）を oga-water/ に入れて使う。
 使いかた：python3 tools/sound/ui_asmr.py <Kenneyのzipをひらいたフォルダ> [名前,名前...]
   そのフォルダの中に rpg-audio/ impact-sounds/ ui-audio/ がある形。
 やること：音の前後の無音を切る → 出だし2ms・終わりをなめらかに → 低いゴロゴロ・耳にささる高い音をけずる
@@ -33,7 +34,7 @@ SET = {
   'tcloth': (['rpg-audio/*/cloth%d.ogg' % i for i in (1, 2, 3, 4)], 250, 7000, .22, 1),  # 布：ふさっ
   'tgrass': (['impact-sounds/*/footstep_grass_00%d.ogg' % i for i in range(5)], 600, 9000, .18, 1),  # 植物：かさっ
   'tsoil':  (['rpg-audio/*/footstep0%d.ogg' % i for i in range(5)], 150, 6000, .18, 1),  # 畑・地面：ざくっ（土の足音）
-  'twater': (['game/splash.mp3'], 400, 8000, .28, 1),  # 水：ちゃぽっ（ゲームの水しぶきを短く）
+  'twater': (['oga-water/splash_%s.ogg' % i for i in ('09', '10', '14', '02')], 150, 9000, .32, 1),  # 水：ちゃぽっ（OpenGameArt「40 CC0 water / splash / slime SFX」の短い水音。oga-water/ に入れる）
   'tbell':  (['impact-sounds/*/impactBell_heavy_00%d.ogg' % i for i in range(3)], 500, 9000, .45, 1),  # 神殿・御神木：ころん（鐘を小さく短く）
   'tfoe':   (['impact-sounds/*/impactSoft_medium_00%d.ogg' % i for i in range(5)], 120, 5000, .16, 1),  # コワイノ：ぽふっ
   'tweb':   (['rpg-audio/*/cloth%d.ogg' % i for i in (1, 3)], 1500, 10000, .16, 1),  # クモの巣：さらっ（布を高い所だけ）
