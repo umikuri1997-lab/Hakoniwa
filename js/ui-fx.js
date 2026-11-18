@@ -162,3 +162,18 @@ if(document.readyState!=='loading'){gaugeWatch();tileWatch();lvWatch()}else docu
 addEventListener('click',e=>{try{let n=e.target;if(!n||!n.closest||n.closest('canvas')||!n.closest('#app'))return;
   for(;n&&n!==document.body;n=n.parentElement){const tg=n.tagName;if(tg==='BUTTON'||tg==='A'||tg==='INPUT'||tg==='SELECT'||tg==='TEXTAREA'||tg==='LABEL'||tg==='SUMMARY'||n.onclick||n.onpointerdown||n.hasAttribute('data-hold')||n.getAttribute('role')==='button')return}
   sfx('uknock')}catch(_){}},true);
+/* おせる所を広げる：小さなボタン・タブ（44pxより小さい）のまわりの、何もない所（パネルの地）をおしたら、
+   いちばん近いボタンをおしたことにする。ボタンの見た目の中・マップの上のタップはかえない。
+   ならんだボタンどうしで、となりの見えている所をうばわないよう、見えない「おせる所」を重ねずに、ここで決める */
+const TAPSLOP=44,TAPBOX='.sheet,.pxcard,.idea-card,.dlg,#dialog,#confirm,#palette,.paper,#topUI,.dock,.askyn,#helpPop,.wcard,#lvup,#rlv';
+function tapSlopPick(t,x,y){if(!t||!t.querySelectorAll||t.id==='cv'||t.closest('canvas,input,select,textarea'))return null;
+  if(t.closest('button,a[href],[role=button],[role=tab],label,[tabindex="0"]'))return null;/* もう何かをおしている */
+  const box=t.closest(TAPBOX)||t;let best=null,bd=1e9;/* おした所をふくむパネルの中のボタンから */
+  for(const b of box.querySelectorAll('button,[role=button],[role=tab]')){if(b.disabled||b.closest('[hidden]'))continue;
+    const r=b.getBoundingClientRect();if(!r.width||!r.height)continue;
+    const w=Math.max(r.width,TAPSLOP),h=Math.max(r.height,TAPSLOP),cx=r.left+r.width/2,cy=r.top+r.height/2;
+    if(Math.abs(x-cx)>w/2||Math.abs(y-cy)>h/2)continue;/* 44pxにのばした所の外 */
+    const dx=Math.max(r.left-x,0,x-r.right),dy=Math.max(r.top-y,0,y-r.bottom),d=dx*dx+dy*dy;if(d<bd){bd=d;best=b}}
+  return best}
+document.addEventListener('click',e=>{if(!e.isTrusted)return;const b=tapSlopPick(e.target,e.clientX,e.clientY);if(!b)return;
+  e.preventDefault();e.stopPropagation();b.click()},true);
