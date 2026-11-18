@@ -153,7 +153,7 @@ ACT_LBL.astray='野良の生き物をむかえにいく';ACT_LBL.alead='生き�
    さいごまで見たら「会った」にする（とちゅうで村を切りかえたら、つぎにまたはじめから）。演出は実時間 ---------- */
 let AMEET=null;
 SCN_DRAW.aniq=(e,t,now)=>{/* 生き物の上の「？」のふきだし（ドット） */const a=e.a;if(!a||a.in)return;const env=scnEnv(t,.08,.12);if(env<=0)return;ctx.globalAlpha=env;
-  const top=a.k==='hane'?30:42,px=a.x*TS,by=Math.round((a.y*TS-uLift(a)-top-Math.abs(Math.sin(now/220))*2)/1.5)*1.5,B=pxBub(ctx,px,by-38.25,40.5,38.25,'#fff','#b8a587');bubIcon(ctx,'❓',px,by-19,1.5,B)};
+  const top=a.k==='hane'?30:42,px=a.x*TS,by=Math.round((a.y*TS-uLift(a)-top-Math.abs(Math.sin(now/220))*2)/1.5)*1.5,B=pxBub(ctx,px,by-19.125,20.25,19.125,'#fff','#b8a587',3.375);bubIcon(ctx,'❓',px,by-9.5,.75,B)};
 function aniMeetPic(k){/* 立つ絵を、整数倍で大きく */const ch=(window.CHIPS||{})['ani:'+k+'#0'];if(!ch)return null;const im=chipImgs(ch,'ani'+k)[0];if(!im||!im.ok)return null;
   const t=document.createElement('canvas');t.width=ch.w;t.height=ch.h;const tg=t.getContext('2d');tg.drawImage(im,0,0);const d=tg.getImageData(0,0,ch.w,ch.h).data;let x0=ch.w,y0=ch.h,x1=-1,y1=-1;
   for(let y=0;y<ch.h;y++)for(let x=0;x<ch.w;x++)if(d[(y*ch.w+x)*4+3]>8){if(x<x0)x0=x;if(x>x1)x1=x;if(y<y0)y0=y;if(y>y1)y1=y}if(x1<0){t.width=t.height=0;return null}
