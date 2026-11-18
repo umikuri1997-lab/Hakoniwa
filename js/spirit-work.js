@@ -114,7 +114,7 @@ function goWork(r,G,nw){boxFullReset();
   // おつげがあれば、それを先にする
   if(S.oracle==='play'&&r.fun<98&&goPlay(r,G,true))return true;
   // 花や木の苗は、空腹などの急ぎの用事を除いて、ほかの仕事より先に植える
-  if(jobWork(r,G))return true;/* しごと場の担当は、ふだんの仕事（植える・ひろう・畑・木・石・草）より先に、そのしごと場で働く */
+  if(jobWork(r,G))return true;if(typeof focusJob==='function'&&focusJob(r,G))return true;/* とくにする仕事（focus.js） *//* しごと場の担当は、ふだんの仕事（植える・ひろう・畑・木・石・草）より先に、そのしごと場で働く */
   if(tryJob(r,G,'plant'))return true;
   if(tryJob(r,G,'otaki'))return true;
   if(tryJob(r,G,'sasa'))return true;
