@@ -24,6 +24,7 @@ SET = {
   'potclk': (['rpg-audio/*/metalPot1.ogg', 'rpg-audio/*/metalPot2.ogg', 'rpg-audio/*/metalPot3.ogg'], 300, 6000, .22, 1),  # おたまがなべにあたる：かちゃ
   'tink':   (['impact-sounds/*/impactGlass_light_00%d.ogg' % i for i in range(3)], 500, 9000, .12, 1),  # あわだて器がボウルにあたる：ちん
   'plate':  (['impact-sounds/*/impactPlate_light_00%d.ogg' % i for i in range(3)], 300, 8000, .22, 1),  # お皿：ことっ
+  'lid':    (['rpg-audio/*/doorOpen_1.ogg', 'rpg-audio/*/doorOpen_2.ogg'], 200, 6000, .45, 1),  # 木箱のふたが開く：ぎぃ
   'cloth':  (['rpg-audio/*/cloth1.ogg', 'rpg-audio/*/cloth2.ogg', 'rpg-audio/*/cloth3.ogg', 'rpg-audio/*/cloth4.ogg'], 300, 8000, .30, 1),  # ぬので、みがく：しゅっ
 }
 def run(a): subprocess.run(a, check=True, capture_output=True)
