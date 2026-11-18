@@ -55,7 +55,7 @@ function drawMatIc(c,k,cx,cy,sz){/* 素材のアイコン（仮の絵）：草�
   else if(k==='kinoko'){c.fillStyle='#efe2c8';c.fillRect(-2.5,-1,5,9);c.fillStyle='#d8876a';c.beginPath();c.ellipse(0,-1,9,6,0,Math.PI,0);c.fill();c.fillStyle='#f6e9d6';c.beginPath();c.arc(-3,-4,1.4,0,7);c.arc(3,-4.5,1.3,0,7);c.fill()}
   else if(k==='can'){c.fillStyle='#b9c0c8';c.fillRect(-6,-8,12,16);c.fillStyle='#d9dee3';c.fillRect(-6,-8,12,2.5);c.fillStyle='#e7a07a';c.fillRect(-6,-2,12,5);c.fillStyle='#8f969e';c.fillRect(-6,6,12,2)}
   c.restore()}
-function shadow(c,x,y,w,h){c.fillStyle='rgba(30,20,10,.22)';c.beginPath();c.ellipse(x,y,w,h,0,0,7);c.fill()}
+function shadow(c,x,y,w,h){/* 足もとのかげ。画面に毎コマ描くときだけ、太陽の向き（sunLean）へのばす（地面の下絵にやきつける物はそのまま） */const L=c===ctx?sunLean():0;c.fillStyle='rgba(30,20,10,.22)';c.beginPath();c.ellipse(x+L*w*.4,y,w*(1+Math.abs(L)*.5),h,0,0,7);c.fill()}
 function drawBarren(c,i,x,y){
   const h=hash(i);
   c.fillStyle=WD===1?'#a39280':'#b3a37c';c.fillRect(x,y,TS,TS);/* 火山のふもとは灰まじりの土 */
