@@ -7,10 +7,12 @@
 #      面が --faces（3000）より多い物は、へらす（fast_simplification。写すのが重くなるため）。
 #   4) ならべた絵（grid.png。正面から見た形と番号）を出す。名前は、絵を見てきめ、--names でもう1回切りわける。
 #   上の向き（--up auto）：ほかの2つの向きのまん中が0に近く、その向きのいちばん下が0に近い向き（トリポの FBX は y、前のは z）。
+#   --join 9+12：はなれて切れた物を1つにまとめる（番号は grid.png の番号）。
+#   --wall：トリポが物を、ゆかではなく、たての壁のように（絵と同じならびで）ならべたとき。正面から見て重なる部品を1つにし、上の行から順にならべる。
 #   ならびは、手前の列から、左から右（トリポの3×3のならびなら、プロンプトの1・2・3…の順にならないことがあるので、絵で見てたしかめる）。
 import sys,os,subprocess,argparse,numpy as np,trimesh
 from PIL import Image,ImageDraw
-ap=argparse.ArgumentParser();ap.add_argument('model');ap.add_argument('out');ap.add_argument('--tex');ap.add_argument('--up',default='auto');ap.add_argument('--names');ap.add_argument('--faces',type=int,default=3000)
+ap=argparse.ArgumentParser();ap.add_argument('model');ap.add_argument('out');ap.add_argument('--tex');ap.add_argument('--up',default='auto');ap.add_argument('--names');ap.add_argument('--faces',type=int,default=3000);ap.add_argument('--wall',action='store_true');ap.add_argument('--join')
 A=ap.parse_args();os.makedirs(A.out,exist_ok=True)
 src=A.model
 if src.lower().endswith('.fbx'):src=os.path.join(A.out,'_all.glb');subprocess.run(['assimp','export',A.model,src],check=True,capture_output=True)
@@ -38,12 +40,18 @@ for i in range(n):   # 上から見て重なる部品は、同じ物
     a=bbs[i]
     for j in range(i+1,n):
         b=bbs[j]
-        if a[0]-0.004<=b[3] and b[0]-0.004<=a[3] and a[1]-0.004<=b[4] and b[1]-0.004<=a[4]:par[f(i)]=f(j)
+        ax=2 if A.wall else 1   # --wall：正面から見て重なる部品を1つに（たての壁のようにならべたモデル）
+        if a[0]-0.004<=b[3] and b[0]-0.004<=a[3] and a[ax]-0.004<=b[ax+3] and b[ax]-0.004<=a[ax+3]:par[f(i)]=f(j)
 grp={}
 for i in range(n):grp.setdefault(f(i),[]).append(i)
 objs=[np.concatenate([comps[i] for i in ids]) for ids in grp.values()];objs=[o for o in objs if len(o)>30]
 rowh=max(0.05,ext.max()/12)
-objs.sort(key=lambda fi:(-round(G[np.unique(F[fi])][:,1].max()/rowh),G[np.unique(F[fi])][:,0].min()))   # 手前の列から、左から右
+objs.sort(key=lambda fi:((-round(G[np.unique(F[fi])][:,2].max()/rowh)) if A.wall else (-round(G[np.unique(F[fi])][:,1].max()/rowh)),G[np.unique(F[fi])][:,0].min()))   # 手前の列から（--wall は上の行から）、左から右
+if A.join:   # --join 9+12,3+4：はなれて切れた物（2本の短剣など）を、1つにまとめる（番号は、まとめる前のならび）
+    J=[sorted(int(x) for x in g_.split('+')) for g_ in A.join.split(',')];drop=set()
+    for g_ in J:
+        objs[g_[0]]=np.concatenate([objs[i] for i in g_]);drop|=set(g_[1:])
+    objs=[o for i,o in enumerate(objs) if i not in drop]
 names=A.names.split(',') if A.names else None
 if names and len(names)!=len(objs):print('名前の数',len(names),'と、物の数',len(objs),'がちがう');names=None
 ims=[]
