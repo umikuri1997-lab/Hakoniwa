@@ -241,28 +241,9 @@ def board_css():
 
 
 # ---- 図鑑：本の背としおり ----
-def spine_rows():
-    # たてにくりかえす本の背（はば7・高さ8）。とじ糸が8ドットごと
-    return ['oddddbo', 'oddddbo', 'odtddbo', 'odttdbo', 'oddtdbo', 'oddddbo', 'oddddbo', 'oddddbo']
-
-
-def ribbon_rows():
-    r = ['oaaaao'] * 18 + ['oaaaao', 'oaoaao'.replace('o', 'o'), 'oa..ao', 'o....o']
-    r = ['oaaaao'] * 18 + ['oaaaao', 'oaa.ao', 'oa..ao', 'o....o']
-    # 右がわに1ドットのかげ
-    r = [x[:4] + ('b' if x[4] == 'a' else x[4]) + x[5] for x in r]
-    return r
-
-
 def book_css():
-    sp = svg(spine_rows(), {'o': '#7a4f2b', 'd': '#a8743f', 'b': '#c99257', 't': '#f4e9d2'})
-    rb = svg(ribbon_rows(), {'o': '#8f3a2a', 'a': '#d65a45', 'b': '#b54835'})
-    return '\n'.join([
-        '/* 図鑑：本の背（左）と、しおりのリボン（上） */',
-        f'.sheet[data-k="zukan"]{{padding-left:calc(var(--pp)*9)}}',
-        f'.sheet[data-k="zukan"]::before{{content:"";position:absolute;left:calc(var(--pp)*1);top:calc(var(--pp)*6);bottom:0;width:calc(var(--pp)*7);background:{sp} 0 0/calc(var(--pp)*7) calc(var(--pp)*8) repeat-y;image-rendering:pixelated;pointer-events:none}}',
-        f'.sheet[data-k="zukan"]::after{{content:"";position:absolute;right:64px;top:calc(var(--pp)*-2);width:calc(var(--pp)*6);height:calc(var(--pp)*22);background:{rb} 0 0/100% 100% no-repeat;image-rendering:pixelated;pointer-events:none}}',
-    ])
+    """図鑑は思い出帳と同じ本（book.js）。前の本の背・しおりのリボンはなくした"""
+    return '/* 図鑑：本は book.js（思い出帳と同じ） */'
 
 
 # ---- 木目（草原の板・ボタンでつかう） ----
@@ -591,77 +572,44 @@ def dlg_css():
 
 
 # ---- ひでんのしょ：巻物（紙は少し黄ばんだ和紙、上と下に木の軸） ----
-def rod_rows(W=12):
-    """巻物の軸の、まん中（よこにくりかえす）：丸い棒（上から 光・地・かげ）と、外のふち。高さ8"""
-    t = tex_tones(48)
-    rows = []
-    for y in range(8):
-        r = ''
-        for x in range(W):
-            if y in (0, 7): r += 'o'
-            elif y == 1: r += 'h'
-            elif y == 2: r += 'l'
-            elif y == 6: r += 'w'
-            elif y == 5: r += 'D'
-            else: r += t[y * 5][x]
-        rows.append(r)
-    return rows
-
-
-def knob_rows():
-    """巻物の軸のはしの玉（10×10）：まるい木の玉。左上が光・右下がかげ"""
-    N = 10
-    rows = []
-    for y in range(N):
-        r = ''
-        for x in range(N):
-            dx, dy = x + .5 - N / 2, y + .5 - N / 2
-            d = (dx * dx + dy * dy) ** .5
-            if d > N / 2: r += '.'; continue
-            if d > N / 2 - 1: r += 'o'; continue
-            lt = -dx - dy
-            r += 'h' if lt > 4.5 else 'l' if lt > 1.5 else 'a' if lt > -2.5 else 'w'
-        rows.append(r)
-    return rows
-
-
 def scroll_css():
-    sp = svg(PAPER, {'a': '#f5e6c3', 'o': '#b48a52', 's': SHADOW})
-    fib = svg(ptex_rows(), {'d': '#8a6a3a22', 'm': '#8a6a3a10', 'l': '#ffffff55'})
-    pal = {'a': '#a86f3c', 'g': '#9e6936', 'D': '#8f5c2e', 'l': '#bf8550', 'h': '#d9a46a', 'w': '#7a4c26', 'o': '#5e3a1e'}
-    rod = svg(rod_rows(), pal)
-    kn = svg(knob_rows(), {'a': '#8a5a30', 'l': '#a8743f', 'h': '#c99257', 'w': '#6e4424', 'o': '#4f3018'})
+    sp = svg(PAPER, {'a': '#f3e7c9', 'o': '#b9935c', 's': SHADOW})
+    fib = svg(ptex_rows(), {'d': '#8a6a3a26', 'm': '#a0804e14', 'l': '#fffaf066'})
     pp = 'var(--pp)'
-    rodbg = (f'{kn} 0 50%/calc({pp}*10) calc({pp}*10) no-repeat,{kn} 100% 50%/calc({pp}*10) calc({pp}*10) no-repeat,'
-             f'{rod} 0 50%/calc({pp}*12) calc({pp}*8) repeat-x')
     k = '.sheet[data-k="manual"]'
     return '\n'.join([
-        '/* ひでんのしょ：巻物（少し黄ばんだ紙と、上と下の木の軸。rod_rows・knob_rows） */',
-        f'{k},body.wd0 {k}{{border-image-source:{sp}!important;border-image-slice:{S} {S} {S + 1} {S} fill!important;background:none!important;overflow:visible;margin-top:calc({pp}*6);padding-bottom:calc({pp}*10 + env(safe-area-inset-bottom,0px))!important}}',
+        '/* ひでんのしょ：巻物の和紙（少し黄ばんだ紙と、すき目のすじ）。上と下の軸は scroll.js がキャンバスで描く */',
+        f'{k},body.wd0 {k}{{border-image-source:{sp}!important;border-image-slice:{S} {S} {S + 1} {S} fill!important;background:none!important;overflow:visible;margin-top:calc({pp}*14);margin-bottom:calc({pp}*14);padding-bottom:env(safe-area-inset-bottom,0px)!important}}',
         f'{k} #sheetBody{{background:{fib} 0 0/96px 96px repeat;image-rendering:pixelated}}',
-        f'{k}::before,{k}::after{{content:"";position:absolute;left:calc({pp}*-2);right:calc({pp}*-2);height:calc({pp}*10);background:{rodbg};image-rendering:pixelated;pointer-events:none;z-index:2}}',
-        f'{k}::before{{top:calc({pp}*-6)}}{k}::after{{bottom:env(safe-area-inset-bottom,0px)}}',
     ])
 
 
 # ---- 思い出帳：ページをめくる本（紙のページ・右に重なったページのふち） ----
-def edge_rows():
-    """ページのふち（小口）：右に重なった紙のはし（はば6・たてにくりかえす高さ4）"""
-    return ['aoboco', 'aoboco', 'aoboco', 'aoboco']
+def cloth_rows():
+    """布の表紙の織り目（4×4でくりかえす）：たて糸とよこ糸が1ドットずつ交わる"""
+    return ['ab.a', '.a.b', 'b.a.', 'a.ba']
+
+
+def tape_rows():
+    """紙テープ（16×6）：はしは手でちぎったぎざぎざ"""
+    return ['.aaaaaaaaaaaaaa.', 'aaaaaaaaaaaaaaab', 'baaaaaaaaaaaaaaa', 'aaaaaaaaaaaaaaab', 'baaaaaaaaaaaaaaa', '.aaaaaaaaaaaaaa.']
+
+
+def pcorner_rows():
+    """写真の角どめ（6×6の三角）。左上の向き。ほかの角は反転して使う"""
+    return ['oooooo', 'oaaao.', 'oaao..', 'oao...', 'oo....', 'o.....']
 
 
 def mbook_css():
-    pg = svg(PAPER, {'a': '#f7eedb', 'o': '#a8743f', 's': SHADOW})
-    fib = svg(ptex_rows(), {'d': '#8a6a3a1c', 'm': '#8a6a3a0c', 'l': '#ffffff60'})
-    ed = svg(edge_rows(), {'a': '#efe2c4', 'b': '#e6d6b2', 'c': '#ddc9a0', 'o': '#b8955e'})
+    fib = svg(ptex_rows(), {'d': '#8a6a3a20', 'm': '#8a6a3a0e', 'l': '#ffffff60'})
+    cloth = svg(cloth_rows(), {'a': '#ffffff1c', 'b': '#0000001c'})
+    tape = svg(tape_rows(), {'a': '#efe2b4d0', 'b': '#e2d09cd0'})
+    pc = svg(pcorner_rows(), {'o': '#7a5a3a', 'a': '#9a7650'})
     pp = 'var(--pp)'
-    k = '.sheet[data-k="record"]'
     return '\n'.join([
-        '/* 思い出帳：ページをめくる本（紙のページ・右に重なったページのふち edge_rows） */',
-        f'{k},body.wd0 {k}{{border-image-source:{pg}!important;padding-right:calc({pp}*6)}}',
-        f'{k} #sheetBody{{position:relative;background:{fib} 0 0/96px 96px repeat;image-rendering:pixelated}}',
-        f'{k}::after{{content:"";position:absolute;right:calc({pp}*1);top:calc({pp}*8);bottom:calc({pp}*4);width:calc({pp}*6);background:{ed} 0 0/calc({pp}*6) calc({pp}*4) repeat-y;image-rendering:pixelated;pointer-events:none}}',
-        f'.mflip{{background:{fib} 0 0/96px 96px repeat,#f7eedb;image-rendering:pixelated;box-shadow:calc({pp}*2) 0 0 #8a6a4540}}',
+        '/* 思い出帳・図鑑：本（book.js）。紙のすき目・表紙の布の織り目・紙テープ・写真の角どめ（cloth_rows・tape_rows・pcorner_rows） */',
+        f'.sheet[data-k="record"],.sheet[data-k="zukan"]{{height:80%}}',
+        f'.bk{{--fib:{fib};--cloth:{cloth};--tape:{tape};--pcorner:{pc}}}',
     ])
 
 

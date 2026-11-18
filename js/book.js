@@ -1,0 +1,114 @@
+/* 本（思い出帳・図鑑）：ページをめくる本。book.js
+   bookMake(body,pages,o)：pages（ページの中身の要素）をならべた本を body に作る。o = {key, at, toc, cover:{t,sub,c}, onAt}
+   ・たての画面は1ページ、よこの画面（はば720より広い）は見開き（左右2ページ、まん中にとじ目）。
+   ・めくる：はしから、紙がもち上がって、まるくそりながらとじ目のほうへたおれる（うらの面・かげ）。絵は1ドット（BKD）のキャンバスに、コマごとに描く。
+     ページの中身は切りとるだけ（ちぢめない）。前へもどるときは、つぎへめくる動きを、さかさに流す。
+   ・指でつまんでめくる：ページのはし（外がわ 4わり）から、よこに引く。とちゅうではなすと、半分より先なら、めくれる。
+   ・遠くのページへは、あいだのページを、ぱらぱらと何まいもめくる（BKRIFF まいまで）。
+   ・表紙：ひらいたとき、布の表紙がひらく。とじるときは、表紙がとじてから画面がとじる（bookShut）。
+   ・音：めくる mpage（めくるたびにべつの録音）・ぱらぱら pflick・表紙 bkopen・bkclose・紙をなでる pslide（なでる速さで大きさがかわる）。
+   ・見た目と音だけ（数字・セーブはかえない）。うごきをへらす設定では、めくる絵を出さない。 */
+const BKD=1.5,BKMS=480,BKFAST=150,BKRIFF=5,BKLIFT=6,BKCOVMS=560;
+const BKC={back:'#e9dab8',hi:'#fff8e6',lit:'#f5e9cc',mid:'#e0cea8',edge:'#c4ab80',sh:'90,60,30'};/* めくれた紙のうら（色は tools/ui/colors.md の「本」） */
+let BK=null,BKSEEN=null,BKSLIDE=null;
+function bkClone(n){/* 写し：キャンバス（図鑑のコワイノなど）の絵もうつす */const c=n.cloneNode(true),a=n.querySelectorAll?n.querySelectorAll('canvas'):[],b=c.querySelectorAll?c.querySelectorAll('canvas'):[];a.forEach((v,i)=>{try{b[i].getContext('2d').drawImage(v,0,0)}catch(_){}});return c}
+function bkSpread(){return innerWidth>innerHeight&&innerWidth>=720}
+function bkEase(p){return p<.5?2*p*p:1-2*(1-p)*(1-p)}
+function bookMake(body,pages,o){o=o||{};const sp=bkSpread(),N=pages.length;let at=Math.max(0,Math.min(N-1,o.at|0));if(sp)at-=at%2;
+  const b=el('<div class="bk"><div class="bkin"><div class="bks l"></div><div class="bkp bkL"><div class="bkc"></div><span class="bkn"></span></div><div class="bkp bkR"><div class="bkc"></div><span class="bkn"></span></div><div class="bks r"></div><canvas class="bkfx" aria-hidden="true"></canvas></div><div class="mnav"><button class="btn mpv" type="button" aria-label="まえのページ">'+pxi('next','prev')+'</button><button class="btn mtc" type="button">もくじ</button><span class="mpn"></span><button class="btn mnx" type="button" aria-label="つぎのページ">'+pxi('next','nxr')+'</button></div></div>');
+  b.dataset.sp=sp?1:0;{const st=document.createElement('div');st.className='bkstore';st.hidden=true;for(const pg of pages)st.appendChild(pg);b.appendChild(st)}/* まだひらいていないページも、本の中にしまっておく（さがせる） */if(o.cls)b.classList.add(o.cls);body.appendChild(b);
+  const B=BK={el:b,in:b.querySelector('.bkin'),L:b.querySelector('.bkL'),R:b.querySelector('.bkR'),cv:b.querySelector('.bkfx'),pages,N,sp,at,o,busy:0,q:null};
+  if(!sp)B.L.hidden=true;b.querySelector('.mpv').onclick=()=>bkGo(B,B.at-(sp?2:1));b.querySelector('.mnx').onclick=()=>bkGo(B,B.at+(sp?2:1));b.querySelector('.mtc').onclick=()=>bkGo(B,0);
+  if(!o.toc)b.querySelector('.mtc').remove();
+  bkMount(B,at);bkDrag(B);bkStroke(B);
+  if(BKSNAP)bkEnter(B);
+  else if(o.cover&&BKSEEN!==o.key){BKSEEN=o.key;if(!(typeof uiReduced==='function'&&uiReduced()))bkCoverOpen(B);else bkSnd('bkopen',.3)}
+  return B}
+/* ページをスロットに入れる（見開きは左 i・右 i+1） */
+function bkMount(B,at){B.at=at;const sp=B.sp,store=B.el.querySelector('.bkstore'),put=(slot,i)=>{const c=slot.querySelector('.bkc'),n=slot.querySelector('.bkn'),pg=B.pages[i];for(const x of[...c.children])store.appendChild(x);if(pg){pg.hidden=false;c.appendChild(pg)}c.scrollTop=0;slot.classList.toggle('blank',!pg);n.textContent=pg&&i>0?String(i):''};
+  if(sp){put(B.L,at);put(B.R,at+1)}else put(B.R,at);
+  const b=B.el,last=sp?B.N-1-((B.N-1)%2):B.N-1;b.querySelector('.mpv').disabled=at<=0;b.querySelector('.mnx').disabled=at>=last;const tc=b.querySelector('.mtc');if(tc)tc.hidden=at===0;
+  b.querySelector('.mpn').textContent=at===0&&B.o.toc?'もくじ':sp?(at||1)+(at+1<B.N?'-'+(at+1):'')+' / '+(B.N-1):at+' / '+(B.N-1);
+  /* 重なった紙のあつみ：よんだ分は左、のこりは右（1〜5ドット） */const th=n=>n<=0?0:Math.min(5,1+Math.floor(n/3));b.querySelector('.bks.l').style.width=th(at)*BKD+'px';b.querySelector('.bks.r').style.width=th(B.N-1-(sp?at+1:at))*BKD+'px';
+  if(B.o.onAt)B.o.onAt(at)}
+function bkSnd(k,v,rt){if(typeof playU==='function'&&typeof AC!=='undefined'&&AC&&AC.state==='running'&&SND.sfx)playU(k,v,rt||1)}
+/* 本の中の場所（.bkin のなかの px）：とじ目 S・1ページのはば w・上と下 */
+function bkGeo(B){const r=B.in.getBoundingClientRect(),R=B.R.getBoundingClientRect();return{r,S:R.left-r.left,w:R.width,top:R.top-r.top,bot:R.bottom-r.top}}
+/* めくる絵のしたく：A＝前のページ（切りとって上にのせる写し）、下には B のページ（本物） */
+function bkSetup(B,from,to,coverEl){const g=bkGeo(B),cv=B.cv;cv.width=Math.ceil(g.r.width/BKD);cv.height=Math.ceil(g.r.height/BKD)+BKLIFT*2;cv.style.width=cv.width*BKD+'px';cv.style.height=cv.height*BKD+'px';cv.style.top=-BKLIFT*BKD+'px';cv.hidden=false;
+  const fw=to>from,A=fw?from:to,Bi=fw?to:from,wrap=(slot,clone)=>{const w=document.createElement('div');w.className='bkwrap';const s=slot.getBoundingClientRect(),r=g.r;w.style.cssText='left:'+(s.left-r.left)+'px;top:'+(s.top-r.top)+'px;height:'+s.height+'px;width:'+s.width+'px';const c=clone;c.style.width=s.width+'px';c.style.height=s.height+'px';w.appendChild(c);B.in.insertBefore(w,B.cv);return w};
+  const snap=(slot,i)=>{if(coverEl&&slot===B.R)return coverEl;const c=slot.cloneNode(false),cc=document.createElement('div');cc.className='bkc';const pg=B.pages[i];if(pg)cc.appendChild(bkClone(pg));c.appendChild(cc);c.classList.toggle('blank',!pg);c.classList.remove('bkL','bkR');c.classList.add(slot===B.L?'bkL':'bkR','bksnap');c.hidden=false;const n=document.createElement('span');n.className='bkn';n.textContent=pg&&i>0?String(i):'';c.appendChild(n);return c};
+  const sc=B.R.querySelector('.bkc').scrollTop;
+  /* いま見えている所の写しは、スクロールの場所もそのまま */
+  const aR=snap(B.R,B.sp?A+1:A),aL=B.sp&&!coverEl?snap(B.L,A):null;
+  bkMount(B,coverEl?B.at:Bi);
+  const st={g,fw,A,Bi,wR:wrap(B.R,aR),wL:aL?wrap(B.L,aL):null,cover:!!coverEl,hideL:!!coverEl&&B.sp};if(fw&&!coverEl){const c=aR.querySelector('.bkc');if(c)c.scrollTop=sc}
+  return st}
+function bkClean(B,st){B.L.style.visibility='';if(st.wR)st.wR.remove();if(st.wL)st.wL.remove();const c=B.cv.getContext('2d');c.clearRect(0,0,B.cv.width,B.cv.height);B.cv.hidden=true}
+/* 1コマを描く：e＝めくれぐあい（0〜1）・a＝めくれた紙のこさ（さいごに紙がおちつく所） */
+function bkFrame(B,st,e,a,pal){const{g}=st,D=BKD,S=g.S,w=g.w,sp=B.sp,f=S+w*(1-e),k=1-.42*Math.sin(Math.PI*e),fw=(S+w-f)*k,xl=f-fw,s=Math.sin(Math.PI*e),q=v=>Math.round(v/D)*D;
+  if(st.hideL)B.L.style.visibility=e>.96?'':'hidden';if(sp)a*=Math.min(1,(1-e)/.08);st.wR.style.width=Math.max(0,q(f-S))+'px';if(st.wL)st.wL.style.width=Math.max(0,Math.min(w,q(xl-(S-w))))+'px';
+  const c=B.cv.getContext('2d'),O=BKLIFT;c.clearRect(0,0,B.cv.width,B.cv.height);const P=pal||BKC;
+  const t0=Math.round(g.top/D)+O,b0=Math.round(g.bot/D)+O,xf=Math.round(f/D),xL=Math.max(sp?-1e9:Math.round(S/D),Math.round(xl/D)),fwD=Math.max(1,xf-Math.round(xl/D));
+  /* めくれた紙の下のページに落ちるかげ（おり目の右） */for(let i=0;i<4&&e>0&&e<1;i++){c.fillStyle='rgba('+P.sh+','+([.2,.13,.07,.03][i]*s*a).toFixed(3)+')';c.fillRect(xf+i,t0,1,b0-t0)}
+  if(fw<D*.5||a<=0)return;
+  /* めくれた紙（うらの面）：おり目の近くは光、外のはしは少しかげ。はしほど上へもち上がる */
+  for(let x=xL;x<xf;x++){const d=(xf-x)/fwD,dd=xf-x,L=Math.round(BKLIFT*s*Math.pow(d,1.6)),y0=t0-L,y1=b0-Math.round(L*.45);
+    c.globalAlpha=a;c.fillStyle=dd<=1?P.hi:dd<=3?P.lit:d>.8?P.mid:P.back;c.fillRect(x,y0,1,y1-y0);
+    c.fillStyle=P.edge;c.fillRect(x,y0,1,1);c.fillRect(x,y1-1,1,1);if(x===xL&&(sp||xl>=S))c.fillRect(x,y0,1,y1-y0)}
+  /* めくれた紙が、まだめくっていない紙に落とすかげ（外のはしの左） */if(sp||xl>S+D)for(let i=1;i<=2;i++){c.globalAlpha=1;c.fillStyle='rgba('+P.sh+','+([.12,.05][i-1]*s*a).toFixed(3)+')';c.fillRect(xL-i,t0,1,b0-t0)}
+  c.globalAlpha=1}
+/* めくれぐあいを e0→e1 へ、ms かけて動かす。さいごに紙がおちつく3コマ（こさ .66・.33・0） */
+function bkRun(B,st,e0,e1,ms,done,pal){const t0=performance.now();const step=now=>{if(!B.el.isConnected){bkClean(B,st);B.busy=0;return}
+    const p=Math.min(1,(now-t0)/ms),e=e0+(e1-e0)*bkEase(p);
+    bkFrame(B,st,e,1,pal);if(p<1){requestAnimationFrame(step);return}
+    if(st.keep){done&&done();return}if(st.undo)st.undo(),st.undo=null;bkClean(B,st);if(!st.cover)bkMount(B,e1>=1?st.Bi:st.A);done&&done()};requestAnimationFrame(step)}
+/* to のページへ。となりならめくる、遠ければ、ぱらぱら */
+function bkGo(B,to,fast){const sp=B.sp;if(sp)to-=((to%2)+2)%2;const last=sp?B.N-1-((B.N-1)%2):B.N-1;to=Math.max(0,Math.min(last,to));if(to===B.at||B.busy)return;
+  const red=typeof uiReduced==='function'&&uiReduced(),stp=sp?2:1,n=Math.abs(to-B.at)/stp;
+  if(red){bkSnd('mpage',.3);bkMount(B,to);return}
+  if(n>1&&!fast){/* あいだのページを、何まいか、ぱらぱら */const dir=to>B.at?1:-1,k=Math.min(BKRIFF,n),L=[];for(let i=1;i<=k;i++){let v=B.at+dir*Math.round(n*i/k)*stp;L.push(v)}
+    const go=()=>{const v=L.shift();if(v==null)return;bkFlip(B,v,L.length?BKFAST:BKMS*.7,go,L.length>0)};go();return}
+  bkFlip(B,to,fast?BKFAST:BKMS)}
+function bkFlip(B,to,ms,done,riff){if(B.busy)return;B.busy=1;const from=B.at,fw=to>from;bkSnd(riff?'pflick':'mpage',riff?.22:.32,.94+Math.random()*.12);
+  const st=bkSetup(B,from,to);bkRun(B,st,fw?0:1,fw?1:0,ms,()=>{B.busy=0;done&&done()})}
+/* 表紙をひらく（ひらいたとき1回）・とじる（bookShut） */
+function bkCoverEl(B){const cv=B.o.cover,d=el('<div class="bkp bkR bkcov"><div class="bkcl"><b></b><small></small></div></div>');d.style.setProperty('--cv',cv.c||'#7d4a3a');d.querySelector('b').textContent=cv.t||'';d.querySelector('small').textContent=cv.sub||'';return d}
+function bkCovPal(B){const c=B.o.cover.c||'#7d4a3a';return Object.assign({},BKC,{back:'#d8c49b',hi:'#efe0bd',lit:'#e2d0a8',mid:'#cdb68a',edge:c})}/* 表紙のうら（見返しの紙）と、ふちは表紙の色 */
+function bkCoverOpen(B){if(B.busy)return;B.busy=1;const st=bkSetup(B,0,1,bkCoverEl(B));bkFrame(B,st,0,1,bkCovPal(B));st.cover=1;setTimeout(()=>{if(!B.el.isConnected){bkClean(B,st);return}bkSnd('bkopen',.34);bkRun(B,st,0,1,BKCOVMS,()=>{B.busy=0},bkCovPal(B))},180)}
+function bookShut(after){const B=BK;if(!B||!B.el.isConnected||!B.o.cover||B.busy||(typeof uiReduced==='function'&&uiReduced()))return false;B.busy=1;
+  const st=bkSetup(B,0,1,bkCoverEl(B));st.keep=1;/* とじるときは、いまのページの上に、表紙がかぶさってくる。とじたまま画面をとじる */
+  bkSnd('pflick',.18);bkRun(B,st,1,0,BKCOVMS*.8,()=>{bkSnd('bkclose',.4);setTimeout(()=>{B.busy=0;BKSEEN=null;after&&after()},140)},bkCovPal(B));return true}
+/* 指でつまんでめくる：ページの外がわから、よこに引く */
+function bkDrag(B){const I=B.in;let s=null;
+  I.addEventListener('pointerdown',e=>{if(B.busy||e.button>0)return;const g=bkGeo(B),x=e.clientX-g.r.left,sp=B.sp,last=sp?B.N-1-((B.N-1)%2):B.N-1;let dir=0;
+    if(x>g.S+g.w*.6&&B.at<last)dir=1;else if((sp?x<g.S-g.w*.6:x<g.S+g.w*.4)&&B.at>0)dir=-1;if(!dir)return;s={id:e.pointerId,x0:e.clientX,y0:e.clientY,dir,g,on:0,st:null,lx:e.clientX,lt:performance.now(),v:0,e:0}});
+  I.addEventListener('pointermove',e=>{if(!s||e.pointerId!==s.id)return;const dx=e.clientX-s.x0,dy=e.clientY-s.y0;
+    if(!s.on){if(Math.abs(dx)<8||Math.abs(dx)<Math.abs(dy)*1.3||Math.sign(dx)!==-s.dir){if(Math.abs(dy)>14)s=null;return}
+      s.on=1;try{I.setPointerCapture(e.pointerId)}catch(_){}B.busy=1;const to=B.at+s.dir*(B.sp?2:1);s.to=to;s.st=bkSetup(B,B.at,to)}
+    const g=s.g,rg=B.sp?g.w*1.5:g.w*.95,u=Math.max(0,Math.min(1,-s.dir*dx/rg));s.e=s.dir>0?u:1-u;bkFrame(B,s.st,s.e,1);
+    const now=performance.now(),dt=Math.max(1,now-s.lt);s.v=(e.clientX-s.lx)/dt;s.lx=e.clientX;s.lt=now;bkSlide(Math.min(1,Math.abs(s.v)*1.2)*.5);e.preventDefault()});
+  const end=e=>{if(!s||e.pointerId!==s.id)return;const q=s;s=null;if(!q.on)return;const u=q.dir>0?q.e:1-q.e,go=u>.42||-q.dir*q.v>.45,e1=go===(q.dir>0)?1:0,ms=Math.max(90,BKMS*Math.abs(e1-q.e));
+    if(go)bkSnd('mpage',.3,1.04);bkRun(B,q.st,q.e,e1,ms,()=>{B.busy=0})};
+  I.addEventListener('pointerup',end);I.addEventListener('pointercancel',end)}
+/* 紙をなでる音：ページをスクロールした・マウスでなでた速さで、こすれる音の大きさがかわる */
+function bkStroke(B){let ly=null,lt=0;const on=(v)=>bkSlide(Math.min(1,v)*.35);
+  for(const c of B.el.querySelectorAll('.bkc'))c.addEventListener('scroll',()=>{const now=performance.now(),y=c.scrollTop;if(ly!=null&&now-lt<200)on(Math.abs(y-ly)/Math.max(1,now-lt)*.8);ly=y;lt=now},{passive:true});
+  B.in.addEventListener('pointermove',e=>{if(e.pointerType!=='mouse'||!e.buttons||B.busy)return;on(Math.hypot(e.movementX||0,e.movementY||0)/12)})}
+function bkSlide(v){/* こすれる音（pslide）をつづけて鳴らし、大きさを v（0〜1）にする。とだえたら、すっと消える */if(typeof AC==='undefined'||!AC||AC.state!=='running'||!SND.sfx)return;const L=(SBUF.pslide||[]).filter(Boolean);if(!L.length)return;const t=AC.currentTime;
+  if(!BKSLIDE){const src=AC.createBufferSource(),g=AC.createGain();src.buffer=L[0];src.loop=true;g.gain.value=0;src.connect(g);g.connect(sfxG);src.start(t,Math.random()*src.buffer.duration);BKSLIDE={src,g,tm:0}}
+  const S0=BKSLIDE;S0.g.gain.setTargetAtTime(v*SFXV,t,.04);clearTimeout(S0.tm);S0.tm=setTimeout(()=>{if(BKSLIDE!==S0)return;BKSLIDE=null;try{S0.g.gain.setTargetAtTime(0,AC.currentTime,.08);S0.src.stop(AC.currentTime+.5)}catch(_){}},140)}
+/* よこ・たての画面がかわったら、本を作りなおす（見開き ⇔ 1ページ） */
+addEventListener('resize',()=>{const B=BK;if(!B||!B.el.isConnected||B.busy)return;if(bkSpread()!==B.sp&&typeof renderSheet==='function'&&typeof sheet!=='undefined'&&sheet)renderSheet()});
+/* 章をかえる（図鑑のしおり）：いまのページを写しておき（bkTabSnap）、作りなおした本で、ぱらぱらとめくって見せる（bkEnter） */
+let BKSNAP=null;
+function bkTabSnap(dir){const B=BK;BKSNAP=null;if(!B||!B.el.isConnected||B.busy||(typeof uiReduced==='function'&&uiReduced()))return;const cl=s=>{const c=bkClone(s);c.hidden=false;c.style.visibility='';return c};BKSNAP={key:B.o.key,dir,R:cl(B.R),L:B.sp?cl(B.L):null,sc:B.R.querySelector('.bkc').scrollTop}}
+function bkEnter(B){const Q=BKSNAP;BKSNAP=null;if(!Q||Q.key!==B.o.key||!!Q.L!==B.sp)return;B.busy=1;const g=bkGeo(B),cv=B.cv,r=g.r;
+  cv.width=Math.ceil(r.width/BKD);cv.height=Math.ceil(r.height/BKD)+BKLIFT*2;cv.style.width=cv.width*BKD+'px';cv.style.height=cv.height*BKD+'px';cv.style.top=-BKLIFT*BKD+'px';cv.hidden=false;
+  const wrap=(slot,c)=>{const w=document.createElement('div');w.className='bkwrap';const s=slot.getBoundingClientRect();w.style.cssText='left:'+(s.left-r.left)+'px;top:'+(s.top-r.top)+'px;height:'+s.height+'px;width:'+s.width+'px';c.classList.add('bksnap');c.style.width=s.width+'px';c.style.height=s.height+'px';w.appendChild(c);B.in.insertBefore(w,B.cv);return w};
+  const fw=Q.dir>0;let st;
+  if(fw){st={g,fw,wR:wrap(B.R,Q.R),wL:Q.L?wrap(B.L,Q.L):null,keep:0,cover:1};const c=Q.R.querySelector('.bkc');if(c)c.scrollTop=Q.sc}
+  else{/* もどる向き：下には前の章の写し、上に新しい章（切りとって、ひろがってくる） */const nR=bkClone(B.R),nL=B.sp?bkClone(B.L):null,put=(slot,src)=>{slot.dataset.real='1';slot.__keep=[...slot.childNodes];slot.replaceChildren(...[...src.childNodes].map(n=>bkClone(n)))};put(B.R,Q.R);if(B.sp)put(B.L,Q.L);
+    st={g,fw,wR:wrap(B.R,nR),wL:nL?wrap(B.L,nL):null,cover:1,undo:()=>{for(const s of[B.R,B.L])if(s.__keep){s.replaceChildren(...s.__keep);s.__keep=null}}}}
+  [0,70,140].forEach((d,i)=>setTimeout(()=>bkSnd('pflick',.16+i*.03,.95+i*.05),d));
+  bkRun(B,st,fw?0:1,fw?1:0,BKMS*.8,()=>{if(st.undo)st.undo();B.busy=0})}

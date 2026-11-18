@@ -62,9 +62,9 @@ function phView(p,after){const url=URL.createObjectURL(p.b),ov=el('<div class="i
   del.onclick=()=>{if(!(del.dataset.ok||del._held)){del.dataset.ok=1;del.textContent='本当にけす';return}phDel(p.id).then(()=>{close();toast('写真をけした');if(after)after()},()=>toast('けせませんでした','warn'))};
   ok.onclick=()=>{sfx('tap');close()};bx.append(del,ok);ov.append(card);document.body.append(ov)}
 /* 思い出帳の「村の写真」 */
-function photoSec(body){if(IS_STORY_REPLAY)return;const sec=el('<div class="sec"><h3>村の写真</h3><div class="phg" style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:6px 0"></div></div>'),g=sec.querySelector('.phg');
+let PHURLS=[];function photoSec(body){if(IS_STORY_REPLAY)return;for(const u of PHURLS)URL.revokeObjectURL(u);PHURLS=[];/* 本のめくる写しも同じ絵を読むので、つぎに作りなおすまで手ばなさない */const sec=el('<div class="sec mph"><h3>村の写真</h3><div class="phg" style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:6px 0"></div></div>'),g=sec.querySelector('.phg');
   body.appendChild(sec);
   const w=WD,st=S;phList(w).then(L=>{if(!sec.isConnected||S!==st)return;if(!L.length){g.replaceWith(el('<p class="note">毎日お昼に、村のすがたが、ここにのこります。</p>'));return}
     for(const p of L.slice().reverse()){const u=URL.createObjectURL(p.b),t=el('<button type="button" class="phT" style="padding:0;border:0;background:none;cursor:pointer"><img alt="" style="display:block;width:100%;aspect-ratio:4/3;object-fit:cover"><small style="display:block;text-align:center"></small></button>');
-      const im=t.querySelector('img');im.src=u;im.onload=()=>URL.revokeObjectURL(u);t.querySelector('small').textContent=p.d+'日め';t.onclick=()=>{sfx('tap');phView(p,()=>{if(sheet==='menu'&&sheetArg==='record')renderSheet()})};g.appendChild(t)}},
+      const im=t.querySelector('img');im.src=u;PHURLS.push(u);t.querySelector('small').textContent=p.d+'日め';t.onclick=()=>{sfx('tap');phView(p,()=>{if(sheet==='menu'&&sheetArg==='record')renderSheet()})};g.appendChild(t)}},
     ()=>{if(sec.isConnected)g.replaceWith(el('<p class="note">このブラウザでは、写真をしまえません。</p>'))})}

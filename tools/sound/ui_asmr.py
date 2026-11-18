@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """UIの手ざわりの音と、料理・もの作りの手もとの音（ASMRのような、近くで小さく鳴る本物の音）を作る。
 元の音：Kenney の音のセット（どれも CC0。https://kenney.nl/assets/ の rpg-audio・impact-sounds・ui-audio）。
-  OpenGameArt の CC0 も使う（そのフォルダに入れる）：水 oga-water/（40-cc0-water-splash-slime-sfx）・かれ葉 oga-rustle/（20-rustles-dry-leaves）・スコップ oga-shovel/（shovel-sound）。
+  OpenGameArt の CC0 も使う（そのフォルダに入れる）：本 oga-book/（StarNinjas「10 Book Page Flips」の book_flip.*.ogg と Voltiment555「Book Flip Sounds」の BookFlip*.wav）・紙 oga-paper/（Luckius「Various Paper Sound Effects」の paper_sound_-_4.mp3 を p4.mp3）・水 oga-water/（40-cc0-water-splash-slime-sfx）・かれ葉 oga-rustle/（20-rustles-dry-leaves）・スコップ oga-shovel/（shovel-sound）。
   6つめに opts（peak：大きい所から切る・sk：切りはじめをずらす秒・att：鳴りはじめのフェード秒）。録音ごとにかえるときは、録音の数のリスト。
 使いかた：python3 tools/sound/ui_asmr.py <Kenneyのzipをひらいたフォルダ> [名前,名前...]
   そのフォルダの中に rpg-audio/ impact-sounds/ ui-audio/ がある形。
@@ -22,6 +22,12 @@ SET = {
   'page':   (['rpg-audio/*/bookFlip1.ogg', 'rpg-audio/*/bookFlip2.ogg', 'rpg-audio/*/bookFlip3.ogg'], 200, 9000, .55, 1),  # 思い出帳のページをめくる：ぺらっ（さいごまで）
   'knockw': (['impact-sounds/*/impactGeneric_light_00%d.ogg' % i for i in range(5)], 120, 6000, .14, 1),  # 行が置かれる・木札：ことっ
   'notch':  (['ui-audio/*/switch12.ogg', 'ui-audio/*/switch13.ogg', 'ui-audio/*/switch14.ogg'], 600, 6500, .06, 1),  # ±：かちっ
+  # ---- 本と巻物（思い出帳・図鑑・ひでんのしょ。book.js・scroll.js） ----
+  'mpage':  (['oga-book/book_flip.1.ogg', 'oga-book/book_flip.4.ogg', 'oga-book/book_flip.6.ogg', 'oga-book/book_flip.8.ogg', 'oga-book/BookFlip2.wav', 'rpg-audio/*/bookFlip1.ogg'], 180, 9000, .6, 1, {'peak': 1, 'sk': -.06, 'att': .01}),  # 本のページをめくる：ぺらっ（めくるたびにべつの録音）
+  'pflick': (['oga-book/book_flip.4.ogg', 'oga-book/book_flip.8.ogg', 'rpg-audio/*/bookFlip3.ogg', 'oga-book/BookFlip2.wav'], 300, 9000, .2, 1, {'peak': 1, 'sk': -.02, 'att': .004}),  # ぱらぱら：1まいぶんの短い音
+  'bkopen': (['rpg-audio/*/bookOpen.ogg', 'rpg-audio/*/bookPlace2.ogg'], 120, 8000, .4, 1),  # 表紙をひらく
+  'bkclose':(['rpg-audio/*/bookClose.ogg', 'rpg-audio/*/bookPlace1.ogg'], 100, 7000, .4, 1),  # 表紙をとじる：ぱたん
+  'pslide': (['oga-paper/p4.mp3'], 250, 8000, 2.6, 1),  # 紙をなでる・巻物がほどける：つづけて鳴らす（こすれる音）
   # ---- 料理・もの作り（マップの音。sfxAt で鳴らす） ----
   'tonton': (['impact-sounds/*/impactWood_light_00%d.ogg' % i for i in range(4)], 250, 7000, .10, 1),  # 包丁でまな板：とん
   'potclk': (['rpg-audio/*/metalPot1.ogg', 'rpg-audio/*/metalPot2.ogg', 'rpg-audio/*/metalPot3.ogg'], 300, 6000, .22, 1),  # おたまがなべにあたる：かちゃ
