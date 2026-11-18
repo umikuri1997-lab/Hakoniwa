@@ -6,7 +6,7 @@
    きょうあったこと：作業がおわったときに dayNote でおぼえる（r.dl：{d:callDay, e:[[種類,なに],...]}）。 */
 const TALKFUN=10,DLMAX=16;
 const DLFUN=new Set(['play','chat','fish','bathe','critwatch','sunset','rainjoy','eat','admire','ownseat']);/* たのしかったことにする物 */
-function dayNote(r,a){if(!r||!a||IS_STORY_REPLAY)return;let v='';const t=a.type;
+function dayNote(r,a){if(!r||!a||IS_STORY_REPLAY||a.shade)return;let v='';const t=a.type;
   if(t==='play')v=a.what||'';else if(t==='chat'||t==='tag'){const p=S.res.find(q=>q.id===a.partner);if(!p)return;v=p.name}
   else if(t==='eat'){v=(a.items||[])[0]||'';if(!FOODS[v])return}else if(t==='cook'){v=r.cing&&r.cing.rec||'';if(!FOODS[v])return}
   else if(t==='build'){const d=S.dyn[a.obj];v=d&&d.build||'';if(!BL[v])return}else if(t==='craft'){const o=(S.orders||[]).find(q=>q.id===a.order);v=o&&o.type||'';if(!BL[v])return}

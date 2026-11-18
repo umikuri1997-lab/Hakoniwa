@@ -357,7 +357,7 @@ function render(now){RFN++;hdFrame();
     for(let cy=cy0;cy<=cy1;cy++)for(let cx=cx0;cx<=cx1;cx++){const q=gq(cx,cy),need=GLOD?(!q.l||q.st):(!q.f||q.st);if(need&&(fresh||built===0||GRD.bt<GBUD)){gbuild(cx,cy,q);built++}q.u=RFN;const im=GLOD?q.l:(q.f||q.l);if(!im)continue;/* まだ作っていない区画は、地面の色のまま（つぎのコマで作る） */
       const ox=cx*GPX,oy=cy*GPX,w=Math.min(GPX,W*TS-ox),h=Math.min(GPX,H*TS-oy),a=SXg(ox),b=SYg(oy),kx=(SXg(ox+w)-a)/w,ky=(SYg(oy+h)-b)/h;ctx.drawImage(im,a-GPAD*kx,b-GPAD*ky,(w+2*GPAD)*kx,(h+2*GPAD)*ky)}GRD.any=true}/* 絵は切りとらず、のりしろ（GPAD）ごと描いて、となりの区画にかさねる *//* 区画は、画面のドットのさかいに合わせておく（さかいめに線が出ないように） */
   const x0=Math.max(0,Math.floor(cam.x/TS)-1),y0=Math.max(0,Math.floor(cam.y/TS)-2),x1=Math.min(W,Math.ceil((cam.x+VW/cam.z)/TS)+1),y1=Math.min(H,Math.ceil((cam.y+VH/cam.z)/TS)+2);
-  waterShimmer(now,x0,y0,x1,y1);drawFords(x0,y0,x1,y1);drawRugsLive(x0,y0,x1,y1);
+  waterShimmer(now,x0,y0,x1,y1);drawFords(x0,y0,x1,y1);drawRugsLive(x0,y0,x1,y1);feelGround(now,x0,y0,x1,y1);/* 地面にのこる季節・水たまり・足もとの反応（feel.js） */
   drawSacredRoot(now);drawFieldStory(now);if(typeof drawTreasure==='function')drawTreasure(now);
   for(const[j,t0]of pops){const a=1-(now-t0)/350;if(a<=0){pops.delete(j);continue}ctx.fillStyle='rgba(255,255,240,'+a*.6+')';const s=4*(1-a);rr(ctx,(j%W)*TS-s,((j/W)|0)*TS-s,TS+s*2,TS+s*2,6)}
   for(const o of S.orders||[])if(o.cs!=null&&S.obj[o.cs]!=='wbench'){const x=o.cs%W,y=(o.cs/W)|0;if(x>=x0&&x<=x1&&y>=y0&&y<=y1){const st=typeof wbworkStage==='function'?wbworkStage(o):-1,wc=st>=0&&window.CHIPS&&CHIPS['wbwork#'+st];if(wc)drawChip(ctx,wc,'wbwork',x*TS,y*TS+WBWORKZ-hiAt(o.cs)*LIFT,now)}}/* 作業台を置けなかった依頼：素材がそろったら、作っている形を地面に（天板の上にのせる絵を、WBWORKZ だけ下げる） */
@@ -419,7 +419,7 @@ function render(now){RFN++;hdFrame();
     if(o==='door'||o==='yozoradoor')add((i/W|0)+.01,0,null,()=>{ctx._doorBack=1;drawObj(ctx,o,x*TS,y*TS-hiAt(i)*LIFT,i);ctx._doorBack=0},i);/* ドアの奥の面 */
     {const sh=castShadowChip(o,i);if(sh)add(y+.0015,0,null,()=>hdCastStretch(x*TS+TS/2,y*TS-hiAt(i)*LIFT+TS*.8,()=>drawChip(ctx,sh,o,x*TS,y*TS-hiAt(i)*LIFT,0,i)),-1)}/* 落ち影：その行の段差のあと・その行の物より先（右の物の下になる） */
     if(o==='wbench'){const c=wbCells(i);for(const [k,yd] of [[c.b,0],[c.y,1]]){const kx=k%W,ky=(k/W)|0;add(objectDepth(o,k),1,null,()=>sideClip(k,()=>dropIn(ctx,i,kx*TS,ky*TS-hiAt(k)*LIFT,now,()=>yd?drawWbYard(ctx,i,kx*TS,ky*TS-hiAt(k)*LIFT,now):drawObj(ctx,o,kx*TS,ky*TS-hiAt(k)*LIFT,i,0,now),o)),k)}continue}/* 作業台：作業台と材料置き場を、それぞれのマスの順に */
-    add(objectDepth(o,i),BL[o].kind==='block'?0:1,null,()=>sideClip(i,()=>dropIn(ctx,i,x*TS,y*TS-hiAt(i)*LIFT,now,()=>drawObj(ctx,o,x*TS,y*TS-hiAt(i)*LIFT,i,S.dyn[i]?(S.dyn[i].g!=null?S.dyn[i].g:S.dyn[i].p):0,now),o)),i)}
+    add(objectDepth(o,i),BL[o].kind==='block'?0:1,null,()=>sideClip(i,()=>dropIn(ctx,i,x*TS,y*TS-hiAt(i)*LIFT,now,()=>{const g=S.dyn[i]?(S.dyn[i].g!=null?S.dyn[i].g:S.dyn[i].p):0;drawObj(ctx,o,x*TS,y*TS-hiAt(i)*LIFT,i,g,now);feelCap(ctx,o,i,x*TS,y*TS-hiAt(i)*LIFT,g)/* 冬：木・岩の上の雪 */},o)),i)}
   drawWebs(add,vis);/* クモの巣 */
   for(const k in S.edge||{}){const j=+k,x=j%W,y=(j/W)|0;if(!vis({x:x+.5,y:y+.5}))continue;add(objectDepth('bedge',j),0,null,()=>sideClip(j,()=>drawBedge(ctx,x*TS,y*TS-hiAt(j)*LIFT,j,false,now)),j);add(objectDepth('bedge',j),1.5,null,()=>sideClip(j,()=>drawBedge(ctx,x*TS,y*TS-hiAt(j)*LIFT,j,true,now)),j)}/* 花壇のふち：同じマスの花より手前 */
   for(const k in S.roof||{}){const j=+k,x=j%W,y=(j/W)|0,id=S.roof[k];if(!vis({x:x+1,y:y+1}))continue;add(y+2.06,3,[x*TS-14,y*TS-60,x*TS+80,y*TS+70],()=>drawRoofItem(ctx,id,x*TS,y*TS-hiAt(j)*LIFT),j);{const bk=window.CHIPS&&CHIPS[id+':back'];if(bk)add(y,0,[x*TS-14,y*TS-60,x*TS+80,y*TS+70],()=>drawChip(ctx,bk,id,x*TS,y*TS-hiAt(j)*LIFT,0),j)}}/* うしろの柱は、その行のはじめ（せいれいや家具より下） *//* ガゼボ・東屋：家の屋根と同じ（2マスめの行のすぐ後）。下に置いた物・ベンチやいすにすわっている子（行+1.02〜1.05）より上 */
@@ -431,6 +431,7 @@ function render(now){RFN++;hdFrame();
   if(S.hi&&!farOn){const RW=cliffRuns();for(let y=Math.max(0,y0-1);y<Math.min(H,y1+2);y++){const L=RW.get(y);if(!L)continue;const vs=[];for(const R of L)if(R.x1>=x0-1&&R.x0<=x1)vs.push({x0:Math.max(R.x0,x0-1),x1:Math.min(R.x1,x1),lv:R.lv});if(!vs.length)continue;/* 見えている所だけ */
     add(y-1+.0005,-1,null,()=>{for(const R of vs)cliffRow(y,R,false)},-1);/* ひとつ上の行の物より先：段差の上の物のかげが、手前の行の上の面にかくれないように */
     add(y+.001,-1,null,()=>{for(const R of vs)cliffRow(y,R,true)},-1)}}/* うしろが低い所だけ、上の面の上はしをもう1回描いて、うしろの物の足もとをかくす *//* 段差：行ごとに、その行の物より先（ひとつ上の行の物より後） */
+  feelLifted(add,x0,y0,x1,y1,now);/* 高い段の上の雪・落ち葉・水たまり（段差の絵のあと） */
   D.sort((a,b)=>a.k-b.k||a.t-b.t);
   for(const it of D)it.draw();
   drawSacredCare(now);drawStoryStage(now);drawKite(now);
@@ -474,6 +475,7 @@ function render(now){RFN++;hdFrame();
   ctx.font='11px "PixelMplus10","Hikomi",sans-serif';ctx.textAlign='center';
   for(const f of floats){ctx.globalAlpha=Math.min(1,f.life*2);const yy=(f.y-(1-f.life)*1.2)*TS;ctx.lineJoin='round';ctx.lineWidth=3;ctx.strokeStyle='rgba(176,138,100,.9)';{const fi=BUBI[bubKey(f.text)]?null:emoImg(f.text);if(BUBI[bubKey(f.text)])bubIcon(ctx,f.text,f.x*TS,yy-6,1.5);else if(fi){const ih=20,iw=ih*fi.width/fi.height;ctx.drawImage(fi,f.x*TS-iw/2,yy-ih+4,iw,ih)}else{ctx.strokeText(f.text,f.x*TS,yy);ctx.fillStyle='#fff3d6';ctx.fillText(f.text,f.x*TS,yy)}}}/* 文字はぜんぶクリーム色 *//* 文字のふちどりはうすい茶色 */
   ctx.globalAlpha=1;ctx.textAlign='start';
+  feelWarm(ctx,x0,y0,x1,y1);feelAir(now,x0,y0,x1,y1);feelClouds(ctx,now,darkness());/* 冬の家の中のぬくもり・朝もや・白い息・かげろう・雨のはね・雲のかげ（feel.js） */
   drawFog(ctx,x0,y0,x1,y1,now);/* 霧（夜の暗さより下） */drawPrintMarks(now,true);/* 霧の中の足あとの印は、霧の上 */
   const dk=darkness();
   ctx.setTransform(dpr,0,0,dpr,0,0);
@@ -482,14 +484,14 @@ function render(now){RFN++;hdFrame();
     dmx.globalCompositeOperation='source-over';dmx.globalAlpha=1;dmx.setTransform(1,0,0,1,0,0);dmx.clearRect(0,0,DMK.width,DMK.height);dmx.setTransform(dpr,0,0,dpr,0,0);dmx.fillStyle=(BOSSEVE||!WD&&S.ns&&(S.ns.final||S.ns.rush)&&!S.cleared?'rgba(46,10,52,':'rgba(14,20,58,')+dk+')';dmx.fillRect(0,0,VW,VH);
     dmx.setTransform(k,0,0,k,-cam.x*k,-cam.y*k);dmx.globalCompositeOperation='destination-out';
     for(const j of LITP){const o=S.obj[j],L=litP(j,o);if(!L)continue;const x=j%W,y=(j/W)|0;if(x<x0-5||x>=x1+5||y<y0-5||y>=y1+5)continue;/* 画面の外5マスの明かりも、光がとどくので描く */if(INDL.has(o)&&roomOf(j))continue;/* 家の中の灯りは、灯りそのものは光らせず、家ぜんたいを光らせる（下） */
-      const R=L.R;dmx.drawImage(lightSpr(R),x*TS+L.dx-R,y*TS+L.dy-R,R*2,R*2)}
+      const R=L.R*feelFlick(j,o,now);/* 火のあかりは、ゆらめく */dmx.drawImage(lightSpr(L.R),x*TS+L.dx-R,y*TS+L.dy-R,R*2,R*2)}
     gearLights(dmx);/* そうびの明かり */rayCutDark(dmx,now);/* 月明かりの帯の所は、少しだけ暗さがうすい */heatGlow(dmx,x0,x1,y0,y1,1);/* 熱の道は、夜ほんのり光る */
     const litH=new Set();for(const j of LIGHTS){if(INDL.has(S.obj[j])){const h=roomOf(j);if(h)litH.add(h)}}/* 灯りのある家 */
-    {dmx.imageSmoothingEnabled=true;dmx.globalAlpha=.75;for(const h of litH)dmx.drawImage(houseGlow(h),h.x0*TS-GLOWM,h.y0*TS-GLOWM);dmx.globalAlpha=1}/* 灯りのある家は、家ぜんたいを同じ明るさで照らす（ふちはぼかす） */
+    {dmx.imageSmoothingEnabled=true;for(const h of litH){const wa=feelWin(h);if(wa<=0)continue;dmx.globalAlpha=.75*wa;dmx.drawImage(houseGlow(h),h.x0*TS-GLOWM,h.y0*TS-GLOWM)}dmx.globalAlpha=1}/* 家のあかりは、夕方に1けんずつともり、夜あけに1けんずつ消える（feelWin） *//* 灯りのある家は、家ぜんたいを同じ明るさで照らす（ふちはぼかす） */
     ctx.setTransform(1,0,0,1,0,0);ctx.drawImage(DMK,0,0);if(nightVarNow()==='kiri'){ctx.globalAlpha=Math.min(1,dk*1.6);ctx.fillStyle=fogPat(ctx);const ox=-(cam.x*k*.6+performance.now()*.006)%256,oy=-(cam.y*k*.6)%256;ctx.translate(ox,oy);ctx.fillRect(-ox,-oy,ctx.canvas.width,ctx.canvas.height);ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=1}/* 霧の夜：うすい霧（1回作った絵をならべて、ゆっくり流す） *//* けずったところは重なっても、暗さがなくなるだけ（明るくなりすぎない） */
-    ctx.setTransform(k,0,0,k,-cam.x*k,-cam.y*k);ctx.globalCompositeOperation='lighter';ctx.globalAlpha=dk*.18;for(const j of LITP){const o=S.obj[j],L=litP(j,o);if(!L)continue;const x=j%W,y=(j/W)|0;if(x<x0-5||x>=x1+5||y<y0-5||y>=y1+5)continue;if(INDL.has(o)&&roomOf(j))continue;const R=L.R;ctx.drawImage(lightSpr(R),x*TS+L.dx-R,y*TS+L.dy-R,R*2,R*2)}heatGlow(ctx,x0,x1,y0,y1,0);ctx.globalAlpha=1;/* 火のあたたかさを、ほんの少しだけ */
+    ctx.setTransform(k,0,0,k,-cam.x*k,-cam.y*k);ctx.globalCompositeOperation='lighter';ctx.globalAlpha=dk*.18;for(const j of LITP){const o=S.obj[j],L=litP(j,o);if(!L)continue;const x=j%W,y=(j/W)|0;if(x<x0-5||x>=x1+5||y<y0-5||y>=y1+5)continue;if(INDL.has(o)&&roomOf(j))continue;const R=L.R*feelFlick(j,o,now);ctx.drawImage(lightSpr(L.R),x*TS+L.dx-R,y*TS+L.dy-R,R*2,R*2)}heatGlow(ctx,x0,x1,y0,y1,0);ctx.globalAlpha=1;/* 火のあたたかさを、ほんの少しだけ */
     ctx.globalCompositeOperation='source-over';
-    {const wl=HOUSEART['wall-window-lit'];if(wl&&wl.complete&&wl.naturalWidth&&isDark()){ctx.globalAlpha=1;for(const h of litH)for(const q of h.set){if(((q/W)|0)===h.y0)continue;/* 上がわの壁の窓は、昼も夜も同じ色 */if(!S.win||S.win[q]!==1||!(HOME_WALLS.has(S.obj[q])||S.obj[q]==='window'))continue;const qx=q%W,qy=(q/W)|0;if(qx<x0-1||qx>x1||qy<y0-1||qy>y1)continue;if(winCovered(qx,qy))continue;/* 手前に背の高い物があれば、窓の光はかさねない */{const lk='window:lit',lc=window.CHIPS&&CHIPS[lk];if(!(lc&&drawChip(ctx,lc,lk,qx*TS,qy*TS-1.5,0,q)))ctx.drawImage(wl,qx*TS+3.625,qy*TS+1.5,24.75,21.7125)}}/* 明かりの絵もチップの大きさのまま */ctx.globalAlpha=1}}/* 夜（21時〜6時）だけ、灯りのある家の窓ガラスは中が明るい色に（暗さの上にかく） */
+    {const wl=HOUSEART['wall-window-lit'];if(wl&&wl.complete&&wl.naturalWidth){for(const h of litH){const wa=feelWin(h);if(wa<=0)continue;ctx.globalAlpha=wa;for(const q of h.set){if(((q/W)|0)===h.y0)continue;/* 上がわの壁の窓は、昼も夜も同じ色 */if(!S.win||S.win[q]!==1||!(HOME_WALLS.has(S.obj[q])||S.obj[q]==='window'))continue;const qx=q%W,qy=(q/W)|0;if(qx<x0-1||qx>x1||qy<y0-1||qy>y1)continue;if(winCovered(qx,qy))continue;/* 手前に背の高い物があれば、窓の光はかさねない */{const lk='window:lit',lc=window.CHIPS&&CHIPS[lk];if(!(lc&&drawChip(ctx,lc,lk,qx*TS,qy*TS-1.5,0,q)))ctx.drawImage(wl,qx*TS+3.625,qy*TS+1.5,24.75,21.7125)}}}/* 明かりの絵もチップの大きさのまま */ctx.globalAlpha=1}}/* 夜（21時〜6時）だけ、灯りのある家の窓ガラスは中が明るい色に（暗さの上にかく） */
     ctx.setTransform(dpr,0,0,dpr,0,0)}
   if(GLWN){ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=Math.min(1,dk*1.5);ctx.globalCompositeOperation='lighter';ctx.drawImage(GLW,0,0);ctx.globalCompositeOperation='source-over';ctx.globalAlpha=1;ctx.setTransform(dpr,0,0,dpr,0,0);GLWN=0}
   hdPost(dk,now);/* HD-2D の仕上げ（ふきだし・矢の数・戦いの数字より下） */ctx.setTransform(k,0,0,k,-cam.x*k,-cam.y*k);drawArrowTags(x0,y0,x1,y1);drawCritGlow(ctx,now);if(bubLate)for(const f of bubs)f();drawTopFx();drawBattleFx(now);drawLeafPrev();ctx.setTransform(dpr,0,0,dpr,0,0);
