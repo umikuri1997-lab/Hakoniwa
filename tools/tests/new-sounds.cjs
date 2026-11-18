@@ -2,19 +2,19 @@
 const boot=require('../sim/boot.cjs'),assert=require('node:assert/strict');
 (async()=>{const {browser,page,run,errors}=await boot();
 await page.mouse.click(450,350);await run(`(()=>{SND.sfx=true;audioInit();AC.resume()})()`);
-await page.waitForFunction(()=>sacredEval(`AC.state==='running'&&['ladder','bowdraw','tpuni','loomk','shutl','cv_chou','midnight','tsoil','twood','tgrass','tstone','trickle','fgrass','knockw','tink','tbell'].every(k=>(SBUF[k]||[]).some(Boolean))`),{},{timeout:30000});
+await page.waitForFunction(()=>sacredEval(`AC.state==='running'&&['ladder','bowdraw','tpuni','loomk','shutl','cv_chou','midnight','tsoil','twood','tgrass','tstone','pourw','tillhit','starkira','fgrass','knockw','tink','tbell'].every(k=>(SBUF[k]||[]).some(Boolean))`),{},{timeout:30000});
 const out=await run(`(()=>{const o={},name=b=>{for(const k in SBUF)if((SBUF[k]||[]).includes(b))return k;return'?'},L=[];const st=AudioBufferSourceNode.prototype.start;AudioBufferSourceNode.prototype.start=function(...a){L.push(name(this.buffer));return st.apply(this,a)};
  const n=k=>L.filter(x=>x===k).length,clr=()=>{L.length=0;for(const k in lastSfx)delete lastSfx[k]};const r=S.res[0];r.nap=false;RHOLD.set(r,0);S.enemies=[];
  const cx=Math.floor(cam.x/TS+VW/cam.z/TS/2),cy=Math.floor(cam.y/TS+VH/cam.z/TS/2);r.x=cx+.5;r.y=cy+.5;
  /* ひろった物：材質の録音 */
  for(const[id,k]of[['mat:wood','twood'],['mat:eda','twood'],['mat:stone','tstone'],['mat:shina','tgrass'],['mat:can','tcan'],['mat:nuno','tcloth'],['food:berry','tgrass'],['food:fish','twater']]){clr();itemSnd(id);o['pick '+id]=itemMat(id)===k&&n(k)>=1&&n('seed')===0}
  clr();S.drops=[];S.mat=S.mat||{};takeDrop({id:'mat:wood',x:cx,y:cy,n:1},r);o.takeDrop=n('twood')>=1;
- clr();sfx('tpuni');o.puni=n('tpuni')===1;clr();sfx('bowdraw');o.bow=n('bowdraw')===1;clr();sfx('starkira');o.kira=n('tink')>=2&&n('tbell')>=1;
+ clr();sfx('tpuni');o.puni=n('tpuni')===1;clr();sfx('bowdraw');o.bow=n('bowdraw')===1;clr();sfx('starkira');o.kira=n('starkira')===1;
  /* 水やり：3秒の音を、つづけて重ねる（すぐ2回よんでも1つだけ） */
- clr();pourKeep(r);pourKeep(r);pourKeep(r);o.pour=n('trickle');
+ clr();pourKeep(r);pourKeep(r);pourKeep(r);o.pour=n('pourw');
  /* 畑の動き */
  const WB=(nm,hits)=>{clr();const m=SPM[nm],t0=.05/m.r;workBeat(r,nm,t0);for(const b of hits){for(const k in lastSfx)delete lastSfx[k];workBeat(r,nm,(b+.02)/m.r)}return L.slice()};
- o.till=WB('till',[.85]).includes('tsoil');o.sow=WB('sow',[.12,.62]).filter(k=>k==='tsoil').length;o.weed=WB('weed',[.6]).includes('tgrass');
+ o.till=WB('till',[.85]).includes('tillhit');o.sow=WB('sow',[.12,.62]).filter(k=>k==='tsoil').length;o.weed=WB('weed',[.6]).includes('tgrass');
  o.loom=WB('loomweave',[.3,.8]).filter(k=>k==='shutl'||k==='loomk').length;
  /* はしご・コワイノの足音 */
  FOOTP.delete(r);CLIMB.add(r);r.act={type:'watchpost',stage:'do',cl:.5,obj:0};clr();{const T0=performance.now();footTick(T0);for(let i=1;i<=10;i++)footTick(T0+i*100)}o.ladder=n('ladder');CLIMB.delete(r);r.act=null;
