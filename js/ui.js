@@ -639,16 +639,16 @@ function renderSheet(){
       body.appendChild(sec)}
   }else if(sheet==='menu'){
     T.textContent=WORLDS[WD].name;
-    const MI=[['oracle','leaf','おつげ'],['manual','book','ひでんのしょ'],['goal','target','目標'],['record','memo','思い出帳'],['maps','compass','マップ選択'],['zukan','zukan','図鑑'],['bondmap','heart','なかよし'],['cal','cal','こよみ'],['gup','power','むらのちから'],['settings','gear','設定'],['support','cup','応援する']];
+    const MI=[['goal','target','目標'],['record','memo','思い出帳'],['oracle','leaf','おつげ'],['gup','power','むらのちから'],['zukan','zukan','図鑑'],['bondmap','heart','なかよし'],['cal','cal','こよみ'],['manual','book','ひでんのしょ'],['maps','compass','マップ選択',1],['settings','gear','設定',1],['support','cup','応援する',1]];/* 4つめが1の物は、下の小さな行（村のことでない物） */
     const sub=MI.find(m=>m[0]===sheetArg);
     if(!sub){/* メニューはアイコンを並べるだけ。タップで中身を開く */
       body.appendChild(el(`<div class="mtags"><span class="mtag">${pxi('grass')}みどりのマス <b>${GRASSN}</b></span><span class="mtag">${pxi('house')}村レベル <b>${S.lv}</b></span><span class="mtag">${pxi('spirit')}せいれい <b>${S.res.length}</b>人</span></div>`));
-      const g=el('<div class="mgrid"></div>');
-      for(const[k,ic,nm]of MI){const b=el('<button class="mtile"><span class="mi"></span><span class="mn"></span></button>');b.querySelector('.mi').innerHTML=pxi(ic);b.querySelector('.mn').textContent=nm;b.dataset.menu=k;
-        b.onclick=()=>{sfx('tap');if(k==='manual')return openSheet('manual');if(k==='record')MEMPG=0;if(k==='maps'){save();closeSheet();return showMaps()}openSheet('menu',k)};g.appendChild(b)}
-      body.appendChild(g);return}
+      const g=el('<div class="mgrid"></div>'),g2=el('<div class="mgrid msub"></div>');
+      for(const[k,ic,nm,sub]of MI){const b=el('<button class="mtile"><span class="mi"></span><span class="mn"></span></button>');b.querySelector('.mi').innerHTML=pxi(ic);b.querySelector('.mn').textContent=nm;b.dataset.menu=k;
+        b.onclick=()=>{sfx('tap');if(k==='manual')return openSheet('manual');if(k==='record')MEMPG=0;if(k==='maps'){save();closeSheet();return showMaps()}GOALCHIP=false;openSheet('menu',k)};(sub?g2:g).appendChild(b)}
+      body.appendChild(g);body.appendChild(g2);return}
     T.textContent=sub[2];
-    sheetBack();
+    if(!(sheetArg==='goal'&&GOALCHIP))sheetBack();/* 上の目標の札からひらいたときは、メニューへもどるボタンを出さない */
     if(sheetArg==='oracle'){
       {const sec=el('<div class="sec"><h3>おつげ</h3><div class="rows"></div></div>'),rw=sec.querySelector('.rows');
        for(const k of [null,...Object.keys(ORACLE).filter(oracleOK)]){const O=k?ORACLE[k]:{name:'じゆうにすごす'},OI={play:'ball',wood:'log',stone:'rock',food:'apple'},on=(S.oracle||null)===k;const b=el('<button class="btn"></button>');b.dataset.oracle=k||'';b.innerHTML=pxi(OI[k]||'leaf','oi');b.appendChild(document.createTextNode(O.name+(on?'（いま）':'')));if(on)b.classList.add('pri');
