@@ -493,7 +493,7 @@ function drawRes0(r,now){
   if(S.rain&&!walking&&!(r.act&&r.act.type==='sleep')&&!roomOf((r.y|0)*W+(r.x|0)))px+=Math.sin(now/45+r.id)*.4;/* 雨の日、外でじっとしている子は、少しふるえる */
   const bob=(walking?Math.abs(Math.sin(now/110+r.id))*2.5:0)+(()=>{const jt=JUMP.get(r),d=jt==null?-1:now-jt;return d>=0&&d<1000?Math.abs(Math.sin(d/130))*9*(1-d/1000):0})();
   {const sw=Math.max(r.swing||0,r.swingT||0),sd=now-sw;if(sw&&sd>=0&&sd<400)px+=(r.face<0?-1:1)*atkLunge(sd)}/* 攻撃のとき：ためて、ふみこんで、当たって止まり、もどる */
-  px+=hitOff(r,now,1)[0];/* たたかれたら、のけぞる */
+  px+=hitOff(r,now,1)[0];/* たたかれたら、のけぞる */if(typeof juiceStopOff==='function')px+=juiceStopOff(r,now);/* さいごの一撃のヒットストップ：ふるえる */
   if(at==='shiver'&&ad)px+=Math.sin(now/26+r.id*3)*1.4;/* ふるえる */
   const tubB=at==='bathe'&&ad&&r.act.tub!=null&&r.act.in>0,wade=at==='bathe'&&ad&&r.act.in>0?r.act.in:sacredPose(r)?.anim==='soak'&&!walking?1:0;/* 水浴び：水の中では下半分がかくれる */
   {const tp=toyPose(r,now);if(tp){px=tp.x;py=tp.y-9}}/* 遊具の上で遊ぶ */const seated=!walking&&r.act&&r.act.stage==='do'&&SEATS.includes(S.obj[(r.y|0)*W+(r.x|0)]);/* いすにすわっているときは、かげを出さない */if(sj<0&&!wade&&!toyR(r)&&!seated)shadow(ctx,px,py+8,12,3.6);

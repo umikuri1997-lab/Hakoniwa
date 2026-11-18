@@ -107,16 +107,20 @@ function fogClear(a,quiet){if(!S.fog[a])return;S.fog[a]=0;S.fogV=(S.fogV||0)+1;i
   dirty=true}
 function fogTap(tx,ty){/* 「しらべる」のタップ：霧の所・見つける物 */if(!fogOn())return false;let j=ty*W+tx;if(fogAt(j)){toast('霧で見えない');return true}j=anc(j);
   const o=S.obj[j],f=fogFind(j);if(!f)return false;
-  if(o==='fogbox'){if(!S.fogReq.includes(j))S.fogReq.push(j);sfx('twood');toast('古い宝箱：せいれいがあけにいく');return true}
+  if(o==='fogbox'){if(typeof fogBoxTap==='function')fogBoxTap(j,f);return true}/* 謎をといてから、せいれいがあけにいく（fogpuzzle.js） */
   if(o==='nushiprint'){if(f.done&&!(printOn()&&!printTraced(j))){toast(BL.nushiprint.name);return true}/* たどる依頼のあいだは、見たあしあとも、もう一度見にいく */if(!S.res.some(r=>r.name===POKO&&!r.hidden)){toast('フタバがいません');return true}if(!S.fogReq.includes(j))S.fogReq.push(j);sfx('tgrass');toast('ヌシ様のあしあと：フタバが見にいく');return true}
   if(o==='fogspring'){toast(BL.fogspring.name+'：'+BL.fogspring.desc);return true}return false}
 const FOGBUSY=new Set(['sleep','eat','flee','watchpost','patrol','bury','faint','shiver','reunion','nmeet','fogopen','foglook','bathe','cook','offer','otaki','otakiget']);
 function fogFree(r){return !r.hidden&&!r.coffin&&!(r.act&&(FOGBUSY.has(r.act.type)||/^(story|field)/.test(r.act.type)))}
-function fogReqFor(r){/* この子が行ける、たのまれた物 */if(!fogOn()||isNight()||!S.fogReq||!S.fogReq.length)return -1;for(const j of S.fogReq){const o=S.obj[j];if(o==='fogbox'||o==='nushiprint'&&r.name===POKO){if(free('o'+j,1))return j}}return -1}
+function fogReqFor(r){/* この子が行ける、たのまれた物 */if(!fogOn()||isNight()||!S.fogReq||!S.fogReq.length)return -1;for(const j of S.fogReq){const o=S.obj[j];if(o==='fogbox'&&(fogFind(j)||{}).unl||o==='nushiprint'&&r.name===POKO){if(free('o'+j,1))return j}}return -1}
 function fogWant(r){return fogFree(r)&&fogReqFor(r)>=0}
 function fogJob(r,G){const j=fogReqFor(r);if(j<0)return false;const o=S.obj[j],ad=k=>k===j&&o==='nushiprint'||[1,-1,W,-W].some(d=>k+d===j&&Math.abs(k%W-j%W)<=1),st=nearest(G,k=>ad(k)&&walk(k),9999);if(st<0)return false;startAct(r,G,o==='fogbox'?'fogopen':'foglook',st,{key:'o'+j,obj:j});return true}
 const fogDone=j=>{S.fogReq=(S.fogReq||[]).filter(k=>k!==j)};
-ACT.fogopen={start(r,a){if(S.obj[a.obj]!=='fogbox')return false;r.bubble='';r.face=(a.obj%W+.5)<r.x?-1:1},done:(r,a)=>a.t>=3,end(r,a){fogDone(a.obj);if(S.obj[a.obj]!=='fogbox')return;const f=fogFind(a.obj);if(f)f.done=1;clearObj(a.obj);burst(a.obj,'furn','furnPlace');if(typeof bpNext==='function'&&bpNext()&&Math.random()<BPCHEST){bpGiveNext(null);addSpiritXp(1,r);recount();dirty=true;return}/* 家の設計図 */const L=FURN.filter(id=>giftPoolOK(id));if(L.length){const id=pick(L);sfx('seed');toast(r.name+'が宝箱から「'+BL[id].name+'」をみつけた','good');addFloat(r.x,r.y-1.8,BL[id].name);if(!(itemBoxOK()&&addItem(r,id,1)))dropAt(r.x,r.y,id,1)}/* 箱へはこんでから、もちものに入る */addSpiritXp(1,r);recount();dirty=true}};
+ACT.fogopen={start(r,a){if(S.obj[a.obj]!=='fogbox')return false;r.bubble='';r.face=(a.obj%W+.5)<r.x?-1:1},done:(r,a)=>a.t>=3,end(r,a){fogDone(a.obj);if(S.obj[a.obj]!=='fogbox')return;const f=fogFind(a.obj);if(f)f.done=1;clearObj(a.obj);burst(a.obj,'furn','furnPlace');if(typeof juiceGlowAt==='function')juiceGlowAt(a.obj%W+.5,((a.obj/W)|0)+.6,2);/* 光の柱 */
+  const id=typeof fogChestItem==='function'?fogChestItem():pick(FURN.filter(id=>giftPoolOK(id)));if(id&&BL[id]){(S.flags.chestGot||(S.flags.chestGot={}))[id]=1;sfx('seed');addFloat(r.x,r.y-1.8,BL[id].name);JUMP.set(r,performance.now());
+    if(BL[id].kind==='gear')giveItem(id,1);else if(!(itemBoxOK()&&addItem(r,id,1)))dropAt(r.x,r.y,id,1);/* 家具は、箱へはこんでから、もちものに入る */
+    if(typeof treasureReveal==='function'&&sheet==null)treasureReveal({ico:iconURL('fogbox'),taps:3,tier:2,name:'古い宝箱',done:r.name+'が宝箱をあけた',items:[{img:iconURL(id),nm:BL[id].name}]});else toast(r.name+'が宝箱から「'+BL[id].name+'」をみつけた','good')}
+  addSpiritXp(1,r);recount();dirty=true}};/* 中身は、宝箱だけの家具か、特別なそうび。タップしてあける（reveal.js） */
 ACT.foglook={start(r,a){if(S.obj[a.obj]!=='nushiprint')return false;r.bubble=''},done:(r,a)=>a.t>=2,end(r,a){fogDone(a.obj);const f=fogFind(a.obj);if(!f)return;const tr=printOn()&&!printTraced(a.obj);if(f.done&&!tr)return;const n=(S.fogF||[]).filter(q=>q.t==='print').indexOf(f),mem=f.done?[]:FOG_PRINT_LINES[Math.max(0,n)%FOG_PRINT_LINES.length];
   if(tr)return printScene(r,f,mem);dialog(mem,()=>{f.done=1})}};
 /* 草原のメイン「ヌシ様のかけらをさがそう」（lv5）：霧の中のヌシ様のあしあと3つを、フタバとたどる。たどったあしあとは S.flags.printT（この依頼で見た物だけ。前に見たあしあとも、もう一度見にいく）。

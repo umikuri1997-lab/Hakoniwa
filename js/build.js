@@ -296,7 +296,7 @@ let RECALL=false,NATIVE=null,NATIVEW=-1;
 function nativeSet(){if(NATIVE&&NATIVEW===WD)return NATIVE;const N=new Set();const add=L=>{for(const id of L||[])N.add(id)};
   for(const q of QUESTS||[]){add(q.learn);add(q.talk&&q.talk.learn);add(q.gives&&q.gives.recipes);add(QUEST_INSPIRATIONS[q.id]);add(QUEST_INSPIRATIONS_CLEAR[q.id])}
   for(const q of SUBQ)if(q.w==null||q.w===WD){add(q.learn);add(QUEST_INSPIRATIONS[q.k]);add(QUEST_INSPIRATIONS_CLEAR[q.k])}
-  for(const id in BL){const b=BL[id];if(STAGEONLY[id]===WD||b.kwr||b.g&&WD===1||(b.w!=null&&b.w===WD))N.add(id);else if(STAGEONLY[id]==null&&(b.w||0)<=WD&&b.lv&&(LEVELUP_ITEMS.has(id)||b.kind!=='furn')&&!RLOCK.has(id)&&!QB.has(id))N.add(id)}
+  for(const id in BL){const b=BL[id];if(STAGEONLY[id]===WD||b.kwr||b.g&&WD===(b.g.gr?0:1)||(b.w!=null&&b.w===WD))N.add(id);else if(STAGEONLY[id]==null&&(b.w||0)<=WD&&b.lv&&(LEVELUP_ITEMS.has(id)||b.kind!=='furn')&&!RLOCK.has(id)&&!QB.has(id))N.add(id)}
   NATIVEW=WD;return NATIVE=N}
 function otherLand(id){if(!S||S.free||!WD)return false;const g=grecOf().get(id);return g!=null&&g<WD&&!nativeSet().has(id)}
 function recShown(id){return RECALL||!otherLand(id)}

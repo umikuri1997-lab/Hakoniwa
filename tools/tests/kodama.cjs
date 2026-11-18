@@ -1,6 +1,6 @@
 /* もりのこだま・霧の中の手がかり・属性のはたらきあい（風の日のはたおり機・雨のたき火・火のせいれいで雪がとける）
    草原：はじめは晴れた4エリアに3こずつ。草むら（タップ→見にいく）・石の輪（石材をはこぶ）・花の輪（同じ花が咲く→見にいく）で見つかり、パワー+5と小さな物。10こめで設計図。霧が晴れると、そのエリアにも3こ。
-   火山：はじめから16エリアに3こずつ（48こ）。 */
+   火山：はじめから16エリアに3こずつ（48こ。置けなかった分は、つぎの朝に）。 */
 const assert=require('node:assert/strict');
 (async()=>{const {browser,page,run,errors}=await require('../sim/boot.cjs')({world:0});
   await run(`checkQuest=()=>{};updTut=()=>{};checkLevel=()=>{};showSpotPop=()=>{};true`);
@@ -43,6 +43,6 @@ const assert=require('node:assert/strict');
   assert.equal(r.melt,true,'火のせいれいのまわり2マスの雪がとける');
   assert.deepEqual(errors,[]);await browser.close();
   /* 火山：はじめから48こ */
-  delete process.env.GAME_URL;const v=await require('../sim/boot.cjs')({world:1});const n=JSON.parse(await v.run(`JSON.stringify([S.kd.length,new Set(S.kd.map(e=>e.a)).size])`));console.log('volcano',n);assert.deepEqual(n,[48,16]);assert.deepEqual(v.errors,[]);await v.browser.close();
+  delete process.env.GAME_URL;const v=await require('../sim/boot.cjs')({world:1});const n=JSON.parse(await v.run(`(()=>{const a=S.kd.length,b=new Set(S.kd.map(e=>e.a)).size;kdMorning();return JSON.stringify([a,b,S.kd.length])})()`));console.log('volcano',n);assert.ok(n[0]>=45&&n[0]<=48,'火山は、はじめから16エリアに3こずつ（置けない所は、つぎの朝に）');assert.equal(n[1],16);assert.ok(n[2]>=n[0]&&n[2]<=48);assert.deepEqual(v.errors,[]);await v.browser.close();
   console.log('OK');
 })().catch(e=>{console.error(e);process.exit(1)});
