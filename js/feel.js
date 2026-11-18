@@ -1,7 +1,7 @@
 /* 時間・温度・質感の手ざわり（feel.js）。見た目と音だけで、数字・せいれいの行動の計算はかえない。セーブするのは、雨のつぎの朝の印（S.wetD）だけ。
    時間：窓のあかりが家ごとにともる・消える（feelWin）／雲のかげ（feelClouds）／地面にのこる季節（冬の雪・秋の落ち葉 feelRow、木と岩の雪 feelCap、屋根の雪 feelRoof）／朝もや・朝つゆ
    温度：白い息（feelAir）／火のゆらめき（feelFlick）／夏のかげろう・セミ／冬の家の中のぬくもり（feelWarm）
-   質感：足音（feelStep・feelStepSnd）／足もとの反応（波紋・土ぼこり・雪の足あと・草のかけら・ふんだ花がゆれる feelKick）／雨のぬれ（水面の波紋・のきのしずく・地面のはね・水たまり）／場所の音（feelAmb：川・火・葉・セミ）
+   質感：足音（feelStep・feelStepSnd）／足もとの反応（波紋・土ぼこり・雪の足あと・草のかけら・ふんだ花がゆれる feelKick）／雨のぬれ（水面の波紋・のきのしずく・地面のはね・水たまり）／場所の音（feelAmb：川・池・温泉・火・葉・セミ）
    絵は、1マス64ドットのドット絵を1回だけ作って（feelArt）、ならべる。マスごとの出る・出ないは、マスの番号から決まる（hash）ので、しまわない */
 const FEEL_SNOWP=.7;/* 雪がつもりきったとき、雪のかたまりが出る地面のわりあい */
 const FEEL_LEAFP=.75;/* 落ち葉がたまりきったとき、木のまわりで落ち葉が出るわりあい */
@@ -150,22 +150,22 @@ function feelStep(now){if(!S||!S.res)return;const fid=typeof FOLLOW!=='undefined
     if(k==='water')ev('rip',620);else if(k==='snow')ev('print',26000);else if(k==='dry'){if(st.n%2===0)ev('dust',420)}else if(k==='grass'){if(st.n%3===0)ev('grass',380)}
 }}
 
-/* ---------- 場所の音：カメラの近くにあるときだけ聞こえる（川のせせらぎ・火のパチパチ・葉のざわめき・夏のセミ）。川は本物の録音、ほかはその場で作る ---------- */
-const FEELAB={};let FEELAT=0;
+/* ---------- 場所の音：カメラの近くにあるときだけ聞こえる（川のせせらぎ・凪いだ池とカエル・お湯の流れこむ温泉・火のパチパチ・葉のざわめき・夏のセミ）。川・池・温泉は本物の録音、ほかはその場で作る ---------- */
+const FEELAB={},FEELREC=new Set(['stream','pond','onsen']);let FEELAT=0;
 function feelBuf(k){const sr=AC.sampleRate,n=Math.floor(sr*3),b=AC.createBuffer(1,n,sr),d=b.getChannelData(0);let a=0,a2=0,m=.5,m2=.5,tm=.5,tm2=.5;
   if(k==='fire'){let e=0;for(let i=0;i<n;i++){const w=Math.random()*2-1;a+=(w-a)*.02;if(Math.random()<9/sr)e=.5+Math.random()*.9;else e*=.9965-Math.random()*.002;if(i%Math.floor(sr/5)===0)tm=Math.random();m+=(tm-m)*.0008;d[i]=a*2.4*(.5+m)+w*e*e*.5}}
   else if(k==='leaves'){for(let i=0;i<n;i++){const w=Math.random()*2-1;a+=(w-a)*.35;a2+=(w-a2)*.06;const s=Math.sin(Math.PI*i/n);d[i]=(a-a2)*(.18+.82*s*s)*.9}}
   else if(k==='semi'){for(let i=0;i<n;i++){const t=i/sr,am=.5+.5*Math.sin(6.283*52*t),sw=.55+.45*Math.sin(6.283*t/3-1.57);d[i]=(Math.sin(6.283*4180*t)+Math.sin(6.283*4420*t+1)*.8+Math.sin(6.283*4760*t+2)*.5)*.2*am*am*sw}}
   const X=Math.floor(sr*.08);for(let i=0;i<X;i++){const u=i/X;d[i]=d[i]*u+d[n-X+i]*(1-u)}/* つなぎ目をならす */return b}
-function feelAmbWant(){const want={stream:0,fire:0,leaves:0,semi:0};if(!S||!started||!SND.sfx||!$('#title').hidden||!$('#maps').hidden||typeof stageReady==='function'&&!stageReady())return want;
-  const vw=VW/cam.z,vh=VH/cam.z,cx=(cam.x+vw/2)/TS,cy=(cam.y+vh/2)/TS,zk=Math.max(.35,Math.min(1.3,cam.z/homeZ())),R=8;let wn=0,tn=0;
-  for(let dy=-R;dy<=R;dy++)for(let dx=-R;dx<=R;dx++){const x=(cx+dx)|0,y=(cy+dy)|0;if(x<0||y<0||x>=W||y>=H)continue;const i=y*W+x,dd=Math.hypot(dx,dy);if(dd>R)continue;if(S.fog&&fogAt(i))continue;if(S.ground[i]===1)wn+=1-dd/R;else{const o=S.obj[i];if(o&&TREES.has(o)&&(o!=='deadtree'||WD===1))tn+=1-dd/R}}
-  want.stream=Math.min(1,wn/14)*.8*zk;want.leaves=Math.min(1,tn/5)*(typeof stormNow==='function'&&stormNow()?.9:S.rain?.5:.3)*zk;
+function feelAmbWant(){const want={stream:0,pond:0,onsen:0,fire:0,leaves:0,semi:0};if(!S||!started||!SND.sfx||!$('#title').hidden||!$('#maps').hidden||typeof stageReady==='function'&&!stageReady())return want;
+  const vw=VW/cam.z,vh=VH/cam.z,cx=(cam.x+vw/2)/TS,cy=(cam.y+vh/2)/TS,zk=Math.max(.35,Math.min(1.3,cam.z/homeZ())),R=8;const wk={river:0,pond:0,onsen:0};let tn=0;
+  for(let dy=-R;dy<=R;dy++)for(let dx=-R;dx<=R;dx++){const x=(cx+dx)|0,y=(cy+dy)|0;if(x<0||y<0||x>=W||y>=H)continue;const i=y*W+x,dd=Math.hypot(dx,dy);if(dd>R)continue;if(S.fog&&fogAt(i))continue;if(S.ground[i]===1)wk[typeof waterKind==='function'?waterKind(i):'river']+=1-dd/R;/* 川・池・温泉で、ちがう音 */else{const o=S.obj[i];if(o&&TREES.has(o)&&(o!=='deadtree'||WD===1))tn+=1-dd/R}}
+  want.stream=Math.min(1,wk.river/14)*.8*zk;want.pond=Math.min(1,wk.pond/14)*.3*zk;want.onsen=Math.min(1,wk.onsen/14)*.3*zk;/* 池・温泉は、かなり小さく（持ち主がきめた） */want.leaves=Math.min(1,tn/5)*(typeof stormNow==='function'&&stormNow()?.9:S.rain?.5:.3)*zk;
   let fv=0;for(const j of LITP){const o=S.obj[j];if(o!=='campfire'&&o!=='torch')continue;const d=Math.hypot(j%W+.5-cx,((j/W)|0)+.5-cy);if(d<6)fv=Math.max(fv,Math.pow(1-d/6,1.5))}want.fire=fv*.8*zk;
   {const h=hour();if(seasonNow()===1&&!S.rain&&h>=9&&h<17)want.semi=(.12+Math.min(1,tn/3)*.2)*Math.min(1,(h-9)/1,(17-h)/1)}
   return want}
 function feelAmb(){if(typeof AC==='undefined'||!AC||AC.state!=='running'||typeof ambG==='undefined'||!ambG)return;const want=feelAmbWant();
-  for(const k in want){let a=FEELAB[k];if(!a){if(!want[k])continue;/* 川・池は本物の録音（tools/sound/stream_loop.py）。読みこむまでは鳴らさない */const rb=k==='stream'?(SBUF.stream||[])[0]:null;if(k==='stream'&&!rb)continue;const src=AC.createBufferSource(),g=AC.createGain();src.buffer=rb||feelBuf(k);src.loop=true;if(rb){src.loopStart=.06;src.loopEnd=rb.duration-.06}g.gain.value=0;src.connect(g);g.connect(ambG);src.start();a=FEELAB[k]={src,g}}a.g.gain.setTargetAtTime(want[k],AC.currentTime,.6)}}
+  for(const k in want){let a=FEELAB[k];if(!a){if(!want[k])continue;/* 川・池・温泉は本物の録音（tools/sound/stream_loop.py・water_amb.py）。読みこむまでは鳴らさない */const rec=FEELREC.has(k),rb=rec?(SBUF[k]||[])[0]:null;if(rec&&!rb)continue;const src=AC.createBufferSource(),g=AC.createGain();src.buffer=rb||feelBuf(k);src.loop=true;if(rb){src.loopStart=.06;src.loopEnd=rb.duration-.06}g.gain.value=0;src.connect(g);g.connect(ambG);src.start();a=FEELAB[k]={src,g}}a.g.gain.setTargetAtTime(want[k],AC.currentTime,.6)}}
 function feelFrame(now){/* 1コマに1回（main.js）。村の時間が進んでいなくても、音の大きさは合わせる */if(!S||!started)return;try{feelStep(now)}catch(e){}if(now-FEELAT>500){FEELAT=now;try{feelAmb()}catch(e){}}}
 
 /* ---------- せいれいの動き：冬は火にあたりに行く・夏はすずしい所で休む（goWeather から） ---------- */

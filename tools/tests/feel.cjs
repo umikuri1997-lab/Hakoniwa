@@ -22,8 +22,8 @@ const out=JSON.parse(await run(`(()=>{const out={};USERPAUSE=true;const T=(d,h)=
  /* 冬は火にあたる・夏の昼は木かげか水べですずむ（どちらも、ひまなとき） */
  S.rain=false;S.obj[(hy+2)*W+hx+2]='campfire';S.obj[(hy+2)*W+hx+6]='tree';recount();r.x=hx+5.5;r.y=hy+2.5;r.path=[];r.act=null;r.quirkT=0;r.shadeT=0;const G=bfs(r.x|0,r.y|0);
  Math.random=()=>.1;T(26,12);const a=feelRest(r,G);out.warm=[a,r.act&&r.act.type,r.act&&r.act.k];r.act=null;T(10,13);const b=feelRest(r,G);out.shade=[b,r.act&&r.act.type,!!(r.act&&r.act.shade)];r.act=null;T(3,13);r.quirkT=0;r.shadeT=0;out.none=feelRest(r,G);Math.random=R0;
- /* 場所の音：水・木・火が近いと大きく、夏の昼だけセミ */
- for(let y=hy-1;y<hy+2;y++)for(let x=hx-2;x<hx+1;x++)S.ground[y*W+x]=1;recount();cam.x=hx*TS-VW/cam.z/2;cam.y=(hy+1)*TS-VH/cam.z/2;started=true;T(10,13);const w=feelAmbWant();T(26,13);const w2=feelAmbWant();out.amb=[w.stream>0,w.fire>0,w.leaves>0,w.semi>0,w2.semi];
+ /* 場所の音：水（ここは池。川・温泉とはべつの音）・木・火が近いと大きく、夏の昼だけセミ */
+ for(let y=hy-1;y<hy+2;y++)for(let x=hx-2;x<hx+1;x++)S.ground[y*W+x]=1;recount();cam.x=hx*TS-VW/cam.z/2;cam.y=(hy+1)*TS-VH/cam.z/2;started=true;T(10,13);const w=feelAmbWant();T(26,13);const w2=feelAmbWant();out.amb=[w.pond>0&&w.stream===0&&w.onsen===0,w.fire>0,w.leaves>0,w.semi>0,w2.semi];
  return JSON.stringify(out)})()`));
 console.log(out);
 assert.deepEqual(out.spring,[0,0]);assert.deepEqual(out.autumn,[0,true]);assert.deepEqual(out.winter,[true,true,1]);
