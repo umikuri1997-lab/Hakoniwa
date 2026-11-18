@@ -162,7 +162,7 @@ function itemPop(id){/* もちもの：おそなえ箱の物・たね・ふし�
   else if(TRNAME[id]){o.querySelector('img').src=trIco(id);o.querySelector('.t').textContent=TRNAME[id]+' '+(S[id]||0)+(id==='tmap'?'まい':'こ');o.querySelector('.n').textContent=TRDESC[id]+(id==='mapPc'?'（'+(S.mapPc||0)+'/'+MAPN+'）':'');if(id==='mapPc')add('つなげる',mapJoin,(S.mapPc||0)<MAPN);if(id==='tmap')add('ひらく',mapOpen,!(S.tmap>0)||S.tx!=null);if(id==='fukuro')add('あける',fukuroOpen,!(S.fukuro>0))}
   else if(id==='horn'){o.querySelector('img').src=hornIco();o.querySelector('.t').textContent='よびごえの角笛 '+(S.horn||0)+'こ';o.querySelector('.n').textContent=HORNDESC;add('ふく',hornBlow,!(S.horn>0))}
   else if(id.startsWith('seed:')){const k=id.slice(5),c=CROPS[k];o.querySelector('img').src=seedIcon(k);o.querySelector('.t').textContent=c.name+'のたね '+cseed(k)+'こ';o.querySelector('.n').textContent=c.desc;add('畑にまく',()=>placeFromInv(id),cseed(k)<1)}
-  else{const b=BL[id];o.querySelector('img').src=iconURL(id);o.querySelector('.t').textContent=iname(id)+' '+inv(id)+(b.kind==='ammo'?'本':'こ');o.querySelector('.n').textContent=b.desc||'';if(b.kind!=='ammo')add('これを置く',()=>placeFromInv(id),!inv(id))}
+  else{const b=BL[id];o.querySelector('img').src=iconURL(id);o.querySelector('.t').textContent=iname(id)+' '+inv(id)+(b.kind==='ammo'?'本':'こ');o.querySelector('.n').textContent=b.desc||'';if(b.kind==='gift')add('あげる',()=>giftWho(id),!inv(id));else if(b.kind!=='ammo')add('これを置く',()=>placeFromInv(id),!inv(id))}
   document.body.appendChild(o)}
 let CRAFTN=0;/* 依頼ボードに出ている物の数 */
 function craftPop(tags){/* 依頼ボードのしぼりこみ：タグをいくつでもえらぶ。えらんだタグがぜんぶつく物を出す */if(document.getElementById('craftPop'))return;sfx('tap');
@@ -244,6 +244,7 @@ function careSec(body,r){/* お世話のタブ：お話・なでる・毛布・�
   if(outS||c.blanket===d)mk('blanket','毛布をかける','',()=>{r.act.blanket=1;r.bubble='💤'});
   if(typeof bdayCareBtn==='function')bdayCareBtn(bw,r);/* 誕生日だけ「おいわい」（birthday.js） */
   {const b=el('<button class="btn">おやつをあげる</button>');lackOn(b,S.food<1?'食料が足りません':'');b.onclick=()=>{if(S.food<1)return;sfx('tap');snackPop(r,closeSheet)};bw.appendChild(b)}/* おやつ：ポップアップで食べ物をえらぶと、その場で食べる。反応で好き・きらいがわかる（food-like.js） */
+  {const b=el('<button class="btn">プレゼント</button>');lackOn(b,giftToday(r)?'きょうは、もうあげた':GIFTIDS.some(id=>inv(id)>0)?'':'おくりものがありません');b.onclick=()=>{if(giftToday(r)||!GIFTIDS.some(id=>inv(id)>0))return;sfx('tap');giftWhat(r,closeSheet)};bw.appendChild(b)}/* おくりもの（gifts.js） *//* おやつ：ポップアップで食べ物をえらぶと、その場で食べる。反応で好き・きらいがわかる（food-like.js） */
   body.appendChild(bw)}
 function sortieSec(body,r){/* 出撃する・しない（6時〜23時だけ、かえられる。夜はそのまま） */const on=fighter(r),sec=el('<div class="sec"><h3>たたかう</h3><p class="note"></p><div class="btns" style="display:flex;gap:8px;flex-wrap:wrap;margin:4px 0 8px"></div></div>'),bw=sec.querySelector('.btns');
   sec.querySelector('p').textContent=on?(r.elem==='fire'?'夜、近くのコワイノとたたかう':'夜、近くのコワイノとたたかう'+(SORTIETXT[r.elem]?'（'+SORTIETXT[r.elem]+'）':'')):(r.elem==='fire'?'夜、見張り台に立つ（'+WPTXT.fire+'）':'夜、見張り台に立つ');
@@ -360,6 +361,7 @@ function renderSheet(){
     {const TL=WD===0?[['mover','ひっこしミトン','家具・建物をタップして、うつしたい所をタップすると、すぐそこへうつる','mover']]:WD===1?[['bulk','ひろびろハケ','指でなぞった範囲を、ブロックでまとめてぬれる。種もまとめて植えてもらえる','hake'],['swap','つけかえトンカチ','つながっている柵・塀・家の壁・道・床を、まとめてべつの種類にかえる。はずした物は、おそなえ箱にもどる','swap']]:[];/* 道具は土地ごと（草原：ひっこしミトン・だんさスコップ、火山：ひろびろハケ・つけかえトンカチ）。もらった道具は、ほかの土地でも使える */
       if(TL.length){const r3=sec('道具');for(const T of TL){const bx=row(r3,T[1],T[2],toolIcon(T[3]),S[T[0]]);if(S[T[0]])btn(bx,'もらった',true);else btn(bx,SP(3000),S.pt<3000,()=>{S.pt-=3000;S[T[0]]=true;applyFeats();toast(T[1]+'をもらった！「どうぐ」から使える','good');trade()},1)}
         if(WD===0){const b2=row(r3,'だんさスコップ','段差をけずる・もる工事を、せいれいにたのめる。1マスでパワー50',toolIcon('scoop'),S.dig);if(S.dig)btn(b2,'もらった',true);else btn(b2,SP(1000),S.pt<1000,()=>{S.pt-=1000;S.dig=true;applyFeats();toast('だんさスコップをもらった！','good');trade()},1)}}}/* だんさスコップは草原のカミサマから（ほかの土地でも使える） */
+    {const rg=sec('おくりもの');for(const id of giftShopToday()){const got=giftShopBought(id),bx=row(rg,BL[id].name,BL[id].desc+'（所持：'+inv(id)+'）',giftIco(id),got),b=el('<button class="btn pri"></button>');b.textContent=got?'もらった':SP(BL[id].shop);lackOn(b,got?'きょうは、もうもらった':S.pt<BL[id].shop?'パワーが足りません':'');b.onclick=()=>{if(got||S.pt<BL[id].shop)return;if(giftShopBuy(id))trade()};bx.appendChild(b)}}/* おくりもの：日がわり（gifts.js） */
     if(S.enemyOn||S.nights>0){const r7=sec('まもりの品'),bx=row(r7,'まよけのハーブ',HERBDESC+'（所持：'+(S.herb||0)+'）',herbIco());btn(bx,SP(200),S.pt<200,()=>{S.pt-=200;S.herb=(S.herb||0)+1;(S.seenIt||(S.seenIt={}))['x:herb']=1;toast('まよけのハーブをもらった','good');trade()},1)}
     if(WD===1&&(qAt('fest')||S.cleared)){const r5=sec('とくべつな交換');/* 火山のふもと：「おまつりをひらこう」のあとから、いつでもおまつり。めぶきのしずく・ごちそうは、おまつりの日に、せいれいの屋台で */
       {const done=S.festDay!=null&&S.festDay>=dayNo(),bx=row(r5,'おまつり','つぎの日が、おまつりになる',null,done);btn(bx,done?(S.festDay>dayNo()?'あしたはおまつり':'きょうはおまつり'):SP(200),done||S.pt<200,()=>{S.pt-=200;S.festDay=dayNo()+1;sfx('good');toast('あしたは、おまつり！','good');trade()},1)}/* たのんだつぎの日の朝7時に、おまつりがはじまる */
@@ -377,7 +379,7 @@ function renderSheet(){
       sec('食べ物'+capTxt(S.food,foodCap()),Object.keys(FOODS).filter(k=>(S.fs[k]||0)>0).map(k=>[foodIc(k),FOODS[k].e,FOODS[k].name,S.fs[k]]),'食べ物は、まだないよ')}
     gearInv(body);/* そうび */
     const grid=el('<div class="grid"></div>');grid.appendChild(Object.assign(el('<b style="grid-column:1/-1;margin-top:10px;font-size:15px"></b>'),{textContent:'おそなえ箱'}));
-    const groups=[['ブロック',BLOCKS.filter(id=>inv(id)>0)],['うえる',PLANTS.filter(id=>inv(id)>0)],...furnitureGroups(FURN.filter(id=>inv(id)>0)),['まもり',AMMO.filter(id=>inv(id)>0)]];
+    const groups=[['ブロック',BLOCKS.filter(id=>inv(id)>0)],['うえる',PLANTS.filter(id=>inv(id)>0)],...furnitureGroups(FURN.filter(id=>inv(id)>0)),['まもり',AMMO.filter(id=>inv(id)>0)],['おくりもの',GIFTIDS.filter(id=>inv(id)>0)]];/* おくりもの（gifts.js） */
     const ids=groups.flatMap(([,items])=>items);
     for(const [name,ids]of groups){if(!ids.length)continue;const heading=el('<b style="grid-column:1/-1;margin-top:8px"></b>');heading.textContent=name;grid.appendChild(heading);for(const id of ids){
       const b=el('<button class="slot"><span class="ct"></span><img alt=""><span class="nm"></span></button>');
@@ -527,7 +529,7 @@ function renderSheet(){
      if(resTab===3)gearSheet(body,r);
      else if(resTab===2)careSec(body,r);/* お世話 */
      else if(resTab===1){if(S.trouble&&S.trouble.id===r.id&&S.trouble.k==='fav')prefKnow(r,'lf');/* こまりごとで、ほしい家具を言っている */const pf=el('<div class="sec"><div class="stats"></div></div>'),pg=pf.querySelector('.stats');
-       for(const[k,v]of[...(troubleText(r)?[['こまりごと',troubleText(r)]]:[]),...(typeof dreamText==='function'&&dreamText(r)?[['ゆめ',dreamText(r)]]:[]),...(jobOf(r)>=0?[['担当',(o=>BL[o].name+'（なれ '+nareLv(r,o)+'）')(S.obj[jobOf(r)])]]:[]),['好きな遊び',prefShow(r,'lk')],['にがてな遊び',prefShow(r,'ng')],['好きな家具',prefShow(r,'lf')],['だいすきな料理',prefShow(r,'fd')],['すきな食べ物',foodKnownText(r,2)],['にがてな食べ物',foodKnownText(r,0)],['なかよし',(b=>b?b.q.name+'（'+b.v+'）':'まだいない')(bondBest(r))],['村に来た日',r.came?r.came+'日目':'はじめから'],['誕生日',typeof bdayText==='function'?bdayText(r):''],['作ったもの',(r.made||0)+'こ'],['追いはらった「コワイノ」',(r.beat||0)+'体'],['ベッド',myBed(r)>=0?'じぶんのベッドがある':'きまっていない']]){const d=el('<div class="stat" style="display:block"><span style="display:block"></span><b style="display:block;text-align:left;margin-top:2px"></b></div>');d.firstChild.textContent=k;d.lastChild.textContent=v;pg.appendChild(d)}
+       for(const[k,v]of[...(troubleText(r)?[['こまりごと',troubleText(r)]]:[]),...(typeof dreamText==='function'&&dreamText(r)?[['ゆめ',dreamText(r)]]:[]),...(jobOf(r)>=0?[['担当',(o=>BL[o].name+'（なれ '+nareLv(r,o)+'）')(S.obj[jobOf(r)])]]:[]),['好きな遊び',prefShow(r,'lk')],['にがてな遊び',prefShow(r,'ng')],['好きな家具',prefShow(r,'lf')],['だいすきな料理',prefShow(r,'fd')],['すきな食べ物',foodKnownText(r,2)],['にがてな食べ物',foodKnownText(r,0)],['たからもの',giftTrText(r)],['だいすきなおくりもの',giftKnownText(r,2)],['すきなおくりもの',giftKnownText(r,1)],['なかよし',(b=>b?b.q.name+'（'+b.v+'）':'まだいない')(bondBest(r))],['村に来た日',r.came?r.came+'日目':'はじめから'],['誕生日',typeof bdayText==='function'?bdayText(r):''],['作ったもの',(r.made||0)+'こ'],['追いはらった「コワイノ」',(r.beat||0)+'体'],['ベッド',myBed(r)>=0?'じぶんのベッドがある':'きまっていない']]){const d=el('<div class="stat" style="display:block"><span style="display:block"></span><b style="display:block;text-align:left;margin-top:2px"></b></div>');d.firstChild.textContent=k;d.lastChild.textContent=v;pg.appendChild(d)}
        body.appendChild(pf)}
      else{
      const st=el('<div class="sec"><div class="stats sgrid"></div></div>'),g=st.querySelector('.stats');
