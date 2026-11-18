@@ -233,7 +233,7 @@ function frame(now){
   if(!PZ&&!menuOpen&&$('#pro').hidden&&stageReady()){try{render(now)}catch(e){frameErr('render',e)}}/* タイトル・導入会話・メニュー中は、背景ワールドを描かない */
   if(AC)wantSong=(!$('#title').hidden||!$('#maps').hidden||!$('#pro').hidden)?'opening':stageSong();
   if(started){hudT+=rdt;if(hudT>.3){hudT=0;updHUD()}
-    if(!sacredQuietActive()&&!GIFT_ACTIVE&&RLVQ.length&&sheet==null&&NEWRES==null&&$('#dialog').hidden&&$('#lvup').hidden&&$('#rlv').hidden)rlvShow(RLVQ.shift());
+    if(!sacredQuietActive()&&!GIFT_ACTIVE&&(RLVQ.length||S.res.some(q=>q.lvPend>0&&!q.hidden))&&sheet==null&&NEWRES==null&&$('#dialog').hidden&&$('#lvup').hidden&&$('#rlv').hidden){if(!RLVQ.length){const r=S.res.find(q=>q.lvPend>0&&!q.hidden);if(r)RLVQ.push({id:r.id,from:rLv(r),to:rLv(r)})}/* えらばずにとじた（読みこみなおした）ごほうび */if(RLVQ.length)rlvShow(RLVQ.shift())}
     if(!sacredQuietActive()&&!GIFT_ACTIVE&&NEWQ.length&&NEWRES==null&&$('#dialog').hidden&&$('#lvup').hidden&&$('#rlv').hidden&&performance.now()>=NEWQ[0].t){const q=NEWQ.shift();if(S.res.some(x=>x.id===q.id)){NEWRES=q.id;resTab=0;sfx('next');openSheet('res',q.id)}else HOLD.delete(q.id)}
     questT+=rdt;if(questT>1&&!GIFT_ACTIVE&&!STORY_REPLAY_SHELL&&!sacredQuietActive()){questT=0;checkLevel();checkQuest()}
     saveT+=rdt;if(saveT>10){saveT=0;save()}}
@@ -254,7 +254,12 @@ function rlvShow(q){const r=S.res.find(x=>x.id===q.id);if(!r)return;RLVR=r;const
   const pt=o.querySelector('.rpt');pt.style.backgroundImage='url('+spiritPort(r.elem,96,r.vr)+')';pt.style.boxShadow='inset 0 0 0 3px '+ELEM[r.elem].col;
   o.querySelector('.rtt').innerHTML='';o.querySelector('.rtt').append(r.name+' が ',Object.assign(document.createElement('b'),{textContent:'Lv'+q.to}),' になった！');
   const g=o.querySelector('.rrows');g.innerHTML='';for(const[k,n]of RSTN){const f=v=>k==='bonus'?'+'+v:k==='atk'&&!v?'なし':String(Math.floor(v+1e-9));/* 画面には小数点を出さない */const up=f(b[k])!==f(a[k]);const x=document.createElement('span'),y=document.createElement('span');x.textContent=n;y.textContent=up?f(a[k])+' → '+f(b[k]):f(b[k]);if(up)y.className='up';g.append(x,y)}
-  if(q.to===3||q.to===5||q.to===10)memo('⬆️',r.name+'がLv'+q.to+'になった');o.hidden=false;sfx('quest')}
+  rlvPick(r);if(q.to!==q.from&&(q.to===3||q.to===5||q.to===10))memo('⬆️',r.name+'がLv'+q.to+'になった');o.hidden=false;sfx('quest')}
+/* レベルアップのごほうび：上がったレベルごとに、能力を1つえらんで+LVB（r.lvPend がのこっている数・r.lvb がふやした分） */
+const LVBK=[['work','はたらく速さ'],['move','移動速度'],['sta','スタミナ']];
+function rlvPick(r){const o=$('#rlv'),ok=$('#rlvOk');let w=o.querySelector('.rpick');if(!w){w=document.createElement('div');w.className='rpick';w.style.cssText='display:flex;flex-direction:column;gap:6px;margin-top:8px';ok.before(w)}w.replaceChildren();const n=r.lvPend||0;ok.hidden=n>0;if(n<=0)return;
+  const h=document.createElement('small');h.textContent='ごほうびを1つえらぶ'+(n>1?'（のこり'+n+'）':'');h.style.textAlign='center';w.appendChild(h);
+  for(const[k,t]of LVBK){const b=document.createElement('button');b.className='btn';b.textContent=t+' +'+LVB;b.onclick=e=>{e.stopPropagation();if(!(r.lvPend>0))return;sfx('tap');r.lvb=r.lvb||{};r.lvb[k]=(r.lvb[k]||0)+LVB;r.lvPend--;if(!r.lvPend)delete r.lvPend;dirty=true;toast(r.name+'の'+t+'が+'+LVB,'good');if(r.lvPend>0)rlvPick(r);else{w.replaceChildren();ok.hidden=false;ok.click()}};w.appendChild(b)}}
 $('#rlvOk').addEventListener('click',e=>{e.stopPropagation();sfx('tap');$('#rlv').hidden=true;const r=RLVR;RLVR=null;if(r&&S.res.includes(r)&&!inBattle(r)){const t=performance.now();JOYU.set(r,t+2600);RHOLD.set(r,t+2600);JUMP.set(r,t);r.bubble='😆'}});/* レベルアップしたら、手をとめて喜ぶ（たたかっている子は、そのままたたかう） */
 for(const id of['#foodStk','#matStk']){const e=$(id);const go=ev=>{if(ev)ev.stopPropagation();if(!started||!S)return;sfx('tap');openSheet('inv')};e.addEventListener('click',go);e.addEventListener('keydown',k=>{if(k.key==='Enter'||k.key===' ')go()})}/* 食料・素材の数をタップすると、そうこが見られる */
 $('#lvOk').addEventListener('click',e=>{e.stopPropagation();sfx('tap');$('#lvup').hidden=true;endClap()});
