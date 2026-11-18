@@ -240,7 +240,7 @@ function careSec(body,r){/* お世話のタブ：お話・なでる・毛布・�
   const sl=r.act&&r.act.type==='sleep'&&r.act.stage==='do',outS=sl&&r.act.ground&&!roomOf((r.y|0)*W+(r.x|0));
   {const b=el('<button class="btn pri">お話する</button>');lackOn(b,sl?'ねているので、おこさない':'');b.onclick=()=>{if(sl)return;sfx('tap');talkTo(r)};bw.appendChild(b)}
   const mk=(k,t,why,f,cl)=>{const b=el('<button class="btn"></button>');b.textContent=t;const done=c[k]===d;lackOn(b,done?'きょうは、もうした':why||'');b.onclick=()=>{if(done||why)return;f();(r.care||(r.care={}))[k]=d;sfx('tap');if(cl)closeSheet();else renderSheet()};bw.appendChild(b)};/* cl：とじて、マップで反応を見せる */
-  mk('pat','なでる',sl?'ねているので、おこさない':'',()=>{r.fun=Math.min(100,r.fun+CAREPAT);JOYU.set(r,performance.now()+2500);r.bubble='💕';addFloat(r.x,r.y-1.6,'たのしさ+'+CAREPAT,'#ffd7e8')},1);
+  mk('pat','なでる',sl?'ねているので、おこさない':'',()=>{r.fun=Math.min(100,r.fun+CAREPAT);patJoy(r);addFloat(r.x,r.y-1.6,'たのしさ+'+CAREPAT,'#ffd7e8')},1);
   if(outS||c.blanket===d)mk('blanket','毛布をかける','',()=>{r.act.blanket=1;r.bubble='💤'});
   {const b=el('<button class="btn">おやつをあげる（食料1）</button>');lackOn(b,S.food<1?'食料が足りません':'');b.onclick=()=>{const it=takeFood(1,'raw')[0];endAct(r);r.meal={u:.3*fullN(r),pt:1,e:FOODS[it]?FOODS[it].e:'🍙',items:[it]};startAct(r,null,'eat',-1,{snack:1});addFloat(r.x,r.y-1.6,'わーい！','#ffd38a');sfx('eat');closeSheet()};bw.appendChild(b)}/* おやつ：よろこんで、その場で食べる */
   body.appendChild(bw)}
@@ -249,6 +249,7 @@ function sortieSec(body,r){/* 出撃する・しない（6時〜23時だけ、�
   const mk=(v,t)=>{const b=el('<button class="btn"></button>');b.textContent=t;if(on===v)b.classList.add('pri');lackOn(b,isNight()?'夜は、かえられない':'');b.onclick=()=>{if(isNight()||on===v)return;r.sortie=v;if(v===sortieDef(r))delete r.sortie;sfx('tap');renderSheet()};bw.appendChild(b)};
   mk(true,'たたかう');mk(false,'たたかわない');body.appendChild(sec)}
 const CAREPAT=10;
+function patJoy(r){/* なでられたら、手をとめて、ぴょんぴょんはねて、よろこぶ（たたかっている子は、そのままたたかう） */const now=performance.now();r.bubble='💕';JOYU.set(r,now+2600);if(typeof inBattle==='function'&&inBattle(r))return;RHOLD.set(r,now+2600);JUMP.set(r,now);fxSpr('hearts',r.x*TS,(r.y-.7)*TS);sfxAt('good',r.x,r.y);villageTimeout(()=>{if(S.res.includes(r)&&!inBattle(r))JUMP.set(r,performance.now())},900)}
 function boxSec(body,j){/* しまう家具：中身と、入れる物 */const a=anc(j);if(!boxTypeAt(a))return;const b=BOX()[a]||{},used=boxUsed(a),cap=boxCap(a);
   {const MOBJ={shina:'weed0g',kasa:'weed0k',kuru:'weed1g',chiri:'weed1k',funba:'weedc'},mic=k=>isFK(k)?foodIc(k.slice(2)):ICONS[k]||(MOBJ[k]&&BL[MOBJ[k]]?iconURL(MOBJ[k]):null);
     const g=el('<div class="grid"></div>'),hd=el('<b style="grid-column:1/-1;margin-top:4px"></b>');hd.textContent='中身'+capTxt(used,cap);g.appendChild(hd);
