@@ -7,10 +7,11 @@ const WBWORKZ=12.5;/* wbwork の絵は作業台の天板の上（絵の下のは
 const KSTYLE={soup:'pot',fishsoup:'pot',pancake:'pan',yakizakana:'pan',kabayaki:'pan',bread:'bake',yakiimo:'bake',foil:'bake',kushiyaki:'grill'};
 const KSTYIC={bowl:'pot',cup:'pot',skewer:'grill',bread:'bake',cake:'pan',plate:'pan',dango:'pan',salad:'pot',sand:'pan'};
 const KMAIN={pot:'cook',pan:'cookfry',bake:'cookfan',grill:'cookgrill',mix:'cookmix'};
-/* 動きの名前 → [音を出す所（1回の動きの中の0〜1）, 音, 粒] */
+/* 動きの名前 → [音を出す所（1回の動きの中の0〜1）, 音, 粒]。音のいちばん大きい所が、手の動きの決まった所（打つ・ひく・水にとどく）になるように、音の頭のぶん前から鳴らす（のこぎりは、ひくまん中・石をほる音は、録音の0.15秒あとが打つ音） */
 const WBEAT={cookcut:[[0,'tonton']],cook:[[0,'potclk']],cookmix:[[.25,'tink']],cookstir:[[.25,'tink']],cookfry:[[.47,'fry'],[.62,'fry']],cookfan:[[.25,'fanw','embers']],cookgrill:[[0,'grill','embers']],cookplate:[[.5,'plate']],
-  loomweave:[[.3,'shuttle'],[.8,'loombeat']],millgrind:[[0,'grind'],[.5,'grind']],saw:[[.25,'saw','chips'],[.75,'saw']],craft:[[0,'nail','chips']],polish:[[0,'cloth'],[.5,'cloth']],
-  wbsaw:[[.25,'saw','chips'],[.75,'saw']],wbham:[[0,'nail','chips']],build:[[0,'bnail']],repair:[[0,'nail']],wbpolish:[[0,'cloth'],[.5,'cloth']]};
+  loomweave:[[.3,'shuttle'],[.8,'loombeat']],millgrind:[[0,'grind'],[.5,'grind']],saw:[[.37,'saw','chips'],[.87,'saw']],craft:[[0,'nail','chips']],polish:[[0,'cloth'],[.5,'cloth']],
+  wbsaw:[[.37,'saw','chips'],[.87,'saw']],wbham:[[0,'nail','chips']],build:[[0,'bnail']],repair:[[0,'nail']],
+  chop:[[.8,'chop','chips']],mine:[[.59,'mine1','pebbles']],draw:[[.05,'dpour','splash']],water:[[0,'pour']],tend:[[0,'pour']],wbpolish:[[0,'cloth'],[.5,'cloth']]};
 const WBMO={craftprep:'wbprep',saw:'wbsaw',craft:'wbham',polish:'wbpolish'};/* 作業台の上でする、もの作りの動き */
 function cookStyle(r){const a=r.act;if(!a||!r.cing)return'mix';if(a.tb)return'mix';const R=typeof recOf==='function'?recOf(r.cing.rec):null,out=R?R.out:r.cing.rec;if(KSTYLE[out])return KSTYLE[out];const D=typeof COOKDI!=='undefined'&&COOKDI[out],t=D&&D.ic&&D.ic[0];let st=KSTYIC[t]||'pot';if(st==='bake'&&S.obj[a.obj]==='campfire')st='pan';return st}/* ふしぎな料理は、なべ */
 function cookP(r){const a=r.act;if(!a||a.obj==null)return 0;return Math.min(1,(a.t||0)/Math.max(1,cookTime(r,a.obj)))}
@@ -73,6 +74,6 @@ function boxLoopTick(){if(!GOSOL.size)return;const now=performance.now(),ok=type
 setInterval(boxLoopTick,100);
 const WBEATP=new WeakMap();
 function workBeat(r,nm,t){const B=WBEAT[nm],m=typeof SPM!=='undefined'&&SPM[nm];if(!B||!m||typeof m.r!=='number')return;const ph=((t*m.r)%1+1)%1,last=WBEATP.get(r);WBEATP.set(r,{nm,ph});if(!last||last.nm!==nm)return;
-  for(const[b,snd,fx]of B){const crossed=last.ph<=ph?(last.ph<b&&b<=ph):(b>last.ph||b<=ph);if(!crossed)continue;sfxAt(snd,r.x,r.y);if(fx&&Math.random()<.5){const j=r.act&&r.act.type==='craft'?((craftOrder(r)||{}).cs??null):r.act&&r.act.obj!=null?r.act.obj:null,x=j!=null?(j%W+.5)*TS:r.x*TS+(r.face<0?-14:14),y=j!=null?((j/W|0)+.4)*TS:r.y*TS;fxSpr(fx,x,y)}}}
+  for(const[b,snd,fx]of B){const crossed=last.ph<=ph?(last.ph<b&&b<=ph):(b>last.ph||b<=ph);if(!crossed)continue;sfxAt(snd,r.x,r.y);if(fx&&Math.random()<.5){const j=r.act&&r.act.type==='draw'&&r.act.src!=null?r.act.src:r.act&&r.act.type==='craft'?((craftOrder(r)||{}).cs??null):r.act&&r.act.obj!=null?r.act.obj:null,x=j!=null?(j%W+.5)*TS:r.x*TS+(r.face<0?-14:14),y=j!=null?((j/W|0)+.4)*TS:r.y*TS;fxSpr(fx,x,y)}}}
 /* できあがり：1回だけ、ぽん・きらきら */
 function workShowStart(r,a){a.sh=0;r.bubble='';/* 頭の上の物とかさならないように */sfxAt('workdone',r.x,r.y);fxSpr('twinkle',r.x*TS,(r.y-.9)*TS)}
