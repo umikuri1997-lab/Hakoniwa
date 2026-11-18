@@ -289,7 +289,7 @@ def rimshade(im,dark=(16,4),light=(9,-3),vmin=45):
     for y,x in zip(*np.nonzero(A&(a[...,:3].max(-1)<vmin*2.55))):   # 輪郭・かげの黒っぽい色
         h,s,v=colorsys.rgb_to_hsv(*(a[y,x,:3]/255.0));a[y,x,:3]=[round(q*255) for q in colorsys.hsv_to_rgb(h,s,vmin/100)]
     return Image.fromarray(a)
-SUNEL=30;SUNAZ=20   # 太陽：高さの角（度）・正面から左へのかたむき（度）。持ち主がきめた（左からを弱めて、正面よりに）
+SUNEL=30;SUNAZ=8   # 太陽：高さの角（度）・正面から左へのかたむき（度）。持ち主がきめた（左からを弱めて、正面よりに）
 SUN=(-float(np.cos(np.radians(SUNEL))*np.sin(np.radians(SUNAZ))),float(np.cos(np.radians(SUNEL))*np.cos(np.radians(SUNAZ))),float(np.sin(np.radians(SUNEL))))   # 自然の物の光（太陽）：3Dの向き（x 右・y 手前・z 上）。木・茂み（tone5 の light=sunscreen(ELEV)）・岩・きのこ（LIGHT）・落ち影（castshadow.py）も、この光（持ち主がきめた：太陽は1つ）
 def sunscreen(elev):
     """SUN を、見おろし elev 度のカメラの、画面の 右・下・手前 の成分にする（tone5 の light）。画面の下＝(0,sin e,−cos e)・手前＝(0,cos e,sin e)"""
