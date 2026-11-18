@@ -113,6 +113,8 @@ function plantChip(id,i,g){const C=window.CHIPS;if(!C)return null;if(!ICON&&i!=n
   if(WD===1&&(id==='deadtree'||id==='tree')&&C[id+'~v'])return C[id+'~v'];
   if(id==='deadtree'&&!ICON&&i!=null&&S){const h=hash(i*7+3),ch=C['deadtree'+(DTV[Math.floor(h*DTV.length)])]||C.deadtree;if(!ch||h*6%1<.5)return ch;return ch._fl||(ch._fl={src:ch,ax:ch.ax,ay:ch.ay,w:ch.w,h:ch.h,f:ch.f,flip:1,fw:TS})}/* 枯れ木：同じ木をまわした3つの絵（tools/art/furn3d/items/nat_deadtree.py）を、マスごとにえらび、半分は左右反対に *//* 火山：自然の木も植えた木も、とんがりの木（tools/art/furn3d/items/nat_cedar.py） */
   return C[id]||null}
+const TSUYAP=[[7,10],[22,6],[12,18],[26,16],[17,4]];
+function tsuyaDots(c,x,y,i,now){/* つやつやの作物：2点のドットの光のつぶが、じゅんに光る（つやつや tsuyaOf） */const t=(now||0)/700+hash(i)*5;for(let k=0;k<TSUYAP.length;k++){const a=(Math.sin(t+k*1.3)+1)/2;if(a<.35)continue;const px=Math.round(x+TSUYAP[k][0]),py=Math.round(y+TSUYAP[k][1]);c.globalAlpha=a;c.fillStyle='#fff6c4';c.fillRect(px,py,2,2);if(a>.8){c.fillStyle='#ffe58a';c.fillRect(px-2,py,2,2);c.fillRect(px+2,py,2,2);c.fillRect(px,py-2,2,2);c.fillRect(px,py+2,2,2)}}c.globalAlpha=1}
 function drawFarmChip(c,x,y,i,g,now){const C=window.CHIPS;if(!C)return false;if(ICON||i==null||!S){const ch=C.farm;return !!ch&&drawChip(c,ch,'farm',x,y,now,i)}
   const n=k=>S.obj[k]==='farm',gx=i%W,gy=(i/W)|0,m=(gx>0&&n(i-1)?1:0)|(gx<W-1&&n(i+1)?2:0)|(gy>0&&n(i-W)?4:0)|(gy<H-1&&n(i+W)?8:0),d=S.dyn[i],wet=!!d&&d.wet>0,base=C[(wet?'farmw:':'farm:')+m];
   if(!base||!chipImgs(base,'farm')[0].ok)return false;drawChip(c,base,'farm',x,y,now,i);/* 畑の土：となりの畑とのつながり・ぬれているか */
@@ -121,7 +123,7 @@ function drawFarmChip(c,x,y,i,g,now){const C=window.CHIPS;if(!C)return false;if(
   if(d&&d.sown!==false&&!(g>0))ov('farm.sprout');/* 植え付けたら、土のもりあがりに小さい芽（育ちはじめたら作物の絵だけ） */
   if(g>0){const k=(d&&d.crop)||'mugi',st=g>=100?3:g>=60?2:1;ov(C['crop:'+k+st]?'crop:'+k+st:'crop:mugi'+st)}/* 作物：育ちぐあい3だん（土のもりあがりごと） */
   if(d&&d.sown!==false){if(g<100&&!workOn(i)){c.fillStyle='rgba(30,20,10,.45)';rr(c,x+4,y+TS-5,TS-8,4,2);c.fillStyle='#8fe06a';if(g>0)rr(c,x+4,y+TS-5,(TS-8)*g/100,4,2)}
-    else{const tw=Math.sin((now||0)/300+i)*.5+.5;c.fillStyle='rgba(255,245,170,'+(.5+tw*.5)+')';const sx=x+TS-6,sy=y+5,r=2+tw*1.5;c.fillRect(sx-r,sy-.6,r*2,1.2);c.fillRect(sx-.6,sy-r,1.2,r*2)}}/* 育つまでのバーと、とれごろのきらきら */
+    else{const tw=Math.sin((now||0)/300+i)*.5+.5;c.fillStyle='rgba(255,245,170,'+(.5+tw*.5)+')';const sx=x+TS-6,sy=y+5,r=2+tw*1.5;c.fillRect(sx-r,sy-.6,r*2,1.2);c.fillRect(sx-.6,sy-r,1.2,r*2);if(g>=100&&tsuyaOf(i))tsuyaDots(c,x,y,i,now)}}/* 育つまでのバーと、とれごろのきらきら（つやつやは、作物のまわりに光のつぶ） */
   return true}
 let BELLRING=-1e9;/* 村の鐘が鳴りはじめた時（4秒ゆれる） */
 const DOORCH=new Set(['door','yozoradoor','gate','stonegate','logdoor','loggate','sdoor']);/* ドア・門は、開きぐあいで絵をえらぶ */
