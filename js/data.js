@@ -118,7 +118,7 @@ const BL={
   yorubed:{name:'よぞらのベッド',kind:'furn',pc:10,time:200,maker:'wood',sleep:{cap:1,pt:5,rate:.1},attr:{wood:2},mat:{wood:8},kwr:1,desc:'夜空の色のふとんのベッド。1人眠れる。つかれ −9／1時間'},/* コワイノのレシピ（落とし物でまれに手に入る）。ふつうのベッドと同じはたらき */
   yozorawall:{name:'よぞらの壁',fix:5,fixm:{wood:1},kind:'block',cost:4,pc:11,time:90,maker:'earth',qty:10,lv:1,solid:1,hp:48,hpS:72.2,brk:1,attr:{},mat:{wood:6,stone:3},kwr:1,desc:'夜空の色の家の壁。じょうぶさ48'},
   lamp:{hp:5,brk:1,fix:3,fixm:{eda:2,stone:2},name:'かがり火',kind:'furn',pc:5,time:160,maker:'fire',solid:1,anim:1,attr:{fire:3},mat:{eda:3,stone:3},desc:'まわり3.5マスを照らす。住み心地+6'},
-  campfire:{hp:5,brk:1,fix:4,fixm:{wood:2,eda:4,stone:4},name:'たき火',kind:'furn',pc:7,time:160,maker:'fire',lv:6,solid:1,anim:1,attr:{fire:4},play:{pt:3,pw:1.35,fun:25,dur:40,cap:3,adj:1},mat:{wood:3,eda:8,stone:8},desc:'3人まで遊べる。たのしさ +25（26.7分）。まわり3.5マスを照らす。雨の日は、外では火が消える'},
+  campfire:{hp:5,brk:1,fix:4,fixm:{wood:2,eda:4,stone:4},name:'たき火',kind:'furn',pc:7,time:160,maker:'fire',lv:6,solid:1,anim:1,attr:{fire:4},play:{pt:3,pw:1.35,fun:25,dur:40,cap:3,adj:1},mat:{wood:3,eda:8,stone:8},desc:'3人まで遊べる。たのしさ +25（26.7分）。まわり3.5マスを照らす。雨の日は、外では火が消えて、料理もできない'},
   swing:{name:'ブランコ',sz:[2,1],kind:'furn',pc:9,time:160,maker:'wood',lv:4,play:{pt:4,pw:1.8,fun:40,dur:50,cap:1},attr:{wind:3},mat:{wood:12,shina:4},mat1:{bamboo:8,wood:4,kuru:4},desc:'1人で遊べる。たのしさ +40（33.3分）。遊ぶと10%の確率で、移動速度+2'},
   torch:{hp:5,brk:1,fix:1,fixm:{eda:2},name:'たいまつ',kind:'furn',lv:3,pc:1,time:100,maker:'fire',solid:1,anim:1,attr:{fire:2},mat:{eda:3},mat1:{bamboo:3},desc:'まわり3.5マスを照らす。住み心地+4'},
   composter:{hp:5,brk:1,fix:2,fixm:{wood:3},name:'コンポスター',kind:'furn',cat:'other',f2:1,pc:3,time:80,maker:'wood',solid:1,attr:{wood:1},mat:{wood:10},desc:'草を入れると、1日で肥料になる。草1こで肥料1こ'},

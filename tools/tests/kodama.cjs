@@ -24,7 +24,7 @@ const assert=require('node:assert/strict');
     /* 霧の中の手がかり：となりが晴れた霧のエリアだけ */out.hint=S.fogF.filter(f=>!f.set&&!f.done&&S.fog[f.a]).map(f=>[f.t,fogHintOn(f.a)]);const c=document.createElement('canvas').getContext('2d');drawFogHints(c,0,0,W,H,performance.now());
     /* 図鑑 */const rows=[];kdZukan(S,(n,d)=>rows.push(n+'|'+d));out.zk=rows;
     /* 風の日のはたおり機 */S.today='kaze';out.loomK=prT(PROC.loom);S.today=null;out.loom=prT(PROC.loom);out.mill=prT(PROC.mill);
-    /* 雨のたき火 */const cf=(a.y|0)*W+(a.x|0)-3;S.obj[cf]='campfire';S.rain=false;recount();out.lit=LIGHTS.includes(cf)&&LITP.includes(cf);S.rain=true;recount();out.out=campOut(cf);out.litRain=LIGHTS.includes(cf)||LITP.includes(cf);
+    /* 雨のたき火 */const cf=(a.y|0)*W+(a.x|0)-3;S.obj[cf]='campfire';S.rain=false;recount();out.lit=LIGHTS.includes(cf)&&LITP.includes(cf);S.rain=true;recount();out.out=campOut(cf);out.litRain=LIGHTS.includes(cf)||LITP.includes(cf);out.cookRain=ACT.cook.start({cing:{rec:'x'},x:a.x,y:a.y},{obj:cf})!==false;
     S.roof=S.roof||{};S.roof[cf-W-1]='gazebo';recount();out.roofLit=!campOut(cf)&&LIGHTS.includes(cf);delete S.roof[cf-W-1];S.rain=false;recount();
     /* 火のせいれいで雪がとける */a.elem='fire';const snowS=snowCover;snowCover=()=>1;FIREMELT.clear();fireMeltTick();const t0=S.t;S.t+=40;fireMeltTick();const j0=(a.y|0)*W+(a.x|0);out.melt=FIREMELT.has(j0)&&FIREMELT.has(j0+2)&&!FIREMELT.has(j0+3);snowCover=snowS;S.t=t0;a.elem='wood';
     return JSON.stringify(out)})()`));
@@ -39,7 +39,7 @@ const assert=require('node:assert/strict');
   assert.equal(r.fogAdd,3);assert.equal(r.fogArea,true);
   assert.ok(r.zk.length>=2&&/^もりのこだま\|見つけた数/.test(r.zk[0]),JSON.stringify(r.zk));
   assert.equal(r.loomK,40);assert.equal(r.loom,60);assert.equal(r.mill,45);
-  assert.equal(r.lit,true);assert.equal(r.out,true);assert.equal(r.litRain,false,'雨の日、外のたき火はあかりにならない');assert.equal(r.roofLit,true,'屋根の下はそのまま');
+  assert.equal(r.lit,true);assert.equal(r.out,true);assert.equal(r.litRain,false,'雨の日、外のたき火はあかりにならない');assert.equal(r.cookRain,false,'雨の日、外のたき火では料理しない');assert.equal(r.roofLit,true,'屋根の下はそのまま');
   assert.equal(r.melt,true,'火のせいれいのまわり2マスの雪がとける');
   assert.deepEqual(errors,[]);await browser.close();
   /* 火山：はじめから48こ */
