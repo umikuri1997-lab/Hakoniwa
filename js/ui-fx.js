@@ -48,8 +48,9 @@ function ldWalk(c){const g=c.getContext('2d');g.setTransform(1,0,0,1,0,0);g.clea
   if(!LDW.pat||now-LDW.t0>P*1000){const k=LDW.pat?(LDPAT.indexOf(LDW.pat)+1)%LDPAT.length:Math.floor(Math.random()*LDPAT.length);LDW.pat=LDPAT[k];LDW.t0=now;LDW.item=LDITEM[Math.floor(Math.random()*LDITEM.length)]}
   const u=(now-LDW.t0)/(P*1000),t=now/1000;g.setTransform(2,0,0,2,0,0);g.imageSmoothingEnabled=false;
   let x,f=1;
-  if(LDW.pat==='walk'){x=u<.5?20+u*2*(Wd-40):Wd-20-(u-.5)*2*(Wd-40);f=u<.5?1:-1}/* 行って、もどる */
-  else x=-14+u*(Wd+28);/* 左から右へ通りぬける */
+  if(LDW.pat==='walk'){x=u<.5?-24+u*2*(Wd+4):Wd-20-(u-.5)*2*(Wd+4);f=u<.5?1:-1}/* 左の外から来て、もどって左の外へ（どのならびも、画面の外で切りかわる） */
+  else if(LDW.pat==='chase')x=-50+u*(Wd+74);/* 前を飛ぶちょう（x+22）も、画面の外から出て外へ消える */
+  else x=-24+u*(Wd+48);/* 左から右へ通りぬける（はしは、運ぶ物も見えない所） */
   x=Math.round(x);
   if(LDW.pat==='chase'){/* ちょうは、せいれいの少し前を、ふわふわ上下しながら飛ぶ */const C=window.CHIPS,op=Math.floor(now/120)%2===0,ch=C&&C['critfly:'+(Math.floor(LDW.t0)%4)+'#'+(op?0:1)];
     if(ch){const im=chipImgs(ch,'critfly')[0];if(im.ok){const bx=Math.round(x+22+Math.sin(t*2.3)*5),by=Math.round(FY-40+Math.sin(t*4.1)*7);g.drawImage(im,bx+ch.ax/2,by+ch.ay/2,ch.w/2,ch.h/2)}}}
@@ -70,12 +71,12 @@ document.addEventListener('pointerup',e=>{if(!document.body.classList.contains('
 document.addEventListener('animationstart',e=>{if(e.animationName!=='kotonn')return;const el=e.target;setTimeout(()=>{const q=el.getBoundingClientRect();if(q.width&&document.body.classList.contains('wd0')){sawdust(q.left+12,q.top+2,4,16);sawdust(q.right-12,q.top+2,4,16)}},165)});
 /* ハンコ：たっせいした物（目標の札・知らせ）に、赤い「できた」をポンとおす。2.4秒でうすくなって消える */
 const STAMPCS={};/* ハンコの絵：字ごと */
-function stampCanvas(tx){tx=tx||'できた';if(STAMPCS[tx])return STAMPCS[tx];const c=document.createElement('canvas');c.width=32;c.height=32;const g=c.getContext('2d'),cx=16,cy=16,R=15;g.fillStyle='#d6453a';
-  for(let y=0;y<32;y++)for(let x=0;x<32;x++){const d=Math.hypot(x+.5-cx,y+.5-cy);if(d<=R&&d>R-2.2&&(x*7+y*3)%11)g.fillRect(x,y,1,1)}/* ふちは、ところどころインクがかすれる */
-  const t=document.createElement('canvas');t.width=32;t.height=32;const h=t.getContext('2d');h.font='10px PixelMplus10';h.textAlign='center';h.textBaseline='middle';h.fillStyle='#d6453a';const a=tx.slice(0,Math.ceil(tx.length/2)),b=tx.slice(Math.ceil(tx.length/2));h.fillText(a,cx,cy-5);h.fillText(b,cx,cy+6);/* 2行に分ける（できた→でき・た、かつやく→かつ・やく） */
-  const d=h.getImageData(0,0,32,32);for(let i=3;i<d.data.length;i+=4)d.data[i]=d.data[i]>110?255:0;h.putImageData(d,0,0);g.drawImage(t,0,0);t.width=t.height=0;/* 字はドットのまま（うすい所はけす） */
-  return STAMPCS[tx]=c}
-function uiStamp(el,small,tx){if(!el||!el.isConnected)return;const c=document.createElement('canvas');c.width=c.height=32;c.getContext('2d').drawImage(stampCanvas(tx),0,0);c.className='ustamp'+(small?' s':'');
+function stampCanvas(tx,N){tx=tx||'できた';N=N||32;const K=tx+'@'+N;if(STAMPCS[K])return STAMPCS[K];const c=document.createElement('canvas');c.width=N;c.height=N;const g=c.getContext('2d'),cx=N/2,cy=N/2,R=N/2-1;g.fillStyle='#d6453a';/* N：32（ふつう）・48（大きなハンコ。字は3行） */
+  for(let y=0;y<N;y++)for(let x=0;x<N;x++){const d=Math.hypot(x+.5-cx,y+.5-cy);if(d<=R&&d>R-2.2&&(x*7+y*3)%11)g.fillRect(x,y,1,1)}/* ふちは、ところどころインクがかすれる */
+  const t=document.createElement('canvas');t.width=N;t.height=N;const h=t.getContext('2d');h.font='10px PixelMplus10';h.textAlign='center';h.textBaseline='middle';h.fillStyle='#d6453a';if(N>=48){const n=Math.ceil(tx.length/3),m=Math.ceil((tx.length-n)/2);[tx.slice(0,n),tx.slice(n,n+m),tx.slice(n+m)].forEach((s,i)=>h.fillText(s,cx,cy+(i-1)*11))}/* 3行（よくで・きま・した） */else{const a=tx.slice(0,Math.ceil(tx.length/2)),b=tx.slice(Math.ceil(tx.length/2));h.fillText(a,cx,cy-5);h.fillText(b,cx,cy+6)}/* 2行に分ける（できた→でき・た、かつやく→かつ・やく） */
+  const d=h.getImageData(0,0,N,N);for(let i=3;i<d.data.length;i+=4)d.data[i]=d.data[i]>110?255:0;h.putImageData(d,0,0);g.drawImage(t,0,0);t.width=t.height=0;/* 字はドットのまま（うすい所はけす） */
+  return STAMPCS[K]=c}
+function uiStamp(el,small,tx,big){if(!el||!el.isConnected)return;const N=big?48:32,c=document.createElement('canvas');c.width=c.height=N;c.getContext('2d').drawImage(stampCanvas(tx,N),0,0);c.className='ustamp'+(big?' b':small?' s':'');/* big：大きなハンコ（48ドット） */
   if(getComputedStyle(el).position==='static')el.style.position='relative';el.appendChild(c);setTimeout(()=>{el.classList.remove('ushake');void el.offsetWidth;el.classList.add('ushake');sfx('stamp');buzz(18)},180);/* ポンとおされた瞬間に、ぽむっ */
   setTimeout(()=>c.classList.add('out'),2400);setTimeout(()=>c.remove(),2850)}
 /* ---- 手ざわりのつづき：ふるえ・長おし・タブの音・行がならぶ・板がしなる・ゲージの音 ---- */
@@ -144,7 +145,8 @@ function smoke(x,y,n){if(uiReduced())return;let box=document.getElementById('tap
   const cols=['#d8cfc0','#c4baa9','#ece4d6'];for(let i=0;i<n&&UIFX.parts.length<40;i++){const d=document.createElement('i'),sz=(i%2?3:1.5);d.style.width=d.style.height=sz+'px';d.style.background=cols[i%3];box.appendChild(d);
     UIFX.parts.push({d,x:x+(Math.random()-.5)*8,y,vx:(Math.random()-.5)*.4,vy:-.5-Math.random()*.5,t:-i*3,smoke:1,ph:i})}if(!UIFX.raf)UIFX.raf=requestAnimationFrame(tapFxStep)}
 function lvWatch(){const e=document.getElementById('lvLbl');if(!e)return;let p=parseInt(e.textContent,10);new MutationObserver(()=>{const v=parseInt(e.textContent,10);
-  if(v>p&&started&&document.body.classList.contains('wd0')&&!uiReduced()){e.classList.remove('ubrand');void e.offsetWidth;e.classList.add('ubrand');sfx('sizzle');const q=e.getBoundingClientRect();smoke(q.left+q.width/2,q.top,7);clearTimeout(e._bT);e._bT=setTimeout(()=>e.classList.remove('ubrand'),1000)}p=v}).observe(e,{childList:true,characterData:true,subtree:true})}
+  if(v>p&&started){if(typeof juiceLvUp==='function')juiceLvUp(e,p,v);else lvBrand(e)}p=v}).observe(e,{childList:true,characterData:true,subtree:true})}/* バーがあふれてから焼き印（juice3.js） */
+function lvBrand(e){if(!document.body.classList.contains('wd0')||uiReduced())return;e.classList.remove('ubrand');void e.offsetWidth;e.classList.add('ubrand');sfx('sizzle');const q=e.getBoundingClientRect();smoke(q.left+q.width/2,q.top,7);clearTimeout(e._bT);e._bT=setTimeout(()=>e.classList.remove('ubrand'),1000)}
 /* 草原：下のシートをとじるとき、板が少しうきあがってから、下へすべっていく（とじた画面の写しを動かす。本物は、すぐとじる） */
 function sheetGhost(){if(!document.body.classList.contains('wd0')||uiReduced())return;const w=document.getElementById('sheetWrap');if(!w||w.hidden)return;const s=w.querySelector('.sheet');if(!s)return;
   const g=w.cloneNode(true);/* 同じ id の写しは、本物のすぐあとに置くので、id でさがすと本物が先に見つかる */

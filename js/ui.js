@@ -240,9 +240,10 @@ function careSec(body,r){/* お世話のタブ：お話・なでる・毛布・�
   const sl=r.act&&r.act.type==='sleep'&&r.act.stage==='do',outS=sl&&r.act.ground&&!roomOf((r.y|0)*W+(r.x|0));
   {const b=el('<button class="btn pri">お話する</button>');lackOn(b,sl?'ねているので、おこさない':'');b.onclick=()=>{if(sl)return;sfx('tap');talkTo(r)};bw.appendChild(b)}
   const mk=(k,t,why,f,cl)=>{const b=el('<button class="btn"></button>');b.textContent=t;const done=c[k]===d;lackOn(b,done?'きょうは、もうした':why||'');b.onclick=()=>{if(done||why)return;f();(r.care||(r.care={}))[k]=d;sfx('tap');if(cl)closeSheet();else renderSheet()};bw.appendChild(b)};/* cl：とじて、マップで反応を見せる */
-  mk('pat','なでる',sl?'ねているので、おこさない':'',()=>{r.fun=Math.min(100,r.fun+CAREPAT);patJoy(r);addFloat(r.x,r.y-1.6,'たのしさ+'+CAREPAT,'#ffd7e8')},1);
+  mk('pat','なでる',sl?'ねているので、おこさない':'',()=>{funAdd(r,CAREPAT,'care');patJoy(r);addFloat(r.x,r.y-1.6,'たのしさ+'+CAREPAT,'#ffd7e8')},1);
   if(outS||c.blanket===d)mk('blanket','毛布をかける','',()=>{r.act.blanket=1;r.bubble='💤'});
-  {const b=el('<button class="btn">おやつをあげる</button>');lackOn(b,S.food<1?'食料が足りません':'');b.onclick=()=>{if(S.food<1)return;sfx('tap');snackPop(r,closeSheet)};bw.appendChild(b)}
+  if(typeof bdayCareBtn==='function')bdayCareBtn(bw,r);/* 誕生日だけ「おいわい」（birthday.js） */
+  {const b=el('<button class="btn">おやつをあげる</button>');lackOn(b,S.food<1?'食料が足りません':'');b.onclick=()=>{if(S.food<1)return;sfx('tap');snackPop(r,closeSheet)};bw.appendChild(b)}/* おやつ：ポップアップで食べ物をえらぶと、その場で食べる。反応で好き・きらいがわかる（food-like.js） */
   {const b=el('<button class="btn">プレゼント</button>');lackOn(b,giftToday(r)?'きょうは、もうあげた':GIFTIDS.some(id=>inv(id)>0)?'':'おくりものがありません');b.onclick=()=>{if(giftToday(r)||!GIFTIDS.some(id=>inv(id)>0))return;sfx('tap');giftWhat(r,closeSheet)};bw.appendChild(b)}/* おくりもの（gifts.js） *//* おやつ：ポップアップで食べ物をえらぶと、その場で食べる。反応で好き・きらいがわかる（food-like.js） */
   body.appendChild(bw)}
 function sortieSec(body,r){/* 出撃する・しない（6時〜23時だけ、かえられる。夜はそのまま） */const on=fighter(r),sec=el('<div class="sec"><h3>たたかう</h3><p class="note"></p><div class="btns" style="display:flex;gap:8px;flex-wrap:wrap;margin:4px 0 8px"></div></div>'),bw=sec.querySelector('.btns');
@@ -521,14 +522,14 @@ function renderSheet(){
     box.querySelector('.dot').style.cssText='background:#f6f1e6 url('+spiritPort(r.elem,96,r.vr)+') center/86% no-repeat;box-shadow:inset 0 0 0 2px '+ELEM[r.elem].col;
     box.querySelector('b').textContent=ELEM[r.elem].name+'のせいれい・'+(r.act?(r.act.shade?'すずしい所で休んでいる':ACT_LBL[r.act.type])||'':'考え中');
     box.querySelector('small').textContent=r.hunger<200?'おなか：危険！':r.hunger<500?'おなか：少なめ':'';
-    box.querySelector('.tx').insertAdjacentHTML('beforeend',gaugeHTML(r)+spiritXpGaugeHTML(r));body.appendChild(box);if(isNew)nickSec(body,r);/* 来たときだけ、名前をかえられる（nick.js） */
-    if(!isNew){const sy=el('<p class="story" style="margin:6px 0 2px"></p>');sy.textContent='「'+sayLine(r)+'」';body.appendChild(sy);if(SAYPK&&!prefKnown(r,SAYPK)){const k=SAYPK;setTimeout(()=>{if(S.res.includes(r)&&prefKnow(r,k)&&sheet==='res'&&sheetArg===r.id)renderSheet()},0)}}/* ひとことで好みを言ったら、わかる */if(!isNew&&S.res.includes(r)){const fb=el('<button class="btn" style="width:100%;margin:2px 0 6px">見守る</button>');fb.onclick=()=>{sfx('tap');followStart(r)};body.appendChild(fb)}/* 見守る：この子をカメラで追う（follow.js） */if(!isNew&&!r.hidden&&sortieOK(r))sortieSec(body,r);/* 出撃 */
+    box.querySelector('.tx').insertAdjacentHTML('beforeend',gaugeHTML(r)+spiritXpGaugeHTML(r));{const sp=box.querySelectorAll('.gauges>span')[1];if(sp){const tp=()=>{sfx('tap');funPop(r)};for(const e of[sp,sp.nextElementSibling]){e.classList.add('comfyTap');e.setAttribute('role','button');e.tabIndex=0;e.onclick=tp;e.onkeydown=ev=>{if(ev.key==='Enter'||ev.key===' '){ev.preventDefault();tp()}}}}}/* たのしさをタップすると、わけの一覧（fun-why.js） */if(typeof inspOn==='function'&&inspOn(r)){const d=el('<div class="inspNote"></div>');d.textContent='きょうは、はりきっている：'+INSPT[r.elem];box.querySelector('.tx').appendChild(d)}/* ひらめきの日（inspire.js） */body.appendChild(box);if(isNew)nickSec(body,r);/* 来たときだけ、名前をかえられる（nick.js） */
+    if(!isNew){const sy=el('<p class="story" style="margin:6px 0 2px"></p>');sy.textContent='「'+sayLine(r)+'」';body.appendChild(sy);if(SAYPK&&!prefKnown(r,SAYPK)){const k=SAYPK;setTimeout(()=>{if(S.res.includes(r)&&prefKnow(r,k)&&sheet==='res'&&sheetArg===r.id)renderSheet()},0)}}/* ひとことで好みを言ったら、わかる */if(!isNew&&S.res.includes(r)){const fb=el('<button class="btn" style="width:100%;margin:2px 0 6px">見守る</button>');fb.onclick=()=>{sfx('tap');followStart(r)};body.appendChild(fb)}/* 見守る：この子をカメラで追う（follow.js） */if(!isNew&&!r.hidden&&sortieOK(r))sortieSec(body,r);/* 出撃 */if(!isNew&&!r.hidden&&typeof focusSec==='function')focusSec(body,r);/* とくにする仕事 */
     {const lv=rLv(r);
      const gOn=WD===1||!!(r.gear&&GSLOTK.some(k=>r.gear[k]))||gearList().length>0,cOn=!isNew&&!r.hidden;if(!gOn&&resTab===3||!cOn&&resTab===2)resTab=0;/* そうびは火山から。お世話は、村にいる子だけ */const tb=el('<div class="ctabs"></div>');[['のうりょく',0],['プロフィール',1],...(cOn?[['お世話',2]]:[]),...(gOn?[['そうび',3]]:[])].forEach(([nm,i])=>{const t=el('<button class="ctab'+(i===resTab?' on':'')+'"></button>');t.textContent=nm;t.onclick=()=>{resTab=i;sfx('next');renderSheet()};tb.appendChild(t)});body.appendChild(tb);/* タブは短い言葉 */
      if(resTab===3)gearSheet(body,r);
      else if(resTab===2)careSec(body,r);/* お世話 */
      else if(resTab===1){if(S.trouble&&S.trouble.id===r.id&&S.trouble.k==='fav')prefKnow(r,'lf');/* こまりごとで、ほしい家具を言っている */const pf=el('<div class="sec"><div class="stats"></div></div>'),pg=pf.querySelector('.stats');
-       for(const[k,v]of[...(troubleText(r)?[['こまりごと',troubleText(r)]]:[]),...(typeof dreamText==='function'&&dreamText(r)?[['ゆめ',dreamText(r)]]:[]),...(jobOf(r)>=0?[['担当',(o=>BL[o].name+'（なれ '+nareLv(r,o)+'）')(S.obj[jobOf(r)])]]:[]),['好きな遊び',prefShow(r,'lk')],['にがてな遊び',prefShow(r,'ng')],['好きな家具',prefShow(r,'lf')],['だいすきな料理',prefShow(r,'fd')],['すきな食べ物',foodKnownText(r,2)],['にがてな食べ物',foodKnownText(r,0)],['たからもの',giftTrText(r)],['だいすきなおくりもの',giftKnownText(r,2)],['すきなおくりもの',giftKnownText(r,1)],['なかよし',(b=>b?b.q.name+'（'+b.v+'）':'まだいない')(bondBest(r))],['村に来た日',r.came?r.came+'日目':'はじめから'],['作ったもの',(r.made||0)+'こ'],['追いはらった「コワイノ」',(r.beat||0)+'体'],['ベッド',myBed(r)>=0?'じぶんのベッドがある':'きまっていない']]){const d=el('<div class="stat" style="display:block"><span style="display:block"></span><b style="display:block;text-align:left;margin-top:2px"></b></div>');d.firstChild.textContent=k;d.lastChild.textContent=v;pg.appendChild(d)}
+       for(const[k,v]of[...(troubleText(r)?[['こまりごと',troubleText(r)]]:[]),...(typeof dreamText==='function'&&dreamText(r)?[['ゆめ',dreamText(r)]]:[]),...(jobOf(r)>=0?[['担当',(o=>BL[o].name+'（なれ '+nareLv(r,o)+'）')(S.obj[jobOf(r)])]]:[]),['好きな遊び',prefShow(r,'lk')],['にがてな遊び',prefShow(r,'ng')],['好きな家具',prefShow(r,'lf')],['だいすきな料理',prefShow(r,'fd')],['すきな食べ物',foodKnownText(r,2)],['にがてな食べ物',foodKnownText(r,0)],['たからもの',giftTrText(r)],['だいすきなおくりもの',giftKnownText(r,2)],['すきなおくりもの',giftKnownText(r,1)],['なかよし',(b=>b?b.q.name+'（'+b.v+'）':'まだいない')(bondBest(r))],['村に来た日',r.came?r.came+'日目':'はじめから'],['誕生日',typeof bdayText==='function'?bdayText(r):''],['作ったもの',(r.made||0)+'こ'],['追いはらった「コワイノ」',(r.beat||0)+'体'],['ベッド',myBed(r)>=0?'じぶんのベッドがある':'きまっていない']]){const d=el('<div class="stat" style="display:block"><span style="display:block"></span><b style="display:block;text-align:left;margin-top:2px"></b></div>');d.firstChild.textContent=k;d.lastChild.textContent=v;pg.appendChild(d)}
        body.appendChild(pf)}
      else{
      const st=el('<div class="sec"><div class="stats sgrid"></div></div>'),g=st.querySelector('.stats');
@@ -641,16 +642,16 @@ function renderSheet(){
       body.appendChild(sec)}
   }else if(sheet==='menu'){
     T.textContent=WORLDS[WD].name;
-    const MI=[['oracle','leaf','おつげ'],['manual','book','ひでんのしょ'],['goal','target','目標'],['record','memo','思い出帳'],['maps','compass','マップ選択'],['zukan','zukan','図鑑'],['bondmap','heart','なかよし'],['cal','cal','こよみ'],['gup','power','むらのちから'],['settings','gear','設定'],['support','cup','応援する']];
+    const MI=[['goal','target','目標'],['record','memo','思い出帳'],['oracle','leaf','おつげ'],['gup','power','むらのちから'],['zukan','zukan','図鑑'],['bondmap','heart','なかよし'],['cal','cal','こよみ'],['manual','book','ひでんのしょ'],['maps','compass','マップ選択',1],['settings','gear','設定',1],['support','cup','応援する',1]];/* 4つめが1の物は、下の小さな行（村のことでない物） */
     const sub=MI.find(m=>m[0]===sheetArg);
     if(!sub){/* メニューはアイコンを並べるだけ。タップで中身を開く */
       body.appendChild(el(`<div class="mtags"><span class="mtag">${pxi('grass')}みどりのマス <b>${GRASSN}</b></span><span class="mtag">${pxi('house')}村レベル <b>${S.lv}</b></span><span class="mtag">${pxi('spirit')}せいれい <b>${S.res.length}</b>人</span></div>`));
-      const g=el('<div class="mgrid"></div>');
-      for(const[k,ic,nm]of MI){const b=el('<button class="mtile"><span class="mi"></span><span class="mn"></span></button>');b.querySelector('.mi').innerHTML=pxi(ic);b.querySelector('.mn').textContent=nm;b.dataset.menu=k;
-        b.onclick=()=>{sfx('tap');if(k==='manual')return openSheet('manual');if(k==='record')MEMPG=0;if(k==='maps'){save();closeSheet();return showMaps()}openSheet('menu',k)};g.appendChild(b)}
-      body.appendChild(g);return}
+      const g=el('<div class="mgrid"></div>'),g2=el('<div class="mgrid msub"></div>');
+      for(const[k,ic,nm,sub]of MI){const b=el('<button class="mtile"><span class="mi"></span><span class="mn"></span></button>');b.querySelector('.mi').innerHTML=pxi(ic);b.querySelector('.mn').textContent=nm;b.dataset.menu=k;
+        b.onclick=()=>{sfx('tap');if(k==='manual')return openSheet('manual');if(k==='record')MEMPG=0;if(k==='maps'){save();closeSheet();return showMaps()}GOALCHIP=false;openSheet('menu',k)};(sub?g2:g).appendChild(b)}
+      body.appendChild(g);body.appendChild(g2);return}
     T.textContent=sub[2];
-    sheetBack();
+    if(!(sheetArg==='goal'&&GOALCHIP))sheetBack();/* 上の目標の札からひらいたときは、メニューへもどるボタンを出さない */
     if(sheetArg==='oracle'){
       {const sec=el('<div class="sec"><h3>おつげ</h3><div class="rows"></div></div>'),rw=sec.querySelector('.rows');
        for(const k of [null,...Object.keys(ORACLE).filter(oracleOK)]){const O=k?ORACLE[k]:{name:'じゆうにすごす'},OI={play:'ball',wood:'log',stone:'rock',food:'apple'},on=(S.oracle||null)===k;const b=el('<button class="btn"></button>');b.dataset.oracle=k||'';b.innerHTML=pxi(OI[k]||'leaf','oi');b.appendChild(document.createTextNode(O.name+(on?'（いま）':'')));if(on)b.classList.add('pri');
@@ -761,7 +762,7 @@ function zukanBody(body){
   else{const it=Object.assign({},d.seenIt||{});for(const k in d.mat||{})if(d.mat[k]>0)it['m:'+k]=1;for(const k in d.fs||{})if(d.fs[k]>0)it['f:'+k]=1;
     for(const k in MATN)if(it['m:'+k])add(MATN[k],'素材',ICONS[k]||null,'i:mat:'+k);for(const k in FOODS)if(it['f:'+k])add(FOODS[k].name,FOODS[k].fx||'食べ物',foodIc(k),'i:food:'+k);if(it['x:horn'])add('よびごえの角笛',HORNDESC,hornIco(),'i:horn');if(it['x:herb'])add('まよけのハーブ',HERBDESC,herbIco(),'i:herb')}
   body.appendChild(el('<p class="story">'+list.length+'こ</p>'));
-  if(ZKW===WD&&!S.free&&typeof zkNext==='function'){const q=zkNext(ZKT),p=el('<p class="note" style="position:relative"></p>');p.textContent=q?(q.all?'ぜんぶまで':'つぎの節目まで')+' あと'+q.left+'こ':'ぜんぶ見つけた';body.appendChild(p);const M=S.flags.zkMs||{},V=S.flags.zkMsV||(S.flags.zkMsV={});if((M[ZKT]||0)>(V[ZKT]||0)){V[ZKT]=M[ZKT];setTimeout(()=>{if(typeof uiStamp==='function')uiStamp(p)},250)}}/* 図鑑の節目（zukanms.js）：とどいたら、はじめて見たときにハンコ */
+  if(ZKW===WD&&!S.free&&typeof zkNext==='function'){const q=zkNext(ZKT),p=el('<p class="note" style="position:relative"></p>');p.textContent=q?(q.all?'ぜんぶまで':'つぎの節目まで')+' あと'+q.left+'こ':'ぜんぶ見つけた';body.appendChild(p);if(typeof juiceZkBar==='function')juiceZkBar(body,ZKT);/* つぎの節目までのバー */const M=S.flags.zkMs||{},V=S.flags.zkMsV||(S.flags.zkMsV={});if((M[ZKT]||0)>(V[ZKT]||0)){V[ZKT]=M[ZKT];setTimeout(()=>{if(typeof uiStamp==='function')uiStamp(p)},250)}}/* 図鑑の節目（zukanms.js）：とどいたら、はじめて見たときにハンコ */
   const zs=S.flags.zkSeen||(S.flags.zkSeen={});let zn=0;const zNew=(name,e)=>{const k=ZKW+':'+ZKT+':'+name;if(zs[k]||!e)return;zs[k]=1;e.classList.add('stknew');e.style.animationDelay=(Math.min(zn++,8)*.06)+'s'};/* 新しく見つけた物のシールは、ぺたっとはる（1回だけ） */
   for(const q of list){if(!q)continue;const r=rowEl(q[0],q[1],q[2]);zNew(q[0],r.querySelector('img'));if(q[3]){const im=r.querySelector('img');if(im){im.style.cursor='pointer';im.onclick=()=>zkSnd(q[3])}}rows.appendChild(r)}
   for(const z of rows.querySelectorAll('.zk'))zNew(z.querySelector('b').textContent,z.querySelector('canvas'));

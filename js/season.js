@@ -65,8 +65,8 @@ function goSnowman(r,G){if(!S||seasonNow()!==3||isNight()||r.snowT>S.t||Math.ran
   const st=nearest(G,j=>snowFree(j)&&j%W<W-1&&snowFree(j+1)&&!near(j+1),14);if(st<0)return false;r.snowT=S.t+SNOWCD;startAct(r,G,'snowman',st,{tg:st+1,dur:SNOWDUR});return true}
 ACT.snowman={start(r,a){if(seasonNow()!==3||S.obj[a.tg])return false;r.face=1;const L=S.snowm||(S.snowm=[]);if(!L.some(q=>q.j===a.tg))L.push({j:a.tg,g:0})},
   tick(r,a){const m=(S.snowm||[]).find(q=>q.j===a.tg);if(m)m.g=Math.max(m.g,Math.min(2,Math.floor(a.t/(a.dur/3))));r.bubble=a.t>=a.dur-6?'✨':''},
-  done:(r,a)=>a.t>=a.dur,end(r,a){const m=(S.snowm||[]).find(q=>q.j===a.tg);if(m)m.g=3;r.fun=Math.min(100,r.fun+SNOWFUN);JUMP.set(r,performance.now());r.wanderRestUntil=S.t+45}};
+  done:(r,a)=>a.t>=a.dur,end(r,a){const m=(S.snowm||[]).find(q=>q.j===a.tg);if(m)m.g=3;if(typeof juiceSnowman==='function')juiceSnowman(a.tg,r);/* ぽんとはねる */funAdd(r,SNOWFUN,'solo');JUMP.set(r,performance.now());r.wanderRestUntil=S.t+45}};
 ACT_LBL.snowman='雪だるまを作っている';IDLE_ACTS.push('snowman');
 function snowDraw(add,vis,ctx){/* 奥行きの順に、ほかの物といっしょに描く */if(!S||!S.snowm||!S.snowm.length||seasonNow()!==3||!SNOWSPR.ok)return;const Z=SNOWSPR;
-  for(const m of S.snowm){const j=m.j;if(S.obj[j]||S.floor[j])continue;const o={x:j%W+.5,y:((j/W)|0)+.8};if(!vis(o))continue;const px=o.x*TS,fy=o.y*TS-(S.hi?hiAt(j)*LIFT:0),g=Math.max(0,Math.min(Z.n-1,m.g|0));
+  for(const m of S.snowm){const j=m.j;if(S.obj[j]||S.floor[j])continue;const o={x:j%W+.5,y:((j/W)|0)+.8};if(!vis(o))continue;const px=o.x*TS,fy=o.y*TS-(S.hi?hiAt(j)*LIFT:0)-(typeof snowHop==='function'?snowHop(j):0),g=Math.max(0,Math.min(Z.n-1,m.g|0));
     add(o.y,2,[px-12,fy-30,px+12,fy+4],()=>{const sm=ctx.imageSmoothingEnabled;ctx.imageSmoothingEnabled=false;ctx.drawImage(Z.img,g*Z.w,0,Z.w,Z.h,px-Z.ax/2,fy-Z.ay/2,Z.w/2,Z.h/2);ctx.imageSmoothingEnabled=sm},j)}}

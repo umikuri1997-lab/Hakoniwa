@@ -103,7 +103,7 @@ function place(id,x,y){
     const L=bridgeSpan(x,y);if(!L)return toast('向こう岸が見つかりません');const n=L.length,pc=b.pc*n,bm={};for(const k in b.mat)bm[k]=b.mat[k]*n;
     if(S.pt<pc)return toast('パワーが足りません（'+SP(pc)+'）');if(!matOK(bm))return toast('素材が足りません（'+matTxt(bm)+'）');
     S.pt-=pc;rsvAdd(bm);/* 素材は、とっておく（せいれいが箱から運ぶ） */for(const q of L){S.obj[q]='site';S.dyn[q]={build:'bridge',p:0,need:b.time,mat:Object.assign({},b.mat),got:{}}}undoStack.push({j:L[0],id,pc,mat:bm,span:L});
-    toast('せいれいが'+b.name+'を'+n+'マスかけにきてくれる');S.placed[id]=(S.placed[id]||0)+1;recount();burst(L[0],'furn');renderPalette();checkQuest();return}
+    toast('せいれいが'+b.name+'を'+n+'マスかけにきてくれる');S.placed[id]=(S.placed[id]||0)+1;if(S.placed[id]===1&&typeof juiceFirst==='function')juiceFirst(L[0],id);recount();burst(L[0],'furn');renderPalette();checkQuest();return}
   const j=y*W+x;
   if(b.kind==='plant'||b.kind==='build'){
     if(b.kind==='plant'&&inv(id)<=0){toast(iname(id)+'がおそなえ箱にありません');return}
@@ -132,7 +132,7 @@ function place(id,x,y){
   }
   if(undoStack.length>30)undoStack.shift();
   if(typeof fieldBuildNote==='function')fieldBuildNote(id,j);/* 御神木の調べのために作った物 */
-  S.placed[id]=(S.placed[id]||0)+1;recount();if(BOXCAP[id]&&S.obj[j]===id)boxUnstash(j,id);/* 前にこわした同じ家具の中身を、この箱へ */if(S.obj[j]===id||S.floor[j]===id||RUGS.has(id)&&S.rug&&S.rug[j]===id||EDGES.has(id)&&S.edge&&S.edge[j]===id||CANOPY.has(id)&&S.roof&&S.roof[j]===id)noteQuestPlacement(id,j);burst(j,b.kind==='block'?'block':b.kind==='plant'?'plant':'furn',b.kind==='furn'?'furnPlace':b.kind==='plant'?'pat':null);if(SEATS.includes(id)&&spotW(j)>=0)addFloat(j%W+.5,(j/W|0)-.3,'つりスポット！');renderPalette();checkQuest();
+  S.placed[id]=(S.placed[id]||0)+1;if(S.placed[id]===1&&typeof juiceFirst==='function')juiceFirst(j,id);/* はじめて置いた家具：シール（juice3.js） */recount();if(BOXCAP[id]&&S.obj[j]===id)boxUnstash(j,id);/* 前にこわした同じ家具の中身を、この箱へ */if(S.obj[j]===id||S.floor[j]===id||RUGS.has(id)&&S.rug&&S.rug[j]===id||EDGES.has(id)&&S.edge&&S.edge[j]===id||CANOPY.has(id)&&S.roof&&S.roof[j]===id)noteQuestPlacement(id,j);burst(j,b.kind==='block'?'block':b.kind==='plant'?'plant':'furn',b.kind==='furn'?'furnPlace':b.kind==='plant'?'pat':null);if(SEATS.includes(id)&&spotW(j)>=0)addFloat(j%W+.5,(j/W|0)-.3,'つりスポット！');renderPalette();checkQuest();
   if(id==='door'||id==='yozoradoor'){const w=houseWhy(j);if(w)setTimeout(()=>toast(w,'warn'),400);else if(HOUSES.some(h=>h.set.has(j))){omo('house');setTimeout(()=>toast('家ができた！','good'),400)}}/* ドアを置いたら、家になったかを知らせる */
 }
 function undo(){
@@ -235,7 +235,7 @@ function craftCarry(o,r){/* できた物は、作ったせいれいが頭の上�
   toast(r.name+'が'+nm+'を作った！','good')}
 const setId=k=>String(k).startsWith('set:')?k.slice(4):k,setN=(k,n)=>String(k).startsWith('set:')?n*(BL[k.slice(4)].qty||1):n;/* ひとまとめ（'set:'+id）を、物と数に */
 function madeStow(id,n,r){/* 作った物をしまった：「ひろった」とは言わない。しまった数（のこりはふつうにしまう）をかえす */
-  const c=r&&r.cmade,m=c?Math.min(n,c[id]||0):0;if(m<=0)return 0;c[id]-=m;if(!(c[id]>0))delete c[id];const b=setId(id),k=setN(id,m);giveItem(b,k,1);toast((r.name?r.name+'が':'')+itemName(b)+(k>1?'×'+k:'')+'を'+(itemDest(id)==='obox'?'おそなえ箱':'箱')+'に入れた','good');return m}
+  const c=r&&r.cmade,m=c?Math.min(n,c[id]||0):0;if(m<=0)return 0;c[id]-=m;if(!(c[id]>0))delete c[id];const b=setId(id),k=setN(id,m);giveItem(b,k,1);if(typeof juiceMadeCount==='function')juiceMadeCount(r,k);/* せいれいの上で 1・2・3… */toast((r.name?r.name+'が':'')+itemName(b)+(k>1?'×'+k:'')+'を'+(itemDest(id)==='obox'?'おそなえ箱':'箱')+'に入れた','good');return m}
 function rectCells(a,b){const x0=Math.min(a.x,b.x),x1=Math.max(a.x,b.x),y0=Math.min(a.y,b.y),y1=Math.max(a.y,b.y);const c=[];for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++)c.push([x,y]);return c}
 let pending=null;
 const STAMPC10={farm:32,fence:16,stone:16,path:8};/* スタンプで足りない分を買うときの値段（1こあたり、パワーの10倍の数：畑3.2・柵1.6・石1.6・あぜ道0.8） */

@@ -160,7 +160,7 @@ function onTap(sx,sy){if(GIFT_ACTIVE&&camAnim&&camAnim.done)return;if(typeof sta
     if(o==='grave'){const d=S.dyn[j]||{};if(!d.buried)return toast((d.name||'せいれい')+'のお墓。なかまが神殿へはこんで、おみおくりしてくれる');/* 守り神は埋葬できない */return toast((d.name||'せいれい')+'のお墓')}
     if(o==='tower'&&!WD&&!S.cleared){if(sacredTapHit(j,w.x/TS,w.y/TS))return sacredTreeTap(j);return}/* 御神木は、根もとの所だけ */
     if(o==='board')return S.feat.craft?openSheet('craft'):toast('依頼ボード。もう少ししたら使えるようになる');
-    if(o==='statue')return toast('女神像。守り神の居場所');
+    if(o==='statue')return typeof sasaPop==='function'?sasaPop():toast('女神像。守り神の居場所');/* 神殿：季節のささげもの（sasage.js） */
     if(o==='statueb'){templeRuinTap(j);return}
     if(o==='altar')return toast('カミサマの台座。カミサマはここに現れる');
     {const c=ty*W+tx,lo=!o||WEEDS.has(o),rc=RFC.has(c)?c:lo&&RFC.has(c+W)?c+W:lo&&RFC.has(c+2*W)?c+2*W:-1;if(rc>=0&&lo)return openSheet('roof',RFC.get(rc))}/* ガゼボ・東屋：下に物がなければ、屋根の説明（屋根の絵はマスの上へはみ出すので、2マス上までみる） */

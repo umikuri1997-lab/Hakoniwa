@@ -9,8 +9,9 @@ const BOND5=new Set();/* なかよし100の子が3マス以内にいる子（毎
 function bondKey(a,b){return a.id<b.id?a.id+'_'+b.id:b.id+'_'+a.id}
 function bondOf(a,b){return a&&b&&a!==b&&S&&S.bond?S.bond[bondKey(a,b)]||0:0}
 function bondAdd(a,b,n,kind){if(!S||!a||!b||a===b||IS_STORY_REPLAY)return;if(kind!=='qr'&&qrPair(a,b))return;/* けんかの日は、なかよしがふえない */if(kind)(S.bondDid||(S.bondDid={}))[bondKey(a,b)]=kind;/* 2人でさいごにしたこと（消えたときの思い出） */const B=S.bond||(S.bond={}),k=bondKey(a,b),v0=B[k]||0,v=Math.min(BOND_MAX,v0+n);if(v===v0)return;B[k]=v;
-  if(v0<BOND_TALK&&v>=BOND_TALK){for(const x of[a,b])addFloat(x.x,x.y-1.4,'なかよし！');memo('🤝',a.name+'と'+b.name+'がなかよしになった');if(typeof letterQ==='function'){const w=pick([a,b]);const o=w===a?b:a;letterQ(w,'mate',{m:o.name},o.elem)}/* なかよしになったことを、手紙に */logEv(a.name+'と'+b.name+'がなかよしになった');SPOT_POPS.push({bond:[a.name,b.name],pair:[a,b].map(r=>({el:r.elem,vr:r.vr})),state:S});omoiNote(a,b,false)}
-  else if(v0<BOND_PLAY&&v>=BOND_PLAY)omoiNote(a,b,true)}
+  if(v0<BOND_TALK&&v>=BOND_TALK){for(const x of[a,b])addFloat(x.x,x.y-1.4,'なかよし！');memo('🤝',a.name+'と'+b.name+'がなかよしになった');if(typeof letterQ==='function'){const w=pick([a,b]);const o=w===a?b:a;letterQ(w,'mate',{m:o.name},o.elem)}/* なかよしになったことを、手紙に */logEv(a.name+'と'+b.name+'がなかよしになった');{const pop={bond:[a.name,b.name],pair:[a,b].map(r=>({el:r.elem,vr:r.vr})),state:S};if(typeof juiceBondHeart==='function'){juiceBondHeart(a,b,BOND_TALK);villageTimeout(()=>SPOT_POPS.push(pop),J3HEARTMS+J3POPMS)}else SPOT_POPS.push(pop)}/* ハートがはじけてから、ポップアップ */omoiNote(a,b,false)}
+  else if(v0<BOND_PLAY&&v>=BOND_PLAY){omoiNote(a,b,true);if(typeof juiceBondHeart==='function')juiceBondHeart(a,b,BOND_PLAY)}
+  if(v0<BOND_MAX&&v>=BOND_MAX&&typeof juiceBondHeart==='function')juiceBondHeart(a,b,BOND_MAX)}
 function bondSet(a,b,n){if(bondOf(a,b)<n)bondAdd(a,b,n-bondOf(a,b))}
 /* 草原のメイン「なかよしの想い」（omoi）：なかよしの組を数える（S.flags.omoiP）。依頼を受ける前から、なかよしの組も、御神木へ行く組になる（omoiSeed：なかよしの数の大きい組から、3組まで） */
 function omoiOn(){return !!S&&WD===0&&!S.free&&!IS_STORY_REPLAY&&typeof QUESTS!=='undefined'&&QUESTS[S.quest]?.id==='omoi'&&S.qTalked&&S.qStory==null}
@@ -335,7 +336,7 @@ const LASTW={wood:['#teary hush|……$M……ごめんね……。','#teary hus
  wind:['#teary hush|……フッ…$M……そんな顔、しないでおくれ……。','#teary hush|……$M……風に、なっても……そばに、いるよ……。','#teary hush|……$M……ありがとう……。']};
 const LASTW0={wood:'#teary hush|……みんな……ごめんね……。',earth:'#teary hush|……みんな……ごめんねぇ……。',fireA:'#teary hush|……みんな……わるいね……。',fireB:'#teary hush|……みんな……わりい……。',water:'#teary hush|……みなさん……ごめんなさい……。',wind:'#teary hush|……フッ…みんな……すまないね……。'};
 function lastWord(r,m){const k=elemKey(r),a=LASTW[k]?k:'wood';return [r.name,m?pickFresh('lw:'+a,LASTW[a]).replace(/\$M/g,m.name):LASTW0[a]]}
-function bondTick(){if(!S||IS_STORY_REPLAY)return;omoiSeed();bondNightTick();bondNearTick();if(typeof supportTick==='function')supportTick();/* なかよしと夜の戦い（support.js） */bondTalkTick();griefTick()}
+function bondTick(){if(!S||IS_STORY_REPLAY)return;if(typeof bdayEveTick==='function')bdayEveTick();/* 誕生日の前の日のないしょ話（birthday.js） */omoiSeed();bondNightTick();bondNearTick();if(typeof supportTick==='function')supportTick();/* なかよしと夜の戦い（support.js） */bondTalkTick();griefTick()}
 
 /* ---------- いっしょに遊ぶ ---------- */
 /* 同じ遊び家具で遊びはじめたら、先に遊んでいる子と+2（1回の遊びで1回） */

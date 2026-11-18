@@ -56,7 +56,7 @@ function chipOf(id,i,rot,sf=''){const C=window.CHIPS;if(!C)return null;if(id==='
   const t=ROTS[id];if(!t||t===5)return ch;const r=rot!=null?rot:i==null||!S?0:RUGS.has(id)&&S.rug&&S.rug[i]===id&&S.obj[i]!==id?((S.rugRot||{})[i]||0):S.obj[i]===id?rotAt(i):0;if(!r)return ch;
   let fl=false;if(t===1)fl=true;else if(C[id+'>'+r+sf])ch=C[id+'>'+r+sf];else if((t===4&&r===3||t===3&&r===2)&&C[id+'>1'+sf]){ch=C[id+'>1'+sf];fl=true}else if(sf)return null;/* sf='.front'：せいれいの手前に重ねる絵 */
   if(!ch||!fl)return ch;const fw=((szR(id,r)||[1,1])[0])*32;return ch._fl&&ch._fl.fw===fw?ch._fl:(ch._fl={src:ch,ax:ch.ax,ay:ch.ay,w:ch.w,h:ch.h,f:ch.f,flip:1,fw})}/* 向きのある家具は「id>向き」の絵。左向きは右向きの反転。左右反転だけの物は、もとの絵を反転 */
-const CRATEACT=new Set(['store','smat','sitem','fetch','cpick','cgrab','otakiget','bfetch','spick']),CRATEO={},CRATESP=.3;/* 木箱のふた：箱をつかう動き・開くのにかかる秒（実時間） */
+const CRATEACT=new Set(['store','smat','sitem','fetch','cpick','cgrab','otakiget','sasaget','bfetch','spick']),CRATEO={},CRATESP=.3;/* 木箱のふた：箱をつかう動き・開くのにかかる秒（実時間） */
 function crateUsing(i){const x=i%W,y=(i/W)|0;return S.res.some(r=>{const a=r.act;if(!a||a.stage!=='do'||!CRATEACT.has(a.type))return false;if(a.box!=null&&a.box>=0)return a.box===i;return Math.abs((r.x|0)-x)+Math.abs((r.y|0)-y)===1})}/* その木箱で、しまう・とりだすをしている子がいるか（箱がきまっていない動きは、となりのマスにいるか） */
 const CRATEFILL=[.4,.8];/* 木箱の中身の絵のさかい（しまえる数にたいする、入っている数のわりあい）：0 空・それより少ない 少し・.4から 半分・.8から いっぱい */
 function crateFill(i){if(typeof boxCap!=='function')return 0;const c=boxCap(i),n=boxUsed(i);if(!c||n<=0)return 0;const r=n/c;return r<CRATEFILL[0]?1:r<CRATEFILL[1]?2:3}
@@ -150,6 +150,8 @@ function drawRoofItem(c,id,x,y){/* ガゼボ・東屋：2×2マス（左上が x
   if(gz){c.fillStyle='#efe7da';c.fillRect(x+30,y-38,4,9);c.beginPath();c.arc(x+32,y-39,3,0,7);c.fill()}else{c.fillStyle=R[1];c.fillRect(x+22,y-33,20,4)}}
 const DOKU_PX=['..................rrrr....','................rrwrrdr...','...............rrrrrwrdd..','...............ddrrrrddd..','..................ss......','.....aaaaaaaaa....st......','...aabbbbbbbbbaa..st.aa...','..abbhhbbbbbbbbbaaststbba.','.abbhbbbbbbhhbbbbbtttbbba.','.abbbbbbbbbhbbbbbbbbbhbba.','.abbbbhhbbbbbbbbbbbbbbbba.','..abbbbbbbbbbbbhhbbbbbba..','...aabbbbbbbbbbbbbbbbaa...','.....aaaaaaaaaaaaaaaaa....'];/* どくの罠の絵（24×14） */
 function drawWbYard(c,i,x,y,now){/* 作業台についた材料置き場：いまの依頼で運んだ素材のわりあいで4まい */const d=S.dyn[i],st=d&&d.order!=null?yardStage('o'+d.order):0,ch=window.CHIPS&&CHIPS['matyard#'+st];if(ch)drawChip(c,ch,'matyard',x,y,now,i)}
+/* 建てている所：足場の上に、できあがる物の絵をうすく出す。建てるほど、こくなる（0%で.3・100%で.65） */
+function siteGhost(c,d,x,y,now,i){const id=d&&d.build;if(!id||!BL[id]||id==='site'||id==='statue'||STAIRS.has(id)||LADDERS.has(id)||id==='bridge'||TERRA.has(id))return;const p=Math.min(1,d.p/(d.need||1)),rot=S.rot&&i!=null?S.rot[i]:0,rch=ROTS[id]&&rot&&chipOf(id,null,rot);c.save();c.globalAlpha*=.3+.35*p;if(rch)drawChip(c,rch,id,x,y,now);else drawObj(c,id,x,y,null,100,now);c.restore()}
 function drawObj(c,id,x,y,i,g,now){
   if(id==='wbench'){const ch=window.CHIPS&&(i!=null?chipOf('wbench',i):CHIPS.wbench);/* 向きの絵（左は右の反転） */if(ch)drawChip(c,ch,id,x,y,now,i);const d=ICON||i==null?null:S.dyn[i],o=d&&(S.orders||[]).find(q=>q.id===d.order),st=o&&typeof wbworkStage==='function'?wbworkStage(o):-1,wc=st>=0&&CHIPS['wbwork#'+st];if(wc)drawChip(c,wc,'wbwork',x,y,now,i);return}/* 作業台。素材がそろったら、天板の上に作っている形（板の山・木のわく・布をかけた形） */
   if(id==='matyard'){const d=ICON||i==null?null:S.dyn[i],k='matyard#'+(d?yardStage(d.yt):0),ch=window.CHIPS&&CHIPS[k];if(ch)drawChip(c,ch,'matyard',x,y,now,i);return}/* 材料置き場：運んだ素材のわりあいで4まい */
@@ -304,8 +306,9 @@ function drawObj(c,id,x,y,i,g,now){
     c.strokeStyle='rgba(255,240,180,.8)';c.setLineDash([3,3]);c.lineWidth=1.5;c.strokeRect(x+3,y+3,TS-6,TS-6);c.setLineDash([]);break}
   case'site':{const d=ICON?null:S.dyn[i];
     if(d&&d.ruin){const ch=window.CHIPS&&CHIPS.statueb;if(ch)drawChip(c,ch,'statueb',x,y,now,i);const p=Math.min(1,d.p/d.need),bw=64,bx=x+16-bw/2,by=y-92;c.fillStyle='rgba(0,0,0,.5)';rr(c,bx-1,by,bw+2,6,3);c.fillStyle='#ecdcbc';rr(c,bx,by+1,bw*p,4,2);break}/* こわれた神殿を直している：絵はこわれた神殿のまま、上に進みぐあい */
-    {const k=siteKey(d&&d.build),ch=chipOK(k)&&CHIPS[k];if(ch){/* 足場：建物の大きさに合わせた、3Dから写した絵（見た目だけ。マスの判定は変えない） */drawChip(c,ch,k,x,y,now,i);if(d){const p=Math.min(1,d.p/d.need),cx=x+(ch.ax+ch.w/2)/2,bw=Math.min(ch.w/2-8,64),bx=cx-bw/2,by=y+ch.ay/2-10;c.fillStyle='rgba(0,0,0,.5)';rr(c,bx-1,by,bw+2,6,3);c.fillStyle='#ecdcbc';rr(c,bx,by+1,bw*p,4,2)}break}}
+    {const k=siteKey(d&&d.build),ch=chipOK(k)&&CHIPS[k];if(ch){/* 足場：建物の大きさに合わせた、3Dから写した絵（見た目だけ。マスの判定は変えない） */drawChip(c,ch,k,x,y,now,i);siteGhost(c,d,x,y,now,i);if(d){const p=Math.min(1,d.p/d.need),cx=x+(ch.ax+ch.w/2)/2,bw=Math.min(ch.w/2-8,64),bx=cx-bw/2,by=y+ch.ay/2-10;c.fillStyle='rgba(0,0,0,.5)';rr(c,bx-1,by,bw+2,6,3);c.fillStyle='#ecdcbc';rr(c,bx,by+1,bw*p,4,2)}break}}
     shadow(c,x+16,y+29,14,3);c.fillStyle='#c9a46a';c.fillRect(x+3,y+20,26,8);c.strokeStyle='#8a5a33';c.lineWidth=2.5;c.beginPath();c.moveTo(x+5,y+28);c.lineTo(x+5,y);c.moveTo(x+27,y+28);c.lineTo(x+27,y);c.moveTo(x+5,y+4);c.lineTo(x+27,y+4);c.moveTo(x+5,y+14);c.lineTo(x+27,y+14);c.moveTo(x+5,y+4);c.lineTo(x+27,y+14);c.stroke();
+    siteGhost(c,d,x,y,now,i);
     if(d){const p=Math.min(1,d.p/d.need);c.fillStyle='rgba(0,0,0,.5)';rr(c,x+2,y-8,28,6,3);c.fillStyle='#ecdcbc';rr(c,x+3,y-7,26*p,4,2)}break}
   case'cooktable':{const P=(col,px,py,w,h)=>{c.fillStyle=col;c.fillRect(x+px,y+py,w,h)};/* 調理台：ドット絵（1マス32ドット、整数の四角だけ。りんかくは少しこい色） */
     P('rgba(120,80,40,.18)',3,28,26,2);
