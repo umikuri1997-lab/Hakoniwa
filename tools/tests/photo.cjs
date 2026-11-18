@@ -35,7 +35,7 @@ const assert=require('node:assert/strict');
   await page.evaluate(()=>sacredEval(`phList(WD).then(async L=>{for(const p of L.slice(0,-1))await phDel(p.id)})`));
   /* 思い出帳には、写すボタンはない */
   {const t=await run(`(()=>{openSheet('menu','record');return [...document.querySelectorAll('#sheetBody button')].some(b=>/写す/.test(b.textContent))})()`);assert.equal(t,false,'no take-photo button')}
-  await run(`openSheet('menu','record')`);await page.waitForSelector('#sheetBody .phT img');
+  await run(`MEMPG=0;openSheet('menu','record');[...document.querySelectorAll('#sheetBody .mtocr')].find(b=>/村の写真/.test(b.textContent)).click()`);/* 思い出帳は本：目次から「村の写真」のページへめくる */await page.waitForSelector('#sheetBody .mpg:not([hidden]):not(.mflip) .phT img');
   if(process.env.SHOT_DIR)await page.screenshot({path:process.env.SHOT_DIR+'/record.png'});
   await run(`document.querySelector('#sheetBody .phT').click()`);await page.waitForSelector('.ph-reveal img');
   const cap=await run(`document.querySelector('.ph-reveal p').textContent`);assert.ok(cap.startsWith('こもれびABC1村・'),cap);
