@@ -9,7 +9,7 @@
    作業用のキャンバスは画面の1/6・1/12の大きさ（iPhone の縦画面で約0.5MB）。小さくした絵（ぼかし・にじみのもと）は2コマに1回だけ作りなおす（HDEVERY） */
 let HD2D=true;try{if(KV.getItem('hakoniwa-hd2d')==='0')HD2D=false}catch(e){}
 function setHd2d(v){HD2D=!!v;try{KV.setItem('hakoniwa-hd2d',HD2D?'1':'0')}catch(e){}HDQ=0;HDQT=0}
-const HDBAND=.15,HDBANDBIG=.09;/* ピントの帯のはば（帯のまん中から上と下へ、画面の高さのわりあい）。見せ場はせまく */
+const HDBAND=.22,HDBANDBIG=.12;/* ピントの帯のはば（帯のまん中から上と下へ、画面の高さのわりあい）。見せ場はせまく */
 const HDFY0=.55;/* ふだんのピントの帯のまん中（画面の高さのわりあい） */
 const HDHOLE=1.8;/* ぼかさない所の半径（マス） */
 const HDAIR=.16;/* 空気の遠近：画面のいちばん上のこさ */
