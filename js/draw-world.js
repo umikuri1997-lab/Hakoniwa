@@ -482,7 +482,7 @@ function render(now){RFN++;
     dmx.setTransform(k,0,0,k,-cam.x*k,-cam.y*k);dmx.globalCompositeOperation='destination-out';
     for(const j of LITP){const o=S.obj[j],L=litP(j,o);if(!L)continue;const x=j%W,y=(j/W)|0;if(x<x0-5||x>=x1+5||y<y0-5||y>=y1+5)continue;/* 画面の外5マスの明かりも、光がとどくので描く */if(INDL.has(o)&&roomOf(j))continue;/* 家の中の灯りは、灯りそのものは光らせず、家ぜんたいを光らせる（下） */
       const R=L.R;dmx.drawImage(lightSpr(R),x*TS+L.dx-R,y*TS+L.dy-R,R*2,R*2)}
-    gearLights(dmx);/* そうびの明かり */heatGlow(dmx,x0,x1,y0,y1,1);/* 熱の道は、夜ほんのり光る */
+    gearLights(dmx);/* そうびの明かり */rayCutDark(dmx,now);/* 月明かりの帯の所は、少しだけ暗さがうすい */heatGlow(dmx,x0,x1,y0,y1,1);/* 熱の道は、夜ほんのり光る */
     const litH=new Set();for(const j of LIGHTS){if(INDL.has(S.obj[j])){const h=roomOf(j);if(h)litH.add(h)}}/* 灯りのある家 */
     {dmx.imageSmoothingEnabled=true;dmx.globalAlpha=.75;for(const h of litH)dmx.drawImage(houseGlow(h),h.x0*TS-GLOWM,h.y0*TS-GLOWM);dmx.globalAlpha=1}/* 灯りのある家は、家ぜんたいを同じ明るさで照らす（ふちはぼかす） */
     ctx.setTransform(1,0,0,1,0,0);ctx.drawImage(DMK,0,0);if(nightVarNow()==='kiri'){ctx.globalAlpha=Math.min(1,dk*1.6);ctx.fillStyle=fogPat(ctx);const ox=-(cam.x*k*.6+performance.now()*.006)%256,oy=-(cam.y*k*.6)%256;ctx.translate(ox,oy);ctx.fillRect(-ox,-oy,ctx.canvas.width,ctx.canvas.height);ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=1}/* 霧の夜：うすい霧（1回作った絵をならべて、ゆっくり流す） *//* けずったところは重なっても、暗さがなくなるだけ（明るくなりすぎない） */
@@ -492,8 +492,9 @@ function render(now){RFN++;
     ctx.setTransform(dpr,0,0,dpr,0,0)}
   if(GLWN){ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=Math.min(1,dk*1.5);ctx.globalCompositeOperation='lighter';ctx.drawImage(GLW,0,0);ctx.globalCompositeOperation='source-over';ctx.globalAlpha=1;ctx.setTransform(dpr,0,0,dpr,0,0);GLWN=0}
   ctx.setTransform(k,0,0,k,-cam.x*k,-cam.y*k);drawArrowTags(x0,y0,x1,y1);drawCritGlow(ctx,now);if(bubLate)for(const f of bubs)f();drawTopFx();drawBattleFx(now);drawLeafPrev();ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.globalCompositeOperation='screen';rayDraw(ctx,now,1);ctx.globalCompositeOperation='source-over';/* 日ざしと月明かりの光の帯（light-rays.js） */
   // 空気の粒（昼は花粉、夜はホタル）
-  for(const m of motes){const x=m.x*VW,y=m.y*VH;if(dk>.3){const a=(Math.sin(now/400+m.p)*.5+.5)*.8;ctx.globalCompositeOperation='lighter';circ(ctx,x,y,2.2*m.s,'rgba(200,255,140,'+a+')');circ(ctx,x,y,6*m.s,'rgba(200,255,140,'+a*.15+')');ctx.globalCompositeOperation='source-over'}else{circ(ctx,x,y,1.4*m.s,'rgba(255,250,220,'+(.35+.2*Math.sin(now/600+m.p))+')')}}
+  for(const m of motes){const x=m.x*VW,y=m.y*VH;if(dk>.3){const a=(Math.sin(now/400+m.p)*.5+.5)*.8;ctx.globalCompositeOperation='lighter';circ(ctx,x,y,2.2*m.s,'rgba(200,255,140,'+a+')');circ(ctx,x,y,6*m.s,'rgba(200,255,140,'+a*.15+')');ctx.globalCompositeOperation='source-over'}else{circ(ctx,x,y,1.4*m.s,'rgba(255,250,220,'+(.35+.2*Math.sin(now/600+m.p))+')')}{const ri=rayInside(x,y,now);if(ri>0){const tw=Math.sin(now/260+m.p*3);if(tw>.2){const P=RAYP,qx=Math.round(x/P)*P,qy=Math.round(y/P)*P;ctx.globalAlpha=Math.min(1,ri*(tw-.2)*1.1);ctx.fillStyle=dk>.3?'#e4eeff':'#fffbe6';ctx.fillRect(qx,qy,P,P);if(tw>.75){ctx.fillRect(qx-P,qy,P,P);ctx.fillRect(qx+P,qy,P,P);ctx.fillRect(qx,qy-P,P,P);ctx.fillRect(qx,qy+P,P,P)}ctx.globalAlpha=1}}}/* 光の帯の中の粒は、ドットできらっと光る */}
   drawHanabi(now);
   drawRainbow(now);
   seasonDraw(ctx,now,dk);/* 季節の色と粒（冬の雨の日は雪） */
