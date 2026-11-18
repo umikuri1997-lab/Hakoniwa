@@ -67,7 +67,7 @@ function lastFirst(list){/* さいごにあそんだステージを、いちば�
   const card=list.querySelector('.wcard[data-k="'+top[0]+'"]');if(card===list.firstElementChild)return;
   const pv=card.previousElementSibling,nx=card.nextElementSibling;if(pv&&pv.classList.contains('wlink'))pv.remove();else if(nx&&nx.classList.contains('wlink'))nx.remove();/* 道の線は、となりのステージどうしでつなぎなおす */
   card.classList.add('wtop');list.insertBefore(card,list.firstElementChild)}
-const APP_VER=1843;/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER=1844;/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
@@ -105,7 +105,7 @@ function lastPlayed(){/* さいごにあそんだステージ（なければ nul
 function titleCont(){/* タイトルの「つづきから」：前にあそんだステージがあるときだけ出す */const t0=Date.now(),go=()=>{if(!KV.ready()&&Date.now()-t0<5000)return setTimeout(go,150);let w=null;try{w=lastPlayed()}catch(e){}const c=$('#tCont'),on=w!=null;if(c.hidden===on){c.hidden=!on;$('#tStart').classList.toggle('pri',!on);window.dispatchEvent(new Event('resize'))}};go()}
 $('#tCont').onclick=()=>{audioInit();sfx('tap');const w=lastPlayed();if(w==null)return titleCont();const L=loadStage(w);if(!L)return titleCont();continueGame(L)};/* 前にあそんだマップを、そのまま開く */
 titleCont();
-{const f=()=>{if($('#title').hidden&&$('#maps').hidden)return;audioInit();if(curSong!=='opening'){curSong=wantSong='opening';step=0;bgmSw=0;nextT=AC?AC.currentTime+.15:0}};addEventListener('pointerdown',f,true);addEventListener('keydown',f,true)}/* タイトルでは、はじめてさわったときから曲を鳴らす（ブラウザは、さわるまで音を出させない） */
+{const f=()=>{if($('#title').hidden&&$('#maps').hidden)return;audioInit();if(curSong!=='opening'){curSong=wantSong='opening';step=0;bgmSw=0;nextT=AC?AC.currentTime+.15:0}};for(const ev of ['pointerdown','touchend','click','keydown'])addEventListener(ev,f,true)}/* タイトルでは、はじめてさわったときから曲を鳴らす（ブラウザは、さわるまで音を出させない） */
 window.__ldDone=1;clearInterval(window.__ldT);$('#tLoad').hidden=true;{const d=document.getElementById('stageLd');if(d&&!d.hidden)stageLoading(true)}/* 思い出帳の再生：つづけて、マップを読みこみ中と出す */{const lw=window.__ldWant&&window.__ldWant();if(lw===2)$('#tCont').onclick();else if(lw)$('#tStart').onclick()}/* 読みこみ中に「はじめる」「つづきから」をおしていたら、そのまま進む */
 
 /* ---------- ループ ---------- */
@@ -242,7 +242,7 @@ document.addEventListener('visibilitychange',()=>{if(document.hidden){running=fa
 addEventListener('pagehide',()=>{save();KV.push(true)});
 addEventListener('resize',resize);
 /* 一度画面をとじて戻ると音が止まったままになる（iOS）→ 次のタッチで鳴らしなおす */
-for(const ev of ['pointerdown','touchend','click'])document.addEventListener(ev,()=>{if(AC&&AC.state!=='running'&&!document.hidden)AC.resume().catch(()=>{})},true);addEventListener('focus',()=>{if(AC&&AC.state!=='running')AC.resume().catch(()=>{})});
+for(const ev of ['pointerdown','touchend','click'])document.addEventListener(ev,()=>{if(AC&&AC.state!=='running'&&!document.hidden)AC.resume().catch(()=>{});if(ev!=='pointerdown')audioUnlock()},true);addEventListener('focus',()=>{if(AC&&AC.state!=='running')AC.resume().catch(()=>{})});
 
 $('#alert').addEventListener('click',()=>{const L=S.enemies.filter(e=>e.spawned&&!e.dead);if(!L.length)return;ALI=(ALI+1)%L.length;const e=L[ALI];centerOn(e.x*TS,e.y*TS);sfx('tap')});/* 「コワイノ ○体」をタップすると、その場所へ */
 $('#guardStatus').addEventListener('click',e=>{e.stopPropagation();if(!S||!started)return;if(!LIGHTARM&&S.pt<1)return toast('パワーが足りません');sfx('tap');const on=!LIGHTARM;setMode('look');LIGHTARM=on;AREAARM=false;LEAFARM=false;dockSync();if(on)toast('光をあてる物をタップ')});/* 守りの光は、もう一度ボタンをおすか、しらべる・おく・こわすをえらぶまで、えらんだまま（チャージ中も）。えらんでいるあいだは、置く・こわす・みるはしない */
