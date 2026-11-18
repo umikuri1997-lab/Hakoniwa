@@ -178,7 +178,8 @@ const ZURA={/* クリア後に図鑑で読める「もとのすがた」（STORY
 const HIT_LAG=150,SHOT_LAG=300,HIT_STOP=70,KO_HOLD=180;/* ミリ秒。火のせいれいがふりはじめてから当たるまで・矢がとどくまで・当たった瞬間に止まる長さ・たおれる前に白く止まる長さ */
 const DMGN=[],SPKS=[],HITV=new WeakMap(),ATKV=new WeakMap();const HURTV=new WeakMap(),HURT1=300,HURT2=600,HURT2P=400;/* いたがるコマ：当たってから よろけるまで（1コマめ）・よろけている長さ（2コマめ。どくは HURT2P）。ミリ秒 */function hurtFrame(e,now){const h=HURTV.get(e);if(!h)return null;const a=now-h.t;return a<0||a>=HURT1+h.n?null:a<HURT1?0:1}/* drawShade の hurt：0は1コマめ・.5より上は2コマめ *//* 数字・火花・たたかれた時刻と向き・たたいた時刻と向き */
 /* コワイノへのダメージは、ここを通す：整数にして体力をへらし、数字・火花・のけぞりを出す。o：lag 当たるまで・sx,sy たたいた所・flash 光る長さ・keep 光らせない・nokb のけぞらない */
-function hurtEn(e,dmg,o){o=o||{};if((o.k==='trap'||o.trap)&&typeof pathA==='function')dmg+=pathA('trap');/* むらのちから：罠のダメージ */dmg=Math.max(1,Math.round(dmg*armorMul(e,o)*weakMul(e,o)));/* 弱点の属性 o.el（defense.js） *//* ヨロイカゲ：o.dt（arrow・fire・poison・burn） */e.hp-=dmg;if(e.hp>0)bossPhase(e);/* オオカゲの段階（defense.js） */if(!o.keep){e.flash=o.flash||6;HURTV.set(e,{t:performance.now()+(o.lag||0),n:HURT2})}/* いたがるコマは、当たって見える時刻から実時間で */hitFx(e,dmg,Object.assign({big:dmg*4>=e.max},o));return dmg}
+function hurtEn(e,dmg,o){o=o||{};if((o.k==='trap'||o.trap)&&typeof pathA==='function')dmg+=pathA('trap');/* むらのちから：罠のダメージ */dmg=Math.max(1,Math.round(dmg*armorMul(e,o)*weakMul(e,o)));/* 弱点の属性 o.el（defense.js） *//* ヨロイカゲ：o.dt（arrow・fire・poison・burn） */e.hp-=dmg;if(e.hp>0)bossPhase(e);/* オオカゲの段階（defense.js） */if(!o.keep){e.flash=o.flash||6;HURTV.set(e,{t:performance.now()+(o.lag||0),n:HURT2})}/* いたがるコマは、当たって見える時刻から実時間で */hitFx(e,dmg,Object.assign({big:dmg*4>=e.max},o));if(o.skill){const z=(EN[e.type]||{}).size||1,px=e.x*TS,py=e.y*TS-12*z+SKHITY-(typeof uLift==='function'?uLift(e):0);if(o.lag)villageTimeout(()=>fxSpr('skillhit',px,py),o.lag);else fxSpr('skillhit',px,py)}/* わざ（まもりの光・大わざ）が当たったコワイノには、金の光と火花（skillhit） */return dmg}
+const SKHITY=28;/* skillhit の光のまん中は、置く所より28点上 */
 function hitFx(t,n,o){o=o||{};n=Math.max(1,Math.round(n));/* 画面の数字には小数点を出さない */const en=!!(t.type&&EN[t.type]),z=en?EN[t.type].size:1,now=performance.now()+(o.lag||0);let dx=0,dy=0;if(o.sx!=null){dx=t.x-o.sx;dy=t.y-o.sy;const l=Math.hypot(dx,dy)||1;dx/=l;dy/=l}
   if(!o.nokb)HITV.set(t,{t:now,dx,dy});
   const lift=typeof uLift==='function'?uLift(t):0,near=DMGN.filter(d=>d.who===t&&Math.abs(d.t0-now)<260).length;/* つづけて当たった数字は、上へずらす */
@@ -326,23 +327,39 @@ function hitRes(e,r,D){if(onTower(r))return;enAim(e,r.x,r.y);if(BOSSFX[e.type]){
   {const L=lightAt(e.x,e.y);e.rest=fire?(D.boss?(L?2:1.5):(L?2.667:2)):(D.boss?(L?4:3):(L?5.333:4))}/* たたいたあと、コワイノがひと休みする時間（明かりの中は長い）。やられて止まる stun とはちがい、うすくならない */e.path=[];e.repath=0;gearHurt(e,r);/* はね返し */
 }
 const LIGHTCDL=[10,10,9.5,9,8.5,8,7.5,7,6.5,6,5.5,5,4.5,4,3.5,3];/* 前の、村レベルごとのチャージ（秒）。いまは使わない。古いセーブの読みかえ（gupMigrate）だけ */
-/* むらのちから（メニュー）の守り神の枝：パワーで、守り神の技を10段階まで強くする（ステージごと。ほかのステージには引きつがない）。数字は段階0〜10の実数。stun・vb は e.stun の数（時計の1.5倍）、sh は葉のまもりの時計の分、cd は秒 */
-const GUPC=[100,200,300,500,700,1000,1400,1900,2500,3200];
+/* むらのちから（メニュー）の守り神の枝：パワーで、守り神の技を強くする（ステージごと。ほかのステージには引きつがない）。max は段階の上限（攻撃のわざ cd・pow・stun・rng は5まで、こもれびのまもり・葉のかべは10まで）、c はつぎの段階へのパワー。数字は段階0〜max の実数。stun・vb は e.stun の数（時計の1.5倍）、sh は葉のまもりの時計の分、cd は秒、rng はタップしたマスからのマス（0はそのマスだけ） */
+const GUPC=[100,200,300,500,700,1000,1400,1900,2500,3200],GUPC5=[300,800,1700,3300,5700];/* GUPC5：攻撃のわざ（5段）。GUPC は10段 */
 const GUP=[
- {k:'cd',n:'まもりの光のチャージ',v:[10,9,8,7,6.5,6,5,4.5,4,3.5,3],t:['10秒','9秒','8秒','7秒','6.5秒','6秒','5秒','4.5秒','4秒','3.5秒','3秒']},
- {k:'pow',n:'まもりの光の威力',v:[10,12,14,16,18,20,22,24,26,28,30],t:['10','12','14','16','18','20','22','24','26','28','30']},
- {k:'stun',n:'まもりの光でとめる時間',v:[2.5,3,3.75,4.5,5.25,6,6.75,7.5,8.25,9,9.75],vb:[1,1.5,1.875,2.25,2.625,3,3.375,3.75,4.125,4.5,4.875],t:['1.7分・オオカゲなど0.7分','2分・オオカゲなど1分','2.5分・オオカゲなど1.25分','3分・オオカゲなど1.5分','3.5分・オオカゲなど1.75分','4分・オオカゲなど2分','4.5分・オオカゲなど2.25分','5分・オオカゲなど2.5分','5.5分・オオカゲなど2.75分','6分・オオカゲなど3分','6.5分・オオカゲなど3.25分']},
- {k:'area',n:'こもれびのまもり',r:[2,2,2.5,2.5,3,3,3.5,3.5,4,4,4.5],sh:[40,45,50,55,60,65,70,75,80,85,90],cd:[5,4.75,4.5,4.25,4,3.75,3.5,3.25,3,2.75,2.5],t:['まわり2マス・葉のまもり40分・チャージ5秒','まわり2マス・葉のまもり45分・チャージ4.75秒','まわり2.5マス・葉のまもり50分・チャージ4.5秒','まわり2.5マス・葉のまもり55分・チャージ4.25秒','まわり3マス・葉のまもり60分・チャージ4秒','まわり3マス・葉のまもり65分・チャージ3.75秒','まわり3.5マス・葉のまもり70分・チャージ3.5秒','まわり3.5マス・葉のまもり75分・チャージ3.25秒','まわり4マス・葉のまもり80分・チャージ3秒','まわり4マス・葉のまもり85分・チャージ2.75秒','まわり4.5マス・葉のまもり90分・チャージ2.5秒']},
- {k:'leaf',n:'葉のかべ',len:[5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10],dur:[45, 52.5, 60, 67.5, 75, 82.5, 90, 97.5, 105, 112.5, 120],cd:[270, 252, 234, 216, 198, 180, 162, 144, 126, 108, 90],t:['長さ5マス・のこる30分・つかえない3時間', '長さ5マス・のこる35分・つかえない2時間48分', '長さ6マス・のこる40分・つかえない2時間36分', '長さ6マス・のこる45分・つかえない2時間24分', '長さ7マス・のこる50分・つかえない2時間12分', '長さ7マス・のこる55分・つかえない2時間', '長さ8マス・のこる60分・つかえない1時間48分', '長さ8マス・のこる65分・つかえない1時間36分', '長さ9マス・のこる70分・つかえない1時間24分', '長さ9マス・のこる75分・つかえない1時間12分', '長さ10マス・のこる80分・つかえない1時間']}];/* 葉のかべ（defense.js）：dur・cd は時計の分×1.5 */
-function gupLv(k){return Math.max(0,Math.min(10,((S.gup||{})[k])|0))}
+ {k:'cd',n:'まもりの光のチャージ',max:5,c:GUPC5,v:[10,8,6.5,5,4,3],t:['10秒','8秒','6.5秒','5秒','4秒','3秒']},
+ {k:'pow',n:'まもりの光の威力',max:5,c:GUPC5,v:[10,14,18,22,26,30],t:['10','14','18','22','26','30']},
+ {k:'stun',n:'まもりの光でとめる時間',max:5,c:GUPC5,v:[2.5,3.75,5.25,6.75,8.25,9.75],vb:[1,1.875,2.625,3.375,4.125,4.875],t:['1.7分・オオカゲなど0.7分','2.5分・オオカゲなど1.25分','3.5分・オオカゲなど1.75分','4.5分・オオカゲなど2.25分','5.5分・オオカゲなど2.75分','6.5分・オオカゲなど3.25分']},
+ {k:'rng',n:'まもりの光の範囲',max:4,c:[300,800,1700,3300],v:[0,1,2,3,4],t:['タップしたマス','まわり1マス','まわり2マス','まわり3マス','まわり4マス']},
+ {k:'area',n:'こもれびのまもり',max:10,c:GUPC,r:[2,2,2.5,2.5,3,3,3.5,3.5,4,4,4.5],sh:[40,45,50,55,60,65,70,75,80,85,90],cd:[5,4.75,4.5,4.25,4,3.75,3.5,3.25,3,2.75,2.5],t:['まわり2マス・葉のまもり40分・チャージ5秒','まわり2マス・葉のまもり45分・チャージ4.75秒','まわり2.5マス・葉のまもり50分・チャージ4.5秒','まわり2.5マス・葉のまもり55分・チャージ4.25秒','まわり3マス・葉のまもり60分・チャージ4秒','まわり3マス・葉のまもり65分・チャージ3.75秒','まわり3.5マス・葉のまもり70分・チャージ3.5秒','まわり3.5マス・葉のまもり75分・チャージ3.25秒','まわり4マス・葉のまもり80分・チャージ3秒','まわり4マス・葉のまもり85分・チャージ2.75秒','まわり4.5マス・葉のまもり90分・チャージ2.5秒']},
+ {k:'leaf',n:'葉のかべ',max:10,c:GUPC,len:[5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10],dur:[45, 52.5, 60, 67.5, 75, 82.5, 90, 97.5, 105, 112.5, 120],cd:[270, 252, 234, 216, 198, 180, 162, 144, 126, 108, 90],t:['長さ5マス・のこる30分・つかえない3時間', '長さ5マス・のこる35分・つかえない2時間48分', '長さ6マス・のこる40分・つかえない2時間36分', '長さ6マス・のこる45分・つかえない2時間24分', '長さ7マス・のこる50分・つかえない2時間12分', '長さ7マス・のこる55分・つかえない2時間', '長さ8マス・のこる60分・つかえない1時間48分', '長さ8マス・のこる65分・つかえない1時間36分', '長さ9マス・のこる70分・つかえない1時間24分', '長さ9マス・のこる75分・つかえない1時間12分', '長さ10マス・のこる80分・つかえない1時間']}];/* 葉のかべ（defense.js）：dur・cd は時計の分×1.5 */
 function gupOf(k){return GUP.find(g=>g.k===k)}
+function gupLv(k){const g=gupOf(k);return Math.max(0,Math.min(g?g.max:10,((S.gup||{})[k])|0))}
 function lightCdMax(){return gupOf('cd').v[gupLv('cd')]}
-function gupBuy(k){const n=gupLv(k);if(n>=10)return false;const c=GUPC[n];if(S.pt<c){toast(lackPt(c),'warn');return false}S.pt-=c;PTW.q=true;sfx('power');(S.gup||(S.gup={}))[k]=n+1;const g=gupOf(k);toast(g.n+'：'+g.t[n]+' → '+g.t[n+1],'good');save();return true}
-function gupMigrate(){/* 前は村レベルでチャージがみじかくなった。強化だけにしたので、古いセーブは、そのときのチャージより長くならない段階にする（1回だけ） */if(S.flags.gup1)return;S.flags.gup1=1;const old=LIGHTCDL[S.lv]||10,v=gupOf('cd').v;let i=0;while(i<10&&v[i]>old)i++;if(i>gupLv('cd'))(S.gup||(S.gup={})).cd=i}let LIGHTCD=0,LIGHTARM=false;/* 守りの光：アイコンをタップしてから、コワイノ・木・岩をタップする *//* のこり秒（倍速なら早くもどる） */
-function guardLight(e){PTW.q=true;if(LIGHTCD>0){toast('まもりの光は、あと'+Math.ceil(LIGHTCD/(S.speed||1))+'秒');return}if(S.pt<1){toast('パワーが足りません');return}S.pt-=1;LIGHTCD=lightCdMax();
-  const D=EN[e.type],G=gupOf('stun'),gs=gupLv('stun');hurtEn(e,gupOf('pow').v[gupLv('pow')],{flash:8,k:'light'});/* 威力・とめる時間は、守り神のちから（GUP）の段階 */e.stun=D.boss?G.vb[gs]:G.v[gs];e.path=[];e.repath=0;
-  const cx=e.x*TS,cy=e.y*TS+8;fxSpr('godlight',cx,cy);lightSnd(e.x,e.y);/* 光の槌：足もとに落ちる */
-  if(e.hp<=0)return defeat(e,'まもりの光で'+D.name+'を追いはらった！')}
+function gupBuy(k){const n=gupLv(k),g=gupOf(k);if(n>=g.max)return false;const c=g.c[n];if(S.pt<c){toast(lackPt(c),'warn');return false}S.pt-=c;PTW.q=true;sfx('power');(S.gup||(S.gup={}))[k]=n+1;toast(g.n+'：'+g.t[n]+' → '+g.t[n+1],'good');save();return true}
+function gupMigrate(){/* 前は村レベルでチャージがみじかくなった。強化だけにしたので、古いセーブは、そのときのチャージより長くならない段階にする（1回だけ） */
+  if(!S.flags.gup1){S.flags.gup1=1;const old=LIGHTCDL[S.lv]||10,G=gupOf('cd'),v=G.v;let i=0;while(i<G.max&&v[i]>old)i++;if(i>gupLv('cd'))(S.gup||(S.gup={})).cd=i}
+  if(!S.flags.gup5){/* 攻撃のわざ（チャージ・威力・とめる時間）は10段から5段にした。5段をこえていた分は5段にして、こえた分にはらったパワー（前の GUPC）をもどす（1回だけ） */S.flags.gup5=1;let back=0;const G0=S.gup||{};for(const k of['cd','pow','stun']){const n=Math.min(10,G0[k]|0);if(n<=5)continue;for(let i=5;i<n;i++)back+=GUPC[i];G0[k]=5}
+    if(back){S.pt+=back;PTW.q=true;toast('守り神の枝が5段になり、パワー'+back+'がもどった','good')}}}
+let LIGHTCD=0,LIGHTARM=false;/* 守りの光：アイコンをタップしてから、地図のどこかをタップする（コワイノ・木・岩でなくてもよい） *//* のこり秒（倍速なら早くもどる） */
+const SHOCKU=new WeakMap(),GLSHOCKR=3;/* まもりの光が落ちたとき、範囲から GLSHOCKR マスまでの起きているせいれいは、おどろいた顔（SHOCKU：おわる時刻）でぴょんとはねる */
+function guardLight(e){return glCast(Math.floor(e.x),Math.floor(e.y),e)}/* コワイノをタップした：そのコワイノのいるマスに落とす（落ちるまでに少しうごいても、そのコワイノには当たる） */
+function glCast(tx,ty,foc){/* まもりの光：タップしたマス（tx,ty）に光の槌を落とす。パワー1・チャージは GUP の cd。当たるのは、光が地面にとどくとき（GLFX）。範囲は GUP の rng */PTW.q=true;
+  if(LIGHTCD>0){toast('まもりの光は、あと'+Math.ceil(LIGHTCD/(S.speed||1))+'秒');return false}if(S.pt<1){toast('パワーが足りません');return false}if(tx<0||ty<0||tx>=W||ty>=H)return false;S.pt-=1;LIGHTCD=lightCdMax();
+  const j=ty*W+tx,R=gupOf('rng').v[gupLv('rng')],cx=foc?foc.x*TS:tx*TS+16,cy=foc?foc.y*TS+8:ty*TS+26-hiAt(j)*LIFT;
+  fxSpr('godlight',cx,cy);lightSnd(tx,ty);const S0=S;villageTimeout(()=>{if(S===S0)glHit(tx,ty,R,foc)},GLFX);return true}
+function glHit(tx,ty,R,foc){/* 光が地面にとどいた：範囲（タップしたマスから R マス、ななめも）のコワイノにダメージととめる、木・岩には素材を落とす。まわりのせいれいはおどろく */
+  const inR=(x,y)=>Math.max(Math.abs((x|0)-tx),Math.abs((y|0)-ty))<=R,G=gupOf('stun'),gs=gupLv('stun'),pw=gupOf('pow').v[gupLv('pow')];
+  if(R>0)for(let dy=-R;dy<=R;dy++)for(let dx=-R;dx<=R;dx++){const x=tx+dx,y=ty+dy;if(x<0||y<0||x>=W||y>=H||!dx&&!dy)continue;const d=Math.max(Math.abs(dx),Math.abs(dy));if(d<R&&(dx+dy)&1)continue;/* ふちのマスは、ぜんぶ。中は1マスおき */const q=y*W+x;villageTimeout(()=>fxSpr('glspark',x*TS+16,y*TS+16+GLSPY-hiAt(q)*LIFT),d*GLSTEP)}
+  for(const e of S.enemies.slice()){if(!e.spawned||e.dead)continue;if(!(e===foc&&Math.hypot(e.x-tx-.5,e.y-ty-.5)<R+1.5)&&!inR(e.x,e.y))continue;
+    const D=EN[e.type];hurtEn(e,pw,{flash:8,k:'light',skill:1,sx:tx+.5,sy:ty+.5});/* 威力・とめる時間は、守り神のちから（GUP）の段階 */e.stun=D.boss?G.vb[gs]:G.v[gs];e.path=[];e.repath=0;
+    if(e.hp<=0)defeat(e,'まもりの光で'+D.name+'を追いはらった！')}
+  for(let dy=-R;dy<=R;dy++)for(let dx=-R;dx<=R;dx++){const x=tx+dx,y=ty+dy;if(x<0||y<0||x>=W||y>=H)continue;const q=y*W+x;if(LIGHTNAT[S.obj[q]]&&!isBud(q)&&!(S.fog&&fogAt(q)))natHit(q)}
+  const now=performance.now();for(const r of S.res){if(r.hidden||r.nap||r.act&&(r.act.type==='sleep'||r.act.type==='faint')&&r.act.stage==='do')continue;const d=Math.max(Math.abs(r.x-tx-.5),Math.abs(r.y-ty-.5))-R;if(d>GLSHOCKR)continue;SHOCKU.set(r,now+GLSHOCKT);JUMP.set(r,now+Math.max(0,d)*40)}}
+const GLSTEP=45,GLSPY=31,GLSHOCKT=1200;/* 範囲の光は、まん中から1マスごとに GLSTEP ミリ秒おくれる。GLSPY：glspark の光のまん中は、置く所より31点上。GLSHOCKT：おどろいた顔の長さ（ミリ秒） */
 let AREACD=0,AREAARM=false;/* こもれびのまもり（フタバから受けついだ守り神の技）：タップした場所のまわりのせいれいに、葉のまもり・パワー3。まわりのマス・葉のまもりの時間・チャージは GUP の area */
 function areaBlast(cx,cy){
   const A=gupOf('area'),ga=gupLv('area'),L=S.res.filter(r=>!r.hidden&&Math.hypot(r.x-cx,r.y-cy)<=A.r[ga]);

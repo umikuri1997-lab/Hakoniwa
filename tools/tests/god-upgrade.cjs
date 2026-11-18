@@ -1,21 +1,24 @@
 const {chromium}=require('playwright'),assert=require('node:assert/strict'),fs=require('node:fs');
-/* むらのちから・守り神の枝（10段階・ステージごと）：パワーで強化すると、まもりの光のチャージ・威力・とめる時間と、こもれびのまもりがかわる。古いセーブは村レベルのチャージより長くならない */
+/* むらのちから・守り神の枝（攻撃のわざは5段・こもれびのまもりは10段・ステージごと）：パワーで強化すると、まもりの光のチャージ・威力・とめる時間・範囲と、こもれびのまもりがかわる。古いセーブは村レベルのチャージより長くならない。5段をこえた前のセーブは5段にして、こえた分のパワーをもどす。ダメージは光が地面にとどいたとき（glHit） */
 (async()=>{const browser=await chromium.launch({executablePath:process.env.CHROME_PATH||(fs.existsSync('/usr/bin/chromium')?'/usr/bin/chromium':undefined),args:['--no-sandbox']});const page=await browser.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));await page.route('**/js/main.js*',async route=>{const r=await route.fetch();await route.fulfill({response:r,body:(await r.text())+'\nwindow.ltEval=s=>eval(s);'});});await page.goto(process.env.GAME_URL||'http://127.0.0.1:8000');await page.waitForFunction(()=>!!window.ltEval);
 await page.waitForFunction(()=>ltEval('!!window.CHIPS&&!!CHIPS["kg_basic:idle"]'),null,{timeout:30000});
 const out=await page.evaluate(()=>ltEval(`(()=>{const o={};S=newState(0);setWorld(0);S.enemies=[];S.pt=5000;
  const mk=t=>({id:S.nid++,type:t,x:50.5,y:50.5,hp:999,max:999,spawned:true,path:[],atk:0,stun:0,flash:0});
- let e=mk('basic');S.enemies=[e];LIGHTCD=0;guardLight(e);o.base={hp:999-e.hp,stun:e.stun,cd:LIGHTCD};
- o.noMoney=(S.pt=50,gupBuy('pow'));S.pt=50000;
- for(let i=0;i<11;i++){gupBuy('cd');gupBuy('pow');gupBuy('stun');gupBuy('area')}o.pt=S.pt;o.lv=JSON.stringify(S.gup);
- e=mk('basic');S.enemies=[e];LIGHTCD=0;guardLight(e);o.max={hp:999-e.hp,stun:e.stun,cd:LIGHTCD};
- const b=mk('boss');S.enemies=[b];LIGHTCD=0;guardLight(b);o.boss=b.stun;
+ let e=mk('basic');S.enemies=[e];LIGHTCD=0;guardLight(e);o.before=999-e.hp;glHit(50,50,gupOf('rng').v[gupLv('rng')],e);o.base={hp:999-e.hp,stun:e.stun,cd:LIGHTCD};
+ o.noMoney=(S.pt=50,gupBuy('pow'));S.pt=100000;
+ for(let i=0;i<11;i++){gupBuy('cd');gupBuy('pow');gupBuy('stun');gupBuy('rng');gupBuy('area')}o.pt=S.pt;o.lv=JSON.stringify(S.gup);
+ e=mk('basic');S.enemies=[e];LIGHTCD=0;guardLight(e);glHit(50,50,4,e);o.max={hp:999-e.hp,stun:e.stun,cd:LIGHTCD};
+ const b=mk('boss');S.enemies=[b];LIGHTCD=0;guardLight(b);glHit(50,50,4,b);o.boss=b.stun;
+ /* 範囲：まわり4マスのコワイノに当たり、その外には当たらない */const i1=mk('basic'),o1=mk('basic');i1.x=54.5;i1.y=46.5;o1.x=55.5;o1.y=50.5;S.enemies=[i1,o1];glHit(50,50,4,null);o.rng=[999-i1.hp,999-o1.hp];
  S.flags.areaSkill=true;const r=S.res[0];r.x=40.5;r.y=40.5;r.hidden=false;r.shU=0;const t0=S.t;areaBlast(40.5+4.4,40.5);o.area={sh:Math.round(r.shU-t0),cd:AREACD};
- openSheet('menu','gup');o.rows=[...document.querySelectorAll('.stree .tnode')].filter(b=>/^g:.*:10$/.test(b.dataset.node)&&b.dataset.st==='done').length;/* 守り神の枝の点（さいだいまで強化） */document.querySelector('.stree .tnode[data-node="g:pow:10"]').click();o.txt=document.querySelector('#treePop').textContent;o.go=!!document.querySelector('#treePop .go');document.querySelector('#treePop .x').click();closeSheet();
+ openSheet('menu','gup');o.rows=[...document.querySelectorAll('.stree .tnode')].filter(b=>/^g:(cd|pow|stun):5$|^g:rng:4$|^g:area:10$/.test(b.dataset.node)&&b.dataset.st==='done').length;/* 守り神の枝の点（さいだいまで強化） */o.n6=document.querySelectorAll('.stree .tnode[data-node="g:pow:6"]').length;document.querySelector('.stree .tnode[data-node="g:pow:5"]').click();o.txt=document.querySelector('#treePop').textContent;o.go=!!document.querySelector('#treePop .go');document.querySelector('#treePop .x').click();closeSheet();
  /* 古いセーブ：村レベル12（前のチャージ4.5秒）→ 4.5秒の段階 */S.flags.gup1=0;S.gup={};S.lv=12;gupMigrate();o.mig12=S.gup.cd;S.flags.gup1=0;S.gup={};S.lv=1;gupMigrate();o.mig1=S.gup.cd||0;
+ /* 前の10段のセーブ：5段をこえた分（6〜8段め）のパワーをもどす。1回だけ */S.flags.gup5=0;S.gup={cd:8,pow:5,stun:10,area:7};S.pt=0;gupMigrate();o.m5=[S.gup.cd,S.gup.pow,S.gup.stun,S.gup.area,S.pt];gupMigrate();o.m5b=S.pt;o.nsFlag=newState(0).flags.gup5;
  return o})()`));
 console.log(JSON.stringify(out));
-assert.deepEqual(out.base,{hp:10,stun:2.5,cd:10});assert.equal(out.noMoney,false);
-assert.equal(out.pt,50000-4*11800);
-assert.deepEqual(out.max,{hp:30,stun:9.75,cd:3});assert.equal(out.boss,4.875);assert.deepEqual(out.area,{sh:90,cd:2.5});
-assert.equal(out.rows,4);assert.ok(out.txt.includes('Lv10')&&!out.go,'さいだいの点は、強化のボタンなし');assert.equal(out.mig12,7);assert.equal(out.mig1,0);
+assert.equal(out.before,0,'光が地面にとどく前は、ダメージなし');assert.deepEqual(out.base,{hp:10,stun:2.5,cd:10});assert.equal(out.noMoney,false);
+assert.equal(out.pt,100000-3*11800-(300+800+1700+3300)-11800);
+assert.deepEqual(out.max,{hp:30,stun:9.75,cd:3});assert.equal(out.boss,4.875);assert.deepEqual(out.rng,[30,0]);assert.deepEqual(out.area,{sh:90,cd:2.5});
+assert.equal(out.rows,5);assert.equal(out.n6,0,'攻撃のわざは5段まで');assert.ok(out.txt.includes('Lv5')&&!out.go,'さいだいの点は、強化のボタンなし');assert.equal(out.mig12,4);assert.equal(out.mig1,0);
+assert.deepEqual(out.m5,[5,5,5,7,(1000+1400+1900)+(1000+1400+1900+2500+3200)]);assert.equal(out.m5b,out.m5[4]);assert.equal(out.nsFlag,1);
 assert.deepEqual(errors,[]);console.log('God upgrades: OK. Browser errors: none');await browser.close()})().catch(e=>{console.error(e);process.exit(1)});
