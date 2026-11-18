@@ -10,7 +10,7 @@ import sys,os,math,numpy as np
 sys.path.insert(0,os.path.join(os.path.dirname(os.path.abspath(__file__)),'..','animals'))
 from ani_rig import smooth,rotm
 TONBOB=-.3   # とんぼの胴体を小さくする（−0.3 で0.7倍）
-HOTB,HOTW=-.45,.9   # ほたるの胴体を小さく（0.55倍）・羽を大きく（1.9倍。はばたくと、その0.45）
+HOTB,HOTW,HOTMV=-.3,0,.3   # ほたるの胴体を小さく（0.7倍）・羽はモデルの大きさ（はばたくと0.45倍）・羽をお尻のほうへずらす（H。持ち主のきめ）
 TURN=20   # 右むきから、手前へ何度（顔が少し見える）
 def band(x,a,b,e=.06):return smooth(a-e,a+e,x)*(1-smooth(b-e,b+e,x))   # a〜b のあいだ（ふちはなめらか）
 def near(c,col,t=24):return (np.abs(col-np.array(c,float)).max(1)<t).astype(float)   # その色の点
@@ -57,8 +57,10 @@ C={
    fr={'w0':dict(wing=0,dangle=12),'w1':dict(wing=-.55,dangle=-4),'e0':dict(wing=-.2,pitch=10,legF=-15,legB=15),'e1':dict(wing=0,pitch=10,legF=-15,legB=15)}),   # はばたく・花にとまる
  'hotaru':dict(size=.25,fly=1,legs=dict(zc=.12,hip=.22,rad=.14,col=(171,108,51)),bones=[
      dict(k='wing',w=lambda u,v,z,c:near((242,245,248),c,20),p=(-.05,0,.6),sc=1,root=1),   # 羽：つけねへちぢむ（はばたいて見える。まわすと、うすい羽がとがった線になった）
-     dict(k='body',w=lambda u,v,z,c:1-near((242,245,248),c,20),p=(-.05,0,.6),sc=1)],   # 胴体（羽いがい）：羽のつけねを中心に小さく（持ち主のきめ：胴体は小さく、羽は大きく）
-   fr={'w0':dict(body=HOTB,wing=HOTW,dangle=12),'w1':dict(body=HOTB,wing=HOTW*.45,dangle=-4)}),
+     dict(k='body',w=lambda u,v,z,c:1-near((242,245,248),c,20),p=(-.05,0,.6),sc=1),   # 胴体（羽いがい）：羽のつけねを中心に小さく（持ち主のきめ）
+     dict(k='wmv',w=lambda u,v,z,c:near((242,245,248),c,20),mv=1,d=(0,-1,-.3))],   # 羽をお尻（−v）のほうへ、少し下げてずらす
+   rot=-169,   # からだは横（v）にのび、顔（目）は u を向くので、目からきめると、からだが奥へのびて羽が上につき出た。お尻（黄色、モデルの色 hotaru_tail.py）が左
+   fr={'w0':dict(body=HOTB,wing=HOTW,wmv=HOTMV,dangle=12),'w1':dict(body=HOTB,wing=HOTW*.45-.55,wmv=HOTMV,dangle=-4)}),
  'tonbo':dict(size=.3,fly=1,fdeg=-101,bones=[   # 目の色がないので、からだののびる向き（頭は目の青いほう）
      dict(k='wing',w=lambda u,v,z,c:near((208,234,214),c,24),p=(0,0,.62),ax='f',mir=1),
      dict(k='body',w=lambda u,v,z,c:1-near((208,234,214),c,24),p=(0,0,.62),sc=1)],   # 胴体と頭（羽いがい）：羽のつけねを中心に小さく（持ち主のきめ）
@@ -125,6 +127,7 @@ class Rig:
             if not a or not w.any():continue
             m=w>0
             if i in s.tax:q=s.root_t[i];P=(V[m]-q)@rotm(s.tax[i],a).T+q;V[m]=V[m]*(1-w[m][:,None])+P*w[m][:,None];continue
+            if b.get('mv'):V[m]+=np.outer(w[m]*a,s.f*b['d'][0]+s.s*b['d'][1]+s.z*b['d'][2])*s.H;continue   # mv：まわさずに、d の向きへ a（H）だけずらす
             q=s.root[i] if i in s.root else s.P(b['p']);P0=V[m]-q
             if False:pass
             elif b.get('sc'):P=P0*(1+a)+q
