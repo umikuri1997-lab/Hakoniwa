@@ -50,7 +50,7 @@ function cookTopDraw(c,id,x,y,i,now){/* 家具の絵のあとに、上の物を�
 function wbworkStage(o){if(!o||hasNeed(o))return -1;if(S.res.some(r=>r.act&&r.act.type==='craft'&&r.act.sh!=null&&r.act.order===o.id))return -1;/* できてかかげているあいだは、台の上の物をなくす（手に持っているので） */const p=o.prog/Math.max(1,o.need);return p<.45?0:p<.85?1:2}
 /* 音と粒：描くたびに、動きの決まった所をこえたら出す */
 /* 箱などから取り出す・置く：その物のほうを向き（boxFace）、しゃがんで手をのばす動き（spirit3d の store）。
-   動きは行動のはじめから（boxActT：せいれいの時間 a.t。1倍で1秒＝2.5）。音は、取る・置くのあいだ、ゴソゴソ（SAMPLES.goso）をつなげて鳴らす（boxLoop）。 */
+   動きは行動のはじめから（boxActT：せいれいの時間 a.t。1倍で1秒＝2.5）。音は、取る・置くのあいだ、ゴソゴソ（SAMPLES.goso）を、切った所をかえながらつなげて鳴らす（boxLoop）。 */
 const TAKEACT=new Set(['bfetch','fetch','cgrab','cpick','otakiget','spick','apick','ppick','haul','cget','acol','pget']);
 const PUTACT=new Set(['store','smat','sitem','ydrop','cput','aput','sput','pput']);
 
@@ -61,15 +61,24 @@ function boxActT(r){const a=boxAct(r);return a?(a.t||0)/MIN_PER_SEC:null}
 function boxTarget(a){return a.box!=null&&a.box>=0?a.box:a.obj!=null&&a.obj>=0?a.obj:-1}
 function boxFace(r,a){/* 向く先のとなりのマスの向き（-W・-1・1・W）。なければ 0 */const t=boxTarget(a);if(t<0)return 0;const c=(r.y|0)*W+(r.x|0),at=anc(t);for(const d of[-W,-1,1,W]){const k=c+d;if(k<0||k>=W*H||Math.abs(k%W-c%W)>1)continue;if(k===t||anc(k)===at&&S.obj[k])return d}const dx=t%W-c%W,dy=(t/W|0)-(c/W|0);return Math.abs(dx)>=Math.abs(dy)?(dx<0?-1:dx>0?1:0):(dy<0?-W:W)}
 /* ゴソゴソをつなげて鳴らす：描くたびに boxBeat が、その子を見たことにする。boxLoopTick が、近い子から BOXLOOPN 人ぶんだけ鳴らし、
-   見えなくなった・おわった・村の時間が止まったら、すっと小さくして止める。音のファイルは1まわり（BOXLOOPL 秒）を3つならべた形で、まん中をくりかえす */
-const BOXLOOPL=1.0337,BOXLOOPN=2,BOXLOOPV=.09,GOSOL=new Map();
+   見えなくなった・おわった・村の時間が止まったら、すっと小さくして止める。音のファイルは1まわり（BOXLOOPL 秒）を3つならべた形。
+   同じ1まわりをくりかえすと、くりかえしがすぐわかるので、録音のどこかから短く切った所（BOXGR 秒）を、高さ・大きさを少しずつかえて、
+   かさねながらつなげて鳴らす（前と近い所はえらばない）。ときどき、手を止めたような小さな間（BOXGAPP）をはさむ */
+const BOXLOOPL=1.0337,BOXLOOPN=2,BOXLOOPV=.09,BOXGR=[.28,.72],BOXGF=.07,BOXGAPP=.18,BOXGAP=[.08,.3],GOSOL=new Map();
 function boxBeat(r,t){const a=boxAct(r);if(!a||t==null)return;let e=GOSOL.get(r);if(!e||e.a!==a){if(e)e.a=a;else{e={a,seen:0};GOSOL.set(r,e)}}e.seen=performance.now();e.x=r.x;e.y=r.y}
-function boxLoopStop(e,t){if(!e.src)return;e.g.gain.cancelScheduledValues(t);e.g.gain.setTargetAtTime(0,t,.06);try{e.src.stop(t+.4)}catch(_){}e.src=null}
+function boxLoopStop(e,t){if(!e.src)return;e.g.gain.cancelScheduledValues(t);e.g.gain.setTargetAtTime(0,t,.06);for(const s of e.src.gr){try{s.stop(t+.4)}catch(_){}}e.src=null}
+function boxGrain(e,buf){/* 1つぶんを e.nt から鳴らし、つぎの時刻を e.nt に */const len=buf.duration,d=BOXGR[0]+Math.random()*(BOXGR[1]-BOXGR[0]),rate=.9+Math.random()*.2,lo=.05,hi=Math.max(lo,len-d-.05);
+  let off=lo+Math.random()*(hi-lo);for(let k=0;k<6&&e.lo!=null&&Math.abs(off-e.lo)%BOXLOOPL<.3;k++)off=lo+Math.random()*(hi-lo);e.lo=off;/* 1まわりの中で前と近い所はさける */
+  const s=AC.createBufferSource(),v=AC.createGain(),w=Math.max(e.nt,AC.currentTime),real=d/rate,pk=.65+Math.random()*.35;s.buffer=buf;s.playbackRate.value=rate;
+  v.gain.setValueAtTime(0,w);v.gain.linearRampToValueAtTime(pk,w+BOXGF);v.gain.setValueAtTime(pk,w+real-BOXGF);v.gain.linearRampToValueAtTime(0,w+real);
+  s.connect(v);v.connect(e.g);s.start(w,off,d);const gr=e.src.gr;gr.push(s);s.onended=()=>{const i=gr.indexOf(s);if(i>=0)gr.splice(i,1);try{v.disconnect()}catch(_){}};
+  e.nt=w+real-BOXGF+(Math.random()<BOXGAPP?BOXGAP[0]+Math.random()*(BOXGAP[1]-BOXGAP[0]):0)}
 function boxLoopTick(){if(!GOSOL.size)return;const now=performance.now(),ok=typeof AC!=='undefined'&&AC&&AC.state==='running'&&SND.sfx&&typeof S!=='undefined'&&S&&!(typeof paused==='function'&&paused()),buf=ok&&(SBUF.goso||[]).find(Boolean),t=typeof AC!=='undefined'&&AC?AC.currentTime:0,L=[];
   for(const[r,e]of GOSOL){const live=now-e.seen<250&&r.act===e.a&&boxAct(r),q=live&&buf?sfxPos(e.x,e.y):null;if(q)L.push([e,q]);else if(!live){boxLoopStop(e,t);GOSOL.delete(r)}/* 音を止めてから表からけす（止めずにけすと、鳴りつづける） */}
   L.sort((a,b)=>b[1].v-a[1].v);const on=new Set(L.slice(0,BOXLOOPN).map(p=>p[0]));
   for(const[r,e]of GOSOL){if(!on.has(e)&&e.src)boxLoopStop(e,t)}if(!buf)return;
-  for(const[e,q]of L){if(!on.has(e))continue;if(!e.src){const s=AC.createBufferSource(),g=AC.createGain(),f=AC.createBiquadFilter();s.buffer=buf;s.loop=true;s.loopStart=BOXLOOPL;s.loopEnd=BOXLOOPL*2;s.playbackRate.value=.94+Math.random()*.12;g.gain.value=0;f.type='lowpass';f.Q.value=.5;let h=g;if(AC.createStereoPanner){e.p=AC.createStereoPanner();g.connect(e.p);h=e.p}else e.p=null;h.connect(f);f.connect(sfxG);s.connect(g);s.start(t,BOXLOOPL*(1+Math.random()));Object.assign(e,{src:s,g,f})}/* 1まわりのどこからか鳴らしはじめる（2人が同じ所から鳴らないように） */
+  for(const[e,q]of L){if(!on.has(e))continue;if(!e.src){const g=AC.createGain(),f=AC.createBiquadFilter();g.gain.value=0;f.type='lowpass';f.Q.value=.5;let h=g;if(AC.createStereoPanner){e.p=AC.createStereoPanner();g.connect(e.p);h=e.p}else e.p=null;h.connect(f);f.connect(sfxG);Object.assign(e,{src:{gr:[]},g,f,nt:t,lo:null})}
+    while(e.nt<t+.3)boxGrain(e,buf);/* 0.1秒ごとによばれるので、0.3秒先まで用意しておく */
     e.g.gain.setTargetAtTime(q.v*BOXLOOPV,t,.08);if(e.p)e.p.pan.setTargetAtTime(q.p,t,.08);e.f.frequency.setTargetAtTime(q.l,t,.08)}}
 setInterval(boxLoopTick,100);
 const WBEATP=new WeakMap();
