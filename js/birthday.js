@@ -1,6 +1,6 @@
 'use strict';
 /* せいれいの誕生日（birthday.js）
-   誕生日：せいれいごとに、1年（4季節×SEASONDAYS 日＝20日）のうちの1日。id からきまるので、しまわない（bdayIdx）。
+   誕生日：村に来た日（r.came。はじめからいる子は1日め）から、1年（4季節×SEASONDAYS 日＝20日）ごと（bdayCame・bdayOn）。来た日そのものは、誕生日にしない。
    前の日（昼）：なかよし（いなければ、ほかの子）が、ピンクの会話で「あしたは〇〇の誕生日」と、ないしょ話（SEV1 にその年のぶんを足す。キー bdy_<id>_<年>）。
    当日：強化のイベントのしくみで、お誕生日会（EVENTS.bday、BDAYAT 時から）。その子の家（ベッド）のそば、なければ神殿のまえに、村にいる子がみんな集まる。
      その日にきまっているイベント（季節の大会など）があれば、そのあと（S.ev の next）。集まれない・暗くなった・コワイノ・時間をすぎた日は、その年はやめる（ほかの日にずらさない）。
@@ -10,10 +10,10 @@
    フリーモードでも出る。思い出帳の再生（MEMRUN）では出ない。お墓・旅の子は、その年はしない。 */
 const BDAYAT=15,BDAYFUN=20,BDAYBOND=3,BDAYPOP=[5,10,20,30];/* たのしさ：evEnd の+10に BDAYFUN をたして30。おいわい：にがて・ふつう・すき・だいすき */
 const BDAYYEAR=()=>SEASONDAYS*4;
-function bdayIdx(r){return r&&r.id!=null?Math.floor(hash(((r.id|0)*7919+131)>>>0)*BDAYYEAR()):-1}/* 1年の何日め（0から） */
+const bdayCame=r=>r&&r.came?r.came:1;
 const bdayYear=d=>Math.floor(Math.max(0,d-1)/BDAYYEAR());
-function bdayOn(r,d){return !!r&&bdayIdx(r)===(Math.max(0,d-1)%BDAYYEAR())}/* d の日が誕生日 */
-function bdayText(r){const i=bdayIdx(r);if(i<0)return '';return SEASONS[Math.floor(i/SEASONDAYS)]+'の'+(i%SEASONDAYS+1)+'日'}
+function bdayOn(r,d){if(!r)return false;const n=d-bdayCame(r);return n>0&&n%BDAYYEAR()===0}/* d の日が誕生日（来てから20日ごと） */
+function bdayText(r){if(!r)return '';const c=bdayCame(r);return SEASONS[seasonOf(c)]+'の'+seasonDay(c)+'日'}
 const bdayToday=r=>bdayOn(r,dayNo());
 const bdayOK=r=>!!r&&!r.hidden&&!r.back&&S.res.includes(r);
 /* お誕生日会（強化のイベントのしくみにのせる。ひらく画面には出さない） */

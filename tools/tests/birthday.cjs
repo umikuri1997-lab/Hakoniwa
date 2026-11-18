@@ -1,4 +1,4 @@
-/* せいれいの誕生日（birthday.js）と、草原の夏の豪華なイベント「花火の夜」（events.js の hanabi）。
+/* せいれいの誕生日（birthday.js：村に来た日から20日ごと）と、草原の夏の豪華なイベント「花火の夜」（events.js の hanabi）。
    誕生日：1年に1回・前の日のないしょ話（ピンクの会話）・当日15時のお誕生日会（みんなが集まり、なかよし+3）・つぎの朝のお礼の手紙・お世話の「おいわい」・プロフィールの誕生日。
    その日のイベントのあとにつづく・時間をすぎたら、その年はやめる。
    花火の夜：夏だけ・たき火がいる・パワー300・枝20・空き缶10・攻撃力+5・スタミナ+1・花火のエフェクト・雨の日はできない。 */
@@ -10,9 +10,8 @@ const assert=require('node:assert/strict');
   const sim=(clockMin,stopIf)=>run(`(()=>{const end=S.t+${clockMin};let n=0;while(S.t<end&&n<40000){stepWorld(1.5);for(const r of S.res){updRes(r,1.5);r.hunger=Math.max(r.hunger,800);r.energy=Math.max(r.energy,80)}S.enemies=[];S.rain=false;n++;${stopIf?'if('+stopIf+')break;':''}}return n})()`);
   const to=(d,h)=>run(`(()=>{const t=(${d}-1)*1440+(${h})*60;if(t>S.t)S.t=t;return dayNo()})()`);
   /* 誕生日のきめかた */
-  const bi=JSON.parse(await run(`JSON.stringify({ix:S.res.map(bdayIdx),tx:S.res.map(bdayText),year:BDAYYEAR()})`));
-  assert.equal(bi.year,20);assert.ok(bi.ix.every(i=>i>=0&&i<20),'index in year '+bi.ix);assert.ok(bi.tx.every(t=>/^(春|夏|秋|冬)の[1-5]日$/.test(t)),'text '+bi.tx);
-  assert.equal(await run(`(()=>{const r=S.res[1];let n=0;for(let d=1;d<=60;d++)if(bdayOn(r,d))n++;return n})()`),3,'once a year');
+  const bi=JSON.parse(await run(`(()=>{const r=S.res[1];r.came=7;const on=[];for(let d=1;d<=50;d++)if(bdayOn(r,d))on.push(d);const f=S.res[0],c0=f.came;delete f.came;const fo=[];for(let d=1;d<=45;d++)if(bdayOn(f,d))fo.push(d);if(c0)f.came=c0;return JSON.stringify({on,fo,tx:bdayText(r),year:BDAYYEAR()})})()`));
+  assert.equal(bi.year,20);assert.deepEqual(bi.on,[27,47],'every 20 days from the day it came');assert.deepEqual(bi.fo,[21,41],'first spirit: from day 1');assert.equal(bi.tx,'夏の2日','birthday text = the day it came');
   /* 花火の夜 */
   assert.equal(await run(`EVENTS.hanabi.stage===0&&EVENTS.hanabi.sea===1&&EVENTS.hanabi.grand===1&&evOn('hanabi')`),true,'grass summer grand');
   let d=await run(`dayNo()`);while(await run(`seasonOf(${d}+1)!==1||seasonDay(${d}+1)===CUPDAY`))d++;await to(d,15);
@@ -34,7 +33,7 @@ const assert=require('node:assert/strict');
   const rn=JSON.parse(await run(`(()=>{S.evDone={};S.ev=null;S.mat.eda=20;S.mat.can=10;const d0=dayNo();evOpen('hanabi',S.res.map(r=>r.id));const day=S.ev.day;S.t=(day-1)*1440+20.2*60;S.rain=true;evTick();const r={ph:S.ev.ph,day:S.ev.day,want:day+1};evCancel();S.rain=false;return JSON.stringify(r)})()`));
   assert.equal(rn.ph,null);assert.equal(rn.day,rn.want,'rain: next day');
   /* 誕生日：誕生日がほかの子とかさならない日をさがす */
-  const bd=JSON.parse(await run(`(()=>{const r=S.res[2];let d=dayNo()+2;while(!(bdayOn(r,d)&&seasonDay(d)!==CUPDAY&&S.res.every(q=>q===r||!bdayOn(q,d))))d++;return JSON.stringify({id:r.id,name:r.name,d})})()`));
+  const bd=JSON.parse(await run(`(()=>{const r=S.res[2];r.came=dayNo()-15;let d=dayNo()+2;while(!(bdayOn(r,d)&&seasonDay(d)!==CUPDAY&&S.res.every(q=>q===r||!bdayOn(q,d))))d++;return JSON.stringify({id:r.id,name:r.name,d})})()`));
   /* 前の日のないしょ話 */
   await to(bd.d-1,12);
   const ev=JSON.parse(await run(`(()=>{S.ev=null;bdayEveTick();const k='bdy_${bd.id}_'+bdayYear(${bd.d});const e=SEV1.find(x=>x.k===k);if(!e)return JSON.stringify({});const L=e.L;checkSev();return JSON.stringify({k,at:e.at(),L,q:(S.sevP||[]).includes(k)})})()`));
