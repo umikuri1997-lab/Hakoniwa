@@ -135,7 +135,7 @@ function pixDraw(c,rows,col,x,y,u){const P={o:shade(col,.72),m:col,h:shade(col,1
 const GICON={};
 function gearColor(id){const b=BL[id];if(b.g.sp)return ORE_COL.sp;if(b.g.col)return ORE_COL[b.g.col];const k=Object.keys(b.mat).map(k=>ORE_OF[k]||k).find(k=>GEAR_ORES.includes(k))||Object.keys(b.mat)[0];return ORE_COL[k]||ORE_COL.iron}
 function pixURL(key,rows,col){if(GICON[key])return GICON[key];const c=document.createElement('canvas');c.width=c.height=144;const g=c.getContext('2d');g.imageSmoothingEnabled=false;pixDraw(g,rows,col,0,0,9);const u=c.toDataURL();c.width=c.height=0;return GICON[key]=u}
-const gearIcon=id=>pixURL(id,GPIX[BL[id].g.ic||BL[id].g.s],gearColor(id));
+const gearIcon=id=>ICONS['g_'+id]||pixURL(id,GPIX[BL[id].g.ic||BL[id].g.s],gearColor(id));/* もらった絵をちぢめたドット絵（tools/art/gear/gear_art.py）。まだない物は、コードの仮の絵 */
 /* 鉱脈の絵：岩に、鉱石の色の粒（ドット） */
 const VSPK=[[9,14],[16,12],[13,19],[20,18],[7,21],[17,23]];
 function drawVein(c,id,x,y,i){drawObj(c,'rock',x,y,i);const col=ORE_COL[VEINS[id]],X=Math.round(x),Y=Math.round(y);for(const[a,b]of VSPK){c.fillStyle=shade(col,.72);c.fillRect(X+a-1,Y+b-1,4,4);c.fillStyle=col;c.fillRect(X+a,Y+b,2,2)}}

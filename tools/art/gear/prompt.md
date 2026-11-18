@@ -2,7 +2,7 @@
 
 そうびの画面・依頼ボード・もちものに出すアイコンの絵。いまは、どのそうびも、コードの仮の絵（`gear.js` の `GPIX`：武器・矢・防具・せおう物・おまもり・専用品の6つの形）の色をかえて出しているだけで、もらった絵はない。
 マップに置く物ではないので、お手本のキューブはつけない。数が多いので、7まいに分けてたのむ（どのプロンプトも、それ1つでわたせる）。
-もらったら `tools/art/gear/` に入れ、`gearIcon`（`gear.js`）を、もらった絵があればそれを使う形にする。
+もらったら `tools/art/gear/src/<シート>.webp`（weapon1・weapon2・arrows・armor1・armor2・charm・tool）に入れ、`python3 tools/art/gear/gear_art.py <出力> --game` でゲームに入れる（`gearIcon` は、`ICONS` の `g_<id>` があればそれを使う）。
 
 ---
 
