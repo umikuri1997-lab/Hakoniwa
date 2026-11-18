@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 """小さな生き物をタップしたときの鳴き声（本物の録音）を作る。
 元の音：OpenGameArt の CC0 の音（どれも CC0）
-  birdsCrickets.zip（bird.wav・bird2.wav・cricket.wav・distressedMosquito.wav） https://opengameart.org/content/birdcricketfrog-and-mosquito-sounds
+  birdchirping071414.wav（庭で録った小鳥） https://opengameart.org/content/bird-chirping-sounds
+  birds-isaiah658.ogg（外で録った小鳥）    https://opengameart.org/content/ambient-bird-sounds
+  birdsCrickets.zip（cricket.wav・distressedMosquito.wav。as3sfxr で作った音） https://opengameart.org/content/birdcricketfrog-and-mosquito-sounds
   ribbit_01〜03.mp3・croak_01_0.mp3   https://opengameart.org/content/ribbit-frog-sounds ・ /frog-croaks
   mouse-2.wav                        https://opengameart.org/content/mouse-imitation
   montage-sfx-20130922@153659.ogg    https://opengameart.org/content/squeaky-rat
@@ -20,7 +22,8 @@ ONLY = sys.argv[2].split(',') if len(sys.argv) > 2 else None
 OUT = os.path.join(os.path.dirname(__file__), '..', '..', 'assets', 'g')
 # 名前: [(元のファイル, はじめ 秒, 長さ 秒, 高さ（1=そのまま）, 低い所を切る Hz, 高い所を切る Hz), ...]
 SET = {
-  'cv_bird':  [('**/bird.wav', 0, .72, 1, 600, 12000), ('**/bird2.wav', 0, .30, 1, 600, 12000)],  # 小鳥：ちゅん・ぴぴっ
+  'cv_bird':  [('birdchirping071414.wav', .80, .42, 1, 1200, 12000), ('birdchirping071414.wav', 2.05, .45, 1, 1200, 12000),
+               ('birds-isaiah658.ogg', 11.40, .40, 1, 1200, 12000), ('birds-isaiah658.ogg', 14.90, .42, 1, 1200, 12000)],  # 小鳥：ちゅん・ぴぴっ（本物の小鳥の録音）
   'cv_risu':  [('montage-sfx-*.ogg', .50, .22, 1.35, 500, 11000), ('montage-sfx-*.ogg', 1.20, .27, 1.35, 500, 11000)],  # りす：ねずみの声を高くした、きゅきゅっ
   'cv_nezumi':[('mouse-2.wav', 0, .28, 1, 500, 11000), ('mouse-2.wav', .40, .28, 1, 500, 11000)],  # ねずみ：ちゅっ
   'cv_usagi': [('RabbitEating.wav', 2.30, .30, 1, 200, 9000), ('RabbitEating.wav', 2.85, .30, 1, 200, 9000)],  # うさぎ：もぐもぐ（うさぎは、ほとんど鳴かない）
