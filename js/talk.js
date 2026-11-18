@@ -104,7 +104,7 @@ const TALKE={
 function smallTalk(r){const P=[],m=bestMate(r),fav=FOODS[favDish(r)],lf=BL[likeF(r)].name,lk=LIKES[r.like],ng=(NIGATE[r.elem]||[]).map(k=>BL[k]&&BL[k].name).filter(Boolean)[0];
   tAll(P,'g',TALKG);tAll(P,'s'+seasonNow(),TALKSEA[seasonNow()]);/* 季節の話 */tAll(P,'e:'+r.elem,TALKE[r.elem]||[]);
   tAll(P,'lk',[[lk+'が、だいすきなんだ。','いつまでも、やっていられるよ。'],['いちばん好きな遊びはね、'+lk+'なんだ。','思いうかべるだけで、うきうきしちゃう。']]);
-  tAll(P,'fd',[[fav.name+'が食べたいなあ。','思いうかべるだけで、おなかがなっちゃう。'],['ぼく、'+fav.name+'に目がないんだ。','毎日でも、食べられるよ。']]);
+  if(prefKnown(r,'fd'))tAll(P,'fd',[[fav.name+'が食べたいなあ。','思いうかべるだけで、おなかがなっちゃう。'],['ぼく、'+fav.name+'に目がないんだ。','毎日でも、食べられるよ。']]);
   tAll(P,'lf',[[lf+'がある家って、すてきだと思うんだ。','ながめてるだけで、しあわせになるよ。'],['ぼくね、'+lf+'が好きなんだ。','見てると、心がおちつくの。']]);
   if(ng)tAdd(P,'ng',['じつはね、'+ng+'は、ちょっとにがてなんだ。','#sigh|みんなには、ないしょだよ。']);
   if(m)tAll(P,'mt',[[m.name+'とは、なかよしなんだ。','いっしょにいると、時間がすぐたっちゃう。'],[m.name+'って、やさしいんだよ。','ぼくが元気ないと、すぐ気づいてくれるんだ。'],['こんど、'+m.name+'と、なにして遊ぼうかな。','考えるだけで、たのしみ。']]);
