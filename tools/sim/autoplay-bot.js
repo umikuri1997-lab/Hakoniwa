@@ -109,6 +109,7 @@ const H=B.H,inHouse=(x,y)=>x>=48&&x<=51&&y>=49&&y<=51,crateIn=(x,y)=>y===51&&x>=
 B.plantAll=(id,nx,ny)=>{let n=0;while(inv(id)>0&&cnt('sprout')<10&&n++<10){if(!B.put(id,nx||58,ny||58))break}};
 B.sow=k=>{let n=0;for(let j=0;j<S.obj.length;j++){if(S.obj[j]!=='farm')continue;const d=S.dyn[j];if(!d||d.crop)continue;if(cseed(k)<1)break;place('seed:'+k,j%W,(j/W)|0);n++}return n};
 H.statue=()=>{if(RUINT>=0&&S.obj[RUINT]==='statueb')templeRuinTap(RUINT);else B.ensure('statue',1,54,57)};/* こわれた神殿を「しらべる」でタップ */H.stor=()=>B.ensure('crate',1,51,51,crateIn);H.mbox=()=>{};
+H.wbench=()=>B.ensure('wbench',1,50,51,(x,y)=>crateIn(x,y)&&benchBoxes(y*W+x).length>0);/* 作業台は、木箱のとなり */
 H.wall=()=>{for(const [x,y] of [[49,52],[50,52],[51,52]])if(!S.obj[y*W+x])place('hwall',x,y)};
 B.weave=n=>{/* はたおり機で、布を n こまで（はたおり機がなければ、置く・たのむ） */if(B.have('loom')<1){if(inv('loom')>0)B.put('loom',56,52);else if(!B.ordered('loom')&&recipeKnown('loom'))orderFurn('loom');return}const j=S.obj.indexOf('loom');if(j<0||(S.mat.nuno||0)+prCount(j)>=n)return;for(const k of GRASSKEYS){const c=Math.min(Math.floor((S.mat[k]||0)/3),n-(S.mat.nuno||0)-prCount(j),PROC.loom.cap-prCount(j));if(c>0){const Q=(S.prQ||(S.prQ={}))[j]||(S.prQ[j]={});rsvAdd({[k]:c*3});Q[k]=(Q[k]||0)+c*3;return}}};
 H.bed=()=>{if(houseBedCount()+inv('bed')+B.sites('bed')<1&&!B.ordered('bed'))B.weave(1);B.ensure('bed',1,48,49,inHouse)};
@@ -132,15 +133,15 @@ H.kagemark=()=>{if(S.flags.kgMark!=null&&!S.flags.kgLook&&!isNight()){const j=S.
 H.nushi=()=>{if(!isNight()&&S.qTalked&&(S.shards||[]).length&&!B.st.nt||performance.now()-(B.st.nt||0)>8000){B.st.nt=performance.now();const [sx,sy]=SR();setMode('look');centerOn((sx+1.5)*TS,(sy+1.5)*TS);try{onTap(VW/2,VH/2)}catch(e){}}};
 H._all=()=>{
   if(S.flags.tapAsk&&!S.flags.tapped&&sheet==null){S.flags.tapPend=true;openSheet('res',S.res[0].id)}
-  if(S.quest<6)return;const n=S.res.length;
+  if(S.quest<7)return;const n=S.res.length;
   for(const id in S.inv){const b=BL[id];if(b&&b.kind==='plant'&&S.inv[id]>0)B.plantAll(id,56+(dayNo()%5)*3,46+(dayNo()%7)*3)}
-  if(S.quest>12)for(const k of ['imo','mugi','tomato','cabbage'])if(CROPS[k])B.sow(k);
+  if(S.quest>13)for(const k of ['imo','mugi','tomato','cabbage'])if(CROPS[k])B.sow(k);
   if((S.mat.eda||0)<12){let c=0;for(const d of S.drops){if(d.id==='mat:eda'&&!d.tap&&Math.hypot(d.x-54,d.y-54)<22&&!(S.fog&&fogAt(d.y*W+d.x))){d.tap=1;if(++c>=6)break}}}
   if((S.mat.kasa||0)<8){let c=0;S.wreq=S.wreq||{};for(let j=0;j<S.obj.length;j++){if(S.obj[j]==='weed0k'&&!S.wreq[j]&&Math.hypot(j%W-54,(j/W|0)-54)<24&&!(S.fog&&fogAt(j))){S.wreq[j]=1;if(++c>=4)break}}}
   if(houseBedCount()+inv('bed')<n){if(!B.ordered('bed')){B.weave(1);orderFurn('bed')}}
   if(inv('bed')>0)(B.put('bed',48,49,inHouse)||B.put('bed',60,49));
-  if(S.quest>7){for(const [id,k] of [['chair',2],['bench',2],['swing',1],['campfire',1],['sandbox',1]])if(recipeKnown(id)&&lvOK(id)&&B.have(id)<k&&S.pt>50)B.ensure(id,k,60,50)}
-  if(S.enemyOn&&S.quest>9){
+  if(S.quest>8){for(const [id,k] of [['chair',2],['bench',2],['swing',1],['campfire',1],['sandbox',1]])if(recipeKnown(id)&&lvOK(id)&&B.have(id)<k&&S.pt>50)B.ensure(id,k,60,50)}
+  if(S.enemyOn&&S.quest>10){
     if((S.inv.arrow||0)<20*Math.max(1,cnt('watch'))&&!B.ordered('arrow')&&recipeKnown('arrow')&&(S.mat.eda||0)>=1&&(S.mat.stone||0)>=1)orderFurn('arrow');/* 見張り台1台につき20本 */
     const wn=Math.min(3,elemCount('wood'));if(B.have('watch')<wn&&S.pt>80)B.ensure('watch',wn,50+B.have('watch')*4,70);
     for(const [id,k] of [['spike',4],['sticky',3],['puddle',3]])if(recipeKnown(id)&&lvOK(id)&&B.have(id)<k&&S.pt>60)B.ensure(id,k,48+((B.have(id)*3)%12),74);

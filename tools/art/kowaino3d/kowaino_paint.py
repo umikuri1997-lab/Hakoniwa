@@ -20,7 +20,7 @@ import kw_tex
 CFG = {
     'basic': dict(model=os.path.join(HERE, 'models', 'kg_basic.glb'),   # 持ち主が直したモデル＋手（kw_model.py）
                   labcol={'base': '#6f6487', 'rim': '#2c2440', 'under': '#2c2440', 'face': '#241c33', 'deco': '#b9aab6', 'pom': '#c8bcc8', 'hand': '#241c33'},
-                  HPX=54, base='#6f6487', lining=True, hem=('#ac9776', 0.03), under='#2c2440', legs=('#342b44', 0.1),
+                  HPX=41, base='#6f6487', lining=True, hem=('#ac9776', 0.03), under='#2c2440', legs=('#342b44', 0.1),
                   eyes=dict(x=0.085, z=0.52, rx=0.03, rz=0.075, col='#c2afae', edge='#9e8a92')),
     'basic_old': dict(HPX=54, thin=0, hem=('#ac9776', 0.03), under='#2c2440', lining='#2c2440', base='#685d7f', parts='#b9aab6', legs=('#342b44', 0.1), eyes=dict(x=0.085, z=0.52, rx=0.03, rz=0.075, col='#c2afae', edge='#9e8a92'),
                   seeds=[('hood', 0.0, 0.85, '#6f6487', 0), ('face', 0.0, 0.52, '#241c33', 1),
@@ -29,7 +29,7 @@ CFG = {
 }
 
 def mk(name, size, cloth, dark, deco, eye, pom=None, edge=None, hand=None, mats=None, **kw):
-    """持ち主が直したモデル（models/kg_<名前>.glb）の色わけで写すときの色。布・裏地と顔（こい色）・かざり・目。大きさはゲームの size（コカゲが1）"""
+    """持ち主が直したモデル（models/kg_<名前>.glb）の色わけで写すときの色。布・裏地と顔（こい色）・かざり・目。大きさはゲームの size（1で54ドット。コカゲは HPX=41・size .75）"""
     return dict(model=os.path.join(HERE, 'models', 'kg_%s.glb' % name), HPX=round(54*size), base=cloth,
                 labcol={'base': cloth, 'under': dark, 'red': dark, 'face': dark, 'deco': deco, 'pom': pom or deco, 'hand': hand or dark},
                 mats=dict({'base': 'fabric', 'red': 'fabric', 'pom': 'fabric'}, **(mats or {})),
@@ -409,11 +409,82 @@ def tube(sc, pts, rs, col, n=10):
         for i in range(n): sc.quad(rings[k][i], rings[k+1][i], rings[k+1][(i+1) % n], rings[k][(i+1) % n], col)
     for i in range(n): sc.tri(pts[-1], rings[-1][i], rings[-1][(i+1) % n], col)
 
+PATD = 0.07   # 布の模様（体とはなれた かざりで、布の面から このきょり（高さのうち）より近い物）：布の面に はりつける
+PATOFF = 0.004   # 模様・目を、面から このきょりだけ 外へ（面とかさならないように）
+EYEV = []   # いま写している目の点（目ごと）
+EYEW, EYEH = 4, 7   # 正面の目のドットの大きさ（EYEPX と同じ）
+EYEWS = ((0.7, 4), (0.45, 3), (0.25, 2), (-1, 1)); EYEHS = ((0.7, 7), (0.5, 5), (0.3, 3), (-1, 1))   # 写した大きさの わり → 目の はば・高さ（ドット）
+EYEEDGE = 0.014   # 目のふち（ふちの色）のはば（高さのうち）
+def ornament(P, F, col, lab, comp, H, cfg, dead=False, name=None):
+    """布の模様と目を、3Dの面にはる（写したあとに2Dで おさない。持ち主）。
+    模様：布の面から PATD より近い かざりの かたまりを、布の面の いちばん近い所へ うつす（うき上がって べつの物に見えない）。色わけ 'pat'。
+    目：顔の面の上に、だ円（たて rz・よこ rx）を2まい（ふちの色・目の色）。色わけ 'eyee'・'eye'。たおされた目は、ほそい線だけ。
+    ボーンの重みは、近い布・顔の点と同じ（kw_skel）"""
+    P = P.copy(); lab = lab.copy(); big = np.bincount(comp).argmax()
+    cl = np.isin(lab, ['base', 'rim', 'under', 'red']); T = trimesh.Trimesh(P, F[cl], process=False)
+    import kw_skel
+    dec = lab == 'deco'
+    if name in kw_skel.SPREAD or name in kw_skel.SCARF: dec[:] = False   # とびちる かざり・マフラーは、模様ではない
+    for labels, sel, _ in kw_skel.ATTACH.get(name, []): dec &= ~kw_skel._sel_faces(P, F, lab, comp, H, labels, sel)   # 骨につける持ち物（ハンマー・牙・つの など）も
+    for q in np.unique(comp[dec]):
+        if q == big: continue
+        k = dec & (comp == q); vs = np.unique(F[k]); cp, d, _ = trimesh.proximity.closest_point(T, P[vs])
+        if d.max() > PATD*H: continue
+        u = P[vs]-cp; u /= np.maximum(np.linalg.norm(u, axis=1), 1e-9)[:, None]; P[vs] = cp+u*PATOFF*H; lab[k] = 'pat'
+    e = cfg.get('eyes'); EYEV[:] = []
+    if not e or not (lab == 'face').any(): return P, F, col, lab, comp
+    fcm = trimesh.Trimesh(P, F[lab == 'face'], process=False); NP, NF, NC, NL = [], [], [], []; o = len(P)
+    for c in eyepos(P, F, lab, H, e):
+        cp, _, ti = trimesh.proximity.closest_point(fcm, c[None]); n = fcm.face_normals[ti[0]]
+        if n[1] < 0: n = -n   # 前を向く
+        n = n/np.linalg.norm(n); u = np.cross([0, 0, 1.0], n); u /= np.linalg.norm(u); v = np.cross(n, u)
+        for lb, k_, off, cc in (('eyee', EYEEDGE, PATOFF, e.get('edge', e['col'])), ('eye', 0.0, PATOFF*2, e['col'])):
+            rx, rz = e['rx']+k_, (e['rz']*0.18 if dead else e['rz'])+k_
+            if dead and lb == 'eye': continue
+            m_ = 24; ctr = cp[0]+n*off*H; ring = [ctr+(u*math.cos(t)*rx+v*math.sin(t)*rz)*H for t in np.linspace(0, 2*math.pi, m_, endpoint=False)]
+            if lb == 'eyee': EYEV.append(list(range(o, o+m_+1)))   # 目のだ円（ふち）の点：写したあと、ドットの形をそろえる（eyeclean）
+            NP += [ctr]+ring; NF += [(o, o+1+i, o+1+(i+1) % m_) for i in range(m_)]; NC += [hx(cc)]*m_; NL += [lb]*m_; o += m_+1
+    return (np.vstack([P, np.array(NP)]), np.vstack([F, np.array(NF)]), np.vstack([col, np.array(NC)]), np.concatenate([lab, np.array(NL, object)]),
+            np.concatenate([comp, np.full(len(NF), comp.max()+1)]))
+
+def eyeset(W, H):
+    """だ円のドット（左右・上下 対称）。ふち：上か下が だ円の外の ドット（持ち主がきめた目の形 EYEPX と同じ きまり。4×7 で EYEPX になる）"""
+    S = np.zeros((H, W), bool)
+    for j in range(H):
+        for i in range(W):
+            x = (i+0.5-W/2)/(W/2); y = (j+0.5-H/2)/(H/2); S[j, i] = x*x+y*y <= 1.0 or W <= 2 or H <= 2
+    up = np.vstack([np.zeros((1, W), bool), S[:-1]]); dn = np.vstack([S[1:], np.zeros((1, W), bool)])
+    return S, S & ~(up & dn)
+
+def eyeclean(im, P, F, lab, PL, R, proj, ext, cfg):
+    """3Dで写した目（小さな だ円は、ドットに すると 左右で形が かわり、ガタガタになる）を、きれいな だ円の ドットに おきかえる。
+    場所・はば・高さは、その目の3Dの だ円を 写した大きさ（向きで ほそくなる・たおれると ねる）。見えていた所（前に物があれば かくれる）だけに描く"""
+    e = cfg['eyes']; a = np.array(im); idb, _ = O.LAST; ep = [p_ for p_, l_ in PL.items() if l_ in ('eye', 'eyee')]
+    Hs, Ws = a.shape[:2]; m = np.isin(idb, ep)[:Hs*BIG, :Ws*BIG].reshape(Hs, BIG, Ws, BIG).mean((1, 3)) > 0.2   # 目が見えている ドット
+    if not m.any(): return im
+    fc = list(hx(cfg['labcol'].get('face', '#241c33')).astype(int))+[255]; ce = list(hx(e.get('edge', e['col'])).astype(int))+[255]; cc = list(hx(e['col']).astype(int))+[255]
+    a[m & (a[..., 3] > 0)] = fc   # 写した目は いったん 顔の色に
+    from scipy.ndimage import binary_dilation
+    vis = binary_dilation(m, iterations=1)
+    for vs in EYEV:
+        q = np.array([proj(R(P[v])) for v in vs[1:]]); q[:, 0] -= ext[0]; q[:, 1] -= ext[2]
+        x0, x1 = q[:, 0].min(), q[:, 0].max(); y0, y1 = q[:, 1].min(), q[:, 1].max()
+        nw, nh = 2*(e['rx']+EYEEDGE)*cfg['HPX'], 2*(e['rz']+EYEEDGE)*cfg['HPX']   # 正面から見た大きさ（ドット）
+        rw, rh = (x1-x0)/nw, (y1-y0)/nh; step = lambda r, L: next(v for t, v in L if r > t)
+        Wd = step(rw, EYEWS); Hd = step(rh, EYEHS)   # 正面で EYEW×EYEH（持ち主がきめた目の大きさ）。よこを向く・たおれて 写した大きさが へったときだけ、段で ほそく・ひくく（コマごとに 大きさが ゆれない）
+        S, Ed = eyeset(Wd, Hd); L = int(round((x0+x1)/2-Wd/2)); T = int(round((y0+y1)/2-Hd/2))
+        for j in range(Hd):
+            for i in range(Wd):
+                y, x = T+j, L+i
+                if S[j, i] and 0 <= y < Hs and 0 <= x < Ws and vis[y, x] and a[y, x, 3]: a[y, x] = ce if Ed[j, i] else cc
+    return Image.fromarray(a)
+
 def shoot(name, cfg, src, yaw=0.0):
     if cfg.get('model'):   # マテリアルつきのモデル（持ち主が直した物・kw_model.py で手を足した物）：色わけはマテリアルのまま
         m, comp, lab0 = load_labeled(cfg['model']); P, F, col, lab, H, cen = paint_labeled(m, comp, lab0, cfg); POMC[:] = []
+        P, F, col, lab, comp = ornament(P, F, col, lab, comp, H, cfg, cfg.get('pose', {}).get('dead', False), name)   # 模様と目を、3Dの面に
         comp0 = comp.copy()
-        comp = np.where(np.isin(lab, ['base', 'under', 'rim', 'face']), 0, comp+1)   # すそのライン・目は、布・顔の所で見る
+        comp = np.where(np.isin(lab, ['base', 'under', 'rim', 'face', 'pat', 'eye', 'eyee']), 0, comp+1)   # すそのライン・目は、布・顔の所で見る
     else:
         m, comp = load(os.path.join(src, 'kg_%s.glb' % name)); P, F, col, lab, H, cen = paint(m, comp, cfg)
     if cfg.get('thin'): P = thin(P, F, lab, k=cfg['thin'])
@@ -422,9 +493,8 @@ def shoot(name, cfg, src, yaw=0.0):
     EYES = None
     if cfg.get('pose'):   # モーション（kw_skel.py）。部品は、色わけ（lab）と つながった かたまり（comp0）でえらぶ
         import kw_skel
-        EY0 = eyepos(P, F, lab, H, cfg['eyes']); from scipy.spatial import cKDTree; EYI = cKDTree(P).query(EY0)[1]; EYO = [e-P[i] for e, i in zip(EY0, EYI)]   # 目：休みのポーズで きめて、近い点といっしょに動かす
         P = kw_skel.Skel(name, P, F, lab, comp0, H).pose(P, **cfg['pose'])   # ボーンを入れて、ポーズをつける
-        lk = cfg['pose'].get('look', (0, 0)); EYES = [P[i]+o+np.array([lk[0], 0, lk[1]])*H for i, o in zip(EYI, EYO)]   # look：目を うごかす
+        lk = cfg['pose'].get('look', (0, 0)); ev = np.unique(F[np.isin(lab, ['eye', 'eyee'])]); P[ev] += np.array([lk[0], 0, lk[1]])*H   # look：目を うごかす
     else: EYES = None
     HD = hands(P, F, lab, H, cfg.get('apart', 0)) if cfg.get('fingers') and not cfg.get('model') else []
     if HD:   # もらったモデルの手は、まん中へちぢめてかくす（新しい手を組む）
@@ -450,9 +520,11 @@ def shoot(name, cfg, src, yaw=0.0):
             return hcol if c_ > ca else lcol if c_ > ca-lwa else pcol
     for k, f in enumerate(F):
         if lab[k] != last:
-            sc.decal(hemf if lab[k] == 'base' else pomf if lab[k] in ('hood', 'pom') else None); sc.group('hoodpom' if lab[k] in ('hood', 'pom') else None)   # ずきんとぽんぽんは、三角形のさかいに線を引かない（さかい目の線は pomf）
+            sc.decal(hemf if lab[k] == 'base' else pomf if lab[k] in ('hood', 'pom') else None); sc.group('hoodpom' if lab[k] in ('hood', 'pom') else 'clothpat' if lab[k] in ('base', 'pat') else 'eye' if lab[k] in ('eye', 'eyee') else None)   # 模様は布と、目のふちは目と、さかいに線を引かない   # ずきんとぽんぽんは、三角形のさかいに線を引かない（さかい目の線は pomf）
             if cfg.get('mats'):   # 材質：でこぼこ・色のむら（kw_tex.py）と、金属のつや
-                mt_ = cfg['mats'].get(lab[k]); sc.bump(kw_tex.bump(mt_, H, seed=len(sc.bm)) if mt_ in kw_tex.MATS else None); sc.material('metal' if mt_ in ('metal', 'ice') else 'gloss' if mt_ == 'gloss' else None)
+                mt_ = cfg['mats'].get('deco' if lab[k] == 'pat' else lab[k]); sc.bump(kw_tex.bump(mt_, H, seed=len(sc.bm)) if mt_ in kw_tex.MATS else None); sc.material('metal' if mt_ in ('metal', 'ice') else 'gloss' if mt_ == 'gloss' else None)
+            if lab[k] in ('eye', 'eyee'): sc.material('flat')   # 目：かげをつけない（きめた色のまま）
+            elif not cfg.get('mats'): sc.material(None)
             sc.part(); last = lab[k]; PL[sc.pid] = lab[k]
         sc.tri(R(P[f[0]]), R(P[f[1]]), R(P[f[2]]), col[k])
     sc.decal(None); sc.group(None); sc.bump(None); sc.material(None)
@@ -461,6 +533,7 @@ def shoot(name, cfg, src, yaw=0.0):
         tm_ = trimesh.Trimesh(vertices=P, faces=F, process=False); VN = tm_.vertex_normals*(1 if tm_.volume > 0 else -1); w_ = HULL*H/cfg['HPX']; Ph = P+VN*w_
         sc.smooth(False); sc.outline(0); sc.material('ink'); sc.part()
         for k, f in enumerate(F):
+            if lab[k] in ('pat', 'eye', 'eyee'): continue   # 面にはった模様・目には、輪郭をつけない
             a_, b_, c_ = (R(Ph[f[0]]), R(Ph[f[1]]), R(Ph[f[2]])); nn = np.cross(b_-a_, c_-a_); av = R(VN[f].mean(0))
             if np.dot(nn, av) < 0: b_, c_ = c_, b_
             sc.tri(a_, b_, c_, np.array(col[k], float)*HULLK)
@@ -511,15 +584,7 @@ def shoot(name, cfg, src, yaw=0.0):
             ln |= (lb >= 0) & (nb >= 0) & (nb != lb) & (nz > zs)
         o = o.copy(); o[ln, :3] = o[ln, :3]*PARTK
     im = (lambda x: x if DITH else despeckle(x))(quant((lambda x: x if HULL else rim(x))(Image.fromarray(o.round().astype(np.uint8), 'RGBA')), NCOL, cfg.get('hem', (None,))[0], pal=PALS.setdefault((name, round(yaw, 3)), [None]) if cfg.get('pose') is not None else None))
-    idbH, zbH = O.LAST; fpid = {p_ for p_, l_ in PL.items() if l_ == 'face'}
-    def eyevis(q, ext, dep):   # 目の場所（大きな絵の上）に、顔の部品が見えていて（まわりのドットの半分より多く）、目より手前に物がない
-        x, y = int((q[0]-ext[0])*BIG), int((q[1]-ext[2])*BIG); sl = (slice(max(0, y-BIG), y+BIG), slice(max(0, x-BIG), x+BIG)); blk = idbH[sl]
-        if not blk.size or np.isin(blk, list(fpid)).mean() <= 0.5: return False
-        return float(np.median(zbH[sl])) <= dep+EYETOL*H
-    if abs(math.cos(yaw)-1) < 1e-6:   # 正面だけ、目をおす
-        ey = EYES if EYES is not None else eyepos(P, F, lab, H, cfg['eyes'])
-        q2 = [proj(R(p)) for p in ey]; side = abs(q2[1][1]-q2[0][1]) > abs(q2[1][0]-q2[0][0])   # 両目のならびが たて：よこにたおれている
-        im = stamp(im, [(proj(R(p))[0]-ext[0], proj(R(p))[1]-ext[2]) for p in ey if eyevis(proj(R(p)), ext, float(np.dot(R(p), V)))], cfg['eyes']['col'], cfg['eyes'].get('edge'), side, cfg.get('pose', {}).get('dead', False))   # 見えている目だけ、おす（まわる・うつむく・前に物があると、かくれる）
+    if EYEV: im = eyeclean(im, P, F, lab, PL, R, proj, ext, cfg)   # 目：3Dのだ円の 場所・大きさ・かくれ方のまま、ドットの形を そろえる
     if cfg.get('pose', {}).get('fade'):   # きえる：体が 上から ばらばらに ほどけ、ほどけた ドットの いくつかが、体の色の つぶになって 上へ のぼる
         fd = cfg['pose']['fade']; a = np.array(im); yy, xx = np.indices(a.shape[:2]); 
         gx, gy = xx+ext[0], yy+ext[2]; hs = (gx*73856093 ^ gy*19349663) & 1023; on = a[..., 3] > 0; ys = yy[on]; y0_, y1_ = (ys.min(), ys.max()) if len(ys) else (0, 1)
@@ -530,9 +595,10 @@ def shoot(name, cfg, src, yaw=0.0):
         pad = max(0, -int(sy.min())) if len(sy) else 0
         if pad: a = np.concatenate([np.zeros((pad,)+a.shape[1:], a.dtype), a]); sy = sy+pad; ext = (ext[0], ext[1], ext[2]-pad, ext[3])
         ok = (sx >= 0) & (sx < a.shape[1]); a[sy[ok], sx[ok]] = col[ok]; im = Image.fromarray(a)
-    if cfg.get('fxp') and abs(math.cos(yaw)-1) > 1e-6:   # うしろ向き：体の前がわ（体の むこう）の パーティクルは、体に かくれるので おさない
+    if cfg.get('fxp') and math.cos(yaw) < -0.5:   # うしろ向き（よこ向きは のぞく）：体の前がわ（体の むこう）の パーティクルは、体に かくれるので おさない
         cfg = dict(cfg, fxp=[q for q in cfg['fxp'] if q[1][1] < 0.08])
     if cfg.get('fxp'):   # パーティクル（色の数をへらしたあとに おす。絵のわくの外に出る分は、わくを広げて入れる）
+        if -math.sin(yaw) < -0.5: cfg = dict(cfg, fxp=[({'swipe': 'swipeL', 'swipeL': 'swipe'}.get(k, k), p, ag) for k, p, ag in cfg['fxp']])   # 左むき：ひっかきの すじも 左へ
         q = [(k, proj(R(np.asarray(p)*H))) for k, p, ag in cfg['fxp']]; ages = [ag for _, _, ag in cfg['fxp']]
         x0 = min([ext[0]]+[int(math.floor(v[0]))-5 for _, v in q]); y0 = min([ext[2]]+[int(math.floor(v[1]))-5 for _, v in q])
         x1 = max([ext[0]+im.width]+[int(math.ceil(v[0]))+5 for _, v in q]); y1 = max([ext[2]+im.height]+[int(math.ceil(v[1]))+5 for _, v in q])
@@ -613,11 +679,13 @@ def despeckle(im, n=2):
 
 def sheets(name, out):
     """モーションのコマ（kw_skel.poses）を写して、モーションごとに、たてにならべた1まいの絵にする（いまのゲームと同じ形：w・h・ax・ay・n）。
-    正面と、うしろ（B。やられはなし）。コマの大きさは、そのモーションのコマぜんぶが入る大きさ（足もとの点をそろえる）"""
+    正面と、うしろ（B。やられはなし）・右むき（R）・左むき（L。待機と攻撃だけ）。コマの大きさは、そのモーションのコマぜんぶが入る大きさ（足もとの点をそろえる）"""
     import kw_skel, json; info = {}
-    for mo, ps in kw_skel.poses(name).items():
-        for B, yaw in (('', 0.0), ('B', math.pi)):
-            if mo == 'hurt' and B: continue
+    PS = {False: kw_skel.poses(name), True: kw_skel.poses(name, side=True)}
+    for mo in PS[False]:
+        for B, yaw in (('', 0.0), ('B', math.pi), ('R', -math.pi/2), ('L', math.pi/2)):   # 正面・うしろ・右むき・左むき（よこは 待機と攻撃だけ。攻撃する相手のほうを向く）
+            if mo == 'hurt' and B or B in ('R', 'L') and mo not in ('idle', 'atk'): continue
+            ps = PS[B in ('R', 'L')][mo]
             fr = []
             fxp = fxparts(ps, name)
             for p, fp in zip(ps, fxp): im, e = shoot(name, dict(CFG[name], pose=p, fxp=fp), None, yaw); fr.append((im, e))

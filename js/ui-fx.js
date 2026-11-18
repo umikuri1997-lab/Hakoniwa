@@ -29,7 +29,7 @@ function tapFx(x,y){if(uiReduced())return;const fire=WD===1,n=fire?6:5;let box=d
   const cols=fire?['#f2a43a','#f7d067','#e0663a']:['#6aa857','#8fca6b','#4f8a40'];
   for(let i=0;i<n&&UIFX.parts.length<30;i++){const d=document.createElement('i'),sz=(fire?(i%3?1:2):(i%2?2:3))*1.5;d.style.width=d.style.height=sz+'px';d.style.background=cols[i%3];box.appendChild(d);
     const a=Math.PI*2*i/n+Math.random()*.6,sp=1+Math.random()*1.4;UIFX.parts.push({d,x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-(fire?1.8:1.2),t:0,fire,ph:i})}
-  {const t0=performance.now();setTimeout(()=>{if(TAPOBJ<t0)sfx(fire?'crackle':'leaf')},0)}/* 物にさわったときは、その物の音だけ */if(!UIFX.raf)UIFX.raf=requestAnimationFrame(tapFxStep)}
+  {const t0=performance.now();setTimeout(()=>{if(TAPOBJ<t0&&!(typeof TAPPEND!=='undefined'&&TAPPEND>=t0))sfx(fire?'crackle':'leaf')},0)}/* 物にさわったときは、その物の音だけ */if(!UIFX.raf)UIFX.raf=requestAnimationFrame(tapFxStep)}
 function tapFxStep(){UIFX.raf=0;const P=UIFX.parts;for(let i=P.length-1;i>=0;i--){const p=P[i];p.t++;p.x+=p.vx;p.y+=p.vy;
     if(p.smoke){p.vy*=.97;p.vx+=Math.sin(p.t*.25+p.ph)*.04}else if(p.dust){p.vy+=.14;p.vx*=.94}else if(p.fire){p.vy-=.03;p.vx*=.97}else{p.vy+=.05;p.vx*=.96;p.x+=Math.sin(p.t*.2+p.ph)*.5}/* 火の粉はのぼり、葉はゆれながら落ちる */
     p.d.style.transform='translate('+Math.round(p.x/1.5)*1.5+'px,'+Math.round(p.y/1.5)*1.5+'px)';if(p.t>32)p.d.style.opacity=String(Math.max(0,(48-p.t)/16));if(p.t>=48){p.d.remove();P.splice(i,1)}}
@@ -136,9 +136,9 @@ document.addEventListener('click',e=>{const b=e.target&&e.target.closest&&e.targ
 function gaugeWatch(){for(const id of['xpBar','foodBar','matBar']){const i=document.getElementById(id);if(!i)continue;let p=parseFloat(i.style.width)||0;
   new MutationObserver(()=>{const v=parseFloat(i.style.width)||0;if(v>p+.5&&document.body.classList.contains('wd0')&&!uiReduced()){const g=i.parentElement;g.classList.remove('gwob');void g.offsetWidth;g.classList.add('gwob');clearTimeout(g._gT);g._gT=setTimeout(()=>g.classList.remove('gwob'),1400)}p=v}).observe(i,{attributes:true,attributeFilter:['style']})}}
 
-/* 草原：一覧を指でなでると、行の板が通りすぎるたびに、マリンバの音（行ごとに音の高さがかわる。1行は約40px） */
+/* 草原：一覧を指でなでると、行の板が通りすぎるたびに、木の歯車の「カラッ」（1行は約40px） */
 document.addEventListener('scroll',e=>{const el=e.target;if(!el||!el.closest||!el.closest('#sheetWrap')||!document.body.classList.contains('wd0'))return;const k=Math.floor(el.scrollTop/40);if(el._xyl===undefined)el._xyl=0;
-  if(k!==el._xyl){XYLN=((k%8)+8)%8;el._xyl=k;sfx('xyl')}},true);
+  if(k!==el._xyl){el._xyl=k;sfx('xyl')}},true);
 /* 草原：村レベルが上がったら、上の欄の数に、新しい数が焼き印で「じゅっ」とおされて、けむりがたつ */
 function smoke(x,y,n){if(uiReduced())return;let box=document.getElementById('tapFx');if(!box){box=document.createElement('div');box.id='tapFx';document.body.appendChild(box)}
   const cols=['#d8cfc0','#c4baa9','#ece4d6'];for(let i=0;i<n&&UIFX.parts.length<40;i++){const d=document.createElement('i'),sz=(i%2?3:1.5);d.style.width=d.style.height=sz+'px';d.style.background=cols[i%3];box.appendChild(d);

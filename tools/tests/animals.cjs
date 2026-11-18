@@ -45,6 +45,8 @@ const assert=require('node:assert/strict');
     /* 画面 */
     S.t=1440*4+9*60;openSheet('furn',coop);out.sec=Array.from(document.querySelectorAll('.sheet h3')).map(e=>e.textContent).find(t=>t.startsWith('すんでいる生き物'))||'';closeSheet();
     /* 小屋をこわすと、つぎの朝、野へかえる */
+    /* 野良をタップすると、1ぴき1回だけ、50%で、とれる物を1こ落とす（小屋の生き物は落とさない） */{const R0=Math.random;Math.random=()=>0;const sd=[];for(const k of['hane','moko','tsuno']){S.drops=[];const b={id:200+sd.length,k,h:-1,stray:1,x:CX+.5,y:CY+6.6,face:1,wt:0};strayDrop(b);strayDrop(b);sd.push(S.drops.map(d=>d.id+':'+d.n+':'+!!d.tap).join())}
+      S.drops=[];const hb={id:300,k:'hane',h:0,x:CX+.5,y:CY+6.6};aniPop(hb);document.querySelectorAll('.pxcard').forEach(c=>c.parentNode.remove());sd.push((S.drops||[]).length);Math.random=R0;S.drops=[];out.sdrop=sd}
     {S.ani.push({id:99,k:'hane',h:-1,stray:1,x:1.5,y:1.6,face:1,wt:0});S.t=1440*4+18*60+1;run(30,()=>!S.ani.some(a=>a.id===99));out.strayGone=!S.ani.some(a=>a.id===99)}/* 野良は夕方に帰る */
     out.spots=['makiba','norakomichi','fureai','hidamari','hoshikusa'].filter(k=>SPOTS.some(p=>p.k===k)).length;out.hints=CHATS.filter(c=>['makiba','norakomichi','fureai','hidamari','hoshikusa'].includes(c.hint)).length;
     clearObj(coop);recount();animalMorning();out.left=S.ani.length;
@@ -54,6 +56,7 @@ const assert=require('node:assert/strict');
   assert.equal(r.fenceWalk,false,'fence blocks');assert.ok(r.pen>0,'pen found');assert.equal(r.huts,1);assert.equal(r.open,null,'open fence is not a pen');
   assert.equal(r.noStray,0,'no stray at 99%');assert.equal(r.stray,true,'stray came');assert.equal(r.strayOut,true,'outside village');
   assert.ok(r.spop.includes('野良のハネマリ')&&r.spop.includes('おむかえ'),r.spop);assert.equal(r.atTap,true,'tap finds stray');assert.equal(r.going,true,'spirit goes');assert.ok(r.led>=0,'leading');assert.ok(r.home>=0,'settled');assert.equal(r.inPen0,true);assert.equal(r.h,true);
+  assert.deepEqual(r.sdrop,['food:egg:1:true','mat:wool:1:true','food:milk:1:true',0],'stray drops '+r.sdrop);
   assert.equal(r.strayGone,true,'stray leaves at 18');assert.equal(r.spots,5);assert.equal(r.hints,5);
   assert.deepEqual(r.ani,['hane']);assert.equal(r.inPen,true);
   assert.ok(r.feedAt>=0,'feed carried');assert.ok(r.ate>=0,'animal ate');assert.ok(r.waterAt>=0,'watered');

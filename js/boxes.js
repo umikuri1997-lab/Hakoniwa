@@ -75,7 +75,7 @@ function gotDrop(t,j){/* 建てるのをやめた：運びこんだ素材は、�
 function siteRefund(t,j){/* 建てる所・依頼をやめた：とっておいた分はもどし、運んだ分は落とす */const left={},fl={},m=needLeft(t);for(const key in m){if(isFK(key))fl[key.slice(2)]=m[key];else left[key]=m[key]}rsvFree(left);rsvFree(fl,true);for(const r of S.res)if(r.bm&&r.bm.t===t.bid)bmDrop(r);if(j!=null&&j>=0){const yk=t.bp!=null?'b'+t.bp:t.bid?yardKey(t.bid):S.obj[j]==='site'&&S.dyn[j]===t?'s'+j:null,y=yardAt(yk);gotDrop(t,y>=0?y:j)}}/* 材料置き場があれば、置き場のところに落とす */
 function eatAdj(j){/* マス j のとなりの、食べ物が入っている箱（神殿のまえもふくむ） */return adjOf(j,k=>{const a=anc(k),t=boxTypeAt(k),b=t?(boxSide(j,k)?BOX()[a]:null):a>=0&&a===pileJ()?PIL():null;if(!b)return false;for(const key in b)if(b[key]>0&&isFK(key))return true;return false})}
 function boxEat(j){/* 箱 j の食べ物 {id:数}（食べられる数） */const b=j===PILE?PIL():BOX()[j],o={};if(b)for(const key in b)if(isFK(key)&&b[key]>0){const k=key.slice(2),n=Math.min(b[key],S.fs[k]||0);if(n>0)o[k]=n}return o}
-function keysAdj(j,keys){/* マス j のとなりの、keys のどれかが入っている箱（神殿のまえもふくむ） */return adjOf(j,k=>{const a=anc(k),t=boxTypeAt(k),b=t?(boxSide(j,k)?BOX()[a]:null):a>=0&&a===pileJ()?PIL():null;if(!b)return false;for(const key of keys)if(b[key]>0)return true;return false})}
+function keysAdj(j,keys,ex){/* マス j のとなりの、keys のどれかが入っている箱（神殿のまえもふくむ。ex の箱はのぞく） */return adjOf(j,k=>{const a=anc(k),t=boxTypeAt(k);if(ex&&t&&ex.has(a))return false;const b=t?(boxSide(j,k)?BOX()[a]:null):a>=0&&a===pileJ()?PIL():null;if(!b)return false;for(const key of keys)if(b[key]>0)return true;return false})}
 function cgLeft(r,R){/* 料理の材料で、まだ持っていない分 {id:数} */const g=r.cgot&&r.cgot.rec===R.key?r.cgot.m:{},m={},N=needR(R,r);for(const k in N){const n=N[k]-(g[k]||0);if(n>0)m[k]=n}return m}
 function cgBack(r){/* 料理をやめた：持っていた材料は、箱へもどす */if(!r.cgot)return;for(const k in r.cgot.m)addFood(k,r.cgot.m[k]);r.cgot=null}
 function toHand(r,m){/* 運んでいた素材の行き先がなくなった：せいれいが持ったまま、箱へしまいにいく */for(const k in m||{})if(m[k]>0){r.cmat=r.cmat||{};r.cmat[k]=(r.cmat[k]||0)+m[k]}}
@@ -83,8 +83,8 @@ function qPick(Q,j){/* たのまれた分（とっておいた素材）を、箱
 function qStale(Q){/* たのまれた素材が、もうどの箱にもない：とっておくのをやめる */if(!Q)return true;for(const k in Q)if(totKey(k)>0)return false;rsvFree(Q);return true}
 function bmTarget(bid){/* 運ぶ先（建てる所の S.dyn か、依頼） */if(typeof bid!=='string')return null;if(bid[0]==='s'){const j=+bid.slice(1);return S.obj[j]==='site'&&S.dyn[j]?S.dyn[j]:null}const id=+bid.slice(1);return (S.orders||[]).find(o=>o.id===id)||null}
 const bmFetching=bid=>S.res.some(q=>q.act&&q.act.type==='bfetch'&&q.act.tb===bid);
-function needReady(t){/* まだ運んでいない素材が、どこかの箱（神殿のまえ）にある */for(const key of needKeys(t))if(totKey(key)>0)return true;return false}
-function fetchFor(r,G,t){/* 建てる所・依頼の素材を、箱へとりにいく */const ks=needKeys(t).filter(k=>totKey(k)>0);if(!ks.length)return false;const j=nearest(G,q=>keysAdj(q,ks)>=0,9999);if(j<0)return false;startAct(r,G,'bfetch',j,{tb:t.bid});return r.act&&r.act.type==='bfetch'}
+function needReady(t){/* 運ぶ素材が、どこかの箱（神殿のまえ）にある（作業台のとなりの箱はのぞく） */const ex=benchEx(t);for(const key in benchLeft(t)){let n=totKey(key);if(ex)for(const a of ex)n-=boxHas(a,key);if(n>0)return true}return false}
+function fetchFor(r,G,t){/* 建てる所・依頼の素材を、箱へとりにいく（作業台のとなりの箱にある分は、運ばない） */const ks=Object.keys(benchLeft(t)).filter(k=>totKey(k)>0),ex=benchEx(t);if(!ks.length)return false;const j=nearest(G,q=>keysAdj(q,ks,ex)>=0,9999);if(j<0)return false;startAct(r,G,'bfetch',j,{tb:t.bid});return r.act&&r.act.type==='bfetch'}
 function haulWant(){/* 神殿のまえの物を、あいた箱へ運ぶ */if(isNight()||pileJ()<0||!PIL())return false;for(const k in PIL())if(PIL()[k]>0&&availOf(k)>0&&BOXL.some(j=>boxRoom(j,k)>0))return true;return false}
 function haulJob(r,G){if(!haulWant()||heldN(r)>0||r.bm)return false;if(S.res.filter(q=>q!==r&&q.act&&q.act.type==='haul').length>=2)return false;const pj=pileJ(),j=nearest(G,q=>adjOf(q,k=>anc(k)===pj)>=0,300);if(j<0)return false;startAct(r,G,'haul',j,{});return r.act&&r.act.type==='haul'}
 const HAULN=10;/* 神殿のまえから、1回に運ぶ数 */

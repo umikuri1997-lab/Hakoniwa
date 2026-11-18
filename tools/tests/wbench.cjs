@@ -1,0 +1,53 @@
+/* 作業台（家具 wbench）：依頼は、置いた作業台で1つずつ作る（o.cs・S.dyn[j].order）。作業台がないと作らない（作業台そのものの依頼だけ、地面で o.gnd）。
+   作業台のとなりの箱にある素材は、運ばずに使う（benchPull。材料置き場も出さない）。ない分だけ、ほかの箱から運ぶ。
+   草原のメインの目標「作業台を置こう」は家の壁のあと。古いセーブは番号をずらし（wbQuestIn）、先へ進んでいれば作業台を1つもらう（wbenchFix） */
+const assert=require('node:assert/strict');
+(async()=>{const {browser,page,run,errors}=await require('../sim/boot.cjs')({world:0});
+  /* 目標のならび */
+  const q=JSON.parse(await run(`JSON.stringify({ids:QUESTS1.slice(3,8).map(q=>q.id),inv:QUEST_INSPIRATIONS.wbench,how:QUESTS1[qsIx('wbench')].how})`));
+  console.log(JSON.stringify(q));assert.deepEqual(q.ids,['table','wall','wbench','bed','path']);assert.deepEqual(q.inv,['wbench']);
+  await run(`checkQuest=()=>{};updTut=()=>{};checkLevel=()=>{};showSpotPop=()=>{};window.FETCH=0;{const s=ACT.bfetch.start;ACT.bfetch.start=(r,a)=>{FETCH++;return s(r,a)}}true`);
+  const st=JSON.parse(await run(`(()=>{document.querySelector('#dialog').hidden=true;S.introSeen=true;S.flags.tapped=1;S.hold=0;USERPAUSE=true;S.enemyOn=false;
+    const a=S.res[0];S.res=[a];endAct(a);a.act=null;S.t=1440*3+8*60;
+    if(BOARD<0){const free=(x,y,w,h)=>{for(let b=0;b<h;b++)for(let c=0;c<w;c++){const k=(y+b)*W+x+c;if(S.obj[k]||S.ground[k]||hiAt(k)||(S.fog&&S.fog[k]))return false}return true};let q=null;for(let y=CY-12;y<CY+20&&!q;y++)for(let x=CX-14;x<CX+14;x++)if(free(x,y,8,6)){q=[x,y];break}const j=q[1]*W+q[0];S.obj[j]='statue';S.obj[j+2]='board';S.obj[j+3]='part';S.ref[j+3]=j+2;recount()}
+    S.quest=qsIx('path');S.qTalked=true;
+    for(let j=0;j<S.obj.length;j++)if(S.obj[j]==='wbench'||S.obj[j]==='crate'){S.obj[j]='';delete S.dyn[j]}
+    const free=j=>!S.obj[j]&&!S.ground[j]&&!S.floor[j]&&!hiAt(j)&&walk(j)&&!(S.fog&&S.fog[j]);let p=-1;
+    const G=bfs(a.x|0,a.y|0);for(let y=CY-20;y<CY+24&&p<0;y++)for(let x=CX-24;x<CX+12;x++){const j=y*W+x;let ok=true;for(let b=-1;b<=1&&ok;b++)for(let c=-1;c<=12;c++)if(!free(j+b*W+c)||G.dist[j+b*W+c]<0){ok=false;break}if(ok){p=j;break}}
+    window.P=p;S.obj[p]='crate';recount();for(const k of Object.keys(S.mat))S.mat[k]=0;S.mat.wood=40;S.mat.stone=20;boxSync();
+    S.pt=999;S.recipes.chair=1;S.unlocked.chair=1;S.recipes.wbench=1;S.unlocked.wbench=1;S.lv=Math.max(S.lv||1,5);S.orders=[];
+    return JSON.stringify({p,box:BOX()[p],need:BL.chair.mat})})()`));
+  console.log(JSON.stringify(st));assert.ok(st.p>=0);assert.equal(st.box.wood,40,'木箱に素材');
+  const step=n=>`(()=>{const a=S.res[0];for(let i=0;i<${n}&&S.orders.length;i++){stepWorld(.25);a.hunger=hMax(a);a.fun=90;a.energy=90}return 1})()`;
+  /* 作業台がないと作らない */
+  const nb=JSON.parse(await run(`(()=>{orderFurn('chair');${step(4000)};const o=S.orders[0];openSheet('craft');const t=[...document.querySelectorAll('.paper small')].map(e=>e.textContent);closeSheet();return JSON.stringify({cs:o.cs,prog:o.prog,got:o.got,fetch:FETCH,t})})()`));
+  console.log(JSON.stringify(nb));assert.ok(nb.cs==null);assert.equal(nb.prog,0,'作業台がないと作らない');assert.equal(nb.fetch,0,'素材も運ばない');assert.ok(nb.t.includes('作業台がありません'));
+  /* 木箱のとなりに作業台：運ばずに作る */
+  const adj=JSON.parse(await run(`(()=>{const b=P+1;S.obj[b]='wbench';recount();wbenchTick();const o=S.orders[0];const cs=o.cs,bx=benchBoxes(cs);${step(40000)};yardTick();
+    return JSON.stringify({cs,b,bx,left:S.orders.length,fetch:FETCH,yard:S.obj.includes('matyard'),wood:BOX()[P].wood,inv:S.inv.chair||0,bench:S.obj[b],ord:S.dyn[b]&&S.dyn[b].order})})()`));
+  console.log(JSON.stringify(adj));assert.equal(adj.cs,adj.b,'空いた作業台をわりあてる');assert.deepEqual(adj.bx,[st.p]);assert.equal(adj.left,0,'できた');
+  assert.equal(adj.fetch,0,'となりの木箱の素材は運ばない');assert.equal(adj.yard,false,'材料置き場も出さない');assert.equal(adj.wood,40-st.need.wood,'となりの木箱からへる');assert.equal(adj.bench,'wbench','作業台はのこる');assert.equal(adj.ord,undefined);
+  /* となりの木箱にない分だけ、ほかの箱から運ぶ */
+  const part=JSON.parse(await run(`(()=>{const far=P+11;S.obj[far]='crate';recount();boxSync();const B=BOX();B[far]={wood:B[P].wood};delete B[P].wood;boxSync();FETCH=0;window.FT=[];{const e=ACT.bfetch.end;ACT.bfetch.end=(r,a)=>{FT.push(boxIdOf(a.box));return e(r,a)}}
+    const nd=BL.chair.mat;window.AL=[];orderFurn('chair');{const a=S.res[0];for(let i=0;i<40000&&S.orders.length;i++){stepWorld(.25);a.hunger=hMax(a);a.fun=90;a.energy=90;const t=a.act&&a.act.type;if(t&&AL[AL.length-1]!==t)AL.push(t)}}return JSON.stringify({AL,far,nd,left:S.orders.length,ft:[...new Set(FT)],B:B[P],F:B[far]})})()`));
+  console.log(JSON.stringify(part));assert.equal(part.left,0);assert.ok(part.ft.every(j=>j!==st.p),'となりの箱からは運ばない');assert.ok(part.ft.length===0||part.ft.every(j=>j===part.far),'ない分は、ほかの箱から運ぶ');
+  /* 作業台が2つ：依頼を2つ、いっしょに */
+  const two=JSON.parse(await run(`(()=>{S.obj[P-1]='wbench';recount();orderFurn('chair');orderFurn('chair');wbenchTick();const r=S.orders.map(o=>o.cs);const cs0=r[0];cancelOrder(S.orders[1].id);wbenchTick();
+    S.obj[cs0]='';delete S.dyn[cs0];recount();wbenchTick();const lost=S.orders[0].cs;S.obj[cs0]='wbench';recount();cancelOrder(S.orders[0].id);return JSON.stringify({r,lost})})()`));
+  console.log(JSON.stringify(two));assert.equal(new Set(two.r).size,2,'作業台ごとに1つずつ');assert.ok(two.r.every(j=>j!=null));
+  /* 作業台がないときの作業台の依頼は、地面で作る */
+  const gnd=JSON.parse(await run(`(()=>{for(let j=0;j<S.obj.length;j++)if(S.obj[j]==='wbench'){S.obj[j]='';delete S.dyn[j]}recount();S.mat.wood=40;S.mat.stone=20;boxSync();orderFurn('wbench');wbenchTick();const g=!!S.orders[0].gnd;window.AL=[];{const a=S.res[0];for(let i=0;i<40000&&S.orders.length;i++){stepWorld(.25);a.hunger=hMax(a);a.fun=90;a.energy=90;const t=a.act&&a.act.type;if(t&&AL[AL.length-1]!==t)AL.push(t)}}return JSON.stringify({AL:AL.slice(0,30),o:S.orders[0],g,left:S.orders.length,inv:S.inv.wbench||0})})()`));
+  console.log(JSON.stringify(gnd));assert.equal(gnd.g,true);assert.equal(gnd.left,0,'作業台の依頼は、作業台がなくても作れる');
+  /* 置くとき：木箱のとなりを光らせる */
+  const hint=JSON.parse(await run(`(()=>{setMode('build');sel='wbench';const j=P;cam.z=2;cam.x=(j%W+.5)*TS-VW/cam.z/2;cam.y=((j/W|0)+.5)*TS-VH/cam.z/2;USERPAUSE=true;return JSON.stringify({})})()`));
+  await page.waitForTimeout(700);const hl=JSON.parse(await run(`JSON.stringify(WBHINT.L)`));console.log('hint',hl.length,hl.slice(0,6));
+  assert.ok(hl.includes(st.p+1)&&hl.includes(st.p-1),'木箱のとなりの置けるマス');if(process.env.SHOT_DIR)await page.screenshot({path:process.env.SHOT_DIR+'/wbench-hint.png'});
+  await run(`setMode('look');1`);
+  /* 古いセーブ：ベッドの目標のとちゅう（足す前の番号 5）→ ベッドのまま、作業台を1つもらう */
+  const old=JSON.parse(await run(`(()=>{for(let j=0;j<S.obj.length;j++)if(S.obj[j]==='wbench'){S.obj[j]='';delete S.dyn[j]}delete S.inv.wbench;delete S.recipes.wbench;S.orders=[];
+    const s=JSON.parse(JSON.stringify(S));delete s.flags.wbIns1;delete s.flags.wbFurn1;s.quest=5;s.qTalked=true;s.qStory=null;continueGame(s);
+    const r={q:QUESTS[S.quest].id,ix:qsIx('wbench'),inv:S.inv.wbench||0,rec:!!S.recipes.wbench};
+    const s2=JSON.parse(JSON.stringify(S));delete s2.flags.wbIns1;delete s2.flags.wbFurn1;s2.quest=5;s2.qStory=4;s2.qTalked=false;delete s2.inv.wbench;continueGame(s2);r.q2=QUESTS[S.quest].id;r.inv2=S.inv.wbench||0;
+    const s3=JSON.parse(JSON.stringify(S));continueGame(s3);r.q3=QUESTS[S.quest].id;return JSON.stringify(r)})()`));
+  console.log(JSON.stringify(old));assert.deepEqual(old,{q:'bed',ix:5,inv:1,rec:true,q2:'wbench',inv2:0,q3:'wbench'},'古いセーブ：番号をずらす・2回読んでもずれない');
+  assert.deepEqual(errors,[],'エラーなし');console.log('ok');await browser.close()})().catch(e=>{console.error(e);process.exit(1)});

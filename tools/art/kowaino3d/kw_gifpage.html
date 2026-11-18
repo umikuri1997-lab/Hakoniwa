@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>コワイノのモーション</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DotGothic16&family=M+PLUS+Rounded+1c:wght@400;700&display=swap">
+<style>
+:root { --bg:#eef2e6; --panel:#ffffff; --ink:#2b2838; --sub:#6b6680; --line:#d6dccb; --accent:#5a4f86; --pix:"DotGothic16", "M PLUS Rounded 1c", sans-serif; --body:"M PLUS Rounded 1c", "Hiragino Sans", sans-serif }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg:#1c1b26; --panel:#262434; --ink:#ecebf4; --sub:#a9a5bd; --line:#3a3850; --accent:#b7acec; color-scheme:dark } }
+:root[data-theme="dark"] { --bg:#1c1b26; --panel:#262434; --ink:#ecebf4; --sub:#a9a5bd; --line:#3a3850; --accent:#b7acec; color-scheme:dark }
+body { background:var(--bg); color:var(--ink); font-family:var(--body); margin:0; padding:24px 16px 48px }
+.wrap { max-width:1100px; margin:0 auto; display:flex; flex-direction:column; gap:20px }
+h1 { font-family:var(--pix); font-size:1.9rem; margin:0; letter-spacing:.04em; text-wrap:balance }
+.lead { color:var(--sub); margin:0; line-height:1.7; max-width:62ch }
+nav { display:flex; flex-wrap:wrap; gap:6px }
+nav a { font-family:var(--pix); font-size:.85rem; color:var(--accent); text-decoration:none; border:1px solid var(--line); background:var(--panel); padding:4px 10px }
+nav a:focus-visible, nav a:hover { outline:2px solid var(--accent); outline-offset:1px }
+.foe { background:var(--panel); border:1px solid var(--line); padding:16px; display:flex; flex-direction:column; gap:12px; scroll-margin-top:16px }
+.foe header { display:flex; flex-wrap:wrap; align-items:baseline; gap:8px 24px }
+h2 { font-family:var(--pix); font-size:1.3rem; margin:0 }
+dl { display:flex; flex-wrap:wrap; gap:4px 20px; margin:0; font-size:.9rem }
+dl div { display:flex; gap:8px } dt { color:var(--sub); letter-spacing:.06em } dd { margin:0 }
+.row { display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:10px }
+figure { margin:0; display:flex; flex-direction:column; gap:4px; min-width:0 }
+figure img { width:100%; height:auto; image-rendering:pixelated; border:1px solid var(--line); background:#b2ce8c }
+figcaption { font-size:.8rem; color:var(--sub); text-align:center }
+</style></head><body>
+<div class="wrap">
+<h1>コワイノのモーション</h1>
+<p class="lead">14体の動きです。ボーンを入れた3Dモデルを動かして、ドット絵に写しました。向きは、正面・うしろ・右・左の4つです。右と左の待機・攻撃は、攻撃している相手がよこにいるときに使います（よこから見ると顔がフードにかくれるので、前のはしに顔と目を入れています）。コカゲは手をなくし、布の下の手でひっかきます。コマ数は、待機4・歩き4・攻撃4・やられ5です。待機と歩きのGIFの速さは、ゲームと同じです（待機1コマ0.625秒・歩き1コマ0.167秒）。攻撃とやられは、見やすいようにゆっくりにしています（ゲームでは、もっと速い）。絵は4倍の大きさで出しています。</p>
+<nav aria-label="コワイノ">{{NAV}}</nav>
+{{SECS}}
+</div>
+</body></html>

@@ -28,10 +28,10 @@ const assert=require('node:assert/strict');
   await run(`prPop(${mj});1`);await page.click('.pxcard .p');await page.click('.pxcard .p');
   assert.equal(await page.textContent('.pxcard .v'),'2','こむぎ5こなら2つまで');await page.click('.pxcard .go');
   /* せいれい（木のせいれいだけ：風・土がいないので、だれでも）が運んで加工する */
-  const sim=JSON.parse(await run(`(()=>{const a=S.res[0];let lit=false,bar=0,n=0;for(;n<20000&&((S.mat.nuno||0)<2||(S.fs.komugiko||0)<2);n++){stepWorld(.25);a.hunger=hMax(a);a.fun=90;a.energy=90;if(a.act&&a.act.type==='proc'&&a.act.stage==='do'){const f=WORKP.proc(a,a.act);if(f>0&&f<1)bar=1}if(prLit(${lj})||prLit(${mj}))lit=true}
-    return JSON.stringify({n,nuno:S.mat.nuno||0,ko:S.fs.komugiko||0,mugi:S.fs.mugi||0,kasa:S.mat.kasa,lit,bar,left:Object.keys(S.prIn||{}).length+Object.keys(S.prQ||{}).length})})()`));
+  const sim=JSON.parse(await run(`(()=>{const a=S.res[0];let lit=false,bar=0,n=0;const an={};for(;n<20000&&((S.mat.nuno||0)<2||(S.fs.komugiko||0)<2);n++){stepWorld(.25);a.hunger=hMax(a);a.fun=90;a.energy=90;if(a.act&&a.act.type==='proc'&&a.act.stage==='do'){const f=WORKP.proc(a,a.act);if(f>0&&f<1)bar=1}if(prLit(${lj})||prLit(${mj}))lit=true;if(a.act&&a.act.type==='proc'&&a.act.stage==='do')an[workAnim(a)+':'+fieldStoryAnim(a)+':'+!!SPM[workAnim(a)]]=1}
+    return JSON.stringify({n,nuno:S.mat.nuno||0,ko:S.fs.komugiko||0,mugi:S.fs.mugi||0,kasa:S.mat.kasa,lit,an:Object.keys(an).sort(),bar,left:Object.keys(S.prIn||{}).length+Object.keys(S.prQ||{}).length})})()`));
   console.log(JSON.stringify(sim));
-  assert.equal(sim.nuno,2,'布2こ');assert.equal(sim.ko,2,'こむぎこ2こ');assert.equal(sim.mugi,1);assert.equal(sim.kasa,1);assert.equal(sim.lit,true);assert.equal(sim.bar,1,'加工のあいだ、足もとに進みぐあいのバー');assert.equal(sim.left,0);
+  assert.equal(sim.nuno,2,'布2こ');assert.equal(sim.ko,2,'こむぎこ2こ');assert.equal(sim.mugi,1);assert.equal(sim.kasa,1);assert.equal(sim.lit,true);assert.deepEqual(sim.an,['loomweave:loomweave:true','millgrind:millgrind:true'],'はたおり・粉ひきの動き');assert.equal(sim.bar,1,'加工のあいだ、足もとに進みぐあいのバー');assert.equal(sim.left,0);
   /* 属性：風のせいれいがいれば、はたおりは風のせいれいだけ */
   const el=JSON.parse(await run(`(()=>{const a=S.res[0],w=mkRes(S,'テスト風','wind',a.x+1,a.y);S.res.push(w);const r=[procOK(a,'loom'),procOK(w,'loom'),procOK(a,'mill'),jobOK(a,'loom'),jobOK(w,'loom')];S.res.pop();return JSON.stringify(r)})()`));
   assert.deepEqual(el,[false,true,true,false,true]);

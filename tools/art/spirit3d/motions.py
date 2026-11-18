@@ -222,6 +222,18 @@ def polish(w, face):
     """しあげ：ぬので、くるくるみがく（奥の手でささえる）"""
     return breathe(dict(sN=0.95+0.14*S(w), bN=-0.55+0.2*C(w), prop='cloth', sF=0.8, bF=-0.7, lean=0.2, hp=0.2, yaw=0.05*C(w), hr=0.05*S(w)), w, 0.4)
 M('polish', 8, 6/(2*PI), polish)
+def loomweave(w, face):
+    """はたおり：両手を胸の横木の上に出し、ひ（シャトル）を手前の手から奥の手へよこにわたして、両手で、おさを手前へ、とんっと引きよせる（ひは、はたおり機の絵の上）"""
+    u = (w/(2*PI)) % 1
+    if u < 0.55: k = S(PI*u/0.55); sN = 1.25+0.1*k; sF = 1.25-0.1*k; yaw = 0.14*S(2*PI*u/0.55); ln = 0.14; tN = 0.35*k; tF = -0.35*k   # ひを、よこへわたす
+    elif u < 0.75: k = (u-0.55)/0.2; sN = sF = 1.25+0.2*k; yaw = 0.0; ln = 0.14+0.08*k; tN = tF = 0.0                                 # おさに手をかけて前へ
+    else: k = (u-0.75)/0.25; b = S(PI*min(1, k*2.5)); sN = sF = 1.45-0.35*b; yaw = 0.0; ln = 0.22-0.12*b; tN = tF = 0.0                 # とんっと引きよせる
+    return breathe(dict(sN=sN, sF=sF, bN=-0.7, bF=-0.7, tN=tN, tF=tF, lean=ln, yaw=yaw, hp=0.22, hr=0.04*S(w)), w, 0.4)
+M('loomweave', 10, 0.6, loomweave)
+def millgrind(w, face):
+    """粉ひき：両手で石うすの取っ手をにぎり、からだごと前へおしだして、まるくまわす（取っ手は、粉ひき小屋の絵の上）"""
+    return breathe(dict(sN=1.2+0.22*S(w), sF=1.2+0.22*S(w), bN=-0.55+0.18*C(w), bF=-0.55+0.18*C(w), lean=0.2+0.1*S(w), yaw=0.1*C(w), z=-0.6-0.4*S(w), legz=-0.3, legM=0.2, legP=-0.2, hp=0.15+0.06*S(w), hr=0.04*C(w)), w, 0.4)
+M('millgrind', 8, 0.5, millgrind)
 # 作業台（天板の高さ0.32＝せいれいの手の高さ）の上でする、もの作り。作業台のないときは、上の地面の動き（saw・polish・craftprep・craft）
 def wbsaw(w, face):
     """のこぎり：天板の上で、奥の手で材料をおさえ、手前の手で前後にひく"""
@@ -231,10 +243,17 @@ def wbpolish(w, face):
     """しあげ：天板の上で、ぬので、くるくるみがく（奥の手でささえる）"""
     return breathe(dict(sN=1.55+0.12*S(w), bN=-0.55+0.2*C(w), prop='cloth', sF=1.5, bF=-0.7, lean=0.2, hp=0.22, yaw=0.05*C(w), hr=0.05*S(w)), w, 0.4)
 M('wbpolish', 8, 6/(2*PI), wbpolish)
+def hamcurve(u, s0, s1, a0, a1):
+    """トンカチ：u 0＝打つ（WBEAT の 0）・〜.15 はねかえる・〜.7 頭の上へふり上げる・〜1 速くふりおろす。
+    s うで（前へふる）、a 柄の角度（水平の前から上へ）。手首 k＝s−a で、柄の角度をうでとべつに動かす（打つときは柄がほぼ水平で、頭の面が下）"""
+    if u < .15: k = u/.15; s = s0+0.25*S(PI*k); a = a0+0.35*S(PI*k)
+    elif u < .7: k = (u-.15)/.55; k = k*k*(3-2*k); s = s0+(s1-s0)*k; a = a0+(a1-a0)*k
+    else: k = ((u-.7)/.3)**1.6; s = s1+(s0-s1)*k; a = a1+(a0-a1)*min(1, k*1.15)
+    return s, a, s-a
 def wbham(w, face):
-    """トンカチ：ふり上げて、天板の上の材料へふりおろす"""
-    u = (w/(2*PI)) % 1; v = math.sin(PI/2*u/0.6) if u < 0.6 else 1-(u-0.6)/0.4
-    return breathe(dict(sN=1.5+0.8*v, bN=-0.4, tN=0.9-0.9*v, prop='hammer', sF=1.5, bF=-0.7, lean=0.22-0.1*v, hp=0.2-0.1*v), w, 0.5)
+    """トンカチ：頭の上へふり上げて、天板の上の材料へふりおろす"""
+    s, a, k = hamcurve((w/(2*PI)) % 1, 1.35, 2.45, -0.1, 2.6); up = (s-1.35)/1.1
+    return breathe(dict(sN=s, bN=-0.4, tN=0.0, kN=k, prop='hammer', sF=1.5, bF=-0.7, lean=0.22-0.1*up, hp=0.2-0.1*up), w, 0.5)
 M('wbham', 8, 2.6/2, wbham)
 def wbprep(w, face):
     """材料をならべる：前かがみで、天板の高さへ手をのばして、もどす"""
@@ -271,8 +290,9 @@ def swingdown(prop):
     return f
 M('chop', 10, 1.4, swingdown('axe')); M('mine', 10, 1.4, swingdown('pick')); M('till', 10, 1.4, swingdown('hoe'))
 def hammer(w, face):
-    u = (w/(2*PI)) % 1; v = math.sin(PI/2*u/0.6) if u < 0.6 else 1-(u-0.6)/0.4
-    return breathe(dict(sN=0.7+1.2*v, bN=-0.35, tN=0.0, prop='hammer', sF=0.9, bF=-0.6, lean=0.18-0.1*v, hp=0.15), w, 0.5)
+    """トンカチ：頭の上へふり上げて、足もとの物へふりおろす"""
+    s, a, k = hamcurve((w/(2*PI)) % 1, 0.55, 2.3, -0.15, 2.5); up = (s-0.55)/1.75
+    return breathe(dict(sN=s, bN=-0.35, tN=0.0, kN=k, prop='hammer', sF=0.9, bF=-0.6, lean=0.2-0.12*up, hp=0.15-0.08*up), w, 0.5)
 for nm in ('build', 'repair', 'craft'): M(nm, 8, 2.6/2, hammer)
 def watering(w, face):
     """じょうろをかたむけて、水をやる（水のつぶは、ゲームでじょうろの先から）"""

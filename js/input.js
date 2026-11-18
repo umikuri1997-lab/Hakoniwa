@@ -75,6 +75,14 @@ function sacredTreeTap(j){/* 御神木をタップ：かけらの光をとどけ
   if((S.setSh||0)>=3){const reason=grassReunionBlockReason();if(reason)return toast(reason);scheduleGrassReunion();return;}
   return openSheet('clear');
 }
+/* 「みる」でタップした物の音：材質で分ける（木 こつっ・石 こんっ・金物 かちっ・布 ふさっ・植物 かさっ・畑や地面 ざくっ・水 ちゃぽっ・神殿や御神木 ころん） */
+let TAPPEND=0;const TAPCLOTH=new Set(['nuno','wool','shina','kasa','kuru','chiri','funba']),TAPMETAL=new Set(['can','icopper','iiron','isilver','igold']),TAPHOLY=new Set(['statue','statueb','altar','tower']),TAPNATW=new Set(['tree','ntree','deadtree','fruit','bamboo','takenoko']),TAPNATS=new Set(['rock','boulder','volcano','crack']);
+function tapMatOf(o){if(TAPHOLY.has(o))return 'tbell';if(TAPNATS.has(o))return 'tstone';if(TAPNATW.has(o))return 'twood';const b=BL[o];if(!b)return null;if(b.kind==='plant'||o==='berry')return 'tgrass';if(o==='farm'||o==='plot'||o==='sprout')return 'tsoil';
+  let w=0,st=0,cl=0,me=0;for(const k in b.mat||{}){const n=b.mat[k];if(TAPCLOTH.has(k))cl+=n;else if(TAPMETAL.has(k))me+=n;else if(k==='stone')st+=n;else w+=n}
+  if(b.mat&&b.mat.nuno||b.mat&&b.mat.wool||cl>w+st+me)return 'tcloth';if(me>w&&me>=st)return 'tcan';if(st>w)return 'tstone';return 'twood'}
+function tapSnd(tx,ty){if(tx<0||ty<0||tx>=W||ty>=H)return;const g=ty*W+tx,j=anc(g),o=S.obj[j];if(WEEDS.has(o)||o==='kagenest'||VEINS[o]&&WD===1||(S.drops||[]).some(q=>q.y*W+q.x===g&&q.id!=='shard'))return;/* 草・落とし物・鉱脈・かげの巣は、それぞれの音 */
+  let k=o?tapMatOf(o):null;if(!o){const f=S.floor[g];if(RUGC.has(g))k='tcloth';else if(S.ground[g]===1||S.ground[g]===2)k='twater';else if(f==='path'||!f||!BL[f])k='tsoil';else k=tapMatOf(f)}
+  if(!k)return;const t0=performance.now();TAPPEND=t0;setTimeout(()=>{if(TAPPEND===t0){TAPPEND=0;if(TAPMAT<t0)sfx(k)}},0)}/* ほかの物の音（神殿・宝箱など）が同じタップで鳴ったら、そちらだけ */
 function onTap(sx,sy){if(GIFT_ACTIVE&&camAnim&&camAnim.done)return;if(typeof starTap==='function'&&starTap())return;/* 流れ星が流れているあいだのタップは、おねがい *//* 霧が晴れる・鉱脈が目をさます演出のカメラ中は、タップをうけない */DLGTAP=performance.now();/* タップで始める会話は、またずにすぐ出す */if(mode==='look'&&typeof tapFx==='function')tapFx(sx,sy);/* しらべるでタップしたところに、葉（火山は火の粉）が舞う */
   let w=toWorld(sx,sy);const w0=w,tx=Math.floor(w.x/TS);{const tl=tapLv(w.x,w.y);if(tl)w={x:w.x,y:w.y+tl*LIFT}}const ty=Math.floor(w.y/TS);/* 高い段のマス・物・せいれい・コワイノは上にずらして描くので、タップの場所も高さの分だけ下へもどす */
   if(AREAARM){AREAARM=false;return areaBlast(w.x/TS,w.y/TS)}
@@ -105,13 +113,14 @@ function onTap(sx,sy){if(GIFT_ACTIVE&&camAnim&&camAnim.done)return;if(typeof sta
     if(!best){const an=typeof aniAtTap==='function'&&aniAtTap(w.x/TS,w.y/TS);if(an){sfx('tani');return aniPop(an)}}/* 飼う生き物：物のタップの前に、足もとのまわりを見る */
     if(best){if(!S.flags.tapped&&S.flags.tapAsk){S.flags.tapPend=true}voiceHmm(best);return openSheet('res',best.id)}// ステータスを見て閉じたら、会話に進む
     if(tx<0||ty<0||tx>=W||ty>=H)return;
+    tapSnd(tx,ty);
     if(RUINT>=0&&S.obj[RUINT]==='statueb'){const px=w.x/TS-RUINT%W,py=w.y/TS-((RUINT/W)|0);if(px>=-.9&&px<1.9&&py>=-2.6&&py<2){templeRuinTap(RUINT);return}}/* こわれた神殿は、絵のどこをタップしても */
     if(typeof fogTap==='function'&&fogTap(tx,ty))return;/* 霧の所・霧の中で見つけた物 */
     {const hw=HOUSES.find(h=>h.set.has(ty*W+tx));if((!hw||OPENH.has(hKey(hw)))&&webTap(tx,ty))return}/* クモの巣：せいれいがそうじする（屋根のある家は、屋根を外してから） */
     {const j=anc(ty*W+tx);if(!isNight()&&godFix(S.obj[j]?j:ty*W+tx))return}/* こわれかけ・こわれた物は、守り神がパワーで直せる */
     {const kg=WD===0&&S.flags.kgMark!=null&&!(S.bossKills&&S.flags.kgLook)&&!S.flags.kgLook&&Math.abs(tx-S.flags.kgMark%W)<=1&&Math.abs(ty-((S.flags.kgMark/W)|0))<=1/* かげのあとは、家の中にあっても調べられる */,hi=kg?-1:HOUSES.findIndex(h=>h.set.has(ty*W+tx));if(hi>=0){const hk=hKey(HOUSES[hi]);if(!OPENH.has(hk)){OPENH.add(hk);dirty=true;return}/* 1回目のタップで屋根を外す */const o0=S.obj[anc(ty*W+tx)];if(HOME_WALLS.has(o0)||HOME_DOORS.has(o0)){OPENH.delete(hk);dirty=true;return}/* 壁をタップすると屋根がもどる */if(!o0)return openSheet('house',hi)}}// 中が見えているときは、家具やせいれいもタップできる
-    if(WD===0&&!S.free&&!S.cleared){const rt=S.obj.indexOf('tower'),b=rt>=0?rt:S.sacredRoot;if(b!=null){const bx=b%W,by=b/W|0,n=sacredSpan(),px=w.x/TS,py=w.y/TS;if(px>=bx-.5&&px<bx+n+.5&&py>=by-(rt>=0?2:0)&&py<by+n)return rt>=0?sacredTreeTap(rt):openSheet('clear')}}/* 御神木・切り株：絵の上（育った木は上へはみ出す葉の所も）をタップすると、じょうけんを見る */
-    if(BOARD>=0){const bx=(w.x/TS-BOARD%W),by=(w.y/TS-(BOARD/W|0));if(bx>=.85&&bx<3.15&&by>=-.9&&by<.95)return S.feat.craft?openSheet('craft'):toast('依頼ボード。もう少ししたら使えるようになる')}/* 依頼ボード：絵（2マスはば・上へはみ出す）のどこをタップしても */
+    if(WD===0&&!S.free&&!S.cleared){const rt=S.obj.indexOf('tower'),b=rt>=0?rt:S.sacredRoot;if(b!=null){const bx=b%W,by=b/W|0,n=sacredSpan(),px=w.x/TS,py=w.y/TS;if(px>=bx-.5&&px<bx+n+.5&&py>=by-(rt>=0?2:0)&&py<by+n){sfx('tbell');return rt>=0?sacredTreeTap(rt):openSheet('clear')}}}/* 御神木・切り株：絵の上（育った木は上へはみ出す葉の所も）をタップすると、じょうけんを見る */
+    if(BOARD>=0){const bx=(w.x/TS-BOARD%W),by=(w.y/TS-(BOARD/W|0));if(bx>=.85&&bx<3.15&&by>=-.9&&by<.95){sfx('twood');return S.feat.craft?openSheet('craft'):toast('依頼ボード。もう少ししたら使えるようになる')}}/* 依頼ボード：絵（2マスはば・上へはみ出す）のどこをタップしても */
     const j=anc(ty*W+tx),o=S.obj[j];
     if(WD===0&&S.flags.kgMark!=null&&!(S.bossKills&&S.flags.kgLook)&&!S.flags.kgLook&&Math.abs(tx-S.flags.kgMark%W)<=1&&Math.abs(ty-((S.flags.kgMark/W)|0))<=1){S.flags.kgLook=true;checkQuest();toast('大きなかげのあと：草がしおれて、つめたい');if(S.res.some(r=>r.name===POKO))dialog([[POKO,'#sigh|……このつめたさ、知ってる気がする。守り神さま、夕方になったら、ちょっとだけ、ぼくの話を聞いてくれる？']]);return}/* 大きなかげのあとを調べる */
     if(WD===1&&S.st2){const g=ty*W+tx;

@@ -627,5 +627,5 @@ const SPEC={wood:['plant','tend','fert','cookS'],water:['water','cookS'],fire:['
 const OWN={plant:'wood',tend:'wood',water:'water',till:'earth',repair:'earth',seed:'wind'};/* 料理は、だれでもできる */
 function ownOK(r,el){return !el||r.elem===el}
 function canJob(r,k){if(k==='seed')return r.elem==='wind';if(k==='fert')return r.elem==='wood';if(k==='harvest'&&r.elem!=='wood'&&S.res.some(q=>q.elem==='wood'))return false;/* 収穫は、木のせいれいがいれば木のせいれい */if(k==='tend'&&S.res.some(q=>q.elem==='water'))return false;/* 水やりは、水のせいれいがいれば水のせいれい（木の子の世話の水やりはしない） *//* 外にふしぎな種があれば、風の子はみんな拾いに行く */return ownOK(r,OWN[k])}
-const makerOf=id=>WD===1&&(id==='bench'||id==='noren')||id==='stor'||id==='mbox'||id==='crate'?null:BL[id].maker;/* 箱は、だれでも作れる *//* 火山のふもと：温泉のクエストに使うベンチ・のれんは、だれでも作れる */
+const makerOf=id=>WD===1&&(id==='bench'||id==='noren')||id==='stor'||id==='mbox'||id==='crate'||id==='wbench'?null:BL[id].maker;/* 箱・作業台は、だれでも作れる *//* 火山のふもと：温泉のクエストに使うベンチ・のれんは、だれでも作れる */
 function craftOK(r,o){return ownOK(r,makerOf(o.type))}
