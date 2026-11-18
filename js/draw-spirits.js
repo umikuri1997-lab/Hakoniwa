@@ -417,6 +417,7 @@ function carryIcon(r){
   if(r.carry&&carryN(r)>0){if(typeof r.carry==='number')return FOODS.mugi.e;const k=r.carryLast&&r.carry[r.carryLast]>0?r.carryLast:Object.keys(r.carry).find(k=>r.carry[k]>0);return foodEmo(k)}
   if(r.cpk){const k=GRASSK.find(k=>(r.cpk.m[k]||0)>0);if(k)return'ic:'+k}if(r.fert>0)return'ic:hiryo';/* 運んでいる草・肥料 */
   if(r.cmat){const k=Object.keys(r.cmat).find(k=>r.cmat[k]>0);if(k)return matIc(k)}
+  if(r.kdst)return matIc('stone');/* もりのこだまの石の輪へはこぶ石材 */
   if(r.bm){const k=Object.keys(r.bm.m).find(k=>r.bm.m[k]>0);if(k)return isFK(k)?foodEmo(k.slice(2)):matIc(k)}/* 建てる所・依頼へ運ぶ素材 */
   if(r.citem){const id=Object.keys(r.citem).find(k=>r.citem[k]>0);if(id)return itemIc(id)}
   if(r.meal)return typeof r.meal==='number'?'🍙':(r.meal.e||'🍙');
@@ -435,6 +436,7 @@ function carryIcons(r){/* 持っているものを、そのまま1つずつ並�
   if(r.cpk){for(const k of GRASSK)for(let i=0;i<(r.cpk.m[k]||0);i++)out.push('ic:'+k)}/* コンポスターへ運ぶ草 */
   if(r.fert>0)for(let i=0;i<r.fert;i++)out.push('ic:hiryo');/* 畑へ運ぶ肥料 */
   if(r.cmat)for(const k in r.cmat)for(let i=0;i<(r.cmat[k]||0);i++)out.push(matIc(k));
+  if(r.kdst)out.push(matIc('stone'));/* もりのこだまの石の輪へはこぶ石材 */
   if(r.bm)for(const k in r.bm.m)for(let i=0;i<(r.bm.m[k]||0);i++)out.push(isFK(k)?em(k.slice(2)):matIc(k));/* 建てる所・依頼へ運ぶ素材 */
   if(r.citem)for(const id in r.citem)for(let i=0;i<(r.citem[id]||0);i++)out.push(itemIc(id));/* ひろった物（砂・角笛・家具など） */
   if(r.meal){if(r.meal.items&&r.meal.items.length)for(const k of r.meal.items)out.push(em(k));else for(let i=0,n=Math.ceil(typeof r.meal==='number'?r.meal:r.meal.u||1);i<n;i++)out.push(typeof r.meal==='number'?'🍙':(r.meal.e||'🍙'))}

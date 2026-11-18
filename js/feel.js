@@ -53,7 +53,13 @@ function feelArt(){if(FEELA)return FEELA;const c=document.createElement('canvas'
 function feelPut(c,A,q,x,y){c.drawImage(A.c,q[0],q[1],q[2],q[3],Math.round(x*2)/2,Math.round(y*2)/2,q[2]/2,q[3]/2)}
 
 /* ---------- 1コマに1回：いまのようす ---------- */
-function feelPrep(now){const h=hour(),k=seasonNow(),C=FEELC;C.rain=!!S.rain&&!snowNow();C.snow=snowCover();C.leaf=leafCover();C.pud=puddleLv();
+/* 火のせいれいが、冬の外で、ひとつのマスに FIRESTAY（時計の20分）立っていたら、まわり FIRE_MR マスの雪がとける（見た目だけ・セーブしない。つぎの朝6時にもどる） */
+const FIRESTAY=30,FIRE_MR=2,FIREMELT=new Set(),FIREW=new WeakMap();let FIREDAY=-1;
+const feelMelt=i=>FEELMELT.has(i)||FIREMELT.has(i);
+function fireMeltTick(){const d=callDay();if(d!==FIREDAY){FIREDAY=d;FIREMELT.clear()}if(snowCover()<=0)return;
+  for(const r of S.res){if(r.elem!=='fire'||r.hidden)continue;const x=r.x|0,y=r.y|0,j=y*W+x;if(roomOf(j))continue;let w=FIREW.get(r);if(!w||w.j!==j){FIREW.set(r,{j,t:S.t});continue}if(w.done||S.t-w.t<FIRESTAY)continue;w.done=1;
+    for(let dy=-FIRE_MR;dy<=FIRE_MR;dy++)for(let dx=-FIRE_MR;dx<=FIRE_MR;dx++){const X=x+dx,Y=y+dy;if(X>=0&&Y>=0&&X<W&&Y<H&&dx*dx+dy*dy<=FIRE_MR*FIRE_MR+1)FIREMELT.add(Y*W+X)}}}
+function feelPrep(now){fireMeltTick();const h=hour(),k=seasonNow(),C=FEELC;C.rain=!!S.rain&&!snowNow();C.snow=snowCover();C.leaf=leafCover();C.pud=puddleLv();
   C.dew=!S.rain&&k!==3&&h>=5&&h<8?Math.min(1,(h-5)/.6,(8-h)/.8):0;C.mist=!S.rain&&h>=4.8&&h<7.8?Math.min(1,(h-4.8)/.7,(7.8-h)/1):0;
   C.heat=k===1&&!S.rain&&h>=11&&h<15.5?Math.min(1,(h-11)/.5,(15.5-h)/.5):0;C.cold=k===3||(k!==1&&h>=4.5&&h<7);
   C.any=C.snow>0||C.leaf>0||C.pud>0||C.dew>0||C.rain;
@@ -68,7 +74,7 @@ function feelRow(y,x0,x1,now,lifted){const C=FEELC,A=feelArt(),c=ctx,near=cam.z>
   if(C.any)for(let x=Math.max(0,x0);x<Math.min(W,x1);x++){const i=y*W+x,hi=hiAt(i);if(lifted?!hi:hi)continue;const gr=S.ground[i];if(S.fog&&fogAt(i))continue;const px=x*TS,py=y*TS-hi*LIFT;
     if(gr===1){if(C.rain&&near&&S.obj[i]!=='bridge'&&hash(i*7+1)<.55){const ph=(now/1100+hash(i*3+2))%1;feelPut(c,A,A.rip[Math.min(3,(ph*4)|0)],px+4+hash(i*5)*10,py+8+hash(i*11)*12)}continue}/* 雨：水面の波紋 */
     if(gr===2||S.obj[i]||FEELIN.has(i)||RUGC.has(i))continue;const f=S.floor[i];if(f&&f!=='path'&&f!=='gravel'&&f!=='stone'&&f!=='brick')continue;/* 家の床・じゅうたんには出さない */
-    if(C.snow>0&&!FEELMELT.has(i)){const q=hash(i*13+5);if(q<C.snow*FEEL_SNOWP){const s=A.snow[(hash(i*3+1)*3)|0];c.globalAlpha=Math.min(1,.55+C.snow*.45);feelPut(c,A,s,px+(TS-s[2]/2)*hash(i*17+3),py+(TS-s[3]/2)*hash(i*19+7));c.globalAlpha=1}continue}
+    if(C.snow>0&&!feelMelt(i)){const q=hash(i*13+5);if(q<C.snow*FEEL_SNOWP){const s=A.snow[(hash(i*3+1)*3)|0];c.globalAlpha=Math.min(1,.55+C.snow*.45);feelPut(c,A,s,px+(TS-s[2]/2)*hash(i*17+3),py+(TS-s[3]/2)*hash(i*19+7));c.globalAlpha=1}continue}
     if(C.leaf>0&&FEELTREE.has(i)&&hash(i*23+9)<C.leaf*FEEL_LEAFP){const s=A.leaf[(hash(i*3+1)*3)|0];feelPut(c,A,s,px+(TS-s[2]/2)*hash(i*17+3),py+(TS-s[3]/2)*hash(i*19+7))}
     if(C.pud>0){const grass=REV.has(i)&&!f;if(hash(i*29+1)<(grass?FEEL_PUDG:FEEL_PUDP)){const n=C.pud>.66?2:C.pud>.33?1:0,s=A.pud[n],sx=px+(TS-s[2]/2)/2,sy=py+(TS-s[3]/2)/2+3;feelPut(c,A,s,sx,sy);
         if(C.rain&&near){const ph=(now/900+hash(i*3+2))%1;if(ph<.6){c.globalAlpha=.8;feelPut(c,A,A.rip[Math.min(1,(ph*3.4)|0)],sx+s[2]/4-9,sy+s[3]/4-4);c.globalAlpha=1}}}}
@@ -90,7 +96,7 @@ function feelCapOf(src,id){if(src._snow!==undefined)return src._snow;const im=ch
     for(let x=0;x<w;x+=Q){const a=top[x];if(a<0)continue;const l=x>=Q*2?top[x-Q*2]:-1,r=x+Q*2<w?top[x+Q*2]:-1,sl=Math.max(l<0?99:Math.abs(l-a),r<0?99:Math.abs(r-a));if(sl>Q*5)continue;/* 切り立った横のふちには、つもらない */
       const th=(sl>Q*2?1:2+((hash(x*7+w)*2)|0))*Q,ay=Math.floor(a/Q)*Q;g.fillStyle='#ffffff';g.fillRect(x,ay,Q,th);g.fillStyle='#d3e0f1';g.fillRect(x,ay+th,Q,Q)}
     t._ok=true;src._snow=t}catch(e){src._snow=null}return src._snow}
-function feelCap(c,o,i,x,y,g){const a=FEELC.snow;if(a<=0||!FEELCAPS.has(o))return;if(FEELMELT.has(i))return;const ch=TREES.has(o)?plantChip(o,i,g):chipOf(o,i);if(!ch)return;const src=ch.src||ch,cap=feelCapOf(src,o);if(!cap)return;
+function feelCap(c,o,i,x,y,g){const a=FEELC.snow;if(a<=0||!FEELCAPS.has(o))return;if(feelMelt(i))return;const ch=TREES.has(o)?plantChip(o,i,g):chipOf(o,i);if(!ch)return;const src=ch.src||ch,cap=feelCapOf(src,o);if(!cap)return;
   const sm=c.imageSmoothingEnabled;c.imageSmoothingEnabled=false;c.save();c.globalAlpha*=Math.min(1,.4+a*.6);if(ch.flip){c.translate(2*x+ch.fw,0);c.scale(-1,1)}if(src.g===64)c.drawImage(cap,x+src.ax/2,y+src.ay/2,src.w/2,src.h/2);else c.drawImage(cap,x+src.ax,y+src.ay);c.restore();c.imageSmoothingEnabled=sm}
 /* 屋根の雪：屋根の形の中に、よこに長い雪のすじをちらす（家ごとに1回だけ作る。1マス32ドットの細かさ） */
 function feelRoof(c,h,R,A){const a=FEELC.snow;if(a<=0||!R||!R.cv||!R.cv.width)return;let sn=h._sn;if(!sn||sn.R!==R){const w=Math.ceil(R.cv.width/R.sc),hh=Math.ceil(R.cv.height/R.sc),t=document.createElement('canvas');t.width=w;t.height=hh;const g=t.getContext('2d'),sd=h.x0*7+h.y0*13;
@@ -131,7 +137,7 @@ function feelAir(now,x0,y0,x1,y1){if(!S)return;const C=FEELC,A=feelArt(),c=ctx,s
 /* ---------- 足音・足もとの反応 ---------- */
 function feelSurf(i){/* そのマスの足もとの材質 */const g=S.ground[i];if(g===2)return 'water';if(S.obj[i]==='bridge')return 'wood';if(RUGC.has(i))return 'cloth';const f=S.floor[i];if(f==='path'||f==='gravel')return FEELC.snow>.4&&!FEELIN.has(i)?'snow':'soil';
   if(f&&BL[f]){const m=typeof tapMatOf==='function'?tapMatOf(f):'twood';return m==='tstone'?'stone':m==='tcloth'?'cloth':'wood'}
-  if(FEELC.snow>.4&&!FEELIN.has(i)&&!FEELMELT.has(i))return 'snow';return REV.has(i)?'grass':'dry'}
+  if(FEELC.snow>.4&&!FEELIN.has(i)&&!feelMelt(i))return 'snow';return REV.has(i)?'grass':'dry'}
 let FEELSND=0;
 function feelStepSnd(k,x,y,alt,follow){if(typeof AC==='undefined'||!AC||!SND.sfx||AC.state!=='running'||typeof sfxG==='undefined'||!sfxG)return;const now=performance.now();if(now-FEELSND<110)return;const q=sfxPos(x,y);if(!q||(!follow&&q.v<.5))return;/* 画面のまん中に近い子と、見守っている子だけ */
   if(typeof SKIP!=='undefined'&&SKIP||S.speed>2)return;FEELSND=now;const t=AC.currentTime,g=AC.createGain();g.gain.value=q.v*(follow?1.25:1)*1.6;let o=g;if(AC.createStereoPanner){const pn=AC.createStereoPanner();pn.pan.value=q.p;g.connect(pn);o=pn}o.connect(sfxG);const r=(alt?1.06:.95)*(.95+Math.random()*.1);
