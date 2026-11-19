@@ -65,7 +65,7 @@ C={
      dict(k='wmv',w=lambda u,v,z,c:near((242,245,248),c,20),mv=1,d=(0,-1,-.3))],   # 羽をお尻（−v）のほうへ、少し下げてずらす
    rot=-169,   # からだは横（v）にのび、顔（目）は u を向くので、目からきめると、からだが奥へのびて羽が上につき出た。お尻（黄色、モデルの色 hotaru_tail.py）が左
    fr={'w0':dict(body=HOTB,wing=HOTW,wmv=HOTMV,dangle=12),'w1':dict(body=HOTB,wing=HOTW*.45-.55,wmv=HOTMV,dangle=-4)}),
- 'tonbo':dict(size=.3,fly=1,fdeg=-101,bones=[   # 目の色がないので、からだののびる向き（頭は目の青いほう）
+ 'tonbo':dict(size=.3,fly=1,fdeg=-101,tint=dict(col=(128,190,64),t=40,ink=(226,78,58)),bones=[   # 目の色がないので、からだののびる向き（頭は目の青いほう）
      dict(k='wing',w=lambda u,v,z,c:near((208,234,214),c,24),p=(0,0,.62),ax='f',mir=1),
      dict(k='body',w=lambda u,v,z,c:1-near((208,234,214),c,24),p=(0,0,.62),sc=1)],   # 胴体と頭（羽いがい）：羽のつけねを中心に小さく（持ち主のきめ）
    fr={'w0':dict(body=TONBOB,wing=-12),'w1':dict(body=TONBOB,wing=10),'e0':dict(body=TONBOB,wing=-4),'e1':dict(body=TONBOB,wing=4)}),   # はばたく・ホバリング
@@ -82,7 +82,11 @@ def vturn(name,vw):return FRONT[name][0 if vw=='d' else 1] if vw else 0
 GROUND=tuple(FRONT)   # 地面を歩く・はねる物：正面・うしろの絵もある（上下へ動くとき、横を向いたまますべらないように）
 def paint(name):
     """blueprint の Part.paint にわたす関数：ポーズの前の点で、面の色をかえる（stripes：その色の面のうち、u が bands の中の面を ink に）"""
-    D=C[name].get('stripes')
+    D=C[name].get('stripes');T=C[name].get('tint')
+    if T:   # tint：その色の面を、べつの色に（とんぼの胴体を赤く。持ち主のたのみ）
+        def g(V,F,Cf):
+            Cf=Cf.copy();m=(np.abs(Cf-np.array(T['col'],float)).max(1)<T['t']);Cf[m]=T['ink'];return Cf
+        return g
     if not D:return None
     def f(V,F,Cf):
         rg=rig(name);u=rg.u[F].mean(1);m=(np.abs(Cf-np.array(D['col'],float)).max(1)<D['t'])

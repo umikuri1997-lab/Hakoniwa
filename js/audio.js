@@ -83,7 +83,7 @@ function greetVoice(r,dl){if(!AC||!SND.sfx||AC.state!=='running'||VOICE)return;c
 /* 鼻歌・もやもやの音（work-fx.js の drawHum・drawMoya）：音符・もやもやが出ているあいだ、画面のまん中にいちばん近い1人（見守っている子がいれば、その子）だけ、
    その子の声の高さで小さく、つぎつぎ鳴らす。会話の画面の声が出ているあいだは鳴らさない。
    鼻歌は、会話の声の母音をのばした音（SAMPLES.vowel）1本を1つの音にし（vNote）、高い音をけずって口をとじた「ん〜」にした、スキップのリズムの「るんるん」のフレーズ（humPhrase）。もやもやは録音（SAMPLES.moya） */
-const MOODM=new Map(),MOODV={hum:.5,moya:.22},MOODGAP={hum:[.7,1.6],moya:[.08,.2]};let MOODP=null;/* つぎを鳴らすまでの間（秒）。もやもやは、もやん・もやんと短く。MOODP：いま鳴らしている {r,k,end} */
+const MOODM=new Map(),MOODV={hum:.25,moya:.22},MOODGAP={hum:[.7,1.6],moya:[.08,.2]};let MOODP=null;/* つぎを鳴らすまでの間（秒）。もやもやは、もやん・もやんと短く。MOODP：いま鳴らしている {r,k,end} */
 SAMPLES.vowel=['assets/g/14dad06147.mp3'];/* 会話の声の母音を、高さのかわらない2秒の「あー」にのばした音（tools/sound/voice_vowel.py、約580Hz） */
 const VIBHZ=6;
 function vNote(b,t,len,rate,v,dest,o={}){/* 1つの音：のばした声（SAMPLES.vowel）1本を、rate の高さで len 秒（o.bend：はじめ少し低くから上がる・o.dim：おわりへ小さく・o.vib：やさしいゆれ）。音の中で粒にきらないので、ゆれすぎない */
@@ -409,8 +409,9 @@ const SFXGAP={chop:.3,mine1:.3,cookfire:2,pour:2.5,crack:1.3,spike:.4,poison:.6}
    村の時間が止まっている・会話・早送りのときは鳴らさない */
 const FOOTRATE=9/(2*Math.PI),FOOTRATEC=11/(2*Math.PI),FOOTLOOK=.12,FOOTV=.07,EFOOTV=.05,FOOTN=2,EFOOTN=2,FOOTP=new WeakMap(),EFOOTP=new WeakMap(),LADV=.1;
 function footMat(x,y){const j=(y|0)*W+(x|0);if(j<0||j>=W*H)return null;const o=S.obj[j];if(o==='bridge')return'fwood';if(typeof RUGC!=='undefined'&&RUGC.has(j))return'fcloth';if(S.ground[j]===2)return'twater';
-  const out=!(typeof roomOf==='function'&&roomOf(j)),snow=out&&typeof snowNow==='function'&&snowNow(),wet=out&&S.rain&&!snow;/* 雨の日（あらしもふくむ）の外の草地・土・道は、ぬれた地面の音（家の中・橋・木と石の床や道は、ふつうの音） */
+  const out=!(typeof roomOf==='function'&&roomOf(j)),snow=out&&typeof snowCover==='function'&&snowCover()>.4&&!(typeof feelMelt==='function'&&feelMelt(j)),wet=out&&S.rain&&!(typeof snowNow==='function'&&snowNow())&&!snow;/* つもった雪の上は、雪の音 *//* 雨の日（あらしもふくむ）の外の草地・土・道は、ぬれた地面の音（家の中・橋・木と石の床や道は、ふつうの音） */
   const f=S.floor[j];if(f&&f!=='path'&&BL[f]&&typeof tapMatOf==='function'){const k=tapMatOf(f);return k==='twood'?'fwood':k==='tstone'?'fstone':k==='tcloth'?'fcloth':wet?'fwet':'fsoil'}if(f)return wet?'fwet':'fsoil';
+  if(o==='farm'||o==='part'&&S.obj[S.ref[j]]==='farm')return wet?'fwet':'fsoil';/* 畑の上は土 */
   if(snow)return'fsnow';return wet?'fwet':typeof REV!=='undefined'&&REV.has(j)?'fgrass':'fsoil'}
 /* 日記を書くあいだ：持ち主の書く音（10秒、SAMPLES.owrite）をくりかえし、おわったら、ゆっくり小さくして止める */
 let WRITEL=null;const WRITEV=.4;
