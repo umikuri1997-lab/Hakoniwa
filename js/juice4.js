@@ -16,11 +16,10 @@ const J4FENCEMAX=400;/* かこいとみる、いちばん広い所（マス） *
 const J4FENCEMS=1200;/* かこいを光が1周する時間（ミリ秒） */
 const J4MENDMS=520;/* 壁を光がはしる時間（ミリ秒） */
 const J4STARMS=1500;/* ★が出てから消えるまで（ミリ秒） */
-const J4STAMPMS=2200;/* 新記録のハンコが出てから消えるまで（ミリ秒） */
 const J4RECMIN={hv:6,kill:3,mat:10,fish:2};/* いままでのいちばんが、この数より少ないうちは、新記録を出さない（はじめのころに毎日出ないように） */
 const J4RECN={hv:'しゅうかく',kill:'追いはらった数',mat:'あつめた素材',fish:'つった魚'};
 const J4WALL=new Set(['wall','sdoor','hedge']);/* 柵（FENCE_IDS）のほかに、かこいになる塀 */
-const J4GROW=[],J4FISH=[],J4FENCE=[],J4MEND=[],J4THREAD=[],J4STAR=[],J4STAMP=[];let J4FQ=[],J4SNAP=null,J4ST=null;
+const J4GROW=[],J4FISH=[],J4FENCE=[],J4MEND=[],J4THREAD=[],J4STAR=[];let J4FQ=[],J4SNAP=null,J4ST=null;
 function j4OK(){return typeof juiceOK==='function'&&juiceOK()&&(typeof stageReady!=='function'||stageReady())}
 function j4Lift(x,y){return typeof hiAt==='function'?hiAt((y|0)*W+(x|0))*LIFT:0}
 function j4Dot(c,pat,cx,cy,P,col,hi){/* ドットの絵（文字の行のならび）を、まん中 cx,cy に描く */const h=pat.length,w=pat[0].length,x0=Math.round(cx-w*P/2),y0=Math.round(cy-h*P/2);c.fillStyle=col;for(let y=0;y<h;y++)for(let x=0;x<w;x++)if(pat[y][x]==='#')c.fillRect(x0+x*P,y0+y*P,P,P);if(hi){c.fillStyle=hi;for(let y=0;y<h;y++)for(let x=0;x<w;x++)if(pat[y][x]==='o')c.fillRect(x0+x*P,y0+y*P,P,P)}}
@@ -107,19 +106,16 @@ function juiceStarDraw(now){for(let i=J4STAR.length-1;i>=0;i--){const s=J4STAR[i
     ctx.globalAlpha=u>.75?(1-u)/.25:1;j4Dot(ctx,J4STARP,s.x*TS,s.y*TS-j4Lift(s.x,s.y+1)+hop-rise,P,'#f0c040','#fffbe6');ctx.globalAlpha=1}}
 
 /* ---------- 7. きょうの新記録 ---------- */
-function juiceRec(k,n,x,y){/* k：hv（収穫）・kill（追いはらった）・mat（あつめた素材）・fish（つった魚）。n：ふえた数。x,y：ハンコを出す所（マス） */
+function juiceRec(k,n){/* k：hv（収穫）・kill（追いはらった）・mat（あつめた素材）・fish（つった魚）。n：ふえた数 */
   if(!S||!n)return;if(typeof MEMRUN!=='undefined'&&MEMRUN||typeof NOSAVE!=='undefined'&&NOSAVE)return;const d=callDay(),R=S.jrec||(S.jrec={d,c:{},b:{},s:{}});
   if(R.d!==d){for(const q in R.c)R.b[q]=Math.max(R.b[q]||0,R.c[q]);R.c={};R.s={};R.d=d}/* 日がかわったら、きのうの数をいちばんとくらべる */
   R.c[k]=(R.c[k]||0)+n;const b=R.b[k]||0;if(R.s[k]||b<J4RECMIN[k]||R.c[k]<=b)return;R.s[k]=1;
-  if(!j4OK())return;J4STAMP.push({x,y,t0:performance.now()});toast('きょうの'+J4RECN[k]+'が、いままででいちばん（'+R.c[k]+'）','good');}
-function juiceStampDraw(now){if(!J4STAMP.length||typeof stampCanvas!=='function')return;const c=ctx,sm=c.imageSmoothingEnabled;c.imageSmoothingEnabled=false;
-  for(let i=J4STAMP.length-1;i>=0;i--){const s=J4STAMP[i],e=now-s.t0;if(e>J4STAMPMS){J4STAMP.splice(i,1);continue}if(e>=140&&!s.pon){s.pon=1;if(typeof sfx==='function')sfx('stamp');if(typeof buzz==='function')buzz(18)}/* ポンとおされた瞬間に、ぽむっ */
-    const k=e<140&&!uiReduced()?3-Math.floor(e/140*4)*.5:1,N=32*k,x=s.x*TS,y=(s.y-2.2)*TS-j4Lift(s.x,s.y);c.globalAlpha=e>J4STAMPMS-500?(J4STAMPMS-e)/500:e<140?.6:1;
-    c.drawImage(stampCanvas('さいこう',32),Math.round(x-N/2),Math.round(y-N/2),N,N)}c.globalAlpha=1;c.imageSmoothingEnabled=sm}
+  if(!j4OK())return;
+  toast('きょうの'+J4RECN[k]+'が、いままででいちばん（'+R.c[k]+'）','good','さいこう');}
 
 /* juice3 から */
 let J4T=0;
 function juice4Frame(now){juiceGrowStep(now);juiceFenceCheck(now);if(now-J4T>250){J4T=now;juiceStarTick(now)}}
-function juice4Draw(now){const dt=J4LD?Math.min(.1,(now-J4LD)/1000):0;J4LD=now;if(J4FENCE.length)juiceFenceDraw(now);if(J4MEND.length)juiceMendDraw(now);if(J4THREAD.length)juiceThreadDraw(now,dt);if(J4STAR.length)juiceStarDraw(now);if(J4FISH.length)juiceFishDraw(now);juiceStampDraw(now)}
+function juice4Draw(now){const dt=J4LD?Math.min(.1,(now-J4LD)/1000):0;J4LD=now;if(J4FENCE.length)juiceFenceDraw(now);if(J4MEND.length)juiceMendDraw(now);if(J4THREAD.length)juiceThreadDraw(now,dt);if(J4STAR.length)juiceStarDraw(now);if(J4FISH.length)juiceFishDraw(now)}
 let J4LD=0;
-function juice4Reset(){J4GROW.length=0;J4FISH.length=0;J4FENCE.length=0;J4MEND.length=0;J4THREAD.length=0;J4STAR.length=0;J4STAMP.length=0;J4FQ=[];J4SNAP=null;J4ST=null}
+function juice4Reset(){J4GROW.length=0;J4FISH.length=0;J4FENCE.length=0;J4MEND.length=0;J4THREAD.length=0;J4STAR.length=0;J4FQ=[];J4SNAP=null;J4ST=null}

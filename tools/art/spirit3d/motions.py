@@ -265,6 +265,21 @@ def grab(w, face):
     u = (w/(2*PI)) % 1; k = S(PI*u)
     return dict(lean=0.1+0.3*k, z=-1.5*k, legz=-0.5*k, legM=0.2*k, legP=0.2*k, sN=0.6+0.7*k, sF=0.6+0.7*k, bN=-0.4, bF=-0.4, hp=0.1+0.15*k)
 for nm in ('cgrab', 'store', 'smat', 'fetch', 'craftprep'): M(nm, 8, 0.6, grab)
+# 箱の高さごとの、とる・しまう（ゲームは、箱の高さで えらぶ：work-fx.js の BOXHI・BOXMID。地面の物は、上の grab）
+def storeh(w, face):
+    """上から入れる箱（ふちが目より上。せいれいは手が短く、背のびではとどかない）：かがんで、ぴょんととび、両手をふちの上へのばして中へ入れ、おりる"""
+    u = (w/(2*PI)) % 1
+    if u < 0.25: k = S(PI/2*u/0.25); j = -1.6*k; lz = -0.5*k; a = 1.0-0.3*k; ln = 0.1                       # かがむ
+    elif u < 0.6: k = (u-0.25)/0.35; j = -1.6+(9.6*S(PI*k)+1.6*k); lz = j+0.6*S(PI*k); a = 0.7+2.0*S(PI/2*min(1, k*1.8)); ln = 0.1+0.12*S(PI*k)   # ぴょん：ふちの上へ手を入れる
+    elif u < 0.8: k = (u-0.6)/0.2; j = -1.2*S(PI*k); lz = -0.4*S(PI*k); a = 2.7-1.7*k; ln = 0.12              # おりる
+    else: j = 0.0; lz = 0.0; a = 1.0; ln = 0.1
+    return dict(lean=ln, z=j, legz=lz, legM=0.2*max(0, -j)/1.6, legP=0.2*max(0, -j)/1.6, sN=a, sF=a, bN=-0.4, bF=-0.4, hp=0.12, top=-0.06*max(0, j)/8, tail=0.15*S(w))
+M('storeh', 8, 0.6, storeh)
+def storem(w, face):
+    """前から入れる家具（たな・炉・小屋など）：胸の高さへ両手をのばして、中へ入れて、もどす"""
+    u = (w/(2*PI)) % 1; k = S(PI*u)
+    return dict(lean=0.08+0.15*k, z=-0.3*k, sN=1.0+0.6*k, sF=1.0+0.6*k, bN=-0.45, bF=-0.45, hp=0.1+0.08*k, tail=0.1*S(w))
+M('storem', 8, 0.6, storem)
 def eat(w, face):
     """両手で持って、口もとで食べる（食べ物の絵は、ゲームで手の所にかさねる）"""
     k = max(0, S(w)); return dict(sN=1.95, sF=1.95, bN=-1.05, bF=-1.05, hp=0.12*k, z=-0.3*k, top=0.08*S(w), tail=0.15*S(w))
