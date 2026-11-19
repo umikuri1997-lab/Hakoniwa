@@ -125,19 +125,26 @@ function diaryBody(T,body,arg){const L=S.diary||[];const e=arg==='m'||arg==null?
     for(const[nm,g]of by){g.L.sort((a,b)=>b[5]-a[5]);const tx=g.L.slice(0,DYPER).map(x=>dyText(x[3],x[4])+(x[5]>1?'（'+x[5]+'回）':'')).join('\n');const r=rowEl(nm,tx,ELEM[g.el]?spiritPort(g.el,96,g.vr):null);r.querySelector('small').style.whiteSpace='pre-line';rw.appendChild(r)}
     P2.appendChild(sec)}
   const pages=[day].concat(P1.children.length?[P1]:[],P2.children.length?[P2]:[]);
-  const go=anim&&P1.children.length&&typeof juiceDiaryCount==='function'?juiceDiaryCount(P1,secW,true):null;let shown=false;
-  const onAt=()=>{if(shown||!P1.isConnected||P1.closest('.bkstore'))return;shown=true;if(go)go();if(stampR)setTimeout(()=>{if(stampR.isConnected)uiStamp(stampR,true,'かつやく')},350)};/* 点のページを見せたときに、数え上げてハンコ */
-  bookMake(body,pages,{key:'diary',at:0,onAt:()=>setTimeout(onAt,0)});
+  /* 点のページ（P1）は、入りきらないと2ページ以上にわかれる。わかれたページごとに、見せたときに数え上げてハンコ（見えていないページで数えない・ハンコをおさない）。
+     わかれたページは、数えおわったら、つぎのページへ自動でめくる（DYAUTOMS。じぶんでページをかえていたら、めくらない） */
+  let map=null;const PT=[],pi=P1.children.length?1:-1;let busy=false;
+  const onAt=at=>{if(busy||!PT.length)return;const vis=BKd.sp?[at,at+1]:[at],L=PT.filter(q=>vis.includes(q.i)&&!q.on);if(!L.length)return;busy=true;
+    const next=k=>{const q=L[k];if(!q){busy=false;const nx=PT.find(x=>!x.on);/* 見えていないページがのこっていたら、つぎへめくる */if(nx&&nx.i>Math.max(...vis))setTimeout(()=>{if(BKd.el.isConnected&&BKd.at===at&&!BKd.busy)bkGo(BKd,at+(BKd.sp?2:1))},DYAUTOMS);return}
+      q.on=1;if(q.st)setTimeout(()=>{if(q.st.isConnected)uiStamp(q.st,true,'かつやく')},350);const after=()=>setTimeout(()=>next(k+1),q.st?700:0);if(q.go)q.go(after);else after()};next(0)};
+  const BKd=bookMake(body,pages,{key:'diary',at:0,onPaged:m=>{map=m},onAt:at=>setTimeout(()=>onAt(at),0)});
+  if(anim&&pi>=0&&map){const end=map[pi+1]!=null?map[pi+1]:BKd.N;for(let i=map[pi];i<end;i++){const pg=BKd.pages[i],q={i,st:stampR&&pg.contains(stampR)?stampR:null};
+      if(typeof juiceDiaryCount==='function')q.go=juiceDiaryCount(pg,secW&&pg.contains(secW)?secW:null,true);PT.push(q)}}
   dyFillPh(new Map([[e.d,{sec:day,e}]]));
   if(anim)setTimeout(()=>dyWrite(body),420);/* 朝の日記：文を、書く音といっしょに、ちょっとずつ出す */
   if(anim){const best=dyBest(e),r=best&&S.res.find(q=>q.name===best.nm&&!q.hidden);if(r&&!DYJ.has(r)){DYJ.add(r);JUMP.set(r,performance.now());villageTimeout(()=>JUMP.set(r,performance.now()),650);addFloat(r.x,r.y-1.4,'がんばった！','#ffe7a8')}}}
 /* 書いているように、文を1字ずつ出す（場所は先にとってある：字は見えないだけ）。「、」「。」と行のおわりで、ひと息。書く音（持ち主の音）を数字ごとに。タップで、すぐさいごまで */
-const DYWMS=55,DYWPAUSE=200,DYWLINE=320;
+const DYWMS=25,DYWPAUSE=100,DYWLINE=150,DYAUTOMS=900;/* 1字・「、」「。」のあと・行のおわり（ミリ秒）。わかれた点のページを自動でめくるまでの間 */
 function dyWrite(root){const L=[...root.querySelectorAll('.dyTx')].filter(p=>!p.dataset.w&&p.textContent);if(!L.length)return;const st=S;
   const P=L.map(p=>{p.dataset.w=1;const t=p.textContent;p.textContent='';const C=[];for(const ch of t){if(ch==='\n'){p.appendChild(document.createTextNode('\n'));C.push(null);continue}const sp=document.createElement('span');sp.className='dyc';sp.textContent=ch;p.appendChild(sp);C.push(sp)}return C});
   const C=P[0],all=()=>{for(const A of P)for(const sp of A)if(sp)sp.classList.add('on');writeLoop(false)};if(uiReduced()){all();return}
   let i=0,n=0,done=false;const fin=()=>{if(done)return;done=true;all();root.removeEventListener('pointerdown',fin,true)};root.addEventListener('pointerdown',fin,true);writeLoop(true);/* 書く音を、書きおわるまで */
-  const step=()=>{if(done)return;if(!root.isConnected||S!==st){done=true;writeLoop(false);return}if(i>=C.length){fin();return}
+  const gone=()=>{const q=C.find(Boolean);return!q||!q.isConnected||!!q.closest('.bkstore')};/* 紙をとじた・ページをめくった：見えていない字を書きつづけない（書く音も止める） */
+  const step=()=>{if(done)return;if(!root.isConnected||S!==st){done=true;writeLoop(false);return}if(gone()){fin();return}if(i>=C.length){fin();return}
     const sp=C[i];for(const A of P){const q=A[i];if(q)q.classList.add('on')}i++;let w=DYWMS;
     if(!sp)w=DYWLINE;else{n++;if('、。！？…'.includes(sp.textContent))w=DYWPAUSE}setTimeout(step,w)};step()}
 /* 思い出帳の「日記」：1日1ページの日記帳（古い日から。dyDayPage）。できごと（S.memo・S.log）と村の写真も、ここにまとめる。さいごのページは「きょうまで」（tail：これまでの合計） */

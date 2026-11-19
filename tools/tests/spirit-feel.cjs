@@ -24,5 +24,5 @@ const s=await run(`(()=>{${reset}S.res=[mkRes(S,POKO,'wood',CX+.5,CY+.5)];const 
  r.fun=20;o.low=[funLow(r),(r.elem='wind',r.fun=50,funLow(r)),(r.fun=70,funLow(r))];
  const n=performance.now();spReact(r,'sad',1000);o.sad=[spReactNow(r,n+10),spAnimFix(r,n+10,false,true,'')];spReact(r,'think',1000);o.think=r.bubble;
  return o})()`);
-assert.deepEqual(s,{in:true,seated:true,out:true,farm:true,eat:['drink','bread','fruit','meal','drink'],snd:[],snd1:['ea_apple','ea_toast','ea_shake','ea_sip'],motions:[],drawPh:'ph',low:[true,true,false],sad:['sad','talksad'],think:'❓'},JSON.stringify(s));
+assert.deepEqual(s,{in:true,seated:true,out:true,farm:true,eat:['drink','bread','fruit','meal','drink'],snd:[],snd1:['ea_apple','ea_toast','ea_water','ea_tea'],motions:[],drawPh:'ph',low:[true,true,false],sad:['sad','talksad'],think:'❓'},JSON.stringify(s));
 assert.deepEqual(errors,[]);console.log('spirit feel ok',JSON.stringify(q));await browser.close()})().catch(e=>{console.error(e);process.exit(1)});
