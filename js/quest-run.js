@@ -26,7 +26,7 @@ function checkQuest(){
   if(complete){
     if(isNight()){renderQuest();return}/* クリアの話・お礼は、昼だけ */
     if(q.pay&&!PAYOK){if(!ASKING&&sheet==null&&(S.payNo==null||S.t-S.payNo>60)){ASKING=true;const who=(q.talk&&q.talk.who)||POKO;
-      askYesNo(who,matTxt(q.pay)+'、もらってもいい？',()=>{ASKING=false;PAYOK=true;checkQuest()},()=>{ASKING=false;S.payNo=S.t;renderQuest()})}renderQuest();return}/* 材料を使うクエストは、きいてから */
+      askYesNo(who,matTxt(q.pay)+'、もらってもいい？',()=>{ASKING=false;PAYOK=true;checkQuest()},()=>{ASKING=false;S.payNo=S.t;renderQuest()},'わたす')}renderQuest();return}/* 材料を使うクエストは、きいてから */
     let wait=QUEST_CLEAR_WAIT;
     if(wait&&wait.quest!==S.quest){QUEST_CLEAR_WAIT=wait=null}
     if(wait&&!wait.done){if(!qvHas(wait.obj,wait.id)||!S.res.includes(wait.r))QUEST_CLEAR_WAIT=wait=null;else{renderQuest();return}}/* 見にくる子が消えたら、べつの子で見にくるのを入れなおす */
@@ -42,7 +42,7 @@ function checkQuest(){
 }
 let ASKING=false,PAYOK=false,SUBT=0;
 /* はい／いいえ をきく（話す人の顔つき） */
-function askYesNo(who,text,yes,no){const o=document.createElement('div');o.className='askyn';o.innerHTML='<div class="ak"><b></b><p></p><div class="ab"><button class="btn">あとで</button><button class="btn pri">はい</button></div></div>';o.querySelector('b').textContent=who;o.querySelector('p').textContent=text;
+function askYesNo(who,text,yes,no,lbl,hold){/* lbl：きめるボタンの字（することのことば）。hold：もどせない決定は、おしつづけて決める */const o=document.createElement('div');o.className='askyn';o.innerHTML='<div class="ak"><b></b><p></p><div class="ab"><button class="btn">あとで</button><button class="btn pri"></button></div></div>';o.querySelector('b').textContent=who;o.querySelector('.btn.pri').textContent=lbl||'はい';if(hold)o.querySelector('.btn.pri').dataset.hold=1;o.querySelector('p').textContent=text;
   const [bn,by]=o.querySelectorAll('button');by.onclick=()=>{sfx('next');o.remove();yes()};bn.onclick=()=>{sfx('tap');o.remove();no()};document.body.appendChild(o);sfx('next')}
 /* クエストのごほうび・解放。お話のあとに行う。続けてすることがあれば関数を返す */
 const ITEM_GIFTS=[];let GIFT_ACTIVE=false;
@@ -51,7 +51,7 @@ function showItemGift(){while(ITEM_GIFTS.length&&ITEM_GIFTS[0].state!==S)ITEM_GI
   const items=new Map(),g0=ITEM_GIFTS[0],ttl=g0.title||'うけとった！',rec=!!g0.rec;while(ITEM_GIFTS.length&&ITEM_GIFTS[0].state===S&&(ITEM_GIFTS[0].title||'うけとった！')===ttl&&!!ITEM_GIFTS[0].rec===rec)for(const[id,n]of ITEM_GIFTS.shift().items)items.set(id,(items.get(id)||0)+n);/* 見出しがおなじものだけ、1まいにまとめる */
   GIFT_ACTIVE=true;const overlay=el('<div class="idea-reveal gift-reveal" role="dialog" aria-modal="true" aria-label="うけとったもの"></div>'),card=el('<div class="idea-card"><div class="idea-symbol">'+pxi(rec?'paper':'box')+'</div><h2></h2><div class="idea-items"></div></div>');
   card.querySelector('h2').textContent=ttl;for(const[id,n]of items){const item=el('<div class="idea-item"></div>'),img=document.createElement('img'),name=document.createElement('span');img.src=iconURL(id);img.alt='';name.textContent=rec?BL[id].name:iname(id)+' ×'+n;item.append(img,name);card.querySelector('.idea-items').append(item)}
-  const button=el('<button class="btn pri" type="button">'+(rec?'OK':'うけとる')+'</button>');button.disabled=true;card.append(button);overlay.append(card);document.body.append(overlay);sfx('good');const prior=document.activeElement;
+  const button=el('<button class="btn pri" type="button">'+(rec?'とじる':'うけとる')+'</button>');button.disabled=true;card.append(button);overlay.append(card);document.body.append(overlay);sfx('good');const prior=document.activeElement;
   setTimeout(()=>{if(overlay.isConnected){button.disabled=false;button.focus({preventScroll:true})}},650);button.onclick=()=>{if(button.disabled)return;overlay.remove();GIFT_ACTIVE=false;if(prior&&prior.isConnected)prior.focus({preventScroll:true})};
 }
 const spotCond=sp=>(sp.room?'家の中に、':'')+sp.how.replace(/^家の中に、/,'').split('と、').map(t=>t.replace(/([0-9]+)(つ|本)$/,'×$1')).join('・');/* 「井戸と、畑3つ」→「井戸・畑×3」 */
@@ -66,13 +66,13 @@ function bondPic(pair,card){const K=2,CW=150,CH=74,cv=document.createElement('ca
     requestAnimationFrame(draw)};
   draw(0);return cv}
 const SHARD_POP=['御神木に、ヌシ様の光がひとつ、やどった。','御神木に、ふたつめの光がやどった。その光に、影たちも気づきはじめている。','ヨルノオオカゲが残した、最後のかけら。御神木に、ヌシ様の光がそろった。'];/* かけらを届けたときの知らせ（1つめ・2つめ・3つめ） */
-const SPOT_POPS=[];/* はじめてできたスポットの説明・なかよしになった2人（{bond:[名前,名前]}） */
+const ROOMPW=20;/* 部屋のスポットが、はじめてできたときのパワー */const SPOT_POPS=[];/* はじめてできたスポットの説明・なかよしになった2人（{bond:[名前,名前]}） */
 function showSpotPop(){if(MEMRUN)return;while(SPOT_POPS.length&&SPOT_POPS[0].state!==S)SPOT_POPS.shift();if(!SPOT_POPS.length||GIFT_ACTIVE)return;
   {const e=SPOT_POPS[0];if(e.sp&&!e.shard&&!e.bond&&!e.scn&&typeof spotScene==='function'&&!(typeof IS_STORY_REPLAY!=='undefined'&&IS_STORY_REPLAY)){if(camAnim||!stageReady())return;/* はじめてのスポット：先にマップで見せる（spot-scene.js） */e.scn=1;GIFT_ACTIVE=true;spotScene(e,back=>{GIFT_ACTIVE=false;e.back=back;if(SPOT_POPS[0]===e)showSpotPop();else if(back)back(null)});return}}
   GIFT_ACTIVE=true;const overlay=el('<div class="idea-reveal gift-reveal" role="dialog" aria-modal="true"></div>'),card=el('<div class="idea-card"><h2></h2><div class="spotpop"><b></b><p></p><p></p></div></div>');
-  const q=card.querySelector('.spotpop'),h=card.querySelector('h2');let AFTER=null;const AFTERS=S;let BACK=null,ISSPOT=false;{const e=SPOT_POPS.shift(),sp=e.sp;AFTER=e.after||null;BACK=e.back||null;if(e.shard){h.textContent='かけらの光を届けた！';q.children[0].textContent='ヌシのかけら（'+e.shard+'/3）';q.children[1].textContent=SHARD_POP[Math.min(3,e.shard)-1];q.children[2].remove()}else if(e.bond){h.textContent='なかよし！';if(e.pair)q.before(bondPic(e.pair,card));q.children[0].textContent=e.bond[0]+'と'+e.bond[1];q.children[1].textContent='なかよしになった';q.children[2].remove()}else{ISSPOT=true;h.textContent='スポットができた！';q.children[0].textContent=sp.n;{const ic=typeof spotIcon==='function'?spotIcon(sp):null;if(ic){const im=el('<img class="spotic" alt="">');im.src=ic;q.before(im)}}/* スポットの代表の家具 */q.children[1].textContent='条件：'+spotCond(sp);q.children[2].textContent=sp.eff}}overlay.setAttribute('aria-label',h.textContent);
-  const button=el('<button class="btn pri" type="button">OK</button>');button.disabled=true;card.append(button);overlay.append(card);document.body.append(overlay);sfx('good');if(ISSPOT)setTimeout(()=>{if(overlay.isConnected&&typeof uiStamp==='function')uiStamp(h)},350);/* 「できた」のハンコ */const prior=document.activeElement;
-  setTimeout(()=>{if(overlay.isConnected){button.disabled=false;button.focus({preventScroll:true})}},650);button.onclick=()=>{if(button.disabled)return;overlay.remove();const end=()=>{GIFT_ACTIVE=false;if(prior&&prior.isConnected)prior.focus({preventScroll:true});if(AFTER&&AFTERS===S)AFTER()};if(BACK)BACK(end);else end()}}
+  const q=card.querySelector('.spotpop'),h=card.querySelector('h2');let AFTER=null;const AFTERS=S;let BACK=null,ISSPOT=false,RPW=0;{const e=SPOT_POPS.shift(),sp=e.sp;AFTER=e.after||null;BACK=e.back||null;if(e.shard){h.textContent='かけらの光を届けた！';q.children[0].textContent='ヌシのかけら（'+e.shard+'/3）';q.children[1].textContent=SHARD_POP[Math.min(3,e.shard)-1];q.children[2].remove()}else if(e.bond){h.textContent='なかよし！';if(e.pair)q.before(bondPic(e.pair,card));q.children[0].textContent=e.bond[0]+'と'+e.bond[1];q.children[1].textContent='なかよしになった';q.children[2].remove()}else{ISSPOT=true;h.textContent='スポットができた！';q.children[0].textContent=sp.n;{const ic=typeof spotIcon==='function'?spotIcon(sp):null;if(ic){const im=el('<img class="spotic" alt="">');im.src=ic;q.before(im)}}/* スポットの代表の家具 */q.children[1].textContent='条件：'+spotCond(sp);q.children[2].textContent=sp.eff;if(sp.room){const pw=el('<p></p>');pw.textContent='ごほうび：パワー+'+ROOMPW;q.append(pw);RPW=ROOMPW}}}overlay.setAttribute('aria-label',h.textContent);
+  const button=el('<button class="btn pri" type="button">とじる</button>');button.disabled=true;card.append(button);overlay.append(card);document.body.append(overlay);sfx('good');if(ISSPOT)setTimeout(()=>{if(overlay.isConnected&&typeof uiStamp==='function')uiStamp(h)},350);/* 「できた」のハンコ */const prior=document.activeElement;
+  setTimeout(()=>{if(overlay.isConnected){button.disabled=false;button.focus({preventScroll:true})}},650);button.onclick=()=>{if(button.disabled)return;overlay.remove();if(RPW&&AFTERS===S)rewardPower(RPW);const end=()=>{GIFT_ACTIVE=false;if(prior&&prior.isConnected)prior.focus({preventScroll:true});if(AFTER&&AFTERS===S)AFTER()};if(BACK)BACK(end);else end()}}
 function questGives(q,g){g=g||q.gives||{};
     (g.feat||[]).forEach(f=>S.feat[f]=true);for(const k in (g.food||{}))addFood(k,g.food[k]);for(const k in (g.mat||{}))S.mat[k]=(S.mat[k]||0)+g.mat[k];for(const k in (g.items||{})){S.unlocked[k]=true;giveItem(k,g.items[k])}queueItemGift(g.items);
     if(g.flags)g.flags.forEach(f=>S.flags[f]=true);if(g.recipes){recipeNotice(g.recipes.filter(id=>!S.recipes[id]));g.recipes.forEach(id=>S.recipes[id]=true)}if(g.shard)giveShard(g.shard);for(const s of g.shards||[])giveShard(s);if(g.enemy)S.enemyOn=true;if(g.shrine)S.flags.shrine=true;if(g.flag){S.flags[g.flag]=true;if(g.flag==='onsen')dirty=true}
@@ -205,7 +205,7 @@ function flashScreen(){const d=document.createElement('div');d.style.cssText='po
 const NTALK=[[/* 草原のヌシ：守り神に話す（ひとつずつ、順番に） */
   '#think|……風が、やわらかくなったな。この土地が、息をふきかえしている。',
   '守り神よ。子らの笑い声は、どんな花より、この地を明るくする。',
-  'わたしの角に、ときどき小鳥がとまる。……じっとしているのは、なかなかむずかしい。',
+  'わたしの角に、ときどきピチュリがとまる。……じっとしているのは、なかなかむずかしい。',
   '#think|フタバは、ずいぶんたくましくなった。……わたしがいないあいだに。',
   '#think|夕やけを見ると、思い出すことがある。さいごまで光ろうとする者のことを。',
   '花が咲くたび、この地のどこかで、新しい命がめざめる。……おまえのおかげだ。',

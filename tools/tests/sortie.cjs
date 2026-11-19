@@ -17,7 +17,7 @@ const assert=require('node:assert/strict');
     const j=((h.y|0)+3)*W+(h.x|0)-6;S.obj[j]='watch';setParts('watch',j,'part');recount();
     h.act={type:'watchpost',stage:'do',cl:1,obj:j};S.inv.arrow=10;S.hp['w'+j]=0;
     const e={id:901,type:'basic',x:(j%W)+1,y:((j/W)|0)+2,hp:EN.basic.hp,max:EN.basic.hp,spawned:true,path:[]};S.enemies=[e];const hp0=e.hp;
-    updTowers(.05);out.arrows=S.inv.arrow;out.brn=e.brn;out.shot=hp0-e.hp;
+    updTowers(.05);for(const k in BOWQ)BOWQ[k].t=0;updTowers(.05);out.arrows=S.inv.arrow;out.brn=e.brn;out.shot=hp0-e.hp;
     S.hp['w'+j]=99;const hp1=e.hp;for(let i=0;i<200;i++){e.stun=1;updEnemy(e,.05)}out.burnDmg=hp1-e.hp;out.brnLeft=e.brn;
     return JSON.stringify(out)})()`));
   console.log(r);

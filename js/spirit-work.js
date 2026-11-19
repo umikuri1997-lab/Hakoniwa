@@ -2,7 +2,7 @@
 const foodLow=()=>S.res.filter(r=>!r.hidden).length*2;/* 箱が、せいれいの人数×2より少なくなったら、食べ物を先にあつめる */
 function cookWants(f){/* 「入れる」にした料理の家具の材料に、その食べ物が足りないか */for(const q in S.ovenSet||{}){if(!COOKST.has(S.obj[q]))continue;const M=ovenMode(q);if(!M||M.m!=='in'||!M.in)continue;for(const k of M.in){if(k==='fish'){if(f==='fish'||isFish(f)){let n=0;for(const x of ['fish',...FISHK])n+=S.fs[x]||0;if(n<1)return true}continue}/* さかなは、どの魚でもよい */if(k===f&&(S.fs[f]||0)<1)return true}}return false}
 /* 畑の世話（たがやす・たねまき・水やり・収穫・肥料）は、世話するマスをふまずに、となりのマスに立って、そのマスのほうを向いてする（workFace）。畑でないマスを先に。となりに立てる所がなければ、そのマスの上 */
-function farmStand(G,j){const x=j%W;let best=-1,bs=1e9;for(const d of[-1,1,-W,W]){const k=j+d;if(k<0||k>=W*H||Math.abs(k%W-x)>1||!walk(k)||G.dist[k]<0)continue;const o=S.obj[k],sc=G.dist[k]+(o==='farm'||o==='plot'?4:0)+(S.res.some(q=>q.act&&q.act.stage==='do'&&(q.y|0)*W+(q.x|0)===k)?3:0);if(sc<bs){bs=sc;best=k}}return best>=0?best:j}
+function farmStand(G,j){const x=j%W;let best=-1,bs=1e9;for(const d of[-1,1,-W,W]){const k=j+d;if(k<0||k>=W*H||Math.abs(k%W-x)>1||!walk(k)||G.dist[k]<0)continue;const o=S.obj[k],sc=G.dist[k]+(o==='farm'||o==='plot'||WEEDS.has(o)?4:0)+(S.res.some(q=>q.act&&q.act.stage==='do'&&(q.y|0)*W+(q.x|0)===k)?3:0);if(sc<bs){bs=sc;best=k}}return best>=0?best:j}
 function tryJob(r,G,k){
   if(!canJob(r,k))return false;
   let j;
@@ -32,23 +32,23 @@ function tryJob(r,G,k){
     const fr=ripeAdj(['fruit']);j=roomN(r)>=1&&fRoom>=2?nearest(G,j=>fr(j)>=0):-1;if(j>=0){const q=fr(j);startAct(r,G,'harvest',j,{key:'o'+q,obj:q,food:1});return true}return false}
   case'offer':{if(OBOX<0||isNight()||r.fun<99||r.offDay===dayNo())return false;/* おそなえは1人1日1回まで *//* たのしさが満タンになったら、おそなえする */j=nearTile(G,OBOX);if(j>=0){startAct(r,G,'offer',j);return true}return false}
   case'gather':{const full=S.food>=(r.elem==='earth'?25:12),tkq=WD===1&&!S.free&&qNow('food3')&&foodCap()-S.food>=2;/* たけのこのおねがいのあいだは、食べ物が足りていても、たけのこをとる */const ckb=full&&foodCap()-S.food>=2&&cookWants('berry');/* えらんだ料理（ジュースなど）にベリーが足りなければ、食べ物が足りていても、ベリーをつむ */if(full&&!tkq&&!ckb||isNight()||roomN(r)<1)return false;const bb=ripeAdj(full?(ckb?['berry']:['takenoko']):['berry','takenoko']);j=nearest(G,j=>bb(j)>=0);if(j>=0){const q=bb(j);startAct(r,G,'gather',j,{key:'o'+q,obj:q});return true}return false}
-  case'drop':if(!(S.drops&&S.drops.length)||isNight())return false;const noF=!S.res.some(x=>x.name===POKO&&!x.hidden);const dOK=q=>(q.id!=='shard'||r.name===POKO||noF)&&!(q.id.startsWith('food:')&&foodCap()-S.food<=0)&&!(q.id.startsWith('mat:')&&matCap()-matTot()<=0)&&!(q.id!=='shard'&&q.id!=='recipe'&&roomN(r)<1);j=S.drops.some(q=>(q.tap||q.lt)&&dOK(q))?nearest(G,j=>S.drops.some(q=>q.y*W+q.x===j&&(q.tap||q.lt)&&dOK(q))&&free('d'+j,1),9999):-1;/* タップした物・守り神の光でこわした物があれば、それを先に（近くのほかの落とし物より先） */if(j<0)j=nearest(G,j=>S.drops.some(q=>q.y*W+q.x===j&&(q.id==='shard'||q.lt||q.tap||Math.hypot(q.x+.5-r.x,q.y+.5-r.y)<=seekR(r)+gearStat(r).prng)/* 落ちている物は、まわり15マス（風の子は20マス）に来て見つけたときにひろう（ヌシのかけらと、守り神の光でこわした物はべつ：どこでも、木を切る・石をほるより先にひろいに行く） */&&(q.id!=='shard'||r.name===POKO||noF)&&!(q.id.startsWith('food:')&&foodCap()-S.food<=0)&&!(q.id.startsWith('mat:')&&matCap()-matTot()<=0)&&!(q.id!=='shard'&&q.id!=='recipe'&&roomN(r)<1))&&free('d'+j,1),S.drops.some(q=>q.tap||q.lt)?9999:90);/* 箱がいっぱいのときは、食料のおとしものはひろわない */if(j>=0){startAct(r,G,'pickdrop',j,{key:'d'+j,obj:j});return true}return false;
+  case'drop':if(!(S.drops&&S.drops.length)||isNight())return false;const noF=!S.res.some(x=>x.name===POKO&&!x.hidden);const dOK=q=>(q.id!=='shard'||r.name===POKO||noF)&&!(q.id.startsWith('food:')&&foodCap()-S.food<=0)&&!(q.id.startsWith('mat:')&&matCap()-matTot()<=0)&&!(q.id!=='shard'&&q.id!=='recipe'&&roomN(r)<1);j=S.drops.some(q=>(q.tap||q.lt)&&dOK(q))?nearest(G,j=>S.drops.some(q=>q.y*W+q.x===j&&(q.tap||q.lt)&&dOK(q))&&free('d'+j,1),9999):-1;/* タップした物・守り神の光でこわした物があれば、それを先に（近くのほかの落とし物より先） */if(j<0)j=nearest(G,j=>S.drops.some(q=>q.y*W+q.x===j&&(q.id==='shard'||q.lt||q.tap||Math.hypot(q.x+.5-r.x,q.y+.5-r.y)<=seekR(r)+gearStat(r).prng)/* 落ちている物は、まわり10マス（風の子は15マス）に来て見つけたときにひろう（ヌシのかけらと、守り神の光でこわした物はべつ：どこでも、木を切る・石をほるより先にひろいに行く） */&&(q.id!=='shard'||r.name===POKO||noF)&&!(q.id.startsWith('food:')&&foodCap()-S.food<=0)&&!(q.id.startsWith('mat:')&&matCap()-matTot()<=0)&&!(q.id!=='shard'&&q.id!=='recipe'&&roomN(r)<1))&&free('d'+j,1),S.drops.some(q=>q.tap||q.lt)?9999:90);/* 箱がいっぱいのときは、食料のおとしものはひろわない */if(j>=0){startAct(r,G,'pickdrop',j,{key:'d'+j,obj:j});return true}return false;
   case'cfill':{if(isNight())return false;if(r.cpk){const cj=r.cpk.j;if(S.obj[cj]!=='composter'){toHand(r,r.cpk.m);r.cpk=null;return false}j=nearest(G,q=>adjOf(q,k=>k===cj)>=0,200);if(j>=0){startAct(r,G,'cput',j,{obj:cj});return true}return false}
     const Q=S.cmpQ||{},cj=Object.keys(Q).map(Number).find(c=>!S.res.some(q=>q!==r&&q.act&&q.act.type==='cpick'&&q.act.cj===c));if(cj==null)return false;if(qStale(Q[cj])){delete Q[cj];return false}const ck=Object.keys(Q[cj]);j=nearest(G,j=>keysAdj(j,ck)>=0,200);if(j>=0){startAct(r,G,'cpick',j,{cj});return true}return false}/* コンポスター：たのまれた草を、箱からコンポスターへ */
   case'fert':{if(isNight()||!COMPS.length)return false;const need=q=>S.obj[q]==='farm'&&S.dyn[q]&&S.dyn[q].sown!==false&&S.dyn[q].g<100&&S.dyn[q].fdD!==dayNo()&&free('f'+q,1);if((r.fert||0)>0){j=nearest(G,need,120);if(j>=0){startAct(r,G,'fert',farmStand(G,j),{key:'f'+j,obj:j});return true}return false}
     if(!S.obj.some((o,q)=>o==='farm'&&need(q)))return false;const cj=COMPS.find(c=>(S.dyn[c]||{}).c>0);if(cj==null)return false;j=nearest(G,q=>adjOf(q,k=>k===cj)>=0,200);if(j>=0){startAct(r,G,'cget',j,{obj:cj});return true}return false}/* 肥料やり：コンポスターから肥料をもっていって、畑にまく（1日1回） */
   case'otaki':{if(isNight()||STATUE<0)return false;if(r.otaki){j=nearest(G,j=>adjOf(j,k=>k===STATUE||k===STATUE+W)>=0,300);if(j>=0){startAct(r,G,'otaki',j,{});return true}return false}
-    if(!S.otakiQ||!Object.keys(S.otakiQ).length||S.res.some(q=>q!==r&&q.act&&q.act.type==='otakiget'))return false;if(qStale(S.otakiQ)){S.otakiQ={};return false}const ok=Object.keys(S.otakiQ);j=nearest(G,j=>keysAdj(j,ok)>=0,200);if(j>=0){startAct(r,G,'otakiget',j,{});return true}return false}/* おたきあげ：箱から素材をとって、神殿へ */
+    if(S.res.some(q=>q!==r&&q.act&&q.act.type==='otakiget'))return false;otakiBClean();{const bs=Object.keys(S.otakiB||{}).map(Number);if(bs.length){j=nearest(G,j=>adjOf(j,k=>bs.includes(anc(k))&&boxSide(j,k))>=0,200);if(j>=0){startAct(r,G,'otakiget',j,{});return true}}}/* 箱の画面からたのんだ分は、その箱から */if(!S.otakiQ||!Object.keys(S.otakiQ).length)return false;if(qStale(S.otakiQ)){S.otakiQ={};return false}const ok=Object.keys(S.otakiQ);j=nearest(G,j=>keysAdj(j,ok)>=0,200);if(j>=0){startAct(r,G,'otakiget',j,{});return true}return false}/* おたきあげ：箱から素材をとって、神殿へ */
   case'sasa':{if(isNight()||STATUE<0)return false;if(r.sasa){j=nearest(G,j=>adjOf(j,k=>k===STATUE||k===STATUE+W)>=0,300);if(j>=0){startAct(r,G,'sasa',j,{});return true}return false}
     if(!S.sasaQ||!Object.keys(S.sasaQ).length||S.res.some(q=>q!==r&&q.act&&q.act.type==='sasaget'))return false;if(qStale(S.sasaQ)){S.sasaQ={};return false}const ok=Object.keys(S.sasaQ);j=nearest(G,j=>keysAdj(j,ok)>=0,200);if(j>=0){startAct(r,G,'sasaget',j,{});return true}return false}/* 季節のささげもの：箱から物をとって、神殿へ（sasage.js） */
-  case'weed':{const mF=matTot()+matN(r)>=matCap(),fF=foodCap()-S.food<=0,okW=k=>S.obj[k]==='kinoko'?!fF:!mF;/* きのこは箱、草は箱 */if(isNight()||mF&&fF||roomN(r)<1)return false;{const RQ=wreqList();j=RQ.length?nearest(G,j=>RQ.includes(j)&&okW(j)&&free('o'+j,1),9999):-1}if(j<0){const GN=grassNeed();if(GN)j=nearest(G,j=>GN[(BL[S.obj[j]]||{}).weed]>0&&okW(j)&&free('o'+j,1),GRASSFAR)}/* 目標に足りない草は、遠くてもとりに行く */if(j<0){const R=WEEDNEAR||seekR(r);j=nearest(G,j=>WEEDS.has(S.obj[j])&&Math.hypot(j%W+.5-r.x,(j/W|0)+.5-r.y)<=R&&okW(j)&&free('o'+j,1))}/* 雑草・きのこは、まわり15マス（風の子は20マス） *//* 「しらべる」でタップした草は、遠くてもさきに */if(j>=0){startAct(r,G,'weed',j,{key:'o'+j,obj:j});return true}return false}
+  case'weed':{const mF=matTot()+matN(r)>=matCap(),fF=foodCap()-S.food<=0,okW=k=>S.obj[k]==='kinoko'?!fF:!mF;/* きのこは箱、草は箱 */if(isNight()||mF&&fF||roomN(r)<1)return false;{const RQ=wreqList();j=RQ.length?nearest(G,j=>RQ.includes(j)&&okW(j)&&free('o'+j,1),9999):-1}if(j<0){const GN=grassNeed();if(GN)j=nearest(G,j=>GN[(BL[S.obj[j]]||{}).weed]>0&&okW(j)&&free('o'+j,1),GRASSFAR)}/* 目標に足りない草は、遠くてもとりに行く */if(j<0){const R=WEEDNEAR||seekR(r);j=nearest(G,j=>WEEDS.has(S.obj[j])&&Math.hypot(j%W+.5-r.x,(j/W|0)+.5-r.y)<=R&&okW(j)&&free('o'+j,1))}/* 雑草・きのこは、まわり10マス（風の子は15マス） *//* 「しらべる」でタップした草は、遠くてもさきに */if(j>=0){startAct(r,G,'weed',farmStand(G,j),{key:'o'+j,obj:j});/* 草・きのこは、ふまずに、となりのマスから抜く */return true}return false}
       case'seed':if(!S.seeds.length||isNight())return false;j=nearest(G,j=>S.seeds.some(q=>q.y*W+q.x===j)&&free('s'+j,1),90);if(j>=0){startAct(r,G,'pickseed',j,{key:'s'+j,obj:j});return true}return false;
   }
   return false;
 }
 const JOBCAT=[['build','repair'],['craft'],['harvest','water','tend','till','sow','plant'],['cook','chop','mine','drop','weed','seed','offer','gather']];
 const ALLJOB=['harvest','sow','offer','gather'],FARMJ=['harvest','water','tend','till','sow'];/* 畑の世話 */
-const IDLE_ACTS=['fish','play','wander','idle','quirk','critwatch','sunset','rainjoy','admire','ownseat'];
+const IDLE_ACTS=['fish','play','wander','idle','quirk','critwatch','sunset','rainjoy','admire','ownseat','trlook'];
 // 種まき・植える・依頼・建築があるか（いつもの作業を中断してでも向かう仕事）
 function hasHighWork(r){
   if(!isNight()&&typeof fogWant==='function'&&fogWant(r))return true;if(!isNight()&&webWant(r))return true;/* たのまれたクモの巣 *//* たのまれた宝箱・あしあと */
@@ -68,7 +68,7 @@ function hasUrgent(r){/* 建てる場所か、だれも受けていない依頼�
   return S.orders.some(q=>(!q.worker||!S.res.some(x=>x.id===q.worker))&&craftOK(r,q))}
 function hasWork(r){
   if(r.bm||haulWant()&&!heldN(r))return true;
-  if(!isNight()&&STATUE>=0&&(r.otaki||S.otakiQ&&Object.keys(S.otakiQ).length))return true;
+  if(!isNight()&&STATUE>=0&&(r.otaki||S.otakiQ&&Object.keys(S.otakiQ).length||S.otakiB&&Object.keys(S.otakiB).length))return true;
   if(!isNight()&&STATUE>=0&&(r.sasa||S.sasaQ&&Object.keys(S.sasaQ).length))return true;
   if(!isNight()&&(r.cpk||S.cmpQ&&Object.keys(S.cmpQ).length))return true;
   if(smeltWant(r))return true;
@@ -95,7 +95,7 @@ function jobWork(r,G,dry){if(isNight())return false;const j=jobOf(r);if(j<0)retu
 function grassNeed(){/* いまの目標で作る物（御神木の調べの準備）に足りない草：素材のキー→足りない数。なければ null */
   const q=QUESTS[S.quest];if(!q||!S.qTalked||typeof FIELD_PREP==='undefined')return null;const p=FIELD_PREP[q.id];if(!p||!p.build||fieldBuildOK(q.id))return null;
   const id=p.build.ids[0],m=(BL[id]||{}).mat;if(!m||inv(id)>0||S.orders.some(o=>o.type===id))return null;const out={};let n=0;for(const k in m)if(GRASSK.includes(k)&&(S.mat[k]||0)<m[k]){out[k]=m[k]-(S.mat[k]||0);n++}return n?out:null}
-const GRASSFAR=60;const SEEKR=15,SEEKRW=20;function seekR(r){return r.elem==='wind'?SEEKRW:SEEKR}/* 雑草・きのこ・落とし物を見つける広さ（まわりのマス） *//* 目標に足りない草は、この歩数までとりに行く */
+const GRASSFAR=60;const SEEKR=10,SEEKRW=15;function seekR(r){return r.elem==='wind'?SEEKRW:SEEKR}/* 雑草・きのこ・落とし物を見つける広さ（まわりのマス） *//* 目標に足りない草は、この歩数までとりに行く */
 const WOODLOW=10;/* 木材がこれより少ないときは、雑草・枝ひろいより先に木を切る */
 let BOXFULL=0;/* 箱がいっぱいを知らせたときの、しまえる数（セーブしない） */
 function boxFullNote(){/* 箱がいっぱいで、木・石をあつめられないとき、1回だけ知らせる。しまえる数がふえるか、2わり空いたら、また知らせる */
@@ -134,7 +134,7 @@ function goWork(r,G,nw){boxFullReset();
   // 建てる・家具づくりがいちばん先。そのつぎに得意な仕事をする
   for(const k of[...(SPEC[r.elem]||[])])if(tryJob(r,G,k))return true;
   for(const cat of JOBCAT)for(const k of cat){
-    if(['chop','mine','drop','weed'].includes(k)){if(gd)continue;gd=true;if(grassNeed()&&tryJob(r,G,'weed'))return true;/* 目標に足りない草が先 */if((S.mat.wood||0)<WOODLOW&&tryJob(r,G,'chop'))return true;/* 木材が少ないときは、雑草・枝より先に木を切る */if(tryJob(r,G,'weed'))return true;/* まわり15マスの雑草・きのこは、木・石より先にむしる */if(tryJob(r,G,'drop'))return true;/* 落とし物（枝など）は、木・石より先にひろう */const jobs=[...mo];for(let i=jobs.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[jobs[i],jobs[j]]=[jobs[j],jobs[i]]}for(const m of jobs)if(tryJob(r,G,m))return true;continue}/* 木・石は、同じ優先度でえらぶ */
+    if(['chop','mine','drop','weed'].includes(k)){if(gd)continue;gd=true;if(grassNeed()&&tryJob(r,G,'weed'))return true;/* 目標に足りない草が先 */if((S.mat.wood||0)<WOODLOW&&tryJob(r,G,'chop'))return true;/* 木材が少ないときは、雑草・枝より先に木を切る */if(tryJob(r,G,'weed'))return true;/* まわり15マスの雑草・きのこは、木・石より先にむしる */if(tryJob(r,G,'drop'))return true;/* 落とし物（枝など）は、木・石より先にひろう */const jobs=[...mo];for(let i=jobs.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[jobs[i],jobs[j]]=[jobs[j],jobs[i]]}if(typeof tokuiLv==='function')jobs.sort((p,q)=>tokuiLv(r,TJOB[q])-tokuiLv(r,TJOB[p]));/* 得意な仕事（★）の多いほうを先に（events.js） */for(const m of jobs)if(tryJob(r,G,m))return true;continue}/* 木・石は、同じ優先度でえらぶ */
     if(tryJob(r,G,k))return true}
   if(nw)return false;goWander(r,G);return true;
 }
@@ -158,6 +158,7 @@ function goWander(r,G){
   if(!isNight()&&!enemyLive()&&Math.random()<OWNSEATP&&goOwnSeat(r,G))return;/* じぶんのいすで休む */
   if(!isNight()&&!enemyLive()&&goWeather(r,G))return;/* 雨・夕焼け */
   if(!isNight()&&!enemyLive()&&Math.random()<.3&&goCritter(r,G))return;if(!isNight()&&!enemyLive()&&Math.random()<.25&&typeof goPetAnimal==='function'&&goPetAnimal(r,G))return;/* 飼う生き物をなでにいく *//* 小さな生き物を見つけたら、見にいく */
+  if(!isNight()&&!enemyLive()&&typeof goOuting==='function'&&goOuting(r,G))return;/* なかよしと、おでかけ（outing.js） */if(!isNight()&&!enemyLive()&&typeof goTreasure==='function'&&goTreasure(r,G))return;/* たからものをながめる（gifts.js） */
   if(!isNight()&&!enemyLive()&&(r.quirkT||0)<=S.t&&Math.random()<QUIRKP&&goQuirk(r,G))return;/* ひとりのときのしぐさ */
   const c=[];for(let j=0;j<W*H;j++){const d=G.dist[j];if(d>=2&&d<=7&&walk(j)&&!(TAKEN&&TAKEN.has(j))&&!((r.routeAvoid||{})[j]>S.t)){const x=j%W,y=(j/W)|0;if(isNight()&&!VILL[j])continue;c.push(j)}}
   if(!c.length)return startAct(r,G,'idle',-1,{dur:15});
@@ -228,13 +229,25 @@ const TROUBLE={
   dark:{t:'夜、家のまわりが暗くてこわい',ok:r=>{const h=homeOf(r);return !!h&&!lightNear(h)},thx:['あかりがあると、夜もこわくないね。','ありがとう。夜が、ちょっとたのしみになったよ。']},
   fav:{t:r=>BL[likeF(r)].name+'がほしい',ok:r=>{const f=likeF(r);return !!f&&BL[f]&&BL[f].kind==='furn'&&!cnt(f)&&recipeKnown(f)&&lvOK(f)},thx:['ずっと、ほしかったんだ。ありがとう！','わあ、だいじにするね！']},
   want:{t:r=>{const f=S.trouble&&S.trouble.f;return (FOODS[f]?FOODS[f].name:'すきな物')+'が食べたい'},ok:r=>{const T=S.trouble;if(T&&T.id===r.id&&T.k==='want')return !!FOODS[T.f]&&!T.ate;return wantPick(r)!=null},thx:['食べたかったんだ。ありがとう！','おいしかった……しあわせ！']},/* おやつで、その食べ物をあげるとなおる（food-like.js の foodReact が T.ate） */
+  room:{t:r=>{const sp=S.trouble&&SPOTS.find(q=>q.k===S.trouble.f);return sp?'家に、'+sp.n+'がほしい。'+sp.how:'家に、部屋がほしい'},ok:r=>{const T=S.trouble,h=homeOf(r);if(T&&T.id===r.id&&T.k==='room')return !!h&&!!ROOMWANT[T.f]&&!roomIn(h,T.f);return roomPick(r)!=null},thx:['ずっと、こういう部屋がほしかったんだ。ありがとう！','わあ、家がもっとすきになったよ！']},/* 部屋のおねがい：その子の家に、まだない部屋（作れる家具だけでできる部屋） */
   far:{t:'食べ物の箱が遠い',ok:r=>{const b=myBed(r);if(b<0||!BOXL.length)return false;const G=bfs(b%W,(b/W)|0);const k=nearest(G,j=>eatAdj(j)>=0,200);return k<0||G.dist[k]>TROUBLEFAR},thx:['ごはんが近くなって、うれしいな。','これで、すぐ食べにいけるね。']}};
+const ROOMWANT={shinshitsu:['bed','shelf1'],ofuro:['bathtub','tub'],shosai:['achair','shelf1','flamp'],living:['sofa1','ltable','monstera'],dinroom:['table','chair'],daidokoro:['cooktable','tub','taru'],nedoko:['bed','table'],monoheya:['crate','asabukuro','makidana'],chozo:['crate','taru'],naya:['crate','taru','asabukuro']};/* 部屋のおねがいに出す部屋と、それを作れるかを見る家具 */
+const roomIn=(h,k)=>SPOTI.some(t=>t.sp.k===k&&h.inside.has(t.j)&&t.sp.need.every((nd,i)=>t.found[i].filter(q=>h.inside.has(q)).length>=nd[1]));/* その家に、その部屋がそろっているか（家の画面の「部屋」と同じ） */
+function roomPick(r){const h=homeOf(r);if(!h)return null;const L=Object.keys(ROOMWANT).filter(k=>!roomIn(h,k)&&ROOMWANT[k].every(id=>cnt(id)>0||(S.inv[id]||0)>0||bpKnown('furn',id)));return L.length?L[Math.floor(Math.random()*L.length)]:null}
+/* こまりごと・ゆめで作ってあげた物：たのんだ子が、すぐ見にきて（questjoy）、そのあと、その家具のふつうの使い方でつかう（tryGiftUse）。つかうせいれいも、その子にきめる */
+function giftVisit(r,j){if(!r||j==null||j<0||!S.res.includes(r)||IS_STORY_REPLAY||typeof MEMRUN!=='undefined'&&MEMRUN)return;j=anc(j);const id=S.obj[j];if(!id||!BL[id])return;const L=(QUEST_VISITS.get(r)||[]).filter(v=>v.obj!==j);L.push({obj:j,id,gift:1});QUEST_VISITS.set(r,L.slice(0,4));if(OWNABLE(id)&&useFor(j,r))(S.useOwn||(S.useOwn={}))[j]=r.id}
+const giftCell=(id,r)=>{const h=homeOf(r);let best=-1,bd=1e9;for(let j=0;j<W*H;j++){if(S.obj[j]!==id)continue;const d=h&&h.inside.has(j)?-1:Math.hypot(j%W-r.x,((j/W)|0)-r.y);if(d<bd){bd=d;best=j}}return best};/* その家具の、その子の家の中の物（なければ、いちばん近い物） */
+function tryGiftUse(r){const j=r.giftUseJ;if(j==null)return false;delete r.giftUseJ;if(isNight()||enemyLive()||r.hunger<300||hungry(r))return false;const o=S.obj[j];if(!o)return false;const G=bfs(r.x|0,r.y|0);
+  if(BENCHES.has(o)){if(!free('o'+j,1)||G.dist[j]<0)return false;endAct(r);startAct(r,G,'rest',j,{key:'o'+j,obj:j,seat:j,dur:30,own:1});return true}
+  if(SEATS.includes(o)){if(!free('o'+j,1)||!free('seat'+j,1)||G.dist[j]<0)return false;endAct(r);startAct(r,G,'ownseat',j,{key:'o'+j,obj:j,dur:30});return true}
+  const p=BL[o]&&BL[o].play;if(p&&!(o==='campfire'&&campOut(j))&&free('o'+j,p.cap)){const st=p.adj?nearest(G,k=>adjOf(k,q=>anc(q)===j)>=0&&walk(k)&&!S.obj[k],40):G.dist[j]>=0?j:-1;if(st<0)return false;endAct(r);startAct(r,G,'play',st,{key:'o'+j,obj:j,what:o,fun:p.fun,dur:p.dur,pt:p.pt,pw:p.pw});return true}
+  return false}
 const troubleText=r=>{const T=S.trouble&&S.trouble.id===r.id?TROUBLE[S.trouble.k]:null;return T?(typeof T.t==='function'?T.t(r):T.t):''};
 function troubleMorning(){if(!S||S.free||IS_STORY_REPLAY||typeof MEMRUN!=='undefined'&&MEMRUN)return;const d=dayNo(),T=S.trouble;
   if(T&&(!S.res.some(r=>r.id===T.id)||d-T.d>=TROUBLEDAYS))S.trouble=null;if(S.trouble)return;
-  const C=[];for(const r of S.res){if(r.hidden&&!homeOf(r))continue;for(const k in TROUBLE)if(TROUBLE[k].ok(r))C.push([r,k])}if(!C.length)return;const [r,k]=C[Math.floor(Math.random()*C.length)];S.trouble={id:r.id,k,d};if(k==='want')S.trouble.f=wantPick(r)}
+  const C=[];for(const r of S.res){if(r.hidden&&!homeOf(r))continue;for(const k in TROUBLE)if(TROUBLE[k].ok(r))C.push([r,k])}if(!C.length)return;const [r,k]=C[Math.floor(Math.random()*C.length)];S.trouble={id:r.id,k,d};if(k==='want')S.trouble.f=wantPick(r);if(k==='room')S.trouble.f=roomPick(r)}
 let TRBT=0;function troubleTick(){const T=S&&S.trouble;if(!T||(TRBT=(TRBT+1)%5))return;/* 5秒に1回 */const r=S.res.find(q=>q.id===T.id);if(!r){S.trouble=null;return}const D=TROUBLE[T.k];if(!D){S.trouble=null;return}
-  if(D.ok(r))return;S.trouble=null;funAdd(r,TROUBLEFUN,'trouble');if(!r.hidden){JOYU.set(r,performance.now()+3000);addFloat(r.x,r.y-1.6,pickFresh('trb:'+T.k,D.thx),'#fff3d6');r.bubble='💕'}toast(r.name+'のこまりごとが、なくなった','good');if(typeof letterQ==='function')letterQ(r,'thx',{f:T.k==='fav'&&typeof likeF==='function'&&BL[likeF(r)]?BL[likeF(r)].name:T.k==='want'&&FOODS[T.f]?FOODS[T.f].name:''},T.k)}ACT_LBL.rainjoy='雨をよろこんでいる';ACT_LBL.stretch='のびをしている';
+  if(D.ok(r))return;S.trouble=null;funAdd(r,TROUBLEFUN,'trouble');if(!r.hidden){JOYU.set(r,performance.now()+3000);addFloat(r.x,r.y-1.6,pickFresh('trb:'+T.k,D.thx),'#fff3d6');r.bubble='💕'}toast(r.name+'のこまりごとが、なくなった','good');{const id=T.k==='fav'?likeF(r):T.k==='room'?(SPOTI.find(t=>t.sp.k===T.f&&homeOf(r)&&homeOf(r).inside.has(t.j))||{}).j:null;const gj=T.k==='room'?id:id?giftCell(id,r):-1;if(gj!=null&&gj>=0)giftVisit(r,gj)}if(typeof letterQ==='function')letterQ(r,'thx',{f:T.k==='fav'&&typeof likeF==='function'&&BL[likeF(r)]?BL[likeF(r)].name:T.k==='want'&&FOODS[T.f]?FOODS[T.f].name:T.k==='room'&&SPOTS.find(q=>q.k===T.f)?SPOTS.find(q=>q.k===T.f).n:''},T.k)}ACT_LBL.rainjoy='雨をよろこんでいる';ACT_LBL.stretch='のびをしている';
 /* すわる家具（いす・ベンチ）：となりのマスから、すわる位置へ、ぴょんと乗る（in）。おりるときは、すわる位置から、となりのマスへ（out）。
    せいれいの場所（r.x・r.y）はすぐにうつし、絵だけを SEATMVMS のあいだに、はねながらうつす（drawRes0。家具にめりこんで見えない） */
 /* 箱の前の行列：箱から取る・箱へしまう子は、立つマスにほかの子がいて作業していれば、そのてまえで待つ。その子のうしろにならんでいる子がいれば、そのうしろで待つ（行列）。
@@ -331,13 +344,14 @@ function updRes(r,dt){rescueStuck(r);if((RHOLD.get(r)||0)>performance.now())retu
   if(tryMainStoryWait(r))return;
   if(tryEarthIntro(r))return;
   if(tryQuestVisit(r))return;
+  if(tryGiftUse(r))return;
   if(!r.act){decide(r);return}
   const a=r.act;
   if(a.stage==='walk'){if(a.whyW>S.t&&a.whyW-S.t<=WHYHOLD)return;moveR(r,dt);return}/* 行動のわけ：その物を見てから、むかう（whyNote） */
   const wdt=(WORKT.has(a.type)&&a.type!=='cook'?dt*(rMul(r,'work')+nareAdd(r,a)+(typeof inspWork==='function'?inspWork(r,a):0)):dt)*gJob(r,a.type);nareTick(r,a,dt);/* 担当のしごと場では、なれのぶん速い *//* 専用品：作業ごとの速さ *//* 料理は、力に関係なく、説明どおりの時間 *//* 力があるほど作業が速い */
   a.t+=wdt;const A=ACT[a.type];
   if(A.tick)A.tick(r,a,wdt);
-  if(A.done(r,a)){a.fin=1;dayNote(r,a);if(typeof vrecNote==='function')vrecNote(r,a);/* 村の記録 */titleNote(r,a);/* しごとの称号 *//* きょうしたことをおぼえる（お話で話す） */if(A.end)A.end(r,a);endAct(r)}
+  if(A.done(r,a)){a.fin=1;dayNote(r,a);if(typeof vrecNote==='function')vrecNote(r,a);/* 村の記録 */titleNote(r,a);/* 得意な仕事の回数・★ *//* きょうしたことをおぼえる（お話で話す） */if(A.end)A.end(r,a);endAct(r)}
 }
 function reunite(r,sp){/* もどってきた子の、もとのなかよしは、神殿へかけつけてよろこぶ */const m=r.reMate&&S.res.find(q=>q.name===r.reMate&&!q.hidden&&q!==r);r.reMate=null;if(m&&!IS_STORY_REPLAY)r.reTalk=m.name;/* 再会の会話（griefTick。紹介のあと・昼に） */if(!m||isNight()&&!m.act)return;const G=bfs(m.x|0,m.y|0),st=nearest(G,j=>Math.abs(j%W-sp[0])+Math.abs(((j/W)|0)-sp[1])===1&&walk(j),300);if(st<0)return;endAct(m);startAct(m,G,'reunion',st,{who:r.id})}
 function finishBurial(r){const nm=r.coffin&&r.coffin.name;r.coffin=null;if(!nm)return;for(const L of[S.buried||[],S.lost||[]])for(const q of L)if(q.name===nm)delete q.unb;/* 埋葬してから、よみがえらせられる */S.pt+=1;S.totalPt+=1;if(typeof juiceFly==='function'&&1)juiceFly(r.x,r.y,'pt',1);toast(r.name+'が'+nm+'をおみおくりした。'+((S.buried||[]).some(q=>q.name===nm)?(backFirst(nm)?'つぎの朝、神殿で呼びもどせる':'神殿で、じゅんばんに呼びもどせる'):'パワー+1'),'good');logEv(r.name+'が'+nm+'をおみおくりした')}

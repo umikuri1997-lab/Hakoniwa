@@ -40,7 +40,7 @@ function pathBuy(p){if(vpOn(p.id))return false;if(!p.r.every(vpOn))return false;
 /* 木（スキルツリー）：たてに長い大木。下は村の枝（くらし・しごと・まもり。枝わかれして上へひらく）、上は守り神の枝（まもりの光のチャージ・威力・とめる時間・範囲は5段まで、こもれびのまもり・葉のかべは10段まで。1つの点が1つのLv。GUP は night.js）。点をタップすると、ポップアップでひらく・強化 */
 /* 木の絵（ドット）：1ドット1.5px のキャンバス（TRW×TRH） */
 const TRW=216,TRH=816,TRGY=798,TRFORK=410,TRG=[{k:'cd',x:18,n:'チャージ'},{k:'pow',x:54,n:'威力'},{k:'stun',x:90,n:'とめる時間'},{k:'rng',x:126,n:'範囲'},{k:'area',x:162,n:'こもれび'},{k:'leaf',x:198,n:'葉のかべ'}],TRGY0=346,TRGD=34,TRLEARN=380;
-const TRPAL={1:['#a39377','#bcae92','#cbbfa4','#ddd3bf'],2:['#6b4428','#8a5a32','#a8743f','#d29a5a']};/* ふち・かげ・もと・光 */
+const TRPAL={1:['#86715a','#bcae92','#cbbfa4','#ddd3bf'],2:['#6b4428','#8a5a32','#a8743f','#d29a5a']};/* ふち・かげ・もと・光 */
 const TRICON={box:'box',cook:'rice',fun:'heart',comf:'house',rec:'moon',work:'hammer',fish:'fish',move:'boot',sta:'sun',hun:'apple',cap:'log',wdmg:'target',wcd:'clock',wrng:'compass',trap:'gear',atk:'sword',kpt:'power',cd:'bulb',pow:'sun',stun:'clock',rng:'grng',area:'shield',leaf:'lwall'};
 let TREEPEND=null,TREESCR=null;/* ひらいたばかりの点（光がとどくまで、前のようすで描く）・描きなおす前のスクロール */
 function treeNodes(){const N=[],on=id=>vpOn(id)&&TREEPEND!=='v:'+id;
@@ -111,7 +111,7 @@ function treeSwap(w0,k,fx){/* 光がとどいたら、木をいまのようす�
     c.fillStyle='#fffbe8';for(let a=0;a<8;a++){const q=a/8*Math.PI*2+.39,d=Math.round(10+t*20);c.fillRect(Math.round(cx+Math.cos(q)*d),Math.round(cy+Math.sin(q)*d),1,1)}c.globalAlpha=1;requestAnimationFrame(step)};
   requestAnimationFrame(step)}
 function treePop(k){const old=document.getElementById('treePop');if(old)old.remove();const n=treeNodes().find(x=>x.k===k);if(!n)return;
-  const o=el('<div id="treePop" style="position:fixed;inset:0;z-index:45;display:flex;align-items:center;justify-content:center;background:rgba(30,24,16,.45);padding:24px"><div class="pxcard" style="background:var(--panel);padding:16px 18px;max-width:320px;width:100%;color:var(--ink)"><b class="t" style="display:block;font-size:15px;margin-bottom:6px"></b><p class="note n" style="margin:0;white-space:pre-line"></p><div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px"><button class="btn x">とじる</button></div></div></div>'),
+  const o=el('<div id="treePop" style="position:fixed;inset:0;z-index:45;display:flex;align-items:center;justify-content:center;background:rgba(40,30,15,.35);padding:24px"><div class="pxcard" style="background:var(--panel);padding:16px 18px;max-width:320px;width:100%;color:var(--ink)"><b class="t" style="display:block;font-size:15px;margin-bottom:6px"></b><p class="note n" style="margin:0;white-space:pre-line"></p><div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px"><button class="btn x">とじる</button></div></div></div>'),
     T=o.querySelector('.t'),D=o.querySelector('.n'),bar=o.querySelector('.x').parentNode,close=()=>o.remove();o.querySelector('.x').onclick=close;o.onclick=e=>{if(e.target===o)close()};
   const go=(label,c,fn)=>{const bt=el('<button class="btn pri go"></button>');bt.textContent=label+'　'+SP(c);lackOn(bt,lackPt(c));bt.onclick=()=>{if(S.pt<c){sfx('tap');return toast(lackPt(c),'warn')}if(fn()){close();TREEPEND=k;renderSheet()}};bar.appendChild(bt)};
   const sv=()=>{const sc=treeScroller(document.querySelector('.stree'));TREESCR=sc?sc.scrollTop:null};

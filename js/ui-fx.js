@@ -48,8 +48,9 @@ function ldWalk(c){const g=c.getContext('2d');g.setTransform(1,0,0,1,0,0);g.clea
   if(!LDW.pat||now-LDW.t0>P*1000){const k=LDW.pat?(LDPAT.indexOf(LDW.pat)+1)%LDPAT.length:Math.floor(Math.random()*LDPAT.length);LDW.pat=LDPAT[k];LDW.t0=now;LDW.item=LDITEM[Math.floor(Math.random()*LDITEM.length)]}
   const u=(now-LDW.t0)/(P*1000),t=now/1000;g.setTransform(2,0,0,2,0,0);g.imageSmoothingEnabled=false;
   let x,f=1;
-  if(LDW.pat==='walk'){x=u<.5?20+u*2*(Wd-40):Wd-20-(u-.5)*2*(Wd-40);f=u<.5?1:-1}/* 行って、もどる */
-  else x=-14+u*(Wd+28);/* 左から右へ通りぬける */
+  if(LDW.pat==='walk'){x=u<.5?-24+u*2*(Wd+4):Wd-20-(u-.5)*2*(Wd+4);f=u<.5?1:-1}/* 左の外から来て、もどって左の外へ（どのならびも、画面の外で切りかわる） */
+  else if(LDW.pat==='chase')x=-50+u*(Wd+74);/* 前を飛ぶちょう（x+22）も、画面の外から出て外へ消える */
+  else x=-24+u*(Wd+48);/* 左から右へ通りぬける（はしは、運ぶ物も見えない所） */
   x=Math.round(x);
   if(LDW.pat==='chase'){/* ちょうは、せいれいの少し前を、ふわふわ上下しながら飛ぶ */const C=window.CHIPS,op=Math.floor(now/120)%2===0,ch=C&&C['critfly:'+(Math.floor(LDW.t0)%4)+'#'+(op?0:1)];
     if(ch){const im=chipImgs(ch,'critfly')[0];if(im.ok){const bx=Math.round(x+22+Math.sin(t*2.3)*5),by=Math.round(FY-40+Math.sin(t*4.1)*7);g.drawImage(im,bx+ch.ax/2,by+ch.ay/2,ch.w/2,ch.h/2)}}}
@@ -125,9 +126,9 @@ function tileWatch(){const b=document.getElementById('sheetBody');if(!b)return;n
 /* 草原：タブをかえると、中の板が、札をひっくり返すように、くるっとまわって中身がかわる（タブのならび .ctabs のあとの物。図鑑の本はのぞく） */
 document.addEventListener('click',e=>{const t=e.target&&e.target.closest&&e.target.closest('.ctabs .ctab');if(!t||!document.body.classList.contains('wd0')||uiReduced()||t.closest('.pxcard')||t.closest('.sheet[data-k="zukan"]'))return;
   sfx('flip');requestAnimationFrame(()=>{const tb=document.querySelector('#sheetBody .ctabs');if(!tb)return;let n=tb.nextElementSibling;while(n){n.classList.remove('uflip');void n.offsetWidth;n.classList.add('uflip');n=n.nextElementSibling}})},true);
-/* 草原：もどせない決定（data-hold のボタン）は、おしつづけると、焼き印のこげ色がたまって「じゅっ」と決まる（0.7秒）。ふつうのタップでは決まらない */
+/* もどせない決定（data-hold のボタン）は、どのステージでも、おしつづけると、焼き印のこげ色がたまって「じゅっ」と決まる（0.7秒）。ふつうのタップでは決まらない */
 const HOLDMS=700;
-function holdOn(b){return b&&b.dataset&&b.dataset.hold&&document.body.classList.contains('wd0')}
+function holdOn(b){return !!(b&&b.dataset&&b.dataset.hold)}
 document.addEventListener('pointerdown',e=>{const b=e.target&&e.target.closest&&e.target.closest('[data-hold]');if(!holdOn(b)||b.disabled)return;b.classList.add('holding');b.style.setProperty('--hold',HOLDMS+'ms');
   clearTimeout(b._hT);b._hT=setTimeout(()=>{b.classList.remove('holding');b._held=1;sfx('sizzle');b.classList.add('branded');setTimeout(()=>b.classList.remove('branded'),400);b.click();b._held=0},HOLDMS)},true);
 for(const ev of['pointerup','pointercancel','pointerleave'])document.addEventListener(ev,e=>{const b=e.target&&e.target.closest&&e.target.closest('[data-hold]');if(!b||!b._hT)return;if(b.classList.contains('holding')){clearTimeout(b._hT);b._hT=0;b.classList.remove('holding')}},true);
