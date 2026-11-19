@@ -62,7 +62,7 @@ const assert=require('node:assert/strict');
   assert.ok(await run(`[...document.querySelectorAll('#sheetBody .btn')].find(b=>b.textContent==='おいわい').classList.contains('lack')`),'once a day');await run(`closeSheet()`);
   /* つぎの朝、お礼の手紙 */
   await to(bd.d+1,6.02);const lt=JSON.parse(await run(`(letterMorning(),JSON.stringify((S.letters||[]).filter(l=>l.k==='bday')))`));
-  assert.equal(lt.length,1);assert.equal(lt[0].tx.length,3);assert.equal(lt[0].who,bd.name);
+  assert.equal(lt.length,1);assert.ok(lt[0].tx.length>=3&&lt[0].tx.length<=6,'手紙は3〜6行（できごと・お世話・ひみつの行がつく）');assert.equal(lt[0].who,bd.name);
   /* 時間をすぎたら、その年はやめる */
   const ms=await run(`(()=>{S.ev={id:'bday',day:dayNo(),bd:${bd.id},who:S.res.map(r=>r.id),paid:{pt:0,food:[]},ph:null};S.t=(dayNo()-1)*1440+18.5*60;evTick();return S.ev})()`);assert.equal(ms,null,'dropped after window');
   await page.waitForTimeout(500);assert.deepEqual(errors,[]);await browser.close();console.log('Birthday & hanabi: ok');

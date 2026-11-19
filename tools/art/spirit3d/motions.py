@@ -521,3 +521,54 @@ def sleepcurl(w, face):
     """床・地面で寝る：ひざをまげて、手を胸によせ、頭をまるめる（ゲームは絵をよこにたおして、横になって寝る形に）"""
     return breathe(dict(legM=1.15, legP=1.0, legz=-1.0, sN=1.3, sF=1.15, bN=-1.05, bF=-0.95, hp=0.28, lean=0.12, z=0.0), w, 0.7)
 M('sleepcurl', 8, 0.25, sleepcurl)
+
+# ---- プレゼント（gift-furn.js の GFMOT）：つつみをあけて、中身によってちがう動き。物の絵はゲームが手にかさねる（WHAND） ----
+def gf_open(w, face):
+    """つつみを両手で胸の前にかかえ、ひもを引いて、がさごそ"""
+    r = 0.18*S(w*2)
+    return breathe(dict(sN=1.35+r, sF=1.35-r, bN=-0.85, bF=-0.85, lean=0.08, hp=0.18, hy=0.06*S(w)), w, 0.5)
+M('gf_open', 8, 0.9, gf_open)
+def gf_lift(w, face):
+    """光にかざす：手前の手を高く上げて、見上げる。少しずつ角度をかえる"""
+    return breathe(dict(sN=2.3+0.08*S(w), bN=0.2, tN=0.2*S(w), sF=0.2, bF=-0.3, lean=-0.1, hp=-0.32, hy=0.12*S(w)), w, 0.5)
+M('gf_lift', 8, 0.3, gf_lift)
+def gf_ear(w, face):
+    """耳にあてる：手前の手を顔の横へ。首をかしげて、きく"""
+    return breathe(dict(sN=2.0, bN=-1.25, sF=0.3, bF=-0.3, hr=0.16+0.03*S(w), hp=0.05, lean=0.02), w, 0.4)
+M('gf_ear', 8, 0.3, gf_ear)
+def gf_wave(w, face):
+    """ふわっとふる：手前の手を上げ、左右にゆらす。体もいっしょにゆれる"""
+    return breathe(dict(sN=1.9+0.35*S(w), bN=0.0, tN=0.4*S(w), sF=0.4, bF=-0.3, yaw=0.1*S(w), roll=0.06*S(w), hp=-0.1, top=0.15*S(w), wing=0.15*S(w*2)), w, 0.6)
+M('gf_wave', 8, 0.7, gf_wave)
+def gf_sniff(w, face):
+    """においをかぐ：両手で顔の前へ。くんくん"""
+    k = max(0, S(w*2))
+    return breathe(dict(sN=1.7, sF=1.7, bN=-1.15, bF=-1.15, hp=0.16+0.06*k, lean=0.08+0.03*k, z=-0.3*k), w, 0.4)
+M('gf_sniff', 8, 0.5, gf_sniff)
+def gf_hug(w, face):
+    """だきしめる：両手でむねにだいて、左右にゆれる"""
+    return breathe(dict(sN=1.5, sF=1.5, bN=-1.1, bF=-1.1, hp=0.14, hr=0.12*S(w), roll=0.08*S(w), lean=0.05, top=0.12*S(w)), w, 0.6)
+M('gf_hug', 8, 0.55, gf_hug)
+def gf_spin(w, face):
+    """地面でまわす：しゃがんで、手前の手で、ひょいっとまわす"""
+    u = (w/(2*PI)) % 1; k = S(PI*min(1, u/0.3)) if u < 0.3 else 0
+    p = dict(z=-4.0, legz=-2.0, legM=0.7, legP=0.7, lean=0.35, hp=0.32, sN=0.4+0.6*k, bN=-0.3, tN=0.8*k, sF=0.3, bF=-0.4, hy=0.1*S(w))
+    return breathe(p, w, 0.4)
+M('gf_spin', 8, 0.5, gf_spin)
+def gf_read(w, face):
+    """読む：両手で胸の前に持って、目を下へ。ときどき、うなずく"""
+    return breathe(dict(sN=1.25, sF=1.25, bN=-0.8, bF=-0.8, hp=0.26+0.05*max(0, S(w)), hy=0.08*S(w*0.5), lean=0.06), w, 0.4)
+M('gf_read', 8, 0.25, gf_read)
+def gf_peek(w, face):
+    """のぞきこむ：手前の手で目のまえへ。少し前へのりだす"""
+    return breathe(dict(sN=1.95, bN=-1.35, sF=0.5, bF=-0.6, lean=0.1+0.03*S(w), hp=0.02, hy=0.06*S(w)), w, 0.4)
+M('gf_peek', 8, 0.3, gf_peek)
+def gf_shake(w, face):
+    """ふって音をきく：手前の手を耳のよこで、しゃかしゃか。首をかしげる"""
+    return breathe(dict(sN=2.15+0.12*S(w*4), bN=-1.0, sF=0.3, bF=-0.3, hr=0.14, hp=0.04, z=0.3*abs(S(w*4))), w, 0.4)
+M('gf_shake', 8, 0.5, gf_shake)
+def hammock(w, face):
+    """はねぶとんのハンモック：あおむけに、もたれて、ゆらゆら（手は頭のうしろ）"""
+    p = dict(lean=-0.7, z=-5.0, legz=-5.0, hp=-0.45, sN=2.4, sF=2.4, bN=-1.2, bF=-1.2, legM=1.25, legP=1.25, roll=0.05*S(w), hr=0.05*S(w))
+    return breathe(p, w, 0.4)
+M('play_g_hammock', 8, 0.3, hammock)
