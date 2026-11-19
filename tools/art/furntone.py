@@ -9,7 +9,7 @@ from PIL import Image
 from scipy.ndimage import gaussian_filter,find_objects
 import oblique3d as O
 HI=((10,-4),(19,-8));SH=((15,4),(28,8));OLK=(38,10);CUTS=(-0.2,0.4,0.88,0.97);DW=0.12;RIM=0.7;VMIN=45;LIGHT=(-0.6,-0.5,0.8);STREAK=(0.14,0.07)   # CUTS：上の面 0.81・左の面 0.51→もとの色・正面 0.23→かげ・右の面 −0.51→こいかげ。ハイライトは、光を向いたまるい所と、ふちの左上
-KEEP=('flat','clear','ink','glass','glassc','gwater');DW3=0.05
+KEEP=('flat','clear','ink','glass','glassc','gwater');DW3=0.0   # 特別な家具：あみは使わない（持ち主がきめた）
 def _hsv(base,dv,ds):
     h,s,v=colorsys.rgb_to_hsv(*(np.asarray(base,float)/255));v=min(1,max(VMIN/100 if dv<-30 else 0,v+dv/100));s=min(1,max(0,s+ds/100))
     return np.array([round(x*255) for x in colorsys.hsv_to_rgb(h,s,v)],np.uint8)

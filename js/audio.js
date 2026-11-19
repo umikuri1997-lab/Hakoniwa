@@ -219,13 +219,15 @@ const LDMV=.135,LDMFADE=1;let LDM=null,ACOMP=null;/* bgmF は曲の切りかえ�
 function ldMusicTick(){const want=typeof STLD!=='undefined'&&STLD&&SND.bgm,now=AC.currentTime;
   if(want&&!LDM){const b=(SBUF.ldmusic||[])[0];if(!b)return;const src=AC.createBufferSource(),g=AC.createGain();src.buffer=b;src.loop=true;src.loopStart=.06;src.loopEnd=b.duration-.06;g.gain.value=LDMV*(SND.bv??1);src.connect(g);g.connect(ACOMP);src.start(now,.06);LDM={src,g};return}
   if(!want&&LDM){const{src,g}=LDM;LDM=null;g.gain.cancelScheduledValues(now);g.gain.setValueAtTime(g.gain.value,now);g.gain.linearRampToValueAtTime(0,now+LDMFADE);src.stop(now+LDMFADE+.05)}}
-/* 大会の曲（魔王魂。持ち主がえらぶ。tools/sound/maou_cup.py で SAMPLES の cupmove・cupcalm・cupaward に入れる）：
-   「3・2・1・どん！」から大会のあいだ（S.ev の ph 'do'）は、動く大会 CUPMOVE か、のんびりした大会の曲。表彰台（CUPV.aw）のあいだは表彰の曲。曲がないときは鳴らさない */
+/* 大会の曲（持ち主がえらぶ。tools/sound/cup_music.py で CUPSONG の cupmove・cupcalm・cupaward に入れる）：
+   「3・2・1・どん！」から大会のあいだ（S.ev の ph 'do'）は、動く大会 CUPMOVE か、のんびりした大会の曲。表彰台（CUPV.aw）のあいだは表彰の曲。曲がないときは鳴らさない。
+   長い曲なので SAMPLES に入れない（はじめにぜんぶ読みこむと、1曲で約70MB）。鳴らすときだけ audio の要素で少しずつ読む */
+const CUPSONG={cupmove:'assets/g/5252fa6dbd.mp3'};/* 動く大会：MusMus「BGM-141」（BGM:MusMus） */
 const CUPMV=.13,CUPMFADE=1.2,CUPMOVE=new Set(['cup0','cup1','cup3','cup5','cup7']);let CUPM=null;
-function cupMusicWant(){if(!S||!started||!SND.bgm||typeof CUPV==='undefined')return '';if(CUPV.aw&&SBUF.cupaward)return 'cupaward';const E=S.ev;if(!E||E.ph!=='do'||!EVENTS[E.id]||!EVENTS[E.id].cup)return '';return CUPMOVE.has(E.id)?'cupmove':'cupcalm'}
+function cupMusicWant(){if(!S||!started||!SND.bgm||typeof CUPV==='undefined')return '';if(CUPV.aw&&CUPSONG.cupaward)return 'cupaward';const E=S.ev;if(!E||E.ph!=='do'||!EVENTS[E.id]||!EVENTS[E.id].cup)return '';const k=CUPMOVE.has(E.id)?'cupmove':'cupcalm';return CUPSONG[k]?k:''}
 function cupMusicTick(){const k=cupMusicWant(),now=AC.currentTime;if(CUPM&&CUPM.k===k)return;
-  if(CUPM){const{src,g}=CUPM;CUPM=null;g.gain.cancelScheduledValues(now);g.gain.setValueAtTime(g.gain.value,now);g.gain.linearRampToValueAtTime(0,now+CUPMFADE);src.stop(now+CUPMFADE+.05)}
-  const b=k&&(SBUF[k]||[])[0];if(!b)return;const src=AC.createBufferSource(),g=AC.createGain();src.buffer=b;src.loop=true;g.gain.setValueAtTime(0,now);g.gain.linearRampToValueAtTime(CUPMV*(SND.bv??1),now+.4);src.connect(g);g.connect(ACOMP||AC.destination);src.start(now);CUPM={k,src,g}}
+  if(CUPM){const{el,g,src}=CUPM;CUPM=null;g.gain.cancelScheduledValues(now);g.gain.setValueAtTime(g.gain.value,now);g.gain.linearRampToValueAtTime(0,now+CUPMFADE);setTimeout(()=>{try{el.pause();src.disconnect();el.removeAttribute('src');el.load()}catch(e){}},CUPMFADE*1000+60)}
+  if(!k)return;const el=new Audio(CUPSONG[k]);el.loop=true;el.preload='auto';const src=AC.createMediaElementSource(el),g=AC.createGain();g.gain.setValueAtTime(0,now);g.gain.linearRampToValueAtTime(CUPMV*(SND.bv??1),now+.6);src.connect(g);g.connect(ACOMP||AC.destination);el.play().catch(()=>{});CUPM={k,el,src,g}}
 function ambTick(){if(!AC||AC.state!=='running')return;ldMusicTick();cupMusicTick();if(!ambG){ambG=AC.createGain();ambG.gain.value=.09;ambF=AC.createBiquadFilter();ambF.type='lowpass';ambF.frequency.value=18000;ambF.Q.value=.4;ambG.connect(ambF);ambF.connect(AC.destination)}
   {const inn=ambIndoor();if(inn!==AMBIN){AMBIN=inn;ambF.frequency.setTargetAtTime(inn?700:18000,AC.currentTime,inn?.25:.4)}}/* 家の中を映すと、外の雨・鳥・虫の音が、壁ごしにやわらかくこもる */
   const want={birds:0,rain:0,night:0,amb_morn:0,amb_spr:0,amb_sum:0,amb_snight:0};let h=12,on=false;if(S&&started&&SND.sfx&&$('#title').hidden&&$('#maps').hidden){on=true;h=hour();if(S.rain)want.rain=.45;else{/* 朝と夕方は、ゆっくり入れかわる */const cl=v=>Math.max(0,Math.min(1,v)),se=typeof seasonNow==='function'?seasonNow():0;

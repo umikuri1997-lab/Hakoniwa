@@ -31,7 +31,7 @@ assert.deepEqual(bond,{got:true,b:1});
 /* ぜんぶもらったら、もう出ない */
 assert.equal(await run(`(()=>{for(const c in GFURN)for(const id of GFURN[c])S.flags.gfGot[id]=1;return gfPick('ret','water')})()`),null);
 /* 大会の曲：動く大会・のんびりした大会・表彰台 */
-const mu=JSON.parse(await run(`(()=>{const o=S.ev,b=SND.bgm,sb={...SBUF};SND.bgm=1;SBUF.cupaward=[1];S.ev={id:'cup0',ph:'do'};const a=cupMusicWant();S.ev={id:'cup6',ph:'do'};const c=cupMusicWant();S.ev={id:'cup6',ph:'go'};const g=cupMusicWant();CUPV.aw={};const w=cupMusicWant();CUPV.aw=null;S.ev=o;SND.bgm=b;delete SBUF.cupaward;return JSON.stringify([a,c,g,w])})()`));
+const mu=JSON.parse(await run(`(()=>{const o=S.ev,b=SND.bgm,cs={...CUPSONG};SND.bgm=1;CUPSONG.cupaward='x';CUPSONG.cupcalm='x';S.ev={id:'cup0',ph:'do'};const a=cupMusicWant();S.ev={id:'cup6',ph:'do'};const c=cupMusicWant();S.ev={id:'cup6',ph:'go'};const g=cupMusicWant();CUPV.aw={};const w=cupMusicWant();CUPV.aw=null;S.ev=o;SND.bgm=b;delete CUPSONG.cupaward;delete CUPSONG.cupcalm;Object.assign(CUPSONG,cs);return JSON.stringify([a,c,g,w])})()`));
 assert.deepEqual(mu,['cupmove','cupcalm','','cupaward']);
 assert.deepEqual(errors,[]);await browser.close();console.log('OK');
 })().catch(e=>{console.error(e);process.exit(1)});
