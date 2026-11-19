@@ -138,7 +138,6 @@ function onTap(sx,sy){if(GIFT_ACTIVE&&camAnim&&camAnim.done)return;if(typeof sta
     if(o==='farm')return openSheet('farm',j);
     if(BEDSET.has(o))return openSheet('bed',j);
     if(COOKST.has(o))return openSheet('oven',j);/* たき火も料理の家具 */
-    if(o==='wbench')return openSheet('craft');/* 作業台：依頼ボードを開く */
     if(o==='matyard'){const d=S.dyn[j];return toast('材料置き場：'+(yardTxt(d&&d.yt)||'からっぽ'))}/* 材料置き場：運んだ数 */
     if(o==='plot')return toast('耕す前の畑：せいれいが耕しにくる');
     if(o==='sprout')return toast(BL[S.dyn[j].plant].name+'を植える場所：せいれいが植えにくる');
