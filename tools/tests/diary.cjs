@@ -22,11 +22,23 @@ const assert=require('node:assert/strict');
     S.dy=null;dyKill(a,'');dyGuard(c);const low=dyBest({k:S.dy.k,g:S.dy.g});/* だれも2点にとどかない */
     S.dy=null;S.ns={n:2,kill:1,lost:[],hurt:0,broke:0,boss:0};dyKill(c,'');dyGuard(b);dyGuard(b);b.fun=50;const m0=(S.memo||[]).length;diaryClose();
     const L=S.diary[S.diary.length-1],body=document.querySelector('#sheetBody');
-    return new Promise(res=>setTimeout(()=>res(JSON.stringify({one:one&&one.nm,tie:tie&&tie.nm,low,b:b.name,a:a.name,fun:b.fun,mvp:L.mvp&&L.mvp.nm,memo:(S.memo||[]).slice(m0).map(x=>x[2]),txt:body.querySelector('.dyMvp')&&body.querySelector('.dyMvp').textContent,first:body.firstElementChild&&body.firstElementChild.className,stamp:!!body.querySelector('.dyMvp .ustamp')})),700))})()`));
+    return new Promise(res=>setTimeout(()=>res(JSON.stringify({one:one&&one.nm,tie:tie&&tie.nm,low,b:b.name,a:a.name,fun:b.fun,mvp:L.mvp&&L.mvp.nm,memo:(S.memo||[]).slice(m0).map(x=>x[2]),txt:body.querySelector('.dyMvp')&&body.querySelector('.dyMvp').textContent,first:(()=>{const p=body.querySelector('.mpg:not([hidden])');return p&&p.firstElementChild&&p.firstElementChild.className})(),stamp:!!body.querySelector('.dyMvp .ustamp')})),700))})()`));
   assert.equal(mv.one,mv.b,'guards count as points');assert.equal(mv.tie,mv.a,'tie goes to more kills');assert.equal(mv.low,null,'under 2 points: nobody');
   assert.equal(mv.mvp,mv.b);assert.equal(mv.fun,60,'fun +10');assert.ok(mv.memo.some(t=>t.includes('ゆうべのかつやく')),'memo');
   assert.ok(/2回まもった/.test(mv.txt),'mvp text '+mv.txt);assert.ok(/dyMvp/.test(mv.first),'mvp is at the top');assert.ok(mv.stamp,'stamp');
   console.log('Diary: last night MVP');
+  /* 本：1ページめは点の出る所（かつやく・守り・しごと）、あとはつぎのページ。どのページもスクロールしない。長い一覧はページをまたぐ */
+  const bk=JSON.parse(await run(`(()=>{closeSheet();const a=S.res[0];S.dy=null;for(let i=0;i<25;i++){dyEv('ながいテストのできごと'+i)}dyWork(a,'build','bench');dyWork(a,'harvest','mugi');
+    S.ns={n:4,kill:3,lost:[],hurt:0,broke:0,boss:0};dyKill(a,'');dyKill(a,'');dyGuard(a);diaryClose();
+    const body=document.querySelector('#sheetBody'),P=[...body.querySelectorAll(':scope>.mpg')],H=p=>[...p.querySelectorAll(':scope>.sec>h3')].map(h=>h.textContent);
+    const fit=P.map(p=>{P.forEach(q=>q.hidden=q!==p);return body.scrollHeight<=body.clientHeight+1});P.forEach((q,i)=>q.hidden=i!==0);
+    const r={n:P.length,h1:H(P[0]),rest:P.slice(1).map(H).flat(),fit,ev:P.reduce((t,p)=>t+[...p.querySelectorAll('.row')].filter(x=>/ながいテスト/.test(x.textContent)).length,0)};
+    P[0].querySelector('.mnx').click();return new Promise(ok=>setTimeout(()=>{r.turn=P.findIndex(p=>!p.hidden);ok(JSON.stringify(r))},500))})()`));
+  assert.ok(bk.n>=3,'diary has pages '+bk.n);
+  assert.deepEqual(bk.h1,['ゆうべのかつやく','ゆうべの守り','きのうのしごと'],'page 1 is the score '+bk.h1);
+  assert.ok(bk.rest.includes('できごと')&&bk.rest.includes('みんなのしたこと')&&bk.rest.includes('ゆうべ追いはらった'),'others on later pages '+bk.rest);
+  assert.ok(bk.fit.every(Boolean),'no page scrolls '+bk.fit);assert.equal(bk.ev,25,'long list is split, nothing lost');assert.equal(bk.turn,1,'next page');
+  console.log('Diary: a book, score on page 1, '+bk.n+' pages without scrolling');
   /* 2回めの朝：ゆうべの守りを2回しまわない。書くことがなければ、日記をふやさない */
   const n2=JSON.parse(await run(`(()=>{closeSheet();const n=S.diary.length;diaryClose();return JSON.stringify({n,m:S.diary.length,sheet})})()`));
   assert.equal(n2.m,n2.n,'empty day is not stored');assert.equal(n2.sheet,null);
