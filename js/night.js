@@ -237,6 +237,7 @@ function updEnemy(e,dt){
   if(e.brn>0){e.brT=(e.brT||0)+dt;if(e.brT>=BURN.iv){e.brT-=BURN.iv;e.brn--;hurtEn(e,BURN.dmg,{flash:4,dt:'burn'});fxSpr('firehit',e.x*TS,e.y*TS);if(e.hp<=0)return defeat(e,EN[e.type].name+'を延焼で追いはらった！')}}/* 延焼（火のせいれいが立つ見張り台の矢） */
   if(e.poi>0){e.poT=(e.poT||0)+dt;if(e.poT>=15){e.poT-=15;e.poi--;hurtEn(e,5,{flash:4,k:'trap',dt:'poison'});sfxAt('poison',e.x,e.y);fxSpr('poison',e.x*TS,e.y*TS);if(e.hp<=0)return defeat(e,EN[e.type].name+'をどくの罠で追いはらった！')}}/* どくの罠：ふんでから10分（15）ごとに5ダメージを6回（1時間） */
   if(e.stun>0){e.stun-=dt;return}if(e.rest>0){e.rest-=dt;return}
+  {const pj=(e.y|0)*W+(e.x|0);if(rainPud(pj)){if(e.rslipJ!==pj){e.rslipJ=pj;e.stun=EN[e.type].boss?RAINSLIPB:RAINSLIP;e.path=[];sfxAt('bonk',e.x,e.y);fxSpr('slip',e.x*TS,e.y*TS);return}}else e.rslipJ=-1}/* 雨の日の水たまりで、すべる（feel.js） */
   e.slow=e.slowU>S.t?.5:1;/* おそくする（そうび） */{const tj=(e.y|0)*W+(e.x|0),to=S.obj[tj];if(to!=='puddle')e.slipJ=-1;/* 水たまりから出たら、つぎにふんだとき、またすべる */if(to&&BL[to]&&BL[to].trap){e.busyT=S.t;const cd=S.trapCd||(S.trapCd={}),rdy=!(cd[tj]>S.t);
     if(to==='spike'){e.spk=(e.spk||0)+dt;if(e.spk>=15){e.spk-=15;hurtEn(e,5,{flash:4,k:'trap'});sfxAt('spike',e.x,e.y)}/* とげの罠：10分（15）ごとに5ダメージ */if(e.hp<=0)return defeat(e,EN[e.type].name+'をとげの罠で追いはらった！')}
     else if(to==='sticky'){if(!(e.poi>0)){e.poi=6;e.poT=0;e.flash=4;HURTV.set(e,{t:performance.now(),n:HURT2P});sfxAt('poison',e.x,e.y);fxSpr('poison',e.x*TS,e.y*TS)}}/* どく：みどりのあわ（tools/fx-trap.py） */
