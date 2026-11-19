@@ -19,7 +19,7 @@ const out=JSON.parse(await run(`(()=>{const out={};USERPAUSE=true;const T=(d,h)=
  S.floor[hy*W+hx+3]='floor';S.floor[hy*W+hx+4]='path';S.ground[hy*W+hx+5]=2;S.obj[hy*W+hx+6]='clover';recount();S.rain=false;T(3,12);cam.z=homeZ();cam.x=hx*TS-VW/cam.z/2;cam.y=hy*TS-VH/cam.z/2;feelPrep(0);
  out.surf=[feelSurf(hy*W+hx+3),feelSurf(hy*W+hx+4),feelSurf(hy*W+hx+5)];
  FEELEV.length=0;r.x=hx+4.6;r.y=hy+.5;feelStep(1000);for(let k=0;k<20;k++){r.x+=.1;feelStep(1000+k*50)}out.rip=FEELEV.some(e=>e.k==='rip');out.kick=FEELKICK.has(hy*W+hx+6)&&Math.abs(feelKick(hy*W+hx+6,1700))>0;
- T(19,12);S.rain=true;feelPrep(0);FEELEV.length=0;r.x=hx+.2;r.y=hy+1.5;feelStep(3000);for(let k=0;k<14;k++){r.x+=.1;feelStep(3000+k*50)}out.print=FEELEV.filter(e=>e.k==='print').length>=2;out.snowSurf=feelSurf((hy+1)*W+hx+1);
+ T(19,12);S.rain=true;feelPrep(0);FEELEV.length=0;r.x=hx+.2;r.y=hy+1.5;feelStep(3000);for(let k=0;k<14;k++){r.x+=.1;feelStep(3000+k*50)}out.print=FEELEV.filter(e=>e.k==='print').length>=2;{const kk=FEELEV.filter(e=>e.k==='kick'&&e.km===FEELKICKM.snow);let ok=kk.length>=1;for(const e of kk)for(const p of e.P){const T=p.ta+p.tf,pk=feelKickZ(p,p.ta,e.km);if(Math.abs(pk-p.v0*p.v0/(2*FEELKG))>1e-6||feelKickZ(p,T,e.km)>1e-6||feelKickZ(p,T*.5,e.km)<0)ok=false}const sn=FEELKICKM.snow,dr=FEELKICKM.dry,ps={v0:Math.sqrt(2*FEELKG*6),ta:Math.sqrt(2*FEELKG*6)/FEELKG};out.snowKick=[ok,feelKickZ(ps,ps.ta+.2,sn)>feelKickZ(ps,ps.ta+.2,dr)]}out.snowSurf=feelSurf((hy+1)*W+hx+1);
  /* 冬は火にあたる・夏の昼は木かげか水べですずむ（どちらも、ひまなとき） */
  S.rain=false;S.obj[(hy+2)*W+hx+2]='campfire';S.obj[(hy+2)*W+hx+6]='tree';recount();r.x=hx+5.5;r.y=hy+2.5;r.path=[];r.act=null;r.quirkT=0;r.shadeT=0;const G=bfs(r.x|0,r.y|0);
  Math.random=()=>.1;T(19,12);const a=feelRest(r,G);out.warm=[a,r.act&&r.act.type,r.act&&r.act.k];r.act=null;T(10,13);const b=feelRest(r,G);out.shade=[b,r.act&&r.act.type,!!(r.act&&r.act.shade)];r.act=null;T(3,13);r.quirkT=0;r.shadeT=0;out.none=feelRest(r,G);Math.random=R0;
@@ -31,7 +31,7 @@ assert.deepEqual(out.spring,[0,0]);assert.deepEqual(out.autumn,[0,true]);assert.
 assert.deepEqual(out.pud,[1,0,true,0]);assert.deepEqual(out.slip,[true,true,true,false,false,false]);assert.equal(out.wetD,true);
 assert.deepEqual(out.win.noon,[0,0,0,0]);assert.deepEqual(out.win.night,[1,1,1,1]);assert.deepEqual(out.win.morn,[0,0,0,0]);assert.ok(out.win.diff&&out.win.range,'window times '+out.win.on);
 assert.deepEqual(out.flick,[true,true,1]);
-assert.deepEqual(out.surf,['wood','soil','water']);assert.ok(out.rip,'ripple');assert.ok(out.kick,'flower kick');assert.ok(out.print,'snow prints');assert.equal(out.snowSurf,'snow');
+assert.deepEqual(out.surf,['wood','soil','water']);assert.ok(out.rip,'ripple');assert.ok(out.kick,'flower kick');assert.ok(out.print,'snow prints');assert.equal(out.snowSurf,'snow');assert.deepEqual(out.snowKick,[true,true],'snow kick: puffs on snow, rise to the peak, land at 0, fall slower than dust');
 assert.deepEqual(out.warm,[true,'quirk','warm']);assert.deepEqual(out.shade,[true,'sunset',true]);assert.equal(out.none,false);
 assert.deepEqual(out.amb,[true,true,true,true,0]);
 /* 描く：冬の雪の日・雨の日・夏の昼・夜あけ・夜を、草原と火山で1コマずつ描いて、エラーが出ないこと */
