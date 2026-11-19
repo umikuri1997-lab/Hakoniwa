@@ -24,6 +24,33 @@ function dyNoon(h){if(h<9||h>=18)return;const D=dyCur();if(D&&D.wx==null)D.wx=dy
 function dyWx(){return typeof stormNow==='function'&&stormNow()?'storm':S.today&&DYOPEN[S.today]?S.today:festOn()?'fest':snowNow()?'snow':S.rain?'rain':rainbowToday()?'rainbow':'sun'+seasonNow()}
 const DYWRITER=()=>WD===1?HOMURA:POKO;/* ひとことを書くせいれい：章のはじめからいる子 */
 const dyWriter=()=>{if(!S)return null;const n=DYWRITER();return S.res.find(r=>r.name===n)||null};
+/* 日記の文が、書く物に合うか（dyFit）：「なでた」「さわった」「すわった」「におい」「どっしり」「ぴかぴか」「食べる」「土」などの文は、そうできる物のときだけ。
+   @N の名前から物をさがし（dyIdOf）、物のしゅるい（dyTr）と、文のことば（DYRULE：[ことば, だめなしゅるい, いるしゅるい]）でたしかめる */
+const DYHOT=new Set(['campfire','torch','lamp','oven','smelter','yogan','candle','firetrap','onsen','hotstone']),DYTRAP=new Set(['pit','spike','sticky','puddle','firetrap','gust']),
+  DYDECO=new Set(['paint1','paint2','paint3','wreath','yonaka','kamizo','komainu','kadomatsu','vane','ema','furin','rockart','stele','lurestatue','curtain1','curtain2','mimamori']),
+  DYSOFT=new Set(['rug1','rug2','hoshirug','pouf','sofa1','bed','yorubed','mimamori','curtain1','curtain2','picnic','achair']),
+  DYDRINK=/ジュース|ミルク|シェイク|セーキ|スープ|茶|みず$|水$/,DYBUG=new Set(['fly','mitsubachi','tonbo','hotaru','tentoumushi','katatsumuri']);
+function dyTr(t,id){const T=new Set(),b=BL[id];
+  if(t==='build'||t==='craft'||t==='pbuilt'||t==='padm'){if(!b)return T;T.add('obj');if(DYHOT.has(id))T.add('hot');if(DYTRAP.has(id))T.add('trap');if(DYDECO.has(id))T.add('deco');if(DYSOFT.has(id))T.add('soft');
+    if(b.kind==='block'||b.kind==='build'&&(b.sz==null)&&/^(bridge|ladder|stairs|slope|dig|mound)/.test(id))T.add('part');if(b.kind==='plant'||id==='monstera'||id==='hedge')T.add('plant');
+    const a=b.sz?b.sz[0]*b.sz[1]:1;if(a>=4||b.kind==='build'&&a>=2)T.add('big');if(b.mat&&b.mat.wood&&!(b.mat.stone>b.mat.wood))T.add('wood')}
+  else if(t==='plant'){T.add(id==='tree'||id==='fruit'?'tree':'flower');if(id==='lotus')T.add('water')}
+  else if(t==='cook'||t==='harvest'){const n=fName(id)||'';if(DYDRINK.test(n))T.add('drink')}
+  else if(t==='pcrit'){if(DYBUG.has(id))T.add('bug')}
+  return T}
+const DYRULE=[[/なで|さわ/,['hot','trap']],[/におい/,['hot','trap','part'],['wood','plant','soft']],[/どっしり|りっぱ|たのもし/,['part'],['big']],[/ぴかぴか/,['plant','trap']],
+  [/すわ|ひとやすみ|ねころ|つつまれて|まん中に立って/,['trap','hot']],[/まわりを|ぐるっ|ぐるーっ|ぐるぐる|うしろから|どこから見ても/,['part','trap']],[/使う|使おう|ためして|使い/,['trap','deco','part']],
+  [/よろしくね|いっしょだね|なかま|てれくさそう|てれちゃった/,['part','trap']],[/トンカチ|とんとん/,['plant']],[/食べる|食べられ|つまみぐい|味/,['drink']],
+  [/土|植わった/,['water']],[/ぼくより大きく|けしき/,['flower']],[/首をかしげ|まね/,['bug']]];
+function dyFit(L,t,id){if(id==null)return true;const T=dyTr(t,id);if(!T.size)return true;const tx=[].concat(L).join('');
+  for(const[re,no,need]of DYRULE)if(re.test(tx)){if(no&&no.some(k=>T.has(k)))return false;if(need&&!need.some(k=>T.has(k)))return false}return true}
+let DYNAME=null;/* 名前 → 物（家具・建物・食べ物・作物・生き物） */
+function dyIdOf(t,n){if(!n)return null;if(!DYNAME){DYNAME={};const put=(m,src,f)=>{for(const k in src||{}){const v=f(k);if(v&&!(v in m))m[v]=k}};
+    DYNAME.o={};put(DYNAME.o,BL,k=>BL[k].name);if(typeof STAGEN!=='undefined')for(const k in STAGEN)DYNAME.o[STAGEN[k]]=k;
+    DYNAME.f={};put(DYNAME.f,typeof FOODS!=='undefined'?FOODS:{},k=>FOODS[k].name);put(DYNAME.f,typeof CROPS!=='undefined'?CROPS:{},k=>CROPS[k].name);
+    DYNAME.c={};if(typeof CRITN!=='undefined')put(DYNAME.c,CRITN,k=>CRITN[k])}
+  return(t==='cook'||t==='harvest'?DYNAME.f:t==='pcrit'?DYNAME.c:DYNAME.o)[n]||null}
+function dyNo(k,A,t0){/* 合わない文の番号（dyIdx の no） */const id=t0&&dyIdOf(t0[0],t0[1]),no=new Set();if(id==null)return no;for(let i=0;i<A.length;i++)if(!dyFit(A[i],t0[0],id))no.add(k+i);if(no.size>=A.length)no.clear();return no}
 /* しゅるい k の文 A から、まだ出していない文の番号をえらぶ（きめるのは dyUse） */
 function dyIdx(k,A,no){const u=(S.dyU||{})[k]||[];let C=[];for(let i=0;i<A.length;i++)if(!u.includes(i)&&!(no&&no.has(k+i)))C.push(i);
   if(!C.length)for(let i=0;i<A.length;i++)if(i!==u[u.length-1]&&!(no&&no.has(k+i)))C.push(i);/* ぜんぶ出したら、さいごに出した文のほかから */
@@ -55,10 +82,10 @@ function dyNote(e,f){const{M:M0,O}=dyTopics(e,f),sad=M0.some(t=>t[0]==='gone'||t
   const wx=e.wx&&DYOPEN[e.wx]?e.wx:'sun'+seasonOf(e.d),sd=sad||top.some(t=>/^night(Hurt|Lost|Broke)$/.test(t[0])),CL=sd?DYCLOSE_SAD:DYCLOSE,clk=sd?'cs':'c',/* かなしい日・こまった夜のあとは、しずかなおわり */sub=(t,x)=>t.split('@N').join(x[1]||'').split('@W').join(x[2]||'');
   const seen=new Set(S.dyTx||[]);let best=null;
   if(typeof DYFULL!=='undefined')for(const t0 of top.concat(M,rest)){const A=DYFULL[t0[0]];if(!A||!A.length)continue;/* 通しの文：その日のいちばんの話題1つについて、はじめからおわりまでつながった日記（diary-full.js）。その話題の日記をぜんぶ書いたら、つぎの話題 */
-    let ok=null;for(let n=0;n<A.length*2&&!ok;n++){const k='f:'+t0[0],i=dyIdx(k,A),L=A[i].map((t,j)=>chatTone(sub(t,t0),f,j)),h=dyHash(L.join('\n'));dyUse(k,i,A.length);if(!seen.has(h))ok={P:[[k,A]],I:[i],L,h}}
+    let ok=null;const NO=dyNo('f:'+t0[0],A,t0);if(NO.size&&NO.size>=A.length)continue;for(let n=0;n<A.length*2&&!ok;n++){const k='f:'+t0[0],i=dyIdx(k,A,NO),L=A[i].map((t,j)=>chatTone(sub(t,t0),f,j)),h=dyHash(L.join('\n'));dyUse(k,i,A.length);if(!seen.has(h))ok={P:[[k,A]],I:[i],L,h}}
     if(ok){best=ok;break}}
   if(!best)for(let n=0;n<16;n++){const P=[['o:'+wx,DYOPEN[wx]]].concat(top.map(x=>['b:'+x[0],DYBODY[x[0]],x])).concat([[clk,CL]]);
-    const I=P.map(p=>dyIdx(p[0],p[1])),L=P.map((p,i)=>chatTone(p[2]?sub(p[1][I[i]],p[2]):p[1][I[i]],f,i)),h=dyHash(L.join('\n'));
+    const I=P.map(p=>dyIdx(p[0],p[1],p[2]?dyNo(p[0],p[1],p[2]):null)),L=P.map((p,i)=>chatTone(p[2]?sub(p[1][I[i]],p[2]):p[1][I[i]],f,i)),h=dyHash(L.join('\n'));
     best={P,I,L,h};if(!seen.has(h))break}
   best.P.forEach((p,i)=>dyUse(p[0],best.I[i],p[1].length));
   const tx=S.dyTx||(S.dyTx=[]);tx.push(best.h);if(tx.length>2000)tx.splice(0,tx.length-2000);
@@ -127,7 +154,7 @@ function diaryBody(T,body,arg){const L=S.diary||[];const e=arg==='m'||arg==null?
   const pages=[day].concat(P1.children.length?[P1]:[],P2.children.length?[P2]:[]);
   const go=anim&&P1.children.length&&typeof juiceDiaryCount==='function'?juiceDiaryCount(P1,secW,true):null;let shown=false;
   const onAt=()=>{if(shown||!P1.isConnected||P1.closest('.bkstore'))return;shown=true;if(go)go();if(stampR)setTimeout(()=>{if(stampR.isConnected)uiStamp(stampR,true,'かつやく')},350)};/* 点のページを見せたときに、数え上げてハンコ */
-  bookMake(body,pages,{key:'diary',at:0,onAt:()=>setTimeout(onAt,0)});
+  bookMake(body,pages,{key:'diary',at:0,cover:{t:'日記',sub:e.fw?e.fw[0]:'',c:'#7d5a3a'},shutOnly:1,onAt:()=>setTimeout(onAt,0)});
   dyFillPh(new Map([[e.d,{sec:day,e}]]));
   if(anim)setTimeout(()=>dyWrite(body),420);/* 朝の日記：文を、書く音といっしょに、ちょっとずつ出す */
   if(anim){const best=dyBest(e),r=best&&S.res.find(q=>q.name===best.nm&&!q.hidden);if(r&&!DYJ.has(r)){DYJ.add(r);JUMP.set(r,performance.now());villageTimeout(()=>JUMP.set(r,performance.now()),650);addFloat(r.x,r.y-1.4,'がんばった！','#ffe7a8')}}}

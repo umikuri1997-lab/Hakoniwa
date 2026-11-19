@@ -455,6 +455,7 @@ function carryIcons(r){/* 持っているものを、そのまま1つずつ並�
   if(r.fert>0)for(let i=0;i<r.fert;i++)out.push('ic:hiryo');/* 畑へ運ぶ肥料 */
   if(r.cmat)for(const k in r.cmat)for(let i=0;i<(r.cmat[k]||0);i++)out.push(matIc(k));
   if(r.sasa)for(const k in r.sasa)for(let i=0;i<(r.sasa[k]||0);i++)out.push(sasaKeyIc(k));/* 神殿へはこぶ、ささげもの */
+  for(const q of[r.ppk&&r.ppk.m,r.spk&&r.spk.m,r.otaki])if(q)for(const k in q)for(let i=0;i<(q[k]||0);i++)out.push(isFK(k)?em(k.slice(2)):matIc(k));/* はたおり機・粉ひき小屋・炉へ入れる物、おたきあげの素材も、頭の上に積んではこぶ */
   if(r.kdst)out.push(matIc('stone'));/* もりのこだまの石の輪へはこぶ石材 */
   if(r.bm)for(const k in r.bm.m)for(let i=0;i<(r.bm.m[k]||0);i++)out.push(isFK(k)?em(k.slice(2)):matIc(k));/* 建てる所・依頼へ運ぶ素材 */
   if(r.citem)for(const id in r.citem)for(let i=0;i<(r.citem[id]||0);i++)out.push(itemIc(id));/* ひろった物（砂・角笛・家具など） */
