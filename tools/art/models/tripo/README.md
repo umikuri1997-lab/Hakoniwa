@@ -89,3 +89,5 @@ P('名前','model',('tripo/oak.glb', cx, cy, z0, size, rot, tilt), on=('ground',
 3回め（`stump` から下）は、色のない FBX（y が上）。`tripo_split.py` は、上の向きを自分でみつけ、面の向きをそろえ、面を3000までへらす。色は設計図で `recol` する。
 
 6回め（`ck_*`）は、料理の家具の上の材料・料理用。色のない glb を `tripo_split.py` で切りわけた（プロンプトは `prompts.md` の「6回め」）。
+
+7回め（`gf/`）は、限定の家具25こ（`g_w_*`・`g_e_*`・`g_f_*`・`g_k_*`・`g_s_*`、設計図は `furn3d/items/g_*_t.py`）。持ち主の1つの glb（たての壁のようにならべた形）を `tripo_split.py --wall --tex`（色は UV の絵から）で切りわけた。トリポは天板・背もたれなどをカメラのほうへかたむけて作るので、`gf_level.py`（天板を水平に）・`gf_bend.py`（背もたれ・鏡・ぜんたいをおこす）・`gf_post.py`（浮いた天板に幹をたす）で、モデルそのものを直した。それぞれの家具の専用なので、`catalog` には入れない。
