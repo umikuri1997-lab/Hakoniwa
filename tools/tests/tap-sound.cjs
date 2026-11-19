@@ -1,4 +1,4 @@
-/* 「みる」でタップした物の音：材質で分ける（木 twood・石 tstone・金物 tcan・布 tcloth・植物 tgrass・畑と地面 tsoil・水 twater・神殿と御神木 tbell）。
+/* 「みる」でタップした物の音：材質で分ける（木 twood・石 tstone・金物 tcan・布 tcloth・植物 tgrass・畑 tsoil・地面は足音の録音 fsoil など・水 twater・神殿と御神木 tbell）。
    物の音が鳴ったタップでは、画面がひらく音（open）と葉の音（leaf）をかさねない。ほかの物の音（宝箱・神殿を直す など）が鳴ったら、そちらだけ */
 const {chromium}=require('playwright'),assert=require('node:assert/strict');
 (async()=>{const browser=await chromium.launch({executablePath:process.env.CHROME_PATH||'/opt/pw-browsers/chromium',args:['--no-sandbox','--autoplay-policy=no-user-gesture-required']});const p=await browser.newPage({viewport:{width:900,height:600}}),errors=[];p.on('pageerror',e=>errors.push(e.message));
@@ -17,7 +17,7 @@ const o=await run(`(async()=>{cam.z=2;centerOn(CX*TS,CY*TS);setMode('look');CRIT
   out.mat=['statue','statueb','altar','tower','takenoko','pouf','curtain','dtable','stonegate'].map(id=>BL[id]?id+':'+tapMatOf(id):id+':-').join(' ');
   sfx=sfx0;return out})()`);
 console.log(JSON.stringify(o));
-const want={chair:'twood',bed:'tcloth',flower:'tgrass',rock:'tstone',tree:'twood',farm:'tsoil',wall:'tstone',fence:'twood',joro:'tcan',ground:'tsoil',water:'twater',stonefloor:'tstone'};
+const want={chair:'twood',bed:'tcloth',flower:'tgrass',rock:'tstone',tree:'twood',farm:'tsoil',wall:'tstone',fence:'twood',joro:'tcan',ground:'fsoil',water:'twater',stonefloor:'fstone'};
 const rec=await run(`(async()=>{audioInit();if(typeof loadSamples==='function'&&!SBUF.twood)loadSamples();const K=['twood','tstone','tcan','tcloth','tgrass','tsoil','twater','tbell','tfoe','tweb','tani','tplace','tsacred'];
   for(let i=0;i<100&&K.some(k=>!(SBUF[k]||[]).filter(Boolean).length);i++)await new Promise(r=>setTimeout(r,100));
   if(AC.state!=='running')await AC.resume();const out={};for(const k of K)out[k]=[(SAMPLES[k]||[]).length,(SBUF[k]||[]).filter(Boolean).length,playU(k,.3)];return out})()`);
