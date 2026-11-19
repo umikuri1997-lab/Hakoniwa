@@ -70,7 +70,7 @@ function sayLine(r){const L=[],fav=FOODS[favDish(r)],m=bestMate(r);
   if(!HOUSES.length)L.push('みんなの家、ほしいなぁ');
   if(GRASSN>=450)L.push('みどりがいっぱいで、うれしいな');else if(GRASSN<60)L.push('もっと草花がふえるといいな');
   if(m)L.push(m.name+'とあそぶの、たのしい！');
-  const fi=L.length;if((S.fs[favDish(r)]||0)>0)L.push('箱に'+fav.name+'がある！ たのしみ');else L.push(fav.name+'が食べたいなぁ');
+  const fi=prefKnown(r,'fd')?L.length:-1;/* 好きな料理は、食べてわかるまで言わない */if(fi<0);else if((S.fs[favDish(r)]||0)>0)L.push('箱に'+fav.name+'がある！ たのしみ');else L.push(fav.name+'が食べたいなぁ');
   if(r.fun>=80)L.push('ここでのくらし、たのしいよ');
   const li=L.length;L.push(LIKES[r.like]+'がすき！');
   const i=(Math.floor(S.t/30)+r.id)%L.length;SAYPK=i===fi?'fd':i===li?'lk':null;/* 好みを言ったひとこと（prefs.js） */return L[i]}

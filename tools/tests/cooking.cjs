@@ -10,7 +10,7 @@ const assert=require('node:assert/strict');
     out.n=COOKD.length;out.byStation=[cookDish(['apple'],'cooktable'),cookDish(['apple'],'campfire'),cookDish(['apple'],'oven')].map(k=>FOODS[k].name);
     out.unagi=FOODS[cookDish(['unagi'],'campfire')].name;out.unagiTomato=cookDish(['unagi','tomato'],'cooktable');out.fsg=recOf(cookKey(['berry','fish','kinoko'],'cooktable')).out;
     out.noIcon=COOKD.filter(D=>!foodIc(D.id)).map(D=>D.id);out.fsgIc=!!foodIc('fsg2');out.legacy=recOf('salad').key;
-    out.bad=COOKD.filter(D=>D.f&&D.f.bad).length;out.numOK=COOKD.filter(D=>D.f).every(D=>{const f=D.f,ef=f.ef||{},t=[];if(ef.en)t.push('つかれ−'+ef.en);if(ef.fun)t.push(ef.fun<0?'たのしさ−'+(-ef.fun):'たのしさ+'+ef.fun);if(ef.wk)t.push((ef.wk[1]/60)+'時間、はたらく速さ+'+ef.wk[0]);return t.join('・')===f.fx});
+    out.bad=COOKD.filter(D=>D.f&&D.f.bad).length;out.numOK=COOKD.filter(D=>D.f).every(D=>{const f=D.f,ef=f.ef||{},t=[];if(ef.en)t.push('つかれ−'+ef.en);if(ef.fun)t.push(ef.fun<0?'たのしさ−'+(-ef.fun):'たのしさ+'+ef.fun);if(ef.wk)t.push((ef.wk[1]/60)+'時間、はたらく速さ+'+ef.wk[0]);if(ef.warm)t.push((ef.warm/90)+'時間、冬の寒さがとどかない');if(ef.cool)t.push((ef.cool/90)+'時間、夏の暑さがとどかない');return t.join('・')===f.fx});
     /* 村で動かす */
     function setup(el){S.ground.fill(0);S.hi.fill(0);S.obj.fill('');S.floor.fill('');S.dyn={};S.enemies=[];S.drops=[];S.seeds=[];S.t=1440*2+700;S.hold=0;resv.clear();BAN.clear();
       const box=50*W+50,st=50*W+56;S.obj[box]='crate';S.obj[st]='cooktable';S.box={};S.pile={};S.rsv={};S.fs={};syncFood();recount();boxSync();S.ovenSet={};

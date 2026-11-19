@@ -66,12 +66,16 @@ const assert=require('node:assert/strict');
   const sg=await go('shukaku',0,farm,73);assert.ok(sg.every(g=>g.cap===1),'shukaku cap+1');assert.equal(await run(`(S.fs.mugi||0)+(S.fs.imo||0)+(S.fs.tomato||0)`),cr0-30,'30 crops used');
   const lg=await go('lantern',0,'',79);assert.ok(lg.every(g=>g.work===2),'lantern work+2');
   assert.equal(await run(`evOn('himatsuri')||evOn('utage')`),false,'volcano only');
-  /* しごとの称号：同じ仕事を100回で称号、その仕事だけ はたらく速さ+2 */
-  const tt=JSON.parse(await run(`(()=>{const r=S.res[1];r.jc={kikori:98};const g0=gJob(r,'chop');titleNote(r,{type:'chop',stage:'do'});const t1=!!(r.ttl||{}).kikori;titleNote(r,{type:'chop',stage:'do'});const w=rStat(r,rLv(r)).work;return JSON.stringify({t1,t2:!!r.ttl.kikori,g0,g1:gJob(r,'chop'),gm:gJob(r,'mine'),w})})()`));
-  assert.ok(!tt.t1&&tt.t2,'title at 100');assert.equal(tt.g0,1);assert.ok(Math.abs(tt.g1-(tt.w+2)/tt.w)<1e-9,'chop +2');assert.equal(tt.gm,1,'other jobs unchanged');
+  /* 得意な仕事（★）：30・100・300回で★1・2・3、その仕事だけ はたらく速さ+★。はじめからの★1は、tk。前のセーブの称号は★2 */
+  const tt=JSON.parse(await run(`(()=>{const r=S.res[1];r.vr.tk=['ishi'];delete r.ttl;r.jc={kikori:29};const g0=gJob(r,'chop');titleNote(r,{type:'chop',stage:'do'});const l1=tokuiLv(r,'kikori');r.jc.kikori=99;titleNote(r,{type:'chop',stage:'do'});const l2=tokuiLv(r,'kikori'),w=rStat(r,rLv(r)).work,g2=gJob(r,'chop'),gm=gJob(r,'mine'),gf=gJob(r,'fish');r.jc.kikori=299;titleNote(r,{type:'chop',stage:'do'});const l3=tokuiLv(r,'kikori');r.jc.kikori=5000;const lx=tokuiLv(r,'kikori');const q={vr:{tk:[]},jc:{},ttl:{tsuri:1}};return JSON.stringify({g0,l1,l2,l3,lx,w,g2,gm,gf,old:tokuiLv(q,'tsuri'),innate:tokuiLv(r,'ishi'),txt:tokuiHtml(r)})})()`));
+  assert.equal(tt.g0,1,'no star = no bonus');assert.equal(tt.l1,1,'30 -> star1');assert.equal(tt.l2,2,'100 -> star2');assert.equal(tt.l3,3,'300 -> star3');assert.equal(tt.lx,3,'max star3');
+  assert.ok(Math.abs(tt.g2-(tt.w+2)/tt.w)<1e-9,'star2 chop +2');assert.ok(Math.abs(tt.gm-(tt.w+1)/tt.w)<1e-9,'innate star1 mine +1');assert.equal(tt.gf,1,'other jobs unchanged');assert.equal(tt.old,2,'old title = star2');assert.equal(tt.innate,1);
+  assert.ok(tt.txt.includes('>木を切る<svg')&&(tt.txt.split('　')[0].match(/pxi tks"/g)||[]).length===3,tt.txt);
+  const pk=JSON.parse(await run(`(()=>{const o=[];for(let i=0;i<200;i++)o.push(tokuiPick('wind'));return JSON.stringify({n:[...new Set(o.map(x=>x.length))].sort(),ry:o.some(x=>x.includes('ryori'))})})()`));
+  assert.deepEqual(pk.n,[1,2],'1 or 2 innate');assert.equal(pk.ry,false,'wind has no cooking');
   await run(`openSheet('res',S.res[1].id)`);await page.waitForTimeout(400);
-  const shown=await run(`document.querySelector('#sheetBody').textContent.includes('きこりの名人')`);await run(`closeSheet()`);
-  assert.ok(shown,'title shown on spirit sheet');
+  const shown=await run(`(()=>{const t=document.querySelector('#sheetBody').textContent;return t.includes('得意な仕事')&&t.includes('5000回')&&t.includes('はたらく速さ+1')})()`);await run(`closeSheet()`);
+  assert.ok(shown,'tokui shown on spirit sheet');
   /* やめたらもどる */
   const c2=JSON.parse(await run(`(()=>{const p=S.pt,f=S.food,w=S.mat.wood;const ok=evOpen('camp',[S.res[0].id]);const p1=S.pt;evCancel();return JSON.stringify({ok,back:S.pt===p&&S.food===f&&S.mat.wood===w,paid:p-p1,ev:S.ev,why:evWhy('camp')})})()`));
   assert.ok(c2.back&&c2.ev===null,'cancel refunds '+JSON.stringify(c2));

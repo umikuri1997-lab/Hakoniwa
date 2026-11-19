@@ -20,7 +20,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict');
      if(!shot&&process.env.SCREENSHOT_DIR&&await child.evaluate(()=>sacredEval('!!sacredDirection()?.vol&&sacredMotionPending()'))){await page.waitForTimeout(700);await page.screenshot({path:process.env.SCREENSHOT_DIR+'/stg-replay-'+key.replace(':','-')+'.png'});shot=true;}
      await page.waitForTimeout(200);}
    assert.equal(await run('JSON.stringify(S)'),before,'parent changed after '+key);assert.equal(await run('KV.getItem(SAVE_KEYS[1])'),'parent save sentinel','child must not save');
-   await page.getByRole('button',{name:'思い出帳へ戻る',exact:true}).click();console.log('Volcano replay passed:',key);
+   await page.getByRole('button',{name:'思い出帳へもどる',exact:true}).click();console.log('Volcano replay passed:',key);
  }
  assert.deepEqual(errors,[]);await browser.close();console.log('Volcano replays: same lines and motion, completion, parent village unchanged; no browser errors.');
 })().catch(e=>{console.error(e);process.exit(1)});

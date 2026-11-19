@@ -19,4 +19,4 @@ function foodKnown(r,v){const K=r.fk||{};return Object.keys(K).filter(k=>FOODS[k
 function foodKnownText(r,v){const L=foodKnown(r,v).map(k=>FOODS[k].name);return L.length?[...new Set(L)].join('・'):'？？？'}
 /* おやつのポップアップ（snackPop）は ui.js */
 /* 「〇〇が食べたい」のこまりごとの食べ物：すき・だいすきの物のうち、この村で一度でも持った物（S.seenIt）から */
-function wantPick(r){const seen=S.seenIt||{},L=Object.keys(FOODS).filter(k=>seen['f:'+k]&&!FOODS[k].bad&&foodLike(r,k)>=2);return L.length?L[Math.floor(Math.random()*L.length)]:null}
+function wantPick(r){const seen=S.seenIt||{},L=Object.keys(FOODS).filter(k=>seen['f:'+k]&&!FOODS[k].bad&&foodLike(r,k)>=2&&(k!==favDish(r)||prefKnown(r,'fd')));/* だいすきな料理は、食べてわかってから */return L.length?L[Math.floor(Math.random()*L.length)]:null}

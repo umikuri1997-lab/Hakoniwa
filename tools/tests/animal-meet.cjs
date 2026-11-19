@@ -19,7 +19,7 @@ const assert=require('node:assert/strict');
   assert.equal(r.meet,true);assert.equal(r.paused,true,'village time stops');assert.equal(r.noPopYet,true);
   assert.equal(r.card,true,'card');assert.equal(r.zoomed,true,'camera zooms');assert.equal(r.q,true,'? bubble');
   assert.ok(r.text.includes('はじめて会った')&&r.text.includes('ハネマリ')&&r.text.includes('とれる物：たまご'),r.text);assert.equal(r.pic,true);
-  assert.equal(r.met,true);assert.equal(r.pop,true,'normal popup after');assert.ok(r.popText.includes('おむかえ'));assert.equal(r.back,true,'camera back');
+  assert.equal(r.met,true);assert.equal(r.pop,true,'normal popup after');assert.ok(r.popText.includes('むかえる'));assert.equal(r.back,true,'camera back');
   assert.equal(r.gift,false);assert.equal(r.am,null);assert.equal(r.second,true,'second tap is direct');assert.equal(r.reset,true,'reset on village switch');
   assert.deepEqual(errors,[]);await browser.close();console.log('OK');
 })().catch(e=>{console.error(e);process.exit(1)});
