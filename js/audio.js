@@ -38,6 +38,7 @@ Object.assign(SAMPLES,{"cv_bird":["assets/g/c8f27e82a0.mp3","assets/g/d5a88a07a1
 Object.assign(SAMPLES,{"mine":["assets/g/ba69ed4c76.mp3"]});
 Object.assign(SAMPLES,{"tpuni":["assets/g/6b79a88272.mp3","assets/g/a9d3a9c033.mp3","assets/g/72120899ad.mp3","assets/g/6074b7cd9b.mp3","assets/g/552f80bbbc.mp3"],"loomk":["assets/g/bdeafe2c64.mp3","assets/g/c36dad1860.mp3","assets/g/5be427e58a.mp3"],"shutl":["assets/g/e3b3fdc4e1.mp3","assets/g/eb9922b92c.mp3","assets/g/4eee98ed5d.mp3"]});/* きのこ・はたおり（Kenney の CC0、tools/sound/ui_asmr.py） */
 Object.assign(SAMPLES,{"bowdraw":["assets/g/31506abaf6.mp3"],"starkira":["assets/g/74849355af.mp3"],"tillhit":["assets/g/2e6fb1390c.mp3","assets/g/20fade0d21.mp3","assets/g/1fc0c732af.mp3","assets/g/520cad11ce.mp3","assets/g/0ba494ed23.mp3","assets/g/9382a53dbd.mp3","assets/g/82a4a0537b.mp3","assets/g/fa9349ce43.mp3"],"pourw":["assets/g/6412920a88.mp3"]});/* 持ち主の音：弓をひきしぼる・流れ星のキラッ・くわが土にささる（8回ぶん）・水やり（tools/sound/owner_sfx4.py） */
+Object.assign(SAMPLES,{"slip":["assets/g/0f85595dd0.mp3"]});/* 効果音ラボ（持ち主がくれた音）：水たまりですべる「シャッ、シャッ」（2回ぶんを切った tools/sound/owner_slip.py） */
 Object.assign(SAMPLES,{"ladder":["assets/g/71d1b47f0b.mp3","assets/g/5618fc1b14.mp3","assets/g/9eca791594.mp3","assets/g/868d642cab.mp3","assets/g/9d54b2f1d9.mp3","assets/g/fa8c7395f1.mp3","assets/g/2f07b68351.mp3","assets/g/2e518a1679.mp3","assets/g/9dba397d59.mp3","assets/g/c5a9516d85.mp3","assets/g/8ecd2b146d.mp3"],"cv_chou":["assets/g/97f36f451e.mp3","assets/g/e82ec64530.mp3","assets/g/b3796e511e.mp3"]});/* 持ち主の音：ハシゴの木のきしみ（きしみ1回ぶんずつ）・ちょうの羽音（tools/sound/owner_ladder_chou.py） */
 Object.assign(SAMPLES,{"fgrass":["assets/g/e76e72a5bf.mp3","assets/g/f937ecdd86.mp3","assets/g/5565fac559.mp3","assets/g/5d5d8a4911.mp3","assets/g/79a17adc48.mp3","assets/g/234a6775ab.mp3","assets/g/4cb4389b5c.mp3"],"fsoil":["assets/g/36c529ba3d.mp3","assets/g/50021808b0.mp3","assets/g/376e7e0de5.mp3","assets/g/c1c7931242.mp3","assets/g/fb1d866378.mp3","assets/g/2da263eecb.mp3","assets/g/118cb5438c.mp3","assets/g/75c1292d54.mp3"],"fwood":["assets/g/afcfac920d.mp3","assets/g/d8034209d2.mp3","assets/g/3da3c49bb1.mp3","assets/g/a994e75433.mp3","assets/g/bb4ac98875.mp3","assets/g/5d49836f73.mp3","assets/g/bdbd1263fa.mp3"],"fstone":["assets/g/6fa35d1b01.mp3","assets/g/ba4664f469.mp3","assets/g/a0f2c1c2e6.mp3","assets/g/7667426112.mp3","assets/g/fcfd0d7ef9.mp3","assets/g/fca4b889f9.mp3","assets/g/435c9a588f.mp3"],"fcloth":["assets/g/61589ac538.mp3","assets/g/d6fd055650.mp3","assets/g/9b55ed379f.mp3"],"fsnow":["assets/g/4bd16a4daf.mp3","assets/g/5d4601b4b3.mp3","assets/g/f96dc8d284.mp3","assets/g/938e7207ab.mp3","assets/g/312ce216f6.mp3","assets/g/98abc74bf4.mp3","assets/g/7b011fac51.mp3"],"fwet":["assets/g/94bc2c34e1.mp3","assets/g/f32efb3157.mp3","assets/g/d2bfcb9225.mp3","assets/g/b1885232a2.mp3","assets/g/34e8464018.mp3","assets/g/41565c56cb.mp3"]});/* せいれいの足音：草・土・木・石・雪・雨の日のぬれた地面は、持ち主の録音（tools/sound/footstep_rec.py）。じゅうたん・ラグは Kenney の CC0（tools/sound/ui_asmr.py の fcloth） */
 Object.assign(SAMPLES,{"dawn":["assets/g/1fb5a4c6a0.mp3"],"midnight":["assets/g/065d13de2d.mp3"]});/* 朝6時・夜12時の切りかえの音（魔王魂の曲のはじめ10秒。朝はオーケストラ・夜はヒーリング。持ち主がえらんだ。tools/sound/maou_chime.py） */
@@ -278,6 +279,7 @@ case'bossKO':noise(t,.5,.3,o,200);tone(70,t,1.4,'sine',.2,o,30);tone(900,t,.35,'
   case'bowdraw':playU('bowdraw',.3);break;/* 弓をひきしぼる（持ち主の音） */
   case'uknock':playU('knockw',.12,.85);break;/* ボタンでない所のタップ：木をそっとたたく */
   case'starkira':playU('starkira',.3);break;/* 流れ星をタップ：キラッ（持ち主の音） */
+  case'slip':if(playU('slip',.4))break;noise(t,.07,.1,o,600);break;/* 水たまりですべる（読みこむ前だけ作った音） */
   case'dscoop':playU('dscoop',.42);break;/* 水くみ：バケツが水に入る */
   case'dlift':playU('dlift',.32);break;/* 水くみ：ひき上げる */
   case'harvdone':playS('harvdone',.5);break;/* とりおわったとき（ガサゴソ bush のあと） */
@@ -393,10 +395,18 @@ function footTick(now0){if(!AC||!SND.sfx||AC.state!=='running'||!S||!started||(t
 setInterval(footTick,100);
 /* 朝6時・夜12時の音（dayChimeTick）：時計がその時刻をこえたら1回だけ鳴らす（ARK の日の出・日の入りのように）。遊んでいるあいだの曲ではなく、短い音だけ。
    村を切りかえた・読みこんだときは、こえたことにしない（CHIMEH を今の時刻にそろえる）。思い出の場面では鳴らさない */
-const CHIMEV=.42;let CHIMEH=null,CHIMES=null;
+const CHIMEV=.21;let CHIMEH=null,CHIMES=null;
 function dayChimeTick(){if(!S||!started){CHIMEH=null;return}const h=hour();if(CHIMES!==S||CHIMEH==null||typeof IS_STORY_REPLAY!=='undefined'&&IS_STORY_REPLAY){CHIMES=S;CHIMEH=h;return}
   const p=CHIMEH;CHIMEH=h;const cross=x=>p<x&&h>=x&&h-p<3;let k=cross(6)?'dawn':p>h&&p-h>12&&p>=21?'midnight':'';if(!k)return;/* 24時をこえたら、夜12時 */
-  if(!AC||!SND.sfx||AC.state!=='running')return;const b=(SBUF[k]||[]).find(Boolean);if(!b)return;const src=AC.createBufferSource(),g=AC.createGain();src.buffer=b;g.gain.value=CHIMEV;src.connect(g);g.connect(sfxG);src.start()}/* 和音なので、高さはゆらさない */
+  if(!AC||!SND.sfx||AC.state!=='running')return;const b=(SBUF[k]||[]).find(Boolean);if(!b)return;
+  const src=AC.createBufferSource(),g=AC.createGain(),t=AC.currentTime;
+  const fadeIn=Math.min(1.5,b.duration/3),fadeOut=Math.min(4,b.duration/2);
+  src.buffer=b;
+  g.gain.setValueAtTime(0,t);
+  g.gain.linearRampToValueAtTime(CHIMEV,t+fadeIn);
+  g.gain.setValueAtTime(CHIMEV,t+(b.duration-fadeOut));
+  g.gain.linearRampToValueAtTime(0,t+b.duration);
+  src.connect(g);g.connect(sfxG);src.start(t)}/* 和音なので、高さはゆらさない */
 setInterval(dayChimeTick,200);
 function sfxPos(x,y){/* マップの場所の音の大きさ・左右・こもり（{v,p,l}）。聞こえないほど遠ければ null */const vw=VW/cam.z,vh=VH/cam.z,d=Math.hypot(x*TS-(cam.x+vw/2),y*TS-(cam.y+vh/2)),R=Math.max(vw,vh)*.8,v=Math.pow(Math.max(0,1-d/R),1.5);if(v<.04)return null;
   const zr=Math.max(.6,Math.min(1.4,cam.z/(typeof homeZ==='function'?homeZ():cam.z))),dx=(x*TS-(cam.x+vw/2))/(vw/2);/* 拡大すると近くで聞こえる（少し大きく、高い音までくっきり） */

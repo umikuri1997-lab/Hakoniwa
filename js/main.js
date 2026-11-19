@@ -69,7 +69,7 @@ function lastFirst(list){/* さいごにあそんだステージを、いちば�
   const card=list.querySelector('.wcard[data-k="'+top[0]+'"]');if(card===list.firstElementChild)return;
   const pv=card.previousElementSibling,nx=card.nextElementSibling;if(pv&&pv.classList.contains('wlink'))pv.remove();else if(nx&&nx.classList.contains('wlink'))nx.remove();/* 道の線は、となりのステージどうしでつなぎなおす */
   card.classList.add('wtop');list.insertBefore(card,list.firstElementChild)}
-const APP_VER=1940;/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER=1946;/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
@@ -231,7 +231,7 @@ function frame(now){
   for(const m of motes){m.y-=prdt*.012*m.s;m.x+=Math.sin(now/2000+m.p)*prdt*.004;if(m.y<0){m.y=1;m.x=Math.random()}}
   seasonStep(prdt,now);feelFrame(now);juiceFrame(now);/* 足音・足もとの反応・場所の音（feel.js） */
   stepLooks(now,rdt);
-  if(!PZ&&!menuOpen&&$('#pro').hidden&&stageReady()){try{render(now)}catch(e){frameErr('render',e)}try{phNoonTick(now)}catch(e){frameErr('photo',e)}}/* 昼12時の村の写真（photo.js） *//* タイトル・導入会話・メニュー中は、背景ワールドを描かない */
+  if(!PZ&&!menuOpen&&$('#pro').hidden&&stageReady()){try{render(now)}catch(e){frameErr('render',e)}try{phTick(now)}catch(e){frameErr('photo',e)}}/* 日記の絵（photo.js） *//* タイトル・導入会話・メニュー中は、背景ワールドを描かない */
   if(AC)wantSong=(!$('#title').hidden||!$('#maps').hidden||!$('#pro').hidden)?'opening':stageSong();
   if(started){hudT+=rdt;if(hudT>.3){hudT=0;updHUD()}
     if(!sacredQuietActive()&&!GIFT_ACTIVE&&(RLVQ.length||S.res.some(q=>q.lvPend>0&&!q.hidden))&&sheet==null&&NEWRES==null&&$('#dialog').hidden&&$('#lvup').hidden&&$('#rlv').hidden){if(!RLVQ.length){const r=S.res.find(q=>q.lvPend>0&&!q.hidden);if(r)RLVQ.push({id:r.id,from:rLv(r),to:rLv(r)})}/* えらばずにとじた（読みこみなおした）ごほうび */if(RLVQ.length)rlvShow(RLVQ.shift())}

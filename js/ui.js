@@ -289,9 +289,10 @@ function memBook(body){const kids=[...body.children],ch=[];
   for(const[i,pg]of pages.entries()){pg.hidden=i!==MEMPG;const nav=el('<div class="mnav"><button class="btn mpv" type="button" aria-label="まえのページ">'+pxi('next','prev')+'</button><button class="btn mtc" type="button">もくじ</button><span class="mpn"></span><button class="btn mnx" type="button" aria-label="つぎのページ">'+pxi('next','nxr')+'</button></div>');
     nav.querySelector('.mpn').textContent=i?i+' / '+(N-1):'もくじ';const pv=nav.querySelector('.mpv'),nx=nav.querySelector('.mnx'),tc=nav.querySelector('.mtc');pv.disabled=i===0;nx.disabled=i>=N-1;tc.hidden=i===0;pv.onclick=()=>memFlip(body,pages,i-1);nx.onclick=()=>memFlip(body,pages,i+1);tc.onclick=()=>memFlip(body,pages,0);pg.appendChild(nav);body.appendChild(pg)}
   /* よこにはらうと、めくる */let sx=null,sy=0;body.onpointerdown=e=>{sx=e.clientX;sy=e.clientY};body.onpointerup=e=>{if(sx==null)return;const dx=e.clientX-sx,dy=e.clientY-sy;sx=null;if(Math.abs(dx)>60&&Math.abs(dx)>Math.abs(dy)*1.6)memFlip(body,pages,MEMPG+(dx<0?1:-1))};body.onpointercancel=()=>{sx=null}}
+function bookShow(pg){/* ページに _show があれば、はじめて見せたときに1回よぶ（日記の数え上げ・ハンコ） */if(pg&&pg._show){const f=pg._show;pg._show=null;f()}}
 function memFlip(body,pages,to,st){/* st：ほかの本（日記 DYBK）のページの数 {p}。なければ思い出帳 */const cur=st?st.p:MEMPG;if(to<0||to>=pages.length||to===cur||MEMFLIP)return;const from=cur,old=pages[from],nw=pages[to],fw=to>from;sfx('page');if(st)st.p=to;else MEMPG=to;
   const red=typeof uiReduced==='function'&&uiReduced();body.scrollTop=0;
-  const show=()=>{old.hidden=true;nw.hidden=false};if(red){show();return}
+  const show=()=>{old.hidden=true;nw.hidden=false;bookShow(nw)};if(red){show();return}
   const cl=(fw?old:nw).cloneNode(true);cl.hidden=false;cl.classList.add('mflip');cl.setAttribute('aria-hidden','true');cl.style.cssText='position:absolute;left:'+old.offsetLeft+'px;top:'+old.offsetTop+'px;width:'+old.offsetWidth+'px;z-index:3;transform-origin:0 0;pointer-events:none;animation:'+(fw?'mflipF':'mflipB')+' .42s steps(1) both';
   if(fw)show();body.appendChild(cl);MEMFLIP=1;setTimeout(()=>{cl.remove();if(!fw)show();MEMFLIP=0},430)}
 /* スポットの代表の家具（アイコンにする）：名前で書き、なければ、そのスポットのもとの物 */
@@ -534,8 +535,8 @@ function renderSheet(){
        body.appendChild(pf)}
      else{
      const st=el('<div class="sec"><div class="stats sgrid"></div></div>'),g=st.querySelector('.stats');
-     for(const tk of[(r.vr||{}).tr,isKey(r.name)?'kizuna':null]){const T2=TRAITS[tk];if(T2){const d=el('<div class="stat" style="display:block"><span style="display:block">特性</span><b style="display:block;text-align:left;margin-top:2px"></b><small style="display:block;color:var(--muted);margin-top:2px"></small></div>');d.querySelector('b').textContent=T2[0];d.querySelector('small').textContent=T2[1];g.appendChild(d)}}/* キーキャラは「きずな」も持つ */titleSec(r,g);/* 得意な仕事（★） */
-     const Z=rStat(r,lv);for(const[k,v,ic]of[['攻撃力',Z.atk?String(Math.floor(Z.atk+1e-9)):'なし','sword'],['はたらく速さ',seaTxt(r,'work',Z.work),'hammer'],['移動速度',seaTxt(r,'move',Z.move),'boot'],['スタミナ',seaTxt(r,'sta',Z.sta),'heart'],['持てる数',heldN(r)+' / '+Z.cap,'box']])g.appendChild(el('<div class="stat sti">'+pxi(ic)+'<span>'+k+'</span><b>'+v+'</b></div>'));/* アイコンつきの2列 */
+     for(const tk of[(r.vr||{}).tr,isKey(r.name)?'kizuna':null]){const T2=TRAITS[tk];if(T2){const d=el('<div class="stat" style="display:block"><span style="display:block">特性</span><b style="display:block;text-align:left;margin-top:2px"></b><small style="display:block;color:var(--muted);margin-top:2px"></small></div>');d.querySelector('b').textContent=T2[0];d.querySelector('small').textContent=T2[1];g.appendChild(d)}}/* キーキャラは「きずな」も持つ */
+     const Z=rStat(r,lv);for(const[k,v,ic]of[['攻撃力',Z.atk?String(Math.floor(Z.atk+1e-9)):'なし','sword'],['はたらく速さ',seaTxt(r,'work',Z.work),'hammer'],['移動速度',seaTxt(r,'move',Z.move),'boot'],['スタミナ',seaTxt(r,'sta',Z.sta),'heart'],['持てる数',heldN(r)+' / '+Z.cap,'box']])g.appendChild(el('<div class="stat sti">'+pxi(ic)+'<span>'+k+'</span><b>'+v+'</b></div>'));/* アイコンつきの2列 */titleSec(r,g);/* 得意な仕事（★）は、いちばん下 */
      body.appendChild(st)}}
     if(isNew){const nb=el('<button class="btn pri">つぎへ</button>');nb.onclick=()=>{sfx('next');closeSheet()};/* 来た子が、ひとことあいさつ（closeSheet の中で。×でとじても同じ） */body.appendChild(nb);return}
   }else if(sheet==='diary'){diaryBody(T,body,sheetArg);

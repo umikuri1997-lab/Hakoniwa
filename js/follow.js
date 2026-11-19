@@ -6,7 +6,7 @@
 let FOLLOW=null;
 const FOLLOWK=3;/* 追う速さ（1秒あたり。大きいほど、ぴったりつく） */
 function followStart(r){if(!S||!r||!S.res.includes(r))return;followEnd();if(sheet)closeSheet();FOLLOW={s:S,sess:VILLAGE_SESSION,id:r.id};
-  const b=el('<button class="btn" id="followTag" aria-live="polite"><b></b><small>画面をうごかすと、おわります</small></button>');b.querySelector('b').textContent=r.name+'を見守っています';b.onclick=()=>{sfx('tap');followEnd()};
+  const b=el('<button class="btn" id="followTag" aria-live="polite">見守り中</button>');b.onclick=()=>{sfx('tap');followEnd()};
   const bot=$('#botUI');if(bot)bot.insertBefore(b,bot.firstChild);else $('#app').appendChild(b)}
 function followEnd(){FOLLOW=null;const t=document.getElementById('followTag');if(t)t.remove()}
 function followActive(){return !!FOLLOW&&FOLLOW.s===S}

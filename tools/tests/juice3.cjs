@@ -19,12 +19,15 @@ const assert=require('node:assert/strict');
   await W8(200);
   const d0=JSON.parse(await run(`JSON.stringify({sheet,h:[...document.querySelectorAll('#sheetBody .sec h3')].map(e=>e.textContent),v:[...document.querySelectorAll('#sheetBody .stat b')].map(e=>e.textContent)})`));
   console.log('diary start',JSON.stringify(d0));assert.ok(d0.h.includes('きのうのしごと'));assert.ok(d0.v.every(t=>/^0|なし/.test(t)),'はじめは0から');
-  await W8(4500);
+  /* 日記は本：ページをめくると、そのページの数を数え上げる */
+  const flip=()=>run(`(()=>{const p=[...document.querySelectorAll('#sheetBody .mpg')].find(x=>!x.hidden&&!x.classList.contains('mflip')),b=p&&p.querySelector('.mnx');if(b&&!b.disabled){b.click();return 1}return 0})()`);
+  while(await flip()){await W8(600);if(await run(`!!document.querySelector('#sheetBody .mpg:not([hidden]) .ustamp.b')||!document.querySelector('#sheetBody .mpg:not([hidden]) .mnx:not([disabled])')`))break;await W8(2000)}
+  await page.waitForFunction(()=>!!document.querySelector('#sheetBody .ustamp.b'),{},{timeout:8000});
   const d1=JSON.parse(await run(`JSON.stringify({v:[...document.querySelectorAll('#sheetBody .stat b')].map(e=>e.textContent),st:!!document.querySelector('#sheetBody .ustamp.b')})`));
   console.log('diary end',JSON.stringify(d1));assert.ok(d1.v.includes('7回'));assert.ok(d1.v.includes('5体'));assert.ok(d1.st,'大きなハンコ');
   /* タップでとばす */
   await run(`(()=>{closeSheet();S.dy={d:dayNo(),w:{},m:[],k:{},o:{},g:{}};for(let i=0;i<30;i++)dyWork(S.res[0],'build','fence');diaryClose();return 1})()`);await W8(600);
-  await run(`(()=>{document.querySelector('#sheetBody').dispatchEvent(new PointerEvent('pointerdown',{bubbles:true}));return 1})()`);
+  await run(`(()=>{document.querySelectorAll('#sheetBody .mpg').forEach(p=>p.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true})));return 1})()`);
   const d2=await run(`[...document.querySelectorAll('#sheetBody .stat b')].map(e=>e.textContent).join()`);console.log('skip',d2);assert.ok(d2.includes('30回'));
   await run(`closeSheet();true`);
   /* なかよし */
