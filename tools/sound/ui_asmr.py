@@ -50,7 +50,6 @@ SET = {
   'tani':   (['impact-sounds/*/impactSoft_medium_00%d.ogg' % i for i in (1, 3)], 250, 7000, .12, 1),  # 生き物：ぽよっ（高く鳴らす）
   'tplace': (['impact-sounds/*/impactPlank_medium_00%d.ogg' % i for i in range(4)], 120, 6000, .18, 1),  # 置く場所：とんっ
   # ---- はしご・弓・きのこ・はたおり（見張り台・畑・もの作りの手もとの音） ----
-  'ladder': (['impact-sounds/*/impactWood_medium_00%d.ogg' % i for i in range(5)], 250, 5500, .14, 1),  # はしごの段に手をかける：こつっ（見張り台のハシゴ・ハシゴ）
   'tpuni':  (['impact-sounds/*/impactSoft_heavy_00%d.ogg' % i for i in range(5)], 100, 3500, .20, 1),  # きのこをタップ：ぷにっ（やわらかい物をおす。高く鳴らす）
   'loomk':  (['impact-sounds/*/impactWood_heavy_00%d.ogg' % i for i in range(3)], 150, 3500, .16, 1),  # はたおり機のおさをうつ：ごとん
   'shutl':  (['rpg-audio/*/drawKnife%d.ogg' % i for i in range(1, 4)], 500, 7000, .30, 1),  # はたおり機のひ（シャトル）がすべる：すーっ

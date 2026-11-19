@@ -36,7 +36,7 @@ const BL={
   bellf:{sp:9,name:'ききょう',item:'ききょうの種',kind:'plant',cost:3,attr:{earth:1},desc:'まわり3マスで、たのしさ+0.2／1時間'},
   salvia:{sp:9,name:'サルビア',item:'サルビアの種',kind:'plant',cost:3,attr:{fire:1},desc:'まわり3マスで、たのしさ+0.2／1時間'},
   nebari:{sp:9,name:'ねばり草',item:'ねばり草の種',kind:'plant',cost:3,attr:{wood:1},desc:'上を歩く「コワイノ」の速さ0.5倍。まわり3マスで、たのしさ+0.2／1時間'},
-  hotaru:{sp:9,name:'ほたるの草むら',item:'ほたるの草むらの苗',kind:'plant',cost:3,attr:{water:1},desc:'夜、まわり2マスをてらすあかり。はじめて光に入った「コワイノ」が2分止まる'},
+  hotaru:{sp:9,name:'ヨルボシの草むら',item:'ヨルボシの草むらの苗',kind:'plant',cost:3,attr:{water:1},desc:'夜、まわり2マスをてらすあかり。はじめて光に入った「コワイノ」が2分止まる'},
   lily:{sp:9,name:'ゆり',item:'ゆりの種',kind:'plant',cost:3,attr:{wind:1},desc:'まわり3マスで、たのしさ+0.2／1時間'},
   lotus:{sp:9,name:'ハス',item:'ハスの種',kind:'plant',cost:3,attr:{water:1},desc:'池にうかぶ花。まわり3マスで、たのしさ+0.2／1時間。まわり2マスで水浴びすると、たのしさ×1.5 / つかれ −9／1時間'},
   tree:{hp:5,brk:1,fix:1,fixm:{},name:'木',item:'木の苗',kind:'plant',cost:4,lv:3,solid:1,env:1,attr:{wood:3},desc:'まわり5マスを緑にする。まわり3マスで、たのしさ+0.4／1時間'},
@@ -142,19 +142,19 @@ const BL={
   drum:{name:'合図の太鼓',fix:2,fixm:{wood:1},kind:'furn',pc:4,time:120,maker:'fire',qty:1,attr:{fire:.5},mat:{wood:8,funba:2},solid:1,desc:'まわり5マスの見張り台のうつ速さ1.25倍（重複なし）'},
   arrow2:{name:'かなものの矢',kind:'ammo',pc:6,time:60,maker:'wood',qty:10,mat:{eda:1,stone:1,can:1},desc:'空き缶をたたいて矢じりにした矢。見張り台の威力+10。1発で1本使う'},
   /* おくりもの（gifts.js）：せいれいにあげると、たからものになる。置く物ではない。ひろう物・お店の物は作らない（nc） */
-  gf_kirei:{name:'きれいな石',kind:'gift',nc:1,pc:0,mat:{},desc:'つるつるの、きれいな石。あげると、たのしさ+20。だいすきな物は+40。'},
-  gf_garasu:{name:'ガラス玉',kind:'gift',nc:1,pc:0,mat:{},desc:'光にすかすと、きらっとするガラス玉。あげると、たのしさ+20。だいすきな物は+40。'},
-  gf_kai:{name:'貝がら',kind:'gift',nc:1,pc:0,mat:{},desc:'水べでつれた、うすもも色の貝がら。あげると、たのしさ+20。だいすきな物は+40。'},
-  gf_hane:{name:'鳥のはね',kind:'gift',nc:1,pc:0,mat:{},desc:'ふわふわの、白い鳥のはね。あげると、たのしさ+20。だいすきな物は+40。'},
-  gf_matsu:{name:'まつぼっくり',kind:'gift',nc:1,pc:0,mat:{},desc:'かたちのいい、まつぼっくり。あげると、たのしさ+20。だいすきな物は+40。'},
-  gf_oshibana:{name:'おし花',kind:'gift',pc:2,time:30,qty:1,mat:{funba:2},desc:'草花をうすくのばした、おし花。あげると、たのしさ+20。だいすきな物は+40。'},
-  gf_kibori:{name:'木彫りの鳥',kind:'gift',pc:3,time:40,qty:1,mat:{wood:2},desc:'木をけずって作った、小さな鳥。あげると、たのしさ+20。だいすきな物は+40。'},
-  gf_koma:{name:'木のこま',kind:'gift',pc:2,time:30,qty:1,mat:{wood:1,eda:1},desc:'くるくるまわる、木のこま。あげると、たのしさ+20。だいすきな物は+40。'},
-  gf_wara:{name:'わらのにんぎょう',kind:'gift',pc:2,time:30,qty:1,mat:{funba:3},desc:'草をあんで作った、小さなにんぎょう。あげると、たのしさ+20。だいすきな物は+40。'},
-  gf_ehagaki:{name:'絵はがき',kind:'gift',nc:1,shop:30,pc:0,mat:{},desc:'遠い土地の景色の、絵はがき。あげると、たのしさ+20。だいすきな物は+40。'},
-  gf_biidama:{name:'ビー玉',kind:'gift',nc:1,shop:30,pc:0,mat:{},desc:'すきとおった、みどりのビー玉。あげると、たのしさ+20。だいすきな物は+40。'},
-  gf_mangekyo:{name:'まんげきょう',kind:'gift',nc:1,shop:50,pc:0,mat:{},desc:'のぞくと、もようがくるくるかわる。あげると、たのしさ+20。だいすきな物は+40。'},
-  gf_hoshisuna:{name:'星の砂のびん',kind:'gift',nc:1,shop:80,pc:0,mat:{},desc:'星のかたちの砂が入った、小さなびん。あげると、たのしさ+20。だいすきな物は+40。'},
+  gf_kirei:{name:'きれいな石',kind:'gift',nc:1,pc:0,mat:{},desc:'つるつるの、きれいな石。あげると、たのしさ+20。'},
+  gf_garasu:{name:'ガラス玉',kind:'gift',nc:1,pc:0,mat:{},desc:'光にすかすと、きらっとするガラス玉。あげると、たのしさ+20。'},
+  gf_kai:{name:'貝がら',kind:'gift',nc:1,pc:0,mat:{},desc:'水べでつれた、うすもも色の貝がら。あげると、たのしさ+20。'},
+  gf_hane:{name:'鳥のはね',kind:'gift',nc:1,pc:0,mat:{},desc:'ふわふわの、白い鳥のはね。あげると、たのしさ+20。'},
+  gf_matsu:{name:'まつぼっくり',kind:'gift',nc:1,pc:0,mat:{},desc:'かたちのいい、まつぼっくり。あげると、たのしさ+20。'},
+  gf_oshibana:{name:'おし花',kind:'gift',pc:2,time:30,qty:1,mat:{funba:2},desc:'草花をうすくのばした、おし花。あげると、たのしさ+20。'},
+  gf_kibori:{name:'木彫りの鳥',kind:'gift',pc:3,time:40,qty:1,mat:{wood:2},desc:'木をけずって作った、小さな鳥。あげると、たのしさ+20。'},
+  gf_koma:{name:'木のこま',kind:'gift',pc:2,time:30,qty:1,mat:{wood:1,eda:1},desc:'くるくるまわる、木のこま。あげると、たのしさ+20。'},
+  gf_wara:{name:'わらのにんぎょう',kind:'gift',pc:2,time:30,qty:1,mat:{funba:3},desc:'草をあんで作った、小さなにんぎょう。あげると、たのしさ+20。'},
+  gf_ehagaki:{name:'絵はがき',kind:'gift',nc:1,shop:30,pc:0,mat:{},desc:'遠い土地の景色の、絵はがき。あげると、たのしさ+20。'},
+  gf_biidama:{name:'ビー玉',kind:'gift',nc:1,shop:30,pc:0,mat:{},desc:'すきとおった、みどりのビー玉。あげると、たのしさ+20。'},
+  gf_mangekyo:{name:'まんげきょう',kind:'gift',nc:1,shop:50,pc:0,mat:{},desc:'のぞくと、もようがくるくるかわる。あげると、たのしさ+20。'},
+  gf_hoshisuna:{name:'星の砂のびん',kind:'gift',nc:1,shop:80,pc:0,mat:{},desc:'星のかたちの砂が入った、小さなびん。あげると、たのしさ+20。'},
   spike:{name:'とげの罠',fix:1,fixm:{wood:1},kind:'furn',lv:1,pc:1,time:100,maker:'wood',qty:5,trap:1,attr:{earth:.5},mat:{wood:2,stone:2},desc:'上にいる「コワイノ」に、10分ごとに5ダメージ',anim:1},
   sticky:{name:'どくの罠',fix:1,fixm:{funba:1},kind:'furn',lv:2,pc:1,time:80,maker:'wood',qty:2,trap:1,attr:{wood:.5},mat:{funba:2},food:{kinoko:1},desc:'ふんだ「コワイノ」に、1時間、10分ごとに5ダメージ',anim:1},
   puddle:{name:'すべる水たまり',fix:1,fixm:{stone:1},kind:'furn',lv:4,pc:1,time:80,maker:'water',qty:2,trap:1,anim:1,attr:{water:.5},mat:{stone:2},desc:'ふんだ「コワイノ」が10分止まる',anim:1},
@@ -298,7 +298,7 @@ const glassUnlocked=()=>!!S;/* スピードアップ：はじめから使える 
 const hasGlass=()=>TESTSPD||(glassUnlocked()&&(S.glassT||0)>0);/* 使える時間がのこっているあいだだけ。はじめの10分は無料、あとは広告を見ると10分ふえる */
 const fmtT=t=>Math.floor(t/60)+':'+String(Math.floor(t%60)).padStart(2,'0');
 function glassUI(){const e=$('#spdN');if(!e)return;const t=TESTSPD||TESTM?'':(S.speed>1&&S.glassT>0?' '+fmtT(S.glassT):S.glassT>0?'':' 広告');const v='×'+S.speed+t;if(e.textContent!==v)e.textContent=v}
-function adPrompt(){if($('#adBox'))return;const d=document.createElement('div');d.id='adBox';d.style.cssText='position:fixed;inset:0;z-index:70;background:rgba(5,15,14,.72);display:flex;align-items:center;justify-content:center;padding:24px';
+function adPrompt(){if($('#adBox'))return;const d=document.createElement('div');d.id='adBox';d.style.cssText='position:fixed;inset:0;z-index:70;background:rgba(40,30,15,.35);display:flex;align-items:center;justify-content:center;padding:24px';
   d.innerHTML='<div class="pxcard" style="background:var(--panel);color:var(--ink);border-radius:16px;padding:20px;max-width:320px;width:100%;text-align:center;font-weight:700;line-height:1.7"><div>広告を見ると、10分間<br>ゲームの速さを2倍にできるよ</div><div id="adMsg" style="margin:10px 0;font-weight:400;min-height:1.7em"></div><div style="display:flex;gap:8px;justify-content:center"><button class="btn pri" id="adGo">広告を見る</button><button class="btn" id="adNo">やめる</button></div></div>';
   document.body.appendChild(d);const close=()=>d.remove();$('#adNo').onclick=close;
   $('#adGo').onclick=()=>{$('#adGo').disabled=true;$('#adNo').disabled=true;let n=5;const m=$('#adMsg');m.textContent='広告 '+n;const iv=setInterval(()=>{n--;if(n>0){m.textContent='広告 '+n;return}clearInterval(iv);S.glassT=Math.min(1800,(S.glassT||0)+600);sfx('level');toast('スピードアップが10分使えるようになった','good');close();applyFeats()},1000)}}/* 広告を見たらスピードアップ10分（いまは広告のかわりの5秒の画面） */

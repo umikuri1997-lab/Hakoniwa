@@ -1,5 +1,5 @@
 /* ボスが来ることがわかる：オオカゲの日数は、ほかの目標の進みぐあいといっしょに上の欄に出る／
-   ヌシのかけらの2つめは、ささげる前にたしかめる（「あとで」なら、ささげない。「はい」でささげる） */
+   ヌシのかけらの2つめは、ささげる前にたしかめる（「あとで」なら、ささげない。「ささげる」でささげる） */
 const assert=require('node:assert/strict');
 (async()=>{const {browser,page,run,errors}=await require('../sim/boot.cjs')();
   const J=async s=>JSON.parse(await run(s));
@@ -13,8 +13,8 @@ const assert=require('node:assert/strict');
   const b=await J(`(()=>{if(!S.res.some(r=>r.name===POKO))S.res.push(mkRes(S,POKO,'wood',44,58));S.quest=questIndexOf('nushi');S.qTalked=true;S.shards=2;S.setSh=1;S.flags.finalReadyDay=dayNo()-1;
     while(S.res.length<5)S.res.push(mkRes(S,'ためし'+S.res.length,'wood',44,58));sacredRootEnsure();growStoryTree();recount();let off=0;sacredOfferShard=(j,d)=>{off++};
     const j=S.obj.indexOf('tower');sacredTreeTap(j);const ask=document.querySelector('.askyn'),txt=ask&&ask.querySelector('p').textContent;sacredTreeTap(j);const n=document.querySelectorAll('.askyn').length;
-    ask.querySelectorAll('button')[0].click();const later=off;sacredTreeTap(j);document.querySelector('.askyn').querySelectorAll('button')[1].click();
+    ask.querySelectorAll('button')[0].click();const later=off;sacredTreeTap(j);{const y=document.querySelector('.askyn').querySelectorAll('button')[1];y._held=1;y.click();y._held=0}
     S.setSh=0;S.shards=1;sacredTreeTap(j);const first=document.querySelectorAll('.askyn').length;return JSON.stringify({txt,n,later,yes:off,first,j})})()`);
-  assert.ok(b.j>=0,'the sacred tree exists');assert.match(b.txt||'',/今夜にも/);assert.equal(b.n,1,'tapping twice opens one question');assert.equal(b.later,0,'"あとで" must not offer the shard');assert.equal(b.yes,2,'"はい" offers the shard; the first shard is offered without the question');assert.equal(b.first,0);
+  assert.ok(b.j>=0,'the sacred tree exists');assert.match(b.txt||'',/今夜にも/);assert.equal(b.n,1,'tapping twice opens one question');assert.equal(b.later,0,'"あとで" must not offer the shard');assert.equal(b.yes,2,'"ささげる" offers the shard; the first shard is offered without the question');assert.equal(b.first,0);
   console.log('Second shard: asked once before offering ('+b.txt+')');
   assert.deepEqual(errors,[],'no page errors');await browser.close();console.log('ok')})().catch(e=>{console.error(e);process.exit(1)});

@@ -6,13 +6,12 @@
      画面・会話・村レベルのカードが出ているあいだは、とじてから（そのあいだは前の数を出す streakShown）。
    ・はじめての料理の名前めくり（juiceNameFlip）：「？？？」が1字ずつ、くるっとめくれて名前になる。
    ・地図の切れはしがくっつく（juiceMapJoin）：3まいがまわりからよってきて、パチッと合わさり、宝の地図になって×が光る。
-   ・つくった数のふきだしカウント（juiceMadeCount）：依頼ボードでまとめてできた物をしまうとき、せいれいの上で 1・2・3… とふえて、さいごの数ではねる。
    ・村レベルのバーがあふれる（juiceLvUp）：村レベルが上がったら、カードをとじたあとで、上の欄のバーがいっぱいまで満ちて光り、
      光のつぶがこぼれてから、新しい数に焼き印（lvBrand）。
    うごきをへらす設定（uiReduced）では、動かさずに、さいごの形をすぐ出す。 */
-const J3COUNTMS=80,J3COUNTMAX=12,J3HEARTMS=900,J3POPMS=650,J3MAPMS=1500,J3MADEMS=70,J3LVFILL=600,J3LVGLOW=350,J3LVDROP=400;
+const J3COUNTMS=80,J3COUNTMAX=12,J3HEARTMS=900,J3POPMS=650,J3MAPMS=1500,J3LVFILL=600,J3LVGLOW=350,J3LVDROP=400;
 const J3HEARTC={30:['#e86a8a','#ffb3c6'],60:['#d84a7a','#ff8fb0'],100:['#d9a230','#ffe58a']};/* ふち・中の色 */
-const J3H=[],J3M=[];let J3ST=null,J3LV=null;
+const J3H=[];let J3ST=null,J3LV=null;
 function j3OK(){return typeof juiceOK==='function'&&juiceOK()}
 function j3U(k,v,st,dl){/* 本物の録音（playU）を、st 半音だけ高く・dl 秒あとに */if(typeof AC==='undefined'||!AC||!SND.sfx||AC.state!=='running'||typeof playU!=='function')return;try{playU(k,v,Math.pow(2,(st||0)/12),dl||0)}catch(e){}}
 function j3Ding(st,dt,v){j3U('tink',v?v*.6:.18,st,dt)}/* 小さな鈴の「チン」（オルゴールの録音） */
@@ -74,16 +73,6 @@ function juiceMapJoin(){if(!j3OK()||uiReduced()||typeof TRPIX==='undefined')retu
     g.globalAlpha=1;requestAnimationFrame(draw)};requestAnimationFrame(draw)}
 
 /* ---------- つくった数のふきだしカウント ---------- */
-function juiceMadeCount(r,k){if(!j3OK()||!r||k<2||J3M.length>3)return;J3M.push({r,k,t0:performance.now(),n:0})}
-function juiceMadeDraw(now){if(!J3M.length)return;const c=ctx,A=typeof dgAtlas==='function'?dgAtlas():null;if(!A)return;const sm=c.imageSmoothingEnabled;c.imageSmoothingEnabled=false;
-  for(let i=J3M.length-1;i>=0;i--){const m=J3M[i],e=now-m.t0,steps=Math.min(m.k,J3COUNTMAX),inc=Math.ceil(m.k/steps),last=Math.ceil(m.k/inc)*J3MADEMS;
-    if(e>last+900||m.r.hidden){J3M.splice(i,1);continue}
-    const n=Math.min(m.k,(Math.floor(e/J3MADEMS)+1)*inc);if(n>m.n){m.n=n;j3U('twood',.36,JUICE_SCALE[Math.min(Math.round(n/inc)-1,JUICE_SCALE.length-1)])}/* 木をたたく音（録音） */
-    const fin=e>=last,ue=fin?(e-last)/900:0,bump=fin&&ue<.25?-4:fin&&ue<.4?1:0,P=fin&&ue<.25?3:2;/* さいごの数で、ぴょんとはねて大きくなる */
-    const s=String(n),j=(m.r.y|0)*W+(m.r.x|0),lift=typeof hiAt==='function'?hiAt(j)*LIFT:0,cx=m.r.x*TS,cy=(m.r.y-1.9)*TS-lift+bump-Math.round(Math.min(e,300)/300*6);
-    c.globalAlpha=fin&&ue>.7?(1-ue)/.3:1;const w=s.length*6*P,x0=Math.round(cx-w/2);
-    for(let d=0;d<s.length;d++)c.drawImage(A,(+s[d])*7,9,7,9,x0+d*6*P-P,Math.round(cy)-P,7*P,9*P);c.globalAlpha=1}
-  c.imageSmoothingEnabled=sm}
 
 /* ---------- 村レベルのバーがあふれる ---------- */
 function juiceLvUp(e,p,v){/* lvWatch から。村レベルのカードをとじたあとで、バーが満ちる → 光る → つぶがこぼれる → 焼き印 */
@@ -105,9 +94,9 @@ function j3Spill(x,y,n){/* 光のつぶ（UIFX の木くずと同じ動き。金
     UIFX.parts.push({d,x:x+(Math.random()-.5)*6,y,vx:.3+Math.random()*1.4,vy:-.8-Math.random()*1.2,t:0,dust:1,ph:i})}if(!UIFX.raf)UIFX.raf=requestAnimationFrame(tapFxStep)}
 
 /* juice2 から */
-function juice3Frame(now){juiceStreakTick();juiceLvTick(now);juiceResTick()}
-function juice3Draw(now){if(J3H.length)juiceBondDraw(now);juiceMadeDraw(now);juiceFirstDraw(now);juiceDreamDraw(now);juiceSnowDraw(now)}
-function juice3Reset(){J3H.length=0;J3M.length=0;J3ST=null;J3RN=null;J3F.length=0;J3D.length=0;J3S.clear();if(J3LV){J3LV.e.style.visibility='';const x=document.getElementById('xpBar');if(x)x.classList.remove('ufx','uglow');J3LV=null}JLVW=null;JLVL=null;JLVP=null}
+function juice3Frame(now){juiceStreakTick();juiceLvTick(now);juiceResTick();if(typeof juice4Frame==='function')juice4Frame(now)}
+function juice3Draw(now){if(typeof juice4Draw==='function')juice4Draw(now);if(J3H.length)juiceBondDraw(now);juiceFirstDraw(now);juiceDreamDraw(now);juiceSnowDraw(now)}
+function juice3Reset(){if(typeof juice4Reset==='function')juice4Reset();J3H.length=0;J3ST=null;J3RN=null;J3F.length=0;J3D.length=0;J3S.clear();if(J3LV){J3LV.e.style.visibility='';const x=document.getElementById('xpBar');if(x)x.classList.remove('ufx','uglow');J3LV=null}JLVW=null;JLVL=null;JLVP=null}
 
 /* ---------- なかまがふえた数（juiceResTick）：紹介をとじてから、上の欄のせいれいの数をふやし（めくり数字は uiNumWatch）、
    新しい子の上に「+1」、まわりのひまな子がそちらを向く。紹介のあいだは前の数（resShownN） ---------- */
@@ -125,7 +114,7 @@ const J3F=[],J3FMS=3200,J3FPEEL=450;let J3FC=null;
 function juiceFirst(j,id){if(!j3OK()||!BL[id]||BL[id].kind!=='furn'||J3F.length>3)return;J3F.push({j,t0:performance.now()+450,s:0})}
 function j3Sticker(){if(J3FC)return J3FC;const tx='はじめて！',W0=58,H0=16,c=document.createElement('canvas');c.width=W0;c.height=H0;const g=c.getContext('2d');
   g.fillStyle='#ffffff';g.fillRect(1,0,W0-2,H0);g.fillRect(0,1,W0,H0-2);g.fillStyle='#fff3c2';g.fillRect(2,2,W0-4,H0-4);g.fillStyle='#e8d29a';g.fillRect(2,H0-3,W0-4,1);/* 白いふち・クリーム色・下にうすいかげ */
-  const t=document.createElement('canvas');t.width=W0;t.height=H0;const h=t.getContext('2d');h.font='10px PixelMplus10';h.textAlign='center';h.textBaseline='middle';h.fillStyle='#c0503a';h.fillText(tx,W0/2,H0/2);
+  const t=document.createElement('canvas');t.width=W0;t.height=H0;const h=t.getContext('2d');h.font='10px PixelMplus10';h.textAlign='center';h.textBaseline='middle';h.fillStyle='#c0392b';h.fillText(tx,W0/2,H0/2);
   const d=h.getImageData(0,0,W0,H0);for(let i=3;i<d.data.length;i+=4)d.data[i]=d.data[i]>110?255:0;h.putImageData(d,0,0);g.drawImage(t,0,0);t.width=t.height=0;return J3FC=c}
 function juiceFirstDraw(now){if(!J3F.length)return;const c=ctx,sm=c.imageSmoothingEnabled;c.imageSmoothingEnabled=false;const Z=j3Sticker();
   for(let i=J3F.length-1;i>=0;i--){const f=J3F[i],e=now-f.t0;if(e<0)continue;if(e>J3FMS+J3FPEEL){J3F.splice(i,1);continue}

@@ -21,7 +21,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict');
    {const after=await run('JSON.stringify(S)');if(after!==before){const a=JSON.parse(after),b=JSON.parse(before);throw Error('Parent changed '+JSON.stringify(Object.keys(a).filter(k=>JSON.stringify(a[k])!==JSON.stringify(b[k])).map(k=>[k,a[k],b[k]])));}}
    assert.equal(await page.evaluate(()=>localStorage.getItem('hakoniwa-w1-v8')),'parent save sentinel');
    if(process.env.SCREENSHOT_DIR)await page.screenshot({path:process.env.SCREENSHOT_DIR+'/replay-'+key.replace(':','-')+'.png'});
-   await page.getByRole('button',{name:'思い出帳へ戻る',exact:true}).click();
+   await page.getByRole('button',{name:'思い出帳へもどる',exact:true}).click();
    assert.equal(await run('JSON.stringify(S)'),before,'parent changed after '+key);console.log('Replay passed:',key);
  }
  // Closing in mid-scene destroys pending callbacks and returns to the untouched village.
@@ -29,7 +29,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict');
  let child=await (await page.waitForSelector('iframe')).contentFrame();await child.waitForSelector('.replay-start');
  assert(await child.evaluate(()=>sacredEval('!SND.bgm&&!SND.sfx')),'sound settings not inherited');
  await child.locator('.replay-start button').click();await child.waitForSelector('#dialog:not([hidden])');
- await child.evaluate(()=>sacredEval("sacredBeat('water')"));await page.getByRole('button',{name:'思い出帳へ戻る',exact:true}).click();
+ await child.evaluate(()=>sacredEval("sacredBeat('water')"));await page.getByRole('button',{name:'思い出帳へもどる',exact:true}).click();
  await page.waitForTimeout(3000);assert.equal(await run('JSON.stringify(S)'),before,'cancelled scene changed parent');
  assert.deepEqual(errors,[]);await browser.close();console.log('Selected replays: native movement/holds, completion, parent village and storage isolation, sound settings and mid-scene cancellation passed; no browser errors.');
 })().catch(e=>{console.error(e);process.exit(1)});

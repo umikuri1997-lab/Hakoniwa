@@ -2,37 +2,48 @@
    おくりもの（BL の kind:'gift'、もちものは S.inv）：ひろう（つり・コワイノの落とし物・ものひろいの日）・依頼ボードで作る・カミサマのお店（日がわり）。
    せいれいにあげると、なくなって、その子のたからもの（r.trs、GIFTMAX まで。いっぱいなら、いちばん古い物といれかわる）になる。
    好み（giftLike：2 だいすき1つ・1 すき GIFTLIKE%・0 ふつう。id と物で決まり、しまわない）。たのしさ+GIFTFUN（だいすきは+GIFTLOVE）。わかった好みは r.gk。
+   素材（'m:'+素材）もあげられる：たのしさ+GIFTMAT だけ（たからもの・好みにはならない）。
    あげるのは1人に1日1回（r.care.gift）。ひまなとき、たからものを頭の上にかかげて、ながめる（trlook）。 */
 const GIFTFUN=20,GIFTLOVE=40,GIFTLIKE=25,GIFTMAX=3,GIFTLOOKP=.08,GIFTLOOKCD=360;
 const GIFTIDS=['gf_kirei','gf_garasu','gf_kai','gf_hane','gf_matsu','gf_oshibana','gf_kibori','gf_koma','gf_wara','gf_ehagaki','gf_biidama','gf_mangekyo','gf_hoshisuna'];
 const GIFTFISH=['gf_kirei','gf_garasu','gf_kai'],GIFTDROP=['gf_kirei','gf_garasu','gf_hane','gf_matsu'],GIFTSHOP=GIFTIDS.filter(id=>BL[id].shop);
 const GIFTFISHP=.03,GIFTDROPP=.02,GIFTMONOP=.25,GIFTSHOPN=2;/* つり3%・コワイノの落とし物2%・ものひろいの日の落とし物1つごとに25%・お店は1日に2しゅるい */
-const GLNAME=['ふつう','すき','だいすき'];
+const GLNAME=['ふつう','すき','だいすき'],GIFTMAT=5;
+const isGM=id=>typeof id==='string'&&id.slice(0,2)==='m:';/* 素材のおくりもの */
+const presentName=id=>isGM(id)?MATN[id.slice(2)]||'':BL[id]?BL[id].name:'';
+const giftHave=id=>isGM(id)?S.mat[id.slice(2)]||0:inv(id);
+function giftMatIco(k){const MOBJ={shina:'weed0g',kasa:'weed0k',kuru:'weed1g',chiri:'weed1k',funba:'weedc'};return ICONS[k]||(MOBJ[k]&&BL[MOBJ[k]]?iconURL(MOBJ[k]):'')}
+const giftAny=()=>GIFTIDS.some(id=>inv(id)>0)||Object.keys(MATN).some(k=>(S.mat[k]||0)>0);
 function giftLike(r,id){if(!r||!BL[id])return 0;const n=GIFTIDS.length,love=Math.floor(hash(((r.id||0)*613+29)>>>0)*n);if(GIFTIDS[love]===id)return 2;return hash(((r.id||0)*389+strH(id))>>>0)*100<GIFTLIKE?1:0}
 function giftKnown(r,v){const K=r.gk||{};return GIFTIDS.filter(id=>K[id]===v&&giftLike(r,id)===v)}
 function giftKnownText(r,v){const L=giftKnown(r,v).map(id=>BL[id].name);return L.length?L.join('・'):'？？？'}
 function giftTrText(r){const L=(r.trs||[]).filter(id=>BL[id]).map(id=>BL[id].name);return L.length?L.join('・'):'まだない'}
 const giftToday=r=>!!(r.care&&r.care.gift===callDay());
 /* あげる：なくなって、たからものになる */
-function presentGive(r,id){if(!r||!BL[id]||inv(id)<1||giftToday(r))return false;S.inv[id]--;if(!S.inv[id])delete S.inv[id];(r.care||(r.care={})).gift=callDay();
-  const v=giftLike(r,id),gain=v===2?GIFTLOVE:GIFTFUN;r.fun=Math.min(100,r.fun+gain);const T=r.trs||(r.trs=[]);T.push(id);while(T.length>GIFTMAX)T.shift();
+function presentGive(r,id){if(!r||giftToday(r))return false;if(isGM(id))return matGive(r,id.slice(2));if(!BL[id]||inv(id)<1)return false;S.inv[id]--;if(!S.inv[id])delete S.inv[id];(r.care||(r.care={})).gift=callDay();
+  const v=giftLike(r,id),gain=v===2?GIFTLOVE:GIFTFUN;funAdd(r,gain,'care');const T=r.trs||(r.trs=[]);T.push(id);while(T.length>GIFTMAX)T.shift();
   const first=!(r.gk&&r.gk[id]!=null);(r.gk||(r.gk={}))[id]=v;dirty=true;
-  if(!r.hidden){const now=performance.now();JOYU.set(r,now+(v?3000:1800));if(!(typeof inBattle==='function'&&inBattle(r))){RHOLD.set(r,now+(v?3000:1800));if(v)JUMP.set(r,now)}fxSpr('hearts',r.x*TS,(r.y-.7)*TS);r.bubble=v===2?'💕':'😊';
-    addFloat(r.x,r.y-1.6,chatTone(v===2?'わあ……！ これ、だいすき！':v?'うれしい！ ありがとう！':'ありがとう。だいじにするね。',r,0),v===2?'#ffd6e6':'#fff3d6');sfx(v?'good':'tap')}
+  if(!r.hidden){const now=performance.now();JOYU.set(r,now+(v?3000:1800));if(!(typeof inBattle==='function'&&inBattle(r))){RHOLD.set(r,now+(v?3000:1800));if(v)JUMP.set(r,now)}fxSpr('hearts',r.x*TS,(r.y-.7)*TS);r.bubble=v===2?'💕':'😊';sfx(v?'good':'tap')}/* 文字は出さない */
   if(first&&v)toast(r.name+'の、'+GLNAME[v]+'なおくりものがわかった','good');
   logEv(r.name+'に'+BL[id].name+'をあげた');return true}
+/* 素材をあげる：たのしさ+GIFTMAT（たからものにはしない）。S.mat をへらすと、boxSync が箱からへらす */
+function matGive(r,k){if(!MATN[k]||(S.mat[k]||0)<1)return false;S.mat[k]--;(r.care||(r.care={})).gift=callDay();funAdd(r,GIFTMAT,'care');dirty=true;
+  if(!r.hidden){const now=performance.now();JOYU.set(r,now+1800);if(!(typeof inBattle==='function'&&inBattle(r)))RHOLD.set(r,now+1800);r.bubble='😊';sfx('tap')}
+  logEv(r.name+'に'+MATN[k]+'をあげた');return true}
 /* もちものから：だれにあげるか */
-function giftWho(id){const o=el('<div style="position:fixed;inset:0;z-index:46;display:flex;align-items:center;justify-content:center;background:rgba(30,24,16,.45);padding:24px"><div class="pxcard" style="background:var(--panel);padding:16px 18px;max-width:340px;width:100%;color:var(--ink);max-height:80vh;overflow:auto"><b class="t" style="font-size:16px;display:block;margin-bottom:8px"></b><div class="rows"></div><div style="display:flex;justify-content:flex-end;margin-top:10px"><button class="btn x">とじる</button></div></div></div>');
-  const close=()=>o.remove();o.querySelector('.x').onclick=()=>{sfx('tap');close()};o.onclick=e=>{if(e.target===o)close()};o.querySelector('.t').textContent=BL[id].name+'を、だれにあげる？';const g=o.querySelector('.rows');
-  for(const r of S.res){const kn=r.gk&&r.gk[id]!=null?GLNAME[r.gk[id]]:'',row=rowEl(r.name,ELEM[r.elem].name+'のせいれい'+(kn?'・'+kn:'')),b=el('<button class="btn pri">あげる</button>');row.appendChild(b);lackOn(b,giftToday(r)?'きょうは、もうあげた':'');
-    b.onclick=()=>{if(giftToday(r)||inv(id)<1)return;presentGive(r,id);close();if(sheet)renderSheet()};g.appendChild(row)}
+function giftWho(id){const o=el('<div style="position:fixed;inset:0;z-index:46;display:flex;align-items:center;justify-content:center;background:rgba(40,30,15,.35);padding:24px"><div class="pxcard" style="background:var(--panel);padding:16px 18px;max-width:340px;width:100%;color:var(--ink);max-height:80vh;overflow:auto"><b class="t" style="font-size:16px;display:block;margin-bottom:8px"></b><div class="rows"></div><div style="display:flex;justify-content:flex-end;margin-top:10px"><button class="btn x">とじる</button></div></div></div>');
+  const close=()=>o.remove();o.querySelector('.x').onclick=()=>{sfx('tap');close()};o.onclick=e=>{if(e.target===o)close()};o.querySelector('.t').textContent=presentName(id)+'を、だれにあげる？';const g=o.querySelector('.rows');
+  for(const r of S.res){const kn=!isGM(id)&&r.gk&&r.gk[id]!=null?GLNAME[r.gk[id]]:'',row=rowEl(r.name,ELEM[r.elem].name+'のせいれい'+(kn?'・'+kn:'')),b=el('<button class="btn pri">あげる</button>');row.appendChild(b);lackOn(b,giftToday(r)?'きょうは、もうあげた':'');
+    b.onclick=()=>{if(giftToday(r)||giftHave(id)<1)return;presentGive(r,id);close();if(sheet)renderSheet()};g.appendChild(row)}
   document.body.appendChild(o)}
 /* お世話のタブから：なにをあげるか */
-function giftWhat(r,done){const o=el('<div style="position:fixed;inset:0;z-index:46;display:flex;align-items:center;justify-content:center;background:rgba(30,24,16,.45);padding:24px"><div class="pxcard" style="background:var(--panel);padding:16px 18px;max-width:340px;width:100%;color:var(--ink);max-height:80vh;overflow:auto"><b class="t" style="font-size:16px;display:block;margin-bottom:8px"></b><div class="rows"></div><div style="display:flex;justify-content:flex-end;margin-top:10px"><button class="btn x">とじる</button></div></div></div>');
-  const close=()=>o.remove();o.querySelector('.x').onclick=()=>{sfx('tap');close()};o.onclick=e=>{if(e.target===o)close()};o.querySelector('.t').textContent=r.name+'に、なにをあげる？';const g=o.querySelector('.rows'),L=GIFTIDS.filter(id=>inv(id)>0);
-  if(!L.length)g.appendChild(nodata('box','おくりものは、まだないよ'));
+function giftWhat(r,done){const o=el('<div style="position:fixed;inset:0;z-index:46;display:flex;align-items:center;justify-content:center;background:rgba(40,30,15,.35);padding:24px"><div class="pxcard" style="background:var(--panel);padding:16px 18px;max-width:340px;width:100%;color:var(--ink);max-height:80vh;overflow:auto"><b class="t" style="font-size:16px;display:block;margin-bottom:8px"></b><div class="rows"></div><div style="display:flex;justify-content:flex-end;margin-top:10px"><button class="btn x">とじる</button></div></div></div>');
+  const close=()=>o.remove();o.querySelector('.x').onclick=()=>{sfx('tap');close()};o.onclick=e=>{if(e.target===o)close()};o.querySelector('.t').textContent=r.name+'に、なにをあげる？';const g=o.querySelector('.rows'),L=GIFTIDS.filter(id=>inv(id)>0),M=Object.keys(MATN).filter(k=>(S.mat[k]||0)>0);
+  if(!L.length&&!M.length)g.appendChild(nodata('box','あげられる物は、まだないよ'));
   for(const id of L){const kn=r.gk&&r.gk[id]!=null?GLNAME[r.gk[id]]:'',row=rowEl(BL[id].name+'　×'+inv(id),kn,giftIco(id)),b=el('<button class="btn pri">あげる</button>');row.appendChild(b);
     b.onclick=()=>{if(giftToday(r)||inv(id)<1)return;presentGive(r,id);close();if(done)done()};g.appendChild(row)}
+  for(const k of M){const row=rowEl(MATN[k]+'　×'+S.mat[k],'',giftMatIco(k)),b=el('<button class="btn pri">あげる</button>');row.appendChild(b);
+    b.onclick=()=>{if(giftToday(r)||(S.mat[k]||0)<1)return;presentGive(r,'m:'+k);close();if(done)done()};g.appendChild(row)}/* 素材 */
   document.body.appendChild(o)}
 /* カミサマのお店：日がわりで GIFTSHOPN しゅるい。1日にそれぞれ1こまで（S.gshop：{d,b}） */
 function giftShopToday(){const d=callDay(),L=GIFTSHOP.slice().sort((a,b)=>hash((d*911+strH(a))>>>0)-hash((d*911+strH(b))>>>0));return L.slice(0,GIFTSHOPN)}

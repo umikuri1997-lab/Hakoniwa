@@ -104,11 +104,11 @@ NEW = [
  ('きのこのおやき', 'kinoko komugiko', [C], F, 'cake'), ('きのこパン', 'kinoko komugiko', [O], E, 'bread'),
  # とくべつな魚
  ('うまき', 'unagi egg', [C, O], F, 'plate'),
- ('アユのしおやき', 'ayu', [C, O], F, 'skewer'),
- ('コイのあまに', 'koi', [C, O], W, 'bowl'),
- ('ナマズのかばやき', 'namazu', [C, O], F, 'plate'),
+ ('ハヤセのしおやき', 'ayu', [C, O], F, 'skewer'),
+ ('キンヒレのあまに', 'koi', [C, O], W, 'bowl'),
+ ('ヒゲヌシのかばやき', 'namazu', [C, O], F, 'plate'),
  ('ゆうやけマスのくしやき', 'yumasu', [C, O], F, 'skewer'),
- ('ナマズのフライ', 'namazu komugiko', [C, O], F, 'plate'),
+ ('ヒゲヌシのフライ', 'namazu komugiko', [C, O], F, 'plate'),
  # 3しゅるい
  ('やさいのシチュー', 'imo tomato milk', [C, O], W, 'bowl'),
  ('さかなのポトフ', 'imo tomato fish', [C, O], W, 'bowl'),
@@ -138,6 +138,16 @@ BAD = {'さかなのベリーソース': 'むらさきのさかな', 'あまず�
        'キャベツのベリーに': 'むらさきキャベツに', 'キャベツのりんごに': 'あまったるいキャベツ', 'ベリーのたまごやき': 'むらさきたまごやき'}
 BASE = ['mugi', 'imo', 'tomato', 'berry', 'apple', 'egg', 'milk', 'fish', 'takenoko', 'kinoko', 'komugiko']
 PT = {1: (2, .9), 2: (3, 1.35), 3: (4, 1.8)}
+# 季節の料理：あたたかい料理（火・かまどで作る、うつわ・カップの料理。ジャムなどはのぞく）は冬の寒さ、つめたい料理（調理台で作るカップの料理）は夏の暑さが、
+#   時計の6時間（せいれいの時間 540。DAYLEN 1.5）とどかない（season.js の seaWarm・seaTired、r.warmT・r.coolT）
+SEAT = 540
+NOTWARM = {'ベリージャム', 'フルーツジャム', 'うなぎのまぜむぎ'}
+def seasonal(nm, st, typ, ef, fx):
+    if typ in ('bowl', 'cup') and st != [T] and nm not in NOTWARM:
+        ef['warm'] = SEAT; fx = (fx + '・' if fx else '') + '6時間、冬の寒さがとどかない'
+    elif typ == 'cup' and st == [T]:
+        ef['cool'] = SEAT; fx = (fx + '・' if fx else '') + '6時間、夏の暑さがとどかない'
+    return ef, fx
 
 def eff(ins, st, typ):
     fun = sum(15 for k in ins if k in FUN) + (10 if typ in ('cake', 'cup', 'dango') else 0)
@@ -171,6 +181,7 @@ def main():
         hard = len(ins) + (1 if O in st else 0)
         tm = {1: 35, 2: 49, 3: 63, 4: 77}[min(4, hard)]
         ef, fx = eff(ins, st[0], typ)
+        ef, fx = seasonal(nm, st, typ, ef, fx)
         if nm in BAD: nm = BAD.pop(nm); ef, fx = {'fun': -15}, 'たのしさ−15'
         pt, pw = PT[min(3, max(1, (v + 1) // 2))]
         out.append(dict(id=k, i=ins, st=st, el=el, time=tm,

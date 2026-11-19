@@ -55,7 +55,7 @@ const assert=require('node:assert/strict');
   console.log(r);
   assert.equal(r.fenceWalk,false,'fence blocks');assert.ok(r.pen>0,'pen found');assert.equal(r.huts,1);assert.equal(r.open,null,'open fence is not a pen');
   assert.equal(r.noStray,0,'no stray at 99%');assert.equal(r.stray,true,'stray came');assert.equal(r.strayOut,true,'outside village');
-  assert.ok(r.spop.includes('野良のハネマリ')&&r.spop.includes('おむかえ'),r.spop);assert.equal(r.atTap,true,'tap finds stray');assert.equal(r.going,true,'spirit goes');assert.ok(r.led>=0,'leading');assert.ok(r.home>=0,'settled');assert.equal(r.inPen0,true);assert.equal(r.h,true);
+  assert.ok(r.spop.includes('野良のハネマリ')&&r.spop.includes('むかえる'),r.spop);assert.equal(r.atTap,true,'tap finds stray');assert.equal(r.going,true,'spirit goes');assert.ok(r.led>=0,'leading');assert.ok(r.home>=0,'settled');assert.equal(r.inPen0,true);assert.equal(r.h,true);
   assert.deepEqual(r.sdrop,['food:egg:1:true','mat:wool:1:true','food:milk:1:true',0],'stray drops '+r.sdrop);
   assert.equal(r.strayGone,true,'stray leaves at 18');assert.equal(r.spots,5);assert.equal(r.hints,5);
   assert.deepEqual(r.ani,['hane']);assert.equal(r.inPen,true);

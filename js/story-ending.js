@@ -94,4 +94,4 @@ function startSacredQuiet(){
 let SHARDASK=false,SHARDOK=false;
 function shardWarnAsk(j){if(WD!==0||S.cleared||(S.setSh||0)!==1||finalDefenseBegun())return false;if(SHARDOK){SHARDOK=false;return false}if(SHARDASK)return true;
   const r=S.flags.finalReadyDay,soon=r!=null&&r<=dayNo()&&!isNight()&&S.res.length>=5&&S.res.some(q=>q.name===POKO)&&cnt('tower')>=1;/* finalCheck と同じ条件で、その日の夜に来るか */
-  SHARDASK=true;const S0=S;askYesNo('ヌシのかけら',soon?'この光をささげると、御神木の力に、影たちが気づく。今夜にも、大きな影の群れがやってくる。ささげる？':'この光をささげると、御神木の力に、影たちが気づく。もうすぐ、大きな影の群れがやってくる。ささげる？',()=>{SHARDASK=false;if(S!==S0)return;SHARDOK=true;sacredTreeTap(j)},()=>{SHARDASK=false});return true}
+  SHARDASK=true;const S0=S;askYesNo('ヌシのかけら',soon?'この光をささげると、御神木の力に、影たちが気づく。今夜にも、大きな影の群れがやってくる。ささげる？':'この光をささげると、御神木の力に、影たちが気づく。もうすぐ、大きな影の群れがやってくる。ささげる？',()=>{SHARDASK=false;if(S!==S0)return;SHARDOK=true;sacredTreeTap(j)},()=>{SHARDASK=false},'ささげる',1);return true}
