@@ -24,7 +24,7 @@ function puddleLv(){if(!S||seasonNow()===3)return 0;const h=hour();if(S.rain)ret
   if(S.wetD===dayNo()&&h>=6&&h<FEEL_DRYH)return 1-(h-6)/(FEEL_DRYH-6);return 0}/* 雨のつぎの日：昼にかけてかわく */
 function pudCell(i){/* そのマスに水たまりの絵が出るか（水たまりが出ている日のこと。見えている所と同じ決まり） */const gr=S.ground[i];if(gr===1||gr===2||S.obj[i]||FEELIN.has(i)||RUGC.has(i)||S.fog&&fogAt(i))return false;const f=S.floor[i];if(f&&f!=='path'&&f!=='gravel'&&f!=='stone'&&f!=='brick')return false;
   return hash(i*29+1)<(REV.has(i)&&!f?FEEL_PUDG:FEEL_PUDP)}
-function rainPud(i){return !!S&&!(snowCover()>0&&!feelMelt(i))&&puddleLv()>0&&pudCell(i)}/* 水たまりが見えているマス：せいれいもコワイノも、すべる */
+function rainPud(i){return !!S&&isNight()&&!(snowCover()>0&&!feelMelt(i))&&puddleLv()>0&&pudCell(i)}/* 夜（23時〜6時）、水たまりが見えているマス：せいれいもコワイノも、すべる */
 const RAINSLIP=7.5,RAINSLIPB=1.5;/* 雨の水たまりで止まる時間（すべる水たまりの罠の半分：5分、オオカゲなどは1分） */
 function rainSlip(r){/* せいれいが水たまりでつるっとすべって、止まる。出てから、またふむと、またすべる */if(r.slipT>S.t){r.stT=S.t;return true}const j=(r.y|0)*W+(r.x|0);
   if(!rainPud(j)){r.slipJ=-1;return false}if(r.slipJ===j)return false;r.slipJ=j;r.slipT=S.t+RAINSLIP;r.stT=S.t;sfxAt('bonk',r.x,r.y);fxSpr('slip',r.x*TS,r.y*TS);SHOCKU.set(r,performance.now()+1200);return true}
