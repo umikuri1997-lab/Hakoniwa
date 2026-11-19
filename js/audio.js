@@ -214,7 +214,6 @@ function sfx(k){
   case'block':if(playS('wdon',.5))break;tone(260,t,.07,'square',.05,o,520);tone(83,t+.05,.07,'triangle',.06,o);break;
   case'plant':playU('tsoil',.3,1.05);playU('tgrass',.22,1.1,.06);break;/* 植えた：土をそっとかぶせて、葉がこすれる（本物の録音） */
   case'equip':playS('equip',.8);break;
-  case'firstDiscovery':seq([72,76,79,84,88],.065,'sine',.07,.28);break;
   case'furn':seq([72,76,79,84],.06,'triangle',.07);break;
   case'furnPlace':if(playS('furniturePlace',.72))break;seq([72,76,79,84],.06,'triangle',.07);break;
   case'matDrop':if(playS('matDrop',.8))break;tone(520,t,.06,'triangle',.06,o,260);break;

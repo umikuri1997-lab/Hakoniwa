@@ -59,15 +59,19 @@ function shadow(c,x,y,w,h){/* 足もとのかげ。画面に毎コマ描くと�
 /* 生き物（飼う生き物・小さな生き物）の足もとのかげ：ドットのだ円（d：1ドットの大きさ、ゲームの点）。まわり1ドットはうすく、中はこく（DSHA）。
    画面に毎コマ描くときは、足もとのかげ（shadow）と同じく、時間で向き（sunLean）と長さ（sunLen）をかえる */
 const DSHA=[.10,.20];
-function dotShadow(c,cx,y,hw,hh,al){if(!(al>0)||hw<1)return;
-  const length=c===ctx?sunLen():1,lean=c===ctx?sunLean():0,fill=c.fillStyle;
-  hw*=1+.5*Math.abs(lean);hh*=length;cx+=hw*.45*lean;
-  for(const [scale,opacity] of [[1,DSHA[0]],[.74,DSHA[1]]]){
-    c.fillStyle='rgba(40,30,20,'+(opacity*al)+')';
-    c.beginPath();c.ellipse(cx,y,hw*scale,hh*scale,0,0,2*Math.PI);c.fill();
-  }
-  c.fillStyle=fill;
-}
+function dotShadow(c,cx,y,hw,hh,al,d){if(!(al>0)||hw<1)return;d=d||1;const L=(c===ctx?sunLen():1),S0=c===ctx?sunLean():0;hw*=1+.5*Math.abs(S0);hh=Math.max(d,hh*L);cx+=Math.round(hw*.45*S0/d)*d;
+  const n=Math.max(1,Math.round(hh*2/d)),y0=y-Math.round(n/2)*d+d,fs=c.fillStyle;
+  for(let r=0;r<n;r++){const t=((r+.5)/n)*2-1,ho=Math.round(hw*Math.sqrt(Math.max(0,1-t*t))/d)*d,hi=Math.round((hw-1.5*d)*Math.sqrt(Math.max(0,1-t*t*1.35))/d)*d,yy=y0+r*d;if(ho<=0)continue;
+    c.fillStyle='rgba(40,30,20,'+(DSHA[0]*al).toFixed(3)+')';c.fillRect(cx-ho,yy,2*ho,d);
+    if(hi>0){c.fillStyle='rgba(40,30,20,'+(DSHA[1]*al).toFixed(3)+')';c.fillRect(cx-hi,yy,2*hi,d)}}
+  c.fillStyle=fs}
+/* チップの足もとのはば：絵の下のほう（すきとおっていない所の、下から30%の行）の、左のはし・右のはし（g64のドット）。チップごとに1回だけしらべる */
+function chipFoot(ch,im){if(ch._ft!==undefined)return ch._ft;if(!im||!im.ok)return null;let r=null;
+  try{const w=im.width,h=im.height,a=im.getContext('2d').getImageData(0,0,w,h).data;let top=-1,bot=-1;
+    for(let y=0;y<h&&top<0;y++)for(let x=0;x<w;x++)if(a[(y*w+x)*4+3]>0){top=y;break}
+    for(let y=h-1;y>=0&&bot<0;y--)for(let x=0;x<w;x++)if(a[(y*w+x)*4+3]>0){bot=y;break}
+    if(top>=0){const y1=Math.floor(bot-(bot-top+1)*.3);let l=w,rr=-1;for(let y=Math.max(0,y1);y<=bot;y++)for(let x=0;x<w;x++)if(a[(y*w+x)*4+3]>0){if(x<l)l=x;if(x>rr)rr=x}if(rr>=l)r={l,r:rr+1}}}catch(e){r=null}
+  ch._ft=r;return r}
 function drawBarren(c,i,x,y){
   const h=hash(i);
   c.fillStyle=WD===1?'#a39280':'#b3a37c';c.fillRect(x,y,TS,TS);/* 火山のふもとは灰まじりの土 */
