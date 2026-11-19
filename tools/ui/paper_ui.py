@@ -707,6 +707,34 @@ def metal_rows():
     return rows
 
 
+def mtape_rows(kind, up, W=48, H=13):
+    """色つきのマスキングテープ（W×H）：ななめにはった形（左から右へ、up なら上がり・でなければ下がり、3ドット）。はしは手でちぢった、ぎざぎざ。
+    もよう：0 水玉・1 しま・2 こうし・3 むじ（まん中に光の線）。a 地・p もよう・e ふち（少しこい）"""
+    import random
+    rnd = random.Random(kind * 7 + up)
+    rows = [['.'] * W for _ in range(H)]
+    for x in range(W):
+        o = round(3 * x / (W - 1)); o = (3 - o) if up else o
+        top, bot = o, o + H - 4
+        jag = 1 if (x < 2 or x > W - 3) else 0
+        for y in range(top, bot + 1):
+            if x in (0, W - 1) and rnd.random() < .45: continue
+            if jag and (y == top or y == bot) and rnd.random() < .6: continue
+            e = y in (top, bot)
+            v = y - top
+            if e: c = 'e'
+            elif kind == 0: c = 'p' if (x % 6 in (2, 3) and v in (3, 4)) or (x % 6 in (5, 0) and v in (6, 7)) else 'a'
+            elif kind == 1: c = 'p' if (x + v) % 6 < 2 else 'a'
+            elif kind == 2: c = 'p' if (x % 5 == 0) or (v == 4) else 'a'
+            else: c = 'p' if v == 2 else 'a'
+            rows[y][x] = c
+    return [''.join(r) for r in rows]
+
+
+TAPEPAL = [{'a': '#f3bcc4d8', 'p': '#fff4f2e8', 'e': '#d9909cd8'}, {'a': '#bfe2cad8', 'p': '#e6f6ead8', 'e': '#8fbf9fd8'},
+           {'a': '#f4dc8ed8', 'p': '#e9c35ed8', 'e': '#cfae55d8'}, {'a': '#bdd6f0d8', 'p': '#e8f2fcd8', 'e': '#8fafd3d8'}]
+
+
 def mbook_css():
     fib = svg(ptex_rows(), {'d': '#8a6a3a20', 'm': '#8a6a3a0e', 'l': '#ffffff60'})
     cloth = svg(cloth_rows(), {'a': '#ffffff1c', 'b': '#0000001c'})
@@ -717,10 +745,11 @@ def mbook_css():
     metal = svg(metal_rows(), {'a': '#d9aa4e', 'h': '#f3d48a', 'd': '#a77a2c', 'w': '#fff4cc', 'n': '#8a6224'})
     rib = svg(rib_rows(), RIBPAL)
     old = svg(oldpaper_rows(), {'d': '#7a5a300a', 'l': '#ffffff14'})
+    tp = ';'.join(f'--tp{k}{"u" if up else "d"}:' + svg(mtape_rows(k, up), TAPEPAL[k]) for k in range(4) for up in (1, 0))
     return '\n'.join([
         '/* 思い出帳・図鑑：本（book.js）。紙のすき目・しみ・角の金のかざり（GOLD）・表紙の布の織り目・角の金具・見出しのリボン・紙テープ・写真の角どめ */',
         f'.sheet[data-k="record"],.sheet[data-k="zukan"]{{height:80%}}',
-        f'.bk{{--old:{old};--fib:{fib};--cloth:{cloth};--tape:{tape};--pcorner:{pc};--gtl:{gtl};--gtr:{gtr};--gbl:{gbl};--gbr:{gbr};--stain:{stain};--metal:{metal};--rib:{rib}}}',
+        f'.bk{{{tp};--old:{old};--fib:{fib};--cloth:{cloth};--tape:{tape};--pcorner:{pc};--gtl:{gtl};--gtr:{gtr};--gbl:{gbl};--gbr:{gbr};--stain:{stain};--metal:{metal};--rib:{rib}}}',
     ])
 
 

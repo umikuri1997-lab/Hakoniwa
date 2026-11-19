@@ -673,19 +673,15 @@ function renderSheet(){
     }else if(sheetArg==='bondmap'){bondMapSec(body);/* なかよしの図（bond-map.js） */
     }else if(sheetArg==='cal'){calSec(body);/* こよみ（calendar.js） */
     }else if(sheetArg==='gup'){treeSec(body);/* むらのちから：村の枝（vpath.js）と守り神の枝（GUP・GUPC は night.js）の木 */
-    }else if(sheetArg==='record'){reflectSec(body);appendStoryReplays(body);diaryList(body);/* 村の記録の章は、日記におきかえた（村の記録は、ゲームの中で数えつづける） */if(typeof letterSec==='function')letterSec(body);photoSec(body);
-      const st=el('<div class="sec"><h3>これまで</h3><div class="recs"></div></div>'),rw=st.querySelector('.recs');
+    }else if(sheetArg==='record'){reflectSec(body);appendStoryReplays(body);/* 日記に、これまで・村の写真・できごとをまとめた（村の記録の章もなくした） */
+      const st=el('<div class="sec"><div class="mtt tape">きょうまで</div><div class="recs"></div></div>'),rw=st.querySelector('.recs');
       for(const[a,b]of[['すごした日',dayNo()+'日'],['のりこえた夜',(S.nights||0)+'回'],['いまのせいれい',S.res.length+'人'],['よんだせいれい',(S.summons||0)+'人'],['消えてしまったせいれい',(S.deaths||0)+'人'],
         ['追いはらった「コワイノ」',(S.kills||0)+'体'],['オオカゲ',(S.bossKills||0)+'回'],[SHN(),(S.shards||0)+'つ'],['めぶきのしずく',(S.mebuki||0)+'こ'],['ためたせいれいパワー',Math.floor(S.totalPt||0)+''],['みどりのマス',GRASSN+'マス'],['村レベル','Lv'+S.lv],['たっせいした目標',S.quest+'こ']]){const d=el('<div class="st"><span></span><b></b></div>');d.firstChild.textContent=a;d.lastChild.textContent=b;rw.appendChild(d)}
-      body.appendChild(st);
+      diaryList(body,st);if(typeof letterSec==='function')letterSec(body);
       if((S.gone||[]).length){/* いなくなったなかま：名前・いっしょにいた日・なかよしとの思い出 */const sec=el('<div class="sec"><h3>いなくなったなかま</h3><div class="rows"></div></div>'),rw2=sec.querySelector('.rows');
         for(const e of S.gone.slice().reverse()){const r=el('<div class="row"><div class="tx"><b></b><small style="white-space:normal"></small></div></div>');r.querySelector('b').textContent=e.name+'（'+ELEM[e.elem].name+'のせいれい）';
           r.querySelector('small').textContent=e.came+'日めから'+e.day+'日めまで、'+Math.max(1,e.day-e.came+1)+'日いっしょにいた'+(e.back?'。'+e.back+'日めに、もどってきた':'')+(e.mem?'\n'+e.mate+'との思い出：「'+e.mem+'」':'');r.querySelector('small').style.whiteSpace='pre-line';rw2.appendChild(r)}
         body.appendChild(sec)}
-      /* 思い出帳ときろくをひとつに：日ごとのできごと */
-      const E=[];(S.memo||[]).forEach(([d,e,t],i)=>E.push([d,i,t,e]));(S.log||[]).forEach(([d,t],i)=>E.push([d,1e4+i,t,'']));E.sort((a,b)=>b[0]-a[0]||b[1]-a[1]);
-      if(!E.length)body.appendChild(el('<div class="sec"><h3>できごと</h3><p class="note">はじめての出来事が、ここにのこります。</p></div>'));
-      let cur=null,rows=null;for(const[d,,t,e]of E){if(d!==cur){cur=d;const sc=el('<div class="sec"><h3></h3><div class="rows"></div></div>');sc.querySelector('h3').textContent=d+'日め';rows=sc.querySelector('.rows');body.appendChild(sc)}rows.appendChild(e===''?rowEl(t,''):memoRow(e,t))}
       memBook(body);/* 思い出帳は、ページをめくる本にする（目次つき） */
     }else if(sheetArg==='talks'){
       const H=(S.dlog||[]).slice().reverse();if(!H.length)body.appendChild(el('<p class="note">まだありません</p>'));

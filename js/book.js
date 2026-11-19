@@ -16,19 +16,19 @@ function bkSpread(){return innerWidth>innerHeight&&innerWidth>=720}
 function bkEase(p){return p<.5?2*p*p:1-2*(1-p)*(1-p)}
 function bookMake(body,pages,o){o=o||{};const sp=bkSpread(),N=pages.length;let at=Math.max(0,Math.min(N-1,o.at|0));if(sp)at-=at%2;
   const b=el('<div class="bk"><div class="bkin"><div class="bkboard"><i></i><i></i><i></i><i></i></div><div class="bkp bkL"><div class="bkc"></div><span class="bkn"></span></div><div class="bkp bkR"><i class="bkpeek" aria-hidden="true"></i><div class="bkc"></div><span class="bkn"></span></div><i class="bkrib" aria-hidden="true"></i><canvas class="bkfx" aria-hidden="true"></canvas></div><div class="mnav"><button class="btn mpv" type="button" aria-label="まえのページ">'+pxi('next','prev')+'</button><button class="btn mtc" type="button">もくじ</button><span class="mpn"></span><button class="btn mnx" type="button" aria-label="つぎのページ">'+pxi('next','nxr')+'</button></div></div>');
-  b.dataset.sp=sp?1:0;if(o.cover&&o.cover.c)b.style.setProperty('--cv',o.cover.c);{const st=document.createElement('div');st.className='bkstore';st.hidden=true;for(const pg of pages)st.appendChild(pg);b.appendChild(st)}/* まだひらいていないページも、本の中にしまっておく（さがせる） */if(o.cls)b.classList.add(o.cls);body.appendChild(b);
+  bkTapes(pages);b.dataset.sp=sp?1:0;if(o.cover&&o.cover.c)b.style.setProperty('--cv',o.cover.c);{const st=document.createElement('div');st.className='bkstore';st.hidden=true;for(const pg of pages)st.appendChild(pg);b.appendChild(st)}/* まだひらいていないページも、本の中にしまっておく（さがせる） */if(o.cls)b.classList.add(o.cls);body.appendChild(b);
   const B=BK={el:b,in:b.querySelector('.bkin'),L:b.querySelector('.bkL'),R:b.querySelector('.bkR'),cv:b.querySelector('.bkfx'),pages,N,sp,at,o,busy:0,q:null};
-  if(!sp)B.L.hidden=true;b.querySelector('.mpv').onclick=()=>bkGo(B,B.at-(sp?2:1));b.querySelector('.mnx').onclick=()=>bkGo(B,B.at+(sp?2:1));b.querySelector('.mtc').onclick=()=>bkGo(B,0);
+  if(!sp)B.L.hidden=true;b.querySelector('.mpv').onclick=()=>{if(B.closed)return;if(B.at===0&&o.cover)return bkCoverClose(B);bkGo(B,B.at-(sp?2:1))};b.querySelector('.mnx').onclick=()=>B.closed?bkCoverGo(B):bkGo(B,B.at+(sp?2:1));b.querySelector('.mtc').onclick=()=>bkGo(B,0);
   if(!o.toc)b.querySelector('.mtc').remove();
   bkMount(B,at);bkDrag(B);bkStroke(B);
   if(BKSNAP)bkEnter(B);
-  else if(o.cover&&BKSEEN!==o.key){BKSEEN=o.key;if(!(typeof uiReduced==='function'&&uiReduced()))bkCoverOpen(B);else bkSnd('bkopen',.3)}
+  else if(o.cover&&BKSEEN!==o.key){BKSEEN=o.key;bkCoverShow(B)}/* ひらいたときは、とじた表紙。めくるのは、さわる人 */
   return B}
 /* ページをスロットに入れる（見開きは左 i・右 i+1） */
 function bkMount(B,at){B.at=at;const sp=B.sp,store=B.el.querySelector('.bkstore'),put=(slot,i)=>{const c=slot.querySelector('.bkc'),n=slot.querySelector('.bkn'),pg=B.pages[i];for(const x of[...c.children])store.appendChild(x);if(pg){pg.hidden=false;c.appendChild(pg)}c.scrollTop=0;slot.classList.toggle('blank',!pg);n.textContent=pg&&i>0?String(i):''};
   if(sp){put(B.L,at);put(B.R,at+1)}else put(B.R,at);
-  const b=B.el,last=sp?B.N-1-((B.N-1)%2):B.N-1;b.querySelector('.mpv').disabled=at<=0;b.querySelector('.mnx').disabled=at>=last;const tc=b.querySelector('.mtc');if(tc)tc.hidden=at===0;
-  b.querySelector('.mpn').textContent=at===0&&B.o.toc?'もくじ':sp?(at||1)+(at+1<B.N?'-'+(at+1):'')+' / '+(B.N-1):at+' / '+(B.N-1);
+  const b=B.el,last=sp?B.N-1-((B.N-1)%2):B.N-1;b.querySelector('.mpv').disabled=!!B.closed||at<=0&&!B.o.cover;b.querySelector('.mnx').disabled=at>=last;const tc=b.querySelector('.mtc');if(tc)tc.hidden=at===0;
+  b.querySelector('.mpn').textContent=B.closed?'表紙':at===0&&B.o.toc?'もくじ':sp?(at||1)+(at+1<B.N?'-'+(at+1):'')+' / '+(B.N-1):at+' / '+(B.N-1);
   /* 重なった紙のあつみ：のこりのページは右、よんだページは左。ページのわりあいで1〜14まい（bkEdge が絵で描く） */const T=Math.max(1,B.N-1),th=n=>1+Math.round(13*Math.max(0,n)/T);B.thR=th(B.N-1-(sp?at+1:at));B.thL=sp?th(at):0;B.el.style.setProperty('--stk',(B.thR+2)*BKD+'px');if(at===0)B.el.dataset.at0='';else delete B.el.dataset.at0;requestAnimationFrame(()=>bkEdge(B));
   if(B.o.onAt)B.o.onAt(at)}
 function bkSnd(k,v,rt){if(typeof playU==='function'&&typeof AC!=='undefined'&&AC&&AC.state==='running'&&SND.sfx)playU(k,v,rt||1)}
@@ -75,20 +75,24 @@ function bkFlip(B,to,ms,done,riff){if(B.busy)return;B.busy=1;const from=B.at,fw=
 /* 表紙をひらく（ひらいたとき1回）・とじる（bookShut） */
 function bkCoverEl(B){const cv=B.o.cover,d=el('<div class="bkp bkR bkcov"><div class="bkcl"><b></b><small></small></div></div>');d.style.setProperty('--cv',cv.c||'#7d4a3a');d.querySelector('b').textContent=cv.t||'';d.querySelector('small').textContent=cv.sub||'';return d}
 function bkCovPal(B){const c=B.o.cover.c||'#7d4a3a';return Object.assign({},BKC,{back:'#d8c49b',hi:'#efe0bd',lit:'#e2d0a8',mid:'#cdb68a',edge:c})}/* 表紙のうら（見返しの紙）と、ふちは表紙の色 */
-function bkCoverOpen(B){if(B.busy)return;B.busy=1;const st=bkSetup(B,0,1,bkCoverEl(B));bkFrame(B,st,0,1,bkCovPal(B));st.cover=1;setTimeout(()=>{if(!B.el.isConnected){bkClean(B,st);return}bkSnd('bkopen',.34);bkRun(B,st,0,1,BKCOVMS,()=>{B.busy=0},bkCovPal(B))},180)}
-function bookShut(after){const B=BK;if(!B||!B.el.isConnected||!B.o.cover||B.busy||(typeof uiReduced==='function'&&uiReduced()))return false;B.busy=1;
-  const st=bkSetup(B,0,1,bkCoverEl(B));st.keep=1;/* とじるときは、いまのページの上に、表紙がかぶさってくる。とじたまま画面をとじる */
-  bkSnd('pflick',.18);bkRun(B,st,1,0,BKCOVMS*.8,()=>{bkSnd('bkclose',.4);setTimeout(()=>{B.busy=0;BKSEEN=null;after&&after()},140)},bkCovPal(B));return true}
+function bkCoverShow(B){/* とじた表紙をのせる（B.closed にしたく。めくるまでそのまま） */const st=bkSetup(B,0,1,bkCoverEl(B));st.cover=1;st.keep=1;B.closed=st;bkFrame(B,st,0,1,bkCovPal(B));bkMount(B,B.at)}
+function bkCoverGo(B){/* 表紙をひらく（ボタン・たたく） */const st=B.closed;if(!st||B.busy)return;B.busy=1;bkSnd('bkopen',.5);bkRun(B,st,0,1,BKCOVMS,()=>{B.busy=0;B.closed=null;bkClean(B,st);bkMount(B,0)},bkCovPal(B))}
+function bkCoverClose(B,after){/* もくじから前へ：表紙がかぶさって、とじる。とじた音 */if(B.busy||B.closed)return;B.busy=1;const st=bkSetup(B,0,1,bkCoverEl(B));st.cover=1;st.keep=1;bkSnd('pflick',.2);bkRun(B,st,1,0,BKCOVMS*.85,()=>{bkSnd('bkclose',.6);B.closed=st;B.busy=0;bkMount(B,B.at);after&&after()},bkCovPal(B))}
+function bookShut(after){const B=BK;if(!B||!B.el.isConnected||!B.o.cover||B.busy||(typeof uiReduced==='function'&&uiReduced()))return false;
+  const fin=()=>setTimeout(()=>{BKSEEN=null;after&&after()},160);if(B.closed){bkSnd('bkclose',.6);fin();return true}/* もうとじている：とじる音だけ */
+  bkCoverClose(B,fin);return true}
 /* 指でつまんでめくる：ページの外がわから、よこに引く */
 function bkDrag(B){const I=B.in;let s=null;
   I.addEventListener('pointerdown',e=>{if(B.busy||e.button>0)return;const g=bkGeo(B),x=e.clientX-g.r.left,sp=B.sp,last=sp?B.N-1-((B.N-1)%2):B.N-1;let dir=0;
+    if(B.closed){if(x>g.S)s={id:e.pointerId,x0:e.clientX,y0:e.clientY,dir:1,g,on:0,st:null,lx:e.clientX,lt:performance.now(),v:0,e:0,cov:1};return}/* とじた表紙：どこからでも、ひらく向きに */
     if(x>g.S+g.w*.6&&B.at<last)dir=1;else if((sp?x<g.S-g.w*.6:x<g.S+g.w*.4)&&B.at>0)dir=-1;if(!dir)return;s={id:e.pointerId,x0:e.clientX,y0:e.clientY,dir,g,on:0,st:null,lx:e.clientX,lt:performance.now(),v:0,e:0}});
   I.addEventListener('pointermove',e=>{if(!s||e.pointerId!==s.id)return;const dx=e.clientX-s.x0,dy=e.clientY-s.y0;
     if(!s.on){if(Math.abs(dx)<8||Math.abs(dx)<Math.abs(dy)*1.3||Math.sign(dx)!==-s.dir){if(Math.abs(dy)>14)s=null;return}
-      s.on=1;try{I.setPointerCapture(e.pointerId)}catch(_){}B.busy=1;const to=B.at+s.dir*(B.sp?2:1);s.to=to;s.st=bkSetup(B,B.at,to)}
-    const g=s.g,rg=B.sp?g.w*1.5:g.w*.95,u=Math.max(0,Math.min(1,-s.dir*dx/rg));s.e=s.dir>0?u:1-u;bkFrame(B,s.st,s.e,1);
+      s.on=1;try{I.setPointerCapture(e.pointerId)}catch(_){}B.busy=1;if(s.cov){s.st=B.closed;s.pal=bkCovPal(B)}else{const to=B.at+s.dir*(B.sp?2:1);s.to=to;s.st=bkSetup(B,B.at,to)}}
+    const g=s.g,rg=B.sp?g.w*1.5:g.w*.95,u=Math.max(0,Math.min(1,-s.dir*dx/rg));s.e=s.dir>0?u:1-u;bkFrame(B,s.st,s.e,1,s.pal);
     const now=performance.now(),dt=Math.max(1,now-s.lt);s.v=(e.clientX-s.lx)/dt;s.lx=e.clientX;s.lt=now;bkSlide(Math.min(1,Math.abs(s.v)*1.2)*.5);e.preventDefault()});
-  const end=e=>{if(!s||e.pointerId!==s.id)return;const q=s;s=null;if(!q.on)return;const u=q.dir>0?q.e:1-q.e,go=u>.42||-q.dir*q.v>.45,e1=go===(q.dir>0)?1:0,ms=Math.max(90,BKMS*Math.abs(e1-q.e));
+  const end=e=>{if(!s||e.pointerId!==s.id)return;const q=s;s=null;if(!q.on){if(q.cov&&e.type==='pointerup')bkCoverGo(B);return}/* 表紙をたたいても、ひらく */
+    if(q.cov){const go=q.e>.35||q.v<-.4;if(go)bkSnd('bkopen',.5);bkRun(B,q.st,q.e,go?1:0,Math.max(90,BKCOVMS*Math.abs((go?1:0)-q.e)),()=>{B.busy=0;if(go){B.closed=null;bkClean(B,q.st);bkMount(B,0)}},q.pal);return}const u=q.dir>0?q.e:1-q.e,go=u>.42||-q.dir*q.v>.45,e1=go===(q.dir>0)?1:0,ms=Math.max(90,BKMS*Math.abs(e1-q.e));
     if(go)bkSnd('mpage',.3,1.04);bkRun(B,q.st,q.e,e1,ms,()=>{B.busy=0})};
   I.addEventListener('pointerup',end);I.addEventListener('pointercancel',end)}
 /* 紙をなでる音：ページをスクロールした・マウスでなでた速さで、こすれる音の大きさがかわる */
@@ -128,3 +132,6 @@ function bkEdge(B){if(!B||!B.el.isConnected)return;const r=B.in.getBoundingClien
     c.fillStyle='#9a7a4c';const dx=Math.floor((n+1)*.6),dy=n+1;c.fillRect(dx,dy+H-1,W,1);c.fillRect(dx+W-1,dy,1,H);/* いちばん奥のふち */
     for(let x=0;x<Math.min(14,W>>2);x++){const u=Math.round(Math.pow(1-x/Math.min(14,W>>2),2)*(n+1)*.55);c.clearRect(dx+x,dy+H-1-u,1,u+1);c.fillRect(dx+x,dy+H-1-u,1,1)}
     c.restore()}}
+
+/* 見出し・日づけのマスキングテープ：字から色（4しゅるい）と、ななめの向きをきめる（同じ字はいつも同じテープ） */
+function bkTapes(pages){for(const pg of pages)for(const t of pg.querySelectorAll('.mtt,.tape,:scope>.sec>h3')){let h=0;for(const ch of t.textContent)h=(h*31+ch.charCodeAt(0))>>>0;t.style.backgroundImage='var(--tp'+(h%4)+((h>>2)&1?'u':'d')+')'}}
