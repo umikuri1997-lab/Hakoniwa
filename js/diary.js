@@ -54,8 +54,9 @@ function dyNote(e,f){const{M:M0,O}=dyTopics(e,f),sad=M0.some(t=>t[0]==='gone'||t
   const top=M.slice(0,pt&&M.length>1?2:1).concat(rest.filter(t=>t[0]!=='calm'||!M.length).slice(0,M.length>1&&pt?0:M.length?1:2));if(top.length>1&&top.some(t=>t[0]==='calm'))top.splice(top.findIndex(t=>t[0]==='calm'),1);
   const wx=e.wx&&DYOPEN[e.wx]?e.wx:'sun'+seasonOf(e.d),sd=sad||top.some(t=>/^night(Hurt|Lost|Broke)$/.test(t[0])),CL=sd?DYCLOSE_SAD:DYCLOSE,clk=sd?'cs':'c',/* かなしい日・こまった夜のあとは、しずかなおわり */sub=(t,x)=>t.split('@N').join(x[1]||'').split('@W').join(x[2]||'');
   const seen=new Set(S.dyTx||[]);let best=null;
-  {const t0=top[0],A=t0&&typeof DYFULL!=='undefined'&&DYFULL[t0[0]];if(A&&A.length){/* 通しの文：その日のいちばんの話題1つについて、はじめからおわりまでつながった日記（diary-full.js） */
-    for(let n=0;n<16;n++){const k='f:'+t0[0],i=dyIdx(k,A),L=A[i].map((t,j)=>chatTone(sub(t,t0),f,j)),h=dyHash(L.join('\n'));best={P:[[k,A]],I:[i],L,h};if(!seen.has(h))break}}}
+  if(typeof DYFULL!=='undefined')for(const t0 of top.concat(M,rest)){const A=DYFULL[t0[0]];if(!A||!A.length)continue;/* 通しの文：その日のいちばんの話題1つについて、はじめからおわりまでつながった日記（diary-full.js）。その話題の日記をぜんぶ書いたら、つぎの話題 */
+    let ok=null;for(let n=0;n<A.length*2&&!ok;n++){const k='f:'+t0[0],i=dyIdx(k,A),L=A[i].map((t,j)=>chatTone(sub(t,t0),f,j)),h=dyHash(L.join('\n'));dyUse(k,i,A.length);if(!seen.has(h))ok={P:[[k,A]],I:[i],L,h}}
+    if(ok){best=ok;break}}
   if(!best)for(let n=0;n<16;n++){const P=[['o:'+wx,DYOPEN[wx]]].concat(top.map(x=>['b:'+x[0],DYBODY[x[0]],x])).concat([[clk,CL]]);
     const I=P.map(p=>dyIdx(p[0],p[1])),L=P.map((p,i)=>chatTone(p[2]?sub(p[1][I[i]],p[2]):p[1][I[i]],f,i)),h=dyHash(L.join('\n'));
     best={P,I,L,h};if(!seen.has(h))break}
