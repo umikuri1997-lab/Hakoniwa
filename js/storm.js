@@ -14,5 +14,4 @@ function stormDriftDrop(){/* 水べに、ながれついた物 */const L=[];for(
   for(let i=0;i<STORMDRIFT;i++){const q=pick(L);if(S.drops.some(d=>d.y*W+d.x===q))continue;const r=Math.random(),it=r<.15?['fukuro',1]:r<.35?['mapPc',1]:r<.6?['mat:can',1]:['mat:wood',3];S.drops.push({x:q%W,y:(q/W)|0,id:it[0],n:it[1],tap:1});n++}
   if(n)setTimeout(()=>toast('あらしのあと、水べに、なにかがながれついている','good'),1400)}
 const stormFun=r=>{if(!stormNow())return 1;return roomOf((r.y|0)*W+(r.x|0))?1:STORMFUN};/* 家の中なら、ふだんどおり */
-function drawStorm(now){/* 暗い空と、ななめに強くふる雨（2点のドットの段々） */if(!stormNow())return;ctx.fillStyle='rgba(40,52,72,.24)';ctx.fillRect(0,0,VW,VH);ctx.fillStyle='rgba(220,235,255,.75)';
-  for(let i=0;i<150;i++){const x=Math.round(((i*97+now*.7)%(VW+80))-40),y=Math.round(((i*61+now*1.6+i*i*7)%(VH+60))-30);for(let s=0;s<6;s++)ctx.fillRect(x-s*3,y+s*4,2,4)}}
+function drawStorm(now){/* 暗い空（雨つぶ・とぶ葉・かみなりは weather-fx.js） */if(!stormNow())return;const g=typeof wxGust==='function'?wxGust(now):0;ctx.fillStyle='rgba(40,52,72,'+(.2+g*.08)+')';ctx.fillRect(0,0,VW,VH)}
