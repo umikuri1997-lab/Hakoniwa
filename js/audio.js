@@ -76,9 +76,19 @@ function greetVoice(r,dl){if(!AC||!SND.sfx||AC.state!=='running'||VOICE)return;c
   cp.threshold.value=-38;cp.ratio.value=12;cp.knee.value=4;cp.attack.value=.003;cp.release.value=.1;g.gain.value=.5*CHATK*q.v*(SND.vv??1);
   src.connect(env);env.connect(cp);cp.connect(g);let h=g;if(AC.createStereoPanner){const pn=AC.createStereoPanner();pn.pan.value=q.p;h.connect(pn);h=pn}{const f=AC.createBiquadFilter();f.type='lowpass';f.frequency.value=Math.min(q.l,2600);f.Q.value=.5;h.connect(f);h=f}h.connect(sfxG);
   src.start(t,Math.random()*Math.max(0,b.duration-d-.1));src.stop(t+d+.05)}
-/* 鼻歌（ごきげんなとき。work-fx.js の humTick）：人の鼻歌の録音（SAMPLES.hum）を、その子の声の高さで、小さく。会話の画面の声が出ているあいだは鳴らさない */
-function humVoice(r){if(!AC||!SND.sfx||AC.state!=='running'||VOICE)return;const L=(SBUF.hum||[]).filter(Boolean);if(!L.length)return;const q=sfxPos(r.x,r.y);if(!q)return;const b=pick(L),vo=(r.vr&&r.vr.vo)||(typeof KEYVR!=='undefined'&&KEYVR[r.name]&&KEYVR[r.name].vo)||1.12,t=AC.currentTime;
-  const src=AC.createBufferSource(),g=AC.createGain();src.buffer=b;src.playbackRate.value=vo*1.15;g.gain.value=.22*q.v*(SND.vv??1);let h=g;src.connect(g);if(AC.createStereoPanner){const pn=AC.createStereoPanner();pn.pan.value=q.p;h.connect(pn);h=pn}{const f=AC.createBiquadFilter();f.type='lowpass';f.frequency.value=Math.min(q.l,3200);h.connect(f);h=f}h.connect(sfxG);src.start(t);src.stop(t+b.duration/src.playbackRate.value+.05)}
+/* 鼻歌・もやもやの音（work-fx.js の drawHum・drawMoya）：音符・もやもやが出ているあいだ、画面のまん中にいちばん近い1人（見守っている子がいれば、その子）だけ、
+   録音（鼻歌 SAMPLES.hum・もやもや SAMPLES.moya）を、その子の声の高さで小さく、つぎつぎ鳴らす。会話の画面の声が出ているあいだは鳴らさない */
+const MOODM=new Map(),MOODV={hum:.22,moya:.22},MOODGAP=[.5,1.1];let MOODP=null;/* MOODP：いま鳴らしている {r,k,end} */
+function moodMark(r,k,now){MOODM.set(r,{k,t:now})}
+function moodTick(){const now=performance.now();for(const[r,m]of MOODM)if(now-m.t>400||r.hidden)MOODM.delete(r);
+  if(!AC||!SND.sfx||AC.state!=='running'||VOICE||!S||!started||(typeof paused==='function'&&paused())||(typeof SKIP!=='undefined'&&SKIP))return;
+  if(MOODP&&AC.currentTime<MOODP.end)return;
+  let best=null,bv=0;for(const[r,m]of MOODM){const q=sfxPos(r.x,r.y);if(!q)continue;const v=(typeof FOLLOW!=='undefined'&&FOLLOW===r)?9:q.v;if(v>bv){bv=v;best=[r,m.k,q]}}
+  if(!best){MOODP=null;return}const[r,k,q]=best,L=(SBUF[k]||[]).filter(Boolean);if(!L.length)return;
+  const b=pick(L),vo=(r.vr&&r.vr.vo)||(typeof KEYVR!=='undefined'&&KEYVR[r.name]&&KEYVR[r.name].vo)||1.12,t=AC.currentTime,rate=k==='hum'?vo*1.15:vo;
+  const src=AC.createBufferSource(),g=AC.createGain();src.buffer=b;src.playbackRate.value=rate;g.gain.value=MOODV[k]*q.v*(SND.vv??1);let h=g;src.connect(g);if(AC.createStereoPanner){const pn=AC.createStereoPanner();pn.pan.value=q.p;h.connect(pn);h=pn}{const f=AC.createBiquadFilter();f.type='lowpass';f.frequency.value=Math.min(q.l,3200);h.connect(f);h=f}h.connect(sfxG);
+  const d=b.duration/rate;src.start(t);src.stop(t+d+.05);MOODP={r,k,end:t+d+MOODGAP[0]+Math.random()*(MOODGAP[1]-MOODGAP[0])}}
+setInterval(moodTick,100);
 function voiceStop(){if(!VOICE)return;const v=VOICE;VOICE=null;clearTimeout(v.end);try{const t=AC.currentTime;v.g.gain.setTargetAtTime(0,t,.04);v.src.stop(t+.2)}catch(e){}}
 /* せいれいどうしのおしゃべりの、小さな話し声：会話の声（SAMPLES.voice）を、話す子の声の高さで、短く切って鳴らす。
    声の作り（コンプレッサー）は会話の声と同じで、大きさは会話の声の CHATK。マップの場所の音と同じく、左右・遠いほど小さく・こもる（sfxPos）。
