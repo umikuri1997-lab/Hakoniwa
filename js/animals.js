@@ -3,7 +3,7 @@
    STRAYH 時に帰る。「しらべる」でタップ →「おむかえ」で、近いせいれいが歩いて行き（astray）、つれて小屋の前まで歩く（alead。生き物は、せいれいの通った所をついていく a.tr）。着いたら、その小屋にすむ。
    木のせいれい（いなければ、だれでも）が箱の草を小屋へ運び（えさ：1頭に1日1こ）、水のせいれい（いなければ、だれでも）が水をくんで小屋の水入れへ。
    えさと水をもらった日の夕方（ANIPRODH 時）に、小屋にとれる物がたまり、せいれいが箱へ運ぶ（aniJob）。夜は小屋の中。コワイノにはねらわれない。
-   セーブ：S.ani（生き物。野良は stray:1・h −1・lead つれているせいれい）・S.dyn[小屋]（feed えさ・wd 水をもらった日・pr とれた物）。 */
+   セーブ：S.ani（生き物。野良は stray:1・h －1・lead つれているせいれい）・S.dyn[小屋]（feed えさ・wd 水をもらった日・pr とれた物）。 */
 const ANI={hane:{name:'ハネマリ',hut:'coop',prod:'egg',cap:3,spd:.9,desc:'まんまるで、ふわふわの羽の生き物。'},moko:{name:'モコダマ',hut:'barn',prod:'wool',cap:2,spd:.7,desc:'ふかふかの毛につつまれた、まるい生き物。'},tsuno:{name:'ツノクサ',hut:'barn',prod:'milk',cap:2,spd:.8,desc:'くるんとした角の、草がすきな生き物。'}};
 const HUTK={coop:['hane'],barn:['moko','tsuno']},PENMAX=300,ANIFUN=3,ANIPET=5,ANIPRODH=17,ANIFEED=2;/* ANIFUN：ひまなときに自分からなでる・ANIPET：「しらべる」でたのんでなでる（1ぴき1日1回 a.petD） */
 let HUTS=[],PENS=new Map(),ANISUB=0;

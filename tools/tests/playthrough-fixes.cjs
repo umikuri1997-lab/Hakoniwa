@@ -35,7 +35,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict');
   console.log('Return lines: no repeat until all are used');
   /* 6. 先に消えた子が待っているときは「次の朝」と言わない */
   const morn=JSON.parse(await run(`(()=>{S.buried=[{name:FIXK0.fire,elem:'fire',unb:false}];const a=backWhen(FIXK0.fire);S.buried.push({name:MINA,elem:'earth',unb:true});const b=backWhen(MINA),c=HOWK(MINA)[0][1],d=DEATHL.earth(MINA)[2];S.buried=[];return JSON.stringify({a,b,c,d})})()`));
-  assert.equal(morn.a,'次の朝、');assert.equal(morn.b,'何日かしたら、');assert.match(morn.c,/何日かしたら、ノドカは/);assert.match(morn.d,/何日かしたら、ノドカは/);
+  assert.equal(morn.a,'つぎの朝、');assert.equal(morn.b,'何日かしたら、');assert.match(morn.c,/何日かしたら、ノドカは/);assert.match(morn.d,/何日かしたら、ノドカは/);
   console.log('Second key spirit lost: not promised for the next morning');
   /* 8. 名前を使いきっても、キーキャラの名前（フタバ2など）は使わない */
   const names=JSON.parse(await run(`(()=>{const keep=S.res.slice();S.nameIdx=NAMES.length-3;S.summon={elem:'wood'};S.summonDay=null;S.mebukiDay=null;const got=[];for(let i=0;i<4;i++){S.summon={elem:'wood',pick:1};S.summonDay=null;S.mebukiDay=null;S.flags.minaCame=true;doSummon();got.push(S.res[S.res.length-1].name)}S.res=keep;NEWQ.length=0;NEWRES=null;if(sheet)closeSheet();return JSON.stringify(got)})()`));

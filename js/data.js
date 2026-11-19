@@ -38,7 +38,7 @@ const BL={
   nebari:{sp:9,name:'ねばり草',item:'ねばり草のたね',kind:'plant',cost:3,attr:{wood:1},desc:'上を歩く「コワイノ」の速さ0.5倍。まわり3マスで、たのしさ+0.2／1時間'},
   hotaru:{sp:9,name:'ほたるの草むら',item:'ほたるの草むらの苗',kind:'plant',cost:3,attr:{water:1},desc:'夜、まわり2マスを照らすあかり。はじめて光に入った「コワイノ」が2分止まる'},
   lily:{sp:9,name:'ゆり',item:'ゆりのたね',kind:'plant',cost:3,attr:{wind:1},desc:'まわり3マスで、たのしさ+0.2／1時間'},
-  lotus:{sp:9,name:'ハス',item:'ハスのたね',kind:'plant',cost:3,attr:{water:1},desc:'池にうかぶ花。まわり3マスで、たのしさ+0.2／1時間。まわり2マスで水浴びすると、たのしさ1.5倍・つかれ−9／1時間'},
+  lotus:{sp:9,name:'ハス',item:'ハスのたね',kind:'plant',cost:3,attr:{water:1},desc:'池にうかぶ花。まわり3マスで、たのしさ+0.2／1時間。まわり2マスで水浴びすると、たのしさ1.5倍・つかれ－9／1時間'},
   tree:{hp:5,brk:1,fix:1,fixm:{},name:'木',item:'木の苗',kind:'plant',cost:4,lv:3,solid:1,env:1,attr:{wood:3},desc:'まわり5マスを緑にする。まわり3マスで、たのしさ+0.4／1時間'},
   fruit:{hp:5,brk:1,fix:1,fixm:{},name:'りんごの木',item:'りんごの苗',kind:'plant',cost:10,lv:6,solid:1,dyn:1,env:1,attr:{wood:3,water:1},desc:'まわり5マスを緑にする。まわり3マスで、たのしさ+0.4／1時間。4日ごとに、りんごが実る。食料+2'},
 /* 新しい家具（スクリプトで描く） */
@@ -50,9 +50,9 @@ const BL={
   sofa1:{hp:5,brk:1,fix:5,fixm:{wood:10},dw:2.5,offerOnly:1,name:'ひとりがけソファ',kind:'furn',cat:'living',f2:1,lv:6,pc:9,time:120,maker:'wood',attr:{wood:1},mat:{wood:20},solid:1,desc:'しずみこむソファ。住み心地+6'},
   hoshirug:{cs:1.5,sz:[2,2],dw:1.25,name:'ほしぞらのラグ',kind:'furn',cat:'living',f2:1,lv:1,pc:3,time:80,maker:'wind',attr:{wind:1},mat:{wood:5},kwr:1,desc:'夜空の色のラグ。住み心地+5',anim:1},/* コワイノのレシピ */
   rug2:{offerOnly:1,cs:1.5,sz:[2,2],dw:1.75,name:'くもラグ',kind:'furn',cat:'living',f2:1,lv:7,pc:5,time:100,maker:'wind',attr:{wind:1},mat:{wood:15},desc:'くもの形のラグ。住み心地+6',anim:1},
-  tub:{hp:5,brk:1,fix:2,fixm:{wood:1,funba:1},name:'水おけ',kind:'furn',cat:'cook',f2:1,lv:3,pc:3,time:80,maker:'water',attr:{water:1},mat:{wood:3},solid:1,desc:'料理をする家具のまわり3マスにあると、料理の時間−10%（重複なし）。住み心地+3'},
-  cooktable:{hp:5,brk:1,fix:2,fixm:{wood:2},name:'調理台',kind:'furn',cat:'cook',lv:3,w:0,pc:3,time:80,maker:'wood',attr:{wood:1},mat:{wood:4},solid:1,desc:'火を使わない料理を作る台。料理をする家具のまわり3マスにあると、料理の時間−10%（重複なし）。住み心地+4'},
-  sink:{hp:5,brk:1,fix:4,fixm:{stone:3},name:'流し台',kind:'furn',cat:'cook',f2:1,lv:4,pc:7,time:120,maker:'water',attr:{water:1},mat:{stone:5},solid:1,desc:'料理をする家具のまわり3マスにあると、料理の時間−10%（重複なし）。住み心地+4'},
+  tub:{hp:5,brk:1,fix:2,fixm:{wood:1,funba:1},name:'水おけ',kind:'furn',cat:'cook',f2:1,lv:3,pc:3,time:80,maker:'water',attr:{water:1},mat:{wood:3},solid:1,desc:'料理をする家具のまわり3マスにあると、料理の時間－10%（重複なし）。住み心地+3'},
+  cooktable:{hp:5,brk:1,fix:2,fixm:{wood:2},name:'調理台',kind:'furn',cat:'cook',lv:3,w:0,pc:3,time:80,maker:'wood',attr:{wood:1},mat:{wood:4},solid:1,desc:'火を使わない料理を作る台。料理をする家具のまわり3マスにあると、料理の時間－10%（重複なし）。住み心地+4'},
+  sink:{hp:5,brk:1,fix:4,fixm:{stone:3},name:'流し台',kind:'furn',cat:'cook',f2:1,lv:4,pc:7,time:120,maker:'water',attr:{water:1},mat:{stone:5},solid:1,desc:'料理をする家具のまわり3マスにあると、料理の時間－10%（重複なし）。住み心地+4'},
   niguruma:{hp:5,brk:1,fix:2,fixm:{wood:4},name:'にぐるま',kind:'furn',cat:'other',f2:1,sz:[2,1],pc:4,time:90,maker:'wood',attr:{wood:1},mat:{wood:10},solid:1,desc:'荷物をはこぶ車。まわり3マスの箱にしまう速さ+20%（重複なし）'},
   kabebukuro:{hp:5,brk:1,fix:2,fixm:{funba:3},name:'かべかけのふくろ',kind:'furn',cat:'other',f2:1,pc:3,time:70,maker:'earth',attr:{earth:1},mat:{funba:5,wood:2},solid:1,desc:'壁にかけるふくろ。物を55までしまえる。住み心地+3'},
   taru:{hp:5,brk:1,fix:2,fixm:{wood:3},name:'たる',kind:'furn',cat:'other',f2:1,pc:3,time:80,maker:'wood',attr:{wood:1},mat:{wood:8},solid:1,desc:'物を60までしまえる。住み心地+3'},
@@ -107,15 +107,15 @@ const BL={
   yozoradoor:{name:'よぞらのドア',fix:2,fixm:{wood:1},kind:'block',anim:1,hp:20,hpS:23,cost:2,pc:5,time:40,maker:'wood',qty:1,lv:1,attr:{},mat:{wood:3},kwr:1,desc:'窓のついたダークチェリーのドア。せいれいだけ通れる。じょうぶさ20'},/* コワイノのレシピ */
   door:{name:'ドア',fix:2,fixm:{wood:1},kind:'block',anim:1,hp:20,hpS:30,cost:2,pc:5,time:40,maker:'wood',qty:1,lv:3,attr:{},mat:{wood:2},desc:'壁にはめる出入り口。せいれいだけ通れる。じょうぶさ20'},
   chair:{name:'いす',kind:'furn',lv:3,pc:3,time:60,maker:'wood',attr:{wood:1},mat:{wood:3},mat1:{bamboo:3},desc:'食卓のとなりで食べると、パワー+0.9。住み心地+4'},
-  takebench:{name:'竹のベンチ',sz:[2,1],kind:'furn',lv:3,pc:3,time:100,maker:'wood',attr:{wood:1},mat:{bamboo:6},desc:'2人すわれる。昼につかれたら、ここで休む。つかれ−30／1時間。住み心地+5'},
+  takebench:{name:'竹のベンチ',sz:[2,1],kind:'furn',lv:3,pc:3,time:100,maker:'wood',attr:{wood:1},mat:{bamboo:6},desc:'2人すわれる。昼につかれたら、ここで休む。つかれ－30／1時間。住み心地+5'},
   andon:{hp:5,brk:1,fix:2,fixm:{wood:1},name:'行燈',kind:'furn',cat:'light',lv:7,w:1,pc:6,time:80,maker:'fire',solid:1,anim:1,attr:{fire:1},mat:{wood:3,kasa:2},mat1:{wood:3,chiri:2},desc:'紙をはった木のあかり。まわり3.5マスを照らす。住み心地+5'},
   takeakari:{hp:5,brk:1,fix:2,fixm:{bamboo:2},name:'竹あかり',kind:'furn',cat:'light',lv:4,pc:4,time:90,maker:'fire',solid:1,anim:1,attr:{fire:1,wood:1},mat:{bamboo:4},desc:'まわり3.5マスを照らす。住み心地+5'},
   shishiodoshi:{hp:5,brk:1,fix:2,fixm:{bamboo:2,stone:1},name:'ししおどし',kind:'furn',cat:'env',lv:5,pc:6,time:110,maker:'water',solid:1,anim:1,attr:{water:1,wood:1},mat:{bamboo:5,stone:3},desc:'水でうごく竹のかざり。住み心地+6'},
-  bench:{name:'ベンチ',sz:[2,1],kind:'furn',pc:3,time:100,maker:'wood',attr:{wood:1},mat:{wood:5},desc:'2人すわれる。昼につかれたら、ここで休む。つかれ−30／1時間。住み心地+5'},
+  bench:{name:'ベンチ',sz:[2,1],kind:'furn',pc:3,time:100,maker:'wood',attr:{wood:1},mat:{wood:5},desc:'2人すわれる。昼につかれたら、ここで休む。つかれ－30／1時間。住み心地+5'},
   wbench:{hp:5,brk:1,fix:2,fixm:{wood:4},name:'作業台',kind:'furn',cat:'other',sz:[2,1],pc:3,time:80,maker:'earth',attr:{earth:1},mat:{wood:8,stone:2},solid:1,dyn:1,desc:'依頼の物を作る台と、材料置き場。となりの箱の素材は、運ばずに使う'},/* 依頼は、空いた作業台で1つずつ作る（S.dyn[j].order、build.js の wbenchTick） */
   loom:{hp:5,brk:1,fix:2,fixm:{wood:2},name:'はたおり機',kind:'furn',cat:'other',pc:3,time:80,maker:'wood',attr:{wind:1},mat:{wood:6},solid:1,desc:'草3こか、わた毛2こで、布1こをおる。布1こ40分。風の強い日は27分'},
-  bed:{name:'ベッド',kind:'furn',pc:10,time:200,maker:'wood',sleep:{cap:1,pt:5,rate:.1},attr:{wood:2},mat:{wood:6,nuno:1},desc:'1人眠れる。つかれ−9／1時間'},
-  yorubed:{name:'よぞらのベッド',kind:'furn',pc:10,time:200,maker:'wood',sleep:{cap:1,pt:5,rate:.1},attr:{wood:2},mat:{wood:8},kwr:1,desc:'夜空の色のふとんのベッド。1人眠れる。つかれ−9／1時間'},/* コワイノのレシピ（落とし物でまれに手に入る）。ふつうのベッドと同じはたらき */
+  bed:{name:'ベッド',kind:'furn',pc:10,time:200,maker:'wood',sleep:{cap:1,pt:5,rate:.1},attr:{wood:2},mat:{wood:6,nuno:1},desc:'1人眠れる。つかれ－9／1時間'},
+  yorubed:{name:'よぞらのベッド',kind:'furn',pc:10,time:200,maker:'wood',sleep:{cap:1,pt:5,rate:.1},attr:{wood:2},mat:{wood:8},kwr:1,desc:'夜空の色のふとんのベッド。1人眠れる。つかれ－9／1時間'},/* コワイノのレシピ（落とし物でまれに手に入る）。ふつうのベッドと同じはたらき */
   yozorawall:{name:'よぞらの壁',fix:5,fixm:{wood:1},kind:'block',cost:4,pc:11,time:90,maker:'earth',qty:10,lv:1,solid:1,hp:48,hpS:72.2,brk:1,attr:{},mat:{wood:6,stone:3},kwr:1,desc:'夜空の色の家の壁。じょうぶさ48'},
   lamp:{hp:5,brk:1,fix:3,fixm:{eda:2,stone:2},name:'かがり火',kind:'furn',pc:5,time:160,maker:'fire',solid:1,anim:1,attr:{fire:3},mat:{eda:3,stone:3},desc:'まわり3.5マスを照らす。住み心地+6'},
   campfire:{hp:5,brk:1,fix:4,fixm:{wood:2,eda:4,stone:4},name:'たき火',kind:'furn',pc:7,time:160,maker:'fire',lv:6,solid:1,anim:1,attr:{fire:4},play:{pt:3,pw:1.35,fun:25,dur:40,cap:3,adj:1},mat:{wood:3,eda:8,stone:8},desc:'3人まで遊べる。たのしさ+25（26.7分）。まわり3.5マスを照らす'},
@@ -163,7 +163,7 @@ const BL={
   chadogu:{hp:5,brk:1,fix:2,fixm:{wood:3},name:'茶道具の台',kind:'furn',cat:'env',w:1,lv:7,pc:9,time:110,maker:'water',attr:{water:1},mat:{wood:8,stone:3},solid:1,desc:'てつのかまと茶わんの台。4人で「お茶のけいこ」をひらける'},
   hokora:{hp:8,brk:1,fix:3,fixm:{stone:4},name:'ほこら',kind:'furn',cat:'env',w:1,lv:8,pc:12,time:140,maker:'earth',attr:{earth:1},mat:{stone:15,wood:6},solid:1,desc:'石の台にのせた小さな社。みんなで「ほこらまいり」をひらける'},
   bell:{name:'村の鐘',sz:[2,2],kind:'build',mat:{wood:60,stone:60},pc:120,time:240,maker:'earth',lv:12,solid:1,attr:{},desc:'朝、村のせいれいのたのしさ+15（重複なし）'},
-  onsen:{name:'露天ぶろ',sz:[2,2],kind:'build',mat:{stone:40},pc:60,time:200,maker:'earth',lv:9,w:1,solid:1,attr:{},desc:'岩でかこんだ温泉。入ると、つかれ−30・たのしさ+10'},
+  onsen:{name:'露天ぶろ',sz:[2,2],kind:'build',mat:{stone:40},pc:60,time:200,maker:'earth',lv:9,w:1,solid:1,attr:{},desc:'岩でかこんだ温泉。入ると、つかれ－30・たのしさ+10'},
   signw:{name:'村の木の看板',sz:[2,1],kind:'build',mat:{wood:30},pc:80,time:160,maker:'wood',lv:11,solid:1,attr:{},desc:'村の入り口の看板。属性の力+10%（重複なし）'},
   signs:{name:'村の石の看板',sz:[2,1],kind:'build',mat:{stone:30},pc:80,time:160,maker:'earth',lv:11,w:1,solid:1,attr:{},desc:'村の入り口の看板。属性の力+10%（重複なし）'},
   lighthouse:{name:'灯台',sz:[2,2],kind:'build',mat:{wood:25,stone:35},pc:35,time:180,maker:'fire',lv:7,solid:1,anim:1,attr:{fire:4},desc:'まわり8マスを照らす'},

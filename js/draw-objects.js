@@ -36,7 +36,7 @@ function wallFront(c,id,x,y,i){/* 家の壁の正面：断面と形は部品の�
   if(i==null||ICON)return;const C=window.CHIPS,E=C&&C[id+':ext'],P=C&&C[id+':post'],ei=E&&chipImgs(E,id)[0],pi=P&&chipImgs(P,id)[0];
   const inn=id==='yozorawall'&&HOUSES.some(h=>h.inside.has(i+W)||h.inside.has(i+W-1)||h.inside.has(i+W+1));
   const isW=k=>{const t=typeAt(k);return t!=='wall'&&t!=='sdoor'&&(HOME_WALLS.has(t)||HOME_DOORS.has(t))},L=isW(i-1),R=isW(i+1),U=isW(i-W),D=isW(i+W),hasH=L||R||!(U||D);
-  const gx=(i%W)*TS-x,eh=E?E.h/2:TS,ey=y+(E?E.ay/2:0),ext=(a,b,cb)=>{if(!ei||!ei.ok)return;const pw=E.w*eh/E.h;c.save();c.beginPath();c.rect(a,ey,b-a,(cb||ey+eh)-ey);c.clip();for(let wx=Math.floor((a+gx)/pw)*pw;wx<b+gx;wx+=pw)c.drawImage(ei,wx-gx,ey,pw,eh);c.restore()};/* 外から見える正面：絵（てっぺんから正面の下まで。y−9〜y+32）を世界の座標でならべる */
+  const gx=(i%W)*TS-x,eh=E?E.h/2:TS,ey=y+(E?E.ay/2:0),ext=(a,b,cb)=>{if(!ei||!ei.ok)return;const pw=E.w*eh/E.h;c.save();c.beginPath();c.rect(a,ey,b-a,(cb||ey+eh)-ey);c.clip();for(let wx=Math.floor((a+gx)/pw)*pw;wx<b+gx;wx+=pw)c.drawImage(ei,wx-gx,ey,pw,eh);c.restore()};/* 外から見える正面：絵（てっぺんから正面の下まで。y－9〜y+32）を世界の座標でならべる */
   const post=()=>{if(pi&&pi.ok)c.drawImage(pi,x+P.ax/2,y+P.ay/2,P.w/2,P.h/2)};/* 柱の正面 */
   const o=.5,f=(a,b)=>{if(inn){ext(a,b,y);wallBand(c,'night',a,b,x,y,i)}else ext(a,b)};/* 家の中から見える正面：てっぺんだけ絵、その下は夜空の帯 */c._noSh=1;
   if(hasH){if(!D){if(L&&R)f(x-o,x+TS+o);else{post();if(L)f(x-o,x+5);if(R)f(x+27,x+TS+o)}}/* 上にしきりの壁がつながっていても、正面は柱を立てずにつなげる（しきりは正面から見えない） */else{if(L)f(x-o,x+5);if(R)f(x+27,x+TS+o)}}else if(!D)post();

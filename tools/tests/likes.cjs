@@ -9,12 +9,12 @@ await p.waitForFunction(()=>sacredEval('stageReady()'),{},{timeout:60000});
 /* 好み：id と食べ物で決まる。だいすきは1つ。すき・にがてもある */
 const dist=await run(`(()=>{const K=Object.keys(FOODS).filter(k=>!FOODS[k].bad);let n=[0,0,0,0];for(let id=1;id<=200;id++){const r={id,name:'n'+id,elem:'wood'};const c=[0,0,0,0];for(const k of K)c[foodLike(r,k)]++;if(c[3]!==1)return 'love:'+c[3];for(let i=0;i<4;i++)n[i]+=c[i]}const r=S.res[0];return {n,same:K.every(k=>foodLike(r,k)===foodLike(r,k))}})()`);
 assert.ok(typeof dist==='object'&&dist.same&&dist.n[0]>0&&dist.n[2]>0,'好みのばらつき '+JSON.stringify(dist));
-/* おやつ：えらんだ物を食べ、反応で、すき・にがてがわかる。にがては たのしさ−5 */
+/* おやつ：えらんだ物を食べ、反応で、すき・にがてがわかる。にがては たのしさ－5 */
 const sn=await run(`(()=>{const r=S.res[0],K=Object.keys(FOODS).filter(k=>!FOODS[k].bad&&k!==favDish(r)),ng=K.find(k=>foodLike(r,k)===0),lk=K.find(k=>foodLike(r,k)===2);if(!ng||!lk)return 'nofood';S.fs={};S.fs[ng]=1;S.fs[lk]=1;syncFood();
   const give=k=>{snackPop(r);const c=[...document.querySelectorAll('.pxcard .slot')].find(x=>{const t=x.querySelector('.nm').textContent;return t===FOODS[k].name||t.startsWith(FOODS[k].name+'（')});if(!c)return false;c.click();ACT.eat.tick(r,r.act,999);const f0=r.fun;ACT.eat.end(r,r.act);return r.fun};
   r.fun=50;const f1=give(ng),face1=(STRAINU.get(r)||0)>performance.now();r.fun=50;const f2=give(lk);
   return {f1,face1,f2,fk:r.fk,ng,lk,left:S.fs,txt:[foodKnownText(r,0),foodKnownText(r,2)],nm:[FOODS[ng].name,FOODS[lk].name]}})()`);
-assert.ok(typeof sn==='object','おやつ '+sn);assert.equal(sn.f1,50+10-5,'にがて：おやつ+10、にがて−5');assert.ok(sn.face1,'にがての顔');assert.equal(sn.f2,50+10+3,'すき：+3');
+assert.ok(typeof sn==='object','おやつ '+sn);assert.equal(sn.f1,50+10-5,'にがて：おやつ+10、にがて－5');assert.ok(sn.face1,'にがての顔');assert.equal(sn.f2,50+10+3,'すき：+3');
 assert.equal(sn.fk[sn.ng],0);assert.equal(sn.fk[sn.lk],2);assert.deepEqual(sn.txt,sn.nm,'プロフィールに出る');assert.equal((sn.left[sn.ng]||0)+(sn.left[sn.lk]||0),0,'えらんだ物がへる');
 /* 箱からとるとき：にがては、ふつうよりあと */
 const ord=await run(`(()=>{const r=S.res[0],K=Object.keys(FOODS).filter(k=>!FOODS[k].bad&&!FOODS[k].dish);const ng=K.find(k=>foodLike(r,k)===0),nm=K.find(k=>foodLike(r,k)===1&&FOODS[k].v===(FOODS[ng]||{}).v);return ng&&nm?[ng,nm].sort((a,b)=>foodLike(r,b)-foodLike(r,a))[0]===nm:'skip'})()`);

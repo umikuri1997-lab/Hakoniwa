@@ -20,7 +20,7 @@ let HDBIG=0,HDLEN=1,HDSUN=0;
 function hdCv(c,w,h){if(!c)c=document.createElement('canvas');if(c.width!==w||c.height!==h){c.width=w;c.height=h}return c}
 function hdBig(ms){HDBIG=Math.max(HDBIG,performance.now()+ms)}/* 見せ場：そのあいだ、にじみを強く */
 function sunLen(){return HDLEN}/* かげの長さ（昼1） */
-function sunLean(){return HDSUN}/* かげのかたむき：−1 朝（かげは西へ）・0 昼・+1 夕方（東へ） */
+function sunLean(){return HDSUN}/* かげのかたむき：－1 朝（かげは西へ）・0 昼・+1 夕方（東へ） */
 function hdFrame(){/* 1コマに1回（render のはじめ） */
   if(!HD2D){HDLEN=1;HDSUN=0;return}const h=hour();HDLEN=h<6||h>18?1:1+HDLONG*Math.abs(h-12)/6;HDSUN=h<6||h>18?0:(h-12)/6}
 function hdTint(h){/* 時間の光の色（soft-light でかさねる色と、こさ） */

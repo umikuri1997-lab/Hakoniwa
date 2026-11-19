@@ -132,7 +132,7 @@ NEW = [
  ('きのこキッシュ', 'komugiko kinoko egg', [O], F, 'cake'),
  ('うなぎのまぜむぎ', 'unagi mugi egg', [C, O], F, 'bowl'),
 ]
-# おいしくなさそうな料理：名前をかえ、効果はたのしさ−15だけ
+# おいしくなさそうな料理：名前をかえ、効果はたのしさ－15だけ
 BAD = {'さかなのベリーソース': 'むらさきのさかな', 'あまずっぱいたけのこ': 'すっぱいたけのこ', 'きのこのベリーやき': 'むらさききのこ',
        'さかなのりんごやき': 'あまいさかな', 'たけのこのりんごに': 'ぐにゃっとたけのこ', 'きのことりんごのいため': 'べちゃっときのこ',
        'キャベツのベリーに': 'むらさきキャベツに', 'キャベツのりんごに': 'あまったるいキャベツ', 'ベリーのたまごやき': 'むらさきたまごやき'}
@@ -147,7 +147,7 @@ def eff(ins, st, typ):
         if fun >= en: fun += 10
         else: en += 10
     ef, fx = {}, []
-    if en: ef['en'] = en; fx.append('つかれ−%d' % en)
+    if en: ef['en'] = en; fx.append('つかれ－%d' % en)
     if fun: ef['fun'] = fun; fx.append('たのしさ+%d' % fun)
     if wkn:
         m = 4 if wkn == 1 else 6; h = 4 + 3 * len(ins) + (2 if st == O else 0)
@@ -171,7 +171,7 @@ def main():
         hard = len(ins) + (1 if O in st else 0)
         tm = {1: 35, 2: 49, 3: 63, 4: 77}[min(4, hard)]
         ef, fx = eff(ins, st[0], typ)
-        if nm in BAD: nm = BAD.pop(nm); ef, fx = {'fun': -15}, 'たのしさ−15'
+        if nm in BAD: nm = BAD.pop(nm); ef, fx = {'fun': -15}, 'たのしさ－15'
         pt, pw = PT[min(3, max(1, (v + 1) // 2))]
         out.append(dict(id=k, i=ins, st=st, el=el, time=tm,
                         f=dict(name=nm, v=v, pt=pt, pw=pw, dish=1, e='ic:' + k, fx=fx, ef=ef, **({'bad': 1} if ef.get('fun', 0) < 0 else {})),

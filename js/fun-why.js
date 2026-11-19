@@ -21,10 +21,10 @@ function funDecayList(r){const L=[],G=gearStat(r);
   return L}
 function funDecayK(r){let k=1;for(const[,m]of funDecayList(r))k*=m;return k}
 function funEnvNow(r){if(!ENVG)return 0;const j=(r.y|0)*W+(r.x|0);return ENVG[j]+(ENVE[r.elem]?ENVE[r.elem][j]:0)}
-function funPop(r){if(!r)return;const P=pxPop('たのしさのわけ'),R=el('<div class="recs comfyCalc"></div>'),f1=v=>Math.round(v*10)/10,sg=v=>(v<0?'−':'+')+Math.abs(v);
+function funPop(r){if(!r)return;const P=pxPop('たのしさのわけ'),R=el('<div class="recs comfyCalc"></div>'),f1=v=>Math.round(v*10)/10,sg=v=>(v<0?'－':'+')+Math.abs(v);
   const row=(a,b,cls)=>{const d=el('<div class="st'+(cls?' '+cls:'')+'"><span></span><b></b></div>');d.firstChild.textContent=a;d.lastChild.textContent=b;R.appendChild(d)};
   const hd=t=>{const d=el('<div class="funHd"></div>');d.textContent=t;R.appendChild(d)};
-  hd('いま');{const K=funDecayK(r);row('時間でへる','−'+f1(.07*FUNHOUR*K)+'／1時間');for(const[n,m]of funDecayList(r))row(n,'×'+f1(m),'sub')}
+  hd('いま');{const K=funDecayK(r);row('時間でへる','－'+f1(.07*FUNHOUR*K)+'／1時間');for(const[n,m]of funDecayList(r))row(n,'×'+f1(m),'sub')}
   {const ev=funEnvNow(r);if(ev>0)row('まわりのけしき','+'+f1(ev*.004*FUNHOUR)+'／1時間')}
   hd('きょう（朝6時から）');const fd=funDay(r),ks=Object.keys(fd.k).map(k=>[k,Math.round(fd.k[k])]).filter(x=>x[1]).sort((a,b)=>Math.abs(b[1])-Math.abs(a[1]));let sum=0;
   for(const[k,v]of ks){row(FUNW[k]||k,sg(v));sum+=v}

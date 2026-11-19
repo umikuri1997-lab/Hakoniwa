@@ -78,7 +78,7 @@ const TRK=el=>Object.keys(TRAITS).filter(k=>k!=='kizuna'&&k!=='tane'&&k!=='nebar
 const EL_BASE={wood:{work:20,move:20,sta:20,cap:1},water:{work:26,move:20,sta:14,cap:1},fire:{work:20,move:20,sta:20,cap:1},earth:{work:16,move:18,sta:26,cap:1},wind:{work:18,move:26,sta:16,cap:1}};/* Lv1の能力（属性ごと。はたらく速さ・移動速度・スタミナの合計は、どれも60）。20がふつうの速さ（STD） */
 const EL_GROW={fire:{atk:[1,20],work:80,move:80,cap:25},earth:{atk:[1,10],work:120,move:60,cap:45},wood:{atk:[1,8],work:90,move:80,cap:30},water:{atk:[1,4],work:110,move:70,cap:25},wind:{atk:[1,6],work:70,move:120,cap:25}};/* レベルが上がるたびに、[いちばん少ない,いちばん多い] のどれかだけふえる。数だけの物は、この%で+1（100をこえた分は、かならず+1。120なら+1と、20%でもう+1） */
 const EL_ATK={fire:10,earth:8,wood:5,water:0,wind:3};/* Lv1の攻撃力 */
-const GRDEV=20;/* せいれいごとの、のびやすさ：能力ごとに−20〜+20（1きざみ） */
+const GRDEV=20;/* せいれいごとの、のびやすさ：能力ごとに－20〜+20（1きざみ） */
 const VRDEV=[-6,-4,-2,0,2,4,6];/* 個体ごとのばらつき：はたらく速さ・移動速度・スタミナを、それぞれ、この中から */
 function vrInt(V){if(V&&V.iv!==3){const K=['pow','spd','sta'];if(V.iv!==2){if(!V.iv)for(const k of K)V[k]=Math.round(((V[k]==null?1:V[k])-1)*10);for(const k of K)V[k]=(V[k]||0)*10}for(const k of K)V[k]=Math.round((V[k]||0)/5);V.iv=3}return V}/* 前のセーブ：倍率（1がふつう）・10がふつう・100がふつうだったころの数を、20がふつうの、たす数にかえる（iv が 3 なら、もうかえてある。100がふつうの数（iv 2）は÷5してまるめる） */
 const trt=(r,k)=>!!(r&&r.vr&&r.vr.tr===k),recK=r=>(trt(r,'nebari')?2:1)*gearStat(r).rec*(1+(typeof pathA==='function'?pathA('rec'):0)/100);/* recK：つかれのとれる速さ（ねばりづよい子は2倍） */
@@ -128,8 +128,8 @@ function genWorld(s,w){
 }
 
 /* ---------- 火山のふもと（ステージ2）：温泉3か所・火山・熱の道 ---------- */
-const SPR_EFF={a:.3,b:.7,c:.8};/* 温泉の効き目：入口はつかれ−0.3/秒、西はたのしさ+0.7/秒、奥は出たあと、その日のおなかのへりかた0.8倍 */
-const SPR_TXT={a:'入っているあいだ、つかれ−27／1時間',b:'入っているあいだ、たのしさ+63／1時間',c:'出たあと、その日のおなかのへりかた0.8倍'};
+const SPR_EFF={a:.3,b:.7,c:.8};/* 温泉の効き目：入口はつかれ－0.3/秒、西はたのしさ+0.7/秒、奥は出たあと、その日のおなかのへりかた0.8倍 */
+const SPR_TXT={a:'入っているあいだ、つかれ－27／1時間',b:'入っているあいだ、たのしさ+63／1時間',c:'出たあと、その日のおなかのへりかた0.8倍'};
 const HSPC={a:[CX+4.8,CY+4.8],b:[CX-8.5,CY-8],c:[CX+.5,CY-15]},SPN={a:'入口の温泉',b:'西の温泉',c:'奥の温泉'};
 const VOLJ=(OFF+1)*W+(CX-1),D1=(OFF+9)*W+(CX-4),D2=(CY-18)*W+(CX+5),CRACKS=[-2,-1,0,1,2].map(d=>(OFF+9)*W+CX+d),BVOL=[D2-1,D2+1,D2-W,D2+W];
 const ASHT=new Set(['oven','bench','takebench','tub','sink','campfire','hotstone']);
