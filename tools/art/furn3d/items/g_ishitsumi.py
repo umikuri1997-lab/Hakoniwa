@@ -12,4 +12,4 @@ def PARTS():
     for k,(r,zs,dx) in enumerate([(0.28,0.26,0.0),(0.2,0.42,0.03),(0.15,0.45,-0.03),(0.11,0.5,0.02),(0.075,0.6,-0.01)]):
         h=r*zs;p=P('石%d'%k,'ball',(CX+dx,CY,z+h,r,zs),ST[k],on=(('石%d'%(k-1),) if k else ()),note='地面におく' if not k else '下の石のてっぺんにのせる');p.tex=False;L.append(p);z+=2*h-0.02
     return L
-TONE5=True
+TONE5=True;TONE3=True   # かげは3だん・あみ少し（限定の家具。持ち主がきめた）

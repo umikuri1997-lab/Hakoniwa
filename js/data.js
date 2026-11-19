@@ -133,8 +133,8 @@ const BL={
   /* 限定の家具（gift-furn.js）：gf:'ret' プレゼントのお返し・'let' 手紙のお礼・'bond' プレゼントを10回あげた節目。el はくれるせいれいの属性 */
   g_ishitsumi:{gf:'ret',el:'earth',shopOnly:1,name:'石つみのかざり',kind:'furn',pc:4,solid:1,attr:{earth:1},mat:{stone:3},desc:'小石をつんだかざり。住み心地+6'},
   g_donguri:{gf:'ret',el:'wood',shopOnly:1,name:'どんぐりのランプ',kind:'furn',cat:'light',pc:4,solid:1,attr:{wood:1},mat:{wood:3},desc:'あかり。住み心地+5'},
-  g_shizuku:{gf:'ret',el:'water',shopOnly:1,name:'しずくのガラスばち',kind:'furn',pc:4,solid:1,attr:{water:1},mat:{stone:3},desc:'水と小石を入れたガラスのはち。住み心地+6'},
-  g_hidamari:{gf:'ret',el:'fire',shopOnly:1,name:'ひだまりのランタン',kind:'furn',cat:'light',pc:4,solid:1,attr:{fire:1},mat:{wood:2,can:1},desc:'あかり。住み心地+5'},
+  g_shizuku:{gf:'ret',el:'water',shopOnly:1,name:'金魚ばち',kind:'furn',pc:4,solid:1,attr:{water:1},mat:{stone:3},desc:'金魚のおよぐ、ガラスのはち。住み心地+6'},
+  g_hidamari:{gf:'ret',el:'fire',shopOnly:1,name:'ほのお色のガラスの小鳥',kind:'furn',pc:4,solid:1,attr:{fire:1},mat:{stone:3},desc:'赤とだいだいのガラスの小鳥。住み心地+6'},
   g_kazaguruma:{gf:'ret',el:'wind',shopOnly:1,name:'かざぐるまのかざり',kind:'furn',cat:'env',pc:4,solid:1,attr:{wind:1},env:3,mat:{wood:3},desc:'まわり3マスで、たのしさ+1.1／1時間。住み心地+4'},
   g_kabin:{gf:'let',el:'earth',shopOnly:1,name:'土やきの花びん',kind:'furn',pc:5,solid:1,attr:{earth:1},mat:{stone:3},desc:'土をやいた花びん。住み心地+8'},
   g_oshibana:{gf:'let',el:'wood',shopOnly:1,name:'おし花のがく',kind:'furn',pc:5,solid:1,attr:{wood:1},mat:{wood:3},desc:'おし花を入れた、立てるがく。住み心地+8'},

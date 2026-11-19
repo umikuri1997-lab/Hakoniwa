@@ -1,20 +1,18 @@
-# ひだまりのランタン（g_hidamari、火のせいれいのお返し）：四角い木のわくのランタン。あたたかい、だいだいのガラスが光る。屋根は四角いかさ、上に取っ手。
-# 設計図（単位はマス）：台（四角い板、0.36角・高さ0〜0.04）→ 柱4本（太さ0.03・高さ0.04〜0.34）→ ガラス（柱のあいだ、光る）→ 屋根（四角すいのかさ、0.42角・高さ0.34〜0.44）→ 取っ手（輪）。
+# ほのお色のガラスの小鳥（g_hidamari、火のせいれいのお返し）：赤からだいだいのガラスでできた、ころんとした小鳥の置き物。小さな木の台にのる。
+# 設計図（単位はマス）：台（木の輪切り、半径0.15・高さ0〜0.04）→ からだ（つぶした玉、半径0.15・高さ0.04〜0.26、少しうしろへ）→ 頭（玉、半径0.09、からだの前の上）
+#   → くちばし（小さな円すい、前へ）→ しっぽ（うすい板を、うしろの上へはね上げる）→ はね（からだの両わきに、うすい玉）。ガラスはつやあり。
 from blueprint import Part as P
 from common import *
-import math
 ID='g_hidamari';BOTTOM=46;GRAD=True
 VIEWS=[('g_hidamari',0)]
-CX,CY=0.50,0.58;RED=(214,112,84);GLASS=(255,176,96);GLC=(255,230,150)
+CX,CY=0.50,0.55;RED=(236,104,78);ORG=(248,160,86);YEL=(252,206,110)
+def G(p):p.tex=False;p.glassc=True;return p   # 色ガラス（すける・ふちほどこい・つやのすじ）
 def PARTS():
-    h=0.18;L=[P('台','box',(CX-h,CY-h,0.0,CX+h,CY+h,0.04),RED,note='地面におく')]
-    for k,(sx,sy) in enumerate([(-1,-1),(1,-1),(1,1),(-1,1)]):L.append(notex(P('柱%d'%k,'cyl',(CX+sx*(h-0.02),CY+sy*(h-0.02),0.016,0.04,0.34),RED,detail=8,on=('台',),note='台の角')))
-    g=P('ガラス','box',(CX-h+0.012,CY-h+0.012,0.04,CX+h-0.012,CY+h-0.012,0.34),GLASS,on=('台',),note='柱のあいだ。中の火で光る');g.glow=True;g.tex=False
-    g.decal=lambda x,y,z:GLC if math.hypot(x-CX,(z-0.13)*0.85)<0.09 else (255,206,128) if math.hypot(x-CX,(z-0.13)*0.85)<0.14 else None;L.append(g)
-    L.append(notex(P('屋根','box',(CX-0.2,CY-0.2,0.34,CX+0.2,CY+0.2,0.365),RED,on=('柱0','柱2'),note='柱の上。のきの板')))
-    L.append(notex(P('屋根の上','box',(CX-0.09,CY-0.09,0.365,CX+0.09,CY+0.09,0.39),RED,on=('屋根',),note='のきの板の上')))
-    ring=[(CX+0.045*math.cos(math.radians(a)),CY,0.435+0.045*math.sin(math.radians(a))) for a in range(-90,271,30)]
-    L.append(P('取っ手','tube',(ring,0.018),(146,140,150),on=('屋根の上',),note='屋根の上'));L[-1].metal=True
-    L.append(flame('火',CX,CY+0.15,0.04,0.17,0.05,('台',),'ガラスの中'))
+    L=[P('台','cyl',(CX,CY,0.15,0.0,0.04),WOOD,detail=32,note='地面におく。輪切りの木')]
+    L.append(G(P('からだ','ball',(CX+0.02,CY,0.14,0.13,0.78),ORG,on=('台',),note='台の上')))
+    L.append(G(P('頭','ball',(CX-0.09,CY+0.01,0.27,0.085),RED,on=('からだ',),note='からだの前の上')))
+    L.append(G(P('くちばし','lathe',(CX-0.185,CY+0.01,[(0.0,0.255),(0.025,0.26),(0.0,0.29)]),YEL,detail=12,on=('頭',),note='頭の前')))
+    L.append(G(P('しっぽ','prism',([(CX+0.1,0.13),(CX+0.26,0.25),(CX+0.27,0.3),(CX+0.12,0.19)],CY-0.04,CY+0.04,'y'),RED,on=('からだ',),note='からだのうしろから、上へはね上げる')))
+    for k,dy in enumerate((-0.11,0.11)):L.append(G(P('はね%d'%k,'ball',(CX+0.05,CY+dy*0.9,0.15,0.055,0.55),(244,128,80),on=('からだ',),note='からだの両わき')))
     return L
-TONE5=True
+TONE5=True;TONE3=True   # かげは3だん・あみ少し（限定の家具。持ち主がきめた）
