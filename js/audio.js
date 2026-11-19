@@ -105,15 +105,17 @@ function moodTick(){const now=performance.now();for(const[r,m]of MOODM)if(now-m.
   const b=pick(L),t=AC.currentTime,rate=voVo(r)*.9;/* もやもやは、ゆっくりのまま */
   const src=AC.createBufferSource(),g=AC.createGain();src.buffer=b;src.playbackRate.value=rate;g.gain.value=MOODV[k]*q.v*(SND.vv??1);let h=g;src.connect(g);if(AC.createStereoPanner){const pn=AC.createStereoPanner();pn.pan.value=q.p;h.connect(pn);h=pn}{const f=AC.createBiquadFilter();f.type='lowpass';f.frequency.value=Math.min(q.l,3200);h.connect(f);h=f}h.connect(sfxG);
   const d=b.duration/rate;src.start(t);src.stop(t+d+.05);MOODP={r,k,end:t+d+gap}}
-/* 朝の体そう（events.js の taiso）の音：体そうをしているあいだ、画面のまん中にいちばん近い、体そうしている子の声（SAMPLES.voice の母音の粒）で、
-   小さく、ふにゃっと音のはじめが上がる、拍のはっきりした明るいメロディ（TAISOM：[半音,拍]、1拍 TAISOB 秒）を、くりかえし流す。会話の画面の声が出ているあいだは鳴らさない */
-const TAISOB=.5,TAISOV=.42,TAISOM=[[0,1],[4,1],[7,1],[4,1],[5,.5],[4,.5],[2,.5],[0,.5],[2,1],[null,1],[4,1],[2,1],[4,1],[7,1],[9,.5],[7,.5],[4,.5],[2,.5],[0,1],[null,1],[7,.5],[7,.5],[9,1],[7,1],[4,1],[5,.5],[4,.5],[2,1],[4,1],[null,1],[2,1],[4,.5],[2,.5],[0,1],[-5,1],[0,2],[null,2]];
+/* 朝の体そう（events.js の taiso）の音：体そうをしているあいだ、体そうしている子みんなの声（SAMPLES.voice の母音の粒、それぞれの声の高さ・場所）で、
+   小さく、ふにゃっと音のはじめが上がる、拍のはっきりした明るいメロディ（TAISOM：[半音,拍]、1拍 TAISOB 秒）を、くりかえし流す。
+   みんなは、子ごとにきまった時間だけ、ちょっとずつずれて歌う（taisoLag：0〜TAISOLAG 秒）。近い子から TAISON 人まで。人数がふえても大きくなりすぎないよう、1人ぶんは 1/√人数。会話の画面の声が出ているあいだは鳴らさない */
+const TAISOB=.5,TAISOV=.42,TAISON=6,TAISOLAG=.09,TAISOM=[[0,1],[4,1],[7,1],[4,1],[5,.5],[4,.5],[2,.5],[0,.5],[2,1],[null,1],[4,1],[2,1],[4,1],[7,1],[9,.5],[7,.5],[4,.5],[2,.5],[0,1],[null,1],[7,.5],[7,.5],[9,1],[7,1],[4,1],[5,.5],[4,.5],[2,1],[4,1],[null,1],[2,1],[4,.5],[2,.5],[0,1],[-5,1],[0,2],[null,2]];
 let TAISOP=null;/* {i:つぎの音,t:その時刻} */
-function taisoWho(){const E=S&&S.ev;if(!E||E.id!=='taiso'||E.ph!=='do')return null;let best=null,bv=0;for(const id of E.who){const r=S.res.find(q=>q.id===id);if(!r||r.hidden||!r.act||r.act.type!=='evt'||r.act.stage!=='do'||r.act.back)continue;const q=sfxPos(r.x,r.y);if(q&&q.v>bv){bv=q.v;best=[r,q]}}return best}
+function taisoLag(r){const h=Math.sin((r.id||0)*12.9898+7.1)*43758.5453;return(h-Math.floor(h))*TAISOLAG}/* 子ごとにきまったずれ（しまわない） */
+function taisoWho(){const E=S&&S.ev;if(!E||E.id!=='taiso'||E.ph!=='do')return[];const L=[];for(const id of E.who){const r=S.res.find(q=>q.id===id);if(!r||r.hidden||!r.act||r.act.type!=='evt'||r.act.stage!=='do'||r.act.back)continue;const q=sfxPos(r.x,r.y);if(q)L.push([r,q])}return L.sort((a,b)=>b[1].v-a[1].v).slice(0,TAISON)}
 function taisoTick(){if(!AC||!SND.sfx||AC.state!=='running'||VOICE||!S||!started||(typeof paused==='function'&&paused())||(typeof SKIP!=='undefined'&&SKIP)){TAISOP=null;return}
-  const w=taisoWho();if(!w){TAISOP=null;return}const b=(SBUF.voice||[])[0];if(!b)return;const[r,q]=w,now=AC.currentTime;if(!TAISOP||TAISOP.t<now-.3)TAISOP={i:0,t:now+.05};
-  const base=voVo(r)*.84;let dest=null;
-  while(TAISOP.t<now+.35){const[n,bt]=TAISOM[TAISOP.i],len=bt*TAISOB;if(n!=null){dest=dest||voiceDest(q,2400,TAISOV);vNote(b,TAISOP.t,Math.min(len*.78,.42),base*Math.pow(2,n/12),1,dest,{g:.09,bend:.9,dim:1})}TAISOP.t+=len;TAISOP.i=(TAISOP.i+1)%TAISOM.length}}
+  const W0=taisoWho();if(!W0.length){TAISOP=null;return}const b=(SBUF.voice||[])[0];if(!b)return;const now=AC.currentTime;if(!TAISOP||TAISOP.t<now-.3)TAISOP={i:0,t:now+.05};
+  const k=1/Math.sqrt(W0.length),V=W0.map(([r,q])=>({base:voVo(r)*.84,lag:taisoLag(r),q,d:null}));
+  while(TAISOP.t<now+.35){const[n,bt]=TAISOM[TAISOP.i],len=bt*TAISOB;if(n!=null)for(const v of V){v.d=v.d||voiceDest(v.q,2400,TAISOV*k);vNote(b,TAISOP.t+v.lag,Math.min(len*.78,.42),v.base*Math.pow(2,n/12),1,v.d,{g:.09,bend:.9,dim:1})}TAISOP.t+=len;TAISOP.i=(TAISOP.i+1)%TAISOM.length}}
 setInterval(moodTick,100);setInterval(taisoTick,100);
 function voiceStop(){if(!VOICE)return;const v=VOICE;VOICE=null;clearTimeout(v.end);try{const t=AC.currentTime;v.g.gain.setTargetAtTime(0,t,.04);v.src.stop(t+.2)}catch(e){}}
 /* せいれいどうしのおしゃべりの、小さな話し声：会話の声（SAMPLES.voice）を、話す子の声の高さで、短く切って鳴らす。
