@@ -685,7 +685,7 @@ def sheets(name, out):
     PS = {False: kw_skel.poses(name), True: kw_skel.poses(name, side=True)}
     for mo in PS[False]:
         for B, yaw in (('', 0.0), ('B', math.pi), ('R', -math.pi/2), ('L', math.pi/2)):   # 正面・うしろ・右むき・左むき（よこは 待機・歩く・攻撃。よこへ歩くとき・攻撃する相手のほうを向く）
-            if mo == 'hurt' and B or B in ('R', 'L') and mo not in ('idle', 'atk', 'walk'): continue
+            if mo == 'hurt' and B or B in ('R', 'L') and mo not in ('idle', 'atk', 'walk', 'steal'): continue
             ps = PS[B in ('R', 'L')][mo]
             fr = []
             fxp = fxparts(ps, name)

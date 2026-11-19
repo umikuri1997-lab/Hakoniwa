@@ -19,19 +19,19 @@ function j3Ding(st,dt,v){j3U('tink',v?v*.6:.18,st,dt)}/* 小さな鈴の「チ�
 /* ---------- 朝の日記の数え上げ ---------- */
 const J3WORK=[['harvest','しゅうかく'],['plant','植えた'],['craft','作った'],['build','建てた'],['fish','つり']];
 function dyWorkSum(e){/* きのうのしごと：種類ごとの回数（みんなのしたこと と同じ記録。料理も「作った」） */const T={};for(const x of e.w||[]){const t=x[3]==='cook'?'craft':x[3];T[t]=(T[t]||0)+x[5]}return J3WORK.filter(k=>T[k[0]]>0).map(k=>[k[1],T[k[0]]+'回'])}
-function juiceDiaryCount(body,secW){/* diaryBody から（朝に出した紙だけ）。secW：きのうのしごと の欄（なければ null） */
-  const L=[...body.querySelectorAll('.stat b')].filter(b=>/^\d+/.test(b.textContent));if(!L.length&&!secW)return;
+function juiceDiaryCount(body,secW,defer){/* diaryBody から（朝に出した紙だけ）。body：日記の本の1ページ。secW：きのうのしごと の欄（なければ null）。defer：数を0にしておき、はじめる関数をかえす（ページを見せたときによぶ） */
+  const L=[...body.querySelectorAll('.stat b')].filter(b=>/^\d+/.test(b.textContent));if(!L.length&&!secW)return defer?()=>{}:undefined;
   const st=S,items=L.map(b=>{const m=b.textContent.match(/^(\d+)(.*)$/);return{b,n:+m[1],sf:m[2]}});
   let done=false;const stamp=()=>{if(secW&&secW.isConnected)uiStamp(secW,false,'よくできました',true)};
   const finish=()=>{if(done)return;done=true;for(const it of items)it.b.textContent=it.n+it.sf;body.removeEventListener('pointerdown',finish,true);setTimeout(stamp,250)};
-  if(uiReduced()||!items.length){finish();return}
+  if(uiReduced()||!items.length){if(defer)return finish;finish();return}
   for(const it of items)it.b.textContent='0'+it.sf;
   body.addEventListener('pointerdown',finish,true);/* タップで、すぐにさいごの数 */
   let i=0,k=0,tick=0;const step=()=>{if(done)return;if(!body.isConnected||S!==st){done=true;return}
     const it=items[i];if(!it){finish();return}const inc=Math.max(1,Math.ceil(it.n/J3COUNTMAX));k=Math.min(it.n,k+inc);it.b.textContent=k+it.sf;
     if(it.n>0){j3U('notch',.32,JUICE_SCALE[Math.min(tick,JUICE_SCALE.length-1)]);tick++}
     if(k>=it.n){i++;k=0;setTimeout(step,J3COUNTMS*3)}else setTimeout(step,J3COUNTMS)};
-  setTimeout(step,450)}
+  const go=()=>setTimeout(step,450);if(defer)return go;go()}
 
 /* ---------- なかよしのハート ---------- */
 function juiceBondHeart(a,b,lv){if(!j3OK()||!a||!b||a.hidden||b.hidden||J3H.length>3)return;J3H.push({a,b,lv,t0:performance.now(),s:0});}

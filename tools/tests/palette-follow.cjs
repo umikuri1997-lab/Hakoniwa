@@ -28,7 +28,7 @@ const assert=require('node:assert/strict');
   const btn=await run(`[...document.querySelectorAll('#sheetBody button')].some(b=>b.textContent==='見守る')`);assert.ok(btn,'button on the spirit sheet');
   await run(`[...document.querySelectorAll('#sheetBody button')].find(b=>b.textContent==='見守る').click()`);
   const f0=JSON.parse(await run(`JSON.stringify({on:followActive(),sheet,tag:document.querySelector('#followTag')?.textContent||'',act:S.res[0].act&&S.res[0].act.type})`));
-  assert.ok(f0.on&&f0.sheet===null&&/見守っています/.test(f0.tag),JSON.stringify(f0));
+  assert.ok(f0.on&&f0.sheet===null&&f0.tag==='見守り中',JSON.stringify(f0));
   const d0=await run(`(()=>{const r=S.res[0];return Math.hypot(cam.x+VW/cam.z/2-r.x*TS,cam.y+VH/cam.z/2-(r.y-.6)*TS)})()`);
   await page.waitForTimeout(500);const dMid=await run(`(()=>{const r=S.res[0];return Math.hypot(cam.x+VW/cam.z/2-r.x*TS,cam.y+VH/cam.z/2-(r.y-.6)*TS+uLift(r))})()`);
   await page.waitForTimeout(2500);const d1=await run(`(()=>{const r=S.res[0];return Math.hypot(cam.x+VW/cam.z/2-r.x*TS,cam.y+VH/cam.z/2-(r.y-.6)*TS+uLift(r))})()`);

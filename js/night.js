@@ -251,7 +251,7 @@ function updEnemy(e,dt){
   else if(D.thief){let bd=1e9,box=-1;if(!EREACH.has(e))EREACH.set(e,bfs(e.x|0,e.y|0,2).dist);const RD=EREACH.get(e),ok=q=>q>=0&&q<W*H&&RD[q]>=0;/* 歩いて行ける所からだけ盗む（壁のうらからは盗めない） */for(const k in S.dyn){if(S.obj[k]!=='farm'||S.dyn[k].sown===false||S.dyn[k].g<100||!ok(+k))continue;const fx2=k%W+.5,fy=((k/W)|0)+.5,d=Math.hypot(fx2-e.x,fy-e.y);if(d<bd){bd=d;goal=+k;box=-1}}
     for(const k of BOXL){const bb=BOX()[k];if(!bb||!Object.keys(bb).some(q=>bb[q]>0&&availOf(q)>0))continue;for(const n of[k-1,k+1,k-W,k+W]){if(!walk(n)||!ok(n)||!boxSide(n,k))continue;const d=Math.hypot(n%W+.5-e.x,((n/W)|0)+.5-e.y);if(d<bd){bd=d;goal=n;box=k}}}/* 中身のある箱 */
     if((e.stolen||0)>=10){e.flee=true;e.path=[];e.repath=0}
-    else if(goal>=0&&bd<.6){const key=box===-1?'farm:'+goal:'box:'+box;if(e.stealKey!==key){e.stealKey=key;e.stealT=0}e.busyT=S.t;e.stealT=(e.stealT||0)+dt/DAYLEN;e.path=[];
+    else if(goal>=0&&bd<.6){const key=box===-1?'farm:'+goal:'box:'+box;if(e.stealKey!==key){e.stealKey=key;e.stealT=0}e.busyT=S.t;e.stealT=(e.stealT||0)+dt/DAYLEN;e.path=[];if(box>=0)enAim(e,box%W+.5,((box/W)|0)+.5);/* 箱から盗むときは、箱のほうを向く（畑は、その上で正面を向く） */
       if(e.stealT>=10){e.stealT-=10;let got='',lk='';
         if(box>=0){const bb=BOX()[box]||{},m=Object.keys(bb).filter(q=>bb[q]>0&&availOf(q)>0).sort((p,q)=>bb[q]-bb[p])[0];/* その箱の、いちばん多い物 */if(m&&boxOut(box,m,1)){if(isFK(m)){got='食料';lk='food:'+m.slice(2)}else{got=MATN[m]||m;lk='mat:'+m}}}
         else{const d=S.dyn[goal],fk=cropK(d),n=(CROPS[fk]||{yield:1}).yield;d.stolen=(d.stolen||0)+1;got='畑の作物';lk='food:'+fk;if(d.stolen>=n){d.g=0;d.sown=false;d.crop=null;delete d.stolen}}
