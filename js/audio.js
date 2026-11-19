@@ -45,7 +45,7 @@ Object.assign(SAMPLES,{"dawn":["assets/g/1fb5a4c6a0.mp3"],"midnight":["assets/g/
 Object.assign(SAMPLES,{"stream":["assets/g/9e6d59d464.mp3"]});/* 川・池のそばの音：本物の小川の録音（OpenGameArt「Park Ambiences」CC0。tools/sound/stream_loop.py で、鳥の声のない所をつなぎ目なく） */
 Object.assign(SAMPLES,{"pond":["assets/g/f6217511b3.mp3"],"onsen":["assets/g/cb11690267.mp3"]});/* 池（凪いだ水面と遠くのカエル）・温泉（凪いだお湯に、かすかに流れこむ音）：OpenGameArt の CC0 の録音（tools/sound/water_amb.py。持ち主がききくらべてえらんだ） */
 Object.assign(SAMPLES,{"ea_apple":["assets/g/033b04f1a7.mp3","assets/g/ca8c273519.mp3"],"ea_melon":["assets/g/cce71f370e.mp3","assets/g/9b13557d2f.mp3"],"ea_pine":["assets/g/b429b7887c.mp3","assets/g/3c978e6aab.mp3","assets/g/aafe9405d2.mp3","assets/g/4f2ead9067.mp3"],"ea_veg":["assets/g/b3987a4f8a.mp3","assets/g/415f635f7e.mp3","assets/g/7b954c0174.mp3","assets/g/cfaf459a68.mp3","assets/g/591cd1baf3.mp3"],"ea_cracker":["assets/g/7579d11750.mp3","assets/g/07983377fc.mp3","assets/g/54020bf7b9.mp3","assets/g/b5f53cb814.mp3"],"ea_cookie":["assets/g/d16d324939.mp3","assets/g/ad5c13df8a.mp3","assets/g/54deb41b96.mp3","assets/g/36784858c5.mp3"],"ea_toast":["assets/g/f5537165a4.mp3","assets/g/a4c85db5bc.mp3","assets/g/987552ec79.mp3","assets/g/cd2cc3d4c4.mp3"],"ea_egg":["assets/g/93a74a9baf.mp3","assets/g/82b2f18201.mp3","assets/g/c02d242927.mp3","assets/g/63083dc9f6.mp3"],"ea_cereal":["assets/g/9f8351b0da.mp3","assets/g/c4c84457d5.mp3","assets/g/963a3622ad.mp3","assets/g/7974cb6944.mp3"],"ea_nut":["assets/g/6d3de93b91.mp3","assets/g/66bde9599f.mp3","assets/g/caa18afa42.mp3"],"ea_choco":["assets/g/d8fc9d5713.mp3","assets/g/b442b3d147.mp3","assets/g/4f97c99193.mp3","assets/g/47d4c6bd29.mp3"],"ea_pickle":["assets/g/53d895ff21.mp3","assets/g/7fd84afe1b.mp3","assets/g/ff69fa7755.mp3","assets/g/64cc84e75a.mp3"],"ea_noodle":["assets/g/42ea5479e7.mp3"],"ea_water":["assets/g/35c04e95bd.mp3","assets/g/c6f064b1d7.mp3","assets/g/e8eb0fa39e.mp3","assets/g/7a02fb4df7.mp3"],"ea_sip":["assets/g/cb6bbc6a18.mp3","assets/g/3204105477.mp3","assets/g/2a442ef7a3.mp3"],"ea_tea":["assets/g/62005e63f5.mp3","assets/g/581ff732bb.mp3","assets/g/2273424c30.mp3","assets/g/e57dce6509.mp3"],"ea_shake":["assets/g/72829dae89.mp3","assets/g/939e58e555.mp3","assets/g/5d5c256ddc.mp3","assets/g/ebea34a27d.mp3"]});/* 食べる・のむ音（持ち主が集めてくれた freesound の録音。tools/sound/eat_asmr.py で、かむ1回ぶんずつ切った。食べる物ごとの音は work-fx.js の eatSnd） */
-Object.assign(SAMPLES,{"dscoop":["assets/g/7567dbe225.mp3","assets/g/3df26569c5.mp3"],"dlift":["assets/g/5307efba0e.mp3","assets/g/17045852ae.mp3"],"hum":["assets/g/100e8dbea4.mp3","assets/g/0057097d08.mp3","assets/g/2042a3b372.mp3"]});/* 鼻歌（AuraVoice「Ghostly Humming」の人の声）と、水をくむ（バケツが水に入る・ひき上げる）音：OpenGameArt の CC0 の録音（tools/sound/spirit_act.py） */
+Object.assign(SAMPLES,{"dscoop":["assets/g/7567dbe225.mp3","assets/g/3df26569c5.mp3"],"dlift":["assets/g/5307efba0e.mp3","assets/g/17045852ae.mp3"]});/* 水をくむ（バケツが水に入る・ひき上げる）音：OpenGameArt の CC0 の録音（tools/sound/spirit_act.py） */
 Object.assign(SAMPLES,{"moya": ["assets/g/3b48b35943.mp3", "assets/g/2d7c698059.mp3", "assets/g/57ccb5ca93.mp3"]});/* もやもや（たのしさが低いとき）：持ち主がくれた声を、尻上がりにしないで、ゆっくりの「もやん」1回ぶんずつにした（tools/sound/owner_moya.py） */
 Object.assign(SAMPLES,{"thunder":["assets/g/838e080f8c.mp3","assets/g/76dfb6bdbe.mp3"]});/* あらしのかみなり：本物の録音（OpenGameArt「Rain + Long Thunder」CC0。tools/sound/thunder.py） */
 Object.assign(SAMPLES,{"harvdone":["assets/g/6f531d4897.mp3"]});/* しゅうかくしおわった音：かれ葉がこすれる本物の録音（OpenGameArt qubodup CC0。tools/sound/harvest_done.py。持ち主がえらんだ） */
@@ -57,7 +57,7 @@ Object.assign(SAMPLES,{"spike":["assets/g/5e814bb008.mp3"],"poison":["assets/g/1
 Object.assign(SAMPLES,{"ldmusic":["assets/g/eeb443379e.mp3"]});/* マップの読みこみ中の曲：OpenGameArt「JRPG Piano」（joth、CC0。tools/sound/load_music.py。持ち主がえらんだ） */
 SAMPLES.shard=['assets/g/9464bc7161.mp3'];/* ヌシのかけらをはめる音（ユーザーの音） */
 SAMPLES.furniturePlace=['assets/g/e33cbd97b8.mp3'];/* 家具を置く音：ユーザー提供 */
-SAMPLES.matDrop=['assets/g/ef846d878d.mp3'];SAMPLES.fireatk=['assets/g/149bc0958c.mp3'];/* 火のせいれいの攻撃：ボッ（もらった音） *//* fire：焚き火のぱちぱち（もらった音。60秒のうち12秒を切り出し） */SAMPLES.click=['assets/g/dc1fab61b3.mp3'];/* ボタンをおす音（もらった音） *//* 守りの光で木・岩をこわして、素材が落ちたときの音（もらった音） */
+SAMPLES.matDrop=['assets/g/ef846d878d.mp3'];SAMPLES.fireatk=['assets/g/149bc0958c.mp3'];/* 火のせいれいの攻撃：ボッ（もらった音） *//* fire：焚き火のぱちぱち（もらった音。60秒のうち12秒を切り出し） */SAMPLES.firecrk=['assets/g/b20b2ff16a.mp3'];/* firecrk：焚き火のパチパチ（持ち主がくれた音。tools/sound/owner_fire.py） */SAMPLES.click=['assets/g/dc1fab61b3.mp3'];/* ボタンをおす音（もらった音） *//* 守りの光で木・岩をこわして、素材が落ちたときの音（もらった音） */
 Object.assign(SAMPLES,{"stamp":["assets/g/5fb1653535.mp3","assets/g/9f56c224e9.mp3","assets/g/f1cb5ea1ff.mp3"],"dust":["assets/g/814fe2b628.mp3","assets/g/8189f95d0a.mp3","assets/g/6bfc4bd6ec.mp3","assets/g/ca1ad9eafa.mp3"],"creak":["assets/g/6c7654c715.mp3","assets/g/c82a840632.mp3"],"bend":["assets/g/b60262d9ed.mp3"],"tab":["assets/g/646421dca2.mp3","assets/g/8553ad0946.mp3"],"knockw":["assets/g/b16e923e81.mp3","assets/g/44cd883b60.mp3","assets/g/c00e91f7e0.mp3","assets/g/b4f4e74b6b.mp3","assets/g/ff0c586227.mp3"],"notch":["assets/g/e4390406ba.mp3","assets/g/0ab0818cbf.mp3","assets/g/bd4aa0ed1d.mp3"]});Object.assign(SAMPLES,{"lid":["assets/g/33c29f24b3.mp3","assets/g/eed154ca9c.mp3"]});/* 木箱のふたが開く音（Kenney の CC0、tools/sound/ui_asmr.py） *//* UIの手ざわりの本物の音（Kenney の CC0 の音を tools/sound/ui_asmr.py でととのえた物）：ハンコ・木くず・なわのきしみ・板のしなり・タブ・ことっ・± */
 Object.assign(SAMPLES,{"twood":["assets/g/c4d66fe5c8.mp3","assets/g/31d3db8da0.mp3","assets/g/0a2507b504.mp3","assets/g/5428603b66.mp3","assets/g/27d96d985a.mp3"],"tstone":["assets/g/c0313b87df.mp3","assets/g/42909bf5c3.mp3","assets/g/d740607154.mp3","assets/g/fc149ecd6d.mp3","assets/g/f00873c212.mp3"],"tcan":["assets/g/e8a6d86ce5.mp3","assets/g/02f3ff1b30.mp3","assets/g/ea19526521.mp3","assets/g/90fa5e0e57.mp3","assets/g/8abd7075f2.mp3"],"tcloth":["assets/g/c2cdd95470.mp3","assets/g/ce2640c6dd.mp3","assets/g/cdb321f6cb.mp3"],"tgrass":["assets/g/4a314261fa.mp3","assets/g/16d30726b3.mp3","assets/g/fbc86f2c44.mp3","assets/g/9178e82c39.mp3","assets/g/24268c983c.mp3"],"tsoil":["assets/g/62d5025d65.mp3","assets/g/e0c48cecb6.mp3"],"twater":["assets/g/1856221d15.mp3","assets/g/15b3735de2.mp3","assets/g/7689d8c500.mp3","assets/g/8cb0dba7a9.mp3"],"tbell":["assets/g/13709a2edb.mp3","assets/g/2f7dccdd32.mp3","assets/g/feeb83871b.mp3"],"tfoe":["assets/g/6ccd894f39.mp3","assets/g/a11fa7e264.mp3","assets/g/0253048f7a.mp3","assets/g/6693e31f34.mp3","assets/g/2fcfb0f848.mp3"],"tweb":["assets/g/1216aa24cb.mp3","assets/g/e8430383b5.mp3"],"tani":["assets/g/f63defe2c9.mp3","assets/g/b32ac3f0b2.mp3"],"tplace":["assets/g/a9d4ab80a0.mp3","assets/g/4d2d55acb6.mp3","assets/g/f71fb79281.mp3","assets/g/56cffcde91.mp3"],"tsacred":["assets/g/b5b66ae8d4.mp3","assets/g/01dbe882fb.mp3","assets/g/501918a536.mp3","assets/g/e935b9741f.mp3"]});/* 「みる」でタップした物の音（本物の録音、tools/sound/ui_asmr.py） */
 Object.assign(SAMPLES,{"page":["assets/g/853378766a.mp3","assets/g/a3901e0d93.mp3","assets/g/5e890e7bc8.mp3"]});/* 思い出帳のページをめくる音：Kenney「RPG Audio」の bookFlip（CC0。tools/sound/ui_asmr.py の page） */
@@ -81,18 +81,46 @@ function greetVoice(r,dl){if(!AC||!SND.sfx||AC.state!=='running'||VOICE)return;c
   src.connect(env);env.connect(cp);cp.connect(g);let h=g;if(AC.createStereoPanner){const pn=AC.createStereoPanner();pn.pan.value=q.p;h.connect(pn);h=pn}{const f=AC.createBiquadFilter();f.type='lowpass';f.frequency.value=Math.min(q.l,2600);f.Q.value=.5;h.connect(f);h=f}h.connect(sfxG);
   src.start(t,Math.random()*Math.max(0,b.duration-d-.1));src.stop(t+d+.05)}
 /* 鼻歌・もやもやの音（work-fx.js の drawHum・drawMoya）：音符・もやもやが出ているあいだ、画面のまん中にいちばん近い1人（見守っている子がいれば、その子）だけ、
-   録音（鼻歌 SAMPLES.hum・もやもや SAMPLES.moya）を、その子の声の高さで小さく、つぎつぎ鳴らす。会話の画面の声が出ているあいだは鳴らさない */
-const MOODM=new Map(),MOODV={hum:.22,moya:.22},MOODGAP={hum:[.5,1.1],moya:[.08,.2]};let MOODP=null;/* つぎを鳴らすまでの間（秒）。もやもやは、もやん・もやんと短く。MOODP：いま鳴らしている {r,k,end} */
+   その子の声の高さで小さく、つぎつぎ鳴らす。会話の画面の声が出ているあいだは鳴らさない。
+   鼻歌は、会話の声の母音をのばした音（SAMPLES.vowel）1本を1つの音にし（vNote）、高い音をけずって口をとじた「ん〜」にした、3〜5音の短いフレーズ（humPhrase）。もやもやは録音（SAMPLES.moya） */
+const MOODM=new Map(),MOODV={hum:.5,moya:.22},MOODGAP={hum:[.7,1.6],moya:[.08,.2]};let MOODP=null;/* つぎを鳴らすまでの間（秒）。もやもやは、もやん・もやんと短く。MOODP：いま鳴らしている {r,k,end} */
+SAMPLES.vowel=['assets/g/033c7b6fbe.mp3'];/* 会話の声の母音を、高さのかわらない2秒の「あー」にのばした音（tools/sound/voice_vowel.py、約580Hz） */
+const VIBHZ=6;
+function vNote(b,t,len,rate,v,dest,o={}){/* 1つの音：のばした声（SAMPLES.vowel）1本を、rate の高さで len 秒（o.bend：はじめ少し低くから上がる・o.dim：おわりへ小さく・o.vib：やさしいゆれ）。音の中で粒にきらないので、ゆれすぎない */
+  const src=AC.createBufferSource(),g=AC.createGain();src.buffer=b;if(o.vib){/* o.vib：音の高さを、やさしく小さくゆらす（VIBHZ 回／秒。はじめは o.bend から上がり、ゆれは少しおくれて出る） */const N=Math.max(2,Math.ceil(len*80)),C=new Float32Array(N);for(let i=0;i<N;i++){const x=i/(N-1)*len,bd=o.bend?o.bend+(1-o.bend)*Math.min(1,x/Math.min(.08,len*.4)):1;C[i]=rate*bd*(1+o.vib*Math.min(1,x/.12)*Math.sin(6.2832*VIBHZ*x))}src.playbackRate.setValueCurveAtTime(C,t,len)}else if(o.bend){src.playbackRate.setValueAtTime(rate*o.bend,t);src.playbackRate.linearRampToValueAtTime(rate,t+Math.min(.08,len*.4))}else src.playbackRate.value=rate;
+  const a=Math.min(.04,len*.25),r=Math.min(.08,len*.3);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(v,t+a);g.gain.linearRampToValueAtTime(o.dim?v*.6:v,t+len-r);g.gain.linearRampToValueAtTime(0,t+len);src.connect(g);g.connect(dest);
+  const use=len*rate+.05;src.start(t,.05+Math.random()*Math.max(0,b.duration-use-.1));src.stop(t+len+.02)}
+function voiceDest(q,lp,v){/* 声の出口：大きさ・左右（マップの場所の音と同じ）・こもり */let h=AC.createGain();h.gain.value=v*q.v*(SND.vv??1);const in0=h;if(AC.createStereoPanner){const pn=AC.createStereoPanner();pn.pan.value=q.p;h.connect(pn);h=pn}const f=AC.createBiquadFilter();f.type='lowpass';f.frequency.value=Math.min(q.l,lp);f.Q.value=.4;h.connect(f);f.connect(sfxG);return in0}
+function voVo(r){return(r.vr&&r.vr.vo)||(typeof KEYVR!=='undefined'&&KEYVR[r.name]&&KEYVR[r.name].vo)||1.12}/* その子の声の高さ */
+const HUMVIB=.014;/* 鼻歌のゆれ（高さの1.4%） */const HUMS=[[0,2,4,2],[4,2,0,-3,0],[0,4,7,4],[2,4,2,0],[7,4,2,0],[-3,0,2,0,-3],[0,0,2,4]];/* 鼻歌のフレーズ（半音。ペンタトニックの中だけ） */
+function humPhrase(r,q,b){const P=pick(HUMS),dest=voiceDest(q,700,MOODV.hum),base=voVo(r)*.84;let t=AC.currentTime+.03;
+  P.forEach((n,i)=>{const last=i===P.length-1,len=last?.75:.38+Math.random()*.12;vNote(b,t,len+.06,base*Math.pow(2,n/12),1,dest,{dim:last,vib:HUMVIB,bend:.97});t+=len});return t}
 function moodMark(r,k,now){MOODM.set(r,{k,t:now})}
 function moodTick(){const now=performance.now();for(const[r,m]of MOODM)if(now-m.t>400||r.hidden)MOODM.delete(r);
   if(!AC||!SND.sfx||AC.state!=='running'||VOICE||!S||!started||(typeof paused==='function'&&paused())||(typeof SKIP!=='undefined'&&SKIP))return;
   if(MOODP&&AC.currentTime<MOODP.end)return;
   let best=null,bv=0;for(const[r,m]of MOODM){const q=sfxPos(r.x,r.y);if(!q)continue;const v=(typeof FOLLOW!=='undefined'&&FOLLOW===r)?9:q.v;if(v>bv){bv=v;best=[r,m.k,q]}}
-  if(!best){MOODP=null;return}const[r,k,q]=best,L=(SBUF[k]||[]).filter(Boolean);if(!L.length)return;
-  const b=pick(L),vo=(r.vr&&r.vr.vo)||(typeof KEYVR!=='undefined'&&KEYVR[r.name]&&KEYVR[r.name].vo)||1.12,t=AC.currentTime,rate=k==='hum'?vo*1.15:vo*.9;/* もやもやは、ゆっくりのまま */
+  if(!best){MOODP=null;return}const[r,k,q]=best,L=(SBUF[k==='hum'?'vowel':k]||[]).filter(Boolean);if(!L.length)return;const g0=MOODGAP[k],gap=g0[0]+Math.random()*(g0[1]-g0[0]);
+  if(k==='hum'){MOODP={r,k,end:humPhrase(r,q,L[0])+gap};return}
+  const b=pick(L),t=AC.currentTime,rate=voVo(r)*.9;/* もやもやは、ゆっくりのまま */
   const src=AC.createBufferSource(),g=AC.createGain();src.buffer=b;src.playbackRate.value=rate;g.gain.value=MOODV[k]*q.v*(SND.vv??1);let h=g;src.connect(g);if(AC.createStereoPanner){const pn=AC.createStereoPanner();pn.pan.value=q.p;h.connect(pn);h=pn}{const f=AC.createBiquadFilter();f.type='lowpass';f.frequency.value=Math.min(q.l,3200);h.connect(f);h=f}h.connect(sfxG);
-  const d=b.duration/rate;src.start(t);src.stop(t+d+.05);MOODP={r,k,end:t+d+MOODGAP[k][0]+Math.random()*(MOODGAP[k][1]-MOODGAP[k][0])}}
-setInterval(moodTick,100);
+  const d=b.duration/rate;src.start(t);src.stop(t+d+.05);MOODP={r,k,end:t+d+gap}}
+/* 朝の体そう（events.js の taiso）の音：体そうをしているあいだ、体そうしている子みんなの声（SAMPLES.vowel、それぞれの場所。高さは TAISOH のハモり）で、
+   小さく、音をのばしてつなげた（はずみすぎない）、拍のはっきりした明るいメロディ（TAISOM：[半音,拍]、1拍 TAISOB 秒）を、くりかえし流す。
+   みんなは、子ごとにきまった時間だけ、ちょっとずつずれて歌う（taisoLag：0〜TAISOLAG 秒）。近い子から TAISON 人まで。人数がふえても大きくなりすぎないよう、1人ぶんは 1/√人数。会話の画面の声が出ているあいだは鳴らさない */
+const TAISOB=.5,TAISOV=.42,TAISON=6,TAISOLAG=.09,TAISOM=[[0,1],[4,1],[7,1],[4,1],[5,.5],[4,.5],[2,.5],[0,.5],[2,1],[null,1],[4,1],[2,1],[4,1],[7,1],[9,.5],[7,.5],[4,.5],[2,.5],[0,1],[null,1],[7,.5],[7,.5],[9,1],[7,1],[4,1],[5,.5],[4,.5],[2,1],[4,1],[null,1],[2,1],[4,.5],[2,.5],[0,1],[-5,1],[0,2],[null,2]];
+let TAISOP=null;/* {i:つぎの音,t:その時刻} */
+/* みんなで歌うときは、不協和音にならないよう、みんな同じ調（TAISOK：1.12の声の高さ）で、声の低い子から順に、ハモる声部（TAISOH：メロディから何音ずらすか。ドレミの音の数）を受けもつ。
+   どの人数でも、同じときに鳴る音は、メロディの音から3度・6度下・3度上（どれもドミソの形になる）だけ */
+const TAISOK=1.12*.84,TAISOH=[[0],[-2,0],[-5,-2,0],[-5,-2,0,2],[-5,-2,0,0,2],[-5,-2,-2,0,0,2]],TAISOSC=[0,2,4,5,7,9,11];
+function taisoHarm(n,h){/* メロディの音 n（半音）を、ドレミで h 音ずらした半音 */if(!h)return n;const oc=Math.floor(n/12),m=n-oc*12;let d=TAISOSC.indexOf(m);if(d<0)return n;d+=h+oc*7;const o2=Math.floor(d/7);return TAISOSC[d-o2*7]+o2*12}
+function taisoLag(r){const h=Math.sin((r.id||0)*12.9898+7.1)*43758.5453;return(h-Math.floor(h))*TAISOLAG}/* 子ごとにきまったずれ（しまわない） */
+function taisoWho(){const E=S&&S.ev;if(!E||E.id!=='taiso'||E.ph!=='do')return[];const L=[];for(const id of E.who){const r=S.res.find(q=>q.id===id);if(!r||r.hidden||!r.act||r.act.type!=='evt'||r.act.stage!=='do'||r.act.back)continue;const q=sfxPos(r.x,r.y);if(q)L.push([r,q])}return L.sort((a,b)=>b[1].v-a[1].v).slice(0,TAISON)}
+function taisoTick(){if(!AC||!SND.sfx||AC.state!=='running'||VOICE||!S||!started||(typeof paused==='function'&&paused())||(typeof SKIP!=='undefined'&&SKIP)){TAISOP=null;return}
+  const W0=taisoWho();if(!W0.length){TAISOP=null;return}const b=(SBUF.vowel||[])[0];if(!b)return;const now=AC.currentTime;if(!TAISOP||TAISOP.t<now-.3)TAISOP={i:0,t:now+.05};
+  const k=1/Math.sqrt(W0.length),HP=TAISOH[W0.length-1],ord=W0.map((w,i)=>i).sort((x,y)=>voVo(W0[x][0])-voVo(W0[y][0])||W0[x][0].id-W0[y][0].id),V=W0.map(([r,q])=>({lag:taisoLag(r),q,d:null,h:0}));ord.forEach((x,j)=>V[x].h=HP[j]);
+  while(TAISOP.t<now+.35){const[n,bt]=TAISOM[TAISOP.i],len=bt*TAISOB;if(n!=null)for(const v of V){v.d=v.d||voiceDest(v.q,2400,TAISOV*k);vNote(b,TAISOP.t+v.lag,len+.05,TAISOK*Math.pow(2,taisoHarm(n,v.h)/12),1,v.d,{bend:.97})}TAISOP.t+=len;TAISOP.i=(TAISOP.i+1)%TAISOM.length}}
+setInterval(moodTick,100);setInterval(taisoTick,100);
 function voiceStop(){if(!VOICE)return;const v=VOICE;VOICE=null;clearTimeout(v.end);try{const t=AC.currentTime;v.g.gain.setTargetAtTime(0,t,.04);v.src.stop(t+.2)}catch(e){}}
 /* せいれいどうしのおしゃべりの、小さな話し声：会話の声（SAMPLES.voice）を、話す子の声の高さで、短く切って鳴らす。
    声の作り（コンプレッサー）は会話の声と同じで、大きさは会話の声の CHATK。マップの場所の音と同じく、左右・遠いほど小さく・こもる（sfxPos）。
@@ -324,7 +352,7 @@ case'bossKO':noise(t,.5,.3,o,200);tone(70,t,1.4,'sine',.2,o,30);tone(900,t,.35,'
   case'put':playU('knockw',.4125,.9);break;/* 箱などに置く：ことっ */
   case'take':playU('cloth',.375,1.05);break;/* 箱などから取る：ごそっ */
   case'lid':playU('lid',.675,1.1);break;/* 木箱のふたが開く：ぎぃ */
-  case'cookfire':playSeg('fire',.55,2.5);break;/* 焚き火・かまど：ぱちぱち（長い音のどこかを2.5秒） */
+  case'cookfire':playSeg('firecrk',.6,2.5);break;/* 焚き火・かまど：パチパチだけ（長い音のどこかを2.5秒） */
   case'door':playS('door',.25);break;
   case'doorClose':playS('doorClose',.25);break;
   case'wave':playWave(.2);break;
