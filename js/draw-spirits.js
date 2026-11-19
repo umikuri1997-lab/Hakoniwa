@@ -690,6 +690,7 @@ function drawShadeDot(c,ty,x,y,s,f,o){
   let mo='idle',fi=Math.floor(t*1.6);
   if(o.die!=null){mo='hurt';fi=o.die}/* たおされたとき：たおれる（3コマ目）→ つぶにほどけて きえる（4・5コマ目） */else if(o.hurt!=null){mo='hurt';fi=o.hurt<.5?0:1}/* 攻撃をうけただけのときは、いたがる2コマだけ（たおれない） */
   else if(o.walk){mo='walk';fi=Math.floor(t*6)}
+  else if(o.steal&&CHIPS[K+'steal']){mo='steal';fi=Math.floor(t*2.5)}/* 盗む：ふくろを前にかまえて下へすくい、きょろきょろ見る（カゲドロボウ） */
   else if(p>=.84){mo='atk';const n=(CHIPS[K+'atk'+B]||CHIPS[K+'atk']).n||3;fi=p<.95?0:Math.min(n-1,1+Math.floor((p-.95)/.05*(n-1)))}/* ふりかぶる → ふりおろす → もどる */
   const key=mo==='hurt'||!CHIPS[K+mo+B]?K+mo:K+mo+B,ch=CHIPS[key];if(key.endsWith('R')||key.endsWith('L'))f=1;/* よこの絵は右・左べつに写してあるので、反転しない */fi=mo==='hurt'?Math.min(fi,ch.n-1):fi%(ch.n||1);
   const sm=c.imageSmoothingEnabled;c.imageSmoothingEnabled=sc<.9;/* 図鑑などで小さく描くときだけ、なめらかに縮める */

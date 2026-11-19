@@ -49,7 +49,7 @@ function drawEnemy(e,now){
    const R=36*z,ox=px-R,oy=py+8-R*1.7,ww=R*2,hh=R*2.2,k=dpr*cam.z,cw=Math.ceil(ww*k)+2,ch=Math.ceil(hh*k)+2;
    if(EOC.width<cw||EOC.height<ch){EOC.width=EOS.width=Math.max(EOC.width,cw);EOC.height=EOS.height=Math.max(EOC.height,ch)}
    eox.setTransform(1,0,0,1,0,0);eox.clearRect(0,0,cw,ch);eox.setTransform(k,0,0,k,-ox*k,-oy*k);
-   const fc=enFace(e,v,now);drawShade(eox,e.type,px,py+8,.27*z,v.f,{dot:1,t:now/1000+e.id*1.3,back:fc?fc==='B':v.back,side:fc?(fc==='R'||fc==='L'?fc:''):now-v.mv<200?v.sd||'':'',walk:now-v.mv<200,flash:ho[2],hurt:hurtFrame(e,now),atk:now-(e.swing||-1e9)<150?.95+(now-e.swing)/150*.045:now-v.mv<200?0:(e.atk||0)/D.atk});
+   const fc=enFace(e,v,now);drawShade(eox,e.type,px,py+8,.27*z,v.f,{dot:1,t:now/1000+e.id*1.3,back:fc?fc==='B':v.back,side:fc?(fc==='R'||fc==='L'?fc:''):now-v.mv<200?v.sd||'':'',walk:now-v.mv<200,steal:D.thief&&foeStealing(e),flash:ho[2],hurt:hurtFrame(e,now),atk:now-(e.swing||-1e9)<150?.95+(now-e.swing)/150*.045:now-v.mv<200?0:(e.atk||0)/D.atk});
    eos.globalCompositeOperation='copy';eos.drawImage(EOC,0,0);eos.globalCompositeOperation='source-in';eos.fillStyle='#fff';eos.fillRect(0,0,cw,ch);eos.globalCompositeOperation='source-over';
    const sw=cw/k,sh=ch/k,o=1.3;ctx.globalAlpha=e.stun>0?.5:.95;
    const OFF=[[o,0],[-o,0],[0,o],[0,-o],[o*.7,o*.7],[-o*.7,o*.7],[o*.7,-o*.7],[-o*.7,-o*.7]];for(const[dx,dy]of OFF)ctx.drawImage(EOS,0,0,cw,ch,ox+dx,oy+dy,sw,sh);
