@@ -8,16 +8,23 @@ const assert=require('node:assert/strict');
   const nx2=JSON.parse(await run(`(()=>{const id=nextLevelItems(2)[0];S.unlocked[id]=true;S.recipes[id]=true;const r=!nextLevelItems(2).includes(id);delete S.unlocked[id];delete S.recipes[id];return JSON.stringify(r)})()`));
   assert.ok(nx2,'already learned things are not shown');
   console.log('Village: the next level shows what will be learned');
-  /* 2. 見た会話の早送り：はじめては出ない。見おえたら出る。動作の待ちは守る */
-  const L=`[['${'フタバ'}','#joy|はじめのセリフ'],['${'フタバ'}','つぎのセリフ'],['${'フタバ'}','さいごのセリフ']]`;
+  /* 2. 見た会話の早送り：4文以上で出る。動作の待ちは守る */
+  const shortTalk=`[['フタバ','はじめ。つぎ！？さいご。']]`;
+  await run(`DLGGAP=0;DLGTAP=performance.now();dlgSeenMark(JSON.stringify(${shortTalk}));dialog(Object.assign(${shortTalk},{skip:1}))`);
+  assert.equal(await page.locator('#dialog .dlgFF').count(),0,'no fast-forward for three sentences, even when seen');
+  await page.locator('#dialog .dlgSkip').click();
+
+  const L=`[['フタバ','#joy|はじめのセリフ。もうひとこと。'],['フタバ','つぎのセリフ'],['フタバ','さいごのセリフ']]`;
   await run(`DLGGAP=0;DLGTAP=performance.now();dialog(${L})`);await page.waitForTimeout(200);
-  assert.equal(await run(`[...document.querySelectorAll('#dlgBtns button')].some(b=>b.textContent==='はやおくり')`),false,'no fast-forward the first time');
+  assert.equal(await page.locator('#dialog .dlgFF').count(),0,'no fast-forward the first time');
   for(let i=0;i<12&&!(await run(`document.querySelector('#dialog').hidden`));i++){await page.waitForTimeout(1100);await run(`(()=>{const b=document.querySelector('#dlgBtns button[data-nx]');if(b&&!b.disabled)b.click()})()`);await page.waitForTimeout(260);await run(`(()=>{const b=document.querySelector('#dlgBtns button[data-nx]');if(b&&!b.disabled)b.click()})()`)}
   assert.equal(await run(`document.querySelector('#dialog').hidden`),true);
   await page.waitForTimeout(3300);
-  await run(`DLGGAP=0;DLGTAP=performance.now();dialog(${L})`);await page.waitForTimeout(150);
-  assert.equal(await run(`[...document.querySelectorAll('#dlgBtns button')].some(b=>b.textContent==='はやおくり')`),true,'fast-forward appears for a seen talk');
-  const t0=Date.now();await run(`[...document.querySelectorAll('#dlgBtns button')].find(b=>b.textContent==='はやおくり').click()`);
+  await run(`DLGGAP=0;DLGTAP=performance.now();dialog(Object.assign(${L},{skip:1}))`);
+  const fastForward=page.locator('#dialog .dlgActions .dlgFF');
+  assert.equal(await fastForward.count(),1,'fast-forward appears in the outer controls for a seen talk');
+  assert.equal(await page.locator('#dialog .dlgActions .dlgSkip').count(),1,'both controls share the outer position');
+  const t0=Date.now();await run(`document.querySelector('#dialog .dlgFF').click()`);
   await page.waitForTimeout(500);assert.equal(await run(`document.querySelector('#dialog').hidden`),false,'the first line waits for its motion (hold 950)');
   await page.waitForFunction(()=>sacredEval(`document.querySelector('#dialog').hidden`),{},{timeout:5000});
   const dt=Date.now()-t0;assert.ok(dt>=900&&dt<3000,'fast-forward ends quickly but after the hold: '+dt);

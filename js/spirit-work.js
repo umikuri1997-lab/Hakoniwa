@@ -111,6 +111,7 @@ const ORACLE={play:{name:'いっぱいあそぶ',e:'🎈',jobs:[],water:1},wood:
 const oracleOK=k=>!ORACLE[k].water||!!(S&&S.flags&&S.flags.oracleWater);/* はじめにえらべるおつげは、木・石・食料だけ。ほかは水のステージでおぼえる（S.flags.oracleWater） */
 function jobWork(r,G,dry){if(isNight())return false;const j=jobOf(r);if(j<0)return false;const o=S.obj[j],st=k=>anc(k)===j;
   if(o==='smelter'){if(r.elem!=='fire'||!(S.smIn||{})[j]||!Object.values(S.smIn[j]).some(n=>n>=SMELT_ORE)||!free('sm'+j,1))return false;if(dry)return true;const q=nearest(G,q=>adjOf(q,st)>=0,200);if(q<0)return false;startAct(r,G,'smelt',q,{key:'sm'+j,obj:j});return true}
+  if(o!=='lumber'&&o!=='quarry')return false;/* はたおり・粉ひきの担当は procJob で加工する */
   const k=o==='lumber'?'chop':'mine';if(!canJob(r,k)||roomN(r)<1||matTot()+matN(r)>=matCap()&&!(k==='chop'&&roomKey('wood')>matN(r))||!free('o'+j,2))return false;if(dry)return true;const q=nearest(G,q=>adjOf(q,st)>=0,200);if(q<0)return false;startAct(r,G,k,q,{key:'o'+j,obj:j,camp:true});return true}
 function grassNeed(){/* いまの目標で作る物（御神木の調べの準備）に足りない草：素材のキー→足りない数。なければ null */
   const q=QUESTS[S.quest];if(!q||!S.qTalked||typeof FIELD_PREP==='undefined')return null;const p=FIELD_PREP[q.id];if(!p||!p.build||fieldBuildOK(q.id))return null;
