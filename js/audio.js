@@ -62,7 +62,7 @@ Object.assign(SAMPLES,{"stamp":["assets/g/5fb1653535.mp3","assets/g/9f56c224e9.m
 Object.assign(SAMPLES,{"twood":["assets/g/c4d66fe5c8.mp3","assets/g/31d3db8da0.mp3","assets/g/0a2507b504.mp3","assets/g/5428603b66.mp3","assets/g/27d96d985a.mp3"],"tstone":["assets/g/c0313b87df.mp3","assets/g/42909bf5c3.mp3","assets/g/d740607154.mp3","assets/g/fc149ecd6d.mp3","assets/g/f00873c212.mp3"],"tcan":["assets/g/e8a6d86ce5.mp3","assets/g/02f3ff1b30.mp3","assets/g/ea19526521.mp3","assets/g/90fa5e0e57.mp3","assets/g/8abd7075f2.mp3"],"tcloth":["assets/g/c2cdd95470.mp3","assets/g/ce2640c6dd.mp3","assets/g/cdb321f6cb.mp3"],"tgrass":["assets/g/4a314261fa.mp3","assets/g/16d30726b3.mp3","assets/g/fbc86f2c44.mp3","assets/g/9178e82c39.mp3","assets/g/24268c983c.mp3"],"twater":["assets/g/1856221d15.mp3","assets/g/15b3735de2.mp3","assets/g/7689d8c500.mp3","assets/g/8cb0dba7a9.mp3"],"tbell":["assets/g/13709a2edb.mp3","assets/g/2f7dccdd32.mp3","assets/g/feeb83871b.mp3"],"tfoe":["assets/g/6ccd894f39.mp3","assets/g/a11fa7e264.mp3","assets/g/0253048f7a.mp3","assets/g/6693e31f34.mp3","assets/g/2fcfb0f848.mp3"],"tweb":["assets/g/1216aa24cb.mp3","assets/g/e8430383b5.mp3"],"tani":["assets/g/f63defe2c9.mp3","assets/g/b32ac3f0b2.mp3"],"tplace":["assets/g/a9d4ab80a0.mp3","assets/g/4d2d55acb6.mp3","assets/g/f71fb79281.mp3","assets/g/56cffcde91.mp3"],"tsacred":["assets/g/b5b66ae8d4.mp3","assets/g/01dbe882fb.mp3","assets/g/501918a536.mp3","assets/g/e935b9741f.mp3"]});/* 「みる」でタップした物の音（本物の録音、tools/sound/ui_asmr.py） */
 Object.assign(SAMPLES,{"page":["assets/g/853378766a.mp3","assets/g/a3901e0d93.mp3","assets/g/5e890e7bc8.mp3"]});/* 思い出帳のページをめくる音：Kenney「RPG Audio」の bookFlip（CC0。tools/sound/ui_asmr.py の page） */
 Object.assign(SAMPLES,{"mpage":["assets/g/466793c686.mp3","assets/g/621c1bf73b.mp3","assets/g/33d1c2051b.mp3","assets/g/713cf89c67.mp3","assets/g/e38deebe0b.mp3","assets/g/f8cd659c4e.mp3"],"pflick":["assets/g/ec6b67851e.mp3","assets/g/8b6ebac665.mp3","assets/g/cd867ca590.mp3","assets/g/45f7fa9206.mp3"],"bkopen":["assets/g/8163c04cec.mp3","assets/g/8e49dd4b4b.mp3"],"bkclose":["assets/g/c59f3ece4e.mp3","assets/g/8936bd08f5.mp3"],"pslide":["assets/g/adf37ba1ae.mp3"]});/* 本と巻物の音（めくる・ぱらぱら・表紙・紙のこすれ）：OpenGameArt の StarNinjas・Voltiment555・Luckius と Kenney「RPG Audio」（どれも CC0。tools/sound/ui_asmr.py） */
-Object.assign(SAMPLES,{"ostamp":["assets/g/b1c3248156.mp3"],"owrite":["assets/g/f9e82fa20b.mp3"]});/* 持ち主がくれた音：ハンコの「ぽんっ」・書く音（tools/sound/owner_stamp_write.py） */SAMPLES.epon=['assets/g/75d6428d94.mp3'];SAMPLES.kill=['assets/g/e4b242fc2e.mp3'];/* コワイノのダメージ音「ぽんっ」（手で軽くたたく本物の録音）・たおした音「さらさら」（効果音ラボの音に余韻をたした g1）。持ち主が「コワイノの音」のページできめた */SAMPLES.tsoil=SAMPLES.fsoil;/* 土・畑の音は、持ち主の足音の録音（土）から（前の録音は太鼓のように聞こえた） */SAMPLES.equip=['assets/g/b1909223de.mp3'];SAMPLES.doorClose=['assets/g/5d1a410eea.mp3'];/* ユーザー提供：衣擦れ2・ドアを閉める2 */
+Object.assign(SAMPLES,{"ostamp":["assets/g/f9e82fa20b.mp3"],"owrite":["assets/g/bb496b8268.mp3"]});Object.assign(SAMPLES,{"atkE":["assets/g/1ee991d89c.mp3"],"atkW":["assets/g/bcfcba8e6f.mp3"],"atkK":["assets/g/f88cbc9949.mp3"],"atkS":["assets/g/89962c0c7f.mp3"]});/* 属性の攻撃の音（持ち主がえらんだ本物の録音、CC0。tools/sound/atk_rec.py） *//* 持ち主がくれた音：ハンコの「ぽんっ」・書く音（tools/sound/owner_stamp_write.py） */SAMPLES.epon=['assets/g/75d6428d94.mp3'];SAMPLES.kill=['assets/g/e4b242fc2e.mp3'];/* コワイノのダメージ音「ぽんっ」（手で軽くたたく本物の録音）・たおした音「さらさら」（効果音ラボの音に余韻をたした g1）。持ち主が「コワイノの音」のページできめた */SAMPLES.tsoil=SAMPLES.fsoil;/* 土・畑の音は、持ち主の足音の録音（土）から（前の録音は太鼓のように聞こえた） */SAMPLES.equip=['assets/g/b1909223de.mp3'];SAMPLES.doorClose=['assets/g/5d1a410eea.mp3'];/* ユーザー提供：衣擦れ2・ドアを閉める2 */
 function loadSamples(){/* 音のファイル（assets/g/*.mp3）を読みこんで、鳴らせる形にしておく */for(const k in SAMPLES){SBUF[k]=[];SAMPLES[k].forEach((u,i)=>{fetch(u).then(r=>r.arrayBuffer()).then(b=>AC.decodeAudioData(b,buf=>{SBUF[k][i]=buf},()=>{})).catch(()=>{})})}}
 // セリフの声：キャラごとに高さを変える（カミサマは低め）
 let VOICE=null,voxC=null;const BRAVET=new WeakMap();
@@ -279,10 +279,10 @@ function sfx(k){
   case'crackle':for(let i=0;i<3;i++)rustle(t+i*.025+Math.random()*.015,.012,.06,o,4500,4500,2);break;/* 火の粉：パチパチ */
   /* せいれいの攻撃：属性ごと。当たる音（arrow）に、属性の音をかさねる */
   case'atk_fire':if(playS('fireatk',.45))break;noise(t,.2,.15,o,300);break;/* ボッ（もらった音） */
-  case'atk_earth':tone(50,t,.18,'sine',.2,o,45);noise(t,.12,.18,o,500);for(let n=0;n<3;n++)noise(t+.14+n*.07,.03,.08,o,1400);tone(42,t+.02,.12,'triangle',.08,o,60);break;/* ずしんとひびいて、石がころころ */
-  case'atk_wood':{const sr=AC.createBufferSource(),g=AC.createGain(),bp=AC.createBiquadFilter();sr.buffer=noiseBuf;bp.type='bandpass';bp.Q.value=2;bp.frequency.setValueAtTime(1200,t);bp.frequency.exponentialRampToValueAtTime(4200,t+.12);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.12,t+.08);g.gain.linearRampToValueAtTime(0,t+.14);sr.connect(bp);bp.connect(g);g.connect(o);sr.start(t);sr.stop(t+.16)}noise(t+.13,.04,.2,o,2200);tone(330,t+.13,.06,'triangle',.06,o,200);playS('bush',.25,.16);break;/* ひゅっ、ぴしっ。葉がざわっ */
-  case'atk_wind':for(const[d,f0,f1]of[[0,700,2400],[.09,900,3000]]){const sr=AC.createBufferSource(),g=AC.createGain(),bp=AC.createBiquadFilter();sr.buffer=noiseBuf;bp.type='bandpass';bp.Q.value=3;bp.frequency.setValueAtTime(f0,t+d);bp.frequency.exponentialRampToValueAtTime(f1,t+d+.18);g.gain.setValueAtTime(0,t+d);g.gain.linearRampToValueAtTime(1.3,t+d+.06);g.gain.linearRampToValueAtTime(0,t+d+.22);sr.connect(bp);bp.connect(g);g.connect(o);sr.start(t+d);sr.stop(t+d+.24)}tone(1800,t+.05,.2,'sine',.15,o,2600);break;/* ひゅんひゅん、と風が2回 */
-  case'atk_water':if(!playS('splash',1.1))noise(t,.2,.2,o,2500);tone(380,t,.12,'sine',.22,o,900);[0,.07,.15].forEach(d=>tone(900+Math.random()*500,t+.08+d,.05,'sine',.09,o,1800));break;/* ぽちゃん、とはじける */
+  case'atk_earth':playU('atkE',0.5);break;/* 持ち主がえらんだ本物の録音 */
+  case'atk_wood':playU('atkW',0.5);break;/* 持ち主がえらんだ本物の録音 */
+  case'atk_wind':playU('atkK',0.5);break;/* 持ち主がえらんだ本物の録音 */
+  case'atk_water':playU('atkS',0.45);break;/* 持ち主がえらんだ本物の録音 */
   case'next':tone(88,t,.04,'triangle',.05,o);break;
   case'good':seq([84,88],.07,'sine',.06);break;
   case'warn':seq([62,57],.14,'square',.035,.22);break;
@@ -369,7 +369,7 @@ case'bossKO':noise(t,.5,.3,o,200);tone(70,t,1.4,'sine',.2,o,30);tone(900,t,.35,'
   case'poison':if(playS('poison',.1125))break;noise(t,.2,.0125,o,500);break;/* どくの罠：ふんだとき・ダメージ */
   case'bonk':if(playS('punch',.45))break;noise(t,.07,.1,o,600);tone(140,t,.1,'square',.05,o,90);break;
   case'fishbite':playU('twater',.36,.8+Math.random()*.3);break;/* 魚がかかって、水がバシャバシャ（水の録音） */
-  case'owrite':playU('owrite',.42,.92+Math.random()*.16);break;/* 日記を書く：さらさら（持ち主の音） */
+  case'owrite':break;/* 書く音は writeLoop で、書いているあいだだけ鳴らす */
   case'ostamp':if(playU('ostamp',.55))break;/* ハンコ：持ち主の「ぽんっ」 */
   case'stamp':if(!playU('stamp',.5,.95))knock(150,t,.12,o,.14);rustle(t+.005,.05,.012,o,1800,900,.7);break;/* ハンコ：紙ごしの、ぽむっ */
   case'dust':playU('dust',.07,1.15+Math.random()*.25);break;/* 木くずが、さらさらこぼれる */
@@ -411,6 +411,10 @@ function footMat(x,y){const j=(y|0)*W+(x|0);if(j<0||j>=W*H)return null;const o=S
   const out=!(typeof roomOf==='function'&&roomOf(j)),snow=out&&typeof snowNow==='function'&&snowNow(),wet=out&&S.rain&&!snow;/* 雨の日（あらしもふくむ）の外の草地・土・道は、ぬれた地面の音（家の中・橋・木と石の床や道は、ふつうの音） */
   const f=S.floor[j];if(f&&f!=='path'&&BL[f]&&typeof tapMatOf==='function'){const k=tapMatOf(f);return k==='twood'?'fwood':k==='tstone'?'fstone':k==='tcloth'?'fcloth':wet?'fwet':'fsoil'}if(f)return wet?'fwet':'fsoil';
   if(snow)return'fsnow';return wet?'fwet':typeof REV!=='undefined'&&REV.has(j)?'fgrass':'fsoil'}
+/* 日記を書くあいだ：持ち主の書く音（10秒、SAMPLES.owrite）をくりかえし、おわったら、ゆっくり小さくして止める */
+let WRITEL=null;const WRITEV=.4;
+function writeLoop(on){if(!on){if(WRITEL&&AC){const t=AC.currentTime;WRITEL.g.gain.setTargetAtTime(0,t,.12);try{WRITEL.s.stop(t+.6)}catch(_){}}WRITEL=null;return}
+  if(WRITEL||!AC||!SND.sfx||AC.state!=='running')return;const B=(SBUF.owrite||[]).filter(Boolean)[0];if(!B)return;const s=AC.createBufferSource(),g=AC.createGain();s.buffer=B;s.loop=true;g.gain.value=0;g.gain.setTargetAtTime(WRITEV,AC.currentTime,.05);s.connect(g);g.connect(sfxG);s.start(0,Math.random()*B.duration*.5);WRITEL={s,g}}
 function footSoft(k,q,vol,rate,delay,lp){/* 小さな足音を1つ、delay 秒あとに（左右・遠いほどこもる） */
   const B=(SBUF[k]||[]).filter(Boolean);if(!B.length)return;const t=AC.currentTime,s=AC.createBufferSource(),g=AC.createGain(),f=AC.createBiquadFilter();s.buffer=pick(B);s.playbackRate.value=rate*(.92+Math.random()*.16);
   g.gain.value=vol*q.v*(.8+Math.random()*.4);f.type='lowpass';f.frequency.value=Math.min(lp||q.l,q.l);let h=g;if(AC.createStereoPanner){const pn=AC.createStereoPanner();pn.pan.value=q.p;g.connect(pn);h=pn}h.connect(f);f.connect(sfxG);s.connect(g);s.start(t+Math.max(0,delay))}
