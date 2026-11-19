@@ -25,4 +25,13 @@ const out=await run(`(()=>{const[a,b]=S.res;S.bond={};S.bond[bondKey(a,b)]=70;fo
   const t1=a.act&&a.act.type,t2=b.act&&b.act.type;for(let i=0;i<4000&&(a.act&&a.act.type==='outing');i++){for(const r of S.res){if(r.act&&r.act.type==='outing'){if(r.act.stage==='walk'&&r.path.length){const n=r.path[0];r.x=n%W+.5;r.y=((n/W)|0)+.5;r.path.shift();if(!r.path.length)beginDo(r)}else if(r.act.stage==='walk')beginDo(r);if(r.act.stage==='do'){if(i===50&&r===a)r.talked=outingTalk(r);r.act.t+=1;ACT.outing.tick(r,r.act,1);if(ACT.outing.done(r,r.act)){ACT.outing.end(r,r.act);r.act=null}}}}}
   return {dbg:JSON.stringify(S.bondDid),ok,t1,t2,bond:bondOf(a,b),fa:a.fun,fb:b.fun,talked:a.talked,dlg:!document.querySelector('#dialog').hidden,day:S.outD===callDay(),again:(()=>{const R=Math.random;Math.random=()=>0;try{return goOuting(a,bfs(a.x|0,a.y|0))}finally{Math.random=R}})()}})()`);
 assert.ok(out.ok&&out.t1==='outing'&&out.t2==='outing','出かける '+JSON.stringify(out));assert.equal(out.bond,73,'なかよし+3');assert.equal(out.fa,50);assert.equal(out.fb,50);assert.ok(out.talked&&out.dlg,'タップで会話');assert.ok(out.day&&out.again===false,'1日1組');
+/* 素材もあげられる：たのしさ+5・たからものにしない */
+const mg=await run(`(()=>{const r=S.res[1];r.care.gift=0;r.fun=10;const t0=r.trs.slice();S.mat.stone=(S.mat.stone||0)+3;boxSync();const n0=S.mat.stone;const ok=presentGive(r,'m:stone');boxSync();return {ok,fun:r.fun,left:n0-S.mat.stone,trs:r.trs.join()===t0.join(),any:giftAny()}})()`);
+assert.deepEqual(mg,{ok:true,fun:15,left:1,trs:true,any:true},JSON.stringify(mg));
+/* 木箱の画面から、その箱のおたきあげ：S.otakiB にたのみ、せいれいがその箱からとる */
+const ob=await run(`(()=>{const a=(CY-4)*W+CX;S.obj[a]='crate';recount();const k='kasa';boxIn(a,k,10);boxSync();openSheet('box',a);const slot=[...document.querySelectorAll('#sheetWrap .slot')].find(c=>c.querySelector('.nm').textContent===MATN[k]);if(!slot)return {slot:false};slot.click();const go=document.querySelector('.pxcard .go');go.onclick();closeSheet();const q=S.otakiB&&S.otakiB[a]&&S.otakiB[a][k];
+  const st0=STATUE;if(STATUE<0){S.obj[(CY+6)*W+CX]='statue';recount()}const r=S.res[0];r.act=null;r.path=[];r.otaki=null;r.x=CX+.5;r.y=CY-2.5;const G=bfs(r.x|0,r.y|0),ok=tryJob(r,G,'otaki');const A=r.act;let got=null;if(A){A.stage='do';ACT.otakiget.start(r,A);ACT.otakiget.end(r,A);got=r.otaki}return {slot:true,q,ok,box:A&&A.bq===a,got,left:boxHas(a,k),gone:!(S.otakiB||{})[a]}})()`);
+assert.ok(ob.slot&&ob.q===5&&ob.ok&&ob.box&&ob.got&&ob.got.kasa>0,'箱からおたきあげ '+JSON.stringify(ob));
+/* 作業台をタップしても、依頼ボードはひらかない */
+assert.equal(await run(`String(onTap).includes("o==='wbench')return openSheet('craft')")`),false);
 assert.deepEqual(errors,[]);console.log('gifts ok',JSON.stringify({base,gv,ui,sh,out}));await browser.close()})();

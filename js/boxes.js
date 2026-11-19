@@ -30,7 +30,7 @@ const distJ=(a,b)=>a<0||b<0?0:Math.abs(a%W-b%W)+Math.abs(((a/W)|0)-((b/W)|0));
 function rsvNeed(){/* とっておく数：建てる所・依頼のまだ運んでいない素材と、炉・コンポスター・おたきあげのたのまれた分 */const R={},add=(key,n)=>{if(n>0)R[key]=(R[key]||0)+n};
   for(const k in S.dyn){if(S.obj[k]!=='site')continue;const d=S.dyn[k];if(!d||!d.mat)continue;if(d.bid==null)d.bid='s'+k;const m=needLeft(d);for(const key in m)add(key,m[key])}
   for(const o of S.orders||[]){if(!o.mat&&!o.food)continue;if(o.bid==null)o.bid='o'+o.id;const m=needLeft(o);for(const key in m)add(key,m[key])}
-  for(const Q of[S.cmpQ,S.smQ,S.prQ])for(const j in Q||{})for(const k in Q[j])add(k,Q[j][k]);for(const k in S.otakiQ||{})add(k,S.otakiQ[k]);for(const k in S.sasaQ||{})add(k,S.sasaQ[k]);/* 季節のささげもの */if(typeof kdRsv==='function')kdRsv(add);/* もりのこだまの石の輪へはこぶ石材 */return R}
+  for(const Q of[S.cmpQ,S.smQ,S.prQ])for(const j in Q||{})for(const k in Q[j])add(k,Q[j][k]);for(const k in S.otakiQ||{})add(k,S.otakiQ[k]);for(const a in S.otakiB||{})for(const k in S.otakiB[a])add(k,S.otakiB[a][k]);/* 箱の画面からの、おたきあげ */for(const k in S.sasaQ||{})add(k,S.sasaQ[k]);/* 季節のささげもの */if(typeof kdRsv==='function')kdRsv(add);/* もりのこだまの石の輪へはこぶ石材 */return R}
 function boxSync(){if(!S)return;S.box=S.box||{};S.pile=S.pile||{};S.rsv=S.rsv||{};
   for(const k in S.box){const j=+k;if(!boxTypeAt(j)||!BOXL.includes(j))boxSpill(j)}/* なくなった箱の中身は、その場所に落とす */
   for(const k in S.boxF||{})if(!boxTypeAt(+k))delete S.boxF[k];
@@ -49,7 +49,7 @@ function boxStash(j,id){/* しまう家具をこわして、もちものにも�
   if(!Object.keys(m).length&&!f)return;const K=S.boxKeep||(S.boxKeep={});(K[id]||(K[id]=[])).push(f?{m,f}:{m})}
 function boxUnstash(j,id){/* しまう家具を置いた：前にこわした同じ家具の中身を、神殿のまえ（なければ、ほかの箱）から、この箱へ */const L=S.boxKeep&&S.boxKeep[id];if(!L||!L.length||!boxTypeAt(j))return;const a=anc(j),e=L.pop();if(!L.length)delete S.boxKeep[id];if(!Object.keys(S.boxKeep).length)delete S.boxKeep;
   if(e.f)(S.boxF||(S.boxF={}))[a]=e.f;for(const key in e.m){let n=Math.min(e.m[key],boxRoom(a,key));if(n<=0)continue;let t=btake(PILE,key,n);n-=t;for(const k of BOXL){if(n<=0)break;if(k===a)continue;const u=btake(k,key,n);t+=u;n-=u}bput(a,key,t)}}
-function boxMove(from,to){/* ひっこしミトン：中身と入れる物もいっしょに */if(from===to)return;if(S.box&&BOX()[from]){BOX()[to]=BOX()[from];delete BOX()[from]}if(S.boxF&&S.boxF[from]){S.boxF[to]=S.boxF[from];delete S.boxF[from]}}
+function boxMove(from,to){/* ひっこしミトン：中身と入れる物もいっしょに */if(from===to)return;if(S.otakiB&&S.otakiB[from]){S.otakiB[to]=S.otakiB[from];delete S.otakiB[from]}if(S.box&&BOX()[from]){BOX()[to]=BOX()[from];delete BOX()[from]}if(S.boxF&&S.boxF[from]){S.boxF[to]=S.boxF[from];delete S.boxF[from]}}
 /* ---- せいれいが、箱にしまう・箱から出す（箱とその数を、いっしょにかえる） ---- */
 function boxIn(j,key,n){/* 箱 j にしまう。入った数をかえす */const t=Math.min(n,boxRoom(j,key));if(t<=0)return 0;bput(j,key,t);availAdd(key,t);return t}
 function boxOut(j,key,n){/* 箱 j から、使える物を出す */const t=Math.min(n,boxHas(j,key),availOf(key));if(t<=0)return 0;btake(j,key,t);availAdd(key,-t);return t}
@@ -84,6 +84,7 @@ function cgLeft(r,R){/* 料理の材料で、まだ持っていない分 {id:数
 function cgBack(r){/* 料理をやめた：持っていた材料は、箱へもどす */if(!r.cgot)return;for(const k in r.cgot.m)addFood(k,r.cgot.m[k]);r.cgot=null}
 function toHand(r,m){/* 運んでいた素材の行き先がなくなった：せいれいが持ったまま、箱へしまいにいく */for(const k in m||{})if(m[k]>0){r.cmat=r.cmat||{};r.cmat[k]=(r.cmat[k]||0)+m[k]}}
 function qPick(Q,j,mx=Infinity){/* たのまれた分（とっておいた素材）を、箱 j からとる（mx：1回に持てる数まで）。とれた分をかえし、Q からへらす */const got={};for(const k of Object.keys(Q)){if(mx<=0)break;const n=boxOutR(j,k,Math.min(Q[k],mx));if(n>0){got[k]=n;mx-=n;Q[k]-=n;if(Q[k]<=0)delete Q[k]}}return got}
+function otakiBClean(){/* 箱の画面からの、おたきあげ（S.otakiB：箱→{素材:数}）。箱がなくなった・その物がもうない分は、とっておくのをやめる */const B=S.otakiB;if(!B)return;for(const a in B){const Q=B[a],ok=boxTypeAt(+a)&&anc(+a)===+a;for(const k of Object.keys(Q))if(!ok||boxHas(+a,k)<=0||!(Q[k]>0)){rsvFree({[k]:Q[k]});delete Q[k]}if(!Object.keys(Q).length)delete B[a]}}
 function qStale(Q){/* たのまれた素材が、もうどの箱にもない：とっておくのをやめる */if(!Q)return true;for(const k in Q)if(totKey(k)>0)return false;rsvFree(Q);return true}
 function bmTarget(bid){/* 運ぶ先（建てる所の S.dyn か、依頼） */if(typeof bid!=='string')return null;if(bid[0]==='s'){const j=+bid.slice(1);return S.obj[j]==='site'&&S.dyn[j]?S.dyn[j]:null}const id=+bid.slice(1);return (S.orders||[]).find(o=>o.id===id)||null}
 const bmFetching=bid=>S.res.some(q=>q.act&&q.act.type==='bfetch'&&q.act.tb===bid);
