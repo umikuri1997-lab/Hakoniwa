@@ -109,9 +109,6 @@ function spReact(r,k,ms){/* k：joy・sad・think。ms のあいだ（1倍の速
 function spReactNow(r,now){const e=REACTU.get(r);return e&&e.u>now&&(r.reactT||0)>S.t?e.k:''}
 function spPetNow(r,now){return (PETU.get(r)||0)>now}
 /* なでる手（守り神の手）：頭の上で、左右にゆっくり行き来する。ドットの四角（1ドット＝ゲームの1.5点）。手の色はやわらかい光の色 */
-const PETHAND=['..oooo..','.ohhhho.','ohhhhhho','ohhhhhho','.ohhhhho','..oohhho','....ooo.'];
-function drawPetHand(c,px,top,now){const g=1.5,sw=Math.round(Math.sin(now/260)*3),x0=Math.round(px/g+sw-4)*g,y0=Math.round(top/g)*g;
-  c.save();c.globalAlpha=.92;PETHAND.forEach((row,y)=>{for(let x=0;x<row.length;x++){const ch=row[x];if(ch==='.')continue;c.fillStyle=ch==='o'?'#e7c99a':'#fff3dc';c.fillRect(x0+x*g,y0+y*g,g,g)}});c.restore()}
 function spFrontNow(r,now){return spPetNow(r,now)||!!spReactNow(r,now)}
 /* いまの動きの名前を、その子のようすで、さしかえる（drawRes0）：床で寝る・なでられる・つりの結果など・食べる物ごとの食べ方・生き物をなでる */
 function spAnimFix(r,now,flSl,front,an){if(typeof SPM==='undefined')return an;if(flSl)return'sleepcurl';if(front&&spPetNow(r,now)&&SPM.petted)return'petted';const k=front&&spReactNow(r,now);if(k&&SPM[REACTA[k]])return REACTA[k];
