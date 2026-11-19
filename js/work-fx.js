@@ -119,11 +119,11 @@ function spAnimFix(r,now,flSl,front,an){if(typeof SPM==='undefined')return an;if
 /* ---------- もやもや（たのしさが低いとき）・鼻歌（ごきげんなとき） ---------- */
 /* もやもや：たのしさが低いあいだ、ずっと。大きさのちがう、むらさきの うずまき（ドットの絵、1ドット＝ゲームの1.5点）が、頭のまわりに、まばらに わいて、くるくるまわりながら上へうかんで、きえる（どうぶつの森の、しょんぼりの雲のように） */
 const MOYAS=[['.ooo.','o...o','o.o.o','o..o.','.oo..'],['..ooo..','.o...o.','o..o..o','o.o.o.o','o.o..o.','.o.....','..oooo.'],['..ooooo..','.o.....o.','o..ooo..o','o.o...o.o','o.o.o.o.o','o.o..oo.o','o..o....o','.o..oooo.','..o......']];
-const MOYAN=5,MOYAL=2600,MOYACOL=['#9a82c6','#8a6bb8','#7a5ca8'];/* 同時にうかぶ数・1つがきえるまで（ミリ秒）・小さい・中・大きいの色 */
+const MOYAN=5,MOYAL=4200,MOYACOL=['#9a82c6','#8a6bb8','#7a5ca8'];/* 同時にうかぶ数・1つがきえるまで（ミリ秒）・小さい・中・大きいの色 */
 function moyaHash(a,b){let h=(a*73856093^b*19349663)>>>0;h=Math.imul(h^h>>>13,1274126177)>>>0;return(h>>>8)/16777216}
 function drawMoya(c,px,top,now,id){const g=1.5;c.save();
   for(let i=0;i<MOYAN;i++){const tt=now+id*977+i*MOYAL/MOYAN,n=Math.floor(tt/MOYAL),k=(tt%MOYAL)/MOYAL,h1=moyaHash(id*31+i,n),h2=moyaHash(n,id*17+i*5),sz=h1<.4?0:h1<.8?1:2,P=MOYAS[sz];
-    const x0=Math.round((px+(h2-.5)*26+Math.sin(k*5+i)*2-P[0].length*g/2)/g)*g,y0=Math.round((top+8-(h1*.6+.4)*6-k*14-P.length*g/2)/g)*g,fl=Math.floor(tt/(260+sz*120))%2;
+    const x0=Math.round((px+(h2-.5)*26+Math.sin(k*5+i)*2-P[0].length*g/2)/g)*g,y0=Math.round((top+8-(h1*.6+.4)*6-k*14-P.length*g/2)/g)*g,fl=Math.floor(tt/(480+sz*220))%2;
     c.globalAlpha=k<.15?k/.15:k>.75?(1-k)/.25:1;c.fillStyle=MOYACOL[sz];
     P.forEach((row,y)=>{for(let x=0;x<row.length;x++)if(row[fl?row.length-1-x:x]==='o')c.fillRect(x0+x*g,y0+y*g,g,g)})}
   c.restore()}

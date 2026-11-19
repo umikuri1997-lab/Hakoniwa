@@ -4,9 +4,10 @@
      w は、作業がおわったとき（dayNote）。m は、思い出帳のメモ・きろく（memo・logEv）。k・o は、コワイノを追いはらったとき（defeat）。
    朝に S.dy をしめて、S.diary（古い順、DIARYMAX 日ぶん）に入れる。ゆうべの守り（S.ns）も、いっしょにしまう（S.ns.dd）。
    なにか書くことがあれば、紙（openSheet('diary')）を出す。思い出帳からも読める（openSheet('diary',日)）。
-   フタバのひとこと（dyNote、文は diary-data.js）と、その日の昼12時の村の写真（photo.js の phNoonTick → S.dy.ph）も、しまう（e.ft・e.ph）。
-     書くのは章のはじめからいる子（草原はフタバ、火山はホムラ。言いかたは chatTone）。その子が村にいない（いなくなった）朝は、ひとことも写真ものせない（DYWRITER）。
-     ひとことの文は、しゅるいごとに、ぜんぶ使うまで同じ文を出さない（S.dyU）。できた文がまったく同じ日記は作らない（S.dyTx）。
+   絵日記（日記のいちばん上）：その日の絵（photo.js の phTick → S.dy.ph、なにを写したかは phK・phN・phS）と、その下の文（dyNote、文は diary-data.js）。しまうのは e.ph・e.phK・e.phN・e.phS・e.ft。
+     書くのは章のはじめからいる子（草原はフタバ、火山はホムラ。言いかたは chatTone）。その子が村にいない（いなくなった）朝は、文も絵ものせない（DYWRITER）。
+     絵を写した日は、文のはじめのできごとを、絵の物のこと（dyPhTopic）にする。
+     文は、しゅるいごとに、ぜんぶ使うまで同じ文を出さない（S.dyU）。できた文がまったく同じ日記は作らない（S.dyTx）。
    思い出帳の再生（IS_STORY_REPLAY・MEMRUN）では、書かない。 */
 const DYJ=new WeakSet(),DIARYMAX=60,DYWORK=new Set(['build','craft','harvest','plant','fish','cook']),DYPER=4;
 function dyOff(){return !S||IS_STORY_REPLAY||typeof MEMRUN!=='undefined'&&MEMRUN}
@@ -18,7 +19,7 @@ function dyEv(t){const D=dyCur();if(!D||!t)return;if(!D.m.includes(t))D.m.push(t
 function dyKill(by,msg){const D=dyCur();if(!D)return;if(by&&by.name){const e=D.k[by.name]||(D.k[by.name]=[by.elem,by.vr||null,0]);e[2]++;return}
   const m=String(msg||''),k=m.includes('罠')?'罠':m.includes('まもりの光')?'まもりの光':'そのほかの守り';D.o[k]=(D.o[k]||0)+1}
 function dyText(t,v){const n=t==='build'?(BL[v]?BL[v].name+'を建てた':''):t==='craft'?(BL[v]?BL[v].name+'を作った':''):t==='cook'?(fName(v)?fName(v)+'を作った':''):t==='harvest'?(fName(v)?fName(v)+'をしゅうかくした':''):t==='plant'?(tName(v)?tName(v)+'を植えた':''):t==='fish'?'つりをした':'';return n}
-/* 昼のようす（photo.js の phNoonTick から毎コマ）：その日の天気・できごとの日を1回だけおぼえる */
+/* 昼のようす（photo.js の phTick から毎コマ）：その日の天気・できごとの日を1回だけおぼえる */
 function dyNoon(h){if(h<9||h>=18)return;const D=dyCur();if(D&&D.wx==null)D.wx=dyWx()}
 function dyWx(){return typeof stormNow==='function'&&stormNow()?'storm':S.today&&DYOPEN[S.today]?S.today:festOn()?'fest':snowNow()?'snow':S.rain?'rain':rainbowToday()?'rainbow':'sun'+seasonNow()}
 const DYWRITER=()=>WD===1?HOMURA:POKO;/* ひとことを書くせいれい：章のはじめからいる子 */
@@ -41,11 +42,16 @@ function dyTopics(e,f){const M=[],O=[],N=e.ns;
   if(new Set(e.w.map(x=>x[0])).size>=3)O.push(['busy']);if(e.m.length>=2)O.push(['events']);
   {const m=bestMate(f);if(m)O.push(['mate',m.name])}
   O.push(['calm']);return{M,O}}
-/* フタバのひとこと（3〜4行） */
-function dyNote(e,f){const{M,O}=dyTopics(e,f),sad=M.some(t=>t[0]==='gone'||t[0]==='bossLose'||t[0]==='trial');
+/* 日記の絵に写した物の話題 */
+function dyPhTopic(e){const k=e.phK,n=e.phN||'';if(!e.ph||!k)return null;
+  if(k==='spot')return n?['pspot',n]:null;if(k==='built')return n?['pbuilt',n]:null;if(k==='new')return n?['new',n]:null;if(k==='day')return['pday'];
+  if(k==='see')return e.phS==='admire'?(n?['padm',n]:null):e.phS==='sunset'?['psun']:e.phS==='critwatch'?(n?['pcrit',n]:['psee']):['pquirk'];return null}
+/* 絵日記の文（3〜4行） */
+function dyNote(e,f){const{M:M0,O}=dyTopics(e,f),sad=M0.some(t=>t[0]==='gone'||t[0]==='bossLose'||t[0]==='trial');
+  const pt=dyPhTopic(e),M=pt?(sad?M0.filter(t=>!(t[0]==='new'&&pt[0]==='new')).concat([pt]):[pt].concat(M0.filter(t=>!(t[0]==='new'&&pt[0]==='new')))):M0;/* 絵の物の話を、はじめに（かなしい日は、かなしいことのあと） */
   const cr=S.dyCat||[],old=k=>{const i=cr.lastIndexOf(k);return i<0?-1:i};/* 前に書いた話題は、あとまわし */
   const rest=O.slice().sort((a,b)=>old(a[0])-old(b[0])||(a[0]==='calm')-(b[0]==='calm')||Math.random()-.5);
-  const top=M.slice(0,1).concat(rest.filter(t=>t[0]!=='calm'||!M.length).slice(0,M.length?1:2));if(top.length>1&&top.some(t=>t[0]==='calm'))top.splice(top.findIndex(t=>t[0]==='calm'),1);
+  const top=M.slice(0,pt&&M.length>1?2:1).concat(rest.filter(t=>t[0]!=='calm'||!M.length).slice(0,M.length>1&&pt?0:M.length?1:2));if(top.length>1&&top.some(t=>t[0]==='calm'))top.splice(top.findIndex(t=>t[0]==='calm'),1);
   const wx=e.wx&&DYOPEN[e.wx]?e.wx:'sun'+seasonOf(e.d),sd=sad||top.some(t=>/^night(Hurt|Lost|Broke)$/.test(t[0])),CL=sd?DYCLOSE_SAD:DYCLOSE,clk=sd?'cs':'c',/* かなしい日・こまった夜のあとは、しずかなおわり */sub=(t,x)=>t.split('@N').join(x[1]||'').split('@W').join(x[2]||'');
   const seen=new Set(S.dyTx||[]);let best=null;
   for(let n=0;n<16;n++){const P=[['o:'+wx,DYOPEN[wx]]].concat(top.map(x=>['b:'+x[0],DYBODY[x[0]],x])).concat([[clk,CL]]);
@@ -60,7 +66,7 @@ function diaryClose(){if(dyOff())return;const D=S.dy;S.dy={d:dayNo(),w:{},m:[],k
   const N=S.ns&&!S.ns.dd?S.ns:null;if(N)N.dd=1;
   const w=Object.values(D.w).filter(e=>dyText(e[3],e[4])),e={d:D.d,w,m:D.m.slice(),k:D.k,o:D.o,g:D.g||{}};
   if(N)e.ns={n:N.n,kill:N.kill,hurt:N.hurt,broke:N.broke,lost:(N.lost||[]).slice(),rw:N.rw||0,trial:!!N.trial,trialOK:!!N.trialOK,boss:N.boss||0,left:N.left||0};
-  e.wx=D.wx||null;const f=dyWriter();if(f&&D.ph)e.ph=D.ph;/* フタバがいないときは、写真ものせない */
+  e.wx=D.wx||null;const f=dyWriter();if(f&&D.ph!=null){e.ph=D.ph;e.phK=D.phK||'';e.phN=D.phN||'';e.phS=D.phS||''}/* 書く子がいないときは、絵ものせない */
   if(!w.length&&!e.m.length&&!e.ns&&!e.ph)return;
   if(f){e.ft=dyNote(e,f);e.fw=[f.name,f.elem,f.vr||null]}
   {const b=dyBest(e),r=b&&S.res.find(q=>q.name===b.nm);if(b){e.mvp=b;if(r){funAdd(r,MVPFUN,'mvp');{const M=S.memo||(S.memo=[]);M.push([dayNo(),'cup',b.nm+'が、ゆうべのかつやくにえらばれた']);if(M.length>200)M.shift()}/* memo() だと、つぎの日の日記のできごとにも入るので、思い出帳だけに書く */}}}/* ゆうべのかつやく：たのしさ+10・思い出帳 */
@@ -77,26 +83,27 @@ function mvpTxt(b){return [b.k?b.k+'体を追いはらった':'',b.g?b.g+'回ま
 const DYPHU=new Map(),DYPHN=6;
 function dyPhUrl(id,b){let u=DYPHU.get(id);if(u)return u;u=URL.createObjectURL(b);DYPHU.set(id,u);if(DYPHU.size>DYPHN){const[k,v]=DYPHU.entries().next().value;DYPHU.delete(k);setTimeout(()=>URL.revokeObjectURL(v),3000)}return u}
 /* 日記の紙（renderSheet から）。arg：'m' は朝に出したとき、数は思い出帳から読む日
-   ページをめくる本（book.js の bookMake。表紙はなし）。1ページめは点の出る所（ゆうべのかつやく・ゆうべの守り・きのうのしごと）、
-   そのあとのページに、写真・ひとこと・追いはらったせいれい・できごと・みんなのしたこと。入りきらない分は、本がつぎのページへわける（bkPaginate）。
-   中身は dySecs（思い出帳の日記のページも同じ物）。DYBK：いま見ているページ（同じ日をかきなおしたときは、そのまま） */
+   ページをめくる本（book.js の bookMake。表紙はなし。中身は dySecs、思い出帳の日記のページも同じ物）。1ページめは絵日記（その日の絵と、その下の文。名前・アイコン・見出しはなし）、
+   2ページめは点の出る所（ゆうべのかつやく・ゆうべの守り・きのうのしごと。数え上げ・ハンコは、そのページをはじめて見せたとき _show）、
+   そのあとのページに、追いはらったせいれい・できごと・みんなのしたこと。入りきらない分は、本がつぎのページへわける（bkPaginate）。
+  DYBK：いま見ているページ（同じ日をかきなおしたときは、そのまま） */
 const DYBK={p:0,k:null};
 function diaryBody(T,body,arg){const L=S.diary||[];const e=arg==='m'||arg==null?L[L.length-1]:L.find(q=>q.d===arg);if(!e)return closeSheet();
   T.textContent=e.d+'日めの日記';
   const key=e.d+'|'+arg,first=DYBK.k!==key;if(first){DYBK.k=key;DYBK.p=0}const anim=arg==='m'&&first;/* かきなおし（画面の回転など）では、数え上げ・ハンコを2回しない */
   if(arg!=='m'){const bk=el('<button class="btn back" aria-label="思い出帳にもどる">'+pxi('next','prev')+'もどる</button>');bk.onclick=()=>{sfx('tap');openSheet('menu','record')};T.before(bk)}
-  const R=dySecs(e,anim),pages=[];
-  if(R.P1.length){const pg=el('<div class="mpg"></div>');for(const x of R.P1)pg.appendChild(x);pages.push(pg)}
-  if(R.P2.length){const pg=el('<div class="mpg"></div>');for(const x of R.P2)pg.appendChild(x);pages.push(pg)}/* 点のあとは、新しいページから */
+  const R=dySecs(e,anim),G=[R.P0,R.P1,R.P2].filter(L=>L.length),pages=G.map(L=>{const pg=el('<div class="mpg"></div>');for(const x of L)pg.appendChild(x);return pg});/* 組（絵日記・点・そのあと）ごとに新しいページから */
   if(!pages.length)pages.push(el('<div class="mpg"></div>'));
-  const B=bookMake(body,pages,{key:'diary',cls:'dybk',at:DYBK.p,onAt:i=>{DYBK.p=i}});DYBK.p=B.at;
-  if(anim&&typeof juiceDiaryCount==='function')juiceDiaryCount(B.pages[0],R.secW);/* 朝の紙だけ、数え上げてハンコ（1ページめの数だけ） */
+  let pp=null;if(anim&&R.P1.length){const sh=R.P1.show,go=typeof juiceDiaryCount==='function'?juiceDiaryCount(pages[G.indexOf(R.P1)],R.secW,true):null;pp=pages[G.indexOf(R.P1)];pp._show=()=>{if(sh)sh();if(go)go()}}/* 朝の紙だけ、点のページを見せたときに、数え上げてハンコ */
+  const B=bookMake(body,pages,{key:'diary',cls:'dybk',at:DYBK.p,onAt:i=>{DYBK.p=i;dyBookShow(BK)}});DYBK.p=B.at;
   if(anim){const best=dyBest(e),r=best&&S.res.find(q=>q.name===best.nm&&!q.hidden);if(r&&!DYJ.has(r)){DYJ.add(r);JUMP.set(r,performance.now());villageTimeout(()=>JUMP.set(r,performance.now()),650);addFloat(r.x,r.y-1.4,'がんばった！','#ffe7a8')}}}
-/* 日記の中身：P1 は1ページめ（点）、P2 はそのあと。anim：朝の紙（ハンコをおす） */
+/* 見えているページ（見開きは2まい）に _show があれば、はじめて見せたときに1回よぶ */
+function dyBookShow(B){if(!B)return;for(const i of B.sp?[B.at,B.at+1]:[B.at]){const pg=B.pages[i];if(pg&&pg._show){const f=pg._show;pg._show=null;f()}}}
+/* 日記の中身：P0 は絵日記、P1 は点（数え上げ・ハンコは P1.show）、P2 はそのあと。anim：朝の紙。secW：きのうのしごと の欄 */
 function dySecs(e,anim){
-  const P1=[],P2=[];/* P1：1ページめ（点）・P2：つぎのページから */
+  const P0=[],P1=[],P2=[];/* P0：絵日記・P1：点・P2：そのあと */
   {const b=dyBest(e);if(b){const sec=el('<div class="sec dyMvp"><h3>ゆうべのかつやく</h3><div class="rows"></div></div>'),r=rowEl(b.nm,mvpTxt(b),ELEM[b.el]?spiritPort(b.el,96,b.vr):null);sec.querySelector('.rows').appendChild(r);P1.push(sec);
-    if(anim)setTimeout(()=>{if(r.isConnected)uiStamp(r,true,'かつやく')},350);else{r.style.position='relative';const c=stampCanvas('かつやく'),k=document.createElement('canvas');k.width=k.height=32;k.getContext('2d').drawImage(c,0,0);k.className='ustamp s';k.style.animation='none';r.appendChild(k)}}}/* いちばん上に、その子の絵とハンコ */
+    if(anim)P1.show=()=>setTimeout(()=>{if(r.isConnected)uiStamp(r,true,'かつやく')},350);else{r.style.position='relative';const c=stampCanvas('かつやく'),k=document.createElement('canvas');k.width=k.height=32;k.getContext('2d').drawImage(c,0,0);k.className='ustamp s';k.style.animation='none';r.appendChild(k)}}}/* いちばん上に、その子の絵とハンコ */
   const N=e.ns;if(N){const sec=el('<div class="sec"><h3></h3></div>');sec.querySelector('h3').textContent=N.trial?(N.trialOK?'試練をのりこえた！':'試練の夜'):N.rw?'夜をぶじに守りきった！':'ゆうべの守り';
     const g=el('<div class="stats"></div>');
     for(const[k,v]of[['来た「コワイノ」',N.n+'体'],['追いはらった',N.kill+'体'],['おそわれたせいれい',N.hurt?N.hurt+'回':'なし'],['こわされた柵・設備',N.broke?N.broke+'こ':'なし'],['ぬすまれたもの',N.lost.length?lostSum(N.lost):'なし']].concat(N.rw?[['ごほうび','パワー+'+N.rw+'・みんなのたのしさ+10']]:[]).concat(N.trialOK?[['試練のごほうび','パワー+60・めぶきのしずく']]:[])){const d=el('<div class="stat"><span></span><b></b></div>');d.firstChild.textContent=k;d.lastChild.textContent=v;g.appendChild(d)}
@@ -106,31 +113,31 @@ function dySecs(e,anim){
     const K=Object.entries(e.k||{}).sort((a,b)=>b[1][2]-a[1][2]),O=Object.entries(e.o||{});
     if(K.length||O.length){const s2=el('<div class="sec"><h3>ゆうべ追いはらった</h3><div class="rows"></div></div>'),rw=s2.querySelector('.rows');for(const[nm,x]of K)rw.appendChild(rowEl(nm,x[2]+'体を追いはらった',ELEM[x[0]]?spiritPort(x[0],96,x[1]):null));for(const[nm,n]of O)rw.appendChild(rowEl(nm,n+'体を追いはらった'));P2.push(s2)}}
   let secW=null;{const T=typeof dyWorkSum==='function'?dyWorkSum(e):[];if(T.length){secW=el('<div class="sec"><h3>きのうのしごと</h3></div>');const g=el('<div class="stats"></div>');for(const[k,v]of T){const d=el('<div class="stat"><span></span><b></b></div>');d.firstChild.textContent=k;d.lastChild.textContent=v;g.appendChild(d)}secW.appendChild(g);P1.push(secW)}}/* きのうのしごと：みんなのしたことの、種類ごとの合計 */
-  if(e.ph){const sec=el('<div class="sec dyPh"><img alt="" style="display:block;width:100%;aspect-ratio:4/3;object-fit:cover"></div>'),im=sec.querySelector('img'),st=S;P2.unshift(sec);/* その日の昼12時の村の写真（けしたあとなら、出さない） */
-    phGet(e.ph).then(p=>{if(!sec.isConnected||S!==st)return;if(!p||!p.b){sec.remove();return}im.src=dyPhUrl(e.ph,p.b)},()=>sec.remove())}
-  if(e.ft&&e.ft.length&&e.fw){const sec=el('<div class="sec"><h3></h3><div class="rows"></div></div>');sec.querySelector('h3').textContent=e.fw[0]+'のひとこと';const r=rowEl(e.fw[0],e.ft.map(t=>t.replace(LOOKRX,'')).join('\n'),ELEM[e.fw[1]]?spiritPort(e.fw[1],96,e.fw[2]):null);r.querySelector('small').style.whiteSpace='pre-line';sec.querySelector('.rows').appendChild(r);P2.splice(e.ph?1:0,0,sec)}
+  if(e.ph!=null||e.ft&&e.ft.length){const sec=el('<div class="sec dyE"></div>'),st=S;P0.push(sec);/* 絵日記：その日の絵（けしたあとなら、出さない）と、その下に文 */
+    if(e.ph!=null){const im=el('<img class="dyPic" alt="">');sec.appendChild(im);phGet(e.ph).then(p=>{if(!im.isConnected||S!==st)return;if(!p||!p.b){im.remove();return}im.src=dyPhUrl(e.ph,p.b)},()=>im.remove())}
+    if(e.ft&&e.ft.length){const tx=el('<p class="dyTx"></p>');tx.textContent=e.ft.map(t=>t.replace(LOOKRX,'')).join('\n');sec.appendChild(tx)}}
   if(e.m.length){const sec=el('<div class="sec"><h3>できごと</h3><div class="rows"></div></div>'),rw=sec.querySelector('.rows');for(const t of e.m)rw.appendChild(rowEl(t,''));P2.push(sec)}
   if(e.w.length){const sec=el('<div class="sec"><h3>みんなのしたこと</h3><div class="rows"></div></div>'),rw=sec.querySelector('.rows');const by=new Map();
     for(const x of e.w){if(!by.has(x[0]))by.set(x[0],{el:x[1],vr:x[2],L:[]});by.get(x[0]).L.push(x)}
     for(const[nm,g]of by){g.L.sort((a,b)=>b[5]-a[5]);const tx=g.L.slice(0,DYPER).map(x=>dyText(x[3],x[4])+(x[5]>1?'（'+x[5]+'回）':'')).join('\n');const r=rowEl(nm,tx,ELEM[g.el]?spiritPort(g.el,96,g.vr):null);r.querySelector('small').style.whiteSpace='pre-line';rw.appendChild(r)}
     P2.push(sec)}
-  return{P1,P2,secW}}
+  return{P0,P1,P2,secW}}
 /* 思い出帳の「日記」：1日ずつの日記帳（古い日から）。日づけ（テープ）・天気と、朝の日記と同じ中身（dySecs）。
    日記のない古い日は、できごと（S.memo・S.log）と村の写真（テープではる。タップで大きく）だけ。さいごのページは「きょうまで」（tail：これまでの合計） */
 const DYWXN={storm:['あらし','rain'],snow:['雪','rain'],rain:['雨','rain'],rainbow:['虹','rainbow'],fest:['おまつり','sun']};
 function diaryList(body,tail){const st=S,E=new Map(),day=d=>E.get(d)||(E.set(d,{d,ev:[]}),E.get(d));
   for(const e of S.diary||[])day(e.d).e=e;
   (S.memo||[]).forEach(([d,ic,t])=>day(d).ev.push([ic,t]));for(const d of S.phDays||[])day(d);(S.log||[]).forEach(([d,t])=>day(d).ev.push(['',t]));
-  const D=[...E.values()].filter(x=>x.d>0).sort((a,b)=>a.d-b.d);if(!D.length&&!tail)return;const pg=new Map();
+  const D=[...E.values()].filter(x=>x.d>0).sort((a,b)=>a.d-b.d);if(!D.length&&!tail)return;const pg=new Map(),dp=new Map();/* dp：日記の絵日記の絵（写真の番号→欄） */
   D.forEach((x,i)=>{const e=x.e,sec=el('<div class="sec mone mdy">'+(i?'':'<h3>日記</h3>')+'<div class="dyhd"><span class="dyd tape"></span><span class="dywx"></span></div><div class="dyphs"></div></div>');
     sec.querySelector('.dyd').textContent=x.d+'日め';if(e){const w=DYWXN[e.wx]||['晴れ','sun'],wx=sec.querySelector('.dywx');wx.innerHTML=pxi(w[1]);wx.appendChild(document.createTextNode(w[0]))}
-    if(e){/* 日記のある日は、朝の日記と同じ中身（dySecs）：1ページめは点、つぎのページから写真・ひとこと・できごと・みんなのしたこと */const R=dySecs(e,false),put=(t,L)=>{for(const q of L){const h=q.querySelector(':scope>h3');if(h)h.classList.add('tape');t.appendChild(q)}};
-      sec.querySelector('.dyphs').remove();put(sec,R.P1);if(!R.P1.length)put(sec,R.P2);body.appendChild(sec);
-      if(R.P1.length&&R.P2.length){const s2=el('<div class="sec mone mdy"></div>');put(s2,R.P2);body.appendChild(s2)}return}
+    if(e){/* 日記のある日は、朝の日記と同じ中身（dySecs）：絵日記・点・できごと・みんなのしたこと */const R=dySecs(e,false);if(e.ph!=null&&R.P0[0])dp.set(e.ph,R.P0[0]);const put=(t,L)=>{for(const q of L){const h=q.querySelector(':scope>h3');if(h)h.classList.add('tape');t.appendChild(q)}};
+      sec.querySelector('.dyphs').remove();const G=[R.P0,R.P1,R.P2].filter(L=>L.length);if(G.length)put(sec,G[0]);body.appendChild(sec);
+      for(const L of G.slice(1)){const s2=el('<div class="sec mone mdy"></div>');put(s2,L);body.appendChild(s2)}return}/* 組（絵日記・点・そのあと）ごとにページをかえる */
     pg.set(x.d,sec);/* 日記のない日（前のセーブ）：できごと・写真だけ */
     if((S.phDays||[]).includes(x.d)){const f=el('<figure class="dyph dyph0" role="button" tabindex="0"><img alt=""></figure>');sec.querySelector('.dyphs').appendChild(f)}/* 写真の場所を先にとっておく（ページわけのあとで絵が入る） */
     if(x.ev.length){const u=el('<ul class="dyev"></ul>');for(const[ic,t]of x.ev){const li=document.createElement('li'),k=memoIc(ic);if(k)li.insertAdjacentHTML('afterbegin',pxi(k,'wx'));li.appendChild(document.createTextNode(t));u.appendChild(li)}sec.appendChild(u)}
     body.appendChild(sec)});
   if(tail){tail.classList.add('mone');if(!D.length)tail.insertAdjacentHTML('afterbegin','<h3>日記</h3>');body.appendChild(tail)}
   /* 村の写真：その日のページに、テープではる（古い日の写真で、ページのない日はのせない） */
-  if(!IS_STORY_REPLAY&&typeof phList==='function')phList(WD).then(L=>{if(S!==st)return;for(const p of L){const sec=pg.get(p.d);if(!sec)continue;const box=sec.querySelector('.dyphs'),u=dyPhUrl(p.id,p.b);let f=sec.querySelector('.dyph0');if(f)f.classList.remove('dyph0');else{f=el('<figure class="dyph" role="button" tabindex="0"><img alt=""></figure>');box.appendChild(f)}f.querySelector('img').src=u;f.onclick=()=>{sfx('tap');phView(p,()=>{if(sheet==='menu'&&sheetArg==='record')renderSheet()})}}for(const f of body.querySelectorAll('.dyph0'))f.remove()},()=>{})}
+  if(!IS_STORY_REPLAY&&typeof phList==='function')phList(WD).then(L=>{if(S!==st)return;for(const p of L){const sec=pg.get(p.d),ds=dp.get(p.id);if(ds){const im=ds.querySelector('.dyPic');if(im){im.setAttribute('role','button');im.tabIndex=0;im.style.cursor='pointer';im.onclick=()=>{sfx('tap');phView(p,()=>{if(sheet==='menu'&&sheetArg==='record')renderSheet()})}}continue}if(!sec)continue;const box=sec.querySelector('.dyphs'),u=dyPhUrl(p.id,p.b);let f=sec.querySelector('.dyph0');if(f)f.classList.remove('dyph0');else{f=el('<figure class="dyph" role="button" tabindex="0"><img alt=""></figure>');box.appendChild(f)}f.querySelector('img').src=u;f.onclick=()=>{sfx('tap');phView(p,()=>{if(sheet==='menu'&&sheetArg==='record')renderSheet()})}}for(const f of body.querySelectorAll('.dyph0'))f.remove()},()=>{})}

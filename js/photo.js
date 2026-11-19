@@ -1,10 +1,13 @@
 /* 村の写真・村の名前（photo.js）
    村の名前：S.vname（ひらがな・カタカナ・英数字・ー・・で VNMAX 字まで。フォントにある字だけ）。村のようす・マップえらび・写真に出す。
-   村の写真：毎日、昼12時（ゲームの時計。12〜15時のあいだで、マップを描いているはじめのコマ）に、自動で写す（phNoonTick、S.phD：写した日）。
-     写すのは、いまのカメラとはべつの、村（VILL）がおさまる所（phFrame）。同じコマで、写す所を描いて写しとり（phSnap）、すぐにもとのカメラで描きなおすので、
+   日記の絵（絵日記の写真）：その日いちばん心にのこった物を、その場所に近よって写す（phWant → つぎのコマで phSnap）。
+     写すのは昼（PHH0〜PHH1）だけ。大事さ（PHPR）：はじめてできたスポット 3（phSpot）・できた家具や建物 2（admireNote から）・
+     新しいなかま 1.5・書く子（フタバ・ホムラ、dyWriter）が見にいった物・夕焼け・生き物・ひとりのしぐさ 1（phLook）・
+     夕方まで何もなかった日は、書く子のまわり 0。その日の絵より大事なときだけ写しなおし、前の絵はけす。書く子が村にいなければ写さない。
+     写す所は、いまのカメラとはべつ。同じコマで、写す所を描いて写しとり（phSnap）、すぐにもとのカメラで描きなおすので、
      画面のカメラはうごかない。ふきだしの文字・矢の数・置く前のわくなどは写さない（PHSNAP）。画面の UI（DOM）は、もとから入らない。
      長い辺 PHMAX ドットにちぢめて、ブラウザの IndexedDB（PHDB）にしまう。セーブ（localStorage）には入れない（大きいので）。
-     ステージごとに PHN まい（いっぱいなら、いちばん古いのをけす）。その日の日記（S.dy.ph）に写真の番号をのこす。
+     ステージごとに PHN まい（いっぱいなら、いちばん古いのをけす）。その日の日記（S.dy.ph・phK・phN・phS）に、写真の番号と、なにを写したかをのこす。
      思い出帳の「村の写真」は、見る・けすだけ。思い出帳の再生ではしない。 */
 const VNMAX=8,PHMAX=480,PHN=30,PHDB='hakoniwa-photo';
 const VNOK=/[^ぁ-ゔァ-ヶー・0-9A-Za-z０-９]/g;
@@ -26,21 +29,14 @@ function phList(w){return phTx('readonly',(s,put)=>{const q=s.index('w').getAll(
 function phDel(id){return phTx('readwrite',s=>{s.delete(id)})}
 function phAdd(rec){return phTx('readwrite',(s,put)=>{const q=s.add(rec);q.onsuccess=()=>put(q.result)})}
 function phGet(id){return phTx('readonly',(s,put)=>{const q=s.get(id);q.onsuccess=()=>put(q.result||null)})}
-/* 写す所：村（VILL。霧の中はのぞく）がおさまるように。広すぎるときは、いちばんこみあった所（家は4ばいに数える）をまん中に */
-const PHZMIN=.6,PHASP=4/3;
-function phFrame(){const cw=Math.min(VW,VH*PHASP),ch=cw/PHASP,fog=typeof fogAt==='function',V=new Float32Array(W*H);let x0=W,y0=H,x1=-1,y1=-1,n=0;
-  for(let j=0;j<VILL.length;j++)if(VILL[j]&&!(fog&&fogAt(j))){V[j]=1;const x=j%W,y=(j/W)|0;if(x<x0)x0=x;if(x>x1)x1=x;if(y<y0)y0=y;if(y>y1)y1=y;n++}
-  for(const h of HOUSES)for(const j of h.set)if(V[j])V[j]=4;
-  if(!n)return{z:clamp(homeZ(),PHZMIN,3),cx:(CX+.5)*TS,cy:(CY+.5)*TS,cw,ch};
-  const bw=(x1-x0+1)*TS,bh=(y1-y0+2)*TS,fit=Math.min(cw/bw,ch/bh);
-  if(fit>=PHZMIN)return{z:Math.min(fit,homeZ()),cx:(x0+x1+1)/2*TS,cy:(y0+y1+1)/2*TS-TS*.5,cw,ch};/* 物の絵は上へのびるので、すこし上に */
-  const fw=Math.min(W,Math.floor(cw/(PHZMIN*TS))),fh=Math.min(H,Math.floor(ch/(PHZMIN*TS))),A=new Float32Array((W+1)*(H+1));/* こみあった所：ならべた合計（summed-area）で、写すわくの中の数がいちばん多い所 */
-  for(let y=0;y<H;y++)for(let x=0;x<W;x++)A[(y+1)*(W+1)+x+1]=V[y*W+x]+A[y*(W+1)+x+1]+A[(y+1)*(W+1)+x]-A[y*(W+1)+x];
-  let best=-1,bx=0,by=0;for(let y=0;y+fh<=H;y++)for(let x=0;x+fw<=W;x++){const v=A[(y+fh)*(W+1)+x+fw]-A[y*(W+1)+x+fw]-A[(y+fh)*(W+1)+x]+A[y*(W+1)+x];if(v>best){best=v;bx=x;by=y}}
-  return{z:PHZMIN,cx:(bx+fw/2)*TS,cy:(by+fh/2)*TS-TS*.5,cw,ch}}
+/* 写す所：マスのかこみ B（{x0,y0,x1,y1}）が大きく入るように、近よる */
+const PHZMIN=.6,PHASP=4/3,PHZMAX=2.4;
+function phFrame(B){const cw=Math.min(VW,VH*PHASP),ch=cw/PHASP,bw=(B.x1-B.x0+1)*TS,bh=(B.y1-B.y0+1)*TS,fit=Math.min(cw/(bw+TS*5),ch/(bh+TS*5));
+  const z=clamp(fit,PHZMIN,Math.max(PHZMAX,homeZ())),lift=hiAt(clamp(Math.round((B.y0+B.y1)/2),0,H-1)*W+clamp(Math.round((B.x0+B.x1)/2),0,W-1))*LIFT;
+  return{z,cx:(B.x0+B.x1+1)/2*TS,cy:(B.y0+B.y1+1)/2*TS-TS*.6-lift,cw,ch}}/* 物の絵は上へのびるので、すこし上に */
 let PHSNAP=0;
 /* 写す所を描いて、写しとる（同じコマで、もとのカメラで描きなおす） */
-function phSnap(now){if(!cv.width||!VW)return null;const F=phFrame(),C={x:cam.x,y:cam.y,z:cam.z},keep={mode,pending,selRect,MOVESRC};
+function phSnap(now,F){if(!cv.width||!VW)return null;const C={x:cam.x,y:cam.y,z:cam.z},keep={mode,pending,selRect,MOVESRC};
   const k=Math.min(1,PHMAX/Math.max(F.cw,F.ch)),w=Math.max(1,Math.round(F.cw*k)),h=Math.max(1,Math.round(F.ch*k)),o=document.createElement('canvas');o.width=w;o.height=h;
   const fresh=()=>{if(typeof HDC!=='undefined'&&HDC)HDC.n=99};/* HD-2D のにじみのもとを、そのコマで作りなおす */
   try{PHSNAP=1;mode='look';pending=null;selRect=null;MOVESRC=null;cam.z=F.z;cam.x=F.cx-VW/F.z/2;cam.y=F.cy-VH/F.z/2;fresh();render(now);
@@ -48,12 +44,35 @@ function phSnap(now){if(!cv.width||!VW)return null;const F=phFrame(),C={x:cam.x,
   catch(e){o.width=o.height=0;return null}
   finally{PHSNAP=0;mode=keep.mode;pending=keep.pending;selRect=keep.selRect;MOVESRC=keep.MOVESRC;cam.x=C.x;cam.y=C.y;cam.z=C.z;fresh();try{render(now)}catch(e){}}
   return new Promise(ok=>{const fin=b=>{o.width=o.height=0;ok(b)};try{o.toBlob(b=>fin(b),'image/jpeg',.9)}catch(e){fin(null)}})}
-/* 毎コマ（マップを描いたあと）：昼12時に1回だけ写す */
-function phNoonTick(now){if(!S||IS_STORY_REPLAY||typeof MEMRUN!=='undefined'&&MEMRUN||NOSAVE||!S.introSeen)return;const h=hour();
+/* 日記の絵の予約 */
+const PHH0=6.5,PHH1=19,PHEVE=17,PHDELAY=1600,PHPR={spot:3,built:2,new:1.5,see:1,day:0},PHLOOK=new Set(['admire','sunset','critwatch','quirk']);
+let PHQ=null,PHCHK=0;
+function phOn(){return !!S&&!IS_STORY_REPLAY&&!(typeof MEMRUN!=='undefined'&&MEMRUN)&&!NOSAVE&&!!S.introSeen}
+const phBoxOf=(x,y,r)=>({x0:Math.floor(x-r),y0:Math.floor(y-r),x1:Math.floor(x+r),y1:Math.floor(y+r)});
+function phBoxJ(id,j){let x0=W,y0=H,x1=-1,y1=-1;for(const[x,y]of fp(id,j%W,(j/W)|0)){x0=Math.min(x0,x);y0=Math.min(y0,y);x1=Math.max(x1,x);y1=Math.max(y1,y)}return x1<0?phBoxOf(j%W+.5,(j/W|0)+.5,0):{x0,y0,x1,y1}}
+/* k：PHPR のしゅるい、B：写す所（マスのかこみ）、n：物の名前、sub：見た物のしゅるい（see のとき） */
+function phWant(k,B,n,sub){if(!phOn()||typeof dyCur!=='function'||!dyWriter())return;const D=dyCur(),h=hour();if(!D||h<PHH0||h>=PHH1)return;
+  const pr=PHPR[k];if(D.phP!=null&&pr<=D.phP)return;if(PHQ&&PHQ.st===S&&PHQ.pr>=pr)return;
+  PHQ={k,B,n:n||'',sub:sub||'',pr,st:S,d:D.d,at:performance.now()+PHDELAY}}
+function phSpot(sp){const I=SPOTI.find(q=>q.sp.k===sp.k);if(!I)return;let x0=W,y0=H,x1=-1,y1=-1;for(const q of spotCells(I)){const x=q%W,y=(q/W)|0;x0=Math.min(x0,x);y0=Math.min(y0,y);x1=Math.max(x1,x);y1=Math.max(y1,y)}if(x1>=0)phWant('spot',{x0,y0,x1,y1},sp.n)}
+/* 1秒に1回：書く子が見にいった物・新しいなかま・夕方まで何もなかった日 */
+function phLook(){const f=dyWriter(),D=S.dy;if(!f||!D||f.hidden)return;const h=hour();
+  {const nw=S.res.find(r=>r.came===D.d&&r!==f&&!r.back&&!r.hidden);if(nw)phWant('new',phBoxOf(nw.x,nw.y,1),nw.name)}
+  const a=f.act;if(a&&PHLOOK.has(a.type)&&a.stage!=='walk'&&a.t>=3){let B=phBoxOf(f.x,f.y,1),n='';
+    if(a.type==='admire'&&a.obj!=null&&BL[a.id]){const O=phBoxJ(a.id,a.obj);B={x0:Math.min(B.x0,O.x0),y0:Math.min(B.y0,O.y0),x1:Math.max(B.x1,O.x1),y1:Math.max(B.y1,O.y1)};n=BL[a.id].name}
+    else if(a.type==='critwatch'){const c=typeof critById==='function'&&critById(a.cid);if(c&&typeof CRITN!=='undefined')n=CRITN[c.k]||''}
+    phWant('see',B,n,a.type)}
+  if(h>=PHEVE&&D.ph==null&&!PHQ)phWant('day',phBoxOf(f.x,f.y,1.5))}
+/* 毎コマ（マップを描いたあと） */
+function phTick(now){if(!phOn())return;const h=hour();
   if(typeof dyNoon==='function')dyNoon(h);
-  const d=dayNo();if(h<12||h>=15||S.phD===d)return;S.phD=d;phAuto(now,d)}
-function phAuto(now,d){const w=WD,st=S,vn=S.vname||'',h=hour(),P=phSnap(now);if(!P)return;
-  P.then(async b=>{if(!b||S!==st)return;try{const L=await phList(w);for(let i=0;i<=L.length-PHN;i++)await phDel(L[i].id);const id=await phAdd({w,d,h,vn,at:Date.now(),b});if(S===st){const D=S.phDays||(S.phDays=[]);if(!D.includes(d)){D.push(d);if(D.length>60)D.shift()}dirty=true}/* 日記に、写真だけの日のページも作る */if(S===st&&S.dy&&S.dy.d===d){S.dy.ph=id;dirty=true}}catch(e){}})}
+  if(now>=PHCHK){PHCHK=now+1000;try{phLook()}catch(e){}}
+  const q=PHQ;if(!q||now<q.at)return;PHQ=null;if(q.st!==S||!S.dy||S.dy.d!==q.d)return;
+  const w=WD,st=S,vn=S.vname||'',P=phSnap(now,phFrame(q.B));if(!P)return;
+  P.then(async b=>{if(!b||S!==st)return;try{const D=S.dy;if(!D||D.d!==q.d||D.phP!=null&&D.phP>=q.pr)return;
+    const L=await phList(w);for(let i=0;i<=L.length-PHN;i++)await phDel(L[i].id);const id=await phAdd({w,d:q.d,h,vn,at:Date.now(),b});
+    if(S!==st||S.dy!==D||D.phP!=null&&D.phP>=q.pr){phDel(id).catch(()=>{});return}
+    const old=D.ph;D.ph=id;D.phK=q.k;D.phN=q.n;D.phS=q.sub;D.phP=q.pr;dirty=true;if(old!=null&&old!==id)phDel(old).catch(()=>{})}catch(e){}})}
 const phCap=p=>(p.vn?p.vn+'村・':'')+p.d+'日め・'+String(Math.floor(p.h)).padStart(2,'0')+':'+String(Math.floor((p.h%1)*60)).padStart(2,'0');
 /* 見る：大きく出して、けせる */
 function phView(p,after){const url=URL.createObjectURL(p.b),ov=el('<div class="idea-reveal ph-reveal" role="dialog" aria-modal="true" aria-label="村の写真"></div>'),card=el('<div class="idea-card" style="min-width:0;padding:14px 12px"><img alt="" style="display:block;max-width:100%;max-height:calc(100vh - 210px);width:auto;height:auto;margin:0 auto 8px"><p style="text-align:center;margin:0 0 8px"></p><div style="display:flex;gap:8px;justify-content:center"></div></div>');
@@ -62,3 +81,9 @@ function phView(p,after){const url=URL.createObjectURL(p.b),ov=el('<div class="i
   del.onclick=()=>{if(!(del.dataset.ok||del._held)){del.dataset.ok=1;del.textContent='本当にけす';return}phDel(p.id).then(()=>{close();toast('写真をけした');if(after)after()},()=>toast('けせませんでした','warn'))};
   ok.onclick=()=>{sfx('tap');close()};bx.append(del,ok);ov.append(card);document.body.append(ov)}
 /* 思い出帳の「村の写真」 */
+function photoSec(body){if(IS_STORY_REPLAY)return;const sec=el('<div class="sec"><h3>村の写真</h3><div class="phg" style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:6px 0"></div></div>'),g=sec.querySelector('.phg');
+  body.appendChild(sec);
+  const w=WD,st=S;phList(w).then(L=>{if(!sec.isConnected||S!==st)return;if(!L.length){g.replaceWith(el('<p class="note">毎日お昼に、村のすがたが、ここにのこります。</p>'));return}
+    for(const p of L.slice().reverse()){const u=URL.createObjectURL(p.b),t=el('<button type="button" class="phT" style="padding:0;border:0;background:none;cursor:pointer"><img alt="" style="display:block;width:100%;aspect-ratio:4/3;object-fit:cover"><small style="display:block;text-align:center"></small></button>');
+      const im=t.querySelector('img');im.src=u;im.onload=()=>URL.revokeObjectURL(u);t.querySelector('small').textContent=p.d+'日め';t.onclick=()=>{sfx('tap');phView(p,()=>{if(sheet==='menu'&&sheetArg==='record')renderSheet()})};g.appendChild(t)}},
+    ()=>{if(sec.isConnected)g.replaceWith(el('<p class="note">このブラウザでは、写真をしまえません。</p>'))})}
