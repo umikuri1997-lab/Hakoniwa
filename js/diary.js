@@ -132,14 +132,14 @@ function diaryBody(T,body,arg){const L=S.diary||[];const e=arg==='m'||arg==null?
   if(anim)setTimeout(()=>dyWrite(body),420);/* 朝の日記：文を、書く音といっしょに、ちょっとずつ出す */
   if(anim){const best=dyBest(e),r=best&&S.res.find(q=>q.name===best.nm&&!q.hidden);if(r&&!DYJ.has(r)){DYJ.add(r);JUMP.set(r,performance.now());villageTimeout(()=>JUMP.set(r,performance.now()),650);addFloat(r.x,r.y-1.4,'がんばった！','#ffe7a8')}}}
 /* 書いているように、文を1字ずつ出す（場所は先にとってある：字は見えないだけ）。「、」「。」と行のおわりで、ひと息。書く音（持ち主の音）を数字ごとに。タップで、すぐさいごまで */
-const DYWMS=55,DYWPAUSE=200,DYWLINE=320,DYWSND=4;
+const DYWMS=55,DYWPAUSE=200,DYWLINE=320;
 function dyWrite(root){const L=[...root.querySelectorAll('.dyTx')].filter(p=>!p.dataset.w&&p.textContent);if(!L.length)return;const st=S;
   const P=L.map(p=>{p.dataset.w=1;const t=p.textContent;p.textContent='';const C=[];for(const ch of t){if(ch==='\n'){p.appendChild(document.createTextNode('\n'));C.push(null);continue}const sp=document.createElement('span');sp.className='dyc';sp.textContent=ch;p.appendChild(sp);C.push(sp)}return C});
-  const C=P[0],all=()=>{for(const A of P)for(const sp of A)if(sp)sp.classList.add('on')};if(uiReduced()){all();return}
-  let i=0,n=0,done=false;const fin=()=>{if(done)return;done=true;all();root.removeEventListener('pointerdown',fin,true)};root.addEventListener('pointerdown',fin,true);
-  const step=()=>{if(done)return;if(!root.isConnected||S!==st){done=true;return}if(i>=C.length){fin();return}
+  const C=P[0],all=()=>{for(const A of P)for(const sp of A)if(sp)sp.classList.add('on');writeLoop(false)};if(uiReduced()){all();return}
+  let i=0,n=0,done=false;const fin=()=>{if(done)return;done=true;all();root.removeEventListener('pointerdown',fin,true)};root.addEventListener('pointerdown',fin,true);writeLoop(true);/* 書く音を、書きおわるまで */
+  const step=()=>{if(done)return;if(!root.isConnected||S!==st){done=true;writeLoop(false);return}if(i>=C.length){fin();return}
     const sp=C[i];for(const A of P){const q=A[i];if(q)q.classList.add('on')}i++;let w=DYWMS;
-    if(!sp)w=DYWLINE;else{if(n++%DYWSND===0)sfx('owrite');if('、。！？…'.includes(sp.textContent))w=DYWPAUSE}setTimeout(step,w)};step()}
+    if(!sp)w=DYWLINE;else{n++;if('、。！？…'.includes(sp.textContent))w=DYWPAUSE}setTimeout(step,w)};step()}
 /* 思い出帳の「日記」：1日1ページの日記帳（古い日から。dyDayPage）。できごと（S.memo・S.log）と村の写真も、ここにまとめる。さいごのページは「きょうまで」（tail：これまでの合計） */
 function diaryList(body,tail){const E=new Map(),day=d=>E.get(d)||(E.set(d,{d,ev:[]}),E.get(d));
   for(const e of S.diary||[])day(e.d).e=e;
