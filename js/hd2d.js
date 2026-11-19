@@ -22,7 +22,11 @@ function hdBig(ms){HDBIG=Math.max(HDBIG,performance.now()+ms)}/* 見せ場：そ
 function sunLen(){return HDLEN}/* かげの長さ（昼1） */
 function sunLean(){return HDSUN}/* かげのかたむき：−1 朝（かげは西へ）・0 昼・+1 夕方（東へ） */
 function hdFrame(){/* 1コマに1回（render のはじめ） */
-  if(!HD2D){HDLEN=1;HDSUN=0;return}const h=hour();HDLEN=h<6||h>18?1:1+HDLONG*Math.abs(h-12)/6;HDSUN=h<6||h>18?0:(h-12)/6}
+  if(!HD2D){HDLEN=1;HDSUN=0;return}
+  const h=hour(),daylight=Math.max(0,Math.min(1,(h-5)/2,(19-h)/2));
+  HDSUN=(h-12)/6*daylight;
+  HDLEN=1+HDLONG*Math.abs(HDSUN);
+}
 function hdTint(h){/* 時間の光の色（soft-light でかさねる色と、こさ） */
   if(h>=5&&h<8){const q=h<6.5?(h-5)/1.5:1-(h-6.5)/1.5;return['255,176,170',.55*q]}/* 明け方：うすいピンク */
   if(h>=8&&h<15.5)return['255,236,196',.24];/* 昼：ほんのりあたたかい */
@@ -38,7 +42,7 @@ function hdPost(dk,now){/* 夜の暗さのあと・ふきだしの前に、画�
   {const w=hdWx();if(w){c.globalCompositeOperation='multiply';c.fillStyle='rgba('+w[0]+','+w[1]+')';c.fillRect(0,0,W0,H0)}}
   c.globalCompositeOperation='source-over';
   {const a=HDAIR*(1-Math.min(1,dk/.4));if(a>0){const g=c.createLinearGradient(0,0,0,H0*.55);g.addColorStop(0,'rgba(200,216,236,'+a+')');g.addColorStop(1,'rgba(200,216,236,0)');c.fillStyle=g;c.fillRect(0,0,W0,H0*.55)}}/* 空気の遠近：奥ほど少し青く・うすく（夜はなし） */
-  if(S.rain&&!(typeof snowNow==='function'&&snowNow())){const st=typeof stormNow==='function'&&stormNow(),a=(st?.2:.13)*(typeof wxRainK==='function'?wxRainK():1)*(1-Math.min(1,dk/.5)*.6);if(a>0){const col='210,220,234',g=c.createLinearGradient(0,0,0,H0);g.addColorStop(0,'rgba('+col+','+a*1.5+')');g.addColorStop(.45,'rgba('+col+','+a*.35+')');g.addColorStop(.75,'rgba('+col+',0)');g.addColorStop(1,'rgba('+col+','+a*.7+')');c.fillStyle=g;c.fillRect(0,0,W0,H0);const e=Math.round(W0*.18),gl=c.createLinearGradient(0,0,e,0);gl.addColorStop(0,'rgba('+col+','+a+')');gl.addColorStop(1,'rgba('+col+',0)');c.fillStyle=gl;c.fillRect(0,0,e,H0);const gr=c.createLinearGradient(W0-e,0,W0,0);gr.addColorStop(0,'rgba('+col+',0)');gr.addColorStop(1,'rgba('+col+','+a+')');c.fillStyle=gr;c.fillRect(W0-e,0,e,H0)}}/* 雨のもや：画面のはしほど白くかすむ（雨が強いほど・あらしはこく） */
+  if(S.rain&&!(typeof snowNow==='function'&&snowNow())){const st=typeof stormNow==='function'&&stormNow(),a=(st?.12:.075)*(typeof wxRainK==='function'?wxRainK():1)*(1-Math.min(1,dk/.5)*.6);if(a>0){const col='210,220,234',g=c.createLinearGradient(0,0,0,H0);g.addColorStop(0,'rgba('+col+','+a*1.5+')');g.addColorStop(.45,'rgba('+col+','+a*.35+')');g.addColorStop(.75,'rgba('+col+',0)');g.addColorStop(1,'rgba('+col+','+a*.7+')');c.fillStyle=g;c.fillRect(0,0,W0,H0);const e=Math.round(W0*.18),gl=c.createLinearGradient(0,0,e,0);gl.addColorStop(0,'rgba('+col+','+a+')');gl.addColorStop(1,'rgba('+col+',0)');c.fillStyle=gl;c.fillRect(0,0,e,H0);const gr=c.createLinearGradient(W0-e,0,W0,0);gr.addColorStop(0,'rgba('+col+',0)');gr.addColorStop(1,'rgba('+col+','+a+')');c.fillStyle=gr;c.fillRect(W0-e,0,e,H0)}}/* 雨のもや：画面のはしほど白くかすむ（雨が強いほど・あらしはこく） */
   if(!HDGLOW){c.restore();return}/* にじみ：切り */
   const aw=Math.max(1,Math.round(W0/HDA)),ah=Math.max(1,Math.round(H0/HDA)),bw=Math.max(1,Math.round(W0/HDB)),bh=Math.max(1,Math.round(H0/HDB));const fresh=!HDC.b||HDC.b.width!==bw||HDC.b.height!==bh||++HDC.n>=HDEVERY;if(fresh)HDC.n=0;
   const B=HDC.b=hdCv(HDC.b,bw,bh),C=HDC.c=hdCv(HDC.c,bw,bh),gb=B.getContext('2d'),gc=C.getContext('2d');

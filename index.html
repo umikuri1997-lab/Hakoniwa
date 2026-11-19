@@ -263,8 +263,8 @@ button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 #dialog.sacred-side{justify-content:flex-end;padding-bottom:60px}
 #dialog.sacred-side .dlg{width:44%;max-height:calc(100% - 76px);gap:6px;padding:10px 14px;overflow:visible}
 #dialog.sacred-side #dlgText{min-height:0;overflow:auto}
-.dlg .dlgSkip{position:absolute;right:0;bottom:calc(100% + 6px);z-index:2}
-#dialog.dtop .dlg .dlgSkip{bottom:auto;top:calc(100% + 6px)}
+.dlg .dlgActions{position:absolute;right:0;bottom:calc(100% + 6px);z-index:2;display:flex;gap:8px}
+#dialog.dtop .dlg .dlgActions{bottom:auto;top:calc(100% + 6px)}
 #dialog.sacred-side .dlg p{font-size:15px;line-height:1.6}
 #dialog.sacred-side #dlgPort{display:none}
 
@@ -664,6 +664,7 @@ body.wd0 .dock button{transform-origin:50% -20px;color:#5e3d22}body.wd0 .quest{t
 /* ハンコ（たっせい）：赤い「できた」が、ポンとおされる（ui-fx.js の uiStamp） */
 .ustamp{position:absolute;right:-6px;top:50%;width:60px;height:60px;margin-top:-30px;image-rendering:pixelated;pointer-events:none;z-index:5;animation:ustamp .5s steps(1)}
 .ustamp.s{width:48px;height:48px;margin-top:-24px;right:-10px}
+.toast .ttx>.ustamp.s{left:50%;right:auto;margin-left:-24px}
 .ustamp.out{opacity:0;transition:opacity .4s}
 .ustamp.b{width:72px;height:72px;margin-top:-30px;right:72px}/* 大きなハンコ（48ドット・1ドット1.5px） */
 #dayLbl .stkn{font-weight:normal;display:inline-block}#dayLbl .stkn.ustkglow{color:#e0962a}
@@ -820,7 +821,18 @@ body.wd0 .uboing2{animation:uboing2 .45s steps(1)}
 @keyframes lvpop{0%{transform:scale(.3,.3);opacity:0}5.556%{transform:scale(.35,.35);opacity:.05}9.259%{transform:scale(.395,.395);opacity:.1}12.963%{transform:scale(.445,.445);opacity:.2}16.667%{transform:scale(.495,.495);opacity:.25}20.37%{transform:scale(.54,.54);opacity:.3}24.074%{transform:scale(.59,.59);opacity:.35}27.778%{transform:scale(.635,.635);opacity:.45}31.481%{transform:scale(.685,.685);opacity:.5}35.185%{transform:scale(.735,.735);opacity:.55}38.889%{transform:scale(.78,.78);opacity:.6}42.593%{transform:scale(.83,.83);opacity:.7}46.296%{transform:scale(.88,.88);opacity:.75}50%{transform:scale(.925,.925);opacity:.8}53.704%{transform:scale(.975,.975);opacity:.85}57.407%{transform:scale(1.02,1.02);opacity:.95}61.111%{transform:scale(1.07,1.07);opacity:1}64.815%{transform:scale(1.075,1.075);opacity:1}68.519%{transform:scale(1.065,1.065);opacity:1}72.222%{transform:scale(1.06,1.06);opacity:1}75.926%{transform:scale(1.05,1.05);opacity:1}79.63%{transform:scale(1.045,1.045);opacity:1}83.333%{transform:scale(1.035,1.035);opacity:1}87.037%{transform:scale(1.03,1.03);opacity:1}90.741%{transform:scale(1.02,1.02);opacity:1}94.444%{transform:scale(1.015,1.015);opacity:1}98.148%{transform:scale(1.005,1.005);opacity:1}100%{transform:none;opacity:1}}
 @keyframes tontileR{0%{transform:translate(0px,-15px);opacity:0}6.25%{transform:translate(0px,-13.5px);opacity:.5}10.417%{transform:translate(0px,-10.5px);opacity:1}14.583%{transform:translate(0px,-6px);opacity:1}18.75%{transform:scale(1.02,.93);opacity:1}22.917%{transform:rotate(-1deg) scale(1.01,.97);opacity:1}27.083%{transform:rotate(-1.25deg) scale(1.005,.985);opacity:1}31.25%{transform:translate(0px,-1.5px) rotate(-1.5deg);opacity:1}35.417%{transform:translate(0px,-1.5px) rotate(-.85deg);opacity:1}39.583%{transform:rotate(-.2deg);opacity:1}43.75%{transform:rotate(.45deg);opacity:1}47.917%{transform:rotate(.95deg);opacity:1}52.083%{transform:rotate(.55deg);opacity:1}56.25%{transform:rotate(.2deg);opacity:1}60.417%{transform:rotate(-.2deg);opacity:1}64.583%{transform:rotate(-.5deg);opacity:1}68.75%{transform:rotate(-.3deg);opacity:1}72.917%{transform:rotate(-.15deg);opacity:1}77.083%{transform:none;opacity:1}81.25%{transform:rotate(.15deg);opacity:1}89.583%{transform:rotate(.1deg);opacity:1}97.917%{transform:rotate(.05deg);opacity:1}100%{transform:none;opacity:1}}
 /* ui-motion:end */
-hit-pad{position:absolute;left:50%;top:50%;width:max(calc(100% + 8px),48px);height:max(calc(100% + 8px),48px);transform:translate(-50%,-50%);z-index:1}#sheetX{position:relative}/* おせる所を広げる（見えない。見た目はかえない）。おしてボタンがつぶれても44pxより小さくならないよう、48px */</style>
+hit-pad{position:absolute;left:50%;top:50%;width:max(calc(100% + 8px),48px);height:max(calc(100% + 8px),48px);transform:translate(-50%,-50%);z-index:1}#sheetX{position:relative}/* おせる所を広げる（見えない。見た目はかえない）。おしてボタンがつぶれても44pxより小さくならないよう、48px */
+.focus-row{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.focus-row h3{margin:0;white-space:nowrap}
+.focus-row .btns{flex-wrap:nowrap}
+.dlg::before,body.wd0 .dlg::before{border-width:calc(var(--pp)*3)!important}
+.sheet .board-attr,.sheet .board-attr *{text-shadow:none!important}
+.anim-meet .idea-card{background:radial-gradient(ellipse at 50% 34%,#3d6671,#172d3e 72%)!important;color:#fff1cc!important;border:2px solid #dcb77a!important;border-image:none!important;box-shadow:0 0 0 3px #253a49,0 0 0 5px #efcf8c,0 18px 70px #111b27!important;text-shadow:none!important}
+.anim-meet .idea-card h2,.anim-meet .amrow{color:inherit!important;text-shadow:none!important}
+.anim-meet .pic{background:radial-gradient(ellipse,#f9db8a65,transparent 65%)}
+.box-contents h3{margin:9px 0 0}
+.box-quantity{margin-left:auto;white-space:nowrap}
+</style>
 
 <div id="app">
   <canvas id="cv" aria-label="はこにわの世界"></canvas>

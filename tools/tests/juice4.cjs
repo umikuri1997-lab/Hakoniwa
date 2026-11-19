@@ -37,10 +37,25 @@ const assert=require('node:assert/strict');
     juiceStarTick(performance.now());const n0=J4STAR.length;v=130;J4ST.force=1;juiceStarTick(performance.now());const n1=J4STAR.length;J4ST.force=1;juiceStarTick(performance.now());const n2=J4STAR.length;houseComfort=hc;recount();return JSON.stringify({n0,n1,n2})})()`));
   console.log('star',JSON.stringify(s));assert.equal(s.n0,0,'はじめは出さない');assert.equal(s.n1,1,'ふえたら出る');assert.equal(s.n2,1,'かわらなければ出ない');
   /* 新記録 */
-  const r=JSON.parse(await run(`(()=>{S.jrec={d:callDay(),c:{},b:{hv:10},s:{}};J4STAMP.length=0;juiceRec('hv',8,CX,CY);const a=J4STAMP.length;juiceRec('hv',3,CX,CY);const b=J4STAMP.length;juiceRec('hv',5,CX,CY);const c=J4STAMP.length;
-    S.jrec.d=callDay()-1;juiceRec('hv',1,CX,CY);return JSON.stringify({a,b,c,best:S.jrec.b.hv,now:S.jrec.c.hv})})()`));
-  console.log('rec',JSON.stringify(r));assert.equal(r.a,0);assert.equal(r.b,1,'こえたら');assert.equal(r.c,1,'1日に1回');assert.equal(r.best,16,'つぎの日に、いちばんになる');assert.equal(r.now,1);
-  for(let i=0;i<5;i++){await run(`juice4Draw(performance.now());true`);await W8(100)}
+  const r=JSON.parse(await run(`(()=>{
+    const box=document.querySelector('#toasts');box.replaceChildren();TOASTQ.length=0;
+    S.jrec={d:callDay(),c:{},b:{hv:10},s:{}};
+    const msg='きょうの'+J4RECN.hv+'が、いままででいちばん（11）';
+    const stamps=()=>box.querySelectorAll('.ttx > .ustamp').length;
+    juiceRec('hv',8);const a=stamps();
+    toast('知らせ1');toast('知らせ2');
+    juiceRec('hv',3);const queued=TOASTQ.some(it=>it.msg===msg&&it.stamp==='さいこう');
+    box.firstElementChild.remove();toastNext();const b=stamps();
+    juiceRec('hv',5);const c=stamps();
+    toast(msg,'good','さいこう');
+    const text=box.querySelector('.ttx:has(.ustamp)').textContent, merged=stamps();
+    S.jrec.d=callDay()-1;juiceRec('hv',1);
+    return JSON.stringify({a,b,c,queued,merged,text,msg,best:S.jrec.b.hv,now:S.jrec.c.hv});
+  })()`));
+  console.log('rec',JSON.stringify(r));assert.equal(r.a,0);assert.equal(r.queued,true);
+  assert.equal(r.b,1,'新記録の文字に押す');assert.equal(r.c,1,'1日に1回');
+  assert.equal(r.merged,1);assert.equal(r.text,r.msg+'（2）');
+  assert.equal(r.best,16,'つぎの日に、いちばんになる');assert.equal(r.now,1);
   /* ふつうに動かしても、エラーが出ない */
   await W8(1500);
   console.log('errors',errors);assert.equal(errors.length,0);await browser.close();console.log('ok')})().catch(e=>{console.error(e);process.exit(1)});
