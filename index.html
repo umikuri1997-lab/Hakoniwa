@@ -206,8 +206,7 @@ button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .zk{display:flex;gap:10px;align-items:center;padding:8px;background:var(--panel2);border:1px solid var(--line);border-radius:12px;margin-top:8px}.zk canvas{flex:0 0 72px;width:72px;height:72px;border-radius:10px;background:#f6f1e6}.zk .zt{min-width:0;flex:1}.zk b{font-size:15px}.zk p{margin:3px 0 0;font-size:10px;line-height:1.5}.zk small{display:block;margin-top:3px;font-size:10px;opacity:.75}
 .btn.back{margin-bottom:8px}
 .sec h3{margin:0 0 8px;font-size:10px;color:var(--muted);letter-spacing:.08em;font-weight:800}
-.dyE .dyPic{display:block;width:100%;aspect-ratio:4/3;object-fit:cover;border:1.5px solid #a8743f;box-sizing:border-box;image-rendering:auto}
-.dyE .dyTx{margin:6px 0 0;padding:0 4px;white-space:pre-line;font-size:15px;line-height:25px;background:repeating-linear-gradient(to bottom,transparent 0,transparent 23.5px,rgba(168,116,63,.45) 23.5px,rgba(168,116,63,.45) 25px)}
+.mdy .dyTx{margin:0;padding:0 4px;color:#5a3c22;white-space:pre-line;font-size:15px;line-height:25px;background:repeating-linear-gradient(to bottom,transparent 0,transparent 23.5px,rgba(168,116,63,.45) 23.5px,rgba(168,116,63,.45) 25px)}
 .rows{display:flex;flex-direction:column;gap:6px}
 .row{display:flex;align-items:center;gap:10px;background:var(--panel2);border-radius:12px;padding:8px 10px}.row svg.pxi.skic{width:32px;height:32px;flex:none;margin:0;color:#86715a}
 .row img{width:36px;height:36px;flex:none;object-fit:contain}img.ic{object-fit:contain}
@@ -814,6 +813,7 @@ body.wd0 .uboing2{animation:uboing2 .45s steps(1)}
 
 .dywx{display:inline-flex;align-items:center;gap:3px;font-size:10px;color:#8a6a40}.dywx svg.pxi{width:18px;height:18px;fill:#a3875a}
 .dyph{position:relative;margin:6px auto 3px;width:min(86%,calc((var(--pgh,400px) - 105px) * 1.33));padding:6px 6px 15px;background:#fbf6ea;box-shadow:0 0 0 1.5px #d8c7a3,3px 4.5px 0 #5a3c1e22}
+.mdy.dyw .dyph{width:min(80%,calc(var(--pgh,400px) * .33 * 1.33));margin-bottom:3px}/* 絵日記：絵は上の半分ほど、下に文 */
 .dyph::before{content:"";position:absolute;top:-9px;left:50%;width:54px;height:15px;margin-left:-27px;background:var(--tp1u) 0 0/100% 100%;image-rendering:pixelated}.dyphs{display:flex;flex-direction:column;gap:12px}.dyphs:empty{display:none}.dyph{cursor:pointer}
 .dyph img{display:block;width:100%;aspect-ratio:4/3;object-fit:cover;box-shadow:0 0 0 1.5px #00000014}
 .dynote{display:grid;grid-template-columns:auto 1fr;gap:3px 9px;align-items:start}.dynote .dyport{grid-row:span 2;width:36px;height:36px;object-fit:contain;image-rendering:pixelated}
