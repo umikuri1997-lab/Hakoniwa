@@ -159,7 +159,7 @@ function onTap(sx,sy){if(GIFT_ACTIVE&&camAnim&&camAnim.done)return;if(typeof sta
     if(o==='grave'){const d=S.dyn[j]||{};if(!d.buried)return toast((d.name||'せいれい')+'のお墓。なかまが神殿へはこんで、おみおくりしてくれる');/* 守り神は埋葬できない */return toast((d.name||'せいれい')+'のお墓')}
     if(o==='tower'&&!WD&&!S.cleared){if(sacredTapHit(j,w.x/TS,w.y/TS))return sacredTreeTap(j);return}/* 御神木は、根もとの所だけ */
     if(o==='board')return S.feat.craft?openSheet('craft'):toast('依頼ボード。もう少ししたら使えるようになる');
-    if(o==='statue')return typeof sasaPop==='function'?sasaPop():toast('女神像。守り神の居場所');/* 神殿：季節のささげもの（sasage.js） */
+    if(o==='statue')return typeof sasaPop==='function'?sasaPop():toast('神殿。守り神の居場所');/* 神殿：季節のささげもの（sasage.js） */
     if(o==='statueb'){templeRuinTap(j);return}
     if(o==='altar')return toast('カミサマの台座。カミサマはここに現れる');
     {const c=ty*W+tx,lo=!o||WEEDS.has(o),rc=RFC.has(c)?c:lo&&RFC.has(c+W)?c+W:lo&&RFC.has(c+2*W)?c+2*W:-1;if(rc>=0&&lo)return openSheet('roof',RFC.get(rc))}/* ガゼボ・東屋：下に物がなければ、屋根の説明（屋根の絵はマスの上へはみ出すので、2マス上までみる） */
@@ -168,12 +168,12 @@ function onTap(sx,sy){if(GIFT_ACTIVE&&camAnim&&camAnim.done)return;if(typeof sta
     if(o&&fw)return toast(BL[o].name+'：'+withAttr(o,BL[o].desc||''));
     if(o)return openSheet('furn',j);/* 噴水・建物・植物・ワナなども、下から説明を出す */
     if(S.ground[j]===1)return toast('池。そばでつりができる');
-    return toast(REV.has(j)?'よみがえった土地':'荒れた土地。まわりに何か置くと、よみがえる');
+    return toast(REV.has(j)?'よみがえった土地':'荒れた土地。まわりに木や花を植えると、よみがえる');
   }
   if((mode==='build'||mode==='remove'||mode==='bulk')&&nightLock())return toast('夜のあいだは、置くことも、こわすこともできません');
   if(mode==='build'){if(BL[sel]&&['furn','build','deco'].includes(BL[sel].kind)&&!BL[sel].trap){/* ワナは柵と同じで、タップするたびにそのまま置く */if(!usable(sel))return place(sel,tx,ty);const ok=canPlace(sel,tx,ty,true);pending={kind:'one',id:sel,x:tx,y:ty,ok};confirmOne();($('#cRot').hidden=!(pending&&pending.kind==='one'&&ROTS[pending.id]),$('#confirm').hidden=false);sfx('tplace');return}return place(sel,tx,ty)}
   if(mode==='remove')return removeAt(tx,ty);
-  if(mode==='bulk'){if(selStamp==='move')return moveTap(tx,ty);if(selStamp&&selStamp.startsWith('bp:'))return askBp(+selStamp.slice(3),tx,ty);if(selStamp)return selStamp.startsWith('swap:')?askSwap(selStamp.slice(5),tx,ty):askStamp(selStamp,tx,ty);if(!S.bulk)return toast('下から道具をえらんでください');return toast('ハケで、なぞった範囲をぬれます')}
+  if(mode==='bulk'){if(selStamp==='move')return moveTap(tx,ty);if(selStamp&&selStamp.startsWith('bp:'))return askBp(+selStamp.slice(3),tx,ty);if(selStamp)return selStamp.startsWith('swap:')?askSwap(selStamp.slice(5),tx,ty):askStamp(selStamp,tx,ty);if(!S.bulk)return toast('下から道具をえらぶ');return toast('ぬりたい物をえらんで、なぞる')}
 }
 
 /* Android の「戻る」で、ゲームのページから出ないようにする：さわったときに、履歴にゲームの印を1つ足しておき、戻るでその印がきえたら、すぐ足しなおす（Chrome は、さわらずに足した履歴を戻るでとばすので、さわるたびにたしかめる） */

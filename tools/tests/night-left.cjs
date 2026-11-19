@@ -7,7 +7,7 @@ const assert=require('node:assert/strict');
   await run(`S.enemies=[${mk('{}')},${mk('{spawned:false,delay:50}')},${mk('{scout:1}')},${mk('{flee:true}')},${mk('{dead:true}')},${mk('{hp:0}')}]`);
   assert.ok(!(await txt()).includes('のこり'),'not shown in the daytime');
   await run(`S.t=1440*2+60;S.enemies.forEach(e=>e.stun=1e9)`);/* 夜1時。コワイノはとめておく */
-  const t=await txt();assert.ok(t.includes('今夜のコワイノ：のこり2ひき'),t);
+  const t=await txt();assert.ok(t.includes('今夜の「コワイノ」：のこり2ひき'),t);
   await run(`S.enemies.forEach(e=>e.dead=true)`);assert.ok(!(await txt()).includes('のこり'),'hidden when none are left');
   console.log('Night: the quest bar shows the enemies left tonight');
   assert.deepEqual(errors,[]);await browser.close();

@@ -24,7 +24,7 @@ const assert=require('node:assert/strict');
   while(await flip()){await W8(600);if(await run(`!!document.querySelector('#sheetBody .mpg:not([hidden]) .ustamp.b')||!document.querySelector('#sheetBody .mpg:not([hidden]) .mnx:not([disabled])')`))break;await W8(2000)}
   await page.waitForFunction(()=>!!document.querySelector('#sheetBody .ustamp.b'),{},{timeout:8000});
   const d1=JSON.parse(await run(`JSON.stringify({v:[...document.querySelectorAll('#sheetBody .stat b')].map(e=>e.textContent),st:!!document.querySelector('#sheetBody .ustamp.b')})`));
-  console.log('diary end',JSON.stringify(d1));assert.ok(d1.v.includes('7回'));assert.ok(d1.v.includes('5体'));assert.ok(d1.st,'大きなハンコ');
+  console.log('diary end',JSON.stringify(d1));assert.ok(d1.v.includes('7回'));assert.ok(d1.v.includes('5ひき'));assert.ok(d1.st,'大きなハンコ');
   /* タップでとばす */
   await run(`(()=>{closeSheet();S.dy={d:dayNo(),w:{},m:[],k:{},o:{},g:{}};for(let i=0;i<30;i++)dyWork(S.res[0],'build','fence');diaryClose();return 1})()`);await W8(600);
   await run(`(()=>{document.querySelectorAll('#sheetBody .mpg').forEach(p=>p.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true})));return 1})()`);

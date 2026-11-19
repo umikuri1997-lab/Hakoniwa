@@ -5,13 +5,13 @@
 const PROLOGUE2=[
   [GOD,'さて、次の土地じゃな。草原のみなも、元気にやっとるようで、なによりじゃ。'],
   [GOD,'ここは火の山のふもとの村。むかしは、あちこちから温泉がわく、あったかい村じゃった。'],
-  [GOD,'じゃが、この火山のヌシ様が力をうばわれて、地面の熱が冷えきってしもうた。温泉も、いまではただの冷たい水たまりじゃ。'],
+  [GOD,'じゃが、この火山のヌシが力をうばわれて、地面の熱が冷えきってしもうた。温泉も、いまではただの冷たい水たまりじゃ。'],
   [GOD,'#worry|あそこには、ひとりでがんばっとる子がおる。はよう行ってやらんとのう。'],
   [GOD,'では、行こうかの。'],
 ];
 const INTRO2=[
   [GOD,'ほい到着〜。ここが火山のふもとの村じゃ。','volcam+vol:introStart'],
-  [GOD,'#worry|見てみい、あの山を。ヌシ様の熱が、あそこから消えてしもうたんじゃ。'],
+  [GOD,'#worry|見てみい、あの山を。ヌシの熱が、あそこから消えてしもうたんじゃ。'],
   [HOMURA,'…ん？ あんたが、うわさの守り神かい？','homcam+vol:lookbackH'],
   [HOMURA,'あたいはホムラ、火のせいれいさ。この村にのこってるのは、もうあたいひとりだよ。'],
   [HOMURA,'#think|……さいきんさ、風が、なんだかあったかい所から来る気がするんだ。……ふしぎだね。'],
@@ -40,7 +40,7 @@ const QUESTS2=[
    talk:{who:HOMURA,when:()=>true,lines:[
     [HOMURA,'温泉をなおすのは、ひと仕事だよ。その前に、腹ごしらえだね。'],
     [HOMURA,'#think|ほら、竹やぶのそばを見てごらん。土から、とんがった頭がのぞいてるだろ。'],
-    [HOMURA,'#joy|あれは、たけのこさ。この村の、春のごちそうなんだ。いくつか、とってきておくれよ。']],gives:{run:()=>takenokoStart()}},
+    [HOMURA,'#joy|あれは、たけのこさ。この村の、ごちそうなんだ。いくつか、とってきておくれよ。']],gives:{run:()=>takenokoStart()}},
    story:[[HOMURA,'#joy|うん、いいたけのこだ。やわらかくて、あまいよ。'],[HOMURA,'よし、これで村の準備はばっちりだね。助かったよ。']],gives:{flag:'hReq'}},
   {id:'springA',text:'温泉をよみがえらせよう',check:()=>S.obj.some((o,j)=>o==='hotstone'&&adjOf(j,k=>S.ground[k]===1&&sprMap()[k]==='a')>=0),how:'「おく」→「湯のわき岩」をえらんで、村の南東の温泉の水べに置く',
    talk:{who:HOMURA,when:()=>true,lines:[
@@ -52,7 +52,7 @@ const QUESTS2=[
     [GOD,'#joy|ホムラ、ひと仕事のあとは、ここでゆっくりあったまるとよいぞ。'],
     [GOD,'それに…お湯から、水の力も満ちてきたようじゃな。'],
     [HOMURA,'…ん？ 湯気の中に、なにか光ってる。これ…ヌシ様の、火だねじゃないか！','vol:hidane'],
-    [GOD,'#nod|ほう、ヌシ様の火だねか。だいじに持っておくんじゃぞ。きっと、この村の力になってくれるはずじゃ。'],
+    [GOD,'#nod|ほう、ヌシの火だねか。だいじに持っておくんじゃぞ。きっと、この村の力になってくれるはずじゃ。'],
     [GOD,'#joy|ほっほ、ホムラにも、やっと笑顔がもどったのう。わしもうれしいわい。'],[GOD,'では、わしはほかの土地を見まわってくるぞい。ときどき遊びに来るからの。ではな〜！']],
    gives:{flag:'onsen',feat:['summon','shop'],shard:'land',godLeave:true}},
   {id:'summon',text:'なかまをむかえよう',check:()=>!!S.flags.minaCame&&NEWRES==null&&!NEWQ.length,how:'朝、神殿の上に「！」が出たら、「しらべる」で神殿をタップ',
@@ -95,9 +95,9 @@ const QUESTS2=[
     [HOMURA,'つまり？'],
     [SHIZUKU,'#nod|灰は、熱をとじこめます。'],
     [HOMURA,'熱をとじこめる灰か……。だったら、そいつで、ひびわれをうめちまえばいいじゃないか。'],
-    [HOMURA,'#joy|よし。ハイカゲが来たら、追いはらって、灰をいただこうじゃないか。']],gives:{flag:'ashOn'}},
+    [HOMURA,'#joy|よし。ハイカゲが来たら、追いはらって、灰をいただくよ。']],gives:{flag:'ashOn'}},
    story:[[HOMURA,'よし、ふさがった！ 熱の道が、つながったよ。','vol:crackSeal'],[SHIZUKU,'ハイカゲの灰が、熱をしっかりとじこめてくれましたね。'],[SHIZUKU,'わたしの知っていたことと……'],[HOMURA,'#joy|あたいの思いつきだ。'],[SHIZUKU,'#joy|……はい。あとは、熱をどこへ流すか、ですね。']]},
-  {id:'springB',text:'熱の装置を西へむけて、西の温泉をよみがえらせよう',check:()=>!!st2().sp.b,how:'火山のふもとの「熱の装置」をタップして、向きを左にかえる',
+  {id:'springB',text:'熱の切りかえ装置を西へむけて、西の温泉をよみがえらせよう',check:()=>!!st2().sp.b,how:'火山のふもとの「熱の切りかえ装置」をタップして、西へむける',
    talk:{who:HOMURA,when:()=>true,lines:[
     [HOMURA,'火山のふもとに、熱の流れを切りかえる装置があるんだ。'],
     [HOMURA,'西へむければ、西の温泉に熱がとどくはずさ。']]},
@@ -143,7 +143,7 @@ const QUESTS2=[
     [SHIZUKU,'奥の装置を直すには、石材と木材、それに…ヌシ様の火だねの力がいります。'],
     [HOMURA,'入口の温泉で見つけた、あの火だねだね。'],
     [SHIZUKU,'直せば、熱が、奥の温泉まで流れるはずです。']]},
-   story:[[SHIZUKU,'#think|……こわいですけど、そっと手をあててみます。',0,'heat:c'],[SHIZUKU,'火だねが、装置に熱を通してくれました……！'],[HOMURA,'#surprise|…奥の温泉にも、湯気だ！ 3つ、ぜんぶよみがえったよ！'],[SHIZUKU,'#joy|温泉が3つ、よみがえりました……！ 夢みたいです。'],[HOMURA,'#joy|やるじゃないか、シズク。……名前で呼んだの、はじめてかもね。','vol:lookbackH'],[SHIZUKU,'…守り神さま。空が、灰色にくもってきました。'],[HOMURA,'今夜は、ハイカゲがわんさか来そうだね…！']],gives:{flag:'ashNight'}},
+   story:[[SHIZUKU,'#think|……こわいですけど、そっと手をあててみます。',0,'heat:c'],[SHIZUKU,'火だねが、装置に熱を通してくれました……！'],[HOMURA,'#surprise|…奥の温泉にも、湯気だ！ 3つ、ぜんぶよみがえったよ！'],[SHIZUKU,'#joy|……夢みたいです。'],[HOMURA,'#joy|やるじゃないか、シズク。……名前で呼んだの、はじめてかもね。','vol:lookbackH'],[SHIZUKU,'…守り神さま。空が、灰色にくもってきました。'],[HOMURA,'今夜は、ハイカゲがわんさか来そうだね…！']],gives:{flag:'ashNight'}},
   {id:'ashNight',text:'灰の降る夜をのりこえよう',check:()=>{const t=st2();return !!t.ashNightAt&&S.nights>=t.ashNightAt&&!isNight()},how:'灰の降る夜を、みんなでのりこえる',
    story:[[HOMURA,'…ふう、なんとかのりこえたね。','vol:ashFall'],[SHIZUKU,'灰は、山の上からふってきていました。なにかが、いるのです。'],[HOMURA,'#danger|なら、あたいが山へ行って、ひとりで……','vol:stepMountain'],[SHIZUKU,'#alarm big|だめです！','vol:grab'],[SHIZUKU,'……むかし、ひとりでのこったのでしょう。今度は、ひとりにしません。'],[HOMURA,'#think hush|……。','vol:lookbackH'],[HOMURA,'#nod|……わかったよ。背中、たのむよ。','vol:backToBack'],[SHIZUKU,'#nod|はい。','vol:morning']],gives:{flag:'hinoNight'}},
   {id:'hinoookage',text:'ヒノオオカゲを追いはらおう',check:()=>!!S.flags.hinoDown,how:'火山から下りてくるヒノオオカゲを追いはらう',
@@ -191,23 +191,23 @@ const DECOQ=['hedge','birdbath','parasol','arch','signpost','monstera','jar','ro
 const QUESTSF=[
   {id:'statue',text:'神殿を直してもらおう',check:()=>cnt('statue')>=1,by:GOD,how:'「しらべる」で、こわれた神殿をタップ',story:[
     [GOD,'#joy|ここが、おヌシとわしの居場所じゃ。せいれいたちも、きっと手を貸してくれるぞい。'],[GOD,'わしはここで、交換でもしながら見とるからの。']]},
-  {id:'ep1',text:'第1話 はじめての居場所：家とベッド2つ',check:()=>HOUSES.length>=1&&houseBedCount()>=2,/* ベッドは家の中に2つ */prog:()=>'家 '+Math.min(1,HOUSES.length)+'/1・ベッド '+Math.min(2,houseBedCount())+'/2',how:'家の壁のすきまを木の壁でふさぎ、依頼ボードでベッドをたのんで家の中に置く。思いついた形は依頼ボードに描くと、せいれいが作る。力がたまると、なかまを呼べる',
+  {id:'ep1',text:'第1話 はじめての居場所：家とベッド2つ',check:()=>HOUSES.length>=1&&houseBedCount()>=2,/* ベッドは家の中に2つ */prog:()=>'家 '+Math.min(1,HOUSES.length)+'/1・ベッド '+Math.min(2,houseBedCount())+'/2',how:'家の壁のすきまを木の壁でふさぎ、依頼ボードでベッドの依頼をはって、家の中に置く',
    talk:{get who(){return FA()},when:()=>true,get lines(){return [[FA(),'ねえねえ、あそこの家、まだ中がからっぽなの。'],[FB(),'草の上で寝るとねぇ、朝には背中がひんやりしてるんだよぉ。'],[FA(),'ここで、あったかく眠れるようになるかな？ 守り神さま、お願い！'],['@idea']]}},
    get story(){return [[FA(),'#joy|できた！ ぼくたちの家だ！'],[FB(),'ふたりきりのころは、雨の日、木の下でくっついて雨宿りしてたねぇ。'],[FA(),'#nod|うん！ これからは、屋根があるね！'],[FB(),'ここ、日なたがぽかぽかで、お気に入りの場所になりそうだねぇ。']]}},
-  {id:'ep2',text:'第2話 みんなの好きなもの：花10・食卓・遊び道具',check:()=>flowerN()>=10&&cnt('table')>=1&&CN(TOYS4)>=1,prog:()=>'花 '+Math.min(10,flowerN())+'/10・食卓 '+Math.min(1,cnt('table'))+'/1・遊び道具 '+Math.min(1,CN(TOYS4))+'/1',how:'花の種を植え、依頼ボードの「家具」で食卓、「遊び」で好きな遊び道具をたのむ',
+  {id:'ep2',text:'第2話 みんなの好きなもの：花10・食卓・遊び道具',check:()=>flowerN()>=10&&cnt('table')>=1&&CN(TOYS4)>=1,prog:()=>'花 '+Math.min(10,flowerN())+'/10・食卓 '+Math.min(1,cnt('table'))+'/1・遊び道具 '+Math.min(1,CN(TOYS4))+'/1',how:'花のたねを植え、依頼ボードの「家具」で食卓、「遊び」で好きな遊び道具の依頼をはる',
    talk:{get who(){return FA()},when:()=>true,get lines(){return [[FA(),'ねえ、好きなもの言いっこしよ！ ぼくは、花！'],[FB(),'ぼくは、みんなでごはんを食べるのが好きだねぇ。'],[FA(),'あと、遊ぶのも！ ぜんぶそろったら、きっと毎日たのしいよ！'],['@idea']]}},
    get story(){return [[FA(),'花も、食卓も、遊び道具もある！ 好きなものだらけ！'],[FA(),'ねえ'+FB()+'、ふたりのころ、いっしょに見つけた花、おぼえてる？'],[FB(),'おぼえてるよぉ。あれが、この村のさいしょの花だったねぇ。']]}},
   {id:'ep3',text:'第3話 遠くからのお客さん：せいれいを4人に',check:()=>S.res.length>=4,prog:()=>'せいれい '+Math.min(4,S.res.length)+'/4',how:'花や家具で属性の力をため、朝に神殿の「！」から呼ぶ',
    talk:{who:GOD,when:()=>true,lines:[[GOD,'この村も、ちょっとずつにぎやかになってきたのう。'],[GOD,'なかまがふえたら、遠くからお客さんが来るかもしれんぞ？']]},
-   get story(){const ids=['hedge'].filter(id=>recipeKnown(id)),gift=ids.length?'草原で見つけたかざりを、おみやげに持ってきたよ！ よかったら使ってね！':'シロツメクサの種を、おみやげに持ってきたよ！ よかったら植えてね！';return [[POKO,'#wave|こんにちはー！ ぼく、はじまりの草原から来たフタバ！'],[POKO,'#surprise|守り神さまの新しい村、見に来ちゃった！ わあ、すてきなところだね！'],[FA(),'#surprise|わあ、お客さんだ！ いらっしゃい！'],[POKO,'草原にはね、花がいっぱいの広場があるんだ！ '+gift],[GOD,'遠くの友だちが訪ねてくる村は、いい村になってきた証拠じゃよ。']]},get gives(){const items={};for(const[id,n]of[['hedge',3]])if(recipeKnown(id))items[id]=n;if(!Object.keys(items).length)items.clover=5;return{items}}},
-  {id:'ep4',text:'第4話 ここが好き！：噴水の広場',check:()=>cnt('fountain')>=1,prog:()=>'噴水 '+Math.min(1,cnt('fountain'))+'/1',how:'「おく」から噴水をえらび、みんなで眺められる場所に建てる',
+   get story(){const ids=['hedge'].filter(id=>recipeKnown(id)),gift=ids.length?'草原で見つけたかざりを、おみやげに持ってきたよ！ よかったら使ってね！':'シロツメクサのたねを、おみやげに持ってきたよ！ よかったら植えてね！';return [[POKO,'#wave|こんにちはー！ ぼく、はじまりの草原から来たフタバ！'],[POKO,'#surprise|守り神さまの新しい村、見に来ちゃった！ わあ、すてきなところだね！'],[FA(),'#surprise|わあ、お客さんだ！ いらっしゃい！'],[POKO,'草原にはね、花がいっぱいの広場があるんだ！ '+gift],[GOD,'遠くの友だちが訪ねてくる村は、いい村になってきた証拠じゃよ。']]},get gives(){const items={};for(const[id,n]of[['hedge',3]])if(recipeKnown(id))items[id]=n;if(!Object.keys(items).length)items.clover=5;return{items}}},
+  {id:'ep4',text:'第4話 ここが好き！：噴水の広場',check:()=>cnt('fountain')>=1,prog:()=>'噴水 '+Math.min(1,cnt('fountain'))+'/1',how:'「おく」から噴水をえらび、みんなで見られる所に建てる',
    talk:{get who(){return FB()},when:()=>true,get lines(){return [[FB(),'みんなで、のんびりできる広場があったらいいねぇ。'],[FA(),'#joy|水がきらきらして、みんなで眺められたらうれしいな！'],['@idea']]}},
    get story(){return [[FA(),'ここ、だーいすき！'],[FB(),'水の音を聞きながら、みんなでのんびりできるねぇ。'],[FA(),'#nod|うん！ ここで、ゆっくりしていこう！'],[FB(),'この広場、大切な場所になりそうだねぇ。']]}},
   {id:'ep5',text:'最終話 みんなのふるさと：たき火とせいれい6人',check:()=>cnt('campfire')>=1&&S.res.length>=6,prog:()=>'たき火 '+Math.min(1,cnt('campfire'))+'/1・せいれい '+Math.min(6,S.res.length)+'/6',how:'火のせいれいに、たき火を作ってもらう。なかまを6人に',
    talk:{get who(){return FA()},when:()=>true,get lines(){return [[FA(),'ねえ、村のお祭りしようよ！'],[FB(),'夜もあったかいところで、みんなで踊れたら、楽しいだろうねぇ。'],[GOD,'#nod|うむ！ なかまがそろったら、盛大にやるとしようかの！'],['@idea']]}},
    get story(){return [[GOD,'おお、にぎやかじゃのう！ ほれ、もっと踊らんか！'],[FA(),'#think|……ねえ'+FB()+'。ふたりだけだったころ、おぼえてる？'],[FB(),'#cry hush|おぼえてるよぉ。しずかで、ちょっとさみしくて……でも、きみがいたから、へいきだったねぇ。'],[FA(),'いまは、こんなにいっぱい！ 守り神さまが来てくれたからだね。'],[FB(),'ここが、みんなの帰る場所になったんだねぇ。'],[FA(),'ここが、ぼくたちのふるさとだね！'],[GOD,'物語はひと区切りじゃが、村づくりはまだまだこれからじゃぞ！']]},gives:{fest:true}},
 ];
-function freeFest(){for(const r of S.res){r.fun=100;spawnFX(r.x-.5,r.y-.6,pick(['#ffd84a','#ff9cc0','#9ff0ff','#b8ff9a']))}startClap();setTimeout(endClap,3200);S.cleared=true;S.clearDay=dayNo();memo('🎉','村のお祭りをひらいた');omo('fest');logEv('村のお祭りをひらいた');toast('物語はひと区切り！ 村づくりはつづくよ','good')}
+function freeFest(){for(const r of S.res){r.fun=100;spawnFX(r.x-.5,r.y-.6,pick(['#ffd84a','#ff9cc0','#9ff0ff','#b8ff9a']))}startClap();setTimeout(endClap,3200);S.cleared=true;S.clearDay=dayNo();memo('ball','村のお祭りをひらいた');omo('fest');logEv('村のお祭りをひらいた');toast('物語はひと区切り！ 村づくりはつづくよ','good')}
 function freeSetup(s){const used=new Set(['フタバ','ノドカ']);const nm=()=>{let n;do{n=NAMES[s.nameIdx%NAMES.length];s.nameIdx++}while(used.has(n));used.add(n);return n};
   const a=nm(),b=nm();s.res=[mkRes(s,a,'wood',CX+.5,CY-1.5,'swing'),mkRes(s,b,'earth',CX+1.5,CY-1.5,'chat')];s.fk=[a,b];s.keyN={wood:a,earth:b};
   s.flags.minaCame=true;s.flags.sumTold=true;s.flags.tapped=true;s.free=1;

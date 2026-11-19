@@ -1,7 +1,7 @@
 /* 守りのしくみ（ほかのタワーディフェンスから）
    高い所の見張り台：段差1だんごとに射程+HIRNG。強化の2つの道：Lv5から、とおめ（射程+1）か、はやうち（うつ間かく0.7倍）。S.dyn[j].wp にしまう（ひっこしミトン・広げるときも、いっしょにうつる）。
    合図の太鼓（drum）：まわり5マスの見張り台の、うつ間かく0.8倍（重複なし）。
-   天気の夜：雨（ほのおの罠のダメージ半分・延焼なし・水の足止め1.5倍）・風の強い日（射程+1・つむじ風9マス）・あらし（射程−1）。知らせは出さない（持ち主がきめた）。
+   天気の夜：雨（ほのおの罠のダメージ半分・延焼なし・水の足止め1.5倍）・風の強い日（射程+1・つむじ風9マス）・あらし（射程－1）。知らせは出さない（持ち主がきめた）。
    ヨロイカゲ（armor）：矢は半分、火・どく・延焼は2倍。ヒカリカゲ（shiny）：まれに来て、村の南を横切って帰る。たおすと、やすらぎの砂かふしぎなふくろ。 */
 const HIRNG=.5,WPATHLV=5,WPATH={far:{n:'とおめ',rng:1,cd:1,t:'射程+1マス'},fast:{n:'はやうち',rng:0,cd:.7,t:'うつ間かく0.7倍'}},DRUMR=5,DRUMCD=.8,SHINYP=.1;
 function wpathOf(j){const d=j!=null&&S.dyn[j];return d&&WPATH[d.wp]?d.wp:null}
@@ -75,7 +75,7 @@ function skillSec(body){const sec=el('<div class="sec"><h3>わざの枠（3つ�
   for(const[k,n,ok,ic]of SKILLS){if(!ok())continue;const r=el('<button class="row" style="text-align:left;width:100%">'+pxi(ic,'skic')+'<div class="tx"><b></b><small></small></div></button>');ckSet(r.querySelector('b'),(on.includes(k)?'✓ ':'')+n);r.querySelector('small').textContent=on.includes(k)?'セットしている':'セットしていない';r.onclick=()=>{skillToggle(k);renderSheet()};rw.appendChild(r)}
   body.appendChild(sec)}
 /* ---------- 見張り台のねらう順（S.dyn[j].to：near・hp・fast・vill） ---------- */
-const TORDER=[['near','近い','いちばん近いコワイノ'],['hp','強い','体力がいちばん多いコワイノ'],['fast','速い','足がいちばん速いコワイノ'],['vill','村に近い','村のまん中にいちばん近いコワイノ']];
+const TORDER=[['near','近い','いちばん近い「コワイノ」'],['hp','強い','体力がいちばん多い「コワイノ」'],['fast','速い','足がいちばん速い「コワイノ」'],['vill','村に近い','村のまん中にいちばん近い「コワイノ」']];
 const torderOf=j=>(j!=null&&S.dyn[j]&&S.dyn[j].to)||'near';
 function torderKey(j,e,d){const k=torderOf(j);return k==='hp'?-e.hp:k==='fast'?-EN[e.type].sp:k==='vill'?Math.hypot(e.x-CX,e.y-CY):d}
 function torderSet(j,k){(S.dyn[j]||(S.dyn[j]={})).to=k;sfx('tap')}

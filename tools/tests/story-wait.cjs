@@ -20,7 +20,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict');
   })()`));
   console.log('waiting reasons',await run(`(()=>{
     S.t=720;S.qTalked=false;S.qStory=null;S.quest=questIndexOf('stor');const r=S.res[0],obj=mainStoryWaitInfo().obj;endAct(r);r.hunger=0;
-    if(!storyWaitStatusText().includes('食事'))throw Error('missing food reason');r.hunger=hMax(r);r.energy=0;
+    if(!storyWaitStatusText().includes('ごはん'))throw Error('missing food reason');r.hunger=hMax(r);r.energy=0;
     if(!storyWaitStatusText().includes('休んで'))throw Error('missing rest reason');r.energy=100;r.cing={rec:'test'};
     if(!storyWaitStatusText().includes('料理'))throw Error('missing cook reason');r.cing=null;
     noteStoryWaitBlock(r,obj,'path');if(!storyWaitStatusText().includes('道をあけよう'))throw Error('missing path reason');

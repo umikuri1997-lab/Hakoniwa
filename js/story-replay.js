@@ -149,7 +149,7 @@ async function playStoryReplay(run){
     run.finished=true;run.running=false;clearInterval(run.tick);
     const end=el('<div class="replay-end" style="position:fixed;inset:20% 10%;z-index:61;background:#fff8e9;border:2px solid #d4c29a;border-radius:18px;padding:22px;display:flex;flex-direction:column;justify-content:center;gap:16px;text-align:center"><b>再生がおわりました</b><button class="btn">もういちどみる</button><button class="btn" aria-label="思い出帳へもどる">もどる</button></div>');
     const [again,close]=end.querySelectorAll('button');again.onclick=()=>location.reload();close.onclick=()=>parent.postMessage({type:'story-replay-close',token:run.token},location.origin);document.body.appendChild(end);
-  }catch(error){run.running=false;clearInterval(run.tick);if(!run.cancelled){run.error=String(error);toast('再生を続けられませんでした。思い出帳へ戻れます','warn');}}
+  }catch(error){run.running=false;clearInterval(run.tick);if(!run.cancelled){run.error=String(error);toast('さいごまで見られませんでした','warn');}}
 }
 function bootStoryReplayPage(){
   const params=new URLSearchParams(location.search),token=params.get('replayToken'),key=params.get('storyReplay'),episode=STORY_REPLAY_EVENTS.find(e=>e.key===key);

@@ -81,7 +81,7 @@ function sacredGrowSparks(j,ms,stage,mode){
    → 1つめ・2つめ：木のよこに、ヌシ様の光のりんかくが少しだけあらわれる → 会話 → done（ささげたことにする）。1つめ・2つめでは、木の姿はかえない */
 function shardLines(n){const N=keyName('earth'),H=keyName('fire'),M=keyName('water'),K=keyName('wind');
   const L=n===1?[[POKO,'#surprise|……いま、木のよこに……！'],[POKO,'#teary|……ヌシ様の、におい。お日さまと、草のにおいだ。'],[N,'花が、いっぺんに咲いたねぇ。土の下まで、ぽかぽかしてるよぉ。'],[GOD,'#nod|うむ。「育てる力」が、木にやどったんじゃ。……ヌシは、ちゃんと、ここにおるぞい。'],[POKO,'#joy|うん。……まっててね、ヌシ様。']]
-    :[[POKO,'#surprise|みんなの光が、木に……！'],[POKO,'#teary|……こっちを、見てる。ヌシ様、みんな、なかよくしてるよ。'],[H,'……いま、木のよこに、でっけえ光が立ってなかったか？'],[M,'はい。……やさしい目でした。'],[K,'#think|フッ…風が、いっしゅん、やんだね。'],[GOD,'#joy|「想う力」も、とどいたのう。ヌシの姿が、だんだん、こくなってきておる。'],[POKO,'#joy|もうすこしだよ、ヌシ様。']];
+    :[[POKO,'#surprise|みんなの光が、木に……！'],[POKO,'#teary|……こっちを、見てる。ヌシ様、みんな、なかよくしてるよ。'],[H,'……いま、木のよこに、でっけえ光が立ってなかったか？'],[M,'はい。……やさしい目でした。'],[K,'#think|フッ……風が、いっしゅん、やんだね。'],[GOD,'#joy|「想う力」も、とどいたのう。ヌシの姿が、だんだん、こくなってきておる。'],[POKO,'#joy|もうすこしだよ、ヌシ様。']];
   return sacredCastLines(L)}
 function sacredCastLines(L){/* いる子の行だけ。カミサマが遠くにいるときは、はじめの行だけ「聞こえるかの？」 */
   let g=0;return L.filter(l=>l[0]&&(l[0]===GOD||spkOK(l[0]))).map(l=>{if(l[0]!==GOD||g++)return l;const m=/^(#[a-z]+\|)?(.*)$/.exec(l[1]);return [GOD,(m[1]||'')+GVOICE()+m[2]]})}

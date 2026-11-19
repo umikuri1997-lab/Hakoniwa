@@ -32,7 +32,7 @@ function sasaGive(r){/* 神殿にとどけた：はじめの束から順にう�
   if(!s.all&&s.L.every(b=>b.done)){s.all=1;const k=typeof bpOpen==='function'&&bpOpen()?bpGiveNext(null):null;if(!k)rewardPower(SASAALL);toast('季節のささげものが、ぜんぶそろった','good')}}
 function sasaBack(r){/* はこんでいる子がいなくなった：箱へもどす */for(const k in r.sasa||{})availAdd(k,r.sasa[k]);r.sasa=null}
 function sasaTick(){if(!sasaOn())return;sasaEnsure()}
-function sasaPop(){/* 神殿をタップ：いまの季節のささげもの */const s=sasaEnsure();if(!s)return toast('女神像。守り神の居場所');
+function sasaPop(){/* 神殿をタップ：いまの季節のささげもの */const s=sasaEnsure();if(!s)return toast('神殿。守り神の居場所');
   const o=el('<div style="position:fixed;inset:0;z-index:45;display:flex;align-items:center;justify-content:center;background:rgba(40,30,15,.35);padding:24px"><div class="pxcard" style="background:var(--panel);padding:16px 18px;max-width:340px;width:100%;max-height:86vh;overflow:auto;color:var(--ink)"><b class="t" style="display:block;font-size:15px;margin-bottom:4px"></b><p class="note n" style="margin:0 0 10px"></p><div class="ks"></div><div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px"><button class="btn x">とじる</button></div></div></div>');
   const upd=()=>{const C=sasaComing(),ks=o.querySelector('.ks');ks.innerHTML='';o.querySelector('.t').textContent=SEASONS[seasonOf(dayNo())]+'のささげもの';
     o.querySelector('.n').textContent=(s.all?'ぜんぶそろった。':typeof bpOpen==='function'&&bpOpen()?'ぜんぶそろうと、設計図。':'ぜんぶそろうと、パワー+'+SASAALL+'。')+s.L.filter(b=>b.done).length+'/'+s.L.length;

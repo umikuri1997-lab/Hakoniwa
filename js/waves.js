@@ -20,11 +20,11 @@ function waveNote(){/* 目標の欄：つぎの波まで */
   if(L.some(e=>e.wv===g&&e.spawned))return '影の波 '+(g+1)+'/'+WAVES.length;
   const m=Math.max(1,Math.ceil(Math.min(...wait.filter(e=>e.wv===g).map(e=>e.delay))/DAYLEN));return 'つぎの波まで：あと'+(m>=60?Math.floor(m/60)+'時間'+(m%60?m%60+'分':''):m+'分')}
 function nightLeftNote(){/* 目標の欄：今夜のコワイノの、のこり（まだ来ていない分もふくむ。先ぶれ・にげていく子・たおれた子はのぞく） */
-  if(!S||!S.enemies||!S.enemies.length||!isNight())return '';const n=S.enemies.filter(e=>!e.dead&&!e.scout&&!e.flee&&!(e.spawned&&e.hp<=0)).length;return n>0?'今夜のコワイノ：のこり'+n+'ひき':''}
+  if(!S||!S.enemies||!S.enemies.length||!isNight())return '';const n=S.enemies.filter(e=>!e.dead&&!e.scout&&!e.flee&&!(e.spawned&&e.hp<=0)).length;return n>0?'今夜の「コワイノ」：のこり'+n+'ひき':''}
 /* ---------- 先ぶれ ---------- */
 function scoutTick(e){/* 先ぶれは、村に入ったら、のぞいて南へ帰る（たたかわない）。帰る道は、にげるコワイノと同じ */
   if(!e.scout||e.flee)return false;const c=(e.y|0)*W+(e.x|0);
-  if(VILL[c]){e.flee=true;e.scoutBack=1;e.path=[];e.repath=0;if(!S.ns||!S.ns.scT){if(S.ns)S.ns.scT=1;toast('先ぶれのコワイノが、村をのぞいて、もどっていく','warn')}return false}
+  if(VILL[c]){e.flee=true;e.scoutBack=1;e.path=[];e.repath=0;if(!S.ns||!S.ns.scT){if(S.ns)S.ns.scT=1;toast('先ぶれの「コワイノ」が、村をのぞいて、もどっていく','warn')}return false}
   return true}
 function scoutGoal(e){/* 先ぶれの行き先：歩いて行ける、いちばん近い村のマス */
   const G=bfsE(e.x|0,e.y|0,40,e.sd||(e.sd=(Math.random()*1e9)|0));let b=-1,bd=1e9;for(let j=0;j<W*H;j++){if(!VILL[j]||G.dist[j]<0)continue;if(G.dist[j]<bd){bd=G.dist[j];b=j}}return b}

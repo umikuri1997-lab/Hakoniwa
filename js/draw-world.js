@@ -92,7 +92,7 @@ const WRND={s:12,t:.72,m:8};/* 池・川のふちを丸める：水のマスの�
 const WBAND=[[67,139,164],[117,151,82],[141,174,92],[152,183,98]],WBANDA=[255,130,82,35];/* 水のふちの色：水がわの1ドット（0）と、陸がわの水からの道のり1〜3ドット（草地 tex:grass の色に合わせた）。陸がわは外ほどうすく（WBANDA）して、まわりの地面につなげる */
 let WKER=null;function wKer(){/* ぼかし（箱のぼかしを3回）の、マス1つぶん（TSドット）のおもみの表：u ドットはなれた所に、マスがどれだけきくか */if(WKER)return WKER;const r=Math.round((Math.sqrt(4*WRND.s*WRND.s+1)-1)/2),R3=3*r;let k=[1];for(let p=0;p<3;p++){const o=new Array(k.length+2*r).fill(0);for(let i=0;i<k.length;i++)for(let j=0;j<=2*r;j++)o[i+j]+=k[i]/(2*r+1);k=o}
   const C=new Float64Array(2*R3+TS);for(let u=-R3;u<=R3+TS-1;u++){/* マスの左はしから u ドットの所のおもみ＝K(u-TS+1)〜K(u) の合計 */let v=0;for(let q=u-TS+1;q<=u;q++)if(q>=-R3&&q<=R3)v+=k[q+R3];C[u+R3]=v}WKER={R3,C};return WKER}
-function waterRound(X0,Y0,X1,Y1,isW){/* 区画（とまわり m）の水の形 f（1＝水）と、陸の、水からの道のり d（1ドット＝世界の1ドット）。水の形はマスの形なので、ぼかしはマスごとのおもみの表（wKer）で足すだけ。まわりがぜんぶ水か、ぜんぶ陸のマス（ut：1か0。まざるマスは −1）は、ぼかしても同じなので計算しない */
+function waterRound(X0,Y0,X1,Y1,isW){/* 区画（とまわり m）の水の形 f（1＝水）と、陸の、水からの道のり d（1ドット＝世界の1ドット）。水の形はマスの形なので、ぼかしはマスごとのおもみの表（wKer）で足すだけ。まわりがぜんぶ水か、ぜんぶ陸のマス（ut：1か0。まざるマスは －1）は、ぼかしても同じなので計算しない */
   const M=WRND.m,w=(X1-X0)*TS+2*M,h=(Y1-Y0)*TS+2*M,ox=X0*TS-M,oy=Y0*TS-M,n=w*h,{R3,C}=wKer(),N=Math.ceil((2*R3+TS)/TS)+1,wt=u=>u<-R3||u>R3+TS-1?0:C[u+R3],G=Math.ceil(R3/TS)+1;
   const ax=(o,len)=>{const t0=new Int32Array(len),wv=new Float32Array(len*N);for(let p=0;p<len;p++){const g=o+p,a=Math.floor((g-R3-TS+1)/TS);t0[p]=a;for(let k=0;k<N;k++)wv[p*N+k]=wt(g-(a+k)*TS)}return {t0,wv}};/* ドットごとに、きくマス（はじめのマスから N こ）とおもみ */
   const tx0=Math.floor(ox/TS),ty0=Math.floor(oy/TS),ntx=Math.ceil((ox+w)/TS)-tx0,nty=Math.ceil((oy+h)/TS)-ty0,ut=new Int8Array(ntx*nty);

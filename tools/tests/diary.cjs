@@ -12,7 +12,7 @@ const assert=require('node:assert/strict');
   assert.deepEqual(r.m,['はじめてのテスト'],'memo and log text merged once');
   assert.equal(r.k,2);assert.deepEqual(r.o,{'罠':1});assert.ok(r.ns&&r.dd,'last night is stored once');
   assert.equal(r.sheet,'diary');assert.equal(r.arg,'m');assert.equal(r.title,r.d+'日めの日記');
-  for(const t of['みんなのしたこと','ベンチを建てた（2回）','はじめてのテスト','ゆうべの守り','2体を追いはらった','ゆうべのかつやく'])assert.ok(r.body.includes(t),'diary shows '+t);
+  for(const t of['みんなのしたこと','ベンチを建てた（2回）','はじめてのテスト','ゆうべの守り','2ひきを追いはらった','ゆうべのかつやく'])assert.ok(r.body.includes(t),'diary shows '+t);
   {const b=r.body,i=['はじめてのテスト','ゆうべのかつやく','ゆうべの守り','みんなのしたこと'].map(t=>b.indexOf(t));assert.ok(i[0]<i[1]&&i[1]<i[2]&&i[2]<i[3],'diary order: day page (events), mvp, night, work '+i);assert.equal(b.split('はじめてのテスト').length,2,'same event once')}
   console.log('Diary: work, events and last night are written and the paper opens in the morning');
   /* ゆうべのかつやく：追いはらった数＋守った数が2点いじょうでいちばん。おなじ点なら追いはらった数。たのしさ+10・思い出帳・ハンコ */

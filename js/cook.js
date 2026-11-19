@@ -2,9 +2,9 @@
    家具ごとに「おまかせ」（作ったことのある料理を、せいれいが箱の材料からえらぶ）か「入れる」（えらんだ材料を作りつづける）。
    表にない組み合わせは、ふしぎな料理。作るまで名前はわからない（S.cookKn：作った組み合わせ→料理）。 */
 for(const D of COOKD)if(D.f)FOODS[D.id]=D.f;
-FOODS.fsg1={name:'ふしぎな料理',v:1,pt:1,pw:.45,dish:1,e:'ic:fsg',fx:'たのしさ−10',ef:{fun:-10},bad:1};
-FOODS.fsg2={name:'ふしぎな料理',v:2,pt:2,pw:.9,dish:1,e:'ic:fsg',fx:'たのしさ−10',ef:{fun:-10},bad:1};
-FOODS.fsg3={name:'ふしぎな料理',v:3,pt:3,pw:1.35,dish:1,e:'ic:fsg',fx:'たのしさ−10',ef:{fun:-10},bad:1};
+FOODS.fsg1={name:'ふしぎな料理',v:1,pt:1,pw:.45,dish:1,e:'ic:fsg',fx:'たのしさ－10',ef:{fun:-10},bad:1};
+FOODS.fsg2={name:'ふしぎな料理',v:2,pt:2,pw:.9,dish:1,e:'ic:fsg',fx:'たのしさ－10',ef:{fun:-10},bad:1};
+FOODS.fsg3={name:'ふしぎな料理',v:3,pt:3,pw:1.35,dish:1,e:'ic:fsg',fx:'たのしさ－10',ef:{fun:-10},bad:1};
 const COOKBY=new Map(),COOKDI={};for(const D of COOKD){COOKDI[D.id]=D;for(const s of D.st)COOKBY.set(D.i.join('+')+'@'+s,D.id)}/* 組み合わせ→料理（さがすための一覧） */
 const COOKIN=['mugi','imo','tomato','berry','apple','egg','milk','fish','takenoko','kinoko','komugiko','unagi','ayu','koi','namazu','yumasu'];/* 入れられる材料（さかなは、どの魚でも） */
 const SPFISH=new Set(['unagi','ayu','koi','namazu','yumasu']);/* とくべつな料理のある魚 */

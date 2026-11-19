@@ -3,7 +3,7 @@
    STRAYH 時に帰る。「しらべる」でタップ →「むかえる」で、近いせいれいが歩いて行き（astray）、つれて小屋の前まで歩く（alead。生き物は、せいれいの通った所をついていく a.tr）。着いたら、その小屋にすむ。
    木のせいれい（いなければ、だれでも）が箱の草を小屋へ運び（えさ：1頭に1日1こ）、水のせいれい（いなければ、だれでも）が水をくんで小屋の水入れへ。
    えさと水をもらった日の夕方（ANIPRODH 時）に、小屋にとれる物がたまり、せいれいが箱へ運ぶ（aniJob）。夜は小屋の中。コワイノにはねらわれない。
-   セーブ：S.ani（生き物。野良は stray:1・h −1・lead つれているせいれい）・S.dyn[小屋]（feed えさ・wd 水をもらった日・pr とれた物）。 */
+   セーブ：S.ani（生き物。野良は stray:1・h －1・lead つれているせいれい）・S.dyn[小屋]（feed えさ・wd 水をもらった日・pr とれた物）。 */
 const ANI={hane:{name:'ハネマリ',hut:'coop',prod:'egg',cap:3,spd:.9,desc:'まんまるで、ふわふわの羽の生き物。'},moko:{name:'モコダマ',hut:'barn',prod:'wool',cap:3,spd:.7,desc:'ふかふかの毛につつまれた、まるい生き物。'},tsuno:{name:'ツノクサ',hut:'barn',prod:'milk',cap:3,spd:.8,desc:'くるんとした角の、草がすきな生き物。'}};
 const HUTK={coop:['hane'],barn:['moko','tsuno']},PENMAX=300,ANIFUN=3,ANIPET=5,ANIPRODH=17,ANIFEED=2,ANIGROW=3;/* ANIFUN：ひまなときに自分からなでる・ANIPET：「しらべる」でたのんでなでる（1ぴき1日1回 a.petD） */
 let HUTS=[],PENS=new Map(),ANISUB=0;
@@ -131,7 +131,7 @@ IDLE_ACTS.push('apet');
 /* ---------- 「しらべる」で生き物をタップ：小さな画面（aniPop）→「なでる」で、行けるいちばん近いせいれいが、なでにいく（aniPetAsk） ---------- */
 function aniAtTap(px,py){/* 足もとのまわり（絵の大きさ） */let best=null,bd=1e9;for(const a of S.ani||[]){if(a.in)continue;const sx=a.k==='hane'?.45:.65,top=a.k==='hane'?.85:1.25,dx=px-a.x,dy=py-a.y;if(Math.abs(dx)>sx||dy>.3||dy<-top)continue;const d=Math.hypot(dx,dy+top/2);if(d<bd){bd=d;best=a}}return best}
 const ANIBUSY=r=>r.hidden||r.coffin||r.hunger<500||storyCalled(r)||onHold(r)||r.act&&(URGNO.includes(r.act.type)||MAINGO.has(r.act.type)||r.act.type==='apetq'||r.act.type==='watchpost');
-function aniPetWhy(a){if(!a||a.in)return 'いまは小屋の中';if(a.petD===callDay())return 'きょうは、もうなでた';if(isNight())return '夜は、なでられない';if(enemyLive())return 'コワイノがいる';if(S.res.some(r=>r.act&&r.act.type==='apetq'&&r.act.aid===a.id))return 'なでにいっている';return ''}
+function aniPetWhy(a){if(!a||a.in)return 'いまは小屋の中';if(a.petD===callDay())return 'きょうは、もうなでた';if(isNight())return '夜は、なでられない';if(enemyLive())return '「コワイノ」がいる';if(S.res.some(r=>r.act&&r.act.type==='apetq'&&r.act.aid===a.id))return 'なでにいっている';return ''}
 function aniPetAsk(a){/* 行けるせいれいのうち、道のりがいちばん近い子 */if(aniPetWhy(a))return null;const bx=a.x|0,by=a.y|0,C=S.res.filter(r=>!ANIBUSY(r)).sort((p,q)=>Math.hypot(p.x-a.x,p.y-a.y)-Math.hypot(q.x-a.x,q.y-a.y)).slice(0,6);let best=null,bd=1e9,bG=null,bs=-1;
   for(const r of C){const G=bfs(r.x|0,r.y|0),st=nearest(G,j=>Math.abs(j%W-bx)+Math.abs(((j/W)|0)-by)===1&&walk(j)&&!S.obj[j],400);if(st<0||G.dist[st]>=bd)continue;bd=G.dist[st];best=r;bG=G;bs=st}
   if(!best)return null;a.petD=callDay();a.pet=120;a.path=null;/* 着くまで、その場で待つ */endAct(best);startAct(best,bG,'apetq',bs,{aid:a.id,dur:12,tap:1});if(!best.act||best.act.type!=='apetq'){a.petD=null;a.pet=0;return null}return best}
@@ -183,7 +183,7 @@ function aniSec(body,j,o){if(!isHut(o)||S.obj[j]!==o)return;const d=hutD(j),L=an
   body.appendChild(sec)}
 /* ---------- 野良の生き物の「おむかえ」 ---------- */
 function strayHut(a){/* その生き物がすめる、空きのある小屋（野良のいる所から近い順） */return HUTS.filter(h=>hutRoom(h,a.k)).sort((p,q)=>Math.hypot(p%W-a.x,((p/W)|0)-a.y)-Math.hypot(q%W-a.x,((q/W)|0)-a.y))[0]}
-function strayWhy(a){if(a.lead!=null)return 'むかえにいっている';if(isNight())return '夜は、むかえにいけない';if(enemyLive())return 'コワイノがいる';if(strayHut(a)==null)return 'すめる小屋がない';return ''}
+function strayWhy(a){if(a.lead!=null)return 'むかえにいっている';if(isNight())return '夜は、むかえにいけない';if(enemyLive())return '「コワイノ」がいる';if(strayHut(a)==null)return 'すめる小屋がない';return ''}
 function strayAsk(a){/* 行けるせいれいのうち、道のりがいちばん近い子。小屋の前まで行けることもたしかめる */if(strayWhy(a))return null;const h=strayHut(a),bx=a.x|0,by=a.y|0,C=S.res.filter(r=>!ANIBUSY(r)&&!r.alead).sort((p,q)=>Math.hypot(p.x-a.x,p.y-a.y)-Math.hypot(q.x-a.x,q.y-a.y)).slice(0,6);let best=null,bd=1e9,bG=null,bs=-1;
   for(const r of C){const G=bfs(r.x|0,r.y|0),st=nearest(G,j=>Math.abs(j%W-bx)+Math.abs(((j/W)|0)-by)<=1&&walk(j)&&!S.obj[j],400);if(st<0||G.dist[st]>=bd)continue;const G2=bfs(st%W,(st/W)|0);if(!hutFront(h).some(c=>G2.dist[c]>=0))continue;bd=G.dist[st];best=r;bG=G;bs=st}
   if(!best)return null;a.lead=best.id;a.lh=h;a.path=null;a.tr=null;endAct(best);startAct(best,bG,'astray',bs,{aid:a.id,h});if(!best.act||best.act.type!=='astray'){a.lead=null;a.lh=null;return null}return best}

@@ -84,7 +84,7 @@ function palEmpty(box,t){const d=nodata('paper',t);d.classList.add('palnone');co
 function renderPalette(){
   if(!S)return;updItemInfo();const box=$('#palItems');box.innerHTML='';{const ob=document.getElementById('palBar');if(ob)ob.remove()}
   const pickItem=id=>()=>{sfx('tap');sel=id;if(pending&&pending.kind==='one'){pending=null;$('#confirm').hidden=true}selStamp=null;renderPalette();const b=BL[id];
-    if(mode==='bulk'){if(!S.bulk)return toast('下から道具をえらんでください');toast('ハケで、なぞった範囲をぬれます');palOpen=false;renderPalette();return}
+    if(mode==='bulk'){if(!S.bulk)return toast('下から道具をえらぶ');toast('ぬりたい物をえらんで、なぞる');palOpen=false;renderPalette();return}
     if(b.kind==='furn'&&!inv(id))toast(b.name+'が足りません','warn');
     else if(b.kind==='block'&&!inv(id))toast(b.name+'がありません');
     else if(b.kind==='plant'&&!inv(id))toast(iname(id)+'がありません');
@@ -100,7 +100,7 @@ function renderPalette(){
     if(sel&&BL[sel]){const id=sel,b=BL[id];box.appendChild(chip(iconURL(id),iname(id),b.kind==='build'?(id==='statue'||(id==='watch'&&watchQ())?'むりょう':SP(b.pc)):'×'+inv(id),'sel',()=>{}))}
     const mb=document.createElement('button');mb.className='chip more';mb.id='palMore';mb.textContent='ほかをえらぶ';mb.onclick=()=>{sfx('tap');palOpen=true;renderPalette()};box.appendChild(mb);return}
   if(mode==='bulk'){
-    if(S.bulk){lbl(box,'ハケ');box.appendChild(chip(toolIcon('hake'),'ひろびろハケ','下からえらぶ','wide',()=>toast('ぬりたいブロックや種をえらんで、指でなぞろう')))}/* もらった道具だけ出す */
+    if(S.bulk){lbl(box,'ハケ');box.appendChild(chip(toolIcon('hake'),'ひろびろハケ','下からえらぶ','wide',()=>toast('ぬりたい物をえらんで、なぞる')))}/* もらった道具だけ出す */
     if(S.mover){lbl(box,'ひっこし');box.appendChild(chip(toolIcon('mover'),'ひっこしミトン','うつす','wide'+(selStamp==='move'?' sel':''),()=>{selStamp='move';MOVESRC=null;palOpen=false;renderPalette();toast('うつしたい家具・建物をタップ')}))}/* ひっこしミトン：家具・建物を、すぐべつの場所へ */
     if(S.stamps){lbl(box,'スタンプ');for(const sid in STAMPS)box.appendChild(chip(stampIcon(sid),STAMPS[sid].name,'スタンプ','wide'+(selStamp===sid?' sel':''),()=>{selStamp=sid;palOpen=false;renderPalette();toast('置きたい場所の左上をタップ')}))}
     if((S.bpInv||[]).length){lbl(box,'設計図');S.bpInv.forEach((it,i)=>{const k='bp:'+i;box.appendChild(chip(bpIcon(it.k),BPS[it.k].name,BPCAT[BPS[it.k].cat]+'の設計図','wide'+(selStamp===k?' sel':''),()=>{sfx('tap');bpPop(i)}))})}/* 家の設計図 */
@@ -115,7 +115,7 @@ function renderPalette(){
   const n0=box.children.length;
   if(mode==='build'&&PF==='all'&&(S.bulk||S.stamps||S.swap||S.mover||(S.bpInv||[]).length)){lbl(box,'どうぐ');if((S.bpInv||[]).length)box.appendChild(chip(iconURL(bpWall()),'設計図','×'+S.bpInv.length,'wide',()=>{sfx('tap');setMode('bulk');selStamp=null}));/* 道具は「おく」の中でえらぶ */
     if(S.mover)box.appendChild(chip(toolIcon('mover'),'ひっこしミトン','うつす','wide',()=>{sfx('tap');setMode('bulk');selStamp='move';MOVESRC=null;palOpen=false;renderPalette();toast('うつしたい家具・建物をタップ')}));
-    if(S.bulk)box.appendChild(chip(toolIcon('hake'),'ひろびろハケ','まとめてぬる','wide',()=>{sfx('tap');setMode('bulk');selStamp=null;toast('ぬりたいブロックや種をえらんで、指でなぞろう')}));
+    if(S.bulk)box.appendChild(chip(toolIcon('hake'),'ひろびろハケ','まとめてぬる','wide',()=>{sfx('tap');setMode('bulk');selStamp=null;toast('ぬりたい物をえらんで、なぞる')}));
     if(S.stamps)box.appendChild(chip(toolIcon('stamp'),'かたどりスタンプ','スタンプ','wide',()=>{sfx('tap');setMode('bulk');selStamp=null}));
     if(S.swap)box.appendChild(chip(toolIcon('swap'),'つけかえトンカチ','つけかえ','wide',()=>{sfx('tap');setMode('bulk');selStamp=null}))}
   const blocks=STATUE<0?[]:BLOCKS.filter(id=>inv(id)>0&&!(mode==='bulk'&&WALLD.has(id))&&pf(id));
@@ -150,7 +150,7 @@ function attrPop(k){
   const h=document.createElement('h3');h.textContent=ELEM[k].name+'の力：'+Number(ATTR[k].toFixed(1))+' / '+needFor(k);card.appendChild(h);
   for(const[name,r]of Object.entries(src))card.appendChild(rowEl(name+' ×'+r.n,'+'+Number(r.v.toFixed(1))));
   if(!Object.keys(src).length)card.appendChild(el('<p class="note">まだありません</p>'));
-  card.appendChild(el('<p class="note">マップにあるものを集計。花と木は育ってから加算されます。</p>'));
+  card.appendChild(el('<p class="note">マップにある物の合計。花と木は、育ってから数に入る。</p>'));
   ov.appendChild(card);ov.onclick=()=>ov.remove();$('#app').appendChild(ov)}/* 属性の内訳ポップアップ */
 function placeFromInv(id){/* もちものから「置く」：ウィンドウをとじて、「おく」でえらんだときと同じにする */closeSheet();setMode('build');sel=id;selStamp=null;palOpen=false;renderPalette();}
 const CREDIT_TXT='音楽：このゲームのオリジナル<br>マップの読みこみ中の曲：joth「JRPG Piano」（OpenGameArt、CC0）<br>効果音・鳥の声・雨の音・朝と季節の環境音：効果音ラボ<br>手ざわりの音（ハンコ・木くず・きしみ・めくる音など）・じゅうたんの上の足音・きのこ・はたおり機の音：Kenney（CC0）<br>本と巻物の音（ページをめくる・ぱらぱら・表紙・紙のこすれ）：StarNinjas「10 Book Page Flips」・Voltiment555「Book Flip Sounds」・Luckius「Various Paper Sound Effects」（OpenGameArt、CC0）と Kenney（CC0）<br>弓をひきしぼる音・水やりの音・畑をたがやす音・流れ星のキラッ・ハシゴのきしみ・ヒラリの羽音・せいれいのもやもや：持ち主の音<br>せいれいとコワイノの足音（草・土・道・木・石・雪・雨の日）：持ち主の録音<br>生き物の鳴き声・かれ葉・水・スコップの音・川・池・温泉の水の音・ケロッパの声・水をくむ音：OpenGameArt（CC0）<br>朝6時・夜12時の切りかえの音：魔王魂（「orchestra03」「healing11b」のはじめを切った）<br>せいれいの鼻歌：AuraVoice「Ghostly Humming」（OpenGameArt、CC0）<br>あらしのかみなりの音：「Rain + Long Thunder」（OpenGameArt、CC0。かみなりの所を切った）<br>せいれいの食べる・のむ音（freesound。どれも、かむ・のむ1回ぶんずつ短く切り、低い音と高い音をけずって、大きさをそろえた）：Chelly01「りんご」「にんじん」・Fabrizio84「クラッカー」「チョコレート」・v23「きゅうり」・dreadmtl「セロリ」・taya_yelton「クッキー」・InMotionAudio「トースト」・Caitlin_100「シリアル」・KrypticKnight「スイカ」・MuteLoops「パイナップル」・shelbyshark「ピクルス」・Lukey1028「アーモンドとくるみ」・Urkki69「ジンジャーブレッド」・16G_Panska_Komarkova_Marika「パンと卵」・marcjunker「照り焼きヌードル」・seenms「水」・rentless「コーヒー」・hijacknielsen「お茶」・Cheney777「ミルクシェイク」（CC0）、drotzruhn「硬めのパン」 https://freesound.org/people/drotzruhn/sounds/405326/ （CC BY 4.0 https://creativecommons.org/licenses/by/4.0/ 、短く切って大きさをそろえた）<br>ミツブンの羽音：IMadeIt「Single Bee Sound」（OpenGameArt、CC-BY 3.0 https://creativecommons.org/licenses/by/3.0/ 、短く切って大きさをそろえた）<br>出典を確認中：村の鐘・夜の環境音・ヌシのかけらをはめる音・家具を置く音・素材が落ちる音';
@@ -176,13 +176,13 @@ function craftPop(tags){/* 依頼ボードのしぼりこみ：タグをいく�
   document.body.appendChild(o);o.upd()}
 function cmpPop(j){/* コンポスター：入れる草の種類ごとに数をえらぶと、せいれいが箱から運んで入れる */const CAP=20,V={};const o=el('<div style="position:fixed;inset:0;z-index:45;display:flex;align-items:center;justify-content:center;background:rgba(40,30,15,.35);padding:24px"><div class="pxcard" style="background:var(--panel);padding:16px 18px;max-width:320px;width:100%;color:var(--ink)"><b class="t" style="display:block;font-size:15px;margin-bottom:4px"></b><p class="note n" style="margin:0 0 10px"></p><div class="ks"></div><div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px"><button class="btn x">とじる</button><button class="btn pri go"></button></div></div></div>');
   const room=()=>Math.max(0,CAP-cmpIn(j)-cmpWait(j)),sum=()=>GRASSK.reduce((a,k)=>a+(V[k]||0),0);
-  const rows=GRASSK.filter(k=>(S.mat[k]||0)>0).map(k=>{const r=el('<div style="display:flex;gap:8px;align-items:center;justify-content:space-between;margin-bottom:6px"><span class="nm" style="flex:1"></span><button class="btn m">−</button><b class="v" style="min-width:2.4em;text-align:center"></b><button class="btn p">＋</button></div>');r.querySelector('.nm').textContent=MATN[k]+'（'+(S.mat[k]||0)+'）';r.querySelector('.m').onclick=()=>{sfx('notch');V[k]=Math.max(0,(V[k]||0)-1);upd()};r.querySelector('.p').onclick=()=>{sfx('notch');if(sum()<room()&&(V[k]||0)<(S.mat[k]||0))V[k]=(V[k]||0)+1;upd()};o.querySelector('.ks').appendChild(r);return[k,r]});
+  const rows=GRASSK.filter(k=>(S.mat[k]||0)>0).map(k=>{const r=el('<div style="display:flex;gap:8px;align-items:center;justify-content:space-between;margin-bottom:6px"><span class="nm" style="flex:1"></span><button class="btn m">－</button><b class="v" style="min-width:2.4em;text-align:center"></b><button class="btn p">＋</button></div>');r.querySelector('.nm').textContent=MATN[k]+'（'+(S.mat[k]||0)+'）';r.querySelector('.m').onclick=()=>{sfx('notch');V[k]=Math.max(0,(V[k]||0)-1);upd()};r.querySelector('.p').onclick=()=>{sfx('notch');if(sum()<room()&&(V[k]||0)<(S.mat[k]||0))V[k]=(V[k]||0)+1;upd()};o.querySelector('.ks').appendChild(r);return[k,r]});
   const upd=()=>{const d=S.dyn[j]||{};o.querySelector('.t').textContent=BL.composter.name;o.querySelector('.n').textContent='草（'+(cmpIn(j)+cmpWait(j))+'/'+CAP+'）・肥料（'+(d.c||0)+'）';for(const[k,r]of rows){r.querySelector('.v').textContent=V[k]||0;r.querySelector('.m').disabled=!(V[k]>0);r.querySelector('.p').disabled=sum()>=room()||(V[k]||0)>=(S.mat[k]||0)}const g=o.querySelector('.go');g.textContent='草を入れる';g.disabled=!sum()};
   o.querySelector('.x').onclick=()=>{sfx('tap');o.remove()};o.onclick=e=>{if(e.target===o)o.remove()};
   o.querySelector('.go').onclick=()=>{if(!sum())return;const Q=(S.cmpQ||(S.cmpQ={}))[j]||(S.cmpQ[j]={});for(const k of GRASSK){const t=Math.min(V[k]||0,S.mat[k]||0);if(t>0){rsvAdd({[k]:t});Q[k]=(Q[k]||0)+t}}sfx('quest');toast('草を入れるのをたのんだ','good');o.remove()};
   if(!rows.length)o.querySelector('.ks').appendChild(el('<p class="note">入れる草がありません</p>'));
   upd();document.body.appendChild(o)}
-function otakiPop(k,bx){/* もちもの・しまう家具の画面：素材をタップしたときのメニュー（おたきあげ・あげる）。数をえらんでたのむと、せいれいが箱から神殿へもっていく（bx：その箱から S.otakiB） */const have=()=>bx!=null?Math.min(boxHas(bx,k),S.mat[k]||0):S.mat[k]||0;const tr=MATTRADE[k]||5;let v=0;const o=el('<div style="position:fixed;inset:0;z-index:45;display:flex;align-items:center;justify-content:center;background:rgba(40,30,15,.35);padding:24px"><div class="pxcard" style="background:var(--panel);padding:16px 18px;max-width:320px;width:100%;color:var(--ink)"><b class="t" style="display:block;font-size:15px;margin-bottom:4px"></b><p class="note n" style="margin:0 0 10px"></p><div style="display:flex;gap:8px;align-items:center;justify-content:center;margin-bottom:12px"><button class="btn m">−</button><b class="v" style="min-width:3em;text-align:center;font-size:15px"></b><button class="btn p">＋</button></div><div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn x">とじる</button><button class="btn pri go"></button></div></div></div>');
+function otakiPop(k,bx){/* もちもの・しまう家具の画面：素材をタップしたときのメニュー（おたきあげ・あげる）。数をえらんでたのむと、せいれいが箱から神殿へもっていく（bx：その箱から S.otakiB） */const have=()=>bx!=null?Math.min(boxHas(bx,k),S.mat[k]||0):S.mat[k]||0;const tr=MATTRADE[k]||5;let v=0;const o=el('<div style="position:fixed;inset:0;z-index:45;display:flex;align-items:center;justify-content:center;background:rgba(40,30,15,.35);padding:24px"><div class="pxcard" style="background:var(--panel);padding:16px 18px;max-width:320px;width:100%;color:var(--ink)"><b class="t" style="display:block;font-size:15px;margin-bottom:4px"></b><p class="note n" style="margin:0 0 10px"></p><div style="display:flex;gap:8px;align-items:center;justify-content:center;margin-bottom:12px"><button class="btn m">－</button><b class="v" style="min-width:3em;text-align:center;font-size:15px"></b><button class="btn p">＋</button></div><div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn x">とじる</button><button class="btn pri go"></button></div></div></div>');
   const upd=()=>{const n=have(),mx=Math.floor(n/tr)*tr;v=Math.max(0,Math.min(v,mx));o.querySelector('.t').textContent=MATN[k]+' '+n+'こ';o.querySelector('.n').textContent='おたきあげ：'+tr+'こでパワー1';o.querySelector('.v').textContent=v;o.querySelector('.m').disabled=v<=0;o.querySelector('.p').disabled=v+tr>mx;const g=o.querySelector('.go');g.dataset.hold=1;/* 草原は、おしつづけて決める */g.textContent='おたきあげ（パワー+'+v/tr+'）';g.disabled=!v};
   o.querySelector('.m').onclick=()=>{sfx('notch');v-=tr;upd()};o.querySelector('.p').onclick=()=>{sfx('notch');v+=tr;upd()};o.querySelector('.x').onclick=()=>{sfx('tap');o.remove()};o.onclick=e=>{if(e.target===o)o.remove()};
   o.querySelector('.go').onclick=()=>{if(!v||have()<v)return;sfx('quest');rsvAdd({[k]:v});const Q=bx!=null?((S.otakiB||(S.otakiB={}))[bx]||(S.otakiB[bx]={})):S.otakiQ||(S.otakiQ={});Q[k]=(Q[k]||0)+v;toast('おたきあげをたのんだ','good');o.remove();if(sheet)renderSheet()};
@@ -243,12 +243,12 @@ function shopDaily(items){
   const day=callDay(),at=(day%items.length+items.length)%items.length;
   return [items[at]];
 }
-function shopPrice(id,k){let t=0;for(let i=0;i<k;i++){if(id==='farm')t+=4+Math.floor(((S.farmBuy||0)+i)/3);/* 畑は3こ買うごとに1ポイント上がる */else if(id==='fruit')t+=10+2*((S.fruitBuy||0)+i);else if(FLOWERS.has(id))t+=BL[id].sp;/* 花の種の値段は、表の sp */else t+=BL[id].cost}return t}
+function shopPrice(id,k){let t=0;for(let i=0;i<k;i++){if(id==='farm')t+=4+Math.floor(((S.farmBuy||0)+i)/3);/* 畑は3こ買うごとに1ポイント上がる */else if(id==='fruit')t+=10+2*((S.fruitBuy||0)+i);else if(FLOWERS.has(id))t+=BL[id].sp;/* 花のたねの値段は、表の sp */else t+=BL[id].cost}return t}
 /* メニューの中の画面：見出しの左に、小さな「もどる」 */
 function sheetBack(){const bk=el('<button class="btn back" aria-label="メニューにもどる">'+pxi('next','prev')+'もどる</button>');bk.onclick=()=>{sfx('tap');openSheet('menu')};$('#sheetTitle').before(bk)}
 function careSec(body,r){/* お世話のタブ：お話・なでる・毛布・おやつ。お話はいつでも（たのしさ+10は1日1回 talk.js）。なでる・毛布は1人に1日1回 */const c=r.care||{},d=callDay(),bw=el('<div class="btns" style="display:flex;gap:8px;flex-wrap:wrap;margin:4px 0 8px"></div>');
   const sl=r.act&&r.act.type==='sleep'&&r.act.stage==='do',outS=sl&&r.act.ground&&!roomOf((r.y|0)*W+(r.x|0));
-  {const b=el('<button class="btn pri">お話する</button>');lackOn(b,sl?'ねているので、おこさない':'');b.onclick=()=>{if(sl)return;sfx('tap');talkTo(r)};bw.appendChild(b)}
+  {const b=el('<button class="btn pri">お話しする</button>');lackOn(b,sl?'ねているので、おこさない':'');b.onclick=()=>{if(sl)return;sfx('tap');talkTo(r)};bw.appendChild(b)}
   const mk=(k,t,why,f,cl)=>{const b=el('<button class="btn"></button>');b.textContent=t;const done=c[k]===d;lackOn(b,done?'きょうは、もうした':why||'');b.onclick=()=>{if(done||why)return;f();(r.care||(r.care={}))[k]=d;sfx('tap');if(cl)closeSheet();else renderSheet()};bw.appendChild(b)};/* cl：とじて、マップで反応を見せる */
   mk('pat','なでる',sl?'ねているので、おこさない':'',()=>{funAdd(r,CAREPAT,'care');patJoy(r);addFloat(r.x,r.y-1.6,'たのしさ+'+CAREPAT,'#ffd7e8')},1);
   if(outS||c.blanket===d)mk('blanket','毛布をかける','',()=>{r.act.blanket=1;r.bubble='💤'});
@@ -257,7 +257,7 @@ function careSec(body,r){/* お世話のタブ：お話・なでる・毛布・�
   {const b=el('<button class="btn">プレゼント</button>');lackOn(b,giftToday(r)?'きょうは、もうあげた':giftAny()?'':'あげられる物がありません');b.onclick=()=>{if(giftToday(r)||!giftAny())return;sfx('tap');giftWhat(r,closeSheet)};bw.appendChild(b)}/* おくりもの（gifts.js） */{const b=el('<button class="btn">見守る</button>');b.onclick=()=>{sfx('tap');followStart(r)};bw.appendChild(b)}/* 見守る：この子をカメラで追う（follow.js） *//* おやつ：ポップアップで食べ物をえらぶと、その場で食べる。反応で好き・きらいがわかる（food-like.js） */
   body.appendChild(bw)}
 function sortieSec(body,r){/* 出撃する・しない（6時〜23時だけ、かえられる。夜はそのまま） */const on=fighter(r),sec=el('<div class="sec"><h3>たたかう</h3><p class="note"></p><div class="btns" style="display:flex;gap:8px;flex-wrap:wrap;margin:4px 0 8px"></div></div>'),bw=sec.querySelector('.btns');
-  sec.querySelector('p').textContent=on?(r.elem==='fire'?'夜、近くのコワイノとたたかう':'夜、近くのコワイノとたたかう'+(SORTIETXT[r.elem]?'（'+SORTIETXT[r.elem]+'）':'')):(r.elem==='fire'?'夜、見張り台に立つ（'+WPTXT.fire+'）':'夜、見張り台に立つ');
+  sec.querySelector('p').textContent=on?(r.elem==='fire'?'夜、近くの「コワイノ」とたたかう':'夜、近くの「コワイノ」とたたかう'+(SORTIETXT[r.elem]?'（'+SORTIETXT[r.elem]+'）':'')):(r.elem==='fire'?'夜、見張り台に立つ（'+WPTXT.fire+'）':'夜、見張り台に立つ');
   const mk=(v,t)=>{const b=el('<button class="btn"></button>');b.textContent=t;if(on===v)b.classList.add('pri');lackOn(b,isNight()?'夜は、かえられない':'');b.onclick=()=>{if(isNight()||on===v)return;r.sortie=v;if(v===sortieDef(r))delete r.sortie;sfx('tap');renderSheet()};bw.appendChild(b)};
   mk(true,'たたかう');mk(false,'たたかわない');body.appendChild(sec)}
 const CAREPAT=10;
@@ -293,7 +293,7 @@ const MANH={'あそびかた':'p:book','せいれいのようす':'p:spirit','�
 const MANIC={'おなか':'p:rice','たのしさ':'p:ball','つかれ':'p:moon','住み心地':'p:house','住み心地の効果':'p:house','ベッドの数':'bed','はたらく速さ':'p:hammer','移動速度':'p:boot','スタミナ':'p:heart','持てる数':'p:box','攻撃力':'p:sword','みんな':'p:spirit',
   '【ダイニング家具】':'table','【料理家具】':'cooktable','【あかり】':'lantern','【庭の家具】':'bench','【あそび道具】':'swing','【かべ・かざり】':'paint1','おそなえでしか手に入らない家具':'gazebo',
   '設計図':'p:paper','宝の地図':'p:compass','ふしぎなふくろ':'p:box','むらのちから':'p:leaf','せいれいのゆめ':'p:moonf','あらしの日':'p:rain','村の記録':'p:chart','流れ星':'p:moonn','せいれいの手紙':'p:paper','加工':'loom','飼う生き物':'coop','しごと場の担当':'p:hammer','床':'floor','水浴び':'tub','あかり':'candle','朽ちた壁':'p:hammer','畑とたね':'p:grass','ベッド':'bed','かまど':'oven','調理台':'cooktable','料理を作るせいれい':'p:cup',
-  'せいれいパワー':'p:power','カミサマとの交換':'p:cup','おつげ':'p:leaf','依頼ボード':'board','なかまを呼ぶ':'p:spirit','わく':'p:gear','鉱石':'p:rock','作る':'p:hammer','強化':'p:hammer','矢':'arrow',
+  'せいれいパワー':'p:power','カミサマとの交換':'p:cup','おつげ':'p:leaf','依頼ボード':'board','なかまを呼ぶ':'p:spirit','つけられるそうび':'p:gear','鉱石':'p:rock','作る':'p:hammer','強化':'p:hammer','矢':'arrow',
   '「コワイノ」':'p:moon','見張り台':'watch','たたかう':'p:sword','まもりの光':'p:sun','守り神の強化':'p:power','直す':'p:hammer','朝まで休む':'p:clock','そなえ':'p:shield','おとしもの':'p:box','おみおくり':'p:heart','お墓':'p:rock',
   '霧の夜':'p:moon','群れの夜':'p:shield','雨の夜':'p:rain','満月':'p:moonf','新月':'p:moonn','おだやかな夜':'p:moon','オオカゲの夜':'p:shield'};
 function manIcEl(k){if(!k)return null;if(k.startsWith('p:')){if(!PXI[k.slice(2)])return null;const d=el('<span class="mic">'+pxi(k.slice(2))+'</span>');return d}if(!BL[k])return null;const im=el('<img class="mic" alt="">');im.src=iconURL(k);return im}
@@ -308,7 +308,7 @@ function memBook(body){const kids=[...body.children],ch=[];
   body.innerHTML='';const pages=[];let B=null;
   {const pg=el('<div class="mpg mtoc"><h3 class="mtt"></h3><div class="rows"></div></div>');manH3(pg.querySelector('h3'),'もくじ');{const e=pg.querySelector('h3');e.insertBefore(el('<span class="mic">'+pxi('book')+'</span>'),e.firstChild)}
     for(const c of ch){const r=el('<button class="row mtocr" type="button"><span class="mic">'+pxi(MEMIC[c.t]||'memo')+'</span><div class="tx"><b></b></div><span class="mtlead"></span><span class="mtpn"></span></button>');r.querySelector('b').textContent=c.t;r.querySelector('.mtpn').textContent=c.p;r._c=c;r.onclick=()=>{if(B)bkGo(B,c.pp!=null?c.pp:c.p)};pg.querySelector('.rows').appendChild(r)}
-    if(!ch.length)pg.appendChild(el('<p class="note">はじめての出来事が、ここにのこります。</p>'));pages.push(pg)}
+    if(!ch.length)pg.appendChild(el('<p class="note">はじめてのできごとが、ここにのこります。</p>'));pages.push(pg)}
   P.forEach(q=>{const pg=el('<div class="mpg"></div>');if(q.c.t==='できごと'&&q.n[0]&&!(q.n[0].querySelector(':scope>h3')||{}).textContent.match(/^できごと$/)){const h=el('<h3 class="mtt"></h3>');pg.appendChild(h);h.textContent='できごと'}for(const n of q.n)pg.appendChild(n);pages.push(pg)});
   B=bookMake(body,pages,{key:'record',at:MEMPG,toc:1,onPaged:map=>{for(const c of ch){c.pp=map[c.p];}for(const r of body.querySelectorAll('.mtocr'))if(r._c)r.querySelector('.mtpn').textContent=r._c.pp},cover:{t:'思い出帳',sub:S.vname||WORLDS[WD].name,c:'#a5352e'},onAt:i=>{MEMPG=i}})}
 /* スポットの代表の家具（アイコンにする）：名前で書き、なければ、そのスポットのもとの物 */
@@ -320,12 +320,12 @@ function spotIcon(sp){const id=spotRepId(sp);return id?iconURL(id):null}
 function pxPop(title){const o=el('<div class="pxpopw" style="position:fixed;inset:0;z-index:45;display:flex;align-items:center;justify-content:center;background:rgba(40,30,15,.35);padding:24px"><div class="pxcard" style="background:var(--panel);padding:16px 18px;max-width:360px;width:100%;max-height:80vh;overflow:auto;color:var(--ink)"><b class="ppt" style="display:block;font-size:15px;margin-bottom:8px"></b><div class="ppb"></div><div style="display:flex;justify-content:flex-end;margin-top:10px"><button class="btn x">とじる</button></div></div></div>');
   o.querySelector('.ppt').textContent=title;const close=()=>o.remove();o.querySelector('.x').onclick=()=>{sfx('tap');close()};o.onclick=e=>{if(e.target===o)close()};document.body.appendChild(o);return{o,body:o.querySelector('.ppb'),close}}
 /* 住み心地のくわしい計算：何で何点か（houseComfort の why） */
-function comfyPop(h){if(!h)return;const C=houseComfort(h),Y=C.why,P=pxPop('住み心地のけいさん'),R=el('<div class="recs comfyCalc"></div>'),f1=v=>Math.round(v*10)/10,sg=v=>(v<0?'−':'+')+f1(Math.abs(v));
+function comfyPop(h){if(!h)return;const C=houseComfort(h),Y=C.why,P=pxPop('住み心地のけいさん'),R=el('<div class="recs comfyCalc"></div>'),f1=v=>Math.round(v*10)/10,sg=v=>(v<0?'－':'+')+f1(Math.abs(v));
   const row=(a,b,cls)=>{const d=el('<div class="st'+(cls?' '+cls:'')+'"><span></span><b></b></div>');d.firstChild.textContent=a;d.lastChild.textContent=b;R.appendChild(d)};
   row('もとの住み心地','+15');if(Y.bp)row('設計図の家',sg(Y.bp));if(Y.pc)row('むらのちから',sg(Y.pc));
   row('家具・かざり',Y.furn>210?sg(Y.furn)+' → +210':sg(Y.furn));
   const ks=Object.keys(Y.PT).sort((a,b)=>Y.PT[b]-Y.PT[a]);for(const k of ks)row((k==='window'?'窓':BL[k]?iname(k):k)+(Y.kc[k]>1?'×'+Y.kc[k]:''),sg(Y.PT[k]),'sub');
-  row('床（'+Y.fl+'/'+Y.n+'マス）',sg(Y.flp));if(C.over)row('ベッドが多い（'+C.over+'こ）',sg(-C.over*105));if(!C.lit)row('あかりがない','−60');
+  row('床（'+Y.fl+'/'+Y.n+'マス）',sg(Y.flp));if(C.over)row('ベッドが多い（'+C.over+'こ）',sg(-C.over*105));if(!C.lit)row('あかりがない','－60');
   for(const[k,p]of Y.RS){const sp=SPOTS.find(s=>s.k===k);row(sp?sp.n:k,'×'+f1(1+p))}if(Y.RS.length>1)row('部屋の合計','×'+f1(1+Y.rs));
   if(C.webs)row('クモの巣（'+C.webs+'こ）',sg(-C.webs*WEBCOMF));row('住み心地',C.v+' / '+COMFMAX,'tot');P.body.appendChild(R)}
 /* おやつ：あげる食べ物をえらぶ */
@@ -343,7 +343,7 @@ function boxFPop(a){/* 箱に入れる物をえらぶポップアップ */const 
     for(const k of L){const on=!!it[k],b=el('<button class="slot"><span class="ct"></span><img alt=""><span class="nm"></span></button>'),im=mic(k);if(im)b.querySelector('img').src=im;else b.querySelector('img').replaceWith(Object.assign(document.createElement('span'),{className:'stockEmo',innerHTML:pxi('box')}));if(on)ckSet(b.querySelector('.ct'),'✓ ');b.querySelector('.nm').textContent=itemKeyName(k);b.onclick=()=>{const n=Object.assign({},it);if(on)delete n[k];else n[k]=1;save(Object.assign({},F,{it:n}))};g.appendChild(b)}};
   draw();o.querySelector('.x').onclick=()=>{sfx('tap');o.remove()};o.onclick=e=>{if(e.target===o)o.remove()};document.body.appendChild(o)}
 function jobOwnSec(body,j,o){if(!(JOBST[o]&&S.obj[anc(j)]===o&&S.res.length))return;/* しごと場の担当 */const a=anc(j),mx=JOBST[o],L=jobOwners(a),sec=el('<div class="sec"><h3></h3><div class="rows"></div></div>'),rows=sec.querySelector('.rows');sec.querySelector('h3').textContent='担当のせいれい（'+L.length+'/'+mx+'）';
-  {const row=el('<button class="row" style="text-align:left;width:100%"><span class="dot" style="background:#f6f1e6"></span><div class="tx"><b></b><small></small></div></button>');ckSet(row.querySelector('b'),(L.length?'':'✓ ')+'だれでも');row.querySelector('small').textContent='あいていれば、だれでも働く';row.onclick=()=>{if(S.jobOwn)delete S.jobOwn[a];sfx('next');renderSheet()};rows.appendChild(row)}
+  {const row=el('<button class="row" style="text-align:left;width:100%"><span class="dot" style="background:#f6f1e6"></span><div class="tx"><b></b><small></small></div></button>');ckSet(row.querySelector('b'),(L.length?'':'✓ ')+'だれでも');row.querySelector('small').textContent='あいていれば、だれでもはたらく';row.onclick=()=>{if(S.jobOwn)delete S.jobOwn[a];sfx('next');renderSheet()};rows.appendChild(row)}
   for(const r of S.res){if(r.hidden||!jobOK(r,o))continue;const on=L.includes(r),row=el('<button class="row" style="text-align:left;width:100%"><span class="dot"></span><div class="tx"><b></b><small></small></div></button>');row.querySelector('.dot').style.cssText='background:#f6f1e6 url('+spiritPort(r.elem,96)+') center/86% no-repeat;box-shadow:inset 0 0 0 2px '+ELEM[r.elem].col;
     const nl=nareLv(r,o),cur=jobOf(r);ckSet(row.querySelector('b'),(on?'✓ ':'')+r.name+'  Lv'+rLv(r));row.querySelector('small').textContent=ELEM[r.elem].name+'のせいれい・なれ '+nl+(nl?'（はたらく速さ+'+nl*NAREUP+'）':'')+(cur>=0&&cur!==a?'・いまは'+BL[S.obj[cur]].name:'');
     row.onclick=()=>{if(!on&&L.length>=mx){sfx('tap');return toast('担当は'+mx+'人まで')}jobSet(a,r,!on);sfx('next');renderSheet()};rows.appendChild(row)}
@@ -400,8 +400,8 @@ function renderSheet(){
       }
     }
     buyItems('花の種（日替わり）',shopDaily(flowerIds));
-    {const TL=WD===0?[['mover','ひっこしミトン','家具・建物をタップして、うつしたい所をタップすると、すぐそこへうつる','mover']]:WD===1?[['bulk','ひろびろハケ','指でなぞった範囲を、ブロックでまとめてぬれる。種もまとめて植えてもらえる','hake'],['swap','つけかえトンカチ','つながっている柵・塀・家の壁・道・床を、まとめてべつの種類にかえる。はずした物は、おそなえ箱にもどる','swap']]:[];/* 道具は土地ごと（草原：ひっこしミトン・だんさスコップ、火山：ひろびろハケ・つけかえトンカチ）。もらった道具は、ほかの土地でも使える */
-      if(TL.length){const r3=sec('道具');for(const T of TL){const bx=row(r3,T[1],T[2],toolIcon(T[3]),S[T[0]]);if(S[T[0]])btn(bx,'もらった',true);else btn(bx,'もらう　'+SP(3000),S.pt<3000,()=>{S.pt-=3000;S[T[0]]=true;applyFeats();toast(T[1]+'をもらった！「どうぐ」から使える','good');trade()},1)}
+    {const TL=WD===0?[['mover','ひっこしミトン','家具・建物をタップして、うつしたい所をタップすると、すぐそこへうつる','mover']]:WD===1?[['bulk','ひろびろハケ','指でなぞった範囲を、ブロックでまとめてぬれる。種もまとめて植えてもらえる','hake'],['swap','つけかえトンカチ','つながっている柵・塀・家の壁・道・床を、まとめてべつの種類にかえる。はずした物は、もちものにもどる','swap']]:[];/* 道具は土地ごと（草原：ひっこしミトン・だんさスコップ、火山：ひろびろハケ・つけかえトンカチ）。もらった道具は、ほかの土地でも使える */
+      if(TL.length){const r3=sec('道具');for(const T of TL){const bx=row(r3,T[1],T[2],toolIcon(T[3]),S[T[0]]);if(S[T[0]])btn(bx,'もらった',true);else btn(bx,'もらう　'+SP(3000),S.pt<3000,()=>{S.pt-=3000;S[T[0]]=true;applyFeats();toast(T[1]+'をもらった！','good');trade()},1)}
         if(WD===0){const b2=row(r3,'だんさスコップ','段差をけずる・もる工事を、せいれいにたのめる。1マスでパワー50',toolIcon('scoop'),S.dig);if(S.dig)btn(b2,'もらった',true);else btn(b2,'もらう　'+SP(1000),S.pt<1000,()=>{S.pt-=1000;S.dig=true;applyFeats();toast('だんさスコップをもらった！','good');trade()},1)}}}/* だんさスコップは草原のカミサマから（ほかの土地でも使える） */
     {const rg=sec('おくりもの（日替わり）');for(const id of giftShopToday()){const got=giftShopBought(id),bx=row(rg,BL[id].name,BL[id].desc+'（所持：'+inv(id)+'）',giftIco(id),got),b=el('<button class="btn pri"></button>');b.textContent=got?'もらった':'もらう　'+SP(BL[id].shop);lackOn(b,got?'きょうは、もうもらった':S.pt<BL[id].shop?'パワーが足りません':'');b.onclick=()=>{if(got||S.pt<BL[id].shop)return;if(giftShopBuy(id))trade()};bx.appendChild(b)}}/* おくりもの：日がわり（gifts.js） */
     if(S.enemyOn||S.nights>0){const r7=sec('まもりの品'),bx=row(r7,'まよけのハーブ',HERBDESC+'（所持：'+(S.herb||0)+'）',herbIco());btn(bx,SP(200),S.pt<200,()=>{S.pt-=200;S.herb=(S.herb||0)+1;(S.seenIt||(S.seenIt={}))['x:herb']=1;toast('まよけのハーブをもらった','good');trade()},1)}
@@ -495,7 +495,7 @@ function renderSheet(){
     const sources={};for(const k of ELEM_KEYS)sources[k]={};
     const add=(k,name,v)=>{const a=sources[k];if(!a)return;const r=a[name]||(a[name]={n:0,v:0});r.n++;r.v+=v};
     for(let j=0;j<W*H;j++){const id=S.obj[j],b=BL[id];if(!b||b.kind==='block'||FLOWERS.has(id)&&isBud(j))continue;for(const k in b.attr||{})if(b.attr[k]>0)add(k,b.name,b.attr[k])}
-    body.appendChild(el('<p class="note">マップにあるものを集計。花は咲いてから加算されます。</p>'));
+    body.appendChild(el('<p class="note">マップにある物の合計。花は、咲いてから数に入る。</p>'));
     for(const k of ELEM_KEYS){const sec=el('<div class="sec"></div>');const h=document.createElement('h3');h.textContent=ELEM[k].name+'の力：'+Number(ATTR[k].toFixed(1));sec.appendChild(h);for(const [name,r]of Object.entries(sources[k]))sec.appendChild(rowEl(name+' ×'+r.n,'+'+Number(r.v.toFixed(1))));if(!Object.keys(sources[k]).length)sec.appendChild(el('<p class="note">まだありません</p>'));body.appendChild(sec)}
   }else if(sheet==='stock'){/* そうこ：いま、なにがいくつあるか */
     T.textContent='そうこ';
@@ -571,7 +571,7 @@ function renderSheet(){
      if(resTab===3)gearSheet(body,r);
      else if(resTab===2)careSec(body,r);/* お世話 */
      else if(resTab===1){if(S.trouble&&S.trouble.id===r.id&&S.trouble.k==='fav')prefKnow(r,'lf');/* こまりごとで、ほしい家具を言っている */const pf=el('<div class="sec"><div class="stats"></div></div>'),pg=pf.querySelector('.stats');
-       for(const[k,v]of[...(troubleText(r)?[['こまりごと',troubleText(r)]]:[]),...(typeof dreamText==='function'&&dreamText(r)?[['ゆめ',dreamText(r)]]:[]),...(jobOf(r)>=0?[['担当',(o=>BL[o].name+'（なれ '+nareLv(r,o)+'）')(S.obj[jobOf(r)])]]:[]),['好きな遊び',prefShow(r,'lk')],['にがてな遊び',prefShow(r,'ng')],['好きな家具',prefShow(r,'lf')],['だいすきな料理',prefShow(r,'fd')],['すきな食べ物',foodKnownText(r,2)],['にがてな食べ物',foodKnownText(r,0)],['たからもの',giftTrText(r)],['だいすきなおくりもの',giftKnownText(r,2)],['すきなおくりもの',giftKnownText(r,1)],['なかよし',(b=>b?b.q.name+'（'+b.v+'）':'まだいない')(bondBest(r))],['村に来た日',r.came?r.came+'日目':'はじめから'],['誕生日',typeof bdayText==='function'?bdayText(r):''],['作ったもの',(r.made||0)+'こ'],['追いはらった「コワイノ」',(r.beat||0)+'体'],['ベッド',myBed(r)>=0?'じぶんのベッドがある':'きまっていない']]){const d=el('<div class="stat" style="display:block"><span style="display:block"></span><b style="display:block;text-align:left;margin-top:2px"></b></div>');d.firstChild.textContent=k;d.lastChild.textContent=v;pg.appendChild(d)}
+       for(const[k,v]of[...(troubleText(r)?[['こまりごと',troubleText(r)]]:[]),...(typeof dreamText==='function'&&dreamText(r)?[['ゆめ',dreamText(r)]]:[]),...(jobOf(r)>=0?[['担当',(o=>BL[o].name+'（なれ '+nareLv(r,o)+'）')(S.obj[jobOf(r)])]]:[]),['好きな遊び',prefShow(r,'lk')],['にがてな遊び',prefShow(r,'ng')],['好きな家具',prefShow(r,'lf')],['だいすきな料理',prefShow(r,'fd')],['すきな食べ物',foodKnownText(r,2)],['にがてな食べ物',foodKnownText(r,0)],['たからもの',giftTrText(r)],['だいすきなおくりもの',giftKnownText(r,2)],['すきなおくりもの',giftKnownText(r,1)],['なかよし',(b=>b?b.q.name+'（'+b.v+'）':'まだいない')(bondBest(r))],['村に来た日',r.came?r.came+'日目':'はじめから'],['誕生日',typeof bdayText==='function'?bdayText(r):''],['作ったもの',(r.made||0)+'こ'],['追いはらった「コワイノ」',(r.beat||0)+'ひき'],['ベッド',myBed(r)>=0?'じぶんのベッドがある':'きまっていない']]){const d=el('<div class="stat" style="display:block"><span style="display:block"></span><b style="display:block;text-align:left;margin-top:2px"></b></div>');d.firstChild.textContent=k;d.lastChild.textContent=v;pg.appendChild(d)}
        body.appendChild(pf)}
      else{
      const st=el('<div class="sec"><div class="stats sgrid"></div></div>'),g=st.querySelector('.stats');
@@ -583,7 +583,7 @@ function renderSheet(){
   }else if(sheet==='diary'){diaryBody(T,body,sheetArg);
   }else if(sheet==='night'){const N=S.ns;if(!N)return closeSheet();T.textContent=N.trial?(N.trialOK?'試練をのりこえた！':'試練の夜'):N.rw?'夜をぶじに守りきった！':'ゆうべの守り';
     const g=el('<div class="stats"></div>');
-    for(const[k,v]of[['来た「コワイノ」',N.n+'体'],['追いはらった',N.kill+'体'],['おそわれたせいれい',N.hurt?N.hurt+'回':'なし'],['こわされた柵・設備',N.broke?N.broke+'こ':'なし'],['ぬすまれたもの',N.lost.length?lostSum(N.lost):'なし']].concat(N.rw?[['ごほうび','パワー+'+N.rw+'・みんなのたのしさ+10']]:[]).concat(N.trialOK?[['試練のごほうび','パワー+60・めぶきのしずく']]:[]))g.appendChild(el('<div class="stat"><span>'+k+'</span><b>'+v+'</b></div>'));
+    for(const[k,v]of[['来た「コワイノ」',N.n+'ひき'],['追いはらった',N.kill+'ひき'],['おそわれたせいれい',N.hurt?N.hurt+'回':'なし'],['こわされた柵・設備',N.broke?N.broke+'こ':'なし'],['ぬすまれたもの',N.lost.length?lostSum(N.lost):'なし']].concat(N.rw?[['ごほうび','パワー+'+N.rw+'・みんなのたのしさ+10']]:[]).concat(N.trialOK?[['試練のごほうび','パワー+60・めぶきのしずく']]:[]))g.appendChild(el('<div class="stat"><span>'+k+'</span><b>'+v+'</b></div>'));
     body.appendChild(g);
     if(N.boss===1&&!N.trial)body.appendChild(el('<p class="note">オオカゲは、追いはらえないまま朝になった。</p>'));
   }else if(sheet==='summon'){T.textContent='だれを呼ぶ？';
@@ -597,7 +597,7 @@ function renderSheet(){
     T.textContent=D.name;
     const FEAT={yama:'火山のふもとの最後の夜に来る。温泉を冷やす',boss2:'ヌシ様をむかえる準備ができたあと、オオカゲのかわりに来る。とても強い',basic:'せいれいをおそう',fast:'足が速い',thief:'食料や素材をぬすむ',brute:'体力が多い',boss:WD?'5日目の夜、そのあと3日ごとに来る。追いはらうと「ヌシ様の火だね」があらわれ、そのあとは5日ごとに来る。当たると目をまわす':'3日目の夜、そのあと3日ごとに来る。一度追いはらうと、そのあとは5日ごと。とても強い。当たると目をまわす'};
     const st=el('<div class="sec"><h3>ステータス</h3><div class="stats"></div></div>'),g=st.querySelector('.stats');
-    for(const[k,v]of[['体力',Math.max(0,Math.ceil(e.hp))+' / '+e.max],['移動速度','×'+D.sp],['壁への攻撃',D.atk+'秒ごとに1'],['せいれいへの攻撃','おなか −'+D.hitN],['特徴',FEAT[e.type]||'']])g.appendChild(el('<div class="stat"><span style="white-space:nowrap">'+k+'</span><b>'+v+'</b></div>'));
+    for(const[k,v]of[['体力',Math.max(0,Math.ceil(e.hp))+' / '+e.max],['移動速度','×'+D.sp],['壁への攻撃',D.atk+'秒ごとに1'],['せいれいへの攻撃','おなか －'+D.hitN],['特徴',FEAT[e.type]||'']])g.appendChild(el('<div class="stat"><span style="white-space:nowrap">'+k+'</span><b>'+v+'</b></div>'));
     body.appendChild(st);
   }else if(sheet==='farm'){const j=sheetArg,d=S.dyn[j];if(!d||S.obj[j]!=='farm'){closeSheet();return}
     const cr=CROPS[cropK(d)];T.textContent=cr?'畑：'+cr.name:'畑';
@@ -638,7 +638,7 @@ function renderSheet(){
     if(TABLES.has(o)){const h=roomOf(j);let n=0;if(h)for(const q of h.inside){const oo=S.obj[q];if(oo&&BL[oo]&&BL[oo].cat==='living')n+=BL[oo].dw||1}if(h)for(const oo of rugsIn(h.inside))n+=BL[oo].dw||1;const bon=h?DINEPT[Math.min(6,n)]:0;
       body.appendChild(el('<div class="rows"></div>')).appendChild(rowEl('ここで食べたときのパワー（いま）',h?'+'+bon+'（家の中の食卓 +1・ダイニング家具で +'+(DINEPT[Math.min(6,n)]-1)+(n/2<3?'。ダイニング家具をふやすと、まだふえる':'。いちばん多い')+'）':'家の外なので、ふえない'))}/* 食卓：いまのパワーのボーナス */
     if(BENCHES.has(o)){const ev=ENVG?Math.max(ENVG[j]||0,ENVG[j+1]||0):0;/* ベンチ：まわりのかざりで上がった回復 */
-      body.appendChild(el('<div class="rows"></div>')).appendChild(rowEl('すわって休むと（1時間あたり）','つかれ −'+(Math.round((20+ev*.36)*10)/10)+' / たのしさ +'+(Math.round((4.8+ev*.36)*10)/10)+(ev>0?'':'')))}
+      body.appendChild(el('<div class="rows"></div>')).appendChild(rowEl('すわって休むと（1時間あたり）','つかれ －'+(Math.round((20+ev*.36)*10)/10)+' / たのしさ +'+(Math.round((4.8+ev*.36)*10)/10)+(ev>0?'':'')))}
 
   }else if(sheet==='roof'){const j=sheetArg,o=(S.roof||{})[j];if(!o||!BL[o])return closeSheet();T.textContent=BL[o].name;{const te=tagsEl(o);if(te)body.appendChild(te)}
     body.appendChild(rowEl(BL[o].name,withAttr(o,BL[o].desc||''),iconURL(o)));/* ガゼボ・東屋（屋根の層）の説明 */
@@ -686,7 +686,7 @@ function renderSheet(){
       body.appendChild(sec)}
   }else if(sheet==='menu'){
     T.textContent=WORLDS[WD].name;
-    const MI=[['goal','target','目標'],['record','memo','思い出帳'],['oracle','leaf','おつげ'],['gup','power','むらのちから'],['zukan','zukan','図鑑'],['work','hammer','しごと'],['bondmap','heart','なかよし'],['cal','cal','こよみ'],['manual','book','ひでんのしょ'],['maps','compass','マップ選択',1],['settings','gear','設定',1],['support','cup','応援する',1]];/* 4つめが1の物は、下の小さな行（村のことでない物） */
+    const MI=[['goal','target','目標'],['record','memo','思い出帳'],['oracle','leaf','おつげ'],['gup','power','むらのちから'],['zukan','zukan','図鑑'],['work','hammer','しごと'],['bondmap','heart','なかよし'],['cal','cal','こよみ'],['manual','book','ひでんのしょ'],['maps','compass','マップ選択',1],['settings','gear','設定',1]];/* 4つめが1の物は、下の小さな行（村のことでない物） */
     const sub=MI.find(m=>m[0]===sheetArg);
     if(!sub){/* メニューはアイコンを並べるだけ。タップで中身を開く */
       body.appendChild(el(`<div class="mtags"><span class="mtag">${pxi('grass')}みどりのマス <b>${GRASSN}</b></span><span class="mtag">${pxi('house')}村レベル <b>${S.lv}</b></span><span class="mtag">${pxi('spirit')}せいれい <b>${S.res.length}</b>人</span></div>`));
@@ -726,7 +726,7 @@ function renderSheet(){
     }else if(sheetArg==='record'){reflectSec(body);appendStoryReplays(body);/* 日記に、これまで・村の写真・できごとをまとめた（村の記録の章もなくした） */
       const st=el('<div class="sec"><div class="mtt tape">きょうまで</div><div class="recs"></div></div>'),rw=st.querySelector('.recs');
       for(const[a,b]of[['すごした日',dayNo()+'日'],['のりこえた夜',(S.nights||0)+'回'],['いまのせいれい',S.res.length+'人'],['よんだせいれい',(S.summons||0)+'人'],['消えてしまったせいれい',(S.deaths||0)+'人'],
-        ['追いはらった「コワイノ」',(S.kills||0)+'体'],['オオカゲ',(S.bossKills||0)+'回'],[SHN(),(S.shards||0)+'つ'],['めぶきのしずく',(S.mebuki||0)+'こ'],['ためたせいれいパワー',Math.floor(S.totalPt||0)+''],['みどりのマス',GRASSN+'マス'],['村レベル','Lv'+S.lv],['たっせいした目標',S.quest+'こ']]){const d=el('<div class="st"><span></span><b></b></div>');d.firstChild.textContent=a;d.lastChild.textContent=b;rw.appendChild(d)}
+        ['追いはらった「コワイノ」',(S.kills||0)+'ひき'],['オオカゲ',(S.bossKills||0)+'回'],[SHN(),(S.shards||0)+'つ'],['めぶきのしずく',(S.mebuki||0)+'こ'],['ためたせいれいパワー',Math.floor(S.totalPt||0)+''],['みどりのマス',GRASSN+'マス'],['村レベル','Lv'+S.lv],['たっせいした目標',S.quest+'こ']]){const d=el('<div class="st"><span></span><b></b></div>');d.firstChild.textContent=a;d.lastChild.textContent=b;rw.appendChild(d)}
       diaryList(body,st);if(typeof letterSec==='function')letterSec(body);
       if((S.gone||[]).length){/* いなくなったなかま：名前・いっしょにいた日・なかよしとの思い出 */const sec=el('<div class="sec"><h3>いなくなったなかま</h3><div class="rows"></div></div>'),rw2=sec.querySelector('.rows');
         for(const e of S.gone.slice().reverse()){const r=el('<div class="row"><div class="tx"><b></b><small style="white-space:normal"></small></div></div>');r.querySelector('b').textContent=e.name+'（'+ELEM[e.elem].name+'のせいれい）';
@@ -737,9 +737,9 @@ function renderSheet(){
       const H=(S.dlog||[]).slice().reverse();if(!H.length)body.appendChild(el('<p class="note">まだありません</p>'));
       const rows=el('<div class="rows"></div>');for(const[w,t]of H){const r=el('<div class="row"><div class="tx"><b></b><small style="white-space:normal"></small></div></div>');r.querySelector('b').textContent=w||'';r.querySelector('small').textContent=t;rows.appendChild(r)}body.appendChild(rows);
     }else if(sheetArg==='memo'){
-      const M=(S.memo||[]).slice().reverse();if(!M.length)body.appendChild(el('<p class="note">はじめての出来事が、ここにのこります。</p>'));
+      const M=(S.memo||[]).slice().reverse();if(!M.length)body.appendChild(el('<p class="note">はじめてのできごとが、ここにのこります。</p>'));
       let cur=null,rows=null;for(const[d,e,t]of M){if(d!==cur){cur=d;const sc=el('<div class="sec"><h3></h3><div class="rows"></div></div>');sc.querySelector('h3').textContent=d+'日め';rows=sc.querySelector('.rows');body.appendChild(sc)}rows.appendChild(memoRow(e,t))}
-    }else if(sheetArg==='support'){/* 広告とコーヒー（まだ準備中） */
+    }else if(sheetArg==='support'){/* 広告とコーヒー（まだ準備中。使えるまでメニューに出さない） */
       {const sec=el('<div class="sec"><div style="display:flex;flex-direction:column;gap:8px"></div></div>');for(const t of['広告を見る','作者にコーヒーをおごる']){const b=el('<button class="btn"></button>');b.innerHTML=pxi('heart','wx')+t;b.onclick=()=>toast('準備中です');sec.firstChild.appendChild(b)}body.appendChild(sec)}
     }else if(sheetArg==='settings'){
       {const t=el('<div class="sec"><h3>テスト用</h3></div>'),b=el('<button class="btn"></button>');b.textContent='5倍速：'+(TESTM?'オン':'オフ');b.onclick=()=>{TESTM=!TESTM;try{KV.setItem('hk-test',TESTM?'1':'')}catch(_){}if(!TESTM&&S.speed>3)S.speed=1;renderSheet();applyFeats()};t.appendChild(b);body.appendChild(t)}/* テストのときだけ5倍速 */
@@ -755,10 +755,10 @@ function renderSheet(){
       {const section=el('<div class="sec"><h3>セーブ</h3><p class="note"></p></div>');
         const status=section.querySelector('p');
         const update=()=>{const st=KV.status();status.textContent=st.available?''+(st.lastSaved?' 最終保存：'+new Date(st.lastSaved).toLocaleTimeString('ja-JP'):''):'このブラウザに保存できません。下の「書き出す」でセーブファイルを保存してください。';};
-        const button=el('<button class="btn pri">いまセーブする</button>');button.onclick=()=>{const ok=save();update();toast(ok?'セーブしました':'このブラウザには保存できません',ok?'good':undefined)};
+        const button=el('<button class="btn pri">いまセーブする</button>');button.onclick=()=>{const ok=save();update();toast(ok?'セーブした':'このブラウザには保存できません',ok?'good':undefined)};
         update();section.appendChild(button);body.appendChild(section)}
       /* セーブの書き出し・読みこみ（ブラウザのデータが消えたときのそなえ） */
-      {const sv=el('<div class="sec"><h3>セーブの書き出し</h3><p class="note">ファイルにして保存できます。別の端末でも「読みこむ」で続きから遊べます。読みこむと、ファイルに含まれる土地のセーブを上書きします。ブラウザのデータを消す前に書き出してください。</p></div>');
+      {const sv=el('<div class="sec"><h3>セーブの書き出し</h3><p class="note">ファイルにして、しまっておける。ほかのスマホやパソコンでも「読みこむ」で、つづきから遊べる。読みこむと、ファイルに入っている土地のセーブは、ファイルの中身にかわる。ブラウザのデータを消す前に、書き出しておこう。</p></div>');
         const ex=el('<button class="btn">書き出す</button>'),im=el('<button class="btn" data-hold>読みこむ</button>'),fi=el('<input type="file" accept=".json,application/json" hidden>');
         ex.onclick=async()=>{save();const d={app:'hakoniwa',v:1,at:Date.now(),saves:{}};try{for(const k of SAVE_KEYS.filter(Boolean)){const t=KV.getItem(k);if(t)d.saves[k]=t}}catch(e){}
           for(let w=0;w<LIVE.length;w++)if(LIVE[w]&&!d.saves[SAVE_KEYS[w]]&&LIVE[w].introSeen)d.saves[SAVE_KEYS[w]]=JSON.stringify(LIVE[w]);
@@ -772,14 +772,14 @@ function renderSheet(){
             for(const [k,value] of entries){if(typeof value!=='string')throw 0;const g=JSON.parse(value);if(!g||g.v!==8||(g.world||0)!==SAVE_KEYS.indexOf(k)||!g.introSeen||!Array.isArray(g.res)||!Array.isArray(g.orders)||!Array.isArray(g.ground)||(g.ground.length!==W*H&&g.ground.length!==OW*OW)||!Array.isArray(g.obj)||(g.obj.length!==W*H&&g.obj.length!==OW*OW)||!g.flags)throw 0}
             const before=entries.map(([k])=>[k,KV.getItem(k)]);NOSAVE=true;
             if(!entries.every(([k,value])=>KV.setItem(k,value))){for(const [k,value]of before){if(value===null)KV.removeItem(k);else KV.setItem(k,value)}NOSAVE=false;toast('ブラウザに保存できないため読みこめません');return}
-            toast('読みこみました。はじめからひらきなおします','good');setTimeout(()=>location.reload(),900)}catch(e){toast('このファイルは読みこめません')}};rd.readAsText(f)};
+            toast('読みこんだ。はじめからひらきなおす','good');setTimeout(()=>location.reload(),900)}catch(e){toast('このファイルは読みこめません')}};rd.readAsText(f)};
         ex.style.marginBottom='8px';sv.appendChild(ex);sv.appendChild(im);sv.appendChild(fi);body.appendChild(sv)}
     }
   }
 }
 
 /* 図鑑：マップごとに、見つけた・おぼえた物だけ（スポット・家具・建物・レシピ・コワイノ・アイテム） */
-let ZKW=null,ZKT=0,ZKPG=0;const ZKPER=6,ZKTC=['#c9604a','#d89a3e','#7d9a4e','#5f8fb0','#8a6aa8','#b07a52'];/* しおりの色（tools/ui/colors.md の「本」） */const ZKTABS=['スポット','家具','建物','レシピ','コワイノ','アイテム','さかな','いきもの','りょうり','こだま'];
+let ZKW=null,ZKT=0,ZKPG=0;const ZKPER=6,ZKTC=['#c9604a','#d89a3e','#7d9a4e','#5f8fb0','#8a6aa8','#b07a52'];/* しおりの色（tools/ui/colors.md の「本」） */const ZKTABS=['スポット','家具','建物','レシピ','「コワイノ」','アイテム','さかな','いきもの','りょうり','こだま'];
 function zkSnd(s){/* 図鑑のアイコンをタップしたときの音（i:物のid → その物の材質の録音・k:音の名前） */if(s.startsWith('i:'))itemSnd(s.slice(2));else if(s.startsWith('k:'))sfx(s.slice(2))}
 function zukanBody(body){
   const ws=[0,1,2,3,4,5].filter(w=>(w===WD&&!S.free)||savedStage(w));if(!ws.length){body.appendChild(el('<p class="note">まだありません</p>'));return}

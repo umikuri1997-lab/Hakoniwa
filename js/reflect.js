@@ -47,7 +47,7 @@ function reflectBody(T,body){T.textContent='村のふりかえり';const bk=el('
   const b=el('<button class="btn" style="width:100%;margin-top:10px">クリアまでの記録</button>');b.onclick=()=>{sfx('tap');openSheet('clearrec')};body.appendChild(b)}
 function clearRecBody(T,body){T.textContent='クリアまでの記録';const bk=el('<button class="btn back" aria-label="もどる">'+pxi('next','prev')+'もどる</button>');bk.onclick=()=>{sfx('tap');openSheet('reflect')};T.before(bk);
   const c=S.clearRec,R=[];
-  if(c){R.push(['クリアした日',c.d+'日め '+c.h+'時']);if(c.ps>0)R.push(['あそんだ時間',playTimeText(c.ps)]);R.push(['のりこえた夜',c.n+'回'],['追いはらった「コワイノ」',c.k+'体'],['オオカゲ',c.b+'回'],['よんだせいれい',c.sm+'人'],['いたせいれい',c.res+'人'],['消えてしまったせいれい',c.dt+'人'],['村レベル','Lv'+c.lv])}
+  if(c){R.push(['クリアした日',c.d+'日め '+c.h+'時']);if(c.ps>0)R.push(['あそんだ時間',playTimeText(c.ps)]);R.push(['のりこえた夜',c.n+'回'],['追いはらった「コワイノ」',c.k+'ひき'],['オオカゲ',c.b+'回'],['よんだせいれい',c.sm+'人'],['いたせいれい',c.res+'人'],['消えてしまったせいれい',c.dt+'人'],['村レベル','Lv'+c.lv])}
   else{R.push(['クリアした日',clearDayOf()+'日め']);const p=S.score&&S.score.parts||[];for(const q of p)if(q[0]!=='クリアした日')R.push([q[0]==='せいれい'?'いたせいれい':q[0],q[1]])}
   const st=el('<div class="sec"><div class="recs"></div></div>'),rw=st.querySelector('.recs');for(const[a,v]of R){const d=el('<div class="st"><span></span><b></b></div>');d.firstChild.textContent=a;d.lastChild.textContent=v;rw.appendChild(d)}body.appendChild(st)}
 function reflectSec(body){if(!reflectOK())return;const s=el('<div class="sec"><h3>この村のおわりに</h3><div style="display:flex;flex-direction:column;gap:8px"></div></div>'),w=s.lastElementChild;

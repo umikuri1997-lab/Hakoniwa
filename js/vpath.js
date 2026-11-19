@@ -7,11 +7,11 @@ const VPATH=[/* 点：x・y は木の絵の上の場所（1ドット1.5px）、r
   {id:'kb2',c:80,t:'箱のしまえる数+5%',a:{box:5},x:40,y:736,r:['kb1']},
   {id:'kc1',c:120,t:'料理の速さ+10%',a:{cook:10},x:24,y:702,r:['kb2']},
   {id:'kc2',c:160,t:'料理の速さ+10%',a:{cook:10},x:24,y:668,r:['kc1']},
-  {id:'kf1',c:100,t:'たのしさのへりかた−5%',a:{fun:5},x:84,y:736,r:['kb1']},
+  {id:'kf1',c:100,t:'たのしさのへりかた－5%',a:{fun:5},x:84,y:736,r:['kb1']},
   {id:'kh1',c:150,t:'家の住み心地+5',a:{comf:5},x:58,y:702,r:['kf1']},
   {id:'kh2',c:200,t:'家の住み心地+5',a:{comf:5},x:58,y:668,r:['kh1']},
   {id:'kr1',c:150,t:'つかれのとれる速さ+10%',a:{rec:10},x:92,y:702,r:['kf1']},
-  {id:'kf2',c:250,t:'たのしさのへりかた−5%',a:{fun:5},x:92,y:668,r:['kr1']}]},
+  {id:'kf2',c:250,t:'たのしさのへりかた－5%',a:{fun:5},x:92,y:668,r:['kr1']}]},
  {k:'shigoto',n:'しごと',lx:194,ly:692,at:710,L:[
   {id:'sw1',c:50,t:'はたらく速さ+1',a:{work:1},x:150,y:690,r:[]},
   {id:'sw2',c:120,t:'はたらく速さ+1',a:{work:1},x:128,y:656,r:['sw1']},
@@ -19,18 +19,18 @@ const VPATH=[/* 点：x・y は木の絵の上の場所（1ドット1.5px）、r
   {id:'sm1',c:60,t:'移動速度+1',a:{move:1},x:162,y:656,r:['sw1']},
   {id:'sm2',c:140,t:'移動速度+1',a:{move:1},x:162,y:622,r:['sm1']},
   {id:'ss1',c:100,t:'スタミナ+2',a:{sta:2},x:196,y:656,r:['sw1']},
-  {id:'sh1',c:150,t:'おなかのへりかた−5%',a:{hun:5},x:196,y:622,r:['ss1']},
+  {id:'sh1',c:150,t:'おなかのへりかた－5%',a:{hun:5},x:196,y:622,r:['ss1']},
   {id:'sc1',c:400,t:'持てる数+1',a:{cap:1},x:145,y:578,r:['sf1','sm2']}]},
  {k:'mamori',n:'まもり',lx:22,ly:602,at:620,L:[
   {id:'md1',c:70,t:'見張り台の威力+1',a:{wdmg:1},x:60,y:600,r:[]},
   {id:'md2',c:100,t:'見張り台の威力+1',a:{wdmg:1},x:36,y:566,r:['md1']},
-  {id:'mc1',c:180,t:'見張り台のうつ間かく−5%',a:{wcd:5},x:36,y:532,r:['md2']},
+  {id:'mc1',c:180,t:'見張り台のうつ間かく－5%',a:{wcd:5},x:36,y:532,r:['md2']},
   {id:'mr1',c:150,t:'見張り台の射程+0.5',a:{wrng:.5},x:36,y:498,r:['mc1']},
   {id:'mr2',c:200,t:'見張り台の射程+0.5',a:{wrng:.5},x:36,y:464,r:['mr1']},
   {id:'mt1',c:120,t:'罠のダメージ+2',a:{trap:2},x:84,y:566,r:['md1']},
   {id:'ma1',c:170,t:'攻撃力+1',a:{atk:1},x:84,y:532,r:['mt1']},
   {id:'ma2',c:220,t:'攻撃力+1',a:{atk:1},x:84,y:498,r:['ma1']},
-  {id:'mp1',c:300,t:'コワイノを追いはらうとパワー+1',a:{kpt:1},x:84,y:464,r:['ma2']}]}];
+  {id:'mp1',c:300,t:'「コワイノ」を追いはらうとパワー+1',a:{kpt:1},x:84,y:464,r:['ma2']}]}];
 const vpOn=id=>!!(S&&S.vpath&&S.vpath[id]);
 function pathA(k){/* ひらいた所の、たし算する数 */if(!S||!S.vpath)return 0;let n=0;for(const b of VPATH)for(const p of b.L)if(p.a[k]&&S.vpath[p.id])n+=p.a[k];return n}
 const pathBox=()=>pathA('box')/100,pathFun=()=>1-pathA('fun')/100;
@@ -116,7 +116,7 @@ function treePop(k){const old=document.getElementById('treePop');if(old)old.remo
   const go=(label,c,fn)=>{const bt=el('<button class="btn pri go"></button>');bt.textContent=label+'　'+SP(c);lackOn(bt,lackPt(c));bt.onclick=()=>{if(S.pt<c){sfx('tap');return toast(lackPt(c),'warn')}if(fn()){close();TREEPEND=k;renderSheet()}};bar.appendChild(bt)};
   const sv=()=>{const sc=treeScroller(document.querySelector('.stree'));TREESCR=sc?sc.scrollTop:null};
   if(n.p){T.textContent=n.b.n;D.textContent=n.p.t+'\n'+(n.st==='done'?'ひらいた':n.st==='lock'?'つながった下の点をひらくと、ひらける':SP(n.p.c));if(n.st==='can')go('ひらく',n.p.c,()=>{sv();return pathBuy(n.p)})}
-  else if(n.k==='learn'){T.textContent='葉のかべ';D.textContent='夜、地面をなぞると、葉のかべが生える。コワイノの道をふさぐ'+(n.st==='done'?'\nおぼえた':'');if(n.st==='can')go('おぼえる',LEAFLEARN,()=>{sv();leafLearn();return leafOK()})}
+  else if(n.k==='learn'){T.textContent='葉のかべ';D.textContent='夜、地面をなぞると、葉のかべが生える。「コワイノ」の道をふさぐ'+(n.st==='done'?'\nおぼえた':'');if(n.st==='can')go('おぼえる',LEAFLEARN,()=>{sv();leafLearn();return leafOK()})}
   else if(n.st==='hid'){T.textContent='？？？';D.textContent='？？？'}
   else{const g=n.g;T.textContent=g.n+'（Lv'+n.n+'）';D.textContent=g.t[n.n]+'\n'+(n.st==='done'?'強化した':n.st==='lock'?'つながった下の点をひらくと、ひらける':SP(n.cost));if(n.st==='can')go('強化',n.cost,()=>{sv();return gupBuy(g.k)})}
   document.body.appendChild(o)}

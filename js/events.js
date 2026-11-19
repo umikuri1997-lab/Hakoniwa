@@ -83,13 +83,13 @@ function evStart(){const E=S.ev,D=EVENTS[E.id];
   if(E.id==='soji'){for(let j=0;j<S.obj.length;j++)if(WEEDS.has(S.obj[j])&&VILL[j])(S.wreq||(S.wreq={}))[j]=1;if(S.web)for(const k in S.web)(S.webq||(S.webq={}))[k]=1}/* 村の中の草・クモの巣を、ぜんぶたのむ */
   for(const r of L)if(r.act&&!evBusy(r)){endAct(r);r.act=null;r.path=[]}/* 出る子は、すぐ向かう（食べている・運んでいる子は、すんでから） */
   musicDuck&&musicDuck(1.5);toast(D.n+'がはじまった！','good');sfx('quest')}
-function evFail(why){const E=S.ev;if(EVENTS[E.id].bday)return bdayDrop(E,why+'。');E.ph=null;E.day=dayNo()+1;toast(EVENTS[E.id].n+'：'+why+'。あしたまた','warn')}
-function evStop(why){const E=S.ev;if(!E||!E.ph)return;if(EVENTS[E.id].bday)return bdayDrop(E,why+'できなかった');for(const r of S.res)if(r.act&&r.act.type==='evt'){endAct(r);r.act=null;r.path=[]}E.ph=null;E.day=dayNo()+1;toast(EVENTS[E.id].n+'は、'+why+'あしたに','warn')}
+function evFail(why){const E=S.ev;if(EVENTS[E.id].bday)return bdayDrop(E,why+'。');E.ph=null;E.day=dayNo()+1;toast(EVENTS[E.id].n+'は、'+why+'ので、あしたにする','warn')}
+function evStop(why){const E=S.ev;if(!E||!E.ph)return;if(EVENTS[E.id].bday)return bdayDrop(E,why+'できなかった');for(const r of S.res)if(r.act&&r.act.type==='evt'){endAct(r);r.act=null;r.path=[]}E.ph=null;E.day=dayNo()+1;toast(EVENTS[E.id].n+'は、'+why+'あしたにする','warn')}
 /* 1秒ごと */
 function evTick(){const E=S&&S.ev;if(!E||typeof MEMRUN!=='undefined'&&MEMRUN)return;const D=EVENTS[E.id];if(!D){S.ev=null;return}const h=hour(),foe=S.enemies.some(e=>e.spawned&&!e.dead);
   if(!E.ph&&D.bday&&(dayNo()>E.day||h>=D.at+3))return bdayDrop(E,'');/* 誕生日の日だけ（ほかの日にずらさない） */
   if(!E.ph){if(dayNo()>=E.day&&h>=D.at&&h<D.at+3&&!isNight()&&!foe&&(D.late||!isDark()))evStart();return}
-  if(isNight()||!D.late&&isDark())return evStop('暗くなったので、');if(foe)return evStop('コワイノが来たので、');
+  if(isNight()||!D.late&&isDark())return evStop('暗くなったので、');if(foe)return evStop('「コワイノ」が来たので、');
   const P=E.who.map(id=>S.res.find(r=>r.id===id)).filter(evHere);if(!P.length){S.ev=null;return}
   const here=r=>r.act&&r.act.type==='evt'&&r.act.stage==='do'&&!r.act.back;
   if(E.ph==='go'){for(const r of P)if(here(r))E.at[r.id]=1;const all=P.every(r=>E.at[r.id]);if(all||S.t-E.t0>EVWAIT){if(!all)for(const r of P){const j=E.slot&&E.slot[r.id];if(j!=null&&Math.hypot(j%W+.5-r.x,((j/W)|0)+.5-r.y)<=2.5)E.at[r.id]=1}/* 時間切れでも、立つ所のすぐそばまで来ている子は、来られたことにする */E.who=E.who.filter(id=>E.at[id]);if(!E.who.length)return evStop('だれも集まれなかったので、');E.ph='do';E.t0=S.t;sfx('good');for(const r of P)if(E.at[r.id])JUMP.set(r,performance.now()+Math.random()*300);if(D.bday)bdayGifts(E,P.filter(r=>E.at[r.id]))}return}
@@ -237,9 +237,9 @@ Object.assign(EVNEED,{flower30:{n:'花30本',list:()=>{const L=[];for(let j=0;j<
   fire4:{n:'たき火・かがり火3つ',list:()=>{const c=evObjs('campfire'),l=evObjs('lamp');return c.length&&l.length>=3?c.slice(0,1):[]},cap:()=>99},
   hanabi:{n:'たき火',list:()=>evObjs('campfire').filter(j=>!campOut(j)).slice(0,1),cap:()=>99},
   utage:{n:'よみがえった温泉3つ・食卓2つ',list:()=>['a','b','c'].every(springOn)&&evTables().length>=2?evTables():[],cap:()=>99}});
-const SETN={eda:'枝',can:'空き缶',food:'食料',wood:'木材',bamboo:'竹',grass:'草',flower:'花の種',crop:'作物'},EVCROP=['mugi','imo','tomato'];
+const SETN={eda:'枝',can:'空き缶',food:'食料',wood:'木材',bamboo:'竹',grass:'草',flower:'花のたね',crop:'作物'},EVCROP=['mugi','imo','tomato'];
 function setHave(k){if(k==='food')return S.food;if(k==='grass')return S.mat[EVGRASS()]||0;if(k==='flower')return[...FLOWERS].reduce((a,id)=>a+inv(id),0);if(k==='crop')return EVCROP.reduce((a,c)=>a+(S.fs[c]||0),0);return S.mat[k]||0}
-function setName(k){return k==='grass'?MATN[EVGRASS()]:k==='flower'?'花の種':SETN[k]}
+function setName(k){return k==='grass'?MATN[EVGRASS()]:k==='flower'?'花のたね':SETN[k]}
 function setLack(D){for(const k in D.set||{})if(setHave(k)<D.set[k])return setName(k)+'が足りません';return ''}
 function setPay(D){const P={};for(const k in D.set||{}){let n=D.set[k];if(k==='food'){P.food=takeFood(n);continue}if(k==='grass'){const g=EVGRASS();S.mat[g]-=n;P[g]=n;continue}
   if(k==='flower'||k==='crop'){const L=k==='flower'?[...FLOWERS]:EVCROP,out={};for(const id of L){const have=k==='flower'?inv(id):(S.fs[id]||0),t=Math.min(have,n);if(t<=0)continue;if(k==='flower')S.inv[id]-=t;else S.fs[id]-=t;out[id]=t;n-=t;if(n<=0)break}if(k==='crop')syncFood();P[k]=out;continue}S.mat[k]-=n;P[k]=n}return P}

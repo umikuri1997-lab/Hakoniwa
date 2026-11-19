@@ -2,7 +2,7 @@
    どの食べ物にも、せいれいごとの好み：3 だいすき（いまの「好きな料理」favDish の1つ）・2 すき・1 ふつう・0 にがて。
    好みは id と食べ物の名前から決まる（しまわない）。わかった すき・にがて（おやつであげて反応を見た物）だけ r.fk にしまう。だいすきがわかるのは prefs.js（r.kn.fd）。 */
 const FLIKE=8,FHATE=5;/* すき・にがてになる%（食べ物ごと） */
-const FLIKEFUN=3,FHATEFUN=-5;/* すき：たのしさ+3・にがて：たのしさ−5 */
+const FLIKEFUN=3,FHATEFUN=-5;/* すき：たのしさ+3・にがて：たのしさ－5 */
 function strH(s){let h=7;for(const c of String(s))h=Math.imul(h,31)+c.charCodeAt(0)|0;return h>>>0}
 function foodLike(r,k){if(!r||!FOODS[k])return 1;if(k===favDish(r))return 3;if(FOODS[k].bad)return 1;const u=hash(((r.id||0)*977+strH(k))>>>0)*100;return u<FLIKE?2:u<FLIKE+FHATE?0:1}
 const FLNAME=['にがて','ふつう','すき','だいすき'];
