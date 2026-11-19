@@ -26,7 +26,6 @@ SET = {
   'mpage':  (['oga-book/book_flip.1.ogg', 'oga-book/book_flip.4.ogg', 'oga-book/book_flip.6.ogg', 'oga-book/book_flip.8.ogg', 'oga-book/BookFlip2.wav', 'rpg-audio/*/bookFlip1.ogg'], 180, 9000, .6, 1, {'peak': 1, 'sk': -.06, 'att': .01}),  # 本のページをめくる：ぺらっ（めくるたびにべつの録音）
   'pflick': (['oga-book/book_flip.4.ogg', 'oga-book/book_flip.8.ogg', 'rpg-audio/*/bookFlip3.ogg', 'oga-book/BookFlip2.wav'], 300, 9000, .2, 1, {'peak': 1, 'sk': -.02, 'att': .004}),  # ぱらぱら：1まいぶんの短い音
   'bkopen': (['rpg-audio/*/bookOpen.ogg', 'rpg-audio/*/bookPlace2.ogg'], 120, 8000, .4, 1),  # 表紙をひらく
-  'bkclose':(['rpg-audio/*/bookClose.ogg', 'rpg-audio/*/bookPlace1.ogg'], 100, 7000, .4, 1),  # 表紙をとじる：ぱたん
   'pslide': (['oga-paper/p4.mp3'], 250, 8000, 2.6, 1),  # 紙をなでる・巻物がほどける：つづけて鳴らす（こすれる音）
   # ---- 料理・もの作り（マップの音。sfxAt で鳴らす） ----
   'tonton': (['impact-sounds/*/impactWood_light_00%d.ogg' % i for i in range(4)], 250, 7000, .10, 1),  # 包丁でまな板：とん

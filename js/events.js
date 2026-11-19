@@ -11,7 +11,7 @@ const evHere=r=>!!r&&(!r.hidden||!!r.act&&r.act.type==='sleep');/* 村にいる�
 const EVCAP={work:12,move:12,sta:12,atk:60,cap:6};
 const EVSTN={work:'はたらく速さ',move:'移動速度',sta:'スタミナ',atk:'攻撃力',cap:'持てる数'};
 const EVENTS={
-  taiso:{n:'朝の体そう',d:'神殿のまえに集まって、みんなで体そう。',at:6.5,dur:20,pt:20,per:0,max:0,gain:{sta:1},talk:['いち、に、さん、し！','のびのび〜！','#joy|からだが、ぽかぽか！']},
+  taiso:{n:'朝の体そう',d:'神殿のまえに集まって、みんなで体そう。',at:6,dur:20,pt:20,per:0,max:0,gain:{sta:1},talk:['いち、に、さん、し！','のびのび〜！','#joy|からだが、ぽかぽか！']},
   soji:{n:'大そうじの日',d:'みんなで、村の草・落とし物・クモの巣をかたづける。',at:9,dur:60,pt:30,per:5,max:0,gain:{work:1},talk:['ぴかぴかにしよう！','#joy|すっきりしてきた！','このへん、まだ草があるよ。']},
   oni:{n:'おにごっこ',d:'広い所で、みんなでおいかけっこ。',at:13,dur:30,pt:30,per:5,max:6,gain:{move:1},talk:['まてまて〜！','#joy|つかまらないよ！','#surprise|わっ、つかまった！']},
   ensoku:{n:'遠足',d:'みんなで遠くまで歩いて、帰ってくる。',at:9,dur:30,pt:50,per:8,food:2,max:6,gain:{move:1},talk:['#joy|ここ、はじめて来た！','空が、ひろいね。','あ、なにか落ちてる！']},

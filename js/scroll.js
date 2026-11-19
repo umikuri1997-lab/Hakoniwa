@@ -55,5 +55,5 @@ function scReset(sh){const b=document.getElementById('sheetBody');sh.classList.r
 let SHEETQUIET=0;
 function sheetShutFx(){const red=typeof uiReduced==='function'&&uiReduced(),fin=()=>{SHEETQUIET=1;closeSheet()};
   const sh=scSheet();if(sh&&!red&&SC&&!SC.anim){scOpen(sh,1,()=>{bkSnd('twood',.25);setTimeout(()=>{fin();scReset(sh);scDrop()},90)});return true}
-  if(typeof bookShut==='function'&&typeof sheet!=='undefined'&&sheet==='menu'&&BK&&BK.el.isConnected&&bookShut(fin))return true;return false}
+  if(typeof bookShut==='function'&&typeof sheet!=='undefined'&&(sheet==='menu'||sheet==='diary')&&BK&&BK.el.isConnected&&bookShut(fin))return true;return false}
 requestAnimationFrame(scTick);

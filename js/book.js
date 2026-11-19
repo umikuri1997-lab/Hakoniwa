@@ -1,5 +1,5 @@
 /* 本（思い出帳・図鑑）：ページをめくる本。book.js
-   bookMake(body,pages,o)：pages（ページの中身の要素）をならべた本を body に作る。o = {key, at, toc, cover:{t,sub,c}, onAt}
+   bookMake(body,pages,o)：pages（ページの中身の要素）をならべた本を body に作る。o = {key, at, toc, cover:{t,sub,c}, shutOnly, onAt}（shutOnly：ひらいたときは表紙を出さず、とじるときだけ表紙がとじる）
    ・たての画面は1ページ、よこの画面（はば720より広い）は見開き（左右2ページ、まん中にとじ目）。
    ・めくる：はしから、紙がもち上がって、まるくそりながらとじ目のほうへたおれる（うらの面・かげ）。絵は1ドット（BKD）のキャンバスに、コマごとに描く。
      ページの中身は切りとるだけ（ちぢめない）。前へもどるときは、つぎへめくる動きを、さかさに流す。
@@ -21,16 +21,16 @@ function bookMake(body,pages,o){o=o||{};const sp=bkSpread(),N=pages.length;let a
   b.style.setProperty('--stk',16*BKD+'px');/* ページをわけるときは、紙のたばがいちばんあつい（14まい）ときの高さではかる（あとで、ページがはみ出さない） */
   if(!sp)B.L.hidden=true;/* 1ページの画面では、左のページを先にかくす（ページをわける前。かくさないと、はばが半分のままはかる） */
   {const P=bkPaginate(B,pages);B.pages=P.pages;B.N=P.pages.length;at=Math.max(0,Math.min(B.N-1,at));if(sp)at-=at%2;B.at=at;if(o.onPaged)o.onPaged(P.map)}/* ページはスクロールさせない：入りきらない分は、つぎのページへ */
-  b.querySelector('.mpv').onclick=()=>{if(B.closed)return;if(B.at===0&&o.cover)return bkCoverClose(B);bkGo(B,B.at-(sp?2:1))};b.querySelector('.mnx').onclick=()=>B.closed?bkCoverGo(B):bkGo(B,B.at+(sp?2:1));b.querySelector('.mtc').onclick=()=>bkGo(B,0);
+  b.querySelector('.mpv').onclick=()=>{if(B.closed)return;if(B.at===0&&o.cover){if(!o.shutOnly)bkCoverClose(B);return}bkGo(B,B.at-(sp?2:1))};b.querySelector('.mnx').onclick=()=>B.closed?bkCoverGo(B):bkGo(B,B.at+(sp?2:1));b.querySelector('.mtc').onclick=()=>bkGo(B,0);
   if(!o.toc)b.querySelector('.mtc').remove();
   bkMount(B,at);bkDrag(B);bkStroke(B);
   if(BKSNAP)bkEnter(B);
-  else if(o.cover&&BKSEEN!==o.key){BKSEEN=o.key;bkCoverShow(B)}/* ひらいたときは、とじた表紙。めくるのは、さわる人 */
+  else if(o.cover&&!o.shutOnly&&BKSEEN!==o.key){BKSEEN=o.key;bkCoverShow(B)}/* ひらいたときは、とじた表紙。めくるのは、さわる人 */
   return B}
 /* ページをスロットに入れる（見開きは左 i・右 i+1） */
 function bkMount(B,at){B.at=at;const sp=B.sp,store=B.el.querySelector('.bkstore'),put=(slot,i)=>{const c=slot.querySelector('.bkc'),n=slot.querySelector('.bkn'),pg=B.pages[i];for(const x of[...c.children])store.appendChild(x);if(pg){pg.hidden=false;c.appendChild(pg)}c.scrollTop=0;slot.classList.toggle('blank',!pg);n.textContent=pg&&i>0?String(i):''};
   if(sp){put(B.L,at);put(B.R,at+1)}else put(B.R,at);
-  const b=B.el,last=sp?B.N-1-((B.N-1)%2):B.N-1;b.querySelector('.mpv').disabled=!!B.closed||at<=0&&!B.o.cover;b.querySelector('.mnx').disabled=at>=last;const tc=b.querySelector('.mtc');if(tc)tc.hidden=at===0;
+  const b=B.el,last=sp?B.N-1-((B.N-1)%2):B.N-1;b.querySelector('.mpv').disabled=!!B.closed||at<=0&&(!B.o.cover||!!B.o.shutOnly);b.querySelector('.mnx').disabled=at>=last;const tc=b.querySelector('.mtc');if(tc)tc.hidden=at===0;
   {const k=B.o.toc?0:1,T=B.N-1+k;/* もくじのない本（日記）は、1ページめから数える */b.querySelector('.mpn').textContent=B.closed?'表紙':at===0&&B.o.toc?'もくじ':sp?(at+k||1)+(at+1<B.N?'-'+(at+1+k):'')+' / '+T:(at+k)+' / '+T}
   /* 重なった紙のあつみ：のこりのページは右、よんだページは左。ページのわりあいで1〜14まい（bkEdge が絵で描く） */const T=Math.max(1,B.N-1),th=n=>1+Math.round(13*Math.max(0,n)/T);B.thR=th(B.N-1-(sp?at+1:at));B.thL=sp?th(at):0;B.el.style.setProperty('--stk',(B.thR+2)*BKD+'px');if(at===0)B.el.dataset.at0='';else delete B.el.dataset.at0;requestAnimationFrame(()=>bkEdge(B));
   if(B.o.onAt)B.o.onAt(at)}
@@ -83,6 +83,7 @@ function bkCoverGo(B){/* 表紙をひらく（ボタン・たたく） */const s
 function bkCoverClose(B,after){/* もくじから前へ：表紙がかぶさって、とじる。とじた音 */if(B.busy||B.closed)return;B.busy=1;const st=bkSetup(B,0,1,bkCoverEl(B));st.cover=1;st.keep=1;bkSnd('pflick',.2);bkRun(B,st,1,0,BKCOVMS*.85,()=>{bkSnd('bkclose',.6);B.closed=st;B.busy=0;bkMount(B,B.at);after&&after()},bkCovPal(B))}
 function bookShut(after){const B=BK;if(!B||!B.el.isConnected||!B.o.cover||B.busy||(typeof uiReduced==='function'&&uiReduced()))return false;
   const fin=()=>setTimeout(()=>{BKSEEN=null;after&&after()},160);if(B.closed){bkSnd('bkclose',.6);fin();return true}/* もうとじている：とじる音だけ */
+  if(B.at>0){/* まん中のページなら、いったん表紙のページまで、めくりもどしてから、とじる */bkGo(B,0);const t0=performance.now(),w=()=>{if(!B.el.isConnected)return after&&after();if((B.busy||B.at!==0)&&performance.now()-t0<4000)return setTimeout(w,40);if(B.busy)return after&&after();bkCoverClose(B,fin)};setTimeout(w,40);return true}
   bkCoverClose(B,fin);return true}
 /* 指でつまんでめくる：ページの外がわから、よこに引く */
 function bkDrag(B){const I=B.in;let s=null;
