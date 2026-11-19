@@ -376,7 +376,7 @@ function sevBack(n){if(WD||!S.flags)return;const Q=S.sevQ||(S.sevQ=[]),F=S.flags
 /* フタバの「こもれびのまもり」：出撃しているフタバのまわり3マス（GUARDR）で、「コワイノ」にねらわれている、たたかう子を葉っぱで守る（受けるダメージ半分） */
 const GUARDR=3;
 const ATKFX={fire:'atk_fire',earth:'atk_earth',wood:'atk_wood',wind:'atk_wind',water:'atk_water'};
-function atkFX(r,en){fxSpr(ATKFX[r.elem]||'slash',en.x*TS,en.y*TS-6,null,en.x>=r.x?1:-1)}/* 攻撃：属性ごとのエフェクト（tools/fx-attack.py）。火はほのおの斬撃・土はつき上がる岩・木はつるのむち・風はかまいたち・水ははじける水 */
+function atkFX(r,en){fxSpr(ATKFX[r.elem]||'slash',en.x*TS,en.y*TS-6,null,en.x>=r.x?1:-1)}/* 攻撃：属性ごとのエフェクト（tools/fx-attack-pfx.py：pixelfx の効果から）。火はほのおの斬撃・土はつき上がる岩・木はつるのむち・風はかまいたち・水ははじける水 */
 function atkSfx(r){sfxAt(ATKFX[r.elem]?'atk_'+r.elem:'hit',r.x,r.y)}/* 攻撃の音も属性ごと */
 function leafFX(t){fxSpr('leafguard',t.x*TS,t.y*TS)}
 const faceTo2=(f,t)=>{f.face=t.x>=f.x?1:-1};

@@ -25,13 +25,18 @@ function presentGive(r,id){if(!r||giftToday(r))return false;if(isGM(id))return m
   const first=!(r.gk&&r.gk[id]!=null);(r.gk||(r.gk={}))[id]=v;dirty=true;
   if(!r.hidden){const now=performance.now();JOYU.set(r,now+(v?3000:1800));if(!(typeof inBattle==='function'&&inBattle(r))){RHOLD.set(r,now+(v?3000:1800));if(v)JUMP.set(r,now)}fxSpr('hearts',r.x*TS,(r.y-.7)*TS);r.bubble=v===2?'💕':'😊';sfx(v?'good':'tap')}/* 文字は出さない */
   if(first&&v)memo('🎁',r.name+'の、'+GLNAME[v]+'なおくりものがわかった');
-  giftReply(r,v===2?'これ、だいすき！':v===1?'うれしい！ 大事にするね。':'ありがとう！');
+  giftReply(r,giftTalk(r,id,v)||[v===2?'これ、だいすき！':v===1?'うれしい！ 大事にするね。':'ありがとう！']);
   logEv(r.name+'に'+BL[id].name+'をあげた');return true}
-function giftReply(r,line){toast(r.name+'「'+line+'」','good');}
+/* 返事の会話（gift-talk.js の GIFTTALK：物・属性・好みごと。素材は3とおりから）。火の一人称 @I は、おれ・あたし・あたい */
+function giftTalk(r,id,v,mn){const T=typeof GIFTTALK!=='undefined'&&GIFTTALK[id];if(!T)return null;const el=r.elem==='earth'||r.elem==='wood'||r.elem==='water'||r.elem==='fire'||r.elem==='wind'?r.elem:'earth',A=T[el];if(!A||!A.length)return null;
+  const L=id==='mat'?A[Math.random()*A.length|0]:A[v]||A[0],pr=r.elem==='fire'?(elemKey(r)==='fireB'?'おれ':r.name===HOMURA?'あたい':'あたし'):'';
+  return L.map(t=>t.split('@I').join(pr).split('@M').join(mn||''))}
+function giftReply(r,L){if(!L||!L.length)return;if(!$('#dialog').hidden||r.hidden){toast(r.name+'「'+String(L[0]).replace(LOOKRX,'')+'」','good');return}/* 会話が出ているとき・村にいないときは、ひとことだけ */
+  dialog(L.map(t=>[r.name,t]),null,'とじる')}
 /* 素材をあげる：たのしさ+GIFTMAT（たからものにはしない）。S.mat をへらすと、boxSync が箱からへらす */
 function matGive(r,k){if(!MATN[k]||(S.mat[k]||0)<1)return false;S.mat[k]--;(r.care||(r.care={})).gift=callDay();funAdd(r,GIFTMAT,'care');dirty=true;
   if(!r.hidden){const now=performance.now();JOYU.set(r,now+1800);if(!(typeof inBattle==='function'&&inBattle(r)))RHOLD.set(r,now+1800);r.bubble='😊';sfx('tap')}
-  giftReply(r,'ありがとう、使わせてもらうね。');
+  giftReply(r,giftTalk(r,'mat',null,MATN[k])||['ありがとう、使わせてもらうね。']);
   logEv(r.name+'に'+MATN[k]+'をあげた');return true}
 /* もちものから：だれにあげるか */
 function giftWho(id){const o=el('<div style="position:fixed;inset:0;z-index:46;display:flex;align-items:center;justify-content:center;background:rgba(40,30,15,.35);padding:24px"><div class="pxcard" style="background:var(--panel);padding:16px 18px;max-width:340px;width:100%;color:var(--ink);max-height:80vh;overflow:auto"><b class="t" style="font-size:16px;display:block;margin-bottom:8px"></b><div class="rows"></div><div style="display:flex;justify-content:flex-end;margin-top:10px"><button class="btn x">とじる</button></div></div></div>');

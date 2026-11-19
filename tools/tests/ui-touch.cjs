@@ -45,7 +45,7 @@ const assert=require('node:assert/strict');
   else console.log('UI touch: (settings list is not long enough to scroll here, skipped the bend check)');
   /* 8. ハンコ・ゲージ */
   await run(`closeSheet();REC.length=0;RECU.length=0;uiStamp(document.querySelector('#quest')||document.body)`);await page.waitForTimeout(300);
-  assert.ok(JSON.parse(await run(`JSON.stringify(REC)`)).includes('stamp'));
+  assert.ok(JSON.parse(await run(`JSON.stringify(REC)`)).some(k=>k==='stamp'||k==='ostamp'));
   await run(`REC.length=0;document.getElementById('xpBar').style.width='10%'`);await page.waitForTimeout(50);await run(`document.getElementById('xpBar').style.width='30%'`);await page.waitForTimeout(50);
   assert.ok(JSON.parse(await run(`JSON.stringify(REC)`)).includes('glug'));console.log('UI touch: the stamp goes pom, the gauge goes glug');
   /* 9. ふるえの設定 */

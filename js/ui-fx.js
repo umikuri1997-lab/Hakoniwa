@@ -76,8 +76,15 @@ function stampCanvas(tx,N){tx=tx||'できた';N=N||32;const K=tx+'@'+N;if(STAMPC
   const t=document.createElement('canvas');t.width=N;t.height=N;const h=t.getContext('2d');h.font='10px PixelMplus10';h.textAlign='center';h.textBaseline='middle';h.fillStyle='#d6453a';if(N>=48){const n=Math.ceil(tx.length/3),m=Math.ceil((tx.length-n)/2);[tx.slice(0,n),tx.slice(n,n+m),tx.slice(n+m)].forEach((s,i)=>h.fillText(s,cx,cy+(i-1)*11))}/* 3行（よくで・きま・した） */else{const a=tx.slice(0,Math.ceil(tx.length/2)),b=tx.slice(Math.ceil(tx.length/2));h.fillText(a,cx,cy-5);h.fillText(b,cx,cy+6)}/* 2行に分ける（できた→でき・た、かつやく→かつ・やく） */
   const d=h.getImageData(0,0,N,N);for(let i=3;i<d.data.length;i+=4)d.data[i]=d.data[i]>110?255:0;h.putImageData(d,0,0);g.drawImage(t,0,0);t.width=t.height=0;/* 字はドットのまま（うすい所はけす） */
   return STAMPCS[K]=c}
+const STAMPHIT=228;/* ハンコの動き（ustamp .6秒）の38%で紙にとどく */
+function stampInk(el,c,N){/* インクのとびちり：ハンコのまわりに、赤いドットが外へはねて消える（1ドット＝ハンコと同じ大きさ、0.34秒） */if(uiReduced())return;const k=document.createElement('canvas'),M=N*2;k.width=k.height=M;k.className='uink';
+  const r=c.getBoundingClientRect(),q=el.getBoundingClientRect(),sc=r.width/N;k.style.width=k.style.height=M*sc+'px';k.style.left=(r.left-q.left-N/2*sc)+'px';k.style.top=(r.top-q.top-N/2*sc)+'px';el.appendChild(k);
+  const g=k.getContext('2d'),n=10+(Math.random()*4|0),D=[];for(let i=0;i<n;i++){const a=i/n*6.283+Math.random()*.4;D.push([a,N*.42+Math.random()*N*.08,1+(Math.random()*2|0),N*.12+Math.random()*N*.16])}
+  const t0=performance.now(),T=340;const f=()=>{const u=(performance.now()-t0)/T;g.clearRect(0,0,M,M);if(u>=1||!k.isConnected){k.remove();return}
+    g.fillStyle='#d6453a';g.globalAlpha=u<.6?1:1-(u-.6)/.4;const e=1-(1-u)*(1-u);for(const[a,r0,s,d]of D){const rr=r0+d*e;g.fillRect(Math.round(M/2+Math.cos(a)*rr-s/2),Math.round(M/2+Math.sin(a)*rr*.85-s/2),s,s)}requestAnimationFrame(f)};requestAnimationFrame(f)}
 function uiStamp(el,small,tx,big){if(!el||!el.isConnected)return;const N=big?48:32,c=document.createElement('canvas');c.width=c.height=N;c.getContext('2d').drawImage(stampCanvas(tx,N),0,0);c.className='ustamp'+(big?' b':small?' s':'');/* big：大きなハンコ（48ドット） */
-  if(getComputedStyle(el).position==='static')el.style.position='relative';el.appendChild(c);setTimeout(()=>{el.classList.remove('ushake');void el.offsetWidth;el.classList.add('ushake');sfx('stamp');buzz(18)},180);/* ポンとおされた瞬間に、ぽむっ */
+  if(getComputedStyle(el).position==='static')el.style.position='relative';el.appendChild(c);
+  setTimeout(()=>{if(!c.isConnected)return;el.classList.remove('ushake','ustampk');void el.offsetWidth;el.classList.add('ustampk');sfx('ostamp');buzz(25);stampInk(el,c,N)},STAMPHIT);/* ふりあげて、ためて、ドンとおした瞬間に「ぽんっ」：紙がゆれて、インクが少しとびちる */
   setTimeout(()=>c.classList.add('out'),2400);setTimeout(()=>c.remove(),2850)}
 /* ---- 手ざわりのつづき：ふるえ・長おし・タブの音・行がならぶ・板がしなる・ゲージの音 ---- */
 /* スマホのふるえ（Android。iPhone のブラウザはふるえない）。設定の「ふるえ」でとめられる */

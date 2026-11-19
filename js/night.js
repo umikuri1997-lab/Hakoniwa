@@ -183,6 +183,7 @@ function hurtEn(e,dmg,o){o=o||{};if((o.k==='trap'||o.trap)&&typeof pathA==='func
 const SKHITY=28;/* skillhit の光のまん中は、置く所より28点上 */
 function hitFx(t,n,o){o=o||{};n=Math.max(1,Math.round(n));/* 画面の数字には小数点を出さない */const en=!!(t.type&&EN[t.type]),z=en?EN[t.type].size:1,now=performance.now()+(o.lag||0);let dx=0,dy=0;if(o.sx!=null){dx=t.x-o.sx;dy=t.y-o.sy;const l=Math.hypot(dx,dy)||1;dx/=l;dy/=l}
   if(!o.nokb)HITV.set(t,{t:now,dx,dy});
+  if(en&&!o.silent){const x=t.x,y=t.y;if(o.lag)setTimeout(()=>sfxAt('ehit',x,y),o.lag);else sfxAt('ehit',x,y)}/* ダメージ音：当たって見える時刻に「ぽんっ」 */
   const lift=typeof uLift==='function'?uLift(t):0,near=DMGN.filter(d=>d.who===t&&Math.abs(d.t0-now)<260).length;/* つづけて当たった数字は、上へずらす */
   if(DMGN.length>60)DMGN.shift();DMGN.push({who:t,x:t.x*TS+(dx>=0?4:-4),y:t.y*TS-(en?30*z+8:36)-lift-near*10,n,row:en?(o.big?1:0):2,t0:now,big:!!o.big,dir:dx>=0?1:-1});
   if(!o.nokb){if(SPKS.length>40)SPKS.shift();SPKS.push({x:t.x*TS-dx*6,y:t.y*TS-(en?12*z:12)-lift,t0:now,en,sd:(Math.random()*997)|0})}}
