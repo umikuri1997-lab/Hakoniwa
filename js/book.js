@@ -18,6 +18,7 @@ function bookMake(body,pages,o){o=o||{};const sp=bkSpread(),N=pages.length;let a
   const b=el('<div class="bk"><div class="bkin"><div class="bkboard"><i></i><i></i><i></i><i></i></div><div class="bkp bkL"><div class="bkc"></div><span class="bkn"></span></div><div class="bkp bkR"><i class="bkpeek" aria-hidden="true"></i><div class="bkc"></div><span class="bkn"></span></div><i class="bkrib" aria-hidden="true"></i><canvas class="bkfx" aria-hidden="true"></canvas></div><div class="mnav"><button class="btn mpv" type="button" aria-label="まえのページ">'+pxi('next','prev')+'</button><button class="btn mtc" type="button">もくじ</button><span class="mpn"></span><button class="btn mnx" type="button" aria-label="つぎのページ">'+pxi('next','nxr')+'</button></div></div>');
   bkTapes(pages);b.dataset.sp=sp?1:0;if(o.cover&&o.cover.c)b.style.setProperty('--cv',o.cover.c);{const st=document.createElement('div');st.className='bkstore';st.hidden=true;for(const pg of pages)st.appendChild(pg);b.appendChild(st)}/* まだひらいていないページも、本の中にしまっておく（さがせる） */if(o.cls)b.classList.add(o.cls);body.appendChild(b);
   const B=BK={el:b,in:b.querySelector('.bkin'),L:b.querySelector('.bkL'),R:b.querySelector('.bkR'),cv:b.querySelector('.bkfx'),pages,N,sp,at,o,busy:0,q:null};
+  {const P=bkPaginate(B,pages);B.pages=P.pages;B.N=P.pages.length;at=Math.max(0,Math.min(B.N-1,at));if(sp)at-=at%2;B.at=at;if(o.onPaged)o.onPaged(P.map)}/* ページはスクロールさせない：入りきらない分は、つぎのページへ */
   if(!sp)B.L.hidden=true;b.querySelector('.mpv').onclick=()=>{if(B.closed)return;if(B.at===0&&o.cover)return bkCoverClose(B);bkGo(B,B.at-(sp?2:1))};b.querySelector('.mnx').onclick=()=>B.closed?bkCoverGo(B):bkGo(B,B.at+(sp?2:1));b.querySelector('.mtc').onclick=()=>bkGo(B,0);
   if(!o.toc)b.querySelector('.mtc').remove();
   bkMount(B,at);bkDrag(B);bkStroke(B);
@@ -103,7 +104,7 @@ function bkSlide(v){/* こすれる音（pslide）をつづけて鳴らし、大
   if(!BKSLIDE){const src=AC.createBufferSource(),g=AC.createGain();src.buffer=L[0];src.loop=true;g.gain.value=0;src.connect(g);g.connect(sfxG);src.start(t,Math.random()*src.buffer.duration);BKSLIDE={src,g,tm:0}}
   const S0=BKSLIDE;S0.g.gain.setTargetAtTime(v*SFXV,t,.04);clearTimeout(S0.tm);S0.tm=setTimeout(()=>{if(BKSLIDE!==S0)return;BKSLIDE=null;try{S0.g.gain.setTargetAtTime(0,AC.currentTime,.08);S0.src.stop(AC.currentTime+.5)}catch(_){}},140)}
 /* よこ・たての画面がかわったら、本を作りなおす（見開き ⇔ 1ページ） */
-addEventListener('resize',()=>{const B=BK;if(!B||!B.el.isConnected)return;bkEdge(B);if(B.busy)return;if(bkSpread()!==B.sp&&typeof renderSheet==='function'&&typeof sheet!=='undefined'&&sheet)renderSheet()});
+let BKRSZ=0;addEventListener('resize',()=>{const B=BK;if(!B||!B.el.isConnected)return;bkEdge(B);clearTimeout(BKRSZ);BKRSZ=setTimeout(()=>{const B=BK;if(!B||!B.el.isConnected||B.busy)return;const c=B.R.querySelector('.bkc');if((bkSpread()!==B.sp||Math.abs(c.clientHeight-B.ch)>2||Math.abs(c.clientWidth-B.cw)>2)&&typeof renderSheet==='function'&&typeof sheet!=='undefined'&&sheet)renderSheet()},200)});/* 画面の大きさがかわったら、ページをわけなおす */
 /* 章をかえる（図鑑のしおり）：いまのページを写しておき（bkTabSnap）、作りなおした本で、ぱらぱらとめくって見せる（bkEnter） */
 let BKSNAP=null;
 function bkTabSnap(dir){const B=BK;BKSNAP=null;if(!B||!B.el.isConnected||B.busy||(typeof uiReduced==='function'&&uiReduced()))return;const cl=s=>{const c=bkClone(s);c.hidden=false;c.style.visibility='';return c};BKSNAP={key:B.o.key,dir,R:cl(B.R),L:B.sp?cl(B.L):null,sc:B.R.querySelector('.bkc').scrollTop}}
@@ -135,3 +136,11 @@ function bkEdge(B){if(!B||!B.el.isConnected)return;const r=B.in.getBoundingClien
 
 /* 見出し・日づけのマスキングテープ：字から色（4しゅるい）と、ななめの向きをきめる（同じ字はいつも同じテープ） */
 function bkTapes(pages){for(const pg of pages)for(const t of pg.querySelectorAll('.mtt,.tape,:scope>.sec>h3')){let h=0;for(const ch of t.textContent)h=(h*31+ch.charCodeAt(0))>>>0;t.style.backgroundImage='var(--tp'+(h%4)+((h>>2)&1?'u':'d')+')'}}
+
+/* ページわけ：ページの中身を右のスロットに入れて、はみ出したら、うしろの物からつぎのページへうつす（節・一覧・リストは中をわける）。map：もとのページ→わけたあとのページ */
+function bkPaginate(B,pages){const c=B.R.querySelector('.bkc'),store=B.el.querySelector('.bkstore'),out=[],map=[],over=()=>c.scrollHeight>c.clientHeight+1;B.ch=c.clientHeight;B.cw=c.clientWidth;B.el.style.setProperty('--pgh',B.ch+'px');/* 写真などは、ページの高さにおさまる大きさ（--pgh） */
+  const inner=el=>{if(!el.children.length)return null;const sh=el.cloneNode(false);while(over()){const last=el.lastElementChild;if(!last)break;if(el.children.length>1){sh.prepend(last);continue}const q=inner(last);if(!q)break;sh.prepend(q)}return sh.children.length?sh:null};
+  pages.forEach((pg,i)=>{map[i]=out.length;let cur=pg;for(let k=0;k<40&&cur;k++){c.replaceChildren(cur);cur.hidden=false;let nx=null;
+      if(over()){nx=cur.cloneNode(false);while(over()){const last=cur.lastElementChild;if(!last)break;if(cur.children.length>1){nx.prepend(last);continue}const q=inner(last);if(!q)break;nx.prepend(q)}if(!nx.children.length)nx=null}
+      out.push(cur);cur=nx}});
+  c.replaceChildren();for(const pg of out)store.appendChild(pg);return{pages:out,map}}
