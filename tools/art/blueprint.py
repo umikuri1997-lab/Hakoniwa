@@ -317,7 +317,7 @@ def model_tris(path,cx,cy,z0,size,rot=0,tilt=0,zs=1.0,up=None):
         VS.append(np.asarray(g.vertices,float));FS.append(np.asarray(g.faces)+n);CS.append(col);n+=len(g.vertices)
     class _M:pass
     m=_M();m.vertices=np.concatenate(VS);m.faces=np.concatenate(FS);col=np.concatenate(CS)
-    if path.startswith('tripo/'):   # トリポのモデル：くらい色・色むらをへらし、あざやかにして、トゥーンの色に（持ち主：黒っぽいかげを使わない）
+    if path.startswith('tripo/') and not path.startswith('tripo/gf/'):   # トリポのモデル（限定の家具 gf/ は、デザインの色にぬりなおしてあるので、そのまま）：くらい色・色むらをへらし、あざやかにして、トゥーンの色に（持ち主：黒っぽいかげを使わない）
         import colorsys
         H=np.array([colorsys.rgb_to_hsv(*(c_/255)) for c_ in col]);vm=H[:,2].mean()
         H[:,2]=np.clip(vm+(H[:,2]-vm)*0.4,0.6,1.0);H[:,1]=np.clip(H[:,1]*1.12+0.04,0,1)
