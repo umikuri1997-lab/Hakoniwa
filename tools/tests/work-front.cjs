@@ -16,6 +16,7 @@ const assert=require('node:assert/strict');
     /* はたおり機を右向きに置いて、加工をたのむ：せいれいは右のマスに立つ */
     S.obj[j]='loom';S.rot[j]=1;const bx=(y0+5)*W+x0+6;S.obj[bx]='crate';recount();for(const k of Object.keys(S.mat))S.mat[k]=0;S.mat.kasa=6;boxSync();
     (S.prIn||(S.prIn={}))[j]={kasa:3};a.x=x0+6.5;a.y=y0+4.5;a.elem='wind';const G=bfs(a.x|0,a.y|0);out.stand=workStand(G,j);out.front=j+1;
+    jobSet(j,a,true);out.assigned=jobOf(a)===j;out.campDry=jobWork(a,null,1);out.campJob=jobWork(a,G);endAct(a);a.act=null;
     out.job=procJob(a,G);out.at=a.act&&a.act.stand;out.type=a.act&&a.act.type;endAct(a);a.act=null;
     /* 前に物を置くと、作業しない */S.obj[j+1]='crate';recount();out.ok2=workOK(j);out.want=procWant(a);out.job2=procJob(a,bfs(a.x|0,a.y|0));S.obj[j+1]='';delete S.prIn[j];
     /* 調理台（後ろ向き）：料理は上のマスに立つ */S.obj[j]='cooktable';S.rot[j]=2;recount();out.oven=ovenStand(bfs(a.x|0,a.y|0),j);out.ovenFront=j-W;
@@ -27,6 +28,7 @@ const assert=require('node:assert/strict');
   assert.deepEqual(o.cells,[[[0,1]],[[1,0]],[[0,-1]],[[-1,0]]],'1マス：前・右・後ろ・左');
   assert.deepEqual(o.mill,[[[0,2],[1,2]],[[2,0],[2,1]],[[0,-1],[1,-1]],[[-1,0],[-1,1]]],'2×2：前の2マス');
   assert.deepEqual(o.wb,[[[0,1]],[[1,0]],[[1,-1]],[[-1,1]]],'作業台：台のマスの前');
+  assert.equal(o.assigned,true);assert.equal(o.campDry,false);assert.equal(o.campJob,false,'はたおり機の担当は採掘しない');
   assert.equal(o.stand,o.front);assert.equal(o.job,true);assert.equal(o.at,o.front,'右のマスに立つ');assert.equal(o.type,'proc');
   assert.equal(o.ok2,false);assert.equal(o.want,false);assert.equal(o.job2,false,'前がふさがると作業しない');
   assert.equal(o.oven,o.ovenFront,'後ろ向きの調理台は上のマス');assert.equal(o.wbs,o.wbFront,'左向きの作業台');
