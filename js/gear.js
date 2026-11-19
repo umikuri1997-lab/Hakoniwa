@@ -186,8 +186,11 @@ function gearSheet(body,r){const sec=el('<div class="sec"></div>');
     gearList().forEach((g2,i)=>{if(gearSlot(BL[g2.id].g)!==k||gearOK(r,g2.id))return;const row=gearRow(g2),b=el('<button class="btn pri">つける</button>');b.onclick=()=>{if(gearEquip(r,i))renderSheet()};row.appendChild(b);sec.appendChild(row)})}
   if(!gearList().length&&!GSLOTK.some(k=>r.gear&&r.gear[k])){const p=el('<p class="note"></p>');p.textContent='そうびは、ありません';sec.appendChild(p)}
   body.appendChild(sec)}
-/* 依頼ボードの「そうび」：わくごとに見出し。さいごに強化 */
-function gearBoardHead(id,prev){const s=BL[id].g&&gearSlot(BL[id].g);if(!s||s==='ar'||(prev&&BL[prev].g&&gearSlot(BL[prev].g)===s))return null;const h=el('<b style="display:block;margin:6px 0 2px"></b>');h.textContent=GSLOT[s];return h}
+/* 依頼ボードの見出し：しゅるい（CRAFT_TABS の名前）がかわる所ごと。そうびは、わく（武器・防具・アクセサリー）ごと。さいごに強化 */
+let BOARDTAB=null;
+function gearBoardHead(id,prev){if(!BOARDTAB){BOARDTAB={};for(const[t,ids]of CRAFT_TABS)for(const i of ids)if(!BOARDTAB[i])BOARDTAB[i]=t}
+  const key=i=>{const g=BL[i].g,s=g&&gearSlot(g);return s&&s!=='ar'?'g:'+s:'t:'+(BOARDTAB[i]||'')},k=key(id);if(prev&&key(prev)===k)return null;
+  const h=el('<b style="display:block;margin:6px 0 2px"></b>');h.textContent=k.startsWith('g:')?GSLOT[k.slice(2)]:k.slice(2);return h}
 function gearBoardUp(box){if(WD===0)return;const L=[];for(const q of gearList())if(gearCanUp(q.id))L.push([q,'']);for(const r of S.res)for(const k of['w','a'])if(r.gear&&r.gear[k])L.push([r.gear[k],r.name]);if(!L.length)return;const h=el('<b style="display:block;margin:8px 0 2px"></b>');h.textContent='強化';box.appendChild(h);for(const[q,who]of L){const row=gearRow(q,who?who+'がつけている':BL[q.id].desc);row.appendChild(gearUpBtn(q,renderSheet));box.appendChild(row)}}
 /* もちもの：そうび */
 function gearInv(body){const L=gearList();if(!L.length)return;const g=el('<div class="grid"></div>'),hd=el('<b style="grid-column:1/-1;margin-top:8px"></b>');hd.textContent='そうび';g.appendChild(hd);for(const q of L){const b=el('<div class="slot"><span class="ct"></span><img alt=""><span class="nm"></span></div>');b.querySelector('img').src=gearIcon(q.id);b.querySelector('.nm').textContent=gearName(q);b.querySelector('.ct').textContent=GSLOT[BL[q.id].g.s];g.appendChild(b)}body.appendChild(g)}
