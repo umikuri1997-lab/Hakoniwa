@@ -507,7 +507,7 @@ function render(now){RFN++;hdFrame();
   drawHanabi(now);
   drawRainbow(now);
   seasonDraw(ctx,now,dk);/* 季節の色と粒（冬の雨の日は雪） */
-  if(S.rain&&!snowNow()){ctx.strokeStyle='rgba(200,225,255,.45)';ctx.lineWidth=1;ctx.beginPath();for(const d of rain){const x=d.x*VW,y=d.y*VH;ctx.moveTo(x,y);ctx.lineTo(x-3,y+10*d.s)}ctx.stroke()}if(typeof drawStorm==='function')drawStorm(now);if(typeof drawStar==='function')drawStar(now);
+  if(typeof drawStorm==='function')drawStorm(now);if(typeof wxRainDraw==='function')wxRainDraw(now);/* 雨つぶ・とぶ葉・かみなり（weather-fx.js） */if(typeof drawStar==='function')drawStar(now);
   if(!VIG||VIG.w!==VW||VIG.h!==VH){const c2=document.createElement('canvas');c2.width=VW;c2.height=VH;const g2=c2.getContext('2d');const vg=g2.createRadialGradient(VW/2,VH/2,Math.min(VW,VH)*.45,VW/2,VH/2,Math.max(VW,VH)*.75);vg.addColorStop(0,'rgba(0,0,0,0)');vg.addColorStop(1,'rgba(10,20,15,.28)');g2.fillStyle=vg;g2.fillRect(0,0,VW,VH);VIG={c:c2,w:VW,h:VH}}
   ctx.drawImage(VIG.c,0,0);
   if(typeof juiceDraw==='function')juiceDraw(now);/* ごほうびの紙ふぶき（juice.js） */
