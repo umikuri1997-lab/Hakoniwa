@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""せいれいの動きに合わせて鳴らす本物の録音（どれも OpenGameArt の CC0）：水くみ（dscoop・dlift）と鼻歌（hum）。食べる・のむ音は eat_asmr.py。切る・低い音と高い音をけずる・大きさをそろえるだけ。
+"""せいれいの動きに合わせて鳴らす本物の録音（どれも OpenGameArt の CC0）：水くみ（dscoop・dlift）。鼻歌は、いまは会話の声をゲームで切ってつなげる（audio.js の humPhrase）ので使っていない。食べる・のむ音は eat_asmr.py。切る・低い音と高い音をけずる・大きさをそろえるだけ。
 元の音（<フォルダ> の中に、この名前で入れる）：
   water/  … 「40 CC0 water / splash / slime SFX」（rubberduck）の water-splash-slime-sfx.zip をひらいた物
   drink/  … 「Liquid Bottle Drink Set」（qubodup）の qubodup-bottle-and-drink-sounds.7z をひらいた物
   crunch/ … 「7 Eating Crunches」（StarNinjas）の crunch_-_tito.zip をひらいた物
   apple_bite_0.ogg … 「Apple Bite」（AntumDeluge）
   crunch_7.ogg〜crunch_10.ogg … 「Crunch sounds (burnt toast)」（cogitollc）
-  ghostly_humming.ogg … 「Ghostly Humming」（AuraVoice。人の鼻歌の録音）→ hum：声が安定してつづく所を3つ、1.8秒ずつ（ゲームが、その子の声の高さで小さく鳴らす）
+  ghostly_humming.ogg … 「Ghostly Humming」（AuraVoice。人の鼻歌の録音）→ 前の鼻歌（hum）。いまは使っていない
 使いかた：python3 tools/sound/spirit_act.py <フォルダ>  → assets/g/<中身のsha1の先10字>.mp3 と、js/audio.js にはる SAMPLES の行"""
 import sys, os, glob, hashlib, subprocess, json
 import numpy as np
