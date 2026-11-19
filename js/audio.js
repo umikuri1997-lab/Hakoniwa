@@ -92,10 +92,10 @@ function vNote(b,t,len,rate,v,dest,o={}){/* 1つの音：のばした声（SAMPL
   const use=len*rate+.05;src.start(t,.05+Math.random()*Math.max(0,b.duration-use-.1));src.stop(t+len+.02)}
 function voiceDest(q,lp,v){/* 声の出口：大きさ・左右（マップの場所の音と同じ）・こもり */let h=AC.createGain();h.gain.value=v*q.v*(SND.vv??1);const in0=h;if(AC.createStereoPanner){const pn=AC.createStereoPanner();pn.pan.value=q.p;h.connect(pn);h=pn}const f=AC.createBiquadFilter();f.type='lowpass';f.frequency.value=Math.min(q.l,lp);f.Q.value=.4;h.connect(f);f.connect(sfxG);return in0}
 function voVo(r){return(r.vr&&r.vr.vo)||(typeof KEYVR!=='undefined'&&KEYVR[r.name]&&KEYVR[r.name].vo)||1.12}/* その子の声の高さ */
-const HUMVIB=.014,HUMSK=[.28,.13],HUMEND=.5;/* 鼻歌のゆれ（高さの1.4%）。スキップのリズム：長い音・短い音（秒）を、かわりばんこに。さいごの音は HUMEND */
+const HUMVIB=.014,HUMVIBL=.02,HUMSK=[.28,.13],HUMEND=.5;/* 鼻歌のゆれ（どの音も高さの1.4%、さいごの音は2%）。スキップのリズム：長い音・短い音（秒）を、かわりばんこに。さいごの音は HUMEND */
 const HUMS=[[0,2,4,4,7,4],[2,4,7,7,9,7],[0,0,4,4,7,9],[4,7,9,7,4,7],[-3,0,2,4,2,4],[0,4,2,4,7,9,7]];/* 鼻歌のフレーズ（半音。ペンタトニックの中だけ。上がっていく明るい形が多い） */
 function humPhrase(r,q,b){const P=pick(HUMS),dest=voiceDest(q,700,MOODV.hum),base=voVo(r)*.84;let t=AC.currentTime+.03;
-  P.forEach((n,i)=>{const last=i===P.length-1,len=last?HUMEND:HUMSK[i&1],on=last?len:len*.86;/* はずむよう、音と音のあいだを少しあける */vNote(b,t,on+.03,base*Math.pow(2,n/12),1,dest,{dim:last,vib:last?HUMVIB:0,bend:i&1?0:.96});t+=len});return t}
+  P.forEach((n,i)=>{const last=i===P.length-1,len=last?HUMEND:HUMSK[i&1],on=last?len:len*.86;/* はずむよう、音と音のあいだを少しあける */vNote(b,t,on+.03,base*Math.pow(2,n/12),1,dest,{dim:last,vib:last?HUMVIBL:HUMVIB,bend:i&1?0:.96});t+=len});return t}
 function moodMark(r,k,now){MOODM.set(r,{k,t:now})}
 function moodTick(){const now=performance.now();for(const[r,m]of MOODM)if(now-m.t>400||r.hidden)MOODM.delete(r);
   if(!AC||!SND.sfx||AC.state!=='running'||VOICE||!S||!started||(typeof paused==='function'&&paused())||(typeof SKIP!=='undefined'&&SKIP))return;
