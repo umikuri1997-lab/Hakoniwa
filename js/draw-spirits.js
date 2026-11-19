@@ -84,6 +84,7 @@ function spPose(o,t,tr,back){/* せいれいの動きの計算：腕の角度・
   /* 火山の物語の動き（どの章でも使える）。後ろ向きのときは、spPose のさいごで腕を頭より先に描く */
   else if(A==='lookback'){const T=o.sceneT||0;aN=aF=.3;lean2=T<.65?.06:-.03*Math.sin(Math.PI*Math.min(1,(T-.65)/.6));frontArm=true}/* 背中を見せていて、ふりかえる */
   else if(A==='kneel'){aN=.5+Math.sin(t*2)*.04;aF=.55;lean2=.12;sq=.15;frontArm=bothF=true}/* ひざをつく */
+  else if(A==='kneelGaze'){const T=o.sceneT||0,v=sacredEase(Math.min(1,Math.max(0,(T-.9)/.7))),w=Math.sin(Math.max(0,T-1.6)*1.7)*v;aN=aF=.5-1.45*v;lean2=.12+.12*v+w*.06;sq=.15;frontArm=bothF=true}/* しゃがんで、ほっぺに両手をあて、みをのりだして、頭を左右にかしげながら、芽をのぞきこむ */
   else if(A==='kneelTouch'){const v=Math.sin(Math.PI*Math.min(1,(o.sceneT||0)/1.4));aN=.5-v*.7;aF=.55;lean2=.14+v*.06;sq=.15;frontArm=true}/* ひざをついて、地面にふれる */
   else if(A==='kneelHeat'){aN=aF=-.85+Math.sin(t*3)*.06;lean2=.12;sq=.15;frontArm=bothF=true}/* ひざをついて、両手を熱にかざす */
   else if(A==='tremble'){aN=aF=-.45+Math.sin(t*40)*.05;lean2=-.03;sq=.04;frontArm=bothF=true}/* ふるえる（体のゆれは sacredBody） */
