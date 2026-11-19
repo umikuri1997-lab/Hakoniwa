@@ -237,6 +237,7 @@ function updEnemy(e,dt){
   if(e.brn>0){e.brT=(e.brT||0)+dt;if(e.brT>=BURN.iv){e.brT-=BURN.iv;e.brn--;hurtEn(e,BURN.dmg,{flash:4,dt:'burn'});fxSpr('firehit',e.x*TS,e.y*TS);if(e.hp<=0)return defeat(e,EN[e.type].name+'を延焼で追いはらった！')}}/* 延焼（火のせいれいが立つ見張り台の矢） */
   if(e.poi>0){e.poT=(e.poT||0)+dt;if(e.poT>=15){e.poT-=15;e.poi--;hurtEn(e,5,{flash:4,k:'trap',dt:'poison'});sfxAt('poison',e.x,e.y);fxSpr('poison',e.x*TS,e.y*TS);if(e.hp<=0)return defeat(e,EN[e.type].name+'をどくの罠で追いはらった！')}}/* どくの罠：ふんでから10分（15）ごとに5ダメージを6回（1時間） */
   if(e.stun>0){e.stun-=dt;return}if(e.rest>0){e.rest-=dt;return}
+  {const pj=(e.y|0)*W+(e.x|0);if(rainPud(pj)){if(e.rslipJ!==pj){e.rslipJ=pj;e.stun=EN[e.type].boss?RAINSLIPB:RAINSLIP;e.path=[];sfxAt('bonk',e.x,e.y);fxSpr('slip',e.x*TS,e.y*TS);return}}else e.rslipJ=-1}/* 雨の日の水たまりで、すべる（feel.js） */
   e.slow=e.slowU>S.t?.5:1;/* おそくする（そうび） */{const tj=(e.y|0)*W+(e.x|0),to=S.obj[tj];if(to!=='puddle')e.slipJ=-1;/* 水たまりから出たら、つぎにふんだとき、またすべる */if(to&&BL[to]&&BL[to].trap){e.busyT=S.t;const cd=S.trapCd||(S.trapCd={}),rdy=!(cd[tj]>S.t);
     if(to==='spike'){e.spk=(e.spk||0)+dt;if(e.spk>=15){e.spk-=15;hurtEn(e,5,{flash:4,k:'trap'});sfxAt('spike',e.x,e.y)}/* とげの罠：10分（15）ごとに5ダメージ */if(e.hp<=0)return defeat(e,EN[e.type].name+'をとげの罠で追いはらった！')}
     else if(to==='sticky'){if(!(e.poi>0)){e.poi=6;e.poT=0;e.flash=4;HURTV.set(e,{t:performance.now(),n:HURT2P});sfxAt('poison',e.x,e.y);fxSpr('poison',e.x*TS,e.y*TS)}}/* どく：みどりのあわ（tools/fx-trap.py） */
@@ -250,7 +251,7 @@ function updEnemy(e,dt){
   else if(D.thief){let bd=1e9,box=-1;if(!EREACH.has(e))EREACH.set(e,bfs(e.x|0,e.y|0,2).dist);const RD=EREACH.get(e),ok=q=>q>=0&&q<W*H&&RD[q]>=0;/* 歩いて行ける所からだけ盗む（壁のうらからは盗めない） */for(const k in S.dyn){if(S.obj[k]!=='farm'||S.dyn[k].sown===false||S.dyn[k].g<100||!ok(+k))continue;const fx2=k%W+.5,fy=((k/W)|0)+.5,d=Math.hypot(fx2-e.x,fy-e.y);if(d<bd){bd=d;goal=+k;box=-1}}
     for(const k of BOXL){const bb=BOX()[k];if(!bb||!Object.keys(bb).some(q=>bb[q]>0&&availOf(q)>0))continue;for(const n of[k-1,k+1,k-W,k+W]){if(!walk(n)||!ok(n)||!boxSide(n,k))continue;const d=Math.hypot(n%W+.5-e.x,((n/W)|0)+.5-e.y);if(d<bd){bd=d;goal=n;box=k}}}/* 中身のある箱 */
     if((e.stolen||0)>=10){e.flee=true;e.path=[];e.repath=0}
-    else if(goal>=0&&bd<.6){const key=box===-1?'farm:'+goal:'box:'+box;if(e.stealKey!==key){e.stealKey=key;e.stealT=0}e.busyT=S.t;e.stealT=(e.stealT||0)+dt/DAYLEN;e.path=[];
+    else if(goal>=0&&bd<.6){const key=box===-1?'farm:'+goal:'box:'+box;if(e.stealKey!==key){e.stealKey=key;e.stealT=0}e.busyT=S.t;e.stealT=(e.stealT||0)+dt/DAYLEN;e.path=[];if(box>=0)enAim(e,box%W+.5,((box/W)|0)+.5);/* 箱から盗むときは、箱のほうを向く（畑は、その上で正面を向く） */
       if(e.stealT>=10){e.stealT-=10;let got='',lk='';
         if(box>=0){const bb=BOX()[box]||{},m=Object.keys(bb).filter(q=>bb[q]>0&&availOf(q)>0).sort((p,q)=>bb[q]-bb[p])[0];/* その箱の、いちばん多い物 */if(m&&boxOut(box,m,1)){if(isFK(m)){got='食料';lk='food:'+m.slice(2)}else{got=MATN[m]||m;lk='mat:'+m}}}
         else{const d=S.dyn[goal],fk=cropK(d),n=(CROPS[fk]||{yield:1}).yield;d.stolen=(d.stolen||0)+1;got='畑の作物';lk='food:'+fk;if(d.stolen>=n){d.g=0;d.sown=false;d.crop=null;delete d.stolen}}

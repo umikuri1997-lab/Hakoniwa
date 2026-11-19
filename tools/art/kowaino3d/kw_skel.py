@@ -320,7 +320,12 @@ MOVES = {
                        dict(hip=(8, 0, 0), chest=(10, 0, 0), armR=(0, 0, 0, -0.19, 0.4, -0.02), armL=(60, -25, 0), sacksq=0.62)],
                   hurt=[dict(chest=(10, 0, 0), head=(14, 0, 0), armL=(70, -30, 0), armR=(60, -20, 0), look=(0, 0.02), fx=[('sweat', (0.18, 0.1, 0.72), 2, 0.05, 0.025)]),
                         dict(root=(-10, 0, 0), armL=(70, -30, 0), armR=(60, -20, 0), move=(0, -0.1, 0.08)),
-                        dict(root=(-4, -30, 0), hip=(0, -4, 0), chest=(4, -6, 0), head=(4, -16, 0), armL=(30, 40, 0), armR=(10, 20, 0), move=(0, -0.04, 0), collapse=0.35, ground=True, fx=[('dust', (0, -0.1, 0.02), 5, 0.2, 0.03)])]),
+                        dict(root=(-4, -30, 0), hip=(0, -4, 0), chest=(4, -6, 0), head=(4, -16, 0), armL=(30, 40, 0), armR=(10, 20, 0), move=(0, -0.04, 0), collapse=0.35, ground=True, fx=[('dust', (0, -0.1, 0.02), 5, 0.2, 0.03)])],
+                  # 盗む（畑・箱の前で、くりかえす）：ふくろを前にかまえて、手といっしょに下へすくう → ふかくすくう → 右・左をきょろきょろ見る
+                  steal=[dict(hip=(3, 0, 0), chest=(14, 0, 0), head=(-6, 0, 0), armR=(0, 0, 0, -0.12, 0.28, 0), armL=(60, 20, 0, 0.08, 0.24, -0.22), sacksq=0.92, sq=0.94),   # 体を前へうごかさない（move）・ふくろを下げない：見おろしなので、うしろ向きで足もとから浮いて見える
+                         dict(hip=(4, 0, 0), chest=(20, 0, 0), head=(-8, 0, 0), armR=(0, 0, 0, -0.12, 0.3, 0), armL=(50, 15, 0, 0.1, 0.3, -0.3), sacksq=0.84, sq=0.9),
+                         dict(hip=(1, 0, 0), chest=(2, 0, 0), head=(0, 0, 24), armR=(0, 0, 0, -0.12, 0.28, 0), armL=(90, -10, 0, 0.08, 0.12, 0.02), sq=1.02),
+                         dict(hip=(1, 0, 0), chest=(2, 0, 0), head=(0, 0, -24), armR=(0, 0, 0, -0.12, 0.28, 0), armL=(90, -10, 0, 0.08, 0.12, 0.02))]),
     # 両こぶしをふりあげて、たたきつける / 目をまわし、よろけて、よこへたおれる
     'brute': dict(atk=[dict(chest=(-8, 0, 0), head=(-6, 0, 0), armL=(60, 10, 0), armR=(60, 10, 0)),
                        dict(hip=(-6, 0, 0), chest=(-14, 0, 0), head=(-8, 0, 0), armL=(140, 8, 0), armR=(140, 8, 0), move=(0, 0, 0.03)),
@@ -474,4 +479,6 @@ def poses(name, side=False):
     for i, (dm, dl) in enumerate(HURTKB):   # やられ：うけた しゅんかん、うしろへ はじかれて のけぞる（うしろへ そるのは −16度まで）
         if i < len(hurt)-1: hurt[i] = dict(hurt[i], move=add(hurt[i], 'move', (0, dm, 0))[:3], chest=(lambda c: (max(-16, c[0]),)+c[1:])(add(hurt[i], 'chest', (dl,))))
     hurt += [dict(hurt[-1], fade=fd, fx=[], lag=(0, 0, 0), hlag=(0, 0, 0)) for k, fd in enumerate(DEADFADE)]   # たおれたあと：体が つぶに ほどけて、上へ きえる（kowaino_paint の fade）
-    return dict(idle=_lag(IDLE, True), walk=_lag(walk, True), atk=_lag(wv(atk), False, name, not side), hurt=_lag(wv(hurt), False, name))
+    out = dict(idle=_lag(IDLE, True), walk=_lag(walk, True), atk=_lag(wv(atk), False, name, not side), hurt=_lag(wv(hurt), False, name))
+    if 'steal' in m: out['steal'] = _lag(wv(m['steal']), True, name)   # 盗む（カゲドロボウだけ。くりかえす）
+    return out

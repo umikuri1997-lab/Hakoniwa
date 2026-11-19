@@ -748,7 +748,7 @@ def mbook_css():
     tp = ';'.join(f'--tp{k}{"u" if up else "d"}:' + svg(mtape_rows(k, up), TAPEPAL[k]) for k in range(4) for up in (1, 0))
     return '\n'.join([
         '/* 思い出帳・図鑑：本（book.js）。紙のすき目・しみ・角の金のかざり（GOLD）・表紙の布の織り目・角の金具・見出しのリボン・紙テープ・写真の角どめ */',
-        f'.sheet[data-k="record"],.sheet[data-k="zukan"]{{height:80%}}',
+        f'.sheet[data-k="record"],.sheet[data-k="zukan"],.sheet[data-k="diary"]{{height:80%}}',
         f'.bk{{{tp};--old:{old};--fib:{fib};--cloth:{cloth};--tape:{tape};--pcorner:{pc};--gtl:{gtl};--gtr:{gtr};--gbl:{gbl};--gbr:{gbr};--stain:{stain};--metal:{metal};--rib:{rib}}}',
     ])
 
