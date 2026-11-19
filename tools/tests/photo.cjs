@@ -1,4 +1,4 @@
-/* 村の名前・村の写真：名前はフォントにある字だけで8字まで。写真は昼12時に自動で村を写して IndexedDB にしまい（30まい、古いのからけす）、思い出帳で見る・けす */
+/* 村の名前・村の写真：名前はフォントにある字だけで8字まで。日記の絵は、その日いちばん大事な物（できた家具・スポット・夕方は書く子のまわり）に近よって写し、IndexedDB にしまう（30まい、古いのからけす）、思い出帳で見る・けす */
 const assert=require('node:assert/strict');
 (async()=>{const {browser,page,run,errors}=await require('../sim/boot.cjs')({viewport:{width:390,height:780}});
   await run(`document.querySelector('#dialog').hidden=true;S.introSeen=true;S.flags.tapped=1;S.hold=0;if(sheet)closeSheet();`);
@@ -13,23 +13,32 @@ const assert=require('node:assert/strict');
   const nm=JSON.parse(await run(`JSON.stringify({v:S.vname,row:[...document.querySelectorAll('#sheetBody .vlSec')].find(s=>s.querySelector('h4').textContent==='村の名前').textContent})`));
   assert.equal(nm.v,'こもれびABC1');assert.ok(nm.row.includes('こもれびABC1村'),'name shown after renaming');
   console.log('Village name: set from the village sheet, limited to font characters');
-  /* 写真：昼12時に、自動で写す（カメラはうごかさない。写す所は村） */
-  await run(`closeSheet();USERPAUSE=true;S.phD=null;S.dy=null;cam.z=2.2;centerOn((CX-20)*TS,(CY+18)*TS)`);
+  /* 日記の絵：家具ができたら、その所に近よって写す（カメラはうごかさない）。夜は写さない。もっと大事な物（スポット）なら写しなおし、前の絵はけす */
+  await run(`closeSheet();USERPAUSE=true;S.dy=null;PHQ=null;cam.z=2.2;centerOn((CX-20)*TS,(CY+18)*TS)`);
   const cam0=JSON.parse(await run(`JSON.stringify(cam)`));
-  const F=JSON.parse(await run(`JSON.stringify(Object.assign(phFrame(),{m:PHZMIN}))`));assert.ok(F.z>=F.m&&F.cw>0,'photo frame');
-  const before=JSON.parse(await run(`(()=>{S.t=Math.floor(S.t/1440)*1440+11*60+59;return JSON.stringify({d:dayNo(),h:hour()})})()`));
+  const F=JSON.parse(await run(`JSON.stringify(Object.assign(phFrame(phBoxJ('bench',CY*W+CX+3)),{m:PHZMIN,hz:homeZ()}))`));assert.ok(F.z>=F.m&&F.cw>0,'photo frame');assert.ok(F.z>1,'close to the thing: '+F.z);
+  await run(`S.t=Math.floor(S.t/1440)*1440+22*60;S.dy=null;PHQ=null;admireNote('bench',CY*W+CX+3)`);await page.waitForTimeout(2600);
+  const n0=await page.evaluate(()=>sacredEval('phList(WD)').then(L=>L.length));assert.equal(n0,0,'no photo at night');
+  const before=JSON.parse(await run(`(()=>{S.t=Math.floor(S.t/1440)*1440+10*60;S.dy=null;PHQ=null;admireNote('bench',CY*W+CX+3);return JSON.stringify({d:dayNo()})})()`));
+  await page.waitForFunction(()=>sacredEval("!!(S.dy&&S.dy.ph!=null&&S.dy.phK==='built')"),{},{timeout:8000});
   await page.waitForTimeout(400);
-  const n0=await page.evaluate(()=>sacredEval('phList(WD)').then(L=>L.length));assert.equal(n0,0,'no photo before noon');
-  await run(`S.t=Math.floor(S.t/1440)*1440+12*60+1`);
-  await page.waitForFunction(()=>sacredEval('!!(S.dy&&S.dy.ph)'),{},{timeout:8000});
   const n=await page.evaluate(()=>sacredEval('phList(WD)').then(L=>L.map(p=>({d:p.d,h:p.h,vn:p.vn,size:p.b.size,type:p.b.type}))));
-  assert.equal(n.length,1,'one photo at noon');assert.equal(n[0].vn,'こもれびABC1');assert.ok(n[0].size>2000,'photo has content');assert.equal(n[0].d,before.d);assert.ok(n[0].h>=12&&n[0].h<13,'taken at noon');
+  assert.equal(n.length,1,'one picture');assert.equal(n[0].vn,'こもれびABC1');assert.ok(n[0].size>2000,'photo has content');assert.equal(n[0].d,before.d);
+  const dy=JSON.parse(await run(`JSON.stringify({k:S.dy.phK,n:S.dy.phN,bn:BL.bench.name})`));assert.equal(dy.n,dy.bn,'the diary knows what is in the picture');
   const cam1=JSON.parse(await run(`JSON.stringify(cam)`));assert.deepEqual(cam1,cam0,'the camera did not move');
-  await page.waitForTimeout(600);const n1=await page.evaluate(()=>sacredEval('phList(WD)').then(L=>L.length));assert.equal(n1,1,'only once a day');
-  if(process.env.SHOT_DIR){const u=await page.evaluate(()=>sacredEval('phList(WD)').then(L=>new Promise(ok=>{const r=new FileReader();r.onload=()=>ok(r.result);r.readAsDataURL(L[0].b)})));require('fs').writeFileSync(process.env.SHOT_DIR+'/noon.jpg',Buffer.from(u.split(',')[1],'base64'))}
-  console.log('Village photo: taken by itself at noon, without moving the camera');
+  if(process.env.SHOT_DIR){const u=await page.evaluate(()=>sacredEval('phList(WD)').then(L=>new Promise(ok=>{const r=new FileReader();r.onload=()=>ok(r.result);r.readAsDataURL(L[0].b)})));require('fs').writeFileSync(process.env.SHOT_DIR+'/built.jpg',Buffer.from(u.split(',')[1],'base64'))}
+  await run(`phWant('see',phBoxOf(CX,CY,1),'','sunset')`);await page.waitForTimeout(2400);
+  const k1=await run(`S.dy.phK`);assert.equal(k1,'built','a smaller thing does not replace it');
+  await run(`phWant('spot',phBoxOf(CX+3,CY,1),'しょくたく')`);
+  await page.waitForFunction(()=>sacredEval("S.dy.phK==='spot'"),{},{timeout:8000});await page.waitForTimeout(400);
+  const n1=await page.evaluate(()=>sacredEval('phList(WD)').then(L=>L.length));assert.equal(n1,1,'the old picture is deleted');
+  console.log('Diary picture: taken close to the new thing, only in the day, the most important one stays');
+  /* 夕方まで何もなかった日は、書く子のまわり */
+  await run(`S.dy=null;PHQ=null;S.t=Math.floor(S.t/1440)*1440+17*60+30`);
+  await page.waitForFunction(()=>sacredEval("!!(S.dy&&S.dy.ph!=null&&S.dy.phK==='day')"),{},{timeout:8000});
+  console.log('Diary picture: on a quiet day, where Futaba is in the evening');
   /* いっぱいのときは、いちばん古い写真をけして、しまう */
-  const full=await page.evaluate(()=>sacredEval(`(async()=>{const L=await phList(WD),b=L[0].b;for(let i=L.length;i<PHN;i++)await phAdd({w:WD,d:-i,h:12,vn:'',at:i,b});const id0=(await phList(WD))[0].id;S.phD=null;return id0})()`));
+  const full=await page.evaluate(()=>sacredEval(`(async()=>{const L=await phList(WD),b=L[0].b;for(let i=L.length;i<PHN;i++)await phAdd({w:WD,d:-i,h:12,vn:'',at:i,b});const id0=(await phList(WD))[0].id;S.dy=null;PHQ=null;return id0})()`));
   await page.waitForFunction(id0=>sacredEval('phList(WD)').then(L=>window.__pf=L.length===PHN&&!L.some(p=>p.id===id0)&&L.some(p=>p.d===dayNo()))&&window.__pf,full,{timeout:8000});
   console.log('Village photo: keeps 30 photos, the oldest goes first');
   await page.evaluate(()=>sacredEval(`phList(WD).then(async L=>{for(const p of L.slice(0,-1))await phDel(p.id)})`));

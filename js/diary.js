@@ -4,9 +4,10 @@
      w は、作業がおわったとき（dayNote）。m は、思い出帳のメモ・きろく（memo・logEv）。k・o は、コワイノを追いはらったとき（defeat）。
    朝に S.dy をしめて、S.diary（古い順、DIARYMAX 日ぶん）に入れる。ゆうべの守り（S.ns）も、いっしょにしまう（S.ns.dd）。
    なにか書くことがあれば、紙（openSheet('diary')）を出す。思い出帳からも読める（openSheet('diary',日)）。
-   フタバのひとこと（dyNote、文は diary-data.js）と、その日の昼12時の村の写真（photo.js の phNoonTick → S.dy.ph）も、しまう（e.ft・e.ph）。
-     書くのは章のはじめからいる子（草原はフタバ、火山はホムラ。言いかたは chatTone）。その子が村にいない（いなくなった）朝は、ひとことも写真ものせない（DYWRITER）。
-     ひとことの文は、しゅるいごとに、ぜんぶ使うまで同じ文を出さない（S.dyU）。できた文がまったく同じ日記は作らない（S.dyTx）。
+   絵日記（日記のいちばん上）：その日の絵（photo.js の phTick → S.dy.ph、なにを写したかは phK・phN・phS）と、その下の文（dyNote、文は diary-data.js）。しまうのは e.ph・e.phK・e.phN・e.phS・e.ft。
+     書くのは章のはじめからいる子（草原はフタバ、火山はホムラ。言いかたは chatTone）。その子が村にいない（いなくなった）朝は、文も絵ものせない（DYWRITER）。
+     絵を写した日は、文のはじめのできごとを、絵の物のこと（dyPhTopic）にする。
+     文は、しゅるいごとに、ぜんぶ使うまで同じ文を出さない（S.dyU）。できた文がまったく同じ日記は作らない（S.dyTx）。
    思い出帳の再生（IS_STORY_REPLAY・MEMRUN）では、書かない。 */
 const DYJ=new WeakSet(),DIARYMAX=60,DYWORK=new Set(['build','craft','harvest','plant','fish','cook']),DYPER=4;
 function dyOff(){return !S||IS_STORY_REPLAY||typeof MEMRUN!=='undefined'&&MEMRUN}
@@ -18,7 +19,7 @@ function dyEv(t){const D=dyCur();if(!D||!t)return;if(!D.m.includes(t))D.m.push(t
 function dyKill(by,msg){const D=dyCur();if(!D)return;if(by&&by.name){const e=D.k[by.name]||(D.k[by.name]=[by.elem,by.vr||null,0]);e[2]++;return}
   const m=String(msg||''),k=m.includes('罠')?'罠':m.includes('まもりの光')?'まもりの光':'そのほかの守り';D.o[k]=(D.o[k]||0)+1}
 function dyText(t,v){const n=t==='build'?(BL[v]?BL[v].name+'を建てた':''):t==='craft'?(BL[v]?BL[v].name+'を作った':''):t==='cook'?(fName(v)?fName(v)+'を作った':''):t==='harvest'?(fName(v)?fName(v)+'をしゅうかくした':''):t==='plant'?(tName(v)?tName(v)+'を植えた':''):t==='fish'?'つりをした':'';return n}
-/* 昼のようす（photo.js の phNoonTick から毎コマ）：その日の天気・できごとの日を1回だけおぼえる */
+/* 昼のようす（photo.js の phTick から毎コマ）：その日の天気・できごとの日を1回だけおぼえる */
 function dyNoon(h){if(h<9||h>=18)return;const D=dyCur();if(D&&D.wx==null)D.wx=dyWx()}
 function dyWx(){return typeof stormNow==='function'&&stormNow()?'storm':S.today&&DYOPEN[S.today]?S.today:festOn()?'fest':snowNow()?'snow':S.rain?'rain':rainbowToday()?'rainbow':'sun'+seasonNow()}
 const DYWRITER=()=>WD===1?HOMURA:POKO;/* ひとことを書くせいれい：章のはじめからいる子 */
@@ -41,11 +42,16 @@ function dyTopics(e,f){const M=[],O=[],N=e.ns;
   if(new Set(e.w.map(x=>x[0])).size>=3)O.push(['busy']);if(e.m.length>=2)O.push(['events']);
   {const m=bestMate(f);if(m)O.push(['mate',m.name])}
   O.push(['calm']);return{M,O}}
-/* フタバのひとこと（3〜4行） */
-function dyNote(e,f){const{M,O}=dyTopics(e,f),sad=M.some(t=>t[0]==='gone'||t[0]==='bossLose'||t[0]==='trial');
+/* 日記の絵に写した物の話題 */
+function dyPhTopic(e){const k=e.phK,n=e.phN||'';if(!e.ph||!k)return null;
+  if(k==='spot')return n?['pspot',n]:null;if(k==='built')return n?['pbuilt',n]:null;if(k==='new')return n?['new',n]:null;if(k==='day')return['pday'];
+  if(k==='see')return e.phS==='admire'?(n?['padm',n]:null):e.phS==='sunset'?['psun']:e.phS==='critwatch'?(n?['pcrit',n]:['psee']):['pquirk'];return null}
+/* 絵日記の文（3〜4行） */
+function dyNote(e,f){const{M:M0,O}=dyTopics(e,f),sad=M0.some(t=>t[0]==='gone'||t[0]==='bossLose'||t[0]==='trial');
+  const pt=dyPhTopic(e),M=pt?(sad?M0.filter(t=>!(t[0]==='new'&&pt[0]==='new')).concat([pt]):[pt].concat(M0.filter(t=>!(t[0]==='new'&&pt[0]==='new')))):M0;/* 絵の物の話を、はじめに（かなしい日は、かなしいことのあと） */
   const cr=S.dyCat||[],old=k=>{const i=cr.lastIndexOf(k);return i<0?-1:i};/* 前に書いた話題は、あとまわし */
   const rest=O.slice().sort((a,b)=>old(a[0])-old(b[0])||(a[0]==='calm')-(b[0]==='calm')||Math.random()-.5);
-  const top=M.slice(0,1).concat(rest.filter(t=>t[0]!=='calm'||!M.length).slice(0,M.length?1:2));if(top.length>1&&top.some(t=>t[0]==='calm'))top.splice(top.findIndex(t=>t[0]==='calm'),1);
+  const top=M.slice(0,pt&&M.length>1?2:1).concat(rest.filter(t=>t[0]!=='calm'||!M.length).slice(0,M.length>1&&pt?0:M.length?1:2));if(top.length>1&&top.some(t=>t[0]==='calm'))top.splice(top.findIndex(t=>t[0]==='calm'),1);
   const wx=e.wx&&DYOPEN[e.wx]?e.wx:'sun'+seasonOf(e.d),sd=sad||top.some(t=>/^night(Hurt|Lost|Broke)$/.test(t[0])),CL=sd?DYCLOSE_SAD:DYCLOSE,clk=sd?'cs':'c',/* かなしい日・こまった夜のあとは、しずかなおわり */sub=(t,x)=>t.split('@N').join(x[1]||'').split('@W').join(x[2]||'');
   const seen=new Set(S.dyTx||[]);let best=null;
   for(let n=0;n<16;n++){const P=[['o:'+wx,DYOPEN[wx]]].concat(top.map(x=>['b:'+x[0],DYBODY[x[0]],x])).concat([[clk,CL]]);
@@ -60,7 +66,7 @@ function diaryClose(){if(dyOff())return;const D=S.dy;S.dy={d:dayNo(),w:{},m:[],k
   const N=S.ns&&!S.ns.dd?S.ns:null;if(N)N.dd=1;
   const w=Object.values(D.w).filter(e=>dyText(e[3],e[4])),e={d:D.d,w,m:D.m.slice(),k:D.k,o:D.o,g:D.g||{}};
   if(N)e.ns={n:N.n,kill:N.kill,hurt:N.hurt,broke:N.broke,lost:(N.lost||[]).slice(),rw:N.rw||0,trial:!!N.trial,trialOK:!!N.trialOK,boss:N.boss||0,left:N.left||0};
-  e.wx=D.wx||null;const f=dyWriter();if(f&&D.ph)e.ph=D.ph;/* フタバがいないときは、写真ものせない */
+  e.wx=D.wx||null;const f=dyWriter();if(f&&D.ph!=null){e.ph=D.ph;e.phK=D.phK||'';e.phN=D.phN||'';e.phS=D.phS||''}/* 書く子がいないときは、絵ものせない */
   if(!w.length&&!e.m.length&&!e.ns&&!e.ph)return;
   if(f){e.ft=dyNote(e,f);e.fw=[f.name,f.elem,f.vr||null]}
   {const b=dyBest(e),r=b&&S.res.find(q=>q.name===b.nm);if(b){e.mvp=b;if(r){funAdd(r,MVPFUN,'mvp');{const M=S.memo||(S.memo=[]);M.push([dayNo(),'cup',b.nm+'が、ゆうべのかつやくにえらばれた']);if(M.length>200)M.shift()}/* memo() だと、つぎの日の日記のできごとにも入るので、思い出帳だけに書く */}}}/* ゆうべのかつやく：たのしさ+10・思い出帳 */
@@ -80,11 +86,11 @@ function dyPhUrl(id,b){let u=DYPHU.get(id);if(u)return u;u=URL.createObjectURL(b
 function diaryBody(T,body,arg){const L=S.diary||[];const e=arg==='m'||arg==null?L[L.length-1]:L.find(q=>q.d===arg);if(!e)return closeSheet();
   T.textContent=e.d+'日めの日記';
   if(arg!=='m'){const bk=el('<button class="btn back" aria-label="思い出帳にもどる">'+pxi('next','prev')+'もどる</button>');bk.onclick=()=>{sfx('tap');openSheet('menu','record')};T.before(bk)}
+  if(e.ph!=null||e.ft&&e.ft.length){const sec=el('<div class="sec dyE"></div>'),st=S;body.appendChild(sec);/* 絵日記：その日の絵（けしたあとなら、出さない）と、その下に文 */
+    if(e.ph!=null){const im=el('<img class="dyPic" alt="">');sec.appendChild(im);phGet(e.ph).then(p=>{if(!im.isConnected||S!==st)return;if(!p||!p.b){im.remove();return}im.src=dyPhUrl(e.ph,p.b)},()=>im.remove())}
+    if(e.ft&&e.ft.length){const tx=el('<p class="dyTx"></p>');tx.textContent=e.ft.map(t=>t.replace(LOOKRX,'')).join('\n');sec.appendChild(tx)}}
   {const b=dyBest(e);if(b){const sec=el('<div class="sec dyMvp"><h3>ゆうべのかつやく</h3><div class="rows"></div></div>'),r=rowEl(b.nm,mvpTxt(b),ELEM[b.el]?spiritPort(b.el,96,b.vr):null);sec.querySelector('.rows').appendChild(r);body.appendChild(sec);
     if(arg==='m')setTimeout(()=>uiStamp(r,true,'かつやく'),350);else{r.style.position='relative';const c=stampCanvas('かつやく'),k=document.createElement('canvas');k.width=k.height=32;k.getContext('2d').drawImage(c,0,0);k.className='ustamp s';k.style.animation='none';r.appendChild(k)}}}/* いちばん上に、その子の絵とハンコ */
-  if(e.ph){const sec=el('<div class="sec dyPh"><img alt="" style="display:block;width:100%;aspect-ratio:4/3;object-fit:cover"></div>'),im=sec.querySelector('img'),st=S;body.appendChild(sec);/* その日の昼12時の村の写真（けしたあとなら、出さない） */
-    phGet(e.ph).then(p=>{if(!sec.isConnected||S!==st)return;if(!p||!p.b){sec.remove();return}im.src=dyPhUrl(e.ph,p.b)},()=>sec.remove())}
-  if(e.ft&&e.ft.length&&e.fw){const sec=el('<div class="sec"><h3></h3><div class="rows"></div></div>');sec.querySelector('h3').textContent=e.fw[0]+'のひとこと';const r=rowEl(e.fw[0],e.ft.map(t=>t.replace(LOOKRX,'')).join('\n'),ELEM[e.fw[1]]?spiritPort(e.fw[1],96,e.fw[2]):null);r.querySelector('small').style.whiteSpace='pre-line';sec.querySelector('.rows').appendChild(r);body.appendChild(sec)}
   const N=e.ns;if(N){const sec=el('<div class="sec"><h3></h3></div>');sec.querySelector('h3').textContent=N.trial?(N.trialOK?'試練をのりこえた！':'試練の夜'):N.rw?'夜をぶじに守りきった！':'ゆうべの守り';
     const g=el('<div class="stats"></div>');
     for(const[k,v]of[['来た「コワイノ」',N.n+'体'],['追いはらった',N.kill+'体'],['おそわれたせいれい',N.hurt?N.hurt+'回':'なし'],['こわされた柵・設備',N.broke?N.broke+'こ':'なし'],['ぬすまれたもの',N.lost.length?lostSum(N.lost):'なし']].concat(N.rw?[['ごほうび','パワー+'+N.rw+'・みんなのたのしさ+10']]:[]).concat(N.trialOK?[['試練のごほうび','パワー+60・めぶきのしずく']]:[])){const d=el('<div class="stat"><span></span><b></b></div>');d.firstChild.textContent=k;d.lastChild.textContent=v;g.appendChild(d)}
