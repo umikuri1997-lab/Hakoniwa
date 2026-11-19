@@ -35,7 +35,7 @@ function cupCheerAsk(E){if(typeof MEMRUN!=='undefined'&&MEMRUN||!started||docume
   o.querySelector('.x').onclick=()=>{sfx('tap');o.remove()};document.body.appendChild(o)}
 /* ---------- はじまりの合図・実況（実時間） ---------- */
 const CUPV={cd:0,id:null,mg:null,lead:null,leadT:0,cheerT:0,aw:null,fl:null};
-function cupBegin(E,P){CUPV.cd=performance.now();E.cdT=S.t;CUPV.id=E.id;CUPV.lead=null;CUPV.leadT=performance.now()+4000;E.ck=0;E.item={};E.loot={};E.pg={};
+function cupBegin(E,P){CUPV.cd=performance.now();E.cdT=S.t;{const q=document.getElementById('cupCheer');if(q)q.remove()}/* えらばないまま、はじまったら、見ているだけ */CUPV.id=E.id;CUPV.lead=null;CUPV.leadT=performance.now()+4000;E.ck=0;E.item={};E.loot={};E.pg={};
   if(E.id==='cup2')for(const r of P)E.item[r.id]=cupCraftPick(r);if(E.id==='cup4')for(const r of P)E.item[r.id]=cupDishPick(r);
   if(!(camAnim&&camAnim.done)&&E.c)panTo(E.c[0]*TS,E.c[1]*TS);
   if(typeof AC!=='undefined'&&AC)[0,1,2].forEach(i=>j3Ding(i===2?7:0,i*.65,.5));setTimeout(()=>{if(S.ev===E){sfx('stamp');j3Ding(12,.05,.6);j3Ding(19,.12,.5);for(const r of P)JUMP.set(r,performance.now()+Math.random()*200)}},1950)}
