@@ -17,7 +17,7 @@ const ORE_COL={copper:'#e0a07a',iron:'#bcc4cc',obsidian:'#8f86a8',silver:'#e4eaf
 const GEAR_ORES=['copper','iron','obsidian','silver','gold','sulfur','crystal'];
 const isGear=id=>!!(BL[id]&&BL[id].g);
 const gearMain=id=>{const b=BL[id];if(b.g.sp)return 'obsidian';return Object.keys(b.mat||{})[0]||'iiron'};/* 強化に使う素材（特の物は黒曜石） */
-const gearCanUp=id=>{const s=BL[id].g.s;return s==='w'||s==='a'};
+const gearCanUp=id=>{const s=BL[id].g.s;return WD!==0&&(s==='w'||s==='a')};
 const GUPATK=[0,10,20,30],GUPHUN=[0,10,20,30];/* 武器の強化 +0〜+3 でふえる攻撃・防具の強化でへる、たたかれたときのおなかのへり */const GUPN=[1,2,3];/* 強化 +1・+2・+3 にいる素材の数 */const GUPPC=50;/* +3 のパワー */
 function gearList(){return S.gear||(S.gear=[])}
 function gearCount(id){let n=0;for(const q of gearList())if(q.id===id)n++;for(const r of S.res)for(const k of GSLOTK)if(r.gear&&r.gear[k]&&r.gear[k].id===id)n++;return n}
@@ -181,14 +181,14 @@ function gearUpBtn(q,after){const b=el('<button class="btn"></button>');if(!gear
 function gearRow(q,sub){const r=rowEl(gearName(q),'',gearIcon(q.id));r.querySelector('small').textContent=sub||BL[q.id].desc;r.style.alignItems='center';return r}
 function gearSheet(body,r){const sec=el('<div class="sec"></div>');
   for(const k of GSLOTK){const q=r.gear&&r.gear[k];const h=el('<b style="display:block;margin-top:6px"></b>');h.textContent=GSLOT[k];sec.appendChild(h);
-    if(q){const row=gearRow(q);const ob=el('<button class="btn">はずす</button>');ob.onclick=()=>{sfx('tap');gearOff(r,k);renderSheet()};row.appendChild(gearUpBtn(q,renderSheet));row.appendChild(ob);sec.appendChild(row)}
+    if(q){const row=gearRow(q);const ob=el('<button class="btn">はずす</button>');ob.onclick=()=>{sfx('tap');gearOff(r,k);renderSheet()};if(WD!==0)row.appendChild(gearUpBtn(q,renderSheet));row.appendChild(ob);sec.appendChild(row)}
     else{const p=el('<p class="note" style="margin:2px 0"></p>');p.textContent=k==='w'&&r.elem!=='fire'?'火のせいれいが装備できます':'なし';sec.appendChild(p)}
     gearList().forEach((g2,i)=>{if(gearSlot(BL[g2.id].g)!==k||gearOK(r,g2.id))return;const row=gearRow(g2),b=el('<button class="btn pri">つける</button>');b.onclick=()=>{if(gearEquip(r,i))renderSheet()};row.appendChild(b);sec.appendChild(row)})}
   if(!gearList().length&&!GSLOTK.some(k=>r.gear&&r.gear[k])){const p=el('<p class="note"></p>');p.textContent='そうびは、ありません';sec.appendChild(p)}
   body.appendChild(sec)}
 /* 依頼ボードの「そうび」：わくごとに見出し。さいごに強化 */
 function gearBoardHead(id,prev){const s=BL[id].g&&gearSlot(BL[id].g);if(!s||s==='ar'||(prev&&BL[prev].g&&gearSlot(BL[prev].g)===s))return null;const h=el('<b style="display:block;margin:6px 0 2px"></b>');h.textContent=GSLOT[s];return h}
-function gearBoardUp(box){const L=[];for(const q of gearList())if(gearCanUp(q.id))L.push([q,'']);for(const r of S.res)for(const k of['w','a'])if(r.gear&&r.gear[k])L.push([r.gear[k],r.name]);if(!L.length)return;const h=el('<b style="display:block;margin:8px 0 2px"></b>');h.textContent='強化';box.appendChild(h);for(const[q,who]of L){const row=gearRow(q,who?who+'がつけている':BL[q.id].desc);row.appendChild(gearUpBtn(q,renderSheet));box.appendChild(row)}}
+function gearBoardUp(box){if(WD===0)return;const L=[];for(const q of gearList())if(gearCanUp(q.id))L.push([q,'']);for(const r of S.res)for(const k of['w','a'])if(r.gear&&r.gear[k])L.push([r.gear[k],r.name]);if(!L.length)return;const h=el('<b style="display:block;margin:8px 0 2px"></b>');h.textContent='強化';box.appendChild(h);for(const[q,who]of L){const row=gearRow(q,who?who+'がつけている':BL[q.id].desc);row.appendChild(gearUpBtn(q,renderSheet));box.appendChild(row)}}
 /* もちもの：そうび */
 function gearInv(body){const L=gearList();if(!L.length)return;const g=el('<div class="grid"></div>'),hd=el('<b style="grid-column:1/-1;margin-top:8px"></b>');hd.textContent='そうび';g.appendChild(hd);for(const q of L){const b=el('<div class="slot"><span class="ct"></span><img alt=""><span class="nm"></span></div>');b.querySelector('img').src=gearIcon(q.id);b.querySelector('.nm').textContent=gearName(q);b.querySelector('.ct').textContent=GSLOT[BL[q.id].g.s];g.appendChild(b)}body.appendChild(g)}
 /* ---------- 炉（smelter、2×2の建物）：鉱石2こで延べ棒1こ ----------
