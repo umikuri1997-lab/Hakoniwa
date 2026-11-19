@@ -172,7 +172,7 @@ let ambF=null,AMBIN=false;
 function ambIndoor(){if(!S||!started||typeof HOUSES==='undefined'||!HOUSES.length||typeof cam==='undefined')return false;const vw=VW/cam.z,vh=VH/cam.z,cx=((cam.x+vw/2)/TS)|0,cy=((cam.y+vh/2)/TS)|0;if(cx<0||cy<0||cx>=W||cy>=H)return false;
   if(cam.z<homeZ()*.95)return false;const h=HOUSES.find(q=>q.set.has(cy*W+cx));return !!h&&roofAOf(h)<.5}
 /* マップの読みこみ中（「マップを読みこみ中…」の画面 STLD）だけ、読みこみ中の曲をくりかえし鳴らす。おわったら1秒（LDMFADE）で消す */
-const LDMV=.27,LDMFADE=1;let LDM=null,ACOMP=null;/* bgmF は曲の切りかえで0になる（ゲームがはじまるときとかさなる）ので、つながない */
+const LDMV=.135,LDMFADE=1;let LDM=null,ACOMP=null;/* bgmF は曲の切りかえで0になる（ゲームがはじまるときとかさなる）ので、つながない */
 function ldMusicTick(){const want=typeof STLD!=='undefined'&&STLD&&SND.bgm,now=AC.currentTime;
   if(want&&!LDM){const b=(SBUF.ldmusic||[])[0];if(!b)return;const src=AC.createBufferSource(),g=AC.createGain();src.buffer=b;src.loop=true;src.loopStart=.06;src.loopEnd=b.duration-.06;g.gain.value=LDMV*(SND.bv??1);src.connect(g);g.connect(ACOMP);src.start(now,.06);LDM={src,g};return}
   if(!want&&LDM){const{src,g}=LDM;LDM=null;g.gain.cancelScheduledValues(now);g.gain.setValueAtTime(g.gain.value,now);g.gain.linearRampToValueAtTime(0,now+LDMFADE);src.stop(now+LDMFADE+.05)}}
