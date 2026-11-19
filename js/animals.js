@@ -152,10 +152,11 @@ function aniJoyF(a,now){const t0=AJOY.get(a);if(t0==null)return null;let e=now-t
 function aniChip(a,now){/* ボーンで動かして写したコマ（tools/art/animals/ani_rig.py）：歩く4コマ（150ミリ秒ごと）・食べる（220ミリ秒ごと）・立つ（息をする2コマ、700ミリ秒ごと。生き物ごとにずらす） */const k=a.k,C=window.CHIPS||{};if(a.in)return null;
   const jf=aniJoyF(a,now);if(jf)return a.vw&&C['ani:'+k+'#'+a.vw+jf[0]]||C['ani:'+k+'#'+jf[0]]||C['ani:'+k+'#0']||null;
   const f=a.eat>0?ANIEAT[(now/220|0)%4]:a.mv?'w'+((now/150|0)%4):String(((now+a.id*337)/700|0)%2);return a.vw&&C['ani:'+k+'#'+a.vw+f]||C['ani:'+k+'#'+f]||C['ani:'+k+'#0']||null}
+const ANISHW=.9,ANISHH=.3;/* 飼う生き物のかげ：足もとのはばに対する、だ円のよこの半径・たての半径の比 */
 function drawAnimal(g,a,now){/* 足もと（a.x, a.y）に、チップの足（下のはし58/64）をそろえる。左むきは、足もとのまん中で反転 */const ch=aniChip(a,now);if(!ch)return;const im=chipImgs(ch,'ani'+a.k)[0];if(!im.ok)return;
   const x=a.x*TS,y=a.y*TS,young=a.born!=null&&a.born+ANIGROW>callDay(),scale=young?.7:1;
-  const width=(a.k==='hane'?6:10)*scale;
-  dotShadow(g,x,y,width,width*.3,1);
+  {const ft=chipFoot(ch,im),sz=(a.k==='hane'?6:10)*scale;/* かげ：足もとのはばに合わせた、ドットのだ円（1ドットはチップと同じ、ゲームの半分の点） */
+    if(ft){const l=ft.l+ch.ax-TS,r=ft.r+ch.ax-TS,m=(l+r)/4*scale,hw=((r-l)/4*ANISHW+1)*scale;dotShadow(g,Math.round(x+(a.face<0?-m:m)),Math.round(y),hw,Math.max(1.5,hw*ANISHH),1,.5)}else dotShadow(g,Math.round(x),Math.round(y),sz,2,1,.5)}
   const jf=aniJoyF(a,now);g.save();g.translate(Math.round(x),Math.round(y)-(jf?jf[2]:0));
   g.scale(a.face<0?-scale:scale,scale);g.imageSmoothingEnabled=false;
   g.drawImage(im,ch.ax/2-TS/2,ch.ay/2-29,ch.w/2,ch.h/2);g.restore()
@@ -227,7 +228,7 @@ function strayMeet(a){if(AMEET||GIFT_ACTIVE||camAnim&&camAnim.done)return strayP
     for(let i=0;i<5;i++)scnAdd('orb',700,{x0:x,y0:y,x1:x+Math.cos(i*1.26)*22,y1:y-12+Math.sin(i*1.26)*12,arc:6,col:'#fff0a8',n:1},200+i*80);
     setTimeout(()=>{if(!ok()||AMEET==null)return finish();const ov=el('<div class="idea-reveal gift-reveal anim-meet" role="dialog" aria-modal="true" aria-label="はじめて会った"></div>'),card=el('<div class="idea-card"><h2>はじめて会った！</h2><div class="pic"></div><b class="nm" style="display:block;font-size:15px"></b><p class="amrow ds"></p><p class="amrow pr"></p></div>');
       const pic=aniMeetPic(a.k);if(pic)card.querySelector('.pic').append(pic);card.querySelector('.nm').textContent=ANI[a.k].name;card.querySelector('.ds').textContent=ANI[a.k].desc;card.querySelector('.pr').textContent='とれる物：'+aniProdName(ANI[a.k].prod);
-      const b=el('<button class="btn pri" type="button">とじる</button>');b.disabled=true;card.append(b);ov.append(card);document.body.append(ov);sfx('firstDiscovery');setTimeout(()=>{if(ov.isConnected)b.disabled=false},800);
+      const b=el('<button class="btn pri" type="button">とじる</button>');b.disabled=true;card.append(b);ov.append(card);document.body.append(ov);sfx('level');setTimeout(()=>{if(ov.isConnected)b.disabled=false},800);
       b.onclick=()=>{if(b.disabled)return;sfx('tap');ov.remove();if(!ok())return finish();(S.flags.aniMet||(S.flags.aniMet={}))[a.k]=1;
         camAnim=AMEET.cam={fz:cam.z,tz:back.z,fx:cam.x+VW/cam.z/2,fy:cam.y+VH/cam.z/2,tx:back.x,ty:back.y,t:0,dur:1.1,done:()=>finish(true)}}},Math.max(0,1500-(performance.now()-T0)))}}}
 function aniMeetReset(){if(!AMEET)return;if(AMEET.cam&&camAnim===AMEET.cam)camAnim=null;AMEET=null;GIFT_ACTIVE=false;document.querySelectorAll('.anim-meet').forEach(e=>e.remove())}/* 村を切りかえたとき */

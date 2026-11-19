@@ -125,10 +125,8 @@ function critChip(c,now){const C=window.CHIPS;if(!C)return null;
   const n='crit'+(CK[c.k].ch||c.k)+'#',f=critFrame(c,now);return c.vw&&C[n+c.vw+f]||C[n+f]||C[n+'0']}
 const CRITSHZ=40;/* とぶ高さ（ゲームの点）がこれくらいで、かげがいちばん小さく */
 function drawCritter(g,c,now){const x=Math.round(c.x*TS),y=Math.round(c.y*TS),z=Math.round(c.z||0)+critPokeZ(c,now),f=c.face<0?-1:1,ch=critChip(c,now),sw=CK[c.k].sw;
-  const al=critAlpha(c);if(al<=0)return;
-  const im=ch?chipImgs(ch,'crit'+c.k)[0]:null,zk=Math.max(.45,1-Math.max(0,c.z||0)/CRITSHZ);
-  const width=sw*.5*zk;
-  dotShadow(g,c.x*TS,c.y*TS,width,Math.max(1,width*.32),al*zk);
+  const al=critAlpha(c);if(al<=0)return;const im=ch?chipImgs(ch,'crit'+c.k)[0]:null,ft=im&&im.ok?chipFoot(ch,im):null,zk=Math.max(.45,1-Math.max(0,z)/CRITSHZ);/* かげ：足もとのはばのドットのだ円。高くとぶほど小さく・うすく */
+  if(ft){const l=ft.l+ch.ax,r=ft.r+ch.ax,m=(l+r)/4,hw=((r-l)/4*.85+.5)*zk;dotShadow(g,x+Math.round(f*m),y,hw,Math.max(1,hw*.32),al*zk,1)}else dotShadow(g,x,y,(sw>>1)*zk,1,al*zk,1);
   if(!ch||!im.ok)return;const sm=g.imageSmoothingEnabled;g.imageSmoothingEnabled=false;g.save();g.globalAlpha=al;g.translate(x,y-z);if(f<0)g.scale(-1,1);g.drawImage(im,ch.ax/2,ch.ay/2,ch.w/2,ch.h/2);g.restore();g.imageSmoothingEnabled=sm}
 /* ほたるの光：夜の暗さより上に、おしりのドットの光（ゆっくり明るく・暗く）。draw-world.js が暗さのあとでよぶ */
 function drawCritGlow(g,now){for(const c of CRIT){if(c.k!=='hotaru')continue;const pq=c.pk?(now-c.pk)/(CRITPK*1000):1,pb=pq>=0&&pq<1?Math.sin(pq*Math.PI):0,a=Math.max(.55+.45*Math.sin(now/520+c.id*1.7),pb)*critAlpha(c);if(a<.15)continue;/* タップすると、ぽっと明るく（pb） */

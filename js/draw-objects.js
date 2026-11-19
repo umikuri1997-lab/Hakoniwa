@@ -60,23 +60,6 @@ const CRATEACT=new Set(['store','smat','sitem','fetch','cpick','cgrab','otakiget
 function crateUsing(i){const x=i%W,y=(i/W)|0;return S.res.some(r=>{const a=r.act;if(!a||a.stage!=='do'||!CRATEACT.has(a.type))return false;if(a.box!=null&&a.box>=0)return a.box===i;return Math.abs((r.x|0)-x)+Math.abs((r.y|0)-y)===1})}/* その木箱で、しまう・とりだすをしている子がいるか（箱がきまっていない動きは、となりのマスにいるか） */
 const CRATEFILL=[.4,.8];/* 木箱の中身の絵のさかい（しまえる数にたいする、入っている数のわりあい）：0 空・それより少ない 少し・.4から 半分・.8から いっぱい */
 function crateFill(i){if(typeof boxCap!=='function')return 0;const c=boxCap(i),n=boxUsed(i);if(!c||n<=0)return 0;const r=n/c;return r<CRATEFILL[0]?1:r<CRATEFILL[1]?2:3}
-function crateItems(c,i,x,y,level){
-  const stock=BOX()[i]||{},keys=Object.keys(stock).filter(k=>stock[k]>0).sort((a,b)=>stock[b]-stock[a]);
-  const count=[0,2,4,7][level],spots=[[7,-9],[17,-7],[11,-4],[22,-10],[5,-4],[19,-3],[13,-12]];
-  for(let n=0;n<count;n++){
-    const key=keys[n%keys.length],p=spots[n],bx=x+p[0],by=y+p[1];
-    if(key==='wood'||key==='eda'||key==='bamboo'){
-      c.fillStyle=key==='bamboo'?'#587b40':'#865330';c.fillRect(bx,by,7,3);
-      c.fillStyle=key==='bamboo'?'#c5d886':'#d6a364';c.fillRect(bx,by,2,3);c.fillRect(bx+2,by,5,1);
-    }else{
-      const food=isFK(key),grass=GRASSK.includes(key);
-      c.fillStyle=food?'#a9563a':grass?'#526b36':'#6e6251';
-      c.fillRect(bx,by+1,5,3);c.fillRect(bx+1,by,3,5);
-      c.fillStyle=food?'#e09858':grass?'#a4bf68':'#b6aea0';
-      c.fillRect(bx+1,by+1,3,2);
-    }
-  }
-}
 function crateLid(i){const T=performance.now(),o=CRATEO[i]||(CRATEO[i]={v:0,t:T}),dt=Math.min(.1,Math.max(0,(T-o.t)/1000));o.t=T;const on=crateUsing(i);if(on&&!o.s){o.s=1;if(typeof sfxAt==='function')sfxAt('lid',i%W,(i/W)|0)}else if(!on&&o.v===0)o.s=0;/* しまっていたふたが開きはじめたら、ぎぃ（しまりきるまで鳴らさない） */o.v=Math.max(0,Math.min(1,o.v+(on?dt:-dt)/CRATESP));if(on?o.v<1:o.v>0)dirty=true;return Math.round(o.v*3)}/* ふたの開きぐあい（0しまった〜3開いた）。開け閉めは実時間で、絵は crate#o1〜#o3 */
 const CHA={};function chipPage(n){/* マップチップのアトラス（大きな絵）。1まいごとに1回だけ読みこむ */let a=CHA[n];if(!a){a=CHA[n]={im:new Image(),ok:false,q:[]};a.im.onload=()=>{a.ok=true;const q=a.q;a.q=[];for(const f of q)f();dirty=true};a.im.onerror=()=>{a.bad=true};a.im.src=(window.CHIPA||[])[n]}return a}
 function atlasFrame(r,id){/* アトラスの (x,y,w,h) を、1まいの絵（キャンバス）に切り出す。読みこむまでは ok=0 */const[n,x,y,w,h]=r,c=document.createElement('canvas');c.width=w;c.height=h;c.ok=0;const a=chipPage(n),done=()=>{const g=c.getContext('2d');g.drawImage(a.im,x,y,w,h,0,0,w,h);if(id==='hwall'||id.startsWith('hwall:')){/* 木の壁だけを明るい黄褐色に。木目と透明度は保つ */const img=g.getImageData(0,0,w,h),d=img.data;for(let k=0;k<d.length;k+=4){if(!d[k+3])continue;const l=.299*d[k]+.587*d[k+1]+.114*d[k+2];d[k]=Math.min(255,l*1.12+18);d[k+1]=Math.min(255,l*.88+14);d[k+2]=Math.min(255,l*.57+10)}g.putImageData(img,0,0)}c.ok=1;try{delete iconCache[id]}catch(e){}};if(a.ok)done();else a.q.push(done);return c}
@@ -88,26 +71,6 @@ const PARTMV={/* 動く部品の動き：rot＝回る角度、sx・sy＝のび�
   suisha:(i,now)=>({rot:ICON?0:(now||performance.now())/1000*.7}),/* 水車の輪は、ずっとまわる */
   vane:(i,now)=>({sx:ICON?1:Math.cos(Math.sin((now||performance.now())/1300+(i||0))*.6)})};
 function partImg(p,id){if(!p._im)p._im=atlasFrame(p.f[0],id);return p._im}
-let ONSEN_SUMMER=null;
-function onsenSummer(c,x,y){
-  const a=chipImgs(CHIPS.onsen,'onsen')[0],b=chipImgs(CHIPS['onsen#1'],'onsen')[0];
-  if(!a.ok||!b.ok)return false;
-  if(!ONSEN_SUMMER){
-    const w=a.width,h=a.height,g=a.getContext('2d'),q=g.getImageData(0,0,w,h),p=b.getContext('2d').getImageData(0,0,w,h);
-    for(let sy=0;sy<66;sy++)for(let sx=32;sx<84;sx++){
-      const i=(sy*w+sx)*4;
-      // 湯気の位置がずれた2コマから、岩と湯の色がよく見える方を使う。
-      const clearer=sy<31?p.data[i+3]<q.data[i+3]:p.data[i]<q.data[i]-3||p.data[i+3]<q.data[i+3]-12;
-      if(sy<20&&sx>=46&&sx<67)q.data.fill(0,i,i+4);
-      else if(clearer)q.data.set(p.data.subarray(i,i+4),i);
-    }
-    ONSEN_SUMMER=document.createElement('canvas');ONSEN_SUMMER.width=w;ONSEN_SUMMER.height=h;
-    ONSEN_SUMMER.getContext('2d').putImageData(q,0,0);
-  }
-  const sm=c.imageSmoothingEnabled;c.imageSmoothingEnabled=false;
-  c.drawImage(ONSEN_SUMMER,x,y+8,64,55);c.imageSmoothingEnabled=sm;
-  return true;
-}
 function hotSteam(c,x,y,now,i){/* 湯のわき岩の湯気：4コマを、となりのコマとうすくかさねて、ゆっくり入れかえる */if(seasonNow()===1)return;const C=window.CHIPS;if(!C||!C['hotstone:steam#0'])return;const t=((now||performance.now())/700+(i||0)*.37)%4,k=t|0,f=t-k,a0=c.globalAlpha;for(const[n,al]of[[k,1-f],[(k+1)%4,f]]){if(al<=.01)continue;c.globalAlpha=a0*al*.8;drawChip(c,C['hotstone:steam#'+n],'hotstone:steam',x,y,now,i)}c.globalAlpha=a0}
 function drawChip(c,ch,id,x,y,now,i){const src=ch.src||ch,g64=src.g===64,ims=chipImgs(src,id),n=ims.length,im=ims[n>1?Math.floor((now||performance.now())/(id==='yomawari'?900:180))%n:0];if(!im.ok)return false;const sm=c.imageSmoothingEnabled,branch=id==='mat:eda'||id==='drop:eda',sv=ch.flip||src.parts||branch;c.imageSmoothingEnabled=false;if(sv)c.save();if(branch){c.translate(x+TS/2,y+TS/2);c.scale(.75,.75);c.translate(-x-TS/2,-y-TS/2)}if(ch.flip){c.translate(2*x+ch.fw,0);c.scale(-1,1)}/* 反転は、マスのはばの中で */
   if(g64)c.drawImage(im,x+src.ax/2,y+src.ay/2,src.w/2,src.h/2);else c.drawImage(im,x+src.ax,y+src.ay);/* 1マス64ドットの絵（g:64）は、半分の大きさでかく */
@@ -207,9 +170,9 @@ function drawObj(c,id,x,y,i,g,now){
   if(CONN[id]&&!c._chip&&!(HOME_WALLS.has(id)&&S&&S.win&&S.win[i]&&!c._win)){const gL=(CONN[id]==='f'||CONN[id]==='w')&&id!=='misugaki'&&!ICON&&i!=null&&GLX[typeAt(i-1)];/* 御簾垣の戸は、柱がマスの中におさまる */if(gL){const gx=GLX[typeAt(i-1)];c.save();c.beginPath();c.rect(x+gx,y-64,96,160);c.clip()}/* 丸太の塀のドアの右の柱も、となりのマスにはみ出す *//* 左が柵のドア：ドアの右の柱（このマスの左はし2.4ドット。すきまが出ないよう2.2から描く）にかぶる板を描かない（横木は柱のふちから） */const ok=drawConn(c,id,x,y,i,now);if(gL)c.restore();if(ok){if(id!=='wall'&&HOME_WALLS.has(id)&&window.CHIPS[id+':ext'])wallFront(c,id,x,y,i);if(!ICON&&i!=null&&DECAYW.has(id)&&decayed(i))drawCrack(c,id,x,y,i);/* 朽ちた壁：ひびをかさねる */return}}/* つながる物は部品で（窓のある壁は、窓の前に壁だけ）。家の壁は、先に、となりの床を壁のふちまでのばす */
   if(!c._chip&&PCH.has(id)){const ch=plantChip(id,i,g);if(ch&&drawChip(c,ch,id,x,y,now,i)){if(id==='nebari')nebariDots(c,x,y,i);if(id==='hotaru'&&!ICON)hotaruDots(c,x,y,i,now);if(id==='berry'&&g>=100)berryOn(c,x,y);if(id==='fruit'&&g>=100&&!ICON)appleOn(c,x,y);if(id==='statue'&&i!=null&&!ICON)for(const q of[i-1,i+1])if(S.obj[q]==='obox'||S.obj[q]==='board')drawObj(c,S.obj[q],x+(q-i)*TS,y,q,0,now);/* 女神像の横の箱・ボードを手前に */return}}
   if(id==='smelter'&&!ICON&&!c._chip&&i!=null&&window.CHIPS&&CHIPS['smelter#on']&&smLit(i)){const ro=rotAt(i),on=CHIPS[(ro?'smelter>'+(ro===3?1:ro):'smelter')+'#on'];if(on&&drawChip(c,ro===3?{src:on,ax:on.ax,ay:on.ay,w:on.w,h:on.h,f:on.f,flip:1,fw:64}:on,id,x,y,now,i))return}/* 炉：精錬しているあいだは、火のついた絵（向きごと。左は右の反転） */
-  if(id==='crate'&&!ICON&&!c._chip&&i!=null&&S){const f=crateLid(i);if(f){const L=crateFill(i),ch=chipOf('crate',i,null,'#o'+f);if(ch&&drawChip(c,ch,id,x,y,now,i)){if(L&&f>=2)crateItems(c,i,x,y,L);return}}}/* 木箱：せいれいがしまう・とりだすあいだ、ふたが開き、中の品と量にあわせて中身を描く */
+  if(id==='crate'&&!ICON&&!c._chip&&i!=null&&S){const f=crateLid(i);if(f){const L=crateFill(i),ch=chipOf('crate',i,null,L?'#f'+L+'o'+f:'#o'+f);if(ch&&drawChip(c,ch,id,x,y,now,i))return}}/* 木箱：せいれいがしまう・とりだすあいだ、ふたが開き、中の品と量にあわせて中身を描く */
   if(id==='andon'&&!ICON&&!c._chip&&window.CHIPS&&CHIPS['andon#on']&&darkness()>.15){if(drawChip(c,CHIPS['andon#on'],id,x,y,now,i))return}/* 行燈：暗くなったら、あかりのついた絵 */
-  if(id==='onsen'&&!ICON&&!c._chip&&window.CHIPS&&CHIPS['onsen#1']){if(seasonNow()===1&&onsenSummer(c,x,y))return;const ch=seasonNow()!==1&&Math.floor(performance.now()/900)%2?CHIPS['onsen#1']:CHIPS.onsen;if(drawChip(c,ch,id,x,y,now,i))return}/* 露天ぶろ：湯気がゆらぐ */
+  if(id==='onsen'&&!ICON&&!c._chip&&window.CHIPS&&CHIPS['onsen#1']){const ch=seasonNow()!==1&&Math.floor(performance.now()/900)%2?CHIPS['onsen#1']:CHIPS.onsen;if(drawChip(c,ch,id,x,y,now,i))return}/* 露天ぶろ：湯気がゆらぐ */
   if(id==='bell'&&!ICON&&!c._chip&&window.CHIPS&&CHIPS['bell#1']){const t=performance.now()-BELLRING,ch=t<4500&&Math.floor(t/260)%2?CHIPS['bell#1']:CHIPS.bell;if(drawChip(c,ch,id,x,y,now,i))return}/* 村の鐘：朝に鳴るあいだ、ゆれる */
   if(id==='composter'&&!ICON&&i!=null&&!c._chip&&window.CHIPS){const d=S.dyn[i]||{};let g=0;for(const x of d.b||[])g+=x[1];const n=Math.min(20,g+(d.c||0)),lv=Math.ceil(n/5),k=lv>=4&&g>0?'':g>0?'composter~'+lv:lv?'composter~c'+lv:'composter~0';if(k&&CHIPS[k]&&drawChip(c,CHIPS[k],id,x,y,now,i))return}/* コンポスター：入っている草・肥料の数（20こまで）で中身の高さ。草があれば草、肥料だけなら肥料、なければから */
   if(id==='jar'&&!ICON&&i!=null&&!c._chip&&window.CHIPS&&CHIPS['jar~e']&&!(((S.dyn[i]||{}).w||0)>0)){if(drawChip(c,CHIPS['jar~e'],id,x,y,now,i))return}/* みずがめ：水がなくなったら、空の絵 */
