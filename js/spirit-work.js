@@ -324,7 +324,7 @@ function updRes(r,dt){rescueStuck(r);if((RHOLD.get(r)||0)>performance.now())retu
   if(!S.enemyOn&&r.hunger<400)r.hunger=400;/* チュートリアル中は、おなかで消えない */
   if(r.hunger<100&&!r.hw10&&S.enemyOn){r.hw10=1;toast(r.name+'のおなかが、もうすぐからっぽ！','warn')}else if(r.hunger>=250)r.hw10=0;
   if(r.hunger<=0){r.hunger=0;return die(r)}
-  if(r.act&&hungry(r)&&!['step','eat','fetch','eatwait','forage','flee','faint','smat','store'].includes(r.act.type))endAct(r);/* おなかが50より少なくなったら、なにをしていても（ねていても・たたかっていても）、やめて食べにいく */
+  if(r.act&&hungry(r)&&!['step','eat','fetch','eatwait','forage','flee','faint','smat','store','sitem'].includes(r.act.type))endAct(r);/* おなかが50より少なくなったら、なにをしていても（ねていても・たたかっていても）、やめて食べにいく */
   if(r.act&&r.act.type==='repair'&&r.hunger<=500&&S.food>0&&!isNight()){endAct(r);goEat(r,bfs(r.x|0,r.y|0));return}
   if(r.cgot&&(isNight()||r.hunger<=250))cgBack(r);if(r.cing&&r.hunger<=250&&S.food<=0){const R=RECIPES.find(x=>x.out===r.cing.rec);if(R){const N=needR(R,r);for(const k in N)addFood(k,N[k])};r.cing=null;if(r.act&&r.act.type==='cook')endAct(r);if(r.bubble==='🔥'||r.bubble==='🍳')r.bubble=null}/* 料理中におなかがすいたら、材料をもどして食べにいく */
   if(r.act&&r.hunger<=(r.act.type==='cook'?250:500)&&S.food>0&&!isNight()&&WORKT.has(r.act.type)){endAct(r)}/* おなかが50いかになったら、作業をやめて食べにいく */
@@ -352,7 +352,9 @@ function updRes(r,dt){rescueStuck(r);if((RHOLD.get(r)||0)>performance.now())retu
   const wdt=(WORKT.has(a.type)&&a.type!=='cook'?dt*(rMul(r,'work')+nareAdd(r,a)+(typeof inspWork==='function'?inspWork(r,a):0)):dt)*gJob(r,a.type);nareTick(r,a,dt);/* 担当のしごと場では、なれのぶん速い *//* 専用品：作業ごとの速さ *//* 料理は、力に関係なく、説明どおりの時間 *//* 力があるほど作業が速い */
   a.t+=wdt;const A=ACT[a.type];
   if(A.tick)A.tick(r,a,wdt);
-  if(A.done(r,a)){a.fin=1;dayNote(r,a);if(typeof vrecNote==='function')vrecNote(r,a);/* 村の記録 */titleNote(r,a);/* 得意な仕事の回数・★ *//* きょうしたことをおぼえる（お話で話す） */if(A.end)A.end(r,a);endAct(r)}
+  if(A.done(r,a)){a.fin=1;dayNote(r,a);if(typeof vrecNote==='function')vrecNote(r,a);/* 村の記録 */titleNote(r,a);/* 得意な仕事の回数・★ *//* きょうしたことをおぼえる（お話で話す） */if(A.end)A.end(r,a);endAct(r);
+    if(STOW_ACTS.has(a.type)&&heldN(r)>0)goStow(r,bfs(r.x|0,r.y|0));/* 入りきらなかった物や、別の箱に入れる物をつづけて運ぶ */
+  }
 }
 function reunite(r,sp){/* もどってきた子の、もとのなかよしは、神殿へかけつけてよろこぶ */const m=r.reMate&&S.res.find(q=>q.name===r.reMate&&!q.hidden&&q!==r);r.reMate=null;if(m&&!IS_STORY_REPLAY)r.reTalk=m.name;/* 再会の会話（griefTick。紹介のあと・昼に） */if(!m||isNight()&&!m.act)return;const G=bfs(m.x|0,m.y|0),st=nearest(G,j=>Math.abs(j%W-sp[0])+Math.abs(((j/W)|0)-sp[1])===1&&walk(j),300);if(st<0)return;endAct(m);startAct(m,G,'reunion',st,{who:r.id})}
 function finishBurial(r){const nm=r.coffin&&r.coffin.name;r.coffin=null;if(!nm)return;for(const L of[S.buried||[],S.lost||[]])for(const q of L)if(q.name===nm)delete q.unb;/* 埋葬してから、よみがえらせられる */S.pt+=1;S.totalPt+=1;if(typeof juiceFly==='function'&&1)juiceFly(r.x,r.y,'pt',1);toast(r.name+'が'+nm+'をおみおくりした。'+((S.buried||[]).some(q=>q.name===nm)?(backFirst(nm)?'次の朝、神殿で呼びもどせる':'神殿で、じゅんばんに呼びもどせる'):'パワー+1'),'good');logEv(r.name+'が'+nm+'をおみおくりした')}
