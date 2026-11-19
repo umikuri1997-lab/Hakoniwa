@@ -31,15 +31,18 @@ function toastRopes(){if(!document.body.classList.contains('wd0'))return;const b
       if(y===null)for(let yy=top-1;yy>0;yy-=2){const e=ropeSolid(document.elementFromPoint(x,yy));if(e){y=e.getBoundingClientRect().bottom;break}}
       t.style.setProperty(k,Math.max(pp*2,Math.round(top-(y===null?0:y)+pp*2))+'px')}}}/* 板のうらに2ドットかくす */
 addEventListener('resize',()=>toastRopes());
-function toastShow(it){const box=$('#toasts'),t=document.createElement('div');t.className='toast'+(it.kind?' '+it.kind:'');t._msg=it.msg;t._n=it.n;const tx=document.createElement('span');tx.className='ttx';tx.textContent=it.n>1?it.msg+'（'+it.n+'）':it.msg;const fc=typeof toastFace==='function'?toastFace(it.msg,it.kind):null;/* 名前の出るせいれいの顔 */if(fc){t.classList.add('hasface');t.appendChild(fc)}t.appendChild(tx);if(document.body.classList.contains('wd0')){const h=document.createElement('i');h.className='trope';t.appendChild(h)}/* 草原の知らせは、なわでつるした木札 */box.appendChild(t);toastRopes();if(/たっせい/.test(it.msg)&&typeof uiStamp==='function')uiStamp(t,true);/* たっせいの知らせには、ハンコ */toastTimer(t,it.kind)}
+function toastShow(it){const box=$('#toasts'),t=document.createElement('div');t.className='toast'+(it.kind?' '+it.kind:'');t._msg=it.msg;t._n=it.n;const tx=document.createElement('span');tx.className='ttx';tx.append(document.createTextNode(it.n>1?it.msg+'（'+it.n+'）':it.msg));const fc=typeof toastFace==='function'?toastFace(it.msg,it.kind):null;/* 名前の出るせいれいの顔 */if(fc){t.classList.add('hasface');t.appendChild(fc)}t.appendChild(tx);if(document.body.classList.contains('wd0')){const h=document.createElement('i');h.className='trope';t.appendChild(h)}/* 草原の知らせは、なわでつるした木札 */box.appendChild(t);toastRopes();if(typeof uiStamp==='function'){
+    if(it.stamp)uiStamp(tx,true,it.stamp);
+    else if(/たっせい/.test(it.msg))uiStamp(t,true);
+  }toastTimer(t,it.kind)}
 function toastTimer(t,kind){clearTimeout(t._tm);t._tm=setTimeout(()=>{t.classList.add('out');setTimeout(()=>{t.remove();toastRopes();toastNext()},180)},TOASTMS[kind||'']||2000)}
 function toastNext(){const box=$('#toasts');while(TOASTQ.length&&box.querySelectorAll('.toast:not(.out):not(#playHint)').length<TOASTMAX)toastShow(TOASTQ.shift())}
-function toast(msg,kind){kind=kind||'';const box=$('#toasts');
-  for(const t of box.querySelectorAll('.toast:not(.out):not(#playHint)'))if(t._msg===msg){t._n++;(t.querySelector('.ttx')||t).textContent=msg+'（'+t._n+'）';t.classList.remove('bump');void t.offsetWidth;t.classList.add('bump');toastTimer(t,kind);return}
+function toast(msg,kind,stamp){kind=kind||'';const box=$('#toasts');
+  for(const t of box.querySelectorAll('.toast:not(.out):not(#playHint)'))if(t._msg===msg){t._n++;t.querySelector('.ttx').firstChild.nodeValue=msg+'（'+t._n+'）';t.classList.remove('bump');void t.offsetWidth;t.classList.add('bump');toastTimer(t,kind);return}
   const q=TOASTQ.find(it=>it.msg===msg);if(q){q.n++;return}
   if(kind==='good')sfx('good');else if(kind==='warn')sfx('warn');
   if(TOASTQ.length>=4)TOASTQ.splice(TOASTQ.findIndex(it=>!it.kind)>=0?TOASTQ.findIndex(it=>!it.kind):0,1);/* まちが長くなりすぎたら、小さい知らせからすてる */
-  TOASTQ.push({msg,kind,n:1});toastNext()}
+  TOASTQ.push({msg,kind,stamp,n:1});toastNext()}
 const FEATS={inv:'#dockInv',build:'[data-mode="build"]',remove:'[data-mode="remove"]',craft:'[data-sheet="craft"]',people:'[data-sheet="people"]'};
 function applyFeats(){
   if(S.glassT==null&&glassUnlocked())S.glassT=600;/* はじめの10分は無料 */$('#speedBtn').hidden=!(glassUnlocked()||TESTSPD||TESTM);if(!(hasGlass()||TESTM))S.speed=1;if(!TESTM&&S.speed>3)S.speed=1;glassUI();
