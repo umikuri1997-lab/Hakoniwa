@@ -104,11 +104,11 @@ NEW = [
  ('きのこのおやき', 'kinoko komugiko', [C], F, 'cake'), ('きのこパン', 'kinoko komugiko', [O], E, 'bread'),
  # とくべつな魚
  ('うまき', 'unagi egg', [C, O], F, 'plate'),
- ('アユのしおやき', 'ayu', [C, O], F, 'skewer'),
- ('コイのあまに', 'koi', [C, O], W, 'bowl'),
- ('ナマズのかばやき', 'namazu', [C, O], F, 'plate'),
+ ('ハヤセのしおやき', 'ayu', [C, O], F, 'skewer'),
+ ('キンヒレのあまに', 'koi', [C, O], W, 'bowl'),
+ ('ヒゲヌシのかばやき', 'namazu', [C, O], F, 'plate'),
  ('ゆうやけマスのくしやき', 'yumasu', [C, O], F, 'skewer'),
- ('ナマズのフライ', 'namazu komugiko', [C, O], F, 'plate'),
+ ('ヒゲヌシのフライ', 'namazu komugiko', [C, O], F, 'plate'),
  # 3しゅるい
  ('やさいのシチュー', 'imo tomato milk', [C, O], W, 'bowl'),
  ('さかなのポトフ', 'imo tomato fish', [C, O], W, 'bowl'),
