@@ -19,7 +19,10 @@ Q = {'tx': 1.5, 'ty': 1.5, 'rot': 0.05, 'sx': 0.005, 'sy': 0.005, 'op': 0.05, 'b
 SRC = {
  'uboing': (.32, "0%{transform:scale(.96,1.1)}25%{transform:scale(1.04,.95)}50%{transform:scale(.99,1.03)}75%{transform:scale(1.01,.99)}100%{transform:none}"),
  'uswing': (1, "0%{transform:rotate(0)}8%{transform:rotate(4deg)}16%{transform:rotate(6deg)}26%{transform:rotate(3deg)}36%{transform:rotate(-3deg)}46%{transform:rotate(-4deg)}56%{transform:rotate(-1deg)}66%{transform:rotate(2deg)}78%{transform:rotate(1deg)}88%{transform:rotate(-1deg)}100%{transform:none}"),
- 'ustamp': (.5, "0%{transform:scale(2.2);opacity:.3}20%{transform:scale(1.6);opacity:.6}40%{transform:scale(1.05);opacity:1}55%{transform:scale(.94)}70%{transform:scale(1.02)}100%{transform:none}"),
+ 'ustamp': (.6, "0%{transform:scale(1.9,1.9) translate(0,-6px);opacity:0}12%{transform:scale(2.15,2.15) translate(0,-12px);opacity:.55}30%{transform:scale(2.3,2.3) translate(0,-15px);opacity:.7}38%{transform:scale(1,1);opacity:1}42%{transform:scale(1.18,.78)}50%{transform:scale(.92,1.1)}60%{transform:scale(1.05,.96)}72%{transform:scale(.98,1.02)}100%{transform:none}"),
+ 'ustampk': (.32, "0%{transform:translate(0,3px) scale(1.02,.97)}15%{transform:translate(-3px,1.5px)}30%{transform:translate(3px,0)}45%{transform:translate(-1.5px,1.5px)}60%{transform:translate(1.5px,0)}80%{transform:translate(0,0)}100%{transform:none}"),
+ 'ucntp': (.16, "0%{transform:scale(1.45,1.45) translate(0,-3px)}35%{transform:scale(.9,1.1)}70%{transform:scale(1.05,.97)}100%{transform:none}"),
+ 'ucntd': (.42, "0%{transform:scale(1,1);filter:brightness(1)}18%{transform:scale(1.8,1.8) translate(0,-6px);filter:brightness(1.6)}40%{transform:scale(.85,1.15);filter:brightness(1.3)}60%{transform:scale(1.12,.92)}80%{transform:scale(.97,1.03)}100%{transform:none;filter:brightness(1)}"),
  'ustk': (.45, "0%{transform:translateY(-24px) scale(1.4);opacity:0}20%{transform:translateY(-15px) scale(1.25);opacity:1}40%{transform:translateY(-4.5px) scale(1.1)}60%{transform:scale(.95)}80%{transform:scale(1.03)}100%{transform:none}"),
  'nbump': (.42, "0%{transform:translateY(-4.5px)}30%{transform:translateY(-1.5px)}60%{transform:translateY(1.5px)}100%{transform:none}"),
  'nspk': (.5, "0%{opacity:1}50%{opacity:1;transform:translateY(-1.5px)}100%{opacity:0;transform:translateY(-3px)}"),

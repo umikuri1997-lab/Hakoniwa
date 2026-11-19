@@ -51,7 +51,7 @@ function kdLoot(r){const tot=KDLOOT.reduce((n,q)=>n+q[2],0);let p=Math.random()*
   return nm+'×'+n}
 function kdFound(e,r){if(!e||e.st===2)return;e.st=2;S.kodama=(S.kodama||0)+1;const n=S.kodama,c=e.k==='hana'||e.k==='ishi'?e.gap:e.j;
   sfx('seed');burst(c,'furn','furnPlace');r.bubble='✨';addFloat(r.x,r.y-1.7,chatTone(pickFresh('kodama',KDLINE),r));
-  const got=kdLoot(r);toast(r.name+'が、もりのこだまを見つけた（'+n+'/'+kdTotal()+'）。'+got,'good');rewardPower(KDPT);addSpiritXp(1,r);logEv('もりのこだまを見つけた（'+n+'）');
+  const got=kdLoot(r);if(typeof SPOT_POPS!=='undefined'&&!MEMRUN)SPOT_POPS.push({state:S,kd:{nm:r.name,n,tot:kdTotal(),got,pt:KDPT}});else toast(r.name+'が、もりのこだまを見つけた（'+n+'/'+kdTotal()+'）。'+got,'good');/* 見つけたら、ポップアップ（showSpotPop） */rewardPower(KDPT);addSpiritXp(1,r);logEv('もりのこだまを見つけた（'+n+'）');
   if(KDBP.includes(n)){memo('leaf','もりのこだまを'+n+'こ見つけた');if(!kdGiveBp(r))S.kdOwe=(S.kdOwe||0)+1}
   if(typeof juiceCheer==='function')juiceCheer();dirty=true}
 function kdGiveBp(r){if(typeof bpNext!=='function'||!bpNext())return false;bpGiveNext(r?r.id:null);return true}

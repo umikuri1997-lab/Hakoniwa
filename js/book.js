@@ -140,9 +140,14 @@ function bkEdge(B){if(!B||!B.el.isConnected)return;bkSpine(B);const r=B.in.getBo
 function bkTapes(pages){for(const pg of pages)for(const t of pg.querySelectorAll('.mtt,.tape,:scope>.sec>h3')){let h=0;for(const ch of t.textContent)h=(h*31+ch.charCodeAt(0))>>>0;t.style.backgroundImage='var(--tp'+(h%4)+((h>>2)&1?'u':'d')+')'}}
 
 /* ページわけ：ページの中身を右のスロットに入れて、はみ出したら、うしろの物からつぎのページへうつす（節・一覧・リストは中をわける）。map：もとのページ→わけたあとのページ */
+/* 絵日記のページ：絵と文が1ページに入るように、絵をちぢめる（できごとなど .dyMore は、入らなければつぎのページへ） */
+function bkFitPic(pg,over){if(!pg.classList||!pg.classList.contains('mdy')||!pg.querySelector('.dyTx'))return;const f=pg.querySelector('.dyph');if(!f)return;f.style.width='';
+  const more=pg.querySelector(':scope>.dyMore'),nx=more&&more.nextSibling;if(more)more.remove();
+  for(let k=0;k<20&&over();k++){const w=f.getBoundingClientRect().width*.9;if(w<72)break;f.style.width=Math.round(w)+'px'}
+  if(more)pg.insertBefore(more,nx)}
 function bkPaginate(B,pages){const c=B.R.querySelector('.bkc'),store=B.el.querySelector('.bkstore'),out=[],map=[],over=()=>c.scrollHeight>c.clientHeight+1;B.ch=c.clientHeight;B.cw=c.clientWidth;B.el.style.setProperty('--pgh',B.ch+'px');/* 写真などは、ページの高さにおさまる大きさ（--pgh） */
   const inner=el=>{if(!el.children.length)return null;const sh=el.cloneNode(false);while(over()){const last=el.lastElementChild;if(!last)break;if(el.children.length>1){sh.prepend(last);continue}const q=inner(last);if(!q)break;sh.prepend(q)}return sh.children.length?sh:null};
-  pages.forEach((pg,i)=>{map[i]=out.length;let cur=pg;for(let k=0;k<40&&cur;k++){c.replaceChildren(cur);cur.hidden=false;let nx=null;
+  pages.forEach((pg,i)=>{map[i]=out.length;let cur=pg;for(let k=0;k<40&&cur;k++){c.replaceChildren(cur);cur.hidden=false;let nx=null;bkFitPic(cur,over);
       if(over()){nx=cur.cloneNode(false);while(over()){const last=cur.lastElementChild;if(!last)break;if(cur.children.length>1){nx.prepend(last);continue}const q=inner(last);if(!q)break;nx.prepend(q)}if(!nx.children.length)nx=null}
       out.push(cur);cur=nx}});
   c.replaceChildren();for(const pg of out)store.appendChild(pg);return{pages:out,map}}

@@ -370,6 +370,11 @@ def fish(w, face):
     p = sit({}, 6.0, 1.3); p.update(sN=1.0+0.08*S(w), kN=0.7, bN=-0.3, prop='rod', sF=0.9, bF=-0.7, lean=0.05, hp=0.05)
     return breathe(p, w, 0.5)
 M('fish', 8, 1.4/(2*PI), fish)
+def fishpull(w, face):
+    """つり：魚がかかって、さおを上へぐいぐい引く（からだをうしろへそらし、手を高く。小きざみにふるえる）"""
+    p = sit({}, 6.0, 1.3); p.update(sN=1.9+0.25*S(w), kN=0.9+0.15*S(w), bN=-0.5, prop='rod', sF=1.7+0.25*S(w), bF=-0.9, lean=-0.12+0.04*S(w), hp=-0.08+0.04*S(w*2))
+    return p
+M('fishpull', 8, 7/(2*PI), fishpull)
 def carry(w, face):
     """荷物を頭の上にのせて運ぶ"""
     p = walk(w, face); p.update(sN=2.9, sF=2.9, bN=0.35, bF=0.35, yaw=p['yaw']*0.5, roll=p['roll']*0.5, hy=0.0)

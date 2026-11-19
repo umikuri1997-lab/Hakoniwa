@@ -6,12 +6,13 @@
 #   胸の横木：前の柱のてっぺんにわたす（0.05角、高さ0.38〜0.43）。
 #   たて糸：上の横木から胸の横木まで、ななめにはった、うすい糸の面（クリーム色に、たての糸のすじ）。
 #   おった布：胸の横木の手前に、すこしたれた布（うすい青に、よこのしま）。下に、布をまく、まき棒（まるい棒）。
-#   ひ（シャトル）：胸の横木の上におく、小さな木の舟の形。
+#   ひ（シャトル）：胸の横木の上におく、小さな木の舟の形。おっているあいだ（#w0〜#w3）は、たて糸のあいだを左右に走る。
+#   おさ：たて糸をとおす横木（0.04角）。左右の柱のあいだで、たて糸の上を前後にすべる。おっているあいだは、#w3 で手前へトンと打ちこむ。
 from blueprint import Part as P
 from common import *
 import math
 ID='loom';BOTTOM=48;GRAD=True
-VIEWS=[('loom',0),('loom>1',1),('loom>2',2)]   # 前・右・後ろ（左は右の反転）
+VIEWS=[('loom',0),('loom>1',1),('loom>2',2)]+[(n+'#w%d'%f,k,'w%d'%f) for n,k in(('loom',0),('loom>1',1),('loom>2',2)) for f in range(4)]   # 前・右・後ろ（左は右の反転）。#w0〜#w3 はおっているあいだ（ひが走る・おさを打つ）
 X0,X1=0.036,0.964;YB,YF=0.46,0.82
 THREAD=(246,240,222);THREAD2=(226,218,196);CLOTHC=(212,230,246);CLOTH2=(190,214,238)
 def PARTS():
@@ -27,7 +28,15 @@ def PARTS():
     def cloth(x,y,z):return CLOTH2 if int(z*60)%3==0 else CLOTHC
     p=notex(P('おった布','plate',((0.5,YF+0.005,0.42),(0.5,YF+0.03,0.20),X1-X0-0.12,0.008),CLOTHC,on=('胸の横木',),note='胸の横木から、まき棒へ'));p.decal=cloth;p.soft1=True;L.append(p)
     L.append(P('まき棒','log',((X0+0.04,YF+0.03,0.17),(X1-0.04,YF+0.03,0.17),0.035),WOOD,on=('左の前の柱','右の前の柱'),note='前の柱のあいだにわたす'))
-    L.append(P('ひ','box',(0.40,YF-0.045,0.43,0.60,YF-0.005,0.46),WOOD,bevel=0,on=('胸の横木',),note='胸の横木の上におく'))
+    def onp(f):return YB+0.03+f*(YF-YB-0.06),0.80-f*0.39   # たて糸の面の上の場所（f：上の横木0〜胸の横木1）
+    V=globals().get('VAR');fr=int(V[1]) if V else -1
+    by,bz=onp(0.86 if fr==3 else 0.55)
+    L.append(P('おさ','box',(X0+0.06,by-0.02,bz+0.004,X1-0.06,by+0.02,bz+0.05),WOOD,bevel=0,on=('たて糸',),note='たて糸の上を前後にすべる'))
+    if fr<0:L.append(P('ひ','box',(0.40,YF-0.045,0.43,0.60,YF-0.005,0.46),WOOD,bevel=0,on=('胸の横木',),note='胸の横木の上におく'))
+    elif fr<3:
+        sx=(0.22,0.5,0.78)[fr];sy,sz=onp(0.72)
+        L.append(P('ひ','box',(sx-0.09,sy-0.02,sz+0.004,sx+0.09,sy+0.02,sz+0.035),WOOD,bevel=0,on=('たて糸',),note='たて糸のあいだを走る'))
+    else:L.append(P('ひ','box',(X1-0.13,YF-0.045,0.43,X1-0.05,YF-0.005,0.46),WOOD,bevel=0,on=('胸の横木',),note='右のはしで止まる'))
     return L
 
 TONE5=True   # かげは木と同じ5色（furntone。持ち主がきめた）
