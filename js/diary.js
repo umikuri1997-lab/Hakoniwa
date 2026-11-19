@@ -76,32 +76,63 @@ function mvpTxt(b){return [b.k?b.k+'体を追いはらった':'',b.g?b.g+'回ま
 /* 日記の写真の URL：とじるときの写しの板（sheetGhost）も同じ絵を読むので、すぐには手ばなさない（さいごの DYPHN まいだけ） */
 const DYPHU=new Map(),DYPHN=6;
 function dyPhUrl(id,b){let u=DYPHU.get(id);if(u)return u;u=URL.createObjectURL(b);DYPHU.set(id,u);if(DYPHU.size>DYPHN){const[k,v]=DYPHU.entries().next().value;DYPHU.delete(k);setTimeout(()=>URL.revokeObjectURL(v),3000)}return u}
-/* 日記の紙（renderSheet から）。arg：'m' は朝に出したとき、数は思い出帳から読む日 */
+/* 日記の紙（renderSheet から）。arg：'m' は朝に出したとき、数は思い出帳から読む日
+   ページをめくる本（思い出帳と同じ memFlip）。1ページめは点の出る所（ゆうべのかつやく・ゆうべの守り・きのうのしごと）、
+   そのあとのページに、写真・ひとこと・追いはらったせいれい・できごと・みんなのしたこと。ページの中はスクロールしないように、
+   はかってつめる（dyPack。長い一覧は、ページをまたいで分ける）。DYBK：いま見ているページ（同じ日をかきなおしたときは、そのまま） */
+const DYBK={p:0,k:null};
 function diaryBody(T,body,arg){const L=S.diary||[];const e=arg==='m'||arg==null?L[L.length-1]:L.find(q=>q.d===arg);if(!e)return closeSheet();
   T.textContent=e.d+'日めの日記';
+  const key=e.d+'|'+arg,first=DYBK.k!==key;if(first){DYBK.k=key;DYBK.p=0}const anim=arg==='m'&&first;/* かきなおし（画面の回転など）では、数え上げ・ハンコを2回しない */
   if(arg!=='m'){const bk=el('<button class="btn back" aria-label="思い出帳にもどる">'+pxi('next','prev')+'もどる</button>');bk.onclick=()=>{sfx('tap');openSheet('menu','record')};T.before(bk)}
-  {const b=dyBest(e);if(b){const sec=el('<div class="sec dyMvp"><h3>ゆうべのかつやく</h3><div class="rows"></div></div>'),r=rowEl(b.nm,mvpTxt(b),ELEM[b.el]?spiritPort(b.el,96,b.vr):null);sec.querySelector('.rows').appendChild(r);body.appendChild(sec);
-    if(arg==='m')setTimeout(()=>uiStamp(r,true,'かつやく'),350);else{r.style.position='relative';const c=stampCanvas('かつやく'),k=document.createElement('canvas');k.width=k.height=32;k.getContext('2d').drawImage(c,0,0);k.className='ustamp s';k.style.animation='none';r.appendChild(k)}}}/* いちばん上に、その子の絵とハンコ */
-  if(e.ph){const sec=el('<div class="sec dyPh"><img alt="" style="display:block;width:100%;aspect-ratio:4/3;object-fit:cover"></div>'),im=sec.querySelector('img'),st=S;body.appendChild(sec);/* その日の昼12時の村の写真（けしたあとなら、出さない） */
-    phGet(e.ph).then(p=>{if(!sec.isConnected||S!==st)return;if(!p||!p.b){sec.remove();return}im.src=dyPhUrl(e.ph,p.b)},()=>sec.remove())}
-  if(e.ft&&e.ft.length&&e.fw){const sec=el('<div class="sec"><h3></h3><div class="rows"></div></div>');sec.querySelector('h3').textContent=e.fw[0]+'のひとこと';const r=rowEl(e.fw[0],e.ft.map(t=>t.replace(LOOKRX,'')).join('\n'),ELEM[e.fw[1]]?spiritPort(e.fw[1],96,e.fw[2]):null);r.querySelector('small').style.whiteSpace='pre-line';sec.querySelector('.rows').appendChild(r);body.appendChild(sec)}
+  const P1=[],P2=[];/* P1：1ページめ（点）・P2：つぎのページから */
+  {const b=dyBest(e);if(b){const sec=el('<div class="sec dyMvp"><h3>ゆうべのかつやく</h3><div class="rows"></div></div>'),r=rowEl(b.nm,mvpTxt(b),ELEM[b.el]?spiritPort(b.el,96,b.vr):null);sec.querySelector('.rows').appendChild(r);P1.push(sec);
+    if(anim)setTimeout(()=>{if(r.isConnected)uiStamp(r,true,'かつやく')},350);else{r.style.position='relative';const c=stampCanvas('かつやく'),k=document.createElement('canvas');k.width=k.height=32;k.getContext('2d').drawImage(c,0,0);k.className='ustamp s';k.style.animation='none';r.appendChild(k)}}}/* いちばん上に、その子の絵とハンコ */
   const N=e.ns;if(N){const sec=el('<div class="sec"><h3></h3></div>');sec.querySelector('h3').textContent=N.trial?(N.trialOK?'試練をのりこえた！':'試練の夜'):N.rw?'夜をぶじに守りきった！':'ゆうべの守り';
     const g=el('<div class="stats"></div>');
     for(const[k,v]of[['来た「コワイノ」',N.n+'体'],['追いはらった',N.kill+'体'],['おそわれたせいれい',N.hurt?N.hurt+'回':'なし'],['こわされた柵・設備',N.broke?N.broke+'こ':'なし'],['ぬすまれたもの',N.lost.length?lostSum(N.lost):'なし']].concat(N.rw?[['ごほうび','パワー+'+N.rw+'・みんなのたのしさ+10']]:[]).concat(N.trialOK?[['試練のごほうび','パワー+60・めぶきのしずく']]:[])){const d=el('<div class="stat"><span></span><b></b></div>');d.firstChild.textContent=k;d.lastChild.textContent=v;g.appendChild(d)}
     sec.appendChild(g);
-    const K=Object.entries(e.k||{}).sort((a,b)=>b[1][2]-a[1][2]),O=Object.entries(e.o||{});
-    if(K.length||O.length){const rw=el('<div class="rows"></div>');for(const[nm,x]of K)rw.appendChild(rowEl(nm,x[2]+'体を追いはらった',ELEM[x[0]]?spiritPort(x[0],96,x[1]):null));for(const[nm,n]of O)rw.appendChild(rowEl(nm,n+'体を追いはらった'));sec.appendChild(rw)}
     if(N.boss===1&&!N.trial)sec.appendChild(el('<p class="note">オオカゲは、追いはらえないまま朝になった。</p>'));
-    body.appendChild(sec)}
-  if(e.m.length){const sec=el('<div class="sec"><h3>できごと</h3><div class="rows"></div></div>'),rw=sec.querySelector('.rows');for(const t of e.m)rw.appendChild(rowEl(t,''));body.appendChild(sec)}
-  let secW=null;{const T=typeof dyWorkSum==='function'?dyWorkSum(e):[];if(T.length){secW=el('<div class="sec"><h3>きのうのしごと</h3></div>');const g=el('<div class="stats"></div>');for(const[k,v]of T){const d=el('<div class="stat"><span></span><b></b></div>');d.firstChild.textContent=k;d.lastChild.textContent=v;g.appendChild(d)}secW.appendChild(g);body.appendChild(secW)}}/* きのうのしごと：みんなのしたことの、種類ごとの合計 */
+    P1.push(sec);
+    const K=Object.entries(e.k||{}).sort((a,b)=>b[1][2]-a[1][2]),O=Object.entries(e.o||{});
+    if(K.length||O.length){const s2=el('<div class="sec"><h3>ゆうべ追いはらった</h3><div class="rows"></div></div>'),rw=s2.querySelector('.rows');for(const[nm,x]of K)rw.appendChild(rowEl(nm,x[2]+'体を追いはらった',ELEM[x[0]]?spiritPort(x[0],96,x[1]):null));for(const[nm,n]of O)rw.appendChild(rowEl(nm,n+'体を追いはらった'));P2.push(s2)}}
+  let secW=null;{const T=typeof dyWorkSum==='function'?dyWorkSum(e):[];if(T.length){secW=el('<div class="sec"><h3>きのうのしごと</h3></div>');const g=el('<div class="stats"></div>');for(const[k,v]of T){const d=el('<div class="stat"><span></span><b></b></div>');d.firstChild.textContent=k;d.lastChild.textContent=v;g.appendChild(d)}secW.appendChild(g);P1.push(secW)}}/* きのうのしごと：みんなのしたことの、種類ごとの合計 */
+  if(e.ph){const sec=el('<div class="sec dyPh"><img alt="" style="display:block;width:100%;aspect-ratio:4/3;object-fit:cover"></div>'),im=sec.querySelector('img'),st=S;P2.unshift(sec);/* その日の昼12時の村の写真（けしたあとなら、出さない） */
+    phGet(e.ph).then(p=>{if(!sec.isConnected||S!==st)return;if(!p||!p.b){sec.remove();return}im.src=dyPhUrl(e.ph,p.b)},()=>sec.remove())}
+  if(e.ft&&e.ft.length&&e.fw){const sec=el('<div class="sec"><h3></h3><div class="rows"></div></div>');sec.querySelector('h3').textContent=e.fw[0]+'のひとこと';const r=rowEl(e.fw[0],e.ft.map(t=>t.replace(LOOKRX,'')).join('\n'),ELEM[e.fw[1]]?spiritPort(e.fw[1],96,e.fw[2]):null);r.querySelector('small').style.whiteSpace='pre-line';sec.querySelector('.rows').appendChild(r);P2.splice(e.ph?1:0,0,sec)}
+  if(e.m.length){const sec=el('<div class="sec"><h3>できごと</h3><div class="rows"></div></div>'),rw=sec.querySelector('.rows');for(const t of e.m)rw.appendChild(rowEl(t,''));P2.push(sec)}
   if(e.w.length){const sec=el('<div class="sec"><h3>みんなのしたこと</h3><div class="rows"></div></div>'),rw=sec.querySelector('.rows');const by=new Map();
     for(const x of e.w){if(!by.has(x[0]))by.set(x[0],{el:x[1],vr:x[2],L:[]});by.get(x[0]).L.push(x)}
     for(const[nm,g]of by){g.L.sort((a,b)=>b[5]-a[5]);const tx=g.L.slice(0,DYPER).map(x=>dyText(x[3],x[4])+(x[5]>1?'（'+x[5]+'回）':'')).join('\n');const r=rowEl(nm,tx,ELEM[g.el]?spiritPort(g.el,96,g.vr):null);r.querySelector('small').style.whiteSpace='pre-line';rw.appendChild(r)}
-    body.appendChild(sec)}
-  if(arg==='m'&&typeof juiceDiaryCount==='function')juiceDiaryCount(body,secW);/* 朝の紙だけ、数え上げてハンコ */
-  if(arg==='m'){const best=dyBest(e),r=best&&S.res.find(q=>q.name===best.nm&&!q.hidden);if(r&&!DYJ.has(r)){DYJ.add(r);JUMP.set(r,performance.now());villageTimeout(()=>JUMP.set(r,performance.now()),650);addFloat(r.x,r.y-1.4,'がんばった！','#ffe7a8')}}}
+    P2.push(sec)}
+  const pages=dyPack(body,P1,P2);
+  if(anim&&typeof juiceDiaryCount==='function')juiceDiaryCount(pages[0],secW);/* 朝の紙だけ、数え上げてハンコ（1ページめの数だけ） */
+  if(anim){const best=dyBest(e),r=best&&S.res.find(q=>q.name===best.nm&&!q.hidden);if(r&&!DYJ.has(r)){DYJ.add(r);JUMP.set(r,performance.now());villageTimeout(()=>JUMP.set(r,performance.now()),650);addFloat(r.x,r.y-1.4,'がんばった！','#ffe7a8')}}}
+/* 欄をページにつめる：1ページめは P1、そのあと P2 を、はみ出さないだけ入れる。一覧（.rows・.stats）は、行ごとにページをまたいで分ける（見出しはつぎのページにも） */
+function dyPack(body,P1,P2){const pages=[],nv=()=>el('<div class="mnav"><button class="btn mpv" type="button" aria-label="まえのページ">'+pxi('next','prev')+'</button><span class="mpn"></span><button class="btn mnx" type="button" aria-label="つぎのページ">'+pxi('next','nxr')+'</button></div>');
+  const cs=getComputedStyle(body),lim=body.clientHeight-parseFloat(cs.paddingTop)-parseFloat(cs.paddingBottom);
+  let pg=null;const open=()=>{pg=el('<div class="mpg dypk"></div>');pg.appendChild(nv());body.appendChild(pg);pages.push(pg)},fits=()=>lim<=0||pg.offsetHeight<=lim+.5,nav=()=>pg.lastChild;
+  const put=sec=>{pg.insertBefore(sec,nav());if(fits())return;
+    const box=sec.querySelector(':scope>.rows,:scope>.stats'),it=box?[...box.children]:[];
+    if(it.length<2){if(pg.children.length>2){sec.remove();open();pg.insertBefore(sec,nav())}return}/* 1つでページより大きい欄は、そのまま（スクロール） */
+    for(const c of it)c.remove();let cur=sec,cb=box;
+    for(const c of it){cb.appendChild(c);if(fits())continue;
+      if(cb.children.length===1&&pg.children.length===2)continue;/* ページに1行だけでも入らない */
+      cb.removeChild(c);if(!cb.children.length)cur.remove();
+      open();cur=sec.cloneNode(false);for(const x of sec.children){if(x===box)break;cur.appendChild(x.cloneNode(true))}cb=box.cloneNode(false);cur.appendChild(cb);cb.appendChild(c);pg.insertBefore(cur,nav())}
+    if(cur!==sec)for(const x of[...sec.children].slice([...sec.children].indexOf(box)+1))cur.appendChild(x)};/* 一覧のあとの文は、さいごの分へ */
+  if(P1.length){open();for(const s of P1)put(s)}
+  let nw=true;for(const s of P2){if(nw)open();nw=false;put(s)}/* 点のあとは、新しいページから */
+  if(!pages.length)open();
+  DYBK.p=Math.max(0,Math.min(pages.length-1,DYBK.p|0));const n=pages.length;
+  pages.forEach((p,i)=>{p.classList.remove('dypk');p.hidden=i!==DYBK.p;const v=p.lastChild,pv=v.querySelector('.mpv'),nx=v.querySelector('.mnx');v.querySelector('.mpn').textContent=(i+1)+' / '+n;pv.disabled=i===0;nx.disabled=i>=n-1;
+    pv.onclick=()=>memFlip(body,pages,i-1,DYBK);nx.onclick=()=>memFlip(body,pages,i+1,DYBK);if(n<2)v.hidden=true});
+  let sx=null,sy=0;body.onpointerdown=e=>{sx=e.clientX;sy=e.clientY};body.onpointerup=e=>{if(sx==null)return;const dx=e.clientX-sx,dy=e.clientY-sy;sx=null;if(Math.abs(dx)>60&&Math.abs(dx)>Math.abs(dy)*1.6)memFlip(body,pages,DYBK.p+(dx<0?1:-1),DYBK)};body.onpointercancel=()=>{sx=null};/* よこにはらうと、めくる */
+  return pages}
 /* 思い出帳の「日記」：日ごとの紙の一覧 */
 function diaryList(body){const L=S.diary||[];if(!L.length)return;const sec=el('<div class="sec"><h3>日記</h3><div class="rows"></div></div>'),rw=sec.querySelector('.rows');
   for(const e of L.slice().reverse()){const n=e.w.length+e.m.length,best=dyBest(e);const sub=(e.ns?'ゆうべ '+e.ns.kill+'体を追いはらった':'夜は、コワイノが来なかった')+(best?'・かつやく：'+best.nm:'')+(n?'・できごと '+n:'');const r=rowEl(e.d+'日めの日記',sub);r.style.cursor='pointer';r.onclick=()=>{sfx('tap');openSheet('diary',e.d)};rw.appendChild(r)}
   body.appendChild(sec)}
+
+/* 画面の大きさがかわったら、ページをつめなおす（見ているページは、そのまま） */
+addEventListener('resize',()=>{clearTimeout(DYBK.rt);DYBK.rt=setTimeout(()=>{if(sheet==='diary')renderSheet()},200)});
