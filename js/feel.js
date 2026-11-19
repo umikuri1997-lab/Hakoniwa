@@ -22,6 +22,12 @@ function snowCover(){if(!S||seasonNow()!==3)return 0;return S.rain?1:Math.min(1,
 function leafCover(){if(!S||seasonNow()!==2)return 0;return Math.min(1,.3+feelSeasonDay()*.15)}/* 秋：日がたつほど、たまる */
 function puddleLv(){if(!S||seasonNow()===3)return 0;const h=hour();if(S.rain)return h<6?1:Math.min(1,.25+(h-6)/4);/* 雨の日：朝からふえる */
   if(S.wetD===dayNo()&&h>=6&&h<FEEL_DRYH)return 1-(h-6)/(FEEL_DRYH-6);return 0}/* 雨のつぎの日：昼にかけてかわく */
+function pudCell(i){/* そのマスに水たまりの絵が出るか（水たまりが出ている日のこと。見えている所と同じ決まり） */const gr=S.ground[i];if(gr===1||gr===2||S.obj[i]||FEELIN.has(i)||RUGC.has(i)||S.fog&&fogAt(i))return false;const f=S.floor[i];if(f&&f!=='path'&&f!=='gravel'&&f!=='stone'&&f!=='brick')return false;
+  return hash(i*29+1)<(REV.has(i)&&!f?FEEL_PUDG:FEEL_PUDP)}
+function rainPud(i){return !!S&&isNight()&&!(snowCover()>0&&!feelMelt(i))&&puddleLv()>0&&pudCell(i)}/* 夜（23時〜6時）、水たまりが見えているマス：せいれいもコワイノも、すべる */
+const RAINSLIP=7.5,RAINSLIPB=1.5;/* 雨の水たまりで止まる時間（すべる水たまりの罠の半分：5分、オオカゲなどは1分） */
+function rainSlip(r){/* せいれいが水たまりでつるっとすべって、止まる。出てから、またふむと、またすべる */if(r.slipT>S.t){r.stT=S.t;return true}const j=(r.y|0)*W+(r.x|0);
+  if(!rainPud(j)){r.slipJ=-1;return false}if(r.slipJ===j)return false;r.slipJ=j;r.slipT=S.t+RAINSLIP;r.stT=S.t;sfxAt('slip',r.x,r.y);fxSpr('slip',r.x*TS,r.y*TS);SHOCKU.set(r,performance.now()+1200);return true}
 function feelWin(h){/* その家の窓のあかりのこさ（0〜1）。家ごとに、ともる時刻・消える時刻がちがう */const t=hour(),q=hash(h.x0*31+h.y0*17+5),on=FEEL_WIN0+q*(FEEL_WIN1-FEEL_WIN0),off=FEEL_WOFF0+hash(h.x0*13+h.y0*29+2)*(FEEL_WOFF1-FEEL_WOFF0);
   if(t>=12)return Math.max(0,Math.min(1,(t-on)/.12));return Math.max(0,Math.min(1,(off-t)/.12))}
 const FEELFLAME={campfire:.07,torch:.06,candle:.05,lantern:.04,flamp:.03,lamp:.035,toro:.04,takeakari:.04,andon:.03,yomawari:.035,statue:.03,watch:.035};
@@ -38,8 +44,8 @@ function feelArt(){if(FEELA)return FEELA;const c=document.createElement('canvas'
   /* 落ち葉のかたまり3つ：ちらばった葉のドット */
   for(let n=0;n<3;n++){const ox=n*64+2,oy=34,w=[56,46,34][n],h=[26,22,16][n],C=['#f6a650','#ec6f45','#f5d25a','#e2884a','#c9603a'];
     for(let k=0;k<[46,32,20][n];k++){const a=hash(n*57+k*3)*6.283,d=Math.sqrt(hash(n*31+k*7)),x=Math.round((w/2+Math.cos(a)*d*(w/2-3))/2)*2,y=Math.round((h/2+Math.sin(a)*d*(h/2-2))/2)*2;g.fillStyle=C[(hash(n*13+k)*C.length)|0];g.fillRect(ox+x,oy+y,hash(k+n)>.35?4:2,hash(k*3+n)>.6?4:2)}A.leaf.push([ox,oy,w,h])}
-  /* 水たまり3つ（小・中・大）：水の色・明るい空のうつり・少しこいふち */
-  [[26,10],[40,14],[54,18]].forEach(([w,h],n)=>{const ox=n*64+2,oy=66;g.globalAlpha=.82;feelBlob(g,ox,oy,w,h,['#a9cfe6','#9cc5df','#7fa9c8'],n*71+3);g.globalAlpha=.9;g.fillStyle='#e4f3fb';g.fillRect(ox+(w*.25|0),oy+2+(n?2:0),n?8:4,2);g.fillRect(ox+(w*.25|0)+(n?10:6),oy+2+(n?2:0),2,2);g.globalAlpha=1;A.pud.push([ox,oy,w,h])});
+  /* 水たまり3つ（小・中・大）：地面の形のまま（たて:よこ＝0.8:1）。水の色・明るい空のうつり・少しこいふち */
+  [[20,16],[30,24],[40,32]].forEach(([w,h],n)=>{const ox=n*64+2,oy=66;g.globalAlpha=.82;feelBlob(g,ox,oy,w,h,['#a9cfe6','#9cc5df','#7fa9c8'],n*71+3);g.globalAlpha=.9;g.fillStyle='#e4f3fb';g.fillRect(ox+(w*.25|0),oy+2+(n?2:0),n?8:4,2);g.fillRect(ox+(w*.25|0)+(n?10:6),oy+2+(n?2:0),2,2);g.globalAlpha=1;A.pud.push([ox,oy,w,h])});
   /* 波紋4コマ：ひろがるだ円の輪 */
   for(let n=0;n<4;n++){const ox=n*40+2,oy=98,rx=5+n*4,ry=2+n*1.6,cx=18,cy=8;g.fillStyle=n<2?'#f2fbff':'#d3ebf6';g.globalAlpha=[.9,.75,.5,.28][n];
     for(let a=0;a<40;a++){const an=a/40*6.283,x=Math.round((cx+Math.cos(an)*rx)/2)*2,y=Math.round((cy+Math.sin(an)*ry)/2)*2;g.fillRect(ox+x,oy+y,2,2)}g.globalAlpha=1;A.rip.push([ox,oy,36,18])}
@@ -76,7 +82,7 @@ function feelRow(y,x0,x1,now,lifted){const C=FEELC,A=feelArt(),c=ctx,near=cam.z>
     if(gr===2||S.obj[i]||FEELIN.has(i)||RUGC.has(i))continue;const f=S.floor[i];if(f&&f!=='path'&&f!=='gravel'&&f!=='stone'&&f!=='brick')continue;/* 家の床・じゅうたんには出さない */
     if(C.snow>0&&!feelMelt(i)){const q=hash(i*13+5);if(q<C.snow*FEEL_SNOWP){const s=A.snow[(hash(i*3+1)*3)|0];c.globalAlpha=Math.min(1,.55+C.snow*.45);feelPut(c,A,s,px+(TS-s[2]/2)*hash(i*17+3),py+(TS-s[3]/2)*hash(i*19+7));c.globalAlpha=1}continue}
     if(C.leaf>0&&FEELTREE.has(i)&&hash(i*23+9)<C.leaf*FEEL_LEAFP){const s=A.leaf[(hash(i*3+1)*3)|0];feelPut(c,A,s,px+(TS-s[2]/2)*hash(i*17+3),py+(TS-s[3]/2)*hash(i*19+7))}
-    if(C.pud>0){const grass=REV.has(i)&&!f;if(hash(i*29+1)<(grass?FEEL_PUDG:FEEL_PUDP)){const n=C.pud>.66?2:C.pud>.33?1:0,s=A.pud[n],sx=px+(TS-s[2]/2)/2,sy=py+(TS-s[3]/2)/2+3;feelPut(c,A,s,sx,sy);
+    if(C.pud>0){if(pudCell(i)){const n=C.pud>.66?2:C.pud>.33?1:0,s=A.pud[n],sx=px+(TS-s[2]/2)/2,sy=py+(TS-s[3]/2)/2+3;feelPut(c,A,s,sx,sy);
         if(C.rain&&near){const ph=(now/900+hash(i*3+2))%1;if(ph<.6){c.globalAlpha=.8;feelPut(c,A,A.rip[Math.min(1,(ph*3.4)|0)],sx+s[2]/4-9,sy+s[3]/4-4);c.globalAlpha=1}}}}
     if(C.wet&&near&&hash(i*37+2)<(f?.3:.12)){const tw=Math.sin(now/(260+hash(i*7+5)*200)+hash(i*9)*40);if(tw>.6){c.globalAlpha=Math.min(1,(tw-.6)*3)*(f?.75:.5);c.fillStyle='#eef6ff';const dx=Math.round(px+3+hash(i*47)*24),dy=Math.round(py+5+hash(i*53)*22);c.fillRect(dx,dy,2,1);if(tw>.9)c.fillRect(dx+(hash(i*59)<.5?-1:2),dy,1,1);c.globalAlpha=1}}/* あらし：ぬれた地面・道のつや（光る点がまたたく） */
     if(C.dew>0&&near&&!f&&REV.has(i)&&hash(i*31+4)<.3){const tw=Math.sin(now/420+hash(i*7)*40);if(tw>.55){c.globalAlpha=C.dew*Math.min(1,(tw-.55)*4);c.fillStyle='#f6fdff';const dx=Math.round(px+4+hash(i*41)*24),dy=Math.round(py+6+hash(i*43)*22);c.fillRect(dx,dy,1,1);if(tw>.85){c.fillRect(dx-1,dy,3,1);c.fillRect(dx,dy-1,1,3)}c.globalAlpha=1}}}

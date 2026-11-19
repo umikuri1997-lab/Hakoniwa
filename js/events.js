@@ -216,10 +216,10 @@ function tokuiHtml(r){const L=tokuiList(r);return L.length?L.map(([k,n])=>'<span
 function titleNote(r,a){const k=TJOB[a&&a.type];if(!k||!r||IS_STORY_REPLAY||a.stage!=='do')return;const l0=tokuiLv(r,k),C=r.jc||(r.jc={});C[k]=(C[k]||0)+1;const l1=tokuiLv(r,k);if(l1<=l0)return;
   memo('',r.name+'の「'+TOKUI[k].n+'」の得意が'+l1+'になった');villageTimeout(()=>{if(!S.res.includes(r))return;toast(r.name+'：「'+TOKUI[k].n+'」の得意 '+l1,'good');JOYU.set(r,performance.now()+3000);addFloat(r.x,r.y-1.6,TOKUI[k].n+' 得意'+l1,'#ffe7a8');sfx('level')},400)}
 function titleMul(r,t){const k=TJOB[t];if(!k||!r)return 1;const n=tokuiLv(r,k);if(!n)return 1;const w=rStat(r,rLv(r)).work;return(w+n*TKUP)/w}/* その仕事は、はたらく速さに★の数をたした速さ */
-function titleSec(r,g){const d=el('<div class="stat" style="display:block"><span style="display:block">得意な仕事</span><div class="tkl" style="margin-top:2px"></div><small class="tkn" style="display:block;color:var(--muted);margin-top:2px"></small></div>'),box=d.querySelector('.tkl');
+function titleSec(r,g){const d=el('<div class="stat" style="display:block"><span style="display:block">得意な仕事</span><div class="tkl" style="margin-top:2px"></div></div>'),box=d.querySelector('.tkl');
   for(const k in TOKUI){const n=tokuiLv(r,k),c=(r.jc||{})[k]||0,row=el('<div style="display:flex;justify-content:space-between;gap:8px"><b></b><small style="color:var(--muted)"></small></div>');
     row.querySelector('b').innerHTML=TOKUI[k].n+' '+tokuiStars(n);row.querySelector('small').textContent=n<TKMAX?c+'/'+TKN[n]+'回':c+'回';box.appendChild(row)}
-  d.querySelector('.tkn').innerHTML=pxi('star','tks')+'1つで、その仕事のはたらく速さ+'+TKUP;g.appendChild(d)}
+  g.appendChild(d)}
 function tokuiMig(s){if(s.flags.tokui1)return;s.flags.tokui1=1;for(const q of[...(s.res||[]),...(s.buried||[]),...(s.lost||[])])if(q.vr&&!q.vr.tk)q.vr.tk=tokuiPick(q.elem)}/* 前のセーブのせいれいにも、はじめからの得意な仕事を1回だけ */
 /* 豪華なイベント（grand）：1季節に1回、みんなが出る。かかる物は人数によらず決まった数（D.set：食料・木材・竹・草・花・作物）。 */
 const EVGRASS=()=>WD===1?'kuru':'shina';

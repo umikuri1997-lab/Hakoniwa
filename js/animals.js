@@ -4,8 +4,8 @@
    木のせいれい（いなければ、だれでも）が箱の草を小屋へ運び（えさ：1頭に1日1こ）、水のせいれい（いなければ、だれでも）が水をくんで小屋の水入れへ。
    えさと水をもらった日の夕方（ANIPRODH 時）に、小屋にとれる物がたまり、せいれいが箱へ運ぶ（aniJob）。夜は小屋の中。コワイノにはねらわれない。
    セーブ：S.ani（生き物。野良は stray:1・h －1・lead つれているせいれい）・S.dyn[小屋]（feed えさ・wd 水をもらった日・pr とれた物）。 */
-const ANI={hane:{name:'ハネマリ',hut:'coop',prod:'egg',cap:3,spd:.9,desc:'まんまるで、ふわふわの羽の生き物。'},moko:{name:'モコダマ',hut:'barn',prod:'wool',cap:2,spd:.7,desc:'ふかふかの毛につつまれた、まるい生き物。'},tsuno:{name:'ツノクサ',hut:'barn',prod:'milk',cap:2,spd:.8,desc:'くるんとした角の、草がすきな生き物。'}};
-const HUTK={coop:['hane'],barn:['moko','tsuno']},PENMAX=300,ANIFUN=3,ANIPET=5,ANIPRODH=17,ANIFEED=2;/* ANIFUN：ひまなときに自分からなでる・ANIPET：「しらべる」でたのんでなでる（1ぴき1日1回 a.petD） */
+const ANI={hane:{name:'ハネマリ',hut:'coop',prod:'egg',cap:3,spd:.9,desc:'まんまるで、ふわふわの羽の生き物。'},moko:{name:'モコダマ',hut:'barn',prod:'wool',cap:3,spd:.7,desc:'ふかふかの毛につつまれた、まるい生き物。'},tsuno:{name:'ツノクサ',hut:'barn',prod:'milk',cap:3,spd:.8,desc:'くるんとした角の、草がすきな生き物。'}};
+const HUTK={coop:['hane'],barn:['moko','tsuno']},PENMAX=300,ANIFUN=3,ANIPET=5,ANIPRODH=17,ANIFEED=2,ANIGROW=3;/* ANIFUN：ひまなときに自分からなでる・ANIPET：「しらべる」でたのんでなでる（1ぴき1日1回 a.petD） */
 let HUTS=[],PENS=new Map(),ANISUB=0;
 const isHut=o=>!!HUTK[o];
 function hutFront(h){const o=S.obj[h];return o==='barn'?[h+2*W,h+2*W+1]:[h+W]}/* 小屋の出入り口の前のマス */
@@ -23,7 +23,33 @@ function aniRecount(){/* recount のあと：小屋の一覧と、かこいの�
 function hutD(h){return S.dyn[h]||(S.dyn[h]={})}
 function animalMorning(){if(!S||IS_STORY_REPLAY)return;S.ani=S.ani||[];
   for(const a of S.ani.slice())if(!a.stray&&(!isHut(S.obj[a.h])||!HUTK[S.obj[a.h]].includes(a.k))){S.ani.splice(S.ani.indexOf(a),1);toast(ANI[a.k].name+'が、野へかえっていった')}/* 小屋がなくなったら、野へかえる */
+  const day=callDay();
+  if(S.aniMorningDay===day)return;
+  S.aniMorningDay=day;
+  for(const h of HUTS){
+    const residents=aniOf(h);
+    const parents=residents.filter(a=>(a.born==null||a.born+ANIGROW<=day)&&aniFun(a)>80);
+    const mother=parents.find(a=>parents.some(b=>b!==a&&b.k===a.k));
+    if(mother&&hutRoom(h,mother.k)){
+      const f=hutFront(h).find(j=>PENS.get(h).includes(j));
+      const k=mother.k;
+      S.ani.push({id:S.aniId=Math.max(S.aniId||0,...S.ani.map(a=>a.id))+1,k,h,born:day,fun:50,x:f%W+.5,y:(f/W|0)+.6,face:1,wt:2});
+      toast(ANI[k].name+'の子どもが生まれた！','good');
+    }
+    for(const a of residents)a.fun=Math.max(0,Math.min(100,aniFun(a)+(a.fd===day-1?aniComfort(h)/10-8:-18)));
+  }
   strayMorning()}
+function aniFun(a){return a.fun??50}
+function aniYield(h){return 1+Math.floor(aniComfort(h)/40)}
+function aniComfort(h){
+  const pen=PENS.get(h);
+  if(!pen)return 0;
+  return Math.min(100,pen.length*3+15*spotN(h,'makiba')+15*spotN(h,'hidamari'));
+}
+const ANIGRASS=new Set(['weed0g','weed0k','weed1g','weed1k','weedc']);
+function aniGraze(j){return ANIGRASS.has(S.obj[j])}
+function aniEat(a,day){a.fd=day;a.eat=3;a.path=null;a.wt=3;a.fun=Math.min(100,aniFun(a)+4)}
+
 function hutRoom(h,k){/* かこいの中で、空きがあって、その生き物がすめる小屋か */return isHut(S.obj[h])&&!!PENS.get(h)&&aniOf(h).length+S.ani.filter(a=>a.stray&&a.lead!=null&&a.lh===h).length<hutCap(h)&&(k==null||HUTK[S.obj[h]].includes(k))}
 function strayMorning(){/* 野良の生き物：空きのある小屋があれば、朝にたまに、村の外に1ぴき */if(typeof MEMRUN!=='undefined'&&MEMRUN||S.ani.some(a=>a.stray))return;
   const hs=HUTS.filter(h=>hutRoom(h));if(!hs.length)return;const p=STRAYP+(hs.some(h=>spotHas(h,'norakomichi'))?STRAYSP:0);if(Math.random()>=p)return;
@@ -54,8 +80,24 @@ function animalTick(dt){if(!S||!S.ani||!S.ani.length||IS_STORY_REPLAY)return;con
     const P=PENS.get(a.h)||null,d=isHut(S.obj[a.h])?hutD(a.h):null;
     if(night&&d){if(a.in)continue;const f=hutFront(a.h)[0];if(!a.path||a.go!==f){a.go=f;a.path=aniPath(a,f,P)||[]}if(!aniStep(a,dt)){a.in=1;a.path=null}continue}/* 夜は小屋へ */
     if(a.in){a.in=0;const f=hutFront(a.h)[0];a.x=f%W+.5;a.y=((f/W)|0)+.6}
-    if(sec&&d){if(a.fd!==day&&(d.feed||0)>0){d.feed--;a.fd=day;a.eat=3;a.path=null;a.wt=3}/* えさを食べる */
-      if(h>=ANIPRODH&&a.pd!==day){a.pd=day;if(a.fd===day&&d.wd===day){const pk=ANI[a.k].prod;d.pr=d.pr||{};d.pr[pk]=(d.pr[pk]||0)+1;if(typeof addFloat==='function')addFloat(a.x,a.y-1,aniProdName(pk)+'+1','#fff2c0')}}}/* 夕方：とれる物 */
+    if(d&&a.fd!==day){
+      const here=(a.y|0)*W+(a.x|0);
+      if(P?.includes(here)&&aniGraze(here)){
+        clearObj(here);dirty=true;aniEat(a,day);
+      }else if(sec){
+        const grass=P?.find(aniGraze);
+        if(grass!=null&&(!a.path?.length||a.go!==grass)){
+          a.go=grass;a.path=aniPath(a,grass,P);
+        }
+        if((grass==null||!a.path?.length)&&(d.feed||0)>0){d.feed--;aniEat(a,day)}
+      }
+    }
+    if(sec&&d&&h>=ANIPRODH&&a.pd!==day&&a.fd===day&&d.wd===day&&(a.born==null||a.born+ANIGROW<=day)){
+      a.pd=day;
+      const pk=ANI[a.k].prod,n=aniYield(a.h);
+      d.pr=d.pr||{};d.pr[pk]=(d.pr[pk]||0)+n;
+      addFloat(a.x,a.y-1,aniProdName(pk)+'+'+n,'#fff2c0');
+    }
     if(a.eat>0)continue;if(aniStep(a,dt))continue;
     if((a.wt-=dt)>0)continue;a.wt=3+Math.random()*6;
     const near=(P||[]).filter(c=>Math.abs(c%W+.5-a.x)<=4&&Math.abs(((c/W)|0)+.6-a.y)<=4);
@@ -81,7 +123,7 @@ Object.assign(ACT,{
   acol:{start(r,a){const d=S.dyn[a.obj];if(!d||!d.pr||!Object.keys(d.pr).length)return false;r.bubble='';faceTo(r,a.obj)},done:(r,a)=>a.t>=4,
     end(r,a){const d=S.dyn[a.obj];if(!d||!d.pr)return;for(const k of Object.keys(d.pr)){const n=Math.min(d.pr[k],roomN(r));if(n<=0)break;if(FOODS[k])addCarry(r,k,n);else addMat(r,k,n);d.pr[k]-=n;if(d.pr[k]<=0)delete d.pr[k]}}},/* とれた物をとる（箱へは、いつものしまい方で） */
   apet:{start(r,a){const b=(S.ani||[]).find(q=>q.id===a.aid);if(!b||b.in)return false;b.pet=a.dur;b.face=r.x<b.x?-1:1;b.vw='';r.face=b.x<r.x?-1:1;r.bubble='❗'},tick(r,a){if(a.t>2)r.bubble='🎵'},done:(r,a)=>a.t>=a.dur,
-    end(r,a){const b=(S.ani||[]).find(q=>q.id===a.aid);if(a.t<a.dur){if(a.tap&&b){b.petD=null;b.pet=0}return}/* とちゅうでやめたら、たのんだなでるは、なかったことに */const n=Math.round((a.tap?ANIPET:ANIFUN)*(b&&spotNear((b.y|0)*W+(b.x|0),'fureai')?1.2:1)*10)/10;/* ふれあいひろば：+20% */funAdd(r,n,'ani');r.wanderRestUntil=S.t+45;r.bubble='';if(b){b.pet=0;aniJoy(b)}if(a.tap)addFloat(r.x,r.y-1.6,'たのしさ+'+n,'#ffd7e8');if(typeof spReact==='function')spReact(r,'joy',1500)/* なでおわったら、正面を向いて、よろこぶ */}}});
+    end(r,a){const b=(S.ani||[]).find(q=>q.id===a.aid);if(a.t<a.dur){if(a.tap&&b){b.petD=null;b.pet=0}return}/* とちゅうでやめたら、たのんだなでるは、なかったことに */const n=Math.round((a.tap?ANIPET:ANIFUN)*(b&&spotNear((b.y|0)*W+(b.x|0),'fureai')?1.2:1)*10)/10;/* ふれあいひろば：+20% */funAdd(r,n,'ani');r.wanderRestUntil=S.t+45;r.bubble='';if(b){b.pet=0;b.fun=Math.min(100,aniFun(b)+(a.tap?12:4));aniJoy(b)}if(a.tap)addFloat(r.x,r.y-1.6,'たのしさ+'+n,'#ffd7e8');if(typeof spReact==='function')spReact(r,'joy',1500)/* なでおわったら、正面を向いて、よろこぶ */}}});
 const aniSpd=(h,box,k2)=>1+.1*spotN(h,'makiba')+(k2==='hidamari'?.1*spotN(h,'hidamari'):0)+(k2==='hoshikusa'&&box!=null&&box>=0&&spotNear(box,'hoshikusa')?.1:0);/* まきば・ひだまりのとや・ほしくさおき場：+10% */
 ACT.apetq=ACT.apet;/* 「しらべる」でたのんだ、なでる（とちゅうで仕事にうつらない） */KEEPC.add('apet');KEEPC.add('apetq');/* 荷物は持ったまま、なでにいく */
 ACT_LBL.apick='生き物のえさをとりにいく';ACT_LBL.aput='生き物にえさをあげている';ACT_LBL.awater='生き物に水をあげている';ACT_LBL.acol='生き物のとれた物をとっている';ACT_LBL.apet='生き物をなでている';ACT_LBL.apetq='生き物をなでにいく';
@@ -96,7 +138,7 @@ function aniPetAsk(a){/* 行けるせいれいのうち、道のりがいちば�
 function aniPop(a){/* 名前・すんでいる小屋・きょうのえさと水 */if(a.stray){strayDrop(a);return (S.flags.aniMet||{})[a.k]||IS_STORY_REPLAY||typeof MEMRUN!=='undefined'&&MEMRUN?strayPop(a):strayMeet(a);}const day=callDay(),h=a.h,d=isHut(S.obj[h])?hutD(h):null;
   const o=el('<div style="position:fixed;inset:0;z-index:45;display:flex;align-items:center;justify-content:center;background:rgba(40,30,15,.35);padding:24px"><div class="pxcard" style="background:var(--panel);padding:16px 18px;max-width:320px;width:100%;color:var(--ink)"><b class="t" style="display:block;font-size:15px;margin-bottom:6px"></b><div class="rows"></div><div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px"><button class="btn x">とじる</button><button class="btn pri go">なでる</button></div></div></div>');
   o.querySelector('.t').textContent=ANI[a.k].name;const rows=o.querySelector('.rows');
-  rows.appendChild(rowEl('すんでいる小屋',d?BL[S.obj[h]].name:'小屋がない'));rows.appendChild(rowEl('えさ',a.fd===day?'もらった':'まだ'));rows.appendChild(rowEl('水',d&&d.wd===day?'もらった':'まだ'));
+  rows.appendChild(rowEl('すんでいる小屋',d?BL[S.obj[h]].name:'小屋がない'));rows.appendChild(rowEl('楽しさ',Math.round(aniFun(a))+' / 100'));rows.appendChild(rowEl('えさ',a.fd===day?'もらった':'まだ'));rows.appendChild(rowEl('水',d&&d.wd===day?'もらった':'まだ'));
   const g=o.querySelector('.go'),why=aniPetWhy(a);lackOn(g,why);
   g.onclick=()=>{if(aniPetWhy(a))return;const r=aniPetAsk(a);if(!r){toast('いまは、なでにいけるせいれいがいない');return}sfx('tap');o.remove();toast(r.name+'が、'+ANI[a.k].name+'をなでにいく')};
   o.querySelector('.x').onclick=()=>{sfx('tap');o.remove()};o.onclick=e=>{if(e.target===o)o.remove()};document.body.appendChild(o)}
@@ -112,9 +154,13 @@ function aniChip(a,now){/* ボーンで動かして写したコマ（tools/art/a
   const f=a.eat>0?ANIEAT[(now/220|0)%4]:a.mv?'w'+((now/150|0)%4):String(((now+a.id*337)/700|0)%2);return a.vw&&C['ani:'+k+'#'+a.vw+f]||C['ani:'+k+'#'+f]||C['ani:'+k+'#0']||null}
 const ANISHW=.9,ANISHH=.3;/* 飼う生き物のかげ：足もとのはばに対する、だ円のよこの半径・たての半径の比 */
 function drawAnimal(g,a,now){/* 足もと（a.x, a.y）に、チップの足（下のはし58/64）をそろえる。左むきは、足もとのまん中で反転 */const ch=aniChip(a,now);if(!ch)return;const im=chipImgs(ch,'ani'+a.k)[0];if(!im.ok)return;
-  const x=Math.round(a.x*TS),y=Math.round(a.y*TS);{const ft=chipFoot(ch,im),sz=a.k==='hane'?6:10;/* かげ：足もとのはばに合わせた、ドットのだ円（1ドットはチップと同じ、ゲームの半分の点） */
-    if(ft){const l=ft.l+ch.ax-TS,r=ft.r+ch.ax-TS,m=(l+r)/4,hw=(r-l)/4*ANISHW+1;dotShadow(g,x+(a.face<0?-m:m),y,hw,Math.max(1.5,hw*ANISHH),1,.5)}else dotShadow(g,x,y,sz,2,1,.5)}
-  const jf=aniJoyF(a,now);g.save();g.translate(x,y-(jf?jf[2]:0));if(a.face<0)g.scale(-1,1);g.imageSmoothingEnabled=false;g.drawImage(im,ch.ax/2-TS/2,ch.ay/2-29,ch.w/2,ch.h/2);g.restore()}
+  const x=a.x*TS,y=a.y*TS,young=a.born!=null&&a.born+ANIGROW>callDay(),scale=young?.7:1;
+  {const ft=chipFoot(ch,im),sz=(a.k==='hane'?6:10)*scale;/* かげ：足もとのはばに合わせた、ドットのだ円（1ドットはチップと同じ、ゲームの半分の点） */
+    if(ft){const l=ft.l+ch.ax-TS,r=ft.r+ch.ax-TS,m=(l+r)/4*scale,hw=((r-l)/4*ANISHW+1)*scale;dotShadow(g,Math.round(x+(a.face<0?-m:m)),Math.round(y),hw,Math.max(1.5,hw*ANISHH),1,.5)}else dotShadow(g,Math.round(x),Math.round(y),sz,2,1,.5)}
+  const jf=aniJoyF(a,now);g.save();g.translate(Math.round(x),Math.round(y)-(jf?jf[2]:0));
+  g.scale(a.face<0?-scale:scale,scale);g.imageSmoothingEnabled=false;
+  g.drawImage(im,ch.ax/2-TS/2,ch.ay/2-29,ch.w/2,ch.h/2);g.restore()
+}
 function aniDraw(add,vis,now,ctx){for(const a of S.ani||[]){if(a.in||!vis(a))continue;const px=a.x*TS,fy=a.y*TS;add(a.y,2,[px-20,fy-34,px+20,fy+4],()=>liftDraw(uLift(a),()=>drawAnimal(ctx,a,now)),(a.y|0)*W+(a.x|0))}}
 /* ---------- とれる物のアイコン（16×16のドット） ---------- */
 const ANIPIX={egg:['................','................','.......oo.......','......ohho......','.....ohhmmo.....','....ohhmmmmo....','....ohmmmmmo....','...ohmmmmmmmo...','...ommmmmmmdo...','...ommmmmmmdo...','...ommmmmmddo...','....ommmmddo....','.....oddddo.....','......oooo......','................','................'],
@@ -125,7 +171,12 @@ for(const k in ANIPIX){ICONS[k]=pixURL('ani:'+k,ANIPIX[k],ANICOL[k]);const im=ne
 /* ---------- 小屋の画面 ---------- */
 function aniSec(body,j,o){if(!isHut(o)||S.obj[j]!==o)return;const d=hutD(j),L=aniOf(j),P=PENS.get(j),day=callDay();
   const sec=el('<div class="sec"><h3></h3><div class="rows"></div></div>'),rows=sec.querySelector('.rows');sec.querySelector('h3').textContent='すんでいる生き物（'+L.length+'/'+hutCap(j)+'）';
-  for(const a of L)rows.appendChild(rowEl(ANI[a.k].name,a.fd===day?'えさを食べた':'おなかがすいている'));
+  for(const a of L){
+    const young=a.born!=null&&a.born+ANIGROW>day;
+    rows.appendChild(rowEl(ANI[a.k].name+(young?'の子ども':''),(a.fd===day?'えさを食べた':'おなかがすいている')+' ・ 楽しさ '+Math.round(aniFun(a))));
+  }
+  rows.appendChild(rowEl('住み心地',aniComfort(j)+' / 100 ・ 1日 '+aniYield(j)+'こ／成体'));
+
   rows.appendChild(rowEl('かこい',P?'かこいの中':'かこいがない'));
   rows.appendChild(rowEl('えさ',(d.feed||0)+'こ'));rows.appendChild(rowEl('水',d.wd===day?'もらった':'まだ'));
   const pr=Object.keys(d.pr||{}).filter(k=>d.pr[k]>0);if(pr.length)rows.appendChild(rowEl('とれた物',pr.map(k=>aniProdName(k)+'（'+d.pr[k]+'）').join('・')));

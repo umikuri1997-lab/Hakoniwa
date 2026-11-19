@@ -161,6 +161,7 @@ function keyName(el){const N=S.keyN||(S.keyN={});/* 5属性のキーキャラ：
   if(nm&&S.res.some(r=>r.name===nm))N[el]=nm;return nm}
 function subWho(q){return q.who||keyName(q.g)}/* who：話す人がきまっている（交換はカミサマ） */
 function checkSub(){const D=S.subDone||(S.subDone={}),Sn=S.subSeen||(S.subSeen={}),St=S.subSt||(S.subSt={});if((St.sortie>=2||D.sortie)&&!S.flags.sortie)S.flags.sortie=1;/* 出撃のサブクエストを受けたら、出撃をえらべる */S.subB||(S.subB={});SUBW={};const SL=subList();/* 1回だけ作って使いまわす */
+  const scheduled=q=>q.k.startsWith('seedwait_')||q.k.startsWith('lv_')||['trade','oracle','lighttry','sortie','salvia3','watch2','lotus3','lily5','swing1','benchwood'].includes(q.k);
   const busy={};
   for(const q of SL){if(D[q.k])continue;if(St[q.k]===1&&(!subOfferReady(q)))delete St[q.k];if(Sn[q.k]&&!St[q.k])St[q.k]=2;
     if(St[q.k]===3&&FLOWER_QUESTS.has(q.k)&&!q.ok()){St[q.k]=2;delete (S.subArrived||{})[q.k];delete SUB_CLEAR_WAIT[q.k]}
@@ -171,7 +172,16 @@ function checkSub(){const D=S.subDone||(S.subDone={}),Sn=S.subSeen||(S.subSeen={
     if(St[q.k])busy[q.g]=busy[q.g]&&!(St[q.k]===3&&St[busy[q.g].k]!==3)?busy[q.g]:q}/* 終わったクエストの報告を先に出す */
   /* サブクエストは一つずつ提示。会話のあいだを村の時間で2時間あける */
   const spaced=!isNight()&&(S.subTalkAt==null||S.t-S.subTalkAt>=120);/* 新しいサブクエストは、昼だけ */
-  if(spaced&&!Object.values(busy).some(q=>St[q.k]===1||St[q.k]===3)&&SL.filter(q=>!D[q.k]&&St[q.k]===2).length<6)for(const q of SL){/* 前のおねがいが終わっていなくても、条件がそろえば出す（受けているのは6つまで） */if(D[q.k]||St[q.k])continue;const w=keyName(q.g);if(!w||!q.at()||!subOfferReady(q))continue;St[q.k]=1;busy[q.g]=q;break}
+  if(spaced&&!Object.values(busy).some(q=>St[q.k]===1||St[q.k]===3)){
+    const eligible=SL.filter(q=>!D[q.k]&&!St[q.k]&&keyName(q.g)&&q.at()&&subOfferReady(q));
+    let q=eligible.find(scheduled);
+    const day=callDay();
+    if(!q&&S.randomRequestDay!==day&&!SL.some(q=>!scheduled(q)&&!D[q.k]&&St[q.k]>=1&&St[q.k]<=3)){
+      const random=eligible.filter(q=>!scheduled(q));
+      if(random.length){q=pick(random);S.randomRequestDay=day}
+    }
+    if(q){St[q.k]=1;busy[q.g]=q}
+  }
   if(spaced&&waitingBellflowers()&&!SL.some(q=>St[q.k]===1||St[q.k]===3)&&SL.filter(q=>St[q.k]===2).length<3){const next=SL.find(q=>q.k.startsWith('seedwait_')&&!D[q.k]&&!St[q.k]&&q.at());if(next&&subOfferReady(next))St[next.k]=1}
   const summonHelp=WD===0&&S.qStory==null&&S.qTalked?({fire:'salvia3',water:'lotus3',wind:'lily5'}[QUESTS[S.quest]?.id]||''):'',supportKeys=summonHelp?(summonHelp==='salvia3'?['salvia3','watch2']:summonHelp==='lily5'?['lily5','swing1']:[summonHelp]):[];
   for(const k of supportKeys){if(D[k]||St[k])continue;const q=SL.find(q=>q.k===k);if(!q||!q.at()||!subOfferReady(q)||!keyName(q.g))continue;if(!isNight()&&(k===summonHelp||spaced)){St[k]=1;break}}

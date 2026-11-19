@@ -19,19 +19,19 @@ function j3Ding(st,dt,v){j3U('tink',v?v*.6:.18,st,dt)}/* 小さな鈴の「チ�
 /* ---------- 朝の日記の数え上げ ---------- */
 const J3WORK=[['harvest','しゅうかく'],['plant','植えた'],['craft','作った'],['build','建てた'],['fish','つり']];
 function dyWorkSum(e){/* きのうのしごと：種類ごとの回数（みんなのしたこと と同じ記録。料理も「作った」） */const T={};for(const x of e.w||[]){const t=x[3]==='cook'?'craft':x[3];T[t]=(T[t]||0)+x[5]}return J3WORK.filter(k=>T[k[0]]>0).map(k=>[k[1],T[k[0]]+'回'])}
-function juiceDiaryCount(body,secW){/* diaryBody から（朝に出した紙だけ）。secW：きのうのしごと の欄（なければ null） */
-  const L=[...body.querySelectorAll('.stat b')].filter(b=>/^\d+/.test(b.textContent));if(!L.length&&!secW)return;
+function juiceDiaryCount(body,secW,defer){/* diaryBody から（朝に出した紙だけ）。body：日記の本の1ページ。secW：きのうのしごと の欄（なければ null）。defer：数を0にしておき、はじめる関数をかえす（ページを見せたときによぶ） */
+  const L=[...body.querySelectorAll('.stat b')].filter(b=>/^\d+/.test(b.textContent));if(!L.length&&!secW)return defer?()=>{}:undefined;
   const st=S,items=L.map(b=>{const m=b.textContent.match(/^(\d+)(.*)$/);return{b,n:+m[1],sf:m[2]}});
   let done=false;const stamp=()=>{if(secW&&secW.isConnected)uiStamp(secW,false,'よくできました',true)};
   const finish=()=>{if(done)return;done=true;for(const it of items)it.b.textContent=it.n+it.sf;body.removeEventListener('pointerdown',finish,true);setTimeout(stamp,250)};
-  if(uiReduced()||!items.length){finish();return}
+  if(uiReduced()||!items.length){if(defer)return finish;finish();return}
   for(const it of items)it.b.textContent='0'+it.sf;
   body.addEventListener('pointerdown',finish,true);/* タップで、すぐにさいごの数 */
   let i=0,k=0,tick=0;const step=()=>{if(done)return;if(!body.isConnected||S!==st){done=true;return}
     const it=items[i];if(!it){finish();return}const inc=Math.max(1,Math.ceil(it.n/J3COUNTMAX));k=Math.min(it.n,k+inc);it.b.textContent=k+it.sf;
     if(it.n>0){j3U('notch',.32,JUICE_SCALE[Math.min(tick,JUICE_SCALE.length-1)]);tick++}
     if(k>=it.n){i++;k=0;setTimeout(step,J3COUNTMS*3)}else setTimeout(step,J3COUNTMS)};
-  setTimeout(step,450)}
+  const go=()=>setTimeout(step,450);if(defer)return go;go()}
 
 /* ---------- なかよしのハート ---------- */
 function juiceBondHeart(a,b,lv){if(!j3OK()||!a||!b||a.hidden||b.hidden||J3H.length>3)return;J3H.push({a,b,lv,t0:performance.now(),s:0});}
@@ -112,17 +112,49 @@ function juiceResTick(){if(!S||!J3RN||J3RN.s!==S)return;const n=S.res.length;if(
 /* ---------- はじめて置いた家具（juiceFirst）：着地のあと「はじめて！」のシールがぺたっとつき、しばらくしてはがれる ---------- */
 const J3F=[],J3FMS=3200,J3FPEEL=450;let J3FC=null;
 function juiceFirst(j,id){if(!j3OK()||!BL[id]||BL[id].kind!=='furn'||J3F.length>3)return;J3F.push({j,t0:performance.now()+450,s:0})}
-function j3Sticker(){if(J3FC)return J3FC;const tx='はじめて！',W0=58,H0=16,c=document.createElement('canvas');c.width=W0;c.height=H0;const g=c.getContext('2d');
-  g.fillStyle='#ffffff';g.fillRect(1,0,W0-2,H0);g.fillRect(0,1,W0,H0-2);g.fillStyle='#fff3c2';g.fillRect(2,2,W0-4,H0-4);g.fillStyle='#e8d29a';g.fillRect(2,H0-3,W0-4,1);/* 白いふち・クリーム色・下にうすいかげ */
-  const t=document.createElement('canvas');t.width=W0;t.height=H0;const h=t.getContext('2d');h.font='10px PixelMplus10';h.textAlign='center';h.textBaseline='middle';h.fillStyle='#c0392b';h.fillText(tx,W0/2,H0/2);
-  const d=h.getImageData(0,0,W0,H0);for(let i=3;i<d.data.length;i+=4)d.data[i]=d.data[i]>110?255:0;h.putImageData(d,0,0);g.drawImage(t,0,0);t.width=t.height=0;return J3FC=c}
-function juiceFirstDraw(now){if(!J3F.length)return;const c=ctx,sm=c.imageSmoothingEnabled;c.imageSmoothingEnabled=false;const Z=j3Sticker();
-  for(let i=J3F.length-1;i>=0;i--){const f=J3F[i],e=now-f.t0;if(e<0)continue;if(e>J3FMS+J3FPEEL){J3F.splice(i,1);continue}
-    if(f.s===0){f.s=1;j3U('page',.24,5)}if(f.s===1&&e>J3FMS){f.s=2;j3U('page',.18,-2)}/* ぺたっ・ぺりっ（紙の録音） */
-    const x=(f.j%W+.5)*TS,lift=typeof hiAt==='function'?hiAt(f.j)*LIFT:0,y=((f.j/W)|0)*TS-14-lift;
-    let k=1,sy=1,a=1;if(e<150)k=e<50?1.5:e<100?1.25:.95;else if(e>J3FMS){const u=(e-J3FMS)/J3FPEEL;sy=Math.max(.1,1-Math.floor(u*4)/4);a=1-u}/* ぺたっ（大きく→小さく）・はがれる（たてにちぢむ） */
-    const w=Math.round(Z.width*k),h=Math.round(Z.height*k*sy);c.globalAlpha=a;c.drawImage(Z,Math.round(x-w/2),Math.round(y-h),w,h);c.globalAlpha=1}
-  c.imageSmoothingEnabled=sm}
+function j3Sticker(){
+  if(J3FC)return J3FC;
+  const c=document.createElement('canvas'),w=c.width=104,h=c.height=28,g=c.getContext('2d');
+  const panel=inset=>{
+    g.beginPath();
+    g.moveTo(9,inset);g.lineTo(w-9,inset);g.lineTo(w-inset,h/2);
+    g.lineTo(w-9,h-inset);g.lineTo(9,h-inset);g.lineTo(inset,h/2);g.closePath();
+  };
+  const shade=g.createLinearGradient(0,0,0,h);
+  shade.addColorStop(0,'#284759');shade.addColorStop(1,'#142735');
+  panel(2);g.fillStyle=shade;g.fill();
+  g.strokeStyle='#efcc82';g.lineWidth=2;g.stroke();
+  panel(5);g.strokeStyle='#a37b49';g.lineWidth=.8;g.stroke();
+  g.font='bold 13px PixelMplus10, sans-serif';g.textAlign='center';g.textBaseline='middle';
+  g.fillStyle='#fff1bf';g.fillText('はじめて！',w/2,h/2+1);
+  return J3FC=c;
+}
+function juiceFirstDraw(now){
+  if(!J3F.length)return;
+  const c=ctx,Z=j3Sticker();
+  for(let i=J3F.length-1;i>=0;i--){
+    const f=J3F[i],e=now-f.t0;
+    if(e<0)continue;
+    if(e>J3FMS+J3FPEEL){J3F.splice(i,1);continue}
+    if(!f.s){f.s=1;sfx('firstDiscovery')}
+    const x=(f.j%W+.5)*TS,lift=hiAt(f.j)*LIFT,y=((f.j/W)|0)*TS-32-lift;
+    const appear=Math.min(1,e/360),fade=Math.min(1,Math.max(0,(e-J3FMS)/J3FPEEL));
+    const scale=1-(1-appear)**3*.36+Math.sin(appear*Math.PI)*.16;
+    c.save();c.translate(x,y+12*(1-appear)-8*fade);c.globalAlpha=(1-fade)*Math.min(1,e/120);
+    if(e<650){
+      const p=e/650;
+      c.save();c.globalAlpha*=1-p;
+      for(let n=0;n<12;n++){
+        const angle=n*Math.PI/6,r=14+52*p,s=2+(1-p)*(n%3);
+        c.save();c.translate(Math.cos(angle)*r,Math.sin(angle)*r*.5);c.rotate(Math.PI/4);
+        c.fillStyle=n%2?'#fff9da':'#ffd37f';c.fillRect(-s/2,-s/2,s,s);c.restore();
+      }
+      c.restore();
+    }
+    c.scale(scale,scale);c.shadowColor='#efc574';c.shadowBlur=12*(1-appear)+4;
+    c.drawImage(Z,-Z.width/2,-Z.height/2);c.restore();
+  }
+}
 
 /* ---------- ゆめがかなった（juiceDream）：頭の上で、ゆめのふきだし（その家具の絵）がふくらんで、星のつぶになってはじける ---------- */
 const J3D=[],J3DSW=700,J3DPOP=700;

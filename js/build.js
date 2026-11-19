@@ -229,6 +229,7 @@ function finishCraft(o,r){
 }
 function craftCarry(o,r){/* できた物は、作ったせいれいが頭の上につんで、おそなえ箱（なければ箱）へはこぶ。1回の依頼でできた分（木の矢10本・柵10こなど）は、ひとまとめで1つ（'set:'+id）。持てる数がいっぱいなら、その場におき、せいれいがはこぶ。箱がひとつもないときだけ、すぐ入れる */
   const id=o.type,n=BL[id].qty||1,nm=BL[id].name,key=n>1?'set:'+id:id;
+  if(['w','a'].includes(BL[id].g?.s))gearIdea(null,id);
   if(!r||!itemBoxOK()){giveItem(id,n);toast((r?r.name+'が':'')+nm+'を作った！','good');return}
   gotNote(id);if(addItem(r,key,1))(r.cmade||(r.cmade={}))[key]=(r.cmade[key]||0)+1;
   else{const b=(S.drops||[]).length;dropAt(r.x,r.y,key,1);if(S.drops&&S.drops.length>b){const d=S.drops[S.drops.length-1];d.tap=1;d.made=1}else giveItem(id,n,1)}/* 置けなければ、そのまま入れる */

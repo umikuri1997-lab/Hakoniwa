@@ -109,22 +109,25 @@ function spReact(r,k,ms){/* k：joy・sad・think。ms のあいだ（1倍の速
 function spReactNow(r,now){const e=REACTU.get(r);return e&&e.u>now&&(r.reactT||0)>S.t?e.k:''}
 function spPetNow(r,now){return (PETU.get(r)||0)>now}
 /* なでる手（守り神の手）：頭の上で、左右にゆっくり行き来する。ドットの四角（1ドット＝ゲームの1.5点）。手の色はやわらかい光の色 */
-const PETHAND=['..oooo..','.ohhhho.','ohhhhhho','ohhhhhho','.ohhhhho','..oohhho','....ooo.'];
-function drawPetHand(c,px,top,now){const g=1.5,sw=Math.round(Math.sin(now/260)*3),x0=Math.round(px/g+sw-4)*g,y0=Math.round(top/g)*g;
-  c.save();c.globalAlpha=.92;PETHAND.forEach((row,y)=>{for(let x=0;x<row.length;x++){const ch=row[x];if(ch==='.')continue;c.fillStyle=ch==='o'?'#e7c99a':'#fff3dc';c.fillRect(x0+x*g,y0+y*g,g,g)}});c.restore()}
 function spFrontNow(r,now){return spPetNow(r,now)||!!spReactNow(r,now)}
 /* いまの動きの名前を、その子のようすで、さしかえる（drawRes0）：床で寝る・なでられる・つりの結果など・食べる物ごとの食べ方・生き物をなでる */
 function spAnimFix(r,now,flSl,front,an){if(typeof SPM==='undefined')return an;if(flSl)return'sleepcurl';if(front&&spPetNow(r,now)&&SPM.petted)return'petted';const k=front&&spReactNow(r,now);if(k&&SPM[REACTA[k]])return REACTA[k];
   if(an==='eat')return eatAnim(r);if((an==='apet'||an==='apetq')&&SPM.anipat)return'anipat';return an}
 /* ---------- もやもや（たのしさが低いとき）・鼻歌（ごきげんなとき） ---------- */
-/* もやもや：頭の上に、むらさきの うずまき（ドットの絵、1ドット＝ゲームの1.5点）。2まいのコマを、ゆっくり入れかえて、ふわふわ上下する */
-const MOYA=['..ooooo..','.o.....o.','o..ooo..o','o.o...o.o','o.o.o.o.o','o.o..oo.o','o..o....o','.o..oooo.','..o......'];
-function drawMoya(c,px,top,now,id){/* 2コマ：うずまきを左右反対にして入れかえ、くるくるまわって見える */const g=1.5,fl=Math.floor(now/450+id)%2,x0=Math.round(px/g-4.5)*g,y0=Math.round((top+Math.sin(now/500+id)*1.5)/g)*g;
-  c.save();c.fillStyle='#8a6bb8';MOYA.forEach((row,y)=>{for(let x=0;x<row.length;x++)if(row[fl?row.length-1-x:x]==='o')c.fillRect(x0+x*g,y0+y*g,g,g)});c.restore()}
-/* 鼻歌：ごきげん（たのしさ FUNF 以上）で、ひまなとき、ときどき。音符のドットが ふわっと上へ。人の声の録音（SAMPLES.hum）を、その子の声の高さで小さく（会話の声が出ているあいだは鳴らさない） */
-const HUMCD=40,HUMDUR=3200,HUMP=.04,HUMU=new WeakMap();
+/* もやもや：たのしさが低いあいだ、ずっと。大きさのちがう、むらさきの うずまき（ドットの絵、1ドット＝ゲームの1.5点）が、頭のまわりに、まばらに わいて、くるくるまわりながら上へうかんで、きえる（どうぶつの森の、しょんぼりの雲のように） */
+const MOYAS=[['.ooo.','o...o','o.o.o','o..o.','.oo..'],['..ooo..','.o...o.','o..o..o','o.o.o.o','o.o..o.','.o.....','..oooo.'],['..ooooo..','.o.....o.','o..ooo..o','o.o...o.o','o.o.o.o.o','o.o..oo.o','o..o....o','.o..oooo.','..o......']];
+const MOYAN=5,MOYAL=4200,MOYACOL=['#9a82c6','#8a6bb8','#7a5ca8'];/* 同時にうかぶ数・1つがきえるまで（ミリ秒）・小さい・中・大きいの色 */
+function moyaHash(a,b){let h=(a*73856093^b*19349663)>>>0;h=Math.imul(h^h>>>13,1274126177)>>>0;return(h>>>8)/16777216}
+function drawMoya(c,px,top,now,id){const g=1.5;c.save();
+  for(let i=0;i<MOYAN;i++){const tt=now+id*977+i*MOYAL/MOYAN,n=Math.floor(tt/MOYAL),k=(tt%MOYAL)/MOYAL,h1=moyaHash(id*31+i,n),h2=moyaHash(n,id*17+i*5),sz=h1<.4?0:h1<.8?1:2,P=MOYAS[sz];
+    const x0=Math.round((px+(h2-.5)*26+Math.sin(k*5+i)*2-P[0].length*g/2)/g)*g,y0=Math.round((top+8-(h1*.6+.4)*6-k*14-P.length*g/2)/g)*g,fl=Math.floor(tt/(480+sz*220))%2;
+    c.globalAlpha=k<.15?k/.15:k>.75?(1-k)/.25:1;c.fillStyle=MOYACOL[sz];
+    P.forEach((row,y)=>{for(let x=0;x<row.length;x++)if(row[fl?row.length-1-x:x]==='o')c.fillRect(x0+x*g,y0+y*g,g,g)})}
+  c.restore()}
+/* 鼻歌：たのしさが FUNF いじょうのあいだ、ずっと。音符のドットが、つぎつぎ ふわっと上へ */
+const HUMGAP=700,HUML=1600;
 const NOTE=['..oo','..oo','..o.','..o.','ooo.','ooo.','.o..'];
-function humTick(r,now){/* drawRes0 から：ひまで、ごきげんな子が、ときどき鼻歌をはじめる */const u=HUMU.get(r);if(u&&now<u.u)return true;if(!r.act||!['idle','wander','quirk','rest','ownseat','sunset'].includes(r.act.type)||r.fun<FUNF||isDark()||(r.humT||0)>S.t)return false;
-  if(Math.random()>HUMP/60)return false;r.humT=S.t+HUMCD+Math.random()*HUMCD;HUMU.set(r,{u:now+HUMDUR,t0:now});if(typeof humVoice==='function')humVoice(r);return true}
-function drawHum(c,px,top,now,r){const u=HUMU.get(r);if(!u||now>=u.u)return;const g=1.5;for(let i=0;i<3;i++){const k=(now-u.t0-i*700)/1600;if(k<0||k>1)continue;const x0=Math.round((px+8+i*4+Math.sin(k*6+i)*3)/g)*g,y0=Math.round((top-k*16)/g)*g;
-  c.save();c.globalAlpha=k<.8?1:(1-k)/.2;NOTE.forEach((row,y)=>{for(let x=0;x<row.length;x++)if(row[x]==='o'){c.fillStyle=i%2?'#e98fb0':'#7aa6e0';c.fillRect(x0+x*g,y0+y*g,g,g)}});c.restore()}}
+function humTick(r){/* drawRes0 から：ごきげんで、こわがっていない子 */return r.fun>=FUNF&&!hostileNow(r)}
+function drawHum(c,px,top,now,r){const g=1.5,tt=now+r.id*613;c.save();for(let j=0;j<3;j++){const n=Math.floor(tt/HUMGAP)-j,k=(tt-n*HUMGAP)/HUML;if(k<0||k>1)continue;const i=((n%2)+2)%2,ox=(moyaHash(r.id,n)-.5)*8;
+  const x0=Math.round((px+8+ox+Math.sin(k*6+n)*3)/g)*g,y0=Math.round((top-k*16)/g)*g;c.globalAlpha=k<.1?k/.1:k<.8?1:(1-k)/.2;c.fillStyle=i?'#e98fb0':'#7aa6e0';
+  NOTE.forEach((row,y)=>{for(let x=0;x<row.length;x++)if(row[x]==='o')c.fillRect(x0+x*g,y0+y*g,g,g)})}c.restore()}
