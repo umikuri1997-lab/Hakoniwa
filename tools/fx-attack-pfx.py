@@ -17,7 +17,8 @@ import hashlib, io, json, os, subprocess, sys
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
 PFX = os.path.join(ROOT, 'tools', 'pixelfx')
-FPS = 20
+FPS = 15  # 1コマ 1/15 秒（0.5〜0.7秒。前は20で、はやすぎて見えなかった）
+SCALE = 1.5  # 大きさ：pixelfx の絵を1.5倍に（3倍にのばしてから面積の平均で半分にし、tidy でうすさ・色をドットにそろえる。当たる所・clip も同じだけ）
 # 暗い → 明るい（ゲームのほかの絵に合わせた、明るくやわらかい色。いちばん暗い色も黒にしない）
 FIRE = ['#b4523c', '#d6683f', '#ec8a4a', '#f8aa58', '#ffcc72', '#ffe8a8', '#fff8e4']
 EMBER = ['#fff4c8', '#ffd47a', '#f6a052', '#e0744a']
@@ -101,16 +102,19 @@ def tidy(im, pal, mist=110, keep=1.):
 def build(key):
     c = CANDS[key]
     fr, (pvx, pvy) = render(c)
+    if SCALE != 1:
+        fr = [f.resize((f.width * 3, f.height * 3), Image.NEAREST).resize((round(f.width * SCALE), round(f.height * SCALE)), Image.BOX) for f in fr]
+        pvx, pvy = pvx * SCALE, pvy * SCALE
     pal = palette_of(c['opts']); n = len(fr); fd = c.get('fade', 0)
     fr = [tidy(f, pal, c.get('mist', 110), 1. if i < n - fd or os.environ.get('FULL') else (n - i) / (fd + 1)) for i, f in enumerate(fr)]
     h = c['hit']
     if h[0] == 'hot':  # その コマの、いちばん明るい色（光るしゅんかんの白）のまん中
         f = fr[h[1]]; px = f.load(); top = max(sum(px[x, y][:3]) for y in range(f.height) for x in range(f.width) if px[x, y][3])
         pts = [(x, y) for y in range(f.height) for x in range(f.width) if px[x, y][3] and sum(px[x, y][:3]) >= top - 6]
-        ax = round(sum(p[0] for p in pts) / len(pts)) + h[2]; ay = round(sum(p[1] for p in pts) / len(pts)) + h[3]
-    else: ax, ay = pvx + h[1], pvy + h[2]
+        ax = round(sum(p[0] for p in pts) / len(pts) + h[2] * SCALE); ay = round(sum(p[1] for p in pts) / len(pts) + h[3] * SCALE)
+    else: ax, ay = round(pvx + h[1] * SCALE), round(pvy + h[2] * SCALE)
     if c.get('clip') and not os.environ.get('FULL'):  # 当たる所から遠い物は切る
-        rx, up, dn = c['clip']
+        rx, up, dn = (v * SCALE for v in c['clip'])
         for f in fr:
             px = f.load()
             for y in range(f.height):

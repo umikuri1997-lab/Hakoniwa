@@ -56,5 +56,5 @@ const PRPIX={
  berrymilk:['................','.......oo.......','......oddo......','.....hhddhh.....','....hhhhhhhh....','....oooooooo....','....ommmmmho....','....ommmmmho....','.....ommmho.....','.....ommmho.....','.....ommmho.....','......omho......','......oddo......','.....oddddo.....','.....oooooo.....','................'],
  pancake:['................','................','................','.......hh.......','......hhhh......','...wwwwwwwwww...','..ohhhhhhhhhho..','..ommmmmmmmmmo..','..oddddddddddo..','..ohhhhhhhhhho..','..ommmmmmmmmmo..','..oddddddddddo..','..ohhhhhhhhhho..','..ommmmmmmmmmo..','...oddddddddo...','................']};
 const PRCOL={komugiko:'#efe6d4',dango:'#f2d2c8',tamasand:'#f2dc8c',milkshake:'#f4e6c4',berrymilk:'#f0c6d6',pancake:'#e8bc78'};
-for(const k in PRPIX){ICONS[k]=pixURL('pr:'+k,PRPIX[k],PRCOL[k]);const im=new Image();im.onload=()=>{im.ok=1;dirty=true};im.src=ICONS[k];ICI[k]=im}
+for(const k in PRPIX){if(ICONS[k])continue;ICONS[k]=pixURL('pr:'+k,PRPIX[k],PRCOL[k]);const im=new Image();im.onload=()=>{im.ok=1;dirty=true};im.src=ICONS[k];ICI[k]=im}
 EMO_IC['🥣']='komugiko';EMO_IC['🍡']='dango';EMO_IC['🥪']='tamasand';EMO_IC['🥛']='milkshake';EMO_IC['🍓']='berrymilk';EMO_IC['🥞']='pancake';/* 食べ物の字（FOODS の e）は、アイコンのキーとしてだけ使う */

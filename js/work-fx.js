@@ -100,11 +100,11 @@ const EATDRINK=new Set(['milk','berryjuice','applejuice','milkshake','berrymilk'
 const EATIC={cup:'drink',bread:'bread',cake:'bread',sand:'bread'};
 function eatKind(items){const k=(items||[])[0];if(!k)return'meal';if(EATDRINK.has(k))return'drink';if(EATBREAD.has(k))return'bread';if(EATFRUIT.has(k))return'fruit';const D=typeof COOKDI!=='undefined'&&COOKDI[k],ic=D&&D.ic&&D.ic[0];return EATIC[ic]||'meal'}
 /* 食べる・のむ音（SAMPLES.ea_〜、tools/sound/eat_asmr.py）：食べ物ごとに、いちばん近い録音。表にない料理は、料理の絵のしゅるい（COOKD の ic）で */
-const EATSND={apple:'ea_apple',ringoame:'ea_apple',berry:'ea_pine',donguri:'ea_nut',tomato:'ea_melon',takenoko:'ea_veg',salad:'ea_veg',kinoko:'ea_pickle',mugi:'ea_cereal',komugiko:'ea_cereal',kakigori:'ea_cracker',
-  imo:'ea_egg',yakiimo:'ea_egg',egg:'ea_egg',pancake:'ea_egg',takoyaki:'ea_egg',yakizakana:'ea_egg',kabayaki:'ea_egg',kushiyaki:'ea_egg',foil:'ea_egg',bread:'ea_toast',tamasand:'ea_toast',
-  milk:'ea_water',berryjuice:'ea_water',applejuice:'ea_water',milkshake:'ea_shake',berrymilk:'ea_shake',soup:'ea_sip',fishsoup:'ea_sip',wataame:'ea_choco',yakisoba:'ea_noodle',marine:'ea_noodle'},
-  EATSNDIC={cup:'ea_tea',bowl:'ea_noodle',plate:'ea_noodle',skewer:'ea_egg',bread:'ea_toast',cake:'ea_cookie',dango:'ea_choco',salad:'ea_veg',sand:'ea_toast'};
-function eatSnd(items){const k=(items||[])[0];if(!k)return'ea_egg';if(EATSND[k])return EATSND[k];if(FOODS[k]&&FOODS[k].fish)return'ea_egg';const D=typeof COOKDI!=='undefined'&&COOKDI[k],ic=D&&D.ic&&D.ic[0];return EATSNDIC[ic]||'ea_noodle'}
+const EATSND={apple:'ea_apple',ringoame:'ea_apple',berry:'ea_apple',tomato:'ea_apple',donguri:'ea_nut',takenoko:'ea_veg',salad:'ea_veg',kinoko:'ea_pickle',mugi:'ea_cereal',komugiko:'ea_cereal',kakigori:'ea_cracker',
+  imo:'ea_soft',yakiimo:'ea_soft',egg:'ea_soft',pancake:'ea_soft',takoyaki:'ea_soft',yakizakana:'ea_soft',kabayaki:'ea_soft',kushiyaki:'ea_soft',foil:'ea_soft',bread:'ea_toast',tamasand:'ea_toast',
+  milk:'ea_water',berryjuice:'ea_water',applejuice:'ea_water',milkshake:'ea_water',berrymilk:'ea_water',soup:'ea_tea',fishsoup:'ea_tea',wataame:'ea_cookie',yakisoba:'ea_soft',marine:'ea_soft'},
+  EATSNDIC={cup:'ea_tea',bowl:'ea_soft',plate:'ea_soft',skewer:'ea_soft',bread:'ea_toast',cake:'ea_cookie',dango:'ea_cookie',salad:'ea_veg',sand:'ea_toast'};
+function eatSnd(items){const k=(items||[])[0];if(!k)return'ea_soft';if(EATSND[k])return EATSND[k];if(FOODS[k]&&FOODS[k].fish)return'ea_soft';const D=typeof COOKDI!=='undefined'&&COOKDI[k],ic=D&&D.ic&&D.ic[0];return EATSNDIC[ic]||'ea_soft'}
 function eatAnim(r){const a=r.act;return typeof SPM!=='undefined'&&a&&a.type==='eat'&&SPM['eat_'+eatKind(a.items)]?'eat_'+eatKind(a.items):'eat'}
 /* ---------- その場でのよろこび・がっかり・ふしぎ（つりの結果・なでたあと・できあがり）：正面を向いて、その動きと顔 ---------- */
 const REACTU=new WeakMap(),PETU=new WeakMap();

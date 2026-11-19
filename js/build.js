@@ -87,9 +87,13 @@ function swingWide(){/* ブランコが2マスはばになった：前のセー�
   for(let j=0;j<S.obj.length;j++){if(S.obj[j]!=='swing')continue;const x=j%W;if(x<W-1&&ok(j+1)){S.obj[j+1]='part';S.ref[j+1]=j}else if(x>0&&ok(j-1)){S.obj[j-1]='swing';S.obj[j]='part';S.ref[j]=j-1;if(S.rot&&S.rot[j]!=null){S.rot[j-1]=S.rot[j];delete S.rot[j]}}else{clearObj(j);giveItem('swing',1,1);back++}}
   if(back)setTimeout(()=>toast('ブランコが2マスはばになったので、ひろげられないブランコを'+back+'つ、もちものにもどした'),1500)}
 function setParts(id,j,kind){const x=j%W,y=(j/W)|0;for(const[a,b]of fp(id,x,y)){const k=b*W+a;if(k===j)continue;S.obj[k]=kind;S.ref[k]=j}}
-/* 植える芽は、せいれいが歩いて行ける所（池の上は、となりの岸から）だけ。行けない所に置くと、植える予定の10この枠がうまったままになる */
+/* 植える芽は、せいれいが歩いて行ける所だけ。池・川の上は、行ける岸から水の中をおよいでとどく所ならどこでも（plantWet：岸につながる水。せいれいの道 spirit-work.js の plant の wade と同じ決まり）。行けない所に置くと、植える予定の10この枠がうまったままになる */
 function plantDist(){const r=S.res.find(q=>!q.hidden)||S.res[0];return r?bfs(r.x|0,r.y|0).dist:null}
-const plantReach=(D,j)=>!D||D[j]>=0||[1,-1,W,-W].some(d=>{const k=j+d;return k>=0&&k<W*H&&Math.abs(k%W-j%W)<=1&&D[k]>=0});
+function plantWet(D){if(D._wet)return D._wet;const M=D._wet=new Uint8Array(W*H),Q=[],sw=k=>S.ground[k]===1&&!solidOf(k);
+  for(let j=0;j<W*H;j++){if(!sw(j))continue;const x=j%W;if([1,-1,W,-W].some(d=>{const k=j+d;return k>=0&&k<W*H&&Math.abs(k%W-x)<=1&&S.ground[k]!==1&&walk(k)&&D[k]>=0})){M[j]=1;Q.push(j)}}/* 行ける岸のとなりの水 */
+  for(let h=0;h<Q.length;h++){const j=Q[h],x=j%W;for(const d of[1,-1,W,-W]){const k=j+d;if(k<0||k>=W*H||Math.abs(k%W-x)>1||M[k]||!sw(k))continue;M[k]=1;Q.push(k)}}/* そこから水の中をおよいで */
+  return M}
+const plantReach=(D,j)=>!D||D[j]>=0||[1,-1,W,-W].some(d=>{const k=j+d;return k>=0&&k<W*H&&Math.abs(k%W-j%W)<=1&&D[k]>=0})||S.ground[j]===1&&!!plantWet(D)[j];
 function place(id,x,y){
   const b=BL[id];
   if(WALLD.has(id)){if(!usable(id)||inv(id)<=0)return toast(BL[id].name+'が足りません','warn');if(!canPlace(id,x,y))return;const j=y*W+x;S.inv[id]--;/* カーテンは、上がわの壁の窓にかける。窓はそのまま（S.win がカーテンなら、その下に窓がある） */(S.win||(S.win={}))[j]=id==='window'?1:id;noteQuestPlacement(HOME_DOORS.has(S.obj[j])?'door':'hwall',j);burst(j,'furn');recount();if(BOXCAP[id])boxUnstash(j,id);dirty=true;renderPalette();return}

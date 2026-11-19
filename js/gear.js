@@ -173,8 +173,8 @@ const gearIcon=id=>ICONS['g_'+id]||pixURL(id,GPIX[BL[id].g.ic||BL[id].g.s],gearC
 /* 鉱脈の絵：岩に、鉱石の色の粒（ドット） */
 const VSPK=[[9,14],[16,12],[13,19],[20,18],[7,21],[17,23]];
 function drawVein(c,id,x,y,i){drawObj(c,'rock',x,y,i);const col=ORE_COL[VEINS[id]],X=Math.round(x),Y=Math.round(y);for(const[a,b]of VSPK){c.fillStyle=shade(col,.72);c.fillRect(X+a-1,Y+b-1,4,4);c.fillStyle=col;c.fillRect(X+a,Y+b,2,2)}}
-for(const k of['icopper','iiron','isilver','igold']){ICONS[k]=pixURL('ingot:'+k,GPIX.ingot,ORE_COL[k.slice(1)]);const im=new Image();im.onload=()=>{im.ok=1};im.src=ICONS[k];ICI[k]=im}/* 延べ棒の素材アイコン */
-for(const k of GEAR_ORES){ICONS[k]=pixURL('ore:'+k,GPIX.ore,ORE_COL[k]);const im=new Image();im.onload=()=>{im.ok=1};im.src=ICONS[k];ICI[k]=im}/* 鉱石の素材アイコン */
+for(const k of['icopper','iiron','isilver','igold']){if(ICONS[k])continue;ICONS[k]=pixURL('ingot:'+k,GPIX.ingot,ORE_COL[k.slice(1)]);const im=new Image();im.onload=()=>{im.ok=1};im.src=ICONS[k];ICI[k]=im}/* 延べ棒の素材アイコン（もらった絵 tools/art/icons32 がなければ、コードの絵） */
+for(const k of GEAR_ORES){if(ICONS[k])continue;ICONS[k]=pixURL('ore:'+k,GPIX.ore,ORE_COL[k]);const im=new Image();im.onload=()=>{im.ok=1};im.src=ICONS[k];ICI[k]=im}/* 鉱石の素材アイコン */
 
 /* ---------- 画面：せいれいの「そうび」タブ ---------- */
 function gearUpBtn(q,after){const b=el('<button class="btn"></button>');if(!gearCanUp(q.id)||(q.lv||0)>=3){b.textContent=(q.lv||0)>=3?'+3':'強化なし';b.disabled=true;return b}const c=gearUpCost(q);b.textContent='強化 '+MATN[c.k]+c.n+(c.pc?'・'+SP(c.pc):'');lackOn(b,lackMat(c.k,c.n)||lackPt(c.pc));b.onclick=e=>{e.stopPropagation();if(gearUp(q))after()};return b}
@@ -186,8 +186,11 @@ function gearSheet(body,r){const sec=el('<div class="sec"></div>');
     gearList().forEach((g2,i)=>{if(gearSlot(BL[g2.id].g)!==k||gearOK(r,g2.id))return;const row=gearRow(g2),b=el('<button class="btn pri">つける</button>');b.onclick=()=>{if(gearEquip(r,i))renderSheet()};row.appendChild(b);sec.appendChild(row)})}
   if(!gearList().length&&!GSLOTK.some(k=>r.gear&&r.gear[k])){const p=el('<p class="note"></p>');p.textContent='そうびは、ありません';sec.appendChild(p)}
   body.appendChild(sec)}
-/* 依頼ボードの「そうび」：わくごとに見出し。さいごに強化 */
-function gearBoardHead(id,prev){const s=BL[id].g&&gearSlot(BL[id].g);if(!s||s==='ar'||(prev&&BL[prev].g&&gearSlot(BL[prev].g)===s))return null;const h=el('<b style="display:block;margin:6px 0 2px"></b>');h.textContent=GSLOT[s];return h}
+/* 依頼ボードの見出し：しゅるい（CRAFT_TABS の名前）がかわる所ごと。そうびは、わく（武器・防具・アクセサリー）ごと。さいごに強化 */
+let BOARDTAB=null;
+function gearBoardHead(id,prev){if(!BOARDTAB){BOARDTAB={};for(const[t,ids]of CRAFT_TABS)for(const i of ids)if(!BOARDTAB[i])BOARDTAB[i]=t}
+  const key=i=>{const g=BL[i].g,s=g&&gearSlot(g);return s&&s!=='ar'?'g:'+s:'t:'+(BOARDTAB[i]||'')},k=key(id);if(prev&&key(prev)===k)return null;
+  const h=el('<b style="display:block;margin:6px 0 2px"></b>');h.textContent=k.startsWith('g:')?GSLOT[k.slice(2)]:k.slice(2);return h}
 function gearBoardUp(box){if(WD===0)return;const L=[];for(const q of gearList())if(gearCanUp(q.id))L.push([q,'']);for(const r of S.res)for(const k of['w','a'])if(r.gear&&r.gear[k])L.push([r.gear[k],r.name]);if(!L.length)return;const h=el('<b style="display:block;margin:8px 0 2px"></b>');h.textContent='強化';box.appendChild(h);for(const[q,who]of L){const row=gearRow(q,who?who+'がつけている':BL[q.id].desc);row.appendChild(gearUpBtn(q,renderSheet));box.appendChild(row)}}
 /* もちもの：そうび */
 function gearInv(body){const L=gearList();if(!L.length)return;const g=el('<div class="grid"></div>'),hd=el('<b style="grid-column:1/-1;margin-top:8px"></b>');hd.textContent='そうび';g.appendChild(hd);for(const q of L){const b=el('<div class="slot"><span class="ct"></span><img alt=""><span class="nm"></span></div>');b.querySelector('img').src=gearIcon(q.id);b.querySelector('.nm').textContent=gearName(q);b.querySelector('.ct').textContent=GSLOT[BL[q.id].g.s];g.appendChild(b)}body.appendChild(g)}

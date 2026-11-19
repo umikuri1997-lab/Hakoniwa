@@ -3,9 +3,9 @@ const assert=require('node:assert/strict');
 (async()=>{const {browser,page,run,errors}=await require('../sim/boot.cjs')({world:0});
 const out=JSON.parse(await run(`(()=>{const out={};USERPAUSE=true;const T=(d,h)=>{S.t=1440*(d-1)+h*60};
  /* 季節：冬（16〜20日め）は雪、秋（11〜15日め）は落ち葉。ほかの季節は出ない */
- S.rain=false;T(3,12);out.spring=[snowCover(),leafCover()];T(12,12);out.autumn=[snowCover(),leafCover()>0];T(16,12);const s0=snowCover();T(19,12);const s1=snowCover();S.rain=true;out.winter=[s0>0,s1>s0,snowCover()];
+ S.rain=false;S.snowA=0;T(3,12);out.spring=[snowCover(),leafCover()];T(12,12);out.autumn=[snowCover(),leafCover()>0];/* 雪：ふっているあいだに、だんだんつもり（一気にではない）、やむと、ゆっくりとける。冬でも雪の日でなければ、ふらない */T(16,8);S.rain=false;S.snowT=S.t;S.t+=120;snowTick();const s0=snowCover(),n0=seasonN(3);S.rain=true;S.t+=60;snowTick();const s1=snowCover();S.t+=600;snowTick();const s2=snowCover(),n1=seasonN(3);S.rain=false;S.t+=120;snowTick();const s3=snowCover();out.winter=[s0,n0,s1>0&&s1<.5,s2,n1>0,s3>.9&&s3<1];
  /* 水たまり：雨の日と、そのつぎの日の昼まで。冬は出ない */
- /* 雨の日の水たまり：夜だけ、せいれいがすべって止まる。出るまで2回めはない。昼・水たまりがかわいたら、すべらない */T(3,23.5);S.rain=true;{let pj=-1;for(let j=0;j<W*H;j++)if(rainPud(j)){pj=j;break}const q=S.res[0],ox=q.x,oy=q.y;q.x=pj%W+.5;q.y=(pj/W|0)+.5;q.slipJ=-1;q.slipT=0;const a1=rainSlip(q),a2=rainSlip(q);q.slipT=0;const a3=rainSlip(q);S.rain=false;S.wetD=0;const a4=rainPud(pj);S.rain=true;T(3,12);const a5=rainPud(pj);out.slip=[pj>=0,a1,a2,a3,a4,a5];q.x=ox;q.y=oy;q.slipJ=-1;q.slipT=0}
+ /* 雨の日の水たまり：夜だけ、せいれいがすべって止まる。出るまで2回めはない。昼・水たまりがかわいたら、すべらない */S.snowA=0;T(3,23.5);S.rain=true;{let pj=-1;for(let j=0;j<W*H;j++)if(rainPud(j)){pj=j;break}const q=S.res[0],ox=q.x,oy=q.y;q.x=pj%W+.5;q.y=(pj/W|0)+.5;q.slipJ=-1;q.slipT=0;const a1=rainSlip(q),a2=rainSlip(q);q.slipT=0;const a3=rainSlip(q);S.rain=false;S.wetD=0;const a4=rainPud(pj);S.rain=true;T(3,12);const a5=rainPud(pj);out.slip=[pj>=0,a1,a2,a3,a4,a5];q.x=ox;q.y=oy;q.slipJ=-1;q.slipT=0}
  T(3,12);S.rain=true;out.pud=[puddleLv()];S.rain=false;S.wetD=0;out.pud.push(puddleLv());S.wetD=dayNo();T(3,8);out.pud.push(puddleLv()>0);T(3,14);out.pud.push(puddleLv());
  /* 雨のつぎの朝に印がつく */
  T(5,6);S.rain=true;S.wetD=0;const R0=Math.random;Math.random=()=>.9;morning();Math.random=R0;out.wetD=S.wetD===dayNo();
@@ -27,7 +27,7 @@ const out=JSON.parse(await run(`(()=>{const out={};USERPAUSE=true;const T=(d,h)=
  for(let y=hy-1;y<hy+2;y++)for(let x=hx-2;x<hx+1;x++)S.ground[y*W+x]=1;recount();cam.x=hx*TS-VW/cam.z/2;cam.y=(hy+1)*TS-VH/cam.z/2;started=true;T(10,13);const w=feelAmbWant();T(19,13);const w2=feelAmbWant();out.amb=[w.pond>0&&w.stream===0&&w.onsen===0,w.fire>0,w.leaves>0,w.semi>0,w2.semi];
  return JSON.stringify(out)})()`));
 console.log(out);
-assert.deepEqual(out.spring,[0,0]);assert.deepEqual(out.autumn,[0,true]);assert.deepEqual(out.winter,[true,true,1]);
+assert.deepEqual(out.spring,[0,0]);assert.deepEqual(out.autumn,[0,true]);assert.deepEqual(out.winter,[0,0,true,1,true,true]);
 assert.deepEqual(out.pud,[1,0,true,0]);assert.deepEqual(out.slip,[true,true,true,false,false,false]);assert.equal(out.wetD,true);
 assert.deepEqual(out.win.noon,[0,0,0,0]);assert.deepEqual(out.win.night,[1,1,1,1]);assert.deepEqual(out.win.morn,[0,0,0,0]);assert.ok(out.win.diff&&out.win.range,'window times '+out.win.on);
 assert.deepEqual(out.flick,[true,true,1]);

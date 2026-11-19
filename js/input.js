@@ -15,35 +15,39 @@ const homeZ=()=>Math.max(minZ(),Math.min(2.2,VW/(13*TS)));
 const toWorld=(sx,sy)=>({x:cam.x+sx/cam.z,y:cam.y+sy/cam.z});
 
 let mode='look',sel='farm',selStamp=null;
+let CVR=null,CVRT=0;function cvRect(){const t=performance.now();if(!CVR||t-CVRT>250){CVR=cv.getBoundingClientRect();CVRT=t}return CVR}/* 画面がずれた（文字を打ったあとページがスクロールしたまま など）ときも、キャンバスの上の場所でタップをはかる */
+const cX=e=>e.clientX-cvRect().left,cY=e=>e.clientY-cvRect().top;
+window.addEventListener('scroll',()=>{CVR=null;const a=document.activeElement;if(a&&/^(INPUT|TEXTAREA)$/.test(a.tagName))return;if(scrollX||scrollY)scrollTo(0,0)},{passive:true});/* ページがずれたままにしない */
+window.addEventListener('resize',()=>{CVR=null});document.addEventListener('focusout',()=>setTimeout(()=>{CVR=null;if(scrollX||scrollY)scrollTo(0,0)},120));
 const ptrs=new Map();let gest=null;
 cv.addEventListener('pointerdown',e=>{
   if(!started)return;if(!(camAnim&&camAnim.done))camAnim=null;/* 演出のカメラ（おわりの処理つき）は、さわっても止めない（止めると、おわりの処理がよばれず、ゲームが止まったままになる） */
-  cv.setPointerCapture(e.pointerId);ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
-  if(ptrs.size===1)gest={type:'maybe',sx:e.clientX,sy:e.clientY,cx:cam.x,cy:cam.y};
+  cv.setPointerCapture(e.pointerId);ptrs.set(e.pointerId,{x:cX(e),y:cY(e)});
+  if(ptrs.size===1)gest={type:'maybe',sx:cX(e),sy:cY(e),cx:cam.x,cy:cam.y};
   else if(ptrs.size===2){const[p,q]=[...ptrs.values()];gest={type:'pinch',d:Math.hypot(p.x-q.x,p.y-q.y),z:cam.z,mid:toWorld((p.x+q.x)/2,(p.y+q.y)/2)};if(selRect&&!pending)selRect=null}
 });
 cv.addEventListener('pointermove',e=>{
-  if(!ptrs.has(e.pointerId))return;ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});if(!gest)return;
+  if(!ptrs.has(e.pointerId))return;ptrs.set(e.pointerId,{x:cX(e),y:cY(e)});if(!gest)return;
   if(gest.type==='pinch'&&ptrs.size>=2){const[p,q]=[...ptrs.values()];const d=Math.hypot(p.x-q.x,p.y-q.y);cam.z=clamp(gest.z*d/gest.d,minZ(),3);const mx=(p.x+q.x)/2,my=(p.y+q.y)/2;cam.x=gest.mid.x-mx/cam.z;cam.y=gest.mid.y-my/cam.z;clampCam();return}
-  const dx=e.clientX-gest.sx,dy=e.clientY-gest.sy;
+  const dx=cX(e)-gest.sx,dy=cY(e)-gest.sy;
   if(gest.type==='maybe'&&Math.hypot(dx,dy)>8){
     const k=BL[sel]&&BL[sel].kind;
     if(LEAFARM){gest.type='leaf';LEAFDRAG=[];const w0=toWorld(gest.sx,gest.sy),t0=tapLv(w0.x,w0.y);leafAdd(Math.floor((w0.y+(t0?t0*LIFT:0))/TS)*W+Math.floor(w0.x/TS))}/* 葉のかべ：なぞる（defense.js） */
     else if(mode==='bulk'&&!selStamp&&S.bulk&&(k==='block'&&S.unlocked[sel]||k==='plant'&&usable(sel)||sel==='spike'&&usable(sel))){let w=toWorld(gest.sx,gest.sy);{const tl=tapLv(w.x,w.y);if(tl)w={x:w.x,y:w.y+tl*LIFT}}gest.type='rect';gest.a={x:Math.floor(w.x/TS),y:Math.floor(w.y/TS)};$('#confirm').hidden=true;pending=null}
     else gest.type='pan'}
   if(gest.type==='pan'){if(FOLLOW)followEnd();/* 見守るは、ドラッグでおわる */cam.x=gest.cx-dx/cam.z;cam.y=gest.cy-dy/cam.z;clampCam()}
-  if(gest.type==='leaf'){const w=toWorld(e.clientX,e.clientY),tl=tapLv(w.x,w.y);leafAdd(Math.floor((w.y+(tl?tl*LIFT:0))/TS)*W+Math.floor(w.x/TS));return}
-  if(gest.type==='rect'){let w=toWorld(e.clientX,e.clientY);{const tl=tapLv(w.x,w.y);if(tl)w={x:w.x,y:w.y+tl*LIFT}}selRect={a:gest.a,b:{x:Math.floor(w.x/TS),y:Math.floor(w.y/TS)}}}
+  if(gest.type==='leaf'){const w=toWorld(cX(e),cY(e)),tl=tapLv(w.x,w.y);leafAdd(Math.floor((w.y+(tl?tl*LIFT:0))/TS)*W+Math.floor(w.x/TS));return}
+  if(gest.type==='rect'){let w=toWorld(cX(e),cY(e));{const tl=tapLv(w.x,w.y);if(tl)w={x:w.x,y:w.y+tl*LIFT}}selRect={a:gest.a,b:{x:Math.floor(w.x/TS),y:Math.floor(w.y/TS)}}}
 });
 function endPtr(e){
   if(!ptrs.has(e.pointerId))return;ptrs.delete(e.pointerId);
-  if(gest&&gest.type==='maybe'&&e.type==='pointerup')onTap(e.clientX,e.clientY);
+  if(gest&&gest.type==='maybe'&&e.type==='pointerup')onTap(cX(e),cY(e));
   else if(gest&&gest.type==='rect'&&selRect)askBulk(sel,rectCells(selRect.a,selRect.b));
   else if(gest&&gest.type==='leaf'){const c=LEAFDRAG;LEAFDRAG=null;leafPlace(c)}
   if(ptrs.size===1){const p=[...ptrs.values()][0];gest={type:'pan',sx:p.x,sy:p.y,cx:cam.x,cy:cam.y}}else if(!ptrs.size)gest=null;
 }
 cv.addEventListener('pointerup',endPtr);cv.addEventListener('pointercancel',endPtr);
-cv.addEventListener('wheel',e=>{e.preventDefault();if(!started)return;const w=toWorld(e.clientX,e.clientY);cam.z=clamp(cam.z*(e.deltaY<0?1.12:.89),minZ(),3);cam.x=w.x-e.clientX/cam.z;cam.y=w.y-e.clientY/cam.z;clampCam()},{passive:false});
+cv.addEventListener('wheel',e=>{e.preventDefault();if(!started)return;const w=toWorld(cX(e),cY(e));cam.z=clamp(cam.z*(e.deltaY<0?1.12:.89),minZ(),3);cam.x=w.x-cX(e)/cam.z;cam.y=w.y-cY(e)/cam.z;clampCam()},{passive:false});
 
 const bubHit=(r,w)=>r.bubX!=null&&Math.abs(r.bubX-w.x)<33&&Math.abs(r.bubY-w.y)<33;/* 描いた吹き出しをタップ（遊具の上で遊ぶ子は、描く場所がr.x,r.yとずれる） */
 const tapY=r=>r.y-(r.act&&r.act.type==='watchpost'&&r.act.stage==='do'?WPLIFT*Math.min(1,r.act.cl||0)/TS:0);/* 見張り台の上の子は、上に描いた所でタップする（見張り台の足もとをタップしても、子をえらばない） */

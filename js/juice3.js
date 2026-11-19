@@ -20,20 +20,21 @@ function j3Ding(st,dt,v){j3U('tink',v?v*.6:.18,st,dt)}/* 小さな鈴の「チ�
 const J3WORK=[['harvest','しゅうかく'],['plant','植えた'],['craft','作った'],['build','建てた'],['fish','つり']];
 function dyWorkSum(e){/* きのうのしごと：種類ごとの回数（みんなのしたこと と同じ記録。料理も「作った」） */const T={};for(const x of e.w||[]){const t=x[3]==='cook'?'craft':x[3];T[t]=(T[t]||0)+x[5]}return J3WORK.filter(k=>T[k[0]]>0).map(k=>[k[1],T[k[0]]+'回'])}
 function juiceDiaryCount(body,secW,defer){/* diaryBody から（朝に出した紙だけ）。body：日記の本の1ページ。secW：きのうのしごと の欄（なければ null）。defer：数を0にしておき、はじめる関数をかえす（ページを見せたときによぶ） */
-  const L=[...body.querySelectorAll('.stat b')].filter(b=>/^\d+/.test(b.textContent));if(!L.length&&!secW)return defer?()=>{}:undefined;
+  const L=[...body.querySelectorAll('.stat b')].filter(b=>/^\d+/.test(b.textContent));if(!L.length&&!secW)return defer?cb=>{if(cb)cb()}:undefined;
+  let onDone=null;/* defer のとき：はじめる関数に、おわったら呼ぶ関数をわたせる（日記の自動でめくる） */
   const st=S,items=L.map(b=>{const m=b.textContent.match(/^(\d+)(.*)$/);return{b,n:+m[1],sf:m[2]}});
-  let done=false;const stamp=()=>{if(secW&&secW.isConnected)uiStamp(secW,false,'よくできました',true)};
-  const finish=()=>{if(done)return;done=true;for(const it of items)it.b.textContent=it.n+it.sf;body.removeEventListener('pointerdown',finish,true);setTimeout(stamp,250)};
-  if(uiReduced()||!items.length){if(defer)return finish;finish();return}
+  let done=false;const stamp=()=>{if(secW&&secW.isConnected&&!secW.closest('.bkstore'))uiStamp(secW,false,'よくできました',true)};
+  const finish=()=>{if(done)return;done=true;for(const it of items)it.b.textContent=it.n+it.sf;body.removeEventListener('pointerdown',finish,true);setTimeout(()=>{stamp();if(onDone)setTimeout(onDone,secW?700:0)},250)};
+  if(uiReduced()||!items.length){if(defer)return cb=>{onDone=cb;finish()};finish();return}
   for(const it of items)it.b.textContent='0'+it.sf;
   body.addEventListener('pointerdown',finish,true);/* タップで、すぐにさいごの数 */
-  let i=0,k=0,tick=0;const step=()=>{if(done)return;if(!body.isConnected||S!==st){done=true;return}
+  let i=0,k=0,tick=0;const step=()=>{if(done)return;if(!body.isConnected||S!==st){done=true;return}if(body.closest('.bkstore')){finish();return}/* ページをめくった：見えていない数を数えつづけない（音も） */
     const it=items[i];if(!it){finish();return}const inc=Math.max(1,Math.ceil(it.n/J3COUNTMAX));k=Math.min(it.n,k+inc);it.b.textContent=k+it.sf;
     const pop=c=>{it.b.classList.remove('ucntp','ucntd');void it.b.offsetWidth;it.b.classList.add(c)};
     if(it.n>0){sfx('xyl');tick++;pop('ucntp')}/* 1つふえるたびに、一覧のスクロールと同じ「カラッ」と、数がはねる */
     if(k>=it.n){pop('ucntd');const row=it.b.closest('.stat');if(row){row.classList.add('ucntrow');setTimeout(()=>row.classList.remove('ucntrow'),420)}if(it.n>0){j3U('tink',.3,JUICE_SCALE[Math.min(i*2+6,JUICE_SCALE.length-1)]);const q=it.b.getBoundingClientRect();if(typeof sawdust==='function'&&q.width)sawdust(q.left+q.width/2,q.top+q.height/2,6,18)}/* 数がそろった行は、大きくはねて光り、木くずがはじける */
       i++;k=0;setTimeout(step,J3COUNTMS*4)}else setTimeout(step,J3COUNTMS)};
-  const go=()=>setTimeout(step,450);if(defer)return go;go()}
+  const go=cb=>{onDone=cb||null;setTimeout(step,450)};if(defer)return go;go()}
 
 /* ---------- なかよしのハート ---------- */
 function juiceBondHeart(a,b,lv){if(!j3OK()||!a||!b||a.hidden||b.hidden||J3H.length>3)return;J3H.push({a,b,lv,t0:performance.now(),s:0});}
@@ -111,51 +112,32 @@ function juiceResTick(){if(!S||!J3RN||J3RN.s!==S)return;const n=S.res.length;if(
     for(const o of S.res){if(o===r||o.hidden||Math.hypot(o.x-r.x,o.y-r.y)>8)continue;const a=o.act;if(a&&!(a.stage==='do'&&LISTEN_ACT.has(a.type)))continue;if(sacredPose(o))continue;sacredSetPose(o,{anim:'storyListen',at:now,duration:2600,...dlgLook(o,r),listen:true})}}/* そちらを向く */
   if(nw.length){j3Ding(7,.05);j3Ding(12,.12);j3Ding(16,.19)}}
 
-/* ---------- はじめて置いた家具（juiceFirst）：着地のあと「はじめて！」のシールがぺたっとつき、しばらくしてはがれる ---------- */
-const J3F=[],J3FMS=3200,J3FPEEL=450;let J3FC=null;
-function juiceFirst(j,id){if(!j3OK()||!BL[id]||BL[id].kind!=='furn'||J3F.length>3)return;J3F.push({j,t0:performance.now()+450,s:0})}
-function j3Sticker(){
-  if(J3FC)return J3FC;
-  const c=document.createElement('canvas'),w=c.width=104,h=c.height=28,g=c.getContext('2d');
-  const panel=inset=>{
-    g.beginPath();
-    g.moveTo(9,inset);g.lineTo(w-9,inset);g.lineTo(w-inset,h/2);
-    g.lineTo(w-9,h-inset);g.lineTo(9,h-inset);g.lineTo(inset,h/2);g.closePath();
-  };
-  const shade=g.createLinearGradient(0,0,0,h);
-  shade.addColorStop(0,'#284759');shade.addColorStop(1,'#142735');
-  panel(2);g.fillStyle=shade;g.fill();
-  g.strokeStyle='#efcc82';g.lineWidth=2;g.stroke();
-  panel(5);g.strokeStyle='#a37b49';g.lineWidth=.8;g.stroke();
-  g.font='bold 13px PixelMplus10, sans-serif';g.textAlign='center';g.textBaseline='middle';
-  g.fillStyle='#fff1bf';g.fillText('はじめて！',w/2,h/2+1);
-  return J3FC=c;
-}
+/* ---------- はじめて置いた家具（juiceFirst）：着地のあと「はじめて！」の文字だけ（わく・背景なし）が1字ずつはねて出て、
+   紙ふぶきと星のドットがはじける。音は、オルゴールの鈴（tink）の、かけあがるアルペジオと、キラッ（starkira：持ち主の音） ---------- */
+const J3F=[],J3FMS=2600,J3FOUT=400,J3FTX='はじめて！',J3FCOL=['#ffe066','#ff8fb1','#8fd8ff','#a8f08a','#ffffff','#ffb056'];let J3FC=null;
+function juiceFirst(j,id){if(!j3OK()||!BL[id]||BL[id].kind!=='furn'||J3F.length>3)return;const P=[];for(let k=0;k<28;k++){const a=hash(j*7+k*13)*6.283,v=50+hash(j+k*5)*90;P.push({vx:Math.cos(a)*v,vy:Math.sin(a)*v*.7-90-hash(k*3+j)*60,c:J3FCOL[k%J3FCOL.length],s:hash(k*11+j)>.5?2:3})}J3F.push({j,t0:performance.now()+450,s:0,P})}
+function j3FirstChars(){/* 1字ずつの絵（ドットのフォント・金色・下にだけ1ドットのかげ） */if(J3FC)return J3FC;J3FC=[...J3FTX].map(ch=>{const c=document.createElement('canvas'),w=c.width=22,h=c.height=24,g=c.getContext('2d');g.font='20px PixelMplus10, sans-serif';g.textAlign='center';g.textBaseline='top';
+  g.fillStyle='#a8661c';g.fillText(ch,w/2,2);g.fillStyle='#ffd23f';g.fillText(ch,w/2,0);return c});return J3FC}
+function j3FirstSnd(){[0,4,7,12,16,19,24].forEach((st,k)=>j3Ding(st,k*.055,.5));j3U('starkira',.32,0,.4)}/* かけあがる鈴と、さいごにキラッ */
 function juiceFirstDraw(now){
   if(!J3F.length)return;
-  const c=ctx,Z=j3Sticker();
+  const c=ctx,Z=j3FirstChars(),sm=c.imageSmoothingEnabled;c.imageSmoothingEnabled=false;
   for(let i=J3F.length-1;i>=0;i--){
     const f=J3F[i],e=now-f.t0;
     if(e<0)continue;
-    if(e>J3FMS+J3FPEEL){J3F.splice(i,1);continue}
-    if(!f.s){f.s=1;sfx('firstDiscovery')}
-    const x=(f.j%W+.5)*TS,lift=hiAt(f.j)*LIFT,y=((f.j/W)|0)*TS-32-lift;
-    const appear=Math.min(1,e/360),fade=Math.min(1,Math.max(0,(e-J3FMS)/J3FPEEL));
-    const scale=1-(1-appear)**3*.36+Math.sin(appear*Math.PI)*.16;
-    c.save();c.translate(x,y+12*(1-appear)-8*fade);c.globalAlpha=(1-fade)*Math.min(1,e/120);
-    if(e<650){
-      const p=e/650;
-      c.save();c.globalAlpha*=1-p;
-      for(let n=0;n<12;n++){
-        const angle=n*Math.PI/6,r=14+52*p,s=2+(1-p)*(n%3);
-        c.save();c.translate(Math.cos(angle)*r,Math.sin(angle)*r*.5);c.rotate(Math.PI/4);
-        c.fillStyle=n%2?'#fff9da':'#ffd37f';c.fillRect(-s/2,-s/2,s,s);c.restore();
-      }
-      c.restore();
-    }
-    c.scale(scale,scale);c.shadowColor='#efc574';c.shadowBlur=12*(1-appear)+4;
-    c.drawImage(Z,-Z.width/2,-Z.height/2);c.restore();
+    if(e>J3FMS+J3FOUT){J3F.splice(i,1);continue}
+    if(!f.s){f.s=1;j3FirstSnd()}
+    const x=Math.round((f.j%W+.5)*TS),lift=hiAt(f.j)*LIFT,y=Math.round(((f.j/W)|0)*TS-30-lift),out=Math.min(1,Math.max(0,(e-J3FMS)/J3FOUT)),t=e/1000;
+    /* 紙ふぶき（重さで落ちる）と、ひろがる星の十字 */
+    for(const p of f.P){const u=Math.min(t,1.6),px=Math.round(x+p.vx*u),py=Math.round(y+8+p.vy*u+140*u*u);if(t>1.6)continue;c.globalAlpha=Math.max(0,1-t/1.6);c.fillStyle=p.c;c.fillRect(px,py,p.s,Math.floor(now/90+p.vx)%2?p.s:1)}
+    if(e<700){const u=e/700,r=Math.round(8+u*44);c.globalAlpha=1-u;for(let k=0;k<10;k++){const a=k/10*6.283+.3,sx=Math.round(x+Math.cos(a)*r),sy=Math.round(y+6+Math.sin(a)*r*.6);c.fillStyle=k%2?'#fff6c8':'#ffd23f';c.fillRect(sx-2,sy,5,1);c.fillRect(sx,sy-2,1,5)}}
+    for(let k=0;k<4;k++){const ph=((now/600)+k*.25)%1;if(e<300)break;c.globalAlpha=(1-ph)*(1-out);c.fillStyle='#fffbe0';const sx=Math.round(x-34+hash(k*17+f.j)*68),sy=Math.round(y+4-ph*18);c.fillRect(sx,sy,1,1);if(ph<.4){c.fillRect(sx-1,sy,3,1);c.fillRect(sx,sy-1,1,3)}}/* ふわっとのぼるきらめき */
+    /* 文字：1字ずつ、ぽんとはねて出て、そろったら、ときどき波うつ */
+    const n=Z.length,W0=17,x0=x-Math.round(n*W0/2);
+    for(let k=0;k<n;k++){const ek=e-k*70;if(ek<0)continue;const a=Math.min(1,ek/220),hop=ek<220?-Math.round(Math.sin(a*Math.PI)*12):ek<1400?0:-Math.round(Math.max(0,Math.sin((ek-1400)/160))*3);
+      c.globalAlpha=(1-out)*Math.min(1,ek/80);c.drawImage(Z[k],x0+k*W0,y-10+hop-Math.round(out*8),22,24)}
   }
+  c.globalAlpha=1;c.imageSmoothingEnabled=sm;
 }
 
 /* ---------- ゆめがかなった（juiceDream）：頭の上で、ゆめのふきだし（その家具の絵）がふくらんで、星のつぶになってはじける ---------- */

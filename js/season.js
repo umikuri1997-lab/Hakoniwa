@@ -13,7 +13,7 @@ function seasonMorning(){const d=dayNo();if(d<=1||seasonOf(d)===seasonOf(d-1))re
 /* 粒：画面の中の場所（0〜1）。p：ゆれ、s：速さ、c：色 */
 const SEAP=Array.from({length:60},()=>({x:Math.random(),y:Math.random(),p:Math.random()*6,s:rnd(.5,1),c:Math.random()}));
 const SEACOL=[['#f7c4d6','#f3aec5','#fbe0ea'],null,['#f6a650','#ec6f45','#f5d25a','#e2884a'],['#ffffff','#f1f6ff','#e4eefb']];
-function seasonN(k){return k===3?(S.rain?60:26):k===0?22:k===2?30:0}
+function seasonN(k){return k===3?(snowNow()?60:0):k===0?22:k===2?30:0}/* 冬でも、雪の日だけ雪がふる */
 function seasonStep(dt,now){if(!S)return;const k=seasonNow(),n=seasonN(k);if(!n)return;for(let i=0;i<n;i++){const m=SEAP[i];
   m.y+=dt*(k===3?.08:.035)*m.s*(k===3&&S.rain?1.6:1);m.x+=Math.sin(now/1400+m.p)*dt*(k===3?.006:.014)+(k===2?dt*.006:0);
   if(m.y>1.02){m.y=-.02;m.x=Math.random()}if(m.x>1.02)m.x=-.02;if(m.x<-.02)m.x=1.02}}
