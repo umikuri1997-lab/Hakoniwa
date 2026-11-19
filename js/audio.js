@@ -112,14 +112,14 @@ function moodTick(){const now=performance.now();for(const[r,m]of MOODM)if(now-m.
 const TAISOB=.5,TAISOV=.42,TAISON=6,TAISOLAG=.09,TAISOM=[[0,1],[4,1],[7,1],[4,1],[5,.5],[4,.5],[2,.5],[0,.5],[2,1],[null,1],[4,1],[2,1],[4,1],[7,1],[9,.5],[7,.5],[4,.5],[2,.5],[0,1],[null,1],[7,.5],[7,.5],[9,1],[7,1],[4,1],[5,.5],[4,.5],[2,1],[4,1],[null,1],[2,1],[4,.5],[2,.5],[0,1],[-5,1],[0,2],[null,2]];
 let TAISOP=null;/* {i:つぎの音,t:その時刻} */
 const TAISOK=1.12*.84;/* 体そうの曲の高さ：みんな同じ音で歌う（それぞれの声の高さで歌うと、ちがう調になって、不協和音になる） */
-const TAISODT=12,TAISOLP=[1700,2900];/* みんなで歌うとき、せいれいごとに高さを ±TAISODT セント（半音は100）・こもり方（TAISOLP の Hz のあいだ）を少しずつかえて、合唱のように重ねる。1人のときはそのまま */
+const TAISOJIT=.05,TAISODT=12,TAISOLP=[1700,2900];/* みんなで歌うとき、音ごとに歌いだしを0〜TAISOJIT 秒ばらつかせ（せいれいごとのずれ taisoLag にたす）、せいれいごとに高さを ±TAISODT セント（半音は100）・こもり方（TAISOLP の Hz のあいだ）を少しずつかえて、合唱のように重ねる。1人のときはそのまま */
 function taisoVoice(r){const h=x=>{const v=Math.sin((r.id||0)*x)*43758.5453;return v-Math.floor(v)};return{dt:Math.pow(2,(h(78.233)*2-1)*TAISODT/1200),lp:TAISOLP[0]+h(39.425)*(TAISOLP[1]-TAISOLP[0])}}/* 子ごとにきまった、高さのずれ・こもり方（しまわない） */
 function taisoLag(r){const h=Math.sin((r.id||0)*12.9898+7.1)*43758.5453;return(h-Math.floor(h))*TAISOLAG}/* 子ごとにきまったずれ（しまわない） */
 function taisoWho(){const E=S&&S.ev;if(!E||E.id!=='taiso'||E.ph!=='do')return[];const L=[];for(const id of E.who){const r=S.res.find(q=>q.id===id);if(!r||r.hidden||!r.act||r.act.type!=='evt'||r.act.stage!=='do'||r.act.back)continue;const q=sfxPos(r.x,r.y);if(q)L.push([r,q])}return L.sort((a,b)=>b[1].v-a[1].v).slice(0,TAISON)}
 function taisoTick(){if(!AC||!SND.sfx||AC.state!=='running'||VOICE||!S||!started||(typeof paused==='function'&&paused())||(typeof SKIP!=='undefined'&&SKIP)){TAISOP=null;return}
   const W0=taisoWho();if(!W0.length){TAISOP=null;return}const b=(SBUF.vowel||[])[0];if(!b)return;const now=AC.currentTime;if(!TAISOP||TAISOP.t<now-.3)TAISOP={i:0,t:now+.05};
   const k=1/Math.sqrt(W0.length),one=W0.length<2,V=W0.map(([r,q])=>{const c=one?{dt:1,lp:2400}:taisoVoice(r);return{lag:taisoLag(r),q,d:null,dt:c.dt,lp:c.lp}});
-  while(TAISOP.t<now+.35){const[n,bt]=TAISOM[TAISOP.i],len=bt*TAISOB;if(n!=null)for(const v of V){v.d=v.d||voiceDest(v.q,v.lp,TAISOV*k);vNote(b,TAISOP.t+v.lag,len+.05,TAISOK*v.dt*Math.pow(2,n/12),1,v.d,{bend:.97})}TAISOP.t+=len;TAISOP.i=(TAISOP.i+1)%TAISOM.length}}
+  while(TAISOP.t<now+.35){const[n,bt]=TAISOM[TAISOP.i],len=bt*TAISOB;if(n!=null)for(const v of V){v.d=v.d||voiceDest(v.q,v.lp,TAISOV*k);vNote(b,TAISOP.t+v.lag+(one?0:Math.random()*TAISOJIT),len+.05,TAISOK*v.dt*Math.pow(2,n/12),1,v.d,{bend:.97})}TAISOP.t+=len;TAISOP.i=(TAISOP.i+1)%TAISOM.length}}
 setInterval(moodTick,100);setInterval(taisoTick,100);
 function voiceStop(){if(!VOICE)return;const v=VOICE;VOICE=null;clearTimeout(v.end);try{const t=AC.currentTime;v.g.gain.setTargetAtTime(0,t,.04);v.src.stop(t+.2)}catch(e){}}
 /* せいれいどうしのおしゃべりの、小さな話し声：会話の声（SAMPLES.voice）を、話す子の声の高さで、短く切って鳴らす。
