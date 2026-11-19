@@ -172,7 +172,7 @@ function critDrop(c){const k=CRITDROP[c.k];if(!k||c.dr)return;c.dr=1;if(Math.ran
   const d=S.drops[S.drops.length-1];d.tap=1;d.cr=1;DROPFX.set(d,{sx:c.x*TS,sy:(c.y-.2)*TS-(c.z||0)-hiAt(d.y*W+d.x)*LIFT,t0:performance.now()})}
 /* どんぐりのアイコン（コードのドット絵。もらった絵があれば、かえる） */
 const DONGURI=['................','................','.......oo.......','.......wo.......','....oooooooo....','...owwwwwwwwo...','..owwwwwwwwwwo..','..oooooooooooo..','...ohmmmmmmdo...','...ohmmmmmmdo...','...ohmmmmmmdo...','....ohmmmmdo....','....ommmmddo....','.....oddddo.....','......oooo......','................'];
-ICONS.donguri=pixURL('food:donguri',DONGURI,'#b9773f');{const im=new Image();im.onload=()=>{im.ok=1;dirty=true};im.src=ICONS.donguri;ICI.donguri=im}
+if(!ICONS.donguri){ICONS.donguri=pixURL('food:donguri',DONGURI,'#b9773f');const im=new Image();im.onload=()=>{im.ok=1;dirty=true};im.src=ICONS.donguri;ICI.donguri=im}
 /* 反応の見た目の高さ（ドット）：ちょう・みつばちは高くまう、かえるは大きくはねる、もぐらは少ししずむ */
 function critPokeZ(c,now){if(!c.pk)return 0;const q=(now-c.pk)/(CRITPK*1000);if(q<0||q>=1)return 0;
   if(c.k==='fly'||c.k==='mitsubachi')return Math.round(Math.sin(q*Math.PI)*16);
