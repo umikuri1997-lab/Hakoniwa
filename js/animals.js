@@ -167,7 +167,7 @@ const ANIPIX={egg:['................','................','.......oo.......','...
   milk:['................','......oooo......','......ohmo......','......oooo......','.....ohmmmo.....','....ohhmmmmo....','....ohmmmmmo....','....ohmmmmmo....','....ommmmmmo....','....ommmmmdo....','....ommmmmdo....','....ommmmddo....','....oddddddo....','.....oooooo.....','................','................'],
   wool:['................','................','.....oo..oo.....','....ohhooho.....','...ohhmmhhmo....','..ohmmmmmmmmo...','..ohmmmmmmmmdo..','.ohmmmmmmmmmdo..','.ommmmmmmmmmmdo.','.ommmmmmmmmmddo.','..ommmmmmmmddo..','..oddmmmmmdddo..','...oodddddoo....','.....ooooo......','................','................']};
 const ANICOL={egg:'#f4e6c8',milk:'#eef3f6',wool:'#f3ead6'};
-for(const k in ANIPIX){ICONS[k]=pixURL('ani:'+k,ANIPIX[k],ANICOL[k]);const im=new Image();im.onload=()=>{im.ok=1};im.src=ICONS[k];ICI[k]=im}
+for(const k in ANIPIX){if(ICONS[k])continue;ICONS[k]=pixURL('ani:'+k,ANIPIX[k],ANICOL[k]);const im=new Image();im.onload=()=>{im.ok=1};im.src=ICONS[k];ICI[k]=im}
 /* ---------- 小屋の画面 ---------- */
 function aniSec(body,j,o){if(!isHut(o)||S.obj[j]!==o)return;const d=hutD(j),L=aniOf(j),P=PENS.get(j),day=callDay();
   const sec=el('<div class="sec"><h3></h3><div class="rows"></div></div>'),rows=sec.querySelector('.rows');sec.querySelector('h3').textContent='すんでいる生き物（'+L.length+'/'+hutCap(j)+'）';

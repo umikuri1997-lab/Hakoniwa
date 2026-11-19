@@ -2,6 +2,7 @@
 1まいの中の物は、たての空き → 行、行の中のよこの空き → 物、でわける（数が多ければ、いちばんせまい空きからまとめる：ならんだ手ぶくろ・火の粉など）。
 どれも、長いほうの辺が S ドットになるようにちぢめ（pixdown.py の make）、コントラスト・あざやかさを上げて（pop）、fishfood_art の tidy でととのえる。
 ゲームでは、ドットを3つずつにのばした絵を assets/g に入れ、js/draw-spirits.js の ICONS に 'g_<id>' で書く（gearIcon がつかう）。
+※ gc01〜14・gt01〜17・ga14〜26・gw19〜36・gar01〜13 は、tools/art/icons32/game.py の 32×32 の絵にかえた（--game でも、それは上書きしない）。
   python3 tools/art/gear/gear_art.py <出力フォルダ>          # ちぢめた絵と見くらべ
   python3 tools/art/gear/gear_art.py <出力フォルダ> --game   # ゲームに入れる"""
 import os, sys
@@ -122,7 +123,10 @@ def build(dst, game=False):
 def put(made):
     import hashlib, io, re
     js = os.path.join(R, 'js', 'draw-spirits.js'); s = open(js, encoding='utf-8').read()
+    import importlib.util as U; sp = U.spec_from_file_location('g32', os.path.join(D, '..', 'icons32', 'game.py')); g32 = U.module_from_spec(sp); sp.loader.exec_module(g32)
+    new = set(g32.A_IDS.values()) | {x for L in g32.B_IDS.values() for x in L}  # 32×32 の絵にした物は、上書きしない
     for k, im in made.items():
+        if 'g_' + k in new: continue
         im = im.resize((im.width * 3, im.height * 3), Image.NEAREST); b = io.BytesIO(); im.save(b, 'WEBP', lossless=True, exact=True); data = b.getvalue()
         name = 'assets/g/' + hashlib.sha1(data).hexdigest()[:10] + '.webp'; open(os.path.join(R, name), 'wb').write(data); key = 'g_' + k
         m = re.search(r"%s:'assets/g/[0-9a-f]+\.webp'," % key, s)
