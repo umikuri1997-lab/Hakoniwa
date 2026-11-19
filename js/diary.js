@@ -101,7 +101,13 @@ function diaryBody(T,body,arg){const L=S.diary||[];const e=arg==='m'||arg==null?
     body.appendChild(sec)}
   if(arg==='m'&&typeof juiceDiaryCount==='function')juiceDiaryCount(body,secW);/* 朝の紙だけ、数え上げてハンコ */
   if(arg==='m'){const best=dyBest(e),r=best&&S.res.find(q=>q.name===best.nm&&!q.hidden);if(r&&!DYJ.has(r)){DYJ.add(r);JUMP.set(r,performance.now());villageTimeout(()=>JUMP.set(r,performance.now()),650);addFloat(r.x,r.y-1.4,'がんばった！','#ffe7a8')}}}
-/* 思い出帳の「日記」：日ごとの紙の一覧 */
-function diaryList(body){const L=S.diary||[];if(!L.length)return;const sec=el('<div class="sec"><h3>日記</h3><div class="rows"></div></div>'),rw=sec.querySelector('.rows');
-  for(const e of L.slice().reverse()){const n=e.w.length+e.m.length,best=dyBest(e);const sub=(e.ns?'ゆうべ '+e.ns.kill+'体を追いはらった':'夜は、コワイノが来なかった')+(best?'・かつやく：'+best.nm:'')+(n?'・できごと '+n:'');const r=rowEl(e.d+'日めの日記',sub);r.style.cursor='pointer';r.onclick=()=>{sfx('tap');openSheet('diary',e.d)};rw.appendChild(r)}
-  body.appendChild(sec)}
+/* 思い出帳の「日記」：1日1ページの日記帳。日づけ（テープ）・天気・その日の昼の村の写真（テープではる）・ひとこと・できごと・ゆうべ（古い日から順に） */
+const DYWXN={storm:['あらし','rain'],snow:['雪','rain'],rain:['雨','rain'],rainbow:['虹','rainbow'],fest:['おまつり','sun']};
+function diaryList(body){const L=S.diary||[];if(!L.length)return;const st=S;
+  L.forEach((e,i)=>{const sec=el('<div class="sec mone mdy">'+(i?'':'<h3>日記</h3>')+'<div class="dyhd"><span class="dyd"></span><span class="dywx"></span></div></div>');
+    sec.querySelector('.dyd').textContent=e.d+'日め';const w=DYWXN[e.wx]||['晴れ','sun'];const wx=sec.querySelector('.dywx');wx.innerHTML=pxi(w[1]);wx.appendChild(document.createTextNode(w[0]));
+    if(e.ph){const f=el('<figure class="dyph"><img alt=""></figure>'),im=f.querySelector('img');sec.appendChild(f);phGet(e.ph).then(p=>{if(!f.isConnected&&!f.parentNode||S!==st)return;if(!p||!p.b){f.remove();return}im.src=dyPhUrl(e.ph,p.b)},()=>f.remove())}/* けした写真は出さない */
+    if(e.ft&&e.ft.length&&e.fw){const n=el('<div class="dynote"><p></p><small></small></div>');n.firstChild.textContent=e.ft.map(t=>t.replace(LOOKRX,'')).join('\n');n.lastChild.textContent='― '+e.fw[0];if(ELEM[e.fw[1]]){const im=el('<img class="dyport" alt="">');im.src=spiritPort(e.fw[1],96,e.fw[2]);n.prepend(im)}sec.appendChild(n)}
+    if(e.m.length){const u=el('<ul class="dyev"></ul>');for(const t of e.m){const li=document.createElement('li');li.textContent=t;u.appendChild(li)}sec.appendChild(u)}
+    const N=e.ns,b=dyBest(e);if(N){const p=el('<p class="dyns"></p>');p.textContent=(N.kill?'ゆうべは、コワイノを'+N.kill+'体追いはらった。':'ゆうべは、コワイノが来なかった。')+(b?b.nm+'が、かつやくした。':'');sec.appendChild(p)}
+    body.appendChild(sec)})}

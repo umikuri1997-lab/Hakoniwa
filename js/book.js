@@ -29,14 +29,13 @@ function bkMount(B,at){B.at=at;const sp=B.sp,store=B.el.querySelector('.bkstore'
   if(sp){put(B.L,at);put(B.R,at+1)}else put(B.R,at);
   const b=B.el,last=sp?B.N-1-((B.N-1)%2):B.N-1;b.querySelector('.mpv').disabled=at<=0;b.querySelector('.mnx').disabled=at>=last;const tc=b.querySelector('.mtc');if(tc)tc.hidden=at===0;
   b.querySelector('.mpn').textContent=at===0&&B.o.toc?'もくじ':sp?(at||1)+(at+1<B.N?'-'+(at+1):'')+' / '+(B.N-1):at+' / '+(B.N-1);
-  /* 重なった紙のあつみ：ページの下と外がわに、紙の層を段々に（よんだ分は左のページ、のこりは右のページ。2〜7まい） */const T=Math.max(1,B.N-1),th=n=>1+Math.round(13*Math.max(0,n)/T),stk=(n,dir)=>{const L=['inset 0 0 0 1.5px #d4bb8a','inset 0 0 0 3px #e2cc9f','inset 0 0 0 4.5px #ebdab4'];for(let k=1;k<=n;k++)L.push((dir*(k>>1)*BKD)+'px '+(k*BKD)+'px 0 '+(k%2?'#c9ad80':'#f4e8cb'));L.push((dir*((n+1)>>1)*BKD)+'px '+((n+1)*BKD)+'px 0 #9a7a4c');return L.join(',')};
-  B.R.style.boxShadow=stk(th(B.N-1-(sp?at+1:at)),1);B.L.style.boxShadow=stk(th(at),-1);B.el.style.setProperty('--stk',(th(B.N-1-(sp?at+1:at))+2)*BKD+'px');
+  /* 重なった紙のあつみ：のこりのページは右、よんだページは左。ページのわりあいで1〜14まい（bkEdge が絵で描く） */const T=Math.max(1,B.N-1),th=n=>1+Math.round(13*Math.max(0,n)/T);B.thR=th(B.N-1-(sp?at+1:at));B.thL=sp?th(at):0;B.el.style.setProperty('--stk',(B.thR+2)*BKD+'px');if(at===0)B.el.dataset.at0='';else delete B.el.dataset.at0;requestAnimationFrame(()=>bkEdge(B));
   if(B.o.onAt)B.o.onAt(at)}
 function bkSnd(k,v,rt){if(typeof playU==='function'&&typeof AC!=='undefined'&&AC&&AC.state==='running'&&SND.sfx)playU(k,v,rt||1)}
 /* 本の中の場所（.bkin のなかの px）：とじ目 S・1ページのはば w・上と下 */
 function bkGeo(B){const r=B.in.getBoundingClientRect(),R=B.R.getBoundingClientRect();return{r,S:R.left-r.left,w:R.width,top:R.top-r.top,bot:R.bottom-r.top}}
 /* めくる絵のしたく：A＝前のページ（切りとって上にのせる写し）、下には B のページ（本物） */
-function bkSetup(B,from,to,coverEl){const g=bkGeo(B),cv=B.cv;cv.width=Math.ceil(g.r.width/BKD);cv.height=Math.ceil(g.r.height/BKD)+BKLIFT*2;cv.style.width=cv.width*BKD+'px';cv.style.height=cv.height*BKD+'px';cv.style.top=-BKLIFT*BKD+'px';cv.hidden=false;
+function bkSetup(B,from,to,coverEl){B.el.classList.toggle('bkcovon',!!coverEl);const g=bkGeo(B),cv=B.cv;cv.width=Math.ceil(g.r.width/BKD);cv.height=Math.ceil(g.r.height/BKD)+BKLIFT*2;cv.style.width=cv.width*BKD+'px';cv.style.height=cv.height*BKD+'px';cv.style.top=-BKLIFT*BKD+'px';cv.hidden=false;
   const fw=to>from,A=fw?from:to,Bi=fw?to:from,wrap=(slot,clone)=>{const w=document.createElement('div');w.className='bkwrap';const s=slot.getBoundingClientRect(),r=g.r;w.style.cssText='left:'+(s.left-r.left)+'px;top:'+(s.top-r.top)+'px;height:'+s.height+'px;width:'+s.width+'px';const c=clone;c.style.width=s.width+'px';c.style.height=s.height+'px';w.appendChild(c);B.in.insertBefore(w,B.cv);return w};
   const snap=(slot,i)=>{if(coverEl&&slot===B.R)return coverEl;const c=slot.cloneNode(false),cc=document.createElement('div');cc.className='bkc';const pg=B.pages[i];if(pg)cc.appendChild(bkClone(pg));c.appendChild(cc);c.classList.toggle('blank',!pg);c.classList.remove('bkL','bkR');c.classList.add(slot===B.L?'bkL':'bkR','bksnap');c.hidden=false;const n=document.createElement('span');n.className='bkn';n.textContent=pg&&i>0?String(i):'';c.appendChild(n);return c};
   const sc=B.R.querySelector('.bkc').scrollTop;
@@ -45,7 +44,7 @@ function bkSetup(B,from,to,coverEl){const g=bkGeo(B),cv=B.cv;cv.width=Math.ceil(
   bkMount(B,coverEl?B.at:Bi);
   const st={g,fw,A,Bi,wR:wrap(B.R,aR),wL:aL?wrap(B.L,aL):null,cover:!!coverEl,hideL:!!coverEl&&B.sp};if(fw&&!coverEl){const c=aR.querySelector('.bkc');if(c)c.scrollTop=sc}
   return st}
-function bkClean(B,st){B.L.style.visibility='';if(st.wR)st.wR.remove();if(st.wL)st.wL.remove();const c=B.cv.getContext('2d');c.clearRect(0,0,B.cv.width,B.cv.height);B.cv.hidden=true}
+function bkClean(B,st){B.el.classList.remove('bkcovon');B.L.style.visibility='';if(st.wR)st.wR.remove();if(st.wL)st.wL.remove();const c=B.cv.getContext('2d');c.clearRect(0,0,B.cv.width,B.cv.height);B.cv.hidden=true}
 /* 1コマを描く：e＝めくれぐあい（0〜1）・a＝めくれた紙のこさ（さいごに紙がおちつく所） */
 function bkFrame(B,st,e,a,pal){const{g}=st,D=BKD,S=g.S,w=g.w,sp=B.sp,f=S+w*(1-e),k=1-.42*Math.sin(Math.PI*e),fw=(S+w-f)*k,xl=f-fw,s=Math.sin(Math.PI*e),q=v=>Math.round(v/D)*D;
   if(st.hideL)B.L.style.visibility=e>.96?'':'hidden';if(sp)a*=Math.min(1,(1-e)/.08);st.wR.style.width=Math.max(0,q(f-S))+'px';if(st.wL)st.wL.style.width=Math.max(0,Math.min(w,q(xl-(S-w))))+'px';
@@ -100,7 +99,7 @@ function bkSlide(v){/* こすれる音（pslide）をつづけて鳴らし、大
   if(!BKSLIDE){const src=AC.createBufferSource(),g=AC.createGain();src.buffer=L[0];src.loop=true;g.gain.value=0;src.connect(g);g.connect(sfxG);src.start(t,Math.random()*src.buffer.duration);BKSLIDE={src,g,tm:0}}
   const S0=BKSLIDE;S0.g.gain.setTargetAtTime(v*SFXV,t,.04);clearTimeout(S0.tm);S0.tm=setTimeout(()=>{if(BKSLIDE!==S0)return;BKSLIDE=null;try{S0.g.gain.setTargetAtTime(0,AC.currentTime,.08);S0.src.stop(AC.currentTime+.5)}catch(_){}},140)}
 /* よこ・たての画面がかわったら、本を作りなおす（見開き ⇔ 1ページ） */
-addEventListener('resize',()=>{const B=BK;if(!B||!B.el.isConnected||B.busy)return;if(bkSpread()!==B.sp&&typeof renderSheet==='function'&&typeof sheet!=='undefined'&&sheet)renderSheet()});
+addEventListener('resize',()=>{const B=BK;if(!B||!B.el.isConnected)return;bkEdge(B);if(B.busy)return;if(bkSpread()!==B.sp&&typeof renderSheet==='function'&&typeof sheet!=='undefined'&&sheet)renderSheet()});
 /* 章をかえる（図鑑のしおり）：いまのページを写しておき（bkTabSnap）、作りなおした本で、ぱらぱらとめくって見せる（bkEnter） */
 let BKSNAP=null;
 function bkTabSnap(dir){const B=BK;BKSNAP=null;if(!B||!B.el.isConnected||B.busy||(typeof uiReduced==='function'&&uiReduced()))return;const cl=s=>{const c=bkClone(s);c.hidden=false;c.style.visibility='';return c};BKSNAP={key:B.o.key,dir,R:cl(B.R),L:B.sp?cl(B.L):null,sc:B.R.querySelector('.bkc').scrollTop}}
@@ -113,3 +112,19 @@ function bkEnter(B){const Q=BKSNAP;BKSNAP=null;if(!Q||Q.key!==B.o.key||!!Q.L!==B
     st={g,fw,wR:wrap(B.R,nR),wL:nL?wrap(B.L,nL):null,cover:1,undo:()=>{for(const s of[B.R,B.L])if(s.__keep){s.replaceChildren(...s.__keep);s.__keep=null}}}}
   [0,70,140].forEach((d,i)=>setTimeout(()=>bkSnd('pflick',.16+i*.03,.95+i*.05),d));
   bkRun(B,st,fw?0:1,fw?1:0,BKMS*.8,()=>{if(st.undo)st.undo();B.busy=0})}
+
+/* 本の紙のたば（ページの下と外がわ）：1まいずつの紙のふちを、奥ほど少しずつずらしてかさねる。紙ごとに色が少しちがい、数まいごとにすきまのかげ、
+   とじ目に近い所は紙がとじ目へまるくしずむ。奥ほど暗い。いちばん奥にふちの線。1ドット BKD のキャンバス（ページのうしろ） */
+function bkEdge(B){if(!B||!B.el.isConnected)return;const r=B.in.getBoundingClientRect();
+  for(const[slot,n,dir,key]of[[B.R,B.thR||1,1,'eR'],[B.L,B.sp?(B.thL||1):0,-1,'eL']]){let cv=B[key];if(!n||slot.hidden){if(cv)cv.hidden=true;continue}
+    if(!cv){cv=B[key]=document.createElement('canvas');cv.className='bkedge';cv.setAttribute('aria-hidden','true');B.in.insertBefore(cv,B.in.querySelector('.bkp'))}cv.hidden=false;
+    const s=slot.getBoundingClientRect(),W=Math.round(s.width/BKD),H=Math.round(s.height/BKD),ox=Math.ceil(n*.6)+2,CW=W+ox,CH=H+n+2;cv.width=CW;cv.height=CH;
+    cv.style.width=CW*BKD+'px';cv.style.height=CH*BKD+'px';cv.style.top=(s.top-r.top)+'px';cv.style.left=(dir>0?s.left-r.left:s.left-r.left-ox*BKD)+'px';
+    const c=cv.getContext('2d');c.clearRect(0,0,CW,CH);c.save();if(dir<0){c.translate(CW,0);c.scale(-1,1)}
+    const P=['#f4e8cb','#efe2c2','#e8d9b6','#f1e5c8','#e2d1a9'],hs=k=>{const x=Math.sin(k*91.7+n*3.1)*43758.5;return x-Math.floor(x)},mix=(a,b,t)=>{const A=parseInt(a.slice(1),16),Bc=parseInt(b.slice(1),16),f=(s)=>Math.round(((A>>s)&255)*(1-t)+((Bc>>s)&255)*t);return'rgb('+f(16)+','+f(8)+','+f(0)+')'};
+    for(let k=n;k>=1;k--){const dx=Math.floor(k*.6),dy=k,t=k/(n+1)*.38,gap=k%3===0,col=mix(gap?'#d6c197':P[Math.floor(hs(k)*P.length)],'#a88a5a',t),jit=hs(k+7)<.35?1:0;
+      c.fillStyle=col;c.fillRect(dx,dy,W-jit,H);/* 紙1まい */
+      const cr=Math.min(14,W>>2);for(let x=0;x<cr;x++){const u=Math.round(Math.pow(1-x/cr,2)*k*.55);if(u>0){c.clearRect(dx+x,dy+H-u,1,u)}}/* とじ目の近くは、紙のはしがまるくしずむ */}
+    c.fillStyle='#9a7a4c';const dx=Math.floor((n+1)*.6),dy=n+1;c.fillRect(dx,dy+H-1,W,1);c.fillRect(dx+W-1,dy,1,H);/* いちばん奥のふち */
+    for(let x=0;x<Math.min(14,W>>2);x++){const u=Math.round(Math.pow(1-x/Math.min(14,W>>2),2)*(n+1)*.55);c.clearRect(dx+x,dy+H-1-u,1,u+1);c.fillRect(dx+x,dy+H-1-u,1,1)}
+    c.restore()}}

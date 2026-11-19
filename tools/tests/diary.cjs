@@ -31,9 +31,9 @@ const assert=require('node:assert/strict');
   const n2=JSON.parse(await run(`(()=>{closeSheet();const n=S.diary.length;diaryClose();return JSON.stringify({n,m:S.diary.length,sheet})})()`));
   assert.equal(n2.m,n2.n,'empty day is not stored');assert.equal(n2.sheet,null);
   /* 思い出帳から読む */
-  const rec=await run(`(()=>{openSheet('menu','record');const t=document.querySelector('#sheetBody').textContent;const row=[...document.querySelectorAll('#sheetBody .row')].find(x=>/日めの日記/.test(x.textContent));row.click();return JSON.stringify({has:/日記/.test(t),sheet,back:!!document.querySelector('#sheetWrap header .back')})})()`);
-  const R=JSON.parse(rec);assert.ok(R.has);assert.equal(R.sheet,'diary');assert.ok(R.back,'back button to the memory book');
-  console.log('Diary: readable from the memory book');
+  const rec=await run(`(()=>{openSheet('menu','record');const d=[...document.querySelectorAll('#sheetBody .mdy')];return JSON.stringify({n:d.length,day:d.length?d[0].querySelector('.dyd').textContent:'',L:S.diary.length})})()`);
+  const R=JSON.parse(rec);assert.equal(R.n,R.L,'one diary page per day');assert.ok(/日め$/.test(R.day),R.day);
+  console.log('Diary: the memory book is a diary, one page per day');
   /* 朝6時をまたぐと、ふだんのしくみで日記がしまわれる */
   const m=JSON.parse(await run(`(()=>{closeSheet();const a=S.res[0];dyWork(a,'build','bench');const n=S.diary.length;S.lastMorning=-1;morning();return JSON.stringify({n,m:S.diary.length})})()`));
   assert.equal(m.m,m.n+1,'morning() closes the diary');

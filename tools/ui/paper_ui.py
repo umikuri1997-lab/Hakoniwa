@@ -140,6 +140,18 @@ def ptex_rows(T=96):
     return rows
 
 
+def oldpaper_rows(T=80):
+    """古い紙のしわとむら：CC0 の古い紙のテクスチャ（OpenGameArt Dugi「Old paper texture」oldpaper.png）を T×T にちぢめ（BOX）、
+    明るさのむらを3つ（d かげ・. そのまま・l 光）にする。左右・上下にかがみうつしにした 2T×2T（くりかえしてもつながる）"""
+    from PIL import Image
+    im = Image.open(PAPERTEX.parent / 'oldpaper.png').convert('L').resize((T, T), Image.BOX)
+    px = [im.getpixel((x, y)) for y in range(T) for x in range(T)]
+    m = sum(px) / len(px); sd = (sum((p - m) ** 2 for p in px) / len(px)) ** .5 or 1
+    rows = [''.join('d' if (px[y * T + x] - m) / sd < -.8 else 'l' if (px[y * T + x] - m) / sd > .9 else '.' for x in range(T)) for y in range(T)]
+    rows = [r + r[::-1] for r in rows]
+    return rows + rows[::-1]
+
+
 FOLD = 16  # 角の折り返しの大きさ（ドット）
 
 
@@ -632,12 +644,13 @@ def scroll_css():
     sp = svg(torn_rows(), {'a': '#f3e7c9', 'b': '#e4d0a4', 'c': '#d9c08e', 'o': '#a88a5a'})
     fib = svg(ptex_rows(), {'d': '#8a6a3a26', 'm': '#a0804e14', 'l': '#fffaf066'})
     rib = svg(rib_rows(), RIBPAL)
+    old = svg(oldpaper_rows(), {'d': '#7a5a300a', 'l': '#ffffff14'})
     pp = 'var(--pp)'
     k = '.sheet[data-k="manual"]'
     return '\n'.join([
         '/* ひでんのしょ：巻物の和紙（ちぎれたふち torn_rows・すき目）と章の札（rib_rows）。上と下の軸は scroll.js がキャンバスで描く */',
         f'{k},body.wd0 {k}{{border-image-source:{sp}!important;border-image-slice:5 6 5 6 fill!important;border-image-width:calc({pp}*5) calc({pp}*6)!important;border-image-repeat:stretch round!important;background:none!important;overflow:visible;margin-top:calc({pp}*14);margin-bottom:calc({pp}*14);padding-bottom:env(safe-area-inset-bottom,0px)!important}}',
-        f'{k} #sheetBody{{background:{fib} 0 0/96px 96px repeat;image-rendering:pixelated}}',
+        f'{k} #sheetBody{{background:{old} 0 0/240px 240px repeat,{fib} 0 0/96px 96px repeat;image-rendering:pixelated}}',
         f'{k}{{--rib:{rib}}}',
     ])
 
@@ -703,10 +716,11 @@ def mbook_css():
     stain = svg(stain_rows(), {'d': '#9a6e3a0e', 'm': '#9a6e3a08'})
     metal = svg(metal_rows(), {'a': '#d9aa4e', 'h': '#f3d48a', 'd': '#a77a2c', 'w': '#fff4cc', 'n': '#8a6224'})
     rib = svg(rib_rows(), RIBPAL)
+    old = svg(oldpaper_rows(), {'d': '#7a5a300a', 'l': '#ffffff14'})
     return '\n'.join([
         '/* 思い出帳・図鑑：本（book.js）。紙のすき目・しみ・角の金のかざり（GOLD）・表紙の布の織り目・角の金具・見出しのリボン・紙テープ・写真の角どめ */',
         f'.sheet[data-k="record"],.sheet[data-k="zukan"]{{height:80%}}',
-        f'.bk{{--fib:{fib};--cloth:{cloth};--tape:{tape};--pcorner:{pc};--gtl:{gtl};--gtr:{gtr};--gbl:{gbl};--gbr:{gbr};--stain:{stain};--metal:{metal};--rib:{rib}}}',
+        f'.bk{{--old:{old};--fib:{fib};--cloth:{cloth};--tape:{tape};--pcorner:{pc};--gtl:{gtl};--gtr:{gtr};--gbl:{gbl};--gbr:{gbr};--stain:{stain};--metal:{metal};--rib:{rib}}}',
     ])
 
 
