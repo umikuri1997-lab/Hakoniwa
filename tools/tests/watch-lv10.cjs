@@ -17,7 +17,7 @@ const assert=require('node:assert/strict');
     for(const q of ws)decide(q);o.both=ws.map(q=>q.act&&q.act.type==='watchpost'&&q.act.obj===j);
     for(const q of ws){q.act.stage='do';ACT.watchpost.start(q,q.act);for(let i=0;i<40;i++)ACT.watchpost.tick(q,q.act,0.5)}
     o.slots=ws.map(q=>q.act.slot).sort().join(',');o.xs=ws.map(q=>Math.round((q.x-x0)*100)/100).sort().join(',');
-    S.enemies[0].x=x0+1;S.enemies[0].y=y0+6;S.inv.arrow=50;S.hp['w'+j]=0;S.hp['w'+j+'_1']=0;const a0=S.inv.arrow;updTowers(0.01);o.shots=a0-S.inv.arrow;o.t0=S.hp['w'+j]>0;o.t1=S.hp['w'+j+'_1']>0;
+    S.enemies[0].x=x0+1;S.enemies[0].y=y0+6;S.inv.arrow=50;S.hp['w'+j]=0;S.hp['w'+j+'_1']=0;const a0=S.inv.arrow;updTowers(0.01);for(const k in BOWQ)BOWQ[k].t=0;updTowers(0.01);o.shots=a0-S.inv.arrow;o.t0=S.hp['w'+j]>0;o.t1=S.hp['w'+j+'_1']>0;
     S.hp['L'+j]=7;for(const q of ws)endAct(q);S.enemies[0].x=x0+5;S.enemies[0].y=y0+16;for(const q of ws){q.x=x0+.5;q.y=y0+3.5;q.wpNo=0}const q0=ws[0],q1=ws[1];decide(q0);decide(q1);o.one7=[q0,q1].filter(q=>q.act&&q.act.type==='watchpost'&&q.act.obj===j).length;
     return JSON.stringify(o)})()`));
   console.log(r);

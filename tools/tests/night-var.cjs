@@ -24,7 +24,7 @@ assert.ok(out.spread<=6,'群れは7マスの中');assert.ok(out.normal>20);
 const shoot=await page.evaluate(()=>nvEval(`(()=>{const r={};for(const k of[null,'kiri']){S=newState(0);setWorld(0);S.obj.fill('');S.hi.fill(0);const j=50*W+50;S.obj[j]='watch';S.hp['L'+j]=1;recount();S.inv.arrow=10;
   const g=S.res[0]||{};S.res=[Object.assign(g,{hidden:false,x:50.5,y:50.5,act:{type:'watchpost',stage:'do',cl:1,obj:j}})];
   const R=WATCH[1].range;const e={id:1,type:'basic',x:50.5+(z0=>z0)(0)+R*0.75,y:51,hp:99,max:99,spawned:true,path:[],atk:0,stun:0,flash:0};S.enemies=[e];
-  S.t=(5*24+21)*60;S.nightVar={d:dayNo(),k};S.hp['w'+j]=0;try{updTowers(.1)}catch(err){r.err=String(err)}r[k||'normal']=99-e.hp;r.R=R}return r})()`));
+  S.t=(5*24+21)*60;S.nightVar={d:dayNo(),k};S.hp['w'+j]=0;try{updTowers(.1);for(const k in BOWQ)BOWQ[k].t=0;updTowers(.1)}catch(err){r.err=String(err)}r[k||'normal']=99-e.hp;r.R=R}return r})()`));
 console.log(JSON.stringify(shoot));assert.ok(shoot.normal>0,'ふつうはうつ');assert.equal(shoot.kiri,0,'霧ではとどかない');assert.equal(out.nowK,'kiri');assert.equal(out.nowM,'mure');
 assert.equal(errors.length,0,errors.join('\n'));
 console.log('Night variants OK. Browser errors: none');await browser.close()})().catch(e=>{console.error(e);process.exit(1)});
