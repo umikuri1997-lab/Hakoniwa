@@ -317,6 +317,8 @@ const questStep=q=>q&&q.steps?(q.steps.find(s=>!s.check())||q.steps[q.steps.leng
 function choiceGuide(){const W=keyName('water'),opt=(t,v,L)=>({t,v,lines:KS([...L,['M','#joy|よろしくおねがいします。']])});return {key:'guide',who:POKO,q:'ねえ、'+W+'に村をあんないするの、だれがいいかな？',
   pick:v=>{const w=S.res.find(r=>r.name===W),g=S.res.find(r=>r.name===v);if(!w||!g)return;bondSet(g,w,BOND_TALK);tourStart(g,w)},
   opts:[opt(POKO,POKO,[[POKO,'#joy|まかせて！ 池の音がよく聞こえる所、おしえてあげる！']]),opt(MINA,MINA,[[MINA,'ぼくでいいのぉ？ ゆっくり歩こうねぇ。']]),opt(keyName('fire'),keyName('fire'),[['H','しょうがねえな。ついてきな。']])]}}
+const WARMH=17;/* 芽のそばのごはん：燃やさない火のつぎの日の、この時からお話（朝から晩まで芽のそばにいたのを見てから） */
+function warmMealReady(){const F=S.flags;if(F.warmDay==null){F.warmDay=callDay();dirty=true;return false}/* 燃やさない火がおわって、この目標になった日 */const d=callDay()-F.warmDay;return d>=2||d===1&&hour()>=WARMH}
 const QUESTS1=[
   {id:'statue',text:'神殿を直してもらおう',how:'「しらべる」で、こわれた神殿をタップ',check:()=>cnt('statue')>=1,by:GOD,story:[
     [POKO,'なおったー！ ぴかぴかの神殿！'],
@@ -458,11 +460,11 @@ const QUESTS1=[
     [POKO,'火の力をためて、火のせいれいをむかえよう！']]},
    get story(){return KS([['H','#joy|おう、来てやったぜ！ 今夜からは、おれも村を守る。'],[POKO,'あったかいせいれいが来てくれた！ あのね、あとで見てほしい木があるの。'],['H','木？ ……いいぜ。そんな顔されちゃ、あとで見てやるよ。']])}},
   companionFieldQuest("fireRoot","燃やさない火","切り株のそばにたき火を置いたら、切り株をタップ。火のせいれいが温めた石を根の周りに置く。ノドカと土を整えて、根元の変化を見届けよう","fire",[["F","ここ、あっためられる？"],["H","木を？"],["F","根っこのぬくもりが、少しずつ小さくなってるの。"],["H","……燃やしていい木じゃ、なさそうだな。"],["F","うん。だいじな木。"],["H","なら、根から少しはなして、小さなたき火をするぞ。そこで石を温めて、根のまわりに置くんだ。"]],[["F","ずっと、そばにいなくてもいいの？"],["H","村の見回りもあるからな。おれがいないあいだも、冷えにくくしてやろう。"],["F","待って。前に来たときも、ここにあった？",0,"stree:bud"],["N","……芽だねぇ。"],["F","#joy|芽！",0,"stree:gaze"],["H","見張ってても、急にはでかくならねえぞ。"],["F","でも、見てたい。"],["H","……じゃあ、ちょっとだけな。",0,"stree:sit"]],['fireRoot']),
-  /* 芽が出たあと：芽のそばからはなれないフタバのために、火のせいれいが、切り株のそばに食卓を置こうと言う（warmIns1）。かまどは火山から */
+  /* 芽が出たあと（つぎの日の夕方 WARMH 時から。warmMealReady）：芽のそばからはなれないフタバのために、火のせいれいが、切り株のそばに食卓を置こうと言う（warmIns1）。かまどは火山から */
   stepQuest({id:'warmMeal',text:'芽のそばのごはん',
    steps:[{id:'warmTable',t:'切り株のそばに、食卓を置く',check:()=>!!S.flags.warmYaki||!!S.flags.warmEat||warmTableJ()>=0,how:'依頼ボードの「家具」で食卓の依頼をはり、切り株のそばに置く'},
     {id:'warmEat',t:'フタバが、切り株のそばの食卓でごはんを食べる',check:()=>!!S.flags.warmYaki||!!S.flags.warmEat,how:'おなかがすくと、フタバが食べにいく'}],
-   talk:{get who(){return keyName('fire')},when:()=>true,get lines(){return KS([['H','#think|フタバのやつ、朝から晩まで、あの芽のそばにいるな。'],['N','ごはんのことも、わすれてるみたいだよぉ。'],['H','しょうがねえな。はなれたくねえなら、ごはんのほうを、そばにもってくりゃいい。'],['H','切り株のそばに、食卓をおこうぜ。芽を見ながら、食えるようにな。']])}},
+   talk:{get who(){return keyName('fire')},when:warmMealReady,wait:'しばらく、芽のようすを見まもろう',get lines(){return KS([['H','#think|フタバのやつ、朝から晩まで、あの芽のそばにいるな。'],['N','ごはんのことも、わすれてるみたいだよぉ。'],['H','しょうがねえな。はなれたくねえなら、ごはんのほうを、そばにもってくりゃいい。'],['H','切り株のそばに、食卓をおこうぜ。芽を見ながら、食えるようにな。']])}},
    get story(){return KS([['F','#joy|ここなら、芽を見ながら、ごはんが食べられるね。'],['H','だろ？ 腹がへってちゃ、芽の世話もできねえからな。'],['F','#think|芽のそばにいると、ごはんのこと、わすれちゃうんだ。'],['H','芽を見るのはいいけどな。おまえが元気じゃなきゃ、芽もしんぱいするぞ。'],['N','あしたからは、みんなで、ここでごはんにしようねぇ。'],['F','#joy|うん！']])}}),
   stepQuest({id:'water',text:'水のせいれいをむかえよう',
    steps:[{id:'lv3',t:'村レベルを3にする',check:()=>S.lv>=3,prog:()=>'いま 村レベル'+S.lv,how:'せいれいが満足してパワーがたまると、村レベルが上がる'},

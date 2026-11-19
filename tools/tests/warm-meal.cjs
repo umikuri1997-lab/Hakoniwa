@@ -20,6 +20,11 @@ const assert=require('node:assert/strict');
     return JSON.stringify({t0,t1,e0,e1,check:QUESTS1[qsIx('warmMeal')].check()})})()`));
   assert.deepEqual(c,{t0:false,t1:true,e0:false,e1:true,check:true});
   console.log('table near the stump, Futaba eats there');
+  /* 4. 依頼の会話は、燃やさない火のつぎの日の夕方（WARMH）から。それまでは、目標の欄に見まもる案内 */
+  const tm=JSON.parse(await run(`(()=>{const q=QUESTS1[qsIx('warmMeal')];delete S.flags.warmDay;S.hold=0;const at=(d,h)=>{S.t=1440*d+h*60;return q.talk.when()};
+    const a=at(3,10),b=at(3,22),c=at(4,16),d=at(4,17),e=at(5,7);return JSON.stringify({a,b,c,d,e,wait:q.talk.wait})})()`));
+  assert.deepEqual(tm,{a:false,b:false,c:false,d:true,e:true,wait:'しばらく、芽のようすを見まもろう'});
+  console.log('warmMeal talk: from the next day 17:00');
   /* 5. かまどのサブクエストはない */
   assert.equal(await run(`SUBQ.some(q=>q.k==='oven')`),false);console.log('oven side quest: removed');
   /* 6. 古いセーブ：今のならびで warmMeal がない番号を読みかえる（2回でもずれない） */

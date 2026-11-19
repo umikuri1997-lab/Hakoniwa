@@ -12,7 +12,7 @@ const assert=require('node:assert/strict');
     if(BOARD<0){const free=(x,y,w,h)=>{for(let b=0;b<h;b++)for(let c=0;c<w;c++){const k=(y+b)*W+x+c;if(S.obj[k]||S.ground[k]||hiAt(k)||(S.fog&&S.fog[k]))return false}return true};let q=null;for(let y=CY-12;y<CY+20&&!q;y++)for(let x=CX-14;x<CX+14;x++)if(free(x,y,8,6)){q=[x,y];break}const j=q[1]*W+q[0];S.obj[j]='statue';S.obj[j+2]='board';S.obj[j+3]='part';S.ref[j+3]=j+2;recount()}
     S.quest=qsIx('path');S.qTalked=true;
     for(let j=0;j<S.obj.length;j++)if(S.obj[j]==='wbench'||S.obj[j]==='crate'){S.obj[j]='';delete S.dyn[j]}
-    const free=j=>!S.obj[j]&&!S.ground[j]&&!S.floor[j]&&!hiAt(j)&&walk(j)&&!(S.fog&&S.fog[j]);let p=-1;
+    const free=j=>!S.obj[j]&&!S.ground[j]&&!S.floor[j]&&!hiAt(j)&&walk(j)&&!(S.fog&&S.fog[j])&&!sacredNoBuild(j);let p=-1;/* 御神木のまわり（物をおけない所）はさける */
     const G=bfs(a.x|0,a.y|0);for(let y=CY-20;y<CY+24&&p<0;y++)for(let x=CX-24;x<CX+12;x++){const j=y*W+x;let ok=true;for(let b=-1;b<=1&&ok;b++)for(let c=-1;c<=12;c++)if(!free(j+b*W+c)||G.dist[j+b*W+c]<0){ok=false;break}if(ok){p=j;break}}
     window.P=p;S.obj[p]='crate';recount();for(const k of Object.keys(S.mat))S.mat[k]=0;S.mat.wood=40;S.mat.stone=20;boxSync();
     S.pt=999;S.recipes.chair=1;S.unlocked.chair=1;S.recipes.wbench=1;S.unlocked.wbench=1;S.lv=Math.max(S.lv||1,5);S.orders=[];

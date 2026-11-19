@@ -189,6 +189,7 @@ button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 #dialog.dtop .dlg{margin:0 auto;padding:10px 14px 8px;gap:6px}
 #dialog.dtop .dlg p{font-size:15px;line-height:1.6}
 #dialog.dtop #dlgPort{display:none}
+#dialog.away{background:none}#dialog.away .dlg,#dialog.away #dlgPort{visibility:hidden}/* 見せる動きのあいだ、会話のわくと立ち絵をしまう（dlgAway） */
 #sheetWrap{position:absolute;inset:0;z-index:25;display:flex;flex-direction:column;justify-content:flex-end}
 .scrim{position:absolute;inset:0;background:rgba(5,15,14,.45)}
 .sheet{position:relative;background:var(--panel);border-top:2px solid var(--line);border-radius:20px 20px 0 0;max-height:80%;display:flex;flex-direction:column;animation:sup .22s ease-out;padding-bottom:env(safe-area-inset-bottom,0px)}
