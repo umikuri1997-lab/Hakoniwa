@@ -23,13 +23,12 @@ const giftToday=r=>!!(r.care&&r.care.gift===callDay());
 function presentGive(r,id){if(!r||giftToday(r))return false;if(isGM(id))return matGive(r,id.slice(2));if(!BL[id]||inv(id)<1)return false;S.inv[id]--;if(!S.inv[id])delete S.inv[id];(r.care||(r.care={})).gift=callDay();
   const v=giftLike(r,id),gain=v===2?GIFTLOVE:GIFTFUN;funAdd(r,gain,'care');const T=r.trs||(r.trs=[]);T.push(id);while(T.length>GIFTMAX)T.shift();
   const first=!(r.gk&&r.gk[id]!=null);(r.gk||(r.gk={}))[id]=v;dirty=true;
-  if(!r.hidden){const now=performance.now();JOYU.set(r,now+(v?3000:1800));if(!(typeof inBattle==='function'&&inBattle(r))){RHOLD.set(r,now+(v?3000:1800));if(v)JUMP.set(r,now)}fxSpr('hearts',r.x*TS,(r.y-.7)*TS);r.bubble=v===2?'💕':'😊';
-    addFloat(r.x,r.y-1.6,chatTone(v===2?'わあ……！ これ、だいすき！':v?'うれしい！ ありがとう！':'ありがとう。だいじにするね。',r,0),v===2?'#ffd6e6':'#fff3d6');sfx(v?'good':'tap')}
+  if(!r.hidden){const now=performance.now();JOYU.set(r,now+(v?3000:1800));if(!(typeof inBattle==='function'&&inBattle(r))){RHOLD.set(r,now+(v?3000:1800));if(v)JUMP.set(r,now)}fxSpr('hearts',r.x*TS,(r.y-.7)*TS);r.bubble=v===2?'💕':'😊';sfx(v?'good':'tap')}/* 文字は出さない */
   if(first&&v)toast(r.name+'の、'+GLNAME[v]+'なおくりものがわかった','good');
   logEv(r.name+'に'+BL[id].name+'をあげた');return true}
 /* 素材をあげる：たのしさ+GIFTMAT（たからものにはしない）。S.mat をへらすと、boxSync が箱からへらす */
 function matGive(r,k){if(!MATN[k]||(S.mat[k]||0)<1)return false;S.mat[k]--;(r.care||(r.care={})).gift=callDay();funAdd(r,GIFTMAT,'care');dirty=true;
-  if(!r.hidden){const now=performance.now();JOYU.set(r,now+1800);if(!(typeof inBattle==='function'&&inBattle(r)))RHOLD.set(r,now+1800);r.bubble='😊';addFloat(r.x,r.y-1.6,chatTone('ありがとう。',r,0),'#fff3d6');sfx('tap')}
+  if(!r.hidden){const now=performance.now();JOYU.set(r,now+1800);if(!(typeof inBattle==='function'&&inBattle(r)))RHOLD.set(r,now+1800);r.bubble='😊';sfx('tap')}
   logEv(r.name+'に'+MATN[k]+'をあげた');return true}
 /* もちものから：だれにあげるか */
 function giftWho(id){const o=el('<div style="position:fixed;inset:0;z-index:46;display:flex;align-items:center;justify-content:center;background:rgba(40,30,15,.35);padding:24px"><div class="pxcard" style="background:var(--panel);padding:16px 18px;max-width:340px;width:100%;color:var(--ink);max-height:80vh;overflow:auto"><b class="t" style="font-size:16px;display:block;margin-bottom:8px"></b><div class="rows"></div><div style="display:flex;justify-content:flex-end;margin-top:10px"><button class="btn x">とじる</button></div></div></div>');
