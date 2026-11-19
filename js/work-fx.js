@@ -2,7 +2,7 @@
    動きの絵は spirit3d（cookprep・cookcut・cookmix・cook・cookfry・cookfan・cookgrill・cookplate・raise・craftprep・saw・craft・polish、作業台の上では wbprep・wbsaw・wbham・wbpolish）。
    音と粒は、描くときの時刻（drawSpiritDot の t）と同じ時刻で、動きの決まった所（WBEAT）をこえたときに出す（手の動きとずれない）。 */
 const WORKSHOW=4;
-const WBWORKZ=12.5;/* wbwork の絵は作業台の天板の上（絵の下のはしが g64 の31）。地面に置くときは、マスの奥行き0.72（g64 の56）まで下げる：(56－31)÷2 */const WBUP=5;/* 作業台は、マスの中で10ドット（g64）上に置く。作業台で作るせいれいも、同じだけ（ゲームの5点）上に立つ *//* できたらかかげる時間（せいれいの時間。1倍で約1.6秒） */
+const WBWORKZ=12.5;/* wbwork の絵は作業台の天板の上（絵の下のはしが g64 の31）。地面に置くときは、マスの奥行き0.72（g64 の56）まで下げる：(56－31)÷2 */const WBUP=5,WBBACK=14;/* 作業台のうしろに立つ向き（2）は、台のほうへ14点よせて、台ごしに手もとが天板にとどくようにする *//* 作業台は、マスの中で10ドット（g64）上に置く。作業台で作るせいれいも、同じだけ（ゲームの5点）上に立つ *//* できたらかかげる時間（せいれいの時間。1倍で約1.6秒） */
 /* 料理の作り方（かまど・たき火）。調理台の料理は、ぜんぶ「まぜる」。はじめの料理は KSTYLE、ほかは料理の絵のしゅるい（COOKD の ic）と家具できめる（KSTYIC） */
 const KSTYLE={soup:'pot',fishsoup:'pot',pancake:'pan',yakizakana:'pan',kabayaki:'pan',bread:'bake',yakiimo:'bake',foil:'bake',kushiyaki:'grill'};
 const KSTYIC={bowl:'pot',cup:'pot',skewer:'grill',bread:'bake',cake:'pan',plate:'pan',dango:'pan',salad:'pot',sand:'pan'};
@@ -24,6 +24,7 @@ function workAnim(r){const a=r.act;if(!a)return'';
   if(a.type==='cook'){const ph=cookPh(r);if(ph==='raise')return'raise';if(ph!=='work')return'cookprep';/* 材料をならべる・できた料理を台にととのえる */const t=cookTool(r);return t==='board'?'cookcut':t==='pot'?'cook':CKSTIR.has(t)?(typeof SPM!=='undefined'&&SPM.cookstir?'cookstir':'cookmix'):'cookfan'}/* 置いた道具にあわせた動き（なべは、おたまでまぜる。フライパン・天板・網・くしは、うちわであおぐ） */
   if(a.type==='craft'){if(a.sh!=null)return'raise';const p=craftP(r),nm=p<.1?'craftprep':p<.45?'saw':p<.85?'craft':'polish',o=craftOrder(r),wb=WBMO[nm];return o&&o.cs!=null&&S.obj[o.cs]==='wbench'&&typeof SPM!=='undefined'&&SPM[wb]?wb:nm}/* 作業台では、天板の高さで手を動かす（wb*）。作業台がないときは、地面の動き */
   if(a.type==='proc'){const o=S.obj[a.obj];return o==='loom'?'loomweave':o==='mill'?'millgrind':'proc'}/* はたおり・粉ひき */
+  if(a.stage==='do'&&(TAKEACT.has(a.type)||PUTACT.has(a.type))){const h=boxReach(a);if(h&&typeof SPM!=='undefined'&&SPM[h])return h}/* 箱の高さに合わせて、とる・しまう */
   return a.type}
 /* 手に持つ物の絵（材料・できた料理・作った物） */
 function workFood(r){const a=r.act;if(!a||a.stage!=='do')return'';
@@ -60,6 +61,9 @@ const PUTACT=new Set(['store','smat','sitem','ydrop','cput','aput','sput','pput'
 function boxAct(r){const a=r.act;return a&&!r.nap&&!(typeof onHold==='function'&&onHold(r))&&a.stage==='do'&&(TAKEACT.has(a.type)||PUTACT.has(a.type))?a:null}
 /* 寝ている（nap）・場面で止められている（onHold）子は、動きが進まないので、取る・置くの動きと音にしない（寝ているあいだ、ゴソゴソが鳴りつづけた） */
 function boxActT(r){const a=boxAct(r);return a?(a.t||0)/MIN_PER_SEC:null}
+/* 取る・置く物の高さ：上から入れる物（ふちが顔の高さ）は背のびして storeh、前から入れる家具は胸の高さへ storem、地面の物（神殿のまえの山・材料置き場など）は、しゃがむ store */
+const BOXHI=new Set(['crate','taru','asabukuro','kabebukuro','composter']),BOXMID=new Set(['makidana','shelf1','shelf2','wshelf','cabinet','smelter','loom','mill','coop','barn','obox']);
+function boxReach(a){const t=boxTarget(a);if(t<0)return'';const id=boxTypeAt(t)||S.obj[anc(t)];return BOXHI.has(id)?'storeh':BOXMID.has(id)?'storem':''}
 function boxTarget(a){return a.box!=null&&a.box>=0?a.box:a.obj!=null&&a.obj>=0?a.obj:-1}
 function boxFace(r,a){/* 向く先のとなりのマスの向き（-W・-1・1・W）。なければ 0 */const t=boxTarget(a);if(t<0)return 0;const c=(r.y|0)*W+(r.x|0),at=anc(t);for(const d of[-W,-1,1,W]){const k=c+d;if(k<0||k>=W*H||Math.abs(k%W-c%W)>1)continue;if(k===t||anc(k)===at&&S.obj[k])return d}const dx=t%W-c%W,dy=(t/W|0)-(c/W|0);return Math.abs(dx)>=Math.abs(dy)?(dx<0?-1:dx>0?1:0):(dy<0?-W:W)}
 /* ゴソゴソをつなげて鳴らす：描くたびに boxBeat が、その子を見たことにする。boxLoopTick が、近い子から BOXLOOPN 人ぶんだけ鳴らし、

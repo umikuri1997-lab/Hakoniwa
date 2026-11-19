@@ -19,3 +19,4 @@
 - `rock030_n.png`：ambientCG「Rock030」のノーマルマップ（OpenGL の向き、`rock030.png` と同じ物）。岩のでこぼこ（コワイノの岩、`kw_tex.py`）。
   取ってきた所：GitHub にある写し（matthewm174/Godot4.3-soulslike-controller の `textures/Rock030_1K-PNG/Rock030_1K-PNG_NormalGL.png`）。256×256 に色の平均（BOX）でちぢめ、16bit を 8bit にした。
 - Metal032 のノーマルマップは、たいらで、でこぼこがない（使わない）。金属は、つやのすじ（`oblique3d` の `material('metal')`）と、金属の色のむら（`metal032.png`）で出す。
+- `oldpaper.png`：Dugi「Old paper texture」（OpenGameArt、https://opengameart.org/content/old-paper-texture 、CC0 をふくむ複数のライセンスからえらべる。CC0 で使う）。しわのある古い紙。思い出帳・図鑑・ひでんのしょの紙に、うすく（`tools/ui/paper_ui.py` の `oldpaper_rows` が、ドットにちぢめて `index.html` に書きこむ）。

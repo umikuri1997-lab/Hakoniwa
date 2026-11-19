@@ -7,7 +7,3 @@ const VRN=Object.fromEntries(VRK.map(k=>[k[0],k]));
 function vrecAdd(k,n){if(!S||S.free||IS_STORY_REPLAY||typeof MEMRUN!=='undefined'&&MEMRUN||!VRN[k])return;const R=S.vrec||(S.vrec={}),a=R[k]||0,b=a+(n||1);R[k]=b;
   for(let i=0;i<VRSTEP.length;i++)if(a<VRSTEP[i]&&b>=VRSTEP[i]){const K=VRN[k];memo('book','村の記録：'+K[1]+' '+VRSTEP[i]+K[2]);toast('村の記録：'+K[1]+' '+VRSTEP[i]+K[2],'good');rewardPower(VRPT[i])}}
 function vrecNote(r,a){/* せいれいの仕事のおわり（spirit-work.js） */if(!a)return;const t=a.type==='tag'?'chat':a.type;if(VRN[t]&&t!=='kill'&&t!=='treasure'&&t!=='dream')vrecAdd(t)}
-function vrecSec(body){/* 思い出帳 */const R=S.vrec||{},sec=el('<div class="sec"><h3>村の記録</h3><div class="rows"></div></div>'),rw=sec.querySelector('.rows');
-  const ks=VRK.filter(k=>(R[k[0]]||0)>0);if(!ks.length){rw.appendChild(el('<p class="note">まだ、記録はないよ</p>'));body.appendChild(sec);return}
-  for(const K of ks){const n=R[K[0]],nx=VRSTEP.find(v=>v>n),row=rowEl(K[1]+'　'+n+K[2],nx?'つぎの節目：'+nx+K[2]:'さいごの節目まで、とどいた');if(!nx)row.classList.add('done');rw.appendChild(row)}
-  body.appendChild(sec)}
