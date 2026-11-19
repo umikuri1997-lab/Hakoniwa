@@ -120,7 +120,7 @@ function bkEnter(B){const Q=BKSNAP;BKSNAP=null;if(!Q||Q.key!==B.o.key||!!Q.L!==B
 
 /* 本の紙のたば（ページの下と外がわ）：1まいずつの紙のふちを、奥ほど少しずつずらしてかさねる。紙ごとに色が少しちがい、数まいごとにすきまのかげ、
    とじ目に近い所は紙がとじ目へまるくしずむ。奥ほど暗い。いちばん奥にふちの線。1ドット BKD のキャンバス（ページのうしろ） */
-function bkEdge(B){if(!B||!B.el.isConnected)return;const r=B.in.getBoundingClientRect();
+function bkEdge(B){if(!B||!B.el.isConnected)return;bkSpine(B);const r=B.in.getBoundingClientRect();
   for(const[slot,n,dir,key]of[[B.R,B.thR||1,1,'eR'],[B.L,B.sp?(B.thL||1):0,-1,'eL']]){let cv=B[key];if(!n||slot.hidden){if(cv)cv.hidden=true;continue}
     if(!cv){cv=B[key]=document.createElement('canvas');cv.className='bkedge';cv.setAttribute('aria-hidden','true');B.in.insertBefore(cv,B.in.querySelector('.bkp'))}cv.hidden=false;
     const s=slot.getBoundingClientRect(),W=Math.round(s.width/BKD),H=Math.round(s.height/BKD),ox=Math.ceil(n*.6)+2,CW=W+ox,CH=H+n+2;cv.width=CW;cv.height=CH;
@@ -144,3 +144,27 @@ function bkPaginate(B,pages){const c=B.R.querySelector('.bkc'),store=B.el.queryS
       if(over()){nx=cur.cloneNode(false);while(over()){const last=cur.lastElementChild;if(!last)break;if(cur.children.length>1){nx.prepend(last);continue}const q=inner(last);if(!q)break;nx.prepend(q)}if(!nx.children.length)nx=null}
       out.push(cur);cur=nx}});
   c.replaceChildren();for(const pg of out)store.appendChild(pg);return{pages:out,map}}
+
+/* とじ目（背表紙）のまわり：ひらいた本のまん中の形。紙の上と下のふちは、とじ目へまるくしずみ（上はさがる・下はあがる）、紙のたばもそれにそう。
+   1ページの画面では、左に見切れたとなりのページも描く（よんだページのたば・とじ目のかげ）。表紙の板は、とじ目の下でまるくふくらむ（背）。1ドット BKD のキャンバス */
+function bkSpine(B){const r=B.in.getBoundingClientRect(),s=B.R.getBoundingClientRect(),sp=B.sp,D=BKD;let cv=B.spc;
+  if(!cv){cv=B.spc=document.createElement('canvas');cv.className='bkspine';cv.setAttribute('aria-hidden','true');B.in.appendChild(cv)}
+  const WL=sp?18:Math.round(72/D),WR=18,top=8,stk=(B.thR||1)+3,H=Math.round(s.height/D),CW=WL+WR,CH=top+H+stk+8,sx=WL,py0=top,py1=top+H;
+  cv.width=CW;cv.height=CH;cv.style.width=CW*D+'px';cv.style.height=CH*D+'px';cv.style.left=(s.left-r.left-WL*D)+'px';cv.style.top=(s.top-r.top-top*D)+'px';
+  const c=cv.getContext('2d'),cvc=getComputedStyle(B.el).getPropertyValue('--cv').trim()||'#a5352e',K=14,dip=d=>d>=K?0:Math.round(4*Math.pow(1-d/K,2)),rise=d=>d>=K?0:Math.round(3*Math.pow(1-d/K,2));
+  c.clearRect(0,0,CW,CH);const closed=B.el.classList.contains('bkcovon');
+  const paper='#f3e5c5',edge='#d4bb8a',Lc=['#f4e8cb','#e8d9b6','#efe2c2','#d6c197','#e2d1a9'];
+  /* 左のページ（1ページの画面だけ：見切れたとなりのページ） */
+  if(!sp&&!closed){const at0=B.at===0,n=at0?0:Math.max(2,B.thL||Math.min(10,1+Math.round(13*B.at/Math.max(1,B.N-1))));
+    for(let k=n;k>=1;k--){c.fillStyle=Lc[k%Lc.length];for(let x=0;x<sx;x++){const d=sx-1-x,t=py0+dip(d),b=py1-rise(d)+k;c.fillRect(x,t+k,1,b-(t+k)+1)}}/* よんだページのたば */
+    for(let x=0;x<sx;x++){const d=sx-1-x,t=py0+dip(d),b=py1-rise(d);c.fillStyle=at0?'#d8c49b':paper;c.fillRect(x,t,1,b-t);c.fillStyle=at0?'#b9a274':edge;c.fillRect(x,t,1,1);c.fillRect(x,b-1,1,1)}/* はじめのページの左は表紙のうら（見返し） */
+    if(!at0){c.fillStyle='rgba(122,90,48,.05)';for(let i=0;i<40;i++){const x=(i*37)%sx,y=py0+6+((i*53)%(H-12));c.fillRect(x,y,1,1)}}
+    for(let i=0;i<7;i++){c.fillStyle='rgba(74,46,22,'+[.22,.16,.12,.08,.05,.03,.015][i]+')';for(let y=py0;y<py1;y++){const x=sx-1-i;const d=i;if(y>=py0+dip(d)&&y<py1-rise(d))c.fillRect(x,y,1,1)}}/* とじ目へ落ちるかげ */}
+  /* とじ目のまわりの、ページの上と下：とじ目へまるくしずむ（上は板の色でけずる・下は紙のたばの色） */
+  const sides=sp?[[1,sx],[-1,sx-1]]:[[1,sx]];
+  for(const[dir,x0]of sides){for(let i=0;i<(dir>0?WR:WL);i++){const x=x0+dir*i,d=i,u=dip(d),v=rise(d);
+      if(u){c.fillStyle=cvc;c.fillRect(x,py0,1,u);c.fillStyle='rgba(0,0,0,.18)';c.fillRect(x,py0,1,u);c.fillStyle=edge;c.fillRect(x,py0+u,1,1)}
+      if(v){c.fillStyle=Lc[1];c.fillRect(x,py1-v,1,v);c.fillStyle='#c9ad80';c.fillRect(x,py1-v,1,1)}}}
+  /* 背：表紙の板が、とじ目の下でまるくふくらむ */
+  {const bw=9,by=py1+stk+1;for(let i=-bw;i<=bw;i++){const h=Math.round(3*Math.sqrt(Math.max(0,1-(i/bw)*(i/bw))));if(!h)continue;c.fillStyle=cvc;c.fillRect(sx+i,by,1,h);c.fillStyle='rgba(0,0,0,.22)';c.fillRect(sx+i,by+h-1,1,1)}
+    c.fillStyle='rgba(255,255,255,.18)';c.fillRect(sx-3,by,2,1)}}
