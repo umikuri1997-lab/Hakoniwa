@@ -42,9 +42,6 @@ const assert=require('node:assert/strict');
   await run(`(()=>{S.mapPc=3;mapJoin();return 1})()`);await W8(300);assert.ok(+await run(`document.querySelectorAll('.j3map').length`)===1);
   await page.screenshot({path:process.env.SHOT||'/tmp/j3map.png'});
   await W8(1500);assert.ok(+await run(`document.querySelectorAll('.j3map').length`)===0);
-  /* つくった数 */
-  await run(`(()=>{const r=S.res[0];r.cmade={'set:arrow':1};madeStow('set:arrow',1,r);return 1})()`);
-  const m=JSON.parse(await run(`JSON.stringify(J3M.map(m=>m.k))`));console.log('made',m);
   /* 村レベル */
   await run(`(()=>{const e=$('#lvLbl');JLVL=+e.textContent;JLVW=80;$('#lvup').hidden=false;e.textContent=+e.textContent+1;return 1})()`);await W8(100);
   const l0=await run(`$('#lvLbl').style.visibility`);await run(`$('#lvup').hidden=true;true`);await W8(2500);const l1=await run(`$('#lvLbl').style.visibility+'|'+$('#xpBar').className`);
@@ -63,8 +60,8 @@ const assert=require('node:assert/strict');
   await run(`(()=>{S.flags.zkBar={6:0};S.fishRec={funa:1,koi:1};ZKT=6;openSheet('menu','zukan');return 1})()`);await W8(100);const z0=await run(`(document.querySelector('.zkbar i')||{}).style?.width||'none'`);await W8(1300);const z1=await run(`document.querySelector('.zkbar i').style.width`);
   console.log('zukan',z0,z1);assert.equal(z0,'0%');assert.ok(parseFloat(z1)>0);await run(`closeSheet();true`);
   /* 音：本物の録音（playU）だけを鳴らす */
-  await run(`audioInit();true`);await page.waitForFunction(()=>sacredEval(`['notch','tink','tab','page','twood'].every(k=>SBUF[k]&&SBUF[k].filter(Boolean).length)`),{},{timeout:30000}).catch(()=>{});
+  await run(`audioInit();true`);await page.waitForFunction(()=>sacredEval(`['notch','tink','tab','page'].every(k=>SBUF[k]&&SBUF[k].filter(Boolean).length)`),{},{timeout:30000}).catch(()=>{});
   const snd=JSON.parse(await run(`(()=>{const L=[];const pu=playU,ok=typeof AC!=='undefined'&&AC;window.__k=[];playU=(k,...a)=>{L.push(k);return true};const st=AC&&AC.state;try{Object.defineProperty(AC,'state',{get:()=>'running',configurable:true})}catch(e){}SND.sfx=true;
-    j3U('notch',.3,2);j3Ding(4);juiceNameFlip(document.createElement('span'),'あ');const r=S.res[0];J3M.length=0;juiceMadeCount(r,3);juiceMadeDraw(performance.now()+500);playU=pu;return JSON.stringify({L,have:['notch','tink','tab','page','twood'].map(k=>!!(SBUF[k]&&SBUF[k].filter(Boolean).length))})})()`));
-  console.log('sound',JSON.stringify(snd));assert.ok(snd.L.includes('notch')&&snd.L.includes('tink')&&snd.L.includes('twood'));assert.ok(snd.have.every(Boolean),'録音が読みこめている');
+    j3U('notch',.3,2);j3Ding(4);juiceNameFlip(document.createElement('span'),'あ');playU=pu;return JSON.stringify({L,have:['notch','tink','tab','page'].map(k=>!!(SBUF[k]&&SBUF[k].filter(Boolean).length))})})()`));
+  console.log('sound',JSON.stringify(snd));assert.ok(snd.L.includes('notch')&&snd.L.includes('tink'));assert.ok(snd.have.every(Boolean),'録音が読みこめている');
   console.log('errors',errors);assert.equal(errors.length,0);await browser.close();console.log('ok')})().catch(e=>{console.error(e);process.exit(1)});

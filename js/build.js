@@ -235,7 +235,7 @@ function craftCarry(o,r){/* できた物は、作ったせいれいが頭の上�
   toast(r.name+'が'+nm+'を作った！','good')}
 const setId=k=>String(k).startsWith('set:')?k.slice(4):k,setN=(k,n)=>String(k).startsWith('set:')?n*(BL[k.slice(4)].qty||1):n;/* ひとまとめ（'set:'+id）を、物と数に */
 function madeStow(id,n,r){/* 作った物をしまった：「ひろった」とは言わない。しまった数（のこりはふつうにしまう）をかえす */
-  const c=r&&r.cmade,m=c?Math.min(n,c[id]||0):0;if(m<=0)return 0;c[id]-=m;if(!(c[id]>0))delete c[id];const b=setId(id),k=setN(id,m);giveItem(b,k,1);if(typeof juiceMadeCount==='function')juiceMadeCount(r,k);/* せいれいの上で 1・2・3… */toast((r.name?r.name+'が':'')+itemName(b)+(k>1?'×'+k:'')+'を'+(itemDest(id)==='obox'?'おそなえ箱':'箱')+'に入れた','good');return m}
+  const c=r&&r.cmade,m=c?Math.min(n,c[id]||0):0;if(m<=0)return 0;c[id]-=m;if(!(c[id]>0))delete c[id];const b=setId(id),k=setN(id,m);giveItem(b,k,1);toast((r.name?r.name+'が':'')+itemName(b)+(k>1?'×'+k:'')+'を'+(itemDest(id)==='obox'?'おそなえ箱':'箱')+'に入れた','good');return m}
 function rectCells(a,b){const x0=Math.min(a.x,b.x),x1=Math.max(a.x,b.x),y0=Math.min(a.y,b.y),y1=Math.max(a.y,b.y);const c=[];for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++)c.push([x,y]);return c}
 let pending=null;
 function yesLbl(t){$('#cYes').textContent=t}/* たしかめのボタンの字は、することのことば（植える・つけかえる・置く） */
