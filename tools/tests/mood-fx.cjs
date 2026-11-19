@@ -20,7 +20,7 @@ const o=await run(`(()=>{setWorld(0);S=newState(0);LIVE[0]=S;started=true;USERPA
  const n=performance.now();moodMark(a,'hum',n);moodMark(b,'moya',n);centerOn(a.x*TS,a.y*TS);let best=null,bv=0;for(const[r,m]of MOODM){const q=sfxPos(r.x,r.y);if(q&&q.v>bv){bv=q.v;best=r}}o.near=best===a;
  o.snd=['voice','moya'].map(k=>(SAMPLES[k]||[]).length);o.humV=typeof humPhrase==='function'&&!SAMPLES.hum;/* 鼻歌は会話の声から */
  /* 朝の体そう：体そうしている子の声で曲。焚き火：パチパチだけの録音 */S.ev={id:'taiso',ph:'do',who:[a.id,b.id]};a.act={type:'evt',stage:'do'};b.act=null;centerOn(a.x*TS,a.y*TS);o.taiso=taisoWho()?.[0]===a;S.ev=null;a.act=null;o.taisoOff=taisoWho()===null;
- o.fire=!!(SAMPLES.firecrk||[]).length&&FEELREC.has('fire')&&FEELRK.fire==='firecrk'&&/playSeg\('firecrk'/.test(sfx.toString());
+ o.fire=!!(SAMPLES.firecrk||[]).length&&FEELREC.has('fire')&&FEELRK.fire==='firecrk'&&sfx.toString().includes("playSeg('firecrk'");
  /* 画面に描くと、もやもやの子がしるされる（歩いていても） */
  MOODM.clear();a.fun=10;b.fun=90;a.x=CX+.5;a.y=CY+.5;b.x=CX+2.5;b.y=CY+.5;startAct(a,bfs(a.x|0,a.y|0),'step',(CY+.5|0)*W+CX+6,{});centerOn(a.x*TS,a.y*TS);render(performance.now());o.marked=[MOODM.get(a)?.k,MOODM.get(b)?.k];
  return o})()`);
