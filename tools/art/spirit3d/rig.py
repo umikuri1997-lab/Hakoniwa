@@ -29,7 +29,7 @@ def posed(sp, face, p):
     out = {'body': (body(sp.solid['body']), 'cream', 'c')}
     for nm, hipx in (('M', -8.0), ('P', 8.0)):
         h = np.array([hipx, 0, 11.]); R = rx(g('leg'+nm)); d = np.array([g('x'), g('y'), g('legz')+g('lift'+nm)])
-        out['leg'+nm] = ((sp.solid['legL' if nm == 'M' else 'legR']-h)@R.T+h+d, 'cream', 'c')
+        out['leg'+nm] = ((sp.solid['legL' if nm == 'M' else 'legR']-h)@R.T+h+d, 'creamf' if face == 1 and nm == 'P' else 'cream', 'c')   # 横向きの奥の足（+x）は1段暗い色（FARLEG）
     anchors = {}
     for near, k in ((True, 'N'), (False, 'F')):
         f, _ = arm_xf(face, near, g('s'+k), g('b'+k), g('t'+k)); A, Hn = sp.arm[face]
@@ -70,6 +70,7 @@ def posed(sp, face, p):
     anchors['ti'] = ti; anchors['mir'] = bool(ti == 1 and v[0]*ref[0] < 0)   # 目の絵：0 正面・1 横・2 なし（うしろ）、横は左右反対か
     return out, anchors
 
+FARLEG = (239, 231, 218)   # 横向きの奥の足の色：体の色（CREAM）より1段暗く、手前の足と見分ける（Frostwind の PIXEL-ART.md の考え方。MIT）
 def darker(c, k=0.72): return tuple(int(v*k) for v in c)
 
 def shoot(sp, face, p):
@@ -90,7 +91,7 @@ def shoot(sp, face, p):
     hoodi = names.index('hood'); headcov = np.zeros(Wd*Hd, bool)   # ずきん・顔のうつる所（目をかさねる所。うでが前にあれば、目の上にもう1回描く）
     for i, nm in enumerate(names):
         P, col, kind = parts[nm]; X, Y, Z = V(P)
-        C = np.tile(np.array(CREAM if col == 'cream' else sp.hand, np.uint8), (len(P), 1)) if isinstance(col, str) else col
+        C = np.tile(np.array(CREAM if col == 'cream' else FARLEG if col == 'creamf' else sp.hand, np.uint8), (len(P), 1)) if isinstance(col, str) else col
         g0 = grp[nm]; gb = GB[nm[:-1]] if g0 else 0.0
         same = np.array([grp[n] == g0 for n in names]+[False]) if g0 else None
         k = int(round((QH if kind == 't' and not nm.startswith(('tail', 'wing')) else Q)*SSN))

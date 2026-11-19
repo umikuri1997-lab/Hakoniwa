@@ -15,6 +15,14 @@ const FEEL_CLOUD=.16;/* 雲のかげのこさ */
 let FEELA=null,FEELK=null,FEELIN=new Set(),FEELTREE=new Set(),FEELMELT=new Set(),FEELHK=null;
 const FEELEV=[];/* 足もとの反応：{k,x,y,i,t0,life,f} */
 const FEELFS=new WeakMap(),FEELKICK=new Map();
+/* 足もとからとぶ粒（Frostwind の kickup.js の考え方。MIT）：材質ごとに、とぶ数・何歩ごと・上がる高さ・横へのひろがり（せかいの点）・落ちる速さの上限（点／秒）・うしろへ流れる速さ（点／秒）・ゆらゆら（点）・色。
+   粒は重さ（FEELKG）で山なりにとび、落ちる速さが上限にとどいたら、その速さで落ちる。雪はふわっとただよい、土はすぐ落ちる。見た目だけ */
+const FEELKG=420;/* 粒を下へひっぱる重さ（点／秒²） */
+const FEELKICKM={
+  dry:{n:3,every:2,h:[2.5,5],sp:[3,8],vt:60,drift:4,fl:0,col:['#d9c7a2','#c9b48d']},
+  soil:{n:2,every:2,h:[1.5,3],sp:[2,5],vt:80,drift:2,fl:0,col:['#b89a72','#a4865f']},
+  grass:{n:2,every:3,h:[3.5,6.5],sp:[4,9],vt:50,drift:2,fl:1,col:['#8fcf6a','#b6e08a']},
+  snow:{n:3,every:2,h:[4,8],sp:[2,5],vt:7,drift:5,fl:1.5,col:['#ffffff','#e2ebf6']}};
 let FEELC={snow:0,leaf:0,pud:0,dew:0,mist:0,heat:0,cold:false,rain:false,wet:false,any:false};
 
 function feelSeasonDay(){return (Math.max(0,dayNo()-1))%SEASONDAYS}
@@ -99,8 +107,14 @@ function feelRow(y,x0,x1,now,lifted){const C=FEELC,A=feelArt(),c=ctx,near=cam.z>
   for(const e of FEELEV){if(e.ry!==y||(lifted?!e.hi:e.hi))continue;const u=(now-e.t0)/e.life,ex=e.x*TS,ey=e.y*TS-e.hi*LIFT;
     if(e.k==='rip'){c.globalAlpha=1-u*.4;feelPut(c,A,A.rip[Math.min(3,(u*4)|0)],ex-9,ey-4);c.globalAlpha=1}
     else if(e.k==='print'){if(C.snow<=0)continue;c.globalAlpha=u>.75?(1-u)*4:1;c.save();c.translate(ex,ey);if(e.f<0)c.scale(-1,1);feelPut(c,A,A.print,-4,-2);c.restore();c.globalAlpha=1}
-    else if(e.k==='dust'){c.globalAlpha=(1-u)*.55;c.fillStyle='#d9c7a2';for(let n=0;n<3;n++){const dx=(n-1)*3.5-e.f*u*4,dy=-u*5-(n===1?2:0),z=1+u*1.5;c.fillRect(Math.round((ex+dx)*2)/2,Math.round((ey+dy)*2)/2,z,z)}c.globalAlpha=1}
-    else if(e.k==='grass'){c.globalAlpha=1-u;c.fillStyle=e.n?'#8fcf6a':'#b6e08a';for(let n=0;n<2;n++){const dx=(n?4:-4)*u*1.6,dy=-Math.sin(u*Math.PI)*6;c.fillRect(Math.round((ex+dx)*2)/2,Math.round((ey+dy)*2)/2,1,1.5)}c.globalAlpha=1}}}
+    else if(e.k==='kick')feelKickDraw(c,e,now,ex,ey)}}
+function feelKickAdd(km,x,y,hi,now,f,seed){/* 粒を1歩ぶん作る：粒ごとに、とぶ時間を先に出しておく */const P=[];let life=0;
+  for(let n=0;n<km.n;n++){const s=seed*13+n*5,h=km.h[0]+(km.h[1]-km.h[0])*hash(s+1),sp=km.sp[0]+(km.sp[1]-km.sp[0])*hash(s+2),a=hash(s+3)*6.283,v0=Math.sqrt(2*FEELKG*h),ta=v0/FEELKG,tv=km.vt/FEELKG,dv=km.vt*km.vt/(2*FEELKG),tf=h<=dv?Math.sqrt(2*h/FEELKG):tv+(h-dv)/km.vt;
+    P.push({vx:Math.cos(a)*sp,vy:Math.sin(a)*sp*.5,v0,ta,tf,ph:hash(s+4)*6.283,c:km.col[n%km.col.length]});life=Math.max(life,(ta+tf)*1000)}
+  FEELEV.push({k:'kick',x,y,ry:y|0,hi,t0:now,life,f,km,P})}
+function feelKickZ(p,t,km){/* 地面からの高さ：上がるあいだは重さ、落ちるときは上限の速さまで */if(t<=p.ta)return p.v0*t-FEELKG*t*t/2;const h=p.v0*p.ta/2,d=t-p.ta,tv=km.vt/FEELKG;return Math.max(0,d<=tv?h-FEELKG*d*d/2:h-km.vt*km.vt/(2*FEELKG)-km.vt*(d-tv))}
+function feelKickDraw(c,e,now,ex,ey){const t=(now-e.t0)/1000,km=e.km;for(const p of e.P){const T=p.ta+p.tf;if(t>=T)continue;const u=t/T,z=feelKickZ(p,t,km),dx=p.vx*t-e.f*km.drift*t+(km.fl?Math.sin(t*9+p.ph)*km.fl*Math.min(1,t*4):0),dy=p.vy*t-z;
+  c.globalAlpha=u>.7?(1-u)/.3*.85:.85;c.fillStyle=p.c;c.fillRect(Math.round((ex+dx)*2)/2,Math.round((ey+dy)*2)/2,1,1)}c.globalAlpha=1}
 function feelGround(now,x0,y0,x1,y1){if(!S)return;feelPrep(now);if(!FEELC.any&&!FEELEV.length)return;const sm=ctx.imageSmoothingEnabled;ctx.imageSmoothingEnabled=false;for(let y=Math.max(0,y0);y<Math.min(H,y1);y++)feelRow(y,x0,x1,now,0);ctx.imageSmoothingEnabled=sm}
 function feelLifted(add,x0,y0,x1,y1,now){if(!S||!S.hi||cam.z<FARZ||(!FEELC.any&&!FEELEV.length))return;for(let y=Math.max(0,y0);y<Math.min(H,y1);y++){let any=false;for(let x=Math.max(0,x0);x<Math.min(W,x1);x++)if(S.hi[y*W+x]){any=true;break}if(any)add(y-1+.0006,-1,null,()=>{const sm=ctx.imageSmoothingEnabled;ctx.imageSmoothingEnabled=false;feelRow(y,x0,x1,now,1);ctx.imageSmoothingEnabled=sm},-1)}}
 
@@ -183,7 +197,7 @@ function feelStep(now){if(!S||!S.res)return;const fid=typeof FOLLOW!=='undefined
     if(r.x<X0||r.x>X1||r.y<Y0||r.y>Y1)continue;const i=(r.y|0)*W+(r.x|0);if(i<0||i>=W*H)continue;if(r.act&&r.act.type==='watchpost'&&r.act.stage==='do')continue;const k=feelSurf(i),hi=hiAt(i),f=fdx<0?-1:1;
     feelStepSnd(k,r.x,r.y,st.n&1,r.id===fid);
     if(cam.z<FARZ*1.6||FEELEV.length>160)continue;const ev=(kk,life)=>FEELEV.push({k:kk,x:r.x,y:r.y,ry:r.y|0,hi,t0:now,life,f,n:st.n&1});
-    if(k==='water')ev('rip',620);else if(k==='snow')ev('print',26000);else if(k==='dry'){if(st.n%2===0)ev('dust',420)}else if(k==='grass'){if(st.n%3===0)ev('grass',380)}
+    if(k==='water')ev('rip',620);else if(k==='snow')ev('print',26000);const km=FEELKICKM[k];if(km&&st.n%km.every===0)feelKickAdd(km,r.x,r.y,hi,now,f,st.n+r.id*7)
 }}
 
 /* ---------- 場所の音：カメラの近くにあるときだけ聞こえる（川のせせらぎ・凪いだ池とカエル・お湯の流れこむ温泉・火のパチパチ・葉のざわめき・夏のセミ）。川・池・温泉・火は本物の録音（火は焚き火の録音 SAMPLES.fire。持ち主がきめた）、ほかはその場で作る ---------- */
