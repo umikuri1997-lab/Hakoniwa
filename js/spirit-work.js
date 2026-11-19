@@ -188,7 +188,7 @@ function goWander(r,G){
 const WALKTIRE=.05;/* 歩いてつかれる量（時間の数字1あたり。はたらくと .22） */
 /* ---------- ひとりのときのしぐさ：昼、お散歩のかわりに30%。属性ごとの小さな動き。おわると、たのしさ+3 ---------- */
 const QUIRKP=.3,QUIRKFUN=3,QUIRKDUR=24,QUIRKCD=120;
-const QUIRKB={stone:'',sniff:'🌼',lookup:'🌿',peek:'💧',warm:'🔥',box:'💦',spin:'🎵'};/* しぐさのとちゅうに出すふきだし */
+const QUIRKB={stone:'',sniff:'🌼',lookup:'🌿',peek:'💧',warm:'',box:'💦',spin:'🎵'};/* しぐさのとちゅうに出すふきだし（火にあたたまる warm は出さない） */
 function goQuirk(r,G){
   let k='',st=-1,tg=-1;const free0=j=>walk(j)&&!S.obj[j]&&!(TAKEN&&TAKEN.has(j));
   const side=(ok,d=1)=>{/* その物の左か右（dマスはなれた所）に立つ（横から見る） */const s=nearest(G,j=>free0(j)&&(j%W>=d&&ok(j-d)||j%W<W-d&&ok(j+d)),12);if(s<0)return false;st=s;tg=s%W>=d&&ok(s-d)?s-d:s+d;return true};
@@ -203,7 +203,7 @@ ACT.quirk={start(r,a){if(a.tg>=0)r.face=a.tg%W+.5>=r.x?1:-1;a.n=0},
   tick(r,a,dt){const k=a.k;if(k==='stone')a.n=Math.min(5,1+Math.floor(a.t/4));/* 小石を1つずつならべる */
     if(k==='spin'){a.sp=(a.sp||0)+dt;if(a.sp>=.35){a.sp=0;r.face=-r.face}}/* くるくるまわる */
     if(k==='peek'&&!a.ev&&a.t>=10){a.ev=1;if(Math.random()<.4&&a.tg>=0){a.fish=1;fxSpr('fishsplash',(a.tg%W+.5)*TS,((a.tg/W|0)+.6)*TS);sfxAt('wave',r.x,r.y)}}/* ときどき、魚がはねる */
-    r.bubble=a.t<6?'':a.fish&&a.t<15?'❗':a.t>=a.dur-5?'✨':QUIRKB[k]||''},
+    r.bubble=k==='warm'||a.t<6?'':a.fish&&a.t<15?'❗':a.t>=a.dur-5?'✨':QUIRKB[k]||''},
   done:(r,a)=>a.t>=a.dur,end(r,a){funAdd(r,QUIRKFUN,'solo');r.wanderRestUntil=S.t+45}};
 ACT_LBL.quirk='ひとりで、のんびりしている';
 /* ---------- 天気・時間への反応：雨の日の水のせいれい・夕焼け・朝ののび ---------- */
