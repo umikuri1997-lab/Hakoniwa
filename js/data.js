@@ -138,7 +138,7 @@ const BL={
   g_kazaguruma:{gf:'ret',el:'wind',shopOnly:1,name:'かざぐるまのかざり',kind:'furn',cat:'env',pc:4,solid:1,attr:{wind:1},env:3,mat:{wood:3},desc:'まわり3マスで、たのしさ+1.1／1時間。住み心地+4'},
   g_kabin:{gf:'let',el:'earth',shopOnly:1,name:'土やきの花びん',kind:'furn',pc:5,solid:1,attr:{earth:1},mat:{stone:3},desc:'土をやいた花びん。住み心地+8'},
   g_oshibana:{gf:'let',el:'wood',shopOnly:1,name:'おし花のがく',kind:'furn',pc:5,solid:1,attr:{wood:1},mat:{wood:3},desc:'おし花を入れた、立てるがく。住み心地+8'},
-  g_kaibako:{gf:'let',el:'water',shopOnly:1,name:'貝がらの小ばこ',kind:'furn',pc:5,solid:1,attr:{water:1},mat:{wood:3},desc:'貝がらでかざった小ばこ。住み心地+8'},
+  g_kaifun:{gf:'let',el:'water',shopOnly:1,name:'貝がらのふんすい',kind:'furn',pc:5,solid:1,anim:1,attr:{water:1},mat:{stone:3},desc:'貝がらの、小さなふんすい。住み心地+8'},
   g_post:{gf:'let',el:'fire',shopOnly:1,name:'赤いポスト',kind:'furn',pc:5,solid:1,attr:{fire:1},mat:{wood:2,can:1},desc:'手紙を入れる、赤いポスト。住み心地+6'},
   g_penzukue:{gf:'let',el:'wind',shopOnly:1,name:'はねペンの書きものづくえ',kind:'furn',pc:5,solid:1,attr:{wind:1},mat:{wood:4},desc:'はねペンをのせた、小さなつくえ。住み心地+8'},
   g_ishibench:{gf:'bond',el:'earth',shopOnly:1,name:'いしだたみのベンチ',sz:[2,1],kind:'furn',pc:8,attr:{earth:2},mat:{stone:6},desc:'2人すわれる。昼につかれたら、ここで休む。つかれ－30／1時間。住み心地+6'},

@@ -5,7 +5,7 @@
    お返し：だいすきの物をあげたら、かならず。すきの物なら GFRETP%。
    プレゼントをあげると（presentGive → gfPresentShow）：つつみを両手でかかえて、がさごそ → ぽんっとひらく → 中身ごとの動き（GFMOT）→ 好みでよろこびの大きさ（だいすき：紙ふぶき・ジャンプ・まわりの子もはくしゅ）→ 返事の会話 → お返し・節目のつつみ（treasureReveal）。
    動きと絵は実時間（sacredSetPose）。村の時間は止めない。 */
-const GFURN={ret:['g_ishitsumi','g_donguri','g_shizuku','g_hidamari','g_kazaguruma'],let:['g_kabin','g_oshibana','g_kaibako','g_post','g_penzukue'],bond:['g_ishibench','g_happasofa','g_suisou','g_danro','g_hammock']};
+const GFURN={ret:['g_ishitsumi','g_donguri','g_shizuku','g_hidamari','g_kazaguruma'],let:['g_kabin','g_oshibana','g_kaifun','g_post','g_penzukue'],bond:['g_ishibench','g_happasofa','g_suisou','g_danro','g_hammock']};
 const GFRETP=20,GFBONDN=10;
 const GFOPENMS=1400,GFSHOWMS=3200,GFJOYMS=1600;/* つつみをあける・中身の動き・よろこぶ（ミリ秒） */
 const GFMOT={gf_kirei:'gf_lift',gf_garasu:'gf_lift',gf_kai:'gf_ear',gf_hane:'gf_wave',gf_matsu:'gf_sniff',gf_oshibana:'gf_sniff',gf_kibori:'gf_hug',gf_wara:'gf_hug',gf_koma:'gf_spin',gf_ehagaki:'gf_read',gf_biidama:'gf_peek',gf_mangekyo:'gf_peek',gf_hoshisuna:'gf_shake'};/* 素材は lnod（うなずいて、しまう） */
