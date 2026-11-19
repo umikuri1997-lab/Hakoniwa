@@ -40,7 +40,7 @@ const TRPIX={
  tmap:['................','..oooooooooooo..','..ohhhhhhhhhmo..','..ohmmmmmmmmdo..','..ohmmwmmmmmdo..','..ommmmwmmmmdo..','..ommmmmwmmmdo..','..ommmmmmwmmdo..','..ommmmmwmwmdo..','..ommmmmmwmmdo..','..ommmmmwmwmdo..','..ommmmmmmmmdo..','..odddddddddddo.','..oooooooooooo..','................','................'],
  fukuro:['................','.......ww.......','......owwo......','.....ohmmdo.....','......omdo......','.....ohhmmo.....','....ohhmmmmo....','...ohmmmmmmdo...','...ohmmmmmmdo...','..ohmmmmmmmmdo..','..ommmmmmmmmdo..','..ommmmmmmmddo..','...ommmmmmddo...','....oddddddo....','.....oooooo.....','................']};
 const TRCOL={mapPc:'#ecdcb4',tmap:'#ecdcb4',fukuro:'#c9a6e0'};
-const trIco=k=>pixURL('tr:'+k,TRPIX[k],TRCOL[k]);
-for(const k in TRPIX){ICONS[k]=trIco(k);const im=new Image();im.onload=()=>{im.ok=1;dirty=true};im.src=ICONS[k];ICI[k]=im}
+const trIco=k=>ICONS[k]||pixURL('tr:'+k,TRPIX[k],TRCOL[k]);/* もらった絵（tools/art/icons32）があれば、それ */
+for(const k in TRPIX){if(ICONS[k])continue;ICONS[k]=trIco(k);const im=new Image();im.onload=()=>{im.ok=1;dirty=true};im.src=ICONS[k];ICI[k]=im}
 function drawTreasure(now){/* 宝の場所の×の印（2点のドット） */if(S.tx==null)return;const j=S.tx,x=(j%W)*TS,y=((j/W)|0)*TS-hiAt(j)*LIFT,b=Math.sin(now/300)*.5+.5;
   ctx.fillStyle='rgba(120,80,40,.25)';ctx.fillRect(x+8,y+20,16,6);ctx.fillStyle='rgba(196,72,52,'+(.75+b*.25)+')';for(let i=0;i<6;i++){ctx.fillRect(x+10+i*2,y+11+i*2,2,2);ctx.fillRect(x+20-i*2,y+11+i*2,2,2)}}

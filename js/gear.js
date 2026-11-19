@@ -173,8 +173,8 @@ const gearIcon=id=>ICONS['g_'+id]||pixURL(id,GPIX[BL[id].g.ic||BL[id].g.s],gearC
 /* 鉱脈の絵：岩に、鉱石の色の粒（ドット） */
 const VSPK=[[9,14],[16,12],[13,19],[20,18],[7,21],[17,23]];
 function drawVein(c,id,x,y,i){drawObj(c,'rock',x,y,i);const col=ORE_COL[VEINS[id]],X=Math.round(x),Y=Math.round(y);for(const[a,b]of VSPK){c.fillStyle=shade(col,.72);c.fillRect(X+a-1,Y+b-1,4,4);c.fillStyle=col;c.fillRect(X+a,Y+b,2,2)}}
-for(const k of['icopper','iiron','isilver','igold']){ICONS[k]=pixURL('ingot:'+k,GPIX.ingot,ORE_COL[k.slice(1)]);const im=new Image();im.onload=()=>{im.ok=1};im.src=ICONS[k];ICI[k]=im}/* 延べ棒の素材アイコン */
-for(const k of GEAR_ORES){ICONS[k]=pixURL('ore:'+k,GPIX.ore,ORE_COL[k]);const im=new Image();im.onload=()=>{im.ok=1};im.src=ICONS[k];ICI[k]=im}/* 鉱石の素材アイコン */
+for(const k of['icopper','iiron','isilver','igold']){if(ICONS[k])continue;ICONS[k]=pixURL('ingot:'+k,GPIX.ingot,ORE_COL[k.slice(1)]);const im=new Image();im.onload=()=>{im.ok=1};im.src=ICONS[k];ICI[k]=im}/* 延べ棒の素材アイコン（もらった絵 tools/art/icons32 がなければ、コードの絵） */
+for(const k of GEAR_ORES){if(ICONS[k])continue;ICONS[k]=pixURL('ore:'+k,GPIX.ore,ORE_COL[k]);const im=new Image();im.onload=()=>{im.ok=1};im.src=ICONS[k];ICI[k]=im}/* 鉱石の素材アイコン */
 
 /* ---------- 画面：せいれいの「そうび」タブ ---------- */
 function gearUpBtn(q,after){const b=el('<button class="btn"></button>');if(!gearCanUp(q.id)||(q.lv||0)>=3){b.textContent=(q.lv||0)>=3?'+3':'強化なし';b.disabled=true;return b}const c=gearUpCost(q);b.textContent='強化 '+MATN[c.k]+c.n+(c.pc?'・'+SP(c.pc):'');lackOn(b,lackMat(c.k,c.n)||lackPt(c.pc));b.onclick=e=>{e.stopPropagation();if(gearUp(q))after()};return b}
