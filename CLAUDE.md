@@ -230,6 +230,7 @@
 - ふきだしの絵（96×96）は、もらった絵（`tools/art/bubble/icons.png`）を `build.py` で BOX でちぢめて作る（ドット絵にしない。輪郭・うすさはもらった絵のまま）。ゲームでは、ふきだし（`pxBub`）がかえす中のまん中に、なめらかにちぢめて描く（`bubIcon`。ふきだしの中では1.5倍、わくの内がわ（`pxBub` の `f`）まで。せかいの大きさで描くと、ふきだしのドットのまるめとずれて、はみ出す）。
 - エフェクト（`FXS`、`fxSpr` でながすコマならびの絵）を新しく作るときは、`tools/` のスクリプトでドット絵を作り、`assets/g` に書き出す（罠：`tools/fx-trap.py`）。作りなおせるように、スクリプトをのこす。
 - エフェクトを作る・直すときは、スキル `.claude/skills/pixelfx/SKILL.md` も読み、`tools/pixelfx`（patch-gg/pixelfx の写し、MIT。244この効果と書き出しの道具）で、にた効果を書き出して見て、お手本・下ごしらえにする。ゲームの中では pixelfx のコードを動かさない（できた絵は上のとおり `assets/g` へ）。
+- せいれいの攻撃のエフェクト（`atk_fire`・`atk_earth`・`atk_wood`・`atk_wind`・`atk_water`、`atkFX`）は `tools/fx-attack-pfx.py`（pixelfx の効果から。火 sword-slash・土 earth-spike・木 vine-whip・風 dagger-flurry・水 splash）。
 - 守り神のわざ（まもりの光・こもれびのまもり・葉のかべ）のエフェクトは `tools/fx-guard-pfx.py`（pixelfx の効果から作る。`godlight` 光の槌（しるしの光る所を短くした `godlight:F`。0.25秒で地面に当たる）・`glspark` 範囲のマスの光・`skillhit` わざが当たったコワイノの金の光（`hurtEn` の `skill`）・`arrowburst` 見張り台の木の矢が当たった所・`areaguard` 葉のつむじ・`arealeaf` 光のつぶ・`leafsprout` 光の花）。まもりの光の音は持ち主がくれた音（`SAMPLES.glight`。もらった音にこだまをかさねて余韻を長くした `tools/sound/glight_tail.py`、もとは `tools/sound/src/glight.mp3`）を、光が地面に当たるコマに合わせて鳴らす（`lightSnd`・`GLHIT`）。コワイノ・夜の暗さより上に描く（`TOPFX`・`drawTopFx`）。画面を少しゆらして光らせる（`skillFx`）のも、まもりの光は地面に当たるとき（`GLFX`）。
 - 絵文字は使わない（新しいふきだし・知らせ・説明・このファイルの文にも）。思い出のメモは `memo(印,文)` の2つをわたし、印はドットのアイコンの名前（`PXI`）。前のセーブ・前からのコードの絵文字の印は、出すときにアイコンにかえる（`MEMOIC`・`memoIc`・`memoRow`）。画面に、印をそのまま文字で出さない。
 - 画面の文での呼び名は「まもりの光」（「守りの光」「守り神の光」と書かない）。
