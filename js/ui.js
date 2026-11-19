@@ -289,9 +289,10 @@ function memBook(body){const kids=[...body.children],ch=[];
   for(const[i,pg]of pages.entries()){pg.hidden=i!==MEMPG;const nav=el('<div class="mnav"><button class="btn mpv" type="button" aria-label="まえのページ">'+pxi('next','prev')+'</button><button class="btn mtc" type="button">もくじ</button><span class="mpn"></span><button class="btn mnx" type="button" aria-label="つぎのページ">'+pxi('next','nxr')+'</button></div>');
     nav.querySelector('.mpn').textContent=i?i+' / '+(N-1):'もくじ';const pv=nav.querySelector('.mpv'),nx=nav.querySelector('.mnx'),tc=nav.querySelector('.mtc');pv.disabled=i===0;nx.disabled=i>=N-1;tc.hidden=i===0;pv.onclick=()=>memFlip(body,pages,i-1);nx.onclick=()=>memFlip(body,pages,i+1);tc.onclick=()=>memFlip(body,pages,0);pg.appendChild(nav);body.appendChild(pg)}
   /* よこにはらうと、めくる */let sx=null,sy=0;body.onpointerdown=e=>{sx=e.clientX;sy=e.clientY};body.onpointerup=e=>{if(sx==null)return;const dx=e.clientX-sx,dy=e.clientY-sy;sx=null;if(Math.abs(dx)>60&&Math.abs(dx)>Math.abs(dy)*1.6)memFlip(body,pages,MEMPG+(dx<0?1:-1))};body.onpointercancel=()=>{sx=null}}
+function bookShow(pg){/* ページに _show があれば、はじめて見せたときに1回よぶ（日記の数え上げ・ハンコ） */if(pg&&pg._show){const f=pg._show;pg._show=null;f()}}
 function memFlip(body,pages,to,st){/* st：ほかの本（日記 DYBK）のページの数 {p}。なければ思い出帳 */const cur=st?st.p:MEMPG;if(to<0||to>=pages.length||to===cur||MEMFLIP)return;const from=cur,old=pages[from],nw=pages[to],fw=to>from;sfx('page');if(st)st.p=to;else MEMPG=to;
   const red=typeof uiReduced==='function'&&uiReduced();body.scrollTop=0;
-  const show=()=>{old.hidden=true;nw.hidden=false};if(red){show();return}
+  const show=()=>{old.hidden=true;nw.hidden=false;bookShow(nw)};if(red){show();return}
   const cl=(fw?old:nw).cloneNode(true);cl.hidden=false;cl.classList.add('mflip');cl.setAttribute('aria-hidden','true');cl.style.cssText='position:absolute;left:'+old.offsetLeft+'px;top:'+old.offsetTop+'px;width:'+old.offsetWidth+'px;z-index:3;transform-origin:0 0;pointer-events:none;animation:'+(fw?'mflipF':'mflipB')+' .42s steps(1) both';
   if(fw)show();body.appendChild(cl);MEMFLIP=1;setTimeout(()=>{cl.remove();if(!fw)show();MEMFLIP=0},430)}
 /* スポットの代表の家具（アイコンにする）：名前で書き、なければ、そのスポットのもとの物 */
