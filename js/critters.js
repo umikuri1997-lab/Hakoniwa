@@ -145,7 +145,7 @@ ACT_LBL.critwatch='小さな生き物を見ている';
    反応は見た目と音だけ（数字はかえない）：小鳥は飛びたつ・うさぎ/りす/ねずみはにげる・ちょう/みつばちは高くまってべつの花へ・とんぼはべつの所へ・
    かえるは大きくはねる・ほたるは明るく光る・もぐらは土にもぐる・はりねずみ/かたつむり/てんとうむしは何かする。タップした所に名前。
    図鑑は S.critRec（しゅるい→見つけた数。1ぴきは1回だけ数える c.rec） */
-const CRITN={fly:'ちょう',mitsubachi:'みつばち',bird:'小鳥',risu:'りす',usagi:'うさぎ',harinezumi:'はりねずみ',nezumi:'ねずみ',mogura:'もぐら',katatsumuri:'かたつむり',tentoumushi:'てんとうむし',tonbo:'とんぼ',hotaru:'ほたる',frog:'かえる'};
+const CRITN={fly:'ヒラリ',mitsubachi:'ミツブン',bird:'ピチュリ',risu:'ホオクリ',usagi:'ミミフワ',harinezumi:'トゲマル',nezumi:'チョロネ',mogura:'ツチホリ',katatsumuri:'マキノロ',tentoumushi:'ポチマル',tonbo:'スイハネ',hotaru:'ヨルボシ',frog:'ケロッパ'};
 const CRITD={fly:'花から花へ、ひらひらとぶ虫。',mitsubachi:'花のみつをあつめる、はたらきものの虫。',bird:'木のそばで、えさをさがす小さな鳥。',risu:'木の実が好きな、しっぽのふさふさした生き物。',
   usagi:'みどりの草地を、ぴょんぴょんはねる生き物。',harinezumi:'夕方、茂みのそばを歩く、せなかがとげとげの生き物。',nezumi:'箱のそばに、こっそりあらわれる小さな生き物。',mogura:'土の中にすむ生き物。',
   katatsumuri:'雨の日に出てくる、からをせおった生き物。',tentoumushi:'赤い羽に点のある、小さな虫。',tonbo:'水の上を、すいすいとぶ虫。',hotaru:'夜のはじめの水べで、おしりが光る虫。',frog:'水べにすむ、よくはねる生き物。'};
