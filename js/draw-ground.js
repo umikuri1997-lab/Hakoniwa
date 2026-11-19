@@ -59,19 +59,15 @@ function shadow(c,x,y,w,h){/* 足もとのかげ。画面に毎コマ描くと�
 /* 生き物（飼う生き物・小さな生き物）の足もとのかげ：ドットのだ円（d：1ドットの大きさ、ゲームの点）。まわり1ドットはうすく、中はこく（DSHA）。
    画面に毎コマ描くときは、足もとのかげ（shadow）と同じく、時間で向き（sunLean）と長さ（sunLen）をかえる */
 const DSHA=[.10,.20];
-function dotShadow(c,cx,y,hw,hh,al,d){if(!(al>0)||hw<1)return;d=d||1;const L=(c===ctx?sunLen():1),S0=c===ctx?sunLean():0;hw*=1+.5*Math.abs(S0);hh=Math.max(d,hh*L);cx+=Math.round(hw*.45*S0/d)*d;
-  const n=Math.max(1,Math.round(hh*2/d)),y0=y-Math.round(n/2)*d+d,fs=c.fillStyle;
-  for(let r=0;r<n;r++){const t=((r+.5)/n)*2-1,ho=Math.round(hw*Math.sqrt(Math.max(0,1-t*t))/d)*d,hi=Math.round((hw-1.5*d)*Math.sqrt(Math.max(0,1-t*t*1.35))/d)*d,yy=y0+r*d;if(ho<=0)continue;
-    c.fillStyle='rgba(40,30,20,'+(DSHA[0]*al).toFixed(3)+')';c.fillRect(cx-ho,yy,2*ho,d);
-    if(hi>0){c.fillStyle='rgba(40,30,20,'+(DSHA[1]*al).toFixed(3)+')';c.fillRect(cx-hi,yy,2*hi,d)}}
-  c.fillStyle=fs}
-/* チップの足もとのはば：絵の下のほう（すきとおっていない所の、下から30%の行）の、左のはし・右のはし（g64のドット）。チップごとに1回だけしらべる */
-function chipFoot(ch,im){if(ch._ft!==undefined)return ch._ft;if(!im||!im.ok)return null;let r=null;
-  try{const w=im.width,h=im.height,a=im.getContext('2d').getImageData(0,0,w,h).data;let top=-1,bot=-1;
-    for(let y=0;y<h&&top<0;y++)for(let x=0;x<w;x++)if(a[(y*w+x)*4+3]>0){top=y;break}
-    for(let y=h-1;y>=0&&bot<0;y--)for(let x=0;x<w;x++)if(a[(y*w+x)*4+3]>0){bot=y;break}
-    if(top>=0){const y1=Math.floor(bot-(bot-top+1)*.3);let l=w,rr=-1;for(let y=Math.max(0,y1);y<=bot;y++)for(let x=0;x<w;x++)if(a[(y*w+x)*4+3]>0){if(x<l)l=x;if(x>rr)rr=x}if(rr>=l)r={l,r:rr+1}}}catch(e){r=null}
-  ch._ft=r;return r}
+function dotShadow(c,cx,y,hw,hh,al){if(!(al>0)||hw<1)return;
+  const length=c===ctx?sunLen():1,lean=c===ctx?sunLean():0,fill=c.fillStyle;
+  hw*=1+.5*Math.abs(lean);hh*=length;cx+=hw*.45*lean;
+  for(const [scale,opacity] of [[1,DSHA[0]],[.74,DSHA[1]]]){
+    c.fillStyle='rgba(40,30,20,'+(opacity*al)+')';
+    c.beginPath();c.ellipse(cx,y,hw*scale,hh*scale,0,0,2*Math.PI);c.fill();
+  }
+  c.fillStyle=fill;
+}
 function drawBarren(c,i,x,y){
   const h=hash(i);
   c.fillStyle=WD===1?'#a39280':'#b3a37c';c.fillRect(x,y,TS,TS);/* 火山のふもとは灰まじりの土 */
@@ -89,15 +85,15 @@ function drawGrass(c,i,x,y){
   if(hash(i*7)<.68){const a=x+7+hash(i*11)*17,b=y+8+hash(i*13)*16;c.fillStyle=hash(i*31)<.5?'#8cb262':'#91b568';c.beginPath();c.ellipse(a,b,1.5,3.2,-.45,0,7);c.ellipse(a+2.8,b-.5,1.5,3.1,.45,0,7);c.ellipse(a+1.4,b-2,1.2,3.5,0,0,7);c.fill();c.strokeStyle='rgba(224,239,171,.36)';c.lineWidth=.65;c.beginPath();c.moveTo(a+1.4,b+1);c.lineTo(a+1.4,b-4);c.stroke()}
   if(h<.09){circ(c,x+8+hash(i*23)*16,y+8+hash(i*29)*16,1.5,h<.035?'#fff3f7':'#ffe27a')}
 }
-function grassBoundaryEdges(i){if(!REV.has(i)||S.ground[i]===1)return [];const gx=i%W,gy=(i/W)|0;return [[0,-1,0],[1,0,1],[0,1,2],[-1,0,3]].filter(([dx,dy])=>gx+dx>=0&&gy+dy>=0&&gx+dx<W&&gy+dy<H&&!REV.has(i+dy*W+dx)&&S.ground[i+dy*W+dx]!==1&&hiAt(i+dy*W+dx)===hiAt(i))}/* 高さのちがうとなりには、草のふちをのばさない（がけの上と下で、草地がまざらない） */
+function grassBoundaryEdges(i){if(!REV.has(i)||S.ground[i]>=1)return [];const gx=i%W,gy=(i/W)|0;return [[0,-1,0],[1,0,1],[0,1,2],[-1,0,3]].filter(([dx,dy])=>gx+dx>=0&&gy+dy>=0&&gx+dx<W&&gy+dy<H&&!REV.has(i+dy*W+dx)&&S.ground[i+dy*W+dx]<1&&hiAt(i+dy*W+dx)===hiAt(i))}/* 高さのちがうとなりには、草のふちをのばさない（がけの上と下で、草地がまざらない） */
 function grassBoundaryCorners(i){
-  const gx=i%W,gy=(i/W)|0,hi0=hiAt(i),at=(x,y)=>x>=0&&y>=0&&x<W&&y<H&&S.ground[y*W+x]!==1&&(hiAt(y*W+x)!==hi0?REV.has(i):REV.has(y*W+x)),corners=[/* 高さのちがうマスは、自分と同じとみなす */
+  const gx=i%W,gy=(i/W)|0,hi0=hiAt(i),at=(x,y)=>x>=0&&y>=0&&x<W&&y<H&&S.ground[y*W+x]<1&&(hiAt(y*W+x)!==hi0?REV.has(i):REV.has(y*W+x)),corners=[/* 高さのちがうマスは、自分と同じとみなす */
     {cells:[[gx-1,gy-1],[gx,gy-1],[gx-1,gy],[gx,gy]],x:gx*TS,y:gy*TS},
     {cells:[[gx,gy-1],[gx+1,gy-1],[gx,gy],[gx+1,gy]],x:(gx+1)*TS,y:gy*TS},
     {cells:[[gx,gy],[gx+1,gy],[gx,gy+1],[gx+1,gy+1]],x:(gx+1)*TS,y:(gy+1)*TS},
     {cells:[[gx-1,gy],[gx,gy],[gx-1,gy+1],[gx,gy+1]],x:gx*TS,y:(gy+1)*TS}
   ],out=[];
-  for(const q of corners){if(q.cells.some(([x,y])=>x<0||y<0||x>=W||y>=H||S.ground[y*W+x]===1))continue;/* 水のマスがまじる角には、草とあれ地の角の絵をおかない（水のそばに土の丸い穴ができるので） */const mask=q.cells.map(([x,y])=>at(x,y)),n=mask.filter(Boolean).length,diagonal=n===2&&mask[0]===mask[3]&&mask[1]===mask[2];if((n!==1&&n!==3&&!diagonal)||!mask.includes(true))continue;const owner=Math.min(...q.cells.filter((_,k)=>mask[k]).map(([x,y])=>y*W+x));if(owner===i)out.push([q.x,q.y])}
+  for(const q of corners){if(q.cells.some(([x,y])=>x<0||y<0||x>=W||y>=H||S.ground[y*W+x]>=1))continue;/* 水のマスがまじる角には、草とあれ地の角の絵をおかない（水のそばに土の丸い穴ができるので） */const mask=q.cells.map(([x,y])=>at(x,y)),n=mask.filter(Boolean).length,diagonal=n===2&&mask[0]===mask[3]&&mask[1]===mask[2];if((n!==1&&n!==3&&!diagonal)||!mask.includes(true))continue;const owner=Math.min(...q.cells.filter((_,k)=>mask[k]).map(([x,y])=>y*W+x));if(owner===i)out.push([q.x,q.y])}
   return out
 }
 function drawGrassBoundary(c,i,x,y){for(const [dx,dy,side] of grassBoundaryEdges(i)){c.save();c.translate(x+(side===1||side===2?TS:0),y+(side>=2?TS:0));c.rotate(side*Math.PI/2);const gx=i%W,gy=(i/W)|0,axis=side===0||side===2?0:1,line=axis?gx+(side===1?1:0):gy+(side===2?1:0),seed=i*137+side*29,world=p=>(axis?gy*TS+p:gx*TS+p),noise=p=>{const z=world(p)/16,a=Math.floor(z),f=z-a,t=f*f*(3-2*f),key=line*7919+axis*104729;return(hash(key+a*374761393)*2-1)*(1-t)+(hash(key+(a+1)*374761393)*2-1)*t},wave=p=>noise(p)*2.6+Math.sin(world(p)*.1+line*1.7)*.55+Math.sin(world(p)*.25+line*2.3)*.2,barren=WD===1?'#a39280':'#b3a37c';c.fillStyle=barren;c.beginPath();c.moveTo(3,-17);c.lineTo(TS-3,-17);c.quadraticCurveTo(TS+1,-10,TS-3,wave(TS-3));for(let p=TS-3;p>=3;p-=2)c.lineTo(p,wave(p));c.quadraticCurveTo(-1,-10,3,-17);c.closePath();c.fill();for(let k=0;k<20;k++){const v=hash(seed*31+k*71),pos=k*1.7-1+hash(seed+k*37)*1.8,depth=2+v*4.3;c.fillStyle=k%4?'#9dc26e':'#8cb262';c.beginPath();c.ellipse(pos,wave(pos)+.6,2+hash(seed+k*17)*1.6,depth*.7,0,0,Math.PI*2);c.fill();c.beginPath();c.moveTo(pos-1.7,wave(pos));c.quadraticCurveTo(pos-1.7,wave(pos)+depth*.6,pos+(v-.5)*3,wave(pos)+depth+1.5);c.quadraticCurveTo(pos+1.9,wave(pos)+depth*.4,pos+1.7,wave(pos));c.closePath();c.fill()}c.restore()}const radius=4.5;c.fillStyle=WD===1?'#a39280':'#b3a37c';for(const [cx,cy] of grassBoundaryCorners(i)){c.beginPath();c.arc(x+cx-i%W*TS,y+cy-((i/W)|0)*TS,radius,0,Math.PI*2);c.fill()}}

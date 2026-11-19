@@ -1,9 +1,18 @@
 'use strict';
 /* ---------- そうび（火山から。持てる数の防具の1つは草原から） ----------
    S.gear：持っている（だれもつけていない）そうび [{id,lv}]。lv は強化（0〜3）
-   r.gear：せいれいがつけているそうび {w:武器, a:防具, c:おまもり, t:専用品}（それぞれ {id,lv}）
+   r.gear：せいれいがつけているそうび {w:武器, a:防具, c:アクセサリー}（それぞれ {id,lv}）
    矢は、いままでの矢と同じく S.inv（見張り台がうつ） */
-const GSLOT={w:'武器',a:'防具',c:'おまもり',t:'専用品'},GSLOTK=['w','a','c','t'];
+const GSLOT={w:'武器',a:'防具',c:'アクセサリー'},GSLOTK=['w','a','c'];
+const gearSlot=g=>g.s==='t'?'c':g.s;
+function gearMigrate(){
+  for(const r of S.res||[]){
+    if(!r.gear?.t)continue;
+    if(!r.gear.c)r.gear.c=r.gear.t;
+    else gearList().push(r.gear.t);
+    delete r.gear.t;gearChanged(r);
+  }
+}
 const ORE_COL={copper:'#e0a07a',iron:'#bcc4cc',obsidian:'#8f86a8',silver:'#e4eaf0',gold:'#f2d47a',crystal:'#f3a6ac',sulfur:'#ecdf86',bamboo:'#b3d48a',kuru:'#a8d494',chiri:'#d4bf8c',wood:'#d4a878',eda:'#c8a27c',stone:'#c4c0b8',shina:'#9ccf84',kasa:'#d8c48c',sp:'#f4b06a',nuno:'#e6d2ae'};
 const GEAR_ORES=['copper','iron','obsidian','silver','gold','sulfur','crystal'];
 const isGear=id=>!!(BL[id]&&BL[id].g);
@@ -24,7 +33,7 @@ function gearStat(r){if(!r||!r.gear)return GNONE;let c=GSC.get(r);if(c&&c.v===(r
 function gJob(r,t){return(r&&r.gear?gearStat(r).job[t]||1:1)*titleMul(r,t)}/* 作業ごとの速さ（専用品・得意な仕事の★） */
 function gearOK(r,id){const g=BL[id].g;if(g.s==='w'&&r.elem!=='fire')return '武器は火のせいれいだけ';if(g.s==='t'&&g.el!==r.elem)return ELEM[g.el].name+'のせいれいだけ';if(g.s==='ar')return '矢は見張り台で使う';return ''}
 function gearChanged(r){r.gv=(r.gv||0)+1;RSC.delete(r)}
-function gearEquip(r,i){const L=gearList(),q=L[i];if(!q)return false;const why=gearOK(r,q.id);if(why){toast(why,'warn');return false}const k=BL[q.id].g.s;r.gear=r.gear||{};L.splice(i,1);if(r.gear[k])L.push(r.gear[k]);r.gear[k]={id:q.id,lv:q.lv||0};gearChanged(r);return true}
+function gearEquip(r,i){const L=gearList(),q=L[i];if(!q)return false;const why=gearOK(r,q.id);if(why){toast(why,'warn');return false}const k=gearSlot(BL[q.id].g);r.gear=r.gear||{};L.splice(i,1);if(r.gear[k])L.push(r.gear[k]);r.gear[k]={id:q.id,lv:q.lv||0};gearChanged(r);sfx('equip');return true}
 function gearOff(r,k){if(!r.gear||!r.gear[k])return;gearList().push(r.gear[k]);delete r.gear[k];gearChanged(r)}
 function gearDropAll(r){if(!r||!r.gear)return;for(const k of GSLOTK)if(r.gear[k])gearList().push(r.gear[k]);r.gear={};gearChanged(r)}/* いなくなった子のそうびは、もちものにもどる */
 function gearUpCost(q){const n=(q.lv||0)+1;return{k:gearMain(q.id),n:GUPN[n-1],pc:n===3?GUPPC:0}}
@@ -64,8 +73,7 @@ function towerVolley(j,x,y,st,g,shots0){/* 威力の大きい矢から、とど�
 function gearLightAt(x,y){if(!isNight())return false;for(const r of S.res){if(r.hidden||!r.gear)continue;const R=gearStat(r).light;if(R&&(r.x-x)**2+(r.y-y)**2<R*R)return true}return false}
 function gearLights(dmx){for(const r of S.res){if(r.hidden||!r.gear)continue;const R=gearStat(r).light;if(!R)continue;const P=R*TS+16;dmx.drawImage(lightSpr(P),r.x*TS-P,r.y*TS-12-P,P*2,P*2)}}
 /* ---------- 入手 ---------- */
-function gearGive(id,n){if(BL[id].kind==='ammo'){S.inv[id]=(S.inv[id]||0)+(n||1)*(BL[id].qty||10);return}for(let i=0;i<(n||1);i++)gearList().push({id,lv:0});gearIdeaGrass()}
-function gearIdeaGrass(){/* 草原ではじめてそうびを手に入れたら、草原の素材で作れるそうびを思いつく */if(!S||S.free||WD!==0||typeof IS_STORY_REPLAY!=='undefined'&&IS_STORY_REPLAY)return;S.recipes||(S.recipes={});S.guardianIdeas||(S.guardianIdeas={});const nw={};for(const id of GEAR_IDS){const g=BL[id].g;if(!g.gr||g.sp||S.recipes[id])continue;S.recipes[id]=true;S.guardianIdeas[id]=true;nw[id]=1}if(Object.keys(nw).length){sfx('level');queueItemGift(nw,'あたらしいレシピ！',true);memo('bulb','そうびのレシピ：'+Object.keys(nw).length+'こ')}}
+function gearGive(id,n){if(BL[id].kind==='ammo'){S.inv[id]=(S.inv[id]||0)+(n||1)*(BL[id].qty||10);return}for(let i=0;i<(n||1);i++)gearList().push({id,lv:0})}
 function gearRand(fish){const L=GEAR_IDS.filter(id=>!(fish&&BL[id].g.nf));return pick(L)}
 function gearFind(r,title){const id=gearRand(title==='つりあげた！');gearGive(id,1);if(r){r.bubble='✨';addFloat(r.x,r.y-1.8,BL[id].name)}queueItemGift({[id]:1},title);return id}
 function gearOffer(r){const L=GEAR_IDS.filter(id=>BL[id].g.sp);const id=pick(L);gearGive(id,1);toast(r.name+'が「'+BL[id].name+'」をおそなえした！','good');queueItemGift({[id]:1},'うけとった！');return true}
@@ -115,9 +123,35 @@ function veinMorning(){if(!S||WD!==1||S.free)return;if(IS_STORY_REPLAY||typeof M
 /* 「しらべる」でタップした鉱脈（のこっている物だけ） */
 function vreqList(){const q=S.vreq;if(!q)return [];const L=[];for(const k in q){if(VEINS[S.obj[+k]])L.push(+k);else delete q[k]}return L}
 /* はじめての鉱石で、そうびのレシピを思いつく（火山だけ）。idea のある物は、はじめてその素材を手に入れたとき */
-function gearIdea(){if(!S||S.free)return;const got=k=>(S.gotMat&&S.gotMat[k]>0)||(S.mat[k]||0)>0,ore=WD===1&&GEAR_ORES.some(got);S.recipes||(S.recipes={});S.guardianIdeas||(S.guardianIdeas={});const nw={};
-  for(const id of GEAR_IDS){const b=BL[id];if(b.g.sp||b.g.gr||S.recipes[id])continue;if(b.idea?got(b.idea):ore&&Object.keys(b.mat).map(k=>ORE_OF[k]||k).every(k=>!GEAR_ORES.includes(k)||got(k))){/* idea の物は、その素材を手に入れたら（どのステージでも。布のせおいぶくろは草原の布） *//* 延べ棒の物は、その鉱石を手に入れたら思いつく */S.recipes[id]=true;S.guardianIdeas[id]=true;nw[id]=1}}
-  const ks=Object.keys(nw);if(ks.length){sfx('level');queueItemGift(nw,'あたらしいレシピ！',true);memo('💡','そうびのレシピ：'+ks.length+'こ')}}
+function gearIdea(material,crafted,carried=0){
+  if(!S||S.free||IS_STORY_REPLAY)return;
+  const known=S.recipes||(S.recipes={});
+  const acquired=k=>Math.max(Math.max(S.gotMat?.[k]||0,S.mat[k]||0)+(k===material?carried:0),crafted===k?1:0);
+  const source=k=>ORE_OF[k]||k;
+  const tier={};
+  const ore=WD===1&&GEAR_ORES.some(k=>acquired(k)>0);
+  for(const id of GEAR_IDS){
+    const b=BL[id],g=b.g;
+    if(g.sp||!b.mat||g.gr&&WD!==0||!g.gr&&!b.idea&&WD!==1)continue;
+    const primary=source(b.idea||gearMain(id));
+    const gear=g.s==='w'||g.s==='a';
+    const key=primary+':'+g.s;
+    const rank=gear?(tier[key]=(tier[key]||0)+1):0;
+    if(known[id])continue;
+    if(crafted&&crafted!=='nuno'&&source(gearMain(crafted))!==primary)continue;
+    if(material&&source(material)!==primary&&!Object.keys(b.mat).some(k=>source(k)===source(material)))continue;
+    if(b.idea?acquired(b.idea)<1:!g.gr&&!ore&&primary!=='bamboo')continue;
+    const related=crafted&&BL[crafted]?.g&&['w','a'].includes(BL[crafted].g.s)&&
+      gear&&source(gearMain(crafted))===primary;
+    const threshold=rank<=1?1:(rank-1)*(related?1:3)+1;
+    if(acquired(primary)<threshold)continue;
+    if(!Object.keys(b.mat).every(k=>!GEAR_ORES.includes(source(k))||acquired(source(k))>=1))continue;
+    known[id]=true;(S.guardianIdeas||(S.guardianIdeas={}))[id]=true;
+    sfx('level');queueItemGift({[id]:1},'あたらしいレシピ！',true);
+    memo('💡','そうびのレシピ：'+b.name);
+    return;
+  }
+}
 /* 毎朝：金のメダル */
 function gearMorning(){for(const r of S.res)if(r.gear&&gearStat(r).pw){S.pt+=1;S.totalPt=(S.totalPt||0)+1}}
 /* ---------- ドット絵（16×16 のマス目、1マス9ドット＝144） ---------- */
@@ -146,14 +180,14 @@ for(const k of GEAR_ORES){ICONS[k]=pixURL('ore:'+k,GPIX.ore,ORE_COL[k]);const im
 function gearUpBtn(q,after){const b=el('<button class="btn"></button>');if(!gearCanUp(q.id)||(q.lv||0)>=3){b.textContent=(q.lv||0)>=3?'+3':'強化なし';b.disabled=true;return b}const c=gearUpCost(q);b.textContent='強化 '+MATN[c.k]+c.n+(c.pc?'・'+SP(c.pc):'');lackOn(b,lackMat(c.k,c.n)||lackPt(c.pc));b.onclick=e=>{e.stopPropagation();if(gearUp(q))after()};return b}
 function gearRow(q,sub){const r=rowEl(gearName(q),'',gearIcon(q.id));r.querySelector('small').textContent=sub||BL[q.id].desc;r.style.alignItems='center';return r}
 function gearSheet(body,r){const sec=el('<div class="sec"></div>');
-  for(const k of GSLOTK){if(k==='w'&&r.elem!=='fire')continue;const q=r.gear&&r.gear[k];const h=el('<b style="display:block;margin-top:6px"></b>');h.textContent=GSLOT[k];sec.appendChild(h);
+  for(const k of GSLOTK){const q=r.gear&&r.gear[k];const h=el('<b style="display:block;margin-top:6px"></b>');h.textContent=GSLOT[k];sec.appendChild(h);
     if(q){const row=gearRow(q);const ob=el('<button class="btn">はずす</button>');ob.onclick=()=>{sfx('tap');gearOff(r,k);renderSheet()};row.appendChild(gearUpBtn(q,renderSheet));row.appendChild(ob);sec.appendChild(row)}
-    else{const p=el('<p class="note" style="margin:2px 0"></p>');p.textContent='なし';sec.appendChild(p)}
-    gearList().forEach((g2,i)=>{if(BL[g2.id].g.s!==k||gearOK(r,g2.id))return;const row=gearRow(g2),b=el('<button class="btn pri">つける</button>');b.onclick=()=>{sfx('tap');gearEquip(r,i);renderSheet()};row.appendChild(b);sec.appendChild(row)})}
+    else{const p=el('<p class="note" style="margin:2px 0"></p>');p.textContent=k==='w'&&r.elem!=='fire'?'火のせいれいが装備できます':'なし';sec.appendChild(p)}
+    gearList().forEach((g2,i)=>{if(gearSlot(BL[g2.id].g)!==k||gearOK(r,g2.id))return;const row=gearRow(g2),b=el('<button class="btn pri">つける</button>');b.onclick=()=>{if(gearEquip(r,i))renderSheet()};row.appendChild(b);sec.appendChild(row)})}
   if(!gearList().length&&!GSLOTK.some(k=>r.gear&&r.gear[k])){const p=el('<p class="note"></p>');p.textContent='そうびは、ありません';sec.appendChild(p)}
   body.appendChild(sec)}
 /* 依頼ボードの「そうび」：わくごとに見出し。さいごに強化 */
-function gearBoardHead(id,prev){const s=BL[id].g&&BL[id].g.s;if(!s||s==='ar'||(prev&&BL[prev].g&&BL[prev].g.s===s))return null;const h=el('<b style="display:block;margin:6px 0 2px"></b>');h.textContent=GSLOT[s];return h}
+function gearBoardHead(id,prev){const s=BL[id].g&&gearSlot(BL[id].g);if(!s||s==='ar'||(prev&&BL[prev].g&&gearSlot(BL[prev].g)===s))return null;const h=el('<b style="display:block;margin:6px 0 2px"></b>');h.textContent=GSLOT[s];return h}
 function gearBoardUp(box){const L=[];for(const q of gearList())if(gearCanUp(q.id))L.push([q,'']);for(const r of S.res)for(const k of['w','a'])if(r.gear&&r.gear[k])L.push([r.gear[k],r.name]);if(!L.length)return;const h=el('<b style="display:block;margin:8px 0 2px"></b>');h.textContent='強化';box.appendChild(h);for(const[q,who]of L){const row=gearRow(q,who?who+'がつけている':BL[q.id].desc);row.appendChild(gearUpBtn(q,renderSheet));box.appendChild(row)}}
 /* もちもの：そうび */
 function gearInv(body){const L=gearList();if(!L.length)return;const g=el('<div class="grid"></div>'),hd=el('<b style="grid-column:1/-1;margin-top:8px"></b>');hd.textContent='そうび';g.appendChild(hd);for(const q of L){const b=el('<div class="slot"><span class="ct"></span><img alt=""><span class="nm"></span></div>');b.querySelector('img').src=gearIcon(q.id);b.querySelector('.nm').textContent=gearName(q);b.querySelector('.ct').textContent=GSLOT[BL[q.id].g.s];g.appendChild(b)}body.appendChild(g)}

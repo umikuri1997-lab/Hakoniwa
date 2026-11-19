@@ -116,7 +116,7 @@ function drawStoryStage(now){
 }
 function volDrawFx(e,now){{const T=(now-e.at)/1000,p=(now-e.at)/e.ms;if(p>=1||T<0)return;
     const fade=Math.min(1,T*3)*(e.stop?Math.max(0,1-(now-e.stop)/900):1);
-    if(e.kind==='steam'||e.kind==='ember'){const[x,y]=volTileXY(e.x,e.y),hot=e.kind==='ember';
+    if(e.kind==='steam'||e.kind==='ember'){const[x,y]=volTileXY(e.x,e.y),hot=e.kind==='ember';if(!hot&&seasonNow()===1)return;
       for(let i=0;i<(hot?12:9);i++){const ph=(T*(hot?.7:.5)+i/(hot?12:9))%1,ox=((i*37)%23)-11+Math.sin(T*2+i)*3*ph;
         if(hot)volDot(x+ox,y-4-ph*46,2,2,i%3?'#ffb347':'#ffe08a',(1-ph)*fade*Math.min(1,(1-p)*4));
         else volDot(x+ox,y-6-ph*34,ph<.5?3:2,ph<.5?3:2,'#ffffff',(1-ph)*.75*fade);}}

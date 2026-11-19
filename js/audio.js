@@ -61,6 +61,7 @@ SAMPLES.matDrop=['assets/g/ef846d878d.mp3'];SAMPLES.fireatk=['assets/g/149bc0958
 Object.assign(SAMPLES,{"stamp":["assets/g/5fb1653535.mp3","assets/g/9f56c224e9.mp3","assets/g/f1cb5ea1ff.mp3"],"dust":["assets/g/814fe2b628.mp3","assets/g/8189f95d0a.mp3","assets/g/6bfc4bd6ec.mp3","assets/g/ca1ad9eafa.mp3"],"creak":["assets/g/6c7654c715.mp3","assets/g/c82a840632.mp3"],"bend":["assets/g/b60262d9ed.mp3"],"tab":["assets/g/646421dca2.mp3","assets/g/8553ad0946.mp3"],"knockw":["assets/g/b16e923e81.mp3","assets/g/44cd883b60.mp3","assets/g/c00e91f7e0.mp3","assets/g/b4f4e74b6b.mp3","assets/g/ff0c586227.mp3"],"notch":["assets/g/e4390406ba.mp3","assets/g/0ab0818cbf.mp3","assets/g/bd4aa0ed1d.mp3"]});Object.assign(SAMPLES,{"lid":["assets/g/33c29f24b3.mp3","assets/g/eed154ca9c.mp3"]});/* 木箱のふたが開く音（Kenney の CC0、tools/sound/ui_asmr.py） *//* UIの手ざわりの本物の音（Kenney の CC0 の音を tools/sound/ui_asmr.py でととのえた物）：ハンコ・木くず・なわのきしみ・板のしなり・タブ・ことっ・± */
 Object.assign(SAMPLES,{"twood":["assets/g/c4d66fe5c8.mp3","assets/g/31d3db8da0.mp3","assets/g/0a2507b504.mp3","assets/g/5428603b66.mp3","assets/g/27d96d985a.mp3"],"tstone":["assets/g/c0313b87df.mp3","assets/g/42909bf5c3.mp3","assets/g/d740607154.mp3","assets/g/fc149ecd6d.mp3","assets/g/f00873c212.mp3"],"tcan":["assets/g/e8a6d86ce5.mp3","assets/g/02f3ff1b30.mp3","assets/g/ea19526521.mp3","assets/g/90fa5e0e57.mp3","assets/g/8abd7075f2.mp3"],"tcloth":["assets/g/c2cdd95470.mp3","assets/g/ce2640c6dd.mp3","assets/g/cdb321f6cb.mp3"],"tgrass":["assets/g/4a314261fa.mp3","assets/g/16d30726b3.mp3","assets/g/fbc86f2c44.mp3","assets/g/9178e82c39.mp3","assets/g/24268c983c.mp3"],"tsoil":["assets/g/62d5025d65.mp3","assets/g/e0c48cecb6.mp3"],"twater":["assets/g/1856221d15.mp3","assets/g/15b3735de2.mp3","assets/g/7689d8c500.mp3","assets/g/8cb0dba7a9.mp3"],"tbell":["assets/g/13709a2edb.mp3","assets/g/2f7dccdd32.mp3","assets/g/feeb83871b.mp3"],"tfoe":["assets/g/6ccd894f39.mp3","assets/g/a11fa7e264.mp3","assets/g/0253048f7a.mp3","assets/g/6693e31f34.mp3","assets/g/2fcfb0f848.mp3"],"tweb":["assets/g/1216aa24cb.mp3","assets/g/e8430383b5.mp3"],"tani":["assets/g/f63defe2c9.mp3","assets/g/b32ac3f0b2.mp3"],"tplace":["assets/g/a9d4ab80a0.mp3","assets/g/4d2d55acb6.mp3","assets/g/f71fb79281.mp3","assets/g/56cffcde91.mp3"],"tsacred":["assets/g/b5b66ae8d4.mp3","assets/g/01dbe882fb.mp3","assets/g/501918a536.mp3","assets/g/e935b9741f.mp3"]});/* 「みる」でタップした物の音（本物の録音、tools/sound/ui_asmr.py） */
 Object.assign(SAMPLES,{"page":["assets/g/853378766a.mp3","assets/g/a3901e0d93.mp3","assets/g/5e890e7bc8.mp3"]});/* 思い出帳のページをめくる音：Kenney「RPG Audio」の bookFlip（CC0。tools/sound/ui_asmr.py の page） */
+SAMPLES.equip=['assets/g/b1909223de.mp3'];SAMPLES.doorClose=['assets/g/5d1a410eea.mp3'];/* ユーザー提供：衣擦れ2・ドアを閉める2 */
 function loadSamples(){/* 音のファイル（assets/g/*.mp3）を読みこんで、鳴らせる形にしておく */for(const k in SAMPLES){SBUF[k]=[];SAMPLES[k].forEach((u,i)=>{fetch(u).then(r=>r.arrayBuffer()).then(b=>AC.decodeAudioData(b,buf=>{SBUF[k][i]=buf},()=>{})).catch(()=>{})})}}
 // セリフの声：キャラごとに高さを変える（カミサマは低め）
 let VOICE=null,voxC=null;const BRAVET=new WeakMap();
@@ -212,6 +213,8 @@ function sfx(k){
   switch(k){
   case'block':if(playS('wdon',.5))break;tone(260,t,.07,'square',.05,o,520);tone(83,t+.05,.07,'triangle',.06,o);break;
   case'plant':playU('tsoil',.3,1.05);playU('tgrass',.22,1.1,.06);break;/* 植えた：土をそっとかぶせて、葉がこすれる（本物の録音） */
+  case'equip':playS('equip',.8);break;
+  case'firstDiscovery':seq([72,76,79,84,88],.065,'sine',.07,.28);break;
   case'furn':seq([72,76,79,84],.06,'triangle',.07);break;
   case'furnPlace':if(playS('furniturePlace',.72))break;seq([72,76,79,84],.06,'triangle',.07);break;
   case'matDrop':if(playS('matDrop',.8))break;tone(520,t,.06,'triangle',.06,o,260);break;
@@ -323,6 +326,7 @@ case'bossKO':noise(t,.5,.3,o,200);tone(70,t,1.4,'sine',.2,o,30);tone(900,t,.35,'
   case'lid':playU('lid',.675,1.1);break;/* 木箱のふたが開く：ぎぃ */
   case'cookfire':playSeg('fire',.55,2.5);break;/* 焚き火・かまど：ぱちぱち（長い音のどこかを2.5秒） */
   case'door':playS('door',.25);break;
+  case'doorClose':playS('doorClose',.25);break;
   case'wave':playWave(.2);break;
   case'wbreak':playS('wallbreak',.5);break;
   case'pour':playSeg('trickle',.4,1.8);break;
@@ -383,9 +387,10 @@ function footTick(now0){if(!AC||!SND.sfx||AC.state!=='running'||!S||!started||(t
   const now=now0==null?performance.now():now0,tS=now/1000,L=[];
   for(const r of S.res){if(r.hidden){FOOTP.delete(r);continue}let p=FOOTP.get(r);if(!p){FOOTP.set(r,{x:r.x,y:r.y,n:-1e9});continue}const d=Math.hypot(r.x-p.x,r.y-p.y);p.x=r.x;p.y=r.y;
     if(r.act&&r.act.stage==='do'&&r.act.type==='sleep')continue;
-    if(typeof CLIMB!=='undefined'&&CLIMB.has(r)){/* ハシゴ：手をかけるたび（sin(t×8) がいちばん大きい所）に、こつっ */
-      if(!ladderNow(r))continue;const u=(tS+r.id*1.7)*8/Math.PI-.5,n=Math.ceil(u-1e-9),dl=(n-u)*Math.PI/8;if(n>(p.l||-1e9)&&dl<=FOOTLOOK){p.l=n;const q=sfxPos(r.x,r.y);if(q)L.push([r,q,dl,'ladder'])}continue}
-    if(d>2||d<.003)continue;/* ワープ・止まっている子は鳴らさない */
+    const ladder=ladderNow(r),watchClimb=r.act?.type==='watchpost'&&r.act.stage==='do';
+    if(ladder&&(watchClimb||d>=.003)){/* ハシゴ：手をかけるたび（sin(t×8) がいちばん大きい所）に、こつっ */
+      const u=(tS+r.id*1.7)*8/Math.PI-.5,n=Math.ceil(u-1e-9),dl=(n-u)*Math.PI/8;if(n>(p.l||-1e9)&&dl<=FOOTLOOK){p.l=n;const q=sfxPos(r.x,r.y);if(q)L.push([r,q,dl,'ladder'])}continue}
+    if(d>2||d<.003||typeof CLIMB!=='undefined'&&CLIMB.has(r))continue;/* ワープ・止まっている子は鳴らさない */
     const rate=r.act&&r.act.type==='critwatch'?FOOTRATEC:FOOTRATE,u=(tS+r.id*1.7)*rate,n=Math.ceil(u*2-.5-1e-9),dl=((n+.5)/2-u)/rate;/* 足がつくのは、動きの 1/4 と 3/4 */
     if(n>p.n&&dl<=FOOTLOOK){p.n=n;const q=sfxPos(r.x,r.y);if(q)L.push([r,q,dl,'foot'])}}
   if(L.length){L.sort((a,b)=>b[1].v-a[1].v);for(const[r,q,dl,kd]of L.slice(0,FOOTN)){if(kd==='ladder'){footSoft('ladder',q,LADV,1,dl);continue}const k=footMat(r.x,r.y);footSoft(k,q,FOOTV*(k==='twater'?.6:1),k==='twater'?1.3:1.15,dl)}}/* 小さな体なので、少し高く */
