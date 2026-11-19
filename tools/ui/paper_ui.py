@@ -655,12 +655,15 @@ def mbook_css():
     fib = svg(ptex_rows(), {'d': '#8a6a3a1c', 'm': '#8a6a3a0c', 'l': '#ffffff60'})
     ed = svg(edge_rows(), {'a': '#efe2c4', 'b': '#e6d6b2', 'c': '#ddc9a0', 'o': '#b8955e'})
     pp = 'var(--pp)'
-    k = '.sheet[data-k="record"]'
+    K = ['.sheet[data-k="record"]', '.sheet[data-k="diary"]']
+    k1 = ','.join(K + ['body.wd0 ' + k for k in K])
+    k2 = ','.join(k + ' #sheetBody' for k in K)
+    k3 = ','.join(k + '::after' for k in K)
     return '\n'.join([
-        '/* 思い出帳：ページをめくる本（紙のページ・右に重なったページのふち edge_rows） */',
-        f'{k},body.wd0 {k}{{border-image-source:{pg}!important;padding-right:calc({pp}*6)}}',
-        f'{k} #sheetBody{{position:relative;background:{fib} 0 0/96px 96px repeat;image-rendering:pixelated}}',
-        f'{k}::after{{content:"";position:absolute;right:calc({pp}*1);top:calc({pp}*8);bottom:calc({pp}*4);width:calc({pp}*6);background:{ed} 0 0/calc({pp}*6) calc({pp}*4) repeat-y;image-rendering:pixelated;pointer-events:none}}',
+        '/* 思い出帳・日記の紙：ページをめくる本（紙のページ・右に重なったページのふち edge_rows） */',
+        f'{k1}{{border-image-source:{pg}!important;padding-right:calc({pp}*6)}}',
+        f'{k2}{{position:relative;background:{fib} 0 0/96px 96px repeat;image-rendering:pixelated}}',
+        f'{k3}{{content:"";position:absolute;right:calc({pp}*1);top:calc({pp}*8);bottom:calc({pp}*4);width:calc({pp}*6);background:{ed} 0 0/calc({pp}*6) calc({pp}*4) repeat-y;image-rendering:pixelated;pointer-events:none}}',
         f'.mflip{{background:{fib} 0 0/96px 96px repeat,#f7eedb;image-rendering:pixelated;box-shadow:calc({pp}*2) 0 0 #8a6a4540}}',
     ])
 

@@ -82,30 +82,35 @@ function mvpTxt(b){return [b.k?b.k+'体を追いはらった':'',b.g?b.g+'回ま
 /* 日記の写真の URL：とじるときの写しの板（sheetGhost）も同じ絵を読むので、すぐには手ばなさない（さいごの DYPHN まいだけ） */
 const DYPHU=new Map(),DYPHN=6;
 function dyPhUrl(id,b){let u=DYPHU.get(id);if(u)return u;u=URL.createObjectURL(b);DYPHU.set(id,u);if(DYPHU.size>DYPHN){const[k,v]=DYPHU.entries().next().value;DYPHU.delete(k);setTimeout(()=>URL.revokeObjectURL(v),3000)}return u}
-/* 日記の紙（renderSheet から）。arg：'m' は朝に出したとき、数は思い出帳から読む日 */
+/* 日記の紙（renderSheet から）。arg：'m' は朝に出したとき、数は思い出帳から読む日。
+   思い出帳と同じ、ページをめくる本（ui.js の bookNav）：絵日記・ゆうべの守り・できごと・きのうのしごと を1ページずつ。朝も思い出帳から読んでも、同じ本。
+   数え上げ・ハンコは、そのページをはじめて見せたとき（_show） */
+let DYPG={pg:0};
 function diaryBody(T,body,arg){const L=S.diary||[];const e=arg==='m'||arg==null?L[L.length-1]:L.find(q=>q.d===arg);if(!e)return closeSheet();
-  T.textContent=e.d+'日めの日記';
+  T.textContent=e.d+'日めの日記';if(DYPG.k!==e.d)DYPG={pg:0,k:e.d};const P=[],page=t=>{const pg=el('<div class="mpg"></div>');if(t){const h=el('<h3 class="mtt"></h3>');h.textContent=t;pg.appendChild(h)}P.push(pg);return pg};
   if(arg!=='m'){const bk=el('<button class="btn back" aria-label="思い出帳にもどる">'+pxi('next','prev')+'もどる</button>');bk.onclick=()=>{sfx('tap');openSheet('menu','record')};T.before(bk)}
-  if(e.ph!=null||e.ft&&e.ft.length){const sec=el('<div class="sec dyE"></div>'),st=S;body.appendChild(sec);/* 絵日記：その日の絵（けしたあとなら、出さない）と、その下に文 */
+  if(e.ph!=null||e.ft&&e.ft.length){const sec=el('<div class="sec dyE"></div>'),st=S;page('').appendChild(sec);/* 絵日記：その日の絵（けしたあとなら、出さない）と、その下に文 */
     if(e.ph!=null){const im=el('<img class="dyPic" alt="">');sec.appendChild(im);phGet(e.ph).then(p=>{if(!im.isConnected||S!==st)return;if(!p||!p.b){im.remove();return}im.src=dyPhUrl(e.ph,p.b)},()=>im.remove())}
     if(e.ft&&e.ft.length){const tx=el('<p class="dyTx"></p>');tx.textContent=e.ft.map(t=>t.replace(LOOKRX,'')).join('\n');sec.appendChild(tx)}}
-  {const b=dyBest(e);if(b){const sec=el('<div class="sec dyMvp"><h3>ゆうべのかつやく</h3><div class="rows"></div></div>'),r=rowEl(b.nm,mvpTxt(b),ELEM[b.el]?spiritPort(b.el,96,b.vr):null);sec.querySelector('.rows').appendChild(r);body.appendChild(sec);
-    if(arg==='m')setTimeout(()=>uiStamp(r,true,'かつやく'),350);else{r.style.position='relative';const c=stampCanvas('かつやく'),k=document.createElement('canvas');k.width=k.height=32;k.getContext('2d').drawImage(c,0,0);k.className='ustamp s';k.style.animation='none';r.appendChild(k)}}}/* いちばん上に、その子の絵とハンコ */
-  const N=e.ns;if(N){const sec=el('<div class="sec"><h3></h3></div>');sec.querySelector('h3').textContent=N.trial?(N.trialOK?'試練をのりこえた！':'試練の夜'):N.rw?'夜をぶじに守りきった！':'ゆうべの守り';
+  const N=e.ns,pN=N||dyBest(e)?page(''):null;
+  {const b=dyBest(e);if(b){const sec=el('<div class="sec dyMvp"><h3>ゆうべのかつやく</h3><div class="rows"></div></div>'),r=rowEl(b.nm,mvpTxt(b),ELEM[b.el]?spiritPort(b.el,96,b.vr):null);sec.querySelector('.rows').appendChild(r);pN.appendChild(sec);
+    if(arg==='m'){const sh=pN._show;pN._show=()=>{if(sh)sh();setTimeout(()=>uiStamp(r,true,'かつやく'),350)}}else{r.style.position='relative';const c=stampCanvas('かつやく'),k=document.createElement('canvas');k.width=k.height=32;k.getContext('2d').drawImage(c,0,0);k.className='ustamp s';k.style.animation='none';r.appendChild(k)}}}/* いちばん上に、その子の絵とハンコ */
+  if(N){const sec=el('<div class="sec"><h3></h3></div>');sec.querySelector('h3').textContent=N.trial?(N.trialOK?'試練をのりこえた！':'試練の夜'):N.rw?'夜をぶじに守りきった！':'ゆうべの守り';
     const g=el('<div class="stats"></div>');
     for(const[k,v]of[['来た「コワイノ」',N.n+'体'],['追いはらった',N.kill+'体'],['おそわれたせいれい',N.hurt?N.hurt+'回':'なし'],['こわされた柵・設備',N.broke?N.broke+'こ':'なし'],['ぬすまれたもの',N.lost.length?lostSum(N.lost):'なし']].concat(N.rw?[['ごほうび','パワー+'+N.rw+'・みんなのたのしさ+10']]:[]).concat(N.trialOK?[['試練のごほうび','パワー+60・めぶきのしずく']]:[])){const d=el('<div class="stat"><span></span><b></b></div>');d.firstChild.textContent=k;d.lastChild.textContent=v;g.appendChild(d)}
     sec.appendChild(g);
     const K=Object.entries(e.k||{}).sort((a,b)=>b[1][2]-a[1][2]),O=Object.entries(e.o||{});
     if(K.length||O.length){const rw=el('<div class="rows"></div>');for(const[nm,x]of K)rw.appendChild(rowEl(nm,x[2]+'体を追いはらった',ELEM[x[0]]?spiritPort(x[0],96,x[1]):null));for(const[nm,n]of O)rw.appendChild(rowEl(nm,n+'体を追いはらった'));sec.appendChild(rw)}
     if(N.boss===1&&!N.trial)sec.appendChild(el('<p class="note">オオカゲは、追いはらえないまま朝になった。</p>'));
-    body.appendChild(sec)}
-  if(e.m.length){const sec=el('<div class="sec"><h3>できごと</h3><div class="rows"></div></div>'),rw=sec.querySelector('.rows');for(const t of e.m)rw.appendChild(rowEl(t,''));body.appendChild(sec)}
-  let secW=null;{const T=typeof dyWorkSum==='function'?dyWorkSum(e):[];if(T.length){secW=el('<div class="sec"><h3>きのうのしごと</h3></div>');const g=el('<div class="stats"></div>');for(const[k,v]of T){const d=el('<div class="stat"><span></span><b></b></div>');d.firstChild.textContent=k;d.lastChild.textContent=v;g.appendChild(d)}secW.appendChild(g);body.appendChild(secW)}}/* きのうのしごと：みんなのしたことの、種類ごとの合計 */
+    pN.appendChild(sec)}
+  if(e.m.length){const sec=el('<div class="sec"><h3>できごと</h3><div class="rows"></div></div>'),rw=sec.querySelector('.rows');for(const t of e.m)rw.appendChild(rowEl(t,''));page('').appendChild(sec)}
+  let secW=null,pW=null;{const T=typeof dyWorkSum==='function'?dyWorkSum(e):[];if(T.length){secW=el('<div class="sec"><h3>きのうのしごと</h3></div>');const g=el('<div class="stats"></div>');for(const[k,v]of T){const d=el('<div class="stat"><span></span><b></b></div>');d.firstChild.textContent=k;d.lastChild.textContent=v;g.appendChild(d)}secW.appendChild(g);(pW=page('')).appendChild(secW)}}/* きのうのしごと：みんなのしたことの、種類ごとの合計 */
   if(e.w.length){const sec=el('<div class="sec"><h3>みんなのしたこと</h3><div class="rows"></div></div>'),rw=sec.querySelector('.rows');const by=new Map();
     for(const x of e.w){if(!by.has(x[0]))by.set(x[0],{el:x[1],vr:x[2],L:[]});by.get(x[0]).L.push(x)}
     for(const[nm,g]of by){g.L.sort((a,b)=>b[5]-a[5]);const tx=g.L.slice(0,DYPER).map(x=>dyText(x[3],x[4])+(x[5]>1?'（'+x[5]+'回）':'')).join('\n');const r=rowEl(nm,tx,ELEM[g.el]?spiritPort(g.el,96,g.vr):null);r.querySelector('small').style.whiteSpace='pre-line';rw.appendChild(r)}
-    body.appendChild(sec)}
-  if(arg==='m'&&typeof juiceDiaryCount==='function')juiceDiaryCount(body,secW);/* 朝の紙だけ、数え上げてハンコ */
+    (pW||(pW=page(''))).appendChild(sec)}
+  if(arg==='m'&&typeof juiceDiaryCount==='function')for(const pg of P){if(!pg.querySelector('.stat b')&&pg!==pW)continue;const sh=pg._show,go=juiceDiaryCount(pg,pg===pW?secW:null,true);pg._show=()=>{if(sh)sh();go()}}/* 朝の紙だけ、そのページを見せたときに数え上げてハンコ */
+  if(!P.length)page('');bookNav(body,P,DYPG,false);
   if(arg==='m'){const best=dyBest(e),r=best&&S.res.find(q=>q.name===best.nm&&!q.hidden);if(r&&!DYJ.has(r)){DYJ.add(r);JUMP.set(r,performance.now());villageTimeout(()=>JUMP.set(r,performance.now()),650);addFloat(r.x,r.y-1.4,'がんばった！','#ffe7a8')}}}
 /* 思い出帳の「日記」：日ごとの紙の一覧 */
 function diaryList(body){const L=S.diary||[];if(!L.length)return;const sec=el('<div class="sec"><h3>日記</h3><div class="rows"></div></div>'),rw=sec.querySelector('.rows');

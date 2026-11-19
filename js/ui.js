@@ -275,23 +275,30 @@ const MANIC={'おなか':'p:rice','たのしさ':'p:ball','つかれ':'p:moon','
 function manIcEl(k){if(!k)return null;if(k.startsWith('p:')){if(!PXI[k.slice(2)])return null;const d=el('<span class="mic">'+pxi(k.slice(2))+'</span>');return d}if(!BL[k])return null;const im=el('<img class="mic" alt="">');im.src=iconURL(k);return im}
 function manIcon(row,key){/* 項目の左にアイコン（あれば）。まだ出会っていない項目には出さない */const e=key?manIcEl(MANIC[key]):null;if(e){row.insertBefore(e,row.firstChild);row.classList.add('hasmic')}return row}
 function manH3(h,t){if(!h)return;h.textContent=t;const e=manIcEl(MANH[t]);if(e)h.insertBefore(e,h.firstChild)}
-/* 思い出帳：ページをめくる本。はじめのページは目次。章（見出しのある .sec）ごとにページ、できごとは4日ずつ。めくるときは前のページの写しが、とじ目のほうへたおれる（mflipF・mflipB） */
+/* 思い出帳：ページをめくる本（bookNav。日記の紙も同じ本）。はじめのページは目次。章（見出しのある .sec）ごとにページ、できごとは4日ずつ。めくるときは前のページの写しが、とじ目のほうへたおれる（mflipF・mflipB） */
 let MEMPG=0,MEMFLIP=0;const MEMDAYS=4;
 const MEMIC={'この村のおわりに':'leaf','物語を見返す':'book','日記':'memo','村の記録':'chart','手紙':'paper','村の写真':'sun','これまで':'clock','いなくなったなかま':'heart','できごと':'memo'};
 function memBook(body){const kids=[...body.children],ch=[];
   for(const n of kids){const h=n.querySelector&&n.querySelector(':scope>h3'),t=h?h.textContent:'';if(/^[0-9]+日め$/.test(t)){let c=ch[ch.length-1];if(!c||c.t!=='できごと')ch.push(c={t:'できごと',n:[]});c.n.push(n);continue}if(h)ch.push({t,n:[n]});else if(ch.length)ch[ch.length-1].n.push(n);else ch.push({t:'はじめに',n:[n]})}
   const P=[];for(const c of ch){c.p=P.length+1;if(c.t==='できごと'){const d=c.n.filter(n=>!/^できごと$/.test((n.querySelector(':scope>h3')||{}).textContent||''));const pre=c.n.filter(n=>!d.includes(n));for(let i=0;i<Math.max(1,d.length);i+=MEMDAYS)P.push({c,n:i?d.slice(i,i+MEMDAYS):[...pre,...d.slice(0,MEMDAYS)]})}else P.push({c,n:c.n})}
-  const N=P.length+1;MEMPG=Math.max(0,Math.min(N-1,MEMPG|0));body.innerHTML='';const pages=[];
+  body.innerHTML='';const pages=[];
   {const pg=el('<div class="mpg mtoc"><h3 class="mtt"></h3><div class="rows"></div></div>');manH3(pg.querySelector('h3'),'もくじ');{const e=pg.querySelector('h3');e.insertBefore(el('<span class="mic">'+pxi('book')+'</span>'),e.firstChild)}
     for(const c of ch){const r=el('<button class="row mtocr" type="button"><span class="mic">'+pxi(MEMIC[c.t]||'memo')+'</span><div class="tx"><b></b></div><span class="mtpn"></span></button>');r.querySelector('b').textContent=c.t;r.querySelector('.mtpn').textContent=c.p+'ページ';r.onclick=()=>memFlip(body,pages,c.p);pg.querySelector('.rows').appendChild(r)}
     if(!ch.length)pg.appendChild(el('<p class="note">はじめての出来事が、ここにのこります。</p>'));pages.push(pg)}
   P.forEach((q,i)=>{const pg=el('<div class="mpg"></div>');if(q.c.t==='できごと'&&q.n[0]&&!(q.n[0].querySelector(':scope>h3')||{}).textContent.match(/^できごと$/)){const h=el('<h3 class="mtt"></h3>');pg.appendChild(h);h.textContent='できごと'}for(const n of q.n)pg.appendChild(n);pages.push(pg)});
-  for(const[i,pg]of pages.entries()){pg.hidden=i!==MEMPG;const nav=el('<div class="mnav"><button class="btn mpv" type="button" aria-label="まえのページ">'+pxi('next','prev')+'</button><button class="btn mtc" type="button">もくじ</button><span class="mpn"></span><button class="btn mnx" type="button" aria-label="つぎのページ">'+pxi('next','nxr')+'</button></div>');
-    nav.querySelector('.mpn').textContent=i?i+' / '+(N-1):'もくじ';const pv=nav.querySelector('.mpv'),nx=nav.querySelector('.mnx'),tc=nav.querySelector('.mtc');pv.disabled=i===0;nx.disabled=i>=N-1;tc.hidden=i===0;pv.onclick=()=>memFlip(body,pages,i-1);nx.onclick=()=>memFlip(body,pages,i+1);tc.onclick=()=>memFlip(body,pages,0);pg.appendChild(nav);body.appendChild(pg)}
-  /* よこにはらうと、めくる */let sx=null,sy=0;body.onpointerdown=e=>{sx=e.clientX;sy=e.clientY};body.onpointerup=e=>{if(sx==null)return;const dx=e.clientX-sx,dy=e.clientY-sy;sx=null;if(Math.abs(dx)>60&&Math.abs(dx)>Math.abs(dy)*1.6)memFlip(body,pages,MEMPG+(dx<0?1:-1))};body.onpointercancel=()=>{sx=null}}
-function memFlip(body,pages,to){if(to<0||to>=pages.length||to===MEMPG||MEMFLIP)return;const from=MEMPG,old=pages[from],nw=pages[to],fw=to>from;sfx('page');MEMPG=to;
+  bookNav(body,pages,MEMBK,true)}
+/* ページをめくる本（思い出帳・日記の紙）：pages をならべ、下にめくるボタン、よこにはらってもめくる。
+   st：いまのページ {pg}（思い出帳は MEMPG）。toc：はじめのページが目次。ページに _show があれば、はじめて見せたときに1回よぶ */
+const MEMBK={get pg(){return MEMPG},set pg(v){MEMPG=v}};
+function bookNav(body,pages,st,toc){const N=pages.length;st.pg=Math.max(0,Math.min(N-1,st.pg|0));
+  for(const[i,pg]of pages.entries()){pg.hidden=i!==st.pg;const nav=el('<div class="mnav"><button class="btn mpv" type="button" aria-label="まえのページ">'+pxi('next','prev')+'</button>'+(toc?'<button class="btn mtc" type="button">もくじ</button>':'')+'<span class="mpn"></span><button class="btn mnx" type="button" aria-label="つぎのページ">'+pxi('next','nxr')+'</button></div>');
+    nav.querySelector('.mpn').textContent=toc?(i?i+' / '+(N-1):'もくじ'):(i+1)+' / '+N;const pv=nav.querySelector('.mpv'),nx=nav.querySelector('.mnx'),tc=nav.querySelector('.mtc');pv.disabled=i===0;nx.disabled=i>=N-1;if(tc){tc.hidden=i===0;tc.onclick=()=>memFlip(body,pages,0,st)}pv.onclick=()=>memFlip(body,pages,i-1,st);nx.onclick=()=>memFlip(body,pages,i+1,st);if(N>1)pg.appendChild(nav);body.appendChild(pg)}
+  bookShow(pages[st.pg]);
+  /* よこにはらうと、めくる */let sx=null,sy=0;body.onpointerdown=e=>{sx=e.clientX;sy=e.clientY};body.onpointerup=e=>{if(sx==null)return;const dx=e.clientX-sx,dy=e.clientY-sy;sx=null;if(Math.abs(dx)>60&&Math.abs(dx)>Math.abs(dy)*1.6)memFlip(body,pages,st.pg+(dx<0?1:-1),st)};body.onpointercancel=()=>{sx=null}}
+function bookShow(pg){if(pg&&pg._show){const f=pg._show;pg._show=null;f()}}
+function memFlip(body,pages,to,st){st=st||MEMBK;if(to<0||to>=pages.length||to===st.pg||MEMFLIP)return;const from=st.pg,old=pages[from],nw=pages[to],fw=to>from;sfx('page');st.pg=to;
   const red=typeof uiReduced==='function'&&uiReduced();body.scrollTop=0;
-  const show=()=>{old.hidden=true;nw.hidden=false};if(red){show();return}
+  const show=()=>{old.hidden=true;nw.hidden=false;bookShow(nw)};if(red){show();return}
   const cl=(fw?old:nw).cloneNode(true);cl.hidden=false;cl.classList.add('mflip');cl.setAttribute('aria-hidden','true');cl.style.cssText='position:absolute;left:'+old.offsetLeft+'px;top:'+old.offsetTop+'px;width:'+old.offsetWidth+'px;z-index:3;transform-origin:0 0;pointer-events:none;animation:'+(fw?'mflipF':'mflipB')+' .42s steps(1) both';
   if(fw)show();body.appendChild(cl);MEMFLIP=1;setTimeout(()=>{cl.remove();if(!fw)show();MEMFLIP=0},430)}
 /* スポットの代表の家具（アイコンにする）：名前で書き、なければ、そのスポットのもとの物 */

@@ -22,10 +22,11 @@ const assert=require('node:assert/strict');
     S.dy=null;dyKill(a,'');dyGuard(c);const low=dyBest({k:S.dy.k,g:S.dy.g});/* だれも2点にとどかない */
     S.dy=null;S.ns={n:2,kill:1,lost:[],hurt:0,broke:0,boss:0};dyKill(c,'');dyGuard(b);dyGuard(b);b.fun=50;const m0=(S.memo||[]).length;diaryClose();
     const L=S.diary[S.diary.length-1],body=document.querySelector('#sheetBody');
-    return new Promise(res=>setTimeout(()=>res(JSON.stringify({one:one&&one.nm,tie:tie&&tie.nm,low,b:b.name,a:a.name,fun:b.fun,mvp:L.mvp&&L.mvp.nm,memo:(S.memo||[]).slice(m0).map(x=>x[2]),txt:body.querySelector('.dyMvp')&&body.querySelector('.dyMvp').textContent,first:[...body.children].filter(c=>!c.classList.contains('dyE'))[0].className,stamp:!!body.querySelector('.dyMvp .ustamp')})),700))})()`));
+    {const v=[...body.querySelectorAll('.mpg')].find(x=>!x.hidden),nx=v&&!v.querySelector('.dyMvp')&&v.querySelector('.mnx');if(nx)nx.click()}/* 日記は本：かつやくのページへめくる */
+    return new Promise(res=>setTimeout(()=>res(JSON.stringify({one:one&&one.nm,tie:tie&&tie.nm,low,b:b.name,a:a.name,fun:b.fun,mvp:L.mvp&&L.mvp.nm,memo:(S.memo||[]).slice(m0).map(x=>x[2]),txt:body.querySelector('.dyMvp')&&body.querySelector('.dyMvp').textContent,first:(()=>{const m=body.querySelector('.dyMvp'),pg=m&&m.closest('.mpg'),i=[...body.querySelectorAll(':scope>.mpg')].indexOf(pg);return pg&&pg.firstElementChild===m&&i===1&&!!body.querySelector(':scope>.mpg .dyE')&&!pg.hidden?'dyMvp':''})(),stamp:!!body.querySelector('.dyMvp .ustamp')})),700))})()`));
   assert.equal(mv.one,mv.b,'guards count as points');assert.equal(mv.tie,mv.a,'tie goes to more kills');assert.equal(mv.low,null,'under 2 points: nobody');
   assert.equal(mv.mvp,mv.b);assert.equal(mv.fun,60,'fun +10');assert.ok(mv.memo.some(t=>t.includes('ゆうべのかつやく')),'memo');
-  assert.ok(/2回まもった/.test(mv.txt),'mvp text '+mv.txt);assert.ok(/dyMvp/.test(mv.first),'mvp is at the top, under the picture diary');assert.ok(mv.stamp,'stamp');
+  assert.ok(/2回まもった/.test(mv.txt),'mvp text '+mv.txt);assert.ok(/dyMvp/.test(mv.first),'mvp opens the next page after the picture diary');assert.ok(mv.stamp,'stamp');
   console.log('Diary: last night MVP');
   /* 2回めの朝：ゆうべの守りを2回しまわない。書くことがなければ、日記をふやさない */
   const n2=JSON.parse(await run(`(()=>{closeSheet();const n=S.diary.length;diaryClose();return JSON.stringify({n,m:S.diary.length,sheet})})()`));
