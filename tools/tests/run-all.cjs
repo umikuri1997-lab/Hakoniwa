@@ -8,7 +8,8 @@ const serve=require('../sim/serve.cjs'),fs=require('fs'),path=require('path'),{s
 const root=path.resolve(__dirname,'../..');
 const cp=require('child_process'),ALL=fs.readdirSync(__dirname).filter(f=>f.endsWith('.cjs')&&f!=='run-all.cjs').sort();
 /* かえた所にかかわるテスト：くらべる先（origin/main）から、いまの作業（まだコミットしていない所も）までにかわった
-   js/*.js の行の、関数・変数の名前（その行で作る名前と、その行をふくむ関数の名前）が出てくるテスト。
+   js/*.js の行の、関数・変数の名前（その行で作る関数と、行のはじめで作る変数の名前・その行をふくむ関数の名前）が出てくるテストと、
+   かえたファイルと同じ名前のテスト（gear.js なら gear.cjs）。関数の中の変数（back・box・row など）は見ない（ふつうの言葉なので、関係のないテストが大量にえらばれた）。
    CHMANY 本より多くのテストに出てくる名前は、よく使う名前なので見ない。かえたテストそのものも入れる。 */
 const CHMANY=20;
 function changedTests(base){
@@ -20,11 +21,12 @@ function changedTests(base){
   for(const f of files){
     if(f.startsWith('tools/tests/')&&src[f.slice(12)])add(f.slice(12),'テストをかえた');
     if(!/^js\/[^/]+\.js$/.test(f)||!fs.existsSync(path.join(root,f)))continue;
+    {const t=path.basename(f,'.js')+'.cjs';if(src[t])add(t,f)}/* かえたファイルと同じ名前のテスト */
     const txt=fs.readFileSync(path.join(root,f),'utf8').split('\n'),d=git('diff -U0 '+base+' -- '+f);
     const hunks=[...d.matchAll(/^@@ -\d+(?:,\d+)? \+(\d+)(?:,(\d+))? @@/gm)];
     if(!hunks.length)hunks.push([0,'1',String(txt.length)]);/* まだ入れていないファイルは、ぜんぶ */
     for(const m of hunks){const s=+m[1],n=m[2]===undefined?1:+m[2];
-      for(let i=Math.max(0,s-1);i<s-1+Math.max(n,1)&&i<txt.length;i++)for(const k of txt[i].matchAll(/(?:function\s+|(?:const|let|var)\s+)([A-Za-z_$][\w$]{2,})/g))names.add(k[1]);
+      for(let i=Math.max(0,s-1);i<s-1+Math.max(n,1)&&i<txt.length;i++)for(const k of txt[i].matchAll(/(?:\bfunction\s+|^(?:const|let|var)\s+)([A-Za-z_$][\w$]{2,})/g))names.add(k[1]);
       for(let i=s-2;i>=0;i--){const k=txt[i].match(/^(?:async\s+)?function\s+([\w$]+)|^(?:const|let|var)\s+([\w$]+)\s*=/);if(k){names.add(k[1]||k[2]);break}}}
   }
   for(const t of names){const re=new RegExp('\\b'+t.replace(/\$/g,'\\$')+'\\b'),h=ALL.filter(f=>re.test(src[f]));if(h.length<=CHMANY)h.forEach(f=>add(f,t))}

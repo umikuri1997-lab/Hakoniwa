@@ -43,7 +43,7 @@ function tryExpandSacredLegacy(state){
   migrateSacredFootprint3(state);
 }
 function sacredNoBuild(j,id){if(!S||WD!==0||S.free||S.sacredRoot==null)return false;const s=fieldStump(S.sacredRoot);if(id&&BL[id]&&BL[id].floor&&BL[id].kind==='block')return SACREDBASE.some(d=>s+d===j);/* 道・床は、木の根もとのマスだけことわる（木が育っても、上の絵が道にかかるだけ） */if(sacredReserved(j))return true;return Math.abs(j%W-s%W)<=1&&Math.abs((j/W|0)-(s/W|0))<=1}/* 切り株のまわり1マスにも、物を置かない */
-const SACREDBASE=[0,-1];/* 切り株・木の根もと（fieldStump からのずれ） */
+const SACREDBASE=[0,-1,-W,-W-1];/* 切り株・木の根もと（fieldStump からのずれ）。幹は4×4のまん中なので、まん中の2×2。だれも通れない（STUMPB） */
 function sacredReserved(j){return !!S&&WD===0&&!S.free&&S.sacredRoot!=null&&sacredCells(S.sacredRoot).includes(j);}
 const sacredQuestIndex=id=>QUESTS1.findIndex(q=>q.id===id||!!q.fieldParts&&q.fieldParts.includes(id));
 function sacredCompleted(id){const i=sacredQuestIndex(id);return fieldStoryDone(id)||i>=0&&S.quest>i&&S.qStory!==i;}

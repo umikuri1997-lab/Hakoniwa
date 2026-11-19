@@ -51,6 +51,8 @@ function sacredBody(r,now){
   return {...p,p:q,t,dx:dx+(p.step||0)*(p.sdir||0)*sacredEase(Math.min(1,t/.5)),dy};/* step：あいてのほうへ、ひと足よる（会話のふれあう動き） */
 }
 const SACRED_BEAT_MS={soil:1800,touch:1700,stone:2400,bump:2600,cover:1900,water:2600,runoff:2400,wind:2200,bud:3200,leaf:3600,grow:5000,omoishard:5200,reply:2200,hug:600,glow:2600,group:1300,sit:1500,quiet:1400,face:1000,lookup:1500,gaze:3800};
+const SACRED_AWAY=new Set(['bud','gaze']);/* この動きのあいだは、会話のわくをしまって場面を見せる（dlgAway） */
+const sacredLineAway=cue=>String(cue||'').split('+').some(c=>c.startsWith('stree:')&&SACRED_AWAY.has(c.slice(6)));
 function sacredLineHold(cue){return String(cue||'').split('+').reduce((ms,c)=>Math.max(ms,c.startsWith('stree:')?(SACRED_BEAT_MS[c.slice(6)]||0):c.startsWith('vol:')&&typeof VOL_BEAT_MS!=='undefined'?(VOL_BEAT_MS[c.slice(4)]||0):c.startsWith('print:')&&typeof PRINT_BEAT_MS!=='undefined'?(PRINT_BEAT_MS[c.slice(6)]||0):0),0);}
 function sacredDirectedLines(step,a){
   const beats={tower:['group']};/* なかまの調べは、セリフの行に合図を書く */
@@ -83,7 +85,7 @@ function sacredBeat(c){
   if(c==='omoishard')omoiShardBeat(j,ms,d);/* なかよしの想い：3つのあかりが、かけらになる */
   if(c==='reply'){sacredStartEffect('reply',ms);sacredShot('face',cast,1.2);sfx('sacred');for(const r of cast)sacredScenePose(r,'storyListen',600000,{side:true,target:j});}
   if(c==='lookup'){/* フタバが木を見あげて、葉がゆれる（ひと呼吸） */sacredStartEffect('sway',ms);if(f){f.face=storyTreeX(j)>=f.x?1:-1;sacredScenePose(f,'storyListen',600000,{sit:true,side:true,target:j})}for(let i=0;i<3;i++)villageTimeout(()=>leafFX({x:storyTreeX(j)+(i-1)*.8,y:storyTreeY(j)-1.2}),i*350);sfx('sacred');d.waitUntil=performance.now()+ms;}
-  if(c==='gaze'&&f){/* フタバが芽によろこんではねてから、ひざをついて、じっと見る（ひと呼吸まつ） */const now=performance.now();JUMP.set(f,now);JOYU.set(f,now+900);f.face=storyTreeX(j)>=f.x?1:-1;sacredScenePose(f,'kneel',600000,{side:true,face:f.face,target:j});sacredShot('care',[f],1.4);d.waitUntil=performance.now()+ms;}
+  if(c==='gaze'&&f){/* フタバが芽によろこんではねてから、芽の前にしゃがみ、ほっぺに両手をあてて、みをのりだしてのぞきこむ（kneelGaze） */const now=performance.now();JUMP.set(f,now);JOYU.set(f,now+900);f.face=storyTreeX(j)>=f.x?1:-1;sacredScenePose(f,'kneelGaze',600000,{side:true,face:f.face,target:j,step:3,sdir:f.face});sacredShot('care',[f],1.4);d.waitUntil=performance.now()+ms;}
   if(c==='face')sacredShot('face',cast);
   if(c==='group'){d.effects.delete('hug');d.effects.delete('embrace');for(const r of cast)SACRED_POSES.delete(r);sacredShot('group',cast,1.7);}
   if(c==='hug'&&f&&S.nushi){d.waitUntil=performance.now()+8000;
@@ -117,5 +119,6 @@ function drawSacredCare(now){
   ctx.restore();
 }
 
+function sacredWaitEnd(){const d=sacredDirection();return Math.max(STAGEWAIT||0,d&&d.waitUntil||0)}/* 場面の動きがおわる時刻 */
 function sacredMotionPending(){if(performance.now()<STAGEWAIT)return true;const d=sacredDirection();return !!d&&performance.now()<(d.waitUntil||0);}
 function sacredResizeShot(){const q=sacredDirection()?.shot;if(!q)return;if(q.mode==='points')storyShot(q.points,{limit:q.limit,seconds:.6,full:q.full});else sacredShot(q.mode,q.cast,.6);}

@@ -117,7 +117,7 @@ function place(id,x,y){
     else{S.pt-=pc;rsvAdd(bm);/* 素材は、とっておく（せいれいが箱から運ぶ） */S.obj[j]='site';S.dyn[j]={build:id,p:0,need:b.time,mat:bm?Object.assign({},bm):undefined,got:{}};undoStack.push({j,id,pc,mat:bm});
       if(LADDERS.has(id))(S.rot||(S.rot={}))[j]=ladderDir(j);/* ハシゴの向き */
       else if(STAIRS.has(id)){const v=stairRot(id,j),d=SROT[v];(S.rot||(S.rot={}))[j]=v;if(d){const o=stairOut(j,d);S.obj[o]='site2';S.ref[o]=j}}/* 階段：向きをきめて、低いほうのマスも足場に */
-      else if(id==='statue'){for(const k of[j-1,j+1,j+W]){S.obj[k]='site2';S.ref[k]=j}}else setParts(id,j,'site2')}/* 足場のどのマスからでも、まわりから作業できる */
+      else if(id==='statue'){for(const k of[j-1,j+1,j+2,j+W]){S.obj[k]='site2';S.ref[k]=j}}else setParts(id,j,'site2')}/* 足場のどのマスからでも、まわりから作業できる */
     toast(b.kind==='plant'?'せいれいが植えにきてくれる':'せいれいが'+b.name+'を建てにきてくれる');
   }else{
     if(inv(id)<=0){toast(b.name+'が足りません','warn');return}/* 足りないときは、知らせるだけ（おそなえ箱は開かない） */
@@ -220,7 +220,7 @@ function finishBuild(j,r){
   if(TERRA.has(S.dyn[j]&&S.dyn[j].build)){const up=S.dyn[j].build==='mound';delete S.dyn[j];S.obj[j]='';S.hi[j]=up?Math.min(HMAX,(S.hi[j]|0)+1):Math.max(0,(S.hi[j]|0)-1);recount();dirty=true;burst(j,'block');if(r)addSpiritXp(2,r);return}/* けずる・もる：段差の高さをかえる */
   const d=S.dyn[j],id=d.build,fix=!!d.ruin;/* こわれた神殿を直した */if(!d.mat&&BL[id].mat&&id!=='tower')(S.freeB||(S.freeB={}))[j]=1;/* ただで建てた（素材を使わなかった） */delete S.dyn[j];S.obj[j]=id;noteQuestPlacement(id,j);setParts(id,j,'part');if(STAIRS.has(id)){const d=stairDir(j);if(d>0){const o=stairOut(j,d);S.obj[o]='part';S.ref[o]=j}}/* 階段：低いほうのマス */if(BL[id].hp)S.hp[j]=BL[id].hp;if(BL[id].dyn)S.dyn[j]={g:0};
   recount();burst(j,'furn');if(r){addSpiritXp(4,r);r.made=(r.made||0)+1}if(fix)toast(BL[id].name+'が直った！','good');else{kurashi('b:'+id,['🏠','はじめて'+BL[id].name+'が建った']);toast(BL[id].name+'が建った！','good')}checkQuest();
-  if(id==='statue'){S.obj[j-1]='obox';S.obj[j+1]='board';S.obj[j+2]='part';S.ref[j+2]=j+1;S.obj[j+W]='altar';recount();burst(j-1,'furn');burst(j+1,'furn')}
+  if(id==='statue'){const b=boardFree(j+3)?j+2:j+1;/* 依頼ボードは、神殿から2つ右・3つ右（絵のある所）。右がどうしてもあかないときだけ、1つ右から */S.obj[j-1]='obox';if(b===j+2){S.obj[j+1]='part';S.ref[j+1]=j}S.obj[b]='board';delete S.ref[b];S.obj[b+1]='part';S.ref[b+1]=b;S.obj[j+W]='altar';S.flags.board3=1;recount();burst(j-1,'furn');burst(b,'furn')}
   if(id==='tower'&&!S.cleared){if(WD===1){if(shLeft()>=1)S.usedSh=(S.usedSh||0)+1;/* かけらを台座にはめる */S.finalNight=true;memo('moonn','守護の台座が建った。最後の夜がくる');setTimeout(()=>toast('守護の台座が光りはじめた…！ 今夜、オオカゲたちがおしよせてくる','warn'),900)}else{memo('grass','御神木が育った');setTimeout(()=>toast('御神木が育った','good'),900)}finalCheck()}/* ヌシ様の前に、きびしい最後の夜 */
 }
 function finishCraft(o,r){

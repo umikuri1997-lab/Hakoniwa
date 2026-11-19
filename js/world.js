@@ -31,7 +31,7 @@ let S=null;
 const resv=new Map();
 let RUINT=-1/* こわれた神殿（直している途中もふくむ）のマス。recount で作る */,STATUE=-1,OBOX=-1,BOARD=-1,counts={},LIGHTS=[],HOTL=[]/* ほたるの草むらのマス */,DRUMS=[]/* 合図の太鼓のマス */,JARS=[],COMPS=[],LITP=[],STELES=[],LURES=[],TOWERS=[],ENVE={},NEARMILL=new Set(),NEARSUI=new Set(),STUMPB=new Set(),NEARVANE=new Set(),NEARCART=new Set(),NEARJORO=new Set(),NEARMIZU=new Set()/* 苔むした石の水ばちのまわり5マス：芽が、植えたその日に育つ */,NEARSIGN=new Set(),NEARPARA=new Set(),SPOTJ=new Map(),SPOTM=new Map(),SPOTI=[],RUGC=new Map(),RFC=new Map(),ENVG=null,REV=new Set(),ATTR={},BASEPCT=0,GRASSN=0;
 function newState(w){w=w||0;
-  const s={v:8,mig:10,box:{},pile:{},rsv:{},flags:{ovenRot4:1,wbIns1:1,wbFurn1:1,wbYard1:1,cook2:1,tableSub1:1,bread2:1,talkq1:1,ovenW1:1,swingRot2:1,box1:1,gup1:1,gup5:1,stat10:1,tokui1:1,stat5:1,trapSub1:1,board2x1:1,bondX2:1,spring2:1,juice1:1,berryHalf:1,berryHalf2:1,land2:1,land3:1,land4:1,arrow0:1,q3ins:1,qmerge1:1,qsplit1:1,earthMerge1:1,fieldMerge1:1,tutSub1:1,farmFirst1:1,omoiIns1:1,warmIns1:1,story3ins1:1,vgift1:1,companionStory:1,fieldStoryV2:1,sacredStoryV1:1,sacredFootprint3:1,sacredFootprint4:1,sacredLeft1:1,fieldBuild1:1,trfit1:1,cookfit1:1,watch5:1,xp12:1,veins1:1,ore2:1,noBerry1:1,yogan2:1,bwall1:1,misu1:1,fl2v1:1,no2f1:1,vq1:1,fog1:1,ruinGap1:1,festq2:1,shin3:1,shinGone1:1,noStable1:1,noTool1:1,rec3:1,ruinTemple1:1,vpath2:1},placed:{},feat:{build:true},inv:{},orders:[],enemyOn:false,nights:0,godGone:false,godShown:false,nushi:null,
+  const s={v:8,mig:10,box:{},pile:{},rsv:{},flags:{ovenRot4:1,wbIns1:1,wbFurn1:1,wbYard1:1,cook2:1,tableSub1:1,bread2:1,talkq1:1,ovenW1:1,swingRot2:1,box1:1,gup1:1,gup5:1,stat10:1,tokui1:1,stat5:1,trapSub1:1,board2x1:1,board3:1,bondX2:1,spring2:1,juice1:1,berryHalf:1,berryHalf2:1,land2:1,land3:1,land4:1,arrow0:1,q3ins:1,qmerge1:1,qsplit1:1,earthMerge1:1,fieldMerge1:1,tutSub1:1,farmFirst1:1,omoiIns1:1,warmIns1:1,story3ins1:1,vgift1:1,companionStory:1,fieldStoryV2:1,sacredStoryV1:1,sacredFootprint3:1,sacredFootprint4:1,sacredLeft1:1,fieldBuild1:1,trfit1:1,cookfit1:1,watch5:1,xp12:1,veins1:1,ore2:1,noBerry1:1,yogan2:1,bwall1:1,misu1:1,fl2v1:1,no2f1:1,vq1:1,fog1:1,ruinGap1:1,festq2:1,shin3:1,shinGone1:1,noStable1:1,noTool1:1,rec3:1,ruinTemple1:1,vpath2:1},placed:{},feat:{build:true},inv:{},orders:[],enemyOn:false,nights:0,godGone:false,godShown:false,nushi:null,
     lv:1,bossKills:0,nightHurt:0,nightHad:false,wave:null,lastWarn:0,
     ref:{},ground:new Array(W*H).fill(0),floor:new Array(W*H).fill(''),obj:new Array(W*H).fill(''),dyn:{},hp:{},
     res:[],enemies:[],pt:25,totalPt:0,food:0,fs:{},cseed:{imo:4},crops:{imo:true},mat:{wood:0,stone:0},regrow:[],t:w===0?15*60:12*60,/* 草原は15時からはじまる */speed:1,
@@ -45,11 +45,11 @@ function newState(w){w=w||0;
 }
 /* こわれた神殿：まん中の道（x=CX）の北のはしの先に置く。像のマスと左右（おそなえ箱・依頼ボードになる所）、手前（台座になる所）の4マス。
    水・浅瀬・道や床・人の作った物があるときや、高さがそろわないときは、北のはしに近い所をさがす。自然の物（木・岩・草）はどける */
-function templeRuinCells(j){return [j,j-1,j+1,j+W,j+2]}/* 神殿・おそなえ箱・依頼ボード（2マス）・台 */
+function templeRuinCells(j){return [j,j-1,j+1,j+W,j+2,j+3]}/* 神殿・おそなえ箱・神殿の右（神殿の絵の下）・台・依頼ボード（2マス、j+2 と j+3。絵のある所） */
 const RUIN_CLEAR=new Set(['deadtree','rock','bamboo','berry','ntree','takenoko','kinoko']),ruinClearable=o=>!o||RUIN_CLEAR.has(o)||WEEDS.has(o);/* こわれた神殿のためにどけてよい自然の物 */
 function templeRuinOK(s,j){const x=j%W,y=(j/W)|0;if(x<2||x>W-3||y<2||y>H-3)return false;const h=s.hi?s.hi[j]|0:0;
   for(const k of templeRuinCells(j)){const o=s.obj[k];if(s.ground[k]||s.floor[k]||(s.hi?s.hi[k]|0:0)!==h)return false;if(!ruinClearable(o))return false}
-  for(let dy=-2;dy<=1;dy++)for(let dx=-2;dx<=2;dx++)if(s.ground[j+dy*W+dx]===1)return false;/* 絵は2マス上・左右へはみ出すので、そこも水でない所 */return true}
+  for(let dy=-2;dy<=1;dy++)for(let dx=-2;dx<=3;dx++)if(s.ground[j+dy*W+dx]===1)return false;/* 絵は2マス上・左右へはみ出すので、そこも水でない所 */return true}
 function templeRuinPlace(s){if(s.obj.includes('statue')||s.obj.includes('statueb'))return -1;
   let y=CY;while(y>1&&s.floor[(y-1)*W+CX])y--;/* 道の北のはし */
   const ty=y-2;let best=-1,bd=1e9;for(let dy=-12;dy<=12;dy++)for(let dx=-12;dx<=12;dx++){const j=(ty+dy)*W+CX+dx;if(!templeRuinOK(s,j))continue;const d=Math.hypot(dx,dy*2);if(d<bd){bd=d;best=j}}/* 道のはしからずれるときは、北や南より、よこ */
@@ -62,6 +62,15 @@ function boardMigrate(){/* 依頼ボードは神殿の右の2マス。前のセ�
   if(S.obj[k]&&!ruinClearable(S.obj[k]))removeAt(k%W,(k/W)|0);/* おいてあった物は、もちものへ */
   if(S.obj[k]&&!ruinClearable(S.obj[k]))return;
   S.obj[k]=STATUE>=0?'part':site?'site2':'part';S.ref[k]=STATUE>=0?t+1:t;delete S.dyn[k];delete S.hp[k];if(S.hp)delete S.hp['n'+k];S.flags.board2x1=1;recount()}
+function boardFree(k){/* 依頼ボードの右のマス（神殿から3つ右）をあける。どかせない物は、もちものへ。水ならあけられない */
+  if(S.ground[k]===1)return false;const mine=()=>(S.obj[k]==='part'||S.obj[k]==='site2')&&S.ref[k]===k-3;/* もう神殿のマス */if(S.obj[k]&&!ruinClearable(S.obj[k])&&!mine())removeAt(k%W,(k/W)|0);
+  if(S.obj[k]&&!ruinClearable(S.obj[k])&&!mine())return false;delete S.dyn[k];delete S.hp[k];if(S.hp)delete S.hp['n'+k];return true}
+function boardShift(){/* 依頼ボードの2マスを、絵のある所（神殿から2つ右・3つ右）へ。神殿のすぐ右は、神殿の絵の下なので神殿のマス（前は、ボードの絵の右はしの下を歩けた）。1回だけ（あけられなければ、つぎの読みこみでまた） */
+  if(S.flags.board3)return;const t=STATUE>=0?STATUE:RUINT;if(t<0)return;const k=t+3;
+  if(STATUE>=0){if(S.obj[t+1]!=='board'||S.ground[t+2]===1){S.flags.board3=1;return}if(!boardFree(k))return;
+    const dy=S.dyn[t+1],hp=S.hp[t+1];S.obj[t+1]='part';S.ref[t+1]=t;delete S.dyn[t+1];delete S.hp[t+1];S.obj[t+2]='board';delete S.ref[t+2];if(dy)S.dyn[t+2]=dy;if(hp!=null)S.hp[t+2]=hp;S.obj[k]='part';S.ref[k]=t+2}
+  else{if(!boardFree(k))return;S.obj[k]=S.obj[t]==='site'?'site2':'part';S.ref[k]=t}/* こわれた神殿：直すまでは神殿のマス */
+  S.flags.board3=1;recount()}
 function templeRuinMigrate(){if(S.flags.ruinTemple1)return;S.flags.ruinTemple1=1;if(STATUE<0&&!statueSite()&&templeRuinPlace(S)>=0)recount()}/* 神殿を建てる前の古いセーブに、こわれた神殿を1回だけ（recount のあとによぶ） */
 /* 「しらべる」でこわれた神殿をタップ：せいれいが直しにいく（神殿を建てる足場と同じ。絵は、こわれた神殿のまま） */
 function templeRuinTap(j){j=anc(j);if(S.obj[j]!=='statueb')return false;
