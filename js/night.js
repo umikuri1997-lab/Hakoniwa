@@ -46,7 +46,7 @@ function doSummon(){
     r=mkRes(S,name,sm.elem,sp[0]+.5,sp[1]+.5);toast(ELEM[sm.elem].name+'のせいれい「'+name+'」がやってきた！','good')
     if(sm.elem==='fire'&&S.crops&&!S.crops.mugi){S.crops.mugi=S.crops.tomato=true}}/* 火のせいれいが来たら、パン・スープの作物がふえる */
   if(STATUE>=0&&S.obj[STATUE+W]==='altar'){r.x=STATUE%W+.5;r.y=((STATUE/W)|0)+1.12;sp=[STATUE%W,((STATUE/W)|0)+1]}/* 神殿のまんなか（台座の上）からあらわれる */
-  r.hunger=750;r.spawnT=performance.now();if(!r.came)r.came=dayNo();if(!r.back)S.lastCame=dayNo();if(!sm.mebuki)S.summonDay=callDay();S.res.push(r);if(!r.back)simNote(r);S.summons=(S.summons||0)+1;memo(r.back?'🌱':'🌟',r.back?r.name+'がもどってきた':r.name+'（'+ELEM[r.elem].name+'のせいれい）が村にやってきた');logEv(r.back?r.name+'がもどってきた':r.name+'（'+ELEM[r.elem].name+'のせいれい）がやってきた');const welcome={id:r.id,t:Infinity};NEWQ.push(welcome);HOLD.add(r.id);welcomeNear(r,welcome);/* なかまの紹介：みんなは集まらない。そばにいる子だけが、その場でよろこぶ *//* ステータスをとじるまで、わーいのポーズで止まる */
+  r.hunger=750;r.spawnT=performance.now();if(!r.came)r.came=dayNo();if(!r.back)S.lastCame=dayNo();if(!sm.mebuki)S.summonDay=callDay();S.res.push(r);if(!r.back&&typeof letterQ==='function')letterQ(r,'new')/* はじめましての手紙 */;if(!r.back)simNote(r);S.summons=(S.summons||0)+1;memo(r.back?'🌱':'🌟',r.back?r.name+'がもどってきた':r.name+'（'+ELEM[r.elem].name+'のせいれい）が村にやってきた');logEv(r.back?r.name+'がもどってきた':r.name+'（'+ELEM[r.elem].name+'のせいれい）がやってきた');const welcome={id:r.id,t:Infinity};NEWQ.push(welcome);HOLD.add(r.id);welcomeNear(r,welcome);/* なかまの紹介：みんなは集まらない。そばにいる子だけが、その場でよろこぶ *//* ステータスをとじるまで、わーいのポーズで止まる */
   spawnFX(sp[0],sp[1],ELEM[r.elem].col);centerOn((sp[0]+.5)*TS,(sp[1]+.5)*TS);quietBeat(2400,'arrive');hdBig(6000);recount();
 }
 
