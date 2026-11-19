@@ -6,5 +6,5 @@ from natcommon import notex,flat
 ID='crittonbo#w1';PX=32;LW=1;GRAD=False;SHADE=[(4.5,-1.2),(9,-2.5)];ELEV=15;BOTTOM=58
 VIEWS=[('crittonbo#w1',0)]
 def PARTS():
-    p=P('tonbo','model',('animals/tonbo.glb',0.5,0.5,0,0.3,0,0),(255,255,255),on=('ground',),note='地面に立つ');p.warp=crit_rig.warp('tonbo','w1')
+    p=P('tonbo','model',('animals/tonbo.glb',0.5,0.5,0,0.3,0,0),(255,255,255),on=('ground',),note='地面に立つ');p.warp=crit_rig.warp('tonbo','w1');p.paint=crit_rig.paint('tonbo')
     return[flat(notex(p))]+[notex(P('小物',k,d,c,on=('ground',),note='手にもつ')) for k,d,c in crit_rig.props('tonbo','w1')]

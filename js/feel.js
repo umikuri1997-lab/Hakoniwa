@@ -3,7 +3,7 @@
    温度：白い息（feelAir）／火のゆらめき（feelFlick）／夏のかげろう・セミ／冬の家の中のぬくもり（feelWarm）
    質感：足音（feelStep・feelStepSnd）／足もとの反応（波紋・土ぼこり・雪の足あと・草のかけら・ふんだ花がゆれる feelKick）／雨のぬれ（水面の波紋・のきのしずく・地面のはね・水たまり）／場所の音（feelAmb：川・池・温泉・火・葉・セミ）
    絵は、1マス64ドットのドット絵を1回だけ作って（feelArt）、ならべる。マスごとの出る・出ないは、マスの番号から決まる（hash）ので、しまわない */
-const FEEL_SNOWP=.7;/* 雪がつもりきったとき、雪のかたまりが出る地面のわりあい */
+const FEEL_SNOWP=1.6,SNOWFULL0=.3;/* 雪のかたまりは、つもるほどふえる。SNOWFULL0 より多くつもると、地面ぜんたいが、だんだん白くなる（一面の雪） */
 const FEEL_LEAFP=.75;/* 落ち葉がたまりきったとき、木のまわりで落ち葉が出るわりあい */
 const FEEL_PUDP=.16,FEEL_PUDG=.06;/* 水たまりが出るわりあい：乾いた地面と道・草地 */
 const FEEL_DRYH=13;/* 雨のつぎの日、水たまりがかわききる時刻 */
@@ -18,7 +18,10 @@ const FEELFS=new WeakMap(),FEELKICK=new Map();
 let FEELC={snow:0,leaf:0,pud:0,dew:0,mist:0,heat:0,cold:false,rain:false,wet:false,any:false};
 
 function feelSeasonDay(){return (Math.max(0,dayNo()-1))%SEASONDAYS}
-function snowCover(){if(!S||seasonNow()!==3)return 0;return S.rain?1:Math.min(1,.35+feelSeasonDay()*.2)}/* 冬：日がたつほどつもり、雪の日はいっぱい */
+const SNOWUP=300,SNOWMW=2880,SNOWMS=240;/* 雪がつもりきるまで（村の分。雪の日だけつもる）・冬に、ふらない日にとけきるまで・冬でなければ、とけきるまで */
+function snowTick(){if(!S)return;const t=S.t,d=S.snowT==null?0:Math.max(0,Math.min(1440,t-S.snowT));S.snowT=t;if(!d)return;const a=S.snowA||0;
+  if(typeof snowNow==='function'&&snowNow())S.snowA=Math.min(1,a+d/SNOWUP);else if(a>0)S.snowA=Math.max(0,a-d/(seasonNow()===3?SNOWMW:SNOWMS))}/* 雪は、ふっているあいだに、だんだんつもる。やむと、ゆっくりとける */
+function snowCover(){return S&&S.snowA||0}/* 0〜1：つもった雪（S.snowA） */
 function leafCover(){if(!S||seasonNow()!==2)return 0;return Math.min(1,.3+feelSeasonDay()*.15)}/* 秋：日がたつほど、たまる */
 function puddleLv(){if(!S||seasonNow()===3)return 0;const h=hour();if(S.rain)return h<6?1:Math.min(1,.25+(h-6)/4);/* 雨の日：朝からふえる */
   if(S.wetD===dayNo()&&h>=6&&h<FEEL_DRYH)return 1-(h-6)/(FEEL_DRYH-6);return 0}/* 雨のつぎの日：昼にかけてかわく */
@@ -41,6 +44,9 @@ function feelBlob(g,ox,oy,w,h,cols,seed){/* ドットのかたまり：行ごと
 function feelArt(){if(FEELA)return FEELA;const c=document.createElement('canvas');c.width=512;c.height=192;const g=c.getContext('2d');const A={c,snow:[],leaf:[],pud:[],rip:[],mist:null,print:null,splash:[]};
   /* 雪のかたまり3つ（白・うすい水色のかげ） */
   [[52,22],[40,18],[30,14]].forEach(([w,h],n)=>{const ox=n*64+2,oy=2;feelBlob(g,ox,oy,w,h,['#ffffff','#f3f8ff','#cfdef0'],n*91+7);g.fillStyle='#ffffff';g.fillRect(ox+w*.3|0,oy+2,6,2);A.snow.push([ox,oy,w,h])});
+  {const t=document.createElement('canvas');t.width=t.height=64;const q=t.getContext('2d');q.fillStyle='#f2f6fc';q.fillRect(0,0,64,64);/* 一面の雪：1マス64ドットの、つながる雪の面（白に、うすい水色のくぼみと、白い光のドット） */
+    for(let k=0;k<26;k++){const x=((hash(k*7+3)*32)|0)*2,y=((hash(k*11+5)*32)|0)*2,w=(2+((hash(k*13)*3)|0))*2;q.fillStyle=k%3?'#e2ebf6':'#d6e2f1';q.fillRect(x,y,Math.min(w,64-x),2);if(k%2){q.fillStyle='#ffffff';q.fillRect(x,Math.max(0,y-2),Math.min(w-2,64-x),2)}}
+    A.snowT=t}
   /* 落ち葉のかたまり3つ：ちらばった葉のドット */
   for(let n=0;n<3;n++){const ox=n*64+2,oy=34,w=[56,46,34][n],h=[26,22,16][n],C=['#f6a650','#ec6f45','#f5d25a','#e2884a','#c9603a'];
     for(let k=0;k<[46,32,20][n];k++){const a=hash(n*57+k*3)*6.283,d=Math.sqrt(hash(n*31+k*7)),x=Math.round((w/2+Math.cos(a)*d*(w/2-3))/2)*2,y=Math.round((h/2+Math.sin(a)*d*(h/2-2))/2)*2;g.fillStyle=C[(hash(n*13+k)*C.length)|0];g.fillRect(ox+x,oy+y,hash(k+n)>.35?4:2,hash(k*3+n)>.6?4:2)}A.leaf.push([ox,oy,w,h])}
@@ -65,7 +71,7 @@ const feelMelt=i=>FEELMELT.has(i)||FIREMELT.has(i);
 function fireMeltTick(){const d=callDay();if(d!==FIREDAY){FIREDAY=d;FIREMELT.clear()}if(snowCover()<=0)return;
   for(const r of S.res){if(r.elem!=='fire'||r.hidden)continue;const x=r.x|0,y=r.y|0,j=y*W+x;if(roomOf(j))continue;let w=FIREW.get(r);if(!w||w.j!==j){FIREW.set(r,{j,t:S.t});continue}if(w.done||S.t-w.t<FIRESTAY)continue;w.done=1;
     for(let dy=-FIRE_MR;dy<=FIRE_MR;dy++)for(let dx=-FIRE_MR;dx<=FIRE_MR;dx++){const X=x+dx,Y=y+dy;if(X>=0&&Y>=0&&X<W&&Y<H&&dx*dx+dy*dy<=FIRE_MR*FIRE_MR+1)FIREMELT.add(Y*W+X)}}}
-function feelPrep(now){fireMeltTick();const h=hour(),k=seasonNow(),C=FEELC;C.rain=!!S.rain&&!snowNow();C.wet=C.rain&&typeof stormNow==='function'&&stormNow();C.snow=snowCover();C.leaf=leafCover();C.pud=puddleLv();
+function feelPrep(now){snowTick();fireMeltTick();const h=hour(),k=seasonNow(),C=FEELC;C.rain=!!S.rain&&!snowNow();C.wet=C.rain&&typeof stormNow==='function'&&stormNow();C.snow=snowCover();C.leaf=leafCover();C.pud=puddleLv();
   C.dew=!S.rain&&k!==3&&h>=5&&h<8?Math.min(1,(h-5)/.6,(8-h)/.8):0;C.mist=!S.rain&&h>=4.8&&h<7.8?Math.min(1,(h-4.8)/.7,(7.8-h)/1):0;
   C.heat=k===1&&!S.rain&&h>=11&&h<15.5?Math.min(1,(h-11)/.5,(15.5-h)/.5):0;C.cold=k===3||(k!==1&&h>=4.5&&h<7);
   C.any=C.snow>0||C.leaf>0||C.pud>0||C.dew>0||C.rain||C.wet;
@@ -76,16 +82,20 @@ function feelPrep(now){fireMeltTick();const h=hour(),k=seasonNow(),C=FEELC;C.rai
   for(let i=FEELEV.length-1;i>=0;i--)if(now-FEELEV[i].t0>FEELEV[i].life)FEELEV.splice(i,1)}
 
 /* ---------- 地面の層（物・せいれいより下）。lifted：高い段のマスだけ（段差の絵のあとに描く） ---------- */
-function feelRow(y,x0,x1,now,lifted){const C=FEELC,A=feelArt(),c=ctx,near=cam.z>=FARZ*1.6;
+function snowPat(c,A){if(!A.snowP){A.snowP=c.createPattern(A.snowT,'repeat');try{A.snowP.setTransform(new DOMMatrix([.5,0,0,.5,0,0]))}catch(e){}}return A.snowP}
+function feelRow(y,x0,x1,now,lifted){const C=FEELC,A=feelArt(),c=ctx,near=cam.z>=FARZ*1.6,snowA=C.snow>SNOWFULL0?Math.min(1,(C.snow-SNOWFULL0)/(1-SNOWFULL0)):0;let run=-1,runE=0,runY=0;
+  const snowFlush=()=>{if(run<0)return;c.globalAlpha=snowA*.94;c.fillStyle=snowPat(c,A);c.fillRect(run,runY,runE-run,TS);c.globalAlpha=1;run=-1};
   if(C.any)for(let x=Math.max(0,x0);x<Math.min(W,x1);x++){const i=y*W+x,hi=hiAt(i);if(lifted?!hi:hi)continue;const gr=S.ground[i];if(S.fog&&fogAt(i))continue;const px=x*TS,py=y*TS-hi*LIFT;
     if(gr===1){if(C.rain&&near&&S.obj[i]!=='bridge'&&hash(i*7+1)<.55){const ph=(now/1100+hash(i*3+2))%1;feelPut(c,A,A.rip[Math.min(3,(ph*4)|0)],px+4+hash(i*5)*10,py+8+hash(i*11)*12)}continue}/* 雨：水面の波紋 */
-    if(gr===2||S.obj[i]||FEELIN.has(i)||RUGC.has(i))continue;const f=S.floor[i];if(f&&f!=='path'&&f!=='gravel'&&f!=='stone'&&f!=='brick')continue;/* 家の床・じゅうたんには出さない */
+    const o=S.obj[i];if(snowA>0&&gr!==2&&!FEELIN.has(i)&&!RUGC.has(i)&&o!=='farm'&&!(o==='part'&&S.obj[S.ref[i]]==='farm')&&!feelMelt(i)){const f=S.floor[i];if(!f||f==='path'||f==='gravel'||f==='stone'||f==='brick'){if(run>=0&&(runE!==px||runY!==py))snowFlush();if(run<0){run=px;runY=py}runE=px+TS}else snowFlush()}else snowFlush();/* 一面の雪：物の下・道の上も（家の中・床・畑・水・火のまわりはのぞく） */
+    if(gr===2||o||FEELIN.has(i)||RUGC.has(i))continue;const f=S.floor[i];if(f&&f!=='path'&&f!=='gravel'&&f!=='stone'&&f!=='brick')continue;/* 家の床・じゅうたんには出さない */
     if(C.snow>0&&!feelMelt(i)){const q=hash(i*13+5);if(q<C.snow*FEEL_SNOWP){const s=A.snow[(hash(i*3+1)*3)|0];c.globalAlpha=Math.min(1,.55+C.snow*.45);feelPut(c,A,s,px+(TS-s[2]/2)*hash(i*17+3),py+(TS-s[3]/2)*hash(i*19+7));c.globalAlpha=1}continue}
     if(C.leaf>0&&FEELTREE.has(i)&&hash(i*23+9)<C.leaf*FEEL_LEAFP){const s=A.leaf[(hash(i*3+1)*3)|0];feelPut(c,A,s,px+(TS-s[2]/2)*hash(i*17+3),py+(TS-s[3]/2)*hash(i*19+7))}
     if(C.pud>0){if(pudCell(i)){const n=C.pud>.66?2:C.pud>.33?1:0,s=A.pud[n],sx=px+(TS-s[2]/2)/2,sy=py+(TS-s[3]/2)/2+3;feelPut(c,A,s,sx,sy);
         if(C.rain&&near){const ph=(now/900+hash(i*3+2))%1;if(ph<.6){c.globalAlpha=.8;feelPut(c,A,A.rip[Math.min(1,(ph*3.4)|0)],sx+s[2]/4-9,sy+s[3]/4-4);c.globalAlpha=1}}}}
     if(C.wet&&near&&hash(i*37+2)<(f?.3:.12)){const tw=Math.sin(now/(260+hash(i*7+5)*200)+hash(i*9)*40);if(tw>.6){c.globalAlpha=Math.min(1,(tw-.6)*3)*(f?.75:.5);c.fillStyle='#eef6ff';const dx=Math.round(px+3+hash(i*47)*24),dy=Math.round(py+5+hash(i*53)*22);c.fillRect(dx,dy,2,1);if(tw>.9)c.fillRect(dx+(hash(i*59)<.5?-1:2),dy,1,1);c.globalAlpha=1}}/* あらし：ぬれた地面・道のつや（光る点がまたたく） */
     if(C.dew>0&&near&&!f&&REV.has(i)&&hash(i*31+4)<.3){const tw=Math.sin(now/420+hash(i*7)*40);if(tw>.55){c.globalAlpha=C.dew*Math.min(1,(tw-.55)*4);c.fillStyle='#f6fdff';const dx=Math.round(px+4+hash(i*41)*24),dy=Math.round(py+6+hash(i*43)*22);c.fillRect(dx,dy,1,1);if(tw>.85){c.fillRect(dx-1,dy,3,1);c.fillRect(dx,dy-1,1,3)}c.globalAlpha=1}}}
+  snowFlush();
   for(const e of FEELEV){if(e.ry!==y||(lifted?!e.hi:e.hi))continue;const u=(now-e.t0)/e.life,ex=e.x*TS,ey=e.y*TS-e.hi*LIFT;
     if(e.k==='rip'){c.globalAlpha=1-u*.4;feelPut(c,A,A.rip[Math.min(3,(u*4)|0)],ex-9,ey-4);c.globalAlpha=1}
     else if(e.k==='print'){if(C.snow<=0)continue;c.globalAlpha=u>.75?(1-u)*4:1;c.save();c.translate(ex,ey);if(e.f<0)c.scale(-1,1);feelPut(c,A,A.print,-4,-2);c.restore();c.globalAlpha=1}
@@ -95,22 +105,28 @@ function feelGround(now,x0,y0,x1,y1){if(!S)return;feelPrep(now);if(!FEELC.any&&!
 function feelLifted(add,x0,y0,x1,y1,now){if(!S||!S.hi||cam.z<FARZ||(!FEELC.any&&!FEELEV.length))return;for(let y=Math.max(0,y0);y<Math.min(H,y1);y++){let any=false;for(let x=Math.max(0,x0);x<Math.min(W,x1);x++)if(S.hi[y*W+x]){any=true;break}if(any)add(y-1+.0006,-1,null,()=>{const sm=ctx.imageSmoothingEnabled;ctx.imageSmoothingEnabled=false;feelRow(y,x0,x1,now,1);ctx.imageSmoothingEnabled=sm},-1)}}
 
 /* ---------- 木・岩の上の雪：チップの絵の、上のふちに白いドットをのせる（チップごとに1回だけ作る） ---------- */
-const FEELCAPS=new Set(['tree','ntree','fruit','deadtree','rock','boulder']);
+const FEELCAPS=new Set(['tree','ntree','fruit','deadtree','rock','boulder','berry','bamboo']);
 function feelCapOf(src,id){if(src._snow!==undefined)return src._snow;const im=chipImgs(src,id)[0];if(!im||!im.ok)return null;/* 絵が読みこみ中：あとでもう1回 */
   try{const w=src.w,h=src.h,t=document.createElement('canvas');t.width=w;t.height=h;const g=t.getContext('2d');g.drawImage(im,0,0,w,h);const d=g.getImageData(0,0,w,h).data,top=new Int16Array(w).fill(-1);
     for(let x=0;x<w;x++)for(let y=0;y<h;y++)if(d[(y*w+x)*4+3]>140){top[x]=y;break}
     g.clearRect(0,0,w,h);const Q=src.g===64?2:1;/* ゲームの1ドット */
     for(let x=0;x<w;x+=Q){const a=top[x];if(a<0)continue;const l=x>=Q*2?top[x-Q*2]:-1,r=x+Q*2<w?top[x+Q*2]:-1,sl=Math.max(l<0?99:Math.abs(l-a),r<0?99:Math.abs(r-a));if(sl>Q*5)continue;/* 切り立った横のふちには、つもらない */
       const th=(sl>Q*2?1:2+((hash(x*7+w)*2)|0))*Q,ay=Math.floor(a/Q)*Q;g.fillStyle='#ffffff';g.fillRect(x,ay,Q,th);g.fillStyle='#d3e0f1';g.fillRect(x,ay+th,Q,Q)}
+    const t2=document.createElement('canvas');t2.width=w;t2.height=h;const g2=t2.getContext('2d');/* つもりきったとき：葉のかたまりの上の面ぜんぶ（上が空いているドット）に、あつく */
+    for(let x=0;x<w;x+=Q)for(let y=Q;y<h*.85;y+=Q){const op=k=>d[(k*w+x)*4+3]>140;if(!op(y)||op(y-Q))continue;const th=(2+((hash(x*5+y*3+w)*2)|0))*Q;g2.fillStyle='#ffffff';g2.fillRect(x,y,Q,th);g2.fillStyle='#d3e0f1';g2.fillRect(x,y+th,Q,Q)}
+    g2.globalCompositeOperation='destination-in';g2.drawImage(im,0,0,w,h);t._thick=t2;
     t._ok=true;src._snow=t}catch(e){src._snow=null}return src._snow}
 function feelCap(c,o,i,x,y,g){const a=FEELC.snow;if(a<=0||!FEELCAPS.has(o))return;if(feelMelt(i))return;const ch=TREES.has(o)?plantChip(o,i,g):chipOf(o,i);if(!ch)return;const src=ch.src||ch,cap=feelCapOf(src,o);if(!cap)return;
-  const sm=c.imageSmoothingEnabled;c.imageSmoothingEnabled=false;c.save();c.globalAlpha*=Math.min(1,.4+a*.6);if(ch.flip){c.translate(2*x+ch.fw,0);c.scale(-1,1)}if(src.g===64)c.drawImage(cap,x+src.ax/2,y+src.ay/2,src.w/2,src.h/2);else c.drawImage(cap,x+src.ax,y+src.ay);c.restore();c.imageSmoothingEnabled=sm}
+  const sm=c.imageSmoothingEnabled;c.imageSmoothingEnabled=false;c.save();const g0=c.globalAlpha,fa=a>SNOWFULL0?Math.min(1,(a-SNOWFULL0)/(1-SNOWFULL0)):0;c.globalAlpha=g0*Math.min(1,a*2.5);if(ch.flip){c.translate(2*x+ch.fw,0);c.scale(-1,1)}const put=im=>{if(src.g===64)c.drawImage(im,x+src.ax/2,y+src.ay/2,src.w/2,src.h/2);else c.drawImage(im,x+src.ax,y+src.ay)};put(cap);if(fa>0&&cap._thick){c.globalAlpha=g0*fa;put(cap._thick)}c.restore();c.imageSmoothingEnabled=sm}
 /* 屋根の雪：屋根の形の中に、よこに長い雪のすじをちらす（家ごとに1回だけ作る。1マス32ドットの細かさ） */
 function feelRoof(c,h,R,A){const a=FEELC.snow;if(a<=0||!R||!R.cv||!R.cv.width)return;let sn=h._sn;if(!sn||sn.R!==R){const w=Math.ceil(R.cv.width/R.sc),hh=Math.ceil(R.cv.height/R.sc),t=document.createElement('canvas');t.width=w;t.height=hh;const g=t.getContext('2d'),sd=h.x0*7+h.y0*13;
     {const n=Math.max(4,Math.round(w*hh/900));for(let k=0;k<n;k++){const bw=18+((hash(sd+k*7)*22)|0),bh=6+((hash(sd+k*11)*5)|0),bx=Math.round(hash(sd+k*13+1)*(w-bw)),by=Math.round(hash(sd+k*17+2)*(hh-bh));/* ふんわりした雪のかたまりを、屋根のあちこちに */
       for(let y=0;y<bh;y++){const u=(y+.5)/bh*2-1,hw=Math.sqrt(Math.max(0,1-u*u))*bw/2,l=Math.round(bw/2-hw+(hash(sd+k*3+y*5)-.5)*3),r=Math.round(bw/2+hw+(hash(sd+k*5+y*7)-.5)*3);if(r<=l)continue;g.fillStyle=y>=bh-1?'#cfdef0':y<bh*.45?'#ffffff':'#f3f8ff';g.fillRect(bx+l,by+y,r-l,1)}}}
-    g.globalCompositeOperation='destination-in';g.drawImage(R.cv,0,0,w,hh);sn=h._sn={R,cv:t}}
-  const sm=c.imageSmoothingEnabled;c.imageSmoothingEnabled=false;c.globalAlpha=A*Math.min(1,.35+a*.65);c.drawImage(sn.cv,R.ox,R.oy);c.globalAlpha=A;c.imageSmoothingEnabled=sm}
+    g.globalCompositeOperation='destination-in';g.drawImage(R.cv,0,0,w,hh);
+    const f=document.createElement('canvas');f.width=w;f.height=hh;const q=f.getContext('2d'),ST=feelArt().snowT;for(let y=0;y<hh;y+=32)for(let x=0;x<w;x+=32)q.drawImage(ST,0,0,64,64,x,y,32,32);/* 屋根いっぱいの雪（つもりきったとき） */
+    q.fillStyle='#cfdef0';for(let y=12;y<hh;y+=16)q.fillRect(0,y,w,1);/* 屋根の段のうすいかげ */q.globalCompositeOperation='destination-in';q.drawImage(R.cv,0,0,w,hh);sn=h._sn={R,cv:t,full:f}}
+  const sm=c.imageSmoothingEnabled;c.imageSmoothingEnabled=false;const fa=a>SNOWFULL0?Math.min(1,(a-SNOWFULL0)/(1-SNOWFULL0)):0;
+  if(fa>0){c.globalAlpha=A*fa*.95;c.drawImage(sn.full,R.ox,R.oy)}c.globalAlpha=A*Math.min(1,a*2.5);c.drawImage(sn.cv,R.ox,R.oy);c.globalAlpha=A;c.imageSmoothingEnabled=sm}/* はじめは、かたまりがちらばり、つもるほど屋根ぜんたいが白くなる */
 
 /* 屋根のつや（あらしの日）：屋根の形の中に、ぬれて光る点をちらす（家ごとに1回だけ作る。あらしでない日は手ばなす） */
 function feelRoofWet(c,h,R,A){if(!FEELC.wet||!R||!R.cv||!R.cv.width){if(h._wt){h._wt.cv.width=h._wt.cv.height=0;h._wt=null}return}let wt=h._wt;if(!wt||wt.R!==R){const w=Math.ceil(R.cv.width/R.sc),hh=Math.ceil(R.cv.height/R.sc),t=document.createElement('canvas');t.width=w;t.height=hh;const g=t.getContext('2d'),sd=h.x0*11+h.y0*17;
@@ -150,6 +166,7 @@ function feelAir(now,x0,y0,x1,y1){if(!S)return;const C=FEELC,A=feelArt(),c=ctx,s
 /* ---------- 足音・足もとの反応 ---------- */
 function feelSurf(i){/* そのマスの足もとの材質 */const g=S.ground[i];if(g===2)return 'water';if(S.obj[i]==='bridge')return 'wood';if(RUGC.has(i))return 'cloth';const f=S.floor[i];if(f==='path'||f==='gravel')return FEELC.snow>.4&&!FEELIN.has(i)?'snow':'soil';
   if(f&&BL[f]){const m=typeof tapMatOf==='function'?tapMatOf(f):'twood';return m==='tstone'?'stone':m==='tcloth'?'cloth':'wood'}
+  if(S.obj[i]==='farm')return 'soil';/* 畑の上は土 */
   if(FEELC.snow>.4&&!FEELIN.has(i)&&!feelMelt(i))return 'snow';return REV.has(i)?'grass':'dry'}
 let FEELSND=0;
 function feelStepSnd(k,x,y,alt,follow){if(typeof AC==='undefined'||!AC||!SND.sfx||AC.state!=='running'||typeof sfxG==='undefined'||!sfxG)return;const now=performance.now();if(now-FEELSND<110)return;const q=sfxPos(x,y);if(!q||(!follow&&q.v<.5))return;/* 画面のまん中に近い子と、見守っている子だけ */
