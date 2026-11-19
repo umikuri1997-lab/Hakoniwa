@@ -22,8 +22,8 @@ const assert=require('node:assert/strict');
     S.dy=null;dyKill(a,'');dyGuard(c);const low=dyBest({k:S.dy.k,g:S.dy.g});/* だれも2点にとどかない */
     S.dy=null;S.ns={n:2,kill:1,lost:[],hurt:0,broke:0,boss:0};dyKill(c,'');dyGuard(b);dyGuard(b);b.fun=50;const m0=(S.memo||[]).length;diaryClose();
     const L=S.diary[S.diary.length-1],body=document.querySelector('#sheetBody');
-    {const v=body.querySelector(':scope>.mpg:not([hidden])');if(v&&v.querySelector('.dyE'))v.querySelector('.mnx').click()}/* 1ページめは絵日記：点のページへめくる */
-    return new Promise(res=>setTimeout(()=>res(JSON.stringify({one:one&&one.nm,tie:tie&&tie.nm,low,b:b.name,a:a.name,fun:b.fun,mvp:L.mvp&&L.mvp.nm,memo:(S.memo||[]).slice(m0).map(x=>x[2]),txt:body.querySelector('.dyMvp')&&body.querySelector('.dyMvp').textContent,first:(()=>{const p=body.querySelector('.mpg:not([hidden])');return p&&p.firstElementChild&&p.firstElementChild.className})(),stamp:!!body.querySelector('.dyMvp .ustamp')})),700))})()`));
+    if(!BK.sp&&BK.pages[BK.at]&&BK.pages[BK.at].querySelector('.dyE'))document.querySelector('#sheetBody .mnx').click();/* 1ページめは絵日記：点のページへめくる（見開きなら、もう見えている） */
+    return new Promise(res=>setTimeout(()=>res(JSON.stringify({one:one&&one.nm,tie:tie&&tie.nm,low,b:b.name,a:a.name,fun:b.fun,mvp:L.mvp&&L.mvp.nm,memo:(S.memo||[]).slice(m0).map(x=>x[2]),txt:body.querySelector('.dyMvp')&&body.querySelector('.dyMvp').textContent,first:(()=>{const p=BK.pages.find(q=>q.querySelector('.dyMvp'));return p&&p.firstElementChild&&p.firstElementChild.className})(),stamp:!!body.querySelector('.dyMvp .ustamp')})),700))})()`));
   assert.equal(mv.one,mv.b,'guards count as points');assert.equal(mv.tie,mv.a,'tie goes to more kills');assert.equal(mv.low,null,'under 2 points: nobody');
   assert.equal(mv.mvp,mv.b);assert.equal(mv.fun,60,'fun +10');assert.ok(mv.memo.some(t=>t.includes('ゆうべのかつやく')),'memo');
   assert.ok(/2回まもった/.test(mv.txt),'mvp text '+mv.txt);assert.ok(/dyMvp/.test(mv.first),'mvp is at the top of the score page');assert.ok(mv.stamp,'stamp');
@@ -31,22 +31,22 @@ const assert=require('node:assert/strict');
   /* 本：1ページめは絵日記、2ページめは点の出る所（かつやく・守り・しごと）、あとはつぎのページ。どのページもスクロールしない。長い一覧はページをまたぐ */
   const bk=JSON.parse(await run(`(()=>{closeSheet();const a=S.res[0];S.dy=null;for(let i=0;i<25;i++){dyEv('ながいテストのできごと'+i)}dyWork(a,'build','bench');dyWork(a,'harvest','mugi');
     S.ns={n:4,kill:3,lost:[],hurt:0,broke:0,boss:0};dyKill(a,'');dyKill(a,'');dyGuard(a);DYBK.k=null;diaryClose();
-    const body=document.querySelector('#sheetBody'),P=[...body.querySelectorAll(':scope>.mpg')],H=p=>[...p.querySelectorAll(':scope>.sec>h3')].map(h=>h.textContent);
-    const fit=P.map(p=>{P.forEach(q=>q.hidden=q!==p);return body.scrollHeight<=body.clientHeight+1});P.forEach((q,i)=>q.hidden=i!==0);
-    const k=P[0].querySelector('.dyE')?1:0,r={e:k,n:P.length,h1:H(P[k]),rest:P.slice(k+1).map(H).flat(),fit,ev:P.reduce((t,p)=>t+[...p.querySelectorAll('.row')].filter(x=>/ながいテスト/.test(x.textContent)).length,0)};
-    P[0].querySelector('.mnx').click();return new Promise(ok=>setTimeout(()=>{r.turn=P.findIndex(p=>!p.hidden);ok(JSON.stringify(r))},500))})()`));
+    const P=BK.pages,H=p=>[...p.querySelectorAll(':scope>.sec>h3')].map(h=>h.textContent),c=BK.R.querySelector('.bkc');
+    const fit=P.map((p,i)=>{bkMount(BK,i);return c.scrollHeight<=c.clientHeight+1});bkMount(BK,0);
+    const k=P[0].querySelector('.dyE')?1:0,r={e:k,n:P.length,h1:H(P[k]),rest:P.slice(k+1).map(H).flat(),fit,ev:P.reduce((t,p)=>t+[...p.querySelectorAll('.row')].filter(x=>/ながいテスト/.test(x.textContent)).length,0),key:BK.o.key};
+    document.querySelector('#sheetBody .mnx').click();return new Promise(ok=>setTimeout(()=>{r.turn=BK.at;r.step=BK.sp?2:1;ok(JSON.stringify(r))},900))})()`));
   assert.ok(bk.n>=3,'diary has pages '+bk.n);
   assert.equal(bk.e,1,'page 1 is the picture diary '+JSON.stringify(bk));assert.deepEqual(bk.h1,['ゆうべのかつやく','ゆうべの守り','きのうのしごと'],'page 2 is the score '+bk.h1);
   assert.ok(bk.rest.includes('できごと')&&bk.rest.includes('みんなのしたこと')&&bk.rest.includes('ゆうべ追いはらった'),'others on later pages '+bk.rest);
-  assert.ok(bk.fit.every(Boolean),'no page scrolls '+bk.fit);assert.equal(bk.ev,25,'long list is split, nothing lost');assert.equal(bk.turn,1,'next page');
+  assert.ok(bk.fit.every(Boolean),'no page scrolls '+bk.fit);assert.equal(bk.ev,25,'long list is split, nothing lost');assert.equal(bk.turn,bk.step,'next page');assert.equal(bk.key,'diary','the diary is a book');
   console.log('Diary: a book, picture diary on page 1, score on page 2, '+bk.n+' pages without scrolling');
   /* 2回めの朝：ゆうべの守りを2回しまわない。書くことがなければ、日記をふやさない */
   const n2=JSON.parse(await run(`(()=>{closeSheet();const n=S.diary.length;diaryClose();return JSON.stringify({n,m:S.diary.length,sheet})})()`));
   assert.equal(n2.m,n2.n,'empty day is not stored');assert.equal(n2.sheet,null);
   /* 思い出帳から読む */
-  const rec=await run(`(()=>{openSheet('menu','record');const t=document.querySelector('#sheetBody').textContent;const row=[...document.querySelectorAll('#sheetBody .row')].find(x=>/日めの日記/.test(x.textContent));row.click();return JSON.stringify({has:/日記/.test(t),sheet,back:!!document.querySelector('#sheetWrap header .back')})})()`);
-  const R=JSON.parse(rec);assert.ok(R.has);assert.equal(R.sheet,'diary');assert.ok(R.back,'back button to the memory book');
-  console.log('Diary: readable from the memory book');
+  const rec=await run(`(()=>{openSheet('menu','record');const d=[...document.querySelectorAll('#sheetBody .mdy')].filter(x=>x.querySelector('.dyd'));const days=new Set(d.map(x=>x.querySelector('.dyd').textContent));return JSON.stringify({n:d.length,day:d.length?d[0].querySelector('.dyd').textContent:'',ok:S.diary.every(e=>days.has(e.d+'日め')),same:document.querySelectorAll('#sheetBody .mdy .dyMvp').length>0})})()`);
+  const R=JSON.parse(rec);assert.ok(R.ok,'every diary day has a page');assert.ok(/日め$/.test(R.day),R.day);assert.ok(R.same,'the memory book shows the same diary');
+  console.log('Diary: the memory book is a diary, one page per day');
   /* 朝6時をまたぐと、ふだんのしくみで日記がしまわれる */
   const m=JSON.parse(await run(`(()=>{closeSheet();const a=S.res[0];dyWork(a,'build','bench');const n=S.diary.length;S.lastMorning=-1;morning();return JSON.stringify({n,m:S.diary.length})})()`));
   assert.equal(m.m,m.n+1,'morning() closes the diary');
@@ -55,7 +55,7 @@ const assert=require('node:assert/strict');
   const f=JSON.parse(await run(`(async()=>{closeSheet();const a=S.res.find(r=>r.name===POKO);S.dy=null;dyWork(S.res[0],'build','bench');dyNoon(12);
     const b=await new Promise(ok=>{const c=document.createElement('canvas');c.width=c.height=8;c.toBlob(ok,'image/jpeg')});const id=await phAdd({w:WD,d:S.dy.d,h:12,vn:'',at:1,b});S.dy.ph=id;S.dy.phK='built';S.dy.phN=BL.bench.name;S.dy.phP=2;
     diaryClose();const L=S.diary[S.diary.length-1];await new Promise(ok=>setTimeout(ok,300));
-    return JSON.stringify({has:!!a,ft:L.ft,ph:L.ph,id,wx:L.wx,img:!!document.querySelector('#sheetBody .dyE .dyPic[src]'),first:!!document.querySelector('#sheetBody>.mpg:not([hidden]) .dyE'),port:!!document.querySelector('#sheetBody .dyE img:not(.dyPic)'),tx:(document.querySelector('#sheetBody .dyE .dyTx')||{}).textContent||'',bn:BL.bench.name,body:document.querySelector('#sheetBody').textContent})})()`));
+    return JSON.stringify({has:!!a,ft:L.ft,ph:L.ph,id,wx:L.wx,img:!!document.querySelector('#sheetBody .dyE .dyPic[src]'),first:!!(BK.pages[0]&&BK.pages[0].querySelector('.dyE')),port:!!document.querySelector('#sheetBody .dyE img:not(.dyPic)'),tx:(document.querySelector('#sheetBody .dyE .dyTx')||{}).textContent||'',bn:BL.bench.name,body:document.querySelector('#sheetBody').textContent})})()`));
   assert.ok(f.has,'Futaba is in the village');assert.ok(f.ft&&f.ft.length>=3&&f.ft.length<=4,'Futaba writes 3-4 lines');assert.equal(f.ph,f.id,'photo of the day');assert.ok(f.wx,'weather of the day');
   assert.ok(f.img,'photo shown in the diary');assert.ok(f.first,'picture diary on the first page');assert.ok(!f.port&&!f.body.includes('のひとこと'),'no icon, no heading');for(const t of f.ft)assert.ok(f.tx.includes(t.replace(/#[a-z ]+\|/,'')),'line shown: '+t);assert.ok(f.ft[1].includes(f.bn),'the first event is about the picture: '+f.ft[1]);
   for(const t of f.ft)assert.ok(t.length<=60&&!/子|オオカゲ|タップ|最後の夜/.test(t),'line rules: '+t);
