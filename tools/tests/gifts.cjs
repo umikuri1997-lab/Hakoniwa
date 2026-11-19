@@ -8,7 +8,7 @@ for(let y=CY-10;y<CY+10;y++)for(let x=CX-10;x<CX+10;x++){const j=y*W+x;S.obj[j]=
 await p.waitForFunction(()=>sacredEval('stageReady()'),{},{timeout:60000});
 /* 13しゅるい・アイコン・好み（だいすきは1つ） */
 const base=await run(`(()=>{const r=S.res[0];return {n:GIFTIDS.length,kind:GIFTIDS.every(id=>BL[id].kind==='gift'),ico:GIFTIDS.every(id=>typeof giftIco(id)==='string'&&giftIco(id).length>20),love:GIFTIDS.filter(id=>giftLike(r,id)===2).length,craft:CRAFT_TABS.find(t=>t[0]==='おくりもの')[1].length,shop:giftShopToday().length,drop:dropRolls('basic').some(e=>BL[e[0]]&&BL[e[0]].kind==='gift'),fish:fishLoot.toString().indexOf('GIFTFISH')>0}})()`);
-assert.deepEqual(base,{n:13,kind:true,ico:true,love:1,craft:4,shop:2,drop:true,fish:true},JSON.stringify(base));
+assert.deepEqual(base,{n:13,kind:true,ico:true,love:1,craft:4,shop:1,drop:true,fish:true},JSON.stringify(base));
 /* あげる：たのしさ+20（だいすき+40）・たからもの・1日1回・3こまで */
 const gv=await run(`(()=>{const r=S.res[0],love=GIFTIDS.find(id=>giftLike(r,id)===2),nm=GIFTIDS.find(id=>giftLike(r,id)===0);for(const id of GIFTIDS)giveItem(id,1);r.fun=10;const ok1=presentGive(r,nm),f1=r.fun,again=presentGive(r,love),f2=r.fun;r.care.gift=0;presentGive(r,love);const f3=r.fun;
   for(const id of GIFTIDS.filter(id=>id!==love&&id!==nm).slice(0,3)){r.care.gift=0;presentGive(r,id)}return {ok1,f1,again,f2,f3,trs:r.trs.length,old:r.trs.includes(nm),left:inv(nm),gk:r.gk[love],txt:giftTrText(r).split('・').length,know:giftKnownText(r,2)===BL[love].name}})()`);
@@ -29,7 +29,7 @@ assert.ok(out.ok&&out.t1==='outing'&&out.t2==='outing','出かける '+JSON.stri
 const mg=await run(`(()=>{const r=S.res[1];r.care.gift=0;r.fun=10;const t0=r.trs.slice();S.mat.stone=(S.mat.stone||0)+3;boxSync();const n0=S.mat.stone;const ok=presentGive(r,'m:stone');boxSync();return {ok,fun:r.fun,left:n0-S.mat.stone,trs:r.trs.join()===t0.join(),any:giftAny()}})()`);
 assert.deepEqual(mg,{ok:true,fun:15,left:1,trs:true,any:true},JSON.stringify(mg));
 /* 木箱の画面から、その箱のおたきあげ：S.otakiB にたのみ、せいれいがその箱からとる */
-const ob=await run(`(()=>{const a=(CY-4)*W+CX;S.obj[a]='crate';recount();const k='kasa';boxIn(a,k,10);boxSync();openSheet('box',a);const slot=[...document.querySelectorAll('#sheetWrap .slot')].find(c=>c.querySelector('.nm').textContent===MATN[k]);if(!slot)return {slot:false};slot.click();const go=document.querySelector('.pxcard .go');go.onclick();closeSheet();const q=S.otakiB&&S.otakiB[a]&&S.otakiB[a][k];
+const ob=await run(`(()=>{const a=(CY-4)*W+CX;S.obj[a]='crate';recount();const k='kasa';boxIn(a,k,10);boxSync();openSheet('box',a);const slot=[...document.querySelectorAll('#sheetWrap .box-contents .row')].find(c=>c.querySelector('.tx b').textContent===MATN[k]);if(!slot)return {slot:false};slot.click();const go=document.querySelector('.pxcard .go');go.onclick();closeSheet();const q=S.otakiB&&S.otakiB[a]&&S.otakiB[a][k];
   const st0=STATUE;if(STATUE<0){S.obj[(CY+6)*W+CX]='statue';recount()}const r=S.res[0];r.act=null;r.path=[];r.otaki=null;r.x=CX+.5;r.y=CY-2.5;const G=bfs(r.x|0,r.y|0),ok=tryJob(r,G,'otaki');const A=r.act;let got=null;if(A){A.stage='do';ACT.otakiget.start(r,A);ACT.otakiget.end(r,A);got=r.otaki}return {slot:true,q,ok,box:A&&A.bq===a,got,left:boxHas(a,k),gone:!(S.otakiB||{})[a]}})()`);
 assert.ok(ob.slot&&ob.q===5&&ob.ok&&ob.box&&ob.got&&ob.got.kasa>0,'箱からおたきあげ '+JSON.stringify(ob));
 /* 作業台をタップしても、依頼ボードはひらかない */

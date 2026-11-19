@@ -7,7 +7,7 @@
 const GIFTFUN=20,GIFTLOVE=40,GIFTLIKE=25,GIFTMAX=3,GIFTLOOKP=.08,GIFTLOOKCD=360;
 const GIFTIDS=['gf_kirei','gf_garasu','gf_kai','gf_hane','gf_matsu','gf_oshibana','gf_kibori','gf_koma','gf_wara','gf_ehagaki','gf_biidama','gf_mangekyo','gf_hoshisuna'];
 const GIFTFISH=['gf_kirei','gf_garasu','gf_kai'],GIFTDROP=['gf_kirei','gf_garasu','gf_hane','gf_matsu'],GIFTSHOP=GIFTIDS.filter(id=>BL[id].shop);
-const GIFTFISHP=.03,GIFTDROPP=.02,GIFTMONOP=.25,GIFTSHOPN=2;/* つり3%・コワイノの落とし物2%・ものひろいの日の落とし物1つごとに25%・お店は1日に2しゅるい */
+const GIFTFISHP=.03,GIFTDROPP=.02,GIFTMONOP=.25,GIFTSHOPN=1;/* つり3%・コワイノの落とし物2%・ものひろいの日の落とし物1つごとに25%・お店は1日に1しゅるい */
 const GLNAME=['ふつう','すき','だいすき'],GIFTMAT=5;
 const isGM=id=>typeof id==='string'&&id.slice(0,2)==='m:';/* 素材のおくりもの */
 const presentName=id=>isGM(id)?MATN[id.slice(2)]||'':BL[id]?BL[id].name:'';
@@ -24,11 +24,14 @@ function presentGive(r,id){if(!r||giftToday(r))return false;if(isGM(id))return m
   const v=giftLike(r,id),gain=v===2?GIFTLOVE:GIFTFUN;funAdd(r,gain,'care');const T=r.trs||(r.trs=[]);T.push(id);while(T.length>GIFTMAX)T.shift();
   const first=!(r.gk&&r.gk[id]!=null);(r.gk||(r.gk={}))[id]=v;dirty=true;
   if(!r.hidden){const now=performance.now();JOYU.set(r,now+(v?3000:1800));if(!(typeof inBattle==='function'&&inBattle(r))){RHOLD.set(r,now+(v?3000:1800));if(v)JUMP.set(r,now)}fxSpr('hearts',r.x*TS,(r.y-.7)*TS);r.bubble=v===2?'💕':'😊';sfx(v?'good':'tap')}/* 文字は出さない */
-  if(first&&v)toast(r.name+'の、'+GLNAME[v]+'なおくりものがわかった','good');
+  if(first&&v)memo('🎁',r.name+'の、'+GLNAME[v]+'なおくりものがわかった');
+  giftReply(r,v===2?'これ、だいすき！':v===1?'うれしい！ 大事にするね。':'ありがとう！');
   logEv(r.name+'に'+BL[id].name+'をあげた');return true}
+function giftReply(r,line){toast(r.name+'「'+line+'」','good');}
 /* 素材をあげる：たのしさ+GIFTMAT（たからものにはしない）。S.mat をへらすと、boxSync が箱からへらす */
 function matGive(r,k){if(!MATN[k]||(S.mat[k]||0)<1)return false;S.mat[k]--;(r.care||(r.care={})).gift=callDay();funAdd(r,GIFTMAT,'care');dirty=true;
   if(!r.hidden){const now=performance.now();JOYU.set(r,now+1800);if(!(typeof inBattle==='function'&&inBattle(r)))RHOLD.set(r,now+1800);r.bubble='😊';sfx('tap')}
+  giftReply(r,'ありがとう、使わせてもらうね。');
   logEv(r.name+'に'+MATN[k]+'をあげた');return true}
 /* もちものから：だれにあげるか */
 function giftWho(id){const o=el('<div style="position:fixed;inset:0;z-index:46;display:flex;align-items:center;justify-content:center;background:rgba(40,30,15,.35);padding:24px"><div class="pxcard" style="background:var(--panel);padding:16px 18px;max-width:340px;width:100%;color:var(--ink);max-height:80vh;overflow:auto"><b class="t" style="font-size:16px;display:block;margin-bottom:8px"></b><div class="rows"></div><div style="display:flex;justify-content:flex-end;margin-top:10px"><button class="btn x">とじる</button></div></div></div>');
@@ -46,7 +49,10 @@ function giftWhat(r,done){const o=el('<div style="position:fixed;inset:0;z-index
     b.onclick=()=>{if(giftToday(r)||(S.mat[k]||0)<1)return;presentGive(r,'m:'+k);close();if(done)done()};g.appendChild(row)}/* 素材 */
   document.body.appendChild(o)}
 /* カミサマのお店：日がわりで GIFTSHOPN しゅるい。1日にそれぞれ1こまで（S.gshop：{d,b}） */
-function giftShopToday(){const d=callDay(),L=GIFTSHOP.slice().sort((a,b)=>hash((d*911+strH(a))>>>0)-hash((d*911+strH(b))>>>0));return L.slice(0,GIFTSHOPN)}
+function giftShopToday(){
+  const day=callDay(),i=(day%GIFTSHOP.length+GIFTSHOP.length)%GIFTSHOP.length;
+  return GIFTSHOP.slice(i,i+GIFTSHOPN);
+}
 function giftShopBought(id){const G=S.gshop;return !!(G&&G.d===callDay()&&G.b&&G.b[id])}
 function giftShopBuy(id){const p=BL[id].shop;if(S.pt<p||giftShopBought(id))return false;S.pt-=p;const d=callDay();if(!S.gshop||S.gshop.d!==d)S.gshop={d,b:{}};S.gshop.b[id]=1;giveItem(id,1);sfx('power');toast(BL[id].name+'をもらった','good');return true}
 /* ひまなとき、たからものを頭の上にかかげて、ながめる */

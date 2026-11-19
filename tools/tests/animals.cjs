@@ -14,7 +14,7 @@ const assert=require('node:assert/strict');
     recount();out.fenceWalk=walk(y0*W+x0);out.pen=(PENS.get(coop)||[]).length;out.huts=HUTS.length;
     /* 柵のドアを柵にかえると… → かこいはそのまま。柵を1つはずすと、かこいでない */
     S.obj[y0*W+x0+1]='';recount();out.open=PENS.get(coop);S.obj[y0*W+x0+1]='fence';recount();
-    {const R=Math.random;Math.random=()=>.99;animalMorning();out.noStray=S.ani.length;Math.random=()=>0;animalMorning();Math.random=R}/* 5%：来ない日・来る日 */
+    {const R=Math.random;Math.random=()=>.99;animalMorning();out.noStray=S.ani.length;Math.random=()=>0;strayMorning();Math.random=R}/* 5%：来ない日・来る日 */
     {const a=S.ani[0];out.stray=!!(a&&a.stray);out.strayOut=a?!VILL[(a.y|0)*W+(a.x|0)]:false;
       document.querySelectorAll('.pxcard').forEach(c=>c.parentNode.remove());out.atTap=aniAtTap(a.x,a.y-.3)===a;S.flags.aniMet={hane:1,moko:1,tsuno:1};/* はじめて会う演出は animal-meet.cjs */aniPop(a);const card=document.querySelector('.pxcard');out.spop=card?card.textContent:'';if(card)card.querySelector('.go').click();out.going=!!(f.act&&f.act.type==='astray');
       let led=-1,home=-1;for(let i=0;i<30000;i++){S.food=100;f.hunger=hMax(f);f.energy=100;f.fun=100;S.t=Math.min(S.t,1440*3+12*60);stepWorld(.1);if(led<0&&f.act&&f.act.type==='alead')led=i;if(!a.stray){home=i;break}}
@@ -38,7 +38,7 @@ const assert=require('node:assert/strict');
       out.again=!!(f.act&&f.act.type==='apetq');out.why=aniPetWhy(a0);if(c2)c2.parentNode.remove();
       for(const k of ['hane','moko','tsuno'])for(const j of ['j0','j1','j2'])if(!CHIPS['ani:'+k+'#'+j])out.noChip=(out.noChip||'')+k+j}
     /* 夕方：とれる物 */
-    S.t=1440*3+17*60+5;out.prAt=run(200,()=>d.pr&&d.pr.egg>0);out.pr=d.pr&&d.pr.egg;
+    S.t=1440*3+17*60+5;out.prAt=run(200,()=>d.pr&&d.pr.egg>0);out.pr=d.pr&&d.pr.egg;out.expectedPr=aniYield(coop);
     const e0=S.fs.egg||0;out.colAt=run(30000,()=>(S.fs.egg||0)>e0);out.egg=S.fs.egg||0;
     /* 夜は小屋へ */
     S.t=1440*3+23*60+30;out.inAt=run(3000,()=>S.ani[0].in===1);
@@ -49,6 +49,16 @@ const assert=require('node:assert/strict');
       S.drops=[];const hb={id:300,k:'hane',h:0,x:CX+.5,y:CY+6.6};aniPop(hb);document.querySelectorAll('.pxcard').forEach(c=>c.parentNode.remove());sd.push((S.drops||[]).length);Math.random=R0;S.drops=[];out.sdrop=sd}
     {S.ani.push({id:99,k:'hane',h:-1,stray:1,x:1.5,y:1.6,face:1,wt:0});S.t=1440*4+18*60+1;run(30,()=>!S.ani.some(a=>a.id===99));out.strayGone=!S.ani.some(a=>a.id===99)}/* 野良は夕方に帰る */
     out.spots=['makiba','norakomichi','fureai','hidamari','hoshikusa'].filter(k=>SPOTS.some(p=>p.k===k)).length;out.hints=CHATS.filter(c=>['makiba','norakomichi','fureai','hidamari','hoshikusa'].includes(c.hint)).length;
+    const base=S.ani[0],grass=PENS.get(coop).find(j=>!S.obj[j]);
+    S.t=1440*5+8*60;base.in=0;base.pet=0;base.fd=null;base.x=grass%W+.5;base.y=(grass/W|0)+.6;
+    S.obj[grass]='weed0g';animalTick(1);
+    out.grazed=!S.obj[grass]&&base.fd===callDay();
+    const pair={...base,id:100,fun:80};base.fun=81;S.ani.push(pair);
+    const rnd=Math.random;Math.random=()=>.99;
+    animalMorning();out.at80=aniOf(coop).length;
+    base.fun=81;pair.fun=81;S.t+=1440;animalMorning();animalMorning();
+    out.birth=aniOf(coop).filter(a=>a.born===callDay()).length;
+    out.yield=aniYield(coop);Math.random=rnd;
     clearObj(coop);recount();animalMorning();out.left=S.ani.length;
     out.sub=!!SUBQ.find(q=>q.k==='animals1'&&q.learn.includes('coop')&&q.learn.includes('barn'));
     return JSON.stringify(out)})()`));
@@ -63,7 +73,7 @@ const assert=require('node:assert/strict');
   assert.ok(r.pop.includes('ハネマリ')&&r.pop.includes('とり小屋')&&r.pop.includes('なでる'),r.pop);assert.equal(r.asked,true,'pet asked');
   assert.ok(r.joy>=0,'animal joy');assert.equal(r.joyChip,true,'joy chip');assert.ok(r.fun>=54&&r.fun<=55,'fun +5 '+r.fun);assert.equal(r.petD,true);
   assert.equal(r.again,false,'once a day');assert.equal(r.why,'きょうは、もうなでた');assert.equal(r.noChip,undefined,'joy chips');
-  assert.ok(r.prAt>=0&&r.pr===1,'egg produced');assert.ok(r.colAt>=0&&r.egg>0,'egg stored');assert.ok(r.inAt>=0,'goes in hut at night');
-  assert.ok(r.sec.startsWith('すんでいる生き物（1/3）'),r.sec);assert.equal(r.left,0);assert.equal(r.sub,true);
+  assert.ok(r.prAt>=0&&r.pr===r.expectedPr,'egg produced');assert.ok(r.colAt>=0&&r.egg>0,'egg stored');assert.ok(r.inAt>=0,'goes in hut at night');
+  assert.ok(r.sec.startsWith('すんでいる生き物（1/3）'),r.sec);assert.equal(r.grazed,true);assert.equal(r.at80,2);assert.equal(r.birth,1);assert.ok(r.yield>1);assert.equal(r.left,0);assert.equal(r.sub,true);
   assert.deepEqual(errors,[]);await browser.close();console.log('OK');
 })().catch(e=>{console.error(e);process.exit(1)});
