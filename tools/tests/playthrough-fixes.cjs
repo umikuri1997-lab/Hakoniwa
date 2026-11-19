@@ -20,7 +20,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict');
     S.qStory=questIndexOf('bed');checkSub();const mid=S.subSt.benchbreak??null;
     for(let i=0;i<30&&!document.querySelector('#dialog').hidden;i++){DLGA.n=DLGA.full.length;DLGA.readReady=0;DLGA.holdUntil=0;document.querySelector('#dlgBtns button').click()}
     const after=S.subSt.benchbreak;S.qStory=null;return JSON.stringify({open,mid,after,seen:(S.subSeen||{}).benchbreak||0})})()`));
-  assert.equal(sub.open,true);assert.equal(sub.mid,null,'the offer is withdrawn while the main thanks is pending');assert.equal(sub.after,2,'heard request is accepted');assert.equal(sub.seen,1);
+  assert.equal(sub.open,true);assert.equal(sub.mid,1,'a daily offer stays while the main thanks is pending');assert.equal(sub.after,2,'heard request is accepted');assert.equal(sub.seen,1);
   console.log('Sub request heard while a main goal clears: accepted, not repeated');
   /* 3. 全滅のあとは、5人そろうまでオオカゲは来ない：表示・夕方の会話も同じ */
   const boss=JSON.parse(await run(`(()=>{${base}S.enemyOn=true;S.quest=questIndexOf('ookage');S.bossWarn=1;S.bossKills=0;S.res4Since=1;S.cleared=false;S.finalNight=false;while(S.res.length<4){const r=S.res[0];S.res.push(mkRes(S,'テスト'+S.res.length,'wood',r.x+2,r.y))}

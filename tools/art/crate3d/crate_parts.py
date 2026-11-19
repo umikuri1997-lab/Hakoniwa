@@ -59,9 +59,9 @@ INNER=lambda name:name.startswith('中のかげ')
 # 中身（しまえる数にたいして入っている数のわりあいで4だん：0 空・1 少し・2 半分・3 いっぱい。チップの #f1〜#f3）。
 # 作り：箱の中に、中身の山（なだらかな高さの面 hfield。底板から山の高さまで）→ 山の上に、まき（log）・石（egg）・りんご（ball）をのせる。
 #   山の高さ FILLZ（いっぱいは、山のてっぺんがふちくらい）。ふたはしまったまま（REST）で、中身は開くコマ（#f<だん>o1〜o3）だけ。
-FILLZ=(None,ZB+0.28,ZB+0.42,ZT-0.06)
+FILLZ=(None,ZB+0.16,ZB+0.20,ZB+0.22)   # 山の高さ（のせた物が2倍の大きさなので、山はひくく。物のてっぺんで、少し・半分・いっぱい）
 REST=(0,0,0,0)   # ふたは、中身があっても、しまったまま（持ち主がえらんだ）。中身は、ふたが開くコマだけで見える
-HEAPC=(190,154,104)   # 中身の山（わらの色。木箱の木より少しこく、のせた物が見えるように）
+HEAPC=(150,112,74)   # 中身の山（わらの色。木箱の木より少しこく、のせた物が見えるように）
 APPLE=(222,96,74);STONE=(178,172,162);BARK=(194,124,84);LEAFC=(124,184,84)
 def contents(sc,lv):
     if not lv:return
@@ -70,16 +70,19 @@ def contents(sc,lv):
     sys.path.insert(0,os.path.join(os.path.dirname(os.path.abspath(__file__)),'..','furn3d','items'))
     from common import hfield
     a=X0+E+T+0.006;b=X1-E-T-0.006;ya=Y0+E+T+0.006;yb=Y1-E-T-0.006;h=FILLZ[lv];cx=(a+b)/2;cy=(ya+yb)/2
-    up=0.07 if lv==3 else 0.03   # 山のまん中のもりあがり
+    up=0.03   # 山のまん中のもりあがり
     top=lambda x,y:h+up*max(0.0,1-((x-cx)/(b-a)*2)**2)*max(0.0,1-((y-cy)/(yb-ya)*2)**2)
     sc.texture(None);sc.material('soft');sc.group('heap');hfield(sc,a,ya,b,yb,top,HEAPC,bot=lambda x,y:ZB+0.005,n=(12,8));sc.group(None);sc.material(None)
-    items={1:[('log',0.40,0.66),('apple',0.62,0.72)],
-           2:[('log',0.36,0.60),('log',0.42,0.78),('apple',0.62,0.70),('stone',0.70,0.52),('apple',0.56,0.84)],
-           3:[('log',0.30,0.56),('log',0.36,0.74),('apple',0.58,0.66),('apple',0.66,0.80),('stone',0.72,0.54),('apple',0.48,0.86),('stone',0.24,0.86)]}[lv]
+    # 中身は、山の上を、すきまなくおおう（底の山が見えないように。1つずつの物は、前の2倍の大きさ。持ち主のたのみ）。物は、箱の内がわからはみ出さない所に置く
+    items=[('apple',0.235,0.48,0),('log',0.50,0.47,0),('apple',0.765,0.48,0),
+           ('stone',0.27,0.65,0),('apple',0.50,0.66,0),('apple',0.73,0.65,0),
+           ('apple',0.25,0.815,0),('stone',0.50,0.81,0),('apple',0.75,0.815,0)]   # 1だんめ：3列3行で、山をすきまなくおおう
+    if lv>=2:items+=[('apple',0.36,0.57,0.14),('apple',0.64,0.59,0.14),('stone',0.50,0.72,0.12)]   # 半分から：もう1だん
+    if lv>=3:items+=[('apple',0.50,0.56,0.22),('log',0.50,0.70,0.20)]   # いっぱい：ふちの上まで、もりあがる（ふたにはあたらない高さ）
     L=[]
-    for k,x,y in items:
-        z=top(x,y)
-        if k=='log':L.append(P('まき','log',((x-0.12,y+0.02,z+0.055),(x+0.12,y-0.02,z+0.055),0.055),BARK,note='山の上'))
-        elif k=='apple':L.append(P('りんご','ball',(x,y,z+0.05,0.058),APPLE,note='山の上'))
-        else:L.append(P('石','egg',(x,y,z+0.035,0.075,0.055,0.042,20),STONE,note='山の上'))
+    for k,x,y,dz in items:
+        z=top(x,y)+dz
+        if k=='log':L.append(P('まき','log',((x-0.24,y+0.01,z+0.11),(x+0.24,y-0.01,z+0.11),0.11),BARK,note='山の上'))
+        elif k=='apple':L.append(P('りんご','ball',(x,y,z+0.10,0.116),APPLE,note='山の上'))
+        else:L.append(P('石','egg',(x,y,z+0.07,0.15,0.11,0.084,20),STONE,note='山の上'))
     for p in L:sc.texture(None);sc.material('soft' if p.kind=='ball' else None);build(sc,[p]);sc.material(None)
