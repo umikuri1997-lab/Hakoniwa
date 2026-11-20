@@ -13,9 +13,9 @@ import crate_parts as C
 out=sys.argv[1];os.makedirs(out,exist_ok=True)
 def opt(k,d):
     return float(sys.argv[sys.argv.index(k)+1]) if k in sys.argv else d
-ELEV=opt('--elev',42);FRAME=opt('--frame',1)   # 見おろしの角度（度。ゲームのほかの絵は51.34）・画角に入れる上下の範囲（マス。0で遠近なし）。木箱は42度・画角10度・木箱ひとつ分（持ち主がえらんだ）
+ELEV=opt('--elev',38);FRAME=opt('--frame',1)   # 見おろしの角度（度。ゲームのほかの絵は51.34）・画角に入れる上下の範囲（マス。0で遠近なし）。木箱は38度・画角10度・木箱ひとつ分。高さの見え方は42度のときのまま（keep。持ち主がえらんだ）
 FOV=opt('--fov',10)
-PROJ,DEPTH=O.persp(ELEV,FOV,FRAME or None,((C.X0+C.X1)/2,(C.Y0+C.Y1)/2,C.ZT/2))
+PROJ,DEPTH=O.persp(ELEV,FOV,FRAME or None,((C.X0+C.X1)/2,(C.Y0+C.Y1)/2,C.ZT/2),keep=42)
 L=C.parts();bad=check(L);print('ささえのたしかめ',bad or 'まちがいなし')
 blueprint(os.path.join(out,'bp_crate.png'),'木箱',L,(1,1),(-0.1,1.1,0.1,1.1,0.8))
 LIDANG=[0,35,70,105]   # ふたの開く角度（度）。0がしまった絵、1〜3が開くとちゅう・開いた絵（チップの #o1〜#o3）
