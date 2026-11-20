@@ -2,7 +2,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict'),fs=r
 /* 守りのしくみ（defense.js）：高い所の見張り台・強化の2つの道・合図の太鼓・天気の夜・ヨロイカゲ・ヒカリカゲ */
 (async()=>{const browser=await chromium.launch({executablePath:process.env.CHROME_PATH||(fs.existsSync('/opt/pw-browsers/chromium')?'/opt/pw-browsers/chromium':undefined),args:['--no-sandbox']});const page=await browser.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));await page.route('**/js/main.js*',async route=>{const r=await route.fetch();await route.fulfill({response:r,body:(await r.text())+'\nwindow.dfEval=s=>eval(s);'});});await page.goto(process.env.GAME_URL||'http://127.0.0.1:8000');await page.waitForFunction(()=>!!window.dfEval);
 await page.waitForFunction(()=>dfEval('!!window.CHIPS&&!!CHIPS["kg_basic:idle"]'),null,{timeout:30000});
-const out=await page.evaluate(()=>dfEval(`(()=>{const o={};S=newState(0);setWorld(0);S.obj.fill('');S.hi.fill(0);S.t=(5*24+12)*60;S.rain=false;S.today=null;recount();
+const out=await page.evaluate(()=>dfEval(`(()=>{const o={};DMGVAR=0;S=newState(0);setWorld(0);S.obj.fill('');S.hi.fill(0);S.t=(5*24+12)*60;S.rain=false;S.today=null;recount();
  const j=50*W+50;S.obj[j]='watch';S.hp['L'+j]=5;recount();
  o.r0=towerRng(j);S.hi[j]=2;o.rHi=towerRng(j);S.hi[j]=0;
  o.path0=wpathOf(j);wpathSet(j,'far');o.rFar=towerRng(j);wpathSet(j,'fast');o.keep=wpathOf(j);delete S.dyn[j].wp;wpathSet(j,'fast');o.cdFast=towerMod(j,WATCH[5]).cd;

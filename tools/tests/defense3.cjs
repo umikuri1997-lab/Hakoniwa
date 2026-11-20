@@ -2,7 +2,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict'),fs=r
 /* 守りのしくみ3（defense.js）：ねらう順・落とし穴の罠・季節のコワイノ・せいれいの大わざ・守りつづけた夜 */
 (async()=>{const browser=await chromium.launch({executablePath:process.env.CHROME_PATH||(fs.existsSync('/opt/pw-browsers/chromium')?'/opt/pw-browsers/chromium':undefined),args:['--no-sandbox']});const page=await browser.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));await page.route('**/js/main.js*',async route=>{const r=await route.fetch();await route.fulfill({response:r,body:(await r.text())+'\nwindow.dfEval=s=>eval(s);'});});await page.goto(process.env.GAME_URL||'http://127.0.0.1:8000');await page.waitForFunction(()=>!!window.dfEval);
 await page.waitForFunction(()=>dfEval('!!window.CHIPS&&!!CHIPS["kg_basic:idle"]'),null,{timeout:30000});
-const out=await page.evaluate(()=>dfEval(`(()=>{const o={};S=newState(0);setWorld(0);S.t=(5*24+12)*60;S.obj.fill('');recount();
+const out=await page.evaluate(()=>dfEval(`(()=>{const o={};DMGVAR=0;S=newState(0);setWorld(0);S.t=(5*24+12)*60;S.obj.fill('');recount();
  /* ねらう順 */const j=50*W+50;S.obj[j]='watch';S.hp['L'+j]=1;recount();const mk=(id,type,x,y,hp)=>({id,type,x,y,hp,max:hp,spawned:true,path:[]});
  const run=k=>{torderSet(j,k);const a=mk(1,'basic',51,52.5,100),b=mk(2,'rockc',51,56,200),c=mk(3,'fast',51,57,50);S.enemies=[a,b,c];S.inv.arrow=10;towerVolley(j,51,51,{dmg:10,range:8,cd:10},null,[]);return S.enemies.find(e=>e.hp<e.max).id};
  o.near=run('near');o.hp=run('hp');o.fast=run('fast');

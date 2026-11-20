@@ -2,7 +2,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict'),fs=r
 /* 守りのしくみ2（defense.js）：コワイノの弱点・ベテランの見張り台・かげの巣・オオカゲの段階・葉のかべ・わざの枠 */
 (async()=>{const browser=await chromium.launch({executablePath:process.env.CHROME_PATH||(fs.existsSync('/opt/pw-browsers/chromium')?'/opt/pw-browsers/chromium':undefined),args:['--no-sandbox']});const page=await browser.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));await page.route('**/js/main.js*',async route=>{const r=await route.fetch();await route.fulfill({response:r,body:(await r.text())+'\nwindow.dfEval=s=>eval(s);'});});await page.goto(process.env.GAME_URL||'http://127.0.0.1:8000');await page.waitForFunction(()=>!!window.dfEval);
 await page.waitForFunction(()=>dfEval('!!window.CHIPS&&!!CHIPS["kg_basic:idle"]'),null,{timeout:30000});
-const out=await page.evaluate(()=>dfEval(`(()=>{const o={};S=newState(0);setWorld(0);S.t=(5*24+12)*60;recount();
+const out=await page.evaluate(()=>dfEval(`(()=>{const o={};DMGVAR=0;S=newState(0);setWorld(0);S.t=(5*24+12)*60;recount();
  /* 弱点 */const f={type:'fast',hp:100,max:100};hurtEn(f,20,{el:'earth'});o.weak=100-f.hp;f.hp=100;hurtEn(f,20,{el:'fire'});o.notWeak=100-f.hp;o.wstun=weakStun({type:'breaker'},'water');
  /* ベテラン */const j=50*W+50;S.obj.fill('');S.obj[j]='watch';S.hp['L'+j]=1;recount();for(let i=0;i<49;i++)vetKill(j);o.v49=vetBonus(j);vetKill(j);o.v50=vetBonus(j);o.dmg=towerMod(j,WATCH[1]).dmg;
  /* かげの巣 */S.bossKills=1;const mr=Math.random;Math.random=()=>.01;nestMorning();Math.random=mr;o.nest=nestCount();const L=['basic','basic'];const sf=seasonFoes;seasonFoes=()=>{};defWave(L,1);seasonFoes=sf;/* 季節のコワイノは defense3 で */o.wave=L.length;

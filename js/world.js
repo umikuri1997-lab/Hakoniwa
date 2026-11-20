@@ -324,6 +324,11 @@ function workCells(j,id,rot){/* j：左上のマス。id・rot をわたすと�
 const workOK=j=>workCells(j).some(k=>walk(k));
 let WORKBLOCKED=[];function workBlockedList(){/* 作業するマスが、どれもふさがっている家具（流し台はのぞく）の左上のマス */const L=[];for(let j=0;j<W*H;j++){const o=S.obj[j];if(o&&o!=='sink'&&WORKF.has(o)&&!workOK(j))L.push(j)}return L}/* 作業するマスが1つでも空いているか */
 function workStand(G,j){/* 作業するマスのうち、いちばん近い行ける所（なければ -1） */let b=-1,bd=1e9;for(const k of workCells(j)){const d=G.dist[k];if(d<0||!walk(k)||d>=bd)continue;b=k;bd=d}return b}
+/* すわる・ねる・遊ぶ家具とお墓（通れる家具）は、使うときだけ上に乗る。道さがしでは、上を通るのを大きな手間（SEATCOST）にして、ほかに道がないときだけ通る。行き先にするのは、その家具を使う行動だけ（startAct の seatStand） */
+const SEATF=new Set(['bed','yorubed','chair','achair','stool','pouf','bench','takebench','swing','grave']),SEATCOST=600;
+const seatJ=j=>j>=0&&j<W*H&&SEATF.has(typeAt(j));
+function walkR(j){return walk(j)&&!seatJ(j)}/* せいれいが、使わずに立ってよいマス */
+function seatBackStep(i,j){/* i→j が、いす・ベンチの背もたれのがわからの乗りおり（その家具のマスどうしは、のぞく） */if(typeof seatBack!=='function')return false;const ci=seatCell(i),cj=seatCell(j);if(cj&&!ci&&seatBack(j)===i)return true;if(ci&&!cj&&seatBack(i)===j)return true;return false}
 function walk(j){if(j<0||j>=W*H||S.ground[j]===1&&S.obj[j]!=='bridge'&&!windBr(j)||STUMPB.has(j)||j===GODJ||fogAt(j))return false;/* 霧の中は歩かない *//* 切り株の上は歩かない */return !solidOf(j)}/* 橋の上は歩ける。浅瀬（ground 2）は歩ける（ゆっくり） */
 /* 雲の海（風のステージ）：マップのはしにつながる ground 1 のマス。歩けない・置けない・橋はかけられるのは水と同じ。水としてのふるまい（水をくむ・つり・水あび・水べの生き物など）は waterJ で見て、雲の海ではしない */
 let SKYS=null,SKYM=null;

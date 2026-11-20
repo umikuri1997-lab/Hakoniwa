@@ -7,7 +7,7 @@ const out=JSON.parse(await page.evaluate(()=>ltEval(`(()=>{const o={};newGame(0)
  const fj=10*W+10,cj=40*W+40;o.walkFog=walk(fj);o.walkMid=walk(cj);o.placeFog=canPlace('fence',10,10,true);o.placeMid=canPlace('fence',40,40,true)||S.obj[cj]!=='';
  o.tapFog=fogTap(10,10);o.digFog=canPlace('dig',10,10,true);o.freeFog=free('o'+fj,1);o.freeMid=free('o'+cj,1);
  /* コワイノは、晴れた所の南のはしから */const ys=new Set();for(let i=0;i<200;i++){const [x,y]=spawnSpot();ys.add((y|0)===fogSouth(x|0)&&!fogAt((y|0)*W+(x|0)))}o.spawnOK=[...ys].join();o.south=fogSouth(40);
- /* みどりのマスで晴れる：エリア5（左上のまん中）に木を植える */for(const [x,y] of [[30,30],[40,30],[30,40],[40,40],[48,34]]){const j=y*W+x;S.obj[j]='tree';delete S.bud}recount();o.fog1=S.fog.join('');
+ /* みどりのマスで晴れる：エリア5（左上のまん中）に木を植える */for(let y=29;y<=49;y+=5)for(let x=29;x<=49;x+=5){const j=y*W+x;S.obj[j]='tree';delete S.bud}recount();/* 木はまわり2マス（5×5）を緑にする：5×5本 */o.fog1=S.fog.join('');
  /* 宝箱：霧を晴らして、せいれいがあける */const bx=S.fogF.find(f=>f.t==='box');fogClear(bx.a);const r=S.res[0];r.act=null;const st=[bx.j+W,bx.j-1,bx.j+1,bx.j-W].find(k=>walk(k));r.x=st%W+.5;r.y=((st/W)|0)+.5;
  fogTap(bx.j%W,(bx.j/W)|0);o.pzOpen=!!document.querySelector('.pxcard canvas');o.pzReq=S.fogReq.includes(bx.j);o.pzKind=bx.pz;document.querySelectorAll('.pxcard').forEach(e=>e.parentNode.remove());/* 謎をとくまでは、あけにいかない */bx.unl=1;fogChestItem=()=>'orgel';
  o.tapBox=fogTap(bx.j%W,(bx.j/W)|0);o.req=S.fogReq.includes(bx.j);const G=bfs(r.x|0,r.y|0);S.t=12*60;o.job=fogJob(r,G);o.act=r.act&&r.act.type;S.obj[(CY+3)*W+CX+3]='crate';recount();const inv0=JSON.stringify(S.inv);const n0=ITEM_GIFTS.length;

@@ -150,6 +150,7 @@ function qDone(id){const index=questIndexOf(id);if(index<0)return false;if(S.qSt
 const SUB_MAIN_AFTER={table1:'bed',chair2:'bed',farm10:['farm6','fire'],light3:'fire'};/* 草原：このメインの目標（いくつかなら、ぜんぶ）がおわってから出す。畑を10は、ホノが来てから */
 function subMainOK(q){const m=SUB_MAIN_AFTER[q.k];return WD!==0||!m||[].concat(m).every(id=>qDone(id))}
 function subOfferReady(q){if(subDaily(q))return subMainOK(q);/* デイリーは、ほかのクエストがあっても出す */if(S.qStory!=null||QUEST_CLEAR_WAIT)return false;return subMainOK(q)}
+const DAILYN=3;/* デイリー：1日に出す数・受けていられる数 */
 const SUBSCHED=['trade','oracle','lighttry','sortie','salvia3','watch2','lotus3','lily5','swing1','benchwood'];
 function subDaily(q){return !(q.k.startsWith('seedwait_')||q.k.startsWith('lv_')||SUBSCHED.includes(q.k))}/* 順番の決まっていないサブクエスト（1日に1つのデイリー） */
 const LEVEL_HELP={2:['benchbreak','chair2'],3:['bed3'],4:['farm10'],5:['toy2','deco3'],8:['room','paint','parasol']};
@@ -180,17 +181,18 @@ function checkSub(){const D=S.subDone||(S.subDone={}),Sn=S.subSeen||(S.subSeen={
     const q=eligible.find(scheduled);
     if(q){St[q.k]=1;busy[q.g]=q}
   }
-  {const day=callDay();/* デイリー：ほかのクエスト（メイン・順番の決まったサブ）があっても、1日に1つ出す。たしかめるのは、デイリーどうしの重なりだけ */
-    if(!isNight()&&S.randomRequestDay!==day&&!SL.some(q=>subDaily(q)&&!D[q.k]&&St[q.k]>=1&&St[q.k]<=3)){
-      const random=SL.filter(q=>subDaily(q)&&!D[q.k]&&!St[q.k]&&keyName(q.g)&&q.at()&&subMainOK(q));
-      if(random.length){const q=pick(random);St[q.k]=1;S.randomRequestDay=day}}}
+  {const day=callDay();/* デイリー：1日に3つまで（DAILYN）、受けているのも3つまで。ほかのクエスト（メイン・順番の決まったサブ）があっても出す。同じ子のおねがいは1つずつ */
+    if(S.dailyDay!==day){if(S.dailyDay!=null)for(const q of SL)if(subDaily(q)&&St[q.k]===1&&!D[q.k])delete St[q.k];/* 話しかけていないおねがいは、つぎの朝に、ほかの物にかわる */S.dailyN=S.randomRequestDay===day?1:0;S.dailyDay=day}
+    if(!isNight()){const on=SL.filter(q=>subDaily(q)&&!D[q.k]&&St[q.k]>=1&&St[q.k]<=3),who=new Set(on.map(q=>subWho(q)));
+      while((S.dailyN||0)<DAILYN&&on.length<DAILYN){const random=SL.filter(q=>subDaily(q)&&!D[q.k]&&!St[q.k]&&keyName(q.g)&&!who.has(subWho(q))&&q.at()&&subMainOK(q));if(!random.length)break;
+        const q=pick(random);St[q.k]=1;on.push(q);who.add(subWho(q));S.dailyN=(S.dailyN||0)+1;S.randomRequestDay=day}}}
   if(spaced&&waitingBellflowers()&&!SL.some(q=>St[q.k]===1||St[q.k]===3)&&SL.filter(q=>St[q.k]===2).length<3){const next=SL.find(q=>q.k.startsWith('seedwait_')&&!D[q.k]&&!St[q.k]&&q.at());if(next&&subOfferReady(next))St[next.k]=1}
   const summonHelp=WD===0&&S.qStory==null&&S.qTalked?({fire:'salvia3',water:'lotus3',wind:'lily5'}[QUESTS[S.quest]?.id]||''):'',supportKeys=summonHelp?(summonHelp==='salvia3'?['salvia3','watch2']:summonHelp==='lily5'?['lily5','swing1']:[summonHelp]):[];
   for(const k of supportKeys){if(D[k]||St[k])continue;const q=SL.find(q=>q.k===k);if(!q||!q.at()||!subOfferReady(q)||!keyName(q.g))continue;if(!isNight()&&(k===summonHelp||spaced)){St[k]=1;break}}
   const visiting=!!QUEST_CLEAR_WAIT&&!QUEST_CLEAR_WAIT.done||Object.values(SUB_CLEAR_WAIT).some(w=>w&&!w.done)||S.res.some(r=>(QUEST_VISITS.get(r)||[]).length||r.act&&r.act.type==='questjoy'&&r.act.joyAt==null);/* クエストのものを見にいく途中は、新しい話の黄色い吹き出しは出さない（着いて喜び始めてから） */
   const requests=visiting?[]:SL.filter(q=>St[q.k]===1&&!isNight()&&(spaced||subDaily(q)||summonHelp&&q.k===summonHelp));
   const pending=requests.filter(q=>supportKeys.includes(q.k)).concat(SL.filter(q=>St[q.k]===3),requests.filter(q=>!supportKeys.includes(q.k)));
-  let one=false,dl=false;for(const q of pending){const d=subDaily(q)&&St[q.k]===1;if(d?dl:one)continue;const w=St[q.k]===3?questReplyWho(q):subWho(q);if(w&&spkOK(w)&&w!==TALKW&&!SUBW[w]){SUBW[w]=q.k;if(d)dl=true;else one=true}}}/* デイリーのおねがいは、ほかのふきだしといっしょに出す */
+  let one=false;for(const q of pending){const d=subDaily(q)&&St[q.k]===1;if(!d&&one)continue;const w=St[q.k]===3?questReplyWho(q):subWho(q);if(w&&spkOK(w)&&w!==TALKW&&!SUBW[w]){SUBW[w]=q.k;if(!d)one=true}}}/* デイリーのおねがいは、ほかのふきだしといっしょに出す（ちがう子なら、いくつでも） */
 function subTalk(k){const q=SUBQ.find(q=>q.k===k),St=S.subSt,D=S.subDone;if(!q||!$('#dialog').hidden||St[k]===1&&!subOfferReady(q))return;S.subTalkAt=S.t;const offer=St[k]===1;/* おねがいの会話を聞きおえたら、とちゅうでメインの目標ができても、受けたことにする */const w=subWho(q)||POKO,L=(St[k]===1?q.L:typeof q.X==='function'?q.X():q.X)||[[w,q.t]];
   const rw=S.res.find(z=>z.name===w),FB2=q.g==='fire'&&rw&&elemKey(rw)==='fireB'&&FIREB[k];let once=0;dialog(ideaDialogue(q,(FB2?(St[k]===1?FB2.L:FB2.X):L).map(x=>[x[0]==='K'?w:x[0],x[1]&&typeof x[1]==='object'?(w===HOMURA?x[1].h:x[1].a):x[1]]),/* {h,a}：ホムラ（あたい）と、ほかの火の子（あたし） */St[k]===1?'accept':'clear'),()=>{if(once++)return;
     if(offer&&!D[k]&&St[k]==null)St[k]=1;

@@ -600,6 +600,7 @@ function chatTopic(r,p){const L=[],mt=bondOf(r,p)>=BOND_TALK,gn=!!goneTalkName()
   {const hs=L.filter(i=>CHATS[i].hint),nh=L.filter(i=>!CHATS[i].hint),use=hs.length&&(Math.random()<.25||!nh.length)?hs:nh;if(use.length)L.splice(0,L.length,...use)}/* スポットのヒントは、たまに（4回に1回くらい） */
   if(gn&&Math.random()<.5){const F=L.filter(i=>CHATS[i].gone);if(F.length)L.splice(0,L.length,...F)}/* 消えたばかりの子がいる日は、その子の話が出やすい */
   if(festOn()){const F=L.filter(i=>CHATS[i].fest);if(F.length)L.splice(0,L.length,...F)}/* おまつりの日は、おまつりの話だけ */
+  if(Math.random()<.7){const F=L.filter(i=>CHATS[i].evc);if(F.length)L.splice(0,L.length,...F)}/* いっしょに出たイベントの話（ev-show.js）が出やすい */
   const R=S.chatRec||(S.chatRec=[]),G=chatSeen(),last=i=>{const k=R.lastIndexOf(i);return k>=0?k:G.has(i)?-.5:-1}/* まだどこでも出ていない話 → ほかのステージで出た話 → このステージで前に出た話 */,lo=Math.min(...L.map(last));let C=L.filter(i=>last(i)===lo);/* だれとだれの会話でも、まだしていない話（なければ、いちばん前にした話）からえらぶ。ひととおりするまで、同じ話はしない */
   if(C.some(i=>CHATS[i].kc)&&Math.random()<.4)C=C.filter(i=>CHATS[i].kc);/* キーキャラの話は、まだしていなければ4割で選ばれる */
   const t=C[Math.floor(Math.random()*C.length)];for(let o;(o=R.indexOf(t))>=0;)R.splice(o,1);R.push(t);chatMark(t);return t}

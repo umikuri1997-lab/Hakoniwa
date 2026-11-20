@@ -39,8 +39,8 @@ const BL={
   hotaru:{sp:9,name:'ヨルボシの草むら',item:'ヨルボシの草むらの苗',kind:'plant',cost:3,attr:{water:1},desc:'夜、まわり2マスを照らすあかり。はじめて光に入った「コワイノ」が2分止まる'},
   lily:{sp:9,name:'ゆり',item:'ゆりのたね',kind:'plant',cost:3,attr:{wind:1},desc:'まわり3マスで、たのしさ+0.2／1時間'},
   lotus:{sp:9,name:'ハス',item:'ハスのたね',kind:'plant',cost:3,attr:{water:1},desc:'池にうかぶ花。まわり3マスで、たのしさ+0.2／1時間。まわり2マスで水あびすると、たのしさ1.5倍・つかれ－9／1時間'},
-  tree:{hp:5,brk:1,fix:1,fixm:{},name:'木',item:'木の苗',kind:'plant',cost:4,lv:3,solid:1,env:1,attr:{wood:3},desc:'まわり5マスを緑にする。まわり3マスで、たのしさ+0.4／1時間'},
-  fruit:{hp:5,brk:1,fix:1,fixm:{},name:'りんごの木',item:'りんごの苗',kind:'plant',cost:10,lv:6,solid:1,dyn:1,env:1,attr:{wood:3,water:1},desc:'まわり5マスを緑にする。まわり3マスで、たのしさ+0.4／1時間。4日ごとに、りんごが実る。食料+2'},
+  tree:{hp:5,brk:1,fix:1,fixm:{},name:'木',item:'木の苗',kind:'plant',cost:4,lv:3,solid:1,env:1,attr:{wood:3},desc:'まわり2マスを緑にする。まわり3マスで、たのしさ+0.4／1時間'},
+  fruit:{hp:5,brk:1,fix:1,fixm:{},name:'りんごの木',item:'りんごの苗',kind:'plant',cost:10,lv:6,solid:1,dyn:1,env:1,attr:{wood:3,water:1},desc:'まわり2マスを緑にする。まわり3マスで、たのしさ+0.4／1時間。4日ごとに、りんごが実る。食料+2'},
 /* 新しい家具（スクリプトで描く） */
   stool:{name:'木のスツール',kind:'furn',lv:1,cat:'living',f2:1,pc:1,time:60,maker:'wood',attr:{wood:1},mat:{wood:1,eda:2},mat1:{bamboo:2},desc:'小さないす。食卓のとなりで食べると、パワー+0.45。住み心地+2'},
   pouf:{name:'まるクッション',kind:'furn',lv:5,cat:'living',f2:1,pc:1,time:60,maker:'wind',attr:{wind:1},mat:{wood:1,nuno:2},desc:'ころんとしたクッション。食卓のとなりで食べると、パワー+0.9。住み心地+3'},
@@ -499,8 +499,8 @@ const QUESTS1=[
   /* 根まで届く水のあと：水のせいれいが、つかれたみんなを、ハスのそばの水あびにさそう（aoIns1。id は前のまま） */
   stepQuest({id:'aoFish',text:'ハスのそばの水あび',
    steps:[{id:'aoLotus',t:'池に、ハスの花を咲かせる',check:()=>S.obj.some((o,j)=>o==='lotus'&&!isBud(j)),how:'「おく」で、ハスのたねを池の上に置く'},
-    {id:'aoBath',t:'ハスのそばの水べで、せいれいが3人、水あびをする',check:()=>(S.flags.aoBath||[]).length>=3,prog:()=>'水あび '+Math.min(3,(S.flags.aoBath||[]).length)+'/3',how:'夕方になると、せいれいが水べで水あびをする'}],
-   talk:{get who(){return keyName('water')},when:()=>true,get lines(){return KS([['M','#think|みなさん、毎日よくはたらいて、夜も見回りをして……つかれていませんか。'],['F','うん、ちょっとだけ。'],['M','水につかると、つかれも、こわい気持ちも、すっと流れていくんです。'],['M','ハスの花のそばの水は、とくにやさしいんですよ。みんなで、水あびをしませんか。'],['H','#think|……水か。おれは、見てるだけにしとくぜ。']])}},
+    {id:'aoBath',t:'ハスのそばの水べで、せいれいが3人、水あびをする',check:()=>(S.flags.aoBath||[]).length>=3,prog:()=>'水あび '+Math.min(3,(S.flags.aoBath||[]).length)+'/3'+(typeof seasonNow==='function'&&seasonNow()===3?'（冬は水あびをしない）':''),how:'夕方になると、せいれいが水べで水あびをする'}],
+   talk:{get who(){return keyName('water')},when:()=>{if(S.flags.aoFishD==null)S.flags.aoFishD=dayNo();return dayNo()>S.flags.aoFishD},wait:'みんなのくらしを、水のせいれいが見まもっている',/* みんなが毎日はたらくのを見てから話す：前の目標をおえた日のうちには話さない */get lines(){return KS([['M','#think|みなさん、毎日よくはたらいて、夜も見回りをして……つかれていませんか。'],['F','うん、ちょっとだけ。'],['M','水につかると、つかれも、こわい気持ちも、すっと流れていくんです。'],['M','ハスの花のそばの水は、とくにやさしいんですよ。みんなで、水あびをしませんか。'],['H','#think|……水か。おれは、見てるだけにしとくぜ。']])}},
    get story(){return KS([['F','#joy|つめたくて、きもちいいね！'],['N','ハスの花のにおいがするよぉ。ねむくなっちゃうねぇ。'],['M','#joy|よかった。みなさんが笑ってくれると、水も、うれしそうです。'],['H','へっ。見てるだけでも、なんだか、すっとするな。'],['M','つかれた日は、また、ここで水あびしましょう。'],['F','#joy|うん！']])}}),
   stepQuest({id:'kagemark',text:'大きなかげのあとを調べよう',alias:['baseUp'],
    steps:[{id:'kagemark',t:'大きなかげのあとを見つける',check:()=>{if(S.flags.kgDay==null)S.flags.kgDay=dayNo();if(S.flags.kgMark==null&&dayNo()>S.flags.kgDay||S.flags.kgMark!=null&&!S.flags.kgLook&&!kgOpen(S.flags.kgMark))kgPlace();/* あとから草・茂みなどが生えて、かくれたら、空いた所へうつす */return !!S.flags.kgLook},/* 話を聞いたつぎの日から、村の南に大きなかげのあとが出る */prog:()=>S.flags.kgMark==null?'あしたの朝、あとが見つかる':'村の南のはしにある',how:'「しらべる」で、村の南に出た、大きなかげのあとをタップする'},
