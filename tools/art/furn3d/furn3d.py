@@ -26,7 +26,7 @@
 #   LIGHT=(x,y,z)（光のくる向き。なければ oblique3d.LIGHT）
 #   SHADE4=[(明るさ,あざやかさ)×3]（GRAD のときの、うすいかげ・半かげ・かげで引く数。なければ oblique3d.SHADE4）
 #   FRONT={チップの名前: 部品の名前を見る関数}（せいれいの手前にかさねる絵 .front。その向きで、その部品だけを写す）
-import sys,os,importlib
+import sys,os,importlib,math
 HERE=os.path.dirname(os.path.abspath(__file__));ART=os.path.join(HERE,'..');ROOT=os.path.join(ART,'..','..')
 sys.path.insert(0,ART);sys.path.insert(0,os.path.join(HERE,'items'))
 import numpy as np
@@ -41,7 +41,7 @@ PN={}
 def scene(M,k,only=None,filt=None,foot=None):
     sc=O.Scene();T=O.Tex(os.path.join(ART,'textures','wood049.png'));TS=O.Tex(os.path.join(ART,'textures','rock030.png'),span=1.0,flow=2,minrun=2,dark=(0.16,0.92),light=(0.14,1.06));TB=O.Tex(os.path.join(ART,'textures','rock030.png'),span=0.5,flow=1,minrun=1,dark=(0.18,0.90),light=(0.12,1.07));TP=O.Tex(os.path.join(ART,'textures','plaster001.png'),span=2.0,flow=3,minrun=3,dark=(0.18,0.96),light=(0.16,1.03));TMT=O.Tex(os.path.join(ART,'textures','metal032.png'),span=1.0,flow=3,minrun=2,dark=(0.16,0.94),light=(0.14,1.05));L=[p for p in M.PARTS() if not filt or filt(p.name)];keep=set()   # filt：写す部品をえらぶ（動く部品だけ・動く部品のほか）   # TS：石の部品（p.stone）のテクスチャ
     for p in L:
-        mt=getattr(p,'metal',False);from blueprint import barktex as _bk;sc.texture(getattr(p,'texobj',None) or (_bk() if getattr(p,'barktex',False) else TP if getattr(p,'plaster',False) else TMT if getattr(p,'mtex',False) else (TB if getattr(p,'brick',False) else TS if getattr(p,'stone',False) else T) if getattr(p,'tex',True) or getattr(p,'brick',False) and not mt else None));sc.material(('shinym' if getattr(p,'shiny',False) else 'metal') if mt else 'glass' if getattr(p,'glass',False) else 'glassc' if getattr(p,'glassc',False) else 'gwater' if getattr(p,'gwater',False) else 'clear' if getattr(p,'clear',False) else 'shiny' if getattr(p,'shiny',False) else 'satin' if getattr(p,'satin',False) else 'flat' if getattr(p,'glow',False) or getattr(p,'flat',False) else 'soft1' if getattr(p,'soft1',False) else 'soft' if getattr(p,'soft',False) else None);p0=sc.pid;sc.decal(getattr(p,'decal',None));sc.smooth(O.GRAD and p.kind in ROUND);sc.curve(getattr(p,'curve',False));sc.outline(None,getattr(p,'olk',None));build(sc,[p]);sc.outline();sc.material(None);sc.decal(None);sc.smooth(False);sc.curve(False)
+        mt=getattr(p,'metal',False);from blueprint import barktex as _bk;sc.texture(getattr(p,'texobj',None) or (_bk() if getattr(p,'barktex',False) else TP if getattr(p,'plaster',False) else TMT if getattr(p,'mtex',False) else (TB if getattr(p,'brick',False) else TS if getattr(p,'stone',False) else T) if getattr(p,'tex',True) or getattr(p,'brick',False) and not mt else None));sc.material(('shinym' if getattr(p,'shiny',False) else 'metal') if mt else 'glass' if getattr(p,'glass',False) else 'glassc' if getattr(p,'glassc',False) else 'gwater' if getattr(p,'gwater',False) else 'clear' if getattr(p,'clear',False) else 'shiny' if getattr(p,'shiny',False) else 'satin' if getattr(p,'satin',False) else 'flat' if getattr(p,'glow',False) or getattr(p,'flat',False) else 'soft1' if getattr(p,'soft1',False) else 'soft' if getattr(p,'soft',False) else None);p0=sc.pid;sc.decal(getattr(p,'decal',None) or (__import__('blueprint').uvdecal(p.dims,p.uvtex) if getattr(p,'uvtex',None) else None));sc.smooth(O.GRAD and p.kind in ROUND);sc.curve(getattr(p,'curve',False));sc.outline(None,getattr(p,'olk',None));build(sc,[p]);sc.outline();sc.material(None);sc.decal(None);sc.smooth(False);sc.curve(False)
         if only and only(p.name):keep|=set(range(p0+1,sc.pid+1))
         for q in range(p0+1,sc.pid+1):PN[q]=p.name   # 部品の番号 → 名前（粒の火で、かくれる物をえらぶ）
     if hasattr(M,'EXTRA') and not filt:sc.texture(None);M.EXTRA(sc)
@@ -62,7 +62,10 @@ def shot(M,k,only=None,S_=64,filt=None,info=None):
     PX=getattr(M,'PX',None);PX=PX if isinstance(PX,int) else None;K=1   # PX がほかの意味の名前（井戸の柱の場所など）のときは使わない
     if PX:K=S_//PX;S_=PX   # PX：1マスのドット数（あらいドット）。PX で写して、K 倍（NEAREST）にのばす。ゲームのチップは g64 のまま
     P=np.array([PROJ(v) for v in V]+[PROJ(sc.fwd(q)) for q in pfire_box(M)+list(getattr(M,'PBOX',()))]);m=2/64;ext=(P[:,0].min()-m,P[:,0].max()+m,P[:,1].min()-m,P[:,1].max()+m);O.S=S_
-    im=O.render_px(sc,PROJ,ext,DEPTH,k=0.80 if O.GRAD else 0.72,lw=getattr(M,'LW',LW),k2=0.90 if O.GRAD else 0.86,merge=getattr(M,'MERGE',6 if O.GRAD else 12),outerk=getattr(M,'OUTERK',False),contrast=getattr(M,'CONTRAST',0))   # CONTRAST：輪郭線を作る前の色にかける   # OUTERK：まわりのふちは、部品の olk でうすくしない   # MERGE：にた色をまとめるさかい（設計図でかえられる）   # GRAD：にた色をまとめるさかいを小さく（グラデーションの段をのこす）   # GRAD の家具は、輪郭線もやわらかい色（持ち主がきめた）
+    _smc=O.SMCREASE
+    if getattr(M,'SMANGLE',None):O.SMCREASE=math.cos(math.radians(M.SMANGLE))   # SMANGLE：スムーズシェードで、まぜる面の向きのちがいの上限（度。トリポのモデルは80）
+    try:im=O.render_px(sc,PROJ,ext,DEPTH,k=0.80 if O.GRAD else 0.72,lw=getattr(M,'LW',LW),k2=0.90 if O.GRAD else 0.86,merge=getattr(M,'MERGE',6 if O.GRAD else 12),outerk=getattr(M,'OUTERK',False),contrast=getattr(M,'CONTRAST',0))   # CONTRAST：輪郭線を作る前の色にかける   # OUTERK：まわりのふちは、部品の olk でうすくしない   # MERGE：にた色をまとめるさかい（設計図でかえられる）   # GRAD：にた色をまとめるさかいを小さく（グラデーションの段をのこす）   # GRAD の家具は、輪郭線もやわらかい色（持ち主がきめた）
+    finally:O.SMCREASE=_smc
     if getattr(M,'MATCAP',None):   # MATCAP='clay' など：マットキャップでかげと質感（tools/art/matcap.py）。TONE5 のかわりに
         import matcap;im=matcap.apply(im,M.MATCAP)
     elif getattr(M,'TONE5',False):   # TONE5=True：木と同じ5色のかげ（左上の光・5色・まるい面のさかいめに市松のあみかけ。tools/art/furntone.py）。家具・建物はこれ（持ち主がきめた）

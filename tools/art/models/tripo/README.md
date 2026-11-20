@@ -90,4 +90,4 @@ P('名前','model',('tripo/oak.glb', cx, cy, z0, size, rot, tilt), on=('ground',
 
 6回め（`ck_*`）は、料理の家具の上の材料・料理用。色のない glb を `tripo_split.py` で切りわけた（プロンプトは `prompts.md` の「6回め」）。
 
-7回め（`gf/`）は、限定の家具25こ（`g_w_*`・`g_e_*`・`g_f_*`・`g_k_*`・`g_s_*`、設計図は `furn3d/items/g_*_t.py`）。持ち主の1つの glb（たての壁のようにならべた形）を `tripo_split.py --wall --tex --sub 0.0025`（三角形をこまかく分けてから UV の絵の色をとる）で切りわけた。形も色もトリポのまま（かたむきを直すと形がくずれる。持ち主がきめた）。かげと質感はマットキャップ（`tools/art/matcap.py`、設計図の `MATCAP`）。それぞれの家具の専用なので、`catalog` には入れない。
+7回め（`gf/`）は、限定の家具25こ（`g_w_*`・`g_e_*`・`g_f_*`・`g_k_*`・`g_s_*`、設計図は `furn3d/items/g_*_t.py`）。持ち主の1つの glb（たての壁のようにならべた形）を `tripo_split.py --wall --tex --keepuv` で切りわけた（形はへらさず・分けず、UV をのこす。テクスチャの絵は `gf/tex.png` の1まい）。色は写すときに、ドットごとにテクスチャの絵からとる（設計図の `p.uvtex`、`blueprint.uvdecal`）。形も色もトリポのまま（かたむきを直すと形がくずれる。持ち主がきめた）。かげと質感はマットキャップ（`tools/art/matcap.py`、設計図の `MATCAP`）、スムーズシェードは80度（`SMANGLE`）。それぞれの家具の専用なので、`catalog` には入れない。
