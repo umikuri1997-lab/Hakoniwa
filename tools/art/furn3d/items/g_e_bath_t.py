@@ -8,8 +8,17 @@ W,K,E=gfh.frame('g_e_bath',0.5,0.5,SIZE)
 def fix(x,y,z,c):   # 湯ぶねの中を水に（持ち主：中身がオレンジ→水）。トリポのテクスチャは中がオレンジで、デザインの水の色は焼けない（色がちがいすぎる）ので、ここでぬる
     r=np.hypot(x-0.5,y-0.5)
     if z>E[1]*0.8 and r<min(E[0],E[2])/2*0.86:
-        w=0.5+0.5*np.sin(r*70);return np.array([176,218,232.])*(0.97+0.05*w)   # 輪の形のさざなみ
+        return np.array([150,206,228.])   # 水の底（水の面はすけるので、底の色が見える）
     return c
+import math
+from common import hfield
+WATER=(120,192,236);SKY=(220,240,252)
+def EXTRA(sc):   # 水（持ち主：みずがめと同じ作り）：はちの中、ふちの0.035下。すけて見える・つやがある（'clear'、水飲み鳥と同じ）
+    zw=0.665;r=0.40;CX,CY=0.505,0.518
+    def col(x,y):t=max(0,min(1,(CY-y)/(r*1.4)+0.3))**1.4;return tuple(WATER[k]*(1-t)+SKY[k]*t for k in range(3))
+    def disk(u,v):U,V=2*u-1,2*v-1;return (CX+r*U*math.sqrt(max(0,1-V*V/2)),CY+r*V*math.sqrt(max(0,1-U*U/2)))
+    top=lambda x,y:zw+0.003*math.sin(x*25+y*8)
+    sc.material('clear');hfield(sc,CX-r,CY-r,CX+r,CY+r,top,lambda x,y:col(*disk((x-(CX-r))/(2*r),(y-(CY-r))/(2*r))),n=(40,40),shape=disk);sc.material(None)
 def PARTS():
     p=P('g_e_bath','model',('tripo/gf/g_e_bath.glb',0.5,0.5,0,SIZE,0,0),(255,255,255),on=('ground',),note='地面におく');p.tex=False;p.uvtex='tripo/gf/tex2.png';p.uvfix=fix   # 色はトリポのテクスチャの絵（木目をはらない）
     return [p]

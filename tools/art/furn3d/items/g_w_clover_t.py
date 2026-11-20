@@ -5,7 +5,16 @@ from blueprint import Part as P
 ID='g_w_clover';BOTTOM=58;GRAD=True;SIZE=0.77
 VIEWS=[('g_w_clover',0),('g_w_clover>1',1),('g_w_clover>2',2),('g_w_clover>3',3)]
 
+LEAF=np.array([156,186,98.]);RIM=np.array([190,208,134.]);VEIN=np.array([182,204,122.]);EDGE=np.array([214,180,128.])
+def fix(x,y,z,c):   # 色むら（持ち主：クローバーの色がむらむら）：トリポのテクスチャの葉は、緑と茶色がまだら。天板（葉）の上の面は葉の緑、ふちと下は木の色の1色にする。ポット・カップ（白っぽい色）はそのまま
+    if 0.39<z<0.515 and not (min(c)>185 and max(c)-min(c)<60):   # 葉の上の面は高さ0.48〜0.51
+        if z<=0.465:return EDGE
+        dx,dy=x-0.5,y-0.5;r=np.hypot(dx,dy)
+        if r>0.41:return RIM   # デザインの絵の、葉のふちの明るい帯
+        if min(abs(dx),abs(dy))<0.011 and r>0.06:return VEIN   # 葉のまん中のすじ（葉は上下左右）
+        return LEAF
+    return c
 def PARTS():
-    p=P('g_w_clover','model',('tripo/gf/g_w_clover.glb',0.5,0.5,0,SIZE,0,0),(255,255,255),on=('ground',),note='地面におく');p.tex=False;p.uvtex='tripo/gf/tex2.png'   # 色はトリポのテクスチャの絵（木目をはらない）
+    p=P('g_w_clover','model',('tripo/gf/g_w_clover.glb',0.5,0.5,0,SIZE,0,0),(255,255,255),on=('ground',),note='地面におく');p.tex=False;p.uvtex='tripo/gf/tex2.png';p.uvfix=fix   # 色はトリポのテクスチャの絵（木目をはらない）
     return [p]
 MATCAP='clay';SMANGLE=80;PARALLEL=True;ELEV=30   # マットキャップ・スムーズシェード80度・遠近なし・見おろし30度（持ち主がきめた）

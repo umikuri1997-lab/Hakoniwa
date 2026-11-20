@@ -28,9 +28,13 @@ def fsofa():
     for s in (sel&(v[:,0]<0),sel&(v[:,0]>=0)):
         if s.sum()<5:continue
         o=v[s].mean(0);v[s]=o+(v[s]-o)*[1.5,0.75,1.0]
+    # わくの上（持ち主：形がデザインと合っていない）：トリポのわくは、背もたれのクッションより上へ、いすの王座のように高くのびている。
+    # デザインでは、わくはクッションのすぐ上で、まん中にほのおのかざり。クッションの上（T0）からかざりの根もと（T1）までを TOPK にちぢめ、かざりはそのまま下へうつす
+    y=v[:,1];h2=y.max();T0,T1,TOPK=0.56*h2,0.86*h2,0.35
+    v[:,1]=np.where(y<=T0,y,np.where(y<=T1,T0+(y-T0)*TOPK,y-(T1-T0)*(1-TOPK)))
     m.vertices=v;save('g_f_sofa',m)
-def screen(n):
-    m=load(n);v=m.vertices;v[:,2]*=0.35;m.vertices=v;save(n,m)   # 0.15 だと、横から見たとき紙のようにうすくなる
+def screen(n,ky=1.0):
+    m=load(n);v=m.vertices;v[:,2]*=0.35;v[:,1]*=ky;m.vertices=v;save(n,m)   # 0.15 だと、横から見たとき紙のようにうすくなる。ky：高さ（持ち主：風のびょうぶは低く。設計図の SIZE も同じだけ低くする）
 def widen(n):
     m=load(n);v=m.vertices;v[:,0]*=1.5;m.vertices=v;save(n,m)
 def planter():
@@ -64,4 +68,4 @@ def tablefill():
     uvp=((px+0.5)/t2.shape[1],1-(py+0.5)/t2.shape[0])   # 天板の色のテクセル
     disk=trimesh.Trimesh(P,F,process=False);disk.visual=trimesh.visual.TextureVisuals(uv=np.tile(uvp,(len(P),1)),material=m.visual.material)
     save('g_f_table',trimesh.util.concatenate([m,disk]))
-fsofa();screen('g_f_screen');screen('g_k_screen');widen('g_k_bed');widen('g_s_sofa');planter();vanity()
+fsofa();screen('g_f_screen');screen('g_k_screen',0.75);widen('g_k_bed');widen('g_s_sofa');planter();vanity()
