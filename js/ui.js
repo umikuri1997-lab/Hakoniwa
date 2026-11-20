@@ -139,7 +139,7 @@ function renderPalette(){
 }
 function gaugeHTML(r){
   const g=(l,v,c,k)=>`<span>${pxi(k)}${l}</span><div class="bar"><i style="width:${clamp(v,0,100)|0}%;background:${c}"></i></div>`;
-  return `<div class="gauges">${g('おなか '+Math.round(r.hunger)+'/'+hMax(r),r.hunger/hMax(r)*100,r.hunger<250?'var(--danger)':'#ffb35c','rice')}${g('たのしさ',r.fun,'var(--pink)','heart')}${g(S.t-(r.eUp||-9)<3?'つかれ（回復中）':'つかれ',100-r.energy,S.t-(r.eUp||-9)<3?'#7ed99a':r.energy<25?'var(--danger)':'#c9a7ff','moon')}</div>`;
+  return `<div class="gauges">${g('おなか '+Math.round(r.hunger)+'/'+hMax(r),r.hunger/hMax(r)*100,r.hunger<125?'var(--danger)':'#ffb35c','rice')}${g('たのしさ',r.fun,'var(--pink)','heart')}${g(S.t-(r.eUp||-9)<3?'つかれ（回復中）':'つかれ',100-r.energy,S.t-(r.eUp||-9)<3?'#7ed99a':r.energy<25?'var(--danger)':'#c9a7ff','moon')}</div>`;
 }
 function spiritXpGaugeHTML(r){const xp=spiritXpProgress(r),max=xp.next==null,base=LVXP[xp.lv],need=max?0:xp.next-base,current=max?0:Math.max(0,Math.round((xp.total-base)*1000)/1000),pct=max?100:clamp(current/need*100,0,100);return `<div class="spiritXp" style="margin-top:8px"><div style="display:flex;justify-content:space-between;gap:8px;font-size:10px"><span>${max?'けいけん MAX':'けいけん '+xpText(current)+' / '+xpText(need)}</span><span>${max?'Lv'+xp.lv:'つぎのレベルまで '+Math.ceil(xp.remaining-1e-9)}</span></div><div class="bar" role="progressbar" aria-label="けいけん" aria-valuemin="0" aria-valuemax="${max?100:need}" aria-valuenow="${max?100:current}" style="margin-top:4px"><i style="width:${pct}%;background:#78b7cb"></i></div></div>`}
 let sheet=null,sheetArg=null;
@@ -565,7 +565,7 @@ function renderSheet(){
     const box=el(`<div class="row"><span class="dot"></span><div class="tx"><b></b><small></small></div></div>`);
     box.querySelector('.dot').style.cssText='background:#f6f1e6 url('+spiritPort(r.elem,96,r.vr)+') center/86% no-repeat;box-shadow:inset 0 0 0 2px '+ELEM[r.elem].col;
     box.querySelector('b').textContent=ELEM[r.elem].name+'のせいれい・'+(r.act?(r.act.shade?'すずしい所で休んでいる':ACT_LBL[r.act.type])||'':'考え中');
-    box.querySelector('small').textContent=r.hunger<200?'おなか：危険！':r.hunger<500?'おなか：少なめ':'';
+    box.querySelector('small').textContent=r.hunger<100?'おなか：危険！':r.hunger<250?'おなか：少なめ':'';
     box.querySelector('.tx').insertAdjacentHTML('beforeend',gaugeHTML(r)+spiritXpGaugeHTML(r));{const sp=box.querySelectorAll('.gauges>span')[1];if(sp){const tp=()=>{sfx('tap');funPop(r)};for(const e of[sp,sp.nextElementSibling]){e.classList.add('comfyTap');e.setAttribute('role','button');e.tabIndex=0;e.onclick=tp;e.onkeydown=ev=>{if(ev.key==='Enter'||ev.key===' '){ev.preventDefault();tp()}}}}}/* たのしさをタップすると、わけの一覧（fun-why.js） */if(typeof inspOn==='function'&&inspOn(r)){const d=el('<div class="inspNote"></div>');d.textContent='きょうは、はりきっている：'+INSPT[r.elem];box.querySelector('.tx').appendChild(d)}/* ひらめきの日（inspire.js） */{const wn=windRemNote(r);if(wn){const d=el('<div class="inspNote"></div>');d.textContent=wn;box.querySelector('.tx').appendChild(d)}}/* 風の遊園地：思い出した遊び */body.appendChild(box);if(isNew)nickSec(body,r);/* 来たときだけ、名前をかえられる（nick.js） */
     if(!isNew){const sy=el('<p class="story" style="margin:6px 0 2px"></p>');sy.textContent='「'+sayLine(r)+'」';body.appendChild(sy);if(SAYPK&&!prefKnown(r,SAYPK)){const k=SAYPK;setTimeout(()=>{if(S.res.includes(r)&&prefKnow(r,k)&&sheet==='res'&&sheetArg===r.id)renderSheet()},0)}}/* ひとことで好みを言ったら、わかる */if(!isNew&&!r.hidden&&sortieOK(r))sortieSec(body,r);/* 出撃 */
     {const lv=rLv(r);

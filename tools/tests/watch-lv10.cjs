@@ -12,7 +12,7 @@ const assert=require('node:assert/strict');
     o.cap7=(S.hp['L'+j]=7,wpCap(j));o.cap8=(S.hp['L'+j]=8,wpCap(j));recount();
     /* 夜、コワイノがいるとき、木のせいれい2人が、どちらも同じ見張り台へ */
     S.t=1440*3+23.5*60;const ws=S.res.filter(q=>q.elem!=='fire').slice(0,2);while(ws.length<2){const q=Object.assign({},S.res[0],{id:900+ws.length,elem:'wood',act:null,path:[]});S.res.push(q);ws.push(q)}
-    for(const q of ws){q.act=null;q.path=[];q.hunger=900;q.meal=null;q.x=x0+0.5;q.y=y0+3.5;q.hidden=false;q.coffin=null}
+    for(const q of ws){q.act=null;q.path=[];q.hunger=450;q.meal=null;q.x=x0+0.5;q.y=y0+3.5;q.hidden=false;q.coffin=null}
     S.enemies=[{id:1,type:'basic',x:x0+5,y:y0+16,hp:9999,max:9999,spawned:true,path:[],atk:0,stun:0,flash:0}];
     for(const q of ws)decide(q);o.both=ws.map(q=>q.act&&q.act.type==='watchpost'&&q.act.obj===j);
     for(const q of ws){q.act.stage='do';ACT.watchpost.start(q,q.act);for(let i=0;i<40;i++)ACT.watchpost.tick(q,q.act,0.5)}

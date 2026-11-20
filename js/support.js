@@ -8,7 +8,7 @@
 const SUPATK=[[100,5],[60,3],[30,2]],SUPR=3,ESCR=3,ESCG=2,ESCBOND=2,ESCMAX=60,TGTMS=4000;
 const SUPA=new Map();
 NIGHT_OK.push('escort');KEEPC.add('escort');
-function supOut(r){return !r||r.hidden||onTower(r)||r.hunger<500||r.act&&['flee','faint','watchpost','escort'].includes(r.act.type)||!!(r.act&&r.act.run)}/* いま、ならんで戦えない子 */
+function supOut(r){return !r||r.hidden||onTower(r)||r.hunger<250||r.act&&['flee','faint','watchpost','escort'].includes(r.act.type)||!!(r.act&&r.act.run)}/* いま、ならんで戦えない子 */
 function supAtkOf(v){for(const [b,n] of SUPATK)if(v>=b)return n;return 0}
 function supAtk(r){return SUPA.get(r)||0}
 function supportTick(){SUPA.clear();if(!S||IS_STORY_REPLAY||!isNight()||!S.enemies||!S.enemies.some(e=>e.spawned&&!e.dead))return;
@@ -21,10 +21,10 @@ function supFx(a,b){const ns=S.ns;if(!ns)return;const K=ns.sup||(ns.sup={}),pk=b
 
 /* ---- 助けてにげる ---- */
 const resById=id=>S.res.find(q=>q.id===id);
-function escWard(r){return fighter(r)&&!r.hidden&&r.hunger<500&&!!r.act&&(r.act.type==='flee'||!!r.act.run)&&r.act.stand>=0}/* にげている、たたかうせいれい */
+function escWard(r){return fighter(r)&&!r.hidden&&r.hunger<250&&!!r.act&&(r.act.type==='flee'||!!r.act.run)&&r.act.stand>=0}/* にげている、たたかうせいれい */
 function escTick(){
   for(const h of S.res){const a=h.act;if(!a||a.type!=='escort')continue;const w=resById(a.who);
-    if(!w||!isNight()||h.hunger<500||S.t-(a.t0||S.t)>ESCMAX||w.act&&w.act.type==='faint'){escEnd(h,w);continue}
+    if(!w||!isNight()||h.hunger<250||S.t-(a.t0||S.t)>ESCMAX||w.act&&w.act.type==='faint'){escEnd(h,w);continue}
     const there=w.hidden||!!w.act&&w.act.stage==='do'&&(w.act.type==='flee'||!!w.act.run);
     if(!there&&!escWard(w)){escEnd(h,w);continue}/* にげるのをやめた */
     if(there&&Math.hypot(h.x-w.x,h.y-w.y)<=ESCR+.5){if(!a.ok){a.ok=1;bondAdd(h,w,ESCBOND,'save');if(typeof dyGuard==='function')dyGuard(h);/* ゆうべのかつやくの、守った数 */toast(h.name+'が'+w.name+'をつれて、にげた','good');for(const r of[h,w])fxSpr('hearts',r.x*TS,(r.y-.7)*TS)}escEnd(h,w)}}

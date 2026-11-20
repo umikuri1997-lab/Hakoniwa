@@ -99,7 +99,7 @@ const CVWALK=2.6,CVFOE=1.5;/* 1秒に歩くマス：せいれい（移動速度2
 const CVSEE=4.2,CVLIGHT=4.4,CVWAKE=3.6,CVAGGRO=6;/* マス：見える・光の絵の半径・コワイノが目をさます・せいれいがねらう */
 const CVSEED=2,CVLIGHTD=2.4,CVWAKED=1.2;/* 光をしぼったとき：見える・光の絵の半径・コワイノが目をさます */
 const CVAMBUSH=50;/* ふいうち：ねているコワイノへのはじめの一撃にたすダメージ */
-const CVHUN={walk:.4,stand:.1,work:3};/* おなかのへり（村と同じ数。コードの1分ごと） */
+const CVHUN={walk:.2,stand:.05,work:1.5};/* おなかのへり（村と同じ数。コードの1分ごと） */
 const CVPUSHT=2,CVSLUICET=4,CVLEAFT=3;/* 作業の時間（コードの分）：岩を1マスおす・水門をあける・葉を置く */
 const CVTORCH=14;/* たいまつがともっている時間（時計の分） */
 const CVLEAF=3;/* 足場の葉の数 */
@@ -224,7 +224,7 @@ function cvEatPop(a){const C=CV;if(!C||!C.party.includes(a))return;const P=pxPop
   for(const k of ks){const b=el('<button class="slot"><span class="ct"></span><img alt=""><span class="nm"></span></button>'),im=typeof foodIc==='function'?foodIc(k):null;if(im)b.querySelector('img').src=im;else b.querySelector('img').remove();b.querySelector('.ct').textContent=C.food[k];b.querySelector('.nm').textContent=FOODS[k].name;
     b.onclick=()=>{P.close();cvEat(a,k)};g.appendChild(b)}}
 function cvEat(a,k){const C=CV,r=a.r;if(!C||!(C.food[k]>0)||!(S.fs[k]>0))return false;C.food[k]--;availAdd('f:'+k,-1);/* 食べた分だけ、村の食べ物がへる */
-  r.hunger=Math.min(hMax(r),r.hunger+FOODS[k].v*1000/fullN(r));a.eatU=performance.now()+1500;a.eatE=FOODS[k].e;a.path=[];a.mv=false;sfx('good');cvHudUpd();return true}
+  r.hunger=Math.min(hMax(r),r.hunger+FOODS[k].v*500/fullN(r));a.eatU=performance.now()+1500;a.eatE=FOODS[k].e;a.path=[];a.mv=false;sfx('good');cvHudUpd();return true}
 
 /* ---------- たたかい ---------- */
 function cvSup(a){/* ならんで戦う力（support.js と同じ数）：3マス以内の、なかよしのなかま */let b=0;for(const q of CV.party)if(q!==a&&Math.hypot(q.x-a.x,q.y-a.y)<=SUPR)b=Math.max(b,supAtkOf(bondOf(a.r,q.r)));return b}
