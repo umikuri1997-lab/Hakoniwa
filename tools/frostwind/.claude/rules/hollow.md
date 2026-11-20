@@ -1,0 +1,19 @@
+---
+paths:
+  - "src/{glow,speleo,hollow-village}.js"
+  - "src/world/cavern.js"
+  - "test/{hollow,hollow-village}.test.mjs"
+---
+
+# Hollow, lamps, rock
+
+`docs/HOLLOW.md` owns the physics. `src/sunlight.js` owns the lamps and
+`hollowRamps`; `src/glow.js` the pool of light a body throws;
+`src/world/cavern.js` the rooms, the rock and the set pieces; `paintHollow` in
+`src/world/ground.js` the drawn floor and walls; `src/speleo.js` the three
+growth forms; `src/hollow-village.js` the cap houses, lamp posts and bench.
+
+A luminous body is placed from analytic fields only: every chunk its light
+reaches asks for it.
+
+Run `npm run test:hollow`. `docs/life/HOLLOW.md` is the dossier.

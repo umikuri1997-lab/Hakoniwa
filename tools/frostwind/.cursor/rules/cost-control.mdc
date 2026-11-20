@@ -1,0 +1,43 @@
+---
+description: Working method
+alwaysApply: true
+---
+
+# Working method
+
+## Read
+
+- Search to find the owner. Read a file whole when you will edit it or reason
+  about its behaviour.
+- One authority cluster per change and per PR. A wider audit needs the user's
+  request.
+- Open `docs/CANON.md` or `docs/DECISIONS.md` to add or change a law.
+- Never read generated or duplicate context: `node_modules/`, `dist/`,
+  `.claude/worktrees/`, `artifacts/`, `reference/*.txt`, `*.actual.png`,
+  `*.diff.png`. Never print a bundle, an atlas or golden data.
+
+## Delegate
+
+- Delegate independent clusters in parallel, one worktree each. Brief each
+  subagent with its file list, the method, and the check that proves its result.
+- A comment-only pass proves itself with `npm run codehash`. A code move proves
+  itself with `npm run lint` and the closest test.
+- A subagent report is a claim. Read the diff before you merge it.
+
+## Verify
+
+- `npm run lint` after every code edit: undefined names, unused bindings, world
+  stage wiring. It takes one second.
+- Then the closest `npm run test:<area>`, a domain aggregate when a cluster
+  changes, `npm test` once at handoff, `npm run verify` when the build or entry
+  point changes. A broad pass supersedes its subsets.
+- Repeat a level only after a relevant edit. Never suppress an assertion.
+- Regenerate a baseline only after an intentional authority change, through its
+  `*:update` script.
+
+## Frames
+
+- Measure first: a structural test or a derived number.
+- Then look. Capture with `tools/shot.mjs` and read the PNG. A change to drawn
+  output is unverified until its frame has been seen.
+- `.cursor/rules/pixel-review-gate.mdc` owns who decides a subjective change.

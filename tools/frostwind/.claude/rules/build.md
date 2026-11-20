@@ -1,0 +1,12 @@
+---
+paths:
+  - "build.mjs"
+  - "src/{main,index}.*"
+---
+
+# Build and entry point
+
+`src/main.js` is the only module that touches the DOM. `build.mjs` bundles one
+offline HTML file and inlines the chunk worker.
+
+Run `npm run build`, then `npm run verify` before handing off.

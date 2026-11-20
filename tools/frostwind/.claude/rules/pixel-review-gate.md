@@ -1,0 +1,40 @@
+---
+paths:
+  - "tools/{review,shot}.mjs"
+  - "test/review.test.mjs"
+  - "src/shaders/**/*.js"
+  - "src/world/ground.js"
+---
+
+# Pixel review
+
+## The agent measures and looks
+
+Objective raster facts are agent work: palette membership, dimensions,
+connectedness, contacts, collision, authored values, legibility floors. Hold
+each with the closest test.
+
+Look at your own frames. Capture the same seed, time and camera before and after
+with `tools/shot.mjs`, and read both PNGs. Report facts: which shape, which
+rung, how many pixels.
+
+## Colour noise
+
+Realism does not excuse a busy frame. A form that paints one rung gets the
+smallest mark that reads: a rim on the edge that causes it, complete along that
+edge, washing out through the half checker. Never a flat second-rung area
+inside one surface (`PROJECTION.md`, value budget). Report the share of pixels
+the mark moves.
+
+## The human owns taste
+
+A change that alters a world's look carries the law or measured defect it
+serves, a before and after frame pair, and one change per reason, so the user
+can revert it alone.
+
+With no law and no defect to decide (silhouette, rhythm, which of several
+forms), produce exactly three distinct candidates and a page from
+`node tools/review.mjs <manifest.json>` (fixture in `test/review.test.mjs`).
+State the factual differences and, if you have one, your pick. Return the review
+ID and page path, then stop until the user answers with the ID and A, B or C.
+Apply only that candidate.
