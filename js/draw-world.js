@@ -429,7 +429,7 @@ function render(now){RFN++;hdFrame();
   for(const g of EXTRA){const px=g.x*TS,fy=g.y*TS;add(g.y,2,[px-30,fy-70,px+30,fy+15],()=>drawRes(g,now),(g.y|0)*W+(g.x|0))}/* 思い出の場面だけの子 */
   if(WD===1)storyStageAdd(add,now);if(WD===1&&typeof kgrAdd==='function')kgrAdd(add,now);/* 火山の幕間・さいごのうずみ火の影と火（kagari.js） *//* 火山の物語の、地面に置く演出（たき火・灰・たまご・ちょうちん）は、せいれいと同じ奥行きの順で */
   if(visitHere()){const g=visitor(),px=g.x*TS,fy=g.y*TS;add(g.y,2,[px-30,fy-70,px+30,fy+15],()=>drawRes(g,now),(g.y|0)*W+(g.x|0))}/* 温泉宿のお客さん */
-  if(GUEST){const g=GUEST,px=g.x*TS,fy=g.y*TS;add(g.y,2,[px-30,fy-70,px+30,fy+15],()=>drawRes(g,now),(g.y|0)*W+(g.x|0))}/* 火山にあそびに来たフタバ */
+  if(typeof shopRows==='function')shopRows(add,now);/* 水のステージの食堂のお客さん */if(GUEST){const g=GUEST,px=g.x*TS,fy=g.y*TS;add(g.y,2,[px-30,fy-70,px+30,fy+15],()=>drawRes(g,now),(g.y|0)*W+(g.x|0))}/* 火山にあそびに来たフタバ */
   if(EVAP.length){EVAP=EVAP.filter(it=>now-it.t0<(it.dur||1800)+600+(it.die?KO_HOLD:0));for(const it of EVAP){const e=it.e,z=EN[e.type].size||1,px=e.x*TS,fy=e.y*TS;add(e.y,2,[px-30*z,fy-110*z,px+30*z,fy+15],()=>liftDraw(uLift(it.e),()=>drawEvap(it,now)),(e.y|0)*W+(e.x|0))}}
   for(const e of S.enemies)if(vis(e)&&!(e.dead&&EVAP.some(it=>it.e===e))){/* 消えていく途中のコワイノは、消える演出だけを描く */const s=EN[e.type].size||1,px=e.x*TS,fy=e.y*TS;add(e.y,2,[px-24*s,fy-56*s-10,px+24*s,fy+15],()=>liftDraw(uLift(e),()=>drawEnemy(e,now)),(e.y|0)*W+(e.x|0))}
   if(godHere()){const GX=godX(),GY=godY(),px=GX*TS,py=GY*TS,onA=STATUE>=0&&S.obj[STATUE+W]==='altar',gk=onA?((STATUE/W)|0)+1.02:GY+.5,gt=onA?1.5:2;add(gk,gt,/* 神殿の柱とおそなえ箱より手前 */[px-36,py-64,px+36,py+24],()=>drawGod(now),(GY|0)*W+(GX|0));}

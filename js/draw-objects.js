@@ -162,7 +162,7 @@ function drawObj0(c,id,x,y,i,g,now){
   if(id==='campfire'&&!ICON&&i!=null&&campOut(i)){const ch=window.CHIPS&&CHIPS['campfire#off'];if(ch&&drawChip(c,ch,id,x,y,now,i))return}/* 雨で消えたたき火 */
   if(typeof KDIDS!=='undefined'&&KDIDS.has(id)){drawKd(c,id,x,y,i,g,now);return}
   if(typeof WINDIDS!=='undefined'&&WINDIDS.has(id)){drawWindObj(c,id,x,y,i,g,now);return}/* 風穴・かざみ・古い風車（wind.js） *//* もりのこだまの見つかる所（kodama.js） */
-  if(typeof MZIDS!=='undefined'&&MZIDS.has(id)){mzDrawObj(c,id,x,y,i,now);return}/* 水のステージの物（mizube.js、コードのドット絵） */
+  if(typeof MZIDS!=='undefined'&&MZIDS.has(id)){mzDrawObj(c,id,x,y,i,now);return}if(typeof SHOPIDS!=='undefined'&&SHOPIDS.has(id)){shopDrawObj(c,id,x,y);return}/* 水のステージの物（mizube.js、コードのドット絵） */
   if(id==='kagenest'){drawNest(c,x,y,now||performance.now());return}if(id==='leafwall'){drawLeafWall(c,x,y,i,now);return}if(id==='pit'){drawPit(c,x,y,i);return}/* かげの巣・葉のかべ（defense.js、コードのドット絵） *//* 霧の中で見つける物 */
   if(VEINS[id]){drawVein(c,id,x,y,i);return}/* 鉱脈 */
   if(id==='tower'&&WD===0){drawStoryTree(c,x,y,i,now,ICON);return;}

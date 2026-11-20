@@ -144,7 +144,7 @@ function goWork(r,G,nw){boxFullReset();
   if(typeof aniJob==='function'&&aniJob(r,G))return true;/* 飼う生き物：えさ・水・とれた物 */
   if(smeltJob(r,G))return true;/* 炉：鉱石を運ぶ・火のせいれいが精錬する */
   if(typeof procJob==='function'&&procJob(r,G))return true;/* 加工：運ぶ・加工する・水車でできた物を運ぶ */
-  if(typeof mzJob==='function'&&mzJob(r,G))return true;/* 水のステージ：水門を直す・宝箱をあける */if(typeof fogJob==='function'&&fogJob(r,G))return true;if(typeof kdJob==='function'&&kdJob(r,G))return true;/* もりのこだま：石材をはこぶ・見にいく */if(typeof wflJob==='function'&&wflJob(r,G))return true;/* 御神木のそばの花の世話（木のなかまと花畑） */if(webJob(r,G))return true;/* クモの巣のそうじ *//* 霧の中で見つけた宝箱・あしあと */
+  if(typeof mzJob==='function'&&mzJob(r,G))return true;if(typeof shopJob==='function'&&shopJob(r,G))return true;/* 水のステージ：食堂の料理を運ぶ・歌う *//* 水のステージ：水門を直す・宝箱をあける */if(typeof fogJob==='function'&&fogJob(r,G))return true;if(typeof kdJob==='function'&&kdJob(r,G))return true;/* もりのこだま：石材をはこぶ・見にいく */if(typeof wflJob==='function'&&wflJob(r,G))return true;/* 御神木のそばの花の世話（木のなかまと花畑） */if(webJob(r,G))return true;/* クモの巣のそうじ *//* 霧の中で見つけた宝箱・あしあと */
   if(r.elem==='wind')for(const k of['drop','seed','weed'])if(tryJob(r,G,k))return true;/* 風のせいれいは、落ちている物（落とし物・枝・ふしぎな種・雑草・きのこ）を、畑の世話・おつげ・木・石より先にひろう */
   if(pitJob(r,G))return true;/* 落とし穴をほりなおす（土のせいれい、defense.js） */
   if(nestJob(r,G))return true;/* 「しらべる」でタップしたかげの巣（defense.js） */
@@ -340,6 +340,7 @@ function updRes(r,dt){rescueStuck(r);if((RHOLD.get(r)||0)>performance.now())retu
     const old=r.act,op=r.path,ob=r.bubble;endAct(r);const G=bfs(r.x|0,r.y|0);if(!(tryJob(r,G,'build')||tryJob(r,G,'craft'))){r.act=old;r.path=op;r.bubble=ob;if(old.key)reserve(old.key)}}}
   if(fighter(r)&&r.act&&r.act.type==='patrol'&&isNight()&&S.enemyOn&&(r.act.hunt!=null?S.t-r.act.hunt>3:S.enemies.some(e=>e.spawned&&!e.dead&&nearRes(e))))endAct(r);/* 見回り中でも、拠点＋3マスにコワイノが来たらすぐ向かう */
   if(fighter(r)&&r.act&&!['step','patrol','eat','fetch','eatwait','flee','faint','forage','bury','escort'].includes(r.act.type)&&r.hunger>=500&&!r.refill&&!r.coffin&&!r.meal&&S.enemies.some(e=>e.spawned&&!e.dead&&nearRes(e)))endAct(r);/* 火の子は、ほかのことをしていても、拠点＋3マスにコワイノが来たら、やめてたたかいに行く */
+  if(typeof shopCut==='function'&&shopCut(r)){const old=r.act,op=r.path,ob=r.bubble;endAct(r);if(!shopJob(r,bfs(r.x|0,r.y|0))){r.act=old;r.path=op;r.bubble=ob;if(old.key)reserve(old.key)}}/* 水のステージの食堂：お客さんが待っていたら、水あび・休み・ぶらぶらをやめて運ぶ */
   if(r.act&&r.act.type==='wander'&&isNight()&&!(isWatch(r)&&S.enemyOn)){endAct(r)}/* 夜になったら、お散歩をやめて帰る */
   if(r.act&&IDLE_ACTS.includes(r.act.type)&&!((r.act.type==='fish'||r.act.type==='play')&&r.act.stage==='do')/* つり・遊び家具は、はじめたら、さいごまで（つりは50秒でやっと魚がとれる。遊びを仕事でとちゅうでやめると、たのしさがたまらず、ひとしごとごとに少しだけ遊ぶようになる） */&&!isNight()&&r.hunger>=550&&!(r.fun<(S.oracle==='play'?98:r.elem==='wind'?60:30)&&r.act.type!=='wander'&&r.act.type!=='idle'&&r.act.type!=='quirk'&&r.act.type!=='critwatch'&&r.act.type!=='sunset'&&r.act.type!=='rainjoy'&&r.act.type!=='admire'&&r.act.type!=='ownseat')&&!r.act.rand/* 遊ぶきまり（decide0・おつげ）と同じ数で、遊びをやめない */){r.wchk=(r.wchk||0)+dt;if(r.wchk>=3){r.wchk=0;if(hasWork(r)){// 実際に仕事を始められたときだけ遊びをやめる（できないなら続ける）
     const old=r.act,op=r.path,ob=r.bubble;endAct(r);if(!goWork(r,bfs(r.x|0,r.y|0),true)){r.act=old;r.path=op;r.bubble=ob;if(old.key)reserve(old.key)}}}}
