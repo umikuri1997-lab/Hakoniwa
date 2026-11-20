@@ -69,7 +69,7 @@ function lastFirst(list){/* さいごにあそんだステージを、いちば�
   const card=list.querySelector('.wcard[data-k="'+top[0]+'"]');if(card===list.firstElementChild)return;
   const pv=card.previousElementSibling,nx=card.nextElementSibling;if(pv&&pv.classList.contains('wlink'))pv.remove();else if(nx&&nx.classList.contains('wlink'))nx.remove();/* 道の線は、となりのステージどうしでつなぎなおす */
   card.classList.add('wtop');list.insertBefore(card,list.firstElementChild)}
-const APP_VER=1999;/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER=1989;/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
@@ -199,7 +199,7 @@ function updTut(){
   hand.hidden=false;hand.style.transform='translate('+x+'px,'+y+'px)';hand.classList.toggle('up',elT?elT>0:y<120);hand.classList.toggle('down',!swipe&&(elT?elT<0:y>innerHeight-110));hand.classList.toggle('elt',!!elT);hand.classList.toggle('side',elT===2);if(elT===2)hand.classList.remove('up','down');// 画面の下のほうは指を上から向ける
   hand.classList.toggle('swipe',!!swipe);hand.classList.toggle('rev',swipe<0);hand.querySelector('.lbl').textContent=lbl;{const L=hand.querySelector('.lbl');L.style.marginLeft='0px';const lr=L.getBoundingClientRect();let sh=0;if(lr.right>innerWidth-8)sh=innerWidth-8-lr.right;else if(lr.left<8)sh=8-lr.left;L.style.marginLeft=sh+'px'}// ラベルが画面からはみ出さないように
 }
-function frameErr(w,e){/* 1コマで失敗しても、表示（HUD）の更新や次のコマは止めない。原因をたどれるよう、メッセージをのこす */const m=w+': '+(e&&e.message)+' @'+((e&&e.stack||'').split('\n')[1]||'').replace(/^.*[\/\\]/,'').slice(-60);window.__frameErr=m;if(frameErr.last!==m){frameErr.last=m;console.error(m);try{toast('エラー '+m)}catch(x){}}}
+function frameErr(w,e){/* 1コマで失敗しても、表示（HUD）の更新や次のコマは止めない。原因をたどれるよう、メッセージをのこす */const m=w+': '+(e&&e.message)+' @'+((e&&e.stack||'').split('\n')[1]||'').replace(/^.*[\/\\]/,'').slice(-60);window.__frameErr=m;lgErr(w,e);if(frameErr.last!==m){frameErr.last=m;console.error(m);try{toast('エラー '+m)}catch(x){}}}
 function stepLooks(now,rdt){/* 見た目だけの動き（ドアの開け閉め・屋根のすけぐあい・まばたき・勇ましい顔・あらわれる演出）を、1コマに1回進める */
   const kd=1-Math.pow(.7,rdt*30);for(const[i,d]of DOOROP){if(!S.obj[i]){DOOROP.delete(i);continue}const near=S.res.some(r=>!r.hidden&&((r.y|0)*W+(r.x|0)===i||r.path&&r.path.length&&r.act&&r.act.stage==='walk'&&(r.path[0]===i||r.path[1]===i)&&Math.abs(r.x-d.cx)<d.ax+1&&Math.abs(r.y-d.cy)<d.ay+1));if(near&&d.op<.03)sfxAt('door',d.cx,d.cy);d.op+=((near?1:0)-d.op)*kd}/* ドアを通る子がいるときだけ開く：ドアのマスにいる子か、歩いていて、つぎの2マスのうちにドアを通る子（近くで休んだり遊んだりしているだけでは開かない）。開きはじめにガチャ */
   const dt=Math.min(.1,rdt);for(const[k,v]of ROOFS){const tg=OPENH.has(k)?0:1;v.a+=Math.sign(tg-v.a)*Math.min(Math.abs(tg-v.a),dt*5)}
@@ -232,7 +232,7 @@ function frame(now){
   for(let i=fx.length-1;i>=0;i--)if(fx[i].life<=0)fx.splice(i,1);
   for(const m of motes){m.y-=prdt*.012*m.s;m.x+=Math.sin(now/2000+m.p)*prdt*.004;if(m.y<0){m.y=1;m.x=Math.random()}}
   seasonStep(prdt,now);feelFrame(now);juiceFrame(now);/* 足音・足もとの反応・場所の音（feel.js） */
-  stepLooks(now,rdt);
+  stepLooks(now,rdt);lgTick(now);/* くわしいログ：目標のかわり・ためた物をのこす（log.js） */
   if(!PZ&&!menuOpen&&$('#pro').hidden&&stageReady()){try{render(now)}catch(e){frameErr('render',e)}try{phTick(now)}catch(e){frameErr('photo',e)}}/* 日記の絵（photo.js） *//* タイトル・導入会話・メニュー中は、背景ワールドを描かない */
   if(AC)wantSong=(!$('#title').hidden||!$('#maps').hidden||!$('#pro').hidden)?'opening':stageSong();
   if(started){hudT+=rdt;if(hudT>.3){hudT=0;updHUD()}
