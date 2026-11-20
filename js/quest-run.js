@@ -11,7 +11,7 @@ function checkQuest(){
   TALKW=null;if(S.qStory==null)QUESTCLEARW=null;finalCheck();
   if(NEWRES!=null||NEWQ.length)return;
   if(S.cleared){if(WD!==FREE&&!(typeof KGRIV!=='undefined'&&KGRIV)&&!(typeof KGRRUN!=='undefined'&&KGRRUN))afterTick();/* 火山のさいごのうずみ火（kagari.js）のあいだは、クリアのあとの依頼を出さない */else freeAfterTick();/* フリーモード：きょうの目標・季節の話（free.js） */return}
-  if(S.quest>=QUESTS.length)return;
+  if(S.quest>=QUESTS.length){if(S.qStory!=null&&$('#dialog').hidden){TALKW=storyWho(QUESTS[S.qStory]);QUESTCLEARW=TALKW;renderQuest()}return}/* さいごの目標のお礼の会話も出す（一覧のおわりで止めない） */
   const q=QUESTS[S.quest];
   if(q.id==='guest'&&S.qTalked&&!S.flags.guestDone&&!GUESTRUN&&!isNight()&&$('#dialog').hidden&&S.qStory==null)guestScene();
   if(S.flags.qPassed&&S.flags.qPassed[q.id]&&S.qStory==null){delete S.flags.qPassed[q.id];S.quest++;S.qTalked=false;return checkQuest()}/* 古いセーブで、ならびをかえる前にもうした目標は、とばす（migrateFarmFirst） */
@@ -53,8 +53,19 @@ function showItemGift(){while(ITEM_GIFTS.length&&ITEM_GIFTS[0].state!==S)ITEM_GI
   GIFT_ACTIVE=true;const overlay=el('<div class="idea-reveal gift-reveal" role="dialog" aria-modal="true" aria-label="うけとったもの"></div>'),card=el('<div class="idea-card"><div class="idea-symbol">'+pxi(rec?'paper':'box')+'</div><h2></h2><div class="idea-items"></div></div>');
   card.querySelector('h2').textContent=ttl;for(const[id,n]of items){const item=el('<div class="idea-item"></div>'),img=document.createElement('img'),name=document.createElement('span');img.src=iconURL(id);img.alt='';name.textContent=rec?BL[id].name:iname(id)+' ×'+n;item.append(img,name);card.querySelector('.idea-items').append(item)}
   const button=el('<button class="btn pri" type="button">'+(rec?'とじる':'うけとる')+'</button>');button.disabled=true;card.append(button);overlay.append(card);document.body.append(overlay);sfx('good');const prior=document.activeElement;
-  setTimeout(()=>{if(overlay.isConnected){button.disabled=false;button.focus({preventScroll:true})}},650);button.onclick=()=>{if(button.disabled)return;overlay.remove();GIFT_ACTIVE=false;if(prior&&prior.isConnected)prior.focus({preventScroll:true})};
+  if(rec)recRevealFx(card,overlay);/* あたらしいレシピ：ひらめきの演出（ためて → はじける → 1つずつぺたっ） */
+  setTimeout(()=>{if(overlay.isConnected){button.disabled=false;button.focus({preventScroll:true})}},rec?650+items.size*240+500:650);button.onclick=()=>{if(button.disabled)return;overlay.remove();GIFT_ACTIVE=false;if(prior&&prior.isConnected)prior.focus({preventScroll:true})};
 }
+/* あたらしいレシピの演出：紙のアイコンがふるえて光をため（ドットの光の帯がまわりだす）→ ぽんとはじけて紙ふぶき → 物が1つずつ、ぺたっと出て鈴が上がっていく → 「ひらめき」のハンコ */
+function recRevealFx(card,overlay){const sym=card.querySelector('.idea-symbol'),its=[...card.querySelectorAll('.idea-item')],red=typeof uiReduced==='function'&&uiReduced();its.forEach(e=>e.style.visibility='hidden');
+  const cv=document.createElement('canvas');cv.className='recray';cv.width=cv.height=64;sym.style.position='relative';sym.prepend(cv);const g=cv.getContext('2d'),t0=performance.now();
+  const draw=now=>{if(!overlay.isConnected)return;const t=(now-t0)/1000,k=Math.min(1,t/.45),a=red?0:Math.floor(t*6)*(Math.PI/20);g.clearRect(0,0,64,64);
+    for(let i=0;i<14;i++){const an=a+i*Math.PI/7;g.globalAlpha=(i%2?.8:.55)*k;g.fillStyle=i%2?'#fff6cf':'#ffd45a';for(let d=8;d<8+24*k;d++){const w=Math.max(1,Math.round(d*.16)),x=Math.round(32+Math.cos(an)*d),y=Math.round(32+Math.sin(an)*d);g.fillRect(x-(w>>1),y-(w>>1),w,w)}}
+    g.globalAlpha=1;for(let i=0;i<8;i++){const ph=(t*1.4+i/8)%1,an=i*.8+t*.5,d=10+ph*20,x=Math.round(32+Math.cos(an)*d),y=Math.round(32+Math.sin(an)*d);g.globalAlpha=1-ph;g.fillStyle='#fff';g.fillRect(x,y-1,1,3);g.fillRect(x-1,y,3,1)}g.globalAlpha=1;requestAnimationFrame(draw)};requestAnimationFrame(draw);
+  sym.classList.add('recshake');if(typeof j3Ding==='function')j3Ding(-5,0,.3);
+  setTimeout(()=>{if(!overlay.isConnected)return;sym.classList.remove('recshake');sym.classList.add('ucntp');if(typeof juiceCheer==='function')juiceCheer('lv');sfx('level');
+    its.forEach((e,i)=>setTimeout(()=>{if(!e.isConnected)return;e.style.visibility='';e.classList.add('stknew');if(typeof j3Ding==='function')j3Ding(i*3,0,.5)},i*240));
+    setTimeout(()=>{if(card.isConnected&&typeof uiStamp==='function')uiStamp(card,false,'ひらめき',true)},its.length*240+150)},650)}
 const spotCond=sp=>(sp.room?'家の中に、':'')+sp.how.replace(/^家の中に、/,'').split('と、').map(t=>t.replace(/([0-9]+)(つ|本)$/,'×$1')).join('・');/* 「井戸と、畑3つ」→「井戸・畑×3」 */
 /* なかよしのポップアップの絵：2人が向かい合って、かわりばんこにはねる。あいだにドットのハート（ポップアップをとじるまで動く） */
 const BONDHEART=['.oo.oo.','offoffo','offfffo','.offfo.','..ofo..','...o...'];
@@ -257,7 +268,7 @@ function updNushi(dt){const n=S.nushi;if(n.app==null)n.app=1;if(n.app<1){n.app=M
   if(n.pl){const r=S.res.find(q=>q.id===n.pl.id);n.pl.t+=dt;if(r&&n.pl.t>90&&r.act&&r.act.type==='npl'&&r.act.stage!=='do')endAct(r);
     if(!r||!r.act||(r.act.type!=='npl'&&n.pl.t>3)){n.pl=null;n.pt=rnd(30,90)}else{n.mv=0;n.path=[];{const dx=r.x-n.x,dy=r.y-n.y;if(Math.abs(dx)<.8&&dy>0)n.dir=1;else{n.dir=0;n.face=dx<0?-1:1}}/* 遊びにくる子のほうを向く（前にいれば正面、横にいれば横向き） */if(r.act.type==='npl'&&r.act.stage==='do'){n.fx=(n.fx||0)+dt;if(n.fx>3){n.fx=0;spawnFX(n.x-.5,n.y-1.1,'#ffb8d8')}}return}}
   if(n.pt==null)n.pt=rnd(20,60);n.pt-=dt;
-  if(n.pt<=0&&S.cleared&&!isNight()){/* クリア後、ときどき、精霊が遊びにくる（なにもしていない子・おもちゃで遊んでいる子から） */n.pt=20;const c=S.res.filter(r=>!r.hidden&&(!r.act||['wander','idle','play'].includes(r.act.type))&&r.hunger>300&&r.energy>25&&Math.abs(r.x-n.x)+Math.abs(r.y-n.y)<30);
+  if(n.pt<=0&&S.cleared&&!isNight()){/* クリア後、ときどき、精霊が遊びにくる（なにもしていない子・おもちゃで遊んでいる子から） */n.pt=20;const c=S.res.filter(r=>!r.hidden&&(!r.act||['wander','idle','play'].includes(r.act.type))&&r.hunger>150&&r.energy>25&&Math.abs(r.x-n.x)+Math.abs(r.y-n.y)<30);
     if(c.length){const r=pick(c),G=bfs(r.x|0,r.y|0),nj=(n.y|0)*W+(n.x|0),F=(j,ok)=>{const dx=j%W-(n.x|0),dy=(j/W|0)-(n.y|0);return ok(dx,dy)&&walk(j)},st0=nearest(G,j=>F(j,(dx,dy)=>dy===1&&Math.abs(dx)<=1),40),st=st0>=0?st0:nearest(G,j=>F(j,(dx,dy)=>dy===0&&Math.abs(dx)>=2&&Math.abs(dx)<=3||dy===2&&Math.abs(dx)<=1),40);/* ヌシ様の前（下）か、横に少しはなれたところ。うしろに立つと、ヌシ様にかくれて見えない */if(st>=0){endAct(r);startAct(r,G,'npl',st,{});n.pl={id:r.id,t:0};n.path=[];return}}}
   if(!n.path)n.path=[];
   if(!n.path.length){n.mv=0;n.t-=dt;if(n.t>0)return;n.t=rnd(30,90);
@@ -291,7 +302,7 @@ function dreamScene(done){/* 草原のはじめ：むかしの、花畑。フタ
   const put0=(k,id)=>{if(!prev.has(k))prev.set(k,S.obj[k]);S.obj[k]=id;if(BL[id]&&BL[id].hp!=null)S.hp[k]=BL[id].hp};
   const FL=['clover','clover','bellf','salvia','lily'];
   for(let dy=-3;dy<=3;dy++)for(let dx=-4;dx<=4;dx++){if(clear(dx,dy))continue;const r=Math.abs(dx*31+dy*17)%10;if(r<5)put(dx,dy,FL[r%5])}/* 花 */
-  if(WD===0)for(let d=3;d<=5;d++){const k=(CY-2)*W+CX+(-d);if(S.obj[k]==='')put0(k,'hwall')}/* 思い出の中では、いまの家のこわれた壁は、なおっている（家の下がわのかべのあな） */
+  if(WD===0)for(const k of starterGapCells(S)){if(S.obj[k]==='')put0(k,'hwall')}/* 思い出の中では、いまの家のこわれた壁は、なおっている（家の下がわのかべのあな） */
   MEMRUN=true;const ss=Object.assign({},S.spotSeen||{});recount();dirty=true;const z0=cam.z;cam.z=1.5;centerOn(cx*TS,(cy-.8)*TS);
   const real=S.res.filter(r=>!r.hidden),keep=real.map(r=>[r,r.hidden]);real.forEach(r=>r.hidden=true);/* いまの子は、思い出のあいだ見せない */
   const mk=(name,dx,dy)=>{const g=mkRes({nid:-910},name,'wood',cx+dx,cy+dy);g.vr=mkVar(POKO,'wood');g.id=-910-EXTRA.length;return g};

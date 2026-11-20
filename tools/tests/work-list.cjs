@@ -4,10 +4,10 @@ const assert=require('node:assert/strict');
   await run(`document.querySelector('#dialog').hidden=true;S.introSeen=true;S.flags.tapped=1;S.hold=0;if(sheet)closeSheet();NOSAVE=true;S.enemies=[];S.t=12*60;
     for(const el of ['fire','water'])S.res.push(mkRes(S,'t'+el,el,CX+.5+S.res.length,CY+2.5));for(const r of S.res){r.hunger=hMax(r);r.energy=100;r.fun=90}`);
   /* わけ */
-  const w=JSON.parse(await run(`(()=>{const[a,b,c]=S.res;a.hunger=100;endAct(a);a.act={type:'chop',stage:'do'};b.stk={t:S.t,n:'木箱'};c.act={type:'wander'};const o=[workWhy(a),workWhy(b),workWhy(c)];b.stk.t=S.t-999;o.push(workWhy(b));return JSON.stringify(o)})()`));
+  const w=JSON.parse(await run(`(()=>{const[a,b,c]=S.res;a.hunger=50;endAct(a);a.act={type:'chop',stage:'do'};b.stk={t:S.t,n:'木箱'};c.act={type:'wander'};const o=[workWhy(a),workWhy(b),workWhy(c)];b.stk.t=S.t-999;o.push(workWhy(b));return JSON.stringify(o)})()`));
   assert.deepEqual(w[0],['おなかがすいている',2]);assert.deepEqual(w[1],['木箱へ行けません',2]);assert.deepEqual(w[2],['することがない',1]);assert.notEqual(w[3][0],'木箱へ行けません','old mark expires');
   /* 一覧：こまっている子が上 */
-  await run(`(()=>{const[a,b,c]=S.res;a.hunger=hMax(a);a.act={type:'chop',stage:'do'};delete b.stk;b.act={type:'chop',stage:'do'};c.hunger=100;c.act={type:'chop',stage:'do'}})()`);
+  await run(`(()=>{const[a,b,c]=S.res;a.hunger=hMax(a);a.act={type:'chop',stage:'do'};delete b.stk;b.act={type:'chop',stage:'do'};c.hunger=50;c.act={type:'chop',stage:'do'}})()`);
   await run(`openSheet('menu','work')`);await page.waitForTimeout(400);
   const L=JSON.parse(await run(`JSON.stringify([...document.querySelectorAll('#sheetBody .rows .row')].map(r=>r.textContent))`));
   assert.equal(L.length,3);assert.ok(L[0].includes('twater')&&L[0].includes('おなかがすいている'),L[0]);assert.ok(L.every(t=>t.includes('得意：')),'tokui on rows');

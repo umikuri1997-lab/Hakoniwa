@@ -22,7 +22,7 @@ const assert=require('node:assert/strict');
   /* 食べ物が少ない・おなかがすいた・休む */
   const k=JSON.parse(await run(`(()=>{const r=S.res[0],x=r.act;const kind=(t,prev,f)=>{f&&f();r.act={type:t,stage:'walk',t:0};return whyKind(r,r.act,prev)};
     const food=kind('harvest','chop',()=>{S.food=0});const full=kind('harvest','chop',()=>{S.food=999});
-    const hungry=kind('fetch','chop',()=>{r.hunger=400});const snack=kind('fetch','idle',()=>{r.hunger=400});const fed=kind('fetch','chop',()=>{r.hunger=hMax(r)});
+    const hungry=kind('fetch','chop',()=>{r.hunger=200});const snack=kind('fetch','idle',()=>{r.hunger=200});const fed=kind('fetch','chop',()=>{r.hunger=hMax(r)});
     S.t=600;const tired=kind('sleep','idle',()=>{r.energy=10});S.t=24*60;const night=kind('sleep','chop',()=>{r.energy=80});const nightIdle=kind('sleep','wander',()=>{});S.t=600;r.energy=100;r.act=null;return JSON.stringify({food,full,hungry,snack,fed,tired,night,nightIdle})})()`));
   assert.deepEqual(k,{food:'food',full:'',hungry:'hungry',snack:'',fed:'',tired:'rest',night:'rest',nightIdle:''});
   console.log('Why-note: food, hunger and rest only when the reason is real');

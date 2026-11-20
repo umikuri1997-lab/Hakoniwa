@@ -438,6 +438,7 @@ function render(now){RFN++;hdFrame();
   if(typeof shopRows==='function')shopRows(add,now);/* 水のステージの食堂のお客さん */if(GUEST){const g=GUEST,px=g.x*TS,fy=g.y*TS;add(g.y,2,[px-30,fy-70,px+30,fy+15],()=>drawRes(g,now),(g.y|0)*W+(g.x|0))}/* 火山にあそびに来たフタバ */
   if(EVAP.length){EVAP=EVAP.filter(it=>now-it.t0<(it.dur||1800)+600+(it.die?KO_HOLD:0));for(const it of EVAP){const e=it.e,z=EN[e.type].size||1,px=e.x*TS,fy=e.y*TS;add(e.y,2,[px-30*z,fy-110*z,px+30*z,fy+15],()=>liftDraw(uLift(it.e),()=>drawEvap(it,now)),(e.y|0)*W+(e.x|0))}}
   for(const e of S.enemies)if(vis(e)&&!(e.dead&&EVAP.some(it=>it.e===e))){/* 消えていく途中のコワイノは、消える演出だけを描く */const s=EN[e.type].size||1,px=e.x*TS,fy=e.y*TS;add(e.y,2,[px-24*s,fy-56*s-10,px+24*s,fy+15],()=>liftDraw(uLift(e),()=>drawEnemy(e,now)),(e.y|0)*W+(e.x|0))}
+  if(WD===YAMI)yamiDrawAdd(add,now);/* 闇のステージ：ヨリ・夜の仕事のあと */
   if(godHere()){const GX=godX(),GY=godY(),px=GX*TS,py=GY*TS,onA=STATUE>=0&&S.obj[STATUE+W]==='altar',gk=onA?((STATUE/W)|0)+1.02:GY+.5,gt=onA?1.5:2;add(gk,gt,/* 神殿の柱とおそなえ箱より手前 */[px-36,py-64,px+36,py+24],()=>drawGod(now),(GY|0)*W+(GX|0));}
   if(festOn())for(const st of festStalls()){const px=(st.x+.5)*TS,py=(st.y+.5)*TS-4;if(!vis({x:st.x+.5,y:st.y+.5}))continue;add(st.y+.3,2,[px-48,py-100,px+48,py+26],()=>drawYatai(px,py,0,now,st),-1);add(st.y+.75,2,[px-48,py-100,px+48,py+26],()=>drawYatai(px,py,1,now,st),-1)}/* せいれいの屋台（屋根は店番のうしろ、台は前） */
   if(typeof TFALL!=='undefined'&&TFALL.length){treeFallTick(now);for(const f of TFALL)add(f.dep,1,null,()=>drawTreeFall(f,now),-1)}/* たおれていく木（juice.js） */

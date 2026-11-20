@@ -4,7 +4,7 @@
 const assert=require('node:assert/strict');
 (async()=>{const {browser,run,errors}=await require('../sim/boot.cjs')({world:0});
   const r=JSON.parse(await run(`(()=>{document.querySelector('#dialog').hidden=true;S.introSeen=true;S.flags.tapped=1;USERPAUSE=true;S.enemyOn=false;const out={};S.t=1440*4+10*60;
-    const a=S.res[0];a.act=null;a.hunger=900;a.fun=50;
+    const a=S.res[0];a.act=null;a.hunger=450;a.fun=50;
     const hx=CX+4,hy=CY-4;for(let y=hy;y<hy+4;y++)for(let x=hx;x<hx+4;x++){const j=y*W+x;S.obj[j]=(y===hy||y===hy+3||x===hx||x===hx+3)?'hwall':''}S.obj[(hy+3)*W+hx+1]='door';
     const bj=(hy+1)*W+hx+1;S.obj[bj]='bed';(S.bedOwn||(S.bedOwn={}))[bj]=a.id;recount();out.home=!!homeOf(a);
     /* 部屋のおねがい：作れる家具だけでできる、まだない部屋 */S.recipes=Object.assign(S.recipes||{},{bed:true,shelf1:true});

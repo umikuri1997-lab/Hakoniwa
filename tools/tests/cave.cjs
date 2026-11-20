@@ -43,7 +43,7 @@ const assert=require('node:assert/strict');
     const e1=mk(25,7);C.en.push(e1);C.dim=true;step(.3);out.dimSleep=e1.asleep;C.focus=e1;const hp0=e1.hp;ea.fatk=0;step(.5);out.ambush=hp0-e1.hp>=CVAMBUSH;out.wokeHit=!e1.asleep;
     const e2=mk(26,5);C.en.push(e2);C.dim=false;C.focus=null;step(.3);out.wideWake=!e2.asleep;C.en=[];
     /* せまい道：コワイノどうしは同じマスに入らない */{const a1=mk(18,11),a2=mk(18,10);a1.asleep=a2.asleep=false;C.en.push(a1,a2);for(const a of C.party)put(a,22,14);let same=false;for(let i=0;i<120;i++){caveFrame(1/30,performance.now());if(cvCell(a1)===cvCell(a2))same=true}out.noStack=!same;C.en=[]}
-    /* 食べる */const fr=by('fire');fr.hunger=300;out.ate=cvEat(act('fire'),'imo');out.hunAte=fr.hunger;out.fsAte=f0-S.fs.imo;
+    /* 食べる */const fr=by('fire');fr.hunger=150;out.ate=cvEat(act('fire'),'imo');out.hunAte=fr.hunger;out.fsAte=f0-S.fs.imo;
     /* 消える */const wr=by('water'),wn=wr.name;wr.hunger=.001;step(.2);out.gone=!S.res.includes(wr)&&!C.party.some(a=>a.r===wr);out.lost=(S.lost||[]).concat(S.buried||[]).some(q=>q.name===wn);document.querySelector('#dialog').hidden=true;
     /* 下へおりる坂：そばまで来ると、その階はクリア。つぎの階がひらく */out.clr0=S.cvClr||0;put(act('earth'),23,3);step(.5);out.clr=S.cvClr;out.clrF=C.clr;
     /* 帰る */C.t=120;const lt=C.loot.pt,pb=S.pt;caveExit(true);out.exit=!CV&&!document.body.classList.contains('cave')&&!document.querySelector('#caveHud');out.pt=S.pt-pb-lt;out.dt=Math.round(S.t-t0);out.pop=!!document.querySelector('.pxpopw');document.querySelectorAll('.pxpopw').forEach(p=>p.remove());
@@ -75,7 +75,7 @@ const assert=require('node:assert/strict');
   assert.deepEqual(r.crack,[true,true]);assert.equal(r.detour,true,'まわり道がある');assert.equal(r.rockArmed,true);assert.equal(r.rockHurt,true);
   assert.equal(r.wall0,true);assert.equal(r.wall,true);assert.equal(r.hidden,true);
   assert.equal(r.dimSleep,true,'光をしぼると、そばでも起きない');assert.equal(r.ambush,true);assert.equal(r.wokeHit,true);assert.equal(r.wideWake,true);assert.equal(r.noStack,true);
-  assert.equal(r.ate,true);assert.equal(r.hunAte,800);assert.equal(r.fsAte,1);assert.equal(r.gone,true);assert.equal(r.lost,true);
+  assert.equal(r.ate,true);assert.equal(r.hunAte,400);assert.equal(r.fsAte,1);assert.equal(r.gone,true);assert.equal(r.lost,true);
   assert.equal(r.exit,true);assert.ok(r.pt>=0&&r.pt<=3);assert.equal(r.dt,120,'洞窟にいた時間ぶん、村の時計が進む');assert.equal(r.pop,true);
   assert.equal(r.inv,1,'ほりだした土器');assert.equal(r.fosRec,1);assert.equal(r.zk,1);assert.equal(r.zkAll,5);assert.equal(r.ico,'data:image');assert.equal(r.zkList,1);assert.equal(r.lit,true);assert.deepEqual(r.again,[0,30]);
   assert.equal(r.blowOff,null,'まっすぐ先でない');assert.equal(r.blowWall,false,'岩のむこう');assert.equal(r.millNo,true);assert.equal(r.blowHit,true);assert.equal(r.mill,true);

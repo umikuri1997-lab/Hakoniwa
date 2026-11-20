@@ -104,11 +104,14 @@ function treeOpenFx(k){/* ひらいた：光が根もとから枝をのぼって
     c.globalAlpha=1;const[x,y]=P[at].map(Math.round);c.fillStyle='#ffd45a';c.fillRect(x-3,y-1,7,3);c.fillRect(x-1,y-3,3,7);c.fillRect(x-2,y-2,5,5);c.fillStyle='#fffbe8';c.fillRect(x-1,y-1,3,3);
     if(t<1)requestAnimationFrame(step);else{TREEPEND=null;treeSwap(w0,k,true)}};
   requestAnimationFrame(step)}
-function treeSwap(w0,k,fx){/* 光がとどいたら、木をいまのようすに描きなおし、点をぽんと光らせる */const w=treeBuild();w0.replaceWith(w);if(!fx)return;const b=w.querySelector('.tnode[data-node="'+k+'"]');if(!b)return;
-  b.classList.add('tpop');sfx('chime');const n=treeNodes().find(x=>x.k===k),cx=n.x,cy=n.y,c=w.querySelector('.tfx').getContext('2d'),T0=performance.now();
-  const step=now=>{if(!w.isConnected)return;const t=(now-T0)/520;c.clearRect(0,0,TRW,TRH);if(t>=1)return;const r=Math.round(14+t*12);c.globalAlpha=Math.round((1-t)*4)/4;
-    c.fillStyle='#ffe58a';for(let a=0;a<16;a++){const q=a/16*Math.PI*2;c.fillRect(Math.round(cx+Math.cos(q)*r)-1,Math.round(cy+Math.sin(q)*r)-1,2,2)}
-    c.fillStyle='#fffbe8';for(let a=0;a<8;a++){const q=a/8*Math.PI*2+.39,d=Math.round(10+t*20);c.fillRect(Math.round(cx+Math.cos(q)*d),Math.round(cy+Math.sin(q)*d),1,1)}c.globalAlpha=1;requestAnimationFrame(step)};
+function treeSwap(w0,k,fx){/* 光がとどいたら、木をいまのようすに描きなおし、点をはでに光らせる：光の輪が3つ・きらきらが四方へとんでおちる・葉がまう・紙ふぶき・上がっていく鈴・ハンコ */const w=treeBuild();w0.replaceWith(w);if(!fx)return;const b=w.querySelector('.tnode[data-node="'+k+'"]');if(!b)return;
+  b.classList.add('tpop');sfx('chime');const n=treeNodes().find(x=>x.k===k),cx=n.x,cy=n.y,c=w.querySelector('.tfx').getContext('2d'),T0=performance.now(),DUR=1600;
+  const SP=[];for(let i=0;i<28;i++){const q=Math.random()*Math.PI*2,v=40+Math.random()*70;SP.push({vx:Math.cos(q)*v,vy:Math.sin(q)*v-40,c:i%3?'#ffe58a':i%2?'#fffbe8':'#9fe07a',leaf:i%4===0})}
+  if(typeof juiceCheer==='function')juiceCheer('lv');if(typeof j3Ding==='function')[0,4,7,12,16].forEach((st,i)=>j3Ding(st,i*.09,.5));setTimeout(()=>{if(b.isConnected&&typeof uiStamp==='function')uiStamp(b,false,'ひらいた',true)},320);
+  const step=now=>{if(!w.isConnected)return;const s=(now-T0)/1000,t=s*1000/DUR;c.clearRect(0,0,TRW,TRH);if(t>=1)return;
+    for(let k2=0;k2<3;k2++){const u=(s-k2*.18)/.6;if(u<0||u>1)continue;const r=Math.round(10+u*(24+k2*8));c.globalAlpha=Math.round((1-u)*4)/4;c.fillStyle=k2===1?'#fffbe8':'#ffe58a';const N=16+k2*8;for(let a=0;a<N;a++){const q=a/N*Math.PI*2;c.fillRect(Math.round(cx+Math.cos(q)*r)-1,Math.round(cy+Math.sin(q)*r)-1,2,2)}}/* 光の輪が3つ */
+    for(const p of SP){const x=Math.round(cx+p.vx*s),y=Math.round(cy+p.vy*s+70*s*s);c.globalAlpha=Math.round(Math.max(0,1-t)*4)/4;c.fillStyle=p.c;if(p.leaf){c.fillRect(x,y,2,1);c.fillRect(x+1,y+1,1,1)}else{c.fillRect(x,y-1,1,3);c.fillRect(x-1,y,3,1)}}/* きらきら・葉 */
+    c.globalAlpha=1;requestAnimationFrame(step)};
   requestAnimationFrame(step)}
 function treePop(k){const old=document.getElementById('treePop');if(old)old.remove();const n=treeNodes().find(x=>x.k===k);if(!n)return;
   const o=el('<div id="treePop" style="position:fixed;inset:0;z-index:45;display:flex;align-items:center;justify-content:center;background:rgba(40,30,15,.35);padding:24px"><div class="pxcard" style="background:var(--panel);padding:16px 18px;max-width:320px;width:100%;color:var(--ink)"><b class="t" style="display:block;font-size:15px;margin-bottom:6px"></b><p class="note n" style="margin:0;white-space:pre-line"></p><div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px"><button class="btn x">とじる</button></div></div></div>'),

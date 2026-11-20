@@ -48,7 +48,7 @@ function gearSpecial(f,e,sx,sy,who){if(!e||e.dead)return;const D=EN[e.type];
   if(f.stun&&!D.boss&&Math.random()<.1)e.stun=Math.max(e.stun||0,STUNT);
   if(f.glow)e.glowU=S.t+SLOWT;
   if(f.kb&&!D.boss){let dx=e.x-sx,dy=e.y-sy;const l=Math.hypot(dx,dy)||1;const nx=e.x+dx/l*.6,ny=e.y+dy/l*.6,q=(ny|0)*W+(nx|0);if(nx>1&&ny>1&&nx<W-1&&ny<H-1&&walk(q)&&!HOME_DOORS.has(typeAt(q))&&!GATE_IDS.has(typeAt(q))){e.x=nx;e.y=ny;e.path=[];e.repath=0}}
-  if(f.steal&&who)who.hunger=Math.min(hMax(who),who.hunger+10)}
+  if(f.steal&&who)who.hunger=Math.min(hMax(who),who.hunger+5)}
 function gearEnemyTick(e,dt){if(e.burnU>S.t&&!e.dead){e.brT=(e.brT||0)+dt;while(e.brT>=1){e.brT-=1;hurtEn(e,BURND,{keep:1,nokb:1,dt:'burn'})}/* 1ごとに3へる */if(e.hp<=0){defeat(e);return true}}return false}/* やけど：少しずつへる */
 function gearGlowNear(e){if(e.glowU>S.t)return true;for(const r of S.res){if(r.hidden||!r.gear)continue;if(gearStat(r).glow&&Math.hypot(r.x-e.x,r.y-e.y)<=3)return true}return false}
 /* 火のせいれいの攻撃のあと：とくべつな効果・横・まわりの敵 */
