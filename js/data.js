@@ -666,6 +666,8 @@ function migrateEarthMerge(state){
   if(state.flags.qsplitPend==='earthListen')delete state.flags.qsplitPend;if(state.flags.qsplitStory==='earthListen')delete state.flags.qsplitStory;
 }
 /* 交換・おつげの目標を、メインからサブクエストへうつした（tutSub1）。古いセーブの番号（QUESTS1_V3）を名前で読みかえ、とちゅうなら、サブクエストのつづきにする（1回だけ） */
+function migrateVolSub(state){/* 火山のサブクエスト「石の塀で村をかこもう」（wall10）・「ようがん台のそばに行燈」（andonyogan）は、「あたたかい畑」（warmfarm）・「湯めぐり」（yumeguri）にかえた：前の2つの状態（受けた・おわった など）は、けす（1回だけ） */
+  if(state.flags.volSub1)return;state.flags.volSub1=1;for(const k of['subSt','subDone','subSeen','subB','subArrived']){const o=state[k];if(o)for(const q of['wall10','andonyogan'])delete o[q]}}
 function migrateTalkSub(state){/* 「せいれいにパワーをそそごう」（boost1）は「せいれいとお話ししよう」（talk1）にかえた：受けた・おわったなどの状態を、名前で読みかえる（1回だけ） */
   if(state.flags.talkq1)return;state.flags.talkq1=1;
   for(const k of['subSt','subDone','subSeen','subB','subArrived']){const o=state[k];if(o&&o.boost1!=null){o.talk1=o.boost1;delete o.boost1}}}

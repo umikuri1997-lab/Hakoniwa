@@ -360,7 +360,7 @@ function glHit(tx,ty,R,foc){/* 光が地面にとどいた：範囲（タップ�
   for(const e of S.enemies.slice()){if(!e.spawned||e.dead)continue;if(!(e===foc&&Math.hypot(e.x-tx-.5,e.y-ty-.5)<R+1.5)&&!inR(e.x,e.y))continue;
     const D=EN[e.type];hurtEn(e,pw,{flash:8,k:'light',skill:1,sx:tx+.5,sy:ty+.5});/* 威力・とめる時間は、守り神のちから（GUP）の段階 */e.stun=D.boss?G.vb[gs]:G.v[gs];e.path=[];e.repath=0;
     if(e.hp<=0)defeat(e,'まもりの光で'+D.name+'を追いはらった！')}
-  for(let dy=-R;dy<=R;dy++)for(let dx=-R;dx<=R;dx++){const x=tx+dx,y=ty+dy;if(x<0||y<0||x>=W||y>=H)continue;const q=y*W+x;if(LIGHTNAT[S.obj[q]]&&!isBud(q)&&!(S.fog&&fogAt(q)))natHit(q)}
+  for(let dy=-R;dy<=R;dy++)for(let dx=-R;dx<=R;dx++){const x=tx+dx,y=ty+dy;if(x<0||y<0||x>=W||y>=H)continue;const q=y*W+x;if(LIGHTNAT[S.obj[q]]&&!isBud(q)&&!(S.fog&&fogAt(q)))natHit(q);else if(rockHard(q))rockHeat(q)}/* 奥のかたい大岩は、熱くなる */
   const now=performance.now();for(const r of S.res){if(r.hidden||r.nap||r.act&&(r.act.type==='sleep'||r.act.type==='faint')&&r.act.stage==='do')continue;const d=Math.max(Math.abs(r.x-tx-.5),Math.abs(r.y-ty-.5))-R;if(d>GLSHOCKR)continue;SHOCKU.set(r,now+GLSHOCKT);JUMP.set(r,now+Math.max(0,d)*40)}}
 const GLSTEP=45,GLSPY=31,GLSHOCKT=1200;/* 範囲の光は、まん中から1マスごとに GLSTEP ミリ秒おくれる。GLSPY：glspark の光のまん中は、置く所より31点上。GLSHOCKT：おどろいた顔の長さ（ミリ秒） */
 let AREACD=0,AREAARM=false;/* こもれびのまもり（フタバから受けついだ守り神の技）：タップした場所のまわりのせいれいに、葉のまもり・パワー3。まわりのマス・葉のまもりの時間・チャージは GUP の area */

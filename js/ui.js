@@ -653,7 +653,8 @@ function renderSheet(){
     else if(t.hvb[j]){P('ヒノオオカゲにこわされて、止まっている。石材3で直せる。');const b=el('<button class="btn pri">直す（石材3）</button>');lackOn(b,lackMat('stone',3));b.onclick=()=>{S.mat.stone-=3;delete t.hvb[j];dirty=true;sfx('level');burst(j,'block');toast('装置を直した','good');dirty=true;closeSheet()};body.appendChild(b)}
     else{P(j===D1?'火山の熱を、左（西の温泉）と右（奥の装置）のどちらに流すか切りかえる。':'熱を、左（奥の温泉）と右（けむり穴）のどちらに流すか切りかえる。');
       P('いまは「'+(dir===0?'左':'右')+'」に流している。');
-      const b=el('<button class="btn pri">向きをかえる</button>');b.onclick=()=>{if(j===D1)t.d1=1-t.d1;else t.d2=1-t.d2;sfx('tap');renderSheet();checkQuest()};body.appendChild(b)}
+      if(j===D1&&!t.crank&&!t.sp.b&&dir===1){P('ハンドルが、さびついている。');const b=el('<button class="btn pri">ハンドルを回す</button>');b.onclick=()=>{sfx('tap');closeSheet();startSacredPlay('heatCrank',j,[],()=>{if(WD!==1||S.st2!==t)return;t.d1=0;t.crank=1;dirty=true;checkQuest()},()=>toast('ハンドルが、あつくなりすぎた'))};body.appendChild(b)}/* はじめて西へむけるときは、守り神の出番「かじとり」（sacred-play.js の heatCrank） */
+      else{const b=el('<button class="btn pri">向きをかえる</button>');b.onclick=()=>{if(j===D1)t.d1=1-t.d1;else t.d2=1-t.d2;sfx('tap');renderSheet();checkQuest()};body.appendChild(b)}}
     const c2=el('<button class="btn">とじる</button>');c2.onclick=()=>{sfx('tap');closeSheet()};body.appendChild(c2);
   }else if(sheet==='stall'){const st=festStalls().find(t=>t.x===sheetArg);if(!st)return closeSheet();const M=STALLM[st.el],kp=S.res.find(r=>r.id===st.id);T.textContent=M.nm+'の屋台';
     {const sb=el('<div class="godSay"><b></b><span></span></div>');sb.querySelector('b').textContent=kp?kp.name:'';sb.querySelector('span').textContent='「'+(kp?chatTone(pick(STALLSAY),kp):pick(STALLSAY))+'」';body.appendChild(sb)}

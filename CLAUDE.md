@@ -587,6 +587,10 @@
 - なくした仕組み（`VGIFT`・2階建て・倉庫・よぞらの窓・アーチ門・石の柵・村レベル14のご神木 `shinboku`（古いセーブは `S.flags.shinGone1` で、けしてパワー160・木材40をもどす））は、それぞれの所に書いてある。のこったコードは、古いセーブの読みかえのため。
 
 ## 火山らしさ
+- 火山の出番（`sacred-play.js` の `VOL_PLAY`、絵は `VOLTYPES` で灰まじりの土）：火入れ `towerLight`・かじとり `heatCrank`（手前の熱の装置を、はじめて西へむけるとき。ハンドルを円をえがいて3回転。`S.st2.crank`。2回めからは、ボタン）・湯もみ `yumomi`（シズクのおねがい `shizukuRest`：依頼を聞いたあと、昼に入口の温泉をタップ `yumomiTap`。左右に12回。`S.st2.yumomi`、しっぱい3回でつぎの日 `yuRetry`）。出番の操作は、草原の4つとも、たがいにも、ちがう物にする。
+- 奥の装置のまわりの大岩（`BVOL`、`rockHard`）は、たたいてもくだけない。まもりの光で熱すると赤くなり（`rockHeat`・`S.st2.hot`、時計の2時間 `ROCKHOT`）、水のせいれい（いなければ、だれでも）が水をかけるとわれる（`goQuench`・`quench`・`rockCrack`）。水路の大岩（`S.st2.bw`）は、いままでどおり、たたいてくだく。
+- 火山の噴火は、もうある（`eruptMorning`：5日に1回、朝に村の外へ岩が3〜5こ）。「ない」と言わない。
+- たしかめは `tools/tests/volcano-plays.cjs`。
 - 守護の台座（火山）は、建てただけでは山の影は来ない。昼に「しらべる」で台座をタップ → ホムラ（いればシズクも）が台座の前へ → 話す → 守り神の出番「火入れ」（`VOL_PLAY` の `towerLight`、`bellows`：おして火を大きく・はなして小さく、うごく帯の中に合計8秒）→ 火がともる → 話す。火を入れたことにする（`S.st2.lit`・`altarLit`）のは、さいごの会話のあと。その夜に来る（`S.finalNight`）。3回しっぱいで、つぎの日（`S.st2.litRetry`）。止まるわけは目標の進みぐあいに出す（`altarWhy`・`altarProg`）。古いセーブは `S.flags.altarLit1`。火山の出番は `VOL_PLAY` に足す（`FIELD_PLAY` は草原の4つだけ）。たしかめは `tools/tests/altar-light.cjs`。
 - 火山の木：自然の木（`deadtree`）も植えた木（`tree`）も、とんがりの木（杉の絵。チップ `deadtree~v`・`tree~v`、`tools/art/furn3d/items/nat_cedar.py`・`nat_cedar2.py`。名前は `STAGEN`）。カミサマのお店は、火山でも木の苗を「とんがりの木の苗」として売る。
 - カミサマのお店の花のたね・りんごの苗は草原だけ。火山では、温泉宿のお客さん（`VISITORS`、ゲストの会話 `guestDone` のあと、3日に1回、朝に来てつぎの朝に帰る `visitMorning`。夜は出ない）が売る（`vshop`）。
