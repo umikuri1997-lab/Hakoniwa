@@ -294,7 +294,7 @@ MODELS=os.path.join(os.path.dirname(os.path.abspath(__file__)),'models')
 _MC={};MODEL_SOFT=0.3   # モデルの色を白にまぜる分
 POTCOL=(226,196,166)   # 観葉植物のはち（モデルではこい灰色）を、ゲームに合わせたやきものの色に
 _MCUV={}
-def uvdecal(d,tex,per=200,fix=None):
+def uvdecal(d,tex,per=260,fix=None):
     """uvtex：モデルの UV で、テクスチャの絵（tex：MODELS からの場所）の色を、写すときにドットごとにとる（形はもとのまま。点ごとの色にしない）。
     面の上に細かく点をまき（1マスに per こ）、その場所の絵の色をとって、見える面の場所にいちばん近い点の色をかえす"""
     from scipy.spatial import cKDTree

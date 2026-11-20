@@ -2,7 +2,7 @@
 # 使い方：python3 tools/art/models/tripo/gf_edit.py   … gf/base/*.glb（切りわけて、天板を水平にした物）から、直した gf/*.glb を作る（何回やっても同じ）
 #   座標は glTF（x 右・y 上・z 手前、足もとが原点）。高さのわりあいは、その家具の高さ h に対する数。
 #   ・火のソファ：クッション（サーモン色の点）を、それぞれのまん中で、よこ1.5倍・たて0.75倍
-#   ・火・風のびょうぶ：おく行きを0.15倍（ほぼまっすぐ）
+#   ・火・風のびょうぶ：おく行きを0.35倍（ほぼまっすぐ）
 #   ・風のベッド・水のソファ：はば1.5倍
 #   ・土の花のオブジェ：鉢のふちより上の花・多肉を、それぞれの根もとで1.25倍・まん中から少し外へ（いい感じにならべる）
 #   ・水のドレッサー：鏡のわくの中に、鏡の板をたす（色はテクスチャのうすい水色のドット。うつりこみは設計図の uvfix）
@@ -23,7 +23,7 @@ def fsofa():
         o=v[s].mean(0);v[s]=o+(v[s]-o)*[1.5,0.75,1.0]
     m.vertices=v;save('g_f_sofa',m)
 def screen(n):
-    m=load(n);v=m.vertices;v[:,2]*=0.15;m.vertices=v;save(n,m)
+    m=load(n);v=m.vertices;v[:,2]*=0.35;m.vertices=v;save(n,m)   # 0.15 だと、横から見たとき紙のようにうすくなる
 def widen(n):
     m=load(n);v=m.vertices;v[:,0]*=1.5;m.vertices=v;save(n,m)
 def planter():
