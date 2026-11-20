@@ -158,11 +158,13 @@ const ALTAR_PRE=[
   [HOMURA,'この火だねに、火を入れるよ。……強すぎても、弱すぎても、だめなんだ。','vol:altarPair'],
   [SHIZUKU,'あつくなりすぎたら、わたしが水でさまします。'],
   [HOMURA,'#think|むかしは、なかまと息を合わせてやったもんさ。'],
+  [KAGARI,'#joy|……こんどは、あたしもいるよ。'],
   [SHIZUKU,'#nod|今日は、わたしたちと、守り神さまがいます。'],
   [HOMURA,'#nod|……そうだね。たのむよ、守り神。']];
 const ALTAR_POST=[
   [HOMURA,'#joy big|ともった……！','vol:altarLit'],
   [SHIZUKU,'台座が、あたたかいです。……山のほうまで、光がとどいていますね。'],
+  [HOMURA,'#think hush|……夜になったら、灰の下で、しずかにおねむり。朝まで、ぬくもりだけのこしてさ。'],
   [HOMURA,'#think|これで、山の上の影にも、見えちまったね。'],
   [HOMURA,'#nod|来るなら来な。今度は、みんなでむかえるよ。']];
 const ALTAR_FAIL=[

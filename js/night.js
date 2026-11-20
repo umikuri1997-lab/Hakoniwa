@@ -4,7 +4,7 @@
 /* 属性の力がたまると、次の朝に神殿に「！」が出て、タップで召喚できる。
    埋葬されたせいれいがいれば、そちらの復活が先（物語のせいれいが最優先） */
 let KEYRES=KEYS[0];
-const isKey=n=>KEYRES.includes(n)||KEYS.flat().includes(n)||Object.values(FIXK0).includes(n)||Object.values((S&&S.keyN)||{}).includes(n);/* キーキャラ（5属性の子もふくむ）は「きずな」で朝にもどる */
+const isKey=n=>KEYRES.includes(n)||KEYS.flat().includes(n)||n===KAGARI||Object.values(FIXK0).includes(n)||Object.values((S&&S.keyN)||{}).includes(n);/* キーキャラ（5属性の子もふくむ）は「きずな」で朝にもどる */
 const SECOND=[{elem:'earth',name:MINA,ok:()=>bloomCount('bellf')>=2&&qAt('kikyo')},/* ききょうの話を聞いてから */{elem:'water',name:SHIZUKU,ok:()=>!!S.flags.onsen}];SECOND[WIND]={elem:null,name:null,ok:()=>false};/* 風（土台）：2人めのキーキャラは、まだいない *//* 2人目のキーキャラが来るきっかけ */
 const MAINEL=['wood','fire'];MAINEL[FREE]='wood';SECOND[FREE]={elem:'earth',name:'',ok:()=>false};MAINEL[MIZU]='water';SECOND[MIZU]={elem:'earth',name:'',ok:()=>false};/* 水のステージ（試作）：2人目のお話はまだない */
 function storySummonOK(el){if(WD!==0||S.free||S.cleared||elemCount(el)>0)return true;const id={earth:'summon',fire:'fire',water:'water',wind:'wind'}[el];if(!id)return true;const qi=questIndexOf(id);return S.quest>qi||S.quest===qi&&S.qTalked&&S.qStory==null}
@@ -42,7 +42,7 @@ function doSummon(){
     toast(r.name+'がもどってきた！','good');sevBack(r.name);goneBack(r.name);reunite(r,sp)}
   else{let name;if(sm.elem===SECOND[WD].elem&&!S.flags.minaCame){name=SECOND[WD].name;S.flags.minaCame=true;S.flags.mnN=S.nights||0}/* 来た夜の数をおぼえておく（e04b） */
     else if(!WD&&FIXK0[sm.elem]&&!S.res.some(q=>q.elem===sm.elem)&&!(S.buried||[]).some(q=>q.elem===sm.elem&&isKey(q.name))&&!(S.lost||[]).some(q=>q.elem===sm.elem&&isKey(q.name)))name=FIXK0[sm.elem];/* その属性のキーキャラは、決まった子 */
-    else{const used=new Set([...[...S.res,...(S.buried||[]),...(S.lost||[])].map(q=>q.name),...Object.values(S.nick||{})]),keyN=new Set([...KEYS.flat(),...Object.values(FIXK0)]);for(;;){const base=NAMES[S.nameIdx%NAMES.length],lap=Math.floor(S.nameIdx/NAMES.length);name=base+(lap?String(lap+1):'');S.nameIdx++;if(!keyN.has(base)&&!used.has(name))break}}/* 名前の候補を使いきったら、うしろに数をつける。キーキャラの名前（フタバ2など）は使わない */
+    else{const used=new Set([...[...S.res,...(S.buried||[]),...(S.lost||[])].map(q=>q.name),...Object.values(S.nick||{})]),keyN=new Set([...KEYS.flat(),KAGARI,...Object.values(FIXK0)]);for(;;){const base=NAMES[S.nameIdx%NAMES.length],lap=Math.floor(S.nameIdx/NAMES.length);name=base+(lap?String(lap+1):'');S.nameIdx++;if(!keyN.has(base)&&!used.has(name))break}}/* 名前の候補を使いきったら、うしろに数をつける。キーキャラの名前（フタバ2など）は使わない */
     r=mkRes(S,name,sm.elem,sp[0]+.5,sp[1]+.5);toast(ELEM[sm.elem].name+'のせいれい「'+name+'」がやってきた！','good')
     if(sm.elem==='fire'&&S.crops&&!S.crops.mugi){S.crops.mugi=S.crops.tomato=true}}/* 火のせいれいが来たら、パン・スープの作物がふえる */
   if(STATUE>=0&&S.obj[STATUE+W]==='altar'){r.x=STATUE%W+.5;r.y=((STATUE/W)|0)+1.12;sp=[STATUE%W,((STATUE/W)|0)+1]}/* 神殿のまんなか（台座の上）からあらわれる */
@@ -151,7 +151,7 @@ const INDL=new Set(['candle','lantern','flamp','oldlantern']);/* 室内の灯り
 const LSPR=new Map();function lightSpr(R){/* 明かりの光の絵（半径 R、まん中の明るさ .9）。半径ごとに1まいだけ作っておく */let c=LSPR.get(R);if(c)return c;c=document.createElement('canvas');c.width=c.height=R*2;const g=c.getContext('2d'),gr=g.createRadialGradient(R,R,2,R,R,R);gr.addColorStop(0,'rgba(255,214,120,.9)');gr.addColorStop(1,'rgba(255,200,100,0)');g.fillStyle=gr;g.fillRect(0,0,R*2,R*2);LSPR.set(R,c);return c}
 const LIGHTP={/* 夜の明かり：光のまん中（マスの左上から dx・dy ドット）と、光の半径 R */
   lamp:{dx:16,dy:3,R:100},g_donguri:{dx:16,dy:8,R:50},g_danro:{dx:32,dy:14,R:90},hotaru:{dx:16,dy:18,R:60},tower:{dx:16,dy:6,R:150},yogan:{dx:32,dy:8,R:60},lighthouse:{dx:32,dy:-75,R:130},campfire:{dx:16,dy:14,R:110},
-  statue:{dx:16,dy:-6,R:110},torch:{dx:16,dy:-22,R:105},candle:{dx:16,dy:10,R:45},lantern:{dx:16,dy:6,R:45},flamp:{dx:16,dy:-6,R:45},takeakari:{dx:16,dy:14,R:90},andon:{dx:16,dy:16,R:90},toro:{dx:16,dy:13,R:100},yomawari:{dx:16,dy:1,R:100}};/* 石どうろうは火袋、よまわりのランタンはガラスの所が光る（まわり3.5マス＝かがり火と同じ） */
+  statue:{dx:16,dy:-6,R:110},torch:{dx:16,dy:-22,R:105},candle:{dx:16,dy:10,R:45},lantern:{dx:16,dy:6,R:45},flamp:{dx:16,dy:-6,R:45},takeakari:{dx:16,dy:14,R:90},andon:{dx:16,dy:16,R:90},kaeribi:{dx:16,dy:16,R:80},toro:{dx:16,dy:13,R:100},yomawari:{dx:16,dy:1,R:100}};/* 石どうろうは火袋、よまわりのランタンはガラスの所が光る（まわり3.5マス＝かがり火と同じ） */
 function litP(j,o){if(o==='watch')return (S.hp['L'+j]||1)>=10?{dx:32,dy:-24,R:150}:{dx:58,dy:-18,R:100};return LIGHTP[o]}/* 見張り台のあかり：Lv5〜9 は右前のランタン、Lv10 は4つのランタン（台ぜんたいを照らす） */
 function steleF(j){const o=S.obj[j],b=o&&BL[o]&&BL[o].hp;if(!b||!STELES.length)return 1;const x=j%W,y=(j/W)|0;for(const q of STELES)if(Math.hypot(q%W-x,((q/W)|0)-y)<=7)return (BL[o].hpS||b)/b;return 1}/* ノームの石像（stele）：まわり7マスの壁・柵・塀は、じょうぶさが BL の hpS（実数で書いてある）になる */
 function litNear(h,x,y){for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++)if(h.set.has((y+dy)*W+x+dx))return true;return false}/* 家の中の灯り：家ぜんたいと、そこから1マス */

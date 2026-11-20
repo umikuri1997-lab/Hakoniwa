@@ -365,7 +365,7 @@ function decide0(r){if(r.wakeStretch){r.wakeStretch=0;if(!isNight()&&!enemyLive(
   if(WD===1&&!isNight()&&r.hunger>=400&&springN()&&r.energy<35&&!((r.bathCD||0)>S.t)){r.bathCD=S.t+240;const bd=r.bathD;if(goBathe(r,G))return;r.bathD=bd}/* 温泉の村：つかれたら温泉へ */}
   if(r.afterBath>S.t&&!isNight()&&(r.restCD||0)<=S.t){r.afterBath=0;const isB=j=>(BENCHES.has(S.obj[j])||(S.obj[j]==='part'&&BENCHES.has(S.obj[S.ref[j]])))&&!ashed(anc(j))&&useFor(j,r);const bj=nearest(G,j=>isB(j)&&free('o'+j,1),40);if(bj>=0)return startAct(r,G,'rest',bj,{key:'o'+bj,obj:anc(bj),seat:bj})}/* 湯上がりは、ベンチでひと休み *//* 水浴びは18時。せいれいごとに少しずつずれる */
   if(r.elem==='water'&&r.hunger>=250&&!isNight()&&goDouse(r,G))return;
-  if(WD===1&&r.hunger>=250&&!isNight()&&goQuench(r,G))return;/* 赤くなった大岩に、水をかけにいく *//* 水の子は、燃えている物があれば、まず消しにいく */
+  if(WD===1&&r.hunger>=250&&!isNight()&&goQuench(r,G))return;if(WD===1&&typeof goVigil==='function'&&goVigil(r,G))return;/* ホムラ：夕方、入り口のあかりをともしにいく（kagari.js） *//* 赤くなった大岩に、水をかけにいく *//* 水の子は、燃えている物があれば、まず消しにいく */
    if(heldN(r)>0&&r.elem==='earth'&&r.hunger>=550&&!isNight()&&tryJob(r,G,'repair'))return;/* 土のせいれいは、ついでの収穫・木切りより修理が先 */
   if(heldN(r)>0){if(heldN(r)<capOf(r)&&!isNight()&&r.hunger>=300&&!r.highFirst){const cm=r.cmat||{},gm=[...WEEDS].some(id=>(cm[BL[id].weed]||0)>0)?['weed']:(cm.stone||0)>0?['mine']:(cm.wood||0)>0||(cm.bamboo||0)>0?['chop']:[];for(const k of['drop','harvest',...gm,'gather'])if(tryJob(r,G,k))return}/* 草むしり・落ちている素材・食べ物も、持てる数までまとめて集めてから運ぶ */
     if(carryN(r)>0&&foodCap()>0)return goStore(r,G)}

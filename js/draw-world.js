@@ -427,7 +427,7 @@ function render(now){RFN++;hdFrame();
   for(const c of CRIT)if(vis(c)){const px=c.x*TS,fy=c.y*TS;add(c.z>6?c.y+.6:c.y,2,[px-13,fy-34,px+13,fy+4],()=>liftDraw(uLift(c),()=>drawCritter(ctx,c,now)),(c.y|0)*W+(c.x|0))}/* 小さな生き物 */
   if(typeof aniDraw==='function')aniDraw(add,vis,now,ctx);/* 飼う生き物 */if(typeof snowDraw==='function')snowDraw(add,vis,ctx);if(typeof wildDraw==='function')wildDraw(add,vis,ctx,now);/* 野の花（free.js） *//* 雪だるま（season.js） */
   for(const g of EXTRA){const px=g.x*TS,fy=g.y*TS;add(g.y,2,[px-30,fy-70,px+30,fy+15],()=>drawRes(g,now),(g.y|0)*W+(g.x|0))}/* 思い出の場面だけの子 */
-  if(WD===1)storyStageAdd(add,now);/* 火山の物語の、地面に置く演出（たき火・灰・たまご・ちょうちん）は、せいれいと同じ奥行きの順で */
+  if(WD===1)storyStageAdd(add,now);if(WD===1&&typeof kgrAdd==='function')kgrAdd(add,now);/* 火山の幕間・さいごのうずみ火の影と火（kagari.js） *//* 火山の物語の、地面に置く演出（たき火・灰・たまご・ちょうちん）は、せいれいと同じ奥行きの順で */
   if(visitHere()){const g=visitor(),px=g.x*TS,fy=g.y*TS;add(g.y,2,[px-30,fy-70,px+30,fy+15],()=>drawRes(g,now),(g.y|0)*W+(g.x|0))}/* 温泉宿のお客さん */
   if(GUEST){const g=GUEST,px=g.x*TS,fy=g.y*TS;add(g.y,2,[px-30,fy-70,px+30,fy+15],()=>drawRes(g,now),(g.y|0)*W+(g.x|0))}/* 火山にあそびに来たフタバ */
   if(EVAP.length){EVAP=EVAP.filter(it=>now-it.t0<(it.dur||1800)+600+(it.die?KO_HOLD:0));for(const it of EVAP){const e=it.e,z=EN[e.type].size||1,px=e.x*TS,fy=e.y*TS;add(e.y,2,[px-30*z,fy-110*z,px+30*z,fy+15],()=>liftDraw(uLift(it.e),()=>drawEvap(it,now)),(e.y|0)*W+(e.x|0))}}
@@ -508,7 +508,7 @@ function render(now){RFN++;hdFrame();
     dmx.setTransform(k,0,0,k,-cam.x*k,-cam.y*k);dmx.globalCompositeOperation='destination-out';
     for(const j of LITP){const o=S.obj[j],L=litP(j,o);if(!L)continue;const x=j%W,y=(j/W)|0;if(x<x0-5||x>=x1+5||y<y0-5||y>=y1+5)continue;/* 画面の外5マスの明かりも、光がとどくので描く */if(INDL.has(o)&&roomOf(j))continue;/* 家の中の灯りは、灯りそのものは光らせず、家ぜんたいを光らせる（下） */
       const R=L.R*feelFlick(j,o,now);/* 火のあかりは、ゆらめく */dmx.drawImage(lightSpr(L.R),x*TS+L.dx-R,y*TS+L.dy-R,R*2,R*2)}
-    gearLights(dmx);/* そうびの明かり */yamiLights(dmx);/* 光のせいれいの明かり */rayCutDark(dmx,now);/* 月明かりの帯の所は、少しだけ暗さがうすい */heatGlow(dmx,x0,x1,y0,y1,1);/* 熱の道は、夜ほんのり光る */
+    gearLights(dmx);/* そうびの明かり */yamiLights(dmx);/* 光のせいれいの明かり */if(typeof kgrLights==='function')kgrLights(dmx,now);/* 火山の場面の火（kagari.js） */rayCutDark(dmx,now);/* 月明かりの帯の所は、少しだけ暗さがうすい */heatGlow(dmx,x0,x1,y0,y1,1);/* 熱の道は、夜ほんのり光る */
     const litH=new Set();for(const j of LIGHTS){if(INDL.has(S.obj[j])){const h=roomOf(j);if(h)litH.add(h)}}/* 灯りのある家 */
     {dmx.imageSmoothingEnabled=true;for(const h of litH){const wa=feelWin(h);if(wa<=0)continue;dmx.globalAlpha=.75*wa;dmx.drawImage(houseGlow(h),h.x0*TS-GLOWM,h.y0*TS-GLOWM)}dmx.globalAlpha=1}/* 家のあかりは、夕方に1けんずつともり、夜あけに1けんずつ消える（feelWin） *//* 灯りのある家は、家ぜんたいを同じ明るさで照らす（ふちはぼかす） */
     ctx.setTransform(1,0,0,1,0,0);ctx.drawImage(DMK,0,0);if(nightVarNow()==='kiri'){ctx.globalAlpha=Math.min(1,dk*.9);ctx.fillStyle=fogPat(ctx);const ox=-(cam.x*k*.6+performance.now()*.006)%256,oy=-(cam.y*k*.6)%256;ctx.translate(ox,oy);ctx.fillRect(-ox,-oy,ctx.canvas.width,ctx.canvas.height);ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=1}/* 霧の夜：うすい霧（1回作った絵をならべて、ゆっくり流す） *//* けずったところは重なっても、暗さがなくなるだけ（明るくなりすぎない） */

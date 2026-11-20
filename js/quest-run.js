@@ -10,7 +10,7 @@ function checkQuest(){
   if(QUEST_CLEAR_WAIT&&QUEST_CLEAR_WAIT.quest!==S.quest)QUEST_CLEAR_WAIT=null;
   TALKW=null;if(S.qStory==null)QUESTCLEARW=null;finalCheck();
   if(NEWRES!=null||NEWQ.length)return;
-  if(S.cleared){if(WD!==FREE)afterTick();else freeAfterTick();/* フリーモード：きょうの目標・季節の話（free.js） */return}
+  if(S.cleared){if(WD!==FREE&&!(typeof KGRIV!=='undefined'&&KGRIV)&&!(typeof KGRRUN!=='undefined'&&KGRRUN))afterTick();/* 火山のさいごのうずみ火（kagari.js）のあいだは、クリアのあとの依頼を出さない */else freeAfterTick();/* フリーモード：きょうの目標・季節の話（free.js） */return}
   if(S.quest>=QUESTS.length)return;
   const q=QUESTS[S.quest];
   if(q.id==='guest'&&S.qTalked&&!S.flags.guestDone&&!GUESTRUN&&!isNight()&&$('#dialog').hidden&&S.qStory==null)guestScene();
