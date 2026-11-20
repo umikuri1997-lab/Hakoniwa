@@ -55,6 +55,10 @@ let LHUD=null,LHN=-1;function letterHud(now,n){/* 上の欄のふうとう・下
 function letterReset(){LPEND=null;LBIRD=null;LLAND=0}/* 村を切りかえたら、とんでいる小鳥はけす（とどいた手紙はそのまま） */
 function lStep(ms,f,done){/* 実時間で k=0→1（1コマごと） */const t0=performance.now(),go=()=>{const k=Math.min(1,(performance.now()-t0)/ms);f(k);if(k<1)requestAnimationFrame(go);else if(done)done()};requestAnimationFrame(go)}
 const px15=v=>Math.round(v/1.5)*1.5;/* 1.5px（1ドット）のます目 */
+function letterSecret(l,fresh){/* ひみつの好み：読んだら、わかったことにする */const q=l.sec;if(!q||!fresh||l.secD)return;l.secD=1;const r=S.res.find(x=>x.id===q.id);if(r&&typeof prefKnow==='function')prefKnow(r,q.k)}
+function letterPack(l){/* お礼の品のつつみ：タップでふくらんで、ゆれて、ひらくと光の柱・紙ふぶき・「うけとった」のハンコ。品は先にうけとってある */const fu=l.g.k.indexOf('furn:')===0;
+  if(typeof treasureReveal!=='function'){toast(giftName(l.g)+'をうけとった','good');return}
+  treasureReveal({ico:wrapIco(l.el),taps:fu?4:2,tier:fu?2:1,name:l.who+'からのつつみ',done:fu?l.who+'が作ってくれた！':'つつみの中には…',items:[{img:giftIcoOf(l.g),nm:giftName(l.g)}],beam:1,confetti:fu?1:0,stamp:'うけとった'})}
 function letterRead(l){/* 手紙を読む（便せんの紙）。はじめて読む手紙は、ふうとうがひらいてから */const fresh=!l.read,red=typeof uiReduced==='function'&&uiReduced(),anim=fresh&&!red;
   const o=el('<div class="letov"><div class="letcol"><div class="letpaper"><span class="lband"></span><p class="lh"></p><div class="lb"></div><p class="lw"></p><p class="lg"></p><button class="btn pri x">とじる</button></div><canvas class="letenv" width="18" height="17"></canvas></div></div>');
   const pa=o.querySelector('.letpaper'),cv=o.querySelector('.letenv'),g=cv.getContext('2d'),b=o.querySelector('.lb'),gp=o.querySelector('.lg');
@@ -62,14 +66,14 @@ function letterRead(l){/* 手紙を読む（便せんの紙）。はじめて読
   const P=l.tx.map(s=>{const p=el('<p></p>');p.dataset.t=s;b.appendChild(p);return p});
   const env=op=>{g.clearRect(0,0,18,17);envDraw(g,0,op?0:5,1,op)};env(0);
   let typing=null,shown=false,gave=!!l.got;
-  const giftNow=()=>{if(!l.g||shown)return;shown=true;gp.hidden=false;gp.textContent=(gave&&!fresh?'入っていた：':'いっしょに入っていた：')+giftName(l.g);if(fresh){playU('tink',.28);toast(giftName(l.g)+'をうけとった','good')}};
+  const giftNow=()=>{if(shown)return;shown=true;letterSecret(l,fresh);if(!l.g)return;gp.hidden=false;gp.textContent=(gave&&!fresh?'入っていた：':'いっしょに入っていた：')+giftName(l.g);if(fresh)setTimeout(()=>letterPack(l),420)};/* はじめて読んだ手紙のお礼の品は、つつみをあける（letterPack） */
   const allText=()=>{for(const p of P)p.textContent=p.dataset.t;typing=null;giftNow()};
   const type=()=>{let i=0,c=0;const N=P.map(p=>p.dataset.t.length),sum=N.reduce((a,v)=>a+v,0),t0=performance.now();typing=1;const go=()=>{if(!typing)return;const n=Math.min(sum,Math.floor((performance.now()-t0)/LTYPE));let r=n;for(let k=0;k<P.length;k++){P[k].textContent=P[k].dataset.t.slice(0,Math.max(0,Math.min(N[k],r)));r-=N[k]}if(n>=sum)return allText();requestAnimationFrame(go)};go()};
   if(fresh&&l.g&&!l.got){l.got=1;giftGive(l.g)}/* お礼の品は、ひらいたときにうけとる（とちゅうでとじても、なくならない） */
-  const close=()=>{if(typing)allText();l.read=1;o.remove();if(sheet==='inv'||sheet==='menu')renderSheet()};
+  const close=()=>{if(typing)allText();letterSecret(l,fresh);l.read=1;o.remove();if(sheet==='inv'||sheet==='menu')renderSheet()};
   o.querySelector('.x').onclick=e=>{e.stopPropagation();sfx('tap');close()};o.onclick=e=>{if(typing){allText();return}if(e.target===o&&!anim)close()};
   document.body.appendChild(o);
-  if(!anim){cv.remove();for(const p of P)p.textContent=p.dataset.t;if(l.g){gave=true;shown=false;giftNow()}sfx('open');return}
+  if(!anim){cv.remove();for(const p of P)p.textContent=p.dataset.t;gave=!!l.g;shown=false;giftNow();sfx('open');return}
   /* ふうとうがおりてくる → 封がひらく → 便せんがのびる → ふうとうが下へきえる → 文 */
   const H=pa.offsetHeight;pa.style.height='0px';pa.style.visibility='hidden';cv.style.transform='translateY(-120px)';o.style.background='rgba(40,30,15,0)';playU('pslide',.4);
   lStep(420,k=>{const e=1-Math.pow(1-k,3),bk=k<.8?0:Math.sin((k-.8)/.2*Math.PI)*6;cv.style.transform='translateY('+px15(-120*(1-e)-bk)+'px)';o.style.background='rgba(40,30,15,'+(.35*k).toFixed(2)+')'},()=>{

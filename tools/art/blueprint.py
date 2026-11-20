@@ -293,6 +293,22 @@ def earclip(pts):
 MODELS=os.path.join(os.path.dirname(os.path.abspath(__file__)),'models')
 _MC={};MODEL_SOFT=0.3   # モデルの色を白にまぜる分
 POTCOL=(226,196,166)   # 観葉植物のはち（モデルではこい灰色）を、ゲームに合わせたやきものの色に
+_MCUV={}
+def uvdecal(d,tex,per=260,fix=None):
+    """uvtex：モデルの UV で、テクスチャの絵（tex：MODELS からの場所）の色を、写すときにドットごとにとる（形はもとのまま。点ごとの色にしない）。
+    面の上に細かく点をまき（1マスに per こ）、その場所の絵の色をとって、見える面の場所にいちばん近い点の色をかえす"""
+    from scipy.spatial import cKDTree
+    V,F,_=model_tris(*d);UV=_MCUV[_mckey(*d)]
+    im=np.asarray(Image.open(os.path.join(MODELS,tex)).convert('RGB'),float);H,W=im.shape[:2];P=[];Q=[]
+    for f in F:
+        a,b,c=V[f];ar=np.linalg.norm(np.cross(b-a,c-a))/2;k=max(1,int(np.ceil(np.sqrt(ar)*per)))
+        for i in range(k+1):
+            for j in range(k+1-i):
+                w=np.array([i,j,k-i-j],float)/k;P.append(w@V[f]);Q.append(w@UV[f])
+    P=np.array(P);Q=np.array(Q);col=im[np.clip(((1-Q[:,1]%1)*H).astype(int),0,H-1),np.clip(((Q[:,0]%1)*W).astype(int),0,W-1)];T=cKDTree(P)
+    if fix:return lambda x,y,z:fix(x,y,z,col[T.query((x,y,z))[1]].copy())   # fix(x,y,z,色)→色：場所で色を直す（天板のよごれ・水・鏡など。設計図の p.uvfix）
+    return lambda x,y,z:col[T.query((x,y,z))[1]]
+def _mckey(path,cx,cy,z0,size,rot=0,tilt=0,zs=1.0,up=None):return(path,cx,cy,z0,size,rot,tilt,zs,None if up is None else tuple(up))
 def model_tris(path,cx,cy,z0,size,rot=0,tilt=0,zs=1.0,up=None):
     """glTF のモデルを読んで、ゲームの向き（x=東, y=南, z=上）の三角形にする。モデルの正面（+Z）を南（手前）へ。色はモデルの色（テクスチャの色をとる）。
     zs：たての高さだけ、のばす・ちぢめる（ひくい切り株など。size はちぢめる前の高さ）。
@@ -300,7 +316,7 @@ def model_tris(path,cx,cy,z0,size,rot=0,tilt=0,zs=1.0,up=None):
     key=(path,cx,cy,z0,size,rot,tilt,zs,None if up is None else tuple(up))
     if key in _MC:return _MC[key]
     import trimesh
-    sc_=trimesh.load(os.path.join(MODELS,path),force='scene');VS,FS,CS=[],[],[];n=0
+    sc_=trimesh.load(os.path.join(MODELS,path),force='scene');VS,FS,CS,UVS=[],[],[],[];n=0
     for node in sc_.graph.nodes_geometry:   # 部品ごとに色をとる（テクスチャの色か、材質の色）
         T_,gname=sc_.graph[node];g=sc_.geometry[gname].copy();g.apply_transform(T_);vis=g.visual;col=None
         try:
@@ -314,10 +330,11 @@ def model_tris(path,cx,cy,z0,size,rot=0,tilt=0,zs=1.0,up=None):
                 if v is not None:bc=np.asarray(v,float)[:3];break
             if bc is not None and bc.max()<=1.0:bc=bc*255
             col=np.tile(bc if bc is not None else [200.0,200,200],(len(g.faces),1))
+        uv_=getattr(vis,'uv',None);UVS.append(np.asarray(uv_,float) if uv_ is not None and len(uv_)==len(g.vertices) else np.zeros((len(g.vertices),2)))   # UV（テクスチャの絵を、写すときにドットごとにとる物 uvtex 用）
         VS.append(np.asarray(g.vertices,float));FS.append(np.asarray(g.faces)+n);CS.append(col);n+=len(g.vertices)
     class _M:pass
     m=_M();m.vertices=np.concatenate(VS);m.faces=np.concatenate(FS);col=np.concatenate(CS)
-    if path.startswith('tripo/'):   # トリポのモデル：くらい色・色むらをへらし、あざやかにして、トゥーンの色に（持ち主：黒っぽいかげを使わない）
+    if path.startswith('tripo/') and not path.startswith('tripo/gf/'):   # トリポのモデル（限定の家具 gf/ は、デザインの色にぬりなおしてあるので、そのまま）：くらい色・色むらをへらし、あざやかにして、トゥーンの色に（持ち主：黒っぽいかげを使わない）
         import colorsys
         H=np.array([colorsys.rgb_to_hsv(*(c_/255)) for c_ in col]);vm=H[:,2].mean()
         H[:,2]=np.clip(vm+(H[:,2]-vm)*0.4,0.6,1.0);H[:,1]=np.clip(H[:,1]*1.12+0.04,0,1)
@@ -332,7 +349,7 @@ def model_tris(path,cx,cy,z0,size,rot=0,tilt=0,zs=1.0,up=None):
     t=math.radians(tilt);T=np.array([[math.cos(t),0,math.sin(t)],[0,1,0],[-math.sin(t),0,math.cos(t)]]);V=V@T.T   # よこにたおす（東西の向きに）
     a=math.radians(rot);R=np.array([[math.cos(a),-math.sin(a),0],[math.sin(a),math.cos(a),0],[0,0,1]]);V=V@R.T
     V=(V-[(V[:,0].max()+V[:,0].min())/2,(V[:,1].max()+V[:,1].min())/2,V[:,2].min()])*k;V[:,2]*=zs;V=V+[cx,cy,z0]
-    _MC[key]=(V,np.array(m.faces),col);return _MC[key]
+    _MCUV[key]=np.concatenate(UVS);_MC[key]=(V,np.array(m.faces),col);return _MC[key]
 
 TOP=np.array([0,0,1.0]);EAST=np.array([1.0,0,0])
 def topv(p):return(p[0],p[1])
