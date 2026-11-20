@@ -203,7 +203,7 @@ function moveTap(tx,ty){const j=ty*W+tx;
     if(!ok){writeObj(id,a,v);return}
     for(const r of S.res)if(r.act&&(r.act.obj===a||cells.includes(r.act.obj)))endAct(r);
     for(const b of S.broken||[])if(b.j===a)b.j=j;if(typeof fieldBuildMove==='function')fieldBuildMove(id,a,j);/* 調べのために置いた物をうつしたら、記録もうつす */
-    boxMove(a,j);/* 箱の中身も、いっしょに */moveCellState(a,j);/* 加工・炉・コンポスター・料理の家具の予定も */if(id==='wbench'){for(const o of S.orders||[])if(o.cs===a)o.cs=j}/* 作業台の依頼も */for(const q of S.ani||[])if(q.h===a){q.h=j;q.path=null;if(q.in){q.x+=j%W-a%W;q.y+=((j/W)|0)-((a/W)|0)}}/* 飼う生き物の小屋も */writeObj(id,j,v)}
+    boxMove(a,j);/* 箱の中身も、いっしょに */moveCellState(a,j);/* 加工・炉・コンポスター・料理の家具の予定も */if(id==='wbench'){for(const o of S.orders||[])if(o.cs===a)o.cs=j}/* 作業台の依頼も */for(const q of S.ani||[])if(q.h===a){q.h=j;q.path=null;q.go=null;if(q.in){q.x+=j%W-a%W;q.y+=((j/W)|0)-((a/W)|0)}else{const f=id==='barn'?j+2*W:j+W;q.x=f%W+.5;q.y=((f/W)|0)+.6}}/* 飼う生き物の小屋も（外にいる生き物は、新しい小屋の前へ） */writeObj(id,j,v)}
   MOVESRC=null;recount();dirty=true;burst(j,'furn','furnPlace');renderPalette();checkQuest()}
 function removeAt(x,y){const tx0=x,ty0=y;
   const j=anc(y*W+x),o=S.obj[j];x=j%W;y=(j/W)|0;
