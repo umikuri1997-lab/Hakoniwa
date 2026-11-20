@@ -43,9 +43,11 @@ function bkSetup(B,from,to,coverEl){B.el.classList.toggle('bkcovon',!!coverEl);c
   const snap=(slot,i)=>{if(coverEl&&slot===B.R)return coverEl;const c=slot.cloneNode(false),cc=document.createElement('div');cc.className='bkc';const pg=B.pages[i];if(pg)cc.appendChild(bkClone(pg));c.appendChild(cc);c.classList.toggle('blank',!pg);c.classList.remove('bkL','bkR');c.classList.add(slot===B.L?'bkL':'bkR','bksnap');c.hidden=false;const n=document.createElement('span');n.className='bkn';n.textContent=pg&&i>0?String(i):'';c.appendChild(n);return c};
   const sc=B.R.querySelector('.bkc').scrollTop;
   /* いま見えている所の写しは、スクロールの場所もそのまま */
-  const aR=snap(B.R,B.sp?A+1:A),aL=B.sp&&!coverEl?snap(B.L,A):null;
+  const aR=coverEl?null:snap(B.R,B.sp?A+1:A),aL=B.sp&&!coverEl?snap(B.L,A):null;
   bkMount(B,coverEl?B.at:Bi);
-  const st={g,fw,A,Bi,wR:wrap(B.R,aR),wL:aL?wrap(B.L,aL):null,cover:!!coverEl,hideL:!!coverEl&&B.sp};if(fw&&!coverEl){const c=aR.querySelector('.bkc');if(c)c.scrollTop=sc}
+  let gc=g,wR;if(coverEl){/* 表紙は、うら表紙（.bkboard）と同じ大きさ：上・右・下へ、ページよりはみ出す（とじ目のがわはそのまま） */const bd=B.el.querySelector('.bkboard'),R=B.R.getBoundingClientRect(),bb=bd?bd.getBoundingClientRect():R,et=Math.max(0,R.top-bb.top),er=Math.max(0,bb.right-R.right),eb=et;
+    gc=Object.assign({},g,{w:g.w+er,top:g.top-et,bot:g.bot+eb});wR=document.createElement('div');wR.className='bkwrap';wR.style.cssText='left:'+(R.left-g.r.left)+'px;top:'+(R.top-g.r.top-et)+'px;height:'+(R.height+et+eb)+'px;width:'+(R.width+er)+'px';coverEl.style.width=(R.width+er)+'px';coverEl.style.height=(R.height+et+eb)+'px';wR.appendChild(coverEl);B.in.insertBefore(wR,B.cv)}
+  const st={g:gc,fw,A,Bi,wR:wR||wrap(B.R,aR),wL:aL?wrap(B.L,aL):null,cover:!!coverEl,hideL:!!coverEl&&B.sp};if(fw&&!coverEl){const c=aR.querySelector('.bkc');if(c)c.scrollTop=sc}
   return st}
 function bkClean(B,st){B.el.classList.remove('bkcovon');B.L.style.visibility='';if(st.wR)st.wR.remove();if(st.wL)st.wL.remove();const c=B.cv.getContext('2d');c.clearRect(0,0,B.cv.width,B.cv.height);B.cv.hidden=true}
 /* 1コマを描く：e＝めくれぐあい（0〜1）・a＝めくれた紙のこさ（さいごに紙がおちつく所） */

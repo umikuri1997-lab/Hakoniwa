@@ -51,6 +51,8 @@ function critHead(c){const lim=CK[c.k].vw?0:.45;if(c.hd==null)c.hd=c.face>0?0:Ma
   if(lim){const r=Math.cos(c.hd)>=0?0:Math.PI;let d=Math.atan2(Math.sin(c.hd-r),Math.cos(c.hd-r));d=Math.max(-lim,Math.min(lim,d));c.hd=r+d}
   return [Math.cos(c.hd),Math.sin(c.hd)]}
 /* 地面の生き物がにげる：近いせいれいからはなれる向きへ、はやく。少しして、いなくなる */
+function critScare(tx,ty,R){/* まもりの光がそばに落ちた：まわりの小さな生き物は、光からはなれる方へ、にげていく */for(const c of CRIT){if(c.fl||c.go)continue;const dx=c.x-(tx+.5),dy=c.y-(ty+.5);if(Math.max(Math.abs(dx),Math.abs(dy))-R>CRITSCARER)continue;const L=Math.hypot(dx,dy)||1;c.fl=1;c.hop=0;if(c.k==='bird'){c.jt=null;c.pre=0}critLeave(c,dx/L,dy/L)}}
+const CRITSCARER=6;
 function critFlee(c){if(c.fl||!CK[c.k].flee&&c.k!=='bird')return;const r=S.res.find(r=>!r.hidden&&Math.hypot(r.x-c.x,r.y-c.y)<1.6);if(!r)return;
   const L=Math.hypot(c.x-r.x,c.y-r.y)||1;c.fl=1;c.hop=0;critLeave(c,(c.x-r.x)/L,(c.y-r.y)/L)}
 /* いなくなるとき：その場で消さず、画面の外へ去る（とぶ物はとんで、地面の物は歩いて・はねて）。見えなくなったら消す（critTick のさいご）。
