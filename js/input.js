@@ -161,6 +161,7 @@ function onTap(sx,sy){if(GIFT_ACTIVE&&camAnim&&camAnim.done)return;if(typeof sta
     if(PROC[o])return prPop(j);/* 粉ひき小屋・はたおり機 */
     if(o==='obox')return S.feat.inv?openSheet('inv'):toast('おそなえ箱');
     if(o==='grave'){const d=S.dyn[j]||{};if(!d.buried)return toast((d.name||'せいれい')+'のお墓。なかまが神殿へはこんで、おみおくりしてくれる');/* 守り神は埋葬できない */return toast((d.name||'せいれい')+'のお墓')}
+    if(o==='tower'&&WD===1&&!S.cleared&&towerLightTap(j))return;/* 火山：守護の台座に火を入れる */
     if(o==='tower'&&!WD&&!S.cleared){if(sacredTapHit(j,w.x/TS,w.y/TS))return sacredTreeTap(j);return}/* 御神木は、根もとの所だけ */
     if(o==='board')return S.feat.craft?openSheet('craft'):toast('依頼ボード。もう少ししたら使えるようになる');
     if(o==='statue')return typeof sasaPop==='function'?sasaPop():toast('神殿。守り神の居場所');/* 神殿：季節のささげもの（sasage.js） */

@@ -162,7 +162,7 @@ const QUESTS2=[
     [GOD,'#joy|ほっほ。それなら、草原から、ひとり連れてこようかの。']]},
    story:[[HOMURA,'#joy|お客さん、よろこんでくれたね！','cheer'],[SHIZUKU,'#joy|とろけちゃいそう、と言ってくれました。'],[HOMURA,'かたゆでも、食べてたよ。'],[HOMURA,'……あとは、ヌシ様をむかえるだけさ。']]},
 
-  {id:'tower',text:'守護の台座を建ててもらおう',check:()=>cnt('tower')>=1,prog:()=>'じょうけん '+clearConds().filter(c=>c[1]).length+'/'+clearConds().length,how:'「おく」→「守護の台座」を建ててもらう。ヌシ様の火だねを、台座にはめる',
+  {id:'tower',text:'守護の台座を建てて、火を入れよう',check:()=>cnt('tower')>=1&&altarLit(),prog:()=>altarProg(),how:'「おく」→「守護の台座」を建ててもらう。建ったら、昼に「しらべる」で台座をタップして、ヌシ様の火だねに火を入れる',
    talk:{who:HOMURA,when:()=>true,lines:[
     [HOMURA,'湯けむりの村も、だいぶ元にもどってきたね。あとは、ヌシ様の火だねをはめる「守護の台座」だ。'],
     [SHIZUKU,'台座を建てるのに、なにが足りないか、いっしょに確かめましょう。'],

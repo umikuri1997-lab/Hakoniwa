@@ -118,7 +118,7 @@ async function playVolReplay(run){
   const id=run.episode.id,q=QUESTS2.find(x=>x.id===id),say=lines=>new Promise(ok=>{DLGTAP=performance.now();DLGGAP=0;dialog(lines,ok);});
   if(id==='intro')await say(INTRO2);
   else if(id==='guest'){guestScene();await waitStoryReplay(run,()=>!!S.flags.guestDone);await waitStoryReplay(run,()=>$('#dialog').hidden);await say(q.story);}
-  else if(id==='tower'){nushiReturns(true);await waitStoryReplay(run,()=>S.cleared);}
+  else if(id==='tower'){{const tw=S.obj.indexOf('tower');if(tw>=0){await new Promise(ok=>altarLightRun(tw,ok));if(STORY_REPLAY_RUN!==run||run.cancelled)throw Error('replay cancelled');await waitStoryReplay(run,()=>$('#dialog').hidden)}}/* 火入れ（守り神の手は、見せるだけ） */nushiReturns(true);await waitStoryReplay(run,()=>S.cleared);}
   else{if(q.talk&&/vol:/.test(JSON.stringify(q.talk.lines)))await say(q.talk.lines.filter(l=>l[0]!=='@idea'));await say(q.story);}
 }
 function replayReadyActors(){for(const r of S.res){endAct(r);delete r.storyWaitHome;RHOLD.delete(r);r.hunger=hMax(r);r.energy=100;r.carry=null;r.cmat=null;r.citem=null;r.meal=null;r.cing=null;}}
