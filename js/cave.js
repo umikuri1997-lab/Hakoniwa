@@ -479,7 +479,7 @@ function cvPaintPx(g,x0,y0,N,T){const C=CV,Fd=C.fld,TH=cvTheme(),CW=TH.wall==='c
         /* 岩のかたまりの中は、まっ暗な空洞（持ち主がきめた）。大岩でかこむ階は、空洞の南のふちに柱の岩が立つ */
         const r=rcA[y],lc=rockOut&&r<FH?lv(TC,px,FH-1-r):-1;if(lc>=0){put(o,WK[lc]);continue}
         {let l=-1;if(hc<CVHANG&&TC){l=lv(TC,px,TC.top+hc);if(l>0)l=Math.max(1,l-Math.floor(hc/22))}/* 台のふちからたれる柱のがけ：下ほど暗く、暗い穴へとける */
-          put(o,l>=1?WK[l]:l===0?WK[0]:VO)}
+          put(o,l>=1?WK[l]:l===0?WK[0]:rockOut&&hc<CVHANG?WK[1]:VO)}/* 大岩でかこむ階：柱の頭と頭のあいだのすきまは、まっ黒にせず、くらい岩の色（持ち主：黒い筋に見える） */
         continue}
       if(c0===2){/* 水（持ち主のたのみで、網目をやめた）：水べは明るいふち。なかは、村と同じ水のテクスチャの3だん＋深さで、くらい色から明るい色のならび（WR）。
            北の岸から下へ CVREFL ドットは、岸の上の岩・がけのうつりこみ（床はうつさない）：上下さかさに、行ごとに1ドットずつゆらいで、水の色で、1行おきに切れる（水面のゆれ） */
@@ -494,9 +494,9 @@ function cvPaintPx(g,x0,y0,N,T){const C=CV,Fd=C.fld,TH=cvTheme(),CW=TH.wall==='c
       const c=ccA[y];let l=c<CVCLIFFH&&TC?lv(TC,px,TC.h-1-c):-1;
       if(l>=0){put(o,WK[l]);continue}/* 床のがけ（水晶のほらあなは、水晶のかべ） */
       l=lv(T.ground,px,py);if(l<0)l=3;
-      if(MO){const m=smp(Fd.Ms,px,py);if(m>.62){let dk=fv[k]<.62?2:fv[k]<.75?1:0;if(sh<6)dk=Math.max(dk,2);else if(sh<14)dk=Math.max(dk,1);if(m<.66)dk++;/* コケ：ふちは1だん暗い。地面のもようの明るさで、コケの6色 */
+      if(MO){const m=smp(Fd.Ms,px,py);if(m>.62){let dk=fv[k]<.62?2:fv[k]<.75?1:0;if(dk){for(let d=1;d<=8&&y+d<H2;d++)if(cls[k+N*d]===0){dk=0;break}}if(sh<6)dk=Math.max(dk,2);else if(sh<14)dk=Math.max(dk,1);if(m<.66)dk++;/* コケ：ふちは1だん暗い。地面のもようの明るさで、コケの6色 */
         const lm=T.moss?lv(T.moss,px,py):l,ml=Math.max(0,Math.min(5,lm-dk));/* コケのテクスチャ（cave:moss）のこさ */put(o,MO[ml]);continue}}
-      let dk=fv[k]<.62?2:fv[k]<.75?1:0;if(sh<6)dk=Math.max(dk,2);else if(sh<14)dk=Math.max(dk,1);/* かげは、色を1だん・2だんさげる */
+      let dk=fv[k]<.62?2:fv[k]<.75?1:0;if(dk){for(let d=1;d<=8&&y+d<H2;d++)if(cls[k+N*d]===0){dk=0;break}}/* 下にかべがある所は、かべぎわのかげをつけない（かべの上のふちに黒い帯が出る。持ち主） */if(sh<6)dk=Math.max(dk,2);else if(sh<14)dk=Math.max(dk,1);/* かげは、色を1だん・2だんさげる */
       if(!rockOut&&ca===0)l=5;/* 台の上のふちは明るく */
       put(o,l===0?FL[0]:cl(FL,l-dk))}}
   g.putImageData(im,0,0);
@@ -542,7 +542,7 @@ function cvDrawDeco(d,now){const C=CV,ox=cvX(d.j)*TS+d.dx,oy=(cvY(d.j)+CVOY)*TS,
 function cvPaintCell(g,x,y){const C=CV,ox=x*TS,oy=y*TS,IN=(a,b)=>a>=0&&b>=0&&a<CVW&&b<CVH,W0=(a,b)=>!IN(a,b)||!C.g[cvJ(a,b)],LV=(a,b)=>IN(a,b)?C.lv[cvJ(a,b)]:0,
     h=n=>hash(((y*CVW+x)*7+n*131+977)>>>0),F=(c,a,b,w,hh)=>{g.fillStyle=c;g.fillRect(ox+a,oy+b,w,hh)};if(!IN(x,y))return;const j=cvJ(x,y);
   if(W0(x,y)){if(W0(x,y+1)||C.wt[j+CVW]||cvTheme().out!=='rock')return;/* つらら石・光る鉱石は、大岩でかこむ階の岩の正面だけ */
-    {const D=cvTheme().deco||{};if(D.roots&&h(120)<D.roots){/* 天井からたれる根：岩の正面の上から、まがりながら下へ。ところどころ小さな葉 */const n=1+((h(121)*2)|0);for(let r=0;r<n;r++){let px=4+((h(122+r)*22)|0),py=-12;const L=22+((h(130+r)*18)|0);for(let i=0;i<L;i++){const w=i<L*.6?2:1;F('#3a2a1c',px-1,py+i,1,1);F(i%6===5?'#7a5634':'#9a7046',px,py+i,w,1);if(w>1)F('#c0905a',px,py+i,1,1);if(h(140+r*31+i)<.16)px+=h(150+r+i)<.5?-1:1;if(i>8&&h(160+r*17+i)<.14){F('#4f8a30',px+w,py+i,3,2);F('#86c25a',px+w,py+i,2,1)}}F('#9a7046',px,py+L,1,2)}}
+    {const D=cvTheme().deco||{};if(D.roots&&h(120)<D.roots){/* 天井からたれる根：岩の正面の上から、まがりながら下へ。ところどころ小さな葉 */const n=1+((h(121)*2)|0);for(let r=0;r<n;r++){let px=4+((h(122+r)*22)|0),py=-12;const L=22+((h(130+r)*18)|0);for(let i=0;i<L;i++){const w=i<L*.6?2:1;F(i%6===5?'#7a5634':'#9a7046',px,py+i,w,1);if(w>1)F('#c0905a',px,py+i,1,1);if(h(140+r*31+i)<.16)px+=h(150+r+i)<.5?-1:1;if(i>8&&h(160+r*17+i)<.14){F('#4f8a30',px+w,py+i,3,2);F('#86c25a',px+w,py+i,2,1)}}F('#9a7046',px,py+L,1,2)}}
       if(D.moss&&h(170)<D.moss){const px=2+((h(171)*20)|0);F('#4f7f34',px,26,8,2);F('#6faa48',px+1,25,5,1);F('#86c25a',px+2,24,2,1)}}/* こけ：岩の正面の下 */
     if(C.ore.has(j)&&!cvChip(g,'cave:ore',ox,oy)){F('#3f8f8a',9,14,4,5);F('#7fe0d2',10,15,2,2);F('#3f8f8a',19,19,5,4);F('#7fe0d2',20,20,2,2);F('#7fe0d2',15,24,2,2)}
     if(h(110)<.3&&!cvChip(g,'cave:stalac#'+(h(111)<.5?0:1),ox,oy+4)){const px=5+((h(112)*18)|0);F('#5a4d43',px,7,5,6);F('#5a4d43',px+1,13,3,4);F('#5a4d43',px+2,17,1,3)}
