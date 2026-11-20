@@ -19,11 +19,11 @@ def arc(base,ang,R,H,n=8,droop=0.35):
     for i in range(n+1):
         t=i/n;pts.append(np.array(base,float)+d*R*t+np.array([0,0,H*(math.sin(math.pi*t*(1-droop*0.5)))-H*droop*t*t]))
     return pts
-def fern(sc,c,R,H,col,col2,nf=7,seed=0,gi='f'):
+def fern(sc,c,R,H,col,col2,nf=7,seed=0,gi='f',z0=0.01):
     """シダ：根もとから nf 本の葉（葉軸＋左右の小葉）。小葉は、先ほど小さい"""
     rs=np.random.RandomState(seed)
     for f in range(nf):
-        ang=f*360/nf+rs.uniform(-18,18);r=R*rs.uniform(.75,1.1);h=H*rs.uniform(.8,1.15);sp=arc((c[0],c[1],0.01),ang,r,h)
+        ang=f*360/nf+rs.uniform(-18,18);r=R*rs.uniform(.75,1.1);h=H*rs.uniform(.8,1.15);sp=arc((c[0],c[1],z0),ang,r,h)
         g='%s%d'%(gi,f);ribbon(sc,sp,[0.012*(1-i/len(sp))+0.004 for i in range(len(sp))],col2,g)
         for i in range(1,len(sp)-1):
             t=i/(len(sp)-1);p=sp[i];tg=sp[i+1]-sp[i-1];tg/=np.linalg.norm(tg);side=np.cross(tg,[0,0,1.0]);side/=np.linalg.norm(side)+1e-12
@@ -92,3 +92,44 @@ def clean(im):
     from PIL import Image
     a=np.array(im);al=a[...,3]>0;P=np.pad(al,1);nb=sum(P[1+dy:1+dy+al.shape[0],1+dx:1+dx+al.shape[1]] for dy in(-1,0,1) for dx in(-1,0,1) if dy or dx)
     a[al&(nb==0)]=0;return Image.fromarray(a)
+def twigs(sc,c,H,col,depth=3,n=4,seed=0):
+    """かれた枝のしげみ：根もとから、えだわかれしながら上・外へのびる、細い枝（葉はない）"""
+    rs=np.random.RandomState(seed);sc.texture(None);sc.material(None);sc.group(None)
+    def br(p,d,l,r,k):
+        q=p+d*l;sc.tube([tuple(p),tuple(q)],r,col)
+        if k<=0:return
+        for _ in range(2):
+            a=rs.uniform(-0.9,0.9);b=rs.uniform(0,6.28);nd=d+np.array([math.cos(b)*a,math.sin(b)*a,0.15]);nd/=np.linalg.norm(nd)
+            br(q,nd,l*rs.uniform(.55,.75),r*0.7,k-1)
+    for f in range(n):
+        b=f*6.28/n+rs.uniform(-.4,.4);d=np.array([math.cos(b)*0.45,math.sin(b)*0.45,1.0]);d/=np.linalg.norm(d)
+        br(np.array([c[0],c[1],0.0]),d,H*0.45,0.012,depth)
+def horsetail(sc,c,H,col,col2,n=7,seed=0):
+    """トクサ：ふしのある、まっすぐな細いくきの、ふしごとに、細い葉が輪になって生える"""
+    rs=np.random.RandomState(seed);sc.texture(None);sc.material(None);sc.group(None)
+    for f in range(n):
+        a=rs.uniform(0,6.28);r=rs.uniform(0,.15);h=H*rs.uniform(.55,1.0);x,y=c[0]+math.cos(a)*r,c[1]+math.sin(a)*r;lean=rs.uniform(-.05,.05)
+        sc.tube([(x,y,0.0),(x+lean,y,h)],0.011,col)
+        for k in range(1,6):
+            z=h*k/6;xx=x+lean*k/6
+            for m in range(6):
+                b=m*6.28/6;d=np.array([math.cos(b),math.sin(b),-0.5]);p0=np.array([xx,y,z])
+                ribbon(sc,[p0,p0+d*0.035,p0+d*0.06],[0.004,0.004,0.001],col2,'h%d_%d_%d'%(f,k,m))
+            sc.sphere(xx,y,z,0.013,col2,n=8,m=4)
+def cycad(sc,c,H,trunk,frond,frond2,nf=10,seed=0):
+    """ソテツ：太く短いみき（うろこのある lathe）の上に、まわりへ広がる、かたい羽の葉"""
+    rs=np.random.RandomState(seed);sc.texture(None);sc.material(None);sc.group(None)
+    prof=[(0.0,0.0),(0.11,0.0)]+[(0.1+0.012*((i%2)*2-1),H*0.45*i/8) for i in range(1,9)]+[(0.0,H*0.47)]
+    sc.revolve(c[0],c[1],prof,lambda k_,i:trunk,n=16)
+    top=(c[0],c[1],H*0.45)
+    for f in range(nf):
+        ang=f*360/nf+rs.uniform(-10,10);sp=arc(top,ang,H*rs.uniform(.55,.7),H*0.3,n=8,droop=0.7)
+        ribbon(sc,sp,[0.01*(1-i/len(sp))+0.003 for i in range(len(sp))],frond2,'y%d'%f)
+        for i in range(1,len(sp)-1):
+            p=sp[i];tg=sp[i+1]-sp[i-1];tg/=np.linalg.norm(tg);side=np.cross(tg,[0,0,1.0]);side/=np.linalg.norm(side)+1e-12;ln=0.08*(1-i/len(sp))+0.03
+            for sg in(-1,1):ribbon(sc,[p,p+side*sg*ln*0.6+tg*0.01,p+side*sg*ln+tg*0.03],[0.006,0.01,0.002],frond,'y%d'%f)
+def treefern(sc,c,H,trunk,col,col2,seed=0):
+    """木のようなシダ：細いみきの先から、大きなシダの葉が、かさのように広がる"""
+    sc.texture(None);sc.material(None);sc.group(None)
+    sc.tube([(c[0],c[1],0.0),(c[0]+0.02,c[1],H*0.55),(c[0]+0.03,c[1],H*0.7)],0.03,trunk)
+    fern(sc,(c[0]+0.03,c[1]),H*0.75,H*0.18,col,col2,nf=9,seed=seed,gi='t',z0=H*0.7)
