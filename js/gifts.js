@@ -26,7 +26,7 @@ function presentGive(r,id){if(!r||giftToday(r))return false;if(isGM(id))return m
   r.gn=(r.gn||0)+1;if(typeof careNote==='function')careNote(r,'gift',id);/* あげた回数（節目の家具 gift-furn.js）・手紙に書く */
   if(first&&v)memo('🎁',r.name+'の、'+GLNAME[v]+'なおくりものがわかった');
   const L=giftTalk(r,id,v)||[v===2?'これ、だいすき！':v===1?'うれしい！ 大事にするね。':'ありがとう！'],after=()=>{if(typeof gfAfterGift==='function')gfAfterGift(r,v)};
-  if(typeof gfPresentShow==='function')gfPresentShow(r,id,v,()=>giftReply(r,L,after));else giftReply(r,L,after);/* つつみをあけて、中身ごとの動き → 返事 → お返し（gift-furn.js） */
+  if(typeof gfPresentShow==='function')gfPresentShow(r,id,v);giftReply(r,L,after);/* 返事はすぐ出す（つつみをあける動きは、うしろでつづく。gift-furn.js）→ お返し */
   logEv(r.name+'に'+BL[id].name+'をあげた');return true}
 /* 返事の会話（gift-talk.js の GIFTTALK：物・属性・好みごと。素材は3とおりから）。火の一人称 @I は、おれ・あたし・あたい */
 function giftTalk(r,id,v,mn){const T=typeof GIFTTALK!=='undefined'&&GIFTTALK[id];if(!T)return null;const el=r.elem==='earth'||r.elem==='wood'||r.elem==='water'||r.elem==='fire'||r.elem==='wind'?r.elem:'earth',A=T[el];if(!A||!A.length)return null;
@@ -37,7 +37,7 @@ function giftReply(r,L,after){if(!L||!L.length){if(after)after();return}if(!$('#
 /* 素材をあげる：たのしさ+GIFTMAT（たからものにはしない）。S.mat をへらすと、boxSync が箱からへらす */
 function matGive(r,k){if(!MATN[k]||(S.mat[k]||0)<1)return false;S.mat[k]--;(r.care||(r.care={})).gift=callDay();funAdd(r,GIFTMAT,'care');dirty=true;
   r.gn=(r.gn||0)+1;const L=giftTalk(r,'mat',null,MATN[k])||['ありがとう、使わせてもらうね。'],after=()=>{if(typeof gfAfterGift==='function')gfAfterGift(r,-1)};
-  if(typeof gfPresentShow==='function')gfPresentShow(r,'m:'+k,-1,()=>giftReply(r,L,after));else giftReply(r,L,after);
+  if(typeof gfPresentShow==='function')gfPresentShow(r,'m:'+k,-1);giftReply(r,L,after);
   logEv(r.name+'に'+MATN[k]+'をあげた');return true}
 /* もちものから：だれにあげるか */
 function giftWho(id){const o=el('<div style="position:fixed;inset:0;z-index:46;display:flex;align-items:center;justify-content:center;background:rgba(40,30,15,.35);padding:24px"><div class="pxcard" style="background:var(--panel);padding:16px 18px;max-width:340px;width:100%;color:var(--ink);max-height:80vh;overflow:auto"><b class="t" style="font-size:16px;display:block;margin-bottom:8px"></b><div class="rows"></div><div style="display:flex;justify-content:flex-end;margin-top:10px"><button class="btn x">とじる</button></div></div></div>');

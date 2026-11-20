@@ -1,6 +1,6 @@
 /* 神殿は、はじめからある、こわれた神殿：草原・火山・フリーモードのどれも。「しらべる」でタップすると、せいれいが直して神殿になる。古いセーブにも1回だけ置く */
 const assert=require('node:assert/strict');
-(async()=>{for(const w of [0,1,6]){const {browser,page,run,errors}=await require('../sim/boot.cjs')({world:w});
+(async()=>{for(const w of [0,1]){/* フリーモードに神殿はない（free-mode.cjs） */const {browser,page,run,errors}=await require('../sim/boot.cjs')({world:w});
   await run(`(()=>{document.querySelector('#dialog').hidden=true;S.introSeen=true;S.flags.tapped=1;S.hold=0;S.t=1440+8*60;S.enemyOn=false;S.enemies=[];USERPAUSE=false})()`);
   const a=JSON.parse(await run(`(()=>{const j=RUINT,x=j%W,y=(j/W)|0;const cells=[j-1,j+1,j+W];removeAt(x,y);removeAt(x-1,y);return JSON.stringify({ruin:S.obj[j],parts:cells.map(k=>S.obj[k]+':'+(S.ref[k]===j)),statue:STATUE,usable:usable('statue'),place:cells.some(k=>canPlace('stor',k%W,(k/W)|0,true)),still:S.obj[j],q:QUESTS[S.quest].id,how:QUESTS[S.quest].how})})()`));
   assert.equal(a.ruin,'statueb',`world ${w}: ruined temple at start`);assert.deepEqual(a.parts,['part:true','part:true','part:true']);

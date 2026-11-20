@@ -3,7 +3,7 @@
    限定の家具（BL の gf）：'ret' プレゼントのお返し・'let' 手紙のお礼・'bond' その子にプレゼントを GFBONDN 回あげた節目。属性ごとに1つずつ（BL の el）。
    もらう家具は、まだもらっていない物（S.flags.gfGot）から、くれる子の属性の物を先に（gfPick）。ぜんぶもらったら、お返し・節目はなし、手紙はいままでの素材。
    お返し：だいすきの物をあげたら、かならず。すきの物なら GFRETP%。
-   プレゼントをあげると（presentGive → gfPresentShow）：つつみを両手でかかえて、がさごそ → ぽんっとひらく → 中身ごとの動き（GFMOT）→ 好みでよろこびの大きさ（だいすき：紙ふぶき・ジャンプ・まわりの子もはくしゅ）→ 返事の会話 → お返し・節目のつつみ（treasureReveal）。
+   プレゼントをあげると（presentGive → gfPresentShow）：つつみを両手でかかえて、がさごそ → ぽんっとひらく → 中身ごとの動き（GFMOT）→ 好みでよろこびの大きさ（だいすき：紙ふぶき・ジャンプ・まわりの子もはくしゅ）。返事の会話は、動きを待たずにすぐ出す（gifts.js）。会話をとじたら、お返し・節目のつつみ（treasureReveal）。
    動きと絵は実時間（sacredSetPose）。村の時間は止めない。 */
 const GFURN={ret:['g_ishitsumi','g_donguri','g_shizuku','g_hidamari','g_kazaguruma'],let:['g_kabin','g_oshibana','g_kaifun','g_post','g_penzukue'],bond:['g_ishibench','g_happasofa','g_suisou','g_danro','g_hammock']};
 const GFRETP=20,GFBONDN=10;

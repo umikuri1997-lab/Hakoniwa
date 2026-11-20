@@ -109,6 +109,15 @@ function waterRound(X0,Y0,X1,Y1,isW){/* 区画（とまわり m）の水の形 f
   for(let y=0;y<h;y++){const r=rg[y];for(let p=0;p<r.length;p+=2)for(let x=r[p];x<r[p+1];x++){const i=y*w+x;if(!d[i])continue;let v=d[i];if(x>0)v=Math.min(v,d[i-1]+1);if(y>0){v=Math.min(v,d[i-w]+1);if(x>0)v=Math.min(v,d[i-w-1]+S2);if(x<w-1)v=Math.min(v,d[i-w+1]+S2)}d[i]=v}}
   for(let y=h-1;y>=0;y--){const r=rg[y];for(let p=r.length-2;p>=0;p-=2)for(let x=r[p+1]-1;x>=r[p];x--){const i=y*w+x;if(!d[i])continue;let v=d[i];if(x<w-1)v=Math.min(v,d[i+1]+1);if(y<h-1){v=Math.min(v,d[i+w]+1);if(x<w-1)v=Math.min(v,d[i+w+1]+S2);if(x>0)v=Math.min(v,d[i+w-1]+S2)}d[i]=v}}
   return {w,f,d,ut:(x,y)=>ut[(y-ty0)*ntx+x-tx0]}}
+/* 雲の海（風のステージ）の仮の絵：128×128でつながる、コードのドット絵（空の色に、段々のだ円をかさねた雲）。もらった絵ができたら、さしかえる */
+let SKYTEX=null;function skyTex(){if(SKYTEX)return SKYTEX;const N=128,cv=document.createElement('canvas');cv.width=cv.height=N;const c=cv.getContext('2d'),R=mulberry(20261121);c.fillStyle='#bfe2f1';c.fillRect(0,0,N,N);
+  const oval=(cx,cy,rx,ry,col)=>{c.fillStyle=col;for(let y=-ry;y<=ry;y++){const w=Math.round(rx*Math.sqrt(Math.max(0,1-y*y/(ry*ry+.01))));if(w<=0)continue;for(const ox of[-N,0,N])for(const oy of[-N,0,N])c.fillRect(cx-w+ox,cy+y+oy,w*2,1)}};
+  const puffs=[];for(let k=0;k<11;k++){const x=(R()*N)|0,y=(R()*N)|0,n=3+((R()*3)|0),L=[];for(let i=0;i<n;i++)L.push([x+((i-(n-1)/2)*9|0)+((R()*5)|0)-2,y+((R()*5)|0)-2,7+((R()*6)|0),4+((R()*3)|0)]);puffs.push(L)}
+  for(const L of puffs)for(const[x,y,rx,ry]of L)oval(x,y+3,rx,ry,'#a5d2e8');/* 雲の下のかげ */
+  for(const L of puffs)for(const[x,y,rx,ry]of L)oval(x,y,rx,ry,'#e6f4fa');
+  for(const L of puffs)for(const[x,y,rx,ry]of L)oval(x-1,y-2,Math.max(2,rx-3),Math.max(1,ry-2),'#fbfeff');/* 上の明るい所 */
+  SKYTEX=cv;return cv}
+const SKYFACE=[[108,92,66],[150,130,98],[126,108,80],[96,82,62]],SKYFH=13,SKYRIM=[104,122,84];/* 浮き島の手前のがけ（上から：土のかげ・岩・岩のかげ・うら）と、島のふちの線（仮の色） */
 function waterCorner(g,R,X0,Y0,X1,Y1,isW){/* 丸めて陸になった、水のマスの角：下絵には前の四角い水のふち（こい緑の線）がのこっているので、その所だけ、まわりの陸と同じ地面（あれ地か草地。マップの位置どおり）でぬりなおす */
   const M=WRND.m,gw=R.w,F=R.f,w=(X1-X0)*TS,h=(Y1-Y0)*TS,C=window.CHIPS,gt=chipImgs(C['tex:grass'],'ground')[0];let L=null,lg=null,id=null;
   for(let ty=Y0;ty<Y1;ty++)for(let tx=X0;tx<X1;tx++){if(!isW(tx,ty)||R.ut(tx,ty)!==-1)continue;const xa=(tx-X0)*TS,ya=(ty-Y0)*TS;let any=false;
@@ -117,26 +126,32 @@ function waterCorner(g,R,X0,Y0,X1,Y1,isW){/* 丸めて陸になった、水の�
     const px=tx*TS,py=ty*TS;if(gr>dr&&gt.ok)lg.drawImage(gt,px%GRTEX,py%GRTEX,TS,TS,xa,ya,TS,TS);else lg.drawImage(dryTex(px,py),px%DRTEX,py%DRTEX,TS,TS,xa,ya,TS,TS)}
   if(!L)return;if(NOISEC){lg.save();lg.imageSmoothingEnabled=true;lg.imageSmoothingQuality='high';lg.drawImage(NOISEC,-TS/2-X0*TS,-TS/2-Y0*TS,(W+1)*TS,(H+1)*TS);lg.restore()}/* 下絵と同じ色むら（drawStaticArea）もかさねる。ないと、ぬりなおした所だけ明るくなって、まわりの草とのさかいに線が出る */const m=TMPC();m.width=w;m.height=h;m.getContext('2d').putImageData(id,0,0);lg.globalCompositeOperation='destination-in';lg.drawImage(m,0,0);g.drawImage(L,0,0);L.width=L.height=m.width=m.height=0}
 function waterChunk(cx,cy){const k=cy*64+cx;if(WCK.c.has(k))return WCK.c.get(k);{const g0=GRD.c.get(k);if(GRD.s!==S||!g0||!g0.f||g0.st)return null}/* 地面の区画（くわしい絵）ができてから作る */const C=window.CHIPS,X0=cx*16,Y0=cy*16,X1=Math.min(W,X0+16),Y1=Math.min(H,Y0+16),isW=(x,y)=>x>=0&&y>=0&&x<W&&y<H&&S.ground[y*W+x]>=1,near=(x,y)=>{for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++)if(isW(x+dx,y+dy))return true;return false};
+  const SM=skyM(),isS=(x,y)=>!!SM&&x>=0&&y>=0&&x<W&&y<H&&SM[y*W+x]===1,nearS=(x,y)=>{for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++)if(isS(x+dx,y+dy))return true;return false};let PS=null;if(SM)for(let y=Y0;y<Y1;y++){let x=X0;while(x<X1){if(!nearS(x,y)){x++;continue}let e=x;while(e+1<X1&&nearS(e+1,y))e++;PS=PS||new Path2D();PS.rect(x*TS,y*TS,(e-x+1)*TS,TS);x=e+1}}/* 風：雲の模様をぬる所（雲の海のマスと、そのまわり1マス） */
   const P=new Path2D();let any=false;for(let y=Y0;y<Y1;y++){let x=X0;while(x<X1){if(!near(x,y)){x++;continue}let e=x;while(e+1<X1&&near(e+1,y))e++;P.rect(x*TS,y*TS,(e-x+1)*TS,TS);any=true;x=e+1}}/* 水の模様をぬる所：水のマスと、そのまわり1マス */
   if(!any){WCK.c.set(k,null);return null}
   const w=(X1-X0)*TS,h=(Y1-Y0)*TS,R=waterRound(X0,Y0,X1,Y1,isW),M=WRND.m,gw=R.w,F=R.f,D=R.d,o=document.createElement('canvas');o.width=w;o.height=h;const g=o.getContext('2d');
   const m=TMPC();m.width=w;m.height=h;const gm=m.getContext('2d'),mi=gm.createImageData(w,h),e=TMPC();e.width=w;e.height=h;const ge=e.getContext('2d'),ei=ge.createImageData(w,h),md=mi.data,ed=ei.data;
   for(let ty=Y0;ty<Y1;ty++)for(let tx=X0;tx<X1;tx++){const u=R.ut(tx,ty),xa=(tx-X0)*TS,ya=(ty-Y0)*TS;if(u===0)continue;/* まわりがぜんぶ陸のマスは、ふちも水もない */
+    const sk=SM&&nearS(tx,ty);
     for(let y=ya;y<ya+TS;y++)for(let x=xa;x<xa+TS;x++){const i=(y+M)*gw+x+M,p=(y*w+x)*4;let c=null;
+      if(F[i]&&sk){md[p+3]=255;if(u<0){/* 風：島の手前（南）のふちの下に、がけ。その下に、雲へ落ちるかげ。ほかのふちは、細い線 */const fh=SKYFH-((hash((X0*TS+x)*13+5)*3)|0);let k=0;for(let q=1;q<=fh+5&&i-q*gw>=0;q++)if(!F[i-q*gw]){k=q;break}
+          if(k&&k<=fh){c=SKYFACE[k<=2?0:k<=fh-5?1:k<=fh-2?2:3];ed[p]=c[0];ed[p+1]=c[1];ed[p+2]=c[2];ed[p+3]=255;continue}
+          if(k){ed[p]=96;ed[p+1]=150;ed[p+2]=184;ed[p+3]=[120,96,72,48,24][k-fh-1];continue}
+          if(!F[i-1]||!F[i+1]||!F[i+gw]){ed[p]=SKYRIM[0];ed[p+1]=SKYRIM[1];ed[p+2]=SKYRIM[2];ed[p+3]=255}}continue}
       if(F[i]){md[p+3]=255;if(u<0&&(!F[i-1]||!F[i+1]||!F[i-gw]||!F[i+gw]))c=WBAND[0]}/* 水：陸にとなる1ドットは、こい水の線 */
       else{const k=Math.round(D[i]);if(k>=1&&k<WBAND.length&&REV.has(ty*W+tx))c=WBAND[k]}/* 陸：水からの道のりで、ふちの草の帯 */
       if(c){ed[p]=c[0];ed[p+1]=c[1];ed[p+2]=c[2];ed[p+3]=F[i]?255:WBANDA[Math.round(D[i])]}}}
   gm.putImageData(mi,0,0);ge.putImageData(ei,0,0);
   g.drawImage(gq(cx,cy).f,-GPAD,-GPAD);waterCorner(g,R,X0,Y0,X1,Y1,isW);g.globalCompositeOperation='destination-out';g.drawImage(m,0,0);g.globalCompositeOperation='source-over';g.drawImage(e,0,0);/* 陸の地面（下絵）のうち、水でない所と、水のふち */
-  m.width=m.height=e.width=e.height=0;const q={o,P};WCK.c.set(k,q);return q}
+  m.width=m.height=e.width=e.height=0;const q={o,P,PS};WCK.c.set(k,q);return q}
 function waterShimmer(now,x0,y0,x1,y1){/* 水面（ふつうのタイルのやり方）：水の模様（tex:water）を、水のマスとまわり1マスに、世界の座標でしきつめてぬる（ゆっくりスクロール）。その上に、区画ごとに作っておいた「水ぎわの陸の地面と水のふち」の絵をかさねる */
   if(WD===1||!waterChipsOK())return;const C=window.CHIPS,im=chipImgs(C['tex:water'],'water')[0];if(!im.ok)return;
-  if(WCK.s!==S){waterDirty(null);WCK.s=S;WCK.pt=null}
+  if(WCK.s!==S){waterDirty(null);WCK.s=S;WCK.pt=null;WCK.spt=null}
   const t=now/1000,sx=Math.floor(t*4)%128,sy=Math.floor(t*2)%128;/* 1秒に よこ4・たて2ドット（テクスチャの1ドットずつ動かす） */
   const qs=[];for(let cy=Math.max(0,(y0-1)>>4);cy<=Math.min((H-1)>>4,(y1+1)>>4);cy++)for(let cx=Math.max(0,(x0-1)>>4);cx<=Math.min((W-1)>>4,(x1+1)>>4);cx++){const q=waterChunk(cx,cy);if(q)qs.push([cx,cy,q])}
   if(!qs.length)return;
   const P=new Path2D();for(const[,,q]of qs)P.addPath(q.P);/* 見えている区画の形を1つにして、1回でぬる（区画のさかいに線が出ないように） */
-  const pt=WCK.pt||(WCK.pt=ctx.createPattern(im,'repeat'));pt.setTransform(new DOMMatrix().translate(sx,sy));ctx.fillStyle=pt;ctx.fill(P);{const dk=darkness();if(dk>0){ctx.fillStyle='rgba(52,50,64,'+(dk*WNIGHT)+')';ctx.fill(P)}}/* 夜は、水をもう少し暗く（青があざやかなまま、うかんで見えないように）。陸の絵を上にかさねるので、水の所だけ */
+  const pt=WCK.pt||(WCK.pt=ctx.createPattern(im,'repeat'));pt.setTransform(new DOMMatrix().translate(sx,sy));ctx.fillStyle=pt;ctx.fill(P);if(qs.some(a=>a[2].PS)){const Q=new Path2D();for(const[,,q]of qs)if(q.PS)Q.addPath(q.PS);const sp=WCK.spt||(WCK.spt=ctx.createPattern(skyTex(),'repeat'));sp.setTransform(new DOMMatrix().translate(Math.floor(t*3)%128,0));ctx.fillStyle=sp;ctx.fill(Q)}/* 風：雲の海は、雲の模様をゆっくり横へ流す */{const dk=darkness();if(dk>0){ctx.fillStyle='rgba(52,50,64,'+(dk*WNIGHT)+')';ctx.fill(P)}}/* 夜は、水をもう少し暗く（青があざやかなまま、うかんで見えないように）。陸の絵を上にかさねるので、水の所だけ */
   const kz=dpr*cam.z,SX=v=>cam.x+Math.round((v-cam.x)*kz)/kz,SY=v=>cam.y+Math.round((v-cam.y)*kz)/kz;
   for(const[cx,cy,q]of qs){const a=SX(cx*16*TS),b=SY(cy*16*TS);ctx.drawImage(q.o,a,b,SX(cx*16*TS+q.o.width)-a,SY(cy*16*TS+q.o.height)-b)}}/* 区画の絵は、画面のドットのさかいに合わせておく */
 function sideClip(i,f){/* 低いマスの物が、となりの高いマスの上へはみ出さないように：となりのマスが高ければ、そのマスの高い面（上の面のてっぺんより下）には描かない */const x=i%W,y=(i/W)|0,h=hiAt(i),L=x>0&&hiAt(i-1)>h?hiAt(i-1):0,R=x<W-1&&hiAt(i+1)>h?hiAt(i+1):0;if(!L&&!R){f();return}
@@ -361,7 +376,7 @@ function render(now){RFN++;hdFrame();
     for(let cy=cy0;cy<=cy1;cy++)for(let cx=cx0;cx<=cx1;cx++){const q=gq(cx,cy),need=GLOD?(!q.l||q.st):(!q.f||q.st);if(need&&(fresh||built===0||GRD.bt<GBUD)){gbuild(cx,cy,q);built++}q.u=RFN;const im=GLOD?q.l:(q.f||q.l);if(!im)continue;/* まだ作っていない区画は、地面の色のまま（つぎのコマで作る） */
       const ox=cx*GPX,oy=cy*GPX,w=Math.min(GPX,W*TS-ox),h=Math.min(GPX,H*TS-oy),a=SXg(ox),b=SYg(oy),kx=(SXg(ox+w)-a)/w,ky=(SYg(oy+h)-b)/h;ctx.drawImage(im,a-GPAD*kx,b-GPAD*ky,(w+2*GPAD)*kx,(h+2*GPAD)*ky)}GRD.any=true}/* 絵は切りとらず、のりしろ（GPAD）ごと描いて、となりの区画にかさねる *//* 区画は、画面のドットのさかいに合わせておく（さかいめに線が出ないように） */
   const x0=Math.max(0,Math.floor(cam.x/TS)-1),y0=Math.max(0,Math.floor(cam.y/TS)-2),x1=Math.min(W,Math.ceil((cam.x+VW/cam.z)/TS)+1),y1=Math.min(H,Math.ceil((cam.y+VH/cam.z)/TS)+2);
-  waterShimmer(now,x0,y0,x1,y1);drawFords(x0,y0,x1,y1);drawRugsLive(x0,y0,x1,y1);feelGround(now,x0,y0,x1,y1);if(typeof cupGround==='function')cupGround(performance.now());/* 大会の表彰台（cup.js） *//* 地面にのこる季節・水たまり・足もとの反応（feel.js） */
+  waterShimmer(now,x0,y0,x1,y1);drawFords(x0,y0,x1,y1);drawWindGround(ctx,x0,y0,x1,y1,now);/* 風：雲の橋と風のすじ */drawRugsLive(x0,y0,x1,y1);feelGround(now,x0,y0,x1,y1);if(typeof cupGround==='function')cupGround(performance.now());/* 大会の表彰台（cup.js） *//* 地面にのこる季節・水たまり・足もとの反応（feel.js） */
   drawSacredRoot(now);drawFieldStory(now);if(typeof drawTreasure==='function')drawTreasure(now);
   for(const[j,t0]of pops){const a=1-(now-t0)/350;if(a<=0){pops.delete(j);continue}if(a>1)continue;/* 順に着地するのを待っている（juicePlace） */ctx.fillStyle='rgba(255,255,240,'+a*.6+')';const s=4*(1-a);rr(ctx,(j%W)*TS-s,((j/W)|0)*TS-s,TS+s*2,TS+s*2,6)}
   for(const o of S.orders||[])if(o.cs!=null&&S.obj[o.cs]!=='wbench'){const x=o.cs%W,y=(o.cs/W)|0;if(x>=x0&&x<=x1&&y>=y0&&y<=y1){const st=typeof wbworkStage==='function'?wbworkStage(o):-1,wc=st>=0&&window.CHIPS&&CHIPS['wbwork#'+st];if(wc)drawChip(ctx,wc,'wbwork',x*TS,y*TS+WBWORKZ-hiAt(o.cs)*LIFT,now)}}/* 作業台を置けなかった依頼：素材がそろったら、作っている形を地面に（天板の上にのせる絵を、WBWORKZ だけ下げる） */
@@ -410,11 +425,11 @@ function render(now){RFN++;hdFrame();
   const add=(k,t,box,draw,own)=>D.push({k,t,box,draw,own});
   for(const r of S.res)if(vis(r)){const px=r.x*TS,fy=r.y*TS,onB=r.act&&r.act.type==='rest'&&r.act.stage==='do'&&BENCHES.has(S.obj[r.act.obj]),onAl=STATUE>=0&&(r.y|0)*W+(r.x|0)===STATUE+W;/* ベンチにすわっている子は、ベンチの背もたれより手前（縦のベンチは2マスめより手前）。神殿の台座の上にいる子は、台座より手前 */const rj=(r.y|0)*W+(r.x|0),inJ=BEDSET.has(typeAt(rj))?anc(rj):r.act&&r.act.stage==='do'?(r.act.type==='sleep'&&BEDSET.has(S.obj[r.act.obj])?r.act.obj:r.act.type==='bathe'&&r.act.tub!=null?r.act.tub:-1):-1,inO=inJ>=0?S.obj[anc(inJ)]:null;/* ベッドの上にいる子（寝る子も、歩いている子も）・バスタブに入る子は、その家具より手前 */const inDr=HOME_DOORS.has(typeAt((r.y|0)*W+(r.x|0)))||GATE_IDS.has(typeAt((r.y|0)*W+(r.x|0)))||SEATS.includes(typeAt((r.y|0)*W+(r.x|0)));/* いすにすわる子も、いすより手前 *//* ドアのマスを通る子は、ドアより手前 */add(r.act&&r.act.type==='watchpost'&&r.act.stage==='do'&&S.obj[r.act.obj]==='watch'?objectDepth('watch',r.act.obj)+.02:toyR(r)?toyPose(r,now).z:inO&&BL[inO]?objectDepth(inO,anc(inJ))+.02:onB?((r.act.obj/W)|0)+(rotAt(r.act.obj)%2===1?2.05:1.05):onAl?((STATUE/W)|0)+2.03:inDr?(r.y|0)+1.02:sacredEffect('embrace')?.actor===r?S.nushi.y+.21:rDepth(r),2,[px-22,fy-64,px+22,fy+13],()=>liftDraw(uLift(r),()=>drawRes(r,now)),(r.y|0)*W+(r.x|0))}
   for(const c of CRIT)if(vis(c)){const px=c.x*TS,fy=c.y*TS;add(c.z>6?c.y+.6:c.y,2,[px-13,fy-34,px+13,fy+4],()=>liftDraw(uLift(c),()=>drawCritter(ctx,c,now)),(c.y|0)*W+(c.x|0))}/* 小さな生き物 */
-  if(typeof aniDraw==='function')aniDraw(add,vis,now,ctx);/* 飼う生き物 */if(typeof snowDraw==='function')snowDraw(add,vis,ctx);/* 雪だるま（season.js） */
+  if(typeof aniDraw==='function')aniDraw(add,vis,now,ctx);/* 飼う生き物 */if(typeof snowDraw==='function')snowDraw(add,vis,ctx);if(typeof wildDraw==='function')wildDraw(add,vis,ctx,now);/* 野の花（free.js） *//* 雪だるま（season.js） */
   for(const g of EXTRA){const px=g.x*TS,fy=g.y*TS;add(g.y,2,[px-30,fy-70,px+30,fy+15],()=>drawRes(g,now),(g.y|0)*W+(g.x|0))}/* 思い出の場面だけの子 */
-  if(WD===1)storyStageAdd(add,now);/* 火山の物語の、地面に置く演出（たき火・灰・たまご・ちょうちん）は、せいれいと同じ奥行きの順で */
+  if(WD===1)storyStageAdd(add,now);if(WD===1&&typeof kgrAdd==='function')kgrAdd(add,now);/* 火山の幕間・さいごのうずみ火の影と火（kagari.js） *//* 火山の物語の、地面に置く演出（たき火・灰・たまご・ちょうちん）は、せいれいと同じ奥行きの順で */
   if(visitHere()){const g=visitor(),px=g.x*TS,fy=g.y*TS;add(g.y,2,[px-30,fy-70,px+30,fy+15],()=>drawRes(g,now),(g.y|0)*W+(g.x|0))}/* 温泉宿のお客さん */
-  if(GUEST){const g=GUEST,px=g.x*TS,fy=g.y*TS;add(g.y,2,[px-30,fy-70,px+30,fy+15],()=>drawRes(g,now),(g.y|0)*W+(g.x|0))}/* 火山にあそびに来たフタバ */
+  if(typeof shopRows==='function')shopRows(add,now);/* 水のステージの食堂のお客さん */if(GUEST){const g=GUEST,px=g.x*TS,fy=g.y*TS;add(g.y,2,[px-30,fy-70,px+30,fy+15],()=>drawRes(g,now),(g.y|0)*W+(g.x|0))}/* 火山にあそびに来たフタバ */
   if(EVAP.length){EVAP=EVAP.filter(it=>now-it.t0<(it.dur||1800)+600+(it.die?KO_HOLD:0));for(const it of EVAP){const e=it.e,z=EN[e.type].size||1,px=e.x*TS,fy=e.y*TS;add(e.y,2,[px-30*z,fy-110*z,px+30*z,fy+15],()=>liftDraw(uLift(it.e),()=>drawEvap(it,now)),(e.y|0)*W+(e.x|0))}}
   for(const e of S.enemies)if(vis(e)&&!(e.dead&&EVAP.some(it=>it.e===e))){/* 消えていく途中のコワイノは、消える演出だけを描く */const s=EN[e.type].size||1,px=e.x*TS,fy=e.y*TS;add(e.y,2,[px-24*s,fy-56*s-10,px+24*s,fy+15],()=>liftDraw(uLift(e),()=>drawEnemy(e,now)),(e.y|0)*W+(e.x|0))}
   if(WD===YAMI)yamiDrawAdd(add,now);/* 闇のステージ：ヨリ・夜の仕事のあと */
@@ -422,7 +437,7 @@ function render(now){RFN++;hdFrame();
   if(festOn())for(const st of festStalls()){const px=(st.x+.5)*TS,py=(st.y+.5)*TS-4;if(!vis({x:st.x+.5,y:st.y+.5}))continue;add(st.y+.3,2,[px-48,py-100,px+48,py+26],()=>drawYatai(px,py,0,now,st),-1);add(st.y+.75,2,[px-48,py-100,px+48,py+26],()=>drawYatai(px,py,1,now,st),-1)}/* せいれいの屋台（屋根は店番のうしろ、台は前） */
   if(typeof TFALL!=='undefined'&&TFALL.length){treeFallTick(now);for(const f of TFALL)add(f.dep,1,null,()=>drawTreeFall(f,now),-1)}/* たおれていく木（juice.js） */
   if(S.nushi){const n=S.nushi,px=n.x*TS,py=n.y*TS;add(n.y+.2,2,[px-100,py-150,px+100,py+20],()=>drawNushi(now),-1)}
-  for(let y=Math.max(0,y0-2);y<Math.min(H,y1+4);y++)for(let x=Math.max(0,x0-4);x<x1;x++){const i=y*W+x,o=S.obj[i];if(!o||o==='part'||!BL[o]||S.ground[i]===1&&o!=='lotus'&&o!=='sprout'&&o!=='bridge'||(FLAT.has(o)||BL[o].floor)&&!(BL[o].dyn||BL[o].anim||TREES.has(o)))continue;/* 立っている物は、動く物も動かない物も、毎コマ足もとの順に描く */
+  for(let y=Math.max(0,y0-2);y<Math.min(H,y1+4);y++)for(let x=Math.max(0,x0-4);x<x1;x++){const i=y*W+x,o=S.obj[i];if(!o||o==='part'||!BL[o]||S.ground[i]===1&&o!=='lotus'&&o!=='sprout'&&o!=='bridge'&&o!=='yudekago'||(FLAT.has(o)||BL[o].floor)&&!(BL[o].dyn||BL[o].anim||TREES.has(o)))continue;/* 立っている物は、動く物も動かない物も、毎コマ足もとの順に描く */
     if(o==='door'||o==='yozoradoor')add((i/W|0)+.01,0,null,()=>{ctx._doorBack=1;drawObj(ctx,o,x*TS,y*TS-hiAt(i)*LIFT,i);ctx._doorBack=0},i);/* ドアの奥の面 */
     {const sh=castShadowChip(o,i);if(sh)add(y+.0015,0,null,()=>hdCastStretch(x*TS+TS/2,y*TS-hiAt(i)*LIFT+TS*.8,()=>drawChip(ctx,sh,o,x*TS,y*TS-hiAt(i)*LIFT,0,i)),-1)}/* 落ち影：その行の段差のあと・その行の物より先（右の物の下になる） */
     if(o==='wbench'){const c=wbCells(i);for(const [k,yd] of [[c.b,0],[c.y,1]]){const kx=k%W,ky=(k/W)|0;add(objectDepth(o,k),1,null,()=>sideClip(k,()=>dropIn(ctx,i,kx*TS,ky*TS-hiAt(k)*LIFT,now,()=>yd?drawWbYard(ctx,i,kx*TS,ky*TS-hiAt(k)*LIFT,now):drawObj(ctx,o,kx*TS,ky*TS-hiAt(k)*LIFT,i,0,now),o)),k)}continue}/* 作業台：作業台と材料置き場を、それぞれのマスの順に */
@@ -438,6 +453,7 @@ function render(now){RFN++;hdFrame();
   if(S.hi&&!farOn){const RW=cliffRuns();for(let y=Math.max(0,y0-1);y<Math.min(H,y1+2);y++){const L=RW.get(y);if(!L)continue;const vs=[];for(const R of L)if(R.x1>=x0-1&&R.x0<=x1)vs.push({x0:Math.max(R.x0,x0-1),x1:Math.min(R.x1,x1),lv:R.lv});if(!vs.length)continue;/* 見えている所だけ */
     add(y-1+.0005,-1,null,()=>{for(const R of vs)cliffRow(y,R,false)},-1);/* ひとつ上の行の物より先：段差の上の物のかげが、手前の行の上の面にかくれないように */
     add(y+.001,-1,null,()=>{for(const R of vs)cliffRow(y,R,true)},-1)}}/* うしろが低い所だけ、上の面の上はしをもう1回描いて、うしろの物の足もとをかくす *//* 段差：行ごとに、その行の物より先（ひとつ上の行の物より後） */
+  if(typeof mzRows==='function')mzRows(add,x0,y0,x1,y1,now);/* 水のステージ：水路・ため池・小舟（段差の絵のあと） */
   feelLifted(add,x0,y0,x1,y1,now);/* 高い段の上の雪・落ち葉・水たまり（段差の絵のあと） */
   D.sort((a,b)=>a.k-b.k||a.t-b.t);
   for(const it of D)it.draw();
@@ -446,7 +462,7 @@ function render(now){RFN++;hdFrame();
   if(pending&&pending.kind==='one'&&TERRA.has(pending.id)){/* けずる・もる：えらんだマスの枠は、段差の絵（上の面）より手前に。かくれて見えないのをふせぐ */const px=pending.x*TS,py=pending.y*TS-hiAt(pending.y*W+pending.x)*LIFT;ctx.fillStyle=pending.ok?'rgba(255,220,90,.35)':'rgba(255,90,90,.4)';ctx.fillRect(px,py,TS,TS);ctx.strokeStyle=pending.ok?'rgba(255,240,140,1)':'rgba(255,110,110,1)';ctx.lineWidth=3;ctx.setLineDash([6,4]);ctx.strokeRect(px+1.5,py+1.5,TS-3,TS-3);ctx.setLineDash([])}
   // 置く前のプレビューは、家の壁や屋根より手前に描く
   if(pending&&pending.kind==='one'){const px=pending.x*TS,py=pending.y*TS-hiAt(pending.y*W+pending.x)*LIFT,TP=pending.id==='statue'?[[-1,0,'obox'],[0,0,'statue'],[1,0,'board'],[0,1,'altar']]:[[0,0,pending.id]];ctx.save();ctx.globalAlpha=.6+Math.sin(now/250)*.15;const rch=ROTS[pending.id]&&PLROTS[pending.id]&&chipOf(pending.id,null,PLROTS[pending.id]);if(pending.id==='wbench'){/* 作業台は、材料置き場（素材台）もいっしょに見せる（wbCells と同じならび） */const r=PLROTS.wbench||0,d=r%2?[0,1]:[1,0],B=r>=2?d:[0,0],Y=r>=2?[0,0]:d,yc=window.CHIPS&&CHIPS['matyard#0'];drawObj(ctx,'wbench',px+B[0]*TS,py+B[1]*TS,null,100,now);if(yc)drawChip(ctx,yc,'matyard',px+Y[0]*TS,py+Y[1]*TS,now)}else if(rch)drawChip(ctx,rch,pending.id,px,py,now);/* 向きをかえられる物は、えらんだ向きの絵だけを見せる（元の向きの絵は出さない） */else for(const[dx,dy,id2]of TP)drawObj(ctx,id2,px+dx*TS,py+dy*TS,pending.y*W+pending.x+dx+dy*W,100,now);ctx.restore()}
-  if(pending&&pending.kind==='one'&&FRONTS.has(pending.id)){/* すわる家具は、置くときに正面（すわった子が向く方）を矢印で出す */
+  if(pending&&pending.kind==='one'&&(FRONTS.has(pending.id)||pending.id==='kazami')){/* かざみは、風をまげる向き *//* すわる家具は、置くときに正面（すわった子が向く方）を矢印で出す */
     const id=pending.id,rot=PLROTS[id]||0,z=szR(id,rot)||[1,1],w=z[0]*TS,h=z[1]*TS;
     const d=[[0,1],[1,0],[0,-1],[-1,0]][rot];
     const bob=Math.sin(now/220)*2,cx=pending.x*TS+w/2+d[0]*(w/2+9+bob),cy=pending.y*TS+h/2+d[1]*(h/2+9+bob);
@@ -484,7 +500,7 @@ function render(now){RFN++;hdFrame();
   if(!PHSNAP)for(const f of floats){ctx.globalAlpha=Math.min(1,f.life*2);/* 村の写真（photo.js）には、数の文字を写さない */const yy=(f.y-(1-f.life)*1.2)*TS;ctx.lineJoin='round';ctx.lineWidth=3;ctx.strokeStyle='rgba(176,138,100,.9)';{const fi=BUBI[bubKey(f.text)]?null:emoImg(f.text);if(BUBI[bubKey(f.text)])bubIcon(ctx,f.text,f.x*TS,yy-6,1.5);else if(fi){const ih=20,iw=ih*fi.width/fi.height;ctx.drawImage(fi,f.x*TS-iw/2,yy-ih+4,iw,ih)}else{ctx.strokeText(f.text,f.x*TS,yy);ctx.fillStyle='#fff3d6';ctx.fillText(f.text,f.x*TS,yy)}}}/* 文字はぜんぶクリーム色 *//* 文字のふちどりはうすい茶色 */
   ctx.globalAlpha=1;ctx.textAlign='start';
   feelWarm(ctx,x0,y0,x1,y1);feelAir(now,x0,y0,x1,y1);feelClouds(ctx,now,darkness());/* 冬の家の中のぬくもり・朝もや・白い息・かげろう・雨のはね・雲のかげ（feel.js） */
-  drawFog(ctx,x0,y0,x1,y1,now);/* 霧（夜の暗さより下） */drawFogHints(ctx,x0,y0,x1,y1,now);/* 霧の中の手がかり */drawPrintMarks(now,true);/* 霧の中の足あとの印は、霧の上 */
+  drawFog(ctx,x0,y0,x1,y1,now);/* 霧（夜の暗さより下） */drawWindCover(ctx,x0,y0,x1,y1,now);if(typeof mzMistDraw==='function')mzMistDraw(ctx,x0,y0,x1,y1);/* 風：雲にしずんだ島 */drawFogHints(ctx,x0,y0,x1,y1,now);/* 霧の中の手がかり */drawPrintMarks(now,true);/* 霧の中の足あとの印は、霧の上 */
   const dk=darkness();
   ctx.setTransform(dpr,0,0,dpr,0,0);
   if(BOSSEVE){const h=hour(),a=Math.min(1,Math.max(0,(h-15)/2))*.16;if(a>0){ctx.fillStyle='rgba(110,30,70,'+a+')';ctx.fillRect(0,0,VW,VH)}}/* オオカゲが来る日の夕方：空があやしい色に */
@@ -493,7 +509,7 @@ function render(now){RFN++;hdFrame();
     dmx.setTransform(k,0,0,k,-cam.x*k,-cam.y*k);dmx.globalCompositeOperation='destination-out';
     for(const j of LITP){const o=S.obj[j],L=litP(j,o);if(!L)continue;const x=j%W,y=(j/W)|0;if(x<x0-5||x>=x1+5||y<y0-5||y>=y1+5)continue;/* 画面の外5マスの明かりも、光がとどくので描く */if(INDL.has(o)&&roomOf(j))continue;/* 家の中の灯りは、灯りそのものは光らせず、家ぜんたいを光らせる（下） */
       const R=L.R*feelFlick(j,o,now);/* 火のあかりは、ゆらめく */dmx.drawImage(lightSpr(L.R),x*TS+L.dx-R,y*TS+L.dy-R,R*2,R*2)}
-    gearLights(dmx);/* そうびの明かり */yamiLights(dmx);/* 光のせいれいの明かり */rayCutDark(dmx,now);/* 月明かりの帯の所は、少しだけ暗さがうすい */heatGlow(dmx,x0,x1,y0,y1,1);/* 熱の道は、夜ほんのり光る */
+    gearLights(dmx);/* そうびの明かり */yamiLights(dmx);/* 光のせいれいの明かり */if(typeof kgrLights==='function')kgrLights(dmx,now);/* 火山の場面の火（kagari.js） */rayCutDark(dmx,now);/* 月明かりの帯の所は、少しだけ暗さがうすい */heatGlow(dmx,x0,x1,y0,y1,1);/* 熱の道は、夜ほんのり光る */
     const litH=new Set();for(const j of LIGHTS){if(INDL.has(S.obj[j])){const h=roomOf(j);if(h)litH.add(h)}}/* 灯りのある家 */
     {dmx.imageSmoothingEnabled=true;for(const h of litH){const wa=feelWin(h);if(wa<=0)continue;dmx.globalAlpha=.75*wa;dmx.drawImage(houseGlow(h),h.x0*TS-GLOWM,h.y0*TS-GLOWM)}dmx.globalAlpha=1}/* 家のあかりは、夕方に1けんずつともり、夜あけに1けんずつ消える（feelWin） *//* 灯りのある家は、家ぜんたいを同じ明るさで照らす（ふちはぼかす） */
     ctx.setTransform(1,0,0,1,0,0);ctx.drawImage(DMK,0,0);if(nightVarNow()==='kiri'){ctx.globalAlpha=Math.min(1,dk*.9);ctx.fillStyle=fogPat(ctx);const ox=-(cam.x*k*.6+performance.now()*.006)%256,oy=-(cam.y*k*.6)%256;ctx.translate(ox,oy);ctx.fillRect(-ox,-oy,ctx.canvas.width,ctx.canvas.height);ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=1}/* 霧の夜：うすい霧（1回作った絵をならべて、ゆっくり流す） *//* けずったところは重なっても、暗さがなくなるだけ（明るくなりすぎない） */

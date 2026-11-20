@@ -3,7 +3,7 @@
    ふえた・へった数は、0〜100にまるめたあとの、じっさいにかわった数。
    funAdd を通らずにかわった分（思い出の場面・おそなえなど、じかに数を入れる所）は「そのほか」。
    せいれいの画面で、たのしさをタップすると funPop で一覧を出す。 */
-const FUNW={time:'時間でへる',env:'まわりのけしき',play:'あそび',chat:'おしゃべり',rest:'ひとやすみ',own:'じぶんの場所',meal:'ごはん',bath:'おふろ',fish:'つり',fest:'おまつり',solo:'ひとりのたのしみ',admire:'あたらしい物を見た',care:'お世話',ev:'イベント',dream:'ゆめ',trouble:'こまりごとがなおった',sleep:'ねむり',night:'夜をぶじに守った',foe:'「コワイノ」',bell:'村の鐘',star:'流れ星',mvp:'ゆうべのかつやく',tree:'御神木',bp:'設計図',ani:'いきもの'};
+const FUNW={time:'時間でへる',env:'まわりのけしき',play:'あそび',chat:'おしゃべり',rest:'ひとやすみ',own:'じぶんの場所',meal:'ごはん',bath:'おふろ',fish:'つり',fest:'おまつり',solo:'ひとりのたのしみ',admire:'あたらしい物を見た',care:'お世話',ev:'イベント',dream:'ゆめ',trouble:'こまりごとがなおった',sleep:'ねむり',night:'夜をぶじに守った',foe:'「コワイノ」',bell:'村の鐘',star:'流れ星',mvp:'ゆうべのかつやく',tree:'御神木',altar:'守護の台座',heat:'熱の装置',bp:'設計図',ani:'いきもの'};
 const FUNHOUR=90,FUNPH=5;/* ゲームの時計の1時間（dt の数）・起きているあいだ、時計の1時間にへる、たのしさ */
 function funDay(r){const d=callDay();if(!r.fd||r.fd.d!==d){if(r.fd)r.fdP={d:r.fd.d,min:r.fd.min??r.fd.f0};r.fd={d,f0:r.fun||0,min:r.fun||0,k:{}}}return r.fd}/* fdP：前の日のいちばん低い数（ひらめきの日 inspire.js） */
 function funAdd(r,n,k){if(!r||!n||!isFinite(n))return;const fd=funDay(r),b=r.fun||0;r.fun=clamp(b+n,0,100);const d=r.fun-b;if(r.fun<(fd.min??fd.f0))fd.min=r.fun;if(d)fd.k[k]=(fd.k[k]||0)+d}

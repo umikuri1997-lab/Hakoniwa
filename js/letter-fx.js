@@ -22,7 +22,7 @@ function envDraw(g,x,y,s,open){for(const[px,py,c]of ENVPX[open?1:0]){g.fillStyle
 const ENVURL={};function envURL(open){/* 一覧・上の欄のアイコン（1ドット2px） */const k=open?1:0;if(ENVURL[k])return ENVURL[k];const c=document.createElement('canvas');c.width=36;c.height=34;const g=c.getContext('2d');envDraw(g,0,open?0:10,2,open);ENVURL[k]=c.toDataURL();c.width=c.height=0;return ENVURL[k]}
 function letterSpot(){/* ふうとうを置く所（せかいの点）：おそなえ箱の前・なければ神殿（こわれた神殿）の前 */const j=OBOX>=0?OBOX:STATUE>=0?STATUE:RUINT;if(j<0)return null;const z=(typeof hiAt==='function'?hiAt(j):0)*LIFT;return{x:(j%W+.5)*TS,y:((j/W)|0)*TS+TS+6-z,j}}
 function letterPostArrive(who){/* 朝に手紙がとどいた：小鳥がとどけにくる */LPEND=who}
-function letterCanFly(){return started&&S&&!S.free&&sheet==null&&$('#dialog').hidden&&NEWRES==null&&!GIFT_ACTIVE&&!(camAnim&&camAnim.done)}
+function letterCanFly(){return started&&S&&sheet==null&&$('#dialog').hidden&&NEWRES==null&&!GIFT_ACTIVE&&!(camAnim&&camAnim.done)}
 function letterBirdStart(now){const T=letterSpot();if(!T){LPEND=null;return}const vw=VW/cam.z,vh=VH/cam.z;
   LBIRD={t0:now,T,who:LPEND,fx:T.x-vw*.55,fz:vh*.5,ox:T.x+vw*.55,oz:vh*.55,drop:0};LPEND=null;
   const sx=(T.x-cam.x)*cam.z,sy=(T.y-cam.y)*cam.z;if(sx<VW*.15||sx>VW*.85||sy<VH*.2||sy>VH*.8)panTo(T.x,T.y);/* 見えないときは、おそなえ箱へカメラをよせる */
@@ -45,7 +45,7 @@ function letterGroundDraw(g,now){const T=letterSpot();if(!T)return;let dy=0;cons
   for(const[ox,oy,ph]of LSPK){const a=Math.sin(((now/900+ph)%1)*Math.PI);if(a<.15)continue;const sx=Math.round(T.x+ox),sy=Math.round(T.y-6+oy+dy*.5);g.globalAlpha=a;g.fillStyle='#fff6c8';g.fillRect(sx-1,sy-3,2,6);g.fillRect(sx-3,sy-1,6,2);g.fillStyle='#ffffff';g.fillRect(sx-1,sy-1,2,2);g.globalAlpha=1}}
 function letterLanded(T){/* ふうとうが着地した：きらきら・音・知らせ */const L=(S.letters||[]).filter(l=>!l.read),n=L.length;if(!n)return;playU('tink',.3);playU('tink',.22,1.5,.12);sfx('page');
   if(typeof juiceGlowAt==='function')juiceGlowAt(T.x/TS,T.y/TS-.3);const w=LBIRD&&LBIRD.who;toast((w&&w.length>1?w.length+'通の':(w&&w[0]||L[n-1].who)+'から')+'手紙がとどいた！','good')}
-function letterFxDraw(now){/* せかいの上の層で毎コマ（draw-world.js）。夜の暗さより上 */if(!S||S.free)return;if(LPEND&&!LBIRD&&letterCanFly())letterBirdStart(now);
+function letterFxDraw(now){/* せかいの上の層で毎コマ（draw-world.js）。夜の暗さより上 */if(!S)return;if(LPEND&&!LBIRD&&letterCanFly())letterBirdStart(now);
   const un=letterUnread();if(LBIRD){letterBirdDraw(ctx,now);if(!LBIRD||LBIRD.drop)un&&letterGroundDraw(ctx,now)}else if(un&&!LPEND)letterGroundDraw(ctx,now);if(!LBIRD&&LLAND&&now-LLAND>700)LLAND=0;letterHud(now,un)}
 function letterTap(sx,sy){/* 「しらべる」でふうとうをタップ */if(mode!=='look'||!S||!letterUnread()||LPEND||LBIRD&&!LBIRD.drop)return false;const T=letterSpot();if(!T)return false;const w=toWorld(sx,sy);if(Math.abs(w.x-T.x)>16||w.y<T.y-28||w.y>T.y+8)return false;sfx('tap');letterOpen();return true}
 function letterOpen(){const U=(S.letters||[]).filter(l=>!l.read);if(U.length===1)return letterRead(U[0]);letterList()}

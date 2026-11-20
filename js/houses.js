@@ -4,7 +4,7 @@ const houseRes=h=>S.res.filter(r=>h.set.has((r.y|0)*W+(r.x|0)));
 const COMFMAX=300;// 住み心地の上限
 // 住み心地（0〜300）：ベッド・家具・床・人数で決まる。高いとよく眠れて、低いとたのしさが下がる
 const COMFR={rockart:1,jar:1,torch:1,clover:1,bellf:1,salvia:1,lily:1,lotus:1,lamp:2,vane:2};/* 家の外でも住み心地に入る範囲（マス） */
-const COMFY={g_ishitsumi:6,g_donguri:5,g_shizuku:6,g_hidamari:6,g_kazaguruma:4,g_kabin:8,g_oshibana:8,g_kaifun:8,g_post:6,g_penzukue:8,g_ishibench:6,g_happasofa:8,g_suisou:12,g_danro:12,g_hammock:6,cooktable:4,joro:3,taru:3,asabukuro:3,makidana:3,kabebukuro:3,takebench:5,takeakari:5,andon:5,shishiodoshi:6,hoshirug:5,mimamori:6,yomawari:6,oyasumi:8,yonaka:10,toro:6,stool:2,pouf:3,achair:5,ltable:5,rug1:5,sofa1:6,rug2:6,tub:3,sink:4,crate:3,monstera:10,shelf1:12,wreath:10,curtain1:10,cabinet:12,paint2:10,shelf2:13,curtain2:10,paint3:10,wshelf:12,paint1:14,bathtub:16,candle:3,lantern:5,flamp:6,window:5,bed:10,table:8,dtable:12,chair:4,oven:6,lamp:6,torch:4,bench:5,jar:5,rockart:5,chochin:6,furin:8,ema:8,komainu:10,kadomatsu:10,vane:4,clover:4,bellf:4,salvia:4,lily:4,lotus:4,stor:3,mbox:3};
+const COMFY={oldlantern:6,doki:6,g_ishitsumi:6,g_donguri:5,g_shizuku:6,g_hidamari:6,g_kazaguruma:4,g_kabin:8,g_oshibana:8,g_kaifun:8,g_post:6,g_penzukue:8,g_ishibench:6,g_happasofa:8,g_suisou:12,g_danro:12,g_hammock:6,cooktable:4,joro:3,taru:3,asabukuro:3,makidana:3,kabebukuro:3,takebench:5,takeakari:5,andon:5,shishiodoshi:6,hoshirug:5,mimamori:6,yomawari:6,oyasumi:8,yonaka:10,toro:6,stool:2,pouf:3,achair:5,ltable:5,rug1:5,sofa1:6,rug2:6,tub:3,sink:4,crate:3,monstera:10,shelf1:12,wreath:10,curtain1:10,cabinet:12,paint2:10,shelf2:13,curtain2:10,paint3:10,wshelf:12,paint1:14,bathtub:16,candle:3,lantern:5,flamp:6,window:5,bed:10,table:8,dtable:12,chair:4,oven:6,lamp:6,torch:4,bench:5,jar:5,rockart:5,chochin:6,furin:8,ema:8,komainu:10,kadomatsu:10,vane:4,clover:4,bellf:4,salvia:4,lily:4,lotus:4,stor:3,mbox:3};
 const DECAYW=new Set(['hwall','bamboowall','logwall','plasterwall','brickwall','yozorawall']),WEBCOMF=5;/* 朽ちた壁になる家の壁（石の塀はならない）。クモの巣1つで住み心地-5 */
 const decayed=j=>{const o=S.obj[j];return DECAYW.has(o)&&S.hp[j]!=null&&S.hp[j]<=BL[o].hp/2};/* 朽ちた壁：じょうぶさが半分以下の家の壁（家の壁にならない） */
 function decayCheck(j){/* コワイノにたたかれて朽ちたら、その家は家でなくなる */if(!(S.hp[j]>0)||!decayed(j))return;const hb=HOUSES.find(h=>h.set.has(j));if(hb){recount();if(typeof houseBreakFlee==='function')houseBreakFlee(hb)}}
@@ -24,7 +24,7 @@ function houseComfort(h){let bed=0,furn=0,fl=0,n=0;const seen=new Set(),PT={},pa
 
 
 
-const LIGHTF=new Set(['g_donguri','g_danro','torch','lamp','lantern','candle','flamp','yomawari','toro','takeakari','andon']);/* 灯りになる家具 */
+const LIGHTF=new Set(['g_donguri','g_danro','torch','lamp','lantern','oldlantern','candle','flamp','yomawari','toro','takeakari','andon']);/* 灯りになる家具 */
 // すきな家具：その家具が家にあると、そのせいれいにとっての住み心地が上がる（名前から決まる）
 const LIKEF=['rockart','jar','vane','bench','table','torch','candle','lantern','sofa1','achair','rug1','monstera','shelf1','paint1','curtain1','birdbath','parasol','stool','pouf'];
 /* 新しいせいれいが来たときのひとこと。性格：木=げんき・土=のんびり・火=らんぼう（あねご／あにき）・水=知的・風=キザで自由人 */
@@ -253,6 +253,7 @@ function toolIcon(k){
   if(k==='glass'){g.fillStyle='#8a5a33';g.fillRect(16,8,40,6);g.fillRect(16,58,40,6);g.fillStyle='#6d4424';g.fillRect(20,14,4,44);g.fillRect(48,14,4,44);
     g.fillStyle='rgba(200,235,255,.55)';g.beginPath();g.moveTo(24,14);g.lineTo(48,14);g.quadraticCurveTo(48,30,37,36);g.quadraticCurveTo(48,42,48,58);g.lineTo(24,58);g.quadraticCurveTo(24,42,35,36);g.quadraticCurveTo(24,30,24,14);g.fill();
     g.fillStyle='#ffcf4a';g.beginPath();g.moveTo(28,22);g.lineTo(44,22);g.lineTo(36,34);g.fill();g.beginPath();g.moveTo(36,40);g.lineTo(45,56);g.lineTo(27,56);g.fill();g.fillRect(35.5,34,1.5,8)}
+  else if(k==='canal'){mzToolIcon(g)}
   else if(k==='scoop'||k==='dig'||k==='mound'){/* だんさスコップ・けずる・もる */if(k!=='scoop'){g.fillStyle='#8cc35c';g.fillRect(12,k==='dig'?30:20,48,8);g.fillStyle='#b08a5e';g.fillRect(12,k==='dig'?38:28,48,k==='dig'?20:30);g.fillStyle='#fff6df';g.beginPath();if(k==='dig'){g.moveTo(36,26);g.lineTo(24,10);g.lineTo(48,10)}else{g.moveTo(36,4);g.lineTo(24,18);g.lineTo(48,18)}g.fill()}else{g.save();g.translate(36,36);g.rotate(.6);g.fillStyle='#b07c50';rr(g,-3,-32,6,34,3);g.fillStyle='#9aa3ad';g.beginPath();g.moveTo(-11,2);g.lineTo(11,2);g.lineTo(9,22);g.quadraticCurveTo(0,30,-9,22);g.closePath();g.fill();g.restore()}}
   else if(k==='hake'){g.save();g.translate(36,36);g.rotate(-.7);g.fillStyle='#b07c50';rr(g,-5,-30,10,30,4);g.fillStyle='#8a5a33';g.fillRect(-5,-30,3,30);
     g.fillStyle='#c4c8cf';g.fillRect(-12,0,24,7);g.fillStyle='#e9d6a8';g.fillRect(-12,7,24,16);g.fillStyle='#d4bc86';for(let i=0;i<6;i++)g.fillRect(-11+i*4,9,1.5,14);

@@ -187,20 +187,21 @@ const SPMSIT=new Set(['sunset']);/* 地面にすわる動き（sitF でも3Dの�
 const FISHPULL=8,FISHEND=50;function fishPullNow(r){const a=r.act;return !!(a&&a.type==='fish'&&a.stage==='do'&&a.t>=FISHEND-FISHPULL)}
 function spMotion(o,A){/* いまの動きの名前（3Dの絵がない動きは '' で、いままでの描き方） */
   if(typeof SPM==='undefined'||o.sit||o.bed||o.sleep||o.banzai||o.sitF&&!SPMSIT.has(A))return'';
-  if(o.walk){const hs=o.hturn?(o.hturn>0?'_hp':'_hn'):'';/* 首を先に向ける絵（spHeadTurn） */return o.carry?(SPM['carry'+hs]?'carry'+hs:SPM.carry?'carry':''):o.chase&&SPM.chase?'chase':SPM['walk'+hs]?'walk'+hs:SPM.walk?'walk':''}
+  if(o.walk){const hs=o.hturn?(o.hturn>0?'_hp':'_hn')+(Math.abs(o.hturn)<1?'a':''):'';/* 首を先に向ける絵（spHeadTurn） */return o.carry?(SPM['carry'+hs]?'carry'+hs:SPM.carry?'carry':''):o.chase&&SPM.chase?'chase':SPM['walk'+hs]?'walk'+hs:SPM.walk?'walk':''}
   if(o.carry)return'';
   if(A==='fish'&&o.fishPull&&SPM.fishpull)return'fishpull';/* 魚がかかった：さおをぐいぐい引く */
   if(A==='play'&&o.toy&&SPM['play_'+o.toy])return'play_'+o.toy;
   if((typeof TAKEACT!=='undefined'&&(TAKEACT.has(A)||PUTACT.has(A)))&&!SPM[A]&&SPM.store)return'store';/* 箱などから取る・置くは、箱にしまうのと同じ動き */
   return SPM[A]?A:''}
 /* 首を先に向ける（Frostwind の attention.js の考え方。MIT）：歩いていて、よこ向きと正面・うしろ向きがかわるとき、HTURNMS のあいだ、前の向きの体のまま、首だけ新しい向きへ向けた絵（walk_hp・walk_hn など、motions.py の HTURN）。
-   正面では hy＋が画面の右・うしろでは画面の左・よこでは＋がこちら（正面）・−が奥（うしろ）。正面とうしろのあいだ・よこの右と左のあいだは、そのまま切りかえる */
-const HTURNMS=170;
+   正面では hy＋が画面の右・うしろでは画面の左・よこでは＋がこちら（正面）・−が奥（うしろ）。正面とうしろのあいだ・よこの右と左のあいだは、そのまま切りかえる。
+   首はいっぺんに向けない：はじめの HTURNA0 は、とちゅうまで向けた絵（walk_hpa など、s は ±0.5）、そのあと向けきった絵 */
+const HTURNMS=190,HTURNA0=70;
 function spHeadTurn(v,walking,face,now){const k=v.back?2:v.turn?1:0,f=face<0?-1:1;
   if(!walking||v.hk==null){v.hk=k;v.hf=f;v.ht=null;return null}
   if(k!==v.hk||k===1&&f!==v.hf){const from=v.hk,ff=v.hf;v.hk=k;v.hf=f;v.ht=(from===1)!==(k===1)?{t:now,from,ff,to:k,tf:f}:null}
   const h=v.ht;if(!h)return null;if(now-h.t>=HTURNMS||now<h.t){v.ht=null;return null}
-  return{back:h.from===2,turn:h.from===1?1:0,face:h.from===1?h.ff:1,s:h.from===0?h.tf:h.from===2?-h.tf:h.to===0?1:-1}}
+  const sg=h.from===0?h.tf:h.from===2?-h.tf:h.to===0?1:-1;return{back:h.from===2,turn:h.from===1?1:0,face:h.from===1?h.ff:1,s:now-h.t<HTURNA0?sg*.5:sg}}
 function spToyPh(r,now){/* 遊具のゆれ・進みぐあい（0〜1）：toyPose0 と同じ時刻の式 */
   const a=toyR(r);if(!a)return null;const j=a.obj,T=now/1000,us=toyUsers(j),k=Math.max(0,us.indexOf(r)),fr=v=>(v%1+1)%1;
   if(a.what==='swing')return fr((T*2.6+j)/(2*Math.PI));if(a.what==='seesaw')return fr((T*1.8+j)/(2*Math.PI)+(k?.5:0));if(a.what==='slide')return fr(T*.45+k*.5);return null}
@@ -581,10 +582,10 @@ function drawRes0(r,now){
     else if(t==='🪓'&&!BUBS.ok&&PSPR.axe&&PSPR.axe.ok){const g=PSPR.axe.img,ih=12.75,iw=ih*g.width/g.height;ctx.save();ctx.translate(px,by-31.5);ctx.rotate(-Math.PI/4);ctx.drawImage(g,-iw/2,-ih/2,iw,ih);ctx.restore()}else if(!pic&&BUBI[bubKey(t)])bubIcon(ctx,t,Math.round(px/1.5)*1.5,by-31.5,1.125,BB);/* 絵文字は、ドットの絵（BUBI）で描く */else{const ei=emoImg(t);if(ei){const k=Math.min(BB.f,BB.s*.85*1.5)/Math.max(ei.width,ei.height),iw=Math.round(ei.width*k),ih=Math.round(ei.height*k);ctx.save();ctx.setTransform(1,0,0,1,0,0);ctx.drawImage(ei,Math.round(BB.x-iw/2),Math.round(BB.y-ih/2),iw,ih);ctx.restore()}/* 絵のアイコンも、ふきだしの中のまん中（画面のピクセル）に */else if(!pic&&!emoSrc(t))bubIcon(ctx,'?',Math.round(px/1.5)*1.5,by-31.5,1.125,BB)}}};
   if(BUBQ){const T=ctx.getTransform();BUBQ.push(()=>{ctx.save();ctx.setTransform(T);over();ctx.restore()})}else over();/* あとで描くふきだしも、見張り台・段差の上の高さのまま */
 }
-const WORKBUB=new Set(['eat','forage','fetch','eatwait','bathe','otaki','sasa','smelt','nest','pitfix','plant','pickdrop','pickseed','awater','apick','aput','acol','douse','sweep','tdig','cpick','ppick','spick','pget','sput','pput','cget','cput']);/* WORKFACE のほかに、ふきだしを出さない作業 */
+const WORKBUB=new Set(['eat','forage','fetch','eatwait','bathe','otaki','sasa','smelt','nest','pitfix','plant','pickdrop','pickseed','awater','apick','aput','acol','douse','quench','sweep','tdig','cpick','ppick','spick','pget','sput','pput','cget','cput']);/* WORKFACE のほかに、ふきだしを出さない作業 */
 let GODP=[-.82,-.6];const godX=()=>STATUE>=0?STATUE%W+.5+GODP[0]:RUINT>=0?RUINT%W+.5:CX+.5,godY=()=>STATUE>=0?((STATUE/W)|0)+(S.obj[STATUE+W]==='altar'?GODP[1]:1.9):RUINT>=0?((RUINT/W)|0)+2.4:CY-6.4;/* 神殿を直す前は、こわれた神殿の前 *//* カミサマは神殿の左の柱の前（おそなえ箱のうしろ）に立つ */
 let GODOUT=false;/* お見送りのあと、カミサマが光になって消える */
-const godHere=()=>S.godShown&&(!S.godGone||S.godVisit)&&!GODOUT;
+const godHere=()=>S.godShown&&(!S.godGone||S.godVisit)&&!GODOUT&&!S.free;/* フリーモードに、カミサマは出ない */
 /* その画面（コマ）で描いたふきだしの場所。となりの子のふきだしと重ならないように、あとの子のぶんを上へずらす */
 const BUBR=[];let BUBF=-1;
 function bubLift(px,by,now){if(BUBF!==now){BUBF=now;BUBR.length=0}for(let k=0;k<3;k++){const hit=BUBR.some(b=>Math.abs(b[0]-px)<45&&Math.abs(b[1]-by)<40.5);if(!hit)break;by-=42.75}return by}

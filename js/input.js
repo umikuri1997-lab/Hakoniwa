@@ -2,7 +2,7 @@
 
 /* ---------- カメラ・入力 ---------- */
 function minZ(){return Math.max(.3,Math.min(VW/(W*TS),VH/(H*TS)))}
-function clampCam(){
+function clampCam(){if(typeof caveOn==='function'&&caveOn())return caveClamp();/* 洞窟のあいだは、カメラはパーティを追う（cave.js） */
   cam.z=clamp(cam.z,minZ(),3);
   const vw=VW/cam.z,vh=VH/cam.z;
   cam.x=vw>=W*TS?(W*TS-vw)/2:clamp(cam.x,-40,W*TS-vw+40);
@@ -85,10 +85,10 @@ let TAPPEND=0;const TAPCLOTH=new Set(['nuno','wool','shina','kasa','kuru','chiri
 function tapMatOf(o){if(o==='tower')return WD===0?'tsacred':'tstone';/* 草原は御神木（木）、火山は守護の台座（石） */if(TAPHOLY.has(o))return 'tstone';if(TAPNATS.has(o))return 'tstone';if(TAPNATW.has(o))return 'twood';const b=BL[o];if(!b)return null;if(b.kind==='plant'||o==='berry')return 'tgrass';if(o==='farm'||o==='plot'||o==='sprout')return 'tsoil';
   let w=0,st=0,cl=0,me=0;for(const k in b.mat||{}){const n=b.mat[k];if(TAPCLOTH.has(k))cl+=n;else if(TAPMETAL.has(k))me+=n;else if(k==='stone')st+=n;else w+=n}
   if(b.mat&&b.mat.nuno||b.mat&&b.mat.wool||cl>w+st+me)return 'tcloth';if(me>w&&me>=st)return 'tcan';if(st>w)return 'tstone';return 'twood'}
-function tapSnd(tx,ty){if(tx<0||ty<0||tx>=W||ty>=H)return;const g=ty*W+tx,j=anc(g),o=S.obj[j];if(WEEDS.has(o)||o==='kagenest'||VEINS[o]&&WD===1||(S.drops||[]).some(q=>q.y*W+q.x===g&&q.id!=='shard'))return;/* 草・落とし物・鉱脈・かげの巣は、それぞれの音 */
-  let k=o?tapMatOf(o):null;if(!o){const f=S.floor[g];if(RUGC.has(g))k='tcloth';else if(S.ground[g]===1||S.ground[g]===2)k='twater';else k=footMat(tx+.5,ty+.5)||'fsoil'}/* 地面・床：その場所の足音の録音 */
+function tapSnd(tx,ty){if(tx<0||ty<0||tx>=W||ty>=H)return;const g=ty*W+tx,j=anc(g),o=S.obj[j];if(WEEDS.has(o)||o==='kagenest'||VEINS[o]&&VOLK()||(S.drops||[]).some(q=>q.y*W+q.x===g&&q.id!=='shard'))return;/* 草・落とし物・鉱脈・かげの巣は、それぞれの音 */
+  let k=o?tapMatOf(o):null;if(!o){const f=S.floor[g];if(RUGC.has(g))k='tcloth';else if(skyJ(g))k='tcloth';else if(S.ground[g]===1||S.ground[g]===2)k='twater';else k=footMat(tx+.5,ty+.5)||'fsoil'}/* 地面・床：その場所の足音の録音 */
   if(!k)return;const t0=performance.now();TAPPEND=t0;setTimeout(()=>{if(TAPPEND===t0){TAPPEND=0;if(TAPMAT<t0)sfx(k)}},0)}/* ほかの物の音（神殿・宝箱など）が同じタップで鳴ったら、そちらだけ */
-function onTap(sx,sy){if(GIFT_ACTIVE&&camAnim&&camAnim.done)return;if(typeof starTap==='function'&&starTap(sx,sy))return;if(typeof letterTap==='function'&&letterTap(sx,sy))return;/* とどいた手紙のふうとう *//* 流れ星そのものをタップしたら、おねがい *//* 霧が晴れる・鉱脈が目をさます演出のカメラ中は、タップをうけない */DLGTAP=performance.now();/* タップで始める会話は、またずにすぐ出す */if(mode==='look'&&typeof tapFx==='function')tapFx(sx,sy);/* しらべるでタップしたところに、葉（火山は火の粉）が舞う */
+function onTap(sx,sy){if(typeof caveOn==='function'&&caveOn())return caveTap(sx,sy);/* 洞窟の探検（cave.js） */if(GIFT_ACTIVE&&camAnim&&camAnim.done)return;if(typeof starTap==='function'&&starTap(sx,sy))return;if(typeof letterTap==='function'&&letterTap(sx,sy))return;/* とどいた手紙のふうとう *//* 流れ星そのものをタップしたら、おねがい *//* 霧が晴れる・鉱脈が目をさます演出のカメラ中は、タップをうけない */DLGTAP=performance.now();/* タップで始める会話は、またずにすぐ出す */if(mode==='look'&&typeof tapFx==='function')tapFx(sx,sy);/* しらべるでタップしたところに、葉（火山は火の粉）が舞う */
   let w=toWorld(sx,sy);const w0=w,tx=Math.floor(w.x/TS);{const tl=tapLv(w.x,w.y);if(tl)w={x:w.x,y:w.y+tl*LIFT}}const ty=Math.floor(w.y/TS);/* 高い段のマス・物・せいれい・コワイノは上にずらして描くので、タップの場所も高さの分だけ下へもどす */if(mode==='look'&&yamiTap(w0.x/TS,w0.y/TS))return;/* 闇のステージ：ヨリ・夜の仕事のあと（yami.js） */
   if(AREAARM){AREAARM=false;return areaBlast(w.x/TS,w.y/TS)}
   if(LEAFARM){const tl=tapLv(w.x,w.y),wy=w.y+(tl?tl*LIFT:0);LEAFDRAG=[];leafAdd(Math.floor(wy/TS)*W+Math.floor(w.x/TS));const c=LEAFDRAG;LEAFDRAG=null;return leafPlace(c)}/* 葉のかべ：タップは1マス *//* こもれびのまもり：タップした場所のまわり */
@@ -121,6 +121,7 @@ function onTap(sx,sy){if(GIFT_ACTIVE&&camAnim&&camAnim.done)return;if(typeof sta
     if(tx<0||ty<0||tx>=W||ty>=H)return;
     tapSnd(tx,ty);
     if(RUINT>=0&&S.obj[RUINT]==='statueb'){const px=w.x/TS-RUINT%W,py=w.y/TS-((RUINT/W)|0);if(px>=-.9&&px<1.9&&py>=-2.6&&py<2){templeRuinTap(RUINT);return}}/* こわれた神殿は、絵のどこをタップしても */
+    if(typeof mzTap==='function'&&mzTap(tx,ty))return;/* 水のステージ：霧・水門・宝箱・船着き場・水路 */
     if(typeof fogTap==='function'&&fogTap(tx,ty))return;/* 霧の所・霧の中で見つけた物 */
     if(typeof kdTap==='function'&&kdTap(tx,ty))return;/* もりのこだまの見つかる所 */
     {const hw=HOUSES.find(h=>h.set.has(ty*W+tx));if((!hw||OPENH.has(hKey(hw)))&&webTap(tx,ty))return}/* クモの巣：せいれいがそうじする（屋根のある家は、屋根を外してから） */
@@ -131,9 +132,11 @@ function onTap(sx,sy){if(GIFT_ACTIVE&&camAnim&&camAnim.done)return;if(typeof sta
     const j=anc(ty*W+tx),o=S.obj[j];
     if(WD===0&&S.flags.kgMark!=null&&!(S.bossKills&&S.flags.kgLook)&&!S.flags.kgLook&&Math.abs(tx-S.flags.kgMark%W)<=1&&Math.abs(ty-((S.flags.kgMark/W)|0))<=1){S.flags.kgLook=true;checkQuest();toast('大きなかげのあと：草がしおれて、つめたい');if(S.res.some(r=>r.name===POKO))dialog([[POKO,'#sigh|……このつめたさ、知ってる気がする。守り神さま、夕方になったら、ちょっとだけ、ぼくの話を聞いてくれる？']]);return}/* 大きなかげのあとを調べる */
     if(WD===1&&S.st2){const g=ty*W+tx;
-      if(S.ground[g]===1&&!o){const k=sprMap()[g];if(k){if(!S.flags.sprLook){S.flags.sprLook=true;checkQuest()}return toast(SPN[k]+'：'+(springOn(k)?'あたたかい湯がわいている'+SPR_TXT[k]:S.st2.sp[k]?'装置がこわれて、湯が冷めている':'冷たい水……熱がとどいていない'))}}
+      if(S.ground[g]===1&&!o){const k=sprMap()[g];if(k==='a'&&WD===1&&yumomiTap())return;/* 湯もみ（シズクのおねがい） */if(k){if(!S.flags.sprLook){S.flags.sprLook=true;checkQuest()}return toast(SPN[k]+'：'+(springOn(k)?'あたたかい湯がわいている'+SPR_TXT[k]:S.st2.sp[k]?'装置がこわれて、湯が冷めている':'冷たい水……熱がとどいていない'))}}
       if(o==='volcano'){if(!S.flags.volLook){S.flags.volLook=true;checkQuest()}return toast('火山：ふもとから、熱の道が村へのびている')}
       if(o==='heatv')return openSheet('heatv',j);
+      if(o==='kaeribi'){sfx('twood');return toast(kgrLampTxt())}
+      if(o==='boulder'&&rockHard(j))return toast(rockHot(j)?'大岩：赤く熱くなっている':'大岩：かたくて、くだけない');
       if(o==='boulder')return toast('大岩：のこり '+Math.max(0,4-(S.hp['n'+j]||0))+'/4');
       if(o==='crack'){const t=st2();if(!(t.hai>0))return toast('ひびわれ：ハイカゲの灰でうめられる（灰'+(t.hai||0)+'）');t.hai--;clearObj(j);S.floor[j]='path';burst(j,'block');sfx('level');recount();dirty=true;toast('ひびわれを、灰でうめた（灰－1）','good');return checkQuest()}}
     {const g=ty*W+tx,dp=(S.drops||[]).find(q=>q.y*W+q.x===g&&q.id!=='shard');if(WEEDS.has(o)||dp){if(o==='kinoko'&&foodCap()-S.food<=0)return toast('箱に入りません');if((WEEDS.has(o)&&o!=='kinoko'||dp&&dp.id.startsWith('mat:'))&&matCap()-matTot()<=0)return toast('箱に入りません');if(dp&&dp.id.startsWith('food:')&&foodCap()-S.food<=0)return toast('箱に入りません');let nm;if(WEEDS.has(o)){(S.wreq||(S.wreq={}))[j]=1;nm=BL[o].name}else{dp.tap=1;nm=dp.id.startsWith('mat:')?(MATN[dp.id.slice(4)]||'おとしもの'):'おとしもの'}sfx(o==='kinoko'?'tpuni':WEEDS.has(o)?'tgrass':dp.id==='mat:can'?'tcan':'twood');return toast(nm+'：せいれいがとりにいく'+'')}}/* 草・きのこ・枝などの落とし物は、タップすると、せいれいがとりにいく */
@@ -152,26 +155,29 @@ function onTap(sx,sy){if(GIFT_ACTIVE&&camAnim&&camAnim.done)return;if(typeof sta
     if(fw&&breakable(o)&&BL[o].brk)return toast(BL[o].name+'：'+withAttr(o,BL[o].desc||'')+'（じょうぶさ '+Math.floor(S.hp[j]??BL[o].hp)+'/'+BL[o].hp+'）');
     if(fw&&breakable(o))return toast(BL[o].name+'：じょうぶさ '+Math.floor(S.hp[j]??BL[o].hp)+'/'+BL[o].hp);
     if(o==='kagenest'&&nestTap(j))return;/* かげの巣：せいれいがこわしにいく（defense.js） */
-    if(VEINS[o]&&WD===1){if(matCap()-matTot()<=0)return toast('箱に入りません');(S.vreq||(S.vreq={}))[j]=1;sfx('tstone');return toast(BL[o].name+'：せいれいがほりにいく')}/* 鉱脈は、タップすると、せいれいがほりにいく */
+    if(VEINS[o]&&VOLK()){if(matCap()-matTot()<=0)return toast('箱に入りません');(S.vreq||(S.vreq={}))[j]=1;sfx('tstone');return toast(BL[o].name+'：せいれいがほりにいく')}/* 鉱脈は、タップすると、せいれいがほりにいく */
     if(o==='rock'||VEINS[o]||o==='deadtree'||o==='ntree'||o==='bamboo')return toast(iname(o)+'：のこり '+Math.max(0,10-(S.hp['n'+j]||0))+'/10');
-    if(o==='takenoko')return toast('たけのこ：あと '+Math.max(1,3-((S.dyn[j]||{}).age||0))+'日で竹になる');
+    if(o==='takenoko')return takenokoPop(j);/* とる・そだてる をえらぶ */
     if(o==='watch'||o==='yogan')return openSheet('watch',j);
     if(o==='composter')return cmpPop(j);
     if(o==='smelter')return smPop(j);
     if(PROC[o])return prPop(j);/* 粉ひき小屋・はたおり機 */
     if(o==='obox')return S.feat.inv?openSheet('inv'):toast('おそなえ箱');
     if(o==='grave'){const d=S.dyn[j]||{};if(!d.buried)return toast((d.name||'せいれい')+'のお墓。なかまが神殿へはこんで、おみおくりしてくれる');/* 守り神は埋葬できない */return toast((d.name||'せいれい')+'のお墓')}
+    if(o==='tower'&&WD===1&&!S.cleared&&towerLightTap(j))return;/* 火山：守護の台座に火を入れる */
     if(o==='tower'&&!WD&&!S.cleared){if(sacredTapHit(j,w.x/TS,w.y/TS))return sacredTreeTap(j);return}/* 御神木は、根もとの所だけ */
     if(o==='board')return S.feat.craft?openSheet('craft'):toast('依頼ボード。もう少ししたら使えるようになる');
     if(o==='statue')return typeof sasaPop==='function'?sasaPop():toast('神殿。守り神の居場所');/* 神殿：季節のささげもの（sasage.js） */
     if(o==='statueb'){templeRuinTap(j);return}
+    if(o==='kazaanab'){windHoleTap(j);return}
+    if(RIDEB[o]){windRideTap(j);return}/* こわれた遊具：せいれいが直しにくる *//* ふさがった風穴：せいれいが石をどけにくる（wind.js） */
     if(o==='altar')return toast('カミサマの台座。カミサマはここに現れる');
     {const c=ty*W+tx,lo=!o||WEEDS.has(o),rc=RFC.has(c)?c:lo&&RFC.has(c+W)?c+W:lo&&RFC.has(c+2*W)?c+2*W:-1;if(rc>=0&&lo)return openSheet('roof',RFC.get(rc))}/* ガゼボ・東屋：下に物がなければ、屋根の説明（屋根の絵はマスの上へはみ出すので、2マス上までみる） */
     if(o&&BL[o].kind==='furn'&&!BL[o].trap&&!fw)return openSheet('furn',j);/* 家具：説明と、向きをかえる */
     if(!o&&RUGC.has(ty*W+tx))return openSheet('furn',RUGC.get(ty*W+tx));/* ラグ */
     if(o&&fw)return toast(BL[o].name+'：'+withAttr(o,BL[o].desc||''));
     if(o)return openSheet('furn',j);/* 噴水・建物・植物・ワナなども、下から説明を出す */
-    if(S.ground[j]===1)return toast('池。そばでつりができる');
+    if(S.ground[j]===1)return toast(skyJ(j)?'雲の海。橋をかけると、わたれる':'池。そばでつりができる');
     return toast(REV.has(j)?'よみがえった土地':'荒れた土地。まわりに木や花を植えると、よみがえる');
   }
   if((mode==='build'||mode==='remove'||mode==='bulk')&&nightLock())return toast('夜のあいだは、置くことも、こわすこともできません');

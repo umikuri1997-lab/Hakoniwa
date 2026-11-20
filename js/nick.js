@@ -6,7 +6,7 @@
    つける名前は、ひらがな・カタカナ・英数字・ー・・で NKMAX 字まで。ほかの子の名前・お話の子のもとの名前と同じ名前や、
    お話の子のもとの名前をふくむ名前にはしない（おきかえが2回かかって、くずれないように）。 */
 const NKMAX=6;
-const NKFIX=()=>[MINA,SHIZUKU,...Object.values(FIXK0)];
+const NKFIX=()=>[MINA,SHIZUKU,KAGARI,...Object.values(FIXK0)];
 let NKRX=null,NKSIG='';
 function nickName(n){return S&&S.nick&&S.nick[n]||n}
 function nickTx(t){const N=S&&S.nick;if(!N||typeof t!=='string')return t;const ks=Object.keys(N);if(!ks.length)return t;const sig=ks.join('|');if(sig!==NKSIG){NKSIG=sig;NKRX=new RegExp(ks.slice().sort((a,b)=>b.length-a.length).join('|'),'g')}NKRX.lastIndex=0;return NKRX.test(t)?(NKRX.lastIndex=0,t.replace(NKRX,k=>N[k]||k)):t}
@@ -16,7 +16,7 @@ function nickWatch(){/* 画面に出た文字のうち、お話の子のもと�
   NKOBS=new MutationObserver(L=>{if(!S||!S.nick||!Object.keys(S.nick).length)return;for(const m of L){if(m.type==='characterData')nickDom(m.target);else for(const a of m.addedNodes)nickDom(a)}});
   NKOBS.observe(document.body,{subtree:true,childList:true,characterData:true})}
 function nickAll(){if(S&&S.nick&&Object.keys(S.nick).length)nickDom(document.body)}
-function nickOK(r){return !!r&&!IS_STORY_REPLAY&&NEWRES===r.id&&!r.back&&r.name!==POKO&&r.name!==HOMURA&&S.res.includes(r)}
+function nickOK(r){return !!r&&!IS_STORY_REPLAY&&NEWRES===r.id&&!r.back&&r.name!==POKO&&r.name!==HOMURA&&r.name!==KAZANE&&S.res.includes(r)}
 function nickClean(t){return String(t||'').replace(/[^ぁ-ゔァ-ヶー・0-9A-Za-z０-９]/g,'').slice(0,NKMAX)}
 function nickBad(v,r){/* つけられない名前なら、そのわけ */if(!v)return '名前を入れてください';
   const fix=NKFIX(),mine=fix.includes(r.name)?r.name:'';

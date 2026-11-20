@@ -11,9 +11,9 @@ const FOG_PRINT_LINES=[
 let FOGM=null,FOGS=null,FOGV=-1;const FOGA=new Map();/* FOGA：晴れていくエリア→はじめた時刻（画面の時計） */
 function fogOn(){return !!S&&WD===0&&!S.free&&Array.isArray(S.fog)}
 function fogBuild(){FOGS=S;FOGV=S.fogV||0;FOGM=new Uint8Array(W*H);for(let j=0;j<W*H;j++)FOGM[j]=S.fog[areaOf(j)]?1:0}
-function fogAt(j){if(!fogOn())return false;if(FOGS!==S||FOGV!==(S.fogV||0))fogBuild();return FOGM[j]===1}
+function fogAt(j){if(WD===WIND)return windSunk(j);/* 風：雲にしずんだ島（wind.js） */if(WD===MIZU)return !!S&&!!S.mz&&mzMistAt(j);/* 水のステージの霧は、マスごと（mizube.js） */if(!fogOn())return false;if(FOGS!==S||FOGV!==(S.fogV||0))fogBuild();return FOGM[j]===1}
 function fogSouth(x){/* その列で、晴れている所のいちばん下の行（コワイノは、ここから来る）。ぜんぶ霧なら -1 */if(!fogOn())return H-1;for(let y=H-1;y>=0;y--)if(!fogAt(y*W+x))return y;return -1}
-function fogBlock(id,x,y,quiet){if(!fogOn())return false;const z=(typeof szR==='function'&&szR(id,PLROTS[id]||0))||[1,1],w=RUGS.has(id)||CANOPY.has(id)?2:z[0],h=RUGS.has(id)||CANOPY.has(id)?2:z[1];for(let b=0;b<h;b++)for(let a=0;a<w;a++){const nx=x+a,ny=y+b;if(nx>=0&&ny>=0&&nx<W&&ny<H&&fogAt(ny*W+nx)){if(!quiet)toast('霧で見えない所には置けません','warn');return true}}return false}
+function fogBlock(id,x,y,quiet){if(!fogOn()&&WD!==WIND&&!(WD===MIZU&&S&&S.mz))return false;/* 風：雲にしずんだ島にも置けない */const z=(typeof szR==='function'&&szR(id,PLROTS[id]||0))||[1,1],w=RUGS.has(id)||CANOPY.has(id)?2:z[0],h=RUGS.has(id)||CANOPY.has(id)?2:z[1];for(let b=0;b<h;b++)for(let a=0;a<w;a++){const nx=x+a,ny=y+b;if(nx>=0&&ny>=0&&nx<W&&ny<H&&fogAt(ny*W+nx)){if(!quiet)toast(WD===WIND?'雲にしずんだ島には置けません':'霧で見えない所には置けません','warn');return true}}return false}
 const fogFind=j=>(S.fogF||[]).find(f=>f.j===j);
 function fogArea(a){const x0=(a%AREAN)*AREAW,y0=((a/AREAN)|0)*AREAW;return {x0,y0,x1:x0+AREAW,y1:y0+AREAW}}
 function fogSpotOK(s,j,hi){return s.ground[j]===0&&!s.obj[j]&&!s.floor[j]&&(hi==null||(s.hi?s.hi[j]||0:0)===hi)}

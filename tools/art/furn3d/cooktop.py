@@ -1,5 +1,5 @@
 # 料理の家具（調理台・かまど・たき火）の上にかさねる絵を、3Dから写す（スキル model3d-pixel）。
-# 使い方：python3 tools/art/furn3d/cooktop.py <出力フォルダ> [--chips] [--only tool,ing,dish]
+# 使い方：python3 tools/art/furn3d/cooktop.py <出力フォルダ> [--chips] [--dish ck126,ck127]（--dish：足した料理の絵だけ作る）
 #   道具（cktool_<家具>_<道具>、調理台は >1・>2 の向きも）：家具の3Dにのせて写し、のせる前の絵とちがうドットだけを切りぬく（家具の絵にぴったりかさなる）。
 #   材料（ckin_<材料>.<大きさ>）・できた料理（ckdish_<料理>）：1つずつ写し、足もとの点を (0,0) にした絵。ゲームは、家具の上の場所（js/cook-top-data.js の CKTOP）に描く。
 #   大きさ：L 台の上（調理台のおく）・S なべ・フライパン・天板・網の上・K くしにさした形。
@@ -308,9 +308,10 @@ def gen_ings(res):
     for k in INGS:
         for sz in('L','S'):im,x,y=solo(ing(k,0,0,0,SIZE[sz]));res['ckin_%s.%s'%(k,sz)]=(im,x,y)
         im,x,y=solo(skewer(k,0,0,0,SIZE['K']));res['ckin_%s.K'%k]=(im,x,y);print('材料',k)
-def gen_dishes(res):
+def gen_dishes(res,only=None):   # only：その料理だけ（--dish。料理を足したとき、ほかの絵を写しなおさない）
     js=open(os.path.join(ROOT,'js','cook-table.js'),encoding='utf8').read();L=json.loads('['+js[js.index('['):].split('];')[0].strip()[1:]+']')
     for D in L+[{'id':'fsg'}]:
+        if only and D['id'] not in only:continue
         out=D['id'];ic=D.get('ic') or ORIG.get(out)
         im,x,y=solo(dish(out,ic,D.get('i',[]),0,0,0,SIZE['D']));res['ckdish_'+out]=(im,x,y)
     print('料理',len(L)+1)
@@ -321,7 +322,9 @@ def main():
     out=sys.argv[1];os.makedirs(out,exist_ok=True);chips='--chips' in sys.argv
     sys.path.insert(0,os.path.join(ROOT,'tools'));import chips as CHP
     head,CC=CHP.load_imgs();res={};data={}
-    gen_tools(out,CC,res,data);gen_ings(res);gen_dishes(res);write_js(data)
+    only=sys.argv[sys.argv.index('--dish')+1].split(',') if '--dish' in sys.argv else None
+    if only:gen_dishes(res,only)
+    else:gen_tools(out,CC,res,data);gen_ings(res);gen_dishes(res);write_js(data)
     for nm,(im,x,y) in res.items():im.save(os.path.join(out,nm.replace('>','_')+'.png'))
     json.dump({nm:[x,y] for nm,(im,x,y) in res.items()},open(os.path.join(out,'meta.json'),'w'))
     # たしかめ：家具ごとに、道具と材料と料理をかさねた絵

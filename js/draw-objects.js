@@ -67,7 +67,7 @@ function chipImgs(ch,id){if(!ch._im)ch._im=ch.f.map(r=>atlasFrame(r,id));return 
 const PARTMV={/* 動く部品の動き：rot＝回る角度、sx・sy＝のびちぢみ（どれも支点のまわり） */
   swing:(i,now)=>{if(ICON)return{};/* アイコンは、マップと同じ形 */const d=i!=null&&S&&toyUsers(i).length?swAng(i,now):0;return rotAt(i)===1?{rot:d*SWROT}:{sx:1+d*.04,sy:1+d*.3}},/* 縦のブランコは、横から見るので、支点のまわりに左右へゆれる */
   seesaw:(i,now)=>({rot:!ICON&&i!=null&&S?ssAng(i,now||0):0}),
-  windmill:(i,now)=>({rot:ICON?0:(now||performance.now())/1000*.9}),
+  windmill:(i,now)=>({rot:ICON||WD===WIND&&!(i!=null&&windNear(i,2))?0:(now||performance.now())/1000*.9}),/* 風のステージ：風があたっているときだけ、まわる */
   suisha:(i,now)=>({rot:ICON?0:(now||performance.now())/1000*.7}),/* 水車の輪は、ずっとまわる */
   vane:(i,now)=>({sx:ICON?1:Math.cos(Math.sin((now||performance.now())/1300+(i||0))*.6)})};
 function partImg(p,id){if(!p._im)p._im=atlasFrame(p.f[0],id);return p._im}
@@ -153,13 +153,16 @@ function drawWbYard(c,i,x,y,now){/* 作業台についた材料置き場：い�
 /* 建てている所：足場の上に、できあがる物の絵をうすく出す。建てるほど、こくなる（0%で.3・100%で.65） */
 function siteGhost(c,d,x,y,now,i){const id=d&&d.build;if(!id||!BL[id]||id==='site'||id==='statue'||STAIRS.has(id)||LADDERS.has(id)||id==='bridge'||TERRA.has(id))return;const p=Math.min(1,d.p/(d.need||1)),rot=S.rot&&i!=null?S.rot[i]:0,rch=ROTS[id]&&rot&&chipOf(id,null,rot);c.save();c.globalAlpha*=.3+.35*p;if(rch)drawChip(c,rch,id,x,y,now);else drawObj(c,id,x,y,null,100,now);c.restore()}
 const LOOMSEQ=[0,1,2,3,2,1,0,3],LOOMMS=150;
-function drawObj(c,id,x,y,i,g,now){
+function drawObj(c,id,x,y,i,g,now){drawObj0(c,id,x,y,i,g,now);if(id==='boulder'&&!ICON&&i!=null&&rockHot(i))rockHotDraw(c,x,y,now);if(id==='takenoko'&&!ICON&&i!=null&&S.dyn[i]&&S.dyn[i].keep)takenokoKeepDraw(c,x,y)}/* 熱した大岩は、ひびが赤く光る */
+function drawObj0(c,id,x,y,i,g,now){
   if(id==='wbench'){const ch=window.CHIPS&&(i!=null?chipOf('wbench',i):CHIPS.wbench);/* 向きの絵（左は右の反転） */if(ch)drawChip(c,ch,id,x,y,now,i);const d=ICON||i==null?null:S.dyn[i],o=d&&(S.orders||[]).find(q=>q.id===d.order),st=o&&typeof wbworkStage==='function'?wbworkStage(o):-1,wc=st>=0&&CHIPS['wbwork#'+st];if(wc)drawChip(c,wc,'wbwork',x,y,now,i);return}/* 作業台。素材がそろったら、天板の上に作っている形（板の山・木のわく・布をかけた形） */
   if(id==='matyard'){const d=ICON||i==null?null:S.dyn[i],k='matyard#'+(d?yardStage(d.yt):0),ch=window.CHIPS&&CHIPS[k];if(ch)drawChip(c,ch,'matyard',x,y,now,i);return}/* 材料置き場：運んだ素材のわりあいで4まい */
   if(id==='statueb'){const ch=window.CHIPS&&CHIPS.statueb;if(ch)drawChip(c,ch,id,x,y,now,i);return}/* こわれた神殿 */
   if(id==='fogbox'||id==='nushiprint'||id==='fogspring'){drawFogObj(c,id,x,y,i,now);return}
   if(id==='campfire'&&!ICON&&i!=null&&campOut(i)){const ch=window.CHIPS&&CHIPS['campfire#off'];if(ch&&drawChip(c,ch,id,x,y,now,i))return}/* 雨で消えたたき火 */
-  if(typeof KDIDS!=='undefined'&&KDIDS.has(id)){drawKd(c,id,x,y,i,g,now);return}/* もりのこだまの見つかる所（kodama.js） */
+  if(typeof KDIDS!=='undefined'&&KDIDS.has(id)){drawKd(c,id,x,y,i,g,now);return}
+  if(typeof WINDIDS!=='undefined'&&WINDIDS.has(id)){drawWindObj(c,id,x,y,i,g,now);return}/* 風穴・かざみ・古い風車（wind.js） *//* もりのこだまの見つかる所（kodama.js） */
+  if(typeof MZIDS!=='undefined'&&MZIDS.has(id)){mzDrawObj(c,id,x,y,i,now);return}if(typeof SHOPIDS!=='undefined'&&SHOPIDS.has(id)){shopDrawObj(c,id,x,y);return}/* 水のステージの物（mizube.js、コードのドット絵） */
   if(id==='kagenest'){drawNest(c,x,y,now||performance.now());return}if(id==='leafwall'){drawLeafWall(c,x,y,i,now);return}if(id==='pit'){drawPit(c,x,y,i);return}/* かげの巣・葉のかべ（defense.js、コードのドット絵） *//* 霧の中で見つける物 */
   if(VEINS[id]){drawVein(c,id,x,y,i);return}/* 鉱脈 */
   if(id==='tower'&&WD===0){drawStoryTree(c,x,y,i,now,ICON);return;}
@@ -173,6 +176,7 @@ function drawObj(c,id,x,y,i,g,now){
   if(id==='loom'&&!ICON&&!c._chip&&i!=null&&now!=null&&window.CHIPS&&CHIPS['loom#w0']&&typeof prLit==='function'&&prLit(i)){const ro=rotAt(i),fr=LOOMSEQ[Math.floor(now/LOOMMS)%LOOMSEQ.length],on=CHIPS[(ro?'loom>'+(ro===3?1:ro):'loom')+'#w'+fr];if(on&&drawChip(c,ro===3?{src:on,ax:on.ax,ay:on.ay,w:on.w,h:on.h,f:on.f,flip:1,fw:64}:on,id,x,y,now,i))return}/* はたおり機：おっているあいだは、ひが左右に走り、おさをトンと打つ（向きごと。左は右の反転） */
   if(id==='smelter'&&!ICON&&!c._chip&&i!=null&&window.CHIPS&&CHIPS['smelter#on']&&smLit(i)){const ro=rotAt(i),on=CHIPS[(ro?'smelter>'+(ro===3?1:ro):'smelter')+'#on'];if(on&&drawChip(c,ro===3?{src:on,ax:on.ax,ay:on.ay,w:on.w,h:on.h,f:on.f,flip:1,fw:64}:on,id,x,y,now,i))return}/* 炉：精錬しているあいだは、火のついた絵（向きごと。左は右の反転） */
   if(id==='crate'&&!ICON&&!c._chip&&i!=null&&S){const f=crateLid(i);if(f){const L=crateFill(i),ch=chipOf('crate',i,null,L?'#f'+L+'o'+f:'#o'+f);if(ch&&drawChip(c,ch,id,x,y,now,i))return}}/* 木箱：せいれいがしまう・とりだすあいだ、ふたが開き、中の品と量にあわせて中身を描く */
+  if(id==='kaeribi'&&window.CHIPS&&CHIPS.andon){const on=!ICON&&CHIPS['andon#on']&&i!=null&&kgrLit()&&darkness()>.15;if(drawChip(c,on?CHIPS['andon#on']:CHIPS.andon,'andon',x,y,now,i))return}/* かえり道のあかり：行燈の絵。ホムラがともした夜だけ、あかりのついた絵 */
   if(id==='andon'&&!ICON&&!c._chip&&window.CHIPS&&CHIPS['andon#on']&&darkness()>.15){if(drawChip(c,CHIPS['andon#on'],id,x,y,now,i))return}/* 行燈：暗くなったら、あかりのついた絵 */
   if(id==='onsen'&&!ICON&&!c._chip&&window.CHIPS&&CHIPS['onsen#1']){const ch=seasonNow()!==1&&Math.floor(performance.now()/900)%2?CHIPS['onsen#1']:CHIPS.onsen;if(drawChip(c,ch,id,x,y,now,i))return}/* 露天ぶろ：湯気がゆらぐ */
   if(id==='bell'&&!ICON&&!c._chip&&window.CHIPS&&CHIPS['bell#1']){const t=performance.now()-BELLRING,ch=t<4500&&Math.floor(t/260)%2?CHIPS['bell#1']:CHIPS.bell;if(drawChip(c,ch,id,x,y,now,i))return}/* 村の鐘：朝に鳴るあいだ、ゆれる */
@@ -307,6 +311,8 @@ function drawObj(c,id,x,y,i,g,now){
   case'sprout':{if(!ICON&&S&&i!=null&&S.ground[i]!==1&&S.dyn[i]&&S.dyn[i].userMound){const bob=Math.sin((now||0)/600+i)*.6;if(chipOK('mound#0')&&chipOK('seed#s')){drawChip(c,CHIPS['mound#'+Math.min(2,(hash(i*13+5)*3)|0)],'mound',x+16,y+28,0);drawChip(c,CHIPS['seed#s'],'seed',x+16,y+23+Math.round(bob),0);break}plantMound(c,x,y,i);drawSeedShape(c,x+16,y+23+bob,.48);break}if(S&&i!=null&&S.ground[i]===1&&!ICON){const b=Math.sin((now||0)/600+i)*1.5;if(chipOK('seedring')&&chipOK('seed')){drawChip(c,CHIPS.seedring,'seed',x+16,y+21,0);drawChip(c,CHIPS.seed,'seed',x+16,y+17+Math.round(b),0);break}c.fillStyle='rgba(255,255,255,.35)';c.beginPath();c.ellipse(x+16,y+21,9,3,0,0,7);c.fill();drawSeedShape(c,x+16,y+17+b,1);break}/* 池に植える予定：種がぷかぷか */if(chipOK('sprout#plan'))drawChip(c,CHIPS['sprout#plan'],'sprout',x+16,y+22,0);else{c.fillStyle='rgba(120,90,50,.6)';c.beginPath();c.ellipse(x+16,y+22,9,5,0,0,7);c.fill();c.strokeStyle='#5fbf4f';c.lineWidth=2;c.beginPath();c.moveTo(x+16,y+21);c.lineTo(x+16,y+14);c.stroke();circ(c,x+13,y+14,3,'#7fd36b');circ(c,x+19,y+13,3,'#7fd36b')}
     c.strokeStyle='rgba(255,240,180,.8)';c.setLineDash([3,3]);c.lineWidth=1.5;c.strokeRect(x+3,y+3,TS-6,TS-6);c.setLineDash([]);break}
   case'site':{const d=ICON?null:S.dyn[i];
+    if(d&&d.hole){drawWindObj(c,'kazaanab',x,y,i,g,now);const p=Math.min(1,d.p/d.need),bw=32,bx=x+16-bw/2,by=y-6;c.fillStyle='rgba(0,0,0,.5)';rr(c,bx-1,by,bw+2,6,3);c.fillStyle='#ecdcbc';rr(c,bx,by+1,bw*p,4,2);break}/* 風穴の石をどけている */
+    if(d&&d.wfix){drawWindObj(c,d.build+'b',x,y,i,g,now);const p=Math.min(1,d.p/d.need),bw=48,bx=x+32-bw/2,by=y-30;c.fillStyle='rgba(0,0,0,.5)';rr(c,bx-1,by,bw+2,6,3);c.fillStyle='#ecdcbc';rr(c,bx,by+1,bw*p,4,2);break}/* こわれた遊具を直している */
     if(d&&d.ruin){const ch=window.CHIPS&&CHIPS.statueb;if(ch)drawChip(c,ch,'statueb',x,y,now,i);const p=Math.min(1,d.p/d.need),bw=64,bx=x+16-bw/2,by=y-92;c.fillStyle='rgba(0,0,0,.5)';rr(c,bx-1,by,bw+2,6,3);c.fillStyle='#ecdcbc';rr(c,bx,by+1,bw*p,4,2);break}/* こわれた神殿を直している：絵はこわれた神殿のまま、上に進みぐあい */
     {const k=siteKey(d&&d.build),ch=chipOK(k)&&CHIPS[k];if(ch){/* 足場：建物の大きさに合わせた、3Dから写した絵（見た目だけ。マスの判定は変えない） */drawChip(c,ch,k,x,y,now,i);siteGhost(c,d,x,y,now,i);if(d){const p=Math.min(1,d.p/d.need),cx=x+(ch.ax+ch.w/2)/2,bw=Math.min(ch.w/2-8,64),bx=cx-bw/2,by=y+ch.ay/2-10;c.fillStyle='rgba(0,0,0,.5)';rr(c,bx-1,by,bw+2,6,3);c.fillStyle='#ecdcbc';rr(c,bx,by+1,bw*p,4,2)}break}}
     shadow(c,x+16,y+29,14,3);c.fillStyle='#c9a46a';c.fillRect(x+3,y+20,26,8);c.strokeStyle='#8a5a33';c.lineWidth=2.5;c.beginPath();c.moveTo(x+5,y+28);c.lineTo(x+5,y);c.moveTo(x+27,y+28);c.lineTo(x+27,y);c.moveTo(x+5,y+4);c.lineTo(x+27,y+4);c.moveTo(x+5,y+14);c.lineTo(x+27,y+14);c.moveTo(x+5,y+4);c.lineTo(x+27,y+14);c.stroke();
@@ -510,7 +516,7 @@ function drawObj(c,id,x,y,i,g,now){
     circ(c,x+17,y-6,5,'#2f4f86');tStar(c,x+17,y-6,4);
     const n=ICON?3:S.orders.length;const px=[[7,1],[14,2],[21,1]];for(let k=0;k<Math.min(3,n);k++){const[a,b]=px[k];c.fillStyle='#f6ecd6';rr(c,x+a,y+b,6,9,1);c.fillStyle='#d4c3a2';c.fillRect(x+a+1,y+b+3,4,.8);c.fillRect(x+a+1,y+b+5,3,.8);circ(c,x+a+3,y+b+.5,.9,'#8a5a33')}
     tBanner(c,x+31,y-4,12,now);break}
-  case'site2':{if(!ICON&&i!=null&&S.ref[i]!=null&&S.dyn[S.ref[i]]&&S.dyn[S.ref[i]].ruin)break;/* こわれた神殿のまわりは、本体の絵だけ */if(!ICON){/* 大きな足場は本体（site）がまとめて描くので、ここは足もとの資材だけ */c.fillStyle='rgba(0,0,0,.12)';c.beginPath();c.ellipse(x+16,y+27,12,3,0,0,7);c.fill();
+  case'site2':{if(!ICON&&i!=null&&S.ref[i]!=null&&S.dyn[S.ref[i]]&&(S.dyn[S.ref[i]].ruin||S.dyn[S.ref[i]].wfix))break;/* こわれた神殿のまわりは、本体の絵だけ */if(!ICON){/* 大きな足場は本体（site）がまとめて描くので、ここは足もとの資材だけ */c.fillStyle='rgba(0,0,0,.12)';c.beginPath();c.ellipse(x+16,y+27,12,3,0,0,7);c.fill();
       c.fillStyle='#b98a58';c.fillRect(x+7,y+21,18,3);c.fillStyle='#a87a4a';c.fillRect(x+9,y+18,16,3);c.fillStyle='#9a9a94';circ(c,x+24,y+24,3,'#a8a8a0');break}
     if(chipOK('site:s1')){drawChip(c,CHIPS['site:s1'],'site:s1',x,y,now,i);break}shadow(c,x+16,y+29,14,3);c.fillStyle='#c9a46a';c.fillRect(x+3,y+20,26,8);c.strokeStyle='#8a5a33';c.lineWidth=2.5;c.beginPath();c.moveTo(x+5,y+28);c.lineTo(x+5,y+6);c.moveTo(x+27,y+28);c.lineTo(x+27,y+6);c.moveTo(x+5,y+10);c.lineTo(x+27,y+10);c.stroke();break}
   case'tower':{shadow(c,x+16,y+29,16,4);c.fillStyle='#9ea4ad';rr(c,x+2,y+20,28,9,3);c.fillStyle='#b8bcc4';rr(c,x+4,y+18,24,5,2);c.fillStyle='#c4523f';c.fillRect(x+7,y-8,4,28);c.fillRect(x+21,y-8,4,28);c.fillRect(x+3,y-12,26,4);c.fillRect(x+5,y-4,22,3);c.fillStyle='#8a2f22';c.fillRect(x+1,y-14,30,3);

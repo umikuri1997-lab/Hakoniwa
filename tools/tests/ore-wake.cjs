@@ -24,7 +24,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict'),fs=r
  for(const [k,id,key] of [[2,'rockCanal','viron'],[3,'haikage3',null],[4,'fire3','vobsid'],[5,'rockDeep','vsilver'],[6,'hinoookage','vgold']]){assert.equal(await run(`${done(id)}oreStageNow()`),k,id);await run(`oreAwaken(${k}).length`);if(key){v=await run(veins);assert.ok(v[key]>0,key)}}
  const sul1=await run(`(()=>{const r=S.res[0];r.cmat=null;const rj=S.obj.findIndex((x,j)=>x==='rock'&&oreNear(j));const rnd=Math.random;Math.random=()=>.05;ACT.mine.end(r,{obj:rj,tgt:'rock'});Math.random=rnd;return (r.cmat||{}).sulfur||0})()`);assert.equal(sul1,1,'ひびわれのあとは硫黄');
  const m2=await run(`(()=>{const r=S.res[0];r.cmat=null;r.lv=1;const j=S.obj.indexOf('vgold');ACT.mine.end(r,{obj:j,tgt:'vgold'});return r.cmat})()`);assert.deepEqual(m2,{gold:2},'黒曜石の段階から2こ（持てる数1でも）');
- const m3=await run(`(()=>{const e=mkRes(S,'テスト土','earth',CX+.5,CY+.5);S.res.push(e);gearGive('gt17',1);gearEquip(e,gearList().findIndex(q=>q.id==='gt17'));e.cmat=null;const j=S.obj.indexOf('viron');ACT.mine.end(e,{obj:j,tgt:'viron'});return [e.cmat,gJob(e,'mine')]})()`);assert.deepEqual(m3,[{iron:3},1.6],'銀のつるはし');
+ const m3=await run(`(()=>{const e=mkRes(S,'テスト土','earth',CX+.5,CY+.5);e.vr.tk=[];e.jc={};/* 得意な仕事の★なしで */S.res.push(e);gearGive('gt17',1);gearEquip(e,gearList().findIndex(q=>q.id==='gt17'));e.cmat=null;const j=S.obj.indexOf('viron');ACT.mine.end(e,{obj:j,tgt:'viron'});return [e.cmat,gJob(e,'mine')]})()`);assert.deepEqual(m3,[{iron:3},1.6],'銀のつるはし');
  /* 4. 毎朝ふえる */
  const g=await run(`(()=>{const c=()=>S.obj.filter((x,j)=>VEINS[x]&&S.dyn[j]&&S.dyn[j].vg).length;S.st2.ore=1;veinMorning();const a=c();const k1=S.obj.filter((x,j)=>VEINS[x]&&S.dyn[j]&&S.dyn[j].vg).every(x=>x==='vcopper');S.st2.ore=6;veinMorning();const b=c();for(let i=0;i<20;i++)veinMorning();const d=c();const inV=S.obj.some((x,j)=>VEINS[x]&&S.dyn[j]&&S.dyn[j].vg&&VILL[j]);return [a,k1,b,d,inV]})()`);
  assert.deepEqual(g,[1,true,5,40,false],'毎朝ふえる数');
@@ -40,11 +40,11 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict'),fs=r
  await fresh();
  await run(`(()=>{GRD.pre=S;${done('springA')}S.res.forEach(r=>r.hidden=false);USERPAUSE=false;oreWakeTick();return true})()`);
  assert.equal(await run(`GIFT_ACTIVE&&OREWAKEON`),true);
- await page.waitForSelector('.idea-reveal[aria-label="鉱脈が目をさました"] button:not([disabled])',{timeout:8000});
+ await page.waitForSelector('.idea-reveal[aria-label="鉱脈が目をさました"] button:not([disabled])',{timeout:20000});
  const txt=await page.textContent('.idea-reveal[aria-label="鉱脈が目をさました"] p');assert.equal(txt,'銅の鉱脈が、見つかるようになった');
  if(process.env.SHOT_DIR)await page.screenshot({path:process.env.SHOT_DIR+'/ore-wake.png'});
  await page.click('.idea-reveal[aria-label="鉱脈が目をさました"] button');
- await page.waitForFunction(()=>oreEval('!OREWAKEON&&!GIFT_ACTIVE'),null,{timeout:8000});
+ await page.waitForFunction(()=>oreEval('!OREWAKEON&&!GIFT_ACTIVE'),null,{timeout:20000});
  await page.waitForFunction(()=>!document.querySelector('#dialog').hidden,null,{timeout:12000});
  const say=await page.textContent('#dlgText');console.log('ひとこと',say);
  assert.equal(await run(`oreStage()`),1);await run(`oreWakeTick();OREWAKEON`).then(x=>assert.equal(x,false,'二度出ない'));

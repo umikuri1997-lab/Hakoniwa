@@ -17,7 +17,7 @@ EVENTS.cup0.d='コースを走って、速さをきそう';EVENTS.cup1.d='ひろ
 EVENTS.cup2.gainTxt+='・作った家具をもらう';
 Object.assign(EVNEED,{trees:{n:'木',list:()=>cupTargets(5).length?[-1]:[],cap:()=>99},water:{n:'水べ',list:()=>cupTargets(6).length?[-1]:[],cap:()=>99},rocks:{n:'岩',list:()=>cupTargets(7).length?[-1]:[],cap:()=>99}});
 const CUPTREE=new Set(['tree','ntree','deadtree','fruit']),CUPROCK=new Set(['rock','boulder']);
-function cupTargets(n){/* 木こり・釣り・採掘の、そばに立つ物（マス） */const L=[];for(let j=0;j<W*H;j++){if(S.fog&&fogAt(j))continue;if(n===5&&CUPTREE.has(S.obj[j])||n===7&&CUPROCK.has(S.obj[j])||n===6&&S.ground[j]===1&&!S.obj[j])L.push(j)}return L}
+function cupTargets(n){/* 木こり・釣り・採掘の、そばに立つ物（マス） */const L=[];for(let j=0;j<W*H;j++){if(fogAt(j))continue;if(n===5&&CUPTREE.has(S.obj[j])||n===7&&CUPROCK.has(S.obj[j])||n===6&&S.ground[j]===1&&!S.obj[j])L.push(j)}return L}
 /* 会場：木こり・釣り・採掘は、その物のとなりに1人ずつ（E.tg：向く物のマス）。events.js の cupStart からよぶ */
 function cupNearStart(E,L,G,tx,ty){const n=+E.id.slice(3),T=new Set(cupTargets(n)),C=[];
   for(let j=0;j<W*H;j++){if(G.dist[j]<0||G.dist[j]>60||!walk(j)||S.obj[j]||S.ground[j]||sacredNoBuild(j))continue;const t=adjOf(j,k=>T.has(k));if(t<0)continue;C.push([Math.hypot(j%W+.5-tx,((j/W)|0)+.5-ty),j,t])}

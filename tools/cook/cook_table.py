@@ -5,6 +5,7 @@ python3 tools/cook/cook_table.py
 """
 import json, os, sys
 T, C, O = 'cooktable', 'campfire', 'oven'
+Y = 'yudekago'   # ゆでかご（火山。温泉の湯でゆでる）
 FV = dict(mugi=1, imo=1, tomato=1, berry=1, apple=1, egg=1, milk=1, fish=1, takenoko=1, kinoko=1, komugiko=2,
           unagi=3, ayu=2, koi=2, namazu=3, yumasu=2)
 FUN = {'berry', 'apple', 'fish', 'ayu', 'koi', 'yumasu'}
@@ -131,6 +132,8 @@ NEW = [
  ('やさいオムレツ', 'imo egg tomato', [C, O], F, 'plate'),
  ('きのこキッシュ', 'komugiko kinoko egg', [O], F, 'cake'),
  ('うなぎのまぜむぎ', 'unagi mugi egg', [C, O], F, 'bowl'),
+ # ゆでかご（温泉の湯でゆでる。表のさいごに足す：番号をずらさない）
+ ('ゆでたけのこ', 'takenoko', [Y], W, 'plate'), ('おんせんたまご', 'egg', [Y], W, 'bowl'),
 ]
 # おいしくなさそうな料理：名前をかえ、効果はたのしさ－15だけ
 BAD = {'さかなのベリーソース': 'むらさきのさかな', 'あまずっぱいたけのこ': 'すっぱいたけのこ', 'きのこのベリーやき': 'むらさききのこ',

@@ -31,16 +31,16 @@ let S=null;
 const resv=new Map();
 let RUINT=-1/* こわれた神殿（直している途中もふくむ）のマス。recount で作る */,STATUE=-1,OBOX=-1,BOARD=-1,counts={},LIGHTS=[],HOTL=[]/* ほたるの草むらのマス */,DRUMS=[]/* 合図の太鼓のマス */,JARS=[],COMPS=[],LITP=[],STELES=[],LURES=[],TOWERS=[],ENVE={},NEARMILL=new Set(),NEARSUI=new Set(),STUMPB=new Set(),NEARVANE=new Set(),NEARCART=new Set(),NEARJORO=new Set(),NEARMIZU=new Set()/* 苔むした石の水ばちのまわり5マス：芽が、植えたその日に育つ */,NEARSIGN=new Set(),NEARPARA=new Set(),SPOTJ=new Map(),SPOTM=new Map(),SPOTI=[],RUGC=new Map(),RFC=new Map(),ENVG=null,REV=new Set(),ATTR={},BASEPCT=0,GRASSN=0;
 function newState(w){w=w||0;
-  const s={v:8,mig:10,box:{},pile:{},rsv:{},flags:{ovenRot4:1,wbIns1:1,wbFurn1:1,wbYard1:1,cook2:1,tableSub1:1,bread2:1,talkq1:1,ovenW1:1,swingRot2:1,box1:1,gup1:1,gup5:1,stat10:1,tokui1:1,stat5:1,trapSub1:1,board2x1:1,board3:1,bondX2:1,spring2:1,juice1:1,berryHalf:1,berryHalf2:1,land2:1,land3:1,land4:1,arrow0:1,q3ins:1,qmerge1:1,qsplit1:1,earthMerge1:1,fieldMerge1:1,tutSub1:1,farmFirst1:1,omoiIns1:1,warmIns1:1,story3ins1:1,vgift1:1,companionStory:1,fieldStoryV2:1,sacredStoryV1:1,sacredFootprint3:1,sacredFootprint4:1,sacredLeft1:1,fieldBuild1:1,trfit1:1,cookfit1:1,watch5:1,xp12:1,veins1:1,ore2:1,noBerry1:1,yogan2:1,bwall1:1,misu1:1,fl2v1:1,no2f1:1,vq1:1,fog1:1,ruinGap1:1,festq2:1,shin3:1,shinGone1:1,noStable1:1,noTool1:1,rec3:1,ruinTemple1:1,vpath2:1},placed:{},feat:{build:true},inv:{},orders:[],enemyOn:false,nights:0,godGone:false,godShown:false,nushi:null,
+  const s={v:8,mig:10,box:{},pile:{},rsv:{},flags:{altarLit1:1,volSub1:1,ovenRot4:1,wbIns1:1,wbFurn1:1,wbYard1:1,cook2:1,tableSub1:1,bread2:1,talkq1:1,ovenW1:1,swingRot2:1,box1:1,gup1:1,gup5:1,stat10:1,tokui1:1,stat5:1,trapSub1:1,board2x1:1,board3:1,bondX2:1,spring2:1,juice1:1,berryHalf:1,berryHalf2:1,land2:1,land3:1,land4:1,arrow0:1,q3ins:1,qmerge1:1,qsplit1:1,earthMerge1:1,fieldMerge1:1,tutSub1:1,farmFirst1:1,omoiIns1:1,warmIns1:1,story3ins1:1,vgift1:1,companionStory:1,fieldStoryV2:1,sacredStoryV1:1,sacredFootprint3:1,sacredFootprint4:1,sacredLeft1:1,fieldBuild1:1,trfit1:1,cookfit1:1,watch5:1,xp12:1,veins1:1,ore2:1,noBerry1:1,yogan2:1,bwall1:1,misu1:1,fl2v1:1,no2f1:1,vq1:1,kgIns1:1,fog1:1,ruinGap1:1,festq2:1,shin3:1,shinGone1:1,noStable1:1,noTool1:1,rec3:1,ruinTemple1:1,vpath2:1},placed:{},feat:{build:true},inv:{},orders:[],enemyOn:false,nights:0,godGone:false,godShown:false,nushi:null,
     lv:1,bossKills:0,nightHurt:0,nightHad:false,wave:null,lastWarn:0,
     ref:{},ground:new Array(W*H).fill(0),floor:new Array(W*H).fill(''),obj:new Array(W*H).fill(''),dyn:{},hp:{},
     res:[],enemies:[],pt:25,totalPt:0,food:0,fs:{},cseed:{imo:4},crops:{imo:true},mat:{wood:0,stone:0},regrow:[],t:w===0?15*60:w===YAMI?8*60:12*60,/* 草原は15時からはじまる */speed:1,
     unlocked:{floor:true,farm:true,[w===1?'misugaki':'fence']:true,[w===1?'bamboowall':'hwall']:true},bulk:false,stamps:false,quest:0,cleared:false,rain:false,seeds:[],nameIdx:2,introSeen:false,lastMorning:1,lastNight:0,subDone:{},drops:[],ani:[],shards:0,gotMat:{wood:0,stone:0},recipes:{},buried:[],nid:1,kills:0,deaths:0};
-  s.world=w;genWorld(s,w);
-  if(w===YAMI){}/* 闇のステージ：はじめは、だれもいない（yami.js の yamiBirth でトモリが生まれる）。はじめに来るのは火のせいれいヒイロ（SECOND） */else if(w===1)s.res.push(mkRes(s,HOMURA,'fire',CX+.5,CY-1.5,'campfire'));else s.res.push(mkRes(s,'フタバ','wood',CX+.5,CY-1.5,'swing'));
+  s.world=w;if(w===FREE)s.flags.valley=1;/* フリーモード：花の谷（free.js。前のセーブの地形はそのまま） */if(w===MIZU)mzGenWorld(s);else genWorld(s,w);
+  if(w===YAMI){}/* 闇のステージ：はじめは、だれもいない（yami.js の yamiBirth でトモリが生まれる）。はじめに来るのは火のせいれいヒイロ（SECOND） */else if(w===1)s.res.push(mkRes(s,HOMURA,'fire',CX+.5,CY-1.5,'campfire'));else if(w===MIZU)s.res.push(mkRes(s,MIO,'water',CX+.5,CY-1.5,'fountain'));else if(w===WIND){s.res.push(mkRes(s,KAZANE,'wind',CX+.5,CY-1.5,'slide'));s.flags.minaCame=true}/* 風（土台）：はじめはカザネひとり。2人めのキーキャラは、お話を作るときに */else s.res.push(mkRes(s,'フタバ','wood',CX+.5,CY-1.5,'swing'));
   if(w===0)s.res[0].nap=true;/* 初回のマップ描画から眠っている */
-  if(w===FREE)freeSetup(s);
-  templeRuinPlace(s);/* こわれた神殿は、はじめからある（どのステージも） */
+  if(w===FREE)freeSetup(s);if(w===MIZU)mzSetup(s);
+  if(w!==FREE)templeRuinPlace(s);/* こわれた神殿は、はじめからある（フリーモードに神殿はない） */
   return s;
 }
 /* こわれた神殿：まん中の道（x=CX）の北のはしの先に置く。像のマスと左右（おそなえ箱・依頼ボードになる所）、手前（台座になる所）の4マス。
@@ -92,23 +92,35 @@ const VRDEV=[-6,-4,-2,0,2,4,6];/* 個体ごとのばらつき：はたらく速�
 function vrInt(V){if(V&&V.iv!==3){const K=['pow','spd','sta'];if(V.iv!==2){if(!V.iv)for(const k of K)V[k]=Math.round(((V[k]==null?1:V[k])-1)*10);for(const k of K)V[k]=(V[k]||0)*10}for(const k of K)V[k]=Math.round((V[k]||0)/5);V.iv=3}return V}/* 前のセーブ：倍率（1がふつう）・10がふつう・100がふつうだったころの数を、20がふつうの、たす数にかえる（iv が 3 なら、もうかえてある。100がふつうの数（iv 2）は÷5してまるめる） */
 const trt=(r,k)=>!!(r&&r.vr&&r.vr.tr===k),recK=r=>(trt(r,'nebari')?2:1)*gearStat(r).rec*(1+(typeof pathA==='function'?pathA('rec'):0)/100);/* recK：つかれのとれる速さ（ねばりづよい子は2倍） */
 /* せいれいごとのばらつき：色(h色相・l明るさ)、まつ毛・ほっぺ、足の速さ・食べる量・力 */
-const KEYVR={'フタバ':{key:true,tr:'nebari',h:0,l:0,lash:false,cheek:true,spd:0,eat:1,pow:0,sta:0,iv:3,vo:1.18},'ノドカ':{key:true,tr:'tafu',h:0,l:0,lash:false,cheek:true,spd:0,eat:1,pow:0,sta:0,iv:3,vo:1.02},'ホムラ':{key:true,tr:'nebari',pk:'fireA',h:0,l:0,lash:false,cheek:true,spd:0,eat:1,pow:0,sta:0,iv:3,vo:1.08},'シズク':{key:true,tr:'hataraki',h:0,l:0,lash:false,cheek:true,spd:0,eat:1,pow:0,sta:0,iv:3,vo:1.12},'ホノ':{key:true,tr:'',pk:'fireB',h:-6,l:.04,lash:false,cheek:false,spd:0,eat:1,pow:0,sta:0,iv:3,vo:.95},'アオ':{key:true,tr:'shoshoku',h:8,l:0,lash:true,cheek:false,spd:0,eat:1,pow:0,sta:0,iv:3,vo:1.12},'フウ':{key:true,tr:'hayaashi',pk:'wind',h:0,l:-.03,lash:true,cheek:true,spd:0,eat:1,pow:0,sta:0,iv:3,vo:1.05}};
+const KEYVR={'フタバ':{key:true,tr:'nebari',h:0,l:0,lash:false,cheek:true,spd:0,eat:1,pow:0,sta:0,iv:3,vo:1.18},'ノドカ':{key:true,tr:'tafu',h:0,l:0,lash:false,cheek:true,spd:0,eat:1,pow:0,sta:0,iv:3,vo:1.02},'ホムラ':{key:true,tr:'nebari',pk:'fireA',h:0,l:0,lash:false,cheek:true,spd:0,eat:1,pow:0,sta:0,iv:3,vo:1.08},'ハヤテ':{key:true,tr:'hayaashi',pk:'wind',h:10,l:.02,lash:false,cheek:false,spd:0,eat:1,pow:0,sta:0,iv:3,vo:1.16},'カザネ':{key:true,tr:'nebari',pk:'wind',h:0,l:0,lash:false,cheek:true,spd:0,eat:1,pow:0,sta:0,iv:3,vo:1.1},'シズク':{key:true,tr:'hataraki',h:0,l:0,lash:false,cheek:true,spd:0,eat:1,pow:0,sta:0,iv:3,vo:1.12},'ミオ':{key:true,tr:'nebari',h:-10,l:.03,lash:true,cheek:true,spd:0,eat:1,pow:0,sta:0,iv:3,vo:1.2},'カガリ':{key:true,tr:'',pk:'fireA',h:4,l:.03,lash:true,cheek:true,spd:0,eat:1,pow:0,sta:0,iv:3,vo:1.2},'ホノ':{key:true,tr:'',pk:'fireB',h:-6,l:.04,lash:false,cheek:false,spd:0,eat:1,pow:0,sta:0,iv:3,vo:.95},'アオ':{key:true,tr:'shoshoku',h:8,l:0,lash:true,cheek:false,spd:0,eat:1,pow:0,sta:0,iv:3,vo:1.12},'フウ':{key:true,tr:'hayaashi',pk:'wind',h:0,l:-.03,lash:true,cheek:true,spd:0,eat:1,pow:0,sta:0,iv:3,vo:1.05}};
 function mkVar(name,el){if(KEYVR[name])return Object.assign({},KEYVR[name]);const R=()=>Math.random()*2-1,D=()=>pick(VRDEV);const sg=Math.random()<.5?-1:1;return{h:Math.round(sg*(12+Math.random()*33)),l:Math.round(R()*14)/100,lash:Math.random()<.4,cheek:Math.random()<.5,spd:D(),eat:Math.round((1+R()*.2)*100)/100,pow:D(),sta:D(),iv:3,vo:Math.round((1.12+R()*.16)*100)/100,tr:pick(TRK(el))}}
 function mkRes(s,name,elem,x,y,like){
   return {id:s.nid++,xp:0,xpf:0,name,elem,color:ELEM[elem].body,x,y,hunger:800,energy:85,fun:70,like:like||pick(LIKE_KEYS.filter(k=>(k!=='slide'||WD===4)&&!nigate(elem,k))),act:null,path:[],starve:0,bubble:'',face:1,hidden:false,hurt:0,vr:Object.assign(mkVar(name,elem),{tk:tokuiPick(elem)})};/* tk：はじめからの得意な仕事（events.js） */
 }
 
 function genWorld(s,w){
-  const R=mulberry(w===1?20261102:w===FREE?20261022:w===YAMI?20261120:20261018),V=w===1;/* V：火山のふもと */
+  const R=mulberry(w===1?20261102:w===FREE?20261022:w===YAMI?20261120:w===WIND?20261120:20261018),V=w===1,K=w===WIND;/* V：火山のふもと。K：風のやんだ空の村（浮き島と雲の海） */
   const pond=(cx,cy,rx,ry)=>{const a=R()*6.28,b=R()*6.28,e=R()*6.28;for(let y=0;y<H;y++)for(let x=0;x<W;x++){const dx=(x+.5-cx)/rx,dy=(y+.5-cy)/ry,th=Math.atan2(dy,dx),lim=1+.2*Math.sin(2*th+a)+.13*Math.sin(3*th+b)+.07*Math.sin(5*th+e);if(Math.hypot(dx,dy)<lim)s.ground[y*W+x]=1}};
-  if(V){pond(OFF+12,OFF+58,3.4,2.4);pond(OFF+60,OFF+14,2.8,2);pond(CX+4.8,CY+4.8,2.4,1.7);pond(CX+6.4,CY+3.7,1.3,1);pond(HSPC.b[0],HSPC.b[1],2.4,1.7);pond(HSPC.c[0],HSPC.c[1],2.2,1.6)}/* 温泉（はじめは冷えている） */
+  const VL=valleyOn(s,w);/* フリーモードの花の谷（free.js） */
+  if(VL){for(const[px,py,rx,ry]of VPONDS)pond(CX+px,CY+py,rx,ry)}
+  else if(K){/* 風：まん中の大きな島・そのまわりの7つの島・すみの小さな島。島でない所は、ぜんぶ雲の海（ground 1。歩けない・橋はかけられる。skyJ） */
+    const land=new Uint8Array(W*H);let nI=0;const isle=(cx,cy,rx,ry)=>{const a=R()*6.28,b=R()*6.28,e=R()*6.28,id=++nI,far=(x,y)=>{for(let q=-4;q<=4;q++)for(let p=-4;p<=4;p++){const v=land[(y+q)*W+x+p];if(v&&v!==id)return false}return true};/* ほかの島とは、4マスあける（島どうしが、くっつかないように） */for(let y=5;y<H-5;y++)for(let x=5;x<W-5;x++){const dx=(x+.5-cx)/rx,dy=(y+.5-cy)/ry,th=Math.atan2(dy,dx),lim=1+.14*Math.sin(2*th+a)+.1*Math.sin(3*th+b)+.06*Math.sin(5*th+e);if(Math.hypot(dx,dy)<lim&&far(x,y))land[y*W+x]=id}};
+    isle(CX,CY,19,18);const ring=[];for(let k=0;k<7;k++){const an=.45+k*6.2832/7+(R()-.5)*.25,ds=35.5+R()*2.5,r=9+R()*3.5,cx=CX+Math.cos(an)*ds,cy=CY+Math.sin(an)*ds;ring.push([cx,cy]);isle(cx,cy,r,r*(.82+R()*.2))}
+    for(const[sx,sy]of[[-1,-1],[1,-1],[-1,1],[1,1]]){/* 四すみの小さな島（入る所だけ）：そのすみにいちばん近い島の、たてか、よこの先に5マスあけて置く（橋はまっすぐ10マスまでなので、ななめの先には置かない） */
+      let bk=0,bv=-1e9;ring.forEach((p,k)=>{const v=(p[0]-CX)*sx+(p[1]-CY)*sy;if(v>bv){bv=v;bk=k}});const id=bk+2;let x0=W,x1=0,y0=H,y1=0;for(let j=0;j<W*H;j++)if(land[j]===id){const x=j%W,y=(j/W)|0;x0=Math.min(x0,x);x1=Math.max(x1,x);y0=Math.min(y0,y);y1=Math.max(y1,y)}
+      const rx=4.5+R()*1.5,ry=4+R()*1.5,vy=(sy>0?y1+1:y0)+sy*(5+ry),hx=(sx>0?x1+1:x0)+sx*(5+rx);
+      if(vy-ry>=6&&vy+ry<=H-6)isle((sx>0?x1-3:x0+4),vy,rx,ry);else if(hx-rx>=6&&hx+rx<=W-6)isle(hx,(sy>0?y1-3:y0+4),rx,ry)}
+    for(let j=0;j<W*H;j++)s.ground[j]=land[j]?0:1;
+    pond(CX+4.8,CY+4.8,2.4,1.7);pond(CX+6.4,CY+3.7,1.3,1);pond(ring[1][0],ring[1][1],2.6,2);pond(ring[4][0],ring[4][1],2.4,1.9)}/* 島の中の池（本物の水） */
+  else if(V){pond(OFF+12,OFF+58,3.4,2.4);pond(OFF+60,OFF+14,2.8,2);pond(CX+4.8,CY+4.8,2.4,1.7);pond(CX+6.4,CY+3.7,1.3,1);pond(HSPC.b[0],HSPC.b[1],2.4,1.7);pond(HSPC.c[0],HSPC.c[1],2.2,1.6)}/* 温泉（はじめは冷えている） */
   else{pond(OFF+8,OFF+10,5,3.6);pond(OFF+11.5,OFF+12.5,3,2.2);pond(OFF+62,OFF+60,6,3.6);pond(OFF+58.5,OFF+58,2.6,2);pond(OFF+60,OFF+8,3,2.4);pond(CX+4.8,CY+4.8,2.4,1.7);pond(CX+6.4,CY+3.7,1.3,1);pond(CX+3.6,CY+6.6,1.2,.9);pond(10,30,4,3);pond(96,70,4.5,3);pond(40,98,3.5,2.6);pond(80,6,3,2.2)}/* 外がわにも池 */
   for(let pass=0;pass<2;pass++){const g=s.ground.slice();for(let y=1;y<H-1;y++)for(let x=1;x<W-1;x++){const j=y*W+x,n=(g[j-1]===1)+(g[j+1]===1)+(g[j-W]===1)+(g[j+W]===1);if(g[j]===1&&n<=1)s.ground[j]=0;else if(g[j]!==1&&n>=3)s.ground[j]=1}}
-  for(let y=CY+12;y<H;y++)s.floor[y*W+CX]='path';
+  if(!K)for(let y=CY+12;y<H;y++)s.floor[y*W+CX]='path';/* 風：島の外（雲の海）へは、道をのばさない */
   for(let y=0;y<H;y++)for(let x=0;x<W;x++){
     const i=y*W+x;if(s.ground[i]===1)continue;
     const dx=Math.max(Math.abs(x+.5-CX)-8,0),dy=Math.max(Math.abs(y+.5-CY)-8,0),out=Math.max(dx,dy);
-    if(x===CX&&y>=CY+11)continue;
+    if(x===CX&&y>=CY+11&&!K)continue;
+    if(VL){valleyCell(s,x,y,i,R());continue}
     const ox=x-OFF,oy=y-OFF,forest=V?(ox<14&&oy<16):(ox>54&&oy<24)||(ox<16&&oy>48);/* 森は、前からの土地の角から、外がわへつづく */
     const r=R();
     if(out<1.2){ // 基地の中：枯れ木と岩がちらばる
@@ -120,7 +132,8 @@ function genWorld(s,w){
     else{if(r<.07)s.obj[i]='deadtree';else if(r<.1)s.obj[i]='rock';else if(r<.1075){s.obj[i]='berry';s.dyn[i]={g:100}}else if(r>=.13&&r<.15)s.obj[i]=w===FREE?'ntree':'deadtree'}
   }
   for(let y=CY-8;y<CY+12;y++)s.floor[y*W+CX]='path';
-  if(!V&&w!==FREE){let best=-1,bd=1e9;for(let y=CY-6;y<=CY+6;y++)for(let x=CX-6;x<=CX+6;x++){const j=y*W+x;if(s.ground[j]===1||s.obj[j]||s.floor[j]||x===CX)continue;if([j-1,j+1,j-W,j+W].some(k=>s.ground[k]===1))continue;const d=Math.hypot(x+.5-(CX-3),y+.5-(CY+3));if(d<bd){bd=d;best=j}}if(best>=0)s.obj[best]='ntree'}/* 草原の拠点に、森の木が1本だけ（ほかの木は、みんな枯れている） */
+  if(VL)wildGen(s);/* 野の花（家・畑を置く前。置いたあとで、もう1回かたづける） */
+  if(!V&&!K&&w!==FREE){let best=-1,bd=1e9;for(let y=CY-6;y<=CY+6;y++)for(let x=CX-6;x<=CX+6;x++){const j=y*W+x;if(s.ground[j]===1||s.obj[j]||s.floor[j]||x===CX)continue;if([j-1,j+1,j-W,j+W].some(k=>s.ground[k]===1))continue;const d=Math.hypot(x+.5-(CX-3),y+.5-(CY+3));if(d<bd){bd=d;best=j}}if(best>=0)s.obj[best]='ntree'}/* 草原の拠点に、森の木が1本だけ（ほかの木は、みんな枯れている） */
   if(V){/* 火山のふもと：南西に古い家（下の壁がくずれている）、北東に2×2の畑、砂利の道が十字に通る */
     const x0=CX-9,x1=CX-4,y0=CY+3,y1=CY+7;for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++){const j=y*W+x;s.obj[j]='';s.ground[j]=0;const edge=x===x0||x===x1||y===y0||y===y1;if(!edge){s.floor[j]='floor';continue}if(y===y1&&x>=x0+1&&x<=x0+3){s.floor[j]='';continue}/* はじめは壁がこわれている（クエストで直す） */const door=x===x1&&y===CY+5;s.obj[j]=door?'door':'bamboowall';s.floor[j]=door?'gravel':'';if(!door)s.hp[j]=BL.bamboowall.hp}/* 火山の古い家は竹の壁 */
     for(let x=x1+1;x<CX;x++){const j=(CY+5)*W+x;s.obj[j]='';s.floor[j]='gravel'}/* 家の戸口から、砂利の道へ */
@@ -131,8 +144,12 @@ function genWorld(s,w){
   for(let d=1;d<=2;d++)s.floor[(CY-4)*W+hx(-d)]='path';
   for(let y=CY-6;y<=CY-2;y++)for(let d=2;d<=7;d++){if(d>2&&d<7&&y>CY-6&&y<CY-2)continue;const x=hx(-d),j=y*W+x;if(y===CY-2&&d>=3&&d<=5)continue;/* はじめは壁がこわれている（クエストで直す） */s.obj[j]=(d===2&&y===CY-4)?'door':'hwall';s.floor[j]=s.obj[j]==='door'?'path':'';if(s.obj[j]==='hwall')s.hp[j]=BL.hwall.hp}
   for(let d=1;d<=4;d++){const j=(CY-4)*W+hx(d);s.obj[j]='farm';s.floor[j]='';s.dyn[j]={g:50,wet:0,crop:'imo'}}/* 最初の畑は4つ。家の道をはさんだ向かいに横1列。作物は、はじめはいもだけ */
+  if(K){for(let d=3;d<=5;d++){const j=(CY-2)*W+hx(-d);s.obj[j]='hwall';s.floor[j]='';s.hp[j]=BL.hwall.hp}/* 風（土台）：家はこわれていない。木箱は、道の東に1つ */
+    const fr=k=>!s.obj[k]&&s.ground[k]!==1&&!s.floor[k];let p=-1;for(let r=0;r<8&&p<0;r++)for(let dy=-r;dy<=r&&p<0;dy++)for(let dx=-r;dx<=r;dx++){const k=(CY+1+dy)*W+CX+3+dx;if(fr(k)&&fr(k-1)&&fr(k+1)){p=k;break}}if(p>=0)s.obj[p]='crate'}
   }
   if(V){const put=id=>{let best=-1,bd=1e9;for(let y=CY-7;y<CY;y++)for(let x=CX-6;x<CX;x++){const j=y*W+x;if(s.ground[j]===1||s.obj[j]||s.floor[j])continue;if([j-1,j+1,j-W,j+W,j-W-1,j-W+1,j+W-1,j+W+1].some(k=>s.ground[k]===1||s.obj[k]==='crate'))continue;const d=Math.hypot(x+.5-(CX-3),y+.5-(CY-3.5));if(d<bd){bd=d;best=j}}if(best>=0)s.obj[best]=id};{const j=(CY+4)*W+CX-8;s.obj[j]='crate';s.floor[j]='floor'}put('crate');for(let y=CY-13;y<CY-8;y++){const j=y*W+CX;if(!s.obj[j]&&s.ground[j]!==1)s.floor[j]='path'}st2Place(s)}/* 火山のふもと：木箱は古い家の中と、村の北西に（コワイノは南から来るので） */
+  if(VL)wildPurge(s);
+  if(K)windGen(s,R);/* 風穴と古い風車（wind.js） */
   genLand(s,w)/* 川と段差（いちばん最後：ほかの物をおいたあと） */;/* 火山の鉱脈は、お話が進むと目をさます（oreWakeTick） */
 }
 
@@ -143,7 +160,7 @@ const HSPC={a:[CX+4.8,CY+4.8],b:[CX-8.5,CY-8],c:[CX+.5,CY-15]},SPN={a:'入口の
 const VOLJ=(OFF+1)*W+(CX-1),D1=(OFF+9)*W+(CX-4),D2=(CY-18)*W+(CX+5),CRACKS=[-2,-1,0,1,2].map(d=>(OFF+9)*W+CX+d),BVOL=[D2-1,D2+1,D2-W,D2+W];
 const ASHT=new Set(['oven','bench','takebench','tub','sink','campfire','hotstone']);
 const NATK=['rock','vcopper','viron','vobsid','vsilver','vgold','deadtree','ntree','berry','bamboo','takenoko'];
-const festOn=()=>!!S&&WD===1&&S.festDay!=null&&(S.festDay===dayNo()||S.festDay===dayNo()-1&&hour()<6);/* おまつり：その日の朝6時まで */
+const festOn=()=>!!S&&VOLK()&&S.festDay!=null&&(S.festDay===dayNo()||S.festDay===dayNo()-1&&hour()<6);/* おまつり：その日の朝6時まで */
 function festStart(){S.festN=(S.festN||0)+1;/* おまつりをひらいた回数 */const L=WD===1?[[HOMURA,'おまつりかい！ ちょうちんの火、いい色だねえ。'],[SHIZUKU,'みなさんで、おどりましょう。ごちそうもありますよ。'],[HOMURA,'たまには、こういう日もいいもんさ。']]:[[POKO,'#surprise|わあ、おまつりだ！ ちょうちんが、いっぱい！'],[MINA,'みんなで、おどろうねぇ。ごちそうもあるよぉ。'],[POKO,'ヌシ様にも、この景色を見せてあげたいな。']];talkOnce('fest1',L.filter(l=>S.res.some(r=>r.name===l[0])))}/* はじめてのおまつりの会話 */
 function festBegin(){S.festAtQ=QUESTS[S.quest]&&QUESTS[S.quest].id;/* どのクエストのときにひらいたか（前にひらいたおまつりは、クエストの数に入れない） */for(const r of S.res){r.fun=100;r.energy=100;spawnFX(r.x-.5,r.y-.6,'#ffd84a')}sfx('level');toast('おまつりがはじまった！ 屋台がならんでいる','good');festStart()}/* おまつりの朝：せいれいの半分が、屋台の店番をする */
 function festGift(){if(S.festDay==null||S.festDay>=dayNo()||S.festGot===S.festDay)return;S.festGot=S.festDay;const fl=['salvia','lotus','lily','clover','bellf'].filter(id=>S.unlocked[id]);/* おまつりのおみやげ：はじめはちょうちん。あとは、ちょうちんか、おぼえた花のたね5つ */
@@ -154,19 +171,19 @@ function drawFestPole(x,y,now){if(!FESTA.ok)return;const h=hour(),on=h>=18||h<6,
   if(on){const lx=x0+17,ly=y0+20,g=ctx.createRadialGradient(lx,ly,1,lx,ly,14);g.addColorStop(0,'rgba(255,190,110,.35)');g.addColorStop(1,'rgba(255,190,110,0)');ctx.fillStyle=g;ctx.fillRect(lx-14,ly-14,28,28)}}/* 夕方からちょうちんがともる */
 /* おまつり（屋台・ちょうちん）は火山だけ（festOn の WD===1）。草原にはない */const STALLM={wood:{nm:'りんごあめ',e:'🍭',col:'#d8452f',L:[['f','ringoame',15]]},fire:{nm:'たこ焼き・焼きそば',e:'🐙',col:'#e07a2a',L:[['f','takoyaki',20],['f','yakisoba',20]]},water:{nm:'かき氷',e:'🍧',col:'#4a8fd8',L:[['f','kakigori',15],['mebuki',400]]},earth:{nm:'ポテト',e:'🍠',col:'#9a6a3a',L:[['f','yakiimo',15]]},wind:{nm:'わたあめ・わなげ',e:'🍬',col:'#3aa88a',L:[['f','wataame',15],['chochin',60]]}};/* せいれいの屋台：店番の子の属性で、売る物がかわる。['f',食べ物,パワー]は5つ。木材・石材は売らない */
 const STALLSAY=['いらっしゃい！','どれにする？','できたてだよ！','おまつりだから、とくべつだよ！'];
-function festStalls(){if(!festOn()||STATUE<0||hour()<7)return [];const sh=Math.min(4,Math.floor((hour()-7)/3)),k=dayNo()+':'+sh;if(S.fst&&S.fst.k===k)return S.fst.L;/* 3時間ごとに店番が交代 */
+function festStalls(){if(!festOn()||festBase()<0||hour()<7)return [];const sh=Math.min(4,Math.floor((hour()-7)/3)),k=dayNo()+':'+sh;if(S.fst&&S.fst.k===k)return S.fst.L;/* 3時間ごとに店番が交代 */
   const R=S.res.filter(r=>!r.hidden),n=Math.floor(R.length/2),r0=12,y=CY-r0-1,P=[];
   for(let d=0;P.length<n&&d<=r0;d+=3)for(const x of d?[CX-d,CX+d]:[CX]){if(P.length>=n||x-1<CX-r0||x+1>CX+r0-1)continue;if([x-1,x,x+1].every(q=>walk(y*W+q)&&!S.obj[y*W+q])&&walk((y+1)*W+x))P.push(x)}/* 屋台は、ちょうちんの柱の上がわの列に、まんなかから3マスずつならべる */
   const C=R.map(r=>({r,n:(r.fkD===dayNo()?r.fkN||0:0)+Math.random()*.5})).sort((a,b)=>a.n-b.n),K=[],el=new Set();for(const c of C)if(K.length<P.length&&!el.has(c.r.elem)){el.add(c.r.elem);K.push(c.r)}for(const c of C)if(K.length<P.length&&!K.includes(c.r))K.push(c.r);/* まだ店番をしていない子から。属性はなるべくばらばらに */
   for(const r of K){if(r.fkD!==dayNo()){r.fkD=dayNo();r.fkN=0}r.fkN++}
   S.fst={k,L:K.map((r,i)=>({x:P[i],y,id:r.id,el:r.elem}))};return S.fst.L}
 function festSpot(G,f,maxD){const L=[];for(let k=0;k<W*H;k++){const d=G.dist[k];if(d<0||d>maxD||!walk(k)||S.obj[k]||roomOf(k)||(TAKEN&&TAKEN.has(k))||!f(k))continue;L.push(k)}return L.length?pick(L):-1}/* 条件にあうマスから、ランダムに1つ */
-function festAct(r,G){if(STATUE<0)return false;const h=hour(),ib=k=>VILL[k];
+function festAct(r,G){if(festBase()<0)return false;const h=hour(),ib=k=>VILL[k];
   if(h>=20&&h<21){const j=festSpot(G,ib,12);if(j>=0){startAct(r,G,'hanabi',j);return true}return false}/* 夜8時から9時は、花火を見る */
   if(h<7||h>=22)return false;if(r.fyD!==dayNo()){r.fyD=dayNo();r.fyN=0}
   {const t=festStalls().find(t=>t.id===r.id);if(t){startAct(r,G,'shopkeep',(t.el==='wind'?t.y+1:t.y)*W+t.x,{sk:S.fst.k});return true}}/* 店番の子は、自分の屋台へ（わたあめの屋台は、屋台の前） */
   const x=Math.random();
-  if(x<.3){const cx=STATUE%W+.5,cy=((STATUE/W)|0)+3.5;const j=nearest(G,k=>{const d=Math.hypot(k%W+.5-cx,((k/W)|0)+.5-cy);return d>=1.6&&d<=2.8&&walk(k)&&!S.obj[k]},80);if(j>=0){startAct(r,G,'bon',j,{cx,cy});return true}}/* 神殿の前で、おどりの輪 */
+  if(x<.3){const FBJ=festBase(),cx=FBJ%W+.5,cy=((FBJ/W)|0)+3.5;const j=nearest(G,k=>{const d=Math.hypot(k%W+.5-cx,((k/W)|0)+.5-cy);return d>=1.6&&d<=2.8&&walk(k)&&!S.obj[k]},80);if(j>=0){startAct(r,G,'bon',j,{cx,cy});return true}}/* 神殿の前で、おどりの輪 */
   if(x<.5&&(r.fyN||0)<3){const L=festStalls().filter(t=>{const q=S.res.find(o=>o.id===t.id);return q&&q.act&&q.act.type==='shopkeep'&&q.act.stage==='do'});if(L.length){const t=pick(L),j=nearest(G,k=>((k/W)|0)===t.y+1&&Math.abs(k%W-t.x)<=1&&!(t.el==='wind'&&k%W===t.x)&&walk(k)&&free('yt'+k,1),80);if(j>=0){startAct(r,G,'yatai',j,{key:'yt'+j,sx:t.x});return true}}}/* 店番のいる屋台（1日3回まで） */
   if(x<.72&&trySocial(r,G))return true;/* おまつりのおしゃべり */
   const j=festSpot(G,k=>ib(k)&&Math.hypot(k%W+.5-r.x,((k/W)|0)+.5-r.y)>=4,30);if(j>=0){startAct(r,G,'fwalk',j);if(r.fsnack&&Math.random()<.6)r.bubble=r.fsnack;return true}/* 村の中を、ぶらぶら見てまわる */
@@ -179,6 +196,20 @@ function fireTick(dt){if(WD!==1||!S.st2||!S.st2.fire)return;const F=S.st2.fire;f
   if(S.hp[j]<=0){(S.broken||(S.broken=[])).push({j,id:o,L:S.hp['L'+j],rot:rotAt(j)});delete F[k];sfxAt('wbreak',j%W+.5,(j/W)|0);clearObj(j);recount();dirty=true;toast(BL[o].name+'が燃えてこわれた','warn')}}}
 function sparkTick(){if(WD!==1||!S.st2||isNight()||elemCount('water')<1||Math.random()>=.05)return;/* 火の粉：昼のあいだ、1時間に5%（水の子が来てから） */const L=[];for(let j=0;j<W*H;j++){const o=S.obj[j];if(FLAM.has(o)&&!fireAt(j)&&VILL[j]&&!HOUSES.some(h=>h.inside.has(j)))L.push(j)}if(!L.length)return;const j=L[(Math.random()*L.length)|0];
   fxSpr('cinder',(j%W+.5)*TS,((j/W)|0)*TS+24);ignite(j)}/* 家の中の物には、火の粉はとどかない */
+/* 奥の装置のまわりの大岩（BVOL）は、かたくて、たたいてもくだけない。まもりの光で熱すると赤くなり（S.st2.hot：マス→さめる時刻 S.t）、赤いあいだに、せいれいが水をかけると、われる（quench）。
+   水をかけるのは水のせいれい（村にいなければ、だれでも）。赤いあいだは時計の2時間（ROCKHOT） */
+/* たけのこをタップ：とる・そだてる をえらぶ。そだてる印（S.dyn[j].keep）のたけのこは、せいれいがとらず（g を0にする）、3日で竹になる */
+function takenokoPop(j){const d=S.dyn[j]||(S.dyn[j]={g:100,age:0}),left=Math.max(1,3-(d.age||0)),P=pxPop('たけのこ'),p=el('<p class="note" style="margin:0 0 10px"></p>');p.textContent='あと'+left+'日で竹になる。'+(d.keep?'いまは、そだてている。':'いまは、せいれいがとる。');P.body.appendChild(p);
+  const row=el('<div style="display:flex;gap:8px"></div>'),mk=(tx,keep)=>{const b=el('<button class="btn"></button>');b.textContent=tx;if(!!d.keep===keep)b.classList.add('pri');b.onclick=()=>{sfx('tap');if(S.obj[j]==='takenoko'){const q=S.dyn[j]||(S.dyn[j]={g:100,age:0});if(keep){q.keep=1;q.g=0}else{delete q.keep;q.g=100}dirty=true}P.close()};row.appendChild(b)};mk('とる',false);mk('そだてる',true);P.body.appendChild(row)}
+function takenokoKeepDraw(c,x,y){c.save();c.fillStyle='#6fae4a';c.fillRect(x+15,y+9,2,4);c.fillRect(x+13,y+10,2,2);c.fillRect(x+17,y+10,2,2);c.fillStyle='#a9d77a';c.fillRect(x+15,y+9,1,2);c.restore()}/* そだてる印：先に小さな葉 */
+const yuN=()=>['a','b','c'].filter(k=>S.st2&&S.st2.yuS&&S.st2.yuS[k]).length;/* 湯めぐり：だれかが入った温泉の数 */
+const ROCKHOT=120;
+const rockHard=j=>WD===1&&!S.free&&S.obj[j]==='boulder'&&BVOL.includes(j);
+const rockHot=j=>rockHard(j)&&!!(S.st2&&S.st2.hot&&S.st2.hot[j]>S.t);
+function rockHeat(j){const t=st2();(t.hot||(t.hot={}))[j]=S.t+ROCKHOT;const x=j%W,y=(j/W)|0;burstAt(x+.5,y+.5,'furn');sfxAt('cookfire',x,y);dirty=true}
+function goQuench(r,G){if(WD!==1||!S.st2||!S.st2.hot||isNight())return false;if(r.elem!=='water'&&S.res.some(q=>q.elem==='water'&&!q.hidden&&!q.coffin))return false;const ks=BVOL.filter(j=>rockHot(j)&&free('hot'+j,1));if(!ks.length)return false;const hit=k=>ks.includes(k);const j=nearest(G,q=>adjOf(q,hit)>=0,150);if(j<0)return false;const t=adjOf(j,hit);startAct(r,G,'quench',j,{key:'hot'+t,obj:t,run:true});return true}
+function rockCrack(j){const t=st2();if(t.hot)delete t.hot[j];delete S.hp['n'+j];const x=j%W,y=(j/W)|0;fxSpr('rockbreak',(x+.5)*TS,(y+.8)*TS);sfxAt('pour',x,y);for(let i=0;i<8;i++)fx.push({k:'p',x:(x+.2+Math.random()*.6)*TS,y:(y+.4)*TS,vx:(Math.random()-.5)*12,vy:-22-Math.random()*16,life:1.1,col:'#ffffff',r:2});/* 湯気 */if(typeof juiceBreak==='function')juiceBreak(j,'stone');clearObj(j);burst(j,'block');recount();checkQuest()}
+function rockHotDraw(c,x,y,now){const f=(Math.sin(now/260)+1)/2;c.save();c.globalAlpha=.45+.3*f;c.fillStyle='#ff7a3a';for(const[a,b,w,h]of[[13,11,2,3],[14,14,2,3],[16,17,2,3],[15,20,2,4],[18,19,4,2],[22,21,3,2],[8,17,3,2],[6,19,2,3]])c.fillRect(x+a,y+b,w,h);c.globalAlpha=.6+.3*f;c.fillStyle='#ffd27a';for(const[a,b]of[[14,13],[16,18],[20,20],[8,18]])c.fillRect(x+a,y+b,1,1);c.restore()}
 function goDouse(r,G){if(WD!==1||!S.st2||!S.st2.fire||isNight())return false;const ks=Object.keys(S.st2.fire).map(Number).filter(j=>free('fire'+j,1));if(!ks.length)return false;const hit=k=>ks.includes(anc(k));const j=nearest(G,q=>adjOf(q,hit)>=0,150);if(j<0)return false;const t=anc(adjOf(j,hit));startAct(r,G,'douse',j,{key:'fire'+t,obj:t,run:true});return true}/* 水の子は、昼のあいだ、燃えている物を消しにいく */
 function drawFire1(j,now){{const o=S.obj[j];if(!o)return;const z=szAt(o,j)||[1,1],x=(j%W)*TS,y=((j/W)|0)*TS,n=z[0]*2,b=y+TS*z[1]-8;
   for(let m=0;m<n;m++){const fx=Math.round(x+6+m*(TS*z[0]-12)/Math.max(1,n-1)),h=Math.round(9+Math.sin(now/110+m*1.7+j)*3+(m%2?2:0));ctx.fillStyle='#d8431c';ctx.fillRect(fx-3,b-h,6,h);ctx.fillStyle='#ff9a2e';ctx.fillRect(fx-2,b-h+3,4,h-3);ctx.fillStyle='#fff1a8';ctx.fillRect(fx-1,b-Math.round(h*.45),2,Math.round(h*.45))}
@@ -275,7 +306,7 @@ const anc=j=>{if(S.obj[j]==='part'||(S.obj[j]==='site2'&&S.ref[j]!=null))return 
 const typeAt=j=>S.obj[anc(j)];
 
 const solidOf=j=>{const o=typeAt(j);return !!(o&&BL[o]&&BL[o].solid)};
-const FRONTS=new Set(['chair','achair','sofa1','bench']);/* 正面のある家具（置くときに矢印を出す） */const ROTS={chair:4,achair:4,sofa1:4,bench:4,bed:2,yorubed:2,sandbox:2,arch:2,ltable:2,bathtub:2,slide:1,seesaw:1,swing:2,signpost:1,vane:1,oven:4,stairs_wood:5,stairs_stone:5,stairs_brick:5,slope_earth:5,cabinet:3,shelf1:3,shelf2:3,makidana:3,crate:4,wbench:4,cooktable:4,sink:4,loom:4,mill:4,smelter:4};/* 向きをかえられる家具。4：前・右・後ろ・左　3：前・右・左（右は「id>1」の絵、左はその反転）　2：横・縦　1：左右反転だけ */
+const FRONTS=new Set(['chair','achair','sofa1','bench']);/* 正面のある家具（置くときに矢印を出す） */const ROTS={chair:4,achair:4,sofa1:4,bench:4,bed:2,yorubed:2,sandbox:2,arch:2,ltable:2,bathtub:2,slide:1,seesaw:1,swing:2,signpost:1,vane:1,kazami:4,oven:4,stairs_wood:5,stairs_stone:5,stairs_brick:5,slope_earth:5,cabinet:3,shelf1:3,shelf2:3,makidana:3,crate:4,wbench:4,cooktable:4,sink:4,loom:4,mill:4,smelter:4};/* 向きをかえられる家具。4：前・右・後ろ・左　3：前・右・左（右は「id>1」の絵、左はその反転）　2：横・縦　1：左右反転だけ */
 const BEDHX=31,BEDHY=-1,BEDVY=8.5,BEDHS=.85;/* 横のベッド：寝る子の足もと（x,y）。たてのベッド：寝る子の足もとのy。BEDHS：横向きで寝るときの、せいれいの横はば。ふとんは重ねない（ベッドの上に寝る子をかく） */
 const ROTN=id=>ROTS[id]===5?4:ROTS[id]===4?4:ROTS[id]===3?3:ROTS[id]?2:1,ROTL={5:[,'手前へ','右へ','左へ','奥へ'],4:['前','右','後ろ','左'],3:['前','右','左'],2:['横','縦'],1:['そのまま','反転']};/* 5：階段の下りる向き（S.rot は 1手前 2右 3左 4奥。0は古いセーブだけ） */
 let PLROTS={};/* 置くときにえらんでいる向き（家具ごと） */
@@ -293,8 +324,14 @@ function workCells(j,id,rot){/* j：左上のマス。id・rot をわたすと�
 const workOK=j=>workCells(j).some(k=>walk(k));
 let WORKBLOCKED=[];function workBlockedList(){/* 作業するマスが、どれもふさがっている家具（流し台はのぞく）の左上のマス */const L=[];for(let j=0;j<W*H;j++){const o=S.obj[j];if(o&&o!=='sink'&&WORKF.has(o)&&!workOK(j))L.push(j)}return L}/* 作業するマスが1つでも空いているか */
 function workStand(G,j){/* 作業するマスのうち、いちばん近い行ける所（なければ -1） */let b=-1,bd=1e9;for(const k of workCells(j)){const d=G.dist[k];if(d<0||!walk(k)||d>=bd)continue;b=k;bd=d}return b}
-function walk(j){if(j<0||j>=W*H||S.ground[j]===1&&S.obj[j]!=='bridge'||STUMPB.has(j)||j===GODJ||S.fog&&fogAt(j))return false;/* 霧の中は歩かない *//* 切り株の上は歩かない */return !solidOf(j)}/* 橋の上は歩ける。浅瀬（ground 2）は歩ける（ゆっくり） */
-const wetJ=j=>S.ground[j]===1&&S.obj[j]!=='bridge'||!!S.fog&&fogAt(j);/* 歩けない水 */
+function walk(j){if(j<0||j>=W*H||S.ground[j]===1&&S.obj[j]!=='bridge'&&!windBr(j)||STUMPB.has(j)||j===GODJ||fogAt(j))return false;/* 霧の中は歩かない *//* 切り株の上は歩かない */return !solidOf(j)}/* 橋の上は歩ける。浅瀬（ground 2）は歩ける（ゆっくり） */
+/* 雲の海（風のステージ）：マップのはしにつながる ground 1 のマス。歩けない・置けない・橋はかけられるのは水と同じ。水としてのふるまい（水をくむ・つり・水あび・水べの生き物など）は waterJ で見て、雲の海ではしない */
+let SKYS=null,SKYM=null;
+function skyOf(g){const M=new Uint8Array(W*H),Q=[];const put=j=>{if(g[j]===1&&!M[j]){M[j]=1;Q.push(j)}};for(let x=0;x<W;x++){put(x);put((H-1)*W+x)}for(let y=0;y<H;y++){put(y*W);put(y*W+W-1)}
+  while(Q.length){const j=Q.pop(),x=j%W;if(x>0)put(j-1);if(x<W-1)put(j+1);if(j>=W)put(j-W);if(j<W*(H-1))put(j+W)}return M}
+function skyM(){if(WD!==WIND||!S)return null;if(SKYS===S)return SKYM;SKYS=S;SKYM=skyOf(S.ground);return SKYM}
+const skyJ=j=>{const M=skyM();return !!M&&M[j]===1},waterJ=j=>S.ground[j]===1&&!skyJ(j);/* waterJ：本物の水（池・川） */
+const wetJ=j=>S.ground[j]===1&&S.obj[j]!=='bridge'&&!windBr(j)||!!fogAt(j);/* 歩けない水 */
 const LIFT=26;/* 段差1だんの高さ（ドット）。高いマスの上の物は、これだけ上に描く */
 function hiAt(j){return S.hi?S.hi[j]|0:0}
 const SLOPES=new Set(['slope_earth']),STAIRS=new Set(['stairs_wood','stairs_stone','stairs_brick',...SLOPES]),/* 土は坂だけ、木・石・レンガは階段だけ */SDIR=[[0,1],[1,0],[0,-1],[-1,0]];/* 階段の向き：0下 1右 2上 3左（低いほう） */
@@ -319,7 +356,7 @@ const onLadder=(a,b)=>ladderLink(b,a)||ladderLink(a,b);/* ハシゴで上り下�
 function jumpEdge(a,b){return hiAt(a)!==hiAt(b)&&!stairLink(a,b)&&!stairLink(b,a)&&!ladderLink(a,b)&&!ladderLink(b,a)}/* 段差を飛ぶ所（階段で上り下りする所はちがう） */
 function zAt(x,y){/* その場所の高さ（ドット）。階段の上は、高いほうのはしから低いほうへ少しずつ下がる */const c=(y|0)*W+(x|0);if(S&&LADDERS.has(S.obj[c])){const d=ladderDir(c),ax=c%W,ay=(c/W)|0,t=d===0?y-ay:d===1?x-ax:ax+1-x;return hiAt(c)*LIFT+(d<0?0:LIFT*Math.max(0,Math.min(1,1-t)))}/* ハシゴの上：うしろの高いマスへ近いほど高い */const a=stairOf(c);if(a<0)return hiAt(c)*LIFT;const d=stairDir(a);if(d<0)return hiAt(c)*LIFT;const ax=a%W,ay=(a/W)|0,t=d===0?2*(y-ay):d===1?x-ax:d===2?ay+1-y:ax+1-x;return LIFT*hiAt(a)+LIFT*Math.max(0,Math.min(1,1-t/2))}/* 2マスで下がる（手前向きは1マス） */
 const HI_OK=new Set(['deadtree','rock','vcopper','viron','vobsid','vsilver','vgold','berry','bamboo','tree','ntree','fruit']);/* 段差を作ってよい物（自然の物） */
-const LANDSEED=w=>w===1?20261102:w===FREE?20261022:w===YAMI?20261120:20261018;
+const LANDSEED=w=>w===1?20261102:w===FREE?20261022:w===YAMI?20261120:w===WIND?20261120:20261018;
 function landMade(s,j){const o=s.obj[j];return !!s.floor[j]||o==='part'||!!o&&!!BL[o]&&!BL[o].natural&&!WEEDS.has(o)}/* 人の作った物（床・道・家具・建物）がある */
 function genRiver(s,w,o){/* 川：草原（とフリー）は北のはしから南のはしへ、火山は西のはしから東のはしへ（南がわを横切る）。村のまん中から26〜30マスはなれて、くねくね流れる。支流が1本。浅瀬（ground 2）は、本流に3か所・支流に1か所。o.ns：火山でも南北（前の川のマスをしらべるとき）。o.dry：マスをしらべるだけ */
   o=o||{};const R=mulberry(LANDSEED(w)+333),tr=w===1&&!o.ns,side0=R()<.5?-1:1,side=tr?1:side0,base=CX+side*(26+R()*4),p1=R()*6.28,p2=R()*6.28,p3=R()*6.28,riv=new Uint8Array(W*H);
@@ -340,9 +377,9 @@ function genHeights(s,w){/* 段差：なめらかなノイズから、0〜3だ�
   const ok=j=>{const x=j%W,y=(j/W)|0;if(x<2||y<2||x>=W-2||y>=H-2)return false;if(Math.max(Math.abs(x+.5-CX),Math.abs(y+.5-CY))<13)return false;if(s.floor[j])return false;const o=s.obj[j];if(o&&!HI_OK.has(o))return false;for(let b=-1;b<=1;b++)for(let a=-1;a<=1;a++)if(s.ground[j+b*W+a])return false;if(w===1&&Math.abs(x+.5-CX)<9&&y<OFF+16)return false;/* 火山：北の火口のまわりは平ら */return true};
   const oct=sc=>{const gw=Math.ceil(W/sc)+2,gh=Math.ceil(H/sc)+2,g=new Float32Array(gw*gh);for(let k=0;k<g.length;k++)g[k]=R();const sm=t=>t*t*(3-2*t);
     return (x,y)=>{const fx=x/sc,fy=y/sc,ix=Math.floor(fx),iy=Math.floor(fy),tx=sm(fx-ix),ty=sm(fy-iy),v=(a,b)=>g[(iy+b)*gw+ix+a];return (v(0,0)*(1-tx)+v(1,0)*tx)*(1-ty)+(v(0,1)*(1-tx)+v(1,1)*tx)*ty}};
-  const V=w===1,n1=oct(V?17:30),n2=oct(V?8:13),n3=oct(V?4:6),T=V?[.50,.58,.66]:[.53,.65,.79];/* 草原：大きくゆるやかな丘（3だんは少ない）。火山：こまかく、けわしい */
+  const VL=valleyOn(s,w),V=w===1,n1=oct(V?17:30),n2=oct(V?8:13),n3=oct(V?4:6),T=V?[.50,.58,.66]:[.53,.65,.79];/* 草原：大きくゆるやかな丘（3だんは少ない）。火山：こまかく、けわしい */
   for(let y=0;y<H;y++)for(let x=0;x<W;x++){const j=y*W+x,c=Math.max(Math.abs(x+.5-CX),Math.abs(y+.5-CY)),f=Math.min(1,Math.max(0,(c-13)/14)),nf=Math.min(1,Math.max(0,(CY+10-y)/50));let v=(.6*n1(x,y)+.3*n2(x,y)+.1*n3(x,y))*(.55+.45*f)+.12*f;if(V)v+=.2*nf-.08*(1-nf);/* 火山：北（火口がわ）へいくほど高い山 */
-    h[j]=v>T[2]?3:v>T[1]?2:v>T[0]?1:0}
+    h[j]=VL?valleyLv(x,y,v):v>T[2]?3:v>T[1]?2:v>T[0]?1:0}
   for(let pass=0;pass<2;pass++)for(let lv=1;lv<=HMAX;lv++){const g=h.slice();for(let y=1;y<H-1;y++)for(let x=1;x<W-1;x++){const j=y*W+x;let n=0;for(let b=-1;b<=1;b++)for(let a=-1;a<=1;a++)if((a||b)&&g[j+b*W+a]>=lv)n++;if(g[j]>=lv&&n<=2)h[j]=Math.min(h[j],lv-1);else if(g[j]<lv&&n>=6)h[j]=Math.max(h[j],lv)}}/* まわり8マスの多いほうにそろえて、ふちをまるく */
   for(let j=0;j<W*H;j++)if(h[j]&&!ok(j))h[j]=0;
   const fix=()=>{for(let it=0;it<6;it++){let ch=0;for(let y=0;y<H;y++)for(let x=0;x<W;x++){const j=y*W+x;let m=h[j];for(let b=-2;b<=2;b++)for(let a=-2;a<=2;a++){const xx=x+a,yy=y+b;if(xx<0||yy<0||xx>=W||yy>=H)continue;m=Math.min(m,h[yy*W+xx])}if(h[j]>m+1){h[j]=m+1;ch=1}}if(!ch)break}};/* 2マス以内との差は1だんまで（段と段のあいだの平らな所は2マス以上。がけが2だんつづけて見えないように） */
@@ -350,4 +387,4 @@ function genHeights(s,w){/* 段差：なめらかなノイズから、0〜3だ�
   for(let pass=0;pass<3;pass++)for(let lv=HMAX;lv>=1;lv--){const g=h.slice();for(let y=1;y<H-1;y++)for(let x=1;x<W-1;x++){const j=y*W+x,n=(g[j-1]>=lv)+(g[j+1]>=lv)+(g[j-W]>=lv)+(g[j+W]>=lv);if(g[j]>=lv&&n<2)h[j]=lv-1;else if(g[j]===lv-1&&n>=3&&ok(j))h[j]=lv}}/* ほそい所はけす、くぼみはうめる */
   fix();
   s.hi=h}
-function genLand(s,w){genRiver(s,w);genHeights(s,w)}/* 地形：川（と浅瀬）、そのあと段差 */
+function genLand(s,w){if(!valleyOn(s,w)&&w!==WIND)genRiver(s,w);/* 花の谷・風（島のあいだは雲の海）に川はない */genHeights(s,w)}/* 地形：川（と浅瀬）、そのあと段差 */

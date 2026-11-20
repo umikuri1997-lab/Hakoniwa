@@ -5,6 +5,7 @@ for(const f of ['core','data','story','world','quests','level','night'])vm.runIn
 const pick=(f,start)=>fs.readFileSync(root+'js/'+f,'utf8').split('\n').find(l=>l.startsWith(start));
 vm.runInContext(pick('build.js','const WIND_STAGE_TOYS'),c);vm.runInContext(pick('village.js','const QB='),c);
 const act=fs.readFileSync(root+'js/spirit-act.js','utf8');
+vm.runInContext('function freeTier(){return 0}function WT(){return WD===FREE?freeTier():WD}',c);/* フリーモードの、クリアした土地まで（free.js） */
 vm.runInContext(act.match(/function stageItemOK[\s\S]*?\n/)[0],c);{const L=act.split('\n'),i=L.findIndex(l=>l.startsWith('function fishLoot'));const e=L.findIndex((l,n)=>n>i&&l.startsWith('  const k=q<.31'));vm.runInContext(L.slice(i,e+1).join('\n'),c)}
 {const L=act.split('\n'),i=L.findIndex(l=>l.startsWith('  offer:{'));let k=i+1;while(!/^  [a-z]+:\{/.test(L[k]))k++;vm.runInContext('ACT2={'+L.slice(i,k).join('\n').trim().replace(/,\s*$/,'')+'}',c)}
 const run=s=>vm.runInContext(s,c);
@@ -34,5 +35,5 @@ console.log('Offering/fishing: recipe furniture only after learning');
     if(WD===0)assert.equal(wall,0,'grassland daily offering gave stone wall');else assert(wall>0,'volcano daily offering keeps stone wall')}
   console.log('Daily offering: stone wall only in the volcano')}
 // かどまつ：カミサマのかざりの交換は火山だけ
-{const src=fs.readFileSync(root+'js/ui.js','utf8'),m=src.match(/if\((WD===1&&[^{]*?)\)\{const r6=sec\('カミサマのかざり'\)/);assert(m,'DECO condition');for(const WD of [0,1,2,3,4]){run('WD='+WD+';S.lv=8');assert.equal(!!run(m[1]),WD===1,'Japanese deco WD='+WD)}
+{const src=fs.readFileSync(root+'js/ui.js','utf8'),m=src.match(/if\((WD===1&&[^{]*?)\)\{const r6=sec\(/);assert(m,'DECO condition');for(const WD of [0,1,2,3,4]){run('WD='+WD+';S.lv=8');assert.equal(!!run(m[1]),WD===1,'Japanese deco WD='+WD)}
  for(const id of ['toro','chochin','furin','ema','komainu','kadomatsu'])assert.equal(run('BL.'+id+'.w'),1,id+' from the volcano');console.log('Japanese deco: volcano only')}

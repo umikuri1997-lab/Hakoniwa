@@ -69,7 +69,7 @@ def shot(M,k,only=None,S_=64,filt=None,info=None):
     if getattr(M,'MATCAP',None):   # MATCAP='clay' など：マットキャップでかげと質感（tools/art/matcap.py）。TONE5 のかわりに
         import matcap;im=matcap.apply(im,M.MATCAP,glow=getattr(M,'GLOW',None))   # GLOW：色→光る所（かげをつけず明るく）
     elif getattr(M,'TONE5',False):   # TONE5=True：木と同じ5色のかげ（左上の光・5色・まるい面のさかいめに市松のあみかけ。tools/art/furntone.py）。家具・建物はこれ（持ち主がきめた）
-        import furntone;im=furntone.tone(im,streak=getattr(M,'STREAK',furntone.STREAK),three=getattr(M,'TONE3',False))   # TONE3：3だん・あみ少し   # STREAK：木目のすじのこさ（設計図ごとにかえられる）
+        import furntone;im=furntone.tone(im,streak=getattr(M,'STREAK',furntone.STREAK),three=getattr(M,'TONE3',False),dw=getattr(M,'DITHER',None))   # DITHER：あみかけのはば（0 で、なし）   # TONE3：3だん・あみ少し   # STREAK：木目のすじのこさ（設計図ごとにかえられる）
     if K>1:
         im=im.resize((im.width*K,im.height*K),Image.NEAREST);S_*=K;O.S=S_
         for nm_ in('LAST_ZB','LAST_IDS'):

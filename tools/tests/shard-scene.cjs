@@ -19,7 +19,7 @@ const assert=require('node:assert/strict');
   await talkOut();assert.equal(await run('S.setSh'),1,'counted once after the dialogue');assert(await run('!SHARD_OFFER&&performance.now()>=SCENEHOLD&&!sacredDirection()'),'scene released');
   assert.equal(await run('sacredStage()'),3,'a shard does not change the tree');assert.equal(await run(`SACRED_ART[Math.floor(sacredStage())]`),'story:sapling');
   /* 2つめ */
-  await run('S.shards=2;SPOT_POPS.length=0');await tap();assert(await run(`!!document.querySelector('.askyn')`),'asked before the second shard');await run(`document.querySelector('.askyn .btn.pri').click()`);/* 2つめは、ささげる前にたしかめる */await page.waitForFunction(()=>!document.querySelector('#dialog').hidden,{},{timeout:30000});await talkOut();assert.equal(await run('S.setSh'),2);
+  await run('S.shards=2;SPOT_POPS.length=0');await tap();assert(await run(`!!document.querySelector('.askyn')`),'asked before the second shard');await run(`(()=>{const b=document.querySelector('.askyn .btn.pri');b._held=1;b.click();b._held=0})()`)/* 長おしで決まるボタン */;/* 2つめは、ささげる前にたしかめる */await page.waitForFunction(()=>!document.querySelector('#dialog').hidden,{},{timeout:30000});await talkOut();assert.equal(await run('S.setSh'),2);
   /* みどりがひろがっても、2つめまでは育たない */
   await run('SPOT_POPS.length=0;recount=()=>{};GRASSN=3000');await page.waitForTimeout(600);assert(await run('sacredStage()===3&&!sacredEffect("growth")'),'green tiles alone do not grow the tree');
   /* 3つめ：場面の中で木が大きく育ち、会話なしで数える。育った木はそのまま */
