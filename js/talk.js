@@ -5,7 +5,7 @@
    いつでも話せる。たのしさ+10（TALKFUN）は、1日に1回（r.care.talk、callDay）。
    きょうあったこと：作業がおわったときに dayNote でおぼえる（r.dl：{d:callDay, e:[[種類,なに],...]}）。 */
 const TALKFUN=10,DLMAX=16;
-const DLFUN=new Set(['play','chat','fish','bathe','critwatch','sunset','rainjoy','eat','admire','ownseat']);/* たのしかったことにする物 */
+const DLFUN=new Set(['splay','play','chat','fish','bathe','critwatch','sunset','rainjoy','eat','admire','ownseat']);/* たのしかったことにする物 */
 function dayNote(r,a){if(!r||!a||IS_STORY_REPLAY||a.shade)return;let v='';const t=a.type;
   if(t==='play')v=a.what||'';else if(t==='chat'||t==='tag'){const p=S.res.find(q=>q.id===a.partner);if(!p)return;v=p.name}
   else if(t==='eat'){v=(a.items||[])[0]||'';if(!FOODS[v])return}else if(t==='cook'){v=r.cing&&r.cing.rec||'';if(!FOODS[v])return}
@@ -13,6 +13,7 @@ function dayNote(r,a){if(!r||!a||IS_STORY_REPLAY||a.shade)return;let v='';const 
   else if(t==='harvest'){const d=S.dyn[a.obj],o=S.obj[a.obj];v=o==='farm'?(d&&cropK(d)):o==='fruit'?'apple':'berry';if(!FOODS[v]&&!(CROPS[v]))return}
   else if(t==='plant'){const d=S.dyn[a.obj];v=d&&d.plant||'';if(!BL[v])return}
   else if(t==='admire'){v=S.obj[a.obj]||'';if(!BL[v])return}
+  else if(t==='splay'){v=a.k||'';if(!v)return}/* 季節の遊び（season-play.js） */
   else if(!['fish','bathe','critwatch','sunset','rainjoy','chop','mine','weed','water','till','repair','ownseat'].includes(t))return;
   const d=callDay();if(!r.dl||r.dl.d!==d)r.dl={d,e:[]};const E=r.dl.e;for(let i=E.length-1;i>=0;i--)if(E[i][0]===t&&E[i][1]===v)E.splice(i,1);E.push([t,v]);if(E.length>DLMAX)E.shift();dyWork(r,t,v)}
 const dlToday=r=>r.dl&&r.dl.d===callDay()?r.dl.e:[];
@@ -53,9 +54,14 @@ const DAYL={
   water:[()=>['きょうは、畑に水をやったよ。','作物が、ごくごく飲んでるみたいだった。'],()=>['水やりのあと、葉っぱがきらきらしてたよ。','きれいだったなあ。']],
   till:[()=>['きょうは、畑をたがやしたよ。','ふかふかの土になったんだ。'],()=>['土をたがやすとね、','あったかいにおいがするんだよ。']],
   repair:[()=>['きょうは、こわれた所を直したよ。','これで、またみんなを守れるね。'],()=>['こわれた所、ちゃんと直したんだ。','前より、じょうぶになったかも。']],
-  ownseat:[()=>['きょうは、じぶんの席でひと休みしたよ。','あそこにすわると、ほっとするんだ。'],()=>['じぶんの席って、いいね。','すわると、なんだかおちつくんだ。']]};
+  ownseat:[()=>['きょうは、じぶんの席でひと休みしたよ。','あそこにすわると、ほっとするんだ。'],()=>['じぶんの席って、いいね。','すわると、なんだかおちつくんだ。']],
+  splay_snowball:[()=>['#joy|きょうは、雪合戦したよ！','雪玉、いっぱい当たっちゃった。'],()=>['雪玉をまるめて、えいって投げたんだ。','つめたいけど、たのしかったな。']],
+  splay_kama:[()=>['きょうは、みんなでかまくらを作ったよ。','中に入ると、ふしぎとあったかいんだ。'],()=>['雪をつんで、かためて、かまくらにしたんだ。','#joy|できたとき、みんなでばんざいしたよ！']],
+  splay_mizu:[()=>['#joy|きょうは、水あそびしたよ！','ぱしゃぱしゃって、びしょびしょになっちゃった。'],()=>['水べで、水をかけあったんだ。','あついから、つめたくてきもちよかったよ。']],
+  splay_hanami:[()=>['きょうは、お花見をしたよ。','お花のそばで食べると、おいしいね。'],()=>['花びらが、ひらひらおちてきてね。','ずっと見ていたくなったんだ。']],
+  splay_leaf:[()=>['#joy|きょうは、落ち葉の山にとびこんだよ！','かさかさって、いい音がしたんだ。'],()=>['落ち葉をあつめて、ふわってまきあげたよ。','赤や黄色で、きれいだったな。']]};
 function dayLine(r,[t,v]){let k=t,n='';
-  if(t==='play'){if(v==='flower')k='flower';else{n=tName(v)||'遊び家具';if(r.like===v)k='playfav'}}
+  if(t==='splay')k='splay_'+v;else if(t==='play'){if(v==='flower')k='flower';else{n=tName(v)||'遊び家具';if(r.like===v)k='playfav'}}
   else if(t==='eat'){n=fName(v);if(v===favDish(r))k='eatfav'}else if(t==='cook'||t==='harvest')n=fName(v);else if(t==='chat'||t==='tag')n=v;else if(v)n=tName(v);
   const F=DAYL[k]||[];if(!F.length)return null;const f=tkFresh('d:'+k,F);return f?f(n,r):null}
 /* いまのようす：u は、ほかの話題より先 */
