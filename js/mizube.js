@@ -20,6 +20,7 @@ BL.dock={hp:5,brk:1,fix:4,fixm:{wood:4},name:'船着き場',kind:'build',mat:{wo
 BL.raft={hp:5,brk:1,fix:4,fixm:{wood:4},name:'いかだ乗り場',kind:'build',mat:{wood:15},pc:0,time:60,maker:'water',lv:1,w:MIZU,solid:1,play:{pt:5,pw:2,fun:20,dur:50,cap:1,adj:1},attr:{water:1},desc:'水路をいかだで下って遊ぶ。たのしさ+20'};
 BL.mzgateb={name:'こわれた水門',solid:1,natural:1};BL.mzgate={name:'水門',solid:1,natural:1};BL.mzchest={name:'しずんだ宝箱',solid:1,natural:1,anim:1};
 TERRA.add('canal');for(const id of['canal','dock','raft'])GNOREC.add(id);BUILDS.splice(BUILDS.indexOf('bridge')+1,0,'dock','raft');STAGEONLY.dock=MIZU;STAGEONLY.raft=MIZU;
+FAVTOY.water.push('raft');FAVTOY.wind.push('raft');/* 川くだりは、水のせいれいの好きな遊び場。風のせいれいは、どの遊び場も好き */
 if(typeof ACT_LBL!=='undefined')Object.assign(ACT_LBL,{mzgate:'水門を直している',mzopen:'宝箱をあけている',mzraft:'川くだりをしている'});
 
 function mzOn(){return !!S&&WD===MIZU&&!!S.mz}

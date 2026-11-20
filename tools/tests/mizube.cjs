@@ -65,7 +65,11 @@ const assert=require('node:assert/strict');
     const end=C[C.length-1];return {rode,fun:Math.round(r.fun),f,at:Math.abs(r.x-(end%W+.5))<1.5&&Math.abs(r.y-(((end/W)|0)+.5))<1.5,toy:!!r.lastToy}})()`);
   assert.equal(p4.rode,true);assert.ok(p4.f>=40,'the longest course is used: '+p4.f);assert.ok(p4.fun>=10+p4.f-5,'fun went up by the rafting fun: '+JSON.stringify(p4));assert.equal(p4.toy,true);
   console.log('Mizube: a spirit rides the raft down the canal');
-  /* 11. 水路と池のあたりを映して、しばらく動かしても、エラーが出ない */
+  /* 11. セーブして読みこんでも、水のとどき方・ひらいた水門・晴れた所は、そのまま */
+  const sv=await J(`(()=>{const a=[MZC.wetN,mzOpenN(),S.mz.clr.reduce((n,v)=>n+v,0)];const ok=save();LIVE[3]=null;continueGame(load(3));return {ok,a,b:[MZC.wetN,mzOpenN(),S.mz.clr.reduce((n,v)=>n+v,0)],wd:WD,far:fogAt(5*W+5)}})()`);
+  assert.equal(sv.ok,true);assert.deepEqual(sv.b,sv.a);assert.equal(sv.wd,3);assert.equal(sv.far,true);
+  console.log('Mizube: the canals, gates and cleared mist survive save and load');
+  /* 12. 水路と池のあたりを映して、しばらく動かしても、エラーが出ない */
   await run(`centerOn(CX*TS,(CY-30)*TS)`);await page.waitForTimeout(1500);await run(`centerOn(CX*TS,(CY-2)*TS)`);await page.waitForTimeout(1500);
   assert.deepEqual(errors,[]);await browser.close();
 })().catch(e=>{console.error(e);process.exit(1)});
