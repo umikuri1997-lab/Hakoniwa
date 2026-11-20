@@ -287,7 +287,7 @@ function reunionTick(r,day){if(!r.reTalk||!day||sevBusy()||r.hidden)return;const
 const QR_P=.05,QR_GAP=7,QR_FUN=1.2;
 const QR_MEM={play:'#cry|@Wの順番で、けんかしたよね……。つぎの日、ちゃんと仲なおりできたのに……。',eat:'#cry|ごはんのことで、けんかしたよね……。ちゃんと、仲なおりしたのに……。',guard:'#cry|夜の持ち場のことで、けんかしたよね……。もっと、いっしょに守りたかった……。',chat:'#cry|言いかたで、けんかしたこともあったね……。あのあと、もっとなかよくなれたのに……。'};
 function qrPair(a,b){const Q=S&&S.qr;return !!Q&&!!a&&!!b&&(Q.a===a.id&&Q.b===b.id||Q.a===b.id&&Q.b===a.id)}
-function qrRoll(){if(S.qr||S.free||IS_STORY_REPLAY||preBedCalm()||!S.bond)return;const L=S.qrLast||(S.qrLast={}),ks=Object.keys(S.bond).filter(k=>S.bond[k]>=BOND_TALK&&dayNo()-(L[k]??-99)>=QR_GAP);
+function qrRoll(){if(S.qr||IS_STORY_REPLAY||preBedCalm()||!S.bond)return;const L=S.qrLast||(S.qrLast={}),ks=Object.keys(S.bond).filter(k=>S.bond[k]>=BOND_TALK&&dayNo()-(L[k]??-99)>=QR_GAP);
   for(let i=ks.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[ks[i],ks[j]]=[ks[j],ks[i]]}
   for(const k of ks){const p=bondPair(k);if(!p||p.some(r=>r.hidden||griefOn(r)||storyCalled(r)))continue;if(Math.random()>=QR_P)continue;
     const did=(S.bondDid||{})[k]||'',why=/^play:/.test(did)?'play':did==='eat'?'eat':did==='guard'?'guard':'chat',w=why==='play'&&BL[did.slice(5)]?did.slice(5):null,[a,b]=Math.random()<.5?p:[p[1],p[0]];

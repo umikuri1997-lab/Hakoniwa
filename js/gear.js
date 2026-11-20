@@ -115,7 +115,7 @@ function oreWakeTick(){if(OREWAKEON||!S||WD!==1||S.free||GIFT_ACTIVE||camAnim||!
   musicDuck(2600);if(tj==null){show();return}camAnim=OREWAKECAM={fz:cam.z,tz:Math.min(cam.z,1.6),fx:back.x,fy:back.y,tx:(tj%W+.5)*TS,ty:(((tj/W)|0)+.5)*TS,t:0,dur:1.6,done:show}}
 function oreWakeReset(){if(OREWAKEON){if(OREWAKECAM&&camAnim===OREWAKECAM)camAnim=null;/* 旧い村のカメラの動きを、新しい村にもちこさない（おわりの処理は、ここでかたづけるので、よばなくてよい） */OREWAKECAM=null;OREWAKEON=false;GIFT_ACTIVE=false;document.querySelectorAll('.idea-reveal[aria-label="鉱脈が目をさました"]').forEach(e=>e.remove())}}/* 村を切りかえたとき */
 /* 毎朝：目をさました鉱石の鉱脈が、岩のそばの空いた地面にふえる（村の中はのぞく） */
-function veinMorning(){if(!S||WD!==1||S.free)return;if(IS_STORY_REPLAY||typeof MEMRUN!=='undefined'&&MEMRUN||typeof NOSAVE!=='undefined'&&NOSAVE)return;const k=oreStage();if(!k)return;const kinds=VEIN_IDS.filter(v=>oreOn(VEINS[v]));if(!kinds.length)return;
+function veinMorning(){if(!S||!VOLK())return;if(IS_STORY_REPLAY||typeof MEMRUN!=='undefined'&&MEMRUN||typeof NOSAVE!=='undefined'&&NOSAVE)return;const k=oreStage();if(!k)return;const kinds=VEIN_IDS.filter(v=>oreOn(VEINS[v]));if(!kinds.length)return;
   let have=0;for(let j=0;j<W*H;j++)if(VEINS[S.obj[j]]&&S.dyn[j]&&S.dyn[j].vg)have++;let n=Math.min(OREWAKE[k-1].day,VEIN_GROW_MAX-have);if(n<=0)return;
   const okC=j=>{const x=j%W,y=(j/W)|0;return x>0&&y>0&&x<W-1&&y<H-1&&!S.obj[j]&&!S.floor[j]&&S.ground[j]===0&&!VILL[j]&&walk(j)&&!(Math.abs(x+.5-CX)<7&&Math.abs(y+.5-CY)<7)&&!S.res.some(r=>(r.x|0)===x&&(r.y|0)===y)};
   const rk=q=>S.obj[q]==='rock'||!!VEINS[S.obj[q]];let C=[];for(let j=0;j<W*H;j++)if(okC(j)&&[j-1,j+1,j-W,j+W].some(rk))C.push(j);if(!C.length)for(let j=0;j<W*H;j+=7)if(okC(j))C.push(j);
@@ -124,12 +124,12 @@ function veinMorning(){if(!S||WD!==1||S.free)return;if(IS_STORY_REPLAY||typeof M
 function vreqList(){const q=S.vreq;if(!q)return [];const L=[];for(const k in q){if(VEINS[S.obj[+k]])L.push(+k);else delete q[k]}return L}
 /* はじめての鉱石で、そうびのレシピを思いつく（火山だけ）。idea のある物は、はじめてその素材を手に入れたとき */
 function gearIdea(material,crafted,carried=0){
-  if(!S||S.free||IS_STORY_REPLAY)return;
+  if(!S||IS_STORY_REPLAY)return;
   const known=S.recipes||(S.recipes={});
   const acquired=k=>Math.max(Math.max(S.gotMat?.[k]||0,S.mat[k]||0)+(k===material?carried:0),crafted===k?1:0);
   const source=k=>ORE_OF[k]||k;
   const tier={};
-  const ore=WD===1&&GEAR_ORES.some(k=>acquired(k)>0);
+  const ore=VOLK()&&GEAR_ORES.some(k=>acquired(k)>0);
   for(const id of GEAR_IDS){
     const b=BL[id],g=b.g;
     if(g.sp||!b.mat||g.gr&&WD!==0||!g.gr&&!b.idea&&WD!==1)continue;

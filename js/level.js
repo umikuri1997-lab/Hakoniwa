@@ -53,16 +53,16 @@ function lvShow(l,bonus,opens){
   if(STATUE>=0)for(let n=0;n<3;n++)setTimeout(()=>burst(STATUE,'furn','none'),n*260);
 }
 const LEVELUP_ITEMS=new Set(['bridge','path','woodpath','ladder_wood','ladder_bamboo','slope_earth','stairs_wood','stairs_stone','stairs_brick','gate','hwall','bamboowall','door','logfence','bamboofence','floor','brickfloor','stonefloor','window','plasterwall','gravel','wall','sdoor','logwall','brick','brickwall','carpet','curtain1','stone','stonegate','logdoor','loggate','kamizo','bell','bedge','onsen','signw','signs','andon','cooktable','lurestatue','mato','picnic','taiko','chadogu','hokora']);
-const levelUpItemsAt=n=>Object.keys(BL).filter(id=>LEVELUP_ITEMS.has(id)&&BL[id].lv===n&&!BL[id].offerOnly&&(BL[id].w||0)<=WD);
-const visibleLevelRewardsAt=n=>levelUpItemsAt(n).filter(id=>BL[id].kind!=='furn'||!S.free);/* フリーモードは、家具のレシピを村レベルでおぼえない */
+const levelUpItemsAt=n=>Object.keys(BL).filter(id=>LEVELUP_ITEMS.has(id)&&BL[id].lv===n&&!BL[id].offerOnly&&(BL[id].w||0)<=WT());
+const visibleLevelRewardsAt=n=>levelUpItemsAt(n).filter(id=>!S.free||stageItemOK(id));/* フリーモード：守りの物・まだ開いていない土地の物は、おぼえない */
 function nextLevelItems(n){/* 村レベル n でおぼえる物（まだおぼえていない物・このステージで使える物だけ）。建物・植える物は BL の lv で使えるようになる（learnedIn と同じ） */const a=visibleLevelRewardsAt(n);for(const id in BL){const b=BL[id];if((b.kind==='build'||b.kind==='plant')&&b.lv===n&&!QB.has(id)&&!b.offerOnly)a.push(id)}return [...new Set(a)].filter(id=>stageItemOK(id)&&!(S.recipes||{})[id]&&!(S.unlocked||{})[id])}
 function nextLvHtml(n){/* 村のようす：つぎのレベルでおぼえる物のアイコン */const L=nextLevelItems(n);if(!L.length)return '';const e=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]);return '<div class="vlNx"><small>レベル'+n+'でおぼえる</small>'+L.map(id=>'<span><img alt="" src="'+iconURL(id)+'">'+e(iname(id))+'</span>').join('')+'</div>'}
 function checkLevel(){
   const l=vLv();if(S.lv>l)return;if(l>(S.lv||1)&&calmNow())return;/* 再会のあとは、レベルアップの知らせを少しまつ *//* 必要なパワーをふやしても、いまの村レベルは下げない */const old=S.lv||1,priorUnlocks={...(S.unlocked||{})},priorRecipes={...(S.recipes||{})};
-  for(let n=2;n<=l;n++)for(const id of visibleLevelRewardsAt(n)){if(BL[id].kind==='block')S.unlocked[id]=true;else if(BL[id].kind==='furn'&&!S.free){S.recipes||(S.recipes={});S.recipes[id]=true}}
+  for(let n=2;n<=l;n++)for(const id of visibleLevelRewardsAt(n)){if(BL[id].kind==='block')S.unlocked[id]=true;else if(BL[id].kind==='furn'){S.recipes||(S.recipes={});S.recipes[id]=true}}
   if(l>=2)S.unlocked.path=true;
   if(old<13&&l>=13)setTimeout(()=>toast('家の屋根の色を、えらべるようになった','good'),1500);/* 屋根の色（家をタップしてえらぶ） */
-  if(l>=4&&!S.free){S.unlocked.window=true;S.recipes||(S.recipes={});S.guardianIdeas||(S.guardianIdeas={});S.recipes.window=true;S.guardianIdeas.window=true}
+  if(l>=4){S.unlocked.window=true;S.recipes||(S.recipes={});S.guardianIdeas||(S.guardianIdeas={});S.recipes.window=true;S.guardianIdeas.window=true}
   if(l>old){sfx('level');const allOpen=[];let allBonus=0;for(let n=old+1;n<=l;n++){const bonus=0;const opens=visibleLevelRewardsAt(n).filter(id=>BL[id].kind==='block'?!priorUnlocks[id]:!priorRecipes[id]);allOpen.push(...opens);allBonus+=bonus}
     S.lv=l;memo('house','村レベル'+l+'になった');renderPalette();if(sheet){if(LVQ){LVQ[1]+=allBonus;LVQ[2].push(...allOpen);LVQ[0]=l}else LVQ=[l,allBonus,allOpen]}else lvShow(l,allBonus,allOpen);
   }else S.lv=l;

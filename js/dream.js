@@ -8,7 +8,7 @@ const DREAMP=.3,DREAMDAYS=3,DREAMWISH=30,DREAMFUN=10,DREAMBOND=3;
 const DREAMSKY=[['ゆうべ、空をとぶゆめを見たんだ。','村が、おもちゃみたいに小さく見えたよ。'],['ゆうべ、雲の上でおひるねするゆめを見たんだ。','#joy|ふわふわで、とっても気持ちよかったよ。'],['ゆうべ、星をあつめるゆめを見たんだ。','ポケットが、きらきらでいっぱいになったよ。'],['ゆうべ、大きな木の上に村があるゆめを見たんだ。','どこまでも、遠くが見えたんだよ。']];
 function dreamWishPick(r){/* まだ村にない、いま作れる家具（好きな家具は、こまりごとで聞くので、べつの物） */const like=typeof likeF==='function'?likeF(r):null;
   const L=FURN.filter(id=>{const b=BL[id];return b&&b.kind==='furn'&&!b.offerOnly&&id!==like&&!cnt(id)&&!inv(id)&&recipeKnown(id)&&lvOK(id)&&!(S.orders||[]).some(o=>o.type===id)&&stageItemOK(id)});return L.length?pick(L):null}
-function dreamMorning(){if(!S||S.free||IS_STORY_REPLAY)return;const D=S.dream;if(D&&dayNo()-D.day>=DREAMDAYS)S.dream=null;if(S.dream)return;
+function dreamMorning(){if(!S||IS_STORY_REPLAY)return;const D=S.dream;if(D&&dayNo()-D.day>=DREAMDAYS)S.dream=null;if(S.dream)return;
   const C=S.res.filter(r=>!r.hidden&&(r.wakeStretch||r.act&&r.act.type==='sleep'));/* 夜にねていた子 */if(!C.length||Math.random()>=DREAMP)return;const r=pick(C),m=bestMate(r),f=dreamWishPick(r),q=Math.random();
   let k='sky';if(m&&S.res.includes(m)&&q<.35)k='mate';else if(f&&q<.8)k='wish';
   S.dream={id:r.id,k,day:dayNo(),f:k==='wish'?f:null,m:k==='mate'?m.id:null,sky:k==='sky'?(Math.random()*DREAMSKY.length)|0:null};
