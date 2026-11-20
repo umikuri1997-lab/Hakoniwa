@@ -7,19 +7,28 @@
 #      面が --faces（3000）より多い物は、へらす（fast_simplification。写すのが重くなるため）。
 #   4) ならべた絵（grid.png。正面から見た形と番号）を出す。名前は、絵を見てきめ、--names でもう1回切りわける。
 #   上の向き（--up auto）：ほかの2つの向きのまん中が0に近く、その向きのいちばん下が0に近い向き（トリポの FBX は y、前のは z）。
+#   --sub 0.003：三角形を（いちばん長い辺の0.3%まで）こまかく分けてから、--tex の絵の色をとる（小さな色の所をのこす）。
+#   --keepuv：形はもとのまま（へらさない・分けない）で、UV とテクスチャの絵をのこす（色は写すときにドットごとに絵からとる。blueprint の model_tris）。--tex の絵が要る。
 #   --join 9+12：はなれて切れた物を1つにまとめる（番号は grid.png の番号）。
 #   --wall：トリポが物を、ゆかではなく、たての壁のように（絵と同じならびで）ならべたとき。正面から見て重なる部品を1つにし、上の行から順にならべる。
 #   ならびは、手前の列から、左から右（トリポの3×3のならびなら、プロンプトの1・2・3…の順にならないことがあるので、絵で見てたしかめる）。
 import sys,os,subprocess,argparse,numpy as np,trimesh
 from PIL import Image,ImageDraw
-ap=argparse.ArgumentParser();ap.add_argument('model');ap.add_argument('out');ap.add_argument('--tex');ap.add_argument('--up',default='auto');ap.add_argument('--names');ap.add_argument('--faces',type=int,default=3000);ap.add_argument('--wall',action='store_true');ap.add_argument('--join')
+ap=argparse.ArgumentParser();ap.add_argument('model');ap.add_argument('out');ap.add_argument('--tex');ap.add_argument('--up',default='auto');ap.add_argument('--names');ap.add_argument('--faces',type=int,default=3000);ap.add_argument('--wall',action='store_true');ap.add_argument('--join');ap.add_argument('--sub',type=float,default=0);ap.add_argument('--keepuv',action='store_true')
 A=ap.parse_args();os.makedirs(A.out,exist_ok=True)
 src=A.model
 if src.lower().endswith('.fbx'):src=os.path.join(A.out,'_all.glb');subprocess.run(['assimp','export',A.model,src],check=True,capture_output=True)
 gs=list(trimesh.load(src,force='scene').dump()) if not src.lower().endswith('.obj') else [trimesh.load(src,force='mesh')]
 g=trimesh.util.concatenate(gs) if len(gs)>1 else gs[0]
 V=np.asarray(g.vertices,float);F=np.asarray(g.faces);vis=g.visual;vcol=None
-if A.tex and getattr(vis,'uv',None) is not None:
+if A.sub and A.tex and getattr(vis,'uv',None) is not None:   # --sub 0.003：三角形をこまかく分けてから、絵の色をとる（色は点ごとにつくので、本の背・もようなどの小さな色が、点のあいだにおちないように）
+    from trimesh.remesh import subdivide_to_size
+    uv0=np.asarray(vis.uv);v_,f_,fi_=subdivide_to_size(V,F,max_edge=A.sub*float(np.ptp(V,0).max()),max_iter=10,return_index=True)
+    tid=np.zeros(len(v_),int);tid[f_.ravel()]=np.repeat(fi_,3);bc=trimesh.triangles.points_to_barycentric(V[F[tid]],v_)
+    uv=(uv0[F[tid]]*bc[:,:,None]).sum(1);V,F=v_,f_;g=trimesh.Trimesh(V,F,process=False)
+    tex=np.asarray(Image.open(A.tex).convert('RGB'));H,W=tex.shape[:2]
+    vcol=tex[np.clip((1-uv[:,1]%1)*H,0,H-1).astype(int),np.clip((uv[:,0]%1)*W,0,W-1).astype(int)]
+elif A.tex and getattr(vis,'uv',None) is not None:
     tex=np.asarray(Image.open(A.tex).convert('RGB'));H,W=tex.shape[:2];uv=np.asarray(vis.uv)
     vcol=tex[np.clip((1-uv[:,1]%1)*H,0,H-1).astype(int),np.clip((uv[:,0]%1)*W,0,W-1).astype(int)]
 elif getattr(vis,'kind',None)=='vertex':vcol=np.asarray(vis.vertex_colors)[:,:3]
@@ -61,6 +70,12 @@ for k,fi in enumerate(objs):
     out=np.c_[v[:,0],v[:,2],-v[:,1]]   # glTF：x 右・y 上・+z 手前
     nm=(names[k] if names else 'obj%02d'%k)
     tm=trimesh.Trimesh(out,mp[F[fi]],vertex_colors=np.c_[vcol[vi],np.full(len(vi),255)],process=False)
+    if A.keepuv:   # もとの形のまま、UV とテクスチャ
+        tm=trimesh.Trimesh(out,mp[F[fi]],process=False)
+        tm.visual=trimesh.visual.TextureVisuals(uv=np.asarray(vis.uv)[vi],material=trimesh.visual.material.PBRMaterial(baseColorTexture=Image.new('RGB',(1,1),(255,255,255))))   # 絵は1つ（out/tex.png）にまとめ、glb には1ドットの絵だけ（UV をのこすため）
+        tm.export(os.path.join(A.out,(names[k] if names else 'obj%02d'%k)+'.glb'));ims.append(Image.new('RGB',(180,180),(150,190,120)))
+        if not os.path.exists(os.path.join(A.out,'tex.png')):Image.open(A.tex).convert('RGB').save(os.path.join(A.out,'tex.png'))
+        continue
     if len(tm.faces)>A.faces:   # 面がおおすぎる物は、へらす（写すのが重く、メモリがたりなくなる）。色は、いちばん近いもとの点から
         from scipy.spatial import cKDTree
         sm=tm.simplify_quadric_decimation(face_count=A.faces);_,ni=cKDTree(out).query(sm.vertices)

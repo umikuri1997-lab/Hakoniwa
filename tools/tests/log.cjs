@@ -1,0 +1,21 @@
+/* ログ（log.js）：エラーはいつも、くわしいログ（せいれい・会話・目標）は入りのときだけのこる。ファイル名:行がのこる。設定の画面とポップアップが出る */
+const assert=require('node:assert/strict');
+(async()=>{const {browser,page,run,errors}=await require('../sim/boot.cjs')();
+  await run(`document.querySelector('#dialog').hidden=true;S.introSeen=true;S.flags.tapped=1;S.hold=0;lgClear();lgSetV(false)`);
+  await page.waitForTimeout(1500);
+  assert.equal(await run(`LOGB.filter(l=>/\\[せいれい\\]/.test(l)).length`),0,'detail lines must not be kept while the detail log is off');
+  await run(`lgSetV(true);S.speed=3`);await page.waitForTimeout(6000);
+  const n=JSON.parse(await run(`JSON.stringify({sp:LOGB.filter(l=>/\\[せいれい\\]/.test(l)).length,q:LOGB.filter(l=>/\\[クエスト\\]/.test(l)).length,s:LOGB.find(l=>/はじめる/.test(l))||''})`));
+  assert.ok(n.sp>0,'spirit actions must be logged');assert.ok(n.q>0,'quest state must be logged');assert.match(n.s,/← \S+ [\w-]+\.js:\d+:\d+/,'the caller file:line must be logged');
+  console.log('Log: spirit and quest lines are kept with the caller',n.s.slice(0,140));
+  await run(`setTimeout(()=>{null.boom()},0)`);await page.waitForTimeout(300);
+  const er=await run(`LOGB.filter(l=>/\\[エラー\\]/.test(l)).join('\\n')`);assert.match(er,/window: .* \| .*:\d+:\d+/,'an uncaught error must be logged with its place');
+  assert.ok((await run(`localStorage.getItem(LOGKEY)||''`)).includes('[エラー]'),'errors must be kept in localStorage at once');
+  console.log('Log: an uncaught error is kept',er.slice(0,160));
+  errors.splice(0,errors.length,...errors.filter(e=>!/boom/.test(e)));
+  await run(`lgSetV(false);openSheet('menu','settings')`);await page.waitForTimeout(300);
+  assert.ok(await run(`[...document.querySelectorAll('.sec h3')].some(h=>h.textContent==='ログ')`),'settings must show the log section');
+  await run(`lgPop()`);assert.ok(await run(`!!document.querySelector('.pxcard pre')&&document.querySelector('.pxcard pre').textContent.length>0`));
+  console.log('Log: settings section and popup open');
+  assert.deepEqual(errors,[]);await browser.close();
+})().catch(e=>{console.error(e);process.exit(1)});
