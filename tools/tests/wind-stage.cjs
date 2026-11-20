@@ -75,8 +75,8 @@ const assert=require('node:assert/strict');
   const d=JSON.parse(await run(`(()=>{const n0=skyM().reduce((a,v)=>a+v,0),w0=JSON.stringify(S.wind);save();LIVE[WIND]=null;const L=loadStage(WIND);continueGame(L);for(const id of ['#title','#maps','#pro','#dialog'])document.querySelector(id).hidden=true;return JSON.stringify({wd:WD,name:S.res[0].name,same:skyM().reduce((a,v)=>a+v,0)===n0,wind:JSON.stringify(S.wind)===w0,open:windOpenN(),q:QUESTS[S.quest].id,writer:DYWRITER(),hay:S.res.some(r=>r.name===HAYATE)})})()`));
   console.log(JSON.stringify(d));
   assert.equal(d.wd,4);assert.equal(d.name,'カザネ');assert.ok(d.same);assert.ok(d.wind,'風穴とうかんだ島がのこる');assert.equal(d.open,1);assert.equal(d.q,'rides2');assert.ok(d.hay,'ハヤテものこる');assert.equal(d.writer,'カザネ');
-  /* マップえらび：風のカードは「つづきから」。水・土は、ひらかない */
+  /* マップえらび：風のカードは「つづきから」。土は、ひらかない（水は試作のあいだ、いつでも入れる） */
   const e=JSON.parse(await run(`(()=>{save();showMaps();const C=k=>document.querySelector('#mList .wcard[data-k="'+k+'"]'),B=k=>[...C(k).querySelectorAll('.wbtns button')].map(x=>x.textContent).join('/');const o={w:B(4),w2:B(2),w3:B(3),open:C(4).classList.contains('open'),name:C(4).querySelector('h3').textContent};document.querySelector('#maps').hidden=true;return JSON.stringify(o)})()`));
   console.log(JSON.stringify(e));
-  assert.equal(e.w,'つづきから/はじめから');assert.equal(e.w2,'');assert.equal(e.w3,'');assert.ok(e.open);assert.equal(e.name,'風のやんだ空の村');
+  assert.equal(e.w,'つづきから/はじめから');assert.equal(e.w2,'');assert.ok(e.w3,'水は試作のあいだ入れる');assert.ok(e.open);assert.equal(e.name,'風のやんだ空の村');
   assert.deepEqual(errors,[]);await browser.close();console.log('wind-stage ok')})().catch(e=>{console.error(e);process.exit(1)});
