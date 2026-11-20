@@ -105,8 +105,8 @@ function houseWhy(j0){const isB=j=>{const t=typeAt(j);return t!=='wall'&&t!=='sd
   const comp=new Set([j0]),q=[j0];while(q.length&&comp.size<600){const j=q.pop(),x=j%W,y=(j/W)|0;for(let b=-1;b<=1;b++)for(let a=-1;a<=1;a++){const k=(y+b)*W+x+a;if(k>=0&&k<W*H&&!comp.has(k)&&isB(k)){comp.add(k);q.push(k)}}}
   if([...comp].some(j=>decayed(j)))return 'まだ家になっていません。朽ちた壁があります';
   if(![...comp].some(j=>HOME_DOORS.has(S.obj[j])))return 'まだ家になっていません。ドアがありません';
-  if([...comp].some(j=>{const x=j%W,y=(j/W)|0;for(let b=-1;b<=1;b++)for(let a=-1;a<=1;a++){const t=typeAt((y+b)*W+x+a);if(t==='wall'||t==='sdoor'||FENCE_IDS.has(t))return true}return false}))return 'まだ家になっていません。かべにすきまがあるか、石の塀や柵がまざっています';
-  return 'まだ家になっていません。かべにすきまがあるか、中が広すぎます'}/* 家にならない理由 */
+  if([...comp].some(j=>{const x=j%W,y=(j/W)|0;for(let b=-1;b<=1;b++)for(let a=-1;a<=1;a++){const t=typeAt((y+b)*W+x+a);if(t==='wall'||t==='sdoor'||FENCE_IDS.has(t))return true}return false}))return 'まだ家になっていません。壁にすきまがあるか、石の塀や柵がまざっています';
+  return 'まだ家になっていません。壁にすきまがあるか、中が広すぎます'}/* 家にならない理由 */
 const GLOWM=60,GLOWC=new Map();/* 家の光の絵（家の形をぼかしたもの）。家の形ごとに1回だけ作る */
 function houseGlow(h){const key=[...h.set].join(',');let g=GLOWC.get(key);if(g)return g;if(GLOWC.size>40)GLOWC.clear();
   const w=(h.x1-h.x0+1)*TS+GLOWM*2,hh=(h.y1-h.y0+1)*TS+GLOWM*2,D=w+hh;g=document.createElement('canvas');g.width=w;g.height=hh;const c=g.getContext('2d');
