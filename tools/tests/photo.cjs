@@ -55,5 +55,8 @@ const assert=require('node:assert/strict');
   /* マップえらびに村の名前 */
   const mp=await run(`(()=>{save();showMaps();return document.querySelector('#mList').textContent})()`);assert.ok(mp.includes('こもれびABC1村'),'map card shows the village name');
   console.log('Village name: shown on the map select');
+  /* はじめからにした同じ土地の、前の村の写真は、新しい村の日記に出さない（QA NEW-06） */
+  {const o=JSON.parse(await run(`(()=>{const vk=S.vk,old=S.vkOld,n=newState(0).vk;const r={own:!!vk&&!old,newKey:!!n&&n!==vk,mine:phMine({v:vk},null),other:phMine({v:'old'},null),legacy:phMine({},null),ref:phMine({id:7},{ph:7})};S.vkOld=1;r.legacyOld=phMine({},null);S.vkOld=old;return JSON.stringify(r)})()`));
+    assert.deepEqual(o,{own:true,newKey:true,mine:true,other:false,legacy:false,ref:true,legacyOld:true},'photos are per village '+JSON.stringify(o))}
   assert.deepEqual(errors,[]);await browser.close();console.log('Photo: ok');
 })().catch(e=>{console.error(e);process.exit(1)});
