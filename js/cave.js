@@ -479,7 +479,7 @@ function cvPaintPx(g,x0,y0,N,T){const C=CV,Fd=C.fld,TH=cvTheme(),CW=TH.wall==='c
         /* 岩のかたまりの中は、まっ暗な空洞（持ち主がきめた）。大岩でかこむ階は、空洞の南のふちに柱の岩が立つ */
         const r=rcA[y],lc=rockOut&&r<FH?lv(TC,px,FH-1-r):-1;if(lc>=0){put(o,WK[lc]);continue}
         {let l=-1;if(hc<CVHANG&&TC){l=lv(TC,px,TC.top+hc);if(l>0)l=Math.max(1,l-Math.floor(hc/22))}/* 台のふちからたれる柱のがけ：下ほど暗く、暗い穴へとける */
-          put(o,l>=1?WK[l]:l===0?WK[0]:rockOut&&hc<CVHANG?WK[1]:VO)}/* 大岩でかこむ階：柱の頭と頭のあいだのすきまは、まっ黒にせず、くらい岩の色（持ち主：黒い筋に見える） */
+          put(o,l>=1?WK[l]:l===0?WK[0]:rockOut&&hc<CVHANG?cl(FL,3):VO)}/* 大岩でかこむ階：柱の頭と頭のあいだのすきまは、床の色（床が柱の頭までつづく。くらい色だと、かべの上のふちに黒い筋が見える。持ち主） */
         continue}
       if(c0===2){/* 水（持ち主のたのみで、網目をやめた）：水べは明るいふち。なかは、村と同じ水のテクスチャの3だん＋深さで、くらい色から明るい色のならび（WR）。
            北の岸から下へ CVREFL ドットは、岸の上の岩・がけのうつりこみ（床はうつさない）：上下さかさに、行ごとに1ドットずつゆらいで、水の色で、1行おきに切れる（水面のゆれ） */
