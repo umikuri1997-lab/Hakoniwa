@@ -4,9 +4,9 @@
 /* 属性の力がたまると、次の朝に神殿に「！」が出て、タップで召喚できる。
    埋葬されたせいれいがいれば、そちらの復活が先（物語のせいれいが最優先） */
 let KEYRES=KEYS[0];
-const isKey=n=>KEYRES.includes(n)||KEYS.flat().includes(n)||Object.values(FIXK0).includes(n)||Object.values((S&&S.keyN)||{}).includes(n);/* キーキャラ（5属性の子もふくむ）は「きずな」で朝にもどる */
-const SECOND=[{elem:'earth',name:MINA,ok:()=>bloomCount('bellf')>=2&&qAt('kikyo')},/* ききょうの話を聞いてから */{elem:'water',name:SHIZUKU,ok:()=>!!S.flags.onsen}];/* 2人目のキーキャラが来るきっかけ */
-const MAINEL=['wood','fire'];MAINEL[FREE]='wood';SECOND[FREE]={elem:'earth',name:'',ok:()=>false};
+const isKey=n=>KEYRES.includes(n)||KEYS.flat().includes(n)||n===KAGARI||Object.values(FIXK0).includes(n)||Object.values((S&&S.keyN)||{}).includes(n);/* キーキャラ（5属性の子もふくむ）は「きずな」で朝にもどる */
+const SECOND=[{elem:'earth',name:MINA,ok:()=>bloomCount('bellf')>=2&&qAt('kikyo')},/* ききょうの話を聞いてから */{elem:'water',name:SHIZUKU,ok:()=>!!S.flags.onsen}];SECOND[WIND]={elem:null,name:null,ok:()=>false};/* 風（土台）：2人めのキーキャラは、まだいない *//* 2人目のキーキャラが来るきっかけ */
+const MAINEL=['wood','fire'];MAINEL[FREE]='wood';SECOND[FREE]={elem:'earth',name:'',ok:()=>false};MAINEL[MIZU]='water';SECOND[MIZU]={elem:'earth',name:'',ok:()=>false};/* 水のステージ（試作）：2人目のお話はまだない */
 function storySummonOK(el){if(WD!==0||S.free||S.cleared||elemCount(el)>0)return true;const id={earth:'summon',fire:'fire',water:'water',wind:'wind'}[el];if(!id)return true;const qi=questIndexOf(id);return S.quest>qi||S.quest===qi&&S.qTalked&&S.qStory==null}
 function sumElem(){
   if(S.res.length>=30)return null;let best=null,bs=0;
@@ -34,7 +34,7 @@ function doSummon(){
   if(!sm.mebuki&&calledToday())return toast(S.mebukiDay===callDay()?'きょうは、めぶきのしずくをつかったので、呼べません':'なかまを呼べるのは、1日に1回です','warn');/* 1日に呼べるのは1回だけ（めぶきのしずくでよみがえらせた1回もふくめる） *//* めぶきのしずくをつかった日は、なかまを呼べない（呼んだ日は、めぶきのしずくをつかえない） */
   if(!sm.rev&&!sm.pick&&S.flags.minaCame&&(sumCands().filter(c=>c.ok).length>1||S.mebuki>0&&(S.lost||[]).some(q=>!q.unb))){openSheet('summon');return}/* 力が届いた属性がいくつかあるか、めぶきのしずくでよみがえらせられる子がいれば、えらぶ */
   S.summon=null;let r;
-  const sx0=STATUE>=0?STATUE%W:CX,sy0=STATUE>=0?((STATUE/W)|0)+3:CY;let sp=null;
+  const sx0=sm.at?sm.at[0]:STATUE>=0?STATUE%W:CX,sy0=sm.at?sm.at[1]:STATUE>=0?((STATUE/W)|0)+3:CY;let sp=null;/* at：やってくる所（フリーモード） */
   for(let rr=0;rr<10&&!sp;rr++){const c=[];for(let dy=-rr;dy<=rr;dy++)for(let dx=-rr;dx<=rr;dx++){if(Math.max(Math.abs(dx),Math.abs(dy))!==rr)continue;const x=sx0+dx,y=sy0+dy;if(x<1||y<1||x>=W-1||y>=H-1)continue;const j=y*W+x;if(walk(j)&&!S.obj[j]&&!S.res.some(q=>(q.x|0)===x&&(q.y|0)===y)&&!(godHere()&&Math.hypot(x+.5-godX(),y+.5-godY())<2.2))c.push([x,y])}if(c.length)sp=pick(c)}
   if(!sp)sp=[CX,CY];
   if(sm.rev){let d;if(sm.lost){const L=S.lost,i=typeof sm.lost==='string'?L.findIndex(q=>q.name===sm.lost):0;d=L.splice(Math.max(0,i),1)[0];}else{const B=S.buried;B.sort((a,b)=>(isKey(b.name)?1:0)-(isKey(a.name)?1:0)||(a.unb?1:0)-(b.unb?1:0));d=B.shift()}
@@ -42,7 +42,7 @@ function doSummon(){
     toast(r.name+'がもどってきた！','good');sevBack(r.name);goneBack(r.name);reunite(r,sp)}
   else{let name;if(sm.elem===SECOND[WD].elem&&!S.flags.minaCame){name=SECOND[WD].name;S.flags.minaCame=true;S.flags.mnN=S.nights||0}/* 来た夜の数をおぼえておく（e04b） */
     else if(!WD&&FIXK0[sm.elem]&&!S.res.some(q=>q.elem===sm.elem)&&!(S.buried||[]).some(q=>q.elem===sm.elem&&isKey(q.name))&&!(S.lost||[]).some(q=>q.elem===sm.elem&&isKey(q.name)))name=FIXK0[sm.elem];/* その属性のキーキャラは、決まった子 */
-    else{const used=new Set([...[...S.res,...(S.buried||[]),...(S.lost||[])].map(q=>q.name),...Object.values(S.nick||{})]),keyN=new Set([...KEYS.flat(),...Object.values(FIXK0)]);for(;;){const base=NAMES[S.nameIdx%NAMES.length],lap=Math.floor(S.nameIdx/NAMES.length);name=base+(lap?String(lap+1):'');S.nameIdx++;if(!keyN.has(base)&&!used.has(name))break}}/* 名前の候補を使いきったら、うしろに数をつける。キーキャラの名前（フタバ2など）は使わない */
+    else{const used=new Set([...[...S.res,...(S.buried||[]),...(S.lost||[])].map(q=>q.name),...Object.values(S.nick||{})]),keyN=new Set([...KEYS.flat(),KAGARI,...Object.values(FIXK0)]);for(;;){const base=NAMES[S.nameIdx%NAMES.length],lap=Math.floor(S.nameIdx/NAMES.length);name=base+(lap?String(lap+1):'');S.nameIdx++;if(!keyN.has(base)&&!used.has(name))break}}/* 名前の候補を使いきったら、うしろに数をつける。キーキャラの名前（フタバ2など）は使わない */
     r=mkRes(S,name,sm.elem,sp[0]+.5,sp[1]+.5);toast(ELEM[sm.elem].name+'のせいれい「'+name+'」がやってきた！','good')
     if(sm.elem==='fire'&&S.crops&&!S.crops.mugi){S.crops.mugi=S.crops.tomato=true}}/* 火のせいれいが来たら、パン・スープの作物がふえる */
   if(STATUE>=0&&S.obj[STATUE+W]==='altar'){r.x=STATUE%W+.5;r.y=((STATUE/W)|0)+1.12;sp=[STATUE%W,((STATUE/W)|0)+1]}/* 神殿のまんなか（台座の上）からあらわれる */
@@ -147,11 +147,11 @@ function edgeSpot(){const R=spawnReach();
   return [CX+.5,H-.5];
 }
 
-const INDL=new Set(['candle','lantern','flamp']);/* 室内の灯り：家の中なら家じゅう、外なら1マス */
+const INDL=new Set(['candle','lantern','flamp','oldlantern']);/* 室内の灯り：家の中なら家じゅう、外なら1マス */
 const LSPR=new Map();function lightSpr(R){/* 明かりの光の絵（半径 R、まん中の明るさ .9）。半径ごとに1まいだけ作っておく */let c=LSPR.get(R);if(c)return c;c=document.createElement('canvas');c.width=c.height=R*2;const g=c.getContext('2d'),gr=g.createRadialGradient(R,R,2,R,R,R);gr.addColorStop(0,'rgba(255,214,120,.9)');gr.addColorStop(1,'rgba(255,200,100,0)');g.fillStyle=gr;g.fillRect(0,0,R*2,R*2);LSPR.set(R,c);return c}
 const LIGHTP={/* 夜の明かり：光のまん中（マスの左上から dx・dy ドット）と、光の半径 R */
   lamp:{dx:16,dy:3,R:100},g_donguri:{dx:16,dy:8,R:50},g_danro:{dx:32,dy:14,R:90},hotaru:{dx:16,dy:18,R:60},tower:{dx:16,dy:6,R:150},yogan:{dx:32,dy:8,R:60},lighthouse:{dx:32,dy:-75,R:130},campfire:{dx:16,dy:14,R:110},
-  statue:{dx:16,dy:-6,R:110},torch:{dx:16,dy:-22,R:105},candle:{dx:16,dy:10,R:45},lantern:{dx:16,dy:6,R:45},flamp:{dx:16,dy:-6,R:45},takeakari:{dx:16,dy:14,R:90},andon:{dx:16,dy:16,R:90},toro:{dx:16,dy:13,R:100},yomawari:{dx:16,dy:1,R:100}};/* 石どうろうは火袋、よまわりのランタンはガラスの所が光る（まわり3.5マス＝かがり火と同じ） */
+  statue:{dx:16,dy:-6,R:110},torch:{dx:16,dy:-22,R:105},candle:{dx:16,dy:10,R:45},lantern:{dx:16,dy:6,R:45},flamp:{dx:16,dy:-6,R:45},takeakari:{dx:16,dy:14,R:90},andon:{dx:16,dy:16,R:90},kaeribi:{dx:16,dy:16,R:80},toro:{dx:16,dy:13,R:100},yomawari:{dx:16,dy:1,R:100}};/* 石どうろうは火袋、よまわりのランタンはガラスの所が光る（まわり3.5マス＝かがり火と同じ） */
 function litP(j,o){if(o==='watch')return (S.hp['L'+j]||1)>=10?{dx:32,dy:-24,R:150}:{dx:58,dy:-18,R:100};return LIGHTP[o]}/* 見張り台のあかり：Lv5〜9 は右前のランタン、Lv10 は4つのランタン（台ぜんたいを照らす） */
 function steleF(j){const o=S.obj[j],b=o&&BL[o]&&BL[o].hp;if(!b||!STELES.length)return 1;const x=j%W,y=(j/W)|0;for(const q of STELES)if(Math.hypot(q%W-x,((q/W)|0)-y)<=7)return (BL[o].hpS||b)/b;return 1}/* ノームの石像（stele）：まわり7マスの壁・柵・塀は、じょうぶさが BL の hpS（実数で書いてある）になる */
 function litNear(h,x,y){for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++)if(h.set.has((y+dy)*W+x+dx))return true;return false}/* 家の中の灯り：家ぜんたいと、そこから1マス */
@@ -179,7 +179,8 @@ const ZURA={/* クリア後に図鑑で読める「もとのすがた」（STORY
 const HIT_LAG=150,SHOT_LAG=300,HIT_STOP=70,KO_HOLD=180;/* ミリ秒。火のせいれいがふりはじめてから当たるまで・矢がとどくまで・当たった瞬間に止まる長さ・たおれる前に白く止まる長さ */
 const DMGN=[],SPKS=[],HITV=new WeakMap(),ATKV=new WeakMap();const HURTV=new WeakMap(),HURT1=300,HURT2=600,HURT2P=400;/* いたがるコマ：当たってから よろけるまで（1コマめ）・よろけている長さ（2コマめ。どくは HURT2P）。ミリ秒 */function hurtFrame(e,now){const h=HURTV.get(e);if(!h)return null;const a=now-h.t;return a<0||a>=HURT1+h.n?null:a<HURT1?0:1}/* drawShade の hurt：0は1コマめ・.5より上は2コマめ *//* 数字・火花・たたかれた時刻と向き・たたいた時刻と向き */
 /* コワイノへのダメージは、ここを通す：整数にして体力をへらし、数字・火花・のけぞりを出す。o：lag 当たるまで・sx,sy たたいた所・flash 光る長さ・keep 光らせない・nokb のけぞらない */
-function hurtEn(e,dmg,o){o=o||{};if((o.k==='trap'||o.trap)&&typeof pathA==='function')dmg+=pathA('trap');/* むらのちから：罠のダメージ */dmg=Math.max(1,Math.round(dmg*armorMul(e,o)*weakMul(e,o)));/* 弱点の属性 o.el（defense.js） *//* ヨロイカゲ：o.dt（arrow・fire・poison・burn） */e.hp-=dmg;if(e.hp>0)bossPhase(e);/* オオカゲの段階（defense.js） */if(!o.keep){e.flash=o.flash||6;HURTV.set(e,{t:performance.now()+(o.lag||0),n:HURT2})}/* いたがるコマは、当たって見える時刻から実時間で */hitFx(e,dmg,Object.assign({big:dmg*4>=e.max},o));if(o.skill){const z=(EN[e.type]||{}).size||1,px=e.x*TS,py=e.y*TS-12*z+SKHITY-(typeof uLift==='function'?uLift(e):0);if(o.lag)villageTimeout(()=>fxSpr('skillhit',px,py),o.lag);else fxSpr('skillhit',px,py)}/* わざ（まもりの光・大わざ）が当たったコワイノには、金の光と火花（skillhit） */return dmg}
+let DMGVAR=.15;/* 攻撃のダメージのぶれ：±15% */
+function hurtEn(e,dmg,o){o=o||{};if((o.k==='trap'||o.trap)&&typeof pathA==='function')dmg+=pathA('trap');/* むらのちから：罠のダメージ */dmg=Math.max(1,Math.round(dmg*armorMul(e,o)*weakMul(e,o)*(o.exact?1:1+(Math.random()*2-1)*DMGVAR)));/* ダメージは少しぶれる（DMGVAR。o.exact：ぶれない） *//* 弱点の属性 o.el（defense.js） *//* ヨロイカゲ：o.dt（arrow・fire・poison・burn） */e.hp-=dmg;if(e.hp>0)bossPhase(e);/* オオカゲの段階（defense.js） */if(!o.keep){e.flash=o.flash||6;HURTV.set(e,{t:performance.now()+(o.lag||0),n:HURT2})}/* いたがるコマは、当たって見える時刻から実時間で */hitFx(e,dmg,Object.assign({big:dmg*4>=e.max},o));if(o.skill){const z=(EN[e.type]||{}).size||1,px=e.x*TS,py=e.y*TS-12*z+SKHITY-(typeof uLift==='function'?uLift(e):0);if(o.lag)villageTimeout(()=>fxSpr('skillhit',px,py),o.lag);else fxSpr('skillhit',px,py)}/* わざ（まもりの光・大わざ）が当たったコワイノには、金の光と火花（skillhit） */return dmg}
 const SKHITY=28;/* skillhit の光のまん中は、置く所より28点上 */
 function hitFx(t,n,o){o=o||{};n=Math.max(1,Math.round(n));/* 画面の数字には小数点を出さない */const en=!!(t.type&&EN[t.type]),z=en?EN[t.type].size:1,now=performance.now()+(o.lag||0);let dx=0,dy=0;if(o.sx!=null){dx=t.x-o.sx;dy=t.y-o.sy;const l=Math.hypot(dx,dy)||1;dx/=l;dy/=l}
   if(!o.nokb)HITV.set(t,{t:now,dx,dy});
@@ -360,8 +361,8 @@ function glHit(tx,ty,R,foc){/* 光が地面にとどいた：範囲（タップ�
   for(const e of S.enemies.slice()){if(!e.spawned||e.dead)continue;if(!(e===foc&&Math.hypot(e.x-tx-.5,e.y-ty-.5)<R+1.5)&&!inR(e.x,e.y))continue;
     const D=EN[e.type];hurtEn(e,pw,{flash:8,k:'light',skill:1,sx:tx+.5,sy:ty+.5});/* 威力・とめる時間は、守り神のちから（GUP）の段階 */e.stun=D.boss?G.vb[gs]:G.v[gs];e.path=[];e.repath=0;
     if(e.hp<=0)defeat(e,'まもりの光で'+D.name+'を追いはらった！')}
-  for(let dy=-R;dy<=R;dy++)for(let dx=-R;dx<=R;dx++){const x=tx+dx,y=ty+dy;if(x<0||y<0||x>=W||y>=H)continue;const q=y*W+x;if(LIGHTNAT[S.obj[q]]&&!isBud(q)&&!(S.fog&&fogAt(q)))natHit(q)}
-  const now=performance.now();for(const r of S.res){if(r.hidden||r.nap||r.act&&(r.act.type==='sleep'||r.act.type==='faint')&&r.act.stage==='do')continue;const d=Math.max(Math.abs(r.x-tx-.5),Math.abs(r.y-ty-.5))-R;if(d>GLSHOCKR)continue;SHOCKU.set(r,now+GLSHOCKT);JUMP.set(r,now+Math.max(0,d)*40)}yamiBirth(tx,ty)}
+  for(let dy=-R;dy<=R;dy++)for(let dx=-R;dx<=R;dx++){const x=tx+dx,y=ty+dy;if(x<0||y<0||x>=W||y>=H)continue;const q=y*W+x;if(LIGHTNAT[S.obj[q]]&&!isBud(q)&&!fogAt(q))natHit(q);else if(rockHard(q))rockHeat(q)}/* 奥のかたい大岩は、熱くなる */
+  const now=performance.now();for(const r of S.res){if(r.hidden||r.nap||r.act&&(r.act.type==='sleep'||r.act.type==='faint')&&r.act.stage==='do')continue;const d=Math.max(Math.abs(r.x-tx-.5),Math.abs(r.y-ty-.5))-R;if(d>GLSHOCKR)continue;SHOCKU.set(r,now+GLSHOCKT);JUMP.set(r,now+Math.max(0,d)*40)}if(typeof aniScare==='function')aniScare(tx,ty,R);if(typeof critScare==='function')critScare(tx,ty,R);/* まわりの生き物も、おどろいて、にげる */yamiBirth(tx,ty)}
 const GLSTEP=45,GLSPY=31,GLSHOCKT=1200;/* 範囲の光は、まん中から1マスごとに GLSTEP ミリ秒おくれる。GLSPY：glspark の光のまん中は、置く所より31点上。GLSHOCKT：おどろいた顔の長さ（ミリ秒） */
 let AREACD=0,AREAARM=false;/* こもれびのまもり（フタバから受けついだ守り神の技）：タップした場所のまわりのせいれいに、葉のまもり・パワー3。まわりのマス・葉のまもりの時間・チャージは GUP の area */
 function areaBlast(cx,cy){
@@ -387,11 +388,11 @@ function defeat(e,msg,r,by){if(e.dead)return;if(typeof pathA==='function'&&pathA
 const DROPS=[['mat:wood',3],['mat:stone',3],['sand',1]];/* sand：やすらぎの砂（コワイノの落とし物だけで手に入る） */
 const DROPSEED={basic:'imo',fast:'tomato',thief:'mugi',brute:'imo',breaker:'mugi',trapper:'tomato',ash:'tomato',rockc:'imo',boss:'mugi',hino:'tomato',yama:'imo',boss2:'mugi'};/* コワイノの種類で、落とす種がちがう（まだ育てられない作物なら、いも） */
 const DROPF={basic:'mimamori',fast:'yomawari',breaker:'oyasumi',boss:'yonaka'};/* コワイノの種類ごとの、落とし物だけの家具 */
-function dropRolls(t){const sd=DROPSEED[t]&&cropOn(DROPSEED[t])?DROPSEED[t]:'imo',L=[['mat:wood',3,.2],['mat:stone',3,.2],['seed:'+sd,2,.2],['sand',1,.1]];if(DROPF[t])L.push([DROPF[t],1,.005]);if(KWR.some(id=>!(S.recipes||{})[id]))L.push(['recipe',1,.001]);if(WD===0&&!EN[t].boss)L.push(['horn',1,.03]);if(!EN[t].boss)L.push(['mapPc',1,.02],['fukuro',1,.01]);if(!EN[t].boss&&!S.free)L.push([pick(GIFTDROP),1,GIFTDROPP]);/* おくりもの2%（gifts.js） *//* 地図の切れはし2%・ふしぎなふくろ1% *//* 草原：よびごえの角笛3% */if(WD===1&&!S.free){L.push(['gear',1,.005]);if(t==='rockc')L.push(['mat:iron',1,.2]);if(t==='hino'||t==='yama')L.push(['mat:obsidian',2,.5])}/* 火山：そうび0.5%・鉄・黒曜石 */return L}/* [物, 数, 落とす確率]：木材・石材・種20%、やすらぎの砂10%、家具0.5%、コワイノのレシピ0.1% */
+function dropRolls(t){const sd=DROPSEED[t]&&cropOn(DROPSEED[t])?DROPSEED[t]:'imo',L=[['mat:wood',3,.2],['mat:stone',3,.2],['seed:'+sd,2,.2],['sand',1,.1]];if(DROPF[t])L.push([DROPF[t],1,.005]);if(KWR.some(id=>!(S.recipes||{})[id]))L.push(['recipe',1,.001]);if(WD===0&&!EN[t].boss)L.push(['horn',1,.03]);if(!EN[t].boss)L.push(['mapPc',1,.02],['fukuro',1,.01]);if(!EN[t].boss)L.push([pick(GIFTDROP),1,GIFTDROPP]);/* おくりもの2%（gifts.js） *//* 地図の切れはし2%・ふしぎなふくろ1% *//* 草原：よびごえの角笛3% */if(WD===1&&!S.free){L.push(['gear',1,.005]);if(t==='rockc')L.push(['mat:iron',1,.2]);if(t==='hino'||t==='yama')L.push(['mat:obsidian',2,.5])}/* 火山：そうび0.5%・鉄・黒曜石 */return L}/* [物, 数, 落とす確率]：木材・石材・種20%、やすらぎの砂10%、家具0.5%、コワイノのレシピ0.1% */
 function dropList(t){const sd=DROPSEED[t]&&cropOn(DROPSEED[t])?DROPSEED[t]:'imo',L=DROPS.concat([['seed:'+sd,2]]);if(DROPF[t])L.push([DROPF[t],1]);return L}
 function monoDrops(n){/* ものひろいの日：村の中の、せいれいが歩いて行ける空いた所に落とす */if(!S.drops)S.drops=[];const r0=S.res.find(q=>!q.hidden),G=bfs(r0?r0.x|0:CX,r0?r0.y|0:CY),C=[];
   for(let q=0;q<W*H;q++)if(VILL[q]&&!S.obj[q]&&walk(q)&&G.dist[q]>=0&&!S.drops.some(d=>d.y*W+d.x===q))C.push(q);
-  for(let i=0;i<n&&C.length;i++){const q=C.splice((Math.random()*C.length)|0,1)[0],[id,m]=!S.free&&Math.random()<GIFTMONOP?[pick(GIFTDROP),1]:pick(dropList());S.drops.push({x:q%W,y:(q/W)|0,id,n:m})}}
+  for(let i=0;i<n&&C.length;i++){const q=C.splice((Math.random()*C.length)|0,1)[0],[id,m]=Math.random()<GIFTMONOP?[pick(GIFTDROP),1]:pick(dropList());S.drops.push({x:q%W,y:(q/W)|0,id,n:m})}}
 function dropAt(x,y,want,nn,et){if(!S.drops)S.drops=[];const x0=x|0,y0=y|0;let j=-1;const r0=S.res.find(q=>!q.hidden),G=want?bfs(r0?r0.x|0:CX,r0?r0.y|0:CY):null,reach=q=>!G||G.dist[q]>=0;/* かけら・しずくは、せいれいが行ける場所に落とす */
   for(let rr2=0;rr2<=(want?8:3)&&j<0;rr2++)for(let dy=-rr2;dy<=rr2&&j<0;dy++)for(let dx=-rr2;dx<=rr2;dx++){const xx=x0+dx,yy=y0+dy;if(xx<0||yy<0||xx>=W||yy>=H)continue;const q=yy*W+xx;if(!S.obj[q]&&walk(q)&&reach(q)&&!S.drops.some(d=>d.y*W+d.x===q)){j=q;break}}
   if(j<0&&G){let bd=1e9;for(let q=0;q<W*H;q++){if(G.dist[q]<0||S.obj[q]||!walk(q)||S.drops.some(d=>d.y*W+d.x===q))continue;const d=Math.hypot(q%W-x0,((q/W)|0)-y0);if(d<bd){bd=d;j=q}}}

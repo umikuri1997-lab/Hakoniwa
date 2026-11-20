@@ -18,7 +18,7 @@ function fishWaterHash(){let h=0,c=0;for(let j=0;j<S.ground.length;j++)if(S.grou
 function fishTime(){const h=hour();return h>=6&&h<17?'day':h>=17&&h<20?'eve':'night'}
 function fishOK(k,at,tm,rain){const f=FISHI[k];if(f.at!==at)return false;if(f.rain==='only')return rain;if(f.tm==='any')return true;if(f.tm===tm)return true;return f.rain==='day'&&rain&&tm==='day'}
 function fishPick(stand){/* その場所・いまの時間・天気でつれる魚 */const w=typeof fishW==='function'?fishW(stand):-1,at=waterKind(w),tm=fishTime(),rain=!!S.rain,st=WD===1?1:0;
-  const L=FISHK.filter(k=>FISHI[k].w===st&&fishOK(k,at,tm,rain));if(L.length)return pick(L);const b=FISHBASE[st];return b[at]||b.river}
+  const L=FISHK.filter(k=>(WD===FREE?FISHI[k].w<=WT():FISHI[k].w===st)&&fishOK(k,at,tm,rain));/* フリーモード：クリアした土地の魚 */if(L.length)return pick(L);const b=FISHBASE[st];return b[at]||b.river}
 function fishGot(k){/* つった魚を数える（図鑑） */const R=S.fishRec||(S.fishRec={});R[k]=(R[k]||0)+1;(S.seenIt||(S.seenIt={}))['f:'+k]=1}
 function needR(R,r){/* 料理の材料（「さかな」は、どの魚でもよい）：持っている魚・とりかけの魚があれば、その魚。なければ、いちばん多い魚 */if(!R||!R.need||!R.need.fish)return R?R.need:{};const o={};for(const k in R.need)if(k!=='fish')o[k]=R.need[k];
   let sp=null;const held=r&&r.cing&&r.cing.rec===R.key&&r.cing.nd?r.cing.nd:r&&r.cgot&&r.cgot.rec===R.key?r.cgot.m:null;if(held)for(const k in held)if((k==='fish'||isFish(k))&&held[k]>0){sp=k;break}

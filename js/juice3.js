@@ -162,7 +162,7 @@ function juiceSnowDraw(now){if(!J3S.size)return;const c=ctx;c.fillStyle='#ffffff
     c.globalAlpha=1-u;for(let k=0;k<10;k++){const an=-Math.PI*(k+.5)/10,r=8+u*22;c.fillRect(Math.round(cx+Math.cos(an)*r),Math.round(cy+Math.sin(an)*r*.7+u*u*16),2,2)}c.globalAlpha=1}}
 
 /* ---------- 図鑑のバー（juiceZkBar）：つぎの節目までのわりあい。前にひらいたときの数から、いまの数へ、とろっとのびる ---------- */
-function juiceZkBar(body,t){if(!S||S.free)return;const q=zkNext(t),n=zkCount(t),v=q?q.v:Math.max(1,n),V=S.flags.zkBar||(S.flags.zkBar={}),p0=Math.min(n,V[t]==null?n:V[t]);V[t]=n;
+function juiceZkBar(body,t){if(!S)return;const q=zkNext(t),n=zkCount(t),v=q?q.v:Math.max(1,n),V=S.flags.zkBar||(S.flags.zkBar={}),p0=Math.min(n,V[t]==null?n:V[t]);V[t]=n;
   const b=el('<div class="bar zkbar"><i></i></div>'),i=b.querySelector('i');body.appendChild(b);const to=Math.min(1,n/v),fr=Math.min(1,p0/v);
   if(uiReduced()||to<=fr){i.style.width=(to*100)+'%';return}i.style.width=(fr*100)+'%';const st=S;
   for(let k=1;k<=10;k++)setTimeout(()=>{if(!i.isConnected||S!==st)return;i.style.width=((fr+(to-fr)*k/10)*100)+'%';if(k%3===0)j3U('notch',.22,k);if(k===10){i.classList.add('uglow');j3Ding(12);setTimeout(()=>i.classList.remove('uglow'),400)}},300+k*70)}

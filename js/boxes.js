@@ -11,7 +11,7 @@ const PILE=-1,fkey=k=>'f:'+k,isFK=k=>k.charCodeAt(0)===102&&k.charCodeAt(1)===58
 let BOXL=[];const RSV=()=>S.rsv||(S.rsv={}),BOX=()=>S.box||(S.box={}),PIL=()=>S.pile||(S.pile={});/* 箱のマス（recount で作る） */
 function boxTypeAt(k){if(k<0||k>=W*H)return '';const a=anc(k),id=S.obj[a];if(HOME_WALLS.has(id)){const w=(S.win||{})[a];return BOXCAP[w]?w:''}return BOXCAP[id]?id:''}
 function boxScan(){BOXL=[];for(let j=0;j<W*H;j++){const o=S.obj[j];if(BOXCAP[o])BOXL.push(j)}for(const k in S.win||{}){const j=+k;if(BOXCAP[S.win[k]]&&HOME_WALLS.has(S.obj[j]))BOXL.push(j)}}
-const pileJ=()=>STATUE>=0?STATUE:RUINT;
+const pileJ=()=>STATUE>=0?STATUE:RUINT>=0?RUINT:OBOX;/* フリーモードは、おそなえ箱のまえ */
 const bx=j=>{if(j===PILE)return PIL();const B=BOX();return B[j]||(B[j]={})};
 function boxCapAdd(){let add=typeof pathBox==='function'?pathBox():0;/* むらのちから */const got=new Set();for(const I of SPOTI||[])if(I.sp.cap&&!got.has(I.sp.k)){got.add(I.sp.k);add+=I.sp.cap}return add}/* しまうスポット：おなじスポットは1こ分、ちがうスポットはたし算 */
 const boxCap=j=>Math.floor((BOXCAP[boxTypeAt(j)]||0)*(1+boxCapAdd()));

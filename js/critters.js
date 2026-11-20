@@ -27,12 +27,12 @@ function critOK(k,j){if(j<0||j>=W*H)return false;const h=hour(),day=h>=7&&h<17,d
   if(k==='usagi')return day&&dry&&critOpen(j)&&REV.has(j);
   if(k==='harinezumi')return h>=17&&h<20&&critOpen(j)&&critNear(j,2,q=>o(q)==='berry'||o(q)==='hedge');
   if(k==='nezumi')return day&&critOpen(j)&&critNear(j,2,q=>BOXCAP[o(q)]!=null);
-  if(k==='mogura')return WD===3&&day&&critOpen(j)&&critNear(j,2,q=>o(q)==='farm');/* もぐらは土のステージだけ（持ち主のきめ） */
+  if(k==='mogura')return WD===2&&day&&critOpen(j)&&critNear(j,2,q=>o(q)==='farm');/* もぐらは土のステージだけ（持ち主のきめ） */
   if(k==='katatsumuri')return S.rain&&h>=6&&h<20&&critOpen(j)&&critNear(j,1,q=>FLOWERS.has(o(q))||WEEDS.has(o(q)));
   if(k==='tentoumushi')return day&&dry&&critOpen(j)&&critNear(j,1,q=>FLOWERS.has(o(q)));
-  if(k==='tonbo')return seasonNow()===2&&h>=9&&h<18&&dry&&S.ground[j]===1&&[1,-1,W,-W].some(d=>S.ground[j+d]!==1&&walk(j+d));
-  if(k==='hotaru')return h>=19&&h<23&&dry&&critOpen(j)&&[1,-1,W,-W].some(d=>S.ground[j+d]===1);
-  if(k==='frog')return (S.rain&&h>=6&&h<20||h>=17&&h<20)&&critOpen(j)&&[1,-1,W,-W].some(d=>S.ground[j+d]===1);
+  if(k==='tonbo')return seasonNow()===2&&h>=9&&h<18&&dry&&waterJ(j)&&[1,-1,W,-W].some(d=>S.ground[j+d]!==1&&walk(j+d));
+  if(k==='hotaru')return h>=19&&h<23&&dry&&critOpen(j)&&[1,-1,W,-W].some(d=>waterJ(j+d));
+  if(k==='frog')return (S.rain&&h>=6&&h<20||h>=17&&h<20)&&critOpen(j)&&[1,-1,W,-W].some(d=>waterJ(j+d));
   return false}
 /* ちょうの数：1日1回（朝）、咲いている花1本ごとに CRITBP で1ぴき。その日は、その数まで出る（マスと日で決まる hash なので、しまわない） */
 const CRITBP=.05;let CRITBD=-1,CRITBS=null,CRITBN=0;
@@ -51,6 +51,8 @@ function critHead(c){const lim=CK[c.k].vw?0:.45;if(c.hd==null)c.hd=c.face>0?0:Ma
   if(lim){const r=Math.cos(c.hd)>=0?0:Math.PI;let d=Math.atan2(Math.sin(c.hd-r),Math.cos(c.hd-r));d=Math.max(-lim,Math.min(lim,d));c.hd=r+d}
   return [Math.cos(c.hd),Math.sin(c.hd)]}
 /* 地面の生き物がにげる：近いせいれいからはなれる向きへ、はやく。少しして、いなくなる */
+function critScare(tx,ty,R){/* まもりの光がそばに落ちた：まわりの小さな生き物は、光からはなれる方へ、にげていく */for(const c of CRIT){if(c.fl||c.go)continue;const dx=c.x-(tx+.5),dy=c.y-(ty+.5);if(Math.max(Math.abs(dx),Math.abs(dy))-R>CRITSCARER)continue;const L=Math.hypot(dx,dy)||1;c.fl=1;c.hop=0;if(c.k==='bird'){c.jt=null;c.pre=0}critLeave(c,dx/L,dy/L)}}
+const CRITSCARER=6;
 function critFlee(c){if(c.fl||!CK[c.k].flee&&c.k!=='bird')return;const r=S.res.find(r=>!r.hidden&&Math.hypot(r.x-c.x,r.y-c.y)<1.6);if(!r)return;
   const L=Math.hypot(c.x-r.x,c.y-r.y)||1;c.fl=1;c.hop=0;critLeave(c,(c.x-r.x)/L,(c.y-r.y)/L)}
 /* いなくなるとき：その場で消さず、画面の外へ去る（とぶ物はとんで、地面の物は歩いて・はねて）。見えなくなったら消す（critTick のさいご）。
@@ -81,7 +83,7 @@ function critTick(dt){if(!S)return;if(CRITS!==S){CRIT=[];CRITS=S}if(IS_STORY_REP
         const dx=c.hx-c.x,dy=c.hy-c.y,L=Math.hypot(dx,dy)||1,sp=Math.min(L,.9*dt);c.x+=dx/L*sp+Math.sin(c.t*3+c.id)*.01;c.y+=dy/L*sp;if(Math.abs(dx)>.05)c.face=dx>0?1:-1;c.z=14+Math.sin(c.t*2.3+c.id)*5}
       if(S.rain||night)c.life=Math.min(c.life,c.t+2)}
     else if(m==='hover'){/* とんぼ：水の上で止まって（ホバリング）、すっと、つぎの所へ */
-      if(c.wait>0){c.wait-=dt;c.z=18+Math.sin(c.t*4+c.id)*1.5;if(c.wait<=0){for(let n=0;n<10;n++){const x=c.hx+(Math.random()-.5)*4,y=c.hy+(Math.random()-.5)*3,j=(y|0)*W+(x|0);if(x>=0&&y>=0&&x<W&&y<H&&S.ground[j]===1){c.tx=x;c.ty=y;break}}if(c.tx==null)c.wait=1}}
+      if(c.wait>0){c.wait-=dt;c.z=18+Math.sin(c.t*4+c.id)*1.5;if(c.wait<=0){for(let n=0;n<10;n++){const x=c.hx+(Math.random()-.5)*4,y=c.hy+(Math.random()-.5)*3,j=(y|0)*W+(x|0);if(x>=0&&y>=0&&x<W&&y<H&&waterJ(j)){c.tx=x;c.ty=y;break}}if(c.tx==null)c.wait=1}}
       else if(c.tx==null)c.wait=.5;
       else{const dx=c.tx-c.x,dy=c.ty-c.y,L=Math.hypot(dx,dy)||1,sp=Math.min(L,2.6*dt);c.x+=dx/L*sp;c.y+=dy/L*sp;if(Math.abs(dx)>.05)c.face=dx>0?1:-1;if(L<.05){c.tx=c.ty=null;c.wait=1.2+Math.random()*2.4}}
       if(S.rain||night)c.life=Math.min(c.life,c.t+2)}
@@ -101,7 +103,7 @@ function critTick(dt){if(!S)return;if(CRITS!==S){CRIT=[];CRITS=S}if(IS_STORY_REP
         if(c.hop<=0&&c.act<=0){c.hop=c.fl?.05:1+Math.random()*2.5;
           if(!c.fl&&m==='hop'&&Math.random()<.3){c.act=1.6;c.hop+=1.6}/* 何かする（耳をぴくぴく・木の実をかじる・のどをふくらます） */
           else{const D=K.hop||.35,o=c.fl?[c.vx,c.vy]:critHead(c),nx=c.x+o[0]*D,ny=c.y+o[1]*D,j=(ny|0)*W+(nx|0);
-            if(c.k==='frog'&&S.ground[j]===1&&Math.random()<.25){c.dead=1;fxSpr&&fxSpr('fishsplash',nx*TS,(ny+.1)*TS)}/* 水へとびこむ */
+            if(c.k==='frog'&&waterJ(j)&&Math.random()<.25){c.dead=1;fxSpr&&fxSpr('fishsplash',nx*TS,(ny+.1)*TS)}/* 水へとびこむ */
             else if((c.fl||Math.abs(nx-c.hx)<1.2&&Math.abs(ny-c.hy)<1.2)&&critGround(nx,ny)){c.jx=c.x;c.jy=c.y;c.nx=nx;c.ny=ny;if(Math.abs(o[0])>.1)c.face=o[0]>0?1:-1;if(m==='bird')c.jt=0;else c.pre=c.fl?.05:.12}
             else if(!c.fl)c.hd=null}}}/* 行けなければ、つぎは向きをえらびなおす */
       if(night||(c.k==='bird'||c.k==='usagi'||c.k==='risu')&&S.rain)c.life=Math.min(c.life,c.t+1)}}

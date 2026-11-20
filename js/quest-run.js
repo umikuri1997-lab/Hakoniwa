@@ -6,15 +6,16 @@ function checkQuest(){
   if(S.flags.qsplitPend||S.flags.qsplitStory)questSplitResolve();
   storySummonNow();
   if(WD===0&&!S.cleared&&(S.setSh||0)>=3&&!NUSHI_RUN&&sheet==null&&$('#dialog').hidden&&!DLGQ.length)scheduleGrassReunion();
+  if(S.free)freeTick();/* フリーモード：クリアで開く物など（free.js） */
   if(QUEST_CLEAR_WAIT&&QUEST_CLEAR_WAIT.quest!==S.quest)QUEST_CLEAR_WAIT=null;
   TALKW=null;if(S.qStory==null)QUESTCLEARW=null;finalCheck();
   if(NEWRES!=null||NEWQ.length)return;
-  if(S.cleared){if(WD!==FREE)afterTick();return}
+  if(S.cleared){if(WD!==FREE&&!(typeof KGRIV!=='undefined'&&KGRIV)&&!(typeof KGRRUN!=='undefined'&&KGRRUN))afterTick();/* 火山のさいごのうずみ火（kagari.js）のあいだは、クリアのあとの依頼を出さない */else freeAfterTick();/* フリーモード：きょうの目標・季節の話（free.js） */return}
   if(S.quest>=QUESTS.length)return;
   const q=QUESTS[S.quest];
   if(q.id==='guest'&&S.qTalked&&!S.flags.guestDone&&!GUESTRUN&&!isNight()&&$('#dialog').hidden&&S.qStory==null)guestScene();
   if(S.flags.qPassed&&S.flags.qPassed[q.id]&&S.qStory==null){delete S.flags.qPassed[q.id];S.quest++;S.qTalked=false;return checkQuest()}/* 古いセーブで、ならびをかえる前にもうした目標は、とばす（migrateFarmFirst） */
-  if(q.skip&&S.qStory==null){/* ステージ2：草原で説明したことは、お話なしでとばす（もらえる物はもらう） */const rec0={...(S.recipes||{})};for(const id of [...questRecipeIds(q),...questRecipeIds(q,'clear')])if(BL[id]&&(!S.free||BL[id].kind!=='furn'))S.recipes[id]=true;if(q.talk){for(const id of q.talk.learn||[])S.recipes[id]=true;questGives(q,Object.assign({},q.talk.gives||{},{watchNow:false}))}if(q.pre)questGives(q,q.pre);questGives(q,Object.assign({},q.gives||{},{watchNow:false}));recipeNotice(Object.keys(S.recipes||{}).filter(id=>!rec0[id]));S.quest++;S.qTalked=false;return checkQuest()}
+  if(q.skip&&S.qStory==null){/* ステージ2：草原で説明したことは、お話なしでとばす（もらえる物はもらう） */const rec0={...(S.recipes||{})};for(const id of [...questRecipeIds(q),...questRecipeIds(q,'clear')])if(BL[id])S.recipes[id]=true;if(q.talk){for(const id of q.talk.learn||[])S.recipes[id]=true;questGives(q,Object.assign({},q.talk.gives||{},{watchNow:false}))}if(q.pre)questGives(q,q.pre);questGives(q,Object.assign({},q.gives||{},{watchNow:false}));recipeNotice(Object.keys(S.recipes||{}).filter(id=>!rec0[id]));S.quest++;S.qTalked=false;return checkQuest()}
   if(!$('#dialog').hidden)return;
   if(S.qStory!=null){TALKW=storyWho(QUESTS[S.qStory]);QUESTCLEARW=TALKW;renderQuest();return}/* クエストのあとのお話は、💬をタップしてから */
   {const e=grassEndingTalk();if(e){if(grassEndingTalkLines(e))TALKW=POKO;renderQuest();return}}/* 最後のかけらの話：フタバの吹き出しから */
@@ -113,6 +114,7 @@ function nextStageGoal(){/* 草原をクリアして、まだ火山のふもと�
   const f=S.res.some(r=>r.name===POKO&&!r.hidden);if(S.flags.sacredReunion&&!S.flags.sacredQuietSeen)return {t:'ヌシ様と話そう',pr:isNight()?'お話は、朝になってから':'御神木のそばで、ヌシ様が待っている',how:'「しらべる」でヌシ様をタップして、話を聞こう。そのあと、フタバたちが、つぎの土地へのお見送りをしてくれる'};/* お見送りは、ヌシ様の話のあと（departDue と同じ条件） */return {t:'つぎの土地へ旅立とう',pr:isNight()?'お見送りは、朝になってから':!f?'フタバが帰ってきたら、お見送り':'みんなが、お見送りのしたくをしている',how:'昼になると、フタバたちが、つぎの土地へのお見送りをしてくれる。お見送りのあと、火山のふもとの村へ行く'}}
 function renderQuest(){const q=QUESTS[Math.min(S.quest,QUESTS.length-1)];let pr='',t=S.cleared?(WD===FREE?'村づくりは、つづく…':'世界クリア！'):q.text;
   if(S.cleared&&WD!==FREE){const a=AFTERQ[S.aq||0],dd=S.daily,dn=dd?dd.k.filter(k=>dd.done[k]).length:0;if(a&&S.aqOn===(S.aq||0)){t=aqTitle(a);pr=aqProg(a)}else t=dd?'きょうの目標 '+dn+'/'+dd.k.length:'世界クリア！'}/* クリア後は、新しいクエストか、きょうの目標を出す */
+  if(S.cleared&&WD===FREE){const g=freeGoal(),dd=S.daily;if(g){t=g.t;pr=g.pr}else if(dd)t='きょうの目標 '+dd.k.filter(k=>dd.done[k]).length+'/'+dd.k.length}/* フリーモード：季節の話か、きょうの目標（free.js） */
   const ng=nextStageGoal();if(ng){t=ng.t;pr=ng.pr}/* 草原をクリアして、まだ旅立っていない：つぎの土地へ */
   if(!S.cleared){const wt=mainTalkWaitText(q);
     if(wt)t=wt;
@@ -313,12 +315,13 @@ let GUEST=null,GUESTRUN=false;
 /* ---------- 温泉宿のお客さん（火山）：草原のなかまが3日に1回とまりに来て、草原の花のたね・苗を売る。朝に来て、つぎの朝に帰る（夜は宿の中） ---------- */
 const VISITORS=[[POKO,'wood','#joy|温泉に入りに来たよ！ 草原の花のたねと苗、もってきたんだ。ほしいのある？'],[MINA,'earth','のんびりしに来たよぉ。草原の苗、いるかねぇ？']],VISIT_EVERY=3;
 let VISITOR=null;
-const visitOn=()=>WD===1&&!S.free&&!!S.st2&&S.st2.visit!=null&&S.st2.visit.day===dayNo();
+const visVol=()=>WD===1&&!S.free,visList=()=>S.free?freeVisitors():VISITORS;/* フリーモードは、旅のお客さん（free.js） */
+const visitOn=()=>(visVol()||!!S.free)&&!!S.st2&&S.st2.visit!=null&&S.st2.visit.day===dayNo();
 const visitHere=()=>visitOn()&&!isNight()&&!GUESTRUN&&!!visitor();
-function visitMorning(){if(WD!==1||S.free||!(S.flags.guestDone||S.cleared))return;const t=st2();if(t.visit&&dayNo()-t.visit.day<VISIT_EVERY)return;const n=t.visitN||0;t.visitN=n+1;t.visit={day:dayNo(),who:n%VISITORS.length};VISITOR=null;toast(VISITORS[t.visit.who][0]+'が、温泉宿にとまりに来た','good')}
-function visitSpot(){const inn=innHouse();let base=-1;if(inn){const dj=[...inn.h.set].find(j=>HOME_DOORS.has(S.obj[j]));if(dj!=null)base=dj+W}if(base<0)base=STATUE>=0?STATUE+2*W:CY*W+CX;for(let r=0;r<6;r++)for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){const k=base+dy*W+dx+1;if(k>0&&k<W*H&&walk(k)&&!S.obj[k]&&S.ground[k]!==1)return k}return base}
-function visitor(){if(!visitOn())return null;const v=S.st2.visit;if(VISITOR&&VISITOR.vs===v&&VISITOR.st===S)return VISITOR;const p=VISITORS[v.who],k=visitSpot();const g=mkRes({nid:-901},p[0],p[1],k%W+.5,(k/W|0)+.6);g.id=-901;g.hidden=false;g.face=1;g.vs=v;g.st=S;VISITOR=g;return g}
-function visitTap(wx,wy){if(!visitHere())return false;const g=visitor();if(Math.hypot(wx-g.x,wy-(g.y-.5))>1.1)return false;sfx('tbell');const p=VISITORS[S.st2.visit.who];dialog([[p[0],p[2]]],()=>openSheet('vshop'));return true}
+function visitMorning(){if(S.free)return freeVisitMorning();if(WD!==1||!(S.flags.guestDone||S.cleared))return;const t=st2();if(t.visit&&dayNo()-t.visit.day<VISIT_EVERY)return;const n=t.visitN||0;t.visitN=n+1;t.visit={day:dayNo(),who:n%VISITORS.length};VISITOR=null;toast(VISITORS[t.visit.who][0]+'が、温泉宿にとまりに来た','good')}
+function visitSpot(){const inn=innHouse();let base=-1;if(inn){const dj=[...inn.h.set].find(j=>HOME_DOORS.has(S.obj[j]));if(dj!=null)base=dj+W}if(base<0)base=STATUE>=0?STATUE+2*W:S.free&&OBOX>=0?OBOX+2*W:CY*W+CX;for(let r=0;r<6;r++)for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){const k=base+dy*W+dx+1;if(k>0&&k<W*H&&walk(k)&&!S.obj[k]&&S.ground[k]!==1)return k}return base}
+function visitor(){if(!visitOn())return null;const v=S.st2.visit;if(VISITOR&&VISITOR.vs===v&&VISITOR.st===S)return VISITOR;const p=visList()[v.who]||visList()[0],k=visitSpot();const g=mkRes({nid:-901},p[0],p[1],k%W+.5,(k/W|0)+.6);g.id=-901;g.hidden=false;g.face=1;g.vs=v;g.st=S;VISITOR=g;return g}
+function visitTap(wx,wy){if(!visitHere())return false;const g=visitor();if(Math.hypot(wx-g.x,wy-(g.y-.5))>1.1)return false;sfx('tbell');const p=visList()[S.st2.visit.who]||visList()[0];dialog([[p[0],p[2]]],()=>openSheet(S.free?'shop':'vshop'));return true}
 function guestScene(){/* 火山：草原のフタバが、温泉にあそびに来る。宿の前にあらわれ、歩いて露天ぶろへ行き、つかって、手をふって帰る（場面だけ。セーブしない人） */
   const hot=[];for(let j=0;j<W*H;j++)if(S.ground[j]===1&&nearHot(j,0))hot.push(j);const inn=innHouse();/* 温泉宿の露天ぶろに入る（なければ、温泉） */
   const tgt=inn?inn.onsen+W+1:hot.length?hot[(hot.length/2)|0]:STATUE>=0?STATUE+W:CY*W+CX;let st=-1;for(let r=1;r<6&&st<0;r++)for(let dy=-r;dy<=r&&st<0;dy++)for(let dx=-r;dx<=r;dx++){const k=tgt+dy*W+dx;if(k>0&&k<W*H&&walk(k)&&!S.obj[k]&&S.ground[k]!==1){st=k;break}}

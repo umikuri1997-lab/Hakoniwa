@@ -39,7 +39,7 @@ function juiceBreak(j,kind,r){if(!juiceOK()||j==null||j<0)return;const B=JBRK[ki
   if(B.ring)fx.push({k:'ring',x:cx,y:cy+4,life:1});juiceThud(kind,x,y);
   if(r&&typeof JUMP!=='undefined')JUMP.set(r,performance.now()+(kind==='crop'?0:120));/* 作業したせいれいが、小さくとびはねる */
   if(kind!=='crop'&&typeof juiceStop==='function')juiceStop(r,n0);/* さいごの一撃：一瞬とまって、ふるえてから、はじける（juice2.js） */
-  if(kind!=='crop'&&cam.z>=homeZ()*.7)juiceShake()}
+  if(kind==='stone'&&cam.z>=homeZ()*.7)juiceShake()}/* 木は切ったときにゆらさない：たおれきって、ドンと地面についたとき（tfThud）だけ */
 /* ---------- 木がたおれる（treeFall） ----------
    さいごの一回で木がなくなったとき（useNat・守りの光 natHit）、その木の絵を、根もとを軸にまわしてたおす。音は持ち主の音（SAMPLES.treefall：ミシミシ → TFTHUD 秒にドン）。
    ミシミシのあいだ（TFWOB 秒まで）は、ゆれる。そのあと、だんだん速くかたむいて、ドンで地面につき、小さくはねて、TFLIE 秒ねてから TFOUT 秒でうすれる。

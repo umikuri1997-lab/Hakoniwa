@@ -13,7 +13,7 @@ const none=await run(`(()=>{S.insp=null;const o=Math.random;Math.random=()=>.5;i
 const fx=await run(`(()=>{const d=callDay(),on=i=>{S.insp={id:S.res[i].id,d}},R=S.res,out={};
 on(0);out.wk=[inspWork(R[0],{type:'build'}),inspWork(R[0],{type:'repair'}),inspWork(R[0],{type:'chop'}),inspWork(R[1],{type:'build'})];
 on(3);const a0=rMul(R[3],'atk');S.insp=null;const a1=rMul(R[3],'atk');out.atk=Math.round((a0-a1)*100);
-on(4);S.drops=[];const d0={id:'mat:eda',n:1,x:0,y:0};let got=0;const am=addMat;addMat=(r,k,n)=>{got+=n;return n};const ac=addCarry;addCarry=(r,k,n)=>{got+=n;return n};try{takeDrop(d0,R[4])}finally{addMat=am;addCarry=ac}got+=S.drops.reduce((t,q)=>t+q.n,0);S.drops=[];out.drop=[got,d0.n];
+on(4);S.drops=[];const d0={id:'mat:eda',n:1,x:0,y:0};let got=0;const am=addMat;addMat=(r,k,n)=>{got+=n;(r.cmat=r.cmat||{})[k]=(r.cmat[k]||0)+n;return n};const ac=addCarry;addCarry=(r,k,n)=>{got+=n;return n};try{takeDrop(d0,R[4])}finally{addMat=am;addCarry=ac;R[4].cmat=null}got+=S.drops.reduce((t,q)=>t+q.n,0);S.drops=[];out.drop=[got,d0.n];
 on(0);out.other=inspOn(R[1]);S.t+=1440;out.next=inspOn(R[0]);return out})()`);
 assert.deepEqual(fx.wk,[.5,.5,0,0],'土：建てる・直すだけ+10（20がふつう） '+JSON.stringify(fx));assert.equal(fx.atk,10,'火：攻撃力+10');
 assert.deepEqual(fx.drop,[2,1],'風：ひろう物+1（落とし物そのものはかえない） '+JSON.stringify(fx.drop));assert.ok(fx.other===false&&fx.next===false,'その子・その日だけ');

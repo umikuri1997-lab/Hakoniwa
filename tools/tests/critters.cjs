@@ -51,7 +51,7 @@ assert.deepEqual(mv.miss,[],'チップがない '+mv.miss);
 for(const k of ['usagi','risu','nezumi','harinezumi','tentoumushi','mitsubachi','tonbo','hotaru','frog'])assert.ok((parseFloat(mv.moved[k])>0.05||k==='frog'&&/gone/.test(mv.moved[k]))&&!/nochip/.test(mv.moved[k]),'動く '+k+' '+mv.moved[k]);/* かえるは、水へとびこんで、いなくなることもある */
 for(const k of ['usagi','risu','nezumi'])assert.ok(mv.fled[k],'にげる '+k);
 /* もぐらは土のステージ（WD 3）だけ */
-const mg=await run(`(()=>{const w0=WD;WD=3;S.t=1440*7+600;const j=(CY+3)*W+CX+4,ok=critOK('mogura',j);WD=w0;return ok})()`);assert.ok(mg,'土のステージに、もぐら');
+const mg=await run(`(()=>{const w0=WD;WD=2;S.t=1440*7+600;const j=(CY+3)*W+CX+4,ok=critOK('mogura',j);WD=w0;return ok})()`);assert.ok(mg,'土のステージに、もぐら');
 /* いなくなるとき（寿命・にげる・雨）は、画面の外へ去ってから消える（見えている所でパッと消えない） */
 const lv=await run(`(()=>{S.rain=false;S.t=1440*8+600;cam.z=2;centerOn(CX*TS,(CY+.5)*TS);S.res=[];const [a,b,c,d]=critView(),bad=[];let n=0;
   const mk=(id,k,x,y,life)=>({id,k,x,y,hx:x,hy:y,z:CK[k].m==='fly'?12:0,vx:0,vy:0,face:1,t:0,life,hop:0,fl:0,ci:0,act:0,ph:0,wait:0});

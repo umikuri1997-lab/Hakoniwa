@@ -83,7 +83,7 @@ const BPNAT=new Set(['ntree','deadtree','bamboo','rock','boulder']);/* 置く所
 const bpSoft=o=>WEEDS.has(o)||o==='kinoko'||o==='takenoko';/* 置くときに、そのままなくなる */
 function bpCheck(k,x,y){/* 置けるか：[ok, わけ] */const {w,h}=bpSize(k);if(x<0||y<0||x+w>W||y+h>H)return[false,'ここには置けません'];const h0=hiAt(y*W+x);
   for(let b=0;b<h;b++)for(let a=0;a<w;a++){const j=(y+b)*W+x+a,o=S.obj[j];
-    if(S.ground[j]===1||S.ground[j]===2)return[false,'水の上には置けません'];if(S.fog&&fogAt(j))return[false,'霧の中には置けません'];if(hiAt(j)!==h0)return[false,'段差のある所には置けません'];
+    if(S.ground[j]===1||S.ground[j]===2)return[false,'水の上には置けません'];if(fogAt(j))return[false,'霧の中には置けません'];if(hiAt(j)!==h0)return[false,'段差のある所には置けません'];
     if(STUMPB.has(j)||j===GODJ||sacredNoBuild(j,bpWall()))return[false,'ここには置けません'];
     if(S.floor[j]||S.rug&&S.rug[j]!=null||S.edge&&S.edge[j]||S.roof&&S.roof[j])return[false,'床や物のある所には置けません'];
     if(o&&!BPNAT.has(o)&&!bpSoft(o)&&!VEINS[o])return[false,'物のある所には置けません'];
@@ -153,12 +153,12 @@ function bpGhostDraw(ctx,now){now=now||performance.now();const L=[];if(pending&&
       if(ok&&(t==='furn'||t==='build'||t==='plant')&&BL[id]){const j0=(y+dy)*W+x+dx,px=(j0%W)*TS,py=((j0/W)|0)*TS-hiAt(j0)*LIFT,rch=ROTS[id]&&rot&&chipOf(id,null,rot);ctx.save();ctx.globalAlpha=.4;if(rch)drawChip(ctx,rch,id,px,py,now);else drawObj(ctx,id,px,py,null,100,now);ctx.restore()}/* 家具・建物・花は、できあがりの絵もうすく */}}
   ctx.restore()}
 const BPTALKL={house:'こんな家に、すんでみたいなって',garden:'こんな庭があったら、すてきだなって',farm:'こんな畑があったら、いいなって',play:'こんな遊び場があったら、みんなで遊べるなって',guard:'こんなふうに守れたら、夜もこわくないなって'};
-function bpTalkGift(r){/* お話のあと：ときどき、えがいた設計図をくれる */if(S.free||Math.random()>=BPTALK)return;const d=callDay();if(S.bpTalkD!=null&&d-S.bpTalkD<BPTALKCD)return;const k=bpNext(null,r.elem);if(!k)return;S.bpTalkD=d;const id=r.id;
+function bpTalkGift(r){/* お話のあと：ときどき、えがいた設計図をくれる */if(Math.random()>=BPTALK)return;const d=callDay();if(S.bpTalkD!=null&&d-S.bpTalkD<BPTALKCD)return;const k=bpNext(null,r.elem);if(!k)return;S.bpTalkD=d;const id=r.id;
   dialog([[r.name,'#think|ねえ、守り神さま……'+BPTALKL[BPS[k].cat]+'、ずっと考えてたんだ。'],[r.name,'#joy|えがいてみたんだ。よかったら、もらって！']],()=>{const q=S.res.find(x=>x.id===id);if(!(S.bpInv||[]).some(z=>z.k===k)&&!(S.bpGot||{})[k])bpGiveK(k,q?q.id:null)})}
 
 /* ---------- 設計図の依頼（サブクエスト bpreq）：bphome のあと、朝に5%、せいれいが設計図をわたして「建ててほしい」とたのむ。建てたらクリア、ごほうびは設計図の rw ---------- */
 const BPREQP=.05;
-function bpMorning(){if(S.free||!bpOpen())return;const D=S.subDone||(S.subDone={}),St=S.subSt||(S.subSt={});
+function bpMorning(){if(!bpOpen())return;const D=S.subDone||(S.subDone={}),St=S.subSt||(S.subSt={});
   if(S.bpReq&&D.bpreq){S.bpReq=null;delete D.bpreq;delete St.bpreq;if(S.subSeen)delete S.subSeen.bpreq;return}/* おえた依頼は、つぎの朝にかたづける（また出るように） */
   if(S.bpReq||Math.random()>=BPREQP)return;const L=S.res.filter(r=>!r.hidden);if(!L.length)return;const r=pick(L),k=bpNext(null,r.elem);if(!k)return;S.bpReq={k,who:r.name}}
 const bpReqQ=()=>S&&S.bpReq&&BPS[S.bpReq.k];
