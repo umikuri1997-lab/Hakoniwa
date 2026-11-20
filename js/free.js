@@ -5,7 +5,7 @@
    野の花（S.wild：マス→花の番号）：見た目だけの花。物・床を置いたマスの花はなくなる（wildPurge）。属性の力・みどりのマス・すてき度には数えない。
    神殿はない（noTemple）。おそなえ箱と依頼ボードは、はじめから村にべつべつにある。カミサマは出ない。なかまは呼ばず、属性の力がたまると朝に谷の南からやってくる（freeArrive）。
    土地をクリアすると開く（freeTier・WT・VOLK）：火山をクリアすると、火と水のせいれい・火山の物・竹・鉱脈と炉とそうび・おまつり・火山のイベントと魚（freeVolOpen）。
-   お話：第1章（QUESTSF、story.js）。おまつりのあとは、第2章（FCH2・S.fc2：火山をクリアしてから）・季節の話4つ（FSEA・S.fsea）・きょうの目標（freeAfterTick）。
+   お話：谷で生まれた小さなせいれい（QUESTSF、story.js と kid.js）。旅立ちのあとは、季節の話4つ（FSEA・S.fsea。お礼のつぎの朝に、旅先から手紙 kidLetter）→ 帰ってくる（kidBackTick）→ 第2章（FCH2・S.fc2：火山をクリアしてから）・きょうの目標（freeAfterTick）。
    交換は、旅のお客さん（freeVisitors、quest-run.js の visit*）。 */
 const VPONDS=[[-13,-15,3,2.2],[18,3,3.4,2.4],[-10,16,2.6,1.9],[9,-19,2.2,1.6]];/* 谷の中の池（まん中からの場所・よこ・たての半径） */
 const VGROVE=[[16,-10,4],[-19,2,4],[5,21,3.5]];/* 谷の中の木立（まん中からの場所・半径） */
@@ -75,13 +75,13 @@ Object.assign(EVENTS,{
 EVORDER.push('fhanami','fsuzumi','fdonguri','fhoshi');
 /* ---------- おまつりのあと：第2章（火山のたより）・季節の話・きょうの目標 ----------
    どれも「依頼の会話 → その話でした行動 → お礼の会話」。いないせいれいの行ははぶき、FA がいなければはじめない。昼・会話のないときだけ。 */
-const fHere=n=>S.res.some(r=>r.name===n&&!r.hidden),fCast=L=>L.filter(x=>fHere(x[0]));
+const fHere=n=>S.res.some(r=>r.name===n&&!r.hidden)||typeof kidRes==='function'&&!!kidRes(n),fCast=L=>L.filter(x=>fHere(x[0]));
 let FBUSY=null;
 function fSay(L,fn){FBUSY=S;const s0=S;let once=0;dialog(fCast(L),()=>{if(once++)return;FBUSY=null;if(S!==s0)return;fn();save();renderQuest()})}
 const fGearN=()=>(S.gear||[]).length+S.res.reduce((n,r)=>n+Object.keys(r.gear||{}).filter(k=>r.gear[k]).length,0);/* 持っている・つけているそうびの数 */
 const FCH2=[
   {t:'火山のたより：火か水のなかまをむかえる',how:'花や家具で、火か水の力をためると、朝、谷の南からやってくる',rw:60,done:()=>S.res.some(r=>r.elem==='fire'||r.elem==='water'),
-   ask:(a,b)=>[[a,'ねえ、風があったかい！ 火山のほうから、ふいてくるよ。'],[b,'あっちの土地も、げんきになったんだねぇ。'],[a,'#joy|火や水のせいれいも、来てくれるかな！']],thx:(a,b)=>[[a,'#joy|ようこそ！ 遠くから、よく来てくれたね！'],[b,'谷が、またにぎやかになるねぇ。']]},
+   ask:(a,b)=>[[KN(),'旅のとちゅうで、けむりの出る大きな山を見たよ。山のほうから、あったかい風がふいてた。'],[a,'ねえ、ほんとだ。風があったかい！'],[b,'あっちの土地も、げんきになったんだねぇ。'],[a,'#joy|火や水のせいれいも、来てくれるかな！']],thx:(a,b)=>[[a,'#joy|ようこそ！ 遠くから、よく来てくれたね！'],[b,'谷が、またにぎやかになるねぇ。']]},
   {t:'谷の湯：露天ぶろに入る',how:'「おく」の「建てる」から露天ぶろを建てる。せいれいが入るのを待つ',rw:60,done:()=>!!S.fc2.bath,
    ask:(a,b)=>[[b,'火山には、あったかいお湯がわくんだってねぇ。'],[a,'#joy|この谷にも、ほしいな！ みんなで、つかってみたい！']],thx:(a,b)=>[[b,'#joy|はぁ……。ごくらくだねぇ……。'],[a,'ぽかぽかで、ねむくなっちゃう……。']]},
   {t:'丘のひかり：鉱脈から、そうびを1つ作る',how:'光る岩（鉱脈）を「しらべる」でタップしてほり、炉で延べ棒にして、依頼ボードの「そうび」で作る',rw:80,start:()=>{S.fc2.g0=fGearN()},done:()=>fGearN()>(S.fc2.g0||0),
@@ -89,7 +89,7 @@ const FCH2=[
   {t:'谷の火まつり：火まつりをひらく',how:'夏のあいだに、依頼ボードの「イベント」で「火まつり」をひらく',rw:100,done:()=>!!S.fc2.hi,
    ask:(a,b)=>[[a,'火のせいれいって、おどるのがすきなんだって！'],[b,'火をかこんで、たいこにあわせて、おどるらしいねぇ。'],[a,'#joy|やりたい！ 谷でも、やろうよ！']],thx:(a,b)=>[[a,'#joy|どん、どん！ まだ、からだがはずんでる！'],[b,'火が、空まであがったねぇ。']]}];
 function fc2St(){return S.fc2||(S.fc2={i:0,on:0})}
-function fc2Now(){/* いまの第2章の話（依頼を聞いたあと）。なければ null */if(!S||!S.free||!S.cleared||freeTier()<1)return null;const F=fc2St();return F.on&&FCH2[F.i]?FCH2[F.i]:null}
+function fc2Now(){/* いまの第2章の話（依頼を聞いたあと）。なければ null */if(!S||!S.free||!S.cleared||freeTier()<1||S.kid&&S.kid.st!=='home')return null;const F=fc2St();return F.on&&FCH2[F.i]?FCH2[F.i]:null}
 function fc2Tick(){if(freeTier()<1)return false;const F=fc2St(),q=FCH2[F.i];if(!q)return false;const a=FA(),b=FB();
   if(!F.on){fSay(q.ask(a,b),()=>{F.on=1;if(q.start)q.start();sfx('quest');toast('目標：'+q.t,'good')});return true}
   if(q.done()){fSay(q.thx(a,b),()=>{F.i++;F.on=0;rewardPower(q.rw);memo('ball',q.t.split('：')[0]);if(typeof juiceCheer==='function')juiceCheer()});return true}
@@ -106,23 +106,24 @@ function fseaThx(k){const a=FA(),b=FB();return [
   [[a,'#joy|すずしかったー！'],[b,'池にうつる夕やけ、みんなで見ると、きれいだったねぇ。']],
   [[a,'#joy|ぼく、いちばんひろえたかも！'],[b,'かぞえてるうちに、わからなくなっちゃったねぇ。']],
   [[a,'#joy|星、つかめそうだったね！'],[b,'みんなでくっついてたから、さむくなかったよぉ。']]][k]}
-function fseaFinL(){const a=FA(),b=FB();return [[a,'春も、夏も、秋も、冬も。ぜんぶ、みんなですごしたね。'],[b,'ふたりきりのころは、季節って、すぎていくだけだったのにねぇ。'],[a,'#joy|いまは、つぎの季節が、まちどおしいよ！']]}
+function fseaFinL(){const a=FA(),b=FB(),k=KN();return [[a,'春も、夏も、秋も、冬も。ぜんぶ、みんなですごしたね。'],[b,'……'+k+'も、どこかで、おなじ季節を見てたかねぇ。'],[a,'春になったら帰るって、手紙に書いてあったよ。'],[b,'そろそろ、だねぇ。']]}
 function fseaSt(){const F=S.fsea||(S.fsea={});F.a||(F.a={});F.e||(F.e={});F.d||(F.d={});return F}
 function fseaNow(){/* いまの季節の話（依頼を聞いて、まだお礼を聞いていない）。なければ −1 */if(!S||!S.free||!S.cleared||!S.fsea)return -1;const F=fseaSt(),k=seasonNow();return F.a[k]&&!F.d[k]?k:-1}
 function freeEvEnd(id,P){/* イベントを、さいごまでした（events.js の evEnd から）。その話を受けているときだけ数える */if(!S||!S.free||!P||!P.length)return;
-  const q=QUESTS[S.quest];if(!S.cleared&&q&&q.id==='fevent'&&S.qTalked)S.fevN=(S.fevN||0)+1;
+  const q=QUESTS[S.quest];if(!S.cleared&&q&&q.id==='ffirst'&&S.qTalked)S.fevN=(S.fevN||0)+1;
   if(!S.cleared)return;const F=fseaSt(),k=FSEA.findIndex(x=>x.ev===id);if(k>=0&&F.a[k]&&!F.d[k])F.e[k]=1;
   if(id==='himatsuri'&&fc2Now()===FCH2[3])S.fc2.hi=1}
 function fseaTick(){const F=fseaSt();if(F.fin)return;
-  for(let k=0;k<4;k++)if(F.e[k]&&!F.d[k])return fSay(fseaThx(k),()=>{F.d[k]=1;rewardPower(FSEA[k].rw);memo('ball',FSEA[k].t.split('：')[0])});/* お礼 */
-  if([0,1,2,3].every(k=>F.d[k]))return fSay(fseaFinL(),()=>{F.fin=1;rewardPower(FSEAFIN);memo('ball','谷で、季節がひとめぐりした')});/* しめの話 */
+  for(let k=0;k<4;k++)if(F.e[k]&&!F.d[k])return fSay(fseaThx(k),()=>{F.d[k]=1;rewardPower(FSEA[k].rw);memo('ball',FSEA[k].t.split('：')[0]);if(typeof kidLetter==='function')kidLetter(k)});/* お礼。つぎの朝、旅先から手紙 */
+  if([0,1,2,3].every(k=>F.d[k]))return fSay(fseaFinL(),()=>{F.fin=1;if(S.kid)S.kid.finD=dayNo();rewardPower(FSEAFIN);memo('ball','谷で、季節がひとめぐりした')});/* しめの話。つぎの朝、小さなせいれいが帰ってくる */
   const k=seasonNow();if(!F.a[k]&&!F.d[k])fSay(fseaAsk(k),()=>{F.a[k]=1;sfx('quest');toast('目標：'+FSEA[k].t,'good')})}
-function freeTick(){/* 毎秒くらい（quest-run.js の checkQuest から） */if(freeTier()>=1&&!S.flags.fvol&&stageReady())freeVolOpen();
+function freeTick(){/* 毎秒くらい（quest-run.js の checkQuest から） */if(freeTier()>=1&&!S.flags.fvol&&stageReady())freeVolOpen();if(!S.kid&&typeof kidEnsure==='function'&&S.flags.valley)kidEnsure();
   if(S.fc2&&S.fc2.on&&S.fc2.i===1&&!S.fc2.bath&&S.res.some(r=>r.act&&r.act.type==='bathe'&&r.act.stage==='do'&&S.obj[anc(r.act.obj)]==='onsen'))S.fc2.bath=1}/* 露天ぶろに入った */
 function freeAfterTick(){/* おまつりのあと（昼だけ。おまつりのつぎの朝から） */if(isNight()||!$('#dialog').hidden||NEWRES!=null)return;if(S.clearDay==null)S.clearDay=0;if(dayNo()<=S.clearDay)return;
   if(!S.daily||S.daily.d!==dayNo())dailySet();dailyCheck();checkFree();
   if(FBUSY===S||typeof DLGGAP!=='undefined'&&performance.now()<DLGGAP||S.ev&&S.ev.ph||!fHere(FA()))return;
-  if(!fc2Tick())fseaTick()}
+  if(typeof kidBackTick==='function'&&S.kid&&kidBackTick())return;/* 小さなせいれいが帰ってくる */
+  if((!S.kid||S.kid.st==='home')&&fc2Tick())return;fseaTick()}
 function freeGoal(){/* 目標の欄：第2章 → 季節の話 */const q=fc2Now();if(q)return{t:q.t,pr:q.done()?'お話がある':''};const k=fseaNow();if(k<0)return null;const F=fseaSt(),id=FSEA[k].ev;return{t:FSEA[k].t,pr:F.e[k]?'お話がある':S.ev&&S.ev.id===id?'もうすぐ、'+EVENTS[id].n:''}}
 function freeSec(body){/* 目標の一覧：第2章と季節の話 */
   if(freeTier()>=1){const F=fc2St(),sec=el('<div class="sec"><h3>火山のたより</h3><div class="rows"></div></div>'),rw=sec.querySelector('.rows');FCH2.forEach((q,i)=>{if(i>F.i)return;const r=i<F.i?rowEl('✓ '+q.t,'たっせい'):F.on?rowEl('・'+q.t,q.how+'。ごほうび パワー+'+q.rw):rowEl('・つぎのお話','昼になると、はじまる');if(i<F.i)r.classList.add('done');rw.appendChild(r)});body.appendChild(sec)}

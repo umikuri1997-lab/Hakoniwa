@@ -1,3 +1,4 @@
+import os
 """せいれいの3Dを、動きの数（ポーズ）で動かして、ドット絵に写す（spirit3d）。
 ポーズの数（ない物は0）：
   体  x・y・z（ずらす）・lean（前かがみ、+で前）・roll（左右にかたむく）・yaw（ひねる）。回す中心は腰 (0,0,11)
@@ -73,9 +74,12 @@ def posed(sp, face, p):
 FARLEG = (239, 231, 218)   # 横向きの奥の足の色：体の色（CREAM）より1段暗く、手前の足と見分ける（Frostwind の PIXEL-ART.md の考え方。MIT）
 def darker(c, k=0.72): return tuple(int(v*k) for v in c)
 
+KS = float(os.environ.get('SPKS', '1'))   # 写す大きさ（build.py --kid）
 def shoot(sp, face, p):
     """ポーズ p の絵（EXT の大きさ、RGBA）と、場所（目のずれ・手・道具の先。チップのドット、足もとが原点）"""
     parts, anc = posed(sp, face, p); V = view(face, p.get('spin', 0.0))
+    if KS != 1.0:   # 小さなせいれい（フリーモード）：足もとを原点に、画面の上でちぢめて写す
+        V1 = V; V = lambda P: (lambda X, Y, Z: (X*KS, Y*KS, Z))(*V1(P))
     names = list(parts); Wd, Hd = (EXT[1]-EXT[0])*SSN, (EXT[3]-EXT[2])*SSN
     zb = np.full(Wd*Hd, -1e9); idb = np.full(Wd*Hd, -1); cb = np.zeros((Wd*Hd, 3), np.uint8); gz = np.full(Wd*Hd, -1e9)
     # 重なりは、本当の奥行き（手前の点が勝つ）。ただし、同じ部品のまとまりの中だけで、少しの差をつける：

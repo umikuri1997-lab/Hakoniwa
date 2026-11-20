@@ -190,24 +190,28 @@ function INTROFL(){return [[FA(),'#surprise|わあ、守り神さまだ！ ぼ�
 const TOYS4=['swing','sandbox','seesaw','slide'];/* 遊び道具（どれでもよい） */
 const LIGHTQ=['torch','lamp','campfire','lantern','candle','flamp','toro','takeakari','andon','yomawari','watchlight'];/* watchlight：あかりのついた見張り台（Lv5〜。recount で数える） *//* クエストで数える「あかり」（どれでもよい） */
 const DECOQ=['hedge','birdbath','parasol','arch','signpost','monstera','jar','rockart','vane','kamizo','shishiodoshi','noren'];/* クエストで数える「かざり」（どれでもよい） */
-/* フリーモードの第1章：数ではなく、やり方をえらべる目標（住み心地・スポット・なかま・イベント・すてき度）。神殿もカミサマも出ない。第2章と季節の話は free.js */
-const fComf=()=>HOUSES.reduce((m,h)=>Math.max(m,houseComfort(h).v),0),fComfSt=()=>Math.min(5,Math.max(HOUSES.length?1:0,Math.ceil(fComf()/60))),fSpotN=()=>new Set((SPOTI||[]).map(x=>x.sp.k)).size;
+/* フリーモードのお話「谷で生まれた小さなせいれい」（しくみは kid.js）：つぼみ → うまれた日 → はじめて → できない → 大きくなった → 旅立ち。神殿もカミサマも出ない。旅のあとの季節の話・おかえり・第2章は free.js。
+   話しかけるのは、いつも、はじめの1人（FA）。小さなせいれいの名前は KN()（kid.js） */
+const kS=()=>S&&S.kid||{};
 const QUESTSF=[
-  {id:'fhome',text:'第1話 ふたりの家：家の住み心地を★3に',check:()=>fComfSt()>=3,prog:()=>'住み心地 ★'+Math.min(3,fComfSt())+'/3',how:'家の中に、家具・あかり・床をふやす。家をタップすると、住み心地がわかる',
-   talk:{get who(){return FA()},when:()=>true,get lines(){return [[FA(),'ねえ、ぼくたちの家、まだ中がからっぽなんだ。'],[FB(),'ねるだけの家だったからねぇ。'],[FA(),'#joy|守り神さま、いごこちのいい家にしてほしいな！']]}},
-   get story(){return [[FA(),'#joy|わあ、家の中が、ぽかぽかする！'],[FB(),'ずっと、ここにいたくなるねぇ。']]}},
-  {id:'fspot',text:'第2話 谷のお気に入り：好きなスポットを1つ作る',check:()=>fSpotN()>=1,prog:()=>'スポット '+Math.min(1,fSpotN())+'/1',how:'ひでんのしょの「くらし・家具」にあるスポットから、好きな組み合わせをえらんで置く',
-   talk:{get who(){return FB()},when:()=>true,get lines(){return [[FB(),'谷のどこかに、お気に入りの場所があるといいねぇ。'],[FA(),'物をならべると、とくべつな場所になるんだって！'],[FB(),'守り神さまの好きな場所を、つくっておくれよぉ。']]}},
-   get story(){return [[FA(),'#joy|ここ、いいね！ ぼく、毎日来ちゃいそう！'],[FB(),'お気に入りが、ひとつできたねぇ。']]}},
-  {id:'ffriend',text:'第3話 谷のむこうから：なかまをむかえる',check:()=>(S.farr||0)>=1,prog:()=>'なかま '+Math.min(1,S.farr||0)+'/1',how:'花や家具で属性の力がたまると、朝、谷の南からなかまがやってくる',
-   talk:{get who(){return FA()},when:()=>true,get lines(){return [[FA(),'ねえ、丘のむこうには、ほかのせいれいもいるのかな。'],[FB(),'この谷がにぎやかになったら、のぞきに来るかもしれないねぇ。'],[FA(),'#joy|来てくれたら、うれしいな！']]}},
-   get story(){return [[FA(),'#joy|ほんとに来てくれた！ ようこそ、花の谷へ！'],[FB(),'ふたりきりじゃ、なくなったねぇ。うれしいねぇ。']]}},
-  {id:'fevent',text:'第4話 みんなであそぶ日：好きなイベントを1つひらく',check:()=>(S.fevN||0)>=1,prog:()=>'イベント '+Math.min(1,S.fevN||0)+'/1',how:'依頼ボードの「イベント」から、好きなイベントをひらく',
-   talk:{get who(){return FA()},when:()=>true,get lines(){return [[FA(),'なかまがふえたから、みんなで、なにかしたいな！'],[FB(),'みんなでやると、たのしいことって、あるよねぇ。']]}},
-   get story(){return [[FA(),'#joy|たのしかったー！ また、やろうね！'],[FB(),'みんなの顔が、にこにこだったねぇ。']]}},
-  {id:'fsuteki',text:'最終話 すてきな谷：すてき度を★3に',check:()=>suteki().st>=3,prog:()=>'すてき度 ★'+Math.min(3,suteki().st)+'/3',how:'かざり・花・道・スポットをふやす。村のようすで、すてき度がわかる',
-   talk:{get who(){return FA()},when:()=>true,get lines(){return [[FA(),'ねえ、この谷、まえよりずっと、すてきになったよね。'],[FB(),'もっとすてきになったら、おいわいしたいねぇ。'],[FA(),'#joy|うん！ 谷のおまつりだ！']]}},
-   get story(){return [[FA(),'#joy|見て見て！ 谷じゅうが、きらきらしてる！'],[FB(),'#cry hush|ふたりだけだったころは、しずかで、ちょっとさみしかったねぇ。'],[FA(),'いまは、こんなににぎやか！ 守り神さまが来てくれたからだね。'],[FB(),'ここが、みんなのふるさとだねぇ。']]},gives:{fest:true}},
+  {id:'fbud',text:'第1話 つぼみ：つぼみのそばに、物を3つ置く',check:()=>kidNear()>=3,prog:()=>'置いた物 '+Math.min(3,kidNear())+'/3',how:'光るつぼみのまわり3マスに、家具・花・かざりなど、好きな物を置く',
+   talk:{get who(){return FA()},when:()=>!!S.kid,get lines(){return [[FA(),'#surprise|ねえ、見て！ 花のむれの中で、つぼみが光ってる！'],[FB(),'こんなつぼみ、はじめて見たねぇ。'],[FA(),'この谷では、せいれいは生まれないって、思ってたけど……。'],[FB(),'だれかが、生まれようとしてるのかもしれないよぉ。'],[FA(),'#joy|さみしくないように、そばに、すてきな物を置いてあげたいな！']]},done(){const K=S.kid;if(K)panTo(K.bj%W*TS+TS/2,((K.bj/W)|0)*TS+TS/2)}},
+   get story(){return [[FA(),'#joy|つぼみが、ぽうっと明るくなった！'],[FB(),'よろこんでるみたいだねぇ。']]}},
+  {id:'fborn',text:'第2話 うまれた日：つぼみがひらくのを待つ',check:()=>!!kS().name,prog:()=>kS().bornD!=null?'あしたの朝':'',how:'朝になると、つぼみがひらく',
+   talk:{get who(){return FA()},when:()=>true,get lines(){return [[FB(),'つぼみが、ふくらんできたねぇ。'],[FA(),'耳をあてると、とくん、とくんって、音がするよ。'],[FB(),'あしたの朝には、ひらくかもしれないねぇ。'],[FA(),'#joy|あしたの朝、いちばんに見にこよう！']]},done(){if(S.kid&&S.kid.bornD==null)S.kid.bornD=callDay()+1}},
+   get story(){return [[FA(),'#joy big|生まれた！ 谷で、せいれいが生まれたよ！'],[FB(),'#cry hush|ちっちゃいねぇ……。手が、こんなに小さいよぉ。'],[KN(),'#joy|……！'],[FA(),'ようこそ、'+KN()+'！ ここが、花の谷だよ。']]}},
+  {id:'ffirst',text:'第3話 はじめて：好きなイベントを1つひらく',check:()=>(S.fevN||0)>=1,prog:()=>'イベント '+Math.min(1,S.fevN||0)+'/1',how:'依頼ボードの「イベント」から、好きなイベントをひらく',
+   talk:{get who(){return FA()},when:()=>!!kS().name,get lines(){return [[FA(),'#tilt|ねえ、'+KN()+'が、ずっと、あとをついてくるんだ。'],[FB(),'まねっこしてるねぇ。さっき、あくびしたら、いっしょにあくびしてたよぉ。'],[KN(),'#joy|まねっこ！'],[FA(),'#surprise|しゃべった！'],[FA(),'#joy|ねえ、みんなで遊ぶところ、見せてあげたいな！']]}},
+   get story(){return [[KN(),'#joy|たのしかった！ もういっかい！'],[FA(),'あはは、また今度ね。'],[FB(),'はじめての「たのしい」だねぇ。']]}},
+  {id:'fcant',text:'第4話 できない：花を3つ植えて、咲かせる',check:()=>kidBloomN()>=3,prog:()=>'咲いた花 '+Math.min(3,kidBloomN())+'/3',get how(){return '「おく」で花を3つ植える。'+KN()+'が水をやると、つぎの朝に咲く'},
+   talk:{get who(){return FA()},when:()=>!!kS().name,get lines(){return [[KN(),'#cry|……はこべない。'],[FA(),'あ……。木箱を、はこぼうとしてたの？'],[KN(),'#cry|みんなみたいに、したいのに……！'],[FA(),'……うん。くやしいね。'],[FB(),'まだ、からだが小さいからねぇ。でも、できることも、きっとあるよぉ。'],[FA(),'そうだ！ 花を植えたら、'+KN()+'に水をやってもらおうよ。'],[KN(),'#tilt|みず……？']]},done(){const K=S.kid;if(K){K.f0=[];for(let j=0;j<W*H;j++)if(FLOWERS.has(S.obj[j]))K.f0.push(j);K.wat={}}}},
+   get story(){return [[KN(),'#joy|さいた！ ぼくが、水をやった花！'],[FA(),'#joy|すごいよ、'+KN()+'！ ぜんぶ、ひとりでできたね！'],[FB(),'できたねぇ。……いい顔してるよぉ。']]}},
+  {id:'fgrow',text:'第5話 大きくなった：すてき度を★3に',check:()=>suteki().st>=3,prog:()=>'すてき度 ★'+Math.min(3,suteki().st)+'/3',how:'かざり・花・道・スポットをふやす。村のようすで、すてき度がわかる',
+   talk:{get who(){return FA()},when:()=>kS().st==='grown',get lines(){return [[FA(),'#surprise|……え？ '+KN()+'？'],[KN(),'#joy|おはよう！ 朝おきたら、みんなと同じになってた！'],[FB(),'大きくなったねぇ……。きのうまで、あんなに小さかったのにねぇ。'],[KN(),'ねえ、旅のお客さんが、丘のむこうの話をしてくれたんだ。大きな川とか、雪の山とか……。'],[KN(),'ぼく、ずっと聞いてた。'],[FA(),'……。'],[FB(),'谷を、もっとすてきにしようかねぇ。どこへ行っても、帰りたくなるくらいに。']]}},
+   get story(){return [[KN(),'谷が、きらきらしてる……。'],[KN(),'ねえ、ふたりとも。話したいことがあるんだ。']]}},
+  {id:'fdepart',text:'第6話 旅立ち：おくりものを1つ用意する',check:()=>Object.keys(S.inv||{}).some(k=>BL[k]&&BL[k].kind==='gift'&&S.inv[k]>0),prog:()=>'',how:'依頼ボードの「おくりもの」で作るか、ひろったおくりものを、もちものに1つ',
+   talk:{get who(){return FA()},when:()=>kS().st==='grown',get lines(){return [[KN(),'谷の外を、見てみたい。'],[FA(),'……うん。'],[KN(),'丘のむこうに、なにがあるのか、じぶんの目で見たいんだ。'],[FB(),'止めないよぉ。'],[FA(),'止めないよ。……でも、なにか、もっていってほしいな。'],[FB(),'旅のおまもりになる物を、用意してあげようかねぇ。']]}},
+   get story(){return [[FA(),'おまもり、旅のかばんに入れておいたよ。'],[KN(),'……ありがとう。たいせつにするね。'],[FB(),'つかれたら、いつでも帰っておいでよぉ。'],[FA(),'#cry|……いってらっしゃい、'+KN()+'！'],[KN(),'#joy|いってきます！']]},gives:{kidGo:true}},
 ];
 function freeFest(){for(const r of S.res){r.fun=100;spawnFX(r.x-.5,r.y-.6,pick(['#ffd84a','#ff9cc0','#9ff0ff','#b8ff9a']))}startClap();setTimeout(endClap,3200);S.cleared=true;S.clearDay=dayNo();memo('ball','村のおまつりをひらいた');omo('fest');logEv('村のおまつりをひらいた');toast('物語はひと区切り！ 村づくりはつづくよ','good')}
 function freeSetup(s){const used=new Set(['フタバ','ノドカ']);const nm=()=>{let n;do{n=NAMES[s.nameIdx%NAMES.length];s.nameIdx++}while(used.has(n));used.add(n);return n};

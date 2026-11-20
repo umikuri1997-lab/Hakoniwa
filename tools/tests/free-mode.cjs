@@ -1,5 +1,6 @@
 /* フリーモード：花の谷（川がない・丘がかこむ・南の切れ目・野の花）／神殿もカミサマもない・おそなえ箱と依頼ボードはべつべつ／なかまは自分でやってくる／
-   火山をクリアすると開く物（火と水のせいれい・火山の物・竹・鉱脈・おまつり・イベント）／第1章の目標／おまつりのあと：きょうの目標・季節の話4つ・第2章／旅のお客さんのお店 */
+   火山をクリアすると開く物（火と水のせいれい・火山の物・竹・鉱脈・おまつり・イベント）／お話「谷で生まれた小さなせいれい」（つぼみ → 生まれる → まねっこ → 水やり → 大きくなる → 旅立ち）／
+   旅のあいだ：きょうの目標・季節の話4つと旅先からの手紙 → おかえり／第2章／旅のお客さんのお店 */
 const assert=require('node:assert/strict');
 (async()=>{const {browser,page,run,errors}=await require('../sim/boot.cjs')({world:6});
   const J=async s=>JSON.parse(await run(s));
@@ -13,7 +14,7 @@ const assert=require('node:assert/strict');
       statue:STATUE,ruin:RUINT,obox:OBOX,board:BOARD,part:S.obj[BOARD+1],god:godHere(),noT:noTemple(),shop:!!S.feat.shop,ids:QUESTS.map(q=>q.id),key:SAVE_KEYS[FREE]})})()`);
   assert.equal(m.ford,0,'no river');assert.ok(m.water>20,'ponds');assert.ok(m.ring>=m.n-2,'hills all around');assert.equal(m.mid,0);assert.equal(m.gap,0,'south gap');assert.ok(m.wild>300,'wild flowers');assert.equal(m.houses,1);
   assert.equal(m.statue,-1,'no temple');assert.equal(m.ruin,-1,'no broken temple');assert.ok(m.obox>=0&&m.board>=0&&m.board!==m.obox+1,'offering box and board stand apart');assert.equal(m.part,'part');assert.equal(m.god,false,'no god');assert.equal(m.noT,false,'building works without a temple');assert.equal(m.shop,false);
-  assert.deepEqual(m.ids,['fhome','fspot','ffriend','fevent','fsuteki']);assert.equal(m.key,'hakoniwa-free-v2');
+  assert.deepEqual(m.ids,['fbud','fborn','ffirst','fcant','fgrow','fdepart']);assert.equal(m.key,'hakoniwa-free-v2');
   console.log('Valley: hills '+m.ring+'/'+m.n+', wild flowers '+m.wild+', no temple, box and board placed');
   /* 2. 野の花：物を置くとなくなる。雑草の下ではのこる */
   const w=await J(`(()=>{const ks=Object.keys(S.wild).map(Number).filter(j=>!S.obj[j]),a=ks[0],b=ks[1];S.obj[a]='rock';S.obj[b]='weed0g';recount();const r={a:a in S.wild,b:b in S.wild};S.obj[a]='';S.obj[b]='';recount();return JSON.stringify(r)})()`);
@@ -25,12 +26,33 @@ const assert=require('node:assert/strict');
   assert.deepEqual(t0.el,['wood','earth']);assert.equal(t0.fire,0,'no fire spirit before the volcano is cleared');assert.equal(t0.came,1,'a spirit arrives by itself');assert.equal(t0.elem,'earth');assert.ok(t0.y>8,'from the south gap: '+t0.y);assert.equal(t0.farr,1);assert.equal(t0.again,1,'one a day');
   console.log('Tier 0: grass things only, an earth spirit walked in from the south');
   await page.waitForTimeout(300);await run(`(()=>{${calm}})()`);
-  /* 4. 第1章：その話でしたイベントだけ数える・目標の判定が動く */
-  const q=await J(`(()=>{const o={};freeEvEnd('taiso',[S.res[0]]);o.before=S.fevN||0;S.quest=3;S.qTalked=true;freeEvEnd('taiso',[S.res[0]]);o.after=S.fevN;S.quest=0;S.qTalked=false;o.chk=QUESTS.map(q=>!!q.check());o.prog=QUESTS.map(q=>q.prog());return JSON.stringify(o)})()`);
-  assert.equal(q.before,0);assert.equal(q.after,1);assert.equal(q.chk[2],true,'the arrival counts');assert.match(q.prog[0],/住み心地 ★/);assert.match(q.prog[4],/すてき度 ★/);
-  /* 5. おまつりのあと：きょうの目標・季節の話（谷のあつまり） */
+  /* 4. お話：谷で生まれた小さなせいれい */
   const day=d=>`S.t=(${d}-1)*1440+11*60;S.lastMorning=${d};DLGGAP=0;`;
-  const a=await J(`(()=>{S.quest=QUESTS.length-1;S.qTalked=false;S.qStory=null;S.cleared=true;S.clearDay=1;${day(2)}checkQuest();return JSON.stringify({daily:S.daily&&S.daily.k,all:dailyHere().map(g=>g.k),dlg:!$('#dialog').hidden,pl:[fplWild().length,fplPond().length,fplGrove().length,fplHill().length]})})()`);
+  const tk=async()=>{const o=await run(`(()=>{${calm}DLGGAP=0;startTalk();return $('#dialog').hidden?0:1})()`);assert.equal(o,1,'a talk opens');await talk()};
+  const st=()=>J(`JSON.stringify({q:S.quest,qs:S.qStory,tk:S.qTalked,k:S.kid&&{st:S.kid.st,name:S.kid.name||'',bj:S.kid.bj},kr:!!KR&&{kid:KR.kid,m:KR.kidM||''}})`);
+  const ck=c=>run(`(()=>{${calm}DLGGAP=0;${c||''};checkQuest();return 1})()`);
+  await ck(day(1));let k=await st();assert.equal(k.k.st,'bud','a glowing bud appears');assert.equal(k.q,0);
+  await tk();await ck(`const j=S.kid.bj;for(const[d,id]of[[2,'chair'],[-2,'stool'],[2*W,'torch']])S.obj[j+d]=id;recount()`);k=await st();assert.equal(k.qs,0,'three things beside the bud');await tk();
+  await ck();await tk();k=await st();assert.equal(k.q,1);assert.equal(k.tk,true);
+  await ck(day(2)+'kidTick(.1)');await page.waitForTimeout(4600);
+  const pop=await run(`(()=>{const i=document.querySelector('.vn-reveal input');if(!i)return 0;i.value='ハナ';document.querySelector('.vn-reveal .btn.pri').click();return 1})()`);assert.equal(pop,1,'name popup after the bud opens');
+  await ck();k=await st();assert.equal(k.k.st,'baby');assert.equal(k.k.name,'ハナ');assert.equal(k.kr.kid,true,'small');assert.equal(k.qs,1);await tk();
+  const fo=await J(`(()=>{const L=kidLeader();KR.x=L.x+3;KR.y=L.y;KR.kT=0;kidTick(.1);const far=KR.path.length>0;for(let i=0;i<600&&KR.path.length;i++)kidTick(.2);return JSON.stringify({far,d:Math.hypot(KR.x-L.x,KR.y-L.y)})})()`);
+  assert.ok(fo.far&&fo.d<2.5,'the little spirit follows: '+fo.d);
+  await ck();await tk();await ck(`freeEvEnd('taiso',[S.res[0]])`);k=await st();assert.equal(k.qs,2,'first event');await tk();
+  await ck();const cry=await J(`(()=>{const m=[];for(let i=0;i<2;i++){KR.kT=0;kidThink(KR);m.push(KR.kidM)}return JSON.stringify(m)})()`);assert.deepEqual(cry.sort(),['kid_carry','kid_talksad'],'tries to carry and cries');
+  await tk();const fl=await J(`(()=>{const c=(KR.y|0)*W+(KR.x|0),L=[];for(let r=2;r<8&&L.length<3;r++)for(let d=-r;d<=r&&L.length<3;d++){const j=c+r*W+d;if(!S.obj[j]&&walk(j)&&S.ground[j]===0){S.obj[j]='clover';L.push(j)}}recount();
+    for(let i=0;i<3000&&kidBloomN()<3;i++){if(!KR.path.length&&KR.kT>0)KR.kT=0;kidTick(.2)}return JSON.stringify({n:kidBloomN(),w:Object.keys(S.kid.wat).length})})()`);
+  assert.equal(fl.n,3,'the little spirit waters the three flowers by itself');
+  await ck();k=await st();assert.equal(k.qs,3);await tk();
+  await ck(`kidMorning()`);k=await st();assert.equal(k.k.st,'grown');assert.equal(k.kr.kid,false,'grown up');
+  await ck();await tk();await ck(`window._st=suteki;suteki=()=>({st:3,v:0})`);k=await st();assert.equal(k.qs,4);await run(`suteki=window._st`);await tk();
+  await ck();await tk();await ck(`S.inv.gf_kirei=1`);k=await st();assert.equal(k.qs,5);await tk();
+  const go=await J(`(()=>{for(let i=0;i<6000&&S.kid.st==='leave';i++)kidTick(.2);return JSON.stringify({st:S.kid.st,cl:S.cleared,gift:S.inv.gf_kirei||0,kr:!!KR})})()`);
+  assert.equal(go.st,'away','the little spirit left the valley');assert.equal(go.cl,true);assert.equal(go.gift,0,'the gift went with it');assert.equal(go.kr,false);
+  console.log('Story: bud, birth and name, following, crying, watering, growing up, departure');
+  /* 5. おまつりのあと：きょうの目標・季節の話（谷のあつまり） */
+  const a=await J(`(()=>{S.clearDay=1;${day(2)}checkQuest();return JSON.stringify({daily:S.daily&&S.daily.k,all:dailyHere().map(g=>g.k),dlg:!$('#dialog').hidden,pl:[fplWild().length,fplPond().length,fplGrove().length,fplHill().length]})})()`);
   assert.ok(a.daily&&a.daily.length===2);assert.ok(!a.all.includes('kill')&&!a.all.includes('bamboo'));assert.ok(a.dlg,'the spring request starts');assert.deepEqual(a.pl,[1,1,1,1],'valley places for the gatherings');
   await talk();await run(`dailyCheck=()=>{}`);
   const b=await J(`JSON.stringify({a:S.fsea.a,q:$('#questTxt').textContent})`);assert.equal(b.a[0],1);assert.match(b.q,/花見/);
@@ -41,8 +63,12 @@ const assert=require('node:assert/strict');
     const f=await J(`JSON.stringify({d:S.fsea.d[${k}],pt:S.pt})`);assert.equal(f.d,1);assert.equal(f.pt,e.p0+60)}
   const g=await J(`(()=>{DLGGAP=0;checkQuest();return JSON.stringify({dlg:!$('#dialog').hidden})})()`);assert.ok(g.dlg,'closing talk');await talk();
   const h=await J(`(()=>{DLGGAP=0;checkQuest();openSheet('menu','goal');const t=$('#sheetBody').textContent;closeSheet();return JSON.stringify({fin:S.fsea.fin,dlg:!$('#dialog').hidden,sec:t.includes('季節の話'),vol:t.includes('火山のたより'),bad:/試練|コワイノ|オオカゲ|守られた/.test(t),q:$('#questTxt').textContent})})()`);
-  assert.equal(h.fin,1);assert.equal(h.dlg,false);assert.ok(h.sec);assert.equal(h.vol,false,'chapter 2 is hidden before the volcano is cleared');assert.equal(h.bad,false);assert.match(h.q,/きょうの目標/);
-  console.log('After the festival: daily goals, four valley gatherings and the closing talk');
+  assert.equal(h.fin,1);assert.equal(h.dlg,false);
+  const lt=await J(`JSON.stringify((S.letterQ||[]).filter(q=>/^kid/.test(q.k)).map(q=>q.who+q.tx.length))`);assert.deepEqual(lt,['ハナ3','ハナ3','ハナ3','ハナ3'],'a letter after each season');assert.ok(h.sec);assert.equal(h.vol,false,'chapter 2 is hidden before the volcano is cleared');assert.equal(h.bad,false);assert.match(h.q,/きょうの目標/);
+  const bk=await J(`(()=>{${day(17)}kidMorning();const o={st:S.kid.st};for(let i=0;i<6000&&!S.kid.arr;i++){if(!KR.path.length)KR.kT=0;kidTick(.2)}o.arr=S.kid.arr;DLGGAP=0;checkQuest();o.dlg=!$('#dialog').hidden;return JSON.stringify(o)})()`);
+  assert.equal(bk.st,'back');assert.equal(bk.arr,1);assert.ok(bk.dlg,'welcome home talk');await talk();
+  const hm=await J(`JSON.stringify({st:S.kid.st,res:S.res.some(r=>r.name==='ハナ'&&r.elem==='wood'),lily:S.inv.lily||0})`);assert.equal(hm.st,'home');assert.ok(hm.res,'joins the valley');assert.ok(hm.lily>=3,'seeds from the journey');
+  console.log('While away: daily goals, four valley gatherings with letters, the closing talk and the return');
   /* 6. 旅のお客さん */
   const v=await J(`(()=>{freeVisitMorning();const o={visit:!!S.st2.visit,here:visitHere(),name:visitor()&&visitor().name};openSheet('shop');o.title=$('#sheetTitle').textContent;o.txt=$('#sheetBody').textContent.slice(0,60);closeSheet();S.st2.visit=null;VISITOR=null;openSheet('shop');o.closed=sheet==null;return JSON.stringify(o)})()`);
   assert.ok(v.visit&&v.here,'a visitor is in the valley');assert.match(v.title,/のお店/);assert.ok(!/カミサマ/.test(v.title+v.txt),'no god in the shop: '+v.txt);assert.ok(v.closed,'no shop without a visitor');

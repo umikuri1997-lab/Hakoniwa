@@ -78,7 +78,7 @@ function questGives(q,g){g=g||q.gives||{};
     (g.feat||[]).forEach(f=>S.feat[f]=true);for(const k in (g.food||{}))addFood(k,g.food[k]);for(const k in (g.mat||{}))S.mat[k]=(S.mat[k]||0)+g.mat[k];for(const k in (g.items||{})){S.unlocked[k]=true;giveItem(k,g.items[k])}queueItemGift(g.items);
     if(g.flags)g.flags.forEach(f=>S.flags[f]=true);if(g.recipes){recipeNotice(g.recipes.filter(id=>!S.recipes[id]));g.recipes.forEach(id=>S.recipes[id]=true)}if(g.shard)giveShard(g.shard);for(const s of g.shards||[])giveShard(s);if(g.enemy)S.enemyOn=true;if(g.shrine)S.flags.shrine=true;if(g.flag){S.flags[g.flag]=true;if(g.flag==='onsen')dirty=true}
     if(typeof g.run==='function')g.run();/* そのクエストだけの準備（たけのこを生やす など） */if(g.godLeave){S.godGone=true;const GX=godX(),GY=godY();fxSpr('poof',GX*TS,GY*TS);sfx('poof')}
-    if(g.fest)freeFest();if(g.msg)toast(g.msg,'good');applyFeats();
+    if(g.fest)freeFest();if(g.kidGo&&typeof kidDepart==='function')kidDepart();/* フリーモード：小さなせいれいが旅に出る（kid.js） */if(g.msg)toast(g.msg,'good');applyFeats();
     const hadW=g.watchNow&&(cnt('watch')>0||S.obj.some((o,j)=>o==='site'&&S.dyn[j]&&S.dyn[j].build==='watch'));// 先に建てていたら、その分のパワーを返す（おごり）
     const after=g.watchNow?(hadW?()=>{S.pt+=BL.watch.pc;for(const k in BL.watch.mat)S.mat[k]=(S.mat[k]||0)+BL.watch.mat[k];toast('見張り台の分のパワーと素材をカミサマが返してくれた','good');checkQuest()}:()=>{setMode('build');sel='watch';renderPalette();toast('見張り台を置く場所をタップ')}):null;
     return after}

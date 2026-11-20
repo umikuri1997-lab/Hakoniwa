@@ -94,6 +94,7 @@ function stepWorld(dt){GODJ=godHere()?Math.floor(godY())*W+Math.floor(godX()):-1
   for(const k in S.dyn){const o=S.obj[k],d=S.dyn[k];if(!o)continue;
     if(o==='farm'){if(S.rain&&d.g<100)d.wet=100}}/* 雨：たねをまく前の畑も、ぬれる */if(S.rain)for(const j of JARS){const d=S.dyn[j]||(S.dyn[j]={});d.w=10}/* 雨の日は、みずがめに水がたまる（畑10マスぶん） *//* ベリー・りんごの実は、朝6時に1日ぶんずつ育つ（morning） */
   for(const r of S.res.slice())updRes(r,dt);
+  if(S.free&&typeof kidTick==='function')kidTick(dt);/* 谷で生まれた小さなせいれい（kid.js） */
   critTick(dt);if(typeof animalTick==='function')animalTick(dt);
   stayTick(dt);
   passGreet(dt);

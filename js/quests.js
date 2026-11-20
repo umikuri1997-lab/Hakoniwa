@@ -573,7 +573,7 @@ function morning(){if(typeof juiceGrowSnap==='function')juiceGrowSnap();/* 育�
 };
    for(const k in EV){const ev=EV[k];if(d<+k||!S.enemyOn||S.flags['day'+k]||S.res.length<3)continue;const L=ev.filter(l=>S.res.some(r=>r.name===l[0]));if(L.length){talkOnce('day'+k,L);break}}/* その日より後の朝で、せいれいが3人になってから。さいごまで見てから「見た」に */}
   checkFree();
-  if(S.free)freeArrive();else summonMorning();/* フリーモード：呼ばない。なかまは自分でやってくる（free.js） */
+  if(S.free){freeArrive();if(typeof kidMorning==='function')kidMorning()}else summonMorning();/* フリーモード：呼ばない。なかまは自分でやってくる（free.js） */
 }
 
 /* 虹：雨のつぎの朝に出ることがある。S.rbDay：虹の日 */
