@@ -9,7 +9,7 @@ function outKind(k){/* そのマスのとなりにある、すてきな物 */let
 function outSpot(G,G2){/* 2人がならんで立てる所：stand と、そのとなり（左右） */const free0=j=>walk(j)&&!S.obj[j]&&!(TAKEN&&TAKEN.has(j))&&!(S.fog&&typeof fogAt==='function'&&fogAt(j)),C=[];
   for(let j=0;j<W*H;j++){const d=G.dist[j];if(d<1||d>OUTFAR||!free0(j))continue;const pk=outKind(j);if(!pk)continue;for(const s of [1,-1]){const j2=j+s;if(Math.abs(j2%W-j%W)!==1||!free0(j2)||G2.dist[j2]<0||G2.dist[j2]>OUTFAR)continue;C.push([j,j2,pk]);break}}
   return C.length?pick(C):null}
-function goOuting(r,G){if(S.free||IS_STORY_REPLAY||(typeof MEMRUN!=='undefined'&&MEMRUN)||S.outD===callDay()||Math.random()>=OUTP)return false;const h=hour();if(h<OUTH0||h>=OUTH1||S.rain)return false;
+function goOuting(r,G){if(IS_STORY_REPLAY||(typeof MEMRUN!=='undefined'&&MEMRUN)||S.outD===callDay()||Math.random()>=OUTP)return false;const h=hour();if(h<OUTH0||h>=OUTH1||S.rain)return false;
   const M=S.res.filter(q=>q!==r&&bondOf(r,q)>=OUTMIN&&!(typeof qrPair==='function'&&qrPair(r,q))&&outFree(q));if(!M.length)return false;const q=pick(M),G2=bfs(q.x|0,q.y|0),P=outSpot(G,G2);if(!P)return false;
   const[j,j2,pk]=P;S.outD=callDay();endAct(q);startAct(r,G,'outing',j,{mate:q.id,pk,lead:1,dur:OUTDUR});startAct(q,G2,'outing',j2,{mate:r.id,pk,dur:OUTDUR});
   if(!r.act||r.act.type!=='outing'||!q.act||q.act.type!=='outing'){for(const x of[r,q])if(x.act&&x.act.type==='outing')endAct(x);S.outD=null;return false}

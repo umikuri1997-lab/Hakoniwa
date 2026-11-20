@@ -9,12 +9,12 @@ function checkQuest(){
   if(QUEST_CLEAR_WAIT&&QUEST_CLEAR_WAIT.quest!==S.quest)QUEST_CLEAR_WAIT=null;
   TALKW=null;if(S.qStory==null)QUESTCLEARW=null;finalCheck();
   if(NEWRES!=null||NEWQ.length)return;
-  if(S.cleared){if(WD!==FREE)afterTick();return}
+  if(S.cleared){if(WD!==FREE)afterTick();else freeAfterTick();/* フリーモード：きょうの目標・季節の話（free.js） */return}
   if(S.quest>=QUESTS.length)return;
   const q=QUESTS[S.quest];
   if(q.id==='guest'&&S.qTalked&&!S.flags.guestDone&&!GUESTRUN&&!isNight()&&$('#dialog').hidden&&S.qStory==null)guestScene();
   if(S.flags.qPassed&&S.flags.qPassed[q.id]&&S.qStory==null){delete S.flags.qPassed[q.id];S.quest++;S.qTalked=false;return checkQuest()}/* 古いセーブで、ならびをかえる前にもうした目標は、とばす（migrateFarmFirst） */
-  if(q.skip&&S.qStory==null){/* ステージ2：草原で説明したことは、お話なしでとばす（もらえる物はもらう） */const rec0={...(S.recipes||{})};for(const id of [...questRecipeIds(q),...questRecipeIds(q,'clear')])if(BL[id]&&(!S.free||BL[id].kind!=='furn'))S.recipes[id]=true;if(q.talk){for(const id of q.talk.learn||[])S.recipes[id]=true;questGives(q,Object.assign({},q.talk.gives||{},{watchNow:false}))}if(q.pre)questGives(q,q.pre);questGives(q,Object.assign({},q.gives||{},{watchNow:false}));recipeNotice(Object.keys(S.recipes||{}).filter(id=>!rec0[id]));S.quest++;S.qTalked=false;return checkQuest()}
+  if(q.skip&&S.qStory==null){/* ステージ2：草原で説明したことは、お話なしでとばす（もらえる物はもらう） */const rec0={...(S.recipes||{})};for(const id of [...questRecipeIds(q),...questRecipeIds(q,'clear')])if(BL[id])S.recipes[id]=true;if(q.talk){for(const id of q.talk.learn||[])S.recipes[id]=true;questGives(q,Object.assign({},q.talk.gives||{},{watchNow:false}))}if(q.pre)questGives(q,q.pre);questGives(q,Object.assign({},q.gives||{},{watchNow:false}));recipeNotice(Object.keys(S.recipes||{}).filter(id=>!rec0[id]));S.quest++;S.qTalked=false;return checkQuest()}
   if(!$('#dialog').hidden)return;
   if(S.qStory!=null){TALKW=storyWho(QUESTS[S.qStory]);QUESTCLEARW=TALKW;renderQuest();return}/* クエストのあとのお話は、💬をタップしてから */
   {const e=grassEndingTalk();if(e){if(grassEndingTalkLines(e))TALKW=POKO;renderQuest();return}}/* 最後のかけらの話：フタバの吹き出しから */
@@ -113,6 +113,7 @@ function nextStageGoal(){/* 草原をクリアして、まだ火山のふもと�
   const f=S.res.some(r=>r.name===POKO&&!r.hidden);if(S.flags.sacredReunion&&!S.flags.sacredQuietSeen)return {t:'ヌシ様と話そう',pr:isNight()?'お話は、朝になってから':'御神木のそばで、ヌシ様が待っている',how:'「しらべる」でヌシ様をタップして、話を聞こう。そのあと、フタバたちが、つぎの土地へのお見送りをしてくれる'};/* お見送りは、ヌシ様の話のあと（departDue と同じ条件） */return {t:'つぎの土地へ旅立とう',pr:isNight()?'お見送りは、朝になってから':!f?'フタバが帰ってきたら、お見送り':'みんなが、お見送りのしたくをしている',how:'昼になると、フタバたちが、つぎの土地へのお見送りをしてくれる。お見送りのあと、火山のふもとの村へ行く'}}
 function renderQuest(){const q=QUESTS[Math.min(S.quest,QUESTS.length-1)];let pr='',t=S.cleared?(WD===FREE?'村づくりは、つづく…':'世界クリア！'):q.text;
   if(S.cleared&&WD!==FREE){const a=AFTERQ[S.aq||0],dd=S.daily,dn=dd?dd.k.filter(k=>dd.done[k]).length:0;if(a&&S.aqOn===(S.aq||0)){t=aqTitle(a);pr=aqProg(a)}else t=dd?'きょうの目標 '+dn+'/'+dd.k.length:'世界クリア！'}/* クリア後は、新しいクエストか、きょうの目標を出す */
+  if(S.cleared&&WD===FREE){const g=fseaGoal(),dd=S.daily;if(g){t=g.t;pr=g.pr}else if(dd)t='きょうの目標 '+dd.k.filter(k=>dd.done[k]).length+'/'+dd.k.length}/* フリーモード：季節の話か、きょうの目標（free.js） */
   const ng=nextStageGoal();if(ng){t=ng.t;pr=ng.pr}/* 草原をクリアして、まだ旅立っていない：つぎの土地へ */
   if(!S.cleared){const wt=mainTalkWaitText(q);
     if(wt)t=wt;

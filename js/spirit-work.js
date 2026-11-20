@@ -264,7 +264,7 @@ function tryGiftUse(r){const j=r.giftUseJ;if(j==null)return false;delete r.giftU
   const p=BL[o]&&BL[o].play;if(p&&!(o==='campfire'&&campOut(j))&&free('o'+j,p.cap)){const st=p.adj?nearest(G,k=>adjOf(k,q=>anc(q)===j)>=0&&walk(k)&&!S.obj[k],40):G.dist[j]>=0?j:-1;if(st<0)return false;endAct(r);startAct(r,G,'play',st,{key:'o'+j,obj:j,what:o,fun:p.fun,dur:p.dur,pt:p.pt,pw:p.pw});return true}
   return false}
 const troubleText=r=>{const T=S.trouble&&S.trouble.id===r.id?TROUBLE[S.trouble.k]:null;return T?(typeof T.t==='function'?T.t(r):T.t):''};
-function troubleMorning(){if(!S||S.free||IS_STORY_REPLAY||typeof MEMRUN!=='undefined'&&MEMRUN)return;const d=dayNo(),T=S.trouble;
+function troubleMorning(){if(!S||IS_STORY_REPLAY||typeof MEMRUN!=='undefined'&&MEMRUN)return;const d=dayNo(),T=S.trouble;
   if(T&&(!S.res.some(r=>r.id===T.id)||d-T.d>=TROUBLEDAYS))S.trouble=null;if(S.trouble)return;
   const C=[];for(const r of S.res){if(r.hidden&&!homeOf(r))continue;for(const k in TROUBLE)if(TROUBLE[k].ok(r))C.push([r,k])}if(!C.length)return;const [r,k]=C[Math.floor(Math.random()*C.length)];S.trouble={id:r.id,k,d};if(k==='want')S.trouble.f=wantPick(r);if(k==='room')S.trouble.f=roomPick(r)}
 let TRBT=0;function troubleTick(){const T=S&&S.trouble;if(!T||(TRBT=(TRBT+1)%5))return;/* 5秒に1回 */const r=S.res.find(q=>q.id===T.id);if(!r){S.trouble=null;return}const D=TROUBLE[T.k];if(!D){S.trouble=null;return}

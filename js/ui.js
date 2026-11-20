@@ -702,21 +702,22 @@ function renderSheet(){
          b.onclick=()=>{S.oracle=k;if(k){S.flags.oracleSet=true;checkQuest()}sfx('quest');toast(k?'おつげ：'+O.name:'おつげをやめた','good');for(const r of S.res)if(!r.hidden&&r.act&&r.act.stage==='do'&&IDLE_ACTS.includes(r.act.type))endAct(r);renderSheet()};rw.appendChild(b)}
        body.appendChild(sec)}
     }else if(sheetArg==='goal'&&S.cleared){
-      body.appendChild(el('<p class="note">この土地は守られた。ここからは、クエストや目標で村をそだてよう。たっせいすると、パワーがもらえます。</p>'));
+      body.appendChild(el('<p class="note">'+(WD===FREE?'お祭りのあとも、村づくりはつづく。季節の話や目標をたっせいすると、パワーがもらえます。':'この土地は守られた。ここからは、クエストや目標で村をそだてよう。たっせいすると、パワーがもらえます。')+'</p>'));
       if(WD===0&&!S.free){const ng=nextStageGoal(),sec=el('<div class="sec"><h3>つぎの土地</h3><div class="rows"></div></div>');sec.querySelector('.rows').appendChild(ng?rowEl('・'+ng.t,ng.pr+'。'+ng.how):rowEl('火山のふもとの村','御神木をタップすると、火山のふもとの村へ行ける'));body.appendChild(sec)}/* つぎのステージへの行き方 */
-      if(WD!==FREE){const a=AFTERQ[S.aq||0],qs=el('<div class="sec"><h3>クエスト</h3><div class="rows"></div></div>');
+      if(WD===FREE)fseaSec(body);/* 季節の話（free.js） */
+      {const a=AFTERQ[S.aq||0],qs=el('<div class="sec"><h3>クエスト</h3><div class="rows"></div></div>');
         if(!a)qs.querySelector('.rows').appendChild(rowEl('✓ ぜんぶたっせい','カミサマからのおねがいは、ぜんぶかなえた'));
         else if(S.aqOn===(S.aq||0))qs.querySelector('.rows').appendChild(rowEl('・'+aqTitle(a),aqProg(a)+'　ごほうび パワー+'+a.rw+'。'+a.how));
         else qs.querySelector('.rows').appendChild(rowEl('・つぎのクエスト','昼になると、カミサマからおねがいがある'));
-        body.appendChild(qs);
+        if(WD!==FREE)body.appendChild(qs);
         const d=S.daily,ds=el('<div class="sec"><h3>きょうの目標</h3><div class="rows"></div></div>');
         if(d)for(const k of d.k){const g=DAILYG.find(x=>x.k===k),ok=!!d.done[k],r=rowEl((ok?'✓ ':'・')+g.t,ok?'たっせい':'いま '+Math.min(g.n,dailyNow(g,d))+' / '+g.n+'　ごほうび パワー+'+g.rw);if(ok)r.classList.add('done');ds.querySelector('.rows').appendChild(r)}
         else ds.querySelector('.rows').appendChild(rowEl('・あしたの朝から','毎朝、2つの目標が出る'));
         body.appendChild(ds)}
       const f=el('<div class="sec"><h3>やりこみ</h3><div class="rows"></div></div>');for(const g of [...freeHere().filter(g=>!(S.freeDone||{})[g.k]),...freeHere().filter(g=>(S.freeDone||{})[g.k])]){const ok=!!(S.freeDone||{})[g.k],r=rowEl((ok?'✓ ':'・')+g.t,ok?'たっせい':'いま '+g.now()+'　ごほうび パワー+'+g.rw);if(ok)r.classList.add('done');f.querySelector('.rows').appendChild(r)}body.appendChild(f);
-      const tr=el('<div class="sec"><h3>「コワイノ」の試練</h3><p class="note">ふだんより多く、強い「コワイノ」と、オオカゲがいっしょにやってくる夜。ぜんぶ追いはらうと、パワー+60と「めぶきのしずく」。</p></div>');
+      if(WD!==FREE){const tr=el('<div class="sec"><h3>「コワイノ」の試練</h3><p class="note">ふだんより多く、強い「コワイノ」と、オオカゲがいっしょにやってくる夜。ぜんぶ追いはらうと、パワー+60と「めぶきのしずく」。</p></div>');
       const b=el('<button class="btn pri" style="width:100%"></button>');b.textContent=S.trial?'今夜、試練の夜がくる':'今夜、試練をうける';b.disabled=!!S.trial||isNight();b.onclick=()=>{S.trial=true;sfx('night');toast('今夜は「コワイノの試練」','warn');renderSheet()};tr.appendChild(b);
-      tr.appendChild(el('<p class="note">のりこえた試練：'+(S.trials||0)+'回</p>'));body.appendChild(tr);subSec(body);/* クリア後は、新しい目標を上に。サブクエストは下に */
+      tr.appendChild(el('<p class="note">のりこえた試練：'+(S.trials||0)+'回</p>'));body.appendChild(tr)}/* フリーモードに、コワイノは来ない */subSec(body);/* クリア後は、新しい目標を上に。サブクエストは下に */
     }else if(sheetArg==='goal'){if(mainStoryFocusTarget()){const b=el('<button class="btn pri" style="width:100%">お話・調査の場所へ</button>');b.onclick=focusMainStoryPlace;body.appendChild(b);}subSec(body,true);
     }else if(sheetArg==='zukan'){zukanBody(body)
     }else if(sheetArg==='work'){workListSec(body);/* 村のしごと一覧（work-list.js） */
@@ -782,7 +783,7 @@ function renderSheet(){
 let ZKW=null,ZKT=0,ZKPG=0;const ZKPER=6,ZKTC=['#c9604a','#d89a3e','#7d9a4e','#5f8fb0','#8a6aa8','#b07a52'];/* しおりの色（tools/ui/colors.md の「本」） */const ZKTABS=['スポット','家具','建物','レシピ','「コワイノ」','アイテム','さかな','いきもの','りょうり','こだま'];
 function zkSnd(s){/* 図鑑のアイコンをタップしたときの音（i:物のid → その物の材質の録音・k:音の名前） */if(s.startsWith('i:'))itemSnd(s.slice(2));else if(s.startsWith('k:'))sfx(s.slice(2))}
 function zukanBody(body){
-  const ws=[0,1,2,3,4,5].filter(w=>(w===WD&&!S.free)||savedStage(w));if(!ws.length){body.appendChild(el('<p class="note">まだありません</p>'));return}
+  const ws=[0,1,2,3,4,5,FREE].filter(w=>w===WD||savedStage(w));if(!ws.length){body.appendChild(el('<p class="note">まだありません</p>'));return}
   if(ZKW==null||!ws.includes(ZKW))ZKW=ws.includes(WD)?WD:ws[0];
   /* 本のしおり：土地と章。タップすると、その章へ、ぱらぱらとめくる（bkTabSnap） */const go=(fn,dir)=>{bkTabSnap(dir);ZKPG=0;fn();renderSheet()};
   if(ws.length>1){const tb=el('<div class="bktabs bkw"></div>');ws.forEach((w,i)=>{const t=el('<button class="bktab'+(w===ZKW?' on':'')+'" type="button"></button>');t.textContent=WORLDS[w].name;t.onclick=()=>{if(w===ZKW)return;go(()=>{ZKW=w},i>ws.indexOf(ZKW)?1:-1)};tb.appendChild(t)});body.appendChild(tb)}
@@ -805,7 +806,7 @@ function zukanBody(body){
   else{const it=Object.assign({},d.seenIt||{});for(const k in d.mat||{})if(d.mat[k]>0)it['m:'+k]=1;for(const k in d.fs||{})if(d.fs[k]>0)it['f:'+k]=1;
     for(const k in MATN)if(it['m:'+k])add(MATN[k],'素材',ICONS[k]||null,'i:mat:'+k);for(const k in FOODS)if(it['f:'+k])add(FOODS[k].name,FOODS[k].fx||'食べ物',foodIc(k),'i:food:'+k);if(it['x:horn'])add('よびごえの角笛',HORNDESC,hornIco(),'i:horn');if(it['x:herb'])add('まよけのハーブ',HERBDESC,herbIco(),'i:herb')}
   const top=el('<div class="mpg zkp"><h3 class="mtt"></h3></div>');top.firstChild.textContent=ZKTABS[ZKT];top.appendChild(el('<p class="story zkn">'+list.length+'こ</p>'));body.appendChild(top);
-  if(ZKW===WD&&!S.free&&typeof zkNext==='function'){const q=zkNext(ZKT),p=el('<p class="note" style="position:relative"></p>');p.textContent=q?(q.all?'ぜんぶまで':'つぎの節目まで')+' あと'+q.left+'こ':'ぜんぶ見つけた';top.appendChild(p);if(typeof juiceZkBar==='function')juiceZkBar(top,ZKT);/* つぎの節目までのバー */const M=S.flags.zkMs||{},V=S.flags.zkMsV||(S.flags.zkMsV={});if((M[ZKT]||0)>(V[ZKT]||0)){V[ZKT]=M[ZKT];setTimeout(()=>{if(typeof uiStamp==='function')uiStamp(p)},250)}}/* 図鑑の節目（zukanms.js）：とどいたら、はじめて見たときにハンコ */
+  if(ZKW===WD&&typeof zkNext==='function'){const q=zkNext(ZKT),p=el('<p class="note" style="position:relative"></p>');p.textContent=q?(q.all?'ぜんぶまで':'つぎの節目まで')+' あと'+q.left+'こ':'ぜんぶ見つけた';top.appendChild(p);if(typeof juiceZkBar==='function')juiceZkBar(top,ZKT);/* つぎの節目までのバー */const M=S.flags.zkMs||{},V=S.flags.zkMsV||(S.flags.zkMsV={});if((M[ZKT]||0)>(V[ZKT]||0)){V[ZKT]=M[ZKT];setTimeout(()=>{if(typeof uiStamp==='function')uiStamp(p)},250)}}/* 図鑑の節目（zukanms.js）：とどいたら、はじめて見たときにハンコ */
   const zs=S.flags.zkSeen||(S.flags.zkSeen={});let zn=0;const zNew=(name,e)=>{const k=ZKW+':'+ZKT+':'+name;if(zs[k]||!e)return;zs[k]=1;e.classList.add('stknew');e.style.animationDelay=(Math.min(zn++,8)*.06)+'s'};/* 新しく見つけた物のシールは、ぺたっとはる（1回だけ） */
   for(const q of list){if(!q)continue;const r=rowEl(q[0],q[1],q[2]);zNew(q[0],r.querySelector('img'));if(q[3]){const im=r.querySelector('img');if(im){im.style.cursor='pointer';im.onclick=()=>zkSnd(q[3])}}rows.appendChild(r)}
   for(const z of rows.querySelectorAll('.zk'))zNew(z.querySelector('b').textContent,z.querySelector('canvas'));

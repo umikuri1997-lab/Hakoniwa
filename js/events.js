@@ -38,7 +38,7 @@ function evNeedOK(id){const D=EVENTS[id];if(D.need&&!EVNEED[D.need].list().lengt
 function evWhy(id){const D=EVENTS[id];if(S.ev)return 'ほかのイベントがきまっています';if(seasonDay(dayNo()+1)===CUPDAY&&!evDoneNow(cupOf(dayNo()+1)))return 'あしたは'+EVENTS[cupOf(dayNo()+1)].n+'です';if(evDoneNow(id))return 'この季節は、もうひらきました';if(cupKind(id)&&cupFew())return 'せいれいが'+CUPMIN+'人からです';if(D.sea!=null&&!D.cup&&seasonOf(dayNo()+1)!==D.sea)return EVSEA[D.sea]+'だけです';/* 大会は、依頼ボードから、どの季節でもひらける */return evNeedOK(id)||(D.set?setLack(D):'')}
 /* 大会（季節の大会・運動会）は、せいれいが CUPMIN 人からひらく */
 const CUPMIN=3,cupKind=id=>!!(EVENTS[id]&&(EVENTS[id].cup||id==='undo')),cupFew=()=>S.res.filter(evHere).length<CUPMIN;
-const evOn=id=>{const D=EVENTS[id];return D&&(D.stage==null||D.stage===WD)};
+const evOn=id=>{const D=EVENTS[id];return D&&(D.stage==null||D.stage===WD||D.stage===0&&WD===FREE)};/* フリーモードは、草原のイベントもひらける */
 function evCost(id,n){const D=EVENTS[id];return{pt:D.pt+D.per*n,food:(D.food||0)*n,wood:(D.wood||0)*n,arrow:(D.arrow||0)*n,bamboo:(D.bamboo||0)*n}}
 function evDoneNow(id){return(S.evDone||{})[id]===seasonKey()}
 function evCostTxt(id){const D=EVENTS[id];if(D.set)return'パワー'+D.pt+'・'+setTxt(D);return'パワー'+D.pt+(D.per?'＋ひとり'+D.per:'')+(D.wood?'・ひとり木材'+D.wood:'')+(D.bamboo?'・ひとり竹'+D.bamboo:'')+(D.arrow?'・ひとり木の矢'+D.arrow+'本':'')+(D.food?'・ひとり食料'+D.food:'')}
@@ -100,6 +100,7 @@ function evTick(){const E=S&&S.ev;if(!E||typeof MEMRUN!=='undefined'&&MEMRUN)ret
     if(S.t-E.t0>=(E.legs?D.dur/E.legs.length:D.dur)){if(E.id==='ensoku'){E.ph='back';E.t0=S.t;for(const r of P){if(Math.random()<.5&&matTot()+matN(r)<matCap()){addMat(r,'eda',1);/* しまう所があるときだけ */addFloat(r.x,r.y-1.5,'枝をみつけた','#fff3d6')}if(r.act&&r.act.type==='evt'){endAct(r);r.act=null;r.path=[]}}return}return evEnd()}return}
   if(E.ph==='back'){for(const r of P)if(r.act&&r.act.type==='evt'&&r.act.back&&r.act.stage==='do'&&!E.backed.includes(r.id))E.backed.push(r.id);if(P.every(r=>E.backed.includes(r.id))||S.t-E.t0>EVWAIT*2)evEnd()}}
 function evEnd(){const E=S.ev,D=EVENTS[E.id];if(E.tr)for(const t of E.tr)if(!t.got&&t.k)S.mat[t.k]=(S.mat[t.k]||0)+1;/* 見つからなかった物は、箱にもどす */const P=E.who.map(id=>S.res.find(r=>r.id===id)).filter(r=>evHere(r)&&(E.id!=='soji'||E.got[r.id])&&(E.id!=='ensoku'||E.backed.includes(r.id)||E.at[r.id]));
+  if(typeof fseaEvEnd==='function')fseaEvEnd(E.id,P);/* フリーモードの季節の話（free.js） */
   const R=D.cup?cupRanks(E,P):null;S.ev=E.next||null;E.ph=null;for(const r of S.res)if(r.act&&r.act.type==='evt'){endAct(r);r.act=null;r.path=[]}
   if(D.bday)bdayEnd(E,P);
   if(D.bond)for(let i=0;i<P.length;i++)for(let k=i+1;k<P.length;k++)bondAdd(P[i],P[k],D.bond);

@@ -36,7 +36,7 @@ function newState(w){w=w||0;
     ref:{},ground:new Array(W*H).fill(0),floor:new Array(W*H).fill(''),obj:new Array(W*H).fill(''),dyn:{},hp:{},
     res:[],enemies:[],pt:25,totalPt:0,food:0,fs:{},cseed:{imo:4},crops:{imo:true},mat:{wood:0,stone:0},regrow:[],t:w===0?15*60:12*60,/* 草原は15時からはじまる */speed:1,
     unlocked:{floor:true,farm:true,[w===1?'misugaki':'fence']:true,[w===1?'bamboowall':'hwall']:true},bulk:false,stamps:false,quest:0,cleared:false,rain:false,seeds:[],nameIdx:2,introSeen:false,lastMorning:1,lastNight:0,subDone:{},drops:[],ani:[],shards:0,gotMat:{wood:0,stone:0},recipes:{},buried:[],nid:1,kills:0,deaths:0};
-  s.world=w;genWorld(s,w);
+  s.world=w;if(w===FREE)s.flags.valley=1;/* フリーモード：花の谷（free.js。前のセーブの地形はそのまま） */genWorld(s,w);
   if(w===1)s.res.push(mkRes(s,HOMURA,'fire',CX+.5,CY-1.5,'campfire'));else s.res.push(mkRes(s,'フタバ','wood',CX+.5,CY-1.5,'swing'));
   if(w===0)s.res[0].nap=true;/* 初回のマップ描画から眠っている */
   if(w===FREE)freeSetup(s);
@@ -101,7 +101,9 @@ function mkRes(s,name,elem,x,y,like){
 function genWorld(s,w){
   const R=mulberry(w===1?20261102:w===FREE?20261022:20261018),V=w===1;/* V：火山のふもと */
   const pond=(cx,cy,rx,ry)=>{const a=R()*6.28,b=R()*6.28,e=R()*6.28;for(let y=0;y<H;y++)for(let x=0;x<W;x++){const dx=(x+.5-cx)/rx,dy=(y+.5-cy)/ry,th=Math.atan2(dy,dx),lim=1+.2*Math.sin(2*th+a)+.13*Math.sin(3*th+b)+.07*Math.sin(5*th+e);if(Math.hypot(dx,dy)<lim)s.ground[y*W+x]=1}};
-  if(V){pond(OFF+12,OFF+58,3.4,2.4);pond(OFF+60,OFF+14,2.8,2);pond(CX+4.8,CY+4.8,2.4,1.7);pond(CX+6.4,CY+3.7,1.3,1);pond(HSPC.b[0],HSPC.b[1],2.4,1.7);pond(HSPC.c[0],HSPC.c[1],2.2,1.6)}/* 温泉（はじめは冷えている） */
+  const VL=valleyOn(s,w);/* フリーモードの花の谷（free.js） */
+  if(VL){for(const[px,py,rx,ry]of VPONDS)pond(CX+px,CY+py,rx,ry)}
+  else if(V){pond(OFF+12,OFF+58,3.4,2.4);pond(OFF+60,OFF+14,2.8,2);pond(CX+4.8,CY+4.8,2.4,1.7);pond(CX+6.4,CY+3.7,1.3,1);pond(HSPC.b[0],HSPC.b[1],2.4,1.7);pond(HSPC.c[0],HSPC.c[1],2.2,1.6)}/* 温泉（はじめは冷えている） */
   else{pond(OFF+8,OFF+10,5,3.6);pond(OFF+11.5,OFF+12.5,3,2.2);pond(OFF+62,OFF+60,6,3.6);pond(OFF+58.5,OFF+58,2.6,2);pond(OFF+60,OFF+8,3,2.4);pond(CX+4.8,CY+4.8,2.4,1.7);pond(CX+6.4,CY+3.7,1.3,1);pond(CX+3.6,CY+6.6,1.2,.9);pond(10,30,4,3);pond(96,70,4.5,3);pond(40,98,3.5,2.6);pond(80,6,3,2.2)}/* 外がわにも池 */
   for(let pass=0;pass<2;pass++){const g=s.ground.slice();for(let y=1;y<H-1;y++)for(let x=1;x<W-1;x++){const j=y*W+x,n=(g[j-1]===1)+(g[j+1]===1)+(g[j-W]===1)+(g[j+W]===1);if(g[j]===1&&n<=1)s.ground[j]=0;else if(g[j]!==1&&n>=3)s.ground[j]=1}}
   for(let y=CY+12;y<H;y++)s.floor[y*W+CX]='path';
@@ -109,6 +111,7 @@ function genWorld(s,w){
     const i=y*W+x;if(s.ground[i]===1)continue;
     const dx=Math.max(Math.abs(x+.5-CX)-8,0),dy=Math.max(Math.abs(y+.5-CY)-8,0),out=Math.max(dx,dy);
     if(x===CX&&y>=CY+11)continue;
+    if(VL){valleyCell(s,x,y,i,R());continue}
     const ox=x-OFF,oy=y-OFF,forest=V?(ox<14&&oy<16):(ox>54&&oy<24)||(ox<16&&oy>48);/* 森は、前からの土地の角から、外がわへつづく */
     const r=R();
     if(out<1.2){ // 基地の中：枯れ木と岩がちらばる
@@ -120,6 +123,7 @@ function genWorld(s,w){
     else{if(r<.07)s.obj[i]='deadtree';else if(r<.1)s.obj[i]='rock';else if(r<.1075){s.obj[i]='berry';s.dyn[i]={g:100}}else if(r>=.13&&r<.15)s.obj[i]=w===FREE?'ntree':'deadtree'}
   }
   for(let y=CY-8;y<CY+12;y++)s.floor[y*W+CX]='path';
+  if(VL)wildGen(s);/* 野の花（家・畑を置く前。置いたあとで、もう1回かたづける） */
   if(!V&&w!==FREE){let best=-1,bd=1e9;for(let y=CY-6;y<=CY+6;y++)for(let x=CX-6;x<=CX+6;x++){const j=y*W+x;if(s.ground[j]===1||s.obj[j]||s.floor[j]||x===CX)continue;if([j-1,j+1,j-W,j+W].some(k=>s.ground[k]===1))continue;const d=Math.hypot(x+.5-(CX-3),y+.5-(CY+3));if(d<bd){bd=d;best=j}}if(best>=0)s.obj[best]='ntree'}/* 草原の拠点に、森の木が1本だけ（ほかの木は、みんな枯れている） */
   if(V){/* 火山のふもと：南西に古い家（下の壁がくずれている）、北東に2×2の畑、砂利の道が十字に通る */
     const x0=CX-9,x1=CX-4,y0=CY+3,y1=CY+7;for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++){const j=y*W+x;s.obj[j]='';s.ground[j]=0;const edge=x===x0||x===x1||y===y0||y===y1;if(!edge){s.floor[j]='floor';continue}if(y===y1&&x>=x0+1&&x<=x0+3){s.floor[j]='';continue}/* はじめは壁がこわれている（クエストで直す） */const door=x===x1&&y===CY+5;s.obj[j]=door?'door':'bamboowall';s.floor[j]=door?'gravel':'';if(!door)s.hp[j]=BL.bamboowall.hp}/* 火山の古い家は竹の壁 */
@@ -133,6 +137,7 @@ function genWorld(s,w){
   for(let d=1;d<=4;d++){const j=(CY-4)*W+hx(d);s.obj[j]='farm';s.floor[j]='';s.dyn[j]={g:50,wet:0,crop:'imo'}}/* 最初の畑は4つ。家の道をはさんだ向かいに横1列。作物は、はじめはいもだけ */
   }
   if(V){const put=id=>{let best=-1,bd=1e9;for(let y=CY-7;y<CY;y++)for(let x=CX-6;x<CX;x++){const j=y*W+x;if(s.ground[j]===1||s.obj[j]||s.floor[j])continue;if([j-1,j+1,j-W,j+W,j-W-1,j-W+1,j+W-1,j+W+1].some(k=>s.ground[k]===1||s.obj[k]==='crate'))continue;const d=Math.hypot(x+.5-(CX-3),y+.5-(CY-3.5));if(d<bd){bd=d;best=j}}if(best>=0)s.obj[best]=id};{const j=(CY+4)*W+CX-8;s.obj[j]='crate';s.floor[j]='floor'}put('crate');for(let y=CY-13;y<CY-8;y++){const j=y*W+CX;if(!s.obj[j]&&s.ground[j]!==1)s.floor[j]='path'}st2Place(s)}/* 火山のふもと：木箱は古い家の中と、村の北西に（コワイノは南から来るので） */
+  if(VL)wildPurge(s);
   genLand(s,w)/* 川と段差（いちばん最後：ほかの物をおいたあと） */;/* 火山の鉱脈は、お話が進むと目をさます（oreWakeTick） */
 }
 
@@ -340,9 +345,9 @@ function genHeights(s,w){/* 段差：なめらかなノイズから、0〜3だ�
   const ok=j=>{const x=j%W,y=(j/W)|0;if(x<2||y<2||x>=W-2||y>=H-2)return false;if(Math.max(Math.abs(x+.5-CX),Math.abs(y+.5-CY))<13)return false;if(s.floor[j])return false;const o=s.obj[j];if(o&&!HI_OK.has(o))return false;for(let b=-1;b<=1;b++)for(let a=-1;a<=1;a++)if(s.ground[j+b*W+a])return false;if(w===1&&Math.abs(x+.5-CX)<9&&y<OFF+16)return false;/* 火山：北の火口のまわりは平ら */return true};
   const oct=sc=>{const gw=Math.ceil(W/sc)+2,gh=Math.ceil(H/sc)+2,g=new Float32Array(gw*gh);for(let k=0;k<g.length;k++)g[k]=R();const sm=t=>t*t*(3-2*t);
     return (x,y)=>{const fx=x/sc,fy=y/sc,ix=Math.floor(fx),iy=Math.floor(fy),tx=sm(fx-ix),ty=sm(fy-iy),v=(a,b)=>g[(iy+b)*gw+ix+a];return (v(0,0)*(1-tx)+v(1,0)*tx)*(1-ty)+(v(0,1)*(1-tx)+v(1,1)*tx)*ty}};
-  const V=w===1,n1=oct(V?17:30),n2=oct(V?8:13),n3=oct(V?4:6),T=V?[.50,.58,.66]:[.53,.65,.79];/* 草原：大きくゆるやかな丘（3だんは少ない）。火山：こまかく、けわしい */
+  const VL=valleyOn(s,w),V=w===1,n1=oct(V?17:30),n2=oct(V?8:13),n3=oct(V?4:6),T=V?[.50,.58,.66]:[.53,.65,.79];/* 草原：大きくゆるやかな丘（3だんは少ない）。火山：こまかく、けわしい */
   for(let y=0;y<H;y++)for(let x=0;x<W;x++){const j=y*W+x,c=Math.max(Math.abs(x+.5-CX),Math.abs(y+.5-CY)),f=Math.min(1,Math.max(0,(c-13)/14)),nf=Math.min(1,Math.max(0,(CY+10-y)/50));let v=(.6*n1(x,y)+.3*n2(x,y)+.1*n3(x,y))*(.55+.45*f)+.12*f;if(V)v+=.2*nf-.08*(1-nf);/* 火山：北（火口がわ）へいくほど高い山 */
-    h[j]=v>T[2]?3:v>T[1]?2:v>T[0]?1:0}
+    h[j]=VL?valleyLv(x,y,v):v>T[2]?3:v>T[1]?2:v>T[0]?1:0}
   for(let pass=0;pass<2;pass++)for(let lv=1;lv<=HMAX;lv++){const g=h.slice();for(let y=1;y<H-1;y++)for(let x=1;x<W-1;x++){const j=y*W+x;let n=0;for(let b=-1;b<=1;b++)for(let a=-1;a<=1;a++)if((a||b)&&g[j+b*W+a]>=lv)n++;if(g[j]>=lv&&n<=2)h[j]=Math.min(h[j],lv-1);else if(g[j]<lv&&n>=6)h[j]=Math.max(h[j],lv)}}/* まわり8マスの多いほうにそろえて、ふちをまるく */
   for(let j=0;j<W*H;j++)if(h[j]&&!ok(j))h[j]=0;
   const fix=()=>{for(let it=0;it<6;it++){let ch=0;for(let y=0;y<H;y++)for(let x=0;x<W;x++){const j=y*W+x;let m=h[j];for(let b=-2;b<=2;b++)for(let a=-2;a<=2;a++){const xx=x+a,yy=y+b;if(xx<0||yy<0||xx>=W||yy>=H)continue;m=Math.min(m,h[yy*W+xx])}if(h[j]>m+1){h[j]=m+1;ch=1}}if(!ch)break}};/* 2マス以内との差は1だんまで（段と段のあいだの平らな所は2マス以上。がけが2だんつづけて見えないように） */
@@ -350,4 +355,4 @@ function genHeights(s,w){/* 段差：なめらかなノイズから、0〜3だ�
   for(let pass=0;pass<3;pass++)for(let lv=HMAX;lv>=1;lv--){const g=h.slice();for(let y=1;y<H-1;y++)for(let x=1;x<W-1;x++){const j=y*W+x,n=(g[j-1]>=lv)+(g[j+1]>=lv)+(g[j-W]>=lv)+(g[j+W]>=lv);if(g[j]>=lv&&n<2)h[j]=lv-1;else if(g[j]===lv-1&&n>=3&&ok(j))h[j]=lv}}/* ほそい所はけす、くぼみはうめる */
   fix();
   s.hi=h}
-function genLand(s,w){genRiver(s,w);genHeights(s,w)}/* 地形：川（と浅瀬）、そのあと段差 */
+function genLand(s,w){if(!valleyOn(s,w))genRiver(s,w);/* 花の谷に川はない */genHeights(s,w)}/* 地形：川（と浅瀬）、そのあと段差 */

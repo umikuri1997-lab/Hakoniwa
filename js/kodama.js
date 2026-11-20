@@ -9,7 +9,7 @@ const KDIDS=new Set(['kdkusa','kdkabu','kdishi','kdhana']),KDPER=3,KDMID=12,KDPT
 const KDLOOT=[['mat:eda',2,30],['seed',2,25],['food:apple',2,25],['mapPc',1,12],['fukuro',1,8]];/* [物,数,えらばれやすさ] */
 const KDRING=[[-1,-1],[0,-1],[1,-1],[-1,0],[1,0],[-1,1],[0,1],[1,1]],KDGAP=[[0,-1],[-1,0],[1,0],[0,1]];/* 輪のマス（まん中のまわり8マス）・すきまにする所（上下左右のまん中） */
 const KDLINE=['こんな所に、かくれてた！','見つけた！ 小さな声がしたんだ。','わあ、ひかってる……！','ここにいたんだね。','ふふ、くすぐったいよ。','森の声みたい。きれいだね。'];
-function kdOn(){return !!S&&!S.free&&!IS_STORY_REPLAY&&!(typeof MEMRUN!=='undefined'&&MEMRUN)}
+function kdOn(){return !!S&&!IS_STORY_REPLAY&&!(typeof MEMRUN!=='undefined'&&MEMRUN)}
 const kdTotal=()=>(S.kd||[]).length;
 function kdCells(e){return e.k==='ishi'||e.k==='hana'?KDRING.map(([dx,dy])=>e.j+dy*W+dx):[e.j]}
 let KDMAP=null,KDMS=null,KDMN=-1;

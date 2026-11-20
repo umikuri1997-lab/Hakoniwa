@@ -27,7 +27,7 @@ function refreshStageInfo(){for(const w of[0,1,FREE])if(!LIVE[w]||LIVE[w].summar
 /* ステージは属性の数だけ（木・火・水・土・風）と、さいごの庭 */
 function freeCard(list){if(!(LIVE[0]&&LIVE[0].cleared))return;let told=false;try{told=KV.getItem('hakoniwa-freeTold')==='1'}catch(e){}if(!told){try{KV.setItem('hakoniwa-freeTold','1')}catch(e){}setTimeout(()=>toast('フリーモードがひらいた！','good'),400)}
   const L=LIVE[FREE],k=FREE,card=el(`<div class="wcard open"><canvas width="760" height="280"></canvas><div class="wb"><span class="wn">FREE MODE</span><h3>フリーモード</h3><p></p><div class="wbtns"></div></div></div>`);
-  card.querySelector('p').textContent=L&&L.introSeen?(L.summary?'':'せいれい '+L.res.length+'人・')+'村レベル '+L.lv+(L.cleared?'・お祭りをひらいた！':''):'自然の力が弱く、災いもほとんどない、しずかな土地。のんびり、自分だけの村をつくろう。';
+  card.querySelector('p').textContent=L&&L.introSeen?(L.summary?'':'せいれい '+L.res.length+'人・')+'村レベル '+L.lv+(L.cleared?'・お祭りをひらいた！':''):'高い丘にかこまれた、花の谷。災いもほとんどない、しずかな土地で、のんびり、自分だけの村をつくろう。';
   const bt=card.querySelector('.wbtns');
   if(L&&L.introSeen){const c=el('<button class="btn pri">つづきから</button>');c.onclick=()=>{sfx('tap');$('#maps').hidden=true;continueGame(L)};bt.appendChild(c);
     const n=el('<button class="btn" data-hold>はじめから</button>');n.onclick=()=>{if(n._held){$('#maps').hidden=true;newGame(k)}};/* データがきえるので、おしつづけて決める */bt.appendChild(n)}
@@ -69,7 +69,7 @@ function lastFirst(list){/* さいごにあそんだステージを、いちば�
   const card=list.querySelector('.wcard[data-k="'+top[0]+'"]');if(card===list.firstElementChild)return;
   const pv=card.previousElementSibling,nx=card.nextElementSibling;if(pv&&pv.classList.contains('wlink'))pv.remove();else if(nx&&nx.classList.contains('wlink'))nx.remove();/* 道の線は、となりのステージどうしでつなぎなおす */
   card.classList.add('wtop');list.insertBefore(card,list.firstElementChild)}
-const APP_VER=1988;/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER=1996;/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
