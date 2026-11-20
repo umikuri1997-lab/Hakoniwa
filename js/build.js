@@ -59,7 +59,8 @@ function canPlace1(id,x,y,quiet){
   if(x<0||y<0||x>=W||y>=H)return false;
   if(starterGap(y*W+x)&&!HOME_WALLS.has(id)&&!HOME_DOORS.has(id)){if(!quiet)toast('ここは家の壁のすきまです','warn');return false}/* 箱や神殿を置くと、こわせずに家が直せなくなる */
   if(WALLD.has(id)){const j=y*W+x,iw=k=>HOME_WALLS.has(typeAt(k))||HOME_DOORS.has(typeAt(k)),wreath=id==='wreath',target=HOME_WALLS.has(S.obj[j])&&S.obj[j]!=='wall'||wreath&&HOME_DOORS.has(S.obj[j]);/* 石の塀にはかけられない */if(!target||wreath&&HOME_DOORS.has(S.obj[j])&&(iw(j-W)||iw(j+W))&&!(iw(j-1)||iw(j+1))||!wreath&&(iw(j-W)||iw(j+W))||(S.win&&S.win[j]&&!((id==='curtain1'||id==='curtain2')&&S.win[j]===1))||((id==='curtain1'||id==='curtain2')&&!(S.win&&S.win[j]===1&&HOUSES.some(h=>h.set.has(j)&&h.inside.has(j+W)&&!h.inside.has(j-W))))){if(!quiet)toast((id==='curtain1'||id==='curtain2')?'カーテンは、家の上がわの窓にだけかけられます':wreath?'リースは、壁か横向きのドアにだけかけられます':BL[id].name+'は、横向きの家の壁にだけかけられます');return false}return true}/* 窓は壁にはめる */
-  const j=y*W+x;if(id==='lotus'){if(S.ground[j]!==1){if(!quiet)toast('ハスは池の上にだけ植えられます');return false}if(S.obj[j]){if(!quiet)toast('ここにはもう何かあります');return false}return true}
+  const j=y*W+x;if(id==='yudekago'){if(!hotW(j)){if(!quiet)toast('ゆでかごは、あたたかい温泉の水の上にだけ置けます');return false}if(S.obj[j]){if(!quiet)toast('ここにはもう何かあります');return false}if(![j-1,j+1,j-W,j+W].some(k=>k>=0&&k<W*H&&Math.abs(k%W-x)<=1&&S.ground[k]!==1&&walk(k))){if(!quiet)toast('岸のすぐそばの水に置いてください');return false}return true}/* ゆでかご：温泉の水のマス。となりの岸から、せいれいが使う */
+  if(id==='lotus'){if(S.ground[j]!==1){if(!quiet)toast('ハスは池の上にだけ植えられます');return false}if(S.obj[j]){if(!quiet)toast('ここにはもう何かあります');return false}return true}
   if(id==='bridge'){if(S.ground[j]!==1){if(!quiet)toast('橋は水の上にだけかけられます');return false}if(S.obj[j]){if(!quiet)toast('ここにはもう何かあります');return false}return true}
   if(S.ground[j]===1){if(!quiet)toast('水の上には置けません');return false}
   if(S.ground[j]===2){if(!quiet)toast('浅瀬には置けません');return false}
@@ -225,7 +226,7 @@ function finishBuild(j,r){
   const d=S.dyn[j],id=d.build,fix=!!d.ruin;/* こわれた神殿を直した */if(!d.mat&&BL[id].mat&&id!=='tower')(S.freeB||(S.freeB={}))[j]=1;/* ただで建てた（素材を使わなかった） */delete S.dyn[j];S.obj[j]=id;noteQuestPlacement(id,j);setParts(id,j,'part');if(STAIRS.has(id)){const d=stairDir(j);if(d>0){const o=stairOut(j,d);S.obj[o]='part';S.ref[o]=j}}/* 階段：低いほうのマス */if(BL[id].hp)S.hp[j]=BL[id].hp;if(BL[id].dyn)S.dyn[j]={g:0};
   recount();burst(j,'furn');if(r){addSpiritXp(4,r);r.made=(r.made||0)+1}if(fix)toast(BL[id].name+'が直った！','good');else{kurashi('b:'+id,['🏠','はじめて'+BL[id].name+'が建った']);toast(BL[id].name+'が建った！','good')}checkQuest();
   if(id==='statue'){const b=boardFree(j+3)?j+2:j+1;/* 依頼ボードは、神殿から2つ右・3つ右（絵のある所）。右がどうしてもあかないときだけ、1つ右から */S.obj[j-1]='obox';if(b===j+2){S.obj[j+1]='part';S.ref[j+1]=j}S.obj[b]='board';delete S.ref[b];S.obj[b+1]='part';S.ref[b+1]=b;S.obj[j+W]='altar';S.flags.board3=1;recount();burst(j-1,'furn');burst(b,'furn')}
-  if(id==='tower'&&!S.cleared){if(WD===1){if(shLeft()>=1)S.usedSh=(S.usedSh||0)+1;/* かけらを台座にはめる */S.finalNight=true;memo('moonn','守護の台座が建った。最後の夜がくる');setTimeout(()=>toast('守護の台座が光りはじめた…！ 今夜、オオカゲたちがおしよせてくる','warn'),900)}else{memo('grass','御神木が育った');setTimeout(()=>toast('御神木が育った','good'),900)}finalCheck()}/* ヌシ様の前に、きびしい最後の夜 */
+  if(id==='tower'&&!S.cleared){if(WD===1){memo('rock','守護の台座が建った');setTimeout(()=>toast('守護の台座が建った','good'),900)}/* 火山：火だねをはめて火を入れるのは、台座をタップしてから（story-stage.js の towerLightTap） */else{memo('grass','御神木が育った');setTimeout(()=>toast('御神木が育った','good'),900)}finalCheck()}/* ヌシ様の前に、きびしい最後の夜 */
 }
 function finishCraft(o,r){
   S.orders=S.orders.filter(q=>q!==o);wbenchDel(o);if(o.type==='board'){S.flags.board5=true;delete S.recipes.board;addSpiritXp(3,r);burst(BOARD,'furn');toast('依頼ボードが広がった！','good');checkSub();if(sheet==='craft')renderSheet();return}S.unlocked[o.type]=true;craftCarry(o,r);if(o.type==='arrow2')S.flags.a2made=(S.flags.a2made||0)+BL.arrow2.qty;addSpiritXp(3,r);if(r)r.made=(r.made||0)+1;kurashi('f:'+o.type,['🪑','はじめて'+BL[o.type].name+'を作った']);burstAt(r.x,r.y,'furn');
@@ -296,7 +297,7 @@ function confirmYes(){
 }
 
 /* ---------- 家具の注文 ---------- */
-const RLOCK=new Set(['wbench','coop','barn','lumber','quarry','stele','fountain','lighthouse','windmill','bed','loom','campfire','oven','swing','lamp','bench','chair','stool','arrow2','drum','pit']);/* 会話でひらめくまで作れない家具 */
+const RLOCK=new Set(['wbench','coop','barn','lumber','quarry','stele','fountain','lighthouse','windmill','bed','loom','campfire','oven','swing','lamp','bench','chair','stool','arrow2','drum','pit','yudekago']);/* 会話でひらめくまで作れない家具 */
 /* ほかの土地でおぼえた物か（依頼ボード・「建てる」で、「この土地」のときは出さない）。この土地のお話・村レベル・思いつきでおぼえる物は、この土地の物 */
 let RECALL=false,NATIVE=null,NATIVEW=-1;
 function nativeSet(){if(NATIVE&&NATIVEW===WD)return NATIVE;const N=new Set();const add=L=>{for(const id of L||[])N.add(id)};

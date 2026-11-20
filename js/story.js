@@ -70,21 +70,23 @@ const QUESTS2=[
     [HOMURA,'#joy|調べてるあいだに、くだけちまうよ。岩なら、まかせときな。'],
     [SHIZUKU,'#think|……すじにそって、くだいてくださいね。']]},
    story:[[SHIZUKU,'水路に、水がもどりました。','vol:canal'],[HOMURA,'#joy|な、くだけば早いだろ。'],[SHIZUKU,'すじにそったから、水路がこわれなかったのです。'],[SHIZUKU,'#think|……でも、まだ冷たいままですね。熱が、とどいていません。']]},
-  {id:'shizukuRest',text:'シズクのおねがい：温泉のそばに休憩所を作ろう',check:()=>nearSp('bench')&&nearSp('tub'),prog:()=>'ベンチ '+(nearSp('bench')?1:0)+'/1・水おけ '+(nearSp('tub')?1:0)+'/1',how:'あたたかい温泉のそばに、ベンチと水おけを置く',
+  {id:'shizukuRest',text:'シズクのおねがい：入口の温泉の湯をももう',check:()=>!!st2().yumomi,prog:()=>yumomiWhy(),how:'昼に「しらべる」で入口の温泉をタップして、湯をもむ',
    talk:{who:SHIZUKU,when:()=>true,learn:['bench','tub'],lines:[
     [SHIZUKU,'わたしからも、ひとつおねがいがあります。'],
-    [SHIZUKU,'温泉から上がると、足を休めたくなります。それに、からだに残ったお湯を、もう少し流せたら……。守り神さま、何かよい方法はありませんか。'],[SHIZUKU,'#think|……湯上がりに、少しぼんやりしたいのです。'],
-    [HOMURA,'#think|湯上がりに、ぼんやり？ あたいは、すぐ次の仕事だけどね。……ま、守り神なら、面白いことを考えてくれそうだ。'],['@idea']],gives:{flags:['lv_tub','lv_bench']}},
-   story:[[SHIZUKU,'#joy|ここで、ゆっくり足を休められます。','vol:benchSit'],[HOMURA,'#think|……ま、たまには悪くないね。','vol:armsCross']],gives:{flag:'sReq'}},
-  {id:'yatai',text:'ホムラのおねがい：温泉のそばに屋台をひらこう',check:()=>nearSp('oven')&&nearSp('table'),prog:()=>'かまど '+(nearSp('oven')?1:0)+'/1・食卓 '+(nearSp('table')?1:0)+'/1',how:'あたたかい温泉のそばに、かまどと食卓を置く',
-   talk:{who:HOMURA,when:()=>true,lines:[
+    [SHIZUKU,'#think|……この湯、わたしには、あつすぎるのです。'],
+    [HOMURA,'#joy|これがいいんじゃないか。'],
+    [SHIZUKU,'むかしの湯治場では、板で湯をもんで、さましたそうです。水でうすめると、湯のよさがへってしまうので。'],
+    [HOMURA,'#think|へえ。……やってみなよ。見ててやるからさ。'],['@idea']],gives:{flags:['lv_tub','lv_bench']}},
+   story:[[SHIZUKU,'#joy|……ちょうどよい湯かげんです。足を入れても、あつくありません。','vol:dipS'],[HOMURA,'#think|あたいには、ぬるくなっちまったけどね。……ま、たまには悪くないよ。','vol:armsCross'],[SHIZUKU,'#joy|湯上がりに、すわって休む所もあると、うれしいですね。']],gives:{flag:'sReq'}},
+  {id:'yatai',text:'ホムラのおねがい：温泉の湯で、ゆでてみよう',check:()=>(st2().yude||0)>=2,prog:()=>'ゆでかごの料理 '+Math.min(2,st2().yude||0)+'/2',how:'「おく」→「ゆでかご」を、あたたかい温泉の、岸のすぐそばの水に置く。ゆでかごをタップして「入れる」で、たけのこをえらぶ',
+   talk:{who:HOMURA,when:()=>true,learn:['yudekago'],lines:[
     [HOMURA,'#joy|温泉がひとつもどっただけで、村の空気がちがうね。'],
-    [HOMURA,'むかしはさ、湯けむりの中で、温泉たまごをふるまう屋台が出てたんだ。'],
-    [SHIZUKU,'#joy|まあ、すてきです。湯上がりに、みんなで食べたいですね。'],
-    [HOMURA,'たまごは、かたゆでにかぎるよ。'],
-    [SHIZUKU,'半熟がいちばんです。'],
-    [HOMURA,'よし、決まりだ。温泉のそばに、かまどと食卓をたのむよ！','hop']]},
-   story:[[HOMURA,'#joy|ほら、できたての温泉たまごだよ！ みんな、食べな！','cheer+vol:egg'],[SHIZUKU,'……かたいです。','vol:eatS'],[HOMURA,'半熟なんて、ぐにゃっとして……'],[SHIZUKU,'#joy|でも、おいしいです。'],[HOMURA,'#joy|だろ？ これで、湯けむりの村らしくなってきた！']]},
+    [HOMURA,'#think|温泉がもどったら、あれだよ。湯でゆでた、たけのこさ。'],
+    [SHIZUKU,'火を使わずに、ですか。'],
+    [HOMURA,'湯けむりの中に、竹のかごをしずめとくだけさ。むかしは、どの湯にも、かごがぶら下がってたんだ。'],
+    [SHIZUKU,'#joy|……それなら、わたしにも作れそうです。'],
+    [HOMURA,'かごは、あたいが編んどいたよ。たのむよ、守り神！','hop']],gives:{items:{yudekago:1}}},
+   story:[[HOMURA,'#joy|ほら、ゆであがったよ！ みんな、食べな！','cheer+vol:egg'],[SHIZUKU,'……かたいです。','vol:eatS'],[HOMURA,'ゆでたけのこは、歯ごたえが命さ。'],[SHIZUKU,'#joy|でも、おいしいです。湯のかおりがします。'],[HOMURA,'#joy|だろ？ これで、湯けむりの村らしくなってきた！']]},
 
   {id:'haikage3',text:'ハイカゲの灰で、ひびわれをうめよう',check:()=>CRACKS.every(j=>S.obj[j]!=='crack'),prog:()=>'ひびわれ '+CRACKS.filter(j=>S.obj[j]!=='crack').length+'/'+CRACKS.length+'・灰 '+(st2().hai||0),how:'夜に来るハイカゲを追いはらうと、灰を落とす。せいれいがひろった灰で、村の北のひびわれを「しらべる」でタップしてうめる',
    talk:{who:SHIZUKU,when:()=>true,lines:[
@@ -97,7 +99,7 @@ const QUESTS2=[
     [HOMURA,'熱をとじこめる灰か……。だったら、そいつで、ひびわれをうめちまえばいいじゃないか。'],
     [HOMURA,'#joy|よし。ハイカゲが来たら、追いはらって、灰をいただくよ。']],gives:{flag:'ashOn'}},
    story:[[HOMURA,'よし、ふさがった！ 熱の道が、つながったよ。','vol:crackSeal'],[SHIZUKU,'ハイカゲの灰が、熱をしっかりとじこめてくれましたね。'],[SHIZUKU,'わたしの知っていたことと……'],[HOMURA,'#joy|あたいの思いつきだ。'],[SHIZUKU,'#joy|……はい。あとは、熱をどこへ流すか、ですね。']]},
-  {id:'springB',text:'熱の切りかえ装置を西へむけて、西の温泉をよみがえらせよう',check:()=>!!st2().sp.b,how:'火山のふもとの「熱の切りかえ装置」をタップして、西へむける',
+  {id:'springB',text:'熱の切りかえ装置を西へむけて、西の温泉をよみがえらせよう',check:()=>!!st2().sp.b,how:'火山のふもとの「熱の切りかえ装置」をタップして、ハンドルを回し、西へむける',
    talk:{who:HOMURA,when:()=>true,lines:[
     [HOMURA,'火山のふもとに、熱の流れを切りかえる装置があるんだ。'],
     [HOMURA,'西へむければ、西の温泉に熱がとどくはずさ。']]},
@@ -135,9 +137,9 @@ const QUESTS2=[
     [SHIZUKU,'奥の温泉に熱をとどけるには、奥の装置を使うはずです。'],
     [SHIZUKU,'その前に、火山を調べてみませんか。熱の流れが、どうなっているか…。']]},
    story:[[HOMURA,'火山の熱は、ちゃんと生きてるね。'],[SHIZUKU,'#scared|でも……山の上から、いやな気配がします。わたし、これ以上は……','vol:scaredS'],[HOMURA,'#nod|……いいよ。あんたの足が動くまで、待つさ。'],[SHIZUKU,'#surprise|ホムラさんが、待つんですか。'],[HOMURA,'たまにはね。それと、奥の装置のまわり、大岩だらけだったよ。']]},
-  {id:'rockDeep',text:'奥の装置のまわりの大岩をどかそう',check:()=>BVOL.every(j=>S.obj[j]!=='boulder'),prog:()=>'大岩 '+BVOL.filter(j=>S.obj[j]!=='boulder').length+'/4',how:'せいれいに、大岩をくだいてもらう',
-   talk:{who:HOMURA,when:()=>true,lines:[[HOMURA,'奥の装置にたどりつくには、まわりの大岩をどかさないとね。'],[HOMURA,'みんな、たのんだよ！']]},
-   story:[[HOMURA,'よし、道がひらけた！'],[SHIZUKU,'#scared|…装置が、こわれていますね。','vol:pointDevice'],[SHIZUKU,'#nod|……直し方は、わかります。こんどは、わたしがやります。']]},
+  {id:'rockDeep',text:'奥の装置のまわりの大岩をわろう',check:()=>BVOL.every(j=>S.obj[j]!=='boulder'),prog:()=>'大岩 '+BVOL.filter(j=>S.obj[j]!=='boulder').length+'/4',how:'まもりの光を、奥の装置のまわりの大岩に当てる。赤くなった大岩に、せいれいが水をかけるとわれる',
+   talk:{who:HOMURA,when:()=>true,lines:[[HOMURA,'#sigh|……だめだ。奥の装置のまわりの岩は、たたいても、びくともしないよ。'],[SHIZUKU,'#think|岩のすじが、つまっています。あつくしてから、きゅうに冷やせば……'],[HOMURA,'つまり？'],[SHIZUKU,'#nod|守り神さまの光であたためて、そこへ水をかけます。'],[HOMURA,'#joy|……こんどは、あんたの番ってわけだ。']]},
+   story:[[HOMURA,'#joy|われた！ ……あんたの言うとおりだったね。'],[SHIZUKU,'#joy|すじを調べておいて、よかったです。'],[SHIZUKU,'#scared|…装置が、こわれていますね。','vol:pointDevice'],[SHIZUKU,'#nod|……直し方は、わかります。こんどは、わたしがやります。']]},
   {id:'springC',text:'奥の装置を直して、奥の温泉に熱をとどけよう',check:()=>!!st2().sp.c,how:'奥の装置を直して、熱を奥の温泉へむける',
    talk:{who:SHIZUKU,when:()=>true,lines:[
     [SHIZUKU,'奥の装置を直すには、石材と木材、それに…ヌシ様の火だねの力がいります。'],
@@ -162,7 +164,7 @@ const QUESTS2=[
     [GOD,'#joy|ほっほ。それなら、草原から、ひとり連れてこようかの。']]},
    story:[[HOMURA,'#joy|お客さん、よろこんでくれたね！','cheer'],[SHIZUKU,'#joy|とろけちゃいそう、と言ってくれました。'],[HOMURA,'かたゆでも、食べてたよ。'],[HOMURA,'……あとは、ヌシ様をむかえるだけさ。']]},
 
-  {id:'tower',text:'守護の台座を建ててもらおう',check:()=>cnt('tower')>=1,prog:()=>'じょうけん '+clearConds().filter(c=>c[1]).length+'/'+clearConds().length,how:'「おく」→「守護の台座」を建ててもらう。ヌシ様の火だねを、台座にはめる',
+  {id:'tower',text:'守護の台座を建てて、火を入れよう',check:()=>cnt('tower')>=1&&altarLit(),prog:()=>altarProg(),how:'「おく」→「守護の台座」を建ててもらう。建ったら、昼に「しらべる」で台座をタップして、ヌシ様の火だねに火を入れる',
    talk:{who:HOMURA,when:()=>true,lines:[
     [HOMURA,'湯けむりの村も、だいぶ元にもどってきたね。あとは、ヌシ様の火だねをはめる「守護の台座」だ。'],
     [SHIZUKU,'台座を建てるのに、なにが足りないか、いっしょに確かめましょう。'],

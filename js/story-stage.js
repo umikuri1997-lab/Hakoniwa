@@ -2,7 +2,7 @@
 /* 火山（2章）の物語の演出。会話の行の「vol:<場面>」で動かす。
    歩み寄り → 視線・構え → 動作 → 結果 → 反応と余韻。動きもカメラも実時間で、大事な動きが終わるまで、つぎの行へ送らない（sacredDirection の waitUntil）。
    夜・敵・人物不在・道がないときは、動きを省いてそのまま進める。村を切りかえたら残さない（VILLAGE_SESSION）。絵はコードで描くドット絵（1ドット＝整数の四角）。 */
-const VOL_BEAT_MS={introStart:400,lookbackH:1300,lookbackS:1300,wave:900,shoulders:1800,springWalk:900,hidane:900,summonRing:1000,meet:900,fanS:800,jumpBoth:800,traceRock:900,canal:1200,benchSit:900,armsCross:600,egg:900,eatS:1200,crackSeal:1000,yoganSide:800,fist:1000,stepBackS:1000,yoganPulse:1200,sitBeside:900,bump:1400,lanterns:1200,eggsUp:1200,cheer:800,ashiyu:900,ripple:900,scaredS:1000,pointDevice:1000,ashFall:600,stepMountain:900,grab:900,backToBack:1300,morning:1500,shadowSpot:900,kneelAsh:1500,skyH:1100,innFront:900,soakBoth:1000,kneelNushi:1500};
+const VOL_BEAT_MS={dipWalk:900,dipS:1200,altarPair:900,altarLit:3400,introStart:400,lookbackH:1300,lookbackS:1300,wave:900,shoulders:1800,springWalk:900,hidane:900,summonRing:1000,meet:900,fanS:800,jumpBoth:800,traceRock:900,canal:1200,benchSit:900,armsCross:600,egg:900,eatS:1200,crackSeal:1000,yoganSide:800,fist:1000,stepBackS:1000,yoganPulse:1200,sitBeside:900,bump:1400,lanterns:1200,eggsUp:1200,cheer:800,ashiyu:900,ripple:900,scaredS:1000,pointDevice:1000,ashFall:600,stepMountain:900,grab:900,backToBack:1300,morning:1500,shadowSpot:900,kneelAsh:1500,skyH:1100,innFront:900,soakBoth:1000,kneelNushi:1500};
 const HINO_AT=new WeakMap();/* ヒノオオカゲが消えた所（保存しない） */
 function volDir(){if(!S||WD!==1||S.free)return null;const d=sacredDirection(true);if(!d)return null;if(!d.vol){d.vol=true;d.volKey=DLGCUR;}return d;}
 function volWho(n){return S.res.find(r=>r.name===n&&!r.hidden)||null;}
@@ -92,6 +92,12 @@ function volBeat(c){
     volPair(x,y,()=>{for(const r of[h,s])volPose(r,'storyListen',600000,{back:true});},{dy:1.5});break;}
   case 'soakBoth':{const inn=innHouse(),o=inn?inn.onsen:-1,[ox,oy]=o>=0?volXY(o):HSPC.a,done=volTask(d,30000);let n=0;const one=()=>{if(++n===2)done(900);};volFx('steam',600000,{x:ox+.5,y:oy+.3});volShot([[ox+.5,oy+.5]],[h,s]);
     const dip=(r,x,y)=>{if(!r)return one();volWalk(r,x,y,{},()=>volHop(r,x,y,360,()=>{volFace(r,ox+.5);volPose(r,'soak',600000,{});one();}));};dip(h,ox+.5,oy+.5);dip(s,ox+(o>=0?1.5:1),oy+(o>=0?1.4:1));break;}
+  case 'dipWalk':case 'dipS':{if(!s)break;const[sx,sy]=HSPC.a,done=volTask(d,30000);volShot([[sx,sy]],[s,h]);/* シズクが、入口の温泉の湯べりへ（dipS は、足を入れてすわる） */
+    volWalk(s,sx,sy,{side:true},()=>{volFace(s,sx);if(c==='dipS'){volPose(s,'storyListen',600000,{sit:true});volFx('ripple',2600,{x:s.x+(s.face||1)*.35,y:s.y+.35});volFx('steam',600000,{x:sx,y:sy});sfx('wave')}else volPose(s,'storyTouch',600000,{});done(900);});break;}
+  case 'altarPair':{const tw=S.obj.indexOf('tower');if(tw<0)break;const x=storyTreeX(tw),y=storyTreeY(tw);volPair(x,y,()=>{for(const r of[h,s])volPose(r,'storyListen',600000,{back:true});},{dy:1.5});break;}/* 台座の前に、ふたりでならぶ */
+  case 'altarLit':{const tw=S.obj.indexOf('tower');if(tw<0)break;const x=storyTreeX(tw),y=storyTreeY(tw);/* 火がともる：台座から熱の柱がのぼり、光の輪がひろがる */
+    volPair(x,y,()=>{for(const r of[h,s])volPose(r,'storyListen',600000,{back:true});volFx('heatPillar',4200,{x,y});volFx('ember',4200,{x,y:y-.6});towerGlow(9000);for(let k=0;k<3;k++)villageTimeout(()=>fx.push({k:'ring',x:x*TS,y:y*TS,life:1.4,col:'#fff6c8'}),k*300);sfx('shard');volShot([[x,y-4],[x,y]],[h,s],2,1.2);
+      villageTimeout(()=>{const n2=performance.now();for(const r of[h,s])if(r){SACRED_POSES.delete(r);JUMP.set(r,n2);JOYU.set(r,n2+1400)}},2400);},{dy:1.5,tail:3200});break;}
   case 'kneelNushi':{if(!h||!S.nushi)break;const n=S.nushi,done=volTask(d,30000);volWalk(h,n.x,n.y,{side:true},()=>{volFace(h,n.x);volPose(h,'kneel',600000,{});volFx('lightPat',600000,{actor:h,from:n});volShot([[n.x,n.y-1.5]],[h,s],2.4,1);done(2000);});break;}
   }
   if(d.shot===shot0&&c!=='introStart'&&sacredDirection()===d){const cast=[h,s].filter(Boolean),q=d.shot,inView=r=>q&&r.x*TS>=q.left&&r.x*TS<=q.right&&r.y*TS-40>=q.top-30&&r.y*TS<=q.bottom+30;if(cast.length&&!cast.every(inView))volShot([],cast,2.4,1);}/* うつっていない子が動くときは、その子が見えるように */
@@ -143,3 +149,56 @@ function volDrawFx(e,now){{const T=(now-e.at)/1000,p=(now-e.at)/e.ms;if(p>=1||T<
     else if(e.kind==='deviceTurn'){const[x,y]=volTileXY(e.x,e.y),q=sacredEase(Math.min(1,p/.7)),ang=Math.round(q*8)/8*Math.PI,cx=x,cy=y-22;for(let i=-4;i<=4;i++)volDot(cx+Math.cos(ang)*i*1.5,cy-Math.sin(ang)*i*1.5*.6,2,2,'#ffe08a',fade);const tx=cx+Math.cos(ang)*7,ty=cy-Math.sin(ang)*7*.6;volDot(tx-2,ty-2,4,4,'#ffb347',fade);}
   }
 }
+
+/* ---- 守護の台座の火入れ（火山） ----
+   台座を建てたあと、昼に「しらべる」で台座をタップ → ホムラ（いればシズクも）が台座の前へ → 話す → 守り神の出番（sacred-play.js の towerLight）→ 火がともる → 話す。
+   火を入れたことにする（S.st2.lit）のは、さいごの会話を見おえてから（とちゅうでとじたら、はじめから）。その夜、山の影が来る（S.finalNight）。
+   3回しっぱいしたら、その日はやめて、つぎの日（朝6時から）にもう一度（S.st2.litRetry）。 */
+const ALTAR_PRE=[
+  [HOMURA,'この火だねに、火を入れるよ。……強すぎても、弱すぎても、だめなんだ。','vol:altarPair'],
+  [SHIZUKU,'あつくなりすぎたら、わたしが水でさまします。'],
+  [HOMURA,'#think|むかしは、なかまと息を合わせてやったもんさ。'],
+  [SHIZUKU,'#nod|今日は、わたしたちと、守り神さまがいます。'],
+  [HOMURA,'#nod|……そうだね。たのむよ、守り神。']];
+const ALTAR_POST=[
+  [HOMURA,'#joy big|ともった……！','vol:altarLit'],
+  [SHIZUKU,'台座が、あたたかいです。……山のほうまで、光がとどいていますね。'],
+  [HOMURA,'#think|これで、山の上の影にも、見えちまったね。'],
+  [HOMURA,'#nod|来るなら来な。今度は、みんなでむかえるよ。']];
+const ALTAR_FAIL=[
+  [HOMURA,'#sigh|……だめだ。火だねが、ぬれちまった。'],
+  [SHIZUKU,'#teary|すみません。かけすぎました……。'],
+  [HOMURA,'かわくまで待って、あした、もう一度やろう。']];
+let ALTAR_RUN=null;
+const altarLit=()=>WD===1&&!!(S.st2&&S.st2.lit);
+const altarLines=L=>L.filter(l=>!!volWho(l[0]));/* いないせいれいの行は、はぶく */
+/* 火を入れられないわけ（目標の進みぐあいと、タップしたときの知らせで同じ文） */
+function altarWhy(){if(!volWho(HOMURA))return 'ホムラがもどるのを待とう';if((st2().litRetry||0)>callDay())return '火入れは、あした、もう一度';if(isNight())return '火入れは、朝になってから';if(S.enemies.some(e=>e.spawned&&!e.dead))return '「コワイノ」がいなくなってから';return ''}
+function altarProg(){if(cnt('tower')<1)return 'じょうけん '+clearConds().filter(c=>c[1]).length+'/'+clearConds().length;if(!altarLit())return altarWhy()||'台座に火を入れよう';if(S.cleared)return '';return S.finalRetry!=null?'山の影は、また来る':S.finalNight||S.finalOn?'夜、山の影がやってくる':''}
+/* 場面：前の会話 → 出番 → あとの会話。won(true/false) をよぶ（思い出帳の再生でも使う） */
+function altarLightRun(j,won){const run=ALTAR_RUN={S,session:VILLAGE_SESSION},ok=()=>ALTAR_RUN===run&&S===run.S&&VILLAGE_SESSION===run.session,end=v=>{if(ALTAR_RUN===run)ALTAR_RUN=null;if(v!=null&&won)won(v)},say=(L,then)=>{DLGTAP=performance.now();const ls=altarLines(L);if(!ls.length||dialog(ls,then)===false)then()};
+  say(ALTAR_PRE,()=>{if(!ok())return end();
+    startSacredPlay('towerLight',j,[],()=>{if(!ok())return end();say(ALTAR_POST,()=>{if(!ok())return end();end(true)})},
+      ()=>{if(!ok())return end();say(ALTAR_FAIL,()=>{if(!ok())return end();end(false)})})})}
+function towerLightTap(j){if(WD!==1||S.free||S.cleared||altarLit()||S.obj[j]!=='tower'||IS_STORY_REPLAY)return false;
+  if(ALTAR_RUN&&ALTAR_RUN.S===S&&ALTAR_RUN.session===VILLAGE_SESSION)return true;/* 何回タップしても1回 */
+  const why=altarWhy();if(why){toast(why);return true}
+  sfx('tstone');altarLightRun(j,v=>{const t=st2();
+    if(!v){t.litRetry=callDay()+1;dirty=true;renderQuest();return}
+    t.lit=1;delete t.litRetry;if(shLeft()>=1)S.usedSh=(S.usedSh||0)+1;/* 火だねを台座にはめる */S.finalNight=true;memo('moonn','守護の台座に、火がともった');dirty=true;checkQuest();renderQuest();
+    setTimeout(()=>toast('台座の光に、山の影が気づいた……','warn'),900)});
+  return true}
+
+/* ---- 湯もみ（シズクのおねがい） ----
+   依頼の会話のあと、昼に「しらべる」で入口の温泉をタップ → シズクが湯べりへ → 守り神の出番（sacred-play.js の yumomi）→ できたら S.st2.yumomi。お礼の会話は、目標のふつうの流れ。
+   3回しっぱいしたら、つぎの日（朝6時から）にもう一度（S.st2.yuRetry） */
+const YUMOMI_PRE=[[SHIZUKU,'#think|……では、湯をもんでみます。守り神さま、板をおねがいします。','vol:dipWalk']];
+const YUMOMI_FAIL=[[SHIZUKU,'#teary|……湯が、ずいぶんこぼれてしまいました。'],[SHIZUKU,'湯がたまるまで待って、あした、もう一度おねがいします。']];
+let YUMOMI_RUN=null;
+const yumomiOn=()=>WD===1&&!S.free&&!S.cleared&&!st2().yumomi&&QUESTS[S.quest]&&QUESTS[S.quest].id==='shizukuRest'&&S.qTalked&&S.qStory==null;
+function yumomiWhy(){if(st2().yumomi)return '';if(!volWho(SHIZUKU))return 'シズクがもどるのを待とう';if((st2().yuRetry||0)>callDay())return '湯もみは、あした、もう一度';if(isNight())return '湯もみは、朝になってから';if(S.enemies.some(e=>e.spawned&&!e.dead))return '「コワイノ」がいなくなってから';if(!springOn('a'))return '入口の温泉が、冷めている';return ''}
+function yumomiRun(won){const run=YUMOMI_RUN={S,session:VILLAGE_SESSION},ok=()=>YUMOMI_RUN===run&&S===run.S&&VILLAGE_SESSION===run.session,end=v=>{if(YUMOMI_RUN===run)YUMOMI_RUN=null;if(v!=null&&won)won(v)},say=(L,then)=>{DLGTAP=performance.now();const ls=altarLines(L);if(!ls.length||dialog(ls,then)===false)then()};
+  say(YUMOMI_PRE,()=>{if(!ok())return end();startSacredPlay('yumomi',-1,[],()=>{if(!ok())return end();end(true)},()=>{if(!ok())return end();say(YUMOMI_FAIL,()=>{if(!ok())return end();end(false)})})})}
+function yumomiTap(){if(!yumomiOn()||IS_STORY_REPLAY)return false;if(YUMOMI_RUN&&YUMOMI_RUN.S===S&&YUMOMI_RUN.session===VILLAGE_SESSION)return true;
+  const why=yumomiWhy();if(why){toast(why);return true}
+  sfx('twater');yumomiRun(v=>{const t=st2();if(!v){t.yuRetry=callDay()+1;dirty=true;renderQuest();return}t.yumomi=1;delete t.yuRetry;dirty=true;checkQuest();renderQuest()});return true}
