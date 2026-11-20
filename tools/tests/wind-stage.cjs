@@ -75,6 +75,8 @@ const assert=require('node:assert/strict');
   const d=JSON.parse(await run(`(()=>{const n0=skyM().reduce((a,v)=>a+v,0),w0=JSON.stringify(S.wind);save();LIVE[WIND]=null;const L=loadStage(WIND);continueGame(L);for(const id of ['#title','#maps','#pro','#dialog'])document.querySelector(id).hidden=true;return JSON.stringify({wd:WD,name:S.res[0].name,same:skyM().reduce((a,v)=>a+v,0)===n0,wind:JSON.stringify(S.wind)===w0,open:windOpenN(),q:QUESTS[S.quest].id,writer:DYWRITER(),hay:S.res.some(r=>r.name===HAYATE)})})()`));
   console.log(JSON.stringify(d));
   assert.equal(d.wd,4);assert.equal(d.name,'カザネ');assert.ok(d.same);assert.ok(d.wind,'風穴とうかんだ島がのこる');assert.equal(d.open,1);assert.equal(d.q,'rides2');assert.ok(d.hay,'ハヤテものこる');assert.equal(d.writer,'カザネ');
+  /* 風の木はアカシア（植えた木も自然の木も。名前も）。落ち影もある */
+  const tk=await run(`[WD,plantChip('deadtree',0)===CHIPS['deadtree~k'],plantChip('tree',0)===CHIPS['tree~k'],iname('tree'),iname('deadtree'),!!castShadowChip('deadtree',0),!!castShadowChip('tree',0)]`);assert.deepEqual(tk,[4,true,true,'アカシアの苗','アカシア',true,true],'風の木');
   /* マップえらび：風のカードは「つづきから」。土は、ひらかない（水は試作のあいだ、いつでも入れる） */
   const e=JSON.parse(await run(`(()=>{save();showMaps();const C=k=>document.querySelector('#mList .wcard[data-k="'+k+'"]'),B=k=>[...C(k).querySelectorAll('.wbtns button')].map(x=>x.textContent).join('/');const o={w:B(4),w2:B(2),w3:B(3),open:C(4).classList.contains('open'),name:C(4).querySelector('h3').textContent};document.querySelector('#maps').hidden=true;return JSON.stringify(o)})()`));
   console.log(JSON.stringify(e));
