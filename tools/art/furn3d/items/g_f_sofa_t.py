@@ -1,9 +1,11 @@
-# g_f_sofa（特別な家具）：持ち主がトリポで作ったモデル（tools/art/models/tripo/gf/g_f_sofa.glb。25こを1つにならべたモデルを tripo_split.py --wall --keepuv で切りわけた物。形はトリポのまま、色はテクスチャの絵 gf/tex.png から写すときにドットごとに）を写す。
-# 設計図：モデル1つ（高さ 0.75 マス、置くマス2つのまん中、地面におく）。前・右・うしろ・左の4つの向き（モデルをまわして写す）。かげと質感はマットキャップ（tools/art/matcap.py、持ち主がきめた）。
+# g_f_sofa（特別な家具）：持ち主がトリポで作ったモデル（tools/art/models/tripo/gf/g_f_sofa.glb。25こを1つにならべたモデルを tripo_split.py --wall --keepuv で切りわけ、gf_level.py・gf_edit.py で直した物。色はテクスチャの絵 gf/tex.png から写すときにドットごとに）を写す。
+# 設計図：モデル1つ（高さ 0.75 マス、置くマス2×1のまん中、地面におく）。前・右・うしろ・左の4つの向き（モデルをまわして写す）。かげと質感はマットキャップ（tools/art/matcap.py）。見おろし35度・平行に写す（持ち主がきめた）。
+import numpy as np,gfh
 from blueprint import Part as P
-ID='g_f_sofa';BOTTOM=58;GRAD=True;SZ=(2,1)
+ID='g_f_sofa';BOTTOM=58;GRAD=True;SZ=(2, 1);SIZE=0.75
 VIEWS=[('g_f_sofa',0),('g_f_sofa>1',1),('g_f_sofa>2',2),('g_f_sofa>3',3)]
+
 def PARTS():
-    p=P('g_f_sofa','model',('tripo/gf/g_f_sofa.glb',1.0,0.5,0,0.75,0,0),(255,255,255),on=('ground',),note='地面におく');p.tex=False;p.uvtex='tripo/gf/tex.png'   # 色はトリポのテクスチャの絵（木目をはらない）
+    p=P('g_f_sofa','model',('tripo/gf/g_f_sofa.glb',1.0,0.5,0,SIZE,0,0),(255,255,255),on=('ground',),note='地面におく');p.tex=False;p.uvtex='tripo/gf/tex.png'   # 色はトリポのテクスチャの絵（木目をはらない）
     return [p]
-MATCAP='clay';SMANGLE=80;PARALLEL=True   # 遠近をかけずに平行に写す（見おろし42度はそのまま。持ち主がきめた）・ マットキャップでかげと質感・スムーズシェード80度（持ち主がきめた）
+MATCAP='clay';SMANGLE=80;PARALLEL=True;ELEV=35   # マットキャップ・スムーズシェード80度・遠近なし・見おろし35度（持ち主がきめた）

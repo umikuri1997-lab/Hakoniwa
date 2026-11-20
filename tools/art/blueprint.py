@@ -294,7 +294,7 @@ MODELS=os.path.join(os.path.dirname(os.path.abspath(__file__)),'models')
 _MC={};MODEL_SOFT=0.3   # モデルの色を白にまぜる分
 POTCOL=(226,196,166)   # 観葉植物のはち（モデルではこい灰色）を、ゲームに合わせたやきものの色に
 _MCUV={}
-def uvdecal(d,tex,per=200):
+def uvdecal(d,tex,per=200,fix=None):
     """uvtex：モデルの UV で、テクスチャの絵（tex：MODELS からの場所）の色を、写すときにドットごとにとる（形はもとのまま。点ごとの色にしない）。
     面の上に細かく点をまき（1マスに per こ）、その場所の絵の色をとって、見える面の場所にいちばん近い点の色をかえす"""
     from scipy.spatial import cKDTree
@@ -306,6 +306,7 @@ def uvdecal(d,tex,per=200):
             for j in range(k+1-i):
                 w=np.array([i,j,k-i-j],float)/k;P.append(w@V[f]);Q.append(w@UV[f])
     P=np.array(P);Q=np.array(Q);col=im[np.clip(((1-Q[:,1]%1)*H).astype(int),0,H-1),np.clip(((Q[:,0]%1)*W).astype(int),0,W-1)];T=cKDTree(P)
+    if fix:return lambda x,y,z:fix(x,y,z,col[T.query((x,y,z))[1]].copy())   # fix(x,y,z,色)→色：場所で色を直す（天板のよごれ・水・鏡など。設計図の p.uvfix）
     return lambda x,y,z:col[T.query((x,y,z))[1]]
 def _mckey(path,cx,cy,z0,size,rot=0,tilt=0,zs=1.0,up=None):return(path,cx,cy,z0,size,rot,tilt,zs,None if up is None else tuple(up))
 def model_tris(path,cx,cy,z0,size,rot=0,tilt=0,zs=1.0,up=None):

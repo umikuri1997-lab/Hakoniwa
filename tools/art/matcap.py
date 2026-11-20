@@ -26,7 +26,7 @@ def boost(cc,sat=SAT,val=VAL):
     c=np.clip(cc,0,255)/255;mx=c.max(-1,keepdims=True);mn=c.min(-1,keepdims=True);v=mx;s=np.where(mx>0,(mx-mn)/np.maximum(mx,1e-6),0)
     v2=np.clip(v*val,0,1);s2=np.clip(s*sat,0,1);g=np.where(mx-mn>1e-6,(c-mn)/np.maximum(mx-mn,1e-6),0)   # 色あいの形（0〜1）はそのまま
     return (v2*(1-s2)+g*v2*s2)*255
-def apply(im,kind='clay',steps=STEPS,sat=SAT,val=VAL):
+def apply(im,kind='clay',steps=STEPS,sat=SAT,val=VAL,glow=None):
     import furntone as FT
     mc=build(kind)*255/200;a=np.array(im).copy();H,W=a.shape[:2];ids=O.LAST_IDS;cc=boost(np.round(O.LAST_CC).astype(float),sat,val);LN=O.LAST_LINE;MT=O.LAST_MT
     if ids.shape!=(H,W):return im
@@ -37,6 +37,11 @@ def apply(im,kind='clay',steps=STEPS,sat=SAT,val=VAL):
     lum=s.mean(2,keepdims=True);s=np.round(lum*steps)/steps   # 明るさだけ（色はのせない。持ち主：マットキャップの色をのせない）を STEPS だんに
     col=np.clip(cc*s,0,255)
     a[...,:3][tgt&~LN]=col[tgt&~LN].astype(np.uint8)
+    if glow is not None:   # 光る所（ランプの火・あかり）：かげをつけず、明るく（まん中ほど白く）
+        g=tgt&glow(np.round(O.LAST_CC).astype(float))
+        if g.any():
+            from scipy.ndimage import distance_transform_edt
+            dd=distance_transform_edt(g);w=np.clip(dd/3,0,1)[...,None];base=np.clip(np.round(O.LAST_CC)*1.12+18,0,255);a[...,:3][g]=np.clip(base*(1-w*0.35)+255*w*0.35,0,255)[g].astype(np.uint8)
     for y_,x_ in zip(*np.nonzero(tgt&LN)):a[y_,x_,:3]=FT._hsv(cc[y_,x_].astype(int),-OLD[0],OLD[1])
     outer=(a[...,3]>0)&(ids<0)&~O.LAST_CLR
     for y_,x_ in zip(*np.nonzero(outer)):
