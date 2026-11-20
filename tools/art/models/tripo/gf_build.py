@@ -15,7 +15,8 @@ from scipy import ndimage
 HERE=os.path.dirname(os.path.abspath(__file__));ROOT=os.path.join(HERE,'..','..','..','..');D=os.path.join(HERE,'gf')
 args=[a for a in sys.argv[1:] if not a.startswith('--')];chips='--chips' in sys.argv;out=os.path.abspath(args[0]);os.makedirs(out,exist_ok=True)
 sys.path.insert(0,HERE)
-N=['g_w_bed','g_w_stump','g_w_clover','g_w_shelf','g_w_acorn','g_e_planter','g_e_bath','g_e_geode','g_e_arch','g_e_lantern','g_f_table','g_f_sofa','g_f_hanger','g_f_lamp','g_f_screen','g_k_egg','g_k_screen','g_k_fan','g_k_chest','g_k_bed','g_s_sofa','g_s_table','g_s_tank','g_s_jelly','g_s_vanity']
+N=['g_w_kinoko','g_w_stump','g_w_clover','g_w_shelf','g_w_acorn','g_e_planter','g_e_bath','g_e_geode','g_e_arch','g_e_lantern','g_f_table','g_f_sofa','g_f_hanger','g_f_lamp','g_f_screen','g_k_egg','g_k_screen','g_k_fan','g_k_chest','g_k_bed','g_s_sofa','g_s_table','g_s_tank','g_s_jelly','g_s_vanity']
+NOD={'g_w_kinoko'}   # 草のベッド（g_w_bed）のかわりに、こちらで3Dを組んだ（持ち主がえらんだ）。デザインの絵はない
 CELL={'g_k_chest':(3,1),'g_k_bed':(3,2),'g_k_screen':(3,3),'g_k_fan':(3,4)}
 names=args[1:] or N
 run=lambda *c:subprocess.run([sys.executable,*c],check=True,cwd=ROOT,capture_output=True)
@@ -28,7 +29,9 @@ with ThreadPoolExecutor(1 if chips else 6) as ex:list(ex.map(shot,names))   # �
 des=Image.open(os.path.join(D,'design.png')).convert('RGBA');cw=des.width/5;K=3;CW,CH,DWd=330,330,240
 G=Image.new('RGB',(DWd+CW*4,CH*len(names)),(142,196,108));dr=ImageDraw.Draw(G)
 for i,n in enumerate(names):
-    r,c=CELL.get(n,divmod(N.index(n),5));d=des.crop((int(c*cw),int(r*cw),int((c+1)*cw),int((r+1)*cw)));d.thumbnail((DWd-10,CH-10));G.paste(d,(5,i*CH+5),d);dr.text((6,i*CH+4),n,fill=(40,60,30))
+    if n not in NOD:   # デザインの絵のない物（こちらで3Dを組んだ物）は、左をあける
+        r,c=CELL.get(n,divmod(N.index(n),5));d=des.crop((int(c*cw),int(r*cw),int((c+1)*cw),int((r+1)*cw)));d.thumbnail((DWd-10,CH-10));G.paste(d,(5,i*CH+5),d)
+    dr.text((6,i*CH+4),n,fill=(40,60,30))
     for k,suf in enumerate(['','_1','_2','_3']):
         f=os.path.join(out,n,n+suf+'.png')
         if not os.path.exists(f):continue
