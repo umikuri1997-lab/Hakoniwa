@@ -188,9 +188,9 @@ function yamiMarkDraw(m,px,py,now){/* 1ドット2点のドット絵 */const c=ct
 
 /* ===== お話の後半（場面5〜8）。STORY.md の「さいごの章」 =====
    5 朝なんて、いらない：ヨリが消えた所に、トモリがすわりこむ（あかり1マス）→ からっぽの夜のゆりかごで、カミサマが話す
-   よるがお：ヨリの消えた所に芽 → 朝ごとにのびて、つぼみ（2日）→ まわり3マスにあかりのない夜（20時〜）にだけひらく。トモリは自分のあかりをおとす。そばのあかりは「しらべる」で消す（つぎの朝6時にもどる）
+   あけよい草：ヨリの消えた所に芽 → 朝ごとにのびて、つぼみ（2日）→ まわり3マスにあかりのない夜（20時〜）にだけひらく。トモリは自分のあかりをおとす。そばのあかりは「しらべる」で消す（つぎの朝6時にもどる）
    6 夜のゆりかご：土・木・水・火・風のせいれいが1人ずつ、ゆりかごを直す（どれからでも）
-   7 さいごの夜：村のあかりをぜんぶ消す → トモリもあかりをおとし、道によるがおが咲く → 大きな影をむかえに行き、2人でゆりかごへ歩く。トモリが3回たたかれたら、3日あとにやりなおし
+   7 さいごの夜：村のあかりをぜんぶ消す → トモリもあかりをおとし、道にあけよい草が咲く → 大きな影をむかえに行き、2人でゆりかごへ歩く。トモリが3回たたかれたら、3日あとにやりなおし
    8 おやすみ：大きな影がゆりかごでねむり、のこったコワイノは夜のほうへかえる → 朝6時、新しい闇のヌシが生まれてクリア */
 const YKEL=['earth','wood','water','fire','wind'],YKN={earth:'土',wood:'木',water:'水',fire:'火',wind:'風'};
 const YKDO={earth:{anim:'build',t:'台をつむ',line:'#proud|土の台、しっかりつんだよ。これなら、ゆれても、くずれない。'},
@@ -212,13 +212,13 @@ QUESTS6.push(
   {id:'yurikago',text:'庭の北の、からっぽのゆりかごを見にいこう',check:()=>!!S.flags.yrk,by:GOD,how:'「しらべる」で、ゆりかごをタップ',
    story:[
     [GOD,'#worry|……トモリには、まだ言えんのう。あの子は、自分をせめすぎとる。']]},
-  /* よるがお（トモリが立ちなおる） */
-  {id:'yoruhana',text:'ヨリのいた所の、よるがおを見守ろう',check:()=>!!S.flags.bloom,how:'つぼみになったら、夜、まわり3マスのあかりを「しらべる」でタップして消す',
+  /* あけよい草（トモリが立ちなおる） */
+  {id:'yoruhana',text:'ヨリのいた所の、あけよい草を見守ろう',check:()=>!!S.flags.bloom,how:'つぼみになったら、夜、まわり3マスのあかりを「しらべる」でタップして消す',
    prog:()=>{const f=yamiState().fl;if(!f)return 'あしたの朝を待とう';if(f.st<2)return 'つぼみまで：あと'+(2-f.st)+'日';const n=yamiNearLights().length;return n?'そばのあかり：'+n:'夜を待とう'},
    talk:{who:TOMORI,when:()=>!!yamiState().fl,lines:[
     [TOMORI,'#surprise|……あ。'],
     [TOMORI,'ヨリがいた所に……ちいさな芽が出てる。'],
-    [GOD,'#think|ほう、よるがおの芽じゃな。朝の光で育って、夜にだけ、花をひらくんじゃ。'],
+    [GOD,'#think|ほう、あけよい草の芽じゃな。朝の光で育って、夜にだけ、花をひらくんじゃ。'],
     [TOMORI,'#think|……夜に、だけ？']]},
    story:[
     [TOMORI,'#joy|ぼくのあかり、もどってきた。……もう、だいじょうぶ。'],
@@ -247,7 +247,7 @@ QUESTS6.push(
     [GOD,'この庭は、もう、夜だけの庭ではない。朝も夜も、ここに帰ってくる。']]}
 );
 function yamiAt(id){const qi=questIndexOf(id);return qi>=0&&S.quest>=qi}/* 依頼の会話のない目標：その目標になったら（qAt は会話を聞いたあと） */
-function yamiR(){/* トモリのあかりの半径（マス）。かなしみで小さくなり、よるがおを見守る夜・さいごの夜には、自分でおとす */
+function yamiR(){/* トモリのあかりの半径（マス）。かなしみで小さくなり、あけよい草を見守る夜・さいごの夜には、自分でおとす */
   if(!S||WD!==YAMI)return YAMILIGHT;const Y=yamiState();if(S.flags.yamiEnd)return YAMILIGHT;if(Y.ph==='meet'||Y.ph==='go'||Y.ph==='rest')return 0;
   if(!S.flags.asayake||S.flags.bloom)return YAMILIGHT;const f=Y.fl,h=hour();if(f&&f.st>=2&&(h>=20||h<6))return 0;return 1}
 function yamiSitOn(){return !!(S&&WD===YAMI&&S.flags.asayake&&!S.flags.bloom&&!S.cleared)}
@@ -258,7 +258,7 @@ function yamiCradle(){const Y=yamiState();if(Y.cr!=null)return Y.cr;if(!S.flags.
 function yamiCradleCells(){const c=yamiState().cr;if(c==null)return [];const L=[];for(let b=0;b<4;b++)for(let a=0;a<3;a++)L.push(c+b*W+a);return L}
 function yamiCradleC(){const c=yamiState().cr;return c==null?null:{x:c%W+1.5,y:((c/W)|0)+1.5}}
 function yamiNoBuild(id,x,y,quiet){const Y=yamiState(),z=szR(id,PLROTS[id]||0)||[1,1],bad=new Set(yamiCradleCells());if(Y.fl)bad.add(Y.fl.j);if(!bad.size)return false;
-  for(let b=0;b<z[1];b++)for(let a=0;a<z[0];a++)if(bad.has((y+b)*W+x+a)){if(!quiet)toast(Y.fl&&(y+b)*W+x+a===Y.fl.j?'よるがおの芽があります':'夜のゆりかごの場所です','warn');return true}return false}
+  for(let b=0;b<z[1];b++)for(let a=0;a<z[0];a++)if(bad.has((y+b)*W+x+a)){if(!quiet)toast(Y.fl&&(y+b)*W+x+a===Y.fl.j?'あけよい草の芽があります':'夜のゆりかごの場所です','warn');return true}return false}
 /* 消したあかり（つぎの朝6時にもどる） */
 function yamiOffSet(){const Y=S&&S.yami;return new Set(Y&&Y.off||[])}
 function yamiLightOff(j){const Y=yamiState();(Y.off||(Y.off=[])).push(j);recount();sfxAt('pick_tcloth',j%W+.5,((j/W)|0)+.5);fx.push({k:'ring',x:(j%W+.5)*TS,y:((j/W)|0)*TS+20,life:.8,col:'#3a3060'});dirty=true;save()}
@@ -319,7 +319,7 @@ function yamiBloom(){const Y=yamiState(),f=Y.fl,t=yamiTomori();if(!f||!t)return;
    [TOMORI,'#nod|……ぼく、影たちにも、帰る夜をつくりたい。朝も夜も、どっちもいる所にしたい。'],
    [HIIRO,'#proud|……へっ。それでこそ、トモリだ。おれも手つだうぜ。'],
    [GOD,'#joy|うむ。ならば、あのゆりかごを、直そうかの。']].filter(l=>l[0]!==HIIRO||S.res.some(r=>r.name===HIIRO&&!r.hidden));
-  dialog(L,()=>{Y.bl=0;S.flags.bloom=1;f.st=3;memo('moon','ヨリのいた所で、よるがおがひらいた。トモリが立ち上がった');const now=performance.now();JUMP.set(t,now+100);renderQuest();save()},null,TOMORI)}
+  dialog(L,()=>{Y.bl=0;S.flags.bloom=1;f.st=3;memo('moon','ヨリのいた所で、あけよい草がひらいた。トモリが立ち上がった');const now=performance.now();JUMP.set(t,now+100);renderQuest();save()},null,TOMORI)}
 /* さいごの夜 */
 function yamiFinalProg(){const Y=yamiState(),t=dayNo(),h=hour();if(Y.ph==='off')return 'のこりのあかり：'+LIGHTS.length;if(Y.ph==='meet')return 'トモリが、大きな影をむかえに行っている';if(Y.ph==='go')return 'ゆりかごまで、2人を守ろう　たたかれた回数：'+(Y.hits||0)+'/'+YHITMAX;if(Y.ph==='rest')return '朝を待とう';
   if(Y.fn==null)return '';const ev=h<6?t-1:t;return Y.fn<=ev?'大きな影が来るまで：今夜':'大きな影が来るまで：あと'+(Y.fn-ev)+'日'}
@@ -329,9 +329,9 @@ function yamiFinalStart(){const Y=yamiState(),t=yamiTomori();Y.ph='off';Y.hits=0
 function yamiMeetCell(t){/* 村の南：大きな影をむかえる所（トモリが歩いて行けて、コワイノも来られる所） */const G=t?bfs(t.x|0,t.y|0):null,R=typeof spawnReach==='function'?spawnReach():null;let fb=-1;for(let d=10;d<=30;d++)for(const dx of [0,-1,1,-2,2,-3,3,-5,5,-8,8]){const x=CX+dx,y=CY+d;if(x<1||y<1||x>=W-1||y>=H-2)continue;const j=y*W+x;if(!walk(j)||S.obj[j]||!walk(j+W))continue;if(G&&G.dist[j]<0)continue;if(fb<0)fb=j;if(R&&R[j+W]<0)continue;return j}return fb>=0?fb:t?(t.y|0)*W+(t.x|0):CY*W+CX}
 function yamiAllOff(){const Y=yamiState(),t=yamiTomori(),c=Y.cr;Y.ph='meet';
   const mj=yamiMeetCell(t),sp=typeof spawnSpot==='function'?spawnSpot():null;YSH={x:sp?sp[0]:CX+.5,y:sp?sp[1]:H-2.5,mj,trail:[],f:1,walk:false,a:0,t0:performance.now()};
-  /* ゆりかごへの道に、よるがおが咲く（見た目だけ） */Y.road=[];if(c!=null){const ax=mj%W+.5,ay=((mj/W)|0)+.5,bx=c%W+1.5,by=((c/W)|0)+3.5,n=Math.max(2,Math.round(Math.hypot(bx-ax,by-ay)/1.6));for(let i=0;i<=n;i++){const s=i%2?.9:-.9,x=Math.round(ax+(bx-ax)*i/n+s),y=Math.round(ay+(by-ay)*i/n);const j=y*W+x;if(x>0&&y>0&&x<W&&y<H&&walk(j)&&!S.obj[j])Y.road.push([j,i])}}Y.rt=performance.now();
+  /* ゆりかごへの道に、あけよい草が咲く（見た目だけ） */Y.road=[];if(c!=null){const ax=mj%W+.5,ay=((mj/W)|0)+.5,bx=c%W+1.5,by=((c/W)|0)+3.5,n=Math.max(2,Math.round(Math.hypot(bx-ax,by-ay)/1.6));for(let i=0;i<=n;i++){const s=i%2?.9:-.9,x=Math.round(ax+(bx-ax)*i/n+s),y=Math.round(ay+(by-ay)*i/n);const j=y*W+x;if(x>0&&y>0&&x<W&&y<H&&walk(j)&&!S.obj[j])Y.road.push([j,i])}}Y.rt=performance.now();
   if(t)panTo(t.x*TS,t.y*TS);sfx('sacred');
-  dialog([[TOMORI,'ぼくのあかりも……おとすね。'],[TOMORI,'#surprise|……見て。道に、よるがおが咲いていく。']],()=>{if(YSH)panTo(YSH.x*TS,YSH.y*TS);renderQuest();save()},null,TOMORI);renderQuest()}
+  dialog([[TOMORI,'ぼくのあかりも……おとすね。'],[TOMORI,'#surprise|……見て。道に、あけよい草が咲いていく。']],()=>{if(YSH)panTo(YSH.x*TS,YSH.y*TS);renderQuest();save()},null,TOMORI);renderQuest()}
 function yamiFail(why){const Y=yamiState(),t=yamiTomori(),S0=S,ev=hour()<6?dayNo()-1:dayNo();Y.ph=null;Y.fn=ev+YRETRY;Y.hits=0;const sh=YSH;YSH=null;if(sh)fxSpr('dawnfade',sh.x*TS,sh.y*TS);if(t){t.act=null;t.path=[]}
   dialog([[TOMORI,why==='dawn'?'#sad|……朝に、なっちゃった。':'#scared|……っ！'],[GOD,'#worry|影が、おびえて、行ってしもうた……。'],[GOD,'また、夜があつまるのを待とう。3日もすれば、もう一度来るじゃろう。']],()=>{if(S!==S0)return;renderQuest();save()},null,TOMORI);renderQuest();save()}
 function yamiHitRes(e,r){const Y=yamiState();if(r.name!==TOMORI||!(Y.ph==='meet'||Y.ph==='go'))return false;/* さいごの夜のトモリ：おなかはへらない。3回たたかれたら、やりなおし */
@@ -360,7 +360,7 @@ function yamiBirthNushi(){/* 朝6時：新しい闇のヌシが生まれる */co
 function yamiStoryTick(prevH,h,dt){if(S.free)return;const Y=yamiState();
   if(prevH<6&&h>=6){/* 朝6時 */
     if(Y.off&&Y.off.length&&Y.ph!=='rest'){Y.off=[];recount()}/* 消したあかりは、もどる */
-    if(S.flags.yrk&&!Y.fl&&Y.yj!=null){const j=walk(Y.yj)&&!S.obj[Y.yj]?Y.yj:yamiStand(Y.yj);if(j>=0){Y.fl={j,st:0,d:dayNo()};recount()}}/* ヨリの消えた所に、よるがおの芽 */
+    if(S.flags.yrk&&!Y.fl&&Y.yj!=null){const j=walk(Y.yj)&&!S.obj[Y.yj]?Y.yj:yamiStand(Y.yj);if(j>=0){Y.fl={j,st:0,d:dayNo()};recount()}}/* ヨリの消えた所に、あけよい草の芽 */
     else if(Y.fl&&Y.fl.st<2&&Y.fl.d<dayNo()){Y.fl.st++;const f=Y.fl;spawnFX(f.j%W,((f.j/W)|0)-.3,'#e8f4c0')}
     dirty=true}
   if((Y.ph==='meet'||Y.ph==='go')&&!YSH&&!YEND)Y.ph='off';/* 読みこみなおしたら、あかりを消したところから */
@@ -374,7 +374,7 @@ function yamiStoryTick(prevH,h,dt){if(S.free)return;const Y=yamiState();
   if(yamiAt('saigo')&&!S.flags.yamiEnd&&Y.ph==null&&Y.fn!=null){const ev=h<6?dayNo()-1:dayNo();if(Y.fn<=ev&&(h>=23||h<5))yamiFinalStart()}
   if(Y.ph==='off'&&!LIGHTS.length&&!YSH)yamiAllOff();
   if((Y.ph==='meet'||Y.ph==='go')&&(Y.hits||0)>=YHITMAX&&!YEND)yamiFail('hit')}
-/* 後半の絵：夜のゆりかご・よるがお・道のよるがお・大きな影（どれも1ドット2点のドット絵。ゆりかごは状態ごとに1まいだけ作っておく） */
+/* 後半の絵：夜のゆりかご・あけよい草・道のあけよい草・大きな影（どれも1ドット2点のドット絵。ゆりかごは状態ごとに1まいだけ作っておく） */
 let YCRC=null;
 function yamiCradleArt(){const Y=yamiState(),N=Y.crN||{},key=YKEL.map(e=>N[e]?1:0).join('')+(S.flags.yamiEnd?'n':Y.ph==='rest'||Y.ph==='born'?'r':'');if(YCRC&&YCRC.k===key)return YCRC.c;
   const w=48,h=44,c=YCRC&&YCRC.c||document.createElement('canvas');c.width=w;c.height=h;const g=c.getContext('2d');g.clearRect(0,0,w,h);const d=(x,y,col)=>{g.fillStyle=col;g.fillRect(x,y,1,1)};

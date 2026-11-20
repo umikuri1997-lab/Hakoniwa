@@ -1,4 +1,4 @@
-/* 闇のステージのお話の後半：朝なんて、いらない（すわりこむトモリ）→ からっぽのゆりかご → よるがお（そばのあかりを消すと、夜にひらく）→ 夜のゆりかごを5つの属性で直す → さいごの夜（あかりを消す・大きな影とゆりかごへ）→ おやすみ（新しい闇のヌシ・クリア）。さいごの夜に3回たたかれたら、3日あとにやりなおし */
+/* 闇のステージのお話の後半：朝なんて、いらない（すわりこむトモリ）→ からっぽのゆりかご → あけよい草（そばのあかりを消すと、夜にひらく）→ 夜のゆりかごを5つの属性で直す → さいごの夜（あかりを消す・大きな影とゆりかごへ）→ おやすみ（新しい闇のヌシ・クリア）。さいごの夜に3回たたかれたら、3日あとにやりなおし */
 const assert=require('node:assert/strict');
 (async()=>{const {browser,page,run,errors}=await require('../sim/boot.cjs')({world:5});
   await run(`window.__dlg=async(max)=>{const W8=ms=>new Promise(f=>setTimeout(f,ms));for(let i=0;i<(max||80);i++){if(typeof sheet!=='undefined'&&sheet!=null)closeSheet();const d=document.querySelector('#dialog');if(d.hidden){await W8(30);if(document.querySelector('#dialog').hidden)return;continue}const bs=[...document.querySelectorAll('#dlgBtns button')].filter(b=>b.offsetParent!==null);try{DLGA.n=DLGA.full.length;DLGA.readReady=0;DLGA.holdUntil=0}catch(e){}if(bs.length)bs[0].click();await W8(30)}};
@@ -13,7 +13,7 @@ const assert=require('node:assert/strict');
     await __day(()=>S.qTalked);out.iTalk=S.qTalked;render(performance.now());DLGTAP=performance.now();out.iTap=yamiTap(t.x,t.y-.3,t.x|0,t.y|0);await __dlg();out.irana=!!S.flags.irana;out.cr=Y.cr!=null;
     await __day(()=>yamiAt('yurikago'));await __dlg();const c=Y.cr;DLGTAP=performance.now();out.cTap=yamiTap(c%W+1.5,((c/W)|0)+1.5,c%W+1,((c/W)|0)+1);await __dlg();out.yrk=!!S.flags.yrk;
     out.noBuild=!canPlace('torch',c%W+1,((c/W)|0)+1,true);await __day('yurikago');
-    /* よるがお：つぎの朝に芽、2日でつぼみ */const d1=dayNo();__morn(d1+1);out.fl=Y.fl&&Y.fl.st;if(!Y.fl){out.dbg=[QUESTS[S.quest].id,S.qTalked,S.qStory,Y.yj,!!S.flags.yrk,hour(),dayNo(),d1];return JSON.stringify(out)}await __day(()=>qAt('yoruhana')&&S.qTalked);out.yTalk=S.qTalked;
+    /* あけよい草：つぎの朝に芽、2日でつぼみ */const d1=dayNo();__morn(d1+1);out.fl=Y.fl&&Y.fl.st;if(!Y.fl){out.dbg=[QUESTS[S.quest].id,S.qTalked,S.qStory,Y.yj,!!S.flags.yrk,hour(),dayNo(),d1];return JSON.stringify(out)}await __day(()=>qAt('yoruhana')&&S.qTalked);out.yTalk=S.qTalked;
     __morn(d1+2);__morn(d1+3);out.st=Y.fl.st;out.prog=QUESTS[S.quest].prog();
     const f=Y.fl.j;let tj=-1;for(const d of [2,-2,2*W,-2*W,2*W+1]){const j=f+d;if(walk(j)&&!S.obj[j]){tj=j;break}}S.obj[tj]='torch';recount();out.near=yamiNearLights().length;
     __at(d1+3,20.5);for(let i=0;i<6;i++)stepWorld(.5);out.noBloom=!S.flags.bloom&&!Y.bl;out.r0=yamiR();
