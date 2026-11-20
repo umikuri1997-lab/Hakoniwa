@@ -14,15 +14,15 @@ const EVENTS={
   taiso:{n:'朝の体そう',d:'神殿のまえに集まって、みんなで体そう。',at:6,dur:20,pt:20,per:0,max:0,gain:{sta:1},talk:['いち、に、さん、し！','のびのび〜！','#joy|からだが、ぽかぽか！']},
   soji:{n:'大そうじの日',d:'みんなで、村の草・落とし物・クモの巣をかたづける。',at:9,dur:60,pt:30,per:5,max:0,gain:{work:1},talk:['ぴかぴかにしよう！','#joy|すっきりしてきた！','このへん、まだ草があるよ。']},
   oni:{n:'おにごっこ',d:'広い所で、みんなでおいかけっこ。',at:13,dur:30,pt:30,per:5,max:6,gain:{move:1},talk:['まてまて〜！','#joy|つかまらないよ！','#surprise|わっ、つかまった！']},
-  ensoku:{n:'遠足',d:'みんなで遠くまで歩いて、帰ってくる。',at:9,dur:30,pt:50,per:8,food:2,max:6,gain:{move:1},talk:['#joy|ここ、はじめて来た！','空が、ひろいね。','あ、なにか落ちてる！']},
-  gochi:{n:'ごちそう会',d:'食卓のまわりに集まって、みんなでごちそうを食べる。',at:12,dur:30,pt:50,per:8,food:3,need:'table',gain:{sta:1},talk:['#joy|いただきます！','おいしいね！','おなか、いっぱい……。']},
-  takara:{n:'たから探し',d:'箱の中の物を3つ、村にかくして、みんなでさがす。',at:13,dur:40,pt:50,per:8,max:6,gain:{move:1},gainTxt:'移動速度+1〜+2',talk:['どこかなあ……。','このへん、あやしい！','#joy|あった！']},
-  yomi:{n:'よみきかせの会',d:'本棚のまえで、本を読んでもらう。',at:14,dur:30,pt:30,per:5,need:'shelf',gain:{work:1},talk:['……そして、森の木は、こたえました。','つづきが、気になる！','#joy|もう1回読んで！']},
-  mizu:{n:'水あそびの日',d:'噴水のまわりで、水をかけあう。',sea:1,at:13,dur:30,pt:50,per:8,need:'fountain',gain:{sta:1},talk:['#joy|つめたーい！','えいっ！','#surprise|わっ、びしょびしょ！']},
-  camp:{n:'キャンプの夜',d:'たき火のまわりで、夜までおしゃべり。',sea:1,at:19,late:1,dur:90,pt:60,per:10,wood:2,food:2,need:'campfire',gain:{sta:1,atk:3},talk:['火、あったかいね。','ぱちぱち、いってる。','夜の音って、しずかだね。']},
-  cha:{n:'お茶会',d:'屋根の下で、のんびりお茶をのむ。',sea:2,at:15,dur:30,pt:50,per:8,food:1,need:'roof',gain:{sta:1},bond:5,talk:['ほっとするね。','葉っぱの色が、きれい。','#joy|また、みんなでしよう。']},
-  hoshi:{n:'星見の会',d:'夜、みんなで寝ころんで星を見る。',sea:3,at:20.5,late:1,dur:60,pt:50,per:8,gain:{sta:1},fun:20,bond:5,talk:['#surprise|あ、ながれ星！','星って、いくつあるんだろう。','空が、すんでるね。']},
-  onsen:{n:'温泉めぐり',d:'よみがえった3つの温泉を、みんなで足湯してまわる。',stage:1,at:10,dur:45,pt:50,per:8,need:'spring3',gain:{sta:1},legs:1,talk:['足湯、きもちいい……。','#joy|ほかほかだね！','つぎの温泉も、たのしみ。']}};
+  ensoku:{n:'遠足',d:'みんなで遠くまで歩いて、帰ってくる。',at:9,dur:30,pt:50,per:8,food:2,max:6,gain:{},fx:'insp',talk:['#joy|ここ、はじめて来た！','空が、ひろいね。','あ、なにか落ちてる！']},
+  gochi:{n:'ごちそう会',d:'食卓のまわりに集まって、みんなでごちそうを食べる。',at:12,dur:30,pt:50,per:8,food:3,need:'table',gain:{},fx:'full',talk:['#joy|いただきます！','おいしいね！','おなか、いっぱい……。']},
+  takara:{n:'たから探し',d:'箱の中の物を3つ、村にかくして、みんなでさがす。',at:13,dur:40,pt:50,per:8,max:6,gain:{cap:1},talk:['どこかなあ……。','このへん、あやしい！','#joy|あった！']},
+  yomi:{n:'よみきかせの会',d:'本棚のまえで、本を読んでもらう。',at:14,dur:30,pt:30,per:5,need:'shelf',gain:{},fxv:30,fx:'xp',talk:['……そして、森の木は、こたえました。','つづきが、気になる！','#joy|もう1回読んで！']},
+  mizu:{n:'水あそびの日',d:'噴水のまわりで、水をかけあう。',sea:1,at:13,dur:30,pt:50,per:8,need:'fountain',gain:{},fun:40,talk:['#joy|つめたーい！','えいっ！','#surprise|わっ、びしょびしょ！']},
+  camp:{n:'キャンプの夜',d:'たき火のまわりで、夜までおしゃべり。',sea:1,at:19,late:1,dur:90,pt:60,per:10,wood:2,food:2,need:'campfire',gain:{},fxv:10,fx:'natk',talk:['火、あったかいね。','ぱちぱち、いってる。','夜の音って、しずかだね。']},
+  cha:{n:'お茶会',d:'屋根の下で、のんびりお茶をのむ。',sea:2,at:15,dur:30,pt:50,per:8,food:1,need:'roof',gain:{},bond:5,talk:['ほっとするね。','葉っぱの色が、きれい。','#joy|また、みんなでしよう。']},
+  hoshi:{n:'星見の会',d:'夜、みんなで寝ころんで星を見る。',sea:3,at:20.5,late:1,dur:60,pt:50,per:8,gain:{},fx:'sunny',talk:['#surprise|あ、ながれ星！','星って、いくつあるんだろう。','空が、すんでるね。']},
+  onsen:{n:'温泉めぐり',d:'よみがえった3つの温泉を、みんなで足湯してまわる。',stage:1,at:10,dur:45,pt:50,per:8,need:'spring3',gain:{},fx:'rest',legs:1,talk:['足湯、きもちいい……。','#joy|ほかほかだね！','つぎの温泉も、たのしみ。']}};
 const EVORDER=['taiso','soji','oni','ensoku','takara','gochi','yomi','mizu','camp','cha','hoshi','onsen'];
 const EVSEA=['春','夏','秋','冬'];
 const evObjs=id=>{const L=[];for(let j=0;j<S.obj.length;j++)if(S.obj[j]===id)L.push(j);return L};
@@ -44,12 +44,12 @@ function evNeedOK(id){const D=EVENTS[id];if(D.need&&!EVNEED[D.need].list().lengt
 function evWhy(id){const D=EVENTS[id];if(evChain().some(E=>E.id===id))return 'もう、きまっています';if(evClash(id,dayNo()+1))return 'あしたは、ほかのイベントと時間がかさなります';if(seasonDay(dayNo()+1)===CUPDAY&&!evDoneNow(cupOf(dayNo()+1)))return 'あしたは'+EVENTS[cupOf(dayNo()+1)].n+'です';if(evDoneNow(id))return 'この季節は、もうひらきました';if(cupKind(id)&&cupFew())return 'せいれいが'+CUPMIN+'人からです';if(D.sea!=null&&!D.cup&&seasonOf(dayNo()+1)!==D.sea)return EVSEA[D.sea]+'だけです';/* 大会は、依頼ボードから、どの季節でもひらける */return evNeedOK(id)||(D.set?setLack(D):'')}
 /* 大会（季節の大会・運動会）は、せいれいが CUPMIN 人からひらく */
 const CUPMIN=3,cupKind=id=>!!(EVENTS[id]&&(EVENTS[id].cup||id==='undo')),cupFew=()=>S.res.filter(evHere).length<CUPMIN;
-const evOn=id=>{const D=EVENTS[id];return D&&(D.stage==null||D.stage===WD||WD===FREE&&D.stage<=WT()&&D.need!=='spring3'&&D.need!=='utage')};/* フリーモード：クリアした土地のイベントもひらける（火山の温泉をつかう物はのぞく） */
+const evOn=id=>evOn0(id)&&(typeof evOpened!=='function'||evOpened(id))/* ひらいたイベントだけ（event-open.js） */,evOn0=id=>{const D=EVENTS[id];return D&&(D.stage==null||D.stage===WD||WD===FREE&&D.stage<=WT()&&D.need!=='spring3'&&D.need!=='utage')};/* フリーモード：クリアした土地のイベントもひらける（火山の温泉をつかう物はのぞく） */
 function evCost(id,n){const D=EVENTS[id];return{pt:D.pt+D.per*n,food:(D.food||0)*n,wood:(D.wood||0)*n,arrow:(D.arrow||0)*n,bamboo:(D.bamboo||0)*n}}
 function evDoneNow(id){return(S.evDone||{})[id]===seasonKey()}
 function evCostTxt(id){const D=EVENTS[id];if(D.set)return'パワー'+D.pt+'・'+setTxt(D);return'パワー'+D.pt+(D.per?'＋ひとり'+D.per:'')+(D.wood?'・ひとり木材'+D.wood:'')+(D.bamboo?'・ひとり竹'+D.bamboo:'')+(D.arrow?'・ひとり木の矢'+D.arrow+'本':'')+(D.food?'・ひとり食料'+D.food:'')}
-function evGainTxt(id){const D=EVENTS[id],g=D.gain,b=D.gainTxt?[D.gainTxt]:Object.keys(g).map(k=>EVSTN[k]+'+'+g[k]);return b.concat(D.fun&&!/たのしさ/.test(b[0]||'')?['たのしさ+'+D.fun]:[],D.bond?['なかよし+'+D.bond]:[],D.ex?[D.ex]:[]).join('・')}
-function evPlayTxt(id){const D=EVENTS[id];if(typeof EVMG==='undefined'||!EVMG[id]||D.cup||D.bday)return '';const ks=D.gainTxt&&id==='takara'?['move']:id==='undo'?['work','move','sta','atk']:Object.keys(D.gain);return 'いっしょにあそんで、うまくできたら：'+ks.filter(k=>EVPLAY[k]).map(k=>EVSTN[k]+'+'+EVPLAY[k]).concat(['たのしさ+'+EVPLAYFUN]).join('・')}
+function evGainTxt(id){const D=EVENTS[id],g=D.gain,b=D.gainTxt?[D.gainTxt]:Object.keys(g).map(k=>EVSTN[k]+'+'+g[k]);return b.concat(D.fun&&!/たのしさ/.test(b[0]||'')?['たのしさ+'+D.fun]:[],D.bond?['なかよし+'+D.bond]:[],D.ex?[D.ex]:[],typeof evFxTxt==='function'&&evFxTxt(D)?[evFxTxt(D)]:[]).join('・')}
+function evPlayTxt(id){const D=EVENTS[id];if(typeof EVMG==='undefined'||!EVMG[id]||D.cup||D.bday)return '';const ks=id==='undo'?['work','move','sta','atk']:Object.keys(D.gain);return 'いっしょにあそんで、うまくできたら：'+ks.filter(k=>EVPLAY[k]).map(k=>EVSTN[k]+'+'+EVPLAY[k]).concat(['たのしさ+'+EVPLAYFUN]).join('・')}
 /* ひらく：お金をはらって、つぎの日にきめる */
 function evOpen(id,who){const D=EVENTS[id],c=evCost(id,who.length);if(!evOn(id))return;{const w=evWhy(id);if(w)return toast(w)}
   if(!who.length)return toast('出るせいれいがいません');if(S.pt<c.pt)return toast('パワーが足りません');{const w=setLack(D);if(w)return toast(w)}if(S.food<c.food)return toast('食料が足りません');if((S.mat.wood||0)<c.wood)return toast('木材が足りません');if((S.mat.bamboo||0)<c.bamboo)return toast('竹が足りません');if((S.inv.arrow||0)<c.arrow)return toast('木の矢が足りません');
@@ -110,9 +110,10 @@ function evEnd(){const E=S.ev,D=EVENTS[E.id];if(E.tr)for(const t of E.tr)if(!t.g
   if(typeof freeEvEnd==='function')freeEvEnd(E.id,P);/* フリーモードのお話（free.js） */
   const R=D.cup?cupRanks(E,P):null;S.ev=E.next||null;E.ph=null;for(const r of S.res)if(r.act&&r.act.type==='evt'){endAct(r);r.act=null;r.path=[]}
   if(D.bday)bdayEnd(E,P);
+  if(typeof evFxApply==='function')evFxApply(D,P);/* あたらしい効果（event-open.js） */
   if(D.bond)for(let i=0;i<P.length;i++)for(let k=i+1;k<P.length;k++)bondAdd(P[i],P[k],D.bond);
   const show=typeof evShowOn==='function'&&evShowOn(E),okP=show&&(E.ek||0)>=EVOK,X=show?evExtra(E,P):{},tags=[];
-  P.forEach((r,i)=>{const T=r.est||(r.est={}),up=[];let G2=E.id==='takara'?{move:((E.find||{})[r.id]||0)>=3?2:1}:D.cup?{[D.stat]:D.rank[cupPlace(E,R,r.id)]}:E.id==='undo'&&E.team[r.id]===(E.win[0]>=E.win[1]?0:1)?{work:2,move:2,sta:2,atk:10}:D.gain;if(okP){G2=Object.assign({},G2);for(const k in G2)G2[k]+=EVPLAY[k]||0}const fn=show?(D.fun||10)+(okP?EVPLAYFUN:0):0;if(show)funAdd(r,fn,'ev');else if(D.fun)funAdd(r,D.fun,'ev');for(const k in G2){const v=Math.min(EVCAP[k],(T[k]||0)+G2[k]),d=v-(T[k]||0);T[k]=v;if(d>0)up.push(EVSTN[k]+'+'+d)}r.estV=(r.estV||0)+1;
+  P.forEach((r,i)=>{const T=r.est||(r.est={}),up=[];let G2=E.id==='takara'?{cap:1}:D.cup?{[D.stat]:D.rank[cupPlace(E,R,r.id)]}:E.id==='undo'&&E.team[r.id]===(E.win[0]>=E.win[1]?0:1)?{work:2,move:2,sta:2,atk:10}:D.gain;if(okP){G2=Object.assign({},G2);for(const k in G2)G2[k]+=EVPLAY[k]||0}const fn=show?(D.fun||10)+(okP?EVPLAYFUN:0):0;if(show)funAdd(r,fn,'ev');else if(D.fun)funAdd(r,D.fun,'ev');for(const k in G2){const v=Math.min(EVCAP[k],(T[k]||0)+G2[k]),d=v-(T[k]||0);T[k]=v;if(d>0)up.push(EVSTN[k]+'+'+d)}r.estV=(r.estV||0)+1;
     if(E.id==='gochi'||E.id==='shukaku'||E.id==='utage')r.hunger=hMax(r);if(E.id==='utage')r.energy=100;if(!show)funAdd(r,10,'ev');
     if(show){const L=[up.length?up.join('・'):'たのしかった！','たのしさ+'+fn];if(X[r.id])L.push(X[r.id]);tags.push({r,L});return}
     villageTimeout(()=>{if(!S.res.includes(r))return;JUMP.set(r,performance.now());addFloat(r.x,r.y-1.6,up.length?up.join('・'):'たのしかった！','#ffe7a8')},300+i*350)});
@@ -179,8 +180,8 @@ Object.assign(EVENTS,{
   cup3:{n:'荷はこびリレー',cup:1,sea:3,at:10,dur:30,stat:'cap',rank:[2,1,1,0],pt:0,per:0,gain:{cap:2},gainTxt:'持てる数　1位+2・2位+1・3位+1',talk:['よいしょ、よいしょ！','#joy|まだまだ、はこべるよ！','つぎ、おねがい！']}});
 const seasonDay=d=>((d-1)%SEASONDAYS)+1,CUPDAY=5,cupOf=d=>'cup'+seasonOf(d);
 function evMorning(){if(!S||S.free&&false)return;const d=dayNo();
-  if(seasonDay(d)===CUPDAY-1&&!cupFew())villageTimeout(()=>toast('あしたは、'+EVENTS[cupOf(d+1)].n+'！','good'),2400);
-  if(seasonDay(d)!==CUPDAY)return;const id=cupOf(d);if(evDoneNow(id)||cupFew())return;
+  if(seasonDay(d)===CUPDAY-1&&!cupFew()&&evOn(cupOf(d+1)))villageTimeout(()=>toast('あしたは、'+EVENTS[cupOf(d+1)].n+'！','good'),2400);
+  if(seasonDay(d)!==CUPDAY)return;const id=cupOf(d);if(evDoneNow(id)||cupFew()||!evOn(id))return;/* 季節の大会も、ひらいてから */
   if(S.ev){if(S.ev.ph)return;S.ev.day=Math.max(S.ev.day,d+1)}/* きまっていたイベントは、つぎの日に */
   const keep=S.ev;S.ev={id,day:d,who:S.res.filter(evHere).map(r=>r.id),paid:{pt:0,food:[]},ph:null,cup:1,next:keep||null};(S.evDone||(S.evDone={}))[id]=seasonKey();
   villageTimeout(()=>toast('きょうは、'+EVENTS[id].n+'！','good'),2600)}
@@ -237,12 +238,12 @@ function tokuiMig(s){if(s.flags.tokui1)return;s.flags.tokui1=1;for(const q of[..
 const EVGRASS=()=>WD===1?'kuru':'shina';
 Object.assign(EVENTS,{
   undo:{n:'村の運動会',grand:1,d:'かけっこ・つなひき・玉入れを、赤と白の組にわかれてする。',sea:2,at:9,dur:90,pt:300,per:0,set:{food:40},gain:{work:1,move:1,sta:1,atk:5},gainTxt:'かった組　はたらく速さ・移動速度・スタミナ+2・攻撃力+10・まけた組　はたらく速さ・移動速度・スタミナ+1・攻撃力+5',talk:['#joy|がんばれー！','赤組、ファイト！','白組も、まけないよ！']},
-  hana:{n:'花まつり',grand:1,stage:0,d:'花のアーチの下で、花かんむりをつけておどる。',sea:0,at:10,dur:60,pt:200,per:0,set:{flower:10},need:'flower30',gain:{sta:2},fun:40,talk:['#joy|花かんむり、にあう？','いいにおい……。','春って、すてきだね。']},
-  lantern:{n:'ランタンとばしの夜',grand:1,d:'夜空に、みんなでランタンをとばす。',sea:3,at:20,late:1,dur:60,pt:250,per:0,set:{wood:30,grass:20},gain:{work:2},bond:10,talk:['ねがいごと、なににする？','#joy|とんでった！','空が、あかるくなったね。']},
-  shukaku:{n:'しゅうかく祭',grand:1,d:'畑のみのりを集めて、みんなで大ごちそう。',sea:2,at:11,dur:60,pt:200,per:0,set:{crop:30},need:'farm10',gain:{cap:1,sta:1},talk:['#joy|ことしも、いっぱいとれたね！','おいしい！','畑さん、ありがとう。']},
-  himatsuri:{n:'火まつり',grand:1,stage:1,d:'たき火とかがり火のまわりで、たいこにあわせておどる。',sea:1,at:19,late:1,dur:90,pt:300,per:0,set:{wood:40,bamboo:20},need:'fire4',gain:{atk:10},talk:['どん、どん！','#joy|火が、たかくあがった！','からだが、あつくなってきた！']},
-  utage:{n:'温泉宿の大うたげ',grand:1,stage:1,d:'温泉であたたまって、食卓をかこんで大うたげ。',sea:3,at:15,dur:90,pt:250,per:0,set:{food:50},need:'utage',gain:{sta:2},talk:['#joy|かんぱーい！','ごちそうが、いっぱい！','ほかほかで、しあわせ……。']}});
-Object.assign(EVENTS,{hanabi:{n:'花火の夜',grand:1,stage:0,d:'たき火から花火をあげて、みんなで夜空を見上げる。',sea:1,at:20,late:1,dur:60,pt:300,per:0,set:{eda:20,can:10},need:'hanabi',gain:{atk:5,sta:1},fun:30,talk:['#surprise|わあっ、ひらいた！','#joy|いまの、大きかったね！','どーん、って、おなかにひびく。','つぎは、なに色かな。']}});
+  hana:{n:'花まつり',grand:1,stage:0,d:'花のアーチの下で、花かんむりをつけておどる。',sea:0,at:10,dur:60,pt:200,per:0,set:{flower:10},need:'flower30',gain:{},fx:'bloom',talk:['#joy|花かんむり、にあう？','いいにおい……。','春って、すてきだね。']},
+  lantern:{n:'ランタンとばしの夜',grand:1,d:'夜空に、みんなでランタンをとばす。',sea:3,at:20,late:1,dur:60,pt:250,per:0,set:{wood:30,grass:20},gain:{},fxv:20,fx:'tokui',talk:['ねがいごと、なににする？','#joy|とんでった！','空が、あかるくなったね。']},
+  shukaku:{n:'しゅうかく祭',grand:1,d:'畑のみのりを集めて、みんなで大ごちそう。',sea:2,at:11,dur:60,pt:200,per:0,set:{crop:30},need:'farm10',gain:{},fx:'ripen',talk:['#joy|ことしも、いっぱいとれたね！','おいしい！','畑さん、ありがとう。']},
+  himatsuri:{n:'火まつり',grand:1,stage:1,d:'たき火とかがり火のまわりで、たいこにあわせておどる。',sea:1,at:19,late:1,dur:90,pt:300,per:0,set:{wood:40,bamboo:20},need:'fire4',gain:{},fxv:10,fx:'natk',talk:['どん、どん！','#joy|火が、たかくあがった！','からだが、あつくなってきた！']},
+  utage:{n:'温泉宿の大うたげ',grand:1,stage:1,d:'温泉であたたまって、食卓をかこんで大うたげ。',sea:3,at:15,dur:90,pt:250,per:0,set:{food:50},need:'utage',gain:{},bond:10,talk:['#joy|かんぱーい！','ごちそうが、いっぱい！','ほかほかで、しあわせ……。']}});
+Object.assign(EVENTS,{hanabi:{n:'花火の夜',grand:1,stage:0,d:'たき火から花火をあげて、みんなで夜空を見上げる。',sea:1,at:20,late:1,dur:60,pt:300,per:0,set:{eda:20,can:10},need:'hanabi',gain:{},fxv:100,fx:'pt',talk:['#surprise|わあっ、ひらいた！','#joy|いまの、大きかったね！','どーん、って、おなかにひびく。','つぎは、なに色かな。']}});
 EVORDER.push('undo','hana','lantern','shukaku','himatsuri','utage','hanabi');
 Object.assign(EVNEED,{flower30:{n:'花30本',list:()=>{const L=[];for(let j=0;j<S.obj.length;j++)if(FLOWERS.has(S.obj[j]))L.push(j);return L.length>=30?L:[]},cap:()=>99},
   farm10:{n:'畑10マス',list:()=>{const L=[];for(let j=0;j<S.obj.length;j++)if(S.obj[j]==='farm'||S.obj[j]==='plot')L.push(j);return L.length>=10?L:[]},cap:()=>99},
@@ -278,9 +279,9 @@ function hanabiFx(E){/* 花火の夜：たき火（E.c）の上の空に、色�
 /* 家具でひらくイベント（新しい家具：弓の的・ピクニックシート・たいこ・茶道具の台・ほこら） */
 Object.assign(EVENTS,{
   matoate:{n:'的あて',d:'弓の的のまえで、木の矢で的をねらう。',at:14,dur:30,pt:30,per:5,arrow:5,need:'mato',gain:{atk:5},talk:['ねらって……えいっ！','#joy|まんなか、あたった！','#surprise|あっ、それた！']},
-  pikunikku:{n:'ピクニック',d:'シートをひろげて、花のそばでおべんとう。',sea:0,stage:0,at:12,dur:40,pt:50,per:8,food:2,need:'picnic',gain:{sta:1},fun:20,talk:['#joy|おべんとう、おいしい！','風が、きもちいいね。','ねころびたくなっちゃう。']},
+  pikunikku:{n:'ピクニック',d:'シートをひろげて、花のそばでおべんとう。',sea:0,stage:0,at:12,dur:40,pt:50,per:8,food:2,need:'picnic',gain:{},fxv:3,fx:'seeds',talk:['#joy|おべんとう、おいしい！','風が、きもちいいね。','ねころびたくなっちゃう。']},
   taikokai:{n:'たいこの会',d:'たいこをたたいて、みんなでおどる。',stage:1,at:16,dur:30,pt:50,per:8,bamboo:1,need:'taiko',gain:{atk:5},talk:['どん、どん、どん！','#joy|からだが、はずむ！','もっと、つよく！']},
   ocha:{n:'お茶のけいこ',d:'茶道具の台のまえで、しずかにお茶をたてる。',stage:1,at:14,dur:30,pt:50,per:8,food:1,need:'chadogu',gain:{work:1},talk:['しゃか、しゃか……。','いい香り。','こころが、おちつくね。']},
-  hokomairi:{n:'ほこらまいり',d:'朝、みんなでほこらにおまいりする。',stage:1,at:6.5,dur:20,pt:30,per:5,need:'hokora',gain:{sta:1},talk:['きょうも、いい日になりますように。','……。','#joy|なんだか、げんきが出てきた。']}});
+  hokomairi:{n:'ほこらまいり',d:'朝、みんなでほこらにおまいりする。',stage:1,at:6.5,dur:20,pt:30,per:5,need:'hokora',gain:{},fx:'calm',talk:['きょうも、いい日になりますように。','……。','#joy|なんだか、げんきが出てきた。']}});
 EVORDER.splice(EVORDER.indexOf('undo'),0,'matoate','pikunikku','taikokai','ocha','hokomairi');
 Object.assign(EVNEED,{mato:{n:'弓の的',list:()=>evObjs('mato'),cap:()=>3},picnic:{n:'ピクニックシート',list:()=>evObjs('picnic'),cap:()=>6},taiko:{n:'たいこ',list:()=>evObjs('taiko'),cap:()=>6},chadogu:{n:'茶道具の台',list:()=>evObjs('chadogu'),cap:()=>4},hokora:{n:'ほこら',list:()=>evObjs('hokora'),cap:()=>99}});

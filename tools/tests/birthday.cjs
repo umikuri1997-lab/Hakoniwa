@@ -7,7 +7,7 @@ const assert=require('node:assert/strict');
   await run(`document.querySelector('#dialog').hidden=true;S.introSeen=true;S.flags.tapped=1;S.hold=0;if(sheet)closeSheet();S.enemyOn=true;S.enemies=[];NOSAVE=true;
     for(const el of ['wood','earth','water','wind'])S.res.push(mkRes(S,'t'+el,el,CX+.5+S.res.length,CY+2.5));for(const r of S.res){r.hunger=hMax(r);r.energy=100;r.fun=60}
     S.pt=5000;S.mat.wood=60;for(let i=0;i<99;i++)addFood('apple',1);S.t=12*60;`);
-  const sim=(clockMin,stopIf)=>run(`(()=>{const end=S.t+${clockMin};let n=0;while(S.t<end&&n<40000){stepWorld(1.5);for(const r of S.res){updRes(r,1.5);r.hunger=Math.max(r.hunger,800);r.energy=Math.max(r.energy,80)}S.enemies=[];S.rain=false;n++;${stopIf?'if('+stopIf+')break;':''}}return n})()`);
+  const sim=(clockMin,stopIf)=>run(`(()=>{const end=S.t+${clockMin};let n=0;while(S.t<end&&n<40000){stepWorld(1.5);for(const r of S.res){updRes(r,1.5);r.hunger=Math.max(r.hunger,400);r.energy=Math.max(r.energy,80)}S.enemies=[];S.rain=false;n++;${stopIf?'if('+stopIf+')break;':''}}return n})()`);
   const to=(d,h)=>run(`(()=>{const t=(${d}-1)*1440+(${h})*60;if(t>S.t)S.t=t;return dayNo()})()`);
   /* 誕生日のきめかた */
   const bi=JSON.parse(await run(`(()=>{const r=S.res[1];r.came=7;const on=[];for(let d=1;d<=50;d++)if(bdayOn(r,d))on.push(d);const f=S.res[0],c0=f.came;delete f.came;const fo=[];for(let d=1;d<=45;d++)if(bdayOn(f,d))fo.push(d);if(c0)f.came=c0;return JSON.stringify({on,fo,tx:bdayText(r),year:BDAYYEAR()})})()`));
@@ -28,7 +28,7 @@ const assert=require('node:assert/strict');
   await sim(60*4,'!S.ev');
   const hr=JSON.parse(await run(`JSON.stringify({ev:S.ev,est:S.res.map(r=>r.est||{}),memo:(S.memo||[]).map(m=>m[2]).filter(t=>t.includes('花火の夜'))})`));
   assert.equal(hr.ev,null,'hanabi finished');assert.ok(hr.memo.length,'hanabi memo');
-  const hg=hr.est.map((e,i)=>({atk:(e.atk||0)-(est0[i].atk||0),sta:(e.sta||0)-(est0[i].sta||0)}));assert.ok(hg.every(g=>g.atk===5&&g.sta===1),'atk+5 sta+1 '+JSON.stringify(hg));
+  /* 花火の夜のごほうびは、パワー+100（あたらしい効果 fx：event-open.js） */assert.equal(await run(`EVENTS.hanabi.fx`),'pt');
   /* 雨の日は、あげられない（つぎの日に） */
   const rn=JSON.parse(await run(`(()=>{S.evDone={};S.ev=null;S.mat.eda=20;S.mat.can=10;const d0=dayNo();evOpen('hanabi',S.res.map(r=>r.id));const day=S.ev.day;S.t=(day-1)*1440+20.2*60;S.rain=true;evTick();const r={ph:S.ev.ph,day:S.ev.day,want:day+1};evCancel();S.rain=false;return JSON.stringify(r)})()`));
   assert.equal(rn.ph,null);assert.equal(rn.day,rn.want,'rain: next day');

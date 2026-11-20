@@ -6,7 +6,7 @@ const assert=require('node:assert/strict');
   await run(`document.querySelector('#dialog').hidden=true;S.introSeen=true;S.flags.tapped=1;S.hold=0;if(sheet)closeSheet();S.enemyOn=true;S.enemies=[];
     for(const el of ['wood','earth','water','fire'])S.res.push(mkRes(S,'t'+el,el,CX+.5+S.res.length,CY+2.5));for(const r of S.res){r.hunger=hMax(r);r.energy=100;r.fun=50}
     S.pt=5000;S.mat.wood=60;for(let i=0;i<99;i++)addFood('apple',1);S.t=12*60;`);
-  const sim=(clockMin,stopIf)=>run(`(()=>{const end=S.t+${clockMin};let n=0;while(S.t<end&&n<40000){stepWorld(1.5);for(const r of S.res){updRes(r,1.5);r.hunger=Math.max(r.hunger,800);r.energy=Math.max(r.energy,40)}S.enemies=[];n++;${stopIf?'if('+stopIf+')break;':''}}return S.t})()`);
+  const sim=(clockMin,stopIf)=>run(`(()=>{const end=S.t+${clockMin};let n=0;while(S.t<end&&n<40000){stepWorld(1.5);for(const r of S.res){updRes(r,1.5);r.hunger=Math.max(r.hunger,400);r.energy=Math.max(r.energy,40)}S.enemies=[];n++;${stopIf?'if('+stopIf+')break;':''}}return S.t})()`);
   const to=(d,h)=>run(`(()=>{const t=(${d}-1)*1440+(${h})*60;if(t>S.t)S.t=t;return dayNo()})()`);
   /* 1. 指あそび：24こ、どれも描いて・タップして・10秒でおわる */
   const ids=JSON.parse(await run(`JSON.stringify(Object.keys(EVMG))`));assert.equal(ids.length,24,'24 minigames');
