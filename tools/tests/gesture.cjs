@@ -1,9 +1,9 @@
 /* 会話の身ぶり：話す子はセリフの印に合った身ぶり、聞く子は反応、「わたす」は手わたし（花かんむりは頭にのる）。夢の場面の花かんむり */
 const assert=require('node:assert/strict');
 (async()=>{const {browser,page,run,errors}=await require('../sim/boot.cjs')({viewport:{width:900,height:700}});
-  await run(`(()=>{document.querySelector('#dialog').hidden=true;S.introSeen=true;S.flags.tapped=1;S.hold=0;S.t=1440+720;S.enemyOn=false;
-    for(let y=CY-4;y<CY+4;y++)for(let x=CX-4;x<CX+6;x++){const j=y*W+x;S.obj[j]='';S.floor[j]='';S.hi[j]=0}
-    S.res=[mkRes(S,POKO,'wood',CX+.5,CY+.5),mkRes(S,MINA,'earth',CX+1.5,CY+.5),mkRes(S,FIXK0.water,'water',CX+.5,CY+1.5)];for(const r of S.res){r.hunger=hMax(r);r.energy=100;r.fun=90;r.act={type:'idle',stage:'do',t:0,dur:9999}}for(const k in S.dyn)if(S.dyn[k]&&S.dyn[k].g!=null)S.dyn[k].g=0;/* 実った物をなくす：会話のあいだに、食べ物をあつめに歩き出さないように（foodLow） */recount();})()`);
+  await run(`(()=>{document.querySelector('#dialog').hidden=true;S.introSeen=true;S.flags.tapped=1;S.hold=0;S.t=1440+720;S.enemyOn=false;sevBegin=()=>false;/* ピンクの会話は出さない（身ぶりだけを見る） */
+    for(let y=CY+2;y<CY+10;y++)for(let x=CX-4;x<CX+6;x++){const j=y*W+x;S.obj[j]='';S.floor[j]='';S.hi[j]=0}
+    S.res=[mkRes(S,POKO,'wood',CX+.5,CY+5.5),mkRes(S,MINA,'earth',CX+1.5,CY+5.5),mkRes(S,FIXK0.water,'water',CX+.5,CY+6.5)];for(const r of S.res){r.hunger=hMax(r);r.energy=100;r.fun=90;r.act={type:'idle',stage:'do',t:0,dur:9999}}for(const k in S.dyn)if(S.dyn[k]&&S.dyn[k].g!=null)S.dyn[k].g=0;/* 実った物をなくす：会話のあいだに、食べ物をあつめに歩き出さないように（foodLow） */recount();})()`);
   const next=async()=>{await page.waitForFunction(()=>sacredEval(`(()=>{const b=document.querySelector('#dlgBtns button[data-nx]');return !!b&&!b.disabled&&performance.now()>=DLGA.holdUntil&&!sacredMotionPending()})()`),{},{timeout:8000});
     const t0=await run('DLGA.lineT');for(let k=0;k<12;k++){await run(`(()=>{const b=document.querySelector('#dlgBtns button[data-nx]');if(b)b.click()})()`);await page.waitForTimeout(260);if(await run(`DLGA.lineT!==${t0}||document.querySelector('#dialog').hidden`))break}};/* 文字が出おわっていなければ、1回めは文字をぜんぶ出すだけ */
   const POKO=await run('POKO'),MINA=await run('MINA');
@@ -26,8 +26,8 @@ const assert=require('node:assert/strict');
   assert.equal(await pose(POKO),'pinky','pinky pair (speaker)');assert.equal(await pose(MINA),'pinky','pinky pair (partner)');
   await next();await page.waitForTimeout(1500);assert.equal(await run(`(sacredPose(S.res[0])||{}).handItem`),'stone','the receiver holds the stone');
   await next();await page.waitForTimeout(1500);assert.equal(await pose(MINA),'yawn','the yawn is catching');
-  await run(`S.obj[CY*W+CX-3]='tree'`);await next();await page.waitForTimeout(200);assert.equal(await pose(POKO),'point','point at the tree');assert.equal(await run('S.res[0].face'),-1,'faces the tree');
-  await next();await run(`S.obj[CY*W+CX-3]=''`);
+  await run(`S.obj[(CY+5)*W+CX-3]='tree'`);await next();await page.waitForTimeout(200);assert.equal(await pose(POKO),'point','point at the tree');assert.equal(await run('S.res[0].face'),-1,'faces the tree');
+  await next();await run(`S.obj[(CY+5)*W+CX-3]=''`);
   assert.equal(await run(`(()=>{const r=S.res[2],n0=S.nushi;r.act={type:'npl',stage:'do',t:0};S.nushi={x:r.x+1.5,y:r.y,pl:{id:r.id}};nushiPet();const a=(sacredPose(r)||{}).anim;S.nushi=n0;dlgGestEnd();r.act={type:'idle',stage:'do',t:0,dur:9999};return a})()`),'headpat','pet Nushi');
   /* 3. つぎの朝6時で、はずれる */
   await run('S.t=1440*2+400');assert.equal(await run('spCrownOn(S.res[1])'),false,'the crown is gone the next morning');
