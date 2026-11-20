@@ -6,7 +6,7 @@
    つける名前は、ひらがな・カタカナ・英数字・ー・・で NKMAX 字まで。ほかの子の名前・お話の子のもとの名前と同じ名前や、
    お話の子のもとの名前をふくむ名前にはしない（おきかえが2回かかって、くずれないように）。 */
 const NKMAX=6;
-const NKFIX=()=>[MINA,SHIZUKU,...Object.values(FIXK0)];
+const NKFIX=()=>[MINA,SHIZUKU,KAGARI,...Object.values(FIXK0)];
 let NKRX=null,NKSIG='';
 function nickName(n){return S&&S.nick&&S.nick[n]||n}
 function nickTx(t){const N=S&&S.nick;if(!N||typeof t!=='string')return t;const ks=Object.keys(N);if(!ks.length)return t;const sig=ks.join('|');if(sig!==NKSIG){NKSIG=sig;NKRX=new RegExp(ks.slice().sort((a,b)=>b.length-a.length).join('|'),'g')}NKRX.lastIndex=0;return NKRX.test(t)?(NKRX.lastIndex=0,t.replace(NKRX,k=>N[k]||k)):t}

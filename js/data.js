@@ -195,7 +195,7 @@ const BL={
   tower:{hp:100,hpS:150,brk:1,fix:20,fixm:{wood:20,stone:10},name:'守護の台座',sz:[2,2],kind:'build',pc:95,time:300,maker:null,solid:1,anim:1,attr:{wood:3,water:3,fire:3,earth:3,wind:3},desc:'守護の力をとりもどす台座。ヌシ様が帰ってくる。光の矢：ダメージ10／6.7分ごと／範囲10マス。まわり7マスを照らす'},
   rock:{name:'岩',solid:1,natural:1},kagenest:{name:'かげの巣',solid:1,natural:1},leafwall:{name:'葉のかべ',natural:1,brk:1,hp:30},/* かげの巣・葉のかべ（defense.js） */vcopper:{name:'銅の鉱脈',solid:1,natural:1},viron:{name:'鉄の鉱脈',solid:1,natural:1},vobsid:{name:'黒曜石の鉱脈',solid:1,natural:1},vsilver:{name:'銀の鉱脈',solid:1,natural:1},vgold:{name:'金の鉱脈',solid:1,natural:1},/* 火山の鉱脈：ほると鉱石 */
   hotstone:{hp:5,brk:1,fix:1,fixm:{},name:'湯のわき岩',kind:'furn',pc:0,time:20,solid:1,anim:1,attr:{fire:3,water:1},desc:'水べに置くと、水があたたまって温泉になる'},
-  volcano:{name:'火山',sz:[3,3],solid:1,anim:1},boulder:{name:'大岩',solid:1,natural:1},heatv:{name:'熱の切りかえ装置',solid:1,anim:1},crack:{name:'ひびわれ',anim:1},/* 火山のふもと */
+  volcano:{name:'火山',sz:[3,3],solid:1,anim:1},boulder:{name:'大岩',solid:1,natural:1},heatv:{name:'熱の切りかえ装置',solid:1,anim:1},kaeribi:{name:'かえり道のあかり',solid:1,anim:1},/* ホムラが夕方にともす、村の入り口のあかり（kagari.js）。絵は行燈 */crack:{name:'ひびわれ',anim:1},/* 火山のふもと */
   kdkusa:{name:'ゆれる草むら',natural:1},kdkabu:{name:'ふしぎな切り株',solid:1,natural:1},kdishi:{name:'小石',natural:1},kdhana:{name:'花',natural:1},/* もりのこだまの見つかる所（kodama.js） */fogbox:{name:'古い宝箱',solid:1,natural:1,anim:1},nushiprint:{name:'ヌシ様のあしあと',natural:1,anim:1},fogspring:{name:'きれいな泉',sz:[2,2],solid:1,natural:1,anim:1,env:1.4,desc:'まわり3マスで、たのしさ+0.5／1時間'},/* 霧の中で見つける物（草原） */
   deadtree:{name:'枯れ木',solid:1,natural:1},
   ntree:{name:'森の木',solid:1,natural:1},
@@ -267,9 +267,9 @@ const LIKE_KEYS=Object.keys(LIKES);
 /* ---------- ストーリー ---------- */
 const GOD='カミサマ',POKO='フタバ';
 const MINA='ノドカ';
-const HOMURA='ホムラ',SHIZUKU='シズク';
+const HOMURA='ホムラ',SHIZUKU='シズク',KAGARI='カガリ';/* カガリ：火山からにげた火のせいれい。おまつりのあと、入り口のあかりをたよりに、自分で帰ってくる（kagari.js） */
 const KEYS=[[POKO,MINA],[HOMURA,SHIZUKU]];KEYS[FREE]=[];const FIXK0={fire:'ホノ',water:'アオ',wind:'フウ'};/* ステージ1の火・水・風のキーキャラ（名前も見た目も固定） *//* ステージごとのキーキャラ（1人目・2人目） */
-const KEYEL={[POKO]:'wood',[MINA]:'earth',[HOMURA]:'fire',[SHIZUKU]:'water'};
+const KEYEL={[POKO]:'wood',[MINA]:'earth',[HOMURA]:'fire',[SHIZUKU]:'water',[KAGARI]:'fire'};
 const LEAD=()=>KEYS[WD][0]||(WD===FREE?FA():GOD);
 const PROLOGUE=[
   ['？？？','#wave|…おーい、聞こえとるかの？ そうそう、おヌシじゃ。'],

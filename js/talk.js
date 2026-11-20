@@ -61,6 +61,7 @@ function dayLine(r,[t,v]){let k=t,n='';
 /* いまのようす：u は、ほかの話題より先 */
 function nowTopic(r){const n=hour(),gn=goneTalkName(),T=S.trouble&&S.trouble.id===r.id?S.trouble.k:null,foe=isNight()&&S.enemies.some(e=>e.spawned&&!e.dead),fv=r.elem==='fire'||fighter(r);
   if(foe)return{u:1,L:tkFresh(fv?'u:foeF':'u:foeS',fv?TALKU.foeF:TALKU.foeS)};
+  if(r.act&&r.act.type==='vigil')return{u:1,L:['#think hush|……なんでもないよ。道の先を、ちょっと見てただけさ。']};/* 入り口のあかりのそば（kagari.js） */
   if(r.came===dayNo()&&!r.back)return{u:1,L:tkFresh('u:new',TALKU.new)};
   {const a=annivTopic(r);if(a)return a}/* 村に来て〇日の記念日 */
   {const d=typeof dreamTopic==='function'?dreamTopic(r):null;if(d)return d}/* ゆうべのゆめ */
