@@ -378,6 +378,7 @@ function decide0(r){if(r.wakeStretch){r.wakeStretch=0;if(!isNight()&&!enemyLive(
   else if(isNight()&&isWatch(r)){// 火のせいれいは寝ないで見回り
     if(r.hunger<250&&hideIn(r,G))return;/* おなかが50より少ないときは、たたかわずに家へにげる */
     {const e=pickFoe(r,foesNow());if(e){const t=huntSpot(G,e,60,r);/* 届かない所にいても、いちばん近くまで行く */if(t>=0)return startAct(r,G,'patrol',t,{hunt:S.t})}}/* 拠点にコワイノが入ったら、まっすぐたたかいに行く */
+    if(typeof ngJob==='function'&&ngJob(r,G))return;/* たのまれた光るつぶを、村の外へひろいに行く（nightglow.js） */
     {const pm=patrolMask(),others=S.res.filter(t=>t!==r&&!t.hidden&&!t.dead),sx=STATUE%W,sy=(STATUE/W)|0;/* 見回る所：家のまわり3マスだけ。家がなければ、ほかの子のまわり3マス → 神殿のまわり3マス（家の中はのぞく） */
       const tiers=[j=>pm[j]===2,others.length?j=>others.some(t=>Math.abs(j%W+.5-t.x)<3.5&&Math.abs(((j/W)|0)+.5-t.y)<3.5):null,STATUE>=0?j=>Math.abs(j%W-sx)<=3&&Math.abs(((j/W)|0)-sy)<=3:null];
       for(const f of tiers){if(!f)continue;const ok=j=>walk(j)&&pm[j]!==3&&f(j);let j=nearest(G,j=>ok(j)&&Math.random()<.04,8);if(j<0)j=nearest(G,ok,200);if(j>=0)return startAct(r,G,'patrol',j)}}

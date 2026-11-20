@@ -461,7 +461,7 @@ function carryIcon(r){
   return null}
 let COFFIN=null;function coffinBmp(){/* 棺の絵文字を一度だけ描いて、見えている部分だけ切り出す（機種で絵文字の位置がちがっても、まんなかに置ける） */if(COFFIN)return COFFIN.w?COFFIN:null;const N=288,c=document.createElement('canvas');c.width=c.height=N;const x=c.getContext('2d');x.font='117px sans-serif';x.textAlign='center';x.textBaseline='middle';x.fillText('⚰️',N/2,N/2);let d;try{d=x.getImageData(0,0,N,N).data}catch(e){return null}let x0=N,y0=N,x1=-1,y1=-1;for(let y=0;y<N;y++)for(let i=0;i<N;i++)if(d[(y*N+i)*4+3]>20){if(i<x0)x0=i;if(i>x1)x1=i;if(y<y0)y0=y;if(y>y1)y1=y}
   if(x1<0){COFFIN={};return null}const w=x1-x0+1,h=y1-y0+1,o=document.createElement('canvas');o.width=w;o.height=h;o.getContext('2d').drawImage(c,x0,y0,w,h,0,0,w,h);COFFIN={c:o,w:w/3,h:h/3};return COFFIN}/* 3倍の大きさで描いて、くっきりさせる（表示は39pxぶん） */
-function itemIc(id){if(id.startsWith('set:'))return itemIc(id.slice(4));if(BL[id]&&BL[id].kind==='gift')return 'ic:'+id;/* おくりもの */return id==='mapPc'||id==='tmap'||id==='fukuro'?'ic:'+id:id==='sand'?'chip:sand':id.startsWith('seed:')||BL[id]&&BL[id].kind==='furn'?'obj:'+id:'chip:drop:bag'}/* ひろった物の、頭の上のアイコン（地面に落ちていたときの絵。家具・たねは、その絵） */
+function itemIc(id){if(id.startsWith('set:'))return itemIc(id.slice(4));if(BL[id]&&BL[id].kind==='gift')return 'ic:'+id;/* おくりもの */return id==='mapPc'||id==='tmap'||id==='fukuro'||/^ng[012]$/.test(id)?'ic:'+id:id==='sand'?'chip:sand':id.startsWith('seed:')||BL[id]&&BL[id].kind==='furn'?'obj:'+id:'chip:drop:bag'}/* ひろった物の、頭の上のアイコン（地面に落ちていたときの絵。家具・たねは、その絵） */
 function carryIcons(r){/* 持っているものを、そのまま1つずつ並べる（上に積むほど新しい） */
   const em=foodEmo,out=[];
   if(r.coffin)return['⚰️'];/* 棺を持っているときは、それだけ */
