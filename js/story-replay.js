@@ -3,10 +3,10 @@
 const STORY_REPLAY_QUESTS=['earthListen','fireRoot','waterFilm','windEcho','tower'];/* 御神木の調べの依頼（中の調べは fieldParts） */
 const replayParts=id=>QUESTS1.find(q=>q.id===id)?.fieldParts||[id];
 const STORY_REPLAY_EVENTS=[{key:'grass:intro',id:'intro',kind:'gintro',title:'はじまりの草原へ'},/* 草原のはじめ：花かんむりの夢 → 着いてからの会話（カミサマの話はのぞく） */...STORY_REPLAY_QUESTS.map(id=>({key:'quest:'+id,id,kind:'quest'})),
-  {key:'event:e16',id:'e16',kind:'event',title:'御神木を守る仲間たち'},
-  {key:'event:e15',id:'e15',kind:'event',title:'フタバが仲間を守る'},
-  {key:'event:e16g',id:'e16g',kind:'event',title:'守り神へ受け継ぐ力'},
-  {key:'event:e09',id:'e09',kind:'event',title:'最後のかけらを、みんなで'},
+  {key:'event:e16',id:'e16',kind:'event',title:'御神木を守るなかまたち'},
+  {key:'event:e15',id:'e15',kind:'event',title:'フタバがなかまを守る'},
+  {key:'event:e16g',id:'e16g',kind:'event',title:'守り神へうけつぐ力'},
+  {key:'event:e09',id:'e09',kind:'event',title:'さいごのかけらを、みんなで'},
   {key:'reunion',kind:'reunion',title:'ヌシ様との再会'},
   {key:'quiet',kind:'quiet',title:'再会のあと、木陰で'},
   /* 火山：本編と同じ会話・動きを、一時データの村で見返す */
@@ -26,8 +26,8 @@ function availableStoryReplays(state=S){
 }
 function appendStoryReplays(body){
   if(!S||S.free||WD>1)return;
-  const sec=el('<div class="sec"><h3>物語を見返す</h3><p class="note">動きやカメラも見返せます。村の時間・進行・報酬は変わりません。</p><div class="rows"></div></div>'),list=sec.querySelector('.rows'),episodes=availableStoryReplays();
-  if(!episodes.length)list.appendChild(el('<p class="note">物語を進めると、ここで見返せます。</p>'));
+  const sec=el('<div class="sec"><h3>物語を見返す</h3><p class="note">動きもカメラも、もういちど見られる。村の時間・お話の進み・ごほうびは、かわらない。</p><div class="rows"></div></div>'),list=sec.querySelector('.rows'),episodes=availableStoryReplays();
+  if(!episodes.length)list.appendChild(el('<p class="note">物語を進めると、ここで見られる。</p>'));
   for(const e of episodes){const b=el('<button class="btn" style="width:100%;text-align:left"></button>');b.textContent='▶ '+storyReplayTitle(e);b.dataset.storyReplay=e.key;b.onclick=()=>openStoryReplay(e.key);list.appendChild(b);}
   body.appendChild(sec);
 }
@@ -142,23 +142,23 @@ async function playStoryReplay(run){
     else{
       const event=SEV1.find(v=>v.k===e.id);S.sev[e.id]=0;S.t=e.id==='e15'?1440:e.id==='e16'?1320:480;
       if(e.id==='e09'&&grassEndingTalk()){checkQuest();await waitStoryReplay(run,()=>TALKW===POKO&&mainStoryBubbleReady(S.res.find(r=>r.name===POKO)));DLGTAP=performance.now();startTalk();}
-      else if(['e16','e09'].includes(e.id)){S.sevP=[e.id];if(!sevBegin(event,sevLines(event.L)))throw Error('集合できませんでした');await waitStoryReplay(run,()=>!!SEV_ENCOUNTERS.get(S)?.ready);const enc=SEV_ENCOUNTERS.get(S);SEVW[enc.speaker.name]=e.id;DLGTAP=performance.now();sevTalk(e.id);}
+      else if(['e16','e09'].includes(e.id)){S.sevP=[e.id];if(!sevBegin(event,sevLines(event.L)))throw Error('みんなが集まれなかった');await waitStoryReplay(run,()=>!!SEV_ENCOUNTERS.get(S)?.ready);const enc=SEV_ENCOUNTERS.get(S);SEVW[enc.speaker.name]=e.id;DLGTAP=performance.now();sevTalk(e.id);}
       else{DLGTAP=performance.now();playDirectStoryEvent(event,sevLines(event.L));}
       await waitStoryReplay(run,()=>S.sev[e.id]===1);
     }
     run.finished=true;run.running=false;clearInterval(run.tick);
-    const end=el('<div class="replay-end" style="position:fixed;inset:20% 10%;z-index:61;background:#fff8e9;border:2px solid #d4c29a;border-radius:18px;padding:22px;display:flex;flex-direction:column;justify-content:center;gap:16px;text-align:center"><b>再生がおわりました</b><button class="btn">もういちどみる</button><button class="btn" aria-label="思い出帳へもどる">もどる</button></div>');
+    const end=el('<div class="replay-end" style="position:fixed;inset:20% 10%;z-index:61;background:#fff8e9;border:2px solid #d4c29a;border-radius:18px;padding:22px;display:flex;flex-direction:column;justify-content:center;gap:16px;text-align:center"><b>再生がおわった</b><button class="btn">もういちどみる</button><button class="btn" aria-label="思い出帳へもどる">もどる</button></div>');
     const [again,close]=end.querySelectorAll('button');again.onclick=()=>location.reload();close.onclick=()=>parent.postMessage({type:'story-replay-close',token:run.token},location.origin);document.body.appendChild(end);
-  }catch(error){run.running=false;clearInterval(run.tick);if(!run.cancelled){run.error=String(error);toast('さいごまで見られませんでした','warn');}}
+  }catch(error){run.running=false;clearInterval(run.tick);if(!run.cancelled){run.error=String(error);toast('さいごまで見られなかった','warn');}}
 }
 function bootStoryReplayPage(){
   const params=new URLSearchParams(location.search),token=params.get('replayToken'),key=params.get('storyReplay'),episode=STORY_REPLAY_EVENTS.find(e=>e.key===key);
-  if(parent===window||!token||!episode){{const d=document.getElementById('stageLd');if(d)d.hidden=true}$('#tStart').textContent='思い出帳から開いてください';$('#tStart').disabled=true;return;}
+  if(parent===window||!token||!episode){{const d=document.getElementById('stageLd');if(d)d.hidden=true}$('#tStart').textContent='思い出帳からひらこう';$('#tStart').disabled=true;return;}
   const receive=async event=>{
     if(event.origin!==location.origin||event.source!==parent||event.data?.type!=='story-replay-start'||event.data.token!==token||event.data.key!==key||STORY_REPLAY_RUN)return;
     const run={token,episode,auto:false,running:false,cancelled:false,finished:false};STORY_REPLAY_RUN=run;prepareStoryReplay(run,event.data);
     await waitStoryReplay(run,()=>stageReady());
-    const start=el('<div class="replay-start" style="position:fixed;inset:12% 8%;z-index:62;border:2px solid #d4c29a;border-radius:18px;background:#fff8e9;padding:24px;display:flex;flex-direction:column;justify-content:center;text-align:center;gap:18px"><b></b><p>村の進行を変えずに、物語を見返します。</p><button class="btn pri">みる</button></div>');start.querySelector('b').textContent=storyReplayTitle(episode);start.querySelector('button').onclick=()=>{audioInit();start.remove();playStoryReplay(run);};document.body.appendChild(start);
+    const start=el('<div class="replay-start" style="position:fixed;inset:12% 8%;z-index:62;border:2px solid #d4c29a;border-radius:18px;background:#fff8e9;padding:24px;display:flex;flex-direction:column;justify-content:center;text-align:center;gap:18px"><b></b><p>村の進みをかえずに、物語をもういちど見る。</p><button class="btn pri">みる</button></div>');start.querySelector('b').textContent=storyReplayTitle(episode);start.querySelector('button').onclick=()=>{audioInit();start.remove();playStoryReplay(run);};document.body.appendChild(start);
   };
   window.addEventListener('message',receive);window.addEventListener('pagehide',()=>{if(STORY_REPLAY_RUN){STORY_REPLAY_RUN.cancelled=true;clearInterval(STORY_REPLAY_RUN.tick);}});
   parent.postMessage({type:'story-replay-ready',token},location.origin);

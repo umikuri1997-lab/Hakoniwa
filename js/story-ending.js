@@ -16,8 +16,8 @@ function grassReunionBlockReason(){
   if(!S.flags.finalWon)return 'まず、御神木に集まる影を追いはらおう';
   if(!S.res.some(r=>r.name===POKO&&!r.hidden))return 'フタバがもどってから、いっしょにヌシ様を迎えよう';
   if(S.qStory!=null)return '先に、いまのお話を聞こう';
-  if(!S.sev?.e09)return '先に、最後のかけらを迎えるお話を聞こう';
-  if((S.setSh||0)<3)return '最後のかけらの光を、御神木へ届けよう';
+  if(!S.sev?.e09)return '先に、さいごのかけらを迎えるお話を聞こう';
+  if((S.setSh||0)<3)return 'さいごのかけらの光を、御神木へとどけよう';
   return '';
 }
 const GRASS_REUNION_PENDING=new WeakMap();
