@@ -1,0 +1,25 @@
+# Dependencies, build products, and agent worktrees
+node_modules/
+dist/
+.claude/
+
+# Research archive — not executable authority; do not load for implementation
+LIFE-MAP.md
+
+# Generated test artefacts and full machine-readable rig dumps
+test/golden/*.png
+test/golden/*.actual.png
+test/golden/*.diff.png
+test/golden/rig.json
+
+# Generated visual-review output
+screenshots/
+review/
+artifacts/
+coverage/
+playwright-report/
+test-results/
+**/*screenshot*.png
+**/*review*.png
+**/*iteration*.png
+**/shot*.png

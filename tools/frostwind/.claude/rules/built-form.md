@@ -1,0 +1,23 @@
+---
+paths:
+  - "src/{construct,pavilion,cabin,swamp-lakehouse,swamp-settlement}.js"
+  - "test/{construct,pavilion,architecture,steading,swamp-lakehouse}.test.mjs"
+  - "tools/houses.mjs"
+---
+
+# Built form
+
+`src/construct.js` owns cabinet volume and constructive units. Each vernacular
+owns its metre table, cladding, mass and meaning.
+
+Every built form:
+
+- carries its depth axis up and right and is never mirrored
+- writes face values into `ao`, which reaches packed thickness materials
+- collides at its drawn base
+- gives supported parts a `lift` so shadows originate at the ground
+
+Closest check: `npm run test:construct` for shared units, `test:pavilion`,
+`test:architecture` for one vernacular, `test:steading` for integration,
+`test:swamp` for the lakehouse. `test:architecture:report` delivers the table.
+`node tools/houses.mjs <kind> <variant> --faces` draws one shell.

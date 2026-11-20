@@ -1,0 +1,938 @@
+{
+ "house:0": {
+  "dims": "149x111",
+  "anchor": "74,110",
+  "ramp": "birch/canopy",
+  "occupied": 10634,
+  "depth": 5661,
+  "aoSpread": 0.938,
+  "faces": {
+   "front": 4973,
+   "top": 3975,
+   "side": 1686,
+   "other": 0
+  },
+  "mats": {
+   "1": 10576,
+   "2": 58
+  },
+  "chan": {
+   "ao": "ce2c389fc559f89e",
+   "horiz": "1d6c510c610c28b5",
+   "noSnow": "2d22545860e39e4b",
+   "nx": "c67e603bc64f1beb",
+   "ny": "0d0db5f4a46e6ea1",
+   "nz": "bc52c1ca78dc1e90",
+   "occ": "bc312435e7a67f47",
+   "rad": "f52a6873a56e39d9",
+   "shade": "fc44c576163bd57f"
+  },
+  "tags": "ax=74 ay=110 h=111 kind=house ramp=birch ramp2=canopy sMax=1 sMin=0.06 tilt=0 w=149"
+ },
+ "house:1": {
+  "dims": "175x130",
+  "anchor": "87,129",
+  "ramp": "birch/canopy",
+  "occupied": 14917,
+  "depth": 8019,
+  "aoSpread": 0.938,
+  "faces": {
+   "front": 6898,
+   "top": 5607,
+   "side": 2412,
+   "other": 0
+  },
+  "mats": {
+   "1": 14849,
+   "2": 68
+  },
+  "chan": {
+   "ao": "8024326d4425afcb",
+   "horiz": "02e725c3bcc0a1fd",
+   "noSnow": "4fdd870a91b41d6f",
+   "nx": "d7c806d161670476",
+   "ny": "072bb1b9cb87f631",
+   "nz": "f4dbd3b46f488867",
+   "occ": "06cfdec370cb581e",
+   "rad": "2c40f2452ef40237",
+   "shade": "c8a67bf7d0fe0bf6"
+  },
+  "tags": "ax=87 ay=129 h=130 kind=house ramp=birch ramp2=canopy sMax=1 sMin=0.06 tilt=0 w=175"
+ },
+ "house:2": {
+  "dims": "129x96",
+  "anchor": "64,95",
+  "ramp": "birch/canopy",
+  "occupied": 8012,
+  "depth": 4329,
+  "aoSpread": 0.938,
+  "faces": {
+   "front": 3683,
+   "top": 3055,
+   "side": 1274,
+   "other": 0
+  },
+  "mats": {
+   "1": 7959,
+   "2": 53
+  },
+  "chan": {
+   "ao": "20262bbbc2553ec6",
+   "horiz": "e15ef911ceb56e0c",
+   "noSnow": "130d0890ba45996a",
+   "nx": "612a35815626b86c",
+   "ny": "e99a0b9f7bf61e04",
+   "nz": "7ef39e983cb5cd85",
+   "occ": "6eea22a3b7ae596c",
+   "rad": "b995873f3771b741",
+   "shade": "527f37145799db36"
+  },
+  "tags": "ax=64 ay=95 h=96 kind=house ramp=birch ramp2=canopy sMax=1 sMin=0.06 tilt=0 w=129"
+ },
+ "cabin:0": {
+  "dims": "86x100",
+  "anchor": "43,99",
+  "ramp": "warm/-",
+  "occupied": 5857,
+  "depth": 3452,
+  "aoSpread": 0.618,
+  "faces": {
+   "front": 2915,
+   "top": 222,
+   "side": 2720,
+   "other": 0
+  },
+  "mats": {
+   "1": 2229,
+   "2": 3612,
+   "6": 16
+  },
+  "chan": {
+   "ao": "ceec15da7043fd3a",
+   "horiz": "9d2f104db7b72a3c",
+   "noSnow": "d621ac72552e69f5",
+   "nx": "0b1ca9a8a0e4878d",
+   "ny": "c426cd00243dff5b",
+   "nz": "d3ca326608dcb1f0",
+   "occ": "d58e0db98733bfbf",
+   "rad": "aafa09348e1685fe",
+   "shade": "2f75323b4e577d27"
+  },
+  "tags": "ax=43 ay=99 h=100 kind=cabin ramp=warm sMax=0.74 sMin=0.06 tilt=0 w=86"
+ },
+ "cabin:1": {
+  "dims": "98x108",
+  "anchor": "49,107",
+  "ramp": "warm/-",
+  "occupied": 7270,
+  "depth": 3997,
+  "aoSpread": 0.618,
+  "faces": {
+   "front": 3953,
+   "top": 197,
+   "side": 3120,
+   "other": 0
+  },
+  "mats": {
+   "1": 2914,
+   "2": 4340,
+   "6": 16
+  },
+  "chan": {
+   "ao": "c689f7869f23e4a4",
+   "horiz": "4e45f5e96ec9422e",
+   "noSnow": "5653245968f2b72c",
+   "nx": "59ee0808f13792f1",
+   "ny": "b79c9a66f01fcea6",
+   "nz": "1a64d566e2b7d497",
+   "occ": "50bf48ebd7470739",
+   "rad": "f7be0f4b9f96856f",
+   "shade": "cad4fe4ce39c7db9"
+  },
+  "tags": "ax=49 ay=107 h=108 kind=cabin ramp=warm sMax=0.74 sMin=0.06 tilt=0 w=98"
+ },
+ "cabin:2": {
+  "dims": "78x90",
+  "anchor": "39,89",
+  "ramp": "warm/-",
+  "occupied": 4711,
+  "depth": 2922,
+  "aoSpread": 0.618,
+  "faces": {
+   "front": 2205,
+   "top": 178,
+   "side": 2328,
+   "other": 0
+  },
+  "mats": {
+   "1": 1724,
+   "2": 2971,
+   "6": 16
+  },
+  "chan": {
+   "ao": "085347bf58638beb",
+   "horiz": "471ecdba558d0b01",
+   "noSnow": "7575a796229743d5",
+   "nx": "d4539fd777ffa3b7",
+   "ny": "aacfb856aaf44d98",
+   "nz": "013c3b903bfec783",
+   "occ": "6742a30367672826",
+   "rad": "16eb9ef52060de38",
+   "shade": "46b7cdfef1cbb68f"
+  },
+  "tags": "ax=39 ay=89 h=90 kind=cabin ramp=warm sMax=0.74 sMin=0.06 tilt=0 w=78"
+ },
+ "swampHouse:0": {
+  "dims": "129x122",
+  "anchor": "64,121",
+  "ramp": "swampWood/swampCanopy",
+  "occupied": 9224,
+  "depth": 4311,
+  "aoSpread": 0.85,
+  "faces": {
+   "front": 5083,
+   "top": 3016,
+   "side": 1125,
+   "other": 0
+  },
+  "mats": {
+   "1": 8556,
+   "12": 668
+  },
+  "chan": {
+   "ao": "a4b569e4258b60d5",
+   "horiz": "4821b7d612b17a5e",
+   "noSnow": "e87157190bbfd0a0",
+   "nx": "a7a04254da5528d4",
+   "ny": "b3f5254d9dd534df",
+   "nz": "fd734fc6a5e04d11",
+   "occ": "718b38c30eb8c6ad",
+   "rad": "4820443dc00dab1a",
+   "shade": "852aec21ddb3ea7a"
+  },
+  "tags": "ax=64 ay=121 h=122 kind=swampHouse ramp=swampWood ramp2=swampCanopy sMax=0.96 sMin=0.04 w=129"
+ },
+ "swampHouse:1": {
+  "dims": "139x124",
+  "anchor": "69,123",
+  "ramp": "swampWood/swampCanopy",
+  "occupied": 10071,
+  "depth": 4785,
+  "aoSpread": 0.851,
+  "faces": {
+   "front": 5466,
+   "top": 3440,
+   "side": 1165,
+   "other": 0
+  },
+  "mats": {
+   "1": 9351,
+   "12": 720
+  },
+  "chan": {
+   "ao": "8c4ca5c95605c0b4",
+   "horiz": "16f62e6bfec2a5fd",
+   "noSnow": "81ba3203a6ceab54",
+   "nx": "eae07e78fd3aa9a0",
+   "ny": "6afb63f631db1674",
+   "nz": "abc1efabef04eb49",
+   "occ": "4124880e1fde8517",
+   "rad": "8b384c8e767f775a",
+   "shade": "7a8c11df9f242edc"
+  },
+  "tags": "ax=69 ay=123 h=124 kind=swampHouse ramp=swampWood ramp2=swampCanopy sMax=0.96 sMin=0.04 w=139"
+ },
+ "swampHouse:2": {
+  "dims": "149x127",
+  "anchor": "74,126",
+  "ramp": "swampWood/swampCanopy",
+  "occupied": 11090,
+  "depth": 5438,
+  "aoSpread": 0.851,
+  "faces": {
+   "front": 5860,
+   "top": 4006,
+   "side": 1224,
+   "other": 0
+  },
+  "mats": {
+   "1": 10305,
+   "12": 785
+  },
+  "chan": {
+   "ao": "99cbf25fd8d6dab6",
+   "horiz": "11906aa37d852dce",
+   "noSnow": "42af1bbaa1a636fb",
+   "nx": "11c7913a1afe7149",
+   "ny": "abfbf24b1facdad2",
+   "nz": "951910abd11bba97",
+   "occ": "dd3304d0edd1eeea",
+   "rad": "b23a096767615b50",
+   "shade": "d5be686ef638ccdd"
+  },
+  "tags": "ax=74 ay=126 h=127 kind=swampHouse ramp=swampWood ramp2=swampCanopy sMax=0.96 sMin=0.04 w=149"
+ },
+ "derelict:0": {
+  "dims": "41x44",
+  "anchor": "20,43",
+  "ramp": "birch/canopy",
+  "occupied": 943,
+  "depth": 32,
+  "aoSpread": 0.782,
+  "faces": {
+   "front": 943,
+   "top": 0,
+   "side": 0,
+   "other": 0
+  },
+  "mats": {
+   "1": 761,
+   "2": 40,
+   "3": 142
+  },
+  "chan": {
+   "ao": "96c4afde62544f70",
+   "horiz": "ebe8655785c20110",
+   "noSnow": "baa234c528afba1c",
+   "nx": "1b11e3b7168ffc9c",
+   "ny": "b76ddbe8ba0f5f2a",
+   "nz": "77ab3d29ca7356b7",
+   "occ": "98085a110ac561a5",
+   "rad": "7671849a00e29197",
+   "shade": "eefa98415503d750"
+  },
+  "tags": "ax=20 ay=43 h=44 kind=derelict ramp=birch ramp2=canopy sMax=0.98 sMin=0.18 tilt=0 w=41"
+ },
+ "nestPole:0": {
+  "dims": "27x113",
+  "anchor": "13,112",
+  "ramp": "loam/-",
+  "occupied": 377,
+  "depth": 277,
+  "aoSpread": 0.34,
+  "faces": {
+   "front": 257,
+   "top": 0,
+   "side": 120,
+   "other": 0
+  },
+  "mats": {
+   "1": 24,
+   "4": 347,
+   "6": 3,
+   "17": 3
+  },
+  "chan": {
+   "ao": "a73e320c6c68756c",
+   "horiz": "bcbe44ea85e17511",
+   "noSnow": "c9311c9567ce75d4",
+   "nx": "19ba9e67bb2c0173",
+   "ny": "f3ca159e85c4b09c",
+   "nz": "d317d014366bd3d4",
+   "occ": "e85d06d5a824eff8",
+   "rad": "c38c2045dcf3b9e5",
+   "shade": "8ad17c2fee28f289"
+  },
+  "tags": "ax=13 ay=112 h=113 kind=nestPole ramp=loam sMax=1 sMin=0.3 tilt=0 w=27"
+ },
+ "pillar:0": {
+  "dims": "30x63",
+  "anchor": "15,62",
+  "ramp": "masonry/canopy",
+  "occupied": 759,
+  "depth": 208,
+  "aoSpread": 0.745,
+  "faces": {
+   "front": 551,
+   "top": 42,
+   "side": 166,
+   "other": 0
+  },
+  "mats": {
+   "1": 759
+  },
+  "chan": {
+   "ao": "bcd8a5718ab4909f",
+   "horiz": "993fed825058c9b4",
+   "noSnow": "3aab648b3d9a6e06",
+   "nx": "6eca769d9c3accec",
+   "ny": "2d4d04ebcfe88f30",
+   "nz": "d4f59a2b2d2c5b64",
+   "occ": "c19a07f0df915d0c",
+   "rad": "5004bf68d336578f",
+   "shade": "fb9d03c245364fbf"
+  },
+  "tags": "ax=15 ay=62 h=63 kind=pillar ramp=masonry ramp2=canopy sMax=1 sMin=0.03 tilt=0 w=30"
+ },
+ "pillar:1": {
+  "dims": "30x52",
+  "anchor": "15,51",
+  "ramp": "masonry/canopy",
+  "occupied": 623,
+  "depth": 175,
+  "aoSpread": 0.739,
+  "faces": {
+   "front": 448,
+   "top": 42,
+   "side": 133,
+   "other": 0
+  },
+  "mats": {
+   "1": 623
+  },
+  "chan": {
+   "ao": "3fc764e97caea3a9",
+   "horiz": "180729b9da7f6458",
+   "noSnow": "0ae208d8333b8d56",
+   "nx": "8bf9baccc521cf6b",
+   "ny": "27964d17fd82b5d1",
+   "nz": "d2042b6dbca3e5f5",
+   "occ": "eca55bcb7d006165",
+   "rad": "8348e39e9e34778f",
+   "shade": "0191a3bc215389fe"
+  },
+  "tags": "ax=15 ay=51 h=52 kind=pillar ramp=masonry ramp2=canopy sMax=1 sMin=0.03 tilt=0 w=30"
+ },
+ "pillar:2": {
+  "dims": "28x41",
+  "anchor": "14,40",
+  "ramp": "masonry/canopy",
+  "occupied": 428,
+  "depth": 123,
+  "aoSpread": 0.705,
+  "faces": {
+   "front": 305,
+   "top": 15,
+   "side": 108,
+   "other": 0
+  },
+  "mats": {
+   "1": 428
+  },
+  "chan": {
+   "ao": "b1213b9649a1366a",
+   "horiz": "cc5e4944a985afa0",
+   "noSnow": "509607d81ec2cc01",
+   "nx": "a841b14e0090b777",
+   "ny": "6e638960bde8bec0",
+   "nz": "14cf93dfb14aac77",
+   "occ": "690f048e412f5c2c",
+   "rad": "6d4dcb2b4f8700ab",
+   "shade": "35ff96d3c55bb2b2"
+  },
+  "tags": "ax=14 ay=40 h=41 kind=pillar ramp=masonry ramp2=canopy sMax=1 sMin=0.03 tilt=0 w=28"
+ },
+ "pillar:3": {
+  "dims": "28x48",
+  "anchor": "14,47",
+  "ramp": "masonry/canopy",
+  "occupied": 514,
+  "depth": 148,
+  "aoSpread": 0.708,
+  "faces": {
+   "front": 366,
+   "top": 19,
+   "side": 129,
+   "other": 0
+  },
+  "mats": {
+   "1": 514
+  },
+  "chan": {
+   "ao": "b95228839b2b70be",
+   "horiz": "e5de309f5ef2a62e",
+   "noSnow": "d457efc0edd106bb",
+   "nx": "89567fa55e16fc34",
+   "ny": "f8bb03425c39fd5e",
+   "nz": "a80bd9f0f7bd04ee",
+   "occ": "47e940e27cc11304",
+   "rad": "afc3389b03f75de6",
+   "shade": "7cc2fcac7fbf0ab6"
+  },
+  "tags": "ax=14 ay=47 h=48 kind=pillar ramp=masonry ramp2=canopy sMax=1 sMin=0.03 tilt=0 w=28"
+ },
+ "ruinWall:0": {
+  "dims": "38x11",
+  "anchor": "19,10",
+  "ramp": "masonry/canopy",
+  "occupied": 413,
+  "depth": 109,
+  "aoSpread": 0.772,
+  "faces": {
+   "front": 304,
+   "top": 109,
+   "side": 0,
+   "other": 0
+  },
+  "mats": {
+   "1": 413
+  },
+  "chan": {
+   "ao": "dd6076dad69a5a2c",
+   "horiz": "256984cb62bc8799",
+   "noSnow": "8fdfd77a487ef5f1",
+   "nx": "256984cb62bc8799",
+   "ny": "ac06434f3e492f0a",
+   "nz": "91711e9aa62101e4",
+   "occ": "6d4c92814f957686",
+   "rad": "427b4782b1735dd1",
+   "shade": "dd6076dad69a5a2c"
+  },
+  "tags": "ax=19 ay=10 h=11 kind=ruinWall ramp=masonry ramp2=canopy sMax=1 sMin=0.03 tilt=0 w=38"
+ },
+ "ruinWall:1": {
+  "dims": "31x10",
+  "anchor": "15,9",
+  "ramp": "masonry/canopy",
+  "occupied": 305,
+  "depth": 88,
+  "aoSpread": 0.812,
+  "faces": {
+   "front": 217,
+   "top": 88,
+   "side": 0,
+   "other": 0
+  },
+  "mats": {
+   "1": 305
+  },
+  "chan": {
+   "ao": "cd62680bd1f20073",
+   "horiz": "be35dae855452c2d",
+   "noSnow": "6929dc871287c5e3",
+   "nx": "be35dae855452c2d",
+   "ny": "30975bdb03f206e1",
+   "nz": "7c40150062e32695",
+   "occ": "38bbf2dbcbb8b027",
+   "rad": "d39e39a26ae5e80e",
+   "shade": "cd62680bd1f20073"
+  },
+  "tags": "ax=15 ay=9 h=10 kind=ruinWall ramp=masonry ramp2=canopy sMax=1 sMin=0.03 tilt=0 w=31"
+ },
+ "ruinWall:2": {
+  "dims": "36x10",
+  "anchor": "18,9",
+  "ramp": "masonry/canopy",
+  "occupied": 355,
+  "depth": 139,
+  "aoSpread": 0.75,
+  "faces": {
+   "front": 216,
+   "top": 139,
+   "side": 0,
+   "other": 0
+  },
+  "mats": {
+   "1": 355
+  },
+  "chan": {
+   "ao": "b72c785c2e927012",
+   "horiz": "52dbd4365b026555",
+   "noSnow": "d3df611a0ed2e328",
+   "nx": "52dbd4365b026555",
+   "ny": "b0b31ce70c5694e7",
+   "nz": "c900f0abaab59c41",
+   "occ": "ee81e37c5230e8d8",
+   "rad": "b55501f95f7c9805",
+   "shade": "b72c785c2e927012"
+  },
+  "tags": "ax=18 ay=9 h=10 kind=ruinWall ramp=masonry ramp2=canopy sMax=1 sMin=0.03 tilt=0 w=36"
+ },
+ "lakeHouse:0": {
+  "dims": "130x134",
+  "anchor": "49,133",
+  "ramp": "swampWood/swampAccent",
+  "occupied": 9719,
+  "depth": 4776,
+  "aoSpread": 0.891,
+  "faces": {
+   "front": 4943,
+   "top": 3520,
+   "side": 1256,
+   "other": 0
+  },
+  "mats": {
+   "1": 9383,
+   "6": 9,
+   "12": 327
+  },
+  "chan": {
+   "ao": "5df52f6230678bfb",
+   "horiz": "3d9dfa44e15a84d0",
+   "noSnow": "6dbd0d76c038da01",
+   "nx": "d9745205d782d855",
+   "ny": "ea8edb5206812941",
+   "nz": "27ff95c2f78327d1",
+   "occ": "bf5dab88a0964e53",
+   "rad": "c0d9daa750f5fb43",
+   "shade": "301d1f4545ecb8f5"
+  },
+  "tags": "ax=49 ay=133 h=134 kind=lakeHouse ramp=swampWood ramp2=swampAccent sMax=0.96 sMin=0.04 w=130"
+ },
+ "houseLadder:0": {
+  "dims": "7x59",
+  "anchor": "3,58",
+  "ramp": "swampWood/-",
+  "occupied": 147,
+  "depth": 4,
+  "aoSpread": 0.46,
+  "faces": {
+   "front": 147,
+   "top": 0,
+   "side": 0,
+   "other": 0
+  },
+  "mats": {
+   "1": 8,
+   "12": 139
+  },
+  "chan": {
+   "ao": "c54e22b7f1eed91b",
+   "horiz": "081a243f4c4fc684",
+   "noSnow": "0a4b86a00511e2b7",
+   "nx": "7a93c039b3134df1",
+   "ny": "9343f1c2f92014a8",
+   "nz": "d9742cd4f747b88e",
+   "occ": "5d6b5824025ce3b3",
+   "rad": "b8b0f313ee6ec5f9",
+   "shade": "6cd455c76fe6c954"
+  },
+  "tags": "ax=3 ay=58 h=59 kind=houseLadder ramp=swampWood sMax=0.88 sMin=0.04 w=7"
+ },
+ "pavilion:0": {
+  "dims": "167x99",
+  "anchor": "75,94",
+  "ramp": "pavilionCloth/pavilionTrim",
+  "occupied": 9265,
+  "depth": 3827,
+  "aoSpread": 0.905,
+  "faces": {
+   "front": 6473,
+   "top": 1701,
+   "side": 1091,
+   "other": 0
+  },
+  "mats": {
+   "1": 8475,
+   "6": 483,
+   "12": 307
+  },
+  "chan": {
+   "ao": "56e3a0f0bcf6247e",
+   "horiz": "5ea93c257133501c",
+   "noSnow": "59c72d7896ec5c65",
+   "nx": "b148c7f003940658",
+   "ny": "99f95da8b6629f27",
+   "nz": "09a7265f3879b27e",
+   "occ": "fc7b095e581b4289",
+   "rad": "74509fa0bb330592",
+   "shade": "6744ddc69bcef5f0"
+  },
+  "tags": "ax=75 ay=94 h=99 kind=pavilion ramp=pavilionCloth ramp2=pavilionTrim sMax=1 sMin=0.06 tilt=0 w=167"
+ },
+ "hut:0": {
+  "dims": "109x96",
+  "anchor": "54,95",
+  "ramp": "masonry/desertCanopy",
+  "occupied": 6925,
+  "depth": 3520,
+  "aoSpread": 0.938,
+  "faces": {
+   "front": 3405,
+   "top": 1174,
+   "side": 2346,
+   "other": 0
+  },
+  "mats": {
+   "1": 6900,
+   "6": 25
+  },
+  "chan": {
+   "ao": "f7fd3f53c39aa8c8",
+   "horiz": "620bfc9a41ae57bf",
+   "noSnow": "78fffd62874849d8",
+   "nx": "e0c1de489f888f77",
+   "ny": "181e8d03fe185597",
+   "nz": "f94db70121eb5b18",
+   "occ": "e7315dec0e4e0b39",
+   "rad": "6fe93e39cb9fdc74",
+   "shade": "a8793e3efa521435"
+  },
+  "tags": "ax=54 ay=95 h=96 kind=hut ramp=masonry ramp2=desertCanopy sMax=1 sMin=0.06 tilt=0 w=109"
+ },
+ "hut:1": {
+  "dims": "119x116",
+  "anchor": "59,115",
+  "ramp": "masonry/desertCanopy",
+  "occupied": 7953,
+  "depth": 3600,
+  "aoSpread": 0.96,
+  "faces": {
+   "front": 4353,
+   "top": 1039,
+   "side": 2561,
+   "other": 0
+  },
+  "mats": {
+   "1": 7928,
+   "6": 25
+  },
+  "chan": {
+   "ao": "9f09b2a2beb4dc3d",
+   "horiz": "04dab4d27adee044",
+   "noSnow": "62733a7fcb37170d",
+   "nx": "43958bb83508bafb",
+   "ny": "013c149e9531b945",
+   "nz": "643840bee4ced09f",
+   "occ": "3e85fb23837cb9c3",
+   "rad": "4174d78618367bf5",
+   "shade": "2c2014526125f81c"
+  },
+  "tags": "ax=59 ay=115 h=116 kind=hut ramp=masonry ramp2=desertCanopy sMax=1 sMin=0.06 tilt=0 w=119"
+ },
+ "hut:2": {
+  "dims": "133x96",
+  "anchor": "66,95",
+  "ramp": "masonry/desertCanopy",
+  "occupied": 7911,
+  "depth": 4071,
+  "aoSpread": 0.938,
+  "faces": {
+   "front": 3840,
+   "top": 3187,
+   "side": 884,
+   "other": 0
+  },
+  "mats": {
+   "1": 7886,
+   "6": 25
+  },
+  "chan": {
+   "ao": "7ff6f925c5019d52",
+   "horiz": "eb6c9a6e7b2efa8a",
+   "noSnow": "0bf93e09e492c2aa",
+   "nx": "da7abcec0187d8fb",
+   "ny": "7fa294f48e647ba9",
+   "nz": "b37d127020fc4afa",
+   "occ": "3deb7cd4b21e2509",
+   "rad": "865d84c3ac0f1440",
+   "shade": "c7073861666d10b6"
+  },
+  "tags": "ax=66 ay=95 h=96 kind=hut ramp=masonry ramp2=desertCanopy sMax=1 sMin=0.06 tilt=0 w=133"
+ },
+ "tent:0": {
+  "dims": "193x79",
+  "anchor": "97,51",
+  "ramp": "folkDark/timber",
+  "occupied": 3786,
+  "depth": 1984,
+  "aoSpread": 0.825,
+  "faces": {
+   "front": 1666,
+   "top": 2088,
+   "side": 32,
+   "other": 0
+  },
+  "mats": {
+   "1": 3344,
+   "6": 275,
+   "12": 167
+  },
+  "chan": {
+   "ao": "2816269796687f14",
+   "horiz": "9e74d3497d7c139f",
+   "noSnow": "480b32a04cd6d9fa",
+   "nx": "7897120b3ecef845",
+   "ny": "a288cad8141e6f2b",
+   "nz": "ebd944382695691a",
+   "occ": "5ae0f06554b88b92",
+   "rad": "b7f923d88372f054",
+   "shade": "8619fea814876113"
+  },
+  "tags": "ax=97 ay=51 h=79 kind=tent ramp=folkDark ramp2=timber sMax=1 sMin=0.04 tilt=0 w=193"
+ },
+ "tent:1": {
+  "dims": "285x79",
+  "anchor": "143,51",
+  "ramp": "folkDark/timber",
+  "occupied": 7919,
+  "depth": 2270,
+  "aoSpread": 0.853,
+  "faces": {
+   "front": 3209,
+   "top": 4694,
+   "side": 16,
+   "other": 0
+  },
+  "mats": {
+   "1": 7159,
+   "6": 428,
+   "12": 332
+  },
+  "chan": {
+   "ao": "9fb7813accf73c03",
+   "horiz": "a900848da4407f5b",
+   "noSnow": "c6b1047b5322d27e",
+   "nx": "3e6f356c8380fb09",
+   "ny": "ab9d361df0dca799",
+   "nz": "7dee3591b94af568",
+   "occ": "0aba79898534c835",
+   "rad": "6d68bf52190833cc",
+   "shade": "617b80f6fd7f717b"
+  },
+  "tags": "ax=143 ay=51 h=79 kind=tent ramp=folkDark ramp2=timber sMax=1 sMin=0.04 tilt=0 w=285"
+ },
+ "capHouse:0": {
+  "dims": "51x37",
+  "anchor": "20,36",
+  "ramp": "dripstone/glowcap",
+  "occupied": 1227,
+  "depth": 813,
+  "aoSpread": 0.865,
+  "faces": {
+   "front": 616,
+   "top": 415,
+   "side": 196,
+   "other": 0
+  },
+  "mats": {
+   "1": 511,
+   "4": 117,
+   "19": 599
+  },
+  "chan": {
+   "ao": "9e87aaba3dae0e5a",
+   "horiz": "b912f50aff865776",
+   "noSnow": "e6c565b82bf5ea2b",
+   "nx": "c93328274f055bfc",
+   "ny": "18e207b013f67d1e",
+   "nz": "20b7cf6f2d4c3c7d",
+   "occ": "6c717fda91783756",
+   "rad": "6f88d9fe00bf12e1",
+   "shade": "3ac0c09865711ae3"
+  },
+  "tags": "ax=20 ay=36 dMax=1 dMin=0 h=37 kind=capHouse ramp=dripstone ramp2=glowcap sMax=0.72 sMin=0.05 tilt=0 w=51"
+ },
+ "capHouse:1": {
+  "dims": "57x43",
+  "anchor": "21,42",
+  "ramp": "dripstone/glowcap",
+  "occupied": 1394,
+  "depth": 873,
+  "aoSpread": 0.865,
+  "faces": {
+   "front": 746,
+   "top": 436,
+   "side": 212,
+   "other": 0
+  },
+  "mats": {
+   "1": 622,
+   "4": 120,
+   "19": 652
+  },
+  "chan": {
+   "ao": "0236d3a1ffd74870",
+   "horiz": "9045f8910e613c4f",
+   "noSnow": "5701d03e86dc9ed7",
+   "nx": "91427060c6891e3a",
+   "ny": "44b174cff35a9503",
+   "nz": "f0a798798f136549",
+   "occ": "351a7f2817492be5",
+   "rad": "553d4ea0bc4e0409",
+   "shade": "15174093044fe792"
+  },
+  "tags": "ax=21 ay=42 dMax=1 dMin=0 h=43 kind=capHouse ramp=dripstone ramp2=glowcap sMax=0.72 sMin=0.05 tilt=0 w=57"
+ },
+ "capHouse:2": {
+  "dims": "56x35",
+  "anchor": "18,34",
+  "ramp": "dripstone/glowcap",
+  "occupied": 1107,
+  "depth": 700,
+  "aoSpread": 0.865,
+  "faces": {
+   "front": 580,
+   "top": 358,
+   "side": 169,
+   "other": 0
+  },
+  "mats": {
+   "1": 446,
+   "4": 118,
+   "19": 543
+  },
+  "chan": {
+   "ao": "9afe1e2fad50445c",
+   "horiz": "f96b50dcb4b7422c",
+   "noSnow": "255c3a22d46b57e3",
+   "nx": "cc392a7ae7762a95",
+   "ny": "0961a62a92eeb958",
+   "nz": "c2ca52d3110d592e",
+   "occ": "16e4bac80b50df13",
+   "rad": "841dc644c1f5ac6c",
+   "shade": "7200b896cc74c957"
+  },
+  "tags": "ax=18 ay=34 dMax=1 dMin=0 h=35 kind=capHouse ramp=dripstone ramp2=glowcap sMax=0.72 sMin=0.05 tilt=0 w=56"
+ },
+ "lampPost:0": {
+  "dims": "7x29",
+  "anchor": "3,28",
+  "ramp": "dripstone/amethyst",
+  "occupied": 66,
+  "depth": 45,
+  "aoSpread": 0.7,
+  "faces": {
+   "front": 42,
+   "top": 3,
+   "side": 21,
+   "other": 0
+  },
+  "mats": {
+   "1": 50,
+   "19": 16
+  },
+  "chan": {
+   "ao": "da03000a34440c89",
+   "horiz": "15dfcf446deb114d",
+   "noSnow": "2e0d2fe0abe5ed51",
+   "nx": "fe0648cb90f5d09a",
+   "ny": "b397f39a9bc98d12",
+   "nz": "8573077d3b103d51",
+   "occ": "cdf7b6e2bc0b5f8e",
+   "rad": "68a1e674c4ade64c",
+   "shade": "1d171b5fe6f78d58"
+  },
+  "tags": "ax=3 ay=28 dMax=1 dMin=0 h=29 kind=lampPost ramp=dripstone ramp2=amethyst sMax=0.72 sMin=0.05 tilt=0 w=7"
+ },
+ "cutBench:0": {
+  "dims": "20x18",
+  "anchor": "10,17",
+  "ramp": "dripstone/amethyst",
+  "occupied": 182,
+  "depth": 73,
+  "aoSpread": 0.7,
+  "faces": {
+   "front": 109,
+   "top": 49,
+   "side": 24,
+   "other": 0
+  },
+  "mats": {
+   "1": 171,
+   "19": 11
+  },
+  "chan": {
+   "ao": "9b63d14aed4a1374",
+   "horiz": "52dbd4365b026555",
+   "noSnow": "d3df611a0ed2e328",
+   "nx": "a4c2cdc7807814b2",
+   "ny": "fe31ec803f4efa72",
+   "nz": "31b815881de18e28",
+   "occ": "642f8c3fd7e2a782",
+   "rad": "d3607a1083804d01",
+   "shade": "98d185e6ede115af"
+  },
+  "tags": "ax=10 ay=17 dMax=1 dMin=0 h=18 kind=cutBench ramp=dripstone ramp2=amethyst sMax=0.72 sMin=0.05 tilt=0 w=20"
+ }
+}

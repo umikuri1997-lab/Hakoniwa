@@ -1,0 +1,18 @@
+---
+description: Frame and palette
+globs: "{src/{render,palette,sunlight}.js,src/shaders/**/*.js,test/{frame-conformance,lighting.test,palette.test,reflection.test}.mjs}"
+alwaysApply: false
+---
+
+# Frame and palette
+
+- `src/render.js` owns targets, GPU state, batches and internal resolution.
+- `src/shaders/` owns composite and quantisation.
+- `src/palette.js` and `src/sunlight.js` own ramps and light-derived colour.
+- Assets carry material and ramp ids, never RGB.
+
+Closest check: `npm run test:palette` for palette data and the snap budget,
+`test:lighting` for light-derived colour, `test:reflection` for the reflection
+path. For a renderer, shader or compositor change run the structural check, then
+`npm run test:frame`, then look at one frame. A shader that fails to compile
+draws nothing and every colour law still passes.

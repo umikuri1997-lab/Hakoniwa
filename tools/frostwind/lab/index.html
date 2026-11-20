@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Frostwood — sprite lab (dev only)</title>
+<!--
+  ══════════════════════════════════════════════════════════════════════════
+  THE SPRITE LAB'S SHELL.
+
+  Same single-file philosophy as src/index.html: the bundle is inlined at the
+  marker in the script tag at the bottom by build.mjs, so dist/lab.html opens
+  from file:// with no server and no network.
+
+  DO NOT WRITE THAT MARKER ANYWHERE ELSE IN THIS FILE, including in a comment
+  about it. build.mjs does `shell.replace(MARKER, bundle)`, which replaces the
+  FIRST occurrence — and the first occurrence was this paragraph, so the whole
+  bundle landed inside an HTML comment and the page loaded, laid out, and did
+  absolutely nothing. It is a dev tool and it ships nowhere — it is not
+  linked from the game, it is not in the golden frames, and dist/frostwood.html
+  does not know it exists.
+
+  ONE CSS RULE IS LOAD-BEARING: image-rendering:pixelated on the canvas. The
+  canvas is sized in WORLD pixels and scaled to a whole multiple of them by CSS,
+  which is exactly what the game's applyFit() does — a fractional or smoothed
+  zoom would resample the grid, and a lab that showed you a resampled sprite
+  would be lying about the only thing it is for.
+  ══════════════════════════════════════════════════════════════════════════
+-->
+<style>
+  :root{ --bg:#0a0d12; --panel:#141922; --line:#232b39; --ink:#c3ceda; --dim:#6c7a8c; --acc:#8fb4d9; }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--ink);
+    font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+  h1{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--acc);
+    margin:0 0 2px 0}
+  .sub2{color:var(--dim);font-size:11px;margin-bottom:10px}
+  #bar{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--line);
+    padding:10px 14px 8px}
+  #wrap{display:flex;align-items:flex-start;gap:14px}
+  #scroll{flex:1;overflow:auto;padding:14px}
+  #frame{position:relative}
+  canvas{position:absolute;top:0;image-rendering:pixelated;
+    box-shadow:0 0 0 1px #000}
+  #labels{position:absolute;inset:0;pointer-events:none}
+  .lbl{position:absolute;font-size:9px;line-height:1.1;color:var(--dim);white-space:nowrap}
+  .lbl.title{color:var(--acc);letter-spacing:.14em;text-transform:uppercase;font-size:9px}
+  .lbl.hdr{text-align:center;font-size:8px;color:#4d596b}
+  .lbl.hdr.dir{color:#7f8ea1;letter-spacing:.10em}
+  /* the row labels are the one place text WRAPS: a name and the ramp/size note
+     under it do not fit on one line in a 120 px gutter, and nowrap sent the note
+     sliding out under the canvas */
+  .lbl.row{text-align:right;color:var(--ink);font-size:9.5px;white-space:normal}
+  .lbl.row .sub{display:block;color:var(--dim);font-size:8px;white-space:normal}
+  aside{width:330px;flex:0 0 330px;border-left:1px solid var(--line);padding:12px;
+    height:100vh;overflow:auto;position:sticky;top:0}
+  fieldset{border:1px solid var(--line);border-radius:5px;margin:0 0 12px;padding:8px 10px}
+  legend{color:var(--acc);font-size:9px;letter-spacing:.14em;text-transform:uppercase;padding:0 4px}
+  label{color:var(--dim)}
+  .row{display:flex;align-items:center;gap:6px;margin:3px 0}
+  .row label{flex:0 0 96px}
+  input,select,button,textarea{background:var(--panel);color:var(--ink);
+    border:1px solid var(--line);border-radius:4px;padding:3px 5px;font:inherit;font-size:11px}
+  input[type=range]{padding:0}
+  input[type=checkbox]{accent-color:var(--acc)}
+  button{cursor:pointer}
+  button:hover{border-color:var(--acc)}
+  textarea{width:100%;height:190px;font-size:10px;line-height:1.45;white-space:pre;resize:vertical}
+  .note{color:var(--dim);font-size:10px;line-height:1.5;margin:6px 0 0}
+  .warn{color:#d9a86c}
+  #err{display:none;white-space:pre-wrap;background:#12060a;color:#ffd9de;padding:12px;
+    font-size:11px}
+  #stat,#fixed{color:var(--dim);font-size:10px;white-space:pre-wrap}
+  .n{width:62px}
+</style>
+</head>
+<body>
+
+<div id="bar">
+  <h1>Frostwood sprite lab</h1>
+  <div class="sub2">every figure · every direction · every gait frame ·
+    drawn through <b>W_SPRITE_VS + SPRITE_FS</b> and the real palette snap,
+    so what you see here is what the shader renders</div>
+  <div class="row" style="flex-wrap:wrap;gap:12px">
+    <span><label for="zoom">zoom</label>
+      <select id="zoom"><option>1</option><option>2</option>
+        <option selected>4</option><option>8</option></select></span>
+    <button id="play">⏸ pause</button>
+    <span>background:
+      <label><input type="radio" name="bg" value="snow" checked> snow</label>
+      <label><input type="radio" name="bg" value="trees"> dark trees</label>
+      <label><input type="radio" name="bg" value="grey"> mid grey</label></span>
+    <span><label><input type="checkbox" id="c-wind"> wind shear</label></span>
+    <span>az <input type="range" id="az" min="0" max="360" step="1" value="218">
+      <b id="v-az">218</b></span>
+    <span>el <input type="range" id="el" min="4" max="86" step="1" value="40">
+      <b id="v-el">40</b></span>
+    <span>warm <input type="range" id="warm" min="-0.5" max="1" step="0.02" value="0.10">
+      <b id="v-warm">0.10</b></span>
+    <span>seed <input type="number" id="seed" class="n" style="width:96px" value="20260727"></span>
+    <span>snow <input type="number" id="snow" class="n" step="0.05" value="1.15"></span>
+    <button id="regen">re-synthesise</button>
+  </div>
+  <div id="stat"></div>
+</div>
+
+<div id="err"></div>
+
+<div id="wrap">
+  <div id="scroll">
+    <div id="frame"><canvas id="lab"></canvas><div id="labels"></div></div>
+  </div>
+
+  <aside>
+    <fieldset>
+      <legend>the cast</legend>
+      <p class="note">Read out of the baked atlas and out of <b>ACTOR</b>, so a
+        new row in src/fauna.js with a baked bank appears here with no edit to
+        this page. Rigged animals carry their own clip table and are shown at
+        the cadence that table declares, which is the only way a wolf's canter
+        is seen at all: no speed threshold reaches it.</p>
+      <p class="note warn">The human cast is the grid-authored person rig:
+        src/body-folk.js owns anatomy and contact, src/figure-folk.js the
+        raster. Judge sheets with node tools/person.mjs.</p>
+      <div class="row"><button id="regen-cast">re-synthesise</button></div>
+      <div class="note" id="terr"></div>
+    </fieldset>
+
+    <fieldset>
+      <legend>what this page is not</legend>
+      <p class="note">No ground, no cast shadows, no snowfall, no interior. A
+        shadow is a statement about the ground a body stands on and there is
+        none here; the hearth is zero because this is the outdoor view. Every
+        uniform that affects the sprite itself is at the game's outdoor default,
+        and lab/stage.js names each one it could not reproduce.</p>
+      <p class="note">The profile view is drawn unflipped. In the game it is
+        mirrored when the animal faces left — a mirror, not a second drawing.</p>
+    </fieldset>
+  </aside>
+</div>
+
+<script type="module">
+/*__BUNDLE__*/
+</script>
+</body>
+</html>

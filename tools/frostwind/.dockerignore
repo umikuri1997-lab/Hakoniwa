@@ -1,0 +1,16 @@
+.git
+node_modules
+dist
+.claude
+.cursor
+artifacts
+screenshots
+review
+coverage
+test
+tools
+lab
+video
+reference
+*.md
+.DS_Store

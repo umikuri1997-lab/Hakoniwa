@@ -1,0 +1,20 @@
+node_modules/
+dist/
+
+# Golden-frame comparison output. The committed goldens are the *.png files in
+# test/golden/; anything ending .actual.png or .diff.png is a failed run's
+# artefact and is regenerated on every `npm test`.
+test/golden/*.actual.png
+test/golden/*.diff.png
+
+# Generated visual-review dumps (shot/figure tools). Not product source.
+review/
+screenshots/
+artifacts/
+
+.DS_Store
+
+# Agent scratch. .claude/worktrees/ holds throwaway checkouts of this repo made by
+# tooling; committing a copy of the tree into the tree is never what was meant.
+.claude/worktrees/
+.env
