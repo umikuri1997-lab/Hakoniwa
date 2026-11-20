@@ -5,7 +5,7 @@ x=東, y=南, z=上（単位はマス）。ゲームの見え方は 画面=(x, y
 部品ごとに太さ・色をかえるときは sc.outline(w, k) のあとに部品を足す（w=0 でその部品は輪郭線なし。k はもとの色にかける数、0.8 ならうすい線）。
 箱の角は、すこし面取り（ベベル BEVEL）する。
 2倍の細かさで描いて BOX でちぢめる。"""
-import math
+import math, os
 import numpy as np
 from PIL import Image, ImageDraw
 
@@ -256,6 +256,10 @@ SATINSHINE = (24, -6)           # サテンのつや（lv −2）：明るさを
 SHINYSPEC = (0.95, 0.86)       # つやつや（material 'shiny'・金属は 'shinym'）：光と目のあいだの向きとの内積が、1つめより大きい所に白い光（lv −3）、2つめより大きい所に うすい光（lv −1）
 SHINYSHINE = (34, -40)          # つやつやの白い光（lv −3）：明るさを足し、あざやかさを大きく引く
 CLEARSPEC = (0.06, 0.035, 0.45, 0.15)   # すけて見える部品のつや：平らな面より、光と目のあいだの向きへかたむいた量（内積の差）が、これより大きい所につよいつや・よわいつや・白くする量・こさに足す量
+GLASSA = (0.1, 0.85, 0.32)     # ガラス（material 'glass'）：正面を向いた面のこさ・ふち（横を向いた面）のこさ・ガラスの中の水（'gwater'）のこさ
+GLASSCA = (0.55, 0.95)   # 色ガラス（material 'glassc'。ガラスの置き物）：正面・ふちのこさ
+GLASSSPEC = (0.995, 0.975)
+GLASSSTREAK = (0.5, 0.68, 0.55)   # ガラスのつやのすじ：目から見て左前（角度・ラジアン。目のほうが0、左が＋）を向いた、たての面（上下の向きの大きさがこれより小さい）     # ガラスのつや：光と目のあいだの向きとの内積が、1つめより大きい所はまっ白、2つめより大きい所は白っぽく
 CLEARA = 0.66   # すけて見える部品（material 'clear'。水）のこさ
 SOFTLV = (0.86, 0.62)
 GRAD = False   # True：かげを4だん（光・うすいかげ・半かげ・かげ）にして、なめらかに（持ち主：かげにもう少しグラデーション）
@@ -347,9 +351,9 @@ def render_px(sc, proj, ext, depth, k=0.72, outer=True, merge=12, lw=1, k2=0.86,
             if ln < 1e-12: continue
             n = n/ln
             if np.dot(n, depth) < 0: n = -n
-            for v in (a, b, c): VN.setdefault((pid,)+tuple(np.round(v, 5)), []).append(n)
+            for v in (a, b, c): VN.setdefault((pid,)+tuple(np.round(v, 5)), []).append((n, ln))   # 面の向きと大きさ（大きい面ほど重く。ふちの細い面に、広い面の向きが引っぱられないように）
     def vnorm(pid, v, n):
-        L_ = [q for q in VN.get((pid,)+tuple(np.round(v, 5)), []) if np.dot(q, n) > SMCREASE]
+        L_ = [q*w for q, w in VN.get((pid,)+tuple(np.round(v, 5)), []) if np.dot(q, n) > SMCREASE]
         if not L_: return n
         m_ = np.sum(L_, 0); return m_/max(1e-9, np.linalg.norm(m_))
     INK = {p_ for p_, m_ in sc.mt.items() if m_ == 'ink'}
@@ -359,7 +363,7 @@ def render_px(sc, proj, ext, depth, k=0.72, outer=True, merge=12, lw=1, k2=0.86,
         n /= ln
         if pid in INK and np.dot(n, depth) > 0: continue   # 背面法の輪郭（ふくらませた うら返しの皮）：うらを向いた面だけ描く
         if np.dot(n, depth) < 0: n = -n
-        if sc.mt.get(pid) == 'clear': CLR.append((a, b, c, cc, n)); continue   # 水など、すけて見える部品は、ほかをぜんぶ描いてから、うすくかさねる
+        if sc.mt.get(pid) in ('clear', 'glass', 'glassc', 'gwater'): CLR.append((a, b, c, cc, n, sc.mt.get(pid))); continue   # 水など、すけて見える部品は、ほかをぜんぶ描いてから、うすくかさねる
         d = float(np.dot(n, LIGHT)); lv = (0 if d > LV4[0] else 1 if d > LV4[1] else 2 if d > LV4[2] else 3) if GRAD else (0 if d > 0.55 else 1 if d > 0.1 else 2)
         if sc.mt.get(pid) == 'soft': lv = (0 if d > SOFTLV4[0] else 1 if d > SOFTLV4[1] else 2 if d > SOFTLV4[2] else 3) if GRAD else (0 if d > SOFTLV[0] else 1 if d > SOFTLV[1] else 2)
         if sc.mt.get(pid) == 'soft1': lv = 0 if d > SOFTLV[0] else 1   # 布（うすいかげだけ。まくらなど、かげをこくしない物）
@@ -529,8 +533,42 @@ def render_px(sc, proj, ext, depth, k=0.72, outer=True, merge=12, lw=1, k2=0.86,
             edge &= inner
             out[edge] = _ol(col0[edge], (np.full(int(edge.sum()), k2 if outerk is True else (outerk+1)/2) if outerk else KP2[idb[edge]])[:, None])
     clrm = np.zeros((Hp, Wp), bool)   # すけて見える部品をかさねたドット
-    for a, b, c, cc, n in CLR:   # すけて見える部品：手前にあるドットだけ、下の色に CLEARA のこさでまぜる（線は引かない・下の部品の線はのこす）
+    CLR.sort(key=lambda t: float(np.dot((t[0]+t[1]+t[2])/3, depth)))   # おくから手前へ（ガラスのうしろのかべ → 中の水 → 手前のかべ）
+    for a, b, c, cc, n, cm in CLR:   # すけて見える部品：手前にあるドットだけ、下の色に CLEARA のこさでまぜる（線は引かない・下の部品の線はのこす）
         d = float(np.dot(n, LIGHT)); lv = (0 if d > LV4[0] else 1 if d > LV4[1] else 2 if d > LV4[2] else 3) if GRAD else (0 if d > 0.55 else 1 if d > 0.1 else 2); shc = np.array(toon(cc, lv), float); al = CLEARA
+        if cm in ('glass', 'glassc', 'gwater'):   # ガラス・ガラスの中の水：うしろに何もない所にもかさねる（チップの半透明）。ガラスは、ふち（目に横を向いた面）ほどこく、光と目のあいだを向いた面に白いつや
+            vd = abs(float(np.dot(n, depth/np.linalg.norm(depth)))); hv0 = LIGHT+depth/np.linalg.norm(depth); hv0 = hv0/np.linalg.norm(hv0); sg = float(np.dot(n, hv0)); shc = np.array(cc, float)
+            if cm in ('glass', 'glassc'): A_ = GLASSA if cm == 'glass' else GLASSCA; al = A_[0]+(A_[1]-A_[0])*(1-vd)**1.5; shc = shc*(1-0.35*(1-vd))
+            else: al = GLASSA[2]; shc = shc*(0.9+0.1*vd)
+            if cm in ('glass', 'glassc'):   # ガラスのつやのすじ：左前を向いたたての面に、白いすじ（まるいガラスに、たてに入る光）
+                dn = depth/np.linalg.norm(depth); up = np.array([0., 0., 1.]); fx = np.cross(up, dn); fx = fx/max(1e-9, np.linalg.norm(fx)); fh = dn-up*float(dn@up); fh = fh/max(1e-9, np.linalg.norm(fh))
+                ang = math.atan2(float(n@fx), float(n@fh)); nz = abs(float(n@up))
+                if nz < GLASSSTREAK[2] and GLASSSTREAK[0] < ang < GLASSSTREAK[1]: shc = np.array([255., 255., 255.]); al = 0.85
+                elif nz < GLASSSTREAK[2] and GLASSSTREAK[0]-0.25 < ang < GLASSSTREAK[1]+0.25: shc = shc*0.45+255*0.55; al = max(al, 0.55)
+            if cm == 'gwater': pass   # 水には、つやを出さない（ガラスの手前のかべが光る）
+            elif sg > GLASSSPEC[0]: shc = np.array([255., 255., 255.]); al = 0.95
+            elif sg > GLASSSPEC[1] and cm != 'gwater': shc = shc*0.4+255*0.6; al = max(al, 0.7)
+        if cm in ('glass', 'glassc', 'gwater'):
+            P = [((proj(p)[0]-x0)*S, (proj(p)[1]-y0)*S) for p in (a, b, c)]; D = [float(np.dot(p, depth)) for p in (a, b, c)]
+            xs = [p[0] for p in P]; ys = [p[1] for p in P]
+            bx0 = max(int(math.floor(min(xs)))-2, 0); bx1 = min(int(math.ceil(max(xs)))+2, Wp-1); by0 = max(int(math.floor(min(ys)))-2, 0); by1 = min(int(math.ceil(max(ys)))+2, Hp-1)
+            if bx1 < bx0 or by1 < by0: continue
+            gx, gy = np.meshgrid(np.arange(bx0, bx1+1)+0.5, np.arange(by0, by1+1)+0.5)
+            if RAY:
+                Pw, ok = _raysolve(proj, x0+gx/S, y0+gy/S, n, a); v0, v1 = b-a, c-a; v2 = Pw-a
+                d00, d01, d11 = v0@v0, v0@v1, v1@v1; d20, d21 = v2@v0, v2@v1; dn = d00*d11-d01*d01
+                w1 = (d11*d20-d01*d21)/dn; w2 = (d00*d21-d01*d20)/dn; w0 = 1-w1-w2
+                m = ok & (w0 >= -1e-6) & (w1 >= -1e-6) & (w2 >= -1e-6); z = Pw@depth
+            else:
+                (ax_, ay_), (bx_, by_), (cx_, cy_) = P; den = (by_-cy_)*(ax_-cx_)+(cx_-bx_)*(ay_-cy_)
+                if abs(den) < 1e-9: continue
+                w0 = ((by_-cy_)*(gx-cx_)+(cx_-bx_)*(gy-cy_))/den; w1 = ((cy_-ay_)*(gx-cx_)+(ax_-cx_)*(gy-cy_))/den; w2 = 1-w0-w1
+                m = (w0 >= -1e-6) & (w1 >= -1e-6) & (w2 >= -1e-6); z = w0*D[0]+w1*D[1]+w2*D[2]
+            s_ = (slice(by0, by1+1), slice(bx0, bx1+1)); vis = m & (z > zb[s_])
+            o = out[s_]; A = alpha[s_].astype(float)/255; na = al+A*(1-al)
+            mix = (shc[None, :]*al+o[vis]*(A[vis][:, None])*(1-al))/np.maximum(na[vis][:, None], 1e-6)
+            o[vis] = mix; out[s_] = o; A[vis] = na[vis]; alpha[s_] = np.round(A*255).astype(alpha.dtype); clrm[s_] |= vis
+            continue
         hv = LIGHT+depth/np.linalg.norm(depth); hv = hv/np.linalg.norm(hv); sp = float(np.dot(n, hv))   # つや：光と目のあいだの向きを向く面（さざなみの山）は、白く光って、こく見える
         sp -= float(hv[2])   # 平らな水面とくらべて、どれだけ光と目のほうへかたむいているか
         if sp > CLEARSPEC[0]: shc = shc*(1-CLEARSPEC[2])+255*CLEARSPEC[2]; al = min(1.0, CLEARA+CLEARSPEC[3])
