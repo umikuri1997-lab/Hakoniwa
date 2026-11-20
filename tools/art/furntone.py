@@ -8,7 +8,7 @@ import numpy as np
 from PIL import Image
 from scipy.ndimage import gaussian_filter,find_objects
 import oblique3d as O
-HI=((10,-4),(19,-8));SH=((15,4),(28,8));OLK=(38,10);CUTS=(-0.2,0.4,0.88,0.97);DW=0.12;RIM=0.7;VMIN=45;LIGHT=(-0.6,-0.5,0.8);STREAK=(0.14,0.07)   # CUTS：上の面 0.81・左の面 0.51→もとの色・正面 0.23→かげ・右の面 −0.51→こいかげ。ハイライトは、光を向いたまるい所と、ふちの左上
+HI=((10,-4),(19,-8));SH=((15,4),(28,8));OLK=(38,10);CUTS=(-0.2,0.4,0.88,0.97);DW=0.12;RIMHI=0.0;RIM=0.7;VMIN=45;LIGHT=(-0.6,-0.5,0.8);STREAK=(0.14,0.07)   # CUTS：上の面 0.81・左の面 0.51→もとの色・正面 0.23→かげ・右の面 −0.51→こいかげ。ハイライトは、光を向いたまるい所と、ふちの左上
 KEEP=('flat','clear','ink')
 def _hsv(base,dv,ds):
     h,s,v=colorsys.rgb_to_hsv(*(np.asarray(base,float)/255));v=min(1,max(VMIN/100 if dv<-30 else 0,v+dv/100));s=min(1,max(0,s+ds/100))
@@ -32,7 +32,7 @@ def tone(im,cuts=CUTS,light=LIGHT,streak=STREAK,dw=None):   # dw：あみかけ�
     t0=t.copy()
     A0=a[...,3]>0;outer=A0&(ids<0)
     po=np.pad(outer|~A0|(LN&(ids>=0)),1);nb=lambda dy,dx:po[1+dy:1+dy+H,1+dx:1+dx+W]   # ふち：まわりのふちと、部品のさかいの線
-    t[body&(nb(0,1)|nb(1,0)|nb(1,1))]-=RIM;t[body&(nb(0,-1)|nb(-1,0)|nb(-1,-1))&~(nb(0,1)|nb(1,0)|nb(1,1))]+=RIM*0.6
+    t[body&(nb(0,1)|nb(1,0)|nb(1,1))]-=RIM;t[body&(nb(0,-1)|nb(-1,0)|nb(-1,-1))&~(nb(0,1)|nb(1,0)|nb(1,1))]+=RIM*RIMHI   # 線の左上がわを明るくする分。RIMHI は0（明るくしない。線のまわりにうすい色がのると、へこんで見える。持ち主がきめた。前は0.6）
     L=a[...,:3].astype(float)@[0.299,0.587,0.114];mf=body.astype(float);Lb=gaussian_filter(L*mf,1.4)/np.maximum(gaussian_filter(mf,1.4),1e-6);dd=L-Lb
     lv=np.floor(t+0.5);fr=t+0.5-lv;yy,xx=np.mgrid[0:H,0:W];ck=(xx+yy)%2==0
     from scipy.ndimage import maximum_filter,minimum_filter
