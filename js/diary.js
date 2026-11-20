@@ -73,7 +73,7 @@ function dyTopics(e,f){const M=[],O=[],N=e.ns;
 /* 日記の絵に写した物の話題 */
 function dyPhTopic(e){const k=e.phK,n=e.phN||'';if(!e.ph||!k)return null;
   if(k==='spot')return n?['pspot',n]:null;if(k==='built')return n?['pbuilt',n]:null;if(k==='new')return n?['new',n]:null;if(k==='day')return['pday'];
-  if(k==='see')return e.phS==='admire'?(n?['padm',n]:null):e.phS==='sunset'?['psun']:e.phS==='critwatch'?(n?['pcrit',n]:['psee']):['pquirk'];return null}
+  if(k==='see')return e.phS==='admire'?(n?['padm',n]:null):e.phS==='sunset'?['psun']:e.phS==='critwatch'?(n?['pcrit',n]:['psee']):(e.phS==='splay'||e.phS==='splayw')?(n?[e.phS==='splay'?'psplay':'psplayw',n]:['pquirk']):['pquirk'];return null}
 /* 絵日記の文（3〜4行） */
 function dyNote(e,f){const{M:M0,O}=dyTopics(e,f),sad=M0.some(t=>t[0]==='gone'||t[0]==='bossLose'||t[0]==='trial');
   const pt=dyPhTopic(e),M=pt?(sad?M0.filter(t=>!(t[0]==='new'&&pt[0]==='new')).concat([pt]):[pt].concat(M0.filter(t=>!(t[0]==='new'&&pt[0]==='new')))):M0;/* 絵の物の話を、はじめに（かなしい日は、かなしいことのあと） */
