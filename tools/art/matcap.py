@@ -7,7 +7,7 @@ import os,numpy as np
 from PIL import Image
 import oblique3d as O
 HERE=os.path.dirname(os.path.abspath(__file__));TEX=os.path.join(HERE,'textures')
-R=256;STEPS=6
+R=256;STEPS=6;SAT=1.3;VAL=1.12   # SAT・VAL：もとの色のあざやかさ・明るさにかける数（持ち主：明度・彩度を上げて）
 KINDS={   # 名前：光の向き（左上・手前）・まわりの光・まわりのくらさ・つや（強さ・するどさ）・あたたかさ
     'clay':dict(light=(-0.55,-0.6,0.58),amb=0.62,rim=0.22,spec=(0.10,18),warm=0.04),   # ねんど・やきもののような、やわらかい質感
     'gloss':dict(light=(-0.55,-0.6,0.58),amb=0.58,rim=0.18,spec=(0.35,40),warm=0.02),  # つやのある質感（やきもの・ガラスのような物）
@@ -22,9 +22,14 @@ def build(kind='clay'):
     c=np.dstack([sh*(1+k['warm']),sh,sh*(1-k['warm'])])+sp[...,None];c[r2>1]=0
     os.makedirs(TEX,exist_ok=True);Image.fromarray(np.clip(c*200,0,255).astype(np.uint8)).save(p)   # 200 が明るさ1（1より明るい所＝つやも入る）
     return np.asarray(Image.open(p).convert('RGB'),float)/255
-def apply(im,kind='clay',steps=STEPS):
+def boost(cc,sat=SAT,val=VAL):
+    """色（…×3）のあざやかさ・明るさを上げる（HSV の s・v にかける）"""
+    c=np.clip(cc,0,255)/255;mx=c.max(-1,keepdims=True);mn=c.min(-1,keepdims=True);v=mx;s=np.where(mx>0,(mx-mn)/np.maximum(mx,1e-6),0)
+    v2=np.clip(v*val,0,1);s2=np.clip(s*sat,0,1);g=np.where(mx-mn>1e-6,(c-mn)/np.maximum(mx-mn,1e-6),0)   # 色あいの形（0〜1）はそのまま
+    return (v2*(1-s2)+g*v2*s2)*255
+def apply(im,kind='clay',steps=STEPS,sat=SAT,val=VAL):
     import furntone as FT
-    mc=build(kind)*255/200;a=np.array(im).copy();H,W=a.shape[:2];ids=O.LAST_IDS;cc=np.round(O.LAST_CC).astype(float);LN=O.LAST_LINE;MT=O.LAST_MT
+    mc=build(kind)*255/200;a=np.array(im).copy();H,W=a.shape[:2];ids=O.LAST_IDS;cc=boost(np.round(O.LAST_CC).astype(float),sat,val);LN=O.LAST_LINE;MT=O.LAST_MT
     if ids.shape!=(H,W):return im
     keep=np.isin(ids,[p for p,m in MT.items() if m in FT.KEEP]);tgt=(ids>=0)&~keep&~O.LAST_CLR
     N=O.LAST_N;D=O.LAST_DEPTH/np.linalg.norm(O.LAST_DEPTH);X=np.array([1.0,0,0]);X=X-D*(X@D);X/=np.linalg.norm(X);U=np.cross(D,X);U=U if U[2]>0 else -U
