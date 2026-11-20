@@ -615,7 +615,14 @@
 - お話の前半（`QUESTS6`）：あかり → ヒイロ（はじめに来る火のせいれい、あにき。`SECOND[YAMI]`、`qAt('hiiro')` から）→ ヨリ（夜、ねているトモリのとなりにいる、おそってこない影。`S.enemies` に入れず、コワイノの絵で描くだけ `yoriPos`・`yamiDrawAdd`。夜にタップ `yamiTap`→`yoriMeet`）→ 夜の仕事のあと3つ（見た目だけの印 `YMARKS`・`S.yami.marks`。昼、ヨリがまだ見ていない印で待つ）→ あさやけ（聞いたつぎの朝6時の場面 `yamiDawnTick`・`YDAWN`。ヨリが朝の光でうすれて消える）。
 - 朝の空：おわったお話の数（`yamiSky`）ぶん、朝の時間（4時半〜8時半）だけ明るい（`YAMISKYK`）。あさやけのあとは、朝の時間に本当の朝の光（`yamiSkyHour`）。
 - さいごの目標のお礼の会話は、目標の一覧のおわりでも出す（`checkQuest`）。
-- たしかめは `tools/tests/yami.cjs`・`tools/tests/yami-story.cjs`（会話は自動プレイと同じ送り方 `DLGA`＋`#dlgBtns`。朝の日記の紙はとじる。タップで始める会話は `DLGTAP` を入れてから）。
+- お話の後半：すわりこむトモリ（`yamiSitOn`・`ysit`。あかりは1マス `yamiR`）→ からっぽの夜のゆりかご（`S.yami.cr`、庭の北の3×3と手前の1行。見た目だけで、物は置けない `yamiNoBuild`）→ あけよい草（ヨリの消えた所 `S.yami.yj` に芽 `S.yami.fl`、朝ごとにのびて2日でつぼみ。まわり3マスにあかりのない20〜23時にひらく `yamiBloom`。トモリは自分のあかりをおとす）→ 5つの属性で直す（`naoshi`、`yamiCradleTap`→`S.yami.yk`→`ywork`）→ さいごの夜（`S.yami.fn`・`ph`：`off` あかりを消す → `meet` 大きな影 `YSH` をむかえる → `go` ゆりかごへ → `rest` → 朝6時 `yamiBirthNushi`）→ クリア。
+- 依頼の会話のない目標になったかは `yamiAt`（`qAt` は依頼の会話を聞いたあと）。
+- 消したあかり（`S.yami.off`）は `recount` で `LIGHTS`・`LITP` からのぞき、つぎの朝6時にもどる。消せるのは、あけよい草のそばのあかり（つぼみのあいだ）と、さいごの夜のぜんぶ（`yamiOffTarget`）。
+- 大きな影はたたかわない（`S.enemies` に入れない）。さいごの夜のトモリはたたかれてもおなかがへらず、3回（`YHITMAX`）か朝になったら、3日あと（`YRETRY`）にやりなおし（`yamiHitRes`・`yamiFail`）。
+- トモリ・ゆりかごを直す子の行動（`ysit`・`yhold`・`ywalk`・`ywork`）は `decide0` のはじめの `yamiDecide` できめる。夜も歩く・待つのは `NIGHT_OK` に入れてある。
+- クリアのあとは、空・暗さが、ほかのステージと同じ昼と夜（`skyHour`・`darkness` の `S.cleared`）。
+- 会話でヒイロがいないときは、ヒイロの行だけはぶく（`ideaDialogue`）。
+- たしかめは `tools/tests/yami.cjs`・`tools/tests/yami-story.cjs`・`tools/tests/yami-story2.cjs`（会話は自動プレイと同じ送り方 `DLGA`＋`#dlgBtns`。朝の日記の紙はとじる。タップで始める会話は `DLGTAP` を入れてから）。
 ## 洞窟の探検
 - 洞窟（`js/cave.js`、`CV`・`caveOn`）：土のステージの核。いまは、設定の「テスト用」の「洞窟へ」から入る2階ぶん（`CVFLOORS`）（きまった案は `IDEAS.md`）。村は止めたまま（`paused`）、洞窟だけを `caveFrame`・`caveRender` で動かして描く。村の `S` は入れかえない。
 - 洞窟のマスは、村のマップの外（y が `H` より下、`CVOY` から）。村のマスを見る共通の描き方（`uLift`・`hiAt`）が、何もない所を見るようにするため。洞窟の中の場所は、せいれい・コワイノとも、この座標で持つ（`drawEnemy`・`hitFx`・`fxSpr`・`sfxAt` がそのまま使える）。

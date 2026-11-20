@@ -212,6 +212,7 @@ if(o==='vane')around(j,3,NEARVANE);if(o==='niguruma')around(j,3,NEARCART);if(o==
   for(let j=0;j<W*H;j++){if(S.ground[j]===1)continue;baseN++;if(REV.has(j))revN++}
   /* 属性値は、せいれいの依頼が出る前から基地にある対象物も含めて数える。依頼開始時の基準化・差し引きはしない。 */
   BASEPCT=Math.round(revN/Math.max(1,baseN)*100);GRASSN=revN;if(typeof fogAfterRecount==='function')fogAfterRecount();if(typeof kdHanaCheck==='function')kdHanaCheck();/* もりのこだまの花の輪 *//* 霧が晴れるか */// マップぜんぶの、みどりのマス
+  if(WD===YAMI&&typeof yamiOffSet==='function'){const O=yamiOffSet();if(O.size){LIGHTS=LIGHTS.filter(j=>!O.has(j));LITP=LITP.filter(j=>!O.has(j))}}/* 闇のステージ：守り神が消したあかり（つぎの朝にもどる、yami.js） */
   if(typeof aniRecount==='function')aniRecount();/* 飼う生き物の小屋とかこい */
   dirty=true;
 }

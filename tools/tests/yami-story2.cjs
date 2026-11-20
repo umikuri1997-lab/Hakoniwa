@@ -1,0 +1,46 @@
+/* 闇のステージのお話の後半：朝なんて、いらない（すわりこむトモリ）→ からっぽのゆりかご → あけよい草（そばのあかりを消すと、夜にひらく）→ 夜のゆりかごを5つの属性で直す → さいごの夜（あかりを消す・大きな影とゆりかごへ）→ おやすみ（新しい闇のヌシ・クリア）。さいごの夜に3回たたかれたら、3日あとにやりなおし */
+const assert=require('node:assert/strict');
+(async()=>{const {browser,page,run,errors}=await require('../sim/boot.cjs')({world:5});
+  await run(`window.__dlg=async(max)=>{const W8=ms=>new Promise(f=>setTimeout(f,ms));for(let i=0;i<(max||80);i++){if(typeof sheet!=='undefined'&&sheet!=null)closeSheet();const d=document.querySelector('#dialog');if(d.hidden){await W8(30);if(document.querySelector('#dialog').hidden)return;continue}const bs=[...document.querySelectorAll('#dlgBtns button')].filter(b=>b.offsetParent!==null);try{DLGA.n=DLGA.full.length;DLGA.readReady=0;DLGA.holdUntil=0}catch(e){}if(bs.length)bs[0].click();await W8(30)}};
+    window.__day=async(id,max)=>{for(let k=0;k<(max||300);k++){if(typeof id==='function'?id():qDone(id))return true;const h=hour();if(h<7||h>18){S.t=Math.floor(S.t/1440)*1440+(h>18?1440:0)+9*60;S.hold=0}stepWorld(.5);checkQuest();if(TALKW&&document.querySelector('#dialog').hidden)startTalk();await __dlg(20)}return false};
+    window.__run=async(pred,max)=>{for(let k=0;k<(max||600);k++){if(pred())return true;stepWorld(.5);checkQuest();await __dlg(10)}return false};
+    window.__at=(d,h)=>{S.t=(d-1)*1440+h*60;S.hold=0};window.__morn=d=>{__at(d,5.99);for(let i=0;i<8&&!(hour()>=6&&hour()<7);i++)stepWorld(.5)};`);
+  const r=JSON.parse(await run(`(async()=>{const out={};document.querySelector('#dialog').hidden=true;S.introSeen=true;S.flags.tapped=1;const day0=Math.floor(S.t/1440)*1440;S.t=day0+10*60;S.hold=0;
+    glHit(CX+2,CY+2,0);await __dlg();const t=S.res.find(x=>x.name===TOMORI);
+    const add=(n,el,dx)=>{const q=mkRes(S,n,el,CX+.5+dx,CY+3.5);q.came=dayNo();S.res.push(q);return q};add(HIIRO,'fire',1);add('ツチ','earth',2);add('コノハ','wood',3);add('ミナモ','water',-1);add('ソヨ','wind',-2);S.flags.minaCame=true;
+    S.enemyOn=false;S.enemies=[];const Y=yamiState();Y.yj=(CY+6)*W+CX+5;S.flags.asayake=1;const qi=id=>questIndexOf(id);S.quest=qi('irana');S.qTalked=false;S.qStory=null;recount();
+    /* 5：すわりこむ */for(let i=0;i<120&&!(t.act&&t.act.type==='ysit'&&t.act.stage==='do');i++)stepWorld(.5);out.sit=t.act&&t.act.type;out.r1=yamiR();
+    await __day(()=>S.qTalked);out.iTalk=S.qTalked;render(performance.now());DLGTAP=performance.now();out.iTap=yamiTap(t.x,t.y-.3,t.x|0,t.y|0);await __dlg();out.irana=!!S.flags.irana;out.cr=Y.cr!=null;
+    await __day(()=>yamiAt('yurikago'));await __dlg();const c=Y.cr;DLGTAP=performance.now();out.cTap=yamiTap(c%W+1.5,((c/W)|0)+1.5,c%W+1,((c/W)|0)+1);await __dlg();out.yrk=!!S.flags.yrk;
+    out.noBuild=!canPlace('torch',c%W+1,((c/W)|0)+1,true);await __day('yurikago');
+    /* あけよい草：つぎの朝に芽、2日でつぼみ */const d1=dayNo();__morn(d1+1);out.fl=Y.fl&&Y.fl.st;if(!Y.fl){out.dbg=[QUESTS[S.quest].id,S.qTalked,S.qStory,Y.yj,!!S.flags.yrk,hour(),dayNo(),d1];return JSON.stringify(out)}await __day(()=>qAt('yoruhana')&&S.qTalked);out.yTalk=S.qTalked;
+    __morn(d1+2);__morn(d1+3);out.st=Y.fl.st;out.prog=QUESTS[S.quest].prog();
+    const f=Y.fl.j;let tj=-1;for(const d of [2,-2,2*W,-2*W,2*W+1]){const j=f+d;if(walk(j)&&!S.obj[j]){tj=j;break}}S.obj[tj]='torch';recount();out.near=yamiNearLights().length;
+    __at(d1+3,20.5);for(let i=0;i<6;i++)stepWorld(.5);out.noBloom=!S.flags.bloom&&!Y.bl;out.r0=yamiR();
+    DLGTAP=performance.now();out.offTap=yamiTap(tj%W+.5,((tj/W)|0)+.5,tj%W,(tj/W)|0);out.lit=LIGHTS.includes(tj);
+    for(let i=0;i<10&&!Y.bl;i++)stepWorld(.5);out.bl=!!Y.bl;await __dlg();out.bloom=!!S.flags.bloom;out.r4=yamiR();
+    __morn(d1+4);out.back=LIGHTS.includes(tj);await __day('yoruhana');
+    /* 6：5つの属性で直す */await __day(()=>qAt('naoshi')&&S.qTalked);const els=[];
+    for(let i=0;i<5;i++){DLGTAP=performance.now();yamiCradleTap();const el=Y.yk&&Y.yk.el;if(!el)break;await __day(()=>(Y.crN||{})[el],400);await __dlg();els.push(el+':'+!!Y.crN[el])}
+    out.els=els;await __day('naoshi');out.naoshi=qDone('naoshi');await __day(()=>yamiAt('saigo'));await __dlg();stepWorld(.5);out.fn=Y.fn-dayNo();out.prog2=QUESTS[S.quest].prog();
+    /* 7：さいごの夜 */const dn=Y.fn;__at(dn,22.99);for(let i=0;i<8&&Y.ph==null;i++)stepWorld(.5);out.ph1=Y.ph;await __dlg();
+    for(const j of LIGHTS.slice())yamiLightOff(j);out.left=LIGHTS.length;stepWorld(.5);out.ph2=Y.ph;out.road=(Y.road||[]).length;await __dlg();out.r00=yamiR();
+    const ms=[];await __run(()=>{if(YSH&&ms.length<12&&Math.random()<.03&&render(performance.now())==null)ms.push([+YSH.x.toFixed(1),+YSH.y.toFixed(1),+t.x.toFixed(1),+t.y.toFixed(1),t.act&&t.act.type,hour().toFixed(2),YSH.walk,YSH.mj%W,(YSH.mj/W)|0]);return Y.ph!=='meet'},900);out.ms=ms;out.ph3=Y.ph;out.h3=hour();await __dlg();await __run(()=>{if(Math.random()<.02)render(performance.now());return Y.ph==='rest'||Y.ph==null},1500);out.ph4=Y.ph;await __run(()=>Y.ph==='rest'&&!YEND,200);
+    render(performance.now());__morn(dn+1);await __dlg();await __day(()=>S.cleared,200);out.end=!!S.flags.yamiEnd;out.cleared=!!S.cleared;out.darkNoon=(__at(dayNo(),12),darkness());out.sky=skyHour();
+    render(performance.now());save();continueGame(load(5));out.reload=[!!S.cleared,!!S.flags.yamiEnd,yamiState().cr!=null];
+    return JSON.stringify(out)})()`));
+  console.log(JSON.stringify(r));
+  assert.equal(r.sit,'ysit');assert.equal(r.r1,1);assert.equal(r.iTalk,true);assert.equal(r.iTap,true);assert.equal(r.irana,true);assert.equal(r.cr,true);
+  assert.equal(r.cTap,true);assert.equal(r.yrk,true);assert.equal(r.noBuild,true);
+  assert.equal(r.fl,0);assert.equal(r.yTalk,true);assert.equal(r.st,2);assert.equal(r.near,1);assert.equal(r.noBloom,true,'そばにあかりがあると、ひらかない');assert.equal(r.r0,0,'トモリは自分のあかりをおとす');
+  assert.equal(r.offTap,true);assert.equal(r.lit,false);assert.equal(r.bl,true);assert.equal(r.bloom,true);assert.equal(r.r4,4);assert.equal(r.back,true,'消したあかりは、つぎの朝にもどる');
+  assert.equal(r.els.length,5);assert.ok(r.els.every(s=>s.endsWith(':true')));assert.equal(r.naoshi,true);assert.equal(r.fn,1);assert.match(r.prog2,/あと1日/);
+  assert.equal(r.ph1,'off');assert.equal(r.left,0);assert.equal(r.ph2,'meet');assert.ok(r.road>0);assert.equal(r.r00,0);assert.equal(r.ph3,'go');assert.equal(r.ph4,'rest');
+  assert.equal(r.end,true);assert.equal(r.cleared,true);assert.equal(r.darkNoon,0,'クリアのあとは、昼が来る');assert.equal(r.sky,12);assert.deepEqual(r.reload,[true,true,true]);
+  /* さいごの夜に、3回たたかれたら、3日あとにやりなおし */
+  const f=JSON.parse(await run(`(async()=>{S=newState(5);LIVE[5]=S;setWorld(5);document.querySelector('#dialog').hidden=true;S.introSeen=true;S.t=10*60;glHit(CX+2,CY+2,0);await __dlg();const t=S.res.find(x=>x.name===TOMORI);const Y=yamiState();
+    S.quest=questIndexOf('saigo');S.qTalked=true;S.qStory=null;S.enemyOn=false;S.enemies=[];Y.cr=(CY-16)*W+CX-1;Y.crN={earth:1,wood:1,water:1,fire:1,wind:1};Y.fn=dayNo();__at(dayNo(),23.1);stepWorld(.5);await __dlg();
+    for(const j of LIGHTS.slice())yamiLightOff(j);stepWorld(.5);await __dlg();const ev=dayNo();const e={type:'basic'};for(let i=0;i<3;i++)hitRes(e,t,EN.basic);await __dlg();return JSON.stringify({ph:Y.ph,fn:Y.fn-ev,hun:t.hunger>0})})()`));
+  console.log(JSON.stringify(f));assert.equal(f.ph,null);assert.equal(f.fn,3);
+  assert.deepEqual(errors,[]);await browser.close();console.log('OK');
+})().catch(e=>{console.error(e);process.exit(1)});

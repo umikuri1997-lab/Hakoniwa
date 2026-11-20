@@ -291,7 +291,7 @@ function drawHeat(now){if(WD!==1||!S.st2)return;const c=ctx;c.save();for(const j
 
 /* ---------- ヘルパー ---------- */
 const clk=()=>S.t-(S.hold||0);/* 時計の時刻 */
-const hour=()=>(clk()/60)%24;function skyHour(){const h=hour();return WD===YAMI?yamiSkyHour(h):h}/* 空・光・環境音に使う時刻（闇のステージは、ずっと夜） */
+const hour=()=>(clk()/60)%24;function skyHour(){const h=hour();return WD===YAMI&&!S.cleared?yamiSkyHour(h):h}/* 空・光・環境音に使う時刻（闇のステージは、ずっと夜） */
 const dayNo=()=>Math.floor(clk()/1440)+1;
 const callDay=()=>Math.floor((clk()-360)/1440)+1;/* なかまを呼ぶ「1日」は、朝6時から朝6時まで（夜中の0時でかわらない） */
 
