@@ -138,7 +138,7 @@ function aniPetAsk(a){/* 行けるせいれいのうち、道のりがいちば�
 function aniPop(a){/* 名前・すんでいる小屋・きょうのえさと水 */if(a.stray){strayDrop(a);return (S.flags.aniMet||{})[a.k]||IS_STORY_REPLAY||typeof MEMRUN!=='undefined'&&MEMRUN?strayPop(a):strayMeet(a);}const day=callDay(),h=a.h,d=isHut(S.obj[h])?hutD(h):null;
   const o=el('<div style="position:fixed;inset:0;z-index:45;display:flex;align-items:center;justify-content:center;background:rgba(40,30,15,.35);padding:24px"><div class="pxcard" style="background:var(--panel);padding:16px 18px;max-width:320px;width:100%;color:var(--ink)"><b class="t" style="display:block;font-size:15px;margin-bottom:6px"></b><div class="rows"></div><div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px"><button class="btn x">とじる</button><button class="btn pri go">なでる</button></div></div></div>');
   o.querySelector('.t').textContent=ANI[a.k].name;const rows=o.querySelector('.rows');
-  rows.appendChild(rowEl('すんでいる小屋',d?BL[S.obj[h]].name:'小屋がない'));rows.appendChild(rowEl('楽しさ',Math.round(aniFun(a))+' / 100'));rows.appendChild(rowEl('えさ',a.fd===day?'もらった':'まだ'));rows.appendChild(rowEl('水',d&&d.wd===day?'もらった':'まだ'));
+  rows.appendChild(rowEl('すんでいる小屋',d?BL[S.obj[h]].name:'小屋がない'));rows.appendChild(rowEl('たのしさ',Math.round(aniFun(a))+' / 100'));rows.appendChild(rowEl('えさ',a.fd===day?'もらった':'まだ'));rows.appendChild(rowEl('水',d&&d.wd===day?'もらった':'まだ'));
   const g=o.querySelector('.go'),why=aniPetWhy(a);lackOn(g,why);
   g.onclick=()=>{if(aniPetWhy(a))return;const r=aniPetAsk(a);if(!r){toast('いまは、なでにいけるせいれいがいない');return}sfx('tap');o.remove();toast(r.name+'が、'+ANI[a.k].name+'をなでにいく')};
   o.querySelector('.x').onclick=()=>{sfx('tap');o.remove()};o.onclick=e=>{if(e.target===o)o.remove()};document.body.appendChild(o)}
@@ -173,9 +173,9 @@ function aniSec(body,j,o){if(!isHut(o)||S.obj[j]!==o)return;const d=hutD(j),L=an
   const sec=el('<div class="sec"><h3></h3><div class="rows"></div></div>'),rows=sec.querySelector('.rows');sec.querySelector('h3').textContent='すんでいる生き物（'+L.length+'/'+hutCap(j)+'）';
   for(const a of L){
     const young=a.born!=null&&a.born+ANIGROW>day;
-    rows.appendChild(rowEl(ANI[a.k].name+(young?'の子ども':''),(a.fd===day?'えさを食べた':'おなかがすいている')+' ・ 楽しさ '+Math.round(aniFun(a))));
+    rows.appendChild(rowEl(ANI[a.k].name+(young?'の子ども':''),(a.fd===day?'えさを食べた':'おなかがすいている')+' ・ たのしさ '+Math.round(aniFun(a))));
   }
-  rows.appendChild(rowEl('住み心地',aniComfort(j)+' / 100 ・ 1日 '+aniYield(j)+'こ／成体'));
+  rows.appendChild(rowEl('住み心地',aniComfort(j)+' / 100 ・ 1日 '+aniYield(j)+'こ／おとな'));
 
   rows.appendChild(rowEl('かこい',P?'かこいの中':'かこいがない'));
   rows.appendChild(rowEl('えさ',(d.feed||0)+'こ'));rows.appendChild(rowEl('水',d.wd===day?'もらった':'まだ'));

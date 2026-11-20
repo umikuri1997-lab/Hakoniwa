@@ -8,7 +8,7 @@ const FISHI={
 const FISHK=Object.keys(FISHI),FISHBASE={0:{pond:'funa',river:'nijimasu'},1:{pond:'akahara',river:'iwana',onsen:'yuami'}};
 const FISHAT={river:'川',pond:'池',onsen:'温泉'},FISHTM={any:'いつでも',day:'昼',eve:'夕方',night:'夜'};
 const isFish=k=>!!FOODS[k]&&!!FOODS[k].fish;
-const fishWhen=k=>{const f=FISHI[k];if(!f)return '';return FISHAT[f.at]+'・'+(f.rain==='only'?'雨の日':FISHTM[f.tm]+(f.rain==='day'?'（雨の日は昼も）':''))};
+const fishWhen=k=>{const f=FISHI[k];if(!f)return '';return FISHAT[f.at]+'・'+(f.rain==='only'?'雨の日':FISHTM[f.tm]+(f.rain==='day'?'・雨の日の昼':''))};
 let WKM=null,WKS=null;
 function waterKind(w){/* 水のマス w は、川・池・温泉のどれか（水がかわったら作りなおす） */if(w<0||S.ground[w]!==1)return 'pond';if(typeof hotW==='function'&&hotW(w))return 'onsen';
   if(WKS!==S||!WKM||WKM.n!==S.ground.length||WKM.h!==fishWaterHash()){WKS=S;WKM={n:S.ground.length,h:fishWaterHash(),k:new Uint8Array(W*H)}}

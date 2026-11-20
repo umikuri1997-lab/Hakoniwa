@@ -180,11 +180,11 @@ const PROF=[
   [GOD,'おお、いいところを見つけたのう！'],
   [GOD,'ここは自然の力が弱くて、せいれいがなかなか生まれん土地なんじゃ。'],
   [GOD,'そのかわり、災いもほとんど起きん。'],
-  [GOD,'つまり、のんびり暮らすにはぴったりというわけじゃな！'],
-  [GOD,'まあ、最初はちと寂しいかもしれんが……。'],
+  [GOD,'つまり、のんびりくらすにはぴったりというわけじゃな！'],
+  [GOD,'まあ、最初はちとさみしいかもしれんが……。'],
   [GOD,'せっかくじゃ！ ここにおヌシだけの村をつくってみんか？'],
   [GOD,'わしも楽しみにしとるぞ！']];
-function INTROFL(){return [[FA(),'#surprise|わあ、守り神さまだ！ ぼく、'+FA()+'！ この土地で、ひっそり暮らしてたんだ！'],[FB(),'#surprise|ふわぁ…。'+FB()+'#joy|だよぉ。ふたりきりだったから、うれしいねぇ。'],[GOD,'この土地にも、おヌシの力を集める場所がいるのう。あそこの古い神殿を直せば、わしの居場所にもなる。']]}
+function INTROFL(){return [[FA(),'#surprise|わあ、守り神さまだ！ ぼく、'+FA()+'！ この土地で、ひっそりくらしてたんだ！'],[FB(),'#surprise|ふわぁ…。'+FB()+'#joy|だよぉ。ふたりきりだったから、うれしいねぇ。'],[GOD,'この土地にも、おヌシの力を集める場所がいるのう。あそこの古い神殿を直せば、わしの居場所にもなる。']]}
 const TOYS4=['swing','sandbox','seesaw','slide'];/* 遊び道具（どれでもよい） */
 const LIGHTQ=['torch','lamp','campfire','lantern','candle','flamp','toro','takeakari','andon','yomawari','watchlight'];/* watchlight：あかりのついた見張り台（Lv5〜。recount で数える） *//* クエストで数える「あかり」（どれでもよい） */
 const DECOQ=['hedge','birdbath','parasol','arch','signpost','monstera','jar','rockart','vane','kamizo','shishiodoshi','noren'];/* クエストで数える「かざり」（どれでもよい） */
@@ -199,15 +199,15 @@ const QUESTSF=[
    get story(){return [[FA(),'花も、食卓も、遊び道具もある！ 好きなものだらけ！'],[FA(),'ねえ'+FB()+'、ふたりのころ、いっしょに見つけた花、おぼえてる？'],[FB(),'おぼえてるよぉ。あれが、この村のさいしょの花だったねぇ。']]}},
   {id:'ep3',text:'第3話 遠くからのお客さん：せいれいを4人に',check:()=>S.res.length>=4,prog:()=>'せいれい '+Math.min(4,S.res.length)+'/4',how:'花や家具で属性の力をため、朝に神殿の「！」から呼ぶ',
    talk:{who:GOD,when:()=>true,lines:[[GOD,'この村も、ちょっとずつにぎやかになってきたのう。'],[GOD,'なかまがふえたら、遠くからお客さんが来るかもしれんぞ？']]},
-   get story(){const ids=['hedge'].filter(id=>recipeKnown(id)),gift=ids.length?'草原で見つけたかざりを、おみやげに持ってきたよ！ よかったら使ってね！':'シロツメクサのたねを、おみやげに持ってきたよ！ よかったら植えてね！';return [[POKO,'#wave|こんにちはー！ ぼく、はじまりの草原から来たフタバ！'],[POKO,'#surprise|守り神さまの新しい村、見に来ちゃった！ わあ、すてきなところだね！'],[FA(),'#surprise|わあ、お客さんだ！ いらっしゃい！'],[POKO,'草原にはね、花がいっぱいの広場があるんだ！ '+gift],[GOD,'遠くの友だちが訪ねてくる村は、いい村になってきた証拠じゃよ。']]},get gives(){const items={};for(const[id,n]of[['hedge',3]])if(recipeKnown(id))items[id]=n;if(!Object.keys(items).length)items.clover=5;return{items}}},
+   get story(){const ids=['hedge'].filter(id=>recipeKnown(id)),gift=ids.length?'草原で見つけたかざりを、おみやげに持ってきたよ！ よかったら使ってね！':'シロツメクサのたねを、おみやげに持ってきたよ！ よかったら植えてね！';return [[POKO,'#wave|こんにちはー！ ぼく、はじまりの草原から来たフタバ！'],[POKO,'#surprise|守り神さまの新しい村、見に来ちゃった！ わあ、すてきなところだね！'],[FA(),'#surprise|わあ、お客さんだ！ いらっしゃい！'],[POKO,'草原にはね、花がいっぱいの広場があるんだ！ '+gift],[GOD,'遠くの友だちが訪ねてくる村は、いい村になってきたしるしじゃよ。']]},get gives(){const items={};for(const[id,n]of[['hedge',3]])if(recipeKnown(id))items[id]=n;if(!Object.keys(items).length)items.clover=5;return{items}}},
   {id:'ep4',text:'第4話 ここが好き！：噴水の広場',check:()=>cnt('fountain')>=1,prog:()=>'噴水 '+Math.min(1,cnt('fountain'))+'/1',how:'「おく」から噴水をえらび、みんなで見られる所に建てる',
-   talk:{get who(){return FB()},when:()=>true,get lines(){return [[FB(),'みんなで、のんびりできる広場があったらいいねぇ。'],[FA(),'#joy|水がきらきらして、みんなで眺められたらうれしいな！'],['@idea']]}},
+   talk:{get who(){return FB()},when:()=>true,get lines(){return [[FB(),'みんなで、のんびりできる広場があったらいいねぇ。'],[FA(),'#joy|水がきらきらして、みんなでながめられたらうれしいな！'],['@idea']]}},
    get story(){return [[FA(),'ここ、だーいすき！'],[FB(),'水の音を聞きながら、みんなでのんびりできるねぇ。'],[FA(),'#nod|うん！ ここで、ゆっくりしていこう！'],[FB(),'この広場、大切な場所になりそうだねぇ。']]}},
   {id:'ep5',text:'最終話 みんなのふるさと：たき火とせいれい6人',check:()=>cnt('campfire')>=1&&S.res.length>=6,prog:()=>'たき火 '+Math.min(1,cnt('campfire'))+'/1・せいれい '+Math.min(6,S.res.length)+'/6',how:'火のせいれいに、たき火を作ってもらう。なかまを6人に',
-   talk:{get who(){return FA()},when:()=>true,get lines(){return [[FA(),'ねえ、村のお祭りしようよ！'],[FB(),'夜もあったかいところで、みんなで踊れたら、楽しいだろうねぇ。'],[GOD,'#nod|うむ！ なかまがそろったら、盛大にやるとしようかの！'],['@idea']]}},
+   talk:{get who(){return FA()},when:()=>true,get lines(){return [[FA(),'ねえ、村のおまつりしようよ！'],[FB(),'夜もあったかいところで、みんなでおどれたら、楽しいだろうねぇ。'],[GOD,'#nod|うむ！ なかまがそろったら、にぎやかにやるとしようかの！'],['@idea']]}},
    get story(){return [[GOD,'おお、にぎやかじゃのう！ ほれ、もっと踊らんか！'],[FA(),'#think|……ねえ'+FB()+'。ふたりだけだったころ、おぼえてる？'],[FB(),'#cry hush|おぼえてるよぉ。しずかで、ちょっとさみしくて……でも、きみがいたから、へいきだったねぇ。'],[FA(),'いまは、こんなにいっぱい！ 守り神さまが来てくれたからだね。'],[FB(),'ここが、みんなの帰る場所になったんだねぇ。'],[FA(),'ここが、ぼくたちのふるさとだね！'],[GOD,'物語はひと区切りじゃが、村づくりはまだまだこれからじゃぞ！']]},gives:{fest:true}},
 ];
-function freeFest(){for(const r of S.res){r.fun=100;spawnFX(r.x-.5,r.y-.6,pick(['#ffd84a','#ff9cc0','#9ff0ff','#b8ff9a']))}startClap();setTimeout(endClap,3200);S.cleared=true;S.clearDay=dayNo();memo('ball','村のお祭りをひらいた');omo('fest');logEv('村のお祭りをひらいた');toast('物語はひと区切り！ 村づくりはつづくよ','good')}
+function freeFest(){for(const r of S.res){r.fun=100;spawnFX(r.x-.5,r.y-.6,pick(['#ffd84a','#ff9cc0','#9ff0ff','#b8ff9a']))}startClap();setTimeout(endClap,3200);S.cleared=true;S.clearDay=dayNo();memo('ball','村のおまつりをひらいた');omo('fest');logEv('村のおまつりをひらいた');toast('物語はひと区切り！ 村づくりはつづくよ','good')}
 function freeSetup(s){const used=new Set(['フタバ','ノドカ']);const nm=()=>{let n;do{n=NAMES[s.nameIdx%NAMES.length];s.nameIdx++}while(used.has(n));used.add(n);return n};
   const a=nm(),b=nm();s.res=[mkRes(s,a,'wood',CX+.5,CY-1.5,'swing'),mkRes(s,b,'earth',CX+1.5,CY-1.5,'chat')];s.fk=[a,b];s.keyN={wood:a,earth:b};
   s.flags.minaCame=true;s.flags.sumTold=true;s.flags.tapped=true;s.free=1;
