@@ -67,7 +67,7 @@ function chipImgs(ch,id){if(!ch._im)ch._im=ch.f.map(r=>atlasFrame(r,id));return 
 const PARTMV={/* 動く部品の動き：rot＝回る角度、sx・sy＝のびちぢみ（どれも支点のまわり） */
   swing:(i,now)=>{if(ICON)return{};/* アイコンは、マップと同じ形 */const d=i!=null&&S&&toyUsers(i).length?swAng(i,now):0;return rotAt(i)===1?{rot:d*SWROT}:{sx:1+d*.04,sy:1+d*.3}},/* 縦のブランコは、横から見るので、支点のまわりに左右へゆれる */
   seesaw:(i,now)=>({rot:!ICON&&i!=null&&S?ssAng(i,now||0):0}),
-  windmill:(i,now)=>({rot:ICON?0:(now||performance.now())/1000*.9}),
+  windmill:(i,now)=>({rot:ICON||WD===WIND&&!(i!=null&&windNear(i,2))?0:(now||performance.now())/1000*.9}),/* 風のステージ：風があたっているときだけ、まわる */
   suisha:(i,now)=>({rot:ICON?0:(now||performance.now())/1000*.7}),/* 水車の輪は、ずっとまわる */
   vane:(i,now)=>({sx:ICON?1:Math.cos(Math.sin((now||performance.now())/1300+(i||0))*.6)})};
 function partImg(p,id){if(!p._im)p._im=atlasFrame(p.f[0],id);return p._im}
@@ -159,7 +159,8 @@ function drawObj(c,id,x,y,i,g,now){
   if(id==='statueb'){const ch=window.CHIPS&&CHIPS.statueb;if(ch)drawChip(c,ch,id,x,y,now,i);return}/* こわれた神殿 */
   if(id==='fogbox'||id==='nushiprint'||id==='fogspring'){drawFogObj(c,id,x,y,i,now);return}
   if(id==='campfire'&&!ICON&&i!=null&&campOut(i)){const ch=window.CHIPS&&CHIPS['campfire#off'];if(ch&&drawChip(c,ch,id,x,y,now,i))return}/* 雨で消えたたき火 */
-  if(typeof KDIDS!=='undefined'&&KDIDS.has(id)){drawKd(c,id,x,y,i,g,now);return}/* もりのこだまの見つかる所（kodama.js） */
+  if(typeof KDIDS!=='undefined'&&KDIDS.has(id)){drawKd(c,id,x,y,i,g,now);return}
+  if(typeof WINDIDS!=='undefined'&&WINDIDS.has(id)){drawWindObj(c,id,x,y,i,g,now);return}/* 風穴・かざみ・古い風車（wind.js） *//* もりのこだまの見つかる所（kodama.js） */
   if(id==='kagenest'){drawNest(c,x,y,now||performance.now());return}if(id==='leafwall'){drawLeafWall(c,x,y,i,now);return}if(id==='pit'){drawPit(c,x,y,i);return}/* かげの巣・葉のかべ（defense.js、コードのドット絵） *//* 霧の中で見つける物 */
   if(VEINS[id]){drawVein(c,id,x,y,i);return}/* 鉱脈 */
   if(id==='tower'&&WD===0){drawStoryTree(c,x,y,i,now,ICON);return;}
@@ -307,6 +308,7 @@ function drawObj(c,id,x,y,i,g,now){
   case'sprout':{if(!ICON&&S&&i!=null&&S.ground[i]!==1&&S.dyn[i]&&S.dyn[i].userMound){const bob=Math.sin((now||0)/600+i)*.6;if(chipOK('mound#0')&&chipOK('seed#s')){drawChip(c,CHIPS['mound#'+Math.min(2,(hash(i*13+5)*3)|0)],'mound',x+16,y+28,0);drawChip(c,CHIPS['seed#s'],'seed',x+16,y+23+Math.round(bob),0);break}plantMound(c,x,y,i);drawSeedShape(c,x+16,y+23+bob,.48);break}if(S&&i!=null&&S.ground[i]===1&&!ICON){const b=Math.sin((now||0)/600+i)*1.5;if(chipOK('seedring')&&chipOK('seed')){drawChip(c,CHIPS.seedring,'seed',x+16,y+21,0);drawChip(c,CHIPS.seed,'seed',x+16,y+17+Math.round(b),0);break}c.fillStyle='rgba(255,255,255,.35)';c.beginPath();c.ellipse(x+16,y+21,9,3,0,0,7);c.fill();drawSeedShape(c,x+16,y+17+b,1);break}/* 池に植える予定：種がぷかぷか */if(chipOK('sprout#plan'))drawChip(c,CHIPS['sprout#plan'],'sprout',x+16,y+22,0);else{c.fillStyle='rgba(120,90,50,.6)';c.beginPath();c.ellipse(x+16,y+22,9,5,0,0,7);c.fill();c.strokeStyle='#5fbf4f';c.lineWidth=2;c.beginPath();c.moveTo(x+16,y+21);c.lineTo(x+16,y+14);c.stroke();circ(c,x+13,y+14,3,'#7fd36b');circ(c,x+19,y+13,3,'#7fd36b')}
     c.strokeStyle='rgba(255,240,180,.8)';c.setLineDash([3,3]);c.lineWidth=1.5;c.strokeRect(x+3,y+3,TS-6,TS-6);c.setLineDash([]);break}
   case'site':{const d=ICON?null:S.dyn[i];
+    if(d&&d.hole){drawWindObj(c,'kazaanab',x,y,i,g,now);const p=Math.min(1,d.p/d.need),bw=32,bx=x+16-bw/2,by=y-6;c.fillStyle='rgba(0,0,0,.5)';rr(c,bx-1,by,bw+2,6,3);c.fillStyle='#ecdcbc';rr(c,bx,by+1,bw*p,4,2);break}/* 風穴の石をどけている */
     if(d&&d.ruin){const ch=window.CHIPS&&CHIPS.statueb;if(ch)drawChip(c,ch,'statueb',x,y,now,i);const p=Math.min(1,d.p/d.need),bw=64,bx=x+16-bw/2,by=y-92;c.fillStyle='rgba(0,0,0,.5)';rr(c,bx-1,by,bw+2,6,3);c.fillStyle='#ecdcbc';rr(c,bx,by+1,bw*p,4,2);break}/* こわれた神殿を直している：絵はこわれた神殿のまま、上に進みぐあい */
     {const k=siteKey(d&&d.build),ch=chipOK(k)&&CHIPS[k];if(ch){/* 足場：建物の大きさに合わせた、3Dから写した絵（見た目だけ。マスの判定は変えない） */drawChip(c,ch,k,x,y,now,i);siteGhost(c,d,x,y,now,i);if(d){const p=Math.min(1,d.p/d.need),cx=x+(ch.ax+ch.w/2)/2,bw=Math.min(ch.w/2-8,64),bx=cx-bw/2,by=y+ch.ay/2-10;c.fillStyle='rgba(0,0,0,.5)';rr(c,bx-1,by,bw+2,6,3);c.fillStyle='#ecdcbc';rr(c,bx,by+1,bw*p,4,2)}break}}
     shadow(c,x+16,y+29,14,3);c.fillStyle='#c9a46a';c.fillRect(x+3,y+20,26,8);c.strokeStyle='#8a5a33';c.lineWidth=2.5;c.beginPath();c.moveTo(x+5,y+28);c.lineTo(x+5,y);c.moveTo(x+27,y+28);c.lineTo(x+27,y);c.moveTo(x+5,y+4);c.lineTo(x+27,y+4);c.moveTo(x+5,y+14);c.lineTo(x+27,y+14);c.moveTo(x+5,y+4);c.lineTo(x+27,y+14);c.stroke();

@@ -376,7 +376,7 @@ function render(now){RFN++;hdFrame();
     for(let cy=cy0;cy<=cy1;cy++)for(let cx=cx0;cx<=cx1;cx++){const q=gq(cx,cy),need=GLOD?(!q.l||q.st):(!q.f||q.st);if(need&&(fresh||built===0||GRD.bt<GBUD)){gbuild(cx,cy,q);built++}q.u=RFN;const im=GLOD?q.l:(q.f||q.l);if(!im)continue;/* まだ作っていない区画は、地面の色のまま（つぎのコマで作る） */
       const ox=cx*GPX,oy=cy*GPX,w=Math.min(GPX,W*TS-ox),h=Math.min(GPX,H*TS-oy),a=SXg(ox),b=SYg(oy),kx=(SXg(ox+w)-a)/w,ky=(SYg(oy+h)-b)/h;ctx.drawImage(im,a-GPAD*kx,b-GPAD*ky,(w+2*GPAD)*kx,(h+2*GPAD)*ky)}GRD.any=true}/* 絵は切りとらず、のりしろ（GPAD）ごと描いて、となりの区画にかさねる *//* 区画は、画面のドットのさかいに合わせておく（さかいめに線が出ないように） */
   const x0=Math.max(0,Math.floor(cam.x/TS)-1),y0=Math.max(0,Math.floor(cam.y/TS)-2),x1=Math.min(W,Math.ceil((cam.x+VW/cam.z)/TS)+1),y1=Math.min(H,Math.ceil((cam.y+VH/cam.z)/TS)+2);
-  waterShimmer(now,x0,y0,x1,y1);drawFords(x0,y0,x1,y1);drawRugsLive(x0,y0,x1,y1);feelGround(now,x0,y0,x1,y1);if(typeof cupGround==='function')cupGround(performance.now());/* 大会の表彰台（cup.js） *//* 地面にのこる季節・水たまり・足もとの反応（feel.js） */
+  waterShimmer(now,x0,y0,x1,y1);drawFords(x0,y0,x1,y1);drawWindGround(ctx,x0,y0,x1,y1,now);/* 風：雲の橋と風のすじ */drawRugsLive(x0,y0,x1,y1);feelGround(now,x0,y0,x1,y1);if(typeof cupGround==='function')cupGround(performance.now());/* 大会の表彰台（cup.js） *//* 地面にのこる季節・水たまり・足もとの反応（feel.js） */
   drawSacredRoot(now);drawFieldStory(now);if(typeof drawTreasure==='function')drawTreasure(now);
   for(const[j,t0]of pops){const a=1-(now-t0)/350;if(a<=0){pops.delete(j);continue}if(a>1)continue;/* 順に着地するのを待っている（juicePlace） */ctx.fillStyle='rgba(255,255,240,'+a*.6+')';const s=4*(1-a);rr(ctx,(j%W)*TS-s,((j/W)|0)*TS-s,TS+s*2,TS+s*2,6)}
   for(const o of S.orders||[])if(o.cs!=null&&S.obj[o.cs]!=='wbench'){const x=o.cs%W,y=(o.cs/W)|0;if(x>=x0&&x<=x1&&y>=y0&&y<=y1){const st=typeof wbworkStage==='function'?wbworkStage(o):-1,wc=st>=0&&window.CHIPS&&CHIPS['wbwork#'+st];if(wc)drawChip(ctx,wc,'wbwork',x*TS,y*TS+WBWORKZ-hiAt(o.cs)*LIFT,now)}}/* 作業台を置けなかった依頼：素材がそろったら、作っている形を地面に（天板の上にのせる絵を、WBWORKZ だけ下げる） */
@@ -460,7 +460,7 @@ function render(now){RFN++;hdFrame();
   if(pending&&pending.kind==='one'&&TERRA.has(pending.id)){/* けずる・もる：えらんだマスの枠は、段差の絵（上の面）より手前に。かくれて見えないのをふせぐ */const px=pending.x*TS,py=pending.y*TS-hiAt(pending.y*W+pending.x)*LIFT;ctx.fillStyle=pending.ok?'rgba(255,220,90,.35)':'rgba(255,90,90,.4)';ctx.fillRect(px,py,TS,TS);ctx.strokeStyle=pending.ok?'rgba(255,240,140,1)':'rgba(255,110,110,1)';ctx.lineWidth=3;ctx.setLineDash([6,4]);ctx.strokeRect(px+1.5,py+1.5,TS-3,TS-3);ctx.setLineDash([])}
   // 置く前のプレビューは、家の壁や屋根より手前に描く
   if(pending&&pending.kind==='one'){const px=pending.x*TS,py=pending.y*TS-hiAt(pending.y*W+pending.x)*LIFT,TP=pending.id==='statue'?[[-1,0,'obox'],[0,0,'statue'],[1,0,'board'],[0,1,'altar']]:[[0,0,pending.id]];ctx.save();ctx.globalAlpha=.6+Math.sin(now/250)*.15;const rch=ROTS[pending.id]&&PLROTS[pending.id]&&chipOf(pending.id,null,PLROTS[pending.id]);if(pending.id==='wbench'){/* 作業台は、材料置き場（素材台）もいっしょに見せる（wbCells と同じならび） */const r=PLROTS.wbench||0,d=r%2?[0,1]:[1,0],B=r>=2?d:[0,0],Y=r>=2?[0,0]:d,yc=window.CHIPS&&CHIPS['matyard#0'];drawObj(ctx,'wbench',px+B[0]*TS,py+B[1]*TS,null,100,now);if(yc)drawChip(ctx,yc,'matyard',px+Y[0]*TS,py+Y[1]*TS,now)}else if(rch)drawChip(ctx,rch,pending.id,px,py,now);/* 向きをかえられる物は、えらんだ向きの絵だけを見せる（元の向きの絵は出さない） */else for(const[dx,dy,id2]of TP)drawObj(ctx,id2,px+dx*TS,py+dy*TS,pending.y*W+pending.x+dx+dy*W,100,now);ctx.restore()}
-  if(pending&&pending.kind==='one'&&FRONTS.has(pending.id)){/* すわる家具は、置くときに正面（すわった子が向く方）を矢印で出す */
+  if(pending&&pending.kind==='one'&&(FRONTS.has(pending.id)||pending.id==='kazami')){/* かざみは、風をまげる向き *//* すわる家具は、置くときに正面（すわった子が向く方）を矢印で出す */
     const id=pending.id,rot=PLROTS[id]||0,z=szR(id,rot)||[1,1],w=z[0]*TS,h=z[1]*TS;
     const d=[[0,1],[1,0],[0,-1],[-1,0]][rot];
     const bob=Math.sin(now/220)*2,cx=pending.x*TS+w/2+d[0]*(w/2+9+bob),cy=pending.y*TS+h/2+d[1]*(h/2+9+bob);
@@ -498,7 +498,7 @@ function render(now){RFN++;hdFrame();
   if(!PHSNAP)for(const f of floats){ctx.globalAlpha=Math.min(1,f.life*2);/* 村の写真（photo.js）には、数の文字を写さない */const yy=(f.y-(1-f.life)*1.2)*TS;ctx.lineJoin='round';ctx.lineWidth=3;ctx.strokeStyle='rgba(176,138,100,.9)';{const fi=BUBI[bubKey(f.text)]?null:emoImg(f.text);if(BUBI[bubKey(f.text)])bubIcon(ctx,f.text,f.x*TS,yy-6,1.5);else if(fi){const ih=20,iw=ih*fi.width/fi.height;ctx.drawImage(fi,f.x*TS-iw/2,yy-ih+4,iw,ih)}else{ctx.strokeText(f.text,f.x*TS,yy);ctx.fillStyle='#fff3d6';ctx.fillText(f.text,f.x*TS,yy)}}}/* 文字はぜんぶクリーム色 *//* 文字のふちどりはうすい茶色 */
   ctx.globalAlpha=1;ctx.textAlign='start';
   feelWarm(ctx,x0,y0,x1,y1);feelAir(now,x0,y0,x1,y1);feelClouds(ctx,now,darkness());/* 冬の家の中のぬくもり・朝もや・白い息・かげろう・雨のはね・雲のかげ（feel.js） */
-  drawFog(ctx,x0,y0,x1,y1,now);/* 霧（夜の暗さより下） */drawFogHints(ctx,x0,y0,x1,y1,now);/* 霧の中の手がかり */drawPrintMarks(now,true);/* 霧の中の足あとの印は、霧の上 */
+  drawFog(ctx,x0,y0,x1,y1,now);/* 霧（夜の暗さより下） */drawWindCover(ctx,x0,y0,x1,y1,now);/* 風：雲にしずんだ島 */drawFogHints(ctx,x0,y0,x1,y1,now);/* 霧の中の手がかり */drawPrintMarks(now,true);/* 霧の中の足あとの印は、霧の上 */
   const dk=darkness();
   ctx.setTransform(dpr,0,0,dpr,0,0);
   if(BOSSEVE){const h=hour(),a=Math.min(1,Math.max(0,(h-15)/2))*.16;if(a>0){ctx.fillStyle='rgba(110,30,70,'+a+')';ctx.fillRect(0,0,VW,VH)}}/* オオカゲが来る日の夕方：空があやしい色に */

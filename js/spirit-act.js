@@ -7,7 +7,7 @@ function roadSearch(sx,sy,block){
   const N=W*H,dist=new Int16Array(N).fill(-1),prev=new Int32Array(N).fill(-1),cost=new Int32Array(N).fill(-1),B=[];
   const s=clamp(sy,0,H-1)*W+clamp(sx,0,W-1);cost[s]=0;dist[s]=0;B[0]=[s];
   for(let c=0;c<B.length;c++){const L=B[c];if(!L)continue;for(const i of L){if(cost[i]!==c)continue;const x=i%W,y=(i/W)|0;
-    for(const[dx,dy]of DIRS){const nx=x+dx,ny=y+dy;if(nx<0||ny<0||nx>=W||ny>=H)continue;const j=ny*W+nx;if(!walk(j)&&!(S.ground[i]===1&&S.ground[j]===1&&!solidOf(j))||block&&block.has(j)||cliff2(i,j))continue;/* 水の中にいるときは、水の中も歩ける */
+    for(const[dx,dy]of DIRS){const nx=x+dx,ny=y+dy;if(nx<0||ny<0||nx>=W||ny>=H)continue;const j=ny*W+nx;if(!walk(j)&&!(waterJ(i)&&waterJ(j)&&!solidOf(j))||block&&block.has(j)||cliff2(i,j))continue;/* 水の中にいるときは、水の中も歩ける（雲の海は歩けない） */
       const fl=S.floor[j],nc=c+(FCOST[fl]||6)*(jumpEdge(i,j)?5:1)*(S.ground[j]===2?2:1)*(onLadder(i,j)?2:1);/* せいれいは、段差をよじのぼると5倍の手間（階段・坂をえらびやすい） *//* 段差を飛ぶのは、歩くより3倍の手間 */if(cost[j]>=0&&cost[j]<=nc)continue;
       cost[j]=nc;dist[j]=dist[i]+1;prev[j]=i;(B[nc]||(B[nc]=[])).push(j)}}}
   return {dist,prev};

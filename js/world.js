@@ -144,6 +144,7 @@ function genWorld(s,w){
     const fr=k=>!s.obj[k]&&s.ground[k]!==1&&!s.floor[k];let p=-1;for(let r=0;r<8&&p<0;r++)for(let dy=-r;dy<=r&&p<0;dy++)for(let dx=-r;dx<=r;dx++){const k=(CY+1+dy)*W+CX+3+dx;if(fr(k)&&fr(k-1)&&fr(k+1)){p=k;break}}if(p>=0)s.obj[p]='crate'}
   }
   if(V){const put=id=>{let best=-1,bd=1e9;for(let y=CY-7;y<CY;y++)for(let x=CX-6;x<CX;x++){const j=y*W+x;if(s.ground[j]===1||s.obj[j]||s.floor[j])continue;if([j-1,j+1,j-W,j+W,j-W-1,j-W+1,j+W-1,j+W+1].some(k=>s.ground[k]===1||s.obj[k]==='crate'))continue;const d=Math.hypot(x+.5-(CX-3),y+.5-(CY-3.5));if(d<bd){bd=d;best=j}}if(best>=0)s.obj[best]=id};{const j=(CY+4)*W+CX-8;s.obj[j]='crate';s.floor[j]='floor'}put('crate');for(let y=CY-13;y<CY-8;y++){const j=y*W+CX;if(!s.obj[j]&&s.ground[j]!==1)s.floor[j]='path'}st2Place(s)}/* 火山のふもと：木箱は古い家の中と、村の北西に（コワイノは南から来るので） */
+  if(K)windGen(s,R);/* 風穴と古い風車（wind.js） */
   genLand(s,w)/* 川と段差（いちばん最後：ほかの物をおいたあと） */;/* 火山の鉱脈は、お話が進むと目をさます（oreWakeTick） */
 }
 
@@ -286,7 +287,7 @@ const anc=j=>{if(S.obj[j]==='part'||(S.obj[j]==='site2'&&S.ref[j]!=null))return 
 const typeAt=j=>S.obj[anc(j)];
 
 const solidOf=j=>{const o=typeAt(j);return !!(o&&BL[o]&&BL[o].solid)};
-const FRONTS=new Set(['chair','achair','sofa1','bench']);/* 正面のある家具（置くときに矢印を出す） */const ROTS={chair:4,achair:4,sofa1:4,bench:4,bed:2,yorubed:2,sandbox:2,arch:2,ltable:2,bathtub:2,slide:1,seesaw:1,swing:2,signpost:1,vane:1,oven:4,stairs_wood:5,stairs_stone:5,stairs_brick:5,slope_earth:5,cabinet:3,shelf1:3,shelf2:3,makidana:3,crate:4,wbench:4,cooktable:4,sink:4,loom:4,mill:4,smelter:4};/* 向きをかえられる家具。4：前・右・後ろ・左　3：前・右・左（右は「id>1」の絵、左はその反転）　2：横・縦　1：左右反転だけ */
+const FRONTS=new Set(['chair','achair','sofa1','bench']);/* 正面のある家具（置くときに矢印を出す） */const ROTS={chair:4,achair:4,sofa1:4,bench:4,bed:2,yorubed:2,sandbox:2,arch:2,ltable:2,bathtub:2,slide:1,seesaw:1,swing:2,signpost:1,vane:1,kazami:4,oven:4,stairs_wood:5,stairs_stone:5,stairs_brick:5,slope_earth:5,cabinet:3,shelf1:3,shelf2:3,makidana:3,crate:4,wbench:4,cooktable:4,sink:4,loom:4,mill:4,smelter:4};/* 向きをかえられる家具。4：前・右・後ろ・左　3：前・右・左（右は「id>1」の絵、左はその反転）　2：横・縦　1：左右反転だけ */
 const BEDHX=31,BEDHY=-1,BEDVY=8.5,BEDHS=.85;/* 横のベッド：寝る子の足もと（x,y）。たてのベッド：寝る子の足もとのy。BEDHS：横向きで寝るときの、せいれいの横はば。ふとんは重ねない（ベッドの上に寝る子をかく） */
 const ROTN=id=>ROTS[id]===5?4:ROTS[id]===4?4:ROTS[id]===3?3:ROTS[id]?2:1,ROTL={5:[,'手前へ','右へ','左へ','奥へ'],4:['前','右','後ろ','左'],3:['前','右','左'],2:['横','縦'],1:['そのまま','反転']};/* 5：階段の下りる向き（S.rot は 1手前 2右 3左 4奥。0は古いセーブだけ） */
 let PLROTS={};/* 置くときにえらんでいる向き（家具ごと） */
@@ -304,13 +305,14 @@ function workCells(j,id,rot){/* j：左上のマス。id・rot をわたすと�
 const workOK=j=>workCells(j).some(k=>walk(k));
 let WORKBLOCKED=[];function workBlockedList(){/* 作業するマスが、どれもふさがっている家具（流し台はのぞく）の左上のマス */const L=[];for(let j=0;j<W*H;j++){const o=S.obj[j];if(o&&o!=='sink'&&WORKF.has(o)&&!workOK(j))L.push(j)}return L}/* 作業するマスが1つでも空いているか */
 function workStand(G,j){/* 作業するマスのうち、いちばん近い行ける所（なければ -1） */let b=-1,bd=1e9;for(const k of workCells(j)){const d=G.dist[k];if(d<0||!walk(k)||d>=bd)continue;b=k;bd=d}return b}
-function walk(j){if(j<0||j>=W*H||S.ground[j]===1&&S.obj[j]!=='bridge'||STUMPB.has(j)||j===GODJ||S.fog&&fogAt(j))return false;/* 霧の中は歩かない *//* 切り株の上は歩かない */return !solidOf(j)}/* 橋の上は歩ける。浅瀬（ground 2）は歩ける（ゆっくり） */
+function walk(j){if(j<0||j>=W*H||S.ground[j]===1&&S.obj[j]!=='bridge'&&!windBr(j)||STUMPB.has(j)||j===GODJ||S.fog&&fogAt(j))return false;/* 霧の中は歩かない *//* 切り株の上は歩かない */return !solidOf(j)}/* 橋の上は歩ける。浅瀬（ground 2）は歩ける（ゆっくり） */
 /* 雲の海（風のステージ）：マップのはしにつながる ground 1 のマス。歩けない・置けない・橋はかけられるのは水と同じ。水としてのふるまい（水をくむ・つり・水あび・水べの生き物など）は waterJ で見て、雲の海ではしない */
 let SKYS=null,SKYM=null;
-function skyM(){if(WD!==WIND||!S)return null;if(SKYS===S)return SKYM;const g=S.ground,M=new Uint8Array(W*H),Q=[];const put=j=>{if(g[j]===1&&!M[j]){M[j]=1;Q.push(j)}};for(let x=0;x<W;x++){put(x);put((H-1)*W+x)}for(let y=0;y<H;y++){put(y*W);put(y*W+W-1)}
-  while(Q.length){const j=Q.pop(),x=j%W;if(x>0)put(j-1);if(x<W-1)put(j+1);if(j>=W)put(j-W);if(j<W*(H-1))put(j+W)}SKYS=S;SKYM=M;return M}
+function skyOf(g){const M=new Uint8Array(W*H),Q=[];const put=j=>{if(g[j]===1&&!M[j]){M[j]=1;Q.push(j)}};for(let x=0;x<W;x++){put(x);put((H-1)*W+x)}for(let y=0;y<H;y++){put(y*W);put(y*W+W-1)}
+  while(Q.length){const j=Q.pop(),x=j%W;if(x>0)put(j-1);if(x<W-1)put(j+1);if(j>=W)put(j-W);if(j<W*(H-1))put(j+W)}return M}
+function skyM(){if(WD!==WIND||!S)return null;if(SKYS===S)return SKYM;SKYS=S;SKYM=skyOf(S.ground);return SKYM}
 const skyJ=j=>{const M=skyM();return !!M&&M[j]===1},waterJ=j=>S.ground[j]===1&&!skyJ(j);/* waterJ：本物の水（池・川） */
-const wetJ=j=>S.ground[j]===1&&S.obj[j]!=='bridge'||!!S.fog&&fogAt(j);/* 歩けない水 */
+const wetJ=j=>S.ground[j]===1&&S.obj[j]!=='bridge'&&!windBr(j)||!!S.fog&&fogAt(j);/* 歩けない水 */
 const LIFT=26;/* 段差1だんの高さ（ドット）。高いマスの上の物は、これだけ上に描く */
 function hiAt(j){return S.hi?S.hi[j]|0:0}
 const SLOPES=new Set(['slope_earth']),STAIRS=new Set(['stairs_wood','stairs_stone','stairs_brick',...SLOPES]),/* 土は坂だけ、木・石・レンガは階段だけ */SDIR=[[0,1],[1,0],[0,-1],[-1,0]];/* 階段の向き：0下 1右 2上 3左（低いほう） */
