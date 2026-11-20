@@ -10,7 +10,7 @@ function checkQuest(){
   TALKW=null;if(S.qStory==null)QUESTCLEARW=null;finalCheck();
   if(NEWRES!=null||NEWQ.length)return;
   if(S.cleared){if(WD!==FREE)afterTick();return}
-  if(S.quest>=QUESTS.length)return;
+  if(S.quest>=QUESTS.length){if(S.qStory!=null&&$('#dialog').hidden){TALKW=storyWho(QUESTS[S.qStory]);QUESTCLEARW=TALKW;renderQuest()}return}/* さいごの目標のお礼の会話も出す（一覧のおわりで止めない） */
   const q=QUESTS[S.quest];
   if(q.id==='guest'&&S.qTalked&&!S.flags.guestDone&&!GUESTRUN&&!isNight()&&$('#dialog').hidden&&S.qStory==null)guestScene();
   if(S.flags.qPassed&&S.flags.qPassed[q.id]&&S.qStory==null){delete S.flags.qPassed[q.id];S.quest++;S.qTalked=false;return checkQuest()}/* 古いセーブで、ならびをかえる前にもうした目標は、とばす（migrateFarmFirst） */

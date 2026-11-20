@@ -284,8 +284,8 @@ const GOD='カミサマ',POKO='フタバ';
 const MINA='ノドカ';
 const HOMURA='ホムラ',SHIZUKU='シズク';
 const KEYS=[[POKO,MINA],[HOMURA,SHIZUKU]];KEYS[FREE]=[];const FIXK0={fire:'ホノ',water:'アオ',wind:'フウ'};/* ステージ1の火・水・風のキーキャラ（名前も見た目も固定） *//* ステージごとのキーキャラ（1人目・2人目） */
-const TOMORI='トモリ';KEYS[YAMI]=[TOMORI];/* 闇のステージ：光のせいれい（1人だけ） */
-const KEYEL={[TOMORI]:'light',[POKO]:'wood',[MINA]:'earth',[HOMURA]:'fire',[SHIZUKU]:'water'};
+const TOMORI='トモリ',HIIRO='ヒイロ';KEYS[YAMI]=[TOMORI,HIIRO];/* 闇のステージ：光のせいれい（1人だけ） */
+const KEYEL={[TOMORI]:'light',[HIIRO]:'fire',[POKO]:'wood',[MINA]:'earth',[HOMURA]:'fire',[SHIZUKU]:'water'};
 const LEAD=()=>KEYS[WD][0]||(WD===FREE?FA():GOD);
 const PROLOGUE=[
   ['？？？','#wave|……おーい、聞こえとるかの？ そうそう、おヌシじゃ。'],

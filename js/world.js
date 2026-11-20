@@ -37,7 +37,7 @@ function newState(w){w=w||0;
     res:[],enemies:[],pt:25,totalPt:0,food:0,fs:{},cseed:{imo:4},crops:{imo:true},mat:{wood:0,stone:0},regrow:[],t:w===0?15*60:w===YAMI?8*60:12*60,/* 草原は15時からはじまる */speed:1,
     unlocked:{floor:true,farm:true,[w===1?'misugaki':'fence']:true,[w===1?'bamboowall':'hwall']:true},bulk:false,stamps:false,quest:0,cleared:false,rain:false,seeds:[],nameIdx:2,introSeen:false,lastMorning:1,lastNight:0,subDone:{},drops:[],ani:[],shards:0,gotMat:{wood:0,stone:0},recipes:{},buried:[],nid:1,kills:0,deaths:0};
   s.world=w;genWorld(s,w);
-  if(w===YAMI){s.flags.minaCame=true}/* 闇のステージ：はじめは、だれもいない（yami.js の yamiBirth でトモリが生まれる）。2人目を待たずに、どの属性も呼べる */else if(w===1)s.res.push(mkRes(s,HOMURA,'fire',CX+.5,CY-1.5,'campfire'));else s.res.push(mkRes(s,'フタバ','wood',CX+.5,CY-1.5,'swing'));
+  if(w===YAMI){}/* 闇のステージ：はじめは、だれもいない（yami.js の yamiBirth でトモリが生まれる）。はじめに来るのは火のせいれいヒイロ（SECOND） */else if(w===1)s.res.push(mkRes(s,HOMURA,'fire',CX+.5,CY-1.5,'campfire'));else s.res.push(mkRes(s,'フタバ','wood',CX+.5,CY-1.5,'swing'));
   if(w===0)s.res[0].nap=true;/* 初回のマップ描画から眠っている */
   if(w===FREE)freeSetup(s);
   templeRuinPlace(s);/* こわれた神殿は、はじめからある（どのステージも） */
