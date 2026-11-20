@@ -284,7 +284,7 @@ function caveEnter(list,food,fl){if(CV||!list.length)return false;fl=clamp(fl|0,
   cam.z=clamp(cam.z,1.4,2.2);cvCamTo(1);for(const a of C.party)cvReveal(a.x,a.y-CVOY,cvSeeR());cvHudUpd();sfx('next');toast('洞窟の'+(fl+1)+'階に入った');return true}
 function cvBfsRing(tj,n){/* tj から近い順に、歩けるマスを n こ（氷の上は止まれないので、のぞく） */const out=[],seen=new Set([tj]),q=[tj];for(let h=0;h<q.length&&out.length<n;h++){const j=q[h];if(!(CV&&CV.ice&&CV.ice[j]))out.push(j);for(const[dx,dy]of DIRS){const a=cvX(j)+dx,b=cvY(j)+dy;if(a<0||b<0||a>=CVW||b>=CVH)continue;const k=cvJ(a,b);if(seen.has(k)||!cvWalk(k)||!cvStepOK(k,j))continue;seen.add(k);q.push(k)}}return out}
 function cvLootText(L){const t=[];for(const k in L.items)if(L.items[k])t.push(BL[k].name);for(const k in L.fos)if(L.fos[k])t.push(CVFOS[k]+' '+L.fos[k]+'こ');for(const k in L.mat)if(L.mat[k])t.push(MATN[k]+' '+L.mat[k]+'こ');if(L.fukuro)t.push('ふしぎなふくろ '+L.fukuro+'こ');if(L.mapPc)t.push('地図の切れはし '+L.mapPc+'こ');if(L.pt)t.push('パワー '+L.pt);return t}
-function cvClose(C){CV=null;document.body.classList.remove('cave');if(C.hud)C.hud.remove();for(const c of[C.dk,...[...C.ch.values()].map(q=>q.c)])if(c)c.width=c.height=0;C.ch.clear();C.fld=null;C.tx=null;if(C.wflow)C.wflow.width=C.wflow.height=0;C.wflow=C.wpat=null;for(const c of Object.values(C.gls||{}))c.width=c.height=0;C.gls=null;if(C.mist)C.mist.width=C.mist.height=0;C.mist=C.mistP=C.shafts=null;for(const c of Object.values(C.crysImg||{}))if(c)c.width=c.height=0;C.crysImg=null;if(C.fogc)C.fogc.width=C.fogc.height=0;/* 作業用のキャンバスは、すぐ手ばなす */
+function cvClose(C){CV=null;document.body.classList.remove('cave');if(C.hud)C.hud.remove();for(const c of[C.dk,...[...C.ch.values()].map(q=>q.c)])if(c)c.width=c.height=0;C.ch.clear();C.fld=null;C.tx=null;if(C.wflow)C.wflow.width=C.wflow.height=0;C.wflow=C.wpat=null;if(C.lflow)C.lflow.width=C.lflow.height=0;C.lflow=C.lpat=null;for(const c of Object.values(C.gls||{}))c.width=c.height=0;C.gls=null;if(C.mist)C.mist.width=C.mist.height=0;C.mist=C.mistP=C.shafts=null;for(const c of Object.values(C.crysImg||{}))if(c)c.width=c.height=0;C.crysImg=null;if(C.fogc)C.fogc.width=C.fogc.height=0;/* 作業用のキャンバスは、すぐ手ばなす */
   EVAP=[];LIGHTARM=false;if(typeof dockSync==='function')dockSync();cam.x=C.cam0.x;cam.y=C.cam0.y;cam.z=C.cam0.z;clampCam()}
 function caveAbort(){if(CV)cvClose(CV)}/* 村を切りかえるとき：何もわたさずにおわる */
 function caveExit(ok){const C=CV;if(!C)return;cvClose(C);const L=C.loot;
@@ -527,15 +527,17 @@ function cvDirty(){const C=CV;for(const q of C.ch.values())q.c.width=q.c.height=
    rock 岩・floor 床（暗い→明るい）・water 水（水べのあわ・明るい・なか・深い・底の光の網目）・void 穴 */
 const CVTHEMES={
   roots:{name:'ねっこの坑道',out:'rock',deco:{roots:.55,moss:.3,shroom:.12,plant:.3,plants:[0,1,2,3,6,8,9,11,12,14,16,17,19],edge:[1,9,16,14],vine:.45,gmoss:.12,big:.1},glow:'#7ff0c8',moss:.55,mossc:['#1c2e1a','#2c4a28','#3a5e30','#4a7238','#5c8a44','#7aa858'],crys:null,rock:['#2a1f1a','#463428','#5e4634','#76593f','#8f6e4d','#a8865e'],floor:['#4a3c31','#7a6550','#816b55','#87715a','#8e775f','#a38c72'],water:['#c8f7e0','#7fe0c4','#3fb39a','#23806f','#a9f5dc'],void:'#160f0c'},
-  crystal:{name:'水晶のほらあな',out:'void',wall:'crys',deco:{crys:.9,shroom:.05,plant:.3,plants:[3,7,15,17,19,10],edge:[15,17,19],pcrys:.9,fcrys:.1,vine:.3,gmoss:.1,big:.06},glow:'#b49cff',moss:.45,mossc:['#241a3a','#3a2a5c','#4e3a7a','#6a4e9c','#8a6ec0','#b49cff'],crys:[['#3a2a6a','#6a4cc0','#9a7ef0','#c4b0ff','#e8deff','#ffffff'],['#1e4a6a','#2f8ac0','#5cc6f0','#9ce6ff','#d6f6ff','#ffffff']],rock:['#1f1830','#3a2c55','#4d3b70','#62508a','#7a68a3','#968abf'],floor:['#3a3152','#655986','#6a5e8c','#6f6391','#756997','#8c80ad'],water:['#e0d8ff','#9fd4f7','#5a9fe0','#3a64b8','#c8e8ff'],void:'#110c1b'},
-  lake:{name:'地底のみずうみ',out:'void',deco:{crys:.14,shroom:.14,plant:.24,plants:[5,6,7,10,13,14,17,1,2],edge:[1,10,14,17],vine:.4,gmoss:.14,big:.08},glow:'#7fe8ff',moss:.5,mossc:['#14242a','#1e3a3c','#28504c','#34645a','#447c6a','#62987e'],crys:[['#1a4a5a','#2a8aa0','#4ccad6','#8ef0f0','#d0fff8','#ffffff']],rock:['#141c2c','#243650','#2f4664','#3c5878','#4d6c8c','#6684a3'],floor:['#2a3646','#516378','#56687d','#5b6d82','#617388','#7a8ca0'],water:['#d6fff8','#7ff0e6','#33c1c8','#1a8a9e','#b6fff4'],void:'#0a0f17'},
-  fossil:{name:'化石の大ひろま',out:'rock',deco:{bone:.2,crys:.08,plant:.14,plants:[20,21,22,23,24,25,18,23,20],edge:[22,21,18],pbone:.22,vine:.2,gmoss:.08,big:.14},glow:'#ffc870',moss:.4,ptex:'ground',mossc:['#3a2c20','#6a5640','#7e6a4e','#8e7a5a','#a08a66','#bca27a'],crys:[['#5a2a0a','#a85a14','#e0901e','#f6c050','#ffe6a0','#ffffff']],rock:['#30241c','#5c4636','#765b45','#907256','#a98a69','#c4a683'],floor:['#504034','#8a745d','#917a62','#978067','#9e866c','#b49c80'],water:['#e8f6d8','#9fe0c4','#54b39c','#2f7f75','#c6f5e0'],void:'#140e0a'},
-  ice:{name:'氷のほらあな',out:'void',wall:'crys',deco:{crys:.55,plant:.12,plants:[7,10,19,7],edge:[19,10],pcrys:.5,fcrys:.08,big:.05},glow:'#bfefff',moss:.42,ptex:'ground',mossc:['#8aa0b8','#b4c8dc','#c8d8e8','#d8e6f2','#e8f2fa','#ffffff'],icec:['#4a6e90','#7aa8cc','#9ccae6','#c0e2f6','#e6f8ff'],crys:[['#2a4a6a','#4c86b0','#7cc0e0','#b4e4f6','#e0f6ff','#ffffff']],rock:['#1a2230','#2a3a50','#3a5068','#4c6680','#62809a','#86a2ba'],floor:['#3a4a5e','#6a7e96','#70849c','#768aa2','#7c90a8','#9cb0c6'],water:['#e8fbff','#a8e0f4','#5cb0d8','#2a70a0','#d0f4ff'],void:'#0a1018'},
-  magma:{name:'マグマのほらあな',out:'rock',deco:{crys:.3,big:.12,plant:.1,plants:[20,22,20,21],edge:[22]},glow:'#ff8a3d',lava:1,moss:.35,ptex:'ground',mossc:['#1a0e0a','#3a1a10','#5a2414','#7a3018','#a8401c','#e06a2a'],crys:[['#2a0a0a','#5a1410','#8a2414','#c8441c','#ff8a3d','#ffd890']],rock:['#140c0a','#261612','#38201a','#4a2c22','#5e3a2c','#78503c'],floor:['#2a1e1a','#4a3830','#4e3c34','#544038','#5a463c','#6e584c'],water:['#fff0b0','#ffb040','#e8601c','#a82810','#fff8d8'],void:'#0a0605'}};
+  crystal:{name:'水晶のほらあな',out:'void',wall:'crys',deco:{crys:.9,shroom:.05,plant:.32,plants:[3,7,15,17,19,10],edge:[15,17,19],pcrys:.9,fcrys:.1,vine:.3,gmoss:.1,big:.06},glow:'#b49cff',moss:.55,mossc:['#241a3a','#3a2a5c','#4e3a7a','#6a4e9c','#8a6ec0','#b49cff'],crys:[['#3a2a6a','#6a4cc0','#9a7ef0','#c4b0ff','#e8deff','#ffffff'],['#1e4a6a','#2f8ac0','#5cc6f0','#9ce6ff','#d6f6ff','#ffffff']],rock:['#1f1830','#3a2c55','#4d3b70','#62508a','#7a68a3','#968abf'],floor:['#3a3152','#655986','#6a5e8c','#6f6391','#756997','#8c80ad'],water:['#e0d8ff','#9fd4f7','#5a9fe0','#3a64b8','#c8e8ff'],void:'#110c1b'},
+  lake:{name:'地底のみずうみ',out:'void',deco:{crys:.14,shroom:.14,plant:.3,plants:[5,6,7,10,13,14,17,1,2],edge:[1,10,14,17],vine:.4,gmoss:.14,big:.08},glow:'#7fe8ff',moss:.55,mossc:['#14242a','#1e3a3c','#28504c','#34645a','#447c6a','#62987e'],crys:[['#1a4a5a','#2a8aa0','#4ccad6','#8ef0f0','#d0fff8','#ffffff']],rock:['#141c2c','#243650','#2f4664','#3c5878','#4d6c8c','#6684a3'],floor:['#2a3646','#516378','#56687d','#5b6d82','#617388','#7a8ca0'],water:['#d6fff8','#7ff0e6','#33c1c8','#1a8a9e','#b6fff4'],void:'#0a0f17'},
+  fossil:{name:'化石の大ひろま',out:'rock',deco:{bone:.2,crys:.08,plant:.3,plants:[20,21,22,23,24,25,18,23,20],edge:[22,21,18],pbone:.35,vine:.2,gmoss:.1,big:.14},glow:'#ffc870',moss:.55,ptex:'pebble',mossc:['#3a2c20','#5e4a36','#76604a','#8e7a5a','#a8916c','#c8b088'],crys:[['#5a2a0a','#a85a14','#e0901e','#f6c050','#ffe6a0','#ffffff']],rock:['#30241c','#5c4636','#765b45','#907256','#a98a69','#c4a683'],floor:['#504034','#8a745d','#917a62','#978067','#9e866c','#b49c80'],water:['#e8f6d8','#9fe0c4','#54b39c','#2f7f75','#c6f5e0'],void:'#140e0a'},
+  ice:{name:'氷のほらあな',out:'void',wall:'crys',deco:{crys:.55,plant:.32,plants:[32,33,34,35,36,37,33,32,35,19],edge:[33,35,37],pcrys:.35,fcrys:.1,gmoss:.1,big:.05},glow:'#bfefff',moss:.55,ptex:'frost',mossc:['#34506c','#4e6e8e','#6a8aa8','#86a4be','#a8c2d8','#d4e4f2'],icec:['#4a6e90','#7aa8cc','#9ccae6','#c0e2f6','#e6f8ff'],crys:[['#2a4a6a','#4c86b0','#7cc0e0','#b4e4f6','#e0f6ff','#ffffff']],rock:['#1a2230','#2a3a50','#3a5068','#4c6680','#62809a','#86a2ba'],floor:['#3a4a5e','#6a7e96','#70849c','#768aa2','#7c90a8','#9cb0c6'],water:['#e8fbff','#a8e0f4','#5cb0d8','#2a70a0','#d0f4ff'],void:'#0a1018'},
+  magma:{name:'マグマのほらあな',out:'rock',deco:{crys:.3,big:.12,plant:.32,plants:[26,27,28,29,30,31,26,29,28,26],edge:[26,29],pcrys:.2,gmoss:.1},glow:'#ff5a20',lava:1,moss:.55,ptex:'ash',
+    mossc:['#120808','#24120e','#381c16','#4c2820','#d8300e','#ffb040'],/* かさぶたの地面：0〜3 黒い岩・4 と 5 は光るすじ */lavac:['#2a0604','#7a0e06','#c41a08','#f2400c','#ff7a1c','#ffd860'],/* 溶岩（持ち主のたのみ：もっと赤く） */
+    crys:[['#2a0606','#6a1008','#a81c0c','#e83a14','#ff7a30','#ffd890']],rock:['#160a08','#2a1410','#3e1e16','#52281e','#683428','#864634'],floor:['#2c1a16','#4c302a','#52342c','#583830','#5e3c34','#784c40'],water:['#ffe890','#ff9a30','#e84010','#a01808','#fff0c0'],void:'#0c0404',dark:'20,5,3'}};
 const cvTheme=()=>CVTHEMES[CV.F.theme]||CVTHEMES.roots;
 const cvRGB=h=>[parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)];
 /* 絵のチップを、こさの番号で読めるようにする（1回だけ）。読みこみ中なら null */
-function cvTexData(){const C=CV;if(C.tx)return C.tx;const T={};for(const k of['cols','ccols','ground','moss','caus']){const id='cave:'+k,ch=cvChipOf(id);if(!ch)continue;const im=chipImgs(ch,id)[0];if(!im.ok)return null;
+function cvTexData(){const C=CV;if(C.tx)return C.tx;const T={};for(const k of['cols','ccols','ground','moss','caus','ash','lava','frost','pebble']){const id='cave:'+k,ch=cvChipOf(id);if(!ch)continue;const im=chipImgs(ch,id)[0];if(!im.ok)return null;
     const d=im.getContext('2d').getImageData(0,0,im.width,im.height).data,L=new Int8Array(im.width*im.height);for(let i=0;i<L.length;i++)L[i]=d[i*4+3]?Math.min(5,Math.round(d[i*4]/50)):-1;
     let top=im.height;for(let y=0;y<im.height&&top===im.height;y++)for(let x=0;x<im.width;x++)if(L[y*im.width+x]>=0){top=y;break}
     T[k]={w:im.width,h:im.height,L,top}}
@@ -564,7 +566,7 @@ function cvPaintPx(g,x0,y0,N,T){const C=CV,Fd=C.fld,TH=cvTheme(),CW=TH.wall==='c
   const slopeAt=(px,py)=>{for(const q of SL){const rx=px-q.bx,ry=py-q.by,a=rx*q.dx+ry*q.dy,ls=-rx*q.dy+ry*q.dx,l=Math.abs(ls),am=(q.a0+q.a1)/2,ha=(q.a1-q.a0)/2,t=(a-am)/ha;if(t<=-1||t>=1)continue;
       const w=19+2*Math.sin(a*.21+q.bx),e=w*Math.pow(1-Math.pow(Math.abs(t),4),.25);if(l<e)return{u:(a-q.a0)/(q.a1-q.a0),edge:e-l,side:(ls<0)===(q.dx+q.dy<0)}}return null};
   const lv=(t,u,v)=>{if(!t)return -1;const X=((u%t.w)+t.w)%t.w,Y=t.w===t.h?((v%t.h)+t.h)%t.h:v;if(Y<0||Y>=t.h)return -1;return t.L[Y*t.w+X]};/* こさの番号。正方形の絵は上下もくりかえす */
-  const WR=[WA[3],WA[2],WA[1],WA[0],WA[4]],IC=TH.icec&&Fd.Ic?TH.icec.map(cvRGB):null,WM=new Uint8Array(N*N),MO=TH.mossc&&Fd.Ms?TH.mossc.map(cvRGB):null;/* 水の色を、くらい順に（深い・なか・あさい・明るい・ふち） */
+  const LVA=TH.lavac&&T.lava?TH.lavac.map(cvRGB):null,GM=TH.lava?new Uint8Array(N*N):null,PX=TH.ptex&&T[TH.ptex]?T[TH.ptex]:T.moss,WR=[WA[3],WA[2],WA[1],WA[0],WA[4]],IC=TH.icec&&Fd.Ic?TH.icec.map(cvRGB):null,WM=new Uint8Array(N*N),MO=TH.mossc&&Fd.Ms?TH.mossc.map(cvRGB):null;/* 水の色を、くらい順に（深い・なか・あさい・明るい・ふち） */
   const im=g.createImageData(N,N),D=im.data,put=(o,c)=>{D[o]=c[0];D[o+1]=c[1];D[o+2]=c[2];D[o+3]=255},cl=(a,i)=>a[Math.max(0,Math.min(a.length-1,i))],rcA=new Int16Array(H2),ccA=new Int16Array(H2),upw=new Int32Array(N).fill(9999);
   for(let x=0;x<N;x++){const px=x0+x;
     /* 下から上へ：rc 下の床からの行（岩の正面）・cc 下の低い床からの行（床のがけ） */
@@ -587,9 +589,11 @@ function cvPaintPx(g,x0,y0,N,T){const C=CV,Fd=C.fld,TH=cvTheme(),CW=TH.wall==='c
       if(c0===2){/* 水（持ち主のたのみで、網目をやめた）：水べは明るいふち。なかは、村と同じ水のテクスチャの3だん＋深さで、くらい色から明るい色のならび（WR）。
            北の岸から下へ CVREFL ドットは、岸の上の岩・がけのうつりこみ（床はうつさない）：上下さかさに、行ごとに1ドットずつゆらいで、水の色で、1行おきに切れる（水面のゆれ） */
         const w=wv[k],edge=(y>0&&cls[k-N]!==2)||(x>0&&cls[k-1]!==2)||(x<N-1&&cls[k+1]!==2)||(y+1<H2&&cls[k+N]!==2);WM[oy*N+x]=1;
+        if(LVA){/* 溶岩（持ち主のたのみ：もっと赤く、光る）：CC0 の溶岩のテクスチャ（cave:lava）の6だん。岸ぎわは、黒くかたまったかさぶた */
+          if(edge){put(o,LVA[0]);continue}const lt=lv(T.lava,px+((py>>4)&1),py);put(o,LVA[w<.56?Math.max(1,lt-2):Math.max(1,lt)]);continue}
         if(edge){put(o,WR[4]);continue}if(w<.56){put(o,WR[3]);continue}
         const tv=T.water?lv(T.water,px+((py>>3)&1),py):1,dep=w>.86?0:w>.7?1:2;let ix=Math.max(0,Math.min(3,dep+tv-1));
-        const u=upw[x];if(u<CVREFL&&(u%4)!==3){const sy=oy-2*u-1+((Math.sin((py+u)*.9)*1.4)|0),sx=x+(((py>>1)&1)?1:-1);/* うつりこみ */
+        const u=upw[x];if(u<CVREFL&&(u%4)!==3&&!LVA){const sy=oy-2*u-1+((Math.sin((py+u)*.9)*1.4)|0),sx=x+(((py>>1)&1)?1:-1);/* うつりこみ */
           if(sy>=0&&sx>=0&&sx<N&&cls[(sy+PADT)*N+sx]===0){const q=(sy*N+sx)*4;if(D[q+3]){const Lm=(D[q]*.3+D[q+1]*.59+D[q+2]*.11)/255;ix=Lm>.62?3:Lm>.42?2:Lm>.22?1:0;if(u>CVREFL*.6)ix=Math.min(3,ix+1)}}}
         put(o,WR[ix]);continue}
       if(c0===3){let up=0;for(let d=1;d<=14&&y-d>=0;d++){if(cls[k-d*N]!==3){up=d;break}}put(o,up?RK[1]:VO);continue}
@@ -600,14 +604,17 @@ function cvPaintPx(g,x0,y0,N,T){const C=CV,Fd=C.fld,TH=cvTheme(),CW=TH.wall==='c
       if(IC){const ic=smp(Fd.Ic,px,py);if(ic>.5){const e=ic<.56,st=((px+py*2+Math.floor(py/7)*13)%46)<3,lw=T.water?lv(T.water,px>>1,py>>1):1;/* すべる氷：ふちはこい色。まん中は、はれた水色に、ななめの光のすじ */
           put(o,IC[e?0:st?4:Math.max(1,Math.min(3,1+lw))]);continue}}
       if(MO){const m=smp(Fd.Ms,px,py);if(m>.62){let dk=fv[k]<.62?2:fv[k]<.75?1:0;if(dk){for(let d=1;d<=8&&y+d<H2;d++)if(cls[k+N*d]===0){dk=0;break}}if(sh<6)dk=Math.max(dk,2);else if(sh<14)dk=Math.max(dk,1);if(m<.66)dk++;/* コケ：ふちは1だん暗い。地面のもようの明るさで、コケの6色 */
-        const lm=TH.ptex==='ground'?l:T.moss?lv(T.moss,px,py):l,/* 化石の大ひろまは、コケでなく砂・小石のまだら（地面のもようのまま） */ml=Math.max(0,Math.min(5,lm-dk));/* コケのテクスチャ（cave:moss）のこさ */put(o,MO[ml]);continue}}
+        const lm=PX?lv(PX,px,py):l,/* 階ごとの地面（持ち主のたのみ：どの階もコケの所くらい豪華に、その階らしい地面で）：コケ・霜（cave:frost）・光るすじのある溶岩のかさぶた（cave:ash）・小石（cave:pebble） */
+          ml=GM&&lm>=4?lm:Math.max(0,Math.min(5,lm-dk));if(GM&&ml>=4)GM[oy*N+x]=1;/* かさぶたの光るすじは、かげでも暗くしない（あとで光らせる） */put(o,MO[ml]);continue}}
       let dk=fv[k]<.62?2:fv[k]<.75?1:0;if(dk){for(let d=1;d<=8&&y+d<H2;d++)if(cls[k+N*d]===0){dk=0;break}}/* 下にかべがある所は、かべぎわのかげをつけない（かべの上のふちに黒い帯が出る。持ち主） */if(sh<6)dk=Math.max(dk,2);else if(sh<14)dk=Math.max(dk,1);/* かげは、色を1だん・2だんさげる */
       if(!rockOut&&ca===0)l=5;/* 台の上のふちは明るく */
       put(o,l===0?FL[0]:cl(FL,l-dk))}}
   g.putImageData(im,0,0);
   /* 水のうつりこみの形（せかいの点）：水のドットを1行ずつ。4行に1行はあけて、水面のゆれで切れて見せる */
   let P=null,PF=null;for(let oy=0;oy<N;oy+=2){const gy=(y0+oy)/2,gap=(Math.floor(gy)&3)===3;let x=0;while(x<N){if(!WM[oy*N+x]){x+=2;continue}const xs=x;while(x<N&&WM[oy*N+x])x+=2;if(!PF){P=new Path2D();PF=new Path2D()}PF.rect((x0+xs)/2,gy+CVOY*TS,(x-xs)/2,1);if(!gap)P.rect((x0+xs)/2,gy+CVOY*TS,(x-xs)/2,1)}}
-  return P?{P,PF}:null}/* P：うつりこみ（4行に1行あけた）・PF：水ぜんぶ（流れる模様） */
+  let GP=null;if(GM)for(let oy=0;oy<N;oy+=2){const gy=(y0+oy)/2;let x=0;while(x<N){if(!GM[oy*N+x]){x+=2;continue}const xs=x;while(x<N&&GM[oy*N+x])x+=2;if(!GP)GP=new Path2D();GP.rect((x0+xs)/2,gy+CVOY*TS,(x-xs)/2,1)}}/* かさぶたの光るすじの形 */
+  if(LVA&&P)P=null;/* 溶岩には、うつりこまない */
+  return P||PF||GP?{P,PF,GP}:null}/* P：うつりこみ（4行に1行あけた）・PF：水ぜんぶ（流れる模様） */
 /* 壁ぎわのかざり（見た目だけ）：北が岩の床のマス（壁のすぐ前）に、階ごとのかざりを、マスの番号できめて置く。光る物は、まわりを照らす */
 function cvDecoPlace(){const C=CV,TH=cvTheme(),D=TH.deco||{},L=[];
   const open=(x,y)=>y<CVH&&x>=0&&x<CVW&&C.g[cvJ(x,y)]&&!C.wt[cvJ(x,y)]&&!C.ob.has(cvJ(x,y));/* 大きなかざりは、道をふさいで見えないよう、広い所（下へ2マス床がつづく）のかべぎわだけ（持ち主のたのみ） */
@@ -629,7 +636,7 @@ function cvDecoPlace(){const C=CV,TH=cvTheme(),D=TH.deco||{},L=[];
     if(ms&&D.pcrys&&TH.crys&&h(40)<D.pcrys*(.5+core)){any=true;L.push({j,k:'crys',v:(h(41)*TH.crys.length)|0,m:CVCRYSP[(h(42)*CVCRYSP.length)|0],flip:h(43)<.5,dx:Math.round((h(44)-.5)*14),dy:Math.round((h(45)-.5)*8)})}/* 水晶のほらあな：まだらの上に、小さな水晶 */
     if(ms&&D.pbone&&h(46)<D.pbone*(.5+core)){any=true;L.push({j,k:'bone',v:[0,0,1,3,3,4,4,2][(h(47)*8)|0],flip:h(48)<.5,dx:Math.round((h(49)-.5)*10),dy:Math.round((h(50)-.5)*8)})}/* 化石の大ひろま：砂のまだらの上に、ほね */
     if(!any&&D.gmoss&&h(6)<D.gmoss*(ms?1.5:1))L.push({j,k:'gmoss',dx:Math.round((h(7)-.5)*10),dy:Math.round((h(8)-.5)*10)})}/* 光るこけ */
-  C.deco=L;C.shafts=null;if(C.mist)C.mist.width=C.mist.height=0;C.mist=C.mistP=null;for(const c of Object.values(C.crysImg||{}))if(c)c.width=c.height=0;C.crysImg=null;if(C.wflow)C.wflow.width=C.wflow.height=0;C.wflow=C.wpat=null}
+  C.deco=L;C.shafts=null;if(C.mist)C.mist.width=C.mist.height=0;C.mist=C.mistP=null;for(const c of Object.values(C.crysImg||{}))if(c)c.width=c.height=0;C.crysImg=null;if(C.wflow)C.wflow.width=C.wflow.height=0;C.wflow=C.wpat=null;if(C.lflow)C.lflow.width=C.lflow.height=0;C.lflow=C.lpat=null}
 /* 水晶の絵を、その階の色にぬりかえた絵（色ごとに1まい。入るときに作って、出るときに手ばなす） */
 /* こさの番号の絵（3Dで写した水晶・岩の段）を、階の色のならびでぬりかえる（1回だけ。C.crysImg にためて、洞窟を出るとき手ばなす） */
 function cvToneImg(id,R,key){const C=CV;if(!C.crysImg)C.crysImg={};if(C.crysImg[key])return C.crysImg[key];const ch=cvChipOf(id);if(!ch)return null;const im=chipImgs(ch,id)[0];if(!im.ok)return null;
@@ -745,13 +752,20 @@ function cvAirDraw(now){const C=CV,TH=cvTheme(),t=now/1000,G=TH.glow;ctx.save();
       ctx.globalAlpha=Math.sin(ph*Math.PI)*.8;P4(i?G:'#ffffff',Math.round(px),Math.round(py),1,1)}}
   ctx.restore()}
 /* 光る物（持ち主のたのみ）：水晶・光るきのこ・光る花は、暗さの上に、もう1回うすく描いて（暗い所でも光って見える）、まわりに色のついた光をかさねる（ゆっくり明るさがゆれる） */
-const CVGLOWP=new Set([2,3,6,7,14,15,17,19]);/* 光る植物の番号（cave:plant#） */
+const CVGLOWP=new Set([2,3,6,7,14,15,17,19,26,27,28,30,31,34,36]);/* 光る植物の番号（cave:plant#） */
 const cvGlows=d=>d.k==='crys'||d.k==='shroom'||d.k==='vine'||d.k==='gmoss'||(d.k==='plant'&&CVGLOWP.has(d.v));
 function cvGlowSpr(col){const C=CV;if(!C.gls)C.gls={};let c=C.gls[col];if(c)return c;c=C.gls[col]=document.createElement('canvas');c.width=c.height=64;const g=c.getContext('2d'),q=cvRGB(col),G=g.createRadialGradient(32,32,0,32,32,32);
   G.addColorStop(0,'rgba('+q+',.9)');G.addColorStop(.35,'rgba('+q+',.35)');G.addColorStop(1,'rgba('+q+',0)');g.fillStyle=G;g.fillRect(0,0,64,64);return c}
 function cvLavaGlow(now){const C=CV,TH=cvTheme();if(!TH.lava)return;const x0=Math.max(0,Math.floor(cam.x/TS)),x1=Math.min(CVW-1,Math.ceil((cam.x+VW/cam.z)/TS)),y0=Math.max(0,Math.floor(cam.y/TS)-CVOY),y1=Math.min(CVH-1,Math.ceil((cam.y+VH/cam.z)/TS)-CVOY);
-  ctx.save();ctx.globalCompositeOperation='lighter';ctx.imageSmoothingEnabled=true;const G=cvGlowSpr('#ff7a2a');/* 溶岩は、まわりを赤く照らす */
-  for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++){const j=cvJ(x,y);if(!C.wt[j]||!C.seen[j]||(x+y)&1)continue;ctx.globalAlpha=.16+.06*Math.sin(now/800+j);ctx.drawImage(G,x*TS-34,(y+CVOY)*TS-34,100,100)}
+  {const P=new Path2D(),Q=new Path2D();let a=0,b=0;for(const q of C.ch.values())if(q.wp){if(q.wp.PF){P.addPath(q.wp.PF);a=1}if(q.wp.GP){Q.addPath(q.wp.GP);b=1}}const T=C.tx;
+    if(a&&T&&T.lava){/* 溶岩そのものが光る（暗さの上に）：赤い光をかさね、明るいすじ（こさ5）が、ゆっくり流れる */
+      if(!C.lflow){const W=T.lava,c=document.createElement('canvas');c.width=W.w;c.height=W.h;const g=c.getContext('2d'),d=g.createImageData(W.w,W.h),q=cvRGB(TH.lavac[5]),r=cvRGB(TH.lavac[4]);
+        for(let i=0;i<W.L.length;i++){const l=W.L[i];if(l<4)continue;const z=l===5?q:r;d.data[i*4]=z[0];d.data[i*4+1]=z[1];d.data[i*4+2]=z[2];d.data[i*4+3]=255}g.putImageData(d,0,0);C.lflow=c;C.lpat=ctx.createPattern(c,'repeat')}
+      const t=now/1000;ctx.save();ctx.clip(P);ctx.globalCompositeOperation='lighter';ctx.fillStyle=TH.lavac[2];ctx.globalAlpha=.32+.06*Math.sin(t*1.3);ctx.fillRect(cam.x,cam.y,VW/cam.z,VH/cam.z);
+      const ox=Math.floor(t*4)%(T.lava.w*2),oy=Math.floor(t*2)%(T.lava.w*2);ctx.globalAlpha=.42+.12*Math.sin(t*2.1);ctx.translate(ox/2,oy/2);ctx.scale(.5,.5);ctx.fillStyle=C.lpat;ctx.fillRect((cam.x-ox/2)*2-512,(cam.y-oy/2)*2-512,VW/cam.z*2+1024,VH/cam.z*2+1024);ctx.restore()}
+    if(b){/* かさぶたの光るすじも、暗さの上で、ゆっくり明るくなったり暗くなったり */const t=now/1000;ctx.save();ctx.clip(Q);ctx.globalCompositeOperation='lighter';ctx.fillStyle=TH.lavac[3];ctx.globalAlpha=.26+.14*Math.sin(t*1.1);ctx.fillRect(cam.x,cam.y,VW/cam.z,VH/cam.z);ctx.restore()}}
+  ctx.save();ctx.globalCompositeOperation='lighter';ctx.imageSmoothingEnabled=true;const G=cvGlowSpr('#ff4a1a');/* 溶岩は、まわりを赤く照らす */
+  for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++){const j=cvJ(x,y);if(!C.wt[j]||!C.seen[j]||(x+y)&1)continue;ctx.globalAlpha=.3+.08*Math.sin(now/800+j);ctx.drawImage(G,x*TS-50,(y+CVOY)*TS-50,132,132)}
   for(const[j,o]of C.ob)if(o.k==='V'&&C.seen[j]){const st=cvVent(j,now);if(st){ctx.globalAlpha=st===2?.5:.2;ctx.drawImage(G,cvX(j)*TS-40,(cvY(j)+CVOY)*TS-50,112,112)}}
   ctx.restore();ctx.imageSmoothingEnabled=false}
 function cvGlowDraw(now){cvLavaGlow(now);const C=CV,TH=cvTheme(),SH='#8ef0e0',FLW='#c89cff';const GA=Object.getOwnPropertyDescriptor(CanvasRenderingContext2D.prototype,'globalAlpha');
@@ -764,12 +778,12 @@ function cvGlowDraw(now){cvLavaGlow(now);const C=CV,TH=cvTheme(),SH='#8ef0e0',FL
 /* 水のうつりこみ（持ち主のたのみ）：水べのそばの物・かざり・せいれい・コワイノを、足もとで上下さかさにして、水の形（区画ごとの wp）の中だけに、うすく描く。
    水の形は4行に1行あけてあるので、水面のゆれで切れた、うつりこみに見える */
 /* 水の模様が、ゆっくり流れる：村の水のテクスチャの明るい所だけを、水の明るい色で、ずらしながらかさねる（下絵の模様とずれて、ゆらいで見える） */
-function cvWaterFlow(now){const C=CV,T=C.tx;if(!T||!T.water)return;const P=new Path2D();let any=false;for(const q of C.ch.values())if(q.wp){P.addPath(q.wp.PF);any=true}if(!any)return;
+function cvWaterFlow(now){const C=CV,T=C.tx;if(!T||!T.water||cvTheme().lava)return;const P=new Path2D();let any=false;for(const q of C.ch.values())if(q.wp&&q.wp.PF){P.addPath(q.wp.PF);any=true}if(!any)return;
   if(!C.wflow){const W=T.water,c=document.createElement('canvas');c.width=W.w;c.height=W.h;const g=c.getContext('2d'),d=g.createImageData(W.w,W.h),q=cvRGB(cvTheme().water[4]);
     for(let i=0;i<W.L.length;i++)if(W.L[i]===2){d.data[i*4]=q[0];d.data[i*4+1]=q[1];d.data[i*4+2]=q[2];d.data[i*4+3]=255}g.putImageData(d,0,0);C.wflow=c;C.wpat=ctx.createPattern(c,'repeat')}
   const t=now/1000,ox=Math.floor(t*3)%128,oy=Math.floor(t*1.5)%128;ctx.save();ctx.clip(P);ctx.globalAlpha=.14;ctx.translate(ox/2,oy/2);ctx.scale(.5,.5);ctx.fillStyle=C.wpat;
   ctx.fillRect((cam.x-ox/2)*2-256,(cam.y-oy/2)*2-256,VW/cam.z*2+512,VH/cam.z*2+512);ctx.restore()}
-function cvReflect(now){const C=CV,P=new Path2D();let any=false;for(const q of C.ch.values())if(q.wp){P.addPath(q.wp.P);any=true}if(!any)return;
+function cvReflect(now){const C=CV,P=new Path2D();let any=false;if(cvTheme().lava)return;for(const q of C.ch.values())if(q.wp&&q.wp.P){P.addPath(q.wp.P);any=true}if(!any)return;
   const nearW=(x,y)=>{for(let d=0;d<=3;d++){const yy=Math.floor(y)+d;if(yy>=0&&yy<CVH&&x>=0&&x<CVW&&C.wt[cvJ(x,yy)])return true}return false},L=[];
   for(const d of C.deco||[])if(C.seen[d.j]&&nearW(cvX(d.j),cvY(d.j)))L.push([(cvY(d.j)+CVOY+1)*TS-2,()=>cvDrawDeco(d,now)]);
   for(const[j,o]of C.ob)if(C.seen[j]&&'AtTDEbgo'.includes(o.k)&&nearW(cvX(j),cvY(j)))L.push([(cvY(j)+CVOY+1)*TS-2,()=>cvDrawObj(j,o,now)]);
@@ -814,7 +828,7 @@ function caveRender(now){const C=CV;if(!C)return;cvCamTo(.12);const k=dpr*cam.z;
   C.sparks=C.sparks.filter(s=>now-s.t0<700);for(const s of C.sparks){const t=(now-s.t0)/1000;ctx.globalAlpha=1-t/.7;P4(s.col,(s.x+s.vx*t)*TS-1,(s.y+CVOY+s.vy*t+2.2*t*t)*TS-1,2,2)}ctx.globalAlpha=1;
   cvMistDraw(now);
   /* 暗さ：光のとどく所だけ明るい。まだ見ていない所は、まっくら */
-  {const D=C.dk;if(D.width!==cv.width||D.height!==cv.height){D.width=cv.width;D.height=cv.height}const g=D.getContext('2d');g.setTransform(1,0,0,1,0,0);g.globalCompositeOperation='source-over';g.clearRect(0,0,D.width,D.height);g.fillStyle='rgba(4,7,16,'+CVDARK+')';g.fillRect(0,0,D.width,D.height);
+  {const D=C.dk;if(D.width!==cv.width||D.height!==cv.height){D.width=cv.width;D.height=cv.height}const g=D.getContext('2d');g.setTransform(1,0,0,1,0,0);g.globalCompositeOperation='source-over';g.clearRect(0,0,D.width,D.height);g.fillStyle='rgba('+(cvTheme().dark||'4,7,16')+','+CVDARK+')';g.fillRect(0,0,D.width,D.height);
     g.globalCompositeOperation='destination-out';const LS=lightSpr(150),sx=x=>x*TS*k-CX,sy=y=>y*TS*k-CY,cut=(x,y,R)=>{const r=R*TS*k;g.drawImage(LS,sx(x)-r,sy(y)-r,r*2,r*2)},LR=(C.dim?CVLIGHTD:CVLIGHT)*(1+.03*Math.sin(now/900)+.015*Math.sin(now/370));/* 光は、ゆっくりゆらぐ */
     for(const a of C.party){cut(a.x,a.y-.4,LR);cut(a.x,a.y-.4,LR*.6)}
     for(const[j,o]of C.ob){if(!C.seen[j])continue;if(o.k==='S'||o.k==='R')cut(cvX(j)+.5,cvY(j)+CVOY+.5,2.2);else if(o.k==='t'&&o.until>C.t)cut(cvX(j)+.5,cvY(j)+CVOY+.2,3+.12*Math.sin(now/130+j))

@@ -5,6 +5,7 @@
 - cave:ccols（256×H）：水晶のほらあなの、水晶のかべ（furn3d の cave_ccols。外のモデルの水晶をならべる）。作り方は cave:cols と同じ。
 - cave:crys#0〜7・cave:steps：3Dで写した水晶のかたまり（外のモデル、furn3d の cave_crys0〜2）・岩の段（cave_steps）。こさの番号で、階ごとの色にぬりかえる。
 - cave:moss（128×128）：コケの地面。CC0 のコケのテクスチャ（moss002）を、こさの番号の6だんに。
+- cave:ash（192）・cave:lava（192）・cave:frost（160）・cave:pebble（192）：CC0 のテクスチャ（lava001＋光る所 lava001_e・lava004・ice003・rocks023）を、こさの番号の6だんに。マグマのかさぶたの地面・溶岩・氷のほらあなの霜の地面・化石の大ひろまの小石の地面
 - cave:caus（128×128）：水の底の光の網目（1 が網目）。ゆがんだボロノイのふち。
 - cave:ground（128×128）：自然の洞窟の地面。コードで1ドットずつ作る（人の作った石だたみにしない。持ち主がきめた）：ふぞろいな色のかたまり・先がとぎれる細いひび・小石・砂つぶ。
 使いかた：python3 tools/art/furn3d/furn3d.py cave_cols <フォルダ>/cave_cols
@@ -69,6 +70,20 @@ def moss(n=128):
         same=(nb==idx[None]).sum(0);mode=np.apply_along_axis(lambda c:np.bincount(c,minlength=6).argmax(),0,nb);idx=np.where(same<=2,mode,idx)
     g=np.array(LV)[idx];o=np.zeros((n,n,4),np.uint8);o[...,0]=o[...,1]=o[...,2]=g;o[...,3]=255
     return Image.fromarray(o,'RGBA')
+def tex6(name,n,q=(.08,.25,.5,.75,.93),emit=None,eq=(.88,.965)):
+    """フリーのテクスチャ（textures/<name>.png、くりかえしてつながる）を、こさの番号の6だんに（moss と同じ作り方）。
+    emit：光る所の絵（溶岩のかさぶたの、光るすじ）。あれば、0〜3 をかさぶたの明るさ、4・5 を光るすじにする"""
+    im=Image.open(os.path.join(ROOT,'tools','art','textures',name+'.png')).convert('RGB').resize((n,n),Image.BOX)
+    a=np.asarray(im,float);L=a[...,0]*.3+a[...,1]*.59+a[...,2]*.11
+    if emit:
+        e=np.asarray(Image.open(os.path.join(ROOT,'tools','art','textures',emit+'.png')).convert('RGB').resize((n,n),Image.BOX),float).mean(2)
+        idx=np.searchsorted(np.quantile(L,[.2,.5,.8]),L);qe=np.quantile(e,eq);idx=np.where(e>qe[1],5,np.where(e>qe[0],4,idx))
+    else:idx=np.searchsorted(np.quantile(L,q),L)
+    for _ in range(2):
+        P=np.pad(idx,1,mode='wrap');nb=np.stack([P[1+dy:1+dy+n,1+dx:1+dx+n] for dy in(-1,0,1) for dx in(-1,0,1) if dx or dy])
+        same=(nb==idx[None]).sum(0);mode=np.apply_along_axis(lambda c:np.bincount(c,minlength=6).argmax(),0,nb);idx=np.where(same<=2,mode,idx)
+    g=np.array(LV)[idx];o=np.zeros((n,n,4),np.uint8);o[...,0]=o[...,1]=o[...,2]=g;o[...,3]=255
+    return Image.fromarray(o,'RGBA')
 def caus(n=128,seed=11):
     """水の底の光の網目（こさの番号：1 が網目、0 がそれ以外）。ゆがんだボロノイのふち。2マスでくりかえす"""
     rs=np.random.RandomState(seed);g=6;P=np.array([((i+.5+rs.uniform(-.35,.35))*n/g,(j+.5+rs.uniform(-.35,.35))*n/g) for j in range(g) for i in range(g)])
@@ -83,7 +98,7 @@ def caus(n=128,seed=11):
     return Image.fromarray(o,'RGBA')
 def main(src,out,chips):
     os.makedirs(out,exist_ok=True)
-    R={'cave:cols':cols(os.path.join(src,'cave_cols','cave_cols.png')),'cave:ccols':cols(os.path.join(src,'cave_ccols','cave_ccols.png')),'cave:ground':ground(),'cave:moss':moss(),'cave:caus':caus()};OF={}
+    R={'cave:cols':cols(os.path.join(src,'cave_cols','cave_cols.png')),'cave:ccols':cols(os.path.join(src,'cave_ccols','cave_ccols.png')),'cave:ground':ground(),'cave:moss':moss(),'cave:ash':tex6('lava001',192,emit='lava001_e'),'cave:lava':tex6('lava004',192,q=(.1,.3,.55,.8,.94)),'cave:frost':tex6('ice003',160),'cave:pebble':tex6('rocks023',192),'cave:caus':caus()};OF={}
     for k,f in TONED.items():   # 3Dで写した、こさの番号の物（水晶・岩の段）。ずれは <フォルダ>/<f>/offs.json（furn3d が出す ax・ay）
         R[k]=Image.fromarray(tone(np.asarray(Image.open(os.path.join(src,f,f+'.png')).convert('RGBA'))).astype(np.uint8),'RGBA');OF[k]=tuple(json.load(open(os.path.join(src,f,'offs.json'))))
     for k,i in R.items():i.save(os.path.join(out,k+'.png'))
