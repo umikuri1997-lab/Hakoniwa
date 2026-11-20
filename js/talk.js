@@ -66,7 +66,7 @@ function nowTopic(r){const n=hour(),gn=goneTalkName(),T=S.trouble&&S.trouble.id=
   {const a=annivTopic(r);if(a)return a}/* 村に来て〇日の記念日 */
   {const d=typeof dreamTopic==='function'?dreamTopic(r):null;if(d)return d}/* ゆうべのゆめ */
   if(r.grief&&gn)return{u:1,L:tkFresh('u:grief',TALKU.grief).map(t=>t.split('@G').join(gn))};
-  if(r.hunger<500)return{u:1,L:tkFresh('u:hungry',TALKU.hungry)};
+  if(r.hunger<250)return{u:1,L:tkFresh('u:hungry',TALKU.hungry)};
   if(r.energy<30)return{u:1,L:tkFresh('u:tired',TALKU.tired)};
   const P=[];
   if(T==='cramped')tAll(P,'t:cr',[['#think|家が、ちょっとせまくて……。','もうすこし広かったら、のびのびできるのにな。'],['#think|ねがえりをうつと、となりにぶつかっちゃうんだ。','もうすこし、ひろびろしたいな。']]);

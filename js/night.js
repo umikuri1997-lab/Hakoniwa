@@ -46,30 +46,30 @@ function doSummon(){
     r=mkRes(S,name,sm.elem,sp[0]+.5,sp[1]+.5);toast(ELEM[sm.elem].name+'のせいれい「'+name+'」がやってきた！','good')
     if(sm.elem==='fire'&&S.crops&&!S.crops.mugi){S.crops.mugi=S.crops.tomato=true}}/* 火のせいれいが来たら、パン・スープの作物がふえる */
   if(STATUE>=0&&S.obj[STATUE+W]==='altar'){r.x=STATUE%W+.5;r.y=((STATUE/W)|0)+1.12;sp=[STATUE%W,((STATUE/W)|0)+1]}/* 神殿のまんなか（台座の上）からあらわれる */
-  r.hunger=750;r.spawnT=performance.now();if(!r.came)r.came=dayNo();if(!r.back)S.lastCame=dayNo();if(!sm.mebuki)S.summonDay=callDay();S.res.push(r);if(!r.back&&typeof letterQ==='function')letterQ(r,'new')/* はじめましての手紙 */;if(!r.back)simNote(r);S.summons=(S.summons||0)+1;memo(r.back?'🌱':'🌟',r.back?r.name+'がもどってきた':r.name+'（'+ELEM[r.elem].name+'のせいれい）が村にやってきた');logEv(r.back?r.name+'がもどってきた':r.name+'（'+ELEM[r.elem].name+'のせいれい）がやってきた');const welcome={id:r.id,t:Infinity};NEWQ.push(welcome);HOLD.add(r.id);welcomeNear(r,welcome);/* なかまの紹介：みんなは集まらない。そばにいる子だけが、その場でよろこぶ *//* ステータスをとじるまで、わーいのポーズで止まる */
+  r.hunger=375;r.spawnT=performance.now();if(!r.came)r.came=dayNo();if(!r.back)S.lastCame=dayNo();if(!sm.mebuki)S.summonDay=callDay();S.res.push(r);if(!r.back&&typeof letterQ==='function')letterQ(r,'new')/* はじめましての手紙 */;if(!r.back)simNote(r);S.summons=(S.summons||0)+1;memo(r.back?'🌱':'🌟',r.back?r.name+'がもどってきた':r.name+'（'+ELEM[r.elem].name+'のせいれい）が村にやってきた');logEv(r.back?r.name+'がもどってきた':r.name+'（'+ELEM[r.elem].name+'のせいれい）がやってきた');const welcome={id:r.id,t:Infinity};NEWQ.push(welcome);HOLD.add(r.id);welcomeNear(r,welcome);/* なかまの紹介：みんなは集まらない。そばにいる子だけが、その場でよろこぶ *//* ステータスをとじるまで、わーいのポーズで止まる */
   spawnFX(sp[0],sp[1],ELEM[r.elem].col);centerOn((sp[0]+.5)*TS,(sp[1]+.5)*TS);quietBeat(2400,'arrive');hdBig(6000);recount();
 }
 
 /* ---------- 敵（「コワイノ」） ---------- */
 const EN={
-  basic:{xp:5,pw:4,name:'コカゲ',hp:100,sp:.80,atk:25,hit:20,hitF:38,hitN:60,hitFS:23,hitNS:30,hitFN:90,hitFNS:45,col:'#2a1d46',eye:'#ff6b8a',size:.75},
-  fast:{xp:4,pw:3,name:'ハヤカゲ',hp:50,sp:1.6,atk:16.7,/* コカゲの足2倍・攻撃1.5倍の速さ */hit:14,hitF:30,hitN:40,hitFS:15,hitNS:20,hitFN:60,hitFNS:30,col:'#1d3446',eye:'#7ff0ff',size:.8},
-  thief:{xp:2,pw:2,name:'カゲドロボウ',hp:30,sp:.88,atk:25,hit:10,hitF:23,hitN:30,hitFS:15,hitNS:15,hitFN:45,hitFNS:23,col:'#3b2a14',eye:'#ffd35c',size:.9,thief:1},
-  brute:{xp:8,pw:6,rng:1.2,name:'カタカゲ',hp:100,sp:.76,atk:9,hit:28,hitF:53,hitN:85,hitFS:30,hitNS:40,hitFN:128,hitFNS:60,col:'#3a1a1a',eye:'#ff8a3d',size:1.25,hs:1}/* 当たり判定は1マス */,
-  breaker:{xp:7,pw:5,name:'カベクダキ',hp:90,sp:.8,atk:6,hit:18,hitF:38,hitN:55,hitFS:23,hitNS:25,hitFN:83,hitFNS:38,col:'#3a2a1a',eye:'#ffa04a',size:1.1,wall:3},/* 壁や柵をこわすのが得意（こわす力3倍・速い）。よけずにまっすぐこわしにくる */
-  trapper:{xp:6,pw:5,name:'ワナクイ',hp:80,sp:.9,atk:12,hit:16,hitF:30,hitN:50,hitFS:15,hitNS:25,hitFN:75,hitFNS:38,col:'#2b3a1e',eye:'#c6ff6b',size:.95,trapper:1},/* 罠・見張り台を先にこわしにくる */
-  boss:{xp:25,pw:20,rng:2.1,name:'オオカゲ',hp:600,sp:.84,atk:7,hit:14,hitF:30,hitN:40,hitFS:15,hitNS:20,hitFN:60,hitFNS:30,col:'#120a24',eye:'#ff3b6b',size:1.8,boss:1},
-  ash:{xp:4,pw:3,name:'ハイカゲ',hp:60,sp:.9,atk:20,hit:12,hitF:45,hitN:35,hitFS:23,hitNS:20,hitFN:53,hitFNS:30,col:'#6d6a66',eye:'#ffb36b',size:.9,ash:1},/* かまど・ベンチなどを灰でよごして止める */
-  armor:{xp:9,pw:7,name:'ヨロイカゲ',hp:120,sp:.7,atk:25,hit:24,hitF:45,hitN:70,hitFS:25,hitNS:35,hitFN:100,hitFNS:50,col:'#4a4a5a',eye:'#9fe0ff',size:1.3,armor:1},/* 矢は半分、火・どく・延焼は2倍（defense.js） */
+  basic:{xp:5,pw:4,name:'コカゲ',hp:100,sp:.80,atk:25,hit:20,hitF:19,hitN:30,hitFS:12,hitNS:15,hitFN:45,hitFNS:22,col:'#2a1d46',eye:'#ff6b8a',size:.75},
+  fast:{xp:4,pw:3,name:'ハヤカゲ',hp:50,sp:1.6,atk:16.7,/* コカゲの足2倍・攻撃1.5倍の速さ */hit:14,hitF:15,hitN:20,hitFS:8,hitNS:10,hitFN:30,hitFNS:15,col:'#1d3446',eye:'#7ff0ff',size:.8},
+  thief:{xp:2,pw:2,name:'カゲドロボウ',hp:30,sp:.88,atk:25,hit:10,hitF:12,hitN:15,hitFS:8,hitNS:8,hitFN:22,hitFNS:12,col:'#3b2a14',eye:'#ffd35c',size:.9,thief:1},
+  brute:{xp:8,pw:6,rng:1.2,name:'カタカゲ',hp:100,sp:.76,atk:9,hit:28,hitF:26,hitN:42,hitFS:15,hitNS:20,hitFN:64,hitFNS:30,col:'#3a1a1a',eye:'#ff8a3d',size:1.25,hs:1}/* 当たり判定は1マス */,
+  breaker:{xp:7,pw:5,name:'カベクダキ',hp:90,sp:.8,atk:6,hit:18,hitF:19,hitN:28,hitFS:12,hitNS:12,hitFN:42,hitFNS:19,col:'#3a2a1a',eye:'#ffa04a',size:1.1,wall:3},/* 壁や柵をこわすのが得意（こわす力3倍・速い）。よけずにまっすぐこわしにくる */
+  trapper:{xp:6,pw:5,name:'ワナクイ',hp:80,sp:.9,atk:12,hit:16,hitF:15,hitN:25,hitFS:8,hitNS:12,hitFN:38,hitFNS:19,col:'#2b3a1e',eye:'#c6ff6b',size:.95,trapper:1},/* 罠・見張り台を先にこわしにくる */
+  boss:{xp:25,pw:20,rng:2.1,name:'オオカゲ',hp:600,sp:.84,atk:7,hit:14,hitF:15,hitN:20,hitFS:8,hitNS:10,hitFN:30,hitFNS:15,col:'#120a24',eye:'#ff3b6b',size:1.8,boss:1},
+  ash:{xp:4,pw:3,name:'ハイカゲ',hp:60,sp:.9,atk:20,hit:12,hitF:22,hitN:18,hitFS:12,hitNS:10,hitFN:26,hitFNS:15,col:'#6d6a66',eye:'#ffb36b',size:.9,ash:1},/* かまど・ベンチなどを灰でよごして止める */
+  armor:{xp:9,pw:7,name:'ヨロイカゲ',hp:120,sp:.7,atk:25,hit:24,hitF:22,hitN:35,hitFS:12,hitNS:18,hitFN:50,hitFNS:25,col:'#4a4a5a',eye:'#9fe0ff',size:1.3,armor:1},/* 矢は半分、火・どく・延焼は2倍（defense.js） */
   shiny:{xp:10,pw:10,name:'ヒカリカゲ',hp:60,sp:1.4,atk:30,hit:0,hitF:0,hitN:0,hitFS:0,hitNS:0,hitFN:0,hitFNS:0,col:'#fff2b0',eye:'#ffffff',size:.8,glow:1,shiny:1},/* まれに来て、横切って帰る */
-  hana:{xp:4,pw:3,name:'ハナカゲ',hp:80,sp:.9,atk:25,hit:16,hitF:30,hitN:45,hitFS:18,hitNS:24,hitFN:70,hitFNS:35,col:'#6a3a5a',eye:'#ffc6e0',size:1},/* 季節のコワイノ（defense.js） */
-  hoteri:{xp:6,pw:5,name:'ホテリカゲ',hp:100,sp:.9,atk:25,hit:20,hitF:38,hitN:60,hitFS:23,hitNS:30,hitFN:90,hitFNS:45,col:'#5a2a1a',eye:'#ffb36b',size:1,fireRes:1},
-  ochiba:{xp:5,pw:4,name:'オチバカゲ',hp:60,sp:1.2,atk:20,hit:14,hitF:30,hitN:40,hitFS:15,hitNS:20,hitFN:60,hitFNS:30,col:'#5a3a1a',eye:'#ffd38a',size:.8,nosl:1},
-  yuki:{xp:9,pw:7,name:'ユキカゲ',hp:160,sp:.6,atk:30,hit:24,hitF:45,hitN:70,hitFS:25,hitNS:35,hitFN:100,hitFNS:50,col:'#3a4a5a',eye:'#e0f4ff',size:1.3},
-  rockc:{xp:12,pw:8,name:'イワカゲ',hp:220,sp:.5,atk:30,hit:30,hitF:113,hitN:90,hitFS:60,hitNS:45,hitFN:135,hitFNS:68,col:'#5a4636',eye:'#ffcf6b',size:1.3},/* おそいけど、かたい */
-  hino:{xp:35,pw:25,rng:2.3,name:'ヒノオオカゲ',hp:750,sp:.7,atk:6,hit:40,hitF:150,hitN:120,hitFS:75,hitNS:60,hitFN:180,hitFNS:90,col:'#3a0c08',eye:'#ffb02e',size:2.1,boss:1,dev:1},/* 火山から下りてきて、熱の装置をねらう */
-  yama:{xp:40,pw:30,rng:2.4,name:'ヤマノオオカゲ',hp:750,sp:.75,atk:6,hit:20,hitF:75,hitN:60,hitFS:38,hitNS:30,hitFN:90,hitFNS:45,col:'#2a0904',eye:'#ff6a2e',size:2.4,boss:1,vol:1},/* 火山のふもとの最後の夜に、火の山からおりてきて、温泉の熱をうばう */
-  boss2:{xp:50,pw:30,rng:3.4,hx:2.6,hy:.8,name:'ヨルノオオカゲ',hp:1100,sp:.9,atk:12,hit:30,hitF:113,hitN:90,hitFS:60,hitNS:45,hitFN:135,hitFNS:68,col:'#05030c',eye:'#ffd84a',size:4.6,boss:1},/* ヌシ様をむかえる準備ができたあとに来る */
+  hana:{xp:4,pw:3,name:'ハナカゲ',hp:80,sp:.9,atk:25,hit:16,hitF:15,hitN:22,hitFS:9,hitNS:12,hitFN:35,hitFNS:18,col:'#6a3a5a',eye:'#ffc6e0',size:1},/* 季節のコワイノ（defense.js） */
+  hoteri:{xp:6,pw:5,name:'ホテリカゲ',hp:100,sp:.9,atk:25,hit:20,hitF:19,hitN:30,hitFS:12,hitNS:15,hitFN:45,hitFNS:22,col:'#5a2a1a',eye:'#ffb36b',size:1,fireRes:1},
+  ochiba:{xp:5,pw:4,name:'オチバカゲ',hp:60,sp:1.2,atk:20,hit:14,hitF:15,hitN:20,hitFS:8,hitNS:10,hitFN:30,hitFNS:15,col:'#5a3a1a',eye:'#ffd38a',size:.8,nosl:1},
+  yuki:{xp:9,pw:7,name:'ユキカゲ',hp:160,sp:.6,atk:30,hit:24,hitF:22,hitN:35,hitFS:12,hitNS:18,hitFN:50,hitFNS:25,col:'#3a4a5a',eye:'#e0f4ff',size:1.3},
+  rockc:{xp:12,pw:8,name:'イワカゲ',hp:220,sp:.5,atk:30,hit:30,hitF:56,hitN:45,hitFS:30,hitNS:22,hitFN:68,hitFNS:34,col:'#5a4636',eye:'#ffcf6b',size:1.3},/* おそいけど、かたい */
+  hino:{xp:35,pw:25,rng:2.3,name:'ヒノオオカゲ',hp:750,sp:.7,atk:6,hit:40,hitF:75,hitN:60,hitFS:38,hitNS:30,hitFN:90,hitFNS:45,col:'#3a0c08',eye:'#ffb02e',size:2.1,boss:1,dev:1},/* 火山から下りてきて、熱の装置をねらう */
+  yama:{xp:40,pw:30,rng:2.4,name:'ヤマノオオカゲ',hp:750,sp:.75,atk:6,hit:20,hitF:38,hitN:30,hitFS:19,hitNS:15,hitFN:45,hitFNS:22,col:'#2a0904',eye:'#ff6a2e',size:2.4,boss:1,vol:1},/* 火山のふもとの最後の夜に、火の山からおりてきて、温泉の熱をうばう */
+  boss2:{xp:50,pw:30,rng:3.4,hx:2.6,hy:.8,name:'ヨルノオオカゲ',hp:1100,sp:.9,atk:12,hit:30,hitF:56,hitN:45,hitFS:30,hitNS:22,hitFN:68,hitFNS:34,col:'#05030c',eye:'#ffd84a',size:4.6,boss:1},/* ヌシ様をむかえる準備ができたあとに来る */
 };
 function bossDayNo(){/* オオカゲが来る日の番号。まだ来ると聞いていなければ null、なかまがそろうまで来ないときは、いる人数のマイナス */const w=S.bossWarn;if(w==null)return null;const t=dayNo(),need=S.wipe?5:4;/* 全滅のあとは、5人そろうまで来ない（level.js の S.wipe） */if(!(S.res.length>=need&&S.res.some(q=>q.elem==='fire')&&KEYS[WD].every(n=>S.res.some(r=>r.name===n))))return -need;let d=t;if(!S.bossOwed)while(!bossNight(d))d++;/* 来る日にそろっていなかった分（S.bossOwed）は、そろって3日たった夜に来る（waveFor と同じ） */if(S.res4Since!=null)d=Math.max(d,S.res4Since+3);return d}
 function bossDays(){const d=bossDayNo();if(d==null)return '';if(d<0)return 'オオカゲ：なかまが'+(-d)+'人そろうまで来ない';const t=dayNo();return d===t?'オオカゲが来るまで：今夜':'オオカゲが来るまで：あと'+(d-t)+'日'}/* クエストの進みぐあいに、オオカゲが来る日を出す */
@@ -317,16 +317,16 @@ function updEnemy(e,dt){
 function overFence(ax,ay,bx,by){/* 柵（門もふくむ）を、はさんでいるか */const n=Math.ceil(Math.hypot(bx-ax,by-ay)*4),ia=(ay|0)*W+(ax|0),ib=(by|0)*W+(bx|0);for(let k=1;k<n;k++){const px=ax+(bx-ax)*k/n,py=ay+(by-ay)*k/n,q=(py|0)*W+(px|0);if(q===ia||q===ib)continue;if(FENCE_IDS.has(typeAt(q)))return true}return false}
 function fenceBetween(ax,ay,bx,by){/* 家の壁をはさんでいたら、離れたところからは攻撃できない（柵・石の柵・石の塀は、こえて攻撃できる） */const n=Math.ceil(Math.hypot(bx-ax,by-ay)*4),ia=(ay|0)*W+(ax|0),ib=(by|0)*W+(bx|0);for(let k=1;k<n;k++){const px=ax+(bx-ax)*k/n,py=ay+(by-ay)*k/n,q=(py|0)*W+(px|0);if(q===ia||q===ib)continue;const t=typeAt(q);if(HOME_WALLS.has(t)&&t!=='wall')return true}return false}
 const hsOf=D=>D.size>=1.5?2:1,reachOf=D=>D.rng||.75*hsOf(D);/* 攻撃がとどく距離：大きいコワイノ（オオカゲ・カタカゲ）は、すこし離れたところから攻撃する *//* 当たり判定は見た目ぴったりではなく、1マスか2マス */
-function houseBreakFlee(h){/* 家の壁・ドアがこわされた瞬間、その家の中にいた子は、起きてすぐ逃げる（こわれた家は、もう家ではない） */if(!h)return;findHouses();for(const r of S.res){const k=(r.y|0)*W+(r.x|0);if(!h.inside.has(k)&&!h.set.has(k))continue;if(r.act&&r.act.type==='faint')continue;if(r.act)endAct(r);r.hidden=false;r.alarm=S.t;if(fighter(r)&&r.hunger>=500)continue;/* 戦える子（火のせいれい・出撃した子）は、そのままたたかう */r.fleeT=S.t;const G=bfs(r.x|0,r.y|0);if(!withFlee(r,fleeHit,G)){r.fleeNow=true;r.fleeHouse=true}r.bubble='💦'}}
+function houseBreakFlee(h){/* 家の壁・ドアがこわされた瞬間、その家の中にいた子は、起きてすぐ逃げる（こわれた家は、もう家ではない） */if(!h)return;findHouses();for(const r of S.res){const k=(r.y|0)*W+(r.x|0);if(!h.inside.has(k)&&!h.set.has(k))continue;if(r.act&&r.act.type==='faint')continue;if(r.act)endAct(r);r.hidden=false;r.alarm=S.t;if(fighter(r)&&r.hunger>=250)continue;/* 戦える子（火のせいれい・出撃した子）は、そのままたたかう */r.fleeT=S.t;const G=bfs(r.x|0,r.y|0);if(!withFlee(r,fleeHit,G)){r.fleeNow=true;r.fleeHouse=true}r.bubble='💦'}}
 const onTower=r=>!!(r.act&&r.act.type==='watchpost'&&r.act.stage==='do'&&(r.act.cl||0)>=.5&&S.obj[r.act.obj]==='watch');/* 見張り台の上に立っている子（見張り台がこわれるまで攻撃されない） */
-function hitRes(e,r,D){if(onTower(r))return;{const g=escGuard(r);if(g)r=g}/* 助けてにげる：にげる子への攻撃は、となりの助ける子がうける（support.js） */enAim(e,r.x,r.y);if(BOSSFX[e.type]){shakeScreen();fxSpr('shock',r.x*TS,r.y*TS,BOSSFX[e.type].col);sfxAt('bonk',r.x,r.y)}/* オオカゲの一撃は、画面がゆれて衝撃がひろがる */if(!WD&&r.elem==='fire'&&r.hunger<600&&r.name===keyName('fire')&&S.flags.guard)S.flags.fHurtG=1;/* こもれびのまもりをおぼえたあとに、火の子がたくさんたたかれた */const sh=(r.shU||0)>S.t;/* フタバの葉っぱのまもり：EN の hitFS・hitNS（まもりありの数） */if((r.faintGrace||0)>S.t||r.act&&r.act.type==='faint'){e.rest=1;return}/* 気絶している子は攻撃しない */const h0=r.hunger,G=gearStat(r),gk=gearGlowNear(e)?.8:1,hu=v=>Math.max(0,Math.round((v-G.hun)*gk*(typeof seaFoeK==='function'?seaFoeK(e):1)));/* 冬のコワイノは攻撃0.8倍 *//* そうび：へるおなか－・光る（整数にする） */sfx('hit');e.swing=performance.now();enLunge(e,r);
+function hitRes(e,r,D){if(onTower(r))return;{const g=escGuard(r);if(g)r=g}/* 助けてにげる：にげる子への攻撃は、となりの助ける子がうける（support.js） */enAim(e,r.x,r.y);if(BOSSFX[e.type]){shakeScreen();fxSpr('shock',r.x*TS,r.y*TS,BOSSFX[e.type].col);sfxAt('bonk',r.x,r.y)}/* オオカゲの一撃は、画面がゆれて衝撃がひろがる */if(!WD&&r.elem==='fire'&&r.hunger<300&&r.name===keyName('fire')&&S.flags.guard)S.flags.fHurtG=1;/* こもれびのまもりをおぼえたあとに、火の子がたくさんたたかれた */const sh=(r.shU||0)>S.t;/* フタバの葉っぱのまもり：EN の hitFS・hitNS（まもりありの数） */if((r.faintGrace||0)>S.t||r.act&&r.act.type==='faint'){e.rest=1;return}/* 気絶している子は攻撃しない */const h0=r.hunger,G=gearStat(r),gk=gearGlowNear(e)?.8:1,hu=v=>Math.max(0,Math.round((v-G.hun)*gk*(typeof seaFoeK==='function'?seaFoeK(e):1)));/* 冬のコワイノは攻撃0.8倍 *//* そうび：へるおなか－・光る（整数にする） */sfx('hit');e.swing=performance.now();enLunge(e,r);
   const lv=rLv(r);S.nightHurt++;if(S.ns)S.ns.hurt++;const fire=r.elem==='fire';
   if(r.act&&['sleep','stay','rest','idle'].includes(r.act.type)&&r.act.stage==='do')endAct(r);/* 攻撃されたら、寝ていても起きる */
   const adj=Math.hypot(e.x-r.x,e.y-r.y)<=Math.max(1.1,reachOf(D)+.05);/* せいれいの攻撃は、となりにいる相手だけ（遠くから攻撃してくる大きいコワイノには、その距離でもやり返せる） */if(fighter(r)&&adj){/* 戦える子（火のせいれい・出撃した子）。受けるダメージは、火は hitF、ほかは hitN *//* やり返しはしない（攻撃されたときの受けるダメージの軽さだけ、戦える子は今までどおり） */
-    r.hunger=Math.max(0,r.hunger-hu(fire?(sh?D.hitFS:D.hitF):(sh?D.hitNS:D.hitN)));r.hurt=40;if(r.hunger<500)r.fleeNow=true;/* 体力（おなか）がへったら逃げる（オオカゲが相手でも同じ） */}
+    r.hunger=Math.max(0,r.hunger-hu(fire?(sh?D.hitFS:D.hitF):(sh?D.hitNS:D.hitN)));r.hurt=40;if(r.hunger<250)r.fleeNow=true;/* 体力（おなか）がへったら逃げる（オオカゲが相手でも同じ） */}
   else{r.hunger=Math.max(0,r.hunger-hu(fire?(sh?D.hitFNS:D.hitFN):(sh?D.hitNS:D.hitN)));/* 火の子は hitFN・hitFNS（はなれているときに受ける数） */funAdd(r,-(20),'foe');r.hurt=40;r.fleeNow=true;/* 戦えない子は、オオカゲが相手でも逃げる */
     if(D.boss&&Math.random()<.25*G.ns){endAct(r);r.act={type:'faint',stage:'do',t:0};r.bubble='😵'}/* ボスの攻撃で気絶するのは、4回に1回くらい */}r.alarm=S.t;
-  if(h0>=120&&r.hunger<30)r.hunger=30;/* 一撃では消えない */
+  if(h0>=120&&r.hunger<15)r.hunger=15;/* 一撃では消えない */
   {const lost=h0-r.hunger;if(lost>0)hitFx(r,lost,{sx:e.x,sy:e.y,big:lost>=100})}/* へったおなかの数字・火花・のけぞり */
   {const L=lightAt(e.x,e.y);e.rest=fire?(D.boss?(L?2:1.5):(L?2.667:2)):(D.boss?(L?4:3):(L?5.333:4))}/* たたいたあと、コワイノがひと休みする時間（明かりの中は長い）。やられて止まる stun とはちがい、うすくならない */e.path=[];e.repath=0;gearHurt(e,r);/* はね返し */
 }

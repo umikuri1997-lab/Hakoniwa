@@ -26,7 +26,7 @@ function kgrLampPlace(){/* 村の南の入り口：まん中の少し南の、�
 function kgrDue(){/* カガリが帰ってくる夕方か */return kgrOn()&&!S.flags.kagariCame&&QUESTS[S.quest]&&QUESTS[S.quest].id==='kagari'&&S.qTalked&&S.qStory==null&&callDay()>(S.flags.kgrFrom??-1)}
 function goVigil(r,G){
   if(!kgrOn()||r.name!==HOMURA||S.flags.kagariCame||isNight()||enemyLive()||KGRRUN)return false;
-  const h=hour();if(h<KGRH0||h>=KGRH1||S.st2.lampD===callDay()||r.hunger<400||kgrDue())return false;/* カガリが帰ってくる夕方は、場面の中でともす */
+  const h=hour();if(h<KGRH0||h>=KGRH1||S.st2.lampD===callDay()||r.hunger<200||kgrDue())return false;/* カガリが帰ってくる夕方は、場面の中でともす */
   if(typeof storyCalled==='function'&&storyCalled(r))return false;
   const L=kgrLampJ();if(L<0)return false;
   let st=nearest(G,j=>(j===L-1||j===L+1)&&walk(j)&&!S.obj[j],9999);if(st<0)st=nearest(G,j=>j===L-W&&walk(j)&&!S.obj[j],9999);if(st<0)return false;
@@ -77,7 +77,7 @@ function kgrReturn(){
     villageTimeout(()=>{if(!ok())return stop();S.st2.lampD=callDay();recount();sfxAt('crackle',lx,ly);
       for(const q of[hh,ss])if(q){q.face=1;volPose(q,'storyListen',600000,{front:true})}/* 道の先（手前）を見る */
       villageTimeout(()=>{if(!ok())return stop();
-        k=mkRes(S,KAGARI,'fire',sp%W+.5,(sp/W|0)+.5);k.kgrTemp=1;k.came=dayNo();k.hunger=750;k.face=1;S.res.push(k);recount();
+        k=mkRes(S,KAGARI,'fire',sp%W+.5,(sp/W|0)+.5);k.kgrTemp=1;k.came=dayNo();k.hunger=375;k.face=1;S.res.push(k);recount();
         volShot([[lx,ly],[sp%W+.5,(sp/W|0)+.5]],[hh,ss,k],2.2,1.6);quietBeat(2400);
         volWalk(k,lx,ly+2,{cap:16000},()=>{if(!ok())return stop();volFace(k,hh?hh.x:lx);volShot([[lx,ly]],[hh,ss,k],2.4,1.2);
           say(KGR_MEET,()=>{
@@ -134,7 +134,7 @@ function kgrTick(){if(!kgrOn())return;const now=performance.now();if(now-KGRT<10
   if(kgrLampNeed()&&kgrLampJ()<0)kgrLampPlace();
   {const lit=kgrLit();if(KGRLIT.S!==S){KGRLIT.S=S;KGRLIT.v=lit}else if(lit!==KGRLIT.v){KGRLIT.v=lit;recount()}}/* ともした・朝になった：夜の光の一覧を作りなおす */
   if(!kgrSceneOK())return;const h=hour();
-  if(kgrDue()&&h>=KGRH0&&h<KGRH1){const ho=volWho(HOMURA);if(ho&&!(ho.act&&ho.act.type==='sleep')&&ho.hunger>=300)kgrReturn();return}
+  if(kgrDue()&&h>=KGRH0&&h<KGRH1){const ho=volWho(HOMURA);if(ho&&!(ho.act&&ho.act.type==='sleep')&&ho.hunger>=150)kgrReturn();return}
   if(h<KGRIVH0||h>=KGRIVH1)return;
   if(S.cleared&&!S.flags.kgrEnd&&S.obj.includes('tower')){kgrEndGather();return}
   if(S.cleared||S.flags.kgrIvD===callDay()||S.finalNight)return;/* 1晩に1つ。山の影の夜は出さない */

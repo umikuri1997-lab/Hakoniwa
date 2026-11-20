@@ -4,7 +4,7 @@
    夜・コワイノ・あいてがいなくなったら、とちゅうでやめる（ごほうびなし）。 */
 const OUTMIN=60,OUTP=.1,OUTH0=9,OUTH1=17,OUTDUR=60,OUTBOND=3,OUTFUN=10,OUTFAR=30;
 const OUTPK={flower:'花のそば',water:'水べ',spot:'すてきな所'};
-function outFree(q){if(!q||q.hidden||q.coffin||q.grief||q.hunger<500||q.energy<30)return false;const a=q.act;if(!a)return true;if(!IDLE_ACTS.includes(a.type))return false;return !((a.type==='fish'||a.type==='play')&&a.stage==='do')}
+function outFree(q){if(!q||q.hidden||q.coffin||q.grief||q.hunger<250||q.energy<30)return false;const a=q.act;if(!a)return true;if(!IDLE_ACTS.includes(a.type))return false;return !((a.type==='fish'||a.type==='play')&&a.stage==='do')}
 function outKind(k){/* そのマスのとなりにある、すてきな物 */let f='';for(const d of [1,-1,W,-W]){const q=k+d;if(q<0||q>=W*H||Math.abs(q%W-k%W)>1)continue;if(FLOWERS.has(S.obj[q])&&!isBud(q))return 'flower';if(waterJ(q))f=f||'water';if(typeof SPOTJ!=='undefined'&&SPOTJ.has(q))f=f||'spot'}return f}
 function outSpot(G,G2){/* 2人がならんで立てる所：stand と、そのとなり（左右） */const free0=j=>walk(j)&&!S.obj[j]&&!(TAKEN&&TAKEN.has(j))&&!(S.fog&&typeof fogAt==='function'&&fogAt(j)),C=[];
   for(let j=0;j<W*H;j++){const d=G.dist[j];if(d<1||d>OUTFAR||!free0(j))continue;const pk=outKind(j);if(!pk)continue;for(const s of [1,-1]){const j2=j+s;if(Math.abs(j2%W-j%W)!==1||!free0(j2)||G2.dist[j2]<0||G2.dist[j2]>OUTFAR)continue;C.push([j,j2,pk]);break}}

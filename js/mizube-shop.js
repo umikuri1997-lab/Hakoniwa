@@ -71,7 +71,7 @@ function shopJob(r,G){/* せいれいの仕事：料理を運ぶ・歌う */if(!
     const st=nearest(G,k=>walk(k)&&keysAdj(k,[key])>=0,9999);if(st<0)continue;c.taken=r.id;startAct(r,G,'mzpick',st,{key:'c'+c.id,cid:c.id,d:c.want});return true}
   return false}
 const SHOPCUT=new Set(['bathe','wander','idle','quirk','critwatch','sunset','rainjoy','admire','ownseat','chat','rest','stretch']);/* お客さんのために、やめてよい事 */
-function shopCut(r){if(!mzOn()||isNight()||!r.act||!SHOPCUT.has(r.act.type)||r.hunger<350||(r.shk>S.t))return false;r.shk=S.t+2;return SHOPC.cust.some(c=>c.st==='wait'&&!c.taken&&availOf('f:'+c.want)>0)}
+function shopCut(r){if(!mzOn()||isNight()||!r.act||!SHOPCUT.has(r.act.type)||r.hunger<175||(r.shk>S.t))return false;r.shk=S.t+2;return SHOPC.cust.some(c=>c.st==='wait'&&!c.taken&&availOf('f:'+c.want)>0)}
 ACT.mzpick={start(r,a){r.bubble=''},done:(r,a)=>a.t>=4,end(r,a){const c=SHOPC.cust.find(q=>q.id===a.cid);const j=(r.y|0)*W+(r.x|0),b=keysAdj(j,['f:'+a.d]);if(c&&b>=0&&boxOut(b,'f:'+a.d,1)){r.mzd={c:a.cid,d:a.d};r.bubble=FOODS[a.d].e}else if(c)c.taken=0}};
 ACT.mzgive={start(r,a){const c=SHOPC.cust.find(q=>q.id===a.cid);if(!c||!r.mzd)return false;r.face=(c.x<r.x)?-1:1},done:(r,a)=>a.t>=3,end(r,a){const c=SHOPC.cust.find(q=>q.id===a.cid);if(c&&c.st==='wait'&&r.mzd){c.st='eat';c.wt=0;S.mz.served=(S.mz.served||0)+1;c.bubble='';JUMP.set(c,performance.now());addFloat(c.x,c.y-1.2,FOODS[r.mzd.d].name,'#ffd38a')}else if(r.mzd)availAdd('f:'+r.mzd.d,1);r.mzd=null;r.bubble=''}};
 ACT.mzsing={start(r,a){r.bubble='🎵';r.face=1},tick(r,a,dt){funAdd(r,dt*.05,'play')},done:(r,a)=>a.t>=SHOP.songDur,end(r,a){if(a.t>=SHOP.songDur){S.mz.songD=callDay();S.mz.sung=(S.mz.sung||0)+1;toast('ミオの歌が、川にひびいた','good')}r.bubble=''}};
