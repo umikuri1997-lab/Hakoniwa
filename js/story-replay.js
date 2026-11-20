@@ -49,7 +49,8 @@ function openStoryReplay(key){if(typeof followEnd==='function')followEnd();/* �
 let STORY_REPLAY_RUN=null;
 function replayControls(run){
   const bar=el('<div style="position:fixed;bottom:12px;left:12px;right:12px;z-index:60;display:flex;justify-content:space-between;gap:8px"><button class="btn" aria-pressed="false">自動送り：オフ</button><button class="btn">おわる</button></div>');
-  const [auto,close]=bar.querySelectorAll('button');auto.onclick=()=>{run.auto=!run.auto;auto.textContent='自動送り：'+(run.auto?'オン':'オフ');auto.setAttribute('aria-pressed',String(run.auto));};close.onclick=()=>parent.postMessage({type:'story-replay-close',token:run.token},location.origin);document.body.appendChild(bar);
+  const [auto,close]=bar.querySelectorAll('button');auto.onclick=()=>{run.auto=!run.auto;auto.textContent='自動送り：'+(run.auto?'オン':'オフ');auto.setAttribute('aria-pressed',String(run.auto));};const shut=()=>parent.postMessage({type:'story-replay-close',token:run.token},location.origin);close.onclick=shut;document.body.appendChild(bar);
+  window.addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();shut()}});/* 再生の画面をさわったあとは、キーがこの画面にとどくので、ここでも Escape でとじる */
 }
 function prepareStoryReplay(run,payload){
   if(payload.sound)Object.assign(SND,{bgm:payload.sound.bgm!==false,sfx:payload.sound.sfx!==false});

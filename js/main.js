@@ -71,7 +71,7 @@ function lastFirst(list){/* さいごにあそんだステージを、いちば�
   const pv=card.previousElementSibling,nx=card.nextElementSibling;if(pv&&pv.classList.contains('wlink'))pv.remove();else if(nx&&nx.classList.contains('wlink'))nx.remove();/* 道の線は、となりのステージどうしでつなぎなおす */
   card.classList.add('wtop');list.insertBefore(card,list.firstElementChild)}
 for(const k in BL)if(BL[k].play&&!FAVTOY.wind.includes(k))FAVTOY.wind.push(k);/* 風のせいれいは、どの遊び場も好き（あとのファイルで足した遊び家具も、ここでぜんぶ入れる） */
-const APP_VER=2015;/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER=2019;/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
@@ -80,7 +80,7 @@ function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
     if(k)list.appendChild(el('<div class="wlink"></div>'));
     let w2o=false,w5o=false;try{w2o=KV.getItem('hakoniwa-w2open')==='1';w5o=KV.getItem('hakoniwa-w5open')==='1'}catch(e){}
     let w6o=false;try{w6o=KV.getItem('hakoniwa-w6open')==='1'}catch(e){}
-    const L=LIVE[k]||null,play=STAGES.includes(k)||k===YAMI,open=k===0||(k===1&&!!((LIVE[0]&&LIVE[0].cleared)||L||w2o))||(k===YAMI&&w6o)||(k===WIND&&!!((LIVE[1]&&LIVE[1].cleared)||L||w5o))||k===MIZU;/* 風は、火山でヌシ様をむかえたら、ひらく *//* 闇のステージ：水・土・風ができるまでは、ためす入り口（とじたカードを5回タップ）だけ。水のステージは、試作のあいだだけ、いつでも入れる */
+    const L=LIVE[k]||null,play=STAGES.includes(k)||k===YAMI,open=k===0||(k===1&&!!((LIVE[0]&&LIVE[0].cleared)||L||w2o))||(k===YAMI&&(w6o||!!(L&&L.introSeen)))||/* 闇：セーブがあれば（読みこんだ時も）ひらく */(k===WIND&&!!((LIVE[1]&&LIVE[1].cleared)||L||w5o))||k===MIZU;/* 風は、火山でヌシ様をむかえたら、ひらく *//* 闇のステージ：水・土・風ができるまでは、ためす入り口（とじたカードを5回タップ）だけ。水のステージは、試作のあいだだけ、いつでも入れる */
     const card=el(`<div class="wcard${open?' open':' lock'}"><canvas width="760" height="280"></canvas><div class="wb"><span class="wn"></span><h3></h3><p></p><div class="wbtns"></div></div></div>`);
     const hide=!open&&!(k===2&&LIVE[1]&&LIVE[1].cleared);/* まだひらいていないステージは、名前も絵も見せない */
     if(hide)card.querySelector('.wn').innerHTML=pxi('lock','wlk')+'WORLD '+(k+1);else card.querySelector('.wn').textContent=wd.sub;card.querySelector('h3').textContent=hide?'？？？':wd.name;
@@ -228,7 +228,7 @@ function frame(now){
   followTick(rdt);/* 見守る */
   if(started&&!window.__noIdle&&now-lastIn>120000&&$('#idle').hidden&&$('#title').hidden&&$('#maps').hidden){$('#idle').hidden=false;try{save()}catch(e){}}
   if(SKIP&&!(isNight()&&S.enemyOn))SKIP=false;/* 朝になったら、ふつうの速さにもどす */
-  if(started&&!sacredQuietActive()&&!menuOpen&&$('#pro').hidden&&sheet==null&&NEWRES==null&&$('#dialog').hidden&&$('#lvup').hidden&&$('#rlv').hidden&&!calmNow()){showItemGift();cookNewTick();showSpotPop();reflectNoteTick();if(typeof fogRevealTick==='function')fogRevealTick();windTick();oreWakeTick()}
+  if(started&&!sacredQuietActive()&&!menuOpen&&$('#pro').hidden&&sheet==null&&NEWRES==null&&$('#dialog').hidden&&$('#lvup').hidden&&$('#rlv').hidden&&!calmNow()){showItemGift();cookNewTick();if(typeof gfShowTick==='function')gfShowTick();showSpotPop();reflectNoteTick();if(typeof fogRevealTick==='function')fogRevealTick();windTick();oreWakeTick()}
   if(!paused()){if(S.speed>1&&!TESTSPD&&!TESTM){S.glassT=Math.max(0,(S.glassT||0)-rdt);if(S.glassT<=0)S.speed=1}glassUI();LIGHTCD=Math.max(0,LIGHTCD-rdt*S.speed*(SKIP?40:1));AREACD=Math.max(0,AREACD-rdt*S.speed*(SKIP?40:1));let g=rdt*MIN_PER_SEC*S.speed*(SKIP?40:1);while(g>0){const s=Math.min(g,2);try{stepWorld(s)}catch(e){frameErr('step',e);break}g-=s;if(performance.now()<BOSSHOLD)break}/* オオカゲの登場・撃破で止めたら、残りは進めない */}
   if(typeof caveOn==='function'&&caveOn()){try{caveFrame(prdt,now)}catch(e){frameErr('cave',e)}}/* 洞窟の探検（cave.js） */
   for(const f of floats)f.life-=prdt*.7;while(floats.length&&floats[0].life<=0)floats.shift();

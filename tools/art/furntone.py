@@ -3,7 +3,7 @@
 # 面の向きは、写したときの奥行き（LAST_ZB）を部品ごとにぼかして出す（部品どうしでまぜない）。明るさの5だんのさかいめは、市松もようのあみかけ。
 # 部品のさかいの線（LAST_LINE）は、その部品の輪郭の色。2ドットめの線（LAST_LINE2）は、ひとつ暗いだん。まわりのふちは、となりの部品の輪郭の色。
 # 光る物・すけて見える物・場所ごとに色をぬった物（material flat・clear・ink）は、そのまま。
-import colorsys
+import colorsys,math
 import numpy as np
 from PIL import Image
 from scipy.ndimage import gaussian_filter,find_objects
@@ -18,7 +18,11 @@ def pal(base):
     k=tuple(int(c) for c in base)
     if k not in _PC:_PC[k]=(np.array([_hsv(k,-SH[1][0],SH[1][1]),_hsv(k,-SH[0][0],SH[0][1]),_hsv(k,0,0),_hsv(k,HI[0][0],HI[0][1]),_hsv(k,HI[1][0],HI[1][1])]),_hsv(k,-OLK[0],OLK[1]))
     return _PC[k]
-def tone(im,cuts=CUTS,light=LIGHT,streak=STREAK,three=False,dw=None):   # dw：あみかけのはば（設計図の DITHER。0 で、あみかけなし）
+def worldlight(ref=42,light=LIGHT):
+    """見おろし ref 度のときの画面の光（light）を、せかいの向きにする。tone の world にわたすと、角度をかえても光の当たり方がかわらない"""
+    t=math.radians(ref);D=np.array([0,math.cos(t),math.sin(t)]);X=np.array([1.0,0,0]);U=np.cross(D,X);U=U if U[2]>0 else -U;l=np.asarray(light,float);l=l/np.linalg.norm(l)
+    return l[0]*X-l[1]*U+l[2]*D
+def tone(im,cuts=CUTS,light=LIGHT,streak=STREAK,three=False,dw=None,world=None):   # dw：あみかけのはば（設計図の DITHER。0 で、あみかけなし）   # world：せかいの向きの光（worldlight）。あれば light のかわりに（光がカメラといっしょに回らない）
     """three=True：かげは3だん（かげ・もとの色・ハイライト）、あみかけは少し（DW3）。限定の家具（持ち主がきめた）"""
     a=np.array(im).copy();H,W=a.shape[:2];ids=O.LAST_IDS;zb=O.LAST_ZB;cc=np.round(O.LAST_CC).astype(int);LN=O.LAST_LINE;LN2=O.LAST_LINE2;MT=O.LAST_MT
     if ids.shape!=(H,W):return im
@@ -27,6 +31,7 @@ def tone(im,cuts=CUTS,light=LIGHT,streak=STREAK,three=False,dw=None):   # dw：�
     if body.sum()<8:return im
     # 面の向き（せかいの向き）を、画面の向き（右・下・手前）になおして、光（左上・手前から）とくらべる
     N=O.LAST_N;D=O.LAST_DEPTH/np.linalg.norm(O.LAST_DEPTH);X=np.array([1.0,0,0]);X=X-D*(X@D);X/=np.linalg.norm(X);U=np.cross(D,X);U=U if U[2]>0 else -U
+    if world is not None:light=(world@X,-(world@U),world@D)   # せかいの光を、いまのカメラの画面の向きに
     n=np.dstack([N@X,-(N@U),N@D]);lv_=np.asarray(light,float);d=n@(lv_/np.linalg.norm(lv_))
     t=np.interp(d,[-1.0]+list(cuts)+[1.0],[0,0.5,1.5,2.5,3.5,4])   # だんのさかいめは、光の向きとの内積の数（家具は平らな面が多いので、木のような順番（%）ではなく、数できめる。上の面・正面・左・右の面が、だんのまん中に入る）
     t0=t.copy()

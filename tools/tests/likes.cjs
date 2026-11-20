@@ -11,7 +11,7 @@ const dist=await run(`(()=>{const K=Object.keys(FOODS).filter(k=>!FOODS[k].bad);
 assert.ok(typeof dist==='object'&&dist.same&&dist.n[0]>0&&dist.n[2]>0,'好みのばらつき '+JSON.stringify(dist));
 /* おやつ：えらんだ物を食べ、反応で、すき・にがてがわかる。にがては たのしさ－5 */
 const sn=await run(`(()=>{const r=S.res[0],K=Object.keys(FOODS).filter(k=>!FOODS[k].bad&&k!==favDish(r)),ng=K.find(k=>foodLike(r,k)===0),lk=K.find(k=>foodLike(r,k)===2);if(!ng||!lk)return 'nofood';S.fs={};S.fs[ng]=1;S.fs[lk]=1;syncFood();
-  const give=k=>{snackPop(r);const c=[...document.querySelectorAll('.pxcard .slot')].find(x=>{const t=x.querySelector('.nm').textContent;return t===FOODS[k].name||t.startsWith(FOODS[k].name+'（')});if(!c)return false;c.click();ACT.eat.tick(r,r.act,999);const f0=r.fun;ACT.eat.end(r,r.act);return r.fun};
+  const give=k=>{snackPop(r);const c=[...document.querySelectorAll('.pxcard .slot')].find(x=>{const t=x.querySelector('.nm').textContent;return t===FOODS[k].name||t.startsWith(FOODS[k].name+'（')});if(!c)return false;c.click();ACT.eat.tick(r,r.act,999);const f0=r.fun;ACT.eat.end(r,r.act);r.act=null;return r.fun};
   r.fun=50;const f1=give(ng),face1=(STRAINU.get(r)||0)>performance.now();r.fun=50;const f2=give(lk);
   return {f1,face1,f2,fk:r.fk,ng,lk,left:S.fs,txt:[foodKnownText(r,0),foodKnownText(r,2)],nm:[FOODS[ng].name,FOODS[lk].name]}})()`);
 assert.ok(typeof sn==='object','おやつ '+sn);assert.equal(sn.f1,50+10-5,'にがて：おやつ+10、にがて－5');assert.ok(sn.face1,'にがての顔');assert.equal(sn.f2,50+10+3,'すき：+3');
@@ -21,7 +21,7 @@ const ord=await run(`(()=>{const r=S.res[0],K=Object.keys(FOODS).filter(k=>!FOOD
 assert.ok(ord===true||ord==='skip','にがてはあと');
 /* 「〇〇が食べたい」のこまりごと：すきな物（この村で持ったことのある物）。おやつでその物をあげると、なおる */
 const wt=await run(`(()=>{const r=S.res[2],K=Object.keys(FOODS).filter(k=>!FOODS[k].bad&&foodLike(r,k)>=2),nm=Object.keys(FOODS).find(k=>!FOODS[k].bad&&foodLike(r,k)===1);S.seenIt={};const none=wantPick(r);S.seenIt['f:'+K[0]]=1;const f=wantPick(r);S.trouble={id:r.id,k:'want',d:dayNo(),f};const txt=troubleText(r),ok0=TROUBLE.want.ok(r);
-  S.fs={};S.fs[f]=1;S.fs[nm]=1;syncFood();const give=k=>{snackPop(r);const c=[...document.querySelectorAll('.pxcard .slot')].find(x=>{const t=x.querySelector('.nm').textContent;return t===FOODS[k].name||t.startsWith(FOODS[k].name+'（')});c.click();ACT.eat.tick(r,r.act,999);ACT.eat.end(r,r.act);for(let i=0;i<6;i++)troubleTick()};
+  S.fs={};S.fs[f]=1;S.fs[nm]=1;syncFood();const give=k=>{snackPop(r);const c=[...document.querySelectorAll('.pxcard .slot')].find(x=>{const t=x.querySelector('.nm').textContent;return t===FOODS[k].name||t.startsWith(FOODS[k].name+'（')});c.click();ACT.eat.tick(r,r.act,999);ACT.eat.end(r,r.act);r.act=null;for(let i=0;i<6;i++)troubleTick()};
   give(nm);const still=!!S.trouble;S.letterQ=[];r.fun=50;NOSAVE=false;give(f);NOSAVE=true;return {none,f,K0:K[0],txt,ok0,still,solved:S.trouble===null,fun:r.fun,letter:(S.letterQ||[]).some(q=>q.k==='thx'&&q.tx.join('').indexOf(FOODS[f].name)>=0)}})()`);
 assert.equal(wt.none,null,'持ったことがなければ出ない');assert.equal(wt.f,wt.K0);assert.ok(wt.ok0&&wt.txt.endsWith('が食べたい'),'こまりごと '+JSON.stringify(wt));assert.ok(wt.still,'ちがう物ではなおらない');assert.ok(wt.solved,'その物をあげるとなおる');assert.ok(wt.fun>=50+10+15,'たのしさ '+wt.fun);assert.ok(wt.letter,'お礼の手紙');
 /* レベルアップ：上がった数だけ、えらんで +1（20がふつう） */
@@ -31,6 +31,6 @@ assert.ok(lv.n>=2,'2レベル以上 '+JSON.stringify(lv));assert.ok(lv.okH&&lv.b
 await run(`(()=>{const r=S.res[1];document.querySelector('#rlv').hidden=true;r.lvPend=1;RLVQ.length=0;return 1})()`);await run(`USERPAUSE=false`);await p.waitForTimeout(600);const again=await run(`!document.querySelector('#rlv').hidden&&document.querySelectorAll('#rlv .rpick button').length`);await run(`USERPAUSE=true`);assert.equal(again,3,'のこりのごほうびを、また出す');
 await run(`document.querySelectorAll('#rlv .rpick button')[1].click()`);
 /* なかよしの図：顔3つ・なかよし30から線・けんかは赤 */
-const bm=await run(`(()=>{const[a,b,c]=S.res;S.bond={};S.bond[bondKey(a,b)]=40;S.bond[bondKey(a,c)]=10;S.qr=null;closeSheet();openSheet('menu','bondmap');const cv=document.querySelector('#sheetBody .bmap canvas'),faces=document.querySelectorAll('#sheetBody .bmface').length;const d=cv.getContext('2d').getImageData(0,0,cv.width,cv.height).data;let px=0;for(let i=3;i<d.length;i+=4)if(d[i])px++;document.querySelector('#sheetBody .bmface').click();return {faces,px,sheet,arg:sheetArg}})()`);
-assert.equal(bm.faces,3);assert.ok(bm.px>10,'線 '+JSON.stringify(bm));assert.equal(bm.sheet,'res','顔をタップでせいれいの画面');
+const bm=await run(`(()=>{const[a,b,c]=S.res;S.bond={};S.bond[bondKey(a,b)]=40;S.bond[bondKey(a,c)]=10;S.qr=null;closeSheet();openSheet('menu','bondmap');const cv=document.querySelector('#sheetBody .bmap canvas'),faces=document.querySelectorAll('#sheetBody .bmface').length;const d=cv.getContext('2d').getImageData(0,0,cv.width,cv.height).data;let px=0;for(let i=3;i<d.length;i+=4)if(d[i])px++;document.querySelector('#sheetBody .bmface').click();const one=document.querySelectorAll('#sheetBody .bmlist .row').length;document.querySelector('#sheetBody .bmface').click();return {faces,px,one,sheet,arg:sheetArg}})()`);
+assert.equal(bm.faces,3);assert.ok(bm.px>10,'線 '+JSON.stringify(bm));assert.ok(bm.one>=2,'1回めは、なかよしの一覧 '+JSON.stringify(bm));assert.equal(bm.sheet,'res','えらんだ顔をもう1回タップで、せいれいの画面');
 assert.deepEqual(errors,[]);console.log('likes ok',JSON.stringify({dist,sn,wt,lv,bm}));await browser.close()})();
