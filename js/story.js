@@ -220,5 +220,12 @@ function freeSetup(s){const used=new Set(['フタバ','ノドカ']);const nm=()=
   s.inv=Object.assign(s.inv||{},{bellf:3,salvia:3,lily:3,lotus:3,clover:9});
   let c2=false;try{const t=KV.getItem(SAVE_KEYS[1]);c2=!!(t&&JSON.parse(t).cleared)}catch(e){}if(c2){s.inv.hotstone=(s.inv.hotstone||0)+2;s.flags.giftV=1}/* 火山の村をクリアしていたら、ほのお石もとどく */syncQuestRecipes(s)}
 QL[FREE]=QUESTSF;PROS[FREE]=PROF;INTROS[FREE]=[];
+/* ---------- 風のやんだ空の村（WORLD 5）：いまは土台だけ。プロローグ・会話・お話のクエストは、お話を作るときに入れる。夜のコワイノも、雲の海から来るしくみを作るまで来ない ---------- */
+const QUESTS5=[
+  {id:'statue',text:'神殿を直してもらおう',check:()=>cnt('statue')>=1,by:GOD,how:'「しらべる」で、こわれた神殿をタップ',
+   gives:{feat:['inv','remove','plant','craft','people','summon','shop'],recipes:['bed','crate','wbench'],items:{wbench:1,bed:1},mat:{wood:10,stone:10},flag:'calmNight',run(){for(const k of['tree','bellf','salvia','lily','lotus','clover'])if(BL[k])S.unlocked[k]=true}}},/* 花のたね・木の苗は、カミサマのお店に出る */
+  {id:'windVillage',text:'浮き島に、村をつくろう',check:()=>false,how:'この土地のお話は、まだない'},
+];
+QL[WIND]=QUESTS5;PROS[WIND]=[];INTROS[WIND]=[];
 
 let QUESTS=QUESTS1;

@@ -86,7 +86,7 @@ function tapMatOf(o){if(o==='tower')return WD===0?'tsacred':'tstone';/* 草原�
   let w=0,st=0,cl=0,me=0;for(const k in b.mat||{}){const n=b.mat[k];if(TAPCLOTH.has(k))cl+=n;else if(TAPMETAL.has(k))me+=n;else if(k==='stone')st+=n;else w+=n}
   if(b.mat&&b.mat.nuno||b.mat&&b.mat.wool||cl>w+st+me)return 'tcloth';if(me>w&&me>=st)return 'tcan';if(st>w)return 'tstone';return 'twood'}
 function tapSnd(tx,ty){if(tx<0||ty<0||tx>=W||ty>=H)return;const g=ty*W+tx,j=anc(g),o=S.obj[j];if(WEEDS.has(o)||o==='kagenest'||VEINS[o]&&WD===1||(S.drops||[]).some(q=>q.y*W+q.x===g&&q.id!=='shard'))return;/* 草・落とし物・鉱脈・かげの巣は、それぞれの音 */
-  let k=o?tapMatOf(o):null;if(!o){const f=S.floor[g];if(RUGC.has(g))k='tcloth';else if(S.ground[g]===1||S.ground[g]===2)k='twater';else k=footMat(tx+.5,ty+.5)||'fsoil'}/* 地面・床：その場所の足音の録音 */
+  let k=o?tapMatOf(o):null;if(!o){const f=S.floor[g];if(RUGC.has(g))k='tcloth';else if(skyJ(g))k='tcloth';else if(S.ground[g]===1||S.ground[g]===2)k='twater';else k=footMat(tx+.5,ty+.5)||'fsoil'}/* 地面・床：その場所の足音の録音 */
   if(!k)return;const t0=performance.now();TAPPEND=t0;setTimeout(()=>{if(TAPPEND===t0){TAPPEND=0;if(TAPMAT<t0)sfx(k)}},0)}/* ほかの物の音（神殿・宝箱など）が同じタップで鳴ったら、そちらだけ */
 function onTap(sx,sy){if(GIFT_ACTIVE&&camAnim&&camAnim.done)return;if(typeof starTap==='function'&&starTap(sx,sy))return;if(typeof letterTap==='function'&&letterTap(sx,sy))return;/* とどいた手紙のふうとう *//* 流れ星そのものをタップしたら、おねがい *//* 霧が晴れる・鉱脈が目をさます演出のカメラ中は、タップをうけない */DLGTAP=performance.now();/* タップで始める会話は、またずにすぐ出す */if(mode==='look'&&typeof tapFx==='function')tapFx(sx,sy);/* しらべるでタップしたところに、葉（火山は火の粉）が舞う */
   let w=toWorld(sx,sy);const w0=w,tx=Math.floor(w.x/TS);{const tl=tapLv(w.x,w.y);if(tl)w={x:w.x,y:w.y+tl*LIFT}}const ty=Math.floor(w.y/TS);/* 高い段のマス・物・せいれい・コワイノは上にずらして描くので、タップの場所も高さの分だけ下へもどす */
@@ -171,7 +171,7 @@ function onTap(sx,sy){if(GIFT_ACTIVE&&camAnim&&camAnim.done)return;if(typeof sta
     if(!o&&RUGC.has(ty*W+tx))return openSheet('furn',RUGC.get(ty*W+tx));/* ラグ */
     if(o&&fw)return toast(BL[o].name+'：'+withAttr(o,BL[o].desc||''));
     if(o)return openSheet('furn',j);/* 噴水・建物・植物・ワナなども、下から説明を出す */
-    if(S.ground[j]===1)return toast('池。そばでつりができる');
+    if(S.ground[j]===1)return toast(skyJ(j)?'雲の海。橋をかけると、わたれる':'池。そばでつりができる');
     return toast(REV.has(j)?'よみがえった土地':'荒れた土地。まわりに木や花を植えると、よみがえる');
   }
   if((mode==='build'||mode==='remove'||mode==='bulk')&&nightLock())return toast('夜のあいだは、置くことも、こわすこともできません');

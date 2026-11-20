@@ -35,15 +35,15 @@ function statueSite(id='statue'){for(const k in S.dyn)if(S.obj[k]==='site'&&S.dy
 const BADC={k:'',t:0,L:[]},WBHINT={k:'',t:0,L:[]};/* 作業台をえらんでいるときの、箱のとなりのマス */
 const RUGS=new Set(['rug1','rug2','hoshirug']);/* ラグは、床の上の層（S.rug：左上のマス→ラグ）。たて2・よこ2マス。上に家具を置ける */
 const EDGES=new Set(['bedge']);/* 花壇のふちは、床の上の層（S.edge：マス→id）。花・雑草が生えていても置け、つながる */
-function canEdge(x,y,quiet){const no=t=>{if(!quiet)toast(t);return false};if(x<0||y<0||x>=W||y>=H)return false;const j=y*W+x;if(sacredNoBuild(j))return no('みんなで世話をしている木の場所です');if(S.ground[j]===1)return no('水の上には置けません');if(S.ground[j]===2)return no('浅瀬には置けません');if(S.edge&&S.edge[j])return no('ここにはもうふちがあります');const o=S.obj[j];if(o&&!WEEDS.has(o)&&!FLOWERS.has(o))return no('ここにはもう何かあります');return true}
+function canEdge(x,y,quiet){const no=t=>{if(!quiet)toast(t);return false};if(x<0||y<0||x>=W||y>=H)return false;const j=y*W+x;if(sacredNoBuild(j))return no('みんなで世話をしている木の場所です');if(S.ground[j]===1)return no(skyJ(j)?'雲の上には置けません':'水の上には置けません');if(S.ground[j]===2)return no('浅瀬には置けません');if(S.edge&&S.edge[j])return no('ここにはもうふちがあります');const o=S.obj[j];if(o&&!WEEDS.has(o)&&!FLOWERS.has(o))return no('ここにはもう何かあります');return true}
 const rugCells=a=>[a,a+1,a+W,a+W+1];
 const lowRoof=id=>{if(LOWROOF.has(id))return true;const b=BL[id];if(!b||CANOPY.has(id)||b.kind!=='furn'&&b.kind!=='plant')return false;const c=CHIPS[id]||CHIPS[id+'#0'];return !!c&&-(c.ay||0)*64/(c.g||32)<=24};/* 屋根の下に置ける、高さ1マスの物：絵がマスの上へ24ドット（g64）までしかはみ出さない物 */
 const CANOPY=new Set(['gazebo','azumaya']),LOWROOF=new Set(['chair','stool','achair','pouf','sofa1','bench','takebench','table','dtable','ltable','clover','bellf','salvia','lily']);/* ガゼボ・東屋は、物の上にかぶせる層（S.roof：左上のマス→id）。たて2・よこ2マス。下に置けるのは、ひくい物だけ（ラグはべつの層なので、いつでも） */
 function canRoof(x,y,quiet){const no=t=>{if(!quiet)toast(t);return false};if(x<0||y<0||x+1>=W||y+1>=H)return false;{const h0=hiAt(y*W+x);if(hiAt(y*W+x+1)!==h0||hiAt(y*W+W+x)!==h0||hiAt(y*W+W+x+1)!==h0)return no('段差をまたいでは置けません')}
-  if(x<0||y<0||x>=W-1||y>=H-1)return no('ここには置けません');for(const c of rugCells(y*W+x)){if(sacredNoBuild(c))return no('みんなで世話をしている木の場所です');if(S.ground[c]===1)return no('水の上には置けません');if(RFC.has(c))return no('ここにはもう屋根があります');const o=S.obj[c],a=o==='part'?S.obj[S.ref[c]]:o;if(a&&!lowRoof(a)&&!WEEDS.has(a))return no('下には、ひくい物だけ置けます')}return true}
+  if(x<0||y<0||x>=W-1||y>=H-1)return no('ここには置けません');for(const c of rugCells(y*W+x)){if(sacredNoBuild(c))return no('みんなで世話をしている木の場所です');if(S.ground[c]===1)return no(skyJ(c)?'雲の上には置けません':'水の上には置けません');if(RFC.has(c))return no('ここにはもう屋根があります');const o=S.obj[c],a=o==='part'?S.obj[S.ref[c]]:o;if(a&&!lowRoof(a)&&!WEEDS.has(a))return no('下には、ひくい物だけ置けます')}return true}
 const rugsIn=set=>{const L=[];for(const k in S.rug||{})if(rugCells(+k).some(c=>set.has(c)))L.push(S.rug[k]);return L};/* 家の中（どこか1マスでも）にあるラグ */
 function canRug(x,y,quiet){const no=t=>{if(!quiet)toast(t);return false};if(x<0||y<0||x+1>=W||y+1>=H)return false;
-  if(x<0||y<0||x>=W-1||y>=H-1)return no('ここには置けません');for(const c of rugCells(y*W+x)){if(sacredNoBuild(c))return no('みんなで世話をしている木の場所です');if(S.ground[c]===1)return no('水の上には置けません');if(RUGC.has(c))return no('ここにはもうラグがあります');const o=S.obj[c],a=o==='part'?S.obj[S.ref[c]]:o;if(a&&!WEEDS.has(a)&&!(BL[a]&&BL[a].kind==='furn'&&!BL[a].trap&&!WALLD.has(a)))return no('ここにはもう何かあります')}return true}/* 家具の下にもしける */
+  if(x<0||y<0||x>=W-1||y>=H-1)return no('ここには置けません');for(const c of rugCells(y*W+x)){if(sacredNoBuild(c))return no('みんなで世話をしている木の場所です');if(S.ground[c]===1)return no(skyJ(c)?'雲の上には置けません':'水の上には置けません');if(RUGC.has(c))return no('ここにはもうラグがあります');const o=S.obj[c],a=o==='part'?S.obj[S.ref[c]]:o;if(a&&!WEEDS.has(a)&&!(BL[a]&&BL[a].kind==='furn'&&!BL[a].trap&&!WALLD.has(a)))return no('ここにはもう何かあります')}return true}/* 家具の下にもしける */
 function canPlace(id,x,y,quiet){if(typeof fogBlock==='function'&&fogBlock(id,x,y,quiet))return false;/* 霧の中には置けない */if(WD===0&&id!=='tower'&&S.sacredRoot!=null){const z=szR(id,PLROTS[id]||0)||[1,1];for(let b=0;b<z[1];b++)for(let a=0;a<z[0];a++)if(sacredNoBuild((y+b)*W+x+a,id)){if(!quiet)toast('みんなで世話をしている木の場所です','warn');return false;}}
   if(EDGES.has(id))return canEdge(x,y,quiet);
   if(RUGS.has(id))return canRug(x,y,quiet);
@@ -59,11 +59,11 @@ function canPlace1(id,x,y,quiet){
   if(x<0||y<0||x>=W||y>=H)return false;
   if(starterGap(y*W+x)&&!HOME_WALLS.has(id)&&!HOME_DOORS.has(id)){if(!quiet)toast('ここは家の壁のすきまです','warn');return false}/* 箱や神殿を置くと、こわせずに家が直せなくなる */
   if(WALLD.has(id)){const j=y*W+x,iw=k=>HOME_WALLS.has(typeAt(k))||HOME_DOORS.has(typeAt(k)),wreath=id==='wreath',target=HOME_WALLS.has(S.obj[j])&&S.obj[j]!=='wall'||wreath&&HOME_DOORS.has(S.obj[j]);/* 石の塀にはかけられない */if(!target||wreath&&HOME_DOORS.has(S.obj[j])&&(iw(j-W)||iw(j+W))&&!(iw(j-1)||iw(j+1))||!wreath&&(iw(j-W)||iw(j+W))||(S.win&&S.win[j]&&!((id==='curtain1'||id==='curtain2')&&S.win[j]===1))||((id==='curtain1'||id==='curtain2')&&!(S.win&&S.win[j]===1&&HOUSES.some(h=>h.set.has(j)&&h.inside.has(j+W)&&!h.inside.has(j-W))))){if(!quiet)toast((id==='curtain1'||id==='curtain2')?'カーテンは、家の上がわの窓にだけかけられます':wreath?'リースは、壁か横向きのドアにだけかけられます':BL[id].name+'は、横向きの家の壁にだけかけられます');return false}return true}/* 窓は壁にはめる */
-  const j=y*W+x;if(id==='lotus'){if(S.ground[j]!==1){if(!quiet)toast('ハスは池の上にだけ植えられます');return false}if(S.obj[j]){if(!quiet)toast('ここにはもう何かあります');return false}return true}
-  if(id==='bridge'){if(S.ground[j]!==1){if(!quiet)toast('橋は水の上にだけかけられます');return false}if(S.obj[j]){if(!quiet)toast('ここにはもう何かあります');return false}return true}
-  if(S.ground[j]===1){if(!quiet)toast('水の上には置けません');return false}
+  const j=y*W+x;if(id==='lotus'){if(!waterJ(j)){if(!quiet)toast('ハスは池の上にだけ植えられます');return false}if(S.obj[j]){if(!quiet)toast('ここにはもう何かあります');return false}return true}
+  if(id==='bridge'){if(S.ground[j]!==1){if(!quiet)toast(WD===WIND?'橋は水か雲の上にだけかけられます':'橋は水の上にだけかけられます');return false}if(S.obj[j]){if(!quiet)toast('ここにはもう何かあります');return false}return true}
+  if(S.ground[j]===1){if(!quiet)toast(skyJ(j)?'雲の上には置けません':'水の上には置けません');return false}
   if(S.ground[j]===2){if(!quiet)toast('浅瀬には置けません');return false}
-  if(id==='suisha'&&![j-1,j+1,j-W,j+W].some(n=>n>=0&&n<W*H&&S.ground[n]===1&&(n%W===x||((n/W)|0)===y))){if(!quiet)toast('水車は、水のとなりにだけ建てられます');return false}
+  if(id==='suisha'&&![j-1,j+1,j-W,j+W].some(n=>n>=0&&n<W*H&&waterJ(n)&&(n%W===x||((n/W)|0)===y))){if(!quiet)toast('水車は、水のとなりにだけ建てられます');return false}
   if(TERRA.has(id)){const k=id==='dig';if(k?!hiAt(j):hiAt(j)>=HMAX){if(!quiet)toast(k?'高いマスだけ、けずれます':'これより高くは、もれません');return false}if(S.obj[j]&&!WEEDS.has(S.obj[j])||S.floor[j]){if(!quiet)toast('なにもない所だけです');return false}if([j-1,j+1,j-W,j+W].some(n=>STAIRS.has(S.obj[n])&&stairTop(n,stairDir(n))===j)){if(!quiet)toast(k?'階段のうしろは、けずれません':'階段のうしろは、もれません');return false}return true}/* だんさスコップ：けずる・もる */
   if(LADDERS.has(id)){if(ladderDir(j)<0){if(!quiet)toast('ハシゴは、がけの下の、うしろか左右が1だん高い所に置けます');return false}if(S.obj[j]&&!WEEDS.has(S.obj[j])){if(!quiet)toast('ここにはもう何かあります');return false}return true}
   if(STAIRS.has(id)){const d=SROT[stairRot(id,j)];if(!stairOK(j,d)){if(!quiet)toast('その向きには置けません');return false}if(d){const o=stairOut(j,d);if(S.obj[o]&&!WEEDS.has(S.obj[o])||o<0||o>=W*H){if(!quiet)toast('階段は2マスいります');return false}}}/* 階段は、段差の下の低い地面に1×2 */
@@ -89,7 +89,7 @@ function swingWide(){/* ブランコが2マスはばになった：前のセー�
 function setParts(id,j,kind){const x=j%W,y=(j/W)|0;for(const[a,b]of fp(id,x,y)){const k=b*W+a;if(k===j)continue;S.obj[k]=kind;S.ref[k]=j}}
 /* 植える芽は、せいれいが歩いて行ける所だけ。池・川の上は、行ける岸から水の中をおよいでとどく所ならどこでも（plantWet：岸につながる水。せいれいの道 spirit-work.js の plant の wade と同じ決まり）。行けない所に置くと、植える予定の10この枠がうまったままになる */
 function plantDist(){const r=S.res.find(q=>!q.hidden)||S.res[0];return r?bfs(r.x|0,r.y|0).dist:null}
-function plantWet(D){if(D._wet)return D._wet;const M=D._wet=new Uint8Array(W*H),Q=[],sw=k=>S.ground[k]===1&&!solidOf(k);
+function plantWet(D){if(D._wet)return D._wet;const M=D._wet=new Uint8Array(W*H),Q=[],sw=k=>waterJ(k)&&!solidOf(k);
   for(let j=0;j<W*H;j++){if(!sw(j))continue;const x=j%W;if([1,-1,W,-W].some(d=>{const k=j+d;return k>=0&&k<W*H&&Math.abs(k%W-x)<=1&&S.ground[k]!==1&&walk(k)&&D[k]>=0})){M[j]=1;Q.push(j)}}/* 行ける岸のとなりの水 */
   for(let h=0;h<Q.length;h++){const j=Q[h],x=j%W;for(const d of[1,-1,W,-W]){const k=j+d;if(k<0||k>=W*H||Math.abs(k%W-x)>1||M[k]||!sw(k))continue;M[k]=1;Q.push(k)}}/* そこから水の中をおよいで */
   return M}

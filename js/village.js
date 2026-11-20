@@ -39,7 +39,7 @@ const GRASSK=['shina','kasa','kuru','chiri','funba'];/* 草の素材 */
 const cmpOf=j=>S.dyn[j]||(S.dyn[j]={b:[],c:0}),cmpIn=j=>{const d=S.dyn[j];return d?(d.b||[]).reduce((a,x)=>a+x[1],0):0},cmpWait=j=>{const Q=(S.cmpQ||{})[j];let n=0;if(Q)for(const k in Q)n+=Q[k];for(const r of S.res)if(r.cpk&&r.cpk.j===j)for(const k in r.cpk.m)n+=r.cpk.m[k];return n};/* コンポスター：b＝入れた草（[入れた時刻, 数]）、c＝できた肥料 */
 function cmpRefund(m){rsvFree(m)}/* コンポスターがなくなったら、運ぶまえの草は、とっておくのをやめる */
 function cmpTick(){if(S.cmpQ)for(const k in S.cmpQ)if(S.obj[k]!=='composter'){cmpRefund(S.cmpQ[k]);delete S.cmpQ[k]}if(!COMPS.length)return;for(const j of COMPS){const d=S.dyn[j];if(!d||!d.b||!d.b.length)continue;const keep=[];for(const x of d.b){if(S.t-x[0]>=1440&&x[0]<=S.t)d.c=(d.c||0)+x[1];else keep.push(x)}d.b=keep}}/* 草を入れて1日たつと、肥料になる */
-function waterSrc(j){/* マス j のとなりの、水をくめる所（池・川の水、井戸、水のたまったみずがめ）。なければ -1 */return adjOf(j,k=>S.ground[k]===1||S.obj[anc(k)]==='well'||(S.obj[anc(k)]==='jar'&&((S.dyn[anc(k)]||{}).w||0)>0))}
+function waterSrc(j){/* マス j のとなりの、水をくめる所（池・川の水、井戸、水のたまったみずがめ）。なければ -1 */return adjOf(j,k=>waterJ(k)||S.obj[anc(k)]==='well'||(S.obj[anc(k)]==='jar'&&((S.dyn[anc(k)]||{}).w||0)>0))}
 const foodCap=()=>S.food+roomFor(true),matCap=()=>matTot()+roomFor(false),matTot=()=>Object.keys(MATN).reduce((a,k)=>a+(S.mat[k]||0),0);
 let OTAKI_SEL={};/* そうこで、おたきあげにえらんでいる数 */
 const MATTRADE={wool:3,shina:5,kasa:5,kuru:5,chiri:5,funba:5,wood:3,stone:3,bamboo:3,eda:3,can:2,copper:2,iron:2,obsidian:1,silver:1,gold:1,sulfur:2,crystal:1,icopper:1,iiron:1,isilver:1,igold:1};/* おたきあげ：素材をパワー1にかえるのに要る数（よく手に入る物ほど多い） */
@@ -148,9 +148,9 @@ function toyPose0(r,now){const a=toyR(r);if(!a)return null;const j=a.obj,X=(j%W)
     else{const q=(p-.7)/.3;x=X+67-q*65;y=Y+56.75+Math.sin(q*Math.PI)*2.5;f=-1}/* 階段の下へもどる */
     r.face=f;return{x,y,z:Y/TS+2.05}}
   return null}
-function spotW(i){const w=sideW(i);if(w>=0)return w;const y=i/W|0;if(y>0&&S.ground[i-W]===1)return i-W;if(y+1<H&&S.ground[i+W]===1)return i+W;return -1}/* 椅子のすぐとなり（上下左右）の水マス（なければ-1） */
+function spotW(i){const w=sideW(i);if(w>=0)return w;const y=i/W|0;if(y>0&&waterJ(i-W))return i-W;if(y+1<H&&waterJ(i+W))return i+W;return -1}/* 椅子のすぐとなり（上下左右）の水マス（なければ-1） */
 function fishW(j){return fSpot(j)?spotW(j):sideW(j)}/* 釣るときに見る水マス（釣りスポットは上下も） */
-function sideW(j){const x=j%W;if(x+1<W&&S.ground[j+1]===1)return j+1;if(x>0&&S.ground[j-1]===1)return j-1;return -1}/* 左右どちらかが水 */
+function sideW(j){const x=j%W;if(x+1<W&&waterJ(j+1))return j+1;if(x>0&&waterJ(j-1))return j-1;return -1}/* 左右どちらかが水 */
 function adjOf(j,fn){const x=j%W,y=(j/W)|0;for(const[dx,dy]of DIRS){const nx=x+dx,ny=y+dy;if(nx<0||ny<0||nx>=W||ny>=H)continue;const k=ny*W+nx;if(fn(k))return k}return -1}
 const elemCount=el=>S.res.filter(r=>r.elem===el).length;
 const NEEDT=[6,24,52,96,160,248,364,512,696,920,1188],NEEDF=[13,38,83,154,256,397,582,819,1114,1472,1901],needFor=el=>{const T=WD===FREE?NEEDF:NEEDT,dk=[...(S.buried||[]),...(S.lost||[])].filter(q=>q.elem===el&&isKey(q.name)).length;return T[Math.min(T.length-1,elemCount(el)+dk)]};/* いなくなったキーキャラも数に入れる（ひとり分の力で2人呼べないように） */

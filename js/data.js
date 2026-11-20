@@ -223,7 +223,7 @@ const BEDSET=new Set(['bed','yorubed']);/* ねむれるベッド（よぞらの�
 function kwrSync(){if(!S)return;let g=[];try{g=JSON.parse(KV.getItem(KWRKEY)||'[]')}catch(e){}const G=new Set(g.filter(id=>KWR.includes(id)));for(const id of KWR)if((S.recipes||{})[id])G.add(id);for(const id of G){(S.recipes||(S.recipes={}))[id]=true;if(BL[id].kind==='block')(S.unlocked||(S.unlocked={}))[id]=true}try{KV.setItem(KWRKEY,JSON.stringify([...G]))}catch(e){}}/* コワイノのレシピ：落とし物でまれに手に入る */
 const STAGEONLY={picnic:0,hwall:0,bamboowall:1,fence:0,misugaki:1,signw:0,signs:1,logfence:0,logdoor:0,loggate:0,bamboofence:1,takebench:1,takeakari:1,shishiodoshi:1};/* そのステージで作れる物（草原0・火山1）。おぼえたら、どのステージでも作れる */
 const GRECKEY='hakoniwa-rec-v1',GRECKEY2='hakoniwa-rec-v2',GRECFIX='hakoniwa-rec-fix1',GNOREC=new Set(['statue','tower','yogan','watch','dig','mound']);let GREC=null;/* おぼえたレシピは、どのステージでもおぼえたまま（ステージべつのセーブとはべつにしまう）。神殿・台座・ようがん台・見張り台は、ステージのお話で決まるので入れない */
-const NOMAT={0:['bamboo','kuru','chiri'],1:['shina','kasa']},matHere=(b,w)=>!Object.keys((w===1?b.mat1:b.mat0)||b.mat||{}).some(k=>(NOMAT[w]||[]).includes(k));/* そのステージで手に入らない素材を使う物は、村レベルでおぼえない（草原：竹・くるくる草・ちりちり草）。b.mat は、いまのステージの素材になるので、w のステージの素材（mat1・mat0）で見る */
+const NOMAT={0:['bamboo','kuru','chiri'],1:['shina','kasa'],4:['bamboo','kuru','chiri']},matHere=(b,w)=>!Object.keys((w===1?b.mat1:b.mat0)||b.mat||{}).some(k=>(NOMAT[w]||[]).includes(k));/* そのステージで手に入らない素材を使う物は、村レベルでおぼえない（草原：竹・くるくる草・ちりちり草）。b.mat は、いまのステージの素材になるので、w のステージの素材（mat1・mat0）で見る */
 function learnedIn(s,w){const out=[];for(const id in BL){const b=BL[id];if(GNOREC.has(id)||STAGEONLY[id]==null&&b.offerOnly&&b.kind==='furn')continue;/* おそなえだけの家具は、レシピにしない */
   if((s.recipes||{})[id]||(s.unlocked||{})[id])out.push(id);
   else if((b.kind==='block'||b.kind==='build'||b.kind==='plant')&&b.lv&&!QB.has(id)&&(s.lv||1)>=b.lv&&(b.w||0)<=w&&matHere(b,w)&&(STAGEONLY[id]==null?!b.offerOnly:STAGEONLY[id]===w))out.push(id)}/* 村レベルで使えるようになった物 */
@@ -231,14 +231,14 @@ function learnedIn(s,w){const out=[];for(const id in BL){const b=BL[id];if(GNORE
 function ownLearned(d,w){/* そのステージが、自分のクエスト・村レベル・持ち物でおぼえる物（ほかのステージからもらった物はふくめない） */const s2={world:w,free:false,flags:d.flags,quest:d.quest||0,qTalked:d.qTalked,qStory:d.qStory,subDone:d.subDone,subSt:d.subSt,subSeen:d.subSeen,lv:d.lv,inv:d.inv,obj:d.obj,orders:d.orders||[],win:d.win,recipes:{},guardianIdeas:{},unlocked:{}};try{syncQuestRecipes(s2)}catch(e){}return new Set(learnedIn(s2,w))}
 function savedStage(w){let d=LIVE&&LIVE[w]&&!LIVE[w].summary?LIVE[w]:null;if(!d)try{const raw=KV.getItem(SAVE_KEYS[w]);if(raw)d=JSON.parse(raw)}catch(e){}return d&&!d.free?d:null}
 function grecOf(){if(!GREC){/* id → おぼえたステージ（どのステージでおぼえたか。「はじめから」で、そのステージの分だけわすれるため） */let g=null;try{g=JSON.parse(KV.getItem(GRECKEY2)||'null')}catch(e){}GREC=new Map(g&&typeof g==='object'&&!Array.isArray(g)?Object.entries(g):[]);if(GREC.delete('stairs2f'))grecSave();/* 2階への階段はなくした */
-    if(!g){let a=null;try{a=JSON.parse(KV.getItem(GRECKEY)||'null')}catch(e){}const ids=new Set(Array.isArray(a)?a:[]),own=[0,1].map(w=>{const d=savedStage(w);if(d)learnedIn(d,w).forEach(id=>ids.add(id));return d?ownLearned(d,w):new Set()});
+    if(!g){let a=null;try{a=JSON.parse(KV.getItem(GRECKEY)||'null')}catch(e){}const ids=new Set(Array.isArray(a)?a:[]),own=STAGES.map(w=>{const d=savedStage(w);if(d)learnedIn(d,w).forEach(id=>ids.add(id));return d?ownLearned(d,w):new Set()});
       for(const id of ids){if(!BL[id])continue;GREC.set(id,own[0].has(id)?0:own[1].has(id)?1:STAGEONLY[id]!=null?STAGEONLY[id]:(BL[id].w||0))}/* 前の形のしまい方からうつす：自分のクエスト・村レベルでおぼえるステージ、わからなければその物のステージ */
       grecSave()}
     if(!KV.getItem(GRECFIX)){/* 前は、火山で草原の素材を火山の素材と見まちがえて、草原でおぼえた物（たいまつなど）を消していた。草原のセーブから、もどす */const d=savedStage(0);if(d)for(const id of learnedIn(d,0)){const b=BL[id];if(b&&GREC.get(id)!==0&&(!b.lv||STAGEONLY[id]!=null||matHere(b,0)))GREC.set(id,0)}grecSave();try{KV.setItem(GRECFIX,'1')}catch(e){}}}return GREC}
 function grecSave(){try{KV.setItem(GRECKEY2,JSON.stringify(Object.fromEntries(GREC)))}catch(e){}}
 function grecForget(w){/* 「はじめから」：そのステージでおぼえたレシピをわすれる（ほかのステージのセーブからも消す。ほかのステージが自分でおぼえる物はのこす） */const G=grecOf(),gone=[...G].filter(([,o])=>o===w).map(([id])=>id);if(!gone.length)return;for(const id of gone)G.delete(id);
   const cut=(d,own)=>{for(const id of gone){if(own.has(id))continue;if(d.recipes)delete d.recipes[id];if(d.guardianIdeas)delete d.guardianIdeas[id];if(d.unlocked)delete d.unlocked[id]}};
-  for(const w2 of[0,1]){if(w2===w)continue;const L=LIVE&&LIVE[w2]&&!LIVE[w2].summary&&!LIVE[w2].free?LIVE[w2]:null;let k=null;try{const raw=KV.getItem(SAVE_KEYS[w2]);if(raw)k=JSON.parse(raw)}catch(e){}if(k&&k.free)k=null;const base=L||k;if(!base)continue;
+  for(const w2 of STAGES){if(w2===w)continue;const L=LIVE&&LIVE[w2]&&!LIVE[w2].summary&&!LIVE[w2].free?LIVE[w2]:null;let k=null;try{const raw=KV.getItem(SAVE_KEYS[w2]);if(raw)k=JSON.parse(raw)}catch(e){}if(k&&k.free)k=null;const base=L||k;if(!base)continue;
     const own=ownLearned(base,w2);for(const id of gone)if(own.has(id))G.set(id,w2);if(L)cut(L,own);if(k){cut(k,own);try{KV.setItem(SAVE_KEYS[w2],JSON.stringify(k))}catch(e){}}}/* 動いているデータと、しまってあるセーブの両方から消す */
   grecSave()}
 const grec=id=>!!S&&!S.free&&grecOf().get(id)<WD;/* 前のステージでおぼえたか */
@@ -266,9 +266,9 @@ const LIKE_KEYS=Object.keys(LIKES);
 /* ---------- ストーリー ---------- */
 const GOD='カミサマ',POKO='フタバ';
 const MINA='ノドカ';
-const HOMURA='ホムラ',SHIZUKU='シズク';
-const KEYS=[[POKO,MINA],[HOMURA,SHIZUKU]];KEYS[FREE]=[];const FIXK0={fire:'ホノ',water:'アオ',wind:'フウ'};/* ステージ1の火・水・風のキーキャラ（名前も見た目も固定） *//* ステージごとのキーキャラ（1人目・2人目） */
-const KEYEL={[POKO]:'wood',[MINA]:'earth',[HOMURA]:'fire',[SHIZUKU]:'water'};
+const HOMURA='ホムラ',SHIZUKU='シズク',KAZANE='カザネ';/* カザネ：風のステージのはじめからいる風のせいれい */
+const KEYS=[[POKO,MINA],[HOMURA,SHIZUKU]];KEYS[WIND]=[KAZANE];KEYS[FREE]=[];const FIXK0={fire:'ホノ',water:'アオ',wind:'フウ'};/* ステージ1の火・水・風のキーキャラ（名前も見た目も固定） *//* ステージごとのキーキャラ（1人目・2人目） */
+const KEYEL={[POKO]:'wood',[MINA]:'earth',[HOMURA]:'fire',[SHIZUKU]:'water',[KAZANE]:'wind'};
 const LEAD=()=>KEYS[WD][0]||(WD===FREE?FA():GOD);
 const PROLOGUE=[
   ['？？？','#wave|…おーい、聞こえとるかの？ そうそう、おヌシじゃ。'],

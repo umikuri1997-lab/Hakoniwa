@@ -174,7 +174,7 @@ function feelAir(now,x0,y0,x1,y1){if(!S)return;const C=FEELC,A=feelArt(),c=ctx,s
     const u=((now+hash((r.id|0)*37+11)*FEEL_BREATH)%FEEL_BREATH)/1100;if(u>=1)continue;const f=r.face<0?-1:1,bx=r.x*TS+f*(13+u*7)-(f<0?3:0),by=r.y*TS-8-hiAt(i)*LIFT-u*5,P=v=>Math.round(v*2)/2;c.fillStyle='#ffffff';/* 口のよこから出て、ふくらみながら上へきえる（ドット3つ） */
     c.globalAlpha=(1-u)*.95;c.fillRect(P(bx),P(by),2.5+u*2,2.5+u*1.5);c.globalAlpha=(1-u)*.8;c.fillRect(P(bx+f*(3.5+u*3)),P(by-2.5-u*2),2+u*3,2+u*2.5);if(u>.2){c.globalAlpha=(1-u)*.6;c.fillRect(P(bx+f*(1.5+u*8)),P(by-5.5-u*4),2+u*2.5,2+u*2)}c.globalAlpha=1}
   if(C.mist>0&&cam.z>=FARZ){/* 朝もや：水べに、うすい白いもやが、ゆっくり流れる */const s=A.mist;
-    for(let y=Math.max(0,y0);y<Math.min(H,y1);y++)for(let x=Math.max(0,x0-2);x<Math.min(W,x1+2);x++){const i=y*W+x;if(S.ground[i]!==1||hash(i*19+3)>.3)continue;if(S.fog&&fogAt(i))continue;const dx=Math.sin(now/5200+hash(i*7)*6.283)*14,dy=Math.sin(now/3300+hash(i*11)*6.283)*2;c.globalAlpha=C.mist*(.45+.25*Math.sin(now/2600+hash(i*5)*6.283));feelPut(c,A,s,x*TS-14+dx,y*TS+4+dy-hiAt(i)*LIFT)}c.globalAlpha=1}
+    for(let y=Math.max(0,y0);y<Math.min(H,y1);y++)for(let x=Math.max(0,x0-2);x<Math.min(W,x1+2);x++){const i=y*W+x;if(!waterJ(i)||hash(i*19+3)>.3)continue;if(S.fog&&fogAt(i))continue;const dx=Math.sin(now/5200+hash(i*7)*6.283)*14,dy=Math.sin(now/3300+hash(i*11)*6.283)*2;c.globalAlpha=C.mist*(.45+.25*Math.sin(now/2600+hash(i*5)*6.283));feelPut(c,A,s,x*TS-14+dx,y*TS+4+dy-hiAt(i)*LIFT)}c.globalAlpha=1}
   c.imageSmoothingEnabled=sm}
 
 /* ---------- 足音・足もとの反応 ---------- */
@@ -208,7 +208,7 @@ function feelBuf(k){const sr=AC.sampleRate,n=Math.floor(sr*3),b=AC.createBuffer(
   const X=Math.floor(sr*.08);for(let i=0;i<X;i++){const u=i/X;d[i]=d[i]*u+d[n-X+i]*(1-u)}/* つなぎ目をならす */return b}
 function feelAmbWant(){const want={stream:0,pond:0,onsen:0,fire:0,leaves:0,semi:0};if(!S||!started||!SND.sfx||!$('#title').hidden||!$('#maps').hidden||typeof stageReady==='function'&&!stageReady())return want;
   const vw=VW/cam.z,vh=VH/cam.z,cx=(cam.x+vw/2)/TS,cy=(cam.y+vh/2)/TS,zk=Math.max(.35,Math.min(1.3,cam.z/homeZ())),R=8;const wk={river:0,pond:0,onsen:0};let tn=0;
-  for(let dy=-R;dy<=R;dy++)for(let dx=-R;dx<=R;dx++){const x=(cx+dx)|0,y=(cy+dy)|0;if(x<0||y<0||x>=W||y>=H)continue;const i=y*W+x,dd=Math.hypot(dx,dy);if(dd>R)continue;if(S.fog&&fogAt(i))continue;if(S.ground[i]===1)wk[typeof waterKind==='function'?waterKind(i):'river']+=1-dd/R;/* 川・池・温泉で、ちがう音 */else{const o=S.obj[i];if(o&&TREES.has(o)&&(o!=='deadtree'||WD===1))tn+=1-dd/R}}
+  for(let dy=-R;dy<=R;dy++)for(let dx=-R;dx<=R;dx++){const x=(cx+dx)|0,y=(cy+dy)|0;if(x<0||y<0||x>=W||y>=H)continue;const i=y*W+x,dd=Math.hypot(dx,dy);if(dd>R)continue;if(S.fog&&fogAt(i))continue;if(waterJ(i))wk[typeof waterKind==='function'?waterKind(i):'river']+=1-dd/R;/* 川・池・温泉で、ちがう音 */else{const o=S.obj[i];if(o&&TREES.has(o)&&(o!=='deadtree'||WD===1))tn+=1-dd/R}}
   want.stream=Math.min(1,wk.river/14)*.8*zk;want.pond=Math.min(1,wk.pond/14)*.3*zk;want.onsen=Math.min(1,wk.onsen/14)*.3*zk;/* 池・温泉は、かなり小さく（持ち主がきめた） */want.leaves=Math.min(1,tn/5)*(typeof stormNow==='function'&&stormNow()?.9:S.rain?.5:.3)*zk;
   let fv=0;for(const j of LITP){const o=S.obj[j];if(o!=='campfire'&&o!=='torch')continue;const d=Math.hypot(j%W+.5-cx,((j/W)|0)+.5-cy);if(d<6)fv=Math.max(fv,Math.pow(1-d/6,1.5))}want.fire=fv*.8*zk;
   {const h=hour();if(seasonNow()===1&&!S.rain&&h>=9&&h<17)want.semi=(.12+Math.min(1,tn/3)*.2)*Math.min(1,(h-9)/1,(17-h)/1)}
@@ -221,5 +221,5 @@ function feelFrame(now){/* 1コマに1回（main.js）。村の時間が進ん�
 const FEEL_WARMP=.35,FEEL_SHADEP=.35;
 function feelRest(r,G){const k=seasonNow(),h=hour(),free=j=>walk(j)&&!S.obj[j]&&!(TAKEN&&TAKEN.has(j));
   if(k===3&&!(r.quirkT>S.t)&&Math.random()<FEEL_WARMP){/* 冬：たき火・たいまつに手をかざす（火のせいれいのしぐさと同じ動き） */const ok=j=>{const t=typeAt(j);return t==='campfire'||t==='torch'||t==='oven'};const st=nearest(G,j=>free(j)&&(j%W>=1&&ok(j-1)||j%W<W-1&&ok(j+1)),14);if(st>=0){const tg=st%W>=1&&ok(st-1)?st-1:st+1;r.quirkT=S.t+QUIRKCD;startAct(r,G,'quirk',st,{k:'warm',tg,dur:QUIRKDUR});return true}}
-  if(k===1&&!S.rain&&h>=11&&h<15.5&&!(r.shadeT>S.t)&&Math.random()<FEEL_SHADEP){/* 夏の昼：木かげか水べにすわって、すずむ */const cool=j=>S.ground[j]===1||TREES.has(typeAt(j))&&!(typeAt(j)==='deadtree'&&WD!==1);const st=nearest(G,j=>free(j)&&!S.floor[j]&&!roomOf(j)&&(j%W>=1&&cool(j-1)||j%W<W-1&&cool(j+1)),14);if(st>=0){r.shadeT=S.t+180;startAct(r,G,'sunset',st===(r.y|0)*W+(r.x|0)?-1:st,{dur:36,shade:1});return true}}
+  if(k===1&&!S.rain&&h>=11&&h<15.5&&!(r.shadeT>S.t)&&Math.random()<FEEL_SHADEP){/* 夏の昼：木かげか水べにすわって、すずむ */const cool=j=>waterJ(j)||TREES.has(typeAt(j))&&!(typeAt(j)==='deadtree'&&WD!==1);const st=nearest(G,j=>free(j)&&!S.floor[j]&&!roomOf(j)&&(j%W>=1&&cool(j-1)||j%W<W-1&&cool(j+1)),14);if(st>=0){r.shadeT=S.t+180;startAct(r,G,'sunset',st===(r.y|0)*W+(r.x|0)?-1:st,{dur:36,shade:1});return true}}
   return false}

@@ -205,7 +205,7 @@ function startPrologue(){
   const show=()=>{const p=$('#proText');const PR=PROS[WD];const tx=lineLook(PR[i][1]).text;/* 「#wave|」などの印は出さない */$('#proWho').textContent=PR[i][0];p.textContent=tx;p.style.animation='none';void p.offsetWidth;p.style.animation='';voiceStart(PR[i][0],tx.length/30+.1)};
   const end=()=>{voiceStop();pro.onclick=null;const S0=S,go=()=>{if(S!==S0)return;if(!stageReady()){$('#proWho').textContent='';$('#proText').textContent='マップを読みこみ中… '+loadPct()+'%';pro.querySelector('.hint').hidden=true;$('#proSkip').hidden=true;setTimeout(go,100);return}/* 待つあいだは、読みこみ中と出す *//* マップを作りおわるまで、まっくらなまま待つ（プロローグのあいだに作りはじめている。ムービーの途中で読みこみが出ないように） */try{render(performance.now())}catch(e){}/* うすくなる前に、新しい村をかいておく（前のデータの画面が一瞬見えないように） */pro.style.opacity='0';setTimeout(()=>{pro.hidden=true;arrive()},800)};go()};
   pro.onclick=e=>{if(e.target.id==='proSkip')return;i++;if(i<PROS[WD].length)show();else end()};
-  $('#proSkip').onclick=end;show();
+  $('#proSkip').onclick=end;if(PROS[WD].length)show();else{$('#proWho').textContent='';$('#proText').textContent='';end()}/* プロローグのないステージ（風の土台）は、すぐ村へ */
 }
 const arriveF=()=>WD===0&&S.sacredRoot!=null&&S.res.find(r=>r.name===POKO);/* 草原のはじめは、カミサマと、切り株の前のフタバが入るように */
 function arrive(){
@@ -213,5 +213,5 @@ function arrive(){
   /* はじめての村へ降りるカメラズームは残す。タイトルの背景描画とは別の演出。 */
   camAnim={fz:cam.z,tz:homeZ(),fx:cam.x+VW/cam.z/2,fy:cam.y+VH/cam.z/2,tx:arriveF()?(CX+arriveF().x)/2*TS:CX*TS,ty:arriveF()?(CY-3+arriveF().y-1)/2*TS:(CY-3)*TS,t:0,dur:2.2,done:()=>{
     S.godShown=true;burst(Math.floor(godY())*W+Math.floor(godX()),'furn');sfx('poof');
-    setTimeout(()=>{started=true;showUI(true);{const f=WD===0&&S.res.find(r=>r.name===POKO);if(f){f.nap=true;RHOLD.set(f,performance.now()+6e5)}}/* 草原のはじめ：フタバは、すわってうとうと */const run=()=>dialog(Object.assign((WD===FREE?INTROFL():INTROS[WD]).slice(),{skip:1}),()=>{for(const r of S.res)if(r.nap){r.nap=false;RHOLD.set(r,0)}S.introSeen=true;save()});/* さいごまで見てから「見た」に */if(WD===0){showUI(false);sceneShift('mem',dreamScene,()=>{showUI(true);run()})}else run()},500)}};/* 草原のはじめに、めざす村のすがた（夢）を見せる */
+    setTimeout(()=>{started=true;showUI(true);{const f=WD===0&&S.res.find(r=>r.name===POKO);if(f){f.nap=true;RHOLD.set(f,performance.now()+6e5)}}/* 草原のはじめ：フタバは、すわってうとうと */const seen=()=>{for(const r of S.res)if(r.nap){r.nap=false;RHOLD.set(r,0)}S.introSeen=true;save()},run=()=>{const L=(WD===FREE?INTROFL():INTROS[WD]).slice();if(!L.length)return seen();/* 着いてからの会話のないステージ（風の土台） */dialog(Object.assign(L,{skip:1}),seen)};/* さいごまで見てから「見た」に */if(WD===0){showUI(false);sceneShift('mem',dreamScene,()=>{showUI(true);run()})}else run()},500)}};/* 草原のはじめに、めざす村のすがた（夢）を見せる */
 }
