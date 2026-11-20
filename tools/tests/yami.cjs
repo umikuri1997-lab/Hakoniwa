@@ -27,5 +27,18 @@ const assert=require('node:assert/strict');
   /* セーブして読みなおす */
   const r3=JSON.parse(await run(`(()=>{const out={};save();const d=load(5);out.saved=!!d&&d.world===5;continueGame(d);out.wd=WD;out.n=S.res.length;out.el=S.res[0].elem;render(performance.now());return JSON.stringify(out)})()`));
   console.log(JSON.stringify(r3));assert.equal(r3.saved,true);assert.equal(r3.wd,5);assert.equal(r3.n,1);assert.equal(r3.el,'light');
+  /* コワイノの来かた：トモリが生まれたら来はじめる・6時〜23時は1時間ごとに25%で1〜2ひき・朝6時に消えない・なかまはたたかう */
+  const r4=JSON.parse(await run(`(()=>{const out={};document.querySelector('#dialog').hidden=true;const q0=Math.random,day=Math.floor(S.t/1440)*1440;out.on=S.enemyOn;S.enemies=[];S.hold=0;
+    Math.random=()=>.1;yamiTick(9.99,10.01);out.n1=S.enemies.length;yamiTick(10.2,10.4);out.same=S.enemies.length;
+    Math.random=()=>.6;yamiTick(10.99,11.01);out.miss=S.enemies.length;
+    let c=0;Math.random=()=>(c++?.9:.1);yamiTick(11.99,12.01);out.n2=S.enemies.length-out.miss;
+    Math.random=()=>.1;yamiTick(22.99,23.01);yamiTick(2.99,3.01);yamiTick(5.5,5.99);out.nightNo=S.enemies.length-out.miss-out.n2;yamiTick(5.99,6.01);out.six=S.enemies.length-out.miss-out.n2;Math.random=q0;
+    out.type=S.enemies.every(e=>e.type==='basic');
+    /* 朝6時：のこったコワイノは消えない */S.enemies=[{id:S.nid++,type:'basic',x:CX+.5,y:CY+9.5,hp:100,max:100,delay:0,spawned:true,path:[],repath:0,atk:0,stun:0,flash:0,flee:false}];S.nightHad=true;S.lastMorning=Math.floor((day+1440)/1440);S.t=day+1440+5*60+59;Math.random=()=>.9;/* 6時の小さな群れは、ここでは出さない */for(let i=0;i<6;i++)stepWorld(.5);Math.random=q0;out.h=hour()>=6;out.left=S.enemies.filter(e=>!e.dead).length;out.had=S.nightHad;
+    /* ぜんぶ追いはらったあとの朝は、かたづく */S.enemies=[{id:S.nid++,type:'basic',x:CX+.5,y:CY+9.5,hp:0,max:100,delay:0,spawned:true,dead:1,path:[],repath:0,atk:0,stun:0,flash:0,flee:false}];S.nightHad=true;S.t=day+2880+5*60+59;S.lastMorning=Math.floor((day+2880)/1440);Math.random=()=>.9;for(let i=0;i<6;i++)stepWorld(.5);Math.random=q0;out.clean=S.enemies.length;
+    return JSON.stringify(out)})()`));
+  console.log(JSON.stringify(r4));
+  assert.equal(r4.on,true);assert.equal(r4.n1,1);assert.equal(r4.same,1);assert.equal(r4.miss,1);assert.equal(r4.n2,2);assert.equal(r4.nightNo,0);assert.equal(r4.six,1);assert.equal(r4.type,true);
+  assert.equal(r4.h,true);assert.equal(r4.left,1);assert.equal(r4.had,false);assert.equal(r4.clean,0);
   assert.deepEqual(errors,[]);await browser.close();console.log('OK');
 })().catch(e=>{console.error(e);process.exit(1)});
