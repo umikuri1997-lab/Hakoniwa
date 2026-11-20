@@ -609,7 +609,10 @@
 - 光の属性（`ELEM.light`）はトモリだけ：神殿では呼べない（`ELEM_KEYS` に入れない）・たたかわない（`sortieOK`）・まわり4マスが歩くあかり（`YAMILIGHT`・`yamiLights`・`yamiLightAt`）。属性ごとの表を足したら、光でこわれないか（`表[r.elem]` をそのまま使っていないか）を見る。
 - トモリの絵は、かりの絵：水の形を色がえ（`SPART`・`spArt`・`SPC.light`）。せいれいの絵を属性の名前でさがす所は `spArt(el)` を通す。
 - コワイノの来かた：トモリが生まれたときから来る（`S.enemyOn`）。23時〜6時は、ほかのステージと同じ大きな群れ（`waveFor`）。6時〜23時は、時計の1時間ごとに25%（`YAMIDAYP`）でコカゲが1〜2ひき（`yamiTick`・`yamiDayWave`）。朝の光がないので、朝6時に消えない（`level.js` の `yk`）。追いはらうまでのこる。
-- たしかめは `tools/tests/yami.cjs`。
+- お話の前半（`QUESTS6`）：あかり → ヒイロ（はじめに来る火のせいれい、あにき。`SECOND[YAMI]`、`qAt('hiiro')` から）→ ヨリ（夜、ねているトモリのとなりにいる、おそってこない影。`S.enemies` に入れず、コワイノの絵で描くだけ `yoriPos`・`yamiDrawAdd`。夜にタップ `yamiTap`→`yoriMeet`）→ 夜の仕事のあと3つ（見た目だけの印 `YMARKS`・`S.yami.marks`。昼、ヨリがまだ見ていない印で待つ）→ あさやけ（聞いたつぎの朝6時の場面 `yamiDawnTick`・`YDAWN`。ヨリが朝の光でうすれて消える）。
+- 朝の空：おわったお話の数（`yamiSky`）ぶん、朝の時間（4時半〜8時半）だけ明るい（`YAMISKYK`）。あさやけのあとは、朝の時間に本当の朝の光（`yamiSkyHour`）。
+- さいごの目標のお礼の会話は、目標の一覧のおわりでも出す（`checkQuest`）。
+- たしかめは `tools/tests/yami.cjs`・`tools/tests/yami-story.cjs`（会話は自動プレイと同じ送り方 `DLGA`＋`#dlgBtns`。朝の日記の紙はとじる。タップで始める会話は `DLGTAP` を入れてから）。
 ## 洞窟の探検
 - 洞窟（`js/cave.js`、`CV`・`caveOn`）：土のステージの核。いまは、設定の「テスト用」の「洞窟へ」から入る2階ぶん（`CVFLOORS`）（きまった案は `IDEAS.md`）。村は止めたまま（`paused`）、洞窟だけを `caveFrame`・`caveRender` で動かして描く。村の `S` は入れかえない。
 - 洞窟のマスは、村のマップの外（y が `H` より下、`CVOY` から）。村のマスを見る共通の描き方（`uLift`・`hiAt`）が、何もない所を見るようにするため。洞窟の中の場所は、せいれい・コワイノとも、この座標で持つ（`drawEnemy`・`hitFx`・`fxSpr`・`sfxAt` がそのまま使える）。

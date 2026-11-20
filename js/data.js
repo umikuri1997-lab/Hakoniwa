@@ -287,8 +287,8 @@ const GOD='カミサマ',POKO='フタバ';
 const MINA='ノドカ';
 const HOMURA='ホムラ',SHIZUKU='シズク',KAZANE='カザネ',HAYATE='ハヤテ',MIO='ミオ',KAGARI='カガリ';/* カガリ：火山からにげた火のせいれい。おまつりのあと、入り口のあかりをたよりに、自分で帰ってくる（kagari.js） *//* ミオ：水のステージの1人目（しずかな歌い手の水のせいれい） *//* ハヤテ：カザネのおさななじみの風のせいれい（はじめにうかんだ島で目をさます） *//* カザネ：風のステージのはじめからいる風のせいれい */
 const KEYS=[[POKO,MINA],[HOMURA,SHIZUKU]];KEYS[WIND]=[KAZANE,HAYATE];KEYS[FREE]=[];KEYS[2]=[];KEYS[MIZU]=[MIO];/* 水のステージの2人目（土）は、お話を作るときにきめる */const FIXK0={fire:'ホノ',water:'アオ',wind:'フウ'};/* ステージ1の火・水・風のキーキャラ（名前も見た目も固定） *//* ステージごとのキーキャラ（1人目・2人目） */
-const TOMORI='トモリ';KEYS[YAMI]=[TOMORI];/* 闇のステージ：光のせいれい（1人だけ） */
-const KEYEL={[TOMORI]:'light',[POKO]:'wood',[MINA]:'earth',[HOMURA]:'fire',[SHIZUKU]:'water',[KAZANE]:'wind',[HAYATE]:'wind',[MIO]:'water',[KAGARI]:'fire'};
+const TOMORI='トモリ',HIIRO='ヒイロ';KEYS[YAMI]=[TOMORI,HIIRO];/* 闇のステージ：光のせいれい（1人だけ） */
+const KEYEL={[TOMORI]:'light',[HIIRO]:'fire',[POKO]:'wood',[MINA]:'earth',[HOMURA]:'fire',[SHIZUKU]:'water',[KAZANE]:'wind',[HAYATE]:'wind',[MIO]:'water',[KAGARI]:'fire'};
 const LEAD=()=>KEYS[WD][0]||(WD===FREE?FA():GOD);
 const PROLOGUE=[
   ['？？？','#wave|……おーい、聞こえとるかの？ そうそう、おヌシじゃ。'],
