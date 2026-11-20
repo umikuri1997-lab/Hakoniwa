@@ -14,7 +14,7 @@ const assert=require('node:assert/strict');
     const o=JSON.parse(await run(`(()=>{${needs||''}recount();const who=S.res.slice(0,${n||99}).map(r=>r.id);const pt=S.pt,f=S.food;const ok=evOpen('${id}',who);return JSON.stringify({ok,pt:pt-S.pt,f:f-S.food,ev:!!S.ev,day:S.ev&&S.ev.day,now:dayNo()})})()`));
     assert.ok(o.ok&&o.ev,id+' opened '+JSON.stringify(o));
     const before=JSON.parse(await run(`JSON.stringify(S.res.map(r=>Object.assign({},r.est)))`));
-    await to(o.day,`EVENTS['${id}'].at-0.1`);await sim(60*8,'!S.ev');
+    await to(o.day,`EVENTS['${id}'].at-0.1`);await run(`S.rain=false`);/* 雨・雪の日は、星見の会・花火があしたになる */await sim(60*8,'!S.ev');
     const r=JSON.parse(await run(`JSON.stringify({ev:S.ev,est:S.res.map(r=>r.est||{}),memo:(S.memo||[]).map(m=>m[2]).filter(t=>t.includes(EVENTS['${id}'].n))})`));
     assert.equal(r.ev,null,id+' finished: '+JSON.stringify(r.ev));assert.ok(r.memo.length,id+' memo');
     const gain=r.est.map((e,i)=>{const o2={};for(const k in e)if(e[k]!==(before[i][k]||0))o2[k]=e[k]-(before[i][k]||0);return o2});
@@ -98,5 +98,16 @@ const assert=require('node:assert/strict');
   /* 大会（季節の大会・運動会）は、せいれいが3人から：2人だと知らせもなく、ひらかない */
   await run(`if(sheet)closeSheet()`);const dn=await run(`dayNo()`),SD=await run(`SEASONDAYS`),CUPD=await run(`CUPDAY`);await to(dn+((CUPD-((dn-1)%SD+1))+SD)%SD||SD,6.02);{const o=JSON.parse(await run(`(()=>{const keep=S.res.slice();S.res=keep.slice(0,2);S.ev=null;const sd=seasonDay(dayNo());evMorning();const ev=S.ev;S.ev=null;const w=evWhy('undo');S.res=keep;return JSON.stringify({sd,ev:!!ev,w})})()`));
     assert.equal(o.sd,5,'cup day');    assert.equal(o.ev,false,'no cup with 2 spirits');assert.equal(o.w,'せいれいが3人からです','undo needs 3')}
+  /* QAの報告（NEW-02・03・05・07） */
+  {const o=JSON.parse(await run(`(()=>{const keep=S.res.slice(),out={};S.ev=null;S.evDone={};while(seasonDay(dayNo()+1)!==CUPDAY)S.t+=1440;
+      /* あしたが大会の日でも、せいれいが3人いなければ、ほかのイベントをひらける（大会はひらかれないので） */S.res=keep.slice(0,2);out.few=evWhy('oni');S.res=keep;out.many=evWhy('oni');
+      /* 依頼ボードでひらいた大会が、その日に3人いなくてやめになったら、はらった分をもどし、またひらける */S.t+=1440;S.t=Math.floor(S.t/1440)*1440+12*60;S.ev=null;S.evDone={};const p0=S.pt;out.ok=!!evOpen('cup4',keep.slice(0,3).map(r=>r.id));out.paid=p0-S.pt;
+      S.res=keep.slice(0,2);S.t=S.ev.day*1440-1440+10*60+1;evTick();out.ev=!!S.ev;out.back=p0-S.pt;out.done=evDoneOn('cup4',dayNo());S.res=keep;out.again=evWhy('cup4');
+      /* 季節のさいごの日にひらいて、つぎの季節の1日めにする：1季節に1回は、ひらく日の季節で見る */S.ev=null;S.evDone={};S.t=(Math.floor(S.t/1440)+1)*1440+12*60;while(seasonDay(dayNo())!==SEASONDAYS)S.t+=1440;out.cross=!!evOpen('oni',keep.slice(0,2).map(r=>r.id));out.key=S.evDone.oni===seasonKeyOf(dayNo()+1)&&S.evDone.oni!==seasonKey();S.ev=null;S.t+=1440;out.next=evWhy('oni');
+      /* 雪・雨の日の星見の会は、あしたにする */S.ev={id:'hoshi',day:dayNo(),who:keep.slice(0,2).map(r=>r.id),paid:{pt:0,food:[]},ph:null};S.rain=true;S.enemies=[];S.t=Math.floor(S.t/1440)*1440+20.5*60+1;evTick();out.star=S.ev&&{ph:S.ev.ph,day:S.ev.day-dayNo()};S.rain=false;S.ev=null;return JSON.stringify(out)})()`));
+    assert.ok(!/^あしたは/.test(o.few),'2人なら、あしたの大会で止めない '+o.few);assert.match(o.many,/^あしたは.*大会です$/,'3人なら止める');
+    assert.ok(o.ok&&o.paid===30,'cup4 booked '+JSON.stringify(o));assert.equal(o.ev,false,'cup4 dropped');assert.equal(o.back,0,'cup4 refunded');assert.equal(o.done,false,'cup4 not done');assert.equal(o.again,'','cup4 can open again');
+    assert.ok(o.cross&&o.key,'season of the event day');assert.equal(o.next,'この季節は、もうひらきました');
+    assert.deepEqual(o.star,{ph:null,day:1},'hoshi in rain goes to tomorrow')}
   await page.waitForTimeout(500);assert.deepEqual(errors,[]);await browser.close();console.log('Events: ok');
 })().catch(e=>{console.error(e);process.exit(1)});

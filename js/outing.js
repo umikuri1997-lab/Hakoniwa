@@ -32,5 +32,5 @@ const OUTTALK={
  spot:[[[0,'ここ、すてきな場所だね。'],[1,'#joy|うん。みんなで作った村だもん。'],[0,'また、いっしょに来ようね。']],
   [[1,'ねえ、ここでなにしてあそぶ？'],[0,'#tilt|うーん……ならんですわってるだけでも、たのしいよ。'],[1,'#joy|うん、そうだね。']],
   [[0,'この村、どんどんにぎやかになるね。'],[1,'うん。きみがいてくれて、うれしいよ。'],[0,'#shy|えへへ……ぼくも。']]]};
-function outingTalk(r){const a=r.act,q=a&&outMate(r,a);if(!q)return false;const A=a.lead?r:q,B=a.lead?q:r,L=OUTTALK[a.pk]||OUTTALK.spot,C=L[L.indexOf(pickFresh('out:'+a.pk,L))];
+function outingTalk(r){const a=r.act,q=a&&outMate(r,a);if(!q||q.act.stage!=='do')return false;/* 2人とも着いてから（あいてが歩いているあいだは、ふつうのタップ） */const A=a.lead?r:q,B=a.lead?q:r,L=OUTTALK[a.pk]||OUTTALK.spot,C=L[L.indexOf(pickFresh('out:'+a.pk,L))];
   dialog(C.map(([s,t],i)=>{const sp=s?B:A;return[sp.name,chatTone(t,sp,i)]}));return true}
