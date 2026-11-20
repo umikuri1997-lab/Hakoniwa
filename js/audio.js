@@ -47,6 +47,7 @@ Object.assign(SAMPLES,{"pond":["assets/g/f6217511b3.mp3"],"onsen":["assets/g/cb1
 Object.assign(SAMPLES,{"ea_apple":["assets/g/4d6b20024c.mp3","assets/g/78ae500886.mp3","assets/g/c7ce399d66.mp3"],"ea_veg":["assets/g/ec770e5a62.mp3","assets/g/7e8bc0bb39.mp3","assets/g/8e72cb57d4.mp3","assets/g/e212a53582.mp3","assets/g/64ca70e27e.mp3","assets/g/3d393256bf.mp3"],"ea_cracker":["assets/g/c70a4251af.mp3","assets/g/439a907a26.mp3","assets/g/c765164d4f.mp3"],"ea_cookie":["assets/g/445933628b.mp3","assets/g/c17b0e8976.mp3","assets/g/62fe8c65fc.mp3","assets/g/d848ef3f68.mp3"],"ea_toast":["assets/g/5b89e2e442.mp3","assets/g/272cef9612.mp3","assets/g/35f57bfcc7.mp3","assets/g/7c775b08d6.mp3"],"ea_cereal":["assets/g/f0c17dde90.mp3","assets/g/ee90ce7155.mp3","assets/g/e0144c5727.mp3"],"ea_nut":["assets/g/10bce02c76.mp3","assets/g/5a7cfa3530.mp3","assets/g/6f545cffd4.mp3"],"ea_pickle":["assets/g/a565c4a706.mp3","assets/g/760bd9550d.mp3","assets/g/c745f485d7.mp3"],"ea_soft":["assets/g/e1648797d6.mp3","assets/g/ac63e52c1e.mp3","assets/g/0bd73cd13b.mp3","assets/g/9555a2e07d.mp3"],"ea_water":["assets/g/2aa114c465.mp3","assets/g/c0b51306a8.mp3","assets/g/0e355d51a9.mp3"],"ea_tea":["assets/g/b0a9f2063e.mp3","assets/g/da10ea2682.mp3","assets/g/18c1d06405.mp3"]});
 Object.assign(SAMPLES,{"dscoop":["assets/g/7567dbe225.mp3","assets/g/3df26569c5.mp3"],"dlift":["assets/g/5307efba0e.mp3","assets/g/17045852ae.mp3"]});/* 水をくむ（バケツが水に入る・ひき上げる）音：OpenGameArt の CC0 の録音（tools/sound/spirit_act.py） */
 Object.assign(SAMPLES,{"moya": ["assets/g/3b48b35943.mp3", "assets/g/2d7c698059.mp3", "assets/g/57ccb5ca93.mp3"]});/* もやもや（たのしさが低いとき）：持ち主がくれた声を、尻上がりにしないで、ゆっくりの「もやん」1回ぶんずつにした（tools/sound/owner_moya.py） */
+Object.assign(SAMPLES,{"cavedrip":["assets/g/c71f5bdd7f.mp3","assets/g/ea04850a8c.mp3","assets/g/dda10e0646.mp3","assets/g/83d7df255d.mp3","assets/g/945908278f.mp3","assets/g/cb53c608a7.mp3"],"caveamb":["assets/g/b2cdd41001.mp3"]});/* 洞窟のしずく・洞窟の空気の音：本物の録音（OpenGameArt「Dripping water loop」「Loopable Dungeon Ambience」CC0。tools/sound/cave_amb.py） */
 Object.assign(SAMPLES,{"thunder":["assets/g/838e080f8c.mp3","assets/g/76dfb6bdbe.mp3"]});/* あらしのかみなり：本物の録音（OpenGameArt「Rain + Long Thunder」CC0。tools/sound/thunder.py） */
 Object.assign(SAMPLES,{"treefall":["assets/g/9d8376a84b.mp3"]});/* 木がたおれる音：持ち主がくれた音（tools/sound/owner_treefall.py） */Object.assign(SAMPLES,{"harvdone":["assets/g/6f531d4897.mp3"]});/* しゅうかくしおわった音：かれ葉がこすれる本物の録音（OpenGameArt qubodup CC0。tools/sound/harvest_done.py。持ち主がえらんだ） */
 Object.assign(SAMPLES,{"goso":["assets/g/392c341186.mp3"]});/* 箱にしまう・取るあいだのゴソゴソ（持ち主がくれた音。tools/sound/gosogoso_loop.py で、つなぎ目なく1まわり1.0337秒を3つならべた形） */
@@ -155,6 +156,7 @@ function audioInit(){
   const comp=ACOMP=AC.createDynamicsCompressor();comp.connect(AC.destination);
   bgmG=AC.createGain();bgmG.gain.value=gainB();bgmF=AC.createGain();bgmF.gain.value=1;bgmG.connect(bgmF);bgmF.connect(comp);
   sfxG=AC.createGain();sfxG.gain.value=gainS();sfxG.connect(comp);
+  {/* 洞窟のこだま：効果音を、おくれてくりかえす（洞窟の中だけ CAVEW をあげる） */const d=AC.createDelay(1),fb=AC.createGain(),lp=AC.createBiquadFilter();d.delayTime.value=CAVEECHO[0];fb.gain.value=CAVEECHO[1];lp.type='lowpass';lp.frequency.value=1800;CAVEW=AC.createGain();CAVEW.gain.value=0;sfxG.connect(d);d.connect(lp);lp.connect(fb);fb.connect(d);lp.connect(CAVEW);CAVEW.connect(comp)}
   voxC=AC.createDynamicsCompressor();voxC.threshold.value=-38;voxC.ratio.value=12;voxC.knee.value=4;voxC.attack.value=.003;voxC.release.value=.1;{const vg=AC.createGain();vg.gain.value=.5;voxC.connect(vg);vg.connect(sfxG)}/* 声の大きさ（コンプレッサーのあとで、半分に） *//* 声は、大きいところをおさえて、音の大きさをそろえる（声の音の中に、ほかより大きい所があるため） */
   noiseBuf=AC.createBuffer(1,AC.sampleRate*.3,AC.sampleRate);const d=noiseBuf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;
   nextT=AC.currentTime+.15;setInterval(sched,60);setInterval(ambTick,500);loadSamples();
@@ -219,9 +221,11 @@ const LDMV=.135,LDMFADE=1;let LDM=null,ACOMP=null;/* bgmF は曲の切りかえ�
 function ldMusicTick(){const want=typeof STLD!=='undefined'&&STLD&&SND.bgm,now=AC.currentTime;
   if(want&&!LDM){const b=(SBUF.ldmusic||[])[0];if(!b)return;const src=AC.createBufferSource(),g=AC.createGain();src.buffer=b;src.loop=true;src.loopStart=.06;src.loopEnd=b.duration-.06;g.gain.value=LDMV*(SND.bv??1);src.connect(g);g.connect(ACOMP);src.start(now,.06);LDM={src,g};return}
   if(!want&&LDM){const{src,g}=LDM;LDM=null;g.gain.cancelScheduledValues(now);g.gain.setValueAtTime(g.gain.value,now);g.gain.linearRampToValueAtTime(0,now+LDMFADE);src.stop(now+LDMFADE+.05)}}
+let CAVEW=null;const CAVEECHO=[.21,.34,.5],CAVEAMBV=.9;/* 洞窟のこだま：おくれ（秒）・くりかえしの大きさ・こだまの大きさ／洞窟の空気の音の大きさ */
 function ambTick(){if(!AC||AC.state!=='running')return;ldMusicTick();if(!ambG){ambG=AC.createGain();ambG.gain.value=.09;ambF=AC.createBiquadFilter();ambF.type='lowpass';ambF.frequency.value=18000;ambF.Q.value=.4;ambG.connect(ambF);ambF.connect(AC.destination)}
   {const inn=ambIndoor();if(inn!==AMBIN){AMBIN=inn;ambF.frequency.setTargetAtTime(inn?700:18000,AC.currentTime,inn?.25:.4)}}/* 家の中を映すと、外の雨・鳥・虫の音が、壁ごしにやわらかくこもる */
-  const want={birds:0,rain:0,night:0,amb_morn:0,amb_spr:0,amb_sum:0,amb_snight:0};let h=12,on=false;if(S&&started&&SND.sfx&&$('#title').hidden&&$('#maps').hidden){on=true;h=hour();if(S.rain)want.rain=.45;else{/* 朝と夕方は、ゆっくり入れかわる */const cl=v=>Math.max(0,Math.min(1,v)),se=typeof seasonNow==='function'?seasonNow():0;
+  const want={birds:0,rain:0,night:0,amb_morn:0,amb_spr:0,amb_sum:0,amb_snight:0,caveamb:0};let h=12,on=false;const cave=typeof caveOn==='function'&&caveOn();if(CAVEW)CAVEW.gain.setTargetAtTime(cave?CAVEECHO[2]:0,AC.currentTime,.2);
+  if(cave){if(SND.sfx)want.caveamb=CAVEAMBV}/* 洞窟の中：村の環境音は止めて、洞窟の空気の音だけ */else if(S&&started&&SND.sfx&&$('#title').hidden&&$('#maps').hidden){on=true;h=hour();if(S.rain)want.rain=.45;else{/* 朝と夕方は、ゆっくり入れかわる */const cl=v=>Math.max(0,Math.min(1,v)),se=typeof seasonNow==='function'?seasonNow():0;
     /* 昼：朝（5時〜7時半）は朝の音、そのあとは季節の音（春・夏はもらった音、秋・冬は鳥の声）。夜：夏はもらった夏の夜の音、ほかは虫の声（大きさ0.5） */
     const day=h<5||h>=18.5?0:h<6.5?cl((h-5)/1.5):h<17?1:cl((18.5-h)/1.5),mo=h<7?1:h<8?8-h:0,nt=h>=17.5?cl((h-17.5)/1.5)*.5:h<5.5?cl((5.5-h)/1)*.5:0;
     want.amb_morn=day*mo;want[se===0?'amb_spr':se===1?'amb_sum':'birds']=day*(1-mo);want[se===1?'amb_snight':'night']=nt}}
@@ -237,6 +241,7 @@ function sfx(k){
   if(!AC||!SND.sfx)return;if(AC.state!=='running'){/* iPhone などは、さわってすぐは音がまだ止まっている（resume があとで終わる）。ボタンの音は、うごきだしてから鳴らす（マップの場所の音はすてる） */if(AC.state==='suspended'&&SFXV===1&&!SFXP&&!SFXL&&!SFXTAB){const t0=performance.now();AC.resume().then(()=>{if(performance.now()-t0<600&&AC.state==='running')sfx(k)}).catch(()=>{})}return}const now=AC.currentTime;if(lastSfx[k]&&now-lastSfx[k]<.07)return;lastSfx[k]=now;
   const t=now+.01,o=SFXV!==1||SFXP||SFXL?sfxOut():sfxG,seq=(ns,gap,type,v,d)=>ns.forEach((m,i)=>tone(m,t+i*gap,d||gap*1.6,type,v,o));
   SFXO=o===sfxG?null:o;if(SFXTAB&&(k==='tap'||k==='next')){SFXTABD=1;if(SFXTAB===2)return;k='tab'}/* タブをおしたときのボタンの音は、めくる音に */
+  if(k==='cavedrip'){playU('cavedrip',.45);return}/* 洞窟のしずく */
   if(k.startsWith('cv_')){playU(k,.3);return}/* 小さな生き物の鳴き声 */
   if(k.startsWith('pick_')){const m=k.slice(5);playU(m,PICKV[m]||.3);return}/* ひろった物の音：その物の材質の録音（tapMatOf と同じ録音。ピロンという音ではない） */if(k.startsWith('ea_')){playU(k,EATV);return}/* 食べる・のむ音：とても小さく（ASMRのように近く小さく） */
   switch(k){
