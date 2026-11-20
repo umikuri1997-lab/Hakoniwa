@@ -17,7 +17,7 @@ function expandMap(d){const O=OFF,mi=j=>(((j/OW)|0)+O)*W+(j%OW)+O,inner=j=>{cons
   if(d.st2)for(const f of['fire','frz','ash','hvb'])if(d.st2[f])d.st2[f]=mk(d.st2[f]);if(d.st2&&Array.isArray(d.st2.bw))d.st2.bw=d.st2.bw.map(mi);
   if(d.imoSeedQuestPlots)d.imoSeedQuestPlots=d.imoSeedQuestPlots.map(mi);
   for(const L of[d.regrow,d.broken,d.fogF])for(const q of L||[])q.j=mi(q.j);if(d.fogReq)d.fogReq=d.fogReq.map(mi);
-  for(const L of[d.drops,d.seeds,d.finds])for(const q of L||[]){q.x+=O;q.y+=O}for(const e of d.bp||[]){e.x+=O;e.y+=O;e.cells=e.cells.map(mi);for(const p of e.ps)p.j=mi(p.j)}if(d.hname)d.hname=mk(d.hname);/* 家の設計図 */if(d.tx!=null)d.tx=mi(d.tx);/* 宝の場所 */for(const q of d.snowm||[])q.j=mi(q.j);/* 雪だるま */for(const q of d.ani||[]){q.x+=O;q.y+=O;q.h=mi(q.h);q.path=null;q.go=null}/* 飼う生き物 */
+  for(const L of[d.drops,d.seeds,d.finds,d.ng&&d.ng.L])for(const q of L||[]){q.x+=O;q.y+=O}for(const e of d.bp||[]){e.x+=O;e.y+=O;e.cells=e.cells.map(mi);for(const p of e.ps)p.j=mi(p.j)}if(d.hname)d.hname=mk(d.hname);/* 家の設計図 */if(d.tx!=null)d.tx=mi(d.tx);/* 宝の場所 */for(const q of d.snowm||[])q.j=mi(q.j);/* 雪だるま */for(const q of d.ani||[]){q.x+=O;q.y+=O;q.h=mi(q.h);q.path=null;q.go=null}/* 飼う生き物 */
   for(const q of[d.nushi,d.b2At])if(q){q.x+=O;q.y+=O;if(q.path)q.path=[]}
   for(const e of d.enemies||[]){e.x+=O;e.y+=O;e.path=[]}
   for(const r of d.res||[]){r.x+=O;r.y+=O;if(r.stX!=null)r.stX+=O;if(r.stY!=null)r.stY+=O;r.act=null;r.path=[];delete r.avoidJ;delete r.faceObj;delete r.lastToy;if(r.cing&&r.cing.ov!=null)r.cing.ov=mi(r.cing.ov)}/* 歩いている途中・作業の途中は、やりなおし */

@@ -410,7 +410,7 @@ const PICKGRASS=new Set(['shina','kasa','kuru','chiri','funba']),PICKSTONE=new S
 function itemMat(id){if(typeof id!=='string')return'twood';
   if(id.startsWith('mat:')||typeof MATN!=='undefined'&&MATN[id]&&!BL[id]){const k=id.startsWith('mat:')?id.slice(4):id;return PICKGRASS.has(k)?'tgrass':PICKSTONE.has(k)?'tstone':k==='can'||/^i(copper|iron|silver|gold)$/.test(k)?'tcan':k==='nuno'||k==='wool'?'tcloth':'twood'}
   if(id.startsWith('food:')||typeof FOODS!=='undefined'&&FOODS[id]&&!BL[id]){const k=id.startsWith('food:')?id.slice(5):id,f=FOODS[k];return f&&f.fish?'twater':'tgrass'}
-  if(id.startsWith('seed:')||id==='sand'||id==='hai')return'tsoil';if(id==='mapPc'||id==='fukuro')return'tcloth';
+  if(id.startsWith('seed:')||id==='sand'||id==='hai')return'tsoil';if(id==='mapPc'||id==='fukuro')return'tcloth';if(/^ng[012]$/.test(id))return'tstone';
   const m=typeof tapMatOf==='function'?tapMatOf(id):null;return m||'twood'}
 function itemSnd(id,x,y){const m=itemMat(id);if(x==null)return sfx('pick_'+m);sfxAt('pick_'+m,x,y)}/* x,y があれば、マップの場所の音（左右・遠いほど小さい） */
 // 画面の中心から遠いほど小さく鳴らす
