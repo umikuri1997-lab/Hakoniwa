@@ -20,15 +20,15 @@ const assert=require('node:assert/strict');
   assert.deepEqual(u,{a:[1,1],b:2,c:4,st:2,menu:['soup']});
   console.log('Shop: cooking skill rises every 10 dishes and sets the dish stars');
   /* お客さん：11時に舟で来て、すわって、料理を待つ。せいれいが箱から運ぶと、食べて、かいがらをはらう（★2＝5） */
-  await run(`(()=>{S.cookKn={'imo+tomato@oven':'soup'};boxIn(${'__D'}+3,'f:soup',5);while(hour()<11)S.t+=1;S.mz.wv=null;S.mz.shell=0;S.mz.served=0;const r=S.res[0];r.x=__D%W+.5;r.y=((__D/W)|0)-1+.5;r.hunger=1000;r.energy=100;r.fun=100;r.act=null;r.path=[]})()`);
+  await run(`(()=>{S.cookKn={'imo+tomato@oven':'soup'};boxIn(${'__D'}+3,'f:soup',5);while(hour()<11)S.t+=1;S.mz.wv=null;S.mz.shell=0;S.mz.served=0;const r=S.res[0];r.x=__D%W+.5;r.y=((__D/W)|0)-1+.5;r.hunger=500;r.energy=100;r.fun=100;r.act=null;r.path=[]})()`);
   await run(`shopTick(.1)`);
   const c0=await J(`{n:SHOPC.cust.length,want:SHOPC.cust.map(c=>c.want)}`);
   assert.equal(c0.n,2,'customers are capped by the seats');assert.deepEqual(c0.want,['soup','soup']);
-  let s=null;for(let k=0;k<40;k++){s=await J(`(()=>{const r=S.res[0];r.hunger=1000;r.energy=100;r.fun=100;for(let i=0;i<200;i++)stepWorld(.25);return {served:S.mz.served||0,shell:S.mz.shell||0,cust:SHOPC.cust.map(c=>c.st)}})()`);if(s.shell>=10)break}
+  let s=null;for(let k=0;k<40;k++){s=await J(`(()=>{const r=S.res[0];r.hunger=500;r.energy=100;r.fun=100;for(let i=0;i<200;i++)stepWorld(.25);return {served:S.mz.served||0,shell:S.mz.shell||0,cust:SHOPC.cust.map(c=>c.st)}})()`);if(s.shell>=10)break}
   assert.equal(s.served,2,'the spirit served both customers: '+JSON.stringify(s));assert.equal(s.shell,10,'two ★2 dishes pay 5 shells each');
   console.log('Shop: customers come by boat, get served, eat and pay shells');
   /* 歌：16時、ミオが舞台で歌う。その夕方のお客さんが2人ふえる */
-  let g=null;for(let k=0;k<20;k++){g=await J(`(()=>{const r=S.res[0];if(k0())while(hour()<16)S.t+=1;r.hunger=1000;r.energy=100;r.fun=100;for(let i=0;i<200&&S.mz.songD!==callDay();i++)stepWorld(.25);return {song:S.mz.songD===callDay(),sung:S.mz.sung||0}})()`.replace('k0()',k===0?'true':'false'));if(g.song)break}
+  let g=null;for(let k=0;k<20;k++){g=await J(`(()=>{const r=S.res[0];if(k0())while(hour()<16)S.t+=1;r.hunger=500;r.energy=100;r.fun=100;for(let i=0;i<200&&S.mz.songD!==callDay();i++)stepWorld(.25);return {song:S.mz.songD===callDay(),sung:S.mz.sung||0}})()`.replace('k0()',k===0?'true':'false'));if(g.song)break}
   assert.deepEqual(g,{song:true,sung:1},'Mio sang on the stage');
   console.log('Shop: Mio sings on the stage before the evening');
   /* 貿易：料理10こで、つぎの朝に3こ */

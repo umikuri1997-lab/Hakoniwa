@@ -130,7 +130,7 @@ ACT_LBL.apick='生き物のえさをとりにいく';ACT_LBL.aput='生き物に�
 IDLE_ACTS.push('apet');
 /* ---------- 「しらべる」で生き物をタップ：小さな画面（aniPop）→「なでる」で、行けるいちばん近いせいれいが、なでにいく（aniPetAsk） ---------- */
 function aniAtTap(px,py){/* 足もとのまわり（絵の大きさ） */let best=null,bd=1e9;for(const a of S.ani||[]){if(a.in)continue;const sx=a.k==='hane'?.45:.65,top=a.k==='hane'?.85:1.25,dx=px-a.x,dy=py-a.y;if(Math.abs(dx)>sx||dy>.3||dy<-top)continue;const d=Math.hypot(dx,dy+top/2);if(d<bd){bd=d;best=a}}return best}
-const ANIBUSY=r=>r.hidden||r.coffin||r.hunger<500||storyCalled(r)||onHold(r)||r.act&&(URGNO.includes(r.act.type)||MAINGO.has(r.act.type)||r.act.type==='apetq'||r.act.type==='watchpost');
+const ANIBUSY=r=>r.hidden||r.coffin||r.hunger<250||storyCalled(r)||onHold(r)||r.act&&(URGNO.includes(r.act.type)||MAINGO.has(r.act.type)||r.act.type==='apetq'||r.act.type==='watchpost');
 function aniPetWhy(a){if(!a||a.in)return 'いまは小屋の中';if(a.petD===callDay())return 'きょうは、もうなでた';if(isNight())return '夜は、なでられない';if(enemyLive())return '「コワイノ」がいる';if(S.res.some(r=>r.act&&r.act.type==='apetq'&&r.act.aid===a.id))return 'なでにいっている';return ''}
 function aniPetAsk(a){/* 行けるせいれいのうち、道のりがいちばん近い子 */if(aniPetWhy(a))return null;const bx=a.x|0,by=a.y|0,C=S.res.filter(r=>!ANIBUSY(r)).sort((p,q)=>Math.hypot(p.x-a.x,p.y-a.y)-Math.hypot(q.x-a.x,q.y-a.y)).slice(0,6);let best=null,bd=1e9,bG=null,bs=-1;
   for(const r of C){const G=bfs(r.x|0,r.y|0),st=nearest(G,j=>Math.abs(j%W-bx)+Math.abs(((j/W)|0)-by)===1&&walk(j)&&!S.obj[j],400);if(st<0||G.dist[st]>=bd)continue;bd=G.dist[st];best=r;bG=G;bs=st}

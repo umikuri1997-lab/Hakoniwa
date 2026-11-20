@@ -136,7 +136,7 @@ function updHUD(){
   if(PTW.s===S&&S.pt<PTW.v&&!PTW.q)sfx('power');PTW.s=S;PTW.v=S.pt;PTW.q=false;/* カミサマにパワーをわたして何かをもらったとき（光・はどうはべつの音） */
   {const it=S.seenIt||(S.seenIt={});for(const k in S.mat)if(S.mat[k]>0)it['m:'+k]=1;for(const k in S.fs||{})if(S.fs[k]>0)it['f:'+k]=1}/* 図鑑のアイテム：一度でも持った素材・食べ物 */
   $('#pt').textContent=typeof juicePtShow==='function'?juicePtShow():S.pt;$('#food').textContent=S.food;$('#woodN').textContent=S.mat.wood||0;$('#matN').textContent=matTot();/* 素材は種類が多いので、上には総量だけ */$('#stoneN').textContent=S.mat.stone||0;{const bn=$('#bambooN'),bi=$('#bambooIc'),on=bambooOn();if(bn){bn.textContent=S.mat.bamboo||0;bn.hidden=!on;bi.hidden=!on;if(!bi.src)bi.src=ICONS.bamboo}}/* 上の欄は数だけ（しまえる数は、しまう家具をタップした画面のゲージで見る） */$('#resN').textContent=typeof resShownN==='function'?resShownN():S.res.length;/* 紹介をとじてから、ふやす（juice3.js） */$('#revLbl').textContent='みどり '+GRASSN;
-  const hungry=S.res.filter(r=>r.hunger<200).length,en=S.enemies.filter(e=>e.spawned).length;
+  const hungry=S.res.filter(r=>r.hunger<100).length,en=S.enemies.filter(e=>e.spawned).length;
   const al=$('#alert');const msg=[];if(en)msg.push('「コワイノ」 '+en+'ひき');if(hungry)msg.push('おなかがすいたせいれい '+hungry+'人');if(S.food===0&&S.enemyOn)msg.push(BOXL.length?'食料ゼロ':'しまう箱がありません');/* 足りない理由もいっしょに出す */
   al.hidden=!msg.length;al.textContent=msg.join('・');
   if(PDOWN){}/* 押している最中に作りなおすと、タップが消えてしまう */

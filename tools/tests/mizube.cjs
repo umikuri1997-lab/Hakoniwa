@@ -44,7 +44,7 @@ const assert=require('node:assert/strict');
   /* 9. じっさいの遊び方：霧の中の水門はタップできない。水路で霧を晴らしてからタップすると、せいれいが直しにいく。「水路をほる」は、せいれいの工事 */
   const p1=await J(`(()=>{const g0=S.mz.gates[0].j;mzTap(g0%W,(g0/W)|0);return {mist:fogAt(g0),req:S.mz.req.length}})()`);assert.deepEqual(p1,{mist:true,req:0});
   const noon=`if(hour()>=17||hour()<7)S.t=Math.floor(S.t/DAYLEN)*DAYLEN+DAYLEN*10/24;`;/* 夜にならないように、夕方になったら、その日の10時へ（毎コマもどすと、時計で待つ動きが終わらない） */
-  await run(`templeRuinTap(RUINT)`);for(let k=0;k<40&&!(await J(`STATUE>=0`));k++)await run(`(()=>{${noon}S.res[0].hunger=1000;S.res[0].energy=100;for(let i=0;i<200&&STATUE<0;i++)stepWorld(.25)})()`);
+  await run(`templeRuinTap(RUINT)`);for(let k=0;k<40&&!(await J(`STATUE>=0`));k++)await run(`(()=>{${noon}S.res[0].hunger=500;S.res[0].energy=100;for(let i=0;i<200&&STATUE<0;i++)stepWorld(.25)})()`);
   assert.equal(await J(`STATUE>=0`),true,'the temple is repaired first');
   /* お礼の会話を読みおえる（読むまで、せいれいは待っている）。もうできている目標（水門・水路・船着き場・いかだ・宝箱）も、会話を読むたびに1つずつ進む */
   for(let i=0;i<120&&await J(`S.quest`)<6;i++){await page.waitForTimeout(300);/* 会話と会話のあいだは、3秒まつ（DLGWAIT） */await run(`(()=>{${noon}for(let k=0;k<40;k++)stepWorld(.25);if(document.querySelector('#dialog').hidden)startTalk()})()`);for(let k=0;k<40&&!(await J(`document.querySelector('#dialog').hidden`));k++){await run(`(()=>{const b=document.querySelector('#dlgBtns .btn[data-nx]')||document.querySelector('#dlgBtns button');if(b)b.click()})()`);await page.waitForTimeout(120)}}
@@ -55,12 +55,12 @@ const assert=require('node:assert/strict');
     return {mist:fogAt(g0),req:S.mz.req.length,site:S.obj[cj],paid:pt-S.pt,cj}})()`);
   assert.equal(p2.mist,false);assert.equal(p2.req,1);assert.equal(p2.site,'site');assert.equal(p2.paid,5);
   const pop=async()=>{await run(`(()=>{const b=document.querySelector('.idea-reveal button');if(b){b.disabled=false;b.click()}})()`);await page.waitForTimeout(250)};/* 知らせの画面（あたらしいレシピ など）は時間を止めるので、待ちながらとじる */
-  let p3=null;for(let k=0;k<60;k++){await pop();p3=await J(`(()=>{${noon}S.res[0].hunger=1000;S.res[0].energy=100;for(let i=0;i<200&&!(S.mz.gates[0].open&&S.mz.cn[${p2.cj}]);i++){stepWorld(.25)}return {open:S.mz.gates[0].open,canal:!!S.mz.cn[${p2.cj}],obj:S.obj[S.mz.gates[0].j],n:mzOpenN(),g1:S.ground[S.mz.chests[1].j]}})()`);if(p3.open&&p3.canal)break}
+  let p3=null;for(let k=0;k<60;k++){await pop();p3=await J(`(()=>{${noon}S.res[0].hunger=500;S.res[0].energy=100;for(let i=0;i<200&&!(S.mz.gates[0].open&&S.mz.cn[${p2.cj}]);i++){stepWorld(.25)}return {open:S.mz.gates[0].open,canal:!!S.mz.cn[${p2.cj}],obj:S.obj[S.mz.gates[0].j],n:mzOpenN(),g1:S.ground[S.mz.chests[1].j]}})()`);if(p3.open&&p3.canal)break}
   assert.equal(p3.open,1,'the spirit repaired the gate');assert.equal(p3.canal,true,'the spirit dug the canal');assert.equal(p3.obj,'mzgate');assert.equal(p3.g1,2,'two open gates uncover the second chest');
   console.log('Mizube: a spirit opens a tapped gate and digs a canal');
   /* 10. 川くだり：せいれいが、コースを下って、たのしさがふえる */
   await pop();await pop();
-  const p4=await J(`(()=>{const r=S.res[0],g=S.mz.gates[1].j,raft=g+2*W-1,f=mzRaftFun(raft),C=mzCourse(raft),st=raft-W;endAct(r);r.x=st%W+.5;r.y=((st/W)|0)+.5;r.path=[];r.fun=10;r.hunger=1000;r.energy=100;
+  const p4=await J(`(()=>{const r=S.res[0],g=S.mz.gates[1].j,raft=g+2*W-1,f=mzRaftFun(raft),C=mzCourse(raft),st=raft-W;endAct(r);r.x=st%W+.5;r.y=((st/W)|0)+.5;r.path=[];r.fun=10;r.hunger=500;r.energy=100;
     S.t=Math.floor(S.t/DAYLEN)*DAYLEN+DAYLEN*10/24;startAct(r,roadSearch(r.x|0,r.y|0),'mzraft',st,{key:'o'+raft,obj:raft,what:'raft',fun:f,dur:50,pt:5,pw:2});let rode=false;for(let i=0;i<800&&r.act&&r.act.type==='mzraft';i++){stepWorld(.25);{const b=document.querySelector('.idea-reveal button');if(b){b.disabled=false;b.click()}}if(r.act&&r.act.type==='mzraft'&&r.act.cs)rode=true}
     const end=C[C.length-1];return {rode,fun:Math.round(r.fun),f,at:Math.abs(r.x-(end%W+.5))<1.5&&Math.abs(r.y-(((end/W)|0)+.5))<1.5,toy:!!r.lastToy}})()`);
   assert.equal(p4.rode,true);assert.ok(p4.f>=40,'the longest course is used: '+p4.f);assert.ok(p4.fun>=10+p4.f-5,'fun went up by the rafting fun: '+JSON.stringify(p4));assert.equal(p4.toy,true);

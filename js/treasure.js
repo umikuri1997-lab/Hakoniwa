@@ -32,7 +32,7 @@ function fukuroOpen(){if(!(S.fukuro>0))return;S.fukuro--;const got=fukuroRoll(),
   const mic=k=>{try{return ICONS[k]||''}catch(e){return''}},fic=k=>{try{return typeof foodIc==='function'?foodIc(k):''}catch(e){return''}};
   for(const[id,n]of got){if(id.startsWith('mat:')){const k=id.slice(4);S.mat[k]=(S.mat[k]||0)+n;items.push({img:mic(k),nm:MATN[k]+'×'+n})}else if(id.startsWith('food:')){const k=id.slice(5);addFood(k,n);items.push({img:fic(k),nm:FOODS[k].name+'×'+n})}else if(id==='mseed'){S.mseed=(S.mseed||0)+n;tier=Math.max(tier,1);items.push({img:seedIco(),nm:'ふしぎな種×'+n})}else if(id==='mapPc'){trStow('mapPc',n);tier=Math.max(tier,1);items.push({img:trIco('mapPc'),nm:'地図の切れはし×'+n})}else if(id.startsWith('seed:')){giveItem(id,n);items.push({img:iconURL(id),nm:CROPS[id.slice(5)].name+'のたね×'+n})}else{giveItem(id,n);gifts[id]=n;tier=2;items.push({img:iconURL(id),nm:BL[id].name})}}
   logEv('ふしぎなふくろをあけた');if(sheet==='inv')renderSheet();
-  treasureReveal({ico:trIco('fukuro'),taps:FUKUROTAPS[tier],tier,name:'ふしぎなふくろ',done:'ふくろから出てきた',items,after:()=>{if(Object.keys(gifts).length)queueItemGift(gifts,'ふくろから！');if(sheet==='inv')renderSheet()}})}
+  treasureReveal({ico:trIco('fukuro'),taps:FUKUROTAPS[tier],tier,name:'ふしぎなふくろ',done:'ふくろから出てきた',items,rays:1,beam:1,confetti:1,stamp:tier>=1?'あたり':null,after:()=>{if(Object.keys(gifts).length)queueItemGift(gifts,'ふくろから！');if(sheet==='inv')renderSheet()}})}
 const FUKUROTAPS=[2,4,6];/* あけるまでのタップの回数：素材・たね・食べ物／ふしぎな種・地図の切れはし／家具・そうび */
 /* ---- 絵 ---- */
 const TRPIX={
