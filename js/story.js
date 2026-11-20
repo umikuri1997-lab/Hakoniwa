@@ -186,8 +186,8 @@ const PROF=[
   [GOD,'わしも楽しみにしとるぞ！']];
 function INTROFL(){return [[FA(),'#surprise|わあ、守り神さまだ！ ぼく、'+FA()+'！ この土地で、ひっそり暮らしてたんだ！'],[FB(),'#surprise|ふわぁ…。'+FB()+'#joy|だよぉ。ふたりきりだったから、うれしいねぇ。'],[GOD,'この土地にも、おヌシの力を集める場所がいるのう。あそこの古い神殿を直せば、わしの居場所にもなる。']]}
 const TOYS4=['swing','sandbox','seesaw','slide'];/* 遊び道具（どれでもよい） */
-const LIGHTQ=['torch','lamp','campfire','lantern','candle','flamp','toro','takeakari','andon','yomawari','watchlight'];/* watchlight：あかりのついた見張り台（Lv5〜。recount で数える） *//* クエストで数える「あかり」（どれでもよい） */
-const DECOQ=['hedge','birdbath','parasol','arch','signpost','monstera','jar','rockart','vane','kamizo','shishiodoshi','noren'];/* クエストで数える「かざり」（どれでもよい） */
+const LIGHTQ=['torch','lamp','campfire','lantern','oldlantern','candle','flamp','toro','takeakari','andon','yomawari','watchlight'];/* watchlight：あかりのついた見張り台（Lv5〜。recount で数える） *//* クエストで数える「あかり」（どれでもよい） */
+const DECOQ=['hedge','birdbath','parasol','arch','signpost','monstera','jar','rockart','doki','vane','kamizo','shishiodoshi','noren'];/* クエストで数える「かざり」（どれでもよい） */
 const QUESTSF=[
   {id:'statue',text:'神殿を直してもらおう',check:()=>cnt('statue')>=1,by:GOD,how:'「しらべる」で、こわれた神殿をタップ',story:[
     [GOD,'#joy|ここが、おヌシとわしの居場所じゃ。せいれいたちも、きっと手を貸してくれるぞい。'],[GOD,'わしはここで、交換でもしながら見とるからの。']]},

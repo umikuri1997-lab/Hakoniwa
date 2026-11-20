@@ -779,7 +779,7 @@ function renderSheet(){
 }
 
 /* 図鑑：マップごとに、見つけた・おぼえた物だけ（スポット・家具・建物・レシピ・コワイノ・アイテム） */
-let ZKW=null,ZKT=0,ZKPG=0;const ZKPER=6,ZKTC=['#c9604a','#d89a3e','#7d9a4e','#5f8fb0','#8a6aa8','#b07a52'];/* しおりの色（tools/ui/colors.md の「本」） */const ZKTABS=['スポット','家具','建物','レシピ','「コワイノ」','アイテム','さかな','いきもの','りょうり','こだま'];
+let ZKW=null,ZKT=0,ZKPG=0;const ZKPER=6,ZKTC=['#c9604a','#d89a3e','#7d9a4e','#5f8fb0','#8a6aa8','#b07a52'];/* しおりの色（tools/ui/colors.md の「本」） */const ZKTABS=['スポット','家具','建物','レシピ','「コワイノ」','アイテム','さかな','いきもの','りょうり','こだま','かせき'];
 function zkSnd(s){/* 図鑑のアイコンをタップしたときの音（i:物のid → その物の材質の録音・k:音の名前） */if(s.startsWith('i:'))itemSnd(s.slice(2));else if(s.startsWith('k:'))sfx(s.slice(2))}
 function zukanBody(body){
   const ws=[0,1,2,3,4,5].filter(w=>(w===WD&&!S.free)||savedStage(w));if(!ws.length){body.appendChild(el('<p class="note">まだありません</p>'));return}
@@ -802,6 +802,7 @@ function zukanBody(body){
   else if(ZKT===7)critZukan(d,add);
   else if(ZKT===8)cookZukan(d,add);
   else if(ZKT===9){if(typeof kdZukan==='function')kdZukan(d,add)}
+  else if(ZKT===10){if(typeof fossilZukan==='function')fossilZukan(d,add)}
   else{const it=Object.assign({},d.seenIt||{});for(const k in d.mat||{})if(d.mat[k]>0)it['m:'+k]=1;for(const k in d.fs||{})if(d.fs[k]>0)it['f:'+k]=1;
     for(const k in MATN)if(it['m:'+k])add(MATN[k],'素材',ICONS[k]||null,'i:mat:'+k);for(const k in FOODS)if(it['f:'+k])add(FOODS[k].name,FOODS[k].fx||'食べ物',foodIc(k),'i:food:'+k);if(it['x:horn'])add('よびごえの角笛',HORNDESC,hornIco(),'i:horn');if(it['x:herb'])add('まよけのハーブ',HERBDESC,herbIco(),'i:herb')}
   const top=el('<div class="mpg zkp"><h3 class="mtt"></h3></div>');top.firstChild.textContent=ZKTABS[ZKT];top.appendChild(el('<p class="story zkn">'+list.length+'こ</p>'));body.appendChild(top);

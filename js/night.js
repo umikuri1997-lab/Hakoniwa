@@ -147,7 +147,7 @@ function edgeSpot(){const R=spawnReach();
   return [CX+.5,H-.5];
 }
 
-const INDL=new Set(['candle','lantern','flamp']);/* 室内の灯り：家の中なら家じゅう、外なら1マス */
+const INDL=new Set(['candle','lantern','flamp','oldlantern']);/* 室内の灯り：家の中なら家じゅう、外なら1マス */
 const LSPR=new Map();function lightSpr(R){/* 明かりの光の絵（半径 R、まん中の明るさ .9）。半径ごとに1まいだけ作っておく */let c=LSPR.get(R);if(c)return c;c=document.createElement('canvas');c.width=c.height=R*2;const g=c.getContext('2d'),gr=g.createRadialGradient(R,R,2,R,R,R);gr.addColorStop(0,'rgba(255,214,120,.9)');gr.addColorStop(1,'rgba(255,200,100,0)');g.fillStyle=gr;g.fillRect(0,0,R*2,R*2);LSPR.set(R,c);return c}
 const LIGHTP={/* 夜の明かり：光のまん中（マスの左上から dx・dy ドット）と、光の半径 R */
   lamp:{dx:16,dy:3,R:100},hotaru:{dx:16,dy:18,R:60},tower:{dx:16,dy:6,R:150},yogan:{dx:32,dy:8,R:60},lighthouse:{dx:32,dy:-75,R:130},campfire:{dx:16,dy:14,R:110},

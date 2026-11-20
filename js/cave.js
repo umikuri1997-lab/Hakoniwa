@@ -60,6 +60,18 @@ const CVJOBANIM={push:'mine',sluice:'water',leaf:'plant'};
 const CVFOS={kai:'うずまき貝の化石',shida:'シダの葉の化石',hone:'さかなのほねの化石',kiba:'おおきなきばの化石',tsume:'つめあとの化石'},CVFOSK=Object.keys(CVFOS),CVFOSALL=100;/* 5しゅるいそろえたときのパワー */
 /* 宝箱（マスの場所ごと）。家具は、はじめの1回だけ。2回めからは CVAGAIN のパワー */
 const CVCHEST={'7,19':{item:'doki'},'38,19':{item:'oldlantern'},'5,11':{fukuro:1,pt:20},'6,4':{mapPc:1,pt:30},'33,7':{fukuro:1,pt:50}},CVAGAIN=30;
+/* 化石：洞窟でひろった数は、ステージごとに数える（S.fosRec）。図鑑の「かせき」に、見つけた物だけ出す。アイコンは、コードのドット（仮の絵。石の板に、くぼんだ形） */
+const CVFOSD={kai:'うずをまいた貝のあと。',shida:'こまかい葉のあと。',hone:'ほねだけになった魚のあと。',kiba:'手のひらより大きな、きばのあと。',tsume:'岩をひっかいた、3本のつめのあと。'};
+const CVFOSP={kai:[[7,5],[8,5],[9,6],[10,7],[10,8],[9,9],[8,10],[7,10],[6,9],[5,8],[5,7],[6,6],[7,7],[8,7],[8,8]],
+  shida:[[8,4],[8,5],[8,6],[8,7],[8,8],[8,9],[8,10],[8,11],[7,5],[6,4],[9,5],[10,4],[7,7],[6,6],[5,6],[9,7],[10,6],[11,6],[7,9],[6,8],[5,8],[9,9],[10,8],[11,8]],
+  hone:[[4,8],[5,8],[6,8],[7,8],[8,8],[9,8],[10,8],[11,8],[5,6],[5,7],[5,9],[5,10],[7,6],[7,7],[7,9],[7,10],[9,6],[9,7],[9,9],[9,10],[12,7],[12,9],[13,8],[12,8],[3,6],[3,10],[4,7],[4,9]],
+  kiba:[[6,4],[7,4],[8,4],[6,5],[7,5],[8,5],[9,5],[7,6],[8,6],[9,6],[8,7],[9,7],[10,7],[9,8],[10,8],[9,9],[10,9],[10,10],[10,11]],
+  tsume:[[3,6],[4,7],[5,8],[6,9],[7,10],[8,11],[6,4],[7,5],[8,6],[9,7],[10,8],[11,9],[9,3],[10,4],[11,5],[12,6],[13,7]]};
+function fossilRows(k){const T=['................','....oooooooo....','..oohhhhhhhmoo..','.ohhmmmmmmmmmdo.','.ohmmmmmmmmmmdo.','.ohmmmmmmmmmmdo.','.ohmmmmmmmmmmdo.','.ohmmmmmmmmmmdo.','.ohmmmmmmmmmmdo.','.ohmmmmmmmmmmdo.','.ohmmmmmmmmmmdo.','.ohmmmmmmmmmmdo.','.ommmmmmmmmmddo.','..oodddddddddo..','....oooooooo....','................'].map(r=>r.split(''));
+  for(const[x,y]of CVFOSP[k]||[])if(T[y]&&T[y][x]&&T[y][x]!=='.')T[y][x]='o';return T.map(r=>r.join(''))}
+function fossilIcon(k){return typeof pixURL==='function'?pixURL('fos:'+k,fossilRows(k),'#cdb99c'):null}
+function fossilGive(k,n){if(!CVFOS[k]||!(n>0))return;const R=S.fosRec||(S.fosRec={});R[k]=(R[k]||0)+n}
+function fossilZukan(d,add){const R=d.fosRec||{};for(const k of CVFOSK)if(R[k]>0)add(CVFOS[k],CVFOSD[k]+'見つけた数 '+R[k],fossilIcon(k),'i:mat:stone')}
 const CVFOES={c:'basic',i:'rockc'};
 let CV=null;
 const caveOn=()=>!!CV;
