@@ -98,7 +98,7 @@ function j3Spill(x,y,n){/* 光のつぶ（UIFX の木くずと同じ動き。金
 
 /* juice2 から */
 function juice3Frame(now){juiceStreakTick();juiceLvTick(now);juiceResTick();if(typeof juice4Frame==='function')juice4Frame(now)}
-function juice3Draw(now){if(typeof cupDraw==='function')cupDraw(now);if(typeof juice4Draw==='function')juice4Draw(now);if(J3H.length)juiceBondDraw(now);juiceFirstDraw(now);juiceDreamDraw(now);juiceSnowDraw(now)}
+function juice3Draw(now){if(typeof cupDraw==='function')cupDraw(now);if(typeof evShowDraw==='function')evShowDraw(now);if(typeof juice4Draw==='function')juice4Draw(now);if(J3H.length)juiceBondDraw(now);juiceFirstDraw(now);juiceDreamDraw(now);juiceSnowDraw(now)}
 function juice3Reset(){if(typeof juice4Reset==='function')juice4Reset();J3H.length=0;J3ST=null;J3RN=null;J3F.length=0;J3D.length=0;J3S.clear();if(J3LV){J3LV.e.style.visibility='';const x=document.getElementById('xpBar');if(x)x.classList.remove('ufx','uglow');J3LV=null}JLVW=null;JLVL=null;JLVP=null}
 
 /* ---------- なかまがふえた数（juiceResTick）：紹介をとじてから、上の欄のせいれいの数をふやし（めくり数字は uiNumWatch）、

@@ -64,6 +64,7 @@ function nowTopic(r){const n=hour(),gn=goneTalkName(),T=S.trouble&&S.trouble.id=
   if(r.came===dayNo()&&!r.back)return{u:1,L:tkFresh('u:new',TALKU.new)};
   {const a=annivTopic(r);if(a)return a}/* 村に来て〇日の記念日 */
   {const d=typeof dreamTopic==='function'?dreamTopic(r):null;if(d)return d}/* ゆうべのゆめ */
+  {const e=typeof evTopic==='function'?evTopic(r):null;if(e)return e}/* きのう・きょうのイベントの思い出（ev-show.js） */
   if(r.grief&&gn)return{u:1,L:tkFresh('u:grief',TALKU.grief).map(t=>t.split('@G').join(gn))};
   if(r.hunger<500)return{u:1,L:tkFresh('u:hungry',TALKU.hungry)};
   if(r.energy<30)return{u:1,L:tkFresh('u:tired',TALKU.tired)};

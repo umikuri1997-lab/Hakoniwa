@@ -19,8 +19,8 @@ function houseComfort(h){let bed=0,furn=0,fl=0,n=0;const seen=new Set(),PT={},pa
   let rs=0;const RS=[];for(const[k,p]of[['shosai',.1],['living',.1],['dinroom',.05],['daidokoro',.05],['nedoko',.05]])if(SPOTI.some(t=>t.sp.k===k&&h.inside.has(t.j)&&t.sp.need.every((nd,i)=>t.found[i].filter(q=>h.inside.has(q)).length>=nd[1]))){rs+=p;RS.push([k,p])}/* そろった物が、ぜんぶその家の中にあるときだけ *//* しょさい・リビング：住み心地+10%、ダイニング・だいどころ・ねどこ：+5% */
   let webs=0;if(S.web)for(const j of h.inside)if(S.web[j]!=null)webs++;/* クモの巣 */
   const bp=typeof bpHouseName==='function'&&bpHouseName(h)?BPCOMF:0,pc=typeof pathA==='function'?pathA('comf'):0,flp=(n?fl/n:0)*45;
-  const v=Math.round(Math.max(0,Math.min(COMFMAX,(15+bp+pc+Math.min(210,furn)+flp-over*105-(lit?0:60))*(1+rs)-webs*WEBCOMF)));/* 上限は300 */
-  return{v,bed,cap,lit,kinds:seen.size,floorPct:n?Math.round(fl/n*100):0,over,webs,why:{bp,pc,furn,PT,kc,fl,n,flp,rs,RS}}}
+  const ev=S.evComf&&dayNo()<S.evComf&&typeof EVCOMF!=='undefined'?EVCOMF:0;/* 大そうじのあと（ev-show.js） */const v=Math.round(Math.max(0,Math.min(COMFMAX,(15+bp+pc+ev+Math.min(210,furn)+flp-over*105-(lit?0:60))*(1+rs)-webs*WEBCOMF)));/* 上限は300 */
+  return{v,bed,cap,lit,kinds:seen.size,floorPct:n?Math.round(fl/n*100):0,over,webs,why:{bp,pc,ev,furn,PT,kc,fl,n,flp,rs,RS}}}
 
 
 

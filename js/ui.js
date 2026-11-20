@@ -322,7 +322,7 @@ function pxPop(title){const o=el('<div class="pxpopw" style="position:fixed;inse
 /* 住み心地のくわしい計算：何で何点か（houseComfort の why） */
 function comfyPop(h){if(!h)return;const C=houseComfort(h),Y=C.why,P=pxPop('住み心地のけいさん'),R=el('<div class="recs comfyCalc"></div>'),f1=v=>Math.round(v*10)/10,sg=v=>(v<0?'－':'+')+f1(Math.abs(v));
   const row=(a,b,cls)=>{const d=el('<div class="st'+(cls?' '+cls:'')+'"><span></span><b></b></div>');d.firstChild.textContent=a;d.lastChild.textContent=b;R.appendChild(d)};
-  row('もとの住み心地','+15');if(Y.bp)row('設計図の家',sg(Y.bp));if(Y.pc)row('むらのちから',sg(Y.pc));
+  row('もとの住み心地','+15');if(Y.bp)row('設計図の家',sg(Y.bp));if(Y.pc)row('むらのちから',sg(Y.pc));if(Y.ev)row('大そうじ',sg(Y.ev));
   row('家具・かざり',Y.furn>210?sg(Y.furn)+' → +210':sg(Y.furn));
   const ks=Object.keys(Y.PT).sort((a,b)=>Y.PT[b]-Y.PT[a]);for(const k of ks)row((k==='window'?'窓':BL[k]?iname(k):k)+(Y.kc[k]>1?'×'+Y.kc[k]:''),sg(Y.PT[k]),'sub');
   row('床（'+Y.fl+'/'+Y.n+'マス）',sg(Y.flp));if(C.over)row('ベッドが多い（'+C.over+'こ）',sg(-C.over*105));if(!C.lit)row('あかりがない','－60');

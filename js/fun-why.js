@@ -18,6 +18,7 @@ function funDecayList(r){const L=[],G=gearStat(r);
   if(rainbowToday())L.push(['虹',RB_FUN]);
   if(r.grief)L.push(['しょんぼり',GRIEF_FUN]);
   if(r.qrF)L.push(['けんか中',QR_FUN]);
+  if(r.evb&&r.evb.fh&&r.evb.d===callDay())L.push(['ほこらまいり',r.evb.fh]);
   return L}
 function funDecayK(r){let k=1;for(const[,m]of funDecayList(r))k*=m;return k}
 function funEnvNow(r){if(!ENVG)return 0;const j=(r.y|0)*W+(r.x|0);return ENVG[j]+(ENVE[r.elem]?ENVE[r.elem][j]:0)}
