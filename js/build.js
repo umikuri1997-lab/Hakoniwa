@@ -54,7 +54,8 @@ function canPlace(id,x,y,quiet){if(typeof fogBlock==='function'&&fogBlock(id,x,y
   return canPlace1(id,x,y,quiet);
 }
 const WATCHGAP=5;function watchNear(x,y){/* 見張り台（建てている途中の物も）と、あいだが5マスより少ないか。2×2どうし、たて・よこ・ななめで数える */for(let k=0;k<S.obj.length;k++){if(S.obj[k]!=='watch'&&!(S.obj[k]==='site'&&S.dyn[k]&&S.dyn[k].build==='watch'))continue;const ax=k%W,ay=(k/W)|0,gx=Math.max(x-(ax+2),ax-(x+2)),gy=Math.max(y-(ay+2),ay-(y+2));if(Math.max(gx,gy)<WATCHGAP)return true}return false}
-function starterGap(j){if(WD!==0||!S||S.free||S.obj[j]||qDone('wall'))return false;const y=(j/W)|0,x=j%W;return y===CY-2&&x>=CX-5&&x<=CX-3}/* 草原のはじめの家の、壁のすきま（壁のクエストで直す所） */
+const starterGapCells=s=>s.flags.home2?[CX-5,CX-6,CX-7].map(x=>(CY-3)*W+x):[CX-3,CX-4,CX-5].map(x=>(CY-2)*W+x);/* 草原のはじめの家の、壁のすきま（家の右から。前のセーブは、前の家の所 home2 なし） */
+function starterGap(j){if(WD!==0||!S||S.free||S.obj[j]||qDone('wall'))return false;return starterGapCells(S).includes(j)}/* 草原のはじめの家の、壁のすきま（壁のクエストで直す所） */
 function canPlace1(id,x,y,quiet){
   if(x<0||y<0||x>=W||y>=H)return false;
   if(starterGap(y*W+x)&&!HOME_WALLS.has(id)&&!HOME_DOORS.has(id)){if(!quiet)toast('ここは家の壁のすきまです','warn');return false}/* 箱や神殿を置くと、こわせずに家が直せなくなる */

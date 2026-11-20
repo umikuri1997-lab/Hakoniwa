@@ -133,7 +133,7 @@ function tutSpot(id){const sz=BL[id].sz||[1,1],V=tutView(),vc=[Math.floor((cam.x
   const near=(c0,need)=>{for(const f of nf?[1,0]:[0])for(let r=0;r<14;r++)for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){if(Math.max(Math.abs(dx),Math.abs(dy))!==r)continue;const x=c0[0]+dx,y=c0[1]+dy;if((!need||inV(x,y))&&canPlace(id,x,y,true)&&(!f||bare(x,y))&&!(gap&&fp(id,x,y).some(([a,c])=>c===CY-2&&a>=CX-5&&a<=CX-3)))return[x,y]}return null};
   if(id==='hotstone'){let bd=1e9;for(let j=0;j<W*H;j++){const x=j%W,y=(j/W)|0;if(S.ground[j]===1||S.obj[j]||adjOf(j,k=>S.ground[k]===1)<0||!canPlace(id,x,y,true))continue;const d=Math.hypot(x-CX,y-CY);if(d<bd){bd=d;v=[x,y]}}}/* 温泉の水べを指す */
   else if(id==='bed'&&HOUSES.length){for(const j of HOUSES[0].inside){const x=j%W,y=(j/W)|0;if(!S.obj[j]&&canPlace(id,x,y,true)){v=[x,y];break}}if(!v)v=near(vc,true)}/* ベッドは家の中を指す */
-  else if(id==='hwall'&&qNow('wall')){for(let d=3;d<=6;d++){const x=WD===1?CX+d:CX-d,y=CY-2;if(!S.obj[y*W+x]&&canPlace(id,x,y,true)){v=[x,y];break}}if(!v)v=near([WD===1?CX+3:CX-4,CY-2],false)}/* 家のすきまを指す */
+  else if(id==='hwall'&&qNow('wall')){const L=WD===1?[3,4,5,6].map(d=>(CY-2)*W+CX+d):starterGapCells(S);for(const k of L){const x=k%W,y=(k/W)|0;if(!S.obj[k]&&canPlace(id,x,y,true)){v=[x,y];break}}if(!v)v=near(WD===1?[CX+3,CY-2]:[L[0]%W+1,(L[0]/W)|0],false)}/* 家のすきまを指す */
   else v=near(vc,true)||near(id==='statue'?[CX,CY-8]:[CX+2,CY+2],false);/* 指は画面の右下。置けないときは、いちばん近い置ける所 */
   const pk=S.quest+':'+id;if(v&&!inV(v[0],v[1])&&tutCache.pan!==pk){tutCache.pan=pk;const s=V[1]+V[3]-VH;centerOn((v[0]+sz[0]/2)*TS,(v[1]+sz[1]/2)*TS-s/2/cam.z)}/* 見えない所なら、一度だけそこへカメラを寄せる（クエストと物ごとに1回。画面を動かしたあとに、もう一度引きもどさない） */
   tutCache={k,t:performance.now(),v,pan:tutCache.pan};return v}
