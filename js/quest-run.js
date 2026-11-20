@@ -57,7 +57,7 @@ function showItemGift(){while(ITEM_GIFTS.length&&ITEM_GIFTS[0].state!==S)ITEM_GI
   setTimeout(()=>{if(overlay.isConnected){button.disabled=false;button.focus({preventScroll:true})}},rec?650+items.size*240+500:650);button.onclick=()=>{if(button.disabled)return;overlay.remove();GIFT_ACTIVE=false;if(prior&&prior.isConnected)prior.focus({preventScroll:true})};
 }
 /* あたらしいレシピの演出：紙のアイコンがふるえて光をため（ドットの光の帯がまわりだす）→ ぽんとはじけて紙ふぶき → 物が1つずつ、ぺたっと出て鈴が上がっていく → 「ひらめき」のハンコ */
-function recRevealFx(card,overlay){const sym=card.querySelector('.idea-symbol'),its=[...card.querySelectorAll('.idea-item')],red=typeof uiReduced==='function'&&uiReduced();its.forEach(e=>e.style.visibility='hidden');
+function recRevealFx(card,overlay,stamp){const sym=card.querySelector('.idea-symbol'),its=[...card.querySelectorAll('.idea-item')],red=typeof uiReduced==='function'&&uiReduced();its.forEach(e=>e.style.visibility='hidden');
   const cv=document.createElement('canvas');cv.className='recray';cv.width=cv.height=64;sym.style.position='relative';sym.prepend(cv);const g=cv.getContext('2d'),t0=performance.now();
   const draw=now=>{if(!overlay.isConnected)return;const t=(now-t0)/1000,k=Math.min(1,t/.45),a=red?0:Math.floor(t*6)*(Math.PI/20);g.clearRect(0,0,64,64);
     for(let i=0;i<14;i++){const an=a+i*Math.PI/7;g.globalAlpha=(i%2?.8:.55)*k;g.fillStyle=i%2?'#fff6cf':'#ffd45a';for(let d=8;d<8+24*k;d++){const w=Math.max(1,Math.round(d*.16)),x=Math.round(32+Math.cos(an)*d),y=Math.round(32+Math.sin(an)*d);g.fillRect(x-(w>>1),y-(w>>1),w,w)}}
@@ -65,7 +65,7 @@ function recRevealFx(card,overlay){const sym=card.querySelector('.idea-symbol'),
   sym.classList.add('recshake');if(typeof j3Ding==='function')j3Ding(-5,0,.3);
   setTimeout(()=>{if(!overlay.isConnected)return;sym.classList.remove('recshake');sym.classList.add('ucntp');if(typeof juiceCheer==='function')juiceCheer('lv');sfx('level');
     its.forEach((e,i)=>setTimeout(()=>{if(!e.isConnected)return;e.style.visibility='';e.classList.add('stknew');if(typeof j3Ding==='function')j3Ding(i*3,0,.5)},i*240));
-    setTimeout(()=>{if(card.isConnected&&typeof uiStamp==='function')uiStamp(card,false,'ひらめき',true)},its.length*240+150)},650)}
+    setTimeout(()=>{if(card.isConnected&&typeof uiStamp==='function')uiStamp(card,false,stamp||'ひらめき',true)},its.length*240+150)},650)}
 const spotCond=sp=>(sp.room?'家の中に、':'')+sp.how.replace(/^家の中に、/,'').split('と、').map(t=>t.replace(/([0-9]+)(つ|本)$/,'×$1')).join('・');/* 「井戸と、畑3つ」→「井戸・畑×3」 */
 /* なかよしのポップアップの絵：2人が向かい合って、かわりばんこにはねる。あいだにドットのハート（ポップアップをとじるまで動く） */
 const BONDHEART=['.oo.oo.','offoffo','offfffo','.offfo.','..ofo..','...o...'];
