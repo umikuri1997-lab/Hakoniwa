@@ -10,7 +10,7 @@ module.exports=async function(opt={}){
   await page.route('**/js/main.js*',async route=>{const r=await route.fetch();await route.fulfill({response:r,body:(await r.text())+'\nwindow.sacredEval=s=>eval(s);window.__noIdle=1;'})});
   await page.goto(process.env.GAME_URL);await page.waitForFunction(()=>window.sacredEval);
   const run=s=>page.evaluate(s=>sacredEval(s),s);
-  await run(`(()=>{newGame(${opt.world||0});for(const id of ['#title','#maps','#pro'])document.querySelector(id).hidden=true;showUI(true);started=true;if(!${!!opt.dmgvar})DMGVAR=0;if(!${!!opt.evlock}&&typeof EVENTS!=='undefined')S.evOpen=Object.fromEntries(Object.keys(EVENTS).map(k=>[k,1]));/* テストでは、イベントをはじめからひらく（opt.evlock：ひらかない） */})()`);/* テストでは、ダメージをぶれさせない（opt.dmgvar：ぶれさせる） */
+  await run(`(()=>{newGame(${opt.world||0});for(const id of ['#title','#maps','#pro'])document.querySelector(id).hidden=true;showUI(true);started=true;if(!${!!opt.dmgvar})DMGVAR=0;if(!${!!opt.evlock}&&typeof EVALLOPEN!=='undefined')EVALLOPEN=true;/* テストでは、イベントをはじめからひらく（opt.evlock：ひらかない） */})()`);/* テストでは、ダメージをぶれさせない（opt.dmgvar：ぶれさせる） */
   await page.waitForFunction(()=>sacredEval('stageReady()'),{},{timeout:90000});
   const close0=browser.close.bind(browser);browser.close=async()=>{await close0();if(server)server.close()};
   return {browser,page,run,errors};

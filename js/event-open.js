@@ -4,7 +4,8 @@
    火山・フリーモード・大会は、じょうけん（EVCOND）をみたすと、ひらく（朝と、ときどき evOpenTick）。ひらいたら、大きな知らせ（evOpenFx：光の帯・紙ふぶき・1つずつ・「ひらいた」のハンコ）。
    ひらいたイベントは S.evOpen（id→1）。前のセーブで、もう出たことのあるイベント（S.evDone）は、ひらいたまま（S.flags.evOpen1）。 */
 const EVOPEN0=['taiso','bday'];
-function evOpened(id){if(!S)return false;if(EVOPEN0.includes(id))return true;return!!(S.evOpen&&S.evOpen[id])}
+let EVALLOPEN=false;/* テスト用（tools/sim/boot.cjs）：ぜんぶひらいたことにする */
+function evOpened(id){if(!S)return false;if(EVALLOPEN)return true;if(EVOPEN0.includes(id))return true;return!!(S.evOpen&&S.evOpen[id])}
 /* あたらしい効果（EVENTS の fx・fxv）：イベントがおわったときに、出た子に（per）か、村に1回 */
 const EVFXT={full:()=>'まんぷく（1日、おなかのへり0.6倍）',xp:v=>'けいけん+'+v,insp:()=>'ひらめき（あした、1人がひらめきの日）',natk:v=>'その夜の攻撃力+'+v,sunny:()=>'あしたは晴れ',seeds:v=>'花のたね'+v+'こ',bloom:()=>'村の花のつぼみが、ぜんぶ咲く',pt:v=>'パワー+'+v,tokui:v=>'得意な仕事の回数+'+v,ripen:()=>'畑の作物が、ぜんぶとれごろになる',rest:()=>'つかれが、ぜんぶとれる',calm:()=>'その夜の「コワイノ」が半分',donguri:v=>'どんぐり'+v+'こ'};
 function evFxTxt(D){return D.fx&&EVFXT[D.fx]?EVFXT[D.fx](D.fxv):''}
