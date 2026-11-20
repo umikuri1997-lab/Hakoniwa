@@ -593,6 +593,7 @@
 - 霧：マスごと（`S.mz.clr`。晴れた所はもどらない）。`fogAt` が水のステージでは `mzMistAt` を見る。霧を見る所は `fogAt(j)` だけを書き、`S.fog&&` をつけない（つけると、水のステージの霧を見ない）。
 - 舟便：船着き場（`dock`）が同じ高さの水でつながると、舟の道（`MZLANE`、`MZC.comps`）。道さがし（`roadSearch`）と歩く所（`spirit-work.js`）は、舟の道を歩く3倍の速さの道として見る。荷はこびは `mzTick`・`mzBoatStop`、ほかの土地のお返しは `mzMorning`（`MZTRADE`、実数）。
 - 川くだり（`raft`・`ACT.mzraft`・`mzRaftFun`）・しずんだ宝箱（`mzchest`：水門をひらくと、ため池の南がわから浅瀬になる `mzGateOpen`）。たしかめは `tools/tests/mizube.cjs`。
+- 食堂（`js/mizube-shop.js`、数字は `SHOP`）：家の中に、店の看板・食卓・食卓のとなりのいす・料理の家具があると食堂（`shopOf`、`recount` のたびに見なおす）。お客さんは1日2回、船着き場から歩いて来る、見た目だけの子（`SHOPC.cust`、セーブしない）。運ぶのは `shopJob`（水あびより先。水あび・休み・ぶらぶらは `shopCut` でやめる）。うでは料理のおわり（`shopCooked`）。かいがら・メニュー・料理のおいしさ・歌の日は `S.mz`。たしかめは `tools/tests/mizube-shop.cjs`。
 - テストで水路を書くときは、神殿（まん中の水門のま南）と、はじめの木箱をよける（上にかさねると、神殿が消えて工事をたのめなくなる）。神殿を直したあとは、お礼の会話（`startTalk`）を読みおえるまで、せいれいが待っている。
 
 ## 闇のステージ（WORLD 6、`WD===YAMI`、`js/yami.js`）

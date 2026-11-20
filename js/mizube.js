@@ -49,7 +49,7 @@ function mzGenWorld(s){const R=mulberry(20261120),N=W*H,h=new Array(N).fill(0),P
 function mzSetup(s){/* 試作：お話がないので、くらしの道具は、はじめからある */
   s.keyN={water:MIO};s.flags.minaCame=true;s.flags.sumTold=true;s.flags.tapped=true;
   Object.assign(s.feat,{inv:true,craft:true,remove:true,plant:true,people:true,shop:true,summon:true});
-  s.fs={berry:12};s.food=12;s.mat={wood:30,stone:30};s.pt=150;s.unlocked.dock=true;s.unlocked.raft=true;
+  s.fs={berry:12};s.food=12;s.mat={wood:30,stone:30};s.pt=150;s.unlocked.dock=true;s.unlocked.raft=true;s.recipes=s.recipes||{};for(const id of ['shopsign','counter','menuboard','stage','table','chair','cooktable','oven'])s.recipes[id]=1;/* 食堂の試作：食堂の家具は、はじめからおぼえている */
   {const fr=k=>!s.obj[k]&&s.ground[k]!==1&&!s.floor[k];let p=-1;for(let r=0;r<8&&p<0;r++)for(let dy=-r;dy<=r&&p<0;dy++)for(let dx=-r;dx<=r;dx++){const k=(CY+1+dy)*W+CX+3+dx;if([0,1,2,3].every(c=>fr(k+c))){p=k;break}}if(p>=0){s.obj[p]='crate';wbenchAt(s,p+1,0);s.obj[p+3]='crate'}}
   for(const k of['tree','bellf','salvia','lily','lotus','clover'])if(BL[k])s.unlocked[k]=true;
   s.inv=Object.assign(s.inv||{},{bellf:3,salvia:3,lily:3,lotus:3,clover:9,bed:1});
@@ -57,7 +57,7 @@ function mzSetup(s){/* 試作：お話がないので、くらしの道具は、
 
 /* ---- 水の流れ・霧・舟の道（S.mz から作る） ---- */
 const MZC={S:null,wet:null,fd:null,mist:null,comps:[],wetN:0,mv:0,used:[]};
-function mzRefresh(){if(!mzOn()){MZLANE=null;MZC.S=null;return}const M=S.mz,N=W*H,first=MZC.S!==S;MZC.S=S;
+function mzRefresh(){if(typeof SHOPC!=='undefined')SHOPC.S=null;/* 食堂は recount のたびに見なおす */if(!mzOn()){MZLANE=null;MZC.S=null;return}const M=S.mz,N=W*H,first=MZC.S!==S;MZC.S=S;
   const wet=new Uint8Array(N),fd=new Int16Array(N).fill(-1),used=[];
   for(const g of M.gates){let left=MZFLOW;if(g.open){const seen=new Uint8Array(N),q=[g.j];seen[g.j]=1;
     for(let i=0;i<q.length;i++){const c=q[i],dc=c===g.j?0:fd[c];for(const n of mzAdj(c)){if(seen[n]||!M.cn[n]||hiAt(n)>hiAt(c))continue;seen[n]=1;if(!wet[n]){if(left<=0)continue;wet[n]=1;left--;fd[n]=dc+1}q.push(n)}}}
@@ -102,7 +102,7 @@ function mzTap(tx,ty){if(!mzOn())return false;let j=ty*W+tx;if(mzMistAt(j)){toas
   if(o==='mzgateb'){if(!M.req.includes(j))M.req.push(j);toast('せいれいが水門を直しにきてくれる');return true}
   if(o==='mzgate'){const i=M.gates.findIndex(g=>g.j===j);toast('水門：水のとどいた水路（'+(MZC.used[i]||0)+'/'+MZFLOW+'）');return true}
   if(o==='mzchest'){if(S.ground[j]===1){toast('水の底に、なにかがしずんでいる');return true}if(!M.req.includes(j))M.req.push(j);toast('せいれいが宝箱をあけにいく');return true}
-  if(o==='dock'){mzDockPop(j);return true}
+  if(o==='dock'){mzDockPop(j);return true}if(o==='shopsign'){shopPop();return true}
   if(o==='raft'){const c=mzCourse(j);toast(c.length?'いかだ乗り場：コース'+c.length+'マス・たのしさ+'+mzRaftFun(j):'いかだ乗り場：水の流れる水路がありません');return true}
   if(!o&&M.cn[j]){toast(MZC.wet&&MZC.wet[j]?'水路：水がとどいている':'水路：水がとどいていない');return true}
   return false}
@@ -202,5 +202,7 @@ QL[MIZU]=[
   {id:'mzdock',text:'船着き場を2つ、水でつなごう',check:()=>mzOn()&&MZC.comps.length>=1,prog:()=>'つながった船着き場 '+(mzOn()&&MZC.comps.length?2:Math.min(1,cnt('dock')))+'/2',how:'「おく」→「建てる」で、船着き場を水のとなりに2つ建てる。同じ高さの水でつながると、小舟が行き来する',story:[[MIO,'#joy|小舟が、うごいた。……むかしは、村じゅうを、舟がめぐっていたの。']]},
   {id:'mzraft',text:'いかだ乗り場をつくろう',check:()=>cnt('raft')>=1,prog:()=>'いかだ乗り場 '+Math.min(1,cnt('raft'))+'/1',how:'「おく」→「建てる」で、いかだ乗り場を、水の流れる水路のとなりに建てる',story:[[MIO,'いかだで、水といっしょに、くだるの。'],[MIO,'#shy|……わたしも、のってみたい。']]},
   {id:'mzchest',text:'しずんだ宝箱をあけよう',check:()=>mzOn()&&S.mz.chests.some(c=>c.got),prog:()=>'あけた宝箱 '+(mzOn()?Math.min(1,S.mz.chests.filter(c=>c.got).length):0)+'/1',how:'水門をひらくと、池の水が引く。浅くなった所の宝箱を、「しらべる」でタップ',story:[[MIO,'#think|池の底に、むかしの物が、のこっていたのね。']]},
+  {id:'mzshop',text:'食堂をひらこう',check:()=>mzOn()&&(S.mz.served||0)>=1,prog:()=>mzOn()&&typeof shopOf==='function'&&shopOf()?'お客さんに出した料理 '+Math.min(1,S.mz.served||0)+'/1':'食堂 0/1',how:'家の中に、店の看板・食卓・いす・料理の家具を置く。船着き場から、お客さんが舟で来る',talk:{who:MIO,when:()=>true,lines:[[MIO,'……カナデとわたしで、やるはずだったの。カナデが作って、わたしが歌う、歌のある食堂。'],[MIO,'#shy|ひとりじゃ、できないと思ってた。……でも、舟が来るなら。']]},story:[[MIO,'#think|……カナデの味じゃない。'],[MIO,'#joy|でも、お皿が、からっぽ。……また、来てね。']]},
+  {id:'mzstage',text:'歌の舞台で歌おう',check:()=>mzOn()&&(S.mz.sung||0)>=1,prog:()=>'舞台で歌った日 '+(mzOn()?Math.min(1,S.mz.sung||0):0)+'/1',how:'食堂の家の中に、歌の舞台を置く。夕方の前に、ミオが歌う',story:[[MIO,'#shy|……ふたりで歌う歌だから、ひとりじゃ、半分なの。'],[MIO,'それでも、手拍子が、きこえた。']]},
   {id:'mzall',text:'水門を3つひらこう',check:()=>mzOn()&&mzOpenN()>=3,prog:()=>'ひらいた水門 '+(mzOn()?mzOpenN():0)+'/3',how:'水路をのばして霧を晴らすと、のこりの水門が見つかる',story:[[MIO,'#joy|みんな、ひらいた。水が、村へかえってくる。'],[MIO,'守り神さま、ありがとう。']]},
 ];
