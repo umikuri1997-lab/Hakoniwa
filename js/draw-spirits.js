@@ -187,20 +187,21 @@ const SPMSIT=new Set(['sunset']);/* 地面にすわる動き（sitF でも3Dの�
 const FISHPULL=8,FISHEND=50;function fishPullNow(r){const a=r.act;return !!(a&&a.type==='fish'&&a.stage==='do'&&a.t>=FISHEND-FISHPULL)}
 function spMotion(o,A){/* いまの動きの名前（3Dの絵がない動きは '' で、いままでの描き方） */
   if(typeof SPM==='undefined'||o.sit||o.bed||o.sleep||o.banzai||o.sitF&&!SPMSIT.has(A))return'';
-  if(o.walk){const hs=o.hturn?(o.hturn>0?'_hp':'_hn'):'';/* 首を先に向ける絵（spHeadTurn） */return o.carry?(SPM['carry'+hs]?'carry'+hs:SPM.carry?'carry':''):o.chase&&SPM.chase?'chase':SPM['walk'+hs]?'walk'+hs:SPM.walk?'walk':''}
+  if(o.walk){const hs=o.hturn?(o.hturn>0?'_hp':'_hn')+(Math.abs(o.hturn)<1?'a':''):'';/* 首を先に向ける絵（spHeadTurn） */return o.carry?(SPM['carry'+hs]?'carry'+hs:SPM.carry?'carry':''):o.chase&&SPM.chase?'chase':SPM['walk'+hs]?'walk'+hs:SPM.walk?'walk':''}
   if(o.carry)return'';
   if(A==='fish'&&o.fishPull&&SPM.fishpull)return'fishpull';/* 魚がかかった：さおをぐいぐい引く */
   if(A==='play'&&o.toy&&SPM['play_'+o.toy])return'play_'+o.toy;
   if((typeof TAKEACT!=='undefined'&&(TAKEACT.has(A)||PUTACT.has(A)))&&!SPM[A]&&SPM.store)return'store';/* 箱などから取る・置くは、箱にしまうのと同じ動き */
   return SPM[A]?A:''}
 /* 首を先に向ける（Frostwind の attention.js の考え方。MIT）：歩いていて、よこ向きと正面・うしろ向きがかわるとき、HTURNMS のあいだ、前の向きの体のまま、首だけ新しい向きへ向けた絵（walk_hp・walk_hn など、motions.py の HTURN）。
-   正面では hy＋が画面の右・うしろでは画面の左・よこでは＋がこちら（正面）・−が奥（うしろ）。正面とうしろのあいだ・よこの右と左のあいだは、そのまま切りかえる */
-const HTURNMS=170;
+   正面では hy＋が画面の右・うしろでは画面の左・よこでは＋がこちら（正面）・−が奥（うしろ）。正面とうしろのあいだ・よこの右と左のあいだは、そのまま切りかえる。
+   首はいっぺんに向けない：はじめの HTURNA0 は、とちゅうまで向けた絵（walk_hpa など、s は ±0.5）、そのあと向けきった絵 */
+const HTURNMS=190,HTURNA0=70;
 function spHeadTurn(v,walking,face,now){const k=v.back?2:v.turn?1:0,f=face<0?-1:1;
   if(!walking||v.hk==null){v.hk=k;v.hf=f;v.ht=null;return null}
   if(k!==v.hk||k===1&&f!==v.hf){const from=v.hk,ff=v.hf;v.hk=k;v.hf=f;v.ht=(from===1)!==(k===1)?{t:now,from,ff,to:k,tf:f}:null}
   const h=v.ht;if(!h)return null;if(now-h.t>=HTURNMS||now<h.t){v.ht=null;return null}
-  return{back:h.from===2,turn:h.from===1?1:0,face:h.from===1?h.ff:1,s:h.from===0?h.tf:h.from===2?-h.tf:h.to===0?1:-1}}
+  const sg=h.from===0?h.tf:h.from===2?-h.tf:h.to===0?1:-1;return{back:h.from===2,turn:h.from===1?1:0,face:h.from===1?h.ff:1,s:now-h.t<HTURNA0?sg*.5:sg}}
 function spToyPh(r,now){/* 遊具のゆれ・進みぐあい（0〜1）：toyPose0 と同じ時刻の式 */
   const a=toyR(r);if(!a)return null;const j=a.obj,T=now/1000,us=toyUsers(j),k=Math.max(0,us.indexOf(r)),fr=v=>(v%1+1)%1;
   if(a.what==='swing')return fr((T*2.6+j)/(2*Math.PI));if(a.what==='seesaw')return fr((T*1.8+j)/(2*Math.PI)+(k?.5:0));if(a.what==='slide')return fr(T*.45+k*.5);return null}

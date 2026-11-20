@@ -34,4 +34,7 @@ const ob=await run(`(()=>{const a=(CY-4)*W+CX;S.obj[a]='crate';recount();const k
 assert.ok(ob.slot&&ob.q===5&&ob.ok&&ob.box&&ob.got&&ob.got.kasa>0,'箱からおたきあげ '+JSON.stringify(ob));
 /* 作業台をタップしても、依頼ボードはひらかない */
 assert.equal(await run(`String(onTap).includes("o==='wbench')return openSheet('craft')")`),false);
+/* 返事の会話は、つつみをあける動きを待たずに、すぐ出る */
+const im=await run(`(()=>{if(typeof dlgClose==='function')try{dlgClose()}catch(e){}document.querySelector('#dialog').hidden=true;DLGQ.length=0;DLGGAP=0;const r=S.res[2]||S.res[1];r.care.gift=0;r.hidden=false;const id=GIFTIDS[0];giveItem(id,1);presentGive(r,id);return !document.querySelector('#dialog').hidden})()`);
+assert.equal(im,true,'返事はすぐ');
 assert.deepEqual(errors,[]);console.log('gifts ok',JSON.stringify({base,gv,ui,sh,out}));await browser.close()})();
