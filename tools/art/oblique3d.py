@@ -351,9 +351,9 @@ def render_px(sc, proj, ext, depth, k=0.72, outer=True, merge=12, lw=1, k2=0.86,
             if ln < 1e-12: continue
             n = n/ln
             if np.dot(n, depth) < 0: n = -n
-            for v in (a, b, c): VN.setdefault((pid,)+tuple(np.round(v, 5)), []).append(n)
+            for v in (a, b, c): VN.setdefault((pid,)+tuple(np.round(v, 5)), []).append((n, ln))   # 面の向きと大きさ（大きい面ほど重く。ふちの細い面に、広い面の向きが引っぱられないように）
     def vnorm(pid, v, n):
-        L_ = [q for q in VN.get((pid,)+tuple(np.round(v, 5)), []) if np.dot(q, n) > SMCREASE]
+        L_ = [q*w for q, w in VN.get((pid,)+tuple(np.round(v, 5)), []) if np.dot(q, n) > SMCREASE]
         if not L_: return n
         m_ = np.sum(L_, 0); return m_/max(1e-9, np.linalg.norm(m_))
     INK = {p_ for p_, m_ in sc.mt.items() if m_ == 'ink'}
