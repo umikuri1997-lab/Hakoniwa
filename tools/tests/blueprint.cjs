@@ -34,10 +34,10 @@ const assert=require('node:assert/strict');
   assert.equal(r.yards,1,'設計図の置き場は1つ');assert.equal(r.yardIn,false,'置き場は建てる所の外');assert.ok(r.ySt.includes(1)&&r.ySt.includes(2),'運ぶと置き場の絵がかわる: '+r.ySt);assert.equal(r.yardsEnd,0,'できたら置き場はかたづく');
   /* とちゅうでやめる */
   const c=JSON.parse(await run(`(()=>{const f=S.res[0];let x0=-1,y0=-1;for(const[ox,oy]of[[10,2],[-12,2],[3,-10],[3,9],[-12,-10]]){const X=(f.x|0)+ox,Y=(f.y|0)+oy;for(let y=Y;y<Y+5;y++)for(let x=X;x<X+5;x++){const j=y*W+x;if(S.obj[j]==='site'||(S.bp||[]).some(e=>e.cells.includes(j)))continue;S.obj[j]='';delete S.ref[j];delete S.dyn[j];S.floor[j]='';S.ground[j]=0;if(S.hi)S.hi[j]=0;if(S.fog)S.fog[j]=0}recount();if(bpCheck('mono',X,Y)[0]){x0=X;y0=Y;break}}
-    S.mat.wood=(S.mat.wood||0)+80;S.mat.funba=(S.mat.funba||0)+10;boxSync();bpGive('mono',null);const i=S.bpInv.findIndex(q=>q.k==='mono');S.t=Math.floor(S.t/1440)*1440+1440+9*60;askBp(i,x0,y0);const why=$('#confirmTxt').textContent;confirmYes();
+    S.mat.wood=(S.mat.wood||0)+80;S.mat.funba=(S.mat.funba||0)+10;boxSync();bpGive('mono',null);const i=S.bpInv.findIndex(q=>q.k==='mono');S.t=Math.floor(S.t/1440)*1440+1440+9*60;const pt0=S.pt,inv0=S.bpInv.filter(q=>q.k==='mono').length;askBp(i,x0,y0);const why=$('#confirmTxt').textContent;confirmYes();
     const e=S.bp.find(q=>q.k==='mono');if(!e)return JSON.stringify({why,bpCheck:bpCheck('mono',x0,y0),pt:S.pt});const site=e.ps.find(p=>p.s===1);const before=S.obj.filter(o=>o==='site').length;removeAt(site.j%W,(site.j/W)|0);
-    return JSON.stringify({had:before,left:S.obj.filter(o=>o==='site').length,bp:S.bp.length})})()`));
-  console.log(c);assert.ok(c.had>0);assert.equal(c.left,0,'all sites of the blueprint removed');assert.equal(c.bp,0);
+    const inv=S.bpInv.filter(q=>q.k==='mono').length-inv0+1,i2=S.bpInv.findIndex(q=>q.k==='mono');return JSON.stringify({had:before,left:S.obj.filter(o=>o==='site').length,bp:S.bp.length,inv,ptBack:S.pt===pt0,again:i2>=0&&bpCheck('mono',x0,y0)[0]})})()`));
+  console.log(c);assert.ok(c.had>0);assert.equal(c.left,0,'all sites of the blueprint removed');assert.equal(c.bp,0);assert.equal(c.inv,1,'1つもできていなければ、設計図がもどる');assert.equal(c.ptBack,true,'パワーももどる');assert.equal(c.again,true,'置きなおせる');
   const q=JSON.parse(await run(`JSON.stringify({sub:!!SUBQ.find(q=>q.k==='bphome'&&q.bp)})`));assert.equal(q.sub,true);
   /* どの設計図も、空いたマスがぜんぶ外（家はドアの前）までつながり、どの家具・建物も、行けるマスのとなりにある（とじこめられる所がない） */
   const lay=JSON.parse(await run(`JSON.stringify(Object.keys(BPS).map(k=>{const b=BPS[k],R=b.rows,h=R.length,w=Math.max(...R.map(r=>r.length)),blk=new Set(),own=[];

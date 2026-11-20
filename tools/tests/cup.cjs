@@ -27,7 +27,7 @@ const assert=require('node:assert/strict');
   for(const id of ['cup2','cup4','cup5','cup6','cup7','cup1']){
     let d=await run(`dayNo()`);await to(d,15);while(await run(`seasonDay(dayNo()+1)===CUPDAY`)){d=await run(`dayNo()`)+1;await to(d,15)}
     const o=JSON.parse(await run(`(()=>{recount();const pt=S.pt,mat=Object.assign({},S.mat),fs=Object.assign({},S.fs);const ok=evOpen('${id}',S.res.map(r=>r.id));return JSON.stringify({ok:!!ok,pt:pt-S.pt,day:S.ev&&S.ev.day,again:evWhy('${id}')})})()`));
-    assert.ok(o.ok,id+' opened');assert.equal(await run(`evDoneNow('${id}')`),true,id+' once per season');assert.equal(o.pt,30,id+' costs 30');
+    assert.ok(o.ok,id+' opened');assert.equal(await run(`evDoneOn('${id}',dayNo()+1)`),true,id+' once per season');assert.equal(o.pt,30,id+' costs 30');
     await to(o.day,`EVENTS['${id}'].at-0.1`);
     const st0=JSON.parse(await run(`JSON.stringify({mat:Object.assign({},S.mat),fs:Object.assign({},S.fs),inv:Object.assign({},S.inv),h:S.res.map(r=>heldN(r))})`));
     await sim(60*3,"S.ev&&S.ev.ph==='go'");const ask=await run(`!!document.getElementById('cupCheer')`);await run(`{const b=document.querySelector('#cupCheer .ks button');if(b)b.click()}`);

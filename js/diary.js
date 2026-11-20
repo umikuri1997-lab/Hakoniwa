@@ -126,7 +126,7 @@ function dyDayPage(x,h3){const e=x.e,sec=el('<div class="sec mone mdy">'+(h3?'<h
   if(more.children.length)sec.appendChild(more);return sec}
 /* 日のページに絵をはる：その日の絵（e.ph）があれば、それだけ。古いセーブの、その日の写真はぜんぶ */
 function dyFillPh(secs,after){if(IS_STORY_REPLAY||typeof phList!=='function')return;const st=S;
-  phList(WD).then(L=>{if(S!==st)return;for(const p of L){const x=secs.get(p.d);if(!x)continue;const sec=x.sec,e=x.e;if(e&&e.ph!=null&&p.id!==e.ph)continue;const box=sec.querySelector('.dyphs'),u=dyPhUrl(p.id,p.b);let f=sec.querySelector('.dyph0');if(f)f.classList.remove('dyph0');else{f=el('<figure class="dyph" role="button" tabindex="0"><img alt=""></figure>');box.appendChild(f)}f.querySelector('img').src=u;f.onclick=()=>{sfx('tap');phView(p,after)}}
+  phList(WD).then(L=>{if(S!==st)return;for(const p of L){const x=secs.get(p.d);if(!x)continue;const sec=x.sec,e=x.e;if(e&&e.ph!=null&&p.id!==e.ph||!phMine(p,e))continue;/* ほかの村（はじめからにした前の村）の写真は出さない */const box=sec.querySelector('.dyphs'),u=dyPhUrl(p.id,p.b);let f=sec.querySelector('.dyph0');if(f)f.classList.remove('dyph0');else{f=el('<figure class="dyph" role="button" tabindex="0"><img alt=""></figure>');box.appendChild(f)}f.querySelector('img').src=u;f.onclick=()=>{sfx('tap');phView(p,after)}}
     for(const s of secs.values())for(const f of s.sec.querySelectorAll('.dyph0'))f.remove()},()=>{})}
 /* 日記の紙（renderSheet から）。arg：'m' は朝に出したとき、数は思い出帳から読む日。
    思い出帳と同じ本（book.js の bookMake）：1ページめは、思い出帳のその日のページと同じ絵日記（dyDayPage）。
