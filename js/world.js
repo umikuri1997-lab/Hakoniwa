@@ -51,7 +51,7 @@ function templeRuinOK(s,j){const x=j%W,y=(j/W)|0;if(x<2||x>W-3||y<2||y>H-3)retur
   for(const k of templeRuinCells(j)){const o=s.obj[k];if(s.ground[k]||s.floor[k]||(s.hi?s.hi[k]|0:0)!==h)return false;if(!ruinClearable(o))return false}
   for(let dy=-2;dy<=1;dy++)for(let dx=-2;dx<=3;dx++)if(s.ground[j+dy*W+dx]===1)return false;/* 絵は2マス上・左右へはみ出すので、そこも水でない所 */return true}
 function templeRuinPlace(s){if(s.obj.includes('statue')||s.obj.includes('statueb'))return -1;
-  let y=CY;while(y>1&&s.floor[(y-1)*W+CX])y--;/* 道の北のはし */
+  let y=(s.world||0)===0?CY-4:CY;/* 草原は、まん中が御神木の切り株なので、切り株のうしろの道から */while(y>1&&s.floor[(y-1)*W+CX])y--;/* 道の北のはし */
   const ty=y-2;let best=-1,bd=1e9;for(let dy=-12;dy<=12;dy++)for(let dx=-12;dx<=12;dx++){const j=(ty+dy)*W+CX+dx;if(!templeRuinOK(s,j))continue;const d=Math.hypot(dx,dy*2);if(d<bd){bd=d;best=j}}/* 道のはしからずれるときは、北や南より、よこ */
   if(best<0)return -1;
   const bx=best%W,by=(best/W)|0;for(let y=by-2;y<=by+1;y++)for(let x=bx-2;x<=bx+2;x++){const k=y*W+x,o=s.obj[k];if(!o||!ruinClearable(o))continue;/* 絵がかかる所の自然の物（木・岩・草）もどける */s.obj[k]='';if(s.dyn)delete s.dyn[k];if(s.hp){delete s.hp[k];delete s.hp['n'+k]}if(s.regrow)s.regrow=s.regrow.filter(g=>g.j!==k)}
@@ -131,7 +131,7 @@ function genWorld(s,w){
     else if(V){if(r<.05)s.obj[i]='deadtree';else if(r<.13)s.obj[i]='rock';else if(r>=.16&&r<.17)s.obj[i]='deadtree';/* 火山にベリーの茂みはない */else if(r<.19)s.obj[i]='bamboo'}/* 火山のふもとは岩が多い。竹も少し */
     else{if(r<.07)s.obj[i]='deadtree';else if(r<.1)s.obj[i]='rock';else if(r<.1075){s.obj[i]='berry';s.dyn[i]={g:100}}else if(r>=.13&&r<.15)s.obj[i]=w===FREE?'ntree':'deadtree'}
   }
-  for(let y=CY-8;y<CY+12;y++)s.floor[y*W+CX]='path';
+  for(let y=CY-8;y<CY+12;y++)if(w!==0||y<CY-3||y>CY+2)s.floor[y*W+CX]='path';/* 草原：まん中は御神木の切り株（4×4）。道は、南から切り株の前まで・北は神殿から切り株のうしろまで */
   if(VL)wildGen(s);/* 野の花（家・畑を置く前。置いたあとで、もう1回かたづける） */
   if(!V&&!K&&w!==FREE){let best=-1,bd=1e9;for(let y=CY-6;y<=CY+6;y++)for(let x=CX-6;x<=CX+6;x++){const j=y*W+x;if(s.ground[j]===1||s.obj[j]||s.floor[j]||x===CX)continue;if([j-1,j+1,j-W,j+W].some(k=>s.ground[k]===1))continue;const d=Math.hypot(x+.5-(CX-3),y+.5-(CY+3));if(d<bd){bd=d;best=j}}if(best>=0)s.obj[best]='ntree'}/* 草原の拠点に、森の木が1本だけ（ほかの木は、みんな枯れている） */
   if(V){/* 火山のふもと：南西に古い家（下の壁がくずれている）、北東に2×2の畑、砂利の道が十字に通る */
@@ -139,11 +139,12 @@ function genWorld(s,w){
     for(let x=x1+1;x<CX;x++){const j=(CY+5)*W+x;s.obj[j]='';s.floor[j]='gravel'}/* 家の戸口から、砂利の道へ */
     for(let x=CX-7;x<=CX+8;x++)if(!s.obj[(CY+1)*W+x])s.floor[(CY+1)*W+x]='gravel';for(let y=CY+2;y<CY+12;y++)s.floor[y*W+CX]='gravel';
     for(let y=CY-5;y<=CY-4;y++)for(let x=CX+3;x<=CX+4;x++){const j=y*W+x;s.obj[j]='farm';s.floor[j]='';s.dyn[j]={g:50,wet:0,crop:'imo'}}}/* 最初の畑は4つ（2×2）。作物は、はじめはいもだけ */
-  else{const hx=dx=>CX+dx;
-  for(let d=3;d<=6;d++)for(let y=CY-5;y<CY-2;y++)s.floor[y*W+hx(-d)]='floor';
-  for(let d=1;d<=2;d++)s.floor[(CY-4)*W+hx(-d)]='path';
-  for(let y=CY-6;y<=CY-2;y++)for(let d=2;d<=7;d++){if(d>2&&d<7&&y>CY-6&&y<CY-2)continue;const x=hx(-d),j=y*W+x;if(y===CY-2&&d>=3&&d<=5)continue;/* はじめは壁がこわれている（クエストで直す） */s.obj[j]=(d===2&&y===CY-4)?'door':'hwall';s.floor[j]=s.obj[j]==='door'?'path':'';if(s.obj[j]==='hwall')s.hp[j]=BL.hwall.hp}
-  for(let d=1;d<=4;d++){const j=(CY-4)*W+hx(d);s.obj[j]='farm';s.floor[j]='';s.dyn[j]={g:50,wet:0,crop:'imo'}}/* 最初の畑は4つ。家の道をはさんだ向かいに横1列。作物は、はじめはいもだけ */
+  else{const G0=w===0,ox=G0?-2:0,oy=G0?-1:0,hx=dx=>CX+dx+(dx<0?ox:0),hy=y=>y+oy;/* 草原：家は北西（切り株のななめうしろ）、畑はその戸口の向かい（北東）。ほかのステージは前のまま */
+  for(let d=3;d<=6;d++)for(let y=CY-5;y<CY-2;y++){const j=hy(y)*W+hx(-d);s.floor[j]='floor';if(G0)s.obj[j]=''}/* 草原の家は、まん中の7マスの外にもかかるので、家の中の枯れ木・岩をどける */
+  for(let d=1;d<=2+(G0?-ox:0);d++)s.floor[hy(CY-4)*W+CX-d]='path';/* 戸口から、まん中の道まで */
+  for(let y=CY-6;y<=CY-2;y++)for(let d=2;d<=7;d++){if(d>2&&d<7&&y>CY-6&&y<CY-2)continue;const x=hx(-d),j=hy(y)*W+x;if(y===CY-2&&d>=3&&d<=5){if(G0)s.obj[j]='';continue}/* はじめは壁がこわれている（クエストで直す） */s.obj[j]=(d===2&&y===CY-4)?'door':'hwall';s.floor[j]=s.obj[j]==='door'?'path':'';if(s.obj[j]==='hwall')s.hp[j]=BL.hwall.hp}
+  for(let d=1;d<=4;d++){const j=hy(CY-4)*W+CX+d;s.obj[j]='farm';s.floor[j]='';s.dyn[j]={g:50,wet:0,crop:'imo'}}/* 最初の畑は4つ。家の道をはさんだ向かいに横1列。作物は、はじめはいもだけ */
+  if(G0)s.flags.home2=1;/* 家・畑・切り株の、まん中のならび（starterGapCells） */
   if(K){for(let d=3;d<=5;d++){const j=(CY-2)*W+hx(-d);s.obj[j]='hwall';s.floor[j]='';s.hp[j]=BL.hwall.hp}/* 風（土台）：家はこわれていない。木箱は、道の東に1つ */
     const fr=k=>!s.obj[k]&&s.ground[k]!==1&&!s.floor[k];let p=-1;for(let r=0;r<8&&p<0;r++)for(let dy=-r;dy<=r&&p<0;dy++)for(let dx=-r;dx<=r;dx++){const k=(CY+1+dy)*W+CX+3+dx;if(fr(k)&&fr(k-1)&&fr(k+1)){p=k;break}}if(p>=0)s.obj[p]='crate'}
   }

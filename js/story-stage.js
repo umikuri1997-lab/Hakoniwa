@@ -2,7 +2,7 @@
 /* 火山（2章）の物語の演出。会話の行の「vol:<場面>」で動かす。
    歩み寄り → 視線・構え → 動作 → 結果 → 反応と余韻。動きもカメラも実時間で、大事な動きが終わるまで、つぎの行へ送らない（sacredDirection の waitUntil）。
    夜・敵・人物不在・道がないときは、動きを省いてそのまま進める。村を切りかえたら残さない（VILLAGE_SESSION）。絵はコードで描くドット絵（1ドット＝整数の四角）。 */
-const VOL_BEAT_MS={dipWalk:900,dipS:1200,altarPair:900,altarLit:3400,introStart:400,lookbackH:1300,lookbackS:1300,wave:900,shoulders:1800,springWalk:900,hidane:900,summonRing:1000,meet:900,fanS:800,jumpBoth:800,traceRock:900,canal:1200,benchSit:900,armsCross:600,egg:900,eatS:1200,crackSeal:1000,yoganSide:800,fist:1000,stepBackS:1000,yoganPulse:1200,sitBeside:900,bump:1400,lanterns:1200,eggsUp:1200,cheer:800,ashiyu:900,ripple:900,scaredS:1000,pointDevice:1000,ashFall:600,stepMountain:900,grab:900,backToBack:1300,morning:1500,shadowSpot:900,kneelAsh:1500,skyH:1100,innFront:900,soakBoth:1000,kneelNushi:1500};
+const VOL_BEAT_MS={dipWalk:900,dipS:1200,altarPair:900,altarLit:3400,introStart:400,lookbackH:1300,temple:1300,lookbackS:1300,wave:900,shoulders:1800,springWalk:900,hidane:900,summonRing:1000,meet:900,fanS:800,jumpBoth:800,traceRock:900,canal:1200,benchSit:900,armsCross:600,egg:900,eatS:1200,crackSeal:1000,yoganSide:800,fist:1000,stepBackS:1000,yoganPulse:1200,sitBeside:900,bump:1400,lanterns:1200,eggsUp:1200,cheer:800,ashiyu:900,ripple:900,scaredS:1000,pointDevice:1000,ashFall:600,stepMountain:900,grab:900,backToBack:1300,morning:1500,shadowSpot:900,kneelAsh:1500,skyH:1100,innFront:900,soakBoth:1000,kneelNushi:1500};
 const HINO_AT=new WeakMap();/* ヒノオオカゲが消えた所（保存しない） */
 function volDir(){if(!S||WD!==1||S.free)return null;const d=sacredDirection(true);if(!d)return null;if(!d.vol){d.vol=true;d.volKey=DLGCUR;}return d;}
 function volWho(n){return S.res.find(r=>r.name===n&&!r.hidden)||null;}
@@ -41,6 +41,7 @@ function volBeat(c){
   switch(c){
   case 'introStart':{if(!h)break;h.face=1;volPose(h,'kneelHeat',600000,{back:true});volFx('campfire',600000,{x:h.x,y:h.y-.75});volFx('ashFall',600000,{haze:true,n:18});break;}
   case 'lookbackH':case 'lookbackS':{const r=c==='lookbackH'?h:s;if(!r)break;volPose(r,'lookback',600000,{back:true,keep:true});volShot([],[r],2.4,1);volHold(1300);break;}
+  case 'temple':{const j=S.obj.indexOf('statueb');if(j<0)break;const x=j%W+.5,y=(j/W|0)+.5;if(h)volFace(h,x);volShot([[x-1,y-2],[x+1,y+.5]],[],2,1.3);d.home={x:x*TS,y:(y-1.6)*TS,z:homeZ()};volHold(1300);break;}/* 「あそこの古い神殿」：神殿を映し、会話がおわっても神殿が見えるままにする */
   case 'wave':{if(!h)break;volPose(h,'wave',1100,{front:true,keep:true});volHold(900);break;}
   case 'shoulders':{if(!h)break;volPose(h,'shoulderDrop',600000,{front:true,keep:true});volHold(1800);break;}
   case 'springWalk':{if(!h)break;const[sx,sy]=HSPC.a,st=volNear(['hotstone'],sx,sy,6),[tx,ty]=st>=0?volXY(st):[sx,sy],done=volTask(d,30000);volShot([[tx,ty],[sx,sy]],[h]);
