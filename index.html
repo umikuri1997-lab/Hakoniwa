@@ -281,7 +281,7 @@ body.cave #dock,body.cave #palette,body.cave #areaBtn,body.cave #leafBtn,body.ca
 .mwrap{max-width:440px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
 .mhead{display:flex;align-items:center;justify-content:space-between;gap:10px}
 .mright{display:flex;flex-direction:column;align-items:flex-end;gap:4px}.mver{font-size:10px;color:#fff7d6;opacity:.85}
-.mhead h2{margin:0;font-family:var(--f-display);font-weight:400;font-size:25px;color:#fff7d6;text-shadow:0 3px 0 #3c5a2c}
+.mhead h2{margin:0;white-space:nowrap;font-family:var(--f-display);font-weight:400;font-size:25px;color:#fff7d6;text-shadow:0 3px 0 #3c5a2c}.mright .btn{white-space:nowrap}@media (max-width:359px){.mhead{flex-direction:column;align-items:stretch}.mright{flex-direction:row;flex-wrap:wrap;align-items:center;justify-content:flex-end}}
 .route{display:flex;flex-direction:column;gap:0;position:relative}
 .wcard{display:flex;flex-direction:column;background:var(--panel);border:2px solid var(--line);border-radius:18px;overflow:hidden;box-shadow:0 5px 0 rgba(0,0,0,.25);text-align:left;width:100%}
 .wcard.open{border-color:var(--accent)}
@@ -296,7 +296,7 @@ body.cave #dock,body.cave #palette,body.cave #areaBtn,body.cave #leafBtn,body.ca
 .pro{position:absolute;z-index:40;inset:0;background:#0b1013;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;padding-left:var(--gut-l);padding-right:var(--gut-r);transition:opacity .8s}
 .pro p{max-width:26em;font-size:15px;line-height:2;color:#f2ead2;text-align:center;margin:0;animation:fade 1.2s ease-out;white-space:pre-line}
 .proWho{font-family:var(--f-display);color:var(--accent);font-size:15px;letter-spacing:.1em;min-height:1.2em;margin-bottom:-12px}
-.pro .hint{font-size:10px;color:#7f8a86;letter-spacing:.2em}
+.pro .hint{font-size:10px;color:#7f8a86;letter-spacing:.2em;font-family:inherit;background:none;border:0;padding:15px 20px;cursor:pointer}
 #proSkip{position:absolute;right:var(--gut-r);bottom:calc(env(safe-area-inset-bottom,0px) + 20px);background:transparent;border-color:#3a4a4a;color:#9fb3ad}
 @keyframes fade{from{opacity:0;transform:translateY(6px)}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
@@ -1055,7 +1055,7 @@ function draw(){if(T.hidden||document.hidden)return;size();var t=(performance.no
  PXSCENE(c,gw,gh,1,'title',t)}
 draw();setInterval(draw,125);addEventListener('resize',function(){SC=null;draw()})})();</script><style>#boot{display:none}html{background:var(--ground)!important}</style>
   <div id="maps" class="maps" hidden><div class="mwrap"><div class="mhead"><h2>マップをえらぶ</h2><div class="mright"><button class="btn" id="mSnd"></button><button class="btn" id="mSfx"></button><div class="mver" id="mVer"></div></div></div><div class="route" id="mList"></div><button class="btn" id="mBack">タイトルへ</button></div></div>
-  <div id="pro" class="pro" hidden><div class="proWho" id="proWho"></div><p id="proText"></p><div class="hint">タップで進む</div><button id="proSkip" class="btn">スキップ</button></div>
+  <div id="pro" class="pro" hidden><div class="proWho" id="proWho"></div><p id="proText"></p><button id="proNext" class="hint" type="button">つぎへ</button><button id="proSkip" class="btn">スキップ</button></div>
 </div>
 
 <script>/* ゲームのデータ（chips.js と js/ のプログラム）を読みこむ。読みこむあいだに「はじめる」をおしたら、何パーセント読みこめたかを出す。読みこめたら、そのまま進む */

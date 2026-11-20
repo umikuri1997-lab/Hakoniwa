@@ -138,6 +138,7 @@ function tutSpot(id){const sz=BL[id].sz||[1,1],V=tutView(),vc=[Math.floor((cam.x
   const pk=S.quest+':'+id;if(v&&!inV(v[0],v[1])&&tutCache.pan!==pk){tutCache.pan=pk;const s=V[1]+V[3]-VH;centerOn((v[0]+sz[0]/2)*TS,(v[1]+sz[1]/2)*TS-s/2/cam.z)}/* 見えない所なら、一度だけそこへカメラを寄せる（クエストと物ごとに1回。画面を動かしたあとに、もう一度引きもどさない） */
   tutCache={k,t:performance.now(),v,pan:tutCache.pan};return v}
 function palArrows(){const b=$('#palItems');if(!b)return;const m=b.scrollWidth-b.clientWidth;$('#palL').hidden=!(m>4&&b.scrollLeft>4);$('#palR').hidden=!(m>4&&b.scrollLeft<m-4)}
+let TUTPAN=null;/* はじめの神殿へカメラをよせた村（1回だけ） */
 function updTut(){
   const hand=$('#tutHand');const hide=()=>{hand.hidden=true};
   if(!S||GIFT_ACTIVE||!$('#dialog').hidden||!$('#lvup').hidden||!$('#rlv').hidden||!$('#title').hidden||!$('#maps').hidden||!$('#pro').hidden||!S.introSeen||S.cleared||questGuideBlockedNow())return hide();/* はじめのカミサマの話を聞きおえるまでは、案内を出さない */
@@ -195,7 +196,7 @@ function updTut(){
   else if(qt==='trade'){if(sheet==='shop'){if(S.flags.traded){el=$('#shopEnd');lbl='交換がおわったら「交換をおわる」'}else{el=[...document.querySelectorAll('#sheetBody .btn.pri')].find(b=>!b.disabled);lbl='交換してみよう'}}else if(!sheet&&godHere()){if(mode!=='look'){el=document.querySelector('#dock [data-mode="look"]');lbl='「しらべる」をタップ'}else{wp=[godX()*TS,(godY()-.2)*TS];lbl='カミサマをタップ'}}}
   let x,y,elT=0;
   if(el){const r=el.getBoundingClientRect(),ar=$('#app').getBoundingClientRect();if(!r.width)return hide();x=r.left-ar.left+r.width/2;y=r.top-ar.top+r.height/2;const nb=r.top-ar.top>ar.height-120,sd=!nb&&r.right-ar.left+170<ar.width;elT=sd?2:r.top-ar.top<140?1:-1;if(sd){x=r.right-ar.left-2}else y=elT<0?r.top-ar.top+2:r.bottom-ar.top-2}/* ボタンは、指と文字をボタンの上（上のほうなら下）に出して、ボタンの文字をかくさない */
-  else if(wp){const ar=$('#app').getBoundingClientRect(),cr=cv.getBoundingClientRect();x=cr.left-ar.left+(wp[0]-cam.x)*cam.z*(cr.width/VW);y=cr.top-ar.top+(wp[1]-cam.y)*cam.z*(cr.height/VH);if(x<0||y<0||x>ar.width||y>ar.height)return hide()}
+  else if(wp){const ar=$('#app').getBoundingClientRect(),cr=cv.getBoundingClientRect();x=cr.left-ar.left+(wp[0]-cam.x)*cam.z*(cr.width/VW);y=cr.top-ar.top+(wp[1]-cam.y)*cam.z*(cr.height/VH);if(qt==='statue'&&WD===0&&TUTPAN!==S&&!sheet&&(x<0||x>ar.width||y>ar.height||y<($('#topUI').getBoundingClientRect().bottom||0)-ar.top+8)){TUTPAN=S;if(focusMainStoryPlace(true))return hide()}/* はじめの神殿が、画面の外か上の欄の下なら、1回だけカメラをよせる（そのあと手で動かしたら、もどさない） */if(x<0||y<0||x>ar.width||y>ar.height)return hide()}
   else return hide();
   hand.style.zIndex=el&&el.closest&&el.closest('#prPop')?'46':'';/* はたおり機などのポップアップの中をさすときは、その上に出す */
   hand.hidden=false;hand.style.transform='translate('+x+'px,'+y+'px)';hand.classList.toggle('up',elT?elT>0:y<120);hand.classList.toggle('down',!swipe&&(elT?elT<0:y>innerHeight-110));hand.classList.toggle('elt',!!elT);hand.classList.toggle('side',elT===2);if(elT===2)hand.classList.remove('up','down');// 画面の下のほうは指を上から向ける
