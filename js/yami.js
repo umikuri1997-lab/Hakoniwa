@@ -276,10 +276,10 @@ function yamiDecide(r,G){if(S.free||S.cleared)return false;const Y=yamiState();
     const go=(j0)=>{if(j0===here||Math.hypot(j0%W+.5-r.x,((j0/W)|0)+.5-r.y)<1.2&&yamiFree(here,r,G,1))return startAct(r,G,'yhold',-1,{dur:5}),true;const k=yamiFreeNear(j0,r,G);if(k===here)return startAct(r,G,'yhold',-1,{dur:5}),true;if(k>=0)return startAct(r,G,'ywalk',k,{}),true;return startAct(r,G,'yhold',-1,{dur:5}),true};
     if(Y.ph==='meet'&&YSH)return go(YSH.mj);
     if(Y.ph==='go'&&Y.cr!=null)return go(Y.cr+3*W+1);
-    if(yamiSitOn()&&!isNight()&&r.hunger>=500&&!(typeof hostileNow==='function'&&hostileNow(r))&&Y.yj!=null){const st=yamiStand(Y.fl?Y.fl.j:Y.yj,r);if(st>=0)return startAct(r,G,'ysit',st,{dur:60}),true}}
+    if(yamiSitOn()&&!isNight()&&r.hunger>=250&&!(typeof hostileNow==='function'&&hostileNow(r))&&Y.yj!=null){const st=yamiStand(Y.fl?Y.fl.j:Y.yj,r);if(st>=0)return startAct(r,G,'ysit',st,{dur:60}),true}}
   if(Y.yk&&!isNight()&&r.elem===Y.yk.el&&r.id===Y.yk.id&&!r.hidden){const c=Y.cr;if(c!=null){const k=yamiStand(c+W+1,r);if(k>=0)return startAct(r,G,'ywork',k,{dur:YKWORK,el:Y.yk.el}),true}}
   return false}
-ACT.ysit={start(r,a){r.face=-1;r.bubble='';const f=yamiState().fl;faceTo(r,f?f.j:yamiState().yj)},done:(r,a)=>a.t>=a.dur||!yamiSitOn()||isNight()||r.hunger<500};
+ACT.ysit={start(r,a){r.face=-1;r.bubble='';const f=yamiState().fl;faceTo(r,f?f.j:yamiState().yj)},done:(r,a)=>a.t>=a.dur||!yamiSitOn()||isNight()||r.hunger<250};
 ACT.yhold={start(r,a){r.bubble='';r.nap=false},done:(r,a)=>a.t>=a.dur||!['off','rest','meet','go'].includes(yamiState().ph)};
 ACT.ywalk={start(r,a){r.bubble=''},done:(r,a)=>true};
 ACT.ywork={start(r,a){const c=yamiState().cr;faceTo(r,c+W+1);sacredSetPose(r,{anim:YKDO[a.el].anim,duration:YKWORK*1000+1500});sfxAt('bush',r.x,r.y)},done:(r,a)=>a.t>=a.dur,end(r,a){if(a.t<a.dur)return;yamiCradleDone(r,a.el)}};
@@ -366,7 +366,7 @@ function yamiStoryTick(prevH,h,dt){if(S.free)return;const Y=yamiState();
     dirty=true}
   if((Y.ph==='meet'||Y.ph==='go')&&!YSH&&!YEND)Y.ph='off';/* 読みこみなおしたら、あかりを消したところから */
   if(Y.ph==='meet'||Y.ph==='go')yamiShadowStep(dt);
-  {const t=yamiTomori();if(t&&yamiSitOn()&&!isNight()&&t.act&&!['ysit','sleep','eat','store','smat','sitem','flee','hide','phew'].includes(t.act.type)&&t.hunger>=500&&!t.meal&&!(typeof hostileNow==='function'&&hostileNow(t))){endAct(t);t.act=null;t.path=[]}}/* すわりこんだトモリは、仕事をしない */
+  {const t=yamiTomori();if(t&&yamiSitOn()&&!isNight()&&t.act&&!['ysit','sleep','eat','store','smat','sitem','flee','hide','phew'].includes(t.act.type)&&t.hunger>=250&&!t.meal&&!(typeof hostileNow==='function'&&hostileNow(t))){endAct(t);t.act=null;t.path=[]}}/* すわりこんだトモリは、仕事をしない */
   if(!$('#dialog').hidden)return;
   if(h>=6&&h<20){if(Y.ph==='off'||Y.ph==='meet'||Y.ph==='go')return yamiFail('dawn');if(Y.ph==='rest'&&!YEND)return yamiBirthNushi()}
   if(yamiAt('saigo')&&Y.fn==null)Y.fn=dayNo()+1;/* ゆりかごを直したつぎの日の夜 */
