@@ -426,9 +426,9 @@ function cvDirty(){const C=CV;for(const q of C.ch.values())q.c.width=q.c.height=
    rock 岩・floor 床（暗い→明るい）・water 水（水べのあわ・明るい・なか・深い・底の光の網目）・void 穴 */
 const CVTHEMES={
   roots:{name:'ねっこの坑道',out:'rock',deco:{roots:.55,moss:.3,shroom:.12,plant:.3,plants:[0,1,2,3,6,8,9,11,12,14,16,17,19],edge:[1,9,16,14],vine:.45,gmoss:.12,big:.1},glow:'#7ff0c8',moss:.55,mossc:['#1c2e1a','#2c4a28','#3a5e30','#4a7238','#5c8a44','#7aa858'],crys:null,rock:['#2a1f1a','#463428','#5e4634','#76593f','#8f6e4d','#a8865e'],floor:['#4a3c31','#7a6550','#816b55','#87715a','#8e775f','#a38c72'],water:['#c8f7e0','#7fe0c4','#3fb39a','#23806f','#a9f5dc'],void:'#160f0c'},
-  crystal:{name:'水晶のほらあな',out:'void',wall:'crys',deco:{crys:.32,shroom:.05,plant:.16,plants:[3,7,15,17,19,10],edge:[15,17,19],pcrys:.3,vine:.3,gmoss:.1,big:.06},glow:'#b49cff',moss:.45,mossc:['#241a3a','#3a2a5c','#4e3a7a','#6a4e9c','#8a6ec0','#b49cff'],crys:[['#3a2a6a','#6a4cc0','#9a7ef0','#c4b0ff','#e8deff','#ffffff'],['#1e4a6a','#2f8ac0','#5cc6f0','#9ce6ff','#d6f6ff','#ffffff']],rock:['#1f1830','#3a2c55','#4d3b70','#62508a','#7a68a3','#968abf'],floor:['#3a3152','#655986','#6a5e8c','#6f6391','#756997','#8c80ad'],water:['#e0d8ff','#9fd4f7','#5a9fe0','#3a64b8','#c8e8ff'],void:'#110c1b'},
+  crystal:{name:'水晶のほらあな',out:'void',wall:'crys',deco:{crys:.9,shroom:.05,plant:.3,plants:[3,7,15,17,19,10],edge:[15,17,19],pcrys:.9,fcrys:.1,vine:.3,gmoss:.1,big:.06},glow:'#b49cff',moss:.45,mossc:['#241a3a','#3a2a5c','#4e3a7a','#6a4e9c','#8a6ec0','#b49cff'],crys:[['#3a2a6a','#6a4cc0','#9a7ef0','#c4b0ff','#e8deff','#ffffff'],['#1e4a6a','#2f8ac0','#5cc6f0','#9ce6ff','#d6f6ff','#ffffff']],rock:['#1f1830','#3a2c55','#4d3b70','#62508a','#7a68a3','#968abf'],floor:['#3a3152','#655986','#6a5e8c','#6f6391','#756997','#8c80ad'],water:['#e0d8ff','#9fd4f7','#5a9fe0','#3a64b8','#c8e8ff'],void:'#110c1b'},
   lake:{name:'地底のみずうみ',out:'void',deco:{crys:.14,shroom:.14,plant:.24,plants:[5,6,7,10,13,14,17,1,2],edge:[1,10,14,17],vine:.4,gmoss:.14,big:.08},glow:'#7fe8ff',moss:.5,mossc:['#14242a','#1e3a3c','#28504c','#34645a','#447c6a','#62987e'],crys:[['#1a4a5a','#2a8aa0','#4ccad6','#8ef0f0','#d0fff8','#ffffff']],rock:['#141c2c','#243650','#2f4664','#3c5878','#4d6c8c','#6684a3'],floor:['#2a3646','#516378','#56687d','#5b6d82','#617388','#7a8ca0'],water:['#d6fff8','#7ff0e6','#33c1c8','#1a8a9e','#b6fff4'],void:'#0a0f17'},
-  fossil:{name:'化石の大ひろま',out:'rock',deco:{bone:.2,crys:.08,plant:.14,plants:[18,4,18],edge:[18],pbone:.22,vine:.2,gmoss:.08,big:.14},glow:'#ffc870',moss:.4,ptex:'ground',mossc:['#3a2c20','#6a5640','#7e6a4e','#8e7a5a','#a08a66','#bca27a'],crys:[['#5a2a0a','#a85a14','#e0901e','#f6c050','#ffe6a0','#ffffff']],rock:['#30241c','#5c4636','#765b45','#907256','#a98a69','#c4a683'],floor:['#504034','#8a745d','#917a62','#978067','#9e866c','#b49c80'],water:['#e8f6d8','#9fe0c4','#54b39c','#2f7f75','#c6f5e0'],void:'#140e0a'}};
+  fossil:{name:'化石の大ひろま',out:'rock',deco:{bone:.2,crys:.08,plant:.14,plants:[18,4,18,0,9,11,16],edge:[18,9],pbone:.22,vine:.2,gmoss:.08,big:.14},glow:'#ffc870',moss:.4,ptex:'ground',mossc:['#3a2c20','#6a5640','#7e6a4e','#8e7a5a','#a08a66','#bca27a'],crys:[['#5a2a0a','#a85a14','#e0901e','#f6c050','#ffe6a0','#ffffff']],rock:['#30241c','#5c4636','#765b45','#907256','#a98a69','#c4a683'],floor:['#504034','#8a745d','#917a62','#978067','#9e866c','#b49c80'],water:['#e8f6d8','#9fe0c4','#54b39c','#2f7f75','#c6f5e0'],void:'#140e0a'}};
 const cvTheme=()=>CVTHEMES[CV.F.theme]||CVTHEMES.roots;
 const cvRGB=h=>[parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)];
 /* 絵のチップを、こさの番号で読めるようにする（1回だけ）。読みこみ中なら null */
@@ -507,20 +507,22 @@ function cvPaintPx(g,x0,y0,N,T){const C=CV,Fd=C.fld,TH=cvTheme(),CW=TH.wall==='c
 function cvDecoPlace(){const C=CV,TH=cvTheme(),D=TH.deco||{},L=[];
   const open=(x,y)=>y<CVH&&x>=0&&x<CVW&&C.g[cvJ(x,y)]&&!C.wt[cvJ(x,y)]&&!C.ob.has(cvJ(x,y));/* 大きなかざりは、道をふさいで見えないよう、広い所（下へ2マス床がつづく）のかべぎわだけ（持ち主のたのみ） */
   for(let y=1;y<CVH;y++)for(let x=0;x<CVW;x++){const j=cvJ(x,y);if(!C.g[j]||C.wt[j]||C.ob.has(j)||C.g[j-CVW])continue;const h=n=>hash(((j*41+n*997+C.fl*7919)>>>0)),room=open(x,y+1)&&open(x,y+2)&&open(x,y+3)&&x>0&&x<CVW-1&&!C.g[cvJ(x-1,y-1)]&&!C.g[cvJ(x+1,y-1)];/* 上の左右もかべ（道の入り口のよこには置かない） */
-    if(room&&D.crys&&TH.crys&&h(1)<D.crys)L.push({j,k:'crys',v:(h(2)*TH.crys.length)|0,m:h(10)<.3?0:h(11)<.5?1:2,flip:h(3)<.5,dx:Math.round((h(4)-.5)*12)});
+    if(room&&D.crys&&TH.crys&&h(1)<D.crys)L.push({j,k:'crys',v:(h(2)*TH.crys.length)|0,m:CVCRYSM[(h(10)*CVCRYSM.length)|0],flip:h(3)<.5,dx:Math.round((h(4)-.5)*12)});
     else if(room&&D.shroom&&h(5)<D.shroom)L.push({j,k:'shroom',v:(h(17)*4)|0,flip:h(18)<.5,dx:Math.round((h(6)-.5)*12)});/* きのこ：4つの生え方（cave:kinoko#0〜3）から */
-    else if(D.bone&&h(7)<D.bone)L.push({j,k:'bone',v:(h(8)*3)|0,dx:Math.round((h(9)-.5)*10)});
+    else if(D.bone&&h(7)<D.bone)L.push({j,k:'bone',v:[0,1,1,2,3,4][(h(8)*6)|0],dx:Math.round((h(9)-.5)*10)});
     const used=L.length&&L[L.length-1].j===j;/* 同じマスには1つだけ */
     if(used);else if(D.vine&&h(12)<D.vine)L.push({j,k:'vine',n:1+((h(13)*3)|0),dx:0});/* 光るつた：岩の正面から、たれる */
     else if(room&&D.big&&h(14)<D.big)L.push({j,k:'big',flip:h(15)<.5,dx:Math.round((h(16)-.5)*10)})}/* 大きな石じゅん */
   const RS=[...C.ob].filter(([,o])=>o.k==='R').map(([j])=>j),nearR=(x,y)=>RS.some(r=>Math.abs(cvX(r)-x)<=1&&cvY(r)-y>=0&&cvY(r)-y<=2);/* 下へおりる入り口の絵の上には、植物を置かない */
   if(D.plant)for(let y=0;y<CVH;y++)for(let x=0;x<CVW;x++){const j=cvJ(x,y);if(!C.g[j]||C.wt[j]||C.ob.has(j)||nearR(x,y)||L.some(d=>d.j===j))continue;const h=n=>hash(((j*53+n*911+C.fl*6151)>>>0));/* 植物：床のどこにでも（持ち主のたのみ） */
-    const mv=TH.moss?cvMossV(x+.5,y+.5):1,ms=mv>.62;if(TH.moss&&!ms&&h(9)>.12)continue;
+    const mv=TH.moss?cvMossV(x+.5,y+.5):1,ms=mv>.62;
+    if(!ms&&D.fcrys&&TH.crys&&h(60)<D.fcrys){L.push({j,k:'crys',v:(h(61)*TH.crys.length)|0,m:CVCRYSP[(h(62)*CVCRYSP.length)|0],flip:h(63)<.5,dx:Math.round((h(64)-.5)*14),dy:Math.round((h(65)-.5)*8)});continue}/* 水晶のほらあな：まだらの外にも、小さな水晶 */
+    if(TH.moss&&!ms&&h(9)>.12)continue;
     /* 自然な生え方（持ち主のたのみ）：コケのまん中ほどこく、ふちはひくい草だけ。しゅるいは、ゆるいノイズで場所ごとにかたまる（3わりは、まざる） */
     const core=Math.max(0,Math.min(1,(mv-.62)/.12)),edge=ms&&core<.35,list=edge&&D.edge?D.edge:D.plants,pick=n=>list[((h(n)<.3?h(n+50):cvNoise(x*.22,y*.22,31+C.fl))*list.length*.999)|0];
     let any=false;const nq=ms?(core>.6?3:core>.25?2:1):1;for(let q=0;q<nq;q++){const hq=n=>h(n+q*20);if(hq(1)<D.plant*(ms?1.2+1.6*core:.8)){any=true;const sx=nq>1?[-9,9,0][q]:0,sy=nq>1?[-6,-6,8][q]:0;L.push({j,k:'plant',v:pick(2+q*20),flip:hq(3)<.5,dx:sx+Math.round((hq(4)-.5)*8),dy:sy+Math.round((hq(5)-.5)*6)})}}
-    if(ms&&D.pcrys&&TH.crys&&h(40)<D.pcrys*(.5+core)){any=true;L.push({j,k:'crys',v:(h(41)*TH.crys.length)|0,m:h(42)<.75?0:1,flip:h(43)<.5,dx:Math.round((h(44)-.5)*14),dy:Math.round((h(45)-.5)*8)})}/* 水晶のほらあな：まだらの上に、小さな水晶 */
-    if(ms&&D.pbone&&h(46)<D.pbone*(.5+core)){any=true;L.push({j,k:'bone',v:h(47)<.12?2:h(47)<.56?0:1,flip:h(48)<.5,dx:Math.round((h(49)-.5)*10),dy:Math.round((h(50)-.5)*8)})}/* 化石の大ひろま：砂のまだらの上に、ほね */
+    if(ms&&D.pcrys&&TH.crys&&h(40)<D.pcrys*(.5+core)){any=true;L.push({j,k:'crys',v:(h(41)*TH.crys.length)|0,m:CVCRYSP[(h(42)*CVCRYSP.length)|0],flip:h(43)<.5,dx:Math.round((h(44)-.5)*14),dy:Math.round((h(45)-.5)*8)})}/* 水晶のほらあな：まだらの上に、小さな水晶 */
+    if(ms&&D.pbone&&h(46)<D.pbone*(.5+core)){any=true;L.push({j,k:'bone',v:[0,0,1,3,3,4,4,2][(h(47)*8)|0],flip:h(48)<.5,dx:Math.round((h(49)-.5)*10),dy:Math.round((h(50)-.5)*8)})}/* 化石の大ひろま：砂のまだらの上に、ほね */
     if(!any&&D.gmoss&&h(6)<D.gmoss*(ms?1.5:1))L.push({j,k:'gmoss',dx:Math.round((h(7)-.5)*10),dy:Math.round((h(8)-.5)*10)})}/* 光るこけ */
   C.deco=L;C.shafts=null;if(C.mist)C.mist.width=C.mist.height=0;C.mist=C.mistP=null;for(const c of Object.values(C.crysImg||{}))if(c)c.width=c.height=0;C.crysImg=null;if(C.wflow)C.wflow.width=C.wflow.height=0;C.wflow=C.wpat=null}
 /* 水晶の絵を、その階の色にぬりかえた絵（色ごとに1まい。入るときに作って、出るときに手ばなす） */
@@ -528,7 +530,9 @@ function cvDecoPlace(){const C=CV,TH=cvTheme(),D=TH.deco||{},L=[];
 function cvToneImg(id,R,key){const C=CV;if(!C.crysImg)C.crysImg={};if(C.crysImg[key])return C.crysImg[key];const ch=cvChipOf(id);if(!ch)return null;const im=chipImgs(ch,id)[0];if(!im.ok)return null;
   const c=document.createElement('canvas');c.width=im.width;c.height=im.height;const g=c.getContext('2d');g.drawImage(im,0,0);const d=g.getImageData(0,0,c.width,c.height),Q=R.map(cvRGB);
   for(let i=0;i<d.data.length;i+=4){if(!d.data[i+3])continue;const l=Math.min(5,Math.round(d.data[i]/50)),q=Q[l];d.data[i]=q[0];d.data[i+1]=q[1];d.data[i+2]=q[2]}g.putImageData(d,0,0);c.ax=ch.ax;c.ay=ch.ay;return C.crysImg[key]=c}
-const cvCrysImg=(v,m)=>cvToneImg('cave:crys#'+m,cvTheme().crys[v],'c'+v+'_'+m);/* m：水晶の形（0 小さい1本・1と2 かたまり） */
+const cvCrysImg=(v,m)=>cvToneImg('cave:crys#'+m,cvTheme().crys[v],'c'+v+'_'+m);/* m：水晶の形（0 小さい1本・1と2 かたまり・3 細長い1本・4 とても大きなかたまり・5 ひくいかたまり・6 おうぎ・7 かけら） */
+const CVCRYSM=[0,1,2,3,4,5,6,7,1,2,6,3];/* かべぎわの水晶の形（大きな物が多め） */
+const CVCRYSP=[0,3,5,7,7,6,0,5];/* 床のまだらの上の水晶の形（小さな物が多め） */
 function cvDrawDeco(d,now){const C=CV,ox=cvX(d.j)*TS+d.dx,oy=(cvY(d.j)+CVOY)*TS,t=now/1000+d.j;
   if(d.k==='crys'){const c=cvCrysImg(d.v,d.m);if(c){ctx.save();if(d.flip){ctx.translate(2*ox+TS,0);ctx.scale(-1,1)}ctx.drawImage(c,ox+c.ax/2,oy+(d.dy||0)+c.ay/2-4,c.width/2,c.height/2);ctx.restore()}
     const p=(t*.6)%2.6;if(p<.6){const s=Math.sin(p/.6*Math.PI),q=cvTheme().crys[d.v][5];ctx.globalAlpha=s;const sx=ox+4+((d.j*7)%24),sy=oy-8+((d.j*3)%18);P4(q,sx,sy,1,1);if(s>.6){P4(q,sx-1,sy,3,1);P4(q,sx,sy-1,1,3)}ctx.globalAlpha=1}return}/* きらっ */

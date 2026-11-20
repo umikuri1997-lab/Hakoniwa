@@ -3,7 +3,7 @@
 ゲーム（js/cave.js の CVTHEMES）が、階ごとの色（6色のならび）にぬりかえるので、1まいの絵で、どの階の色にもなる。0 は輪郭・すきま、5 はいちばん明るい所。
 - cave:cols（256×H）：3Dで写した柱の岩のがけ（furn3d の cave_cols。4マスでくりかえす）の、まん中の4マス。上のすきとおった所はそのまま。
 - cave:ccols（256×H）：水晶のほらあなの、水晶のかべ（furn3d の cave_ccols。外のモデルの水晶をならべる）。作り方は cave:cols と同じ。
-- cave:crys#0〜2・cave:steps：3Dで写した水晶のかたまり（外のモデル、furn3d の cave_crys0〜2）・岩の段（cave_steps）。こさの番号で、階ごとの色にぬりかえる。
+- cave:crys#0〜7・cave:steps：3Dで写した水晶のかたまり（外のモデル、furn3d の cave_crys0〜2）・岩の段（cave_steps）。こさの番号で、階ごとの色にぬりかえる。
 - cave:moss（128×128）：コケの地面。CC0 のコケのテクスチャ（moss002）を、こさの番号の6だんに。
 - cave:caus（128×128）：水の底の光の網目（1 が網目）。ゆがんだボロノイのふち。
 - cave:ground（128×128）：自然の洞窟の地面。コードで1ドットずつ作る（人の作った石だたみにしない。持ち主がきめた）：ふぞろいな色のかたまり・先がとぎれる細いひび・小石・砂つぶ。
@@ -15,7 +15,7 @@ import numpy as np
 from PIL import Image
 HERE=os.path.dirname(os.path.abspath(__file__));ROOT=os.path.join(HERE,'..','..','..')
 LV=[0,50,100,150,200,250]
-TONED={'cave:crys#0':'cave_crys0','cave:crys#1':'cave_crys1','cave:crys#2':'cave_crys2','cave:steps':'cave_steps','cave:down':'cave_down'}   # 3Dで写して、こさの番号にする物
+TONED={**{'cave:crys#%d'%n:'cave_crys%d'%n for n in range(8)},'cave:steps':'cave_steps','cave:down':'cave_down'}   # 3Dで写して、こさの番号にする物
 PALL=[235,200,160,120,85]   # 3Dで写したときの5だんの灰色（furn3d の PAL）→ こさの番号 5・4・3・2・1。これより暗い輪郭は 0
 def tone(a):
     """3Dの絵（RGBA）→ こさの番号の灰色。すきとおった所はそのまま"""
