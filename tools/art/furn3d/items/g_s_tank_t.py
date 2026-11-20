@@ -6,4 +6,4 @@ VIEWS=[('g_s_tank',0),('g_s_tank>1',1),('g_s_tank>2',2),('g_s_tank>3',3)]
 def PARTS():
     p=P('g_s_tank','model',('tripo/gf/g_s_tank.glb',0.5,0.5,0,0.97,0,0),(255,255,255),on=('ground',),note='地面におく');p.tex=False;p.uvtex='tripo/gf/tex.png'   # 色はトリポのテクスチャの絵（木目をはらない）
     return [p]
-MATCAP='clay';SMANGLE=80   # マットキャップでかげと質感・スムーズシェード80度（持ち主がきめた）
+MATCAP='clay';SMANGLE=80;PARALLEL=True   # 遠近をかけずに平行に写す（見おろし42度はそのまま。持ち主がきめた）・ マットキャップでかげと質感・スムーズシェード80度（持ち主がきめた）

@@ -6,4 +6,4 @@ VIEWS=[('g_k_screen',0),('g_k_screen>1',1),('g_k_screen>2',2),('g_k_screen>3',3)
 def PARTS():
     p=P('g_k_screen','model',('tripo/gf/g_k_screen.glb',1.0,0.5,0,1.3,0,0),(255,255,255),on=('ground',),note='地面におく');p.tex=False;p.uvtex='tripo/gf/tex.png'   # 色はトリポのテクスチャの絵（木目をはらない）
     return [p]
-MATCAP='clay';SMANGLE=80   # マットキャップでかげと質感・スムーズシェード80度（持ち主がきめた）
+MATCAP='clay';SMANGLE=80;PARALLEL=True   # 遠近をかけずに平行に写す（見おろし42度はそのまま。持ち主がきめた）・ マットキャップでかげと質感・スムーズシェード80度（持ち主がきめた）

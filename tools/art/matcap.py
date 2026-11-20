@@ -7,7 +7,7 @@ import os,numpy as np
 from PIL import Image
 import oblique3d as O
 HERE=os.path.dirname(os.path.abspath(__file__));TEX=os.path.join(HERE,'textures')
-R=256;STEPS=6;SAT=0.85;VAL=1.32;OLD=(16,6)   # OLD：輪郭線の色（もとの色の明るさをひく数・あざやかさをたす数。持ち主：輪郭線が暗すぎる）。 SAT・VAL：もとの色のあざやかさ・明るさにかける数（持ち主：明度・彩度を上げて）
+R=256;STEPS=6;SAT=0.7;VAL=1.42;OLD=(16,6)   # OLD：輪郭線の色（もとの色の明るさをひく数・あざやかさをたす数。持ち主：輪郭線が暗すぎる）。 SAT・VAL：もとの色のあざやかさ・明るさにかける数（持ち主：明度・彩度を上げて）
 KINDS={   # 名前：光の向き（左上・手前）・まわりの光・まわりのくらさ・つや（強さ・するどさ）・あたたかさ
     'clay':dict(light=(-0.55,-0.6,0.58),amb=0.80,rim=0.10,spec=(0.10,18),warm=0.0),   # ねんど・やきもののような、やわらかい質感
     'gloss':dict(light=(-0.55,-0.6,0.58),amb=0.58,rim=0.18,spec=(0.35,40),warm=0.02),  # つやのある質感（やきもの・ガラスのような物）
