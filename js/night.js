@@ -105,7 +105,7 @@ function nightVarPick(){/* 夕方、今夜の波が決まったあとに1回だ�
   const w=S.wave||[];if(S.herbD===d&&(!w.length||!w.some(t=>!EN[t].boss)||S.today==='odayaka'||S.rushOn||S.finalOn||S.trialOn)){S.herbD=null;S.herb=(S.herb||0)+1}/* とくべつな夜になったら、まよけのハーブをかえす */if(S.hornD===d){if(!w.length||w.some(t=>EN[t].boss)||S.today==='odayaka'||S.rushOn||S.finalOn||S.trialOn){S.hornD=null;S.horn=(S.horn||0)+1}return}/* 角笛をふいた夜は、霧・群れにしない。とくべつな夜になったら、角笛をかえす */if(!w.length||w.some(t=>EN[t].boss)||(S.nights||0)<4||d<5||S.today==='odayaka'||S.rushOn||S.finalOn||S.trialOn)return;
   if(typeof paceCalmNow==='function'&&paceCalmNow(d))return;/* きびしい日のあとは、おだやかに（pace.js） */const K=typeof paceSpiceNow==='function'&&paceSpiceNow()?PACEKIRI:.15,o=K-.15;/* おだやかな日がつづいたら、霧の夜25%（pace.js） */const p=Math.random(),seen=S.seenEn||{},k=p<K?'kiri':p<.20+o?(!(S.mureDay!=null&&d-S.mureDay<=7)?'mure':null):p<.25+o?(seen.trapper?'wana':null):p<.30+o?(seen.thief?'doro':null):p<.35+o?'ushio':null;if(!k)return;S.nightVar.k=k;if(k==='mure')S.mureDay=d;/* 群れの夜は5%、群れの夜のあと7日は群れにしない（S.mureDay）。ワナクイのうたげ・かげのどろぼう市・かげのうしおは5%ずつ（そのコワイノに会ってから） */toast({kiri:'今夜は霧が出そう',mure:'今夜は、「コワイノ」がむれで来そう',wana:'今夜は、ワナクイがあつまってきそう',doro:'今夜は、カゲドロボウがあつまってきそう',ushio:'今夜は、コカゲがつぎつぎにおしよせてきそう'}[k],'warn')}
 const nightVarNow=()=>{const v=S&&S.nightVar;if(!v||!v.k)return null;const h=hour(),d=dayNo();return v.d===d&&h>=20||v.d===d-1&&h<6?v.k:null};/* 今夜の変化（夕方20時から朝6時まで） */
-const HORNDESC='「コワイノ」のおとしもの。ふくと、今夜の「コワイノ」が1.5倍になる。';
+const HORNDESC='「コワイノ」のおとしもの。ふくと、今夜のふつうの「コワイノ」が1.5倍になる。';
 const hornNow=()=>{if(!S||S.hornD==null)return false;const h=hour(),d=dayNo();return S.hornD===d&&h>=6||S.hornD===d-1&&h<6};/* 角笛の夜（ふいてから朝6時まで） */
 function hornOK(){/* 角笛をふけるのは、草原の昼（6時から20時、今夜のコワイノが決まる前）、1日に1回、とくべつな夜でないとき */if(WD!==0||!S.enemyOn||!(S.horn>0))return false;const h=hour(),d=dayNo();if(h<6||h>=20||S.lastWarn===d||S.hornD===d)return false;
   if(S.finalNight||S.trial||S.today==='odayaka'||S.rushOn||S.finalOn||S.trialOn)return false;
@@ -127,10 +127,10 @@ function spawnWave(list){SKIP=false;/* コワイノが来たら、早送りを�
   S.nightHurt=0;S.nightHad=true;S.ns={n:list.length,kill:0,lost:[],hurt:0,broke:0,boss:list.includes('boss')||list.includes('boss2')||list.includes('hino')||list.includes('yama')?1:0,trial:!!S.trialOn,final:!!S.finalOn,rush:S.rushOn?S.rushN:0};if(nsc)S.ns.n+=nsc;if(wv){const nv=S.flags.nv||(S.flags.nv={});nv.wave=1;if(nsc)nv.scout=1;if(nightSideNow())nv.side=1}S.trialOn=false;S.finalOn=false;S.rushOn=false;
   if(S.ns.rush&&!WD&&S.res.some(r=>r.name===POKO))dialog([[POKO,S.ns.rush===1?'#alarm big|守り神さま、見て……！ 影が、あんなにたくさん……！ 御神木を守らなきゃ！':'#think|ゆうべより、もっと多い……！ みんな、もうひと晩、がんばろう！']]);
   else if(list.includes('yama'))dialog([[HOMURA,'守り神！ 火の山が、あばれてる……！'],[HOMURA,'「ヤマノオオカゲ」だ。温泉の熱をうばいに来るよ。'],[SHIZUKU,'温泉を、朝まで守りぬきましょう……！']],null,null,LEAD());
-  else if(list.includes('hino'))dialog(['火山のほうから、熱い風がふいてくる…！','「ヒノオオカゲ」が来るよ！ 熱の装置をねらってる！ みんなで追いはらって！'],null,null,LEAD());
-  else if(list.filter(t=>t==='ash').length>=6)dialog(['空から、灰がふってきた…！','ハイカゲがたくさん来るよ！ かまどやベンチをまもって！'],null,null,LEAD());
-  else if(list.includes('boss2'))dialog(WD===1?[[HOMURA,'守り神！ 山の上にのこってた影が、おりてくるよ…！'],[HOMURA,'今夜は「ヤマノオオカゲ」さ。みんな、気をつけな！']]:['守り神さま…！ いつもより、ずっと空気が重い…！','あれ……オオカゲより、ずっと大きい……！ みんな、家の中にかくれて！'],null,null,LEAD());
-  else if(list.includes('boss')&&!WD&&!S.flags.bossTold&&S.res.some(r=>r.name===POKO)){S.flags.bossTold=1;dialog([[POKO,'#worry|守り神さま…！ ……この感じ。空気が、ずっしり重い。'],[POKO,'#alarm big|「オオカゲ」……「コワイノ」があつまった大きな影が、来るんだ。'],[POKO,'#sigh|思い出すと、今でも足がすくむ……。'],[POKO,'#think|でも、もう、にげない。みんなで、朝まで守りきろう。']],null,null,LEAD())}
+  else if(list.includes('hino'))dialog(['火山のほうから、熱い風がふいてくる……！','「ヒノオオカゲ」が来るよ！ 熱の装置をねらってる！ みんなで追いはらって！'],null,null,LEAD());
+  else if(list.filter(t=>t==='ash').length>=6)dialog(['空から、灰がふってきた……！','ハイカゲがたくさん来るよ！ かまどやベンチをまもって！'],null,null,LEAD());
+  else if(list.includes('boss2'))dialog(WD===1?[[HOMURA,'守り神！ 山の上にのこってた影が、おりてくるよ……！'],[HOMURA,'今夜は「ヤマノオオカゲ」さ。みんな、気をつけな！']]:['守り神さま……！ いつもより、ずっと空気が重い……！','あれ……オオカゲより、ずっと大きい……！ みんな、家の中にかくれて！'],null,null,LEAD());
+  else if(list.includes('boss')&&!WD&&!S.flags.bossTold&&S.res.some(r=>r.name===POKO)){S.flags.bossTold=1;dialog([[POKO,'#worry|守り神さま……！ ……この感じ。空気が、ずっしり重い。'],[POKO,'#alarm big|「オオカゲ」……「コワイノ」があつまった大きな影が、来るんだ。'],[POKO,'#sigh|思い出すと、今でも足がすくむ……。'],[POKO,'#think|でも、もう、にげない。みんなで、朝まで守りきろう。']],null,null,LEAD())}
   /* 火山では、オオカゲが来ることは知らせない（草原で話したので、くりかえさない） *//* 草原は、はじめての夜のフタバの知らせだけ。2回目からは知らせない */
 }
 // 出現場所：マップの南のはし（いちばん下の行）から。水・障害物・明かりの中はさける
@@ -426,7 +426,7 @@ const BURN={dmg:3,iv:3,n:3};/* 延焼：3ごと（時計の2分）に3ダメー�
 const WSTOP=1.5,WSTOPA=.75;/* 水のせいれいが止める時間：1分＋攻撃力1につき30秒（時計の1分は1.5）。オオカゲなどは半分 */
 function waterStop(r,e){const v=WSTOP+Math.max(0,Math.round(rMul(r,'atk')*100))*WSTOPA;return EN[e.type].boss?v/2:v}
 const SORTIE={wood:{cd:5,rng:1.5},earth:{cd:10,rng:1.5},wind:{cd:5,rng:2.25},water:{stop:1,cd:5,rng:1.5}};/* 出撃した火のせいれいでない子の近接：間かく・とどくきょり。ダメージは、その子の攻撃力。水はダメージなしで止める */
-const SORTIETXT={wood:'',earth:'攻撃の速さ0.5倍',wind:'攻撃3・とどくきょり1.5倍',water:'ダメージなし。たたいた「コワイノ」は2分止まる。オオカゲなどは1分'};
+const SORTIETXT={wood:'',earth:'攻撃の速さ0.5倍',wind:'攻撃3・とどくきょり1.5倍',water:'ダメージなし。たたいた「コワイノ」は1分＋攻撃力1につき30秒止まる。オオカゲなどは半分'};
 const WPTXT={wood:'木の矢を放つ',earth:'威力1.5倍・うつ速さ0.5倍',wind:'射程1.5倍・威力0.5倍',water:'木の矢をつかわない。あたった「コワイノ」は1分＋攻撃力1につき30秒止まる。オオカゲなどは半分。ダメージなし',fire:'威力0.5倍・木の矢を1回に2本。あたった「コワイノ」は、2分ごとに3ダメージを3回'};
 const wpGuardOf=j=>S.res.find(q=>!q.hidden&&q.act&&q.act.type==='watchpost'&&q.act.stage==='do'&&(q.act.cl||0)>=1&&q.act.obj===j)||null;const wpGuardAt=(j,si)=>S.res.find(q=>!q.hidden&&q.act&&q.act.type==='watchpost'&&q.act.stage==='do'&&(q.act.cl||0)>=1&&q.act.obj===j&&(q.act.slot||0)===si)||null;/* その立つ所（0・1）にいる子 */
 const watchGuard=j=>S.res.some(q=>!q.hidden&&q.act&&q.act.type==='watchpost'&&q.act.stage==='do'&&(q.act.cl||0)>=1&&q.act.obj===j);/* 見張り台にせいれいが立っているか */

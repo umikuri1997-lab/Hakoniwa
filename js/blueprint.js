@@ -114,7 +114,7 @@ function bpFinish(j,r){/* finishBuild から：設計図の部品ができた */
   else{setBlock(p.id,j);if(p.t==='win')(S.win||(S.win={}))[j]=1}
   p.s=2;if(r){addSpiritXp(1,r);r.made=(r.made||0)+1}if(p.t!=='plant')burst(j,p.t==='furn'||p.t==='build'?'furn':'block');recount();bpAdvance(e);dirty=true}
 const BPDONE={/* できたときの、くれたせいれいのひとこと（同じ物をつづけない pickFresh） */
-  house:[[['#joy|わあ……！ ずっと、こんな家にすんでみたかったんだ。'],['#joy|守り神さま、ほんとうに、ありがとう！ 今夜から、ここでねむるね。']],[['#joy|えがいたとおりの家だ……！'],['#joy|守り神さま、ありがとう！ 大切にすむね。']],[['#joy|できた……！ 中に入ってみてもいい？'],['#joy|守り神さま、ありがとう。ここが、わたしのおうちだね。']]],
+  house:[[['#joy|わあ……！ ずっと、こんな家にすんでみたかったんだ。'],['#joy|守り神さま、ほんとうに、ありがとう！ 今夜から、ここでねむるね。']],[['#joy|えがいたとおりの家だ……！'],['#joy|守り神さま、ありがとう！ 大切にすむね。']],[['#joy|できた……！ 中に入ってみてもいい？'],['#joy|守り神さま、ありがとう。ここが、おうちになるんだね。']]],
   garden:[[['#joy|わあ……！ えがいたとおりの庭だ。'],['#joy|守り神さま、ありがとう！ ここで、のんびりしたいな。']],[['#joy|すてき……！ ずっと、ながめていたくなるね。'],['#joy|守り神さま、ありがとう！']],[['#joy|できた！ ここに来ると、ほっとするね。'],['#joy|守り神さま、ありがとう。みんなにも見せてあげよう。']]],
   farm:[[['#joy|できた！ これで、おいしいものが、たくさん育てられるね。'],['#joy|守り神さま、ありがとう！']],[['#joy|わあ……！ ここに、なにを育てようかな。'],['#joy|守り神さま、ありがとう！ たいせつに世話するね。']],[['#joy|えがいたとおりだ……！'],['#joy|守り神さま、ありがとう。みのるのが、たのしみだね。']]],
   play:[[['#joy|できた！ みんなで、ここで遊ぼうよ！'],['#joy|守り神さま、ありがとう！']],[['#joy|わあ……！ はやく遊んでみたいな。'],['#joy|守り神さま、ありがとう！ みんなを、よんでくるね。']],[['#joy|えがいたとおりの遊び場だ……！'],['#joy|守り神さま、ありがとう。たくさん遊ぶね。']]],
@@ -154,7 +154,7 @@ function bpGhostDraw(ctx,now){now=now||performance.now();const L=[];if(pending&&
   ctx.restore()}
 const BPTALKL={house:'こんな家に、すんでみたいなって',garden:'こんな庭があったら、すてきだなって',farm:'こんな畑があったら、いいなって',play:'こんな遊び場があったら、みんなで遊べるなって',guard:'こんなふうに守れたら、夜もこわくないなって'};
 function bpTalkGift(r){/* お話のあと：ときどき、えがいた設計図をくれる */if(Math.random()>=BPTALK)return;const d=callDay();if(S.bpTalkD!=null&&d-S.bpTalkD<BPTALKCD)return;const k=bpNext(null,r.elem);if(!k)return;S.bpTalkD=d;const id=r.id;
-  dialog([[r.name,'#think|ねえ、守り神さま……'+BPTALKL[BPS[k].cat]+'、ずっと考えてたんだ。'],[r.name,'#joy|えがいてみたの。よかったら、もらって！']],()=>{const q=S.res.find(x=>x.id===id);if(!(S.bpInv||[]).some(z=>z.k===k)&&!(S.bpGot||{})[k])bpGiveK(k,q?q.id:null)})}
+  dialog([[r.name,'#think|ねえ、守り神さま……'+BPTALKL[BPS[k].cat]+'、ずっと考えてたんだ。'],[r.name,'#joy|えがいてみたんだ。よかったら、もらって！']],()=>{const q=S.res.find(x=>x.id===id);if(!(S.bpInv||[]).some(z=>z.k===k)&&!(S.bpGot||{})[k])bpGiveK(k,q?q.id:null)})}
 
 /* ---------- 設計図の依頼（サブクエスト bpreq）：bphome のあと、朝に5%、せいれいが設計図をわたして「建ててほしい」とたのむ。建てたらクリア、ごほうびは設計図の rw ---------- */
 const BPREQP=.05;
@@ -166,7 +166,7 @@ SUBQ.push({k:'bpreq',
   get g(){const n=S&&S.bpReq&&S.bpReq.who,r=n&&S.res.find(q=>q.name===n);return r?r.elem:'earth'},get who(){return S&&S.bpReq?S.bpReq.who:''},
   get t(){const b=bpReqQ();return b?'「'+b.name+'」を建てよう':'設計図をたのまれた'},
   get how(){const b=bpReqQ();return '「おく」→「どうぐ」→「設計図」で「'+(b?b.name:'')+'」をえらび、建てたい場所の左上をタップ'},
-  get L(){const b=bpReqQ(),c=b?b.cat:'house';return [['K','#think|ねえ、守り神さま……'+BPTALKL[c]+'、ずっと考えてたんだ。'],['K','#joy|えがいてみたの。いっしょに建ててくれる？']]},
+  get L(){const b=bpReqQ(),c=b?b.cat:'house';return [['K','#think|ねえ、守り神さま……'+BPTALKL[c]+'、ずっと考えてたんだ。'],['K','#joy|えがいてみたんだ。いっしょに建ててくれる？']]},
   X:()=>{const b=bpReqQ();return pickFresh('bpdone:'+(b?b.cat:'house'),BPDONE[b?b.cat:'house']).map(l=>['K',l[0]])},
   get rw(){const b=bpReqQ();return b?b.rw:0},
   at:()=>!!S.bpReq&&!S.bpReq.done&&S.res.some(r=>!r.hidden&&r.name===S.bpReq.who),ok:()=>!!(S.bpReq&&S.bpReq.done),n:1,now:()=>S.bpReq&&S.bpReq.done?1:0,

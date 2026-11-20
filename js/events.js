@@ -226,7 +226,7 @@ function tokuiMig(s){if(s.flags.tokui1)return;s.flags.tokui1=1;for(const q of[..
 /* 豪華なイベント（grand）：1季節に1回、みんなが出る。かかる物は人数によらず決まった数（D.set：食料・木材・竹・草・花・作物）。 */
 const EVGRASS=()=>WD===1?'kuru':'shina';
 Object.assign(EVENTS,{
-  undo:{n:'村の運動会',grand:1,d:'かけっこ・つなひき・玉入れを、赤と白の組にわかれてする。',sea:2,at:9,dur:90,pt:300,per:0,set:{food:40},gain:{work:1,move:1,sta:1,atk:5},gainTxt:'はたらく速さ・移動速度・スタミナ+1・攻撃力+5（かった組は、はたらく速さ・移動速度・スタミナ+2・攻撃力+10）',talk:['#joy|がんばれー！','赤組、ファイト！','白組も、まけないよ！']},
+  undo:{n:'村の運動会',grand:1,d:'かけっこ・つなひき・玉入れを、赤と白の組にわかれてする。',sea:2,at:9,dur:90,pt:300,per:0,set:{food:40},gain:{work:1,move:1,sta:1,atk:5},gainTxt:'かった組　はたらく速さ・移動速度・スタミナ+2・攻撃力+10・まけた組　はたらく速さ・移動速度・スタミナ+1・攻撃力+5',talk:['#joy|がんばれー！','赤組、ファイト！','白組も、まけないよ！']},
   hana:{n:'花まつり',grand:1,stage:0,d:'花のアーチの下で、花かんむりをつけておどる。',sea:0,at:10,dur:60,pt:200,per:0,set:{flower:10},need:'flower30',gain:{sta:2},fun:40,talk:['#joy|花かんむり、にあう？','いいにおい……。','春って、すてきだね。']},
   lantern:{n:'ランタンとばしの夜',grand:1,d:'夜空に、みんなでランタンをとばす。',sea:3,at:20,late:1,dur:60,pt:250,per:0,set:{wood:30,grass:20},gain:{work:2},bond:10,talk:['ねがいごと、なににする？','#joy|とんでった！','空が、あかるくなったね。']},
   shukaku:{n:'しゅうかく祭',grand:1,d:'畑のみのりを集めて、みんなで大ごちそう。',sea:2,at:11,dur:60,pt:200,per:0,set:{crop:30},need:'farm10',gain:{cap:1,sta:1},talk:['#joy|ことしも、いっぱいとれたね！','おいしい！','畑さん、ありがとう。']},

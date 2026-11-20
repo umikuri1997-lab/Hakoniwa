@@ -25,7 +25,7 @@ const assert=require('node:assert/strict');
   const day=d=>`S.t=${'('+d+'-1)*1440+11*60'};S.lastMorning=${d};DLGGAP=0;`;
   const a=await J(`(()=>{S.quest=QUESTS.length-1;S.qTalked=false;S.qStory=null;S.cleared=true;S.clearDay=1;${day(2)}checkQuest();return JSON.stringify({daily:S.daily&&S.daily.k,all:dailyHere().map(g=>g.k),dlg:!$('#dialog').hidden,sea:seasonNow()})})()`);
   assert.ok(a.daily&&a.daily.length===2,'two daily goals');assert.ok(!a.all.includes('kill')&&!a.all.includes('bamboo'),'no foe/bamboo goals: '+a.all);assert.ok(a.dlg,'the spring request starts');assert.equal(a.sea,0);
-  await talk();
+  await talk();await run(`dailyCheck=()=>{}`);/* ここからは、季節の話のごほうびだけを数える */
   const b=await J(`JSON.stringify({a:S.fsea.a,q:$('#questTxt').textContent,on:evOn('hana'),pt:S.pt})`);
   assert.equal(b.a[0],1);assert.match(b.q,/花まつり/);assert.ok(b.on,'grass events open in free mode');
   /* イベントをおえる前は、お礼が出ない */
