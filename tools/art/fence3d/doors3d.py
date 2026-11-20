@@ -13,10 +13,12 @@
 #   石の塀のドア：石の柱 0.36角（石3だん＋かさ石）。とびら：上のまるい板戸（たて板・鉄の帯2本・輪の取っ手）。
 #   石の大門：石の柱 0.4角・高さ1.2、板戸2まい。
 #   御簾垣の戸：竹の柱（マスの中）、とびらは竹のわくに御簾（細い竹をよこにつむ）。
+#   白い塀のドア（風）：白い柱 0.18角・高さ1.02、上に水色の玉（たて置きはマスの中）。とびら：上のまるい白い板3まい・水色の横木・白い横木・取っ手。
+#   入場ゲート（風）：白い柱 0.22角・高さ1.6、水色の玉。上に白い横木（高さ1.42〜1.54）と、そこからつるした布の三角の旗5まい（うすい色）。とびら2まい（白い板・水色の横木）。
 import sys,os,math
 HERE=os.path.dirname(os.path.abspath(__file__));sys.path.insert(0,HERE)
 import fence3d as F
-from fence3d import Part,tube,FENCEC,NAIL,LOGC,IRON,STONE,ST,STC,CRM,CRMP
+from fence3d import Part,tube,FENCEC,NAIL,LOGC,IRON,STONE,ST,STC,CRM,CRMP,PARKW,PARKB
 import numpy as np
 from PIL import Image
 DOORW=(176,118,72);DOORD=(150,98,60)   # 石の塀のドア・石の大門の板戸の木の色
@@ -134,7 +136,38 @@ def misugate(v,n):
         for k in range(18):z=0.09+k*(H-0.16)/17;b.tube('crm','御簾',(u0+0.05,PW,z),(u1-0.05,PW,z),0.022,F.CRM,det=8)
         for bu in((u0+u1)/2,):b.box('crm','押縁',bu-0.02,PW+0.022,0.06,bu+0.02,PW+0.048,H-0.04,CRMP)
     leaf(b,rot,body);return b.P,(0,1)
-DOORS={'gate':(gate,True),'logdoor':(logdoor,True),'loggate':(loggate,False),'sdoor':(sdoor,True),'stonegate':(stonegate,False),'misugaki.gate':(misugate,False)}
+PFLAG=[(246,196,196),(250,226,170),(190,222,240),(206,232,196),(222,206,240)]   # 入場ゲートの旗の色（うすい赤・黄・水色・緑・むらさき）
+def parkboards(b,u0,u1,W0,W1,FR,top):
+    """白い塀のとびら：上のまるい白い板をすきまなくならべ、前に水色の横木と白い横木"""
+    k=max(2,round((u1-u0)/0.25));wd=(u1-u0-0.02)/k;w=wd/2-0.004
+    for i in range(k):
+        c=u0+0.01+wd/2+i*wd;b.prism('picket','板',[(c-w,0.04),(c+w,0.04),(c+w,top-0.08),(c+w*0.6,top-0.02),(c,top),(c-w*0.6,top-0.02),(c-w,top-0.08)],W0,W1,PARKW)
+    b.box('railh','横木',u0+0.01,FR,0.56,u1-0.01,FR+0.04,0.65,PARKB);b.box('railh','横木',u0+0.01,FR,0.12,u1-0.01,FR+0.04,0.20,PARKW)
+def parkpost(b,pu,PW,h,z1):
+    b.box('post','柱',pu-h,PW-h,0,pu+h,PW+h,z1,PARKW);x,y=b.xy(pu,PW);b.P.append(('cap',Part('柱の玉','ball',(x,y,z1+0.06,h*0.9,1.0),PARKB),None))
+def parkdoor(v,n):
+    b=B(v);W0,W1=(0.885,0.945) if not v else (0.45,0.51);PW=0.865 if not v else 0.5;FR=W1;h=0.09
+    posts=[0.0,1.0] if not v else [0.09,0.91]
+    for pu in posts:parkpost(b,pu,PW,h,1.02)
+    u0,u1=posts[0]+h,posts[1]-h;rot=b.hinge(u0,FR+0.04,ANG[n])
+    def body(b):
+        parkboards(b,u0,u1,W0,W1,FR,0.86)
+        b.box('iron','取っ手',u1-0.08,FR+0.04,0.40,u1-0.04,FR+0.07,0.48,(150,150,160))
+    leaf(b,rot,body);return b.P,((-0.2,1.2) if not v else (0,1))
+def parkgate(v,n):
+    b=B(0);PW=0.865;W0,W1=0.885,0.945;FR=W1;h=0.11
+    for pu in(0.0,2.0):parkpost(b,pu,PW,h,1.6)
+    b.box('railh','上の横木',-0.08,PW-0.06,1.42,2.08,PW+0.06,1.54,PARKW)
+    for i in range(5):   # 布の三角の旗（横木からつるす）
+        c=0.3+i*0.35;b.prism('flag','旗',[(c-0.1,1.42),(c+0.1,1.42),(c,1.24)],PW+0.07,PW+0.09,PFLAG[i])
+    for side in(0,1):
+        u0,u1=(h,1.0) if side==0 else (1.0,2-h);hu=u0 if side==0 else u1;rot=('rot',hu,FR+0.04,ANG[n] if side==0 else -ANG[n])
+        def body(b,u0=u0,u1=u1,side=side):
+            parkboards(b,u0+0.005,u1-0.005,W0,W1,FR,0.96)
+            hu2=u1-0.08 if side==0 else u0+0.04;b.box('iron','取っ手',hu2,FR+0.04,0.44,hu2+0.04,FR+0.07,0.52,(150,150,160))
+        leaf(b,rot,body)
+    return b.P,(-0.4,2.4)
+DOORS={'gate':(gate,True),'logdoor':(logdoor,True),'loggate':(loggate,False),'sdoor':(sdoor,True),'stonegate':(stonegate,False),'misugaki.gate':(misugate,False),'parkdoor':(parkdoor,True),'parkgate':(parkgate,False)}
 def build_door(iid):
     fn,hasv=DOORS[iid];out={}
     for o in(['h','v'] if hasv else ['h']):
@@ -154,5 +187,5 @@ if __name__=='__main__':
         head,CC=CHP.load_imgs();names=[]
         for iid,res in R.items():
             for k,(im,ax,ay) in res.items():CC[k]={'g':64,'ax':ax,'ay':ay,'w':im.width,'h':im.height,'f':[im]};names.append(k)
-            if iid+'#h0' in res and iid in CC:im,ax,ay=res[iid+'#h0'];CC[iid]={'g':64,'ax':ax,'ay':ay,'w':im.width,'h':im.height,'f':[im]};names.append(iid)
+            if iid+'#h0' in res and (iid in CC or iid in('parkdoor','parkgate')):im,ax,ay=res[iid+'#h0'];CC[iid]={'g':64,'ax':ax,'ay':ay,'w':im.width,'h':im.height,'f':[im]};names.append(iid)
         CHP.pack_imgs(head,CC);open(os.path.join(F.ROOT,'.chips_changed'),'a').write('\n'+'\n'.join(names));print('チップに入れた',len(names))
