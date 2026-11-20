@@ -32,6 +32,7 @@ def fsofa():
     # デザインでは、わくはクッションのすぐ上で、まん中にほのおのかざり。クッションの上（T0）からかざりの根もと（T1）までを TOPK にちぢめ、かざりはそのまま下へうつす
     y=v[:,1];h2=y.max();T0,T1,TOPK=0.56*h2,0.86*h2,0.35
     v[:,1]=np.where(y<=T0,y,np.where(y<=T1,T0+(y-T0)*TOPK,y-(T1-T0)*(1-TOPK)))
+    v[:,0]*=1.5   # はば1.5倍（持ち主）
     m.vertices=v;save('g_f_sofa',m)
 def screen(n,ky=1.0):
     m=load(n);v=m.vertices;v[:,2]*=0.35;v[:,1]*=ky;m.vertices=v;save(n,m)   # 0.15 だと、横から見たとき紙のようにうすくなる。ky：高さ（持ち主：風のびょうぶは低く。設計図の SIZE も同じだけ低くする）
