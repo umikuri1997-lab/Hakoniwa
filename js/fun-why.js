@@ -26,7 +26,7 @@ function funPop(r){if(!r)return;const P=pxPop('たのしさのわけ'),R=el('<di
   const hd=t=>{const d=el('<div class="funHd"></div>');d.textContent=t;R.appendChild(d)};
   hd('いま');{const K=funDecayK(r);row('時間でへる','－'+f1(FUNPH*K)+'／1時間');for(const[n,m]of funDecayList(r))row(n,'×'+f1(m),'sub')}
   {const ev=funEnvNow(r);if(ev>0)row('まわりのけしき','+'+f1(ev*.004*FUNHOUR)+'／1時間')}
-  hd('きょう（朝6時から）');const fd=funDay(r),ks=Object.keys(fd.k).map(k=>[k,Math.round(fd.k[k])]).filter(x=>x[1]).sort((a,b)=>Math.abs(b[1])-Math.abs(a[1]));let sum=0;
+  hd('きょう');const fd=funDay(r),ks=Object.keys(fd.k).map(k=>[k,Math.round(fd.k[k])]).filter(x=>x[1]).sort((a,b)=>Math.abs(b[1])-Math.abs(a[1]));let sum=0;
   for(const[k,v]of ks){row(FUNW[k]||k,sg(v));sum+=v}
   {const o=Math.round(r.fun-fd.f0)-sum;if(o)row('そのほか',sg(o))}
   if(!ks.length&&Math.round(r.fun-fd.f0)===0)row('まだ、かわっていない','');
