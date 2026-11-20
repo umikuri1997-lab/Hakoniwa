@@ -22,7 +22,7 @@ function dyText(t,v){const n=t==='build'?(BL[v]?BL[v].name+'を建てた':''):t=
 /* 昼のようす（photo.js の phTick から毎コマ）：その日の天気・できごとの日を1回だけおぼえる */
 function dyNoon(h){if(h<9||h>=18)return;const D=dyCur();if(D&&D.wx==null)D.wx=dyWx()}
 function dyWx(){return typeof stormNow==='function'&&stormNow()?'storm':S.today&&DYOPEN[S.today]?S.today:festOn()?'fest':snowNow()?'snow':S.rain?'rain':rainbowToday()?'rainbow':'sun'+seasonNow()}
-const DYWRITER=()=>WD===1?HOMURA:POKO;/* ひとことを書くせいれい：章のはじめからいる子 */
+const DYWRITER=()=>WD===1?HOMURA:WD===YAMI?TOMORI:POKO;/* ひとことを書くせいれい：章のはじめからいる子 */
 const dyWriter=()=>{if(!S)return null;const n=DYWRITER();return S.res.find(r=>r.name===n)||null};
 /* 日記の文が、書く物に合うか（dyFit）：「なでた」「さわった」「すわった」「におい」「どっしり」「ぴかぴか」「食べる」「土」などの文は、そうできる物のときだけ。
    @N の名前から物をさがし（dyIdOf）、物のしゅるい（dyTr）と、文のことば（DYRULE：[ことば, だめなしゅるい, いるしゅるい]）でたしかめる */

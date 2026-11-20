@@ -22,7 +22,7 @@ function stageInfo(w){
 }
 function juiceMig(d){/* 焼きりんご・焼きベリーは、りんごジュース・ベリージュース（調理台）にかわった：古いセーブの名前をおきかえる */if(!d||d.flags&&d.flags.juice1)return d;let t=JSON.stringify(d);if(/yakiapple|yakiberry/.test(t))d=JSON.parse(t.replace(/yakiapple/g,'applejuice').replace(/yakiberry/g,'berryjuice'));(d.flags||(d.flags={})).juice1=1;for(const q in d.ovenSet||{}){const R=ALLRECIPES.find(x=>x.out===d.ovenSet[q]);if(!R||dishSt(R)!==d.obj[q])delete d.ovenSet[q]}for(const r of d.res||[])if(r.cing){const R=ALLRECIPES.find(x=>x.out===r.cing.rec);if(R&&R.el!==r.elem){const nd=R.out==='bread'?{mugi:2}:R.need;/* このころのパンは、こむぎ2こ */for(const k in nd)d.fs[k]=(d.fs[k]||0)+nd[k];r.cing=null}}return d}
 function loadStage(w){if(LIVE[w]&&!LIVE[w].summary)return LIVE[w];return LIVE[w]=load(w)}
-function refreshStageInfo(){for(const w of[0,1,FREE])if(!LIVE[w]||LIVE[w].summary)LIVE[w]=stageInfo(w)}
+function refreshStageInfo(){for(const w of[0,1,YAMI,FREE])if(!LIVE[w]||LIVE[w].summary)LIVE[w]=stageInfo(w)}
 /* ステージごとのセーブ */
 /* ステージは属性の数だけ（木・火・水・土・風）と、さいごの庭 */
 function freeCard(list){if(!(LIVE[0]&&LIVE[0].cleared))return;let told=false;try{told=KV.getItem('hakoniwa-freeTold')==='1'}catch(e){}if(!told){try{KV.setItem('hakoniwa-freeTold','1')}catch(e){}setTimeout(()=>toast('フリーモードがひらいた！','good'),400)}
@@ -65,11 +65,11 @@ function thumb(cv2,k,open,hide){
     PXSPIRIT(c,p[1],x-el,y-hop,1);c.fillStyle='rgba(40,60,30,.25)';c.fillRect(x+2,y+11,6,1)});
 }
 function lastFirst(list){/* さいごにあそんだステージを、いちばん上に（のこりは、もとのならび） */
-  const top=[0,1,FREE].map(w=>[w,LIVE[w]&&LIVE[w].introSeen?coverLast(w):0]).filter(a=>a[1]>0&&list.querySelector('.wcard[data-k="'+a[0]+'"]')).sort((a,b)=>b[1]-a[1])[0];if(!top)return;
+  const top=[0,1,YAMI,FREE].map(w=>[w,LIVE[w]&&LIVE[w].introSeen?coverLast(w):0]).filter(a=>a[1]>0&&list.querySelector('.wcard[data-k="'+a[0]+'"]')).sort((a,b)=>b[1]-a[1])[0];if(!top)return;
   const card=list.querySelector('.wcard[data-k="'+top[0]+'"]');if(card===list.firstElementChild)return;
   const pv=card.previousElementSibling,nx=card.nextElementSibling;if(pv&&pv.classList.contains('wlink'))pv.remove();else if(nx&&nx.classList.contains('wlink'))nx.remove();/* 道の線は、となりのステージどうしでつなぎなおす */
   card.classList.add('wtop');list.insertBefore(card,list.firstElementChild)}
-const APP_VER=1992;/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER=1993;/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
@@ -77,23 +77,25 @@ function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   WORLDS.forEach((wd,k)=>{if(k===FREE)return;
     if(k)list.appendChild(el('<div class="wlink"></div>'));
     let w2o=false;try{w2o=KV.getItem('hakoniwa-w2open')==='1'}catch(e){}
-    const L=LIVE[k]||null,open=k===0||(k===1&&!!((LIVE[0]&&LIVE[0].cleared)||L||w2o));
+    let w6o=false;try{w6o=KV.getItem('hakoniwa-w6open')==='1'}catch(e){}
+    const L=LIVE[k]||null,play=k<=1||k===YAMI,open=k===0||(k===1&&!!((LIVE[0]&&LIVE[0].cleared)||L||w2o))||(k===YAMI&&w6o);/* 闇のステージ：水・土・風ができるまでは、ためす入り口（とじたカードを5回タップ）だけ */
     const card=el(`<div class="wcard${open?' open':' lock'}"><canvas width="760" height="280"></canvas><div class="wb"><span class="wn"></span><h3></h3><p></p><div class="wbtns"></div></div></div>`);
     const hide=!open&&!(k===2&&LIVE[1]&&LIVE[1].cleared);/* まだひらいていないステージは、名前も絵も見せない */
     if(hide)card.querySelector('.wn').innerHTML=pxi('lock','wlk')+'WORLD '+(k+1);else card.querySelector('.wn').textContent=wd.sub;card.querySelector('h3').textContent=hide?'？？？':wd.name;
     let info=wd.desc;
-    if(k<=1&&L&&L.introSeen)info=(L.vname?L.vname+'村・':'')+(L.summary?'':'せいれい '+L.res.length+'人・')+'村レベル '+L.lv+(L.cleared?'・ヌシ様が帰ってきた！':'');
+    if(play&&L&&L.introSeen)info=(L.vname?L.vname+'村・':'')+(L.summary?'':'せいれい '+L.res.length+'人・')+'村レベル '+L.lv+(L.cleared?'・ヌシ様が帰ってきた！':'');
     else if(k===1&&!open)info='はじまりの草原でヌシ様をむかえると、ひらきます。';
     if(k===2)info=LIVE[1]&&LIVE[1].cleared?'道がひらいた！ ……けれど、まだ準備中。':'まえの土地でヌシ様をむかえると、ひらきます。';
-    if(k>=3)info=k===5?'？？？':'まえの土地でヌシ様をむかえると、ひらきます。';
+    if(k>=3&&!(open&&play))info=k===5?'？？？':'まえの土地でヌシ様をむかえると、ひらきます。';
     card.querySelector('p').textContent=info;
     const bt=card.querySelector('.wbtns');
-    if(k<=1&&open){
+    if(play&&open){
       if(L&&L.introSeen){const c=el('<button class="btn pri">つづきから</button>');c.onclick=()=>{sfx('tap');$('#maps').hidden=true;continueGame(L)};bt.appendChild(c);
         const n=el('<button class="btn" data-hold>はじめから</button>');n.onclick=()=>{if(n._held){$('#maps').hidden=true;newGame(k)}};/* データがきえるので、おしつづけて決める */bt.appendChild(n)}
       else{const n=el('<button class="btn pri">あそぶ</button>');n.onclick=()=>{sfx('tap');$('#maps').hidden=true;newGame(k)};bt.appendChild(n)}
     }
     if(k===1&&!open){let n=0;card.onclick=()=>{if(++n>=5){try{KV.setItem('hakoniwa-w2open','1')}catch(e){}sfx('arrive');showMaps()}}}/* 確認用：とじたWORLD 2を5回タップでひらく */
+    if(k===YAMI&&!open){let n=0;card.onclick=()=>{if(++n>=5){try{KV.setItem('hakoniwa-w6open','1')}catch(e){}sfx('arrive');showMaps()}}}/* 確認用：とじたWORLD 6を5回タップでひらく */
     card.dataset.k=k;list.appendChild(card);thumb(card.querySelector('canvas'),k,open,hide);
   });
   lastFirst(list);
@@ -103,7 +105,7 @@ const dayNoOf=s=>Math.floor((s.t-(s.hold||0))/1440)+1;
 $('#mSnd').onclick=()=>{audioInit();setSnd('bgm',!SND.bgm);showMaps()};$('#mSfx').onclick=()=>{audioInit();setSnd('sfx',!SND.sfx);showMaps()};
 $('#mBack').onclick=()=>{$('#maps').hidden=true;$('#title').hidden=false;titleCont()};
 $('#tStart').onclick=()=>{audioInit();curSong=wantSong='opening';step=0;nextT=AC?AC.currentTime+.15:0;sfx('furn');const t0=Date.now(),go=()=>{if(KV.ready()||Date.now()-t0>5000)showMaps();else setTimeout(go,150)};if(!KV.ready())toast('セーブを読みこみ中…');go()};/* クラウドのセーブを待ってから、土地をえらぶ */
-function lastPlayed(){/* さいごにあそんだステージ（なければ null） */refreshStageInfo();const top=[0,1,FREE].map(w=>[w,LIVE[w]&&LIVE[w].introSeen?coverLast(w):0]).filter(a=>a[1]>0).sort((a,b)=>b[1]-a[1])[0];return top?top[0]:null}
+function lastPlayed(){/* さいごにあそんだステージ（なければ null） */refreshStageInfo();const top=[0,1,YAMI,FREE].map(w=>[w,LIVE[w]&&LIVE[w].introSeen?coverLast(w):0]).filter(a=>a[1]>0).sort((a,b)=>b[1]-a[1])[0];return top?top[0]:null}
 function titleCont(){/* タイトルの「つづきから」：前にあそんだステージがあるときだけ出す */const t0=Date.now(),go=()=>{if(!KV.ready()&&Date.now()-t0<5000)return setTimeout(go,150);let w=null;try{w=lastPlayed()}catch(e){}const c=$('#tCont'),on=w!=null;if(c.hidden===on){c.hidden=!on;$('#tStart').classList.toggle('pri',!on);window.dispatchEvent(new Event('resize'))}};go()}
 $('#tCont').onclick=()=>{audioInit();sfx('tap');const w=lastPlayed();if(w==null)return titleCont();const L=loadStage(w);if(!L)return titleCont();continueGame(L)};/* 前にあそんだマップを、そのまま開く */
 titleCont();

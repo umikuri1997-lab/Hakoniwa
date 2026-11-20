@@ -1,6 +1,6 @@
 'use strict';
 
-function darkness(){const h=hour();if(h>=7&&h<17)return 0;const mk=typeof moonOf==='function'?moonOf(h>=17?dayNo():dayNo()-1):null,M=mk?MOONDK[mk]:.66;/* 夜の暗さ：ふだん .66・満月 .54・新月 .78 */if(h>=17&&h<20.5)return (h-17)/3.5*M;if(h>=20.5||h<4.5)return M;return M*(1-(h-4.5)/2.5)}
+function darkness(){const h=hour();if(WD===YAMI)return yamiDark(h);/* 闇のステージは、ずっと夜 */if(h>=7&&h<17)return 0;const mk=typeof moonOf==='function'?moonOf(h>=17?dayNo():dayNo()-1):null,M=mk?MOONDK[mk]:.66;/* 夜の暗さ：ふだん .66・満月 .54・新月 .78 */if(h>=17&&h<20.5)return (h-17)/3.5*M;if(h>=20.5||h<4.5)return M;return M*(1-(h-4.5)/2.5)}
 const motes=Array.from({length:26},()=>({x:Math.random(),y:Math.random(),p:Math.random()*6,s:rnd(.4,1)}));
 let selRect=null;
 
@@ -14,7 +14,9 @@ function drawMark(el,px,by,now){
   else if(el==='wind'){c.strokeStyle='#3fc0a0';c.lineWidth=1.8;c.beginPath();c.arc(px,by-13,3.5,Math.PI*.2+now/400,Math.PI*1.7+now/400);c.stroke()}
 }
 /* ---------- 精霊の絵 ---------- */
+const SPART={light:'water'};function spArt(el){return SPART[el]||el}/* 絵の形をかりる属性（光は、かりの絵：水の形を色がえ） */
 const SPC={
+  light:{hood:'#f4d262',cheek:'#fbe9b4',dark:'#d9a938',eye:'#7a5a1c',hand:'#fff1cf',line:'#f3e2bd'},
   earth:{hood:'#8f6a50',cheek:'#c6b1a0',dark:'#6f4f3a',eye:'#5e3d2a',hand:'#e3c3a3',line:'#ead6bd',leaf:'#5e8f43'},
   water:{hood:'#78c3fb',cheek:'#badef5',dark:'#4fa6e8',eye:'#1d4f7c',hand:'#f3dfc6',line:'#ecd9c0'},
   fire:{hood:'#e8604f',cheek:'#f2ac9f',dark:'#c94a3c',eye:'#8f3a22',hand:'#ffc887',line:'#f0d4ae'},
@@ -167,12 +169,12 @@ function spProp(c,prop,sx,a,t,o){/* せいれいが手に持つ道具 */c.save()
 /* 3Dから写した動き（js/spirit-motions.js の SPM。tools/art/spirit3d/build.py が作る）。
    動きの絵は、はじめて使うときに読みこみ、SPMIDLE ミリ秒使わなければ手ばなす。せいれいの色にかえたコマは、ぜんぶで SPMCAP まで持つ（古い物からすてる） */
 const SPMI={},SPMC=new Map(),SPMCAP=500,SPMIDLE=60000;let SPMT=0;
-function spmImg(nm,el){const k=SPM[nm].s[el];let g=SPMI[k];if(!g){g=SPMI[k]={img:new Image(),ok:0,u:0};g.img.onload=()=>{g.ok=1;dirty=true};g.img.src=k}/* 同じ形の動き（しまう・とる など）は、同じ絵のファイル */g.u=performance.now();return g.ok?g.img:null}
+function spmImg(nm,el){const k=SPM[nm].s[spArt(el)];let g=SPMI[k];if(!g){g=SPMI[k]={img:new Image(),ok:0,u:0};g.img.onload=()=>{g.ok=1;dirty=true};g.img.src=k}/* 同じ形の動き（しまう・とる など）は、同じ絵のファイル */g.u=performance.now();return g.ok?g.img:null}
 function spmFree(now){if(now-SPMT<5000)return;SPMT=now;for(const k in SPMI){const g=SPMI[k];if(now-g.u>SPMIDLE){g.img.src='';delete SPMI[k];for(const[c0,cv]of SPMC)if(c0.startsWith(k+'|')){cv.width=cv.height=0;SPMC.delete(c0)}}}}
 function spmCell(nm,el,vr,dir,i){/* せいれいの色にした1コマ（色のかえ方は spDot と同じ。色をかえないときは、もとの絵の場所）。dir 3〜5 は、目の上にかさねる絵（正面・横・うしろ。G[5] の高さ） */
-  const m=SPM[nm],G=m.g[el];if(!G)return null;const im=spmImg(nm,el);if(!im)return null;const ov=dir>2,H=ov?G[5]:G[1],sx=i*G[0],sy=ov?G[1]*3+(dir-3)*H:dir*G[1],A=SPC[el],B=spcVar(el,vr);
+  const m=SPM[nm],ae=spArt(el),G=m.g[ae];if(!G)return null;const im=spmImg(nm,el);if(!im)return null;const ov=dir>2,H=ov?G[5]:G[1],sx=i*G[0],sy=ov?G[1]*3+(dir-3)*H:dir*G[1],A=SPC[ae],B=spcVar(el,vr);
   if(A===B)return[im,sx,sy];
-  const k=m.s[el]+'|'+(vr&&vr.h||0)+'_'+(vr&&vr.l||0)+'|'+dir+'|'+i;let cv=SPMC.get(k);
+  const k=m.s[ae]+'|'+(ae!==el?el:'')+(vr&&vr.h||0)+'_'+(vr&&vr.l||0)+'|'+dir+'|'+i;let cv=SPMC.get(k);
   if(cv){SPMC.delete(k);SPMC.set(k,cv);return[cv,0,0]}
   cv=document.createElement('canvas');cv.width=G[0];cv.height=H;const g=cv.getContext('2d');g.drawImage(im,sx,sy,G[0],H,0,0,G[0],H);
   const d=g.getImageData(0,0,G[0],H),p=d.data,M={};for(const r in A)if(B[r])M[A[r].toLowerCase()]=B[r];
@@ -221,9 +223,9 @@ function drawMitt(c,x,y,D,col,ol){const X=Math.round(x/D)-2,Y=Math.round(y/D)-2;
   c.fillStyle=col;for(let j=0;j<4;j++)for(let i=0;i<4;i++)if(MITT[j][i]==='#')c.fillRect((X+i)*D,(Y+j)*D,D,D)}
 const WHAND={cookprep:{s:30,dy:-6},cookplate:{s:28,at:'tip',dy:-8},cookfry:{s:22,at:'tip',dy:-6},raise:{s:36,dy:0}};/* 手に持つ物の大きさ・場所（at:'tip' は道具の先。raise は頭の上） */
 function spmDraw(c,el,x,y,s,f,o,nm,t,back,tr,spr,D){/* 3Dの動きの1コマを描いて、目・ほっぺ・まつげをかさね、その上に、ずきん・顔の手前にある、うで・手・道具（G[4]・G[5]）をかさねる */
-  const m=SPM[nm],G=m.g[el];if(!G)return false;const dir=back?2:tr?1:0,ph=m.r==='ph'?(o.ph==null?0:o.ph):((t*m.r)%1+1)%1,i=Math.floor(ph*m.n)%m.n,cell=spmCell(nm,el,o.vr,dir,i);if(!cell)return false;
+  const m=SPM[nm],G=m.g[spArt(el)];if(!G)return false;const dir=back?2:tr?1:0,ph=m.r==='ph'?(o.ph==null?0:o.ph):((t*m.r)%1+1)%1,i=Math.floor(ph*m.n)%m.n,cell=spmCell(nm,el,o.vr,dir,i);if(!cell)return false;
   const fl=nm==='fish'&&o.fishTo?m.h[dir][i]:null;if(fl&&fl.length>4&&dir===2){const tx=x+fl[4]*D*s*f;drawFishLine(c,tx,y+fl[5]*D*s,tx+3*Math.sign(tx-x),o.fishTo[1]-.3*TS,t)}/* うしろ向き（上の水）：糸とうきは体より奥。うきは頭にかくれないよう、竿の先の側 */
-  const vr=o.vr,e=m.e[el][dir][i];c.save();c.translate(x,y);c.scale(s*f,s);const sm=c.imageSmoothingEnabled;c.imageSmoothingEnabled=false;
+  const vr=o.vr,e=m.e[spArt(el)][dir][i];c.save();c.translate(x,y);c.scale(s*f,s);const sm=c.imageSmoothingEnabled;c.imageSmoothingEnabled=false;
   const cwx=((tr?-4:0)+e[0])*D,cwy=((CROWNY[el]||-66)+e[1])*D;if(o.crown&&e[2]<2)drawCrown(c,cwx,cwy,D,null,0,0,'b');/* 花かんむりの奥の半分は、頭より先（頭にかくれる） */
   c.drawImage(cell[0],cell[1],cell[2],G[0],G[1],G[2]*D,G[3]*D,G[0]*D,G[1]*D);
   if(e[2]<2){const S2=e[2]===1?'S':'',md=o.mood==='cry'?'teary':o.mood||'',fm=o.blink&&!md?'shut':md==='smile'||md==='joy'||md==='eat'?'hap':['teary','tear','shock','strain','sad','brave','tired','hungry'].includes(md)?md:'n',ex=e[0]*D,ey=e[1]*D+(el==='wind'?-3*D:0);
@@ -233,7 +235,7 @@ function spmDraw(c,el,x,y,s,f,o,nm,t,back,tr,spr,D){/* 3Dの動きの1コマを�
   const h=m.h[dir][i];/* 手前の手・奥の手・道具の先（チップのドット） */
   if(o.handItem&&!o.crownHand&&dir!==2){const hx=(h[0]+h[2])/2*D,hy=(h[1]+h[3])/2*D;drawHandItem(c,hx+(dir===1&&nm==='offer2'?6*D:0),hy-2*D,D,o.handItem)}/* 手に持つ小物：両手のあいだ（さしだすときは前へ） */
   if(o.crownHand){const hx=(h[0]+h[2])/2*D,hy=(h[1]+h[3])/2*D;if(nm==='crownput'&&dir===1)drawCrown(c,hx+14*D,hy-6*D,D,o.crownN,8,3);else drawCrown(c,hx,hy-2*D,D,o.crownN,8,3)}/* 手に持つ花かんむり：両手のあいだ（のせるときは、前へさしだした所） */
-  if(o.food&&dir!==2&&WHAND[nm]){const ei=emoImg(o.food);if(ei){const W0=WHAND[nm],k0=W0.s/Math.max(ei.width,ei.height),ih=ei.height*k0,iw=ei.width*k0;/* 長い辺を W0.s に */let hx,hy;if(W0.at==='tip'&&h.length>4){hx=h[4]*D;hy=h[5]*D}else{hx=(h[0]+h[2])/2*D;hy=(h[1]+h[3])/2*D}hy+=W0.dy;if(nm==='raise'){const e0=m.e[el][dir][i];hx=e0[0]*D;hy=((CROWNY[el]||-66)+e0[1])*D-ih/2-10*D}/* かかげる物は、頭のてっぺん（花かんむりの所）の上 */if(nm==='cookfry'){const u=((t*m.r)%1+1)%1,k=u>.44&&u<.66?Math.sin(Math.PI*(u-.44)/.22):0;hy-=k*26}/* フライパン：ひょいっと上へとんで、もどる */c.save();if(f<0)c.scale(-1,1);c.drawImage(ei,(f<0?-hx:hx)-iw/2,hy-ih/2,iw,ih);c.restore()}}/* 料理・もの作り：材料（両手のあいだ）・フライパンとお皿の上・かかげる物（頭の上） */
+  if(o.food&&dir!==2&&WHAND[nm]){const ei=emoImg(o.food);if(ei){const W0=WHAND[nm],k0=W0.s/Math.max(ei.width,ei.height),ih=ei.height*k0,iw=ei.width*k0;/* 長い辺を W0.s に */let hx,hy;if(W0.at==='tip'&&h.length>4){hx=h[4]*D;hy=h[5]*D}else{hx=(h[0]+h[2])/2*D;hy=(h[1]+h[3])/2*D}hy+=W0.dy;if(nm==='raise'){const e0=m.e[spArt(el)][dir][i];hx=e0[0]*D;hy=((CROWNY[el]||-66)+e0[1])*D-ih/2-10*D}/* かかげる物は、頭のてっぺん（花かんむりの所）の上 */if(nm==='cookfry'){const u=((t*m.r)%1+1)%1,k=u>.44&&u<.66?Math.sin(Math.PI*(u-.44)/.22):0;hy-=k*26}/* フライパン：ひょいっと上へとんで、もどる */c.save();if(f<0)c.scale(-1,1);c.drawImage(ei,(f<0?-hx:hx)-iw/2,hy-ih/2,iw,ih);c.restore()}}/* 料理・もの作り：材料（両手のあいだ）・フライパンとお皿の上・かかげる物（頭の上） */
   if((nm==='eat'||nm==='hold'||/^eat_/.test(nm))&&o.food&&dir!==2){const ei=emoImg(o.food);if(ei){/* 食べ物は手で持つ：食べ物を描いてから、持っている手（ドットの手）を上にかさねる。くだものは手前の手・料理は奥の手（器）・ほかは両手のあいだ */
     const one=nm==='eat_fruit'?0:nm==='eat_meal'?2:-1,ih=nm==='eat_fruit'?28:nm==='eat_meal'?30:32,iw=ih*ei.width/ei.height,hx=(one>=0?h[one]:(h[0]+h[2])/2)*D,hy=(one>=0?h[one+1]:(h[1]+h[3])/2)*D-(one>=0?ih*.32:4);
     c.save();if(f<0)c.scale(-1,1);c.drawImage(ei,(f<0?-hx:hx)-iw/2,hy-ih/2,iw,ih);c.restore();
@@ -251,14 +253,14 @@ function drawFishLine(c,tx,ty,wx,wy,t){/* 糸・波の輪・うき（うきと�
 const SPDOT={},SPDOK={};
 function spDot(key,el,vr){/* 絵の色を、その子の色にかえる（もとの色：共通の絵は木、ほかはその属性） */
   const ch=window.CHIPS&&CHIPS[key];if(!ch)return null;const im=chipImgs(ch,key)[0];if(!im.ok)return null;
-  const se=key.startsWith('sp:')?'wood':el,k=key+'|'+el+'|'+(vr&&vr.h||0)+'_'+(vr&&vr.l||0);if(SPDOT[k])return SPDOT[k];
+  const se=key.startsWith('sp:')?'wood':spArt(el),k=key+'|'+el+'|'+(vr&&vr.h||0)+'_'+(vr&&vr.l||0);if(SPDOT[k])return SPDOT[k];
   const A=SPC[se],B=spcVar(el,vr);if(A===B)return SPDOT[k]=im;
   const cv=document.createElement('canvas');cv.width=ch.w;cv.height=ch.h;const g=cv.getContext('2d');g.drawImage(im,0,0);
   const d=g.getImageData(0,0,ch.w,ch.h),p=d.data,M={};for(const r in A)if(B[r])M[A[r].toLowerCase()]=B[r];
   for(let i=0;i<p.length;i+=4){if(!p[i+3])continue;const h='#'+((1<<24)|(p[i]<<16)|(p[i+1]<<8)|p[i+2]).toString(16).slice(1),to=M[h];if(to){p[i]=parseInt(to.slice(1,3),16);p[i+1]=parseInt(to.slice(3,5),16);p[i+2]=parseInt(to.slice(5,7),16)}}
   g.putImageData(d,0,0);return SPDOT[k]=cv}
 function spDotReady(el){if(SPDOK[el])return true;if(!window.CHIPS)return false;
-  for(const k in CHIPS)if((k.startsWith('sp:')||k.startsWith('sp_'+el+':'))&&!chipImgs(CHIPS[k],k)[0].ok)return false;return SPDOK[el]=true}
+  for(const k in CHIPS)if((k.startsWith('sp:')||k.startsWith('sp_'+spArt(el)+':'))&&!chipImgs(CHIPS[k],k)[0].ok)return false;return SPDOK[el]=true}
 const SOLE=['....ooooooo....','..oofffffffoo..','.offfffffffffo.','.offsssssssffo.','offsssssssssffo','ofsssssssssssfo','ofsssssssssssfo','ofsssssssssssfo','ofsssssssssssfo','ofsssssssssssfo','ofsssssssssssfo','offsssssssssffo','.offsssssssffo.','.offfffffffffo.','..oofffffffoo..','....ooooooo....'],SOLEC={};
 function soleImg(el,vr){/* 足のうら（正面にすわって足をこちらへのばしたとき）：足の絵の色（ふち・体の色）から作るドット絵。丸い形で、指はない。まん中は少し色のついたうら */
   const k=el+'|'+(vr&&vr.h||0)+'_'+(vr&&vr.l||0);if(SOLEC[k])return SOLEC[k];const ft=spDot('sp:footL',el,vr);if(!ft)return null;
@@ -274,7 +276,7 @@ function drawSpiritDot(c,el,x,y,s,f,o){
   let {br,st,arm,A,aN,aF,prop,lean2,sq,frontArm,bothF}=spPose(o,t,tr,back);
   const spr=(key,X,Y)=>{const ch=CHIPS[key],im=spDot(key,el,vr);if(im)c.drawImage(im,(X||0)+ch.ax*D,(Y||0)+ch.ay*D,ch.w*D,ch.h*D)};
   {const nm=spMotion(o,A);if(nm&&spmDraw(c,el,x,y,s,f,o,nm,t,back,tr,spr,D))return true}/* 3Dから写した動き */
-  const E0='sp_'+el+':',S=tr?'S':'';
+  const E0='sp_'+spArt(el)+':',S=tr?'S':'';
   // いきをする・しゃがむ・かたむくは、絵を回さずに、頭とうでをドット単位でずらす（ドットがくずれないように）
   const L=(o.lean||0)+lean2,hDy=-Math.round((br-sq)*44)*D,aDy=-Math.round((br-sq)*20)*D,hDx=Math.round(L*52)*D,aDx=Math.round(L*22)*D;
   c.save();c.translate(x,y);c.scale(s*f,s);
