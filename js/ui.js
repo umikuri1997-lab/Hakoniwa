@@ -743,7 +743,7 @@ function renderSheet(){
     }else if(sheetArg==='support'){/* 広告とコーヒー（まだ準備中。使えるまでメニューに出さない） */
       {const sec=el('<div class="sec"><div style="display:flex;flex-direction:column;gap:8px"></div></div>');for(const t of['広告を見る','作者にコーヒーをおごる']){const b=el('<button class="btn"></button>');b.innerHTML=pxi('heart','wx')+t;b.onclick=()=>toast('準備中です');sec.firstChild.appendChild(b)}body.appendChild(sec)}
     }else if(sheetArg==='settings'){
-      {const t=el('<div class="sec"><h3>テスト用</h3></div>'),b=el('<button class="btn"></button>');b.textContent='5倍速：'+(TESTM?'オン':'オフ');b.onclick=()=>{TESTM=!TESTM;try{KV.setItem('hk-test',TESTM?'1':'')}catch(_){}if(!TESTM&&S.speed>3)S.speed=1;renderSheet();applyFeats()};t.appendChild(b);body.appendChild(t)}/* テストのときだけ5倍速 */
+      {const t=el('<div class="sec"><h3>テスト用</h3></div>'),b=el('<button class="btn"></button>');b.textContent='5倍速：'+(TESTM?'オン':'オフ');b.onclick=()=>{TESTM=!TESTM;try{KV.setItem('hk-test',TESTM?'1':'')}catch(_){}if(!TESTM&&S.speed>3)S.speed=1;renderSheet();applyFeats()};t.appendChild(b);{const c=el('<button class="btn" style="margin-left:6px">洞窟へ</button>');c.onclick=()=>{sfx('tap');closeSheet();cavePrep()};t.appendChild(c)}/* 洞窟の探検（cave.js。土のステージができるまでの入口） */body.appendChild(t)}/* テストのときだけ5倍速 */
       const so=el('<div class="sec"><h3>おと</h3><div style="display:flex;gap:8px;flex-wrap:wrap"></div></div>');
       for(const[k,l]of[['bgm','音楽'],['sfx','効果音'],...(navigator.vibrate?[['vib','ふるえ']]:[])]){const b=el('<button class="btn"></button>');b.textContent=l+'：'+(SND[k]?'オン':'オフ');b.onclick=()=>{audioInit();setSnd(k,!SND[k]);renderSheet()};so.lastElementChild.appendChild(b)}
       body.appendChild(so);
@@ -781,7 +781,7 @@ function renderSheet(){
 }
 
 /* 図鑑：マップごとに、見つけた・おぼえた物だけ（スポット・家具・建物・レシピ・コワイノ・アイテム） */
-let ZKW=null,ZKT=0,ZKPG=0;const ZKPER=6,ZKTC=['#c9604a','#d89a3e','#7d9a4e','#5f8fb0','#8a6aa8','#b07a52'];/* しおりの色（tools/ui/colors.md の「本」） */const ZKTABS=['スポット','家具','建物','レシピ','「コワイノ」','アイテム','さかな','いきもの','りょうり','こだま'];
+let ZKW=null,ZKT=0,ZKPG=0;const ZKPER=6,ZKTC=['#c9604a','#d89a3e','#7d9a4e','#5f8fb0','#8a6aa8','#b07a52'];/* しおりの色（tools/ui/colors.md の「本」） */const ZKTABS=['スポット','家具','建物','レシピ','「コワイノ」','アイテム','さかな','いきもの','りょうり','こだま','かせき'];
 function zkSnd(s){/* 図鑑のアイコンをタップしたときの音（i:物のid → その物の材質の録音・k:音の名前） */if(s.startsWith('i:'))itemSnd(s.slice(2));else if(s.startsWith('k:'))sfx(s.slice(2))}
 function zukanBody(body){
   const ws=[0,1,2,3,4,5].filter(w=>(w===WD&&!S.free)||savedStage(w));if(!ws.length){body.appendChild(el('<p class="note">まだありません</p>'));return}
@@ -804,6 +804,7 @@ function zukanBody(body){
   else if(ZKT===7)critZukan(d,add);
   else if(ZKT===8)cookZukan(d,add);
   else if(ZKT===9){if(typeof kdZukan==='function')kdZukan(d,add)}
+  else if(ZKT===10){if(typeof fossilZukan==='function')fossilZukan(d,add)}
   else{const it=Object.assign({},d.seenIt||{});for(const k in d.mat||{})if(d.mat[k]>0)it['m:'+k]=1;for(const k in d.fs||{})if(d.fs[k]>0)it['f:'+k]=1;
     for(const k in MATN)if(it['m:'+k])add(MATN[k],'素材',ICONS[k]||null,'i:mat:'+k);for(const k in FOODS)if(it['f:'+k])add(FOODS[k].name,FOODS[k].fx||'食べ物',foodIc(k),'i:food:'+k);if(it['x:horn'])add('よびごえの角笛',HORNDESC,hornIco(),'i:horn');if(it['x:herb'])add('まよけのハーブ',HERBDESC,herbIco(),'i:herb')}
   const top=el('<div class="mpg zkp"><h3 class="mtt"></h3></div>');top.firstChild.textContent=ZKTABS[ZKT];top.appendChild(el('<p class="story zkn">'+list.length+'こ</p>'));body.appendChild(top);

@@ -183,7 +183,7 @@ function recount(){if(S.fogF&&!S.flags.spring2)fogSpring2(S);if(S.fogF&&!S.flags
     if(o==='statue')STATUE=j;if(o==='statueb'||o==='site'&&S.dyn[j]&&S.dyn[j].ruin)RUINT=j;if(o==='obox')OBOX=j;if(o==='board')BOARD=j;
     if(o==='stele')STELES.push(j);
     if(o==='lurestatue')LURES.push(j);
-    if(o==='lamp'||o==='lighthouse'||o==='tower'||o==='campfire'&&!campOut(j)||o==='statue'||o==='torch'||o==='candle'||o==='lantern'||o==='flamp'||o==='yomawari'||o==='toro'||o==='takeakari'||o==='andon'||o==='g_donguri'||o==='g_danro'||o==='watch'&&watchLit(j)||o==='hotaru'&&!isBud(j))LIGHTS.push(j);if(o==='hotaru')HOTL.push(j);if(o==='drum')DRUMS.push(j);if(o==='watch'&&watchLit(j))counts.watchlight=(counts.watchlight||0)+1;/* 見張り台のあかり（Lv5〜）も、あかりとして数える */
+    if(o==='lamp'||o==='lighthouse'||o==='tower'||o==='campfire'&&!campOut(j)||o==='statue'||o==='torch'||o==='candle'||o==='lantern'||o==='oldlantern'||o==='flamp'||o==='yomawari'||o==='toro'||o==='takeakari'||o==='andon'||o==='g_donguri'||o==='g_danro'||o==='watch'&&watchLit(j)||o==='hotaru'&&!isBud(j))LIGHTS.push(j);if(o==='hotaru')HOTL.push(j);if(o==='drum')DRUMS.push(j);if(o==='watch'&&watchLit(j))counts.watchlight=(counts.watchlight||0)+1;/* 見張り台のあかり（Lv5〜）も、あかりとして数える */
     if(LIGHTP[o]&&!(o==='hotaru'&&isBud(j))&&!(o==='campfire'&&campOut(j))||o==='watch'&&watchLit(j))LITP.push(j);/* 夜に光をかく明かりの一覧 */
     if(o==='watch'||o==='yogan'||o==='tower')TOWERS.push(j);
     if(FLOWERS.has(o)&&!isBud(j)){const el=Object.keys(BL[o].attr||{})[0],E=el&&(ENVE[el]||(ENVE[el]=new Float32Array(W*H)));for(let dy=-3;dy<=3;dy++)for(let dx=-3;dx<=3;dx++){const nx=x+dx,ny=y+dy;if(nx<0||ny<0||nx>=W||ny>=H)continue;const q=ny*W+nx;ENVG[q]+=.56;if(E)E[q]+=1.11}}/* 花：まわり3マスで、たのしさ+0.2／1時間、同じ属性のせいれいは+0.6／1時間 */

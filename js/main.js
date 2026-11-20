@@ -69,7 +69,7 @@ function lastFirst(list){/* さいごにあそんだステージを、いちば�
   const card=list.querySelector('.wcard[data-k="'+top[0]+'"]');if(card===list.firstElementChild)return;
   const pv=card.previousElementSibling,nx=card.nextElementSibling;if(pv&&pv.classList.contains('wlink'))pv.remove();else if(nx&&nx.classList.contains('wlink'))nx.remove();/* 道の線は、となりのステージどうしでつなぎなおす */
   card.classList.add('wtop');list.insertBefore(card,list.firstElementChild)}
-const APP_VER=1994;/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER=1997;/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
@@ -115,7 +115,7 @@ window.__ldDone=1;clearInterval(window.__ldT);$('#tLoad').hidden=true;$('#tBtns'
 /* ---------- ループ ---------- */
 let last=performance.now(),frameT=0,tutT=0,saveT=0,questT=0,running=true;
 let STLD=false;let USERPAUSE=false;/* 「とめる」ボタン：ゲームの時間を止めて、ゆっくり配置を考える */
-const paused=()=>(typeof sacredPlayActive==='function'&&sacredPlayActive())||sacredQuietActive()||USERPAUSE||!stageReady()||performance.now()<BOSSHOLD||performance.now()<SCENEHOLD||GIFT_ACTIVE||!started||sheet!=null||!$('#dialog').hidden||!$('#lvup').hidden||!$('#rlv').hidden||NEWRES!=null||!$('#idle').hidden;
+const paused=()=>(typeof caveOn==='function'&&caveOn())/* 洞窟のあいだ、村は止める（cave.js） */||(typeof sacredPlayActive==='function'&&sacredPlayActive())||sacredQuietActive()||USERPAUSE||!stageReady()||performance.now()<BOSSHOLD||performance.now()<SCENEHOLD||GIFT_ACTIVE||!started||sheet!=null||!$('#dialog').hidden||!$('#lvup').hidden||!$('#rlv').hidden||NEWRES!=null||!$('#idle').hidden;
 /* 寝落ち対策：2分さわらないと、時間を止める */
 let lastIn=performance.now();
 for(const ev of['pointerdown','keydown','wheel'])addEventListener(ev,()=>{lastIn=performance.now();const d=$('#idle');if(!d.hidden){d.hidden=true;last=performance.now()}},true);
@@ -226,6 +226,7 @@ function frame(now){
   if(SKIP&&!(isNight()&&S.enemyOn))SKIP=false;/* 朝になったら、ふつうの速さにもどす */
   if(started&&!sacredQuietActive()&&!menuOpen&&$('#pro').hidden&&sheet==null&&NEWRES==null&&$('#dialog').hidden&&$('#lvup').hidden&&$('#rlv').hidden&&!calmNow()){showItemGift();cookNewTick();showSpotPop();reflectNoteTick();if(typeof fogRevealTick==='function')fogRevealTick();oreWakeTick()}
   if(!paused()){if(S.speed>1&&!TESTSPD&&!TESTM){S.glassT=Math.max(0,(S.glassT||0)-rdt);if(S.glassT<=0)S.speed=1}glassUI();LIGHTCD=Math.max(0,LIGHTCD-rdt*S.speed*(SKIP?40:1));AREACD=Math.max(0,AREACD-rdt*S.speed*(SKIP?40:1));let g=rdt*MIN_PER_SEC*S.speed*(SKIP?40:1);while(g>0){const s=Math.min(g,2);try{stepWorld(s)}catch(e){frameErr('step',e);break}g-=s;if(performance.now()<BOSSHOLD)break}/* オオカゲの登場・撃破で止めたら、残りは進めない */}
+  if(typeof caveOn==='function'&&caveOn()){try{caveFrame(prdt,now)}catch(e){frameErr('cave',e)}}/* 洞窟の探検（cave.js） */
   for(const f of floats)f.life-=prdt*.7;while(floats.length&&floats[0].life<=0)floats.shift();
   for(const s of shots)s.life-=prdt*1.4;while(shots.length&&shots[0].life<=0)shots.shift();
   for(const f of fx){if(f.w0!=null){if(now<f.w0)continue;f.w0=null}f.life-=prdt*(f.k==='spr'?1/f.dur:f.k==='ring'?(f.col?1.3:2.2):1.4);if(f.k!=='ring'&&f.k!=='spr'&&!PZ){f.x+=f.vx*rdt;f.y+=f.vy*rdt;f.vy+=(f.k==='p'?260:40)*rdt;f.vx*=.96}}
@@ -233,7 +234,7 @@ function frame(now){
   for(const m of motes){m.y-=prdt*.012*m.s;m.x+=Math.sin(now/2000+m.p)*prdt*.004;if(m.y<0){m.y=1;m.x=Math.random()}}
   seasonStep(prdt,now);feelFrame(now);juiceFrame(now);/* 足音・足もとの反応・場所の音（feel.js） */
   stepLooks(now,rdt);lgTick(now);/* くわしいログ：目標のかわり・ためた物をのこす（log.js） */
-  if(!PZ&&!menuOpen&&$('#pro').hidden&&stageReady()){try{render(now)}catch(e){frameErr('render',e)}try{phTick(now)}catch(e){frameErr('photo',e)}}/* 日記の絵（photo.js） *//* タイトル・導入会話・メニュー中は、背景ワールドを描かない */
+  if(!PZ&&!menuOpen&&$('#pro').hidden&&stageReady()){if(typeof caveOn==='function'&&caveOn()){try{caveRender(now)}catch(e){frameErr('caveRender',e)}}/* 洞窟のあいだは、洞窟だけを描く */else{try{render(now)}catch(e){frameErr('render',e)}try{phTick(now)}catch(e){frameErr('photo',e)}}}/* 日記の絵（photo.js） *//* タイトル・導入会話・メニュー中は、背景ワールドを描かない */
   if(AC)wantSong=(!$('#title').hidden||!$('#maps').hidden||!$('#pro').hidden)?'opening':stageSong();
   if(started){hudT+=rdt;if(hudT>.3){hudT=0;updHUD()}
     if(!sacredQuietActive()&&!GIFT_ACTIVE&&(RLVQ.length||S.res.some(q=>q.lvPend>0&&!q.hidden))&&sheet==null&&NEWRES==null&&$('#dialog').hidden&&$('#lvup').hidden&&$('#rlv').hidden){if(!RLVQ.length){const r=S.res.find(q=>q.lvPend>0&&!q.hidden);if(r)RLVQ.push({id:r.id,from:rLv(r),to:rLv(r)})}/* えらばずにとじた（読みこみなおした）ごほうび */if(RLVQ.length)rlvShow(RLVQ.shift())}

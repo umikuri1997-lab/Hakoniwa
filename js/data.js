@@ -128,6 +128,8 @@ const BL={
   basin:{hp:5,brk:1,fix:4,fixm:{stone:3},name:'水鉢',kind:'furn',pc:7,time:160,maker:'water',solid:1,anim:1,attr:{water:4,wood:.5},mat:{stone:5},desc:''},/* もう作れない（古いセーブ用） */
   kamizo:{hp:5,brk:1,fix:5,fixm:{stone:13},name:'カミサマの像',kind:'furn',lv:5,pc:10,time:160,maker:'earth',solid:1,attr:{earth:2},mat:{stone:25},desc:'カミサマが遊びにくる確率50%'},
   orgel:{chest:1,shopOnly:1,name:'古いオルゴール',kind:'furn',cat:'env',pc:6,solid:1,attr:{},env:3,mat:{wood:4},desc:'まわり3マスで、たのしさ+1.1／1時間'},
+  oldlantern:{chest:1,shopOnly:1,hp:5,brk:1,fix:2,fixm:{can:1},name:'古いカンテラ',kind:'furn',cat:'light',f2:1,pc:3,solid:1,attr:{fire:1},mat:{can:2},mat1:{can:2},desc:'洞窟にのこっていたあかり。住み心地+6'},
+  doki:{chest:1,shopOnly:1,hp:5,brk:1,fix:1,fixm:{stone:2},name:'ほりだした土器',kind:'furn',pc:1,solid:1,attr:{earth:2},mat:{stone:3},desc:'洞窟からほりだしたかざり。住み心地+6'},
   telescope:{chest:1,shopOnly:1,name:'星見の望遠鏡',kind:'furn',pc:6,solid:1,attr:{},mat:{wood:3,stone:2},desc:'流れ星の夜が来るわりあい+10%（重複なし）'},
   hdokei:{chest:1,shopOnly:1,name:'森の柱時計',kind:'furn',pc:15,solid:1,attr:{},mat:{wood:6},desc:'住み心地+15'},
   mizubachi:{chest:1,shopOnly:1,name:'苔むした石の水ばち',kind:'furn',cat:'env',pc:5,solid:1,attr:{},mat:{stone:6},desc:'まわり5マスの花・木の芽が、植えたその日に育つ'},
