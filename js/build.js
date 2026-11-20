@@ -16,8 +16,8 @@ function spawnSeed(){
 /* ---------- 置く・こわす ---------- */
 let undoStack=[];
 const inv=id=>id.startsWith('seed:')?cseed(id.slice(5)):BL[id]&&BL[id].kind==='gear'?gearCount(id):S.inv[id]||0;
-const iname=id=>id.startsWith('seed:')?CROPS[id.slice(5)].name+'のたね':WD===1&&STAGEN[id]?STAGEN[id]:BL[id].item||BL[id].name;
-const STAGEN={tree:'とんがりの木の苗',deadtree:'とんがりの木'};/* 火山での名前（植えた木も自然の木も、とんがりの木） */
+const iname=id=>id.startsWith('seed:')?CROPS[id.slice(5)].name+'のたね':STAGEN[WD]&&STAGEN[WD][id]?STAGEN[WD][id]:BL[id].item||BL[id].name;
+const STAGEN={1:{tree:'とんがりの木の苗',deadtree:'とんがりの木'},4:{tree:'アカシアの苗',deadtree:'アカシア'}};/* ステージでの名前（植えた木も自然の木も、火山はとんがりの木・風はアカシア。4 は WIND） */
 const cseed=k=>(S.cseed||(S.cseed={}))[k]||0;
 function sowFarm(d){if(d.sown!==false)return true;if(d.paid){d.paid=false;d.sown=true;d.g=0;d.ts=1;delete d.dry;dirty=true;return true}const k=cropK(d);if(cseed(k)>0){S.cseed[k]--;d.sown=true;d.g=0;d.ts=1;delete d.dry;dirty=true;return true}/* d.ts：まいてから、水が切れたか（d.dry）を見ている畑（つやつや tsuyaOf） */return false}
 function giveItem(id,n,back){if(!back)gotNote(id);/* back：こわした・もどした物は「最近もらった」にしない */if(BL[id]&&BL[id].kind==='gear'){gearGive(id,n);return}/* そうびは S.gear に1つずつ */if(id.startsWith('seed:')){const k=id.slice(5);S.cseed[k]=cseed(k)+n;return}S.inv[id]=inv(id)+n}
@@ -44,7 +44,7 @@ function canRoof(x,y,quiet){const no=t=>{if(!quiet)toast(t);return false};if(x<0
 const rugsIn=set=>{const L=[];for(const k in S.rug||{})if(rugCells(+k).some(c=>set.has(c)))L.push(S.rug[k]);return L};/* 家の中（どこか1マスでも）にあるラグ */
 function canRug(x,y,quiet){const no=t=>{if(!quiet)toast(t);return false};if(x<0||y<0||x+1>=W||y+1>=H)return false;{const C=rugCells(y*W+x),h0=hiAt(C[0]);if(C.some(c=>hiAt(c)!==h0))return no('段差をまたいでは置けません')}/* 屋根と同じく、ラグも段差をまたがない */
   if(x<0||y<0||x>=W-1||y>=H-1)return no('ここには置けません');for(const c of rugCells(y*W+x)){if(sacredNoBuild(c))return no('みんなで世話をしている木の場所です');if(S.ground[c]===1)return no(skyJ(c)?'雲の上には置けません':'水の上には置けません');if(RUGC.has(c))return no('ここにはもうラグがあります');const o=S.obj[c],a=o==='part'?S.obj[S.ref[c]]:o;if(a&&!WEEDS.has(a)&&!(BL[a]&&BL[a].kind==='furn'&&!BL[a].trap&&!WALLD.has(a)))return no('ここにはもう何かあります')}return true}/* 家具の下にもしける */
-function canPlace(id,x,y,quiet){if(typeof fogBlock==='function'&&fogBlock(id,x,y,quiet))return false;/* 霧の中には置けない */if(WD===0&&id!=='tower'&&S.sacredRoot!=null){const z=szR(id,PLROTS[id]||0)||[1,1];for(let b=0;b<z[1];b++)for(let a=0;a<z[0];a++)if(sacredNoBuild((y+b)*W+x+a,id)){if(!quiet)toast('みんなで世話をしている木の場所です','warn');return false;}}
+function canPlace(id,x,y,quiet){if(typeof fogBlock==='function'&&fogBlock(id,x,y,quiet))return false;/* 霧の中には置けない */if(WD===YAMI&&typeof yamiNoBuild==='function'&&yamiNoBuild(id,x,y,quiet))return false;/* 闇のステージ：ゆりかごと、あけよい草（yami.js） */if(WD===0&&id!=='tower'&&S.sacredRoot!=null){const z=szR(id,PLROTS[id]||0)||[1,1];for(let b=0;b<z[1];b++)for(let a=0;a<z[0];a++)if(sacredNoBuild((y+b)*W+x+a,id)){if(!quiet)toast('みんなで世話をしている木の場所です','warn');return false;}}
   if(EDGES.has(id))return canEdge(x,y,quiet);
   if(RUGS.has(id))return canRug(x,y,quiet);
   if(CANOPY.has(id))return canRoof(x,y,quiet);
@@ -203,7 +203,7 @@ function moveTap(tx,ty){const j=ty*W+tx;
     if(!ok){writeObj(id,a,v);return}
     for(const r of S.res)if(r.act&&(r.act.obj===a||cells.includes(r.act.obj)))endAct(r);
     for(const b of S.broken||[])if(b.j===a)b.j=j;if(typeof fieldBuildMove==='function')fieldBuildMove(id,a,j);/* 調べのために置いた物をうつしたら、記録もうつす */
-    boxMove(a,j);/* 箱の中身も、いっしょに */moveCellState(a,j);/* 加工・炉・コンポスター・料理の家具の予定も */if(id==='wbench'){for(const o of S.orders||[])if(o.cs===a)o.cs=j}/* 作業台の依頼も */for(const q of S.ani||[])if(q.h===a){q.h=j;q.path=null;if(q.in){q.x+=j%W-a%W;q.y+=((j/W)|0)-((a/W)|0)}}/* 飼う生き物の小屋も */writeObj(id,j,v)}
+    boxMove(a,j);/* 箱の中身も、いっしょに */moveCellState(a,j);/* 加工・炉・コンポスター・料理の家具の予定も */if(id==='wbench'){for(const o of S.orders||[])if(o.cs===a)o.cs=j}/* 作業台の依頼も */for(const q of S.ani||[])if(q.h===a){q.h=j;q.path=null;q.go=null;if(q.in){q.x+=j%W-a%W;q.y+=((j/W)|0)-((a/W)|0)}else{const f=id==='barn'?j+2*W:j+W;q.x=f%W+.5;q.y=((f/W)|0)+.6}}/* 飼う生き物の小屋も（外にいる生き物は、新しい小屋の前へ） */writeObj(id,j,v)}
   MOVESRC=null;recount();dirty=true;burst(j,'furn','furnPlace');renderPalette();checkQuest()}
 function removeAt(x,y){const tx0=x,ty0=y;
   const j=anc(y*W+x),o=S.obj[j];x=j%W;y=(j/W)|0;

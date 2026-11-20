@@ -10,7 +10,7 @@ const LETTERK={mate:'なかよしのこと',anniv:'記念日',thx:'ありがと�
 const LETTERGIFT={thx:1,anniv:1,dream:1,back:1,house:1,boss:1};/* お礼の品を入れる手紙 */
 function letterGift(el){/* お礼の品：手紙でしかもらえない家具（gfPick、まだもらっていない物。その子の属性の物から）。ぜんぶもらったら、その子の属性の素材 */const f=typeof gfPick==='function'&&gfPick('let',el);if(f)return{k:'furn:'+f,n:1};
   if(el==='wood'){const L=Object.keys(CROPS).filter(c=>cropOn(c));return L.length?{k:'seed:'+pick(L),n:3}:{k:'mat:wood',n:8}}
-  if(el==='earth')return{k:'mat:stone',n:8};if(el==='fire')return{k:'mat:wood',n:8};if(el==='wind')return{k:'mat:eda',n:6};if(el==='water'){const L=FISHK.filter(f=>FISHI[f].w===(WD===1?1:0)&&FISHI[f].tm==='any'&&!FISHI[f].rain);return{k:'food:'+(L.length?pick(L):'fish'),n:2}}return{k:'mat:wood',n:8}}
+  if(el==='earth')return{k:'mat:stone',n:8};if(el==='fire')return{k:'mat:wood',n:8};if(el==='wind')return{k:'mat:eda',n:6};if(el==='water'){const L=FISHK.filter(f=>FISHI[f].w===fishSt()&&FISHI[f].tm==='any'&&!FISHI[f].rain);return{k:'food:'+(L.length?pick(L):'fish'),n:2}}return{k:'mat:wood',n:8}}
 const giftKT=g=>[g.k.slice(0,g.k.indexOf(':')),g.k.slice(g.k.indexOf(':')+1)];
 function giftName(g){if(!g)return '';const[t,id]=giftKT(g);return t==='furn'?(BL[id]?BL[id].name:id):(t==='mat'?MATN[id]:t==='food'?FOODS[id].name:t==='seed'?CROPS[id].name+'のたね':id)+'×'+g.n}
 function giftIcoOf(g){if(!g)return '';const[t,id]=giftKT(g);try{return t==='furn'||t==='seed'?iconURL(t==='seed'?'seed:'+id:id):t==='mat'?(ICONS[id]||iconURL(id)):t==='food'?(foodIc(id)||''):''}catch(e){return ''}}
