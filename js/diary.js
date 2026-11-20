@@ -61,6 +61,7 @@ const dyHash=t=>{let h=0;for(let i=0;i<t.length;i++)h=(h*31+t.charCodeAt(i))|0;r
 function dyTopics(e,f){const M=[],O=[],N=e.ns;
   const gone=(S.gone||[]).filter(g=>g.day>=e.d&&g.day<=dayNo()&&g.name!==f.name);if(gone.length)M.push(['gone',gone[gone.length-1].name]);
   const nw=S.res.filter(r=>r.came===e.d&&r!==f&&!r.back);if(nw.length)M.push(['new',nw[nw.length-1].name]);
+  if(e.ev&&e.ev[2].includes(f.id)&&typeof EVKIND!=='undefined'&&EVKIND[e.ev[0]])M.push(['ev'+EVKIND[e.ev[0]],e.ev[1]]);/* 書く子が出たイベント（ev-show.js） */
   if(N&&N.trial)M.push([N.trialOK?'trialOK':'trial']);else if(N&&N.boss)M.push([N.boss===1?'bossLose':'bossWin']);
   if(N&&!N.trial){const best=dyBest(e);O.push(N.hurt?['nightHurt']:N.lost&&N.lost.length?['nightLost']:N.broke?['nightBroke']:best&&best.nm!==f.name?['nightBest',best.nm]:N.kill>=6?['nightBig']:N.kill?['nightSome']:['nightQuiet'])}
   else if(!N&&!Object.keys(e.k||{}).length&&!Object.keys(e.o||{}).length)O.push(['nightQuiet']);
