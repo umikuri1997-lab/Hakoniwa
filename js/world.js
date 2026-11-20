@@ -36,10 +36,10 @@ function newState(w){w=w||0;
     ref:{},ground:new Array(W*H).fill(0),floor:new Array(W*H).fill(''),obj:new Array(W*H).fill(''),dyn:{},hp:{},
     res:[],enemies:[],pt:25,totalPt:0,food:0,fs:{},cseed:{imo:4},crops:{imo:true},mat:{wood:0,stone:0},regrow:[],t:w===0?15*60:12*60,/* 草原は15時からはじまる */speed:1,
     unlocked:{floor:true,farm:true,[w===1?'misugaki':'fence']:true,[w===1?'bamboowall':'hwall']:true},bulk:false,stamps:false,quest:0,cleared:false,rain:false,seeds:[],nameIdx:2,introSeen:false,lastMorning:1,lastNight:0,subDone:{},drops:[],ani:[],shards:0,gotMat:{wood:0,stone:0},recipes:{},buried:[],nid:1,kills:0,deaths:0};
-  s.world=w;genWorld(s,w);
-  if(w===1)s.res.push(mkRes(s,HOMURA,'fire',CX+.5,CY-1.5,'campfire'));else s.res.push(mkRes(s,'フタバ','wood',CX+.5,CY-1.5,'swing'));
+  s.world=w;if(w===MIZU)mzGenWorld(s);else genWorld(s,w);
+  if(w===1)s.res.push(mkRes(s,HOMURA,'fire',CX+.5,CY-1.5,'campfire'));else if(w===MIZU)s.res.push(mkRes(s,MIO,'water',CX+.5,CY-1.5,'fountain'));else s.res.push(mkRes(s,'フタバ','wood',CX+.5,CY-1.5,'swing'));
   if(w===0)s.res[0].nap=true;/* 初回のマップ描画から眠っている */
-  if(w===FREE)freeSetup(s);
+  if(w===FREE)freeSetup(s);if(w===MIZU)mzSetup(s);
   templeRuinPlace(s);/* こわれた神殿は、はじめからある（どのステージも） */
   return s;
 }
@@ -92,7 +92,7 @@ const VRDEV=[-6,-4,-2,0,2,4,6];/* 個体ごとのばらつき：はたらく速�
 function vrInt(V){if(V&&V.iv!==3){const K=['pow','spd','sta'];if(V.iv!==2){if(!V.iv)for(const k of K)V[k]=Math.round(((V[k]==null?1:V[k])-1)*10);for(const k of K)V[k]=(V[k]||0)*10}for(const k of K)V[k]=Math.round((V[k]||0)/5);V.iv=3}return V}/* 前のセーブ：倍率（1がふつう）・10がふつう・100がふつうだったころの数を、20がふつうの、たす数にかえる（iv が 3 なら、もうかえてある。100がふつうの数（iv 2）は÷5してまるめる） */
 const trt=(r,k)=>!!(r&&r.vr&&r.vr.tr===k),recK=r=>(trt(r,'nebari')?2:1)*gearStat(r).rec*(1+(typeof pathA==='function'?pathA('rec'):0)/100);/* recK：つかれのとれる速さ（ねばりづよい子は2倍） */
 /* せいれいごとのばらつき：色(h色相・l明るさ)、まつ毛・ほっぺ、足の速さ・食べる量・力 */
-const KEYVR={'フタバ':{key:true,tr:'nebari',h:0,l:0,lash:false,cheek:true,spd:0,eat:1,pow:0,sta:0,iv:3,vo:1.18},'ノドカ':{key:true,tr:'tafu',h:0,l:0,lash:false,cheek:true,spd:0,eat:1,pow:0,sta:0,iv:3,vo:1.02},'ホムラ':{key:true,tr:'nebari',pk:'fireA',h:0,l:0,lash:false,cheek:true,spd:0,eat:1,pow:0,sta:0,iv:3,vo:1.08},'シズク':{key:true,tr:'hataraki',h:0,l:0,lash:false,cheek:true,spd:0,eat:1,pow:0,sta:0,iv:3,vo:1.12},'ホノ':{key:true,tr:'',pk:'fireB',h:-6,l:.04,lash:false,cheek:false,spd:0,eat:1,pow:0,sta:0,iv:3,vo:.95},'アオ':{key:true,tr:'shoshoku',h:8,l:0,lash:true,cheek:false,spd:0,eat:1,pow:0,sta:0,iv:3,vo:1.12},'フウ':{key:true,tr:'hayaashi',pk:'wind',h:0,l:-.03,lash:true,cheek:true,spd:0,eat:1,pow:0,sta:0,iv:3,vo:1.05}};
+const KEYVR={'フタバ':{key:true,tr:'nebari',h:0,l:0,lash:false,cheek:true,spd:0,eat:1,pow:0,sta:0,iv:3,vo:1.18},'ノドカ':{key:true,tr:'tafu',h:0,l:0,lash:false,cheek:true,spd:0,eat:1,pow:0,sta:0,iv:3,vo:1.02},'ホムラ':{key:true,tr:'nebari',pk:'fireA',h:0,l:0,lash:false,cheek:true,spd:0,eat:1,pow:0,sta:0,iv:3,vo:1.08},'シズク':{key:true,tr:'hataraki',h:0,l:0,lash:false,cheek:true,spd:0,eat:1,pow:0,sta:0,iv:3,vo:1.12},'ミオ':{key:true,tr:'nebari',h:-10,l:.03,lash:true,cheek:true,spd:0,eat:1,pow:0,sta:0,iv:3,vo:1.2},'ホノ':{key:true,tr:'',pk:'fireB',h:-6,l:.04,lash:false,cheek:false,spd:0,eat:1,pow:0,sta:0,iv:3,vo:.95},'アオ':{key:true,tr:'shoshoku',h:8,l:0,lash:true,cheek:false,spd:0,eat:1,pow:0,sta:0,iv:3,vo:1.12},'フウ':{key:true,tr:'hayaashi',pk:'wind',h:0,l:-.03,lash:true,cheek:true,spd:0,eat:1,pow:0,sta:0,iv:3,vo:1.05}};
 function mkVar(name,el){if(KEYVR[name])return Object.assign({},KEYVR[name]);const R=()=>Math.random()*2-1,D=()=>pick(VRDEV);const sg=Math.random()<.5?-1:1;return{h:Math.round(sg*(12+Math.random()*33)),l:Math.round(R()*14)/100,lash:Math.random()<.4,cheek:Math.random()<.5,spd:D(),eat:Math.round((1+R()*.2)*100)/100,pow:D(),sta:D(),iv:3,vo:Math.round((1.12+R()*.16)*100)/100,tr:pick(TRK(el))}}
 function mkRes(s,name,elem,x,y,like){
   return {id:s.nid++,xp:0,xpf:0,name,elem,color:ELEM[elem].body,x,y,hunger:800,energy:85,fun:70,like:like||pick(LIKE_KEYS.filter(k=>(k!=='slide'||WD===4)&&!nigate(elem,k))),act:null,path:[],starve:0,bubble:'',face:1,hidden:false,hurt:0,vr:Object.assign(mkVar(name,elem),{tk:tokuiPick(elem)})};/* tk：はじめからの得意な仕事（events.js） */
@@ -293,8 +293,8 @@ function workCells(j,id,rot){/* j：左上のマス。id・rot をわたすと�
 const workOK=j=>workCells(j).some(k=>walk(k));
 let WORKBLOCKED=[];function workBlockedList(){/* 作業するマスが、どれもふさがっている家具（流し台はのぞく）の左上のマス */const L=[];for(let j=0;j<W*H;j++){const o=S.obj[j];if(o&&o!=='sink'&&WORKF.has(o)&&!workOK(j))L.push(j)}return L}/* 作業するマスが1つでも空いているか */
 function workStand(G,j){/* 作業するマスのうち、いちばん近い行ける所（なければ -1） */let b=-1,bd=1e9;for(const k of workCells(j)){const d=G.dist[k];if(d<0||!walk(k)||d>=bd)continue;b=k;bd=d}return b}
-function walk(j){if(j<0||j>=W*H||S.ground[j]===1&&S.obj[j]!=='bridge'||STUMPB.has(j)||j===GODJ||S.fog&&fogAt(j))return false;/* 霧の中は歩かない *//* 切り株の上は歩かない */return !solidOf(j)}/* 橋の上は歩ける。浅瀬（ground 2）は歩ける（ゆっくり） */
-const wetJ=j=>S.ground[j]===1&&S.obj[j]!=='bridge'||!!S.fog&&fogAt(j);/* 歩けない水 */
+function walk(j){if(j<0||j>=W*H||S.ground[j]===1&&S.obj[j]!=='bridge'||STUMPB.has(j)||j===GODJ||fogAt(j))return false;/* 霧の中は歩かない *//* 切り株の上は歩かない */return !solidOf(j)}/* 橋の上は歩ける。浅瀬（ground 2）は歩ける（ゆっくり） */
+const wetJ=j=>S.ground[j]===1&&S.obj[j]!=='bridge'||fogAt(j);/* 歩けない水 */
 const LIFT=26;/* 段差1だんの高さ（ドット）。高いマスの上の物は、これだけ上に描く */
 function hiAt(j){return S.hi?S.hi[j]|0:0}
 const SLOPES=new Set(['slope_earth']),STAIRS=new Set(['stairs_wood','stairs_stone','stairs_brick',...SLOPES]),/* 土は坂だけ、木・石・レンガは階段だけ */SDIR=[[0,1],[1,0],[0,-1],[-1,0]];/* 階段の向き：0下 1右 2上 3左（低いほう） */

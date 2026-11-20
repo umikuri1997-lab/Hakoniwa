@@ -105,7 +105,7 @@ function sacredOfferShard(j,done){
     at(3300,()=>{sacredRings(tx,ty+10,1,34,'#fff6c8');scnAdd('vein',2600,{x:g.cx,y:g.base-6,h:g.h*.8,w:5});scnAdd('glow',3200,{x:g.cx,y:g.base-g.h*.4,r:Math.min(70,g.h*.6)});sacredStartEffect('sway',2600);sfx('sacred');
       for(let i=0;i<12;i++){const a=i/12*Math.PI*2;fx.push({k:'p',x:tx,y:ty,vx:Math.cos(a)*50,vy:Math.sin(a)*40-40,life:1,col:i%2?'#fff6c8':'#bfe8ff',r:2})}});
     if(n===1)at(4100,()=>{/* 育てる力：木のまわりに、光の花が、内がわから外へ咲きひろがる */const cx=storyTreeX(j),cy=storyTreeY(j),C=['#ffd1e8','#fff2f6','#fff0a8','#d8c8ff'];let k=0;
-      for(let i=0;i<70&&k<30;i++){const an=Math.random()*Math.PI*2,r=1.8+Math.random()*3.6,x=cx+Math.cos(an)*r,y=cy+.6+Math.sin(an)*r*.7,q=(y|0)*W+(x|0);if(x<0||y<0||x>=W||y>=H||S.obj[q]||S.ground[q]===1||S.ground[q]===2||(S.fog&&fogAt(q)))continue;
+      for(let i=0;i<70&&k<30;i++){const an=Math.random()*Math.PI*2,r=1.8+Math.random()*3.6,x=cx+Math.cos(an)*r,y=cy+.6+Math.sin(an)*r*.7,q=(y|0)*W+(x|0);if(x<0||y<0||x>=W||y>=H||S.obj[q]||S.ground[q]===1||S.ground[q]===2||(fogAt(q)))continue;
         scnAdd('bloom',4600,{x:x*TS,y:y*TS-hiAt(q)*LIFT,col:C[k++%4]},(r-1.8)*420+Math.random()*200)}sfx('plant')});
     if(n===2)at(4100,()=>{/* 想う力：村のせいれいから、ちいさな光が木へあつまる */const L=S.res.filter(r=>!r.hidden&&r!==f).sort((a,b)=>Math.hypot(a.x-f.x,a.y-f.y)-Math.hypot(b.x-f.x,b.y-f.y)).slice(0,14);
       L.forEach((r,i)=>{const col=ELEM[r.elem].body;scnAdd('orb',1300,{x0:r.x*TS,y0:r.y*TS-18-uLift(r),x1:tx,y1:ty,arc:20,col,n:2},i*150);scnAdd('ring',700,{x:tx,y:ty+6,r0:4,r1:16,col,a:.7},i*150+1300)});sfx('power')});

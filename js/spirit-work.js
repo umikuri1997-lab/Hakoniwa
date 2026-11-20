@@ -144,7 +144,7 @@ function goWork(r,G,nw){boxFullReset();
   if(typeof aniJob==='function'&&aniJob(r,G))return true;/* 飼う生き物：えさ・水・とれた物 */
   if(smeltJob(r,G))return true;/* 炉：鉱石を運ぶ・火のせいれいが精錬する */
   if(typeof procJob==='function'&&procJob(r,G))return true;/* 加工：運ぶ・加工する・水車でできた物を運ぶ */
-  if(typeof fogJob==='function'&&fogJob(r,G))return true;if(typeof kdJob==='function'&&kdJob(r,G))return true;/* もりのこだま：石材をはこぶ・見にいく */if(typeof wflJob==='function'&&wflJob(r,G))return true;/* 御神木のそばの花の世話（木のなかまと花畑） */if(webJob(r,G))return true;/* クモの巣のそうじ *//* 霧の中で見つけた宝箱・あしあと */
+  if(typeof mzJob==='function'&&mzJob(r,G))return true;/* 水のステージ：水門を直す・宝箱をあける */if(typeof fogJob==='function'&&fogJob(r,G))return true;if(typeof kdJob==='function'&&kdJob(r,G))return true;/* もりのこだま：石材をはこぶ・見にいく */if(typeof wflJob==='function'&&wflJob(r,G))return true;/* 御神木のそばの花の世話（木のなかまと花畑） */if(webJob(r,G))return true;/* クモの巣のそうじ *//* 霧の中で見つけた宝箱・あしあと */
   if(r.elem==='wind')for(const k of['drop','seed','weed'])if(tryJob(r,G,k))return true;/* 風のせいれいは、落ちている物（落とし物・枝・ふしぎな種・雑草・きのこ）を、畑の世話・おつげ・木・石より先にひろう */
   if(pitJob(r,G))return true;/* 落とし穴をほりなおす（土のせいれい、defense.js） */
   if(nestJob(r,G))return true;/* 「しらべる」でタップしたかげの巣（defense.js） */
@@ -294,8 +294,8 @@ function moveR(r,dt){
   if(r.path.length){const cj=(r.y|0)*W+(r.x|0),n0=r.path[0];if(n0!==cj&&Math.abs(n0%W-cj%W)+Math.abs(((n0/W)|0)-((cj/W)|0))>1){/* 次のマスがとなりでない（古い道・押されてずれた）ときは、いまの場所から道を引きなおす。壁をすりぬけない */
     const g=r.path[r.path.length-1],G0=roadSearch(r.x|0,r.y|0);r.path=G0.dist[g]>=0?avoidPath(r,G0,g):[];if(!r.path.length&&g!==cj){noPass(r);endAct(r);return}}}
   if(boxQueueWait(r,dt))return;/* 箱の前に、ほかの子がいる：ぎりぎりまで行って、ならんで待つ */
-  while(step>0&&r.path.length){const j=r.path[0];if(!walk(j)&&!(S.ground[j]===1&&!solidOf(j)&&(S.ground[(r.y|0)*W+(r.x|0)]===1||r.act&&r.act.wade))){const goal=r.path[r.path.length-1],G=roadSearch(r.x|0,r.y|0);if(G.dist[goal]>=0&&walk(goal)){r.path=avoidPath(r,G,goal);if(r.path.length)return}noPass(r);endAct(r);return}
-    const tx=j%W+.5,ty=((j/W)|0)+.5,dx=tx-r.x,dy=ty-r.y,d=Math.hypot(dx,dy),jf=(jumpEdge((r.y|0)*W+(r.x|0),j)?9:1)*(S.ground[j]===2?2:1)*(onLadder((r.y|0)*W+(r.x|0),j)?3:1);/* ハシゴは歩く速さ×0.5（マスのさかいまで3倍ゆっくり＝1マスで2倍の時間） *//* 段差をよじのぼる・おりる間（マスのさかいまで）は9倍ゆっくり＝1マスで5倍の時間 *//* 浅瀬は2倍ゆっくり *//* 段差を飛ぶ間（マスのさかいまで）は5倍ゆっくり＝1マスで3倍の時間 */
+  while(step>0&&r.path.length){const j=r.path[0];if(!walk(j)&&!(S.ground[j]===1&&!solidOf(j)&&(S.ground[(r.y|0)*W+(r.x|0)]===1||r.act&&r.act.wade))&&!(MZLANE&&MZLANE[j]&&!solidOf(j))){const goal=r.path[r.path.length-1],G=roadSearch(r.x|0,r.y|0);if(G.dist[goal]>=0&&walk(goal)){r.path=avoidPath(r,G,goal);if(r.path.length)return}noPass(r);endAct(r);return}
+    const tx=j%W+.5,ty=((j/W)|0)+.5,dx=tx-r.x,dy=ty-r.y,d=Math.hypot(dx,dy),jf=MZLANE&&MZLANE[j]?1/3:(jumpEdge((r.y|0)*W+(r.x|0),j)?9:1)*(S.ground[j]===2?2:1)*(onLadder((r.y|0)*W+(r.x|0),j)?3:1);/* 舟の道（水のステージ）は、舟にのって歩く3倍の速さ *//* ハシゴは歩く速さ×0.5（マスのさかいまで3倍ゆっくり＝1マスで2倍の時間） *//* 段差をよじのぼる・おりる間（マスのさかいまで）は9倍ゆっくり＝1マスで5倍の時間 *//* 浅瀬は2倍ゆっくり *//* 段差を飛ぶ間（マスのさかいまで）は5倍ゆっくり＝1マスで3倍の時間 */
     if(dx)r.face=dx<0?-1:1;
     if(r.path.length===1&&r.act&&j===r.act.stand&&seatCell(j)&&j!==(r.y|0)*W+(r.x|0)){{const cj=(r.y|0)*W+(r.x|0);if(cj===seatBack(j)){/* 背もたれのがわからは乗らない：前か横へまわってから乗る */const G=roadSearch(r.x|0,r.y|0);let best=null;for(const n of seatSides(j)){if(G.dist[n]<0)continue;const p=avoidPath(r,G,n);if(p.length&&(!best||p.length<best.length))best=p}if(best){r.path=best.concat([j]);continue}}}SEATMV.set(r,{k:'in',x:r.x*TS,y:r.y*TS,t0:performance.now()});r.x=tx;r.y=ty;r.path.shift();break}/* となりのマスから、すわる位置へ、ぴょんと乗る */
     if(d*jf<=step){r.x=tx;r.y=ty;r.path.shift();step-=d*jf}else{r.x+=dx/d*step/jf;r.y+=dy/d*step/jf;step=0}}

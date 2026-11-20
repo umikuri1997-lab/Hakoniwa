@@ -618,6 +618,7 @@ function goPlay(r,G,strict){
     if(allowFishing&&canJob(r,'fish')&&roomN(r)>0&&S.ground[j]!==1&&fishW(j)>=0&&free('f'+j,1)&&fq<(fSpot(j)?FISHPS+FISHPA*spotN(j,'fishspot','yoruzuri'):FISHP)+(typeof pathA==='function'?pathA('fish'):0)/100){const sp=fSpot(j),s=10+(sp?12:0)+(r.like==='fish'?6:0)+(r.elem==='water'?9:0)-d*.3+Math.random()*2;if(s>bs){bs=s;best={type:'fish',stand:j,o:{key:'f'+j,spot:sp}}}}
   }
   {const sb=socialBest(r,G);if(sb&&sb.s>bs){bs=sb.s;best=sb.b}}
+  if(typeof mzRaftPick==='function')best=mzRaftPick(best);/* 水のステージ：いかだ乗り場は川くだり */
   if(!best)return strict?false:goWander(r,G);
   if(best.type==='chat'){const o=S.res.find(q=>q.id===best.o.partner);if(o){endAct(o);o.act={type:'chatwait',stage:'do',t:0,partner:r.id};o.bubble='👋'}}
   startAct(r,G,best.type,best.stand,best.o);if(best.type==='play')bondInvite(r,best.o);return true

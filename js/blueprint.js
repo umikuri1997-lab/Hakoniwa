@@ -83,7 +83,7 @@ const BPNAT=new Set(['ntree','deadtree','bamboo','rock','boulder']);/* 置く所
 const bpSoft=o=>WEEDS.has(o)||o==='kinoko'||o==='takenoko';/* 置くときに、そのままなくなる */
 function bpCheck(k,x,y){/* 置けるか：[ok, わけ] */const {w,h}=bpSize(k);if(x<0||y<0||x+w>W||y+h>H)return[false,'ここには置けません'];const h0=hiAt(y*W+x);
   for(let b=0;b<h;b++)for(let a=0;a<w;a++){const j=(y+b)*W+x+a,o=S.obj[j];
-    if(S.ground[j]===1||S.ground[j]===2)return[false,'水の上には置けません'];if(S.fog&&fogAt(j))return[false,'霧の中には置けません'];if(hiAt(j)!==h0)return[false,'段差のある所には置けません'];
+    if(S.ground[j]===1||S.ground[j]===2)return[false,'水の上には置けません'];if(fogAt(j))return[false,'霧の中には置けません'];if(hiAt(j)!==h0)return[false,'段差のある所には置けません'];
     if(STUMPB.has(j)||j===GODJ||sacredNoBuild(j,bpWall()))return[false,'ここには置けません'];
     if(S.floor[j]||S.rug&&S.rug[j]!=null||S.edge&&S.edge[j]||S.roof&&S.roof[j])return[false,'床や物のある所には置けません'];
     if(o&&!BPNAT.has(o)&&!bpSoft(o)&&!VEINS[o])return[false,'物のある所には置けません'];

@@ -181,7 +181,7 @@ const BL={
   signw:{name:'村の木の看板',sz:[2,1],kind:'build',mat:{wood:30},pc:80,time:160,maker:'wood',lv:11,solid:1,attr:{},desc:'村の入り口の看板。属性の力+10%（重複なし）'},
   signs:{name:'村の石の看板',sz:[2,1],kind:'build',mat:{stone:30},pc:80,time:160,maker:'earth',lv:11,w:1,solid:1,attr:{},desc:'村の入り口の看板。属性の力+10%（重複なし）'},
   lighthouse:{name:'灯台',sz:[2,2],kind:'build',mat:{wood:25,stone:35},pc:35,time:180,maker:'fire',lv:7,solid:1,anim:1,attr:{fire:4},desc:'まわり8マスを照らす'},
-  lurestatue:{hp:60,brk:1,fix:6,fixm:{stone:8},name:'おびきよせの石像',kind:'build',mat:{wood:10,stone:40},pc:12,time:100,maker:'earth',lv:6,w:2,solid:1,attr:{},desc:'石の像。まわり7マスの「コワイノ」は、先にこの像をこわしにくる。じょうぶさ60'},
+  lurestatue:{hp:60,brk:1,fix:6,fixm:{stone:8},name:'おびきよせの石像',kind:'build',mat:{wood:10,stone:40},pc:12,time:100,maker:'earth',lv:6,w:MIZU,solid:1,attr:{},desc:'石の像。まわり7マスの「コワイノ」は、先にこの像をこわしにくる。じょうぶさ60'},
   stele:{hp:5,brk:1,fix:18,fixm:{wood:6,stone:25},name:'ノームの石像',kind:'build',mat:{wood:12,stone:50},pc:35,time:180,maker:'earth',lv:6,solid:1,attr:{earth:4},desc:'まわり7マスの壁・柵・塀が、1.5倍じょうぶになる（重複なし）'},
   fountain:{name:'噴水',sz:[2,2],kind:'build',mat:{wood:15,stone:60},pc:45,time:200,maker:'water',lv:6,solid:1,anim:1,play:{pt:6,pw:2.7,fun:45,dur:50,cap:3,adj:1},attr:{water:6},desc:'3人まで遊べる。たのしさ+45（33.3分）。遊ぶと10%の確率で、スタミナ+2'},
   statue:{name:'神殿',kind:'build',anim:1,pc:0,time:50,maker:null,solid:1,attr:{wood:1,water:1,fire:1,earth:1,wind:1},desc:'守り神の居場所'},
@@ -266,9 +266,9 @@ const LIKE_KEYS=Object.keys(LIKES);
 /* ---------- ストーリー ---------- */
 const GOD='カミサマ',POKO='フタバ';
 const MINA='ノドカ';
-const HOMURA='ホムラ',SHIZUKU='シズク';
-const KEYS=[[POKO,MINA],[HOMURA,SHIZUKU]];KEYS[FREE]=[];const FIXK0={fire:'ホノ',water:'アオ',wind:'フウ'};/* ステージ1の火・水・風のキーキャラ（名前も見た目も固定） *//* ステージごとのキーキャラ（1人目・2人目） */
-const KEYEL={[POKO]:'wood',[MINA]:'earth',[HOMURA]:'fire',[SHIZUKU]:'water'};
+const HOMURA='ホムラ',SHIZUKU='シズク',MIO='ミオ';/* ミオ：水のステージの1人目（しずかな歌い手の水のせいれい） */
+const KEYS=[[POKO,MINA],[HOMURA,SHIZUKU]];KEYS[FREE]=[];KEYS[2]=[];KEYS[MIZU]=[MIO];/* 水のステージの2人目（土）は、お話を作るときにきめる */const FIXK0={fire:'ホノ',water:'アオ',wind:'フウ'};/* ステージ1の火・水・風のキーキャラ（名前も見た目も固定） *//* ステージごとのキーキャラ（1人目・2人目） */
+const KEYEL={[POKO]:'wood',[MINA]:'earth',[HOMURA]:'fire',[SHIZUKU]:'water',[MIO]:'water'};
 const LEAD=()=>KEYS[WD][0]||(WD===FREE?FA():GOD);
 const PROLOGUE=[
   ['？？？','#wave|…おーい、聞こえとるかの？ そうそう、おヌシじゃ。'],

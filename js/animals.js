@@ -17,7 +17,7 @@ const aniPass=j=>walk(j)&&!GATE_IDS.has(S.obj[j])&&!HOME_DOORS.has(S.obj[j]);
 function penOf(h){/* 小屋の前から、柵・塀・水・がけでかこまれた所（PENMAX マスまで）。外へつながっていれば null */
   const seen=new Set(),Q=[];for(const s of hutFront(h))if(s>=0&&s<W*H&&aniPass(s)&&!seen.has(s)){seen.add(s);Q.push(s)}if(!Q.length)return null;
   for(let i=0;i<Q.length;i++){const c=Q[i],x=c%W,y=(c/W)|0;
-    for(const[dx,dy]of DIRS){const nx=x+dx,ny=y+dy;if(nx<0||ny<0||nx>=W||ny>=H)return null;const n=ny*W+nx;if(seen.has(n))continue;if(S.fog&&fogAt(n))return null;if(!aniPass(n)||cliff2(c,n))continue;seen.add(n);Q.push(n);if(Q.length>PENMAX)return null}}
+    for(const[dx,dy]of DIRS){const nx=x+dx,ny=y+dy;if(nx<0||ny<0||nx>=W||ny>=H)return null;const n=ny*W+nx;if(seen.has(n))continue;if(fogAt(n))return null;if(!aniPass(n)||cliff2(c,n))continue;seen.add(n);Q.push(n);if(Q.length>PENMAX)return null}}
   return Q}
 function aniRecount(){/* recount のあと：小屋の一覧と、かこいの中のマス */HUTS=[];PENS=new Map();if(!S)return;for(let j=0;j<S.obj.length;j++)if(isHut(S.obj[j]))HUTS.push(j);for(const h of HUTS)PENS.set(h,penOf(h))}
 function hutD(h){return S.dyn[h]||(S.dyn[h]={})}
@@ -54,7 +54,7 @@ function hutRoom(h,k){/* かこいの中で、空きがあって、その生き�
 function strayMorning(){/* 野良の生き物：空きのある小屋があれば、朝にたまに、村の外に1ぴき */if(typeof MEMRUN!=='undefined'&&MEMRUN||S.ani.some(a=>a.stray))return;
   const hs=HUTS.filter(h=>hutRoom(h));if(!hs.length)return;const p=STRAYP+(hs.some(h=>spotHas(h,'norakomichi'))?STRAYSP:0);if(Math.random()>=p)return;
   const h=hs[Math.floor(Math.random()*hs.length)],K=HUTK[S.obj[h]],k=K[Math.floor(Math.random()*K.length)],f=hutFront(h).find(c=>walk(c));if(f==null)return;
-  const G=bfs(f%W,(f/W)|0),C=[];for(let j=0;j<W*H;j++){const d=G.dist[j];if(d>=8&&d<=50&&!VILL[j]&&!S.obj[j]&&aniPass(j)&&S.ground[j]!==1&&!(S.fog&&fogAt(j)))C.push(j)}if(!C.length)return;
+  const G=bfs(f%W,(f/W)|0),C=[];for(let j=0;j<W*H;j++){const d=G.dist[j];if(d>=8&&d<=50&&!VILL[j]&&!S.obj[j]&&aniPass(j)&&S.ground[j]!==1&&!(fogAt(j)))C.push(j)}if(!C.length)return;
   const c=C[Math.floor(Math.random()*C.length)];S.ani.push({id:(S.aniId=(S.aniId||0)+1),k,h:-1,stray:1,x:c%W+.5,y:((c/W)|0)+.6,face:1,wt:0});toast('村の外に、野良の'+ANI[k].name+'が来ている','good')}
 function strayLeave(a,why){S.ani.splice(S.ani.indexOf(a),1);toast(why||'野良の'+ANI[a.k].name+'は、どこかへ行ってしまった')}
 function strayFollow(a,dt){/* つれているせいれいの、通った所をついていく */const r=S.res.find(q=>q.id===a.lead);
