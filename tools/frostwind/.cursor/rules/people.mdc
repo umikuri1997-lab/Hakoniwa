@@ -1,0 +1,25 @@
+---
+description: People
+globs: "{src/{people,body-folk,figure-folk,culture,attention,gear}.js,test/{folk-contract,folk-raster,folk-colour,culture,attention,cast,gear,resolve}.test.mjs,tools/{person,lineup,resolve}.mjs}"
+alwaysApply: false
+---
+
+# People
+
+- `src/people.js` owns the cast, atlas keys, raster choice and biome traveller
+  row. Add a person through the body table. Keep one cast list.
+- `src/body-folk.js` owns integer anatomy, contact and garment landmarks. Human
+  joints stay grid-authored.
+- `src/figure-folk.js` owns raster concessions and garment drawing.
+- `src/culture.js` owns dress, fashion vocabulary, weather selection and ramps.
+  Body modules carry no appearance choices.
+
+Closest check: `npm run test:folk:contract` for anatomy, states, views and gait,
+`test:folk:raster` for connectedness, stems, face and cues, `test:folk:colour`
+for ramps, hierarchy and dress, `test:culture` for vocabulary, `test:people` for
+the cluster. `node tools/person.mjs <name>` draws one person.
+
+`src/gear.js` owns wearable items: a named fold over a fashion row, refused by
+weather, palette or slot. `tools/lineup.mjs <biome>` draws the roster at one
+scale; `npm run test:cast` holds silhouette distance, `test:gear` the items.
+The `add-character` skill carries the row order.

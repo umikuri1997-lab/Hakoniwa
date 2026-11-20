@@ -572,3 +572,35 @@ def hammock(w, face):
     p = dict(lean=-0.7, z=-5.0, legz=-5.0, hp=-0.45, sN=2.4, sF=2.4, bN=-1.2, bF=-1.2, legM=1.25, legP=1.25, roll=0.05*S(w), hr=0.05*S(w))
     return breathe(p, w, 0.4)
 M('play_g_hammock', 8, 0.3, hammock)
+# ---- おくれてついてくる（Frostwind の PIXEL-ART.md「Animation」の考え方。MIT）----
+# 体が大きく上下する動き（FOLLOW）は、頭巾の先（topz）としっぽ（tail）が、体よりおくれて動き、とまる所で行きすぎてもどる。
+# 頭巾の先・しっぽを、体の高さ z にばねでつながった物として、動きの1まわりをくりかえし計算し、おちついた形の、体とのずれ d を使う。
+# FOLW：ばねの速さ（動きの1まわりに何回ゆれるか）・FOLZ：ゆれのとまりやすさ・FOLTOP：頭巾の先の上下（火・水。d の何倍のドット）・FOLTILT：頭巾の先のかたむき（土・木・風。ラジアン）・FOLTAIL：しっぽ（ラジアン）・FOLMAX：ずれの上（ドット）
+FOLLOW = ('play_slide', 'play', 'qrain', 'chase', 'raise', 'storeh', 'draw')
+FOLW, FOLZ, FOLTOP, FOLTILT, FOLTAIL, FOLMAX = 1.6, 0.3, 0.9, 0.06, 0.07, 3.0
+def _follow(name):
+    m = MOTIONS[name]; f0 = m['f']; N = 256; cache = {}
+    def lag(face):
+        if face in cache: return cache[face]
+        zs = [f0(2*PI*i/N, face).get('z', 0.0) for i in range(N)]; w0 = 2*PI*FOLW; dt = 1.0/N; y = zs[0]; v = 0.0; d = [0.0]*N
+        for it in range(6):
+            for i in range(N):
+                a = w0*w0*(zs[i]-y)-2*FOLZ*w0*v; v += a*dt; y += v*dt
+                if it == 5: d[i] = max(-FOLMAX, min(FOLMAX, y-zs[i]))
+        cache[face] = d; return d
+    def f(w, face):
+        p = f0(w, face); d = lag(face); i = int(round((w % (2*PI))/(2*PI)*N)) % N
+        p['topz'] = p.get('topz', 0.0)+FOLTOP*d[i]; p['top'] = p.get('top', 0.0)+FOLTILT*d[i]; p['tail'] = p.get('tail', 0.0)-FOLTAIL*d[i]; return p
+    m['f'] = f
+for _n in FOLLOW: _follow(_n)
+
+# ---- 首を先に向ける（Frostwind の attention.js の考え方。MIT）----
+# 歩いていて向きがかわるとき、ゲームが HTURNMS のあいだ、前の向きの体のまま、首だけ新しい向きへ向けた絵を出す（draw-spirits.js の spHeadTurn）。
+# _hp は hy を +HTURN、_hn は −HTURN。正面では + が画面の右・うしろでは + が画面の左・横では + が手前（こちら）を向く。
+HTURN = 0.8
+for _b in ('walk', 'carry'):
+    for _s, _k in ((1, '_hp'), (-1, '_hn')):
+        _m = MOTIONS[_b]
+        def _f(w, face, f0=_m['f'], s=_s):
+            p = f0(w, face); p['hy'] = p.get('hy', 0.0)+s*HTURN; return p
+        M(_b+_k, _m['n'], _m['rate'], _f)

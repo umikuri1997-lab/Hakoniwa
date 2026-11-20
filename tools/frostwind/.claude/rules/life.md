@@ -1,0 +1,14 @@
+---
+paths:
+  - "src/{life,life-session,life-runtime,behavior,disturbance,fauna}.js"
+  - "src/world/life-field.js"
+  - "test/{life,life-runtime,cohort,life-session,behavior,disturbance,ecology}.test.mjs"
+---
+
+# Semantic life, behavior, culture
+
+`LIFE.md` owns the contract, `docs/life/*.md` the habitat dossiers. Simulate
+reasons and consequences everywhere, bodies only near the traveller.
+`src/world/life-field.js` owns life sites, patches and the cohort roster.
+
+Run `npm run test:life`.

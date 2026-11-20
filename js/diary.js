@@ -22,7 +22,7 @@ function dyText(t,v){const n=t==='build'?(BL[v]?BL[v].name+'を建てた':''):t=
 /* 昼のようす（photo.js の phTick から毎コマ）：その日の天気・できごとの日を1回だけおぼえる */
 function dyNoon(h){if(h<9||h>=18)return;const D=dyCur();if(D&&D.wx==null)D.wx=dyWx()}
 function dyWx(){return typeof stormNow==='function'&&stormNow()?'storm':S.today&&DYOPEN[S.today]?S.today:festOn()?'fest':snowNow()?'snow':S.rain?'rain':rainbowToday()?'rainbow':'sun'+seasonNow()}
-const DYWRITER=()=>WD===1?HOMURA:POKO;/* ひとことを書くせいれい：章のはじめからいる子 */
+const DYWRITER=()=>WD===1?HOMURA:WD===YAMI?TOMORI:POKO;/* ひとことを書くせいれい：章のはじめからいる子 */
 const dyWriter=()=>{if(!S)return null;const n=DYWRITER();return S.res.find(r=>r.name===n)||null};
 /* 日記の文が、書く物に合うか（dyFit）：「なでた」「さわった」「すわった」「におい」「どっしり」「ぴかぴか」「食べる」「土」などの文は、そうできる物のときだけ。
    @N の名前から物をさがし（dyIdOf）、物のしゅるい（dyTr）と、文のことば（DYRULE：[ことば, だめなしゅるい, いるしゅるい]）でたしかめる */
@@ -121,7 +121,7 @@ function dyDayPage(x,h3){const e=x.e,sec=el('<div class="sec mone mdy">'+(h3?'<h
   if(e&&e.ph!=null||(S.phDays||[]).includes(x.d)){const f=el('<figure class="dyph dyph0" role="button" tabindex="0"><img alt=""></figure>');sec.querySelector('.dyphs').appendChild(f)}/* 絵の場所を先にとっておく（ページわけのあとで絵が入る） */
   if(e&&e.ft&&e.ft.length){const n=el('<p class="dyTx"></p>');n.textContent=e.ft.map(t=>t.replace(LOOKRX,'')).join('\n');sec.appendChild(n);sec.classList.add('dyw')}/* 文のある日は、絵日記の形（絵は上の半分、下にけい線の文） */
   const X=x.ev||[],ev=(e?e.m.map(t=>{const m=X.find(v=>v[1]===t);return[m?m[0]:'',t]}):X).filter((v,i,A)=>A.findIndex(w=>w[1]===v[1])===i);/* 日記のある日は、その日の日記のできごと（印は思い出のメモから）。同じ文は1つ */const more=el('<div class="dyMore"></div>');/* できごと・ゆうべのひとことは、絵と文のあと（入らなければ、つぎのページ） */if(ev.length){const u=el('<ul class="dyev"></ul>');for(const[ic,t]of ev){const li=document.createElement('li'),k=memoIc(ic);if(k)li.insertAdjacentHTML('afterbegin',pxi(k,'wx'));li.appendChild(document.createTextNode(t));u.appendChild(li)}more.appendChild(u)}
-  const N=e&&e.ns,b=e&&dyBest(e);if(N){const p=el('<p class="dyns"></p>');p.textContent=(N.kill?'ゆうべは、コワイノを'+N.kill+'体追いはらった。':'ゆうべは、コワイノが来なかった。')+(b?b.nm+'が、かつやくした。':'');more.appendChild(p)}
+  const N=e&&e.ns,b=e&&dyBest(e);if(N){const p=el('<p class="dyns"></p>');p.textContent=(N.kill?'ゆうべは、「コワイノ」を'+N.kill+'ひき追いはらった。':'ゆうべは、「コワイノ」が来なかった。')+(b?b.nm+'が、かつやくした。':'');more.appendChild(p)}
   if(more.children.length)sec.appendChild(more);return sec}
 /* 日のページに絵をはる：その日の絵（e.ph）があれば、それだけ。古いセーブの、その日の写真はぜんぶ */
 function dyFillPh(secs,after){if(IS_STORY_REPLAY||typeof phList!=='function')return;const st=S;

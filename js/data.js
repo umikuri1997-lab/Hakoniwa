@@ -19,8 +19,8 @@ const BL={
   stonefloor:{name:'石の床',kind:'block',floor:1,lv:6,cost:2,pc:4,time:40,maker:'earth',qty:10,mat:{stone:3},attr:{earth:.5},desc:'石をしきつめた家の床。歩く速さ1.15倍'},
   herrfloor:{name:'ヘリンボーンの床',kind:'block',floor:1,lv:1,cost:2,pc:4,time:45,maker:'wood',qty:10,mat:{wood:3},attr:{wood:.5},kwr:1,desc:'ダークチェリーの板を、山がたにしきつめた床。歩く速さ1.15倍'},/* コワイノのレシピ */
   carpet:{name:'じゅうたん',kind:'block',floor:1,lv:9,cost:2,pc:3,time:35,maker:'wind',qty:10,mat:{wood:2},attr:{wind:.5},desc:'やわらかな織り模様の床。歩く速さ1倍'},
-  stone:{name:'石畳',kind:'block',floor:1,cost:2,pc:4,time:40,maker:'earth',qty:10,lv:4,w:1,mat:{stone:6},attr:{earth:.75},desc:'しっかりした石の床。歩く速さ1.55倍'},
-  farm:{name:'畑',kind:'block',cost:4,dyn:1,attr:{},desc:'置くとせいれいが耕して種をまく。水やりすると育つ。こむぎ・キャベツは2日で食料+1、いもは3日で食料+2'},
+  stone:{name:'石畳',kind:'block',floor:1,cost:2,pc:4,time:40,maker:'earth',qty:10,lv:4,w:1,mat:{stone:6},attr:{earth:.75},desc:'石をしきつめた道。歩く速さ1.55倍'},
+  farm:{name:'畑',kind:'block',cost:4,dyn:1,attr:{},desc:'置くとせいれいが耕してたねをまく。水やりすると育つ。こむぎ・キャベツは2日で食料+1、いもは3日で食料+2'},
   misugaki:{name:'御簾垣',fix:2,fixm:{bamboo:1},kind:'block',cost:2,pc:4,time:60,maker:'wood',qty:10,w:1,solid:1,brk:1,hp:20,hpS:30,attr:{},mat:{bamboo:5},desc:'竹をあんだ垣。「コワイノ」の足止め。じょうぶさ20'},
   fence:{name:'柵',fix:2,fixm:{wood:1},kind:'block',cost:2,pc:4,time:60,maker:'wood',qty:10,solid:1,hp:20,hpS:30,attr:{},mat:{wood:5},desc:'木の板の柵。「コワイノ」の足止め。じょうぶさ20'},
   logfence:{name:'丸太の塀',fix:3,fixm:{wood:1},kind:'block',cost:3,pc:6,time:70,maker:'wood',qty:10,lv:6,offerOnly:1,solid:1,brk:1,hp:36,hpS:54.4,attr:{},mat:{wood:7},desc:'太い丸太をすきまなくならべた塀。じょうぶさ36'},
@@ -38,7 +38,7 @@ const BL={
   nebari:{sp:9,name:'ねばり草',item:'ねばり草のたね',kind:'plant',cost:3,attr:{wood:1},desc:'上を歩く「コワイノ」の速さ0.5倍。まわり3マスで、たのしさ+0.2／1時間'},
   hotaru:{sp:9,name:'ヨルボシの草むら',item:'ヨルボシの草むらの苗',kind:'plant',cost:3,attr:{water:1},desc:'夜、まわり2マスを照らすあかり。はじめて光に入った「コワイノ」が2分止まる'},
   lily:{sp:9,name:'ゆり',item:'ゆりのたね',kind:'plant',cost:3,attr:{wind:1},desc:'まわり3マスで、たのしさ+0.2／1時間'},
-  lotus:{sp:9,name:'ハス',item:'ハスのたね',kind:'plant',cost:3,attr:{water:1},desc:'池にうかぶ花。まわり3マスで、たのしさ+0.2／1時間。まわり2マスで水浴びすると、たのしさ1.5倍・つかれ－9／1時間'},
+  lotus:{sp:9,name:'ハス',item:'ハスのたね',kind:'plant',cost:3,attr:{water:1},desc:'池にうかぶ花。まわり3マスで、たのしさ+0.2／1時間。まわり2マスで水あびすると、たのしさ1.5倍・つかれ－9／1時間'},
   tree:{hp:5,brk:1,fix:1,fixm:{},name:'木',item:'木の苗',kind:'plant',cost:4,lv:3,solid:1,env:1,attr:{wood:3},desc:'まわり5マスを緑にする。まわり3マスで、たのしさ+0.4／1時間'},
   fruit:{hp:5,brk:1,fix:1,fixm:{},name:'りんごの木',item:'りんごの苗',kind:'plant',cost:10,lv:6,solid:1,dyn:1,env:1,attr:{wood:3,water:1},desc:'まわり5マスを緑にする。まわり3マスで、たのしさ+0.4／1時間。4日ごとに、りんごが実る。食料+2'},
 /* 新しい家具（スクリプトで描く） */
@@ -70,7 +70,7 @@ const BL={
   paint3:{hp:5,brk:1,fix:3,fixm:{wood:13},offerOnly:1,name:'花の額',kind:'furn',cat:'other',f2:1,lv:8,pc:5,time:80,maker:'wind',attr:{wind:1},mat:{wood:25},solid:1,desc:'花の絵。住み心地+10'},
   wshelf:{hp:5,brk:1,fix:4,fixm:{wood:10},name:'かべ棚',kind:'furn',cat:'other',f2:1,lv:8,pc:9,time:100,maker:'wood',attr:{wood:1},mat:{wood:20},solid:1,desc:'つる草をたらした棚。住み心地+12。物を200までしまえる'},
   paint1:{hp:5,brk:1,fix:5,fixm:{wood:15},offerOnly:1,name:'風景画',kind:'furn',cat:'other',f2:1,lv:9,pc:9,time:120,maker:'water',attr:{water:1},mat:{wood:30},solid:1,desc:'草原の絵。住み心地+14'},
-  bathtub:{hp:5,brk:1,fix:8,fixm:{wood:8,stone:15},offerOnly:1,name:'バスタブ',kind:'furn',cat:'other',f2:1,lv:9,pc:15,time:180,maker:'water',attr:{water:1},mat:{wood:15,stone:30},solid:1,desc:'家の中のおふろ。夕方、ここで水浴びできる。住み心地+16'},
+  bathtub:{hp:5,brk:1,fix:8,fixm:{wood:8,stone:15},offerOnly:1,name:'バスタブ',kind:'furn',cat:'other',f2:1,lv:9,pc:15,time:180,maker:'water',attr:{water:1},mat:{wood:15,stone:30},solid:1,desc:'家の中のおふろ。夕方、ここで水あびできる。住み心地+16'},
   candle:{hp:5,brk:1,fix:1,fixm:{wood:1},offerOnly:1,name:'ろうそく',kind:'furn',cat:'light',f2:1,lv:5,pc:1,time:60,maker:'fire',attr:{fire:1},mat:{wood:2},solid:1,desc:'あかり。住み心地+3'},
   lantern:{hp:5,brk:1,fix:2,fixm:{wood:1,can:1},name:'ランタン',kind:'furn',cat:'light',f2:1,lv:6,pc:3,time:80,maker:'fire',attr:{fire:1},mat:{wood:2,can:1},solid:1,desc:'あかり。住み心地+5'},
   flamp:{hp:5,brk:1,fix:4,fixm:{wood:2,stone:1},offerOnly:1,name:'フロアランプ',kind:'furn',cat:'light',f2:1,lv:6,pc:7,time:100,maker:'fire',attr:{fire:1},mat:{wood:3,stone:2},solid:1,desc:'あかり。住み心地+6'},
@@ -178,11 +178,11 @@ const BL={
   gust:{name:'つむじ風の罠',fix:2,fixm:{eda:1},kind:'furn',pc:3,time:120,maker:'wind',lv:5,qty:2,trap:1,anim:1,attr:{wind:.5},mat:{eda:2},desc:'ふんだ「コワイノ」を6マスふきとばし、1.3分止める。つぎに使えるまで2時間30分',anim:1},
   dig:{name:'けずる',kind:'build',pc:50,time:40,maker:'earth',attr:{},desc:'高いマスを1だん低くする工事。パワー50'},
   mound:{name:'もる',kind:'build',pc:50,time:40,maker:'earth',attr:{},desc:'低いマスを1だん高くする工事。パワー50'},
-  watch:{name:'見張り台',fix:10,fixm:{wood:10,stone:10},kind:'build',sz:[2,2],mat:{wood:25,stone:20},pc:20,time:150,maker:'earth',lv:2,solid:1,attr:{fire:2,earth:2},desc:'夜、せいれいが上に立って、「コワイノ」に木の矢を放つ。ダメージ10／6.7分ごと／範囲6マス'},
+  watch:{name:'見張り台',fix:10,fixm:{wood:10,stone:10},kind:'build',sz:[2,2],mat:{wood:25,stone:20},pc:20,time:150,maker:'earth',lv:2,solid:1,attr:{fire:2,earth:2},desc:'夜、せいれいが上に立って、「コワイノ」に木の矢を放つ。威力10／6.7分ごと／射程6マス'},
   coop:{name:'とり小屋',kind:'build',mat:{wood:20},pc:15,time:120,maker:'wood',lv:4,solid:1,attr:{wood:1},desc:'ハネマリが3羽まで住む小屋'},
-  barn:{name:'家畜小屋',kind:'build',sz:[2,2],mat:{wood:50,stone:10},pc:30,time:200,maker:'earth',lv:4,solid:1,attr:{earth:2},desc:'モコダマかツノクサが2頭まで住む小屋'},
+  barn:{name:'家畜小屋',kind:'build',sz:[2,2],mat:{wood:50,stone:10},pc:30,time:200,maker:'earth',lv:4,solid:1,attr:{earth:2},desc:'モコダマかツノクサが3頭まで住む小屋'},
   smelter:{name:'炉',fix:10,fixm:{stone:10},kind:'build',sz:[2,2],mat:{wood:10,stone:30},pc:20,time:150,maker:'fire',w:1,solid:1,attr:{fire:2},desc:'鉱石2こで、延べ棒1こを作る'},
-  yogan:{name:'ようがん台',fix:10,fixm:{stone:15},kind:'build',sz:[2,2],mat:{wood:5,stone:40},pc:20,time:150,maker:'fire',lv:1,solid:1,attr:{fire:3},desc:'火山のふもとの守り。「コワイノ」に火の玉を飛ばす。ダメージ10（まわり5）／5.3分ごと／範囲5マス'},
+  yogan:{name:'ようがん台',fix:10,fixm:{stone:15},kind:'build',sz:[2,2],mat:{wood:5,stone:40},pc:20,time:150,maker:'fire',lv:1,solid:1,attr:{fire:3},desc:'火山のふもとの守り。「コワイノ」に火の玉を飛ばす。威力10（まわり5）／5.3分ごと／射程5マス'},
   well:{hp:5,brk:1,fix:10,fixm:{wood:4,stone:15},name:'井戸',kind:'build',mat:{wood:8,stone:30},pc:20,time:140,maker:'water',lv:6,solid:1,attr:{water:4},desc:'いくらでも水をくめる井戸'},
   mill:{hp:5,brk:1,fix:6,fixm:{wood:6,stone:4},name:'粉ひき小屋',kind:'build',sz:[2,2],mat:{wood:15,stone:10},pc:10,time:120,maker:'earth',lv:4,solid:1,attr:{earth:2},desc:'こむぎ2こで、こむぎこ1こをひく'},
   suisha:{hp:5,brk:1,fix:4,fixm:{wood:6},name:'水車',kind:'build',mat:{wood:20,stone:4},pc:10,time:120,maker:'water',lv:7,solid:1,attr:{water:2},desc:'まわり5マスの粉ひき小屋・はたおり機が、せいれいがいなくても動く'},
@@ -207,7 +207,7 @@ const BL={
   altar:{name:'カミサマの台座',solid:1,anim:1},
   site2:{name:'建てている場所',solid:1,job:1},
   part:{name:''},
-  tower:{hp:100,hpS:150,brk:1,fix:20,fixm:{wood:20,stone:10},name:'守護の台座',sz:[2,2],kind:'build',pc:95,time:300,maker:null,solid:1,anim:1,attr:{wood:3,water:3,fire:3,earth:3,wind:3},desc:'守護の力をとりもどす台座。ヌシ様が帰ってくる。光の矢：ダメージ10／6.7分ごと／範囲10マス。まわり7マスを照らす'},
+  tower:{hp:100,hpS:150,brk:1,fix:20,fixm:{wood:20,stone:10},name:'守護の台座',sz:[2,2],kind:'build',pc:95,time:300,maker:null,solid:1,anim:1,attr:{wood:3,water:3,fire:3,earth:3,wind:3},desc:'守護の力をとりもどす台座。ヌシ様が帰ってくる。光の矢：威力10／6.7分ごと／射程10マス。まわり7マスを照らす'},
   rock:{name:'岩',solid:1,natural:1},kagenest:{name:'かげの巣',solid:1,natural:1},leafwall:{name:'葉のかべ',natural:1,brk:1,hp:30},/* かげの巣・葉のかべ（defense.js） */vcopper:{name:'銅の鉱脈',solid:1,natural:1},viron:{name:'鉄の鉱脈',solid:1,natural:1},vobsid:{name:'黒曜石の鉱脈',solid:1,natural:1},vsilver:{name:'銀の鉱脈',solid:1,natural:1},vgold:{name:'金の鉱脈',solid:1,natural:1},/* 火山の鉱脈：ほると鉱石 */
   hotstone:{hp:5,brk:1,fix:1,fixm:{},name:'湯のわき岩',kind:'furn',pc:0,time:20,solid:1,anim:1,attr:{fire:3,water:1},desc:'水べに置くと、水があたたまって温泉になる'},
   volcano:{name:'火山',sz:[3,3],solid:1,anim:1},boulder:{name:'大岩',solid:1,natural:1},heatv:{name:'熱の切りかえ装置',solid:1,anim:1},crack:{name:'ひびわれ',anim:1},/* 火山のふもと */
@@ -284,10 +284,11 @@ const GOD='カミサマ',POKO='フタバ';
 const MINA='ノドカ';
 const HOMURA='ホムラ',SHIZUKU='シズク';
 const KEYS=[[POKO,MINA],[HOMURA,SHIZUKU]];KEYS[FREE]=[];const FIXK0={fire:'ホノ',water:'アオ',wind:'フウ'};/* ステージ1の火・水・風のキーキャラ（名前も見た目も固定） *//* ステージごとのキーキャラ（1人目・2人目） */
-const KEYEL={[POKO]:'wood',[MINA]:'earth',[HOMURA]:'fire',[SHIZUKU]:'water'};
+const TOMORI='トモリ';KEYS[YAMI]=[TOMORI];/* 闇のステージ：光のせいれい（1人だけ） */
+const KEYEL={[TOMORI]:'light',[POKO]:'wood',[MINA]:'earth',[HOMURA]:'fire',[SHIZUKU]:'water'};
 const LEAD=()=>KEYS[WD][0]||(WD===FREE?FA():GOD);
 const PROLOGUE=[
-  ['？？？','#wave|…おーい、聞こえとるかの？ そうそう、おヌシじゃ。'],
+  ['？？？','#wave|……おーい、聞こえとるかの？ そうそう、おヌシじゃ。'],
   [GOD,'#wave|わしはカミサマじゃ。おヌシは、生まれたばかりの小さな守り神なんじゃよ。ほっほ、まだ目がしょぼしょぼしとるのう。'],
   [GOD,'#alarm|おヌシに行ってほしい草原があるんじゃ。むかしはにぎやかじゃったが、「コワイノ」の大群におそわれてのう。せいれいたちは、散り散りになってしもうた。'],
   [GOD,'#joy|せいれいたちの力を集めて、あの土地に守護の力を取りもどしておくれ。おヌシなら、きっとできる。では、行こうかの！'],
@@ -318,8 +319,8 @@ function adPrompt(){if($('#adBox'))return;const d=document.createElement('div');
   d.innerHTML='<div class="pxcard" style="background:var(--panel);color:var(--ink);border-radius:16px;padding:20px;max-width:320px;width:100%;text-align:center;font-weight:700;line-height:1.7"><div>広告を見ると、10分間<br>ゲームの速さを2倍にできるよ</div><div id="adMsg" style="margin:10px 0;font-weight:400;min-height:1.7em"></div><div style="display:flex;gap:8px;justify-content:center"><button class="btn pri" id="adGo">広告を見る</button><button class="btn" id="adNo">やめる</button></div></div>';
   document.body.appendChild(d);const close=()=>d.remove();$('#adNo').onclick=close;
   $('#adGo').onclick=()=>{$('#adGo').disabled=true;$('#adNo').disabled=true;let n=5;const m=$('#adMsg');m.textContent='広告 '+n;const iv=setInterval(()=>{n--;if(n>0){m.textContent='広告 '+n;return}clearInterval(iv);S.glassT=Math.min(1800,(S.glassT||0)+600);sfx('level');toast('スピードアップが10分使えるようになった','good');close();applyFeats()},1000)}}/* 広告を見たらスピードアップ10分（いまは広告のかわりの5秒の画面） */
-const GOD_SHOP=['いらっしゃ〜い。なにがほしいかの？','おっ、来たのう。今日はなにと交換する？','パワーたまっとるか？ ゆっくり見ていくがよい。','どれも自慢の品じゃよ。たぶん。','ほれ、えらべえらべ。まけんがの。'],GOD_BUY=['まいど〜！ だいじに使うんじゃぞ。','いい買い物をしたのう〜。','それをえらぶか？ わかっとるのう。','ありがとさん〜。パワーはだいじにあずかっとくぞい。','また来るんじゃよ。…おっと、来とるのはわしのほうか。'],GOD_POOR=['パワーが足りんのう〜。せいれいたちにがんばってもらうんじゃ。','ツケはなしじゃぞ〜。'];let shopSay='';
-const GOD_IDLE=['草、生えてきたのう〜。','むかしはのう…はて、なんの話じゃったか。','パワー？ ためればなんとかなるわい！','ねむ…。','夜は「コワイノ」に気をつけるんじゃぞ。たぶん来るからの。','「コワイノ」は、ほんとうに悪いやつなんかのう…。','おやつ持っとらんか？','属性がたまるとせいれいが来るぞい。…たしか。'];
+const GOD_SHOP=['いらっしゃ〜い。なにがほしいかの？','おっ、来たのう。今日はなにと交換する？','パワーたまっとるか？ ゆっくり見ていくがよい。','どれも自慢の品じゃよ。たぶん。','ほれ、えらべえらべ。まけんがの。'],GOD_BUY=['まいど〜！ だいじに使うんじゃぞ。','いい買い物をしたのう〜。','それをえらぶか？ わかっとるのう。','ありがとさん〜。パワーはだいじにあずかっとくぞい。','また来るんじゃよ。……おっと、来とるのはわしのほうか。'],GOD_POOR=['パワーが足りんのう〜。せいれいたちにがんばってもらうんじゃ。','ツケはなしじゃぞ〜。'];let shopSay='';
+const GOD_IDLE=['草、生えてきたのう〜。','むかしはのう……はて、なんの話じゃったか。','パワー？ ためればなんとかなるわい！','ねむ……。','夜は「コワイノ」に気をつけるんじゃぞ。たぶん来るからの。','「コワイノ」は、ほんとうに悪いやつなんかのう……。','おやつ持っとらんか？','花や木の力が満ちると、せいれいが来るぞい。……たしか。'];
 function KS(L){const o=[];let gv=false;for(let[w,t,...rest]of L){if(w[0]==='@'){o.push([w,t,...rest]);continue}let n=w;if(w.length===1){try{n=sevName(w)}catch(e){n=null}}if(n){if(t&&typeof t==='object'){const q=S&&S.res.find(x=>x.name===n);t=q&&elemKey(q)==='fireB'?t.B:t.A}if(n===GOD&&!gv&&typeof t==='string'){gv=true;if(!t.includes('聞こえるかの？')){const m=/^(#[^|]*\|)?([\s\S]*)$/.exec(t);t=(m[1]||'')+GVOICE()+m[2]}}/* カミサマが遠くにいるときは、はじめの行だけ「聞こえるかの？」 */o.push([n,t,...rest])}}return o}/* キーキャラの名前を入れたセリフ */
 function pathMade(){const n=S.floor.filter(f=>f==='path').length;if(S.flags.path0==null)S.flags.path0=n;return Math.max(0,n-S.flags.path0)}/* クエストを受けてから、しいたあぜ道の数 */
 /* 御神木の調べ。parts：その話でつづけて調べる段階（FIELD_STORIES のキー）。1つの依頼の中で、じゅんに最後まで調べる */
@@ -357,13 +358,13 @@ const QUESTS1=[
   {id:'mbox',skip:true,text:'木箱を置こう',how:'',check:()=>true,/* 食料箱と素材箱を木箱にまとめた（box1）。古いセーブの番号のために、とばす目標としてのこす */
    story:[
     [POKO,'#surprise|わあ、ぴったり！ 集めてた木と石、ぜんぶ入れとくね。'],
-    [POKO,'#nod|…あ、くるんってした枝は、ぼくのたからものだから、入れないけどね。'],
+    [POKO,'#nod|……あ、くるんってした枝は、ぼくのたからものだから、入れないけどね。'],
     [GOD,'#joy|ほっほ、たからものは、だいじにせんとのう。'],[GOD,'せいれいたちは、困っていることや、やってみたいことを話してくれる。どんな形でかなえるかは、おヌシのひらめき次第じゃ。']],
    get gives(){return S&&S.flags.qmMbox?{}:{mat:{wood:10,stone:10},flag:'qmMbox',msg:'フタバが集めていた木材10・石材10を木箱に入れた'}}},
   {id:'table',skip:true,text:'食卓をたのもう',how:'',check:()=>true},/* 食卓はサブクエスト（table1）にした。古いセーブの番号のために、とばす目標としてのこす */
   {id:'wall',text:'家の壁を直そう',how:'「おく」→「木の壁」をえらんで、家の壁のすきまをふさぐ',check:()=>HOUSES.length>=1,
    talk:{who:GOD,when:()=>true,lines:[
-    [GOD,'しまう場所は、できたのう。…そろそろ、夜のことも話しておかんとな。'],
+    [GOD,'しまう場所は、できたのう。……そろそろ、夜のことも話しておかんとな。'],
     [GOD,'#alarm|この土地には、夜になると「コワイノ」が来るんじゃ。家の中にいればおそわれん。じゃが、壁にすきまがあると、こわして入ろうとするんじゃ。'],
     [POKO,'#scared|「コワイノ」……。夜は、あの穴のあいた家にかくれてたんだ。'],
     [GOD,'#worry|あの家、壁がこわれたままなんじゃ。あれでは、夜が心配じゃのう。'],
@@ -434,7 +435,7 @@ const QUESTS1=[
     [POKO,'これで、少しは安心できるね。'],[POKO,'#joy|守ってくれて、ありがとう、守り神さま！']]},
   {id:'kikyo',text:'ききょうを植えて、土の力をためよう',how:"「おく」→「ききょうのたね」を植える。ききょうが咲いて土の力がたまると、なかまを呼べる",check:()=>bloomCount('bellf')>=2,prog:()=>'咲いたききょう '+Math.min(2,bloomCount('bellf'))+'/2',
    talk:{who:POKO,when:()=>true,lines:[
-    [POKO,'#cry|ねえカミサマ…ぼく、ひとりだとちょっとさみしいな。'],
+    [POKO,'#cry|ねえカミサマ……ぼく、ひとりだとちょっとさみしいな。'],
     [GOD,'#worry|……そうじゃのう。ずっとひとりで、よう待っとったものな。'],
     [GOD,'#think|つぎに来てもらうなら、土のせいれいがよかろう。土をなでるのが好きな子らでな。フタバの、よい相棒になってくれそうじゃ。'],
     [GOD,'ほれ、ききょうのたねじゃ。青い花がきれいに咲いたら、土のせいれいも、きっと気づいてくれるじゃろう。']],gives:{feat:['summon'],items:{bellf:5}}},
@@ -446,7 +447,7 @@ const QUESTS1=[
     [GOD,'#nod|力は満ちたのう……。朝になれば、呼ぶしるしが出るはずじゃ。'],
     [POKO,'#joy|ぼく、はじめに、なんて言おうかな。']],gives:{flag:'sumTold'}},
    by:MINA,story:[
-    [MINA,'#surprise wave|ふわぁ…。はじめまして、ノドカだよぉ。よろしくねぇ。'],
+    [MINA,'#surprise wave|ふわぁ……。はじめまして、ノドカだよぉ。よろしくねぇ。'],
     [POKO,'#wave|わーい、なかまだ！ よろしくね、ノドカ！'],
     [MINA,'畑を耕すのと、柵を直すのが得意なんだぁ。のんびりやるねぇ。'],[MINA,'#joy|呼んでくれて、ありがとうねぇ、守り神さま。']]},
   {id:'farm6',text:'畑を6つにしよう',how:"「おく」→「畑」をえらび、合計6つにする",check:()=>cnt('farm')>=6,prog:()=>'畑 '+Math.min(6,cnt('farm'))+'/6',
@@ -465,7 +466,7 @@ const QUESTS1=[
    story:[
     [POKO,'#joy|たねをまいてくれて、ありがとう！ 水やりと世話は、ぼくにまかせて！'],
     [MINA,'大きくなるの、たのしみだねぇ。']]},
-  companionFieldQuest("earthListen","切り株の下で","古い切り株のそばにあさぶくろを置いたら、切り株をタップ。ノドカと根元の土を確かめる。よけた土をふくろに入れながら、フタバと根の様子を確かめよう","earth",[["F","ノドカ？ どうしたの？"],["N","毎日、畑の土をさわってたらねぇ……ここだけ、土の中に、ほんの少しだけぬくもりが残ってるのに気づいたんだぁ。"],["F","ぬくもり？"],["N","うん。まわりの土は、みんな冷えてるのに。"],["F","#think|……この木……"],["N","知ってる木なのぉ？"],["F","#think|……大きな木だったんだ。"],["N","土の下、見てみようかぁ。よけた土を入れておく、ふくろがあるといいねぇ。あとで、ちゃんともどせるように。"]],[["F","#think|……あれ？ この傷、ヌシ様の角のあとだ。"],["N","……この傷かぁ。"],["F","ここに頭をくっつけて、お昼寝してたんだ。ぼくが上に乗っても、ぜんぜん起きなくって。"],["F","#think|……また、葉っぱ、生えるかな。"],["N","根は、まだ残ってるよぉ。"],["N","冷えないように、土をもどしておこうねぇ。",0,"stree:cover"],["F","うん。ぼくも、手伝う。"]],['earthListen']),
+  companionFieldQuest("earthListen","切り株の下で","古い切り株のそばにあさぶくろを置いたら、切り株をタップ。ノドカと根もとの土を確かめる。よけた土をふくろに入れながら、フタバと根の様子を確かめよう","earth",[["F","ノドカ？ どうしたの？"],["N","毎日、畑の土をさわってたらねぇ……ここだけ、土の中に、ほんの少しだけぬくもりが残ってるのに気づいたんだぁ。"],["F","ぬくもり？"],["N","うん。まわりの土は、みんな冷えてるのに。"],["F","#think|……この木……"],["N","知ってる木なのぉ？"],["F","#think|……大きな木だったんだ。"],["N","土の下、見てみようかぁ。よけた土を入れておく、ふくろがあるといいねぇ。あとで、ちゃんともどせるように。"]],[["F","#think|……あれ？ この傷、ヌシ様の角のあとだ。"],["N","……この傷かぁ。"],["F","ここに頭をくっつけて、お昼寝してたんだ。ぼくが上に乗っても、ぜんぜん起きなくって。"],["F","#think|……また、葉っぱ、生えるかな。"],["N","根は、まだ残ってるよぉ。"],["N","冷えないように、土をもどしておこうねぇ。",0,"stree:cover"],["F","うん。ぼくも、手伝う。"]],['earthListen']),
   /* どのクエストも：吹き出し→会話でクエストを受ける→たっせい→吹き出し→お礼とごほうび */
   {id:'fire',text:'火のせいれいをむかえよう',check:()=>elemCount('fire')>=1&&NEWRES==null,how:'見張り台やサルビアを置いて火の力をためる。満ちたつぎの朝、神殿の「！」からなかまを呼ぶ',prog:()=>'火の力 '+Math.floor(ATTR.fire)+'/'+needFor('fire'),
    talk:{who:POKO,when:()=>true,lines:[
@@ -475,7 +476,7 @@ const QUESTS1=[
     [MINA,'火のせいれいなら、ぬくもりを分けてあげられるかもしれないねぇ。夜は、「コワイノ」から村を守ってくれるんだってぇ。'],
     [POKO,'火の力をためて、火のせいれいをむかえよう！']]},
    get story(){return KS([['H','#joy|おう、来てやったぜ！ 今夜からは、おれも村を守る。'],[POKO,'あったかいせいれいが来てくれた！ あのね、あとで見てほしい木があるの。'],['H','木？ ……いいぜ。そんな顔されちゃ、あとで見てやるよ。']])}},
-  companionFieldQuest("fireRoot","燃やさない火","切り株のそばにたき火を置いたら、切り株をタップ。火のせいれいが温めた石を根の周りに置く。ノドカと土を整えて、根元の変化を見届けよう","fire",[["F","ここ、あっためられる？"],["H","木を？"],["F","根っこのぬくもりが、少しずつ小さくなってるの。"],["H","……燃やしていい木じゃ、なさそうだな。"],["F","うん。だいじな木。"],["H","なら、根から少しはなして、小さなたき火をするぞ。そこで石を温めて、根のまわりに置くんだ。"]],[["F","ずっと、そばにいなくてもいいの？"],["H","村の見回りもあるからな。おれがいないあいだも、冷えにくくしてやろう。"],["F","待って。前に来たときも、ここにあった？",0,"stree:bud"],["N","……芽だねぇ。"],["F","#joy|芽！",0,"stree:gaze"],["H","見張ってても、急にはでかくならねえぞ。"],["F","でも、見てたい。"],["H","……じゃあ、ちょっとだけな。",0,"stree:sit"]],['fireRoot']),
+  companionFieldQuest("fireRoot","燃やさない火","切り株のそばにたき火を置いたら、切り株をタップ。火のせいれいが温めた石を根のまわりに置く。ノドカと土を整えて、根もとの変化を見届けよう","fire",[["F","ここ、あっためられる？"],["H","木を？"],["F","根っこのぬくもりが、少しずつ小さくなってるの。"],["H","……燃やしていい木じゃ、なさそうだな。"],["F","うん。だいじな木。"],["H","なら、根から少しはなして、小さなたき火をするぞ。そこで石を温めて、根のまわりに置くんだ。"]],[["F","ずっと、そばにいなくてもいいの？"],["H","村の見回りもあるからな。おれがいないあいだも、冷えにくくしてやろう。"],["F","待って。前に来たときも、ここにあった？",0,"stree:bud"],["N","……芽だねぇ。"],["F","#joy|芽！",0,"stree:gaze"],["H","見張ってても、急にはでかくならねえぞ。"],["F","でも、見てたい。"],["H","……じゃあ、ちょっとだけな。",0,"stree:sit"]],['fireRoot']),
   /* 芽が出たあと（つぎの日の夕方 WARMH 時から。warmMealReady）：芽のそばからはなれないフタバのために、火のせいれいが、切り株のそばに食卓を置こうと言う（warmIns1）。かまどは火山から */
   stepQuest({id:'warmMeal',text:'芽のそばのごはん',
    steps:[{id:'warmTable',t:'切り株のそばに、食卓を置く',check:()=>!!S.flags.warmYaki||!!S.flags.warmEat||warmTableJ()>=0,how:'依頼ボードの「家具」で食卓の依頼をはり、切り株のそばに置く'},
@@ -502,7 +503,7 @@ const QUESTS1=[
    steps:[{id:'kagemark',t:'大きなかげのあとを見つける',check:()=>{if(S.flags.kgDay==null)S.flags.kgDay=dayNo();if(S.flags.kgMark==null&&dayNo()>S.flags.kgDay||S.flags.kgMark!=null&&!S.flags.kgLook&&!kgOpen(S.flags.kgMark))kgPlace();/* あとから草・茂みなどが生えて、かくれたら、空いた所へうつす */return !!S.flags.kgLook},/* 話を聞いたつぎの日から、村の南に大きなかげのあとが出る */prog:()=>S.flags.kgMark==null?'あしたの朝、あとが見つかる':'村の南のはしにある',how:'「しらべる」で、村の南に出た、大きなかげのあとをタップする'},
     {id:'tale',t:'夕方、フタバの話を聞く',check:()=>{if(!S.flags.kgLook)return false;if(S.flags.taleDay==null){S.flags.taleDay=dayNo();S.flags.taleLate=hour()>=18}return (dayNo()>S.flags.taleDay||S.flags.taleLate===false)&&hour()>=18&&!isNight()},/* あとを見つけたあとの、さいしょの18時（18時より前に見つけたらその日、あとならあしたの18時） */how:'18時になると、フタバが話しはじめる'}],
    talk:{who:POKO,when:()=>true,lines:[
-    [POKO,'さいきん、夜になると、村の外のほうで、ずしん…ずしん…って音がするんだ。'],
+    [POKO,'さいきん、夜になると、村の外のほうで、ずしん……ずしん……って音がするんだ。'],
     [MINA,'土も、なんだかそわそわしてるよぉ。なにかが、近くを歩きまわってるのかもねぇ。'],
     [POKO,'#alarm|明るくなったら、村のまわりを見てまわろうね。']]},
    story:[
@@ -521,7 +522,7 @@ const QUESTS1=[
     {id:'yoru10',t:'「コワイノ」を10ひき追いはらう',check:()=>killsSince()>=10,prog:()=>'「コワイノ」 '+Math.min(10,killsSince())+'/10',how:'夜に来る「コワイノ」を、あわせて10ひき追いはらう'},
     {id:'ookage',t:'オオカゲを追いはらう',check:()=>(S.bossKills||0)>=1,prog:()=>bossDays(),how:'柵・見張り台・罠を整え、夜に来るオオカゲを追いはらう'}],
    talk:{who:POKO,when:()=>true,lines:[
-    [POKO,'#alarm|守り神さま、夜の「コワイノ」を見てたらね…森の奥に、ひときわ大きな黒い影がいたんだ。あのあしあとの、かげだよ。きっと。'],
+    [POKO,'#alarm|守り神さま、夜の「コワイノ」を見てたらね……森の奥に、ひときわ大きな黒い影がいたんだ。あのあしあとの、影だよ。きっと。'],
     [MINA,'#alarm|それは「オオカゲ」だねぇ。「コワイノ」が、たくさんあつまってできた影だって、言われてるよぉ。'],
     [MINA,'#alarm|土の音を聞くとねぇ……もうすぐ、来そうだよぉ。'],
     [MINA,'#nod|みんなで、そなえておこうねぇ。']]},
@@ -544,7 +545,7 @@ const QUESTS1=[
     [MINA,'あの葉っぱにも、いい風を運んでくれるかもしれないねぇ。風の力をためれば、来てくれるはずだよぉ。'],
     [POKO,'#think|じゃあ、ふわっとゆれる遊び道具があったら、よろこんでくれるかな？ 守り神さま、なにか思いつく？'],['@idea']]},
    get story(){return KS([['K','フッ……風に呼ばれて来てみれば、ずいぶん素朴な村だね。'],[POKO,'風のせいれいが来た！ これで、木・土・火・水・風のなかまがそろったね！'],['K','フッ……素朴なのも、悪くない。ぼくの風で、もっと華やかにしてあげよう。'],[POKO,'#think|……そうだ。あの切り株の若葉にも、やさしい風をとどけてくれるかな。']])}},
-  companionFieldQuest("windEcho","葉ずれの向こう","切り株のそばに風車を建てたら、切り株をタップ。風のせいれいと若葉の音を聞く。集まった仲間と世話をして、フタバの声を届けよう。返事を最後まで聞く","wind",[["K","ずいぶん大事にされているね。この木は。"],["F","みんなで、お世話してるんだ。"],["K","……根元へ、風を通してみてもいいかな。"],["F","葉っぱ、飛んでいかない？"],["K","そんな乱暴な風は、使わないさ。"],["K","木のそばに、風車を建ててもいいかな。羽が回れば、風の強さが目で見える。強すぎたら、すぐわかるよ。"]],[["F","#teary|……生きてる。"],["F","ヌシ様、生きてるんだ。"],["F","ぼくが、ひとりじゃないって……。"],["N","聞いてくれたねぇ。",0,"stree:touch"],["F","守り神さま。"],["F","ヌシ様を、もとの姿にもどしてあげたい。"],["F","また、この木の下で……みんなで会いたい。"]],['windEcho']),
+  companionFieldQuest("windEcho","葉ずれの向こう","切り株のそばに風車を建てたら、切り株をタップ。風のせいれいと若葉の音を聞く。集まった仲間と世話をして、フタバの声を届けよう。返事を最後まで聞く","wind",[["K","ずいぶん大事にされているね。この木は。"],["F","みんなで、お世話してるんだ。"],["K","……根もとへ、風を通してみてもいいかな。"],["F","葉っぱ、飛んでいかない？"],["K","そんな乱暴な風は、使わないさ。"],["K","木のそばに、風車を建ててもいいかな。羽が回れば、風の強さが目で見える。強すぎたら、すぐわかるよ。"]],[["F","#teary|……生きてる。"],["F","ヌシ様、生きてるんだ。"],["F","ぼくが、ひとりじゃないって……。"],["N","聞いてくれたねぇ。",0,"stree:touch"],["F","守り神さま。"],["F","ヌシ様を、もとの姿にもどしてあげたい。"],["F","また、この木の下で……みんなで会いたい。"]],['windEcho']),
   /* 葉ずれの向こうのあと：風のせいれいが、たこをあげて、空から村をながめる（kiteIns1）。霧のむこうの足あとに気づき、かけらさがしへつながる */
   stepQuest({id:'kite',text:'空からのながめ',
    steps:[{id:'kiteMat',t:'たこの材料をあつめる',check:()=>(S.mat.eda||0)>=3&&(S.mat.shina||0)>=4,prog:()=>'枝 '+Math.min(3,S.mat.eda||0)+'/3　しなやかな草 '+Math.min(4,S.mat.shina||0)+'/4',how:'枝と、しなやかな草を箱にためる'}],
@@ -598,7 +599,7 @@ const QUESTS1=[
      {t:'ゆり',v:'lily',lines:[[POKO,'#joy|ゆり！ 白くて、ヌシ様の毛なみみたいだね！']]},
      {t:'シロツメクサ',v:'clover',lines:[[POKO,'#joy|シロツメクサ！ ヌシ様のそばで、よく四つ葉をさがしたんだ！']]}]}],
     [MINA,'#joy|花が咲いたら、みんなで、お世話しようねぇ。']]},
-   get story(){return [[POKO,'#surprise|わあ…御神木のまわりが、'+wflName()+'でいっぱいだ！ 木のなかまも、こんなにふえたね。'],[POKO,'#joy|ありがとう、守り神さま！'],[POKO,'#joy|ひとり1本ずつ、5人で。……あのころと、同じ花だ。'],[MINA,'にぎやかだねぇ。御神木も、うれしそうだよぉ。'],...KS([['M','#joy|花のあいだを、水がすうっと流れていきます。'],['K','フッ……花のかおりが、風にのって村じゅうに広がっているよ。'],['H','夜は、おれが花畑も見まわっとくぜ。']]).filter(l=>S.res.some(r=>r.name===l[0])),[POKO,'ヌシ様、見てくれるかな。……会いたいな。']]}}),
+   get story(){return [[POKO,'#surprise|わあ……御神木のまわりが、'+wflName()+'でいっぱいだ！ 木のなかまも、こんなにふえたね。'],[POKO,'#joy|ありがとう、守り神さま！'],[POKO,'#joy|ひとり1本ずつ、5人で。……あのころと、同じ花だ。'],[MINA,'にぎやかだねぇ。御神木も、うれしそうだよぉ。'],...KS([['M','#joy|花のあいだを、水がすうっと流れていきます。'],['K','フッ……花のかおりが、風にのって村じゅうに広がっているよ。'],['H','夜は、おれが花畑も見まわっとくぜ。']]).filter(l=>S.res.some(r=>r.name===l[0])),[POKO,'ヌシ様、見てくれるかな。……会いたいな。']]}}),
   {id:'nushi',get text(){return grassEndingGoal().text},check:()=>!!S.cleared,prog:()=>grassEndingGoal().progress,get how(){return grassEndingGoal().how},
    talk:{who:POKO,when:()=>true,get lines(){return [
     [POKO,'かけらも、あと少しだね。ヌシ様をむかえる準備、もうすぐかな。'],
