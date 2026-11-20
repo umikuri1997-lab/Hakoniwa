@@ -5,7 +5,16 @@ from blueprint import Part as P
 ID='g_w_bed';BOTTOM=58;GRAD=True;SIZE=0.94
 VIEWS=[('g_w_bed',0),('g_w_bed>1',1),('g_w_bed>2',2),('g_w_bed>3',3)]
 
+LEAF=np.array([150,178,92.]);SHEET=np.array([244,232,214.]);PILLOW=np.array([250,244,234.])
+def wood(c):return c[0]-c[1]>38 and c[2]<150   # 木のわく（茶色）
+def fix(x,y,z,c):   # ぬり分け（持ち主：色のぬり分けがおかしい）：トリポのテクスチャは、天がいの葉・かけぶとんに白っぽいまだら、シーツに緑がまざる。
+    # 天がい（高さ0.5より上・ベッドのうしろがわ）は葉の緑、かけぶとん（足もとがわ）は葉の緑、シーツはクリーム、まくら（頭がわ）は白。木のわくはそのまま
+    if wood(c):return c
+    if z>0.5 and y<0.66:return LEAF
+    if 0.26<z<0.5 and 0.16<x<0.84 and 0.22<y<0.93:
+        return LEAF if y>0.58 else (SHEET if y>0.38 else PILLOW)
+    return c
 def PARTS():
-    p=P('g_w_bed','model',('tripo/gf/g_w_bed.glb',0.5,0.5,0,SIZE,0,0),(255,255,255),on=('ground',),note='地面におく');p.tex=False;p.uvtex='tripo/gf/tex2.png'   # 色はトリポのテクスチャの絵（木目をはらない）
+    p=P('g_w_bed','model',('tripo/gf/g_w_bed.glb',0.5,0.5,0,SIZE,0,0),(255,255,255),on=('ground',),note='地面におく');p.tex=False;p.uvtex='tripo/gf/tex2.png';p.uvfix=fix   # 色はトリポのテクスチャの絵（木目をはらない）
     return [p]
 MATCAP='clay';SMANGLE=80;PARALLEL=True;ELEV=30   # マットキャップ・スムーズシェード80度・遠近なし・見おろし30度（持ち主がきめた）

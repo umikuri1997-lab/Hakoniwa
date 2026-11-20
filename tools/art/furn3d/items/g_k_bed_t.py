@@ -7,7 +7,7 @@ VIEWS=[('g_k_bed',0),('g_k_bed>1',1),('g_k_bed>2',2),('g_k_bed>3',3)]
 
 QUILT=np.array([186,198,228.])
 def fix(x,y,z,c):   # 色むら（持ち主：ベッドの色がむらむら）：かけぶとんに、トリポのテクスチャのむらさき・灰色のまだらがある。かけぶとん（まくらより手前・わくの内がわ）は青の1色にする
-    if 0.10<z<0.42 and abs(x-1.0)<0.53 and 0.30<y<0.92:return QUILT
+    if 0.06<z<0.42 and abs(x-1.0)<0.56 and 0.30<y<0.95 and not min(c)>222:return QUILT
     return c
 def PARTS():
     p=P('g_k_bed','model',('tripo/gf/g_k_bed.glb',1.0,0.5,0,SIZE,0,0),(255,255,255),on=('ground',),note='地面におく');p.tex=False;p.uvtex='tripo/gf/tex2.png';p.uvfix=fix   # 色はトリポのテクスチャの絵（木目をはらない）

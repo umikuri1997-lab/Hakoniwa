@@ -6,9 +6,10 @@ ID='g_e_bath';BOTTOM=58;GRAD=True;SIZE=0.7
 VIEWS=[('g_e_bath',0),('g_e_bath>1',1),('g_e_bath>2',2),('g_e_bath>3',3)]
 W,K,E=gfh.frame('g_e_bath',0.5,0.5,SIZE)
 def fix(x,y,z,c):   # 湯ぶねの中を水に（持ち主：中身がオレンジ→水）。トリポのテクスチャは中がオレンジで、デザインの水の色は焼けない（色がちがいすぎる）ので、ここでぬる
-    r=np.hypot(x-0.5,y-0.5)
-    if z>E[1]*0.8 and r<min(E[0],E[2])/2*0.86:
+    r=np.hypot(x-0.505,y-0.518)
+    if z>0.6 and r<0.405:   # はちの内がわだけ（ふちの外の下には、ぬらない）
         return np.array([150,206,228.])   # 水の底（水の面はすけるので、底の色が見える）
+    if 0.45<z<=0.6 and r>0.3 and c[2]>c[0]:return np.array([238,224,208.])   # はちの外の下に、デザインの水の色が焼けてまだらになった所は、石の色に
     return c
 import math
 from common import hfield
