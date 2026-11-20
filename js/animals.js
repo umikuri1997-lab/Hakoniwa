@@ -147,6 +147,11 @@ function goPetAnimal(r,G){/* ひまなとき：近くの生き物をなでにい
 /* ---------- 絵 ---------- */
 const ANIEAT=['e0','e1','e2','e1'];/* 食べる：さげる → ついばむ → かむ → ついばむ */
 const ANIJOYF=[['j0',110,0],['j1',170,6],['j2',110,2],['j0',90,0],['j1',170,6],['j2',110,2]],ANIJOYT=760,AJOY=new WeakMap();/* よろこぶ：コマ・ミリ秒・はねる高さ（ゲームの点。絵は下のはしをそろえて写したので、描く位置を上げる）。実時間。セーブしない */
+/* まもりの光がそばに落ちた：おどろいて、ぴょんととび、光からはなれる方へにげる（かこいの中はかこいの中で）。見た目と動きだけ */
+const ANISCARER=4;
+function aniScare(tx,ty,R){for(const a of S.ani||[]){if(a.in)continue;const dx=a.x-(tx+.5),dy=a.y-(ty+.5),d=Math.max(Math.abs(dx),Math.abs(dy))-R;if(d>ANISCARER)continue;AJOY.set(a,performance.now());a.pet=0;a.eat=0;a.wt=4;
+  const P=PENS.get(a.h)||null,L=Math.hypot(dx,dy)||1,ux=dx/L,uy=dy/L;let to=-1,bv=-1e9;for(let k=1;k<=4;k++)for(let s2=-1;s2<=1;s2++){const x=Math.round(a.x-.5+ux*k*1.2-uy*s2),y=Math.round(a.y-.6+uy*k*1.2+ux*s2);if(x<0||y<0||x>=W||y>=H)continue;const j=y*W+x;if(P?!P.includes(j):!aniPass(j))continue;const v=Math.hypot(x+.5-tx-.5,y+.5-ty-.5);if(v>bv){bv=v;to=j}}
+  if(to>=0&&a.lead==null){a.path=aniPath(a,to,P)||[];a.go=to}}}
 function aniJoy(a){AJOY.set(a,performance.now());if(typeof sfxAt==='function')sfxAt('good',a.x,a.y)}
 function aniJoyF(a,now){const t0=AJOY.get(a);if(t0==null)return null;let e=now-t0;if(e<0||e>=ANIJOYT){AJOY.delete(a);return null}for(const f of ANIJOYF){if(e<f[1])return f;e-=f[1]}return null}
 function aniChip(a,now){/* ボーンで動かして写したコマ（tools/art/animals/ani_rig.py）：歩く4コマ（150ミリ秒ごと）・食べる（220ミリ秒ごと）・立つ（息をする2コマ、700ミリ秒ごと。生き物ごとにずらす） */const k=a.k,C=window.CHIPS||{};if(a.in)return null;

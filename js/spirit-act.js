@@ -7,8 +7,8 @@ function roadSearch(sx,sy,block){
   const N=W*H,dist=new Int16Array(N).fill(-1),prev=new Int32Array(N).fill(-1),cost=new Int32Array(N).fill(-1),B=[];
   const s=clamp(sy,0,H-1)*W+clamp(sx,0,W-1);cost[s]=0;dist[s]=0;B[0]=[s];
   for(let c=0;c<B.length;c++){const L=B[c];if(!L)continue;for(const i of L){if(cost[i]!==c)continue;const x=i%W,y=(i/W)|0;
-    for(const[dx,dy]of DIRS){const nx=x+dx,ny=y+dy;if(nx<0||ny<0||nx>=W||ny>=H)continue;const j=ny*W+nx;if(!walk(j)&&!(waterJ(i)&&waterJ(j)&&!solidOf(j))&&!(MZLANE&&MZLANE[j]&&!solidOf(j)&&hiAt(i)===hiAt(j))||block&&block.has(j)||cliff2(i,j))continue;/* 水の中にいるときは、水の中も歩ける（雲の海は歩けない） */
-      const fl=S.floor[j],nc=c+(MZLANE&&MZLANE[j]?2:(FCOST[fl]||6)*(jumpEdge(i,j)?5:1)*(S.ground[j]===2?2:1)*(onLadder(i,j)?2:1));/* 舟の道は、歩く3倍の速さ（重み 6÷3） *//* せいれいは、段差をよじのぼると5倍の手間（階段・坂をえらびやすい） *//* 段差を飛ぶのは、歩くより3倍の手間 */if(cost[j]>=0&&cost[j]<=nc)continue;
+    for(const[dx,dy]of DIRS){const nx=x+dx,ny=y+dy;if(nx<0||ny<0||nx>=W||ny>=H)continue;const j=ny*W+nx;if(!walk(j)&&!(waterJ(i)&&waterJ(j)&&!solidOf(j))&&!(MZLANE&&MZLANE[j]&&!solidOf(j)&&hiAt(i)===hiAt(j))||block&&block.has(j)||cliff2(i,j)||seatBackStep(i,j))continue;/* 水の中にいるときは、水の中も歩ける（雲の海は歩けない） *//* いす・ベンチの背もたれのがわからは、乗りおりしない */
+      const fl=S.floor[j],nc=c+(MZLANE&&MZLANE[j]?2:(FCOST[fl]||6)*(jumpEdge(i,j)?5:1)*(S.ground[j]===2?2:1)*(onLadder(i,j)?2:1))+(seatJ(j)?SEATCOST:0);/* 通れる家具の上は、ほかに道がないときだけ *//* 舟の道は、歩く3倍の速さ（重み 6÷3） *//* せいれいは、段差をよじのぼると5倍の手間（階段・坂をえらびやすい） *//* 段差を飛ぶのは、歩くより3倍の手間 */if(cost[j]>=0&&cost[j]<=nc)continue;
       cost[j]=nc;dist[j]=dist[i]+1;prev[j]=i;(B[nc]||(B[nc]=[])).push(j)}}}
   return {dist,prev};
 }
@@ -130,10 +130,13 @@ function goStow(r,G,next){
   }
   return false;
 }
+function seatUse(j,o){if(!o)return false;const a=anc(j);return o.obj!=null&&o.obj>=0&&anc(o.obj)===a||o.seat!=null&&anc(o.seat)===a||o.key==='seat'+j||o.stand===j}/* その家具を使う行動（ねる・すわる・遊ぶ・食べる席） */
+function seatStand(G,j,r){let b=-1,bd=1e9;for(let dy=-2;dy<=2;dy++)for(let dx=-2;dx<=2;dx++){const x=j%W+dx,y=((j/W)|0)+dy;if(x<0||y<0||x>=W||y>=H)continue;const k=y*W+x;if(!walkR(k)||G.dist[k]<0)continue;const d=Math.abs(dx)+Math.abs(dy)+G.dist[k]*.01+(S.res.some(q=>q!==r&&!q.hidden&&(q.y|0)*W+(q.x|0)===k)?2:0);if(d<bd){bd=d;b=k}}return b>=0?b:j}/* 家具のそばの、歩いて行ける空いたマス（なければ、そのまま） */
 function startAct(r,G,type,stand,o){
   if(stand>=0&&stand===r.avoidJ&&S.t<r.avoidU&&type!=='idle')return startAct(r,G,'idle',-1,{dur:15});/* 10分止まったままだった行き先は、しばらくえらばない */
   if(!KEEPC.has(type)&&G&&!(o&&(o.run||o.hunt!=null))&&!r.coffin&&goStow(r,G,type))return;/* べつの行動にうつる前に、持っている物をしまう */
   if(type==='idle'&&stand<0&&G&&!isNight()&&(r.restCD||0)<=S.t){const bj=benchSpot(G,r);if(bj>=0){type='rest';stand=bj;o={key:'o'+bj,obj:anc(bj),seat:bj,dur:Math.max(30,(o&&o.dur)||15)}}}/* ひとやすみは、あいているベンチがあればベンチで */
+  if(stand>=0&&G&&seatJ(stand)&&!seatUse(stand,o))stand=seatStand(G,stand,r);else if(stand<0&&G&&type==='idle'){const cj=(r.y|0)*W+(r.x|0);if(seatJ(cj)){const k=seatStand(G,cj,r);if(k!==cj)stand=k}}/* 使わない家具の上には立たない（となりの空いたマスへ）・使いおわった家具の上で、ぼんやりしない */
   const prevT=r.act&&r.act.type;r.bubble='';/* 前の行動の吹き出し（💤など）を残さない */
   r.act=Object.assign({type,stand,t:0,stage:'walk'},o||{});whyNote(r,prevT);
   if(r.act.key)reserve(r.act.key);
@@ -223,7 +226,7 @@ const ACT={
     syncFood();if(units)r.meal={u:units,pt,pw,e:FOODS[items[0]].e,items};if(sheet==='food')renderSheet()}},
   npl:{start(r,a){if(!S.nushi||!S.cleared)return false;r.bubble='💚';r.face=S.nushi.x>=r.x?1:-1;if(!S.flags.nplayed){S.flags.nplayed=1;memo('heart',r.name+'がヌシ様と遊んだ');logEv(r.name+'がヌシ様と遊んだ')}},tick(r,a,dt){funAdd(r,1.6*dt,'play');a.bt=(a.bt||0)+dt;if(a.bt>3){a.bt=0;r.bubble=pick(['💚','😆','🎵'])}a.jt=(a.jt||0)+dt;if(a.jt>2.5&&S.nushi){a.jt=0;JUMP.set(r,performance.now());S.nushi.hop=performance.now()}},done:(r,a)=>a.t>=40||!S.nushi/* ぴょんぴょんはねて、ヌシ様もいっしょにはねる */,end(r){addPt(1.35,r,3)}},/* クリア後、ヌシ様のところへ遊びに行く */
   chatwait:{done:(r,a)=>{const p=S.res.find(q=>q.id===a.partner);return a.t>=40||!p||!p.act||p.act.type!=='chat'||p.act.partner!==r.id}},
-  tag:{tick(r,a,dt){const ang=a.ph+a.t*.35,nx=a.cx+Math.cos(ang)*1.1,ny=a.cy+Math.sin(ang)*.8;r.face=nx>=r.x?1:-1;if(walk((ny|0)*W+(nx|0))){r.x=nx;r.y=ny}/* 通れないマスには入らない */funAdd(r,.6*dt,'play')},
+  tag:{tick(r,a,dt){const ang=a.ph+a.t*.35,nx=a.cx+Math.cos(ang)*1.1,ny=a.cy+Math.sin(ang)*.8;r.face=nx>=r.x?1:-1;if(walkR((ny|0)*W+(nx|0))){r.x=nx;r.y=ny}/* 通れないマス・家具の上には入らない */funAdd(r,.6*dt,'play')},
     done:(r,a)=>a.t>=30,end(r,a){addPt(.9,r,2)}},
   cpick:{start(r,a){if(!S.cmpQ||!S.cmpQ[a.cj])return false;a.box=keysAdj(a.stand,Object.keys(S.cmpQ[a.cj]));if(a.box<0)return false;faceTo(r,a.box);r.bubble='';},done:(r,a)=>a.t>=4,end(r,a){const Q=S.cmpQ&&S.cmpQ[a.cj];if(!Q)return;const m=qPick(Q,boxIdOf(a.box),Math.max(1,roomN(r)));/* 1回に持てる数まで */if(!Object.keys(Q).length)delete S.cmpQ[a.cj];if(Object.keys(m).length)r.cpk={j:a.cj,m}}},/* コンポスターに入れる草を、箱からとる */
   cput:{start(r,a){if(!r.cpk)return false;r.bubble='';faceTo(r,a.obj)},done:(r,a)=>a.t>=4,end(r,a){const p=r.cpk;r.cpk=null;if(!p)return;if(S.obj[p.j]!=='composter'){toHand(r,p.m);return}let n=0;for(const k in p.m)n+=p.m[k];if(n>0)cmpOf(p.j).b.push([S.t,n]);}},/* 草をコンポスターに入れる */
