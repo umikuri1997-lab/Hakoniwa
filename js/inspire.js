@@ -1,10 +1,10 @@
 /* ひらめきの日（リムワールドのインスピレーションを手本に）：
    朝（morning）に、前の日（朝6時から朝6時まで）たのしさが INSPFUN より下にならなかったせいれいから、INSPP で1人だけ。
    その日（callDay）だけ、属性ごとに1つの仕事が、とくべつにうまくいく（S.insp={id,d}）。
-   土：建てる・直すの、はたらく速さ+10・木：収穫+1・水：つりで家具が出る5%・火：攻撃力+10・風：落とし物をひろうと+1こ。
+   土：建てる・直すの、はたらく速さ+10・木：収穫+1・水：つりで家具が出る確率5%・火：攻撃力+10・風：落とし物をひろうと+1こ。
    たのしさの前の日のいちばん低い数は fun-why.js の r.fd.min・r.fdP。たしかめは tools/tests/inspire.cjs。 */
 const INSPP=.2,INSPFUN=70,INSPWORK=10,INSPHARV=1,INSPFISH=.05,INSPATK=10,INSPDROP=1;
-const INSPT={earth:'建てる・直すの、はたらく速さ+10',wood:'収穫+1',water:'つりで家具が出る5%',fire:'攻撃力+10',wind:'落とし物をひろうと+1こ'};
+const INSPT={earth:'建てる・直すの、はたらく速さ+10',wood:'収穫+1',water:'つりで家具が出る確率5%',fire:'攻撃力+10',wind:'落とし物をひろうと+1こ'};
 const INSPL={earth:'きょうは、からだがかるいよ。',wood:'きょうは、いい日になりそうだよ！',water:'きょうは、いいことがありそうだよ。',fire:'きょうは、力がみなぎってるよ！',wind:'きょうの風は、いい風だよ。'};/* ぼく・だよ で書き、言いかたは chatTone */
 function inspOn(r,el){const I=S&&S.insp;return!!(r&&I&&I.id===r.id&&I.d===callDay()&&(!el||r.elem===el))}
 function inspWork(r,a){return inspOn(r,'earth')&&a&&(a.type==='build'||a.type==='repair')?INSPWORK/STD:0}
