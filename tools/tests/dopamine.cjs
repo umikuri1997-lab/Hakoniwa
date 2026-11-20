@@ -40,7 +40,7 @@ function klotski(P){const W=4,H=5,key=s=>{const g=Array(20).fill('.');s.forEach(
   console.log(JSON.stringify(r));
   for(const k in r.pz)assert.equal(r.pz[k],true,k);
   assert.equal(r.fukTaps,6,'家具はタップ6回');assert.equal(r.fukItem,'古いオルゴール');
-  assert.equal(r.gearLearn[1],8,'作れる8つを思いつく');assert.equal(r.gearHas,1);assert.equal(r.ggKnown,true);
+  assert.equal(r.gearLearn[1],r.gearLearn[0],'特別なそうびをもらっても、レシピは思いつかない（思いつくのは素材を手に入れたとき。gear.cjs）');assert.equal(r.gearHas,1);assert.equal(r.ggKnown,false);
   assert.deepEqual(r.zk,[1,50]);assert.deepEqual(r.zkNext,{v:6,left:1,all:true});
   assert.deepEqual(r.chestRec,[false,false,false,false]);assert.equal(r.chestPool,false);
   assert.equal(r.bud,false,'水ばちのそばの芽は育つ');assert.equal(r.budFar,true);assert.equal(r.star,true);

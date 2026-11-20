@@ -309,7 +309,7 @@ function moveR(r,dt){
   if(r.ghost>0)r.ghost-=dt;
   if(r.act&&r.act.stage==='walk'&&r.path.length){/* 長いあいだ1マスも近づけないときは、あきらめる */
     if(r.wkA!==r.act){r.wkA=r.act;r.wkMin=r.path.length;r.wkT=0}else if(r.path.length<r.wkMin){r.wkMin=r.path.length;r.wkT=0}else r.wkT+=dt;
-    if(r.wkT>30&&r.act.type!=='nmeet'){if(r.act.key)BAN.set(r.act.key,S.t+180);noPass(r);endAct(r);r.path=[];r.act={type:'idle',stage:'do',t:0,dur:8};r.wkA=null;return}}
+    if(r.wkT>30&&r.act.type!=='nmeet'){lgR(r,'30分ちかづけない '+lgActTxt(r.act)+' のこり'+r.path.length+'マス');if(r.act.key)BAN.set(r.act.key,S.t+180);noPass(r);endAct(r);r.path=[];r.act={type:'idle',stage:'do',t:0,dur:8};r.wkA=null;return}}
   if(!r.path.length&&r.act)beginDo(r);
 }
 const NIGHT_OK=['nmeet','watchpost','phew','step','sleep','stay','shiver','eat','fetch','eatwait','store','smat','sitem','flee','patrol','follow','faint','forage','questjoy','pray','reunion']/* お墓へはこぶ（pray）は夜もつづける：やめると毎コマやりなおしになって動けない */;
@@ -319,7 +319,7 @@ function rescueStuck(r){if(r.hidden)return;const cj=(r.y|0)*W+(r.x|0),o=S.obj[cj
 let PBC_T=-1,PBC_V=false,PBC_S=null;function preBedCalm(){if(!S||S.free||WD!==0)return false;if(PBC_S===S&&PBC_T===S.t)return PBC_V;PBC_S=S;PBC_T=S.t;const bi=questIndexOf('bed');PBC_V=bi>=0&&S.quest<=bi&&!(cnt('bed')+cnt('yorubed'));return PBC_V}
 function updRes(r,dt){rescueStuck(r);if((RHOLD.get(r)||0)>performance.now())return;if((r.reactT||0)>S.t&&r.reactT-S.t<12)return;/* つりの結果・できあがりなどの、よろこぶ・がっかり（spReact）のあいだは、手をとめる（村の時間） *//* 喜んでいる・話したあとの少しの間は、手をとめる */if(r._pe!=null&&r.energy>r._pe+1e-6)r.eUp=S.t;r._pe=r.energy;/* 元気が回復しているか */
   if(HOLD.has(r.id)){if(r.act)endAct(r);r.act=null;return}
-  if(r.hidden||r.act&&r.act.stage==='do'||Math.hypot(r.x-(r.stX??r.x),r.y-(r.stY??r.y))>.3){r.stX=r.x;r.stY=r.y;r.stT=S.t}else if(S.t-(r.stT??S.t)>=10&&!(r.act&&r.act.type==='nmeet')){if(r.act&&r.act.stand>=0){r.avoidJ=r.act.stand;r.avoidU=S.t+120}r.stX=r.x;r.stY=r.y;r.stT=S.t;if(r.act)endAct(r)}/* 動いてもいない・作業もしていないまま10分たったら、いまの行動をやめて、べつの行動をえらぶ */
+  if(r.hidden||r.act&&r.act.stage==='do'||Math.hypot(r.x-(r.stX??r.x),r.y-(r.stY??r.y))>.3){r.stX=r.x;r.stY=r.y;r.stT=S.t}else if(S.t-(r.stT??S.t)>=10&&!(r.act&&r.act.type==='nmeet')){if(r.act&&r.act.stand>=0){r.avoidJ=r.act.stand;r.avoidU=S.t+120}r.stX=r.x;r.stY=r.y;r.stT=S.t;lgR(r,'10分うごかない '+lgActTxt(r.act));if(r.act)endAct(r)}/* 動いてもいない・作業もしていないまま10分たったら、いまの行動をやめて、べつの行動をえらぶ */
   const sleeping=r.act&&r.act.type==='sleep'&&r.act.stage==='do',storyWaiting=storyWaitProtected(r)||preBedCalm();
   const mv=r.act&&(r.act.stage==='walk'||r.act.type==='tag');const lazy=!r.act||r.act.type==='idle'||r.act.type==='wander'||r.act.type==='quirk'||r.act.type==='stay';const wk=r.act&&r.act.stage==='do'&&WORKT.has(r.act.type);/* おなかは、作業するとへる。つかれているほどへりやすい */if(!storyWaiting)r.hunger-=(sleeping?.03:wk?3:mv?.4:.2)*(lazy?.5:1)*(r.energy<10?2:r.energy<30?1.5:1)*dt*(trt(r,'shoshoku')?.8:1)*(r.full>S.t?.6:1)*(WD===1&&r.sprC===dayNo()?SPR_EFF.c:1)*(1-(typeof pathA==='function'?pathA('hun'):0)/100)*(typeof seaHun==='function'?seaHun(r):1);/* 冬は、おなかのへり1.2倍（seaHun） */
   if(!sleeping&&!storyWaiting)funAdd(r,-FUNPH/FUNHOUR*dt*funDecayK(r),'time');/* へりかたの倍は funDecayK（fun-why.js）。いま効いている物の一覧と同じ *//* なかよしが消えたあとは、しょんぼり */
@@ -398,7 +398,7 @@ function die(r){if(r.kdst&&typeof kdStoneBack==='function')kdStoneBack(r);if(r.s
   toast(r.name+'が消えてしまった…','warn');
   {const DT=S.res.length?deathTalk(r):null;if(DT&&DT.length)talkOnce('dt'+Math.round(S.t*60),DT);/* とちゅうでとじたら、つづきからでもう一度 */else{const key=isKey(r.name),fk=key?'deathTold':'death2Told';if(!S.flags[fk]&&S.res.length){const sp=S.res.find(q=>KEYRES.includes(q.name))||S.res[0],n=r.name;
     talkOnce(fk,(key?DEATHL:DEATHL2)[elemKey(sp)](n).map(t=>[sp.name,sp.name===POKO&&WD===0&&!(S.bossKills>0||qDone('ookage')||qAt('ookage')&&S.qTalked)?t.replace('オオカゲが落とす「めぶきのしずく」','「めぶきのしずく」という、いのちの力'):t]))/* フタバは、名前を聞く前は「オオカゲ」と言わない */}}}/* 話す子の性格で説明する */
-  if(!S.res.length){S.wipe=true;S.wipeGift=WD===0?(lvOK('logfence')?'logfence':'fence'):(lvOK('wall')?'wall':'misugaki');giveItem(S.wipeGift,10);S.herb=(S.herb||0)+1;(S.seenIt||(S.seenIt={}))['x:herb']=1;/* まよけのハーブも1つ *//* おくりものは、先にわたしておく（会話のとちゅうでとじても、なくならない） */for(const L of[S.buried||[],S.lost||[]])for(const q of L)delete q.unb}/* 全滅：埋葬する子がいないので、埋葬の前でも、次の朝から呼びもどせるようにする（お墓はそのまま） */
+  if(!S.res.length){S.wipe=true;S.wipeGift=WD!==1?(lvOK('logfence')?'logfence':'fence'):(lvOK('wall')?'wall':'misugaki');giveItem(S.wipeGift,10);S.herb=(S.herb||0)+1;(S.seenIt||(S.seenIt={}))['x:herb']=1;/* まよけのハーブも1つ *//* おくりものは、先にわたしておく（会話のとちゅうでとじても、なくならない） */for(const L of[S.buried||[],S.lost||[]])for(const q of L)delete q.unb}/* 全滅：埋葬する子がいないので、埋葬の前でも、次の朝から呼びもどせるようにする（お墓はそのまま） */
   if(!S.res.length)setTimeout(()=>STATUE<0?gameOver():dialog([[GOD,'#cry|みんな、消えてしもうた……。おヌシ、ひとりでよう耐えたのう。'],[GOD,'じゃが、だいじょうぶじゃ。朝になれば、この土地に深くなじんだ子から、また会えるぞい。'],[GOD,'#alarm|人数が少ないうちは、「コワイノ」も少なめじゃ。オオカゲも、なかまがそろうまでは来んはずじゃ。'],[GOD,'それと…これを使うがよい。'+BL[S.wipeGift||'fence'].name+'と、まよけのハーブじゃ。']],()=>{toast(BL[S.wipeGift||'fence'].name+'を10こもらった','good');toast('まよけのハーブを1つもらった','good')}),800);/* 石の塀を覚えていたら、石の塀 */
 }
 /* 建てる場所・依頼ボードへ行けないとき：5秒ごとにBFS1回でしらべ、行けなくなったときだけ知らせる。道があいたら消す */
