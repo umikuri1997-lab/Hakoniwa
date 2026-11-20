@@ -71,7 +71,7 @@ const SKILLS=[['light','まもりの光',()=>true,'glight'],['area','こもれ�
 function skillSetOf(){const have=SKILLS.filter(s=>s[2]()).map(s=>s[0]);if(!S.skillSet)return have.slice(0,SKILLMAX);return S.skillSet.filter(k=>have.includes(k))}
 const skillOn=k=>skillSetOf().includes(k);
 function skillToggle(k){let L=skillSetOf().slice();if(L.includes(k))L=L.filter(x=>x!==k);else{if(L.length>=SKILLMAX)return toast('わざは3つまで');L.push(k)}S.skillSet=L;sfx('tap')}
-function skillSec(body){const sec=el('<div class="sec"><h3>わざの枠（3つまで）</h3><div class="rows"></div></div>'),rw=sec.querySelector('.rows');const on=skillSetOf();
+function skillSec(body){const sec=el('<div class="sec"><h3>わざの枠</h3><div class="rows"></div></div>'),rw=sec.querySelector('.rows');const on=skillSetOf();
   for(const[k,n,ok,ic]of SKILLS){if(!ok())continue;const r=el('<button class="row" style="text-align:left;width:100%">'+pxi(ic,'skic')+'<div class="tx"><b></b><small></small></div></button>');ckSet(r.querySelector('b'),(on.includes(k)?'✓ ':'')+n);r.querySelector('small').textContent=on.includes(k)?'セットしている':'セットしていない';r.onclick=()=>{skillToggle(k);renderSheet()};rw.appendChild(r)}
   body.appendChild(sec)}
 /* ---------- 見張り台のねらう順（S.dyn[j].to：near・hp・fast・vill） ---------- */

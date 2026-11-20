@@ -27,7 +27,7 @@ function refreshStageInfo(){for(const w of[0,1,FREE])if(!LIVE[w]||LIVE[w].summar
 /* ステージは属性の数だけ（木・火・水・土・風）と、さいごの庭 */
 function freeCard(list){if(!(LIVE[0]&&LIVE[0].cleared))return;let told=false;try{told=KV.getItem('hakoniwa-freeTold')==='1'}catch(e){}if(!told){try{KV.setItem('hakoniwa-freeTold','1')}catch(e){}setTimeout(()=>toast('フリーモードがひらいた！','good'),400)}
   const L=LIVE[FREE],k=FREE,card=el(`<div class="wcard open"><canvas width="760" height="280"></canvas><div class="wb"><span class="wn">FREE MODE</span><h3>フリーモード</h3><p></p><div class="wbtns"></div></div></div>`);
-  card.querySelector('p').textContent=L&&L.introSeen?(L.summary?'':'せいれい '+L.res.length+'人・')+'村レベル '+L.lv+(L.cleared?'・お祭りをひらいた！':''):'自然の力が弱く、災いもほとんどない、しずかな土地。のんびり、自分だけの村をつくろう。';
+  card.querySelector('p').textContent=L&&L.introSeen?(L.summary?'':'せいれい '+L.res.length+'人・')+'村レベル '+L.lv+(L.cleared?'・おまつりをひらいた！':''):'自然の力が弱く、災いもほとんどない、しずかな土地。のんびり、自分だけの村をつくろう。';
   const bt=card.querySelector('.wbtns');
   if(L&&L.introSeen){const c=el('<button class="btn pri">つづきから</button>');c.onclick=()=>{sfx('tap');$('#maps').hidden=true;continueGame(L)};bt.appendChild(c);
     const n=el('<button class="btn" data-hold>はじめから</button>');n.onclick=()=>{if(n._held){$('#maps').hidden=true;newGame(k)}};/* データがきえるので、おしつづけて決める */bt.appendChild(n)}
@@ -36,7 +36,7 @@ function freeCard(list){if(!(LIVE[0]&&LIVE[0].cleared))return;let told=false;try
 const WORLDS=[
   {name:'はじまりの草原',sub:'WORLD 1・木',el:'wood',desc:'自然の力がくずれて荒れた草原。せいれいたちと村をつくり、守護の力をとりもどそう。'},
   {name:'火山のふもとの村',sub:'WORLD 2・火',el:'fire',desc:'地面の熱が冷えきった、火の山のふもとの村。こおりかけた温泉に、ぬくもりをとりもどそう。'},
-  {name:'霧のみずべの村',sub:'WORLD 3・水',el:'water',desc:'霧がはれず、水の流れが止まった村。'},
+  {name:'霧のみずべの村',sub:'WORLD 3・水',el:'water',desc:'霧が晴れず、水の流れが止まった村。'},
   {name:'ひびわれた岩の谷',sub:'WORLD 4・土',el:'earth',desc:'大地がひびわれ、くずれかけた谷の村。'},
   {name:'風のやんだ空の村',sub:'WORLD 5・風',el:'wind',desc:'風が止まり、しずみかけた浮き島の村。'},
   {name:'忘れられた神々の庭',sub:'WORLD 6',el:null,desc:'5つの力が生まれた場所。'},
@@ -84,7 +84,7 @@ function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
     let info=wd.desc;
     if(k<=1&&L&&L.introSeen)info=(L.vname?L.vname+'村・':'')+(L.summary?'':'せいれい '+L.res.length+'人・')+'村レベル '+L.lv+(L.cleared?'・ヌシ様が帰ってきた！':'');
     else if(k===1&&!open)info='はじまりの草原でヌシ様をむかえると、ひらきます。';
-    if(k===2)info=LIVE[1]&&LIVE[1].cleared?'道がひらいた！ …けれど、まだ準備中。':'まえの土地でヌシ様をむかえると、ひらきます。';
+    if(k===2)info=LIVE[1]&&LIVE[1].cleared?'道がひらいた！ ……けれど、まだ準備中。':'まえの土地でヌシ様をむかえると、ひらきます。';
     if(k>=3)info=k===5?'？？？':'まえの土地でヌシ様をむかえると、ひらきます。';
     card.querySelector('p').textContent=info;
     const bt=card.querySelector('.wbtns');
