@@ -1,7 +1,7 @@
 # マットキャップ（matcap）：球に光をあてた1まいの絵を、ドットごとの面の向き（画面の右・下・手前）で引いて、かげと質感をつける。
 # 3Dから写した家具の、かげのつけかたの1つ（設計図に MATCAP='clay' など。furn3d.py が写したあとに apply をよぶ）。
 #   絵は、ここで計算して作る（たしかめ用に tools/art/textures/matcap_<名前>.png にも書き出す）。
-#   色＝部品のもとの色 × 絵の明るさ（まん中の明るさを1にそろえる）＋ 絵のつやの白。明るさは STEPS だんにまとめる（ドット絵なので、なめらかにしすぎない。あみは使わない）。
+#   色＝部品のもとの色 × 絵の明るさ（色はのせない。まん中の明るさを1にそろえる）。明るさは STEPS だんにまとめる（ドット絵なので、なめらかにしすぎない。あみは使わない）。
 #   部品のさかいの線・まわりのふちは、furntone と同じ輪郭の色。光る物・すける物（furntone.KEEP）はそのまま。
 import os,numpy as np
 from PIL import Image
@@ -9,7 +9,7 @@ import oblique3d as O
 HERE=os.path.dirname(os.path.abspath(__file__));TEX=os.path.join(HERE,'textures')
 R=256;STEPS=6;SAT=1.3;VAL=1.12;OLD=(16,6)   # OLD：輪郭線の色（もとの色の明るさをひく数・あざやかさをたす数。持ち主：輪郭線が暗すぎる）。 SAT・VAL：もとの色のあざやかさ・明るさにかける数（持ち主：明度・彩度を上げて）
 KINDS={   # 名前：光の向き（左上・手前）・まわりの光・まわりのくらさ・つや（強さ・するどさ）・あたたかさ
-    'clay':dict(light=(-0.55,-0.6,0.58),amb=0.80,rim=0.10,spec=(0.10,18),warm=0.04),   # ねんど・やきもののような、やわらかい質感
+    'clay':dict(light=(-0.55,-0.6,0.58),amb=0.80,rim=0.10,spec=(0.10,18),warm=0.0),   # ねんど・やきもののような、やわらかい質感
     'gloss':dict(light=(-0.55,-0.6,0.58),amb=0.58,rim=0.18,spec=(0.35,40),warm=0.02),  # つやのある質感（やきもの・ガラスのような物）
 }
 def build(kind='clay'):
@@ -34,7 +34,7 @@ def apply(im,kind='clay',steps=STEPS,sat=SAT,val=VAL):
     N=O.LAST_N;D=O.LAST_DEPTH/np.linalg.norm(O.LAST_DEPTH);X=np.array([1.0,0,0]);X=X-D*(X@D);X/=np.linalg.norm(X);U=np.cross(D,X);U=U if U[2]>0 else -U
     n=np.dstack([N@X,-(N@U),N@D]);n/=np.maximum(np.linalg.norm(n,axis=2,keepdims=True),1e-6)
     u=np.clip(((n[...,0]+1)/2*R).astype(int),0,R-1);v=np.clip(((n[...,1]+1)/2*R).astype(int),0,R-1);s=mc[v,u]   # 画面の下が +y
-    lum=s.mean(2,keepdims=True);q=np.round(lum*steps)/steps;s=s*(q/np.maximum(lum,1e-6))   # 明るさを STEPS だんに
+    lum=s.mean(2,keepdims=True);s=np.round(lum*steps)/steps   # 明るさだけ（色はのせない。持ち主：マットキャップの色をのせない）を STEPS だんに
     col=np.clip(cc*s,0,255)
     a[...,:3][tgt&~LN]=col[tgt&~LN].astype(np.uint8)
     for y_,x_ in zip(*np.nonzero(tgt&LN)):a[y_,x_,:3]=FT._hsv(cc[y_,x_].astype(int),-OLD[0],OLD[1])
