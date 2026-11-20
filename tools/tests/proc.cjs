@@ -6,7 +6,8 @@ const assert=require('node:assert/strict');
   const base=JSON.parse(await run(`(()=>{document.querySelector('#dialog').hidden=true;S.introSeen=true;S.flags.tapped=1;S.hold=0;USERPAUSE=true;S.enemyOn=false;
     const a=S.res[0];S.res=[a];endAct(a);a.act=null;S.t=1440*3+8*60;
     const free=(x,y,w,h)=>{for(let b=0;b<h;b++)for(let c=0;c<w;c++){const k=(y+b)*W+x+c;if(S.obj[k]||S.ground[k]||S.floor[k]||hiAt(k)||(S.fog&&S.fog[k]))return false}return true};
-    let p=null;for(let y=CY+3;y<CY+20&&!p;y++)for(let x=CX-8;x<CX+8;x++)if(free(x,y,8,4)){p=[x,y];break}const [x0,y0]=p;
+    let p=null;for(let y=CY+3;y<CY+20&&!p;y++)for(let x=CX-8;x<CX+8;x++)if(free(x,y,8,4)){p=[x,y];break}
+    if(!p){/* 空き地がなければ（木の生え方しだい）、平らな空き地を作る */const x=CX-4,y=CY+6;for(let b=0;b<4;b++)for(let c=0;c<8;c++){const k=(y+b)*W+x+c;S.obj[k]='';delete S.ref[k];S.ground[k]=0;S.floor[k]='';if(S.hi)S.hi[k]=0}recount();if(!free(x,y,8,4))throw new Error('テストの空き地を作れない');p=[x,y]}const [x0,y0]=p;
     const lj=y0*W+x0,mj=y0*W+x0+3,bj=(y0+3)*W+x0+6;S.obj[lj]='loom';S.obj[mj]='mill';for(const q of[mj+1,mj+W,mj+W+1]){S.obj[q]='part';S.ref[q]=mj}S.obj[bj]='crate';S.obj[bj+1]='crate';recount();
     for(const k of Object.keys(S.mat))S.mat[k]=0;S.fs={};S.mat.kasa=7;S.mat.shina=2;addFood('mugi',5);addFood('apple',20);boxSync();
     return JSON.stringify({lj,mj,bj})})()`));

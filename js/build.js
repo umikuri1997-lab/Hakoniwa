@@ -42,7 +42,7 @@ const CANOPY=new Set(['gazebo','azumaya']),LOWROOF=new Set(['chair','stool','ach
 function canRoof(x,y,quiet){const no=t=>{if(!quiet)toast(t);return false};if(x<0||y<0||x+1>=W||y+1>=H)return false;{const h0=hiAt(y*W+x);if(hiAt(y*W+x+1)!==h0||hiAt(y*W+W+x)!==h0||hiAt(y*W+W+x+1)!==h0)return no('段差をまたいでは置けません')}
   if(x<0||y<0||x>=W-1||y>=H-1)return no('ここには置けません');for(const c of rugCells(y*W+x)){if(sacredNoBuild(c))return no('みんなで世話をしている木の場所です');if(S.ground[c]===1)return no(skyJ(c)?'雲の上には置けません':'水の上には置けません');if(RFC.has(c))return no('ここにはもう屋根があります');const o=S.obj[c],a=o==='part'?S.obj[S.ref[c]]:o;if(a&&!lowRoof(a)&&!WEEDS.has(a))return no('下には、ひくい物だけ置けます')}return true}
 const rugsIn=set=>{const L=[];for(const k in S.rug||{})if(rugCells(+k).some(c=>set.has(c)))L.push(S.rug[k]);return L};/* 家の中（どこか1マスでも）にあるラグ */
-function canRug(x,y,quiet){const no=t=>{if(!quiet)toast(t);return false};if(x<0||y<0||x+1>=W||y+1>=H)return false;
+function canRug(x,y,quiet){const no=t=>{if(!quiet)toast(t);return false};if(x<0||y<0||x+1>=W||y+1>=H)return false;{const C=rugCells(y*W+x),h0=hiAt(C[0]);if(C.some(c=>hiAt(c)!==h0))return no('段差をまたいでは置けません')}/* 屋根と同じく、ラグも段差をまたがない */
   if(x<0||y<0||x>=W-1||y>=H-1)return no('ここには置けません');for(const c of rugCells(y*W+x)){if(sacredNoBuild(c))return no('みんなで世話をしている木の場所です');if(S.ground[c]===1)return no(skyJ(c)?'雲の上には置けません':'水の上には置けません');if(RUGC.has(c))return no('ここにはもうラグがあります');const o=S.obj[c],a=o==='part'?S.obj[S.ref[c]]:o;if(a&&!WEEDS.has(a)&&!(BL[a]&&BL[a].kind==='furn'&&!BL[a].trap&&!WALLD.has(a)))return no('ここにはもう何かあります')}return true}/* 家具の下にもしける */
 function canPlace(id,x,y,quiet){if(typeof fogBlock==='function'&&fogBlock(id,x,y,quiet))return false;/* 霧の中には置けない */if(WD===0&&id!=='tower'&&S.sacredRoot!=null){const z=szR(id,PLROTS[id]||0)||[1,1];for(let b=0;b<z[1];b++)for(let a=0;a<z[0];a++)if(sacredNoBuild((y+b)*W+x+a,id)){if(!quiet)toast('みんなで世話をしている木の場所です','warn');return false;}}
   if(EDGES.has(id))return canEdge(x,y,quiet);
@@ -180,6 +180,10 @@ function rugsBig(){/* ラグがたて2・よこ2マスになった：前のラ�
   if(back)setTimeout(()=>toast('ラグが大きくなったので、しけないラグを'+back+'つ、もちものにもどした'),1500)}
 function clearObj(j){j=anc(j);const o=S.obj[j];if(S.bedOwn)delete S.bedOwn[j];/* ベッドをどけたら、だれのベッドかも消す */if(S.wpOwn)delete S.wpOwn[j];/* 見張り台も */if(S.useOwn)delete S.useOwn[j];/* いす・遊び家具なども */if(S.jobOwn)delete S.jobOwn[j];/* しごと場の担当も */const tl=o&&BL[o]&&BL[o].sz?fp(o,j%W,(j/W)|0).map(([a,b])=>b*W+a):[j];delete S.hp['L'+j];if(S.win&&S.win[j]){const p=S.win[j],wid='window';giveItem(p===1?wid:p,1,1);if(p==='curtain1'||p==='curtain2')giveItem(wid,1,1);delete S.win[j]}/* カーテンの下の窓ももどす */if(S.rot)delete S.rot[j];for(const k in S.ref)if(S.ref[k]===j){S.obj[k]='';delete S.ref[k]}S.obj[j]='';delete S.dyn[j];delete S.hp[j];delete S.hp['L'+j];
   for(const r of S.res)if(r.act&&r.act.obj===j)endAct(r);return o}
+const CELLSTATE=['prQ','prIn','prOut','prW','smQ','smIn','cmpQ','ovenSet'];/* マスごとにしまう、家具の予定・中身 */
+function moveCellState(a,j){/* ひっこしミトンでうつした家具の、予定・入れた物・できた物・進みぐあい・運んでいるとちゅうの行き先を、うつした先へ */
+  for(const f of CELLSTATE){const Q=S[f];if(Q&&Q[a]!=null){Q[j]=Q[a];delete Q[a]}}
+  for(const r of S.res){for(const k of['ppk','spk','cpk'])if(r[k]&&r[k].j===a)r[k].j=j;const A=r.act;if(A){if(A.sj===a)A.sj=j;if(A.cj===a)A.cj=j}}}
 let MOVESRC=null;/* ひっこしミトン：えらんだ物 {k:'obj'|'rug'|'roof',j} */
 const NOMOVE=new Set(['kaeribi','kazaana','kazaanab','oldmill','merryb','cupb','skyswingb','wheelb','statue','statueb','obox','board','altar','tower','site','site2','matyard']);/* 神殿まわり・建てている物は、うつせない */
 function moveTarget(j){if(S.rug&&RUGC.has(j)&&!(S.obj[j]&&S.obj[j]!=='part'&&!WEEDS.has(S.obj[j])))return {k:'rug',j:RUGC.get(j)};const a=anc(j),o=S.obj[a];
@@ -199,7 +203,7 @@ function moveTap(tx,ty){const j=ty*W+tx;
     if(!ok){writeObj(id,a,v);return}
     for(const r of S.res)if(r.act&&(r.act.obj===a||cells.includes(r.act.obj)))endAct(r);
     for(const b of S.broken||[])if(b.j===a)b.j=j;if(typeof fieldBuildMove==='function')fieldBuildMove(id,a,j);/* 調べのために置いた物をうつしたら、記録もうつす */
-    boxMove(a,j);/* 箱の中身も、いっしょに */if(id==='wbench'){for(const o of S.orders||[])if(o.cs===a)o.cs=j}/* 作業台の依頼も */for(const q of S.ani||[])if(q.h===a){q.h=j;q.path=null;if(q.in){q.x+=j%W-a%W;q.y+=((j/W)|0)-((a/W)|0)}}/* 飼う生き物の小屋も */writeObj(id,j,v)}
+    boxMove(a,j);/* 箱の中身も、いっしょに */moveCellState(a,j);/* 加工・炉・コンポスター・料理の家具の予定も */if(id==='wbench'){for(const o of S.orders||[])if(o.cs===a)o.cs=j}/* 作業台の依頼も */for(const q of S.ani||[])if(q.h===a){q.h=j;q.path=null;if(q.in){q.x+=j%W-a%W;q.y+=((j/W)|0)-((a/W)|0)}}/* 飼う生き物の小屋も */writeObj(id,j,v)}
   MOVESRC=null;recount();dirty=true;burst(j,'furn','furnPlace');renderPalette();checkQuest()}
 function removeAt(x,y){const tx0=x,ty0=y;
   const j=anc(y*W+x),o=S.obj[j];x=j%W;y=(j/W)|0;
