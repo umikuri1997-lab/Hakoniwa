@@ -598,8 +598,8 @@ for _n in FOLLOW: _follow(_n)
 # 歩いていて向きがかわるとき、ゲームが HTURNMS のあいだ、前の向きの体のまま、首だけ新しい向きへ向けた絵を出す（draw-spirits.js の spHeadTurn）。
 # _hp は hy を +HTURN、_hn は −HTURN。正面では + が画面の右・うしろでは + が画面の左・横では + が手前（こちら）を向く。
 # _hpa・_hna は、そのとちゅう（HTURNA）。首をいっぺんに向けず、とちゅうの絵をはさんで、少しずつ向ける。
-HTURN = 0.8
-HTURNA = 0.4
+HTURN = 0.4
+HTURNA = 0.2
 for _b in ('walk', 'carry'):
     for _s, _k, _a in ((1, '_hp', HTURN), (-1, '_hn', HTURN), (1, '_hpa', HTURNA), (-1, '_hna', HTURNA)):
         _m = MOTIONS[_b]
