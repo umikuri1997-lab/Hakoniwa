@@ -3,13 +3,13 @@
 #   じく：クリーム色の、根もとが少しひろがった円柱（半径0.17→0.13・高さ0〜0.30）。
 #   かさ（すわる所）：じくの上。下の面（ひだ・うすい茶）は高さ0.29〜0.33、ふち（半径0.31）から、上はひくいドーム（てっぺん0.47、まん中はすわれるように平ら）。
 #     かさの色は、やわらかい赤茶。上の面に白い水玉8こ（半径0.035〜0.05）。
-#   足もと：右手前に小さなきのこ1本（じく・かさ・白い点1こ）、左うしろに苔のかたまり2こ。どの向きから見ても同じに見えないように。
+#   足もと：右手前に小さなきのこ1本（じく・かさ・白い点1こ）、左うしろに草2むら・手前にシロツメクサ（トリポのモデル）。どの向きから見ても同じに見えないように。
 # かげと質感は、ほかの限定の家具と同じマットキャップ・スムーズシェード80度・見おろし30度・平行に写す。
 import numpy as np,math
 from blueprint import Part as P
 ID='g_w_kinoko';BOTTOM=58;GRAD=True
 VIEWS=[('g_w_kinoko',0),('g_w_kinoko>1',1),('g_w_kinoko>2',2),('g_w_kinoko>3',3)]
-CX,CY=0.5,0.5;STEM=(250,238,210);GILL=(238,196,150);CAP=(232,72,56);DOT=(255,250,240);MOSS=(118,196,72)   # あざやかに（持ち主）
+CX,CY=0.5,0.5;STEM=(250,238,210);GILL=(238,196,150);CAP=(232,72,56);DOT=(255,250,240);MOSS=(118,196,72);GRASS0=(70,150,56);GRASS1=(150,212,84)   # あざやかに（持ち主）
 import random
 _R=random.Random(7);DOTS=[]   # 水玉（持ち主：白もようが不自然）：大きさのそろった丸を少しならべるのをやめ、本物のベニテングタケのように、
 # てっぺんほど大きく・ふちほど小さいつぶを、いびつな形で、12こちらす。ふち（りんかくにかかる所）には置かない
@@ -34,7 +34,8 @@ def PARTS():
     s2=P('小さなじく','lathe',(mx,my,[(0.0,0.0),(0.045,0.0),(0.035,0.06),(0.035,0.10),(0.0,0.10)]),STEM,detail=24,on=('ground',));s2.tex=False;L.append(s2)
     def d2(x,y,z):return DOT if z>0.15 and math.hypot(x-mx-0.015,y-my+0.01)<0.022 else (GILL if z<0.105 else CAP)
     c2=P('小さなかさ','lathe',(mx,my,[(0.0,0.095),(0.08,0.10),(0.085,0.115),(0.07,0.14),(0.035,0.16),(0.0,0.165)]),CAP,detail=32,on=('小さなじく',));c2.tex=False;c2.decal=d2;L.append(c2)
-    for i,(bx,by,r) in enumerate([(CX-0.22,CY-0.16,0.07),(CX-0.12,CY-0.24,0.055)]):
-        m=P('苔%d'%i,'ball',(bx,by,r*0.25,r,0.55),MOSS,on=('ground',));m.tex=False;L.append(m)
+    # 足もとの草（持ち主：葉・植物をただの丸でかかない）：トリポの草のモデル（grass.glb）とシロツメクサ（clover.glb）を置く
+    for i,(f,bx,by,h,rot) in enumerate([('grass.glb',CX-0.21,CY-0.12,0.24,20),('grass2.glb',CX-0.06,CY-0.24,0.20,110),('clover.glb',CX-0.02,CY+0.25,0.10,60),('grass.glb',CX+0.22,CY-0.18,0.18,250)]):
+        g=P('草%d'%i,'model',('tripo/'+f,bx,by,0,h,rot,0),MOSS,on=('ground',),note='地面におく');g.tex=False;g.decal=(lambda h:lambda x,y,z:tuple(int(a+(b-a)*min(1,z/h)) for a,b in zip(GRASS0,GRASS1)))(h);L.append(g)   # 根もとはこい緑、先ほど明るい緑
     return L
 MATCAP='clay';SMANGLE=80;PARALLEL=True;ELEV=30   # ほかの限定の家具と同じ
