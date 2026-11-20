@@ -39,7 +39,7 @@ function rainPud(i){return !!S&&isNight()&&!(snowCover()>0&&!feelMelt(i))&&puddl
 const RAINSLIP=7.5,RAINSLIPB=1.5;/* 雨の水たまりで止まる時間（すべる水たまりの罠の半分：5分、オオカゲなどは1分） */
 function rainSlip(r){/* せいれいが水たまりでつるっとすべって、止まる。出てから、またふむと、またすべる */if(r.slipT>S.t){r.stT=S.t;return true}const j=(r.y|0)*W+(r.x|0);
   if(!rainPud(j)){r.slipJ=-1;return false}if(r.slipJ===j)return false;r.slipJ=j;r.slipT=S.t+RAINSLIP;r.stT=S.t;sfxAt('slip',r.x,r.y);fxSpr('slip',r.x*TS,r.y*TS);SHOCKU.set(r,performance.now()+1200);return true}
-function feelWin(h){/* その家の窓のあかりのこさ（0〜1）。家ごとに、ともる時刻・消える時刻がちがう */const t=hour(),q=hash(h.x0*31+h.y0*17+5),on=FEEL_WIN0+q*(FEEL_WIN1-FEEL_WIN0),off=FEEL_WOFF0+hash(h.x0*13+h.y0*29+2)*(FEEL_WOFF1-FEEL_WOFF0);
+function feelWin(h){/* その家の窓のあかりのこさ（0〜1）。家ごとに、ともる時刻・消える時刻がちがう */const t=skyHour(),q=hash(h.x0*31+h.y0*17+5),on=FEEL_WIN0+q*(FEEL_WIN1-FEEL_WIN0),off=FEEL_WOFF0+hash(h.x0*13+h.y0*29+2)*(FEEL_WOFF1-FEEL_WOFF0);
   if(t>=12)return Math.max(0,Math.min(1,(t-on)/.12));return Math.max(0,Math.min(1,(off-t)/.12))}
 const FEELFLAME={campfire:.07,torch:.06,candle:.05,lantern:.04,flamp:.03,lamp:.035,toro:.04,takeakari:.04,andon:.03,yomawari:.035,statue:.03,watch:.035};
 function feelFlick(j,o,now){/* 火のあかりのゆらめき：光の大きさの倍（1のまわり）。1秒に9回くらい、こきざみにかわる */const a=FEELFLAME[o];if(!a)return 1;const t=Math.floor(now/110);return 1+(hash(t*7+j*3)-.5)*a+Math.sin(now/640+j)*a*.5}
