@@ -63,7 +63,9 @@ def shot(M,k,only=None,S_=64,filt=None,info=None):
     if PX:K=S_//PX;S_=PX   # PX：1マスのドット数（あらいドット）。PX で写して、K 倍（NEAREST）にのばす。ゲームのチップは g64 のまま
     P=np.array([PROJ(v) for v in V]+[PROJ(sc.fwd(q)) for q in pfire_box(M)+list(getattr(M,'PBOX',()))]);m=2/64;ext=(P[:,0].min()-m,P[:,0].max()+m,P[:,1].min()-m,P[:,1].max()+m);O.S=S_
     im=O.render_px(sc,PROJ,ext,DEPTH,k=0.80 if O.GRAD else 0.72,lw=getattr(M,'LW',LW),k2=0.90 if O.GRAD else 0.86,merge=getattr(M,'MERGE',6 if O.GRAD else 12),outerk=getattr(M,'OUTERK',False),contrast=getattr(M,'CONTRAST',0))   # CONTRAST：輪郭線を作る前の色にかける   # OUTERK：まわりのふちは、部品の olk でうすくしない   # MERGE：にた色をまとめるさかい（設計図でかえられる）   # GRAD：にた色をまとめるさかいを小さく（グラデーションの段をのこす）   # GRAD の家具は、輪郭線もやわらかい色（持ち主がきめた）
-    if getattr(M,'TONE5',False):   # TONE5=True：木と同じ5色のかげ（左上の光・5色・まるい面のさかいめに市松のあみかけ。tools/art/furntone.py）。家具・建物はこれ（持ち主がきめた）
+    if getattr(M,'MATCAP',None):   # MATCAP='clay' など：マットキャップでかげと質感（tools/art/matcap.py）。TONE5 のかわりに
+        import matcap;im=matcap.apply(im,M.MATCAP)
+    elif getattr(M,'TONE5',False):   # TONE5=True：木と同じ5色のかげ（左上の光・5色・まるい面のさかいめに市松のあみかけ。tools/art/furntone.py）。家具・建物はこれ（持ち主がきめた）
         import furntone;im=furntone.tone(im,streak=getattr(M,'STREAK',furntone.STREAK),three=getattr(M,'TONE3',False))   # TONE3：3だん・あみ少し   # STREAK：木目のすじのこさ（設計図ごとにかえられる）
     if K>1:
         im=im.resize((im.width*K,im.height*K),Image.NEAREST);S_*=K;O.S=S_
