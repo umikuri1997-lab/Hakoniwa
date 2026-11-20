@@ -46,7 +46,7 @@ function dyFit(L,t,id){if(id==null)return true;const T=dyTr(t,id);if(!T.size)ret
   for(const[re,no,need]of DYRULE)if(re.test(tx)){if(no&&no.some(k=>T.has(k)))return false;if(need&&!need.some(k=>T.has(k)))return false}return true}
 let DYNAME=null;/* 名前 → 物（家具・建物・食べ物・作物・生き物） */
 function dyIdOf(t,n){if(!n)return null;if(!DYNAME){DYNAME={};const put=(m,src,f)=>{for(const k in src||{}){const v=f(k);if(v&&!(v in m))m[v]=k}};
-    DYNAME.o={};put(DYNAME.o,BL,k=>BL[k].name);if(typeof STAGEN!=='undefined')for(const k in STAGEN)DYNAME.o[STAGEN[k]]=k;
+    DYNAME.o={};put(DYNAME.o,BL,k=>BL[k].name);if(typeof STAGEN!=='undefined')for(const w in STAGEN)for(const k in STAGEN[w])DYNAME.o[STAGEN[w][k]]=k;
     DYNAME.f={};put(DYNAME.f,typeof FOODS!=='undefined'?FOODS:{},k=>FOODS[k].name);put(DYNAME.f,typeof CROPS!=='undefined'?CROPS:{},k=>CROPS[k].name);
     DYNAME.c={};if(typeof CRITN!=='undefined')put(DYNAME.c,CRITN,k=>CRITN[k])}
   return(t==='cook'||t==='harvest'?DYNAME.f:t==='pcrit'?DYNAME.c:DYNAME.o)[n]||null}
@@ -73,7 +73,7 @@ function dyTopics(e,f){const M=[],O=[],N=e.ns;
 /* 日記の絵に写した物の話題 */
 function dyPhTopic(e){const k=e.phK,n=e.phN||'';if(!e.ph||!k)return null;
   if(k==='spot')return n?['pspot',n]:null;if(k==='built')return n?['pbuilt',n]:null;if(k==='new')return n?['new',n]:null;if(k==='day')return['pday'];
-  if(k==='see')return e.phS==='admire'?(n?['padm',n]:null):e.phS==='sunset'?['psun']:e.phS==='critwatch'?(n?['pcrit',n]:['psee']):['pquirk'];return null}
+  if(k==='see')return e.phS==='admire'?(n?['padm',n]:null):e.phS==='sunset'?['psun']:e.phS==='critwatch'?(n?['pcrit',n]:['psee']):(e.phS==='splay'||e.phS==='splayw')?(n?[e.phS==='splay'?'psplay':'psplayw',n]:['pquirk']):['pquirk'];return null}
 /* 絵日記の文（3〜4行） */
 function dyNote(e,f){const{M:M0,O}=dyTopics(e,f),sad=M0.some(t=>t[0]==='gone'||t[0]==='bossLose'||t[0]==='trial');
   const pt=dyPhTopic(e),M=pt?(sad?M0.filter(t=>!(t[0]==='new'&&pt[0]==='new')).concat([pt]):[pt].concat(M0.filter(t=>!(t[0]==='new'&&pt[0]==='new')))):M0;/* 絵の物の話を、はじめに（かなしい日は、かなしいことのあと） */
