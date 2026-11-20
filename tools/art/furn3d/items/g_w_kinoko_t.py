@@ -9,7 +9,7 @@ import numpy as np,math
 from blueprint import Part as P
 ID='g_w_kinoko';BOTTOM=58;GRAD=True
 VIEWS=[('g_w_kinoko',0),('g_w_kinoko>1',1),('g_w_kinoko>2',2),('g_w_kinoko>3',3)]
-CX,CY=0.5,0.5;STEM=(242,230,206);GILL=(226,200,168);CAP=(206,120,92);DOT=(252,246,236);MOSS=(150,184,96)
+CX,CY=0.5,0.5;STEM=(250,238,210);GILL=(238,196,150);CAP=(232,72,56);DOT=(255,250,240);MOSS=(118,196,72)   # あざやかに（持ち主）
 DOTS=[(a,e) for a,e in [(20,40),(95,55),(160,35),(230,50),(300,38),(60,75),(200,72),(330,68)]]   # 水玉：まわりの角度・ドームの上の高さ（度）
 def capdecal(x,y,z):
     if z<0.335:return GILL
