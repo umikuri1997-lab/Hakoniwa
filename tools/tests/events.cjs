@@ -52,13 +52,13 @@ const assert=require('node:assert/strict');
   /* 新しい家具のイベント（草原）：弓の的・ピクニックシート。村レベルでおぼえる */
   assert.deepEqual(JSON.parse(await run(`JSON.stringify([levelUpItemsAt(6).includes('mato'),levelUpItemsAt(5).includes('picnic'),levelUpItemsAt(6).includes('taiko')])`)),[true,true,false],'level rewards (taiko is volcano)');
   await run(`S.inv.arrow=(S.inv.arrow||0)+40`);const ar0=await run(`S.inv.arrow`);
-  const mg=await go('matoate',3,"{const j=(CY+6)*W+CX+3;S.obj[j]='mato';}");assert.ok(mg.slice(0,3).every(g=>g.atk===5),'matoate atk+5');assert.equal(await run(`S.inv.arrow`),ar0-15,'arrows used');
+  const mg=await go('matoate',3,"{const j=(CY+6)*W+CX+3;S.obj[j]='mato';}");assert.ok(mg.slice(0,3).every(g=>g.atk===5),'matoate atk+5');assert.equal(await run(`S.inv.arrow`),ar0-15+10,'arrows used, then 10 back as the reward');
   await go('pikunikku',0,"{const j=(CY+8)*W+CX-3;for(const k of[j,j+1,j+W,j+W+1])S.obj[k]=k===j?'picnic':'part';for(const k of[j+1,j+W,j+W+1])S.ref[k]=j}",58);
   /* 豪華なイベント：決まった数をはらい、みんなが出る */
   await run(`for(const id of ['salvia','lily'])S.inv[id]=(S.inv[id]||0)+6;S.mat.shina=(S.mat.shina||0)+30;S.mat.wood=(S.mat.wood||0)+40;addFood('mugi',20);addFood('imo',15);for(let i=0;i<60;i++)addFood('apple',1);S.pt+=3000`);
   const fl="{let n=0;for(let y=CY-14;y<CY-8&&n<30;y++)for(let x=CX-12;x<CX+12&&n<30;x++){const j=y*W+x;if(!S.obj[j]&&!S.ground[j]&&walk(j)){S.obj[j]='salvia';n++}}}";
-  const h0=await run(`S.inv.salvia+S.inv.lily`);
-  const hg=await go('hana',0,fl,58);assert.ok(hg.every(g=>g.sta===2),'hana sta+2');assert.equal(await run(`S.inv.salvia+S.inv.lily`),h0-10,'10 flower seeds used');
+  const h0=await run(`FLOWERS2.reduce((a,f)=>a+(S.inv[f]||0),0)`);
+  const hg=await go('hana',0,fl,58);assert.ok(hg.every(g=>g.sta===2),'hana sta+2');assert.equal(await run(`FLOWERS2.reduce((a,f)=>a+(S.inv[f]||0),0)`),h0-10+3,'10 flower seeds used, then 3 back as the reward');
   const ug=await go('undo',0,'',72);const big=ug.filter(g=>g.work===2).length,small=ug.filter(g=>g.work===1).length;assert.ok(big>=1&&big+small===ug.length,'undo +1 / winners +2 '+JSON.stringify(ug));
   const farm="{let n=0;for(let y=CY+9;y<CY+12&&n<10;y++)for(let x=CX-4;x<CX+4&&n<10;x++){const j=y*W+x;if(!S.obj[j]&&!S.ground[j]&&walk(j)){S.obj[j]='plot';S.dyn[j]={p:0};n++}}}";
   await run(`addFood('mugi',20);addFood('imo',15)`);/* 運動会の食料で作物がへっているので、たす */
