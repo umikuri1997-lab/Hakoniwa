@@ -742,7 +742,7 @@ function renderSheet(){
     }else if(sheetArg==='support'){/* 広告とコーヒー（まだ準備中。使えるまでメニューに出さない） */
       {const sec=el('<div class="sec"><div style="display:flex;flex-direction:column;gap:8px"></div></div>');for(const t of['広告を見る','作者にコーヒーをおごる']){const b=el('<button class="btn"></button>');b.innerHTML=pxi('heart','wx')+t;b.onclick=()=>toast('準備中です');sec.firstChild.appendChild(b)}body.appendChild(sec)}
     }else if(sheetArg==='settings'){
-      {const t=el('<div class="sec"><h3>テスト用</h3></div>'),b=el('<button class="btn"></button>');b.textContent='5倍速：'+(TESTM?'オン':'オフ');b.onclick=()=>{TESTM=!TESTM;try{KV.setItem('hk-test',TESTM?'1':'')}catch(_){}if(!TESTM&&S.speed>3)S.speed=1;renderSheet();applyFeats()};t.appendChild(b);body.appendChild(t)}/* テストのときだけ5倍速 */
+      {const t=el('<div class="sec"><h3>テスト用</h3></div>'),b=el('<button class="btn"></button>');b.textContent='5倍速：'+(TESTM?'オン':'オフ');b.onclick=()=>{TESTM=!TESTM;try{KV.setItem('hk-test',TESTM?'1':'')}catch(_){}if(!TESTM&&S.speed>3)S.speed=1;renderSheet();applyFeats()};t.appendChild(b);{const c=el('<button class="btn" style="margin-left:6px">洞窟へ</button>');c.onclick=()=>{sfx('tap');closeSheet();cavePrep()};t.appendChild(c)}/* 洞窟の探検（cave.js。土のステージができるまでの入口） */body.appendChild(t)}/* テストのときだけ5倍速 */
       const so=el('<div class="sec"><h3>おと</h3><div style="display:flex;gap:8px;flex-wrap:wrap"></div></div>');
       for(const[k,l]of[['bgm','音楽'],['sfx','効果音'],...(navigator.vibrate?[['vib','ふるえ']]:[])]){const b=el('<button class="btn"></button>');b.textContent=l+'：'+(SND[k]?'オン':'オフ');b.onclick=()=>{audioInit();setSnd(k,!SND[k]);renderSheet()};so.lastElementChild.appendChild(b)}
       body.appendChild(so);
