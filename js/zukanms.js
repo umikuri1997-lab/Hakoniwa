@@ -12,7 +12,7 @@ function zkCount(t,d){d=d||S;const G=typeof grecOf==='function'?grecOf():new Map
   if(t===8){const K=d.cookKn||{};return new Set(Object.values(K)).size}
   if(t===10){const R=d.fosRec||{};let c=0;for(const k in R)if(R[k]>0)c++;return c}
   const it=Object.assign({},d.seenIt||{});for(const k in d.mat||{})if(d.mat[k]>0)it['m:'+k]=1;for(const k in d.fs||{})if(d.fs[k]>0)it['f:'+k]=1;for(const k in MATN)if(it['m:'+k])n++;for(const k in FOODS)if(it['f:'+k])n++;if(it['x:horn'])n++;if(it['x:herb'])n++;return n}
-function zkTotal(t){/* 「ぜんぶ」の数（このステージで見つけられる数がきまるタブだけ。ほかは0） */if(t===6)return FISHK.filter(k=>FISHI[k].w===WD).length;if(t===7)return CRITKINDS.filter(k=>k!=='mogura'||WD===3).length;if(t===10)return typeof CVFOSK!=='undefined'?CVFOSK.length:0;return 0}
+function zkTotal(t){/* 「ぜんぶ」の数（このステージで見つけられる数がきまるタブだけ。ほかは0） */if(t===6)return FISHK.filter(k=>FISHI[k].w===WD).length;if(t===7)return CRITKINDS.filter(k=>k!=='mogura'||WD===2).length;if(t===10)return typeof CVFOSK!=='undefined'?CVFOSK.length:0;return 0}
 function zkSteps(t){const T=zkTotal(t),L=ZKMS.filter(v=>!T||v<T);if(T)L.push(T);return L}
 function zkNext(t){/* 図鑑のタブに出す：つぎの節目まで、あと何こ */const n=zkCount(t),L=zkSteps(t);for(const v of L)if(n<v)return{v,left:v-n,all:v===zkTotal(t)};return null}
 function zkReward(t,v,all){const nm=ZKTABS[t];if(all&&t===10){rewardPower(CVFOSALL);toast('図鑑の「'+nm+'」をうめた','good');return}/* 化石は、そろえるとパワー（cave.js） */if(all){const G=GEAR_IDS.filter(id=>BL[id].g.sp&&!gearCount(id)&&(BL[id].g.gr||WD===1));if(G.length){const id=pick(G);giveItem(id,1);queueItemGift({[id]:1},'図鑑の「'+nm+'」をうめた！');return}

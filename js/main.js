@@ -11,7 +11,7 @@ function continueGame(saved){if(saved&&saved.summary)saved=loadStage(saved.world
 
 
 /* ---------- マップ選択 ---------- */
-const LIVE=[null,null];
+const LIVE=[null,null,null,null];
 function stageInfo(w){
   const live=LIVE[w];if(live&&!live.summary)return live;
   const raw=KV.getItem(SAVE_KEYS[w]);if(!raw)return null;
@@ -36,13 +36,13 @@ function freeCard(list){if(!(LIVE[0]&&LIVE[0].cleared))return;let told=false;try
 const WORLDS=[
   {name:'はじまりの草原',sub:'WORLD 1・木',el:'wood',desc:'自然の力がくずれて荒れた草原。せいれいたちと村をつくり、守護の力をとりもどそう。'},
   {name:'火山のふもとの村',sub:'WORLD 2・火',el:'fire',desc:'地面の熱が冷えきった、火の山のふもとの村。こおりかけた温泉に、ぬくもりをとりもどそう。'},
-  {name:'霧のみずべの村',sub:'WORLD 3・水',el:'water',desc:'霧が晴れず、水の流れが止まった村。'},
-  {name:'ひびわれた岩の谷',sub:'WORLD 4・土',el:'earth',desc:'大地がひびわれ、くずれかけた谷の村。'},
+  {name:'ひびわれた岩の谷',sub:'WORLD 3・土',el:'earth',desc:'大地がひびわれ、くずれかけた谷の村。'},
+  {name:'霧のみずべの村',sub:'WORLD 4・水',el:'water',desc:'霧が晴れず、水の流れが止まった村。水門をあけて、水路で水をながそう。'},
   {name:'風のやんだ空の村',sub:'WORLD 5・風',el:'wind',desc:'風が止まり、しずみかけた浮き島の村。'},
   {name:'忘れられた神々の庭',sub:'WORLD 6',el:null,desc:'5つの力が生まれた場所。'},
 ];WORLDS[FREE]={name:'フリーモード',sub:'FREE',el:null,desc:''};
 /* ステージの表紙：そのステージのメインのせいれい（キーキャラ）を、ゲームのドット絵（drawSpiritDot）でならべる。会えた子だけ（はじめの子はいつも）。うしろはコードのドット絵の景色（PXSCENE）を3倍に */
-const COVER_KEY='hakoniwa-cover-v1',COVER_EL=[['wood','earth','fire','water','wind'],['fire','water','wood','earth','wind']];COVER_EL[WIND]=['wind','wood','earth','fire','water'];
+const COVER_KEY='hakoniwa-cover-v1',COVER_EL=[['wood','earth','fire','water','wind'],['fire','water','wood','earth','wind']];COVER_EL[WIND]=['wind','wood','earth','fire','water'];COVER_EL[MIZU]=['water','earth','wood','fire','wind'];
 function coverCast(d,w){/* セーブのデータ（ぜんぶ読んだ物）から：[名前,属性,見た目] */const all=(d.res||[]).concat(d.buried||[],d.lost||[]),N=d.keyN||{},out=[];
   for(const el of COVER_EL[w]||[]){let nm=N[el];if(!nm){if(w===0)nm=KEYEL0[el]||FIXK0[el];else for(const k of KEYS[w]||[])if(KEYEL[k]===el&&!nm)nm=k}if(!nm)continue;
     const r=all.find(x=>x&&x.name===nm);if(!r&&nm!==KEYS[w][0])continue;out.push([nm,(r&&r.elem)||KEYEL[nm]||el,(r&&r.vr)||KEYVR[nm]||null])}return out}
@@ -53,7 +53,7 @@ function coverOf(k){const L=LIVE[k];if(L&&!L.summary)return coverCast(L,k);const
   /* しるしがない前のセーブ：名前の決まった子だけ、セーブの文字からさがす */let raw='';try{raw=KV.getItem(SAVE_KEYS[k])||''}catch(e){}const fx=k===0?['フタバ','ノドカ','ホノ','アオ','フウ']:KEYS[k]||[];
   return fx.filter((n,i)=>!i||raw.indexOf('"name":"'+n+'"')>=0).map(n=>[n,KEYEL[n]||Object.keys(FIXK0).find(e=>FIXK0[e]===n)||'wood',KEYVR[n]||null])}
 function thumb(cv2,k,open,hide){
-  const kind=k===1?'volcano':k===2?'water':k===FREE?'free':'meadow',cast=hide||!open||k===FREE?[]:coverOf(k);
+  const kind=k===1?'volcano':k===MIZU?'water':k===FREE?'free':'meadow',cast=hide||!open||k===FREE?[]:coverOf(k);
   cv2.width=190;cv2.height=70;cv2.classList.add('px');const c=cv2.getContext('2d');
   if(typeof PXSCENE!=='function'){c.fillStyle='#2a3a36';c.fillRect(0,0,190,70);return}
   if(hide)return PXSCENE(c,190,70,1,'lock',0);
@@ -78,7 +78,7 @@ function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
     if(k)list.appendChild(el('<div class="wlink"></div>'));
     let w2o=false,w5o=false;try{w2o=KV.getItem('hakoniwa-w2open')==='1';w5o=KV.getItem('hakoniwa-w5open')==='1'}catch(e){}
     let w6o=false;try{w6o=KV.getItem('hakoniwa-w6open')==='1'}catch(e){}
-    const L=LIVE[k]||null,play=STAGES.includes(k)||k===YAMI,open=k===0||(k===1&&!!((LIVE[0]&&LIVE[0].cleared)||L||w2o))||(k===YAMI&&w6o)||(k===WIND&&!!((LIVE[1]&&LIVE[1].cleared)||L||w5o));/* 風は、火山でヌシ様をむかえたら、ひらく *//* 闇のステージ：水・土・風ができるまでは、ためす入り口（とじたカードを5回タップ）だけ */
+    const L=LIVE[k]||null,play=STAGES.includes(k)||k===YAMI,open=k===0||(k===1&&!!((LIVE[0]&&LIVE[0].cleared)||L||w2o))||(k===YAMI&&w6o)||(k===WIND&&!!((LIVE[1]&&LIVE[1].cleared)||L||w5o))||k===MIZU;/* 風は、火山でヌシ様をむかえたら、ひらく *//* 闇のステージ：水・土・風ができるまでは、ためす入り口（とじたカードを5回タップ）だけ。水のステージは、試作のあいだだけ、いつでも入れる */
     const card=el(`<div class="wcard${open?' open':' lock'}"><canvas width="760" height="280"></canvas><div class="wb"><span class="wn"></span><h3></h3><p></p><div class="wbtns"></div></div></div>`);
     const hide=!open&&!(k===2&&LIVE[1]&&LIVE[1].cleared);/* まだひらいていないステージは、名前も絵も見せない */
     if(hide)card.querySelector('.wn').innerHTML=pxi('lock','wlk')+'WORLD '+(k+1);else card.querySelector('.wn').textContent=wd.sub;card.querySelector('h3').textContent=hide?'？？？':wd.name;
@@ -87,7 +87,7 @@ function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
     else if(k===1&&!open)info='はじまりの草原でヌシ様をむかえると、ひらきます。';
     if(k===2)info=LIVE[1]&&LIVE[1].cleared?'道がひらいた！ ……けれど、まだ準備中。':'まえの土地でヌシ様をむかえると、ひらきます。';
     if(k>=3&&!(open&&play))info=k===5?'？？？':'まえの土地でヌシ様をむかえると、ひらきます。';
-    if(k===WIND&&!open)info='まえの土地でヌシ様をむかえると、ひらきます。';
+    if(k===WIND&&!open)info='まえの土地でヌシ様をむかえると、ひらきます。';if(k===MIZU&&!(L&&L.introSeen))info=wd.desc;
     card.querySelector('p').textContent=info;
     const bt=card.querySelector('.wbtns');
     if(play&&open){

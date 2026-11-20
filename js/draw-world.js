@@ -452,6 +452,7 @@ function render(now){RFN++;hdFrame();
   if(S.hi&&!farOn){const RW=cliffRuns();for(let y=Math.max(0,y0-1);y<Math.min(H,y1+2);y++){const L=RW.get(y);if(!L)continue;const vs=[];for(const R of L)if(R.x1>=x0-1&&R.x0<=x1)vs.push({x0:Math.max(R.x0,x0-1),x1:Math.min(R.x1,x1),lv:R.lv});if(!vs.length)continue;/* 見えている所だけ */
     add(y-1+.0005,-1,null,()=>{for(const R of vs)cliffRow(y,R,false)},-1);/* ひとつ上の行の物より先：段差の上の物のかげが、手前の行の上の面にかくれないように */
     add(y+.001,-1,null,()=>{for(const R of vs)cliffRow(y,R,true)},-1)}}/* うしろが低い所だけ、上の面の上はしをもう1回描いて、うしろの物の足もとをかくす *//* 段差：行ごとに、その行の物より先（ひとつ上の行の物より後） */
+  if(typeof mzRows==='function')mzRows(add,x0,y0,x1,y1,now);/* 水のステージ：水路・ため池・小舟（段差の絵のあと） */
   feelLifted(add,x0,y0,x1,y1,now);/* 高い段の上の雪・落ち葉・水たまり（段差の絵のあと） */
   D.sort((a,b)=>a.k-b.k||a.t-b.t);
   for(const it of D)it.draw();
@@ -498,7 +499,7 @@ function render(now){RFN++;hdFrame();
   if(!PHSNAP)for(const f of floats){ctx.globalAlpha=Math.min(1,f.life*2);/* 村の写真（photo.js）には、数の文字を写さない */const yy=(f.y-(1-f.life)*1.2)*TS;ctx.lineJoin='round';ctx.lineWidth=3;ctx.strokeStyle='rgba(176,138,100,.9)';{const fi=BUBI[bubKey(f.text)]?null:emoImg(f.text);if(BUBI[bubKey(f.text)])bubIcon(ctx,f.text,f.x*TS,yy-6,1.5);else if(fi){const ih=20,iw=ih*fi.width/fi.height;ctx.drawImage(fi,f.x*TS-iw/2,yy-ih+4,iw,ih)}else{ctx.strokeText(f.text,f.x*TS,yy);ctx.fillStyle='#fff3d6';ctx.fillText(f.text,f.x*TS,yy)}}}/* 文字はぜんぶクリーム色 *//* 文字のふちどりはうすい茶色 */
   ctx.globalAlpha=1;ctx.textAlign='start';
   feelWarm(ctx,x0,y0,x1,y1);feelAir(now,x0,y0,x1,y1);feelClouds(ctx,now,darkness());/* 冬の家の中のぬくもり・朝もや・白い息・かげろう・雨のはね・雲のかげ（feel.js） */
-  drawFog(ctx,x0,y0,x1,y1,now);/* 霧（夜の暗さより下） */drawWindCover(ctx,x0,y0,x1,y1,now);/* 風：雲にしずんだ島 */drawFogHints(ctx,x0,y0,x1,y1,now);/* 霧の中の手がかり */drawPrintMarks(now,true);/* 霧の中の足あとの印は、霧の上 */
+  drawFog(ctx,x0,y0,x1,y1,now);/* 霧（夜の暗さより下） */drawWindCover(ctx,x0,y0,x1,y1,now);if(typeof mzMistDraw==='function')mzMistDraw(ctx,x0,y0,x1,y1);/* 風：雲にしずんだ島 */drawFogHints(ctx,x0,y0,x1,y1,now);/* 霧の中の手がかり */drawPrintMarks(now,true);/* 霧の中の足あとの印は、霧の上 */
   const dk=darkness();
   ctx.setTransform(dpr,0,0,dpr,0,0);
   if(BOSSEVE){const h=hour(),a=Math.min(1,Math.max(0,(h-15)/2))*.16;if(a>0){ctx.fillStyle='rgba(110,30,70,'+a+')';ctx.fillRect(0,0,VW,VH)}}/* オオカゲが来る日の夕方：空があやしい色に */

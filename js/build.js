@@ -10,7 +10,7 @@ function natHit(j){/* まもりの光が、木・岩に当たった（glHit）�
 /* 守り神の光は、はじめから木や岩にも使える。フタバの「やってみて」は、はじめての夜のあとのサブクエスト（lighttry） */
 function spawnSeed(){
   for(let t=0;t<40;t++){const x=OFF+((Math.random()*OW)|0),y=OFF+((Math.random()*OW)|0),j=y*W+x;/* 前からの土地の中に落ちる */
-    if(!VILL[j]&&!S.ground[j]&&!S.obj[j]&&!sacredNoBuild(j)&&!(S.fog&&fogAt(j))){S.seeds.push({x,y});return}}
+    if(!VILL[j]&&!S.ground[j]&&!S.obj[j]&&!sacredNoBuild(j)&&!(fogAt(j))){S.seeds.push({x,y});return}}
 }
 
 /* ---------- 置く・こわす ---------- */
@@ -59,7 +59,7 @@ function canPlace1(id,x,y,quiet){
   if(x<0||y<0||x>=W||y>=H)return false;
   if(starterGap(y*W+x)&&!HOME_WALLS.has(id)&&!HOME_DOORS.has(id)){if(!quiet)toast('ここは家の壁のすきまです','warn');return false}/* 箱や神殿を置くと、こわせずに家が直せなくなる */
   if(WALLD.has(id)){const j=y*W+x,iw=k=>HOME_WALLS.has(typeAt(k))||HOME_DOORS.has(typeAt(k)),wreath=id==='wreath',target=HOME_WALLS.has(S.obj[j])&&S.obj[j]!=='wall'||wreath&&HOME_DOORS.has(S.obj[j]);/* 石の塀にはかけられない */if(!target||wreath&&HOME_DOORS.has(S.obj[j])&&(iw(j-W)||iw(j+W))&&!(iw(j-1)||iw(j+1))||!wreath&&(iw(j-W)||iw(j+W))||(S.win&&S.win[j]&&!((id==='curtain1'||id==='curtain2')&&S.win[j]===1))||((id==='curtain1'||id==='curtain2')&&!(S.win&&S.win[j]===1&&HOUSES.some(h=>h.set.has(j)&&h.inside.has(j+W)&&!h.inside.has(j-W))))){if(!quiet)toast((id==='curtain1'||id==='curtain2')?'カーテンは、家の上がわの窓にだけかけられます':wreath?'リースは、壁か横向きのドアにだけかけられます':BL[id].name+'は、横向きの家の壁にだけかけられます');return false}return true}/* 窓は壁にはめる */
-  const j=y*W+x;if(id==='yudekago'){if(!hotW(j)){if(!quiet)toast('ゆでかごは、あたたかい温泉の水の上にだけ置けます');return false}if(S.obj[j]){if(!quiet)toast('ここにはもう何かあります');return false}if(![j-1,j+1,j-W,j+W].some(k=>k>=0&&k<W*H&&Math.abs(k%W-x)<=1&&S.ground[k]!==1&&walk(k))){if(!quiet)toast('岸のすぐそばの水に置いてください');return false}return true}/* ゆでかご：温泉の水のマス。となりの岸から、せいれいが使う */
+  const j=y*W+x;if(typeof mzPlaceCheck==='function'){const v=mzPlaceCheck(id,j,quiet);if(v!=null)return v}/* 水のステージ：水路・船着き場・いかだ乗り場 */if(id==='yudekago'){if(!hotW(j)){if(!quiet)toast('ゆでかごは、あたたかい温泉の水の上にだけ置けます');return false}if(S.obj[j]){if(!quiet)toast('ここにはもう何かあります');return false}if(![j-1,j+1,j-W,j+W].some(k=>k>=0&&k<W*H&&Math.abs(k%W-x)<=1&&S.ground[k]!==1&&walk(k))){if(!quiet)toast('岸のすぐそばの水に置いてください');return false}return true}/* ゆでかご：温泉の水のマス。となりの岸から、せいれいが使う */
   if(id==='lotus'){if(!waterJ(j)){if(!quiet)toast('ハスは池の上にだけ植えられます');return false}if(S.obj[j]){if(!quiet)toast('ここにはもう何かあります');return false}return true}
   if(id==='bridge'){if(S.ground[j]!==1){if(!quiet)toast(WD===WIND?'橋は水か雲の上にだけかけられます':'橋は水の上にだけかけられます');return false}if(S.obj[j]){if(!quiet)toast('ここにはもう何かあります');return false}return true}
   if(S.ground[j]===1){if(!quiet)toast(skyJ(j)?'雲の上には置けません':'水の上には置けません');return false}
@@ -202,6 +202,7 @@ function moveTap(tx,ty){const j=ty*W+tx;
   MOVESRC=null;recount();dirty=true;burst(j,'furn','furnPlace');renderPalette();checkQuest()}
 function removeAt(x,y){const tx0=x,ty0=y;
   const j=anc(y*W+x),o=S.obj[j];x=j%W;y=(j/W)|0;
+  if(typeof mzRemove==='function'&&mzRemove(j))return;/* 水のステージ：水路をうめる・水門はこわせない */
   if(S.win&&S.win[j]){const id=S.win[j]===1?'window':S.win[j];if(BOXCAP[id])boxStash(j,id);/* 中身は散らさない */if(id==='curtain1'||id==='curtain2')S.win[j]=1;else delete S.win[j];giveItem(id,1,1);/* カーテンをはずすと、窓がのこる */toast(BL[id].name+'をもちものにもどした');burst(j,'furn','rm');recount();renderPalette();return}
   if(o){const b=BL[o];if(o==='grave'){const d=S.dyn[j];if(d&&!d.buried&&d.name)for(const L of[S.buried||[],S.lost||[]])for(const q of L)if(q.name===d.name)delete q.unb}/* おみおくりの前のお墓をこわしたら、おみおくりがすんだことにする（unb がのこると、その子を二度と呼びもどせない） */if(o==='tower')return toast(storyTreeName()+'はこわせません');if(o==='kazaana'||o==='kazaanab'||o==='oldmill'||o==='site'&&S.dyn[j]&&S.dyn[j].hole)return toast((o==='oldmill'?'古い風車':'風穴')+'はこわせません');if(RIDEB[o]||o==='site'&&S.dyn[j]&&S.dyn[j].wfix)return toast('こわれた遊具は、こわせません');if(o==='volcano'||o==='heatv'||o==='crack'||o==='boulder'||o==='fogbox'||o==='nushiprint'||o==='fogspring'||typeof KDIDS!=='undefined'&&KDIDS.has(o))return toast(b.name+'はこわせません');if(S.free&&(o==='obox'||o==='board'))return toast(BL[o].name+'はこわせません');if(o==='statue'||o==='statueb'||o==='obox'||o==='board'||o==='altar'||o==='site2')return toast('神殿はこわせません');if((o==='stor'||o==='mbox')&&cnt(o)<=1&&!(WD===0&&!S.free&&!qDone('wall')&&y===CY-2&&x>=CX-5&&x<=CX-3))return toast(BL[o].name+'は、1つはいります');
     if(o==='matyard')return toast('材料置き場は、作りおわるとかたづきます');
@@ -222,6 +223,7 @@ function removeAt(x,y){const tx0=x,ty0=y;
 }
 function finishBuild(j,r){
   if(S.dyn[j]&&S.dyn[j].bp!=null&&typeof bpFinish==='function')return bpFinish(j,r);/* 家の設計図の部品 */
+  if(S.dyn[j]&&S.dyn[j].build==='canal')return mzCanalDone(j,r);/* 水路をほりおえた */
   if(TERRA.has(S.dyn[j]&&S.dyn[j].build)){const up=S.dyn[j].build==='mound';delete S.dyn[j];S.obj[j]='';S.hi[j]=up?Math.min(HMAX,(S.hi[j]|0)+1):Math.max(0,(S.hi[j]|0)-1);recount();dirty=true;burst(j,'block');if(r)addSpiritXp(2,r);return}/* けずる・もる：段差の高さをかえる */
   const d=S.dyn[j],id=d.build,fix=!!d.ruin;/* こわれた神殿を直した */if(d.hole){delete S.dyn[j];S.obj[j]='kazaana';recount();burst(j,'furn');sfx('level');if(r)addSpiritXp(4,r);toast('風穴がひらいた！ 風がふき出した','good');memo('leaf','風穴がひらいて、風がふき出した');checkQuest();return}/* 風穴の石をどけた（wind.js） */if(d.wfix){windFixDone(j,d,r);return}/* こわれた遊具を直した */if(!d.mat&&BL[id].mat&&id!=='tower')(S.freeB||(S.freeB={}))[j]=1;/* ただで建てた（素材を使わなかった） */delete S.dyn[j];S.obj[j]=id;noteQuestPlacement(id,j);setParts(id,j,'part');if(STAIRS.has(id)){const d=stairDir(j);if(d>0){const o=stairOut(j,d);S.obj[o]='part';S.ref[o]=j}}/* 階段：低いほうのマス */if(BL[id].hp)S.hp[j]=BL[id].hp;if(BL[id].dyn)S.dyn[j]={g:0};
   recount();burst(j,'furn');if(r){addSpiritXp(4,r);r.made=(r.made||0)+1}if(fix)toast(BL[id].name+'が直った！','good');else{kurashi('b:'+id,['🏠','はじめて'+BL[id].name+'が建った']);toast(BL[id].name+'が建った！','good')}checkQuest();
