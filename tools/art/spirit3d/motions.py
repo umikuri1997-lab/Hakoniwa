@@ -300,15 +300,15 @@ def eat_bread(w, face):
     return dict(sN=1.55+0.45*k, sF=1.55+0.45*k, bN=-1.05+0.1*k, bF=-1.05+0.1*k, hp=0.12+0.35*k+0.12*ch, lean=0.12*k, z=-0.8*ch, top=0.1*k+0.08*ch, tail=0.12*S(w))
 M('eat_bread', 10, 0.55, eat_bread)
 def eat_fruit(w, face):
-    """くだもの：手前の手で持って口へ、かりっ。奥の手はおなか。かじったら、もぐもぐ"""
+    """くだもの：両手で持って口へ、かりっ。かじったら、もぐもぐ（持ち主のきめ：食べ物は、基本両手で持つ）"""
     u = (w/(2*PI)) % 1; k, ch = bite(u)
-    return dict(sN=1.35+0.7*k, bN=-1.0-0.15*k, sF=0.7, bF=-0.75, hp=0.1+0.32*k+0.12*ch, hr=0.06*S(w), lean=0.08*k, z=-0.8*ch, top=0.08*k+0.08*ch, tail=0.12*S(w))
+    return dict(sN=1.5+0.5*k, sF=1.5+0.5*k, bN=-1.05+0.1*k, bF=-1.05+0.1*k, hp=0.1+0.32*k+0.12*ch, hr=0.04*S(w), lean=0.08*k, z=-0.8*ch, top=0.08*k+0.08*ch, tail=0.12*S(w))
 M('eat_fruit', 10, 0.6, eat_fruit)
 def eat_meal(w, face):
-    """料理：奥の手で器をもち、手前の手で口へはこんで、ぱくっ。そのあと、もぐもぐ"""
+    """料理：両手で器を持って口もとへよせ、ぱくっ。そのあと、もぐもぐ（持ち主のきめ：食べ物は、基本両手で持つ）"""
     u = (w/(2*PI)) % 1; k, ch = bite(u)
     up = S(PI*min(1, u/0.45)) if u < 0.45 else 0
-    return dict(sN=1.0+1.05*up, bN=-0.7-0.35*up, sF=1.45, bF=-0.95, hp=0.15+0.3*k+0.12*ch, lean=0.06+0.08*k, z=-0.8*ch, top=0.08*ch, tail=0.12*S(w))
+    return dict(sN=1.4+0.4*up, sF=1.4+0.4*up, bN=-1.0+0.1*up, bF=-1.0+0.1*up, hp=0.15+0.3*k+0.12*ch, lean=0.06+0.08*k, z=-0.8*ch, top=0.08*ch, tail=0.12*S(w))
 M('eat_meal', 10, 0.55, eat_meal)
 def hold(w, face):
     return breathe(dict(sN=1.3, sF=1.3, bN=-0.9, bF=-0.9, hp=0.08), w)

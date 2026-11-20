@@ -132,6 +132,10 @@ function drawMoya(c,px,top,now,id){const g=1.5;c.save();
 const HUMGAP=700,HUML=1600;
 const NOTE=['..oo','..oo','..o.','..o.','ooo.','ooo.','.o..'];
 function humTick(r){/* drawRes0 から：ごきげんで、こわがっていない子 */return r.fun>=FUNF&&!hostileNow(r)}
+/* 鼻歌・もやもやは、たまに：MOODCHK ミリ秒ごとに、たのしさの量に合わせた確率で、MOODDUR ミリ秒だけ出す（ごきげんなほど・しょんぼりなほど、よく出る） */
+const MOODCHK=7000,MOODDUR=4500,MOODP0=.1,MOODP1=.5,MOODB=new WeakMap();
+function moodChance(r,k){if(k==='hum')return MOODP0+MOODP1*Math.max(0,Math.min(1,(r.fun-FUNF)/(100-FUNF)));const L=FUNLOWV[r.elem]||30;return MOODP0+MOODP1*Math.max(0,Math.min(1,(L-r.fun)/L))}
+function moodOn(r,k,now){let b=MOODB.get(r);if(!b||b.k!==k){b={k,u:0,n:now+Math.random()*MOODCHK};MOODB.set(r,b)}if(now<b.u)return true;if(now>=b.n){b.n=now+MOODCHK;if(Math.random()<moodChance(r,k)){b.u=now+MOODDUR;b.t0=now;return true}}return false}
 function drawHum(c,px,top,now,r){const g=1.5,tt=now+r.id*613;c.save();for(let j=0;j<3;j++){const n=Math.floor(tt/HUMGAP)-j,k=(tt-n*HUMGAP)/HUML;if(k<0||k>1)continue;const i=((n%2)+2)%2,ox=(moyaHash(r.id,n)-.5)*8;
   const x0=Math.round((px+8+ox+Math.sin(k*6+n)*3)/g)*g,y0=Math.round((top-k*16)/g)*g;c.globalAlpha=k<.1?k/.1:k<.8?1:(1-k)/.2;c.fillStyle=i?'#e98fb0':'#7aa6e0';
   NOTE.forEach((row,y)=>{for(let x=0;x<row.length;x++)if(row[x]==='o')c.fillRect(x0+x*g,y0+y*g,g,g)})}c.restore()}

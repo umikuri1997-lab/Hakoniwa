@@ -156,12 +156,12 @@ function adjOf(j,fn){const x=j%W,y=(j/W)|0;for(const[dx,dy]of DIRS){const nx=x+d
 const elemCount=el=>S.res.filter(r=>r.elem===el).length;
 const NEEDT=[6,24,52,96,160,248,364,512,696,920,1188],NEEDF=[13,38,83,154,256,397,582,819,1114,1472,1901],needFor=el=>{const T=WD===FREE?NEEDF:NEEDT,dk=[...(S.buried||[]),...(S.lost||[])].filter(q=>q.elem===el&&isKey(q.name)).length;return T[Math.min(T.length-1,elemCount(el)+dk)]};/* いなくなったキーキャラも数に入れる（ひとり分の力で2人呼べないように） */
 const reviveNeed=q=>{const T=WD===FREE?NEEDF:NEEDT,dk=[...(S.buried||[]),...(S.lost||[])].filter(x=>x!==q&&x.elem===q.elem&&isKey(x.name)).length;return T[Math.min(T.length-1,elemCount(q.elem)+dk)]};/* めぶきのしずくでよみがえらせるのにいる、その属性の力 *//* なかまを呼ぶのに必要な力（いる人数ごと）。フリーモードは自然の力が弱いので多め */
-const STAYG=180;/* せいれいが、みんなの合計で時計の3時間（180分）いたマスは、緑になる */let STAYDIRTY=false;
+const STAYG=180;/* せいれいが、みんなの合計で時計の3時間（180分）いたマスは、まわり1マスまで緑になる */let STAYDIRTY=false;
 function stayTick(dt){if(!S||WD===FREE||IS_STORY_REPLAY)return;const m=dt/DAYLEN,st=S.stay||(S.stay={}),g=S.grn||(S.grn={});
-  for(const r of S.res){if(r.hidden)continue;const j=(r.y|0)*W+(r.x|0);if(j<0||j>=W*H||g[j]||S.ground[j]===1)continue;const v=(st[j]||0)+m;if(v>=STAYG){g[j]=1;delete st[j];STAYDIRTY=true}else st[j]=v}}
+  for(const r of S.res){if(r.hidden)continue;const j=(r.y|0)*W+(r.x|0);if(j<0||j>=W*H||g[j]||S.ground[j]===1)continue;const v=(st[j]||0)+m;if(v>=STAYG){const x=j%W,y=j/W|0;for(let b=-1;b<=1;b++)for(let a=-1;a<=1;a++){const k=j+b*W+a;if(x+a<0||x+a>=W||y+b<0||y+b>=H||S.ground[k]===1)continue;g[k]=1;delete st[k]}STAYDIRTY=true}else st[j]=v}}/* そのマスと、まわり1マスが緑になる */
 function stayGreen(){if(!STAYDIRTY||!S)return;STAYDIRTY=false;recount()}/* 1秒に1回だけ、緑のマスを入れなおす */
 function campOut(j){/* 雨（雪・あらしもふくむ）の日、外のたき火は消える：あかり・遊び場・料理の家具にならない。家の中・屋根（ガゼボ・東屋）の下はそのまま */if(!S||!S.rain||S.obj[j]!=='campfire')return false;if(roomOf(j))return false;if(S.roof)for(const k of[j,j-1,j-W,j-W-1])if(S.roof[k]&&Math.abs(k%W-j%W)<=1)return false;return true}
-function revRadius(o){/* 緑が広がるのは、木や草を生やしたときだけ（家具・建物・道・畑では広がらない） */const b=BL[o];if(!b)return 0;if(o==='tower')return 7;if(o==='tree'||o==='fruit')return 5;if(b.kind==='plant')return 3;/* 植えた木はまわり5マス、花はまわり3マス */if(o==='ntree'||o==='berry'||o==='bamboo'||o==='takenoko')return 1;return 0}
+function revRadius(o){/* 緑が広がるのは、木や草を生やしたときだけ（家具・建物・道・畑では広がらない） */const b=BL[o];if(!b)return 0;if(o==='tower')return 7;if(o==='tree'||o==='fruit')return 2;if(b.kind==='plant')return 1;/* 植えた木はまわり2マス、花はまわり1マス */if(o==='ntree'||o==='berry'||o==='bamboo'||o==='takenoko')return 1;return 0}
 /* 属性の力の表示（例：属性 木+1・土+2） */
 function attrTxt(id){const b=BL[id];if(!b||!b.attr||b.kind==='block')return'';const a=Object.entries(b.attr).filter(e=>e[1]>0);return a.length?'属性 '+a.map(([k,v])=>ELEM[k].name+'+'+(+v.toFixed(2))).join('・'):''}
 const withAttr=(id,t)=>{const a=attrTxt(id);return a?(t?t+'　':'')+'【'+a+'】':t||''};

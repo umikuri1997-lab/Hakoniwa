@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""朝6時・夜12時の切りかえの音：魔王魂の曲（持ち主がえらんだ）の、はじめ10秒くらいを切った物。
+"""朝6時・夜12時の切りかえの音：魔王魂の曲（持ち主がえらんだ）の、はじめ20秒くらいを切った物。
   朝 dawn：maou_bgm_orchestra03.mp3　夜 midnight：maou_bgm_healing11b.mp3
   曲のファイルそのものは、魔王魂の決まり（素材の再配布をしない）のため、リポジトリに入れない。
-  はじめの無音をけずる・10.5秒で切る・さいご2.5秒をゆっくり小さく・大きさを前の音と同じ -16 LUFS にそろえるだけ。
+  はじめの無音をけずる・21秒で切る・さいご5秒をゆっくり小さく・大きさを前の音と同じ -16 LUFS にそろえるだけ。
 使いかた：python3 tools/sound/maou_chime.py <orchestra03.mp3> <healing11b.mp3>  → assets/g/<中身のsha1の先10字>.mp3 と SAMPLES の行"""
 import sys, os, hashlib, subprocess, tempfile, json
 OUT = os.path.join(os.path.dirname(__file__), '..', '..', 'assets', 'g')
-LEN, FADE, LUFS = 10.5, 2.5, -16
+LEN, FADE, LUFS = 21, 5, -16
 def cut(src):
   with tempfile.TemporaryDirectory() as td:
     w = os.path.join(td, 'a.wav'); m = os.path.join(td, 'b.mp3')

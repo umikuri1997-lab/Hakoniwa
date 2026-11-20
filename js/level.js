@@ -77,7 +77,7 @@ function sepRes(dt){// 移動中は重なってOK、止まって作業してい�
     let wp=wt(p),wq=wt(q);if((wp===0)!==(wq===0))continue;if(wp+wq<=0){if(d>.35)continue;wp=wq=.5}
     if(d<1e-4){const an=(p.id*7+q.id*13)%6.28;dx=Math.cos(an);dy=Math.sin(an);d=0}else{dx/=d;dy/=d}
     const m=Math.min(R-d,.6*dt+.03);
-    const mv=(r,sx,sy)=>{const nx=r.x+sx,ny=r.y+sy;if(walk((ny|0)*W+(nx|0))){r.x=nx;r.y=ny}};
+    const mv=(r,sx,sy)=>{const nx=r.x+sx,ny=r.y+sy;if(walkR((ny|0)*W+(nx|0))){r.x=nx;r.y=ny}};
     if(p.ghost>0||q.ghost>0)continue;
     const side=(r,sx,sy,k)=>{if(r.path&&r.path.length){const j=r.path[0],hx=j%W+.5-r.x,hy=((j/W)|0)+.5-r.y,hl=Math.hypot(hx,hy)||1,ux=hx/hl,uy=hy/hl;
         const dot=sx*ux+sy*uy;if(dot<0){sx-=dot*ux;sy-=dot*uy;const pl=Math.hypot(sx,sy);if(pl<1e-3){sx=-uy;sy=ux}else{sx/=pl;sy/=pl}}}
