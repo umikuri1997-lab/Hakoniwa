@@ -592,6 +592,7 @@
 - はじめは、せいれいが0人。まもりの光が地面にとどく（`glHit`）と、はじめの1回だけ、光のせいれいトモリが生まれる（`yamiBirth`・`S.flags.tomori`）。
 - 光の属性（`ELEM.light`）はトモリだけ：神殿では呼べない（`ELEM_KEYS` に入れない）・たたかわない（`sortieOK`）・まわり4マスが歩くあかり（`YAMILIGHT`・`yamiLights`・`yamiLightAt`）。属性ごとの表を足したら、光でこわれないか（`表[r.elem]` をそのまま使っていないか）を見る。
 - トモリの絵は、かりの絵：水の形を色がえ（`SPART`・`spArt`・`SPC.light`）。せいれいの絵を属性の名前でさがす所は `spArt(el)` を通す。
+- コワイノの来かた：トモリが生まれたときから来る（`S.enemyOn`）。23時〜6時は、ほかのステージと同じ大きな群れ（`waveFor`）。6時〜23時は、時計の1時間ごとに25%（`YAMIDAYP`）でコカゲが1〜2ひき（`yamiTick`・`yamiDayWave`）。朝の光がないので、朝6時に消えない（`level.js` の `yk`）。追いはらうまでのこる。
 - たしかめは `tools/tests/yami.cjs`。
 
 ## 火山らしさ

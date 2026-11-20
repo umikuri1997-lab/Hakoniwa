@@ -45,6 +45,12 @@ function yamiLightAt(x,y){if(!S)return false;for(const r of S.res)if(yamiLit(r)&
 function yamiBirthCell(tx,ty){/* 光が落ちたマスにいちばん近い、歩ける空いたマス */let best=-1,bd=1e9;for(let dy=-6;dy<=6;dy++)for(let dx=-6;dx<=6;dx++){const x=tx+dx,y=ty+dy;if(x<0||y<0||x>=W||y>=H)continue;const j=y*W+x;if(!walk(j)||S.obj[j])continue;const d=dx*dx+dy*dy;if(d<bd){bd=d;best=j}}return best}
 function yamiBirth(tx,ty){/* まもりの光が地面にとどいた：はじめの1回だけ、その光からトモリが生まれる */
   if(!S||WD!==YAMI||S.free||S.flags.tomori||!S.introSeen)return;const j=yamiBirthCell(tx,ty);if(j<0){toast('ここには、おりられないようだ');return}
-  const r=mkRes(S,TOMORI,'light',j%W+.5,((j/W)|0)+.5,'swing');r.came=dayNo();S.res.push(r);S.flags.tomori=1;
+  const r=mkRes(S,TOMORI,'light',j%W+.5,((j/W)|0)+.5,'swing');r.came=dayNo();S.res.push(r);S.flags.tomori=1;S.enemyOn=true;/* コワイノは、トモリが生まれたときから来る */
   burst(j,'furn');sfx('arrive');if(typeof hdBig==='function')hdBig();const now=performance.now();if(typeof JOYU!=='undefined')JOYU.set(r,now+2600);JUMP.set(r,now+200);
   recount();renderQuest();dirty=true;save()}
+/* コワイノの来かた：23時〜6時は、ほかのステージと同じ大きな群れ（waveFor）。6時〜23時は、時計の1時間ごとに YAMIDAYP で、コカゲが1〜2ひき（来る時刻も数もランダム）。朝の光がないので、追いはらうまでのこる（level.js の yk） */
+const YAMIDAYP=.25;
+function yamiDayWave(n){/* 小さな群れを出す（夜の記録 S.ns は作りなおさない） */
+  SKIP=false;const d=EN.basic;for(let k=0;k<n;k++)S.enemies.push({id:S.nid++,type:'basic',x:0,y:0,hp:d.hp,max:d.hp,delay:k*4,spawned:false,path:[],repath:0,atk:0,stun:0,flash:0,flee:false});
+  if(!S.ns)S.ns={n:0,kill:0,lost:[],hurt:0,broke:0,boss:0};S.ns.n+=n;toast('コワイノが来ました','warn');dirty=true}
+function yamiTick(prevH,h){if(!S||WD!==YAMI||S.free||!S.enemyOn||S.cleared)return;if(Math.floor(prevH)===Math.floor(h)||h<6||h>=23)return;if(Math.random()>=YAMIDAYP)return;yamiDayWave(Math.random()<.5?1:2)}
