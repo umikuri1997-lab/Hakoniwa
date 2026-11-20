@@ -103,7 +103,7 @@ function genWorld(s,w){
   const pond=(cx,cy,rx,ry)=>{const a=R()*6.28,b=R()*6.28,e=R()*6.28;for(let y=0;y<H;y++)for(let x=0;x<W;x++){const dx=(x+.5-cx)/rx,dy=(y+.5-cy)/ry,th=Math.atan2(dy,dx),lim=1+.2*Math.sin(2*th+a)+.13*Math.sin(3*th+b)+.07*Math.sin(5*th+e);if(Math.hypot(dx,dy)<lim)s.ground[y*W+x]=1}};
   const VL=valleyOn(s,w);/* フリーモードの花の谷（free.js） */
   if(VL){for(const[px,py,rx,ry]of VPONDS)pond(CX+px,CY+py,rx,ry)}
-  if(K){/* 風：まん中の大きな島・そのまわりの7つの島・すみの小さな島。島でない所は、ぜんぶ雲の海（ground 1。歩けない・橋はかけられる。skyJ） */
+  else if(K){/* 風：まん中の大きな島・そのまわりの7つの島・すみの小さな島。島でない所は、ぜんぶ雲の海（ground 1。歩けない・橋はかけられる。skyJ） */
     const land=new Uint8Array(W*H);let nI=0;const isle=(cx,cy,rx,ry)=>{const a=R()*6.28,b=R()*6.28,e=R()*6.28,id=++nI,far=(x,y)=>{for(let q=-4;q<=4;q++)for(let p=-4;p<=4;p++){const v=land[(y+q)*W+x+p];if(v&&v!==id)return false}return true};/* ほかの島とは、4マスあける（島どうしが、くっつかないように） */for(let y=5;y<H-5;y++)for(let x=5;x<W-5;x++){const dx=(x+.5-cx)/rx,dy=(y+.5-cy)/ry,th=Math.atan2(dy,dx),lim=1+.14*Math.sin(2*th+a)+.1*Math.sin(3*th+b)+.06*Math.sin(5*th+e);if(Math.hypot(dx,dy)<lim&&far(x,y))land[y*W+x]=id}};
     isle(CX,CY,19,18);const ring=[];for(let k=0;k<7;k++){const an=.45+k*6.2832/7+(R()-.5)*.25,ds=35.5+R()*2.5,r=9+R()*3.5,cx=CX+Math.cos(an)*ds,cy=CY+Math.sin(an)*ds;ring.push([cx,cy]);isle(cx,cy,r,r*(.82+R()*.2))}
     for(const[sx,sy]of[[-1,-1],[1,-1],[-1,1],[1,1]]){/* 四すみの小さな島（入る所だけ）：そのすみにいちばん近い島の、たてか、よこの先に5マスあけて置く（橋はまっすぐ10マスまでなので、ななめの先には置かない） */
