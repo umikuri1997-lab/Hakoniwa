@@ -233,6 +233,9 @@ const hotW=j=>WD===1&&S.ground[j]===1&&springOn(sprMap()[j]);
 function nearHot(j,r){const x=j%W,y=(j/W)|0;for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){const xx=x+dx,yy=y+dy;if(xx<0||yy<0||xx>=W||yy>=H)continue;if(hotW(yy*W+xx))return true}return false}
 const nearSp=id=>S.obj.some((o,j)=>(id==='bench'?BENCHES.has(o):o===id)&&nearHot(j,4));/* ベンチは竹のベンチもふくむ *//* 温泉のそば（4マス以内） */
 const FLOWERS2=['clover','bellf','salvia','lily','lotus'];
+/* 冷たい温泉を調べよう：調べた水たまり（西 b・奥 c）。前のセーブの true は、調べおわったことにする。sprLast は、さいごに調べた温泉（vol:touchH でホムラが歩いていく所） */
+function sprLookN(){const f=S.flags.sprLook;if(f===true)return 2;return f&&typeof f==='object'?(f.b?1:0)+(f.c?1:0):0}
+function sprLookTap(k){if(WD!==1)return;const f=S.flags.sprLook;if(f===true)return;const o=f&&typeof f==='object'?f:(S.flags.sprLook={});if(k==='a'||o[k])return;o[k]=1;S.flags.sprLast=k;checkQuest()}
 function spNear(ids,k){if(!springOn(k))return 0;const M=sprMap();let n=0;for(let j=0;j<W*H;j++){if(!ids.includes(S.obj[j])||isBud(j))continue;/* 花は、さいてから数える */const x=j%W,y=(j/W)|0;let ok=false;for(let dy=-4;dy<=4&&!ok;dy++)for(let dx=-4;dx<=4;dx++){const xx=x+dx,yy=y+dy;if(xx<0||yy<0||xx>=W||yy>=H)continue;const q=yy*W+xx;if(S.ground[q]===1&&M[q]===k){ok=true;break}}if(ok)n++}return n}/* その温泉のそば（4マス以内）にある数 */
 const tkGot=()=>{const t=st2();return Math.max(0,(t.tkGot||0)-(t.tkBase||0))};/* たけのこのクエスト：うけてから、せいれいがとった、たけのこの数 */
 function takenokoSpawn(n){/* 村に近い竹のとなりに、たけのこを生やす（すでに生えている分もかぞえる） */if(WD!==1)return;let have=0;for(let j=0;j<W*H;j++)if(S.obj[j]==='takenoko')have++;const c=[];for(let j=0;j<W*H;j++){if(S.obj[j]!=='bamboo')continue;const x=j%W;for(const k of[j-1,j+1,j-W,j+W])if(k>=0&&k<W*H&&Math.abs(k%W-x)<=1&&!S.obj[k]&&!S.floor[k]&&S.ground[k]===0&&!RFC.has(k)&&!c.some(q=>q[1]===k))c.push([Math.hypot(k%W-CX,((k/W)|0)-CY),k])}c.sort((a,b)=>a[0]-b[0]);for(const[,k]of c){if(have>=n)break;S.obj[k]='takenoko';S.dyn[k]={g:100,age:0};have++}recount();dirty=true}
