@@ -20,3 +20,5 @@
   取ってきた所：GitHub にある写し（matthewm174/Godot4.3-soulslike-controller の `textures/Rock030_1K-PNG/Rock030_1K-PNG_NormalGL.png`）。256×256 に色の平均（BOX）でちぢめ、16bit を 8bit にした。
 - Metal032 のノーマルマップは、たいらで、でこぼこがない（使わない）。金属は、つやのすじ（`oblique3d` の `material('metal')`）と、金属の色のむら（`metal032.png`）で出す。
 - `oldpaper.png`：Dugi「Old paper texture」（OpenGameArt、https://opengameart.org/content/old-paper-texture 、CC0 をふくむ複数のライセンスからえらべる。CC0 で使う）。しわのある古い紙。思い出帳・図鑑・ひでんのしょの紙に、うすく（`tools/ui/paper_ui.py` の `oldpaper_rows` が、ドットにちぢめて `index.html` に書きこむ）。
+- `moss002.png`：ambientCG「Moss002」の色の絵（1K、https://ambientcg.com/view?id=Moss002 、CC0 1.0）。洞窟のコケの地面（`tools/art/cave/cave_tex.py` の `moss` が、こさの番号にちぢめて、チップ `cave:moss` にする）。
+  取ってきた所：GitHub にある写し（Malcolmnixon/AliceMaze の `assets/ambientcg.com/Moss002_1K-JPG/Moss002_1K_Color.jpg`）。ネットの制限で ambientcg.com から直接は取れなかった。ファイルの形だけ、そのままの色で PNG に書きなおした。
