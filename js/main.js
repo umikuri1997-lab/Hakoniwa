@@ -80,7 +80,7 @@ function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
     if(k)list.appendChild(el('<div class="wlink"></div>'));
     let w2o=false,w5o=false;try{w2o=KV.getItem('hakoniwa-w2open')==='1';w5o=KV.getItem('hakoniwa-w5open')==='1'}catch(e){}
     let w6o=false;try{w6o=KV.getItem('hakoniwa-w6open')==='1'}catch(e){}
-    const L=LIVE[k]||null,play=STAGES.includes(k)||k===YAMI,open=k===0||(k===1&&!!((LIVE[0]&&LIVE[0].cleared)||L||w2o))||(k===YAMI&&w6o)||(k===WIND&&!!((LIVE[1]&&LIVE[1].cleared)||L||w5o))||k===MIZU;/* 風は、火山でヌシ様をむかえたら、ひらく *//* 闇のステージ：水・土・風ができるまでは、ためす入り口（とじたカードを5回タップ）だけ。水のステージは、試作のあいだだけ、いつでも入れる */
+    const L=LIVE[k]||null,play=STAGES.includes(k)||k===YAMI,open=k===0||(k===1&&!!((LIVE[0]&&LIVE[0].cleared)||L||w2o))||(k===YAMI&&(w6o||!!(L&&L.introSeen)))||/* 闇：セーブがあれば（読みこんだ時も）ひらく */(k===WIND&&!!((LIVE[1]&&LIVE[1].cleared)||L||w5o))||k===MIZU;/* 風は、火山でヌシ様をむかえたら、ひらく *//* 闇のステージ：水・土・風ができるまでは、ためす入り口（とじたカードを5回タップ）だけ。水のステージは、試作のあいだだけ、いつでも入れる */
     const card=el(`<div class="wcard${open?' open':' lock'}"><canvas width="760" height="280"></canvas><div class="wb"><span class="wn"></span><h3></h3><p></p><div class="wbtns"></div></div></div>`);
     const hide=!open&&!(k===2&&LIVE[1]&&LIVE[1].cleared);/* まだひらいていないステージは、名前も絵も見せない */
     if(hide)card.querySelector('.wn').innerHTML=pxi('lock','wlk')+'WORLD '+(k+1);else card.querySelector('.wn').textContent=wd.sub;card.querySelector('h3').textContent=hide?'？？？':wd.name;

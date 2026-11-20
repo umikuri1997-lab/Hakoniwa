@@ -763,21 +763,21 @@ function renderSheet(){
         const button=el('<button class="btn pri">いまセーブする</button>');button.onclick=()=>{const ok=save();update();toast(ok?'セーブした':'このブラウザには保存できません',ok?'good':undefined)};
         update();section.appendChild(button);body.appendChild(section)}
       /* セーブの書き出し・読みこみ（ブラウザのデータが消えたときのそなえ） */
-      {const sv=el('<div class="sec"><h3>セーブの書き出し</h3><p class="note">ファイルにして、しまっておける。ほかのスマホやパソコンでも「読みこむ」で、つづきから遊べる。読みこむと、ファイルに入っている土地のセーブは、ファイルの中身にかわる。ブラウザのデータを消す前に、書き出しておこう。</p></div>');
+      {const sv=el('<div class="sec"><h3>セーブの書き出し</h3><p class="note">ファイルにして、しまっておける。村の写真も入る。ほかのスマホやパソコンでも「読みこむ」で、つづきから遊べる。読みこむと、ファイルに入っている土地のセーブと写真は、ファイルの中身にかわる。ブラウザのデータを消す前に、書き出しておこう。</p></div>');
         const ex=el('<button class="btn">書き出す</button>'),im=el('<button class="btn" data-hold>読みこむ</button>'),fi=el('<input type="file" accept=".json,application/json" hidden>');
         ex.onclick=async()=>{save();const d={app:'hakoniwa',v:1,at:Date.now(),saves:{}};try{for(const k of SAVE_KEYS.filter(Boolean)){const t=KV.getItem(k);if(t)d.saves[k]=t}}catch(e){}
           for(let w=0;w<LIVE.length;w++)if(LIVE[w]&&!d.saves[SAVE_KEYS[w]]&&LIVE[w].introSeen)d.saves[SAVE_KEYS[w]]=JSON.stringify(LIVE[w]);
+          d.photos=typeof phExport==='function'?await phExport():[];/* 村の写真（IndexedDB）も入れる */
           const txt=JSON.stringify(d),dt=new Date(),nm='hakoniwa-save-'+dt.getFullYear()+String(dt.getMonth()+1).padStart(2,'0')+String(dt.getDate()).padStart(2,'0')+'.json';
           let dl=null;try{dl=window.claude&&await window.claude.use('downloads')}catch(e){}
-          if(dl){try{await dl.save({filename:nm,data:new Blob([txt],{type:'application/json'})});toast('セーブを書き出した','good')}catch(e){if(e&&e.code!=='declined')toast('書き出せませんでした')}return}
-          try{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([txt],{type:'application/json'}));a.download=nm;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),10000);toast('セーブを書き出した','good')}catch(e){toast('書き出せませんでした')}};
+          if(dl){try{await dl.save({filename:nm,data:new Blob([txt],{type:'application/json'})});toast(saveDoneTx(d,txt),'good')}catch(e){if(e&&e.code!=='declined')toast('書き出せませんでした')}return}
+          try{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([txt],{type:'application/json'}));a.download=nm;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),10000);toast(saveDoneTx(d,txt),'good')}catch(e){toast('書き出せませんでした')}};
         im.onclick=()=>{if(im._held)fi.click()};/* いまのセーブをうわがきするので、おしつづけて決める */
-        fi.onchange=()=>{const f=fi.files&&fi.files[0];if(!f)return;if(f.size>20*1024*1024){toast('ファイルが大きすぎます');fi.value='';return}const rd=new FileReader();rd.onload=()=>{try{const d=JSON.parse(rd.result);if(!d||d.app!=='hakoniwa'||d.v!==1||!d.saves||typeof d.saves!=='object'||Array.isArray(d.saves))throw 0;
-            const entries=Object.entries(d.saves).filter(([k])=>SAVE_KEYS.includes(k));if(!entries.length)throw 0;
+        fi.onchange=()=>{const f=fi.files&&fi.files[0];fi.value='';if(!f)return;if(f.size>40*1024*1024){toast('ファイルが大きすぎます');return}const rd=new FileReader();rd.onload=()=>{let d,entries;try{d=JSON.parse(rd.result);if(!d||d.app!=='hakoniwa'||d.v!==1||!d.saves||typeof d.saves!=='object'||Array.isArray(d.saves))throw 0;
+            entries=Object.entries(d.saves).filter(([k])=>SAVE_KEYS.includes(k));if(!entries.length)throw 0;
             for(const [k,value] of entries){if(typeof value!=='string')throw 0;const g=JSON.parse(value);if(!g||g.v!==8||(g.world||0)!==SAVE_KEYS.indexOf(k)||!g.introSeen||!Array.isArray(g.res)||!Array.isArray(g.orders)||!Array.isArray(g.ground)||(g.ground.length!==W*H&&g.ground.length!==OW*OW)||!Array.isArray(g.obj)||(g.obj.length!==W*H&&g.obj.length!==OW*OW)||!g.flags)throw 0}
-            const before=entries.map(([k])=>[k,KV.getItem(k)]);NOSAVE=true;
-            if(!entries.every(([k,value])=>KV.setItem(k,value))){for(const [k,value]of before){if(value===null)KV.removeItem(k);else KV.setItem(k,value)}NOSAVE=false;toast('ブラウザに保存できないため読みこめません');return}
-            toast('読みこんだ。はじめからひらきなおす','good');setTimeout(()=>location.reload(),900)}catch(e){toast('このファイルは読みこめません')}};rd.readAsText(f)};
+            if(d.photos!=null&&!Array.isArray(d.photos))throw 0}catch(e){toast('このファイルは読みこめません');return}
+          importAsk(d,entries)};rd.readAsText(f)};
         ex.style.marginBottom='8px';sv.appendChild(ex);sv.appendChild(im);sv.appendChild(fi);body.appendChild(sv)}
     }
   }
@@ -820,3 +820,25 @@ function zukanBody(body){
   for(let i=0,j=0;i<items.length;j++){const n=j===0?Math.max(1,per-2):per,pg=j===0?top:el('<div class="mpg zkp"><div class="rows"></div></div>'),rw=j===0?top.appendChild(el('<div class="rows"></div>')):pg.firstChild;for(const it of items.slice(i,i+n))rw.appendChild(it);i+=n;if(j>0)pages.push(pg)}
   top.remove();for(const t of tabs)body.appendChild(t);
   bookMake(body,pages,{key:'zukan',at:ZKPG,cover:{t:'図鑑',sub:WORLDS[ZKW].name,c:'#4f6b45'},onAt:i=>{ZKPG=i}})}
+
+/* セーブの書き出し・読みこみ：書き出したときの知らせ・読みこむ前に、どの村がうわがきされるかをたしかめる画面 */
+function saveMB(n){return (Math.max(.1,n/1048576)).toFixed(1)+'MB'}
+function saveDoneTx(d,txt){const n=(d.photos||[]).length;return 'セーブを書き出した（'+(n?'写真'+n+'まい・':'')+saveMB(txt.length)+'）'}
+function saveSum(t){try{const g=JSON.parse(t);return (g.vname?g.vname+'村・':'')+'村レベル '+g.lv+'・せいれい '+(g.res||[]).length+'人'}catch(e){return ''}}
+function importAsk(d,entries){if(document.querySelector('.imp-reveal'))return;const ph=Array.isArray(d.photos)?d.photos:null;
+  const ov=el('<div class="idea-reveal imp-reveal" role="dialog" aria-modal="true" aria-label="セーブを読みこむ"></div>'),card=el('<div class="idea-card" style="min-width:0;max-width:440px;text-align:left"><h2>セーブを読みこむ</h2><p class="note"></p><div class="impL"></div><p class="note impPh"></p><div style="display:flex;gap:8px;justify-content:center;margin-top:10px"></div></div>');
+  card.querySelector('.note').textContent='ファイルの日時：'+(d.at?new Date(d.at).toLocaleString('ja-JP'):'わからない');
+  const L=card.querySelector('.impL');
+  for(const [k,value] of entries){const w=SAVE_KEYS.indexOf(k),now=(()=>{try{return KV.getItem(k)}catch(e){return null}})(),row=el('<div class="sec" style="margin:6px 0"><h3></h3><p></p><p class="note"></p></div>');
+    row.querySelector('h3').textContent=(WORLDS[w]&&WORLDS[w].name||'')+(now?'（うわがき）':'');row.querySelector('p').textContent='ファイル：'+saveSum(value);
+    row.querySelector('.note').textContent=now?'いま：'+saveSum(now)+' → ファイルの村にかわる':'いまは、この土地のセーブはない';L.appendChild(row)}
+  const pn=card.querySelector('.impPh');if(ph){const ws=entries.map(([k])=>SAVE_KEYS.indexOf(k));pn.textContent='写真：'+ph.filter(p=>p&&ws.includes(p.w)).length+'まい（この土地のいまの写真は、ファイルの写真にかわる）'}else pn.textContent='このファイルには写真が入っていない（いまの写真は、そのまま）';
+  const no=el('<button class="btn" type="button">やめる</button>'),ok=el('<button class="btn pri" type="button" data-hold>読みこむ</button>');
+  no.onclick=()=>{sfx('tap');ov.remove()};
+  ok.onclick=async()=>{if(!ok._held||ok._go)return;ok._go=1;const ws=entries.map(([k])=>SAVE_KEYS.indexOf(k));let M=null;
+    if(ph&&typeof phImport==='function'){try{M=await phImport(ph,ws)}catch(e){M=null}}/* 写真がしまえないブラウザでも、村だけは読みこむ */
+    const put=entries.map(([k,value])=>{if(!ph)return[k,value];const g=JSON.parse(value),w=SAVE_KEYS.indexOf(k);phRemap(g,M&&M[w]||{});return[k,JSON.stringify(g)]});
+    const before=put.map(([k])=>[k,KV.getItem(k)]);NOSAVE=true;
+    if(!put.every(([k,value])=>KV.setItem(k,value))){for(const [k,value]of before){if(value===null)KV.removeItem(k);else KV.setItem(k,value)}NOSAVE=false;ok._go=0;toast('ブラウザに保存できないため読みこめません');return}
+    ov.remove();toast('読みこんだ。はじめからひらきなおす','good');setTimeout(()=>location.reload(),900)};
+  card.lastElementChild.append(no,ok);ov.append(card);document.body.append(ov)}

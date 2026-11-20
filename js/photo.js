@@ -29,6 +29,15 @@ function phList(w){return phTx('readonly',(s,put)=>{const q=s.index('w').getAll(
 function phDel(id){return phTx('readwrite',s=>{s.delete(id)})}
 function phAdd(rec){return phTx('readwrite',(s,put)=>{const q=s.add(rec);q.onsuccess=()=>put(q.result)})}
 function phGet(id){return phTx('readonly',(s,put)=>{const q=s.get(id);q.onsuccess=()=>put(q.result||null)})}
+/* セーブの書き出し・読みこみ（ui.js）：写真もファイルに入れて、ほかのスマホやパソコンへ移す。絵は data: の文字にする */
+function phAll(){return phTx('readonly',(s,put)=>{const q=s.getAll();q.onsuccess=()=>put(q.result||[])})}
+const phB64=b=>new Promise((ok,ng)=>{const f=new FileReader();f.onload=()=>ok(f.result);f.onerror=()=>ng(f.error);f.readAsDataURL(b)});
+async function phExport(){let L=[];try{L=await phAll()}catch(e){return[]}const O=[];for(const p of L){if(!(p.b instanceof Blob))continue;try{O.push({id:p.id,w:p.w,d:p.d,h:p.h,vn:p.vn||'',at:p.at,b:await phB64(p.b)})}catch(e){}}return O}
+async function phImport(list,ws){/* ws の土地の写真を、ファイルの写真にいれかえる。かえす：土地→{前の番号:新しい番号} */const M={};for(const w of ws)M[w]={};
+  const old=await phAll();for(const p of old)if(ws.includes(p.w))await phDel(p.id);
+  for(const p of list||[]){if(!p||!ws.includes(p.w)||typeof p.b!=='string'||!p.b.startsWith('data:image/'))continue;let b;try{b=await(await fetch(p.b)).blob()}catch(e){continue}
+    const id=await phAdd({w:p.w,d:p.d,h:p.h,vn:p.vn||'',at:p.at,b});M[p.w][p.id]=id}return M}
+function phRemap(g,m){/* セーブの日記がさす写真の番号を、新しい番号に（ない写真はさしていない形に） */const fix=e=>{if(!e||e.ph==null)return;if(m[e.ph]!=null)e.ph=m[e.ph];else delete e.ph};fix(g.dy);for(const e of g.diary||[])fix(e)}
 /* 写す所：マスのかこみ B（{x0,y0,x1,y1}）が大きく入るように、近よる */
 const PHZMIN=.6,PHASP=4/3,PHZMAX=2.4;
 function phFrame(B){const cw=Math.min(VW,VH*PHASP),ch=cw/PHASP,bw=(B.x1-B.x0+1)*TS,bh=(B.y1-B.y0+1)*TS,fit=Math.min(cw/(bw+TS*5),ch/(bh+TS*5));
