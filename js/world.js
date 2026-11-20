@@ -40,7 +40,7 @@ function newState(w){w=w||0;
   if(w===1)s.res.push(mkRes(s,HOMURA,'fire',CX+.5,CY-1.5,'campfire'));else s.res.push(mkRes(s,'フタバ','wood',CX+.5,CY-1.5,'swing'));
   if(w===0)s.res[0].nap=true;/* 初回のマップ描画から眠っている */
   if(w===FREE)freeSetup(s);
-  templeRuinPlace(s);/* こわれた神殿は、はじめからある（どのステージも） */
+  if(w!==FREE)templeRuinPlace(s);/* こわれた神殿は、はじめからある（フリーモードに神殿はない） */
   return s;
 }
 /* こわれた神殿：まん中の道（x=CX）の北のはしの先に置く。像のマスと左右（おそなえ箱・依頼ボードになる所）、手前（台座になる所）の4マス。
@@ -148,7 +148,7 @@ const HSPC={a:[CX+4.8,CY+4.8],b:[CX-8.5,CY-8],c:[CX+.5,CY-15]},SPN={a:'入口の
 const VOLJ=(OFF+1)*W+(CX-1),D1=(OFF+9)*W+(CX-4),D2=(CY-18)*W+(CX+5),CRACKS=[-2,-1,0,1,2].map(d=>(OFF+9)*W+CX+d),BVOL=[D2-1,D2+1,D2-W,D2+W];
 const ASHT=new Set(['oven','bench','takebench','tub','sink','campfire','hotstone']);
 const NATK=['rock','vcopper','viron','vobsid','vsilver','vgold','deadtree','ntree','berry','bamboo','takenoko'];
-const festOn=()=>!!S&&WD===1&&S.festDay!=null&&(S.festDay===dayNo()||S.festDay===dayNo()-1&&hour()<6);/* おまつり：その日の朝6時まで */
+const festOn=()=>!!S&&VOLK()&&S.festDay!=null&&(S.festDay===dayNo()||S.festDay===dayNo()-1&&hour()<6);/* おまつり：その日の朝6時まで */
 function festStart(){S.festN=(S.festN||0)+1;/* おまつりをひらいた回数 */const L=WD===1?[[HOMURA,'おまつりかい！ ちょうちんの火、いい色だねえ。'],[SHIZUKU,'みなさんで、おどりましょう。ごちそうもありますよ。'],[HOMURA,'たまには、こういう日もいいもんさ。']]:[[POKO,'#surprise|わあ、おまつりだ！ ちょうちんが、いっぱい！'],[MINA,'みんなで、おどろうねぇ。ごちそうもあるよぉ。'],[POKO,'ヌシ様にも、この景色を見せてあげたいな。']];talkOnce('fest1',L.filter(l=>S.res.some(r=>r.name===l[0])))}/* はじめてのおまつりの会話 */
 function festBegin(){S.festAtQ=QUESTS[S.quest]&&QUESTS[S.quest].id;/* どのクエストのときにひらいたか（前にひらいたおまつりは、クエストの数に入れない） */for(const r of S.res){r.fun=100;r.energy=100;spawnFX(r.x-.5,r.y-.6,'#ffd84a')}sfx('level');toast('おまつりがはじまった！ 屋台がならんでいる','good');festStart()}/* おまつりの朝：せいれいの半分が、屋台の店番をする */
 function festGift(){if(S.festDay==null||S.festDay>=dayNo()||S.festGot===S.festDay)return;S.festGot=S.festDay;const fl=['salvia','lotus','lily','clover','bellf'].filter(id=>S.unlocked[id]);/* おまつりのおみやげ：はじめはちょうちん。あとは、ちょうちんか、おぼえた花のたね5つ */
@@ -159,19 +159,19 @@ function drawFestPole(x,y,now){if(!FESTA.ok)return;const h=hour(),on=h>=18||h<6,
   if(on){const lx=x0+17,ly=y0+20,g=ctx.createRadialGradient(lx,ly,1,lx,ly,14);g.addColorStop(0,'rgba(255,190,110,.35)');g.addColorStop(1,'rgba(255,190,110,0)');ctx.fillStyle=g;ctx.fillRect(lx-14,ly-14,28,28)}}/* 夕方からちょうちんがともる */
 /* おまつり（屋台・ちょうちん）は火山だけ（festOn の WD===1）。草原にはない */const STALLM={wood:{nm:'りんごあめ',e:'🍭',col:'#d8452f',L:[['f','ringoame',15]]},fire:{nm:'たこ焼き・焼きそば',e:'🐙',col:'#e07a2a',L:[['f','takoyaki',20],['f','yakisoba',20]]},water:{nm:'かき氷',e:'🍧',col:'#4a8fd8',L:[['f','kakigori',15],['mebuki',400]]},earth:{nm:'ポテト',e:'🍠',col:'#9a6a3a',L:[['f','yakiimo',15]]},wind:{nm:'わたあめ・わなげ',e:'🍬',col:'#3aa88a',L:[['f','wataame',15],['chochin',60]]}};/* せいれいの屋台：店番の子の属性で、売る物がかわる。['f',食べ物,パワー]は5つ。木材・石材は売らない */
 const STALLSAY=['いらっしゃい！','どれにする？','できたてだよ！','おまつりだから、とくべつだよ！'];
-function festStalls(){if(!festOn()||STATUE<0||hour()<7)return [];const sh=Math.min(4,Math.floor((hour()-7)/3)),k=dayNo()+':'+sh;if(S.fst&&S.fst.k===k)return S.fst.L;/* 3時間ごとに店番が交代 */
+function festStalls(){if(!festOn()||festBase()<0||hour()<7)return [];const sh=Math.min(4,Math.floor((hour()-7)/3)),k=dayNo()+':'+sh;if(S.fst&&S.fst.k===k)return S.fst.L;/* 3時間ごとに店番が交代 */
   const R=S.res.filter(r=>!r.hidden),n=Math.floor(R.length/2),r0=12,y=CY-r0-1,P=[];
   for(let d=0;P.length<n&&d<=r0;d+=3)for(const x of d?[CX-d,CX+d]:[CX]){if(P.length>=n||x-1<CX-r0||x+1>CX+r0-1)continue;if([x-1,x,x+1].every(q=>walk(y*W+q)&&!S.obj[y*W+q])&&walk((y+1)*W+x))P.push(x)}/* 屋台は、ちょうちんの柱の上がわの列に、まんなかから3マスずつならべる */
   const C=R.map(r=>({r,n:(r.fkD===dayNo()?r.fkN||0:0)+Math.random()*.5})).sort((a,b)=>a.n-b.n),K=[],el=new Set();for(const c of C)if(K.length<P.length&&!el.has(c.r.elem)){el.add(c.r.elem);K.push(c.r)}for(const c of C)if(K.length<P.length&&!K.includes(c.r))K.push(c.r);/* まだ店番をしていない子から。属性はなるべくばらばらに */
   for(const r of K){if(r.fkD!==dayNo()){r.fkD=dayNo();r.fkN=0}r.fkN++}
   S.fst={k,L:K.map((r,i)=>({x:P[i],y,id:r.id,el:r.elem}))};return S.fst.L}
 function festSpot(G,f,maxD){const L=[];for(let k=0;k<W*H;k++){const d=G.dist[k];if(d<0||d>maxD||!walk(k)||S.obj[k]||roomOf(k)||(TAKEN&&TAKEN.has(k))||!f(k))continue;L.push(k)}return L.length?pick(L):-1}/* 条件にあうマスから、ランダムに1つ */
-function festAct(r,G){if(STATUE<0)return false;const h=hour(),ib=k=>VILL[k];
+function festAct(r,G){if(festBase()<0)return false;const h=hour(),ib=k=>VILL[k];
   if(h>=20&&h<21){const j=festSpot(G,ib,12);if(j>=0){startAct(r,G,'hanabi',j);return true}return false}/* 夜8時から9時は、花火を見る */
   if(h<7||h>=22)return false;if(r.fyD!==dayNo()){r.fyD=dayNo();r.fyN=0}
   {const t=festStalls().find(t=>t.id===r.id);if(t){startAct(r,G,'shopkeep',(t.el==='wind'?t.y+1:t.y)*W+t.x,{sk:S.fst.k});return true}}/* 店番の子は、自分の屋台へ（わたあめの屋台は、屋台の前） */
   const x=Math.random();
-  if(x<.3){const cx=STATUE%W+.5,cy=((STATUE/W)|0)+3.5;const j=nearest(G,k=>{const d=Math.hypot(k%W+.5-cx,((k/W)|0)+.5-cy);return d>=1.6&&d<=2.8&&walk(k)&&!S.obj[k]},80);if(j>=0){startAct(r,G,'bon',j,{cx,cy});return true}}/* 神殿の前で、おどりの輪 */
+  if(x<.3){const FBJ=festBase(),cx=FBJ%W+.5,cy=((FBJ/W)|0)+3.5;const j=nearest(G,k=>{const d=Math.hypot(k%W+.5-cx,((k/W)|0)+.5-cy);return d>=1.6&&d<=2.8&&walk(k)&&!S.obj[k]},80);if(j>=0){startAct(r,G,'bon',j,{cx,cy});return true}}/* 神殿の前で、おどりの輪 */
   if(x<.5&&(r.fyN||0)<3){const L=festStalls().filter(t=>{const q=S.res.find(o=>o.id===t.id);return q&&q.act&&q.act.type==='shopkeep'&&q.act.stage==='do'});if(L.length){const t=pick(L),j=nearest(G,k=>((k/W)|0)===t.y+1&&Math.abs(k%W-t.x)<=1&&!(t.el==='wind'&&k%W===t.x)&&walk(k)&&free('yt'+k,1),80);if(j>=0){startAct(r,G,'yatai',j,{key:'yt'+j,sx:t.x});return true}}}/* 店番のいる屋台（1日3回まで） */
   if(x<.72&&trySocial(r,G))return true;/* おまつりのおしゃべり */
   const j=festSpot(G,k=>ib(k)&&Math.hypot(k%W+.5-r.x,((k/W)|0)+.5-r.y)>=4,30);if(j>=0){startAct(r,G,'fwalk',j);if(r.fsnack&&Math.random()<.6)r.bubble=r.fsnack;return true}/* 村の中を、ぶらぶら見てまわる */

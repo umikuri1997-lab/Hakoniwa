@@ -445,7 +445,7 @@ function inspireQuest(q,phase='accept'){const ids=questRecipeIds(q,phase);if(!id
 const IDEA_SHOWN=new Set();/* 会話の中の「あたらしいかたち」の画面で、もう見せたレシピ（同じレシピを2回知らせない） */
 function recipeNotice(ids){/* あたらしくおぼえたレシピを、大きな知らせで見せる。前のステージからもらった物・もう知らせた物・会話の中で見せた物は出さない */if(!S)return;const known=S.guardianIdeas||(S.guardianIdeas={});const L=[...new Set(ids||[])].filter(id=>BL[id]&&!known[id]&&!grec(id));if(!L.length)return;
   L.forEach(id=>known[id]=true);const nw=L.filter(id=>!IDEA_SHOWN.has(id));L.forEach(id=>IDEA_SHOWN.delete(id));if(!nw.length)return;sfx('level');queueItemGift(Object.fromEntries(nw.map(id=>[id,1])),'あたらしいレシピ！',true);memo('bulb','あたらしいかたち：'+nw.map(id=>BL[id].name).join('・'))}
-function otherModeFurnitureRecipes(){const known=new Set();for(const w of[0,1]){let d=LIVE&&LIVE[w];if(!d)try{const raw=KV.getItem(SAVE_KEYS[w]);if(raw)d=JSON.parse(raw)}catch(e){}if(!d||d.free)continue;syncQuestRecipes(d);for(const id of FURN)if((d.recipes||{})[id])known.add(id);if((d.recipes||{}).window)known.add('window')}return known}
+function otherModeFurnitureRecipes(){const known=new Set();for(const w of[0,1]){let d=LIVE&&LIVE[w];if(!d)try{const raw=KV.getItem(SAVE_KEYS[w]);if(raw)d=JSON.parse(raw)}catch(e){}if(!d||d.free||!d.cleared)continue;/* クリアした土地の家具だけ */syncQuestRecipes(d);for(const id of FURN)if((d.recipes||{})[id])known.add(id);if((d.recipes||{}).window)known.add('window')}return known}
 function syncQuestRecipes(s){const shared=s.free?otherModeFurnitureRecipes():null,learn=(q,phase)=>{for(const id of questRecipeIds(q,phase)){(s.recipes||(s.recipes={}))[id]=true;(s.guardianIdeas||(s.guardianIdeas={}))[id]=true}};
   for(const id of FURN)if(!BL[id].offerOnly&&((s.inv||{})[id]||(s.obj||[]).includes(id)||(s.orders||[]).some(o=>o.type===id)||Object.values(s.win||{}).includes(id)))(s.recipes||(s.recipes={}))[id]=true;/* 旧セーブの所持・設置済み家具は既知の形として維持 */
   if((s.inv||{}).window||(s.obj||[]).includes('window')||(s.orders||[]).some(o=>o.type==='window')||Object.values(s.win||{}).includes('window'))(s.recipes||(s.recipes={})).window=true;
@@ -561,7 +561,7 @@ function morning(){if(typeof juiceGrowSnap==='function')juiceGrowSnap();/* 育�
   if(S.regrow&&S.regrow.length){let ch=false;S.regrow=S.regrow.filter(g=>{if(g.day!=null?dayNo()<g.day:S.t<g.t)return true;if(!S.obj[g.j]&&!S.floor[g.j]&&!S.res.some(r=>(r.y|0)*W+(r.x|0)===g.j)){S.obj[g.j]=g.id;ch=true;return false}return true});if(ch)recount()}
   for(const k in S.dyn){const o=S.obj[k],d=S.dyn[k];if((o==='berry'||o==='fruit')&&d&&d.g<100){d.g=Math.min(100,d.g+25);continue}/* ベリー・りんごは4日（朝ごとに25） */if(o!=='farm')continue;if(d.sown===false){d.wet=0;continue}if(d.g<100&&!(d.wet>0))d.dry=1;/* 朝に水が切れていた：つやつやにならない */if(d.wet>0&&d.g<100)d.g=Math.min(100,d.g+100/((CROPS[d.crop]||CROPS.mugi).days)*(warmSet().has(+k)?1.5:1)*(d.gw||1));/* あたたかい畑：育つ速さ+50% */delete d.gw;d.wet=0}
   if(typeof juiceGrowWave==='function')juiceGrowWave();/* 育った物が、なみのように順にはねる（juice4.js） */
-  if(WD===1){takenokoMorning();eruptMorning();gearMorning();veinMorning();visitMorning()}weedMorning();webMorning();if(typeof animalMorning==='function')animalMorning();
+  if(WD===1){takenokoMorning();eruptMorning();gearMorning();veinMorning();visitMorning()}if(S.free){visitMorning();if(VOLK())veinMorning()}/* フリーモード：旅のお客さん・火山をクリアしたあとの鉱脈 */weedMorning();webMorning();if(typeof animalMorning==='function')animalMorning();
   if(cnt('bell')>0){BELLRING=performance.now();{const j=S.obj.indexOf('bell');if(j>=0)bellRing(j%W+1,((j/W)|0)+1)}for(const r of S.res)if(!r.hidden)funAdd(r,15,'bell')}/* 村の鐘：朝に鳴って、たのしさ+15（いくつあっても1回） */
   const wxE=wxMorning();/* 天気：前もってきめた日（weather.js。雨・虹・あらし） */
   S.today=null;if(S.enemyOn&&dayNo()>=3&&wxE&&wxE.t&&DAYEV[wxE.t]){const k=wxE.t,E=DAYEV[k];S.today=k;/* 日替わりのできごと（前もってきめた日 wxE.t） */
@@ -573,7 +573,7 @@ function morning(){if(typeof juiceGrowSnap==='function')juiceGrowSnap();/* 育�
 };
    for(const k in EV){const ev=EV[k];if(d<+k||!S.enemyOn||S.flags['day'+k]||S.res.length<3)continue;const L=ev.filter(l=>S.res.some(r=>r.name===l[0]));if(L.length){talkOnce('day'+k,L);break}}/* その日より後の朝で、せいれいが3人になってから。さいごまで見てから「見た」に */}
   checkFree();
-  summonMorning();
+  if(S.free)freeArrive();else summonMorning();/* フリーモード：呼ばない。なかまは自分でやってくる（free.js） */
 }
 
 /* 虹：雨のつぎの朝に出ることがある。S.rbDay：虹の日 */

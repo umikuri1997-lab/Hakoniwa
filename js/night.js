@@ -34,7 +34,7 @@ function doSummon(){
   if(!sm.mebuki&&calledToday())return toast(S.mebukiDay===callDay()?'きょうは、めぶきのしずくをつかったので、呼べません':'なかまを呼べるのは、1日に1回です','warn');/* 1日に呼べるのは1回だけ（めぶきのしずくでよみがえらせた1回もふくめる） *//* めぶきのしずくをつかった日は、なかまを呼べない（呼んだ日は、めぶきのしずくをつかえない） */
   if(!sm.rev&&!sm.pick&&S.flags.minaCame&&(sumCands().filter(c=>c.ok).length>1||S.mebuki>0&&(S.lost||[]).some(q=>!q.unb))){openSheet('summon');return}/* 力が届いた属性がいくつかあるか、めぶきのしずくでよみがえらせられる子がいれば、えらぶ */
   S.summon=null;let r;
-  const sx0=STATUE>=0?STATUE%W:CX,sy0=STATUE>=0?((STATUE/W)|0)+3:CY;let sp=null;
+  const sx0=sm.at?sm.at[0]:STATUE>=0?STATUE%W:CX,sy0=sm.at?sm.at[1]:STATUE>=0?((STATUE/W)|0)+3:CY;let sp=null;/* at：やってくる所（フリーモード） */
   for(let rr=0;rr<10&&!sp;rr++){const c=[];for(let dy=-rr;dy<=rr;dy++)for(let dx=-rr;dx<=rr;dx++){if(Math.max(Math.abs(dx),Math.abs(dy))!==rr)continue;const x=sx0+dx,y=sy0+dy;if(x<1||y<1||x>=W-1||y>=H-1)continue;const j=y*W+x;if(walk(j)&&!S.obj[j]&&!S.res.some(q=>(q.x|0)===x&&(q.y|0)===y)&&!(godHere()&&Math.hypot(x+.5-godX(),y+.5-godY())<2.2))c.push([x,y])}if(c.length)sp=pick(c)}
   if(!sp)sp=[CX,CY];
   if(sm.rev){let d;if(sm.lost){const L=S.lost,i=typeof sm.lost==='string'?L.findIndex(q=>q.name===sm.lost):0;d=L.splice(Math.max(0,i),1)[0];}else{const B=S.buried;B.sort((a,b)=>(isKey(b.name)?1:0)-(isKey(a.name)?1:0)||(a.unb?1:0)-(b.unb?1:0));d=B.shift()}

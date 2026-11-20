@@ -582,7 +582,7 @@ function drawRes0(r,now){
 const WORKBUB=new Set(['eat','forage','fetch','eatwait','bathe','otaki','sasa','smelt','nest','pitfix','plant','pickdrop','pickseed','awater','apick','aput','acol','douse','sweep','tdig','cpick','ppick','spick','pget','sput','pput','cget','cput']);/* WORKFACE のほかに、ふきだしを出さない作業 */
 let GODP=[-.82,-.6];const godX=()=>STATUE>=0?STATUE%W+.5+GODP[0]:RUINT>=0?RUINT%W+.5:CX+.5,godY=()=>STATUE>=0?((STATUE/W)|0)+(S.obj[STATUE+W]==='altar'?GODP[1]:1.9):RUINT>=0?((RUINT/W)|0)+2.4:CY-6.4;/* 神殿を直す前は、こわれた神殿の前 *//* カミサマは神殿の左の柱の前（おそなえ箱のうしろ）に立つ */
 let GODOUT=false;/* お見送りのあと、カミサマが光になって消える */
-const godHere=()=>S.godShown&&(!S.godGone||S.godVisit)&&!GODOUT;
+const godHere=()=>S.godShown&&(!S.godGone||S.godVisit)&&!GODOUT&&!S.free;/* フリーモードに、カミサマは出ない */
 /* その画面（コマ）で描いたふきだしの場所。となりの子のふきだしと重ならないように、あとの子のぶんを上へずらす */
 const BUBR=[];let BUBF=-1;
 function bubLift(px,by,now){if(BUBF!==now){BUBF=now;BUBR.length=0}for(let k=0;k<3;k++){const hit=BUBR.some(b=>Math.abs(b[0]-px)<45&&Math.abs(b[1]-by)<40.5);if(!hit)break;by-=42.75}return by}

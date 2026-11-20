@@ -186,34 +186,35 @@ const PROF=[
   [GOD,'まあ、最初はちとさみしいかもしれんが……。'],
   [GOD,'せっかくじゃ！ ここにおヌシだけの村をつくってみんか？'],
   [GOD,'わしも楽しみにしとるぞ！']];
-function INTROFL(){return [[FA(),'#surprise|わあ、守り神さまだ！ ぼく、'+FA()+'！ この谷で、ひっそりくらしてたんだ！'],[FB(),'#surprise|ふわぁ…。'+FB()+'#joy|だよぉ。ふたりきりだったから、うれしいねぇ。'],[GOD,'この土地にも、おヌシの力を集める場所がいるのう。あそこの古い神殿を直せば、わしの居場所にもなる。']]}
+function INTROFL(){return [[FA(),'#surprise|わあ、守り神さまだ！ ぼく、'+FA()+'！ この谷で、ひっそりくらしてたんだ！'],[FB(),'#surprise|ふわぁ…。'+FB()+'#joy|だよぉ。ふたりきりだったから、うれしいねぇ。'],[FA(),'#joy|ねえ、この谷を、いっしょにすてきにしようよ！']]}
 const TOYS4=['swing','sandbox','seesaw','slide'];/* 遊び道具（どれでもよい） */
 const LIGHTQ=['torch','lamp','campfire','lantern','candle','flamp','toro','takeakari','andon','yomawari','watchlight'];/* watchlight：あかりのついた見張り台（Lv5〜。recount で数える） *//* クエストで数える「あかり」（どれでもよい） */
 const DECOQ=['hedge','birdbath','parasol','arch','signpost','monstera','jar','rockart','vane','kamizo','shishiodoshi','noren'];/* クエストで数える「かざり」（どれでもよい） */
+/* フリーモードの第1章：数ではなく、やり方をえらべる目標（住み心地・スポット・なかま・イベント・すてき度）。神殿もカミサマも出ない。第2章と季節の話は free.js */
+const fComf=()=>HOUSES.reduce((m,h)=>Math.max(m,houseComfort(h).v),0),fComfSt=()=>Math.min(5,Math.max(HOUSES.length?1:0,Math.ceil(fComf()/60))),fSpotN=()=>new Set((SPOTI||[]).map(x=>x.sp.k)).size;
 const QUESTSF=[
-  {id:'statue',text:'神殿を直してもらおう',check:()=>cnt('statue')>=1,by:GOD,how:'「しらべる」で、こわれた神殿をタップ',story:[
-    [GOD,'#joy|ここが、おヌシとわしの居場所じゃ。せいれいたちも、きっと手を貸してくれるぞい。'],[GOD,'わしはここで、交換でもしながら見とるからの。']]},
-  {id:'ep1',text:'第1話 はじめての居場所：家とベッド2つ',check:()=>HOUSES.length>=1&&houseBedCount()>=2,/* ベッドは家の中に2つ */prog:()=>'家 '+Math.min(1,HOUSES.length)+'/1・ベッド '+Math.min(2,houseBedCount())+'/2',how:'依頼ボードの「家具」で、はたおり機とベッド2つの依頼をはる。はたおり機で布をおり、できたベッドを家の中に置く',
-   talk:{get who(){return FA()},when:()=>true,get lines(){return [[FA(),'ねえねえ、あそこの家、まだ中がからっぽなの。'],[FB(),'草の上で寝るとねぇ、朝には背中がひんやりしてるんだよぉ。'],[FA(),'ここで、あったかく眠れるようになるかな？ 守り神さま、お願い！'],['@idea']]}},
-   get story(){return [[FA(),'#joy|できた！ ぼくたちの家だ！'],[FB(),'ふたりきりのころは、雨の日、木の下でくっついて雨宿りしてたねぇ。'],[FA(),'#nod|うん！ これからは、屋根があるね！'],[FB(),'ここ、日なたがぽかぽかで、お気に入りの場所になりそうだねぇ。']]}},
-  {id:'ep2',text:'第2話 みんなの好きなもの：花10・食卓・遊び道具',check:()=>flowerN()>=10&&cnt('table')>=1&&CN(TOYS4)>=1,prog:()=>'花 '+Math.min(10,flowerN())+'/10・食卓 '+Math.min(1,cnt('table'))+'/1・遊び道具 '+Math.min(1,CN(TOYS4))+'/1',how:'花のたねを植え、依頼ボードの「家具」で食卓、「遊び」で好きな遊び道具の依頼をはる',
-   talk:{get who(){return FA()},when:()=>true,get lines(){return [[FA(),'ねえ、好きなもの言いっこしよ！ ぼくは、花！ '+FVAL()+'の花もすきだけど、家のそばにも咲かせたいな。'],[FB(),'ぼくは、みんなでごはんを食べるのが好きだねぇ。'],[FA(),'あと、遊ぶのも！ ぜんぶそろったら、きっと毎日たのしいよ！'],['@idea']]}},
-   get story(){return [[FA(),'花も、食卓も、遊び道具もある！ 好きなものだらけ！'],[FA(),'ねえ'+FB()+'、ふたりのころ、'+FVAL()+'の花をいっしょにかぞえたの、おぼえてる？'],[FB(),'おぼえてるよぉ。とちゅうで、ねむくなっちゃったねぇ。']]}},
-  {id:'ep3',text:'第3話 遠くからのお客さん：せいれいを4人に',check:()=>S.res.length>=4,prog:()=>'せいれい '+Math.min(4,S.res.length)+'/4',how:'花や家具で属性の力をため、朝に神殿の「！」から呼ぶ',
-   talk:{who:GOD,when:()=>true,lines:[[GOD,'この村も、ちょっとずつにぎやかになってきたのう。'],[GOD,'なかまがふえたら、遠くからお客さんが来るかもしれんぞ？']]},
-   get story(){const ids=['hedge'].filter(id=>recipeKnown(id)),gift=ids.length?'草原で見つけたかざりを、おみやげに持ってきたよ！ よかったら使ってね！':'シロツメクサのたねを、おみやげに持ってきたよ！ よかったら植えてね！';return [[POKO,'#wave|こんにちはー！ ぼく、はじまりの草原から来たフタバ！'],[POKO,'#surprise|守り神さまの新しい村、見に来ちゃった！ わあ、すてきなところだね！'],[FA(),'#surprise|わあ、お客さんだ！ いらっしゃい！'],[POKO,'草原にはね、花がいっぱいの広場があるんだ！ '+gift],[GOD,'遠くの友だちが訪ねてくる村は、いい村になってきたしるしじゃよ。']]},get gives(){const items={};for(const[id,n]of[['hedge',3]])if(recipeKnown(id))items[id]=n;if(!Object.keys(items).length)items.clover=5;return{items}}},
-  {id:'ep4',text:'第4話 ここが好き！：噴水の広場',check:()=>cnt('fountain')>=1,prog:()=>'噴水 '+Math.min(1,cnt('fountain'))+'/1',how:'「おく」から噴水をえらび、みんなで見られる所に建てる',
-   talk:{get who(){return FB()},when:()=>true,get lines(){return [[FB(),'みんなで、のんびりできる広場があったらいいねぇ。'],[FA(),'#joy|水がきらきらして、みんなでながめられたらうれしいな！'],['@idea']]}},
-   get story(){return [[FA(),'ここ、だーいすき！'],[FB(),'水の音を聞きながら、みんなでのんびりできるねぇ。'],[FA(),'#nod|うん！ ここで、ゆっくりしていこう！'],[FB(),'この広場、大切な場所になりそうだねぇ。']]}},
-  {id:'ep5',text:'最終話 みんなのふるさと：たき火とせいれい6人',check:()=>cnt('campfire')>=1&&S.res.length>=6,prog:()=>'たき火 '+Math.min(1,cnt('campfire'))+'/1・せいれい '+Math.min(6,S.res.length)+'/6',how:'火のせいれいに、たき火を作ってもらう。なかまを6人に',
-   talk:{get who(){return FA()},when:()=>true,get lines(){return [[FA(),'ねえ、村のおまつりしようよ！'],[FB(),'夜もあったかいところで、みんなでおどれたら、楽しいだろうねぇ。'],[GOD,'#nod|うむ！ なかまがそろったら、にぎやかにやるとしようかの！'],['@idea']]}},
-   get story(){return [[GOD,'おお、にぎやかじゃのう！ ほれ、もっと踊らんか！'],[FA(),'#think|……ねえ'+FB()+'。ふたりだけだったころ、おぼえてる？'],[FB(),'#cry hush|おぼえてるよぉ。しずかで、ちょっとさみしくて……でも、きみがいたから、へいきだったねぇ。'],[FA(),'いまは、こんなにいっぱい！ 守り神さまが来てくれたからだね。'],[FB(),'ここが、みんなの帰る場所になったんだねぇ。'],[FA(),'ここが、ぼくたちのふるさとだね！'],[GOD,'物語はひと区切りじゃが、村づくりはまだまだこれからじゃぞ！']]},gives:{fest:true}},
+  {id:'fhome',text:'第1話 ふたりの家：家の住み心地を★3に',check:()=>fComfSt()>=3,prog:()=>'住み心地 ★'+Math.min(3,fComfSt())+'/3',how:'家の中に、家具・あかり・床をふやす。家をタップすると、住み心地がわかる',
+   talk:{get who(){return FA()},when:()=>true,get lines(){return [[FA(),'ねえ、ぼくたちの家、まだ中がからっぽなんだ。'],[FB(),'ねるだけの家だったからねぇ。'],[FA(),'#joy|守り神さま、いごこちのいい家にしてほしいな！']]}},
+   get story(){return [[FA(),'#joy|わあ、家の中が、ぽかぽかする！'],[FB(),'ずっと、ここにいたくなるねぇ。']]}},
+  {id:'fspot',text:'第2話 谷のお気に入り：好きなスポットを1つ作る',check:()=>fSpotN()>=1,prog:()=>'スポット '+Math.min(1,fSpotN())+'/1',how:'ひでんのしょの「くらし・家具」にあるスポットから、好きな組み合わせをえらんで置く',
+   talk:{get who(){return FB()},when:()=>true,get lines(){return [[FB(),'谷のどこかに、お気に入りの場所があるといいねぇ。'],[FA(),'物をならべると、とくべつな場所になるんだって！'],[FB(),'守り神さまの好きな場所を、つくっておくれよぉ。']]}},
+   get story(){return [[FA(),'#joy|ここ、いいね！ ぼく、毎日来ちゃいそう！'],[FB(),'お気に入りが、ひとつできたねぇ。']]}},
+  {id:'ffriend',text:'第3話 谷のむこうから：なかまをむかえる',check:()=>(S.farr||0)>=1,prog:()=>'なかま '+Math.min(1,S.farr||0)+'/1',how:'花や家具で属性の力がたまると、朝、谷の南からなかまがやってくる',
+   talk:{get who(){return FA()},when:()=>true,get lines(){return [[FA(),'ねえ、丘のむこうには、ほかのせいれいもいるのかな。'],[FB(),'この谷がにぎやかになったら、のぞきに来るかもしれないねぇ。'],[FA(),'#joy|来てくれたら、うれしいな！']]}},
+   get story(){return [[FA(),'#joy|ほんとに来てくれた！ ようこそ、花の谷へ！'],[FB(),'ふたりきりじゃ、なくなったねぇ。うれしいねぇ。']]}},
+  {id:'fevent',text:'第4話 みんなであそぶ日：好きなイベントを1つひらく',check:()=>(S.fevN||0)>=1,prog:()=>'イベント '+Math.min(1,S.fevN||0)+'/1',how:'依頼ボードの「イベント」から、好きなイベントをひらく',
+   talk:{get who(){return FA()},when:()=>true,get lines(){return [[FA(),'なかまがふえたから、みんなで、なにかしたいな！'],[FB(),'みんなでやると、たのしいことって、あるよねぇ。']]}},
+   get story(){return [[FA(),'#joy|たのしかったー！ また、やろうね！'],[FB(),'みんなの顔が、にこにこだったねぇ。']]}},
+  {id:'fsuteki',text:'最終話 すてきな谷：すてき度を★3に',check:()=>suteki().st>=3,prog:()=>'すてき度 ★'+Math.min(3,suteki().st)+'/3',how:'かざり・花・道・スポットをふやす。村のようすで、すてき度がわかる',
+   talk:{get who(){return FA()},when:()=>true,get lines(){return [[FA(),'ねえ、この谷、まえよりずっと、すてきになったよね。'],[FB(),'もっとすてきになったら、おいわいしたいねぇ。'],[FA(),'#joy|うん！ 谷のおまつりだ！']]}},
+   get story(){return [[FA(),'#joy|見て見て！ 谷じゅうが、きらきらしてる！'],[FB(),'#cry hush|ふたりだけだったころは、しずかで、ちょっとさみしかったねぇ。'],[FA(),'いまは、こんなににぎやか！ 守り神さまが来てくれたからだね。'],[FB(),'ここが、みんなのふるさとだねぇ。']]},gives:{fest:true}},
 ];
 function freeFest(){for(const r of S.res){r.fun=100;spawnFX(r.x-.5,r.y-.6,pick(['#ffd84a','#ff9cc0','#9ff0ff','#b8ff9a']))}startClap();setTimeout(endClap,3200);S.cleared=true;S.clearDay=dayNo();memo('ball','村のおまつりをひらいた');omo('fest');logEv('村のおまつりをひらいた');toast('物語はひと区切り！ 村づくりはつづくよ','good')}
 function freeSetup(s){const used=new Set(['フタバ','ノドカ']);const nm=()=>{let n;do{n=NAMES[s.nameIdx%NAMES.length];s.nameIdx++}while(used.has(n));used.add(n);return n};
   const a=nm(),b=nm();s.res=[mkRes(s,a,'wood',CX+.5,CY-1.5,'swing'),mkRes(s,b,'earth',CX+1.5,CY-1.5,'chat')];s.fk=[a,b];s.keyN={wood:a,earth:b};
-  s.flags.minaCame=true;s.flags.sumTold=true;s.flags.tapped=true;s.free=1;s.recipes.wbench=true;s.recipes.crate=true;
-  Object.assign(s.feat,{inv:true,craft:true,remove:true,plant:true,people:true,shop:true,summon:true});
+  s.flags.minaCame=true;s.flags.sumTold=true;s.flags.tapped=true;s.free=1;for(const id of['wbench','crate','loom','bed','table','chair','stool','bench','torch'])s.recipes[id]=true;/* はじめから作れる物 */
+  {const fr=k=>!s.obj[k]&&s.ground[k]!==1&&!s.floor[k],y=CY-9;let ox=-1;for(let d=1;d<12&&ox<0;d++)if([0,1,3,4].every(c=>fr(y*W+CX-d-2+c)))ox=CX-d-2;if(ox<0)ox=CX-4;const o=y*W+ox,b=o+3;s.obj[o]='obox';s.obj[b]='board';s.obj[b+1]='part';s.ref[b+1]=b;s.flags.board2x1=1;s.flags.board3=1}/* 神殿はない。おそなえ箱と依頼ボードは、べつべつに置いてある */
+  Object.assign(s.feat,{inv:true,craft:true,remove:true,plant:true,people:true});/* カミサマのお店・なかまを呼ぶ、はない */
   s.fs={berry:12};s.food=12;s.mat={wood:20,stone:20};s.pt=40;
   for(let j=0;j<W*H;j++)if(s.obj[j]==='deadtree')s.obj[j]=Math.random()<.5?'ntree':'';
   for(let d=3;d<=5;d++){const j=(CY-2)*W+CX-d;s.obj[j]='hwall';s.floor[j]='';s.hp[j]=BL.hwall.hp}/* 家はこわれていない */

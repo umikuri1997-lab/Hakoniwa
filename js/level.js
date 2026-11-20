@@ -53,8 +53,8 @@ function lvShow(l,bonus,opens){
   if(STATUE>=0)for(let n=0;n<3;n++)setTimeout(()=>burst(STATUE,'furn','none'),n*260);
 }
 const LEVELUP_ITEMS=new Set(['bridge','path','woodpath','ladder_wood','ladder_bamboo','slope_earth','stairs_wood','stairs_stone','stairs_brick','gate','hwall','bamboowall','door','logfence','bamboofence','floor','brickfloor','stonefloor','window','plasterwall','gravel','wall','sdoor','logwall','brick','brickwall','carpet','curtain1','stone','stonegate','logdoor','loggate','kamizo','bell','bedge','onsen','signw','signs','andon','cooktable','lurestatue','mato','picnic','taiko','chadogu','hokora']);
-const levelUpItemsAt=n=>Object.keys(BL).filter(id=>LEVELUP_ITEMS.has(id)&&BL[id].lv===n&&!BL[id].offerOnly&&(BL[id].w||0)<=WD);
-const visibleLevelRewardsAt=n=>levelUpItemsAt(n).filter(id=>!S.free||!FREEHIDE.has(id)&&matHere(BL[id],WD));/* フリーモード：守りの物・手に入らない素材の物は、おぼえない */
+const levelUpItemsAt=n=>Object.keys(BL).filter(id=>LEVELUP_ITEMS.has(id)&&BL[id].lv===n&&!BL[id].offerOnly&&(BL[id].w||0)<=WT());
+const visibleLevelRewardsAt=n=>levelUpItemsAt(n).filter(id=>!S.free||stageItemOK(id));/* フリーモード：守りの物・まだ開いていない土地の物は、おぼえない */
 function nextLevelItems(n){/* 村レベル n でおぼえる物（まだおぼえていない物・このステージで使える物だけ）。建物・植える物は BL の lv で使えるようになる（learnedIn と同じ） */const a=visibleLevelRewardsAt(n);for(const id in BL){const b=BL[id];if((b.kind==='build'||b.kind==='plant')&&b.lv===n&&!QB.has(id)&&!b.offerOnly)a.push(id)}return [...new Set(a)].filter(id=>stageItemOK(id)&&!(S.recipes||{})[id]&&!(S.unlocked||{})[id])}
 function nextLvHtml(n){/* 村のようす：つぎのレベルでおぼえる物のアイコン */const L=nextLevelItems(n);if(!L.length)return '';const e=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]);return '<div class="vlNx"><small>レベル'+n+'でおぼえる</small>'+L.map(id=>'<span><img alt="" src="'+iconURL(id)+'">'+e(iname(id))+'</span>').join('')+'</div>'}
 function checkLevel(){
