@@ -71,7 +71,7 @@ function lastFirst(list){/* さいごにあそんだステージを、いちば�
   const pv=card.previousElementSibling,nx=card.nextElementSibling;if(pv&&pv.classList.contains('wlink'))pv.remove();else if(nx&&nx.classList.contains('wlink'))nx.remove();/* 道の線は、となりのステージどうしでつなぎなおす */
   card.classList.add('wtop');list.insertBefore(card,list.firstElementChild)}
 for(const k in BL)if(BL[k].play&&!FAVTOY.wind.includes(k))FAVTOY.wind.push(k);/* 風のせいれいは、どの遊び場も好き（あとのファイルで足した遊び家具も、ここでぜんぶ入れる） */
-const APP_VER=2023;/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
+const APP_VER=2024;/* バージョン：PRを出すたびに、そのPRの番号に書きかえる */
 function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   refreshStageInfo();
   $('#title').hidden=true;$('#maps').hidden=false;showUI(false);started=false;
@@ -233,7 +233,7 @@ function frame(now){
   if(typeof caveOn==='function'&&caveOn()){try{caveFrame(prdt,now)}catch(e){frameErr('cave',e)}}/* 洞窟の探検（cave.js） */
   for(const f of floats)f.life-=prdt*.7;while(floats.length&&floats[0].life<=0)floats.shift();
   for(const s of shots)s.life-=prdt*1.4;while(shots.length&&shots[0].life<=0)shots.shift();
-  for(const f of fx){if(f.w0!=null){if(now<f.w0)continue;f.w0=null}f.life-=prdt*(f.k==='spr'?1/f.dur:f.k==='ring'?(f.col?1.3:2.2):1.4);if(f.k!=='ring'&&f.k!=='spr'&&!PZ){f.x+=f.vx*rdt;f.y+=f.vy*rdt;f.vy+=(f.k==='p'?260:40)*rdt;f.vx*=.96}}
+  for(const f of fx){if(f.w0!=null){if(now<f.w0)continue;f.w0=null}f.life-=prdt*(f.k==='spr'?1/f.dur:f.k==='ring'?(f.col?1.3:2.2):1.4);if(f.k!=='ring'&&f.k!=='spr'&&!PZ){f.x+=f.vx*rdt;f.y+=f.vy*rdt;f.vy+=(f.g!=null?f.g:f.k==='p'?260:40)*rdt;if(f.vt&&f.vy>f.vt)f.vy=f.vt;if(!f.nd)f.vx*=.96;if(f.sw)f.x+=Math.cos(f.life*6+(f.ph||0))*f.sw*rdt}}/* g：重さ・vt：落ちる速さの上限・nd：空気でへらない・sw：左右にひらひら（季節の遊びの花びら・落ち葉） */
   for(let i=fx.length-1;i>=0;i--)if(fx[i].life<=0)fx.splice(i,1);
   for(const m of motes){m.y-=prdt*.012*m.s;m.x+=Math.sin(now/2000+m.p)*prdt*.004;if(m.y<0){m.y=1;m.x=Math.random()}}
   seasonStep(prdt,now);feelFrame(now);juiceFrame(now);/* 足音・足もとの反応・場所の音（feel.js） */
