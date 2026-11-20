@@ -36,13 +36,18 @@ function gfPresentShow(r,id,v,done){/* id：おくりもの（素材は 'm:'+素
     else{JOYU.set(r,t+GFJOYMS);r.bubble='😊';sfx('tap')}},GFOPENMS+GFSHOWMS);
   villageTimeout(()=>{if(done)done()},GFOPENMS+GFSHOWMS+GFJOYMS)}
 /* ---- お返し・節目のつつみ ---- */
-function gfAfterGift(r,v){/* 返事の会話のあと：お返し（だいすき・すき GFRETP%）と、GFBONDN 回めの節目 */const Q=[];
+function gfAfterGift(r,v){/* 返事の会話のあと：お返し（だいすき・すき GFRETP%）と、GFBONDN 回めの節目。家具は先にもちものへ入れ、見せる順番だけ S.gfShow にのこす（とちゅうで読みこみなおしても、なくならない。見せおわるまで、つぎに開いたときに見せなおす gfShowTick） */const Q=[];
   if(!r.gbond&&(r.gn||0)>=GFBONDN){const id=gfPick('bond',r.elem);r.gbond=1;if(id)Q.push({id,cat:'bond'})}
   if(v===2||v===1&&Math.random()*100<GFRETP){const id=gfPick('ret',r.elem);if(id)Q.push({id,cat:'ret'})}
-  const next=()=>{const q=Q.shift();if(!q)return;giveItem(q.id,1);dirty=true;const bd=q.cat==='bond';
-    const L=bd?['いつも、ありがとう。','守り神さまのために、これを作ったんだ。']:['これ、お返しだよ。','よかったら、村にかざってね。'];
-    const go=()=>{if(typeof treasureReveal!=='function'){toast(BL[q.id].name+'をもらった','good');next();return}
-      treasureReveal({ico:wrapIco(r.elem),taps:bd?5:3,tier:2,name:r.name+(bd?'からの、とくべつなつつみ':'からのお返し'),done:r.name+'が作ってくれた！',items:[{img:iconURL(q.id),nm:BL[q.id].name}],beam:1,confetti:1,stamp:'うけとった',after:next});
-      logEv(r.name+'から'+BL[q.id].name+'をもらった');memo('gift',r.name+'から'+BL[q.id].name+'をもらった')};
-    if(!r.hidden&&$('#dialog').hidden)dialog(L.map(t=>[r.name,chatTone(t,r)]),go,'うけとる');else go()};
-  next()}
+  if(!Q.length)return;const L=S.gfShow||(S.gfShow=[]);
+  for(const q of Q){giveItem(q.id,1);logEv(r.name+'から'+BL[q.id].name+'をもらった');memo('gift',r.name+'から'+BL[q.id].name+'をもらった');L.push({id:q.id,cat:q.cat,rid:r.id,nm:r.name,el:r.elem})}
+  dirty=true;gfShowNext()}
+let GFSHOW=null;/* いま見せている S（村を切りかえたら、見せなおす） */
+function gfShowNext(){const L=S.gfShow;if(!L||!L.length){delete S.gfShow;GFSHOW=null;return}GFSHOW=S;const st=S,q=L[0];
+  const r=S.res.find(x=>x.id===q.rid),nm=r?r.name:q.nm,bd=q.cat==='bond',fin=()=>{if(S!==st)return;const i=L.indexOf(q);if(i>=0)L.splice(i,1);dirty=true;gfShowNext()};
+  if(!BL[q.id]){fin();return}
+  const Lw=bd?['いつも、ありがとう。','守り神さまのために、これを作ったんだ。']:['これ、お返しだよ。','よかったら、村にかざってね。'];
+  const go=()=>{if(S!==st)return;if(typeof treasureReveal!=='function'){toast(BL[q.id].name+'をもらった','good');fin();return}
+    treasureReveal({ico:wrapIco(q.el),taps:bd?5:3,tier:2,name:nm+(bd?'からの、とくべつなつつみ':'からのお返し'),done:nm+'が作ってくれた！',items:[{img:iconURL(q.id),nm:BL[q.id].name}],beam:1,confetti:1,stamp:'うけとった',after:fin})};
+  if(r&&!r.hidden&&$('#dialog').hidden)dialog(Lw.map(t=>[nm,chatTone(t,r)]),go,'うけとる');else go()}
+function gfShowTick(){/* 読みこんだあと：見せおわっていない、お返し・節目のつつみ */if(GFSHOW===S||!S||!S.gfShow||!S.gfShow.length||GIFT_ACTIVE)return;gfShowNext()}
