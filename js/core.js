@@ -17,7 +17,7 @@ const SP=n=>'パワー'+n;
 let VILL=new Uint8Array(0);/* 村（家・置いた物のまわり3マス）。夜ににげる・見まわる所。recount で作る */
 const MIN_PER_SEC=2.5;         // 1倍速: 1秒 = ゲーム内2.5分
 const FREE=6,YAMI=5;/* YAMI：闇のステージ（忘れられた神々の庭） *//* フリーモードのステージ番号 */
-const SAVE_KEYS=['hakoniwa-w1-v8','hakoniwa-w2-v1'];SAVE_KEYS[FREE]='hakoniwa-free-v2';SAVE_KEYS[YAMI]='hakoniwa-w6-v1';/* ステージごとに別のセーブ */
+const SAVE_KEYS=['hakoniwa-w1-v8','hakoniwa-w2-v1'];SAVE_KEYS[4]='hakoniwa-w5-v1';SAVE_KEYS[FREE]='hakoniwa-free-v2';const WIND=4/* 風のやんだ空の村（WORLD 5）のステージ番号 */,STAGES=[0,1,WIND];/* いま遊べる、お話のステージ（水・土は、まだない。闇は YAMI でべつに見る） */SAVE_KEYS[YAMI]='hakoniwa-w6-v1';/* ステージごとに別のセーブ */
 let WD=0;/* いまのステージ */
 const DIRS=[[1,0],[-1,0],[0,1],[0,-1]];let TESTM=(()=>{try{return KV.getItem('hk-test')==='1'}catch(_){return false}})();
 const $=s=>document.querySelector(s);

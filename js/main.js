@@ -22,7 +22,7 @@ function stageInfo(w){
 }
 function juiceMig(d){/* 焼きりんご・焼きベリーは、りんごジュース・ベリージュース（調理台）にかわった：古いセーブの名前をおきかえる */if(!d||d.flags&&d.flags.juice1)return d;let t=JSON.stringify(d);if(/yakiapple|yakiberry/.test(t))d=JSON.parse(t.replace(/yakiapple/g,'applejuice').replace(/yakiberry/g,'berryjuice'));(d.flags||(d.flags={})).juice1=1;for(const q in d.ovenSet||{}){const R=ALLRECIPES.find(x=>x.out===d.ovenSet[q]);if(!R||dishSt(R)!==d.obj[q])delete d.ovenSet[q]}for(const r of d.res||[])if(r.cing){const R=ALLRECIPES.find(x=>x.out===r.cing.rec);if(R&&R.el!==r.elem){const nd=R.out==='bread'?{mugi:2}:R.need;/* このころのパンは、こむぎ2こ */for(const k in nd)d.fs[k]=(d.fs[k]||0)+nd[k];r.cing=null}}return d}
 function loadStage(w){if(LIVE[w]&&!LIVE[w].summary)return LIVE[w];return LIVE[w]=load(w)}
-function refreshStageInfo(){for(const w of[0,1,YAMI,FREE])if(!LIVE[w]||LIVE[w].summary)LIVE[w]=stageInfo(w)}
+function refreshStageInfo(){for(const w of[...STAGES,YAMI,FREE])if(!LIVE[w]||LIVE[w].summary)LIVE[w]=stageInfo(w)}
 /* ステージごとのセーブ */
 /* ステージは属性の数だけ（木・火・水・土・風）と、さいごの庭 */
 function freeCard(list){if(!(LIVE[0]&&LIVE[0].cleared))return;let told=false;try{told=KV.getItem('hakoniwa-freeTold')==='1'}catch(e){}if(!told){try{KV.setItem('hakoniwa-freeTold','1')}catch(e){}setTimeout(()=>toast('フリーモードがひらいた！','good'),400)}
@@ -42,9 +42,9 @@ const WORLDS=[
   {name:'忘れられた神々の庭',sub:'WORLD 6',el:null,desc:'5つの力が生まれた場所。'},
 ];WORLDS[FREE]={name:'フリーモード',sub:'FREE',el:null,desc:''};
 /* ステージの表紙：そのステージのメインのせいれい（キーキャラ）を、ゲームのドット絵（drawSpiritDot）でならべる。会えた子だけ（はじめの子はいつも）。うしろはコードのドット絵の景色（PXSCENE）を3倍に */
-const COVER_KEY='hakoniwa-cover-v1',COVER_EL=[['wood','earth','fire','water','wind'],['fire','water','wood','earth','wind']];
+const COVER_KEY='hakoniwa-cover-v1',COVER_EL=[['wood','earth','fire','water','wind'],['fire','water','wood','earth','wind']];COVER_EL[WIND]=['wind','wood','earth','fire','water'];
 function coverCast(d,w){/* セーブのデータ（ぜんぶ読んだ物）から：[名前,属性,見た目] */const all=(d.res||[]).concat(d.buried||[],d.lost||[]),N=d.keyN||{},out=[];
-  for(const el of COVER_EL[w]||[]){let nm=N[el];if(!nm){if(w===0)nm=KEYEL0[el]||FIXK0[el];else for(const k of KEYS[w]||[])if(KEYEL[k]===el)nm=k}if(!nm)continue;
+  for(const el of COVER_EL[w]||[]){let nm=N[el];if(!nm){if(w===0)nm=KEYEL0[el]||FIXK0[el];else for(const k of KEYS[w]||[])if(KEYEL[k]===el&&!nm)nm=k}if(!nm)continue;
     const r=all.find(x=>x&&x.name===nm);if(!r&&nm!==KEYS[w][0])continue;out.push([nm,(r&&r.elem)||KEYEL[nm]||el,(r&&r.vr)||KEYVR[nm]||null])}return out}
 function coverMeta(){try{return JSON.parse(KV.getItem(COVER_KEY)||'{}')||{}}catch(e){return {}}}
 function coverNote(d){/* save() のとき：表紙のせいれいと、あそんだ時刻を小さくしまう */if(!d)return;const w=d.world||0,M=coverMeta();M[w]={t:Date.now(),c:w===FREE?[]:coverCast(d,w)};try{KV.setItem(COVER_KEY,JSON.stringify(M))}catch(e){}}
@@ -65,7 +65,7 @@ function thumb(cv2,k,open,hide){
     PXSPIRIT(c,p[1],x-el,y-hop,1);c.fillStyle='rgba(40,60,30,.25)';c.fillRect(x+2,y+11,6,1)});
 }
 function lastFirst(list){/* さいごにあそんだステージを、いちばん上に（のこりは、もとのならび） */
-  const top=[0,1,YAMI,FREE].map(w=>[w,LIVE[w]&&LIVE[w].introSeen?coverLast(w):0]).filter(a=>a[1]>0&&list.querySelector('.wcard[data-k="'+a[0]+'"]')).sort((a,b)=>b[1]-a[1])[0];if(!top)return;
+  const top=[...STAGES,YAMI,FREE].map(w=>[w,LIVE[w]&&LIVE[w].introSeen?coverLast(w):0]).filter(a=>a[1]>0&&list.querySelector('.wcard[data-k="'+a[0]+'"]')).sort((a,b)=>b[1]-a[1])[0];if(!top)return;
   const card=list.querySelector('.wcard[data-k="'+top[0]+'"]');if(card===list.firstElementChild)return;
   const pv=card.previousElementSibling,nx=card.nextElementSibling;if(pv&&pv.classList.contains('wlink'))pv.remove();else if(nx&&nx.classList.contains('wlink'))nx.remove();/* 道の線は、となりのステージどうしでつなぎなおす */
   card.classList.add('wtop');list.insertBefore(card,list.firstElementChild)}
@@ -76,9 +76,9 @@ function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
   const list=$('#mList');list.innerHTML='';freeCard(list);
   WORLDS.forEach((wd,k)=>{if(k===FREE)return;
     if(k)list.appendChild(el('<div class="wlink"></div>'));
-    let w2o=false;try{w2o=KV.getItem('hakoniwa-w2open')==='1'}catch(e){}
+    let w2o=false,w5o=false;try{w2o=KV.getItem('hakoniwa-w2open')==='1';w5o=KV.getItem('hakoniwa-w5open')==='1'}catch(e){}
     let w6o=false;try{w6o=KV.getItem('hakoniwa-w6open')==='1'}catch(e){}
-    const L=LIVE[k]||null,play=k<=1||k===YAMI,open=k===0||(k===1&&!!((LIVE[0]&&LIVE[0].cleared)||L||w2o))||(k===YAMI&&w6o);/* 闇のステージ：水・土・風ができるまでは、ためす入り口（とじたカードを5回タップ）だけ */
+    const L=LIVE[k]||null,play=STAGES.includes(k)||k===YAMI,open=k===0||(k===1&&!!((LIVE[0]&&LIVE[0].cleared)||L||w2o))||(k===YAMI&&w6o)||(k===WIND&&!!((LIVE[1]&&LIVE[1].cleared)||L||w5o));/* 風は、火山でヌシ様をむかえたら、ひらく *//* 闇のステージ：水・土・風ができるまでは、ためす入り口（とじたカードを5回タップ）だけ */
     const card=el(`<div class="wcard${open?' open':' lock'}"><canvas width="760" height="280"></canvas><div class="wb"><span class="wn"></span><h3></h3><p></p><div class="wbtns"></div></div></div>`);
     const hide=!open&&!(k===2&&LIVE[1]&&LIVE[1].cleared);/* まだひらいていないステージは、名前も絵も見せない */
     if(hide)card.querySelector('.wn').innerHTML=pxi('lock','wlk')+'WORLD '+(k+1);else card.querySelector('.wn').textContent=wd.sub;card.querySelector('h3').textContent=hide?'？？？':wd.name;
@@ -87,6 +87,7 @@ function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
     else if(k===1&&!open)info='はじまりの草原でヌシ様をむかえると、ひらきます。';
     if(k===2)info=LIVE[1]&&LIVE[1].cleared?'道がひらいた！ ……けれど、まだ準備中。':'まえの土地でヌシ様をむかえると、ひらきます。';
     if(k>=3&&!(open&&play))info=k===5?'？？？':'まえの土地でヌシ様をむかえると、ひらきます。';
+    if(k===WIND&&!open)info='まえの土地でヌシ様をむかえると、ひらきます。';
     card.querySelector('p').textContent=info;
     const bt=card.querySelector('.wbtns');
     if(play&&open){
@@ -94,7 +95,7 @@ function showMaps(){$('#mVer').textContent='バージョン '+APP_VER;
         const n=el('<button class="btn" data-hold>はじめから</button>');n.onclick=()=>{if(n._held){$('#maps').hidden=true;newGame(k)}};/* データがきえるので、おしつづけて決める */bt.appendChild(n)}
       else{const n=el('<button class="btn pri">あそぶ</button>');n.onclick=()=>{sfx('tap');$('#maps').hidden=true;newGame(k)};bt.appendChild(n)}
     }
-    if(k===1&&!open){let n=0;card.onclick=()=>{if(++n>=5){try{KV.setItem('hakoniwa-w2open','1')}catch(e){}sfx('arrive');showMaps()}}}/* 確認用：とじたWORLD 2を5回タップでひらく */
+    if((k===1||k===WIND)&&!open){let n=0;card.onclick=()=>{if(++n>=5){try{KV.setItem(k===1?'hakoniwa-w2open':'hakoniwa-w5open','1')}catch(e){}sfx('arrive');showMaps()}}}/* 確認用：とじたWORLD 2を5回タップでひらく */
     if(k===YAMI&&!open){let n=0;card.onclick=()=>{if(++n>=5){try{KV.setItem('hakoniwa-w6open','1')}catch(e){}sfx('arrive');showMaps()}}}/* 確認用：とじたWORLD 6を5回タップでひらく */
     card.dataset.k=k;list.appendChild(card);thumb(card.querySelector('canvas'),k,open,hide);
   });
@@ -105,7 +106,7 @@ const dayNoOf=s=>Math.floor((s.t-(s.hold||0))/1440)+1;
 $('#mSnd').onclick=()=>{audioInit();setSnd('bgm',!SND.bgm);showMaps()};$('#mSfx').onclick=()=>{audioInit();setSnd('sfx',!SND.sfx);showMaps()};
 $('#mBack').onclick=()=>{$('#maps').hidden=true;$('#title').hidden=false;titleCont()};
 $('#tStart').onclick=()=>{audioInit();curSong=wantSong='opening';step=0;nextT=AC?AC.currentTime+.15:0;sfx('furn');const t0=Date.now(),go=()=>{if(KV.ready()||Date.now()-t0>5000)showMaps();else setTimeout(go,150)};if(!KV.ready())toast('セーブを読みこみ中…');go()};/* クラウドのセーブを待ってから、土地をえらぶ */
-function lastPlayed(){/* さいごにあそんだステージ（なければ null） */refreshStageInfo();const top=[0,1,YAMI,FREE].map(w=>[w,LIVE[w]&&LIVE[w].introSeen?coverLast(w):0]).filter(a=>a[1]>0).sort((a,b)=>b[1]-a[1])[0];return top?top[0]:null}
+function lastPlayed(){/* さいごにあそんだステージ（なければ null） */refreshStageInfo();const top=[...STAGES,YAMI,FREE].map(w=>[w,LIVE[w]&&LIVE[w].introSeen?coverLast(w):0]).filter(a=>a[1]>0).sort((a,b)=>b[1]-a[1])[0];return top?top[0]:null}
 function titleCont(){/* タイトルの「つづきから」：前にあそんだステージがあるときだけ出す */const t0=Date.now(),go=()=>{if(!KV.ready()&&Date.now()-t0<5000)return setTimeout(go,150);let w=null;try{w=lastPlayed()}catch(e){}const c=$('#tCont'),on=w!=null;if(c.hidden===on){c.hidden=!on;$('#tStart').classList.toggle('pri',!on);window.dispatchEvent(new Event('resize'))}};go()}
 $('#tCont').onclick=()=>{audioInit();sfx('tap');const w=lastPlayed();if(w==null)return titleCont();const L=loadStage(w);if(!L)return titleCont();continueGame(L)};/* 前にあそんだマップを、そのまま開く */
 titleCont();
@@ -224,7 +225,7 @@ function frame(now){
   followTick(rdt);/* 見守る */
   if(started&&!window.__noIdle&&now-lastIn>120000&&$('#idle').hidden&&$('#title').hidden&&$('#maps').hidden){$('#idle').hidden=false;try{save()}catch(e){}}
   if(SKIP&&!(isNight()&&S.enemyOn))SKIP=false;/* 朝になったら、ふつうの速さにもどす */
-  if(started&&!sacredQuietActive()&&!menuOpen&&$('#pro').hidden&&sheet==null&&NEWRES==null&&$('#dialog').hidden&&$('#lvup').hidden&&$('#rlv').hidden&&!calmNow()){showItemGift();cookNewTick();showSpotPop();reflectNoteTick();if(typeof fogRevealTick==='function')fogRevealTick();oreWakeTick()}
+  if(started&&!sacredQuietActive()&&!menuOpen&&$('#pro').hidden&&sheet==null&&NEWRES==null&&$('#dialog').hidden&&$('#lvup').hidden&&$('#rlv').hidden&&!calmNow()){showItemGift();cookNewTick();showSpotPop();reflectNoteTick();if(typeof fogRevealTick==='function')fogRevealTick();windTick();oreWakeTick()}
   if(!paused()){if(S.speed>1&&!TESTSPD&&!TESTM){S.glassT=Math.max(0,(S.glassT||0)-rdt);if(S.glassT<=0)S.speed=1}glassUI();LIGHTCD=Math.max(0,LIGHTCD-rdt*S.speed*(SKIP?40:1));AREACD=Math.max(0,AREACD-rdt*S.speed*(SKIP?40:1));let g=rdt*MIN_PER_SEC*S.speed*(SKIP?40:1);while(g>0){const s=Math.min(g,2);try{stepWorld(s)}catch(e){frameErr('step',e);break}g-=s;if(performance.now()<BOSSHOLD)break}/* オオカゲの登場・撃破で止めたら、残りは進めない */}
   if(typeof caveOn==='function'&&caveOn()){try{caveFrame(prdt,now)}catch(e){frameErr('cave',e)}}/* 洞窟の探検（cave.js） */
   for(const f of floats)f.life-=prdt*.7;while(floats.length&&floats[0].life<=0)floats.shift();
