@@ -16,8 +16,8 @@ const W=108,H=108,TS=32,CX=54,CY=54,OW=72,OFF=18;/* マップは108×108マス�
 const SP=n=>'パワー'+n;
 let VILL=new Uint8Array(0);/* 村（家・置いた物のまわり3マス）。夜ににげる・見まわる所。recount で作る */
 const MIN_PER_SEC=2.5;         // 1倍速: 1秒 = ゲーム内2.5分
-const FREE=6;/* フリーモードのステージ番号 */
-const SAVE_KEYS=['hakoniwa-w1-v8','hakoniwa-w2-v1'];SAVE_KEYS[4]='hakoniwa-w5-v1';SAVE_KEYS[FREE]='hakoniwa-free-v1';const WIND=4/* 風のやんだ空の村（WORLD 5）のステージ番号 */,STAGES=[0,1,WIND];/* いま遊べる、お話のステージ（水・土は、まだない） *//* ステージごとに別のセーブ */
+const FREE=6,YAMI=5;/* YAMI：闇のステージ（忘れられた神々の庭） *//* フリーモードのステージ番号 */
+const SAVE_KEYS=['hakoniwa-w1-v8','hakoniwa-w2-v1'];SAVE_KEYS[4]='hakoniwa-w5-v1';SAVE_KEYS[FREE]='hakoniwa-free-v1';SAVE_KEYS[YAMI]='hakoniwa-w6-v1';const WIND=4/* 風のやんだ空の村（WORLD 5）のステージ番号 */,STAGES=[0,1,WIND,YAMI];/* いま遊べる、お話のステージ（水・土は、まだない） *//* ステージごとに別のセーブ */
 let WD=0;/* いまのステージ */
 const DIRS=[[1,0],[-1,0],[0,1],[0,-1]];let TESTM=(()=>{try{return KV.getItem('hk-test')==='1'}catch(_){return false}})();
 const $=s=>document.querySelector(s);
@@ -35,8 +35,9 @@ const ELEM={
   earth:{name:'土',col:'#b8863b',body:'#e6c07a',can:'はたらく速さ16・移動速度18・スタミナ26・畑を耕す・柵を直す・パンを作る・土の家具づくり'},
   wind:{name:'風',col:'#3fc0a0',body:'#c9f2e6',can:'はたらく速さ18・移動速度26・スタミナ16・たのしさ60より下で遊びに行く・ふしぎな種をひろう・風の家具づくり'},
 };
-const ELEM_KEYS=Object.keys(ELEM);
+ELEM.light={name:'光',col:'#e0a92e',body:'#ffe9a0',can:'はたらく速さ20・移動速度20・スタミナ20・まわり4マスを照らす'};/* 光：闇のステージのトモリだけ。神殿では呼べないので、ELEM_KEYS には入れない */
+const ELEM_KEYS=Object.keys(ELEM).filter(k=>k!=='light');
 /* 火山のそうび（js/gear.js）：鉱脈の表と、そうびがないときの効果。しくみの関数は gear.js がおきかえる（ほかのファイルだけを読むテストでも動くように） */
 const VEINS={vcopper:'copper',viron:'iron',vobsid:'obsidian',vsilver:'silver',vgold:'gold'},VEIN_IDS=Object.keys(VEINS);/* 鉱脈：ほると鉱石 */
 const GNONE={atk:0,rch:0,hit:1,iv:1,hun:0,mv:0,flee:1,rec:1,fun:1,work:0,cap:0,xp:1,ns:1,light:0,fear:0,rain:0,refl:0,tburn:0,fburn:0,nob:0,glow:0,burn:0,kb:0,slow:0,stun:0,steal:0,aoe:0,side:0,job:{},crop:0,stone:0,dish:0,wcan:0,prng:0,grow:1,pw:0,ore:0};
-function gearStat(){return GNONE}function gJob(){return 1}function gearStrike(){}function gearHurt(){}function gearEnemyTick(){return false}function gearGlowNear(){return false}function gearMorning(){}function gearIdea(){}function mineOre(){return false}function placeVeins(){}function oreWakeTick(){}function oreWakeReset(){}function veinMorning(){}function vreqList(){return []}function oreMigrate(){}function smeltJob(){return false}function smeltWant(){return false}function smTick(){}function smPop(){}function smLit(){return false}function gearLightAt(){return false}function gearLights(){}function gearDropAll(){}function gearOffer(){return false}function gearFind(){}function towerVolley(){return 0}function ammoTotal(){return (S.inv.arrow||0)+(S.inv.arrow2||0)}function gearGive(){}function gearCount(){return 0}
+function yamiSkyHour(){return 0}function yamiTick(){}function yamiLights(){}function yamiLightAt(){return false}function yamiBirth(){}function yamiDark(){return .66}/* 闇のステージ（yami.js） */function gearStat(){return GNONE}function gJob(){return 1}function gearStrike(){}function gearHurt(){}function gearEnemyTick(){return false}function gearGlowNear(){return false}function gearMorning(){}function gearIdea(){}function mineOre(){return false}function placeVeins(){}function oreWakeTick(){}function oreWakeReset(){}function veinMorning(){}function vreqList(){return []}function oreMigrate(){}function smeltJob(){return false}function smeltWant(){return false}function smTick(){}function smPop(){}function smLit(){return false}function gearLightAt(){return false}function gearLights(){}function gearDropAll(){}function gearOffer(){return false}function gearFind(){}function towerVolley(){return 0}function ammoTotal(){return (S.inv.arrow||0)+(S.inv.arrow2||0)}function gearGive(){}function gearCount(){return 0}

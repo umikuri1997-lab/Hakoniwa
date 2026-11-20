@@ -23,7 +23,7 @@ function sunLen(){return HDLEN}/* かげの長さ（昼1） */
 function sunLean(){return HDSUN}/* かげのかたむき：－1 朝（かげは西へ）・0 昼・+1 夕方（東へ） */
 function hdFrame(){/* 1コマに1回（render のはじめ） */
   if(!HD2D){HDLEN=1;HDSUN=0;return}
-  const h=hour(),daylight=Math.max(0,Math.min(1,(h-5)/2,(19-h)/2));
+  const h=skyHour(),daylight=Math.max(0,Math.min(1,(h-5)/2,(19-h)/2));
   HDSUN=(h-12)/6*daylight;
   HDLEN=1+HDLONG*Math.abs(HDSUN);
 }
@@ -37,7 +37,7 @@ function hdWx(){/* 天気の光（multiply でかさねる色と、こさ） */
   if(S.rain)return typeof snowNow==='function'&&snowNow()?['215,225,245',.3]:['185,198,222',.34+.12*(typeof wxRainK==='function'?wxRainK():1)];/* 雨が強いほど暗く *//* 雪：つめたい白・雨：青みの灰色 */
   return null}
 function hdPost(dk,now){/* 夜の暗さのあと・ふきだしの前に、画面（デバイスの点）で */if(!HD2D)return;const c=ctx,cv=c.canvas,W0=cv.width,H0=cv.height;if(!W0||!H0)return;
-  c.save();c.setTransform(1,0,0,1,0,0);const h=hour(),big=now<HDBIG?Math.min(1,(HDBIG-now)/600):0;
+  c.save();c.setTransform(1,0,0,1,0,0);const h=skyHour(),big=now<HDBIG?Math.min(1,(HDBIG-now)/600):0;
   {const t=hdTint(h);if(t&&t[1]>0){c.globalCompositeOperation='soft-light';c.fillStyle='rgba('+t[0]+','+t[1]+')';c.fillRect(0,0,W0,H0)}}
   {const w=hdWx();if(w){c.globalCompositeOperation='multiply';c.fillStyle='rgba('+w[0]+','+w[1]+')';c.fillRect(0,0,W0,H0)}}
   c.globalCompositeOperation='source-over';

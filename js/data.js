@@ -130,6 +130,22 @@ const BL={
   telescope:{chest:1,shopOnly:1,name:'星見の望遠鏡',kind:'furn',pc:6,solid:1,attr:{},mat:{wood:3,stone:2},desc:'流れ星の夜が来るわりあい+10%（重複なし）'},
   hdokei:{chest:1,shopOnly:1,name:'森の柱時計',kind:'furn',pc:15,solid:1,attr:{},mat:{wood:6},desc:'住み心地+15'},
   mizubachi:{chest:1,shopOnly:1,name:'苔むした石の水ばち',kind:'furn',cat:'env',pc:5,solid:1,attr:{},mat:{stone:6},desc:'まわり5マスの花・木の芽が、植えたその日に育つ'},
+  /* 限定の家具（gift-furn.js）：gf:'ret' プレゼントのお返し・'let' 手紙のお礼・'bond' プレゼントを10回あげた節目。el はくれるせいれいの属性 */
+  g_ishitsumi:{gf:'ret',el:'earth',shopOnly:1,name:'石つみのかざり',kind:'furn',pc:4,solid:1,attr:{earth:1},mat:{stone:3},desc:'小石をつんだかざり。住み心地+6'},
+  g_donguri:{gf:'ret',el:'wood',shopOnly:1,name:'どんぐりのランプ',kind:'furn',cat:'light',pc:4,solid:1,attr:{wood:1},mat:{wood:3},desc:'あかり。住み心地+5'},
+  g_shizuku:{gf:'ret',el:'water',shopOnly:1,name:'金魚ばち',kind:'furn',pc:4,solid:1,attr:{water:1},mat:{stone:3},desc:'金魚のおよぐ、ガラスのはち。住み心地+6'},
+  g_hidamari:{gf:'ret',el:'fire',shopOnly:1,name:'ほのお色のガラスの小鳥',kind:'furn',pc:4,solid:1,attr:{fire:1},mat:{stone:3},desc:'赤とだいだいのガラスの小鳥。住み心地+6'},
+  g_kazaguruma:{gf:'ret',el:'wind',shopOnly:1,name:'かざぐるまのかざり',kind:'furn',cat:'env',pc:4,solid:1,attr:{wind:1},env:3,mat:{wood:3},desc:'まわり3マスで、たのしさ+1.1／1時間。住み心地+4'},
+  g_kabin:{gf:'let',el:'earth',shopOnly:1,name:'土やきの花びん',kind:'furn',pc:5,solid:1,attr:{earth:1},mat:{stone:3},desc:'土をやいた花びん。住み心地+8'},
+  g_oshibana:{gf:'let',el:'wood',shopOnly:1,name:'おし花のがく',kind:'furn',pc:5,solid:1,attr:{wood:1},mat:{wood:3},desc:'おし花を入れた、立てるがく。住み心地+8'},
+  g_kaifun:{gf:'let',el:'water',shopOnly:1,name:'貝がらのふんすい',kind:'furn',pc:5,solid:1,anim:1,attr:{water:1},mat:{stone:3},desc:'貝がらの、小さなふんすい。住み心地+8'},
+  g_post:{gf:'let',el:'fire',shopOnly:1,name:'赤いポスト',kind:'furn',pc:5,solid:1,attr:{fire:1},mat:{wood:2,can:1},desc:'手紙を入れる、赤いポスト。住み心地+6'},
+  g_penzukue:{gf:'let',el:'wind',shopOnly:1,name:'はねペンの書きものづくえ',kind:'furn',pc:5,solid:1,attr:{wind:1},mat:{wood:4},desc:'はねペンをのせた、小さなつくえ。住み心地+8'},
+  g_ishibench:{gf:'bond',el:'earth',shopOnly:1,name:'いしだたみのベンチ',sz:[2,1],kind:'furn',pc:8,attr:{earth:2},mat:{stone:6},desc:'2人すわれる。昼につかれたら、ここで休む。つかれ－30／1時間。住み心地+6'},
+  g_happasofa:{gf:'bond',el:'wood',shopOnly:1,name:'はっぱのソファ',sz:[2,1],kind:'furn',pc:8,attr:{wood:2},mat:{wood:6},desc:'2人すわれる。昼につかれたら、ここで休む。つかれ－30／1時間。住み心地+8'},
+  g_suisou:{gf:'bond',el:'water',shopOnly:1,name:'水草の水そう',sz:[2,1],kind:'furn',pc:8,solid:1,attr:{water:2},mat:{wood:4,stone:2},desc:'水草のゆれる水そう。住み心地+12'},
+  g_danro:{gf:'bond',el:'fire',shopOnly:1,name:'れんがのだんろ',sz:[2,1],kind:'furn',cat:'light',pc:8,solid:1,attr:{fire:2},mat:{stone:6},desc:'あかり。冬の寒さをふせぐ。住み心地+12'},
+  g_hammock:{gf:'bond',el:'wind',shopOnly:1,name:'はねぶとんのハンモック',sz:[2,1],kind:'furn',pc:8,play:{pt:4,pw:1.8,fun:40,dur:50,cap:1},attr:{wind:2},mat:{wood:4,nuno:2},desc:'1人で遊べる。たのしさ+40（33.3分）。住み心地+6'},
   chochin:{w:1,name:'おまつりのちょうちん',kind:'furn',shopOnly:1,pc:6,solid:1,attr:{},desc:'おまつりのおみやげ。赤いちょうちん。住み心地+6'},
   furin:{w:1,name:'ふうりん',kind:'furn',shopOnly:1,pc:8,solid:1,anim:1,attr:{},desc:'カミサマのかざり。風がふくと、ちりんと鳴る。住み心地+8'},
   ema:{w:1,name:'えまかけ',kind:'furn',shopOnly:1,pc:8,solid:1,attr:{},desc:'カミサマのかざり。ねがいごとを書いた板をかける。住み心地+8'},
@@ -268,7 +284,8 @@ const GOD='カミサマ',POKO='フタバ';
 const MINA='ノドカ';
 const HOMURA='ホムラ',SHIZUKU='シズク',KAZANE='カザネ',HAYATE='ハヤテ';/* ハヤテ：カザネのおさななじみの風のせいれい（はじめにうかんだ島で目をさます） *//* カザネ：風のステージのはじめからいる風のせいれい */
 const KEYS=[[POKO,MINA],[HOMURA,SHIZUKU]];KEYS[WIND]=[KAZANE,HAYATE];KEYS[FREE]=[];const FIXK0={fire:'ホノ',water:'アオ',wind:'フウ'};/* ステージ1の火・水・風のキーキャラ（名前も見た目も固定） *//* ステージごとのキーキャラ（1人目・2人目） */
-const KEYEL={[POKO]:'wood',[MINA]:'earth',[HOMURA]:'fire',[SHIZUKU]:'water',[KAZANE]:'wind',[HAYATE]:'wind'};
+const TOMORI='トモリ';KEYS[YAMI]=[TOMORI];/* 闇のステージ：光のせいれい（1人だけ） */
+const KEYEL={[TOMORI]:'light',[POKO]:'wood',[MINA]:'earth',[HOMURA]:'fire',[SHIZUKU]:'water',[KAZANE]:'wind',[HAYATE]:'wind'};
 const LEAD=()=>KEYS[WD][0]||(WD===FREE?FA():GOD);
 const PROLOGUE=[
   ['？？？','#wave|……おーい、聞こえとるかの？ そうそう、おヌシじゃ。'],
