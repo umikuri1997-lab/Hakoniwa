@@ -156,7 +156,7 @@ function litP(j,o){if(o==='watch')return (S.hp['L'+j]||1)>=10?{dx:32,dy:-24,R:15
 function steleF(j){const o=S.obj[j],b=o&&BL[o]&&BL[o].hp;if(!b||!STELES.length)return 1;const x=j%W,y=(j/W)|0;for(const q of STELES)if(Math.hypot(q%W-x,((q/W)|0)-y)<=7)return (BL[o].hpS||b)/b;return 1}/* ノームの石像（stele）：まわり7マスの壁・柵・塀は、じょうぶさが BL の hpS（実数で書いてある）になる */
 function litNear(h,x,y){for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++)if(h.set.has((y+dy)*W+x+dx))return true;return false}/* 家の中の灯り：家ぜんたいと、そこから1マス */
 function lightMul(x,y){for(const j of LIGHTS)if(S.obj[j]==='toro'&&(j%W+.5-x)**2+(((j/W)|0)+.5-y)**2<12.25)return .75;return lightAt(x,y)?.8:1}/* 灯りの中のコワイノの速さ：石どうろう0.75倍・ふつうの灯り0.8倍 */
-function lightAt(x,y){return lampAt(x,y)||gearLightAt(x,y)}
+function lightAt(x,y){return lampAt(x,y)||gearLightAt(x,y)||yamiLightAt(x,y)}
 function lampAt(x,y){for(const j of LIGHTS)if(lampOne(j,x,y))return true;return false}
 function lampOne(j,x,y){const o=S.obj[j];const offset=o==='tower'&&WD===0?sacredSpan()/2:o==='lighthouse'?1:.5,lx=j%W+offset,ly=((j/W)|0)+offset;if(INDL.has(o)){const h=roomOf(j);return h?litNear(h,x|0,y|0):(lx-x)**2+(ly-y)**2<2.25}return (lx-x)**2+(ly-y)**2<(o==='tower'?49:o==='lighthouse'?64:o==='hotaru'?HOTARUR2:12.25)}/* 1つの灯りの範囲（ふつう3.5・台座7マス） *//* 置いた灯りだけ（そうびの灯りはのぞく） */
 const EREACH=new WeakMap();
@@ -361,7 +361,7 @@ function glHit(tx,ty,R,foc){/* 光が地面にとどいた：範囲（タップ�
     const D=EN[e.type];hurtEn(e,pw,{flash:8,k:'light',skill:1,sx:tx+.5,sy:ty+.5});/* 威力・とめる時間は、守り神のちから（GUP）の段階 */e.stun=D.boss?G.vb[gs]:G.v[gs];e.path=[];e.repath=0;
     if(e.hp<=0)defeat(e,'まもりの光で'+D.name+'を追いはらった！')}
   for(let dy=-R;dy<=R;dy++)for(let dx=-R;dx<=R;dx++){const x=tx+dx,y=ty+dy;if(x<0||y<0||x>=W||y>=H)continue;const q=y*W+x;if(LIGHTNAT[S.obj[q]]&&!isBud(q)&&!(S.fog&&fogAt(q)))natHit(q)}
-  const now=performance.now();for(const r of S.res){if(r.hidden||r.nap||r.act&&(r.act.type==='sleep'||r.act.type==='faint')&&r.act.stage==='do')continue;const d=Math.max(Math.abs(r.x-tx-.5),Math.abs(r.y-ty-.5))-R;if(d>GLSHOCKR)continue;SHOCKU.set(r,now+GLSHOCKT);JUMP.set(r,now+Math.max(0,d)*40)}}
+  const now=performance.now();for(const r of S.res){if(r.hidden||r.nap||r.act&&(r.act.type==='sleep'||r.act.type==='faint')&&r.act.stage==='do')continue;const d=Math.max(Math.abs(r.x-tx-.5),Math.abs(r.y-ty-.5))-R;if(d>GLSHOCKR)continue;SHOCKU.set(r,now+GLSHOCKT);JUMP.set(r,now+Math.max(0,d)*40)}yamiBirth(tx,ty)}
 const GLSTEP=45,GLSPY=31,GLSHOCKT=1200;/* 範囲の光は、まん中から1マスごとに GLSTEP ミリ秒おくれる。GLSPY：glspark の光のまん中は、置く所より31点上。GLSHOCKT：おどろいた顔の長さ（ミリ秒） */
 let AREACD=0,AREAARM=false;/* こもれびのまもり（フタバから受けついだ守り神の技）：タップした場所のまわりのせいれいに、葉のまもり・パワー3。まわりのマス・葉のまもりの時間・チャージは GUP の area */
 function areaBlast(cx,cy){

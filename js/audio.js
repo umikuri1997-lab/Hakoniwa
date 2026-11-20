@@ -221,7 +221,7 @@ function ldMusicTick(){const want=typeof STLD!=='undefined'&&STLD&&SND.bgm,now=A
   if(!want&&LDM){const{src,g}=LDM;LDM=null;g.gain.cancelScheduledValues(now);g.gain.setValueAtTime(g.gain.value,now);g.gain.linearRampToValueAtTime(0,now+LDMFADE);src.stop(now+LDMFADE+.05)}}
 function ambTick(){if(!AC||AC.state!=='running')return;ldMusicTick();if(!ambG){ambG=AC.createGain();ambG.gain.value=.09;ambF=AC.createBiquadFilter();ambF.type='lowpass';ambF.frequency.value=18000;ambF.Q.value=.4;ambG.connect(ambF);ambF.connect(AC.destination)}
   {const inn=ambIndoor();if(inn!==AMBIN){AMBIN=inn;ambF.frequency.setTargetAtTime(inn?700:18000,AC.currentTime,inn?.25:.4)}}/* 家の中を映すと、外の雨・鳥・虫の音が、壁ごしにやわらかくこもる */
-  const want={birds:0,rain:0,night:0,amb_morn:0,amb_spr:0,amb_sum:0,amb_snight:0};let h=12,on=false;if(S&&started&&SND.sfx&&$('#title').hidden&&$('#maps').hidden){on=true;h=hour();if(S.rain)want.rain=.45;else{/* 朝と夕方は、ゆっくり入れかわる */const cl=v=>Math.max(0,Math.min(1,v)),se=typeof seasonNow==='function'?seasonNow():0;
+  const want={birds:0,rain:0,night:0,amb_morn:0,amb_spr:0,amb_sum:0,amb_snight:0};let h=12,on=false;if(S&&started&&SND.sfx&&$('#title').hidden&&$('#maps').hidden){on=true;h=skyHour();if(S.rain)want.rain=.45;else{/* 朝と夕方は、ゆっくり入れかわる */const cl=v=>Math.max(0,Math.min(1,v)),se=typeof seasonNow==='function'?seasonNow():0;
     /* 昼：朝（5時〜7時半）は朝の音、そのあとは季節の音（春・夏はもらった音、秋・冬は鳥の声）。夜：夏はもらった夏の夜の音、ほかは虫の声（大きさ0.5） */
     const day=h<5||h>=18.5?0:h<6.5?cl((h-5)/1.5):h<17?1:cl((18.5-h)/1.5),mo=h<7?1:h<8?8-h:0,nt=h>=17.5?cl((h-17.5)/1.5)*.5:h<5.5?cl((5.5-h)/1)*.5:0;
     want.amb_morn=day*mo;want[se===0?'amb_spr':se===1?'amb_sum':'birds']=day*(1-mo);want[se===1?'amb_snight':'night']=nt}}
