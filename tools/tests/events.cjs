@@ -74,7 +74,7 @@ const assert=require('node:assert/strict');
   const pk=JSON.parse(await run(`(()=>{const o=[];for(let i=0;i<200;i++)o.push(tokuiPick('wind'));return JSON.stringify({n:[...new Set(o.map(x=>x.length))].sort(),ry:o.some(x=>x.includes('ryori'))})})()`));
   assert.deepEqual(pk.n,[1,2],'1 or 2 innate');assert.equal(pk.ry,false,'wind has no cooking');
   await run(`openSheet('res',S.res[1].id)`);await page.waitForTimeout(400);
-  const shown=await run(`(()=>{const t=document.querySelector('#sheetBody').textContent;return t.includes('得意な仕事')&&t.includes('5000回')&&t.includes('はたらく速さ+1')})()`);await run(`closeSheet()`);
+  const shown=await run(`(()=>{const t=document.querySelector('#sheetBody').textContent;return t.includes('得意な仕事')&&t.includes('5000回')&&document.querySelectorAll('#sheetBody .tkl>div').length===6})()`);await run(`closeSheet()`);
   assert.ok(shown,'tokui shown on spirit sheet');
   /* やめたらもどる */
   const c2=JSON.parse(await run(`(()=>{const p=S.pt,f=S.food,w=S.mat.wood;const ok=evOpen('camp',[S.res[0].id]);const p1=S.pt;evCancel();return JSON.stringify({ok,back:S.pt===p&&S.food===f&&S.mat.wood===w,paid:p-p1,ev:S.ev,why:evWhy('camp')})})()`));

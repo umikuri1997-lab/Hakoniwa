@@ -6,7 +6,7 @@ const assert=require('node:assert/strict');
   /* 目標のならび */
   const q=JSON.parse(await run(`JSON.stringify({ids:QUESTS1.slice(3,8).map(q=>q.id),inv:QUEST_INSPIRATIONS.wbench,how:QUESTS1[qsIx('wbench')].how})`));
   console.log(JSON.stringify(q));assert.deepEqual(q.ids,['table','wall','wbench','bed','path']);assert.deepEqual(q.inv,['wbench']);
-  await run(`checkQuest=()=>{};updTut=()=>{};checkLevel=()=>{};showSpotPop=()=>{};window.FETCH=0;{const s=ACT.bfetch.start;ACT.bfetch.start=(r,a)=>{FETCH++;return s(r,a)}}true`);
+  await run(`checkQuest=()=>{};updTut=()=>{};checkLevel=()=>{};showSpotPop=()=>{};window.FETCH=0;{const t=tryJob;tryJob=(r,G,k)=>['chop','mine','weed','drop','gather'].includes(k)?false:t(r,G,k)}/* 木を切るなどで、箱の数がかわらないように */{const s=ACT.bfetch.start;ACT.bfetch.start=(r,a)=>{FETCH++;return s(r,a)}}true`);
   const st=JSON.parse(await run(`(()=>{document.querySelector('#dialog').hidden=true;S.introSeen=true;S.flags.tapped=1;S.hold=0;USERPAUSE=true;S.enemyOn=false;
     const a=S.res[0];S.res=[a];endAct(a);a.act=null;S.t=1440*3+8*60;
     if(BOARD<0){const free=(x,y,w,h)=>{for(let b=0;b<h;b++)for(let c=0;c<w;c++){const k=(y+b)*W+x+c;if(S.obj[k]||S.ground[k]||hiAt(k)||(S.fog&&S.fog[k]))return false}return true};let q=null;for(let y=CY-12;y<CY+20&&!q;y++)for(let x=CX-14;x<CX+14;x++)if(free(x,y,8,6)){q=[x,y];break}const j=q[1]*W+q[0];S.obj[j]='statue';S.obj[j+2]='board';S.obj[j+3]='part';S.ref[j+3]=j+2;recount()}
@@ -14,6 +14,8 @@ const assert=require('node:assert/strict');
     for(let j=0;j<S.obj.length;j++)if(S.obj[j]==='wbench'||S.obj[j]==='crate'){S.obj[j]='';delete S.dyn[j]}
     const free=j=>!S.obj[j]&&!S.ground[j]&&!S.floor[j]&&!hiAt(j)&&walk(j)&&!(S.fog&&S.fog[j])&&!sacredNoBuild(j);let p=-1;/* 御神木のまわり（物をおけない所）はさける */
     const G=bfs(a.x|0,a.y|0);for(let y=CY-20;y<CY+24&&p<0;y++)for(let x=CX-24;x<CX+12;x++){const j=y*W+x;let ok=true;for(let b=-1;b<=1&&ok;b++)for(let c=-1;c<=12;c++)if(!free(j+b*W+c)||G.dist[j+b*W+c]<0){ok=false;break}if(ok){p=j;break}}
+    if(p<0){/* 空き地がない地図：木・岩などをどけて、場所を作る */const keep=new Set(['statue','statueb','board','obox','part']),can=j=>!(S.fog&&S.fog[j])&&!sacredNoBuild(j)&&!S.floor[j]&&!keep.has(S.obj[j]);for(let y=CY-10;y<CY+14&&p<0;y++)for(let x=CX-14;x<CX+2;x++){const j=y*W+x;let ok=true;for(let b=-1;b<=1&&ok;b++)for(let c=-1;c<=12;c++)if(!can(j+b*W+c)){ok=false;break}if(ok){p=j;break}}
+      if(p>=0){for(let b=-1;b<=1;b++)for(let c=-1;c<=12;c++){const k=p+b*W+c;S.obj[k]='';delete S.dyn[k];S.ground[k]=0;if(S.hi)S.hi[k]=0}recount()}}
     window.P=p;S.obj[p]='crate';recount();for(const k of Object.keys(S.mat))S.mat[k]=0;S.mat.wood=40;S.mat.stone=20;boxSync();
     S.pt=999;S.recipes.chair=1;S.unlocked.chair=1;S.recipes.wbench=1;S.unlocked.wbench=1;S.lv=Math.max(S.lv||1,5);S.orders=[];
     return JSON.stringify({p,box:BOX()[p],need:BL.chair.mat})})()`));
@@ -23,10 +25,10 @@ const assert=require('node:assert/strict');
   const nb=JSON.parse(await run(`(()=>{orderFurn('chair');${step(4000)};const o=S.orders[0];openSheet('craft');const t=[...document.querySelectorAll('.paper small')].map(e=>e.textContent);closeSheet();return JSON.stringify({cs:o.cs,prog:o.prog,got:o.got,fetch:FETCH,t})})()`));
   console.log(JSON.stringify(nb));assert.ok(nb.cs==null);assert.equal(nb.prog,0,'作業台がないと作らない');assert.equal(nb.fetch,0,'素材も運ばない');assert.ok(nb.t.includes('作業台がありません'));
   /* 木箱のとなりに作業台：運ばずに作る */
-  const adj=JSON.parse(await run(`(()=>{const b=P+1;wbenchAt(S,b,0);recount();wbenchTick();const o=S.orders[0];const cs=o.cs,bx=benchBoxes(cs);${step(40000)};yardTick();
-    return JSON.stringify({cs,b,bx,left:S.orders.length,fetch:FETCH,yard:S.obj.includes('matyard'),wood:BOX()[P].wood,inv:S.inv.chair||0,bench:S.obj[b],ord:S.dyn[b]&&S.dyn[b].order})})()`));
+  const adj=JSON.parse(await run(`(()=>{const b=P+1,w0=BOX()[P].wood;wbenchAt(S,b,0);recount();wbenchTick();const o=S.orders[0];const cs=o.cs,bx=benchBoxes(cs);${step(40000)};yardTick();
+    return JSON.stringify({cs,b,bx,left:S.orders.length,fetch:FETCH,yard:S.obj.includes('matyard'),wood:BOX()[P].wood,w0,inv:S.inv.chair||0,bench:S.obj[b],ord:S.dyn[b]&&S.dyn[b].order})})()`));
   console.log(JSON.stringify(adj));assert.equal(adj.cs,adj.b,'空いた作業台をわりあてる');assert.deepEqual(adj.bx,[st.p]);assert.equal(adj.left,0,'できた');
-  assert.equal(adj.fetch,0,'となりの木箱の素材は運ばない');assert.equal(adj.yard,false,'材料置き場も出さない');assert.equal(adj.wood,40-st.need.wood,'となりの木箱からへる');assert.equal(adj.bench,'wbench','作業台はのこる');assert.equal(adj.ord,undefined);
+  assert.equal(adj.fetch,0,'となりの木箱の素材は運ばない');assert.equal(adj.yard,false,'材料置き場も出さない');assert.equal(adj.w0,40);assert.equal(adj.wood,adj.w0-st.need.wood,'となりの木箱からへる');assert.equal(adj.bench,'wbench','作業台はのこる');assert.equal(adj.ord,undefined);
   /* となりの木箱にない分だけ、ほかの箱から運ぶ */
   const part=JSON.parse(await run(`(()=>{const far=P+11;S.obj[far]='crate';recount();boxSync();const B=BOX();B[far]={wood:B[P].wood};delete B[P].wood;boxSync();FETCH=0;window.FT=[];{const e=ACT.bfetch.end;ACT.bfetch.end=(r,a)=>{FT.push(boxIdOf(a.box));return e(r,a)}}
     const nd=BL.chair.mat;window.AL=[];orderFurn('chair');{const a=S.res[0];for(let i=0;i<40000&&S.orders.length;i++){stepWorld(.25);a.hunger=hMax(a);a.fun=90;a.energy=90;const t=a.act&&a.act.type;if(t&&AL[AL.length-1]!==t)AL.push(t)}}return JSON.stringify({AL,far,nd,left:S.orders.length,ft:[...new Set(FT)],B:B[P],F:B[far]})})()`));

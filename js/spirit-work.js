@@ -1,5 +1,5 @@
 function dropNear(r,q){
-  return q.id==='shard'||q.made||Math.hypot(q.x+.5-r.x,q.y+.5-r.y)<=seekR(r)+gearStat(r).prng;
+  return q.id==='shard'||q.made||q.tap||q.lt||Math.hypot(q.x+.5-r.x,q.y+.5-r.y)<=seekR(r)+gearStat(r).prng;
 }
 'use strict';
 const foodLow=()=>S.res.filter(r=>!r.hidden).length*2;/* 箱が、せいれいの人数×2より少なくなったら、食べ物を先にあつめる */
@@ -48,7 +48,7 @@ function tryJob(r,G,k){
       if(q.tap||q.lt)priority.add(tile);
     }
     const choose=(set,limit)=>set.size?nearest(G,j=>set.has(j)&&free('d'+j,1),limit):-1;
-    j=choose(priority,90);
+    j=choose(priority,9999);/* タップした物・守り神の光でこわした物は、どこでも */
     if(j<0)j=choose(tiles,400);
     if(j<0)return false;
     startAct(r,G,'pickdrop',j,{key:'d'+j,obj:j});return true;
