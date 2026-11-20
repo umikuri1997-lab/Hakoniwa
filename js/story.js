@@ -220,16 +220,48 @@ function freeSetup(s){const used=new Set(['フタバ','ノドカ']);const nm=()=
   s.inv=Object.assign(s.inv||{},{bellf:3,salvia:3,lily:3,lotus:3,clover:9});
   let c2=false;try{const t=KV.getItem(SAVE_KEYS[1]);c2=!!(t&&JSON.parse(t).cleared)}catch(e){}if(c2){s.inv.hotstone=(s.inv.hotstone||0)+2;s.flags.giftV=1}/* 火山の村をクリアしていたら、ほのお石もとどく */syncQuestRecipes(s)}
 QL[FREE]=QUESTSF;PROS[FREE]=PROF;INTROS[FREE]=[];
-/* ---------- 風のやんだ空の村（WORLD 5）：いまは土台だけ。プロローグ・会話・お話のクエストは、お話を作るときに入れる。夜のコワイノも、雲の海から来るしくみを作るまで来ない ---------- */
+/* ---------- 風のやんだ空の村（WORLD 5）：風のやんだ遊園地。この島は、むかし、ヌシ様の風で遊具がまわる空の遊び場だった。風が止まって遊具も止まり、せいれいたちは楽しむことをわすれている。
+   いまあるのは、風穴 → 神殿 → ハヤテが目をさます → メリーゴーラウンド → コーヒーカップと空中ブランコ、まで。観覧車の山場・雲の下・さいごの夜は、これから（IDEAS.md）。夜のコワイノも、まだ来ない ---------- */
+const PROLOGUE5=[
+  [GOD,'つぎの土地は、空の上じゃ。雲の海に、島がいくつもうかんでおる。'],
+  [GOD,'#joy|むかしは、風でまわる遊び場があってのう。笑い声が、雲の下までとどいたもんじゃ。'],
+  [GOD,'#worry|……いまは、風がやんで、しんとしておる。島も、雲にしずみかけとる。'],
+  [GOD,'笑い方をわすれた子らがおる。行ってやろうかの。'],
+];
+const INTRO5=[
+  [KAZANE,'……おや。お客さんとは、めずらしいね。'],
+  [KAZANE,'ぼくはカザネ。風のせいれいさ。……もっとも、風は、もうふかないけれどね。'],
+  [GOD,'#worry|遊び場も、すっかり止まってしもうたのう。'],
+  [KAZANE,'#think|遊び場？ ……ああ、あのさびた鉄のかたまりのことかい。どう遊ぶ物だったかも、わすれたよ。'],
+  [GOD,'あそこに、石でふさがった風穴がある。風がもどれば、なにか思い出すかもしれんぞ。'],
+  [KAZANE,'フッ……ものずきな守り神だ。まあ、ひまつぶしには、なるかな。'],
+];
+const WIND_HAYATE=[
+  [HAYATE,'#surprise|……ふあ。……あれ、風？ 風がふいてる！'],
+  [KAZANE,'#surprise|ハヤテ……！'],
+  [HAYATE,'#joy|カザネじゃないか！ なんだい、その顔。ねぼけているのは、ぼくのほうだろう？'],
+  [KAZANE,'#think|……フッ。おそいお目ざめだね。待ちくたびれたよ。'],
+  [HAYATE,'#joy|ねえ、遊び場は？ メリーゴーラウンドは、まだまわっているかい？'],
+  [KAZANE,'……あれは、もう動かないよ。動かし方も、わすれた。'],
+  [HAYATE,'#think|わすれた？ きみが？ ……いちばん上手に、まわしていたのに。'],
+];
 const QUESTS5=[
   {id:'windHole',text:'風穴をひらこう',check:()=>windOpenN()>=1,by:GOD,how:'「しらべる」で、石でふさがった風穴をタップ',
+   story:[[KAZANE,'#surprise|……風だ。'],[KAZANE,'フッ……ひさしぶりだね、この音。'],[GOD,'#joy|おお、古い風車がまわっとる！ ええ音じゃのう。'],[KAZANE,'#think|……べつに、うれしくなんかないさ。少し、なつかしいだけだよ。']],
    gives:{recipes:['kazami'],items:{kazami:3}}},
   {id:'statue',text:'神殿を直してもらおう',check:()=>cnt('statue')>=1,by:GOD,how:'「しらべる」で、こわれた神殿をタップ',
+   story:[[GOD,'#joy|ここが、おヌシとわしの居場所じゃ。'],[KAZANE,'神殿まで直すとはね。……ほんとうに、ものずきだ。'],[GOD,'雲の下に、まだ島がしずんでおる。風がとどけば、うかんでくるはずじゃ。'],[KAZANE,'#think|……しずんだ島、か。あそこには、まだ、ねむっているやつがいるんだ。']],
    gives:{feat:['inv','remove','plant','craft','people','summon','shop'],recipes:['bed','crate','wbench'],items:{wbench:1,bed:1},mat:{wood:10,stone:10},flag:'calmNight',run(){for(const k of['tree','bellf','salvia','lily','lotus','clover'])if(BL[k])S.unlocked[k]=true}}},/* 花のたね・木の苗は、カミサマのお店に出る */
-  {id:'windReach',text:'となりの島に風をとどけよう',check:()=>windUpN()>=1,how:'風の道に「かざみ」を置くと、風の向きがかわる。雲にしずんだ島に風がとどくと、島がうかぶ'},
+  {id:'windReach',text:'となりの島に風をとどけよう',check:()=>windUpN()>=1&&S.flags.hayate===2,how:'風の道に「かざみ」を置くと、風の向きがかわる。雲にしずんだ島に風がとどくと、島がうかぶ'},
+  {id:'merryFix',text:'メリーゴーラウンドを動かそう',check:()=>!!(S.flags.rideRun&&S.flags.rideRun.merry),prog:()=>cnt('merry')?'':'こわれたメリーゴーラウンド 0/1',how:'「しらべる」で、こわれたメリーゴーラウンドをタップして直す。風のせいれいが係になると動き、ほかのせいれいがのれる',
+   talk:{who:HAYATE,when:()=>true,lines:[[HAYATE,'カザネ、あれを直そう。ぼくがのるから、きみがまわすんだ。'],[KAZANE,'#think|……やれやれ。むかしから、きみは言いだしたら聞かないね。'],[HAYATE,'#joy|そうこなくっちゃ！']]},
+   story:[[HAYATE,'#joy big|あははは！ まわる、まわる！ カザネ、もっと速く！'],[KAZANE,'#surprise|……。'],[KAZANE,'#joy|……ふ、ははっ。なんだい、その顔。目がまわっているじゃないか。'],[HAYATE,'#joy|あ。カザネが、笑った。'],[KAZANE,'#shy|……わ、笑ってなんかいないさ。風が、くすぐったかっただけだよ。'],[GOD,'#joy|ええのう、ええのう。遊び場は、だれかが笑うと、またまわりだすもんじゃ。']]},
+  {id:'rides2',text:'コーヒーカップと空中ブランコを動かそう',check:()=>!!(S.flags.rideRun&&S.flags.rideRun.cup&&S.flags.rideRun.skyswing),prog:()=>'動いた遊具 '+((S.flags.rideRun&&S.flags.rideRun.cup?1:0)+(S.flags.rideRun&&S.flags.rideRun.skyswing?1:0))+'/2',how:'うかんだ島で、こわれた遊具をさがして直す。風のせいれいが係になると動く',
+   talk:{who:KAZANE,when:()=>true,lines:[[KAZANE,'#think|……ほかの島にも、遊具がしずんでいたはずだ。カップと、空のブランコ。'],[HAYATE,'#joy|ぜんぶ動かそう！ 音が聞こえたら、ねむっているみんなも、きっと起きてくるよ。'],[KAZANE,'フッ……きみに言われると、できる気がしてくるから、ふしぎだ。']]},
+   story:[[KAZANE,'フッ……ひとつ動かすたびに、ひとつ思い出すね。遊ぶって、こういうことだったか。'],[HAYATE,'#think|ねえ、カザネ。……どうして風は、やんだんだろう。'],[KAZANE,'#think|……さあね。あの方は、なにも言わずに、行ってしまったから。'],[HAYATE,'……カザネ。']]},
   {id:'windAll',text:'島をぜんぶうかせよう',check:()=>windUpN()>=windIsleN(),prog:()=>'うかんだ島 '+windUpN()+'/'+windIsleN(),how:'うかんだ島の風穴をひらいて、風をつぎの島へとどける'},
-  {id:'windVillage',text:'浮き島に、村をつくろう',check:()=>false,how:'この土地のお話は、まだない'},
+  {id:'windVillage',text:'空の遊び場を、にぎやかにしよう',check:()=>false,how:'この土地のお話のつづきは、まだない'},
 ];
-QL[WIND]=QUESTS5;PROS[WIND]=[];INTROS[WIND]=[];
+QL[WIND]=QUESTS5;PROS[WIND]=PROLOGUE5;INTROS[WIND]=INTRO5;
 
 let QUESTS=QUESTS1;

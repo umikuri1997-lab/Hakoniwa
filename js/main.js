@@ -44,7 +44,7 @@ const WORLDS=[
 /* ステージの表紙：そのステージのメインのせいれい（キーキャラ）を、ゲームのドット絵（drawSpiritDot）でならべる。会えた子だけ（はじめの子はいつも）。うしろはコードのドット絵の景色（PXSCENE）を3倍に */
 const COVER_KEY='hakoniwa-cover-v1',COVER_EL=[['wood','earth','fire','water','wind'],['fire','water','wood','earth','wind']];COVER_EL[WIND]=['wind','wood','earth','fire','water'];
 function coverCast(d,w){/* セーブのデータ（ぜんぶ読んだ物）から：[名前,属性,見た目] */const all=(d.res||[]).concat(d.buried||[],d.lost||[]),N=d.keyN||{},out=[];
-  for(const el of COVER_EL[w]||[]){let nm=N[el];if(!nm){if(w===0)nm=KEYEL0[el]||FIXK0[el];else for(const k of KEYS[w]||[])if(KEYEL[k]===el)nm=k}if(!nm)continue;
+  for(const el of COVER_EL[w]||[]){let nm=N[el];if(!nm){if(w===0)nm=KEYEL0[el]||FIXK0[el];else for(const k of KEYS[w]||[])if(KEYEL[k]===el&&!nm)nm=k}if(!nm)continue;
     const r=all.find(x=>x&&x.name===nm);if(!r&&nm!==KEYS[w][0])continue;out.push([nm,(r&&r.elem)||KEYEL[nm]||el,(r&&r.vr)||KEYVR[nm]||null])}return out}
 function coverMeta(){try{return JSON.parse(KV.getItem(COVER_KEY)||'{}')||{}}catch(e){return {}}}
 function coverNote(d){/* save() のとき：表紙のせいれいと、あそんだ時刻を小さくしまう */if(!d)return;const w=d.world||0,M=coverMeta();M[w]={t:Date.now(),c:w===FREE?[]:coverCast(d,w)};try{KV.setItem(COVER_KEY,JSON.stringify(M))}catch(e){}}
