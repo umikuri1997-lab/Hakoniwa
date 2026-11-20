@@ -181,13 +181,33 @@ def scene_wall(m):   # 石の塀（石垣）：おなじ大きさの石を、だ
         for c in range(3):stone('柱の石',(0.29,0.6,c*0.32,0.71,1.0,(c+1)*0.32),ST,(0.5,20+c))
         stone('柱のかさ',(0.26,0.57,0.96,0.74,1.0,1.08),STC,(0.5,30))
     return P
+PARKW=(252,250,244);PARKB=(176,212,230)   # 遊園地の白い塀：白い板・水色（柱の玉・横木の帯）
+def scene_park(m):   # 遊園地の白い塀（風）：板の柵と同じ線に、白い板（はば0.24・高さ0.9、上はまるい）をすきまなくならべる。柱は0.18角・高さ1.02、上に水色の玉。前に水色の横木の帯
+    L,R,U,D=m&1,m&2,m&4,m&8;post=not(m in(3,12));P=[];Y0,Y1=0.885,0.945;PC=(0.5,0.865);w=0.118
+    top=lambda c:[(c-w,0),(c+w,0),(c+w,0.82),(c+w*0.6,0.885),(c,0.905),(c-w*0.6,0.885),(c-w,0.82)]
+    for cx in(0,0.25,0.5,0.75,1.0):
+        if cx<0.5 and not L or cx>0.5 and not R or cx==0.5 and (post or not(L or R)):continue
+        P.append(('picket',Part('板','prism',(top(cx),Y0,Y1),PARKW),(cx%1,0)))
+    for cy in(0.125,0.375,0.625,0.875):
+        if post and abs(cy-PC[1])<0.17:continue
+        if m==12 or (cy<PC[1] and U) or (cy>PC[1] and D):P.append(('picket',Part('板','prism',(top(cy),0.45,0.51,'x'),PARKW),(0,cy%1)))
+    if post:
+        P.append(('post',Part('柱','box',(0.41,0.775,0,0.59,0.955,1.02),PARKW),None))
+        P.append(('cap',Part('柱の玉','ball',(0.5,0.865,1.08,0.08,1.0),PARKB),None))
+    for z0,z1,col in((0.56,0.65,PARKB),(0.12,0.2,PARKW)):
+        if L or R:
+            x0=-0.4 if L else 0.41;x1=1.4 if R else 0.59
+            P.append(('railh',Part('横木','box',(x0,0.945,z0,x1,0.985,z1),col),(0,0)))
+        for y0,y1 in vsegs(m,PC[1],0.775,0.985 if (L or R) else 0.955):
+            addv(P,'railv',lambda a,b,z0=z0,z1=z1,col=col:Part('横木','box',(0.51,a,z0,0.55,b,z1),col,grp='pv%d'%(z0*100)),y0,y1,col)
+    return P
 def render(P,xr=(0,1)):
     sc=O.Scene();sc.txo={};sc.txax={};ext_ids=set()
     for kind,p,org in P:
         if kind=='stone':sc.texture(TS)
-        elif kind in('picket','post','railh','railv','ext') and p.col not in(BAM,BAMP,CRM,CRMP):sc.texture(TW)
+        elif kind in('picket','post','railh','railv','ext') and p.col not in(BAM,BAMP,CRM,CRMP,PARKB,PARKW):sc.texture(TW)
         else:sc.texture(None)
-        sc.material('metal' if kind=='iron' else None);p0=sc.pid;build(sc,[p]);sc.material(None)
+        sc.material('metal' if kind=='iron' else 'flat' if p.col==PARKW else None);p0=sc.pid;build(sc,[p]);sc.material(None)
         ids=range(p0+1,sc.pid+1)
         rot=org if isinstance(org,tuple) and org and org[0]=='rot' else None
         if rot:   # とびら：ちょうつがいのたての軸のまわりに、部品をまわす
@@ -212,7 +232,7 @@ def render(P,xr=(0,1)):
     im=Image.fromarray(a);bb=im.getbbox();return im.crop(bb),bb[0]+int(round(xr[0]*64)),bb[1]-128
 OLD={0:'H0',1:'HL',2:'HR',3:'HLR',4:'VU',8:'VD',12:'VUD'}
 def build_all(iid):
-    fn={'fence':scene_fence,'logfence':scene_log,'bamboofence':scene_bamboo,'misugaki':scene_misugaki,'wall':scene_wall}[iid];out={}
+    fn={'fence':scene_fence,'logfence':scene_log,'bamboofence':scene_bamboo,'misugaki':scene_misugaki,'wall':scene_wall,'parkfence':scene_park}[iid];out={}
     for m in range(16):im,ax,ay=render(fn(m));out[m]=(im,ax,ay)
     return out
 def sheet(res,path,layout):

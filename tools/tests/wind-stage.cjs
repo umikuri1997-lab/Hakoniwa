@@ -77,6 +77,8 @@ const assert=require('node:assert/strict');
   assert.equal(d.wd,4);assert.equal(d.name,'カザネ');assert.ok(d.same);assert.ok(d.wind,'風穴とうかんだ島がのこる');assert.equal(d.open,1);assert.equal(d.q,'rides2');assert.ok(d.hay,'ハヤテものこる');assert.equal(d.writer,'カザネ');
   /* 風の木はアカシア（植えた木も自然の木も。名前も）。落ち影もある */
   const tk=await run(`[WD,plantChip('deadtree',0)===CHIPS['deadtree~k'],plantChip('tree',0)===CHIPS['tree~k'],iname('tree'),iname('deadtree'),!!castShadowChip('deadtree',0),!!castShadowChip('tree',0)]`);assert.deepEqual(tk,[4,true,true,'アカシアの苗','アカシア',true,true],'風の木');
+  /* 風の塀：遊園地の白い塀・そのドア・入場ゲート（3Dから写した絵。風だけで作れる・村レベルでおぼえる・柵としてつながる） */
+  const pk=await run(`[stageItemOK('parkfence'),stageItemOK('parkdoor'),stageItemOK('parkgate'),FENCE_IDS.has('parkfence'),GATE_IDS.has('parkgate'),HOME_DOORS.has('parkdoor'),!!CHIPS['parkfence:m15'],!!CHIPS['parkdoor#v3'],!!CHIPS['parkgate#h3'],!!CHIPS.parkdoor,LEVELUP_ITEMS.has('parkgate'),BL.parkgate.lv,(()=>{const w=WD;WD=0;const r=stageItemOK('parkfence');WD=w;return r})()]`);assert.deepEqual(pk,[true,true,true,true,true,false,true,true,true,true,true,9,false],'風の塀');
   /* マップえらび：風のカードは「つづきから」。土は、ひらかない（水は試作のあいだ、いつでも入れる） */
   const e=JSON.parse(await run(`(()=>{save();showMaps();const C=k=>document.querySelector('#mList .wcard[data-k="'+k+'"]'),B=k=>[...C(k).querySelectorAll('.wbtns button')].map(x=>x.textContent).join('/');const o={w:B(4),w2:B(2),w3:B(3),open:C(4).classList.contains('open'),name:C(4).querySelector('h3').textContent};document.querySelector('#maps').hidden=true;return JSON.stringify(o)})()`));
   console.log(JSON.stringify(e));
