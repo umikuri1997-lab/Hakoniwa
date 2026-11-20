@@ -58,10 +58,10 @@ const BPS={/* 設計図。rows の字：「.」床（fl、なければフロー�
 };
 const BPCAT={house:'家',garden:'庭',farm:'畑',play:'遊び場',guard:'守り'},BPCOMF=10,BPGIVEFUN=30,BPFISH=.02,BPCHEST=.5,BPTALK=.15,BPTALKCD=3,BPELW=3;/* つり2%・霧の宝箱50%・お話15%（3日に1回まで）。くれるせいれいと同じ属性の設計図は、えらばれやすさ3 */
 const BPT={floor:8,wall:12,door:15,win:18,furn:40,path:8,farm:8,edge:8,fence:12,gate:15,plant:10};/* 1つずつの部品を建てる時間（建物は BL の time） */
-const BPWM={hwall:{wood:1},bamboowall:{bamboo:1},logwall:{wood:1},plasterwall:{wood:1,stone:1},brickwall:{stone:2},yozorawall:{wood:1,stone:1}};/* 壁1マスの素材 */
-const BPWINM={hwall:{wood:3},bamboowall:{bamboo:1,wood:2},logwall:{wood:3},plasterwall:{wood:3,stone:1},brickwall:{stone:2,wood:2},yozorawall:{wood:3,stone:1}};/* 窓のある壁1マスの素材 */
+const BPWM={hwall:{wood:1},bamboowall:{bamboo:1},canvaswall:{wood:1},acaciawall:{wood:1,stone:1},logwall:{wood:1},plasterwall:{wood:1,stone:1},brickwall:{stone:2},yozorawall:{wood:1,stone:1}};/* 壁1マスの素材 */
+const BPWINM={hwall:{wood:3},bamboowall:{bamboo:1,wood:2},canvaswall:{wood:3},acaciawall:{wood:3,stone:1},logwall:{wood:3},plasterwall:{wood:3,stone:1},brickwall:{stone:2,wood:2},yozorawall:{wood:3,stone:1}};/* 窓のある壁1マスの素材 */
 const BPFM={floor:{wood:1},stonefloor:{stone:1},brickfloor:{stone:1},path:{stone:1},gravel:{stone:1},woodpath:{wood:1},stone:{stone:1},brick:{stone:1},fence:{wood:1},misugaki:{bamboo:1},bedge:{wood:1},door:{wood:2},yozoradoor:{wood:2},gate:{wood:3}};/* 床・道・柵・ふち・ドア1マスの素材 */
-const bpWall=()=>WD===1?'bamboowall':'hwall',bpWallOf=b=>b.wl||bpWall(),bpFence=()=>WD===1?'misugaki':'fence';
+const bpWall=()=>WD===1?'bamboowall':WD===WIND?'canvaswall':'hwall',bpWallOf=b=>b.wl||bpWall(),bpFence=()=>WD===1?'misugaki':'fence';
 function bpPieceMat(t,id){/* 1つずつの部品の素材 */if(t==='farm'||t==='plant')return{};if(t==='wall')return Object.assign({},BPWM[id]||{wood:1});if(t==='win')return Object.assign({},BPWINM[id]||{wood:3});if(BPFM[id])return Object.assign({},BPFM[id]);return Object.assign({},BL[id].mat||{})}
 const bpTime=(t,id)=>t==='build'?BL[id].time:BPT[t];
 function bpPieces(k){/* 設計図の部品：[dx,dy,t,id,rot,phase]。段：1 床・道・畑・ふち（1行ずつ）→ 2 家具・建物・花・木 → 3 壁・窓・柵 → 4 ドア・柵のドア（さいご：それまで出入り口があいていて、中のせいれいが出られる） */const b=BPS[k],L=[],wl=bpWallOf(b);
@@ -129,8 +129,10 @@ function bpComplete(e){S.bp=S.bp.filter(q=>q!==e);const b=BPS[e.k],cat=b.cat||'h
   if(r){funAdd(r,BPGIVEFUN,'bp');if(h){const bed=e.ps.find(p=>p.t==='furn'&&BEDSET.has(p.id));if(bed)(S.bedOwn||(S.bedOwn={}))[bed.j]=r.id}/* くれたせいれいが、その家のベッドをつかう */
     if(!e.req)dialog(pickFresh('bpdone:'+cat,BPDONE[cat]).map(l=>[r.name,l[0]]))}
   checkQuest()}
-function bpCancel(e){/* 建てている部品をやめた：設計図ごとやめる（できた部品はのこす） */for(const p of e.ps)if(p.s===1&&S.obj[p.j]==='site'&&S.dyn[p.j]&&S.dyn[p.j].bp===e.id){siteRefund(S.dyn[p.j],p.j);clearObj(p.j)}
-  S.bp=S.bp.filter(q=>q!==e);toast(BPS[e.k].name+'を建てるのをやめた');if(e.req)(S.bpInv||(S.bpInv=[])).push({k:e.k,g:e.g,req:1});/* 設計図の依頼の物は、設計図がもどる（もどらないと、依頼がおわらない） */recount()}
+function bpCancel(e){/* 建てている部品をやめた：設計図ごとやめる（できた部品はのこす。1つもできていなければ、設計図とパワーはもどる） */for(const p of e.ps)if(p.s===1&&S.obj[p.j]==='site'&&S.dyn[p.j]&&S.dyn[p.j].bp===e.id){siteRefund(S.dyn[p.j],p.j);clearObj(p.j)}
+  S.bp=S.bp.filter(q=>q!==e);const none=e.ps.every(p=>p.s<2);/* まだ1つもできていない：設計図もパワーももどして、置きなおせる */
+  if(none){S.pt+=BPS[e.k].pc;(S.bpInv||(S.bpInv=[])).push(e.req?{k:e.k,g:e.g,req:1}:{k:e.k,g:e.g})}else if(e.req)(S.bpInv||(S.bpInv=[])).push({k:e.k,g:e.g,req:1});/* 設計図の依頼の物は、設計図がもどる（もどらないと、依頼がおわらない） */
+  toast(BPS[e.k].name+'を建てるのをやめた'+(none||e.req?'。設計図は、もどった':''));recount()}
 const bpOfSite=j=>{const d=S.dyn[j];return d&&d.bp!=null?(S.bp||[]).find(q=>q.id===d.bp)||null:null};
 function bpTick(){/* 1秒ごと：木・岩をかたづけおわったら、つぎの段へ。だれかがどけた物のあとも */for(const e of (S.bp||[]).slice()){if(e.ps.some(p=>p.s===1))continue;bpAdvance(e)}}
 function bpJob(r,G,dry){/* 置く所の木・岩を、切る・ほる */if(isNight()||!S.bp||!S.bp.length)return false;
