@@ -19,7 +19,7 @@ function rayBlocked(){return !S||S.rain||(typeof stormNow==='function'&&stormNow
 function rayNow(){/* いまの光：{kind,a}（出さないときは null） */if(rayBlocked())return null;const h=skyHour(),sm=(a,b)=>Math.max(0,Math.min(1,(h-a)/(b-a)));
   if(h>=5.5&&h<8){const a=sm(5.5,6.5)*(1-sm(7,8));/* 昼（8時〜15時半、hd2d.js の hdTint と同じ）には出さない */return a>0?{kind:'morn',a}:null}
   if(h>=15.5&&h<18.5){const a=sm(15.5,16.5)*(1-sm(17.5,18.5));return a>0?{kind:'eve',a}:null}
-  if(h>=19.5||h<5.5){if(typeof nightVarNow==='function'&&nightVarNow()==='kiri')return null;const mk=typeof moonOf==='function'?moonOf(h>=17?dayNo():dayNo()-1):null,m=mk in RAYMOON?RAYMOON[mk]:RAYMOONN;if(!m)return null;const a=(h>=19.5?sm(19.5,20.5):1-sm(4.5,5.5))*m;return a>0?{kind:'moon',a}:null}
+  if(h>=19.5||h<5.5){if(typeof nightVarNow==='function'&&nightVarNow()==='kiri')return null;const mk=typeof moonOf==='function'?moonOf(hour()>=17?dayNo():dayNo()-1)/* どの日の月かは時計の時刻（闇のステージの空の時刻は、いつも0時） */:null,m=mk in RAYMOON?RAYMOON[mk]:RAYMOONN;if(!m)return null;const a=(h>=19.5?sm(19.5,20.5):1-sm(4.5,5.5))*m;return a>0?{kind:'moon',a}:null}
   return null}
 function rayLay(i,kind,now){/* 帯の左上の場所と、ゆれ（こさ）。ずれはドットのマス目にそろえる */const R=RAYS[i],c=rayCache(i,kind),sw=Math.round(Math.sin(now/7000+R.ph)*2)*RAYP,x=Math.round(R.f*VW/RAYP)*RAYP-c._ox*RAYP-R.w*RAYP/2+sw;return {c,x,y:0,k:.75+.25*Math.sin(now/3000+R.ph)}}
 function rayDraw(g,now,mul){/* g：描く先（dpr の座標）。mul：こさにかける数 */const L=rayNow();if(!L)return null;const K=RAYK[L.kind];g.save();g.imageSmoothingEnabled=false;

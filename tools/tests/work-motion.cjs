@@ -3,7 +3,7 @@ const boot=require('../sim/boot.cjs'),assert=require('node:assert/strict');
 (async()=>{const {browser,run,errors}=await boot();
 const out=await run(`(()=>{const out={};const cx=54,cy=64;for(let y=cy-4;y<cy+6;y++)for(let x=cx-10;x<cx+12;x++){const j=y*W+x;S.obj[j]='';S.floor[j]='';S.hi[j]=0;S.ground[j]=0}
  S.t=1440*2+600;S.enemies=[];const tb=cy*W+cx-8,ov=cy*W+cx-3,cf=cy*W+cx+2,wb=cy*W+cx+7;S.obj[tb]='cooktable';S.obj[ov]='oven';S.obj[cf]='campfire';S.obj[wb]='wbench';S.dyn[wb]={order:777};recount();
- const base=S.res[0];S.res=[];const mk=(el,x)=>{const r=JSON.parse(JSON.stringify(base));r.id=300+x;r.name='t'+x;r.elem=el;r.x=x+.5;r.y=cy+.5;r.act=null;r.hunger=1800;r.fun=90;r.energy=100;r.hidden=false;r.nap=false;S.res.push(r);return r};
+ const base=S.res[0];S.res=[];const mk=(el,x)=>{const r=JSON.parse(JSON.stringify(base));r.id=300+x;r.name='t'+x;r.elem=el;r.x=x+.5;r.y=cy+.5;r.act=null;r.hunger=900;r.fun=90;r.energy=100;r.hidden=false;r.nap=false;S.res.push(r);return r};
  const go=(r,rec,st)=>{r.cing={rec,ov:st,prog:0};r.act={type:'cook',stage:'do',obj:st,t:0};ACT.cook.start(r,r.act);return r};
  const at=(r,p)=>{r.act.t=p*cookTime(r,r.act.obj);return workAnim(r)};
  const a=go(mk('wood',cx-9),'salad',tb),b=go(mk('fire',cx-4),'pancake',ov),c=go(mk('fire',cx+1),'kushiyaki',cf),s=go(mk('water',cx-2),'soup',ov),br=go(mk('earth',cx-5),'bread',ov);

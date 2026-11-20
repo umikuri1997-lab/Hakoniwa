@@ -4,7 +4,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict');
 await p.route('**/js/main.js*',async route=>{const r=await route.fetch();await route.fulfill({response:r,body:(await r.text())+'\nwindow.sacredEval=s=>eval(s);'});});
 await p.goto(process.env.GAME_URL||'http://127.0.0.1:8000');await p.waitForFunction(()=>window.sacredEval);const run=s=>p.evaluate(s=>sacredEval(s),s);
 await run(`(()=>{setWorld(0);S=newState(0);LIVE[0]=S;started=true;USERPAUSE=true;NOSAVE=true;S.introSeen=true;S.enemyOn=false;S.hold=0;S.t=1440*2+600;for(const id of ['#title','#maps','#pro','#dialog','#lvup','#rlv'])document.querySelector(id).hidden=true;
-for(let y=CY-8;y<CY+8;y++)for(let x=CX-8;x<CX+8;x++){const j=y*W+x;S.obj[j]='';S.ground[j]=0;S.floor[j]='';delete S.ref[j];delete S.dyn[j]}S.res=[mkRes(S,'a','wood',CX+.5,CY+.5)];const r=S.res[0];r.hunger=900;r.energy=100;r.fun=40;r.fd=null;recount();return 1})()`);
+for(let y=CY-8;y<CY+8;y++)for(let x=CX-8;x<CX+8;x++){const j=y*W+x;S.obj[j]='';S.ground[j]=0;S.floor[j]='';delete S.ref[j];delete S.dyn[j]}S.res=[mkRes(S,'a','wood',CX+.5,CY+.5)];const r=S.res[0];r.hunger=450;r.energy=100;r.fun=40;r.fd=null;recount();return 1})()`);
 await p.waitForFunction(()=>sacredEval('stageReady()'),{},{timeout:60000});
 const a=await run(`(()=>{const r=S.res[0];funAdd(r,10,'play');funAdd(r,5,'play');funAdd(r,-3,'foe');funAdd(r,80,'meal');/* 100でとまる：55→100 は +45 */r.fun-=20;/* じかに：そのほか */return {fun:r.fun,k:r.fd.k,f0:r.fd.f0}})()`);
 assert.equal(a.f0,40,'朝の数');assert.deepEqual(a.k,{play:15,foe:-3,meal:48},'わけごと・100でまるめた分だけ '+JSON.stringify(a));assert.equal(a.fun,80);

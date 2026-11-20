@@ -5,11 +5,11 @@ const LV_XP=[0,60,315,693,1391,2678,4478,7200,9900,13500,18000,23625,30375,38250
 const maxLv=()=>S&&S.cleared?15:10;
 function vLv(){let l=1;while(l<maxLv()&&S.totalPt>=LV_XP[l])l++;return l}
 const LVXP=[0,0,30,143,355,679,1122,1690,2391,3229,4209,5335,6611,8040,9627,11374,13284,15360,17605,20021,22611,25377,28321,31446,34754,38247,41926,45794,49853,54104,58549,63189,68028,73065,78303,83743,89387,95236,101292,107556,114029];/* せいれいのレベル：そのレベルになるのに要るけいけん（Lv1〜40） */
-const HMAX1=1000,HMAX1F=2000,HMAXUP=200,HMAXUPN=131,HMAXSTEP=10;/* おなかの最大：レベル1で1000（火の子は2000）。レベルが上がるたびに200〜1500ふえる（10きざみで131とおり。せいれいとレベルごとにばらつく） */
+const HMAX1=500,HMAX1F=1000,HMAXUP=100,HMAXUPN=131,HMAXSTEP=5;/* おなかの最大：レベル1で500（火の子は1000）。レベルが上がるたびに100〜750ふえる（5きざみで131とおり。せいれいとレベルごとにばらつく） */
 const OFFERPL=[0,0,0,0,1,1,1,2,2,2,3,3,3,4,4,4,5,5,5,6,6,6,7,7,7,8,8,8,9,9,9,10,10,10,11,11,11,12,12,12,13];/* せいれいのレベルごとに、おくりものにふえる数 */
 const SEEDPL=[0,0,0.5,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1];/* せいれいのレベルごとに、たねが1こふえる確率 */
 const OVENM=[1,.9,.8,.7,.6,.5,.4,.3,.2,.1,0];/* そばにある調理の家具の種類の数ごとの、料理にかかる時間の倍（0種=1・1種=0.9…） */
-const rLv=r=>{const x=r.xp||0;let l=1;while(l+1<LVXP.length&&x>=LVXP[l+1])l++;return l},hMax=r=>{const lv=rLv(r);let c=HMC.get(r);if(!c||c.lv!==lv||c.f!==r.elem){let n=r.elem==='fire'?HMAX1F:HMAX1;for(let l=2;l<=lv;l++)n+=HMAXUP+HMAXSTEP*Math.floor(hash(((r.id||0)*131+l*17+23)>>>0)*HMAXUPN);c={lv,f:r.elem,n};HMC.set(r,c)}return c.n};const HMC=new WeakMap();/* おなかの最大：上がったレベルごとに200〜1500をたす */
+const rLv=r=>{const x=r.xp||0;let l=1;while(l+1<LVXP.length&&x>=LVXP[l+1])l++;return l},hMax=r=>{const lv=rLv(r);let c=HMC.get(r);if(!c||c.lv!==lv||c.f!==r.elem){let n=r.elem==='fire'?HMAX1F:HMAX1;for(let l=2;l<=lv;l++)n+=HMAXUP+HMAXSTEP*Math.floor(hash(((r.id||0)*131+l*17+23)>>>0)*HMAXUPN);c={lv,f:r.elem,n};HMC.set(r,c)}return c.n};const HMC=new WeakMap();/* おなかの最大：上がったレベルごとに100〜750をたす */
 /* せいれいの能力。はたらく速さ・移動速度・スタミナは20がふつう（STD）。レベルが上がると、はたらく速さ・移動速度・持てる数などがふえる */
 const lvF=(lv,k)=>1+k*(Math.min(lv,10)-1);
 /* レベルアップでふえる量は、属性ごとのはば（EL_GROW）の中で、せいれいとレベルごとにばらつく */
@@ -92,7 +92,7 @@ function stepWorld(dt){GODJ=godHere()?Math.floor(godY())*W+Math.floor(godX()):-1
   const prevH=hour(),t0=S.t;let nt=S.t+dt/DAYLEN;// 時計：夜も昼と同じ速さ（1日は1.5倍の長さ）
   if(!S.enemyOn&&WD!==YAMI&&!S.flags.calmNight){/* calmNight：コワイノの来ない夜（風の土台）。神殿を直したら、時計はふつうに進む */const c=clk(),cap=Math.floor(c/1440)*1440+(WD===0?20:18)*60,nc=c+(nt-S.t);if(nc>cap)S.hold=(S.hold||0)+Math.min(nt-S.t,nc-cap)}/* チュートリアルで夜がはじまるまで、時計（朝・昼・夜）は18時（草原は20時）で止めておく。せいれいの動きにつかう時間（S.t）は進める */S.t=nt;const h=hour();
   for(const k in S.dyn){const o=S.obj[k],d=S.dyn[k];if(!o)continue;
-    if(o==='farm'){if(S.rain&&d.g<100)d.wet=100}}/* 雨：たねをまく前の畑も、ぬれる */if(S.rain)for(const j of JARS){const d=S.dyn[j]||(S.dyn[j]={});d.w=10}/* 雨の日は、みずがめに水がたまる（畑10マスぶん） *//* ベリー・りんごの実は、朝6時に1日ぶんずつ育つ（morning） */
+    if(o==='farm'){if(S.rain&&d.g<100)d.wet=100}}/* 雨：たねをまく前の畑も、ぬれる */if(S.rain)for(const j of JARS){const d=S.dyn[j]||(S.dyn[j]={});d.w=JARW}/* 雨の日は、みずがめに水がたまる（畑10マスぶん） *//* ベリー・りんごの実は、朝6時に1日ぶんずつ育つ（morning） */
   for(const r of S.res.slice())updRes(r,dt);
   critTick(dt);if(typeof animalTick==='function')animalTick(dt);
   stayTick(dt);

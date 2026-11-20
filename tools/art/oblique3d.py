@@ -603,13 +603,15 @@ def render_px(sc, proj, ext, depth, k=0.72, outer=True, merge=12, lw=1, k2=0.86,
         sub = img[m]; sub[:, :3] = u[to[inv.ravel()]]; img[m] = sub
     return Image.fromarray(img, 'RGBA')
 
-def persp(elev=51.34, fov=40.0, frame=None, center=(0.5, 0.65, 0.3), full=False):
+def persp(elev=51.34, fov=40.0, frame=None, center=(0.5, 0.65, 0.3), full=False, keep=None):
     """左右は平行のまま、奥行き（上下）だけに遠近をかける写し方。render・render_px の proj と depth（見る向き）をかえす。
     elev：見おろしの角度（度。51.34 でいまのゲームの見え方と同じ形 = 画面 (x, y−0.8z)）。
     fov：上下の画角（度）。frame：その画角に入れる上下の範囲（マス。カメラとの距離がきまる）。None なら遠近なし（平行）。
-    center：カメラが向く所（せかいのマス）。大きさは、いまのゲームと同じ（51.34度・遠近なしで game と同じ数になる）"""
+    center：カメラが向く所（せかいのマス）。大きさは、いまのゲームと同じ（51.34度・遠近なしで game と同じ数になる）
+    keep：その角度（度）のときと、高さの見え方を同じにする（角度をゆるくしても、たてにのびない。上の面がうすくなるだけ）"""
     t = math.radians(elev); V = np.array([0, math.cos(t), math.sin(t)]); U_ = np.array([0, -math.sin(t), math.cos(t)])
     k = 1/math.sin(math.radians(51.34)); c0 = np.array(center, float)
+    if keep: k *= math.cos(math.radians(keep))/math.cos(t)   # 高さ（z）の画面の長さ cos(t)*k を、keep の角度のときと同じに
     D = None if not frame else frame/(2*k*math.tan(math.radians(fov)/2))
     oy = c0[1]-0.8*c0[2]   # center が、game と同じ画面の所に写るように
     def proj(p):

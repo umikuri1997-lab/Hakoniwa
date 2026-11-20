@@ -30,7 +30,7 @@ const QUESTS6=[
     [TOMORI,'#surprise|……わあ。'],
     [TOMORI,'あかるい……。ここは、どこ？'],
     [GOD,'#surprise|ほっ……！ 光の中から、せいれいが生まれおった。'],
-    [GOD,'その色は……お日さまの子じゃな。まだ、子をおくる力が、のこっとったんじゃのう。'],
+    [GOD,'その色は……光のせいれいじゃな。お日さまに、まだこんな力が残っとったとはのう。'],
     [TOMORI,'ぼく、トモリ。……きみの光、あったかいね。'],
     [GOD,'#joy|よう来てくれたのう、トモリ。この庭は、ずっと夜でな。おヌシのあかりが、たよりじゃ。']]},
   {id:'statue',text:'神殿を直してもらおう',check:()=>cnt('statue')>=1,by:GOD,how:'「しらべる」で、こわれた神殿をタップ',story:[
@@ -116,6 +116,7 @@ function yamiBirth(tx,ty){/* まもりの光が地面にとどいた：はじめ
   if(!S||WD!==YAMI||S.free||S.flags.tomori||!S.introSeen)return;const j=yamiBirthCell(tx,ty);if(j<0){toast('ここには、おりられないようだ');return}
   const r=mkRes(S,TOMORI,'light',j%W+.5,((j/W)|0)+.5,'swing');r.came=dayNo();S.res.push(r);S.flags.tomori=1;S.enemyOn=true;/* コワイノは、トモリが生まれたときから来る */
   burst(j,'furn');sfx('arrive');if(typeof hdBig==='function')hdBig();const now=performance.now();if(typeof JOYU!=='undefined')JOYU.set(r,now+2600);JUMP.set(r,now+200);
+  LIGHTARM=false;dockSync();document.querySelectorAll('#toasts .toast').forEach(t=>{if(t.textContent.indexOf('光を落とす所')>=0)t.remove()});/* はじめの会話のふきだしを、そのまま押せるように、光をえらぶのをやめる（ふだんの、えらんだままうつのはそのまま） */
   recount();renderQuest();dirty=true;save()}
 /* コワイノの来かた：23時〜6時は、ほかのステージと同じ大きな群れ（waveFor）。6時〜23時は、時計の1時間ごとに YAMIDAYP で、コカゲが1〜2ひき（来る時刻も数もランダム）。朝の光がないので、追いはらうまでのこる（level.js の yk） */
 const YAMIDAYP=.25;

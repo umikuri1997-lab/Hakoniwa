@@ -310,7 +310,8 @@ const INTRO=[
   [GOD,'この土地に守護の力を取りもどすには、おヌシの力を集める場所がいる。'],
   [GOD,'#think|……おや。あそこに、古い神殿がのこっとるのう。'],
   [POKO,'#think|うん……。ぼくが気づいたときには、もう、くずれてたんだ。'],
-  [GOD,'#joy|あれを直せば、わしの居場所にもなる。せいれいたちに、直してもらおうのう。'],
+  [GOD,'#joy|フタバ、あの神殿を直してくれんかのう。直れば、おヌシとわしの居場所になるぞい。'],
+  [POKO,'#joy|うん、やってみる！ 守り神さま、神殿の場所をおしえてね。'],
 ];
 let TESTSPD=false;try{TESTSPD=KV.getItem('hakoniwa-test')==='1'}catch(e){}
 const GLASS_IC='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="2.5" rx="1" fill="#a0703f"/><rect x="5" y="19.5" width="14" height="2.5" rx="1" fill="#a0703f"/><path d="M7 4.5c0 5 10 5.5 10 7.5s-10 2.5-10 7.5h10c0-5-10-5.5-10-7.5s10-2.5 10-7.5z" fill="#dff1f7" stroke="#7a5233" stroke-width=".8"/><path d="M9 18.5c1-2 5-2 6 0z" fill="#e8c27a"/></svg>');

@@ -63,7 +63,7 @@ function dyTopics(e,f){const M=[],O=[],N=e.ns;
   const nw=S.res.filter(r=>r.came===e.d&&r!==f&&!r.back);if(nw.length)M.push(['new',nw[nw.length-1].name]);
   if(e.ev&&e.ev[2].includes(f.id)&&typeof EVKIND!=='undefined'&&EVKIND[e.ev[0]])M.push(['ev'+EVKIND[e.ev[0]],e.ev[1]]);/* 書く子が出たイベント（ev-show.js） */
   if(N&&N.trial)M.push([N.trialOK?'trialOK':'trial']);else if(N&&N.boss)M.push([N.boss===1?'bossLose':'bossWin']);
-  if(N&&!N.trial){const best=dyBest(e);O.push(N.hurt?['nightHurt']:N.lost&&N.lost.length?['nightLost']:N.broke?['nightBroke']:best&&best.nm!==f.name?['nightBest',best.nm]:N.kill>=6?['nightBig']:N.kill?['nightSome']:['nightQuiet'])}
+  if(N&&!N.trial){const best=dyBest(e),nt=(N.hurt?['nightHurt']:N.lost&&N.lost.length?['nightLost']:N.broke?['nightBroke']:best&&best.nm!==f.name?['nightBest',best.nm]:N.kill>=6?['nightBig']:N.kill?['nightSome']:N.n?null:['nightQuiet']);if(nt)O.push(nt)}/* 来たのに追いはらえなかった夜は「来なかった」と書かない */
   else if(!N&&!Object.keys(e.k||{}).length&&!Object.keys(e.o||{}).length)O.push(['nightQuiet']);
   const mine=e.w.filter(x=>x[0]===f.name).sort((a,b)=>b[5]-a[5]);if(mine.length)O.push(['self',dyText(mine[0][3],mine[0][4])]);
   for(const t of['build','craft','harvest','cook','plant','fish']){const L=e.w.filter(x=>x[3]===t&&x[0]!==f.name).sort((a,b)=>b[5]-a[5]);if(!L.length)continue;const v=L[0][4],n=t==='build'||t==='craft'?(BL[v]&&BL[v].name):t==='plant'?tName(v):t==='fish'?'':fName(v);if(n!=null&&(n||t==='fish'))O.push([t,n,L[0][0]])}
@@ -122,7 +122,7 @@ function dyDayPage(x,h3){const e=x.e,sec=el('<div class="sec mone mdy">'+(h3?'<h
   if(e&&e.ph!=null||(S.phDays||[]).includes(x.d)){const f=el('<figure class="dyph dyph0" role="button" tabindex="0"><img alt=""></figure>');sec.querySelector('.dyphs').appendChild(f)}/* 絵の場所を先にとっておく（ページわけのあとで絵が入る） */
   if(e&&e.ft&&e.ft.length){const n=el('<p class="dyTx"></p>');n.textContent=e.ft.map(t=>t.replace(LOOKRX,'')).join('\n');sec.appendChild(n);sec.classList.add('dyw')}/* 文のある日は、絵日記の形（絵は上の半分、下にけい線の文） */
   const X=x.ev||[],ev=(e?e.m.map(t=>{const m=X.find(v=>v[1]===t);return[m?m[0]:'',t]}):X).filter((v,i,A)=>A.findIndex(w=>w[1]===v[1])===i);/* 日記のある日は、その日の日記のできごと（印は思い出のメモから）。同じ文は1つ */const more=el('<div class="dyMore"></div>');/* できごと・ゆうべのひとことは、絵と文のあと（入らなければ、つぎのページ） */if(ev.length){const u=el('<ul class="dyev"></ul>');for(const[ic,t]of ev){const li=document.createElement('li'),k=memoIc(ic);if(k)li.insertAdjacentHTML('afterbegin',pxi(k,'wx'));li.appendChild(document.createTextNode(t));u.appendChild(li)}more.appendChild(u)}
-  const N=e&&e.ns,b=e&&dyBest(e);if(N){const p=el('<p class="dyns"></p>');p.textContent=(N.kill?'ゆうべは、「コワイノ」を'+N.kill+'ひき追いはらった。':'ゆうべは、「コワイノ」が来なかった。')+(b?b.nm+'が、かつやくした。':'');more.appendChild(p)}
+  const N=e&&e.ns,b=e&&dyBest(e);if(N){const p=el('<p class="dyns"></p>');p.textContent=(N.kill?'ゆうべは、「コワイノ」を'+N.kill+'ひき追いはらった。':N.n?'ゆうべは、「コワイノ」が'+N.n+'ひき来た。追いはらえなかった。':'ゆうべは、「コワイノ」が来なかった。')+(b?b.nm+'が、かつやくした。':'');more.appendChild(p)}
   if(more.children.length)sec.appendChild(more);return sec}
 /* 日のページに絵をはる：その日の絵（e.ph）があれば、それだけ。古いセーブの、その日の写真はぜんぶ */
 function dyFillPh(secs,after){if(IS_STORY_REPLAY||typeof phList!=='function')return;const st=S;

@@ -17,7 +17,7 @@ const aniPass=j=>walk(j)&&!GATE_IDS.has(S.obj[j])&&!HOME_DOORS.has(S.obj[j]);
 function penOf(h){/* 小屋の前から、柵・塀・水・がけでかこまれた所（PENMAX マスまで）。外へつながっていれば null */
   const seen=new Set(),Q=[];for(const s of hutFront(h))if(s>=0&&s<W*H&&aniPass(s)&&!seen.has(s)){seen.add(s);Q.push(s)}if(!Q.length)return null;
   for(let i=0;i<Q.length;i++){const c=Q[i],x=c%W,y=(c/W)|0;
-    for(const[dx,dy]of DIRS){const nx=x+dx,ny=y+dy;if(nx<0||ny<0||nx>=W||ny>=H)return null;const n=ny*W+nx;if(seen.has(n))continue;if(fogAt(n))return null;if(!aniPass(n)||cliff2(c,n))continue;seen.add(n);Q.push(n);if(Q.length>PENMAX)return null}}
+    for(const[dx,dy]of DIRS){const nx=x+dx,ny=y+dy;if(nx<0||ny<0||nx>=W||ny>=H)return null;const n=ny*W+nx;if(seen.has(n))continue;if(cliff2(c,n))continue;if(fogAt(n)){if(S.ground[n]===1)continue;return null}/* 霧の中の水は、かこいのはし。霧の中の地面へつながるなら、かこいではない */if(!aniPass(n))continue;seen.add(n);Q.push(n);if(Q.length>PENMAX)return null}}
   return Q}
 function aniRecount(){/* recount のあと：小屋の一覧と、かこいの中のマス */HUTS=[];PENS=new Map();if(!S)return;for(let j=0;j<S.obj.length;j++)if(isHut(S.obj[j]))HUTS.push(j);for(const h of HUTS)PENS.set(h,penOf(h))}
 function hutD(h){return S.dyn[h]||(S.dyn[h]={})}
@@ -111,9 +111,9 @@ const grassHave=()=>GRASSK.filter(k=>totKey(k)>0);
 function aniJob(r,G,dry){if(isNight()||!S.ani||!S.ani.length)return false;const day=callDay(),adj=h=>q=>adjOf(q,k=>anc(k)===h)>=0;
   if(r.apk){if(dry)return true;const h=r.apk.j;if(!isHut(S.obj[h])){toHand(r,r.apk.m);r.apk=null;return false}const j=nearest(G,adj(h),200);if(j>=0){startAct(r,G,'aput',j,{obj:h});return true}return false}/* 運んでいる草は、先に小屋へ */
   for(const h of HUTS){const d=hutD(h);if(!d.pr||!Object.keys(d.pr).length||roomN(r)<1||!free('ap'+h,1))continue;if(dry)return true;const j=nearest(G,adj(h),200);if(j>=0){startAct(r,G,'acol',j,{key:'ap'+h,obj:h});return true}}/* とれた物を、箱へ */
-  if(aniRole(r,'wood')&&roomN(r)>=1){const gk=grassHave();if(gk.length)for(const h of HUTS){if(!aniOf(h).length||aniNeedFeed(h)<=0)continue;if(dry)return true;const j=nearest(G,q=>keysAdj(q,gk)>=0,200);if(j>=0){startAct(r,G,'apick',j,{h});return true}break}}/* えさの草を、箱から */
-  if(aniRole(r,'water'))for(const h of HUTS){const d=hutD(h);if(!aniOf(h).length||d.wd===day||!free('aw'+h,1))continue;if(dry)return true;
-    if((r.wcan||0)>0){const j=nearest(G,adj(h),200);if(j>=0){startAct(r,G,'awater',j,{key:'aw'+h,obj:h});return true}}else{const s=nearest(G,q=>waterSrc(q)>=0,80);if(s>=0){startAct(r,G,'draw',s,{src:waterSrc(s)});return true}}break}/* 水入れに水を */
+  if(aniRole(r,'wood')&&roomN(r)>=1){const gk=grassHave();if(gk.length)for(const h of HUTS){if(!aniOf(h).length||aniNeedFeed(h)<=0||nearest(G,adj(h),200)<0)continue;/* 行けない小屋はとばして、つぎの小屋へ */if(dry)return true;const j=nearest(G,q=>keysAdj(q,gk)>=0,200);if(j>=0){startAct(r,G,'apick',j,{h});return true}break}}/* えさの草を、箱から */
+  if(aniRole(r,'water'))for(const h of HUTS){const d=hutD(h);if(!aniOf(h).length||d.wd===day||!free('aw'+h,1))continue;const j=nearest(G,adj(h),200);if(j<0)continue;/* 行けない小屋はとばして、つぎの小屋へ */if(dry)return true;
+    if((r.wcan||0)>0){startAct(r,G,'awater',j,{key:'aw'+h,obj:h});return true}else{const s=nearest(G,q=>waterSrc(q)>=0,80);if(s>=0){startAct(r,G,'draw',s,{src:waterSrc(s)});return true}}break}/* 水入れに水を */
   return false}
 Object.assign(ACT,{
   apick:{start(r,a){const gk=grassHave();a.box=keysAdj(a.stand,gk);if(a.box<0)return false;faceTo(r,a.box);r.bubble='';},done:(r,a)=>a.t>=4/aniSpd(a.h,a.box,'hoshikusa'),
@@ -130,7 +130,7 @@ ACT_LBL.apick='生き物のえさをとりにいく';ACT_LBL.aput='生き物に�
 IDLE_ACTS.push('apet');
 /* ---------- 「しらべる」で生き物をタップ：小さな画面（aniPop）→「なでる」で、行けるいちばん近いせいれいが、なでにいく（aniPetAsk） ---------- */
 function aniAtTap(px,py){/* 足もとのまわり（絵の大きさ） */let best=null,bd=1e9;for(const a of S.ani||[]){if(a.in)continue;const sx=a.k==='hane'?.45:.65,top=a.k==='hane'?.85:1.25,dx=px-a.x,dy=py-a.y;if(Math.abs(dx)>sx||dy>.3||dy<-top)continue;const d=Math.hypot(dx,dy+top/2);if(d<bd){bd=d;best=a}}return best}
-const ANIBUSY=r=>r.hidden||r.coffin||r.hunger<500||storyCalled(r)||onHold(r)||r.act&&(URGNO.includes(r.act.type)||MAINGO.has(r.act.type)||r.act.type==='apetq'||r.act.type==='watchpost');
+const ANIBUSY=r=>r.hidden||r.coffin||r.hunger<250||storyCalled(r)||onHold(r)||r.act&&(URGNO.includes(r.act.type)||MAINGO.has(r.act.type)||r.act.type==='apetq'||r.act.type==='watchpost');
 function aniPetWhy(a){if(!a||a.in)return 'いまは小屋の中';if(a.petD===callDay())return 'きょうは、もうなでた';if(isNight())return '夜は、なでられない';if(enemyLive())return '「コワイノ」がいる';if(S.res.some(r=>r.act&&r.act.type==='apetq'&&r.act.aid===a.id))return 'なでにいっている';return ''}
 function aniPetAsk(a){/* 行けるせいれいのうち、道のりがいちばん近い子 */if(aniPetWhy(a))return null;const bx=a.x|0,by=a.y|0,C=S.res.filter(r=>!ANIBUSY(r)).sort((p,q)=>Math.hypot(p.x-a.x,p.y-a.y)-Math.hypot(q.x-a.x,q.y-a.y)).slice(0,6);let best=null,bd=1e9,bG=null,bs=-1;
   for(const r of C){const G=bfs(r.x|0,r.y|0),st=nearest(G,j=>Math.abs(j%W-bx)+Math.abs(((j/W)|0)-by)===1&&walk(j)&&!S.obj[j],400);if(st<0||G.dist[st]>=bd)continue;bd=G.dist[st];best=r;bG=G;bs=st}

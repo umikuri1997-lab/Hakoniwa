@@ -30,12 +30,12 @@ function fieldStoryEnsure(id){
   S.fieldSites||(S.fieldSites={});const r=fieldStoryActor(step);if(!r)return state;
   sacredRootEnsure(r);return state;
 }
-/* 御神木の切り株の場所：草原のはじめから置いておく（新しいゲーム・切り株のない古いセーブ）。神殿の西どなりの、歩いて行ける空いた所 */
+/* 御神木の切り株の場所：草原のはじめから置いておく（新しいゲーム・切り株のない古いセーブ）。マップのまん中（幹がマップの中心）。ふさがっていれば、近くの歩いて行ける空いた所 */
 function sacredRootEnsure(r){
   if(!S||WD!==0||S.free)return S&&S.sacredRoot;S.fieldSites||(S.fieldSites={});
   if(S.sacredRoot!=null){S.fieldSites.root=S.sacredRoot;return S.sacredRoot;}
   if(S.obj.includes('tower'))return null;
-  const G=r?bfs(r.x|0,r.y|0):bfs(CX,CY+2),old=S.fieldSites.root,x=old!=null?old%W:CX-5,y=old!=null?(old/W|0):CY;if(old==null){const tj=y*W+x,cs=sacredCells(tj),nat=o=>!o||WEEDS.has(o)||o==='ntree'||o==='deadtree'||o==='rock'||o==='bush';if(cs.every(k=>nat(S.obj[k])&&!S.floor[k]&&!roomOf(k)&&S.ground[k]!==1&&S.ground[k]!==2&&hiAt(k)===hiAt(tj))){let ch=false;for(const k of cs)if(S.obj[k]){S.obj[k]='';ch=true}if(ch)recount()}}/* 切り株の場所の、自然の木・岩・草は片づける */let best=-1,score=Infinity;
+  const G=r?bfs(r.x|0,r.y|0):bfs(CX,CY+2),old=S.fieldSites.root,x=old!=null?old%W:CX-2,y=old!=null?(old/W|0):CY-2;if(old==null){const tj=y*W+x,cs=sacredCells(tj),nat=o=>!o||WEEDS.has(o)||o==='ntree'||o==='deadtree'||o==='rock'||o==='bush';if(cs.every(k=>nat(S.obj[k])&&!S.floor[k]&&!roomOf(k)&&S.ground[k]!==1&&S.ground[k]!==2&&hiAt(k)===hiAt(tj))){let ch=false;for(const k of cs)if(S.obj[k]){S.obj[k]='';ch=true}if(ch)recount()}}/* 切り株の場所の、自然の木・岩・草は片づける */let best=-1,score=Infinity;
   for(let j=0;j<W*H;j++){const d=G.dist[j];if(d<0||d>100)continue;const sc=Math.hypot(j%W-x,(j/W|0)-y)+d*.03;if(sc>=score||!sacredRootFits(j))continue;best=j;score=sc;}
   if(best>=0){S.sacredRoot=best;S.fieldSites.root=best;dirty=true;}
   return S.sacredRoot;
@@ -136,7 +136,7 @@ function fieldWaitKeep(r,a){
   return !!step&&fieldCast(step).includes(r);
 }
 ACT.fieldwait={start(r,a){r.bubble='';if(a.obj!=null)faceTo(r,fieldStump(a.obj));},done:(r,a)=>!fieldWaitKeep(r,a)};
-function fieldStoryAnim(r){const pose=sacredPose(r);if(pose)return pose.anim;return r.act?.type==='storywait'?'storyListen':r.act?.type==='fieldstory'?FIELD_STORIES[r.act.fieldId]?.[r.act.phase]?.anim||'talk':['fieldwait','fieldintro','fieldassist','fieldgather'].includes(r.act?.type)?'talkthink':(r.act?.type==='cook'||r.act?.type==='craft'||r.act?.type==='proc'||typeof boxAct==='function'&&boxAct(r))&&typeof workAnim==='function'?workAnim(r):r.act?.type==='fltend'?'tend':r.act?.type==='quirk'?'q'+r.act.k:r.act?.type==='critwatch'?(r.act.t<4?'point':'crit_'+r.act.k):r.act?.type==='rainjoy'?'qrain':r.act?.type==='snowman'?(r.act.t<r.act.dur-6?'qstone':'talkjoy'):r.act?.type==='stretch'?'qstretch':r.act?.type==='evt'?evAnim(r):r.act?.type==='sunset'?'sunset':r.act?.type==='vgift'?(r.act.said?'talkjoy':'sow'):r.act?.type;}/* 料理・もの作りは、進みぐあいで動きをかえる（workAnim） */
+function fieldStoryAnim(r){const pose=sacredPose(r);if(pose)return pose.anim;return r.act?.type==='storywait'?'storyListen':r.act?.type==='fieldstory'?FIELD_STORIES[r.act.fieldId]?.[r.act.phase]?.anim||'talk':['fieldwait','fieldintro','fieldassist','fieldgather'].includes(r.act?.type)?'talkthink':(r.act?.type==='cook'||r.act?.type==='craft'||r.act?.type==='proc'||typeof boxAct==='function'&&boxAct(r))&&typeof workAnim==='function'?workAnim(r):r.act?.type==='fltend'?'tend':r.act?.type==='quirk'?'q'+r.act.k:r.act?.type==='critwatch'?(r.act.t<4?'point':'crit_'+r.act.k):r.act?.type==='rainjoy'?'qrain':r.act?.type==='snowman'?(r.act.t<r.act.dur-6?'qstone':'talkjoy'):r.act?.type==='stretch'?'qstretch':r.act?.type==='evt'?evAnim(r):r.act?.type==='sunset'?'sunset':r.act?.type==='splay'&&typeof splayAnim==='function'?splayAnim(r):r.act?.type==='vgift'?(r.act.said?'talkjoy':'sow'):r.act?.type;}/* 料理・もの作りは、進みぐあいで動きをかえる（workAnim） */
 function drawFieldStory(now,labelsOnly=false){
   if(!$('#dialog').hidden)return;const q=fieldStoryCurrent();if(!q)return;const state=fieldStoryState(q.id),step=FIELD_STORIES[q.id][state?.step||0],j=S.fieldSites?.[step.site];if(j==null)return;
   const x=(j%W+sacredSpan()/2)*TS,y=((j/W|0)+sacredSpan()-.45)*TS-hiAt(j)*LIFT,t=now/600;

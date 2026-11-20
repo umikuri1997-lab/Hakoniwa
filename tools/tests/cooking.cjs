@@ -14,8 +14,8 @@ const assert=require('node:assert/strict');
     /* 村で動かす */
     function setup(el){S.ground.fill(0);S.hi.fill(0);S.obj.fill('');S.floor.fill('');S.dyn={};S.enemies=[];S.drops=[];S.seeds=[];S.t=1440*2+700;S.hold=0;resv.clear();BAN.clear();
       const box=50*W+50,st=50*W+56;S.obj[box]='crate';S.obj[st]='cooktable';S.box={};S.pile={};S.rsv={};S.fs={};syncFood();recount();boxSync();S.ovenSet={};
-      const b0=S.res[0];S.res=[];for(let i=0;i<2;i++){const q=JSON.parse(JSON.stringify(b0));q.id=200+i;q.name='e'+i;q.elem=el;q.x=53.5+i;q.y=52.5;q.act=null;q.cing=null;q.cgot=null;q.carry=null;q.hunger=1500;q.fun=90;q.energy=100;q.hidden=false;q.vr=q.vr||{};q.vr.tr='';S.res.push(q)}recount();return st}
-    const runN=n=>{const c0=S.cookN||0;for(let i=0;i<n&&(S.cookN||0)===c0;i++){stepWorld(.25);for(const q of S.res){q.hunger=1500;q.fun=90}}return (S.cookN||0)-c0};
+      const b0=S.res[0];S.res=[];for(let i=0;i<2;i++){const q=JSON.parse(JSON.stringify(b0));q.id=200+i;q.name='e'+i;q.elem=el;q.x=53.5+i;q.y=52.5;q.act=null;q.cing=null;q.cgot=null;q.carry=null;q.hunger=750;q.fun=90;q.energy=100;q.hidden=false;q.vr=q.vr||{};q.vr.tr='';S.res.push(q)}recount();return st}
+    const runN=n=>{const c0=S.cookN||0;for(let i=0;i<n&&(S.cookN||0)===c0;i++){stepWorld(.25);for(const q of S.res){q.hunger=750;q.fun=90}}return (S.cookN||0)-c0};
     const sim=(el,ins,mode)=>{const st=setup(el);S.cookKn={};COOKNEW.length=0;for(const k of ins)S.fs[k]=3;syncFood();boxSync();S.ovenSet={[st]:typeof mode==='object'?mode:{m:'in',in:ins}};const n=runN(mode==='fsg'||el!=='wind'?6000:1500);return {n,kn:Object.values(S.cookKn||{}),nw:COOKNEW.map(g=>g.out),fs:Object.keys(S.fs).filter(k=>S.fs[k]>0&&FOODS[k].dish)}};
     out.juiceWater=sim('water',['apple']);out.juiceWind=sim('wind',['apple']);
     out.fsgWind=sim('wind',['berry','takenoko','kinoko'],'fsg');

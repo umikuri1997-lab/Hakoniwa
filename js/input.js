@@ -132,7 +132,7 @@ function onTap(sx,sy){if(typeof caveOn==='function'&&caveOn())return caveTap(sx,
     const j=anc(ty*W+tx),o=S.obj[j];
     if(WD===0&&S.flags.kgMark!=null&&!(S.bossKills&&S.flags.kgLook)&&!S.flags.kgLook&&Math.abs(tx-S.flags.kgMark%W)<=1&&Math.abs(ty-((S.flags.kgMark/W)|0))<=1){S.flags.kgLook=true;checkQuest();toast('大きなかげのあと：草がしおれて、つめたい');if(S.res.some(r=>r.name===POKO))dialog([[POKO,'#sigh|……このつめたさ、知ってる気がする。守り神さま、夕方になったら、ちょっとだけ、ぼくの話を聞いてくれる？']]);return}/* 大きなかげのあとを調べる */
     if(WD===1&&S.st2){const g=ty*W+tx;
-      if(S.ground[g]===1&&!o){const k=sprMap()[g];if(k==='a'&&WD===1&&yumomiTap())return;/* 湯もみ（シズクのおねがい） */if(k){if(!S.flags.sprLook){S.flags.sprLook=true;checkQuest()}return toast(SPN[k]+'：'+(springOn(k)?'あたたかい湯がわいている'+SPR_TXT[k]:S.st2.sp[k]?'装置がこわれて、湯が冷めている':'冷たい水……熱がとどいていない'))}}
+      if(S.ground[g]===1&&!o){const k=sprMap()[g];if(k==='a'&&WD===1&&yumomiTap())return;/* 湯もみ（シズクのおねがい） */if(k){sprLookTap(k);return toast(SPN[k]+'：'+(springOn(k)?'あたたかい湯がわいている'+SPR_TXT[k]:S.st2.sp[k]?'装置がこわれて、湯が冷めている':'冷たい水……熱がとどいていない'))}}
       if(o==='volcano'){if(!S.flags.volLook){S.flags.volLook=true;checkQuest()}return toast('火山：ふもとから、熱の道が村へのびている')}
       if(o==='heatv')return openSheet('heatv',j);
       if(o==='kaeribi'){sfx('twood');return toast(kgrLampTxt())}
