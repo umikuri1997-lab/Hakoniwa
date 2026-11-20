@@ -13,7 +13,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict');
  const dup=['chair2','light3','lv_toy2','toy2','toy3','deco3','tree5','food40','room','paint','compost','fish5','lv_parasol','parasol','trap4','fbench2','fbed2','twbox1','yoganup'];
  const subs=await run(`subList().map(q=>q.k)`);
  for(const k of dup)assert.ok(!subs.includes(k),'火山に出てしまう: '+k);
- for(const k of ['shishi1','takeakari1','yumeguri','warmfarm','ore10','benchwood','twmat1'])assert.ok(subs.includes(k),'火山のサブクエストがない: '+k);
+ for(const k of ['takegrow','takeakari1','yumeguri','warmfarm','ore10','benchwood','twmat1'])assert.ok(subs.includes(k),'火山のサブクエストがない: '+k);
  const v1=await run(`AFTERQ.filter(q=>q.w==null||q.w===1).map(q=>q.k)`);assert.deepEqual(v1,['aqv1','aqv2','aqv3','aqv4']);
  const v0=await run(`AFTERQ.filter(q=>q.w==null||q.w===0).map(q=>q.k)`);assert.deepEqual(v0,['aq2','aq3','aq4','aq5']);
  const d1=await run(`dailyHere().map(g=>g.k)`);assert.ok(!d1.includes('wood')&&d1.includes('bamboo'));
@@ -71,7 +71,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict');
   /* 湯めぐり：3つの湯に1回ずつ */S.st2.yuS={a:1,b:1};o.push(q('yumeguri').ok());S.st2.yuS.c=1;o.push(q('yumeguri').ok());o.push(false);
   /* あたたかい畑：4回しゅうかく */S.st2.warmH=3;o.push(q('warmfarm').ok());S.st2.warmH=4;o.push(q('warmfarm').ok());
   S.gotMat={copper:3};S.subB={ore10:q('ore10').base()};S.gotMat.iron=9;o.push(q('ore10').ok());S.gotMat.gold=1;o.push(q('ore10').ok());
-  o.push(q('shishi1').ok());S.obj[(CY+24)*W+CX]='shishiodoshi';recount();o.push(q('shishi1').ok());
+  /* 竹をそだてる：そだてる印のたけのこが、3日で竹になる */o.push(q('takegrow').ok());{const tj=(CY+26)*W+CX;S.obj[tj]='takenoko';S.dyn[tj]={g:0,age:2,keep:1};takenokoMorning();o.push(q('takegrow').ok()&&S.obj[tj]==='bamboo');S.obj[tj]=''}
   {const tj=(CY+24)*W+CX+3;for(let dy=-3;dy<=3;dy++)for(let dx=-3;dx<=3;dx++)if(S.obj[tj+dy*W+dx]==='bamboo')S.obj[tj+dy*W+dx]='';recount();o.push(q('takeakari1').ok());S.obj[tj]='takeakari';recount();o.push(q('takeakari1').ok());for(const d of [2,W*2,-2])S.obj[tj+d]='bamboo';recount();o.push(q('takeakari1').ok())}
   S.mat.wood=150;S.mat.bamboo=49;o.push(q('twmat1').ok());S.mat.bamboo=50;o.push(q('twmat1').ok());
   o.push(q('benchwood').at());S.recipes.takebench=true;S.quest=questIndexOf('ashiyu');S.qTalked=true;recount();const at=q('benchwood').at();o.push(at);

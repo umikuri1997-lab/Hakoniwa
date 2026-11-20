@@ -97,7 +97,7 @@ function prepareVolReplay(run,payload){
   S.feat={build:true,plant:true,craft:true,summon:true,people:true};
   const put=(o,x,y)=>{for(let r=0;r<7;r++)for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){const j=((y|0)+dy)*W+(x|0)+dx;if(walk(j)&&!S.obj[j]&&S.ground[j]!==1&&!S.floor[j]&&walk(j+W)&&walk(j-1)&&walk(j+1)){S.obj[j]=o;if(BL[o]?.hp)S.hp[j]=BL[o].hp;return j}}return -1};
   const[ax,ay]=HSPC.a;put('hotstone',ax+1,ay);if(['shizukuRest','ashiyu'].includes(id)){put('bench',ax+2,ay+2);put('bench',HSPC.b[0]+2,HSPC.b[1]+2);put('bench',HSPC.b[0]-2,HSPC.b[1]+2);}
-  if(id==='yatai'){put('oven',ax-3,ay+3);put('table',ax-1,ay+3);}if(id==='fire3')put('yogan',D1%W+3,(D1/W|0)+3);
+if(id==='fire3')put('yogan',D1%W+3,(D1/W|0)+3);
   for(const k of['a','b','c'])if(['springC','ashNight','hinoookage','inn','guest','tower','fest','ashiyu','volcano','rockDeep'].includes(id)||k==='a'&&id!=='springA'||k==='b'&&['fire3','haikage3'].includes(id))st2().sp[k]=1;
   if(!['intro','springA'].includes(id))S.flags.onsen=true;
   if(['haikage3','springB'].includes(id))for(const j of CRACKS)S.obj[j]=id==='haikage3'?'':S.obj[j];

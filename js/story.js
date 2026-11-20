@@ -78,15 +78,15 @@ const QUESTS2=[
     [SHIZUKU,'むかしの湯治場では、板で湯をもんで、さましたそうです。水でうすめると、湯のよさがへってしまうので。'],
     [HOMURA,'#think|へえ。……やってみなよ。見ててやるからさ。'],['@idea']],gives:{flags:['lv_tub','lv_bench']}},
    story:[[SHIZUKU,'#joy|……ちょうどよい湯かげんです。足を入れても、あつくありません。','vol:dipS'],[HOMURA,'#think|あたいには、ぬるくなっちまったけどね。……ま、たまには悪くないよ。','vol:armsCross'],[SHIZUKU,'#joy|湯上がりに、すわって休む所もあると、うれしいですね。']],gives:{flag:'sReq'}},
-  {id:'yatai',text:'ホムラのおねがい：温泉のそばに屋台をひらこう',check:()=>nearSp('oven')&&nearSp('table'),prog:()=>'かまど '+(nearSp('oven')?1:0)+'/1・食卓 '+(nearSp('table')?1:0)+'/1',how:'あたたかい温泉のそばに、かまどと食卓を置く',
-   talk:{who:HOMURA,when:()=>true,lines:[
+  {id:'yatai',text:'ホムラのおねがい：温泉の湯で、ゆでてみよう',check:()=>(st2().yude||0)>=2,prog:()=>'ゆでかごの料理 '+Math.min(2,st2().yude||0)+'/2',how:'「おく」→「ゆでかご」を、あたたかい温泉の、岸のすぐそばの水に置く。ゆでかごをタップして「入れる」で、たけのこをえらぶ',
+   talk:{who:HOMURA,when:()=>true,learn:['yudekago'],lines:[
     [HOMURA,'#joy|温泉がひとつもどっただけで、村の空気がちがうね。'],
-    [HOMURA,'むかしはさ、湯けむりの中で、温泉たまごをふるまう屋台が出てたんだ。'],
-    [SHIZUKU,'#joy|まあ、すてきです。湯上がりに、みんなで食べたいですね。'],
-    [HOMURA,'たまごは、かたゆでにかぎるよ。'],
-    [SHIZUKU,'半熟がいちばんです。'],
-    [HOMURA,'よし、決まりだ。温泉のそばに、かまどと食卓をたのむよ！','hop']]},
-   story:[[HOMURA,'#joy|ほら、できたての温泉たまごだよ！ みんな、食べな！','cheer+vol:egg'],[SHIZUKU,'……かたいです。','vol:eatS'],[HOMURA,'半熟なんて、ぐにゃっとして……'],[SHIZUKU,'#joy|でも、おいしいです。'],[HOMURA,'#joy|だろ？ これで、湯けむりの村らしくなってきた！']]},
+    [HOMURA,'#think|温泉がもどったら、あれだよ。湯でゆでた、たけのこさ。'],
+    [SHIZUKU,'火を使わずに、ですか。'],
+    [HOMURA,'湯けむりの中に、竹のかごをしずめとくだけさ。むかしは、どの湯にも、かごがぶら下がってたんだ。'],
+    [SHIZUKU,'#joy|……それなら、わたしにも作れそうです。'],
+    [HOMURA,'かごは、あたいが編んどいたよ。たのむよ、守り神！','hop']],gives:{items:{yudekago:1}}},
+   story:[[HOMURA,'#joy|ほら、ゆであがったよ！ みんな、食べな！','cheer+vol:egg'],[SHIZUKU,'……かたいです。','vol:eatS'],[HOMURA,'ゆでたけのこは、歯ごたえが命さ。'],[SHIZUKU,'#joy|でも、おいしいです。湯のかおりがします。'],[HOMURA,'#joy|だろ？ これで、湯けむりの村らしくなってきた！']]},
 
   {id:'haikage3',text:'ハイカゲの灰で、ひびわれをうめよう',check:()=>CRACKS.every(j=>S.obj[j]!=='crack'),prog:()=>'ひびわれ '+CRACKS.filter(j=>S.obj[j]!=='crack').length+'/'+CRACKS.length+'・灰 '+(st2().hai||0),how:'夜に来るハイカゲを追いはらうと、灰を落とす。せいれいがひろった灰で、村の北のひびわれを「しらべる」でタップしてうめる',
    talk:{who:SHIZUKU,when:()=>true,lines:[

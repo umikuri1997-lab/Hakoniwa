@@ -18,7 +18,8 @@ def pal(base):
     k=tuple(int(c) for c in base)
     if k not in _PC:_PC[k]=(np.array([_hsv(k,-SH[1][0],SH[1][1]),_hsv(k,-SH[0][0],SH[0][1]),_hsv(k,0,0),_hsv(k,HI[0][0],HI[0][1]),_hsv(k,HI[1][0],HI[1][1])]),_hsv(k,-OLK[0],OLK[1]))
     return _PC[k]
-def tone(im,cuts=CUTS,light=LIGHT,streak=STREAK):
+def tone(im,cuts=CUTS,light=LIGHT,streak=STREAK,dw=None):   # dw：あみかけのはば（設計図の DITHER。0 で、あみかけなし）
+    DW_=DW if dw is None else dw
     a=np.array(im).copy();H,W=a.shape[:2];ids=O.LAST_IDS;zb=O.LAST_ZB;cc=np.round(O.LAST_CC).astype(int);LN=O.LAST_LINE;LN2=O.LAST_LINE2;MT=O.LAST_MT
     if ids.shape!=(H,W):return im
     keep=np.isin(ids,[p for p,m in MT.items() if m in KEEP])
@@ -37,7 +38,7 @@ def tone(im,cuts=CUTS,light=LIGHT,streak=STREAK):
     from scipy.ndimage import maximum_filter,minimum_filter
     gr=maximum_filter(np.where(body,t0,-9),3)-minimum_filter(np.where(body,t0,9),3)
     grad=body&(gr>0.05)&(gr<3)   # あみかけは、明るさがなめらかにかわる所（まるい面）だけ。平らな面がまるごと、さかいめの近くにあっても、あみにしない
-    lv[(fr<DW)&ck&grad]-=1;lv[(fr>1-DW)&~ck&grad]+=1
+    lv[(fr<DW_)&ck&grad]-=1;lv[(fr>1-DW_)&~ck&grad]+=1
     tx=body&np.isin(ids,list(getattr(O,'LAST_TX',())) or [-9])
     for sgn,k_ in ((-1,streak[0]),(1,streak[1])):   # 木目のすじ：いちばん強い所だけ、1だん（細長いすじだけ）
         if k_<=0 or tx.sum()<8:continue

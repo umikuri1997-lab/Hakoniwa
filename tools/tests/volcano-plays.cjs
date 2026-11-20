@@ -1,7 +1,7 @@
 /* 火山の「くりかえし」を直した所：奥の大岩（光で熱して水でわる）・かじとり（熱の装置のハンドル）・湯もみ（シズクのおねがい）・サブクエスト（あたたかい畑・湯めぐり） */
 const assert=require('node:assert/strict');
 (async()=>{const {browser,page,run,errors}=await require('../sim/boot.cjs')({viewport:{width:390,height:780},world:1});
-  const wait=ms=>page.waitForTimeout(ms);
+  const wait=ms=>page.waitForTimeout(ms),FOODSN=k=>k==='ck126';
   await run(`document.querySelector('#dialog').hidden=true;DLGQ.length=0;S.introSeen=true;S.flags.tapped=1;S.hold=0;if(sheet)closeSheet();S.enemyOn=true;S.enemies=[];NOSAVE=true;S.godGone=true;S.flags.onsen=true;
     S.res.push(mkRes(S,SHIZUKU,'water',CX+2.5,CY+6.5));for(const r of S.res){r.hunger=hMax(r);r.energy=100;r.fun=50;r.nap=false;endAct(r)}S.t=12*60;recount();`);
   const talk=async()=>{const t0=Date.now();while(Date.now()-t0<90000){if(await run(`document.querySelector('#dialog').hidden`))return;await run(`(()=>{DLGA.n=DLGA.full.length;DLGA.readReady=0;const b=[...document.querySelectorAll('#dlgBtns button')].find(b=>!b.classList.contains('dlgSkip')&&!b.classList.contains('dlgFF'));if(b&&!b.disabled&&performance.now()>=DLGA.holdUntil&&!sacredMotionPending())b.click()})()`);await wait(100)}throw Error('dialog did not end')};
@@ -39,7 +39,19 @@ const assert=require('node:assert/strict');
   assert.equal(await run(`!!S.st2.yumomi&&QUESTS.find(q=>q.id==='shizukuRest').check()`),true,'the bath is ready');await run(`document.querySelector('#dialog').hidden=true;DLGQ.length=0`);
   assert.equal(await run(`yumomiTap()`),false,'done: the tap falls through');
   /* 4. サブクエスト */
-  assert.equal(await run(`(()=>{const q=k=>SUBQ.find(x=>x.k===k);return [!!q('warmfarm'),!!q('yumeguri'),!q('wall10'),!q('andonyogan')].join()})()`),'true,true,true,true');
+  assert.equal(await run(`(()=>{const q=k=>SUBQ.find(x=>x.k===k);return [!!q('warmfarm'),!!q('yumeguri'),!!q('takegrow'),!q('wall10'),!q('andonyogan'),!q('shishi1')].join()})()`),'true,true,true,true,true,true');
+  /* そだてる印：せいれいがとらない（g が0） */
+  assert.equal(await run(`(()=>{const j=(CY+12)*W+CX+9;S.obj[j]='takenoko';S.dyn[j]={g:100,age:0};takenokoPop(j);[...document.querySelectorAll('.pxpopw button')].find(b=>b.textContent==='そだてる').click();const a=[S.dyn[j].keep,S.dyn[j].g,!document.querySelector('.pxpopw')];takenokoPop(j);[...document.querySelectorAll('.pxpopw button')].find(b=>b.textContent==='とる').click();a.push(S.dyn[j].keep,S.dyn[j].g);S.obj[j]='';delete S.dyn[j];return JSON.stringify(a)})()`),'[1,0,true,null,100]');
   assert.equal(await run(`(()=>{const s={flags:{},subSt:{wall10:1,ore10:1},subDone:{andonyogan:1}};migrateVolSub(s);migrateVolSub(s);return JSON.stringify([s.subSt,s.subDone,s.flags.volSub1])})()`),'[{"ore10":1},{},1]');
+  /* 5. ゆでかご：あたたかい温泉の、岸のすぐそばの水にだけ置ける。水のせいれいが、たけのこをゆでる */
+  const yk=JSON.parse(await run(`(()=>{SPRM=null;const M=sprMap();let w=-1,land=-1;for(let j=0;j<W*H&&w<0;j++){if(M[j]!=='a'||S.ground[j]!==1||S.obj[j])continue;for(const k of[j-1,j+1,j-W,j+W])if(S.ground[k]!==1&&walk(k)&&!S.obj[k]){w=j;land=k;break}}window.YW=w;window.YL=land;
+    const a=canPlace('yudekago',w%W,(w/W)|0,true),b=canPlace('yudekago',land%W,(land/W)|0,true);S.flags.onsen=false;const c=canPlace('yudekago',w%W,(w/W)|0,true);S.flags.onsen=true;return JSON.stringify({w,a,b,c,rec:(recOf('takenoko@yudekago')||{}).out,egg:(recOf('egg@yudekago')||{}).out})})()`));
+  assert.ok(yk.w>=0);assert.deepEqual([yk.a,yk.b,yk.c],[true,false,false],'only on warm spring water next to the shore');assert.equal(FOODSN(yk.rec),true);
+  await run(`(()=>{S.obj[YW]='yudekago';S.hp[YW]=BL.yudekago.hp;let c=-1;for(let r=2;r<8&&c<0;r++)for(let dy=-r;dy<=r&&c<0;dy++)for(let dx=-r;dx<=r;dx++){const k=YL+dy*W+dx;if(k!==YL&&S.ground[k]!==1&&walk(k)&&!S.obj[k]){c=k;break}}S.obj[c]='crate';S.hp[c]=BL.crate.hp;recount();for(let i=0;i<4;i++)addFood('takenoko',1);S.ovenSet=S.ovenSet||{};S.ovenSet[YW]={m:'in',in:['takenoko']};S.st2.yude=0;S.quest=QUESTS.findIndex(q=>q.id==='yatai');S.qTalked=true;S.qStory=null;
+    const s=S.res.find(r=>r.name===SHIZUKU);endAct(s);s.x=YL%W+.5;s.y=(YL/W|0)+.5;s.hunger=hMax(s);s.energy=100;s.fun=80;S.t=10*60+Math.ceil(S.t/1440)*1440})()`);
+  const cooked=await run(`(()=>{const s=S.res.find(r=>r.name===SHIZUKU);let seen='';for(let i=0;i<9000&&!(S.st2.yude>0);i++){stepWorld(.5);updRes(s,.5);s.hunger=hMax(s);s.energy=100;s.fun=80;S.enemies=[];if(s.act&&s.act.type==='cook')seen='cook';if(S.t%1440>20*60)S.t+=14*60}return seen+','+(S.st2.yude||0)})()`);
+  assert.equal(cooked,'cook,1','the water spirit boils bamboo shoots in the basket');
+  assert.equal(await run(`(()=>{S.st2.yude=2;return QUESTS.find(q=>q.id==='yatai').check()})()`),true);
+  await run(`document.querySelector('#dialog').hidden=true;DLGQ.length=0;for(const o of document.querySelectorAll('.gift-reveal,.pxpopw'))o.remove()`);
   await wait(300);assert.deepEqual(errors,[]);await browser.close();console.log('Volcano plays: ok');
 })().catch(e=>{console.error(e);process.exit(1)});

@@ -59,7 +59,8 @@ function canPlace1(id,x,y,quiet){
   if(x<0||y<0||x>=W||y>=H)return false;
   if(starterGap(y*W+x)&&!HOME_WALLS.has(id)&&!HOME_DOORS.has(id)){if(!quiet)toast('ここは家の壁のすきまです','warn');return false}/* 箱や神殿を置くと、こわせずに家が直せなくなる */
   if(WALLD.has(id)){const j=y*W+x,iw=k=>HOME_WALLS.has(typeAt(k))||HOME_DOORS.has(typeAt(k)),wreath=id==='wreath',target=HOME_WALLS.has(S.obj[j])&&S.obj[j]!=='wall'||wreath&&HOME_DOORS.has(S.obj[j]);/* 石の塀にはかけられない */if(!target||wreath&&HOME_DOORS.has(S.obj[j])&&(iw(j-W)||iw(j+W))&&!(iw(j-1)||iw(j+1))||!wreath&&(iw(j-W)||iw(j+W))||(S.win&&S.win[j]&&!((id==='curtain1'||id==='curtain2')&&S.win[j]===1))||((id==='curtain1'||id==='curtain2')&&!(S.win&&S.win[j]===1&&HOUSES.some(h=>h.set.has(j)&&h.inside.has(j+W)&&!h.inside.has(j-W))))){if(!quiet)toast((id==='curtain1'||id==='curtain2')?'カーテンは、家の上がわの窓にだけかけられます':wreath?'リースは、壁か横向きのドアにだけかけられます':BL[id].name+'は、横向きの家の壁にだけかけられます');return false}return true}/* 窓は壁にはめる */
-  const j=y*W+x;if(id==='lotus'){if(S.ground[j]!==1){if(!quiet)toast('ハスは池の上にだけ植えられます');return false}if(S.obj[j]){if(!quiet)toast('ここにはもう何かあります');return false}return true}
+  const j=y*W+x;if(id==='yudekago'){if(!hotW(j)){if(!quiet)toast('ゆでかごは、あたたかい温泉の水の上にだけ置けます');return false}if(S.obj[j]){if(!quiet)toast('ここにはもう何かあります');return false}if(![j-1,j+1,j-W,j+W].some(k=>k>=0&&k<W*H&&Math.abs(k%W-x)<=1&&S.ground[k]!==1&&walk(k))){if(!quiet)toast('岸のすぐそばの水に置いてください');return false}return true}/* ゆでかご：温泉の水のマス。となりの岸から、せいれいが使う */
+  if(id==='lotus'){if(S.ground[j]!==1){if(!quiet)toast('ハスは池の上にだけ植えられます');return false}if(S.obj[j]){if(!quiet)toast('ここにはもう何かあります');return false}return true}
   if(id==='bridge'){if(S.ground[j]!==1){if(!quiet)toast('橋は水の上にだけかけられます');return false}if(S.obj[j]){if(!quiet)toast('ここにはもう何かあります');return false}return true}
   if(S.ground[j]===1){if(!quiet)toast('水の上には置けません');return false}
   if(S.ground[j]===2){if(!quiet)toast('浅瀬には置けません');return false}
@@ -296,7 +297,7 @@ function confirmYes(){
 }
 
 /* ---------- 家具の注文 ---------- */
-const RLOCK=new Set(['wbench','coop','barn','lumber','quarry','stele','fountain','lighthouse','windmill','bed','loom','campfire','oven','swing','lamp','bench','chair','stool','arrow2','drum','pit']);/* 会話でひらめくまで作れない家具 */
+const RLOCK=new Set(['wbench','coop','barn','lumber','quarry','stele','fountain','lighthouse','windmill','bed','loom','campfire','oven','swing','lamp','bench','chair','stool','arrow2','drum','pit','yudekago']);/* 会話でひらめくまで作れない家具 */
 /* ほかの土地でおぼえた物か（依頼ボード・「建てる」で、「この土地」のときは出さない）。この土地のお話・村レベル・思いつきでおぼえる物は、この土地の物 */
 let RECALL=false,NATIVE=null,NATIVEW=-1;
 function nativeSet(){if(NATIVE&&NATIVEW===WD)return NATIVE;const N=new Set();const add=L=>{for(const id of L||[])N.add(id)};

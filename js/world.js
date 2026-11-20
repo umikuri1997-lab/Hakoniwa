@@ -181,6 +181,10 @@ function sparkTick(){if(WD!==1||!S.st2||isNight()||elemCount('water')<1||Math.ra
   fxSpr('cinder',(j%W+.5)*TS,((j/W)|0)*TS+24);ignite(j)}/* 家の中の物には、火の粉はとどかない */
 /* 奥の装置のまわりの大岩（BVOL）は、かたくて、たたいてもくだけない。まもりの光で熱すると赤くなり（S.st2.hot：マス→さめる時刻 S.t）、赤いあいだに、せいれいが水をかけると、われる（quench）。
    水をかけるのは水のせいれい（村にいなければ、だれでも）。赤いあいだは時計の2時間（ROCKHOT） */
+/* たけのこをタップ：とる・そだてる をえらぶ。そだてる印（S.dyn[j].keep）のたけのこは、せいれいがとらず（g を0にする）、3日で竹になる */
+function takenokoPop(j){const d=S.dyn[j]||(S.dyn[j]={g:100,age:0}),left=Math.max(1,3-(d.age||0)),P=pxPop('たけのこ'),p=el('<p class="note" style="margin:0 0 10px"></p>');p.textContent='あと'+left+'日で竹になる。'+(d.keep?'いまは、そだてている。':'いまは、せいれいがとる。');P.body.appendChild(p);
+  const row=el('<div style="display:flex;gap:8px"></div>'),mk=(tx,keep)=>{const b=el('<button class="btn"></button>');b.textContent=tx;if(!!d.keep===keep)b.classList.add('pri');b.onclick=()=>{sfx('tap');if(S.obj[j]==='takenoko'){const q=S.dyn[j]||(S.dyn[j]={g:100,age:0});if(keep){q.keep=1;q.g=0}else{delete q.keep;q.g=100}dirty=true}P.close()};row.appendChild(b)};mk('とる',false);mk('そだてる',true);P.body.appendChild(row)}
+function takenokoKeepDraw(c,x,y){c.save();c.fillStyle='#6fae4a';c.fillRect(x+15,y+9,2,4);c.fillRect(x+13,y+10,2,2);c.fillRect(x+17,y+10,2,2);c.fillStyle='#a9d77a';c.fillRect(x+15,y+9,1,2);c.restore()}/* そだてる印：先に小さな葉 */
 const yuN=()=>['a','b','c'].filter(k=>S.st2&&S.st2.yuS&&S.st2.yuS[k]).length;/* 湯めぐり：だれかが入った温泉の数 */
 const ROCKHOT=120;
 const rockHard=j=>WD===1&&!S.free&&S.obj[j]==='boulder'&&BVOL.includes(j);

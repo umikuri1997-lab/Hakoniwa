@@ -590,6 +590,9 @@
 - 火山の出番（`sacred-play.js` の `VOL_PLAY`、絵は `VOLTYPES` で灰まじりの土）：火入れ `towerLight`・かじとり `heatCrank`（手前の熱の装置を、はじめて西へむけるとき。ハンドルを円をえがいて3回転。`S.st2.crank`。2回めからは、ボタン）・湯もみ `yumomi`（シズクのおねがい `shizukuRest`：依頼を聞いたあと、昼に入口の温泉をタップ `yumomiTap`。左右に12回。`S.st2.yumomi`、しっぱい3回でつぎの日 `yuRetry`）。出番の操作は、草原の4つとも、たがいにも、ちがう物にする。
 - 奥の装置のまわりの大岩（`BVOL`、`rockHard`）は、たたいてもくだけない。まもりの光で熱すると赤くなり（`rockHeat`・`S.st2.hot`、時計の2時間 `ROCKHOT`）、水のせいれい（いなければ、だれでも）が水をかけるとわれる（`goQuench`・`quench`・`rockCrack`）。水路の大岩（`S.st2.bw`）は、いままでどおり、たたいてくだく。
 - 火山の噴火は、もうある（`eruptMorning`：5日に1回、朝に村の外へ岩が3〜5こ）。「ない」と言わない。
+- ゆでかご（`yudekago`、火山。`STAGEONLY`・`RLOCK`）：あたたかい温泉の、岸のすぐそばの水のマスに置く料理の家具（`canPlace1`。水の上に置ける物は、ハス・橋・ゆでかご。描くのは `draw-world.js` の水のマスの例外）。湯がぬるいと作れない（`hotW`）。料理は表のさいごに足した「ゆでたけのこ」「おんせんたまご」（`cook_table.py` の `Y`。作るのは水のせいれい）。ホムラのおねがい（`yatai`）は、ゆでかごの料理を2こ（`S.st2.yude`）。絵は3D（`tools/art/furn3d/items/yudekago.py`。水面から上だけ。あみかけは設計図の `DITHER` で最小限）。料理の家具を数える所は `COOKST` を使い、名前をならべない（ゆでかごだけの村で、料理をはじめなかった）。
+- たけのこをタップすると「とる・そだてる」をえらべる（`takenokoPop`）。そだてる印（`S.dyn[j].keep`）のたけのこは `g` を0にして、せいれいがとらない。竹になった数は `S.st2.tkGrew`（サブクエスト `takegrow`）。
+- 火山のサブクエスト：あたたかい畑（`warmfarm`：`S.st2.warmH`）・湯めぐり（`yumeguri`：`S.st2.yuS`）・竹をそだてる（`takegrow`）。前の石の塀10・行燈・ししおどしのサブクエストは `migrateVolSub`（`S.flags.volSub1`）でけす。
 - たしかめは `tools/tests/volcano-plays.cjs`。
 - 守護の台座（火山）は、建てただけでは山の影は来ない。昼に「しらべる」で台座をタップ → ホムラ（いればシズクも）が台座の前へ → 話す → 守り神の出番「火入れ」（`VOL_PLAY` の `towerLight`、`bellows`：おして火を大きく・はなして小さく、うごく帯の中に合計8秒）→ 火がともる → 話す。火を入れたことにする（`S.st2.lit`・`altarLit`）のは、さいごの会話のあと。その夜に来る（`S.finalNight`）。3回しっぱいで、つぎの日（`S.st2.litRetry`）。止まるわけは目標の進みぐあいに出す（`altarWhy`・`altarProg`）。古いセーブは `S.flags.altarLit1`。火山の出番は `VOL_PLAY` に足す（`FIELD_PLAY` は草原の4つだけ）。たしかめは `tools/tests/altar-light.cjs`。
 - 火山の木：自然の木（`deadtree`）も植えた木（`tree`）も、とんがりの木（杉の絵。チップ `deadtree~v`・`tree~v`、`tools/art/furn3d/items/nat_cedar.py`・`nat_cedar2.py`。名前は `STAGEN`）。カミサマのお店は、火山でも木の苗を「とんがりの木の苗」として売る。
