@@ -197,7 +197,7 @@ function subTalk(k){const q=SUBQ.find(q=>q.k===k),St=S.subSt,D=S.subDone;if(!q||
   const rw=S.res.find(z=>z.name===w),FB2=q.g==='fire'&&rw&&elemKey(rw)==='fireB'&&FIREB[k];let once=0;dialog(ideaDialogue(q,(FB2?(St[k]===1?FB2.L:FB2.X):L).map(x=>[x[0]==='K'?w:x[0],x[1]&&typeof x[1]==='object'?(w===HOMURA?x[1].h:x[1].a):x[1]]),/* {h,a}：ホムラ（あたい）と、ほかの火の子（あたし） */St[k]===1?'accept':'clear'),()=>{if(once++)return;
     if(offer&&!D[k]&&St[k]==null)St[k]=1;
     if(St[k]===1){St[k]=2;Sn0(k);if(q.onAccept)q.onAccept();if(q.base)S.subB[k]=q.base();for(const id of q.learn||[])S.recipes[id]=true;inspireQuest(q);if(q.bp&&typeof bpGiveNext==='function'){const gv=S.res.find(x=>x.name===subWho(q)&&!x.hidden);bpGiveNext(gv?gv.id:null,q.bp===1?'house':q.bp,1)}/* 設計図をもらう */for(const x in q.give||{}){S.unlocked[x]=true;giveItem(x,q.give[x])}queueItemGift(q.give);if(q.feat)questGives(q,{feat:q.feat});if(q.mat)questGives(q,{mat:q.mat});/* 作るのに使う素材をもらう（食卓） */sfx('quest');toast('サブクエスト：'+q.t,'good');renderPalette()}
-    else if(St[k]===3){St[k]=4;D[k]=1;inspireQuest(q,'clear');if(q.godLeave&&!S.godGone)questGives(q,{godLeave:true});if(q.rw){rewardPower(q.rw)}memo('memo','サブクエスト「'+q.t+'」をたっせい');logEv('サブクエスト「'+q.t+'」をたっせい')}
+    else if(St[k]===3){St[k]=4;D[k]=1;if(q.ev&&typeof evOpenNow==='function')evOpenNow(q.ev);/* イベントをひらくサブクエスト（event-open.js） */inspireQuest(q,'clear');if(q.godLeave&&!S.godGone)questGives(q,{godLeave:true});if(q.rw){rewardPower(q.rw)}memo('memo','サブクエスト「'+q.t+'」をたっせい');logEv('サブクエスト「'+q.t+'」をたっせい')}
     checkSub()},null)}
 function Sn0(k){(S.subSeen||(S.subSeen={}))[k]=1}
 /* ---------- ステージ1の物語イベント（フタバと5属性のキーキャラ） ----------

@@ -1,0 +1,122 @@
+{
+ "joy1.mp3": {
+  "desc": "カリンバの2つの音を高くして、オルゴールのように「ちりりん」と3つ上がる",
+  "sources": [
+   {
+    "title": "Kalimba Two-Notes",
+    "author": "railkill",
+    "license": "CC0 1.0",
+    "url": "https://opengameart.org/content/kalimba-two-notes"
+   }
+  ],
+  "edit": "カリンバの録音を1オクターブ（+12）上げ、2つめの音を+17で写して3つめの音にかさねた。7kHzより上をけずり、小さなこだまをつけた ／ 大きさは約 -20 LUFS にそろえた（ピークは -1.5 dBFS まで）"
+ },
+ "joy2.mp3": {
+  "desc": "人の声で作った小さな生き物の「わぁい！」（上がって下がる声）",
+  "sources": [
+   {
+    "title": "80 CC0 creature SFX (cute_09.ogg)",
+    "author": "rubberduck",
+    "license": "CC0 1.0",
+    "url": "https://opengameart.org/content/80-cc0-creature-sfx"
+   }
+  ],
+  "edit": "声を+3半音（長さはそのまま、rubberband）高くし、7.5kHzより上をけずった ／ 大きさは約 -20 LUFS にそろえた（ピークは -1.5 dBFS まで）"
+ },
+ "joy3.mp3": {
+  "desc": "おもちゃの木琴が「ぽろん」と3つ上がる（低めにしてやわらかく）",
+  "sources": [
+   {
+    "title": "Children's Xylophone (child's_xylophone-2.wav)",
+    "author": "AntumDeluge",
+    "license": "CC0 1.0",
+    "url": "https://opengameart.org/content/childrens-xylophone"
+   }
+  ],
+  "edit": "木琴の音階から3つの音を切り出し、-8半音（さいごは-7）さげて、0.09秒ずつの間でならべた。6kHzより上をけずった ／ 大きさは約 -20 LUFS にそろえた（ピークは -1.5 dBFS まで）"
+ },
+ "joy4.mp3": {
+  "desc": "鈴の音を高い4つの音でかさねた、きらきらの「きらーん」",
+  "sources": [
+   {
+    "title": "Bell dings/chimes (bell_ding2.wav)",
+    "author": "PWL",
+    "license": "CC0 1.0",
+    "url": "https://opengameart.org/content/bell-dingschimes"
+   }
+  ],
+  "edit": "鈴の1回の音を+12・+19・+24・+28半音で写し、0.06秒ずつずらしてかさね、こだまをつけた。700Hzより下と9kHzより上をけずった ／ 大きさは約 -20 LUFS にそろえた（ピークは -1.5 dBFS まで）"
+ },
+ "joy5.mp3": {
+  "desc": "やわらかい物の「ぽ・よん」と2回はねて、さいごに小さなガラスの「ちん」",
+  "sources": [
+   {
+    "title": "Impact Sounds",
+    "author": "Kenney",
+    "license": "CC0 1.0",
+    "url": "https://kenney.nl/assets/impact-sounds"
+   }
+  ],
+  "edit": "impactSoft_medium_001・003 を+17・+22半音（テープのように高く・短く）、impactGlass_light_002 を+12半音で小さく、順にならべた。ゆるく圧縮した ／ 大きさは約 -20 LUFS にそろえた（ピークは -1.5 dBFS まで）"
+ },
+ "pot1.mp3": {
+  "desc": "ふたのないおなべが「ぐつぐつ」にえる音",
+  "sources": [
+   {
+    "title": "boiling water loops (cooking_without_cover_01.ogg)",
+    "author": "TinyWorlds",
+    "license": "CC0 1.0",
+    "url": "https://opengameart.org/content/boiling-water-loops"
+   }
+  ],
+  "edit": "はじめの1.6秒を切り出し、5kHzより上をけずり、ゆるく圧縮した。はじめとおわりをふわっと ／ 大きさは約 -20 LUFS にそろえた（ピークは -1.5 dBFS まで）"
+ },
+ "pot2.mp3": {
+  "desc": "おたまで、おなべの中をかきまぜる「しゃりしゃり」（陶器をこする音を低くした）",
+  "sources": [
+   {
+    "title": "General Household Sound Effects (forkonplate01.wav)",
+    "author": "bretbernhoft",
+    "license": "CC0 1.0",
+    "url": "https://opengameart.org/content/general-household-sound-effects"
+   }
+  ],
+  "edit": "フォークでお皿をこする録音（16.2秒から1.3秒）を-4半音さげ、4kHzより上をけずった ／ 大きさは約 -20 LUFS にそろえた（ピークは -1.5 dBFS まで）"
+ },
+ "pot3.mp3": {
+  "desc": "おなべのふたが「かた・かた」と小さくゆれる（下にうすく、にえる音）",
+  "sources": [
+   {
+    "title": "Impact Sounds",
+    "author": "Kenney",
+    "license": "CC0 1.0",
+    "url": "https://kenney.nl/assets/impact-sounds"
+   },
+   {
+    "title": "boiling water loops (cooking_with_cover_01.ogg)",
+    "author": "TinyWorlds",
+    "license": "CC0 1.0",
+    "url": "https://opengameart.org/content/boiling-water-loops"
+   }
+  ],
+  "edit": "impactTin_medium の5つの音を「かたかた・かたかた・かた」の間でならべ、ふたをしたおなべの音を-16dBで下にかさねた。5kHzより上をけずり、ゆるく圧縮した ／ 大きさは約 -20 LUFS にそろえた（ピークは -1.5 dBFS まで）"
+ },
+ "pot4.mp3": {
+  "desc": "ふたをしたおなべが、にえる音に、おたまが「ことっ」と2回あたる",
+  "sources": [
+   {
+    "title": "boiling water loops (cooking_with_cover_01.ogg)",
+    "author": "TinyWorlds",
+    "license": "CC0 1.0",
+    "url": "https://opengameart.org/content/boiling-water-loops"
+   },
+   {
+    "title": "cutlery sounds (fork_on_dish_01.ogg)",
+    "author": "TinyWorlds",
+    "license": "CC0 1.0",
+    "url": "https://opengameart.org/content/cutlery-sounds"
+   }
+  ],
+  "edit": "ふたをしたおなべの録音（0.5秒から1.8秒）に、フォークでお皿をたたく音を-5・-6半音さげて2回かさねた。5kHz・4.5kHzより上をけずった ／ 大きさは約 -20 LUFS にそろえた（ピークは -1.5 dBFS まで）"
+ }
+}

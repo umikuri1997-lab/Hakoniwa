@@ -68,7 +68,7 @@ const assert=require('node:assert/strict');
   console.log(JSON.stringify(w3));
   assert.match(w3.prog,/^うかんだ島 1\/\d+$/);assert.equal(w3.tail,1.5,'追い風');assert.equal(w3.head,1);assert.equal(w3.blocked,0,'木は風を止める');assert.ok(w3.again>0);assert.equal(w3.gone,0,'かざみをはずすと、橋が消える');assert.equal(w3.reach,0);assert.ok(w3.home,'とりのこされたせいれいは、まん中の島へ');assert.ok(w3.stillUp,'うかんだ島は、しずまない');
   /* 夜をこえても、コワイノは来ない・止まらない */
-  const c=JSON.parse(await run(`(()=>{S.t=1440+19*60;const d0=dayNo();const end=S.t+14*60;let n=0;let slept=false;while(S.t<end&&n++<40000){stepWorld(1.5);for(const r of S.res){updRes(r,1.5);r.hunger=Math.max(r.hunger,800);if(r.act&&r.act.type==='sleep')slept=true}}return JSON.stringify({slept,d:dayNo()-d0,en:S.enemies.length,on:!!S.enemyOn,h:Math.round(hour()),morning:S.lastMorning===dayNo()})})()`));
+  const c=JSON.parse(await run(`(()=>{S.t=1440+19*60;const d0=dayNo();const end=S.t+14*60;let n=0;let slept=false;while(S.t<end&&n++<40000){stepWorld(1.5);for(const r of S.res){updRes(r,1.5);r.hunger=Math.max(r.hunger,400);if(r.act&&r.act.type==='sleep')slept=true}}return JSON.stringify({slept,d:dayNo()-d0,en:S.enemies.length,on:!!S.enemyOn,h:Math.round(hour()),morning:S.lastMorning===dayNo()})})()`));
   console.log(JSON.stringify(c));
   assert.equal(c.d,1,'つぎの日になる');assert.equal(c.h,9);assert.ok(c.morning,'朝が来る');assert.ok(c.slept,'夜は寝る');assert.equal(c.en,0);assert.equal(c.on,false);
   /* セーブして読みなおす：風のステージのまま、雲の海・風穴・うかんだ島も同じ */
