@@ -677,6 +677,7 @@
   - 風車・古い風車（`oldmill`、見た目だけ）は、風のステージでは、まわり2マスに風の道があるときだけまわる。
   - 水の中を歩く所（道さがし・ハスを植える・水あび）は `waterJ` で見る（`S.ground===1` で見ると、雲の橋から雲の海へ歩き出す）。
 - 風の木はアカシア（植えた木 `tree~k`・自然の木 `deadtree~k`、切ると木材。設計図 `tools/art/furn3d/items/nat_acacia.py`、モデルは `acacia_prep.py`）。ステージでの木の名前は `STAGEN[ステージ]`。風・水・闇でそろえる物の案は `IDEAS.md`。
+- 風の塀は、遊園地の白い塀（`parkfence`・ドア `parkdoor`・入場ゲート `parkgate`、`STAGEONLY` 風）。3Dから写す（`fence3d.py` の `scene_park`・`doors3d.py`）。白い物は、ふつうのかげだと灰色になるので、かげをつけない材質（`flat`）で写す。
 - コワイノの来ない夜（`S.flags.calmNight`）：`S.enemyOn` がないと時計は18時で止まる（朝が来ない）ので、コワイノなしで夜をすごさせるステージは、この印で時計を進める。
 
 ## 火山らしさ
