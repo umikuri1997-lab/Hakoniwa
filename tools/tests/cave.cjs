@@ -54,7 +54,7 @@ const assert=require('node:assert/strict');
     out.blowOff=blow(10,4);out.blowWall=blow(20,5);out.millNo=!C.ob.get(J(2,5)).done;out.blowHit=blow(10,5);out.mill=C.ob.get(J(2,5)).done&&C.ob.get(J(28,5)).done;
     /* 木：葉は3まい。まん中の列に置くと、島にもむこう岸にも行ける */const wo=act('wood');put(wo,10,6);const leaf=(x,y)=>{cvUse(J(x,y),C.ob.get(J(x,y)));step(5)};out.leaf0=C.leaf;leaf(9,6);leaf(8,6);leaf(7,6);out.leaf=C.leaf;
     out.island=!!cvBfs(J(10,6),j=>j===J(7,5));out.far=!!cvBfs(J(10,6),j=>j===J(3,5));cvUse(J(9,5),C.ob.get(J(9,5)));out.noLeaf=!wo.job;
-    /* しずく・下絵の区画 */C.dripT=0;cvDripTick(performance.now());out.drip=C.drips.length;caveRender(performance.now());out.chunks=C.ch.size>0&&C.ch.size<=CVCHMAX;caveAbort();out.abort=!CV;
+    /* しずく・下絵の区画 */for(let i=0;i<30&&!C.drips.length;i++){C.dripT=0;cvDripTick(performance.now())}out.drip=C.drips.length;caveRender(performance.now());out.chunks=C.ch.size>0&&C.ch.size<=CVCHMAX;caveAbort();out.abort=!CV;
     /* ===== 2階：ひらいた階からえらべる ===== */cavePrep();{const P=document.querySelector('.pxpopw');out.flBtn=[...P.querySelectorAll('button')].filter(b=>/^[12]階$/.test(b.textContent)).length;P.remove()}
     S.t=Math.floor(S.t/1440)*1440+9*60;caveEnter([by('earth'),by('fire')],{},1);C=CV;out.fl1=C.fl;{let S0=-1,R0=-1;for(const[j,o]of C.ob){if(o.k==='S')S0=j;if(o.k==='R')R0=j}out.main2=!!cvBfs(S0,j=>j===R0);
       out.closed2=[[21,17],[6,21],[10,25],[40,27],[11,28],[19,31]].map(([x,y])=>!!cvBfs(S0,j=>j===J(x,y)));
