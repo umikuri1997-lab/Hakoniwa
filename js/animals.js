@@ -1,5 +1,5 @@
 /* ---------- 飼う生き物（ハネマリ・モコダマ・ツノクサ） ----------
-   柵・塀でかこんだ所の、とり小屋（coop）・家畜小屋（barn）に空きがあると、朝に STRAYP（のらの小道 +STRAYSP）で、村の外に野良の生き物が1ぴき来る（strayMorning、a.stray）。
+   朝に STRAYP（のらの小道 +STRAYSP）で、村の外に野良の生き物が1ぴき来る（strayMorning、a.stray）。柵・塀でかこんだ所の、とり小屋（coop）・家畜小屋（barn）に空きがあれば、そこにすめる生き物。小屋がなければ、まだひらめいていない小屋の生き物で、はじめてタップすると、その小屋をひらめく（strayIdea）。
    STRAYH 時に帰る。「しらべる」でタップ →「むかえる」で、近いせいれいが歩いて行き（astray）、つれて小屋の前まで歩く（alead。生き物は、せいれいの通った所をついていく a.tr）。着いたら、その小屋にすむ。
    木のせいれい（いなければ、だれでも）が箱の草を小屋へ運び（えさ：1頭に1日1こ）、水のせいれい（いなければ、だれでも）が水をくんで小屋の水入れへ。
    えさと水をもらった日の夕方（ANIPRODH 時）に、小屋にとれる物がたまり、せいれいが箱へ運ぶ（aniJob）。夜は小屋の中。コワイノにはねらわれない。
@@ -11,7 +11,7 @@ const isHut=o=>!!HUTK[o];
 function hutFront(h){const o=S.obj[h];return o==='barn'?[h+2*W,h+2*W+1]:[h+W]}/* 小屋の出入り口の前のマス */
 function hutCap(h){const o=S.obj[h];return o==='coop'?ANI.hane.cap:o==='barn'?ANI.moko.cap:0}
 const aniOf=h=>(S.ani||[]).filter(a=>a.h===h&&!a.stray);
-const STRAYP=.05,STRAYSP=.05,STRAYH=18;/* 野良の生き物：朝に来る確率・のらの小道で足す確率・帰る時刻 */
+const STRAYP=.25,STRAYSP=.10,STRAYH=18;/* 野良の生き物：朝に来る確率・のらの小道で足す確率・帰る時刻 */
 const aniHome=()=>(S.ani||[]).filter(a=>!a.stray);
 const aniPass=j=>walk(j)&&!GATE_IDS.has(S.obj[j])&&!HOME_DOORS.has(S.obj[j]);
 function penOf(h){/* 小屋の前から、柵・塀・水・がけでかこまれた所（PENMAX マスまで）。外へつながっていれば null */
@@ -51,11 +51,14 @@ function aniGraze(j){return ANIGRASS.has(S.obj[j])}
 function aniEat(a,day){a.fd=day;a.eat=3;a.path=null;a.wt=3;a.fun=Math.min(100,aniFun(a)+4)}
 
 function hutRoom(h,k){/* かこいの中で、空きがあって、その生き物がすめる小屋か */return isHut(S.obj[h])&&!!PENS.get(h)&&aniOf(h).length+S.ani.filter(a=>a.stray&&a.lead!=null&&a.lh===h).length<hutCap(h)&&(k==null||HUTK[S.obj[h]].includes(k))}
-function strayMorning(){/* 野良の生き物：空きのある小屋があれば、朝にたまに、村の外に1ぴき */if(typeof MEMRUN!=='undefined'&&MEMRUN||S.ani.some(a=>a.stray))return;
-  const hs=HUTS.filter(h=>hutRoom(h));if(!hs.length)return;const p=STRAYP+(hs.some(h=>spotHas(h,'norakomichi'))?STRAYSP:0);if(Math.random()>=p)return;
-  const h=hs[Math.floor(Math.random()*hs.length)],K=HUTK[S.obj[h]],k=K[Math.floor(Math.random()*K.length)],f=hutFront(h).find(c=>walk(c));if(f==null)return;
+function strayMorning(){/* 野良の生き物：朝に STRAYP で、村の外に1ぴき。空きのある小屋があれば、そこにすめる生き物。小屋をまだひらめいていなければ、その小屋の生き物（はじめてタップするとひらめく strayIdea） */if(typeof MEMRUN!=='undefined'&&MEMRUN||WD===YAMI||S.ani.some(a=>a.stray))return;
+  const hs=HUTS.filter(h=>hutRoom(h)),kn=Object.keys(ANI).filter(k=>!recipeKnown(ANI[k].hut));if(!hs.length&&!kn.length)return;const p=STRAYP+(hs.some(h=>spotHas(h,'norakomichi'))?STRAYSP:0);if(Math.random()>=p)return;
+  let k,f;if(hs.length){const h=hs[Math.floor(Math.random()*hs.length)],K=HUTK[S.obj[h]];k=K[Math.floor(Math.random()*K.length)];f=hutFront(h).find(c=>walk(c))}
+  else{k=kn[Math.floor(Math.random()*kn.length)];const r=STATUE<0&&S.res.find(q=>!q.hidden);f=STATUE>=0?hutFront(STATUE).find(c=>walk(c)):r?(r.y|0)*W+(r.x|0):null}if(f==null)return;
   const G=bfs(f%W,(f/W)|0),C=[];for(let j=0;j<W*H;j++){const d=G.dist[j];if(d>=8&&d<=50&&!VILL[j]&&!S.obj[j]&&aniPass(j)&&S.ground[j]!==1&&!(fogAt(j)))C.push(j)}if(!C.length)return;
   const c=C[Math.floor(Math.random()*C.length)];S.ani.push({id:(S.aniId=(S.aniId||0)+1),k,h:-1,stray:1,x:c%W+.5,y:((c/W)|0)+.6,face:1,wt:0});toast('村の外に、野良の'+ANI[k].name+'が来ている','good')}
+function strayIdea(a){/* はじめて野良をタップしたら、その生き物の小屋をひらめく。ひらめいたら true */const id=ANI[a.k].hut;if(IS_STORY_REPLAY||typeof MEMRUN!=='undefined'&&MEMRUN||recipeKnown(id))return false;
+  S.recipes||(S.recipes={});S.guardianIdeas||(S.guardianIdeas={});S.recipes[id]=true;S.guardianIdeas[id]=true;sfx('level');queueItemGift({[id]:1},'あたらしいレシピ！',true);memo('bulb','あたらしいかたち：'+BL[id].name);return true}
 function strayLeave(a,why){S.ani.splice(S.ani.indexOf(a),1);toast(why||'野良の'+ANI[a.k].name+'は、どこかへ行ってしまった')}
 function strayFollow(a,dt){/* つれているせいれいの、通った所をついていく */const r=S.res.find(q=>q.id===a.lead);
   const ok=r&&!r.hidden&&(r.alead&&r.alead.aid===a.id||r.act&&r.act.type==='astray'&&r.act.aid===a.id);if(!ok){a.lead=null;a.lh=null;a.tr=null;a.wt=2;return}
@@ -111,8 +114,8 @@ const grassHave=()=>GRASSK.filter(k=>totKey(k)>0);
 function aniJob(r,G,dry){if(isNight()||!S.ani||!S.ani.length)return false;const day=callDay(),adj=h=>q=>adjOf(q,k=>anc(k)===h)>=0;
   if(r.apk){if(dry)return true;const h=r.apk.j;if(!isHut(S.obj[h])){toHand(r,r.apk.m);r.apk=null;return false}const j=nearest(G,adj(h),200);if(j>=0){startAct(r,G,'aput',j,{obj:h});return true}return false}/* 運んでいる草は、先に小屋へ */
   for(const h of HUTS){const d=hutD(h);if(!d.pr||!Object.keys(d.pr).length||roomN(r)<1||!free('ap'+h,1))continue;if(dry)return true;const j=nearest(G,adj(h),200);if(j>=0){startAct(r,G,'acol',j,{key:'ap'+h,obj:h});return true}}/* とれた物を、箱へ */
-  if(aniRole(r,'wood')&&roomN(r)>=1){const gk=grassHave();if(gk.length)for(const h of HUTS){if(!aniOf(h).length||aniNeedFeed(h)<=0||nearest(G,adj(h),200)<0)continue;/* 行けない小屋はとばして、つぎの小屋へ */if(dry)return true;const j=nearest(G,q=>keysAdj(q,gk)>=0,200);if(j>=0){startAct(r,G,'apick',j,{h});return true}break}}/* えさの草を、箱から */
-  if(aniRole(r,'water'))for(const h of HUTS){const d=hutD(h);if(!aniOf(h).length||d.wd===day||!free('aw'+h,1))continue;const j=nearest(G,adj(h),200);if(j<0)continue;/* 行けない小屋はとばして、つぎの小屋へ */if(dry)return true;
+  if(aniRole(r,'wood')&&roomN(r)>=1){const gk=grassHave();if(gk.length)for(const h of HUTS){if(!aniOf(h).length||aniNeedFeed(h)<=0||!dry&&nearest(G,adj(h),200)<0)continue;/* 行けない小屋はとばして、つぎの小屋へ */if(dry)return true;const j=nearest(G,q=>keysAdj(q,gk)>=0,200);if(j>=0){startAct(r,G,'apick',j,{h});return true}break}}/* えさの草を、箱から */
+  if(aniRole(r,'water'))for(const h of HUTS){const d=hutD(h);if(!aniOf(h).length||d.wd===day||!free('aw'+h,1))continue;const j=dry?0:nearest(G,adj(h),200);/* dry（hasWork）は G がない */if(j<0)continue;/* 行けない小屋はとばして、つぎの小屋へ */if(dry)return true;
     if((r.wcan||0)>0){startAct(r,G,'awater',j,{key:'aw'+h,obj:h});return true}else{const s=nearest(G,q=>waterSrc(q)>=0,80);if(s>=0){startAct(r,G,'draw',s,{src:waterSrc(s)});return true}}break}/* 水入れに水を */
   return false}
 Object.assign(ACT,{
@@ -196,7 +199,7 @@ function strayAsk(a){/* 行けるせいれいのうち、道のりがいちば�
 const STRAYDROPP=.5;
 function strayDrop(a){if(a.dr||IS_STORY_REPLAY||typeof MEMRUN!=='undefined'&&MEMRUN)return;a.dr=1;if(Math.random()>=STRAYDROPP)return;const pk=ANI[a.k].prod,key=(FOODS[pk]?'food:':'mat:')+pk,n0=(S.drops||[]).length;dropAt(a.x,a.y,key,1);if(!(S.drops&&S.drops.length>n0))return;
   const d=S.drops[S.drops.length-1];d.tap=1;d.cr=1;DROPFX.set(d,{sx:a.x*TS,sy:(a.y-.6)*TS-hiAt(d.y*W+d.x)*LIFT,t0:performance.now()})}
-function strayPop(a){const o=el('<div style="position:fixed;inset:0;z-index:45;display:flex;align-items:center;justify-content:center;background:rgba(40,30,15,.35);padding:24px"><div class="pxcard" style="background:var(--panel);padding:16px 18px;max-width:320px;width:100%;color:var(--ink)"><b class="t" style="display:block;font-size:15px;margin-bottom:6px"></b><div class="rows"></div><div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px"><button class="btn x">とじる</button><button class="btn pri go">むかえる</button></div></div></div>');
+function strayPop(a){if(strayIdea(a))return;const o=el('<div style="position:fixed;inset:0;z-index:45;display:flex;align-items:center;justify-content:center;background:rgba(40,30,15,.35);padding:24px"><div class="pxcard" style="background:var(--panel);padding:16px 18px;max-width:320px;width:100%;color:var(--ink)"><b class="t" style="display:block;font-size:15px;margin-bottom:6px"></b><div class="rows"></div><div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px"><button class="btn x">とじる</button><button class="btn pri go">むかえる</button></div></div></div>');
   o.querySelector('.t').textContent='野良の'+ANI[a.k].name;const rows=o.querySelector('.rows'),h=strayHut(a);rows.appendChild(rowEl('すめる小屋',h!=null?BL[S.obj[h]].name:'ない'));rows.appendChild(rowEl('とれる物',aniProdName(ANI[a.k].prod)));
   const g=o.querySelector('.go');lackOn(g,strayWhy(a));
   g.onclick=()=>{if(strayWhy(a))return;const r=strayAsk(a);if(!r){toast('いまは、むかえにいけるせいれいがいない');return}sfx('tap');o.remove();toast(r.name+'が、'+ANI[a.k].name+'をむかえにいく')};

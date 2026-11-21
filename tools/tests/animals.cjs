@@ -4,6 +4,10 @@ const assert=require('node:assert/strict');
   const r=JSON.parse(await run(`(()=>{document.querySelector('#dialog').hidden=true;S.introSeen=true;S.flags.tapped=1;S.hold=0;USERPAUSE=true;
     const f=S.res[0];f.hunger=hMax(f);f.energy=100;f.fun=100;S.res=[f];endAct(f);f.act=null;S.t=1440*3+8*60;S.food=100;
     const out={};const x0=(f.x|0)+3,y0=(f.y|0)+2;
+    /* 小屋がなく、小屋をまだひらめいていなくても、野良が来る。はじめてタップすると、その生き物の小屋をひらめく */
+    {const R=Math.random,rc=S.recipes;S.recipes=Object.assign({},rc);delete S.recipes.coop;delete S.recipes.barn;S.ani=[];recount();Math.random=()=>0;strayMorning();Math.random=R;const a=S.ani[0];
+      out.idea0=!!(a&&a.stray);if(a){S.flags.aniMet={hane:1,moko:1,tsuno:1};a.dr=1;document.querySelectorAll('.pxcard').forEach(c=>c.parentNode.remove());aniPop(a);out.ideaLearn=recipeKnown(ANI[a.k].hut);out.ideaNoPop=!document.querySelector('.pxcard');}
+      S.recipes=rc;rc.coop=rc.barn=true;S.ani=[];S.flags.aniMet={};ITEM_GIFTS.length=0;document.querySelectorAll('.idea-reveal,.gift-reveal').forEach(e=>e.remove())}
     /* 7×7 のかこい（柵）。中に、とり小屋（左上の近く）と水（池1マス） */
     const clear=(x,y)=>{const j=y*W+x;S.obj[j]='';delete S.ref[j];S.floor[j]='';S.ground[j]=0;if(S.fog)S.fog[j]=0};
     for(let y=y0-1;y<=y0+7;y++)for(let x=x0-1;x<=x0+7;x++)clear(x,y);
@@ -47,7 +51,7 @@ const assert=require('node:assert/strict');
     /* 小屋をこわすと、つぎの朝、野へかえる */
     /* 野良をタップすると、1ぴき1回だけ、50%で、とれる物を1こ落とす（小屋の生き物は落とさない） */{const R0=Math.random;Math.random=()=>0;const sd=[];for(const k of['hane','moko','tsuno']){S.drops=[];const b={id:200+sd.length,k,h:-1,stray:1,x:CX+.5,y:CY+6.6,face:1,wt:0};strayDrop(b);strayDrop(b);sd.push(S.drops.map(d=>d.id+':'+d.n+':'+!!d.tap).join())}
       S.drops=[];const hb={id:300,k:'hane',h:0,x:CX+.5,y:CY+6.6};aniPop(hb);document.querySelectorAll('.pxcard').forEach(c=>c.parentNode.remove());sd.push((S.drops||[]).length);Math.random=R0;S.drops=[];out.sdrop=sd}
-    {S.ani.push({id:99,k:'hane',h:-1,stray:1,x:1.5,y:1.6,face:1,wt:0});S.t=1440*4+18*60+1;run(30,()=>!S.ani.some(a=>a.id===99));out.strayGone=!S.ani.some(a=>a.id===99)}/* 野良は夕方に帰る */
+    {S.ani.push({id:99,k:'hane',h:-1,stray:1,x:1.5,y:1.6,face:1,wt:0});S.hold=0;S.t=1440*4+18*60+1;run(30,()=>!S.ani.some(a=>a.id===99));out.strayGone=!S.ani.some(a=>a.id===99)}/* 野良は夕方に帰る */
     out.spots=['makiba','norakomichi','fureai','hidamari','hoshikusa'].filter(k=>SPOTS.some(p=>p.k===k)).length;out.hints=CHATS.filter(c=>['makiba','norakomichi','fureai','hidamari','hoshikusa'].includes(c.hint)).length;
     const base=S.ani[0],grass=PENS.get(coop).find(j=>!S.obj[j]);
     S.t=1440*5+8*60;base.in=0;base.pet=0;base.fd=null;base.x=grass%W+.5;base.y=(grass/W|0)+.6;
@@ -60,10 +64,10 @@ const assert=require('node:assert/strict');
     out.birth=aniOf(coop).filter(a=>a.born===callDay()).length;
     out.yield=aniYield(coop);Math.random=rnd;
     clearObj(coop);recount();animalMorning();out.left=S.ani.length;
-    out.sub=!!SUBQ.find(q=>q.k==='animals1'&&q.learn.includes('coop')&&q.learn.includes('barn'));
+    out.sub=!!SUBQ.find(q=>q.k==='animals1'&&!q.learn);
     return JSON.stringify(out)})()`));
   console.log(r);
-  assert.equal(r.fenceWalk,false,'fence blocks');assert.ok(r.pen>0,'pen found');assert.equal(r.huts,1);assert.equal(r.open,null,'open fence is not a pen');
+  assert.equal(r.idea0,true,'stray comes without hut');assert.equal(r.ideaLearn,true,'tap learns hut');assert.equal(r.ideaNoPop,true,'idea instead of popup');assert.equal(r.fenceWalk,false,'fence blocks');assert.ok(r.pen>0,'pen found');assert.equal(r.huts,1);assert.equal(r.open,null,'open fence is not a pen');
   assert.equal(r.noStray,0,'no stray at 99%');assert.equal(r.stray,true,'stray came');assert.equal(r.strayOut,true,'outside village');
   assert.ok(r.spop.includes('野良のハネマリ')&&r.spop.includes('むかえる'),r.spop);assert.equal(r.atTap,true,'tap finds stray');assert.equal(r.going,true,'spirit goes');assert.ok(r.led>=0,'leading');assert.ok(r.home>=0,'settled');assert.equal(r.inPen0,true);assert.equal(r.h,true);
   assert.deepEqual(r.sdrop,['food:egg:1:true','mat:wool:1:true','food:milk:1:true',0],'stray drops '+r.sdrop);
