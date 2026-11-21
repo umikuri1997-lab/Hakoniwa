@@ -113,7 +113,7 @@ const SPOTS=[
   {k:'gohan',n:'ごはんどころ',main:o=>o==='crate',need:[[o=>TABLES.has(o),1]],how:'木箱と、食卓',eff:'まわり3マスで食べると、食べる速さ+20%'},
   {k:'nedoko',n:'ねどこ',room:1,main:o=>BEDSET.has(o),need:[[o=>TABLES.has(o),1]],how:'家の中に、ベッドと、食卓',eff:'その家の住み心地+5%'},
   {k:'makiba',n:'まきば',main:o=>o==='coop'||o==='barn',need:[[o=>o==='tub',1],[o=>o==='crate',1]],how:'とり小屋か家畜小屋と、水おけと、木箱',eff:'小屋へえさ・水を運ぶ速さ+10%'},/* 飼う生き物（animals.js） */
-  {k:'norakomichi',n:'のらの小道',main:o=>o==='coop'||o==='barn',need:[[o=>o==='signpost',1],[o=>o==='hedge',1]],how:'とり小屋か家畜小屋と、道しるべと、生垣',eff:'野良の生き物が来る確率+5%'},
+  {k:'norakomichi',n:'のらの小道',main:o=>o==='coop'||o==='barn',need:[[o=>o==='signpost',1],[o=>o==='hedge',1]],how:'とり小屋か家畜小屋と、道しるべと、生垣',eff:'野良の生き物が来る確率+10%'},
   {k:'fureai',n:'ふれあいひろば',main:o=>o==='coop'||o==='barn',need:[[o=>BENCHES.has(o),2]],how:'とり小屋か家畜小屋と、ベンチ2つ',eff:'まわり3マスで生き物をなでると、たのしさ+20%'},
   {k:'hidamari',n:'ひだまりのとや',main:o=>o==='coop',need:[[(o,q)=>FLOWERS.has(o)&&!isBud(q),2]],how:'とり小屋と、花2つ',eff:'生き物に水をあげる速さ+10%'},
   {k:'hoshikusa',n:'ほしくさおき場',main:o=>o==='barn',need:[[o=>o==='makidana',1]],how:'家畜小屋と、まき棚',eff:'まわり3マスで、えさの草を箱からとる速さ+10%'}];
