@@ -590,7 +590,7 @@ const QUESTS1=[
   stepQuest({id:'guardLearn',text:'こもれびのまもり',
    steps:[{id:'guardUse',t:'夜、フタバがこもれびのまもりで火のせいれいを守る',check:()=>!!S.flags.guardUsed,how:'夜、フタバがたたかいに出て、そばで「コワイノ」にねらわれている火のせいれいを葉っぱで守る。フタバがたたかうかは、せいれいの画面でえらぶ'}],
    talk:{who:POKO,when:()=>true,get lines(){const e=SEV1.find(x=>x.k===(S.flags.hDied?'e06d':'e06'));return e?sevLines(e.L)||[]:[]},
-    gives:{run(){S.flags.guard=true;memo('leaf','フタバが「こもれびのまもり」をおぼえた');skillPop('leaf','フタバが「こもれびのまもり」をおぼえた！',['夜、たたかうフタバのまわり3マスで、「コワイノ」にねらわれている、たたかうせいれいを、葉っぱで1人守る。','守られたせいれいは、40分のあいだ、「コワイノ」から受けるダメージ0.5倍。','つかったあとは、75分たつと、また守れる。'])}}},
+    gives:{run(){S.flags.guard=true;memo('leaf','フタバが「こもれびのまもり」をおぼえた');guardLearnPop()}}},
    get story(){return KS([['H','ゆうべは、助かったぜ。葉っぱが、ふわっとかかってさ。'],['F','#surprise|ほんと！？ ……ちゃんと、とどいてたんだ。'],['H','ああ。おまえも、いっしょに村を守ってたんだな。'],['F','#joy|うん！ これからも、いっしょに守ろうね。']])}}),
   {id:'wind',text:'風のせいれいをむかえよう',how:"「おく」→「ゆりのたね」を植えたり、ブランコを置いたりして風の力をため、朝に神殿の「！」から呼ぶ",check:()=>elemCount('wind')>=1&&NEWRES==null,prog:()=>'風の力 '+Math.floor(ATTR.wind)+'/'+needFor('wind'),
    talk:{who:POKO,when:()=>true,learn:['swing'],lines:[
