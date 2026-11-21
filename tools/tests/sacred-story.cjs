@@ -11,7 +11,15 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict');
   const read=()=>run(`(()=>{DLGGAP=0;dlgNext();let n=0;while(!document.querySelector('#dialog').hidden&&n++<160){DLGA.n=DLGA.full.length;DLGA.readReady=0;DLGA.holdUntil=0;if(sacredDirection())sacredDirection().waitUntil=0;const button=document.querySelector('#dlgBtns button');button.disabled=false;button.click();}return n;})()`);
   let root;const STAY=[];
   /* 調べの前に作る物：前からある物では進まない。依頼を受けてから、ふつうに置く（place）と進む */
-  await run(`window.buildFor=pid=>{const p=FIELD_PREP[pid];if(!p||!fieldPrepNeed(pid))return;const id=p.build.ids[0],b=BL[id],j=S.sacredRoot;
+  /* 設計図の準備（土・火）：依頼を聞くと設計図をもらい、切り株のそばに建ておわると進む。その物（あさぶくろ・たき火）をじかに置いても進まない */
+  await run(`window.buildBp=pid=>{const p=FIELD_PREP[pid],j=S.sacredRoot;if(!fieldPrepNeed(pid))return;const i=(S.bpInv||[]).findIndex(it=>it.k===p.bp);if(i<0)throw Error('no blueprint '+pid);
+    {const id=p.build.ids[0],k0=[...Array(W*H).keys()].find(k=>fieldDistance(k,j)===2&&canPlace(id,k%W,k/W|0,true));S.inv[id]=(S.inv[id]||0)+1;place(id,k0%W,k0/W|0);if(S.obj[k0]==='site')finishBuild(k0,null);recount();if(!fieldPrepNeed(pid))throw Error('a placed item must not count for a blueprint prep '+pid);clearObj(k0);recount()}
+    let at=null;for(let b=-12;b<=12&&!at;b++)for(let a=-12;a<=12;a++){const x=j%W+a,y=(j/W|0)+b;if(bpCheck(p.bp,x,y)[0]){at=[x,y];break}}if(!at)throw Error('no blueprint spot '+pid);
+    {const far=[...Array(W*H).keys()].find(k=>fieldDistance(k,j)>FIELD_NEAR_R+8&&bpCheck(p.bp,k%W,k/W|0)[0]===false);/* 遠い所には置けない */}
+    S.pt+=BPS[p.bp].pc;const m=bpCost(p.bp);for(const k in m)S.mat[k]=(S.mat[k]||0)+m[k];bpPlace(i,at[0],at[1]);const e=S.bp.find(q=>q.k===p.bp);if(!e)throw Error('blueprint not placed '+pid);if(fieldPrepNeed(pid).label!==p.wait)throw Error('wait label '+pid);
+    let n=0;while(S.bp.includes(e)&&n++<200){for(const q of e.cells)if(S.obj[q]==='site'&&S.dyn[q]&&S.dyn[q].bp===e.id)finishBuild(q,null);for(const q of e.cells)if(BPNAT.has(S.obj[q]))clearObj(q);bpTick()}
+    if(S.bp.includes(e))throw Error('blueprint not finished '+pid);if(fieldPrepNeed(pid))throw Error('blueprint prep not recorded '+pid+JSON.stringify(fieldStoryState(pid)));if(fieldBuiltCell(pid)==null)throw Error('no built cell '+pid);}`);
+  await run(`window.buildFor=pid=>{const p=FIELD_PREP[pid];if(!p||!fieldPrepNeed(pid))return;if(p.bp)return buildBp(pid);const id=p.build.ids[0],b=BL[id],j=S.sacredRoot;
     {const k0=[...Array(W*H).keys()].find(k=>fieldDistance(k,j)===2&&canPlace(b.kind==='block'?'path':id,k%W,k/W|0,true));if(b.kind==='block')S.floor[k0]=id;else S.obj[k0]=id;recount();if(fieldPrepNeed(pid))throw Error('an item already near the stump must count '+pid);/* 依頼の前から切り株のそばにある物も、数に入れる（fieldBuildAdopt） */S.obj[k0]='';S.floor[k0]='';fieldStoryState(pid).built.cells=[];recount();if(!fieldPrepNeed(pid))throw Error('removed item still counted '+pid);}
     let tries=0;while(fieldPrepNeed(pid)&&tries++<400){const k=[...Array(W*H).keys()].find(k=>fieldDistance(k,j)>=2&&fieldDistance(k,j)<=3&&!S.obj[k]&&!S.floor[k]&&canPlace(id,k%W,k/W|0,true));if(k==null)throw Error('no spot '+pid);
       if(b.kind==='build'){if(STATUE<0){S.obj[(CY+15)*W+CX+15]='statue';recount();}S.pt+=b.pc;for(const m in b.mat)S.mat[m]=(S.mat[m]||0)+b.mat[m];}else S.inv[id]=(S.inv[id]||0)+1;
