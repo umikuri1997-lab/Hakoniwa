@@ -200,7 +200,7 @@ function mzToolIcon(g){/* 「水路をほる」のアイコン（72×72のキャ
 PROS[MIZU]=[[GOD,'さて、こんどは水の土地じゃ。'],[GOD,'#worry|霧がはれず、水の流れも止まっておる。ひとりで歌っとる子が、まっておるぞい。'],[GOD,'では、行こうかの。']];
 INTROS[MIZU]=[[GOD,'ほい到着〜。ここが霧のみずべの村じゃ。'],[MIO,'#shy|……あ。守り神さま……？ わたし、ミオ。'],[MIO,'水が止まってから、村は、ずっと霧の中なの。'],[GOD,'まずは、あそこの古い神殿を直すとしようかの。']];
 QL[MIZU]=[
-  {id:'statue',text:'神殿を直してもらおう',check:()=>cnt('statue')>=1,by:GOD,how:'「しらべる」で、こわれた神殿をタップ',story:[[GOD,'#joy|ここが、おヌシとわしの居場所じゃ。'],[MIO,'……神殿。きれいに、なった。']]},
+  {id:'statue',text:'神殿を直してもらおう',check:()=>cnt('statue')>=1,by:GOD,how:'「しらべる」で、こわれた神殿をタップ',gives:{enemy:true},story:[[GOD,'#joy|ここが、おヌシとわしの居場所じゃ。'],[MIO,'……神殿。きれいに、なった。']]},
   {id:'mzgate1',text:'水門をひらこう',check:()=>mzOn()&&mzOpenN()>=1,prog:()=>'ひらいた水門 '+Math.min(1,mzOn()?mzOpenN():0)+'/1',how:'「しらべる」で、北の高い所にある、こわれた水門をタップ',story:[[MIO,'#joy|……水の音。ひさしぶりに、きこえた。']]},
   {id:'mzflow',text:'水路で水をながそう',check:()=>mzOn()&&MZC.wetN>=10,prog:()=>'水のとどいた水路 '+Math.min(10,MZC.wetN)+'/10',how:'「おく」→「水路をほる」で、ひらいた水門から低いほうへ、水路をつなぐ',story:[[MIO,'水がとおると、霧が、うすくなるの。'],[MIO,'#nod|もっと、とおくまで、ながしたいな。']]},
   {id:'mzdock',text:'船着き場を2つ、水でつなごう',check:()=>mzOn()&&MZC.comps.length>=1,prog:()=>'つながった船着き場 '+(mzOn()&&MZC.comps.length?2:Math.min(1,cnt('dock')))+'/2',how:'「おく」→「建てる」で、船着き場を水のとなりに2つ建てる。同じ高さの水でつながると、小舟が行き来する',story:[[MIO,'#joy|小舟が、うごいた。……むかしは、村じゅうを、舟がめぐっていたの。']]},
@@ -210,3 +210,7 @@ QL[MIZU]=[
   {id:'mzstage',text:'歌の舞台で歌おう',check:()=>mzOn()&&(S.mz.sung||0)>=1,prog:()=>'舞台で歌った日 '+(mzOn()?Math.min(1,S.mz.sung||0):0)+'/1',how:'食堂の家の中に、歌の舞台を置く。夕方の前に、ミオが歌う',story:[[MIO,'#shy|……ふたりで歌う歌だから、ひとりじゃ、半分なの。'],[MIO,'それでも、手拍子が、きこえた。']]},
   {id:'mzall',text:'水門を3つひらこう',check:()=>mzOn()&&mzOpenN()>=3,prog:()=>'ひらいた水門 '+(mzOn()?mzOpenN():0)+'/3',how:'水路をのばして霧を晴らすと、のこりの水門が見つかる',story:[[MIO,'#joy|みんな、ひらいた。水が、村へかえってくる。'],[MIO,'守り神さま、ありがとう。']]},
 ];
+
+/* 堀：水の流れる水路のマスは、コワイノの歩く速さ MZMOAT 倍（浅瀬の2倍ゆっくりに、かさねる。night.js） */
+const MZMOAT=.5;
+function mzMoat(j){return mzOn()&&!!MZC.wet&&MZC.S===S&&!!MZC.wet[j]}
