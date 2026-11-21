@@ -27,11 +27,7 @@ function hdFrame(){/* 1コマに1回（render のはじめ） */
   HDSUN=(h-12)/6*daylight;
   HDLEN=1+HDLONG*Math.abs(HDSUN);
 }
-function hdTint(h){/* 時間の光の色（soft-light でかさねる色と、こさ） */
-  if(h>=5&&h<8){const q=h<6.5?(h-5)/1.5:1-(h-6.5)/1.5;return['255,176,170',.55*q]}/* 明け方：うすいピンク */
-  if(h>=8&&h<15.5)return['255,236,196',.24];/* 昼：ほんのりあたたかい */
-  if(h>=15.5&&h<20){const q=h<18?(h-15.5)/2.5:1-(h-18)/2;return['255,150,72',.2+.3*q]}/* 夕方：オレンジ（光の帯がうもれないこさ） */
-  return null}
+function hdTint(h){/* 時間の光の色（soft-light でかさねる色と、こさ）：daycolor.js の表 DAYC の glow */const g=dcNow().glow;return g?[g.slice(0,3).map(Math.round).join(','),g[3]]:null}
 function hdWx(){/* 天気の光（multiply でかさねる色と、こさ） */
   if(typeof stormNow==='function'&&stormNow())return['150,165,195',.5];/* あらし：青く暗く */
   if(S.rain)return typeof snowNow==='function'&&snowNow()?['215,225,245',.3]:['185,198,222',.34+.12*(typeof wxRainK==='function'?wxRainK():1)];/* 雨が強いほど暗く *//* 雪：つめたい白・雨：青みの灰色 */
