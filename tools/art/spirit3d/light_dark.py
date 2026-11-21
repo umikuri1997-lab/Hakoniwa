@@ -6,6 +6,8 @@
 折り返しは額で高さ約56ドット、うなじで約32ドット。幅12〜16ドットの
 帯を頭に回し、その上辺に丸い紫の布をつなぐ。布は後頭部の中央近くで
 帯の上にたれ、うなじの高さで直径約18ドットの房をとめる。
+ケープは首もとから幅約64ドットに広がり、肩と背中を一枚の布で包む。
+胸の前は開いて三日月で留め、裾は丸い波形にする。
 """
 from math import pi
 import numpy as np
@@ -118,7 +120,7 @@ def chest_mark(body, dark):
         pigment = tones(rgb('#ecad48'),rgb('#fff2ad'),
                         np.clip(.58+.45*depth[mask]-.10*x[mask],0,1))
     at = surface_points[mask].copy()
-    at[:,1] += .32
+    at[:,1] += 1.9 if dark else .32
     return at,pigment
 
 
@@ -182,19 +184,28 @@ def night_cap():
 
 
 def mantle():
-    """左右の肩から伸びて、先へ行くほど下がる短い外套。"""
-    u,v = np.meshgrid(np.linspace(0,1,100),np.linspace(0,1,55),indexing='ij')
-    u,v = u.ravel(),v.ravel()
-    x = 7+24*u
-    top = 30-10*u
-    bottom = 22-12*u+6*u**3
-    z = top*(1-v)+bottom*v
-    y = (7.2-3.5*u)*np.cos(pi*v)+2*u
-    right = np.column_stack((x,y,z))
-    left = right*np.array([-1,1,1])
-    points = np.concatenate((right,left))
-    shade = np.clip(.64+.017*(points[:,2]-21)-.007*points[:,0],0,1)
-    return points,tones(rgb('#795483'),rgb('#bc96c5'),shade)
+    """三日月の留め具から肩と背中を一枚で包む短いケープ。"""
+    drop = np.linspace(0,1,115)[:,None]
+    around = np.linspace(0,1,560)
+    opening = .035+.36*drop**1.35
+    angle = opening+(2*pi-2*opening)*around
+    side,front = np.sin(angle),np.cos(angle)
+
+    # 襟から肩へ広げ、六つの丸い山が裾につながる。
+    lobe = .5+.5*np.cos(6*angle)
+    ripple = lobe*drop**2.4
+    x = (9.4+22.2*drop+1.4*ripple)*side
+    y = (11.5+9.8*drop+.9*ripple)*front
+    y += drop*(4.5*side**2-.7)
+    # 背中の布はしっぽのつけ根を覆い、下からしっぽを出す。
+    y -= 9*np.maximum(-front,0)**5*np.sin(pi*drop)**1.5
+    hem = 16.3+1.1*front-5*lobe
+    z = 28.7+(hem-28.7)*drop**1.3
+    cloth = np.stack((x,y,z),axis=-1).reshape(-1,3)
+
+    shade = np.clip(.69-.26*drop+.15*lobe*drop-.09*side+.035*front,0,1)
+    color = tones(rgb('#875995'),rgb('#c9a6d2'),shade.ravel())
+    return cloth,color
 
 
 class LightDark(Spirit):
