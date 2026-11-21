@@ -29,6 +29,7 @@ const context = vm.createContext({
   i: phase === null ? null : 1, rideAng: () => phase,
   PLROTS: {kazami: dir}, performance: {now: () => 0},
 });
+const water = ['dock', 'raft', 'mzchest', 'mzgate', 'mzgateb'].includes(name);
 const wind = fs.readFileSync('js/wind.js', 'utf8');
 const windArt = wind.slice(wind.indexOf('function drawWindObj'), wind.indexOf('function drawRide0'));
 const ride = wind.slice(wind.indexOf('function drawRide0')).split('\n\n')[0];
@@ -37,6 +38,11 @@ let anchor = [32, 56];
 if (rides.has(base)) {
   vm.runInContext('drawRide(c, base, name !== base, 0, 0, i, 0)', context);
   anchor = [base === 'wheel' ? 96 : 64, 112];
+} else if (water) {
+  const mz = fs.readFileSync('js/mizube.js', 'utf8');
+  vm.runInContext(mz.slice(mz.indexOf('const mzPx='), mz.indexOf('function mzBoatDraw')), context);
+  vm.runInContext('mzDrawObj(c, name, 0, 0, null, 1)', context);
+  anchor = [32, 64];
 } else {
   vm.runInContext('drawWindObj(c, name, 0, 0, null, 0, 0)', context);
 }
