@@ -676,6 +676,7 @@
   - 追い風（`windTail`）：風の道の上を、風と同じ向きに歩くと移動速度1.5倍（`WINDTAIL`）。
   - 風車・古い風車（`oldmill`、見た目だけ）は、風のステージでは、まわり2マスに風の道があるときだけまわる。
   - 水の中を歩く所（道さがし・ハスを植える・水あび）は `waterJ` で見る（`S.ground===1` で見ると、雲の橋から雲の海へ歩き出す）。
+- 風の草・花・素材（`tools/art/windgrass/windgrass_art.py`、もらった白い背景の絵は `unwhite.py` ですかす）：雑草はなびき草 `weed4g`・ほうき草 `weed4k`（`weedSt` が4）、花はたんぽぽ `tanpopo`（風の村でははじめから植えられる）。雲わた（雲の海のふちの陸）・風の羽（風の道の上・風の小鳥の落とし物）は毎朝、落とし物でわく（`windMatMorning`）。草原の草を使う家具は、風では `mat4`（風での素材。実数で書く）。素材を足したら、`MATN`・`MATTRADE`・`GRASSK`・`NOMAT` にも足す。
 - 風の木はアカシア（植えた木 `tree~k`・自然の木 `deadtree~k`、切ると木材。設計図 `tools/art/furn3d/items/nat_acacia.py`、モデルは `acacia_prep.py`）。ステージでの木の名前は `STAGEN[ステージ]`。風・水・闇でそろえる物の案は `IDEAS.md`。
 - 風の塀は、遊園地の白い塀（`parkfence`・ドア `parkdoor`・入場ゲート `parkgate`、`STAGEONLY` 風）。3Dから写す（`fence3d.py` の `scene_park`・`doors3d.py`）。白い物は、ふつうのかげだと灰色になるので、かげをつけない材質（`flat`）で写す。
 - 風の家の壁は、帆布の壁（`canvaswall`、新しい風の村のはじめの家・設計図の壁）とアカシアの板壁（`acaciawall`）。3Dとテクスチャで写した5まい（上の面・正面・柱の切り口と正面・たての帯）を、竹の壁の道具の `part`・`vpart` で組む（`tools/art/windwall/windwall3d.py`）。壁の正面に光があたる向きで写す（ふつうの光だと、正面がかげになって白い布が灰色になる）。
