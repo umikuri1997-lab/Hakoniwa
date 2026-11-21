@@ -24,6 +24,7 @@ PAL={
  'te':dict(size=2.2,base=(58,48,56),eye=None,kind='te')}
 def norm(V):
     H=max(V[:,2].max(),1e-6);return (V[:,0]-.5)/H,(V[:,1]-.5)/H,V[:,2]/H,H
+MODELCOL=True   # True：モデルの色を使う（持ち主が色をつけたモデル）。False：場所で色をぬる（色のないモデルのとき）
 def comps(V,F):
     """つながった部品ごとの番号（点の場所が同じなら、つながっているとみる）"""
     from scipy.sparse import coo_matrix
@@ -34,6 +35,7 @@ def comps(V,F):
 def paint(name):
     D=PAL[name]
     def f(V,F,Cf):
+        if MODELCOL:return Cf   # 持ち主が色をつけたモデル（トリポのテクスチャを点の色にした物）：その色のまま
         P=V[F].mean(1);xn,yn,zn,H=norm(P);c=np.tile(np.array(D['base'],float),(len(F),1))
         g=COLOR.get(name)
         if g:c=g(xn,yn,zn,c)
