@@ -241,7 +241,7 @@ function freeSetup(s){const used=new Set(['フタバ','ノドカ']);const nm=()=
   let c2=false;try{const t=KV.getItem(SAVE_KEYS[1]);c2=!!(t&&JSON.parse(t).cleared)}catch(e){}if(c2){s.inv.hotstone=(s.inv.hotstone||0)+2;s.flags.giftV=1}/* 火山の村をクリアしていたら、ほのお石もとどく */syncQuestRecipes(s)}
 QL[FREE]=QUESTSF;PROS[FREE]=PROF;INTROS[FREE]=[];
 /* ---------- 風のやんだ空の村（WORLD 5）：風のやんだ遊園地。この島は、むかし、ヌシ様の風で遊具がまわる空の遊び場だった。風が止まって遊具も止まり、せいれいたちは楽しむことをわすれている。
-   いまあるのは、風穴 → 神殿 → ハヤテが目をさます → メリーゴーラウンド → コーヒーカップと空中ブランコ、まで。観覧車の山場・雲の下・さいごの夜は、これから（IDEAS.md）。夜のコワイノも、まだ来ない ---------- */
+   風穴 → 神殿 → ハヤテが目をさます → メリーゴーラウンド → コーヒーカップと空中ブランコ → 島をぜんぶ → 観覧車のてっぺん → 雲の切れ目 → さいごの夜 → ヌシ様をむかえる（後半は wind-story.js）。ふだんの夜にコワイノは来ない ---------- */
 const PROLOGUE5=[
   [GOD,'つぎの土地は、空の上じゃ。雲の海に、島がいくつもうかんでおる。'],
   [GOD,'#joy|むかしは、風でまわる遊び場があってのう。笑い声が、雲の下までとどいたもんじゃ。'],
@@ -280,7 +280,13 @@ const QUESTS5=[
    talk:{who:KAZANE,when:()=>true,lines:[[KAZANE,'#think|……ほかの島にも、遊具がしずんでいたはずだ。カップと、空のブランコ。'],[HAYATE,'#joy|ぜんぶ動かそう！ 音が聞こえたら、ねむっているみんなも、きっと起きてくるよ。'],[KAZANE,'フッ……きみに言われると、できる気がしてくるから、ふしぎだ。']]},
    story:[[KAZANE,'フッ……ひとつ動かすたびに、ひとつ思い出すね。遊ぶって、こういうことだったか。'],[HAYATE,'#think|ねえ、カザネ。……どうして風は、やんだんだろう。'],[KAZANE,'#think|……さあね。あの方は、なにも言わずに、行ってしまったから。'],[HAYATE,'……カザネ。']]},
   {id:'windAll',text:'島をぜんぶうかせよう',check:()=>windUpN()>=windIsleN(),prog:()=>'うかんだ島 '+windUpN()+'/'+windIsleN(),how:'うかんだ島の風穴をひらいて、風をつぎの島へとどける'},
-  {id:'windVillage',text:'空の遊び場を、にぎやかにしよう',check:()=>false,how:'この土地のお話のつづきは、まだない'},
+  {id:'windWheel',text:'観覧車を動かそう',check:()=>!!S.flags.windTop,prog:()=>cnt('wheel')?'観覧車にのったせいれい 0/1':'こわれた観覧車 0/1',how:'いちばん大きな島の、こわれた観覧車を直す。風のせいれいが係になると動く',
+   talk:{who:HAYATE,when:()=>true,lines:[[HAYATE,'#think|いちばん大きな島に、観覧車があったよね。'],[HAYATE,'てっぺんからなら、雲の下まで見えるかもしれない。'],[KAZANE,'#think|……雲の下、か。あの方が、行ってしまった所だね。'],[HAYATE,'#joy|行こう、カザネ。こんどは、きみものるんだよ。']]}},/* てっぺんの場面（wind-story.js の windTopScene）で、雲の下のつばさが見える */
+  {id:'windCall',text:'雲の切れ目に、風をとどけよう',check:()=>!!S.flags.windCall,prog:()=>'雲の切れ目にとどいた風 '+(typeof windGapOK==='function'&&windGapOK()?1:0)+'/1',how:'観覧車の島のはしの、雲の切れ目まで、風の道をのばす。風の道は、かざみで曲がる',
+   talk:{who:KAZANE,when:()=>true,lines:[[KAZANE,'あの雲の切れ目まで、風をとどけてみよう。'],[KAZANE,'#think|ぼくたちの風が、まだここにあるって、あの方に知らせたいんだ。'],[HAYATE,'#joy|かざみで、まげていけばいいんだね！']]}},
+  {id:'windNight',text:'ひと晩、遊び場を守ろう',check:()=>!!S.flags.windWon,prog:()=>typeof windNightProg==='function'?windNightProg():'',how:'遊具を4つとも直すと、その夜、影が遊具をねらってくる。朝まで遊具を2つのこせば、守りぬける',
+   talk:{who:KAZANE,when:()=>true,lines:[[KAZANE,'ヌシ様が、つばさをひらくときは、影も目をさます。'],[KAZANE,'#think|影は、遊具をねらってくるはずだ。笑い声のもとを、こわしに。'],[HAYATE,'#joy|守りぬこう、カザネ。朝まで、遊び場をまわしつづけるんだ！']]}},
+  {id:'windEnd',text:'ヌシ様をむかえよう',check:()=>!!S.flags.windEnd,how:'朝になると、ヌシ様が雲の上へのぼってくる'},
 ];
 QL[WIND]=QUESTS5;PROS[WIND]=PROLOGUE5;INTROS[WIND]=INTRO5;
 
