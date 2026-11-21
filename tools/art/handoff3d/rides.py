@@ -12,7 +12,9 @@
 つなぐ。半径1.55の二重の輪を8本のスポークで車軸に固定。
 4個のゴンドラを輪の横軸に吊り、座面を横軸の0.49下に置く。
 """
-from math import cos, sin, tau
+from math import cos, sin, sqrt, tau
+
+from common import WOOD
 
 PINK = (241, 164, 180)
 CREAM = (255, 241, 211)
@@ -20,6 +22,8 @@ MINT = (143, 208, 186)
 GOLD = (222, 176, 116)
 TRIM = (168, 118, 111)
 BLUE = (206, 233, 231)
+BRASS = (184, 136, 83)
+LEATHER = (159, 102, 95)
 SEATS = {"merry": 3, "cup": 2, "skyswing": 3, "wheel": 4}
 SPEED = {"merry": 1, "cup": 1.3, "skyswing": 1, "wheel": .35}
 
@@ -30,8 +34,15 @@ def polar(radius, angle, z):
 
 def carousel(m, phase, broken, seats):
     m.lathe([(0, 0), (1.23, 0), (1.29, .08), (1.29, .24),
-             (1.24, .30), (0, .30)], GOLD)
-    m.rod((0, 0, .24), (.13 if broken else 0, 0, 2.65), .075, GOLD)
+             (1.24, .255), (0, .255)], GOLD, surface="wood")
+    for i in range(-6, 7):
+        y = i*.18
+        half = sqrt(1.24**2-(abs(y)+.084)**2)
+        m.box((-half, y-.084, .254), (half, y+.084, .30), WOOD)
+    m.rod((0, 0, .24), (.13 if broken else 0, 0, 2.65), .075, GOLD, surface="wood")
+    for z in (.34, .47, 1.95):
+        m.lathe([(.082, z), (.105, z), (.105, z+.04), (.082, z+.04)],
+                BRASS, z*.05 if broken else 0, surface="metal")
     roof_x = .18 if broken else 0
     for panel in range(12):
         if broken and panel in (1, 2):
@@ -41,10 +52,12 @@ def carousel(m, phase, broken, seats):
         x, y, z = polar(1.31, a, 2.14 + .10 * cos(a) * broken)
         u, v, w = polar(1.31, b, 2.14 + .10 * cos(b) * broken)
         color = PINK if panel % 2 else CREAM
-        m.part(color)
+        m.part(color, surface="cloth")
         m.sc.tri((roof_x, 0, 2.65), (x, y, z), (u, v, w), m.color(color))
         m.sc.quad((x, y, z), (u, v, w), (u, v, w-.10),
                   (x, y, z-.10), m.color(color))
+        m.rod((x, y, z-.095), (u, v, w-.095), .019, GOLD)
+        m.rod((roof_x, 0, 2.65), (x, y, z+.015), .014, CREAM)
     m.ball((roof_x, 0, 2.69), .09, GOLD)
     for index in range(3):
         angle = phase + index * tau / 3
@@ -61,6 +74,11 @@ def carousel(m, phase, broken, seats):
         m.rod(horse(-.17, 0), horse(.15, 0), .115, CREAM)
         m.rod(horse(.12, .02), horse(.18, .25), .065, CREAM)
         m.rod(horse(.15, .23), horse(.30, .19), .065, CREAM)
+        m.rod(horse(.15, .23), horse(.13, .32), .027, CREAM)
+        m.rod(horse(-.16, .025), horse(-.32, -.13), .038, GOLD)
+        m.rod(horse(.095, .15), horse(.145, .247), .028, GOLD)
+        m.ball(horse(.235, .234), .025, LEATHER)
+        m.rod(horse(.205, .15), horse(.27, .20), .017, LEATHER)
         for along in (-.12, .13):
             m.rod(horse(along, -.03), horse(along-.05, -.28), .039, CREAM)
         m.rod(horse(-.075, .105), horse(.075, .105), .045, PINK)
@@ -74,6 +92,9 @@ def cups(m, phase, broken, seats):
              (1.30, .30), (0, .30)], MINT)
     m.lathe([(0, .30), (.12, .30), (.10, .67), (0, .69)], GOLD)
     m.ball((0, 0, .70), .10, PINK)
+    m.lathe([(1.29,.231),(1.37,.231),(1.36,.265),(1.29,.265)], CREAM)
+    for i in range(12):
+        m.ball(polar(1.29, i*tau/12, .262), .025, BRASS, surface="metal")
     for index in range(2):
         angle = phase + index * tau / 2
         x, y, _ = polar(.70, angle, 0)
@@ -82,9 +103,15 @@ def cups(m, phase, broken, seats):
         first = m.sc.pid
         m.lathe([(0, z), (.24, z), (.34, z+.13), (.41, z+.47),
                  (.355, z+.47), (.295, z+.16), (0, z+.16)], color, x, y)
+        m.lathe([(.344, z+.20), (.365, z+.20), (.369, z+.23),
+                 (.349, z+.23)], CREAM, x, y)
         m.lathe([(.357, z+.47), (.412, z+.47), (.412, z+.52),
                  (.357, z+.52), (.357, z+.47)], CREAM, x, y)
         m.box((x-.19, y-.10, z+.16), (x+.19, y+.05, z+.22), MINT)
+        m.rod((x,y,z+.15), (x,y,z+.31), .033, BRASS, surface="metal")
+        wheel = [(x+.095*cos(i*tau/20), y+.095*sin(i*tau/20), z+.31)
+                 for i in range(21)]
+        m.tube(wheel, .018, CREAM)
         if not (broken and index == 1):
             m.tube([(x+(.34+.13*sin(k*tau/16))*cos(angle),
                      y+(.34+.13*sin(k*tau/16))*sin(angle),
@@ -100,10 +127,17 @@ def swing(m, phase, broken, seats):
     m.lathe([(0, 0), (.68, 0), (.72, .11), (.67, .22),
              (.31, .27), (0, .27)], GOLD)
     top = (.23 if broken else 0, 0, 4.16)
-    m.rod((0, 0, .22), top, .079, GOLD)
+    m.rod((0, 0, .22), top, .079, GOLD, surface="metal")
+    m.lathe([(.13,.22),(.23,.22),(.19,.34),(.16,.49),(.10,.49)],
+            BRASS, surface="metal")
+    for i in range(6):
+        m.ball(polar(.59, i*tau/6, .216), .029, BRASS, surface="metal")
     m.lathe([(0, 4.04), (.74, 4.04), (.78, 4.17), (.71, 4.25),
              (.10, 4.42), (0, 4.42)], PINK, top[0])
     m.ball((top[0], 0, 4.48), .081, CREAM)
+    for i in range(12):
+        x, y, z = polar(.742, i*tau/12, 4.17)
+        m.ball((x+top[0], y, z), .041, CREAM)
     for index in range(3):
         angle = phase + index * tau / 3
         x, y, z = polar(1.20 if not broken else .81, angle, 1.57)
@@ -115,16 +149,31 @@ def swing(m, phase, broken, seats):
             m.rod((hx+top[0]+side*.09, hy, hz),
                   (x+side*.15, y, z+.03), .019, MINT)
         m.box((x-.19, y-.12, z-.05), (x+.19, y+.12, z+.04), PINK)
-        m.box((x-.19, y-.13, z+.04), (x+.19, y-.08, z+.21), CREAM)
+        m.box((x-.19, y-.13, z+.04), (x+.19, y-.08, z+.21), CREAM,
+              surface="cloth")
+        for side in (-1, 1):
+            sx = x+side*.175
+            m.rod((sx,y-.10,z+.13), (sx,y+.095,z+.13), .024, PINK)
+            m.ball((sx,y+.09,z+.12), .026, CREAM)
         seats.append((x, y, z+.04))
 
 
 def wheel(m, phase, broken, seats):
     hub = (-.13 if broken else 0, -.40, 2.94)
-    m.box((-1.32, -.69, 0), (1.32, .69, .13), GOLD)
+    m.box((-1.32, -.69, 0), (1.32, .69, .13), GOLD, surface="wood")
+    for i in range(8):
+        y = -.65+i*.165
+        m.box((-1.31, y, .125), (1.31, y+.155, .161), WOOD)
+    m.box((-.35,.65,.024),(.35,.79,.077), WOOD)
+    m.box((-.35,.62,.074),(.35,.72,.119), WOOD)
     for side in (-1, 1):
         for y in (-.58, .51):
-            m.rod((side*1.06, y, .12), (hub[0], y, hub[2]), .089, MINT)
+            m.rod((side*1.06, y, .12), (hub[0], y, hub[2]), .089, MINT,
+                  surface="metal")
+            x = side*1.06
+            m.box((x-.15,y-.10,.144), (x+.15,y+.10,.21), BRASS)
+            for dx in (-.109, .109):
+                m.ball((x+dx,y,.21), .024, CREAM)
         m.rod((-1.08, side*.50, .71), (1.08, side*.50, .71), .047, GOLD)
     m.rod((hub[0], -.65, hub[2]), (hub[0], .55, hub[2]), .09, GOLD)
 
@@ -158,6 +207,11 @@ def wheel(m, phase, broken, seats):
         for dx in (-.25, .19):
             m.box((x+dx, -.07, z-.44), (x+dx+.06, .26, z-.23), color)
         m.box((x-.19, -.075, z-.44), (x+.19, -.025, z-.23), BLUE)
+        if not broken:
+            m.rod((x-.19,.253,z-.29), (x+.19,.253,z-.29), .018, color,
+                  surface="metal")
+        for dx in (-.15,.15):
+            m.ball((x+dx,.25,z-.466), .028, CREAM)
         seats.append((x, .12, z-.43))
     if broken:
         m.rod((-.96, .50, .16), (-1.23, .73, .23), .045, PINK)
