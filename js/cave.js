@@ -111,6 +111,8 @@ const CVJOBANIM={push:'mine',sluice:'water',leaf:'plant'};
 const CVFOS={kai:'うずまき貝の化石',shida:'シダの葉の化石',hone:'さかなのほねの化石',kiba:'おおきなきばの化石',tsume:'つめあとの化石'},CVFOSK=Object.keys(CVFOS),CVFOSALL=100;/* 5しゅるいそろえたときのパワー */
 /* 宝箱（マスの場所ごと）。家具は、はじめの1回だけ。2回めからは CVAGAIN のパワー */
 const CVAGAIN=30;
+const CVTAPR=3;/* マス：タップした所から、これより遠くにしか行ける所がなければ、歩かない */
+const CVLOOKMS=6000;/* ドラッグで見回したあと、カメラがパーティへもどらない時間（ミリ秒）。タップで歩きだしたら、すぐもどる */
 const CVDARK=.88;/* 光のとどかない所の暗さ */
 const CVGLOW=1.5,CVOREGLOW=1.1,CVLURE=9;/* マス：光るきのこ・光る鉱石のあかり・見ていない所の光が見えるきょり */
 const CVOREP=.06;/* 正面の見える岩のうち、光る鉱石のわりあい */
@@ -296,17 +298,25 @@ function cvUse(j,o){const C=CV;C.focus=null;C.askHome=-1;C.sel=null;
   ba.job={k:o.k==='o'?'pick':'chest',j,t:0};ba.jq=[];ba.path=bp;ba.mv=false;ba.chase=false;cvGo(bp.length?bp[bp.length-1]:cvCell(ba),ba);sfx('tap')}
 function caveTap(sx,sy){const C=CV;if(!C||cvHold())return;const w=toWorld(sx,sy),wx=w.x/TS,wy=w.y/TS,x=Math.floor(wx),y=Math.floor(wy)-CVOY,in0=x>=0&&y>=0&&x<CVW&&y<CVH;
   if(LIGHTARM){caveLight(x,y);return}
+  C.lookU=0;/* タップしたら、カメラはパーティへもどる */
   if(C.sel&&in0){const sel=C.sel,tj=cvJ(x,y);C.sel=null;
     if(sel.k==='b'){const d=cvPushDirs(sel.j).find(q=>q.t===tj),a=C.party.find(q=>q.elem==='earth');if(d&&a){const p=cvBfs(cvCell(a),q=>q===d.s);if(p){a.job={k:'push',j:sel.j,to:d.t,s:d.s,t:0};a.jq=[];a.path=p;a.mv=false;a.chase=false;C.sel=sel;sfx('tap')}return}if(tj===sel.j){cvHudUpd();return}}
     if(sel.k==='m'){const a=C.party.find(q=>q.elem==='wind');if(a&&C.seen[tj]&&cvWalk(tj)){const p=cvBfs(cvCell(a),q=>q===tj);if(!p)return toast('そこへ行けません');a.job={k:'blow',j:sel.j,at:tj,t:0};a.jq=[];a.path=p;a.mv=false;a.chase=false;C.mark={x:x+.5,y:y+.5,t0:performance.now()};sfx('tap');return}}
     cvHudUpd()}
   {let be=null,bd=1e9;for(const e of C.en){if(e.dead||!C.seen[cvCell(e)])continue;const z=EN[e.type].size,d=Math.hypot(e.x-wx,e.y-.6*z-wy);if(d<.9*Math.max(1,z)&&d<bd){bd=d;be=e}}
     if(be){C.focus=be;C.askHome=-1;for(const a of C.party){a.mv=false;a.job=null;a.jq=[];a.rp=0}C.mark={x:be.x,y:be.y-CVOY,t0:performance.now(),foe:1};sfx('tap');return}}
-  if(!in0)return;let j=cvJ(x,y),o=C.ob.get(j);
-  if(!cvObjTap(o)&&y+1<CVH&&wy-(y+CVOY)>.45){const o2=C.ob.get(j+CVW);if(cvObjTap(o2)&&o2.k!=='S'&&o2.k!=='R'&&o2.k!=='k'){o=o2;j+=CVW}}/* 物の絵は上へはみ出すので、すぐ上のマスの下半分でも、その物 */
-  if(cvObjTap(o)&&C.seen[j])return cvUse(j,o);
-  let tj=j;if(!C.seen[tj]||!cvWalk(tj)){tj=-1;let bd=1e9;for(let k=0;k<CVW*CVH;k++)if(C.seen[k]&&cvWalk(k)){const d=Math.hypot(cvX(k)-x,cvY(k)-y);if(d<bd){bd=d;tj=k}}}/* 見えている歩けるマスのうち、いちばん近い所 */
-  if(tj<0)return;C.focus=null;C.askHome=-1;cvGo(tj);C.mark={x:cvX(tj)+.5,y:cvY(tj)+.5,t0:performance.now()};sfx('tap')}
+  if(in0){let j=cvJ(x,y),o=C.ob.get(j);
+    if(!cvObjTap(o)&&y+1<CVH&&wy-(y+CVOY)>.45){const o2=C.ob.get(j+CVW);if(cvObjTap(o2)&&o2.k!=='S'&&o2.k!=='R'&&o2.k!=='k'){o=o2;j+=CVW}}/* 物の絵は上へはみ出すので、すぐ上のマスの下半分でも、その物 */
+    if(cvObjTap(o)&&C.seen[j])return cvUse(j,o)}
+  /* 歩く先：暗い所でも、歩いて行ける所ならそこへ。行けなければ、タップに近い、行ける所 */
+  const tj=cvTapGoal(x,y);if(tj<0)return toast('そこへは行けません');
+  if(in0&&tj!==cvJ(x,y)&&cvWalk(cvJ(x,y)))toast('そこへは行けません');/* 床なのに行けない（岩だなの上 など）：近くまで行く */
+  C.focus=null;C.askHome=-1;cvGo(tj);C.mark={x:cvX(tj)+.5,y:cvY(tj)+.5,t0:performance.now()};sfx('tap')}
+/* パーティが歩いて行けるマスのうち、タップ（x,y）にいちばん近いマス（CVTAPR より遠ければ -1） */
+function cvTapGoal(x,y){const C=CV;if(!C.party.length)return -1;const rc=new Uint8Array(CVW*CVH),q=[];
+  for(const a of C.party){const j=cvCell(a);if(j>=0&&j<CVW*CVH&&!rc[j]){rc[j]=1;q.push(j)}}
+  for(let h=0;h<q.length;h++){const j=q[h],jx=cvX(j),jy=cvY(j);for(const[dx,dy]of DIRS){const a=jx+dx,b=jy+dy;if(a<0||b<0||a>=CVW||b>=CVH)continue;const k=cvJ(a,b);if(rc[k]||!cvWalk(k)||!cvStepOK(j,k))continue;rc[k]=1;q.push(k)}}
+  let tj=-1,bd=CVTAPR+.01;for(const k of q){const d=Math.hypot(cvX(k)-x,cvY(k)-y);if(d<bd){bd=d;tj=k}}return tj}
 
 /* ---------- 1コマ ---------- */
 function cvJobTick(a,cdt,now){const C=CV,J=a.job,o=C.ob.get(J.j),cj=cvCell(a),end=()=>{a.job=null};if(!o)return end();
@@ -525,8 +535,9 @@ function cvWaterDraw(now){const C=CV,x0=Math.max(0,Math.floor(cam.x/TS)),x1=Math
     if(u<320){P4('#bfe3f5',px,py-(1-u/320)*(1-u/320)*70-2,1,3);continue}if(!d.s){d.s=1;if(typeof sfxAt==='function')sfxAt('cavedrip',d.x,d.y+CVOY)}
     const q=(u-320)/780;ctx.globalAlpha=(1-q)*.8;if(d.w){const r=2+q*9;for(let i=0;i<10;i++){const an=i/10*6.283;P4('#9fd0e6',px+Math.cos(an)*r,py+Math.sin(an)*r*.45,1,1)}}else{P4('#bfe3f5',px-2-q*3,py-q*4,1,1);P4('#bfe3f5',px+2+q*3,py-q*4,1,1);P4('#6f8f9e',px-1,py,3,1)}ctx.globalAlpha=1}}
 function cvCamTo(k){const C=CV;if(!C||!C.party.length)return;let x=0,y=0;for(const a of C.party){x+=a.x;y+=a.y}x=x/C.party.length*TS;y=(y/C.party.length-.6)*TS;const tx=x-VW/cam.z/2,ty=y-VH/cam.z/2;cam.x+=(tx-cam.x)*k;cam.y+=(ty-cam.y)*k}
-function caveClamp(){cam.z=clamp(cam.z,1.2,3)}/* 洞窟のあいだは、カメラはパーティを追う（clampCam のかわり） */
-function caveRender(now){const C=CV;if(!C)return;cvCamTo(.12);const k=dpr*cam.z;
+function caveClamp(look){cam.z=clamp(cam.z,1.2,3);const C=CV;if(!C)return;if(look)C.lookU=performance.now()+CVLOOKMS;/* ドラッグ・ピンチで見回したあいだは、パーティを追わない */
+  const vw=VW/cam.z,vh=VH/cam.z;cam.x=clamp(cam.x,-vw/2,CVW*TS-vw/2);cam.y=clamp(cam.y,CVOY*TS-vh/2,(CVOY+CVH)*TS-vh/2)}/* 洞窟の外へ行きすぎない（clampCam のかわり） */
+function caveRender(now){const C=CV;if(!C)return;if(!(C.lookU>now))cvCamTo(.12);const k=dpr*cam.z;
   ctx.setTransform(1,0,0,1,0,0);ctx.fillStyle='#1a1511';ctx.fillRect(0,0,cv.width,cv.height);const CX=Math.round(cam.x*k),CY=Math.round(cam.y*k);ctx.setTransform(k,0,0,k,-CX,-CY);
   const sm=ctx.imageSmoothingEnabled;ctx.imageSmoothingEnabled=false;
   {const vx0=cam.x/TS,vx1=(cam.x+VW/cam.z)/TS,vy0=cam.y/TS-CVOY,vy1=(cam.y+VH/cam.z)/TS-CVOY,n=CVCH*TS,p=CVPAD/2;
