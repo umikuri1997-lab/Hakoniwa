@@ -209,10 +209,10 @@ function windBeat(k){/* 会話の合図 wind:<場面> */if(k!=='peek'||!windOn()
 function windSceneReset(){WSCN=[];WPART=null}
 function drawWindScene(c,now){/* つばさ・ヌシ様の顔・ねむる影（雲の上、夜の暗さより下） */if(!WSCN.length)return;WSCN=WSCN.filter(s=>now<s.end+1500);
   for(const s of WSCN){if(now<s.t0)continue;const fin=Math.min(1,(now-s.t0)/1500),out=s.end===Infinity?1:Math.max(0,1-(now-s.end)/1500),a=fin*out;if(a<=0)continue;
-    if(s.k==='peek'){const tw=.55+.45*Math.sin((now-s.t0)/260);wingDots(c,s.x,s.y,1,a*.6*tw,now)}
+    if(s.k==='peek'){const tw=.55+.45*Math.sin((now-s.t0)/260);if(!(typeof wnDraw==='function'&&wnDraw(c,'support',s.x,s.y+8,a*.6*tw,false,.5)))wingDots(c,s.x,s.y,1,a*.6*tw,now)}/* 雲のすきまに見えるつばさ */
     else{c.save();c.globalAlpha=a*.85;c.fillStyle='#eef6ff';const R=4*TS;for(let i=-R;i<=R;i+=8){const h=Math.round(Math.sqrt(Math.max(0,R*R-i*i))*.45/4)*4;c.fillRect(Math.round(s.x+i),Math.round(s.y-h),8,h*2)}c.restore();/* 雲がひらいた所：うすい空の色のだ円（段々） */
-      wingDots(c,s.x,s.y+10,1.6,a,now);for(const[dx,dy]of[[-46,18],[-14,26],[22,20]])if(typeof drawShade==='function'){c.save();c.globalAlpha=a*.8;drawShade(c,'basic',s.x+dx,s.y+dy,.18,1,{dot:1,t:0});c.restore()}/* つばさのかげで、ねむる影 */
-      nushiFaceDots(c,s.x,s.y-30,a,now)}}}
+      const art=typeof wnDraw==='function'&&wnDraw(c,'support',s.x,s.y+10,a);if(!art)wingDots(c,s.x,s.y+10,1.6,a,now);/* つばさで島をささえる姿（3Dの絵） */for(const[dx,dy]of[[-46,18],[-14,26],[22,20]])if(typeof drawShade==='function'){c.save();c.globalAlpha=a*.8;drawShade(c,'basic',s.x+dx,s.y+dy,.18,1,{dot:1,t:0});c.restore()}/* つばさのかげで、ねむる影 */
+      if(!art)nushiFaceDots(c,s.x,s.y-30,a,now)}}}/* 3Dの絵には顔もある */
 function wingDots(c,x,y,k,a,now){/* 白いつばさ（2点の四角のドット）：羽根を、ゆっくりはばたく角度でならべる */const P=2*Math.max(1,Math.round(k)),fl=Math.sin(now/900)*.08;c.save();c.globalAlpha=a;
   for(const sd of[-1,1])for(let f=0;f<9;f++){const L=(44-f*3)*k,ang=(-.25+f*.11+fl)*sd,bx=x+sd*(10+f*7)*k,by=y-f*2*k;for(let t=0;t<L;t+=P){const px=Math.round((bx+Math.sin(ang)*t*.3*sd+sd*t*.55)/P)*P,py=Math.round((by+t*.25)/P)*P;c.fillStyle=t<P*2?'#d6deef':'#f8fbff';c.fillRect(px,py,P,P*2)}}c.restore()}
 function nushiFaceDots(c,x,y,a,now){/* 風のヌシ様の顔：白い大きな鳥の頭（かりのドット絵） */const P=4,R=(dx,dy,w,h,col)=>{c.fillStyle=col;c.fillRect(Math.round((x+dx*P)/2)*2,Math.round((y+dy*P)/2)*2,w*P,h*P)};c.save();c.globalAlpha=a;
