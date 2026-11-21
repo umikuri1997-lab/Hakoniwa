@@ -5,7 +5,7 @@
 const path=require('path'),fs=require('fs'),boot=require(path.join(__dirname,'..','sim','boot.cjs'));
 if(!process.env.CHROME_PATH)process.env.CHROME_PATH='/opt/pw-browsers/chromium';
 const OUT=process.argv[2]||'seat.json';
-const SEATS=[['chair','いす',4],['achair','ひじかけいす',4],['sofa1','ひとりがけソファ',4],['bench','ベンチ',4],['stool','スツール',1],['pouf','まるクッション',1]];
+const SEATS=[['chair','いす',4],['achair','ひじかけいす',4],['sofa1','ひとりがけソファ',4],['bench','ベンチ',4],['stool','スツール',1],['pouf','まるクッション',1],['kagoisu','かごいす',1],['g_w_kinoko','きのこのスツール',4],['g_w_stump','切り株のいす',4],['g_k_egg','雲のつりいす',4],['g_f_sofa','ほのおのソファ',4],['g_s_sofa','貝がらのソファ',4]];
 const K=6,CW=112,CH=128,OX=40,OY=56;
 (async()=>{const {browser,page,run,errors}=await boot({viewport:{width:1000,height:1000}});
 await page.waitForFunction(()=>sacredEval('assetsOK&&stageReady()'));
