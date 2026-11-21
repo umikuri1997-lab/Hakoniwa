@@ -1,11 +1,11 @@
 /* ---------- せいれいの手紙 ----------
-   こまかいわけ：なかよしは あいての属性、記念日は 日数、こまりごとは しゅるい、お礼（care）は なでた・おやつ・おくりもの・毛布、ひみつ（secret）は 好み。文は属性ごとに5通、1通まるごと。
+   こまかいわけ：なかよしは あいての属性、記念日は 日数、こまりごとは しゅるい、お礼（care）は なでた・おやつ・おくりもの・毛布、ひみつ（secret）は 好み。文は属性ごと（どの属性でもよい物は any）、1通まるごと・3〜8行で1通ずつ形をかえる。
    ほかのきっかけ：来たつぎの朝（new）・じぶんの家（house、letterHouse）・はじめての料理（cook）・あの大きな影を追いはらった朝（boss）・仲なおり（make）。
    なかよし（mate）・村に来た記念日（anniv）・こまりごとがなおった（thx）・ゆめがかなった（dream）・よみがえった（back）・守り神がしてくれたこと（care、careNote）・朝のひみつの好み（secret、letterSecretMorning）に、せいれいが手紙を書く（letterQ → S.letterQ）。
    お礼にあたる手紙（LETTERGIFT）には、その子の属性のお礼の品（letterGift）が入っていて、はじめて読んだときにうけとる。
    つぎの朝6時に、小鳥がおそなえ箱へ手紙をとどける（letterMorning → S.letters、演出は letter-fx.js）。もちものの「手紙」で読む。読んだ手紙は、思い出帳の「手紙」で何度でも読める。
    文はその子の言いかた（chatTone）。同じ子が同じ文をくりかえさない（pickFresh）。 */
-/* 文は js/letter-data.js の LETTERD（しゅるい→こまかいわけ→属性→5通、1通は5〜6行のつながった文）。{m} なかま・{n} 数・{f} 家具や料理・{s} 季節 */
+/* 文は js/letter-data.js の LETTERD（しゅるい→こまかいわけ→属性か any→1通ずつちがう形の、つながった文）。{m} なかま・{n} 数・{f} 家具や料理・{s} 季節 */
 const LETTERK={mate:'なかよしのこと',anniv:'記念日',thx:'ありがとう',dream:'ゆめがかなった',back:'もどってきた',lv:'つよくなった',season:'季節のたより',new:'はじめまして',house:'じぶんの家',cook:'はじめての料理',boss:'まもってくれて',make:'仲なおり'};
 const LETTERGIFT={thx:1,anniv:1,dream:1,back:1,house:1,boss:1};/* お礼の品を入れる手紙 */
 function letterGift(el){/* お礼の品：手紙でしかもらえない家具（gfPick、まだもらっていない物。その子の属性の物から）。ぜんぶもらったら、その子の属性の素材 */const f=typeof gfPick==='function'&&gfPick('let',el);if(f)return{k:'furn:'+f,n:1};
@@ -15,7 +15,7 @@ const giftKT=g=>[g.k.slice(0,g.k.indexOf(':')),g.k.slice(g.k.indexOf(':')+1)];
 function giftName(g){if(!g)return '';const[t,id]=giftKT(g);return t==='furn'?(BL[id]?BL[id].name:id):(t==='mat'?MATN[id]:t==='food'?FOODS[id].name:t==='seed'?CROPS[id].name+'のたね':id)+'×'+g.n}
 function giftIcoOf(g){if(!g)return '';const[t,id]=giftKT(g);try{return t==='furn'||t==='seed'?iconURL(t==='seed'?'seed:'+id:id):t==='mat'?(ICONS[id]||iconURL(id)):t==='food'?(foodIc(id)||''):''}catch(e){return ''}}
 function giftGive(g){if(!g)return;const[t,id]=giftKT(g);if(t==='furn'){if(typeof gfGive==='function')gfGive(id);else giveItem(id,1)}else if(t==='mat')S.mat[id]=(S.mat[id]||0)+g.n;else if(t==='food')addFood(id,g.n);else if(t==='seed')giveItem(g.k,g.n);sfx('power')}
-function letterTx(k,sub,el){/* その場面・属性の手紙の文（3通）。こまかいわけがなければ '' */const K=LETTERD[k];if(!K)return null;const C=K[sub!=null&&K[sub]?sub:'']||K[Object.keys(K)[0]];return C&&(C[el]||C.wood)||null}
+function letterTx(k,sub,el){/* その場面・属性の手紙の文（3通）。こまかいわけがなければ '' */const K=LETTERD[k];if(!K)return null;const C=K[sub!=null&&K[sub]?sub:'']||K[Object.keys(K)[0]];return C&&(C[el]||C.any||C.wood)||null}/* any：どの属性でも書ける文 */
 function letterQ(r,k,v,sub,d,sec){/* 手紙を書く（つぎの朝にとどく）。v：{m,n,f,s}。sub：こまかいわけ。sec：ひみつの好み（読んだらわかる） */if(!r||!S||IS_STORY_REPLAY||(typeof MEMRUN!=='undefined'&&MEMRUN)||(typeof NOSAVE!=='undefined'&&NOSAVE))return;const L=letterTx(k,sub,r.elem);if(!L)return;const Q=S.letterQ||(S.letterQ=[]);if(Q.some(q=>q.id===r.id&&q.k===k))return;
   const V=v&&typeof v==='object'?v:{m:v,n:v,f:v,s:v},sb=sub!=null&&LETTERD[k][sub]?sub:'',i=L.indexOf(pickFresh('lt:'+r.id+':'+k+':'+sb,L)),fill=t=>t.replace(/\{([mnfs])\}/g,(_,c)=>V[c]!=null?V[c]:'');
   const tx=L[i<0?0:i].map(t=>chatTone(fill(t),r));Q.push({id:r.id,who:r.name,el:r.elem,k,d:d!=null?d:dayNo(),tx,g:LETTERGIFT[k]?letterGift(r.elem):null,sec:sec||null})}
