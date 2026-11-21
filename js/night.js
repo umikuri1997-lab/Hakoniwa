@@ -52,24 +52,24 @@ function doSummon(){
 
 /* ---------- 敵（「コワイノ」） ---------- */
 const EN={
-  basic:{xp:5,pw:4,name:'コカゲ',hp:100,sp:.80,atk:25,hit:20,hitF:19,hitN:30,hitFS:12,hitNS:15,hitFN:45,hitFNS:22,col:'#2a1d46',eye:'#ff6b8a',size:.75},
-  fast:{xp:4,pw:3,name:'ハヤカゲ',hp:50,sp:1.6,atk:16.7,/* コカゲの足2倍・攻撃1.5倍の速さ */hit:14,hitF:15,hitN:20,hitFS:8,hitNS:10,hitFN:30,hitFNS:15,col:'#1d3446',eye:'#7ff0ff',size:.8},
-  thief:{xp:2,pw:2,name:'カゲドロボウ',hp:30,sp:.88,atk:25,hit:10,hitF:12,hitN:15,hitFS:8,hitNS:8,hitFN:22,hitFNS:12,col:'#3b2a14',eye:'#ffd35c',size:.9,thief:1},
-  brute:{xp:8,pw:6,rng:1.2,name:'カタカゲ',hp:100,sp:.76,atk:9,hit:28,hitF:26,hitN:42,hitFS:15,hitNS:20,hitFN:64,hitFNS:30,col:'#3a1a1a',eye:'#ff8a3d',size:1.25,hs:1}/* 当たり判定は1マス */,
-  breaker:{xp:7,pw:5,name:'カベクダキ',hp:90,sp:.8,atk:6,hit:18,hitF:19,hitN:28,hitFS:12,hitNS:12,hitFN:42,hitFNS:19,col:'#3a2a1a',eye:'#ffa04a',size:1.1,wall:3},/* 壁や柵をこわすのが得意（こわす力3倍・速い）。よけずにまっすぐこわしにくる */
-  trapper:{xp:6,pw:5,name:'ワナクイ',hp:80,sp:.9,atk:12,hit:16,hitF:15,hitN:25,hitFS:8,hitNS:12,hitFN:38,hitFNS:19,col:'#2b3a1e',eye:'#c6ff6b',size:.95,trapper:1},/* 罠・見張り台を先にこわしにくる */
-  boss:{xp:25,pw:20,rng:2.1,name:'オオカゲ',hp:600,sp:.84,atk:7,hit:14,hitF:15,hitN:20,hitFS:8,hitNS:10,hitFN:30,hitFNS:15,col:'#120a24',eye:'#ff3b6b',size:1.8,boss:1},
-  ash:{xp:4,pw:3,name:'ハイカゲ',hp:60,sp:.9,atk:20,hit:12,hitF:22,hitN:18,hitFS:12,hitNS:10,hitFN:26,hitFNS:15,col:'#6d6a66',eye:'#ffb36b',size:.9,ash:1},/* かまど・ベンチなどを灰でよごして止める */
-  armor:{xp:9,pw:7,name:'ヨロイカゲ',hp:120,sp:.7,atk:25,hit:24,hitF:22,hitN:35,hitFS:12,hitNS:18,hitFN:50,hitFNS:25,col:'#4a4a5a',eye:'#9fe0ff',size:1.3,armor:1},/* 矢は半分、火・どく・延焼は2倍（defense.js） */
+  basic:{xp:5,pw:4,name:'コカゲ',hp:100,sp:.80,atk:25,hit:20,hitF:76,hitN:120,hitFS:48,hitNS:60,hitFN:180,hitFNS:88,col:'#2a1d46',eye:'#ff6b8a',size:.75},
+  fast:{xp:4,pw:3,name:'ハヤカゲ',hp:50,sp:1.6,atk:16.7,/* コカゲの足2倍・攻撃1.5倍の速さ */hit:14,hitF:60,hitN:80,hitFS:32,hitNS:40,hitFN:120,hitFNS:60,col:'#1d3446',eye:'#7ff0ff',size:.8},
+  thief:{xp:2,pw:2,name:'カゲドロボウ',hp:30,sp:.88,atk:25,hit:10,hitF:48,hitN:60,hitFS:32,hitNS:32,hitFN:88,hitFNS:48,col:'#3b2a14',eye:'#ffd35c',size:.9,thief:1},
+  brute:{xp:8,pw:6,rng:1.2,name:'カタカゲ',hp:100,sp:.76,atk:9,hit:28,hitF:104,hitN:168,hitFS:60,hitNS:80,hitFN:256,hitFNS:120,col:'#3a1a1a',eye:'#ff8a3d',size:1.25,hs:1}/* 当たり判定は1マス */,
+  breaker:{xp:7,pw:5,name:'カベクダキ',hp:90,sp:.8,atk:6,hit:18,hitF:76,hitN:112,hitFS:48,hitNS:48,hitFN:168,hitFNS:76,col:'#3a2a1a',eye:'#ffa04a',size:1.1,wall:3},/* 壁や柵をこわすのが得意（こわす力3倍・速い）。よけずにまっすぐこわしにくる */
+  trapper:{xp:6,pw:5,name:'ワナクイ',hp:80,sp:.9,atk:12,hit:16,hitF:60,hitN:100,hitFS:32,hitNS:48,hitFN:152,hitFNS:76,col:'#2b3a1e',eye:'#c6ff6b',size:.95,trapper:1},/* 罠・見張り台を先にこわしにくる */
+  boss:{xp:25,pw:20,rng:2.1,name:'オオカゲ',hp:600,sp:.84,atk:7,hit:14,hitF:60,hitN:80,hitFS:32,hitNS:40,hitFN:120,hitFNS:60,col:'#120a24',eye:'#ff3b6b',size:1.8,boss:1},
+  ash:{xp:4,pw:3,name:'ハイカゲ',hp:60,sp:.9,atk:20,hit:12,hitF:88,hitN:72,hitFS:48,hitNS:40,hitFN:104,hitFNS:60,col:'#6d6a66',eye:'#ffb36b',size:.9,ash:1},/* かまど・ベンチなどを灰でよごして止める */
+  armor:{xp:9,pw:7,name:'ヨロイカゲ',hp:120,sp:.7,atk:25,hit:24,hitF:88,hitN:140,hitFS:48,hitNS:72,hitFN:200,hitFNS:100,col:'#4a4a5a',eye:'#9fe0ff',size:1.3,armor:1},/* 矢は半分、火・どく・延焼は2倍（defense.js） */
   shiny:{xp:10,pw:10,name:'ヒカリカゲ',hp:60,sp:1.4,atk:30,hit:0,hitF:0,hitN:0,hitFS:0,hitNS:0,hitFN:0,hitFNS:0,col:'#fff2b0',eye:'#ffffff',size:.8,glow:1,shiny:1},/* まれに来て、横切って帰る */
-  hana:{xp:4,pw:3,name:'ハナカゲ',hp:80,sp:.9,atk:25,hit:16,hitF:15,hitN:22,hitFS:9,hitNS:12,hitFN:35,hitFNS:18,col:'#6a3a5a',eye:'#ffc6e0',size:1},/* 季節のコワイノ（defense.js） */
-  hoteri:{xp:6,pw:5,name:'ホテリカゲ',hp:100,sp:.9,atk:25,hit:20,hitF:19,hitN:30,hitFS:12,hitNS:15,hitFN:45,hitFNS:22,col:'#5a2a1a',eye:'#ffb36b',size:1,fireRes:1},
-  ochiba:{xp:5,pw:4,name:'オチバカゲ',hp:60,sp:1.2,atk:20,hit:14,hitF:15,hitN:20,hitFS:8,hitNS:10,hitFN:30,hitFNS:15,col:'#5a3a1a',eye:'#ffd38a',size:.8,nosl:1},
-  yuki:{xp:9,pw:7,name:'ユキカゲ',hp:160,sp:.6,atk:30,hit:24,hitF:22,hitN:35,hitFS:12,hitNS:18,hitFN:50,hitFNS:25,col:'#3a4a5a',eye:'#e0f4ff',size:1.3},
-  rockc:{xp:12,pw:8,name:'イワカゲ',hp:220,sp:.5,atk:30,hit:30,hitF:56,hitN:45,hitFS:30,hitNS:22,hitFN:68,hitFNS:34,col:'#5a4636',eye:'#ffcf6b',size:1.3},/* おそいけど、かたい */
-  hino:{xp:35,pw:25,rng:2.3,name:'ヒノオオカゲ',hp:750,sp:.7,atk:6,hit:40,hitF:75,hitN:60,hitFS:38,hitNS:30,hitFN:90,hitFNS:45,col:'#3a0c08',eye:'#ffb02e',size:2.1,boss:1,dev:1},/* 火山から下りてきて、熱の装置をねらう */
-  yama:{xp:40,pw:30,rng:2.4,name:'ヤマノオオカゲ',hp:750,sp:.75,atk:6,hit:20,hitF:38,hitN:30,hitFS:19,hitNS:15,hitFN:45,hitFNS:22,col:'#2a0904',eye:'#ff6a2e',size:2.4,boss:1,vol:1},/* 火山のふもとの最後の夜に、火の山からおりてきて、温泉の熱をうばう */
-  boss2:{xp:50,pw:30,rng:3.4,hx:2.6,hy:.8,name:'ヨルノオオカゲ',hp:1100,sp:.9,atk:12,hit:30,hitF:56,hitN:45,hitFS:30,hitNS:22,hitFN:68,hitFNS:34,col:'#05030c',eye:'#ffd84a',size:4.6,boss:1},/* ヌシ様をむかえる準備ができたあとに来る */
+  hana:{xp:4,pw:3,name:'ハナカゲ',hp:80,sp:.9,atk:25,hit:16,hitF:60,hitN:88,hitFS:36,hitNS:48,hitFN:140,hitFNS:72,col:'#6a3a5a',eye:'#ffc6e0',size:1},/* 季節のコワイノ（defense.js） */
+  hoteri:{xp:6,pw:5,name:'ホテリカゲ',hp:100,sp:.9,atk:25,hit:20,hitF:76,hitN:120,hitFS:48,hitNS:60,hitFN:180,hitFNS:88,col:'#5a2a1a',eye:'#ffb36b',size:1,fireRes:1},
+  ochiba:{xp:5,pw:4,name:'オチバカゲ',hp:60,sp:1.2,atk:20,hit:14,hitF:60,hitN:80,hitFS:32,hitNS:40,hitFN:120,hitFNS:60,col:'#5a3a1a',eye:'#ffd38a',size:.8,nosl:1},
+  yuki:{xp:9,pw:7,name:'ユキカゲ',hp:160,sp:.6,atk:30,hit:24,hitF:88,hitN:140,hitFS:48,hitNS:72,hitFN:200,hitFNS:100,col:'#3a4a5a',eye:'#e0f4ff',size:1.3},
+  rockc:{xp:12,pw:8,name:'イワカゲ',hp:220,sp:.5,atk:30,hit:30,hitF:224,hitN:180,hitFS:120,hitNS:88,hitFN:272,hitFNS:136,col:'#5a4636',eye:'#ffcf6b',size:1.3},/* おそいけど、かたい */
+  hino:{xp:35,pw:25,rng:2.3,name:'ヒノオオカゲ',hp:750,sp:.7,atk:6,hit:40,hitF:300,hitN:240,hitFS:152,hitNS:120,hitFN:360,hitFNS:180,col:'#3a0c08',eye:'#ffb02e',size:2.1,boss:1,dev:1},/* 火山から下りてきて、熱の装置をねらう */
+  yama:{xp:40,pw:30,rng:2.4,name:'ヤマノオオカゲ',hp:750,sp:.75,atk:6,hit:20,hitF:152,hitN:120,hitFS:76,hitNS:60,hitFN:180,hitFNS:88,col:'#2a0904',eye:'#ff6a2e',size:2.4,boss:1,vol:1},/* 火山のふもとの最後の夜に、火の山からおりてきて、温泉の熱をうばう */
+  boss2:{xp:50,pw:30,rng:3.4,hx:2.6,hy:.8,name:'ヨルノオオカゲ',hp:1100,sp:.9,atk:12,hit:30,hitF:224,hitN:180,hitFS:120,hitNS:88,hitFN:272,hitFNS:136,col:'#05030c',eye:'#ffd84a',size:4.6,boss:1},/* ヌシ様をむかえる準備ができたあとに来る */
 };
 function bossDayNo(){/* オオカゲが来る日の番号。まだ来ると聞いていなければ null、なかまがそろうまで来ないときは、いる人数のマイナス */const w=S.bossWarn;if(w==null)return null;const t=dayNo(),need=S.wipe?5:4;/* 全滅のあとは、5人そろうまで来ない（level.js の S.wipe） */if(!(S.res.length>=need&&S.res.some(q=>q.elem==='fire')&&KEYS[WD].every(n=>S.res.some(r=>r.name===n))))return -need;let d=t;if(!S.bossOwed)while(!bossNight(d))d++;/* 来る日にそろっていなかった分（S.bossOwed）は、そろって3日たった夜に来る（waveFor と同じ） */if(S.res4Since!=null)d=Math.max(d,S.res4Since+3);return d}
 function bossDays(){const d=bossDayNo();if(d==null)return '';if(d<0)return 'オオカゲ：なかまが'+(-d)+'人そろうまで来ない';const t=dayNo();return d===t?'オオカゲが来るまで：今夜':'オオカゲが来るまで：あと'+(d-t)+'日'}/* クエストの進みぐあいに、オオカゲが来る日を出す */
