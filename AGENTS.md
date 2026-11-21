@@ -75,3 +75,10 @@
 - JS をさわったら、ファイルを1つずつ `node --check`（`for f in js/*.js; do node --check "$f" || echo "$f"; done`）。
 - `git clean` に、さがした結果をわたさない。キャッシュは `find -name __pycache__ -prune -exec rm -rf {} +` でけし、`git status` で消えた物（`D`）があれば `git checkout --` でもどす。
 - 強制pushはしない。
+
+## Claude とのやりとり（`handoff/`）
+- 持ち主が「handoff」と言ったら、`handoff/to-gpt.md` の「いまのたのみ」をする。「なし」なら、なにもせずに、そう言う。
+- たのみが、このファイル・`CLAUDE.md` の決まりとぶつかるときは、作らずに、そのわけを `from-gpt.md` に書く。
+- おわったら、`handoff/from-gpt.md` の「いまの結果」を、そこにある書き方で書きかえる（前の結果はけしてよい。たのみと同じ番号にする）。見せる絵は `handoff/files/` に入れる（大きな絵はちぢめずに、1まい数MBまで）。
+- `to-gpt.md` は書きかえない（Claude が書く所）。
+- ブランチを切って、そのブランチにコミットして push し、PRにする。PRの説明には、たのみの番号を書く。マージはしない（Claude がたしかめてからする）。
