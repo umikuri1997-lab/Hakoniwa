@@ -8,7 +8,7 @@
    ・表紙：ひらいたとき、布の表紙がひらく。とじるときは、表紙がとじてから画面がとじる（bookShut）。
    ・音：めくる mpage（めくるたびにべつの録音）・ぱらぱら pflick・表紙 bkopen・bkclose・紙をなでる pslide（なでる速さで大きさがかわる）。
    ・見た目と音だけ（数字・セーブはかえない）。うごきをへらす設定では、めくる絵を出さない。 */
-const BKD=1.5,BKMS=480,BKFAST=150,BKRIFF=5,BKLIFT=6,BKCOVMS=560;
+const BKD=1.5,BKMS=480,BKFAST=150,BKRIFF=5,BKLIFT=6,BKCOVMS=560,BKTHK=2;
 const BKC={back:'#e9dab8',hi:'#fff8e6',lit:'#f5e9cc',mid:'#e0cea8',edge:'#c4ab80',sh:'90,60,30'};/* めくれた紙のうら（色は tools/ui/colors.md の「本」） */
 let BK=null,BKSEEN=null,BKSLIDE=null;
 function bkClone(n){/* 写し：キャンバス（図鑑のコワイノなど）の絵もうつす */const c=n.cloneNode(true),a=n.querySelectorAll?n.querySelectorAll('canvas'):[],b=c.querySelectorAll?c.querySelectorAll('canvas'):[];a.forEach((v,i)=>{try{b[i].getContext('2d').drawImage(v,0,0)}catch(_){}});return c}
@@ -47,11 +47,11 @@ function bkSetup(B,from,to,coverEl){B.el.classList.toggle('bkcovon',!!coverEl);c
   bkMount(B,coverEl?B.at:Bi);
   let gc=g,wR;if(coverEl){/* 表紙は、うら表紙（.bkboard）と同じ大きさ：上・右・下へ、ページよりはみ出す（とじ目のがわはそのまま） */const bd=B.el.querySelector('.bkboard'),R=B.R.getBoundingClientRect(),bb=bd?bd.getBoundingClientRect():R,et=Math.max(0,R.top-bb.top),er=Math.max(0,bb.right-R.right),eb=et;
     gc=Object.assign({},g,{w:g.w+er,top:g.top-et,bot:g.bot+eb});wR=document.createElement('div');wR.className='bkwrap';wR.style.cssText='left:'+(R.left-g.r.left)+'px;top:'+(R.top-g.r.top-et)+'px;height:'+(R.height+et+eb)+'px;width:'+(R.width+er)+'px';coverEl.style.width=(R.width+er)+'px';coverEl.style.height=(R.height+et+eb)+'px';wR.appendChild(coverEl);B.in.insertBefore(wR,B.cv)}
-  const st={g:gc,fw,A,Bi,wR:wR||wrap(B.R,aR),wL:aL?wrap(B.L,aL):null,cover:!!coverEl,hideL:!!coverEl&&B.sp};if(fw&&!coverEl){const c=aR.querySelector('.bkc');if(c)c.scrollTop=sc}
+  const st={g:gc,fw,A,Bi,wR:wR||wrap(B.R,aR),wL:aL?wrap(B.L,aL):null,cover:!!coverEl,hard:!!coverEl,hideL:!!coverEl&&B.sp};if(fw&&!coverEl){const c=aR.querySelector('.bkc');if(c)c.scrollTop=sc}
   return st}
 function bkClean(B,st){B.el.classList.remove('bkcovon');B.L.style.visibility='';if(st.wR)st.wR.remove();if(st.wL)st.wL.remove();const c=B.cv.getContext('2d');c.clearRect(0,0,B.cv.width,B.cv.height);B.cv.hidden=true}
 /* 1コマを描く：e＝めくれぐあい（0〜1）・a＝めくれた紙のこさ（さいごに紙がおちつく所） */
-function bkFrame(B,st,e,a,pal){const{g}=st,D=BKD,S=g.S,w=g.w,sp=B.sp,f=S+w*(1-e),k=1-.42*Math.sin(Math.PI*e),fw=(S+w-f)*k,xl=f-fw,s=Math.sin(Math.PI*e),q=v=>Math.round(v/D)*D;
+function bkFrame(B,st,e,a,pal){if(st.hard)return bkHard(B,st,e,pal);const{g}=st,D=BKD,S=g.S,w=g.w,sp=B.sp,f=S+w*(1-e),k=1-.42*Math.sin(Math.PI*e),fw=(S+w-f)*k,xl=f-fw,s=Math.sin(Math.PI*e),q=v=>Math.round(v/D)*D;
   if(st.hideL)B.L.style.visibility=e>.96?'':'hidden';if(sp)a*=Math.min(1,(1-e)/.08);st.wR.style.width=Math.max(0,q(f-S))+'px';if(st.wL)st.wL.style.width=Math.max(0,Math.min(w,q(xl-(S-w))))+'px';
   const c=B.cv.getContext('2d'),O=BKLIFT;c.clearRect(0,0,B.cv.width,B.cv.height);const P=pal||BKC;
   const t0=Math.round(g.top/D)+O,b0=Math.round(g.bot/D)+O,xf=Math.round(f/D),xL=Math.max(sp?-1e9:Math.round(S/D),Math.round(xl/D)),fwD=Math.max(1,xf-Math.round(xl/D));
@@ -63,6 +63,20 @@ function bkFrame(B,st,e,a,pal){const{g}=st,D=BKD,S=g.S,w=g.w,sp=B.sp,f=S+w*(1-e)
     c.fillStyle=P.edge;c.fillRect(x,y0,1,1);c.fillRect(x,y1-1,1,1);if(x===xL&&(sp||xl>=S))c.fillRect(x,y0,1,y1-y0)}
   /* めくれた紙が、まだめくっていない紙に落とすかげ（外のはしの左） */if(sp||xl>S+D)for(let i=1;i<=2;i++){c.globalAlpha=1;c.fillStyle='rgba('+P.sh+','+([.12,.05][i-1]*s*a).toFixed(3)+')';c.fillRect(xL-i,t0,1,b0-t0)}
   c.globalAlpha=1}
+/* ハードカバーの表紙：かたい板なので、まがらない。とじ目を軸に、まっすぐまわる（e＝0〜1。おもては右へちぢみ、90度をこえるとうら（見返し）が左にひろがる）。外のふちほど上へもち上がる（まっすぐな線）。板のあつみ BKTHK */
+function bkHard(B,st,e,pal){const{g}=st,D=BKD,S=g.S,w=g.w,sp=B.sp,th=Math.PI*e,co=Math.cos(th),s=Math.sin(th),q=v=>Math.round(v/D)*D;
+  if(st.hideL)B.L.style.visibility=e>.96?'':'hidden';st.wR.style.width=(co>0?Math.max(0,q(w*co)):0)+'px';
+  const c=B.cv.getContext('2d'),O=BKLIFT,P=pal||BKC;c.clearRect(0,0,B.cv.width,B.cv.height);
+  const t0=Math.round(g.top/D)+O,b0=Math.round(g.bot/D)+O,xs=Math.round(S/D),W=Math.round(w*Math.abs(co)/D),L=Math.round(BKLIFT*s),T=Math.round(BKTHK*s),dk='rgba('+P.sh+',.28)';
+  if(co>0){/* おもて：上のふちが外へむかって、まっすぐ上がる */for(let i=0;i<W;i++){const l=Math.round(L*(i+1)/Math.max(1,W));if(l>0){c.fillStyle=P.edge;c.fillRect(xs+i,t0-l,1,l)}}
+    /* 板のあつみ（外のふちの横の面） */for(let i=0;i<T;i++){c.fillStyle=P.edge;c.fillRect(xs+W+i,t0-L,1,b0-t0+L);c.fillStyle=dk;c.fillRect(xs+W+i,t0-L,1,b0-t0+L)}
+    /* 下のページに落ちるかげ */for(let i=0;i<4&&e>0;i++){c.fillStyle='rgba('+P.sh+','+([.2,.13,.07,.03][i]*s).toFixed(3)+')';c.fillRect(xs+W+T+i,t0,1,b0-t0)}
+    return}
+  if(!sp||W<1)return;/* 1ページの画面では、うらはとじ目の左（画面の外）へ */
+  /* うら（見返しの紙）：とじ目の近くは光、外のはしほど上へ */for(let i=0;i<W;i++){const x=xs-1-i,l=Math.round(L*(i+1)/W),y0=t0-l;
+    c.fillStyle=i<=1?P.hi:i<=3?P.lit:i>W*.8?P.mid:P.back;c.fillRect(x,y0,1,b0-y0);c.fillStyle=P.edge;c.fillRect(x,y0,1,1);c.fillRect(x,b0-1,1,1)}
+  for(let i=0;i<Math.max(1,T);i++){c.fillStyle=P.edge;c.fillRect(xs-W-1-i,t0-L,1,b0-t0+L)}
+  for(let i=1;i<=2;i++){c.fillStyle='rgba('+P.sh+','+([.12,.05][i-1]*s).toFixed(3)+')';c.fillRect(xs-W-Math.max(1,T)-i,t0,1,b0-t0)}}
 /* めくれぐあいを e0→e1 へ、ms かけて動かす。さいごに紙がおちつく3コマ（こさ .66・.33・0） */
 function bkRun(B,st,e0,e1,ms,done,pal){const t0=performance.now();const step=now=>{if(!B.el.isConnected){bkClean(B,st);B.busy=0;return}
     const p=Math.min(1,(now-t0)/ms),e=e0+(e1-e0)*bkEase(p);
