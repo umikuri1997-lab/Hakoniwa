@@ -263,9 +263,9 @@
   "cup_static": {
     "file": "cup_static.png",
     "x": -89,
-    "y": -105,
+    "y": -104,
     "w": 178,
-    "h": 124
+    "h": 123
   },
   "cup": {
     "frames": 16,
