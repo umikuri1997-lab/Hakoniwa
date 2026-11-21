@@ -100,7 +100,7 @@ const EATDRINK=new Set(['milk','berryjuice','applejuice','milkshake','berrymilk'
 const EATIC={cup:'drink',bread:'bread',cake:'bread',sand:'bread'};
 function eatKind(items){const k=(items||[])[0];if(!k)return'meal';if(EATDRINK.has(k))return'drink';if(EATBREAD.has(k))return'bread';if(EATFRUIT.has(k))return'fruit';const D=typeof COOKDI!=='undefined'&&COOKDI[k],ic=D&&D.ic&&D.ic[0];return EATIC[ic]||'meal'}
 /* 食べる・のむ音（SAMPLES.ea_〜、tools/sound/eat_asmr.py）：食べ物ごとに、いちばん近い録音。表にない料理は、料理の絵のしゅるい（COOKD の ic）で */
-const EATSND={apple:'ea_apple',ringoame:'ea_apple',berry:'ea_apple',tomato:'ea_apple',donguri:'ea_nut',takenoko:'ea_veg',salad:'ea_veg',kinoko:'ea_pickle',mugi:'ea_cereal',komugiko:'ea_cereal',kakigori:'ea_cracker',
+const EATSND={apple:'ea_apple',ringoame:'ea_apple',berry:'ea_apple',tomato:'ea_apple',donguri:'ea_nut',takenoko:'ea_veg',salad:'ea_veg',kinoko:'ea_soft',mugi:'ea_cereal',komugiko:'ea_cereal',kakigori:'ea_cracker',
   imo:'ea_soft',yakiimo:'ea_soft',egg:'ea_soft',pancake:'ea_soft',takoyaki:'ea_soft',yakizakana:'ea_soft',kabayaki:'ea_soft',kushiyaki:'ea_soft',foil:'ea_soft',bread:'ea_toast',tamasand:'ea_toast',
   milk:'ea_water',berryjuice:'ea_water',applejuice:'ea_water',milkshake:'ea_water',berrymilk:'ea_water',soup:'ea_tea',fishsoup:'ea_tea',wataame:'ea_cookie',yakisoba:'ea_soft',marine:'ea_soft'},
   EATSNDIC={cup:'ea_tea',bowl:'ea_soft',plate:'ea_soft',skewer:'ea_soft',bread:'ea_toast',cake:'ea_cookie',dango:'ea_cookie',salad:'ea_veg',sand:'ea_toast'};
