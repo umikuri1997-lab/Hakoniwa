@@ -342,13 +342,22 @@ function cliffPart(key,K){if(CPART.s!==S){CPART.clear();atlasClear();CPART.s=S}/
   finally{TOPF=null;REV=R0;CLV=cv;tmpDone()}
   P.t=performance.now();CPART.set(ck,P);return P}
 function cliffPreload(){/* ステージを開くとき：このマップで使う段差の部品を、まとめて作っておく（はじめて見る所で止まらないように） */const RW=cliffRuns(),keys=new Set();for(const[y,L]of RW)for(const R of L)for(let k=R.x0;k<=R.x1;k++)keys.add(cliffKey(k,y,R.lv));for(const K of [2,1])for(const k of keys)cliffPart(k,K)}
+const CUBET={};/* つんだブロックの絵：1マス64ドットのドット絵（石・板はもらったテクスチャを切りとる、レンガはコードのドット）。まわり1ドットはブロックのさかいの線 */
+function cubeTex(id){let c=CUBET[id];if(c)return c.ok?c:null;c=document.createElement('canvas');c.width=c.height=64;const g=c.getContext('2d');g.imageSmoothingEnabled=false;
+  const tk=id==='blk_stone'?'tex:granite':id==='blk_wood'?'tex:planks':'',ch=tk&&(window.CHIPS||{})[tk];
+  if(tk){const im=ch&&chipImgs(ch,tk)[0];if(!im||!im.ok){c.width=c.height=0;return null}g.drawImage(im,0,0,64,64,0,0,64,64)}/* テクスチャは1マス64ドットの細かさ：はじめの64ドットを、そのまま */
+  else{g.fillStyle='#e6d3b6';g.fillRect(0,0,64,64);const B=['#c47a58','#b86f50','#cd8562','#bf7553'];for(let r=0;r<4;r++)for(let k=-1;k<3;k++){const x=k*32+(r%2?16:0)+1,y=r*16+1;g.fillStyle=B[(r*3+k+4)%4];g.fillRect(x,y,30,14);g.fillStyle='rgba(255,236,214,.35)';g.fillRect(x,y,30,1);g.fillStyle='rgba(90,48,32,.22)';g.fillRect(x,y+13,30,1)}}/* レンガ：1こ32×16ドット、目地2ドット、段ごとに半分ずらす */
+  g.fillStyle='rgba(70,52,40,.35)';g.fillRect(0,0,64,1);g.fillRect(0,63,64,1);g.fillRect(0,0,1,64);g.fillRect(63,0,1,64);/* ブロックのさかい */
+  c.ok=1;CUBET[id]=c;return c}
 function cliffRow(y,R,top,B){/* 1つのかたまり（行・段）の段差を描く（B：遠くの絵に描くときの {g:描く先,kz:細かさ,ox,oy:ドットをそろえる元}）：かげ・がけ（部品A）→ 上の面の地面（地面の下絵をずらす）→ ふち（部品B）。top：うしろが低い所の、上はしだけ（うしろの物の足もとをかくす） */
   const g=B?B.g:ctx,lod=B?true:GLOD,ox=B?B.ox:cam.x,oz=B?B.oy:cam.y,lv=R.lv,dy=(lv-1)*LIFT,oy=y*TS-LIFT-6-dy,keys=[],kz=B?B.kz:dpr*cam.z,SX=v=>ox+Math.round((v-ox)*kz)/kz,SY=v=>oz+Math.round((v-oz)*kz)/kz,DI=(im,sx,sy,sw,sh,x,y2,w,h)=>{const a=SX(x),b=SY(y2);g.drawImage(im,sx,sy,sw,sh,a,b,SX(x+w)-a,SY(y2+h)-b)};/* 部品は、画面のドットのさかいに合わせておく（マスのさかいめに、うすい線やすきまが出ないように） */for(let k=R.x0;k<=R.x1;k++)keys.push(cliffKey(k,y,lv));
   const hh=top?LIFT+6:CPH,ok=k=>!top||!(y>0&&hiAt((y-1)*W+k)>=lv);
   if(!top){const m=i=>(keys[i]&2)&&!(keys[i]&256);let i=0;while(i<keys.length){if(!m(i)){i++;continue}let e=i;while(e+1<keys.length&&m(e+1))e++;const px=(R.x0+i)*TS,w=(e-i+1)*TS,py=y*TS;g.save();g.translate(0,2*(py+TS)-dy);g.scale(1,-1);gblit(g,px-6,py+TS,w+12,8,px-6,py+TS,w+12,8,lod);g.restore();i=e+1}}/* がけの下はしのすきまには、すぐ下の低い地面（下絵を上下に鏡うつし。つづいた所はまとめて1回） */
   const PK=kz>1.5?2:1,part=(L)=>{for(let i=0;i<keys.length;i++){const kk=keys[i],k=R.x0+i;if(!(kk&15)&&L==='a')continue;if(!ok(k))continue;const q=cliffPart(kk,PK)[L];if(!q)continue;const a=Math.max(q.x,(kk&4)?0:8),b=Math.min(q.x+q.w,(kk&8)?TS+16:TS+8),y2=Math.min(q.y+q.h,hh);if(b<=a||y2<=q.y)continue;DI(q.c,q.sx+(a-q.x)*PK,q.sy,(b-a)*PK,(y2-q.y)*PK,k*TS-8+a,oy+q.y,b-a,y2-q.y)}};
   part('a');
+  if(!top&&S.vx)for(let i=0;i<keys.length;i++){if(!(keys[i]&2))continue;const k=R.x0+i,id=cubeAt(y*W+k,lv);if(!id)continue;const T=cubeTex(id);if(!T)continue;const fy=y*TS+TS-lv*LIFT;DI(T,0,0,64,LIFT*2,k*TS,fy,TS,LIFT);const a=SX(k*TS),b=SY(fy);g.fillStyle='rgba(48,34,24,.26)';g.fillRect(a,b,SX(k*TS+TS)-a,SY(fy+LIFT)-b)}/* つんだブロックの正面：その材質の絵を、すこし暗く */
   {let k=R.x0;while(k<=R.x1){if(!ok(k)){k++;continue}let e=k;while(e+1<=R.x1&&ok(e+1))e++;const w=(e-k+1)*TS;{const a=SX(k*TS),b=SY(y*TS-lv*LIFT);gblit(g,k*TS,y*TS,w,top?LIFT:TS,a,b,SX(k*TS+w)-a,SY(y*TS-lv*LIFT+(top?LIFT:TS))-b,lod)}{g.fillStyle='rgba(255,250,225,.10)';const a=SX(k*TS),b=SY(y*TS-lv*LIFT);g.fillRect(a,b,SX(k*TS+w)-a,SY(y*TS-lv*LIFT+(top?LIFT:TS))-b)}k=e+1}}/* 上の面の地面：地面の下絵を、そのまま上へずらす。高い所は少し明るく */
+  if(S.vx)for(let k=R.x0;k<=R.x1;k++){const j=y*W+k;if(hiAt(j)!==lv||!ok(k))continue;const id=cubeAt(j,lv);if(!id)continue;const T=cubeTex(id);if(!T)continue;const h=top?LIFT:TS;DI(T,0,0,64,h*2,k*TS,y*TS-lv*LIFT,TS,h)}/* いちばん上がブロックなら、上の面もその材質 */
   part('b')}
 const FARZ=.5,FARK=.25,FAR={s:null,c:new Map(),bt:0};/* 遠くの絵（LOD）：拡大 FARZ より小さいときは、段差を、16×16マスの区画ごとに作っておいた絵（1マス8ドット、1こ約64KB・マップぜんぶで約3MB）で1まいずつ描く。段差の部品を毎コマ描かない。そのかわり、遠くの画面でだけ、段差と物の重なり順がふだんとちがう */
 function farClear(){for(const f of FAR.c.values())if(f.c)f.c.width=f.c.height=0;FAR.c.clear();FAR.s=S}

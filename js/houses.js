@@ -240,6 +240,7 @@ function iconURL(id){/* アイコンは、大きなキャンバスに2倍の細�
   if(BL[id]&&BL[id].kind==='gift'&&typeof giftIco==='function')return giftIco(id);/* おくりもの（gifts.js） */
   if(BL[id]&&BL[id].g)return gearIcon(id);/* そうび・矢：ドット絵 */
   if(iconCache[id])return iconCache[id];
+  if(typeof CUBES!=='undefined'&&CUBES.includes(id)){const T=cubeTex(id);if(!T)return '';const c=document.createElement('canvas');c.width=c.height=144;const g=c.getContext('2d');g.imageSmoothingEnabled=false;g.drawImage(T,0,0,64,40,8,6,128,80);g.drawImage(T,0,0,64,26,8,86,128,52);g.fillStyle='rgba(48,34,24,.3)';g.fillRect(8,86,128,52);g.fillStyle='rgba(255,250,230,.5)';g.fillRect(8,86,128,2);const u=c.toDataURL();c.width=c.height=0;return iconCache[id]=u}/* つむブロック：上の面と正面を、そのまま2倍のドットで */
   const N=576,T=ICONTMP||(ICONTMP=document.createElement('canvas'));T.width=T.height=N;const t=T.getContext('2d');t.setTransform(1,0,0,1,0,0);t.clearRect(0,0,N,N);t.setTransform(2,0,0,2,0,0);/* 2倍の細かさで描く（1マス64ドットの絵が、そのままの細かさで入る） */
   ICON=true;try{if(BL[id].floor)drawFloor(t,id,96,160,7,true);else drawObj(t,id,96,160,7,(id==='berry'||id==='fruit')?100:id==='farm'?60:0,1)}finally{ICON=false}
   const d=t.getImageData(0,0,N,N).data;let x0=N,y0=N,x1=-1,y1=-1;for(let y=0;y<N;y++)for(let x=0;x<N;x++)if(d[(y*N+x)*4+3]>8){if(x<x0)x0=x;if(x>x1)x1=x;if(y<y0)y0=y;if(y>y1)y1=y}

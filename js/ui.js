@@ -136,7 +136,7 @@ function renderPalette(){
     const bLock=id=>!noTemple()&&BREQ[id]&&lvOK(id)&&!elemCount(BREQ[id]),builds0=BUILDS.filter(id=>(usable(id)||bLock(id))&&pf(id)),builds=builds0.filter(recShown);/* 属性の子がいなくても、ならべて見せる */
     if(builds0.length){lbl(box,'建てる');recToggle(box,builds0);for(const id of builds)box.appendChild(chip(iconURL(id),BL[id].name,id==='statue'||(id==='watch'&&watchQ())?'むりょう':SP(BL[id].pc),(sel===id?'sel':'')+(bLock(id)?' zero':''),bLock(id)?()=>toast(ELEM[BREQ[id]].name+'のせいれいがいると建てられます'):pickItem(id),id==='tower'?TOWER_MAT():(id==='watch'&&watchQ())?null:BL[id].mat))}
     if(typeof mzOn==='function'&&mzOn()&&PF==='all'){lbl(box,'水路');box.appendChild(chip(toolIcon('canal'),BL.canal.name,SP(BL.canal.pc),sel==='canal'?'sel':'',pickItem('canal')))}/* 水のステージ：水路をほる（せいれいの工事） */
-    if(PF==='all'){lbl(box,'ほる・つむ');for(const id of['dig','mound'])box.appendChild(chip(toolIcon(id),BL[id].name,'',sel===id?'sel':'',pickItem(id),BL[id].mat))}/* ほる・つむ：はじめから。タップで守り神がじかに、なぞるとせいれいにたのむ（terra） */
+    if(PF==='all'){lbl(box,'ほる・つむ');for(const id of['dig','mound'])box.appendChild(chip(toolIcon(id),BL[id].name,'',sel===id?'sel':'',pickItem(id),BL[id].mat));for(const id of CUBES)if(inv(id)>0)box.appendChild(chip(iconURL(id),BL[id].name,'×'+inv(id),sel===id?'sel':'',pickItem(id)))}/* ほる・つむ：はじめから。タップで守り神がじかに、なぞるとせいれいにたのむ（terra） */
     if(PF!=='all'&&box.children.length===n0)palEmpty(box,'「'+PF+'」の物は、いま持っていないよ');
   }
 }
