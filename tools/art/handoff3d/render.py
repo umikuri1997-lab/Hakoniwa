@@ -18,6 +18,7 @@ import oblique3d as O
 from blueprint import Part, build
 from furn3d import ELEV, FOV, FRAME, KEEP, LW
 from rides import CREAM, MODELS, SEATS, SPEED
+from wind_objects import hole, vane
 
 SCALE = 64
 FRAMES = 16
@@ -245,14 +246,39 @@ def rides(out, metadata):
     return comparisons
 
 
+def wind_objects(out, metadata):
+    comparisons = []
+    for name in ("kazaana", "kazaanab", "kazami", "kazami>1", "kazami>2", "kazami>3"):
+        model = Model()
+        if name.startswith("kazami"):
+            vane(model)
+            turn = int(name[-1]) if ">" in name else 0
+            model.sc.turn(turn, (-.5, -.5, .5, .5))
+            # Scene.turn uses x=.5 for sideways views. Restore the centered model.
+            if turn % 2:
+                for a, b, c, _, _ in model.sc.t:
+                    for point in (a,b,c):
+                        point[0] -= .5
+        else:
+            hole(model, name == "kazaanab")
+        image, offset, _ = render(model, SMALL_EXT, .14 if name.startswith("kazami") else .41)
+        image = Image.fromarray(palette([image])[0])
+        save(image, offset, name, out, metadata)
+        x, y, right, bottom = image.getbbox()
+        comparisons.append((name, game_image(name),
+                            (image.crop((x, y, right, bottom)),
+                             (offset[0]+x, offset[1]+y))))
+    return comparisons
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("request", choices=("H-1",))
+    parser.add_argument("request", choices=("H-1", "H-2"))
     parser.add_argument("output", type=Path)
     args = parser.parse_args()
     args.output.mkdir(parents=True, exist_ok=True)
     metadata = {"g": SCALE}
-    make = rides
+    make = {"H-1": rides, "H-2": wind_objects}[args.request]
     rows = make(args.output, metadata)
     compare(rows, args.output / "cmp_x4.png", 4)
     for name, _, (sprite, _) in rows:

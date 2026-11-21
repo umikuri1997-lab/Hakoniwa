@@ -1,0 +1,45 @@
+{
+  "g": 64,
+  "kazaana": {
+    "file": "kazaana.png",
+    "x": -28,
+    "y": -53,
+    "w": 56,
+    "h": 55
+  },
+  "kazaanab": {
+    "file": "kazaanab.png",
+    "x": -28,
+    "y": -53,
+    "w": 56,
+    "h": 55
+  },
+  "kazami": {
+    "file": "kazami.png",
+    "x": -8,
+    "y": -62,
+    "w": 16,
+    "h": 61
+  },
+  "kazami>1": {
+    "file": "kazami_dir1.png",
+    "x": -20,
+    "y": -54,
+    "w": 42,
+    "h": 53
+  },
+  "kazami>2": {
+    "file": "kazami_dir2.png",
+    "x": -8,
+    "y": -64,
+    "w": 16,
+    "h": 63
+  },
+  "kazami>3": {
+    "file": "kazami_dir3.png",
+    "x": -22,
+    "y": -54,
+    "w": 42,
+    "h": 53
+  }
+}
