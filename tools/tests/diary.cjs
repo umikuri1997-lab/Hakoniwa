@@ -59,6 +59,11 @@ const assert=require('node:assert/strict');
   assert.ok(f.img,'photo shown in the diary');assert.ok(f.first,'picture diary on the first page');assert.ok(f.same,'the memory book shows the same page');assert.ok(!f.port&&!f.body.includes('のひとこと'),'no icon, no heading');for(const t of f.ft)assert.ok(f.tx.includes(t.replace(/#[a-z ]+\|/,'')),'line shown: '+t);assert.ok(f.ft.join('').includes(f.bn),'the diary is about the picture: '+f.ft[1]);
   for(const t of f.ft)assert.ok(t.length<=60&&!/子|オオカゲ|タップ|最後の夜/.test(t),'line rules: '+t);
   console.log('Diary: picture diary with the new furniture and Futaba\'s lines');
+  /* 大きなできごと（オオカゲを追いはらった）の日は、ふだんの絵のことより、そちらを書く */
+  const bw=JSON.parse(await run(`(()=>{closeSheet();const a=S.res.find(r=>r.name===POKO),R=[];for(let i=0;i<12;i++){const e={d:5,w:[],m:[],k:{},o:{},wx:'sun1',ns:{n:5,kill:5,lost:[],hurt:0,broke:0,boss:2},ph:1,phK:'see',phS:'quirk'},L=dyNote(e,a).join('');
+    R.push(DYFULL.bossWin.some(A=>A.map((t,j)=>chatTone(t,a,j)).join('')===L))}return JSON.stringify(R)})()`));
+  assert.ok(bw.every(Boolean),'boss night is written before the daily picture '+bw);
+  console.log('Diary: the boss night comes before daily things');
   /* 同じできごとの日がつづいても、同じ日記はできない。同じ文も、しゅるいの文をぜんぶ使うまで出ない */
   const u=JSON.parse(await run(`(()=>{closeSheet();const a=S.res.find(r=>r.name===POKO),T=new Set(),seen={};let dupT=0,dupL=0;S.dyU={};S.dyTx=[];
     for(let i=0;i<150;i++){const e={d:5,w:[[S.res[0].name,'earth',null,'build','bench',1]],m:[],k:{},o:{},wx:'sun1'},L=dyNote(e,a),t=L.join('|');if(T.has(t))dupT++;T.add(t);

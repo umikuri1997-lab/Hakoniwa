@@ -6,7 +6,7 @@
    なにか書くことがあれば、紙（openSheet('diary')）を出す。思い出帳からも読める（openSheet('diary',日)）。
    絵日記（日記のいちばん上）：その日の絵（photo.js の phTick → S.dy.ph、なにを写したかは phK・phN・phS）と、その下の文（dyNote、文は diary-data.js）。しまうのは e.ph・e.phK・e.phN・e.phS・e.ft。
      書くのは章のはじめからいる子（草原はフタバ、火山はホムラ。言いかたは chatTone）。その子が村にいない（いなくなった）朝は、文も絵ものせない（DYWRITER）。
-     絵を写した日は、文のはじめのできごとを、絵の物のこと（dyPhTopic）にする。
+     絵を写した日は、文のはじめのできごとを、絵の物のこと（dyPhTopic）にする。ただし、大きなできごと（dyTopics の M：いなくなった・新しいなかま・イベント・オオカゲ・試練）のある日は、そちらが先。
      文は、しゅるいごとに、ぜんぶ使うまで同じ文を出さない（S.dyU）。できた文がまったく同じ日記は作らない（S.dyTx）。
    思い出帳の再生（IS_STORY_REPLAY・MEMRUN）では、書かない。 */
 const DYJ=new WeakSet(),DIARYMAX=60,DYWORK=new Set(['build','craft','harvest','plant','fish','cook']),DYPER=4;
@@ -76,7 +76,7 @@ function dyPhTopic(e){const k=e.phK,n=e.phN||'';if(!e.ph||!k)return null;
   if(k==='see')return e.phS==='admire'?(n?['padm',n]:null):e.phS==='sunset'?['psun']:e.phS==='critwatch'?(n?['pcrit',n]:['psee']):(e.phS==='splay'||e.phS==='splayw')?(n?[e.phS==='splay'?'psplay':'psplayw',n]:['pquirk']):['pquirk'];return null}
 /* 絵日記の文（3〜4行） */
 function dyNote(e,f){const{M:M0,O}=dyTopics(e,f),sad=M0.some(t=>t[0]==='gone'||t[0]==='bossLose'||t[0]==='trial');
-  const pt=dyPhTopic(e),M=pt?(sad?M0.filter(t=>!(t[0]==='new'&&pt[0]==='new')).concat([pt]):[pt].concat(M0.filter(t=>!(t[0]==='new'&&pt[0]==='new')))):M0;/* 絵の物の話を、はじめに（かなしい日は、かなしいことのあと） */
+  const pt=dyPhTopic(e),M=pt?M0.filter(t=>!(t[0]==='new'&&pt[0]==='new')).concat([pt]):M0;/* 大きなできごと（オオカゲを追いはらった など）が先。絵の物の話は、そのあと（なにもなければ、はじめ） */
   const cr=S.dyCat||[],old=k=>{const i=cr.lastIndexOf(k);return i<0?-1:i};/* 前に書いた話題は、あとまわし */
   const rest=O.slice().sort((a,b)=>old(a[0])-old(b[0])||(a[0]==='calm')-(b[0]==='calm')||Math.random()-.5);
   const top=M.slice(0,pt&&M.length>1?2:1).concat(rest.filter(t=>t[0]!=='calm'||!M.length).slice(0,M.length>1&&pt?0:M.length?1:2));if(top.length>1&&top.some(t=>t[0]==='calm'))top.splice(top.findIndex(t=>t[0]==='calm'),1);
