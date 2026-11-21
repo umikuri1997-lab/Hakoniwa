@@ -51,8 +51,7 @@ function sacredRevealed(id){const i=sacredQuestIndex(id);return i>=0&&S.quest>i&
 function sacredStage(){
   if(!S)return 4;if(IS_STORY_REPLAY&&S.replayMature)return 4;
   if(S.obj.includes('tower'))return S.cleared||(S.setSh||0)>=3||S.treeSeen>=4?4:3;/* 大きな木になるのは、3つめのかけらをささげたとき（前のセーブで、もう育っていた木は、そのまま） */
-  if(sacredRevealed('waterFilm'))return 2;
-  if(sacredRevealed('fireRoot'))return 1;
+  {const n=['fireRoot','waterFilm','windEcho'].filter(sacredRevealed).length;if(n)return Math.min(2,n)}/* 1つめの調べで芽、2つめで若葉（お話の道 route.js：火・水・風のどれでも） */
   return 0;
 }
 function sacredRootFits(j){const base=SACREDBASE.map(d=>fieldStump(j)+d);return j>=0&&j%W<=W-sacredSpan()&&(j/W|0)<=H-sacredSpan()&&sacredCells(j).every(k=>(walk(k)||STUMPB.has(k))&&!S.obj[k]&&!(S.floor[k]&&base.includes(k))&&!roomOf(k)&&!RUGC.has(k)&&hiAt(k)===hiAt(j));}/* 道・床は、根もとのマスだけことわる（sacredNoBuild と同じ） */
