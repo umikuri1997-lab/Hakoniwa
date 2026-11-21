@@ -38,7 +38,7 @@ const assert=require('node:assert/strict');
   const tp=JSON.parse(await run(`JSON.stringify(evTopic(S.res[1]))`));assert.ok(tp&&tp.L.length>=3,'talk topic with thanks '+JSON.stringify(tp));
   assert.equal(await run(`evTopic(S.res[1])`),null,'once a day');
   assert.ok(await run(`CHATS.some(c=>c.evc&&c.ok(S.res[0],S.res[1]))`),'chat about it');
-  assert.ok(await run(`letterTx('ev','taiso','fire').length===3`),'3 letters per element');
+  assert.ok(await run(`letterTx('ev','taiso','fire').length===5&&letterTx('ev','taiso','fire').every(L=>L.length>=5&&L.length<=6)`),'5 whole letters per element');
   /* 3. 体そうの日の、はたらく速さは、つぎの朝6時にもどる */
   await to(day+1,6.2);assert.equal(await run(`evSt(S.res[0],'work')`),0,'buff ends next morning');
   /* 4. 水あそび（夏）：つかれ－30 */
