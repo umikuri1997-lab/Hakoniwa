@@ -280,6 +280,18 @@ def palette(images, threshold=12):
     return frames
 
 
+def daylight(pixels):
+    """昼の散乱光を足す。色相と彩度を保ち、強い光沢は白飛びさせない。"""
+    result = pixels.copy()
+    visible = result[..., 3] > 0
+    rgb = result[visible, :3].astype(float)
+    value = rgb.max(axis=1)
+    filled = np.interp(value, (0, 48, 96, 144, 192, 224, 255),
+                       (0, 65, 132, 190, 225, 245, 255))
+    result[visible, :3] = np.rint(rgb*(filled/np.maximum(value, 1))[:, None])
+    return result
+
+
 def rides(out, metadata):
     comparisons = []
     for name, make in MODELS.items():
@@ -299,6 +311,7 @@ def rides(out, metadata):
         broken, broken_offset, _ = render(model, RIDE_EXT, ground, parallel=True)
         assert broken_offset == offset
         *frames, damaged = palette(images+[broken])
+        frames = [daylight(frame) for frame in frames]
         stable = np.logical_and.reduce([(frame == frames[0]).all(axis=2)
                                         for frame in frames])
         still = Image.fromarray(np.where(stable[..., None], frames[0], 0))
