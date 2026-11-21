@@ -55,11 +55,17 @@ def flag(m, x, y, z, broken):
     m.rod((x,y,z+.09),(x,y,z+.52),.03,HONEY,surface="polished")
     bead(m,(x,y,z+.52),.055,HONEY,surface="polished")
     wave = ((0,0),(.13,.022),(.27,-.005),(.41,-.043),(.56,-.029))
-    for (a, za), (b, zb) in zip(wave, wave[1:]):
-        ya, yb = y+.041*sin(a*10), y+.041*sin(b*10)
-        board(m, ((x+a,ya,z+.465+za),(x+b,yb,z+.465+zb),
-                  (x+b,yb,z+.29+zb+.085*b),(x+a,ya,z+.29+za+.085*a)),
-              BLUE, "cloth")
+    edges = [
+        ((x+u, y+.041*sin(u*10), z+.465+h),
+         (x+u, y+.041*sin(u*10), z+.29+h+.085*u))
+        for u, h in wave
+    ]
+    # 一枚の布として輪郭と布目の単位を共有し、頂点で面の向きをまぜる。
+    m.material(BLUE, True, "cloth")
+    m.sc.part()
+    color = m.color(BLUE)
+    for (upper, lower), (next_upper, next_lower) in zip(edges, edges[1:]):
+        m.sc.quad(upper, next_upper, next_lower, lower, color)
 
 
 def deck(m, radius, broken):
