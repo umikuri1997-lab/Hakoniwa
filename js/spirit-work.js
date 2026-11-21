@@ -312,7 +312,7 @@ function moveR(r,dt){
     if(r.wkT>30&&r.act.type!=='nmeet'){lgR(r,'30分ちかづけない '+lgActTxt(r.act)+' のこり'+r.path.length+'マス');if(r.act.key)BAN.set(r.act.key,S.t+180);noPass(r);endAct(r);r.path=[];r.act={type:'idle',stage:'do',t:0,dur:8};r.wkA=null;return}}
   if(!r.path.length&&r.act)beginDo(r);
 }
-const NIGHT_OK=['nmeet','watchpost','phew','step','sleep','stay','shiver','eat','fetch','eatwait','store','smat','sitem','flee','patrol','follow','faint','forage','questjoy','pray','reunion','ywalk','yhold','ngget']/* お墓へはこぶ（pray）は夜もつづける：やめると毎コマやりなおしになって動けない */;
+const NIGHT_OK=['nmeet','watchpost','phew','step','sleep','stay','shiver','eat','fetch','eatwait','store','smat','sitem','flee','patrol','follow','faint','forage','questjoy','pray','reunion','ywalk','yhold','ngget','tkwatch']/* お墓へはこぶ（pray）は夜もつづける：やめると毎コマやりなおしになって動けない */;
 const WORKT=new Set(['fert','till','sow','plant','build','craft','water','tend','repair','harvest','gather','chop','mine','cook']);
 function rescueStuck(r){if(r.hidden)return;const cj=(r.y|0)*W+(r.x|0),o=S.obj[cj];if(!(HOME_WALLS.has(o)||(FENCE_IDS.has(o)&&!GATE_IDS.has(o))||S.ground[cj]===1&&!windBr(cj)&&!(r.act&&(r.act.type==='bathe'||r.act.type==='plant'&&r.act.wade))))return;/* 水浴び・池のまんなかのハス植えは、水に入ってよい */if(r.act&&r.act.type==='step'||(r.stepT||0)>S.t)return;r.stepT=S.t+5;/* 壁や柵・水の中にいたら、いちばん近い歩ける場所へ歩いて出る（5分ごとにさがす） */const G=bfs(cj%W,(cj/W)|0),k=nearest(G,j=>j!==cj&&walk(j)&&!S.obj[j],12);if(k>=0){endAct(r);startAct(r,G,'step',k,{run:true})}}
 /* 草原のはじめ：ベッドを置く目標（bed）がおわるまでは、おなか・たのしさ・つかれが進まない（村にベッドが1つでもあれば、おわり） */
@@ -399,7 +399,7 @@ function die(r){if(r.kdst&&typeof kdStoneBack==='function')kdStoneBack(r);if(r.s
   toast(r.name+'が消えてしまった…','warn');
   {const DT=S.res.length?deathTalk(r):null;if(DT&&DT.length)talkOnce('dt'+Math.round(S.t*60),DT);/* とちゅうでとじたら、つづきからでもう一度 */else{const key=isKey(r.name),fk=key?'deathTold':'death2Told';if(!S.flags[fk]&&S.res.length){const sp=S.res.find(q=>KEYRES.includes(q.name))||S.res[0],n=r.name;
     talkOnce(fk,(key?DEATHL:DEATHL2)[elemKey(sp)](n).map(t=>[sp.name,sp.name===POKO&&WD===0&&!(S.bossKills>0||qDone('ookage')||qAt('ookage')&&S.qTalked)?t.replace('オオカゲが落とす「めぶきのしずく」','「めぶきのしずく」という、いのちの力'):t]))/* フタバは、名前を聞く前は「オオカゲ」と言わない */}}}/* 話す子の性格で説明する */
-  if(!S.res.length){S.wipe=true;S.wipeGift=WD===1?(lvOK('wall')?'wall':'misugaki'):WD===WIND&&lvOK('parkfence')?'parkfence':(lvOK('logfence')?'logfence':'fence');giveItem(S.wipeGift,10);S.herb=(S.herb||0)+1;(S.seenIt||(S.seenIt={}))['x:herb']=1;/* まよけのハーブも1つ *//* おくりものは、先にわたしておく（会話のとちゅうでとじても、なくならない） */for(const L of[S.buried||[],S.lost||[]])for(const q of L)delete q.unb}/* 全滅：埋葬する子がいないので、埋葬の前でも、次の朝から呼びもどせるようにする（お墓はそのまま） */
+  if(!S.res.length){S.wipe=true;S.wipeGift=WD===1?(lvOK('wall')?'wall':'misugaki'):WD===WIND?(lvOK('parkfence')?'parkfence':'ropefence'):(lvOK('logfence')?'logfence':'fence');giveItem(S.wipeGift,10);S.herb=(S.herb||0)+1;(S.seenIt||(S.seenIt={}))['x:herb']=1;/* まよけのハーブも1つ *//* おくりものは、先にわたしておく（会話のとちゅうでとじても、なくならない） */for(const L of[S.buried||[],S.lost||[]])for(const q of L)delete q.unb}/* 全滅：埋葬する子がいないので、埋葬の前でも、次の朝から呼びもどせるようにする（お墓はそのまま） */
   if(!S.res.length)setTimeout(()=>STATUE<0?gameOver():dialog([[GOD,'#cry|みんな、消えてしもうた……。おヌシ、ひとりでよう耐えたのう。'],[GOD,'じゃが、だいじょうぶじゃ。朝になれば、この土地に深くなじんだ子から、また会えるぞい。'],[GOD,'#alarm|人数が少ないうちは、「コワイノ」も少なめじゃ。オオカゲも、なかまがそろうまでは来んはずじゃ。'],[GOD,'それと…これを使うがよい。'+BL[S.wipeGift||'fence'].name+'と、まよけのハーブじゃ。']],()=>{toast(BL[S.wipeGift||'fence'].name+'を10こもらった','good');toast('まよけのハーブを1つもらった','good')}),800);/* 石の塀を覚えていたら、石の塀 */
 }
 /* 建てる場所・依頼ボードへ行けないとき：5秒ごとにBFS1回でしらべ、行けなくなったときだけ知らせる。道があいたら消す */
@@ -410,9 +410,9 @@ function jobReach(){const rs=S.res.filter(q=>!q.hidden);if(!rs.length)return new
 function jobReachTick(){if(!S||isNight())return;if(JOBBLK.S!==S)JOBBLK={S,set:new Set(),t:0};if(S.t-JOBBLK.t<5&&S.t>=JOBBLK.t)return;JOBBLK.t=S.t;const now=jobReach();
   for(const k of now)if(!JOBBLK.set.has(k))toast(k==='board'?'依頼ボードへ行けません':'建てる所へ行けません','warn');JOBBLK.set=now}
 const jobBlocked=k=>JOBBLK.S===S&&JOBBLK.set.has(k);
-/* 御神木のそばの花の世話（草原のメイン「木のなかまと花畑」。仕事えらびは wflJob、数えるのは quests.js の wflCells など） */
+/* 御神木のそばの花の世話（草原のメイン「きょうだいの花畑」。仕事えらびは wflJob、数えるのは quests.js の wflCells など） */
 ACT.fltend={start(r,a){if(!wflOn()||S.obj[a.obj]!==wflKind())return false;r.bubble='';r.face=(a.obj%W+.5)<r.x?-1:(a.obj%W+.5)>r.x?1:r.face},done:(r,a)=>a.t>=4,
   end(r,a){if(!wflOn()||wflT().includes(r.id))return;const T=S.flags.flTend=[...wflT(),r.id],x=a.obj%W+.5,y=(a.obj/W|0)+.5;sfxAt('bush',r.x,r.y);addFloat(r.x,r.y-1.6,'いいにおい');for(let i=0;i<6;i++)villageTimeout(()=>leafFX({x:x+(Math.random()-.5)*.6,y:y-.3}),i*120);addSpiritXp(1,r);
-    if(T.length>=WFL_TEND){const L=wflCells();L.forEach((k,i)=>villageTimeout(()=>{burst(k,'plant','none');leafFX({x:k%W+.5,y:(k/W|0)+.2})},i*160));sfx('sacred');toast('御神木のそばの'+wflName()+'が、満開になった','good');logEv('御神木のそばの花畑が満開になった')}/* 5人の世話で、満開 */
-    else toast(r.name+'が'+wflName()+'の世話をした（'+T.length+'/'+WFL_TEND+'）');renderQuest();checkQuest();dirty=true}};
+    if(wflTN()>=wflNeed()){const L=wflCells();L.forEach((k,i)=>villageTimeout(()=>{burst(k,'plant','none');leafFX({x:k%W+.5,y:(k/W|0)+.2})},i*160));sfx('sacred');toast('御神木のそばの'+wflName()+'が、満開になった','good');logEv('御神木のそばの花畑が満開になった')}/* 村にいる5人の世話で、満開 */
+    else toast(r.name+'が'+wflName()+'の世話をした（'+wflTN()+'/'+wflNeed()+'）');renderQuest();checkQuest();dirty=true}};
 ACT_LBL.fltend='花の世話をしている';WORKFACE.add('fltend');/* 花のほうを向く（北の花には、うしろ向き） */

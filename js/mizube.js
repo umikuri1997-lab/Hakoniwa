@@ -93,7 +93,7 @@ function mzPlaceCheck(id,j,quiet){/* canPlace1 から：true・false をかえ�
   if(id==='dock'&&!mzAdj(j).some(n=>mzWater(n)&&hiAt(n)===hiAt(j)))return no('船着き場は、水のとなりにだけ建てられます');
   if(id==='raft'&&!mzAdj(j).some(n=>MZC.wet&&MZC.wet[n]))return no('いかだ乗り場は、水の流れる水路のとなりにだけ建てられます');
   return null}
-function mzCanalDone(j,r){delete S.dyn[j];S.obj[j]='';S.mz.cn[j]=1;S.mz.v++;recount();dirty=true;burst(j,'block');if(r)addSpiritXp(2,r);checkQuest()}
+function mzCanalDone(j,r){delete S.dyn[j];S.obj[j]='';S.mz.cn[j]=1;S.mz.v++;recount();dirty=true;burst(j,'block');if(r){addSpiritXp(2,r);addMat(r,'nendo',1)}/* 水路をほると、粘土が1こ */checkQuest()}
 function mzRemove(j){/* removeAt から：水路をうめる・こわせない物 */if(!mzOn())return false;const o=S.obj[j];if(o==='mzgateb'||o==='mzgate'||o==='mzchest'){toast(BL[o].name+'はこわせません');return true}
   if(!o&&S.mz.cn[j]){delete S.mz.cn[j];S.ground[j]=0;S.mz.v++;toast('水路をうめた');burst(j,'block','rm');recount();dirty=true;return true}return false}
 
@@ -137,7 +137,11 @@ function mzBoatStop(C,B,d){const M=S.mz;
   const o=M.send[d];if(o&&!B.cg&&C.docks.includes(o.to)){let t=0;for(const j of mzNearBoxes(d)){if(t>=MZBOATN)break;t+=boxOut(j,o.k,MZBOATN-t)}if(t>0)B.cg={k:o.k,n:t,to:o.to}}}
 function mzTick(dt){if(!mzOn()||MZC.S!==S)return;const M=S.mz;for(const C of MZC.comps){const B=M.boats[C.key]||(M.boats[C.key]={d:0,w:0,cg:null}),n=C.route.length;if(!n)continue;if(B.w>0){B.w-=dt;continue}
     const p0=Math.floor(B.d);B.d+=.36*MZBOATK*dt;for(let i=p0+1;i<=Math.floor(B.d);i++){const d=C.stops[i%n];if(d!=null){B.d=i;B.w=MZBOATWAIT;mzBoatStop(C,B,d);break}}if(B.d>1e6)B.d%=n}}
-function mzMorning(){if(!mzOn())return;const M=S.mz;for(const t of M.trade||[]){const T=MZTRADE.find(q=>q.w===t.w);if(!T)continue;if(T.food)addFood(T.food,T.n);else S.mat[T.mat]=(S.mat[T.mat]||0)+T.n;toast(T.name+'から、'+(T.food?FOODS[T.food].name:MATN[T.mat])+'が'+T.n+'こ とどいた','good')}M.trade=[]}
+const MZSTDAY=4,MZSTMAX=12;/* 丸石：毎朝、浅瀬・水べのとなりの陸に4こ（地面に12こまで） */
+function mzStoneMorning(){if(!mzOn())return;if(!S.drops)S.drops=[];const r0=S.res.find(q=>!q.hidden),G=r0?bfs(r0.x|0,r0.y|0):null,has=new Set(S.drops.map(d=>d.y*W+d.x));let k=S.drops.filter(d=>d.id==='mat:maruishi').length,n=MZSTDAY;
+  const L=[];for(let j=0;j<W*H;j++){if(S.ground[j]!==0||S.obj[j]||S.floor[j]||!walk(j)||has.has(j)||fogAt(j)||G&&G.dist[j]<0)continue;if([j-1,j+1,j-W,j+W].some(q=>q>=0&&q<W*H&&S.ground[q]))L.push(j)}
+  while(n>0&&k<MZSTMAX&&L.length){const i=(Math.random()*L.length)|0,j=L.splice(i,1)[0];S.drops.push({x:j%W,y:(j/W)|0,id:'mat:maruishi',n:1});n--;k++}}
+function mzMorning(){if(!mzOn())return;mzStoneMorning();const M=S.mz;for(const t of M.trade||[]){const T=MZTRADE.find(q=>q.w===t.w);if(!T)continue;if(T.food)addFood(T.food,T.n);else S.mat[T.mat]=(S.mat[T.mat]||0)+T.n;toast(T.name+'から、'+(T.food?FOODS[T.food].name:MATN[T.mat])+'が'+T.n+'こ とどいた','good')}M.trade=[]}
 const mzKeyName=k=>k.startsWith('f:')?FOODS[k.slice(2)].name:MATN[k]||k;
 function mzDockPop(j){const M=S.mz,C=MZC.comps.find(c=>c.docks.includes(j)),P=pxPop('船着き場'),B=P.body;let sel=(M.send[j]||{}).k||null;
   const day=typeof callDay==='function'?callDay():dayNo();

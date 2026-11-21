@@ -72,6 +72,12 @@ function windRiseTick(){while(WRISEQ.length&&WRISEQ[0].state!==S)WRISEQ.shift();
       const button=el('<button class="btn pri" type="button">とじる</button>');button.disabled=true;card.append(button);overlay.append(card);document.body.append(overlay);sfx('good');setTimeout(()=>{if(overlay.isConnected)button.disabled=false},650);
       button.onclick=()=>{if(button.disabled)return;overlay.remove();if(!ok())return finish();memo('leaf','風がとどいて、島がうかんだ');const go=()=>{checkQuest();camAnim=WRISECAM={fz:cam.z,tz:back.z,fx:cam.x+VW/cam.z/2,fy:cam.y+VH/cam.z/2,tx:back.x,ty:back.y,t:0,dur:1.2,done:finish}};if(!windHayateWake(k,go))go()}},WINDRISE+200)}}}
 function windRiseReset(){WRISEQ.length=0;if(WRISEON){if(WRISECAM&&camAnim===WRISECAM)camAnim=null;WRISECAM=null;WRISEON=false;GIFT_ACTIVE=false;document.querySelectorAll('.idea-reveal[aria-label="島がうかんだ"]').forEach(e=>e.remove())}}/* 村を切りかえたとき */
+const KUMODAY=6,KUMOMAX=20,HANEDAY=3,HANEMAX=10;/* 雲わた：毎朝、雲の海のふちに6こ（地面に20こまで）。風の羽：毎朝、風の道の上に3まい（10まいまで） */
+function windMatMorning(){if(!windOn())return;if(!WN||WNS!==S)windSync();if(!S.drops)S.drops=[];const M=skyM(),I=windIsles(S),r0=S.res.find(q=>!q.hidden),G=r0?bfs(r0.x|0,r0.y|0):null,has=new Set(S.drops.map(d=>d.y*W+d.x)),cnt=id=>S.drops.filter(d=>d.id===id).length;
+  const ok=j=>j>=0&&j<W*H&&S.ground[j]===0&&!S.obj[j]&&!S.floor[j]&&walk(j)&&!has.has(j)&&!fogAt(j)&&(!G||G.dist[j]>=0)&&I.id[j]>0;
+  const put=(L,id,n,max)=>{for(let k=cnt(id);n>0&&k<max&&L.length;){const i=(Math.random()*L.length)|0,j=L[i];L.splice(i,1);if(!ok(j))continue;S.drops.push({x:j%W,y:(j/W)|0,id,n:1});has.add(j);n--;k++}};
+  const edge=[],path=[];for(let j=0;j<W*H;j++){if(!ok(j))continue;if([j-1,j+1,j-W,j+W].some(q=>q>=0&&q<W*H&&M[q]))edge.push(j);if(WN.dir[j]>=0)path.push(j)}
+  put(edge,'mat:kumowata',KUMODAY,KUMOMAX);put(path,'mat:hane',HANEDAY,HANEMAX)}
 function windTick(){if(!windOn())return;if(!WN||WNS!==S)windSync();windCarry();windRiseTick()}
 /* ---------- 風の遊園地 ----------
    遊具（RIDES）は、風のせいれいが係（rideop）になって風を送っているあいだだけ動き、ほかのせいれいがのれる。係は、のったせいれいが遊びおわるたびに、たのしさ+RIDEOPFUN。風の道が2マス以内にとどいている遊具は、係がつかれない。
