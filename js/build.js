@@ -237,7 +237,7 @@ function removeAt0(x,y){const tx0=x,ty0=y;
 function finishBuild(j,r){
   if(S.dyn[j]&&S.dyn[j].bp!=null&&typeof bpFinish==='function')return bpFinish(j,r);/* 家の設計図の部品 */
   if(S.dyn[j]&&S.dyn[j].build==='canal')return mzCanalDone(j,r);/* 水路をほりおえた */
-  if(TERRA.has(S.dyn[j]&&S.dyn[j].build)){const up=S.dyn[j].build==='mound';delete S.dyn[j];S.obj[j]='';S.hi[j]=up?Math.min(HMAX,(S.hi[j]|0)+1):Math.max(0,(S.hi[j]|0)-1);if(!up){if(r&&roomN(r)>0)addMat(r,'tsuchi',1);else S.mat.tsuchi=(S.mat.tsuchi||0)+1}/* ほった土は、ほったせいれいが箱へはこぶ */recount();dirty=true;burst(j,'block');if(r)addSpiritXp(1,r);return}/* ほる・つむ：段差の高さをかえる */
+  if(TERRA.has(S.dyn[j]&&S.dyn[j].build)){const up=S.dyn[j].build==='mound',cube=S.dyn[j].cube;delete S.dyn[j];S.obj[j]='';let got='';if(up){if((S.hi[j]|0)<HMAX)terraUp(j,cube);else if(cube)S.inv[cube]=(S.inv[cube]||0)+1}else if((S.hi[j]|0)>0){got=terraTop(j);terraDown(j)}if(got==='tsuchi'){if(r&&roomN(r)>0)addMat(r,'tsuchi',1);else S.mat.tsuchi=(S.mat.tsuchi||0)+1}else if(got){if(!(r&&addItem(r,got,1)>0))S.inv[got]=(S.inv[got]||0)+1}/* ほった物は、ほったせいれいが箱へはこぶ */recount();dirty=true;burst(j,'block');if(r)addSpiritXp(1,r);return}/* ほる・つむ：段差の高さをかえる */
   const d=S.dyn[j],id=d.build,fix=!!d.ruin;/* こわれた神殿を直した */if(d.hole){delete S.dyn[j];S.obj[j]='kazaana';recount();burst(j,'furn');sfx('level');if(r)addSpiritXp(4,r);toast('風穴がひらいた！ 風がふき出した','good');memo('leaf','風穴がひらいて、風がふき出した');checkQuest();return}/* 風穴の石をどけた（wind.js） */if(d.wfix){windFixDone(j,d,r);return}/* こわれた遊具を直した */if(!d.mat&&BL[id].mat&&id!=='tower')(S.freeB||(S.freeB={}))[j]=1;/* ただで建てた（素材を使わなかった） */delete S.dyn[j];S.obj[j]=id;noteQuestPlacement(id,j);setParts(id,j,'part');if(STAIRS.has(id)){const d=stairDir(j);if(d>0){const o=stairOut(j,d);S.obj[o]='part';S.ref[o]=j}}/* 階段：低いほうのマス */if(BL[id].hp)S.hp[j]=BL[id].hp;if(BL[id].dyn)S.dyn[j]={g:0};
   recount();burst(j,'furn');if(r){addSpiritXp(4,r);r.made=(r.made||0)+1}if(fix)toast(BL[id].name+'が直った！','good');else{kurashi('b:'+id,['🏠','はじめて'+BL[id].name+'が建った']);toast(BL[id].name+'が建った！','good')}checkQuest();
   if(id==='statue'){const b=boardFree(j+3)?j+2:j+1;/* 依頼ボードは、神殿から2つ右・3つ右（絵のある所）。右がどうしてもあかないときだけ、1つ右から */S.obj[j-1]='obox';if(b===j+2){S.obj[j+1]='part';S.ref[j+1]=j}S.obj[b]='board';delete S.ref[b];S.obj[b+1]='part';S.ref[b+1]=b;S.obj[j+W]='altar';S.flags.board3=1;recount();burst(j-1,'furn');burst(b,'furn')}
@@ -264,19 +264,27 @@ const STAMPC10={farm:32,fence:16,stone:16,path:8};/* スタンプで足りない
 function stampCost(need){let c10=0;const parts=[];for(const id in need){const short=Math.max(0,need[id]-inv(id));c10+=short?short*(STAMPC10[id]==null?Infinity:STAMPC10[id]):0;/* 足りない分だけ、1こあたりの値段で買う（足りていれば0） */if(short)parts.push(BL[id].name+short+'こ')}return {cost:Math.ceil(c10/10),parts}}
 function shortCost(need){let cost=0;const parts=[];for(const id in need){const short=Math.max(0,need[id]-inv(id));cost+=short*(BL[id].qty?Infinity:BL[id].cost);if(short)parts.push(BL[id].name+short+'こ')}return {cost,parts}}
 /* ---------- ほる・つむ（地面のブロック） ----------
-   タップ：守り神が、その場ですぐ1だんほる・つむ（かずのかぎりなし）。ほった土はその場に落ち、せいれいがはこぶ。つむ土は箱から。
-   なぞる：えらんだ所を、せいれいにたのむ（建てる所のしくみ。つむ土は、せいれいが箱からはこぶ） */
-function terraNow(id,x,y){if(!canPlace(id,x,y))return;const j=y*W+x,up=id==='mound';
-  if(up&&(S.mat.tsuchi||0)<1)return toast('土が足りません','warn');
-  S.hi[j]=up?(S.hi[j]|0)+1:(S.hi[j]|0)-1;if(up)S.mat.tsuchi--;
-  recount();dirty=true;burst(j,'block');sfxAt(up?'tsoil':'dig',x+.5,y+.5);if(!up){const n0=(S.drops||[]).length;dropAt(x,y,'mat:tsuchi',1);if(S.drops&&S.drops.length>n0){const d=S.drops[S.drops.length-1];d.lt=1;DROPFX.set(d,{sx:x*TS+16,sy:y*TS+4,t0:performance.now()})}}/* ほった土は、その場に落とし、せいれいがひろって箱へはこぶ（まもりの光でこわした物と同じ） */renderPalette();
+   タップ：守り神が、その場ですぐ1だんほる・つむ（かずのかぎりなし）。ほった物はその場に落ち、せいれいがはこぶ。つむ土は箱から、ブロックはもちものから。
+   なぞる：えらんだ所を、せいれいにたのむ（建てる所のしくみ。つむ土は、せいれいが箱からはこぶ。ブロックは、たのんだときにもちものからへらす）。
+   S.vx[マス]：だんごとのブロック（[1だんめ,2だんめ,…]、''は土）。ないマスは、ぜんぶ土 */
+const VX=()=>S.vx||(S.vx={});
+function cubeAt(j,lv){const v=S.vx&&S.vx[j];return v&&v[lv-1]||''}/* マス j の lv だんめのブロック（''は土） */
+function vxSet(j,lv,id){const v=VX()[j]||(VX()[j]=[]);while(v.length<lv)v.push('');v[lv-1]=id||'';while(v.length&&!v[v.length-1])v.pop();if(!v.length)delete S.vx[j]}
+function terraTop(j){const h=hiAt(j);return h>0?cubeAt(j,h)||'tsuchi':'tsuchi'}/* ほると出る物 */
+function terraUp(j,id){const h=(S.hi[j]|0)+1;S.hi[j]=h;vxSet(j,h,CUBES.includes(id)?id:'')}/* 1だんつむ */
+function terraDown(j){const h=S.hi[j]|0;vxSet(j,h,'');S.hi[j]=h-1}/* 1だんほる */
+const terraHave=id=>CUBES.includes(id)?inv(id):S.mat.tsuchi||0;/* つむ物の、のこり */
+function terraNow(id,x,y){const up=id!=='dig';if(!canPlace(up?'mound':'dig',x,y))return;const j=y*W+x;
+  if(up&&terraHave(id)<1)return toast((CUBES.includes(id)?BL[id].name:'土')+'が足りません','warn');
+  let got='';if(up){if(CUBES.includes(id))S.inv[id]--;else S.mat.tsuchi--;terraUp(j,id)}else{got=terraTop(j);terraDown(j)}
+  recount();dirty=true;burst(j,'block');sfxAt(up?'tsoil':'dig',x+.5,y+.5);if(!up){const n0=(S.drops||[]).length;dropAt(x,y,got==='tsuchi'?'mat:tsuchi':got,1);if(S.drops&&S.drops.length>n0){const d=S.drops[S.drops.length-1];d.lt=1;DROPFX.set(d,{sx:x*TS+16,sy:y*TS+4,t0:performance.now()})}}/* ほった物は、その場に落とし、せいれいがひろって箱へはこぶ（まもりの光でこわした物と同じ） */renderPalette();
   if(!S.flags.digTip){S.flags.digTip=1;setTimeout(()=>toast('なぞると、せいれいにまとめてたのめる'),600)}}
-function askTerra(id,cells){const up=id==='mound',ok=cells.filter(([x,y])=>canPlace(id,x,y,true)&&S.obj[y*W+x]!=='site');if(!ok.length)return toast(up?'つめる所がありません':'ほれる所がありません');
-  if(up){const n=Math.min(ok.length,S.mat.tsuchi||0);if(!n)return toast('土が足りません','warn');ok.length=n}
-  pending={kind:'terra',id,cells:ok};$('#confirmTxt').textContent=ok.length+'マス'+(up?'つむ・土'+ok.length:'ほる')+'・せいれいにたのむ';lackOn($('#cYes'),'');yesLbl(up?'つむ':'ほる');$('#cRot').hidden=true;$('#confirm').hidden=false}
-function terraAsk(p){const up=p.id==='mound',b=BL[p.id];let n=0;
-  for(const[x,y]of p.cells){if(!canPlace(p.id,x,y,true))continue;if(up&&(S.mat.tsuchi||0)<1)break;const j=y*W+x;if(up)rsvAdd(b.mat);S.obj[j]='site';S.dyn[j]={build:p.id,p:0,need:b.time,mat:up?Object.assign({},b.mat):undefined,got:{}};if(n<14)burstAt(x,y,'block');n++}
-  if(!n)return toast(up?'土が足りません':'ほれる所がありません','warn');recount();renderPalette();toast('せいれいが'+n+'マス'+(up?'つみ':'ほり')+'にきてくれる','good')}
+function askTerra(id,cells){const up=id!=='dig',ok=cells.filter(([x,y])=>canPlace(up?'mound':'dig',x,y,true)&&S.obj[y*W+x]!=='site');if(!ok.length)return toast(up?'つめる所がありません':'ほれる所がありません');
+  const nm=CUBES.includes(id)?BL[id].name:'土';if(up){const n=Math.min(ok.length,terraHave(id));if(!n)return toast(nm+'が足りません','warn');ok.length=n}
+  pending={kind:'terra',id,cells:ok};$('#confirmTxt').textContent=ok.length+'マス'+(up?'つむ・'+nm+ok.length:'ほる')+'・せいれいにたのむ';lackOn($('#cYes'),'');yesLbl(up?'つむ':'ほる');$('#cRot').hidden=true;$('#confirm').hidden=false}
+function terraAsk(p){const up=p.id!=='dig',cube=CUBES.includes(p.id),bid=up?'mound':'dig',b=BL[bid];let n=0;
+  for(const[x,y]of p.cells){if(!canPlace(bid,x,y,true))continue;if(up&&terraHave(p.id)<1)break;const j=y*W+x;if(up&&!cube)rsvAdd(b.mat);if(cube)S.inv[p.id]--;S.obj[j]='site';S.dyn[j]={build:bid,p:0,need:b.time,mat:up&&!cube?Object.assign({},b.mat):undefined,got:{}};if(cube)S.dyn[j].cube=p.id;if(n<14)burstAt(x,y,'block');n++}
+  if(!n)return toast(up?'つむ物が足りません':'ほれる所がありません','warn');recount();renderPalette();toast('せいれいが'+n+'マス'+(up?'つみ':'ほり')+'にきてくれる','good')}
 function askBulk(id,cells){if(WALLD.has(id))return toast(BL[id].name+'は、ハケではぬれません');/* 窓・カーテンは、壁に1つずつかける */
   const ok=cells.filter(([x,y])=>canPlace(id,x,y,true));
   if(!ok.length){toast('置ける場所がありません');return}
