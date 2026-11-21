@@ -388,7 +388,9 @@ case'bossKO':noise(t,.5,.3,o,200);tone(70,t,1.4,'sine',.2,o,30);tone(900,t,.35,'
   case'ostamp':if(playU('ostamp',.55))break;/* ハンコ：持ち主の「ぽんっ」 */
   case'stamp':if(!playU('stamp',.5,.95))knock(150,t,.12,o,.14);rustle(t+.005,.05,.012,o,1800,900,.7);break;/* ハンコ：紙ごしの、ぽむっ */
   case'dust':playU('dust',.07,1.15+Math.random()*.25);break;/* 木くずが、さらさらこぼれる */
-  case'creak':playU('creak',.06,1.2);break;/* つるしたなわが、きゅ… */
+  case'creak':playU('creak',.06,1.2);break;
+  case'bkkoe':playU('voice',.22,.55+Math.random()*.15);break;/* 洞窟の声のこだま：だれかの声を、ひくく小さく（会話の声の録音） */
+  case'bklure':playU(Math.random()<.5?'cv_usagi':'cv_risu',.35);break;/* 洞窟のえさ：かわいい生き物の声でよぶ *//* つるしたなわが、きゅ… */
   case'bend':playU('bend',.04+.08*SFXR,.85+SFXR*.15);break;/* 板がしなって、ぎぃ（SFXR：しなりの大きさ 0〜1） */
   case'page':if(!playU('page',.34,1))rustle(t,.12,.05,o,3400,2200,.6);break;/* 思い出帳のページをめくる：ぺらっ（本物の録音） */
   case'tab':if(!playU('tab',.3,1.05))rustle(t,.06,.03,o,3600,2400,.6);playU('knockw',.12,1.35,.025);break;/* タブ：ぱたっとめくって、ことっ */

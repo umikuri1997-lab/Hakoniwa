@@ -2,7 +2,8 @@
 /* 洞窟のバケモノ（cave.js のつづき）。設定は STORY.md の「土の谷の大穴とバケモノ」
    ・階ごとの、たたかえるバケモノ（CVBK。EN に入れて、たたかいの数字は村と同じしくみ）：その階で人がしたことから生まれた物
    ・4つのこわい物（CVSC。たおせない。よけ方がある）：声のこだま（1階から）・見はりの目（2階から）・えさ（3階から）・ほりつづける手（4階から。大穴のある階だけ）
-   ・絵は、コードの仮のドット絵（トリポの絵ができたら、かえる）
+   ・絵は、持ち主が色をつけたトリポのモデルから写したチップ（bk<名前>#<コマ>）。チップがないときは、コードの仮の絵
+   ・こわい物の音：声 bkkoe（会話の声をひくく）・見はりの目 creak・えさ bklure（生き物の声）・ほる手 thunder（ひくく小さく）
    たしかめは tools/tests/cave-bake.cjs */
 /* たたかえるバケモノ（数字は実数。hitF・hitN は、たたかれたせいれいのへるおなか） */
 const CVBK={
@@ -46,13 +47,13 @@ function cvLR(){const C=CV;return (C.dim?CVLIGHTD:CVLIGHT)*(C.lrK||1)}
 /* 毎コマ */
 function cvBakeTick(cdt,mv,now){const C=CV;if(!C.sc)return;
   /* 光すい：そばにいると、光の広さが小さくなる */
-  {let k=1;for(const e of C.en){if(e.dead||e.down||!EN[e.type].drain)continue;if(C.party.some(a=>Math.hypot(a.x-e.x,a.y-e.y)<=CVSUIR)){k=CVSUIK;if(!C.note.sui){C.note.sui=1;toast('光が、すいこまれていく','warn')}}}C.lrK=k}
-  for(const e of C.en.slice()){if(e.dead)continue;const D=EN[e.type];
-    if(D.split&&!e.kid&&!e.spl&&e.hp<e.max&&e.hp>0){/* 夜の水のかたまり：はじめてたたかれると、2つにわかれる */e.spl=1;const h=Math.ceil(e.hp/2);e.hp=h;const j=cvBfsRing(cvCell(e),2).find(q=>q!==cvCell(e));if(j!=null){C.en.push({id:C.eid++,type:e.type,x:cvX(j)+.5,y:cvY(j)+.5+CVOY,hp:h,max:h,spawned:true,asleep:false,stun:0,atk:0,path:[],rp:0,dead:false,tg:e.tg,cj:j,kid:1});cvSpark(cvX(j)+.5,cvY(j)+.5,'#7fe8ff',12);sfx('pour')}}
+  {let k=1;for(const e of C.en){if(e.dead||e.down||!EN[e.type].drain||relOn('suisho'))continue;if(C.party.some(a=>Math.hypot(a.x-e.x,a.y-e.y)<=CVSUIR)){k=CVSUIK;if(!C.note.sui){C.note.sui=1;toast('光が、すいこまれていく','warn')}}}C.lrK=k}
+  for(const e of C.en.slice()){if(e.dead)continue;const D=EN[e.type];if(D.bk&&!e.asleep&&C.seen[cvCell(e)])bkSeen(e.type);
+    if(D.split&&!relOn('bin')&&!e.kid&&!e.spl&&e.hp<e.max&&e.hp>0){/* 夜の水のかたまり：はじめてたたかれると、2つにわかれる */e.spl=1;const h=Math.ceil(e.hp/2);e.hp=h;const j=cvBfsRing(cvCell(e),2).find(q=>q!==cvCell(e));if(j!=null){C.en.push({id:C.eid++,type:e.type,x:cvX(j)+.5,y:cvY(j)+.5+CVOY,hp:h,max:h,spawned:true,asleep:false,stun:0,atk:0,path:[],rp:0,dead:false,tg:e.tg,cj:j,kid:1});cvSpark(cvX(j)+.5,cvY(j)+.5,'#7fe8ff',12);sfx('pour')}}
     if(e.down&&C.t>=e.down){/* 組みかけのほね：組みなおして起きる */e.down=0;e.hp=e.max;e.asleep=false;e.stun=0;cvSpark(e.x,e.y-CVOY,'#e8dcc0',14);sfx('crack');if(!C.note.hone){C.note.hone=1;toast('ほねが、また組みあがった','warn')}}
     if(D.hot&&!e.asleep&&!e.down){const j=cvCell(e);if(C.g[j]&&!C.wt[j])C.hotT.set(j,C.t+CVROHOT)}}
   for(const[j,u]of C.hotT)if(u<=C.t)C.hotT.delete(j);
-  for(const a of C.party){const u=C.hotT.get(a.cj);if(u&&a.elem!=='fire'){a.r.hunger-=CVHOTHUN*cdt;if(!C.note.rohot){C.note.rohot=1;toast('あつい床。火のせいれいのほかは、おなかがはやくへる','warn')}}}
+  for(const a of C.party){const u=C.hotT.get(a.cj);if(u&&a.elem!=='fire'&&!relOn('fuigo')){a.r.hunger-=CVHOTHUN*cdt;if(!C.note.rohot){C.note.rohot=1;toast('あつい床。火のせいれいのほかは、おなかがはやくへる','warn')}}}
   for(const s of C.sc)cvScTick(s,cdt,mv,now)}
 /* ねむりからさめるか（ためしのからだは、火のせいれいが近づいたときだけ） */
 function cvWakeOK(e,a){const D=EN[e.type];if(D.thaw)return a.elem==='fire'&&Math.hypot(a.x-e.x,a.y-e.y)<=CVTAMER;return true}
@@ -68,23 +69,26 @@ function cvScTick(s,cdt,mv,now){const C=CV,P=CVSC[s.k];if(!C.party.length)return
   if(!s.on){if((s.cd-=mv)>0)return;if(cvScSpawn(s))s.on=true;else s.cd=3;return}
   if(s.k==='koe'){const[a,d]=cvNearest(s.x,s.y);if(!a)return;
     if((s.st=(s.st||0)-mv)<=0){s.st=P.step;sfxAt('fstone',s.x+.5,s.y+.5+CVOY,.7)}/* 足音 */
+    if(d<6&&(s.vc=(s.vc||0)-mv)<=0){s.vc=2.5+Math.random()*3;sfxAt('bkkoe',s.x+.5,s.y+.5+CVOY)}/* 声：だれかの声を、ひくく小さく */
     if(d<5)for(const q of C.party)if(!q.path.length&&(q.lk=(q.lk||0)-mv)<=0){q.lk=.6;q.face=-q.face;q.shockU=now+300}/* きょろきょろ */
-    if(d<=P.near){for(const q of C.party){q.frzU=now+P.frz*1000;q.shockU=now+P.frz*1000;q.path=[];q.mv=false}sfx('warn');if(!C.note.koe){C.note.koe=1;toast('だれもいないのに、すぐそばで声がした','warn')}cvScOff(s);return}
+    if(d<=P.near&&relOn('nafuda')){cvScOff(s);bkSeen('sc_koe');cvSpark(s.x+.5,s.y+.5,'#d8e8ff',12);playU('tink',.25,.8);if(!C.note.koeN){C.note.koeN=1;toast('ふだが、つめたく光った。声が、はなれていく','good')}return}
+    if(d<=P.near){bkSeen('sc_koe');for(const q of C.party){q.frzU=now+P.frz*1000;q.shockU=now+P.frz*1000;q.path=[];q.mv=false}sfx('warn');if(!C.note.koe){C.note.koe=1;toast('だれもいないのに、すぐそばで声がした','warn')}cvScOff(s);return}
     if((s.rp=(s.rp||0)-mv)<=0||!s.path||!s.path.length){s.rp=1;const tj=a.cj,p=cvBfs(cvJ(s.x,s.y),q=>q===tj);s.path=p||[]}
     cvScMove(s,mv*P.sp);return}
   if(s.k==='me'){const x=cvX(s.j),y=cvY(s.j),[a,d]=cvNearest(x,y);if(!a)return;
     if(d<cvLR()*.9){cvScOff(s,[3,6]);return}/* 光がとどくと消える */
-    if(d<10)s.t+=mv*(C.dim?.5:1);
-    if(s.t>=P.gaze){let n=0;for(const e of C.en)if(!e.dead&&e.asleep&&!EN[e.type].thaw&&C.party.some(q=>Math.hypot(q.x-e.x,q.y-e.y)<=P.wake)){e.asleep=false;e.wakeT=now;n++}sfx('warn');toast(n?'見られていた。バケモノが目をさました':'暗がりから、だれかが見ていた','warn');cvScOff(s);return}return}
+    if(d<10){const t0=s.t;s.t+=mv*(C.dim?.5:1);if(t0<CVSC.me.gaze/2&&s.t>=CVSC.me.gaze/2){playU('creak',.25,.7);bkSeen('sc_me')}}/* 半分まで見られたら、ぎいっ */
+    if(s.t>=P.gaze){bkSeen('sc_me');let n=0;for(const e of C.en)if(!e.dead&&e.asleep&&!EN[e.type].thaw&&C.party.some(q=>Math.hypot(q.x-e.x,q.y-e.y)<=P.wake)){e.asleep=false;e.wakeT=now;n++}sfx('warn');toast(n?'見られていた。バケモノが目をさました':'暗がりから、だれかが見ていた','warn');cvScOff(s);return}return}
   if(s.k==='esa'){const[a,d]=cvNearest(s.x,s.y);if(!a)return;
     if(s.rev){if(now>s.rev)cvScOff(s);return}
-    if(!s.lured){/* ひまなせいれいが、見にいきたがる */const q=C.party.find(q=>!q.path.length&&!q.job&&cvPd(q,s.x,s.y)<=P.lure);if(q){s.lured=1;const tj=cvJ(s.x,s.y),p=cvBfs(q.cj,k=>cvAdj(k,tj));if(p)q.path=p}}
-    if(d<=1.1){a.r.hunger=Math.max(0,a.r.hunger-P.hun);a.hurtU=now+3000;hitFx(a,P.hun,{sx:s.x+.5,sy:s.y+.5+CVOY,silent:1});for(const q of C.party)q.shockU=now+1200;s.rev=now+700;s.bite=1;sfx('warn');sfx('hit');if(!C.note.esa){C.note.esa=1;toast('かわいい生き物じゃなかった','warn')}cvHudUpd();return}
+    if(d<=CVRELSUZU&&relOn('suzu')){s.rev=now+900;s.bite=0;bkSeen('sc_esa');cvSpark(s.x+.5,s.y+.5,'#ffe9a8',12);playU('tink',.3,1.3);playU('tink',.22,1.6,.12);if(!C.note.suzu){C.note.suzu=1;toast('すずが鳴った。かわいい生き物じゃない','good')}return}
+    if(!s.lured){/* ひまなせいれいが、見にいきたがる */const q=C.party.find(q=>!q.path.length&&!q.job&&cvPd(q,s.x,s.y)<=P.lure);if(q){s.lured=1;sfxAt('bklure',s.x+.5,s.y+.5+CVOY);const tj=cvJ(s.x,s.y),p=cvBfs(q.cj,k=>cvAdj(k,tj));if(p)q.path=p}}
+    if(d<=1.1){a.r.hunger=Math.max(0,a.r.hunger-P.hun);a.hurtU=now+3000;hitFx(a,P.hun,{sx:s.x+.5,sy:s.y+.5+CVOY,silent:1});for(const q of C.party)q.shockU=now+1200;s.rev=now+700;s.bite=1;bkSeen('sc_esa');sfx('warn');sfx('hit');if(!C.note.esa){C.note.esa=1;toast('かわいい生き物じゃなかった','warn')}cvHudUpd();return}
     if((s.rp=(s.rp||0)-mv)<=0||!s.path||!s.path.length){s.rp=1;const tj=a.cj,p=cvBfs(cvJ(s.x,s.y),q=>q===tj);s.path=p||[]}
     cvScMove(s,mv*P.sp);return}
   if(s.k==='te'){const j=s.rim[(s.i|0)%s.rim.length],x=cvX(j),y=cvY(j),[a,d]=cvNearest(x,y);s.x=x;s.y=y;
     if(s.stun>0){s.stun-=mv;return}
-    if(d<=P.shake){/* 近づくと、地面がゆれて小石が落ちる */if((s.qk=(s.qk||0)-mv)<=0){s.qk=.7+Math.random()*.6;cvSpark(a.x+(Math.random()-.5)*3,a.y-CVOY-1.5,'#85776a',3);if(Math.random()<.4)sfx('crack')}if(!C.note.te){C.note.te=1;toast('地面が、ゆれている','warn')}}
+    if(d<=P.shake){/* 近づくと、地面がゆれて小石が落ちる */if((s.qk=(s.qk||0)-mv)<=0){s.qk=.7+Math.random()*.6;cvSpark(a.x+(Math.random()-.5)*3,a.y-CVOY-1.5,'#85776a',3);if(Math.random()<.4)sfx('crack')}if(!C.note.te){C.note.te=1;toast('地面が、ゆれている','warn')}if((s.rb=(s.rb||0)-mv)<=0){s.rb=5;playU('thunder',.12,.55);bkSeen('sc_te')}/* 地の底から、ごろごろ */}
     if(s.st===1){if((s.t+=mv)>=P.wind){/* 手をのばす */s.st=2;s.t=0;let hit=false;for(const q of C.party)if(cvPd(q,x,y)<=P.r){q.r.hunger=Math.max(0,q.r.hunger-P.hun);q.hurtU=now+3000;hitFx(q,P.hun,{sx:x+.5,sy:y+.5+CVOY,silent:1});hit=true}for(const q of C.party)q.shockU=now+1500;sfx('crack');if(hit){sfx('hit');cvHudUpd()}}return}
     if(s.st===2){if((s.t+=mv)>=P.rest){s.st=0;s.t=0}else{s.i+=s.dir*mv*P.sp*.5}return}
     if(d<=(C.dim?P.seeD:P.see)){s.st=1;s.t=0;sfx('warn');return}
@@ -103,8 +107,8 @@ function cvBakeLight(tx,ty,R){const C=CV;if(!C.sc)return;const now=performance.n
   for(const s of C.sc){if(!s.on)continue;const x=s.k==='me'?cvX(s.j):s.x,y=s.k==='me'?cvY(s.j):s.y,d=Math.max(Math.abs(x-tx),Math.abs(y-ty));
     if(s.k==='te'){if(d<=R+2){s.stun=CVSC.te.stun;s.st=0;s.t=0;cvSpark(x+.5,y+.5,'#fff3c4',14)}continue}
     if(d>R+1)continue;
-    if(s.k==='koe'){s.vis=now+1500;setTimeout(()=>{if(CV===C)cvScOff(s,[35,60])},1500);cvSpark(x+.5,y+.5,'#d8d0ff',16);if(!C.note.koeL){C.note.koeL=1;toast('光の中に、うすいすがたが見えて、消えた','good')}}
-    else if(s.k==='esa'&&!s.rev){s.rev=now+900;s.bite=0;cvSpark(x+.5,y+.5,'#fff3c4',12);if(!C.note.esaL){C.note.esaL=1;toast('光をあびて、正体をあらわした','good')}}
+    if(s.k==='koe'){bkSeen('sc_koe');s.vis=now+1500;setTimeout(()=>{if(CV===C)cvScOff(s,[35,60])},1500);cvSpark(x+.5,y+.5,'#d8d0ff',16);if(!C.note.koeL){C.note.koeL=1;toast('光の中に、うすいすがたが見えて、消えた','good')}}
+    else if(s.k==='esa'&&!s.rev){bkSeen('sc_esa');s.rev=now+900;s.bite=0;cvSpark(x+.5,y+.5,'#fff3c4',12);if(!C.note.esaL){C.note.esaL=1;toast('光をあびて、正体をあらわした','good')}}
     else if(s.k==='me')cvScOff(s,[6,12])}}
 /* ---------- 絵（仮のドット絵） ---------- */
 /* 3Dから写したチップ（tools/art/cave/bake_build.py。bk<名前>#<コマ>）：止まる 0・1／歩く w0〜w3／たたく a0（ためる）・a1（ふりおろす） */

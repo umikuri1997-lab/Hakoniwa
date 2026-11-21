@@ -16,7 +16,7 @@ const CVW=56,CVH=44,CVOY=H+8;/* 地図は tools/cave/cave_maps.py で作る（�
    マグマの階：L 冷やせる溶岩（水のせいれいが水をかけると、つながった所がみな黒い岩の足場）・V ふきだす溶岩（ときどき、ふきだす。ふきだすあいだは通れない）・z ゆらぐ岩の橋（3回通るとくずれて溶岩）・H あつい床（火のせいれいのほかは、おなかがはやくへる）
    O 大穴（底の見えない穴。歩けない・見とおせる。むかしの人がほった穴。STORY.md）
    X 大穴の上の橋（水晶の階は水晶の橋・化石の階はほねの橋）・J 大穴にはった氷（すべる氷と同じ）
-   K 手がかりの物（歩けない。階ごとに、むかしの人のしたことが形でわかる物：くい・からの水晶の台・黒いしみ・氷の中のかげ・ならべかけのほね・われた炉）
+   K 手がかりの物（歩けない。しらべると、その階のむかしの道具が見つかる cave-relic.js。階ごとに、むかしの人のしたことが形でわかる物：くい・からの水晶の台・黒いしみ・氷の中のかげ・ならべかけのほね・われた炉）
    ゆりかごのへや：Y ゆりかご・N 根と土にくるまれた、大きなかげ（どちらも歩けない）
    lv は、マスごとの高さ。高い所から低い所へは、とびおりられる。低い所から高い所へは、坂からだけ
    地図は、まるい空洞とくねった道で作る（作ったあと、どのパーティでも入口から坂まで行けること・どこからでも入口か坂へもどれることを、tools/tests/cave.cjs でたしかめる） */
@@ -467,7 +467,7 @@ function cvClose(C){CV=null;document.body.classList.remove('cave');if(C.hud)C.hu
 function caveAbort(){if(CV)cvClose(CV)}/* 村を切りかえるとき：何もわたさずにおわる */
 function caveExit(ok){const C=CV;if(!C)return;cvClose(C);const L=C.loot;
   if(ok){for(const k in L.mat)S.mat[k]=(S.mat[k]||0)+L.mat[k];if(L.pt){S.pt+=L.pt;PTW.q=true}if(L.fukuro){S.fukuro=(S.fukuro||0)+L.fukuro;(S.seenIt||(S.seenIt={}))['x:fukuro']=1}if(L.mapPc){S.mapPc=(S.mapPc||0)+L.mapPc;(S.seenIt||(S.seenIt={}))['x:mapPc']=1}
-    for(const k in L.items){giveItem(k,L.items[k]);(S.flags.cvItem||(S.flags.cvItem={}))[k]=1}
+    for(const k in L.items){giveItem(k,L.items[k]);(S.flags.cvItem||(S.flags.cvItem={}))[k]=1;if(BL[k]&&BL[k].relic)(S.relRec||(S.relRec={}))[k]=1}
     if(typeof fossilGive==='function')for(const k in L.fos)fossilGive(k,L.fos[k])}
   /* 村の時計を、洞窟にいた時間ぶん進める（夜20時まで）。つれていったせいれいは、そのあいだ何もしていない */
   const hold=C.all.filter(r=>S.res.includes(r));for(const r of hold)RHOLD.set(r,performance.now()+6e5);
@@ -551,7 +551,7 @@ function cvGustEnd(){const C=CV,G=C.gust;C.gust=null;if(!G.hit)return toast('風
 /* ---------- 指示：歩く・物を使う ---------- */
 function cvGo(tj,skip){const C=CV,L=C.party.filter(a=>a!==skip),ring=cvBfsRing(tj,L.length+(skip?1:0)).filter(j=>!skip||!skip.path.length||j!==skip.path[skip.path.length-1]);
   L.forEach((a,i)=>{const dj=ring[i]!=null?ring[i]:tj,p=cvBfs(cvCell(a),j=>j===dj);a.job=null;a.jq=[];a.chase=false;if(p){a.path=p;a.mv=true}})}
-const cvObjTap=o=>!!o&&(o.k==='b'||o.k==='t'||o.k==='x'||o.k==='y'||o.k==='o'||o.k==='S'||o.k==='R'||(o.k==='m'||o.k==='k'||o.k==='T'||o.k==='F'||o.k==='Z'||o.k==='L')&&!o.done);
+const cvObjTap=o=>!!o&&(o.k==='b'||o.k==='t'||o.k==='x'||o.k==='y'||o.k==='o'||o.k==='S'||o.k==='R'||o.k==='K'||o.k==='Y'||(o.k==='m'||o.k==='k'||o.k==='T'||o.k==='F'||o.k==='Z'||o.k==='L')&&!o.done);
 function cvJobGo(a,job,goal){const p=cvBfs(cvCell(a),goal);if(!p){toast('そこへ行けません');return false}a.job=job;a.jq=[];a.path=p;a.mv=false;a.chase=false;cvGo(p.length?p[p.length-1]:cvCell(a),a);sfx('tap');return true}
 function cvUse(j,o){const C=CV;C.focus=null;C.askHome=-1;C.sel=null;
   if(CVGATE[o.k]){const D=CVGATE[o.k],a=C.party.find(q=>q.elem===D.el);if(!a)return toast(D.no);
@@ -564,7 +564,7 @@ function cvUse(j,o){const C=CV;C.focus=null;C.askHome=-1;C.sel=null;
     if(o.k==='L')return cvJobGo(a,{k:'cool',j,t:0},q=>cvAdj(q,j))}
   if(o.k==='S'||o.k==='R'){if(C.party.some(a=>Math.hypot(a.x-cvX(j)-.5,a.y-CVOY-cvY(j)-.5)<1.6))return cvHomeAsk();cvGo(j);C.askHome=j;sfx('tap');return}
   let ba=null,bp=null;for(const a of C.party){const p=cvBfs(cvCell(a),q=>cvAdj(q,j));if(p&&(!bp||p.length<bp.length)){bp=p;ba=a}}if(!ba)return toast('そこへ行けません');
-  ba.job={k:o.k==='o'?'pick':'chest',j,t:0};ba.jq=[];ba.path=bp;ba.mv=false;ba.chase=false;cvGo(bp.length?bp[bp.length-1]:cvCell(ba),ba);sfx('tap')}
+  ba.job={k:o.k==='o'?'pick':o.k==='K'||o.k==='Y'?'relic':'chest',j,t:0};ba.jq=[];ba.path=bp;ba.mv=false;ba.chase=false;cvGo(bp.length?bp[bp.length-1]:cvCell(ba),ba);sfx('tap')}
 function caveTap(sx,sy){const C=CV;if(!C||cvHold())return;const w=toWorld(sx,sy),wx=w.x/TS,wy=w.y/TS,x=Math.floor(wx),y=Math.floor(wy)-CVOY,in0=x>=0&&y>=0&&x<CVW&&y<CVH;
   if(LIGHTARM){caveLight(x,y);return}
   if(C.sel&&in0){const sel=C.sel,tj=cvJ(x,y);C.sel=null;
@@ -582,7 +582,7 @@ function caveTap(sx,sy){const C=CV;if(!C||cvHold())return;const w=toWorld(sx,sy)
 /* ---------- 1コマ ---------- */
 function cvJobTick(a,cdt,now){const C=CV,J=a.job,o=C.ob.get(J.j),cj=cvCell(a),end=()=>{a.job=null};if(!o)return end();
   if(J.k==='push'){if(o.k!=='b')return end();if(cj!==J.s){const p=cvBfs(cj,q=>q===J.s);if(!p)return end();a.path=p;return}
-    cvFace(a,cvX(J.j)-cvX(cj),cvY(J.j)-cvY(cj));J.t+=cdt*rMul(a.r,'work');a.r.hunger-=CVHUN.work*cdt;if(J.t<CVPUSHT)return;
+    cvFace(a,cvX(J.j)-cvX(cj),cvY(J.j)-cvY(cj));J.t+=cdt*rMul(a.r,'work');a.r.hunger-=CVHUN.work*cdt;if(J.t<(relOn('kui')?CVPUSHT/2:CVPUSHT))return;
     const t=C.ob.get(J.to);if(t&&!(t.k==='h'&&!t.done)&&t.k!=='!'||C.party.some(q=>cvCell(q)===J.to)||C.en.some(e=>!e.dead&&cvCell(e)===J.to)){toast('岩がうごかない');return end()}
     C.ob.delete(J.j);sfxAt('pick_stone',a.x,a.y);
     if(t&&t.k==='h'){t.done=true;C.sel=null;sfx('good');toast('岩がくぼみにはまった','good');cvSpark(cvX(J.to)+.5,cvY(J.to)+.5,'#d9c7a8',16);a.joyU=now+1400;a.jumpT=now;for(const q of C.party)cvReveal(q.x,q.y-CVOY,cvSeeR())}
@@ -593,7 +593,8 @@ function cvJobTick(a,cdt,now){const C=CV,J=a.job,o=C.ob.get(J.j),cj=cvCell(a),en
   if(!cvObjTap(o))return end();
   const near=J.k==='sluice'?cvNear(cj,J.j):cvAdj(cj,J.j);if(!near){const p=cvBfs(cj,q=>J.k==='sluice'?cvNear(q,J.j):cvAdj(q,J.j));if(!p)return end();a.path=p;return}
   cvFace(a,cvX(J.j)-cvX(cj),cvY(J.j)-cvY(cj));
-  if(J.k==='pick'){C.ob.delete(J.j);cvLoot({fos:CVFOSK[(Math.random()*CVFOSK.length)|0]});sfxAt('pick_stone',a.x,a.y);cvSpark(cvX(J.j)+.5,cvY(J.j)+.5,'#d9c7a8',10);return end()}
+  if(J.k==='pick'){C.ob.delete(J.j);cvLoot({fos:CVFOSK[(Math.random()*CVFOSK.length)|0]});if(relOn('sekiban')&&Math.random()<CVRELFOS)cvLoot({fos:CVFOSK[(Math.random()*CVFOSK.length)|0]});sfxAt('pick_stone',a.x,a.y);cvSpark(cvX(J.j)+.5,cvY(J.j)+.5,'#d9c7a8',10);return end()}
+  if(J.k==='relic'){cvRelicLook(a,J.j,now);return end()}
   if(J.k==='chest'){o.done=true;cvLoot(C.F.chest[cvX(J.j)+','+cvY(J.j)]||{});sfx('quest');cvSpark(cvX(J.j)+.5,cvY(J.j)+.4,'#ffe58a',14);a.joyU=now+1400;a.jumpT=now;return end()}
   if(J.k==='torch'){o.until=C.t+CVTORCH;sfxAt('atk_fire',a.x,a.y);cvSpark(cvX(J.j)+.5,cvY(J.j)+.2,'#ffb36b',8);cvTorchCheck();return end()}
   J.t+=cdt*rMul(a.r,'work');a.r.hunger-=CVHUN.work*cdt;
@@ -628,7 +629,7 @@ function cvActor(a,cdt,mv,now){const C=CV,r=a.r;if(a.eatU>now||a.frzU>now)return
     else{const en=cvTarget(a);if(en){const E=a.elem==='fire'?SORTIE.wood:SORTIE[a.elem]||SORTIE.wood,d=Math.hypot(en.x-a.x,en.y-a.y);
       if(d<=E.rng&&cvLos(a.x,a.y-CVOY,en.x,en.y-CVOY)){if(C.t>=a.fatk&&!(E.stop&&en.stun>1))cvAttack(a,en)}
       else if((a.rp-=mv)<=0){a.rp=.4;const ej=cvCell(en),p=cvBfs(cj,q=>cvAdj(q,ej)||q===ej);if(p&&p.length){if(p[p.length-1]===ej)p.pop();a.path=p;a.chase=true}}}}}
-  {const ho=C.ob.get(cj);if(ho&&ho.k==='H'&&a.elem!=='fire'){r.hunger-=CVHOTHUN*cdt;if(!C.note.hot){C.note.hot=1;toast('あつい床。火のせいれいのほかは、おなかがはやくへる','warn')}}}/* あつい床 */
+  {const ho=C.ob.get(cj);if(ho&&ho.k==='H'&&a.elem!=='fire'&&!relOn('fuigo')){r.hunger-=CVHOTHUN*cdt;if(!C.note.hot){C.note.hot=1;toast('あつい床。火のせいれいのほかは、おなかがはやくへる','warn')}}}/* あつい床 */
   if(r.hunger<=0){r.hunger=0;cvDie(a)}}
 function cvFoe(e,cdt,mv,now){const C=CV;if(e.dead||e.down)return;const D=EN[e.type];cvStep(e,now,false);
   if(e.asleep){const R=C.dim?CVWAKED:CVWAKE;if(C.seen[cvCell(e)])for(const a of C.party)if(Math.hypot(a.x-e.x,a.y-e.y)<=R&&cvWakeOK(e,a)&&cvLos(e.x,e.y-CVOY,a.x,a.y-CVOY)){e.asleep=false;e.wakeT=now;break}return}
