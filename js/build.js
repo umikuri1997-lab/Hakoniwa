@@ -264,12 +264,12 @@ const STAMPC10={farm:32,fence:16,stone:16,path:8};/* スタンプで足りない
 function stampCost(need){let c10=0;const parts=[];for(const id in need){const short=Math.max(0,need[id]-inv(id));c10+=short?short*(STAMPC10[id]==null?Infinity:STAMPC10[id]):0;/* 足りない分だけ、1こあたりの値段で買う（足りていれば0） */if(short)parts.push(BL[id].name+short+'こ')}return {cost:Math.ceil(c10/10),parts}}
 function shortCost(need){let cost=0;const parts=[];for(const id in need){const short=Math.max(0,need[id]-inv(id));cost+=short*(BL[id].qty?Infinity:BL[id].cost);if(short)parts.push(BL[id].name+short+'こ')}return {cost,parts}}
 /* ---------- ほる・つむ（地面のブロック） ----------
-   タップ：守り神が、その場ですぐ1だんほる・つむ（かずのかぎりなし）。ほった土は箱へ（boxSync）、つむ土は箱から。
+   タップ：守り神が、その場ですぐ1だんほる・つむ（かずのかぎりなし）。ほった土はその場に落ち、せいれいがはこぶ。つむ土は箱から。
    なぞる：えらんだ所を、せいれいにたのむ（建てる所のしくみ。つむ土は、せいれいが箱からはこぶ） */
 function terraNow(id,x,y){if(!canPlace(id,x,y))return;const j=y*W+x,up=id==='mound';
   if(up&&(S.mat.tsuchi||0)<1)return toast('土が足りません','warn');
-  S.hi[j]=up?(S.hi[j]|0)+1:(S.hi[j]|0)-1;if(up)S.mat.tsuchi--;else S.mat.tsuchi=(S.mat.tsuchi||0)+1;
-  recount();dirty=true;burst(j,'block');sfxAt(up?'tsoil':'dig',x+.5,y+.5);if(!up&&typeof juiceFly==='function')juiceFly(x+.5,y+.5,'mat',1);renderPalette();
+  S.hi[j]=up?(S.hi[j]|0)+1:(S.hi[j]|0)-1;if(up)S.mat.tsuchi--;
+  recount();dirty=true;burst(j,'block');sfxAt(up?'tsoil':'dig',x+.5,y+.5);if(!up){const n0=(S.drops||[]).length;dropAt(x,y,'mat:tsuchi',1);if(S.drops&&S.drops.length>n0){const d=S.drops[S.drops.length-1];d.lt=1;DROPFX.set(d,{sx:x*TS+16,sy:y*TS+4,t0:performance.now()})}}/* ほった土は、その場に落とし、せいれいがひろって箱へはこぶ（まもりの光でこわした物と同じ） */renderPalette();
   if(!S.flags.digTip){S.flags.digTip=1;setTimeout(()=>toast('なぞると、せいれいにまとめてたのめる'),600)}}
 function askTerra(id,cells){const up=id==='mound',ok=cells.filter(([x,y])=>canPlace(id,x,y,true)&&S.obj[y*W+x]!=='site');if(!ok.length)return toast(up?'つめる所がありません':'ほれる所がありません');
   if(up){const n=Math.min(ok.length,S.mat.tsuchi||0);if(!n)return toast('土が足りません','warn');ok.length=n}
