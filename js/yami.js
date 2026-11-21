@@ -269,7 +269,7 @@ function yamiOffTarget(j){/* いま、このあかりを消せるか */const Y=y
 function yamiStand(j,r){/* j のそばの、歩ける空いたマス（ちかい順） */let best=-1,bd=1e9;for(let dy=-2;dy<=2;dy++)for(let dx=-2;dx<=2;dx++){if(!dx&&!dy)continue;const x=j%W+dx,y=((j/W)|0)+dy;if(x<0||y<0||x>=W||y>=H)continue;const k=y*W+x;if(!walk(k)||S.obj[k])continue;const d=dx*dx+dy*dy+(r?Math.hypot(x+.5-r.x,y+.5-r.y)*.01:0);if(d<bd){bd=d;best=k}}return best}
 function yamiFree(j,r,G,me){if(j<0||j>=W*H||!walk(j)||S.obj[j]&&S.obj[j]!=='part'&&!yamiCradleCells().includes(j))return false;if(G&&G.dist[j]<0)return false;if(!me&&j===r.avoidJ&&S.t<r.avoidU)return false;return !S.res.some(q=>q!==r&&!q.hidden&&(q.y|0)*W+(q.x|0)===j)}
 function yamiFreeNear(j0,r,G){/* j0 にいちばん近い、空いていて行けるマス */let best=-1,bd=1e9;for(let dy=-2;dy<=2;dy++)for(let dx=-2;dx<=2;dx++){const x=j0%W+dx,y=((j0/W)|0)+dy;if(x<0||y<0||x>=W||y>=H)continue;const j=y*W+x;if(!yamiFree(j,r,G,j===(r.y|0)*W+(r.x|0)))continue;const d=dx*dx+dy*dy;if(d<bd){bd=d;best=j}}return best}
-function yamiDecide(r,G){if(S.free||S.cleared)return false;const Y=yamiState();
+function yamiDecide(r,G){if(r.elem==='dark'&&tsukiDecide(r,G))return true;if(S.free||S.cleared)return false;const Y=yamiState();
   if(r.name===TOMORI&&!r.hidden){
     if(Y.ph==='off'||Y.ph==='rest'||Y.ph==='meet'&&!YSH)return startAct(r,G,'yhold',-1,{dur:30}),true;/* あかりを消すのを待つ・ゆりかごのそばでねむる影を見守る */
     const here=(r.y|0)*W+(r.x|0);
@@ -358,7 +358,7 @@ function yamiBirthNushi(){/* 朝6時：新しい闇のヌシが生まれる */co
    [TOMORI,'#think|……。'],
    [TOMORI,'#joy|おやすみ。……それから、おはよう。'],
    [GOD,'#think|見てみい。お日さまが、のぼってきた。……朝も夜も、そろったのう。'],
-   [GOD,'#joy|ヌシ様は、生まれたばかりじゃ。お日さまも、まだ弱っとる。……わしらで、守りそだてていこうかの。']],()=>{if(S!==S0)return;S.flags.yamiEnd=1;Y.ph=null;Y.off=[];recount();memo('sun','夜のゆりかごで、新しい闇のヌシ様が生まれた。朝と夜が、そろった');renderQuest();save()},null,TOMORI)}
+   [GOD,'#joy|ヌシ様は、生まれたばかりじゃ。お日さまも、まだ弱っとる。……わしらで、守りそだてていこうかの。']],()=>{if(S!==S0)return;S.flags.yamiEnd=1;S.flags.yamiEndD=dayNo();Y.ph=null;Y.off=[];recount();memo('sun','夜のゆりかごで、新しい闇のヌシ様が生まれた。朝と夜が、そろった');renderQuest();save()},null,TOMORI)}
 function yamiStoryTick(prevH,h,dt){if(S.free)return;const Y=yamiState();
   if(prevH<6&&h>=6){/* 朝6時 */
     if(Y.off&&Y.off.length&&Y.ph!=='rest'){Y.off=[];recount()}/* 消したあかりは、もどる */
@@ -371,6 +371,7 @@ function yamiStoryTick(prevH,h,dt){if(S.free)return;const Y=yamiState();
   if(!$('#dialog').hidden)return;
   if(h>=6&&h<20){if(Y.ph==='off'||Y.ph==='meet'||Y.ph==='go')return yamiFail('dawn');if(Y.ph==='rest'&&!YEND)return yamiBirthNushi()}
   if(yamiAt('saigo')&&Y.fn==null)Y.fn=dayNo()+1;/* ゆりかごを直したつぎの日の夜 */
+  if(S.cleared&&S.flags.tsukimi!==1&&h>=20&&h<23&&dayNo()>=(S.flags.yamiEndD||0))return tsukimiBirth();/* クリアした日の夜、ツキミが生まれる */
   if(S.flags.yamiEnd&&!S.cleared&&S.quest>=QUESTS.length&&S.qStory==null){S.cleared=true;toast('忘れられた神々の庭に、朝と夜がもどった','good');renderQuest();save()}
   if(qAt('yoruhana')&&!S.flags.bloom&&!Y.bl&&Y.fl&&Y.fl.st>=2&&h>=20&&h<23&&S.qTalked&&!yamiNearLights().length&&yamiTomori())yamiBloom();
   if(yamiAt('saigo')&&!S.flags.yamiEnd&&Y.ph==null&&Y.fn!=null){const ev=h<6?dayNo()-1:dayNo();if(Y.fn<=ev&&(h>=23||h<5))yamiFinalStart()}
@@ -407,3 +408,52 @@ function yamiDrawAdd2(add,now){if(!S||S.free)return;const Y=yamiState();
     add(y,2,[px-90,py-170,px+90,py+30],()=>{ctx.save();ctx.globalAlpha=a;drawShade(ctx,'boss2',px,py+8,s,sh.f||1,{dot:1,t:now/1000,walk:sh.walk,side,back});ctx.restore()},(y|0)*W+(x|0))}
   if(S.flags.yamiEnd&&Y.cr!=null){const x=Y.cr%W+2.6,y=((Y.cr/W)|0)+3.1,px=x*TS,py=y*TS;add(y,2,[px-24,py-40,px+24,py+12],()=>{ctx.save();ctx.globalAlpha=.85;drawShade(ctx,'basic',px,py+8,.27*1.1,-1,{dot:1,t:12.3});ctx.restore()},(y|0)*W+(x|0))}/* 新しいヌシ様のそばでねむる、小さな影（だれかは言わない） */
 }
+/* クリアのあと（STORY.md「さいごの章」）：新しい闇のヌシから、闇のせいれいツキミが1人生まれる（クリアした日の夜20時）。
+   ツキミは夜ねむらず、ねむるせいれいのそばにすわって見守る。まわり TKWR マスでねむるせいれいは、つかれのとれる速さ TKWK 倍。つかれは朝ねむってとる。
+   闇のせいれいはツキミだけ。神殿では呼べない（ELEM_KEYS に入れない）・たたかわない（sortieOK）。絵は、かりの絵（水の形を色がえ） */
+const TSUKIMI='ツキミ',TKWR=3,TKWK=1.5,TKFLOOR=35;/* TKFLOOR：見守っているあいだ、つかれはここより下がらない */
+ELEM.dark={name:'闇',col:'#6a5fa8',body:'#c9c0ea',can:'はたらく速さ20・移動速度20・スタミナ20・夜、まわり3マスでねむるせいれいのつかれのとれる速さ1.5倍'};
+EL_BASE.dark={work:20,move:20,sta:20,cap:1};EL_GROW.dark={atk:[0,0],work:90,move:80,cap:30};EL_ATK.dark=0;
+DEATHL.dark=DEATHL.wood;DEATHL2.dark=DEATHL2.wood;OFFER.dark=OFFER.light;BDGIFT.dark='よつゆのしずく';
+SPC.dark={hood:'#6a5fa8',cheek:'#cfc6ec',dark:'#4e4488',eye:'#2a2350',hand:'#e6e0f6',line:'#d8d2ea'};SPART.dark='water';
+KEYEL[TSUKIMI]='dark';
+KEYVR[TSUKIMI]={key:true,tr:'',h:0,l:0,lash:true,cheek:true,spd:0,eat:1,pow:0,sta:0,iv:3,vo:1.1};
+KEYHELLO[TSUKIMI]='……こんばんは。夜は、ぼくの番だよ。';
+KEYBACK[TSUKIMI]=['ただいま。……夜のあいだ、ちゃんと見ているからね。','#wave|もどってこられたよ。みんな、よくねむれてた？','#joy|また、おやすみのそばにいられる。'];
+function tkWatchK(r){if(WD!==YAMI||!S||!S.flags.tsukimi)return 1;for(const q of S.res)if(q!==r&&q.act&&q.act.type==='tkwatch'&&Math.hypot(q.x-r.x,q.y-r.y)<=TKWR)return TKWK;return 1}/* ツキミのそばでねむる */
+function tsukiDecide(r,G){/* 闇のせいれい：夜は見守る。朝は、つかれていればねむる */
+  if(S.free||WD!==YAMI)return false;
+  if(!isNight()){if(r.tkNap){r.tkNap=0;if(r.energy<90&&r.hunger>=250&&!hostileNow(r)){goSleep(r,G);return true}}return false}
+  if(r.hunger<250||r.meal||hostileNow(r))return false;
+  const sl=S.res.filter(q=>q!==r&&!q.coffin&&q.act&&q.act.type==='sleep');const here=(r.y|0)*W+(r.x|0);
+  let best=-1,bs=-1e9;for(const q of sl){const k=yamiFreeNear((q.y|0)*W+(q.x|0),r,G);if(k<0)continue;const x=k%W+.5,y=((k/W)|0)+.5;let n=0;for(const p of sl)if(Math.hypot(p.x-x,p.y-y)<=TKWR)n++;const sc=n*10-(G.dist[k]||0)*.05;if(sc>bs){bs=sc;best=k}}/* いちばん多くのせいれいを見守れる所 */
+  if(best<0||best===here)return startAct(r,G,'tkwatch',-1,{dur:best<0?10:60}),true;
+  return startAct(r,G,'ywalk',best,{}),true}
+ACT.tkwatch={start(r,a){r.bubble='';r.nap=false;const h=roomOf((r.y|0)*W+(r.x|0));if(h&&isNight()){r.hidden=true;a.hid=1}/* 家の中では、ねむる子と同じく、かくれている */let q=null,d=1e9;for(const p of S.res)if(p!==r&&p.act&&p.act.type==='sleep'){const e=Math.hypot(p.x-r.x,p.y-r.y);if(e<d){d=e;q=p}}if(q)r.face=q.x>=r.x?1:-1},
+  tick(r,a){if(r.energy<TKFLOOR)r.energy=TKFLOOR},
+  done:(r,a)=>a.t>=a.dur||!isNight()||r.hunger<250||hostileNow(r),
+  end(r,a){if(a.hid)r.hidden=false;if(!isNight())r.tkNap=1}};
+function tsukimiBirth(){/* 新しい闇のヌシのゆりかごから、ツキミが生まれる。会話をさいごまで見てから「生まれた」にする（とちゅうでとじたら、つぎの夜にはじめから） */
+  const C=yamiCradleC(),S0=S;if(!C)return;let r=S.res.find(q=>q.name===TSUKIMI);
+  if(!r){const j=yamiBirthCell(C.x|0,(C.y|0)+2);if(j<0)return;r=mkRes(S,TSUKIMI,'dark',j%W+.5,((j/W)|0)+.5);r.came=dayNo();S.res.push(r);recount()}
+  S.flags.tsukimi=.5;panTo(r.x*TS,r.y*TS);spawnFX(r.x-.5,r.y-.8,'#c8b8ff');for(let k=0;k<3;k++)villageTimeout(()=>fx.push({k:'ring',x:r.x*TS,y:r.y*TS,life:1.4,col:'#e8e0ff'}),k*300);sfx('arrive');if(typeof hdBig==='function')hdBig();
+  const T=S.res.some(q=>q.name===TOMORI&&!q.hidden&&!q.coffin),L=[[GOD,'#surprise|……おや。ゆりかごのそばが、ほんのり光っとる。'],[TOMORI,'#surprise|だれか、いる……！'],
+   [TSUKIMI,'#wave|……こんばんは。ぼく、ツキミ。いま、生まれたところ。'],[TSUKIMI,'ヌシ様がね、夜のあいだ、みんなのねむりを見ていてって。'],
+   [GOD,'#joy|闇のせいれいじゃ。……ずいぶん、ひさしぶりに見たのう。'],[TOMORI,'#heart|ぼくがねむっているあいだ、そばにいてくれる？'],
+   [TSUKIMI,'#nod|うん。夜は、ぼくの番。おやすみのそばに、いるよ。']].filter(x=>T||x[0]!==TOMORI);
+  dialog(L,()=>{if(S!==S0)return;S.flags.tsukimi=1;memo('moonn','新しい闇のヌシ様のゆりかごから、闇のせいれいツキミが生まれた');renderQuest();save()},null,TSUKIMI)}
+/* 追いはらったコワイノが、夜のほうへかえる（クリアのあと）：白く止まる → ふりむいて夜のほう（北）へ歩く → 紺にとけて、月のしるしがのこって消える */
+const YHOMEMS=3200,YHOMEC='#1e2550';
+function yamiHomeOn(){return !!(S&&WD===YAMI&&S.cleared&&!S.free)}
+function drawHome(it,now,e,D,z,px,py,v){const a=now-it.t0;
+  if(a<KO_HOLD){drawShade(ctx,e.type,px+(a<0?0:Math.sin(now/18)*1.5),py+8,.27*z,v.f,{dot:1,t:it.t0/1000+e.id*1.3,flash:a>=0,hurt:a>=0?0:null});return}
+  const p=(a-KO_HOLD)/it.dur;if(p>=1)return;const cl=(x,y0,y1)=>Math.max(0,Math.min(1,(x-y0)/(y1-y0)));
+  const wk=cl(p,.12,.8),yy=py+8-wk*TS*1.4,tint=cl(p,.25,.7),fade=1-cl(p,.6,.85);
+  if(fade>0){const R=36*z,ox=px-R,oy=yy-R*1.7,ww=R*2,hh=R*2.2,k=dpr*cam.z,cw=Math.ceil(ww*k)+2,ch=Math.ceil(hh*k)+2;
+    if(EOC.width<cw||EOC.height<ch){EOC.width=EOS.width=Math.max(EOC.width,cw);EOC.height=EOS.height=Math.max(EOC.height,ch)}
+    eox.setTransform(1,0,0,1,0,0);eox.clearRect(0,0,EOC.width,EOC.height);eox.setTransform(k,0,0,k,-ox*k,-oy*k);
+    drawShade(eox,e.type,px,yy,.27*z,v.f,{dot:1,t:now/1000+e.id*1.3,back:true,walk:p>=.12});/* ふりむいて、うしろ向きで歩く */
+    eox.setTransform(1,0,0,1,0,0);eox.globalCompositeOperation='source-atop';eox.globalAlpha=tint*.85;eox.fillStyle=YHOMEC;eox.fillRect(0,0,cw,ch);eox.globalCompositeOperation='source-over';eox.globalAlpha=1;/* 紺にとけていく */
+    ctx.save();ctx.globalAlpha=fade;ctx.drawImage(EOC,0,0,cw,ch,ox,oy,cw/k,ch/k);ctx.restore()}
+  const m=cl(p,.62,.75)*(1-cl(p,.88,1));if(m>0){/* 月のしるし：ドットの三日月（2点の四角） */const P=2,cx=Math.round(px/P)*P,cy=Math.round((yy-34*z)/P)*P,rows=['..###.','.##...','##....','##....','##....','.##...','..###.'];
+    ctx.save();ctx.globalAlpha=m;ctx.fillStyle='#e8e0ff';for(let i=0;i<rows.length;i++)for(let k=0;k<6;k++)if(rows[i][k]==='#')ctx.fillRect(cx-6+k*P,cy-7+i*P,P,P);ctx.restore()}}
