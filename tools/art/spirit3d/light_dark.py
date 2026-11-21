@@ -1,8 +1,10 @@
 """トモリとツキミの頭巾・しっぽ・胸飾り。座標はチップのドット。
 
 顔・耳の位置と体、手足の形、骨は水の精霊と同じ。
-トモリは金色の頭巾、七つの光、胸のしずく。ツキミは右へ
-垂れる紫の頭巾、うす紫の折り返しと房、肩にかかる布と胸の三日月。
+トモリは金色の頭巾、七つの光、胸のしずく。ツキミは紫のナイトキャップ、
+肩にかかる布と胸の三日月。ナイトキャップの白い折り返しは、額で高さ
+約60ドット、うなじで約34ドット。幅10〜13ドットの帯で頭を囲み、
+その上辺に紫の布をつなぐ。布は右後ろに垂れ、先端で房をとめる。
 """
 from math import pi
 import numpy as np
@@ -84,7 +86,7 @@ def chest_mark(body, dark):
 
 
 def cuff_height(front):
-    return 48.5+11*np.maximum(front,0)**1.37+2*np.minimum(front,0)
+    return 46.5+13*np.maximum(front,0)**1.37-12.5*np.maximum(-front,0)**1.45
 
 
 def night_cap():
@@ -92,13 +94,18 @@ def night_cap():
     theta = np.linspace(0,2*pi,640,endpoint=False)
     dx,dy = np.cos(theta),np.sin(theta)
     low = cuff_height(dy)
-    # 折り返しは頭の外周をまわる、厚みのある帯。
+    back = np.maximum(-dy,0)
+    width = 10.2+2.8*back
+    # 後頭部のふくらみを越えて、うなじへ向かう厚みのある帯。
+    rim_x = -.7+dx*(30.7+2.2*(1-np.maximum(dy,0)))
+    rim_y = -5+dy*(24.8+6.6*back)
     t = np.linspace(0,1,27)[:,None]
     roll = np.sin(pi*t)
-    cuff = np.stack((dx*(29.7+1.55*roll),-5+dy*(24.8+1.6*roll),
-                     low+10.2*t),axis=-1).reshape(-1,3)
-    cuff_colors = tones(rgb('#b9a6ca'),rgb('#ede1ee'),
-                        np.clip(.51+.019*(cuff[:,2]-53)-.011*cuff[:,0]+.012*cuff[:,1],0,1))
+    cuff = np.stack((rim_x+1.55*dx*roll,rim_y+1.6*dy*roll,
+                     low+width*t),axis=-1).reshape(-1,3)
+    cuff_colors = tones(rgb('#d4c8df'),rgb('#faf4f8'),
+                        np.clip(.55+.016*(t*width).ravel()
+                                -.008*cuff[:,0]+.004*cuff[:,1],0,1))
 
     # 軸は上から右うしろへ曲がり、房のつく先へ下がる。
     rows = np.array([
@@ -122,7 +129,7 @@ def night_cap():
     fabric = (center[:,None,:]+dx[None,:,None]*radii[:,0,None,None]*side[:,None,:]
               +dy[None,:,None]*radii[:,1,None,None]*depth[:,None,:])
     # 根もとは折り返しと辺を共有し、上へ行く間に布の丸みへつなぐ。
-    rim = np.stack((29.7*dx,-5+24.8*dy,low+10.2),axis=1)
+    rim = np.stack((rim_x,rim_y,low+width),axis=1)
     weight = np.clip(1-u/.24,0,1)**2
     fabric += weight[:,None,None]*(rim-fabric[0])[None,:,:]
     p = fabric.reshape(-1,3)
@@ -130,9 +137,11 @@ def night_cap():
                     np.clip(.53+.005*(p[:,2]-72)-.005*p[:,0]+.007*p[:,1],0,1))
     cloth = np.concatenate((cuff,p))
     colors = np.concatenate((cuff_colors,pigment))
-    grid = np.rint(cloth/QH).astype(np.int16)
+    # 斜めから写しても布に点のすきまができないよう、細かい間隔で点をまとめる。
+    pitch = QH/2
+    grid = np.rint(cloth/pitch).astype(np.int16)
     vertices,first = np.unique(grid,axis=0,return_index=True)
-    return texture(vertices.astype(float)*QH,colors[first])
+    return texture(vertices.astype(float)*pitch,colors[first])
 
 
 def mantle():
