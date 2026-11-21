@@ -1,7 +1,7 @@
 # 限定の家具（トリポ）のモデルを、持ち主の直しのとおりに直す（モデルそのものを直す。UV とテクスチャはそのまま）。
 # 使い方：python3 tools/art/models/tripo/gf_edit.py   … gf/base/*.glb（切りわけて、天板を水平にした物）から、直した gf/*.glb を作る（何回やっても同じ）
 #   座標は glTF（x 右・y 上・z 手前、足もとが原点）。高さのわりあいは、その家具の高さ h に対する数。
-#   ・火のソファ・風のベッド・水のテーブル・水のソファ・木の切り株：持ち主が Blender で形を直し、マテリアルを分けたい所をオブジェクトに分けたモデル（gf/base）を、そのまま使う（ここでは直さない。持ち主がきめた）
+#   ・火のソファ・風のベッド・水のテーブル・水のソファ・木の切り株：持ち主が Blender で形を直し、マテリアルを分けたい所をオブジェクトに分けたモデル（gf/base）を使う（オブジェクトの分けかたはのこす）。風のベッド・水のソファは、はば1.5倍。水のテーブルは、もらったモデルに左の脚2本しかない（ミラーが書き出されていない）ので、左右反対にして右の2本を足す（持ち主がきめた）
 #   ・火・風のびょうぶ：おく行きを0.35倍（ほぼまっすぐ）
 #   ・土の花のオブジェ：鉢のふちより上の花・多肉を、それぞれの根もとで1.25倍・まん中から少し外へ（いい感じにならべる）
 #   ・火のテーブル：天板の面のない所を、うらの円い板でうめる
@@ -17,7 +17,18 @@ def save(n,m):m.export(os.path.join(D,n+'.glb'));print(n,'なおした')
 def near(c,ref,tol):return np.abs(c-np.array(ref,float)).sum(1)<tol
 def screen(n,ky=1.0):
     m=load(n);v=m.vertices;v[:,2]*=0.35;v[:,1]*=ky;m.vertices=v;save(n,m)   # 0.15 だと、横から見たとき紙のようにうすくなる。ky：高さ（持ち主：風のびょうぶは低く。設計図の SIZE も同じだけ低くする）
-def keep(n):import shutil;shutil.copy(os.path.join(B,n+'.glb'),os.path.join(D,n+'.glb'));print(n,'そのまま')   # 持ち主が直したモデル：そのまま（オブジェクトの分けかたものこす）
+def own(n,fn=None):   # 持ち主が直したモデル：オブジェクト（ノード）ごとに fn(ノードの名前, 形) で直して、オブジェクトのまま書く
+    sc=trimesh.load(os.path.join(B,n+'.glb'),force='scene')
+    if fn:
+        for nd in list(sc.graph.nodes_geometry):
+            T,gn=sc.graph[nd];g=sc.geometry[gn];r=fn(nd,g)
+            if r is not None:sc.geometry[gn]=r
+    sc.export(os.path.join(D,n+'.glb'));print(n,'持ち主のモデル')
+def wide15(nd,g):g.vertices[:,0]*=1.5;return g   # はば1.5倍（まん中は x=0）
+def legs4(nd,g):   # 脚（o0）：左の2本を左右反対にして、右に2本を足す（天板のまん中は x=0）
+    if nd!='o0':return None
+    m=g.copy();m.vertices[:,0]*=-1;m.faces=m.faces[:,::-1]
+    return trimesh.util.concatenate([g,m])
 def planter():
     m=load('g_e_planter');v=m.vertices;h=v[:,1].max();c=vcol(m)
     cream=near(c,(222,190,158),70);top=(v[:,1]>0.55*h)&~cream
@@ -50,4 +61,4 @@ def tablefill():
     disk=trimesh.Trimesh(P,F,process=False);disk.visual=trimesh.visual.TextureVisuals(uv=np.tile(uvp,(len(P),1)),material=m.visual.material)
     save('g_f_table',trimesh.util.concatenate([m,disk]))
 screen('g_f_screen');screen('g_k_screen',0.75);planter();vanity()
-for n in ('g_f_sofa','g_k_bed','g_s_table','g_s_sofa','g_w_stump'):keep(n)
+own('g_f_sofa');own('g_k_bed',wide15);own('g_s_table',legs4);own('g_s_sofa',wide15);own('g_w_stump')

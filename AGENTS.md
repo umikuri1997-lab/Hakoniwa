@@ -1,5 +1,8 @@
 # Hakoniwa 3D作成の決まり（GPT・Codex 用）
 
+## さいしょに：「handoff」と言われたら
+持ち主が「handoff」とだけ言ったら、それは「`handoff/to-gpt.md` の『いまのたのみ』をして」という意味。聞きかえさずに、`handoff/to-gpt.md` を読んで、このファイルの決まりで作り、`handoff/from-gpt.md` に結果を書く。返事は日本語。
+
 このリポジトリで、3Dモデルを組んでゲームの絵（ドット絵のマップチップ）にする仕事は、GPT（Codex）がする。
 このファイルは、そのときに読む決まり。ゲームぜんたいの決まりは `CLAUDE.md` にあり、ぶつかったら `CLAUDE.md` が先。
 
@@ -76,7 +79,7 @@
 - `git clean` に、さがした結果をわたさない。キャッシュは `find -name __pycache__ -prune -exec rm -rf {} +` でけし、`git status` で消えた物（`D`）があれば `git checkout --` でもどす。
 - 強制pushはしない。
 
-## Claude とのやりとり（`handoff/`）
+## Claude とのやりとり（`handoff/` のくわしい決まり）
 - 持ち主が「handoff」と言ったら、`handoff/to-gpt.md` の「いまのたのみ」をする。「なし」なら、なにもせずに、そう言う。
 - たのみが、このファイル・`CLAUDE.md` の決まりとぶつかるときは、作らずに、そのわけを `from-gpt.md` に書く。
 - おわったら、`handoff/from-gpt.md` の「いまの結果」を、そこにある書き方で書きかえる（前の結果はけしてよい。たのみと同じ番号にする）。見せる絵は `handoff/files/` に入れる（大きな絵はちぢめずに、1まい数MBまで）。

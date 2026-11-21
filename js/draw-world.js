@@ -510,7 +510,7 @@ function render(now){RFN++;hdFrame();DCG.armed=false;
     else if(h<1){ctx.strokeStyle='rgba(255,236,150,.55)';ctx.lineWidth=7;ctx.beginPath();ctx.moveTo(X(tl),Y(tl));ctx.lineTo(X(h),Y(h));ctx.stroke();ctx.strokeStyle='#fffbe0';ctx.lineWidth=3;ctx.stroke();ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(X(h),Y(h),4,0,7);ctx.fill()}
     else{const q=(p-1/2.4)/(1-1/2.4);ctx.globalAlpha=1-q;ctx.strokeStyle='#fff3b0';ctx.lineWidth=3;ctx.beginPath();ctx.arc(s.x2*TS,s.y2*TS,6+q*18,0,7);ctx.stroke();ctx.fillStyle='rgba(255,250,210,.7)';ctx.beginPath();ctx.arc(s.x2*TS,s.y2*TS,9*(1-q),0,7);ctx.fill()}ctx.restore()}ctx.globalAlpha=1;
   feelWarm(ctx,x0,y0,x1,y1);feelAir(now,x0,y0,x1,y1);feelClouds(ctx,now,darkness());/* 冬の家の中のぬくもり・朝もや・白い息・かげろう・雨のはね・雲のかげ（feel.js） */
-  drawFog(ctx,x0,y0,x1,y1,now);/* 霧（夜の暗さより下） */drawWindCover(ctx,x0,y0,x1,y1,now);if(typeof drawWindScene==="function")drawWindScene(ctx,now);if(typeof mzMistDraw==='function')mzMistDraw(ctx,x0,y0,x1,y1);/* 風：雲にしずんだ島 */drawFogHints(ctx,x0,y0,x1,y1,now);/* 霧の中の手がかり */drawPrintMarks(now,true);/* 霧の中の足あとの印は、霧の上 */
+  drawFog(ctx,x0,y0,x1,y1,now);/* 霧（夜の暗さより下） */drawWindCover(ctx,x0,y0,x1,y1,now);if(typeof drawWindScene==="function")drawWindScene(ctx,now);if(typeof drawWindNushi==="function")drawWindNushi(ctx,now);/* さいごの朝・クリアのあとのヌシ様（wind-story.js） */if(typeof mzMistDraw==='function')mzMistDraw(ctx,x0,y0,x1,y1);/* 風：雲にしずんだ島 */drawFogHints(ctx,x0,y0,x1,y1,now);/* 霧の中の手がかり */drawPrintMarks(now,true);/* 霧の中の足あとの印は、霧の上 */
   const dk=darkness();
   ctx.setTransform(dpr,0,0,dpr,0,0);
   if(BOSSEVE){const h=hour(),a=Math.min(1,Math.max(0,(h-15)/2))*.16;if(a>0){ctx.fillStyle='rgba(110,30,70,'+a+')';ctx.fillRect(0,0,VW,VH)}}/* オオカゲが来る日の夕方：空があやしい色に */
