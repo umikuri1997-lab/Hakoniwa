@@ -1,7 +1,7 @@
 """引き継ぎ用の透過 PNG と比較図。チップの登録はしない。"""
 import argparse
 import json
-from math import cos, sin, tau
+from math import cos, radians, sin, tau
 from pathlib import Path
 import subprocess
 import sys
@@ -50,10 +50,14 @@ class Model:
 
     def material(self, color, smooth, surface):
         surface = "wood" if surface is None and color == WOOD else surface
-        self.sc.texture(SURFACES.get(surface))
+        self.sc.texture(SURFACES.get("metal" if surface == "polished" else surface))
         # The stone normal map follows world-space surfaces, including cut faces.
         self.sc.bump(self.stone_relief() if surface == "stone" else None)
-        self.sc.material("flat" if color == CREAM else None)
+        finish = {"polished": "metal" if self.faded else "shinym",
+                  "enamel": None if self.faded else "shiny",
+                  "glass": "glass", "water": "clear"}.get(
+                      surface, "flat" if color == CREAM else None)
+        self.sc.material(finish)
         self.sc.smooth(smooth or surface == "stone")
 
     def stone_relief(self):
@@ -96,6 +100,41 @@ class Model:
         build(self.sc, [Part("板", "prism", (points, low, high, "z"),
                              self.color(color))])
 
+    def water_disk(self, radius, z, color, ornament):
+        """水面の小波。波の面で空と水盤の金の飾りを反射する。"""
+        self.part(color, surface="water")
+        angle = radians(ELEV)
+        eye = np.array((0, cos(angle), sin(angle)))
+        tint = np.array(color)
+        sky = np.array((225, 244, 255))
+        center, ornament_radius, gold = ornament
+        ripple = ((0, .000), (.22, .007), (.44, -.004), (.65, .006),
+                  (.83, -.003), (1, .000))
+        for (r0, h0), (r1, h1) in zip(ripple, ripple[1:]):
+            for i in range(24):
+                a, b = i*tau/24, (i+1)*tau/24
+                points = np.array([(r*radius*cos(t), r*radius*sin(t),
+                                    z+h*(.82+.18*cos(3*t))) for r, h, t in
+                                   ((r0,h0,a),(r1,h1,a),(r1,h1,b),(r0,h0,b))])
+                for face in (points[[0,1,2]], points[[0,2,3]]):
+                    normal = np.cross(face[1]-face[0], face[2]-face[0])
+                    area = np.linalg.norm(normal)
+                    if area < 1e-10:
+                        continue
+                    normal /= area
+                    facing = max(0, float(eye@normal))
+                    ray = 2*facing*normal-eye
+                    to_ornament = np.asarray(center)-face.mean(axis=0)
+                    t = float(to_ornament@ray)
+                    hits = t > 0 and np.linalg.norm(to_ornament-t*ray) < ornament_radius
+                    # 反射色は視線の角度に合わせる。水底との合成は clear が行う。
+                    fresnel = .08 + .92*(1-facing)**5
+                    reflected = np.asarray(gold) if hits else sky
+                    if hits:
+                        fresnel = max(.32, fresnel)
+                    paint = tuple(np.rint(tint*(1-fresnel)+reflected*fresnel))
+                    self.sc.tri(*face, paint)
+
     def rock(self, x, y, z, width, height, angle, color):
         self.part(color, surface="stone")
         rings = [[(x+width*r*cos(angle+i*tau/5), y+width*r*sin(angle+i*tau/5),
@@ -136,7 +175,17 @@ def render(model, ext, ground, parallel=False):
     O.GRAD = True
     image = O.render_px(model.sc, projection, ext, depth, k=.80, k2=.90,
                         lw=LW, merge=0)
-    image = furntone.tone(image, dw=0, streak=(.22, .13), world=furntone.worldlight(KEEP))
+    toned = furntone.tone(image, dw=0, streak=(.22, .13),
+                         world=furntone.worldlight(KEEP))
+    reflective = [pid for pid, finish in O.LAST_MT.items()
+                  if finish in {"metal", "shinym", "shiny"}]
+    if reflective:
+        # 金属・釉薬はレンダラーで求めた反射光を使う。輪郭と透過面は合成済み。
+        mask = np.isin(O.LAST_IDS, reflective) & ~O.LAST_LINE & ~O.LAST_CLR
+        pixels = np.array(toned)
+        pixels[mask] = np.asarray(image)[mask]
+        toned = Image.fromarray(pixels)
+    image = toned
     anchor = tuple(round(v*SCALE) for v in (ext[0], ext[2]))
     bounds = image.getbbox()
     assert bounds and 0 < bounds[0] < bounds[2] < image.width, (bounds, ext)
