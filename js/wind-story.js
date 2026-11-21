@@ -64,6 +64,11 @@ function windStoryTick(){if(!windOn()||S.free||IS_STORY_REPLAY||WSRUN)return;if(
   if(S.flags.windEnd&&!S.cleared&&S.quest>=QUESTS.length&&S.qStory==null){S.cleared=true;S.clearDay=dayNo();toast('空の遊び場に、風がもどった','good');renderQuest();save();return}
   const h=hour();if(isNight()||h<7||h>=18||camAnim||!stageReady()||!$('#dialog').hidden||sheet!=null||S.enemies.some(e=>!e.dead))return;
   if(windQ('windEnd')&&S.flags.windWon&&!S.flags.windEnd&&!(S.wind.liftD>dayNo()))return windEndScene()}/* 風をあつめそこねたら、つぎの日にもう一度（S.wind.liftD） */
+/* ---------- ヌシ様の鳥：3Dから写した絵（GPT の H-5、tools/art/windnushi/sheet.py が WNSPR を書く）。読みこむまでは、コードの仮のドット絵 ---------- */
+const WNSPR={"src":"assets/g/831f8bf200.webp","ms":100,"r":{"fly0":[481,0,466,455,-267,-375],"fly1":[948,0,475,455,-274,-376],"fly2":[0,463,520,437,-302,-361],"fly3":[0,1303,574,389,-332,-314],"fly4":[499,1693,597,355,-343,-252],"fly5":[1084,901,586,394,-336,-254],"fly6":[1027,463,576,406,-331,-252],"fly7":[0,901,579,401,-331,-244],"fly8":[575,1303,560,386,-330,-244],"fly9":[1136,1303,520,362,-325,-247],"fly10":[1097,1693,499,340,-324,-244],"fly11":[0,1693,498,357,-325,-275],"fly12":[580,901,503,397,-325,-314],"fly13":[521,463,505,432,-320,-349],"fly14":[1424,0,496,455,-306,-373],"fly15":[0,0,480,462,-286,-381],"support":[0,2051,678,307,-339,-222],"face":[679,2051,56,161,-28,-77]}};
+let WNIMG=null;
+function wnImg(){/* ヌシ様の絵（大きいので、使うときだけ読みこむ） */if(!WNSPR.src)return null;if(!WNIMG){WNIMG=new Image();WNIMG.ok=0;WNIMG.onload=()=>{WNIMG.ok=1;dirty=true};WNIMG.src=WNSPR.src}return WNIMG.ok?WNIMG:null}
+function wnDraw(c,k,x,y,al,fl,q){/* WNSPR の1まいを、基準点が x,y になるように（1マス64ドットの絵を半分の大きさで。q：さらに倍） */const im=wnImg(),r=WNSPR.r&&WNSPR.r[k];if(!im||!r)return false;q=(q||1)*.5;c.save();c.globalAlpha*=al;c.translate(Math.round(x),Math.round(y));if(fl)c.scale(-1,1);const sm=c.imageSmoothingEnabled;c.imageSmoothingEnabled=false;c.drawImage(im,r[0],r[1],r[2],r[3],r[4]*q,r[5]*q,r[2]*q,r[3]*q);c.imageSmoothingEnabled=sm;c.restore();return true}
 /* ---------- ヌシ様の鳥（コードの仮のドット絵。2ドットずつ） ---------- */
 function wOval(c,cx,cy,rx,ry,col){c.fillStyle=col;for(let q=-ry;q<=ry;q+=2){const w=Math.round(rx*Math.sqrt(Math.max(0,1-q*q/(ry*ry+.01)))/2)*2;if(w>0)c.fillRect(Math.round(cx/2)*2-w,Math.round((cy+q)/2)*2,w*2,2)}}
 function wWing(c,x,y,side,span,lift,col,edge){/* 雲のようにふくらんだ、つばさ（玉をならべる） */for(let i=0;i<=10;i++){const t=i/10,px=x+side*(18+t*span),py=y-6-lift*t*t+Math.sin(t*3.1)*6,r=Math.max(6,26*(1-t*.7));wOval(c,px,py+3,r,r*.7,edge);wOval(c,px,py,r,r*.7,col)}
@@ -78,4 +83,5 @@ function drawWindNushi(c,now){if(!windOn()||S.free)return;const b=WV.bird;if(!b&
   let x,y,al=1;const fl=Math.sin(now/260)*.5+.5;
   if(b&&!S.flags.windEnd){const t=(now-b.t0)/1000;if(t<3){const p=t/3;x=b.sx*TS;y=b.sy*TS+80-p*160;al=Math.min(1,p*1.6)}else{const p=Math.min(1,(t-3)/2.4),e=p*p*(3-2*p);x=(b.sx+(b.hx-b.sx)*e)*TS;y=(b.sy-5+(b.hy-b.sy+5)*e)*TS-80*(1-e)+Math.sin(now/900)*6}}
   else{const [gx,gy]=windEndFrom(),a=now/9000;x=(gx+Math.cos(a)*7)*TS;y=(gy+1+Math.sin(a)*4)*TS;al=.85}
+  const fr='fly'+(Math.floor(now/(WNSPR.ms||100))%16),fx=WV.bx!=null&&x<WV.bx-.01;WV.bx=x;if(wnDraw(c,fr,x,y,al,fx))return;/* はばたき16コマ。左へとぶときは反転 */
   windBird(c,x,y,fl,al)}
