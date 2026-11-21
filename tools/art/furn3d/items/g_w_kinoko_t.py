@@ -9,7 +9,7 @@ import numpy as np,math
 from blueprint import Part as P
 ID='g_w_kinoko';BOTTOM=58;GRAD=True
 VIEWS=[('g_w_kinoko',0),('g_w_kinoko>1',1),('g_w_kinoko>2',2),('g_w_kinoko>3',3)]
-CX,CY=0.5,0.5;STEM=(250,238,210);GILL=(238,196,150);CAP=(232,72,56);DOT=(255,250,240);MOSS=(118,196,72);GRASS0=(70,150,56);GRASS1=(150,212,84)   # あざやかに（持ち主）
+CX,CY=0.5,0.5;STEM=(250,238,210);GILL=(238,196,150);CAP=(232,72,56);DOT=(255,236,228);MOSS=(118,196,72);GRASS0=(70,150,56);GRASS1=(150,212,84)   # あざやかに（持ち主）
 import random
 _R=random.Random(7);DOTS=[]   # 水玉（持ち主：白もようが不自然）：大きさのそろった丸を少しならべるのをやめ、本物のベニテングタケのように、
 # てっぺんほど大きく・ふちほど小さいつぶを、いびつな形で、12こちらす。ふち（りんかくにかかる所）には置かない
