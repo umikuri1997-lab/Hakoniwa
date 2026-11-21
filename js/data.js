@@ -169,21 +169,31 @@ const BL={
   hdokei:{chest:1,shopOnly:1,name:'森の柱時計',kind:'furn',pc:15,solid:1,attr:{},mat:{wood:6},desc:'住み心地+15'},
   mizubachi:{chest:1,shopOnly:1,name:'苔むした石の水ばち',kind:'furn',cat:'env',pc:5,solid:1,attr:{},mat:{stone:6},desc:'まわり5マスの花・木の芽が、植えたその日に育つ'},
   /* 限定の家具（gift-furn.js）：gf:'ret' プレゼントのお返し・'let' 手紙のお礼・'bond' プレゼントを10回あげた節目。el はくれるせいれいの属性 */
-  g_ishitsumi:{gf:'ret',el:'earth',shopOnly:1,name:'石つみのかざり',kind:'furn',pc:4,solid:1,attr:{earth:1},mat:{stone:3},desc:'小石をつんだかざり。住み心地+6'},
-  g_donguri:{gf:'ret',el:'wood',shopOnly:1,name:'どんぐりのランプ',kind:'furn',cat:'light',pc:4,solid:1,attr:{wood:1},mat:{wood:3},desc:'あかり。住み心地+5'},
-  g_shizuku:{gf:'ret',el:'water',shopOnly:1,name:'金魚ばち',kind:'furn',pc:4,solid:1,attr:{water:1},mat:{stone:3},desc:'金魚のおよぐ、ガラスのはち。住み心地+6'},
-  g_hidamari:{gf:'ret',el:'fire',shopOnly:1,name:'ほのお色のガラスの小鳥',kind:'furn',pc:4,solid:1,attr:{fire:1},mat:{stone:3},desc:'赤とだいだいのガラスの小鳥。住み心地+6'},
-  g_kazaguruma:{gf:'ret',el:'wind',shopOnly:1,name:'かざぐるまのかざり',kind:'furn',cat:'env',pc:4,solid:1,attr:{wind:1},env:3,mat:{wood:3},desc:'まわり3マスで、たのしさ+1.1／1時間。住み心地+4'},
-  g_kabin:{gf:'let',el:'earth',shopOnly:1,name:'土やきの花びん',kind:'furn',pc:5,solid:1,attr:{earth:1},mat:{stone:3},desc:'土をやいた花びん。住み心地+8'},
-  g_oshibana:{gf:'let',el:'wood',shopOnly:1,name:'おし花のがく',kind:'furn',pc:5,solid:1,attr:{wood:1},mat:{wood:3},desc:'おし花を入れた、立てるがく。住み心地+8'},
-  g_kaifun:{gf:'let',el:'water',shopOnly:1,name:'貝がらのふんすい',kind:'furn',pc:5,solid:1,anim:1,attr:{water:1},mat:{stone:3},desc:'貝がらの、小さなふんすい。住み心地+8'},
-  g_post:{gf:'let',el:'fire',shopOnly:1,name:'赤いポスト',kind:'furn',pc:5,solid:1,attr:{fire:1},mat:{wood:2,can:1},desc:'手紙を入れる、赤いポスト。住み心地+6'},
-  g_penzukue:{gf:'let',el:'wind',shopOnly:1,name:'はねペンの書きものづくえ',kind:'furn',pc:5,solid:1,attr:{wind:1},mat:{wood:4},desc:'はねペンをのせた、小さなつくえ。住み心地+8'},
-  g_ishibench:{gf:'bond',el:'earth',shopOnly:1,name:'いしだたみのベンチ',sz:[2,1],kind:'furn',pc:8,attr:{earth:2},mat:{stone:6},desc:'2人すわれる。昼につかれたら、ここで休む。つかれ－30／1時間。住み心地+6'},
-  g_happasofa:{gf:'bond',el:'wood',shopOnly:1,name:'はっぱのソファ',sz:[2,1],kind:'furn',pc:8,attr:{wood:2},mat:{wood:6},desc:'2人すわれる。昼につかれたら、ここで休む。つかれ－30／1時間。住み心地+8'},
-  g_suisou:{gf:'bond',el:'water',shopOnly:1,name:'水草の水そう',sz:[2,1],kind:'furn',pc:8,solid:1,attr:{water:2},mat:{wood:4,stone:2},desc:'水草のゆれる水そう。住み心地+12'},
-  g_danro:{gf:'bond',el:'fire',shopOnly:1,name:'れんがのだんろ',sz:[2,1],kind:'furn',cat:'light',pc:8,solid:1,attr:{fire:2},mat:{stone:6},desc:'あかり。冬の寒さをふせぐ。住み心地+12'},
-  g_hammock:{gf:'bond',el:'wind',shopOnly:1,name:'はねぶとんのハンモック',sz:[2,1],kind:'furn',pc:8,play:{pt:4,pw:1.8,fun:40,dur:50,cap:1},attr:{wind:2},mat:{wood:4,nuno:2},desc:'1人で遊べる。たのしさ+40（33.3分）。住み心地+6'},
+  g_w_kinoko:{gf:'ret',el:'wood',shopOnly:1,name:'きのこのスツール',kind:'furn',pc:4,solid:1,attr:{wood:1},mat:{wood:3},desc:'赤いきのこの形のスツール。住み心地+6'},
+  g_w_acorn:{gf:'ret',el:'wood',shopOnly:1,name:'どんぐりのあかり',kind:'furn',cat:'light',pc:4,solid:1,attr:{wood:1},mat:{wood:3},desc:'あかり。住み心地+5'},
+  g_w_clover:{gf:'let',el:'wood',shopOnly:1,name:'クローバーのテーブル',kind:'furn',pc:5,solid:1,eat:{cap:2,pt:2,pw:.9},attr:{wood:1},mat:{wood:4},desc:'2人まで食べられる。食べるたびにパワー+0.9。住み心地+8'},
+  g_w_shelf:{gf:'let',el:'wood',shopOnly:1,name:'えだの本だな',kind:'furn',pc:5,solid:1,attr:{wood:1},mat:{wood:4},desc:'木のえだでできた本だな。住み心地+8'},
+  g_w_stump:{gf:'bond',el:'wood',shopOnly:1,name:'切り株のいす',kind:'furn',pc:8,solid:1,attr:{wood:2},mat:{wood:6},desc:'苔のクッションの、切り株のいす。住み心地+10'},
+  g_e_planter:{gf:'ret',el:'earth',shopOnly:1,name:'多肉植物のはち',kind:'furn',pc:4,solid:1,attr:{earth:1},mat:{stone:3},desc:'宝石つきの、多肉植物のはち。住み心地+6'},
+  g_e_lantern:{gf:'ret',el:'earth',shopOnly:1,name:'宝石のランタン',kind:'furn',cat:'light',pc:4,solid:1,attr:{earth:1},mat:{stone:3},desc:'あかり。住み心地+5'},
+  g_e_bath:{gf:'let',el:'earth',shopOnly:1,name:'宝石の水ばち',kind:'furn',pc:5,solid:1,attr:{earth:1},mat:{stone:4},desc:'水をはった、石の水ばち。住み心地+8'},
+  g_e_arch:{gf:'let',el:'earth',shopOnly:1,name:'宝石のアーチ',sz:[2,1],kind:'furn',pc:5,solid:1,attr:{earth:1},mat:{stone:4},desc:'つたのからまる、石のアーチ。住み心地+8'},
+  g_e_geode:{gf:'bond',el:'earth',shopOnly:1,name:'アメジストのテーブル',sz:[2,2],kind:'furn',pc:8,solid:1,eat:{cap:4,pt:2,pw:.9},attr:{earth:2},mat:{stone:6},desc:'4人まで食べられる。食べるたびにパワー+0.9。住み心地+12'},
+  g_f_hanger:{gf:'ret',el:'fire',shopOnly:1,name:'ほのおのコートかけ',kind:'furn',pc:4,solid:1,attr:{fire:1},mat:{wood:3},desc:'ほのおの形のコートかけ。住み心地+6'},
+  g_f_lamp:{gf:'ret',el:'fire',shopOnly:1,name:'ほのおのランプ',kind:'furn',cat:'light',pc:4,solid:1,anim:1,attr:{fire:1},mat:{wood:2,can:1},desc:'あかり。冬の寒さをふせぐ。住み心地+5'},
+  g_f_table:{gf:'let',el:'fire',shopOnly:1,name:'おひさまのテーブル',kind:'furn',pc:5,solid:1,eat:{cap:2,pt:2,pw:.9},attr:{fire:1},mat:{wood:4},desc:'2人まで食べられる。食べるたびにパワー+0.9。住み心地+8'},
+  g_f_screen:{gf:'let',el:'fire',shopOnly:1,name:'ほのおのびょうぶ',sz:[2,1],kind:'furn',pc:5,solid:1,attr:{fire:1},mat:{wood:4},desc:'ほのおのもようのびょうぶ。住み心地+8'},
+  g_f_sofa:{gf:'bond',el:'fire',shopOnly:1,name:'ほのおのソファ',sz:[2,1],kind:'furn',pc:8,solid:1,attr:{fire:2},mat:{wood:4,nuno:2},desc:'ほのおのかざりのソファ。住み心地+12'},
+  g_k_fan:{gf:'ret',el:'wind',shopOnly:1,name:'かざぐるまのスタンド',kind:'furn',cat:'env',pc:4,solid:1,attr:{wind:1},env:3,mat:{wood:3},desc:'まわり3マスで、たのしさ+1.1／1時間。住み心地+4'},
+  g_k_egg:{gf:'ret',el:'wind',shopOnly:1,name:'雲のつりいす',kind:'furn',pc:4,solid:1,attr:{wind:1},mat:{wood:3,nuno:1},desc:'雲のクッションの、つりいす。住み心地+6'},
+  g_k_screen:{gf:'let',el:'wind',shopOnly:1,name:'雲のびょうぶ',sz:[2,1],kind:'furn',pc:5,solid:1,attr:{wind:1},mat:{wood:4},desc:'リボンのかかった、雲のびょうぶ。住み心地+8'},
+  g_k_chest:{gf:'let',el:'wind',shopOnly:1,name:'羽のたんす',kind:'furn',pc:5,solid:1,attr:{wind:1},mat:{wood:4},desc:'羽のもようのたんす。住み心地+6。物を60までしまえる'},
+  g_k_bed:{gf:'bond',el:'wind',shopOnly:1,name:'雲のベッド',sz:[2,1],kind:'furn',pc:8,sleep:{cap:1,pt:5,rate:.1},attr:{wind:2},mat:{wood:4,nuno:2},desc:'1人眠れる。つかれ－9／1時間'},
+  g_s_jelly:{gf:'ret',el:'water',shopOnly:1,name:'くらげのあかり',kind:'furn',cat:'light',pc:4,solid:1,attr:{water:1},mat:{stone:3},desc:'あかり。住み心地+5'},
+  g_s_vanity:{gf:'ret',el:'water',shopOnly:1,name:'貝のドレッサー',kind:'furn',pc:4,solid:1,attr:{water:1},mat:{wood:3},desc:'しずくの形のかがみの、ドレッサー。住み心地+6'},
+  g_s_table:{gf:'let',el:'water',shopOnly:1,name:'ハスの葉のテーブル',kind:'furn',pc:5,solid:1,eat:{cap:2,pt:2,pw:.9},attr:{water:1},mat:{wood:4},desc:'2人まで食べられる。食べるたびにパワー+0.9。住み心地+8'},
+  g_s_tank:{gf:'let',el:'water',shopOnly:1,name:'金魚の水そう',kind:'furn',pc:5,solid:1,attr:{water:1},mat:{wood:3,stone:2},desc:'金魚のおよぐ水そう。住み心地+10'},
+  g_s_sofa:{gf:'bond',el:'water',shopOnly:1,name:'貝がらのソファ',sz:[2,1],kind:'furn',pc:8,solid:1,attr:{water:2},mat:{wood:4,nuno:2},desc:'真珠の色の、貝がらのソファ。住み心地+12'},
   chochin:{w:1,name:'おまつりのちょうちん',kind:'furn',shopOnly:1,pc:6,solid:1,attr:{},desc:'おまつりのおみやげ。赤いちょうちん。住み心地+6'},
   furin:{w:1,name:'ふうりん',kind:'furn',shopOnly:1,pc:8,solid:1,anim:1,attr:{},desc:'カミサマのかざり。風がふくと、ちりんと鳴る。住み心地+8'},
   ema:{w:1,name:'えまかけ',kind:'furn',shopOnly:1,pc:8,solid:1,attr:{},desc:'カミサマのかざり。ねがいごとを書いた板をかける。住み心地+8'},
@@ -273,7 +283,7 @@ const STAGEFL=new Set(['tanpopo','ayame','tsukimi'])/* その土地だけの花�
 function bedStep(){/* はじめのベッド：はたおり機 → 布 → ベッドの、いまの所 */const lm=cnt('loom')>0,nu=(S.mat.nuno||0)>0||(S.orders||[]).some(o=>o.type==='bed')||cnt('bed')>0||(S.inv||{}).bed>0;return 'はたおり機 '+(lm?'1':'0')+'/1・布 '+(nu?'1':'0')+'/1・ベッド '+Math.min(1,houseBedCount())+'/1'+((S.orders||[]).some(o=>o.type==='bed')&&!S.obj.includes('wbench')?'・作業台がありません':'')}/* 作業台がないと、ベッドの依頼は作れない */
 const bloomCount=id=>S.obj.reduce((n,o,j)=>n+(o===id&&!isBud(j)?1:0),0);
 const FLOWER_QUESTS=new Set(['salvia3','lotus3','lily5','clover3']);
-const BEDSET=new Set(['bed','yorubed']);/* ねむれるベッド（よぞらのベッドも同じはたらき） */const KWR=['yozorawall','yozoradoor','yorubed','hoshirug','herrfloor'];const KWRKEY='hakoniwa-kwr-v1';/* コワイノのレシピは、どのステージでもおぼえたまま（ステージべつのセーブとはべつにしまう） */
+const BEDSET=new Set(['bed','yorubed','g_k_bed']);/* ねむれるベッド（よぞらのベッドも同じはたらき） */const KWR=['yozorawall','yozoradoor','yorubed','hoshirug','herrfloor'];const KWRKEY='hakoniwa-kwr-v1';/* コワイノのレシピは、どのステージでもおぼえたまま（ステージべつのセーブとはべつにしまう） */
 function kwrSync(){if(!S)return;let g=[];try{g=JSON.parse(KV.getItem(KWRKEY)||'[]')}catch(e){}const G=new Set(g.filter(id=>KWR.includes(id)));for(const id of KWR)if((S.recipes||{})[id])G.add(id);for(const id of G){(S.recipes||(S.recipes={}))[id]=true;if(BL[id].kind==='block')(S.unlocked||(S.unlocked={}))[id]=true}try{KV.setItem(KWRKEY,JSON.stringify([...G]))}catch(e){}}/* コワイノのレシピ：落とし物でまれに手に入る */
 const STAGEONLY={canvasdoor:4,archdoor:3,niwadoor:5,canalgate:3,irongate:5,gekkolamp:5,hotarukago:5,shitone:5,tsukimidai:5,mosswall:5,moonwall:5,ibara:5,kuzure:5,terraceseat:3,madobachi:3,canallamp:3,araiba:3,ashifence:3,rankan:3,timberwall:3,canalwall:3,shimahammock:4,fusenya:4,kagoisu:4,kazakadan:4,kazelamp:4,ropefence:4,kazami:4,canvaswall:4,acaciawall:4,parkfence:4,parkdoor:4,parkgate:4,merry:4,cup:4,skyswing:4,wheel:4,picnic:0,hwall:0,bamboowall:1,fence:0,misugaki:1,signw:0,signs:1,logfence:0,logdoor:0,loggate:0,bamboofence:1,takebench:1,takeakari:1,shishiodoshi:1,yudekago:1};/* そのステージで作れる物（草原0・火山1）。おぼえたら、どのステージでも作れる */
 const GRECKEY='hakoniwa-rec-v1',GRECKEY2='hakoniwa-rec-v2',GRECFIX='hakoniwa-rec-fix1',GNOREC=new Set(['statue','tower','yogan','watch','dig','mound']);let GREC=null;/* おぼえたレシピは、どのステージでもおぼえたまま（ステージべつのセーブとはべつにしまう）。神殿・台座・ようがん台・見張り台は、ステージのお話で決まるので入れない */
@@ -302,7 +312,7 @@ const CRAFT_TABS=[["家具", ["wbench", "table", "dtable", "chair", "stool", "po
 const craftInTag=id=>{if(!craftTags.length)return true;const t=tagsOf(id);return craftTags.every(g=>t.includes(g))};
 const GIFTF=['furin','ema','kadomatsu','komainu','chochin','mimamori','yomawari','oyasumi','yonaka'];/* 交換・おみやげ・コワイノの落とし物でもらう家具 */
 function furnitureGroups(ids){const wanted=new Set(ids);return CRAFT_TABS.map(([name,items])=>[name,items.filter(id=>wanted.has(id))]).filter(([,items])=>items.length)}
-const TABLES=new Set(['table','dtable']);/* 食べられる食卓（ふつう・大きな食卓） */
+const TABLES=new Set(['table','dtable','g_w_clover','g_e_geode','g_f_table','g_s_table']);/* 食べられる食卓（ふつう・大きな食卓） */
 const FURN=['gekkolamp','hotarukago','shitone','tsukimidai','terraceseat','madobachi','canallamp','araiba','shimahammock','fusenya','kagoisu','kazakadan','kazelamp','loom','composter','cooktable','joro','kabebukuro','niguruma','taru','asabukuro','makidana','hoshirug','yorubed','toro','table','chair','oven','bed','bench','takebench','takeakari','andon','shishiodoshi','campfire','swing','torch','jar','rockart','vane','spike','puddle','sticky','stool','dtable','pouf','achair','ltable','rug1','sofa1','rug2','tub','sink','crate','monstera','shelf1','wreath','curtain1','cabinet','paint2','shelf2','curtain2','paint3','wshelf','paint1','bathtub','candle','lantern','flamp','signpost','hedge','birdbath','parasol','arch','slide','sandbox','seesaw','kamizo','noren','gazebo','azumaya'];// 属性の罠（sticky/firetrap/gust）は次のステージから
 
 const TERRA=new Set(['dig','mound']);/* だんさスコップの工事 */

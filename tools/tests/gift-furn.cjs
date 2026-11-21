@@ -6,9 +6,9 @@ await p.goto(process.env.GAME_URL||'http://127.0.0.1:8000');await p.waitForFunct
 await run(`(()=>{setWorld(0);S=newState(0);LIVE[0]=S;started=true;USERPAUSE=true;NOSAVE=true;S.introSeen=true;S.enemyOn=false;S.hold=0;S.t=1440*2+600;for(const id of ['#title','#maps','#pro','#dialog','#lvup','#rlv'])document.querySelector(id).hidden=true;
 for(let y=CY-10;y<CY+10;y++)for(let x=CX-10;x<CX+10;x++){const j=y*W+x;S.obj[j]='';S.ground[j]=0;S.floor[j]='';S.hi[j]=0;delete S.ref[j];delete S.dyn[j]}S.res=[mkRes(S,'a','water',CX+.5,CY+.5),mkRes(S,'b','fire',CX+2.5,CY+.5)];for(const r of S.res){r.hunger=hMax(r);r.energy=100;r.fun=50;r.nap=false}recount();return 1})()`);
 await p.waitForFunction(()=>sacredEval('stageReady()'),{},{timeout:60000});
-/* 15こ・どれもレシピにならない・属性ごとに1つずつ・動きの絵がある */
-const base=await run(`(()=>{const A=[].concat(GFURN.ret,GFURN.let,GFURN.bond);return JSON.stringify({n:A.length,shop:A.every(id=>BL[id]&&BL[id].shopOnly&&BL[id].kind==='furn'),el:['ret','let','bond'].every(c=>['earth','wood','water','fire','wind'].every(e=>GFURN[c].filter(id=>BL[id].el===e).length===1)),comfy:A.every(id=>COMFY[id]>0),mot:Object.values(GFMOT).every(m=>SPM[m]),ham:!!SPM.play_g_hammock})})()`);
-assert.deepEqual(JSON.parse(base),{n:15,shop:true,el:true,comfy:true,mot:true,ham:true},base);
+/* 25こ・どれもレシピにならない・属性ごとに、お返し2・手紙2・節目1・動きの絵がある */
+const base=await run(`(()=>{const A=[].concat(GFURN.ret,GFURN.let,GFURN.bond);return JSON.stringify({n:A.length,shop:A.every(id=>BL[id]&&BL[id].shopOnly&&BL[id].kind==='furn'),el:[['ret',2],['let',2],['bond',1]].every(([c,k])=>['earth','wood','water','fire','wind'].every(e=>GFURN[c].filter(id=>BL[id].el===e).length===k)),comfy:A.every(id=>COMFY[id]>0||BEDSET.has(id)),mot:Object.values(GFMOT).every(m=>SPM[m]),rot:A.every(id=>ROTS[id]),chip:A.every(id=>CHIPS[id]&&(ROTS[id]<4||CHIPS[id+'>3'])),fn:[TABLES.has('g_e_geode'),BEDSET.has('g_k_bed'),LIGHTF.has('g_s_jelly'),BOXCAP.g_k_chest>0].every(Boolean)})})()`);
+assert.deepEqual(JSON.parse(base),{n:25,shop:true,el:true,comfy:true,mot:true,rot:true,chip:true,fn:true},base);
 /* だいすきの物をあげる：つつみをあける → 中身の動き → 返事の会話 → お返しのつつみ（水のせいれいの物） */
 const love=await run(`(()=>{const r=S.res[0];S.flags.gfGot={};const id=GIFTIDS.find(q=>giftLike(r,q)===2);giveItem(id,1);presentGive(r,id);const ps=sacredPose(r);return JSON.stringify({id,open:ps&&ps.anim,wrap:ps&&ps.gfood})})()`);
 const L=JSON.parse(love);assert.equal(L.open,'gf_open','つつみを両手でかかえる');assert.ok(/^ic:gfwrap_/.test(L.wrap),L.wrap);
@@ -22,12 +22,15 @@ for(let i=0;i<8&&await run(`!document.querySelector('#dialog').hidden`);i++){awa
 await p.waitForTimeout(400);
 for(let i=0;i<6&&await run(`!document.querySelector('#dialog').hidden`);i++){await run(`{DLGA.typing=0;DLGA.readReady=0;DLGA.holdUntil=0;const c=document.querySelector('#dialog button');if(c){c.disabled=false;c.click()}}`);await p.waitForTimeout(250)}
 await p.waitForTimeout(400);
-const ret=JSON.parse(await run(`JSON.stringify({got:!!S.flags.gfGot.g_shizuku,inv:S.inv.g_shizuku||0,card:[...document.querySelectorAll('.pxcard')].some(c=>c.textContent.includes('お返し'))})`));
+const ret=JSON.parse(await run(`JSON.stringify({got:!!S.flags.gfGot.g_s_jelly,inv:S.inv.g_s_jelly||0,card:[...document.querySelectorAll('.pxcard')].some(c=>c.textContent.includes('お返し'))})`));
 assert.deepEqual(ret,{got:true,inv:1,card:true},JSON.stringify(ret));
 await run(`for(const o of document.querySelectorAll('.pxcard'))o.parentNode.remove()`);
-/* 10回めの節目：とくべつなつつみ（水草の水そう） */
-const bond=JSON.parse(await run(`(()=>{const r=S.res[0];r.gn=10;gfAfterGift(r,0);for(let i=0;i<4&&!document.querySelector('#dialog').hidden;i++)dlgNext&&dlgNext();return JSON.stringify({got:!!S.flags.gfGot.g_suisou,b:r.gbond})})()`));
+/* 10回めの節目：とくべつなつつみ（貝がらのソファ） */
+const bond=JSON.parse(await run(`(()=>{const r=S.res[0];r.gn=10;gfAfterGift(r,0);for(let i=0;i<4&&!document.querySelector('#dialog').hidden;i++)dlgNext&&dlgNext();return JSON.stringify({got:!!S.flags.gfGot.g_s_sofa,b:r.gbond})})()`));
 assert.deepEqual(bond,{got:true,b:1});
+/* 前のセーブ：前の限定の家具は、同じ属性の新しい家具にかわる（置いてある物は同じマス、置けなければ、もちもの） */
+const mig=JSON.parse(await run(`(()=>{const j=(CY+5)*W+CX,k=(CY+5)*W+CX+4;S.flags.gf25=0;S.obj[j]='g_donguri';S.obj[k]='g_suisou';S.obj[k+1]='part';S.ref[k+1]=k;S.inv.g_kabin=2;S.flags.gfGot={g_post:1};gfMigrate();return JSON.stringify({a:S.obj[j],b:S.obj[k],b2:S.obj[k+1],inv:S.inv.g_e_bath,old:S.inv.g_kabin||0,got:S.flags.gfGot})})()`));
+assert.deepEqual(mig,{a:'g_w_acorn',b:'g_s_sofa',b2:'part',inv:2,old:0,got:{g_f_screen:1}},JSON.stringify(mig));
 /* ぜんぶもらったら、もう出ない */
 assert.equal(await run(`(()=>{for(const c in GFURN)for(const id of GFURN[c])S.flags.gfGot[id]=1;return gfPick('ret','water')})()`),null);
 /* 大会の曲：動く大会・のんびりした大会・表彰台 */
