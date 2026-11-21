@@ -1,28 +1,28 @@
-/* ほる・つむ：守り神のどうぐ「つるはし」。タップでつむ・長おしでほる（材質で時間がちがう）。8だんまでつめる。だんさスコップはない */
+/* ほる・つむ：守り神のどうぐ「かたちの筆」。タップでつむ・長おしでほる（材質で時間がちがう）。8だんまでつめる。だんさスコップはない */
 const assert=require('node:assert/strict');
 (async()=>{const {browser,page,run,errors}=await require('../sim/boot.cjs')();
-  await run(`document.querySelector('#dialog').hidden=true;S.introSeen=true;S.flags.tapped=1;S.hold=0;S.t=1440+600;`);
+  await run(`document.querySelector('#dialog').hidden=true;S.introSeen=true;S.flags.tapped=1;S.hold=0;S.flags.fude=1;S.t=1440+600;`);
   const r=JSON.parse(await run(`(()=>{
     const ok=j=>!S.obj[j]&&!S.floor[j]&&!S.ground[j]&&!fogAt(j)&&walk(j);let x0=-1,y0=-1;
     for(let y=CY-12;y<CY+12&&x0<0;y++)for(let x=CX-12;x<CX+12;x++){let g=1;for(let b=0;b<3&&g;b++)for(let a=0;a<4;a++){const j=(y+b)*W+x+a;if(!ok(j)||hiAt(j)!==hiAt(y*W+x))g=0}if(g){x0=x;y0=y;break}}
-    const j=y0*W+x0,h0=hiAt(j);S.mat.tsuchi=0;
-    S.hi[j]=Math.max(1,h0);const h1=hiAt(j);terraNow('dig',x0,y0);const dug=hiAt(j),t1=(S.drops||[]).filter(d=>d.id==='mat:tsuchi'&&d.lt).reduce((n,d)=>n+d.n,0)+S.mat.tsuchi;S.drops=[];
-    S.mat.tsuchi=20;for(let i=0;i<12;i++)terraNow('mound',x0,y0);const top=hiAt(j),t2=S.mat.tsuchi;
+    const j=y0*W+x0,h0=hiAt(j);S.inv.blk_soil=0;
+    S.hi[j]=Math.max(1,h0);const h1=hiAt(j);terraNow('dig',x0,y0);const dug=hiAt(j),t1=(S.drops||[]).filter(d=>d.id==='blk_soil'&&d.lt).reduce((n,d)=>n+d.n,0);S.drops=[];
+    S.inv.blk_soil=20;for(let i=0;i<12;i++)terraNow('mound',x0,y0);const top=hiAt(j),t2=S.inv.blk_soil;
     for(let i=0;i<3;i++)render(performance.now());/* 8だんでも描ける */
-    S.hi[j]=h1;S.mat.tsuchi=0;
+    S.hi[j]=h1;S.inv.blk_soil=0;
     const shop=!!BL.dig&&BL.dig.pc===0&&BL.mound.pc===0;
-    /* つるはし：長おしでほる（土1秒）・はやくはなすとつむ。とちゅうではなすと、ほらない */
-    const c=[x0+1,y0+1],cj=c[1]*W+c[0];S.hi[cj]=2;S.mat.tsuchi=3;PICKSEL='tsuchi';const now=performance.now();
+    /* かたちの筆：長おしでほる（土1秒）・はやくはなすとつむ。とちゅうではなすと、ほらない */
+    const c=[x0+1,y0+1],cj=c[1]*W+c[0];S.hi[cj]=2;S.inv.blk_soil=3;PICKSEL=SOIL;const now=performance.now();
     PICKH={x:c[0],y:c[1],j:cj,t0:now-300,dig:false,n:0};pickTick(now);const need=PICKH.need;pickTick(now+500);pickUp();const half=hiAt(cj);
     PICKH={x:c[0],y:c[1],j:cj,t0:now-300,dig:false,n:0};pickTick(now);pickTick(now+1000);const held=hiAt(cj);pickUp();
     PICKH={x:c[0],y:c[1],j:cj,t0:performance.now(),dig:false,n:0};pickUp();const tap=hiAt(cj);
-    const tool=(()=>{setMode('build');PALF='all';palOpen=true;renderPalette();return [...document.querySelectorAll('#palette .chip')].some(e=>/つるはし/.test(e.textContent))})();
+    const tool=(()=>{setMode('build');PALF='all';palOpen=true;renderPalette();return [...document.querySelectorAll('#palette .chip')].some(e=>/かたちの筆/.test(e.textContent))})();
         return JSON.stringify({h1,dug,t1,top,t2,shop,need,half,held,tap,tool,HMAX})})()`));
   console.log(r);
-  assert.equal(r.dug,r.h1-1,'タップで1だんほれる');assert.equal(r.t1,1,'ほると土が1こ落ちる（せいれいがはこぶ）');
-  assert.equal(r.top,8,'8だんまでつめる');assert.equal(r.t2,20-(8-r.dug),'つんだぶん土がへる');
+  assert.equal(r.dug,r.h1-1,'タップで1だんほれる');assert.equal(r.t1,1,'ほると土のブロックが1こ落ちる（せいれいがはこぶ）');
+  assert.equal(r.top,8,'8だんまでつめる');assert.equal(r.t2,20-(8-r.dug),'つんだぶん土のブロックがへる');
   assert.ok(r.shop,'ほる・つむにパワーはいらない');
-  assert.equal(r.need,1000,'土は1秒');assert.equal(r.half,2,'とちゅうではなすと、ほらない');assert.equal(r.held,1,'長おしでほれた');assert.equal(r.tap,2,'タップでつむ');assert.ok(r.tool,'「おく」のどうぐに、つるはし');
+  assert.equal(r.need,1000,'土は1秒');assert.equal(r.half,2,'とちゅうではなすと、ほらない');assert.equal(r.held,1,'長おしでほれた');assert.equal(r.tap,2,'タップでつむ');assert.ok(r.tool,'「おく」のどうぐに、かたちの筆');
   /* つむブロック：もちものからつむと、そのだんがブロックになり、ほるとブロックがもどる。依頼ボードで作れる */
   const c=JSON.parse(await run(`(()=>{const ok=j=>!S.obj[j]&&!S.floor[j]&&!S.ground[j]&&!fogAt(j)&&walk(j);let j=-1;for(let k=(CY-8)*W+CX-8;k<(CY+8)*W;k++)if(ok(k)&&ok(k+1)&&ok(k+W)){j=k;break}const x=j%W,y=(j/W)|0,h0=hiAt(j);
     S.inv.blk_stone=3;S.inv.blk_brick=1;terraNow('blk_stone',x,y);terraNow('blk_brick',x,y);const o={h:hiAt(j)-h0,c1:cubeAt(j,h0+1),c2:cubeAt(j,h0+2),inv:S.inv.blk_stone,ico:iconURL('blk_stone').slice(0,10)};
@@ -35,16 +35,24 @@ const assert=require('node:assert/strict');
   console.log(c);
   assert.equal(c.h,2);assert.equal(c.c1,'blk_stone');assert.equal(c.c2,'blk_brick');assert.equal(c.inv,2);assert.ok(c.ico.startsWith('data:'),'アイコン');
   assert.equal(c.back,'blk_brick','ほるとブロックがもどる');assert.equal(c.c2b,'');assert.equal(c.back2,'blk_stone');assert.ok(c.gone);
-  assert.equal(c.inv2,1);assert.equal(c.built,'blk_stone','つるはしでブロックをつむ');assert.ok(c.ord,'依頼ボードでたのめる');assert.equal(c.made,10,'10こできた');
-  /* 地面より下：2だんまでほれて、石材が出る。水にとなりあうと、水がながれこんで池になる */
+  assert.equal(c.inv2,1);assert.equal(c.built,'blk_stone','筆でブロックをつむ');assert.ok(c.ord,'依頼ボードでたのめる');assert.equal(c.made,10,'10こできた');
+  /* 地面より下：2だんまでほれて、石のブロックが出る。水にとなりあうと、水がながれこんで池になる */
   const d=JSON.parse(await run(`(()=>{const ok=j=>!S.obj[j]&&!S.floor[j]&&!S.ground[j]&&!fogAt(j)&&walk(j)&&hiAt(j)===0;let j=-1;for(let k=(CY-10)*W+CX-10;k<(CY+10)*W;k++)if(ok(k)&&ok(k+1)&&ok(k+2)&&ok(k-1)&&ok(k+W)&&ok(k-W)&&ok(k+1+W)&&ok(k+1-W)){j=k;break}const x=j%W,y=(j/W)|0,o={};
     S.drops=[];terraNow('dig',x,y);o.h1=hiAt(j);o.drop=(S.drops.find(q=>q.lt)||{}).id;terraNow('dig',x,y);o.h2=hiAt(j);o.ok3=canPlace('dig',x,y,true);
     for(let i=0;i<3;i++)render(performance.now());o.stairNo=canPlace('stairs_wood',x,y,true);
-    S.mat.tsuchi=1;terraNow('mound',x,y);o.back=hiAt(j);
+    S.inv.blk_soil=1;terraNow('mound',x,y);o.back=hiAt(j);
     /* 水：となりのマスを池にして、ほる */S.ground[j+2]=1;S.drops=[];terraNow('dig',x+1,y);o.pond=S.ground[j+1]===1&&hiAt(j+1)===0;o.walk=walk(j+1);
     for(let i=0;i<3;i++)render(performance.now());return JSON.stringify(o)})()`));
   console.log(d);
-  assert.equal(d.h1,-1);assert.equal(d.drop,'mat:stone','地面より下は石材');assert.equal(d.h2,-2);assert.equal(d.ok3,false,'2だんまで');assert.equal(d.stairNo,false,'穴に階段はおけない');
+  assert.equal(d.h1,-1);assert.equal(d.drop,'blk_stone','地面より下は石のブロック');assert.equal(d.h2,-2);assert.equal(d.ok3,false,'2だんまで');assert.equal(d.stairNo,false,'穴に階段はおけない');
   assert.equal(d.back,-1,'穴にもつめる');assert.ok(d.pond,'水にとなりあうと池になる');assert.equal(d.walk,false);
+  /* かたちの筆：草原は、神殿を直したあとカミサマにもらう。前のセーブの素材「土」は、土のブロックに */
+  const f=JSON.parse(await run(`(()=>{const o={};const f0=S.flags.fude,g0=S.godGone;S.flags.fude=0;S.godGone=false;o.no=fudeHas();setMode('build');PALF='all';palOpen=true;renderPalette();o.noChip=[...document.querySelectorAll('#palette .chip')].some(e=>/かたちの筆/.test(e.textContent));
+    const q=SUBQ.find(q=>q.k==='fude');o.at=q.at()===(cnt('statue')>=1);o.who=q.who===GOD;q.onAccept();o.yes=fudeHas();S.flags.fudeDig=S.flags.fudeUp=1;o.ok=q.ok();
+    S.mat.tsuchi=4;S.inv.blk_soil=1;S.drops=[{id:'mat:tsuchi',x:1,y:1,n:1}];soilMigrate();o.soil=S.inv.blk_soil;o.mat=S.mat.tsuchi;o.drop=S.drops[0].id;S.drops=[];o.brick=JSON.stringify(BL.blk_brick.mat);
+    S.flags.fude=f0;S.godGone=g0;return JSON.stringify(o)})()`));
+  console.log(f);
+  assert.equal(f.no,false,'草原は、もらうまで筆がない');assert.equal(f.noChip,false);assert.ok(f.at&&f.who,'神殿を直したら、カミサマのおねがい');assert.ok(f.yes&&f.ok);
+  assert.equal(f.soil,5,'前の土は土のブロックに');assert.equal(f.mat,0);assert.equal(f.drop,'blk_soil');assert.ok(!/tsuchi/.test(f.brick),'レンガに土の素材はいらない');
   assert.deepEqual(errors,[]);console.log('dig-stack: ok');await browser.close();
 })().catch(e=>{console.error(e);process.exit(1)});

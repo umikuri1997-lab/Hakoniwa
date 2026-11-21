@@ -25,7 +25,7 @@ cv.addEventListener('pointerdown',e=>{
   cv.setPointerCapture(e.pointerId);ptrs.set(e.pointerId,{x:cX(e),y:cY(e)});
   if(ptrs.size===1)gest={type:'maybe',sx:cX(e),sy:cY(e),cx:cam.x,cy:cam.y};
   else if(ptrs.size===2){const[p,q]=[...ptrs.values()];gest={type:'pinch',d:Math.hypot(p.x-q.x,p.y-q.y),z:cam.z,mid:toWorld((p.x+q.x)/2,(p.y+q.y)/2)};if(selRect&&!pending)selRect=null}
-  if(ptrs.size===1&&mode==='bulk'&&selStamp==='pick')pickDown(cX(e),cY(e));else pickCancel();/* つるはし：長おしでほる・タップでつむ */
+  if(ptrs.size===1&&mode==='bulk'&&selStamp==='pick')pickDown(cX(e),cY(e));else pickCancel();/* かたちの筆：長おしでほる・タップでつむ */
 });
 cv.addEventListener('pointermove',e=>{
   if(!ptrs.has(e.pointerId))return;ptrs.set(e.pointerId,{x:cX(e),y:cY(e)});if(!gest)return;
@@ -42,7 +42,7 @@ cv.addEventListener('pointermove',e=>{
 });
 function endPtr(e){
   if(!ptrs.has(e.pointerId))return;ptrs.delete(e.pointerId);
-  if(gest&&gest.type==='maybe'&&e.type==='pointerup'&&mode==='bulk'&&selStamp==='pick'){pickUp();gest=null;return}/* つるはし */
+  if(gest&&gest.type==='maybe'&&e.type==='pointerup'&&mode==='bulk'&&selStamp==='pick'){pickUp();gest=null;return}/* かたちの筆 */
   pickCancel();
   if(gest&&gest.type==='maybe'&&e.type==='pointerup')onTap(cX(e),cY(e));
   else if(gest&&gest.type==='rect'&&selRect)askBulk(sel,rectCells(selRect.a,selRect.b));

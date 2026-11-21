@@ -253,6 +253,9 @@ function sfx(k){
   SFXO=o===sfxG?null:o;if(SFXTAB&&(k==='tap'||k==='next')){SFXTABD=1;if(SFXTAB===2)return;k='tab'}/* タブをおしたときのボタンの音は、めくる音に */
   if(k==='cavedrip'){playU('cavedrip',.45);return}/* 洞窟のしずく */
   if(k.startsWith('cv_')){playU(k,.3);return}/* 小さな生き物の鳴き声 */
+  if(k.startsWith('brk_')){playU(k.slice(4),.9,.85);playU('dig',.8);return}/* かたちの筆でほりおえた：そのブロックの材質の音を大きく、低めに＋ほる音 */
+  if(k.startsWith('put_')){playU(k.slice(4),.7,1.05);return}/* ブロックをつんだ */
+  if(k==='fudedig'){playU('dig',.5,1.15);return}/* 筆でほっているあいだ */
   if(k.startsWith('pick_')){const m=k.slice(5);playU(m,PICKV[m]||.3);return}/* ひろった物の音：その物の材質の録音（tapMatOf と同じ録音。ピロンという音ではない） */if(k.startsWith('ea_')){playU(k,EATV);return}/* 食べる・のむ音：とても小さく（ASMRのように近く小さく） */
   switch(k){
   case'block':if(playS('wdon',.5))break;tone(260,t,.07,'square',.05,o,520);tone(83,t+.05,.07,'triangle',.06,o);break;

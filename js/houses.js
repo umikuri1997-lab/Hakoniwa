@@ -240,6 +240,7 @@ function iconURL(id){/* アイコンは、大きなキャンバスに2倍の細�
   if(BL[id]&&BL[id].kind==='gift'&&typeof giftIco==='function')return giftIco(id);/* おくりもの（gifts.js） */
   if(BL[id]&&BL[id].g)return gearIcon(id);/* そうび・矢：ドット絵 */
   if(iconCache[id])return iconCache[id];
+  if(id==='blk_soil'&&typeof ICONS!=='undefined'&&ICONS.tsuchi)return ICONS.tsuchi;/* 土のブロック：土のアイコン */
   if(typeof CUBES!=='undefined'&&CUBES.includes(id)){const T=cubeTex(id);if(!T)return '';const c=document.createElement('canvas');c.width=c.height=144;const g=c.getContext('2d');g.imageSmoothingEnabled=false;g.drawImage(T,0,0,64,40,8,6,128,80);g.drawImage(T,0,0,64,26,8,86,128,52);g.fillStyle='rgba(48,34,24,.3)';g.fillRect(8,86,128,52);g.fillStyle='rgba(255,250,230,.5)';g.fillRect(8,86,128,2);const u=c.toDataURL();c.width=c.height=0;return iconCache[id]=u}/* つむブロック：上の面と正面を、そのまま2倍のドットで */
   const N=576,T=ICONTMP||(ICONTMP=document.createElement('canvas'));T.width=T.height=N;const t=T.getContext('2d');t.setTransform(1,0,0,1,0,0);t.clearRect(0,0,N,N);t.setTransform(2,0,0,2,0,0);/* 2倍の細かさで描く（1マス64ドットの絵が、そのままの細かさで入る） */
   ICON=true;try{if(BL[id].floor)drawFloor(t,id,96,160,7,true);else drawObj(t,id,96,160,7,(id==='berry'||id==='fruit')?100:id==='farm'?60:0,1)}finally{ICON=false}
@@ -254,6 +255,10 @@ function toolIcon(k){
   if(k==='glass'){g.fillStyle='#8a5a33';g.fillRect(16,8,40,6);g.fillRect(16,58,40,6);g.fillStyle='#6d4424';g.fillRect(20,14,4,44);g.fillRect(48,14,4,44);
     g.fillStyle='rgba(200,235,255,.55)';g.beginPath();g.moveTo(24,14);g.lineTo(48,14);g.quadraticCurveTo(48,30,37,36);g.quadraticCurveTo(48,42,48,58);g.lineTo(24,58);g.quadraticCurveTo(24,42,35,36);g.quadraticCurveTo(24,30,24,14);g.fill();
     g.fillStyle='#ffcf4a';g.beginPath();g.moveTo(28,22);g.lineTo(44,22);g.lineTo(36,34);g.fill();g.beginPath();g.moveTo(36,40);g.lineTo(45,56);g.lineTo(27,56);g.fill();g.fillRect(35.5,34,1.5,8)}
+  else if(k==='fude'){/* かたちの筆（ドット絵、24×24のます目を3pxずつ）：白木の軸・うすい金の口金・光る穂先と、光のつぶ */
+    const M=['......................y.','.....................yhy','....................yhhy','...................yhhy.','..................yhhy..','.................yhhy...','................yhhy....','...............yhhy.....','..............yhhy......','.............yhhy.......','............ggy.........','...........gGGg.........','..........gGGg..........','.........bwwb...........','........bwwwb...........','.......bwWwb............','......bwWwb.............','.....bwWwb..............','....bWWwb...............','...bWWb.................','..bWb...........*.......','.bb.....................','.................*......','..*.....................'];
+    const C={y:'#d8c49a',h:'#f3e6c6',g:'#c9a24a',G:'#f2d77e',b:'#e8c86a',w:'#fff6d6',W:'#fffbe9','*':'#ffe9a8'};
+    for(let y=0;y<24;y++)for(let x=0;x<24;x++){const ch=M[y][x];if(C[ch]){g.fillStyle=C[ch];g.fillRect(x*3,y*3,3,3)}}}
   else if(k==='canal'){mzToolIcon(g)}
   else if(k==='scoop'||k==='dig'||k==='mound'){/* だんさスコップ・けずる・もる */if(k!=='scoop'){g.fillStyle='#8cc35c';g.fillRect(12,k==='dig'?30:20,48,8);g.fillStyle='#b08a5e';g.fillRect(12,k==='dig'?38:28,48,k==='dig'?20:30);g.fillStyle='#fff6df';g.beginPath();if(k==='dig'){g.moveTo(36,26);g.lineTo(24,10);g.lineTo(48,10)}else{g.moveTo(36,4);g.lineTo(24,18);g.lineTo(48,18)}g.fill()}else{g.save();g.translate(36,36);g.rotate(.6);g.fillStyle='#b07c50';rr(g,-3,-32,6,34,3);g.fillStyle='#9aa3ad';g.beginPath();g.moveTo(-11,2);g.lineTo(11,2);g.lineTo(9,22);g.quadraticCurveTo(0,30,-9,22);g.closePath();g.fill();g.restore()}}
   else if(k==='hake'){g.save();g.translate(36,36);g.rotate(-.7);g.fillStyle='#b07c50';rr(g,-5,-30,10,30,4);g.fillStyle='#8a5a33';g.fillRect(-5,-30,3,30);
