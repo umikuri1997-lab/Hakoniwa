@@ -33,6 +33,7 @@ def apply(im,kind='clay',steps=STEPS,sat=SAT,val=VAL,glow=None):
     keep=np.isin(ids,[p for p,m in MT.items() if m in FT.KEEP]);tgt=(ids>=0)&~keep&~O.LAST_CLR
     N=O.LAST_N;D=O.LAST_DEPTH/np.linalg.norm(O.LAST_DEPTH);X=np.array([1.0,0,0]);X=X-D*(X@D);X/=np.linalg.norm(X);U=np.cross(D,X);U=U if U[2]>0 else -U
     n=np.dstack([N@X,-(N@U),N@D]);n/=np.maximum(np.linalg.norm(n,axis=2,keepdims=True),1e-6)
+    k_=np.minimum(1,0.985/np.maximum(np.hypot(n[...,0],n[...,1]),1e-6));n[...,0]*=k_;n[...,1]*=k_   # 見る向きとほぼ直角の面は、球の絵のふちの外（黒）を読むので、ふちの内がわにおさめる
     u=np.clip(((n[...,0]+1)/2*R).astype(int),0,R-1);v=np.clip(((n[...,1]+1)/2*R).astype(int),0,R-1);s=mc[v,u]   # 画面の下が +y
     lum=s.mean(2,keepdims=True);s=np.round(lum*steps)/steps   # 明るさだけ（色はのせない。持ち主：マットキャップの色をのせない）を STEPS だんに
     col=np.clip(cc*s,0,255)

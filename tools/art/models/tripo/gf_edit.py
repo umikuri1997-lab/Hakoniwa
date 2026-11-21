@@ -1,9 +1,8 @@
 # 限定の家具（トリポ）のモデルを、持ち主の直しのとおりに直す（モデルそのものを直す。UV とテクスチャはそのまま）。
 # 使い方：python3 tools/art/models/tripo/gf_edit.py   … gf/base/*.glb（切りわけて、天板を水平にした物）から、直した gf/*.glb を作る（何回やっても同じ）
 #   座標は glTF（x 右・y 上・z 手前、足もとが原点）。高さのわりあいは、その家具の高さ h に対する数。
-#   ・火のソファ：背もたれをまえへ33度おこす（デザインの絵と合わせる）・クッション（サーモン色の点）を、それぞれのまん中で、よこ1.5倍・たて0.75倍
+#   ・火のソファ・風のベッド・水のテーブル・水のソファ・木の切り株：持ち主が Blender で形を直したモデル（gf/base）を、そのまま使う（ここでは直さない。持ち主がきめた）
 #   ・火・風のびょうぶ：おく行きを0.35倍（ほぼまっすぐ）
-#   ・風のベッド・水のソファ：はば1.5倍
 #   ・土の花のオブジェ：鉢のふちより上の花・多肉を、それぞれの根もとで1.25倍・まん中から少し外へ（いい感じにならべる）
 #   ・火のテーブル：天板の面のない所を、うらの円い板でうめる
 #   ・水のドレッサー：鏡のわくの中に、鏡の板をたす（色はテクスチャのうすい水色のドット。うつりこみは設計図の uvfix）
@@ -16,28 +15,9 @@ def load(n):return trimesh.load(os.path.join(B,n+'.glb'),force='mesh')
 def vcol(m):uv=m.visual.uv;return tex[np.clip(((1-uv[:,1]%1)*TH).astype(int),0,TH-1),np.clip(((uv[:,0]%1)*TW).astype(int),0,TW-1)]
 def save(n,m):m.export(os.path.join(D,n+'.glb'));print(n,'なおした')
 def near(c,ref,tol):return np.abs(c-np.array(ref,float)).sum(1)<tol
-def fsofa():
-    m=load('g_f_sofa');v=m.vertices.copy();h=v[:,1].max();c=vcol(m)
-    # 背もたれ（デザインの絵と合わせる。持ち主）：トリポの背もたれは、うしろへ43度たおれている。座面とのさかい（ちょうつがい）を軸に、まえへ BACKUP 度おこす。
-    # どれだけ回すかは、ちょうつがいから見た向き（まえ＝0度・まうえ＝90度・うしろ＝180度）できめる：60度より上（背もたれ・ひじかけの上）はぜんぶ、それより下はまわさない（あいだはなめらかに）
-    hz,hy=-0.02,0.07;BACKUP=33
-    dz,dy=v[:,2]-hz,v[:,1]-hy;th=np.degrees(np.arctan2(dy,dz));wt=np.clip((th-40)/30,0,1);wt=wt*wt*(3-2*wt);wt[dy<0]=0
-    a=np.radians(-BACKUP)*wt;ca,sa=np.cos(a),np.sin(a)   # まえ（+z）へたおす＝向きの角度をへらす
-    v[:,2]=hz+dz*ca-dy*sa;v[:,1]=hy+dz*sa+dy*ca;v[:,1]-=v[:,1].min()
-    sel=near(c,(221,154,107),60)&(np.abs(v[:,0])<0.075)&(v[:,1]>0.28*h)&(v[:,1]<0.75*h)&(v[:,2]<0.06)
-    for s in (sel&(v[:,0]<0),sel&(v[:,0]>=0)):
-        if s.sum()<5:continue
-        o=v[s].mean(0);v[s]=o+(v[s]-o)*[1.5,0.75,1.0]
-    # わくの上（持ち主：形がデザインと合っていない）：トリポのわくは、背もたれのクッションより上へ、いすの王座のように高くのびている。
-    # デザインでは、わくはクッションのすぐ上で、まん中にほのおのかざり。クッションの上（T0）からかざりの根もと（T1）までを TOPK にちぢめ、かざりはそのまま下へうつす
-    y=v[:,1];h2=y.max();T0,T1,TOPK=0.56*h2,0.86*h2,0.35
-    v[:,1]=np.where(y<=T0,y,np.where(y<=T1,T0+(y-T0)*TOPK,y-(T1-T0)*(1-TOPK)))
-    v[:,0]*=1.5   # はば1.5倍（持ち主）
-    m.vertices=v;save('g_f_sofa',m)
 def screen(n,ky=1.0):
     m=load(n);v=m.vertices;v[:,2]*=0.35;v[:,1]*=ky;m.vertices=v;save(n,m)   # 0.15 だと、横から見たとき紙のようにうすくなる。ky：高さ（持ち主：風のびょうぶは低く。設計図の SIZE も同じだけ低くする）
-def widen(n):
-    m=load(n);v=m.vertices;v[:,0]*=1.5;m.vertices=v;save(n,m)
+def keep(n):save(n,load(n))   # 持ち主が直したモデル：そのまま
 def planter():
     m=load('g_e_planter');v=m.vertices;h=v[:,1].max();c=vcol(m)
     cream=near(c,(222,190,158),70);top=(v[:,1]>0.55*h)&~cream
@@ -69,4 +49,5 @@ def tablefill():
     uvp=((px+0.5)/t2.shape[1],1-(py+0.5)/t2.shape[0])   # 天板の色のテクセル
     disk=trimesh.Trimesh(P,F,process=False);disk.visual=trimesh.visual.TextureVisuals(uv=np.tile(uvp,(len(P),1)),material=m.visual.material)
     save('g_f_table',trimesh.util.concatenate([m,disk]))
-fsofa();screen('g_f_screen');screen('g_k_screen',0.75);widen('g_k_bed');widen('g_s_sofa');planter();vanity()
+screen('g_f_screen');screen('g_k_screen',0.75);planter();vanity()
+for n in ('g_f_sofa','g_k_bed','g_s_table','g_s_sofa','g_w_stump'):keep(n)
