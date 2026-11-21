@@ -14,9 +14,9 @@ function drawMark(el,px,by,now){
   else if(el==='wind'){c.strokeStyle='#3fc0a0';c.lineWidth=1.8;c.beginPath();c.arc(px,by-13,3.5,Math.PI*.2+now/400,Math.PI*1.7+now/400);c.stroke()}
 }
 /* ---------- 精霊の絵 ---------- */
-const SPART={light:'water'};function spArt(el){return SPART[el]||el}/* 絵の形をかりる属性（光は、かりの絵：水の形を色がえ） */
+const SPART={};function spArt(el){return SPART[el]||el}/* 絵の形をかりる属性（いまはない。光・闇も、じぶんの絵：GPT の H-4） */
 const SPC={
-  light:{hood:'#f4d262',cheek:'#fbe9b4',dark:'#d9a938',eye:'#7a5a1c',hand:'#fff1cf',line:'#f3e2bd'},
+  light:{hood:'#ffdc75',cheek:'#fff0ba',dark:'#eeb75d',eye:'#3f5e26',hand:'#fff3d5',line:'#e6bd76'},/* 3Dの絵（tools/art/spirit3d/light_dark.py の LIGHT）と同じ色 */
   earth:{hood:'#8f6a50',cheek:'#c6b1a0',dark:'#6f4f3a',eye:'#5e3d2a',hand:'#e3c3a3',line:'#ead6bd',leaf:'#5e8f43'},
   water:{hood:'#78c3fb',cheek:'#badef5',dark:'#4fa6e8',eye:'#1d4f7c',hand:'#f3dfc6',line:'#ecd9c0'},
   fire:{hood:'#e8604f',cheek:'#f2ac9f',dark:'#c94a3c',eye:'#8f3a22',hand:'#ffc887',line:'#f0d4ae'},
@@ -297,7 +297,7 @@ function drawSpiritDot(c,el,x,y,s,f,o){
     if(tr){if(o.sit){spr('sp:rumpS');c.save();c.translate(4*D,-6*D);c.rotate(-Math.PI/2);c.scale(.8,1.3);c.translate(.5*D,8*D);spr('sp:footS');c.restore()}/* 横向きにすわる：まるいおしり（sp:rumpS）をかいて、足をつけねを中心に90度回して前へのばす */
       else{spr('sp:footS',-ws*3*D,up(ws));spr('sp:footS',ws*3*D,up(-ws))}}
     else if(!sitF){spr('sp:footL',0,up(ws));spr('sp:footR',0,up(-ws))}}
-  spr('sp:body'+S+'0');
+  spr('sp:body'+S+'0');if(CHIPS[E0+'cape']&&!tr){spr(E0+'cape');if(!back)spr(E0+'chest')}/* 光・闇のケープと胸のかざり */
   if(tr&&!frontArm)armD(-farA,aA(-farA));
   if(back&&el!=='wind')tail(-tr*12,-17);
   // 頭と顔（食べるときは、うなずく）
@@ -307,13 +307,13 @@ function drawSpiritDot(c,el,x,y,s,f,o){
     rot=(k,lx,ly,a)=>{const[px,py]=hp(lx,ly);c.save();c.translate(px,py);c.rotate(a);c.translate(-px,-py);spr(k);c.restore()},dd=v=>Math.round(v*H*.87)*D;
   if(o.crown&&!o.bed)drawCrown(c,tr?-4*D:0,(CROWNY[el]||-66)*D,D,null,0,0,'b');/* 花かんむりの奥の半分は、頭巾より先（頭にかくれる） */
   if(el==='wind'){const[px,py]=[(back?1:-1)*tr*4*H,-30*TUNE.bodyH+H*(-79+36)];c.save();c.translate(px,py);c.rotate(Math.sin(t*2)*.15);c.translate(-px,-py);spr(E0+'vine'+hs);c.restore()}
-  spr(E0+'hood'+hs);
+  if(el==='light')spr(E0+'tip'+hs);/* 光のせいれいの光（頭巾のうしろ） */spr(E0+'hood'+hs);if(el==='dark'){spr(E0+'cap'+hs);spr(E0+'tip'+hs)}/* 闇のせいれいのナイトキャップと房 */
   if(el==='wood'||el==='fire'){const v=dd(Math.sin(t*(el==='fire'?7:2.2))*(el==='fire'?2.5:1.4));spr(E0+'tip'+hs,v,0)}/* 頭巾の先が左右にゆれる */
   if(el==='water'){const v=dd(Math.sin(t*2.2)*1.4);if(v<0)spr(E0+'tip'+hs);spr(E0+'tip'+hs,0,v)}/* 水の子は上下（上がるときは、すきまがあかないように元の位置にも描く） */
   if(el==='fire')spr(E0+'ember'+hs,0,dd(Math.sin(t*3)*2.5));/* 火の玉がふわふわ */
   if(el==='earth')rot(E0+'sprout'+hs,1,-88,Math.sin(t*2.4)*.18);/* 芽がゆれる */
   if(el==='wind'&&back){c.save();c.translate(0,-30*TUNE.bodyH);c.scale(TUNE.head,TUNE.head);c.translate(0,36);c.scale(1-tr*.3,1);wings(1);c.restore()}/* うしろ向きのはねは、頭といっしょに */
-  if(!back){if(el!=='wind')spr('sp:head'+S);if(el==='fire'&&!tr)spr(E0+'bang');
+  if(!back){if(el!=='wind')spr(CHIPS[E0+'face'+S]?E0+'face'+S:'sp:head'+S);if(el==='fire'&&!tr)spr(E0+'bang');
     const md=o.sleep?'':o.mood==='cry'?'teary':o.mood||'',fy=el==='wind'?-3*D:0;
     const fm=o.sleep||(o.blink&&!md)?'shut':md==='smile'||md==='joy'||md==='eat'?'hap':['teary','tear','shock','strain','sad','brave','tired','hungry'].includes(md)?md:'n';
     if(vr&&vr.cheek)spr('sp:cheek'+S,0,fy);

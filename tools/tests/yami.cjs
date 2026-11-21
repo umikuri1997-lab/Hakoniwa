@@ -11,14 +11,14 @@ const assert=require('node:assert/strict');
     out.near=Math.hypot(t.x-CX-2.5,t.y-CY-2.5)<7;out.stat=[EL_BASE.light.work,EL_BASE.light.move,EL_BASE.light.sta];out.key=isKey(t.name);
     /* トモリのまわり4マスは、あかり */out.lit=lightAt(t.x+3.5,t.y);out.unlit=lightAt(t.x+4.5,t.y);
     /* 光は、神殿で呼べない・たたかえない */out.cands=sumCands().map(c=>c.el).includes('light');out.sortie=sortieOK(t);
-    /* 描ける（かりの絵：水の形を色がえ） */for(let i=0;i<5;i++){stepWorld(.3);render(performance.now())}out.art=spArt('light');
+    /* 描ける（光のせいれいの絵：GPT の H-4） */for(let i=0;i<5;i++){stepWorld(.3);render(performance.now())}out.art=spArt('light');
     /* 目標：トモリが生まれたら、つぎは神殿 */checkQuest();out.story=S.qStory!=null||TALKW===TOMORI;
     return JSON.stringify(out)})()`));
   console.log(JSON.stringify(r));
   assert.equal(r.wd,5);assert.equal(r.res0,0);assert.deepEqual(r.quests.slice(0,2),['tomori','statue']);assert.equal(r.q0,'tomori');assert.equal(r.keys,false);
   assert.ok(r.dark>=.5);assert.equal(r.sky,0);assert.equal(r.hour,12);assert.equal(r.night,false);assert.equal(r.hour2,true);
   assert.equal(r.res1,1);assert.equal(r.name,'トモリ');assert.equal(r.elem,'light');assert.equal(r.flag,1);assert.equal(r.res2,1);assert.equal(r.near,true);assert.deepEqual(r.stat,[20,20,20]);assert.equal(r.key,true);
-  assert.equal(r.lit,true);assert.equal(r.unlit,false);assert.equal(r.cands,false);assert.equal(r.sortie,false);assert.equal(r.art,'water');assert.equal(r.story,true);
+  assert.equal(r.lit,true);assert.equal(r.unlit,false);assert.equal(r.cands,false);assert.equal(r.sortie,false);assert.equal(r.art,'light');assert.equal(r.story,true);
   /* お話を聞いて、神殿を直す → くらしの道具をもらう */
   const r2=JSON.parse(await run(`(async()=>{const out={};const W8=ms=>new Promise(f=>setTimeout(f,ms));
     for(let i=0;i<60&&S.quest===0;i++){checkQuest();if(S.qStory!=null&&document.querySelector('#dialog').hidden&&typeof questTalkTap==='function')questTalkTap();const d=document.querySelector('#dialog');if(!d.hidden)d.click();await W8(120)}
