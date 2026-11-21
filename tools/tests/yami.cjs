@@ -40,5 +40,11 @@ const assert=require('node:assert/strict');
   console.log(JSON.stringify(r4));
   assert.equal(r4.on,true);assert.equal(r4.n1,1);assert.equal(r4.same,1);assert.equal(r4.miss,1);assert.equal(r4.n2,2);assert.equal(r4.nightNo,0);assert.equal(r4.six,1);assert.equal(r4.type,true);
   assert.equal(r4.h,true);assert.equal(r4.left,1);assert.equal(r4.had,false);assert.equal(r4.clean,0);
+  /* トモリは、コワイノにねらわれない・たたかれない（さいごの夜の「むかえる」「ゆりかごへ」だけは、ねらわれる） */
+  const r5=JSON.parse(await run(`(()=>{const out={};document.querySelector('#dialog').hidden=true;const t=S.res.find(r=>r.name===TOMORI);t.hidden=false;t.act=null;t.hunger=400;const day=Math.floor(S.t/1440)*1440;S.t=day+10*60;S.hold=0;
+    const e={id:S.nid++,type:'basic',x:t.x+.8,y:t.y,hp:100,max:100,delay:0,spawned:true,path:[],repath:0,atk:0,stun:0,flash:0,flee:false,slow:1};S.enemies=[e];
+    S.nightHurt=0;hitRes(e,t,EN.basic);out.direct=t.hunger;for(let i=0;i<40;i++)stepWorld(.5);out.after=S.nightHurt===0&&!(t.hurt>0);out.tg=e.tg===t.id;out.safe=yamiSafe(t);
+    const Y=yamiState(),p0=Y.ph;Y.ph='go';out.go=yamiSafe(t);Y.ph='meet';out.meet=yamiSafe(t);Y.ph=p0;S.enemies=[];return JSON.stringify(out)})()`));
+  console.log(JSON.stringify(r5));assert.equal(r5.direct,400);assert.equal(r5.after,true);assert.equal(r5.tg,false);assert.equal(r5.safe,true);assert.equal(r5.go,false);assert.equal(r5.meet,false);
   assert.deepEqual(errors,[]);await browser.close();console.log('OK');
 })().catch(e=>{console.error(e);process.exit(1)});
