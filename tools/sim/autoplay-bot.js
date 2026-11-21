@@ -18,6 +18,7 @@ B.ensure=(id,n,nx,ny,ok)=>{if(B.have(id)>=n)return true;const b=BL[id];if(!b)ret
   if(b.kind==='furn'||b.kind==='block'&&!S.unlocked[id]){if(inv(id)>0){B.put(id,nx,ny,ok)}else if(!B.ordered(id)&&recipeKnown(id)){orderFurn(id)}return false}
   B.put(id,nx,ny,ok);return B.have(id)>=n};
 B.ui=()=>{
+  for(const P of[typeof ROUTEPOP!=='undefined'&&ROUTEPOP,typeof LVPOP!=='undefined'&&LVPOP]){const b=P&&P.querySelector('.btn');if(b){b.click();return true}}/* お話の道・レシピをえらぶ：はじめの物 */
   const b=[...document.querySelectorAll('.idea-reveal button')].find(b=>!b.disabled);if(b){b.click();return true}if(document.querySelector('.idea-reveal'))return true;
   for(const id of ['#lvup','#rlv']){const e=document.querySelector(id);if(e&&!e.hidden){const bs=[...e.querySelectorAll('button')].filter(b=>!b.classList.contains('lvic'));if(bs.length){bs[bs.length-1].click();return true}}}
   {const y=document.querySelector('.askyn .btn.pri');if(y){y._held=1;y.click();y._held=0;return true}}/* 材料をわたすクエストの「もらってもいい？」は「わたす」 */
