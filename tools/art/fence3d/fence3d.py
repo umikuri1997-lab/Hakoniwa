@@ -14,6 +14,7 @@
 #   柱（はし・角・まじわる所）：0.16角・高さ1.0（先は四角すい0.08）。まん中 (0.5, 0.865)。よこの柵と同じ線。
 #   横木：よこは、くい・柱の前（y 0.945〜0.985）、高さ 0.62〜0.76 と 0.16〜0.30。くぎは、くいのまん中。
 #     たては、くいの東がわ（x 0.51〜0.55）、同じ高さ。柱のうしろ・前の面にとめる。
+# ロープの手すり（風）：scene_rope のはじめの行。
 # 丸太の塀：
 #   丸太：半径1/6・高さ1.0、よこは x のまん中 1/6・1/2・5/6、y のまん中 0.78。たては x 0.5、y のまん中 1/6・1/2・5/6。
 #   横木：丸太の前（y 0.94〜0.985）、高さ 0.62〜0.74 と 0.18〜0.30。丸太のさかいに鉄の帯。たては丸太の東がわ。
@@ -201,11 +202,100 @@ def scene_park(m):   # 遊園地の白い塀（風）：板の柵と同じ線に
         for y0,y1 in vsegs(m,PC[1],0.775,0.985 if (L or R) else 0.955):
             addv(P,'railv',lambda a,b,z0=z0,z1=z1,col=col:Part('横木','box',(0.51,a,z0,0.55,b,z1),col,grp='pv%d'%(z0*100)),y0,y1,col)
     return P
+ACAC=(222,170,108);ROPE=(226,206,152);ROPED=(204,182,126)   # ロープの手すり（風）：アカシアの木・なびき草をよったロープ
+def scene_rope(m):   # ロープの手すり（風）：柱は角・はしだけ（アカシアの丸い柱、半径0.075・高さ0.8、ロープを2かい巻く）。そのあいだは、ロープ2本（高さ0.62・0.34、太さ0.026）と、マスのさかいの細いくい（半径0.045・高さ0.7。たては1マスに1本）
+    L,R,U,D=m&1,m&2,m&4,m&8;post=not(m in(3,12));P=[];YC=0.865;PC=(0.5,YC)
+    for cx in(0.0,1.0):
+        if (cx<0.5 and L) or (cx>0.5 and R):P.append(('post',Part('くい','cyl',(cx,YC,0.045,0,0.7),ACAC),(cx%1,0)))
+    if m==3:P.append(('post',Part('くい','cyl',(0.5,YC,0.045,0,0.7),ACAC),(0.5,0)))
+    if m==12 or U and not post:P.append(('post',Part('くい','cyl',(0.5,0.375,0.045,0,0.7),ACAC),(0,0.375)))
+    if post:
+        P.append(('post',Part('柱','cyl',(0.5,YC,0.075,0,0.8),ACAC),(0,0)))
+        for z in(0.62,0.34):P.append(('rope',Part('巻いたロープ','cyl',(0.5,YC,0.085,z-0.035,z+0.035),ROPED),None))
+    for z in(0.62,0.34):
+        if L or R:
+            x0=-0.4 if L else 0.5;x1=1.4 if R else 0.5
+            P.append(('rope',tube('ロープ',(x0,YC+0.05,z),(x1,YC+0.05,z),0.026,ROPE),None))
+        for y0,y1 in vsegs(m,YC,YC-0.06,YC+0.06):
+            g='rv%d'%(z*100)
+            addv(P,'ropev',lambda a,b,z=z,g=g:Part('ロープ','frust',((0.55,a,z),(0.55,b,z),0.026,0.026),ROPE,detail=12,grp=g),y0,y1,ROPE)
+    return P
+REED=(238,224,172);REEDG=(214,220,160);BIND=(170,140,96);RPOST=(150,108,78)   # あしの垣（水）
+def scene_ashi(m):   # あしの垣（水）：あしのくき（半径0.036・高さ0.80〜0.88）を1マスに12本、すきまなくならべ、高さ0.24・0.60に、しばるなわ。柱は角・はしだけ（木の丸い柱、半径0.07・高さ0.95）
+    L,R,U,D=m&1,m&2,m&4,m&8;post=not(m in(3,12));P=[];YC=0.865
+    for k in range(12):
+        c=(k+0.5)/12;h=0.80+0.08*((k*7)%5)/4;col=REED if k%3 else REEDG
+        if post and abs(c-0.5)<0.09:continue
+        if (c<0.5 and L) or (c>0.5 and R) or m==3:P.append(('reed',Part('あし','cyl',(c,YC,0.036,0,h),col,detail=8),None))
+        if m==12 or (c<YC and U) or (c>YC and D) and not(post and abs(c-YC)<0.09):
+            if not(post and abs(c-YC)<0.09):P.append(('reed',Part('あし','cyl',(0.5,c,0.036,0,h),col,detail=8),None))
+    if post:P.append(('post',Part('柱','cyl',(0.5,YC,0.07,0,0.95),RPOST),(0,0)))
+    for z in(0.24,0.60):
+        if L or R:
+            x0=-0.4 if L else 0.5;x1=1.4 if R else 0.5
+            P.append(('rope',tube('なわ',(x0,YC+0.035,z),(x1,YC+0.035,z),0.02,BIND),None))
+        for y0,y1 in vsegs(m,YC,YC-0.06,YC+0.06):
+            g='av%d'%(z*100)
+            addv(P,'ropev',lambda a,b,z=z,g=g:Part('なわ','frust',((0.535,a,z),(0.535,b,z),0.02,0.02),BIND,detail=10,grp=g),y0,y1,BIND)
+    return P
+RSTN=(214,218,222);RSTND=(196,202,208)   # 運河の石の欄干（水）
+def scene_rankan(m):   # 運河の石の欄干（水）：石の台（高さ0〜0.10）と上の手すり（高さ0.58〜0.70）のあいだに、つぼの形の小さな柱（1マスに4本）。柱は角・はしだけ（0.22角・高さ0.86、かさ石）
+    L,R,U,D=m&1,m&2,m&4,m&8;post=not(m in(3,12));P=[];YC=0.865
+    vase=lambda cx,cy:Part('小柱','lathe',(cx,cy,[(0.0,0.10),(0.04,0.10),(0.035,0.16),(0.055,0.30),(0.03,0.46),(0.04,0.52),(0.045,0.58),(0.0,0.58)]),RSTND,detail=12)
+    for k in range(4):
+        c=(k+0.5)/4
+        if post and abs(c-0.5)<0.2:continue
+        if (c<0.5 and L) or (c>0.5 and R) or m==3:P.append(('stone',vase(c,YC),(c,0)))
+        if (m==12 or (c<YC and U) or (c>YC and D)) and not(post and abs(c-YC)<0.2):P.append(('stone',vase(0.5,c),(0,c)))
+    if post:
+        P.append(('stone',Part('石の柱','box',(0.39,YC-0.11,0,0.61,YC+0.11,0.80),RSTN),(0.5,0)))
+        P.append(('stone',Part('かさ石','box',(0.37,YC-0.13,0.80,0.63,YC+0.13,0.86),RSTN),(0.5,0.5)))
+    for z0,z1,w in((0,0.10,0.065),(0.58,0.70,0.075)):
+        if L or R:
+            x0=-0.4 if L else 0.5;x1=1.4 if R else 0.5
+            P.append(('stone',Part('台' if z0==0 else '手すり','box',(x0,YC-w,z0,x1,YC+w,z1),RSTN),(0,0)))
+        for y0,y1 in vsegs(m,YC,YC-0.11,YC+0.11):
+            g='kv%d'%(z0*100)
+            addv(P,'stonev',lambda a,b,z0=z0,z1=z1,w=w,g=g:Part('手すり','box',(0.5-w,a,z0,0.5+w,b,z1),RSTN,grp=g),y0,y1,RSTN)
+    return P
+IBS=(126,104,120);IBSD=(104,86,104);IBL=(120,150,112);IBF=(236,214,232)   # いばらの生垣（闇）：くき（くすんだむらさき）・葉・花
+def scene_ibara(m):   # いばらの生垣（闇）：古木のくい（柱は角・はし、半径0.06・高さ0.85）に、いばらのくき（太さ0.028）を5本ずつ、波うたせてからめる。とげ（小さな円すい）・葉（小さな板）・うすいピンクの小さな花
+    L,R,U,D=m&1,m&2,m&4,m&8;post=not(m in(3,12));P=[];YC=0.865
+    import math as _m
+    def vine(a,b,z,ph,horiz):   # a〜b を、高さ z のまわりで波うつ、いばらのくき（折れ線）
+        n=10;pts=[]
+        for i in range(n+1):
+            t=a+(b-a)*i/n;dz=0.07*_m.sin(t*_m.pi*4+ph);dw=0.02*_m.cos(t*_m.pi*4+ph)
+            pts.append((t,YC+dw,z+dz) if horiz else (0.5+dw,t,z+dz))
+        return pts
+    for z,ph,col in((0.12,0.0,IBSD),(0.27,1.7,IBS),(0.42,3.1,IBSD),(0.57,4.4,IBS),(0.72,5.6,IBSD)):
+        if L or R:
+            x0=-0.4 if L else 0.5;x1=1.4 if R else 0.5;pts=vine(x0,x1,z,ph,True)
+            P.append(('vine',Part('くき','tube',(pts,0.028),col),None))
+            for i in range(1,len(pts)-1):
+                x,y,zz=pts[i]
+                if i%2:P.append(('vine',Part('とげ','cone',(x,y+0.02,0.014,zz+0.01,zz+0.06),col),None))
+                P.append(('leaf',Part('葉','plate',((x,y+0.03,zz-0.01),(x+0.07*(1 if i%2 else -1),y+0.04,zz+0.05),0.05,0.006),IBL),None))
+            for i in range(2,len(pts)-1,4):
+                x,y,zz=pts[i];P.append(('flower',Part('花','cyl',(x,y+0.035,0.022,zz+0.02,zz+0.03),IBF,detail=8),None))
+        for y0,y1 in vsegs(m,YC,YC-0.06,YC+0.06):
+            if y0<0:y0=0.0
+            if y1>y0:P.append(('vine',Part('くき','tube',(vine(y0,y1,z,ph,False),0.028),col),None))
+    if post:P.append(('post',Part('くい','cyl',(0.5,YC,0.06,0,0.85),(150,132,120)),(0,0)))
+    return P
+def scene_kuzure(m):   # くずれた石の欄干（闇）：運河の石の欄干と同じ組み方で、こけむした灰色の石。小柱は、ところどころかけている
+    P=scene_rankan(m);out=[]
+    for i,(k,p,o) in enumerate(P):
+        p.col=MSTONE if p.col==RSTN else MSTONED if p.col==RSTND else p.col
+        if p.name=='小柱' and (i*7)%5==0:continue   # かけた小柱
+        out.append((k,p,o))
+    return out
+MSTONE=(178,176,170);MSTONED=(160,158,154)
 def render(P,xr=(0,1)):
     sc=O.Scene();sc.txo={};sc.txax={};ext_ids=set()
     for kind,p,org in P:
         if kind=='stone':sc.texture(TS)
-        elif kind in('picket','post','railh','railv','ext') and p.col not in(BAM,BAMP,CRM,CRMP,PARKB,PARKW):sc.texture(TW)
+        elif kind in('picket','post','railh','railv','ext') and p.col not in(BAM,BAMP,CRM,CRMP,PARKB,PARKW,REED,REEDG,BIND,RSTN,RSTND,IBS,IBSD,IBL,IBF,MSTONE,MSTONED):sc.texture(TW)
         else:sc.texture(None)
         sc.material('metal' if kind=='iron' else 'flat' if p.col==PARKW else None);p0=sc.pid;build(sc,[p]);sc.material(None)
         ids=range(p0+1,sc.pid+1)
@@ -232,7 +322,7 @@ def render(P,xr=(0,1)):
     im=Image.fromarray(a);bb=im.getbbox();return im.crop(bb),bb[0]+int(round(xr[0]*64)),bb[1]-128
 OLD={0:'H0',1:'HL',2:'HR',3:'HLR',4:'VU',8:'VD',12:'VUD'}
 def build_all(iid):
-    fn={'fence':scene_fence,'logfence':scene_log,'bamboofence':scene_bamboo,'misugaki':scene_misugaki,'wall':scene_wall,'parkfence':scene_park}[iid];out={}
+    fn={'fence':scene_fence,'logfence':scene_log,'bamboofence':scene_bamboo,'misugaki':scene_misugaki,'wall':scene_wall,'parkfence':scene_park,'ropefence':scene_rope,'ashifence':scene_ashi,'rankan':scene_rankan,'ibara':scene_ibara,'kuzure':scene_kuzure}[iid];out={}
     for m in range(16):im,ax,ay=render(fn(m));out[m]=(im,ax,ay)
     return out
 def sheet(res,path,layout):

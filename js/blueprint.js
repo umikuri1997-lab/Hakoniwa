@@ -54,14 +54,17 @@ const BPS={/* 設計図。rows の字：「.」床（fl、なければフロー�
   kagaribi:{name:'かがりびのみち',cat:'guard',el:'fire',pc:20,rw:15,rows:['ppppp','     '],furn:[[0,1,'lamp'],[2,1,'lamp'],[4,1,'lamp']]},
   taikoba:{name:'あいずのたいこ',cat:'guard',el:'earth',pc:20,rw:15,rows:['   '],furn:[[0,0,'torch'],[1,0,'drum'],[2,0,'torch']]},
   sakumamori:{name:'さくのまもり',cat:'guard',el:'earth',pc:20,rw:15,rows:['FFFFFGFFFFF'],furn:[]},
+  /* お話の設計図（story）：御神木の調べの準備で、なかまがくれる。ふつうにはもらえない（bpNext）。切り株のそばにしか置けない（fieldBpNear） */
+  nemoto:{name:'根もとのものおき',cat:'house',el:'earth',pc:20,rw:15,story:1,key:'asabukuro',rows:['WWWWW','W...W','W...W','WWDWW'],furn:[[1,1,'asabukuro'],[2,1,'asabukuro'],[3,1,'crate']]},
+  takibi:{name:'たき火のひろば',cat:'garden',el:'fire',pc:20,rw:15,story:1,key:'campfire',rows:['     ','ppppp','pp pp','ppppp','     '],furn:[[2,2,'campfire'],[0,0,'stool'],[4,0,'stool'],[2,4,'stool']]},
   otoshiana:{name:'おとしあなのみち',cat:'guard',el:'earth',pc:20,rw:15,rows:['     '],furn:[[0,0,'pit'],[1,0,'spike'],[2,0,'pit'],[3,0,'spike'],[4,0,'pit']]},
 };
 const BPCAT={house:'家',garden:'庭',farm:'畑',play:'遊び場',guard:'守り'},BPCOMF=10,BPGIVEFUN=30,BPFISH=.02,BPCHEST=.5,BPTALK=.15,BPTALKCD=3,BPELW=3;/* つり2%・霧の宝箱50%・お話15%（3日に1回まで）。くれるせいれいと同じ属性の設計図は、えらばれやすさ3 */
 const BPT={floor:8,wall:12,door:15,win:18,furn:40,path:8,farm:8,edge:8,fence:12,gate:15,plant:10};/* 1つずつの部品を建てる時間（建物は BL の time） */
-const BPWM={hwall:{wood:1},bamboowall:{bamboo:1},canvaswall:{wood:1},acaciawall:{wood:1,stone:1},logwall:{wood:1},plasterwall:{wood:1,stone:1},brickwall:{stone:2},yozorawall:{wood:1,stone:1}};/* 壁1マスの素材 */
-const BPWINM={hwall:{wood:3},bamboowall:{bamboo:1,wood:2},canvaswall:{wood:3},acaciawall:{wood:3,stone:1},logwall:{wood:3},plasterwall:{wood:3,stone:1},brickwall:{stone:2,wood:2},yozorawall:{wood:3,stone:1}};/* 窓のある壁1マスの素材 */
-const BPFM={floor:{wood:1},stonefloor:{stone:1},brickfloor:{stone:1},path:{stone:1},gravel:{stone:1},woodpath:{wood:1},stone:{stone:1},brick:{stone:1},fence:{wood:1},misugaki:{bamboo:1},bedge:{wood:1},door:{wood:2},yozoradoor:{wood:2},gate:{wood:3}};/* 床・道・柵・ふち・ドア1マスの素材 */
-const bpWall=()=>WD===1?'bamboowall':WD===WIND?'canvaswall':'hwall',bpWallOf=b=>b.wl||bpWall(),bpFence=()=>WD===1?'misugaki':'fence';
+const BPWM={hwall:{wood:1},bamboowall:{bamboo:1},canvaswall:{wood:1},acaciawall:{wood:1,stone:1},timberwall:{wood:1,nendo:1},canalwall:{maruishi:1,nendo:1},mosswall:{stone:1,kogi:1},moonwall:{stone:1,gekko:1},logwall:{wood:1},plasterwall:{wood:1,stone:1},brickwall:{stone:2},yozorawall:{wood:1,stone:1}};/* 壁1マスの素材 */
+const BPWINM={hwall:{wood:3},bamboowall:{bamboo:1,wood:2},canvaswall:{wood:3},acaciawall:{wood:3,stone:1},timberwall:{wood:3,nendo:1},canalwall:{maruishi:2,wood:2},mosswall:{stone:2,kogi:1},moonwall:{stone:2,gekko:1},logwall:{wood:3},plasterwall:{wood:3,stone:1},brickwall:{stone:2,wood:2},yozorawall:{wood:3,stone:1}};/* 窓のある壁1マスの素材 */
+const BPFM={floor:{wood:1},stonefloor:{stone:1},brickfloor:{stone:1},path:{stone:1},gravel:{stone:1},woodpath:{wood:1},stone:{stone:1},brick:{stone:1},fence:{wood:1},misugaki:{bamboo:1},ropefence:{wood:1,nabiki:1},ashifence:{ashi:1},ibara:{kagekusa:1},bedge:{wood:1},door:{wood:2},yozoradoor:{wood:2},gate:{wood:3}};/* 床・道・柵・ふち・ドア1マスの素材 */
+const bpWall=()=>WD===1?'bamboowall':WD===WIND?'canvaswall':WD===MIZU?'timberwall':WD===YAMI?'mosswall':'hwall',bpWallOf=b=>b.wl||bpWall(),bpFence=()=>WD===1?'misugaki':WD===WIND?'ropefence':WD===MIZU?'ashifence':WD===YAMI?'ibara':'fence';
 function bpPieceMat(t,id){/* 1つずつの部品の素材 */if(t==='farm'||t==='plant')return{};if(t==='wall')return Object.assign({},BPWM[id]||{wood:1});if(t==='win')return Object.assign({},BPWINM[id]||{wood:3});if(BPFM[id])return Object.assign({},BPFM[id]);return Object.assign({},BL[id].mat||{})}
 const bpTime=(t,id)=>t==='build'?BL[id].time:BPT[t];
 function bpPieces(k){/* 設計図の部品：[dx,dy,t,id,rot,phase]。段：1 床・道・畑・ふち（1行ずつ）→ 2 家具・建物・花・木 → 3 壁・窓・柵 → 4 ドア・柵のドア（さいご：それまで出入り口があいていて、中のせいれいが出られる） */const b=BPS[k],L=[],wl=bpWallOf(b);
@@ -88,6 +91,7 @@ function bpCheck(k,x,y){/* 置けるか：[ok, わけ] */const {w,h}=bpSize(k);i
     if(S.floor[j]||S.rug&&S.rug[j]!=null||S.edge&&S.edge[j]||S.roof&&S.roof[j])return[false,'床や物のある所には置けません'];
     if(o&&!BPNAT.has(o)&&!bpSoft(o)&&!VEINS[o])return[false,'物のある所には置けません'];
     if(S.bp&&S.bp.some(e=>e.cells.includes(j)))return[false,'ほかの設計図とかさなっています']}
+  if(BPS[k].story&&typeof fieldBpNear==='function'&&!fieldBpNear(k,x,y))return[false,'切り株のそばに置こう'];
   for(const[dx,dy,id]of BPS[k].furn)if(id==='watch'&&watchNear(x+dx,y+dy))return[false,'見張り台は、5マスはなさないと置けません'];
   return[true,'']}
 function askBp(i,x,y){const it=(S.bpInv||[])[i];if(!it)return;const k=it.k,[ok,why]=bpCheck(k,x,y),pc=BPS[k].pc,m=bpCost(k);
@@ -128,6 +132,7 @@ function bpComplete(e){S.bp=S.bp.filter(q=>q!==e);const b=BPS[e.k],cat=b.cat||'h
   if(e.req&&S.bpReq&&S.bpReq.k===e.k)S.bpReq.done=1;/* 設計図の依頼：お礼の会話は、サブクエストの報告で */
   if(r){funAdd(r,BPGIVEFUN,'bp');if(h){const bed=e.ps.find(p=>p.t==='furn'&&BEDSET.has(p.id));if(bed)(S.bedOwn||(S.bedOwn={}))[bed.j]=r.id}/* くれたせいれいが、その家のベッドをつかう */
     if(!e.req)dialog(pickFresh('bpdone:'+cat,BPDONE[cat]).map(l=>[r.name,l[0]]))}
+  if(typeof fieldBpDone==='function')fieldBpDone(e);/* 御神木の調べの準備の設計図 */
   checkQuest()}
 function bpCancel(e){/* 建てている部品をやめた：設計図ごとやめる（できた部品はのこす。1つもできていなければ、設計図とパワーはもどる） */for(const p of e.ps)if(p.s===1&&S.obj[p.j]==='site'&&S.dyn[p.j]&&S.dyn[p.j].bp===e.id){siteRefund(S.dyn[p.j],p.j);clearObj(p.j)}
   S.bp=S.bp.filter(q=>q!==e);const none=e.ps.every(p=>p.s<2);/* まだ1つもできていない：設計図もパワーももどして、置きなおせる */
@@ -143,7 +148,7 @@ const bpHouseName=h=>{if(!S.hname)return null;for(const k in S.hname)if(h.inside
 function bpGive(k,g){(S.bpInv||(S.bpInv=[])).push({k,g:g==null?null:g});toast('設計図「'+BPS[k].name+'」をもらった','good')}
 const bpOpen=()=>!!(S.subDone||{}).bphome||!!S.flags.bpOpen;/* 設計図は、土のせいれいのサブクエスト（bphome）をおえてから出る。火山などは、草原でおえていれば（syncTools） */
 function bpNext(cat,el,force){/* まだ持っていない・建てていない設計図から1つ（cat：しゅるい、el：くれるせいれいの属性。同じ属性の物がえらばれやすい。force：bphome のとき） */if(!force&&!bpOpen())return null;const have=new Set([...(S.bpInv||[]).map(q=>q.k),...(S.bp||[]).map(q=>q.k),...Object.keys(S.bpGot||{})]);
-  const L=Object.keys(BPS).filter(k=>!have.has(k)&&(!cat||BPS[k].cat===cat)&&bpCanGet(k));if(!L.length)return null;const wt=k=>el&&BPS[k].el===el?BPELW:1;let n=Math.random()*L.reduce((a,k)=>a+wt(k),0);for(const k of L)if((n-=wt(k))<0)return k;return L[L.length-1]}
+  const L=Object.keys(BPS).filter(k=>!BPS[k].story&&!have.has(k)&&(!cat||BPS[k].cat===cat)&&bpCanGet(k));if(!L.length)return null;const wt=k=>el&&BPS[k].el===el?BPELW:1;let n=Math.random()*L.reduce((a,k)=>a+wt(k),0);for(const k of L)if((n-=wt(k))<0)return k;return L[L.length-1]}
 function bpGiveK(k,g){(S.bpGot||(S.bpGot={}))[k]=1;bpGive(k,g);return k}
 function bpGiveNext(g,cat,force){const r=g!=null?S.res.find(q=>q.id===g):null,k=bpNext(cat,r&&r.elem,force);return k?bpGiveK(k,g):null}
 /* ---------- 絵：置く前のわく・建てる前の部品のうすい形 ---------- */

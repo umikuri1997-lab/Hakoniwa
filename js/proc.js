@@ -3,7 +3,7 @@
    S.prQ[j]：たのまれて、箱から運ぶのを待つ物（箱のキー。たのんだときに、とっておく rsvAdd）。r.ppk：運んでいる物 {j,m}。
    S.prIn[j]：入った物。せいれいが n こずつ加工して、できた物を持って箱へしまう。
    水車（suisha）のまわり5マス（NEARSUI）の加工の家具は、せいれいがいなくても動く（S.prW[j]：進みぐあい）。できた物は S.prOut[j] にたまり、せいれいが箱へ運ぶ。 */
-const GRASSKEYS=['shina','kasa','kuru','chiri','funba'];
+const GRASSKEYS=['shina','kasa','kuru','chiri','funba','nabiki','houki','ashi','gama','yotsuyu','kagekusa'];
 const PROC={mill:{ins:['f:mugi'],n:2,out:'f:komugiko',el:'earth',T:45,cap:10,verb:'ひく',ask:'粉ひきをたのんだ'},/* こむぎ2こで、こむぎこ1こ。1こ30分 */
   loom:{ins:[...GRASSKEYS,'wool'],n:3,nk:{wool:2},out:'nuno',el:'wind',T:60,Tk:40,cap:10,verb:'おる',ask:'はたおりをたのんだ'}};/* 草3こか、わた毛2こで、布1こ。1こ40分。風の強い日（S.today==='kaze'）は Tk：1こ27分 */
 const prT=P=>S&&S.today==='kaze'&&P.Tk?P.Tk:P.T;/* 1こ作る時間 */

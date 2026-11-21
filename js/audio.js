@@ -406,7 +406,7 @@ case'bossKO':noise(t,.5,.3,o,200);tone(70,t,1.4,'sine',.2,o,30);tone(900,t,.35,'
 /* ひろった物・図鑑でタップした物の音：その物の材質ごとの録音（「みる」でタップしたときと同じ録音。大きさは同じ）。
    id は 'mat:<素材>'・'food:<食べ物>'・家具の id など。草・きのこ・食べ物は植物（tgrass）、魚は水、わた毛・布は布、石・鉱石は石、空き缶・延べ棒は金物、木・枝・竹は木 */
 const PICKV={twood:.42,tgrass:.34,tcan:.26,tstone:.4,tcloth:.44,tsoil:.38,twater:.3,tsacred:.4};
-const PICKGRASS=new Set(['shina','kasa','kuru','chiri','funba']),PICKSTONE=new Set(['stone','copper','iron','obsidian','silver','gold','sulfur','crystal']);
+const PICKGRASS=new Set(['shina','kasa','kuru','chiri','funba','nabiki','houki','ashi','gama','yotsuyu','kagekusa']),PICKSTONE=new Set(['stone','maruishi','gekko','nendo','copper','iron','obsidian','silver','gold','sulfur','crystal']);
 function itemMat(id){if(typeof id!=='string')return'twood';
   if(id.startsWith('mat:')||typeof MATN!=='undefined'&&MATN[id]&&!BL[id]){const k=id.startsWith('mat:')?id.slice(4):id;return PICKGRASS.has(k)?'tgrass':PICKSTONE.has(k)?'tstone':k==='can'||/^i(copper|iron|silver|gold)$/.test(k)?'tcan':k==='nuno'||k==='wool'?'tcloth':'twood'}
   if(id.startsWith('food:')||typeof FOODS!=='undefined'&&FOODS[id]&&!BL[id]){const k=id.startsWith('food:')?id.slice(5):id,f=FOODS[k];return f&&f.fish?'twater':'tgrass'}

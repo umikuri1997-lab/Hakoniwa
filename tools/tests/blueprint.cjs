@@ -49,7 +49,7 @@ const assert=require('node:assert/strict');
     for(const[id,c]of own){if(BL[id].kind==='plant')continue;if(!c.some(([a,d])=>[[1,0],[-1,0],[0,1],[0,-1]].some(([p,q])=>seen.has((a+p)+','+(d+q)))))bad.push(id)}
     const cats=b.cat;return [k,cats,bad.join(' ')]}))`));
   console.log(JSON.stringify(lay));for(const[k,cat,bad]of lay){assert.ok(['house','garden','farm','play','guard'].includes(cat),k+' cat');assert.equal(bad,'',k+' closed-off cells / furniture')}
-  const cnt=lay.reduce((m,[,c])=>(m[c]=(m[c]||0)+1,m),{});console.log(cnt);assert.equal(lay.length,50);
+  const cnt=lay.reduce((m,[,c])=>(m[c]=(m[c]||0)+1,m),{});console.log(cnt);assert.equal(lay.length,52);/* ふつうの50こと、お話の2つ（story） */
   /* おそなえだけの家具は入れない・家でない物も建てられる（花・ふち・畑・柵・柵のドア・2×2の建物） */
   const off=JSON.parse(await run(`JSON.stringify(Object.keys(BPS).filter(k=>BPS[k].furn.some(f=>BL[f[2]].offerOnly&&STAGEONLY[f[2]]==null)))`));assert.deepEqual(off,[],'no offer-only furniture');
   /* おぼえていない物の入った設計図は、もらえない */

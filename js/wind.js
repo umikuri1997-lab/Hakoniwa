@@ -72,6 +72,12 @@ function windRiseTick(){while(WRISEQ.length&&WRISEQ[0].state!==S)WRISEQ.shift();
       const button=el('<button class="btn pri" type="button">とじる</button>');button.disabled=true;card.append(button);overlay.append(card);document.body.append(overlay);sfx('good');setTimeout(()=>{if(overlay.isConnected)button.disabled=false},650);
       button.onclick=()=>{if(button.disabled)return;overlay.remove();if(!ok())return finish();memo('leaf','風がとどいて、島がうかんだ');const go=()=>{checkQuest();camAnim=WRISECAM={fz:cam.z,tz:back.z,fx:cam.x+VW/cam.z/2,fy:cam.y+VH/cam.z/2,tx:back.x,ty:back.y,t:0,dur:1.2,done:finish}};if(!windHayateWake(k,go))go()}},WINDRISE+200)}}}
 function windRiseReset(){WRISEQ.length=0;if(WRISEON){if(WRISECAM&&camAnim===WRISECAM)camAnim=null;WRISECAM=null;WRISEON=false;GIFT_ACTIVE=false;document.querySelectorAll('.idea-reveal[aria-label="島がうかんだ"]').forEach(e=>e.remove())}}/* 村を切りかえたとき */
+const KUMODAY=6,KUMOMAX=20,HANEDAY=3,HANEMAX=10;/* 雲わた：毎朝、雲の海のふちに6こ（地面に20こまで）。風の羽：毎朝、風の道の上に3まい（10まいまで） */
+function windMatMorning(){if(!windOn())return;if(!WN||WNS!==S)windSync();if(!S.drops)S.drops=[];const M=skyM(),I=windIsles(S),r0=S.res.find(q=>!q.hidden),G=r0?bfs(r0.x|0,r0.y|0):null,has=new Set(S.drops.map(d=>d.y*W+d.x)),cnt=id=>S.drops.filter(d=>d.id===id).length;
+  const ok=j=>j>=0&&j<W*H&&S.ground[j]===0&&!S.obj[j]&&!S.floor[j]&&walk(j)&&!has.has(j)&&!fogAt(j)&&(!G||G.dist[j]>=0)&&I.id[j]>0;
+  const put=(L,id,n,max)=>{for(let k=cnt(id);n>0&&k<max&&L.length;){const i=(Math.random()*L.length)|0,j=L[i];L.splice(i,1);if(!ok(j))continue;S.drops.push({x:j%W,y:(j/W)|0,id,n:1});has.add(j);n--;k++}};
+  const edge=[],path=[];for(let j=0;j<W*H;j++){if(!ok(j))continue;if([j-1,j+1,j-W,j+W].some(q=>q>=0&&q<W*H&&M[q]))edge.push(j);if(WN.dir[j]>=0)path.push(j)}
+  put(edge,'mat:kumowata',KUMODAY,KUMOMAX);put(path,'mat:hane',HANEDAY,HANEMAX)}
 function windTick(){if(!windOn())return;if(!WN||WNS!==S)windSync();windCarry();windRiseTick()}
 /* ---------- 風の遊園地 ----------
    遊具（RIDES）は、風のせいれいが係（rideop）になって風を送っているあいだだけ動き、ほかのせいれいがのれる。係は、のったせいれいが遊びおわるたびに、たのしさ+RIDEOPFUN。風の道が2マス以内にとどいている遊具は、係がつかれない。
@@ -91,7 +97,15 @@ ACT.rideop={start(r,a){if(!RIDES.has(S.obj[a.obj]))return false;r.bubble='';r.fa
 for(const id of RIDES)TOYS.add(id);/* のっているせいれいを、遊具の上に描く（toyR・toyPose） */
 if(typeof ACT_LBL!=='undefined')ACT_LBL.rideop='遊具を動かしている';if(typeof WORKFACE!=='undefined')WORKFACE.add('rideop');
 function windPlayEnd(r,a){if(!windFun()||!RIDES.has(a.what))return;windRemember(r,a.what);const F=S.flags.rideRun||(S.flags.rideRun={});F[a.what]=(F[a.what]||0)+1;const op=rideOp(a.obj);if(op){funAdd(op,RIDEOPFUN,'play');op.bubble='🎵'}}
-function windRemember(r,ride){/* はじめてその遊具にのった・係をした：遊び方を1つ思い出す */r.rode=r.rode||{};if(r.rode[ride])return;r.rode[ride]=1;r.rem=r.rem||{};const L=Object.keys(BL).filter(id=>BL[id].play&&!RIDES.has(id)&&!r.rem[id]&&!nigate(r.elem,id));if(!L.length)return;const here=L.filter(id=>cnt(id)>0),t=L.includes(r.like)?r.like:here.length?here[(Math.random()*here.length)|0]:L[(Math.random()*L.length)|0];r.rem[t]=1;toast(r.name+'が、'+BL[t].name+'の遊び方を思い出した','good');if(typeof spReact==='function')spReact(r,'joy',1400)}
+function windRemember(r,ride){/* はじめてその遊具にのった・係をした：遊び方を1つ思い出す */r.rode=r.rode||{};if(r.rode[ride])return;r.rode[ride]=1;r.rem=r.rem||{};const L=Object.keys(BL).filter(id=>BL[id].play&&!RIDES.has(id)&&!r.rem[id]&&!nigate(r.elem,id));if(!L.length)return;const here=L.filter(id=>cnt(id)>0),t=L.includes(r.like)?r.like:here.length?here[(Math.random()*here.length)|0]:L[(Math.random()*L.length)|0];r.rem[t]=1;toast(r.name+'が、'+BL[t].name+'の遊び方を思い出した','good');if(typeof spReact==='function')spReact(r,'joy',1400);windRemFx(r,t)}
+/* 思い出した：頭の上に、その遊び家具の絵がふわっとうかんで光り、風のつぶがあつまる。その子の言いかたのひとこと（見た目と音だけ。実時間） */
+const WREMLINE=['そうだ、こうやって遊んだんだ！','思い出した！ 体がおぼえてる。','あっ、この遊び、すきだったなあ。','風がふいたら、思い出したよ。','なつかしい……もう一回やりたい！','わすれてたのが、うそみたい！'],WREMIMG=new Map(),WREMMS=3200;
+function windRemFx(r,t){if(!r||r.hidden||IS_STORY_REPLAY)return;let im=WREMIMG.get(t);if(!im){im=new Image();im.src=iconURL(t);WREMIMG.set(t,im)}
+  const x=r.x*TS,y=r.y*TS-uLift(r)-58;scnAdd('windrem',WREMMS,{r,im});scnAdd('glow',WREMMS*.8,{x,y,r:22,col:'#e8f6ff'},150);scnAdd('ring',900,{x,y,r0:6,r1:30,col:'#dff4ff'},150);
+  for(let i=0;i<6;i++){const a=i*1.047;scnAdd('orb',700,{x0:x+Math.cos(a)*34,y0:y+Math.sin(a)*20,x1:x,y1:y,arc:i%2?10:-10,col:i%2?'#dff4ff':'#fff6c8',n:1},i*80)}
+  sfx('good');addFloat(r.x,r.y-1.7,chatTone(pickFresh('wrem',WREMLINE),r),'#e8f6ff')}
+SCN_DRAW.windrem=(e,t,now)=>{/* 頭の上の遊び家具の絵（144のアイコンを30の大きさに。うかんでから、ゆっくりゆれる） */const r=e.r,im=e.im;if(!r||r.hidden||!im.complete||!im.naturalWidth)return;const env=scnEnv(t,.1,.18);if(env<=0)return;
+  const s=30,rise=Math.min(1,t/.12),x=Math.round(r.x*TS-s/2),y=Math.round((r.y*TS-uLift(r)-44-rise*14-s/2+Math.sin(now/320)*2)/2)*2;ctx.save();ctx.globalAlpha=env;ctx.imageSmoothingEnabled=true;ctx.drawImage(im,x,y,s,s);ctx.restore()}
 function windRemNote(r){if(!windFun())return '';const n=Object.keys(r.rem||{}).length;return '思い出した遊び：'+n}
 /* ハヤテ：はじめにうかんだ島で目をさます（カザネのおさななじみ）。会話を読みおえてから、来たことにする */
 function windHayateWake(k,after){if(S.flags.hayate||S.res.some(q=>q.name===HAYATE))return false;const I=windIsles(S),h=S.wind.holes.find(q=>I.id[q.j]===k);let c=-1,bd=1e9;for(let j=0;j<W*H;j++){if(I.id[j]!==k||!walk(j)||S.obj[j])continue;const d=h?Math.hypot(j%W-h.j%W,((j/W)|0)-((h.j/W)|0)):Math.hypot(j%W-I.cx[k],((j/W)|0)-I.cy[k]);if(d>=1&&d<bd){bd=d;c=j}}if(c<0)return false;
