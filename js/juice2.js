@@ -25,7 +25,7 @@ function juiceHouse(h,now){if(JHS.length>4)return;let sx=0,sy=0,n=0;for(const j 
 function juiceHouseDraw(now){for(let i=JHS.length-1;i>=0;i--){const H=JHS[i],e=now-H.t0;if(e>JHOUSEMS+900){JHS.splice(i,1);continue}const P=2;
     const u=Math.min(1,e/JHOUSEMS),a0=u*Math.PI*2;
     for(const c of H.cells){let d=a0-c.a;if(d<0)continue;/* まだ光がとどいていない壁 */const fade=e>JHOUSEMS?1-(e-JHOUSEMS)/900:1,hot=Math.max(0,1-d/.9);ctx.globalAlpha=Math.max(0,(.10+.3*hot)*fade);ctx.fillStyle=hot>.5?'#fffbe6':'#ffe58a';
-      const x=c.x*TS,y=c.y*TS-(typeof hiAt==='function'?hiAt((c.y|0)*W+(c.x|0))*LIFT:0);const h=TS/2;ctx.fillRect(x-h+P,y-h+P,TS-2*P,TS-2*P);if(hot>.3){ctx.globalAlpha=Math.min(1,hot)*fade;ctx.fillStyle='#fffbe6';ctx.fillRect(x-h,y-h,TS,P);ctx.fillRect(x-h,y+h-P,TS,P);ctx.fillRect(x-h,y-h,P,TS);ctx.fillRect(x+h-P,y-h,P,TS)}}/* 光がとどいたマスは、ほんのり光り、いまの所は白いわくで光る */
+      const x=c.x*TS,y=c.y*TS-(typeof hiAt==='function'?liftOf((c.y|0)*W+(c.x|0)):0);const h=TS/2;ctx.fillRect(x-h+P,y-h+P,TS-2*P,TS-2*P);if(hot>.3){ctx.globalAlpha=Math.min(1,hot)*fade;ctx.fillStyle='#fffbe6';ctx.fillRect(x-h,y-h,TS,P);ctx.fillRect(x-h,y+h-P,TS,P);ctx.fillRect(x-h,y-h,P,TS);ctx.fillRect(x+h-P,y-h,P,TS)}}/* 光がとどいたマスは、ほんのり光り、いまの所は白いわくで光る */
     if(e>=JHOUSEMS&&!H.pop){H.pop=1;const x=H.cx*TS,y=(H.top-.6)*TS;fx.push({k:'ring',x,y,life:1,col:'rgba(255,240,180,.95)'});for(let k=0;k<14;k++){const a=-Math.PI*(k/13),sp=70+Math.random()*60;fx.push({k:'p',x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-50,life:.9+Math.random()*.3,col:['#ffe58a','#fffbe6','#f6a650','#8fd06a'][k%4],r:3})}jKnock(784,0,.6,.12);jKnock(1176,.06,.45,.1)}/* 家の上で、ぽん */}
   ctx.globalAlpha=1}
 

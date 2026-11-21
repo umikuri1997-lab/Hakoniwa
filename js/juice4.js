@@ -21,7 +21,7 @@ const J4RECN={hv:'しゅうかく',kill:'追いはらった数',mat:'あつめ�
 const J4WALL=new Set(['wall','sdoor','hedge']);/* 柵（FENCE_IDS）のほかに、かこいになる塀 */
 const J4GROW=[],J4FISH=[],J4FENCE=[],J4MEND=[],J4THREAD=[],J4STAR=[];let J4FQ=[],J4SNAP=null,J4ST=null;
 function j4OK(){return typeof juiceOK==='function'&&juiceOK()&&(typeof stageReady!=='function'||stageReady())}
-function j4Lift(x,y){return typeof hiAt==='function'?hiAt((y|0)*W+(x|0))*LIFT:0}
+function j4Lift(x,y){return typeof hiAt==='function'?liftOf((y|0)*W+(x|0)):0}
 function j4Dot(c,pat,cx,cy,P,col,hi){/* ドットの絵（文字の行のならび）を、まん中 cx,cy に描く */const h=pat.length,w=pat[0].length,x0=Math.round(cx-w*P/2),y0=Math.round(cy-h*P/2);c.fillStyle=col;for(let y=0;y<h;y++)for(let x=0;x<w;x++)if(pat[y][x]==='#')c.fillRect(x0+x*P,y0+y*P,P,P);if(hi){c.fillStyle=hi;for(let y=0;y<h;y++)for(let x=0;x<w;x++)if(pat[y][x]==='o')c.fillRect(x0+x*P,y0+y*P,P,P)}}
 
 /* ---------- 1. 朝、いっせいに育つ ---------- */

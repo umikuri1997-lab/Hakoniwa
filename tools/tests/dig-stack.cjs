@@ -36,5 +36,15 @@ const assert=require('node:assert/strict');
   assert.equal(c.h,2);assert.equal(c.c1,'blk_stone');assert.equal(c.c2,'blk_brick');assert.equal(c.inv,2);assert.ok(c.ico.startsWith('data:'),'アイコン');
   assert.equal(c.back,'blk_brick','ほるとブロックがもどる');assert.equal(c.c2b,'');assert.equal(c.back2,'blk_stone');assert.ok(c.gone);
   assert.ok(c.site,'せいれいにたのめる');assert.equal(c.inv2,1);assert.equal(c.built,'blk_stone','せいれいがつんだ');assert.ok(c.ord,'依頼ボードでたのめる');assert.equal(c.made,10,'10こできた');
+  /* 地面より下：2だんまでほれて、石材が出る。水にとなりあうと、水がながれこんで池になる */
+  const d=JSON.parse(await run(`(()=>{const ok=j=>!S.obj[j]&&!S.floor[j]&&!S.ground[j]&&!fogAt(j)&&walk(j)&&hiAt(j)===0;let j=-1;for(let k=(CY-10)*W+CX-10;k<(CY+10)*W;k++)if(ok(k)&&ok(k+1)&&ok(k+2)&&ok(k-1)&&ok(k+W)&&ok(k-W)&&ok(k+1+W)&&ok(k+1-W)){j=k;break}const x=j%W,y=(j/W)|0,o={};
+    S.drops=[];terraNow('dig',x,y);o.h1=hiAt(j);o.drop=(S.drops.find(q=>q.lt)||{}).id;terraNow('dig',x,y);o.h2=hiAt(j);o.ok3=canPlace('dig',x,y,true);
+    for(let i=0;i<3;i++)render(performance.now());o.stairNo=canPlace('stairs_wood',x,y,true);
+    S.mat.tsuchi=1;terraNow('mound',x,y);o.back=hiAt(j);
+    /* 水：となりのマスを池にして、ほる */S.ground[j+2]=1;S.drops=[];terraNow('dig',x+1,y);o.pond=S.ground[j+1]===1&&hiAt(j+1)===0;o.walk=walk(j+1);
+    for(let i=0;i<3;i++)render(performance.now());return JSON.stringify(o)})()`));
+  console.log(d);
+  assert.equal(d.h1,-1);assert.equal(d.drop,'mat:stone','地面より下は石材');assert.equal(d.h2,-2);assert.equal(d.ok3,false,'2だんまで');assert.equal(d.stairNo,false,'穴に階段はおけない');
+  assert.equal(d.back,-1,'穴にもつめる');assert.ok(d.pond,'水にとなりあうと池になる');assert.equal(d.walk,false);
   assert.deepEqual(errors,[]);console.log('dig-stack: ok');await browser.close();
 })().catch(e=>{console.error(e);process.exit(1)});

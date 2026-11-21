@@ -48,7 +48,7 @@ function omoiScene(j){
   const hold=r=>{endAct(r);r.path=[];r.act={type:'idle',stage:'do',t:0,dur:999,omoiHold:1};r.face=r.x<tx?1:-1};
   const stop=(msg)=>{if(OMOI_RUN===run){OMOI_RUN=null;SCENEHOLD=0}for(const r of pr){if(r.act&&(r.act.omoiHold||r.act.type==='nmeet'))endAct(r);SACRED_POSES.delete(r)}if(sacredDirection())sacredEndDirection(true);if(msg)toast(msg)};
   let n=0,begun=false;const arrive=()=>{if(++n<2||begun)return;begun=true;care()};
-  const care=()=>{if(!alive())return stop();if(isNight())return stop('御神木へ行くのは、朝になってから');for(const r of pr)hold(r);const view=[[storyTreeX(j)*TS-40,sacredTopY(j)+20],[storyTreeX(j)*TS+40,storyTreeY(j)*TS-hiAt(j)*LIFT],...pr.flatMap(r=>[[r.x*TS-24,r.y*TS-55-uLift(r)],[r.x*TS+24,r.y*TS+10-uLift(r)]])];storyShot(view,{limit:2.4,seconds:1.2,full:true});
+  const care=()=>{if(!alive())return stop();if(isNight())return stop('御神木へ行くのは、朝になってから');for(const r of pr)hold(r);const view=[[storyTreeX(j)*TS-40,sacredTopY(j)+20],[storyTreeX(j)*TS+40,storyTreeY(j)*TS-liftOf(j)],...pr.flatMap(r=>[[r.x*TS-24,r.y*TS-55-uLift(r)],[r.x*TS+24,r.y*TS+10-uLift(r)]])];storyShot(view,{limit:2.4,seconds:1.2,full:true});
     const one=(r,at,then)=>villageTimeout(()=>{if(!alive())return stop();const c=OMOI_CARE[r.elem]||OMOI_CARE.wood;sacredScenePose(r,c[0],2200,{side:true,target:j,face:r.face});sacredStartEffect(c[1],2200,{actor:r});sfx(r.elem==='water'?'wave':'bush');
       if(r.elem==='wood')for(let i=0;i<10;i++)villageTimeout(()=>fx.push({k:'p',x:r.x*TS+r.face*8,y:r.y*TS-26-uLift(r),vx:r.face*(30+Math.random()*30),vy:-20-Math.random()*30,life:1,col:i%2?'#f6c6d6':'#fff2f6',r:2}),400+i*80);/* 花びら */
       if(then)villageTimeout(then,2300)},at);
@@ -67,7 +67,7 @@ function shardOfferReady(){/* 御神木にかけらをささげられる（sacre
 function omoiBubOn(){/* 御神木の青いふきだしが出ている（出ていれば、そのマス） */if(!S||WD!==0||!(omoiWait()||shardOfferReady())||OMOI_RUN&&OMOI_RUN.state===S&&OMOI_RUN.session===VILLAGE_SESSION||SHARD_OFFER&&SHARD_OFFER.state===S||!$('#dialog').hidden)return -1;const j=S.sacredRoot;return j==null||S.obj[j]!=='tower'?-1:j}
 function drawOmoiBub(now){/* なかよしの2人が待っている・かけらをささげられるときは、御神木に青いふきだし */const j=omoiBubOn();if(j<0)return;talkBub(storyTreeX(j)*TS,sacredTopY(j)+34,now)}
 function omoiBubHit(wx,wy){/* 青いふきだし（talkBub：はば45・高さ42、根もとの上 63〜21 の点）をタップした */const j=omoiBubOn();if(j<0)return false;const px=storyTreeX(j)*TS,by=sacredTopY(j)+34;return Math.abs(wx*TS-px)<=26&&wy*TS>=by-68&&wy*TS<=by-14}
-function sacredTopY(j,st){/* 御神木の絵のてっぺん（世界の座標）。育ちぐあい（st。なければ、いま）で絵がかわる */const a=window.CHIPS&&CHIPS[SACRED_ART[Math.floor(st==null?sacredStage():st)]];return (j/W|0)*TS+(sacredSpan()-4)*TS-hiAt(j)*LIFT+(a?a.ay/2:-60)}
+function sacredTopY(j,st){/* 御神木の絵のてっぺん（世界の座標）。育ちぐあい（st。なければ、いま）で絵がかわる */const a=window.CHIPS&&CHIPS[SACRED_ART[Math.floor(st==null?sacredStage():st)]];return (j/W|0)*TS+(sacredSpan()-4)*TS-liftOf(j)+(a?a.ay/2:-60)}
 /* いちばんなかよしの子（村にいる子だけ）。{q,v} */
 function bondBest(r){let q=null,v=0;if(!S||!S.bond)return null;for(const o of S.res){if(o===r)continue;const b=S.bond[bondKey(r,o)]||0;if(b>v){v=b;q=o}}return q?{q,v}:null}
 function bondPair(pk){const [a,b]=pk.split('_').map(Number),A=S.res.find(r=>r.id===a),B=S.res.find(r=>r.id===b);return A&&B?[A,B]:null}

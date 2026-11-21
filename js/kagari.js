@@ -110,7 +110,7 @@ function kgrIvPlay(k){
   else if(k==='c'){x=VOLJ%W+1.5;y=(VOLJ/W|0)+5.5}
   else{const tw=S.obj.indexOf('tower');if(tw<0)return false;x=tw%W+1;y=(tw/W|0)+1}
   const ms=KGRIVMS[k],now=performance.now(),run=KGRIV={k,x,y,at:now+1300,ms,S,session:VILLAGE_SESSION};
-  SCENEHOLD=now+ms+1600;sacredDirection(true);const lift=hiAt((y|0)*W+(x|0))*LIFT;
+  SCENEHOLD=now+ms+1600;sacredDirection(true);const lift=liftOf((y|0)*W+(x|0));
   storyShot([[x*TS-90,y*TS-80-lift],[x*TS+90,y*TS+30-lift]],{limit:2.6,seconds:1.3,full:true});quietBeat(ms+1300);
   villageTimeout(()=>{if(KGRIV!==run)return;KGRIV=null;SCENEHOLD=0;
     if(k==='end')return kgrEndTalk();
@@ -152,7 +152,7 @@ function kgrShade(ty,X,Y,sc,o,a=1,warm=0){if(a<=0)return;ctx.save();ctx.globalAl
   if(warm>0&&window.CHIPS&&typeof kgTint==='function'){/* あたたまって、ほんのり火の色に */const K='kg_'+ty+':idle',ch=CHIPS[K];if(ch){const s=.27*(EN[ty]?EN[ty].size:.9)*2*sc,fi=Math.floor((o.t||0)*1.6)%(ch.n||1);ctx.globalAlpha=a*warm*.55;ctx.translate(X,Y);ctx.scale(s,s);ctx.drawImage(kgTint(K,'#ffb35a'),0,fi*ch.h,ch.w,ch.h,ch.ax,ch.ay,ch.w,ch.h)}}
   ctx.restore()}
 const kgrEase=q=>q<=0?0:q>=1?1:q*q*(3-2*q);
-function kgrIvDraw(now){const e=KGRIV;if(!e||e.S!==S)return;const T=(now-e.at)/1000;if(T<0)return;const lift=hiAt((e.y|0)*W+(e.x|0))*LIFT,X=e.x*TS,Y=e.y*TS-lift+10,out=T>e.ms/1000-1.4?Math.max(0,(e.ms/1000-T)/1.4):1;
+function kgrIvDraw(now){const e=KGRIV;if(!e||e.S!==S)return;const T=(now-e.at)/1000;if(T<0)return;const lift=liftOf((e.y|0)*W+(e.x|0)),X=e.x*TS,Y=e.y*TS-lift+10,out=T>e.ms/1000-1.4?Math.max(0,(e.ms/1000-T)/1.4):1;
   if(e.k==='a'){/* ハイカゲが、火を朝までのこそうとして灰をかぶせ、消してしまう。手をかざしても、つめたいまま */
     const f=T<5?1:T<7.5?1-(T-5)/2.5:0;kgrFire(X,Y,f,T);if(f<=0&&T<11)for(let i=0;i<3;i++){const q=((T-7.5)*.5+i/3)%1;kgrDot(X-2+i*2,Y-8-q*16,2,2,'#b9b4ae',(1-q)*.6)}/* けむり */
     kgrAsh(X,Y,T,5,7.2);const wk=T>=1.5&&T<4.5,sx=X-70+56*kgrEase((T-1.5)/3);
@@ -173,6 +173,6 @@ function kgrIvDraw(now){const e=KGRIV;if(!e||e.S!==S)return;const T=(now-e.at)/1
     if(T>=10)for(let i=0;i<10;i++){const q=Math.min(1,(T-10)/1.8),ox=((i*37)%31)-15;kgrDot(sx+ox*(.4+q),Y-6-q*(26+i*3),2,2,i%2?'#ffcf6a':'#ffb347',(1-q)*.9)}}/* あたたまって、火の粉のようにほどける */
   ctx.globalAlpha=1}
 function kgrAdd(add,now){if(!KGRIV||KGRIV.S!==S)return;add(KGRIV.y+.9,1,null,()=>{ctx.save();kgrIvDraw(now);ctx.restore()},-1)}
-function kgrLights(g,now){/* 場面の火・灰の下の火の明かり（夜の暗さをけずる） */const e=KGRIV;if(!e||e.S!==S)return;const T=(now-e.at)/1000,lift=hiAt((e.y|0)*W+(e.x|0))*LIFT,X=e.x*TS,Y=e.y*TS-lift+10;let R=0,yy=Y-6;
+function kgrLights(g,now){/* 場面の火・灰の下の火の明かり（夜の暗さをけずる） */const e=KGRIV;if(!e||e.S!==S)return;const T=(now-e.at)/1000,lift=liftOf((e.y|0)*W+(e.x|0)),X=e.x*TS,Y=e.y*TS-lift+10;let R=0,yy=Y-6;
   if(e.k==='a')R=T<5?70:T<7.5?70*(1-(T-5)/2.5):0;else if(e.k==='end'){R=T<4.5?60:40+6*Math.sin(T*2.4);yy=Y-44}
   if(R>2)g.drawImage(lightSpr(70),X-R,yy-R,R*2,R*2)}

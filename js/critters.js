@@ -171,7 +171,7 @@ function critPoke(c,px,py){const K=CK[c.k],now=performance.now();if(c.pk&&now-c.
 /* 小鳥はベリー・りすはどんぐり・うさぎはわた毛を、1ぴき1回だけ、50%で1こ落とす（CRITDROP）。落ちた物は、せいれいがどこからでもひろいに行く（tap） */
 const CRITDROP={bird:'food:berry',risu:'food:donguri',usagi:'mat:wool'},CRITDROPP=.5;
 function critDrop(c){const k=c.k==='bird'&&WD===WIND?'mat:hane':CRITDROP[c.k];/* 風のステージの小鳥は、風の羽 */if(!k||c.dr)return;c.dr=1;if(Math.random()>=CRITDROPP)return;const n0=(S.drops||[]).length;dropAt(c.x,c.y,k,1);if(!(S.drops&&S.drops.length>n0))return;
-  const d=S.drops[S.drops.length-1];d.tap=1;d.cr=1;DROPFX.set(d,{sx:c.x*TS,sy:(c.y-.2)*TS-(c.z||0)-hiAt(d.y*W+d.x)*LIFT,t0:performance.now()})}
+  const d=S.drops[S.drops.length-1];d.tap=1;d.cr=1;DROPFX.set(d,{sx:c.x*TS,sy:(c.y-.2)*TS-(c.z||0)-liftOf(d.y*W+d.x),t0:performance.now()})}
 /* どんぐりのアイコン（コードのドット絵。もらった絵があれば、かえる） */
 const DONGURI=['................','................','.......oo.......','.......wo.......','....oooooooo....','...owwwwwwwwo...','..owwwwwwwwwwo..','..oooooooooooo..','...ohmmmmmmdo...','...ohmmmmmmdo...','...ohmmmmmmdo...','....ohmmmmdo....','....ommmmddo....','.....oddddo.....','......oooo......','................'];
 if(!ICONS.donguri){ICONS.donguri=pixURL('food:donguri',DONGURI,'#b9773f');const im=new Image();im.onload=()=>{im.ok=1;dirty=true};im.src=ICONS.donguri;ICI.donguri=im}

@@ -20,7 +20,7 @@ let VOLFXN=0;function volFx(kind,ms,extra={}){return sacredStartEffect(kind+'#'+
 function volFxEnd(kind){const d=sacredDirection();if(!d)return;const now=performance.now();for(const e of d.effects.values())if(e.kind===kind&&!e.stop){e.stop=now;e.ms=Math.min(e.ms,now-e.at+900);}}
 /* カメラ：人物と場所（マスの座標）が、会話欄と立ち絵を避けて見えるように */
 function volShot(tiles=[],cast=[],limit=2.4,seconds=1.2){const P=[];for(const r of cast)if(r)P.push([r.x*TS-24,r.y*TS-58-uLift(r)],[r.x*TS+24,r.y*TS+10-uLift(r)]);
-  for(const [x,y]of tiles){const lift=hiAt((y|0)*W+(x|0))*LIFT;P.push([x*TS-22,y*TS-34-lift],[x*TS+22,y*TS+12-lift]);}return storyShot(P,{limit,seconds});}
+  for(const [x,y]of tiles){const lift=liftOf((y|0)*W+(x|0));P.push([x*TS-22,y*TS-34-lift],[x*TS+22,y*TS+12-lift]);}return storyShot(P,{limit,seconds});}
 /* 歩いて行く。そばにいれば歩かない。行けないとき・じゃまされたときは、その場で続ける */
 function volWalk(r,x,y,o,arrive){const d=sacredDirection();let done=false;const fin=ok=>{if(done)return;done=true;if(!ok&&S.res.includes(r)&&r.act?.type==='nmeet'){r.path=[];endAct(r);}if(arrive)arrive();};
   if(!r)return fin(true);if(Math.hypot(r.x-x,r.y-y)<(o.close||1))return fin(true);
@@ -116,7 +116,7 @@ function volEndScene(restore){const d=sacredDirection();if(!d||!d.vol)return;for
 function volDot(x,y,w,h,col,a=1){if(a<=0)return;ctx.globalAlpha=a;ctx.fillStyle=col;ctx.fillRect(Math.round(x),Math.round(y),w,h);}
 function volRing(x,y,rx,ry,col,a,step=10){for(let g=0;g<360;g+=step){const t=g*Math.PI/180;volDot(x+Math.cos(t)*rx,y+Math.sin(t)*ry,2,1,col,a);}}
 function volEgg(x,y){volDot(x-2,y-3,4,1,'#fffaf0');volDot(x-3,y-2,6,3,'#fff6e4');volDot(x-2,y+1,4,1,'#eadcc4');volDot(x-2,y-2,1,1,'#ffffff');}
-function volTileXY(x,y){return [x*TS,y*TS-hiAt((y|0)*W+(x|0))*LIFT];}
+function volTileXY(x,y){return [x*TS,y*TS-liftOf((y|0)*W+(x|0))];}
 const VOL_GROUND=new Set(['campfire','ashPile','lanterns']);/* 地面に置く物は、奥行きの順で描く */
 function storyStageAdd(add,now){const d=sacredDirection();if(!d||!d.effects.size)return;
   for(const [key,e]of d.effects){if(!(VOL_GROUND.has(e.kind)||e.kind==='egg'&&!e.actor))continue;const one=(y,fn)=>add(y,1,null,()=>{ctx.save();fn();ctx.globalAlpha=1;ctx.restore();},-1);

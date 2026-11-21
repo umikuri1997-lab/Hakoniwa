@@ -207,7 +207,7 @@ function heatScene(k){if(WD!==1||!S||!HSPC[k])return;const who=k==='b'?HOMURA:SH
 let KITE=null;/* たこあげ：{r,at,state,session}。会話がとじたら消える */
 function stageKite(name){if(!S)return;const r=S.res.find(q=>q.name===name&&!q.hidden);if(!r)return;r.face=r.face||1;sacredScenePose(r,'point',60000,{side:true,face:r.face});KITE={r,at:performance.now(),state:S,session:VILLAGE_SESSION};sfx('wave');STAGEWAIT=performance.now()+2600}/* 糸をもって、たこを空へ（2.6秒あがりきるまで、つぎへ送らない） */
 function drawKite(now){const k=KITE;if(!k)return;if(k.state!==S||k.session!==VILLAGE_SESSION||!S.res.includes(k.r)||$('#dialog').hidden&&now-k.at>1500){if(k.r)SACRED_POSES.delete(k.r);KITE=null;return}
-  const r=k.r,f=r.face||1,hx=r.x*TS+f*7,hy=r.y*TS-26-hiAt((r.y|0)*W+(r.x|0))*LIFT,q=Math.min(1,(now-k.at)/2600),e=1-(1-q)*(1-q),T=now/1000,kx=hx+f*(10+36*e)+Math.sin(T*1.3)*4*e,ky=hy-8-92*e+Math.sin(T*2.1)*3*e;
+  const r=k.r,f=r.face||1,hx=r.x*TS+f*7,hy=r.y*TS-26-liftOf((r.y|0)*W+(r.x|0)),q=Math.min(1,(now-k.at)/2600),e=1-(1-q)*(1-q),T=now/1000,kx=hx+f*(10+36*e)+Math.sin(T*1.3)*4*e,ky=hy-8-92*e+Math.sin(T*2.1)*3*e;
   ctx.save();for(let i=1;i<24;i++){const u=i/24,sx=hx+(kx-hx)*u,sy=hy+(ky-hy)*u+Math.sin(Math.PI*u)*6*e;volDot(sx,sy,1,1,'#f4ead6',.9)}/* 糸：少したるむ */
   const x0=Math.round(kx),y0=Math.round(ky),W2=[1,3,5,7,9,7,5,3,1];const u=2;W2.forEach((w,i)=>{const h=(w-1)/2;for(let c=-h;c<=h;c++)volDot(x0+c*u,y0+(i-5)*u,u,u,c<0?(i<4?'#ff9f8f':'#f5806f'):(i<4?'#ffd98a':'#f4c26a'))});volDot(x0,y0-5*u,u,9*u,'#fff3d6',.9);volDot(x0-4*u,y0-u,9*u,u,'#fff3d6',.9);/* ひしがたのたこ（1ドット＝2） */
   for(let i=0;i<6;i++){const ty=y0+4*u+i*3*u,tx=x0+Math.round(Math.sin(T*4+i*.8)*2)*u;volDot(tx,ty,u,2*u,'#f4ead6',.9);if(i%2)volDot(tx-u,ty+u,3*u,u,i%4===1?'#8fd3ff':'#ffb3c7')}/* しっぽとリボン */

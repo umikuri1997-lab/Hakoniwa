@@ -171,7 +171,7 @@ function printStar(cx,cy,a,n){/* ドットの星（2点のます目）：まん�
   ctx.globalAlpha=a*.9;ctx.fillStyle='#e0a03a';for(const[dx,dy]of B)ctx.fillRect(cx-2+dx,cy-2+dy,4,4);
   ctx.globalAlpha=a;for(const[dx,dy]of B){ctx.fillStyle=dx||dy?(Math.abs(dx)+Math.abs(dy)>=6?'#fff2b0':'#ffe27a'):'#fffbe6';ctx.fillRect(cx-1+dx,cy-1+dy,2,2)}}
 function drawPrintMarks(now,inFog){/* たどる依頼のあいだ、まだたどっていない足あとのまわりで、ドットの星がいくつもまたたき、光のつぶがたちのぼる（霧の中の物は、霧の上に描く inFog） */if(!printOn()||!$('#dialog').hidden)return;
-  for(const f of printList()){if(printTraced(f.j)||fogAt(f.j)!==!!inFog)continue;const x0=(f.j%W)*TS+16,y0=((f.j/W)|0)*TS+12-hiAt(f.j)*LIFT;ctx.save();
+  for(const f of printList()){if(printTraced(f.j)||fogAt(f.j)!==!!inFog)continue;const x0=(f.j%W)*TS+16,y0=((f.j/W)|0)*TS+12-liftOf(f.j);ctx.save();
     for(let m=0;m<3;m++){const q=(now/1600+m/3+f.j*.13)%1,px=x0+Math.round(Math.sin(q*6.3+m*2)*3)+(m-1)*7,py=y0-Math.round(q*26);ctx.globalAlpha=Math.sin(Math.PI*q)*.85;ctx.fillStyle=m%2?'#fff6c8':'#d8f3c0';ctx.fillRect(px-1,py-1,2,2)}/* 足あとから、光のつぶがたちのぼる */
     for(const[dx,dy,o]of PRINT_STARS){const q=(now/1100+o+f.j*.37)%1,a=Math.sin(Math.PI*q);if(a<.1)continue;printStar(x0+dx,y0+dy,a,a>.85?3:a>.5?2:1)}
     ctx.restore()}}
@@ -184,19 +184,19 @@ function printScene(r,f,mem){const k=Math.min(PRINT_TRACE.length-1,printT().leng
 function printCue(c){const P=PRINTSC;if(!P||P.state!==S||P.session!==VILLAGE_SESSION||!S.res.includes(P.r))return;const r=P.r,d=sacredDirection(true);if(!d)return;const now=performance.now();
   if(c==='point'){const nx=printNext(P.j);if(nx<0)return;const tx=nx%W+.5,ty=((nx/W)|0)+.5,dist=Math.hypot(tx-r.x,ty-r.y)||1,u=Math.min(dist,6)/dist,ex=r.x+(tx-r.x)*u,ey=r.y+(ty-r.y)*u;
     r.face=tx>=r.x?1:-1;sacredScenePose(r,'point',600000,{side:true,face:r.face});sfx('twood');
-    for(let i=1;i<=12;i++)villageTimeout(()=>{const q=i/12,px=r.x+(ex-r.x)*q,py=r.y+(ey-r.y)*q;fx.push({k:'p',x:px*TS,y:py*TS-8-hiAt((py|0)*W+(px|0))*LIFT,vx:0,vy:-18,life:1,col:i%2?'#fff6c8':'#d8f3c0',r:2})},300+i*90);/* 光の点々が、つぎの足あとのほうへ */
+    for(let i=1;i<=12;i++)villageTimeout(()=>{const q=i/12,px=r.x+(ex-r.x)*q,py=r.y+(ey-r.y)*q;fx.push({k:'p',x:px*TS,y:py*TS-8-liftOf((py|0)*W+(px|0)),vx:0,vy:-18,life:1,col:i%2?'#fff6c8':'#d8f3c0',r:2})},300+i*90);/* 光の点々が、つぎの足あとのほうへ */
     {const fx0=P.j%W+.5,fy0=((P.j/W)|0)+.5,L=Math.hypot(ex-fx0,ey-fy0),n=Math.max(4,Math.min(9,Math.round(L/.7))),pts=[];for(let i=1;i<=n;i++)pts.push([fx0+(ex-fx0)*i/n,fy0+(ey-fy0)*i/n]);hoofTrail(pts,230,1500,700);hoofBlooms(fx0,fy0,6,300)}/* むかしヌシ様が歩いた、光るひづめのあとが、1歩ずつあらわれては消える。足あとのまわりに、光の花 */
     storyShot([[r.x*TS-24,r.y*TS-55-uLift(r)],[r.x*TS+24,r.y*TS+10-uLift(r)],[ex*TS-22,ey*TS-34],[ex*TS+22,ey*TS+12]],{limit:2.2,seconds:1.3});d.waitUntil=Math.max(d.waitUntil||0,now+PRINT_BEAT_MS.point)}
-  if(c==='glow'){const x=P.j%W+.5,y=((P.j/W)|0)+.5,lift=hiAt(P.j)*LIFT;r.face=x>=r.x?1:-1;sacredScenePose(r,'kneel',600000,{side:true,face:r.face});sfx('shard');
+  if(c==='glow'){const x=P.j%W+.5,y=((P.j/W)|0)+.5,lift=liftOf(P.j);r.face=x>=r.x?1:-1;sacredScenePose(r,'kneel',600000,{side:true,face:r.face});sfx('shard');
     for(let i=0;i<22;i++)villageTimeout(()=>fx.push({k:'p',x:(x+(Math.random()-.5)*.8)*TS,y:y*TS-lift,vx:(Math.random()-.5)*30,vy:-60-Math.random()*50,life:1,col:i%3?'#fff6c8':'#bfe8ff',r:2+(i%2)}),i*70);/* 足あとから、光がたちのぼる */
     storyShot([[r.x*TS-24,r.y*TS-55-uLift(r)],[r.x*TS+24,r.y*TS+10-uLift(r)],[x*TS-22,y*TS-40-lift],[x*TS+22,y*TS+12-lift]],{limit:2.6,seconds:1.1});d.waitUntil=Math.max(d.waitUntil||0,now+PRINT_BEAT_MS.glow)}
   if(c==='circle'){/* 光るひづめのあとが、足あとから出て、フタバのまわりをひとまわりし、すぐそばで止まる（見えないヌシ様が、よってくる） */const x=P.j%W+.5,y=((P.j/W)|0)+.5,a0=Math.atan2((y-r.y)/.7,x-r.x),R=1.25,pts=[[x,y]];
     for(let i=0;i<=10;i++){const a=a0+i/10*Math.PI*2;pts.push([r.x+Math.cos(a)*R,r.y+Math.sin(a)*R*.7])}hoofTrail(pts,300,1700,200);
-    const sx=r.x+r.face*.8,sy=r.y+.15;for(const o of[-.14,.14])scnAdd('hoof',9000,{x:(sx+o)*TS,y:sy*TS-hiAt((sy|0)*W+(sx|0))*LIFT,v:true},3900);/* そばで止まった、2つのあと */
+    const sx=r.x+r.face*.8,sy=r.y+.15;for(const o of[-.14,.14])scnAdd('hoof',9000,{x:(sx+o)*TS,y:sy*TS-liftOf((sy|0)*W+(sx|0)),v:true},3900);/* そばで止まった、2つのあと */
     SACRED_POSES.delete(r);sacredScenePose(r,'lookUp',600000,{side:true,face:r.face});storyShot([[r.x*TS-56,r.y*TS-62-uLift(r)],[r.x*TS+56,r.y*TS+40-uLift(r)]],{limit:2.6,seconds:1.2});d.waitUntil=Math.max(d.waitUntil||0,now+PRINT_BEAT_MS.circle)}
   if(c==='pat'){/* 頭の葉が、なでられたように、ふわっとゆれる */const hx=r.x*TS,hy=r.y*TS-40-uLift(r);scnAdd('glow',2200,{x:hx,y:hy,r:14});scnAdd('ring',900,{x:hx,y:hy,r0:3,r1:16,col:'#fff6c8',a:.8},300);
     for(let i=0;i<4;i++)scnAdd('leaf',1600,{x:hx+(i-1.5)*5,y:hy-2,vy:14,sway:4,ph:i*1.7,col:i%2?'#9ecf75':'#c8f5a0'},400+i*160);villageTimeout(()=>JUMP.set(r,performance.now()),350);sfx('pat');d.waitUntil=Math.max(d.waitUntil||0,now+PRINT_BEAT_MS.pat)}
-  if(c==='take'){/* 光が足あとからうきあがって、フタバの両手へ。とどいたら、手の中でふわっと光る */const x=P.j%W+.5,y=((P.j/W)|0)+.5,lift=hiAt(P.j)*LIFT;r.face=x>=r.x?1:-1;SACRED_POSES.delete(r);sacredScenePose(r,'storyOffer',600000,{side:true,face:r.face});
+  if(c==='take'){/* 光が足あとからうきあがって、フタバの両手へ。とどいたら、手の中でふわっと光る */const x=P.j%W+.5,y=((P.j/W)|0)+.5,lift=liftOf(P.j);r.face=x>=r.x?1:-1;SACRED_POSES.delete(r);sacredScenePose(r,'storyOffer',600000,{side:true,face:r.face});
     const hand=()=>[r.x*TS+r.face*7,r.y*TS-26-uLift(r)];for(let i=0;i<16;i++)villageTimeout(()=>{const [hx,hy]=hand(),q=i/16,sx=x*TS,sy=y*TS-6-lift;fx.push({k:'p',x:sx+(hx-sx)*q,y:sy+(hy-sy)*q-Math.sin(Math.PI*q)*14,vx:0,vy:-6,life:1,col:i%2?'#fff6c8':'#bfe8ff',r:2})},200+i*60);
     scnAdd('gem',1300,{x:x*TS,y:y*TS-10-lift,rise:10});villageTimeout(()=>{const [hx,hy]=hand();scnAdd('orb',800,{x0:x*TS,y0:y*TS-20-lift,x1:hx,y1:hy-8,arc:14,col:'#fff0a8',n:3});scnAdd('gem',2400,{actor:r,dx:r.face*7,dy:-34},750)},500);/* 光があつまって、かけらになり、手の上へ */
     villageTimeout(()=>{const [hx,hy]=hand();sfx('shard');for(let i=0;i<14;i++){const a=i/14*Math.PI*2;fx.push({k:'p',x:hx,y:hy,vx:Math.cos(a)*40,vy:Math.sin(a)*40-20,life:1,col:i%2?'#fff6c8':'#d8f3c0',r:2})}},1300);
@@ -216,7 +216,7 @@ const WEBC=[];function webArt(v){/* クモの巣の、チップ（web#0・web#1�
   const ox=v?63:0,sx=v?-1:1;/* 角（左上か右上）から、放射の糸と、まわりの糸 */const R=[[1,0],[.92,.38],[.7,.7],[.38,.92],[0,1]];for(const[dx,dy]of R)for(let t=0;t<46;t++)P(ox+sx*dx*t,dy*t,.8-t/120);
   for(const rad of[9,17,26,36])for(let n=0;n<R.length-1;n++){const[a1,b1]=R[n],[a2,b2]=R[n+1];for(let t=0;t<=1;t+=1/(rad*.9)){const k=Math.sin(t*Math.PI)*.18*rad;/* 糸は少したるむ */const px=a1*rad+(a2*rad-a1*rad)*t-k*(a1+a2)/2,py=b1*rad+(b2*rad-b1*rad)*t-k*(b1+b2)/2;P(ox+sx*px,py,.62-rad/110)}}
   return WEBC[v]=cv}
-function drawWebs(add,vis){/* 床のマスの上の角に、壁の正面にかかるように描く（そのマスの物より奥・壁より手前） */if(!S.web)return;for(const k in S.web){const j=+k,x=j%W,y=(j/W)|0;if(!vis({x:x+.5,y:y+.5}))continue;const v=S.web[k]?1:0;add(y+.015,0,null,()=>{const X=x*TS,Y=y*TS-hiAt(j)*LIFT-22,ch=window.CHIPS&&CHIPS['web#'+v];if(ch&&drawChip(ctx,ch,'web#'+v,X,Y+22,0,j))return;ctx.drawImage(webArt(v),X,Y,32,32)},j)}}
+function drawWebs(add,vis){/* 床のマスの上の角に、壁の正面にかかるように描く（そのマスの物より奥・壁より手前） */if(!S.web)return;for(const k in S.web){const j=+k,x=j%W,y=(j/W)|0;if(!vis({x:x+.5,y:y+.5}))continue;const v=S.web[k]?1:0;add(y+.015,0,null,()=>{const X=x*TS,Y=y*TS-liftOf(j)-22,ch=window.CHIPS&&CHIPS['web#'+v];if(ch&&drawChip(ctx,ch,'web#'+v,X,Y+22,0,j))return;ctx.drawImage(webArt(v),X,Y,32,32)},j)}}
 const CRACKC={};function crackArt(v,vert){/* 朽ちた壁のひびの仮の絵（64×64 を1マスに。マスの上はしが壁の正面の上はし）。あとで、マップチップ crack#0〜9（たての壁は crack:v#0〜9）に差しかえられる */const key=(vert?'v':'h')+v;if(CRACKC[key])return CRACKC[key];const cv=document.createElement('canvas');cv.width=cv.height=64;const c=cv.getContext('2d'),rnd=fogRand(v*9973+(vert?77:3));
   const line=(x,y,n,dx)=>{for(let t=0;t<n;t++){c.fillStyle='rgba(74,52,36,.62)';c.fillRect(x|0,y|0,1,1);c.fillStyle='rgba(255,246,226,.38)';c.fillRect(x|0,(y|0)+1,1,1);y+=1;x+=dx+(rnd()<.45?(rnd()<.5?-1:1):0);if(x<(vert?12:2)||x>(vert?52:61))break;if(rnd()<.08){line(x,y,(n-t)*.5,-dx||(rnd()<.5?1:-1));}}};
   if(vert){line(24+v*6,6,26,0);line(38-v*4,30,22,0)}else{const S0=[[10,4,30,.6],[44,8,22,-.5],[28,20,26,.3]];S0.forEach(([x,y,n,dx],q)=>{if(q<=v+1)line(x+v*5,y,n,dx)})}
