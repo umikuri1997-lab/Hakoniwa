@@ -1,5 +1,5 @@
 """洞窟のバケモノ（js/cave-bake.js）の3Dから写すドット絵：トリポのモデル（tools/art/models/cave/bk_*.glb。色がないモデル）に、
-場所で色をぬり（paint）、からだ全体のかんたんなポーズ（warp）をつけて、コマごとに写す。bake_build.py が設計図を作って写す。
+場所で色をぬり（paint）、骨（BONE：足・うで・頭・耳・あご・指など）でポーズ（warp）をつけて、コマごとに写す。bake_build.py が設計図を作って写す。
 座標：model_tris のあと（x 東・y 南＝手前・z 上、足もとのまん中が (0.5,0.5,0)）。モデルの高さ H でわった数 xn・yn・zn で色をきめる。
 コマ：'0'・'1' 止まる（息）・'w0'〜'w3' 歩く・'a0'・'a1' たたく（ためる・ふりおろす）。"""
 import math,numpy as np
@@ -71,26 +71,82 @@ SMALL={   # 小さな部品：'eye'・色・None（からだのまま）
  'mi':lambda x,y,z,n:'eye' if z>.8 and y>.02 else None,
  'ro':lambda x,y,z,n:'eye' if z>.6 and y>.1 else None,
  'te':lambda x,y,z,n:None}
-# ポーズ
-FR={'walk':{'0':{},'1':dict(sq=.97),'w0':dict(sw=6,bob=.02),'w1':dict(sq=.96),'w2':dict(sw=-6,bob=.02),'w3':dict(sq=.96),'a0':dict(lean=-10,sq=1.02),'a1':dict(lean=16,sq=.95)},
-    'float':{'0':dict(bob=.06),'1':dict(bob=.03,sq=.97),'w0':dict(bob=.06,lean=6),'w1':dict(bob=.08,lean=6),'w2':dict(bob=.06,lean=6),'w3':dict(bob=.04,lean=6),'a0':dict(bob=.1,sq=1.05),'a1':dict(bob=.02,lean=14,sq=.92)},
-    'blob':{'0':{},'1':dict(sq=.92,wid=1.04),'w0':dict(sq=.88,wid=1.08),'w1':dict(sq=1.05,wid=.96,lean=6),'w2':dict(sq=.9,wid=1.06),'w3':dict(sq=1.04,wid=.97,lean=-4),'a0':dict(sq=.8,wid=1.12),'a1':dict(sq=1.15,wid=.9,lean=12)},
-    'hop':{'0':{},'1':dict(sq=.96),'w0':dict(sq=.85,wid=1.06),'w1':dict(sq=1.08,lean=8),'w2':dict(sq=1.02,lean=4),'w3':dict(sq=.9),'a0':dict(sq=.9,lean=-6),'a1':dict(sq=1.1,lean=14,wid=1.06)},
-    'te':{'0':{},'1':dict(sq=.98,curl=4),'w0':dict(sw=3),'w1':dict(curl=8),'w2':dict(sw=-3),'w3':dict(curl=4),'a0':dict(sq=1.04,curl=-10,lean=-6),'a1':dict(sq=.9,curl=20,lean=18)}}
-def frames(name):return list(FR[PAL[name]['kind']])
+# ---------- 骨（ボーン） ----------
+# からだの形ごとの骨。数は、モデルの高さ H でわった数（z：足もとからの高さ・x：まん中からの横）。
+#  ひと形（hum）：足2本（hip より下、左右で分ける。もものつけねを支点に前後へふる）・うで2本（sh より下で、まん中から armx より外。かたを支点に前後へふる）・頭（neck より上。首を支点にうなずく）
+#  ふわふわ（float）：下の足（tent より下）を、場所ごとにずれた波でゆらす　かたまり（blob）：上の面を波うたせる
+#  うさぎ（hop）：耳（ear より上。耳のつけねを支点に前後へ）・あご（口のまん中 mouth より下の前のほう。下へひらく）
+#  手（te）：手首（wrist より上を前へまげる）・指（knuckle より上を、先ほど大きくまげる）
+BONE={'kui':dict(t='hum',hip=.30,sh=.60,armx=.19,neck=.62),
+ 'tame':dict(t='hum',hip=.36,sh=.66,armx=.16,neck=.70),
+ 'hone':dict(t='hum',hip=.42,sh=.68,armx=.18,neck=.72),
+ 'ro':dict(t='hum',hip=.16,sh=.50,armx=.19,neck=.56),
+ 'mi':dict(t='hum',hip=.40,sh=.76,armx=.11,neck=.79),
+ 'sui':dict(t='float',tent=.45),'yoru':dict(t='blob'),'esa':dict(t='hop',ear=.70,mouth=.40),'te':dict(t='te',wrist=.42,knuckle=.70)}
+def rotx(P,c,deg):
+    """東西の軸（x）のまわりに、点 c を支点にまわす（+ は、上の物が前＝手前 y+ へたおれる）"""
+    a=math.radians(deg);y=P[:,1]-c[1];z=P[:,2]-c[2];Q=P.copy();Q[:,1]=c[1]+y*math.cos(a)+z*math.sin(a);Q[:,2]=c[2]-y*math.sin(a)+z*math.cos(a);return Q
+def roty(P,c,deg):
+    """南北の軸（y）のまわり（+ は、上の物が東 x+ へ）"""
+    a=math.radians(deg);x=P[:,0]-c[0];z=P[:,2]-c[2];Q=P.copy();Q[:,0]=c[0]+x*math.cos(a)+z*math.sin(a);Q[:,2]=c[2]-x*math.sin(a)+z*math.cos(a);return Q
+def mix(V,Q,w):return V*(1-w[:,None])+Q*w[:,None]
+def bones(name,V):
+    """骨の重み（休んでいる形で1回だけ）"""
+    B=BONE[name];H=max(V[:,2].max(),1e-6);cx=(V[:,0].max()+V[:,0].min())/2;cy=(V[:,1].max()+V[:,1].min())/2;z=V[:,2]/H;x=(V[:,0]-cx)/H;y=(V[:,1]-cy)/H;W=dict(H=H,cx=cx,cy=cy)
+    if B['t']=='hum':
+        arm=sm(B['armx']-.03,B['armx']+.02,np.abs(x))*sm(B['sh']+.02,B['sh']-.04,z)*sm(B['hip']-.06,B['hip']+.02,z)
+        W['legL']=sm(B['hip']+.02,B['hip']-.06,z)*(x<0)*(1-arm);W['legR']=sm(B['hip']+.02,B['hip']-.06,z)*(x>=0)*(1-arm)
+        W['armL']=arm*(x<0);W['armR']=arm*(x>=0);W['head']=sm(B['neck']-.03,B['neck']+.04,z)*(1-arm)
+        W['hipL']=np.array([cx-.08*H,cy,B['hip']*H]);W['hipR']=np.array([cx+.08*H,cy,B['hip']*H])
+        W['shL']=np.array([cx-B['armx']*H,cy,B['sh']*H]);W['shR']=np.array([cx+B['armx']*H,cy,B['sh']*H]);W['neck']=np.array([cx,cy,B['neck']*H])
+    elif B['t']=='float':W['tent']=sm(B['tent'],.05,z)**1.5;W['x']=x;W['y']=y
+    elif B['t']=='blob':W['top']=sm(.1,1,z);W['x']=x;W['y']=y
+    elif B['t']=='hop':
+        W['ear']=sm(B['ear']-.02,B['ear']+.06,z);W['jaw']=sm(B['mouth']+.02,B['mouth']-.06,z)*sm(.02,.12,y)*sm(.06,.16,z);W['earc']=np.array([cx,cy,B['ear']*H]);W['jawc']=np.array([cx,cy-.05*H,B['mouth']*H])
+    elif B['t']=='te':
+        W['wr']=sm(B['wrist'],B['wrist']+.15,z);W['fg']=np.clip((z-B['knuckle'])/(1-B['knuckle']),0,1);W['wc']=np.array([cx,cy,B['wrist']*H]);W['kc']=np.array([cx,cy,B['knuckle']*H])
+    return W
+_BW={}
+# ポーズ（コマごと）。hum：leg 足をふる度（左が+なら右は−）・arm うでをふる度（足と逆）・armU 両うでを前へあげる度・head うなずく度・lean からだを前へ・bob 上へ・sq たて
+#  float：ph 波の位置（0〜1）・amp ゆれのはば　blob：ph・amp　hop：ear 耳の度・jaw あごの度　te：wr 手首の度・fg 指の度
+FR={'hum':{'0':dict(),'1':dict(sq=.97,head=4,arm=3),'w0':dict(leg=26,arm=-22,bob=.03,head=3),'w1':dict(leg=0,sq=.97),'w2':dict(leg=-26,arm=22,bob=.03,head=3),'w3':dict(leg=0,sq=.97),
+      'a0':dict(armU=-150,lean=-8,head=-10,sq=1.02),'a1':dict(armU=-20,lean=16,head=14,sq=.95)},
+    'float':{'0':dict(ph=0,amp=.05,bob=.06),'1':dict(ph=.5,amp=.05,bob=.03),'w0':dict(ph=0,amp=.09,bob=.06,lean=8),'w1':dict(ph=.25,amp=.09,bob=.08,lean=8),'w2':dict(ph=.5,amp=.09,bob=.06,lean=8),'w3':dict(ph=.75,amp=.09,bob=.04,lean=8),
+      'a0':dict(ph=.1,amp=.04,bob=.1,sq=1.06,lean=-6),'a1':dict(ph=.6,amp=.14,bob=.02,lean=16,sq=.92)},
+    'blob':{'0':dict(ph=0,amp=.04),'1':dict(ph=.5,amp=.04,sq=.94,wid=1.03),'w0':dict(ph=0,amp=.1,sq=.88,wid=1.08),'w1':dict(ph=.25,amp=.1,sq=1.05,wid=.96,lean=6),'w2':dict(ph=.5,amp=.1,sq=.9,wid=1.06),'w3':dict(ph=.75,amp=.1,sq=1.04,wid=.97,lean=-4),
+      'a0':dict(ph=.2,amp=.06,sq=.8,wid=1.12),'a1':dict(ph=.7,amp=.14,sq=1.18,wid=.9,lean=14)},
+    'hop':{'0':dict(),'1':dict(sq=.96,ear=-8),'w0':dict(sq=.85,wid=1.06,ear=14),'w1':dict(sq=1.08,lean=8,ear=-22),'w2':dict(sq=1.02,lean=4,ear=-10),'w3':dict(sq=.9,ear=10),
+      'a0':dict(sq=.9,lean=-6,ear=-25,jaw=25),'a1':dict(sq=1.1,lean=14,wid=1.06,ear=20,jaw=45)},
+    'te':{'0':dict(fg=10),'1':dict(fg=22,wr=3),'w0':dict(fg=8,wr=8,sw=3),'w1':dict(fg=30,wr=4),'w2':dict(fg=8,wr=8,sw=-3),'w3':dict(fg=30,wr=4),'a0':dict(fg=-15,wr=-18,sq=1.04),'a1':dict(fg=75,wr=30,sq=.92)}}
+def frames(name):return list(FR[BONE[name]['t']])
 def warp(name,fr):
-    q=FR[PAL[name]['kind']][fr]
+    q=FR[BONE[name]['t']][fr];t=BONE[name]['t']
     def f(V):
-        V=V.copy();H=max(V[:,2].max(),1e-6);c=np.array([.5,.5,0.]);z=V[:,2]/H
-        sw=math.radians(q.get('sw',0));
-        if sw:   # 歩く：左右にゆれる（上ほど大きく）
-            a=sw*z;x0=V[:,0]-c[0];V[:,0]=c[0]+x0*np.cos(a)-(V[:,2])*np.sin(a)*.25
-        cu=math.radians(q.get('curl',0))
-        if cu:   # 手：上のほうを前へまげる
-            m=sm(.55,1,z);a=cu*m;y0=V[:,1]-c[1];zz=V[:,2]-.55*H;V[:,1]=np.where(m>0,c[1]+y0*np.cos(a)+zz*np.sin(a),V[:,1]);V[:,2]=np.where(m>0,.55*H-y0*np.sin(a)+zz*np.cos(a),V[:,2])
+        V=V.copy();W=_BW.get(name)
+        if W is None or len(W.get('_n',[]))!=len(V):W=bones(name,V);W['_n']=V[:,0];_BW[name]=W
+        H=W['H'];c=np.array([W['cx'],W['cy'],0.])
+        if t=='hum':
+            for s_,k in(('L',1),('R',-1)):
+                if q.get('leg'):V=mix(V,rotx(V,W['hip'+s_],q['leg']*k),W['leg'+s_])
+                a=q.get('arm',0)*k+q.get('armU',0)
+                if a:V=mix(V,rotx(V,W['sh'+s_],a),W['arm'+s_])
+            if q.get('head'):V=mix(V,rotx(V,W['neck'],q['head']),W['head'])
+        elif t=='float':
+            ph=q.get('ph',0)*2*math.pi;a=q.get('amp',0)*H;w=W['tent'];V[:,0]+=a*w*np.sin(ph+W['x']*14);V[:,1]+=a*w*np.cos(ph+W['y']*14)*.6
+        elif t=='blob':
+            ph=q.get('ph',0)*2*math.pi;a=q.get('amp',0);V[:,2]*=1+a*W['top']*np.sin(ph+W['x']*9+W['y']*5)
+        elif t=='hop':
+            if q.get('ear'):V=mix(V,rotx(V,W['earc'],q['ear']),W['ear'])
+            if q.get('jaw'):V=mix(V,rotx(V,W['jawc'],-q['jaw']),W['jaw'])
+        elif t=='te':
+            if q.get('fg'):   # 指：先ほど大きくまげる（つけねからの長さで、角度をわける）
+                g=W['fg']
+                for k in range(1,5):   # 4つのふしに分けて、少しずつまげる
+                    m=sm((k-1)/4,(k-.5)/4,g);kc=W['kc'].copy();kc[2]+=(k-1)/4*(H-kc[2]);V=mix(V,rotx(V,kc,q['fg']/4),m)
+            if q.get('wr'):V=mix(V,rotx(V,W['wc'],q['wr']),W['wr'])
+            if q.get('sw'):V=mix(V,roty(V,np.array([W['cx'],W['cy'],0.]),q['sw']),np.clip(V[:,2]/H,0,1))
         le=math.radians(q.get('lean',0))
-        if le:   # 前へたおれる（足もとを支点に、上ほど）
-            y0=V[:,1]-c[1];zz=V[:,2];V[:,1]=c[1]+y0*np.cos(le)+zz*np.sin(le);V[:,2]=-y0*np.sin(le)+zz*np.cos(le)
+        if le:y0=V[:,1]-c[1];zz=V[:,2].copy();V[:,1]=c[1]+y0*np.cos(le)+zz*np.sin(le);V[:,2]=-y0*np.sin(le)+zz*np.cos(le)
         V[:,2]*=q.get('sq',1);w=q.get('wid',1);V[:,0]=c[0]+(V[:,0]-c[0])*w;V[:,1]=c[1]+(V[:,1]-c[1])*w
         V[:,2]+=q.get('bob',0)*H;V[:,2]-=min(0,V[:,2].min())
         a=math.radians(TURN);x0=V[:,0]-c[0];y0=V[:,1]-c[1];V[:,0]=c[0]+x0*math.cos(a)-y0*math.sin(a);V[:,1]=c[1]+x0*math.sin(a)+y0*math.cos(a)
